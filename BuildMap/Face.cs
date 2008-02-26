@@ -39,8 +39,10 @@ namespace BuildMap
         private List<Vector3>   mPoints;
 
         //for drawrings
-//        private VertexBuffer            mVertBuffer;
-        private VertexPositionColor[]   mPosColor;
+        private VertexBuffer            mVertBuffer;
+        private VertexPositionNormalTexture[]   mPosColor;
+        private short[]                 mIndexs;
+        private IndexBuffer             mIndexBuffer;
 
 
         public Plane GetPlane()
@@ -105,55 +107,62 @@ namespace BuildMap
         }
 
 
-        private void MakeVBuffer(GraphicsDevice g)
+        private void MakeVBuffer(GraphicsDevice g, Color c)
         {
             int i = 0;
             int j = 0;
 
-            //generate a random color for use by selected items
-            Random rnd = new Random();
-            Color randColor = new Color(
-                            Convert.ToByte(rnd.Next(255)),
-                            Convert.ToByte(rnd.Next(255)),
-                            Convert.ToByte(rnd.Next(255)));
 
             //triangulate the brush face points
-            mPosColor = new VertexPositionColor[3 + ((mPoints.Count - 3) * 3)];
+//            mPosColor = new VertexPositionColor[3 + ((mPoints.Count - 3) * 3)];
+            mPosColor = new VertexPositionNormalTexture[mPoints.Count];
+            mIndexs = new short[(3 + ((mPoints.Count - 3) * 3))];
+            mIndexBuffer =new IndexBuffer(g, 2 * (3 + ((mPoints.Count - 3) * 3)),
+                BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
+
+            foreach (Vector3 pos in mPoints)
+            {
+                mPosColor[i].Position = pos;
+                mPosColor[i++].Normal = mFacePlane.Normal;
+            }
 
             for(i = 1;i < mPoints.Count - 1;i++)
             {
                 //initial vertex
-                mPosColor[j].Position = mPoints[0];
-                mPosColor[j++].Color = randColor;
-
-                mPosColor[j].Position = mPoints[i];
-                mPosColor[j++].Color = randColor;
-                mPosColor[j].Position = mPoints[(i + 1) % mPoints.Count];
-                mPosColor[j++].Color = randColor;
+                mIndexs[j++] = 0;
+                mIndexs[j++] = (short)i;
+                mIndexs[j++] = (short)((i + 1) % mPoints.Count);
             }
-/*
+
+            mIndexBuffer.SetData<short>(mIndexs, 0, mIndexs.Length);
+
             mVertBuffer = new VertexBuffer(g,
-                VertexPositionColor.SizeInBytes * (mPosColor.Length),
+                VertexPositionNormalTexture.SizeInBytes * (mPosColor.Length),
                 BufferUsage.None);
 
             // Set the vertex buffer data to the array of vertices.
-            mVertBuffer.SetData<VertexPositionColor>(mPosColor);*/
+            mVertBuffer.SetData<VertexPositionNormalTexture>(mPosColor);
         }
 
 
-        public void Draw(GraphicsDevice g)
+        public void Draw(GraphicsDevice g, Color c)
         {
             if(mPosColor == null || mPosColor.Length < 1)
             {
-                MakeVBuffer(g);
+                MakeVBuffer(g, c);
             }
 
+            g.Vertices[0].SetSource(mVertBuffer, 0, VertexPositionNormalTexture.SizeInBytes);
+            g.Indices = mIndexBuffer;
+
             //g.RenderState.PointSize = 10;
-            g.DrawUserPrimitives<VertexPositionColor>(
+            g.DrawIndexedPrimitives(
                 PrimitiveType.TriangleList,
-                mPosColor,
+                0,
                 0,                  // index of the first vertex to draw
-                mPosColor.Length/3    // number of primitives
+                mPosColor.Length,
+                0,
+                mIndexs.Length/3    // number of primitives
             );
         }
 

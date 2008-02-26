@@ -36,9 +36,16 @@ namespace BuildMap
 
         public void Draw(GraphicsDevice g)
         {
-            foreach(Face f in mFaces)
+            //generate a random color
+            Random rnd = new Random();
+            Color randColor = new Color(
+                            Convert.ToByte(rnd.Next(255)),
+                            Convert.ToByte(rnd.Next(255)),
+                            Convert.ToByte(rnd.Next(255)));
+
+            foreach (Face f in mFaces)
             {
-                f.Draw(g);
+                f.Draw(g, randColor);
             }
         }
 

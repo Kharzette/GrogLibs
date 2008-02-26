@@ -55,7 +55,7 @@ namespace BuildMap
 
             mMap = new Map(szMapFileName);
 
-            mMap.RemoveOverlap();
+            //mMap.RemoveOverlap();
         }
 
         /// <summary>
@@ -122,7 +122,6 @@ namespace BuildMap
         protected override void Draw(GameTime gameTime)
         {
             graphics.GraphicsDevice.Clear(Color.CornflowerBlue);
-            graphics.GraphicsDevice.Clear(Color.SteelBlue);
             graphics.GraphicsDevice.VertexDeclaration = mVertexDeclaration;
 
             mBasicEffect.World = mWorldMatrix;
@@ -175,7 +174,13 @@ namespace BuildMap
             mBasicEffect.World      =mWorldMatrix;
             mBasicEffect.View       =mViewMatrix;
             mBasicEffect.Projection =mProjectionMatrix;
-            mBasicEffect.VertexColorEnabled = true;
+            mBasicEffect.VertexColorEnabled = false;
+            mBasicEffect.DirectionalLight0.DiffuseColor = new Vector3(1.0f, 1.0f, 1.0f);
+            mBasicEffect.DirectionalLight0.Direction = Vector3.Down;
+            mBasicEffect.DirectionalLight0.Enabled = true;
+            mBasicEffect.DirectionalLight0.SpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
+            mBasicEffect.AmbientLightColor = new Vector3(0.1f, 0.1f, 0.1f);
+            mBasicEffect.EnableDefaultLighting();
         }
 
 
