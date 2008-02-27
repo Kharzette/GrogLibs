@@ -104,7 +104,7 @@ namespace BuildMap
                 }
             }
 
-            if(inside == null || !inside.IsValid() || (bf == null || !bf.IsValid()))
+            if(inside == null || !inside.IsValid())
             {
                 return false;
             }
@@ -115,10 +115,15 @@ namespace BuildMap
         //expands all faces to seal cracks
         public void SealFaces()
         {
-            if(mFaces.Count < 4)
+RESTART2:
+            //check that faces are valid
+            foreach(Face f in mFaces)
             {
-                mFaces.Clear();
-                return;
+                if (!f.IsValid())
+                {
+                    mFaces.Remove(f);
+                    goto RESTART2;
+                }
             }
 
 RESTART:

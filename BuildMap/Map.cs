@@ -63,8 +63,14 @@ namespace BuildMap
         public void RemoveOverlap()
         {
             int i, j;
-            i = 0;
+
+            i = 1;
         startoveragain:
+            if (i > 0)
+            {
+                i--;
+            }
+
             for (; i < mBrushes.Count; i++)
             {
                 for(j = 0;j < mBrushes.Count;j++)
