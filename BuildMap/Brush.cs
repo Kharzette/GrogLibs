@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace BuildMap
 {
-    class Brush
+    public class Brush
     {
         private List<Face>  mFaces;
 

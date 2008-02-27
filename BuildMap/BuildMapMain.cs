@@ -29,6 +29,8 @@ namespace BuildMap
         private GamePadState            mCurrentGamePadState;
         private GamePadState            mLastGamePadState;
         private KeyboardState           mCurrentKeyboardState;
+        private MouseState              mCurrentMouseState;
+        private MouseState              mLastMouseState;
 
         //cam / player stuff will move later
         private Vector3 mCamPos;
@@ -55,7 +57,7 @@ namespace BuildMap
 
             mMap = new Map(szMapFileName);
 
-            //mMap.RemoveOverlap();
+            mMap.RemoveOverlap();
         }
 
         /// <summary>
@@ -205,9 +207,11 @@ namespace BuildMap
 
         private void CheckGamePadInput()
         {
+            mLastMouseState         =mCurrentMouseState;
             mLastGamePadState       =mCurrentGamePadState;
             mCurrentGamePadState    =GamePad.GetState(PlayerIndex.One);
             mCurrentKeyboardState   =Keyboard.GetState();
+            mCurrentMouseState      =Mouse.GetState();
 
             if(((mCurrentGamePadState.Buttons.A == ButtonState.Pressed)) &&
                  (mLastGamePadState.Buttons.A == ButtonState.Released))
@@ -258,6 +262,41 @@ namespace BuildMap
             {
                 mCamPos -= vleft * (time * 0.1f);
             }
+
+			//Note: apologies for hacking this shit in, I wanted the ability to turn to be able to see the map better -- Kyth
+			if(mCurrentKeyboardState.IsKeyDown(Keys.Q))
+            {
+            	mYaw -= time*0.1f;
+            }
+
+			if(mCurrentKeyboardState.IsKeyDown(Keys.E))
+            {
+            	mYaw += time*0.1f;
+            }
+
+			if(mCurrentKeyboardState.IsKeyDown(Keys.Z))
+            {
+            	mPitch -= time*0.1f;
+            }
+
+			if(mCurrentKeyboardState.IsKeyDown(Keys.C))
+            {
+            	mPitch += time*0.1f;
+            }
+
+			if(mCurrentKeyboardState.IsKeyDown(Keys.Right) ||
+                mCurrentKeyboardState.IsKeyDown(Keys.D))
+            {
+                mCamPos -= vleft * (time * 0.1f);
+            }
+
+            //Horrible mouselook hack so I can see where I'm going. Won't let me spin in circles, some kind of overflow issue?
+            if(mCurrentMouseState.RightButton == ButtonState.Pressed)
+            {
+                mPitch += (mCurrentMouseState.Y - mLastMouseState.Y) * time * 0.03f;
+                mYaw += (mCurrentMouseState.X - mLastMouseState.X) * time * 0.03f;                    
+            }
+
 
             mPitch += mCurrentGamePadState.ThumbSticks.Right.Y * time * 0.25f;
             mYaw += mCurrentGamePadState.ThumbSticks.Right.X * time * 0.25f;

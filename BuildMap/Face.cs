@@ -269,10 +269,12 @@ namespace BuildMap
 
                 float   num;
 
+				//NOTE: This is how TryParse is intended to be used -- Kyth
                 if(Single.TryParse(tok, out num))
                 {
                     //rest are numbers
-                    numbers.Add(System.Convert.ToSingle(tok));
+					//numbers.Add(System.Convert.ToSingle(tok));
+					numbers.Add(num);
                 }
             }
 
