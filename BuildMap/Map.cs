@@ -12,6 +12,7 @@ namespace BuildMap
     class Map
     {
         List<Brush> mBrushes;
+		BspTree		mTree;
 
 
         //reads a .map file
@@ -58,6 +59,12 @@ namespace BuildMap
                 b.Draw(g);
             }
         }
+
+
+		public void	BuildTree()
+		{
+			mTree	=new BspTree(mBrushes);
+		}
 
 
         public void RemoveOverlap()

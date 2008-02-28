@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace BuildMap
 {
-    struct Plane
+    public struct Plane
     {
         public Vector3	Normal;
         public float	Dist;

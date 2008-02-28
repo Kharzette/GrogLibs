@@ -42,10 +42,17 @@ namespace BuildMap
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
 
+			if(args.Length <= 0)
+			{
+				this.Exit();
+				return;
+			}
+
             //check the command line args
             if(args.GetLength(0) < 1)
             {
                 this.Exit();
+				return;
             }
 
             //arg zero should be the map name
@@ -58,6 +65,8 @@ namespace BuildMap
             mMap = new Map(szMapFileName);
 
             mMap.RemoveOverlap();
+
+			mMap.BuildTree();
         }
 
         /// <summary>

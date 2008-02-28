@@ -56,6 +56,153 @@ namespace BuildMap
         }
 
 
+		public bool GetSplitPlane(int fNum, out Plane p)
+		{
+			if(fNum < mFaces.Count)
+			{
+				p	=mFaces[fNum].GetPlane();
+				return	true;
+			}
+			p	=new Plane();	//value type, gotta do something
+			return	false;
+		}
+
+
+		public Plane GetCrappySplittingPlane()
+		{
+			foreach(Face f in mFaces)
+			{
+				Plane	p	=f.GetPlane();
+
+				//find an axial
+				if(Math.Abs(Vector3.Dot(p.Normal, Vector3.Left)) == 1.0f)
+				{
+					return	p;
+				}
+				else if (Math.Abs(Vector3.Dot(p.Normal, Vector3.Forward)) == 1.0f)
+				{
+					return	p;
+				}
+				else if (Math.Abs(Vector3.Dot(p.Normal, Vector3.Up)) == 1.0f)
+				{
+					return	p;
+				}
+			}
+
+			//just return the first one, whatever
+			return	mFaces[0].GetPlane();
+		}
+
+
+		//return the best score in the brush
+		public float GetBestSplittingPlaneScore(List<Brush> brushList)
+		{
+			float	BestScore	=696969.0f;	//0.5f is the goal
+
+			foreach(Face f in mFaces)
+			{
+				Plane	p	=f.GetPlane();
+
+				//test balance
+				List<Brush>	copyList	=new List<Brush>(brushList);
+				List<Brush> front		=new List<Brush>();
+				List<Brush> back		=new List<Brush>();
+
+				foreach(Brush b2 in copyList)
+				{
+					Brush bf, bb;
+
+					b2.SplitBrush(p, out bf, out bb);
+
+					if(bb != null)
+					{
+						back.Add(bb);
+					}
+					if(bf != null)
+					{
+						front.Add(bf);
+					}
+				}
+
+				if(front.Count !=0 && back.Count != 0)
+				{
+					float	score;
+					if(front.Count > back.Count)
+					{
+						score	=(float)front.Count / back.Count;
+					}
+					else
+					{
+						score	=(float)back.Count / front.Count;
+					}
+
+					if(score < BestScore)
+					{
+						BestScore	=score;
+					}
+				}
+			}
+
+			return	BestScore;
+		}
+
+
+		//return the best plane in the brush
+		public Plane GetBestSplittingPlane(List<Brush> brushList)
+		{
+			float	BestScore	=696969.0f;	//0.5f is the goal
+			int		BestIndex	=0;
+
+			foreach(Face f in mFaces)
+			{
+				Plane	p	=f.GetPlane();
+
+				//test balance
+				List<Brush>	copyList	=new List<Brush>(brushList);
+				List<Brush> front		=new List<Brush>();
+				List<Brush> back		=new List<Brush>();
+
+				foreach(Brush b in copyList)
+				{
+					Brush bf, bb;
+
+					b.SplitBrush(p, out bf, out bb);
+
+					if(bb != null)
+					{
+						back.Add(bb);
+					}
+					if(bf != null)
+					{
+						front.Add(bf);
+					}
+				}
+
+				if(front.Count !=0 && back.Count != 0)
+				{
+					float	score;
+					if(front.Count > back.Count)
+					{
+						score	=(float)(front.Count / back.Count);
+					}
+					else
+					{
+						score	=(float)(back.Count / front.Count);
+					}
+
+					if(score < BestScore)
+					{
+						BestScore	=score;
+						BestIndex	=mFaces.IndexOf(f);
+					}
+				}
+			}
+
+			//return the best plane
+			return	mFaces[BestIndex].GetPlane();
+		}
+
+
         public bool Intersects(Brush b)
         {
             foreach(Face f in mFaces)
@@ -168,7 +315,7 @@ RESTART:
         }
 
 
-        private void SplitBrush(Plane p, out Brush bf, out Brush bb)
+        public void SplitBrush(Plane p, out Brush bf, out Brush bb)
         {
             float   fDist, bDist;
 
