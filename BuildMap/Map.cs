@@ -9,46 +9,102 @@ using System.Diagnostics;
 
 namespace BuildMap
 {
+	class Entity
+	{
+		public	List<String>	mKey;
+		public	List<String>	mValue;
+		public	List<Brush>		mBrushes;
+
+
+		public Entity()
+		{
+			mKey	=new List<string>();
+			mValue	=new List<string>();
+			mBrushes=new List<Brush>();
+		}
+
+
+		public void ReadFromMap(StreamReader sr)
+		{
+            string	s			="";
+			Brush	b			=null;
+			bool	brushComing	=false;
+
+            while((s = sr.ReadLine()) != null)
+            {
+				s	=s.Trim();
+				if(s.StartsWith("\""))
+				{
+					string[]	tokens;
+					tokens	=s.Split('\"');
+
+					mKey.Add(tokens[1]);
+					mValue.Add(tokens[3]);
+				}
+				else if(s.StartsWith("{"))
+				{
+					//brush coming I think
+					b			=new Brush();
+					brushComing	=true;					
+				}
+				else if(s.StartsWith("}"))
+				{
+					if(brushComing)
+					{
+						brushComing	=false;
+						
+						//seal the brush
+						b.SealFaces();
+						
+						if(b.IsValid())
+						{
+							mBrushes.Add(b);
+						}
+					}
+					else
+					{
+						return;	//entity done
+					}
+				}
+				else if(s.StartsWith("("))
+				{
+					b.MakeFaceFromMapLine(s);
+				}
+			}
+		}
+	};
+
     class Map
     {
-        List<Brush> mBrushes;
-		BspTree		mTree;
-
+		List<Entity>	mEntities;
+		BspTree			mTree;
 
         //reads a .map file
         public Map(string mapFileName)
         {
-            mBrushes = new List<Brush>();
+			mEntities	=new List<Entity>();
+
+
             if(File.Exists(mapFileName))
             {
                 using(StreamReader sr = File.OpenText(mapFileName))
                 {
                     string s = "";
-                    Brush b =new Brush();
 
                     while((s = sr.ReadLine()) != null)
                     {
-                        s = s.Trim();
+						s	=s.Trim();
+						if(s.StartsWith("{"))
+						{
+							Entity	e	=new Entity();
 
-                        //skip past the crap
-                        if(s.StartsWith("}"))
-                        {
-                            //seal the brush
-                            b.SealFaces();
+							e.ReadFromMap(sr);
 
-                            if(b.IsValid())
-                            {
-                                mBrushes.Add(b);
-                            }
-                            b = new Brush();
-                        }
-                        else if(s.StartsWith("("))
-                        {
-                            b.MakeFaceFromMapLine(s);
-                        }
-                    }
-                }
-            }
+							mEntities.Add(e);
+						}
+					}
+				}
+			}
         }
 
 
@@ -60,22 +116,60 @@ namespace BuildMap
 
         public void Draw(GraphicsDevice g)
         {
-            foreach(Brush b in mBrushes)
-            {
-                b.Draw(g);
-            }
+			foreach(Entity e in mEntities)
+			{
+				foreach(Brush b in e.mBrushes)
+				{
+					b.Draw(g);
+				}
+			}
         }
 
 
 		public void	BuildTree()
 		{
-			mTree	=new BspTree(mBrushes);
+			//look for the worldspawn
+			foreach(Entity e in mEntities)
+			{
+				foreach(string s in e.mKey)
+				{
+					if(s == "classname")
+					{
+						if(e.mValue[e.mKey.IndexOf(s)] == "worldspawn")
+						{
+							mTree	=new BspTree(e.mBrushes);
+							return;
+						}
+					}
+				}
+			}
 		}
 
 
         public void RemoveOverlap()
         {
-            int i, j;
+            int			i, j;
+			List<Brush>	brushes	=null;
+
+			//look for the worldspawn
+			foreach(Entity e in mEntities)
+			{
+				foreach(string s in e.mKey)
+				{
+					if(s == "classname")
+					{
+						if(e.mValue[e.mKey.IndexOf(s)] == "worldspawn")
+						{
+							brushes	=e.mBrushes;
+							break;
+						}
+					}
+				}
+				if(brushes != null)
+				{
+					break;
+				}
+			}
 
             i = 1;
         startoveragain:
@@ -84,16 +178,16 @@ namespace BuildMap
                 i--;
             }
 
-            for (; i < mBrushes.Count; i++)
+            for (; i < brushes.Count; i++)
             {
-                for(j = 0;j < mBrushes.Count;j++)
+                for(j = 0;j < brushes.Count;j++)
                 {
                     if(i == j)
                     {
                         continue;
                     }
 
-                    if(!mBrushes[i].Intersects(mBrushes[j]))
+                    if(!brushes[i].Intersects(brushes[j]))
                     {
                         continue;
                     }
@@ -101,13 +195,13 @@ namespace BuildMap
                     List<Brush> cutup = new List<Brush>();
                     List<Brush> cutup2 = new List<Brush>();
 
-                    if(mBrushes[i].SubtractBrush(mBrushes[j], out cutup))
+                    if(brushes[i].SubtractBrush(brushes[j], out cutup))
                     {
                         //make sure the brush returned is
                         //not the one passed in
                         if(cutup.Count == 1)
                         {
-                            if(mBrushes[i].Equals(cutup[0]))
+                            if(brushes[i].Equals(cutup[0]))
                             {
                                 continue;
                             }
@@ -123,13 +217,13 @@ namespace BuildMap
                         cutup.Clear();
                     }
 
-                    if(mBrushes[j].SubtractBrush(mBrushes[i], out cutup2))
+                    if(brushes[j].SubtractBrush(brushes[i], out cutup2))
                     {
                         //make sure the brush returned is
                         //not the one passed in
                         if(cutup2.Count == 1)
                         {
-                            if(mBrushes[j].Equals(cutup2[0]))
+                            if(brushes[j].Equals(cutup2[0]))
                             {
                                 continue;
                             }
@@ -161,10 +255,10 @@ namespace BuildMap
 
                         foreach(Brush b in cutup)
                         {
-                            mBrushes.Add(b);
+                            brushes.Add(b);
                         }
                         cutup.Clear();
-                        mBrushes.RemoveAt(i);
+                        brushes.RemoveAt(i);
                         goto startoveragain;
                     }
                     else
@@ -173,10 +267,10 @@ namespace BuildMap
 
                         foreach(Brush b in cutup2)
                         {
-                            mBrushes.Add(b);
+                            brushes.Add(b);
                         }
                         cutup2.Clear();
-                        mBrushes.RemoveAt(j);
+                        brushes.RemoveAt(j);
                         goto startoveragain;
                     }
                 }
@@ -188,13 +282,13 @@ namespace BuildMap
             while(!bDone)
             {
                 bDone = true;
-                foreach(Brush b in mBrushes)
+                foreach(Brush b in brushes)
                 {
                     if(!b.IsValid())
                     {
                         Debug.WriteLine("Brush totally clipped away");
 
-                        mBrushes.Remove(b);
+                        brushes.Remove(b);
                         bDone = false;
                         break;
                     }
