@@ -147,7 +147,7 @@ namespace BuildMap
             {
                 pass.Begin();
 
-                mMap.Draw(graphics.GraphicsDevice);
+                mMap.Draw(graphics.GraphicsDevice, mCamPos);				
 
                 pass.End();
             }

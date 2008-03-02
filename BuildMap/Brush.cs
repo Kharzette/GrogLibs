@@ -11,7 +11,6 @@ namespace BuildMap
     {
         private List<Face>  mFaces;
 
-
         public Brush()
         {
             mFaces  =new List<Face>();
@@ -95,7 +94,7 @@ namespace BuildMap
 
 
 		//return the best score in the brush
-		public float GetBestSplittingPlaneScore(List<Brush> brushList)
+		public float GetBestSplittingFaceScore(List<Brush> brushList)
 		{
 			float	BestScore	=696969.0f;	//0.5f is the goal
 
@@ -148,7 +147,7 @@ namespace BuildMap
 
 
 		//return the best plane in the brush
-		public Plane GetBestSplittingPlane(List<Brush> brushList)
+		public Face GetBestSplittingFace(List<Brush> brushList)
 		{
 			float	BestScore	=696969.0f;	//0.5f is the goal
 			int		BestIndex	=0;
@@ -199,7 +198,7 @@ namespace BuildMap
 			}
 
 			//return the best plane
-			return	mFaces[BestIndex].GetPlane();
+			return	mFaces[BestIndex];
 		}
 
 
@@ -313,6 +312,17 @@ RESTART:
             }
             return false;
         }
+
+
+		public void GetNodesFromFaces(out List<BspNode> nodes)
+		{
+			nodes	=new List<BspNode>();
+
+			foreach(Face f in mFaces)
+			{
+				nodes.Add(new BspNode(f));
+			}
+		}
 
 
         public void SplitBrush(Plane p, out Brush bf, out Brush bb)

@@ -52,6 +52,12 @@ namespace BuildMap
         }
 
 
+		public void Draw(GraphicsDevice g, Vector3 camPos)
+		{
+			mTree.Draw(g, camPos);
+		}
+
+
         public void Draw(GraphicsDevice g)
         {
             foreach(Brush b in mBrushes)
@@ -109,7 +115,7 @@ namespace BuildMap
 
                         if(cutup.Count == 0)
                         {
-                            Debug.WriteLine("Subtract returned true, but an empty list");
+                            //Debug.WriteLine("Subtract returned true, but an empty list");
                         }
                     }
                     else
@@ -131,7 +137,7 @@ namespace BuildMap
 
                         if(cutup2.Count == 0)
                         {
-                            Debug.WriteLine("Subtract returned true, but an empty list");
+                            //Debug.WriteLine("Subtract returned true, but an empty list");
                         }
                     }
                     else

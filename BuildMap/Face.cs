@@ -29,7 +29,7 @@ namespace BuildMap
         //need a texture reference here
     }
 
-    class Face
+    public class Face
     {
         private const float ON_EPSILON = 0.1f;
         private const float EDGE_LENGTH = 0.1f;
@@ -70,7 +70,8 @@ namespace BuildMap
         public Face(Plane p)
         {
             mPoints = new List<Vector3>();
-            SetFaceFromPlane(p, 8000.0f);
+            SetFaceFromPlane(p, Bounds.MIN_MAX_BOUNDS);
+			mFacePlane	=p;
         }
 
 
@@ -169,7 +170,7 @@ namespace BuildMap
 
         public void Expand()
         {
-            SetFaceFromPlane(mFacePlane, 8000);
+            SetFaceFromPlane(mFacePlane, Bounds.MIN_MAX_BOUNDS);
         }
 
 
@@ -315,7 +316,7 @@ namespace BuildMap
         }
 
 
-        private void SetFaceFromPlane(Plane p, float dist)
+        public void SetFaceFromPlane(Plane p, float dist)
         {
             float   v;
             Vector3 vup, vright, org;
@@ -373,6 +374,32 @@ namespace BuildMap
             }
             return false;
         }
+
+
+		public void GetSplitInfo(Face		f,
+								 out int	pointsOnFront,
+								 out int	pointsOnBack,
+								 out int	pointsOnPlane)
+		{
+			pointsOnPlane = pointsOnFront = pointsOnBack = 0;
+			foreach(Vector3 pnt in mPoints)
+			{
+				float	dot	=Vector3.Dot(pnt, mFacePlane.Normal) - mFacePlane.Dist;
+
+                if(dot > ON_EPSILON)
+                {
+                    pointsOnFront++;
+                }
+                else if(dot < -ON_EPSILON)
+                {
+                    pointsOnBack++;
+                }
+                else
+                {
+					pointsOnPlane++;
+                }
+			}
+		}
 
 
         //clip this face in front or behind face f
@@ -453,5 +480,13 @@ namespace BuildMap
                 mPoints.Clear();
             }
         }
+
+		public void AddToBounds(Bounds bnd)
+		{
+			foreach(Vector3 pnt in mPoints)
+			{
+				bnd.AddPointToBounds(pnt);
+			}
+		}
     }
 }
