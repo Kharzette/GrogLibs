@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace BuildMap
 {
-	class Entity
+	public class Entity
 	{
 		public	List<String>	mKey;
 		public	List<String>	mValue;
@@ -21,6 +21,39 @@ namespace BuildMap
 			mKey	=new List<string>();
 			mValue	=new List<string>();
 			mBrushes=new List<Brush>();
+		}
+
+
+		public bool GetOrigin(out Vector3 org)
+		{
+			org	=Vector3.Zero;
+			foreach(string s in mKey)
+			{
+				if(s == "origin")
+				{
+					string	[]szVec	=mValue[mKey.IndexOf(s)].Split(' ');
+
+					if(szVec.Length != 3)
+					{
+						return	false;
+					}
+
+					if(!Single.TryParse(szVec[0], out org.X))
+					{
+						return	false;
+					}
+					if(!Single.TryParse(szVec[0], out org.Y))
+					{
+						return	false;
+					}
+					if(!Single.TryParse(szVec[0], out org.Z))
+					{
+						return	false;
+					}
+					return	true;
+				}
+			}
+			return	false;
 		}
 
 
@@ -126,6 +159,12 @@ namespace BuildMap
         }
 
 
+		public bool ClassifyPoint(Vector3 pnt)
+		{
+			return	mTree.ClassifyPoint(pnt);
+		}
+
+
 		public void	BuildTree()
 		{
 			//look for the worldspawn
@@ -137,7 +176,12 @@ namespace BuildMap
 					{
 						if(e.mValue[e.mKey.IndexOf(s)] == "worldspawn")
 						{
-							mTree	=new BspTree(e.mBrushes);
+							//ordinarily we'd junk the original brushes
+							List<Brush>	copy	=new List<Brush>(e.mBrushes);
+
+							//use the copy so we have the old ones around to draw
+							mTree	=new BspTree(copy);
+
 							return;
 						}
 					}

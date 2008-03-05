@@ -202,6 +202,15 @@ namespace BuildMap
 		}
 
 
+        public void MarkFacesNotVisible()
+        {
+            foreach(Face f in mFaces)
+            {
+				f.mbVisible	=false;
+			}
+		}
+
+
         public bool Intersects(Brush b)
         {
             foreach(Face f in mFaces)
@@ -325,6 +334,15 @@ RESTART:
 		}
 
 
+		public void AddFacesToList(ref List<Face> faceList)
+		{
+			foreach(Face f in mFaces)
+			{
+				faceList.Add(new Face(f));
+			}
+		}
+
+
         public void SplitBrush(Plane p, out Brush bf, out Brush bb)
         {
             float   fDist, bDist;
@@ -394,5 +412,5 @@ RESTART:
             bb.SealFaces();
             bf.SealFaces();
         }
-    }
+	}
 }

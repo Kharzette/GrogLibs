@@ -31,18 +31,19 @@ namespace BuildMap
 
     public class Face
     {
-        private const float ON_EPSILON = 0.1f;
-        private const float EDGE_LENGTH = 0.1f;
+        private const float ON_EPSILON	=0.1f;
+        private const float EDGE_LENGTH	=0.1f;
 
         private Plane           mFacePlane;
         private TexInfo         mTexInfo;
         private List<Vector3>   mPoints;
+		public	bool			mbVisible;
 
         //for drawrings
-        private VertexBuffer            mVertBuffer;
+        private VertexBuffer					mVertBuffer;
         private VertexPositionNormalTexture[]   mPosColor;
-        private short[]                 mIndexs;
-        private IndexBuffer             mIndexBuffer;
+        private short[]							mIndexs;
+        private IndexBuffer						mIndexBuffer;
 
 
         public Plane GetPlane()
@@ -148,6 +149,11 @@ namespace BuildMap
 
         public void Draw(GraphicsDevice g, Color c)
         {
+			if(mPoints.Count < 3)
+			{
+				return;
+			}
+
             if(mPosColor == null || mPosColor.Length < 1)
             {
                 MakeVBuffer(g, c);
@@ -480,6 +486,7 @@ namespace BuildMap
                 mPoints.Clear();
             }
         }
+
 
 		public void AddToBounds(Bounds bnd)
 		{
