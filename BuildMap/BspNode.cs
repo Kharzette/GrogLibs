@@ -10,11 +10,17 @@ namespace BuildMap
 {
 	public class BspNode
 	{
-		private	Plane			mPlane;
-		private List<Face>		mFaces;
-		private BspNode			mFront,	mBack;
-		private	Bounds			mBounds;
-		private	bool			mbLeaf;
+		public const UInt32	BSP_CONTENTS_SOLID2	=1;
+
+		private	Plane		mPlane;
+		private List<Face>	mFaces;
+		private BspNode		mFront,	mBack;
+		private	Bounds		mBounds;
+		private	bool		mbLeaf;
+		private	Face		mPortal;
+		private	BspNode		mParent;
+		private	UInt32		mFillKey;	//for flooding
+		private	UInt32		mContents;
 
 
 		public BspNode(Face f)
@@ -89,11 +95,13 @@ namespace BuildMap
 
 			if(!FindGoodSplitFace(brushList, out face))
 			{
+				mbLeaf	=true;
+
+				//copy in the brush faces
 				foreach(Brush b in brushList)
 				{
 					b.AddFacesToList(ref mFaces);
 				}
-				mbLeaf	=true;
 				return;
 			}
 
@@ -130,7 +138,8 @@ namespace BuildMap
 
 			if(frontList.Count > 0)
 			{
-				mFront	=new BspNode();
+				mFront			=new BspNode();
+				mFront.mParent	=this;
 				mFront.BuildTree(frontList);
 			}
 			else
@@ -140,12 +149,184 @@ namespace BuildMap
 
 			if(backList.Count > 0)
 			{
-				mBack	=new BspNode();
+				mBack			=new BspNode();
+				mBack.mParent	=this;
 				mBack.BuildTree(backList);
 			}
 			else
 			{
 				Debug.Assert(false);// && "Nonleaf node with no back side brushes!");
+			}
+		}
+
+
+		private	void NukeAllButThisPlane(Plane p)
+		{
+			int	foundIdx	=-1;
+
+			foreach(Face f in mFaces)
+			{
+				Plane	p2	=f.GetPlane();
+
+				if(Math.Abs(p2.Normal.X - p.Normal.X) > Bounds.DIST_EPSILON)
+				{
+					continue;
+				}
+				if(Math.Abs(p2.Normal.Y - p.Normal.Y) > Bounds.DIST_EPSILON)
+				{
+					continue;
+				}
+				if(Math.Abs(p2.Normal.Z - p.Normal.Z) > Bounds.DIST_EPSILON)
+				{
+					continue;
+				}
+				foundIdx	=mFaces.IndexOf(f);
+				break;
+			}
+
+			if(foundIdx == -1)
+			{
+				Debug.WriteLine("Couldn't find plane in NukeAll");
+				return;
+			}
+
+			Face	keep	=new Face(mFaces[foundIdx]);
+
+			mFaces.Clear();
+
+			mFaces.Add(keep);
+		}
+
+
+		private	void ClipToParents(Face prt)
+		{
+			Face clippy	=new Face(mPlane);
+
+			prt.ClipByFace(clippy, true);
+
+			if(mParent != null)
+			{
+				mParent.ClipToParents(prt);
+			}
+		}
+
+
+		public void DrawPortalsDumb(GraphicsDevice g, Vector3 camPos)
+		{
+			if(mFront != null)
+			{
+				mFront.Draw(g, camPos);
+			}
+
+			if(mPortal != null)
+			{
+				mPortal.Draw(g, Color.CadetBlue);
+			}
+
+			if(mBack != null)
+			{
+				mBack.Draw(g, camPos);
+			}
+		}
+
+
+		public	void DrawPortals(GraphicsDevice g, Vector3 camPos)
+		{
+			if(mbLeaf)
+			{
+				return;
+			}
+
+			float	d	=Vector3.Dot(mPlane.Normal, camPos) - mPlane.Dist;
+			if(d > 0.0f)
+			{
+				if(mFront != null)
+				{
+					mFront.Draw(g, camPos);
+				}
+
+				if(mPortal != null)
+				{
+					mPortal.Draw(g, Color.CadetBlue);
+				}
+
+				if(mBack != null)
+				{
+					mBack.Draw(g, camPos);
+				}
+			}
+			else if(d < 0.0f)
+			{
+				if(mBack != null)
+				{
+					mBack.Draw(g, camPos);
+				}
+
+				if(mPortal != null)
+				{
+					mPortal.Draw(g, Color.CadetBlue);
+				}
+
+				if(mFront != null)
+				{
+					mFront.Draw(g, camPos);
+				}
+			}
+			else
+			{
+				if(mFront != null)
+				{
+					mFront.Draw(g, camPos);
+				}
+
+				if(mPortal != null)
+				{
+					mPortal.Draw(g, Color.CadetBlue);
+				}
+
+				if(mBack != null)
+				{
+					mBack.Draw(g, camPos);
+				}
+			}
+		}
+
+
+		public	void BuildPortals()
+		{
+			//recurse to leaves
+			if(mFront != null)
+			{
+				mFront.BuildPortals();
+			}
+
+			if(!mbLeaf)
+			{
+				if(mParent != null)
+				{
+					mPortal	=new Face(mPlane);
+					mParent.ClipToParents(mPortal);
+
+					mPortal.mFlags	=0;
+					if((mFront.mContents & BSP_CONTENTS_SOLID2) != 0)
+					{
+						mPortal.mFlags	|=1;
+					}
+
+					if((mBack.mContents & BSP_CONTENTS_SOLID2) != 0)
+					{
+						mPortal.mFlags	|=4;
+					}
+					else
+					{
+						mPortal.mFlags	|=2;
+					}
+				}
+			}
+
+			if(mBack != null)
+			{
+				mBack.BuildPortals();
 			}
 		}
 
@@ -339,13 +520,187 @@ namespace BuildMap
 				}
 			}
 		}
+
 		
+
+		private void FillUnTouchedLeafs(UInt32 curFill)
+		{
+			if(!mbLeaf)
+			{
+				mFront.FillUnTouchedLeafs(curFill);
+				mBack.FillUnTouchedLeafs(curFill);
+				return;
+			}
+
+			if((mContents & BSP_CONTENTS_SOLID2) != 0)
+			{
+				return;		//allready solid or removed...
+			}
+
+			if(mFillKey != curFill)
+			{
+				// Fill er in with solid so it does not show up...(Preserve user contents)
+				mContents	&=(0xffff0000);
+				mContents	|=BSP_CONTENTS_SOLID2;
+			}
+		}
+
+
+		private bool FillFromEntities(List<Entity> ents, UInt32 curFill)
+		{
+			bool	bEmpty	=false;
+
+			foreach(Entity e in ents)
+			{
+				if(ents.IndexOf(e) == 0)
+				{
+					continue;	//skip world
+				}
+
+				Vector3	org;
+
+				if(!e.GetOrigin(out org))
+				{
+					continue;
+				}
+
+				BspNode	bn;
+
+				if(GetLeafLandedIn(org, out bn))
+				{
+					continue;
+				}
+				
+				//There is at least one entity in empty space...
+				bEmpty	=true;
+
+				if(!bn.FillLeafs2r(curFill))
+				{
+					return	false;
+				}
+			}
+
+			if(!bEmpty)
+			{
+				Debug.WriteLine("FillFromEntities:  No valid entities for operation.");
+				return	false;
+			}
+
+			return	true;
+		}
+
+
+		bool FillLeafs2r(UInt32 curFill)
+		{
+			if((mContents & BSP_CONTENTS_SOLID2) != 0)
+			{
+				return	true;
+			}
+
+			if(mFillKey == curFill)
+			{
+				return	true;
+			}
+
+			mFillKey	=curFill;
+
+			return	true;
+		}
+
 
 		public bool ClassifyPoint(Vector3 pnt)
 		{
 			if(mbLeaf)
 			{
-				return	IsPointBehindAllNodeFaces(pnt);
+				if(IsPointBehindAllNodeFaces(pnt))
+				{
+					return	true;
+				}
+				else
+				{
+					return	false;
+				}
+			}
+
+			float	d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;
+
+			if(d > 0.0f)
+			{
+				return	mFront.ClassifyPoint(pnt);
+			}
+			else if(d < 0.0f)
+			{
+				return	mBack.ClassifyPoint(pnt);
+			}
+			else
+			{
+				return	mFront.ClassifyPoint(pnt);
+			}
+		}
+
+
+		//returns impact point
+		public Vector3 RayCast(Vector3 pntA, Vector3 pntB)
+		{
+			if(mbLeaf)
+			{
+				if(IsPointBehindAllNodeFaces(pntA))
+				{
+					return	pntA;
+				}
+				else
+				{
+					return	Vector3.Zero;
+				}
+			}
+
+			float	d	=Vector3.Dot(mPlane.Normal, pntA) - mPlane.Dist;
+			float	d2	=Vector3.Dot(mPlane.Normal, pntB) - mPlane.Dist;
+
+			if(d > 0.0f && d2 > 0.0f)
+			{
+				return	mFront.RayCast(pntA, pntB);
+			}
+			else if(d < 0.0f && d2 < 0.0f)
+			{
+				return	mBack.RayCast(pntA, pntB);
+			}
+			else if(d == 0.0f && d2 == 0.0f)
+			{
+				return	mFront.RayCast(pntA, pntB);
+			}
+			else	//split up segment
+			{
+				float	splitRatio	=d / (d - d2);
+				Vector3	mid	=pntA + (splitRatio * (pntB - pntA));
+				Vector3	ret;
+
+				ret	=mFront.RayCast(pntA, mid);
+
+				if(ret != Vector3.Zero)
+				{
+					return	ret;
+				}
+
+				return	mBack.RayCast(mid, pntB);
+			}
+		}
+
+
+		//returns true for solid
+		public bool GetLeafLandedIn(Vector3 pnt, out BspNode bn)
+		{
+			bn	=this;
+			if(mbLeaf)
+			{
+				if(IsPointBehindAllNodeFaces(pnt))
+				{
+					return	true;
+				}
+				else
+				{
+					return	false;
+				}
 			}
 
 			float	d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;

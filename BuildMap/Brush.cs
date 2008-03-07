@@ -233,6 +233,15 @@ namespace BuildMap
         }
 
 
+		public void LightBrush(BspNode root, Vector3 lightPos, float lightVal, Vector3 color)
+		{
+			foreach(Face f in mFaces)
+			{
+				f.LightFace(root, lightPos, lightVal, color);
+			}
+		}
+
+
         //brush b gobbles thisbrush
         //returns a bunch of parts
         public bool SubtractBrush(Brush b, out List<Brush> outside)

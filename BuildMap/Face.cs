@@ -38,6 +38,8 @@ namespace BuildMap
         private TexInfo         mTexInfo;
         private List<Vector3>   mPoints;
 		public	bool			mbVisible;
+		public	UInt32			mFlags;
+		private	UInt32[]		mLightMap;
 
         //for drawrings
         private VertexBuffer					mVertBuffer;
@@ -488,7 +490,118 @@ namespace BuildMap
         }
 
 
-		public void AddToBounds(Bounds bnd)
+		public	void LightFace(BspNode root, Vector3 lightPos, float lightVal, Vector3 color)
+		{
+			//figure out the face extents
+			Bounds	bnd	=new Bounds();
+
+			AddToBounds(ref bnd);
+
+			//get the top left point in the plane
+			//project maxs onto the face plane
+			float	d	=Vector3.Dot(bnd.mMaxs, mFacePlane.Normal) - mFacePlane.Dist;
+
+			Vector3	delta	=mFacePlane.Normal * d;
+
+			Vector3	maxInPlane	=bnd.mMaxs - delta;
+
+			d	=Vector3.Dot(bnd.mMins, mFacePlane.Normal) - mFacePlane.Dist;
+
+			delta	=mFacePlane.Normal * d;
+
+			Vector3	minInPlane	=bnd.mMins - delta;
+
+			//make sure the light is in range
+			if((Vector3.Distance(lightPos, minInPlane) > lightVal)
+				&&(Vector3.Distance(lightPos, maxInPlane) > lightVal))
+			{
+				return;
+			}
+
+			//use the delta of the two in plane minmax points
+			//to generate a cross with the face's normal
+			//then add them together and normalize to get
+			//a lightmap axis.  Then cross with the normal
+			//to get the other axis
+			Vector3	deltaMinMax	=maxInPlane - minInPlane;
+
+			Vector3	deltaMinMaxUnit	=deltaMinMax;
+			deltaMinMaxUnit.Normalize();
+
+			Vector3 YAxis	=Vector3.Cross(deltaMinMaxUnit, mFacePlane.Normal);
+			YAxis.Normalize();
+			YAxis	+=deltaMinMaxUnit;
+			YAxis.Normalize();
+
+			Vector3 XAxis	=Vector3.Cross(YAxis, mFacePlane.Normal);
+			XAxis.Normalize();
+
+			//now find the number of lightmap units along
+			//both axis vectors in the face extents
+			float	XExtents	=-Vector3.Dot(XAxis, deltaMinMax);
+			float	YExtents	=-Vector3.Dot(YAxis, deltaMinMax);
+
+			XExtents	=Math.Abs(XExtents);
+			YExtents	=Math.Abs(YExtents);
+
+			//we'll do a light point every 8 world units
+			int	numXPoints	=(int)XExtents / 8 + 1;
+			int	numYPoints	=(int)YExtents / 8 + 1;
+
+			//scale axis vectors
+			XAxis	*=8.0f;
+			YAxis	*=8.0f;
+
+			if(mLightMap == null)
+			{
+				mLightMap	=new UInt32[numXPoints * numYPoints];
+			}
+
+			for(int y=0;y < numYPoints;y++)
+			{
+				for(int x=0;x < numXPoints;x++)
+				{
+					Vector3	lmPoint	=maxInPlane + (XAxis * x);
+					lmPoint	+=(YAxis * y);
+
+					//shoot a ray from lmPoint to the light
+					Vector3	impact	=root.RayCast(lmPoint, lightPos);
+
+					//hit something along the way?
+					if(impact == Vector3.Zero)
+					{
+						float	dist	=Vector3.Distance(lmPoint, lightPos);
+						Vector3	clr		=color * dist;
+						
+						clr	/=lightVal;
+
+						UInt32	rB, bB, gB;
+						rB	=(UInt32)(clr.X * 255.0f);
+						bB	=(UInt32)(clr.Y * 255.0f);
+						gB	=(UInt32)(clr.Z * 255.0f);
+						if(rB > 255)
+						{
+							rB	=255;
+						}
+						if(bB > 255)
+						{
+							bB	=255;
+						}
+						if(gB > 255)
+						{
+							gB	=255;
+						}
+						mLightMap[(y * numXPoints) + x]	=(byte)rB;
+						mLightMap[(y * numXPoints) + x]	|=(bB << 8);
+						mLightMap[(y * numXPoints) + x]	|=(gB << 16);
+						mLightMap[(y * numXPoints) + x]	|=((UInt32)255 << 24);
+					}
+				}
+			}
+		}
+
+
+		public void AddToBounds(ref Bounds bnd)
 		{
 			foreach(Vector3 pnt in mPoints)
 			{

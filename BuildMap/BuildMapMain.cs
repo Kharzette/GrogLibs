@@ -27,6 +27,7 @@ namespace BuildMap
 		private Matrix                  mProjectionMatrix;
 		private BasicEffect             mMapEffect;
 		private BasicEffect             mDotEffect;
+		private BasicEffect             mPortalEffect;
 		private VertexDeclaration       mVertexDeclaration;
 		private GamePadState            mCurrentGamePadState;
 		private GamePadState            mLastGamePadState;
@@ -36,6 +37,7 @@ namespace BuildMap
 		private	bool					mbDrawDot;
 		private	bool					mbDrawBsp;
 		private	bool					mbDrawBrushes;
+		private	bool					mbDrawPortals;
 		
 		//cam / player stuff will move later
 		private Vector3 mCamPos, mDotPos;
@@ -69,6 +71,8 @@ namespace BuildMap
 			mMap	=new Map(szMapFileName);
 			mMap.RemoveOverlap();
 			mMap.BuildTree();
+			mMap.BuildPortals();
+			mMap.LightAllBrushes();
 		}
 
 		/// <summary>
@@ -87,6 +91,7 @@ namespace BuildMap
 			mbDrawBsp		=true;
 			mbDrawDot		=false;
 			mbDrawBrushes	=false;
+			mbDrawPortals	=false;
 
 			base.Initialize();
 		}
@@ -149,6 +154,9 @@ namespace BuildMap
 			mMapEffect.World = mWorldMatrix;
 			mMapEffect.View = mViewMatrix;
 			mMapEffect.Projection = mProjectionMatrix;
+			mPortalEffect.World = mWorldMatrix;
+			mPortalEffect.View = mViewMatrix;
+			mPortalEffect.Projection = mProjectionMatrix;
 
 			mMapEffect.Begin();
 			foreach(EffectPass pass in mMapEffect.CurrentTechnique.Passes)
@@ -207,6 +215,16 @@ namespace BuildMap
 				}
 				mDotEffect.End();
 			}
+
+			if(mbDrawPortals)
+			{
+				mPortalEffect.Begin();
+
+				mMap.DrawPortals(graphics.GraphicsDevice, mCamPos);
+
+				mPortalEffect.End();
+			}
+
 			base.Draw(gameTime);
 		}
 
@@ -256,7 +274,14 @@ namespace BuildMap
 			mDotEffect.World      =mWorldMatrix;
 			mDotEffect.View       =mViewMatrix;
 			mDotEffect.Projection =mProjectionMatrix;
-			//mDotEffect.VertexColorEnabled = true;
+
+			mPortalEffect = new BasicEffect(graphics.GraphicsDevice, null);
+			mPortalEffect.DiffuseColor = new Vector3(0.0f, 0.0f, 1.0f);
+
+			mPortalEffect.World			=mWorldMatrix;
+			mPortalEffect.View			=mViewMatrix;
+			mPortalEffect.Projection	=mProjectionMatrix;
+			mPortalEffect.Alpha			=0.5f;
 		}
 
 
@@ -296,6 +321,11 @@ namespace BuildMap
 				(mLastGamePadState.Buttons.Y == ButtonState.Released))
 			{
 				mbDrawBrushes	=!mbDrawBrushes;
+			}
+			if(((mCurrentGamePadState.Buttons.X == ButtonState.Pressed)) &&
+				(mLastGamePadState.Buttons.X == ButtonState.Released))
+			{
+				mbDrawPortals	=!mbDrawPortals;
 			}
 		}
 

@@ -42,11 +42,62 @@ namespace BuildMap
 					{
 						return	false;
 					}
-					if(!Single.TryParse(szVec[0], out org.Y))
+					if(!Single.TryParse(szVec[1], out org.Y))
 					{
 						return	false;
 					}
-					if(!Single.TryParse(szVec[0], out org.Z))
+					if(!Single.TryParse(szVec[2], out org.Z))
+					{
+						return	false;
+					}
+					return	true;
+				}
+			}
+			return	false;
+		}
+
+
+		public bool GetLightValue(out float dist)
+		{
+			dist	=250;
+			foreach(string s in mKey)
+			{
+				if(s == "light")
+				{
+					if(!Single.TryParse(mValue[mKey.IndexOf(s)], out dist))
+					{
+						return	false;
+					}
+					return	true;
+				}
+			}
+			return	false;
+		}
+
+
+		public bool GetColor(out Vector3 color)
+		{
+			color	=Vector3.One;
+			foreach(string s in mKey)
+			{
+				if(s == "color")
+				{
+					string	[]szVec	=mValue[mKey.IndexOf(s)].Split(' ');
+
+					if(szVec.Length != 3)
+					{
+						return	false;
+					}
+
+					if(!Single.TryParse(szVec[0], out color.X))
+					{
+						return	false;
+					}
+					if(!Single.TryParse(szVec[1], out color.Y))
+					{
+						return	false;
+					}
+					if(!Single.TryParse(szVec[2], out color.Z))
 					{
 						return	false;
 					}
@@ -168,6 +219,65 @@ namespace BuildMap
 		public void	BuildTree()
 		{
 			//look for the worldspawn
+			Entity e	=GetWorldSpawnEntity();
+
+			//ordinarily we'd junk the original brushes
+			List<Brush>	copy	=new List<Brush>(e.mBrushes);
+
+			//use the copy so we have the old ones around to draw
+			mTree	=new BspTree(copy);
+		}
+
+
+		private	void LightBrushes(List<Brush> bl, Vector3 lightPos, float lightVal, Vector3 color)
+		{
+			foreach(Brush b in bl)
+			{
+				b.LightBrush(mTree.GetRoot(), lightPos, lightVal, color);
+			}
+		}
+
+
+		public void LightAllBrushes()
+		{
+			//find worldspawn brush list
+			Entity	wse	=GetWorldSpawnEntity();
+
+			foreach(Entity e in mEntities)
+			{
+				foreach(string s in e.mKey)
+				{
+					Vector3	lightPos, clr;
+					float	lightVal;
+					if(!e.GetLightValue(out lightVal))
+					{
+						continue;
+					}
+					if(!e.GetOrigin(out lightPos))
+					{
+						continue;
+					}
+					e.GetColor(out clr);
+					LightBrushes(wse.mBrushes, lightPos, lightVal, clr);
+				}
+			}
+		}
+
+
+		public void BuildPortals()
+		{
+			mTree.BuildPortals();
+		}
+
+
+		public void DrawPortals(GraphicsDevice g, Vector3 camPos)
+		{
+			mTree.DrawPortals(g, camPos);
+		}
+
+
+		public Entity GetWorldSpawnEntity()
+		{
 			foreach(Entity e in mEntities)
 			{
 				foreach(string s in e.mKey)
@@ -176,17 +286,12 @@ namespace BuildMap
 					{
 						if(e.mValue[e.mKey.IndexOf(s)] == "worldspawn")
 						{
-							//ordinarily we'd junk the original brushes
-							List<Brush>	copy	=new List<Brush>(e.mBrushes);
-
-							//use the copy so we have the old ones around to draw
-							mTree	=new BspTree(copy);
-
-							return;
+							return	e;
 						}
 					}
 				}
 			}
+			return	null;
 		}
 
 
