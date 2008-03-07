@@ -85,15 +85,15 @@ namespace BuildMap
 		}
 
 
-		public void Draw(GraphicsDevice g, Vector3 camPos)
+		public void Draw(GraphicsDevice g, Effect fx, Vector3 camPos)
 		{
-			mRoot.Draw(g, camPos);
+			mRoot.Draw(g, fx, camPos);
 		}
 
 
-		public void DrawPortals(GraphicsDevice g, Vector3 camPos)
+		public void DrawPortals(GraphicsDevice g, Effect fx, Vector3 camPos)
 		{
-			mRoot.DrawPortalsDumb(g, camPos);
+			mRoot.DrawPortalsDumb(g, fx, camPos);
 		}
 
 

@@ -39,13 +39,13 @@ namespace BuildMap
         private List<Vector3>   mPoints;
 		public	bool			mbVisible;
 		public	UInt32			mFlags;
-		private	UInt32[]		mLightMap;
+		private	Texture2D		mLightMap;
 
         //for drawrings
-        private VertexBuffer					mVertBuffer;
-        private VertexPositionNormalTexture[]   mPosColor;
-        private short[]							mIndexs;
-        private IndexBuffer						mIndexBuffer;
+        private VertexBuffer			mVertBuffer;
+        private VertexPositionTexture[]	mPosColor;
+        private short[]					mIndexs;
+        private IndexBuffer				mIndexBuffer;
 
 
         public Plane GetPlane()
@@ -119,15 +119,20 @@ namespace BuildMap
 
             //triangulate the brush face points
 //            mPosColor = new VertexPositionColor[3 + ((mPoints.Count - 3) * 3)];
-            mPosColor = new VertexPositionNormalTexture[mPoints.Count];
-            mIndexs = new short[(3 + ((mPoints.Count - 3) * 3))];
-            mIndexBuffer =new IndexBuffer(g, 2 * (3 + ((mPoints.Count - 3) * 3)),
+            mPosColor	=new VertexPositionTexture[mPoints.Count];
+            mIndexs		=new short[(3 + ((mPoints.Count - 3) * 3))];
+            mIndexBuffer=new IndexBuffer(g, 2 * (3 + ((mPoints.Count - 3) * 3)),
                 BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
+
+			List<Vector2>	tcrds;
+
+			GetTexCoords(out tcrds);
 
             foreach (Vector3 pos in mPoints)
             {
-                mPosColor[i].Position = pos;
-                mPosColor[i++].Normal = mFacePlane.Normal;
+                mPosColor[i].Position			=pos;
+				mPosColor[i].TextureCoordinate=tcrds[i];
+				i++;
             }
 
             for(i = 1;i < mPoints.Count - 1;i++)
@@ -141,15 +146,15 @@ namespace BuildMap
             mIndexBuffer.SetData<short>(mIndexs, 0, mIndexs.Length);
 
             mVertBuffer = new VertexBuffer(g,
-                VertexPositionNormalTexture.SizeInBytes * (mPosColor.Length),
+                VertexPositionTexture.SizeInBytes * (mPosColor.Length),
                 BufferUsage.None);
 
             // Set the vertex buffer data to the array of vertices.
-            mVertBuffer.SetData<VertexPositionNormalTexture>(mPosColor);
+            mVertBuffer.SetData<VertexPositionTexture>(mPosColor);
         }
 
 
-        public void Draw(GraphicsDevice g, Color c)
+        public void Draw(GraphicsDevice g, Effect fx, Color c)
         {
 			if(mPoints.Count < 3)
 			{
@@ -160,8 +165,12 @@ namespace BuildMap
             {
                 MakeVBuffer(g, c);
             }
+			if(mLightMap != null)
+			{
+				fx.Parameters["LightMap"].SetValue(mLightMap);
+			}
 
-            g.Vertices[0].SetSource(mVertBuffer, 0, VertexPositionNormalTexture.SizeInBytes);
+            g.Vertices[0].SetSource(mVertBuffer, 0, VertexPositionTexture.SizeInBytes);
             g.Indices = mIndexBuffer;
 
             //g.RenderState.PointSize = 10;
@@ -490,7 +499,68 @@ namespace BuildMap
         }
 
 
-		public	void LightFace(BspNode root, Vector3 lightPos, float lightVal, Vector3 color)
+		private	void	GetTexCoords(out List<Vector2> coords)
+		{
+			coords	=new List<Vector2>();
+
+			//figure out the face extents
+			Bounds	bnd	=new Bounds();
+
+			AddToBounds(ref bnd);
+
+			//get the top left point in the plane
+			//project maxs onto the face plane
+			float	d	=Vector3.Dot(bnd.mMaxs, mFacePlane.Normal) - mFacePlane.Dist;
+
+			Vector3	delta	=mFacePlane.Normal * d;
+
+			Vector3	maxInPlane	=bnd.mMaxs - delta;
+
+			d	=Vector3.Dot(bnd.mMins, mFacePlane.Normal) - mFacePlane.Dist;
+
+			delta	=mFacePlane.Normal * d;
+
+			Vector3	minInPlane	=bnd.mMins - delta;
+
+			//use the delta of the two in plane minmax points
+			//to generate a cross with the face's normal
+			//then add them together and normalize to get
+			//a lightmap axis.  Then cross with the normal
+			//to get the other axis
+			Vector3	deltaMinMax	=maxInPlane - minInPlane;
+
+			Vector3	deltaMinMaxUnit	=deltaMinMax;
+			deltaMinMaxUnit.Normalize();
+
+			Vector3 YAxis	=Vector3.Cross(deltaMinMaxUnit, mFacePlane.Normal);
+			YAxis.Normalize();
+			YAxis	+=deltaMinMaxUnit;
+			YAxis.Normalize();
+
+			Vector3 XAxis	=Vector3.Cross(YAxis, mFacePlane.Normal);
+			XAxis.Normalize();
+
+			Vector3	maxAtOrg	=maxInPlane - minInPlane;
+
+			float	xratio	=Vector3.Dot(maxInPlane, XAxis) / Vector3.Dot(minInPlane, XAxis);
+			float	yratio	=Vector3.Dot(maxInPlane, YAxis) / Vector3.Dot(minInPlane, YAxis);
+
+			//check each point using these axis vectors
+			//to get a set of texture coordinates
+			//this is totally wrong
+			foreach(Vector3 pnt in mPoints)
+			{
+				Vector2	crd;
+				crd.X	=Vector3.Dot(pnt, XAxis) - Vector3.Dot(minInPlane, XAxis);
+				crd.Y	=Vector3.Dot(pnt, YAxis) - Vector3.Dot(minInPlane, YAxis);
+				crd.X	*=xratio;
+				crd.Y	*=yratio;
+				coords.Add(crd);
+			}
+		}
+
+
+		public	void LightFace(GraphicsDevice gd, BspNode root, Vector3 lightPos, float lightVal, Vector3 color)
 		{
 			//figure out the face extents
 			Bounds	bnd	=new Bounds();
@@ -552,9 +622,21 @@ namespace BuildMap
 			XAxis	*=8.0f;
 			YAxis	*=8.0f;
 
+			Color[]	lm	=new Color[numXPoints * numYPoints];
+
+			bool	bWasAllocated;
+
+			int	xPadded	=(int)Math.Pow(2, Math.Ceiling(Math.Log(numXPoints) / Math.Log(2)));
+			int	yPadded	=(int)Math.Pow(2, Math.Ceiling(Math.Log(numYPoints) / Math.Log(2)));
+
 			if(mLightMap == null)
 			{
-				mLightMap	=new UInt32[numXPoints * numYPoints];
+				mLightMap		=new Texture2D(gd, xPadded, yPadded, 1, TextureUsage.None, SurfaceFormat.Color);
+				bWasAllocated	=false;
+			}
+			else
+			{
+				bWasAllocated	=true;
 			}
 
 			for(int y=0;y < numYPoints;y++)
@@ -577,26 +659,85 @@ namespace BuildMap
 
 						UInt32	rB, bB, gB;
 						rB	=(UInt32)(clr.X * 255.0f);
-						bB	=(UInt32)(clr.Y * 255.0f);
-						gB	=(UInt32)(clr.Z * 255.0f);
+						gB	=(UInt32)(clr.Y * 255.0f);
+						bB	=(UInt32)(clr.Z * 255.0f);
 						if(rB > 255)
 						{
 							rB	=255;
 						}
 						if(bB > 255)
 						{
-							bB	=255;
+							gB	=255;
 						}
 						if(gB > 255)
 						{
-							gB	=255;
+							bB	=255;
 						}
-						mLightMap[(y * numXPoints) + x]	=(byte)rB;
-						mLightMap[(y * numXPoints) + x]	|=(bB << 8);
-						mLightMap[(y * numXPoints) + x]	|=(gB << 16);
-						mLightMap[(y * numXPoints) + x]	|=((UInt32)255 << 24);
+						Color	c	=new Color((byte)rB, (byte)gB, (byte)bB);
+						lm[(y * numXPoints) + x]	=c;
+//						lm[(y * numXPoints) + x]	=(byte)rB;
+//						lm[(y * numXPoints) + x]	|=(gB << 8);
+//						lm[(y * numXPoints) + x]	|=(bB << 16);
+//						lm[(y * numXPoints) + x]	|=((UInt32)255 << 24);
 					}
 				}
+			}
+
+			//put the data in the texture
+			if(bWasAllocated)
+			{
+				Color[]	existing	=new Color[xPadded * yPadded];
+
+				//grab data
+				mLightMap.GetData<Color>(existing);
+
+				for(int y=0;y < numYPoints;y++)
+				{
+					for(int x=0;x < numXPoints;x++)
+					{
+						int	r	=lm[(y * numXPoints) + x].R
+										+ existing[(y * xPadded) + x].R;
+						int	g	=lm[(y * numXPoints) + x].G
+										+ existing[(y * xPadded) + x].G;
+						int	b	=lm[(y * numXPoints) + x].B
+										+ existing[(y * xPadded) + x].B;
+						
+						if(r > 255)
+						{
+							r	=255;
+						}
+						if(g > 255)
+						{
+							g	=255;
+						}
+						if(b > 255)
+						{
+							b	=255;
+						}
+						existing[(y * xPadded) + x]	=new Color((byte)r, (byte)g, (byte)b);
+					}
+				}
+
+				//put existing back in
+				mLightMap.SetData<Color>(existing);
+			}
+			else
+			{
+				//grab data
+				Color[]	existing	=new Color[xPadded * yPadded];
+				mLightMap.GetData<Color>(existing);
+
+				//overwrite
+				for(int y=0;y < numYPoints;y++)
+				{
+					for(int x=0;x < numXPoints;x++)
+					{
+						existing[(y * xPadded) + x]	=lm[(y * numXPoints) + x];
+					}
+				}
+
+				//put existing back in
+				mLightMap.SetData<Color>(existing);
 			}
 		}
 

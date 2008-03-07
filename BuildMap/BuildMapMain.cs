@@ -19,13 +19,12 @@ namespace BuildMap
 	{
 		private GraphicsDeviceManager   graphics;
 		private SpriteBatch             spriteBatch;
-		private string                  szMapFileName;
 		private Map                     mMap;
 		private Matrix                  mWorldMatrix;
 		private Matrix                  mViewMatrix;
 		private Matrix                  mViewTranspose;
 		private Matrix                  mProjectionMatrix;
-		private BasicEffect             mMapEffect;
+		private Effect					mMapEffect;
 		private BasicEffect             mDotEffect;
 		private BasicEffect             mPortalEffect;
 		private VertexDeclaration       mVertexDeclaration;
@@ -38,6 +37,8 @@ namespace BuildMap
 		private	bool					mbDrawBsp;
 		private	bool					mbDrawBrushes;
 		private	bool					mbDrawPortals;
+		private	bool					mbTextureEnabled;
+		private	string					mMapFileName;
 		
 		//cam / player stuff will move later
 		private Vector3 mCamPos, mDotPos;
@@ -63,16 +64,11 @@ namespace BuildMap
 			}
 			
 			//arg zero should be the map name
-			szMapFileName   =args[0];
+			mMapFileName   =args[0];
 			for (int i = 0; i < args.GetLength(0); i++)
 			{
 				Debug.WriteLine(args[i]);
 			}
-			mMap	=new Map(szMapFileName);
-			mMap.RemoveOverlap();
-			mMap.BuildTree();
-			mMap.BuildPortals();
-			mMap.LightAllBrushes();
 		}
 
 		/// <summary>
@@ -88,10 +84,11 @@ namespace BuildMap
 			InitializeEffect();
 			InitializeTransform();
 
-			mbDrawBsp		=true;
+			mbDrawBsp		=false;
 			mbDrawDot		=false;
-			mbDrawBrushes	=false;
+			mbDrawBrushes	=true;
 			mbDrawPortals	=false;
+			mbTextureEnabled=false;
 
 			base.Initialize();
 		}
@@ -105,6 +102,13 @@ namespace BuildMap
 			// Create a new SpriteBatch, which can be used to draw textures.
 			spriteBatch = new SpriteBatch(GraphicsDevice);
 
+			mMapEffect	=Content.Load<Effect>("LightMap");
+
+			mMap	=new Map(mMapFileName);
+			mMap.RemoveOverlap();
+			mMap.BuildTree();
+			mMap.BuildPortals();
+			mMap.LightAllBrushes(graphics.GraphicsDevice);
 			// TODO: use this.Content to load your game content here
 		}
 
@@ -151,25 +155,20 @@ namespace BuildMap
 			mDotEffect.World = mWorldMatrix;
 			mDotEffect.View = mViewMatrix;
 			mDotEffect.Projection = mProjectionMatrix;
-			mMapEffect.World = mWorldMatrix;
-			mMapEffect.View = mViewMatrix;
-			mMapEffect.Projection = mProjectionMatrix;
 			mPortalEffect.World = mWorldMatrix;
 			mPortalEffect.View = mViewMatrix;
 			mPortalEffect.Projection = mProjectionMatrix;
+
+			UpdateLightMapEffect();
 
 			mMapEffect.Begin();
 			foreach(EffectPass pass in mMapEffect.CurrentTechnique.Passes)
 			{
 				pass.Begin();
 
-				if(mbDrawBsp)
-				{
-					mMap.Draw(graphics.GraphicsDevice, mCamPos);
-				}
 				if(mbDrawBrushes)
 				{
-					mMap.Draw(graphics.GraphicsDevice);
+					mMap.Draw(graphics.GraphicsDevice, mMapEffect);
 				}
 
 				pass.End();
@@ -220,7 +219,11 @@ namespace BuildMap
 			{
 				mPortalEffect.Begin();
 
-				mMap.DrawPortals(graphics.GraphicsDevice, mCamPos);
+				if(mbDrawBsp)
+				{
+					mMap.Draw(graphics.GraphicsDevice, mPortalEffect, mCamPos);
+				}
+				mMap.DrawPortals(graphics.GraphicsDevice, mPortalEffect, mCamPos);
 
 				mPortalEffect.End();
 			}
@@ -253,20 +256,6 @@ namespace BuildMap
 			mVertexDeclaration = new VertexDeclaration(
 				graphics.GraphicsDevice,
 				VertexPositionNormalTexture.VertexElements);
-
-			mMapEffect = new BasicEffect(graphics.GraphicsDevice, null);
-			mMapEffect.DiffuseColor = new Vector3(1.0f, 1.0f, 1.0f);
-
-			mMapEffect.World      =mWorldMatrix;
-			mMapEffect.View       =mViewMatrix;
-			mMapEffect.Projection =mProjectionMatrix;
-			mMapEffect.VertexColorEnabled = false;
-			mMapEffect.DirectionalLight0.DiffuseColor = new Vector3(1.0f, 1.0f, 1.0f);
-			mMapEffect.DirectionalLight0.Direction = Vector3.Down;
-			mMapEffect.DirectionalLight0.Enabled = true;
-			mMapEffect.DirectionalLight0.SpecularColor = new Vector3(1.0f, 1.0f, 1.0f);
-			mMapEffect.AmbientLightColor = new Vector3(0.1f, 0.1f, 0.1f);
-			mMapEffect.EnableDefaultLighting();
 
 			mDotEffect = new BasicEffect(graphics.GraphicsDevice, null);
 			mDotEffect.DiffuseColor = new Vector3(1.0f, 1.0f, 1.0f);
@@ -327,6 +316,28 @@ namespace BuildMap
 			{
 				mbDrawPortals	=!mbDrawPortals;
 			}
+		}
+
+
+		private void UpdateLightMapEffect()
+		{
+			//set all parameters
+			/*
+			mMapEffect.Parameters["colorMap"].SetValue(colorRT.GetTexture());
+			mMapEffect.Parameters["normalMap"].SetValue(normalRT.GetTexture());
+			mMapEffect.Parameters["depthMap"].SetValue(depthRT.GetTexture());
+			mMapEffect.Parameters["lightDirection"].SetValue(lightDirection);
+			mMapEffect.Parameters["Color"].SetValue(color.ToVector3());
+			mMapEffect.Parameters["cameraPosition"].SetValue(camera.Position);
+			mMapEffect.Parameters["InvertViewProjection"].SetValue(
+				Matrix.Invert(camera.View * camera.Projection));
+			mMapEffect.Parameters["halfPixel"].SetValue(halfPixel);
+			*/
+
+			mMapEffect.Parameters["World"].SetValue(mWorldMatrix);
+			mMapEffect.Parameters["View"].SetValue(mViewMatrix);
+			mMapEffect.Parameters["Projection"].SetValue(mProjectionMatrix);
+			mMapEffect.Parameters["TextureEnabled"].SetValue(mbTextureEnabled);
 		}
 
 

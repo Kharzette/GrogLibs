@@ -211,26 +211,26 @@ namespace BuildMap
 		}
 
 
-		public void DrawPortalsDumb(GraphicsDevice g, Vector3 camPos)
+		public void DrawPortalsDumb(GraphicsDevice g, Effect fx, Vector3 camPos)
 		{
 			if(mFront != null)
 			{
-				mFront.Draw(g, camPos);
+				mFront.Draw(g, fx, camPos);
 			}
 
 			if(mPortal != null)
 			{
-				mPortal.Draw(g, Color.CadetBlue);
+				mPortal.Draw(g, fx, Color.CadetBlue);
 			}
 
 			if(mBack != null)
 			{
-				mBack.Draw(g, camPos);
+				mBack.Draw(g, fx, camPos);
 			}
 		}
 
 
-		public	void DrawPortals(GraphicsDevice g, Vector3 camPos)
+		public	void DrawPortals(GraphicsDevice g, Effect fx, Vector3 camPos)
 		{
 			if(mbLeaf)
 			{
@@ -242,51 +242,51 @@ namespace BuildMap
 			{
 				if(mFront != null)
 				{
-					mFront.Draw(g, camPos);
+					mFront.Draw(g, fx, camPos);
 				}
 
 				if(mPortal != null)
 				{
-					mPortal.Draw(g, Color.CadetBlue);
+					mPortal.Draw(g, fx, Color.CadetBlue);
 				}
 
 				if(mBack != null)
 				{
-					mBack.Draw(g, camPos);
+					mBack.Draw(g, fx, camPos);
 				}
 			}
 			else if(d < 0.0f)
 			{
 				if(mBack != null)
 				{
-					mBack.Draw(g, camPos);
+					mBack.Draw(g, fx, camPos);
 				}
 
 				if(mPortal != null)
 				{
-					mPortal.Draw(g, Color.CadetBlue);
+					mPortal.Draw(g, fx, Color.CadetBlue);
 				}
 
 				if(mFront != null)
 				{
-					mFront.Draw(g, camPos);
+					mFront.Draw(g, fx, camPos);
 				}
 			}
 			else
 			{
 				if(mFront != null)
 				{
-					mFront.Draw(g, camPos);
+					mFront.Draw(g, fx, camPos);
 				}
 
 				if(mPortal != null)
 				{
-					mPortal.Draw(g, Color.CadetBlue);
+					mPortal.Draw(g, fx, Color.CadetBlue);
 				}
 
 				if(mBack != null)
 				{
-					mBack.Draw(g, camPos);
+					mBack.Draw(g, fx, camPos);
 				}
 			}
 		}
@@ -472,7 +472,7 @@ namespace BuildMap
 
 
 		//something is hozed so just drawing all nodes
-		public void Draw(GraphicsDevice g, Vector3 camPos)
+		public void Draw(GraphicsDevice g, Effect fx, Vector3 camPos)
 		{
 			if(mbLeaf)
 			{
@@ -480,7 +480,7 @@ namespace BuildMap
 				{
 					foreach(Face f in mFaces)
 					{
-						f.Draw(g, Color.AntiqueWhite);
+						f.Draw(g, fx, Color.AntiqueWhite);
 					}
 				}
 			}
@@ -490,33 +490,33 @@ namespace BuildMap
 			{
 				if(mFront != null)
 				{
-					mFront.Draw(g, camPos);
+					mFront.Draw(g, fx, camPos);
 				}
 				if(mBack != null)
 				{
-					mBack.Draw(g, camPos);
+					mBack.Draw(g, fx, camPos);
 				}
 			}
 			else if(d < 0.0f)
 			{
 				if(mBack != null)
 				{
-					mBack.Draw(g, camPos);
+					mBack.Draw(g, fx, camPos);
 				}
 				if(mFront != null)
 				{
-					mFront.Draw(g, camPos);
+					mFront.Draw(g, fx, camPos);
 				}
 			}
 			else
 			{
 				if(mFront != null)
 				{
-					mFront.Draw(g, camPos);
+					mFront.Draw(g, fx, camPos);
 				}
 				if(mBack != null)
 				{
-					mBack.Draw(g, camPos);
+					mBack.Draw(g, fx, camPos);
 				}
 			}
 		}

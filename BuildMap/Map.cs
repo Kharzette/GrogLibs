@@ -192,19 +192,19 @@ namespace BuildMap
         }
 
 
-		public void Draw(GraphicsDevice g, Vector3 camPos)
+		public void Draw(GraphicsDevice g, Effect fx, Vector3 camPos)
 		{
-			mTree.Draw(g, camPos);
+			mTree.Draw(g, fx, camPos);
 		}
 
 
-        public void Draw(GraphicsDevice g)
+        public void Draw(GraphicsDevice g, Effect fx)
         {
 			foreach(Entity e in mEntities)
 			{
 				foreach(Brush b in e.mBrushes)
 				{
-					b.Draw(g);
+					b.Draw(g, fx);
 				}
 			}
         }
@@ -229,16 +229,16 @@ namespace BuildMap
 		}
 
 
-		private	void LightBrushes(List<Brush> bl, Vector3 lightPos, float lightVal, Vector3 color)
+		private	void LightBrushes(GraphicsDevice g, List<Brush> bl, Vector3 lightPos, float lightVal, Vector3 color)
 		{
 			foreach(Brush b in bl)
 			{
-				b.LightBrush(mTree.GetRoot(), lightPos, lightVal, color);
+				b.LightBrush(g, mTree.GetRoot(), lightPos, lightVal, color);
 			}
 		}
 
 
-		public void LightAllBrushes()
+		public void LightAllBrushes(GraphicsDevice g)
 		{
 			//find worldspawn brush list
 			Entity	wse	=GetWorldSpawnEntity();
@@ -258,7 +258,7 @@ namespace BuildMap
 						continue;
 					}
 					e.GetColor(out clr);
-					LightBrushes(wse.mBrushes, lightPos, lightVal, clr);
+					LightBrushes(g, wse.mBrushes, lightPos, lightVal, clr);
 				}
 			}
 		}
@@ -270,9 +270,9 @@ namespace BuildMap
 		}
 
 
-		public void DrawPortals(GraphicsDevice g, Vector3 camPos)
+		public void DrawPortals(GraphicsDevice g, Effect fx, Vector3 camPos)
 		{
-			mTree.DrawPortals(g, camPos);
+			mTree.DrawPortals(g, fx, camPos);
 		}
 
 

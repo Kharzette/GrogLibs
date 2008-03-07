@@ -33,7 +33,7 @@ namespace BuildMap
         }
 
 
-        public void Draw(GraphicsDevice g)
+        public void Draw(GraphicsDevice g, Effect fx)
         {
             //generate a random color
             Random rnd = new Random();
@@ -44,7 +44,7 @@ namespace BuildMap
 
             foreach (Face f in mFaces)
             {
-                f.Draw(g, randColor);
+                f.Draw(g, fx, randColor);
             }
         }
 
@@ -233,11 +233,11 @@ namespace BuildMap
         }
 
 
-		public void LightBrush(BspNode root, Vector3 lightPos, float lightVal, Vector3 color)
+		public void LightBrush(GraphicsDevice g, BspNode root, Vector3 lightPos, float lightVal, Vector3 color)
 		{
 			foreach(Face f in mFaces)
 			{
-				f.LightFace(root, lightPos, lightVal, color);
+				f.LightFace(g, root, lightPos, lightVal, color);
 			}
 		}
 
