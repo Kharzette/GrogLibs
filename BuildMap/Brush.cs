@@ -33,6 +33,15 @@ namespace BuildMap
         }
 
 
+		public void GetThriceLightmaps(out List<Texture2D> list)
+		{
+			list	=new List<Texture2D>();
+			list.Add(mFaces[0].GetLightMap());
+			list.Add(mFaces[1].GetLightMap());
+			list.Add(mFaces[2].GetLightMap());
+		}
+
+
         public void Draw(GraphicsDevice g, Effect fx)
         {
             //generate a random color
@@ -42,10 +51,10 @@ namespace BuildMap
                             Convert.ToByte(rnd.Next(255)),
                             Convert.ToByte(rnd.Next(255)));
 
-            foreach (Face f in mFaces)
-            {
-                f.Draw(g, fx, randColor);
-            }
+			foreach (Face f in mFaces)
+			{
+				f.Draw(g, fx, randColor);
+			}
         }
 
 
@@ -111,7 +120,7 @@ namespace BuildMap
 				{
 					Brush bf, bb;
 
-					b2.SplitBrush(p, out bf, out bb);
+					b2.SplitBrush(f, out bf, out bb);
 
 					if(bb != null)
 					{
@@ -165,7 +174,7 @@ namespace BuildMap
 				{
 					Brush bf, bb;
 
-					b.SplitBrush(p, out bf, out bb);
+					b.SplitBrush(f, out bf, out bb);
 
 					if(bb != null)
 					{
@@ -237,7 +246,7 @@ namespace BuildMap
 		{
 			foreach(Face f in mFaces)
 			{
-				f.LightFace(g, root, lightPos, lightVal, color);
+				f.LightFace(g, root, lightPos, lightVal);//, color);
 			}
 		}
 
@@ -255,7 +264,7 @@ namespace BuildMap
 
             foreach(Face f2 in b.mFaces)
             {
-                inside.SplitBrush(f2.GetPlane(), out bf, out bb);
+                inside.SplitBrush(f2, out bf, out bb);
 
                 if(bf != null && bf.IsValid())
                 {
@@ -283,7 +292,7 @@ RESTART2:
             //check that faces are valid
             foreach(Face f in mFaces)
             {
-                if (!f.IsValid())
+                if (!f.IsValid() || f.IsTiny())
                 {
                     mFaces.Remove(f);
                     goto RESTART2;
@@ -352,9 +361,10 @@ RESTART:
 		}
 
 
-        public void SplitBrush(Plane p, out Brush bf, out Brush bb)
+        public void SplitBrush(Face splitBy, out Brush bf, out Brush bb)
         {
             float   fDist, bDist;
+			Plane	p	=splitBy.GetPlane();
 
             fDist = bDist = 0.0f;
 
@@ -378,7 +388,7 @@ RESTART:
             }
 
             //create a split face
-            Face splitFace = new Face(p);
+            Face splitFace = new Face(p, splitBy);
 
             //clip against all brush faces
             foreach(Face f in mFaces)

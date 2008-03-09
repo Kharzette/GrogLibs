@@ -13,6 +13,130 @@ namespace BuildMap
         public float	Dist;
     }
 
+	class LightInfo
+	{
+		public	Vector3	mTexOrg;
+		public	Vector3	mWorldToTexS, mWorldToTexT;
+		public	Vector3	mTexToWorldS, mTexToWorldT;
+		public	float	mExactMinS, mExactMinT;
+		public	float	mExactMaxS, mExactMaxT;
+		public	int		mTexMinS, mTexMinT;
+		public	int		mTexSizeS, mTexSizeT;
+
+		//lightmap points in 3space
+		public	Vector3[]	mSurface;
+		public	int			mNumSurfacePoints;
+
+		//actual lightmap points
+		public	float[]		mSamples;
+
+
+		public	void CalcFaceVectors(Plane p, TexInfo t)
+		{
+			mWorldToTexS.X	=t.mTexS.X;
+			mWorldToTexS.Y	=t.mTexS.Y;
+			mWorldToTexS.Z	=t.mTexS.Z;
+			mWorldToTexT.X	=t.mTexT.X;
+			mWorldToTexT.Y	=t.mTexT.Y;
+			mWorldToTexT.Z	=t.mTexT.Z;
+
+			Vector3	texNormal	=Vector3.Cross(mWorldToTexS, mWorldToTexT);
+			texNormal.Normalize();
+
+			Debug.Assert(!float.IsNaN(texNormal.X));
+
+			float	d	=Vector3.Dot(texNormal, p.Normal);
+			Debug.Assert(d != 0.0f);
+			if(d < 0.0f)
+			{
+				d			=-d;
+				texNormal	=-texNormal;
+			}
+
+			d	=1.0f / d;
+
+			float	len	=mWorldToTexS.Length();
+			float	d2	=Vector3.Dot(mWorldToTexS, p.Normal);
+			d2	*=d;
+			mTexToWorldS	=mWorldToTexS + (texNormal * -d2);
+			mTexToWorldS	*=((1.0f / len) * (1.0f / len));
+			Debug.Assert(!float.IsNaN(mTexToWorldS.X));
+
+			len	=mWorldToTexT.Length();
+			d2	=Vector3.Dot(mWorldToTexT, p.Normal);
+			d2	*=d;
+			mTexToWorldT	=mWorldToTexT + (texNormal * -d2);
+			mTexToWorldT	*=((1.0f / len) * (1.0f / len));
+
+			mTexOrg.X	=-t.mTexS.Z * mTexToWorldS.X -
+							t.mTexT.Z * mTexToWorldT.X;
+			mTexOrg.Y	=-t.mTexS.Z * mTexToWorldS.Y -
+							t.mTexT.Z * mTexToWorldT.Y;
+			mTexOrg.Z	=-t.mTexS.Z * mTexToWorldS.Z -
+							t.mTexT.Z * mTexToWorldT.Z;
+
+			d2	=Vector3.Dot(mTexOrg, p.Normal) - p.Dist - 1.0f;
+			d2	*=d;
+			mTexOrg	=mTexOrg + (p.Normal * -d2);
+		}
+
+
+		public	void CalcFaceExtents(List<Vector3> pnts, TexInfo t)
+		{
+			//figure out the face extents
+			float	mins, mint, maxs, maxt;
+
+			mins	=mint	=Bounds.MIN_MAX_BOUNDS;
+			maxs	=maxt	=-Bounds.MIN_MAX_BOUNDS;
+
+			foreach(Vector3 pnt in pnts)
+			{
+				float	val;
+
+				//can't interchange vec4s and vec3s
+				//asspain
+				val	=pnt.X * t.mTexS.X + pnt.Y * t.mTexS.Y +
+						pnt.Z * t.mTexS.Z +	t.mTexS.W;
+
+				if(val < mins)
+				{
+					mins	=val;
+				}
+				if(val > maxs)
+				{
+					maxs	=val;
+				}
+
+				val	=pnt.X * t.mTexT.X + pnt.Y * t.mTexT.Y +
+						pnt.Z * t.mTexT.Z +	t.mTexT.W;
+
+				if(val < mint)
+				{
+					mint	=val;
+				}
+				if(val > maxt)
+				{
+					maxt	=val;
+				}
+			}
+
+			mExactMinS	=mins;
+			mExactMaxS	=maxs;
+			mExactMinT	=mint;
+			mExactMaxT	=maxt;
+
+			mins	=(float)Math.Floor(mins / 8.0f);
+			maxs	=(float)Math.Ceiling(maxs / 8.0f);
+			mint	=(float)Math.Floor(mint / 8.0f);
+			maxt	=(float)Math.Ceiling(maxt / 8.0f);
+
+			mTexMinS	=(int)mins;
+			mTexMinT	=(int)mint;
+			mTexSizeS	=(int)(maxs - mins);
+			mTexSizeT	=(int)(maxt - mint);
+		}
+	}
+
     struct TexInfoVectors
     {
 	    public float    uScale, vScale;
@@ -21,10 +145,13 @@ namespace BuildMap
 
     struct TexInfo
     {
+		public const UInt32		TEX_SPECIAL	=1;
         public Vector3          mNormal;
         public TexInfoVectors   mTexVecs;
         public float            mRotationAngle;
         public string           mTexName;   //temporary
+		public Vector4			mTexS, mTexT;
+		public UInt32			mFlags;
 
         //need a texture reference here
     }
@@ -33,6 +160,12 @@ namespace BuildMap
     {
         private const float ON_EPSILON	=0.1f;
         private const float EDGE_LENGTH	=0.1f;
+        private const float SCALECOS	=0.5f;
+        private const float RANGESCALE	=0.5f;
+
+		//a bunch of vectors for finding the best
+		//axial vec for texturing / lighting
+		private static Vector3[]	mBaseAxis;
 
         private Plane           mFacePlane;
         private TexInfo         mTexInfo;
@@ -40,6 +173,7 @@ namespace BuildMap
 		public	bool			mbVisible;
 		public	UInt32			mFlags;
 		private	Texture2D		mLightMap;
+		private	LightInfo		mLightInfo;
 
         //for drawrings
         private VertexBuffer			mVertBuffer;
@@ -48,34 +182,70 @@ namespace BuildMap
         private IndexBuffer				mIndexBuffer;
 
 
-        public Plane GetPlane()
-        {
-            return  mFacePlane;
-        }
+		//init the axis stuff
+		public static void SetUpBaseAxis()
+		{
+			mBaseAxis		=new Vector3[18];
+			mBaseAxis[0]	=Vector3.Backward;
+			mBaseAxis[1]	=Vector3.Right;
+			mBaseAxis[2]	=Vector3.Down;
 
+			mBaseAxis[3]	=Vector3.Forward;
+			mBaseAxis[4]	=Vector3.Right;
+			mBaseAxis[5]	=Vector3.Down;
 
-        public Face(List<Vector3> pnts)
-        {
-            mPoints = new List<Vector3>();
-            mPoints = pnts;
+			mBaseAxis[6]	=Vector3.Right;
+			mBaseAxis[7]	=Vector3.Up;
+			mBaseAxis[8]	=Vector3.Forward;
 
-            if(SetPlaneFromFace())
-            {
-                //init texinfo, set dibid, set texture pos
-            }
-            else
-            {
-                Debug.WriteLine("assgoblinry?");
-            }
-        }
+			mBaseAxis[9]	=Vector3.Left;
+			mBaseAxis[10]	=Vector3.Up;
+			mBaseAxis[11]	=Vector3.Forward;
 
+			mBaseAxis[12]	=Vector3.Up;
+			mBaseAxis[13]	=Vector3.Right;
+			mBaseAxis[14]	=Vector3.Forward;
 
-        public Face(Plane p)
-        {
-            mPoints = new List<Vector3>();
-            SetFaceFromPlane(p, Bounds.MIN_MAX_BOUNDS);
+			mBaseAxis[15]	=Vector3.Down;
+			mBaseAxis[16]	=Vector3.Right;
+			mBaseAxis[17]	=Vector3.Forward;
+		}
+		
+		
+		public Plane GetPlane()
+		{
+			return	mFacePlane;
+		}
+		
+		
+		public Face(List<Vector3> pnts)
+		{
+			mPoints	=new List<Vector3>();
+			mPoints	=pnts;
+			
+			if(SetPlaneFromFace())
+			{
+				//init texinfo, set dibid, set texture pos
+			}
+			else
+			{
+				Debug.WriteLine("assgoblinry?");
+			}
+		}
+		
+		
+		public Face(Plane p, Face f)
+		{
+			mPoints	=new List<Vector3>();
+			SetFaceFromPlane(p, Bounds.MIN_MAX_BOUNDS);
 			mFacePlane	=p;
-        }
+
+			if(f != null)
+			{
+				mTexInfo	=f.mTexInfo;
+				mFlags		=f.mFlags;
+			}
+		}
 
 
         public Face(Face f)
@@ -87,7 +257,9 @@ namespace BuildMap
                 mPoints.Add(pnt);
             }
 
-            mFacePlane = f.mFacePlane;
+            mFacePlane	=f.mFacePlane;
+			mTexInfo	=f.mTexInfo;
+			mFlags		=f.mFlags;
         }
 
 
@@ -100,7 +272,9 @@ namespace BuildMap
                 mPoints.Add(pnt);
             }
 
-            mFacePlane = f.mFacePlane;
+            mFacePlane	=f.mFacePlane;
+			mTexInfo	=f.mTexInfo;
+			mFlags		=f.mFlags;
 
             if(bInvert)
             {
@@ -116,9 +290,7 @@ namespace BuildMap
             int i = 0;
             int j = 0;
 
-
             //triangulate the brush face points
-//            mPosColor = new VertexPositionColor[3 + ((mPoints.Count - 3) * 3)];
             mPosColor	=new VertexPositionTexture[mPoints.Count];
             mIndexs		=new short[(3 + ((mPoints.Count - 3) * 3))];
             mIndexBuffer=new IndexBuffer(g, 2 * (3 + ((mPoints.Count - 3) * 3)),
@@ -131,7 +303,7 @@ namespace BuildMap
             foreach (Vector3 pos in mPoints)
             {
                 mPosColor[i].Position			=pos;
-				mPosColor[i].TextureCoordinate=tcrds[i];
+				mPosColor[i].TextureCoordinate	=tcrds[i];
 				i++;
             }
 
@@ -156,7 +328,7 @@ namespace BuildMap
 
         public void Draw(GraphicsDevice g, Effect fx, Color c)
         {
-			if(mPoints.Count < 3)
+			if(mPoints.Count < 3 || IsTiny())
 			{
 				return;
 			}
@@ -166,8 +338,15 @@ namespace BuildMap
                 MakeVBuffer(g, c);
             }
 			if(mLightMap != null)
-			{
+			{				
 				fx.Parameters["LightMap"].SetValue(mLightMap);
+				fx.Parameters["LightMapEnabled"].SetValue(true);
+				fx.CommitChanges();
+			}
+			else
+			{
+				fx.Parameters["LightMapEnabled"].SetValue(false);
+				fx.CommitChanges();
 			}
 
             g.Vertices[0].SetSource(mVertBuffer, 0, VertexPositionTexture.SizeInBytes);
@@ -183,6 +362,70 @@ namespace BuildMap
                 mIndexs.Length/3    // number of primitives
             );
         }
+
+
+		bool	GetTextureAxis(out Vector3 xv, out Vector3 yv)
+		{
+			int		bestaxis;
+			float	dot, best;
+			int		i;
+			
+			best		=0;
+			bestaxis	=0;
+			
+			for(i=0 ; i<3 ; i++)
+			{
+				dot	=(float)Math.Abs(VecIdx(mFacePlane.Normal, i));
+				if(dot > best)
+				{
+					best		=dot;
+					bestaxis	=i;
+				}
+			}
+
+			switch(bestaxis)
+			{
+				case 0:						// X
+					xv.X	=0.0f;
+					xv.Y	=0.0f;
+					xv.Z	=1.0f;
+
+					yv.X	=0.0f;
+					yv.Y	=-1.0f;
+					yv.Z	=0.0f;
+					break;
+				case 1:						// Y
+					xv.X	=1.0f;
+					xv.Y	=0.0f;
+					xv.Z	=0.0f;
+
+					yv.X	=0.0f;
+					yv.Y	=0.0f;
+					yv.Z	=1.0f;
+					break;
+				case 2:						// Z
+					xv.X	=1.0f;
+					xv.Y	=0.0f;
+					xv.Z	=0.0f;
+
+					yv.X	=0.0f;
+					yv.Y	=-1.0f;
+					yv.Z	=0.0f;
+					break;
+				default:
+					xv.X	=0.0f;
+					xv.Y	=0.0f;
+					xv.Z	=1.0f;
+
+					yv.X	=0.0f;
+					yv.Y	=-1.0f;
+					yv.Z	=0.0f;
+					Debug.WriteLine("TextureAxisFromPlane: No Axis found.");
+					return false;
+			}
+
+			return	true;
+		}
 
 
         public void Expand()
@@ -279,7 +522,13 @@ namespace BuildMap
                 }
 
                 //grab tex name if avail
-                if(char.IsLetter(tok, 0))
+				if(tok[0] == '*')
+				{
+					mTexInfo.mFlags	|=TexInfo.TEX_SPECIAL;
+					mTexInfo.mTexName	=tok;
+					continue;
+				}
+                else if(char.IsLetter(tok, 0))
                 {
                     mTexInfo.mTexName = tok;
                     continue;
@@ -310,7 +559,120 @@ namespace BuildMap
             mTexInfo.mTexVecs.vScale    =numbers[13];
 
             SetPlaneFromFace();
+
+			//do quake style texture axis stuff
+			Vector3	vecs, vect;
+			GetTextureAxis(out vecs, out vect);
+
+			Debug.Assert(vecs != Vector3.Zero);
+
+			if(mTexInfo.mTexVecs.uScale == 0.0f)
+			{
+				mTexInfo.mTexVecs.uScale	=1.0f;
+			}
+			if(mTexInfo.mTexVecs.vScale == 0.0f)
+			{
+				mTexInfo.mTexVecs.vScale	=1.0f;
+			}
+
+			float	ang, sinv, cosv, ns, nt;
+			int		sv, tv;
+
+			if(mTexInfo.mRotationAngle == 0)
+				{ sinv = 0 ; cosv = 1; }
+			else if(mTexInfo.mRotationAngle == 90)
+				{ sinv = 1 ; cosv = 0; }
+			else if(mTexInfo.mRotationAngle == 180)
+				{ sinv = 0 ; cosv = -1; }
+			else if(mTexInfo.mRotationAngle == 270)
+				{ sinv = -1 ; cosv = 0; }
+			else
+			{	
+				ang = mTexInfo.mRotationAngle / 180.0f * (float)Math.PI;
+				sinv = (float)Math.Sin(ang);
+				cosv = (float)Math.Cos(ang);
+			}
+		
+			if(vecs.X != 0.0f)
+			{
+				sv = 0;
+			}
+			else if(vecs.Y != 0.0f)
+			{
+				sv = 1;
+			}
+			else
+			{
+				sv = 2;
+			}
+			if(vect.X != 0.0f)
+			{
+				tv = 0;
+			}
+			else if(vect.Y != 0.0f)
+			{
+				tv = 1;
+			}
+			else
+			{
+				tv = 2;
+			}
+
+			ns	=cosv * VecIdx(vecs, sv) - sinv * VecIdx(vecs, tv);
+			nt	=sinv * VecIdx(vecs, sv) + cosv * VecIdx(vecs, tv);
+			VecIdxAssign(ref vecs, sv, ns);
+			VecIdxAssign(ref vecs, tv, nt);
+						
+			ns	=cosv * VecIdx(vect, sv) - sinv * VecIdx(vect, tv);
+			nt	=sinv * VecIdx(vect, sv) + cosv * VecIdx(vect, tv);
+			VecIdxAssign(ref vect, sv, ns);
+			VecIdxAssign(ref vect, tv, nt);
+
+			vecs	=vecs * (1.0f / mTexInfo.mTexVecs.uScale);
+			vect	=vect * (1.0f / mTexInfo.mTexVecs.vScale);
+			Debug.Assert(vecs != Vector3.Zero);
+
+			mTexInfo.mTexS.X	=vecs.X;
+			mTexInfo.mTexS.Y	=vecs.Y;
+			mTexInfo.mTexS.Z	=vecs.Z;
+			mTexInfo.mTexT.X	=vect.X;
+			mTexInfo.mTexT.Y	=vect.Y;
+			mTexInfo.mTexT.Z	=vect.Z;
+						
+			mTexInfo.mTexS.W	=mTexInfo.mTexVecs.uOffset;
+			mTexInfo.mTexT.W	=mTexInfo.mTexVecs.vOffset;
         }
+
+
+		private	static float VecIdx(Vector3 v, int idx)
+		{
+			if(idx == 0)
+			{
+				return	v.X;
+			}
+			else if(idx == 1)
+			{
+				return	v.Y;
+			}
+			return	v.Z;
+		}
+
+
+		private	static void VecIdxAssign(ref Vector3 v, int idx, float val)
+		{
+			if(idx == 0)
+			{
+				v.X	=val;
+			}
+			else if(idx == 1)
+			{
+				v.Y	=val;
+			}
+			else
+			{
+				v.Z	=val;
+			}
+		}
 
 
         public void GetFaceMinMaxDistancesFromPlane(Plane p, ref float front, ref float back)
@@ -503,113 +865,449 @@ namespace BuildMap
 		{
 			coords	=new List<Vector2>();
 
-			//figure out the face extents
-			Bounds	bnd	=new Bounds();
+			Vector3	XAxis, YAxis, maxInPlane, minInPlane, topLeft;
 
-			AddToBounds(ref bnd);
+			MakeLightMapAxisVectors(out XAxis, out YAxis,
+				out maxInPlane, out minInPlane, out topLeft);
 
-			//get the top left point in the plane
-			//project maxs onto the face plane
-			float	d	=Vector3.Dot(bnd.mMaxs, mFacePlane.Normal) - mFacePlane.Dist;
-
-			Vector3	delta	=mFacePlane.Normal * d;
-
-			Vector3	maxInPlane	=bnd.mMaxs - delta;
-
-			d	=Vector3.Dot(bnd.mMins, mFacePlane.Normal) - mFacePlane.Dist;
-
-			delta	=mFacePlane.Normal * d;
-
-			Vector3	minInPlane	=bnd.mMins - delta;
-
-			//use the delta of the two in plane minmax points
-			//to generate a cross with the face's normal
-			//then add them together and normalize to get
-			//a lightmap axis.  Then cross with the normal
-			//to get the other axis
-			Vector3	deltaMinMax	=maxInPlane - minInPlane;
-
+			Vector3	deltaMinMax		=maxInPlane - minInPlane;
 			Vector3	deltaMinMaxUnit	=deltaMinMax;
 			deltaMinMaxUnit.Normalize();
 
-			Vector3 YAxis	=Vector3.Cross(deltaMinMaxUnit, mFacePlane.Normal);
-			YAxis.Normalize();
-			YAxis	+=deltaMinMaxUnit;
-			YAxis.Normalize();
+			Vector3	maxOrg	=maxInPlane - minInPlane;
 
-			Vector3 XAxis	=Vector3.Cross(YAxis, mFacePlane.Normal);
-			XAxis.Normalize();
+			//project max at origin back onto the plane
+			float	d		=Vector3.Dot(maxOrg, mFacePlane.Normal) - mFacePlane.Dist;
+			Vector3	delta	=mFacePlane.Normal * d;
+			maxOrg			-=delta;
 
-			Vector3	maxAtOrg	=maxInPlane - minInPlane;
+			float	xratio	=Vector3.Dot(maxOrg, XAxis);
+			float	yratio	=Vector3.Dot(maxOrg, YAxis);
 
-			float	xratio	=Vector3.Dot(maxInPlane, XAxis) / Vector3.Dot(minInPlane, XAxis);
-			float	yratio	=Vector3.Dot(maxInPlane, YAxis) / Vector3.Dot(minInPlane, YAxis);
+			if(xratio == 0.0f || yratio == 0.0f)
+			{
+				//no area to min / max
+				//probably a 45 face
+				foreach(Vector3 pnt in mPoints)
+				{
+					//make a fake set
+					Vector2	blah;
+					blah.X = 0.0f;
+					blah.Y = 0.0f;
+					coords.Add(blah);
+				}
+				return;
+			}
+
+			//we also need to know how much padding is added
+			//on to the edges of the texture
+			float	XExtents	=Vector3.Dot(XAxis, deltaMinMax);
+			float	YExtents	=Vector3.Dot(YAxis, deltaMinMax);
+
+			XExtents	=Math.Abs(XExtents);
+			YExtents	=Math.Abs(YExtents);
+
+			//we'll do a light point every 8 world units
+			float	numXPoints	=(int)XExtents / 8 + 1;
+			float	numYPoints	=(int)YExtents / 8 + 1;
+			float	padRatioX;
+			float	padRatioY;
+			if(mLightMap != null)
+			{
+				padRatioX	=numXPoints / mLightMap.Width;
+				padRatioY	=numYPoints / mLightMap.Height;
+			}
+			else
+			{
+				padRatioX	=1.0f;
+				padRatioY	=1.0f;
+			}
 
 			//check each point using these axis vectors
 			//to get a set of texture coordinates
-			//this is totally wrong
 			foreach(Vector3 pnt in mPoints)
 			{
 				Vector2	crd;
-				crd.X	=Vector3.Dot(pnt, XAxis) - Vector3.Dot(minInPlane, XAxis);
-				crd.Y	=Vector3.Dot(pnt, YAxis) - Vector3.Dot(minInPlane, YAxis);
-				crd.X	*=xratio;
-				crd.Y	*=yratio;
+				Vector3	pntOrg	=pnt - minInPlane;
+				crd.X	=Vector3.Dot(pntOrg, XAxis);
+				crd.Y	=Vector3.Dot(pntOrg, YAxis);
+				crd.X	/=xratio;
+				crd.Y	/=yratio;
+
+				//Debug.Assert(crd.X >= 0.0f && crd.X <= 1.0f);
+				//Debug.Assert(crd.Y >= 0.0f && crd.Y <= 1.0f);
+
+				//flip X.  top left is 0,0
+				//crd.X	=1.0f - crd.X;
+				//crd.Y	=1.0f - crd.Y;
+				crd.X	*=padRatioX;
+				crd.Y	*=padRatioY;
 				coords.Add(crd);
 			}
 		}
 
 
-		public	void LightFace(GraphicsDevice gd, BspNode root, Vector3 lightPos, float lightVal, Vector3 color)
+		private	void MakeLightMapAxisVectors(out Vector3 XAxis,
+			out Vector3 YAxis, out Vector3 minInPlane,
+			out Vector3 maxInPlane, out Vector3 topLeft)
 		{
 			//figure out the face extents
 			Bounds	bnd	=new Bounds();
 
 			AddToBounds(ref bnd);
 
-			//get the top left point in the plane
+			//need to build a reliable set of axis vectors
+			//try a cross with straight up
+			XAxis	=Vector3.Cross(Vector3.Up, mFacePlane.Normal);
+			XAxis.Normalize();
+
+			//check for colinear
+			if(float.IsNaN(XAxis.X))
+			{
+				XAxis	=Vector3.Cross(Vector3.Forward, mFacePlane.Normal);
+				XAxis.Normalize();
+			}
+
+			//now get an up vector from this
+			YAxis	=Vector3.Cross(XAxis, mFacePlane.Normal);
+			YAxis.Normalize();
+
+			//now recross these to get a proper side
+			XAxis	=Vector3.Cross(mFacePlane.Normal, YAxis);
+			XAxis.Normalize();
+
+			//if either axis vectors are negative, make them positive
+			if(Vector3.Dot(Vector3.One, XAxis) < 0.0f)
+			{
+				XAxis	*=-1.0f;
+			}
+			if(Vector3.Dot(Vector3.One, YAxis) < 0.0f)
+			{
+				YAxis	*=-1.0f;
+			}
+
+			//get the max and min points in the plane
 			//project maxs onto the face plane
 			float	d	=Vector3.Dot(bnd.mMaxs, mFacePlane.Normal) - mFacePlane.Dist;
 
 			Vector3	delta	=mFacePlane.Normal * d;
 
-			Vector3	maxInPlane	=bnd.mMaxs - delta;
+			maxInPlane	=bnd.mMaxs - delta;
 
 			d	=Vector3.Dot(bnd.mMins, mFacePlane.Normal) - mFacePlane.Dist;
 
 			delta	=mFacePlane.Normal * d;
 
-			Vector3	minInPlane	=bnd.mMins - delta;
+			minInPlane	=bnd.mMins - delta;
 
-			//make sure the light is in range
-			if((Vector3.Distance(lightPos, minInPlane) > lightVal)
-				&&(Vector3.Distance(lightPos, maxInPlane) > lightVal))
+			//find a good starting point that represents
+			//the top left of the lightmap in 3space
+			//which should be the dots of min and max
+			//for x and y respectively
+			float	left	=Vector3.Dot(XAxis, minInPlane);
+			float	top		=Vector3.Dot(YAxis, maxInPlane);
+
+			//to get these values into 3space, scale the
+			//axis vectors by them and add them together
+			topLeft	=XAxis * left;
+			topLeft	+=YAxis * top;
+
+			//project topLeft back onto the plane
+			d		=Vector3.Dot(topLeft, mFacePlane.Normal) - mFacePlane.Dist;
+			delta	=mFacePlane.Normal * d;
+			topLeft	=topLeft - delta;
+		}
+
+
+		public Texture2D GetLightMap()
+		{
+			return	mLightMap;
+		}
+
+
+		private	void CalcPoints(BspNode root)
+		{
+			float	mids, midt;
+			Vector3	faceMid;
+			int		s, t, w, c, h, i, startS, startT, step;
+
+			mids	=(mLightInfo.mExactMaxS + mLightInfo.mExactMinS) / 2.0f;
+			midt	=(mLightInfo.mExactMaxT + mLightInfo.mExactMinT) / 2.0f;
+
+			faceMid	=mLightInfo.mTexOrg +
+						(mLightInfo.mTexToWorldS * mids) +
+						(mLightInfo.mTexToWorldT * midt);
+
+			w		=mLightInfo.mTexSizeS + 1;
+			h		=mLightInfo.mTexSizeT + 1;
+			startS	=(int)(mLightInfo.mTexMinS * 8.0f);
+			startT	=(int)(mLightInfo.mTexMinT * 8.0f);
+			step	=8;
+
+			mLightInfo.mSurface				=new Vector3[w * h];
+			mLightInfo.mNumSurfacePoints	=w * h;
+
+			for(t=c=0;t < h;t++)
+			{
+				for(s=0;s < w;s++,c++)
+				{
+					float	us	=startS + s * step;
+					float	ut	=startT + t * step;
+
+					for(i=0;i < 6;i++)
+					{
+						mLightInfo.mSurface[c]
+							=mLightInfo.mTexOrg + mLightInfo.mWorldToTexS * us
+								+mLightInfo.mTexToWorldT * ut;
+
+						bool	clear	=root.RayCastBool(faceMid, mLightInfo.mSurface[c]);
+						if(clear)
+						{
+							break;
+						}
+						if((i & 1) != 0)
+						{
+							if(us > mids)
+							{
+								us	-=4;
+								if(us < mids)
+								{
+									us	=mids;
+								}
+							}
+							else
+							{
+								us	+=4;
+								if(us > mids)
+								{
+									us	=mids;
+								}
+							}
+						}
+						else
+						{
+							if(ut > midt)
+							{
+								ut	-=4;
+								if(ut < midt)
+								{
+									ut	=midt;
+								}
+							}
+							else
+							{
+								ut	+=4;
+								if(ut > midt)
+								{
+									ut	=midt;
+								}
+							}
+						}
+
+						Vector3	move	=faceMid - mLightInfo.mSurface[c];
+						if(move == Vector3.Zero)
+						{
+							break;	//reached the midpoint
+						}
+						move.Normalize();
+						Debug.Assert(!float.IsNaN(move.X));
+						mLightInfo.mSurface[(t * w) + s]	+=(move * 4.0f);
+					}
+					Debug.Assert(!float.IsNaN(mLightInfo.mSurface[c].X));
+					Debug.Assert(!float.IsNaN(mLightInfo.mSurface[c].Y));
+					Debug.Assert(!float.IsNaN(mLightInfo.mSurface[c].Z));
+				}
+			}
+		}
+
+
+		private	void	SingleLightFace(BspNode root, Vector3 lightPos, float lightVal)
+		{
+			int		i, c;
+			float	dist	=Vector3.Dot(lightPos, mFacePlane.Normal) - mFacePlane.Dist;
+			bool	bNewSamples	=false;
+
+			if(dist <= 0.0f)
 			{
 				return;
 			}
 
-			//use the delta of the two in plane minmax points
-			//to generate a cross with the face's normal
-			//then add them together and normalize to get
-			//a lightmap axis.  Then cross with the normal
-			//to get the other axis
-			Vector3	deltaMinMax	=maxInPlane - minInPlane;
+			if(dist > lightVal)
+			{
+				return;
+			}
+			int	size	=(mLightInfo.mTexSizeT + 1) * (mLightInfo.mTexSizeS + 1);
 
-			Vector3	deltaMinMaxUnit	=deltaMinMax;
-			deltaMinMaxUnit.Normalize();
+			if(mLightInfo.mSamples == null)
+			{
+				bNewSamples			=true;
+				mLightInfo.mSamples	=new float[size];
 
-			Vector3 YAxis	=Vector3.Cross(deltaMinMaxUnit, mFacePlane.Normal);
-			YAxis.Normalize();
-			YAxis	+=deltaMinMaxUnit;
-			YAxis.Normalize();
+				for(i=0;i < size;i++)
+				{
+					mLightInfo.mSamples[i]	=0.0f;
+				}
+			}
 
-			Vector3 XAxis	=Vector3.Cross(YAxis, mFacePlane.Normal);
-			XAxis.Normalize();
+			bool	hit	=false;
+
+			for(c=0;c < mLightInfo.mNumSurfacePoints;c++)
+			{
+				if(!root.RayCastBool(lightPos, mLightInfo.mSurface[c]))
+				{
+					continue;
+				}
+
+				Vector3	incoming	=lightPos - mLightInfo.mSurface[c];
+				incoming.Normalize();
+
+				float	angle	=Vector3.Dot(incoming, mFacePlane.Normal);
+				angle	=(1.0f - SCALECOS) + SCALECOS * angle;
+				float	add	=lightVal - dist;
+
+				add	*=angle;
+				if(add < 0.0f)
+				{
+					continue;
+				}
+				mLightInfo.mSamples[c]	+=add;
+				Debug.Assert(!float.IsNaN(mLightInfo.mSamples[c]));
+				if(mLightInfo.mSamples[c] > 1.0f)
+				{
+					hit	=true;
+				}
+			}
+			
+			if(!hit && bNewSamples)
+			{
+				//trash the lightmap, too dim
+				mLightInfo.mSamples	=null;
+			}
+		}
+
+
+		public	void LightFace(GraphicsDevice gd, BspNode root,
+								Vector3 lightPos, float lightVal)
+		{
+			int	c, t, s;
+
+			if((mTexInfo.mFlags & TexInfo.TEX_SPECIAL) != 0)
+			{
+				return;
+			}
+
+			mLightInfo	=new LightInfo();
+
+			mLightInfo.CalcFaceVectors(mFacePlane, mTexInfo);
+			mLightInfo.CalcFaceExtents(mPoints, mTexInfo);
+			CalcPoints(root);
+
+			SingleLightFace(root, lightPos, lightVal);
+
+			if(mLightInfo.mSamples == null)
+			{
+				return;
+			}
+
+			int	xPadded	=(int)Math.Pow(2, Math.Ceiling(Math.Log(mLightInfo.mTexSizeS) / Math.Log(2)));
+			int	yPadded	=(int)Math.Pow(2, Math.Ceiling(Math.Log(mLightInfo.mTexSizeT) / Math.Log(2)));
+
+			Color[]	lm	=new Color[xPadded * yPadded];
+
+			for(t=0,c=0;t < mLightInfo.mTexSizeT;t++,c++)
+			{
+				for(s=0;s < mLightInfo.mTexSizeS;s++, c++)
+				{
+					float	total	=mLightInfo.mSamples[c];
+
+					total	*=RANGESCALE;
+					if(total > 255.0f)
+					{
+						total	=255.0f;
+					}
+					Debug.Assert(total >= 0.0f);
+
+					lm[(t * xPadded) + s]	=new Color((byte)total, (byte)total, (byte)total);
+				}
+			}
+
+			if(mLightMap == null)
+			{
+				mLightMap	=new Texture2D(gd, xPadded, yPadded, 0, TextureUsage.None, SurfaceFormat.Color);
+
+				mLightMap.SetData<Color>(lm);
+			}
+			else
+			{
+				Color[]	existing	=new Color[xPadded * yPadded];
+
+				//grab data
+				mLightMap.GetData<Color>(existing);
+
+				for(t=0,c=0;t < mLightInfo.mTexSizeT;t++)
+				{
+					for(s=0;s < mLightInfo.mTexSizeS;s++, c++)
+					{
+						int	r	=lm[c].R + existing[(t * xPadded) + s].R;
+						int	g	=lm[c].G + existing[(t * xPadded) + s].G;
+						int	b	=lm[c].B + existing[(t * xPadded) + s].B;
+						
+						if(r > 255)
+						{
+							r	=255;
+						}
+						if(g > 255)
+						{
+							g	=255;
+						}
+						if(b > 255)
+						{
+							b	=255;
+						}
+						existing[(t * xPadded) + s]	=new Color((byte)r, (byte)g, (byte)b);
+					}
+				}
+
+				//put existing back in
+				mLightMap.SetData<Color>(existing);
+			}
+		}
+
+
+		public	void LightFace(GraphicsDevice gd, BspNode root, Vector3 lightPos, float lightVal, Vector3 color)
+		{
+			mLightInfo	=new LightInfo();
+			mLightInfo.CalcFaceVectors(mFacePlane, mTexInfo);
+			/*
+			//make sure the light is in range
+			Vector3	lightToMin	=minInPlane - lightPos;
+			Vector3	lightToMax	=maxInPlane	- lightPos;
+
+			if((lightToMin.Length() > lightVal)	&& (lightToMax.Length() > lightVal))
+			{
+				return;
+			}
+
+			lightToMin.Normalize();
+			lightToMax.Normalize();
+
+			//make sure the face isn't facing away from the light
+			float	minToLightDot	=Vector3.Dot(mFacePlane.Normal, lightToMin);
+			float	maxToLightDot	=Vector3.Dot(mFacePlane.Normal, lightToMax);
+
+			if(minToLightDot > 0.0f && maxToLightDot > 0.0f)
+			{
+				return;
+			}
+
+			Debug.WriteLine("Lighting");
+
+			Vector3	deltaMinMax		=maxInPlane - minInPlane;
 
 			//now find the number of lightmap units along
 			//both axis vectors in the face extents
-			float	XExtents	=-Vector3.Dot(XAxis, deltaMinMax);
-			float	YExtents	=-Vector3.Dot(YAxis, deltaMinMax);
+			float	XExtents	=Vector3.Dot(XAxis, deltaMinMax);
+			float	YExtents	=Vector3.Dot(YAxis, deltaMinMax);
 
 			XExtents	=Math.Abs(XExtents);
 			YExtents	=Math.Abs(YExtents);
@@ -631,7 +1329,7 @@ namespace BuildMap
 
 			if(mLightMap == null)
 			{
-				mLightMap		=new Texture2D(gd, xPadded, yPadded, 1, TextureUsage.None, SurfaceFormat.Color);
+				mLightMap		=new Texture2D(gd, xPadded, yPadded, 0, TextureUsage.None, SurfaceFormat.Color);
 				bWasAllocated	=false;
 			}
 			else
@@ -643,19 +1341,49 @@ namespace BuildMap
 			{
 				for(int x=0;x < numXPoints;x++)
 				{
-					Vector3	lmPoint	=maxInPlane + (XAxis * x);
+					Vector3	lmPoint	=topLeft + (XAxis * x);
 					lmPoint	+=(YAxis * y);
 
-					//shoot a ray from lmPoint to the light
-					Vector3	impact	=root.RayCast(lmPoint, lightPos);
+					//shoot a ray from the light to the light map point
+					Vector3	impact	=root.RayCast(lightPos, lmPoint);
+
+					if(impact != Vector3.Zero)
+					{
+						impact	-=lmPoint;
+					}
 
 					//hit something along the way?
 					if(impact == Vector3.Zero)
 					{
-						float	dist	=Vector3.Distance(lmPoint, lightPos);
+						Vector3	lightToHere	=lmPoint - lightPos;
+						float	dist		=lightToHere.Length();
+
+						lightToHere	/=dist;	//normalize
+
+						float	l2f	=Vector3.Dot(lightToHere, mFacePlane.Normal);
+
+						if(l2f > 0.0f)
+						{
+							continue;
+						}
+
+						if(dist > lightVal)
+						{
+							continue;
+						}
+
+						dist	=-(lightVal - dist) * l2f;
+
+						//dist	*=0.01f;
+
+						if(dist > 1.0f)
+						{
+							dist	=1.0f;
+						}
+
 						Vector3	clr		=color * dist;
 						
-						clr	/=lightVal;
+						//clr	/=lightVal;
 
 						UInt32	rB, bB, gB;
 						rB	=(UInt32)(clr.X * 255.0f);
@@ -738,7 +1466,7 @@ namespace BuildMap
 
 				//put existing back in
 				mLightMap.SetData<Color>(existing);
-			}
+			}*/
 		}
 
 

@@ -62,7 +62,7 @@ namespace BuildMap
 			}
 			else
 			{	//this won't be used but gotta return something
-				bestFace	=new Face(new Plane());
+				bestFace	=new Face(new Plane(), null);
 				return	false;
 			}
 		}
@@ -112,7 +112,7 @@ namespace BuildMap
 			{
 				Brush	bf, bb;
 
-				b.SplitBrush(face.GetPlane(), out bf, out bb);
+				b.SplitBrush(face, out bf, out bb);
 
 				if(bb != null)
 				{
@@ -200,7 +200,7 @@ namespace BuildMap
 
 		private	void ClipToParents(Face prt)
 		{
-			Face clippy	=new Face(mPlane);
+			Face clippy	=new Face(mPlane, null);
 
 			prt.ClipByFace(clippy, true);
 
@@ -304,7 +304,7 @@ namespace BuildMap
 			{
 				if(mParent != null)
 				{
-					mPortal	=new Face(mPlane);
+					mPortal	=new Face(mPlane, null);
 					mParent.ClipToParents(mPortal);
 
 					mPortal.mFlags	=0;
@@ -683,6 +683,48 @@ namespace BuildMap
 				}
 
 				return	mBack.RayCast(mid, pntB);
+			}
+		}
+
+
+		//returns true or false
+		public bool RayCastBool(Vector3 pntA, Vector3 pntB)
+		{
+			if(mbLeaf)
+			{
+				if(IsPointBehindAllNodeFaces(pntA))
+				{
+					return	false;
+				}
+				else
+				{
+					return	true;
+				}
+			}
+
+			float	d	=Vector3.Dot(mPlane.Normal, pntA) - mPlane.Dist;
+			float	d2	=Vector3.Dot(mPlane.Normal, pntB) - mPlane.Dist;
+
+			if(d > 0.0f && d2 > 0.0f)
+			{
+				return	mFront.RayCastBool(pntA, pntB);
+			}
+			else if(d < 0.0f && d2 < 0.0f)
+			{
+				return	mBack.RayCastBool(pntA, pntB);
+			}
+			else if(d == 0.0f && d2 == 0.0f)
+			{
+				return	mFront.RayCastBool(pntA, pntB);
+			}
+			else	//split up segment
+			{
+				float	splitRatio	=d / (d - d2);
+				Vector3	mid	=pntA + (splitRatio * (pntB - pntA));
+
+				//is this correct?
+				return	mFront.RayCastBool(pntA, mid);
+				//return	mBack.RayCast(mid, pntB);
 			}
 		}
 

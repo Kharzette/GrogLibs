@@ -6,6 +6,7 @@ texture Texture;
 texture LightMap;
 
 bool TextureEnabled;
+bool LightMapEnabled;
 
 
 struct VS_INPUT
@@ -62,10 +63,10 @@ sampler LightMapSampler = sampler_state
 
     MinFilter = Linear;
     MagFilter = Linear;
-    MipFilter = None;
+    MipFilter = Linear;
     
-    AddressU = Wrap;
-    AddressV = Wrap;
+    AddressU = Clamp;
+    AddressV = Clamp;
 };
 
 
@@ -79,11 +80,17 @@ float4 PixelShader(PS_INPUT input) : COLOR0
     else
         color = float3(1, 1, 1);
 
-    //color = float3(0.4, 0.4, 0.4);
-    float3 lm = tex2D(LightMapSampler, input.TexCoord);
-
-    // Apply lighting.
-    color *= lm;
+    //color = float3(0.1, 0.1, 0.1);
+    if(LightMapEnabled)
+    {
+		float2	tc	=input.TexCoord;
+		float2	hp	=float2(0.1, 0.1);
+		//tc	-=hp;
+		float3 lm = tex2D(LightMapSampler, tc);
+		
+		// Apply lighting.
+		color *= lm;
+	}
     
     return float4(color, 1);
 }

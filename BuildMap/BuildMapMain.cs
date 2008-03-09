@@ -17,8 +17,8 @@ namespace BuildMap
 	/// </summary>
 	public class BuildMapMain : Microsoft.Xna.Framework.Game
 	{
-		private GraphicsDeviceManager   graphics;
-		private SpriteBatch             spriteBatch;
+		private GraphicsDeviceManager   mGraphics;
+		private SpriteBatch             mSpriteBatch;
 		private Map                     mMap;
 		private Matrix                  mWorldMatrix;
 		private Matrix                  mViewMatrix;
@@ -27,7 +27,8 @@ namespace BuildMap
 		private Effect					mMapEffect;
 		private BasicEffect             mDotEffect;
 		private BasicEffect             mPortalEffect;
-		private VertexDeclaration       mVertexDeclaration;
+		private VertexDeclaration       mBasicVertexDeclaration;
+		private VertexDeclaration       mMapVertexDeclaration;
 		private GamePadState            mCurrentGamePadState;
 		private GamePadState            mLastGamePadState;
 		private KeyboardState           mCurrentKeyboardState;
@@ -47,7 +48,7 @@ namespace BuildMap
 
 		public BuildMapMain(string[] args)
 		{
-			graphics = new GraphicsDeviceManager(this);
+			mGraphics = new GraphicsDeviceManager(this);
 			Content.RootDirectory = "Content";
 			
 			if(args.Length <= 0)
@@ -69,6 +70,9 @@ namespace BuildMap
 			{
 				Debug.WriteLine(args[i]);
 			}
+			mCamPos.X	=-192.0f;
+			mCamPos.Y	=-64.0f;
+			mCamPos.Z	=-64.0f;
 		}
 
 		/// <summary>
@@ -90,6 +94,8 @@ namespace BuildMap
 			mbDrawPortals	=false;
 			mbTextureEnabled=false;
 
+			Face.SetUpBaseAxis();
+
 			base.Initialize();
 		}
 
@@ -100,7 +106,7 @@ namespace BuildMap
 		protected override void LoadContent()
 		{
 			// Create a new SpriteBatch, which can be used to draw textures.
-			spriteBatch = new SpriteBatch(GraphicsDevice);
+			mSpriteBatch = new SpriteBatch(GraphicsDevice);
 
 			mMapEffect	=Content.Load<Effect>("LightMap");
 
@@ -108,7 +114,7 @@ namespace BuildMap
 			mMap.RemoveOverlap();
 			mMap.BuildTree();
 			mMap.BuildPortals();
-			mMap.LightAllBrushes(graphics.GraphicsDevice);
+			mMap.LightAllBrushes(mGraphics.GraphicsDevice);
 			// TODO: use this.Content to load your game content here
 		}
 
@@ -149,8 +155,7 @@ namespace BuildMap
 		/// <param name="gameTime">Provides a snapshot of timing values.</param>
 		protected override void Draw(GameTime gameTime)
 		{
-			graphics.GraphicsDevice.Clear(Color.CornflowerBlue);
-			graphics.GraphicsDevice.VertexDeclaration = mVertexDeclaration;
+			mGraphics.GraphicsDevice.Clear(Color.CornflowerBlue);
 
 			mDotEffect.World = mWorldMatrix;
 			mDotEffect.View = mViewMatrix;
@@ -161,6 +166,7 @@ namespace BuildMap
 
 			UpdateLightMapEffect();
 
+			mGraphics.GraphicsDevice.VertexDeclaration	=mMapVertexDeclaration;
 			mMapEffect.Begin();
 			foreach(EffectPass pass in mMapEffect.CurrentTechnique.Passes)
 			{
@@ -168,13 +174,14 @@ namespace BuildMap
 
 				if(mbDrawBrushes)
 				{
-					mMap.Draw(graphics.GraphicsDevice, mMapEffect);
+					mMap.Draw(mGraphics.GraphicsDevice, mMapEffect);
 				}
 
 				pass.End();
 			}
 			mMapEffect.End();
 
+			mGraphics.GraphicsDevice.VertexDeclaration = mBasicVertexDeclaration;
 			if(mbDrawDot)
 			{
 				mDotEffect.Begin();
@@ -198,13 +205,13 @@ namespace BuildMap
 					}
 					mDotEffect.CommitChanges();
 
-					vpc[0].Position				=mDotPos;
+					vpc[0].Position				=mMap.GetFirstLightPos();
 					vpc[0].Normal				=Vector3.Forward;
 					vpc[0].TextureCoordinate	=Vector2.One;
 
-					graphics.GraphicsDevice.RenderState.PointSize	=10;
+					mGraphics.GraphicsDevice.RenderState.PointSize	=10;
 
-					graphics.GraphicsDevice.DrawUserPrimitives<VertexPositionNormalTexture>
+					mGraphics.GraphicsDevice.DrawUserPrimitives<VertexPositionNormalTexture>
 						(PrimitiveType.PointList, vpc, 0, 1);
 
 					mDotEffect.DiffuseColor	=Vector3.One;
@@ -221,13 +228,40 @@ namespace BuildMap
 
 				if(mbDrawBsp)
 				{
-					mMap.Draw(graphics.GraphicsDevice, mPortalEffect, mCamPos);
+					mMap.Draw(mGraphics.GraphicsDevice, mPortalEffect, mCamPos);
 				}
-				mMap.DrawPortals(graphics.GraphicsDevice, mPortalEffect, mCamPos);
+				mMap.DrawPortals(mGraphics.GraphicsDevice, mPortalEffect, mCamPos);
 
 				mPortalEffect.End();
 			}
+			
+			//draw a few lightmaps
+			int halfWidth = GraphicsDevice.Viewport.Width / 2;
+			int halfHeight = GraphicsDevice.Viewport.Height / 2;
+			
+			mSpriteBatch.Begin();
 
+			List<Texture2D>	thrice;
+
+			mMap.GetThriceLightmaps(out thrice);
+
+			if(thrice[0] != null)
+			{
+				mSpriteBatch.Draw(thrice[0],
+					new Rectangle(0, 0, halfWidth, halfHeight), Color.White);
+			}			
+			if(thrice[1] != null)
+			{
+				mSpriteBatch.Draw(thrice[1], 
+					new Rectangle(0, halfHeight, halfWidth, halfHeight), Color.White);
+			}
+			if(thrice[2] != null)
+			{
+				mSpriteBatch.Draw(thrice[2], 
+					new Rectangle(halfWidth, 0, halfWidth, halfHeight), Color.White);
+			}			
+			mSpriteBatch.End();
+			
 			base.Draw(gameTime);
 		}
 
@@ -253,18 +287,22 @@ namespace BuildMap
 
 		private void InitializeEffect()
 		{
-			mVertexDeclaration = new VertexDeclaration(
-				graphics.GraphicsDevice,
+			mBasicVertexDeclaration	=new VertexDeclaration(
+				mGraphics.GraphicsDevice,
 				VertexPositionNormalTexture.VertexElements);
 
-			mDotEffect = new BasicEffect(graphics.GraphicsDevice, null);
+			mMapVertexDeclaration	=new VertexDeclaration(
+				mGraphics.GraphicsDevice,
+				VertexPositionTexture.VertexElements);
+
+			mDotEffect = new BasicEffect(mGraphics.GraphicsDevice, null);
 			mDotEffect.DiffuseColor = new Vector3(1.0f, 1.0f, 1.0f);
 
 			mDotEffect.World      =mWorldMatrix;
 			mDotEffect.View       =mViewMatrix;
 			mDotEffect.Projection =mProjectionMatrix;
 
-			mPortalEffect = new BasicEffect(graphics.GraphicsDevice, null);
+			mPortalEffect = new BasicEffect(mGraphics.GraphicsDevice, null);
 			mPortalEffect.DiffuseColor = new Vector3(0.0f, 0.0f, 1.0f);
 
 			mPortalEffect.World			=mWorldMatrix;
@@ -282,8 +320,8 @@ namespace BuildMap
 
 			mProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(45),
-				(float)graphics.GraphicsDevice.Viewport.Width /
-				(float)graphics.GraphicsDevice.Viewport.Height,
+				(float)mGraphics.GraphicsDevice.Viewport.Width /
+				(float)mGraphics.GraphicsDevice.Viewport.Height,
 				1.0f, 100.0f);
 		}
 

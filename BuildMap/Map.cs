@@ -50,6 +50,13 @@ namespace BuildMap
 					{
 						return	false;
 					}
+					//flip x
+					org.X	=-org.X;
+
+					//swap y and z
+					float	zTemp	=org.Z;
+					org.Z	=org.Y;
+					org.Y	=zTemp;
 					return	true;
 				}
 			}
@@ -245,28 +252,47 @@ namespace BuildMap
 
 			foreach(Entity e in mEntities)
 			{
-				foreach(string s in e.mKey)
+				Vector3	lightPos, clr;
+				float	lightVal;
+				if(!e.GetLightValue(out lightVal))
 				{
-					Vector3	lightPos, clr;
-					float	lightVal;
-					if(!e.GetLightValue(out lightVal))
-					{
-						continue;
-					}
-					if(!e.GetOrigin(out lightPos))
-					{
-						continue;
-					}
-					e.GetColor(out clr);
-					LightBrushes(g, wse.mBrushes, lightPos, lightVal, clr);
+					continue;
+				}
+				if(!e.GetOrigin(out lightPos))
+				{
+					continue;
+				}
+				e.GetColor(out clr);
+				LightBrushes(g, wse.mBrushes, lightPos, lightVal, clr);
+			}
+		}
+
+
+		public Vector3 GetFirstLightPos()
+		{
+			foreach(Entity e in mEntities)
+			{
+				float	dist;
+				if(e.GetLightValue(out dist))
+				{
+					Vector3	ret;
+					e.GetOrigin(out ret);
+					return	ret;
 				}
 			}
+			return	Vector3.Zero;
 		}
 
 
 		public void BuildPortals()
 		{
 			mTree.BuildPortals();
+		}
+
+
+		public void GetThriceLightmaps(out List<Texture2D> list)
+		{
+			GetWorldSpawnEntity().mBrushes[4].GetThriceLightmaps(out list);
 		}
 
 
