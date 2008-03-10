@@ -36,9 +36,24 @@ namespace BuildMap
 		public void GetThriceLightmaps(out List<Texture2D> list)
 		{
 			list	=new List<Texture2D>();
-			list.Add(mFaces[0].GetLightMap());
-			list.Add(mFaces[1].GetLightMap());
-			list.Add(mFaces[2].GetLightMap());
+			list.Add(mFaces[3].GetLightMap());
+			list.Add(mFaces[4].GetLightMap());
+			list.Add(mFaces[5].GetLightMap());
+		}
+
+
+		public int GetFirstSurface(out Vector3[] surfPoints)
+		{
+			foreach(Face f in mFaces)
+			{
+				int	np	=f.GetSurfPoints(out surfPoints);
+				if(np > 0)
+				{
+					return	np;
+				}
+			}
+			surfPoints	=null;
+			return	0;
 		}
 
 
@@ -358,6 +373,24 @@ RESTART:
 			{
 				faceList.Add(new Face(f));
 			}
+		}
+
+
+		public void AddFacesToLeaf(BspNode bn)
+		{
+			BspNode	walk	=bn;
+
+			//assign face zero to the node
+			walk.mFace	=new Face(mFaces[0]);
+			walk.mPlane	=mFaces[0].GetPlane();
+			for(int i=1;i < mFaces.Count;i++)
+			{
+				BspNode	b	=new BspNode(mFaces[i]);
+				walk.mBack	=b;
+				b.mParent	=walk;
+				walk		=walk.mBack;
+			}
+			walk.mbLeaf	=true;
 		}
 
 

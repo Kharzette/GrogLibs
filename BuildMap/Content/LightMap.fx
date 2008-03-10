@@ -63,7 +63,7 @@ sampler LightMapSampler = sampler_state
 
     MinFilter = Linear;
     MagFilter = Linear;
-    MipFilter = Linear;
+    MipFilter = None;
     
     AddressU = Clamp;
     AddressV = Clamp;
@@ -78,14 +78,12 @@ float4 PixelShader(PS_INPUT input) : COLOR0
     if (TextureEnabled)
         color = tex2D(TextureSampler, input.TexCoord);
     else
-        color = float3(1, 1, 1);
+        color = float3(1.0, 1.0, 1.0);
 
     //color = float3(0.1, 0.1, 0.1);
     if(LightMapEnabled)
     {
 		float2	tc	=input.TexCoord;
-		float2	hp	=float2(0.1, 0.1);
-		//tc	-=hp;
 		float3 lm = tex2D(LightMapSampler, tc);
 		
 		// Apply lighting.

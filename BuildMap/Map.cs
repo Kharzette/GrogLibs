@@ -290,9 +290,26 @@ namespace BuildMap
 		}
 
 
+		public int GetFirstSurface(out Vector3[] surfPoints)
+		{
+			Entity	e	=GetWorldSpawnEntity();
+
+			foreach(Brush b in e.mBrushes)
+			{
+				int	ret	=b.GetFirstSurface(out surfPoints);
+				if(ret > 0)
+				{
+					return	ret;
+				}
+			}
+			surfPoints	=null;
+			return	0;
+		}
+
+
 		public void GetThriceLightmaps(out List<Texture2D> list)
 		{
-			GetWorldSpawnEntity().mBrushes[4].GetThriceLightmaps(out list);
+			GetWorldSpawnEntity().mBrushes[0].GetThriceLightmaps(out list);
 		}
 
 

@@ -94,8 +94,6 @@ namespace BuildMap
 			mbDrawPortals	=false;
 			mbTextureEnabled=false;
 
-			Face.SetUpBaseAxis();
-
 			base.Initialize();
 		}
 
@@ -189,7 +187,17 @@ namespace BuildMap
 				{
 					pass.Begin();
 
-					VertexPositionNormalTexture[]	vpc	=new VertexPositionNormalTexture[1];
+					Vector3[]	surfPnts;
+					int np	=mMap.GetFirstSurface(out surfPnts);
+
+					VertexPositionNormalTexture[]	vpc	=new VertexPositionNormalTexture[np + 1];
+					for(int i=0;i < np;i++)
+					{
+						vpc[i].Position	=surfPnts[i];
+						vpc[i].Normal				=Vector3.Forward;
+						vpc[i].TextureCoordinate	=Vector2.One;
+					}
+					
 					bool cp	=mMap.ClassifyPoint(mDotPos);
 					if(cp == false)
 					{
@@ -204,15 +212,13 @@ namespace BuildMap
 						mDotEffect.DiffuseColor	=Vector3.UnitZ;
 					}
 					mDotEffect.CommitChanges();
-
-					vpc[0].Position				=mMap.GetFirstLightPos();
-					vpc[0].Normal				=Vector3.Forward;
-					vpc[0].TextureCoordinate	=Vector2.One;
+					
+					vpc[np].Position	=mDotPos;//mMap.GetFirstLightPos();
 
 					mGraphics.GraphicsDevice.RenderState.PointSize	=10;
 
 					mGraphics.GraphicsDevice.DrawUserPrimitives<VertexPositionNormalTexture>
-						(PrimitiveType.PointList, vpc, 0, 1);
+						(PrimitiveType.PointList, vpc, 0, np + 1);
 
 					mDotEffect.DiffuseColor	=Vector3.One;
 					mDotEffect.CommitChanges();
@@ -222,19 +228,26 @@ namespace BuildMap
 				mDotEffect.End();
 			}
 
-			if(mbDrawPortals)
+			if(mbDrawPortals || mbDrawBsp)
 			{
 				mPortalEffect.Begin();
+			}
 
-				if(mbDrawBsp)
-				{
-					mMap.Draw(mGraphics.GraphicsDevice, mPortalEffect, mCamPos);
-				}
+			if(mbDrawBsp)
+			{
+				mMap.Draw(mGraphics.GraphicsDevice, mPortalEffect, mCamPos);
+			}
+
+			if(mbDrawPortals)
+			{
 				mMap.DrawPortals(mGraphics.GraphicsDevice, mPortalEffect, mCamPos);
+			}
 
+			if(mbDrawPortals || mbDrawBsp)
+			{
 				mPortalEffect.End();
 			}
-			
+			/*
 			//draw a few lightmaps
 			int halfWidth = GraphicsDevice.Viewport.Width / 2;
 			int halfHeight = GraphicsDevice.Viewport.Height / 2;
@@ -260,8 +273,7 @@ namespace BuildMap
 				mSpriteBatch.Draw(thrice[2], 
 					new Rectangle(halfWidth, 0, halfWidth, halfHeight), Color.White);
 			}			
-			mSpriteBatch.End();
-			
+			mSpriteBatch.End();*/
 			base.Draw(gameTime);
 		}
 

@@ -12,30 +12,26 @@ namespace BuildMap
 	{
 		public const UInt32	BSP_CONTENTS_SOLID2	=1;
 
-		private	Plane		mPlane;
-		private List<Face>	mFaces;
-		private BspNode		mFront,	mBack;
+		public	Plane		mPlane;
+		public	Face		mFace;
+		public	BspNode		mFront,	mBack;
 		private	Bounds		mBounds;
-		private	bool		mbLeaf;
+		public	bool		mbLeaf;
 		private	Face		mPortal;
-		private	BspNode		mParent;
+		public	BspNode		mParent;
 		private	UInt32		mFillKey;	//for flooding
 		private	UInt32		mContents;
 
 
 		public BspNode(Face f)
 		{
-			mFaces		=new  List<Face>();
-			Face	cp	=new Face(f);
-			mFaces.Add(cp);
-
+			mFace	=new Face(f);
 			mPlane	=f.GetPlane();
 		}
 
 
 		public BspNode()
 		{
-			mFaces	=new  List<Face>();
 		}
 
 
@@ -67,7 +63,7 @@ namespace BuildMap
 			}
 		}
 
-
+		/*
 		private	bool IsPointBehindAllNodeFaces(Vector3 pnt)
 		{
 			Debug.Assert(mbLeaf);
@@ -84,7 +80,7 @@ namespace BuildMap
 			}
 			return	true;
 		}
-
+		*/
 
 		public void BuildTree(List<Brush> brushList)
 		{
@@ -95,12 +91,10 @@ namespace BuildMap
 
 			if(!FindGoodSplitFace(brushList, out face))
 			{
-				mbLeaf	=true;
-
 				//copy in the brush faces
 				foreach(Brush b in brushList)
 				{
-					b.AddFacesToList(ref mFaces);
+					b.AddFacesToLeaf(this);
 				}
 				return;
 			}
@@ -159,7 +153,7 @@ namespace BuildMap
 			}
 		}
 
-
+		/*
 		private	void NukeAllButThisPlane(Plane p)
 		{
 			int	foundIdx	=-1;
@@ -196,7 +190,7 @@ namespace BuildMap
 
 			mFaces.Add(keep);
 		}
-
+		*/
 
 		private	void ClipToParents(Face prt)
 		{
@@ -308,7 +302,7 @@ namespace BuildMap
 					mParent.ClipToParents(mPortal);
 
 					mPortal.mFlags	=0;
-					if((mFront.mContents & BSP_CONTENTS_SOLID2) != 0)
+					if(mFront != null && (mFront.mContents & BSP_CONTENTS_SOLID2) != 0)
 					{
 						mPortal.mFlags	|=1;
 					}
@@ -331,6 +325,7 @@ namespace BuildMap
 		}
 
 
+		/*
 		public	void MarkLeafs()
 		{
 			if(mFront == null && mBack == null)
@@ -348,7 +343,7 @@ namespace BuildMap
 			{
 				mBack.MarkLeafs();
 			}
-		}
+		}*/
 
 
 		//per face add, like in fusion
@@ -476,12 +471,9 @@ namespace BuildMap
 		{
 			if(mbLeaf)
 			{
-				if(mFaces != null)
+				if(mFace != null)
 				{
-					foreach(Face f in mFaces)
-					{
-						f.Draw(g, fx, Color.AntiqueWhite);
-					}
+					mFace.Draw(g, fx, Color.AntiqueWhite);
 				}
 			}
 
@@ -610,30 +602,41 @@ namespace BuildMap
 
 		public bool ClassifyPoint(Vector3 pnt)
 		{
+			float	d;
+
 			if(mbLeaf)
 			{
-				if(IsPointBehindAllNodeFaces(pnt))
-				{
-					return	true;
-				}
-				else
+				d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;
+				if(d > -Face.ON_EPSILON)
 				{
 					return	false;
 				}
+				else
+				{
+					return	true;
+				}
 			}
 
-			float	d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;
+			d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;
 
-			if(d > 0.0f)
+			if(d > -Face.ON_EPSILON)
 			{
+				if(mFront == null)
+				{
+					return	false;	//landed in empty
+				}
 				return	mFront.ClassifyPoint(pnt);
 			}
-			else if(d < 0.0f)
+			else if(d < Face.ON_EPSILON)
 			{
 				return	mBack.ClassifyPoint(pnt);
 			}
 			else
 			{
+				if(mFront == null)
+				{
+					return	false;	//landed in empty
+				}
 				return	mFront.ClassifyPoint(pnt);
 			}
 		}
@@ -642,47 +645,54 @@ namespace BuildMap
 		//returns impact point
 		public Vector3 RayCast(Vector3 pntA, Vector3 pntB)
 		{
+			float	d, d2;
+
 			if(mbLeaf)
 			{
-				if(IsPointBehindAllNodeFaces(pntA))
+				d	=Vector3.Dot(mPlane.Normal, pntA) - mPlane.Dist;
+				d2	=Vector3.Dot(mPlane.Normal, pntB) - mPlane.Dist;
+
+				if(d > -Face.ON_EPSILON && d2 > -Face.ON_EPSILON)
 				{
-					return	pntA;
+					return	Vector3.Zero;	//no impact
 				}
-				else
+				else if(d < Face.ON_EPSILON && d2 < Face.ON_EPSILON)
 				{
-					return	Vector3.Zero;
+					return	pntA;	//crossover point is impact
+				}
+				else	//split up segment
+				{
+					float	splitRatio	=d / (d - d2);
+					Vector3	mid	=pntA + (splitRatio * (pntB - pntA));
+
+					return	mid;
 				}
 			}
 
-			float	d	=Vector3.Dot(mPlane.Normal, pntA) - mPlane.Dist;
-			float	d2	=Vector3.Dot(mPlane.Normal, pntB) - mPlane.Dist;
+			d	=Vector3.Dot(mPlane.Normal, pntA) - mPlane.Dist;
+			d2	=Vector3.Dot(mPlane.Normal, pntB) - mPlane.Dist;
 
-			if(d > 0.0f && d2 > 0.0f)
+			if(d > -Face.ON_EPSILON && d2 > -Face.ON_EPSILON)
 			{
 				return	mFront.RayCast(pntA, pntB);
 			}
-			else if(d < 0.0f && d2 < 0.0f)
+			else if(d < Face.ON_EPSILON && d2 < Face.ON_EPSILON)
 			{
 				return	mBack.RayCast(pntA, pntB);
-			}
-			else if(d == 0.0f && d2 == 0.0f)
-			{
-				return	mFront.RayCast(pntA, pntB);
 			}
 			else	//split up segment
 			{
 				float	splitRatio	=d / (d - d2);
 				Vector3	mid	=pntA + (splitRatio * (pntB - pntA));
-				Vector3	ret;
 
-				ret	=mFront.RayCast(pntA, mid);
-
-				if(ret != Vector3.Zero)
+				if(d > 0.0f)
 				{
-					return	ret;
+					return	mFront.RayCast(pntA, mid);
 				}
-
-				return	mBack.RayCast(mid, pntB);
+				else
+				{
+					return	mBack.RayCast(mid, pntB);
+				}
 			}
 		}
 
@@ -690,41 +700,72 @@ namespace BuildMap
 		//returns true or false
 		public bool RayCastBool(Vector3 pntA, Vector3 pntB)
 		{
+			float	d, d2;
+
 			if(mbLeaf)
 			{
-				if(IsPointBehindAllNodeFaces(pntA))
+				d	=Vector3.Dot(mPlane.Normal, pntA) - mPlane.Dist;
+				d2	=Vector3.Dot(mPlane.Normal, pntB) - mPlane.Dist;
+
+				if(d > -Face.ON_EPSILON && d2 > -Face.ON_EPSILON)
+				{
+					return	true;	//no impact
+				}
+				else if(d < Face.ON_EPSILON && d2 < Face.ON_EPSILON)
+				{
+					return	false;	//crossover point is impact
+				}
+				else	//split up segment
 				{
 					return	false;
 				}
-				else
-				{
-					return	true;
-				}
 			}
 
-			float	d	=Vector3.Dot(mPlane.Normal, pntA) - mPlane.Dist;
-			float	d2	=Vector3.Dot(mPlane.Normal, pntB) - mPlane.Dist;
+			d	=Vector3.Dot(mPlane.Normal, pntA) - mPlane.Dist;
+			d2	=Vector3.Dot(mPlane.Normal, pntB) - mPlane.Dist;
 
-			if(d > 0.0f && d2 > 0.0f)
+			if(d > -Face.ON_EPSILON && d2 > -Face.ON_EPSILON)
 			{
+				if(mFront == null)
+				{
+					return	true;	//landed in empty
+				}
 				return	mFront.RayCastBool(pntA, pntB);
 			}
-			else if(d < 0.0f && d2 < 0.0f)
+			else if(d < Face.ON_EPSILON && d2 < Face.ON_EPSILON)
 			{
 				return	mBack.RayCastBool(pntA, pntB);
-			}
-			else if(d == 0.0f && d2 == 0.0f)
-			{
-				return	mFront.RayCastBool(pntA, pntB);
 			}
 			else	//split up segment
 			{
 				float	splitRatio	=d / (d - d2);
 				Vector3	mid	=pntA + (splitRatio * (pntB - pntA));
 
-				//is this correct?
-				return	mFront.RayCastBool(pntA, mid);
-				//return	mBack.RayCast(mid, pntB);
+				bool	bHit;
+
+				if(mFront != null)
+				{
+					if(d > 0.0f)
+					{
+						bHit	=mFront.RayCastBool(pntA, mid);
+					}
+					else
+					{
+						bHit	=mFront.RayCastBool(mid, pntB);
+					}
+					if(!bHit)
+					{
+						return	bHit;
+					}
+				}
+				if(d2 > 0.0f)
+				{
+					return	mBack.RayCastBool(pntA, mid);
+				}
+				else
+				{
+					return	mBack.RayCastBool(mid, pntB);
+				}
 			}
 		}
 
@@ -732,32 +773,39 @@ namespace BuildMap
 		//returns true for solid
 		public bool GetLeafLandedIn(Vector3 pnt, out BspNode bn)
 		{
+			float	d;
+
 			bn	=this;
 			if(mbLeaf)
 			{
-				if(IsPointBehindAllNodeFaces(pnt))
+				d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;
+				if(d < Face.ON_EPSILON)
 				{
 					return	true;
 				}
 				else
 				{
-					return	false;
+					return	true;
 				}
 			}
 
-			float	d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;
+			d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;
 
-			if(d > 0.0f)
+			if(d > -Face.ON_EPSILON)
 			{
 				return	mFront.ClassifyPoint(pnt);
 			}
-			else if(d < 0.0f)
+			else if(d < Face.ON_EPSILON)
 			{
 				return	mBack.ClassifyPoint(pnt);
 			}
-			else
+			else if(d > 0.0f)
 			{
 				return	mFront.ClassifyPoint(pnt);
+			}
+			else
+			{
+				return	mBack.ClassifyPoint(pnt);
 			}
 		}
 	}
