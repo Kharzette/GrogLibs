@@ -7,19 +7,22 @@ texture LightMap;
 
 bool TextureEnabled;
 bool LightMapEnabled;
+bool FullBright;
 
 
 struct VS_INPUT
 {
     float4 Position : POSITION0;
-    float2 TexCoord : TEXCOORD0;
+    float2 TexCoord0 : TEXCOORD0;
+    float2 TexCoord1 : TEXCOORD1;
 };
 
 
 struct VS_OUTPUT
 {
     float4 Position : POSITION0;
-    float2 TexCoord : TEXCOORD0;
+    float2 TexCoord0 : TEXCOORD0;
+    float2 TexCoord1 : TEXCOORD1;
 };
 
 
@@ -32,7 +35,8 @@ VS_OUTPUT VertexShader(VS_INPUT input)
 
     output.Position = mul(mul(worldPosition, View), Projection);
 
-    output.TexCoord = input.TexCoord;
+    output.TexCoord0 = input.TexCoord0;
+    output.TexCoord1 = input.TexCoord1;
     
     return output;
 }
@@ -40,7 +44,8 @@ VS_OUTPUT VertexShader(VS_INPUT input)
 
 struct PS_INPUT
 {
-    float2 TexCoord : TEXCOORD0;
+    float2 TexCoord0 : TEXCOORD0;
+    float2 TexCoord1 : TEXCOORD1;
 };
 
 
@@ -76,18 +81,27 @@ float4 PixelShader(PS_INPUT input) : COLOR0
     float3 color;
     
     if (TextureEnabled)
-        color = tex2D(TextureSampler, input.TexCoord);
+    {
+        color = tex2D(TextureSampler, input.TexCoord0);
+    }
     else
+    {
         color = float3(1.0, 1.0, 1.0);
+    }
 
-    //color = float3(0.1, 0.1, 0.1);
     if(LightMapEnabled)
     {
-		float2	tc	=input.TexCoord;
-		float3 lm = tex2D(LightMapSampler, tc);
+		float3 lm = tex2D(LightMapSampler, input.TexCoord1);
 		
 		// Apply lighting.
 		color *= lm;
+	}
+	else
+	{
+		if(!FullBright)
+		{
+			color *= float3(0.01, 0.01, 0.01);
+		}
 	}
     
     return float4(color, 1);

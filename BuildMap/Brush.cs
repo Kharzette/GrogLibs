@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -59,16 +60,9 @@ namespace BuildMap
 
         public void Draw(GraphicsDevice g, Effect fx)
         {
-            //generate a random color
-            Random rnd = new Random();
-            Color randColor = new Color(
-                            Convert.ToByte(rnd.Next(255)),
-                            Convert.ToByte(rnd.Next(255)),
-                            Convert.ToByte(rnd.Next(255)));
-
 			foreach (Face f in mFaces)
 			{
-				f.Draw(g, fx, randColor);
+				f.Draw(g, fx);
 			}
         }
 
@@ -372,6 +366,44 @@ RESTART:
 			foreach(Face f in mFaces)
 			{
 				faceList.Add(new Face(f));
+			}
+		}
+
+
+		public void GetTexFileNames(ref List<string> fn)
+		{
+			foreach(Face f in mFaces)
+			{
+				f.GetTexFileNames(ref fn);
+			}
+		}
+
+
+		public void SetTexturePointers(List<KeyValuePair<string, Texture2D>> tl)
+		{
+			foreach(Face f in mFaces)
+			{
+				f.SetTexturePointers(tl);
+			}
+		}
+
+
+		public void WriteToFile(BinaryWriter bw)
+		{
+			bw.Write(mFaces.Count);
+
+			foreach(Face f in mFaces)
+			{
+				f.WriteToFile(bw);
+			}
+		}
+
+
+		public void BuildVertexInfo(GraphicsDevice g)
+		{
+			foreach(Face f in mFaces)
+			{
+				f.BuildVertexInfo(g);
 			}
 		}
 

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Content;
 using System.Diagnostics;
 
 namespace BuildMap
@@ -29,6 +31,12 @@ namespace BuildMap
 
 		//actual lightmap points
 		public	float[]		mSamples;
+
+
+		public void WriteToFile(BinaryWriter bw)
+		{
+			//can't think of anything the game will need
+		}
 
 
 		public	void CalcFaceVectors(Plane p, TexInfo t)
@@ -152,9 +160,30 @@ namespace BuildMap
         public string           mTexName;   //temporary
 		public Vector3			mTexS, mTexT;
 		public UInt32			mFlags;
+		public Texture2D		mTexture;
 
-        //need a texture reference here
+
+		public void WriteToFile(BinaryWriter bw)
+		{
+			bw.Write(mTexName);
+			bw.Write(mFlags);
+			bw.Write(mTexS.X);
+			bw.Write(mTexS.Y);
+			bw.Write(mTexS.Z);
+			bw.Write(mTexT.X);
+			bw.Write(mTexT.Y);
+			bw.Write(mTexT.Z);
+		}
     }
+
+
+	public struct VertexPositionTextureTexture
+	{
+		public	Vector3	Position;
+		public	Vector2	Texture0;
+		public	Vector2	Texture1;
+	}
+
 
     public class Face
     {
@@ -173,7 +202,7 @@ namespace BuildMap
 
         //for drawrings
         private VertexBuffer			mVertBuffer;
-        private VertexPositionTexture[]	mPosColor;
+        private VertexPositionTextureTexture[]	mPosColor;
         private short[]					mIndexs;
         private IndexBuffer				mIndexBuffer;
 
@@ -249,47 +278,49 @@ namespace BuildMap
                 mFacePlane.Dist *= -1.0f;
             }
         }
+		
+		
+		private void MakeVBuffer(GraphicsDevice g)
+		{
+			int	i	=0;
+			int	j	=0;
+			
+			//triangulate the brush face points
+			mPosColor	=new VertexPositionTextureTexture[mPoints.Count];
+			mIndexs		=new short[(3 + ((mPoints.Count - 3) * 3))];
+			mIndexBuffer=new IndexBuffer(g, 2 * (3 + ((mPoints.Count - 3) * 3)),
+							BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
+			
+			List<Vector2>	tcrds0;
+			List<Vector2>	tcrds1;
 
-
-        private void MakeVBuffer(GraphicsDevice g, Color c)
-        {
-            int i = 0;
-            int j = 0;
-
-            //triangulate the brush face points
-            mPosColor	=new VertexPositionTexture[mPoints.Count];
-            mIndexs		=new short[(3 + ((mPoints.Count - 3) * 3))];
-            mIndexBuffer=new IndexBuffer(g, 2 * (3 + ((mPoints.Count - 3) * 3)),
-                BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
-
-			List<Vector2>	tcrds;
-
-			GetTexCoords(out tcrds);
-
-            foreach (Vector3 pos in mPoints)
-            {
-                mPosColor[i].Position			=pos;
-				mPosColor[i].TextureCoordinate	=tcrds[i];
+			GetTexCoords0(out tcrds0);
+			GetTexCoords1(out tcrds1);
+			
+			foreach(Vector3 pos in mPoints)
+			{
+				mPosColor[i].Position	=pos;
+				mPosColor[i].Texture0	=tcrds0[i];
+				mPosColor[i].Texture1	=tcrds1[i];
 				i++;
-            }
-
-            for(i = 1;i < mPoints.Count - 1;i++)
-            {
-                //initial vertex
-                mIndexs[j++] = 0;
-                mIndexs[j++] = (short)i;
-                mIndexs[j++] = (short)((i + 1) % mPoints.Count);
-            }
-
-            mIndexBuffer.SetData<short>(mIndexs, 0, mIndexs.Length);
-
-            mVertBuffer = new VertexBuffer(g,
-                VertexPositionTexture.SizeInBytes * (mPosColor.Length),
-                BufferUsage.None);
-
-            // Set the vertex buffer data to the array of vertices.
-            mVertBuffer.SetData<VertexPositionTexture>(mPosColor);
-        }
+			}
+			
+			for(i=1;i < mPoints.Count-1;i++)
+			{
+				//initial vertex
+				mIndexs[j++]	=0;
+				mIndexs[j++]	=(short)i;
+				mIndexs[j++]	=(short)((i + 1) % mPoints.Count);
+			}
+			
+			mIndexBuffer.SetData<short>(mIndexs, 0, mIndexs.Length);
+			
+			mVertBuffer	=new VertexBuffer(g, 28 * (mPosColor.Length),
+							BufferUsage.None);
+			
+			//Set the vertex buffer data to the array of vertices.
+			mVertBuffer.SetData<VertexPositionTextureTexture>(mPosColor);
+		}
 
 
 		public int GetSurfPoints(out Vector3[] surfPoints)
@@ -307,30 +338,44 @@ namespace BuildMap
 		}
 
 
-        public void Draw(GraphicsDevice g, Effect fx, Color c)
+        public void Draw(GraphicsDevice g, Effect fx)
         {
 			if(mPoints.Count < 3 || IsTiny())
 			{
-				return;
+				Debug.Assert(false);
 			}
 
             if(mPosColor == null || mPosColor.Length < 1)
             {
-                MakeVBuffer(g, c);
+				Debug.Assert(false);
             }
+
 			if(mLightMap != null)
 			{				
 				fx.Parameters["LightMap"].SetValue(mLightMap);
 				fx.Parameters["LightMapEnabled"].SetValue(true);
-				fx.CommitChanges();
+				fx.Parameters["FullBright"].SetValue(false);
 			}
 			else
 			{
+				if((mTexInfo.mFlags & TexInfo.TEX_SPECIAL) != 0)
+				{
+					fx.Parameters["FullBright"].SetValue(true);
+				}
 				fx.Parameters["LightMapEnabled"].SetValue(false);
-				fx.CommitChanges();
 			}
+			if(mTexInfo.mTexture != null)
+			{
+				fx.Parameters["Texture"].SetValue(mTexInfo.mTexture);
+				fx.Parameters["TextureEnabled"].SetValue(true);
+			}
+			else
+			{
+				fx.Parameters["TextureEnabled"].SetValue(false);
+			}
+			fx.CommitChanges();
 
-            g.Vertices[0].SetSource(mVertBuffer, 0, VertexPositionTexture.SizeInBytes);
+            g.Vertices[0].SetSource(mVertBuffer, 0, 28);
             g.Indices = mIndexBuffer;
 
             //g.RenderState.PointSize = 10;
@@ -413,6 +458,19 @@ namespace BuildMap
         {
             SetFaceFromPlane(mFacePlane, Bounds.MIN_MAX_BOUNDS);
         }
+
+
+		public void SetTexturePointers(List<KeyValuePair<string, Texture2D>> tl)
+		{
+			foreach(KeyValuePair<string, Texture2D> k in tl)
+			{
+				if(k.Key == mTexInfo.mTexName)
+				{
+					mTexInfo.mTexture	=k.Value;
+					return;
+				}
+			}
+		}
 
 
         public bool IsValid()
@@ -504,6 +562,12 @@ namespace BuildMap
 
                 //grab tex name if avail
 				if(tok[0] == '*')
+				{
+					mTexInfo.mFlags	|=TexInfo.TEX_SPECIAL;
+					mTexInfo.mTexName	=tok.Substring(1);
+					continue;
+				}
+				else if(tok[0] == '#')
 				{
 					mTexInfo.mFlags	|=TexInfo.TEX_SPECIAL;
 					mTexInfo.mTexName	=tok;
@@ -618,6 +682,65 @@ namespace BuildMap
         }
 
 
+		public void BuildVertexInfo(GraphicsDevice g)
+		{
+			if(mPoints.Count < 3 || IsTiny())
+			{
+				Debug.Assert(false);
+			}
+			MakeVBuffer(g);
+		}
+
+
+		public void WriteToFile(BinaryWriter bw)
+		{
+			mTexInfo.WriteToFile(bw);
+
+			bw.Write(mPoints.Count);
+
+			for(int i=0;i < mPoints.Count;i++)
+			{
+				bw.Write(mPosColor[i].Position.X);
+				bw.Write(mPosColor[i].Position.Y);
+				bw.Write(mPosColor[i].Position.Z);
+
+				bw.Write(mPosColor[i].Texture0.X);
+				bw.Write(mPosColor[i].Texture0.Y);
+				bw.Write(mPosColor[i].Texture1.X);
+				bw.Write(mPosColor[i].Texture1.Y);
+			}
+
+			//write indexs length
+			bw.Write(mIndexs.GetLength(0));
+
+			//write indexs
+			for(int i=0;i < mIndexs.GetLength(0);i++)
+			{
+				bw.Write(mIndexs[i]);
+			}
+
+			//lightmapped?
+			bw.Write(mLightMap != null);
+
+			//write lightmap
+			if(mLightMap != null)
+			{
+				bw.Write(mLightMap.Width);
+				bw.Write(mLightMap.Height);
+
+				Color[]	existing	=new Color[mLightMap.Width * mLightMap.Height];
+
+				//grab data
+				mLightMap.GetData<Color>(existing);
+
+				for(int i=0;i < (mLightMap.Width * mLightMap.Height);i++)
+				{
+					bw.Write(existing[i].PackedValue);
+				}
+			}
+		}
+
+
 		private	static float VecIdx(Vector3 v, int idx)
 		{
 			if(idx == 0)
@@ -645,6 +768,18 @@ namespace BuildMap
 			else
 			{
 				v.Z	=val;
+			}
+		}
+
+
+		public void GetTexFileNames(ref List<string> fn)
+		{
+			if(mTexInfo.mTexName != null)
+			{
+				if(!fn.Contains(mTexInfo.mTexName))
+				{
+					fn.Add(mTexInfo.mTexName);
+				}
 			}
 		}
 
@@ -835,7 +970,57 @@ namespace BuildMap
         }
 
 
-		private	void	GetTexCoords(out List<Vector2> coords)
+		private	void	GetTexCoords0(out List<Vector2> coords)
+		{
+			coords	=new List<Vector2>();
+
+			float	minS, minT;
+
+			minS	=Bounds.MIN_MAX_BOUNDS;
+			minT	=Bounds.MIN_MAX_BOUNDS;
+
+			//calculate the min values for s and t
+			foreach(Vector3 pnt in mPoints)
+			{
+				float	d;
+				d	=Vector3.Dot(mTexInfo.mTexS, pnt);
+
+				if(d < minS)
+				{
+					minS	=d;
+				}
+
+				d	=Vector3.Dot(mTexInfo.mTexT, pnt);
+				if(d < minT)
+				{
+					minT	=d;
+				}
+			}
+
+			float	shiftU	=-minS + TexInfo.LIGHTMAPSCALE;
+			float	shiftV	=-minT + TexInfo.LIGHTMAPSCALE;
+
+			foreach(Vector3 pnt in mPoints)
+			{
+				Vector2	crd;
+				crd.X	=Vector3.Dot(mTexInfo.mTexS, pnt);
+				crd.Y	=Vector3.Dot(mTexInfo.mTexT, pnt);
+
+				crd.X	+=shiftU;
+				crd.Y	+=shiftV;
+
+				if(mTexInfo.mTexture != null)
+				{
+					crd.X	/=mTexInfo.mTexture.Width;
+					crd.Y	/=mTexInfo.mTexture.Height;
+				}
+
+				coords.Add(crd);
+			}
+		}
+
+
+		private	void	GetTexCoords1(out List<Vector2> coords)
 		{
 			coords	=new List<Vector2>();
 

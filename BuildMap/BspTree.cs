@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -53,6 +54,21 @@ namespace BuildMap
 				mMaxs.Z	=pnt.Z;
 			}
 		}
+
+
+		public void MergeBounds(Bounds b1, Bounds b2)
+		{
+			if(b1 != null)
+			{
+				AddPointToBounds(b1.mMins);
+				AddPointToBounds(b1.mMaxs);
+			}
+			if(b2 != null)
+			{
+				AddPointToBounds(b2.mMins);
+				AddPointToBounds(b2.mMaxs);
+			}
+		}
 	}
 
 	class BspTree
@@ -69,6 +85,8 @@ namespace BuildMap
 
 			mRoot	=new BspNode();
 			mRoot.BuildTree(brushList);
+
+			mRoot.BoundNodes();
 			/*
 			foreach(Brush b in brushList)
 			{
@@ -76,6 +94,12 @@ namespace BuildMap
 			}
 			mRoot.MarkLeafs();
 			*/
+		}
+
+
+		public void WriteToFile(BinaryWriter bw)
+		{
+			mRoot.WriteToFile(bw);
 		}
 
 

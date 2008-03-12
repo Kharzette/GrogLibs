@@ -4,7 +4,9 @@ using System.Text;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Content;
 using System.Diagnostics;
+using Microsoft.Xna.Framework.Storage;
 
 
 namespace BuildMap
@@ -163,12 +165,46 @@ namespace BuildMap
 				}
 			}
 		}
+
+
+		public void WriteToFile(BinaryWriter bw)
+		{
+			int	i;
+
+			Debug.Assert(mKey.Count == mValue.Count);
+
+			//write out # of key value pairs
+			bw.Write(mKey.Count);
+
+			for(i=0;i < mKey.Count;i++)
+			{
+				bw.Write(mKey[i]);
+				bw.Write(mValue[i]);
+			}
+
+			//brushes?
+			bw.Write(mBrushes != null);
+
+			//any brushes to write?
+			if(mBrushes != null)
+			{
+				//write number of brushes as uint32
+				bw.Write(mBrushes.Count);
+
+				foreach(Brush b in mBrushes)
+				{
+					b.WriteToFile(bw);
+				}
+			}			
+		}
 	};
 
     class Map
     {
 		List<Entity>	mEntities;
 		BspTree			mTree;
+
+		List<KeyValuePair<string, Texture2D>>	mTextures;
 
         //reads a .map file
         public Map(string mapFileName)
@@ -215,6 +251,18 @@ namespace BuildMap
 				}
 			}
         }
+
+
+		public void BuildVertexInfo(GraphicsDevice g)
+		{
+			foreach(Entity e in mEntities)
+			{
+				foreach(Brush b in e.mBrushes)
+				{
+					b.BuildVertexInfo(g);
+				}
+			}
+		}
 
 
 		public bool ClassifyPoint(Vector3 pnt)
@@ -287,6 +335,79 @@ namespace BuildMap
 		public void BuildPortals()
 		{
 			mTree.BuildPortals();
+		}
+
+
+		public void LoadTextures(ContentManager cm)
+		{
+			mTextures	=new List<KeyValuePair<string, Texture2D>>();
+
+			List<string>	texFiles	=new List<string>();
+
+			Entity	e	=GetWorldSpawnEntity();
+
+			foreach(Brush b in e.mBrushes)
+			{
+				b.GetTexFileNames(ref texFiles);
+			}
+
+			foreach(string fn in texFiles)
+			{
+				Texture2D	tex	=cm.Load<Texture2D>("textures\\" + fn);
+				KeyValuePair<string, Texture2D>	kv;
+
+				kv	=new KeyValuePair<string,Texture2D>(fn, tex);
+				mTextures.Add(kv);
+			}
+		}
+
+
+		public void Save(string fileName)
+		{
+			FileStream	file	=OpenTitleFile(fileName,
+				FileMode.Open, FileAccess.Write);
+
+			BinaryWriter	bw	=new BinaryWriter(file);
+
+			bw.Write(mEntities.Count);
+
+			//write all entities
+			foreach(Entity e in mEntities)
+			{
+				e.WriteToFile(bw);
+			}
+
+			//write bsp
+			mTree.WriteToFile(bw);
+		}
+
+
+		public static FileStream OpenTitleFile(string fileName,
+			FileMode mode, FileAccess access)
+		{
+			string fullPath	=Path.Combine(
+				StorageContainer.TitleLocation, fileName);
+
+			if(!File.Exists(fullPath) &&
+				(access == FileAccess.Write || access == FileAccess.ReadWrite))
+			{
+				return	File.Create(fullPath);
+			}
+			else
+			{
+				return File.Open(fullPath, mode, access);
+			}
+		}
+
+
+		public void SetTexturePointers()
+		{
+			Entity	e	=GetWorldSpawnEntity();
+
+			foreach(Brush b in e.mBrushes)
+			{
+				b.SetTexturePointers(mTextures);
+			}
 		}
 
 

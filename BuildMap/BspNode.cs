@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -214,7 +215,7 @@ namespace BuildMap
 
 			if(mPortal != null)
 			{
-				mPortal.Draw(g, fx, Color.CadetBlue);
+				mPortal.Draw(g, fx);
 			}
 
 			if(mBack != null)
@@ -241,7 +242,7 @@ namespace BuildMap
 
 				if(mPortal != null)
 				{
-					mPortal.Draw(g, fx, Color.CadetBlue);
+					mPortal.Draw(g, fx);
 				}
 
 				if(mBack != null)
@@ -258,7 +259,7 @@ namespace BuildMap
 
 				if(mPortal != null)
 				{
-					mPortal.Draw(g, fx, Color.CadetBlue);
+					mPortal.Draw(g, fx);
 				}
 
 				if(mFront != null)
@@ -275,7 +276,7 @@ namespace BuildMap
 
 				if(mPortal != null)
 				{
-					mPortal.Draw(g, fx, Color.CadetBlue);
+					mPortal.Draw(g, fx);
 				}
 
 				if(mBack != null)
@@ -473,7 +474,7 @@ namespace BuildMap
 			{
 				if(mFace != null)
 				{
-					mFace.Draw(g, fx, Color.AntiqueWhite);
+					mFace.Draw(g, fx);
 				}
 			}
 
@@ -534,6 +535,72 @@ namespace BuildMap
 				// Fill er in with solid so it does not show up...(Preserve user contents)
 				mContents	&=(0xffff0000);
 				mContents	|=BSP_CONTENTS_SOLID2;
+			}
+		}
+
+
+		public Bounds BoundNodes()
+		{
+			Bounds	b, b2;
+
+			b	=b2	=null;
+
+			if(mbLeaf)
+			{
+				mBounds	=new Bounds();
+
+				mFace.AddToBounds(ref mBounds);
+				return	mBounds;
+			}
+
+			if(mFront != null)
+			{
+				b	=mFront.BoundNodes();
+			}
+			if(mBack != null)
+			{
+				b2	=mBack.BoundNodes();
+			}
+			mBounds	=new Bounds();
+			mBounds.MergeBounds(b, b2);
+
+			if(mFace != null)
+			{
+				mFace.AddToBounds(ref mBounds);
+			}
+
+			return	mBounds;
+		}
+
+
+		public void WriteToFile(BinaryWriter bw)
+		{
+			//write plane
+			bw.Write(mPlane.Normal.X);
+			bw.Write(mPlane.Normal.Y);
+			bw.Write(mPlane.Normal.Z);
+			bw.Write(mPlane.Dist);
+
+			//write bounds
+			bw.Write(mBounds.mMins.X);
+			bw.Write(mBounds.mMins.Y);
+			bw.Write(mBounds.mMins.Z);
+			bw.Write(mBounds.mMaxs.X);
+			bw.Write(mBounds.mMaxs.Y);
+			bw.Write(mBounds.mMaxs.Z);
+
+			bw.Write(mbLeaf);
+
+			bw.Write(mFront != null);
+			if(mFront != null)
+			{
+				mFront.WriteToFile(bw);
+			}
+
+			bw.Write(mBack != null);
+			if(mBack != null)
+			{
+				mBack.WriteToFile(bw);
 			}
 		}
 

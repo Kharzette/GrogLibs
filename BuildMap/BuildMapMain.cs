@@ -106,14 +106,36 @@ namespace BuildMap
 			// Create a new SpriteBatch, which can be used to draw textures.
 			mSpriteBatch = new SpriteBatch(GraphicsDevice);
 
+			string	outputFileName	=mMapFileName;
+
+			//strip extension
+			int	idx	=outputFileName.LastIndexOf('.');
+
+			outputFileName	=outputFileName.Remove(idx);
+
+			outputFileName += ".zone";
+
+			//strip path stuff off
+			idx	=outputFileName.LastIndexOf('/');
+			if(idx != -1)
+			{
+				outputFileName	=outputFileName.Substring(idx + 1);
+			}
+
 			mMapEffect	=Content.Load<Effect>("LightMap");
 
 			mMap	=new Map(mMapFileName);
+			//mMap.LoadTextures(Content);
 			mMap.RemoveOverlap();
 			mMap.BuildTree();
-			mMap.BuildPortals();
+			//mMap.BuildPortals();
 			mMap.LightAllBrushes(mGraphics.GraphicsDevice);
-			// TODO: use this.Content to load your game content here
+
+			mMap.BuildVertexInfo(mGraphics.GraphicsDevice);
+
+			mMap.Save(outputFileName);
+			
+			//mMap.SetTexturePointers();
 		}
 
 		/// <summary>
@@ -303,9 +325,19 @@ namespace BuildMap
 				mGraphics.GraphicsDevice,
 				VertexPositionNormalTexture.VertexElements);
 
+			//set up a 2 texcoord vert element
+			VertexElement[]	ve	=new VertexElement[3];
+
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
+			
 			mMapVertexDeclaration	=new VertexDeclaration(
 				mGraphics.GraphicsDevice,
-				VertexPositionTexture.VertexElements);
+				ve);
 
 			mDotEffect = new BasicEffect(mGraphics.GraphicsDevice, null);
 			mDotEffect.DiffuseColor = new Vector3(1.0f, 1.0f, 1.0f);
