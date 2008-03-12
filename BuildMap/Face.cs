@@ -72,16 +72,16 @@ namespace BuildMap
 			mTexToWorldT	=mWorldToTexT + (texNormal * -d2);
 			mTexToWorldT	*=((1.0f / len) * (1.0f / len));
 
-			mTexOrg.X	=-t.mTexS.Z * mTexToWorldS.X -
-							t.mTexT.Z * mTexToWorldT.X;
-			mTexOrg.Y	=-t.mTexS.Z * mTexToWorldS.Y -
-							t.mTexT.Z * mTexToWorldT.Y;
-			mTexOrg.Z	=-t.mTexS.Z * mTexToWorldS.Z -
-							t.mTexT.Z * mTexToWorldT.Z;
+			mTexOrg.X	=-t.mTexVecs.uOffset * mTexToWorldS.X -
+							t.mTexVecs.vOffset * mTexToWorldT.X;
+			mTexOrg.Y	=-t.mTexVecs.uOffset * mTexToWorldS.Y -
+							t.mTexVecs.vOffset * mTexToWorldT.Y;
+			mTexOrg.Z	=-t.mTexVecs.uOffset * mTexToWorldS.Z -
+							t.mTexVecs.vOffset * mTexToWorldT.Z;
 
 			d2	=Vector3.Dot(mTexOrg, p.Normal) - p.Dist - 1.0f;
 			d2	*=d;
-			mTexOrg	=mTexOrg + (p.Normal * -d2);
+			mTexOrg	=mTexOrg + (texNormal * -d2);
 		}
 
 
@@ -151,7 +151,7 @@ namespace BuildMap
     struct TexInfo
     {
 		public const UInt32		TEX_SPECIAL			=1;
-		public	const float		LIGHTMAPSCALE		=8.0f;
+		public	const float		LIGHTMAPSCALE		=4.0f;
 		public	const float		LIGHTMAPHALFSCALE	=LIGHTMAPSCALE / 2.0f;
 
         public Vector3          mNormal;
@@ -446,7 +446,7 @@ namespace BuildMap
 					yv.X	=0.0f;
 					yv.Y	=-1.0f;
 					yv.Z	=0.0f;
-					Debug.WriteLine("TextureAxisFromPlane: No Axis found.");
+					Debug.WriteLine("GetTextureAxis: No Axis found.");
 					return false;
 			}
 

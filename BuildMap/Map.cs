@@ -302,6 +302,10 @@ namespace BuildMap
 			{
 				Vector3	lightPos, clr;
 				float	lightVal;
+				if(e == GetWorldSpawnEntity())
+				{
+					continue;
+				}
 				if(!e.GetLightValue(out lightVal))
 				{
 					continue;
@@ -320,6 +324,10 @@ namespace BuildMap
 		{
 			foreach(Entity e in mEntities)
 			{
+				if(e == GetWorldSpawnEntity())
+				{
+					continue;
+				}
 				float	dist;
 				if(e.GetLightValue(out dist))
 				{

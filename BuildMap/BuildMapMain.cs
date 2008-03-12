@@ -235,7 +235,7 @@ namespace BuildMap
 					}
 					mDotEffect.CommitChanges();
 					
-					vpc[np].Position	=mDotPos;//mMap.GetFirstLightPos();
+					vpc[np].Position	=mMap.GetFirstLightPos();
 
 					mGraphics.GraphicsDevice.RenderState.PointSize	=10;
 
