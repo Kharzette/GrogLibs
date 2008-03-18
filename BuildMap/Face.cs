@@ -130,10 +130,10 @@ namespace BuildMap
 			mint	=(float)Math.Floor(mint / TexInfo.LIGHTMAPSCALE);
 			maxt	=(float)Math.Ceiling(maxt / TexInfo.LIGHTMAPSCALE);
 
-			mTexMinS	=(int)mins;
-			mTexMinT	=(int)mint;
-			mTexSizeS	=(int)(maxs - mins);
-			mTexSizeT	=(int)(maxt - mint);
+			mTexMinS	=(int)Math.Floor(mins);
+			mTexMinT	=(int)Math.Floor(mint);
+			mTexSizeS	=(int)Math.Floor((maxs - mins));
+			mTexSizeT	=(int)Math.Floor((maxt - mint));
 
 			if(mTexSizeS > 4096 || mTexSizeT > 4096)
 			{
@@ -151,8 +151,10 @@ namespace BuildMap
     struct TexInfo
     {
 		public const UInt32		TEX_SPECIAL			=1;
-		public	const float		LIGHTMAPSCALE		=4.0f;
+		public const UInt32		FACE_HIDDEN			=2;
+		public	const float		LIGHTMAPSCALE		=8.0f;
 		public	const float		LIGHTMAPHALFSCALE	=LIGHTMAPSCALE / 2.0f;
+		public	const float		LIGHTMAPDOUBLESCALE	=LIGHTMAPSCALE * 2.0f;
 
         public Vector3          mNormal;
         public TexInfoVectors   mTexVecs;
@@ -201,10 +203,10 @@ namespace BuildMap
 		private	LightInfo		mLightInfo;
 
         //for drawrings
-        private VertexBuffer			mVertBuffer;
+        private VertexBuffer					mVertBuffer;
         private VertexPositionTextureTexture[]	mPosColor;
-        private short[]					mIndexs;
-        private IndexBuffer				mIndexBuffer;
+        private short[]							mIndexs;
+        private IndexBuffer						mIndexBuffer;
 
 
 		public Plane GetPlane()
@@ -323,21 +325,6 @@ namespace BuildMap
 		}
 
 
-		public int GetSurfPoints(out Vector3[] surfPoints)
-		{
-			if(mLightMap != null)
-			{
-				surfPoints	=mLightInfo.mSurface;
-				return	mLightInfo.mNumSurfacePoints;
-			}
-			else
-			{
-				surfPoints	=null;
-				return 0;
-			}
-		}
-
-
         public void Draw(GraphicsDevice g, Effect fx)
         {
 			if(mPoints.Count < 3 || IsTiny())
@@ -350,6 +337,11 @@ namespace BuildMap
 				Debug.Assert(false);
             }
 
+			if((mFlags & TexInfo.FACE_HIDDEN) != 0)
+			{
+				return;
+			}
+			
 			if(mLightMap != null)
 			{				
 				fx.Parameters["LightMap"].SetValue(mLightMap);
@@ -374,7 +366,7 @@ namespace BuildMap
 				fx.Parameters["TextureEnabled"].SetValue(false);
 			}
 			fx.CommitChanges();
-
+			
             g.Vertices[0].SetSource(mVertBuffer, 0, 28);
             g.Indices = mIndexBuffer;
 
@@ -413,29 +405,29 @@ namespace BuildMap
 			{
 				case 0:						// X
 					xv.X	=0.0f;
-					xv.Y	=0.0f;
-					xv.Z	=1.0f;
-
-					yv.X	=0.0f;
-					yv.Y	=-1.0f;
-					yv.Z	=0.0f;
-					break;
-				case 1:						// Y
-					xv.X	=1.0f;
-					xv.Y	=0.0f;
+					xv.Y	=1.0f;
 					xv.Z	=0.0f;
 
 					yv.X	=0.0f;
 					yv.Y	=0.0f;
 					yv.Z	=1.0f;
 					break;
-				case 2:						// Z
-					xv.X	=1.0f;
+				case 1:						// Y
+					xv.X	=0.0f;
 					xv.Y	=0.0f;
+					xv.Z	=1.0f;
+
+					yv.X	=1.0f;
+					yv.Y	=0.0f;
+					yv.Z	=0.0f;
+					break;
+				case 2:						// Z
+					xv.X	=0.0f;
+					xv.Y	=1.0f;
 					xv.Z	=0.0f;
 
-					yv.X	=0.0f;
-					yv.Y	=-1.0f;
+					yv.X	=1.0f;
+					yv.Y	=0.0f;
 					yv.Z	=0.0f;
 					break;
 				default:
@@ -458,19 +450,6 @@ namespace BuildMap
         {
             SetFaceFromPlane(mFacePlane, Bounds.MIN_MAX_BOUNDS);
         }
-
-
-		public void SetTexturePointers(List<KeyValuePair<string, Texture2D>> tl)
-		{
-			foreach(KeyValuePair<string, Texture2D> k in tl)
-			{
-				if(k.Key == mTexInfo.mTexName)
-				{
-					mTexInfo.mTexture	=k.Value;
-					return;
-				}
-			}
-		}
 
 
         public bool IsValid()
@@ -618,6 +597,16 @@ namespace BuildMap
 			if(mTexInfo.mTexVecs.vScale == 0.0f)
 			{
 				mTexInfo.mTexVecs.vScale	=1.0f;
+			}
+
+			//test
+			if(mTexInfo.mTexVecs.uScale < 0.0f)
+			{
+				mTexInfo.mTexVecs.uScale	=-mTexInfo.mTexVecs.uScale;
+			}
+			if(mTexInfo.mTexVecs.vScale < 0.0f)
+			{
+				mTexInfo.mTexVecs.vScale	=-mTexInfo.mTexVecs.vScale;
 			}
 
 			float	ang, sinv, cosv, ns, nt;
@@ -772,18 +761,6 @@ namespace BuildMap
 		}
 
 
-		public void GetTexFileNames(ref List<string> fn)
-		{
-			if(mTexInfo.mTexName != null)
-			{
-				if(!fn.Contains(mTexInfo.mTexName))
-				{
-					fn.Add(mTexInfo.mTexName);
-				}
-			}
-		}
-
-
         public void GetFaceMinMaxDistancesFromPlane(Plane p, ref float front, ref float back)
         {
             float d;
@@ -837,30 +814,6 @@ namespace BuildMap
             mPoints.Add(org + vright + vup);
             mPoints.Add(org + vright - vup);
             mPoints.Add(org - vright - vup);
-        }
-
-
-        private bool IsPointBehindFacePlane(Vector3 pnt)
-        {
-            float dot = Vector3.Dot(pnt, mFacePlane.Normal)
-                                - mFacePlane.Dist;
-
-            return (dot < -ON_EPSILON);
-        }
-
-
-        public bool IsAnyPointBehindAllPlanes(Face f, List<Plane> planes)
-        {
-            foreach(Vector3 pnt in f.mPoints)
-            {
-                foreach(Plane p in planes)
-                {
-                    if(!IsPointBehindFacePlane(pnt))
-                    {
-                    }
-                }
-            }
-            return false;
         }
 
 
@@ -1047,8 +1000,8 @@ namespace BuildMap
 				}
 			}
 
-			float	shiftU	=-minS + TexInfo.LIGHTMAPSCALE;
-			float	shiftV	=-minT + TexInfo.LIGHTMAPSCALE;
+			float	shiftU	=-minS + TexInfo.LIGHTMAPHALFSCALE;
+			float	shiftV	=-minT + TexInfo.LIGHTMAPHALFSCALE;
 
 			foreach(Vector3 pnt in mPoints)
 			{
@@ -1062,14 +1015,14 @@ namespace BuildMap
 				//scale down to a zero to one range
 				if(mLightMap != null)
 				{
-					crd.X	/=(mLightInfo.mTexSizeS * TexInfo.LIGHTMAPSCALE);
-					crd.Y	/=(mLightInfo.mTexSizeT * TexInfo.LIGHTMAPSCALE);
+					crd.X	/=((float)mLightInfo.mTexSizeS * TexInfo.LIGHTMAPSCALE);
+					crd.Y	/=((float)mLightInfo.mTexSizeT * TexInfo.LIGHTMAPSCALE);
 
 					//ratio between the size
 					//of the lightmap and the padded
 					//texture2d used in rendering
-					crd.X	/=(float)mLightMap.Width / ((float)mLightInfo.mTexSizeS);
-					crd.Y	/=(float)mLightMap.Height / ((float)mLightInfo.mTexSizeT);
+					crd.X	/=((float)mLightMap.Width / ((float)mLightInfo.mTexSizeS));
+					crd.Y	/=((float)mLightMap.Height / ((float)mLightInfo.mTexSizeT));
 				}
 
 				coords.Add(crd);
@@ -1083,7 +1036,7 @@ namespace BuildMap
 		}
 
 
-		private	void CalcPoints(BspNode root)
+		private	void CalcSurfacePoints(BspNode root)
 		{
 			float	mids, midt;
 			Vector3	faceMid;
@@ -1105,6 +1058,8 @@ namespace BuildMap
 			mLightInfo.mSurface				=new Vector3[w * h];
 			mLightInfo.mNumSurfacePoints	=w * h;
 
+			bool	bAllInSolid	=true;
+
 			for(t=c=0;t < h;t++)
 			{
 				for(s=0;s < w;s++,c++)
@@ -1112,69 +1067,73 @@ namespace BuildMap
 					float	us	=startS + s * step;
 					float	ut	=startT + t * step;
 
-					for(i=0;i < 6;i++)
+					//here quake / genesis can guarantee
+					//that the face will for the mostpart
+					//be in empty space.  I cannot guarantee
+					//that as I don't do any sort of hidden
+					//leaf removal.  So I use a classify
+					//instead of a raycast, and try only
+					//axial shifts in s and t
+					for(i=0;i < 8;i++)
 					{
 						mLightInfo.mSurface[c]
 							=mLightInfo.mTexOrg + mLightInfo.mTexToWorldS * us
 								+mLightInfo.mTexToWorldT * ut;
 
-						bool	clear	=root.RayCastBool(faceMid, mLightInfo.mSurface[c]);
-						if(clear)
+						bool	solid	=root.ClassifyPoint(mLightInfo.mSurface[c]);
+						if(!solid)
 						{
+							bAllInSolid	=false;
 							break;
 						}
-						if((i & 1) != 0)
+						if(i < 4)
 						{
-							if(us > mids)
+							if(i < 2)	//try a shift left
 							{
-								us	-=TexInfo.LIGHTMAPHALFSCALE;
-								if(us < mids)
-								{
-									us	=mids;
-								}
+								us	-=TexInfo.LIGHTMAPSCALE;
+							}
+							else if(i < 3)
+							{
+								//recenter + half
+								us	+=TexInfo.LIGHTMAPDOUBLESCALE;
+								us	+=TexInfo.LIGHTMAPSCALE;
 							}
 							else
 							{
-								us	+=TexInfo.LIGHTMAPHALFSCALE;
-								if(us > mids)
-								{
-									us	=mids;
-								}
+								us	+=TexInfo.LIGHTMAPSCALE;
 							}
 						}
 						else
 						{
-							if(ut > midt)
+							if(i < 5)
 							{
-								ut	-=TexInfo.LIGHTMAPHALFSCALE;
-								if(ut < midt)
-								{
-									ut	=midt;
-								}
+								//recenter
+								us	-=TexInfo.LIGHTMAPDOUBLESCALE;
+								ut	-=TexInfo.LIGHTMAPSCALE;
+							}
+							else if(i < 6)	//try shift down
+							{
+								ut	-=TexInfo.LIGHTMAPSCALE;
+							}
+							else if(i < 7)	
+							{
+								ut	+=TexInfo.LIGHTMAPDOUBLESCALE;
+								ut	+=TexInfo.LIGHTMAPSCALE;
 							}
 							else
 							{
-								ut	+=TexInfo.LIGHTMAPHALFSCALE;
-								if(ut > midt)
-								{
-									ut	=midt;
-								}
+								ut	+=TexInfo.LIGHTMAPSCALE;
 							}
 						}
-
-						Vector3	move	=faceMid - mLightInfo.mSurface[c];
-						if(move == Vector3.Zero)
-						{
-							break;	//reached the midpoint
-						}
-						move.Normalize();
-						Debug.Assert(!float.IsNaN(move.X));
-						mLightInfo.mSurface[(t * w) + s]	+=(move * TexInfo.LIGHTMAPHALFSCALE);
 					}
 					Debug.Assert(!float.IsNaN(mLightInfo.mSurface[c].X));
 					Debug.Assert(!float.IsNaN(mLightInfo.mSurface[c].Y));
 					Debug.Assert(!float.IsNaN(mLightInfo.mSurface[c].Z));
 				}
+			}
+			if(bAllInSolid)
+			{
+				this.mFlags	|=TexInfo.FACE_HIDDEN;
 			}
 		}
 
@@ -1211,11 +1170,6 @@ namespace BuildMap
 
 			for(c=0;c < mLightInfo.mNumSurfacePoints;c++)
 			{
-				if(c == (mLightInfo.mNumSurfacePoints / 2))
-				{
-					c++;
-					c--;
-				}
 				if(!root.RayCastBool(lightPos, mLightInfo.mSurface[c]))
 				{
 					continue;
@@ -1263,7 +1217,7 @@ namespace BuildMap
 
 			mLightInfo.CalcFaceVectors(mFacePlane, mTexInfo);
 			mLightInfo.CalcFaceExtents(mPoints, mTexInfo);
-			CalcPoints(root);
+			CalcSurfacePoints(root);
 
 			SingleLightFace(root, lightPos, lightVal);
 
@@ -1272,14 +1226,14 @@ namespace BuildMap
 				return;
 			}
 
-			int	xPadded	=(int)Math.Pow(2, Math.Ceiling(Math.Log(mLightInfo.mTexSizeS) / Math.Log(2)));
-			int	yPadded	=(int)Math.Pow(2, Math.Ceiling(Math.Log(mLightInfo.mTexSizeT) / Math.Log(2)));
+			int	xPadded	=(int)Math.Pow(2, Math.Ceiling(Math.Log(mLightInfo.mTexSizeS + 1) / Math.Log(2)));
+			int	yPadded	=(int)Math.Pow(2, Math.Ceiling(Math.Log(mLightInfo.mTexSizeT + 1) / Math.Log(2)));
 
 			Color[]	lm	=new Color[xPadded * yPadded];
 
-			for(t=0,c=0;t < mLightInfo.mTexSizeT;t++,c++)
+			for(t=0,c=0;t < (mLightInfo.mTexSizeT + 1);t++)
 			{
-				for(s=0;s < mLightInfo.mTexSizeS;s++, c++)
+				for(s=0;s < (mLightInfo.mTexSizeS + 1);s++, c++)
 				{
 					float	total	=mLightInfo.mSamples[c];
 
@@ -1295,19 +1249,19 @@ namespace BuildMap
 			}
 
 			//clamp the colors out beyond the real border
-			for(t=0;t < mLightInfo.mTexSizeT;t++)
+			for(t=0;t < mLightInfo.mTexSizeT + 1;t++)
 			{
-				Color	padColor	=lm[(t * xPadded) + mLightInfo.mTexSizeS - 1];
+				Color	padColor	=lm[(t * xPadded) + mLightInfo.mTexSizeS];
 				for(s=mLightInfo.mTexSizeS;s < xPadded;s++)
 				{
 					lm[(t * xPadded) + s]	=padColor;
 				}
 			}
-			for(t=mLightInfo.mTexSizeT;t < yPadded;t++)
+			for(t=mLightInfo.mTexSizeT + 1;t < yPadded;t++)
 			{
 				for(s=0;s < xPadded;s++)
 				{
-					Color	padXColor	=lm[((t-1) * xPadded) + s];
+					Color	padXColor	=lm[((t - 1) * xPadded) + s];
 					lm[(t * xPadded) + s]	=padXColor;
 				}
 			}
@@ -1326,9 +1280,9 @@ namespace BuildMap
 				//grab data
 				mLightMap.GetData<Color>(existing);
 
-				for(t=0,c=0;t < mLightInfo.mTexSizeT;t++)
+				for(t=0,c=0;t < (mLightInfo.mTexSizeT + 1);t++)
 				{
-					for(s=0;s < mLightInfo.mTexSizeS;s++, c++)
+					for(s=0;s < (mLightInfo.mTexSizeS + 1);s++, c++)
 					{
 						int	r	=lm[(t * xPadded) + s].R + existing[(t * xPadded) + s].R;
 						int	g	=lm[(t * xPadded) + s].G + existing[(t * xPadded) + s].G;
@@ -1363,5 +1317,86 @@ namespace BuildMap
 				bnd.AddPointToBounds(pnt);
 			}
 		}
-    }
+
+		#region Unused
+		public int GetSurfPoints(out Vector3[] surfPoints)
+		{
+			if(mLightMap != null)
+			{
+				surfPoints	=mLightInfo.mSurface;
+				return	mLightInfo.mNumSurfacePoints;
+			}
+			else
+			{
+				surfPoints	=null;
+				return 0;
+			}
+		}
+
+
+		public bool MiddleInSolid(BspNode root)
+		{
+			float	mids, midt;
+			Vector3	faceMid;
+
+			mids	=(mLightInfo.mExactMaxS + mLightInfo.mExactMinS) / 2.0f;
+			midt	=(mLightInfo.mExactMaxT + mLightInfo.mExactMinT) / 2.0f;
+
+			faceMid	=mLightInfo.mTexOrg +
+						(mLightInfo.mTexToWorldS * mids) +
+						(mLightInfo.mTexToWorldT * midt);
+
+			return	root.ClassifyPoint(faceMid);
+		}
+
+
+		public void SetTexturePointers(List<KeyValuePair<string, Texture2D>> tl)
+		{
+			foreach(KeyValuePair<string, Texture2D> k in tl)
+			{
+				if(k.Key == mTexInfo.mTexName)
+				{
+					mTexInfo.mTexture	=k.Value;
+					return;
+				}
+			}
+		}
+
+
+		public void GetTexFileNames(ref List<string> fn)
+		{
+			if(mTexInfo.mTexName != null)
+			{
+				if(!fn.Contains(mTexInfo.mTexName))
+				{
+					fn.Add(mTexInfo.mTexName);
+				}
+			}
+		}
+
+
+        private bool IsPointBehindFacePlane(Vector3 pnt)
+        {
+            float dot = Vector3.Dot(pnt, mFacePlane.Normal)
+                                - mFacePlane.Dist;
+
+            return (dot < -ON_EPSILON);
+        }
+
+
+        public bool IsAnyPointBehindAllPlanes(Face f, List<Plane> planes)
+        {
+            foreach(Vector3 pnt in f.mPoints)
+            {
+                foreach(Plane p in planes)
+                {
+                    if(!IsPointBehindFacePlane(pnt))
+                    {
+                    }
+                }
+            }
+            return false;
+		}
+		#endregion
+	}
 }

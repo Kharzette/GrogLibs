@@ -299,10 +299,10 @@ namespace BuildMap
 			{
 				if(mParent != null)
 				{
-					mPortal	=new Face(mPlane, null);
+					mPortal	=new Face(mPlane, mFace);
 					mParent.ClipToParents(mPortal);
-
 					mPortal.mFlags	=0;
+
 					if(mFront != null && (mFront.mContents & BSP_CONTENTS_SOLID2) != 0)
 					{
 						mPortal.mFlags	|=1;
@@ -454,6 +454,83 @@ namespace BuildMap
 		}*/
 
 
+		public void BuildVertexInfo(GraphicsDevice g)
+		{
+			if(mFront != null)
+			{
+				mFront.BuildVertexInfo(g);
+			}
+
+			if(mFace != null)
+			{
+				mFace.BuildVertexInfo(g);
+			}
+
+			if(mBack != null)
+			{
+				mBack.BuildVertexInfo(g);
+			}
+		}
+
+		public static int	gCount;
+		public static int	gCheck;
+
+
+		public int GetFirstBSPSurface(out Vector3[] surfPoints)
+		{
+			int	np;
+			if(mBack != null)
+			{
+				np	=mBack.GetFirstBSPSurface(out surfPoints);
+				if(np > 0)
+				{
+					return	np;
+				}
+			}
+			if(mPortal != null)
+			{
+				if(gCount > gCheck)
+				{
+					np	=mPortal.GetSurfPoints(out surfPoints);
+					if(np > 0)
+					{
+						return	np;
+					}
+				}
+				gCount++;
+			}
+			if(mFront != null)
+			{
+				np	=mFront.GetFirstBSPSurface(out surfPoints);
+				if(np > 0)
+				{
+					return	np;
+				}
+			}
+			surfPoints	=null;
+			return	0;
+		}
+
+
+		public void Light(GraphicsDevice g, BspNode root, Vector3 lightPos, float lightVal, Vector3 clr)
+		{
+			if(mFront != null)
+			{
+				mFront.Light(g, root, lightPos, lightVal, clr);
+			}
+
+			if(mFace != null)
+			{
+				mFace.LightFace(g, root, lightPos, lightVal);
+			}
+
+			if(mBack != null)
+			{
+				mBack.Light(g, root, lightPos, lightVal, clr);
+			}
+		}
+
+
 		public void AddBrushToTree(Brush b)
 		{
 			List<BspNode>	nodes;
@@ -470,7 +547,7 @@ namespace BuildMap
 		//something is hozed so just drawing all nodes
 		public void Draw(GraphicsDevice g, Effect fx, Vector3 camPos)
 		{
-			if(mbLeaf)
+			//if(mbLeaf)
 			{
 				if(mFace != null)
 				{

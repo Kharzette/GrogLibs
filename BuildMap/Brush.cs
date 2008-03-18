@@ -37,9 +37,9 @@ namespace BuildMap
 		public void GetThriceLightmaps(out List<Texture2D> list)
 		{
 			list	=new List<Texture2D>();
-			list.Add(mFaces[3].GetLightMap());
-			list.Add(mFaces[4].GetLightMap());
-			list.Add(mFaces[5].GetLightMap());
+			list.Add(mFaces[0].GetLightMap());
+			list.Add(mFaces[1].GetLightMap());
+			list.Add(mFaces[2].GetLightMap());
 		}
 
 
@@ -47,6 +47,10 @@ namespace BuildMap
 		{
 			foreach(Face f in mFaces)
 			{
+				if(mFaces.IndexOf(f) < 0)
+				{
+					continue;
+				}
 				int	np	=f.GetSurfPoints(out surfPoints);
 				if(np > 0)
 				{

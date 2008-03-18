@@ -130,6 +130,7 @@ namespace BuildMap
 			mMap.BuildTree();
 			//mMap.BuildPortals();
 			mMap.LightAllBrushes(mGraphics.GraphicsDevice);
+			//mMap.LightAllBspFaces(mGraphics.GraphicsDevice);
 
 			mMap.BuildVertexInfo(mGraphics.GraphicsDevice);
 
@@ -197,6 +198,11 @@ namespace BuildMap
 					mMap.Draw(mGraphics.GraphicsDevice, mMapEffect);
 				}
 
+				if(mbDrawBsp)
+				{
+					mMap.Draw(mGraphics.GraphicsDevice, mMapEffect, mCamPos);
+				}
+
 				pass.End();
 			}
 			mMapEffect.End();
@@ -249,15 +255,9 @@ namespace BuildMap
 				}
 				mDotEffect.End();
 			}
-
-			if(mbDrawPortals || mbDrawBsp)
+			if(mbDrawPortals)
 			{
 				mPortalEffect.Begin();
-			}
-
-			if(mbDrawBsp)
-			{
-				mMap.Draw(mGraphics.GraphicsDevice, mPortalEffect, mCamPos);
 			}
 
 			if(mbDrawPortals)
@@ -397,6 +397,16 @@ namespace BuildMap
 				(mLastGamePadState.Buttons.X == ButtonState.Released))
 			{
 				mbDrawPortals	=!mbDrawPortals;
+			}
+			if(((mCurrentGamePadState.Buttons.RightShoulder == ButtonState.Pressed)) &&
+				(mLastGamePadState.Buttons.RightShoulder == ButtonState.Released))
+			{
+				BspNode.gCheck++;
+			}
+			if(((mCurrentGamePadState.Buttons.LeftShoulder == ButtonState.Pressed)) &&
+				(mLastGamePadState.Buttons.LeftShoulder == ButtonState.Released))
+			{
+				BspNode.gCheck--;
 			}
 		}
 

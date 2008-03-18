@@ -265,6 +265,19 @@ namespace BuildMap
 		}
 
 
+		public void BuildBSPVertexInfo(GraphicsDevice g)
+		{
+			mTree.BuildVertexInfo(g);
+			foreach(Entity e in mEntities)
+			{
+				foreach(Brush b in e.mBrushes)
+				{
+					b.BuildVertexInfo(g);
+				}
+			}
+		}
+
+
 		public bool ClassifyPoint(Vector3 pnt)
 		{
 			return	mTree.ClassifyPoint(pnt);
@@ -316,6 +329,33 @@ namespace BuildMap
 				}
 				e.GetColor(out clr);
 				LightBrushes(g, wse.mBrushes, lightPos, lightVal, clr);
+			}
+		}
+
+
+		public void LightAllBspFaces(GraphicsDevice g)
+		{
+			//find worldspawn brush list
+			Entity	wse	=GetWorldSpawnEntity();
+
+			foreach(Entity e in mEntities)
+			{
+				Vector3	lightPos, clr;
+				float	lightVal;
+				if(e == GetWorldSpawnEntity())
+				{
+					continue;
+				}
+				if(!e.GetLightValue(out lightVal))
+				{
+					continue;
+				}
+				if(!e.GetOrigin(out lightPos))
+				{
+					continue;
+				}
+				e.GetColor(out clr);
+				mTree.Light(g, lightPos, lightVal, clr);
 			}
 		}
 
@@ -419,12 +459,27 @@ namespace BuildMap
 		}
 
 
+		public int GetFirstBSPSurface(out Vector3[] surfPoints)
+		{
+			int	ret	=mTree.GetFirstBSPSurface(out surfPoints);
+			if(ret > 0)
+			{
+				return	ret;
+			}
+			return	0;
+		}
+
+
 		public int GetFirstSurface(out Vector3[] surfPoints)
 		{
 			Entity	e	=GetWorldSpawnEntity();
 
 			foreach(Brush b in e.mBrushes)
 			{
+				if(e.mBrushes.IndexOf(b) < 0)
+				{
+					continue;
+				}
 				int	ret	=b.GetFirstSurface(out surfPoints);
 				if(ret > 0)
 				{

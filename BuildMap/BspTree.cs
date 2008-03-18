@@ -115,6 +115,13 @@ namespace BuildMap
 		}
 
 
+		public int GetFirstBSPSurface(out Vector3[] surfPoints)
+		{
+			BspNode.gCount	=0;
+			return	mRoot.GetFirstBSPSurface(out surfPoints);
+		}
+
+
 		public void Draw(GraphicsDevice g, Effect fx, Vector3 camPos)
 		{
 			mRoot.Draw(g, fx, camPos);
@@ -130,6 +137,18 @@ namespace BuildMap
 		public BspNode GetRoot()
 		{
 			return	mRoot;
+		}
+
+
+		public void BuildVertexInfo(GraphicsDevice g)
+		{
+			mRoot.BuildVertexInfo(g);
+		}
+
+
+		public void Light(GraphicsDevice g, Vector3 lightPos, float lightVal, Vector3 clr)
+		{
+			mRoot.Light(g, mRoot, lightPos, lightVal, clr);
 		}
 	}
 }
