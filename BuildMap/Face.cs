@@ -72,12 +72,12 @@ namespace BuildMap
 			mTexToWorldT	=mWorldToTexT + (texNormal * -d2);
 			mTexToWorldT	*=((1.0f / len) * (1.0f / len));
 
-			mTexOrg.X	=-t.mTexVecs.uOffset * mTexToWorldS.X -
-							t.mTexVecs.vOffset * mTexToWorldT.X;
-			mTexOrg.Y	=-t.mTexVecs.uOffset * mTexToWorldS.Y -
-							t.mTexVecs.vOffset * mTexToWorldT.Y;
-			mTexOrg.Z	=-t.mTexVecs.uOffset * mTexToWorldS.Z -
-							t.mTexVecs.vOffset * mTexToWorldT.Z;
+			mTexOrg.X	=-t.uOffset * mTexToWorldS.X -
+							t.vOffset * mTexToWorldT.X;
+			mTexOrg.Y	=-t.uOffset * mTexToWorldS.Y -
+							t.vOffset * mTexToWorldT.Y;
+			mTexOrg.Z	=-t.uOffset * mTexToWorldS.Z -
+							t.vOffset * mTexToWorldT.Z;
 
 			d2	=Vector3.Dot(mTexOrg, p.Normal) - p.Dist - 1.0f;
 			d2	*=d;
@@ -87,7 +87,6 @@ namespace BuildMap
 
 		public	void CalcFaceExtents(List<Vector3> pnts, TexInfo t)
 		{
-			//figure out the face extents
 			float	mins, mint, maxs, maxt;
 
 			mins	=mint	=Bounds.MIN_MAX_BOUNDS;
@@ -97,7 +96,7 @@ namespace BuildMap
 			{
 				float	val;
 
-				val	=Vector3.Dot(pnt, t.mTexS) + t.mTexVecs.uOffset;
+				val	=Vector3.Dot(pnt, t.mTexS) + t.uOffset;
 
 				if(val < mins)
 				{
@@ -108,7 +107,7 @@ namespace BuildMap
 					maxs	=val;
 				}
 
-				val	=Vector3.Dot(pnt, t.mTexT) + t.mTexVecs.vOffset;
+				val	=Vector3.Dot(pnt, t.mTexT) + t.vOffset;
 
 				if(val < mint)
 				{
@@ -142,24 +141,21 @@ namespace BuildMap
 		}
 	}
 
-    struct TexInfoVectors
-    {
-	    public float    uScale, vScale;
-	    public float    uOffset, vOffset;
-    }
 
     struct TexInfo
     {
 		public const UInt32		TEX_SPECIAL			=1;
+		public const UInt32		TEX_ANIMATING		=4;
 		public const UInt32		FACE_HIDDEN			=2;
-		public	const float		LIGHTMAPSCALE		=8.0f;
+		public	const float		LIGHTMAPSCALE		=4.0f;
 		public	const float		LIGHTMAPHALFSCALE	=LIGHTMAPSCALE / 2.0f;
 		public	const float		LIGHTMAPDOUBLESCALE	=LIGHTMAPSCALE * 2.0f;
-
-        public Vector3          mNormal;
-        public TexInfoVectors   mTexVecs;
-        public float            mRotationAngle;
-        public string           mTexName;   //temporary
+		
+		public Vector3			mNormal;
+		public float			uScale, vScale;
+		public float			uOffset, vOffset;
+		public float			mRotationAngle;
+		public string			mTexName;   //temporary
 		public Vector3			mTexS, mTexT;
 		public UInt32			mFlags;
 		public Texture2D		mTexture;
@@ -185,30 +181,29 @@ namespace BuildMap
 		public	Vector2	Texture0;
 		public	Vector2	Texture1;
 	}
-
-
-    public class Face
-    {
-        public	const float ON_EPSILON	=0.1f;
-        private const float EDGE_LENGTH	=0.1f;
-        private const float SCALECOS	=0.5f;
-        private const float RANGESCALE	=0.5f;
-
-        private Plane           mFacePlane;
-        private TexInfo         mTexInfo;
-        private List<Vector3>   mPoints;
+	
+	public class Face
+	{
+		public	const float ON_EPSILON	=0.1f;
+		private const float EDGE_LENGTH	=0.1f;
+		private const float SCALECOS	=0.5f;
+		private const float RANGESCALE	=0.5f;
+		
+		private Plane			mFacePlane;
+		private TexInfo			mTexInfo;
+		private List<Vector3>	mPoints;
 		public	bool			mbVisible;
 		public	UInt32			mFlags;
 		private	Texture2D		mLightMap;
 		private	LightInfo		mLightInfo;
-
-        //for drawrings
-        private VertexBuffer					mVertBuffer;
-        private VertexPositionTextureTexture[]	mPosColor;
-        private short[]							mIndexs;
-        private IndexBuffer						mIndexBuffer;
-
-
+		
+		//for drawrings
+		private VertexBuffer					mVertBuffer;
+		private VertexPositionTextureTexture[]	mVerts;
+		private short[]							mIndexs;
+		private IndexBuffer						mIndexBuffer;
+	
+	
 		public Plane GetPlane()
 		{
 			return	mFacePlane;
@@ -288,7 +283,7 @@ namespace BuildMap
 			int	j	=0;
 			
 			//triangulate the brush face points
-			mPosColor	=new VertexPositionTextureTexture[mPoints.Count];
+			mVerts	=new VertexPositionTextureTexture[mPoints.Count];
 			mIndexs		=new short[(3 + ((mPoints.Count - 3) * 3))];
 			mIndexBuffer=new IndexBuffer(g, 2 * (3 + ((mPoints.Count - 3) * 3)),
 							BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
@@ -301,9 +296,9 @@ namespace BuildMap
 			
 			foreach(Vector3 pos in mPoints)
 			{
-				mPosColor[i].Position	=pos;
-				mPosColor[i].Texture0	=tcrds0[i];
-				mPosColor[i].Texture1	=tcrds1[i];
+				mVerts[i].Position	=pos;
+				mVerts[i].Texture0	=tcrds0[i];
+				mVerts[i].Texture1	=tcrds1[i];
 				i++;
 			}
 			
@@ -317,11 +312,11 @@ namespace BuildMap
 			
 			mIndexBuffer.SetData<short>(mIndexs, 0, mIndexs.Length);
 			
-			mVertBuffer	=new VertexBuffer(g, 28 * (mPosColor.Length),
+			mVertBuffer	=new VertexBuffer(g, 28 * (mVerts.Length),
 							BufferUsage.None);
 			
 			//Set the vertex buffer data to the array of vertices.
-			mVertBuffer.SetData<VertexPositionTextureTexture>(mPosColor);
+			mVertBuffer.SetData<VertexPositionTextureTexture>(mVerts);
 		}
 
 
@@ -332,7 +327,7 @@ namespace BuildMap
 				Debug.Assert(false);
 			}
 
-            if(mPosColor == null || mPosColor.Length < 1)
+            if(mVerts == null || mVerts.Length < 1)
             {
 				Debug.Assert(false);
             }
@@ -375,7 +370,7 @@ namespace BuildMap
                 PrimitiveType.TriangleList,
                 0,
                 0,                  // index of the first vertex to draw
-                mPosColor.Length,
+                mVerts.Length,
                 0,
                 mIndexs.Length/3    // number of primitives
             );
@@ -552,6 +547,12 @@ namespace BuildMap
 					mTexInfo.mTexName	=tok;
 					continue;
 				}
+				else if(tok[0] == '+')
+				{
+					//animating I think
+					mTexInfo.mTexName	=tok;
+					mTexInfo.mFlags	|=TexInfo.TEX_ANIMATING;
+				}
                 else if(char.IsLetter(tok, 0))
                 {
                     mTexInfo.mTexName = tok;
@@ -564,7 +565,6 @@ namespace BuildMap
                 if(Single.TryParse(tok, out num))
                 {
                     //rest are numbers
-					//numbers.Add(System.Convert.ToSingle(tok));
 					numbers.Add(num);
                 }
             }
@@ -576,11 +576,11 @@ namespace BuildMap
             mPoints.Add(new Vector3(-numbers[3], numbers[5], numbers[4]));
             mPoints.Add(new Vector3(-numbers[6], numbers[8], numbers[7]));
 
-            mTexInfo.mTexVecs.uOffset   =numbers[9];
-            mTexInfo.mTexVecs.vOffset   =numbers[10];
-            mTexInfo.mRotationAngle     =numbers[11];
-            mTexInfo.mTexVecs.uScale    =numbers[12];
-            mTexInfo.mTexVecs.vScale    =numbers[13];
+            mTexInfo.uOffset		=numbers[9];
+            mTexInfo.vOffset		=numbers[10];
+            mTexInfo.mRotationAngle	=numbers[11];
+            mTexInfo.uScale			=numbers[12];
+            mTexInfo.vScale			=numbers[13];
 
             SetPlaneFromFace();
 
@@ -590,23 +590,13 @@ namespace BuildMap
 
 			Debug.Assert(vecs != Vector3.Zero);
 
-			if(mTexInfo.mTexVecs.uScale == 0.0f)
+			if(mTexInfo.uScale == 0.0f)
 			{
-				mTexInfo.mTexVecs.uScale	=1.0f;
+				mTexInfo.uScale	=1.0f;
 			}
-			if(mTexInfo.mTexVecs.vScale == 0.0f)
+			if(mTexInfo.vScale == 0.0f)
 			{
-				mTexInfo.mTexVecs.vScale	=1.0f;
-			}
-
-			//test
-			if(mTexInfo.mTexVecs.uScale < 0.0f)
-			{
-				mTexInfo.mTexVecs.uScale	=-mTexInfo.mTexVecs.uScale;
-			}
-			if(mTexInfo.mTexVecs.vScale < 0.0f)
-			{
-				mTexInfo.mTexVecs.vScale	=-mTexInfo.mTexVecs.vScale;
+				mTexInfo.vScale	=1.0f;
 			}
 
 			float	ang, sinv, cosv, ns, nt;
@@ -662,8 +652,8 @@ namespace BuildMap
 			VecIdxAssign(ref vect, sv, ns);
 			VecIdxAssign(ref vect, tv, nt);
 
-			vecs	=vecs * (1.0f / mTexInfo.mTexVecs.uScale);
-			vect	=vect * (1.0f / mTexInfo.mTexVecs.vScale);
+			vecs	=vecs * (1.0f / mTexInfo.uScale);
+			vect	=vect * (1.0f / mTexInfo.vScale);
 			Debug.Assert(vecs != Vector3.Zero);
 
 			mTexInfo.mTexS	=vecs;
@@ -689,14 +679,14 @@ namespace BuildMap
 
 			for(int i=0;i < mPoints.Count;i++)
 			{
-				bw.Write(mPosColor[i].Position.X);
-				bw.Write(mPosColor[i].Position.Y);
-				bw.Write(mPosColor[i].Position.Z);
+				bw.Write(mVerts[i].Position.X);
+				bw.Write(mVerts[i].Position.Y);
+				bw.Write(mVerts[i].Position.Z);
 
-				bw.Write(mPosColor[i].Texture0.X);
-				bw.Write(mPosColor[i].Texture0.Y);
-				bw.Write(mPosColor[i].Texture1.X);
-				bw.Write(mPosColor[i].Texture1.Y);
+				bw.Write(mVerts[i].Texture0.X);
+				bw.Write(mVerts[i].Texture0.Y);
+				bw.Write(mVerts[i].Texture1.X);
+				bw.Write(mVerts[i].Texture1.Y);
 			}
 
 			//write indexs length

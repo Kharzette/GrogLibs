@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
@@ -296,12 +297,58 @@ namespace BuildMap
 			mTree	=new BspTree(copy);
 		}
 
-
-		private	void LightBrushes(GraphicsDevice g, List<Brush> bl, Vector3 lightPos, float lightVal, Vector3 color)
+		public struct LightParameters
 		{
-			foreach(Brush b in bl)
+			public	GraphicsDevice		g;
+			public	BspNode				root;
+			public	List<Brush>			brushList;
+			public	ManualResetEvent	doneEvent;
+			public	int					core, cores;
+		}
+
+
+		private	void LightBrushesThreadCB(Object threadContext)
+		{
+			LightParameters	p	=(LightParameters)threadContext;
+
+			Console.WriteLine("Thread doing light brushes half to end\n");
+
+			for(int i=0;i < mEntities.Count;i++)
 			{
-				b.LightBrush(g, mTree.GetRoot(), lightPos, lightVal, color);
+				Vector3	lightPos, clr;
+				float	lightVal;
+				if(mEntities[i] == GetWorldSpawnEntity())
+				{
+					continue;
+				}
+				if(!mEntities[i].GetLightValue(out lightVal))
+				{
+					continue;
+				}
+				if(!mEntities[i].GetOrigin(out lightPos))
+				{
+					continue;
+				}
+				mEntities[i].GetColor(out clr);
+
+				LightBrushes(p.g, p.brushList, lightPos, lightVal, clr,
+					(p.brushList.Count / p.cores) * (p.core + 1),
+					(p.brushList.Count / p.cores) * (p.core + 2));
+			}
+
+			Console.WriteLine("Thread done lighting\n");
+			p.doneEvent.Set();
+		}
+
+
+		private	void LightBrushes(GraphicsDevice g, List<Brush> bl,
+			Vector3 lightPos, float lightVal, Vector3 color,
+			int	startIndex, int endIndex)
+		{
+			Debug.Assert(endIndex <= bl.Count);
+			for(int i=startIndex;i < endIndex;i++)
+			{
+				bl[i].LightBrush(g, mTree.GetRoot(), lightPos, lightVal, color);
 			}
 		}
 
@@ -311,25 +358,64 @@ namespace BuildMap
 			//find worldspawn brush list
 			Entity	wse	=GetWorldSpawnEntity();
 
-			foreach(Entity e in mEntities)
+			int	cores	=System.Environment.ProcessorCount;
+
+			if(cores < 2)
+			{
+				cores	=2;	//lazy
+			}
+
+			//spin off extra threads to process chunks of the map
+			ManualResetEvent[]	res	=new ManualResetEvent[cores - 1];
+
+			for(int i=0;i < (cores - 1);i++)
+			{
+				res[i]	=new ManualResetEvent(false);
+			}
+
+			LightParameters	p	=new LightParameters();
+
+			Console.WriteLine("Main thread doing front part of light brushes\n");
+	
+			if(mEntities.Count < 2)
+			{
+				Console.WriteLine("Need at least 2 entities for threading to work\n");
+			}
+
+			p.g			=g;
+			p.root		=mTree.GetRoot();
+			p.brushList	=wse.mBrushes;
+			p.cores		=cores;
+
+			for(int i=0;i < (cores - 1);i++)
+			{
+				p.doneEvent	=res[i];
+				p.core		=i;
+				ThreadPool.QueueUserWorkItem(LightBrushesThreadCB, p);
+			}
+
+			for(int i=0;i < mEntities.Count;i++)
 			{
 				Vector3	lightPos, clr;
 				float	lightVal;
-				if(e == GetWorldSpawnEntity())
+				if(mEntities[i] == GetWorldSpawnEntity())
 				{
 					continue;
 				}
-				if(!e.GetLightValue(out lightVal))
+				if(!mEntities[i].GetLightValue(out lightVal))
 				{
 					continue;
 				}
-				if(!e.GetOrigin(out lightPos))
+				if(!mEntities[i].GetOrigin(out lightPos))
 				{
 					continue;
 				}
-				e.GetColor(out clr);
-				LightBrushes(g, wse.mBrushes, lightPos, lightVal, clr);
+				mEntities[i].GetColor(out clr);
+
+				LightBrushes(g, wse.mBrushes, lightPos, lightVal, clr, 0, (wse.mBrushes.Count / cores));
 			}
+			Console.WriteLine("Main thread done, waiting on second thread\n");
+			WaitHandle.WaitAll(res);
 		}
 
 
@@ -527,25 +613,9 @@ namespace BuildMap
             int			i, j;
 			List<Brush>	brushes	=null;
 
-			//look for the worldspawn
-			foreach(Entity e in mEntities)
-			{
-				foreach(string s in e.mKey)
-				{
-					if(s == "classname")
-					{
-						if(e.mValue[e.mKey.IndexOf(s)] == "worldspawn")
-						{
-							brushes	=e.mBrushes;
-							break;
-						}
-					}
-				}
-				if(brushes != null)
-				{
-					break;
-				}
-			}
+			Entity	wse	=GetWorldSpawnEntity();
+
+			brushes	=wse.mBrushes;
 
             i = 1;
         startoveragain:

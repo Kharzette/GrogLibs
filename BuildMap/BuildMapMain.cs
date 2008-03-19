@@ -413,19 +413,6 @@ namespace BuildMap
 
 		private void UpdateLightMapEffect()
 		{
-			//set all parameters
-			/*
-			mMapEffect.Parameters["colorMap"].SetValue(colorRT.GetTexture());
-			mMapEffect.Parameters["normalMap"].SetValue(normalRT.GetTexture());
-			mMapEffect.Parameters["depthMap"].SetValue(depthRT.GetTexture());
-			mMapEffect.Parameters["lightDirection"].SetValue(lightDirection);
-			mMapEffect.Parameters["Color"].SetValue(color.ToVector3());
-			mMapEffect.Parameters["cameraPosition"].SetValue(camera.Position);
-			mMapEffect.Parameters["InvertViewProjection"].SetValue(
-				Matrix.Invert(camera.View * camera.Projection));
-			mMapEffect.Parameters["halfPixel"].SetValue(halfPixel);
-			*/
-
 			mMapEffect.Parameters["World"].SetValue(mWorldMatrix);
 			mMapEffect.Parameters["View"].SetValue(mViewMatrix);
 			mMapEffect.Parameters["Projection"].SetValue(mProjectionMatrix);

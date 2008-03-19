@@ -8,9 +8,14 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace BuildMap
 {
+	//a brush is a convex volume bounded
+	//by planes.  The space defined as being
+	//on the back side of all the planes in
+	//the brush
     public class Brush
     {
         private List<Face>  mFaces;
+
 
         public Brush()
         {
@@ -28,38 +33,11 @@ namespace BuildMap
             }
         }
 
+
         public void MakeFaceFromMapLine(string szLine)
         {
             mFaces.Add(new Face(szLine));
         }
-
-
-		public void GetThriceLightmaps(out List<Texture2D> list)
-		{
-			list	=new List<Texture2D>();
-			list.Add(mFaces[0].GetLightMap());
-			list.Add(mFaces[1].GetLightMap());
-			list.Add(mFaces[2].GetLightMap());
-		}
-
-
-		public int GetFirstSurface(out Vector3[] surfPoints)
-		{
-			foreach(Face f in mFaces)
-			{
-				if(mFaces.IndexOf(f) < 0)
-				{
-					continue;
-				}
-				int	np	=f.GetSurfPoints(out surfPoints);
-				if(np > 0)
-				{
-					return	np;
-				}
-			}
-			surfPoints	=null;
-			return	0;
-		}
 
 
         public void Draw(GraphicsDevice g, Effect fx)
@@ -86,32 +64,6 @@ namespace BuildMap
 			}
 			p	=new Plane();	//value type, gotta do something
 			return	false;
-		}
-
-
-		public Plane GetCrappySplittingPlane()
-		{
-			foreach(Face f in mFaces)
-			{
-				Plane	p	=f.GetPlane();
-
-				//find an axial
-				if(Math.Abs(Vector3.Dot(p.Normal, Vector3.Left)) == 1.0f)
-				{
-					return	p;
-				}
-				else if (Math.Abs(Vector3.Dot(p.Normal, Vector3.Forward)) == 1.0f)
-				{
-					return	p;
-				}
-				else if (Math.Abs(Vector3.Dot(p.Normal, Vector3.Up)) == 1.0f)
-				{
-					return	p;
-				}
-			}
-
-			//just return the first one, whatever
-			return	mFaces[0].GetPlane();
 		}
 
 
@@ -221,15 +173,6 @@ namespace BuildMap
 
 			//return the best plane
 			return	mFaces[BestIndex];
-		}
-
-
-        public void MarkFacesNotVisible()
-        {
-            foreach(Face f in mFaces)
-            {
-				f.mbVisible	=false;
-			}
 		}
 
 
@@ -365,15 +308,6 @@ RESTART:
 		}
 
 
-		public void AddFacesToList(ref List<Face> faceList)
-		{
-			foreach(Face f in mFaces)
-			{
-				faceList.Add(new Face(f));
-			}
-		}
-
-
 		public void GetTexFileNames(ref List<string> fn)
 		{
 			foreach(Face f in mFaces)
@@ -499,6 +433,81 @@ RESTART:
 
             bb.SealFaces();
             bf.SealFaces();
-        }
+		}
+
+		#region Unused
+		public void AddFacesToList(ref List<Face> faceList)
+		{
+			foreach(Face f in mFaces)
+			{
+				faceList.Add(new Face(f));
+			}
+		}
+
+
+        public void MarkFacesNotVisible()
+        {
+            foreach(Face f in mFaces)
+            {
+				f.mbVisible	=false;
+			}
+		}
+
+
+		//temporary hack for drawing lightmaps
+		public void GetThriceLightmaps(out List<Texture2D> list)
+		{
+			list	=new List<Texture2D>();
+			list.Add(mFaces[0].GetLightMap());
+			list.Add(mFaces[1].GetLightMap());
+			list.Add(mFaces[2].GetLightMap());
+		}
+
+
+		//for debugging the surface points
+		public int GetFirstSurface(out Vector3[] surfPoints)
+		{
+			foreach(Face f in mFaces)
+			{
+				if(mFaces.IndexOf(f) < 0)
+				{
+					continue;
+				}
+				int	np	=f.GetSurfPoints(out surfPoints);
+				if(np > 0)
+				{
+					return	np;
+				}
+			}
+			surfPoints	=null;
+			return	0;
+		}
+
+
+		public Plane GetCrappySplittingPlane()
+		{
+			foreach(Face f in mFaces)
+			{
+				Plane	p	=f.GetPlane();
+
+				//find an axial
+				if(Math.Abs(Vector3.Dot(p.Normal, Vector3.Left)) == 1.0f)
+				{
+					return	p;
+				}
+				else if (Math.Abs(Vector3.Dot(p.Normal, Vector3.Forward)) == 1.0f)
+				{
+					return	p;
+				}
+				else if (Math.Abs(Vector3.Dot(p.Normal, Vector3.Up)) == 1.0f)
+				{
+					return	p;
+				}
+			}
+
+			//just return the first one, whatever
+			return	mFaces[0].GetPlane();
+		}
+		#endregion
 	}
 }

@@ -11,7 +11,7 @@ namespace BuildMap
 {
 	public class BspNode
 	{
-		public const UInt32	BSP_CONTENTS_SOLID2	=1;
+		public const UInt32	CONTENTS_SOLID	=1;
 
 		public	Plane		mPlane;
 		public	Face		mFace;
@@ -64,25 +64,8 @@ namespace BuildMap
 			}
 		}
 
-		/*
-		private	bool IsPointBehindAllNodeFaces(Vector3 pnt)
-		{
-			Debug.Assert(mbLeaf);
 
-			foreach(Face f in mFaces)
-			{
-				Plane	p	=f.GetPlane();
-
-				float	d	=Vector3.Dot(p.Normal, pnt) - p.Dist;
-				if(d > 0.0f)
-				{
-					return	false;
-				}
-			}
-			return	true;
-		}
-		*/
-
+		//builds a bsp good for collision info
 		public void BuildTree(List<Brush> brushList)
 		{
 			List<Brush>	frontList	=new List<Brush>();
@@ -154,306 +137,8 @@ namespace BuildMap
 			}
 		}
 
-		/*
-		private	void NukeAllButThisPlane(Plane p)
-		{
-			int	foundIdx	=-1;
 
-			foreach(Face f in mFaces)
-			{
-				Plane	p2	=f.GetPlane();
-
-				if(Math.Abs(p2.Normal.X - p.Normal.X) > Bounds.DIST_EPSILON)
-				{
-					continue;
-				}
-				if(Math.Abs(p2.Normal.Y - p.Normal.Y) > Bounds.DIST_EPSILON)
-				{
-					continue;
-				}
-				if(Math.Abs(p2.Normal.Z - p.Normal.Z) > Bounds.DIST_EPSILON)
-				{
-					continue;
-				}
-				foundIdx	=mFaces.IndexOf(f);
-				break;
-			}
-
-			if(foundIdx == -1)
-			{
-				Debug.WriteLine("Couldn't find plane in NukeAll");
-				return;
-			}
-
-			Face	keep	=new Face(mFaces[foundIdx]);
-
-			mFaces.Clear();
-
-			mFaces.Add(keep);
-		}
-		*/
-
-		private	void ClipToParents(Face prt)
-		{
-			Face clippy	=new Face(mPlane, null);
-
-			prt.ClipByFace(clippy, true);
-
-			if(mParent != null)
-			{
-				mParent.ClipToParents(prt);
-			}
-		}
-
-
-		public void DrawPortalsDumb(GraphicsDevice g, Effect fx, Vector3 camPos)
-		{
-			if(mFront != null)
-			{
-				mFront.Draw(g, fx, camPos);
-			}
-
-			if(mPortal != null)
-			{
-				mPortal.Draw(g, fx);
-			}
-
-			if(mBack != null)
-			{
-				mBack.Draw(g, fx, camPos);
-			}
-		}
-
-
-		public	void DrawPortals(GraphicsDevice g, Effect fx, Vector3 camPos)
-		{
-			if(mbLeaf)
-			{
-				return;
-			}
-
-			float	d	=Vector3.Dot(mPlane.Normal, camPos) - mPlane.Dist;
-			if(d > 0.0f)
-			{
-				if(mFront != null)
-				{
-					mFront.Draw(g, fx, camPos);
-				}
-
-				if(mPortal != null)
-				{
-					mPortal.Draw(g, fx);
-				}
-
-				if(mBack != null)
-				{
-					mBack.Draw(g, fx, camPos);
-				}
-			}
-			else if(d < 0.0f)
-			{
-				if(mBack != null)
-				{
-					mBack.Draw(g, fx, camPos);
-				}
-
-				if(mPortal != null)
-				{
-					mPortal.Draw(g, fx);
-				}
-
-				if(mFront != null)
-				{
-					mFront.Draw(g, fx, camPos);
-				}
-			}
-			else
-			{
-				if(mFront != null)
-				{
-					mFront.Draw(g, fx, camPos);
-				}
-
-				if(mPortal != null)
-				{
-					mPortal.Draw(g, fx);
-				}
-
-				if(mBack != null)
-				{
-					mBack.Draw(g, fx, camPos);
-				}
-			}
-		}
-
-
-		public	void BuildPortals()
-		{
-			//recurse to leaves
-			if(mFront != null)
-			{
-				mFront.BuildPortals();
-			}
-
-			if(!mbLeaf)
-			{
-				if(mParent != null)
-				{
-					mPortal	=new Face(mPlane, mFace);
-					mParent.ClipToParents(mPortal);
-					mPortal.mFlags	=0;
-
-					if(mFront != null && (mFront.mContents & BSP_CONTENTS_SOLID2) != 0)
-					{
-						mPortal.mFlags	|=1;
-					}
-
-					if((mBack.mContents & BSP_CONTENTS_SOLID2) != 0)
-					{
-						mPortal.mFlags	|=4;
-					}
-					else
-					{
-						mPortal.mFlags	|=2;
-					}
-				}
-			}
-
-			if(mBack != null)
-			{
-				mBack.BuildPortals();
-			}
-		}
-
-
-		/*
-		public	void MarkLeafs()
-		{
-			if(mFront == null && mBack == null)
-			{
-				mbLeaf		=true;
-				return;
-			}
-
-			if(mFront != null)
-			{
-				mFront.MarkLeafs();
-			}
-
-			if(mBack != null)
-			{
-				mBack.MarkLeafs();
-			}
-		}*/
-
-
-		//per face add, like in fusion
-		/*
-		private void AddToTree(BspNode n)
-		{
-			if(mFace == null)
-			{
-				mFace	=n.mFace;
-				return;
-			}
-
-			int		pf, pb, po;
-			Plane	tp	=mFace.GetPlane();
-
-			mFace.GetSplitInfo(n.mFace, out pf, out pb, out po);
-
-			if(pf == 0 && pb == 0)	//coplanar
-			{
-				Plane	np	=n.mFace.GetPlane();
-
-				if(Vector3.Dot(tp.Normal, np.Normal) > 0)
-				{
-					if(mBack != null)
-					{
-						mBack.AddToTree(n);
-					}
-					else
-					{
-						mBack	=n;
-					}
-				}
-				else
-				{
-					if(mFront != null)
-					{
-						mFront.AddToTree(n);
-					}
-					else
-					{
-						mFront	=n;
-					}
-				}
-			}
-			else if(pf == 0)	//back
-			{
-				if(mBack != null)
-				{
-					mBack.AddToTree(n);
-				}
-				else
-				{
-					mBack	=n;
-				}
-			}
-			else if(pb == 0)	//front
-			{
-				if(mFront != null)
-				{
-					mFront.AddToTree(n);
-				}
-				else
-				{
-					mFront	=n;
-				}
-			}
-			else	//split
-			{
-				Face	ff, bf;
-
-				ff	=new Face(n.mFace);
-				bf	=new Face(n.mFace);
-
-				ff.ClipByFace(mFace, true);
-				bf.ClipByFace(mFace, false);
-
-				if(ff.IsValid() && !ff.IsTiny())
-				{
-					n.mFace	=ff;
-
-					if(mFront != null)
-					{
-						mFront.AddToTree(n);
-					}
-					else
-					{
-						mFront	=n;
-					}
-				}
-
-				if(bf.IsValid() && !bf.IsTiny())
-				{
-					if(mBack != null)
-					{
-						BspNode	bnode	=new BspNode();
-						bnode.mFace		=bf;
-
-						mBack.AddToTree(bnode);
-					}
-					else
-					{
-						mBack		=new BspNode();
-						mBack.mFace	=bf;
-					}
-				}
-			}
-		}*/
-
-
+		#region DebugStuff
 		public void BuildVertexInfo(GraphicsDevice g)
 		{
 			if(mFront != null)
@@ -529,30 +214,15 @@ namespace BuildMap
 				mBack.Light(g, root, lightPos, lightVal, clr);
 			}
 		}
-
-
-		public void AddBrushToTree(Brush b)
-		{
-			List<BspNode>	nodes;
-
-			b.GetNodesFromFaces(out nodes);
-
-			foreach(BspNode n in nodes)
-			{
-				//AddToTree(n);
-			}
-		}
+		#endregion
 
 
 		//something is hozed so just drawing all nodes
 		public void Draw(GraphicsDevice g, Effect fx, Vector3 camPos)
 		{
-			//if(mbLeaf)
+			if(mFace != null)
 			{
-				if(mFace != null)
-				{
-					mFace.Draw(g, fx);
-				}
+				mFace.Draw(g, fx);
 			}
 
 			float	d	=Vector3.Dot(mPlane.Normal, camPos) - mPlane.Dist;
@@ -588,30 +258,6 @@ namespace BuildMap
 				{
 					mBack.Draw(g, fx, camPos);
 				}
-			}
-		}
-
-		
-
-		private void FillUnTouchedLeafs(UInt32 curFill)
-		{
-			if(!mbLeaf)
-			{
-				mFront.FillUnTouchedLeafs(curFill);
-				mBack.FillUnTouchedLeafs(curFill);
-				return;
-			}
-
-			if((mContents & BSP_CONTENTS_SOLID2) != 0)
-			{
-				return;		//allready solid or removed...
-			}
-
-			if(mFillKey != curFill)
-			{
-				// Fill er in with solid so it does not show up...(Preserve user contents)
-				mContents	&=(0xffff0000);
-				mContents	|=BSP_CONTENTS_SOLID2;
 			}
 		}
 
@@ -682,68 +328,7 @@ namespace BuildMap
 		}
 
 
-		private bool FillFromEntities(List<Entity> ents, UInt32 curFill)
-		{
-			bool	bEmpty	=false;
-
-			foreach(Entity e in ents)
-			{
-				if(ents.IndexOf(e) == 0)
-				{
-					continue;	//skip world
-				}
-
-				Vector3	org;
-
-				if(!e.GetOrigin(out org))
-				{
-					continue;
-				}
-
-				BspNode	bn;
-
-				if(GetLeafLandedIn(org, out bn))
-				{
-					continue;
-				}
-				
-				//There is at least one entity in empty space...
-				bEmpty	=true;
-
-				if(!bn.FillLeafs2r(curFill))
-				{
-					return	false;
-				}
-			}
-
-			if(!bEmpty)
-			{
-				Debug.WriteLine("FillFromEntities:  No valid entities for operation.");
-				return	false;
-			}
-
-			return	true;
-		}
-
-
-		bool FillLeafs2r(UInt32 curFill)
-		{
-			if((mContents & BSP_CONTENTS_SOLID2) != 0)
-			{
-				return	true;
-			}
-
-			if(mFillKey == curFill)
-			{
-				return	true;
-			}
-
-			mFillKey	=curFill;
-
-			return	true;
-		}
-
-
+		#region RayCastsAndContents
 		public bool ClassifyPoint(Vector3 pnt)
 		{
 			float	d;
@@ -952,5 +537,246 @@ namespace BuildMap
 				return	mBack.ClassifyPoint(pnt);
 			}
 		}
+		#endregion
+
+
+		#region PortalStuff
+		private bool FillFromEntities(List<Entity> ents, UInt32 curFill)
+		{
+			bool	bEmpty	=false;
+
+			foreach(Entity e in ents)
+			{
+				if(ents.IndexOf(e) == 0)
+				{
+					continue;	//skip world
+				}
+
+				Vector3	org;
+
+				if(!e.GetOrigin(out org))
+				{
+					continue;
+				}
+
+				BspNode	bn;
+
+				if(GetLeafLandedIn(org, out bn))
+				{
+					continue;
+				}
+				
+				//There is at least one entity in empty space...
+				bEmpty	=true;
+
+				if(!bn.FillLeafs2r(curFill))
+				{
+					return	false;
+				}
+			}
+
+			if(!bEmpty)
+			{
+				Debug.WriteLine("FillFromEntities:  No valid entities for operation.");
+				return	false;
+			}
+
+			return	true;
+		}
+
+
+		bool FillLeafs2r(UInt32 curFill)
+		{
+			if((mContents & CONTENTS_SOLID) != 0)
+			{
+				return	true;
+			}
+
+			if(mFillKey == curFill)
+			{
+				return	true;
+			}
+
+			mFillKey	=curFill;
+
+			return	true;
+		}
+
+
+		private void FillUnTouchedLeafs(UInt32 curFill)
+		{
+			if(!mbLeaf)
+			{
+				mFront.FillUnTouchedLeafs(curFill);
+				mBack.FillUnTouchedLeafs(curFill);
+				return;
+			}
+
+			if((mContents & CONTENTS_SOLID) != 0)
+			{
+				return;		//allready solid or removed...
+			}
+
+			if(mFillKey != curFill)
+			{
+				// Fill er in with solid so it does not show up...(Preserve user contents)
+				mContents	&=(0xffff0000);
+				mContents	|=CONTENTS_SOLID;
+			}
+		}
+
+
+		public	void MarkLeafs()
+		{
+			if(mFront == null && mBack == null)
+			{
+				mbLeaf		=true;
+				return;
+			}
+
+			if(mFront != null)
+			{
+				mFront.MarkLeafs();
+			}
+
+			if(mBack != null)
+			{
+				mBack.MarkLeafs();
+			}
+		}
+
+
+		private	void ClipToParents(Face prt)
+		{
+			Face clippy	=new Face(mPlane, null);
+
+			prt.ClipByFace(clippy, true);
+
+			if(mParent != null)
+			{
+				mParent.ClipToParents(prt);
+			}
+		}
+
+
+		public void DrawPortalsDumb(GraphicsDevice g, Effect fx, Vector3 camPos)
+		{
+			if(mFront != null)
+			{
+				mFront.Draw(g, fx, camPos);
+			}
+
+			if(mPortal != null)
+			{
+				mPortal.Draw(g, fx);
+			}
+
+			if(mBack != null)
+			{
+				mBack.Draw(g, fx, camPos);
+			}
+		}
+
+
+		public	void DrawPortals(GraphicsDevice g, Effect fx, Vector3 camPos)
+		{
+			if(mbLeaf)
+			{
+				return;
+			}
+
+			float	d	=Vector3.Dot(mPlane.Normal, camPos) - mPlane.Dist;
+			if(d > 0.0f)
+			{
+				if(mFront != null)
+				{
+					mFront.Draw(g, fx, camPos);
+				}
+
+				if(mPortal != null)
+				{
+					mPortal.Draw(g, fx);
+				}
+
+				if(mBack != null)
+				{
+					mBack.Draw(g, fx, camPos);
+				}
+			}
+			else if(d < 0.0f)
+			{
+				if(mBack != null)
+				{
+					mBack.Draw(g, fx, camPos);
+				}
+
+				if(mPortal != null)
+				{
+					mPortal.Draw(g, fx);
+				}
+
+				if(mFront != null)
+				{
+					mFront.Draw(g, fx, camPos);
+				}
+			}
+			else
+			{
+				if(mFront != null)
+				{
+					mFront.Draw(g, fx, camPos);
+				}
+
+				if(mPortal != null)
+				{
+					mPortal.Draw(g, fx);
+				}
+
+				if(mBack != null)
+				{
+					mBack.Draw(g, fx, camPos);
+				}
+			}
+		}
+
+
+		public	void BuildPortals()
+		{
+			//recurse to leaves
+			if(mFront != null)
+			{
+				mFront.BuildPortals();
+			}
+
+			if(!mbLeaf)
+			{
+				if(mParent != null)
+				{
+					mPortal	=new Face(mPlane, mFace);
+					mParent.ClipToParents(mPortal);
+					mPortal.mFlags	=0;
+
+					if(mFront != null && (mFront.mContents & CONTENTS_SOLID) != 0)
+					{
+						mPortal.mFlags	|=1;
+					}
+
+					if((mBack.mContents & CONTENTS_SOLID) != 0)
+					{
+						mPortal.mFlags	|=4;
+					}
+					else
+					{
+						mPortal.mFlags	|=2;
+					}
+				}
+			}
+
+			if(mBack != null)
+			{
+				mBack.BuildPortals();
+			}
+		}
+		#endregion
 	}
 }

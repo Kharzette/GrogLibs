@@ -87,13 +87,6 @@ namespace BuildMap
 			mRoot.BuildTree(brushList);
 
 			mRoot.BoundNodes();
-			/*
-			foreach(Brush b in brushList)
-			{
-				mRoot.AddBrushToTree(b);
-			}
-			mRoot.MarkLeafs();
-			*/
 		}
 
 
