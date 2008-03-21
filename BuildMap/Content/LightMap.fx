@@ -68,7 +68,7 @@ sampler LightMapSampler = sampler_state
 
     MinFilter = Linear;
     MagFilter = Linear;
-    MipFilter = Linear;
+    MipFilter = None;
     
     AddressU = Clamp;
     AddressV = Clamp;

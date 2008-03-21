@@ -10,6 +10,16 @@ using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
 using System.Diagnostics;
 
+
+//todo:
+//done	color for lightmaps
+//atlas lightmaps and fix uvs
+//properly handle special brush types
+//properly handle brush models
+//properly handle triggers
+//test texture alignment
+//normal mapping
+
 namespace BuildMap
 {
 	/// <summary>
@@ -132,7 +142,11 @@ namespace BuildMap
 			mMap.LightAllBrushes(mGraphics.GraphicsDevice);
 			//mMap.LightAllBspFaces(mGraphics.GraphicsDevice);
 
-			mMap.BuildVertexInfo(mGraphics.GraphicsDevice);
+			mMap.BuildVertexInfo();
+
+			mMap.AtlasLightMaps(mGraphics.GraphicsDevice);
+
+			mMap.BuildVertexBuffers(mGraphics.GraphicsDevice);
 
 			mMap.Save(outputFileName);
 			

@@ -148,7 +148,7 @@ namespace BuildMap
 
 			if(mFace != null)
 			{
-				mFace.BuildVertexInfo(g);
+				mFace.BuildVertexInfo();
 			}
 
 			if(mBack != null)
@@ -206,7 +206,7 @@ namespace BuildMap
 
 			if(mFace != null)
 			{
-				mFace.LightFace(g, root, lightPos, lightVal);
+				mFace.LightFace(g, root, lightPos, lightVal, clr);
 			}
 
 			if(mBack != null)

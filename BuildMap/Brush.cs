@@ -34,6 +34,15 @@ namespace BuildMap
         }
 
 
+		public void AtlasLightMaps(GraphicsDevice g, TexAtlas al)
+		{
+			foreach(Face f in mFaces)
+			{
+				f.AtlasLightMap(g, al);
+			}
+		}
+
+
         public void MakeFaceFromMapLine(string szLine)
         {
             mFaces.Add(new Face(szLine));
@@ -202,7 +211,7 @@ namespace BuildMap
 		{
 			foreach(Face f in mFaces)
 			{
-				f.LightFace(g, root, lightPos, lightVal);//, color);
+				f.LightFace(g, root, lightPos, lightVal, color);
 			}
 		}
 
@@ -328,7 +337,17 @@ RESTART:
 
 		public void WriteToFile(BinaryWriter bw)
 		{
-			bw.Write(mFaces.Count);
+			int	numLightMapped	=0;
+
+			foreach(Face f in mFaces)
+			{
+				if(f.IsLightMapped())
+				{
+					numLightMapped++;
+				}
+			}
+
+			bw.Write(numLightMapped);
 
 			foreach(Face f in mFaces)
 			{
@@ -337,11 +356,20 @@ RESTART:
 		}
 
 
-		public void BuildVertexInfo(GraphicsDevice g)
+		public void BuildVertexInfo()
 		{
 			foreach(Face f in mFaces)
 			{
-				f.BuildVertexInfo(g);
+				f.BuildVertexInfo();
+			}
+		}
+
+
+		public void BuildVertexBuffers(GraphicsDevice g)
+		{
+			foreach(Face f in mFaces)
+			{
+				f.BuildVertexBuffers(g);
 			}
 		}
 
@@ -451,16 +479,6 @@ RESTART:
             {
 				f.mbVisible	=false;
 			}
-		}
-
-
-		//temporary hack for drawing lightmaps
-		public void GetThriceLightmaps(out List<Texture2D> list)
-		{
-			list	=new List<Texture2D>();
-			list.Add(mFaces[0].GetLightMap());
-			list.Add(mFaces[1].GetLightMap());
-			list.Add(mFaces[2].GetLightMap());
 		}
 
 

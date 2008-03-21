@@ -194,8 +194,8 @@ namespace BuildMap
 		private List<Vector3>	mPoints;
 		public	bool			mbVisible;
 		public	UInt32			mFlags;
-		private	Texture2D		mLightMap;
 		private	LightInfo		mLightInfo;
+		private	Color[]			mLightMap;	//actual texture2d goes in an atlas
 		
 		//for drawrings
 		private VertexBuffer					mVertBuffer;
@@ -275,18 +275,31 @@ namespace BuildMap
                 mFacePlane.Dist *= -1.0f;
             }
         }
+
+
+		private	void MakeVBuffer(GraphicsDevice g)
+		{
+			mIndexBuffer=new IndexBuffer(g, 2 * (3 + ((mPoints.Count - 3) * 3)),
+							BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
+			
+			mIndexBuffer.SetData<short>(mIndexs, 0, mIndexs.Length);
+			
+			mVertBuffer	=new VertexBuffer(g, 28 * (mVerts.Length),
+							BufferUsage.None);
+			
+			//Set the vertex buffer data to the array of vertices.
+			mVertBuffer.SetData<VertexPositionTextureTexture>(mVerts);
+		}
 		
 		
-		private void MakeVBuffer(GraphicsDevice g)
+		private void MakeVerts()
 		{
 			int	i	=0;
 			int	j	=0;
 			
 			//triangulate the brush face points
 			mVerts	=new VertexPositionTextureTexture[mPoints.Count];
-			mIndexs		=new short[(3 + ((mPoints.Count - 3) * 3))];
-			mIndexBuffer=new IndexBuffer(g, 2 * (3 + ((mPoints.Count - 3) * 3)),
-							BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
+			mIndexs	=new short[(3 + ((mPoints.Count - 3) * 3))];
 			
 			List<Vector2>	tcrds0;
 			List<Vector2>	tcrds1;
@@ -308,15 +321,7 @@ namespace BuildMap
 				mIndexs[j++]	=0;
 				mIndexs[j++]	=(short)i;
 				mIndexs[j++]	=(short)((i + 1) % mPoints.Count);
-			}
-			
-			mIndexBuffer.SetData<short>(mIndexs, 0, mIndexs.Length);
-			
-			mVertBuffer	=new VertexBuffer(g, 28 * (mVerts.Length),
-							BufferUsage.None);
-			
-			//Set the vertex buffer data to the array of vertices.
-			mVertBuffer.SetData<VertexPositionTextureTexture>(mVerts);
+			}			
 		}
 
 
@@ -337,20 +342,6 @@ namespace BuildMap
 				return;
 			}
 			
-			if(mLightMap != null)
-			{				
-				fx.Parameters["LightMap"].SetValue(mLightMap);
-				fx.Parameters["LightMapEnabled"].SetValue(true);
-				fx.Parameters["FullBright"].SetValue(false);
-			}
-			else
-			{
-				if((mTexInfo.mFlags & TexInfo.TEX_SPECIAL) != 0)
-				{
-					fx.Parameters["FullBright"].SetValue(true);
-				}
-				fx.Parameters["LightMapEnabled"].SetValue(false);
-			}
 			if(mTexInfo.mTexture != null)
 			{
 				fx.Parameters["Texture"].SetValue(mTexInfo.mTexture);
@@ -661,7 +652,17 @@ namespace BuildMap
         }
 
 
-		public void BuildVertexInfo(GraphicsDevice g)
+		public void BuildVertexInfo()
+		{
+			if(mPoints.Count < 3 || IsTiny())
+			{
+				Debug.Assert(false);
+			}
+			MakeVerts();
+		}
+
+
+		public void BuildVertexBuffers(GraphicsDevice g)
 		{
 			if(mPoints.Count < 3 || IsTiny())
 			{
@@ -673,6 +674,11 @@ namespace BuildMap
 
 		public void WriteToFile(BinaryWriter bw)
 		{
+			if(mLightMap == null)
+			{
+				return;
+			}
+
 			mTexInfo.WriteToFile(bw);
 
 			bw.Write(mPoints.Count);
@@ -700,21 +706,39 @@ namespace BuildMap
 
 			//lightmapped?
 			bw.Write(mLightMap != null);
+		}
 
-			//write lightmap
+
+		public bool IsLightMapped()
+		{
+			return	(mLightMap != null);
+		}
+
+
+		public void AtlasLightMap(GraphicsDevice g, TexAtlas al)
+		{
 			if(mLightMap != null)
 			{
-				bw.Write(mLightMap.Width);
-				bw.Write(mLightMap.Height);
-
-				Color[]	existing	=new Color[mLightMap.Width * mLightMap.Height];
-
-				//grab data
-				mLightMap.GetData<Color>(existing);
-
-				for(int i=0;i < (mLightMap.Width * mLightMap.Height);i++)
+				double	su, sv, uo, vo;
+				if(al.Insert(mLightMap, mLightInfo.mTexSizeS + 1,
+					mLightInfo.mTexSizeT + 1,
+					out su, out sv, out uo, out vo))
 				{
-					bw.Write(existing[i].PackedValue);
+					//scale our UV coordinates to fit the atlas
+					for(int i=0;i < mVerts.Length;i++)
+					{
+						//scale
+						mVerts[i].Texture1.X
+							=(float)((double)mVerts[i].Texture1.X * su);
+						mVerts[i].Texture1.Y
+							=(float)((double)mVerts[i].Texture1.Y * sv);
+
+						//offset
+						mVerts[i].Texture1.X	=
+							(float)((double)mVerts[i].Texture1.X + uo);
+						mVerts[i].Texture1.Y	=
+							(float)((double)mVerts[i].Texture1.Y + vo);
+					}
 				}
 			}
 		}
@@ -1005,24 +1029,18 @@ namespace BuildMap
 				//scale down to a zero to one range
 				if(mLightMap != null)
 				{
-					crd.X	/=((float)mLightInfo.mTexSizeS * TexInfo.LIGHTMAPSCALE);
-					crd.Y	/=((float)mLightInfo.mTexSizeT * TexInfo.LIGHTMAPSCALE);
+					crd.X	/=((float)(mLightInfo.mTexSizeS + 1) * TexInfo.LIGHTMAPSCALE);
+					crd.Y	/=((float)(mLightInfo.mTexSizeT + 1) * TexInfo.LIGHTMAPSCALE);
 
 					//ratio between the size
 					//of the lightmap and the padded
 					//texture2d used in rendering
-					crd.X	/=((float)mLightMap.Width / ((float)mLightInfo.mTexSizeS));
-					crd.Y	/=((float)mLightMap.Height / ((float)mLightInfo.mTexSizeT));
+//					crd.X	/=((float)mLightMap.Width / ((float)mLightInfo.mTexSizeS));
+//					crd.Y	/=((float)mLightMap.Height / ((float)mLightInfo.mTexSizeT));
 				}
 
 				coords.Add(crd);
 			}
-		}
-
-
-		public Texture2D GetLightMap()
-		{
-			return	mLightMap;
 		}
 
 
@@ -1194,9 +1212,10 @@ namespace BuildMap
 
 
 		public	void LightFace(GraphicsDevice gd, BspNode root,
-								Vector3 lightPos, float lightVal)
+								Vector3 lightPos, float lightVal,
+								Vector3 color)
 		{
-			int	c, t, s;
+			int	t, s;
 
 			if((mTexInfo.mFlags & TexInfo.TEX_SPECIAL) != 0)
 			{
@@ -1216,86 +1235,51 @@ namespace BuildMap
 				return;
 			}
 
-			int	xPadded	=(int)Math.Pow(2, Math.Ceiling(Math.Log(mLightInfo.mTexSizeS + 1) / Math.Log(2)));
-			int	yPadded	=(int)Math.Pow(2, Math.Ceiling(Math.Log(mLightInfo.mTexSizeT + 1) / Math.Log(2)));
+			int	w	=(mLightInfo.mTexSizeS + 1);
+			int	h	=(mLightInfo.mTexSizeT + 1);
 
-			Color[]	lm	=new Color[xPadded * yPadded];
-
-			for(t=0,c=0;t < (mLightInfo.mTexSizeT + 1);t++)
+			if(mLightMap == null)
 			{
-				for(s=0;s < (mLightInfo.mTexSizeS + 1);s++, c++)
+				mLightMap	=new Color[w * h];
+			}
+
+			for(t=0;t < h;t++)
+			{
+				for(s=0;s < w;s++)
 				{
-					float	total	=mLightInfo.mSamples[c];
+					float	total	=mLightInfo.mSamples[(t * w) + s];
 
 					total	*=RANGESCALE;
 					if(total > 255.0f)
 					{
 						total	=255.0f;
 					}
+
+					//put in color
+					Vector3	clr	=total * color;
+					//clr	/=255.0f;
 					Debug.Assert(total >= 0.0f);
 
-					lm[(t * xPadded) + s]	=new Color((byte)total, (byte)total, (byte)total);
-				}
-			}
+					int	r	=mLightMap[(t * w) + s].R + (int)clr.X;
+					int g	=mLightMap[(t * w) + s].G + (int)clr.Y;
+					int	b	=mLightMap[(t * w) + s].B + (int)clr.Z;
 
-			//clamp the colors out beyond the real border
-			for(t=0;t < mLightInfo.mTexSizeT + 1;t++)
-			{
-				Color	padColor	=lm[(t * xPadded) + mLightInfo.mTexSizeS];
-				for(s=mLightInfo.mTexSizeS;s < xPadded;s++)
-				{
-					lm[(t * xPadded) + s]	=padColor;
-				}
-			}
-			for(t=mLightInfo.mTexSizeT + 1;t < yPadded;t++)
-			{
-				for(s=0;s < xPadded;s++)
-				{
-					Color	padXColor	=lm[((t - 1) * xPadded) + s];
-					lm[(t * xPadded) + s]	=padXColor;
-				}
-			}
-
-
-			if(mLightMap == null)
-			{
-				mLightMap	=new Texture2D(gd, xPadded, yPadded, 0, TextureUsage.None, SurfaceFormat.Color);
-
-				mLightMap.SetData<Color>(lm);
-			}
-			else
-			{
-				Color[]	existing	=new Color[xPadded * yPadded];
-
-				//grab data
-				mLightMap.GetData<Color>(existing);
-
-				for(t=0,c=0;t < (mLightInfo.mTexSizeT + 1);t++)
-				{
-					for(s=0;s < (mLightInfo.mTexSizeS + 1);s++, c++)
+					//clamp
+					if(r > 255)
 					{
-						int	r	=lm[(t * xPadded) + s].R + existing[(t * xPadded) + s].R;
-						int	g	=lm[(t * xPadded) + s].G + existing[(t * xPadded) + s].G;
-						int	b	=lm[(t * xPadded) + s].B + existing[(t * xPadded) + s].B;
-						
-						if(r > 255)
-						{
-							r	=255;
-						}
-						if(g > 255)
-						{
-							g	=255;
-						}
-						if(b > 255)
-						{
-							b	=255;
-						}
-						existing[(t * xPadded) + s]	=new Color((byte)r, (byte)g, (byte)b);
+						r	=255;
 					}
-				}
+					if(g > 255)
+					{
+						g	=255;
+					}
+					if(b > 255)
+					{
+						b	=255;
+					}
 
-				//put existing back in
-				mLightMap.SetData<Color>(existing);
+					mLightMap[(t *w) + s]	=new Color((byte)r, (byte)g, (byte)b);
+				}
 			}
 		}
 

@@ -90,7 +90,7 @@ namespace BuildMap
 			color	=Vector3.One;
 			foreach(string s in mKey)
 			{
-				if(s == "color")
+				if(s == "color" || s == "_color")
 				{
 					string	[]szVec	=mValue[mKey.IndexOf(s)].Split(' ');
 
@@ -123,6 +123,8 @@ namespace BuildMap
             string	s			="";
 			Brush	b			=null;
 			bool	brushComing	=false;
+			bool	patchComing	=false;
+			bool	patchBrush	=false;
 
             while((s = sr.ReadLine()) != null)
             {
@@ -137,9 +139,12 @@ namespace BuildMap
 				}
 				else if(s.StartsWith("{"))
 				{
-					//brush coming I think
-					b			=new Brush();
-					brushComing	=true;					
+					if(!patchComing)
+					{
+						//brush coming I think
+						b			=new Brush();
+						brushComing	=true;
+					}
 				}
 				else if(s.StartsWith("}"))
 				{
@@ -155,6 +160,14 @@ namespace BuildMap
 							mBrushes.Add(b);
 						}
 					}
+					else if(patchComing)
+					{
+						patchComing	=false;
+					}
+					else if(patchBrush)
+					{
+						patchBrush	=false;	//I'll support these someday maybe
+					}
 					else
 					{
 						return;	//entity done
@@ -162,7 +175,17 @@ namespace BuildMap
 				}
 				else if(s.StartsWith("("))
 				{
-					b.MakeFaceFromMapLine(s);
+					if(brushComing)
+					{
+						b.MakeFaceFromMapLine(s);
+					}
+				}
+				else if(s.StartsWith("patchDef2"))
+				{
+					brushComing	=false;
+					patchComing	=true;
+					patchBrush	=true;
+					b			=null;
 				}
 			}
 		}
@@ -204,6 +227,7 @@ namespace BuildMap
     {
 		List<Entity>	mEntities;
 		BspTree			mTree;
+		TexAtlas		mAtlas;
 
 		List<KeyValuePair<string, Texture2D>>	mTextures;
 
@@ -244,6 +268,10 @@ namespace BuildMap
 
         public void Draw(GraphicsDevice g, Effect fx)
         {
+			fx.Parameters["LightMap"].SetValue(mAtlas.GetAtlasTexture());
+			fx.Parameters["LightMapEnabled"].SetValue(true);
+			fx.Parameters["FullBright"].SetValue(false);
+
 			foreach(Entity e in mEntities)
 			{
 				foreach(Brush b in e.mBrushes)
@@ -254,13 +282,25 @@ namespace BuildMap
         }
 
 
-		public void BuildVertexInfo(GraphicsDevice g)
+		public void BuildVertexInfo()
 		{
 			foreach(Entity e in mEntities)
 			{
 				foreach(Brush b in e.mBrushes)
 				{
-					b.BuildVertexInfo(g);
+					b.BuildVertexInfo();
+				}
+			}
+		}
+
+
+		public void BuildVertexBuffers(GraphicsDevice g)
+		{
+			foreach(Entity e in mEntities)
+			{
+				foreach(Brush b in e.mBrushes)
+				{
+					b.BuildVertexBuffers(g);
 				}
 			}
 		}
@@ -273,7 +313,7 @@ namespace BuildMap
 			{
 				foreach(Brush b in e.mBrushes)
 				{
-					b.BuildVertexInfo(g);
+					b.BuildVertexInfo();
 				}
 			}
 		}
@@ -331,9 +371,20 @@ namespace BuildMap
 				}
 				mEntities[i].GetColor(out clr);
 
-				LightBrushes(p.g, p.brushList, lightPos, lightVal, clr,
-					(p.brushList.Count / p.cores) * (p.core + 1),
-					(p.brushList.Count / p.cores) * (p.core + 2));
+				//-1 for zero based index, -1 for main thread
+				if(p.core == p.cores - 2)
+				{
+					//go to the end, sometimes there's a remainder
+					LightBrushes(p.g, p.brushList, lightPos, lightVal, clr,
+						(p.brushList.Count / p.cores) * (p.core + 1),
+						p.brushList.Count);
+				}
+				else
+				{
+					LightBrushes(p.g, p.brushList, lightPos, lightVal, clr,
+						(p.brushList.Count / p.cores) * (p.core + 1),
+						(p.brushList.Count / p.cores) * (p.core + 2));
+				}
 			}
 
 			Console.WriteLine("Thread done lighting\n");
@@ -513,6 +564,22 @@ namespace BuildMap
 
 			//write bsp
 			mTree.WriteToFile(bw);
+
+			//write lightmap atlas
+			Texture2D	tex	=mAtlas.GetAtlasTexture();
+
+			Color[]	col	=new Color[(tex.Width * tex.Height)];
+
+			tex.GetData<Color>(col);
+
+			//write width and height
+			bw.Write(tex.Width);
+			bw.Write(tex.Height);
+
+			for(int i=0;i < (tex.Width * tex.Height);i++)
+			{
+				bw.Write(col[i].PackedValue);
+			}
 		}
 
 
@@ -577,12 +644,6 @@ namespace BuildMap
 		}
 
 
-		public void GetThriceLightmaps(out List<Texture2D> list)
-		{
-			GetWorldSpawnEntity().mBrushes[0].GetThriceLightmaps(out list);
-		}
-
-
 		public void DrawPortals(GraphicsDevice g, Effect fx, Vector3 camPos)
 		{
 			mTree.DrawPortals(g, fx, camPos);
@@ -605,6 +666,19 @@ namespace BuildMap
 				}
 			}
 			return	null;
+		}
+
+
+		public void AtlasLightMaps(GraphicsDevice g)
+		{
+			Entity	wse	=GetWorldSpawnEntity();
+
+			mAtlas	=new TexAtlas(g);
+
+			foreach(Brush b in wse.mBrushes)
+			{
+				b.AtlasLightMaps(g, mAtlas);
+			}
 		}
 
 
