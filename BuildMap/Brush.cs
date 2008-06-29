@@ -64,18 +64,6 @@ namespace BuildMap
         }
 
 
-		public bool GetSplitPlane(int fNum, out Plane p)
-		{
-			if(fNum < mFaces.Count)
-			{
-				p	=mFaces[fNum].GetPlane();
-				return	true;
-			}
-			p	=new Plane();	//value type, gotta do something
-			return	false;
-		}
-
-
 		//return the best score in the brush
 		public float GetBestSplittingFaceScore(List<Brush> brushList)
 		{
@@ -116,6 +104,12 @@ namespace BuildMap
 					else
 					{
 						score	=(float)back.Count / front.Count;
+					}
+
+					//weigh detail higher
+					if((f.mFlags & TexInfo.FACE_DETAIL) != 0)
+					{
+						score	+=69.0f;
 					}
 
 					if(score < BestScore)
@@ -337,13 +331,22 @@ RESTART:
 
 		public void WriteToFile(BinaryWriter bw)
 		{
-			int	numLightMapped	=0;
+			int	numLightMapped		=0;
+			int	numNonLightMapped	=0;
 
 			foreach(Face f in mFaces)
 			{
+				if((f.mFlags & TexInfo.FACE_HIDDEN) != 0)
+				{
+					continue;
+				}
 				if(f.IsLightMapped())
 				{
 					numLightMapped++;
+				}
+				else
+				{
+					numNonLightMapped++;
 				}
 			}
 
@@ -351,7 +354,14 @@ RESTART:
 
 			foreach(Face f in mFaces)
 			{
-				f.WriteToFile(bw);
+				f.WriteToFile(bw, true);
+			}
+
+			bw.Write(numNonLightMapped);
+
+			foreach(Face f in mFaces)
+			{
+				f.WriteToFile(bw, false);
 			}
 		}
 
@@ -469,15 +479,6 @@ RESTART:
 			foreach(Face f in mFaces)
 			{
 				faceList.Add(new Face(f));
-			}
-		}
-
-
-        public void MarkFacesNotVisible()
-        {
-            foreach(Face f in mFaces)
-            {
-				f.mbVisible	=false;
 			}
 		}
 

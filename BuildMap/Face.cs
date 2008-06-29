@@ -147,6 +147,7 @@ namespace BuildMap
 		public const UInt32		TEX_SPECIAL			=1;
 		public const UInt32		TEX_ANIMATING		=4;
 		public const UInt32		FACE_HIDDEN			=2;
+		public const UInt32		FACE_DETAIL			=0x8000000;
 		public	const float		LIGHTMAPSCALE		=4.0f;
 		public	const float		LIGHTMAPHALFSCALE	=LIGHTMAPSCALE / 2.0f;
 		public	const float		LIGHTMAPDOUBLESCALE	=LIGHTMAPSCALE * 2.0f;
@@ -192,7 +193,6 @@ namespace BuildMap
 		private Plane			mFacePlane;
 		private TexInfo			mTexInfo;
 		private List<Vector3>	mPoints;
-		public	bool			mbVisible;
 		public	UInt32			mFlags;
 		private	LightInfo		mLightInfo;
 		private	Color[]			mLightMap;	//actual texture2d goes in an atlas
@@ -515,6 +515,9 @@ namespace BuildMap
             string  []tokens    =szLine.Split(' ');
 
             List<float> numbers =new List<float>();
+			List<UInt32> flags	=new List<UInt32>();
+
+			int	cnt	=0;
 
             //grab all the numbers out
             foreach(string tok in tokens)
@@ -528,13 +531,13 @@ namespace BuildMap
                 //grab tex name if avail
 				if(tok[0] == '*')
 				{
-					mTexInfo.mFlags	|=TexInfo.TEX_SPECIAL;
+					mTexInfo.mFlags		|=TexInfo.TEX_SPECIAL;
 					mTexInfo.mTexName	=tok.Substring(1);
 					continue;
 				}
 				else if(tok[0] == '#')
 				{
-					mTexInfo.mFlags	|=TexInfo.TEX_SPECIAL;
+					mTexInfo.mFlags		|=TexInfo.TEX_SPECIAL;
 					mTexInfo.mTexName	=tok;
 					continue;
 				}
@@ -542,7 +545,7 @@ namespace BuildMap
 				{
 					//animating I think
 					mTexInfo.mTexName	=tok;
-					mTexInfo.mFlags	|=TexInfo.TEX_ANIMATING;
+					mTexInfo.mFlags		|=TexInfo.TEX_ANIMATING;
 				}
                 else if(char.IsLetter(tok, 0))
                 {
@@ -551,13 +554,25 @@ namespace BuildMap
                 }
 
                 float   num;
+				UInt32	inum;
 
-				//NOTE: This is how TryParse is intended to be used -- Kyth
-                if(Single.TryParse(tok, out num))
-                {
-                    //rest are numbers
-					numbers.Add(num);
-                }
+				if(cnt > 13)
+				{
+					if(UInt32.TryParse(tok, out inum))
+					{
+						flags.Add(inum);
+						cnt++;
+					}
+				}
+				else
+				{
+					if(Single.TryParse(tok, out num))
+					{
+						//rest are numbers
+						numbers.Add(num);
+						cnt++;
+					}
+				}
             }
 
             //deal with the numbers
@@ -572,6 +587,15 @@ namespace BuildMap
             mTexInfo.mRotationAngle	=numbers[11];
             mTexInfo.uScale			=numbers[12];
             mTexInfo.vScale			=numbers[13];
+
+			//see if there are any quake 3 style flags
+			if(flags.Count > 0)
+			{
+				if((flags[0] & TexInfo.FACE_DETAIL) != 0)
+				{
+					mFlags	|=TexInfo.FACE_DETAIL;
+				}
+			}
 
             SetPlaneFromFace();
 
@@ -672,9 +696,17 @@ namespace BuildMap
 		}
 
 
-		public void WriteToFile(BinaryWriter bw)
+		public void WriteToFile(BinaryWriter bw, bool bLightMapped)
 		{
-			if(mLightMap == null)
+			if((mFlags & TexInfo.FACE_HIDDEN) != 0)
+			{
+				return;
+			}
+			if(bLightMapped && mLightMap == null)
+			{
+				return;
+			}
+			if(!bLightMapped && mLightMap != null)
 			{
 				return;
 			}
@@ -703,9 +735,6 @@ namespace BuildMap
 			{
 				bw.Write(mIndexs[i]);
 			}
-
-			//lightmapped?
-			bw.Write(mLightMap != null);
 		}
 
 
@@ -1031,12 +1060,6 @@ namespace BuildMap
 				{
 					crd.X	/=((float)(mLightInfo.mTexSizeS + 1) * TexInfo.LIGHTMAPSCALE);
 					crd.Y	/=((float)(mLightInfo.mTexSizeT + 1) * TexInfo.LIGHTMAPSCALE);
-
-					//ratio between the size
-					//of the lightmap and the padded
-					//texture2d used in rendering
-//					crd.X	/=((float)mLightMap.Width / ((float)mLightInfo.mTexSizeS));
-//					crd.Y	/=((float)mLightMap.Height / ((float)mLightInfo.mTexSizeT));
 				}
 
 				coords.Add(crd);

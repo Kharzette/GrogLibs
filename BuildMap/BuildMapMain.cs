@@ -13,7 +13,7 @@ using System.Diagnostics;
 
 //todo:
 //done	color for lightmaps
-//atlas lightmaps and fix uvs
+//done	atlas lightmaps and fix uvs
 //properly handle special brush types
 //properly handle brush models
 //properly handle triggers
