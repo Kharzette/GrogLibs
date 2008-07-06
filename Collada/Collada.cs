@@ -18,15 +18,15 @@ namespace Collada
 
 	public class MeshMaterials
 	{
-		public List<int> mPolyPositionIndices;
-		public List<int> mPolyNormalIndices;
-		public List<int> mPolyUVIndices;
+		public List<uint> mPolyPositionIndices;
+		public List<uint> mPolyNormalIndices;
+		public List<uint> mPolyUVIndices;
 
 		public MeshMaterials()
 		{
-			mPolyPositionIndices	=new List<int>();
-			mPolyNormalIndices		=new List<int>();
-			mPolyUVIndices			=new List<int>();
+			mPolyPositionIndices	=new List<uint>();
+			mPolyNormalIndices		=new List<uint>();
+			mPolyUVIndices			=new List<uint>();
 		}
 	}
 
@@ -112,10 +112,15 @@ namespace Collada
 
 	class Collada
 	{
+		//data from collada
 		private	List<Material>		mMaterials;
 		private	List<SceneNode>		mRootNodes;
 		private	List<Controller>	mControllers;
 		private	List<Geometry>		mGeometries;
+
+		//debug draw data
+		VertexBuffer			mVerts;
+		List<IndexBuffer>		mIndexs;
 
 		public Collada(string meshFileName, GraphicsDevice g)
 		{
@@ -123,8 +128,63 @@ namespace Collada
 			mRootNodes		=new List<SceneNode>();
 			mControllers	=new List<Controller>();
 			mGeometries		=new List<Geometry>();
+			mIndexs			=new List<IndexBuffer>();
 
 			Load(meshFileName);
+
+			ConvertData(g);
+		}
+
+
+		private	void	ConvertData(GraphicsDevice g)
+		{
+			mVerts	=new VertexBuffer(g, 16 * mGeometries[0].mMeshes[0].mPositions.Count, BufferUsage.WriteOnly);
+
+			VertexPositionColor[] vpc	=new VertexPositionColor[mGeometries[0].mMeshes[0].mPositions.Count];
+
+			//copy in the goodies
+			for(int i=0;i < mGeometries[0].mMeshes[0].mPositions.Count;i++)
+			{
+				vpc[i].Position	=mGeometries[0].mMeshes[0].mPositions[i];
+				vpc[i].Color	=Color.Beige;
+			}
+
+			mVerts.SetData<VertexPositionColor>(vpc);
+
+			//load the various index buffs
+			for(int i=0;i < mGeometries[0].mMeshes[0].mMeshMaterials.Count;i++)
+			{
+				UInt32[] indexL	=null;
+				indexL	=new UInt32[mGeometries[0].mMeshes[0].mMeshMaterials[i].mPolyPositionIndices.Count];
+
+				//copy in indexs
+				for(int j=0;j < mGeometries[0].mMeshes[0].mMeshMaterials[i].mPolyPositionIndices.Count;j++)
+				{
+					indexL[j]	=mGeometries[0].mMeshes[0].mMeshMaterials[i].mPolyPositionIndices[j];
+				}
+
+				IndexBuffer	idx	=new IndexBuffer(g, mGeometries[0].mMeshes[0].mMeshMaterials[i].mPolyPositionIndices.Count * 4, BufferUsage.WriteOnly, IndexElementSize.ThirtyTwoBits);
+				idx.SetData<UInt32>(indexL, 0, mGeometries[0].mMeshes[0].mMeshMaterials[i].mPolyPositionIndices.Count);
+
+				mIndexs.Add(idx);
+			}
+		}
+
+
+		public void Draw(GraphicsDevice g, Effect fx)
+		{
+			g.Vertices[0].SetSource(mVerts, 0, 16);
+
+			for(int i=0;i < mIndexs.Count;i++)
+			{
+				g.Indices	=mIndexs[i];
+				
+				g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+						0, 0,
+						mGeometries[0].mMeshes[0].mPositions.Count,
+						0,
+						mGeometries[0].mMeshes[0].mMeshMaterials[i].mPolyPositionIndices.Count / 3);
+			}
 		}
 
 
@@ -487,6 +547,11 @@ namespace Collada
 		{
 			MeshMaterials	mm	=null;
 
+			//triangulation buffers
+			uint[] vq	=new uint[10];
+			uint[] nq	=new uint[10];
+			uint[] uq	=new uint[10];
+
 			while(r.Read())
 			{
 				if(r.Name == "mesh" && r.NodeType == XmlNodeType.EndElement)
@@ -516,17 +581,33 @@ namespace Collada
 
 					string[] tokens	=r.Value.Split(' ');
 
-					for(int i=0;i < tokens.Length;i+=3)
+					Debug.Assert(tokens.Length == 12);
+
+					for(int j=0, i=0;i < tokens.Length;i+=3, j++)
 					{
-						int	vert, norm, uv;
+						uint	vert, norm, uv;
 
-						int.TryParse(tokens[i], out vert);
-						int.TryParse(tokens[i+1], out norm);
-						int.TryParse(tokens[i+2], out uv);
+						uint.TryParse(tokens[i], out vert);
+						uint.TryParse(tokens[i+1], out norm);
+						uint.TryParse(tokens[i+2], out uv);
 
-						mm.mPolyPositionIndices.Add(vert);
-						mm.mPolyNormalIndices.Add(norm);
-						mm.mPolyUVIndices.Add(uv);
+						vq[j]	=vert;
+						nq[j]	=norm;
+						uq[j]	=uv;
+					}
+
+					//comes out in quads sometimes, triangulate
+					for(int i=1;i < ((tokens.Length / 3) - 1);i++)
+					{
+						mm.mPolyPositionIndices.Add(vq[0]);
+						mm.mPolyNormalIndices.Add(nq[0]);
+						mm.mPolyUVIndices.Add(uq[0]);
+						mm.mPolyPositionIndices.Add(vq[((i + 1) % (tokens.Length / 3))]);
+						mm.mPolyNormalIndices.Add(nq[((i + 1) % (tokens.Length / 3))]);
+						mm.mPolyUVIndices.Add(uq[((i + 1) % (tokens.Length / 3))]);
+						mm.mPolyPositionIndices.Add(vq[i]);
+						mm.mPolyNormalIndices.Add(nq[i]);
+						mm.mPolyUVIndices.Add(uq[i]);
 					}
 				}
 			}
