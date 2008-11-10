@@ -145,8 +145,9 @@ namespace BuildMap
     struct TexInfo
     {
 		public const UInt32		TEX_SPECIAL			=1;
-		public const UInt32		TEX_ANIMATING		=4;
 		public const UInt32		FACE_HIDDEN			=2;
+		public const UInt32		TEX_ANIMATING		=4;
+		public const UInt32		TEX_CLIP			=8;
 		public const UInt32		FACE_DETAIL			=0x8000000;
 		public	const float		LIGHTMAPSCALE		=4.0f;
 		public	const float		LIGHTMAPHALFSCALE	=LIGHTMAPSCALE / 2.0f;
@@ -158,14 +159,12 @@ namespace BuildMap
 		public float			mRotationAngle;
 		public string			mTexName;   //temporary
 		public Vector3			mTexS, mTexT;
-		public UInt32			mFlags;
 		public Texture2D		mTexture;
 
 
 		public void WriteToFile(BinaryWriter bw)
 		{
 			bw.Write(mTexName);
-			bw.Write(mFlags);
 			bw.Write(mTexS.X);
 			bw.Write(mTexS.Y);
 			bw.Write(mTexS.Z);
@@ -337,7 +336,9 @@ namespace BuildMap
 				Debug.Assert(false);
             }
 
-			if((mFlags & TexInfo.FACE_HIDDEN) != 0)
+			//don't draw clip or hidden
+			if(((mFlags & TexInfo.FACE_HIDDEN) |
+				(mFlags & TexInfo.TEX_CLIP)) != 0)
 			{
 				return;
 			}
@@ -529,15 +530,21 @@ namespace BuildMap
                 }
 
                 //grab tex name if avail
+				if(tok == "clip" || tok == "CLIP")
+				{
+					mFlags	|=TexInfo.TEX_CLIP;
+					mFlags	|=TexInfo.FACE_HIDDEN;
+					mTexInfo.mTexName	=tok;
+				}
 				if(tok[0] == '*')
 				{
-					mTexInfo.mFlags		|=TexInfo.TEX_SPECIAL;
+					mFlags	|=TexInfo.TEX_SPECIAL;
 					mTexInfo.mTexName	=tok.Substring(1);
 					continue;
 				}
 				else if(tok[0] == '#')
 				{
-					mTexInfo.mFlags		|=TexInfo.TEX_SPECIAL;
+					mFlags		|=TexInfo.TEX_SPECIAL;
 					mTexInfo.mTexName	=tok;
 					continue;
 				}
@@ -545,7 +552,7 @@ namespace BuildMap
 				{
 					//animating I think
 					mTexInfo.mTexName	=tok;
-					mTexInfo.mFlags		|=TexInfo.TEX_ANIMATING;
+					mFlags	|=TexInfo.TEX_ANIMATING;
 				}
                 else if(char.IsLetter(tok, 0))
                 {
@@ -698,7 +705,9 @@ namespace BuildMap
 
 		public void WriteToFile(BinaryWriter bw, bool bLightMapped)
 		{
-			if((mFlags & TexInfo.FACE_HIDDEN) != 0)
+			//don't write clip or hidden
+			if(((mFlags & TexInfo.FACE_HIDDEN) |
+				(mFlags & TexInfo.TEX_CLIP)) != 0)
 			{
 				return;
 			}
@@ -1240,7 +1249,9 @@ namespace BuildMap
 		{
 			int	t, s;
 
-			if((mTexInfo.mFlags & TexInfo.TEX_SPECIAL) != 0)
+			//don't light clip or hidden
+			if(((mFlags & TexInfo.FACE_HIDDEN) |
+				(mFlags & TexInfo.TEX_CLIP)) != 0)
 			{
 				return;
 			}

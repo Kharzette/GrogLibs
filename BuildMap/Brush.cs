@@ -210,6 +210,21 @@ namespace BuildMap
 		}
 
 
+		public bool IsClip()
+		{
+			if(mFaces.Count == 0)
+			{
+				return	false;
+			}
+			//make sure brush b can legally gobble
+			if((mFaces[0].mFlags & TexInfo.TEX_CLIP) != 0)
+			{
+				return	true;
+			}
+			return	false;
+		}
+
+
         //brush b gobbles thisbrush
         //returns a bunch of parts
         public bool SubtractBrush(Brush b, out List<Brush> outside)
@@ -217,6 +232,22 @@ namespace BuildMap
             Brush   bf, bb, inside;
 
             outside =new List<Brush>();
+
+			if(b.mFaces.Count == 0)
+			{
+				return	false;
+			}
+
+			//make sure brush b can legally gobble
+			if(((b.mFaces[0].mFlags & TexInfo.FACE_HIDDEN) |
+				(b.mFaces[0].mFlags & TexInfo.FACE_DETAIL) |
+				(b.mFaces[0].mFlags & TexInfo.TEX_CLIP)) != 0)
+			{
+				//these face types shouldn't be gobblin
+				//goblinses
+				return	false;
+			}
+
             inside  =new Brush(this);
 
             bf = bb = null;

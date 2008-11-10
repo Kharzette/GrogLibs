@@ -36,7 +36,6 @@ namespace BuildMap
 		private Matrix                  mProjectionMatrix;
 		private Effect					mMapEffect;
 		private BasicEffect             mDotEffect;
-		private BasicEffect             mPortalEffect;
 		private VertexDeclaration       mBasicVertexDeclaration;
 		private VertexDeclaration       mMapVertexDeclaration;
 		private GamePadState            mCurrentGamePadState;
@@ -47,7 +46,6 @@ namespace BuildMap
 		private	bool					mbDrawDot;
 		private	bool					mbDrawBsp;
 		private	bool					mbDrawBrushes;
-		private	bool					mbDrawPortals;
 		private	bool					mbTextureEnabled;
 		private	string					mMapFileName;
 		
@@ -101,7 +99,6 @@ namespace BuildMap
 			mbDrawBsp		=false;
 			mbDrawDot		=false;
 			mbDrawBrushes	=true;
-			mbDrawPortals	=false;
 			mbTextureEnabled=false;
 
 			base.Initialize();
@@ -137,10 +134,12 @@ namespace BuildMap
 			mMap	=new Map(mMapFileName);
 			//mMap.LoadTextures(Content);
 			mMap.RemoveOverlap();
-			mMap.BuildTree();
-			//mMap.BuildPortals();
+
+			mMap.BuildTree(true);
+
 			mMap.LightAllBrushes(mGraphics.GraphicsDevice);
-			//mMap.LightAllBspFaces(mGraphics.GraphicsDevice);
+
+			mMap.BuildTree(false);
 
 			mMap.BuildVertexInfo();
 
@@ -195,9 +194,6 @@ namespace BuildMap
 			mDotEffect.World = mWorldMatrix;
 			mDotEffect.View = mViewMatrix;
 			mDotEffect.Projection = mProjectionMatrix;
-			mPortalEffect.World = mWorldMatrix;
-			mPortalEffect.View = mViewMatrix;
-			mPortalEffect.Projection = mProjectionMatrix;
 
 			UpdateLightMapEffect();
 
@@ -269,47 +265,6 @@ namespace BuildMap
 				}
 				mDotEffect.End();
 			}
-			if(mbDrawPortals)
-			{
-				mPortalEffect.Begin();
-			}
-
-			if(mbDrawPortals)
-			{
-				mMap.DrawPortals(mGraphics.GraphicsDevice, mPortalEffect, mCamPos);
-			}
-
-			if(mbDrawPortals || mbDrawBsp)
-			{
-				mPortalEffect.End();
-			}
-			/*
-			//draw a few lightmaps
-			int halfWidth = GraphicsDevice.Viewport.Width / 2;
-			int halfHeight = GraphicsDevice.Viewport.Height / 2;
-			
-			mSpriteBatch.Begin();
-
-			List<Texture2D>	thrice;
-
-			mMap.GetThriceLightmaps(out thrice);
-
-			if(thrice[0] != null)
-			{
-				mSpriteBatch.Draw(thrice[0],
-					new Rectangle(0, 0, halfWidth, halfHeight), Color.White);
-			}			
-			if(thrice[1] != null)
-			{
-				mSpriteBatch.Draw(thrice[1], 
-					new Rectangle(0, halfHeight, halfWidth, halfHeight), Color.White);
-			}
-			if(thrice[2] != null)
-			{
-				mSpriteBatch.Draw(thrice[2], 
-					new Rectangle(halfWidth, 0, halfWidth, halfHeight), Color.White);
-			}			
-			mSpriteBatch.End();*/
 			base.Draw(gameTime);
 		}
 
@@ -359,14 +314,6 @@ namespace BuildMap
 			mDotEffect.World      =mWorldMatrix;
 			mDotEffect.View       =mViewMatrix;
 			mDotEffect.Projection =mProjectionMatrix;
-
-			mPortalEffect = new BasicEffect(mGraphics.GraphicsDevice, null);
-			mPortalEffect.DiffuseColor = new Vector3(0.0f, 0.0f, 1.0f);
-
-			mPortalEffect.World			=mWorldMatrix;
-			mPortalEffect.View			=mViewMatrix;
-			mPortalEffect.Projection	=mProjectionMatrix;
-			mPortalEffect.Alpha			=0.5f;
 		}
 
 
@@ -406,21 +353,6 @@ namespace BuildMap
 				(mLastGamePadState.Buttons.Y == ButtonState.Released))
 			{
 				mbDrawBrushes	=!mbDrawBrushes;
-			}
-			if(((mCurrentGamePadState.Buttons.X == ButtonState.Pressed)) &&
-				(mLastGamePadState.Buttons.X == ButtonState.Released))
-			{
-				mbDrawPortals	=!mbDrawPortals;
-			}
-			if(((mCurrentGamePadState.Buttons.RightShoulder == ButtonState.Pressed)) &&
-				(mLastGamePadState.Buttons.RightShoulder == ButtonState.Released))
-			{
-				BspNode.gCheck++;
-			}
-			if(((mCurrentGamePadState.Buttons.LeftShoulder == ButtonState.Pressed)) &&
-				(mLastGamePadState.Buttons.LeftShoulder == ButtonState.Released))
-			{
-				BspNode.gCheck--;
 			}
 		}
 

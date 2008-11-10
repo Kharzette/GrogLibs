@@ -96,22 +96,9 @@ namespace BuildMap
 		}
 
 
-		public void BuildPortals()
-		{
-			mRoot.BuildPortals();
-		}
-
-
 		public bool ClassifyPoint(Vector3 pnt)
 		{
 			return	mRoot.ClassifyPoint(pnt);
-		}
-
-
-		public int GetFirstBSPSurface(out Vector3[] surfPoints)
-		{
-			BspNode.gCount	=0;
-			return	mRoot.GetFirstBSPSurface(out surfPoints);
 		}
 
 
@@ -121,27 +108,9 @@ namespace BuildMap
 		}
 
 
-		public void DrawPortals(GraphicsDevice g, Effect fx, Vector3 camPos)
-		{
-			mRoot.DrawPortalsDumb(g, fx, camPos);
-		}
-
-
 		public BspNode GetRoot()
 		{
 			return	mRoot;
-		}
-
-
-		public void BuildVertexInfo(GraphicsDevice g)
-		{
-			mRoot.BuildVertexInfo(g);
-		}
-
-
-		public void Light(GraphicsDevice g, Vector3 lightPos, float lightVal, Vector3 clr)
-		{
-			mRoot.Light(g, mRoot, lightPos, lightVal, clr);
 		}
 	}
 }

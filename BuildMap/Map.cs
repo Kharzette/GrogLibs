@@ -306,32 +306,37 @@ namespace BuildMap
 		}
 
 
-		public void BuildBSPVertexInfo(GraphicsDevice g)
-		{
-			mTree.BuildVertexInfo(g);
-			foreach(Entity e in mEntities)
-			{
-				foreach(Brush b in e.mBrushes)
-				{
-					b.BuildVertexInfo();
-				}
-			}
-		}
-
-
 		public bool ClassifyPoint(Vector3 pnt)
 		{
 			return	mTree.ClassifyPoint(pnt);
 		}
 
 
-		public void	BuildTree()
+		public void	BuildTree(bool bLightTree)
 		{
 			//look for the worldspawn
 			Entity e	=GetWorldSpawnEntity();
+			List<Brush>	copy;
 
-			//ordinarily we'd junk the original brushes
-			List<Brush>	copy	=new List<Brush>(e.mBrushes);
+			if(bLightTree)
+			{
+				copy	=new List<Brush>();
+				//take out clip brushes
+				//we don't want them blocking
+				//light raycasts
+				foreach(Brush b in e.mBrushes)
+				{
+					if(b.IsClip())
+					{
+						continue;
+					}
+					copy.Add(b);
+				}
+			}
+			else
+			{
+				copy	=new List<Brush>(e.mBrushes);
+			}
 
 			//use the copy so we have the old ones around to draw
 			mTree	=new BspTree(copy);
@@ -470,33 +475,6 @@ namespace BuildMap
 		}
 
 
-		public void LightAllBspFaces(GraphicsDevice g)
-		{
-			//find worldspawn brush list
-			Entity	wse	=GetWorldSpawnEntity();
-
-			foreach(Entity e in mEntities)
-			{
-				Vector3	lightPos, clr;
-				float	lightVal;
-				if(e == GetWorldSpawnEntity())
-				{
-					continue;
-				}
-				if(!e.GetLightValue(out lightVal))
-				{
-					continue;
-				}
-				if(!e.GetOrigin(out lightPos))
-				{
-					continue;
-				}
-				e.GetColor(out clr);
-				mTree.Light(g, lightPos, lightVal, clr);
-			}
-		}
-
-
 		public Vector3 GetFirstLightPos()
 		{
 			foreach(Entity e in mEntities)
@@ -514,12 +492,6 @@ namespace BuildMap
 				}
 			}
 			return	Vector3.Zero;
-		}
-
-
-		public void BuildPortals()
-		{
-			mTree.BuildPortals();
 		}
 
 
@@ -612,17 +584,6 @@ namespace BuildMap
 		}
 
 
-		public int GetFirstBSPSurface(out Vector3[] surfPoints)
-		{
-			int	ret	=mTree.GetFirstBSPSurface(out surfPoints);
-			if(ret > 0)
-			{
-				return	ret;
-			}
-			return	0;
-		}
-
-
 		public int GetFirstSurface(out Vector3[] surfPoints)
 		{
 			Entity	e	=GetWorldSpawnEntity();
@@ -641,12 +602,6 @@ namespace BuildMap
 			}
 			surfPoints	=null;
 			return	0;
-		}
-
-
-		public void DrawPortals(GraphicsDevice g, Effect fx, Vector3 camPos)
-		{
-			mTree.DrawPortals(g, fx, camPos);
 		}
 
 
