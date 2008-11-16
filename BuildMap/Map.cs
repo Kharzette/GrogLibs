@@ -14,9 +14,9 @@ namespace BuildMap
 {
 	public class Entity
 	{
-		public	List<String>	mKey;
-		public	List<String>	mValue;
-		public	List<Brush>		mBrushes;
+		public List<String>	mKey;
+		public List<String>	mValue;
+		public List<Brush>	mBrushes;
 
 
 		public Entity()
@@ -85,6 +85,20 @@ namespace BuildMap
 		}
 
 
+		//omni lights use position as a vector
+		public bool IsLightOmni()
+		{
+			foreach(string s in mKey)
+			{
+				if(s == "omni")
+				{
+					return	true;
+				}
+			}
+			return	false;
+		}
+
+
 		public bool GetColor(out Vector3 color)
 		{
 			color	=Vector3.One;
@@ -120,18 +134,19 @@ namespace BuildMap
 
 		public void ReadFromMap(StreamReader sr)
 		{
-            string	s			="";
-			Brush	b			=null;
+			string	s	="";
+			Brush	b	=null;
+
 			bool	brushComing	=false;
 			bool	patchComing	=false;
 			bool	patchBrush	=false;
 
-            while((s = sr.ReadLine()) != null)
-            {
+			while((s = sr.ReadLine()) != null)
+			{
 				s	=s.Trim();
 				if(s.StartsWith("\""))
 				{
-					string[]	tokens;
+					string	[]tokens;
 					tokens	=s.Split('\"');
 
 					mKey.Add(tokens[1]);
@@ -151,10 +166,10 @@ namespace BuildMap
 					if(brushComing)
 					{
 						brushComing	=false;
-						
+
 						//seal the brush
 						b.SealFaces();
-						
+
 						if(b.IsValid())
 						{
 							mBrushes.Add(b);
@@ -193,7 +208,7 @@ namespace BuildMap
 
 		public void WriteToFile(BinaryWriter bw)
 		{
-			int	i;
+			int i;
 
 			Debug.Assert(mKey.Count == mValue.Count);
 
@@ -219,32 +234,32 @@ namespace BuildMap
 				{
 					b.WriteToFile(bw);
 				}
-			}			
+			}
 		}
 	};
 
-    class Map
-    {
+	class Map
+	{
 		List<Entity>	mEntities;
 		BspTree			mTree;
 		TexAtlas		mAtlas;
 
 		List<KeyValuePair<string, Texture2D>>	mTextures;
 
-        //reads a .map file
-        public Map(string mapFileName)
-        {
+		//reads a .map file
+		public Map(string mapFileName)
+		{
 			mEntities	=new List<Entity>();
 
 
-            if(File.Exists(mapFileName))
-            {
-                using(StreamReader sr = File.OpenText(mapFileName))
-                {
-                    string s = "";
+			if(File.Exists(mapFileName))
+			{
+				using(StreamReader sr = File.OpenText(mapFileName))
+				{
+					string	s	="";
 
-                    while((s = sr.ReadLine()) != null)
-                    {
+					while((s = sr.ReadLine()) != null)
+					{
 						s	=s.Trim();
 						if(s.StartsWith("{"))
 						{
@@ -257,7 +272,7 @@ namespace BuildMap
 					}
 				}
 			}
-        }
+		}
 
 
 		public void Draw(GraphicsDevice g, Effect fx, Vector3 camPos)
@@ -266,8 +281,8 @@ namespace BuildMap
 		}
 
 
-        public void Draw(GraphicsDevice g, Effect fx)
-        {
+		public void Draw(GraphicsDevice g, Effect fx)
+		{
 			fx.Parameters["LightMap"].SetValue(mAtlas.GetAtlasTexture());
 			fx.Parameters["LightMapEnabled"].SetValue(true);
 			fx.Parameters["FullBright"].SetValue(false);
@@ -279,7 +294,7 @@ namespace BuildMap
 					b.Draw(g, fx);
 				}
 			}
-        }
+		}
 
 
 		public void BuildVertexInfo()
@@ -312,10 +327,10 @@ namespace BuildMap
 		}
 
 
-		public void	BuildTree(bool bLightTree)
+		public void BuildTree(bool bLightTree)
 		{
 			//look for the worldspawn
-			Entity e	=GetWorldSpawnEntity();
+			Entity		e	=GetWorldSpawnEntity();
 			List<Brush>	copy;
 
 			if(bLightTree)
@@ -344,17 +359,17 @@ namespace BuildMap
 
 		public struct LightParameters
 		{
-			public	GraphicsDevice		g;
-			public	BspNode				root;
-			public	List<Brush>			brushList;
-			public	ManualResetEvent	doneEvent;
-			public	int					core, cores;
+			public GraphicsDevice g;
+			public BspNode root;
+			public List<Brush> brushList;
+			public ManualResetEvent doneEvent;
+			public int core, cores;
 		}
 
 
-		private	void LightBrushesThreadCB(Object threadContext)
+		private void LightBrushesThreadCB(Object threadContext)
 		{
-			LightParameters	p	=(LightParameters)threadContext;
+			LightParameters p	=(LightParameters)threadContext;
 
 			Console.WriteLine("Thread doing light brushes half to end\n");
 
@@ -375,18 +390,19 @@ namespace BuildMap
 					continue;
 				}
 				mEntities[i].GetColor(out clr);
+				bool	bOmni	=mEntities[i].IsLightOmni();
 
 				//-1 for zero based index, -1 for main thread
 				if(p.core == p.cores - 2)
 				{
 					//go to the end, sometimes there's a remainder
-					LightBrushes(p.g, p.brushList, lightPos, lightVal, clr,
+					LightBrushes(p.g, p.brushList, lightPos, lightVal, clr, bOmni,
 						(p.brushList.Count / p.cores) * (p.core + 1),
 						p.brushList.Count);
 				}
 				else
 				{
-					LightBrushes(p.g, p.brushList, lightPos, lightVal, clr,
+					LightBrushes(p.g, p.brushList, lightPos, lightVal, clr, bOmni,
 						(p.brushList.Count / p.cores) * (p.core + 1),
 						(p.brushList.Count / p.cores) * (p.core + 2));
 				}
@@ -397,14 +413,14 @@ namespace BuildMap
 		}
 
 
-		private	void LightBrushes(GraphicsDevice g, List<Brush> bl,
-			Vector3 lightPos, float lightVal, Vector3 color,
-			int	startIndex, int endIndex)
+		private void LightBrushes(GraphicsDevice g, List<Brush> bl,
+			Vector3 lightPos, float lightVal, Vector3 color, bool bOmni,
+			int startIndex, int endIndex)
 		{
 			Debug.Assert(endIndex <= bl.Count);
 			for(int i=startIndex;i < endIndex;i++)
 			{
-				bl[i].LightBrush(g, mTree.GetRoot(), lightPos, lightVal, color);
+				bl[i].LightBrush(g, mTree.GetRoot(), lightPos, lightVal, color, bOmni);
 			}
 		}
 
@@ -414,7 +430,7 @@ namespace BuildMap
 			//find worldspawn brush list
 			Entity	wse	=GetWorldSpawnEntity();
 
-			int	cores	=System.Environment.ProcessorCount;
+			int cores	=System.Environment.ProcessorCount;
 
 			if(cores < 2)
 			{
@@ -422,7 +438,7 @@ namespace BuildMap
 			}
 
 			//spin off extra threads to process chunks of the map
-			ManualResetEvent[]	res	=new ManualResetEvent[cores - 1];
+			ManualResetEvent	[]res	=new ManualResetEvent[cores - 1];
 
 			for(int i=0;i < (cores - 1);i++)
 			{
@@ -432,7 +448,7 @@ namespace BuildMap
 			LightParameters	p	=new LightParameters();
 
 			Console.WriteLine("Main thread doing front part of light brushes\n");
-	
+
 			if(mEntities.Count < 2)
 			{
 				Console.WriteLine("Need at least 2 entities for threading to work\n");
@@ -467,8 +483,9 @@ namespace BuildMap
 					continue;
 				}
 				mEntities[i].GetColor(out clr);
+				bool	bOmni	=mEntities[i].IsLightOmni();
 
-				LightBrushes(g, wse.mBrushes, lightPos, lightVal, clr, 0, (wse.mBrushes.Count / cores));
+				LightBrushes(g, wse.mBrushes, lightPos, lightVal, clr, bOmni, 0, (wse.mBrushes.Count / cores));
 			}
 			Console.WriteLine("Main thread done, waiting on second thread\n");
 			WaitHandle.WaitAll(res);
@@ -483,7 +500,7 @@ namespace BuildMap
 				{
 					continue;
 				}
-				float	dist;
+				float dist;
 				if(e.GetLightValue(out dist))
 				{
 					Vector3	ret;
@@ -511,9 +528,9 @@ namespace BuildMap
 			foreach(string fn in texFiles)
 			{
 				Texture2D	tex	=cm.Load<Texture2D>("textures\\" + fn);
-				KeyValuePair<string, Texture2D>	kv;
+				KeyValuePair<string, Texture2D> kv;
 
-				kv	=new KeyValuePair<string,Texture2D>(fn, tex);
+				kv	=new KeyValuePair<string, Texture2D>(fn, tex);
 				mTextures.Add(kv);
 			}
 		}
@@ -522,7 +539,7 @@ namespace BuildMap
 		public void Save(string fileName)
 		{
 			FileStream	file	=OpenTitleFile(fileName,
-				FileMode.Open, FileAccess.Write);
+									FileMode.Open, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
@@ -540,7 +557,7 @@ namespace BuildMap
 			//write lightmap atlas
 			Texture2D	tex	=mAtlas.GetAtlasTexture();
 
-			Color[]	col	=new Color[(tex.Width * tex.Height)];
+			Color	[]col	=new Color[(tex.Width * tex.Height)];
 
 			tex.GetData<Color>(col);
 
@@ -558,17 +575,19 @@ namespace BuildMap
 		public static FileStream OpenTitleFile(string fileName,
 			FileMode mode, FileAccess access)
 		{
-			string fullPath	=Path.Combine(
-				StorageContainer.TitleLocation, fileName);
+			string	fullPath	=Path.Combine(
+									StorageContainer.TitleLocation,
+									fileName);
 
 			if(!File.Exists(fullPath) &&
-				(access == FileAccess.Write || access == FileAccess.ReadWrite))
+				(access == FileAccess.Write ||
+				access == FileAccess.ReadWrite))
 			{
 				return	File.Create(fullPath);
 			}
 			else
 			{
-				return File.Open(fullPath, mode, access);
+				return	File.Open(fullPath, mode, access);
 			}
 		}
 
@@ -594,7 +613,7 @@ namespace BuildMap
 				{
 					continue;
 				}
-				int	ret	=b.GetFirstSurface(out surfPoints);
+				int ret	=b.GetFirstSurface(out surfPoints);
 				if(ret > 0)
 				{
 					return	ret;
@@ -637,138 +656,138 @@ namespace BuildMap
 		}
 
 
-        public void RemoveOverlap()
-        {
-            int			i, j;
+		public void RemoveOverlap()
+		{
+			int	i, j;
 			List<Brush>	brushes	=null;
 
 			Entity	wse	=GetWorldSpawnEntity();
 
 			brushes	=wse.mBrushes;
 
-            i = 1;
-        startoveragain:
-            if (i > 0)
-            {
-                i--;
-            }
+			i	=1;
+		startoveragain:
+			if(i > 0)
+			{
+				i--;
+			}
 
-            for (; i < brushes.Count; i++)
-            {
-                for(j = 0;j < brushes.Count;j++)
-                {
-                    if(i == j)
-                    {
-                        continue;
-                    }
+			for(;i < brushes.Count;i++)
+			{
+				for(j = 0;j < brushes.Count;j++)
+				{
+					if(i == j)
+					{
+						continue;
+					}
 
-                    if(!brushes[i].Intersects(brushes[j]))
-                    {
-                        continue;
-                    }
+					if(!brushes[i].Intersects(brushes[j]))
+					{
+						continue;
+					}
 
-                    List<Brush> cutup = new List<Brush>();
-                    List<Brush> cutup2 = new List<Brush>();
+					List<Brush>	cutup	=new List<Brush>();
+					List<Brush>	cutup2	=new List<Brush>();
 
-                    if(brushes[i].SubtractBrush(brushes[j], out cutup))
-                    {
-                        //make sure the brush returned is
-                        //not the one passed in
-                        if(cutup.Count == 1)
-                        {
-                            if(brushes[i].Equals(cutup[0]))
-                            {
-                                continue;
-                            }
-                        }
+					if(brushes[i].SubtractBrush(brushes[j], out cutup))
+					{
+						//make sure the brush returned is
+						//not the one passed in
+						if(cutup.Count == 1)
+						{
+							if(brushes[i].Equals(cutup[0]))
+							{
+								continue;
+							}
+						}
 
-                        if(cutup.Count == 0)
-                        {
-                            //Debug.WriteLine("Subtract returned true, but an empty list");
-                        }
-                    }
-                    else
-                    {
-                        cutup.Clear();
-                    }
+						if(cutup.Count == 0)
+						{
+							//Debug.WriteLine("Subtract returned true, but an empty list");
+						}
+					}
+					else
+					{
+						cutup.Clear();
+					}
 
-                    if(brushes[j].SubtractBrush(brushes[i], out cutup2))
-                    {
-                        //make sure the brush returned is
-                        //not the one passed in
-                        if(cutup2.Count == 1)
-                        {
-                            if(brushes[j].Equals(cutup2[0]))
-                            {
-                                continue;
-                            }
-                        }
+					if(brushes[j].SubtractBrush(brushes[i], out cutup2))
+					{
+						//make sure the brush returned is
+						//not the one passed in
+						if(cutup2.Count == 1)
+						{
+							if(brushes[j].Equals(cutup2[0]))
+							{
+								continue;
+							}
+						}
 
-                        if(cutup2.Count == 0)
-                        {
-                            //Debug.WriteLine("Subtract returned true, but an empty list");
-                        }
-                    }
-                    else
-                    {
-                        cutup2.Clear();
-                    }
+						if(cutup2.Count == 0)
+						{
+							//Debug.WriteLine("Subtract returned true, but an empty list");
+						}
+					}
+					else
+					{
+						cutup2.Clear();
+					}
 
-                    if(cutup.Count==0 && cutup2.Count==0)
-                    {
-                        continue;
-                    }
+					if(cutup.Count==0 && cutup2.Count==0)
+					{
+						continue;
+					}
 
-                    if(cutup.Count > 4 && cutup2.Count > 4)
-                    {
-                        continue;
-                    }
+					if(cutup.Count > 4 && cutup2.Count > 4)
+					{
+						continue;
+					}
 
-                    if(cutup.Count < cutup2.Count)
-                    {
-                        cutup2.Clear();
+					if(cutup.Count < cutup2.Count)
+					{
+						cutup2.Clear();
 
-                        foreach(Brush b in cutup)
-                        {
-                            brushes.Add(b);
-                        }
-                        cutup.Clear();
-                        brushes.RemoveAt(i);
-                        goto startoveragain;
-                    }
-                    else
-                    {
-                        cutup.Clear();
+						foreach(Brush b in cutup)
+						{
+							brushes.Add(b);
+						}
+						cutup.Clear();
+						brushes.RemoveAt(i);
+						goto startoveragain;
+					}
+					else
+					{
+						cutup.Clear();
 
-                        foreach(Brush b in cutup2)
-                        {
-                            brushes.Add(b);
-                        }
-                        cutup2.Clear();
-                        brushes.RemoveAt(j);
-                        goto startoveragain;
-                    }
-                }
-            }
+						foreach(Brush b in cutup2)
+						{
+							brushes.Add(b);
+						}
+						cutup2.Clear();
+						brushes.RemoveAt(j);
+						goto startoveragain;
+					}
+				}
+			}
 
-            bool    bDone   =false;
+			bool bDone   =false;
 
-            //see if any got completely eaten
-            while(!bDone)
-            {
-                bDone = true;
-                foreach(Brush b in brushes)
-                {
-                    if(!b.IsValid())
-                    {
-                        Debug.WriteLine("Brush totally clipped away");
+			//see if any got completely eaten
+			while(!bDone)
+			{
+				bDone	=true;
+				foreach(Brush b in brushes)
+				{
+					if(!b.IsValid())
+					{
+						Debug.WriteLine("Brush totally clipped away");
 
-                        brushes.Remove(b);
-                        bDone = false;
-                        break;
-                    }
-                }
-            }
-        }
-    }
+						brushes.Remove(b);
+						bDone	=false;
+						break;
+					}
+				}
+			}
+		}
+	}
 }

@@ -11,12 +11,12 @@ namespace BuildMap
 {
 	public class BspNode
 	{
-		public	Plane		mPlane;
-		public	Face		mFace;
-		public	BspNode		mFront,	mBack;
-		private	Bounds		mBounds;
-		public	bool		mbLeaf;
-		public	BspNode		mParent;
+		public	Plane	mPlane;
+		public	Face	mFace;
+		public	BspNode	mFront, mBack;
+		private	Bounds	mBounds;
+		public	bool	mbLeaf;
+		public	BspNode	mParent;
 
 
 		public BspNode(Face f)
@@ -50,7 +50,7 @@ namespace BuildMap
 			if(BestIndex >= 0)
 			{
 				bestFace	=brushList[BestIndex].GetBestSplittingFace(brushList);
-				return	true;
+				return true;
 			}
 			else
 			{	//this won't be used but gotta return something
@@ -64,7 +64,7 @@ namespace BuildMap
 		public void BuildTree(List<Brush> brushList)
 		{
 			List<Brush>	frontList	=new List<Brush>();
-			List<Brush> backList	=new List<Brush>();
+			List<Brush>	backList	=new List<Brush>();
 
 			Face	face;
 
@@ -189,7 +189,7 @@ namespace BuildMap
 				mBounds	=new Bounds();
 
 				mFace.AddToBounds(ref mBounds);
-				return	mBounds;
+				return mBounds;
 			}
 
 			if(mFront != null)
@@ -254,11 +254,11 @@ namespace BuildMap
 				d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;
 				if(d > -Face.ON_EPSILON)
 				{
-					return	false;
+					return false;
 				}
 				else
 				{
-					return	true;
+					return true;
 				}
 			}
 
@@ -268,21 +268,21 @@ namespace BuildMap
 			{
 				if(mFront == null)
 				{
-					return	false;	//landed in empty
+					return false;	//landed in empty
 				}
-				return	mFront.ClassifyPoint(pnt);
+				return mFront.ClassifyPoint(pnt);
 			}
 			else if(d < Face.ON_EPSILON)
 			{
-				return	mBack.ClassifyPoint(pnt);
+				return mBack.ClassifyPoint(pnt);
 			}
 			else
 			{
 				if(mFront == null)
 				{
-					return	false;	//landed in empty
+					return false;	//landed in empty
 				}
-				return	mFront.ClassifyPoint(pnt);
+				return mFront.ClassifyPoint(pnt);
 			}
 		}
 
@@ -299,16 +299,16 @@ namespace BuildMap
 
 				if(d > -Face.ON_EPSILON && d2 > -Face.ON_EPSILON)
 				{
-					return	Vector3.Zero;	//no impact
+					return Vector3.Zero;	//no impact
 				}
 				else if(d < Face.ON_EPSILON && d2 < Face.ON_EPSILON)
 				{
-					return	pntA;	//crossover point is impact
+					return pntA;	//crossover point is impact
 				}
 				else	//split up segment
 				{
 					float	splitRatio	=d / (d - d2);
-					Vector3	mid	=pntA + (splitRatio * (pntB - pntA));
+					Vector3 mid			=pntA + (splitRatio * (pntB - pntA));
 
 					return	mid;
 				}
@@ -319,24 +319,24 @@ namespace BuildMap
 
 			if(d > -Face.ON_EPSILON && d2 > -Face.ON_EPSILON)
 			{
-				return	mFront.RayCast(pntA, pntB);
+				return mFront.RayCast(pntA, pntB);
 			}
 			else if(d < Face.ON_EPSILON && d2 < Face.ON_EPSILON)
 			{
-				return	mBack.RayCast(pntA, pntB);
+				return mBack.RayCast(pntA, pntB);
 			}
 			else	//split up segment
 			{
-				float	splitRatio	=d / (d - d2);
-				Vector3	mid	=pntA + (splitRatio * (pntB - pntA));
+				float splitRatio	=d / (d - d2);
+				Vector3 mid	=pntA + (splitRatio * (pntB - pntA));
 
 				if(d > 0.0f)
 				{
-					return	mFront.RayCast(pntA, mid);
+					return mFront.RayCast(pntA, mid);
 				}
 				else
 				{
-					return	mBack.RayCast(mid, pntB);
+					return mBack.RayCast(mid, pntB);
 				}
 			}
 		}
@@ -354,15 +354,15 @@ namespace BuildMap
 
 				if(d > -Face.ON_EPSILON && d2 > -Face.ON_EPSILON)
 				{
-					return	true;	//no impact
+					return true;	//no impact
 				}
 				else if(d < Face.ON_EPSILON && d2 < Face.ON_EPSILON)
 				{
-					return	false;	//crossover point is impact
+					return false;	//crossover point is impact
 				}
 				else	//split up segment
 				{
-					return	false;
+					return false;
 				}
 			}
 
@@ -373,18 +373,18 @@ namespace BuildMap
 			{
 				if(mFront == null)
 				{
-					return	true;	//landed in empty
+					return true;	//landed in empty
 				}
-				return	mFront.RayCastBool(pntA, pntB);
+				return mFront.RayCastBool(pntA, pntB);
 			}
 			else if(d < Face.ON_EPSILON && d2 < Face.ON_EPSILON)
 			{
-				return	mBack.RayCastBool(pntA, pntB);
+				return mBack.RayCastBool(pntA, pntB);
 			}
 			else	//split up segment
 			{
 				float	splitRatio	=d / (d - d2);
-				Vector3	mid	=pntA + (splitRatio * (pntB - pntA));
+				Vector3 mid			=pntA + (splitRatio * (pntB - pntA));
 
 				bool	bHit;
 
@@ -400,16 +400,16 @@ namespace BuildMap
 					}
 					if(!bHit)
 					{
-						return	bHit;
+						return bHit;
 					}
 				}
 				if(d2 > 0.0f)
 				{
-					return	mBack.RayCastBool(pntA, mid);
+					return mBack.RayCastBool(pntA, mid);
 				}
 				else
 				{
-					return	mBack.RayCastBool(mid, pntB);
+					return mBack.RayCastBool(mid, pntB);
 				}
 			}
 		}
@@ -426,11 +426,11 @@ namespace BuildMap
 				d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;
 				if(d < Face.ON_EPSILON)
 				{
-					return	true;
+					return true;
 				}
 				else
 				{
-					return	true;
+					return true;
 				}
 			}
 

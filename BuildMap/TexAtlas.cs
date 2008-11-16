@@ -12,8 +12,8 @@ namespace BuildMap
 	//http://www.blackpawn.com/texts/lightmaps/default.html
 	class TexNode
 	{
-		public const int TEXATLAS_WIDTH		=4096;
-		public const int TEXATLAS_HEIGHT	=4096;
+		public const int	TEXATLAS_WIDTH	=4096;
+		public const int	TEXATLAS_HEIGHT	=4096;
 
 		TexNode		mFront;
 		TexNode		mBack;
@@ -79,8 +79,8 @@ namespace BuildMap
 			}
 
 			//split
-			int	dw	=(mRect.Right - mRect.Left) - texW;
-			int	dh	=(mRect.Bottom - mRect.Top) - texH;
+			int dw	=(mRect.Right - mRect.Left) - texW;
+			int dh	=(mRect.Bottom - mRect.Top) - texH;
 
 			mFront	=new TexNode();
 			mBack	=new TexNode();
@@ -115,8 +115,8 @@ namespace BuildMap
 
 	public class TexAtlas
 	{
-		private	Texture2D	mAtlasTexture;
-		private	TexNode		mRoot;
+		private Texture2D	mAtlasTexture;
+		private TexNode		mRoot;
 
 
 		public TexAtlas(GraphicsDevice g)
@@ -135,7 +135,7 @@ namespace BuildMap
 		}
 
 
-		public bool	Insert(Color[] tex, int texW, int texH,
+		public bool Insert(Color[] tex, int texW, int texH,
 			out double scaleU, out double scaleV, out double uoffs, out double voffs)
 		{
 			//test code
@@ -155,10 +155,10 @@ namespace BuildMap
 
 			if(n == null)
 			{
-				return	false;
+				return false;
 			}
 
-			Color[]	at	=new Color[TexNode.TEXATLAS_WIDTH * TexNode.TEXATLAS_HEIGHT];
+			Color	[]at	=new Color[TexNode.TEXATLAS_WIDTH * TexNode.TEXATLAS_HEIGHT];
 
 			//copy pixels in
 			mAtlasTexture.GetData<Color>(at);
@@ -167,12 +167,12 @@ namespace BuildMap
 
 			if(target.Top != 0)
 			{
-				int		j	=0;
+				int j	=0;
 				j++;
 				j--;
 			}
 
-			int	c	=0;
+			int c	=0;
 			for(int y=target.Top;y < target.Bottom;y++)
 			{
 				for(int x=target.Left;x < target.Right;x++, c++)

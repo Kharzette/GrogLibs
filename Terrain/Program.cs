@@ -1,6 +1,6 @@
 using System;
 
-namespace BuildMap
+namespace Terrain
 {
 	static class Program
 	{
@@ -9,7 +9,7 @@ namespace BuildMap
 		/// </summary>
 		static void Main(string[] args)
 		{
-			using(BuildMapMain game = new BuildMapMain(args))
+			using(Terrain game = new Terrain(args))
 			{
 				game.Run();
 			}

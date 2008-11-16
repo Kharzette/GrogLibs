@@ -9,17 +9,18 @@ namespace BuildMap
 {
 	public class Bounds
 	{
-		public	const float	MIN_MAX_BOUNDS	=15192.0f;
-		public	const float	DIST_EPSILON	=0.01f;
-		public	const float	ANGLE_EPSILON	=0.00001f;
-		public	Vector3	mMins, mMaxs;
+		public const float	MIN_MAX_BOUNDS	=15192.0f;
+		public const float	DIST_EPSILON	=0.01f;
+		public const float	ANGLE_EPSILON	=0.00001f;
+
+		public Vector3	mMins, mMaxs;
 
 
 		public Bounds()
 		{
 			ClearBounds();
 		}
-		
+
 		public void ClearBounds()
 		{
 			mMins.X	=mMins.Y =	mMins.Z	=MIN_MAX_BOUNDS;

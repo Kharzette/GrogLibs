@@ -9,28 +9,28 @@ using System.Diagnostics;
 
 namespace BuildMap
 {
-    public struct Plane
-    {
-        public Vector3	Normal;
-        public float	Dist;
-    }
+	public struct Plane
+	{
+		public Vector3	Normal;
+		public float	Dist;
+	}
 
 	class LightInfo
 	{
-		public	Vector3	mTexOrg;
-		public	Vector3	mWorldToTexS, mWorldToTexT;
-		public	Vector3	mTexToWorldS, mTexToWorldT;
-		public	float	mExactMinS, mExactMinT;
-		public	float	mExactMaxS, mExactMaxT;
-		public	int		mTexMinS, mTexMinT;
-		public	int		mTexSizeS, mTexSizeT;
+		public Vector3	mTexOrg;
+		public Vector3	mWorldToTexS, mWorldToTexT;
+		public Vector3	mTexToWorldS, mTexToWorldT;
+		public float	mExactMinS, mExactMinT;
+		public float	mExactMaxS, mExactMaxT;
+		public int		mTexMinS, mTexMinT;
+		public int		mTexSizeS, mTexSizeT;
 
 		//lightmap points in 3space
-		public	Vector3[]	mSurface;
-		public	int			mNumSurfacePoints;
+		public Vector3	[]mSurface;
+		public int		mNumSurfacePoints;
 
 		//actual lightmap points
-		public	float[]		mSamples;
+		public float	[]mSamples;
 
 
 		public void WriteToFile(BinaryWriter bw)
@@ -39,12 +39,12 @@ namespace BuildMap
 		}
 
 
-		public	void CalcFaceVectors(Plane p, TexInfo t)
+		public void CalcFaceVectors(Plane p, TexInfo t)
 		{
 			mWorldToTexS	=t.mTexS;
 			mWorldToTexT	=t.mTexT;
 
-			Vector3	texNormal	=Vector3.Cross(mWorldToTexS, mWorldToTexT);
+			Vector3 texNormal	=Vector3.Cross(mWorldToTexS, mWorldToTexT);
 			texNormal.Normalize();
 
 			Debug.Assert(!float.IsNaN(texNormal.X));
@@ -59,8 +59,8 @@ namespace BuildMap
 
 			d	=1.0f / d;
 
-			float	len	=mWorldToTexS.Length();
-			float	d2	=Vector3.Dot(mWorldToTexS, p.Normal);
+			float len	=mWorldToTexS.Length();
+			float d2	=Vector3.Dot(mWorldToTexS, p.Normal);
 			d2	*=d;
 			mTexToWorldS	=mWorldToTexS + (texNormal * -d2);
 			mTexToWorldS	*=((1.0f / len) * (1.0f / len));
@@ -85,7 +85,7 @@ namespace BuildMap
 		}
 
 
-		public	void CalcFaceExtents(List<Vector3> pnts, TexInfo t)
+		public void CalcFaceExtents(List<Vector3> pnts, TexInfo t)
 		{
 			float	mins, mint, maxs, maxt;
 
@@ -142,24 +142,24 @@ namespace BuildMap
 	}
 
 
-    struct TexInfo
-    {
-		public const UInt32		TEX_SPECIAL			=1;
-		public const UInt32		FACE_HIDDEN			=2;
-		public const UInt32		TEX_ANIMATING		=4;
-		public const UInt32		TEX_CLIP			=8;
-		public const UInt32		FACE_DETAIL			=0x8000000;
-		public	const float		LIGHTMAPSCALE		=4.0f;
-		public	const float		LIGHTMAPHALFSCALE	=LIGHTMAPSCALE / 2.0f;
-		public	const float		LIGHTMAPDOUBLESCALE	=LIGHTMAPSCALE * 2.0f;
-		
-		public Vector3			mNormal;
-		public float			uScale, vScale;
-		public float			uOffset, vOffset;
-		public float			mRotationAngle;
-		public string			mTexName;   //temporary
-		public Vector3			mTexS, mTexT;
-		public Texture2D		mTexture;
+	struct TexInfo
+	{
+		public const UInt32 TEX_SPECIAL			=1;
+		public const UInt32 FACE_HIDDEN			=2;
+		public const UInt32 TEX_ANIMATING		=4;
+		public const UInt32 TEX_CLIP			=8;
+		public const UInt32 FACE_DETAIL			=0x8000000;
+		public const float LIGHTMAPSCALE		=4.0f;
+		public const float LIGHTMAPHALFSCALE	=LIGHTMAPSCALE / 2.0f;
+		public const float LIGHTMAPDOUBLESCALE	=LIGHTMAPSCALE * 2.0f;
+
+		public Vector3		mNormal;
+		public float		uScale, vScale;
+		public float		uOffset, vOffset;
+		public float		mRotationAngle;
+		public string		mTexName;   //temporary
+		public Vector3		mTexS, mTexT;
+		public Texture2D	mTexture;
 
 
 		public void WriteToFile(BinaryWriter bw)
@@ -172,48 +172,48 @@ namespace BuildMap
 			bw.Write(mTexT.Y);
 			bw.Write(mTexT.Z);
 		}
-    }
+	}
 
 
 	public struct VertexPositionTextureTexture
 	{
-		public	Vector3	Position;
-		public	Vector2	Texture0;
-		public	Vector2	Texture1;
+		public Vector3	Position;
+		public Vector2	Texture0;
+		public Vector2	Texture1;
 	}
-	
+
 	public class Face
 	{
-		public	const float ON_EPSILON	=0.1f;
-		private const float EDGE_LENGTH	=0.1f;
-		private const float SCALECOS	=0.5f;
-		private const float RANGESCALE	=0.5f;
-		
+		public	const float	ON_EPSILON	=0.1f;
+		private	const float	EDGE_LENGTH	=0.1f;
+		private	const float	SCALECOS	=0.5f;
+		private	const float	RANGESCALE	=0.5f;
+
 		private Plane			mFacePlane;
 		private TexInfo			mTexInfo;
 		private List<Vector3>	mPoints;
 		public	UInt32			mFlags;
-		private	LightInfo		mLightInfo;
-		private	Color[]			mLightMap;	//actual texture2d goes in an atlas
-		
+		private LightInfo		mLightInfo;
+		private Color			[]mLightMap;	//actual texture2d goes in an atlas
+
 		//for drawrings
 		private VertexBuffer					mVertBuffer;
-		private VertexPositionTextureTexture[]	mVerts;
-		private short[]							mIndexs;
+		private VertexPositionTextureTexture	[]mVerts;
+		private short							[]mIndexs;
 		private IndexBuffer						mIndexBuffer;
-	
-	
+
+
 		public Plane GetPlane()
 		{
 			return	mFacePlane;
 		}
-		
-		
+
+
 		public Face(List<Vector3> pnts)
 		{
 			mPoints	=new List<Vector3>();
 			mPoints	=pnts;
-			
+
 			if(SetPlaneFromFace())
 			{
 				//init texinfo, set dibid, set texture pos
@@ -223,8 +223,8 @@ namespace BuildMap
 				Debug.WriteLine("assgoblinry?");
 			}
 		}
-		
-		
+
+
 		public Face(Plane p, Face f)
 		{
 			mPoints	=new List<Vector3>();
@@ -239,73 +239,73 @@ namespace BuildMap
 		}
 
 
-        public Face(Face f)
-        {
-            mPoints = new List<Vector3>();
-
-            foreach(Vector3 pnt in f.mPoints)
-            {
-                mPoints.Add(pnt);
-            }
-
-            mFacePlane	=f.mFacePlane;
-			mTexInfo	=f.mTexInfo;
-			mFlags		=f.mFlags;
-        }
-
-
-        public Face(Face f, bool bInvert)
-        {
-            mPoints = new List<Vector3>();
-
-            foreach(Vector3 pnt in f.mPoints)
-            {
-                mPoints.Add(pnt);
-            }
-
-            mFacePlane	=f.mFacePlane;
-			mTexInfo	=f.mTexInfo;
-			mFlags		=f.mFlags;
-
-            if(bInvert)
-            {
-                mPoints.Reverse();
-                mFacePlane.Normal *= -1.0f;
-                mFacePlane.Dist *= -1.0f;
-            }
-        }
-
-
-		private	void MakeVBuffer(GraphicsDevice g)
+		public Face(Face f)
 		{
-			mIndexBuffer=new IndexBuffer(g, 2 * (3 + ((mPoints.Count - 3) * 3)),
-							BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
-			
+			mPoints = new List<Vector3>();
+
+			foreach(Vector3 pnt in f.mPoints)
+			{
+				mPoints.Add(pnt);
+			}
+
+			mFacePlane	=f.mFacePlane;
+			mTexInfo	=f.mTexInfo;
+			mFlags		=f.mFlags;
+		}
+
+
+		public Face(Face f, bool bInvert)
+		{
+			mPoints	=new List<Vector3>();
+
+			foreach(Vector3 pnt in f.mPoints)
+			{
+				mPoints.Add(pnt);
+			}
+
+			mFacePlane	=f.mFacePlane;
+			mTexInfo	=f.mTexInfo;
+			mFlags		=f.mFlags;
+
+			if(bInvert)
+			{
+				mPoints.Reverse();
+				mFacePlane.Normal	*=-1.0f;
+				mFacePlane.Dist		*=-1.0f;
+			}
+		}
+
+
+		private void MakeVBuffer(GraphicsDevice g)
+		{
+			mIndexBuffer	=new IndexBuffer(g, 2 * (3 + ((mPoints.Count - 3) * 3)),
+								BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
+
 			mIndexBuffer.SetData<short>(mIndexs, 0, mIndexs.Length);
-			
+
 			mVertBuffer	=new VertexBuffer(g, 28 * (mVerts.Length),
 							BufferUsage.None);
-			
+
 			//Set the vertex buffer data to the array of vertices.
 			mVertBuffer.SetData<VertexPositionTextureTexture>(mVerts);
 		}
-		
-		
+
+
 		private void MakeVerts()
 		{
-			int	i	=0;
-			int	j	=0;
-			
+			int i	=0;
+			int j	=0;
+
 			//triangulate the brush face points
 			mVerts	=new VertexPositionTextureTexture[mPoints.Count];
 			mIndexs	=new short[(3 + ((mPoints.Count - 3) * 3))];
-			
+
 			List<Vector2>	tcrds0;
 			List<Vector2>	tcrds1;
 
 			GetTexCoords0(out tcrds0);
 			GetTexCoords1(out tcrds1);
-			
+
 			foreach(Vector3 pos in mPoints)
 			{
 				mVerts[i].Position	=pos;
@@ -313,28 +313,28 @@ namespace BuildMap
 				mVerts[i].Texture1	=tcrds1[i];
 				i++;
 			}
-			
+
 			for(i=1;i < mPoints.Count-1;i++)
 			{
 				//initial vertex
 				mIndexs[j++]	=0;
 				mIndexs[j++]	=(short)i;
 				mIndexs[j++]	=(short)((i + 1) % mPoints.Count);
-			}			
+			}
 		}
 
 
-        public void Draw(GraphicsDevice g, Effect fx)
-        {
+		public void Draw(GraphicsDevice g, Effect fx)
+		{
 			if(mPoints.Count < 3 || IsTiny())
 			{
 				Debug.Assert(false);
 			}
 
-            if(mVerts == null || mVerts.Length < 1)
-            {
+			if(mVerts == null || mVerts.Length < 1)
+			{
 				Debug.Assert(false);
-            }
+			}
 
 			//don't draw clip or hidden
 			if(((mFlags & TexInfo.FACE_HIDDEN) |
@@ -342,7 +342,7 @@ namespace BuildMap
 			{
 				return;
 			}
-			
+
 			if(mTexInfo.mTexture != null)
 			{
 				fx.Parameters["Texture"].SetValue(mTexInfo.mTexture);
@@ -353,32 +353,32 @@ namespace BuildMap
 				fx.Parameters["TextureEnabled"].SetValue(false);
 			}
 			fx.CommitChanges();
-			
-            g.Vertices[0].SetSource(mVertBuffer, 0, 28);
-            g.Indices = mIndexBuffer;
 
-            //g.RenderState.PointSize = 10;
-            g.DrawIndexedPrimitives(
-                PrimitiveType.TriangleList,
-                0,
-                0,                  // index of the first vertex to draw
-                mVerts.Length,
-                0,
-                mIndexs.Length/3    // number of primitives
-            );
-        }
+			g.Vertices[0].SetSource(mVertBuffer, 0, 28);
+			g.Indices = mIndexBuffer;
+
+			//g.RenderState.PointSize = 10;
+			g.DrawIndexedPrimitives(
+				PrimitiveType.TriangleList,
+				0,
+				0,                  // index of the first vertex to draw
+				mVerts.Length,
+				0,
+				mIndexs.Length/3    // number of primitives
+			);
+		}
 
 
-		bool	GetTextureAxis(out Vector3 xv, out Vector3 yv)
+		bool GetTextureAxis(out Vector3 xv, out Vector3 yv)
 		{
 			int		bestaxis;
 			float	dot, best;
 			int		i;
-			
+
 			best		=0;
 			bestaxis	=0;
-			
-			for(i=0 ; i<3 ; i++)
+
+			for(i=0;i<3;i++)
 			{
 				dot	=(float)Math.Abs(VecIdx(mFacePlane.Normal, i));
 				if(dot > best)
@@ -433,103 +433,104 @@ namespace BuildMap
 		}
 
 
-        public void Expand()
-        {
-            SetFaceFromPlane(mFacePlane, Bounds.MIN_MAX_BOUNDS);
-        }
+		public void Expand()
+		{
+			SetFaceFromPlane(mFacePlane, Bounds.MIN_MAX_BOUNDS);
+		}
 
 
-        public bool IsValid()
-        {
-            return (mPoints.Count > 2);
-        }
+		public bool IsValid()
+		{
+			return	(mPoints.Count > 2);
+		}
 
 
-        public bool IsTiny()
-        {
-            int i, j;
-            int edges   =0;
-            for(i=0;i < mPoints.Count;i++)
-            {
-                j   =(i + 1) % mPoints.Count;
-
-                Vector3 delta = mPoints[j] - mPoints[i];
-                float len = delta.Length();
-
-                if(len > EDGE_LENGTH)
-                {
-                    edges++;
-                    if(edges == 3)
-                    {
-                        return  false;
-                    }
-                }
-            }
-            return  true;
-        }
-
-
-        private bool SetPlaneFromFace()
-        {
-            int     i;
-
-            //catches colinear points now
+		public bool IsTiny()
+		{
+			int i, j;
+			int edges   =0;
 			for(i=0;i < mPoints.Count;i++)
 			{
-                //gen a plane normal from the cross of edge vectors
-                Vector3 v1  =mPoints[i] - mPoints[(i + 1) % mPoints.Count];
-                Vector3 v2  =mPoints[(i + 2) % mPoints.Count] - mPoints[(i + 1) % mPoints.Count];
+				j   =(i + 1) % mPoints.Count;
 
-                mFacePlane.Normal   =Vector3.Cross(v1, v2);
+				Vector3	delta	=mPoints[j] - mPoints[i];
+				float	len		=delta.Length();
 
-                if(!mFacePlane.Normal.Equals(Vector3.Zero))
-                {
-                    break;
-                }
-                //try the next three if there are three
-            }
-            if(i >= mPoints.Count)
-            {
-                //need a talky flag
-                //in some cases this isn't worthy of a warning
-                //Debug.WriteLine("Face with no normal!");
-                return  false;
-            }
-
-            mFacePlane.Normal.Normalize();
-            mFacePlane.Dist =Vector3.Dot(mPoints[1], mFacePlane.Normal);
-            mTexInfo.mNormal =mFacePlane.Normal;
-
-            return true;
-        }
+				if(len > EDGE_LENGTH)
+				{
+					edges++;
+					if(edges == 3)
+					{
+						return	false;
+					}
+				}
+			}
+			return	true;
+		}
 
 
-        //parse map file stuff
-        public Face(string szLine)
-        {
-            mPoints = new List<Vector3>();
-            //gank (
-            szLine.TrimStart('(');
+		private bool SetPlaneFromFace()
+		{
+			int i;
 
-            szLine.Trim();
+			//catches colinear points now
+			for(i=0;i < mPoints.Count;i++)
+			{
+				//gen a plane normal from the cross of edge vectors
+				Vector3	v1  =mPoints[i] - mPoints[(i + 1) % mPoints.Count];
+				Vector3	v2  =mPoints[(i + 2) % mPoints.Count] - mPoints[(i + 1) % mPoints.Count];
 
-            string  []tokens    =szLine.Split(' ');
+				mFacePlane.Normal   =Vector3.Cross(v1, v2);
 
-            List<float> numbers =new List<float>();
-			List<UInt32> flags	=new List<UInt32>();
+				if(!mFacePlane.Normal.Equals(Vector3.Zero))
+				{
+					break;
+				}
+				//try the next three if there are three
+			}
+			if(i >= mPoints.Count)
+			{
+				//need a talky flag
+				//in some cases this isn't worthy of a warning
+				//Debug.WriteLine("Face with no normal!");
+				return false;
+			}
 
-			int	cnt	=0;
+			mFacePlane.Normal.Normalize();
+			mFacePlane.Dist		=Vector3.Dot(mPoints[1], mFacePlane.Normal);
+			mTexInfo.mNormal	=mFacePlane.Normal;
 
-            //grab all the numbers out
-            foreach(string tok in tokens)
-            {
-                //skip ()
-                if(tok[0] == '(' || tok[0] == ')')
-                {
-                    continue;
-                }
+			return	true;
+		}
 
-                //grab tex name if avail
+
+		//parse map file stuff
+		public Face(string szLine)
+		{
+			mPoints	=new List<Vector3>();
+
+			//gank (
+			szLine.TrimStart('(');
+
+			szLine.Trim();
+
+			string	[]tokens    =szLine.Split(' ');
+
+			List<float>		numbers =new List<float>();
+			List<UInt32>	flags	=new List<UInt32>();
+
+			int cnt	=0;
+
+			//grab all the numbers out
+			foreach(string tok in tokens)
+			{
+				//skip ()
+				if(tok[0] == '(' || tok[0] == ')')
+				{
+					continue;
+				}
+
+				//grab tex name if avail
 				if(tok == "clip" || tok == "CLIP")
 				{
 					mFlags	|=TexInfo.TEX_CLIP;
@@ -554,13 +555,13 @@ namespace BuildMap
 					mTexInfo.mTexName	=tok;
 					mFlags	|=TexInfo.TEX_ANIMATING;
 				}
-                else if(char.IsLetter(tok, 0))
-                {
-                    mTexInfo.mTexName = tok;
-                    continue;
-                }
+				else if(char.IsLetter(tok, 0))
+				{
+					mTexInfo.mTexName = tok;
+					continue;
+				}
 
-                float   num;
+				float	num;
 				UInt32	inum;
 
 				if(cnt > 13)
@@ -580,20 +581,20 @@ namespace BuildMap
 						cnt++;
 					}
 				}
-            }
+			}
 
-            //deal with the numbers
-            //invert x and swap y and z
-            //to convert to left handed
-            mPoints.Add(new Vector3(-numbers[0], numbers[2], numbers[1]));
-            mPoints.Add(new Vector3(-numbers[3], numbers[5], numbers[4]));
-            mPoints.Add(new Vector3(-numbers[6], numbers[8], numbers[7]));
+			//deal with the numbers
+			//invert x and swap y and z
+			//to convert to left handed
+			mPoints.Add(new Vector3(-numbers[0], numbers[2], numbers[1]));
+			mPoints.Add(new Vector3(-numbers[3], numbers[5], numbers[4]));
+			mPoints.Add(new Vector3(-numbers[6], numbers[8], numbers[7]));
 
-            mTexInfo.uOffset		=numbers[9];
-            mTexInfo.vOffset		=numbers[10];
-            mTexInfo.mRotationAngle	=numbers[11];
-            mTexInfo.uScale			=numbers[12];
-            mTexInfo.vScale			=numbers[13];
+			mTexInfo.uOffset		=numbers[9];
+			mTexInfo.vOffset		=numbers[10];
+			mTexInfo.mRotationAngle	=numbers[11];
+			mTexInfo.uScale			=numbers[12];
+			mTexInfo.vScale			=numbers[13];
 
 			//see if there are any quake 3 style flags
 			if(flags.Count > 0)
@@ -604,10 +605,10 @@ namespace BuildMap
 				}
 			}
 
-            SetPlaneFromFace();
+			SetPlaneFromFace();
 
 			//do quake style texture axis stuff
-			Vector3	vecs, vect;
+			Vector3 vecs, vect;
 			GetTextureAxis(out vecs, out vect);
 
 			Debug.Assert(vecs != Vector3.Zero);
@@ -621,54 +622,62 @@ namespace BuildMap
 				mTexInfo.vScale	=1.0f;
 			}
 
-			float	ang, sinv, cosv, ns, nt;
-			int		sv, tv;
+			float ang, sinv, cosv, ns, nt;
+			int sv, tv;
 
 			if(mTexInfo.mRotationAngle == 0)
-				{ sinv = 0 ; cosv = 1; }
-			else if(mTexInfo.mRotationAngle == 90)
-				{ sinv = 1 ; cosv = 0; }
-			else if(mTexInfo.mRotationAngle == 180)
-				{ sinv = 0 ; cosv = -1; }
-			else if(mTexInfo.mRotationAngle == 270)
-				{ sinv = -1 ; cosv = 0; }
-			else
-			{	
-				ang = mTexInfo.mRotationAngle / 180.0f * (float)Math.PI;
-				sinv = (float)Math.Sin(ang);
-				cosv = (float)Math.Cos(ang);
+			{
+				sinv = 0; cosv = 1;
 			}
-		
+			else if(mTexInfo.mRotationAngle == 90)
+			{
+				sinv = 1; cosv = 0;
+			}
+			else if(mTexInfo.mRotationAngle == 180)
+			{
+				sinv = 0; cosv = -1;
+			}
+			else if(mTexInfo.mRotationAngle == 270)
+			{
+				sinv = -1; cosv = 0;
+			}
+			else
+			{
+				ang		=mTexInfo.mRotationAngle / 180.0f * (float)Math.PI;
+				sinv	=(float)Math.Sin(ang);
+				cosv	=(float)Math.Cos(ang);
+			}
+
 			if(vecs.X != 0.0f)
 			{
-				sv = 0;
+				sv	=0;
 			}
 			else if(vecs.Y != 0.0f)
 			{
-				sv = 1;
+				sv	=1;
 			}
 			else
 			{
-				sv = 2;
+				sv	=2;
 			}
 			if(vect.X != 0.0f)
 			{
-				tv = 0;
+				tv	=0;
 			}
 			else if(vect.Y != 0.0f)
 			{
-				tv = 1;
+				tv	=1;
 			}
 			else
 			{
-				tv = 2;
+				tv	=2;
 			}
 
 			ns	=cosv * VecIdx(vecs, sv) - sinv * VecIdx(vecs, tv);
 			nt	=sinv * VecIdx(vecs, sv) + cosv * VecIdx(vecs, tv);
 			VecIdxAssign(ref vecs, sv, ns);
 			VecIdxAssign(ref vecs, tv, nt);
-						
+
 			ns	=cosv * VecIdx(vect, sv) - sinv * VecIdx(vect, tv);
 			nt	=sinv * VecIdx(vect, sv) + cosv * VecIdx(vect, tv);
 			VecIdxAssign(ref vect, sv, ns);
@@ -680,7 +689,7 @@ namespace BuildMap
 
 			mTexInfo.mTexS	=vecs;
 			mTexInfo.mTexT	=vect;
-        }
+		}
 
 
 		public void BuildVertexInfo()
@@ -723,6 +732,7 @@ namespace BuildMap
 			mTexInfo.WriteToFile(bw);
 
 			bw.Write(mPoints.Count);
+			bw.Write(mFlags);
 
 			for(int i=0;i < mPoints.Count;i++)
 			{
@@ -782,7 +792,7 @@ namespace BuildMap
 		}
 
 
-		private	static float VecIdx(Vector3 v, int idx)
+		private static float VecIdx(Vector3 v, int idx)
 		{
 			if(idx == 0)
 			{
@@ -796,7 +806,7 @@ namespace BuildMap
 		}
 
 
-		private	static void VecIdxAssign(ref Vector3 v, int idx, float val)
+		private static void VecIdxAssign(ref Vector3 v, int idx, float val)
 		{
 			if(idx == 0)
 			{
@@ -813,169 +823,169 @@ namespace BuildMap
 		}
 
 
-        public void GetFaceMinMaxDistancesFromPlane(Plane p, ref float front, ref float back)
-        {
-            float d;
-
-            foreach(Vector3 pnt in mPoints)
-            {
-                d =Vector3.Dot(pnt, p.Normal) - p.Dist;
-
-                if(d > front)
-                {
-                    front = d;
-                }
-                else if(d < back)
-                {
-                    back = d;
-                }
-            }
-        }
-
-
-        public void SetFaceFromPlane(Plane p, float dist)
-        {
-            float   v;
-            Vector3 vup, vright, org;
-
-            //find the major axis of the plane normal
-            vup.X = vup.Y = 0.0f;
-            vup.Z = 1.0f;
-            if((System.Math.Abs(p.Normal.Z) > System.Math.Abs(p.Normal.X))
-                && (System.Math.Abs(p.Normal.Z) > System.Math.Abs(p.Normal.Y)))
-            {
-                vup.X = 1.0f;
-                vup.Y = vup.Z = 0.0f;
-            }
-
-            v = Vector3.Dot(vup, p.Normal);
-
-            vup = vup + p.Normal * -v;
-            vup.Normalize();
-
-            org = p.Normal * p.Dist;
-
-            vright  =Vector3.Cross(vup, p.Normal);
-
-            vup *= dist;
-            vright *= dist;
-
-            mPoints.Clear();
-
-            mPoints.Add(org - vright + vup);
-            mPoints.Add(org + vright + vup);
-            mPoints.Add(org + vright - vup);
-            mPoints.Add(org - vright - vup);
-        }
-
-
-		public void GetSplitInfo(Face		f,
-								 out int	pointsOnFront,
-								 out int	pointsOnBack,
-								 out int	pointsOnPlane)
+		public void GetFaceMinMaxDistancesFromPlane(Plane p, ref float front, ref float back)
 		{
-			pointsOnPlane = pointsOnFront = pointsOnBack = 0;
+			float	d;
+
 			foreach(Vector3 pnt in mPoints)
 			{
-				float	dot	=Vector3.Dot(pnt, mFacePlane.Normal) - mFacePlane.Dist;
+				d	=Vector3.Dot(pnt, p.Normal) - p.Dist;
 
-                if(dot > ON_EPSILON)
-                {
-                    pointsOnFront++;
-                }
-                else if(dot < -ON_EPSILON)
-                {
-                    pointsOnBack++;
-                }
-                else
-                {
-					pointsOnPlane++;
-                }
+				if(d > front)
+				{
+					front	=d;
+				}
+				else if(d < back)
+				{
+					back	=d;
+				}
 			}
 		}
 
 
-        //clip this face in front or behind face f
-        public void ClipByFace(Face f, bool bFront)
-        {
-            List<Vector3> frontSide = new List<Vector3>();
-            List<Vector3> backSide = new List<Vector3>();
+		public void SetFaceFromPlane(Plane p, float dist)
+		{
+			float	v;
+			Vector3	vup, vright, org;
 
-            for(int i = 0;i < mPoints.Count;i++)
-            {
-                int j = (i + 1) % mPoints.Count;
-                Vector3 p1, p2;
+			//find the major axis of the plane normal
+			vup.X	=vup.Y	=0.0f;
+			vup.Z	=1.0f;
+			if((System.Math.Abs(p.Normal.Z) > System.Math.Abs(p.Normal.X))
+                && (System.Math.Abs(p.Normal.Z) > System.Math.Abs(p.Normal.Y)))
+			{
+				vup.X	=1.0f;
+				vup.Y	=vup.Z	=0.0f;
+			}
 
-                p1 = mPoints[i];
-                p2 = mPoints[j];
+			v	=Vector3.Dot(vup, p.Normal);
 
-                float dot = Vector3.Dot(p1, f.mFacePlane.Normal)
-                                    - f.mFacePlane.Dist;
-                float dot2 = Vector3.Dot(p2, f.mFacePlane.Normal)
-                                    - f.mFacePlane.Dist;
+			vup	=vup + p.Normal * -v;
+			vup.Normalize();
 
-                if(dot > ON_EPSILON)
-                {
-                    frontSide.Add(p1);
-                }
-                else if(dot < -ON_EPSILON)
-                {
-                    backSide.Add(p1);
-                }
-                else
-                {
-                    frontSide.Add(p1);
-                    backSide.Add(p1);
-                    continue;
-                }
+			org	=p.Normal * p.Dist;
 
-                //skip ahead if next point is onplane
-                if(dot2 < ON_EPSILON && dot2 > -ON_EPSILON)
-                {
-                    continue;
-                }
+			vright	=Vector3.Cross(vup, p.Normal);
 
-                //skip ahead if next point is on same side
-                if(dot2 > ON_EPSILON && dot > ON_EPSILON)
-                {
-                    continue;
-                }
+			vup		*=dist;
+			vright	*=dist;
 
-                //skip ahead if next point is on same side
-                if(dot2 < -ON_EPSILON && dot < -ON_EPSILON)
-                {
-                    continue;
-                }
+			mPoints.Clear();
 
-                float splitRatio = dot / (dot - dot2);
-                Vector3 mid = p1 + (splitRatio * (p2 - p1));
-
-                frontSide.Add(mid);
-                backSide.Add(mid);
-            }
-
-            //dump our point list
-            mPoints.Clear();
-
-            //copy in the front side
-            if (bFront)
-            {
-                mPoints = frontSide;
-            }
-            else
-            {
-                mPoints = backSide;
-            }
-
-            if(!SetPlaneFromFace())
-            {
-                //whole face was clipped away, no big deal
-                mPoints.Clear();
-            }
-        }
+			mPoints.Add(org - vright + vup);
+			mPoints.Add(org + vright + vup);
+			mPoints.Add(org + vright - vup);
+			mPoints.Add(org - vright - vup);
+		}
 
 
-		private	void	GetTexCoords0(out List<Vector2> coords)
+		public void GetSplitInfo(Face f,
+								 out int pointsOnFront,
+								 out int pointsOnBack,
+								 out int pointsOnPlane)
+		{
+			pointsOnPlane	=pointsOnFront	=pointsOnBack	=0;
+			foreach(Vector3 pnt in mPoints)
+			{
+				float	dot	=Vector3.Dot(pnt, mFacePlane.Normal) - mFacePlane.Dist;
+
+				if(dot > ON_EPSILON)
+				{
+					pointsOnFront++;
+				}
+				else if(dot < -ON_EPSILON)
+				{
+					pointsOnBack++;
+				}
+				else
+				{
+					pointsOnPlane++;
+				}
+			}
+		}
+
+
+		//clip this face in front or behind face f
+		public void ClipByFace(Face f, bool bFront)
+		{
+			List<Vector3>	frontSide	=new List<Vector3>();
+			List<Vector3>	backSide	=new List<Vector3>();
+
+			for(int i = 0;i < mPoints.Count;i++)
+			{
+				int	j	=(i + 1) % mPoints.Count;
+				Vector3	p1, p2;
+
+				p1	=mPoints[i];
+				p2	=mPoints[j];
+
+				float	dot		=Vector3.Dot(p1, f.mFacePlane.Normal)
+									- f.mFacePlane.Dist;
+				float	dot2	=Vector3.Dot(p2, f.mFacePlane.Normal)
+									- f.mFacePlane.Dist;
+
+				if(dot > ON_EPSILON)
+				{
+					frontSide.Add(p1);
+				}
+				else if(dot < -ON_EPSILON)
+				{
+					backSide.Add(p1);
+				}
+				else
+				{
+					frontSide.Add(p1);
+					backSide.Add(p1);
+					continue;
+				}
+
+				//skip ahead if next point is onplane
+				if(dot2 < ON_EPSILON && dot2 > -ON_EPSILON)
+				{
+					continue;
+				}
+
+				//skip ahead if next point is on same side
+				if(dot2 > ON_EPSILON && dot > ON_EPSILON)
+				{
+					continue;
+				}
+
+				//skip ahead if next point is on same side
+				if(dot2 < -ON_EPSILON && dot < -ON_EPSILON)
+				{
+					continue;
+				}
+
+				float	splitRatio	=dot / (dot - dot2);
+				Vector3	mid			=p1 + (splitRatio * (p2 - p1));
+
+				frontSide.Add(mid);
+				backSide.Add(mid);
+			}
+
+			//dump our point list
+			mPoints.Clear();
+
+			//copy in the front side
+			if(bFront)
+			{
+				mPoints	=frontSide;
+			}
+			else
+			{
+				mPoints	=backSide;
+			}
+
+			if(!SetPlaneFromFace())
+			{
+				//whole face was clipped away, no big deal
+				mPoints.Clear();
+			}
+		}
+
+
+		private void GetTexCoords0(out List<Vector2> coords)
 		{
 			coords	=new List<Vector2>();
 
@@ -987,8 +997,7 @@ namespace BuildMap
 			//calculate the min values for s and t
 			foreach(Vector3 pnt in mPoints)
 			{
-				float	d;
-				d	=Vector3.Dot(mTexInfo.mTexS, pnt);
+				float	d	=Vector3.Dot(mTexInfo.mTexS, pnt);
 
 				if(d < minS)
 				{
@@ -1025,7 +1034,7 @@ namespace BuildMap
 		}
 
 
-		private	void	GetTexCoords1(out List<Vector2> coords)
+		private void GetTexCoords1(out List<Vector2> coords)
 		{
 			coords	=new List<Vector2>();
 
@@ -1037,8 +1046,7 @@ namespace BuildMap
 			//calculate the min values for s and t
 			foreach(Vector3 pnt in mPoints)
 			{
-				float	d;
-				d	=Vector3.Dot(mTexInfo.mTexS, pnt);
+				float	d	=Vector3.Dot(mTexInfo.mTexS, pnt);
 
 				if(d < minS)
 				{
@@ -1076,7 +1084,8 @@ namespace BuildMap
 		}
 
 
-		private	void CalcSurfacePoints(BspNode root)
+		//returns false if face too big to light
+		private bool CalcSurfacePoints(BspNode root)
 		{
 			float	mids, midt;
 			Vector3	faceMid;
@@ -1095,6 +1104,11 @@ namespace BuildMap
 			startT	=(int)(mLightInfo.mTexMinT * TexInfo.LIGHTMAPSCALE);
 			step	=(int)TexInfo.LIGHTMAPSCALE;
 
+			if(w > 4096 || h > 4096)
+			{
+				return false;
+			}
+
 			mLightInfo.mSurface				=new Vector3[w * h];
 			mLightInfo.mNumSurfacePoints	=w * h;
 
@@ -1102,7 +1116,7 @@ namespace BuildMap
 
 			for(t=c=0;t < h;t++)
 			{
-				for(s=0;s < w;s++,c++)
+				for(s=0;s < w;s++, c++)
 				{
 					float	us	=startS + s * step;
 					float	ut	=startT + t * step;
@@ -1118,7 +1132,7 @@ namespace BuildMap
 					{
 						mLightInfo.mSurface[c]
 							=mLightInfo.mTexOrg + mLightInfo.mTexToWorldS * us
-								+mLightInfo.mTexToWorldT * ut;
+								+ mLightInfo.mTexToWorldT * ut;
 
 						bool	solid	=root.ClassifyPoint(mLightInfo.mSurface[c]);
 						if(!solid)
@@ -1155,7 +1169,7 @@ namespace BuildMap
 							{
 								ut	-=TexInfo.LIGHTMAPSCALE;
 							}
-							else if(i < 7)	
+							else if(i < 7)
 							{
 								ut	+=TexInfo.LIGHTMAPDOUBLESCALE;
 								ut	+=TexInfo.LIGHTMAPSCALE;
@@ -1175,24 +1189,30 @@ namespace BuildMap
 			{
 				this.mFlags	|=TexInfo.FACE_HIDDEN;
 			}
+			return	true;
 		}
 
 
-		private	void	SingleLightFace(BspNode root, Vector3 lightPos, float lightVal)
+		private void SingleLightFace(BspNode root, Vector3 lightPos, float lightVal, bool bOmni)
 		{
 			int		i, c;
-			float	dist	=Vector3.Dot(lightPos, mFacePlane.Normal) - mFacePlane.Dist;
 			bool	bNewSamples	=false;
 
-			if(dist <= 0.0f)
+			float	dist	=Vector3.Dot(lightPos, mFacePlane.Normal)
+								- mFacePlane.Dist;
+			if(!bOmni)
 			{
-				return;
+				if(dist <= 0.0f)
+				{
+					return;
+				}
+
+				if(dist > lightVal)
+				{
+					return;
+				}
 			}
 
-			if(dist > lightVal)
-			{
-				return;
-			}
 			int	size	=(mLightInfo.mTexSizeT + 1) * (mLightInfo.mTexSizeS + 1);
 
 			if(mLightInfo.mSamples == null)
@@ -1208,33 +1228,77 @@ namespace BuildMap
 
 			bool	hit	=false;
 
-			for(c=0;c < mLightInfo.mNumSurfacePoints;c++)
+			if(!bOmni)
 			{
-				if(!root.RayCastBool(lightPos, mLightInfo.mSurface[c]))
+				for(c=0;c < mLightInfo.mNumSurfacePoints;c++)
 				{
-					continue;
-				}
+					if(!root.RayCastBool(lightPos, mLightInfo.mSurface[c]))
+					{
+						continue;
+					}
 
-				Vector3	incoming	=lightPos - mLightInfo.mSurface[c];
-				incoming.Normalize();
+					Vector3	incoming	=lightPos - mLightInfo.mSurface[c];
+					incoming.Normalize();
 
-				float	angle	=Vector3.Dot(incoming, mFacePlane.Normal);
-				angle	=(1.0f - SCALECOS) + SCALECOS * angle;
-				float	add	=lightVal - dist;
+					float	angle	=Vector3.Dot(incoming, mFacePlane.Normal);
+					angle			=(1.0f - SCALECOS) + SCALECOS * angle;
+					float	add		=lightVal - dist;
 
-				add	*=angle;
-				if(add < 0.0f)
-				{
-					continue;
-				}
-				mLightInfo.mSamples[c]	+=add;
-				Debug.Assert(!float.IsNaN(mLightInfo.mSamples[c]));
-				if(mLightInfo.mSamples[c] > 1.0f)
-				{
-					hit	=true;
+					add	*=angle;
+					if(add < 0.0f)
+					{
+						continue;
+					}
+					mLightInfo.mSamples[c]	+=add;
+					Debug.Assert(!float.IsNaN(mLightInfo.mSamples[c]));
+					if(mLightInfo.mSamples[c] > 1.0f)
+					{
+						hit	=true;
+					}
 				}
 			}
-			
+			else
+			{
+				//directional / omni lighting
+				for(c=0;c < mLightInfo.mNumSurfacePoints;c++)
+				{
+					Vector3	lightDir	=lightPos;
+
+					//get a unit vector
+					lightDir.Normalize();
+
+					//project backwards along the vector
+					lightDir	*=-10000.0f;
+
+					//shoot a ray from the surf point
+					//to a position way above
+					lightDir	+=mLightInfo.mSurface[c];
+					if(!root.RayCastBool(lightDir, mLightInfo.mSurface[c]))
+					{
+						continue;
+					}
+
+					lightDir.Normalize();
+
+					float	angle	=Vector3.Dot(lightDir, mFacePlane.Normal);
+					angle			=(1.0f - SCALECOS) + SCALECOS * angle;
+
+					//no falloff for directional
+					float	add		=lightVal;
+
+					add	*=angle;
+					if(add < 0.0f)
+					{
+						continue;
+					}
+					mLightInfo.mSamples[c]	+=add;
+					Debug.Assert(!float.IsNaN(mLightInfo.mSamples[c]));
+					if(mLightInfo.mSamples[c] > 1.0f)
+					{
+						hit	=true;
+					}
+				}
+			}
 			if(!hit && bNewSamples)
 			{
 				//trash the lightmap, too dim
@@ -1243,9 +1307,9 @@ namespace BuildMap
 		}
 
 
-		public	void LightFace(GraphicsDevice gd, BspNode root,
+		public void LightFace(GraphicsDevice gd, BspNode root,
 								Vector3 lightPos, float lightVal,
-								Vector3 color)
+								Vector3 color, bool bOmni)
 		{
 			int	t, s;
 
@@ -1260,9 +1324,12 @@ namespace BuildMap
 
 			mLightInfo.CalcFaceVectors(mFacePlane, mTexInfo);
 			mLightInfo.CalcFaceExtents(mPoints, mTexInfo);
-			CalcSurfacePoints(root);
+			if(!CalcSurfacePoints(root))
+			{
+				return;
+			}
 
-			SingleLightFace(root, lightPos, lightVal);
+			SingleLightFace(root, lightPos, lightVal, bOmni);
 
 			if(mLightInfo.mSamples == null)
 			{
@@ -1290,13 +1357,13 @@ namespace BuildMap
 					}
 
 					//put in color
-					Vector3	clr	=total * color;
+					Vector3 clr	=total * color;
 					//clr	/=255.0f;
 					Debug.Assert(total >= 0.0f);
 
-					int	r	=mLightMap[(t * w) + s].R + (int)clr.X;
+					int r	=mLightMap[(t * w) + s].R + (int)clr.X;
 					int g	=mLightMap[(t * w) + s].G + (int)clr.Y;
-					int	b	=mLightMap[(t * w) + s].B + (int)clr.Z;
+					int b	=mLightMap[(t * w) + s].B + (int)clr.Z;
 
 					//clamp
 					if(r > 255)
@@ -1332,12 +1399,12 @@ namespace BuildMap
 			if(mLightMap != null)
 			{
 				surfPoints	=mLightInfo.mSurface;
-				return	mLightInfo.mNumSurfacePoints;
+				return mLightInfo.mNumSurfacePoints;
 			}
 			else
 			{
 				surfPoints	=null;
-				return 0;
+				return	0;
 			}
 		}
 
@@ -1383,27 +1450,27 @@ namespace BuildMap
 		}
 
 
-        private bool IsPointBehindFacePlane(Vector3 pnt)
-        {
-            float dot = Vector3.Dot(pnt, mFacePlane.Normal)
-                                - mFacePlane.Dist;
+		private bool IsPointBehindFacePlane(Vector3 pnt)
+		{
+			float	dot	=Vector3.Dot(pnt, mFacePlane.Normal)
+							- mFacePlane.Dist;
 
-            return (dot < -ON_EPSILON);
-        }
+			return (dot < -ON_EPSILON);
+		}
 
 
-        public bool IsAnyPointBehindAllPlanes(Face f, List<Plane> planes)
-        {
-            foreach(Vector3 pnt in f.mPoints)
-            {
-                foreach(Plane p in planes)
-                {
-                    if(!IsPointBehindFacePlane(pnt))
-                    {
-                    }
-                }
-            }
-            return false;
+		public bool IsAnyPointBehindAllPlanes(Face f, List<Plane> planes)
+		{
+			foreach(Vector3 pnt in f.mPoints)
+			{
+				foreach(Plane p in planes)
+				{
+					if(!IsPointBehindFacePlane(pnt))
+					{
+					}
+				}
+			}
+			return false;
 		}
 		#endregion
 	}

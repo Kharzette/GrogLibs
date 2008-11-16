@@ -11,35 +11,38 @@ using Microsoft.Xna.Framework.Storage;
 
 namespace Collada
 {
-    /// <summary>
-    /// This is the main type for your game
-    /// </summary>
-    public class Game1 : Microsoft.Xna.Framework.Game
-    {
-        SpriteBatch             spriteBatch;
-        Collada                 mCollada;
-		GraphicsDeviceManager mGDM;
-		private BasicEffect mZoneEffect;
-		private VertexDeclaration mZoneVertexDeclaration;
-		private Matrix mWorldMatrix;
-		private Matrix mViewMatrix;
-		private Matrix mViewTranspose;
-		private Matrix mProjectionMatrix;
-		private GamePadState mCurrentGamePadState;
-		private GamePadState mLastGamePadState;
-		private KeyboardState mCurrentKeyboardState;
-		private MouseState mCurrentMouseState;
-		private MouseState mLastMouseState;
+	/// <summary>
+	/// This is the main type for your game
+	/// </summary>
+	public class Game1 : Microsoft.Xna.Framework.Game
+	{
+		SpriteBatch				spriteBatch;
+		Collada					mCollada;
+		GraphicsDeviceManager	mGDM;
+
+		private BasicEffect			mZoneEffect;
+		private VertexDeclaration	mZoneVertexDeclaration;
+
+		private Matrix	mWorldMatrix;
+		private Matrix	mViewMatrix;
+		private Matrix	mViewTranspose;
+		private Matrix	mProjectionMatrix;
+
+		private GamePadState	mCurrentGamePadState;
+		private GamePadState	mLastGamePadState;
+		private KeyboardState	mCurrentKeyboardState;
+		private MouseState		mCurrentMouseState;
+		private MouseState		mLastMouseState;
 
 		//cam / player stuff will move later
-		private Vector3 mCamPos, mDotPos;
-		private float mPitch, mYaw, mRoll;
+		private Vector3	mCamPos, mDotPos;
+		private float	mPitch, mYaw, mRoll;
 
 
 		public Game1()
 		{
-			mGDM = new GraphicsDeviceManager(this);
-			Content.RootDirectory = "Content";
+			mGDM	=new GraphicsDeviceManager(this);
+			Content.RootDirectory	="Content";
 		}
 
 		protected override void Initialize()
@@ -73,7 +76,7 @@ namespace Collada
 		{
 			mZoneEffect	=new BasicEffect(GraphicsDevice, null);
 
-            mCollada = new Collada("content/WackyWalk2.dae", GraphicsDevice);
+			mCollada = new Collada("content/WackyWalk2.dae", GraphicsDevice);
 		}
 
 		/// <summary>
