@@ -31,8 +31,29 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Terrain.fx">
-      <Name>Terrain</Name>
+    <Compile Include="Shaders\2TexGourad.fx">
+      <Name>2TexGourad</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Models\p1_saucer.fbx">
+      <Name>p1_saucer</Name>
+      <Importer>FbxImporter</Importer>
+      <Processor>ModelProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Textures\saucer_p1_diff_v1.tga">
+      <Name>saucer_p1_diff_v1</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Shaders\Flyer.fx">
+      <Name>Flyer</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
     </Compile>

@@ -13,34 +13,18 @@ using Microsoft.Xna.Framework.Storage;
 
 namespace Terrain
 {
-	public struct VPNTT
-	{
-		public Vector3	Position;
-		public Vector3	Normal;
-		public Vector2	TexCoord0;
-		public Vector2	TexCoord1;
-	};
-
-
 	public class Terrain : Microsoft.Xna.Framework.Game
 	{
 		//drawing
 		private	GraphicsDeviceManager	mGDM;
 		private	SpriteBatch				mSpriteBatch;
+		private	Effect					mFXFlyer;
 
-		//maps & mats
+		//mats
 		private	Matrix	mMATWorld;
 		private	Matrix	mMATView;
 		private	Matrix	mMATViewTranspose;
 		private	Matrix	mMATProjection;
-
-		//verts & effects
-		private	Effect				mFXTerrain;
-		private	VertexDeclaration	mVDTerrain;
-		private	VertexBuffer		mVBTerrain;
-		private	IndexBuffer			mIBTerrain;
-		private	Texture2D			mTEXTerrain0;
-		private	Texture2D			mTEXTerrain1;
 
 		//control
 		private	GamePadState	mGPStateCurrent;
@@ -49,13 +33,19 @@ namespace Terrain
 		private	MouseState		mMStateCurrent;
 		private	MouseState		mMStateLast;
 
-		//crap
-		private	string	mHeightMapFileName;
-		private	int		mNumIndex, mNumVerts, mNumTris;
-
 		//cam / player stuff will move later
-		private Vector3	mCamPos, mDotPos;
+		private Vector3	mCamPos;
 		private float	mPitch, mYaw, mRoll;
+
+		//height maps
+		private	HeightMap	mMap0, mMap1;
+		private	Vector3		mMap0Position, mMap1Position;
+		private	Vector3		mMap0Direction, mMap1Direction;
+
+		//player ship
+		private	Flyer	mPlayerShip;
+		private	Vector3	mPlayerPos;
+		private	float	mPlayerSpeed;	//expressed mainly in terrain movement
 
 
 		public Terrain(string[] args)
@@ -76,21 +66,35 @@ namespace Terrain
 				return;
 			}
 
-			//arg zero should be the map name
-			mHeightMapFileName   =args[0];
+			//not using arguments yet
+			/*blah   =args[0];
 			for(int i = 0;i < args.GetLength(0);i++)
 			{
 				Debug.WriteLine(args[i]);
-			}
-			mCamPos.X	=-192.0f;
-			mCamPos.Y	=-64.0f;
-			mCamPos.Z	=-64.0f;
+			}*/
 		}
 
 
 		protected override void Initialize()
 		{
-			mPitch	=mYaw	=mRoll	=0;
+			mYaw	=mRoll	=0.0f;
+			mPitch	=90.0f;
+
+			//initial camera position
+			mCamPos	=Vector3.UnitY * -450.0f;
+
+			//center the maps
+			mMap0Position	=-Vector3.UnitX * (64 / 2) * 10.0f;
+			mMap0Position	+=Vector3.UnitY * (64 / 2) * 10.0f;
+
+			mMap1Position	=mMap0Position + (Vector3.UnitY * 630.0f);
+
+			mMap0Direction	=-Vector3.UnitY;
+			mMap1Direction	=-Vector3.UnitY;
+
+			mPlayerPos	=Vector3.UnitY * 30000.0f;
+			mPlayerPos	+=Vector3.UnitZ * 3000.0f;
+
 			InitializeEffect();
 			InitializeTransform();
 
@@ -100,263 +104,22 @@ namespace Terrain
 
 		protected override void LoadContent()
 		{
-			int			w, h;
-			Texture2D	heightTex;
-
 			mSpriteBatch	=new SpriteBatch(GraphicsDevice);
+			mFXFlyer		=Content.Load<Effect>("Shaders/Flyer");
 
-			if(false)
-			{
-				FileStream	file	=OpenTitleFile(mHeightMapFileName,
-										FileMode.Open, FileAccess.Read);
+			mMap0	=new HeightMap("content/height.jpg",
+				"content/dirt_simple_df_.dds",
+				"content/dirt_mottledsand_df_.dds",
+				3.0f, 7.0f,
+				mGDM.GraphicsDevice, Content);
 
-				BinaryReader	br	=new BinaryReader(file);
+			mMap1	=new HeightMap("content/height.jpg",
+				"content/dirt_simple_df_.dds",
+				"content/dirt_mottledsand_df_.dds",
+				3.0f, 7.0f,
+				mGDM.GraphicsDevice, Content);
 
-				//convert height map to verts
-				w	=1024;
-				h	=1024;
-			}
-			else
-			{
-				heightTex	=Texture2D.FromFile(mGDM.GraphicsDevice, "content/height.jpg");
-				w			=heightTex.Width;
-				h			=heightTex.Height;
-			}
-
-			mNumVerts	=w * h;
-			mNumTris	=((w - 1) * (h - 1)) * 2;
-			mNumIndex	=mNumTris * 3;
-
-			Color	[]col	=new Color[w * h];
-
-			heightTex.GetData<Color>(col);
-
-			//alloc some space for verts and indexs
-			VPNTT	[]verts		=new VPNTT[mNumVerts];
-			ushort	[]indexs	=new ushort[mNumIndex];
-
-			//load the height map
-			ushort	idx	=0;
-			for(int y=0;y < h;y++)
-			{
-				for(int x=0;x < w;x++)
-				{
-					int	dex	=x + (y * w);
-					verts[dex].Position.X	=(float)x * 10.0f;
-					verts[dex].Position.Z	=(float)y * 10.0f;
-//					verts[dex].Position.Z	=(float)br.ReadByte();
-					verts[dex].Position.Y	=((float)col[idx++].R) / 5.0f;
-
-					//texcoords
-					verts[dex].TexCoord0.X	=(float)x * (4.0f / w);
-					verts[dex].TexCoord0.Y	=(float)y * (4.0f / h);
-
-					verts[dex].TexCoord1.X	=(float)x * (7.0f / w);
-					verts[dex].TexCoord1.Y	=(float)y * (7.0f / h);
-				}
-			}
-
-			Vector3	[]adjacent	=new Vector3[8];
-			bool	[]valid		=new bool[8];
-
-			//generate normals
-			for(int y=0;y < h;y++)
-			{
-				for(int x=0;x < w;x++)
-				{
-					//get the positions of the 8
-					//adjacent verts, numbered clockwise
-					//from upper right on a grid
-
-					//grab first 3 spots which
-					//are negative in Y
-					if(y > 0)
-					{
-						if(x > 0)
-						{
-							adjacent[0]	=verts[(x - 1) + ((y - 1) * w)].Position;
-							valid[0]	=true;
-						}
-						else
-						{
-							valid[0]	=false;
-						}
-
-						adjacent[1]	=verts[x + ((y - 1) * w)].Position;
-						valid[1]	=true;
-
-						if(x < (w - 1))
-						{
-							adjacent[2]	=verts[(x + 1) + ((y - 1) * w)].Position;
-							valid[2]	=true;
-						}
-						else
-						{
-							valid[2]	=false;
-						}
-					}
-					else
-					{
-						valid[0]	=false;
-						valid[1]	=false;
-						valid[2]	=false;
-					}
-
-					//next two are to the sides of
-					//the calcing vert in X
-					if(x > 0)
-					{
-						adjacent[7]	=verts[(x - 1) + (y * w)].Position;
-						valid[7]	=true;
-					}
-					else
-					{
-						valid[7]	=false;
-					}
-
-					if(x < (w - 1))
-					{
-						adjacent[3]	=verts[(x + 1) + (y * w)].Position;
-						valid[3]	=true;
-					}
-					else
-					{
-						valid[3]	=false;
-					}
-
-					//next three are positive in Y
-					if(y < (h - 1))
-					{
-						if(x > 0)
-						{
-							adjacent[6]	=verts[(x - 1) + ((y + 1) * w)].Position;
-							valid[6]	=true;
-						}
-						else
-						{
-							valid[6]	=false;
-						}
-
-						adjacent[5]	=verts[x + ((y + 1) * w)].Position;
-						valid[5]	=true;
-
-						if(x < (w - 1))
-						{
-							adjacent[4]	=verts[(x + 1) + ((y + 1) * w)].Position;
-							valid[4]	=true;
-						}
-						else
-						{
-							valid[4]	=false;
-						}
-					}
-					else
-					{
-						valid[5]	=false;
-						valid[6]	=false;
-						valid[4]	=false;
-					}
-
-					//use the edges between adjacents
-					//to determine a good normal
-					Vector3	norm, edge1, edge2;
-
-					norm	=Vector3.Zero;
-
-					for(int i=0;i < 8;i++)
-					{
-						//find next valid adjacent
-						while(i < 8 && !valid[i])
-						{
-							i++;
-						}
-						if(i >= 8)
-						{
-							break;
-						}
-
-						//note the i++
-						edge1	=adjacent[i++] - verts[x + (y * w)].Position;
-
-						//find next valid adjacent
-						while(i < 8 && !valid[i])
-						{
-							i++;
-						}
-						if(i >= 8)
-						{
-							break;
-						}
-						edge2	=adjacent[i] - verts[x + (y * w)].Position;
-
-						norm	+=Vector3.Cross(edge2, edge1);
-					}
-
-					//average
-					norm.Normalize();
-
-					verts[x + (y * w)].Normal	=norm;
-				}
-			}
-
-
-			//index the tris
-			idx	=0;
-
-			for(int j=0;j < (h - 1);j++)
-			{
-				for(int i=(j * w);i < ((j * w) + (w - 1));i++)
-				{
-					indexs[idx++]	=(ushort)i;
-					indexs[idx++]	=(ushort)(i + 1);
-					indexs[idx++]	=(ushort)(i + w);
-
-					indexs[idx++]	=(ushort)(i + 1);
-					indexs[idx++]	=(ushort)((i + 1) + w);
-					indexs[idx++]	=(ushort)(i + w);
-				}
-			}
-
-			mIBTerrain	=new IndexBuffer(mGDM.GraphicsDevice, mNumIndex * 2, BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
-			mVBTerrain	=new VertexBuffer(mGDM.GraphicsDevice, mNumVerts * 40, BufferUsage.WriteOnly);
-
-			mIBTerrain.SetData<ushort>(indexs);
-			mVBTerrain.SetData<VPNTT>(verts);
-
-			mTEXTerrain0	=Texture2D.FromFile(mGDM.GraphicsDevice, "content/dirt_simple_df_.dds");
-			mTEXTerrain1	=Texture2D.FromFile(mGDM.GraphicsDevice, "content/dirt_mottledsand_df_.dds");
-
-			mFXTerrain	=Content.Load<Effect>("Terrain");
-
-			//set up shader stuff that won't change for now
-			Vector4	colr;
-			colr.X	=1.0f;
-			colr.Y	=0.9f;
-			colr.Z	=0.9f;
-			colr.W	=1.0f;
-			mFXTerrain.Parameters["lightColor"].SetValue(colr);
-
-			colr.X	=0.1f;
-			colr.Y	=0.1f;
-			colr.Z	=0.1f;
-			colr.W	=1.0f;
-			mFXTerrain.Parameters["ambientColor"].SetValue(colr);
-
-			Vector3	dir;
-			dir.X	=0.2f;
-			dir.Z	=-0.1f;
-			dir.Y	=-1.0f;
-			dir.Normalize();
-
-			mFXTerrain.Parameters["lightDirection"].SetValue(dir);
-
-			mFXTerrain.Parameters["TerTexture0"].SetValue(mTEXTerrain0);
-			mFXTerrain.Parameters["TerTexture1"].SetValue(mTEXTerrain1);
-			mFXTerrain.CommitChanges();
-
-			//set stream source
-			mGDM.GraphicsDevice.Vertices[0].SetSource(mVBTerrain, 0, 40);
-			mGDM.GraphicsDevice.Indices	=mIBTerrain;
+			mPlayerShip	=new Flyer("Models/p1_saucer", Content, mFXFlyer);
 		}
 
 
@@ -380,6 +143,28 @@ namespace Terrain
 
 			UpdateMatrices();
 
+			mPlayerShip.Update(gameTime, mKBStateCurrent);
+
+			//update the height map positions
+			float	time	=(float)gameTime.ElapsedGameTime.TotalMilliseconds;
+			mMap0Position	+=mMap0Direction * mPlayerSpeed * (time * 0.1f);
+			mMap1Position	+=mMap1Direction * mPlayerSpeed * (time * 0.1f);
+
+			//wrap
+			if(mMap0Position.Y < -(64 * 3))
+			{
+				mMap0Position	=mMap1Position + (Vector3.UnitY * 630.0f);
+			}
+			if(mMap1Position.Y < -(64 * 3))
+			{
+				mMap1Position	=mMap0Position + (Vector3.UnitY * 630.0f);
+			}
+
+			mMap0.SetPos(mMap0Position);
+			mMap1.SetPos(mMap1Position);
+
+			UpdatePlayer(gameTime);
+
 			base.Update(gameTime);
 		}
 
@@ -388,21 +173,9 @@ namespace Terrain
 		{
 			mGDM.GraphicsDevice.Clear(Color.CornflowerBlue);
 
-			UpdateTerrainEffect();
-
-			mGDM.GraphicsDevice.VertexDeclaration	=mVDTerrain;
-			mFXTerrain.Begin();
-			foreach(EffectPass pass in mFXTerrain.CurrentTechnique.Passes)
-			{
-				pass.Begin();
-				
-				//draw shizzle here
-				mGDM.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-					0, 0, mNumVerts, 0, mNumTris);
-
-				pass.End();
-			}
-			mFXTerrain.End();
+			mMap0.Draw(mGDM.GraphicsDevice);
+			mMap1.Draw(mGDM.GraphicsDevice);
+			mPlayerShip.Draw(mGDM.GraphicsDevice);
 
 			base.Draw(gameTime);
 		}
@@ -419,25 +192,18 @@ namespace Terrain
 				GraphicsDevice.DisplayMode.AspectRatio, 1, 10000);
 			
 			Matrix.Transpose(ref mMATView, out mMATViewTranspose);
-			mDotPos	=-mCamPos + mMATViewTranspose.Forward * 10.0f;
+			//Vector3	shipPos	=-mCamPos + mMATViewTranspose.Forward * 10.0f;
+
+			//mPlayerShip.UpdatePosition(shipPos);
+
+			//update height map
+			mMap0.UpdateMatrices(mMATWorld, mMATView, mMATProjection);
+			mPlayerShip.UpdateMatrices(mMATWorld, mMATView, mMATProjection);
 		}
 
 
 		private void InitializeEffect()
 		{
-			//set up a 2 texcoord vert element
-			VertexElement	[]ve	=new VertexElement[4];
-
-			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
-						VertexElementMethod.Default, VertexElementUsage.Position, 0);
-			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector3,
-						VertexElementMethod.Default, VertexElementUsage.Normal, 0);
-			ve[2]	=new VertexElement(0, 24, VertexElementFormat.Vector2,
-						VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
-			ve[3]	=new VertexElement(0, 32, VertexElementFormat.Vector2,
-						VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
-
-			mVDTerrain	=new VertexDeclaration(mGDM.GraphicsDevice,	ve);
 		}
 
 
@@ -464,24 +230,6 @@ namespace Terrain
 		}
 
 
-		private void UpdateTerrainEffect()
-		{
-			mFXTerrain.Parameters["World"].SetValue(mMATWorld);
-			mFXTerrain.Parameters["View"].SetValue(mMATView);
-			mFXTerrain.Parameters["Projection"].SetValue(mMATProjection);
-
-			Vector3	dir;
-			dir.X	=-0.7f;
-			dir.Z	=-0.1f;
-			dir.Y	=-0.5f;
-			dir.Normalize();
-
-			mFXTerrain.Parameters["lightDirection"].SetValue(dir);
-
-			mFXTerrain.CommitChanges();
-		}
-
-
 		private void UpdateCamera(GameTime gameTime)
 		{
 			float	time	=(float)gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -503,18 +251,7 @@ namespace Terrain
 
 			Matrix.Transpose(ref mMATView, out mMATViewTranspose);
 
-			if(mKBStateCurrent.IsKeyDown(Keys.Up) ||
-				mKBStateCurrent.IsKeyDown(Keys.W))
-			{
-				mCamPos	+=vin * (time * 0.1f);
-			}
-
-			if(mKBStateCurrent.IsKeyDown(Keys.Down) ||
-				mKBStateCurrent.IsKeyDown(Keys.S))
-			{
-				mCamPos	-=vin * (time * 0.1f);
-			}
-
+			/*
 			if(mKBStateCurrent.IsKeyDown(Keys.Left) ||
 				mKBStateCurrent.IsKeyDown(Keys.A))
 			{
@@ -547,13 +284,7 @@ namespace Terrain
 			{
 				mPitch	+=time*0.1f;
 			}
-
-			if(mKBStateCurrent.IsKeyDown(Keys.Right) ||
-				mKBStateCurrent.IsKeyDown(Keys.D))
-			{
-				mCamPos	-=vleft * (time * 0.1f);
-			}
-
+			*/
 			//Horrible mouselook hack so I can see where I'm going. Won't let me spin in circles, some kind of overflow issue?
 			if(mMStateCurrent.RightButton == ButtonState.Pressed)
 			{
@@ -566,6 +297,53 @@ namespace Terrain
 
 			mCamPos	-=vleft * (mGPStateCurrent.ThumbSticks.Left.X * time * 0.25f);
 			mCamPos	+=vin * (mGPStateCurrent.ThumbSticks.Left.Y * time * 0.25f);
+		}
+
+
+		private void UpdatePlayer(GameTime gameTime)
+		{
+			float	time	=(float)gameTime.ElapsedGameTime.TotalMilliseconds;
+
+			if(mKBStateCurrent.IsKeyDown(Keys.Left) ||
+				mKBStateCurrent.IsKeyDown(Keys.A))
+			{
+				mPlayerPos	-=Vector3.UnitX * mPlayerSpeed * time;
+			}
+
+			if(mKBStateCurrent.IsKeyDown(Keys.Right) ||
+				mKBStateCurrent.IsKeyDown(Keys.D))
+			{
+				mPlayerPos	+=Vector3.UnitX * mPlayerSpeed * time;
+			}
+
+			//keep player confined
+			//his power level must not go over 9000!
+			if(mPlayerPos.X > 8000.0f)
+			{
+				mPlayerPos.X	=8000.0f;
+			}
+			else if(mPlayerPos.X < -8000.0f)
+			{
+				mPlayerPos.X	=-8000.0f;
+			}
+
+			if(mKBStateCurrent.IsKeyDown(Keys.Up) ||
+				mKBStateCurrent.IsKeyDown(Keys.W))
+			{
+				mPlayerSpeed	=10.0f;
+			}
+			else if(mKBStateCurrent.IsKeyDown(Keys.Down) ||
+				mKBStateCurrent.IsKeyDown(Keys.S))
+			{
+				mPlayerSpeed	=3.0f;
+			}
+			else
+			{
+				mPlayerSpeed	=5.0f;
+			}
+
+
+			mPlayerShip.UpdatePosition(mPlayerPos);
 		}
 
 
