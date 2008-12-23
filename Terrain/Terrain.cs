@@ -10,6 +10,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
+using Microsoft.Surface;
+using Microsoft.Surface.Core;
 
 namespace Terrain
 {
@@ -19,6 +21,13 @@ namespace Terrain
 		private	GraphicsDeviceManager	mGDM;
 		private	SpriteBatch				mSpriteBatch;
 		private	Effect					mFXFlyer;
+
+		//surface
+		private ContactTarget	mContactTarget;
+		private UserOrientation	mOrientation;
+		private bool			mbAppActive	=true;
+		private bool			mbAppPreview;
+		private bool			mbLoadComplete;
 
 		//mats
 		private	Matrix	mMATWorld;
@@ -53,6 +62,18 @@ namespace Terrain
 			mGDM	=new GraphicsDeviceManager(this);
 			Content.RootDirectory	="Content";
 
+			mbLoadComplete	=false;
+
+			InteractiveSurface	IASurf	=InteractiveSurface.DefaultInteractiveSurface;
+
+			int	maxHeight	=mGDM.PreferredBackBufferHeight;
+			int	maxWidth	=mGDM.PreferredBackBufferWidth;
+			if(IASurf != null)
+			{
+				maxHeight	=IASurf.Height;
+				maxWidth	=IASurf.Width;
+			}
+
 			if(args.Length <= 0)
 			{
 				this.Exit();
@@ -77,6 +98,16 @@ namespace Terrain
 
 		protected override void Initialize()
 		{
+			SetWindowOnSurface();
+			InitializeSurfaceInput();
+
+			mOrientation	=ApplicationLauncher.Orientation;
+
+			//Subscribe to surface application activation events
+			ApplicationLauncher.ApplicationActivated	+=OnApplicationActivated;
+			ApplicationLauncher.ApplicationPreviewed	+=OnApplicationPreviewed;
+			ApplicationLauncher.ApplicationDeactivated	+=OnApplicationDeactivated;
+
 			mYaw	=mRoll	=0.0f;
 			mPitch	=90.0f;
 
@@ -107,15 +138,15 @@ namespace Terrain
 			mSpriteBatch	=new SpriteBatch(GraphicsDevice);
 			mFXFlyer		=Content.Load<Effect>("Shaders/Flyer");
 
-			mMap0	=new HeightMap("content/height.jpg",
-				"content/dirt_simple_df_.dds",
-				"content/dirt_mottledsand_df_.dds",
+			mMap0	=new HeightMap("../../../content/height.jpg",
+				"../../../content/dirt_simple_df_.dds",
+				"../../../content/dirt_mottledsand_df_.dds",
 				3.0f, 7.0f,
 				mGDM.GraphicsDevice, Content);
 
-			mMap1	=new HeightMap("content/height.jpg",
-				"content/dirt_simple_df_.dds",
-				"content/dirt_mottledsand_df_.dds",
+			mMap1	=new HeightMap("../../../content/height.jpg",
+				"../../../content/dirt_simple_df_.dds",
+				"../../../content/dirt_mottledsand_df_.dds",
 				3.0f, 7.0f,
 				mGDM.GraphicsDevice, Content);
 
@@ -137,33 +168,36 @@ namespace Terrain
 				this.Exit();
 			}
 
-			CheckGamePadInput();
-
-			UpdateCamera(gameTime);
-
-			UpdateMatrices();
-
-			mPlayerShip.Update(gameTime, mKBStateCurrent);
-
-			//update the height map positions
-			float	time	=(float)gameTime.ElapsedGameTime.TotalMilliseconds;
-			mMap0Position	+=mMap0Direction * mPlayerSpeed * (time * 0.1f);
-			mMap1Position	+=mMap1Direction * mPlayerSpeed * (time * 0.1f);
-
-			//wrap
-			if(mMap0Position.Y < -(64 * 3))
+			if(mbAppActive || mbAppPreview)
 			{
-				mMap0Position	=mMap1Position + (Vector3.UnitY * 630.0f);
-			}
-			if(mMap1Position.Y < -(64 * 3))
-			{
-				mMap1Position	=mMap0Position + (Vector3.UnitY * 630.0f);
-			}
+				CheckGamePadInput();
 
-			mMap0.SetPos(mMap0Position);
-			mMap1.SetPos(mMap1Position);
+				UpdateCamera(gameTime);
 
-			UpdatePlayer(gameTime);
+				UpdateMatrices();
+
+				mPlayerShip.Update(gameTime, mKBStateCurrent);
+
+				//update the height map positions
+				float	time	=(float)gameTime.ElapsedGameTime.TotalMilliseconds;
+				mMap0Position	+=mMap0Direction * mPlayerSpeed * (time * 0.1f);
+				mMap1Position	+=mMap1Direction * mPlayerSpeed * (time * 0.1f);
+
+				//wrap
+				if(mMap0Position.Y < -(64 * 3))
+				{
+					mMap0Position	=mMap1Position + (Vector3.UnitY * 630.0f);
+				}
+				if(mMap1Position.Y < -(64 * 3))
+				{
+					mMap1Position	=mMap0Position + (Vector3.UnitY * 630.0f);
+				}
+
+				mMap0.SetPos(mMap0Position);
+				mMap1.SetPos(mMap1Position);
+
+				UpdatePlayer(gameTime);
+			}
 
 			base.Update(gameTime);
 		}
@@ -171,6 +205,12 @@ namespace Terrain
 
 		protected override void Draw(GameTime gameTime)
 		{
+			if(!mbLoadComplete)
+			{
+				//Dismiss the loading screen now that we are starting to draw
+				mbLoadComplete = true;
+				ApplicationLauncher.SignalApplicationLoadComplete();
+			}
 			mGDM.GraphicsDevice.Clear(Color.CornflowerBlue);
 
 			mMap0.Draw(mGDM.GraphicsDevice);
@@ -364,6 +404,69 @@ namespace Terrain
 			{
 				return	File.Open(fullPath, mode, access);
 			}
+		}
+
+
+		private void SetWindowOnSurface()
+		{
+			System.Diagnostics.Debug.Assert(Window.Handle != System.IntPtr.Zero,
+				"Window initialization must be complete before SetWindowOnSurface is called");
+
+			// We don't want to run in full-screen mode because we need
+			// overlapped windows, so instead run in windowed mode
+			// and resize to take up the whole surface with no border.
+
+			// Make sure the graphics device has the correct back buffer size.
+			InteractiveSurface interactiveSurface = InteractiveSurface.DefaultInteractiveSurface;
+			if(interactiveSurface != null)
+			{
+				mGDM.PreferredBackBufferWidth = interactiveSurface.Width;
+				mGDM.PreferredBackBufferHeight = interactiveSurface.Height;
+				mGDM.ApplyChanges();
+
+				// Remove the border and position the window.
+				Program.RemoveBorder(Window.Handle);
+				Program.PositionWindow(Window,
+					interactiveSurface.Left,
+					interactiveSurface.Top);
+			}
+		}
+
+		//==========================================================//
+		/// <summary>
+		/// Initializes the surface input system. This should be called after any window
+		/// initialization is done, and should only be called once.
+		/// </summary>
+		private void InitializeSurfaceInput()
+		{
+			System.Diagnostics.Debug.Assert(Window.Handle != System.IntPtr.Zero,
+				"Window initialization must be complete before InitializeSurfaceInput is called");
+			System.Diagnostics.Debug.Assert(mContactTarget == null,
+				"Surface input already initialized");
+
+			//Create a target for surface input.
+			mContactTarget	=new ContactTarget(Window.Handle, EventThreadChoice.OnBackgroundThread);
+			mContactTarget.EnableInput();
+		}
+
+
+		private void OnApplicationActivated(object sender, EventArgs e)
+		{
+			mbAppActive		=true;
+			mbAppPreview	=false;
+		}
+
+
+		private void OnApplicationPreviewed(object sender, EventArgs e)
+		{
+			mbAppActive		=false;
+			mbAppPreview	=true;
+		}
+
+		private void OnApplicationDeactivated(object sender, EventArgs e)
+		{
+			mbAppActive		=false;
+			mbAppPreview	=false;
 		}
 	}
 }
