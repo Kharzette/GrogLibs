@@ -16,12 +16,11 @@ namespace Collada
 	/// </summary>
 	public class Game1 : Microsoft.Xna.Framework.Game
 	{
-		SpriteBatch				spriteBatch;
+		SpriteBatch				mSpriteBatch;
 		Collada					mCollada;
 		GraphicsDeviceManager	mGDM;
 
-		private BasicEffect			mZoneEffect;
-		private VertexDeclaration	mZoneVertexDeclaration;
+		private Effect			mTestEffect;
 
 		private Matrix	mWorldMatrix;
 		private Matrix	mViewMatrix;
@@ -50,6 +49,7 @@ namespace Collada
 			mPitch = mYaw = mRoll = 0;
 			InitializeEffect();
 			InitializeTransform();
+			VertexTypes.AddType(typeof(VPosNormTexTexColor));
 
 			base.Initialize();
 		}
@@ -74,9 +74,9 @@ namespace Collada
 		/// </summary>
 		protected override void LoadContent()
 		{
-			mZoneEffect	=new BasicEffect(GraphicsDevice, null);
-
-			mCollada = new Collada("content/WackyWalk2.dae", GraphicsDevice);
+			mTestEffect	=Content.Load<Effect>("VPosNormTexTexColor");
+			mCollada	=new Collada("content/hero.dae", GraphicsDevice);
+//			mCollada = new Collada("content/WackyWalk.dae", GraphicsDevice);
 		}
 
 		/// <summary>
@@ -141,16 +141,6 @@ namespace Collada
 
 		private void InitializeEffect()
 		{
-			VertexElement[] ve	=new VertexElement[2];
-
-			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Position, 0);
-			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Rgba32,
-				VertexElementMethod.Default, VertexElementUsage.Color, 0);
-
-			mZoneVertexDeclaration	=new VertexDeclaration(
-				mGDM.GraphicsDevice,
-				ve);
 		}
 
 		/// <summary>
@@ -183,19 +173,7 @@ namespace Collada
 
 			UpdateLightMapEffect();
 
-			mZoneEffect.VertexColorEnabled	=true;
-			mGDM.GraphicsDevice.VertexDeclaration	=mZoneVertexDeclaration;
-
-			mZoneEffect.Begin();
-			foreach(EffectPass pass in mZoneEffect.CurrentTechnique.Passes)
-			{
-				pass.Begin();
-
-				mCollada.Draw(mGDM.GraphicsDevice, mZoneEffect);
-
-				pass.End();
-			}
-			mZoneEffect.End();
+			mCollada.Draw(mGDM.GraphicsDevice, mTestEffect);
 
 			base.Draw(gameTime);
 		}
@@ -203,9 +181,10 @@ namespace Collada
 
 		private void UpdateLightMapEffect()
 		{
-			mZoneEffect.Parameters["World"].SetValue(mWorldMatrix);
-			mZoneEffect.Parameters["View"].SetValue(mViewMatrix);
-			mZoneEffect.Parameters["Projection"].SetValue(mProjectionMatrix);
+			mTestEffect.Parameters["mWorld"].SetValue(mWorldMatrix);
+			mTestEffect.Parameters["mView"].SetValue(mViewMatrix);
+			mTestEffect.Parameters["mProjection"].SetValue(mProjectionMatrix);
+			mTestEffect.Parameters["mLocal"].SetValue(Matrix.Identity);	//TODO:fix
 			//mZoneEffect.Parameters["TextureEnabled"].SetValue(mbTextureEnabled);
 		}
 
