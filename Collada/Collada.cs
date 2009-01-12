@@ -106,6 +106,7 @@ namespace Collada
 
 			dc.mNumVerts		=numPoints;
 			dc.mVertSize		=VertexTypes.GetSizeForType(t);
+			dc.mTexName			=mMaterial;
 
 			//there's a big difference in the way the data is stored
 			//from Collada, and what XNA needs.  Collada feeds us
@@ -174,11 +175,12 @@ namespace Collada
 
 										//get the value
 										Vector3	vec;
-										int		flIdx	=mIndexs[curPoly][curIdx];
+										int		flIdx	=mIndexs[curPoly][curIdx] * 3;
 
+										//swap y and z
 										vec.X	=fa.mFloats[flIdx];
-										vec.Y	=fa.mFloats[flIdx + 1];
-										vec.Z	=fa.mFloats[flIdx + 2];
+										vec.Z	=fa.mFloats[flIdx + 1];
+										vec.Y	=fa.mFloats[flIdx + 2];
 
 										if(inp.mSemantic == "NORMAL")
 										{
@@ -205,10 +207,12 @@ namespace Collada
 
 										//get the value
 										Vector2	vec;
-										int		flIdx	=mIndexs[curPoly][curIdx];
+										int		flIdx	=mIndexs[curPoly][curIdx] * 2;
 
+										//the Y element of UV is upside down for
+										//some wierd reason
 										vec.X	=fa.mFloats[flIdx];
-										vec.Y	=fa.mFloats[flIdx + 1];
+										vec.Y	=-fa.mFloats[flIdx + 1];
 
 										if(inp.mSemantic == "TEXCOORD")
 										{
@@ -227,7 +231,7 @@ namespace Collada
 
 										//get the value
 										Vector4	vec;
-										int		flIdx	=mIndexs[curPoly][curIdx];
+										int		flIdx	=mIndexs[curPoly][curIdx] * 4;
 
 										vec.X	=fa.mFloats[flIdx];
 										vec.Y	=fa.mFloats[flIdx + 1];
@@ -276,9 +280,10 @@ namespace Collada
 											Vector3	vec;
 											int		flIdx	=mIndexs[curPoly][curIdx] * 3;
 
+											//swap Y and Z
 											vec.X	=fa.mFloats[flIdx];
-											vec.Y	=fa.mFloats[flIdx + 1];
-											vec.Z	=fa.mFloats[flIdx + 2];
+											vec.Z	=fa.mFloats[flIdx + 1];
+											vec.Y	=fa.mFloats[flIdx + 2];
 
 											if(inp.mSemantic == "VERTEX")
 											{
@@ -304,7 +309,8 @@ namespace Collada
 							}
 						}
 					}
-					//flip winding order
+					//flip winding order?
+					/*
 					List<ushort>	reverse	=new List<ushort>();
 					for(int j=startIdx;j < ind;j++)
 					{
@@ -314,7 +320,7 @@ namespace Collada
 					for(int j=ind - 1;j >= startIdx;j--,k++)
 					{
 						indices[j]	=reverse[k];
-					}
+					}*/
 					curPoly++;
 				}
 			}
@@ -1217,21 +1223,62 @@ namespace Collada
 	{
 		public VertexBuffer			mVerts;
 		public IndexBuffer			mIndexs;
+		public VertexBuffer			mSkinData;
 		public VertexDeclaration	mVD;
-		public int					mNumVerts, mNumTriangles, mVertSize;
+		public int					mNumVerts, mNumTriangles, mVertSize, mTexChannel;
+		public string				mTexName;
+	}
+
+	class ColladaEffect
+	{
+		public string	mName;
+		public string	mTextureID;
+		public int		mChannel;
+
+		public void Load(XmlReader r)
+		{
+			r.MoveToNextAttribute();
+			mName	=r.Value;
+
+			while(r.Read())
+			{
+				if(r.NodeType == XmlNodeType.Whitespace)
+				{
+					continue;	//skip whitey
+				}
+				if(r.Name == "texture")
+				{
+					if(r.NodeType == XmlNodeType.Element)
+					{
+						r.MoveToFirstAttribute();
+						mTextureID	=r.Value;
+
+						r.MoveToNextAttribute();
+						int.TryParse(r.Value, out mChannel);
+					}
+				}
+				else if(r.Name == "effect")
+				{
+					return;
+				}
+			}
+		}
 	}
 
 	class Collada
 	{
 		//data from collada
-		private	Dictionary<string, Material>	mMaterials		=new Dictionary<string,Material>();
-		private Dictionary<string, LibImage>	mImages			=new Dictionary<string,LibImage>();
-		private	Dictionary<string, SceneNode>	mRootNodes		=new Dictionary<string,SceneNode>();
-		private	Dictionary<string, Controller>	mControllers	=new Dictionary<string,Controller>();
-		private	Dictionary<string, Geometry>	mGeometries		=new Dictionary<string,Geometry>();
-		private Dictionary<string, Animation>	mAnimations		=new Dictionary<string,Animation>();
+		private	Dictionary<string, Material>		mMaterials		=new Dictionary<string,Material>();
+		private Dictionary<string, LibImage>		mImages			=new Dictionary<string,LibImage>();
+		private	Dictionary<string, SceneNode>		mRootNodes		=new Dictionary<string,SceneNode>();
+		private	Dictionary<string, Controller>		mControllers	=new Dictionary<string,Controller>();
+		private	Dictionary<string, Geometry>		mGeometries		=new Dictionary<string,Geometry>();
+		private Dictionary<string, Animation>		mAnimations		=new Dictionary<string,Animation>();
+		private Dictionary<string, ColladaEffect>	mColladaEffects	=new Dictionary<string,ColladaEffect>();
 
 		private List<DrawChunk>	mChunks	=new List<DrawChunk>();
+
+		private Dictionary<string, Texture2D>	mTextures	=new Dictionary<string,Texture2D>();
 
 
 		public Collada(string meshFileName, GraphicsDevice g)
@@ -1240,13 +1287,16 @@ namespace Collada
 
 			BuildBuffers(g);
 
-			FileStream	fs	=new FileStream("gack.mesh", FileMode.OpenOrCreate);
-
-			BinaryFormatter	bf	=new BinaryFormatter();
-
-			bf.Serialize(fs, mChunks);
-
-			fs.Close();
+			foreach(KeyValuePair<string, LibImage> li in mImages)
+			{
+				string	path	=li.Value.mPath;
+				if(path.StartsWith("file://"))
+				{
+					path	=path.Remove(0, 7);
+				}
+				Texture2D	tex	=Texture2D.FromFile(g, path);
+				mTextures.Add(li.Value.mName, tex);
+			}
 		}
 		
 		//Getting the FieldInfo's is relatively expensive, you should come up
@@ -1266,16 +1316,66 @@ namespace Collada
 			{
 				geom.Value.BuildBuffers(g, mChunks);
 			}
+
+			//fix up materials
+			foreach(DrawChunk dc in mChunks)
+			{
+				if(dc.mTexName != null)
+				{
+					//find in fx
+					string	fxname	=dc.mTexName + "-fx";
+
+					if(mColladaEffects.ContainsKey(fxname))
+					{
+						dc.mTexName		=mColladaEffects[fxname].mTextureID;
+						dc.mTexChannel	=mColladaEffects[fxname].mChannel;
+
+						//chop off -image on the end
+						if(dc.mTexName.EndsWith("-image"))
+						{
+							dc.mTexName	=dc.mTexName.Remove(dc.mTexName.IndexOf("-image"));
+						}
+					}
+				}
+			}
 		}
 
 
 		public void Draw(GraphicsDevice g, Effect fx)
 		{
-			foreach(DrawChunk dc in mChunks)
+			for(int i=0;i < mChunks.Count;i++)
+//			foreach(DrawChunk dc in mChunks)
 			{
+				DrawChunk	dc	=mChunks[i];
 				g.VertexDeclaration	=dc.mVD;
 				g.Indices			=dc.mIndexs;
 				g.Vertices[0].SetSource(dc.mVerts, 0, dc.mVertSize);
+
+				Matrix	loc	=Matrix.Identity;
+
+				if(dc.mTexName != null)
+				{
+					if(mTextures.ContainsKey(dc.mTexName))
+					{
+						string	tex	="mTexture" + dc.mTexChannel;
+						fx.Parameters[tex].SetValue(mTextures[dc.mTexName]);
+					}
+				}
+				/*
+				if(i==0)
+				{
+					loc	=Matrix.CreateTranslation(new Vector3(30.0f, 0.0f, 0.0f));
+				}
+				else if(i==1)
+				{
+					loc	=Matrix.CreateTranslation(new Vector3(0.0f, 30.0f, 0.0f));
+				}
+				else if(i == 2)
+				{
+					loc	=Matrix.CreateTranslation(new Vector3(0.0f, 0.0f, 30.0f));
+				}*/
+
+				fx.Parameters["mLocal"].SetValue(loc);
 
 				fx.Begin();
 				foreach(EffectPass pass in fx.CurrentTechnique.Passes)
@@ -1291,6 +1391,40 @@ namespace Collada
 					pass.End();
 				}
 				fx.End();
+			}
+		}
+
+
+		private void LoadColladaEffects(XmlReader r)
+		{
+			//find effects
+			while(r.Read())
+			{
+				if(r.Name == "library_effects")
+				{
+					break;
+				}
+			}
+
+			//read effects
+			while(r.Read())
+			{
+				if(r.NodeType == XmlNodeType.Whitespace)
+				{
+					continue;	//skip whitespace
+				}
+
+				if(r.Name == "effect")
+				{
+					r.MoveToFirstAttribute();
+					string	fxid	=r.Value;
+
+					ColladaEffect	ce	=new ColladaEffect();
+
+					ce.Load(r);
+
+					mColladaEffects.Add(fxid, ce);
+				}
 			}
 		}
 
@@ -1530,6 +1664,11 @@ namespace Collada
 			file.Seek(0, SeekOrigin.Begin);
 			r	=XmlReader.Create(file);
 			LoadAnimations(r);
+
+			//find effects
+			file.Seek(0, SeekOrigin.Begin);
+			r	=XmlReader.Create(file);
+			LoadColladaEffects(r);
 		}
 
 

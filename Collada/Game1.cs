@@ -47,7 +47,6 @@ namespace Collada
 		protected override void Initialize()
 		{
 			mPitch = mYaw = mRoll = 0;
-			InitializeEffect();
 			InitializeTransform();
 			VertexTypes.AddType(typeof(VPosNormTexTexColor));
 
@@ -77,6 +76,8 @@ namespace Collada
 			mTestEffect	=Content.Load<Effect>("VPosNormTexTexColor");
 			mCollada	=new Collada("content/hero.dae", GraphicsDevice);
 //			mCollada = new Collada("content/WackyWalk.dae", GraphicsDevice);
+
+			InitializeEffect();
 		}
 
 		/// <summary>
@@ -141,6 +142,18 @@ namespace Collada
 
 		private void InitializeEffect()
 		{
+			Vector4	[]lightColor	=new Vector4[3];
+			lightColor[0]	=new Vector4(0.9f, 0.9f, 0.9f, 1.0f);
+			lightColor[1]	=new Vector4(0.7f, 0.6f, 0.6f, 1.0f);
+			lightColor[2]	=new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+
+			Vector4	ambColor	=new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+			Vector3	lightDir	=new Vector3(1.0f, -1.0f, 0.1f);
+			lightDir.Normalize();
+
+			mTestEffect.Parameters["mLightColor"].SetValue(lightColor);
+			mTestEffect.Parameters["mLightDirection"].SetValue(lightDir);
+			mTestEffect.Parameters["mAmbientColor"].SetValue(ambColor);
 		}
 
 		/// <summary>
