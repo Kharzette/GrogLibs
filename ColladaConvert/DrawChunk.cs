@@ -16,6 +16,42 @@ namespace ColladaConvert
 		public Vector4	BoneWeights;
 		public Vector2	TexCoord0;
 		public int		mOriginalIndex;
+
+
+		public static bool operator==(TrackedVert a, TrackedVert b)
+		{
+			return	(
+				(a.BoneIndex0 == b.BoneIndex0) &&
+				(a.BoneWeights == b.BoneWeights) &&
+				(a.Position0 == b.Position0) &&
+				(a.Normal0 == b.Normal0) &&
+				(a.TexCoord0 == b.TexCoord0) &&
+				(a.mOriginalIndex == b.mOriginalIndex));
+		}
+
+
+		public static bool operator!=(TrackedVert a, TrackedVert b)
+		{
+			return	(
+				(a.BoneIndex0 != b.BoneIndex0) ||
+				(a.BoneWeights != b.BoneWeights) ||
+				(a.Position0 != b.Position0) ||
+				(a.Normal0 != b.Normal0) ||
+				(a.TexCoord0 != b.TexCoord0) ||
+				(a.mOriginalIndex != b.mOriginalIndex));
+		}
+
+
+		public override bool Equals(object obj)
+		{
+			return	base.Equals(obj);
+		}
+
+
+		public override int GetHashCode()
+		{
+			return	base.GetHashCode();
+		}
 	}
 
 	public class DrawChunk
@@ -47,6 +83,31 @@ namespace ColladaConvert
 				mBaseVerts[i / 3].Position0.Y		=verts[i + 1];
 				mBaseVerts[i / 3].Position0.Z		=verts[i + 2];
 				mBaseVerts[i / 3].mOriginalIndex	=i / 3;
+			}
+		}
+
+
+		public void EliminateDuplicateVerts()
+		{
+			//throw these in a list to make it easier
+			//to throw some out
+			List<TrackedVert>	verts	=new List<TrackedVert>();
+			for(int i=0;i < mNumBaseVerts;i++)
+			{
+				verts.Add(mBaseVerts[i]);
+			}
+
+			restart:
+			for(int i=0;i < mNumBaseVerts;i++)
+			{
+				for(int j=0;j < mNumBaseVerts;j++)
+				{
+					if(verts[i] == verts[j])
+					{
+						verts.RemoveAt(j);
+						goto restart;
+					}
+				}
 			}
 		}
 
@@ -94,87 +155,51 @@ namespace ColladaConvert
 		}
 
 
-		//this will grow the list of baseverts
-		//as polygons all share verts, but sometimes
-		//the normals for a particular face are different
-		public void AddNormalsToBaseVerts(List<int> posIdxs,
-											List<float> norms,
-											List<int> normIdxs)
+		//this copies all pertinent per polygon information
+		//into the trackedverts.  Every vert indexed by a
+		//polygon will be duplicated as the normals and
+		//texcoords can vary on a particular position in a mesh
+		//depending on which polygon is being drawn.
+		//This also constructs a list of indices
+		public void AddNormTexByPoly(List<int>		posIdxs,
+									List<float>		norms,
+									List<int>		normIdxs,
+									List<float>		texCoords,
+									List<int>		texIdxs,
+									List<int>		vertCounts)
 		{
-			//make a list for extra verts
-			//these will be merged into the array later
 			List<TrackedVert>	verts	=new List<TrackedVert>();
 
-			//buzz through the polygons checking for
-			//normals that are different on the same vert
-			//thus causing a new vert to be created
+			Debug.Assert(posIdxs.Count == normIdxs.Count && posIdxs.Count == texIdxs.Count);
+
+			//track the polygon in use
+			int	polyIndex	=0;
+			int	curVert		=0;
 			for(int i=0;i < posIdxs.Count;i++)
 			{
-				int	posIdx	=posIdxs[i];
-				int	nrmIdx	=normIdxs[i];
+				int	pidx	=posIdxs[i];
+				int	nidx	=normIdxs[i];
+				int	tidx	=texIdxs[i];
 
-				//first see if a normal exists at all
-				//for this vertex
-				bool	bFound	=false;
-				if(mBaseVerts[posIdx].Normal0.LengthSquared() == 0)
-				{
-					//no normal was here before
-					mBaseVerts[posIdx].Normal0.X	=norms[nrmIdx * 3];
-					mBaseVerts[posIdx].Normal0.Y	=norms[1 + nrmIdx * 3];
-					mBaseVerts[posIdx].Normal0.Z	=norms[2 + nrmIdx * 3];
-					bFound							=true;
-				}
+				TrackedVert	tv	=new TrackedVert();
+				
+				//copy the basevertex, this will ensure we
+				//get the right position and bone indexes
+				//and vertex weights
+				tv	=mBaseVerts[pidx];
 
-				if(!bFound)
-				{
-					//check through the to be added list
-					foreach(TrackedVert tv in verts)
-					{
-						if(tv.mOriginalIndex == posIdx)
-						{
-							//duplicate vert here, check the normal
-							if(tv.Normal0.X	== norms[nrmIdx * 3]
-								&& tv.Normal0.Y == norms[1 + nrmIdx * 3]
-								&& tv.Normal0.Z == norms[2 + nrmIdx * 3])
-							{
-								bFound	=true;
-								break;
-							}
-						}
-					}
-				}
+				//copy normal
+				tv.Normal0.X	=norms[nidx * 3];
+				tv.Normal0.Y	=norms[1 + nidx * 3];
+				tv.Normal0.Z	=norms[2 + nidx * 3];
 
-				if(!bFound)
-				{
-					//if it still hasn't been found, add
-					//a new vertex to the to be added list
-					TrackedVert	trv	=new TrackedVert();
+				//copy texcoords
+				tv.TexCoord0.X	=texIdxs[tidx * 2];
+				tv.TexCoord0.Y	=texIdxs[1 + tidx * 2];
 
-					//these are structs, so the data will
-					//be copied, instead of a ref made
-					trv				=mBaseVerts[posIdx];
-					trv.Normal0.X	=norms[nrmIdx * 3];
-					trv.Normal0.Y	=norms[1 + nrmIdx * 3];
-					trv.Normal0.Z	=norms[2 + nrmIdx * 3];
+				verts.Add(tv);
 
-					verts.Add(trv);
-				}
-			}
 
-			//add all the original verts to the tobeaddedlist
-			for(int i=0;i < mNumBaseVerts;i++)
-			{
-				verts.Add(mBaseVerts[i]);
-			}
-
-			//nuke and recreate baseverts
-			mNumBaseVerts	=verts.Count;
-			mBaseVerts		=new TrackedVert[mNumBaseVerts];
-
-			//copy em all back in
-			for(int i=0;i < mNumBaseVerts;i++)
-			{
-				mBaseVerts[i]	=verts[i];
 			}
 		}
 
