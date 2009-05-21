@@ -6,10 +6,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace ColladaConvert
 {
-	public class Vertices
+	public class Sampler
 	{
-		private List<Input>	mInputs	=new List<Input>();
-
+		private List<Input>		mInputs	=new List<Input>();
 
 		public void Load(XmlReader r)
 		{
@@ -26,7 +25,7 @@ namespace ColladaConvert
 					inp.Load(r);
 					mInputs.Add(inp);
 				}
-				else if(r.Name == "vertices")
+				else if(r.Name == "sampler")
 				{
 					return;
 				}

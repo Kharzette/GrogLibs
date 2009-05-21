@@ -1,9 +1,14 @@
 //shader using TomF's trilights
+
+//constants
+#define	MAX_BONES	30
+
 //matrii
 shared float4x4	mWorld;
 shared float4x4 mView;
 shared float4x4 mProjection;
 shared float4x4	mLocal;
+float4x4		mBones[MAX_BONES];
 
 //texture layers used on the surface
 texture	mTexture0;
@@ -19,10 +24,9 @@ shared float	mLightFactor2;
 //this comes outta the vertex shader
 struct VSOutput 
 {
-     float4	Position	: POSITION;
-     float2	TexCoord0	: TEXCOORD0;
-     float2	TexCoord1	: TEXCOORD1;
-     float4	Color		: COLOR0;
+	float4	Position	: POSITION;
+	float2	TexCoord0	: TEXCOORD0;
+	float4	Color		: COLOR0;	
 };
 
 //this plugs into the pixel shader
@@ -30,7 +34,6 @@ struct PSInput
 {
 	float4	Color		: COLOR0;
 	float2	TexCoord0	: TEXCOORD0;
-	float2	TexCoord1	: TEXCOORD1;
 };
 
 sampler TexSampler0 = sampler_state
@@ -59,11 +62,11 @@ sampler TexSampler1 = sampler_state
 
 
 //vertex shader
-VSOutput DiffuseGourad(float3 position	: POSITION,
-					   float3 normal	: NORMAL,
-					   float2 tex0		: TEXCOORD0,
-					   float2 tex1		: TEXCOORD1,
-					   float4 color		: COLOR0)
+VSOutput DiffuseGouradSkin(float3	position	: POSITION,
+							float3	normal		: NORMAL,
+							float4	bnIdxs		: BLENDINDICES0,
+							float4	bnWeights	: BLENDWEIGHT0,
+							float2	tex0		: TEXCOORD0)
 {
 	VSOutput	output;
 	
@@ -73,9 +76,19 @@ VSOutput DiffuseGourad(float3 position	: POSITION,
 	float4x4	wvp	=mul(mul(localWorld, mView), mProjection);
 	
 	float4	worldPos	=mul(float4(position, 1.0f), localWorld);
+
+	//do the bone influences
+	float4x4 skinTransform	=0;
+	skinTransform	+=mBones[bnIdxs.x] * bnWeights.x;
+	skinTransform	+=mBones[bnIdxs.y] * bnWeights.y;
+	skinTransform	+=mBones[bnIdxs.z] * bnWeights.z;
+	skinTransform	+=mBones[bnIdxs.w] * bnWeights.w;
+	
+	//xform the vert to the character's boney pos
+	output.Position	=mul(float4(position, 1.0f), skinTransform);
 	
 	//transform the input position to the output
-	output.Position	=mul(float4(position, 1.0f), wvp);
+	output.Position	=mul(output.Position, wvp);
 	
 	float3 worldNormal	=mul(normal, mWorld);
 	
@@ -91,7 +104,6 @@ VSOutput DiffuseGourad(float3 position	: POSITION,
 	
 	//direct copy of texcoords
 	output.TexCoord0	=tex0;
-	output.TexCoord1	=tex1;
 	
 	//return the output structure
 	return	output;
@@ -100,15 +112,12 @@ VSOutput DiffuseGourad(float3 position	: POSITION,
 float4 Gourad2TexModulate(PSInput input) : COLOR
 {
 	float4	texel0	=tex2D(TexSampler0, input.TexCoord0);
-	float4	texel1	=tex2D(TexSampler1, input.TexCoord1);
 	
 	float4	inColor	=input.Color;
 	
-	float4	texLitColor	=inColor * texel0;// * texel1;
+	float4	texLitColor	=inColor * texel0;
 	
 	return	texLitColor;
-//	return	input.Color;
-//	return	texel0;
 }
 
 technique VertexLighting
@@ -116,7 +125,7 @@ technique VertexLighting
 	pass P0
 	{
 		//set the VertexShader state to the vertex shader function
-		VertexShader = compile vs_2_0 DiffuseGourad();
+		VertexShader = compile vs_2_0 DiffuseGouradSkin();
 
 		//set the PixelShader state to the pixel shader function          
 		PixelShader = compile ps_2_0 Gourad2TexModulate();

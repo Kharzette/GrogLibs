@@ -1,1270 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Diagnostics;
 using System.Xml;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Storage;
 
-namespace Collada
+namespace ColladaConvert
 {
-	public class Material
-	{
-		public string	mName, mInstanceEffect;
-	}
-
-
-	public class LibImage
-	{
-		public string	mName, mPath;
-	}
-
-
-	public class MeshMaterials
-	{
-		public List<uint> mPolyPositionIndices;
-		public List<uint> mPolyNormalIndices;
-		public List<uint> mPolyUVIndices;
-
-		public MeshMaterials()
-		{
-			mPolyPositionIndices	=new List<uint>();
-			mPolyNormalIndices		=new List<uint>();
-			mPolyUVIndices			=new List<uint>();
-		}
-	}
-
-
-	public class Vertices
-	{
-		public List<Input>	mInputs	=new List<Input>();
-
-		public void Load(XmlReader r)
-		{
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;
-				}
-
-				if(r.Name == "input")
-				{
-					Input	inp	=new Input();
-					inp.Load(r);
-					mInputs.Add(inp);
-				}
-				else if(r.Name == "vertices")
-				{
-					return;
-				}
-			}
-		}
-	}
-
-
-	public class Polygons
-	{
-		public string		mMaterial;
-		public int			mCount;
-
-		public List<Input>					mInputs	=new List<Input>();
-		public Dictionary<int, List<int>>	mIndexs	=new Dictionary<int,List<int>>();
-
-		public void BuildBuffers(GraphicsDevice g, Mesh m, List<DrawChunk> dcl)
-		{
-			DrawChunk	dc	=new DrawChunk();
-
-			dc.mVD	=GetVertexDeclaration(g);
-
-			Type	t	=GetVertexType();
-
-			//calc size of index buffer
-			//this is tricky because we have to triangulate
-			int	size		=0;
-			int numPoints	=0;	//number of polygon points
-			foreach(KeyValuePair<int, List<int>> idx in mIndexs)
-			{
-				int polyPoints		=idx.Value.Count / mInputs.Count;
-				numPoints			+=polyPoints;
-				dc.mNumTriangles	=(numPoints - 3) + 1;
-				size	+=dc.mNumTriangles * 3;
-			}
-
-			dc.mIndexs	=new IndexBuffer(g, 2 * size, BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
-
-			ushort	[]indices	=new ushort[size];
-
-			Type	vertType	=GetVertexType();
-			Array	vertArray	=Array.CreateInstance(vertType, numPoints);
-
-			dc.mNumVerts		=numPoints;
-			dc.mVertSize		=VertexTypes.GetSizeForType(t);
-			dc.mTexName			=mMaterial;
-
-			//there's a big difference in the way the data is stored
-			//from Collada, and what XNA needs.  Collada feeds us
-			//per polygon indices that reach into seperate lists of
-			//positions, normals, texture coordinates etc...  Because
-			//these lists are per polygon, the same vertex can have
-			//a different set of UV coordinates or normals based on
-			//however the artist set it up.  So we have to draw from
-			//the per polygon data, and combine each polygon vertex
-			//into a single long list, then check it for duplicates
-			//and remap the indices and vertex weights.  It's a mess.
-
-			//get the max offset
-			int	maxOffset	=0;
-			foreach(Input inp in mInputs)
-			{
-				if(inp.mOffset > maxOffset)
-				{
-					maxOffset	=inp.mOffset;
-				}
-			}
-
-			//loop through the inputs, yankin out the values
-			int	curPoly	=0;	//current polygon index
-			int	curIdx	=0;	//current vertex index in the polygon
-			int	curVI	=0;	//current vertex index in the master list
-			int	ind		=0;	//current index index.... get it?
-			foreach(Input inp in mInputs)
-			{
-				curPoly	=0;
-				curVI	=0;
-				ind		=0;
-				while(curPoly < mCount)
-				{
-					curIdx			=inp.mOffset;
-					int	startVert	=curVI;	//a zero offset for triangulation
-					int startIdx	=ind;	//a zero offset for reversing winding
-					while(mIndexs[curPoly].Count > curIdx)
-					{
-						//triangulation
-						if(ind > 2)
-						{
-							indices[ind++]	=(ushort)(startVert);
-							indices[ind++]	=(ushort)(curVI - 1);
-						}
-						//find the input source
-						string	sourceKey	=inp.mSource;
-						if(sourceKey.StartsWith("#"))
-						{
-							sourceKey	=sourceKey.Remove(0, 1);
-						}
-						if(m.mSources.ContainsKey(sourceKey))
-						{
-							Source src	=m.mSources[sourceKey];
-
-							//get accessor information
-							if(src.mAccessor.mSource.Contains(sourceKey))
-							{
-								if(src.mAccessor.mStride == 3)
-								{
-									if(src.mAccessor.mParams[0].mType == "float")
-									{
-										string	arr	=sourceKey + "-array";
-										//going to assume these are vector3
-										FloatArray fa	=src.mFloats[arr];
-
-										//get the value
-										Vector3	vec;
-										int		flIdx	=mIndexs[curPoly][curIdx] * 3;
-
-										//swap y and z
-										vec.X	=fa.mFloats[flIdx];
-										vec.Z	=fa.mFloats[flIdx + 1];
-										vec.Y	=fa.mFloats[flIdx + 2];
-
-										if(inp.mSemantic == "NORMAL")
-										{
-											Collada.SetValue(vertArray, curVI, "Normal" + inp.mSet, vec);
-										}
-										else if(inp.mSemantic == "TEXCOORD")
-										{
-											Collada.SetValue(vertArray, curVI, "TexCoord" + inp.mSet, vec);
-										}
-										else if(inp.mSemantic == "COLOR")
-										{
-											Collada.SetValue(vertArray, curVI, "Color" + inp.mSet, vec);
-										}
-										curIdx	+=(maxOffset + 1);
-										indices[ind++]	=(ushort)curVI++;
-									}
-								}
-								else if(src.mAccessor.mStride == 2)
-								{
-									if(src.mAccessor.mParams[0].mType == "float")
-									{
-										string	arr	=sourceKey + "-array";
-										FloatArray fa	=src.mFloats[arr];
-
-										//get the value
-										Vector2	vec;
-										int		flIdx	=mIndexs[curPoly][curIdx] * 2;
-
-										//the Y element of UV is upside down for
-										//some wierd reason
-										vec.X	=fa.mFloats[flIdx];
-										vec.Y	=-fa.mFloats[flIdx + 1];
-
-										if(inp.mSemantic == "TEXCOORD")
-										{
-											Collada.SetValue(vertArray, curVI, "TexCoord" + inp.mSet, vec);
-										}
-										curIdx	+=(maxOffset + 1);
-										indices[ind++]	=(ushort)curVI++;
-									}
-								}
-								else if(src.mAccessor.mStride == 4)
-								{
-									if(src.mAccessor.mParams[0].mType == "double")
-									{
-										string	arr	=sourceKey + "-array";
-										FloatArray fa	=src.mFloats[arr];
-
-										//get the value
-										Vector4	vec;
-										int		flIdx	=mIndexs[curPoly][curIdx] * 4;
-
-										vec.X	=fa.mFloats[flIdx];
-										vec.Y	=fa.mFloats[flIdx + 1];
-										vec.Z	=fa.mFloats[flIdx + 2];
-										vec.W	=fa.mFloats[flIdx + 3];
-
-										Color	col	=new Color(vec);
-
-										if(inp.mSemantic == "COLOR")
-										{
-											Collada.SetValue(vertArray, curVI, "Color" + inp.mSet, col);
-										}
-										curIdx	+=(maxOffset + 1);
-										indices[ind++]	=(ushort)curVI++;
-									}
-								}
-							}
-						}
-						else if(m.mVerts.ContainsKey(sourceKey))
-						{
-							//verts are just a redirection
-							//I'm going to assume here that there
-							//is only one input
-							string redirKey	=m.mVerts[sourceKey].mInputs[0].mSource;
-							if(redirKey.StartsWith("#"))
-							{
-								redirKey	=redirKey.Remove(0, 1);
-							}
-							//now search in sources
-							if(m.mSources.ContainsKey(redirKey))
-							{
-								Source src	=m.mSources[redirKey];
-
-								//get accessor information
-								if(src.mAccessor.mSource.Contains(redirKey))
-								{
-									if(src.mAccessor.mStride == 3)
-									{
-										if(src.mAccessor.mParams[0].mType == "float")
-										{
-											string	arr	=redirKey + "-array";
-											//going to assume these are vector3
-											FloatArray fa	=src.mFloats[arr];
-
-											//get the value
-											Vector3	vec;
-											int		flIdx	=mIndexs[curPoly][curIdx] * 3;
-
-											//swap Y and Z
-											vec.X	=fa.mFloats[flIdx];
-											vec.Z	=fa.mFloats[flIdx + 1];
-											vec.Y	=fa.mFloats[flIdx + 2];
-
-											if(inp.mSemantic == "VERTEX")
-											{
-												Collada.SetValue(vertArray, curVI, "Position" + inp.mSet, vec);
-											}
-											else if(inp.mSemantic == "NORMAL")
-											{
-												Collada.SetValue(vertArray, curVI, "Normal" + inp.mSet, vec);
-											}
-											else if(inp.mSemantic == "TEXCOORD")
-											{
-												Collada.SetValue(vertArray, curVI, "TexCoord" + inp.mSet, vec);
-											}
-											else if(inp.mSemantic == "COLOR")
-											{
-												Collada.SetValue(vertArray, curVI, "Color" + inp.mSet, vec);
-											}
-											curIdx	+=(maxOffset + 1);
-											indices[ind++]	=(ushort)curVI++;
-										}
-									}
-								}
-							}
-						}
-					}
-					//flip winding order?
-					/*
-					List<ushort>	reverse	=new List<ushort>();
-					for(int j=startIdx;j < ind;j++)
-					{
-						reverse.Add(indices[j]);
-					}
-					int k=0;
-					for(int j=ind - 1;j >= startIdx;j--,k++)
-					{
-						indices[j]	=reverse[k];
-					}*/
-					curPoly++;
-				}
-			}
-			dc.mVerts	=new VertexBuffer(g,
-				numPoints * VertexTypes.GetSizeForType(t),
-				BufferUsage.WriteOnly);
-
-			//take the built array and feed it into
-			//a vertex buffer and pray
-			//dc.mVerts.SetData<t>(vertArray);
-			MethodInfo genericMethod =
-				typeof (VertexBuffer).GetMethods().Where(
-					x => x.Name == "SetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
-            
-			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {t});
-
-			typedMethod.Invoke(dc.mVerts, new object[] {vertArray});
-
-			dc.mIndexs.SetData<ushort>(indices);
-
-			dcl.Add(dc);
-		}
-
-
-		public int GetNumVertices(Mesh m)
-		{
-			//find the verts
-			foreach(Input inp in mInputs)
-			{
-				if(inp.mSemantic == "VERTEX")
-				{
-					string	key	=inp.mSource;
-					if(key.StartsWith("#"))
-					{
-						key	=key.Remove(0, 1);
-					}
-					if(m.mVerts.ContainsKey(key))
-					{
-						//assuming one input
-						string	redirKey	=m.mVerts[key].mInputs[0].mSource;
-						if(redirKey.StartsWith("#"))
-						{
-							redirKey	=redirKey.Remove(0, 1);
-						}
-						string arrKey	=redirKey + "-array";
-						if(m.mSources.ContainsKey(redirKey))
-						{
-							if(m.mSources[redirKey].mFloats.ContainsKey(arrKey))
-							{
-								return	m.mSources[redirKey].mFloats[arrKey].mCount / 3;
-							}
-						}
-					}
-				}
-			}
-			return	0;
-		}
-
-		public Type GetVertexType()
-		{
-			//count up the number of different elements
-			int	pos		=0;
-			int	norm	=0;
-			int	tex		=0;
-			int	color	=0;
-
-			foreach(Input inp in mInputs)
-			{
-				switch(inp.mSemantic)
-				{
-					case "VERTEX":
-						pos++;
-						break;
-					case "NORMAL":
-						norm++;
-						break;
-					case "TEXCOORD":
-						tex++;
-						break;
-					case "COLOR":
-						color++;
-						break;
-					default:
-						Debug.WriteLine("Warning! unknown input semantic!");
-						break;
-				}
-			}
-			return	VertexTypes.GetMatch(pos, norm, tex, color);
-
-		}
-		public VertexDeclaration GetVertexDeclaration(GraphicsDevice g)
-		{
-			Type	t	=GetVertexType();
-			return	VertexTypes.GetVertexDeclarationForType(g, t);
-			/*
-			VertexElement	[]ve	=new VertexElement[mInputs.Count];
-
-			short	sizeSoFar	=0;
-			for(int i=0;i < mInputs.Count;i++)
-			{
-				//keep track of the number of times
-				//the various channels are used
-				byte	vertNum	=0;
-				byte	normNum	=0;
-				byte	texNum	=0;
-				byte	colNum	=0;
-
-				switch(mInputs[i].mSemantic)
-				{
-					case "VERTEX":
-						ve[i]	=new VertexElement(0, sizeSoFar,
-							VertexElementFormat.Vector3,
-							VertexElementMethod.Default,
-							VertexElementUsage.Position, vertNum);
-						vertNum++;
-						sizeSoFar	+=12;
-						break;
-					case "NORMAL":
-						ve[i]	=new VertexElement(0, sizeSoFar,
-							VertexElementFormat.Vector3,
-							VertexElementMethod.Default,
-							VertexElementUsage.Normal, vertNum);
-						normNum++;
-						sizeSoFar	+=12;
-						break;
-					case "TEXCOORD":
-						ve[i]	=new VertexElement(0, sizeSoFar,
-							VertexElementFormat.Vector2,
-							VertexElementMethod.Default,
-							VertexElementUsage.TextureCoordinate, vertNum);
-						texNum++;
-						sizeSoFar	+=8;
-						break;
-					case "COLOR":
-						ve[i]	=new VertexElement(0, sizeSoFar,
-							VertexElementFormat.Vector4,
-							VertexElementMethod.Default,
-							VertexElementUsage.Color, vertNum);
-						colNum++;
-						sizeSoFar	+=16;
-						break;
-					default:
-						Debug.WriteLine("Warning! unknown input semantic!");
-						break;
-				}
-			}
-			VertexDeclaration	vd	=new VertexDeclaration(g, ve);
-
-			return	vd;*/
-		}
-
-		public void Load(XmlReader r)
-		{
-			int	attCnt	=r.AttributeCount;
-			if(attCnt > 0)
-			{
-				r.MoveToFirstAttribute();
-				while(attCnt > 0)
-				{
-					if(r.Name == "material")
-					{
-						mMaterial	=r.Value;
-					}
-					else if(r.Name == "count")
-					{
-						int.TryParse(r.Value, out mCount);
-					}
-					r.MoveToNextAttribute();
-					attCnt--;
-				}
-
-				int	curPoly	=0;
-
-				while(r.Read())
-				{
-					if(r.NodeType == XmlNodeType.Whitespace)
-					{
-						continue;	//skip whitey
-					}
-					if(r.Name == "input")
-					{
-						Input	inp	=new Input();
-						inp.Load(r);
-						mInputs.Add(inp);
-					}
-					else if(r.Name == "p")
-					{
-						if(r.NodeType == XmlNodeType.EndElement)
-						{
-							continue;
-						}
-						List<int>	ind	=new List<int>();
-
-						//go to values
-						r.Read();
-
-						string	[]tokens	=r.Value.Split(' ', '\n');
-						foreach(string tok in tokens)
-						{
-							int	i;
-
-							if(int.TryParse(tok, out i))
-							{
-								ind.Add(i);
-							}
-						}
-						mIndexs.Add(curPoly, ind);
-						curPoly++;
-					}
-					else if(r.Name == "polygons")
-					{
-						return;
-					}
-				}
-			}
-		}
-	}
-
-
-	public class Mesh
-	{
-		public Dictionary<string, Source>	mSources	=new Dictionary<string,Source>();
-		public Dictionary<string, Vertices>	mVerts		=new Dictionary<string,Vertices>();
-		public List<Polygons>				mPolys		=new List<Polygons>();
-
-		public Mesh()	{}
-
-		public void BuildBuffers(GraphicsDevice g, List<DrawChunk> dc)
-		{
-			foreach(Polygons p in mPolys)
-			{
-				p.BuildBuffers(g, this, dc);
-			}
-		}
-		public void Load(XmlReader r)
-		{
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;	//skip whitey
-				}
-
-				if(r.Name == "source")
-				{
-					r.MoveToFirstAttribute();
-
-					string	srcID	=r.Value;
-
-					Source	src	=new Source();
-					src.Load(r);
-
-					mSources.Add(srcID, src);
-				}
-				else if(r.Name == "mesh")
-				{
-					return;
-				}
-				else if(r.Name == "vertices")
-				{
-					r.MoveToFirstAttribute();
-					string	vertID	=r.Value;
-
-					Vertices	vert	=new Vertices();
-					vert.Load(r);
-					mVerts.Add(vertID, vert);					
-				}
-				else if(r.Name == "polygons")
-				{
-					Polygons	pol	=new Polygons();
-					pol.Load(r);
-
-					mPolys.Add(pol);
-				}
-			}
-		}
-	}
-
-
-	public class Geometry
-	{
-		public string	mName;
-
-		public	List<Mesh>	mMeshes	=new List<Mesh>();
-
-		public Geometry()	{}
-
-		public void BuildBuffers(GraphicsDevice g, List<DrawChunk> dc)
-		{
-			foreach(Mesh m in mMeshes)
-			{
-				m.BuildBuffers(g, dc);
-			}
-		}
-		public void Load(XmlReader r)
-		{
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;	//skip whitey
-				}
-
-				if(r.Name == "mesh")
-				{
-					Mesh	m	=new Mesh();
-					m.Load(r);
-					mMeshes.Add(m);
-				}
-				else if(r.Name == "geometry")
-				{
-					return;
-				}
-			}
-		}
-	}
-
-
-	public class NameArray
-	{
-		public List<string>	mNames	=new List<string>();
-
-		public void Load(XmlReader r)
-		{
-			r.MoveToNextAttribute();
-			int nCnt;
-			int.TryParse(r.Value,out nCnt);
-
-			//skip to the guts
-			r.Read();
-
-			string[] tokens	=r.Value.Split(' ', '\n');
-
-			//copynames
-			foreach(string tok in tokens)
-			{
-				if(tok == "")
-				{
-					continue;	//skip empties
-				}
-				mNames.Add(tok);
-			}
-			r.Read();
-		}
-	}
-
-
-	public class FloatArray
-	{
-		public List<float>	mFloats	=new List<float>();
-		public int			mCount;
-
-		public void Load(XmlReader r)
-		{
-			r.MoveToNextAttribute();
-			int.TryParse(r.Value,out mCount);
-
-			//skip to the guts
-			r.Read();
-
-			string[] tokens	=r.Value.Split(' ', '\n');
-
-			//dump into floats
-			foreach(string flt in tokens)
-			{
-				float	f;
-				
-				if(Single.TryParse(flt, out f))
-				{
-					mFloats.Add(f);
-				}
-			}
-			r.Read();
-		}
-	}
-
-
-	public class Param
-	{
-		public string	mType, mName;
-
-		public void Load(XmlReader r)
-		{
-			int	attCnt	=r.AttributeCount;
-			if(attCnt > 0)
-			{
-				r.MoveToFirstAttribute();
-				while(attCnt > 0)
-				{
-					if(r.Name == "name")
-					{
-						mName	=r.Value;
-					}
-					else if(r.Name == "type")
-					{
-						mType	=r.Value;
-					}
-					r.MoveToNextAttribute();
-					attCnt--;
-				}
-			}
-		}
-	}
-
-
-	public class Accessor
-	{
-		public string		mSource;
-		public int			mCount;
-		public int			mStride;
-		public List<Param>	mParams	=new List<Param>();
-
-		public void Load(XmlReader r)
-		{
-			int	attCnt	=r.AttributeCount;
-			if(attCnt > 0)
-			{
-				r.MoveToFirstAttribute();
-				while(attCnt > 0)
-				{
-					if(r.Name == "source")
-					{
-						mSource	=r.Value;
-					}
-					else if(r.Name == "count")
-					{
-						int.TryParse(r.Value, out mCount);
-					}
-					else if(r.Name == "stride")
-					{
-						int.TryParse(r.Value, out mStride);
-					}
-					r.MoveToNextAttribute();
-					attCnt--;
-				}
-			}
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;	//skip whitey
-				}
-				if(r.Name == "accessor")
-				{
-					return;
-				}
-				else if(r.Name == "param")
-				{
-					Param	p	=new Param();
-					p.Load(r);
-					mParams.Add(p);
-				}
-			}
-		}
-	}
-
-
-	public class Source
-	{
-		public Dictionary<string, NameArray>	mNames		=new Dictionary<string,NameArray>();
-		public Dictionary<string, FloatArray>	mFloats		=new Dictionary<string,FloatArray>();
-		public Accessor							mAccessor;
-
-		public void Load(XmlReader r)
-		{
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;	//skip whitey
-				}
-				if(r.Name == "source")
-				{
-					return;
-				}
-				else if(r.Name == "Name_array")
-				{
-					if(r.AttributeCount > 0)
-					{
-						NameArray	na	=new NameArray();
-						r.MoveToFirstAttribute();
-						string naID	=r.Value;
-						na.Load(r);
-						mNames.Add(naID, na);
-					}
-				}
-				else if(r.Name == "float_array")
-				{
-					if(r.AttributeCount > 0)
-					{
-						r.MoveToFirstAttribute();
-						string faID	=r.Value;
-						FloatArray	fa	=new FloatArray();
-						fa.Load(r);
-						mFloats.Add(faID, fa);
-					}
-				}
-				else if(r.Name == "accessor")
-				{
-					mAccessor	=new Accessor();
-					mAccessor.Load(r);
-				}
-			}
-		}
-	}
-
-
-	public class Input
-	{
-		public string	mSemantic, mSource;
-		public int		mOffset, mSet;
-
-		public Type GetTypeForSemantic()
-		{
-			switch(mSemantic)
-			{
-				case "VERTEX":
-					return	typeof(Vector3);
-				case "NORMAL":
-					return	typeof(Vector3);
-				case "TEXCOORD":
-					return	typeof(Vector2);
-				case "COLOR":
-					return	typeof(Vector4);
-				default:
-					Debug.WriteLine("Warning! unknown input semantic!");
-					break;
-			}
-			return	typeof(object);	//wild guess?
-		}
-		public void Load(XmlReader r)
-		{
-			int	attCnt	=r.AttributeCount;
-
-			r.MoveToFirstAttribute();
-			while(attCnt > 0)
-			{
-				if(r.Name == "semantic")
-				{
-					mSemantic	=r.Value;
-				}
-				else if(r.Name == "offset")
-				{
-					int.TryParse(r.Value, out mOffset);
-				}
-				else if(r.Name == "source")
-				{
-					mSource	=r.Value;
-				}
-				else if(r.Name == "set")	//by Set!
-				{
-					int.TryParse(r.Value, out mSet);
-				}
-				r.MoveToNextAttribute();
-				attCnt--;
-			}
-		}
-	}
-
-	public class Joints
-	{
-		List<Input>	mInputs	=new List<Input>();
-
-		public void Load(XmlReader r)
-		{
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;	//skip whitey
-				}
-				if(r.Name == "input")
-				{
-					Input	inp	=new Input();
-					inp.Load(r);
-					mInputs.Add(inp);
-				}
-				else if(r.Name == "joints")
-				{
-					return;
-				}
-			}
-		}
-	}
-
-
-	public class VertexWeights
-	{
-		public List<Input>	mInputs				=new List<Input>();
-		public List<int>	mVertWeightCount	=new List<int>();	//number of bone influences per vertex
-		public List<int>	mVertWeightBones	=new List<int>();	//indexes of bones that correspond to the weight
-
-		public void Load(XmlReader r)
-		{
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;	//skip whitey
-				}
-				if(r.Name == "input")
-				{
-					Input	inp	=new Input();
-					inp.Load(r);
-					mInputs.Add(inp);
-				}
-				else if(r.Name == "vcount")
-				{
-					if(r.NodeType != XmlNodeType.EndElement)
-					{
-						r.Read();
-
-						string[] tokens	=r.Value.Split(' ');
-
-						//copy vertex weight counts
-						foreach(string tok in tokens)
-						{
-							int numInfluences;
-
-							if(int.TryParse(tok, out numInfluences))
-							{
-								mVertWeightCount.Add(numInfluences);
-							}
-						}
-					}
-				}
-				else if(r.Name == "v")
-				{
-					if(r.NodeType != XmlNodeType.EndElement)
-					{
-						r.Read();
-
-						string	[]tokens	=r.Value.Split(' ');
-
-						//copy vertex weight bones
-						foreach(string tok in tokens)
-						{
-							int boneIndex;
-
-							if(int.TryParse(tok, out boneIndex))
-							{
-								mVertWeightBones.Add(boneIndex);
-							}
-						}
-					}
-				}
-				else if(r.Name == "vertex_weights")
-				{
-					return;
-				}
-			}
-		}
-	}
-
-
-	public class Skin
-	{
-		public string						mSource;
-		public Matrix						mBindShapeMatrix;
-		public Dictionary<string, Source>	mSources	=new Dictionary<string,Source>();
-		public Joints						mJoints;
-		public VertexWeights				mVertWeights;
-
-		public void Load(XmlReader r)
-		{
-			if(r.AttributeCount > 0)
-			{
-				r.MoveToFirstAttribute();
-
-				mSource	=r.Value;
-			}
-
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;	//skip whitey
-				}
-
-				if(r.Name == "skin")
-				{
-					return;
-				}
-				else if(r.Name == "bind_shape_matrix")
-				{
-					if(r.NodeType == XmlNodeType.Element)
-					{
-						//skip to the guts
-						r.Read();
-
-						Collada.GetMatrixFromString(r.Value, out mBindShapeMatrix);
-					}
-				}
-				else if(r.Name == "joints")
-				{
-					mJoints	=new Joints();
-					mJoints.Load(r);
-				}
-				else if(r.Name == "source")
-				{
-					Source	src	=new Source();
-					r.MoveToFirstAttribute();
-					string	srcID	=r.Value;
-					src.Load(r);
-					mSources.Add(srcID, src);
-				}
-				else if(r.Name == "vertex_weights")
-				{
-					mVertWeights	=new VertexWeights();
-					mVertWeights.Load(r);
-				}
-			}
-		}
-	}
-
-
-	public class Controller
-	{
-		public Skin	mSkin;
-
-		public void Load(XmlReader r)
-		{
-			//read controller stuff
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;	//skip whitey
-				}
-
-				if(r.Name == "controller")
-				{
-					return;
-				}
-				else if(r.Name == "skin")
-				{
-					mSkin	=new Skin();
-					mSkin.Load(r);
-				}
-			}
-		}
-	}
-
-
-	public class InstanceMaterial
-	{
-		public	string	mSymbol, mTarget, mBindSemantic, mBindTarget;
-	}
-
-
-	public class SceneNode
-	{
-		public	string			mName, mSID, mType;
-		public	Vector3			mTranslation, mScale;
-		public	Vector4			mRotX, mRotY, mRotZ;
-
-		public	Dictionary<string, SceneNode>	mChildren	=new Dictionary<string, SceneNode>();
-
-		//skin instance stuff
-		public string	mInstanceControllerURL;
-		public string	mSkeleton;
-		public string	mInstanceGeometryURL;
-
-		public	List<InstanceMaterial>	mBindMaterials;
-
-		public SceneNode()
-		{
-			mBindMaterials	=new List<InstanceMaterial>();
-		}
-	}
-
-	public class Channel
-	{
-		public string	mSource;
-		public string	mTarget;
-	}
-
-	public class Sampler
-	{
-		List<Input>		mInputs	=new List<Input>();
-
-		public void Load(XmlReader r)
-		{
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;
-				}
-
-				if(r.Name == "input")
-				{
-					Input	inp	=new Input();
-					inp.Load(r);
-					mInputs.Add(inp);
-				}
-				else if(r.Name == "sampler")
-				{
-					return;
-				}
-			}
-		}
-	}
-
-	//animations on individual controllers
-	public class SubAnimation
-	{
-		public Dictionary<string, Source>	mSources	=new Dictionary<string,Source>();
-		public Dictionary<string, Sampler>	mSamplers	=new Dictionary<string,Sampler>();
-		public List<Channel>				mChannels	=new List<Channel>();
-
-		public void Load(XmlReader r)
-		{
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;
-				}
-
-				if(r.Name == "source")
-				{
-					Source	src	=new Source();
-					r.MoveToFirstAttribute();
-					string	srcID	=r.Value;
-					src.Load(r);
-					mSources.Add(srcID, src);
-				}
-				else if(r.Name == "sampler")
-				{
-					Sampler	samp	=new Sampler();
-					r.MoveToFirstAttribute();
-					string	sampID	=r.Value;
-					samp.Load(r);
-					mSamplers.Add(sampID, samp);
-				}
-				else if(r.Name == "channel")
-				{
-					Channel	chan	=new Channel();
-
-					int	attCnt	=r.AttributeCount;
-					r.MoveToFirstAttribute();
-					while(attCnt > 0)
-					{
-						if(r.Name == "source")
-						{
-							chan.mSource	=r.Value;
-						}
-						else if(r.Name == "target")
-						{
-							chan.mTarget	=r.Value;
-						}
-						r.MoveToNextAttribute();
-						attCnt--;
-					}
-					mChannels.Add(chan);
-				}
-				else if(r.Name == "animation")
-				{
-					return;
-				}
-			}
-		}
-	}
-
-	public class Animation
-	{
-		public string	mName;
-
-		public List<SubAnimation>	mSubAnims	=new List<SubAnimation>();
-
-		public void Load(XmlReader r)
-		{
-			r.MoveToNextAttribute();
-			mName	=r.Value;
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;
-				}
-
-				if(r.Name == "animation")
-				{
-					if(r.NodeType == XmlNodeType.EndElement)
-					{
-						return;
-					}
-
-					SubAnimation	sub	=new SubAnimation();
-					sub.Load(r);
-					mSubAnims.Add(sub);
-				}
-			}
-		}
-	}
-
-	//debug draw data
-	public class DrawChunk
-	{
-		public VertexBuffer			mVerts;
-		public IndexBuffer			mIndexs;
-		public VertexBuffer			mSkinData;
-		public VertexDeclaration	mVD;
-		public int					mNumVerts, mNumTriangles, mVertSize, mTexChannel;
-		public string				mTexName;
-	}
-
-	class ColladaEffect
-	{
-		public string	mName;
-		public string	mTextureID;
-		public int		mChannel;
-
-		public void Load(XmlReader r)
-		{
-			r.MoveToNextAttribute();
-			mName	=r.Value;
-
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;	//skip whitey
-				}
-				if(r.Name == "texture")
-				{
-					if(r.NodeType == XmlNodeType.Element)
-					{
-						r.MoveToFirstAttribute();
-						mTextureID	=r.Value;
-
-						r.MoveToNextAttribute();
-						int.TryParse(r.Value, out mChannel);
-					}
-				}
-				else if(r.Name == "effect")
-				{
-					return;
-				}
-			}
-		}
-	}
-
 	class Collada
 	{
 		//data from collada
@@ -1276,6 +18,7 @@ namespace Collada
 		private Dictionary<string, Animation>		mAnimations		=new Dictionary<string,Animation>();
 		private Dictionary<string, ColladaEffect>	mColladaEffects	=new Dictionary<string,ColladaEffect>();
 
+		//actual useful data for the game
 		private List<DrawChunk>	mChunks	=new List<DrawChunk>();
 
 		private Dictionary<string, Texture2D>	mTextures	=new Dictionary<string,Texture2D>();
@@ -1285,7 +28,53 @@ namespace Collada
 		{
 			Load(meshFileName);
 
-			BuildBuffers(g);
+			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
+			{
+				List<float> verts	=geo.Value.GetBaseVerts();
+
+				DrawChunk	cnk	=new DrawChunk();
+
+				cnk.CreateBaseVerts(verts);
+
+				cnk.SetGeometryID(geo.Key);
+
+				mChunks.Add(cnk);
+			}
+
+			foreach(KeyValuePair<string, Controller> cont in mControllers)
+			{
+				Skin	sk	=cont.Value.GetSkin();
+
+				foreach(DrawChunk cnk in mChunks)
+				{
+					if(cnk.mGeometryID == sk.GetGeometryID())
+					{
+						cnk.AddWeightsToBaseVerts(sk);
+					}
+				}
+			}
+
+			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
+			{
+				//find the matching drawchunk
+				foreach(DrawChunk cnk in mChunks)
+				{
+					if(cnk.mGeometryID == geo.Key)
+					{
+						List<int>	posIdxs		=geo.Value.GetPositionIndexs();
+						List<float>	norms		=geo.Value.GetNormals();
+						List<int>	normIdxs	=geo.Value.GetNormalIndexs();
+
+						cnk.AddNormalsToBaseVerts(posIdxs, norms, normIdxs);
+					}
+				}
+			}
+
+//			BuildBuffers(g);
+
+//			BuildBones(g);
+
+//			BuildWeights(g);
 
 			foreach(KeyValuePair<string, LibImage> li in mImages)
 			{
@@ -1299,22 +88,88 @@ namespace Collada
 			}
 		}
 		
-		//Getting the FieldInfo's is relatively expensive, you should come up
-		//with a way to cache them (by root object type and name) if speed matters.
-		public static void SetValue(Array a, int pos, string fieldName, object value)
+		//put all the wieghts and indices into the vbuffer
+		/*
+		public void BuildWeights(GraphicsDevice g)
 		{
-			var element = a.GetValue(pos);
-			var elementType = element.GetType();
-			FieldInfo fi = elementType.GetField(fieldName);
-			fi.SetValue(element, value);
-			a.SetValue(element, pos);
-		}
+			foreach(DrawChunk dc in mChunks)
+			{
+				//get the geom id
+				string	key	=dc.mGeometryID;
+
+				//add a # on the front
+				key	=key.Insert(0, "#");
+
+				//match this to the right controller
+				Controller	cnt	=null;
+				foreach(KeyValuePair<string, Controller> cont in mControllers)
+				{
+					if(cont.Value.mSkin.mSource == key)
+					{
+						//found it
+						cnt	=cont.Value;
+						break;
+					}
+				}
+
+				//grab the source key for the joints array
+				string	keyName	="";
+				for(int i=0;i < cnt.mSkin.mJoints.mInputs.Count;i++)
+				{
+					if(cnt.mSkin.mJoints.mInputs[i].mSemantic == "JOINT")
+					{
+						keyName	=cnt.mSkin.mJoints.mInputs[i].mSource;
+					}
+				}
+
+				//strip off the # in the key
+				keyName	=keyName.Substring(1);
+
+				//replace -joints with -Weights, kinda lame
+				keyName	=keyName.Replace("-Joints", "-Weights");
+
+				//find the weights
+				Source	src	=cnt.mSkin.mSources[keyName];
+			}
+		}*/
+
+		/*
+		private void	BuildBones(GraphicsDevice g)
+		{
+			//build a map that goes from bone name to index
+			foreach(KeyValuePair<string, Controller> cont in mControllers)
+			{
+				cont.Value.BuildBones(g);
+			}
+
+			//copy bones into drawchunks
+			foreach(DrawChunk dc in mChunks)
+			{
+				string	key	=dc.mGeometryID;
+
+				//add a # on the front
+				key	=key.Insert(0, "#");
+
+				//match this to the right controller
+				foreach(KeyValuePair<string, Controller> cont in mControllers)
+				{
+					if(cont.Value.mSkin.mSource == key)
+					{
+						//ref bones, copy would be better TODO
+						dc.mBones	=cont.Value.mBones;
+						break;
+					}
+				}
+			}
+		}*/
 		
+		/*
 		private	void	BuildBuffers(GraphicsDevice g)
 		{
 			foreach(KeyValuePair<string, Geometry> geom in mGeometries)
 			{
-				geom.Value.BuildBuffers(g, mChunks);
+				//pass down the geometry id for the chunkage
+				geom.Value.BuildBuffers(g, geom.Key, mChunks);
 			}
 
 			//fix up materials
@@ -1331,11 +186,25 @@ namespace Collada
 						dc.mTexChannel	=mColladaEffects[fxname].mChannel;
 
 						//chop off -image on the end
-						if(dc.mTexName.EndsWith("-image"))
+						if(dc.mTexName != null && dc.mTexName.EndsWith("-image"))
 						{
 							dc.mTexName	=dc.mTexName.Remove(dc.mTexName.IndexOf("-image"));
 						}
 					}
+				}
+			}
+		}*/
+
+
+		//copies bones into the shader
+		public void UpdateBones(GraphicsDevice g, Effect fx)
+		{
+			foreach(DrawChunk dc in mChunks)
+			{
+				//some chunks are never really drawn
+				if(dc.mBones != null)
+				{
+					fx.Parameters["mBones"].SetValue(dc.mBones);
 				}
 			}
 		}
@@ -1472,13 +341,16 @@ namespace Collada
 
 				if(r.Name == "instance_effect")
 				{
-					r.MoveToFirstAttribute();
+					if(r.AttributeCount > 0)
+					{
+						r.MoveToFirstAttribute();
 
-					Material m			=new Material();
-					m.mName				=matName;
-					m.mInstanceEffect	=r.Value;
+						Material m			=new Material();
+						m.mName				=matName;
+						m.mInstanceEffect	=r.Value;
 
-					mMaterials.Add(matID, m);
+						mMaterials.Add(matID, m);
+					}
 				}
 			}
 		}
@@ -1583,7 +455,7 @@ namespace Collada
 						string	id	=r.Value;
 
 						SceneNode	root	=new SceneNode();
-						LoadNode(r, root);
+						root.LoadNode(r);
 
 						mRootNodes.Add(id, root);
 					}
@@ -1895,204 +767,6 @@ namespace Collada
 		}
 
 
-		public void LoadNode(XmlReader r, SceneNode n)
-		{
-			r.MoveToFirstAttribute();
-
-			int attcnt	=r.AttributeCount;
-
-			while(attcnt > 0)
-			{
-				//look for valid attributes for nodes
-				if(r.Name == "name")
-				{
-					n.mName	=r.Value;
-				}
-				else if(r.Name == "sid")
-				{
-					n.mSID	=r.Value;
-				}
-				else if(r.Name == "type")
-				{
-					n.mType	=r.Value;
-				}
-
-				attcnt--;
-				r.MoveToNextAttribute();
-			}
-
-			InstanceMaterial	m		=null;
-			bool				bEmpty	=false;
-			
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;
-				}
-
-				if(r.Name == "translate")
-				{
-					int attcnt2	=r.AttributeCount;
-
-					if(attcnt2 > 0)
-					{
-						//skip to the next element, the actual value
-						r.Read();
-
-						GetVectorFromString(r.Value,out n.mTranslation);
-					}
-				}
-				else if(r.Name == "instance_geometry")
-				{
-					if(r.AttributeCount > 0)
-					{
-						r.MoveToFirstAttribute();
-						n.mInstanceGeometryURL	=r.Value;
-					}
-				}
-				else if(r.Name == "scale")
-				{
-					int attcnt2	=r.AttributeCount;
-
-					if(attcnt2 > 0)
-					{
-						//skip to the next element, the actual value
-						r.Read();
-
-						GetVectorFromString(r.Value, out n.mScale);
-					}
-				}
-				else if(r.Name == "instance_material")
-				{
-					if(r.AttributeCount > 0)
-					{
-						bEmpty	=r.IsEmptyElement;
-
-						r.MoveToFirstAttribute();
-
-						m	=new InstanceMaterial();
-
-						if(r.Name == "symbol")
-						{
-							m.mSymbol	=r.Value;
-						}
-						else if(r.Name == "target")
-						{
-							m.mTarget	=r.Value;
-						}
-
-						r.MoveToNextAttribute();
-
-						if(r.Name == "symbol")
-						{
-							m.mSymbol	=r.Value;
-						}
-						else if(r.Name == "target")
-						{
-							m.mTarget	=r.Value;
-						}
-						if(bEmpty)
-						{
-							n.mBindMaterials.Add(m);
-						}
-					}
-					else
-					{
-						if(!bEmpty)
-						{
-							n.mBindMaterials.Add(m);
-						}
-					}
-				}
-				else if(r.Name == "bind")
-				{
-					r.MoveToFirstAttribute();
-
-					if(r.Name == "semantic")
-					{
-						m.mBindSemantic	=r.Value;
-					}
-					else if(r.Name == "target")
-					{
-						m.mBindTarget	=r.Value;
-					}
-
-					r.MoveToNextAttribute();
-
-					if(r.Name == "semantic")
-					{
-						m.mBindSemantic	=r.Value;
-					}
-					else if(r.Name == "target")
-					{
-						m.mBindTarget	=r.Value;
-					}
-				}
-				else if(r.Name == "instance_controller")
-				{
-					if(r.AttributeCount > 0)
-					{
-						r.MoveToFirstAttribute();
-
-						n.mInstanceControllerURL	=r.Value;
-					}
-				}
-				else if(r.Name == "skeleton")
-				{
-					r.Read();
-					n.mSkeleton	=r.Value;
-				}
-				else if(r.Name == "rotate")
-				{
-					int attcnt2	=r.AttributeCount;
-
-					if(attcnt2 > 0)
-					{
-						r.MoveToFirstAttribute();
-
-						string	axis	=r.Value;
-
-						r.Read();	//skip to vec4 value
-
-						//check the sid for which axis
-						if(axis == "rotateX")
-						{
-							GetVectorFromString(r.Value, out n.mRotX);
-						}
-						else if(axis == "rotateY")
-						{
-							GetVectorFromString(r.Value, out n.mRotY);
-						}
-						else if(axis == "rotateZ")
-						{
-							GetVectorFromString(r.Value, out n.mRotZ);
-						}
-					}
-				}
-				else if(r.Name == "node")
-				{
-					int attcnt2	=r.AttributeCount;
-
-					if(attcnt2 > 0)
-					{
-						r.MoveToFirstAttribute();
-						string	id	=r.Value;
-
-						SceneNode child	=new SceneNode();
-						LoadNode(r, child);
-
-						n.mChildren.Add(id, child);
-					}
-					else
-					{
-						return;
-					}
-				}
-			}
-		}
-
-
 		public static void GetVectorFromString(string str, out Vector3 vec)
 		{
 			string[] tokens	=str.Split(' ');
@@ -2158,42 +832,3 @@ namespace Collada
 		}
 	}
 }
-
-
-
-/*
-//Move to fist element
-r.MoveToElement();
-				
-Console.WriteLine("XmlReader Properties Test");
-Console.WriteLine("===================");
-				
-//Read this element's properties and display them on console
-Console.WriteLine("Name:" + r.Name);
-Console.WriteLine("Base URI:" + r.BaseURI);
-Console.WriteLine("Local Name:" + r.LocalName);
-Console.WriteLine("Attribute Count:" + r.AttributeCount.ToString());
-Console.WriteLine("Depth:" + r.Depth.ToString());
-//Console.WriteLine("Line Number:" + r.LineNumber.ToString());
-Console.WriteLine("Node Type:" + r.NodeType.ToString());
-Console.WriteLine("Attribute Count:" + r.Value.ToString());
-						//create a dynamic type based on the collada
-						//input semantics
-						AssemblyName	an	=new AssemblyName("Assgoblins");
-						AssemblyBuilder	ab	=AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
-						ModuleBuilder	mb	=ab.DefineDynamicModule("Assgoblins");
-						TypeBuilder		tb	=mb.DefineType("CustomVertex",
-												TypeAttributes.Public |
-												TypeAttributes.SequentialLayout |
-												TypeAttributes.Serializable,
-												typeof(ValueType));
-
-						//define the custom struct
-						foreach(Input inp in p.mInputs)
-						{
-							tb.DefineField(inp.mSemantic, inp.GetTypeForSemantic(), FieldAttributes.Public);
-						}
-						var	CustomVertex	=tb.CreateType();
-						var	CVArray	=Array.CreateInstance(CustomVertex.GetType(), size);
-						//dynArray.SetValue(dynamicType1Instance1, 0);
-*/
