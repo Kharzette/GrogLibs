@@ -14,6 +14,13 @@ namespace ColladaConvert
 		private List<Param>	mParams	=new List<Param>();
 
 
+		public bool IsTexCoord()
+		{
+			return	(mParams[0].mName == "S"
+				&& mParams[1].mName == "T");
+		}
+
+
 		public bool IsPosition()
 		{
 			if(mStride == 3 && mParams.Count == 3)

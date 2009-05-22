@@ -39,6 +39,12 @@ namespace ColladaConvert
 		}
 
 
+		public bool IsTexCoord()
+		{
+			return	(mSemantic == "TEXCOORD");
+		}
+
+
 		public bool IsNormal()
 		{
 			return	(mSemantic == "NORMAL");

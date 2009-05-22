@@ -27,15 +27,33 @@ namespace ColladaConvert
 		}
 
 
+		public List<float> GetTexCoords()
+		{
+			return	mMesh.GetTexCoords();
+		}
+
+
 		public List<int> GetNormalIndexs()
 		{
 			return	mMesh.GetNormalIndexs();
 		}
 
 
+		public List<int> GetTexCoordIndexs()
+		{
+			return	mMesh.GetTexCoordIndexs();
+		}
+
+
 		public List<int> GetPositionIndexs()
 		{
 			return	mMesh.GetPositionIndexs();
+		}
+
+
+		public List<int> GetVertCounts()
+		{
+			return	mMesh.GetVertCounts();
 		}
 
 

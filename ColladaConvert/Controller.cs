@@ -42,7 +42,7 @@ namespace ColladaConvert
 			return	mSkin;
 		}
 
-		/*
+		
 		public void BuildBones(GraphicsDevice g)
 		{
 			int	idx	=0;
@@ -111,6 +111,6 @@ namespace ColladaConvert
 				//copy matrix to bone list
 				mBones[i]	=mat;
 			}
-		}*/
+		}
 	}
 }

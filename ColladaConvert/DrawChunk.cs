@@ -68,6 +68,7 @@ namespace ColladaConvert
 
 		private TrackedVert		[]mBaseVerts;
 		private	int				mNumBaseVerts;
+		private List<ushort>	mIndexList	=new List<ushort>();
 
 
 		//this will build a base list of verts
@@ -98,13 +99,22 @@ namespace ColladaConvert
 			}
 
 			restart:
-			for(int i=0;i < mNumBaseVerts;i++)
+			for(int i=0;i < verts.Count;i++)
 			{
-				for(int j=0;j < mNumBaseVerts;j++)
+				for(int j=0;j < verts.Count;j++)
 				{
+					if(i == j)
+					{
+						continue;
+					}
 					if(verts[i] == verts[j])
 					{
 						verts.RemoveAt(j);
+
+						//search through the polygon
+						//index list to remove any instances
+						//of j and replace them with i
+						ReplaceIndex((ushort)j, (ushort)i);
 						goto restart;
 					}
 				}
@@ -175,6 +185,7 @@ namespace ColladaConvert
 			//track the polygon in use
 			int	polyIndex	=0;
 			int	curVert		=0;
+			int	vCnt		=vertCounts[polyIndex];
 			for(int i=0;i < posIdxs.Count;i++)
 			{
 				int	pidx	=posIdxs[i];
@@ -194,19 +205,104 @@ namespace ColladaConvert
 				tv.Normal0.Z	=norms[2 + nidx * 3];
 
 				//copy texcoords
-				tv.TexCoord0.X	=texIdxs[tidx * 2];
-				tv.TexCoord0.Y	=texIdxs[1 + tidx * 2];
+				tv.TexCoord0.X	=texCoords[tidx * 2];
+				tv.TexCoord0.Y	=texCoords[1 + tidx * 2];
 
 				verts.Add(tv);
+				mIndexList.Add((ushort)(verts.Count - 1));
+				curVert++;
 
-
+				if(curVert >= vCnt)
+				{
+					polyIndex++;
+					if(polyIndex >= vertCounts.Count)
+					{
+						break;
+					}
+					vCnt	=vertCounts[polyIndex];
+					curVert	=0;
+				}
 			}
+
+			//dump verts back into baseverts
+			mBaseVerts		=new TrackedVert[verts.Count];
+			mNumBaseVerts	=verts.Count;
+			for(int i=0;i < verts.Count;i++)
+			{
+				mBaseVerts[i]	=verts[i];
+			}
+			EliminateDuplicateVerts();
+
+			mNumVerts		=verts.Count;
+			mNumTriangles	=vertCounts.Count;
 		}
 
 
 		public void SetGeometryID(string id)
 		{
 			mGeometryID	=id;
+		}
+
+
+		private void ReplaceIndex(ushort find, ushort replace)
+		{
+			for(int i=0;i < mIndexList.Count;i++)
+			{
+				if(mIndexList[i] == find)
+				{
+					mIndexList[i]	=replace;
+				}
+			}
+		}
+
+
+		//take the munged data and stuff it into
+		//the vertex and index buffers
+		public void BuildBuffers(GraphicsDevice gd)
+		{
+			VPosNormTexAnim	[]verts	=new VPosNormTexAnim[mNumBaseVerts];
+
+			for(int i=0;i < mNumBaseVerts;i++)
+			{
+				verts[i].BoneIndex0		=mBaseVerts[i].BoneIndex0;
+				verts[i].BoneWeights	=mBaseVerts[i].BoneWeights;
+				verts[i].Normal0		=mBaseVerts[i].Normal0;
+				verts[i].Position0		=mBaseVerts[i].Position0;
+				verts[i].TexCoord0		=mBaseVerts[i].TexCoord0;
+			}
+
+			mVerts	=new VertexBuffer(gd,
+						64 * mNumBaseVerts,
+						BufferUsage.WriteOnly);
+
+			mVerts.SetData<VPosNormTexAnim>(verts);
+
+			ushort	[]idxs	=new ushort[mIndexList.Count];
+
+			for(int i=0;i < mIndexList.Count;i++)
+			{
+				idxs[i]	=mIndexList[i];
+			}
+
+			mIndexs	=new IndexBuffer(gd,
+						2 * mIndexList.Count,
+						BufferUsage.WriteOnly,
+						IndexElementSize.SixteenBits);
+
+			VertexElement[] ve	=new VertexElement[5];
+
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
+			ve[2]	=new VertexElement(0, 24, VertexElementFormat.Vector4,
+				VertexElementMethod.Default, VertexElementUsage.BlendIndices, 0);
+			ve[3]	=new VertexElement(0, 40, VertexElementFormat.Vector4,
+				VertexElementMethod.Default, VertexElementUsage.BlendWeight, 0);
+			ve[4]	=new VertexElement(0, 56, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+
+			mVD	=new VertexDeclaration(gd, ve);
 		}
 	}
 }

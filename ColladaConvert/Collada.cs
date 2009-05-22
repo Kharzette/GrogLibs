@@ -64,8 +64,14 @@ namespace ColladaConvert
 						List<int>	posIdxs		=geo.Value.GetPositionIndexs();
 						List<float>	norms		=geo.Value.GetNormals();
 						List<int>	normIdxs	=geo.Value.GetNormalIndexs();
+						List<float>	texCoords	=geo.Value.GetTexCoords();
+						List<int>	texIdxs		=geo.Value.GetTexCoordIndexs();
+						List<int>	vertCounts	=geo.Value.GetVertCounts();
 
-						cnk.AddNormalsToBaseVerts(posIdxs, norms, normIdxs);
+						cnk.AddNormTexByPoly(posIdxs, norms, normIdxs,
+							texCoords, texIdxs, vertCounts);
+
+						cnk.BuildBuffers(g);
 					}
 				}
 			}

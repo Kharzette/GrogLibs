@@ -38,6 +38,18 @@ namespace ColladaConvert
 		}
 
 
+		public bool IsTexCoord()
+		{
+			if(mFloatID == null)
+			{
+				return	false;
+			}
+
+			//not really sure this is a valid way
+			return	mAccessor.IsTexCoord();
+		}
+
+
 		public List<float>	GetFloatArray()
 		{
 			return	mFloats;

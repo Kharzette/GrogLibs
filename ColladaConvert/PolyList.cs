@@ -17,6 +17,12 @@ namespace ColladaConvert
 		private	List<int>		mVertCounts	=new List<int>();
 
 
+		public List<int> GetVertCounts()
+		{
+			return	mVertCounts;
+		}
+
+
 		public List<int> GetPositionIndexs()
 		{
 			//find which index is pos
@@ -37,6 +43,20 @@ namespace ColladaConvert
 			for(int i=0;i < mInputs.Count;i++)
 			{
 				if(mInputs[i].IsNormal())
+				{
+					return	mIndexs[i];
+				}
+			}
+			return	null;
+		}
+
+
+		public List<int> GetTexCoordIndexs()
+		{
+			//find which index is tex
+			for(int i=0;i < mInputs.Count;i++)
+			{
+				if(mInputs[i].IsTexCoord())
 				{
 					return	mIndexs[i];
 				}

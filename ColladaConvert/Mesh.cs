@@ -43,6 +43,19 @@ namespace ColladaConvert
 		}
 
 
+		public List<float> GetTexCoords()
+		{
+			foreach(KeyValuePair<string, Source> src in mSources)
+			{
+				if(src.Value.IsTexCoord())
+				{
+					return	src.Value.GetFloatArray();
+				}
+			}
+			return	null;
+		}
+
+
 		public List<int> GetPositionIndexs()
 		{
 			//see if this file is into polys or polylists
@@ -67,6 +80,34 @@ namespace ColladaConvert
 			else
 			{
 				return	mPolyList.GetNormalIndexs();
+			}
+		}
+
+
+		public List<int> GetTexCoordIndexs()
+		{
+			//see if this file is into polys or polylists
+			if(mPolys.Count > 0)
+			{
+				return	null;	//TODO: finish this
+			}
+			else
+			{
+				return	mPolyList.GetTexCoordIndexs();
+			}
+		}
+
+
+		public List<int> GetVertCounts()
+		{
+			//see if this file is into polys or polylists
+			if(mPolys.Count > 0)
+			{
+				return	null;	//TODO: finish this
+			}
+			else
+			{
+				return	mPolyList.GetVertCounts();
 			}
 		}
 
