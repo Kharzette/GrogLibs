@@ -22,7 +22,9 @@ namespace ColladaConvert
 			}
 
 			//not really sure this is a valid way
-			return	mFloatID.Contains("positions-array");
+			return	(mFloatID.Contains("positions-array")
+				|| mFloatID.Contains("Position-array")
+				|| mFloatID.Contains("pv-array"));
 		}
 
 
@@ -53,6 +55,12 @@ namespace ColladaConvert
 		public List<float>	GetFloatArray()
 		{
 			return	mFloats;
+		}
+
+
+		public List<string>	GetNameArray()
+		{
+			return	mNames;
 		}
 
 

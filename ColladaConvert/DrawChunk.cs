@@ -231,10 +231,12 @@ namespace ColladaConvert
 			{
 				mBaseVerts[i]	=verts[i];
 			}
-			EliminateDuplicateVerts();
+			//EliminateDuplicateVerts();
+
+			Triangulate(vertCounts);
 
 			mNumVerts		=verts.Count;
-			mNumTriangles	=vertCounts.Count;
+			mNumTriangles	=mIndexList.Count / 2;
 		}
 
 
@@ -252,6 +254,34 @@ namespace ColladaConvert
 				{
 					mIndexList[i]	=replace;
 				}
+			}
+		}
+
+
+		private void Triangulate(List<int> vertCounts)
+		{
+			List<ushort>	newIdxs	=new List<ushort>();
+
+			int	curIdx	=0;
+			for(int i=0;i < vertCounts.Count;i++)
+			{
+				//see how many verts in this polygon
+				int	vCount	=vertCounts[i];
+
+				for(int j=1;j < (vCount - 1);j++)
+				{
+					newIdxs.Add(mIndexList[curIdx]);
+					newIdxs.Add(mIndexList[j + curIdx]);
+					newIdxs.Add(mIndexList[j + 1 + curIdx]);
+				}
+				curIdx	+=vCount;
+			}
+
+			//dump back into regular list
+			mIndexList.Clear();
+			for(int i=newIdxs.Count - 1;i >= 0;i--)
+			{
+				mIndexList.Add(newIdxs[i]);
 			}
 		}
 
@@ -289,6 +319,8 @@ namespace ColladaConvert
 						BufferUsage.WriteOnly,
 						IndexElementSize.SixteenBits);
 
+			mIndexs.SetData<ushort>(idxs);
+
 			VertexElement[] ve	=new VertexElement[5];
 
 			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
@@ -303,6 +335,8 @@ namespace ColladaConvert
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
 
 			mVD	=new VertexDeclaration(gd, ve);
+
+			mVertSize	=64;
 		}
 	}
 }

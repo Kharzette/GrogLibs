@@ -27,6 +27,24 @@ namespace ColladaConvert
 		}
 
 
+		public Matrix GetMatrix()
+		{
+			Matrix	mat	=Matrix.Identity;
+			mat.Translation	=mTranslation;
+			mat.M11			=mRotX.X;
+			mat.M12			=mRotX.Y;
+			mat.M13			=mRotX.Z;
+			mat.M21			=mRotY.X;
+			mat.M22			=mRotY.Y;
+			mat.M23			=mRotY.Z;
+			mat.M31			=mRotZ.X;
+			mat.M32			=mRotZ.Y;
+			mat.M33			=mRotZ.Z;
+
+			return	mat;
+		}
+
+
 		public void LoadNode(XmlReader r)
 		{
 			r.MoveToFirstAttribute();

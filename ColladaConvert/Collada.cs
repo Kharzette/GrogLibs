@@ -139,13 +139,13 @@ namespace ColladaConvert
 			}
 		}*/
 
-		/*
+		
 		private void	BuildBones(GraphicsDevice g)
 		{
-			//build a map that goes from bone name to index
+			//build bones for each controller
 			foreach(KeyValuePair<string, Controller> cont in mControllers)
 			{
-				cont.Value.BuildBones(g);
+				cont.Value.BuildBones(g, mRootNodes);
 			}
 
 			//copy bones into drawchunks
@@ -159,15 +159,15 @@ namespace ColladaConvert
 				//match this to the right controller
 				foreach(KeyValuePair<string, Controller> cont in mControllers)
 				{
-					if(cont.Value.mSkin.mSource == key)
+					Skin	sk	=cont.Value.GetSkin();
+					if(sk.GetGeometryID() == key)
 					{
-						//ref bones, copy would be better TODO
-						dc.mBones	=cont.Value.mBones;
+						cont.Value.CopyBonesTo(dc.mBones);
 						break;
 					}
 				}
 			}
-		}*/
+		}
 		
 		/*
 		private	void	BuildBuffers(GraphicsDevice g)
@@ -222,9 +222,9 @@ namespace ColladaConvert
 //			foreach(DrawChunk dc in mChunks)
 			{
 				DrawChunk	dc	=mChunks[i];
-				g.VertexDeclaration	=dc.mVD;
-				g.Indices			=dc.mIndexs;
 				g.Vertices[0].SetSource(dc.mVerts, 0, dc.mVertSize);
+				g.Indices			=dc.mIndexs;
+				g.VertexDeclaration	=dc.mVD;
 
 				Matrix	loc	=Matrix.Identity;
 

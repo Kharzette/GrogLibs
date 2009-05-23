@@ -10,6 +10,20 @@ namespace ColladaConvert
 	{
 		private List<Input>	mInputs	=new List<Input>();
 
+
+		public string GetJointKey()
+		{
+			foreach(Input inp in mInputs)
+			{
+				if(inp.IsJoint())
+				{
+					return	inp.GetKey();
+				}
+			}
+			return	null;
+		}
+
+
 		public void Load(XmlReader r)
 		{
 			while(r.Read())

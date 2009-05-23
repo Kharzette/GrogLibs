@@ -22,6 +22,17 @@ namespace ColladaConvert
 		}
 
 
+		public List<string> GetJointNameArray()
+		{
+			//look into source with the index into the weight array
+			string	key	=mSource.Substring(1) + "-skin-joints";
+
+			Source	src	=mSources[key];
+
+			return	src.GetNameArray();
+		}
+
+
 		//returns the infIndexd bone influencing vertex at vertIndex
 		public int GetBoneIndexForVertIndex(int vertIndex, int infIndex)
 		{

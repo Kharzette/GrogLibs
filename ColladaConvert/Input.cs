@@ -33,6 +33,12 @@ namespace ColladaConvert
 		}
 
 
+		public bool IsJoint()
+		{
+			return	(mSemantic == "JOINT");
+		}
+
+
 		public bool IsVertex()
 		{
 			return	(mSemantic == "VERTEX");
@@ -48,6 +54,12 @@ namespace ColladaConvert
 		public bool IsNormal()
 		{
 			return	(mSemantic == "NORMAL");
+		}
+
+
+		public string GetKey()
+		{
+			return	mSemantic;
 		}
 
 

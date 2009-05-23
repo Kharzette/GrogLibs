@@ -8,8 +8,8 @@ namespace ColladaConvert
 {
 	public class Controller
 	{
-		private Skin	mSkin;
-		private Matrix	[]mBones;
+		private Skin			mSkin;
+		private List<Matrix>	mBones	=new List<Matrix>();
 
 		private Dictionary<string, Int32>	mBIdxMap	=new Dictionary<string,int>();
 
@@ -42,74 +42,30 @@ namespace ColladaConvert
 			return	mSkin;
 		}
 
-		
-		public void BuildBones(GraphicsDevice g)
+
+		public void CopyBonesTo(Matrix []bones)
 		{
-			int	idx	=0;
+			bones	=new Matrix[mBones.Count];
 
-			//grab the source key for the joints array
-			string	keyName	="";
-			for(int i=0;i < mSkin.mJoints.mInputs.Count;i++)
+			for(int i=0;i < mBones.Count;i++)
 			{
-				if(mSkin.mJoints.mInputs[i].mSemantic == "JOINT")
+				bones[i]	=mBones[i];
+			}
+		}
+
+		
+		public void BuildBones(GraphicsDevice g, Dictionary<string, SceneNode> nodes)
+		{
+			//grab the list of bones from the skin
+			List<string>	jointNames	=mSkin.GetJointNameArray();
+
+			//find each bone and place it in our arrays
+			foreach(string jn in jointNames)
+			{
+				if(nodes.ContainsKey(jn))
 				{
-					keyName	=mSkin.mJoints.mInputs[i].mSource;
+					mBones.Add(nodes[jn].GetMatrix());
 				}
-			}
-
-			//strip off the # in the key
-			keyName	=keyName.Substring(1);
-
-			//find the bone name list via the keyName
-			Source	src	=mSkin.mSources[keyName];
-
-			foreach(string name in src.mNames)
-			{
-				mBIdxMap.Add(name, idx++);
-			}
-
-			//alloc bones
-			mBones	=new Matrix[idx];
-
-			//grab the matrix key
-			for(int i=0;i < mSkin.mJoints.mInputs.Count;i++)
-			{
-				if(mSkin.mJoints.mInputs[i].mSemantic == "INV_BIND_MATRIX")
-				{
-					keyName	=mSkin.mJoints.mInputs[i].mSource;
-				}
-			}
-
-			//strip off the # in the key
-			keyName	=keyName.Substring(1);
-
-			//find the bone list via the keyName
-			src	=mSkin.mSources[keyName];
-
-			Matrix	mat;
-			string	arr	=keyName + "-array";
-			for(int i=0;i < idx;i++)
-			{
-				int	fidx	=i * 16;
-				mat.M11	=src.mFloats[0 + fidx];
-				mat.M12	=src.mFloats[1 + fidx];
-				mat.M13	=src.mFloats[2 + fidx];
-				mat.M14	=src.mFloats[3 + fidx];
-				mat.M21	=src.mFloats[4 + fidx];
-				mat.M22	=src.mFloats[5 + fidx];
-				mat.M23	=src.mFloats[6 + fidx];
-				mat.M24	=src.mFloats[7 + fidx];
-				mat.M31	=src.mFloats[8 + fidx];
-				mat.M32	=src.mFloats[9 + fidx];
-				mat.M33	=src.mFloats[10 + fidx];
-				mat.M34	=src.mFloats[11 + fidx];
-				mat.M41	=src.mFloats[12 + fidx];
-				mat.M42	=src.mFloats[13 + fidx];
-				mat.M43	=src.mFloats[14 + fidx];
-				mat.M44	=src.mFloats[15 + fidx];
-
-				//copy matrix to bone list
-				mBones[i]	=mat;
 			}
 		}
 	}

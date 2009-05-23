@@ -18,6 +18,10 @@ namespace ColladaConvert
 		SpriteBatch				mSpriteBatch;
 		Collada					mCollada;
 		GraphicsDeviceManager	mGDM;
+		VertexBuffer			mVB;
+		VertexDeclaration		mVDecl;
+		IndexBuffer				mIB;
+		Effect					mFX;
 
 		private Effect			mTestEffect;
 
@@ -35,6 +39,9 @@ namespace ColladaConvert
 		//cam / player stuff will move later
 		private Vector3	mCamPos, mDotPos;
 		private float	mPitch, mYaw, mRoll;
+
+		private	Texture2D	mDesu;
+		private	Vector3		mLightDir;
 
 
 		public ColladaConvert()
@@ -71,9 +78,68 @@ namespace ColladaConvert
 		/// </summary>
 		protected override void LoadContent()
 		{
+			//load shader
+			mFX		=Content.Load<Effect>("Simple");
+
 			mTestEffect	=Content.Load<Effect>("VPosNormTexAnim");
-			mCollada	=new Collada("content/cyl.dae", GraphicsDevice);
+			mCollada	=new Collada("content/beach.dae", GraphicsDevice);
+//			mCollada	=new Collada("content/hero.dae", GraphicsDevice);
 //			mCollada = new Collada("content/WackyWalk.dae", GraphicsDevice);
+			mDesu	=Content.Load<Texture2D>("desu");
+
+			Point	topLeft, bottomRight;
+			topLeft.X		=-500;
+			topLeft.Y		=-500;
+			bottomRight.X	=500;
+			bottomRight.Y	=500;
+
+			//fill in some verts, just a simple quad
+			VertexPositionNormalTexture	[]verts	=new VertexPositionNormalTexture[4];
+			verts[0].Position.X	=topLeft.X;
+			verts[1].Position.X	=bottomRight.X;
+			verts[2].Position.X	=topLeft.X;
+			verts[3].Position.X	=bottomRight.X;
+
+			verts[0].Position.Y	=topLeft.Y;
+			verts[1].Position.Y	=topLeft.Y;
+			verts[2].Position.Y	=bottomRight.Y;
+			verts[3].Position.Y	=bottomRight.Y;
+
+			verts[0].TextureCoordinate	=Vector2.UnitY;
+			verts[1].TextureCoordinate	=Vector2.UnitX + Vector2.UnitY;
+			verts[3].TextureCoordinate	=Vector2.UnitX;
+
+			//set up a simple vertex element
+			VertexElement	[]ve	=new VertexElement[3];
+
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+						VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector3,
+						VertexElementMethod.Default, VertexElementUsage.Normal, 0);
+			ve[2]	=new VertexElement(0, 24, VertexElementFormat.Vector2,
+						VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+
+			//create vertex declaration
+			mVDecl	=new VertexDeclaration(mGDM.GraphicsDevice, ve);
+
+			//create vertex and index buffers
+			mVB	=new VertexBuffer(mGDM.GraphicsDevice, 32 * 4, BufferUsage.WriteOnly);
+			mIB	=new IndexBuffer(mGDM.GraphicsDevice, 2 * 6, BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
+
+			//put our data into the vertex buffer
+			mVB.SetData<VertexPositionNormalTexture>(verts);
+
+			//mark the indexes
+			UInt16	[]ind	=new ushort[6];
+			ind[0]	=0;
+			ind[1]	=1;
+			ind[2]	=2;
+			ind[3]	=2;
+			ind[4]	=1;
+			ind[5]	=3;
+
+			//fill in index buffer
+			mIB.SetData<UInt16>(ind);
 
 			InitializeEffect();
 		}
@@ -92,7 +158,7 @@ namespace ColladaConvert
 		{
 			mLastMouseState         =mCurrentMouseState;
 			mLastGamePadState       =mCurrentGamePadState;
-			//mCurrentGamePadState    =GamePad.GetState(PlayerIndex.One);
+			mCurrentGamePadState    =GamePad.GetState(PlayerIndex.One);
 			mCurrentKeyboardState   =Keyboard.GetState();
 			mCurrentMouseState      =Mouse.GetState();
 		}
@@ -102,10 +168,10 @@ namespace ColladaConvert
 		{
 			// Compute camera matrices.
 
-			mViewMatrix = Matrix.CreateTranslation(mCamPos) *
-			Matrix.CreateRotationY(MathHelper.ToRadians(mYaw)) *
-			Matrix.CreateRotationX(MathHelper.ToRadians(mPitch)) *
-			Matrix.CreateRotationZ(MathHelper.ToRadians(mRoll));
+			mViewMatrix	=Matrix.CreateTranslation(mCamPos) *
+				Matrix.CreateRotationY(MathHelper.ToRadians(mYaw)) *
+				Matrix.CreateRotationX(MathHelper.ToRadians(mPitch)) *
+				Matrix.CreateRotationZ(MathHelper.ToRadians(mRoll));
 			mProjectionMatrix   =Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
 										GraphicsDevice.DisplayMode.AspectRatio,
 										1,
@@ -131,6 +197,7 @@ namespace ColladaConvert
 			mTestEffect.Parameters["mLightColor"].SetValue(lightColor);
 			mTestEffect.Parameters["mLightDirection"].SetValue(lightDir);
 			mTestEffect.Parameters["mAmbientColor"].SetValue(ambColor);
+			mTestEffect.Parameters["mTexture0"].SetValue(mDesu);
 		}
 
 		/// <summary>
@@ -149,6 +216,26 @@ namespace ColladaConvert
 			UpdateCamera(gameTime);
 
 			UpdateMatrices();
+			//rotate the light vector
+
+			//grab a time value to use to spin the axii
+			float spinAmount	=gameTime.TotalGameTime.Milliseconds;
+
+			//scale it back a bit
+			spinAmount	*=0.00001f;
+
+			//build a matrix that spins over time
+			Matrix	mat	=Matrix.CreateFromYawPitchRoll
+				(spinAmount * 3.0f,
+				spinAmount,
+				spinAmount * 0.5f);
+
+			//transform (rotate) the vector
+			mLightDir	=Vector3.TransformNormal(mLightDir, mat);
+
+			//update it in the shader
+			mFX.Parameters["mLightDir"].SetValue(mLightDir);
+			mFX.Parameters["mTexture"].SetValue(mDesu);
 
 			base.Update(gameTime);
 		}
@@ -167,6 +254,31 @@ namespace ColladaConvert
 
 			mCollada.Draw(mGDM.GraphicsDevice, mTestEffect);
 
+			//set stream source, index, and decl
+			mGDM.GraphicsDevice.Vertices[0].SetSource(mVB, 0, 32);
+			mGDM.GraphicsDevice.Indices				=mIB;
+			mGDM.GraphicsDevice.VertexDeclaration	=mVDecl;
+
+			mLightDir.X	=0.5f;
+			mLightDir.Y	=0.2f;
+			mLightDir.Z	=0.7f;
+
+			mLightDir.Normalize();
+
+			mFX.Parameters["mLightDir"].SetValue(mLightDir);
+			mFX.Begin();
+			foreach(EffectPass pass in mFX.CurrentTechnique.Passes)
+			{
+				pass.Begin();
+				
+				//draw shizzle here
+				mGDM.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+					0, 0, 4, 0, 2);
+
+				pass.End();
+			}
+			mFX.End();
+
 			base.Draw(gameTime);
 		}
 
@@ -177,7 +289,6 @@ namespace ColladaConvert
 			mTestEffect.Parameters["mView"].SetValue(mViewMatrix);
 			mTestEffect.Parameters["mProjection"].SetValue(mProjectionMatrix);
 			mTestEffect.Parameters["mLocal"].SetValue(Matrix.Identity);	//TODO:fix
-			//mZoneEffect.Parameters["TextureEnabled"].SetValue(mbTextureEnabled);
 		}
 
 
