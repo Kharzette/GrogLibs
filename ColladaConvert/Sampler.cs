@@ -10,6 +10,7 @@ namespace ColladaConvert
 	{
 		private List<Input>		mInputs	=new List<Input>();
 
+
 		public void Load(XmlReader r)
 		{
 			while(r.Read())

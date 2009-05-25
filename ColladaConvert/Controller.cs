@@ -43,7 +43,7 @@ namespace ColladaConvert
 		}
 
 
-		public void CopyBonesTo(Matrix []bones)
+		public void CopyBonesTo(ref Matrix []bones)
 		{
 			bones	=new Matrix[mBones.Count];
 
@@ -59,12 +59,23 @@ namespace ColladaConvert
 			//grab the list of bones from the skin
 			List<string>	jointNames	=mSkin.GetJointNameArray();
 
+			//grab the inverse bind pose matrix list
+			List<Matrix>	ibps	=mSkin.GetInverseBindPoses();
+
+			Matrix	bind		=mSkin.GetBindShapeMatrix();
+
 			//find each bone and place it in our arrays
+			int	curMat	=0;
 			foreach(string jn in jointNames)
 			{
-				if(nodes.ContainsKey(jn))
+				foreach(KeyValuePair<string, SceneNode> sn in nodes)
 				{
-					mBones.Add(nodes[jn].GetMatrix());
+					Matrix	mat;
+					if(sn.Value.GetMatrixForBone(jn, out mat))
+					{
+						mBones.Add(ibps[curMat++] * mat);
+						break;
+					}
 				}
 			}
 		}

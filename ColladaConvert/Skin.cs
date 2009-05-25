@@ -15,21 +15,58 @@ namespace ColladaConvert
 		private VertexWeights				mVertWeights;
 
 
-		//returns the number of bones that influence the vert indexed
-		public int GetNumInfluencesForVertIndex(int vertIndex)
-		{
-			return	mVertWeights.GetCount(vertIndex);
-		}
-
-
+		//returns the array of bone names
 		public List<string> GetJointNameArray()
 		{
-			//look into source with the index into the weight array
-			string	key	=mSource.Substring(1) + "-skin-joints";
+			string	key	=mJoints.GetJointKey();
+
+			//strip #
+			key	=key.Substring(1);
 
 			Source	src	=mSources[key];
 
 			return	src.GetNameArray();
+		}
+
+
+		public List<Matrix>	GetInverseBindPoses()
+		{
+			string	key	=mJoints.GetInverseBindPosesKey();
+
+			//strip #
+			key	=key.Substring(1);
+
+			Source	src	=mSources[key];
+
+			List<float>	fa	=src.GetFloatArray();
+
+			List<Matrix>	ret	=new List<Matrix>();
+
+			for(int i=0;i < fa.Count / 16;i++)
+			{
+				int	ofs	=i * 16;
+				Matrix	mat	=new Matrix(
+					fa[ofs + 0], fa[ofs + 4], fa[ofs + 8], fa[ofs + 12],
+					fa[ofs + 1], fa[ofs + 5], fa[ofs + 9], fa[ofs + 13],
+					fa[ofs + 2], fa[ofs + 6], fa[ofs + 10], fa[ofs + 14],
+					fa[ofs + 3], fa[ofs + 7], fa[ofs + 11], fa[ofs + 15]);
+
+				ret.Add(mat);
+			}
+			return	ret;
+		}
+
+
+		public Matrix GetBindShapeMatrix()
+		{
+			return	mBindShapeMatrix;
+		}
+
+
+		//returns the number of bones that influence the vert indexed
+		public int GetNumInfluencesForVertIndex(int vertIndex)
+		{
+			return	mVertWeights.GetCount(vertIndex);
 		}
 
 
@@ -46,8 +83,11 @@ namespace ColladaConvert
 			//grab the index
 			int	idx	=mVertWeights.GetWeightIndex(vertIndex, infIndex);
 
-			//look into source with the index into the weight array
-			string	key	=mSource.Substring(1) + "-skin-weights";
+			//get the source key to the actual weight array
+			string	key	=mVertWeights.GetWeightArrayKey();
+
+			//strip off #
+			key	=key.Substring(1);
 
 			Source	src	=mSources[key];
 

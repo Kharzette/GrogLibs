@@ -61,6 +61,7 @@ namespace ColladaConvert
 		public VertexBuffer			mSkinData;
 		public VertexDeclaration	mVD;
 		public Matrix				[]mBones;
+		public Matrix				mBindShapeMatrix;
 		public int					mNumVerts, mNumTriangles, mVertSize, mTexChannel;
 		public string				mTexName;
 		public string				mSkinName;
@@ -81,8 +82,8 @@ namespace ColladaConvert
 			for(int i=0;i < verts.Count;i+=3)
 			{
 				mBaseVerts[i / 3].Position0.X		=verts[i];
-				mBaseVerts[i / 3].Position0.Y		=verts[i + 1];
-				mBaseVerts[i / 3].Position0.Z		=verts[i + 2];
+				mBaseVerts[i / 3].Position0.Y		=verts[i + 2];
+				mBaseVerts[i / 3].Position0.Z		=verts[i + 1];
 				mBaseVerts[i / 3].mOriginalIndex	=i / 3;
 			}
 		}
@@ -178,9 +179,13 @@ namespace ColladaConvert
 									List<int>		texIdxs,
 									List<int>		vertCounts)
 		{
-			List<TrackedVert>	verts	=new List<TrackedVert>();
+			//make sure there are at least positions and vertCounts
+			if(posIdxs == null || vertCounts == null)
+			{
+				return;
+			}
 
-			Debug.Assert(posIdxs.Count == normIdxs.Count && posIdxs.Count == texIdxs.Count);
+			List<TrackedVert>	verts	=new List<TrackedVert>();
 
 			//track the polygon in use
 			int	polyIndex	=0;
@@ -188,9 +193,19 @@ namespace ColladaConvert
 			int	vCnt		=vertCounts[polyIndex];
 			for(int i=0;i < posIdxs.Count;i++)
 			{
-				int	pidx	=posIdxs[i];
-				int	nidx	=normIdxs[i];
-				int	tidx	=texIdxs[i];
+				int	pidx, nidx, tidx;
+
+				pidx	=posIdxs[i];
+				nidx	=tidx	=0;
+
+				if(normIdxs != null && norms != null)
+				{
+					nidx	=normIdxs[i];
+				}
+				if(texIdxs != null && texCoords != null)
+				{
+					tidx	=texIdxs[i];
+				}
 
 				TrackedVert	tv	=new TrackedVert();
 				
@@ -199,14 +214,20 @@ namespace ColladaConvert
 				//and vertex weights
 				tv	=mBaseVerts[pidx];
 
-				//copy normal
-				tv.Normal0.X	=norms[nidx * 3];
-				tv.Normal0.Y	=norms[1 + nidx * 3];
-				tv.Normal0.Z	=norms[2 + nidx * 3];
+				//copy normal if exists
+				if(normIdxs != null && norms != null)
+				{
+					tv.Normal0.X	=norms[nidx * 3];
+					tv.Normal0.Y	=norms[1 + nidx * 3];
+					tv.Normal0.Z	=norms[2 + nidx * 3];
+				}
 
 				//copy texcoords
-				tv.TexCoord0.X	=texCoords[tidx * 2];
-				tv.TexCoord0.Y	=texCoords[1 + tidx * 2];
+				if(texIdxs != null && texCoords != null)
+				{
+					tv.TexCoord0.X	=texCoords[tidx * 2];
+					tv.TexCoord0.Y	=texCoords[1 + tidx * 2];
+				}
 
 				verts.Add(tv);
 				mIndexList.Add((ushort)(verts.Count - 1));
@@ -236,7 +257,7 @@ namespace ColladaConvert
 			Triangulate(vertCounts);
 
 			mNumVerts		=verts.Count;
-			mNumTriangles	=mIndexList.Count / 2;
+			mNumTriangles	=mIndexList.Count / 3;
 		}
 
 

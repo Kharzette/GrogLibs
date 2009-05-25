@@ -10,6 +10,7 @@ namespace ColladaConvert
 	{
 		public string	mType, mName;
 
+
 		public void Load(XmlReader r)
 		{
 			int	attCnt	=r.AttributeCount;

@@ -9,8 +9,7 @@ namespace ColladaConvert
 	public class SceneNode
 	{
 		private	string			mName, mSID, mType;
-		private	Vector3			mTranslation, mScale;
-		private	Vector4			mRotX, mRotY, mRotZ;
+		private	Matrix			mMat;
 
 		private	Dictionary<string, SceneNode>	mChildren	=new Dictionary<string, SceneNode>();
 
@@ -21,27 +20,44 @@ namespace ColladaConvert
 
 		private	List<InstanceMaterial>	mBindMaterials;
 
+
 		public SceneNode()
 		{
 			mBindMaterials	=new List<InstanceMaterial>();
+			mMat			=Matrix.Identity;
+		}
+
+
+		public bool GetMatrixForBone(string boneName, out Matrix outMat)
+		{
+			if(mName == boneName)
+			{
+				outMat	=GetMatrix();
+				return	true;
+			}
+			foreach(KeyValuePair<string, SceneNode> sn in mChildren)
+			{
+				if(sn.Value.GetMatrixForBone(boneName, out outMat))
+				{
+					//mul by parent
+					outMat	*=GetMatrix();
+					return	true;
+				}
+			}
+			outMat	=Matrix.Identity;
+			return	false;
+		}
+
+
+		public string GetInstanceControllerURL()
+		{
+			return	mInstanceControllerURL;
 		}
 
 
 		public Matrix GetMatrix()
 		{
-			Matrix	mat	=Matrix.Identity;
-			mat.Translation	=mTranslation;
-			mat.M11			=mRotX.X;
-			mat.M12			=mRotX.Y;
-			mat.M13			=mRotX.Z;
-			mat.M21			=mRotY.X;
-			mat.M22			=mRotY.Y;
-			mat.M23			=mRotY.Z;
-			mat.M31			=mRotZ.X;
-			mat.M32			=mRotZ.Y;
-			mat.M33			=mRotZ.Z;
-
-			return	mat;
+			return	mMat;
 		}
 
 
@@ -90,7 +106,11 @@ namespace ColladaConvert
 						//skip to the next element, the actual value
 						r.Read();
 
-						Collada.GetVectorFromString(r.Value,out mTranslation);
+						Vector3	trans;
+
+						Collada.GetVectorFromString(r.Value, out trans);
+
+						mMat	*=Matrix.CreateTranslation(trans);
 					}
 				}
 				else if(r.Name == "instance_geometry")
@@ -110,7 +130,11 @@ namespace ColladaConvert
 						//skip to the next element, the actual value
 						r.Read();
 
-						Collada.GetVectorFromString(r.Value, out mScale);
+						Vector3	scale;
+
+						Collada.GetVectorFromString(r.Value, out scale);
+
+						mMat	*=Matrix.CreateScale(scale);
 					}
 				}
 				else if(r.Name == "instance_material")
@@ -201,23 +225,20 @@ namespace ColladaConvert
 					{
 						r.MoveToFirstAttribute();
 
-						string	axis	=r.Value;
+						//skip to the next element, the actual value
+						r.Read();
 
-						r.Read();	//skip to vec4 value
+						//these are a 3 element axis + a rotation in degrees
+						Vector4	axisRot;
+						Collada.GetVectorFromString(r.Value, out axisRot);
 
-						//check the sid for which axis
-						if(axis == "rotateX")
-						{
-							Collada.GetVectorFromString(r.Value, out mRotX);
-						}
-						else if(axis == "rotateY")
-						{
-							Collada.GetVectorFromString(r.Value, out mRotY);
-						}
-						else if(axis == "rotateZ")
-						{
-							Collada.GetVectorFromString(r.Value, out mRotZ);
-						}
+						//bust out the axis into a vec3
+						Vector3	axis;
+						axis.X	=axisRot.X;
+						axis.Y	=axisRot.Y;
+						axis.Z	=axisRot.Z;
+
+						mMat	*=Matrix.CreateFromAxisAngle(axis, MathHelper.ToRadians(axisRot.W));
 					}
 				}
 				else if(r.Name == "node")

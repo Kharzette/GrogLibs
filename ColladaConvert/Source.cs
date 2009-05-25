@@ -14,43 +14,14 @@ namespace ColladaConvert
 		private Accessor		mAccessor;
 
 
-		public bool IsPosition()
+		private static Matrix LoadColladaMatrix(float[] mat, int offset)
 		{
-			if(mFloatID == null)
-			{
-				return	false;
-			}
-
-			//not really sure this is a valid way
-			return	(mFloatID.Contains("positions-array")
-				|| mFloatID.Contains("Position-array")
-				|| mFloatID.Contains("pv-array"));
-		}
-
-
-		public bool IsNormal()
-		{
-			if(mFloatID == null)
-			{
-				return	false;
-			}
-
-			//not really sure this is a valid way
-			return	mFloatID.Contains("normals-array");
-		}
-
-
-		public bool IsTexCoord()
-		{
-			if(mFloatID == null)
-			{
-				return	false;
-			}
-
-			//not really sure this is a valid way
-			return	mAccessor.IsTexCoord();
-		}
-
+			return new Matrix(
+				mat[offset + 0], mat[offset + 4], mat[offset + 8], mat[offset + 12],
+				mat[offset + 1], mat[offset + 5], mat[offset + 9], mat[offset + 13],
+				mat[offset + 2], mat[offset + 6], mat[offset + 10], mat[offset + 14],
+				mat[offset + 3], mat[offset + 7], mat[offset + 11], mat[offset + 15]);
+		} // LoadColladaMatrix(mat, offset)
 
 		public List<float>	GetFloatArray()
 		{

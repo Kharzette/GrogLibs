@@ -100,7 +100,6 @@
     <Compile Include="Mesh.cs" />
     <Compile Include="Param.cs" />
     <Compile Include="Polygons.cs" />
-    <Compile Include="PolyList.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ColladaConvert.cs" />

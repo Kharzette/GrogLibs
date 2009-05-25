@@ -8,8 +8,7 @@ namespace ColladaConvert
 {
 	public class Geometry
 	{
-		private string		mName;
-		Mesh				mMesh;
+		Mesh	mMesh;
 
 
 		public Geometry()	{}
@@ -27,9 +26,9 @@ namespace ColladaConvert
 		}
 
 
-		public List<float> GetTexCoords()
+		public List<float> GetTexCoords(int set)
 		{
-			return	mMesh.GetTexCoords();
+			return	mMesh.GetTexCoords(set);
 		}
 
 
@@ -39,9 +38,9 @@ namespace ColladaConvert
 		}
 
 
-		public List<int> GetTexCoordIndexs()
+		public List<int> GetTexCoordIndexs(int set)
 		{
-			return	mMesh.GetTexCoordIndexs();
+			return	mMesh.GetTexCoordIndexs(set);
 		}
 
 

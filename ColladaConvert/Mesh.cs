@@ -10,8 +10,7 @@ namespace ColladaConvert
 	{
 		private Dictionary<string, Source>		mSources	=new Dictionary<string,Source>();
 		private Dictionary<string, Vertices>	mVerts		=new Dictionary<string,Vertices>();
-		private List<Polygons>					mPolys		=new List<Polygons>();
-		private	PolyList						mPolyList;
+		private Polygons						mPolys;
 
 
 		public Mesh()	{}
@@ -19,96 +18,74 @@ namespace ColladaConvert
 
 		public List<float> GetBaseVerts()
 		{
-			foreach(KeyValuePair<string, Source> src in mSources)
-			{
-				if(src.Value.IsPosition())
-				{
-					return	src.Value.GetFloatArray();
-				}
-			}
-			return	null;
+			//find key
+			string	key	=mPolys.GetPositionSourceKey();
+
+			//strip #
+			key	=key.Substring(1);
+
+			//use key to look up in mVerts
+			Vertices v	=mVerts[key];
+
+			key	=v.GetPositionKey();
+
+			//strip #
+			key	=key.Substring(1);
+
+			return	mSources[key].GetFloatArray();
 		}
 
 
 		public List<float> GetNormals()
 		{
-			foreach(KeyValuePair<string, Source> src in mSources)
-			{
-				if(src.Value.IsNormal())
-				{
-					return	src.Value.GetFloatArray();
-				}
-			}
-			return	null;
+			//find key
+			string	key	=mPolys.GetNormalSourceKey();
+
+			//strip #
+			key	=key.Substring(1);
+
+			return	mSources[key].GetFloatArray();
 		}
 
 
-		public List<float> GetTexCoords()
+		public List<float> GetTexCoords(int set)
 		{
-			foreach(KeyValuePair<string, Source> src in mSources)
+			//find texcoord key
+			string	key	=mPolys.GetTexCoordSourceKey(set);
+
+			if(key == "")
 			{
-				if(src.Value.IsTexCoord())
-				{
-					return	src.Value.GetFloatArray();
-				}
+				return	null;
 			}
-			return	null;
+
+			//strip #
+			key	=key.Substring(1);
+
+			return	mSources[key].GetFloatArray();
 		}
 
 
 		public List<int> GetPositionIndexs()
 		{
-			//see if this file is into polys or polylists
-			if(mPolys.Count > 0)
-			{
-				return	null;	//TODO: finish this
-			}
-			else
-			{
-				return	mPolyList.GetPositionIndexs();
-			}
+			return	mPolys.GetPositionIndexs();
 		}
 
 
 		public List<int> GetNormalIndexs()
 		{
-			//see if this file is into polys or polylists
-			if(mPolys.Count > 0)
-			{
-				return	null;	//TODO: finish this
-			}
-			else
-			{
-				return	mPolyList.GetNormalIndexs();
-			}
+			return	mPolys.GetNormalIndexs();
 		}
 
 
-		public List<int> GetTexCoordIndexs()
+		public List<int> GetTexCoordIndexs(int set)
 		{
-			//see if this file is into polys or polylists
-			if(mPolys.Count > 0)
-			{
-				return	null;	//TODO: finish this
-			}
-			else
-			{
-				return	mPolyList.GetTexCoordIndexs();
-			}
+			return	mPolys.GetTexCoordIndexs(set);
 		}
 
 
 		public List<int> GetVertCounts()
 		{
-			//see if this file is into polys or polylists
-			if(mPolys.Count > 0)
-			{
-				return	null;	//TODO: finish this
-			}
-			else
-			{
-				return	mPolyList.GetVertCounts();
-			}
+			return	mPolys.GetVertCounts();
 		}
 
 
@@ -147,15 +124,13 @@ namespace ColladaConvert
 				}
 				else if(r.Name == "polygons")
 				{
-					Polygons	pol	=new Polygons();
-					pol.Load(r);
-
-					mPolys.Add(pol);
+					mPolys	=new Polygons();
+					mPolys.Load(r);
 				}
 				else if(r.Name == "polylist")
 				{
-					mPolyList	=new PolyList();
-					mPolyList.Load(r);
+					mPolys	=new Polygons();
+					mPolys.LoadList(r);
 				}
 			}
 		}

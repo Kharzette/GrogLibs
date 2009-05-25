@@ -21,6 +21,19 @@ namespace ColladaConvert
 		}
 
 
+		public string GetWeightArrayKey()
+		{
+			foreach(Input inp in mInputs)
+			{
+				if(inp.IsWeight())
+				{
+					return	inp.GetKey();
+				}
+			}
+			return	"";
+		}
+
+
 		//returns the infIndexd index of the vert at vertIndex
 		//as if that made any sense at all
 		public int GetBoneIndex(int vertIndex, int infIndex)
@@ -77,7 +90,7 @@ namespace ColladaConvert
 					{
 						r.Read();
 
-						string	[]tokens	=r.Value.Split(' ','\n');
+						string	[]tokens	=r.Value.Split(' ', '\n');
 
 						int			curVert		=0;
 						bool		bEven		=true;
@@ -109,6 +122,7 @@ namespace ColladaConvert
 									numInf		=0;
 									pvBone		=new List<int>();
 									pvWeight	=new List<int>();
+									curVert++;
 								}
 							}
 						}

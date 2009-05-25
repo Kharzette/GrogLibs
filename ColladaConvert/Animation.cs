@@ -12,6 +12,7 @@ namespace ColladaConvert
 
 		private List<SubAnimation>	mSubAnims	=new List<SubAnimation>();
 
+
 		public void Load(XmlReader r)
 		{
 			r.MoveToNextAttribute();

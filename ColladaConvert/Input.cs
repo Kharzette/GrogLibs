@@ -39,15 +39,27 @@ namespace ColladaConvert
 		}
 
 
+		public bool IsInverseBindMatrix()
+		{
+			return	(mSemantic == "INV_BIND_MATRIX");
+		}
+
+
+		public bool IsWeight()
+		{
+			return	(mSemantic == "WEIGHT");
+		}
+
+
 		public bool IsVertex()
 		{
 			return	(mSemantic == "VERTEX");
 		}
 
 
-		public bool IsTexCoord()
+		public bool IsTexCoord(int set)
 		{
-			return	(mSemantic == "TEXCOORD");
+			return	(mSet == set && mSemantic == "TEXCOORD");
 		}
 
 
@@ -57,9 +69,15 @@ namespace ColladaConvert
 		}
 
 
+		public bool IsPosition()
+		{
+			return	(mSemantic == "POSITION");
+		}
+
+
 		public string GetKey()
 		{
-			return	mSemantic;
+			return	mSource;
 		}
 
 

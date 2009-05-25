@@ -11,6 +11,19 @@ namespace ColladaConvert
 		private List<Input>	mInputs	=new List<Input>();
 
 
+		public string GetPositionKey()
+		{
+			foreach(Input inp in mInputs)
+			{
+				if(inp.IsPosition())
+				{
+					return	inp.GetKey();
+				}
+			}
+			return	"";
+		}
+
+
 		public void Load(XmlReader r)
 		{
 			while(r.Read())

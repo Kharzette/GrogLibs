@@ -82,32 +82,48 @@ namespace ColladaConvert
 			mFX		=Content.Load<Effect>("Simple");
 
 			mTestEffect	=Content.Load<Effect>("VPosNormTexAnim");
-			mCollada	=new Collada("content/beach.dae", GraphicsDevice);
+//			mCollada	=new Collada("content/beach.dae", GraphicsDevice);
+			mCollada	=new Collada("content/cylboned.dae", GraphicsDevice);
+//			mCollada	=new Collada("content/goblinry.dae", GraphicsDevice);
+//			mCollada	=new Collada("content/cyl.dae", GraphicsDevice);
 //			mCollada	=new Collada("content/hero.dae", GraphicsDevice);
-//			mCollada = new Collada("content/WackyWalk.dae", GraphicsDevice);
+//			mCollada	=new Collada("content/WackyWalk2.dae", GraphicsDevice);
 			mDesu	=Content.Load<Texture2D>("desu");
 
 			Point	topLeft, bottomRight;
-			topLeft.X		=-500;
-			topLeft.Y		=-500;
+			topLeft.X		=0;
+			topLeft.Y		=0;
 			bottomRight.X	=500;
 			bottomRight.Y	=500;
 
-			//fill in some verts, just a simple quad
-			VertexPositionNormalTexture	[]verts	=new VertexPositionNormalTexture[4];
+			//fill in some verts two quads
+			VertexPositionNormalTexture	[]verts	=new VertexPositionNormalTexture[8];
 			verts[0].Position.X	=topLeft.X;
 			verts[1].Position.X	=bottomRight.X;
 			verts[2].Position.X	=topLeft.X;
 			verts[3].Position.X	=bottomRight.X;
+
+			verts[4].Position.Z	=topLeft.X;
+			verts[5].Position.Z	=bottomRight.X;
+			verts[6].Position.Z	=topLeft.X;
+			verts[7].Position.Z	=bottomRight.X;
 
 			verts[0].Position.Y	=topLeft.Y;
 			verts[1].Position.Y	=topLeft.Y;
 			verts[2].Position.Y	=bottomRight.Y;
 			verts[3].Position.Y	=bottomRight.Y;
 
+			verts[4].Position.Y	=topLeft.Y;
+			verts[5].Position.Y	=topLeft.Y;
+			verts[6].Position.Y	=bottomRight.Y;
+			verts[7].Position.Y	=bottomRight.Y;
+
 			verts[0].TextureCoordinate	=Vector2.UnitY;
 			verts[1].TextureCoordinate	=Vector2.UnitX + Vector2.UnitY;
 			verts[3].TextureCoordinate	=Vector2.UnitX;
+			verts[4].TextureCoordinate	=Vector2.UnitY;
+			verts[5].TextureCoordinate	=Vector2.UnitX + Vector2.UnitY;
+			verts[6].TextureCoordinate	=Vector2.UnitX;
 
 			//set up a simple vertex element
 			VertexElement	[]ve	=new VertexElement[3];
@@ -123,23 +139,29 @@ namespace ColladaConvert
 			mVDecl	=new VertexDeclaration(mGDM.GraphicsDevice, ve);
 
 			//create vertex and index buffers
-			mVB	=new VertexBuffer(mGDM.GraphicsDevice, 32 * 4, BufferUsage.WriteOnly);
-			mIB	=new IndexBuffer(mGDM.GraphicsDevice, 2 * 6, BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
+			mVB	=new VertexBuffer(mGDM.GraphicsDevice, 32 * 8, BufferUsage.WriteOnly);
+			mIB	=new IndexBuffer(mGDM.GraphicsDevice, 2 * 12, BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
 
 			//put our data into the vertex buffer
 			mVB.SetData<VertexPositionNormalTexture>(verts);
 
 			//mark the indexes
-			UInt16	[]ind	=new ushort[6];
+			ushort	[]ind	=new ushort[12];
 			ind[0]	=0;
 			ind[1]	=1;
 			ind[2]	=2;
 			ind[3]	=2;
 			ind[4]	=1;
 			ind[5]	=3;
+			ind[6]	=4;
+			ind[7]	=5;
+			ind[8]	=6;
+			ind[9]	=6;
+			ind[10]	=5;
+			ind[11]	=7;
 
 			//fill in index buffer
-			mIB.SetData<UInt16>(ind);
+			mIB.SetData<ushort>(ind);
 
 			InitializeEffect();
 		}
@@ -273,7 +295,7 @@ namespace ColladaConvert
 				
 				//draw shizzle here
 				mGDM.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-					0, 0, 4, 0, 2);
+					0, 0, 8, 0, 4);
 
 				pass.End();
 			}

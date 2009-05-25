@@ -24,6 +24,19 @@ namespace ColladaConvert
 		}
 
 
+		public string GetInverseBindPosesKey()
+		{
+			foreach(Input inp in mInputs)
+			{
+				if(inp.IsInverseBindMatrix())
+				{
+					return	inp.GetKey();
+				}
+			}
+			return	null;
+		}
+
+
 		public void Load(XmlReader r)
 		{
 			while(r.Read())
@@ -34,9 +47,12 @@ namespace ColladaConvert
 				}
 				if(r.Name == "input")
 				{
-					Input	inp	=new Input();
-					inp.Load(r);
-					mInputs.Add(inp);
+					if(r.NodeType == XmlNodeType.Element)
+					{
+						Input	inp	=new Input();
+						inp.Load(r);
+						mInputs.Add(inp);
+					}
 				}
 				else if(r.Name == "joints")
 				{
