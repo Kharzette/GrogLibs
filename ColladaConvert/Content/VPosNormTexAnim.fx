@@ -69,11 +69,11 @@ VSOutput DiffuseGouradSkin(float3	position	: POSITION,
 							float2	tex0		: TEXCOORD0)
 {
 	VSOutput	output;
+	float4		vertPos	=mul(float4(position, 1.0f), mLocal);
+//	float4		vertPos	=float4(position, 1.0f);
 	
-	float4x4	localWorld	=mul(mLocal, mWorld);
-
 	//generate the world-view-proj matrix
-	float4x4	wvp	=mul(mul(localWorld, mView), mProjection);
+	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 	
 	//do the bone influences
 	float4x4 skinTransform	=0;
@@ -83,11 +83,11 @@ VSOutput DiffuseGouradSkin(float3	position	: POSITION,
 	skinTransform	+=mBones[bnIdxs.w] * bnWeights.w;
 	
 	//xform the vert to the character's boney pos
-	output.Position	=mul(float4(position, 1.0f), skinTransform);
+	vertPos	=mul(vertPos, skinTransform);
 //	output.Position =float4(position, 1.0);
 	
 	//transform the input position to the output
-	output.Position	=mul(output.Position, wvp);
+	output.Position	=mul(vertPos, wvp);
 	
 	float3 worldNormal	=mul(normal, mWorld);
 	

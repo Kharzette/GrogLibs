@@ -65,19 +65,19 @@ namespace ColladaConvert
 			Matrix	bind		=mSkin.GetBindShapeMatrix();
 
 			//find each bone and place it in our arrays
-			int	curMat	=0;
-			foreach(string jn in jointNames)
+			for(int i=0;i < jointNames.Count;i++)
 			{
+				string	jn	=jointNames[i];
 				foreach(KeyValuePair<string, SceneNode> sn in nodes)
 				{
 					Matrix	mat;
 					if(sn.Value.GetMatrixForBone(jn, out mat))
 					{
-//						Matrix	invinv	=Matrix.Invert(ibps[curMat++]);
+//						Matrix	invinv	=Matrix.Invert(ibps[i]);
 //						mBones.Add(mat * invinv);
 //						mBones.Add(invinv * mat);
 
-						mBones.Add(bind * ibps[curMat++] * mat);
+						mBones.Add(ibps[i] * mat);
 
 //						mBones.Add(ibps[curMat++] * mat);
 //						mBones.Add(ibps[curMat++]);

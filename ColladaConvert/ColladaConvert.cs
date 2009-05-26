@@ -39,6 +39,7 @@ namespace ColladaConvert
 		//cam / player stuff will move later
 		private Vector3	mCamPos, mDotPos;
 		private float	mPitch, mYaw, mRoll;
+		private float	mBonePitch, mBoneYaw, mBoneRoll;
 
 		private	Texture2D	mDesu;
 		private	Texture2D	mEureka;
@@ -262,6 +263,49 @@ namespace ColladaConvert
 			//update it in the shader
 			mFX.Parameters["mLightDir"].SetValue(mLightDir);
 			mFX.Parameters["mTexture"].SetValue(mDesu);
+
+			//put in some keys for messing with bones
+			float	time		=(float)gameTime.ElapsedGameTime.TotalMilliseconds;
+			bool	bChanged	=false;
+			if(mCurrentKeyboardState.IsKeyDown(Keys.I))
+			{
+				mBonePitch	+=(time * 0.001f);
+				bChanged	=true;
+			}
+			else if(mCurrentKeyboardState.IsKeyDown(Keys.K))
+			{
+				mBonePitch	-=(time * 0.001f);
+				bChanged	=true;
+			}
+
+			if(mCurrentKeyboardState.IsKeyDown(Keys.J))
+			{
+				mBoneYaw	+=(time * 0.001f);
+				bChanged	=true;
+			}
+			else if(mCurrentKeyboardState.IsKeyDown(Keys.L))
+			{
+				mBoneYaw	-=(time * 0.001f);
+				bChanged	=true;
+			}
+
+			if(mCurrentKeyboardState.IsKeyDown(Keys.H))
+			{
+				mBoneRoll	+=(time * 0.001f);
+				bChanged	=true;
+			}
+			else if(mCurrentKeyboardState.IsKeyDown(Keys.U))
+			{
+				mBoneRoll	-=(time * 0.001f);
+				bChanged	=true;
+			}
+
+			Matrix	boneMat	=Matrix.CreateFromYawPitchRoll(mBoneYaw, mBonePitch, mBoneRoll);
+
+			if(bChanged)
+			{
+				mCollada.DebugBoneModify(boneMat);
+			}
 
 			base.Update(gameTime);
 		}

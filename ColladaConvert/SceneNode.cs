@@ -50,12 +50,35 @@ namespace ColladaConvert
 				if(sn.Value.GetMatrixForBone(boneName, out outMat))
 				{
 					//mul by parent
+//					Matrix	invSelf		=Matrix.Invert(outMat);
+//					Matrix	invParent	=Matrix.Invert(mMat);
+//					outMat	=GetMatrix() * invSelf;
+//					outMat	*=invParent;
+//					outMat	=invParent * outMat;
 					outMat	*=GetMatrix();
 //					outMat	=GetMatrix() * outMat;
 					return	true;
 				}
 			}
 			outMat	=Matrix.Identity;
+			return	false;
+		}
+
+
+		public bool ModifyMatrixForBone(string boneName, Matrix mat)
+		{
+			if(mName == boneName)
+			{
+				mMat	*=mat;
+				return	true;
+			}
+			foreach(KeyValuePair<string, SceneNode> sn in mChildren)
+			{
+				if(sn.Value.ModifyMatrixForBone(boneName, mat))
+				{
+					return	true;
+				}
+			}
 			return	false;
 		}
 
@@ -122,10 +145,10 @@ namespace ColladaConvert
 						Collada.GetVectorFromString(r.Value, out trans);
 
 						//negate x, swap y and z						
-//						float	temp	=trans.Y;
-//						trans.X	=-trans.X;
-//						trans.Y	=trans.Z;
-//						trans.Z	=temp;
+						float	temp	=trans.Y;
+						trans.X	=-trans.X;
+						trans.Y	=trans.Z;
+						trans.Z	=temp;
 						
 						mMat	*=Matrix.CreateTranslation(trans);
 //						mMat	=Matrix.CreateTranslation(trans) * mMat;

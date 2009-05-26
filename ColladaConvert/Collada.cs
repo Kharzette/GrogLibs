@@ -147,9 +147,9 @@ namespace ColladaConvert
 
 				dc.UpdateBones(fx);
 
-//				fx.Parameters["mLocal"].SetValue(dc.mBindShapeMatrix);
+				fx.Parameters["mLocal"].SetValue(dc.mBindShapeMatrix);
 //				fx.Parameters["mLocal"].SetValue(mRootNodes["Box01"].GetMatrix());
-				fx.Parameters["mLocal"].SetValue(loc);
+//				fx.Parameters["mLocal"].SetValue(loc);
 
 				fx.Begin();
 				foreach(EffectPass pass in fx.CurrentTechnique.Passes)
@@ -731,6 +731,29 @@ namespace ColladaConvert
 			Matrix	outMat	=inMat;
 
 			return	outMat;
+		}
+
+
+		public void DebugBoneModify(Matrix mat)
+		{
+			/*
+			foreach(KeyValuePair<string, SceneNode> nodes in mRootNodes)
+			{
+				nodes.Value.ModifyMatrixForBone("connectBone01", mat);
+			}*/
+			Controller		cont	=mControllers["Cone02Controller"];
+			Skin			sk		=cont.GetSkin();
+			Matrix			bind	=sk.GetBindShapeMatrix();
+			List<Matrix>	ibps	=sk.GetInverseBindPoses();
+			Matrix			bone;
+
+			mRootNodes["Bone01"].GetMatrixForBone("connectBone01", out bone);
+
+			//mod the shader bones directly
+			mChunks[2].mBones[0]	=ibps[0] * bone * mat;
+//			mChunks[2].mBones[0]	=bind * ibps[0] * bone * mat;
+//			mChunks[2].mBones[0]	=bind * bone * ibps[0] * mat;
+//			mChunks[2].mBones[0]	=bone * mat;
 		}
 
 
