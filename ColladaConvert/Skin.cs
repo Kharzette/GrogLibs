@@ -29,6 +29,12 @@ namespace ColladaConvert
 		}
 
 
+		public void ConvertBindShapeMatrixCoordinateSystemMAX()
+		{
+			mBindShapeMatrix	=Collada.ConvertMatrixCoordinateSystemMAX(mBindShapeMatrix);
+		}
+
+
 		public List<Matrix>	GetInverseBindPoses()
 		{
 			string	key	=mJoints.GetInverseBindPosesKey();

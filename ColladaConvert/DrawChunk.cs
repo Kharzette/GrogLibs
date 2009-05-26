@@ -82,8 +82,8 @@ namespace ColladaConvert
 			for(int i=0;i < verts.Count;i+=3)
 			{
 				mBaseVerts[i / 3].Position0.X		=verts[i];
-				mBaseVerts[i / 3].Position0.Y		=verts[i + 2];
-				mBaseVerts[i / 3].Position0.Z		=verts[i + 1];
+				mBaseVerts[i / 3].Position0.Y		=verts[i + 1];
+				mBaseVerts[i / 3].Position0.Z		=verts[i + 2];
 				mBaseVerts[i / 3].mOriginalIndex	=i / 3;
 			}
 		}
@@ -358,6 +358,17 @@ namespace ColladaConvert
 			mVD	=new VertexDeclaration(gd, ve);
 
 			mVertSize	=64;
+		}
+
+
+		//copies bones into the shader
+		public void UpdateBones(Effect fx)
+		{
+			//some chunks are never really drawn
+			if(mBones != null)
+			{
+				fx.Parameters["mBones"].SetValue(mBones);
+			}
 		}
 	}
 }

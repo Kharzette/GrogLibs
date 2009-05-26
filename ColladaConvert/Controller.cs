@@ -73,10 +73,42 @@ namespace ColladaConvert
 					Matrix	mat;
 					if(sn.Value.GetMatrixForBone(jn, out mat))
 					{
-						mBones.Add(ibps[curMat++] * mat);
+//						Matrix	invinv	=Matrix.Invert(ibps[curMat++]);
+//						mBones.Add(mat * invinv);
+//						mBones.Add(invinv * mat);
+
+						mBones.Add(bind * ibps[curMat++] * mat);
+
+//						mBones.Add(ibps[curMat++] * mat);
+//						mBones.Add(ibps[curMat++]);
+//						mBones.Add(mat * ibps[curMat++]);
+//						mBones.Add(bind * invinv);
+//						mBones.Add(invinv * mat);
 						break;
 					}
 				}
+			}
+		}
+
+
+		public void ChangeCoordinateSystemMAX(Dictionary<string, SceneNode> nodes)
+		{
+			//grab the list of bones from the skin
+			List<string>	jointNames	=mSkin.GetJointNameArray();
+
+			//grab the inverse bind pose matrix list
+			List<Matrix>	ibps	=mSkin.GetInverseBindPoses();
+
+			for(int i=0;i < ibps.Count;i++)
+			{
+				ibps[i]	=Collada.ConvertMatrixCoordinateSystemMAX(ibps[i]);
+			}
+
+			mSkin.ConvertBindShapeMatrixCoordinateSystemMAX();
+
+			foreach(KeyValuePair<string, SceneNode> sn in nodes)
+			{
+				sn.Value.ConvertBoneCoordinateSystemMAX();
 			}
 		}
 	}

@@ -41,6 +41,7 @@ namespace ColladaConvert
 		private float	mPitch, mYaw, mRoll;
 
 		private	Texture2D	mDesu;
+		private	Texture2D	mEureka;
 		private	Vector3		mLightDir;
 
 
@@ -83,12 +84,15 @@ namespace ColladaConvert
 
 			mTestEffect	=Content.Load<Effect>("VPosNormTexAnim");
 //			mCollada	=new Collada("content/beach.dae", GraphicsDevice);
-			mCollada	=new Collada("content/cylboned.dae", GraphicsDevice);
+//			mCollada	=new Collada("content/cylboned.dae", GraphicsDevice);
+			mCollada	=new Collada("content/boxboned.dae", GraphicsDevice);
 //			mCollada	=new Collada("content/goblinry.dae", GraphicsDevice);
 //			mCollada	=new Collada("content/cyl.dae", GraphicsDevice);
 //			mCollada	=new Collada("content/hero.dae", GraphicsDevice);
 //			mCollada	=new Collada("content/WackyWalk2.dae", GraphicsDevice);
+//			mCollada	=new Collada("content/simplebox.dae", GraphicsDevice);
 			mDesu	=Content.Load<Texture2D>("desu");
+			mEureka	=Content.Load<Texture2D>("Eureka");
 
 			Point	topLeft, bottomRight;
 			topLeft.X		=0;
@@ -123,7 +127,7 @@ namespace ColladaConvert
 			verts[3].TextureCoordinate	=Vector2.UnitX;
 			verts[4].TextureCoordinate	=Vector2.UnitY;
 			verts[5].TextureCoordinate	=Vector2.UnitX + Vector2.UnitY;
-			verts[6].TextureCoordinate	=Vector2.UnitX;
+			verts[7].TextureCoordinate	=Vector2.UnitX;
 
 			//set up a simple vertex element
 			VertexElement	[]ve	=new VertexElement[3];
@@ -272,8 +276,6 @@ namespace ColladaConvert
 
 			UpdateLightMapEffect();
 
-			mCollada.UpdateBones(mGDM.GraphicsDevice, mTestEffect);
-
 			mCollada.Draw(mGDM.GraphicsDevice, mTestEffect);
 
 			//set stream source, index, and decl
@@ -287,7 +289,9 @@ namespace ColladaConvert
 
 			mLightDir.Normalize();
 
+			mFX.Parameters["mTexture"].SetValue(mDesu);
 			mFX.Parameters["mLightDir"].SetValue(mLightDir);
+			
 			mFX.Begin();
 			foreach(EffectPass pass in mFX.CurrentTechnique.Passes)
 			{
@@ -295,7 +299,21 @@ namespace ColladaConvert
 				
 				//draw shizzle here
 				mGDM.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-					0, 0, 8, 0, 4);
+					0, 0, 4, 0, 2);
+
+				pass.End();
+			}
+			mFX.End();
+			
+			mFX.Parameters["mTexture"].SetValue(mEureka);
+			mFX.Begin();
+			foreach(EffectPass pass in mFX.CurrentTechnique.Passes)
+			{
+				pass.Begin();
+				
+				//draw shizzle here
+				mGDM.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+					4, 0, 4, 0, 2);
 
 				pass.End();
 			}

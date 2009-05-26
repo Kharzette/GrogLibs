@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Xml;
 using System.IO;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -34,6 +35,9 @@ namespace ColladaConvert
 
 				DrawChunk	cnk	=new DrawChunk();
 
+				//convert coordinate system to ours
+				ConvertCoordinateSystemMAX(verts);
+
 				cnk.CreateBaseVerts(verts);
 
 				cnk.SetGeometryID(geo.Key);
@@ -44,6 +48,8 @@ namespace ColladaConvert
 			foreach(KeyValuePair<string, Controller> cont in mControllers)
 			{
 				Skin	sk	=cont.Value.GetSkin();
+
+				cont.Value.ChangeCoordinateSystemMAX(mRootNodes);
 
 				foreach(DrawChunk cnk in mChunks)
 				{
@@ -119,20 +125,6 @@ namespace ColladaConvert
 		}
 		
 
-		//copies bones into the shader
-		public void UpdateBones(GraphicsDevice g, Effect fx)
-		{
-			foreach(DrawChunk dc in mChunks)
-			{
-				//some chunks are never really drawn
-				if(dc.mBones != null)
-				{
-					fx.Parameters["mBones"].SetValue(dc.mBones);
-				}
-			}
-		}
-
-
 		public void Draw(GraphicsDevice g, Effect fx)
 		{
 			for(int i=0;i < mChunks.Count;i++)
@@ -153,8 +145,11 @@ namespace ColladaConvert
 					}
 				}
 
-				fx.Parameters["mLocal"].SetValue(dc.mBindShapeMatrix);
-//				fx.Parameters["mLocal"].SetValue(loc);
+				dc.UpdateBones(fx);
+
+//				fx.Parameters["mLocal"].SetValue(dc.mBindShapeMatrix);
+//				fx.Parameters["mLocal"].SetValue(mRootNodes["Box01"].GetMatrix());
+				fx.Parameters["mLocal"].SetValue(loc);
 
 				fx.Begin();
 				foreach(EffectPass pass in fx.CurrentTechnique.Passes)
@@ -627,7 +622,7 @@ namespace ColladaConvert
 			string[] tokens	=str.Split(' ', '\n', '\t');
 
 			int	tokIdx	=0;
-
+			
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M11));
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M21));
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M31));
@@ -644,6 +639,98 @@ namespace ColladaConvert
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M24));
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M34));
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M44));
+			/*
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M11));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M12));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M13));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M14));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M21));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M22));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M23));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M24));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M31));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M32));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M33));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M34));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M41));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M42));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M43));
+			while(!Single.TryParse(tokens[tokIdx++],out mat.M44));
+			*/
+		}
+
+
+		//change a floatarray of vector3's from max's
+		//coordinate system to ours
+		private void ConvertCoordinateSystemMAX(List<float> verts)
+		{
+			Debug.Assert(verts.Count % 3 == 0);
+			return;
+
+			for(int i=0;i < verts.Count / 3;i++)
+			{
+				float	temp	=verts[i * 3 + 1];
+
+				//negate x, and swap y and z
+				verts[i * 3]		=-verts[i * 3];
+				verts[i * 3 + 1]	=verts[i * 3 + 2];
+				verts[i * 3 + 2]	=temp;
+			}
+		}
+
+
+		public static Matrix ConvertMatrixCoordinateSystemMAX(Matrix inMat)
+		{
+			Matrix	convertMat	=Matrix.Identity;
+			convertMat.M11	=-1;
+			convertMat.M22	=0;
+			convertMat.M23	=1;
+			convertMat.M32	=1;
+			convertMat.M33	=0;
+
+			Matrix	outMat	=inMat * convertMat;
+//			Matrix	outMat	=convertMat * inMat;
+//			Matrix	outMat	=inMat;
+
+//			Matrix	outMat;
+
+			return	outMat;
+
+			outMat.M11	=inMat.M11;
+			outMat.M12	=inMat.M12;
+			outMat.M13	=inMat.M13;
+			outMat.M14	=inMat.M14;
+			outMat.M21	=inMat.M21;
+			outMat.M22	=inMat.M22;
+			outMat.M23	=inMat.M23;
+			outMat.M24	=inMat.M24;
+			outMat.M31	=inMat.M31;
+			outMat.M32	=inMat.M32;
+			outMat.M33	=inMat.M33;
+			outMat.M34	=inMat.M34;
+			outMat.M41	=-inMat.M41;
+			outMat.M42	=inMat.M43;
+			outMat.M43	=inMat.M42;
+			outMat.M44	=inMat.M44;
+
+			return	outMat;
+		}
+
+
+		public static Matrix ConvertMatrixCoordinateSystemSceneNode(Matrix inMat)
+		{
+			Matrix	convertMat	=Matrix.Identity;
+			convertMat.M11	=1;
+			convertMat.M22	=0;
+			convertMat.M23	=1;
+			convertMat.M32	=-1;
+			convertMat.M33	=0;
+
+//			Matrix	outMat	=inMat * convertMat;
+//			Matrix	outMat	=convertMat * inMat;
+			Matrix	outMat	=inMat;
+
+			return	outMat;
 		}
 
 
