@@ -37,9 +37,10 @@ namespace ColladaConvert
 		private MouseState		mLastMouseState;
 
 		//cam / player stuff will move later
-		private Vector3	mCamPos, mDotPos;
+		private Vector3	mCamPos, mDotPos, mBonePos;
 		private float	mPitch, mYaw, mRoll;
 		private float	mBonePitch, mBoneYaw, mBoneRoll;
+		private	Matrix	mBoneMatrix;
 
 		private	Texture2D	mDesu;
 		private	Texture2D	mEureka;
@@ -86,10 +87,10 @@ namespace ColladaConvert
 			mTestEffect	=Content.Load<Effect>("VPosNormTexAnim");
 //			mCollada	=new Collada("content/beach.dae", GraphicsDevice);
 //			mCollada	=new Collada("content/cylboned.dae", GraphicsDevice);
-			mCollada	=new Collada("content/boxboned.dae", GraphicsDevice);
+//			mCollada	=new Collada("content/boxboned.dae", GraphicsDevice);
 //			mCollada	=new Collada("content/goblinry.dae", GraphicsDevice);
 //			mCollada	=new Collada("content/cyl.dae", GraphicsDevice);
-//			mCollada	=new Collada("content/hero.dae", GraphicsDevice);
+			mCollada	=new Collada("content/hero.dae", GraphicsDevice);
 //			mCollada	=new Collada("content/WackyWalk2.dae", GraphicsDevice);
 //			mCollada	=new Collada("content/simplebox.dae", GraphicsDevice);
 			mDesu	=Content.Load<Texture2D>("desu");
@@ -194,6 +195,10 @@ namespace ColladaConvert
 		private void UpdateMatrices()
 		{
 			// Compute camera matrices.
+			mBoneMatrix	=Matrix.CreateTranslation(mBonePos) *
+				Matrix.CreateRotationY(MathHelper.ToRadians(mBoneYaw)) *
+				Matrix.CreateRotationX(MathHelper.ToRadians(mBonePitch)) *
+				Matrix.CreateRotationZ(MathHelper.ToRadians(mBoneRoll));
 
 			mViewMatrix	=Matrix.CreateTranslation(mCamPos) *
 				Matrix.CreateRotationY(MathHelper.ToRadians(mYaw)) *
@@ -243,6 +248,7 @@ namespace ColladaConvert
 			UpdateCamera(gameTime);
 
 			UpdateMatrices();
+
 			//rotate the light vector
 
 			//grab a time value to use to spin the axii
@@ -266,46 +272,10 @@ namespace ColladaConvert
 
 			//put in some keys for messing with bones
 			float	time		=(float)gameTime.ElapsedGameTime.TotalMilliseconds;
-			bool	bChanged	=false;
-			if(mCurrentKeyboardState.IsKeyDown(Keys.I))
-			{
-				mBonePitch	+=(time * 0.001f);
-				bChanged	=true;
-			}
-			else if(mCurrentKeyboardState.IsKeyDown(Keys.K))
-			{
-				mBonePitch	-=(time * 0.001f);
-				bChanged	=true;
-			}
 
-			if(mCurrentKeyboardState.IsKeyDown(Keys.J))
-			{
-				mBoneYaw	+=(time * 0.001f);
-				bChanged	=true;
-			}
-			else if(mCurrentKeyboardState.IsKeyDown(Keys.L))
-			{
-				mBoneYaw	-=(time * 0.001f);
-				bChanged	=true;
-			}
+			UpdateBone(time);
 
-			if(mCurrentKeyboardState.IsKeyDown(Keys.H))
-			{
-				mBoneRoll	+=(time * 0.001f);
-				bChanged	=true;
-			}
-			else if(mCurrentKeyboardState.IsKeyDown(Keys.U))
-			{
-				mBoneRoll	-=(time * 0.001f);
-				bChanged	=true;
-			}
-
-			Matrix	boneMat	=Matrix.CreateFromYawPitchRoll(mBoneYaw, mBonePitch, mBoneRoll);
-
-			if(bChanged)
-			{
-				mCollada.DebugBoneModify(boneMat);
-			}
+			//mCollada.DebugBoneModify(mBoneMatrix);
 
 			base.Update(gameTime);
 		}
@@ -372,7 +342,6 @@ namespace ColladaConvert
 			mTestEffect.Parameters["mWorld"].SetValue(mWorldMatrix);
 			mTestEffect.Parameters["mView"].SetValue(mViewMatrix);
 			mTestEffect.Parameters["mProjection"].SetValue(mProjectionMatrix);
-			mTestEffect.Parameters["mLocal"].SetValue(Matrix.Identity);	//TODO:fix
 		}
 
 
@@ -460,6 +429,78 @@ namespace ColladaConvert
 
 			mCamPos -= vleft * (mCurrentGamePadState.ThumbSticks.Left.X * time * 0.25f);
 			mCamPos += vin * (mCurrentGamePadState.ThumbSticks.Left.Y * time * 0.25f);
+		}
+
+
+		private void UpdateBone(float time)
+		{
+			Vector3	vup, vleft, vin;
+
+			//grab view matrix in vector transpose
+			vup.X   =mBoneMatrix.M12;
+			vup.Y   =mBoneMatrix.M22;
+			vup.Z   =mBoneMatrix.M32;
+			vleft.X =mBoneMatrix.M11;
+			vleft.Y =mBoneMatrix.M21;
+			vleft.Z =mBoneMatrix.M31;
+			vin.X   =mBoneMatrix.M13;
+			vin.Y   =mBoneMatrix.M23;
+			vin.Z   =mBoneMatrix.M33;
+
+			if(mCurrentKeyboardState.IsKeyDown(Keys.T))
+			{
+				mBonePos	+=vin * (time * 0.1f);
+			}
+			else if(mCurrentKeyboardState.IsKeyDown(Keys.V))
+			{
+				mBonePos	-=vin * (time * 0.1f);
+			}
+
+			if(mCurrentKeyboardState.IsKeyDown(Keys.F))
+			{
+				mBonePos	+=vleft * (time * 0.1f);
+			}
+
+			if(mCurrentKeyboardState.IsKeyDown(Keys.G))
+			{
+				mBonePos	-=vleft * (time * 0.1f);
+			}
+
+			if(mCurrentKeyboardState.IsKeyDown(Keys.I))
+			{
+				mBonePitch	+=(time * 0.1f);
+			}
+			else if(mCurrentKeyboardState.IsKeyDown(Keys.K))
+			{
+				mBonePitch	-=(time * 0.1f);
+			}
+
+			if(mCurrentKeyboardState.IsKeyDown(Keys.J))
+			{
+				mBoneYaw	+=(time * 0.1f);
+			}
+			else if(mCurrentKeyboardState.IsKeyDown(Keys.L))
+			{
+				mBoneYaw	-=(time * 0.1f);
+			}
+
+			if(mCurrentKeyboardState.IsKeyDown(Keys.H))
+			{
+				mBoneRoll	+=(time * 0.1f);
+			}
+			else if(mCurrentKeyboardState.IsKeyDown(Keys.U))
+			{
+				mBoneRoll	-=(time * 0.1f);
+			}
+
+			if(mCurrentKeyboardState.IsKeyDown(Keys.H))
+			{
+				mBoneRoll	+=(time * 0.1f);
+			}
+			else if(mCurrentKeyboardState.IsKeyDown(Keys.U))
+			{
+				mBoneRoll	-=(time * 0.1f);
+			}
 		}
 	}
 }

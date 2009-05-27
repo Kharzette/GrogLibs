@@ -78,6 +78,7 @@ namespace ColladaConvert
 //						mBones.Add(invinv * mat);
 
 						mBones.Add(ibps[i] * mat);
+//						mBones.Add(ibps[i]);
 
 //						mBones.Add(ibps[curMat++] * mat);
 //						mBones.Add(ibps[curMat++]);
@@ -91,7 +92,7 @@ namespace ColladaConvert
 		}
 
 
-		public void ChangeCoordinateSystemMAX(Dictionary<string, SceneNode> nodes)
+		public void ChangeCoordinateSystemMAX()
 		{
 			//grab the list of bones from the skin
 			List<string>	jointNames	=mSkin.GetJointNameArray();
@@ -105,11 +106,6 @@ namespace ColladaConvert
 			}
 
 			mSkin.ConvertBindShapeMatrixCoordinateSystemMAX();
-
-			foreach(KeyValuePair<string, SceneNode> sn in nodes)
-			{
-				sn.Value.ConvertBoneCoordinateSystemMAX();
-			}
 		}
 	}
 }

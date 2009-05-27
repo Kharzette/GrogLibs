@@ -28,16 +28,6 @@ namespace ColladaConvert
 		}
 
 
-		public void ConvertBoneCoordinateSystemMAX()
-		{
-			foreach(KeyValuePair<string, SceneNode> sn in mChildren)
-			{
-				sn.Value.ConvertBoneCoordinateSystemMAX();
-			}
-			mMat	=Collada.ConvertMatrixCoordinateSystemSceneNode(mMat);
-		}
-
-
 		public bool GetMatrixForBone(string boneName, out Matrix outMat)
 		{
 			if(mName == boneName)
@@ -50,13 +40,7 @@ namespace ColladaConvert
 				if(sn.Value.GetMatrixForBone(boneName, out outMat))
 				{
 					//mul by parent
-//					Matrix	invSelf		=Matrix.Invert(outMat);
-//					Matrix	invParent	=Matrix.Invert(mMat);
-//					outMat	=GetMatrix() * invSelf;
-//					outMat	*=invParent;
-//					outMat	=invParent * outMat;
 					outMat	*=GetMatrix();
-//					outMat	=GetMatrix() * outMat;
 					return	true;
 				}
 			}
@@ -80,6 +64,12 @@ namespace ColladaConvert
 				}
 			}
 			return	false;
+		}
+
+
+		public void AdjustRootMatrixForMax()
+		{
+			mMat	*=Matrix.CreateFromYawPitchRoll(0, MathHelper.ToRadians(-90), MathHelper.ToRadians(180));
 		}
 
 
@@ -144,14 +134,7 @@ namespace ColladaConvert
 
 						Collada.GetVectorFromString(r.Value, out trans);
 
-						//negate x, swap y and z						
-						float	temp	=trans.Y;
-						trans.X	=-trans.X;
-						trans.Y	=trans.Z;
-						trans.Z	=temp;
-						
 						mMat	*=Matrix.CreateTranslation(trans);
-//						mMat	=Matrix.CreateTranslation(trans) * mMat;
 					}
 				}
 				else if(r.Name == "instance_geometry")
@@ -175,12 +158,6 @@ namespace ColladaConvert
 
 						Collada.GetVectorFromString(r.Value, out scale);
 						
-						//convert from max
-						float	temp	=scale.Y;
-						scale.X	=-scale.X;
-						scale.Y	=scale.Z;
-						scale.Z	=temp;
-
 						mMat	*=Matrix.CreateScale(scale);
 					}
 				}
@@ -282,15 +259,13 @@ namespace ColladaConvert
 						//bust out the axis into a vec3
 						
 						Vector3	axis;
-//						axis.X	=axisRot.X;
-//						axis.Y	=axisRot.Y;
-//						axis.Z	=axisRot.Z;
-						axis.X	=-axisRot.X;
-						axis.Y	=axisRot.Z;
-						axis.Z	=axisRot.Y;
+						axis.X	=axisRot.X;
+						axis.Y	=axisRot.Y;
+						axis.Z	=axisRot.Z;
 
-//						mMat	=Matrix.CreateFromAxisAngle(axis, MathHelper.ToRadians(axisRot.W)) * mMat;
-						mMat	*=Matrix.CreateFromAxisAngle(axis, MathHelper.ToRadians(axisRot.W));
+						//note concat order
+						mMat	=Matrix.CreateFromAxisAngle(
+							axis, MathHelper.ToRadians(axisRot.W)) * mMat;
 					}
 				}
 				else if(r.Name == "node")

@@ -7,7 +7,7 @@
 shared float4x4	mWorld;
 shared float4x4 mView;
 shared float4x4 mProjection;
-shared float4x4	mLocal;
+shared float4x4	mBindPose;
 float4x4		mBones[MAX_BONES];
 
 //texture layers used on the surface
@@ -69,7 +69,7 @@ VSOutput DiffuseGouradSkin(float3	position	: POSITION,
 							float2	tex0		: TEXCOORD0)
 {
 	VSOutput	output;
-	float4		vertPos	=mul(float4(position, 1.0f), mLocal);
+	float4		vertPos	=mul(float4(position, 1.0f), mBindPose);
 //	float4		vertPos	=float4(position, 1.0f);
 	
 	//generate the world-view-proj matrix

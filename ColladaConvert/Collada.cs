@@ -35,9 +35,6 @@ namespace ColladaConvert
 
 				DrawChunk	cnk	=new DrawChunk();
 
-				//convert coordinate system to ours
-				ConvertCoordinateSystemMAX(verts);
-
 				cnk.CreateBaseVerts(verts);
 
 				cnk.SetGeometryID(geo.Key);
@@ -49,7 +46,7 @@ namespace ColladaConvert
 			{
 				Skin	sk	=cont.Value.GetSkin();
 
-				cont.Value.ChangeCoordinateSystemMAX(mRootNodes);
+				cont.Value.ChangeCoordinateSystemMAX();
 
 				foreach(DrawChunk cnk in mChunks)
 				{
@@ -58,6 +55,12 @@ namespace ColladaConvert
 						cnk.AddWeightsToBaseVerts(sk);
 					}
 				}
+			}
+
+			foreach(KeyValuePair<string, SceneNode> roots in mRootNodes)
+			{
+				//throw a 90 degree x rotation onto every root
+				roots.Value.AdjustRootMatrixForMax();
 			}
 
 			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
@@ -147,9 +150,8 @@ namespace ColladaConvert
 
 				dc.UpdateBones(fx);
 
-				fx.Parameters["mLocal"].SetValue(dc.mBindShapeMatrix);
-//				fx.Parameters["mLocal"].SetValue(mRootNodes["Box01"].GetMatrix());
-//				fx.Parameters["mLocal"].SetValue(loc);
+				//set the bind pose matrix for this chunk
+				fx.Parameters["mBindPose"].SetValue(dc.mBindShapeMatrix);
 
 				fx.Begin();
 				foreach(EffectPass pass in fx.CurrentTechnique.Passes)
@@ -600,6 +602,7 @@ namespace ColladaConvert
 		{
 			string[] tokens	=str.Split(' ');
 
+			//todo:  This is very fragile
 			Single.TryParse(tokens[0], out vec.X);
 			Single.TryParse(tokens[1], out vec.Y);
 			Single.TryParse(tokens[2], out vec.Z);
@@ -610,6 +613,7 @@ namespace ColladaConvert
 		{
 			string[] tokens	=str.Split(' ');
 
+			//todo:  This is very fragile
 			Single.TryParse(tokens[0],out vec.X);
 			Single.TryParse(tokens[1],out vec.Y);
 			Single.TryParse(tokens[2],out vec.Z);
@@ -622,7 +626,9 @@ namespace ColladaConvert
 			string[] tokens	=str.Split(' ', '\n', '\t');
 
 			int	tokIdx	=0;
-			
+
+			//transpose as we load
+			//this looks very unsafe / dangerous
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M11));
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M21));
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M31));
@@ -639,34 +645,15 @@ namespace ColladaConvert
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M24));
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M34));
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M44));
-			/*
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M11));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M12));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M13));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M14));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M21));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M22));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M23));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M24));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M31));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M32));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M33));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M34));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M41));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M42));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M43));
-			while(!Single.TryParse(tokens[tokIdx++],out mat.M44));
-			*/
 		}
 
 
 		//change a floatarray of vector3's from max's
 		//coordinate system to ours
+		//not used, but nice to have for debugging
 		private void ConvertCoordinateSystemMAX(List<float> verts)
 		{
 			Debug.Assert(verts.Count % 3 == 0);
-			return;
-
 			for(int i=0;i < verts.Count / 3;i++)
 			{
 				float	temp	=verts[i * 3 + 1];
@@ -679,39 +666,23 @@ namespace ColladaConvert
 		}
 
 
+		//decomposition seems the only reliable way
+		//to convert between handedness
 		public static Matrix ConvertMatrixCoordinateSystemMAX(Matrix inMat)
 		{
-			Matrix	convertMat	=Matrix.Identity;
-			convertMat.M11	=-1;
-			convertMat.M22	=0;
-			convertMat.M23	=1;
-			convertMat.M32	=1;
-			convertMat.M33	=0;
+			Vector3		scaleVec, trans;
+			Quaternion	rot;
 
-			Matrix	outMat	=inMat * convertMat;
-//			Matrix	outMat	=convertMat * inMat;
-//			Matrix	outMat	=inMat;
+			//this could fail
+			bool	ret	=inMat.Decompose(out scaleVec, out rot, out trans);
 
-//			Matrix	outMat;
+			Debug.Assert(ret);
 
-			return	outMat;
-
-			outMat.M11	=inMat.M11;
-			outMat.M12	=inMat.M12;
-			outMat.M13	=inMat.M13;
-			outMat.M14	=inMat.M14;
-			outMat.M21	=inMat.M21;
-			outMat.M22	=inMat.M22;
-			outMat.M23	=inMat.M23;
-			outMat.M24	=inMat.M24;
-			outMat.M31	=inMat.M31;
-			outMat.M32	=inMat.M32;
-			outMat.M33	=inMat.M33;
-			outMat.M34	=inMat.M34;
-			outMat.M41	=-inMat.M41;
-			outMat.M42	=inMat.M43;
-			outMat.M43	=inMat.M42;
-			outMat.M44	=inMat.M44;
+			//wild guess at proper order
+			Matrix	outMat;
+			outMat	=Matrix.CreateScale(scaleVec);
+			outMat	*=Matrix.CreateFromQuaternion(rot);
+			outMat	*=Matrix.CreateTranslation(trans);
 
 			return	outMat;
 		}
@@ -719,41 +690,25 @@ namespace ColladaConvert
 
 		public static Matrix ConvertMatrixCoordinateSystemSceneNode(Matrix inMat)
 		{
-			Matrix	convertMat	=Matrix.Identity;
-			convertMat.M11	=1;
-			convertMat.M22	=0;
-			convertMat.M23	=1;
-			convertMat.M32	=-1;
-			convertMat.M33	=0;
-
-//			Matrix	outMat	=inMat * convertMat;
-//			Matrix	outMat	=convertMat * inMat;
 			Matrix	outMat	=inMat;
 
 			return	outMat;
 		}
 
 
+		//debug routine for messing with bones
 		public void DebugBoneModify(Matrix mat)
 		{
-			/*
-			foreach(KeyValuePair<string, SceneNode> nodes in mRootNodes)
-			{
-				nodes.Value.ModifyMatrixForBone("connectBone01", mat);
-			}*/
-			Controller		cont	=mControllers["Cone02Controller"];
+			Controller		cont	=mControllers["Box01Controller"];
 			Skin			sk		=cont.GetSkin();
 			Matrix			bind	=sk.GetBindShapeMatrix();
 			List<Matrix>	ibps	=sk.GetInverseBindPoses();
 			Matrix			bone;
 
-			mRootNodes["Bone01"].GetMatrixForBone("connectBone01", out bone);
+			mRootNodes["Bone01"].GetMatrixForBone("Bone01", out bone);
 
 			//mod the shader bones directly
-			mChunks[2].mBones[0]	=ibps[0] * bone * mat;
-//			mChunks[2].mBones[0]	=bind * ibps[0] * bone * mat;
-//			mChunks[2].mBones[0]	=bind * bone * ibps[0] * mat;
-//			mChunks[2].mBones[0]	=bone * mat;
+			mChunks[0].mBones[0]	=ibps[0] * bone * mat;
 		}
 
 
