@@ -88,11 +88,13 @@
   <ItemGroup>
     <Compile Include="Accessor.cs" />
     <Compile Include="Animation.cs" />
+    <Compile Include="Animator.cs" />
     <Compile Include="Channel.cs" />
     <Compile Include="Collada.cs" />
     <Compile Include="ColladaEffect.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="DrawChunk.cs" />
+    <Compile Include="GameSkeleton.cs" />
     <Compile Include="Geometry.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="Joints.cs" />

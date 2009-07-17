@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
+using System.Xml;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Media;
-using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
 
 namespace ColladaConvert
@@ -81,18 +78,11 @@ namespace ColladaConvert
 		/// </summary>
 		protected override void LoadContent()
 		{
-			//load shader
-			mFX		=Content.Load<Effect>("Simple");
-
+			//load debug shaders
+			mFX			=Content.Load<Effect>("Simple");
 			mTestEffect	=Content.Load<Effect>("VPosNormTexAnim");
-//			mCollada	=new Collada("content/beach.dae", GraphicsDevice);
-//			mCollada	=new Collada("content/cylboned.dae", GraphicsDevice);
-//			mCollada	=new Collada("content/boxboned.dae", GraphicsDevice);
-//			mCollada	=new Collada("content/goblinry.dae", GraphicsDevice);
-//			mCollada	=new Collada("content/cyl.dae", GraphicsDevice);
+
 			mCollada	=new Collada("content/hero.dae", GraphicsDevice);
-//			mCollada	=new Collada("content/WackyWalk2.dae", GraphicsDevice);
-//			mCollada	=new Collada("content/simplebox.dae", GraphicsDevice);
 			mDesu	=Content.Load<Texture2D>("desu");
 			mEureka	=Content.Load<Texture2D>("Eureka");
 

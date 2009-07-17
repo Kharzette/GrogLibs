@@ -21,6 +21,7 @@ namespace ColladaConvert
 
 		//actual useful data for the game
 		private List<DrawChunk>	mChunks	=new List<DrawChunk>();
+		private	GameSkeleton	mGameSkeleton;
 
 		private Dictionary<string, Texture2D>	mTextures	=new Dictionary<string,Texture2D>();
 
@@ -57,11 +58,7 @@ namespace ColladaConvert
 				}
 			}
 
-			foreach(KeyValuePair<string, SceneNode> roots in mRootNodes)
-			{
-				//throw a 90 degree x rotation onto every root
-				roots.Value.AdjustRootMatrixForMax();
-			}
+			mGameSkeleton	=new GameSkeleton(mRootNodes);
 
 			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
 			{
@@ -446,6 +443,8 @@ namespace ColladaConvert
 			file.Seek(0, SeekOrigin.Begin);
 			r	=XmlReader.Create(file);
 			LoadColladaEffects(r);
+
+			file.Close();
 		}
 
 

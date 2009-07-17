@@ -21,6 +21,12 @@ namespace ColladaConvert
 		private	List<InstanceMaterial>	mBindMaterials;
 
 
+		public Dictionary<string, SceneNode>	GetChildren()
+		{
+			return	mChildren;
+		}
+
+
 		public SceneNode()
 		{
 			mBindMaterials	=new List<InstanceMaterial>();
@@ -83,6 +89,12 @@ namespace ColladaConvert
 		public Matrix GetMatrix()
 		{
 			return	mMat;
+		}
+
+
+		public string GetName()
+		{
+			return	mName;
 		}
 
 
