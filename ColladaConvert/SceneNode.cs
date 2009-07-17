@@ -69,6 +69,7 @@ namespace ColladaConvert
 
 		public void AdjustRootMatrixForMax()
 		{
+			//mMat	*=Matrix.CreateTranslation(50.0f, 80.0f, 150.0f);
 			mMat	*=Matrix.CreateFromYawPitchRoll(0, MathHelper.ToRadians(-90), MathHelper.ToRadians(180));
 		}
 

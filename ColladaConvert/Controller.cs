@@ -73,18 +73,9 @@ namespace ColladaConvert
 					Matrix	mat;
 					if(sn.Value.GetMatrixForBone(jn, out mat))
 					{
-//						Matrix	invinv	=Matrix.Invert(ibps[i]);
-//						mBones.Add(mat * invinv);
-//						mBones.Add(invinv * mat);
-
+						//shader bones expected to be inverse
+						//bind pose * scene node bone
 						mBones.Add(ibps[i] * mat);
-//						mBones.Add(ibps[i]);
-
-//						mBones.Add(ibps[curMat++] * mat);
-//						mBones.Add(ibps[curMat++]);
-//						mBones.Add(mat * ibps[curMat++]);
-//						mBones.Add(bind * invinv);
-//						mBones.Add(invinv * mat);
 						break;
 					}
 				}
