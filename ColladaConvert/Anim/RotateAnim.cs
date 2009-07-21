@@ -35,7 +35,7 @@ namespace ColladaConvert
 	{
 		protected override void ApplyValueToOperand(float val)
 		{
-			((Rotate)mOperand).mValue.W	*=MathHelper.ToRadians(val);
+			((Rotate)mOperand).mValue.W	=MathHelper.ToRadians(val);
 		}
 		public RotateWAnim(AnimCreationParameters acp) : base(acp) { }
 	}

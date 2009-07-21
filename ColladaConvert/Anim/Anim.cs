@@ -81,8 +81,10 @@ namespace ColladaConvert
 			int	startIndex;
 			for(startIndex = 0;startIndex < mTimes.Count;startIndex++)
 			{
-				if(animTime >= mTimes[startIndex])
+				if(animTime < mTimes[startIndex])
 				{
+					//back up one
+					startIndex--;
 					break;	//found
 				}
 			}
@@ -100,6 +102,9 @@ namespace ColladaConvert
 			float	val	=GetBezierPosition(percentage,
 				mValues[startIndex], mControl1[startIndex],
 				mControl2[startIndex + 1], mValues[startIndex + 1]);
+
+			//just use keyframe
+			val	=mValues[startIndex];
 
 			ApplyValueToOperand(val);
 		}
