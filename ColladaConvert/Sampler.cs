@@ -32,5 +32,18 @@ namespace ColladaConvert
 				}
 			}
 		}
+
+
+		public string GetSourceForSemantic(string sem)
+		{
+			foreach(Input i in mInputs)
+			{
+				if(i.GetSemantic() == sem)
+				{
+					return	i.GetSource();
+				}
+			}
+			return	"";
+		}
 	}
 }

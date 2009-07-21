@@ -13,6 +13,23 @@ namespace ColladaConvert
 		private List<SubAnimation>	mSubAnims	=new List<SubAnimation>();
 
 
+		public string GetName()
+		{
+			return	mName;
+		}
+
+
+		public List<Anim> GetAnims(Dictionary<string, SceneNode> roots)
+		{
+			List<Anim>	ret	=new List<Anim>();
+			foreach(SubAnimation sa in mSubAnims)
+			{
+				ret.AddRange(sa.GetAnims(roots));
+			}
+			return	ret;
+		}
+
+
 		public void Load(XmlReader r)
 		{
 			r.MoveToNextAttribute();

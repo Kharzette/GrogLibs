@@ -267,6 +267,8 @@ namespace ColladaConvert
 
 			//mCollada.DebugBoneModify(mBoneMatrix);
 
+			mCollada.Animate("Bip01-anim", (float)(gameTime.TotalGameTime.TotalSeconds * 0.001f));
+
 			base.Update(gameTime);
 		}
 

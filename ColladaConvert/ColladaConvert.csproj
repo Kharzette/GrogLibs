@@ -87,8 +87,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Accessor.cs" />
+    <Compile Include="Anim\Anim.cs" />
     <Compile Include="Animation.cs" />
     <Compile Include="Animator.cs" />
+    <Compile Include="Anim\RotateAnim.cs" />
+    <Compile Include="Anim\ScaleAnim.cs" />
     <Compile Include="Channel.cs" />
     <Compile Include="Collada.cs" />
     <Compile Include="ColladaEffect.cs" />
@@ -98,8 +101,15 @@
     <Compile Include="Geometry.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="Joints.cs" />
+    <Compile Include="NodeElements\LookAt.cs" />
     <Compile Include="Material.cs" />
     <Compile Include="Mesh.cs" />
+    <Compile Include="NodeElements\MatrixL.cs" />
+    <Compile Include="NodeElements\NodeElement.cs" />
+    <Compile Include="NodeElements\Rotate.cs" />
+    <Compile Include="NodeElements\Scale.cs" />
+    <Compile Include="NodeElements\Skew.cs" />
+    <Compile Include="NodeElements\Translate.cs" />
     <Compile Include="Param.cs" />
     <Compile Include="Polygons.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -110,6 +120,7 @@
     <Compile Include="Skin.cs" />
     <Compile Include="Source.cs" />
     <Compile Include="SubAnimation.cs" />
+    <Compile Include="Anim\TransAnim.cs" />
     <Compile Include="VertexWeights.cs" />
     <Compile Include="Vertices.cs" />
   </ItemGroup>

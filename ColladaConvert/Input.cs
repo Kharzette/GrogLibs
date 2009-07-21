@@ -81,6 +81,18 @@ namespace ColladaConvert
 		}
 
 
+		public string GetSemantic()
+		{
+			return	mSemantic;
+		}
+
+
+		public string GetSource()
+		{
+			return	mSource;
+		}
+
+
 		public void Load(XmlReader r)
 		{
 			int	attCnt	=r.AttributeCount;

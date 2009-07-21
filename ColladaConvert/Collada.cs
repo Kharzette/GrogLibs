@@ -22,6 +22,7 @@ namespace ColladaConvert
 		//actual useful data for the game
 		private List<DrawChunk>	mChunks	=new List<DrawChunk>();
 		private	GameSkeleton	mGameSkeleton;
+		public Animator			mAnimator;
 
 		private Dictionary<string, Texture2D>	mTextures	=new Dictionary<string,Texture2D>();
 
@@ -93,15 +94,28 @@ namespace ColladaConvert
 //				mTextures.Add(li.Value.mName, tex);
 			}
 
-			BuildBones(g);
+			BuildBones();
+
+			//create useful anims
+			mAnimator	=new Animator(mAnimations, mRootNodes);
+		}
+
+
+		public void Animate(string anim, float time)
+		{
+//			mAnimator.Animate(anim, time);
+
+			mAnimator.AnimateAll(time);
+
+			BuildBones();
 		}
 
 		
-		private void	BuildBones(GraphicsDevice g)
+		private void	BuildBones()
 		{
 			foreach(KeyValuePair<string, Controller> cont in mControllers)
 			{
-				cont.Value.BuildBones(g, mRootNodes);
+				cont.Value.BuildBones(mRootNodes);
 			}
 
 			//copy bones into drawchunks
@@ -617,6 +631,52 @@ namespace ColladaConvert
 			Single.TryParse(tokens[1],out vec.Y);
 			Single.TryParse(tokens[2],out vec.Z);
 			Single.TryParse(tokens[3],out vec.W);
+		}
+
+
+		public static void GetQuaternionFromString(string str, out Quaternion q)
+		{
+			string[] tokens	=str.Split(' ');
+
+			//todo:  This is very fragile
+			Single.TryParse(tokens[0],out q.X);
+			Single.TryParse(tokens[1],out q.Y);
+			Single.TryParse(tokens[2],out q.Z);
+			Single.TryParse(tokens[3],out q.W);
+
+			q.W	=MathHelper.ToRadians(q.W);
+		}
+
+
+		public static void GetSkewFromString(string str, out float ang, out Vector3 axRot, out Vector3 axTrans)
+		{
+			string[] tokens	=str.Split(' ');
+
+			//todo:  This is very fragile
+			Single.TryParse(tokens[0], out ang);
+			Single.TryParse(tokens[1], out axRot.X);
+			Single.TryParse(tokens[2], out axRot.Y);
+			Single.TryParse(tokens[3], out axRot.Z);
+			Single.TryParse(tokens[4], out axTrans.X);
+			Single.TryParse(tokens[5], out axTrans.Y);
+			Single.TryParse(tokens[6], out axTrans.Z);
+		}
+
+
+		public static void GetLookAtFromString(string str, out Vector3 eyePos, out Vector3 interestPos, out Vector3 upVec)
+		{
+			string[] tokens	=str.Split(' ');
+
+			//todo:  This is very fragile
+			Single.TryParse(tokens[0], out eyePos.X);
+			Single.TryParse(tokens[1], out eyePos.Y);
+			Single.TryParse(tokens[2], out eyePos.Z);
+			Single.TryParse(tokens[3], out interestPos.X);
+			Single.TryParse(tokens[4], out interestPos.Y);
+			Single.TryParse(tokens[5], out interestPos.Z);
+			Single.TryParse(tokens[6], out upVec.X);
+			Single.TryParse(tokens[7], out upVec.Y);
+			Single.TryParse(tokens[8], out upVec.Z);
 		}
 
 

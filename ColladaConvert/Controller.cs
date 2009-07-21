@@ -54,8 +54,11 @@ namespace ColladaConvert
 		}
 
 		
-		public void BuildBones(GraphicsDevice g, Dictionary<string, SceneNode> nodes)
+		public void BuildBones(Dictionary<string, SceneNode> nodes)
 		{
+			//clear bones
+			mBones.Clear();
+
 			//grab the list of bones from the skin
 			List<string>	jointNames	=mSkin.GetJointNameArray();
 

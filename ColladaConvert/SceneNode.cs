@@ -8,10 +8,11 @@ namespace ColladaConvert
 {
 	public class SceneNode
 	{
-		private	string			mName, mSID, mType;
-		private	Matrix			mMat;
+		string	mName, mType, mSID;
+		Matrix	mMat;
 
-		private	Dictionary<string, SceneNode>	mChildren	=new Dictionary<string, SceneNode>();
+		Dictionary<string, NodeElement>	mElements	=new Dictionary<string, NodeElement>();
+		Dictionary<string, SceneNode>	mChildren	=new Dictionary<string, SceneNode>();
 
 		//skin instance stuff
 		private string	mInstanceControllerURL;
@@ -55,6 +56,30 @@ namespace ColladaConvert
 		}
 
 
+		public bool GetElement(string boneName, string elName, out NodeElement el)
+		{
+			if(mName == boneName)
+			{
+				if(mElements.ContainsKey(elName))
+				{
+					el	=mElements[elName];
+					return	true;
+				}
+				el	=null;
+				return	false;
+			}
+			foreach(KeyValuePair<string, SceneNode> sn in mChildren)
+			{
+				if(sn.Value.GetElement(boneName, elName, out el))
+				{
+					return	true;
+				}
+			}
+			el	=null;
+			return	false;
+		}
+
+
 		public bool ModifyMatrixForBone(string boneName, Matrix mat)
 		{
 			if(mName == boneName)
@@ -88,6 +113,23 @@ namespace ColladaConvert
 
 		public Matrix GetMatrix()
 		{
+			//compose from elements
+			mMat	=Matrix.Identity;
+
+			//this should probably be cached
+			foreach(KeyValuePair<string,NodeElement> el in mElements)
+			{
+				if(el.Value is Rotate)
+				{
+//					mMat	*=el.Value.GetMatrix();
+					mMat	=el.Value.GetMatrix() * mMat;
+				}
+				else
+				{
+					mMat	*=el.Value.GetMatrix();
+				}
+			}
+
 			return	mMat;
 		}
 
@@ -124,181 +166,143 @@ namespace ColladaConvert
 				r.MoveToNextAttribute();
 			}
 
-			InstanceMaterial	m		=null;
-			bool				bEmpty	=false;
-			
 			while(r.Read())
 			{
 				if(r.NodeType == XmlNodeType.Whitespace)
 				{
 					continue;
 				}
+				else if(r.NodeType != XmlNodeType.Element && r.Name == "node")
+				{
+					return;
+				}
+				else if(r.NodeType != XmlNodeType.Element)
+				{
+					continue;
+				}
 
 				if(r.Name == "translate")
 				{
-					int attcnt2	=r.AttributeCount;
+					Translate	t	=new Translate(r);
 
-					if(attcnt2 > 0)
+					//sids are optional
+					string	sid	=t.GetSID();
+					if(sid == null)
 					{
-						//skip to the next element, the actual value
-						r.Read();
-
-						Vector3	trans;
-
-						Collada.GetVectorFromString(r.Value, out trans);
-
-						mMat	*=Matrix.CreateTranslation(trans);
+						sid	="translate";
 					}
+					mElements.Add(sid, t);
 				}
-				else if(r.Name == "instance_geometry")
+				else if(r.Name == "rotate")
 				{
-					if(r.AttributeCount > 0)
+					Rotate	rot	=new Rotate(r);
+
+					//sids are optional
+					string	sid	=rot.GetSID();
+					if(sid == null)
 					{
-						r.MoveToFirstAttribute();
-						mInstanceGeometryURL	=r.Value;
+						sid	="rotate";
 					}
+					mElements.Add(sid, rot);
 				}
 				else if(r.Name == "scale")
 				{
-					int attcnt2	=r.AttributeCount;
+					Scale	s	=new Scale(r);
 
-					if(attcnt2 > 0)
+					//sids are optional
+					string	sid	=s.GetSID();
+					if(sid == null)
 					{
-						//skip to the next element, the actual value
-						r.Read();
-
-						Vector3	scale;
-
-						Collada.GetVectorFromString(r.Value, out scale);
-						
-						mMat	*=Matrix.CreateScale(scale);
+						sid	="scale";
 					}
+					mElements.Add(sid, s);
+				}
+				else if(r.Name == "skew")
+				{
+					Skew	s	=new Skew(r);
+					//sids are optional
+					string	sid	=s.GetSID();
+					if(sid == null)
+					{
+						sid	="skew";
+					}
+					mElements.Add(sid, s);
+				}
+				else if(r.Name == "matrix")
+				{
+					MatrixL	mat	=new MatrixL(r);
+
+					//sids are optional
+					string	sid	=mat.GetSID();
+					if(sid == null)
+					{
+						sid	="matrix";
+					}
+					mElements.Add(sid, mat);
+				}
+				else if(r.Name == "LookAt")
+				{
+					LookAt	la	=new LookAt(r);
+
+					//sids are optional
+					string	sid	=la.GetSID();
+					if(sid == null)
+					{
+						sid	="lookat";
+					}
+					mElements.Add(sid, la);
+				}
+				else if(r.Name == "instance_geometry")
+				{
+					r.MoveToFirstAttribute();
+					mInstanceGeometryURL	=r.Value;
 				}
 				else if(r.Name == "instance_material")
 				{
-					if(r.AttributeCount > 0)
-					{
-						bEmpty	=r.IsEmptyElement;
-
-						r.MoveToFirstAttribute();
-
-						m	=new InstanceMaterial();
-
-						if(r.Name == "symbol")
-						{
-							m.mSymbol	=r.Value;
-						}
-						else if(r.Name == "target")
-						{
-							m.mTarget	=r.Value;
-						}
-
-						r.MoveToNextAttribute();
-
-						if(r.Name == "symbol")
-						{
-							m.mSymbol	=r.Value;
-						}
-						else if(r.Name == "target")
-						{
-							m.mTarget	=r.Value;
-						}
-						if(bEmpty)
-						{
-							mBindMaterials.Add(m);
-						}
-					}
-					else
-					{
-						if(!bEmpty)
-						{
-							mBindMaterials.Add(m);
-						}
-					}
-				}
-				else if(r.Name == "bind")
-				{
 					r.MoveToFirstAttribute();
 
-					if(r.Name == "semantic")
+					InstanceMaterial	m	=new InstanceMaterial();
+
+					if(r.Name == "symbol")
 					{
-						m.mBindSemantic	=r.Value;
+						m.mSymbol	=r.Value;
 					}
 					else if(r.Name == "target")
 					{
-						m.mBindTarget	=r.Value;
+						m.mTarget	=r.Value;
 					}
 
 					r.MoveToNextAttribute();
 
-					if(r.Name == "semantic")
+					if(r.Name == "symbol")
 					{
-						m.mBindSemantic	=r.Value;
+						m.mSymbol	=r.Value;
 					}
 					else if(r.Name == "target")
 					{
-						m.mBindTarget	=r.Value;
+						m.mTarget	=r.Value;
 					}
+					mBindMaterials.Add(m);
 				}
 				else if(r.Name == "instance_controller")
 				{
-					if(r.AttributeCount > 0)
-					{
-						r.MoveToFirstAttribute();
-
-						mInstanceControllerURL	=r.Value;
-					}
+					r.MoveToFirstAttribute();
+					mInstanceControllerURL	=r.Value;
 				}
 				else if(r.Name == "skeleton")
 				{
 					r.Read();
 					mSkeleton	=r.Value;
 				}
-				else if(r.Name == "rotate")
-				{
-					int attcnt2	=r.AttributeCount;
-
-					if(attcnt2 > 0)
-					{
-						r.MoveToFirstAttribute();
-
-						//skip to the next element, the actual value
-						r.Read();
-
-						//these are a 3 element axis + a rotation in degrees
-						Vector4	axisRot;
-						Collada.GetVectorFromString(r.Value, out axisRot);
-
-						//bust out the axis into a vec3
-						
-						Vector3	axis;
-						axis.X	=axisRot.X;
-						axis.Y	=axisRot.Y;
-						axis.Z	=axisRot.Z;
-
-						//note concat order
-						mMat	=Matrix.CreateFromAxisAngle(
-							axis, MathHelper.ToRadians(axisRot.W)) * mMat;
-					}
-				}
 				else if(r.Name == "node")
 				{
-					int attcnt2	=r.AttributeCount;
+					r.MoveToFirstAttribute();
+					string	id	=r.Value;
 
-					if(attcnt2 > 0)
-					{
-						r.MoveToFirstAttribute();
-						string	id	=r.Value;
+					SceneNode child	=new SceneNode();
+					child.LoadNode(r);
 
-						SceneNode child	=new SceneNode();
-						child.LoadNode(r);
-
-						mChildren.Add(id, child);
-					}
-					else
-					{
-						return;
-					}
+					mChildren.Add(id, child);
 				}
 			}
 		}
