@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -99,18 +100,39 @@ namespace ColladaConvert
 			//multiply by amount beyond p1
 			percentage	*=(animTime - mTimes[startIndex]);
 
+			//can't get this bezier stuff to work
+			/*
 			float	val	=GetBezierPosition(percentage,
 				mValues[startIndex], mControl1[startIndex],
 				mControl2[startIndex + 1], mValues[startIndex + 1]);
 
-			//just use keyframe
-			val	=mValues[startIndex];
+			float	val2	=LongWay(percentage, mValues[startIndex], mControl1[startIndex],
+				mControl2[startIndex + 1], mValues[startIndex + 1]);
+			*/
 
-			ApplyValueToOperand(val);
+			float	val3	=mValues[startIndex + 1] - mValues[startIndex];
+			val3	*=percentage;
+			val3	+=mValues[startIndex];
+
+			Debug.Assert(percentage >= 0.0f && percentage <= 1.0f);
+
+			//just use keyframe
+			//val	=mValues[startIndex];
+
+			ApplyValueToOperand(val3);
 		}
 
 
 		protected abstract void ApplyValueToOperand(float val);
+
+
+		private static float LongWay(float t, float p0, float p1, float p2, float p3)
+		{
+			return	((1 - t) * (1 - t) * (1 - t)) * p0 +
+				3 * ((1 - t) * (1 - t)) * t * p1 +
+				3 * (1 - t) * (t * t) * p2 +
+				(t * t * t) * p3;
+		}
 
 
 		private static float B1(float t)
@@ -146,9 +168,6 @@ namespace ColladaConvert
 			float	p2,
 			float	p3)
 		{
-			p1	=1.0f - p1;
-			p2	=1.0f - p2;
-
 			float	pos	=(B4(percent) * p0) +
 				(B3(percent) * p1) +
 				(B2(percent) * p2) +
