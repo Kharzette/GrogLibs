@@ -32,6 +32,12 @@ namespace ColladaConvert
 		}
 
 
+		public List<float> GetColors(int set)
+		{
+			return	mMesh.GetColors(set);
+		}
+
+
 		public List<int> GetNormalIndexs()
 		{
 			return	mMesh.GetNormalIndexs();
@@ -41,6 +47,12 @@ namespace ColladaConvert
 		public List<int> GetTexCoordIndexs(int set)
 		{
 			return	mMesh.GetTexCoordIndexs(set);
+		}
+
+
+		public List<int> GetColorIndexs(int set)
+		{
+			return	mMesh.GetColorIndexs(set);
 		}
 
 

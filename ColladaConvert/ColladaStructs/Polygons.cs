@@ -36,6 +36,19 @@ namespace ColladaConvert
 		}
 
 
+		public string GetColorSourceKey(int set)
+		{
+			foreach(Input inp in mInputs)
+			{
+				if(inp.IsColor(set))
+				{
+					return	inp.GetKey();
+				}
+			}
+			return	"";
+		}
+
+
 		public string GetPositionSourceKey()
 		{
 			foreach(Input inp in mInputs)
@@ -96,6 +109,20 @@ namespace ColladaConvert
 			for(int i=0;i < mInputs.Count;i++)
 			{
 				if(mInputs[i].IsTexCoord(set))
+				{
+					return	mIndexs[i];
+				}
+			}
+			return	null;
+		}
+
+
+		public List<int> GetColorIndexs(int set)
+		{
+			//find which index is color
+			for(int i=0;i < mInputs.Count;i++)
+			{
+				if(mInputs[i].IsColor(set))
 				{
 					return	mIndexs[i];
 				}

@@ -35,28 +35,28 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="VPosNormTexAnim.fx">
-      <Name>VPosNormTexAnim</Name>
+    <Compile Include="Shaders\VPosNormBoneTex0Tex1Col0.fx">
+      <Name>VPosNormBoneTex0Tex1Col0</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="desu.png">
+    <Compile Include="Textures\desu.png">
       <Name>desu</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Simple.fx">
+    <Compile Include="Shaders\Simple.fx">
       <Name>Simple</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Eureka.jpg">
+    <Compile Include="Textures\Eureka.jpg">
       <Name>Eureka</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>

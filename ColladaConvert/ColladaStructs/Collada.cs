@@ -5,6 +5,7 @@ using System.IO;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Content;
 
 namespace ColladaConvert
 {
@@ -20,22 +21,28 @@ namespace ColladaConvert
 		private Dictionary<string, ColladaEffect>	mColladaEffects	=new Dictionary<string, ColladaEffect>();
 
 		//actual useful data for the game
-		private List<DrawChunk>	mChunks	=new List<DrawChunk>();
+		private List<MeshConverter>	mChunks	=new List<MeshConverter>();
 		private	GameSkeleton	mGameSkeleton;
 		public Animator			mAnimator;
+
+		private	MaterialLib	mMatLib;
 
 		private Dictionary<string, Texture2D>	mTextures	=new Dictionary<string,Texture2D>();
 
 
-		public Collada(string meshFileName, GraphicsDevice g)
+		public Collada(string meshFileName, GraphicsDevice g, ContentManager cm)
 		{
+			InitTypes();
+
 			Load(meshFileName);
+
+			mMatLib	=new MaterialLib(g, cm);
 
 			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
 			{
 				List<float> verts	=geo.Value.GetBaseVerts();
 
-				DrawChunk	cnk	=new DrawChunk();
+				MeshConverter	cnk	=new MeshConverter();
 
 				cnk.CreateBaseVerts(verts);
 
@@ -50,9 +57,9 @@ namespace ColladaConvert
 
 				cont.Value.ChangeCoordinateSystemMAX();
 
-				foreach(DrawChunk cnk in mChunks)
+				foreach(MeshConverter cnk in mChunks)
 				{
-					if(cnk.mGeometryID == sk.GetGeometryID())
+					if(cnk.mConverted.mGeometryID == sk.GetGeometryID())
 					{
 						cnk.AddWeightsToBaseVerts(sk);
 					}
@@ -64,21 +71,53 @@ namespace ColladaConvert
 			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
 			{
 				//find the matching drawchunk
-				foreach(DrawChunk cnk in mChunks)
+				foreach(MeshConverter cnk in mChunks)
 				{
-					if(cnk.mGeometryID == geo.Key)
+					if(cnk.mConverted.mGeometryID == geo.Key)
 					{
 						List<int>	posIdxs		=geo.Value.GetPositionIndexs();
 						List<float>	norms		=geo.Value.GetNormals();
 						List<int>	normIdxs	=geo.Value.GetNormalIndexs();
-						List<float>	texCoords	=geo.Value.GetTexCoords(0);
-						List<int>	texIdxs		=geo.Value.GetTexCoordIndexs(0);
+						List<float>	texCoords0	=geo.Value.GetTexCoords(0);
+						List<float>	texCoords1	=geo.Value.GetTexCoords(1);
+						List<float>	texCoords2	=geo.Value.GetTexCoords(2);
+						List<float>	texCoords3	=geo.Value.GetTexCoords(3);
+						List<int>	texIdxs0	=geo.Value.GetTexCoordIndexs(0);
+						List<int>	texIdxs1	=geo.Value.GetTexCoordIndexs(1);
+						List<int>	texIdxs2	=geo.Value.GetTexCoordIndexs(2);
+						List<int>	texIdxs3	=geo.Value.GetTexCoordIndexs(3);
+						List<float>	colors0		=geo.Value.GetColors(0);
+						List<float>	colors1		=geo.Value.GetColors(1);
+						List<float>	colors2		=geo.Value.GetColors(2);
+						List<float>	colors3		=geo.Value.GetColors(3);
+						List<int>	colIdxs0	=geo.Value.GetColorIndexs(0);
+						List<int>	colIdxs1	=geo.Value.GetColorIndexs(1);
+						List<int>	colIdxs2	=geo.Value.GetColorIndexs(2);
+						List<int>	colIdxs3	=geo.Value.GetColorIndexs(3);
 						List<int>	vertCounts	=geo.Value.GetVertCounts();
 
 						cnk.AddNormTexByPoly(posIdxs, norms, normIdxs,
-							texCoords, texIdxs, vertCounts);
+							texCoords0, texIdxs0, texCoords1, texIdxs1,
+							texCoords2, texIdxs2, texCoords3, texIdxs3,
+							colors0, colIdxs0, colors1, colIdxs1,
+							colors2, colIdxs2, colors3, colIdxs3,
+							vertCounts);
 
-						cnk.BuildBuffers(g);
+						bool	bPos	=(posIdxs != null && posIdxs.Count > 0);
+						bool	bNorm	=(norms != null && norms.Count > 0);
+						bool	bBone	=true;	//TODO: fix this
+						bool	bTex0	=(texCoords0 != null && texCoords0.Count > 0);
+						bool	bTex1	=(texCoords1 != null && texCoords1.Count > 0);
+						bool	bTex2	=(texCoords2 != null && texCoords2.Count > 0);
+						bool	bTex3	=(texCoords3 != null && texCoords3.Count > 0);
+						bool	bCol0	=(colors0 != null && colors0.Count > 0);
+						bool	bCol1	=(colors1 != null && colors1.Count > 0);
+						bool	bCol2	=(colors2 != null && colors2.Count > 0);
+						bool	bCol3	=(colors3 != null && colors3.Count > 0);
+
+						cnk.BuildBuffers(g, bPos, bNorm, bBone,
+							bBone, bTex0, bTex1, bTex2, bTex3,
+							bCol0, bCol1, bCol2, bCol3);
 					}
 				}
 			}
@@ -110,6 +149,12 @@ namespace ColladaConvert
 			BuildBones();
 		}
 
+
+		public void UpdateMaterialEffects(Matrix world, Matrix view, Matrix proj)
+		{
+			mMatLib.UpdateEffects(world, view, proj);
+		}
+
 		
 		private void	BuildBones()
 		{
@@ -119,9 +164,9 @@ namespace ColladaConvert
 			}
 
 			//copy bones into drawchunks
-			foreach(DrawChunk dc in mChunks)
+			foreach(MeshConverter dc in mChunks)
 			{
-				string	key	=dc.mGeometryID;
+				string	key	=dc.mConverted.mGeometryID;
 
 				//match this to the right controller
 				foreach(KeyValuePair<string, Controller> cont in mControllers)
@@ -130,57 +175,25 @@ namespace ColladaConvert
 					Matrix	bsm	=sk.GetBindShapeMatrix();
 					if(sk.GetGeometryID() == key)
 					{
-						cont.Value.CopyBonesTo(ref dc.mBones);
-						dc.mBindShapeMatrix	=bsm;
+						cont.Value.CopyBonesTo(ref dc.mConverted.mBones);
+						dc.mConverted.mBindShapeMatrix	=bsm;
 						break;
 					}
 				}
 			}
 		}
 		
-
-		public void Draw(GraphicsDevice g, Effect fx)
+		
+		public void Draw(GraphicsDevice g)
 		{
 			for(int i=0;i < mChunks.Count;i++)
 			{
-				DrawChunk	dc	=mChunks[i];
-				g.Vertices[0].SetSource(dc.mVerts, 0, dc.mVertSize);
-				g.Indices			=dc.mIndexs;
-				g.VertexDeclaration	=dc.mVD;
+				MeshConverter	dc	=mChunks[i];
 
-				Matrix	loc	=Matrix.Identity;
-
-				if(dc.mTexName != null)
-				{
-					if(mTextures.ContainsKey(dc.mTexName))
-					{
-						string	tex	="mTexture" + dc.mTexChannel;
-						fx.Parameters[tex].SetValue(mTextures[dc.mTexName]);
-					}
-				}
-
-				dc.UpdateBones(fx);
-
-				//set the bind pose matrix for this chunk
-				fx.Parameters["mBindPose"].SetValue(dc.mBindShapeMatrix);
-
-				fx.Begin();
-				foreach(EffectPass pass in fx.CurrentTechnique.Passes)
-				{
-					pass.Begin();
-
-					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-						0, 0,
-						dc.mNumVerts,
-						0,
-						dc.mNumTriangles);
-
-					pass.End();
-				}
-				fx.End();
+				dc.mConverted.Draw(g, mMatLib);
 			}
 		}
-
+		
 
 		private void LoadColladaEffects(XmlReader r)
 		{
@@ -767,7 +780,112 @@ namespace ColladaConvert
 			mRootNodes["Bone01"].GetMatrixForBone("Bone01", out bone);
 
 			//mod the shader bones directly
-			mChunks[0].mBones[0]	=ibps[0] * bone * mat;
+			mChunks[0].mConverted.mBones[0]	=ibps[0] * bone * mat;
+		}
+
+
+		private void InitTypes()
+		{
+			VertexTypes.AddType(typeof(VPos));
+			VertexTypes.AddType(typeof(VPosNorm));
+			VertexTypes.AddType(typeof(VPosBone));
+			VertexTypes.AddType(typeof(VPosTex0));
+			VertexTypes.AddType(typeof(VPosTex0Tex1));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Tex2));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Tex2Tex3));
+			VertexTypes.AddType(typeof(VPosCol0));
+			VertexTypes.AddType(typeof(VPosCol0Col1));
+			VertexTypes.AddType(typeof(VPosCol0Col1Col2));
+			VertexTypes.AddType(typeof(VPosCol0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosTex0Col0));
+			VertexTypes.AddType(typeof(VPosTex0Col0Col1));
+			VertexTypes.AddType(typeof(VPosTex0Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosTex0Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Col0));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Col0Col1));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Tex2Col0));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Tex2Col0Col1));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Tex2Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Tex2Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Tex2Tex3Col0));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Tex2Tex3Col0Col1));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Tex2Tex3Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosTex0Tex1Tex2Tex3Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosBoneTex0));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Tex2));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Tex2Tex3));
+			VertexTypes.AddType(typeof(VPosBoneCol0));
+			VertexTypes.AddType(typeof(VPosBoneCol0Col1));
+			VertexTypes.AddType(typeof(VPosBoneCol0Col1Col2));
+			VertexTypes.AddType(typeof(VPosBoneCol0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosBoneTex0Col0));
+			VertexTypes.AddType(typeof(VPosBoneTex0Col0Col1));
+			VertexTypes.AddType(typeof(VPosBoneTex0Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosBoneTex0Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Col0));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Col0Col1));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Tex2Col0));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Tex2Col0Col1));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Tex2Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Tex2Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Tex2Tex3Col0));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Tex2Tex3Col0Col1));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Tex2Tex3Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosBoneTex0Tex1Tex2Tex3Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosNormTex0));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Tex2));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Tex2Tex3));
+			VertexTypes.AddType(typeof(VPosNormCol0));
+			VertexTypes.AddType(typeof(VPosNormCol0Col1));
+			VertexTypes.AddType(typeof(VPosNormCol0Col1Col2));
+			VertexTypes.AddType(typeof(VPosNormCol0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosNormTex0Col0));
+			VertexTypes.AddType(typeof(VPosNormTex0Col0Col1));
+			VertexTypes.AddType(typeof(VPosNormTex0Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosNormTex0Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Col0));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Col0Col1));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Tex2Col0));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Tex2Col0Col1));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Tex2Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Tex2Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Tex2Tex3Col0));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Tex2Tex3Col0Col1));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Tex2Tex3Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosNormTex0Tex1Tex2Tex3Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2Tex3));
+			VertexTypes.AddType(typeof(VPosNormBoneCol0));
+			VertexTypes.AddType(typeof(VPosNormBoneCol0Col1));
+			VertexTypes.AddType(typeof(VPosNormBoneCol0Col1Col2));
+			VertexTypes.AddType(typeof(VPosNormBoneCol0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Col0));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Col0Col1));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Col0));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Col0Col1));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2Col0));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2Col0Col1));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2Tex3Col0));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2Tex3Col0Col1));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2Tex3Col0Col1Col2));
+			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2Tex3Col0Col1Col2Col3));
+			VertexTypes.AddType(typeof(VPosNormBone));
 		}
 
 

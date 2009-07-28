@@ -20,8 +20,6 @@ namespace ColladaConvert
 		IndexBuffer				mIB;
 		Effect					mFX;
 
-		private Effect			mTestEffect;
-
 		private Matrix	mWorldMatrix;
 		private Matrix	mViewMatrix;
 		private Matrix	mViewTranspose;
@@ -79,12 +77,11 @@ namespace ColladaConvert
 		protected override void LoadContent()
 		{
 			//load debug shaders
-			mFX			=Content.Load<Effect>("Simple");
-			mTestEffect	=Content.Load<Effect>("VPosNormTexAnim");
+			mFX			=Content.Load<Effect>("Shaders/Simple");
 
-			mCollada	=new Collada("content/hero.dae", GraphicsDevice);
-			mDesu	=Content.Load<Texture2D>("desu");
-			mEureka	=Content.Load<Texture2D>("Eureka");
+			mCollada	=new Collada("content/hero.dae", GraphicsDevice, Content);
+			mDesu	=Content.Load<Texture2D>("Textures/desu");
+			mEureka	=Content.Load<Texture2D>("Textures/Eureka");
 
 			Point	topLeft, bottomRight;
 			topLeft.X		=0;
@@ -215,11 +212,11 @@ namespace ColladaConvert
 			Vector4	ambColor	=new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 			Vector3	lightDir	=new Vector3(1.0f, -1.0f, 0.1f);
 			lightDir.Normalize();
-
+/*
 			mTestEffect.Parameters["mLightColor"].SetValue(lightColor);
 			mTestEffect.Parameters["mLightDirection"].SetValue(lightDir);
 			mTestEffect.Parameters["mAmbientColor"].SetValue(ambColor);
-			mTestEffect.Parameters["mTexture0"].SetValue(mDesu);
+			mTestEffect.Parameters["mTexture0"].SetValue(mDesu);*/
 		}
 
 		/// <summary>
@@ -282,7 +279,7 @@ namespace ColladaConvert
 
 			UpdateLightMapEffect();
 
-			mCollada.Draw(mGDM.GraphicsDevice, mTestEffect);
+			mCollada.Draw(mGDM.GraphicsDevice);
 
 			//set stream source, index, and decl
 			mGDM.GraphicsDevice.Vertices[0].SetSource(mVB, 0, 32);
@@ -331,9 +328,7 @@ namespace ColladaConvert
 
 		private void UpdateLightMapEffect()
 		{
-			mTestEffect.Parameters["mWorld"].SetValue(mWorldMatrix);
-			mTestEffect.Parameters["mView"].SetValue(mViewMatrix);
-			mTestEffect.Parameters["mProjection"].SetValue(mProjectionMatrix);
+			mCollada.UpdateMaterialEffects(mWorldMatrix, mViewMatrix, mProjectionMatrix);
 		}
 
 

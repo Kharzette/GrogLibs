@@ -63,6 +63,12 @@ namespace ColladaConvert
 		}
 
 
+		public bool IsColor(int set)
+		{
+			return	(mSet == set && mSemantic == "COLOR");
+		}
+
+
 		public bool IsNormal()
 		{
 			return	(mSemantic == "NORMAL");

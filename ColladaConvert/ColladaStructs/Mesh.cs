@@ -65,6 +65,23 @@ namespace ColladaConvert
 		}
 
 
+		public List<float> GetColors(int set)
+		{
+			//find color key
+			string	key	=mPolys.GetColorSourceKey(set);
+
+			if(key == "")
+			{
+				return	null;
+			}
+
+			//strip #
+			key	=key.Substring(1);
+
+			return	mSources[key].GetFloatArray();
+		}
+
+
 		public List<int> GetPositionIndexs()
 		{
 			return	mPolys.GetPositionIndexs();
@@ -80,6 +97,12 @@ namespace ColladaConvert
 		public List<int> GetTexCoordIndexs(int set)
 		{
 			return	mPolys.GetTexCoordIndexs(set);
+		}
+
+
+		public List<int> GetColorIndexs(int set)
+		{
+			return	mPolys.GetColorIndexs(set);
 		}
 
 
