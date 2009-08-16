@@ -86,15 +86,16 @@ namespace ColladaConvert
 		}
 
 
-		public void BuildBones(GraphicsDevice g, GameSkeleton gs)
+		public void BuildBones(GameSkeleton gs)
 		{
+			//clear bones
+			mBones.Clear();
+
 			//grab the list of bones from the skin
 			List<string>	jointNames	=mSkin.GetJointNameArray();
 
 			//grab the inverse bind pose matrix list
 			List<Matrix>	ibps	=mSkin.GetInverseBindPoses();
-
-			Matrix	bind		=mSkin.GetBindShapeMatrix();
 
 			//find each bone and place it in our arrays
 			for(int i=0;i < jointNames.Count;i++)
@@ -106,7 +107,6 @@ namespace ColladaConvert
 					//shader bones expected to be inverse
 					//bind pose * scene node bone
 					mBones.Add(ibps[i] * mat);
-					break;
 				}
 			}
 		}

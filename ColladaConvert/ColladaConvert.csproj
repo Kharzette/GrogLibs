@@ -99,6 +99,10 @@
     <Compile Include="Conversion\VertexStructures.cs" />
     <Compile Include="Conversion\VertexTypes.cs" />
     <Compile Include="Conversion\MeshConverter.cs" />
+    <Compile Include="GameStructs\GameChannelTarget.cs" />
+    <Compile Include="GameStructs\GameChannel.cs" />
+    <Compile Include="GameStructs\GameSubAnim.cs" />
+    <Compile Include="GameStructs\GameAnim.cs" />
     <Compile Include="GameStructs\GameSkeleton.cs" />
     <Compile Include="ColladaStructs\Geometry.cs" />
     <Compile Include="ColladaStructs\Input.cs" />

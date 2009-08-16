@@ -24,6 +24,7 @@ namespace ColladaConvert
 		private List<MeshConverter>	mChunks	=new List<MeshConverter>();
 		private	GameSkeleton	mGameSkeleton;
 		public Animator			mAnimator;
+		public GameAnim			mGameAnim;
 
 		private	MaterialLib	mMatLib;
 
@@ -137,6 +138,30 @@ namespace ColladaConvert
 
 			//create useful anims
 			mAnimator	=new Animator(mAnimations, mRootNodes);
+
+			//grab inverse bind poses
+			List<Matrix>	ibinds	=new List<Matrix>();
+			foreach(KeyValuePair<string, Controller> cont in mControllers)
+			{
+				Skin	sk	=cont.Value.GetSkin();
+				Matrix	bsm	=sk.GetBindShapeMatrix();
+				ibinds.Add(bsm);
+			}
+
+			mGameAnim	=new GameAnim(mControllers.Count, ibinds);
+			int	i		=0;
+			
+			//create anims we can save
+			foreach(KeyValuePair<string, Controller> cont in mControllers)
+			{
+				Skin	sk	=cont.Value.GetSkin();
+
+				List<string>		boneNames	=sk.GetJointNameArray();
+				List<GameSubAnim>	anims		=mAnimator.BuildGameAnims(mGameSkeleton);
+
+				mGameAnim.AddControllerSubAnims(i, anims);
+				i++;
+			}
 		}
 
 
@@ -144,8 +169,14 @@ namespace ColladaConvert
 		{
 //			mAnimator.Animate(anim, time);
 
-			mAnimator.AnimateAll(time);
+//			mAnimator.AnimateAll(time);
 
+			for(int i=0;i < mControllers.Count;i++)
+			{
+//				int	i=3;
+				mGameAnim.Animate(i, time, mGameSkeleton);
+				//mGameAnim.ApplyBindShapes(i, mGameSkeleton);
+			}
 			BuildBones();
 		}
 
@@ -160,13 +191,16 @@ namespace ColladaConvert
 		{
 			foreach(KeyValuePair<string, Controller> cont in mControllers)
 			{
-				cont.Value.BuildBones(mRootNodes);
+//				cont.Value.BuildBones(mRootNodes);
+				cont.Value.BuildBones(mGameSkeleton);
 			}
 
 			//copy bones into drawchunks
 			foreach(MeshConverter dc in mChunks)
 			{
 				string	key	=dc.mConverted.mGeometryID;
+
+				dc.mConverted.mBones	=null;
 
 				//match this to the right controller
 				foreach(KeyValuePair<string, Controller> cont in mControllers)

@@ -62,6 +62,7 @@ namespace ColladaConvert
 						prm.mControl1	=mSources[srcC1].GetFloatArray();
 						prm.mControl2	=mSources[srcC2].GetFloatArray();
 						prm.mOperand	=ne;
+						prm.mNodeName	=nName;
 
 						Anim	a	=(Anim)Activator.CreateInstance(ne.GetAnimatorType(addr), prm);
 

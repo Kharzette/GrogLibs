@@ -14,6 +14,7 @@ namespace ColladaConvert
 		public List<float>	mControl1;	//first control point per value
 		public List<float>	mControl2;	//second control point per value
 		public NodeElement	mOperand;	//reference to value being animated
+		public string		mNodeName;
 	}
 
 
@@ -24,12 +25,15 @@ namespace ColladaConvert
 		List<float>	mControl1;	//first control point per value
 		List<float>	mControl2;	//second control point per value
 		float		mTotalTime;	//total time of the animation
+		string		mNodeName;	//needed for conversion
 
 		protected NodeElement	mOperand;	//reference to value being animated
 
 
 		public Anim(AnimCreationParameters acp)
 		{
+			mNodeName	=acp.mNodeName;
+
 			//init our lists
 			mTimes		=new List<float>();
 			mValues		=new List<float>();
@@ -63,6 +67,156 @@ namespace ColladaConvert
 			end		=mTimes[mTimes.Count - 1];
 
 			mTotalTime	=end - start;
+		}
+
+
+		public string GetOperandSID()
+		{
+			return	mOperand.GetSID();
+		}
+
+
+		public List<float> GetTimes()
+		{
+			return	mTimes;
+		}
+
+
+		public List<float> GetValues()
+		{
+			return	mValues;
+		}
+
+
+		public List<float> GetControl1()
+		{
+			return	mControl1;
+		}
+
+
+		public List<float> GetControl2()
+		{
+			return	mControl2;
+		}
+
+
+		public int GetNumKeys()
+		{
+			return	mTimes.Count;
+		}
+
+
+		public float GetTotalTime()
+		{
+			return	mTotalTime;
+		}
+
+
+		public string GetNodeName()
+		{
+			return	mNodeName;
+		}
+
+
+		//for conversion to gamechannels
+		public GameChannel.ChannelType GetChannelType()
+		{
+			if(mOperand is Rotate)
+			{
+				return	GameChannel.ChannelType.ROTATE;
+			}
+			else if(mOperand is Scale)
+			{
+				return	GameChannel.ChannelType.SCALE;
+			}
+			else if(mOperand is Translate)
+			{
+				return	GameChannel.ChannelType.TRANSLATE;
+			}
+
+			//todo: some kind of error here maybe?
+			return GameChannel.ChannelType.LOOKAT;
+		}
+
+
+		public GameChannel.ChannelTarget GetChannelTarget()
+		{
+			GameChannel.ChannelType	ct	=GetChannelType();
+
+			if(ct == GameChannel.ChannelType.ROTATE)
+			{
+				if(this is RotateXAnim)
+				{
+					return	GameChannel.ChannelTarget.X;
+				}
+				else if(this is RotateYAnim)
+				{
+					return	GameChannel.ChannelTarget.Y;
+				}
+				else if(this is RotateZAnim)
+				{
+					return	GameChannel.ChannelTarget.Z;
+				}
+				else if(this is RotateWAnim)
+				{
+					return	GameChannel.ChannelTarget.W;
+				}
+			}
+			else if(ct == GameChannel.ChannelType.SCALE)
+			{
+				if(this is ScaleXAnim)
+				{
+					return	GameChannel.ChannelTarget.X;
+				}
+				else if(this is ScaleYAnim)
+				{
+					return	GameChannel.ChannelTarget.Y;
+				}
+				else if(this is ScaleZAnim)
+				{
+					return	GameChannel.ChannelTarget.Z;
+				}
+			}
+			else if(ct == GameChannel.ChannelType.TRANSLATE)
+			{
+				if(this is TransXAnim)
+				{
+					return	GameChannel.ChannelTarget.X;
+				}
+				else if(this is TransYAnim)
+				{
+					return	GameChannel.ChannelTarget.Y;
+				}
+				else if(this is TransZAnim)
+				{
+					return	GameChannel.ChannelTarget.Z;
+				}
+			}
+			return	GameChannel.ChannelTarget.W;
+		}
+
+
+		public float GetTimeForKey(int idx)
+		{
+			if(idx < 0 || idx > mTimes.Count)
+			{
+				Debug.WriteLine("Keyframe index out of range in Animate(int)!");
+				return	0.0f;
+			}
+
+			return	mTimes[idx];
+		}
+
+		//this overload anims by keyframe index
+		public void Animate(int idx)
+		{
+			if(idx < 0 || idx > mTimes.Count)
+			{
+				Debug.WriteLine("Keyframe index out of range in Animate(int)!");
+				return;
+			}
+
+			ApplyValueToOperand(mValues[idx]);
 		}
 
 

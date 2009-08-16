@@ -9,16 +9,19 @@ namespace ColladaConvert
 {
 	public class GSNode
 	{
-		private	Matrix			mBone;
-		private	string			mName;
-		private List<GSNode>	mChildren	=new List<GSNode>();
+		string			mName;
+		List<GSNode>	mChildren	=new List<GSNode>();
+
+		//channels for animating
+		List<GameChannelTarget>	mChannels	=new List<GameChannelTarget>();
 
 
 		//init from a scenenode
 		public GSNode(SceneNode sn)
 		{
 			mName	=sn.GetName();
-			mBone	=sn.GetMatrix();
+
+			mChannels	=sn.GetGameChannels();
 
 			Dictionary<string, SceneNode>	kids	=sn.GetChildren();
 
@@ -31,11 +34,61 @@ namespace ColladaConvert
 		}
 
 
+		public Matrix GetMatrix()
+		{
+			//compose from elements
+			Matrix mat	=Matrix.Identity;
+
+			//this should probably be cached
+			foreach(GameChannelTarget gc in mChannels)
+			{
+				if(gc.IsRotation())
+				{
+					mat	=gc.GetMatrix() * mat;
+				}
+				else
+				{
+					mat	*=gc.GetMatrix();
+				}
+			}
+
+			return	mat;
+		}
+
+
+		public bool GetChannelTarget(string node, string sid, out GameChannelTarget gct)
+		{
+			if(mName == node)
+			{
+				foreach(GameChannelTarget gc in mChannels)
+				{
+					if(gc.GetSID() == sid)
+					{
+						gct	=gc;
+						return	true;
+					}
+				}
+			}
+			else
+			{
+				foreach(GSNode n in mChildren)
+				{
+					if(n.GetChannelTarget(node, sid, out gct))
+					{
+						return	true;
+					}
+				}
+			}
+			gct	=null;
+			return	false;
+		}
+
+
 		public bool GetMatrixForBone(string boneName, out Matrix ret)
 		{
 			if(boneName == mName)
 			{
-				ret	=mBone;
+				ret	=GetMatrix();
 				return	true;
 			}
 
@@ -43,6 +96,7 @@ namespace ColladaConvert
 			{
 				if(n.GetMatrixForBone(boneName, out ret))
 				{
+					ret	*=GetMatrix();
 					return	true;
 				}
 			}
@@ -51,10 +105,10 @@ namespace ColladaConvert
 		}
 
 
-		public void AdjustRootMatrixForMax()
-		{
-			mBone	*=Matrix.CreateFromYawPitchRoll(0, MathHelper.ToRadians(-90), MathHelper.ToRadians(180));
-		}
+//		public void AdjustRootMatrixForMax()
+//		{
+//			mBone	*=Matrix.CreateFromYawPitchRoll(0, MathHelper.ToRadians(-90), MathHelper.ToRadians(180));
+//		}
 	}
 
 
@@ -72,8 +126,22 @@ namespace ColladaConvert
 				mRoots.Add(n);
 
 				//adjust for max coordinate system
-				n.AdjustRootMatrixForMax();
+				//n.AdjustRootMatrixForMax();
 			}
+		}
+
+
+		public bool GetChannelTarget(string node, string sid, out GameChannelTarget gct)
+		{
+			foreach(GSNode n in mRoots)
+			{
+				if(n.GetChannelTarget(node, sid, out gct))
+				{
+					return	true;
+				}
+			}
+			gct	=null;
+			return	false;
 		}
 
 
@@ -81,7 +149,7 @@ namespace ColladaConvert
 		{
 			foreach(GSNode n in mRoots)
 			{
-				if(GetMatrixForBone(boneName, out ret))
+				if(n.GetMatrixForBone(boneName, out ret))
 				{
 					return	true;
 				}

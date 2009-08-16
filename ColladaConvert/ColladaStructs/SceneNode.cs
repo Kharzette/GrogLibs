@@ -56,6 +56,69 @@ namespace ColladaConvert
 		}
 
 
+		//matrix returned here will not be multiplied by parents
+		public bool GetMatrixForBoneNonRecursive(string boneName, out Matrix outMat)
+		{
+			if(mName == boneName)
+			{
+				outMat	=GetMatrix();
+				return	true;
+			}
+			foreach(KeyValuePair<string, SceneNode> sn in mChildren)
+			{
+				if(sn.Value.GetMatrixForBoneNonRecursive(boneName, out outMat))
+				{
+					return	true;
+				}
+			}
+			outMat	=Matrix.Identity;
+			return	false;
+		}
+
+
+		public List<GameChannelTarget> GetGameChannels()
+		{
+			List<GameChannelTarget>	ret	=new List<GameChannelTarget>();
+
+			foreach(KeyValuePair<string, NodeElement> ne in mElements)
+			{
+				GameChannelTarget	gc	=null;
+				Vector4				val	=Vector4.Zero;
+				if(ne.Value is Rotate)
+				{
+					Rotate	r	=(Rotate)ne.Value;
+					gc	=new GameChannelTarget(GameChannel.ChannelType.ROTATE, ne.Key);
+
+					val.X	=r.mValue.X;
+					val.Y	=r.mValue.Y;
+					val.Z	=r.mValue.Z;
+					val.W	=r.mValue.W;
+				}
+				else if(ne.Value is Scale)
+				{
+					Scale	s	=(Scale)ne.Value;
+					gc	=new GameChannelTarget(GameChannel.ChannelType.SCALE, ne.Key);
+
+					val.X	=s.mValue.X;
+					val.Y	=s.mValue.Y;
+					val.Z	=s.mValue.Z;
+				}
+				else if(ne.Value is Translate)
+				{
+					Translate	t	=(Translate)ne.Value;
+					gc	=new GameChannelTarget(GameChannel.ChannelType.TRANSLATE, ne.Key);
+
+					val.X	=t.mValue.X;
+					val.Y	=t.mValue.Y;
+					val.Z	=t.mValue.Z;
+				}
+				gc.SetValue(val);
+				ret.Add(gc);
+			}
+			return	ret;
+		}
+
+
 		public bool GetElement(string boneName, string elName, out NodeElement el)
 		{
 			if(mName == boneName)
@@ -121,8 +184,7 @@ namespace ColladaConvert
 			{
 				if(el.Value is Rotate)
 				{
-//					mMat	*=el.Value.GetMatrix();
-					mMat	=el.Value.GetMatrix() * mMat;
+					mMat	*=el.Value.GetMatrix();
 				}
 				else
 				{
