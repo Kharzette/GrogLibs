@@ -4,23 +4,23 @@ using System.Xml;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace ColladaConvert
+namespace Character
 {
-	public class GameChannelTarget
+	public class ChannelTarget
 	{
 		Vector4					mValue;	//value to animate
-		GameChannel.ChannelType	mType;	//target of animation
+		Channel.ChannelType	mType;	//target of animation
 		string					mSID;	//identifier so channels can match up
 		
 
-		public GameChannelTarget(GameChannel.ChannelType type, string sid)
+		public ChannelTarget(Channel.ChannelType type, string sid)
 		{
 			mType	=type;
 			mSID	=sid;
 		}
 
 
-		public GameChannel.ChannelType GetChannelType()
+		public Channel.ChannelType GetChannelType()
 		{
 			return	mType;
 		}
@@ -38,20 +38,20 @@ namespace ColladaConvert
 		}
 
 
-		public void SetValue(float val, GameChannel.ChannelTarget targ)
+		public void SetValue(float val, Channel.AxisTarget targ)
 		{
 			switch(targ)
 			{
-				case GameChannel.ChannelTarget.X:
+				case Channel.AxisTarget.X:
 					mValue.X	=val;
 					break;
-				case GameChannel.ChannelTarget.Y:
+				case Channel.AxisTarget.Y:
 					mValue.Y	=val;
 					break;
-				case GameChannel.ChannelTarget.Z:
+				case Channel.AxisTarget.Z:
 					mValue.Z	=val;
 					break;
-				case GameChannel.ChannelTarget.W:
+				case Channel.AxisTarget.W:
 					mValue.W	=val;
 					break;
 			}
@@ -60,7 +60,7 @@ namespace ColladaConvert
 
 		public bool IsRotation()
 		{
-			return	mType == GameChannel.ChannelType.ROTATE;
+			return	mType == Channel.ChannelType.ROTATE;
 		}
 
 
@@ -69,23 +69,15 @@ namespace ColladaConvert
 			Matrix	ret	=Matrix.Identity;
 			switch(mType)
 			{
-				case GameChannel.ChannelType.ROTATE:
-					/*
-					Quaternion	q;
-					q.X	=mValue.X;
-					q.Y	=mValue.Y;
-					q.Z	=mValue.Z;
-					q.W	=MathHelper.ToRadians(mValue.W);
-					ret	=Matrix.CreateFromQuaternion(q);
-					*/
+				case Channel.ChannelType.ROTATE:
 					Vector3	axis;
 					axis.X	=mValue.X;
 					axis.Y	=mValue.Y;
 					axis.Z	=mValue.Z;
-					return	Matrix.CreateFromAxisAngle(axis, MathHelper.ToRadians(mValue.W));
+					ret	=Matrix.CreateFromAxisAngle(axis, MathHelper.ToRadians(mValue.W));
 					break;
 					
-				case GameChannel.ChannelType.SCALE:
+				case Channel.ChannelType.SCALE:
 					Vector3	s;
 					s.X	=mValue.X;
 					s.Y	=mValue.Y;
@@ -93,7 +85,7 @@ namespace ColladaConvert
 					ret	=Matrix.CreateScale(s);
 					break;
 
-				case GameChannel.ChannelType.TRANSLATE:
+				case Channel.ChannelType.TRANSLATE:
 					Vector3 t;
 					t.X	=mValue.X;
 					t.Y	=mValue.Y;

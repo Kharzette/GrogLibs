@@ -6,9 +6,9 @@ using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace ColladaConvert
+namespace Character
 {
-	public class GameSubAnim
+	public class SubAnim
 	{
 		float	[]mTimes;		//keyframe times
 		float	[]mValues;		//key values
@@ -16,11 +16,11 @@ namespace ColladaConvert
 		float	[]mControl2;	//second control point per value
 		float	mTotalTime;		//total time of the animation
 
-		GameChannel	mTarget;	//target channel
+		Channel	mTarget;	//target channel
 
 
-		public GameSubAnim(int numKeys, float totalTime,
-			GameChannel	targ,
+		public SubAnim(int numKeys, float totalTime,
+			Channel	targ,
 			List<float>	times,		//keyframe times
 			List<float>	values,	//key values
 			List<float>	control1,	//first control point per value
@@ -44,7 +44,7 @@ namespace ColladaConvert
 		}
 
 
-		public void Animate(float time, GameSkeleton gs)
+		public void Animate(float time, Skeleton gs)
 		{
 			//make sure the time is not before our start
 			if(time < mTimes[0])
@@ -83,22 +83,36 @@ namespace ColladaConvert
 
 			//can't get this bezier stuff to work
 			/*
-			float	val	=GetBezierPosition(percentage,
+			float	val	=Anim.GetBezierPosition(1.0f - percentage,
 				mValues[startIndex], mControl1[startIndex],
 				mControl2[startIndex + 1], mValues[startIndex + 1]);
 
-			float	val2	=LongWay(percentage, mValues[startIndex], mControl1[startIndex],
+			float	val2	=Anim.LongWay(percentage, mValues[startIndex], mControl1[startIndex],
 				mControl2[startIndex + 1], mValues[startIndex + 1]);
-			*/
+
+			float val3	=Cubic(mValues[startIndex], mControl1[startIndex],
+				mControl2[startIndex + 1], mValues[startIndex + 1], percentage);
+
+			
+			
 
 //			Quaternion	qd	=Quaternion.Lerp(mRotation[startIndex + 1], mRotation[startIndex], 1.0f - percentage);
 //			Vector3		sd	=Vector3.Lerp(mScale[startIndex + 1], mScale[startIndex], 1.0f - percentage);
 //			Vector3		td	=Vector3.Lerp(mTrans[startIndex + 1], mTrans[startIndex], 1.0f - percentage);
-
+*/
 			float value	=MathHelper.Lerp(mValues[startIndex], mValues[startIndex + 1], percentage);
 //			float	value	=mValues[0];
 
 			mTarget.SetValue(value);
+		}
+
+
+		static public float Cubic(float A, float B, float C, float D, float t)
+		{
+			float	a = t;
+			float	b = 1 - t;
+			
+			return	A*(b*b*b) + 3*B*(b*b)*a + 3*C*b*(a*a) + D*(a*a*a);
 		}
 	}
 }

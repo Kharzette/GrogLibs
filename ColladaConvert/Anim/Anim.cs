@@ -119,80 +119,80 @@ namespace ColladaConvert
 
 
 		//for conversion to gamechannels
-		public GameChannel.ChannelType GetChannelType()
+		public Character.Channel.ChannelType GetChannelType()
 		{
 			if(mOperand is Rotate)
 			{
-				return	GameChannel.ChannelType.ROTATE;
+				return	Character.Channel.ChannelType.ROTATE;
 			}
 			else if(mOperand is Scale)
 			{
-				return	GameChannel.ChannelType.SCALE;
+				return	Character.Channel.ChannelType.SCALE;
 			}
 			else if(mOperand is Translate)
 			{
-				return	GameChannel.ChannelType.TRANSLATE;
+				return	Character.Channel.ChannelType.TRANSLATE;
 			}
 
 			//todo: some kind of error here maybe?
-			return GameChannel.ChannelType.LOOKAT;
+			return Character.Channel.ChannelType.LOOKAT;
 		}
 
 
-		public GameChannel.ChannelTarget GetChannelTarget()
+		public Character.Channel.AxisTarget GetChannelTarget()
 		{
-			GameChannel.ChannelType	ct	=GetChannelType();
+			Character.Channel.ChannelType	ct	=GetChannelType();
 
-			if(ct == GameChannel.ChannelType.ROTATE)
+			if(ct == Character.Channel.ChannelType.ROTATE)
 			{
 				if(this is RotateXAnim)
 				{
-					return	GameChannel.ChannelTarget.X;
+					return	Character.Channel.AxisTarget.X;
 				}
 				else if(this is RotateYAnim)
 				{
-					return	GameChannel.ChannelTarget.Y;
+					return	Character.Channel.AxisTarget.Y;
 				}
 				else if(this is RotateZAnim)
 				{
-					return	GameChannel.ChannelTarget.Z;
+					return	Character.Channel.AxisTarget.Z;
 				}
 				else if(this is RotateWAnim)
 				{
-					return	GameChannel.ChannelTarget.W;
+					return	Character.Channel.AxisTarget.W;
 				}
 			}
-			else if(ct == GameChannel.ChannelType.SCALE)
+			else if(ct == Character.Channel.ChannelType.SCALE)
 			{
 				if(this is ScaleXAnim)
 				{
-					return	GameChannel.ChannelTarget.X;
+					return	Character.Channel.AxisTarget.X;
 				}
 				else if(this is ScaleYAnim)
 				{
-					return	GameChannel.ChannelTarget.Y;
+					return	Character.Channel.AxisTarget.Y;
 				}
 				else if(this is ScaleZAnim)
 				{
-					return	GameChannel.ChannelTarget.Z;
+					return	Character.Channel.AxisTarget.Z;
 				}
 			}
-			else if(ct == GameChannel.ChannelType.TRANSLATE)
+			else if(ct == Character.Channel.ChannelType.TRANSLATE)
 			{
 				if(this is TransXAnim)
 				{
-					return	GameChannel.ChannelTarget.X;
+					return	Character.Channel.AxisTarget.X;
 				}
 				else if(this is TransYAnim)
 				{
-					return	GameChannel.ChannelTarget.Y;
+					return	Character.Channel.AxisTarget.Y;
 				}
 				else if(this is TransZAnim)
 				{
-					return	GameChannel.ChannelTarget.Z;
+					return	Character.Channel.AxisTarget.Z;
 				}
 			}
-			return	GameChannel.ChannelTarget.W;
+			return	Character.Channel.AxisTarget.W;
 		}
 
 
@@ -280,7 +280,7 @@ namespace ColladaConvert
 		protected abstract void ApplyValueToOperand(float val);
 
 
-		private static float LongWay(float t, float p0, float p1, float p2, float p3)
+		public static float LongWay(float t, float p0, float p1, float p2, float p3)
 		{
 			return	((1 - t) * (1 - t) * (1 - t)) * p0 +
 				3 * ((1 - t) * (1 - t)) * t * p1 +

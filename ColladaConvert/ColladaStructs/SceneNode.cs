@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Xml;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Character;
 
 namespace ColladaConvert
 {
@@ -76,18 +77,34 @@ namespace ColladaConvert
 		}
 
 
-		public List<GameChannelTarget> GetGameChannels()
+		public void AddToGameSkeleton(out GSNode gsn)
 		{
-			List<GameChannelTarget>	ret	=new List<GameChannelTarget>();
+			gsn	=new GSNode();
+			gsn.SetName(mName);
+			gsn.SetChannels(GetGameChannels());
+
+			foreach(KeyValuePair<string, SceneNode> k in mChildren)
+			{
+				GSNode	kid	=new GSNode();
+				k.Value.AddToGameSkeleton(out kid);
+
+				gsn.AddChild(kid);
+			}
+		}
+
+
+		public List<ChannelTarget> GetGameChannels()
+		{
+			List<ChannelTarget>	ret	=new List<ChannelTarget>();
 
 			foreach(KeyValuePair<string, NodeElement> ne in mElements)
 			{
-				GameChannelTarget	gc	=null;
+				ChannelTarget	gc	=null;
 				Vector4				val	=Vector4.Zero;
 				if(ne.Value is Rotate)
 				{
 					Rotate	r	=(Rotate)ne.Value;
-					gc	=new GameChannelTarget(GameChannel.ChannelType.ROTATE, ne.Key);
+					gc	=new ChannelTarget(Character.Channel.ChannelType.ROTATE, ne.Key);
 
 					val.X	=r.mValue.X;
 					val.Y	=r.mValue.Y;
@@ -97,7 +114,7 @@ namespace ColladaConvert
 				else if(ne.Value is Scale)
 				{
 					Scale	s	=(Scale)ne.Value;
-					gc	=new GameChannelTarget(GameChannel.ChannelType.SCALE, ne.Key);
+					gc	=new ChannelTarget(Character.Channel.ChannelType.SCALE, ne.Key);
 
 					val.X	=s.mValue.X;
 					val.Y	=s.mValue.Y;
@@ -106,7 +123,7 @@ namespace ColladaConvert
 				else if(ne.Value is Translate)
 				{
 					Translate	t	=(Translate)ne.Value;
-					gc	=new GameChannelTarget(GameChannel.ChannelType.TRANSLATE, ne.Key);
+					gc	=new ChannelTarget(Character.Channel.ChannelType.TRANSLATE, ne.Key);
 
 					val.X	=t.mValue.X;
 					val.Y	=t.mValue.Y;

@@ -86,7 +86,7 @@ namespace ColladaConvert
 		public int				mNumVerts, mNumTriangles, mVertSize;
 
 		//the converted mesh
-		public GameMesh	mConverted;
+		public Character.Mesh	mConverted;
 
 
 		//this will build a base list of verts
@@ -105,7 +105,7 @@ namespace ColladaConvert
 			}
 
 			//create a new gamemesh
-			mConverted	=new GameMesh();
+			mConverted	=new Character.Mesh();
 		}
 
 

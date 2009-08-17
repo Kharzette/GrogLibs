@@ -20,6 +20,10 @@ namespace ColladaConvert
 		IndexBuffer				mIB;
 		Effect					mFX;
 
+		AnimForm	mCF;
+		string		mCurrentAnimName;
+		float		mTimeScale;			//anim playback speed
+
 		private Matrix	mWorldMatrix;
 		private Matrix	mViewMatrix;
 		private Matrix	mViewTranspose;
@@ -46,6 +50,9 @@ namespace ColladaConvert
 		{
 			mGDM	=new GraphicsDeviceManager(this);
 			Content.RootDirectory	="Content";
+
+			mCurrentAnimName	="";
+			mTimeScale			=1.0f;
 		}
 
 		protected override void Initialize()
@@ -79,7 +86,6 @@ namespace ColladaConvert
 			//load debug shaders
 			mFX			=Content.Load<Effect>("Shaders/Simple");
 
-			mCollada	=new Collada("content/hero.dae", GraphicsDevice, Content);
 			mDesu	=Content.Load<Texture2D>("Textures/desu");
 			mEureka	=Content.Load<Texture2D>("Textures/Eureka");
 
@@ -157,6 +163,14 @@ namespace ColladaConvert
 			mIB.SetData<ushort>(ind);
 
 			InitializeEffect();
+
+			mCF	=new AnimForm();
+			mCF.Visible	=true;
+
+			mCF.eOpenAnim				+=OnOpenAnim;
+			mCF.eOpenModel				+=OnOpenModel;
+			mCF.eAnimSelectionChanged	+=OnAnimSelChanged;
+			mCF.eTimeScaleChanged		+=OnTimeScaleChanged;
 		}
 
 		/// <summary>
@@ -219,6 +233,52 @@ namespace ColladaConvert
 			mTestEffect.Parameters["mTexture0"].SetValue(mDesu);*/
 		}
 
+
+		private void OnOpenAnim(object sender, EventArgs ea)
+		{
+			string	path	=(string)sender;
+
+			if(mCollada != null)
+			{
+				mCollada.LoadAnim(path);
+			}
+			else
+			{
+				mCollada	=new Collada(path, GraphicsDevice, Content);
+			}			
+		}
+
+
+		private void OnOpenModel(object sender, EventArgs ea)
+		{
+			string	path	=(string)sender;
+
+			mCollada	=new Collada(path, GraphicsDevice, Content);
+		}
+
+
+		private void OnAnimSelChanged(object sender, EventArgs ea)
+		{
+			System.Windows.Forms.DataGridViewSelectedRowCollection
+				src	=(System.Windows.Forms.DataGridViewSelectedRowCollection)sender;
+
+			foreach(System.Windows.Forms.DataGridViewRow dgvr in src)
+			{
+				//eventually we'll blend these animations
+				//but for now play the first
+				mCurrentAnimName	=(string)dgvr.Cells[0].FormattedValue;
+			}
+		}
+
+
+		private void OnTimeScaleChanged(object sender, EventArgs ea)
+		{
+			Decimal	val	=(Decimal)sender;
+
+			mTimeScale	=Convert.ToSingle(val);
+		}
+
+
 		/// <summary>
 		/// Allows the game to run logic such as updating the world,
 		/// checking for collisions, gathering input, and playing audio.
@@ -264,7 +324,10 @@ namespace ColladaConvert
 
 			//mCollada.DebugBoneModify(mBoneMatrix);
 
-			mCollada.Animate("Bip01-anim", (float)(gameTime.TotalGameTime.TotalSeconds * 0.1f));
+			if(mCollada != null)
+			{
+				mCollada.Animate(mCurrentAnimName, (float)(gameTime.TotalGameTime.TotalSeconds) * mTimeScale);
+			}
 
 			base.Update(gameTime);
 		}
@@ -279,7 +342,10 @@ namespace ColladaConvert
 
 			UpdateLightMapEffect();
 
-			mCollada.Draw(mGDM.GraphicsDevice);
+			if(mCollada != null)
+			{
+				mCollada.Draw(mGDM.GraphicsDevice);
+			}
 
 			//set stream source, index, and decl
 			mGDM.GraphicsDevice.Vertices[0].SetSource(mVB, 0, 32);
@@ -328,7 +394,10 @@ namespace ColladaConvert
 
 		private void UpdateLightMapEffect()
 		{
-			mCollada.UpdateMaterialEffects(mWorldMatrix, mViewMatrix, mProjectionMatrix);
+			if(mCollada != null)
+			{
+				mCollada.UpdateMaterialEffects(mWorldMatrix, mViewMatrix, mProjectionMatrix);
+			}
 		}
 
 

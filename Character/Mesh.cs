@@ -5,9 +5,9 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace ColladaConvert
+namespace Character
 {
-	public class GameMesh
+	public class Mesh
 	{
 		public VertexBuffer			mVerts;
 		public IndexBuffer			mIndexs;
@@ -49,7 +49,7 @@ namespace ColladaConvert
 			mMaterialName	="desu.png";
 
 			//grab material
-			GameMaterial	gm	=matLib.GetMaterial(mMaterialName);
+			Material	gm	=matLib.GetMaterial(mMaterialName);
 			if(gm == null)
 			{
 				return;	//no material?

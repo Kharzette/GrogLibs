@@ -6,9 +6,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 
-namespace ColladaConvert
+namespace Character
 {
-	public class GameMaterial
+	public class Material
 	{
 		public List<Texture2D>		mMaps	=new List<Texture2D>();
 		public string				mShaderName;
@@ -17,7 +17,7 @@ namespace ColladaConvert
 
 	public class MaterialLib
 	{
-		Dictionary<string, GameMaterial>	mMats	=new Dictionary<string, GameMaterial>();
+		Dictionary<string, Material>	mMats	=new Dictionary<string, Material>();
 		Dictionary<string, Effect>			mFX		=new Dictionary<string, Effect>();
 
 
@@ -30,7 +30,7 @@ namespace ColladaConvert
 		}
 
 
-		public GameMaterial GetMaterial(string name)
+		public Material GetMaterial(string name)
 		{
 			if(mMats.ContainsKey(name))
 			{
@@ -193,7 +193,7 @@ namespace ColladaConvert
 				//create an element
 				Texture2D	tex	=Texture2D.FromFile(gd, path);
 
-				GameMaterial	mat	=new GameMaterial();
+				Material	mat	=new Material();
 
 				mat.mMaps.Add(tex);
 

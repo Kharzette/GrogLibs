@@ -5,7 +5,7 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace ColladaConvert
+namespace Character
 {
 	public class GSNode
 	{
@@ -13,24 +13,31 @@ namespace ColladaConvert
 		List<GSNode>	mChildren	=new List<GSNode>();
 
 		//channels for animating
-		List<GameChannelTarget>	mChannels	=new List<GameChannelTarget>();
+		List<ChannelTarget>	mChannels	=new List<ChannelTarget>();
 
 
-		//init from a scenenode
-		public GSNode(SceneNode sn)
+
+		public GSNode()
 		{
-			mName	=sn.GetName();
+		}
 
-			mChannels	=sn.GetGameChannels();
 
-			Dictionary<string, SceneNode>	kids	=sn.GetChildren();
+		public void AddChild(GSNode kid)
+		{
+			mChildren.Add(kid);
+		}
 
-			foreach(KeyValuePair<string, SceneNode> k in kids)
-			{
-				GSNode	n	=new GSNode(k.Value);
 
-				mChildren.Add(n);
-			}
+		public void SetName(string name)
+		{
+			mName	=name;
+		}
+
+
+
+		public void SetChannels(List<ChannelTarget> chans)
+		{
+			mChannels	=chans;
 		}
 
 
@@ -40,7 +47,7 @@ namespace ColladaConvert
 			Matrix mat	=Matrix.Identity;
 
 			//this should probably be cached
-			foreach(GameChannelTarget gc in mChannels)
+			foreach(ChannelTarget gc in mChannels)
 			{
 				if(gc.IsRotation())
 				{
@@ -56,11 +63,11 @@ namespace ColladaConvert
 		}
 
 
-		public bool GetChannelTarget(string node, string sid, out GameChannelTarget gct)
+		public bool GetChannelTarget(string node, string sid, out ChannelTarget gct)
 		{
 			if(mName == node)
 			{
-				foreach(GameChannelTarget gc in mChannels)
+				foreach(ChannelTarget gc in mChannels)
 				{
 					if(gc.GetSID() == sid)
 					{
@@ -103,35 +110,26 @@ namespace ColladaConvert
 			ret	=Matrix.Identity;
 			return	false;
 		}
-
-
-//		public void AdjustRootMatrixForMax()
-//		{
-//			mBone	*=Matrix.CreateFromYawPitchRoll(0, MathHelper.ToRadians(-90), MathHelper.ToRadians(180));
-//		}
 	}
 
 
-	public class GameSkeleton
+	public class Skeleton
 	{
 		private	List<GSNode>	mRoots	=new List<GSNode>();
 
 
-		public GameSkeleton(Dictionary<string, SceneNode> sns)
+		public Skeleton()
 		{
-			//extract collada scene nodes into gameskel
-			foreach(KeyValuePair<string, SceneNode> sn in sns)
-			{
-				GSNode	n	=new GSNode(sn.Value);
-				mRoots.Add(n);
-
-				//adjust for max coordinate system
-				//n.AdjustRootMatrixForMax();
-			}
 		}
 
 
-		public bool GetChannelTarget(string node, string sid, out GameChannelTarget gct)
+		public void AddRoot(GSNode gsn)
+		{
+			mRoots.Add(gsn);
+		}
+
+
+		public bool GetChannelTarget(string node, string sid, out ChannelTarget gct)
 		{
 			foreach(GSNode n in mRoots)
 			{

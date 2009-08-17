@@ -4,9 +4,9 @@ using System.Xml;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace ColladaConvert
+namespace Character
 {
-	public class GameChannel
+	public class Channel
 	{
 		public enum ChannelType
 		{
@@ -18,34 +18,34 @@ namespace ColladaConvert
 			MATRIX
 		}
 
-		public enum ChannelTarget
+		public enum AxisTarget
 		{
 			X, Y, Z, W
 		}
 
-		GameChannelTarget	mTarget;		//reference to the target
-		ChannelTarget		mTargetType;	//which part do we modify
-		string				mTargetNode;	//node name for target
-		string				mTargetSID;		//SID of target channel
+		ChannelTarget	mTarget;		//reference to the target
+		AxisTarget		mAxis;			//which part do we modify
+		string			mTargetNode;	//node name for target
+		string			mTargetSID;		//SID of target channel
 		
 
-		public GameChannel(string targNode, string targSID)
+		public Channel(string targNode, string targSID)
 		{
 			mTargetNode	=targNode;
 			mTargetSID	=targSID;
 		}
 
 
-		public GameChannel(GameChannelTarget gct, ChannelTarget ct)
+		public Channel(ChannelTarget gct, AxisTarget at)
 		{
-			mTarget		=gct;
-			mTargetType	=ct;
+			mTarget	=gct;
+			mAxis	=at;
 		}
 
 
 		public void SetValue(float val)
 		{
-			mTarget.SetValue(val, mTargetType);
+			mTarget.SetValue(val, mAxis);
 		}
 	}
 }

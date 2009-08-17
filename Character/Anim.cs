@@ -4,48 +4,53 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace ColladaConvert
+namespace Character
 {
-	public class GameAnim
+	public class Anim
 	{
-		List<GameSubAnim>	[]mControllerAnims;
-		Matrix				[]mInverseBindPoses;
+		List<SubAnim>	[]mControllerAnims;
+
+		string	mName;		//animation name for the library
+		bool	mbLooping;
+		bool	mbPingPong;
 
 
-		public GameAnim(int numControllers, List<Matrix> invBinds)
+		public string Name
 		{
-			mControllerAnims	=new List<GameSubAnim>[numControllers];
-
-			mInverseBindPoses	=new Matrix[invBinds.Count];
-			for(int i=0;i < invBinds.Count;i++)
-			{
-				mInverseBindPoses[i]	=invBinds[i];
-			}
+			get { return mName; }
+			set { mName = value; }
+		}
+		public bool Looping
+		{
+			get { return mbLooping; }
+			set { mbLooping = value; }
+		}
+		public bool PingPong
+		{
+			get { return mbPingPong; }
+			set { mbPingPong = value; }
 		}
 
 
-		public void AddControllerSubAnims(int cidx, List<GameSubAnim> anims)
+		public Anim(int numControllers)
+		{
+			mControllerAnims	=new List<SubAnim>[numControllers];
+		}
+
+
+		public void AddControllerSubAnims(int cidx, List<SubAnim> anims)
 		{
 			mControllerAnims[cidx]	=anims;
 		}
 
 
-		public void Animate(int cidx, float time, GameSkeleton gs)
+		public void Animate(int cidx, float time, Skeleton gs)
 		{
-			List<GameSubAnim>	subs	=mControllerAnims[cidx];
+			List<SubAnim>	subs	=mControllerAnims[cidx];
 
-			foreach(GameSubAnim an in subs)
+			foreach(SubAnim an in subs)
 			{
 				an.Animate(time, gs);
-			}
-		}
-
-
-		public void ApplyBindShapes(int cidx, Matrix []bones)
-		{
-			for(int i=0;i < bones.Length;i++)
-			{
-				bones[i]	=mInverseBindPoses[cidx] * bones[i];
 			}
 		}
 	}

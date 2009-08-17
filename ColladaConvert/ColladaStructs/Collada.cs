@@ -22,13 +22,18 @@ namespace ColladaConvert
 
 		//actual useful data for the game
 		private List<MeshConverter>	mChunks	=new List<MeshConverter>();
-		private	GameSkeleton	mGameSkeleton;
-		public Animator			mAnimator;
-		public GameAnim			mGameAnim;
+		private	Character.Skeleton	mGameSkeleton;
+		public Animator				mAnimator;
 
-		private	MaterialLib	mMatLib;
+		//list of stored anims
+		public List<Character.Anim>		mGameAnim	=new List<Character.Anim>();
+
+		private	Character.MaterialLib	mMatLib;
 
 		private Dictionary<string, Texture2D>	mTextures	=new Dictionary<string,Texture2D>();
+
+		//events
+		public static event EventHandler	eAnimsUpdated;
 
 
 		public Collada(string meshFileName, GraphicsDevice g, ContentManager cm)
@@ -37,7 +42,7 @@ namespace ColladaConvert
 
 			Load(meshFileName);
 
-			mMatLib	=new MaterialLib(g, cm);
+			mMatLib	=new Character.MaterialLib(g, cm);
 
 			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
 			{
@@ -67,7 +72,7 @@ namespace ColladaConvert
 				}
 			}
 
-			mGameSkeleton	=new GameSkeleton(mRootNodes);
+			mGameSkeleton	=BuildGameSkeleton();
 
 			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
 			{
@@ -139,16 +144,8 @@ namespace ColladaConvert
 			//create useful anims
 			mAnimator	=new Animator(mAnimations, mRootNodes);
 
-			//grab inverse bind poses
-			List<Matrix>	ibinds	=new List<Matrix>();
-			foreach(KeyValuePair<string, Controller> cont in mControllers)
-			{
-				Skin	sk	=cont.Value.GetSkin();
-				Matrix	bsm	=sk.GetBindShapeMatrix();
-				ibinds.Add(bsm);
-			}
-
-			mGameAnim	=new GameAnim(mControllers.Count, ibinds);
+			Character.Anim	anm	=new Character.Anim(mControllers.Count);
+			anm.Name	=meshFileName.Substring(meshFileName.IndexOf("Content"));
 			int	i		=0;
 			
 			//create anims we can save
@@ -157,25 +154,96 @@ namespace ColladaConvert
 				Skin	sk	=cont.Value.GetSkin();
 
 				List<string>		boneNames	=sk.GetJointNameArray();
-				List<GameSubAnim>	anims		=mAnimator.BuildGameAnims(mGameSkeleton);
+				List<Character.SubAnim>	anims		=mAnimator.BuildGameAnims(mGameSkeleton);
 
-				mGameAnim.AddControllerSubAnims(i, anims);
+				anm.AddControllerSubAnims(i, anims);
 				i++;
 			}
+			mGameAnim.Add(anm);
+
+			eAnimsUpdated(mGameAnim, null);
+		}
+
+
+		public void LoadAnim(string path)
+		{
+			FileStream	file	=OpenTitleFile(path,
+				FileMode.Open, FileAccess.Read);
+			
+			file.Seek(0, SeekOrigin.Begin);
+			XmlReader	r	=XmlReader.Create(file);
+			mAnimations.Clear();
+			LoadAnimations(r);
+
+			BuildBones();
+
+			//create useful anims
+			mAnimator	=new Animator(mAnimations, mRootNodes);
+
+			Character.Anim	anm	=new Character.Anim(mControllers.Count);
+			anm.Name	=path.Substring(path.IndexOf("Content"));
+			int	i		=0;
+			
+			//create anims we can save
+			foreach(KeyValuePair<string, Controller> cont in mControllers)
+			{
+				Skin	sk	=cont.Value.GetSkin();
+
+				List<string>		boneNames	=sk.GetJointNameArray();
+				List<Character.SubAnim>	anims	=mAnimator.BuildGameAnims(mGameSkeleton);
+
+				anm.AddControllerSubAnims(i, anims);
+				i++;
+			}
+			mGameAnim.Add(anm);
+			file.Close();
+
+			eAnimsUpdated(mGameAnim, null);
+		}
+
+
+		public Character.Skeleton	BuildGameSkeleton()
+		{
+			Character.Skeleton	ret	=new Character.Skeleton();
+
+			foreach(KeyValuePair<string, SceneNode> sn in mRootNodes)
+			{
+				Character.GSNode	n;//	=new GSNode();
+
+				sn.Value.AddToGameSkeleton(out n);
+
+				ret.AddRoot(n);
+			}
+			return	ret;
 		}
 
 
 		public void Animate(string anim, float time)
 		{
-//			mAnimator.Animate(anim, time);
-
-//			mAnimator.AnimateAll(time);
-
-			for(int i=0;i < mControllers.Count;i++)
+			foreach(Character.Anim anm in mGameAnim)
 			{
-//				int	i=3;
-				mGameAnim.Animate(i, time, mGameSkeleton);
-				//mGameAnim.ApplyBindShapes(i, mGameSkeleton);
+				if(anm.Name != anim)
+				{
+					continue;
+				}
+				for(int i=0;i < mControllers.Count;i++)
+				{
+					anm.Animate(i, time, mGameSkeleton);
+				}
+			}
+			BuildBones();
+		}
+
+
+		//plays em all, no idea what this will do
+		public void Animate(float time)
+		{
+			foreach(Character.Anim anm in mGameAnim)
+			{
+				for(int i=0;i < mControllers.Count;i++)
+				{
+					anm.Animate(i, time, mGameSkeleton);
+				}
 			}
 			BuildBones();
 		}
@@ -184,6 +252,12 @@ namespace ColladaConvert
 		public void UpdateMaterialEffects(Matrix world, Matrix view, Matrix proj)
 		{
 			mMatLib.UpdateEffects(world, view, proj);
+
+//			if(mbAnimsUpdated)
+//			{
+//				mbAnimsUpdated	=false;
+//				eAnimsUpdated(mGameAnim, null);
+//			}
 		}
 
 		
