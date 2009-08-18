@@ -8,10 +8,14 @@ namespace ColladaConvert
 {
 	public class Geometry
 	{
+		string	mName;
 		Mesh	mMesh;
 
 
-		public Geometry()	{}
+		public Geometry(string name)
+		{
+			mName	=name;
+		}
 
 
 		public List<float> GetBaseVerts()
@@ -68,6 +72,12 @@ namespace ColladaConvert
 		}
 
 
+		public string GetMeshName()
+		{
+			return	mMesh.GetName();
+		}
+
+
 		public void Load(XmlReader r)
 		{
 			while(r.Read())
@@ -80,7 +90,7 @@ namespace ColladaConvert
 				if(r.Name == "mesh")
 				{
 					//only one mesh per geometry allowed
-					mMesh	=new Mesh();
+					mMesh	=new Mesh(mName);
 					mMesh.Load(r);
 				}
 				else if(r.Name == "geometry")

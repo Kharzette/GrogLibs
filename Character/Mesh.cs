@@ -9,6 +9,7 @@ namespace Character
 {
 	public class Mesh
 	{
+		string						mName;
 		public VertexBuffer			mVerts;
 		public IndexBuffer			mIndexs;
 		public VertexDeclaration	mVD;
@@ -18,6 +19,25 @@ namespace Character
 		public string				mMaterialName;
 		public string				mGeometryID;	//for mapping geoms to skins
 		public bool					mSkinned;		//true if using skinning
+
+
+		public string Name
+		{
+			get { return mName; }
+			set { mName = value; }
+		}
+		public string MaterialName
+		{
+			get { return mMaterialName; }
+			set { mMaterialName = value; }
+		}
+
+
+		public Mesh(string name)
+		{
+			mName			=name;
+			mMaterialName	="";
+		}
 
 
 		public void SetGeometryID(string id)
@@ -45,48 +65,37 @@ namespace Character
 
 			Matrix	loc	=Matrix.Identity;
 
-			//hard code material name for now
-			mMaterialName	="desu.png";
-
-			//grab material
-			Material	gm	=matLib.GetMaterial(mMaterialName);
-			if(gm == null)
+			Texture2D	tex	=matLib.GetMaterialTexture(mMaterialName);
+			if(tex == null)
 			{
 				return;	//no material?
 			}
 
-//			Effect	fx	=matLib.GetShader(gm.mShaderName);
+			Effect	fx	=matLib.GetMaterialShader(mMaterialName);
 
-			//hard code this for now
-			Effect	fx	=matLib.GetShader("Shaders\\VPosNormBoneTex0Tex1Col0");
+			fx.Parameters["mTexture0"].SetValue(tex);
 
-			for(int map=0;map < gm.mMaps.Count;map++)
+			UpdateBones(fx);
+
+			if(fx.Parameters["mBindPose"] != null)
 			{
-				string	tex	="mTexture" + map;
-				fx.Parameters[tex].SetValue(gm.mMaps[map]);
-
-				UpdateBones(fx);
-
-				if(fx.Parameters["mBindPose"] != null)
-				{
-					fx.Parameters["mBindPose"].SetValue(mBindShapeMatrix);
-				}
-
-				fx.Begin();
-				foreach(EffectPass pass in fx.CurrentTechnique.Passes)
-				{
-					pass.Begin();
-
-					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-						0, 0,
-						mNumVerts,
-						0,
-						mNumTriangles);
-
-					pass.End();
-				}
-				fx.End();
+				fx.Parameters["mBindPose"].SetValue(mBindShapeMatrix);
 			}
+
+			fx.Begin();
+			foreach(EffectPass pass in fx.CurrentTechnique.Passes)
+			{
+				pass.Begin();
+
+				g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+					0, 0,
+					mNumVerts,
+					0,
+					mNumTriangles);
+
+				pass.End();
+			}
+			fx.End();
 		}
 	}
 }

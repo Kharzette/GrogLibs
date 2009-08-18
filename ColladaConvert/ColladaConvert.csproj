@@ -84,17 +84,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AnimGrid.cs" />
-    <Compile Include="AnimForm.cs">
+    <Compile Include="Forms\AnimGridModel.cs" />
+    <Compile Include="Forms\AnimForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="AnimForm.Designer.cs">
+    <Compile Include="Forms\AnimForm.Designer.cs">
       <DependentUpon>AnimForm.cs</DependentUpon>
     </Compile>
     <Compile Include="ColladaStructs\Accessor.cs" />
     <Compile Include="Anim\Anim.cs" />
     <Compile Include="ColladaStructs\Animation.cs" />
-    <Compile Include="Animator.cs" />
+    <Compile Include="Conversion\Animator.cs" />
     <Compile Include="Anim\RotateAnim.cs" />
     <Compile Include="Anim\ScaleAnim.cs" />
     <Compile Include="ColladaStructs\Channel.cs" />
@@ -107,6 +107,13 @@
     <Compile Include="ColladaStructs\Geometry.cs" />
     <Compile Include="ColladaStructs\Input.cs" />
     <Compile Include="ColladaStructs\Joints.cs" />
+    <Compile Include="Forms\MaterialForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\MaterialForm.Designer.cs">
+      <DependentUpon>MaterialForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\GridModel.cs" />
     <Compile Include="NodeElements\LookAt.cs" />
     <Compile Include="ColladaStructs\Material.cs" />
     <Compile Include="ColladaStructs\Mesh.cs" />
@@ -178,8 +185,11 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="AnimForm.resx">
+    <EmbeddedResource Include="Forms\AnimForm.resx">
       <DependentUpon>AnimForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\MaterialForm.resx">
+      <DependentUpon>MaterialForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

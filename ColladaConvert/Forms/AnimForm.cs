@@ -12,7 +12,7 @@ namespace ColladaConvert
 	public partial class AnimForm : Form
 	{
 		//data
-		AnimGrid	mAnimGrid;
+		AnimGridModel	mAnimGrid;
 
 		//file dialog
 		OpenFileDialog	mOFD	=new OpenFileDialog();
@@ -59,7 +59,7 @@ namespace ColladaConvert
 		{
 			List<Character.Anim>	anms	=(List<Character.Anim>)sender;
 
-			mAnimGrid	=new AnimGrid(anms);
+			mAnimGrid	=new AnimGridModel(anms);
 
 			AnimGrid.DataSource	=mAnimGrid;
 		}

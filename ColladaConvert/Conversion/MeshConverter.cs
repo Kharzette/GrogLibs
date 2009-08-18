@@ -80,13 +80,21 @@ namespace ColladaConvert
 
 	public class MeshConverter
 	{
-		private TrackedVert		[]mBaseVerts;
-		private	int				mNumBaseVerts;
-		private List<ushort>	mIndexList	=new List<ushort>();
-		public int				mNumVerts, mNumTriangles, mVertSize;
+		string			mName;
+		TrackedVert		[]mBaseVerts;
+		int				mNumBaseVerts;
+		List<ushort>	mIndexList	=new List<ushort>();
+
+		public int	mNumVerts, mNumTriangles, mVertSize;
 
 		//the converted mesh
 		public Character.Mesh	mConverted;
+
+
+		public MeshConverter(string name)
+		{
+			mName	=name;
+		}
 
 
 		//this will build a base list of verts
@@ -105,7 +113,7 @@ namespace ColladaConvert
 			}
 
 			//create a new gamemesh
-			mConverted	=new Character.Mesh();
+			mConverted	=new Character.Mesh(mName);
 		}
 
 

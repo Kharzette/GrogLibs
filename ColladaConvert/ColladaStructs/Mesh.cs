@@ -8,12 +8,23 @@ namespace ColladaConvert
 {
 	public class Mesh
 	{
-		private Dictionary<string, Source>		mSources	=new Dictionary<string,Source>();
-		private Dictionary<string, Vertices>	mVerts		=new Dictionary<string,Vertices>();
-		private Polygons						mPolys;
+		string	mName;
+
+		Dictionary<string, Source>		mSources	=new Dictionary<string,Source>();
+		Dictionary<string, Vertices>	mVerts		=new Dictionary<string,Vertices>();
+		Polygons						mPolys;
 
 
-		public Mesh()	{}
+		public Mesh(string name)
+		{
+			mName	=name;
+		}
+
+
+		public string GetName()
+		{
+			return	mName;
+		}
 
 
 		public List<float> GetBaseVerts()

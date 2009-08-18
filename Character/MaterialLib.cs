@@ -10,15 +10,34 @@ namespace Character
 {
 	public class Material
 	{
-		public List<Texture2D>		mMaps	=new List<Texture2D>();
-		public string				mShaderName;
+		string	mMap;			//name of the texmap
+		string	mShaderName;	//name of the shader
+		string	mName;			//name of the overall material
+
+
+		public string Name
+		{
+			get { return mName; }
+			set { mName = value; }
+		}
+		public string Map
+		{
+			get { return mMap; }
+			set { mMap = value; }
+		}
+		public string ShaderName
+		{
+			get { return mShaderName; }
+			set { mShaderName = value; }
+		}
 	}
 
 
 	public class MaterialLib
 	{
 		Dictionary<string, Material>	mMats	=new Dictionary<string, Material>();
-		Dictionary<string, Effect>			mFX		=new Dictionary<string, Effect>();
+		Dictionary<string, Effect>		mFX		=new Dictionary<string, Effect>();
+		Dictionary<string, Texture2D>	mMaps	=new Dictionary<string, Texture2D>();
 
 
 		public MaterialLib(GraphicsDevice gd, ContentManager cm)
@@ -30,23 +49,65 @@ namespace Character
 		}
 
 
-		public Material GetMaterial(string name)
+		public Dictionary<string, Material> GetMaterials()
+		{
+			return	mMats;
+		}
+
+
+		public Dictionary<string, Effect> GetShaders()
+		{
+			return	mFX;
+		}
+
+
+		public Dictionary<string, Texture2D> GetTextures()
+		{
+			return	mMaps;
+		}
+
+
+		public void AddMaterial(Material mat)
+		{
+			mMats.Add(mat.Name, mat);
+		}
+
+
+		public Texture2D GetMaterialTexture(string name)
 		{
 			if(mMats.ContainsKey(name))
 			{
-				return	mMats[name];
+				return	mMaps[mMats[name].Map];
 			}
 			return	null;
 		}
 
 
-		public Effect GetShader(string name)
+		public Effect GetMaterialShader(string name)
 		{
-			if(mFX.ContainsKey(name))
+			if(mMats.ContainsKey(name))
 			{
-				return	mFX[name];
+				return	mFX[mMats[name].ShaderName];
 			}
 			return	null;
+		}
+
+
+		//only used by the tools, this makes sure
+		//the names used as keys in the dictionaries
+		//match the name properties in the objects
+		public void UpdateDictionaries()
+		{
+			restart:
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				if(mat.Key != mat.Value.Name)
+				{
+					mMats.Remove(mat.Key);
+					mMats.Add(mat.Value.Name, mat.Value);
+					goto restart;
+				}
+			}
 		}
 
 
@@ -193,12 +254,7 @@ namespace Character
 				//create an element
 				Texture2D	tex	=Texture2D.FromFile(gd, path);
 
-				Material	mat	=new Material();
-
-				mat.mMaps.Add(tex);
-
-				mMats.Add(f.Name, mat);
-
+				mMaps.Add(f.Name, tex);
 			}
 		}
 	}

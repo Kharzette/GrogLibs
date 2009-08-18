@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Xml;
 using System.IO;
 using System.Diagnostics;
+using System.ComponentModel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
@@ -32,23 +33,27 @@ namespace ColladaConvert
 
 		private Dictionary<string, Texture2D>	mTextures	=new Dictionary<string,Texture2D>();
 
+		//gui list of mesh parts for the material form
+		BindingList<Character.Mesh>	mMeshPartList	=new BindingList<Character.Mesh>();
+
 		//events
 		public static event EventHandler	eAnimsUpdated;
+		public static event EventHandler	eMeshPartListUpdated;
 
 
-		public Collada(string meshFileName, GraphicsDevice g, ContentManager cm)
+		public Collada(string meshFileName, GraphicsDevice g, ContentManager cm, Character.MaterialLib mlib)
 		{
 			InitTypes();
 
 			Load(meshFileName);
 
-			mMatLib	=new Character.MaterialLib(g, cm);
+			mMatLib	=mlib;
 
 			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
 			{
 				List<float> verts	=geo.Value.GetBaseVerts();
 
-				MeshConverter	cnk	=new MeshConverter();
+				MeshConverter	cnk	=new MeshConverter(geo.Value.GetMeshName());
 
 				cnk.CreateBaseVerts(verts);
 
@@ -162,6 +167,12 @@ namespace ColladaConvert
 			mGameAnim.Add(anm);
 
 			eAnimsUpdated(mGameAnim, null);
+
+			foreach(MeshConverter mc in mChunks)
+			{
+				mMeshPartList.Add(mc.mConverted);
+			}
+			eMeshPartListUpdated(mMeshPartList, null);
 		}
 
 
@@ -644,8 +655,10 @@ namespace ColladaConvert
 						//alloc a new geom
 						r.MoveToFirstAttribute();
 						string	geomID	=r.Value;
+						r.MoveToNextAttribute();
+						string	geoName	=r.Value;
 
-						Geometry	g	=new Geometry();
+						Geometry	g	=new Geometry(geoName);
 						g.Load(r);
 
 						mGeometries.Add(geomID, g);

@@ -19,31 +19,36 @@ namespace ColladaConvert
 		VertexDeclaration		mVDecl;
 		IndexBuffer				mIB;
 		Effect					mFX;
+		Character.MaterialLib	mMatLib;
 
+		//material gui
+		MaterialForm	mMF;
+
+		//animation gui
 		AnimForm	mCF;
 		string		mCurrentAnimName;
 		float		mTimeScale;			//anim playback speed
 
-		private Matrix	mWorldMatrix;
-		private Matrix	mViewMatrix;
-		private Matrix	mViewTranspose;
-		private Matrix	mProjectionMatrix;
+		Matrix	mWorldMatrix;
+		Matrix	mViewMatrix;
+		Matrix	mViewTranspose;
+		Matrix	mProjectionMatrix;
 
-		private GamePadState	mCurrentGamePadState;
-		private GamePadState	mLastGamePadState;
-		private KeyboardState	mCurrentKeyboardState;
-		private MouseState		mCurrentMouseState;
-		private MouseState		mLastMouseState;
+		GamePadState	mCurrentGamePadState;
+		GamePadState	mLastGamePadState;
+		KeyboardState	mCurrentKeyboardState;
+		MouseState		mCurrentMouseState;
+		MouseState		mLastMouseState;
 
 		//cam / player stuff will move later
-		private Vector3	mCamPos, mDotPos, mBonePos;
-		private float	mPitch, mYaw, mRoll;
-		private float	mBonePitch, mBoneYaw, mBoneRoll;
-		private	Matrix	mBoneMatrix;
+		Vector3	mCamPos, mDotPos, mBonePos;
+		float	mPitch, mYaw, mRoll;
+		float	mBonePitch, mBoneYaw, mBoneRoll;
+		Matrix	mBoneMatrix;
 
-		private	Texture2D	mDesu;
-		private	Texture2D	mEureka;
-		private	Vector3		mLightDir;
+		Texture2D	mDesu;
+		Texture2D	mEureka;
+		Vector3		mLightDir;
 
 
 		public ColladaConvert()
@@ -83,6 +88,8 @@ namespace ColladaConvert
 		/// </summary>
 		protected override void LoadContent()
 		{
+			mMatLib	=new Character.MaterialLib(mGDM.GraphicsDevice, Content);
+
 			//load debug shaders
 			mFX			=Content.Load<Effect>("Shaders/Simple");
 
@@ -171,6 +178,9 @@ namespace ColladaConvert
 			mCF.eOpenModel				+=OnOpenModel;
 			mCF.eAnimSelectionChanged	+=OnAnimSelChanged;
 			mCF.eTimeScaleChanged		+=OnTimeScaleChanged;
+
+			mMF	=new MaterialForm(mMatLib);
+			mMF.Visible	=true;
 		}
 
 		/// <summary>
@@ -244,7 +254,7 @@ namespace ColladaConvert
 			}
 			else
 			{
-				mCollada	=new Collada(path, GraphicsDevice, Content);
+				mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib);
 			}			
 		}
 
@@ -253,7 +263,7 @@ namespace ColladaConvert
 		{
 			string	path	=(string)sender;
 
-			mCollada	=new Collada(path, GraphicsDevice, Content);
+			mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib);
 		}
 
 
