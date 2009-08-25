@@ -14,12 +14,18 @@ float4x4		mBones[MAX_BONES];
 texture	mTexture0;
 texture mTexture1;
 
+//material amb & diffuse
+float4	mMatAmbient;
+float4	mMatDiffuse;
+
 //sunlight / moonlight
-shared float4	mLightColor[3];		//trilights need 3 colors
-shared float3	mLightDirection;
-shared float4	mAmbientColor;
-shared float	mLightFactor1;
-shared float	mLightFactor2;
+float4	mLightColor0;		//trilights need 3 colors
+float4	mLightColor1;		//trilights need 3 colors
+float4	mLightColor2;		//trilights need 3 colors
+float3	mLightDirection;
+float	mLightFactor1;
+float	mLightFactor2;
+
 
 //this comes outta the vertex shader
 struct VSOutput 
@@ -68,7 +74,8 @@ VSOutput DiffuseGouradSkin(float3	position	: POSITION,
 							float4	bnWeights	: BLENDWEIGHT0,
 							float2	tex0		: TEXCOORD0,
 							float2	tex1		: TEXCOORD1,
-							float4	col0		: COLOR0)
+							float4	col0		: COLOR0,
+							uniform int			lightMethod)
 {
 	VSOutput	output;
 	float4		vertPos	=mul(float4(position, 1.0f), mBindPose);
@@ -95,9 +102,25 @@ VSOutput DiffuseGouradSkin(float3	position	: POSITION,
     float3	totalLight	=float3(0,0,0);
 	float	LdotN		=dot(worldNormal, mLightDirection);
 	
-	totalLight	+=(mLightColor[0] * max(0, LdotN))
-		+ (mLightColor[1] * (1 - abs(LdotN)))
-		+ (mLightColor[2] * max(0, -LdotN));
+	if(lightMethod == 0)
+	{
+		//wraparound
+		totalLight	+=(mLightColor0 *
+			max(0, LdotN + mLightFactor1) * mLightFactor2);
+	}
+	else if(lightMethod == 1)
+	{
+		//hemispherical
+		totalLight	+=(mLightColor0 + mLightColor2) * 0.5
+			+ (mLightColor0 - mLightColor2) * LdotN * 0.5;
+	}
+	else
+	{
+		//trilight
+		totalLight	+=(mLightColor0 * max(0, LdotN))
+			+ (mLightColor1 * (1 - abs(LdotN)))
+			+ (mLightColor2 * max(0, -LdotN));
+	}	
 		
 	output.Color.rgb	=totalLight;
 	output.Color.a		=1.0f;
@@ -115,18 +138,42 @@ float4 Gourad2TexModulate(PSInput input) : COLOR
 	
 	float4	inColor	=input.Color;
 	
-//	float4	texLitColor	=inColor * texel0;
-	float4	texLitColor	=texel0;
+	float4	texLitColor	=inColor * texel0;
+//	float4	texLitColor	=texel0;
 	
 	return	texLitColor;
 }
 
-technique VertexLighting
+technique WrapAround
 {     
 	pass P0
 	{
 		//set the VertexShader state to the vertex shader function
-		VertexShader = compile vs_2_0 DiffuseGouradSkin();
+		VertexShader = compile vs_2_0 DiffuseGouradSkin(0);
+
+		//set the PixelShader state to the pixel shader function          
+		PixelShader = compile ps_2_0 Gourad2TexModulate();
+	}
+}
+
+technique Hemispherical
+{     
+	pass P0
+	{
+		//set the VertexShader state to the vertex shader function
+		VertexShader = compile vs_2_0 DiffuseGouradSkin(1);
+
+		//set the PixelShader state to the pixel shader function          
+		PixelShader = compile ps_2_0 Gourad2TexModulate();
+	}
+}
+
+technique Trilight
+{     
+	pass P0
+	{
+		//set the VertexShader state to the vertex shader function
+		VertexShader = compile vs_2_0 DiffuseGouradSkin(3);
 
 		//set the PixelShader state to the pixel shader function          
 		PixelShader = compile ps_2_0 Gourad2TexModulate();

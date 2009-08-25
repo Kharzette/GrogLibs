@@ -70,7 +70,7 @@ namespace Character
 			switch(mType)
 			{
 				case Channel.ChannelType.ROTATE:
-					Vector3	axis;
+					Vector3	axis	=Vector3.Zero;
 					axis.X	=mValue.X;
 					axis.Y	=mValue.Y;
 					axis.Z	=mValue.Z;
@@ -78,7 +78,7 @@ namespace Character
 					break;
 					
 				case Channel.ChannelType.SCALE:
-					Vector3	s;
+					Vector3	s	=Vector3.Zero;
 					s.X	=mValue.X;
 					s.Y	=mValue.Y;
 					s.Z	=mValue.Z;
@@ -86,7 +86,7 @@ namespace Character
 					break;
 
 				case Channel.ChannelType.TRANSLATE:
-					Vector3 t;
+					Vector3 t	=Vector3.Zero;
 					t.X	=mValue.X;
 					t.Y	=mValue.Y;
 					t.Z	=mValue.Z;

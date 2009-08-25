@@ -112,12 +112,16 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(377, 347);
+			this.ControlBox = false;
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this.TimeScale);
 			this.Controls.Add(this.AnimGrid);
 			this.Controls.Add(this.LoadModel);
 			this.Controls.Add(this.LoadAnim);
+			this.MaximizeBox = false;
 			this.Name = "AnimForm";
+			this.ShowIcon = false;
+			this.ShowInTaskbar = false;
 			this.Text = "Animation";
 			((System.ComponentModel.ISupportInitialize)(this.AnimGrid)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.TimeScale)).EndInit();

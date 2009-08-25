@@ -4,7 +4,9 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Text;
+using System.Diagnostics;
 using System.Windows.Forms;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Character;
 
@@ -15,12 +17,14 @@ namespace ColladaConvert
 		MaterialGridModel	mMatModel;		
 		MaterialLib			mMatLib;		
 		OpenFileDialog		mOFD	=new OpenFileDialog();
+		ShaderList			mSL;
+		TextureForm			mTF;
+		TechniqueList		mTL;
 
-		//data bindings for tex & shader
-		BindingList<TextureGridModel>	mTextures	=new BindingList<TextureGridModel>();
-		BindingList<ShaderGridModel>	mShaders	=new BindingList<ShaderGridModel>();
+		//temporary reference to a cell being modified
+		DataGridViewCell	mEditingCell;
 
-		
+
 		public MaterialForm(MaterialLib matlib)
 		{
 			InitializeComponent();
@@ -29,104 +33,110 @@ namespace ColladaConvert
 
 			mMatModel	=new MaterialGridModel(mMatLib.GetMaterials());
 
-			//disable buttons
-			ApplyTexture.Enabled	=false;
+			NewMaterial.Enabled		=true;
 			ApplyMaterial.Enabled	=false;
 
-			Dictionary<string, Texture2D>	textures	=mMatLib.GetTextures();
-			Dictionary<string, Effect>		shaders		=mMatLib.GetShaders();
-
-			foreach(KeyValuePair<string, Texture2D> tex in textures)
-			{
-				TextureGridModel	tgm	=new TextureGridModel();
-				tgm.Name	=tex.Key;
-				mTextures.Add(tgm);
-			}
-
-			foreach(KeyValuePair<string, Effect> fx in shaders)
-			{
-				ShaderGridModel	sgm	=new ShaderGridModel();
-				sgm.Name	=fx.Key;
-				mShaders.Add(sgm);
-			}
-
-			TextureGrid.DataSource	=mTextures;
 			MaterialGrid.DataSource	=mMatModel;
-			ShaderGrid.DataSource	=mShaders;
 
 			Collada.eMeshPartListUpdated	+=OnMeshPartListUpdated;
+
+			//set shadername and technique columns to
+			//read only so text can't be entered in cell
+			MaterialGrid.Columns[1].ReadOnly	=true;
+			MaterialGrid.Columns[2].ReadOnly	=true;
 		}
 
 
-		private void ApplyTexture_Click(object sender, EventArgs e)
+		private void OnTextureListOk(object sender, EventArgs ea)
 		{
-			Character.Material	mat	=new Character.Material();
+			DataGridViewSelectedRowCollection	matSel	=MaterialProperties.SelectedRows;
 
-			if(TextureGrid.CurrentRow != null)
-			{
-				mat.Map			=(string)TextureGrid.CurrentRow.Cells[0].FormattedValue;
-				mat.Name		=(string)TextureGrid.CurrentRow.Cells[0].FormattedValue;
-				mat.ShaderName	=(string)ShaderGrid.CurrentRow.Cells[0].FormattedValue;
+			mEditingCell.Value	=sender;
+			mEditingCell		=null;
 
-				//chop off the file extension
-				mat.Name	=mat.Name.Substring(0, mat.Name.Length - 4);
+			mTF.eOk		-=OnTextureListOk;
+			mTF.eCancel	-=OnTextureListCancel;
 
-				mMatLib.AddMaterial(mat);
-				UpdateMaterials();
-			}
+			MaterialGrid.Enabled		=true;
+			MaterialProperties.Enabled	=true;
 		}
 
 
-		private void ApplyMaterial_Click(object sender, EventArgs e)
+		private void OnTextureListCancel(object sender, EventArgs ea)
 		{
-			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-			DataGridViewSelectedRowCollection	mpSel	=MeshPartGrid.SelectedRows;
+			mTF.eOk		-=OnTextureListOk;
+			mTF.eCancel	-=OnTextureListCancel;
 
-			mpSel[0].Cells[1].Value	=matSel[0].Cells[0].Value;
+			MaterialGrid.Enabled		=true;
+			MaterialProperties.Enabled	=true;
 		}
 
 
-		private void TextureGrid_SelectionChanged(object sender, EventArgs e)
-		{
-			DataGridViewSelectedRowCollection	texSel	=TextureGrid.SelectedRows;
-			DataGridViewSelectedRowCollection	shdSel	=ShaderGrid.SelectedRows;
-
-			if(texSel.Count > 0 && shdSel.Count > 0)
-			{
-				ApplyTexture.Enabled	=true;
-			}
-			else
-			{
-				ApplyTexture.Enabled	=false;
-			}
-		}
-
-
-		private void ShaderGrid_SelectionChanged(object sender, EventArgs e)
-		{
-			TextureGrid_SelectionChanged(sender, e);
-		}
-
-
-		private void MaterialGrid_SelectionChanged(object sender, EventArgs e)
+		private void OnTechniqueListOk(object sender, EventArgs ea)
 		{
 			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-			DataGridViewSelectedRowCollection	mpSel	=MeshPartGrid.SelectedRows;
 
-			if(matSel.Count > 0 && mpSel.Count > 0)
-			{
-				ApplyMaterial.Enabled	=true;
-			}
-			else
-			{
-				ApplyMaterial.Enabled	=false;
-			}
+			matSel[0].Cells[2].Value	=sender;
+
+			mSL.eOk		-=OnTechniqueListOk;
+			mSL.eCancel	-=OnTechniqueListCancel;
+
+			MaterialGrid.Enabled	=true;
+
+			//update shader parameters
+			Character.Material	mat	=(Character.Material)matSel[0].DataBoundItem;
+			UpdateShaderParameters(mat);
+
+			MaterialProperties.DataSource			=mat.Parameters;
+			MaterialProperties.Columns[0].ReadOnly	=true;
+			MaterialProperties.Columns[1].ReadOnly	=true;
+			MaterialProperties.Columns[2].ReadOnly	=true;
+		}
+
+
+		private void OnTechniqueListCancel(object sender, EventArgs ea)
+		{
+			mSL.eOk		-=OnTechniqueListOk;
+			mSL.eCancel	-=OnTechniqueListCancel;
+
+			MaterialGrid.Enabled	=true;
+		}
+
+
+		private void OnShaderListOk(object sender, EventArgs ea)
+		{
+			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
+
+			matSel[0].Cells[1].Value	=sender;
+
+			mSL.eOk		-=OnShaderListOk;
+			mSL.eCancel	-=OnShaderListCancel;
+
+			MaterialGrid.Enabled	=true;
+
+			//update shader parameters
+			Character.Material	mat	=(Character.Material)matSel[0].DataBoundItem;
+			UpdateShaderParameters(mat);
+
+			MaterialProperties.DataSource			=mat.Parameters;
+			MaterialProperties.Columns[0].ReadOnly	=true;
+			MaterialProperties.Columns[1].ReadOnly	=true;
+			MaterialProperties.Columns[2].ReadOnly	=true;
+		}
+
+
+		private void OnShaderListCancel(object sender, EventArgs ea)
+		{
+			mSL.eOk		-=OnShaderListOk;
+			mSL.eCancel	-=OnShaderListCancel;
+
+			MaterialGrid.Enabled	=true;
 		}
 
 
 		private void MeshPartGrid_SelectionChanged(object sender, EventArgs e)
 		{
-			MaterialGrid_SelectionChanged(sender, e);
+			OnSelectionChanged(sender, e);
 		}
 
 
@@ -144,9 +154,221 @@ namespace ColladaConvert
 			MaterialGrid.DataSource	=mMatModel;
 		}
 
-		private void MaterialGrid_CellValidated(object sender, DataGridViewCellEventArgs e)
+
+		private void OnNewMaterial(object sender, EventArgs e)
 		{
-			mMatLib.UpdateDictionaries();
+			Character.Material	m	=new Character.Material();
+
+			m.Name			="default";
+			m.ShaderName	="";
+			m.Technique		="";
+
+			mMatLib.AddMaterial(m);
+			mMatModel.Add(m);
+
+			MaterialProperties.DataSource			=m.Parameters;
+			MaterialProperties.Columns[0].ReadOnly	=true;
+			MaterialProperties.Columns[1].ReadOnly	=true;
+			MaterialProperties.Columns[2].ReadOnly	=true;
+		}
+
+
+		private void OnSelectionChanged(object sender, EventArgs e)
+		{
+			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
+			DataGridViewSelectedRowCollection	mpSel	=MeshPartGrid.SelectedRows;
+
+			if(matSel.Count > 0)
+			{
+				if(mpSel.Count > 0)
+				{
+					ApplyMaterial.Enabled	=true;
+				}
+				Character.Material	mat	=(Character.Material)matSel[0].DataBoundItem;
+				MaterialProperties.DataSource			=mat.Parameters;
+				MaterialProperties.Columns[0].ReadOnly	=true;
+				MaterialProperties.Columns[1].ReadOnly	=true;
+				MaterialProperties.Columns[2].ReadOnly	=true;
+			}
+			else
+			{
+				ApplyMaterial.Enabled	=false;
+			}
+		}
+
+
+		private void OnCellValidated(object sender, DataGridViewCellEventArgs e)
+		{
+			//update name?
+			if(e.ColumnIndex == 0)
+			{
+				mMatLib.UpdateDictionaries();
+			}
+		}
+
+
+		private void OnApplyMaterial(object sender, EventArgs e)
+		{
+			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
+			DataGridViewSelectedRowCollection	mpSel	=MeshPartGrid.SelectedRows;
+
+			mpSel[0].Cells[1].Value	=matSel[0].Cells[0].Value;
+		}
+
+
+		private void OnCellClick(object sender, DataGridViewCellMouseEventArgs e)
+		{
+			//if this is the shader name
+			if(e.ColumnIndex == 1)
+			{
+				mSL	=new ShaderList(mMatLib);
+				mSL.eOk					+=OnShaderListOk;
+				mSL.eCancel				+=OnShaderListCancel;
+				mSL.Visible				=true;
+				MaterialGrid.Enabled	=false;
+			}
+			else if(e.ColumnIndex == 2)
+			{
+				Character.Material	m	=(Character.Material)
+					MaterialGrid.Rows[e.RowIndex].DataBoundItem;
+
+				if(mMatLib.GetMaterialShader(m.Name) != null)
+				{
+					//techniques
+					mTL	=new TechniqueList(mMatLib, m.Name);
+					mTL.eOk					+=OnTechniqueListOk;
+					mTL.eCancel				+=OnTechniqueListCancel;
+					mTL.Visible				=true;
+					MaterialGrid.Enabled	=false;
+				}
+			}
+		}
+
+
+		private void UpdateShaderParameters(Character.Material m)
+		{
+			//grab fx
+			Effect	fx	=mMatLib.GetMaterialShader(m.Name);
+
+			List<ShaderParameters>	parms	=new List<ShaderParameters>();
+
+			foreach(EffectParameter ep in fx.Parameters)
+			{
+				Debug.WriteLine("Parm: " + ep.Semantic);
+
+				//skip matrices
+				if(ep.ParameterClass == EffectParameterClass.MatrixColumns
+					|| ep.ParameterClass == EffectParameterClass.MatrixRows)
+				{
+					continue;
+				}
+
+				//skip samplers
+				if(ep.ParameterType == EffectParameterType.Sampler)
+				{
+					continue;
+				}
+
+				//skip stuff with lots of elements
+				//such as lists of bones
+				if(ep.Elements.Count > 0)
+				{
+					continue;
+				}
+
+				ShaderParameters	sp	=new ShaderParameters();
+
+				sp.Name		=ep.Name;
+				sp.Class	=ep.ParameterClass;
+				sp.Type		=ep.ParameterType;
+
+				switch(sp.Class)
+				{
+					case EffectParameterClass.MatrixColumns:
+						sp.Value	=Convert.ToString(ep.GetValueMatrix());
+						break;
+
+					case EffectParameterClass.MatrixRows:
+						sp.Value	=Convert.ToString(ep.GetValueMatrix());
+						break;
+
+					case EffectParameterClass.Vector:
+						if(ep.ColumnCount == 2)
+						{
+							Vector2	vec	=ep.GetValueVector2();
+							sp.Value	=Convert.ToString(vec.X)
+								+ " " + Convert.ToString(vec.Y);
+						}
+						else if(ep.ColumnCount == 3)
+						{
+							Vector3	vec	=ep.GetValueVector3();
+							sp.Value	=Convert.ToString(vec.X)
+								+ " " + Convert.ToString(vec.Y)
+								+ " " + Convert.ToString(vec.Z);
+						}
+						else
+						{
+							Vector4	vec	=ep.GetValueVector4();
+							sp.Value	=Convert.ToString(vec.X)
+								+ " " + Convert.ToString(vec.Y)
+								+ " " + Convert.ToString(vec.Z)
+								+ " " + Convert.ToString(vec.W);
+						}
+						break;
+				}					
+
+				parms.Add(sp);
+			}
+			m.Parameters	=parms;
+		}
+
+
+		private void OnPropCellClick(object sender, DataGridViewCellEventArgs e)
+		{
+			if(e.ColumnIndex != 3)
+			{
+				return;	//only interested in param value
+			}
+
+			DataGridViewCell	cell	=
+				MaterialProperties.Rows[e.RowIndex].Cells[3];
+
+			//figure out what type this is
+			EffectParameterClass	epc	=(EffectParameterClass)
+				MaterialProperties.Rows[e.RowIndex].Cells[1].Value;
+
+			if(epc == EffectParameterClass.Object)
+			{
+				EffectParameterType	ept	=(EffectParameterType)
+					MaterialProperties.Rows[e.RowIndex].Cells[2].Value;
+
+				if(ept == EffectParameterType.Texture)
+				{
+					//keep a reference to this cell while
+					//the tex gump comes up
+					mEditingCell	=cell;
+
+					mTF	=new TextureForm(mMatLib);
+					mTF.eOk						+=OnTextureListOk;
+					mTF.eCancel					+=OnTextureListCancel;
+					mTF.Visible					=true;
+					MaterialGrid.Enabled		=false;
+					MaterialProperties.Enabled	=false;
+				}
+			}
+		}
+
+
+		private void OnPropValueValidated(object sender, DataGridViewCellEventArgs e)
+		{
+			if(e.ColumnIndex != 3)
+			{
+				return;
+			}
+			Character.Material	m	=(Character.Material)
+				MaterialGrid.SelectedRows[0].DataBoundItem;
+
+			mMatLib.ApplyParameters(m.Name);
 		}
 	}
 }

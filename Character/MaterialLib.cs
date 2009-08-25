@@ -5,14 +5,47 @@ using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Storage;
 
 namespace Character
 {
+	public class ShaderParameters
+	{
+		string					mName;
+		EffectParameterClass	mClass;
+		EffectParameterType		mType;
+		string					mValue;
+
+		public string Name
+		{
+			get { return mName; }
+			set { mName = value; }
+		}
+		public EffectParameterClass Class
+		{
+			get { return mClass; }
+			set { mClass = value; }
+		}
+		public EffectParameterType Type
+		{
+			get { return mType; }
+			set { mType = value; }
+		}
+		public string Value
+		{
+			get { return mValue; }
+			set { mValue = value; }
+		}
+	}
+
 	public class Material
 	{
-		string	mMap;			//name of the texmap
 		string	mShaderName;	//name of the shader
 		string	mName;			//name of the overall material
+		string	mTechnique;		//technique to use with this material
+
+		//parameters for the chosen shader
+		List<ShaderParameters>	mParameters	=new List<ShaderParameters>();
 
 
 		public string Name
@@ -20,15 +53,20 @@ namespace Character
 			get { return mName; }
 			set { mName = value; }
 		}
-		public string Map
-		{
-			get { return mMap; }
-			set { mMap = value; }
-		}
 		public string ShaderName
 		{
 			get { return mShaderName; }
 			set { mShaderName = value; }
+		}
+		public string Technique
+		{
+			get { return mTechnique; }
+			set { mTechnique = value; }
+		}
+		public List<ShaderParameters> Parameters
+		{
+			get { return mParameters; }
+			set { mParameters = value; }
 		}
 	}
 
@@ -73,21 +111,14 @@ namespace Character
 		}
 
 
-		public Texture2D GetMaterialTexture(string name)
-		{
-			if(mMats.ContainsKey(name))
-			{
-				return	mMaps[mMats[name].Map];
-			}
-			return	null;
-		}
-
-
 		public Effect GetMaterialShader(string name)
 		{
 			if(mMats.ContainsKey(name))
 			{
-				return	mFX[mMats[name].ShaderName];
+				if(mFX.ContainsKey(mMats[name].ShaderName))
+				{
+					return	mFX[mMats[name].ShaderName];
+				}
 			}
 			return	null;
 		}
@@ -106,6 +137,86 @@ namespace Character
 					mMats.Remove(mat.Key);
 					mMats.Add(mat.Value.Name, mat.Value);
 					goto restart;
+				}
+			}
+		}
+
+
+		//updates a shader with a material's props
+		public void ApplyParameters(string matName)
+		{
+			Effect	fx	=GetMaterialShader(matName);
+
+			Material	mat	=mMats[matName];
+
+			//set technique
+			if(mat.Technique != "")
+			{
+				fx.CurrentTechnique	=fx.Techniques[mat.Technique];
+			}
+
+			foreach(ShaderParameters sp in mat.Parameters)
+			{
+				if(sp.Value == null || sp.Value == "")
+				{
+					continue;	//skip anything blank
+				}
+				switch(sp.Class)
+				{
+					case EffectParameterClass.Object:
+						if(sp.Type == EffectParameterType.Texture)
+						{
+							fx.Parameters[sp.Name].SetValue(mMaps[sp.Value]);
+						}
+						break;
+
+					case EffectParameterClass.Scalar:
+						if(sp.Type == EffectParameterType.Single)
+						{
+							fx.Parameters[sp.Name].SetValue(
+								Convert.ToSingle(sp.Value));
+						}
+						break;
+
+					case EffectParameterClass.Vector:
+						//get the number of columns
+						EffectParameter	ep	=fx.Parameters[sp.Name];
+
+						if(ep.ColumnCount == 2)
+						{
+							Vector2	vec	=Vector2.Zero;
+							string	[]tokens;
+							tokens	=sp.Value.Split(' ');
+							vec.X	=Convert.ToSingle(tokens[0]);
+							vec.Y	=Convert.ToSingle(tokens[1]);
+							ep.SetValue(vec);
+						}
+						else if(ep.ColumnCount == 3)
+						{
+							Vector3	vec	=Vector3.Zero;
+							string	[]tokens;
+							tokens	=sp.Value.Split(' ');
+							vec.X	=Convert.ToSingle(tokens[0]);
+							vec.Y	=Convert.ToSingle(tokens[1]);
+							vec.Z	=Convert.ToSingle(tokens[2]);
+							ep.SetValue(vec);
+						}
+						else if(ep.ColumnCount == 4)
+						{
+							Vector4	vec	=Vector4.Zero;
+							string	[]tokens;
+							tokens	=sp.Value.Split(' ');
+							vec.X	=Convert.ToSingle(tokens[0]);
+							vec.Y	=Convert.ToSingle(tokens[1]);
+							vec.Z	=Convert.ToSingle(tokens[2]);
+							vec.W	=Convert.ToSingle(tokens[3]);
+							ep.SetValue(vec);
+						}
+						else
+						{
+							Debug.Assert(false);
+						}
+						break;
 				}
 			}
 		}
@@ -167,10 +278,20 @@ namespace Character
 		//load shaders in the content/shaders folder
 		private void LoadShaders(ContentManager cm)
 		{
-			DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory + "../../../Content/Shaders/");
+#if XBOX
+			DirectoryInfo	di	=new DirectoryInfo(StorageContainer.TitleLocation
+				+ "../../../Content/Shaders/");
+
+			//stupid getfiles won't take multiple wildcards
+			FileInfo[]		fi	=di.GetFiles("*.fx");
+#else
+			DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
+				+ "../../../Content/Shaders/");
 
 			//stupid getfiles won't take multiple wildcards
 			FileInfo[]		fi	=di.GetFiles("*.fx", SearchOption.AllDirectories);
+#endif
+
 
 			foreach(FileInfo f in fi)
 			{
@@ -192,7 +313,23 @@ namespace Character
 
 		private void LoadTextures(GraphicsDevice gd)
 		{
-			DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory + "../../../Content/Textures/");
+#if XBOX
+			DirectoryInfo	di	=new DirectoryInfo(StorageContainer.TitleLocation
+				+ "../../../Content/Textures/");
+
+			//stupid getfiles won't take multiple wildcards
+			FileInfo[]		fi0	=di.GetFiles("*.bmp");
+			FileInfo[]		fi1	=di.GetFiles("*.dds");
+			FileInfo[]		fi2	=di.GetFiles("*.dib");
+			FileInfo[]		fi3	=di.GetFiles("*.hdr");
+			FileInfo[]		fi4	=di.GetFiles("*.jpg");
+			FileInfo[]		fi5	=di.GetFiles("*.pfm");
+			FileInfo[]		fi6	=di.GetFiles("*.png");
+			FileInfo[]		fi7	=di.GetFiles("*.ppm");
+			FileInfo[]		fi8	=di.GetFiles("*.tga");
+#else
+			DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
+				+ "../../../Content/Textures/");
 
 			//stupid getfiles won't take multiple wildcards
 			FileInfo[]		fi0	=di.GetFiles("*.bmp", SearchOption.AllDirectories);
@@ -204,6 +341,8 @@ namespace Character
 			FileInfo[]		fi6	=di.GetFiles("*.png", SearchOption.AllDirectories);
 			FileInfo[]		fi7	=di.GetFiles("*.ppm", SearchOption.AllDirectories);
 			FileInfo[]		fi8	=di.GetFiles("*.tga", SearchOption.AllDirectories);
+#endif
+
 
 			//merge these
 			List<FileInfo>	fi	=new List<FileInfo>();
@@ -252,9 +391,11 @@ namespace Character
 				path	+="\\" + f.Name;
 
 				//create an element
+#if !XBOX
 				Texture2D	tex	=Texture2D.FromFile(gd, path);
 
 				mMaps.Add(f.Name, tex);
+#endif
 			}
 		}
 	}

@@ -64,18 +64,25 @@ namespace Character
 			g.VertexDeclaration	=mVD;
 
 			Matrix	loc	=Matrix.Identity;
-
+			/*
 			Texture2D	tex	=matLib.GetMaterialTexture(mMaterialName);
 			if(tex == null)
 			{
 				return;	//no material?
-			}
+			}*/
 
 			Effect	fx	=matLib.GetMaterialShader(mMaterialName);
 
-			fx.Parameters["mTexture0"].SetValue(tex);
+			if(fx == null)
+			{
+				return;
+			}
+			//fx.Parameters["mTexture0"].SetValue(tex);
 
 			UpdateBones(fx);
+
+			//this might get slow
+			matLib.ApplyParameters(mMaterialName);
 
 			if(fx.Parameters["mBindPose"] != null)
 			{

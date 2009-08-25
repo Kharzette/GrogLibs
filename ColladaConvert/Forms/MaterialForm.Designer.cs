@@ -28,76 +28,42 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.TextureGrid = new System.Windows.Forms.DataGridView();
 			this.MeshPartGrid = new System.Windows.Forms.DataGridView();
-			this.ApplyTexture = new System.Windows.Forms.Button();
-			this.ShaderGrid = new System.Windows.Forms.DataGridView();
+			this.NewMaterial = new System.Windows.Forms.Button();
 			this.MaterialGrid = new System.Windows.Forms.DataGridView();
 			this.ApplyMaterial = new System.Windows.Forms.Button();
-			((System.ComponentModel.ISupportInitialize)(this.TextureGrid)).BeginInit();
+			this.MaterialProperties = new System.Windows.Forms.DataGridView();
 			((System.ComponentModel.ISupportInitialize)(this.MeshPartGrid)).BeginInit();
-			((System.ComponentModel.ISupportInitialize)(this.ShaderGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).BeginInit();
+			((System.ComponentModel.ISupportInitialize)(this.MaterialProperties)).BeginInit();
 			this.SuspendLayout();
-			// 
-			// TextureGrid
-			// 
-			this.TextureGrid.AllowUserToAddRows = false;
-			this.TextureGrid.AllowUserToDeleteRows = false;
-			this.TextureGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.TextureGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-			this.TextureGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-			this.TextureGrid.Location = new System.Drawing.Point(12, 211);
-			this.TextureGrid.MultiSelect = false;
-			this.TextureGrid.Name = "TextureGrid";
-			this.TextureGrid.ReadOnly = true;
-			this.TextureGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this.TextureGrid.Size = new System.Drawing.Size(237, 160);
-			this.TextureGrid.TabIndex = 0;
-			this.TextureGrid.SelectionChanged += new System.EventHandler(this.TextureGrid_SelectionChanged);
 			// 
 			// MeshPartGrid
 			// 
 			this.MeshPartGrid.AllowUserToAddRows = false;
 			this.MeshPartGrid.AllowUserToDeleteRows = false;
-			this.MeshPartGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+			this.MeshPartGrid.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.MeshPartGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
 			this.MeshPartGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-			this.MeshPartGrid.Location = new System.Drawing.Point(12, 12);
+			this.MeshPartGrid.Location = new System.Drawing.Point(231, 214);
 			this.MeshPartGrid.Name = "MeshPartGrid";
+			this.MeshPartGrid.ReadOnly = true;
 			this.MeshPartGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this.MeshPartGrid.Size = new System.Drawing.Size(495, 94);
+			this.MeshPartGrid.Size = new System.Drawing.Size(276, 172);
 			this.MeshPartGrid.TabIndex = 1;
 			this.MeshPartGrid.SelectionChanged += new System.EventHandler(this.MeshPartGrid_SelectionChanged);
 			// 
-			// ApplyTexture
+			// NewMaterial
 			// 
-			this.ApplyTexture.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.ApplyTexture.Location = new System.Drawing.Point(12, 377);
-			this.ApplyTexture.Name = "ApplyTexture";
-			this.ApplyTexture.Size = new System.Drawing.Size(143, 29);
-			this.ApplyTexture.TabIndex = 3;
-			this.ApplyTexture.Text = "Apply Tex/Shd to Mat";
-			this.ApplyTexture.UseVisualStyleBackColor = true;
-			this.ApplyTexture.Click += new System.EventHandler(this.ApplyTexture_Click);
-			// 
-			// ShaderGrid
-			// 
-			this.ShaderGrid.AllowUserToAddRows = false;
-			this.ShaderGrid.AllowUserToDeleteRows = false;
-			this.ShaderGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-			this.ShaderGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-			this.ShaderGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-			this.ShaderGrid.Location = new System.Drawing.Point(255, 211);
-			this.ShaderGrid.MultiSelect = false;
-			this.ShaderGrid.Name = "ShaderGrid";
-			this.ShaderGrid.ReadOnly = true;
-			this.ShaderGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this.ShaderGrid.Size = new System.Drawing.Size(252, 160);
-			this.ShaderGrid.TabIndex = 4;
-			this.ShaderGrid.SelectionChanged += new System.EventHandler(this.ShaderGrid_SelectionChanged);
+			this.NewMaterial.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.NewMaterial.Location = new System.Drawing.Point(12, 392);
+			this.NewMaterial.Name = "NewMaterial";
+			this.NewMaterial.Size = new System.Drawing.Size(94, 29);
+			this.NewMaterial.TabIndex = 3;
+			this.NewMaterial.Text = "New Material";
+			this.NewMaterial.UseVisualStyleBackColor = true;
+			this.NewMaterial.Click += new System.EventHandler(this.OnNewMaterial);
 			// 
 			// MaterialGrid
 			// 
@@ -106,54 +72,68 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.MaterialGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
 			this.MaterialGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-			this.MaterialGrid.Location = new System.Drawing.Point(12, 112);
+			this.MaterialGrid.Location = new System.Drawing.Point(12, 214);
 			this.MaterialGrid.MultiSelect = false;
 			this.MaterialGrid.Name = "MaterialGrid";
 			this.MaterialGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this.MaterialGrid.Size = new System.Drawing.Size(495, 93);
+			this.MaterialGrid.Size = new System.Drawing.Size(213, 172);
 			this.MaterialGrid.TabIndex = 5;
-			this.MaterialGrid.CellValidated += new System.Windows.Forms.DataGridViewCellEventHandler(this.MaterialGrid_CellValidated);
-			this.MaterialGrid.SelectionChanged += new System.EventHandler(this.MaterialGrid_SelectionChanged);
+			this.MaterialGrid.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.OnCellClick);
+			this.MaterialGrid.CellValidated += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnCellValidated);
+			this.MaterialGrid.SelectionChanged += new System.EventHandler(this.OnSelectionChanged);
 			// 
 			// ApplyMaterial
 			// 
 			this.ApplyMaterial.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.ApplyMaterial.Location = new System.Drawing.Point(161, 377);
+			this.ApplyMaterial.Location = new System.Drawing.Point(341, 392);
 			this.ApplyMaterial.Name = "ApplyMaterial";
 			this.ApplyMaterial.Size = new System.Drawing.Size(166, 29);
 			this.ApplyMaterial.TabIndex = 6;
 			this.ApplyMaterial.Text = "Apply Material To MeshPart";
 			this.ApplyMaterial.UseVisualStyleBackColor = true;
-			this.ApplyMaterial.Click += new System.EventHandler(this.ApplyMaterial_Click);
+			this.ApplyMaterial.Click += new System.EventHandler(this.OnApplyMaterial);
+			// 
+			// MaterialProperties
+			// 
+			this.MaterialProperties.AllowUserToAddRows = false;
+			this.MaterialProperties.AllowUserToDeleteRows = false;
+			this.MaterialProperties.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+			this.MaterialProperties.Location = new System.Drawing.Point(12, 12);
+			this.MaterialProperties.Name = "MaterialProperties";
+			this.MaterialProperties.Size = new System.Drawing.Size(495, 196);
+			this.MaterialProperties.TabIndex = 7;
+			this.MaterialProperties.CellValidated += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnPropValueValidated);
+			this.MaterialProperties.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnPropCellClick);
 			// 
 			// MaterialForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(519, 418);
+			this.ClientSize = new System.Drawing.Size(519, 433);
+			this.ControlBox = false;
+			this.Controls.Add(this.MaterialProperties);
 			this.Controls.Add(this.ApplyMaterial);
 			this.Controls.Add(this.MaterialGrid);
-			this.Controls.Add(this.ShaderGrid);
-			this.Controls.Add(this.ApplyTexture);
+			this.Controls.Add(this.NewMaterial);
 			this.Controls.Add(this.MeshPartGrid);
-			this.Controls.Add(this.TextureGrid);
+			this.MaximizeBox = false;
 			this.Name = "MaterialForm";
+			this.ShowIcon = false;
+			this.ShowInTaskbar = false;
 			this.Text = "MaterialForm";
-			((System.ComponentModel.ISupportInitialize)(this.TextureGrid)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MeshPartGrid)).EndInit();
-			((System.ComponentModel.ISupportInitialize)(this.ShaderGrid)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).EndInit();
+			((System.ComponentModel.ISupportInitialize)(this.MaterialProperties)).EndInit();
 			this.ResumeLayout(false);
 
 		}
 
 		#endregion
 
-		private System.Windows.Forms.DataGridView TextureGrid;
 		private System.Windows.Forms.DataGridView MeshPartGrid;
-		private System.Windows.Forms.Button ApplyTexture;
-		private System.Windows.Forms.DataGridView ShaderGrid;
+		private System.Windows.Forms.Button NewMaterial;
 		private System.Windows.Forms.DataGridView MaterialGrid;
 		private System.Windows.Forms.Button ApplyMaterial;
+		private System.Windows.Forms.DataGridView MaterialProperties;
 	}
 }

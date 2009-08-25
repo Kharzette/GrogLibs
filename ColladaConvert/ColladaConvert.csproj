@@ -114,6 +114,24 @@
       <DependentUpon>MaterialForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\GridModel.cs" />
+    <Compile Include="Forms\ShaderList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ShaderList.Designer.cs">
+      <DependentUpon>ShaderList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\TechniqueList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\TechniqueList.Designer.cs">
+      <DependentUpon>TechniqueList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\TextureForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\TextureForm.Designer.cs">
+      <DependentUpon>TextureForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="NodeElements\LookAt.cs" />
     <Compile Include="ColladaStructs\Material.cs" />
     <Compile Include="ColladaStructs\Mesh.cs" />
@@ -190,6 +208,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\MaterialForm.resx">
       <DependentUpon>MaterialForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\ShaderList.resx">
+      <DependentUpon>ShaderList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\TechniqueList.resx">
+      <DependentUpon>TechniqueList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\TextureForm.resx">
+      <DependentUpon>TextureForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

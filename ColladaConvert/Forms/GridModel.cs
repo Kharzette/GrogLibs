@@ -35,7 +35,8 @@ namespace ColladaConvert
 
 	public class ShaderGridModel
 	{
-		string	mName;
+		string					mName;
+
 		public string Name
 		{
 			get { return mName; }
