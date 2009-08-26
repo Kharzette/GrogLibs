@@ -30,6 +30,7 @@ namespace ColladaConvert
 		public List<Character.Anim>		mGameAnim	=new List<Character.Anim>();
 
 		private	Character.MaterialLib	mMatLib;
+		private Character.AnimLib		mAnimLib;
 
 		private Dictionary<string, Texture2D>	mTextures	=new Dictionary<string,Texture2D>();
 
@@ -41,13 +42,18 @@ namespace ColladaConvert
 		public static event EventHandler	eMeshPartListUpdated;
 
 
-		public Collada(string meshFileName, GraphicsDevice g, ContentManager cm, Character.MaterialLib mlib)
+		public Collada(string meshFileName,
+			GraphicsDevice g,
+			ContentManager cm,
+			Character.MaterialLib mlib,
+			Character.AnimLib alib)
 		{
 			InitTypes();
 
 			Load(meshFileName);
 
-			mMatLib	=mlib;
+			mMatLib		=mlib;
+			mAnimLib	=alib;
 
 			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
 			{
@@ -165,6 +171,7 @@ namespace ColladaConvert
 				i++;
 			}
 			mGameAnim.Add(anm);
+			mAnimLib.AddAnim(anm);
 
 			eAnimsUpdated(mGameAnim, null);
 
@@ -207,6 +214,7 @@ namespace ColladaConvert
 				i++;
 			}
 			mGameAnim.Add(anm);
+			mAnimLib.AddAnim(anm);
 			file.Close();
 
 			eAnimsUpdated(mGameAnim, null);
@@ -228,7 +236,7 @@ namespace ColladaConvert
 			return	ret;
 		}
 
-
+		/*
 		public void Animate(string anim, float time)
 		{
 			foreach(Character.Anim anm in mGameAnim)
@@ -239,7 +247,7 @@ namespace ColladaConvert
 				}
 				for(int i=0;i < mControllers.Count;i++)
 				{
-					anm.Animate(i, time, mGameSkeleton);
+					anm.Animate(i, time);
 				}
 			}
 			BuildBones();
@@ -253,12 +261,12 @@ namespace ColladaConvert
 			{
 				for(int i=0;i < mControllers.Count;i++)
 				{
-					anm.Animate(i, time, mGameSkeleton);
+					anm.Animate(i, time);
 				}
 			}
 			BuildBones();
 		}
-
+		*/
 
 		public void UpdateMaterialEffects(Matrix world, Matrix view, Matrix proj)
 		{

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml;
+using System.IO;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -29,6 +31,7 @@ namespace Character
 		string			mTargetSID;		//SID of target channel
 		
 
+		public Channel() {}
 		public Channel(string targNode, string targSID)
 		{
 			mTargetNode	=targNode;
@@ -43,9 +46,36 @@ namespace Character
 		}
 
 
+		public void FixTarget(Skeleton sk)
+		{
+			if(!sk.GetChannelTarget(mTargetNode, mTargetSID, out mTarget))
+			{
+				Debug.WriteLine("Couldn't find channeltarget in FixTarget()");
+			}
+		}
+
+
 		public void SetValue(float val)
 		{
 			mTarget.SetValue(val, mAxis);
+		}
+
+
+		//channel target will be refd from
+		//the skeleton
+		public void Write(BinaryWriter bw)
+		{
+			bw.Write((UInt32)mAxis);
+			bw.Write(mTargetNode);
+			bw.Write(mTargetSID);
+		}
+
+
+		public void Read(BinaryReader br)
+		{
+			mAxis		=(AxisTarget)br.ReadUInt32();
+			mTargetNode	=br.ReadString();
+			mTargetSID	=br.ReadString();
 		}
 	}
 }

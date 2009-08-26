@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Xml;
 using System.Diagnostics;
-using System.Reflection;
+//using System.Reflection;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -17,6 +18,11 @@ namespace Character
 		float	mTotalTime;		//total time of the animation
 
 		Channel	mTarget;	//target channel
+
+
+		public SubAnim()
+		{
+		}
 
 
 		public SubAnim(int numKeys, float totalTime,
@@ -44,7 +50,88 @@ namespace Character
 		}
 
 
-		public void Animate(float time, Skeleton gs)
+		public void Write(BinaryWriter bw)
+		{
+			//keyframe times
+			bw.Write(mTimes.Length);
+			foreach(float time in mTimes)
+			{
+				bw.Write(time);
+			}
+
+			//key values
+			bw.Write(mValues.Length);
+			foreach(float val in mValues)
+			{
+				bw.Write(val);
+			}
+
+			//control point 1
+			bw.Write(mControl1.Length);
+			foreach(float c1 in mControl1)
+			{
+				bw.Write(c1);
+			}
+
+			//control point 2
+			bw.Write(mControl2.Length);
+			foreach(float c2 in mControl2)
+			{
+				bw.Write(c2);
+			}
+
+			//total time
+			bw.Write(mTotalTime);
+
+			//channel
+			mTarget.Write(bw);
+		}
+
+
+		public void Read(BinaryReader br)
+		{
+			int	num	=br.ReadInt32();
+			mTimes	=new float[num];
+			for(int i=0;i < num;i++)
+			{
+				mTimes[i]	=br.ReadSingle();
+			}
+
+			num	=br.ReadInt32();
+			mValues	=new float[num];
+			for(int i=0;i < num;i++)
+			{
+				mValues[i]	=br.ReadSingle();
+			}
+
+			num	=br.ReadInt32();
+			mControl1	=new float[num];
+			for(int i=0;i < num;i++)
+			{
+				mControl1[i]	=br.ReadSingle();
+			}
+
+			num	=br.ReadInt32();
+			mControl2	=new float[num];
+			for(int i=0;i < num;i++)
+			{
+				mControl2[i]	=br.ReadSingle();
+			}
+
+			mTotalTime	=br.ReadSingle();
+
+			mTarget	=new Channel();
+			mTarget.Read(br);
+		}
+
+
+		public void FixChannels(Skeleton sk)
+		{
+			mTarget.FixTarget(sk);
+		}
+
+
+		public void Animate(float time)
 		{
 			//make sure the time is not before our start
 			if(time < mTimes[0])

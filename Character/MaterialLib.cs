@@ -16,6 +16,15 @@ namespace Character
 		EffectParameterType		mType;
 		string					mValue;
 
+
+		public ShaderParameters()
+		{
+			//init these strings to "" instead of null
+			//so that blank values save and load properly
+			mName	="";
+			mValue	="";
+		}
+
 		public string Name
 		{
 			get { return mName; }
@@ -35,6 +44,24 @@ namespace Character
 		{
 			get { return mValue; }
 			set { mValue = value; }
+		}
+
+
+		public void Write(BinaryWriter bw)
+		{
+			bw.Write(mName);
+			bw.Write((UInt32)mClass);
+			bw.Write((UInt32)mType);
+			bw.Write(mValue);
+		}
+
+
+		public void Read(BinaryReader br)
+		{
+			mName	=br.ReadString();
+			mClass	=(EffectParameterClass)br.ReadUInt32();
+			mType	=(EffectParameterType)br.ReadUInt32();
+			mValue	=br.ReadString();
 		}
 	}
 
@@ -68,6 +95,55 @@ namespace Character
 			get { return mParameters; }
 			set { mParameters = value; }
 		}
+
+
+		public void Write(BinaryWriter bw)
+		{
+			bw.Write(mName);
+			bw.Write(mShaderName);
+			bw.Write(mTechnique);
+
+			bw.Write(mParameters.Count);
+			foreach(ShaderParameters sp in mParameters)
+			{
+				sp.Write(bw);
+			}
+		}
+
+
+		public void Read(BinaryReader br)
+		{
+			mName		=br.ReadString();
+			mShaderName	=br.ReadString();
+			mTechnique	=br.ReadString();
+
+			int	numParameters	=br.ReadInt32();
+			for(int i=0;i < numParameters;i++)
+			{
+				ShaderParameters	sp	=new ShaderParameters();
+				sp.Read(br);
+
+				mParameters.Add(sp);
+			}
+		}
+
+
+		public List<string>	GetReferencedTextures()
+		{
+			List<string>	ret	=new List<string>();
+
+			foreach(ShaderParameters sp in mParameters)
+			{
+				if(sp.Type == EffectParameterType.Texture)
+				{
+					if(sp.Value != null && sp.Value != "")
+					{
+						ret.Add(sp.Value);
+					}
+				}
+			}
+			return	ret;
+		}
 	}
 
 
@@ -77,13 +153,26 @@ namespace Character
 		Dictionary<string, Effect>		mFX		=new Dictionary<string, Effect>();
 		Dictionary<string, Texture2D>	mMaps	=new Dictionary<string, Texture2D>();
 
+		//reference to the content manager
+		ContentManager	mContent;
 
+
+		//tool side constructor, loads up everything
 		public MaterialLib(GraphicsDevice gd, ContentManager cm)
 		{
-			LoadShaders(cm);
-			LoadTextures(gd);
+			mContent	=cm;
 
-			InitializeEffects();
+			LoadShaders();
+			LoadTextures(gd);
+		}
+
+
+		//game side constructor, loads only what is needed
+		public MaterialLib(GraphicsDevice gd, ContentManager cm, string fn)
+		{
+			mContent	=cm;
+
+			ReadFromFile(fn);
 		}
 
 
@@ -102,6 +191,108 @@ namespace Character
 		public Dictionary<string, Texture2D> GetTextures()
 		{
 			return	mMaps;
+		}
+
+
+		//this only saves referenced stuff
+		//the tool side will still need to enumerate
+		//all the textures / shaders
+		public void SaveToFile(string fileName)
+		{
+			FileStream	file	=OpenTitleFile(fileName,
+									FileMode.Open, FileAccess.Write);
+
+			BinaryWriter	bw	=new BinaryWriter(file);
+
+			//write a magic number identifying matlibs
+			UInt32	magic	=0xFA77DA77;
+
+			bw.Write(magic);
+
+			//write number of materials
+			bw.Write(mMats.Count);
+
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				mat.Value.Write(bw);
+			}
+		}
+
+
+		public bool ReadFromFile(string fileName)
+		{
+			FileStream	file	=OpenTitleFile(fileName,
+									FileMode.Open, FileAccess.Read);
+
+			BinaryReader	br	=new BinaryReader(file);
+
+			//clear existing data
+			mMaps.Clear();
+			mMats.Clear();
+			mFX.Clear();
+
+			//read magic number
+			UInt32	magic	=br.ReadUInt32();
+
+			if(magic != 0xFA77DA77)
+			{
+				return	false;
+			}
+
+			int	numMaterials	=br.ReadInt32();
+
+			//list the referenced textures and shaders
+			List<string>	texNeeded	=new List<string>();
+			List<string>	shdNeeded	=new List<string>();
+
+			for(int i=0;i < numMaterials;i++)
+			{
+				Material	m	=new Material();
+
+				m.Read(br);
+
+				mMats.Add(m.Name, m);
+
+				texNeeded.AddRange(m.GetReferencedTextures());
+
+				if(!shdNeeded.Contains(m.ShaderName))
+				{
+					shdNeeded.Add(m.ShaderName);
+				}
+			}
+
+			//eliminate duplicates
+			List<string>	texs	=new List<string>();
+			foreach(string tex in texNeeded)
+			{
+				if(!texs.Contains(tex))
+				{
+					texs.Add(tex);
+				}
+			}
+
+			//load shaders
+			foreach(string shd in shdNeeded)
+			{
+				Effect	fx	=mContent.Load<Effect>(shd);
+
+				mFX.Add(shd, fx);
+			}
+
+			//load textures
+			foreach(string tex in texs)
+			{
+				if(tex == "")
+				{
+					continue;
+				}
+				string	texPath	="Textures/" + tex;
+				Texture2D	t	=mContent.Load<Texture2D>(texPath);
+
+				mMaps.Add(tex, t);
+			}
+
+			return	true;
 		}
 
 
@@ -222,39 +413,6 @@ namespace Character
 		}
 
 
-		private void InitializeEffects()
-		{
-			Vector4	[]lightColor	=new Vector4[3];
-			lightColor[0]	=new Vector4(0.9f, 0.9f, 0.9f, 1.0f);
-			lightColor[1]	=new Vector4(0.6f, 0.5f, 0.5f, 1.0f);
-			lightColor[2]	=new Vector4(0.1f, 0.1f, 0.1f, 1.0f);
-
-			Vector4	ambColor	=new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
-			Vector3	lightDir	=new Vector3(1.0f, -1.0f, 0.1f);
-			lightDir.Normalize();
-
-			foreach(KeyValuePair<string, Effect> fx in mFX)
-			{
-				if(fx.Value.Parameters["mLightColor"] != null)
-				{
-					fx.Value.Parameters["mLightColor"].SetValue(lightColor);
-				}
-				if(fx.Value.Parameters["mLightDirection"] != null)
-				{
-					fx.Value.Parameters["mLightDirection"].SetValue(lightDir);
-				}
-				if(fx.Value.Parameters["mAmbientColor"] != null)
-				{
-					fx.Value.Parameters["mAmbientColor"].SetValue(ambColor);
-				}
-				if(fx.Value.Parameters["mLightColor"] != null)
-				{
-					fx.Value.Parameters["mLightColor"].SetValue(lightColor);
-				}
-			}
-		}
-
-
 		public void UpdateEffects(Matrix world, Matrix view, Matrix proj)
 		{
 			foreach(KeyValuePair<string, Effect> fx in mFX)
@@ -276,22 +434,17 @@ namespace Character
 
 
 		//load shaders in the content/shaders folder
-		private void LoadShaders(ContentManager cm)
+		private void LoadShaders()
 		{
 #if XBOX
-			DirectoryInfo	di	=new DirectoryInfo(StorageContainer.TitleLocation
-				+ "../../../Content/Shaders/");
-
-			//stupid getfiles won't take multiple wildcards
-			FileInfo[]		fi	=di.GetFiles("*.fx");
+			//this is a toolside method, stubbed out on xbox
+			return;
 #else
 			DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
 				+ "../../../Content/Shaders/");
 
 			//stupid getfiles won't take multiple wildcards
 			FileInfo[]		fi	=di.GetFiles("*.fx", SearchOption.AllDirectories);
-#endif
-
 
 			foreach(FileInfo f in fi)
 			{
@@ -304,29 +457,19 @@ namespace Character
 				path	=path.Substring(0, path.LastIndexOf('.'));
 
 				//load shader
-				Effect	fx	=cm.Load<Effect>(path);
+				Effect	fx	=mContent.Load<Effect>(path);
 
 				mFX.Add(path, fx);
 			}
+#endif
 		}
 
 
 		private void LoadTextures(GraphicsDevice gd)
 		{
 #if XBOX
-			DirectoryInfo	di	=new DirectoryInfo(StorageContainer.TitleLocation
-				+ "../../../Content/Textures/");
-
-			//stupid getfiles won't take multiple wildcards
-			FileInfo[]		fi0	=di.GetFiles("*.bmp");
-			FileInfo[]		fi1	=di.GetFiles("*.dds");
-			FileInfo[]		fi2	=di.GetFiles("*.dib");
-			FileInfo[]		fi3	=di.GetFiles("*.hdr");
-			FileInfo[]		fi4	=di.GetFiles("*.jpg");
-			FileInfo[]		fi5	=di.GetFiles("*.pfm");
-			FileInfo[]		fi6	=di.GetFiles("*.png");
-			FileInfo[]		fi7	=di.GetFiles("*.ppm");
-			FileInfo[]		fi8	=di.GetFiles("*.tga");
+			//this is a toolside method, stubbed out on xbox
+			return;
 #else
 			DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
 				+ "../../../Content/Textures/");
@@ -341,8 +484,6 @@ namespace Character
 			FileInfo[]		fi6	=di.GetFiles("*.png", SearchOption.AllDirectories);
 			FileInfo[]		fi7	=di.GetFiles("*.ppm", SearchOption.AllDirectories);
 			FileInfo[]		fi8	=di.GetFiles("*.tga", SearchOption.AllDirectories);
-#endif
-
 
 			//merge these
 			List<FileInfo>	fi	=new List<FileInfo>();
@@ -391,11 +532,33 @@ namespace Character
 				path	+="\\" + f.Name;
 
 				//create an element
-#if !XBOX
 				Texture2D	tex	=Texture2D.FromFile(gd, path);
 
-				mMaps.Add(f.Name, tex);
+				//strip extension
+				path	=f.Name.Substring(0, f.Name.LastIndexOf('.'));
+
+				mMaps.Add(path, tex);
+			}
 #endif
+		}
+
+
+		public static FileStream OpenTitleFile(string fileName,
+			FileMode mode, FileAccess access)
+		{
+			string	fullPath	=Path.Combine(
+									StorageContainer.TitleLocation,
+									fileName);
+
+			if(!File.Exists(fullPath) &&
+				(access == FileAccess.Write ||
+				access == FileAccess.ReadWrite))
+			{
+				return	File.Create(fullPath);
+			}
+			else
+			{
+				return	File.Open(fullPath, mode, access);
 			}
 		}
 	}

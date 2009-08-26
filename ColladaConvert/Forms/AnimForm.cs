@@ -16,6 +16,7 @@ namespace ColladaConvert
 
 		//file dialog
 		OpenFileDialog	mOFD	=new OpenFileDialog();
+		SaveFileDialog	mSFD	=new SaveFileDialog();
 
 		//events
 		public event	EventHandler	eOpenAnim;
@@ -77,6 +78,23 @@ namespace ColladaConvert
 		private void TimeScale_ValueChanged(object sender, EventArgs e)
 		{
 			eTimeScaleChanged(TimeScale.Value, null);
+		}
+
+
+		private void OnSaveLibrary(object sender, EventArgs e)
+		{
+
+		}
+
+
+		private void OnLoadLibrary(object sender, EventArgs e)
+		{
+
+		}
+
+		private void OnSaveModel(object sender, EventArgs e)
+		{
+
 		}
 	}
 }

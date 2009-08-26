@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -32,6 +33,11 @@ namespace Character
 		}
 
 
+		public Anim()
+		{
+		}
+
+
 		public Anim(int numControllers)
 		{
 			mControllerAnims	=new List<SubAnim>[numControllers];
@@ -44,13 +50,84 @@ namespace Character
 		}
 
 
-		public void Animate(int cidx, float time, Skeleton gs)
+		public void Write(BinaryWriter bw)
+		{
+			bw.Write(mName);
+			bw.Write(mbLooping);
+			bw.Write(mbPingPong);
+
+			bw.Write(mControllerAnims.Length);
+			foreach(List<SubAnim> sal in mControllerAnims)
+			{
+				bw.Write(sal.Count);
+				foreach(SubAnim sa in sal)
+				{
+					sa.Write(bw);
+				}
+			}
+		}
+
+
+		public void Read(BinaryReader br)
+		{
+			mName		=br.ReadString();
+			mbLooping	=br.ReadBoolean();
+			mbPingPong	=br.ReadBoolean();
+
+			int	numSAL	=br.ReadInt32();
+
+			mControllerAnims	=new List<SubAnim>[numSAL];
+
+			for(int i=0;i < numSAL;i++)
+			{
+				int numSubAnims	=br.ReadInt32();
+				mControllerAnims[i]	=new List<SubAnim>();
+				for(int j=0;j < numSubAnims;j++)
+				{
+					SubAnim sa	=new SubAnim();
+					sa.Read(br);
+
+					mControllerAnims[i].Add(sa);
+				}
+			}
+		}
+
+
+		public void FixChannels(Skeleton sk)
+		{
+			for(int i=0;i < mControllerAnims.Length;i++)
+			{
+				List<SubAnim>	subs	=mControllerAnims[i];
+
+				foreach(SubAnim an in subs)
+				{
+					an.FixChannels(sk);
+				}
+			}
+		}
+
+
+		public void Animate(int cidx, float time)
 		{
 			List<SubAnim>	subs	=mControllerAnims[cidx];
 
 			foreach(SubAnim an in subs)
 			{
-				an.Animate(time, gs);
+				an.Animate(time);
+			}
+		}
+
+
+		public void Animate(float time)
+		{
+			for(int i=0;i < mControllerAnims.Length;i++)
+			{
+				List<SubAnim>	subs	=mControllerAnims[i];
+
+				foreach(SubAnim an in subs)
+				{
+					an.Animate(time);
+				}
 			}
 		}
 	}

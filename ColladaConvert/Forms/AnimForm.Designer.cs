@@ -33,6 +33,9 @@
 			this.AnimGrid = new System.Windows.Forms.DataGridView();
 			this.TimeScale = new System.Windows.Forms.NumericUpDown();
 			this.label1 = new System.Windows.Forms.Label();
+			this.button1 = new System.Windows.Forms.Button();
+			this.button2 = new System.Windows.Forms.Button();
+			this.SaveModel = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.AnimGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.TimeScale)).BeginInit();
 			this.SuspendLayout();
@@ -70,7 +73,7 @@
 			this.AnimGrid.Location = new System.Drawing.Point(11, 13);
 			this.AnimGrid.Name = "AnimGrid";
 			this.AnimGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this.AnimGrid.Size = new System.Drawing.Size(355, 205);
+			this.AnimGrid.Size = new System.Drawing.Size(406, 205);
 			this.AnimGrid.TabIndex = 2;
 			this.AnimGrid.SelectionChanged += new System.EventHandler(this.AnimGrid_SelectionChanged);
 			// 
@@ -107,12 +110,45 @@
 			this.label1.TabIndex = 4;
 			this.label1.Text = "Time Scale";
 			// 
+			// button1
+			// 
+			this.button1.Location = new System.Drawing.Point(164, 310);
+			this.button1.Name = "button1";
+			this.button1.Size = new System.Drawing.Size(78, 25);
+			this.button1.TabIndex = 5;
+			this.button1.Text = "Save Library";
+			this.button1.UseVisualStyleBackColor = true;
+			this.button1.Click += new System.EventHandler(this.OnSaveLibrary);
+			// 
+			// button2
+			// 
+			this.button2.Location = new System.Drawing.Point(248, 310);
+			this.button2.Name = "button2";
+			this.button2.Size = new System.Drawing.Size(84, 25);
+			this.button2.TabIndex = 6;
+			this.button2.Text = "Load Library";
+			this.button2.UseVisualStyleBackColor = true;
+			this.button2.Click += new System.EventHandler(this.OnLoadLibrary);
+			// 
+			// SaveModel
+			// 
+			this.SaveModel.Location = new System.Drawing.Point(338, 310);
+			this.SaveModel.Name = "SaveModel";
+			this.SaveModel.Size = new System.Drawing.Size(78, 25);
+			this.SaveModel.TabIndex = 7;
+			this.SaveModel.Text = "Save Model";
+			this.SaveModel.UseVisualStyleBackColor = true;
+			this.SaveModel.Click += new System.EventHandler(this.OnSaveModel);
+			// 
 			// AnimForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(377, 347);
+			this.ClientSize = new System.Drawing.Size(428, 347);
 			this.ControlBox = false;
+			this.Controls.Add(this.SaveModel);
+			this.Controls.Add(this.button2);
+			this.Controls.Add(this.button1);
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this.TimeScale);
 			this.Controls.Add(this.AnimGrid);
@@ -137,5 +173,8 @@
 		private System.Windows.Forms.DataGridView AnimGrid;
 		private System.Windows.Forms.NumericUpDown TimeScale;
 		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.Button button1;
+		private System.Windows.Forms.Button button2;
+		private System.Windows.Forms.Button SaveModel;
 	}
 }

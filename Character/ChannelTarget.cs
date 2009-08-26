@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -8,11 +9,12 @@ namespace Character
 {
 	public class ChannelTarget
 	{
-		Vector4					mValue;	//value to animate
+		Vector4				mValue;	//value to animate
 		Channel.ChannelType	mType;	//target of animation
-		string					mSID;	//identifier so channels can match up
+		string				mSID;	//identifier so channels can match up
 		
 
+		public ChannelTarget() { }
 		public ChannelTarget(Channel.ChannelType type, string sid)
 		{
 			mType	=type;
@@ -35,6 +37,29 @@ namespace Character
 		public void SetValue(Vector4 val)
 		{
 			mValue	=val;
+		}
+
+
+		public void Write(BinaryWriter bw)
+		{
+			bw.Write(mValue.X);
+			bw.Write(mValue.Y);
+			bw.Write(mValue.Z);
+			bw.Write(mValue.W);
+			bw.Write((UInt32)mType);
+			bw.Write(mSID);
+		}
+
+
+		public void Read(BinaryReader br)
+		{
+			mValue		=Vector4.Zero;
+			mValue.X	=br.ReadSingle();
+			mValue.Y	=br.ReadSingle();
+			mValue.Z	=br.ReadSingle();
+			mValue.W	=br.ReadSingle();
+			mType		=(Channel.ChannelType)br.ReadUInt32();
+			mSID		=br.ReadString();
 		}
 
 

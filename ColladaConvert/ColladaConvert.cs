@@ -20,6 +20,7 @@ namespace ColladaConvert
 		IndexBuffer				mIB;
 		Effect					mFX;
 		Character.MaterialLib	mMatLib;
+		Character.AnimLib		mAnimLib;
 
 		//material gui
 		MaterialForm	mMF;
@@ -88,7 +89,9 @@ namespace ColladaConvert
 		/// </summary>
 		protected override void LoadContent()
 		{
-			mMatLib	=new Character.MaterialLib(mGDM.GraphicsDevice, Content);
+			mMatLib		=new Character.MaterialLib(mGDM.GraphicsDevice, Content);
+			mAnimLib	=new Character.AnimLib();
+
 
 			//load debug shaders
 			mFX			=Content.Load<Effect>("Shaders/Simple");
@@ -254,7 +257,7 @@ namespace ColladaConvert
 			}
 			else
 			{
-				mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib);
+				mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib);
 			}			
 		}
 
@@ -263,7 +266,7 @@ namespace ColladaConvert
 		{
 			string	path	=(string)sender;
 
-			mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib);
+			mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib);
 		}
 
 
@@ -336,7 +339,8 @@ namespace ColladaConvert
 
 			if(mCollada != null)
 			{
-				mCollada.Animate(mCurrentAnimName, (float)(gameTime.TotalGameTime.TotalSeconds) * mTimeScale);
+				//mCollada.Animate(mCurrentAnimName, (float)(gameTime.TotalGameTime.TotalSeconds) * mTimeScale);
+				mAnimLib.Animate(mCurrentAnimName, (float)(gameTime.TotalGameTime.TotalSeconds) * mTimeScale);
 			}
 
 			base.Update(gameTime);

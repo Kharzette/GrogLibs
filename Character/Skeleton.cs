@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml;
+using System.IO;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -110,6 +111,49 @@ namespace Character
 			ret	=Matrix.Identity;
 			return	false;
 		}
+
+
+		public void Read(BinaryReader br)
+		{
+			mName	=br.ReadString();
+
+			int	numChan	=br.ReadInt32();
+			mChannels.Clear();
+			for(int i=0;i < numChan;i++)
+			{
+				ChannelTarget	ct	=new ChannelTarget();
+				ct.Read(br);
+
+				mChannels.Add(ct);
+			}
+
+			int	numChildren	=br.ReadInt32();
+			for(int i=0;i < numChildren;i++)
+			{
+				GSNode	n	=new GSNode();
+				n.Read(br);
+
+				mChildren.Add(n);
+			}
+		}
+
+
+		public void Write(BinaryWriter bw)
+		{
+			bw.Write(mName);
+
+			bw.Write(mChannels.Count);
+			foreach(ChannelTarget ct in mChannels)
+			{
+				ct.Write(bw);
+			}
+
+			bw.Write(mChildren.Count);
+			foreach(GSNode n in mChildren)
+			{
+				n.Write(bw);
+			}
+		}
 	}
 
 
@@ -154,6 +198,32 @@ namespace Character
 			}
 			ret	=Matrix.Identity;
 			return	false;
+		}
+
+
+		public void Read(BinaryReader br)
+		{
+			int	numRoots	=br.ReadInt32();
+
+			for(int i=0;i < numRoots;i++)
+			{
+				GSNode	n	=new GSNode();
+
+				n.Read(br);
+
+				mRoots.Add(n);
+			}
+		}
+
+
+		public void Write(BinaryWriter bw)
+		{
+			bw.Write(mRoots.Count);
+
+			foreach(GSNode n in mRoots)
+			{
+				n.Write(bw);
+			}
 		}
 	}
 }

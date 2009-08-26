@@ -82,10 +82,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Anim.cs" />
+    <Compile Include="AnimLib.cs" />
     <Compile Include="Channel.cs" />
     <Compile Include="ChannelTarget.cs" />
+    <Compile Include="Character.cs" />
     <Compile Include="Mesh.cs" />
     <Compile Include="Skeleton.cs" />
+    <Compile Include="Skin.cs" />
     <Compile Include="SubAnim.cs" />
     <Compile Include="MaterialLib.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

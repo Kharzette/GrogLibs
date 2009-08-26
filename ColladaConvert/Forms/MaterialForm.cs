@@ -17,6 +17,7 @@ namespace ColladaConvert
 		MaterialGridModel	mMatModel;		
 		MaterialLib			mMatLib;		
 		OpenFileDialog		mOFD	=new OpenFileDialog();
+		SaveFileDialog		mSFD	=new SaveFileDialog();
 		ShaderList			mSL;
 		TextureForm			mTF;
 		TechniqueList		mTL;
@@ -369,6 +370,53 @@ namespace ColladaConvert
 				MaterialGrid.SelectedRows[0].DataBoundItem;
 
 			mMatLib.ApplyParameters(m.Name);
+		}
+
+
+		private void OnSizeChanged(object sender, EventArgs e)
+		{
+			//get the mesh part grid out of the material
+			//grid's junk
+			int	adjust	=MaterialGrid.Top - 6;
+
+			adjust	-=(MeshPartGrid.Top + MeshPartGrid.Size.Height);
+
+			MeshPartGrid.SetBounds(MeshPartGrid.Left,
+				MeshPartGrid.Top + adjust,
+				MeshPartGrid.Width,
+				MeshPartGrid.Height);
+		}
+
+
+		private void OnSave(object sender, EventArgs e)
+		{
+			DialogResult	dr	=mSFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			mMatLib.SaveToFile(mSFD.FileName);
+		}
+
+		private void OnLoad(object sender, EventArgs e)
+		{
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			mMatLib.ReadFromFile(mOFD.FileName);
+
+			UpdateMaterials();
+
+			MaterialProperties.DataSource			=mMatModel[0].Parameters;
+			MaterialProperties.Columns[0].ReadOnly	=true;
+			MaterialProperties.Columns[1].ReadOnly	=true;
+			MaterialProperties.Columns[2].ReadOnly	=true;
 		}
 	}
 }
