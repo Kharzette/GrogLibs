@@ -9,16 +9,15 @@ namespace Character
 {
 	public class Mesh
 	{
-		string						mName;
-		public VertexBuffer			mVerts;
-		public IndexBuffer			mIndexs;
-		public VertexDeclaration	mVD;
-		public Matrix				[]mBones;
-		public Matrix				mBindShapeMatrix;
-		public int					mNumVerts, mNumTriangles, mVertSize;
-		public string				mMaterialName;
-		public string				mGeometryID;	//for mapping geoms to skins
-		public bool					mSkinned;		//true if using skinning
+		string				mName;
+		VertexBuffer		mVerts;
+		IndexBuffer			mIndexs;
+		VertexDeclaration	mVD;
+		Matrix				[]mBones;
+		int					mNumVerts, mNumTriangles, mVertSize;
+		string				mMaterialName;
+		bool				mSkinned;		//true if using skinning
+		Skin				mSkin;
 
 
 		public string Name
@@ -40,19 +39,74 @@ namespace Character
 		}
 
 
-		public void SetGeometryID(string id)
+		public void SetSkin(Skin sk)
 		{
-			mGeometryID	=id;
+			mSkin	=sk;
+		}
+
+
+		public void SetVertexDeclaration(VertexDeclaration vd)
+		{
+			mVD	=vd;
+		}
+
+
+		public void SetVertSize(int size)
+		{
+			mVertSize	=size;
+		}
+
+
+		public void SetNumVerts(int nv)
+		{
+			mNumVerts	=nv;
+		}
+
+
+		public void SetNumTriangles(int numTri)
+		{
+			mNumTriangles	=numTri;
+		}
+
+
+		public void SetVertexBuffer(VertexBuffer vb)
+		{
+			mVerts	=vb;
+		}
+
+
+		public void SetIndexBuffer(IndexBuffer indbuf)
+		{
+			mIndexs	=indbuf;
 		}
 
 
 		//copies bones into the shader
-		public void UpdateBones(Effect fx)
+		public void UpdateShaderBones(Effect fx)
 		{
 			//some chunks are never really drawn
 			if(mBones != null)
 			{
 				fx.Parameters["mBones"].SetValue(mBones);
+			}
+		}
+
+
+		public void UpdateBones(Skeleton sk)
+		{
+			//no need for this if not skinned
+			if(mSkin == null)
+			{
+				return;
+			}
+
+			if(mBones == null)
+			{
+				mBones	=new Matrix[mSkin.GetNumBones()];
+			}
+			for(int i=0;i < mBones.Length;i++)
+			{
+				mBones[i]	=mSkin.GetBoneByIndex(i, sk);
 			}
 		}
 
@@ -63,30 +117,21 @@ namespace Character
 			g.Indices			=mIndexs;
 			g.VertexDeclaration	=mVD;
 
-			Matrix	loc	=Matrix.Identity;
-			/*
-			Texture2D	tex	=matLib.GetMaterialTexture(mMaterialName);
-			if(tex == null)
-			{
-				return;	//no material?
-			}*/
-
 			Effect	fx	=matLib.GetMaterialShader(mMaterialName);
 
 			if(fx == null)
 			{
 				return;
 			}
-			//fx.Parameters["mTexture0"].SetValue(tex);
 
-			UpdateBones(fx);
+			UpdateShaderBones(fx);
 
 			//this might get slow
 			matLib.ApplyParameters(mMaterialName);
 
 			if(fx.Parameters["mBindPose"] != null)
 			{
-				fx.Parameters["mBindPose"].SetValue(mBindShapeMatrix);
+				fx.Parameters["mBindPose"].SetValue(mSkin.GetBindShapeMatrix());
 			}
 
 			fx.Begin();

@@ -21,6 +21,7 @@ namespace ColladaConvert
 		Effect					mFX;
 		Character.MaterialLib	mMatLib;
 		Character.AnimLib		mAnimLib;
+		Character.Character		mCharacter;
 
 		//material gui
 		MaterialForm	mMF;
@@ -91,7 +92,7 @@ namespace ColladaConvert
 		{
 			mMatLib		=new Character.MaterialLib(mGDM.GraphicsDevice, Content);
 			mAnimLib	=new Character.AnimLib();
-
+			mCharacter	=new Character.Character(mMatLib, mAnimLib);
 
 			//load debug shaders
 			mFX			=Content.Load<Effect>("Shaders/Simple");
@@ -257,7 +258,7 @@ namespace ColladaConvert
 			}
 			else
 			{
-				mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib);
+				mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib, mCharacter);
 			}			
 		}
 
@@ -266,7 +267,7 @@ namespace ColladaConvert
 		{
 			string	path	=(string)sender;
 
-			mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib);
+			mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib, mCharacter);
 		}
 
 
@@ -339,8 +340,7 @@ namespace ColladaConvert
 
 			if(mCollada != null)
 			{
-				//mCollada.Animate(mCurrentAnimName, (float)(gameTime.TotalGameTime.TotalSeconds) * mTimeScale);
-				mAnimLib.Animate(mCurrentAnimName, (float)(gameTime.TotalGameTime.TotalSeconds) * mTimeScale);
+				mCharacter.Animate(mCurrentAnimName, (float)(gameTime.TotalGameTime.TotalSeconds) * mTimeScale);
 			}
 
 			base.Update(gameTime);
@@ -354,7 +354,7 @@ namespace ColladaConvert
 		{
 			mGDM.GraphicsDevice.Clear(Color.CornflowerBlue);
 
-			UpdateLightMapEffect();
+			UpdateWVP();
 
 			if(mCollada != null)
 			{
@@ -406,12 +406,9 @@ namespace ColladaConvert
 		}
 
 
-		private void UpdateLightMapEffect()
+		private void UpdateWVP()
 		{
-			if(mCollada != null)
-			{
-				mCollada.UpdateMaterialEffects(mWorldMatrix, mViewMatrix, mProjectionMatrix);
-			}
+			mMatLib.UpdateWVP(mWorldMatrix, mViewMatrix, mProjectionMatrix);
 		}
 
 

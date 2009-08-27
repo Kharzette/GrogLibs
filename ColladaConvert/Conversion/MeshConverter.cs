@@ -85,7 +85,8 @@ namespace ColladaConvert
 		int				mNumBaseVerts;
 		List<ushort>	mIndexList	=new List<ushort>();
 
-		public int	mNumVerts, mNumTriangles, mVertSize;
+		public string	mGeometryID;
+		public int		mNumVerts, mNumTriangles, mVertSize;
 
 		//the converted mesh
 		public Character.Mesh	mConverted;
@@ -381,7 +382,7 @@ namespace ColladaConvert
 
 		public void SetGeometryID(string id)
 		{
-			mConverted.mGeometryID	=id;
+			mGeometryID	=id;
 		}
 
 
@@ -542,7 +543,7 @@ namespace ColladaConvert
 				offset	+=4;
 			}
 
-			mConverted.mVD	=new VertexDeclaration(gd, ve);			
+			mConverted.SetVertexDeclaration(new VertexDeclaration(gd, ve));
 		}
 
 
@@ -628,13 +629,14 @@ namespace ColladaConvert
 				}
 			}
 
-			mConverted.mVertSize		=VertexTypes.GetSizeForType(vtype);
-			mConverted.mNumVerts		=mNumBaseVerts;
-			mConverted.mNumTriangles	=mNumTriangles;
+			mConverted.SetVertSize(VertexTypes.GetSizeForType(vtype));
+			mConverted.SetNumVerts(mNumBaseVerts);
+			mConverted.SetNumTriangles(mNumTriangles);
 
-			mConverted.mVerts	=new VertexBuffer(gd,
-				mNumBaseVerts * mConverted.mVertSize,
+			VertexBuffer vb	=new VertexBuffer(gd,
+				mNumBaseVerts * VertexTypes.GetSizeForType(vtype),
 				BufferUsage.WriteOnly);
+
 
 			MethodInfo genericMethod =
 				typeof (VertexBuffer).GetMethods().Where(
@@ -642,7 +644,9 @@ namespace ColladaConvert
             
 			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
 
-			typedMethod.Invoke(mConverted.mVerts, new object[] {verts});
+			typedMethod.Invoke(vb, new object[] {verts});
+
+			mConverted.SetVertexBuffer(vb);
 
 //			mConverted.mVerts.SetData<vtype>(verts);
 
@@ -653,23 +657,21 @@ namespace ColladaConvert
 				idxs[i]	=mIndexList[i];
 			}
 
-			mConverted.mIndexs	=new IndexBuffer(gd,
+			IndexBuffer	indbuf	=new IndexBuffer(gd,
 						2 * mIndexList.Count,
 						BufferUsage.WriteOnly,
 						IndexElementSize.SixteenBits);
 
-			mConverted.mIndexs.SetData<ushort>(idxs);
+			indbuf.SetData<ushort>(idxs);
+
+			mConverted.SetIndexBuffer(indbuf);
 		}
 
 
 		//copies bones into the shader
 		public void UpdateBones(Effect fx)
 		{
-			//some chunks are never really drawn
-			if(mConverted.mBones != null)
-			{
-				fx.Parameters["mBones"].SetValue(mConverted.mBones);
-			}
+			mConverted.UpdateShaderBones(fx);
 		}
 	}
 }

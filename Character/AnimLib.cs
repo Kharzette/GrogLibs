@@ -22,6 +22,18 @@ namespace Character
 		}
 
 
+		public Skeleton GetSkeleton()
+		{
+			return	mSkeleton;
+		}
+
+
+		public void SetSkeleton(Skeleton sk)
+		{
+			mSkeleton	=sk;
+		}
+
+
 		//this only saves referenced stuff
 		//the tool side will still need to enumerate
 		//all the textures / shaders

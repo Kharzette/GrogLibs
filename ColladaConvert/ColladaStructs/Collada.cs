@@ -21,7 +21,7 @@ namespace ColladaConvert
 		private Dictionary<string, Animation>		mAnimations		=new Dictionary<string, Animation>();
 		private Dictionary<string, ColladaEffect>	mColladaEffects	=new Dictionary<string, ColladaEffect>();
 
-		//actual useful data for the game
+		//midstep converters
 		private List<MeshConverter>	mChunks	=new List<MeshConverter>();
 		private	Character.Skeleton	mGameSkeleton;
 		public Animator				mAnimator;
@@ -29,8 +29,10 @@ namespace ColladaConvert
 		//list of stored anims
 		public List<Character.Anim>		mGameAnim	=new List<Character.Anim>();
 
+		//actual useful data for the game
 		private	Character.MaterialLib	mMatLib;
 		private Character.AnimLib		mAnimLib;
+		private Character.Character		mCharacter;
 
 		private Dictionary<string, Texture2D>	mTextures	=new Dictionary<string,Texture2D>();
 
@@ -46,7 +48,8 @@ namespace ColladaConvert
 			GraphicsDevice g,
 			ContentManager cm,
 			Character.MaterialLib mlib,
-			Character.AnimLib alib)
+			Character.AnimLib alib,
+			Character.Character chr)
 		{
 			InitTypes();
 
@@ -54,6 +57,7 @@ namespace ColladaConvert
 
 			mMatLib		=mlib;
 			mAnimLib	=alib;
+			mCharacter	=chr;
 
 			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
 			{
@@ -76,7 +80,7 @@ namespace ColladaConvert
 
 				foreach(MeshConverter cnk in mChunks)
 				{
-					if(cnk.mConverted.mGeometryID == sk.GetGeometryID())
+					if(cnk.mGeometryID == sk.GetGeometryID())
 					{
 						cnk.AddWeightsToBaseVerts(sk);
 					}
@@ -85,12 +89,14 @@ namespace ColladaConvert
 
 			mGameSkeleton	=BuildGameSkeleton();
 
+			mAnimLib.SetSkeleton(mGameSkeleton);
+
 			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
 			{
 				//find the matching drawchunk
 				foreach(MeshConverter cnk in mChunks)
 				{
-					if(cnk.mConverted.mGeometryID == geo.Key)
+					if(cnk.mGeometryID == geo.Key)
 					{
 						List<int>	posIdxs		=geo.Value.GetPositionIndexs();
 						List<float>	norms		=geo.Value.GetNormals();
@@ -150,8 +156,6 @@ namespace ColladaConvert
 //				mTextures.Add(li.Value.mName, tex);
 			}
 
-			BuildBones();
-
 			//create useful anims
 			mAnimator	=new Animator(mAnimations, mRootNodes);
 
@@ -160,26 +164,56 @@ namespace ColladaConvert
 			int	i		=0;
 			
 			//create anims we can save
+			List<Character.Skin>	skinList	=new List<Character.Skin>();
 			foreach(KeyValuePair<string, Controller> cont in mControllers)
 			{
 				Skin	sk	=cont.Value.GetSkin();
 
 				List<string>		boneNames	=sk.GetJointNameArray();
-				List<Character.SubAnim>	anims		=mAnimator.BuildGameAnims(mGameSkeleton);
+				List<Character.SubAnim>	anims	=mAnimator.BuildGameAnims(mGameSkeleton);
 
 				anm.AddControllerSubAnims(i, anims);
 				i++;
+
+				Character.Skin	skin	=new Character.Skin();
+				skin.SetBindShapeMatrix(sk.GetBindShapeMatrix());
+				skin.SetBoneNames(sk.GetJointNameArray());
+				skin.SetInverseBindPoses(sk.GetInverseBindPoses());
+
+				mCharacter.AddSkin(skin);
+				skinList.Add(skin);
 			}
 			mGameAnim.Add(anm);
 			mAnimLib.AddAnim(anm);
 
 			eAnimsUpdated(mGameAnim, null);
 
+			Dictionary<string, Character.Mesh>	idlist	=new Dictionary<string,Character.Mesh>();
+
 			foreach(MeshConverter mc in mChunks)
 			{
 				mMeshPartList.Add(mc.mConverted);
+				mCharacter.AddMeshPart(mc.mConverted);
+				idlist.Add(mc.mGeometryID, mc.mConverted);
 			}
+
 			eMeshPartListUpdated(mMeshPartList, null);
+
+			//set skin pointers in meshes
+			i	=0;
+			foreach(KeyValuePair<string, Controller> cont in mControllers)
+			{
+				Skin	sk	=cont.Value.GetSkin();
+
+				foreach(MeshConverter cnk in mChunks)
+				{
+					if(cnk.mGeometryID == sk.GetGeometryID())
+					{
+						idlist[cnk.mGeometryID].SetSkin(skinList[i]);
+					}
+				}
+				i++;
+			}
 		}
 
 
@@ -192,8 +226,6 @@ namespace ColladaConvert
 			XmlReader	r	=XmlReader.Create(file);
 			mAnimations.Clear();
 			LoadAnimations(r);
-
-			BuildBones();
 
 			//create useful anims
 			mAnimator	=new Animator(mAnimations, mRootNodes);
@@ -236,89 +268,10 @@ namespace ColladaConvert
 			return	ret;
 		}
 
-		/*
-		public void Animate(string anim, float time)
-		{
-			foreach(Character.Anim anm in mGameAnim)
-			{
-				if(anm.Name != anim)
-				{
-					continue;
-				}
-				for(int i=0;i < mControllers.Count;i++)
-				{
-					anm.Animate(i, time);
-				}
-			}
-			BuildBones();
-		}
 
-
-		//plays em all, no idea what this will do
-		public void Animate(float time)
-		{
-			foreach(Character.Anim anm in mGameAnim)
-			{
-				for(int i=0;i < mControllers.Count;i++)
-				{
-					anm.Animate(i, time);
-				}
-			}
-			BuildBones();
-		}
-		*/
-
-		public void UpdateMaterialEffects(Matrix world, Matrix view, Matrix proj)
-		{
-			mMatLib.UpdateEffects(world, view, proj);
-
-//			if(mbAnimsUpdated)
-//			{
-//				mbAnimsUpdated	=false;
-//				eAnimsUpdated(mGameAnim, null);
-//			}
-		}
-
-		
-		private void	BuildBones()
-		{
-			foreach(KeyValuePair<string, Controller> cont in mControllers)
-			{
-//				cont.Value.BuildBones(mRootNodes);
-				cont.Value.BuildBones(mGameSkeleton);
-			}
-
-			//copy bones into drawchunks
-			foreach(MeshConverter dc in mChunks)
-			{
-				string	key	=dc.mConverted.mGeometryID;
-
-				dc.mConverted.mBones	=null;
-
-				//match this to the right controller
-				foreach(KeyValuePair<string, Controller> cont in mControllers)
-				{
-					Skin	sk	=cont.Value.GetSkin();
-					Matrix	bsm	=sk.GetBindShapeMatrix();
-					if(sk.GetGeometryID() == key)
-					{
-						cont.Value.CopyBonesTo(ref dc.mConverted.mBones);
-						dc.mConverted.mBindShapeMatrix	=bsm;
-						break;
-					}
-				}
-			}
-		}
-		
-		
 		public void Draw(GraphicsDevice g)
 		{
-			for(int i=0;i < mChunks.Count;i++)
-			{
-				MeshConverter	dc	=mChunks[i];
-
-				dc.mConverted.Draw(g, mMatLib);
-			}
+			mCharacter.Draw(g);
 		}
 		
 
@@ -909,7 +862,7 @@ namespace ColladaConvert
 			mRootNodes["Bone01"].GetMatrixForBone("Bone01", out bone);
 
 			//mod the shader bones directly
-			mChunks[0].mConverted.mBones[0]	=ibps[0] * bone * mat;
+//			mChunks[0].mConverted.mBones[0]	=ibps[0] * bone * mat;
 		}
 
 

@@ -413,7 +413,7 @@ namespace Character
 		}
 
 
-		public void UpdateEffects(Matrix world, Matrix view, Matrix proj)
+		public void UpdateWVP(Matrix world, Matrix view, Matrix proj)
 		{
 			foreach(KeyValuePair<string, Effect> fx in mFX)
 			{

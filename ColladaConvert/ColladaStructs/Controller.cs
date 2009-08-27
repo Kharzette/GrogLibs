@@ -42,79 +42,7 @@ namespace ColladaConvert
 			return	mSkin;
 		}
 
-
-		public void CopyBonesTo(ref Matrix []bones)
-		{
-			bones	=new Matrix[mBones.Count];
-
-			for(int i=0;i < mBones.Count;i++)
-			{
-				bones[i]	=mBones[i];
-			}
-		}
-
 		
-		public void BuildBones(Dictionary<string, SceneNode> nodes)
-		{
-			//clear bones
-			mBones.Clear();
-
-			//grab the list of bones from the skin
-			List<string>	jointNames	=mSkin.GetJointNameArray();
-
-			//grab the inverse bind pose matrix list
-			List<Matrix>	ibps	=mSkin.GetInverseBindPoses();
-
-			Matrix	bind		=mSkin.GetBindShapeMatrix();
-
-			//find each bone and place it in our arrays
-			for(int i=0;i < jointNames.Count;i++)
-			{
-				string	jn	=jointNames[i];
-				foreach(KeyValuePair<string, SceneNode> sn in nodes)
-				{
-					Matrix	mat;
-					if(sn.Value.GetMatrixForBone(jn, out mat))
-					{
-						//shader bones expected to be inverse
-						//bind pose * scene node bone
-						mBones.Add(ibps[i] * mat);
-						break;
-					}
-				}
-			}
-		}
-
-
-		public void BuildBones(Character.Skeleton gs)
-		{
-			//clear bones
-			mBones.Clear();
-
-			//grab the list of bones from the skin
-			List<string>	jointNames	=mSkin.GetJointNameArray();
-
-			//grab the inverse bind pose matrix list
-			List<Matrix>	ibps	=mSkin.GetInverseBindPoses();
-			Matrix		maxAdjust	=Matrix.CreateFromYawPitchRoll(0,
-										MathHelper.ToRadians(-90),
-										MathHelper.ToRadians(180));
-
-			//find each bone and place it in our arrays
-			for(int i=0;i < jointNames.Count;i++)
-			{
-				string	jn	=jointNames[i];
-				Matrix	mat;
-				if(gs.GetMatrixForBone(jn, out mat))
-				{
-					//shader bones expected to be inverse
-					//bind pose * scene node bone
-					mBones.Add(ibps[i] * mat * maxAdjust);
-				}
-			}
-		}
-
-
 		public void ChangeCoordinateSystemMAX()
 		{
 			//grab the list of bones from the skin
