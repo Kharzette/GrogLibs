@@ -53,6 +53,9 @@ namespace ColladaConvert
 		Vector3		mLightDir;
 
 
+		public static event EventHandler	eAnimsUpdated;
+		public static event EventHandler	eMeshPartListUpdated;
+
 		public ColladaConvert()
 		{
 			mGDM	=new GraphicsDeviceManager(this);
@@ -178,10 +181,13 @@ namespace ColladaConvert
 			mCF	=new AnimForm();
 			mCF.Visible	=true;
 
-			mCF.eOpenAnim				+=OnOpenAnim;
-			mCF.eOpenModel				+=OnOpenModel;
+			mCF.eLoadAnim				+=OnOpenAnim;
+			mCF.eLoadModel				+=OnOpenModel;
 			mCF.eAnimSelectionChanged	+=OnAnimSelChanged;
 			mCF.eTimeScaleChanged		+=OnTimeScaleChanged;
+			mCF.eSaveLibrary			+=OnSaveLibrary;
+			mCF.eSaveCharacter			+=OnSaveCharacter;
+			mCF.eLoadCharacter			+=OnLoadCharacter;
 
 			mMF	=new MaterialForm(mMatLib);
 			mMF.Visible	=true;
@@ -259,7 +265,9 @@ namespace ColladaConvert
 			else
 			{
 				mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib, mCharacter);
-			}			
+				eMeshPartListUpdated(mCharacter.GetMeshPartList(), null);
+			}
+			eAnimsUpdated(mAnimLib.GetAnims(), null);
 		}
 
 
@@ -268,6 +276,37 @@ namespace ColladaConvert
 			string	path	=(string)sender;
 
 			mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib, mCharacter);
+
+			eMeshPartListUpdated(mCharacter.GetMeshPartList(), null);
+			eAnimsUpdated(mAnimLib.GetAnims(), null);
+		}
+
+
+		private void OnSaveLibrary(object sender, EventArgs ea)
+		{
+			string	path	=(string)sender;
+
+			mAnimLib.SaveToFile(path);
+		}
+
+
+		private void OnSaveCharacter(object sender, EventArgs ea)
+		{
+			string	path	=(string)sender;
+
+			mCharacter.SaveToFile(path);
+		}
+
+
+		private void OnLoadCharacter(object sender, EventArgs ea)
+		{
+			string	path	=(string)sender;
+
+			mCharacter	=new Character.Character(mMatLib, mAnimLib);
+
+			mCharacter.ReadFromFile(path, mGDM.GraphicsDevice);
+
+			eMeshPartListUpdated(mCharacter.GetMeshPartList(), null);
 		}
 
 

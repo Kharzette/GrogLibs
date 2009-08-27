@@ -65,6 +65,8 @@
     <Compile Include="SubAnim.cs" />
     <Compile Include="MaterialLib.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VertexStructures.cs" />
+    <Compile Include="VertexTypes.cs" />
   </ItemGroup>
   <ItemGroup>
     <NestedContentProject Include="Content\Content.contentproj">

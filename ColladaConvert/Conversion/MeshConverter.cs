@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Character;
 
 namespace ColladaConvert
 {
@@ -118,6 +119,7 @@ namespace ColladaConvert
 		}
 
 
+		//this totally doesn't work at all
 		public void EliminateDuplicateVerts()
 		{
 			//throw these in a list to make it easier
@@ -632,10 +634,13 @@ namespace ColladaConvert
 			mConverted.SetVertSize(VertexTypes.GetSizeForType(vtype));
 			mConverted.SetNumVerts(mNumBaseVerts);
 			mConverted.SetNumTriangles(mNumTriangles);
+			mConverted.SetTypeIndex(VertexTypes.GetIndex(vtype));
 
+			//set bufferusage here so that getdata can be called
+			//we'll need it to save the mesh to a file
 			VertexBuffer vb	=new VertexBuffer(gd,
 				mNumBaseVerts * VertexTypes.GetSizeForType(vtype),
-				BufferUsage.WriteOnly);
+				BufferUsage.None);
 
 
 			MethodInfo genericMethod =
@@ -657,9 +662,11 @@ namespace ColladaConvert
 				idxs[i]	=mIndexList[i];
 			}
 
+			//set bufferusage here so that getdata can be called
+			//we'll need it to save the mesh to a file
 			IndexBuffer	indbuf	=new IndexBuffer(gd,
 						2 * mIndexList.Count,
-						BufferUsage.WriteOnly,
+						BufferUsage.None,
 						IndexElementSize.SixteenBits);
 
 			indbuf.SetData<ushort>(idxs);

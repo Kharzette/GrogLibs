@@ -39,7 +39,7 @@ namespace ColladaConvert
 
 			MaterialGrid.DataSource	=mMatModel;
 
-			Collada.eMeshPartListUpdated	+=OnMeshPartListUpdated;
+			ColladaConvert.eMeshPartListUpdated	+=OnMeshPartListUpdated;
 
 			//set shadername and technique columns to
 			//read only so text can't be entered in cell
@@ -143,7 +143,14 @@ namespace ColladaConvert
 
 		private void OnMeshPartListUpdated(object sender, EventArgs ea)
 		{
-			BindingList<Character.Mesh>	blm	=(BindingList<Character.Mesh>)sender;
+			List<Character.Mesh>	lm	=(List<Character.Mesh>)sender;
+
+			BindingList<Character.Mesh>	blm	=new BindingList<Character.Mesh>();
+
+			foreach(Character.Mesh m in lm)
+			{
+				blm.Add(m);
+			}
 
 			MeshPartGrid.DataSource	=blm;
 		}

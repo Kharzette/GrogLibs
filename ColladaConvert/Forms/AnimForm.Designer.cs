@@ -35,7 +35,8 @@
 			this.label1 = new System.Windows.Forms.Label();
 			this.button1 = new System.Windows.Forms.Button();
 			this.button2 = new System.Windows.Forms.Button();
-			this.SaveModel = new System.Windows.Forms.Button();
+			this.SaveCharacter = new System.Windows.Forms.Button();
+			this.LoadCharacter = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.AnimGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.TimeScale)).BeginInit();
 			this.SuspendLayout();
@@ -43,7 +44,7 @@
 			// LoadAnim
 			// 
 			this.LoadAnim.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.LoadAnim.Location = new System.Drawing.Point(12, 310);
+			this.LoadAnim.Location = new System.Drawing.Point(11, 310);
 			this.LoadAnim.Name = "LoadAnim";
 			this.LoadAnim.Size = new System.Drawing.Size(67, 25);
 			this.LoadAnim.TabIndex = 0;
@@ -54,7 +55,7 @@
 			// LoadModel
 			// 
 			this.LoadModel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.LoadModel.Location = new System.Drawing.Point(85, 310);
+			this.LoadModel.Location = new System.Drawing.Point(84, 310);
 			this.LoadModel.Name = "LoadModel";
 			this.LoadModel.Size = new System.Drawing.Size(73, 25);
 			this.LoadModel.TabIndex = 1;
@@ -130,15 +131,25 @@
 			this.button2.UseVisualStyleBackColor = true;
 			this.button2.Click += new System.EventHandler(this.OnLoadLibrary);
 			// 
-			// SaveModel
+			// SaveCharacter
 			// 
-			this.SaveModel.Location = new System.Drawing.Point(338, 310);
-			this.SaveModel.Name = "SaveModel";
-			this.SaveModel.Size = new System.Drawing.Size(78, 25);
-			this.SaveModel.TabIndex = 7;
-			this.SaveModel.Text = "Save Model";
-			this.SaveModel.UseVisualStyleBackColor = true;
-			this.SaveModel.Click += new System.EventHandler(this.OnSaveModel);
+			this.SaveCharacter.Location = new System.Drawing.Point(11, 279);
+			this.SaveCharacter.Name = "SaveCharacter";
+			this.SaveCharacter.Size = new System.Drawing.Size(94, 25);
+			this.SaveCharacter.TabIndex = 7;
+			this.SaveCharacter.Text = "Save Character";
+			this.SaveCharacter.UseVisualStyleBackColor = true;
+			this.SaveCharacter.Click += new System.EventHandler(this.OnSaveCharacter);
+			// 
+			// LoadCharacter
+			// 
+			this.LoadCharacter.Location = new System.Drawing.Point(111, 279);
+			this.LoadCharacter.Name = "LoadCharacter";
+			this.LoadCharacter.Size = new System.Drawing.Size(97, 25);
+			this.LoadCharacter.TabIndex = 8;
+			this.LoadCharacter.Text = "Load Character";
+			this.LoadCharacter.UseVisualStyleBackColor = true;
+			this.LoadCharacter.Click += new System.EventHandler(this.OnLoadCharacter);
 			// 
 			// AnimForm
 			// 
@@ -146,7 +157,8 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(428, 347);
 			this.ControlBox = false;
-			this.Controls.Add(this.SaveModel);
+			this.Controls.Add(this.LoadCharacter);
+			this.Controls.Add(this.SaveCharacter);
 			this.Controls.Add(this.button2);
 			this.Controls.Add(this.button1);
 			this.Controls.Add(this.label1);
@@ -175,6 +187,7 @@
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.Button button1;
 		private System.Windows.Forms.Button button2;
-		private System.Windows.Forms.Button SaveModel;
+		private System.Windows.Forms.Button SaveCharacter;
+		private System.Windows.Forms.Button LoadCharacter;
 	}
 }

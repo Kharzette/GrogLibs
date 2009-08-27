@@ -34,6 +34,19 @@ namespace Character
 		}
 
 
+		//used mainly by gui
+		public List<Anim>	GetAnims()
+		{
+			List<Anim>	ret	=new List<Anim>();
+
+			foreach(KeyValuePair<string, Anim> anms in mAnims)
+			{
+				ret.Add(anms.Value);
+			}
+			return	ret;
+		}
+
+
 		//this only saves referenced stuff
 		//the tool side will still need to enumerate
 		//all the textures / shaders
@@ -59,6 +72,9 @@ namespace Character
 			{
 				mat.Value.Write(bw);
 			}
+
+			bw.Close();
+			file.Close();
 		}
 
 
@@ -99,6 +115,9 @@ namespace Character
 			{
 				an.Value.FixChannels(mSkeleton);
 			}
+
+			br.Close();
+			file.Close();
 
 			return	true;
 		}

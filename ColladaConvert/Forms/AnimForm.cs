@@ -19,16 +19,19 @@ namespace ColladaConvert
 		SaveFileDialog	mSFD	=new SaveFileDialog();
 
 		//events
-		public event	EventHandler	eOpenAnim;
-		public event	EventHandler	eOpenModel;
+		public event	EventHandler	eLoadAnim;
+		public event	EventHandler	eLoadModel;
 		public event	EventHandler	eAnimSelectionChanged;
 		public event	EventHandler	eTimeScaleChanged;
+		public event	EventHandler	eSaveLibrary;
+		public event	EventHandler	eSaveCharacter;
+		public event	EventHandler	eLoadCharacter;
 
 		public AnimForm()
 		{
 			InitializeComponent();
 
-			Collada.eAnimsUpdated	+=OnAnimsUpdated;
+			ColladaConvert.eAnimsUpdated	+=OnAnimsUpdated;
 		}
 
 		private void LoadAnim_Click(object sender, EventArgs e)
@@ -40,7 +43,7 @@ namespace ColladaConvert
 				return;
 			}
 
-			eOpenAnim(mOFD.FileName, null);
+			eLoadAnim(mOFD.FileName, null);
 		}
 
 		private void LoadModel_Click(object sender, EventArgs e)
@@ -52,7 +55,7 @@ namespace ColladaConvert
 				return;
 			}
 
-			eOpenModel(mOFD.FileName, null);
+			eLoadModel(mOFD.FileName, null);
 		}
 
 
@@ -83,18 +86,53 @@ namespace ColladaConvert
 
 		private void OnSaveLibrary(object sender, EventArgs e)
 		{
+			DialogResult	dr	=mSFD.ShowDialog();
 
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			eSaveLibrary(mSFD.FileName, null);
 		}
 
 
 		private void OnLoadLibrary(object sender, EventArgs e)
 		{
+			DialogResult	dr	=mOFD.ShowDialog();
 
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			eLoadModel(mOFD.FileName, null);
 		}
 
-		private void OnSaveModel(object sender, EventArgs e)
-		{
 
+		private void OnSaveCharacter(object sender, EventArgs e)
+		{
+			DialogResult	dr	=mSFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			eSaveCharacter(mSFD.FileName, null);
+		}
+
+
+		private void OnLoadCharacter(object sender, EventArgs e)
+		{
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			eLoadCharacter(mOFD.FileName, null);
 		}
 	}
 }

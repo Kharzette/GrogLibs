@@ -101,8 +101,6 @@
     <Compile Include="ColladaStructs\Collada.cs" />
     <Compile Include="ColladaStructs\ColladaEffect.cs" />
     <Compile Include="ColladaStructs\Controller.cs" />
-    <Compile Include="Conversion\VertexStructures.cs" />
-    <Compile Include="Conversion\VertexTypes.cs" />
     <Compile Include="Conversion\MeshConverter.cs" />
     <Compile Include="ColladaStructs\Geometry.cs" />
     <Compile Include="ColladaStructs\Input.cs" />

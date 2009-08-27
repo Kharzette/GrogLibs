@@ -216,6 +216,9 @@ namespace Character
 			{
 				mat.Value.Write(bw);
 			}
+
+			bw.Close();
+			file.Close();
 		}
 
 
@@ -291,6 +294,9 @@ namespace Character
 
 				mMaps.Add(tex, t);
 			}
+
+			br.Close();
+			file.Close();
 
 			return	true;
 		}
