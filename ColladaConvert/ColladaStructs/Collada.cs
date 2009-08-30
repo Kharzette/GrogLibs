@@ -116,7 +116,6 @@ namespace ColladaConvert
 
 						bool	bPos	=(posIdxs != null && posIdxs.Count > 0);
 						bool	bNorm	=(norms != null && norms.Count > 0);
-						bool	bBone	=true;	//TODO: fix this
 						bool	bTex0	=(texCoords0 != null && texCoords0.Count > 0);
 						bool	bTex1	=(texCoords1 != null && texCoords1.Count > 0);
 						bool	bTex2	=(texCoords2 != null && texCoords2.Count > 0);
@@ -125,6 +124,18 @@ namespace ColladaConvert
 						bool	bCol1	=(colors1 != null && colors1.Count > 0);
 						bool	bCol2	=(colors2 != null && colors2.Count > 0);
 						bool	bCol3	=(colors3 != null && colors3.Count > 0);
+						bool	bBone	=false;
+
+						//see if any skins reference this geometry
+						foreach(KeyValuePair<string, Controller> cont in mControllers)
+						{
+							Skin	sk	=cont.Value.GetSkin();
+							if(sk.GetGeometryID() == geo.Key)
+							{
+								bBone	=true;
+								break;
+							}
+						}
 
 						cnk.BuildBuffers(g, bPos, bNorm, bBone,
 							bBone, bTex0, bTex1, bTex2, bTex3,

@@ -304,22 +304,22 @@ namespace ColladaConvert
 				if(texIdxs0 != null && texCoords0 != null)
 				{
 					tv.TexCoord0.X	=texCoords0[tidx0 * 2];
-					tv.TexCoord0.Y	=1.0f - texCoords0[1 + tidx0 * 2];
+					tv.TexCoord0.Y	=-texCoords0[1 + tidx0 * 2];
 				}
 				if(texIdxs1 != null && texCoords1 != null)
 				{
 					tv.TexCoord1.X	=texCoords1[tidx1 * 2];
-					tv.TexCoord1.Y	=1.0f - texCoords1[1 + tidx1 * 2];
+					tv.TexCoord1.Y	=-texCoords1[1 + tidx1 * 2];
 				}
 				if(texIdxs2 != null && texCoords2 != null)
 				{
 					tv.TexCoord2.X	=texCoords2[tidx2 * 2];
-					tv.TexCoord2.Y	=1.0f - texCoords2[1 + tidx2 * 2];
+					tv.TexCoord2.Y	=texCoords2[1 + tidx2 * 2];
 				}
 				if(texIdxs3 != null && texCoords3 != null)
 				{
 					tv.TexCoord3.X	=texCoords3[tidx3 * 2];
-					tv.TexCoord3.Y	=1.0f - texCoords3[1 + tidx3 * 2];
+					tv.TexCoord3.Y	=texCoords3[1 + tidx3 * 2];
 				}
 				if(colorIdxs0 != null && colors0 != null)
 				{
@@ -603,15 +603,15 @@ namespace ColladaConvert
 				}
 				if(bTexCoord1)
 				{
-					VertexTypes.SetArrayField(verts, i, "TexCoord0", mBaseVerts[i].TexCoord1);
+					VertexTypes.SetArrayField(verts, i, "TexCoord1", mBaseVerts[i].TexCoord1);
 				}
 				if(bTexCoord2)
 				{
-					VertexTypes.SetArrayField(verts, i, "TexCoord0", mBaseVerts[i].TexCoord2);
+					VertexTypes.SetArrayField(verts, i, "TexCoord2", mBaseVerts[i].TexCoord2);
 				}
 				if(bTexCoord3)
 				{
-					VertexTypes.SetArrayField(verts, i, "TexCoord0", mBaseVerts[i].TexCoord3);
+					VertexTypes.SetArrayField(verts, i, "TexCoord3", mBaseVerts[i].TexCoord3);
 				}
 				if(bColor0)
 				{

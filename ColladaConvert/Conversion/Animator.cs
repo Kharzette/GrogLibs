@@ -70,7 +70,8 @@ namespace ColladaConvert
 						Debug.WriteLine("GetChannelTarget failed in BuildGameAnims!");
 					}
 
-					gc	=new Character.Channel(gct, an.GetChannelTarget());
+					gc	=new Character.Channel(an.GetNodeName(),
+						an.GetOperandSID(), an.GetChannelTarget(), gs);
 
 					Character.SubAnim	gsa	=new Character.SubAnim(an.GetNumKeys(),
 						an.GetTotalTime(), gc,

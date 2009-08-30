@@ -31,7 +31,7 @@ namespace ColladaConvert
 
 		public void ConvertBindShapeMatrixCoordinateSystemMAX()
 		{
-			mBindShapeMatrix	=Collada.ConvertMatrixCoordinateSystemMAX(mBindShapeMatrix);
+			//mBindShapeMatrix	=Collada.ConvertMatrixCoordinateSystemMAX(mBindShapeMatrix);
 		}
 
 

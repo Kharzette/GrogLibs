@@ -158,6 +158,13 @@ namespace ColladaConvert
 				}
 				else if(r.Name == "polygons")
 				{
+					//if there's more than one set of
+					//polygons in a mesh, just skip the
+					//next, it's usually a blank material
+					if(mPolys != null && mPolys.GetCount() > 2)
+					{
+						continue;
+					}
 					mPolys	=new Polygons();
 					mPolys.Load(r);
 				}

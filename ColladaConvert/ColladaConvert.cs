@@ -178,7 +178,7 @@ namespace ColladaConvert
 
 			InitializeEffect();
 
-			mCF	=new AnimForm();
+			mCF	=new AnimForm(mAnimLib);
 			mCF.Visible	=true;
 
 			mCF.eLoadAnim				+=OnOpenAnim;
@@ -304,7 +304,7 @@ namespace ColladaConvert
 
 			mCharacter	=new Character.Character(mMatLib, mAnimLib);
 
-			mCharacter.ReadFromFile(path, mGDM.GraphicsDevice);
+			mCharacter.ReadFromFile(path, mGDM.GraphicsDevice, true);
 
 			eMeshPartListUpdated(mCharacter.GetMeshPartList(), null);
 		}

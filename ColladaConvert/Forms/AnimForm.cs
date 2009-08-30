@@ -12,7 +12,8 @@ namespace ColladaConvert
 	public partial class AnimForm : Form
 	{
 		//data
-		AnimGridModel	mAnimGrid;
+		AnimGridModel		mAnimGrid;
+		Character.AnimLib	mAnimLib;
 
 		//file dialog
 		OpenFileDialog	mOFD	=new OpenFileDialog();
@@ -27,9 +28,11 @@ namespace ColladaConvert
 		public event	EventHandler	eSaveCharacter;
 		public event	EventHandler	eLoadCharacter;
 
-		public AnimForm()
+		public AnimForm(Character.AnimLib anlib)
 		{
 			InitializeComponent();
+
+			mAnimLib	=anlib;
 
 			ColladaConvert.eAnimsUpdated	+=OnAnimsUpdated;
 		}
@@ -67,6 +70,7 @@ namespace ColladaConvert
 
 			AnimGrid.DataSource	=mAnimGrid;
 		}
+
 
 		private void AnimGrid_SelectionChanged(object sender, EventArgs e)
 		{
@@ -133,6 +137,15 @@ namespace ColladaConvert
 			}
 
 			eLoadCharacter(mOFD.FileName, null);
+		}
+
+		private void OnCellValidated(object sender, DataGridViewCellEventArgs e)
+		{
+			//update name?
+			if(e.ColumnIndex == 0)
+			{
+				mAnimLib.UpdateDictionaries();
+			}
 		}
 	}
 }

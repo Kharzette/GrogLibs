@@ -23,6 +23,12 @@ namespace ColladaConvert
 		}
 
 
+		public int GetCount()
+		{
+			return	mIndexs.Count;
+		}
+
+
 		public string GetTexCoordSourceKey(int set)
 		{
 			foreach(Input inp in mInputs)
