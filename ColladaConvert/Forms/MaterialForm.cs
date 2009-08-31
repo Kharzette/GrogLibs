@@ -15,7 +15,8 @@ namespace ColladaConvert
 	public partial class MaterialForm : Form
 	{
 		MaterialGridModel	mMatModel;		
-		MaterialLib			mMatLib;		
+		MaterialLib			mMatLib;
+		Character.Character	mCharacter;
 		OpenFileDialog		mOFD	=new OpenFileDialog();
 		SaveFileDialog		mSFD	=new SaveFileDialog();
 		ShaderList			mSL;
@@ -26,11 +27,12 @@ namespace ColladaConvert
 		DataGridViewCell	mEditingCell;
 
 
-		public MaterialForm(MaterialLib matlib)
+		public MaterialForm(MaterialLib matlib, Character.Character chr)
 		{
 			InitializeComponent();
 
-			mMatLib	=matlib;
+			mMatLib		=matlib;
+			mCharacter	=chr;
 
 			mMatModel	=new MaterialGridModel(mMatLib.GetMaterials());
 
@@ -79,8 +81,8 @@ namespace ColladaConvert
 
 			matSel[0].Cells[2].Value	=sender;
 
-			mSL.eOk		-=OnTechniqueListOk;
-			mSL.eCancel	-=OnTechniqueListCancel;
+			mTL.eOk		-=OnTechniqueListOk;
+			mTL.eCancel	-=OnTechniqueListCancel;
 
 			MaterialGrid.Enabled	=true;
 
@@ -137,13 +139,12 @@ namespace ColladaConvert
 
 		private void MeshPartGrid_SelectionChanged(object sender, EventArgs e)
 		{
-			OnSelectionChanged(sender, e);
 		}
 
 
 		private void OnMeshPartListUpdated(object sender, EventArgs ea)
 		{
-			List<Character.Mesh>	lm	=(List<Character.Mesh>)sender;
+			List<Character.Mesh>	lm	=mCharacter.GetMeshPartList();
 
 			BindingList<Character.Mesh>	blm	=new BindingList<Character.Mesh>();
 
@@ -153,6 +154,8 @@ namespace ColladaConvert
 			}
 
 			MeshPartGrid.DataSource	=blm;
+			MeshPartGrid.Columns[1].ReadOnly	=true;
+			MeshPartGrid.Columns[2].ReadOnly	=true;
 		}
 
 
@@ -424,6 +427,14 @@ namespace ColladaConvert
 			MaterialProperties.Columns[0].ReadOnly	=true;
 			MaterialProperties.Columns[1].ReadOnly	=true;
 			MaterialProperties.Columns[2].ReadOnly	=true;
+		}
+
+
+		private void OnMeshPartNuking(object sender, DataGridViewRowCancelEventArgs e)
+		{
+			Character.Mesh	nukeMe	=(Character.Mesh)e.Row.DataBoundItem;
+
+			mCharacter.NukeMesh(nukeMe);
 		}
 	}
 }

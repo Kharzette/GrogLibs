@@ -12,7 +12,7 @@ namespace ColladaConvert
 
 		Dictionary<string, Source>		mSources	=new Dictionary<string,Source>();
 		Dictionary<string, Vertices>	mVerts		=new Dictionary<string,Vertices>();
-		Polygons						mPolys;
+		List<Polygons>					mPolys		=new List<Polygons>();
 
 
 		public Mesh(string name)
@@ -27,10 +27,10 @@ namespace ColladaConvert
 		}
 
 
-		public List<float> GetBaseVerts()
+		public List<float> GetBaseVerts(int idx)
 		{
 			//find key
-			string	key	=mPolys.GetPositionSourceKey();
+			string	key	=mPolys[idx].GetPositionSourceKey();
 
 			//strip #
 			key	=key.Substring(1);
@@ -47,10 +47,10 @@ namespace ColladaConvert
 		}
 
 
-		public List<float> GetNormals()
+		public List<float> GetNormals(int idx)
 		{
 			//find key
-			string	key	=mPolys.GetNormalSourceKey();
+			string	key	=mPolys[idx].GetNormalSourceKey();
 
 			//strip #
 			key	=key.Substring(1);
@@ -59,10 +59,10 @@ namespace ColladaConvert
 		}
 
 
-		public List<float> GetTexCoords(int set)
+		public List<float> GetTexCoords(int idx, int set)
 		{
 			//find texcoord key
-			string	key	=mPolys.GetTexCoordSourceKey(set);
+			string	key	=mPolys[idx].GetTexCoordSourceKey(set);
 
 			if(key == "")
 			{
@@ -76,10 +76,10 @@ namespace ColladaConvert
 		}
 
 
-		public List<float> GetColors(int set)
+		public List<float> GetColors(int idx, int set)
 		{
 			//find color key
-			string	key	=mPolys.GetColorSourceKey(set);
+			string	key	=mPolys[idx].GetColorSourceKey(set);
 
 			if(key == "")
 			{
@@ -93,33 +93,39 @@ namespace ColladaConvert
 		}
 
 
-		public List<int> GetPositionIndexs()
+		public List<int> GetPositionIndexs(int idx)
 		{
-			return	mPolys.GetPositionIndexs();
+			return	mPolys[idx].GetPositionIndexs();
 		}
 
 
-		public List<int> GetNormalIndexs()
+		public List<int> GetNormalIndexs(int idx)
 		{
-			return	mPolys.GetNormalIndexs();
+			return	mPolys[idx].GetNormalIndexs();
 		}
 
 
-		public List<int> GetTexCoordIndexs(int set)
+		public List<int> GetTexCoordIndexs(int idx, int set)
 		{
-			return	mPolys.GetTexCoordIndexs(set);
+			return	mPolys[idx].GetTexCoordIndexs(set);
 		}
 
 
-		public List<int> GetColorIndexs(int set)
+		public List<int> GetColorIndexs(int idx, int set)
 		{
-			return	mPolys.GetColorIndexs(set);
+			return	mPolys[idx].GetColorIndexs(set);
 		}
 
 
-		public List<int> GetVertCounts()
+		public List<int> GetVertCounts(int idx)
 		{
-			return	mPolys.GetVertCounts();
+			return	mPolys[idx].GetVertCounts();
+		}
+
+
+		public int GetNumParts()
+		{
+			return	mPolys.Count;
 		}
 
 
@@ -158,20 +164,25 @@ namespace ColladaConvert
 				}
 				else if(r.Name == "polygons")
 				{
-					//if there's more than one set of
-					//polygons in a mesh, just skip the
-					//next, it's usually a blank material
-					if(mPolys != null && mPolys.GetCount() > 2)
+					Polygons	p	=new Polygons();
+					p.Load(r);
+
+					//make sure there's actual data here
+					//sometimes the exporter likes to give
+					//an empty set
+					if(p.GetCount() != 0)
 					{
-						continue;
+						mPolys.Add(p);
 					}
-					mPolys	=new Polygons();
-					mPolys.Load(r);
 				}
 				else if(r.Name == "polylist")
 				{
-					mPolys	=new Polygons();
-					mPolys.LoadList(r);
+					Polygons	p	=new Polygons();
+					p.LoadList(r);
+					if(p.GetCount() != 0)
+					{
+						mPolys.Add(p);
+					}
 				}
 			}
 		}

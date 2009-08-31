@@ -31,10 +31,37 @@ namespace Character
 			get { return mbPingPong; }
 			set { mbPingPong = value; }
 		}
+		public int NumKeyFrames
+		{
+			get {
+				int	numKeys	=0;
+				foreach(List<SubAnim> sal in mControllerAnims)
+				{
+					foreach(SubAnim sa in sal)
+					{
+						numKeys	+=sa.GetNumKeys();
+					}
+				}
+				return	numKeys;
+			}
+
+		}
 
 
 		public Anim()
 		{
+		}
+
+
+		public void Reduce(float maxError)
+		{
+			foreach(List<SubAnim> sal in mControllerAnims)
+			{
+				foreach(SubAnim sa in sal)
+				{
+					sa.Reduce(maxError);
+				}
+			}
 		}
 
 

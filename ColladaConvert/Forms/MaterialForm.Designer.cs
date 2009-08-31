@@ -43,16 +43,15 @@
 			// MeshPartGrid
 			// 
 			this.MeshPartGrid.AllowUserToAddRows = false;
-			this.MeshPartGrid.AllowUserToDeleteRows = false;
 			this.MeshPartGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
 			this.MeshPartGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
 			this.MeshPartGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this.MeshPartGrid.Location = new System.Drawing.Point(12, 214);
 			this.MeshPartGrid.Name = "MeshPartGrid";
-			this.MeshPartGrid.ReadOnly = true;
 			this.MeshPartGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this.MeshPartGrid.Size = new System.Drawing.Size(495, 146);
 			this.MeshPartGrid.TabIndex = 1;
+			this.MeshPartGrid.UserDeletingRow += new System.Windows.Forms.DataGridViewRowCancelEventHandler(this.OnMeshPartNuking);
 			this.MeshPartGrid.SelectionChanged += new System.EventHandler(this.MeshPartGrid_SelectionChanged);
 			// 
 			// NewMaterial
@@ -86,7 +85,7 @@
 			// 
 			// ApplyMaterial
 			// 
-			this.ApplyMaterial.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.ApplyMaterial.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.ApplyMaterial.Location = new System.Drawing.Point(353, 532);
 			this.ApplyMaterial.Name = "ApplyMaterial";
 			this.ApplyMaterial.Size = new System.Drawing.Size(154, 29);
@@ -109,20 +108,22 @@
 			this.MaterialProperties.CellValidated += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnPropValueValidated);
 			this.MaterialProperties.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnPropCellClick);
 			// 
-			// Save
+			// SaveButton
 			// 
+			this.SaveButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.SaveButton.Location = new System.Drawing.Point(112, 532);
-			this.SaveButton.Name = "Save";
+			this.SaveButton.Name = "SaveButton";
 			this.SaveButton.Size = new System.Drawing.Size(46, 29);
 			this.SaveButton.TabIndex = 8;
 			this.SaveButton.Text = "Save";
 			this.SaveButton.UseVisualStyleBackColor = true;
 			this.SaveButton.Click += new System.EventHandler(this.OnSave);
 			// 
-			// Load
+			// LoadButton
 			// 
+			this.LoadButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.LoadButton.Location = new System.Drawing.Point(164, 532);
-			this.LoadButton.Name = "Load";
+			this.LoadButton.Name = "LoadButton";
 			this.LoadButton.Size = new System.Drawing.Size(48, 29);
 			this.LoadButton.TabIndex = 9;
 			this.LoadButton.Text = "Load";

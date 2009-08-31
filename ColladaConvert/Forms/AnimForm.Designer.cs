@@ -37,8 +37,12 @@
 			this.button2 = new System.Windows.Forms.Button();
 			this.SaveCharacter = new System.Windows.Forms.Button();
 			this.LoadCharacter = new System.Windows.Forms.Button();
+			this.ClearAll = new System.Windows.Forms.Button();
+			this.Compress = new System.Windows.Forms.Button();
+			this.MaxError = new System.Windows.Forms.NumericUpDown();
 			((System.ComponentModel.ISupportInitialize)(this.AnimGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.TimeScale)).BeginInit();
+			((System.ComponentModel.ISupportInitialize)(this.MaxError)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// LoadAnim
@@ -72,15 +76,18 @@
 			this.AnimGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
 			this.AnimGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this.AnimGrid.Location = new System.Drawing.Point(11, 13);
+			this.AnimGrid.MultiSelect = false;
 			this.AnimGrid.Name = "AnimGrid";
 			this.AnimGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this.AnimGrid.Size = new System.Drawing.Size(406, 205);
 			this.AnimGrid.TabIndex = 2;
+			this.AnimGrid.UserDeletingRow += new System.Windows.Forms.DataGridViewRowCancelEventHandler(this.OnRowNuking);
 			this.AnimGrid.CellValidated += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnCellValidated);
 			this.AnimGrid.SelectionChanged += new System.EventHandler(this.AnimGrid_SelectionChanged);
 			// 
 			// TimeScale
 			// 
+			this.TimeScale.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.TimeScale.DecimalPlaces = 2;
 			this.TimeScale.Increment = new decimal(new int[] {
             1,
@@ -105,6 +112,7 @@
 			// 
 			// label1
 			// 
+			this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.label1.AutoSize = true;
 			this.label1.Location = new System.Drawing.Point(69, 228);
 			this.label1.Name = "label1";
@@ -114,6 +122,7 @@
 			// 
 			// button1
 			// 
+			this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.button1.Location = new System.Drawing.Point(164, 310);
 			this.button1.Name = "button1";
 			this.button1.Size = new System.Drawing.Size(78, 25);
@@ -124,6 +133,7 @@
 			// 
 			// button2
 			// 
+			this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.button2.Location = new System.Drawing.Point(248, 310);
 			this.button2.Name = "button2";
 			this.button2.Size = new System.Drawing.Size(84, 25);
@@ -134,6 +144,7 @@
 			// 
 			// SaveCharacter
 			// 
+			this.SaveCharacter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.SaveCharacter.Location = new System.Drawing.Point(11, 279);
 			this.SaveCharacter.Name = "SaveCharacter";
 			this.SaveCharacter.Size = new System.Drawing.Size(94, 25);
@@ -144,6 +155,7 @@
 			// 
 			// LoadCharacter
 			// 
+			this.LoadCharacter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.LoadCharacter.Location = new System.Drawing.Point(111, 279);
 			this.LoadCharacter.Name = "LoadCharacter";
 			this.LoadCharacter.Size = new System.Drawing.Size(97, 25);
@@ -152,12 +164,61 @@
 			this.LoadCharacter.UseVisualStyleBackColor = true;
 			this.LoadCharacter.Click += new System.EventHandler(this.OnLoadCharacter);
 			// 
+			// ClearAll
+			// 
+			this.ClearAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.ClearAll.Location = new System.Drawing.Point(346, 224);
+			this.ClearAll.Name = "ClearAll";
+			this.ClearAll.Size = new System.Drawing.Size(70, 25);
+			this.ClearAll.TabIndex = 9;
+			this.ClearAll.Text = "Clear All";
+			this.ClearAll.UseVisualStyleBackColor = true;
+			this.ClearAll.Click += new System.EventHandler(this.OnClearAll);
+			// 
+			// Compress
+			// 
+			this.Compress.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.Compress.Location = new System.Drawing.Point(271, 224);
+			this.Compress.Name = "Compress";
+			this.Compress.Size = new System.Drawing.Size(69, 24);
+			this.Compress.TabIndex = 10;
+			this.Compress.Text = "Compress";
+			this.Compress.UseVisualStyleBackColor = true;
+			this.Compress.Click += new System.EventHandler(this.OnCompress);
+			// 
+			// MaxError
+			// 
+			this.MaxError.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.MaxError.DecimalPlaces = 3;
+			this.MaxError.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            196608});
+			this.MaxError.Location = new System.Drawing.Point(214, 226);
+			this.MaxError.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            196608});
+			this.MaxError.Name = "MaxError";
+			this.MaxError.Size = new System.Drawing.Size(51, 20);
+			this.MaxError.TabIndex = 11;
+			this.MaxError.Value = new decimal(new int[] {
+            10,
+            0,
+            0,
+            65536});
+			// 
 			// AnimForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(428, 347);
 			this.ControlBox = false;
+			this.Controls.Add(this.MaxError);
+			this.Controls.Add(this.Compress);
+			this.Controls.Add(this.ClearAll);
 			this.Controls.Add(this.LoadCharacter);
 			this.Controls.Add(this.SaveCharacter);
 			this.Controls.Add(this.button2);
@@ -174,6 +235,7 @@
 			this.Text = "Animation";
 			((System.ComponentModel.ISupportInitialize)(this.AnimGrid)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.TimeScale)).EndInit();
+			((System.ComponentModel.ISupportInitialize)(this.MaxError)).EndInit();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -190,5 +252,8 @@
 		private System.Windows.Forms.Button button2;
 		private System.Windows.Forms.Button SaveCharacter;
 		private System.Windows.Forms.Button LoadCharacter;
+		private System.Windows.Forms.Button ClearAll;
+		private System.Windows.Forms.Button Compress;
+		private System.Windows.Forms.NumericUpDown MaxError;
 	}
 }

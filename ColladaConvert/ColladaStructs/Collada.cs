@@ -49,15 +49,21 @@ namespace ColladaConvert
 
 			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
 			{
-				List<float> verts	=geo.Value.GetBaseVerts();
+				int	numParts	=geo.Value.GetNumMeshParts();
 
-				MeshConverter	cnk	=new MeshConverter(geo.Value.GetMeshName());
+				for(int j=0;j < numParts;j++)
+				{
+					List<float> verts	=geo.Value.GetBaseVerts(j);
+					
+					MeshConverter	cnk	=new MeshConverter(geo.Value.GetMeshName());
 
-				cnk.CreateBaseVerts(verts);
+					cnk.CreateBaseVerts(verts);
 
-				cnk.SetGeometryID(geo.Key);
-
-				mChunks.Add(cnk);
+					cnk.mPartIndex	=j;
+					cnk.SetGeometryID(geo.Key);
+					
+					mChunks.Add(cnk);
+				}
 			}
 
 			foreach(KeyValuePair<string, Controller> cont in mControllers)
@@ -86,26 +92,26 @@ namespace ColladaConvert
 				{
 					if(cnk.mGeometryID == geo.Key)
 					{
-						List<int>	posIdxs		=geo.Value.GetPositionIndexs();
-						List<float>	norms		=geo.Value.GetNormals();
-						List<int>	normIdxs	=geo.Value.GetNormalIndexs();
-						List<float>	texCoords0	=geo.Value.GetTexCoords(0);
-						List<float>	texCoords1	=geo.Value.GetTexCoords(1);
-						List<float>	texCoords2	=geo.Value.GetTexCoords(2);
-						List<float>	texCoords3	=geo.Value.GetTexCoords(3);
-						List<int>	texIdxs0	=geo.Value.GetTexCoordIndexs(0);
-						List<int>	texIdxs1	=geo.Value.GetTexCoordIndexs(1);
-						List<int>	texIdxs2	=geo.Value.GetTexCoordIndexs(2);
-						List<int>	texIdxs3	=geo.Value.GetTexCoordIndexs(3);
-						List<float>	colors0		=geo.Value.GetColors(0);
-						List<float>	colors1		=geo.Value.GetColors(1);
-						List<float>	colors2		=geo.Value.GetColors(2);
-						List<float>	colors3		=geo.Value.GetColors(3);
-						List<int>	colIdxs0	=geo.Value.GetColorIndexs(0);
-						List<int>	colIdxs1	=geo.Value.GetColorIndexs(1);
-						List<int>	colIdxs2	=geo.Value.GetColorIndexs(2);
-						List<int>	colIdxs3	=geo.Value.GetColorIndexs(3);
-						List<int>	vertCounts	=geo.Value.GetVertCounts();
+						List<int>	posIdxs		=geo.Value.GetPositionIndexs(cnk.mPartIndex);
+						List<float>	norms		=geo.Value.GetNormals(cnk.mPartIndex);
+						List<int>	normIdxs	=geo.Value.GetNormalIndexs(cnk.mPartIndex);
+						List<float>	texCoords0	=geo.Value.GetTexCoords(cnk.mPartIndex, 0);
+						List<float>	texCoords1	=geo.Value.GetTexCoords(cnk.mPartIndex, 1);
+						List<float>	texCoords2	=geo.Value.GetTexCoords(cnk.mPartIndex, 2);
+						List<float>	texCoords3	=geo.Value.GetTexCoords(cnk.mPartIndex, 3);
+						List<int>	texIdxs0	=geo.Value.GetTexCoordIndexs(cnk.mPartIndex, 0);
+						List<int>	texIdxs1	=geo.Value.GetTexCoordIndexs(cnk.mPartIndex, 1);
+						List<int>	texIdxs2	=geo.Value.GetTexCoordIndexs(cnk.mPartIndex, 2);
+						List<int>	texIdxs3	=geo.Value.GetTexCoordIndexs(cnk.mPartIndex, 3);
+						List<float>	colors0		=geo.Value.GetColors(cnk.mPartIndex, 0);
+						List<float>	colors1		=geo.Value.GetColors(cnk.mPartIndex, 1);
+						List<float>	colors2		=geo.Value.GetColors(cnk.mPartIndex, 2);
+						List<float>	colors3		=geo.Value.GetColors(cnk.mPartIndex, 3);
+						List<int>	colIdxs0	=geo.Value.GetColorIndexs(cnk.mPartIndex, 0);
+						List<int>	colIdxs1	=geo.Value.GetColorIndexs(cnk.mPartIndex, 1);
+						List<int>	colIdxs2	=geo.Value.GetColorIndexs(cnk.mPartIndex, 2);
+						List<int>	colIdxs3	=geo.Value.GetColorIndexs(cnk.mPartIndex, 3);
+						List<int>	vertCounts	=geo.Value.GetVertCounts(cnk.mPartIndex);
 
 						cnk.AddNormTexByPoly(posIdxs, norms, normIdxs,
 							texCoords0, texIdxs0, texCoords1, texIdxs1,
@@ -159,7 +165,23 @@ namespace ColladaConvert
 			mAnimator	=new Animator(mAnimations, mRootNodes);
 
 			Character.Anim	anm	=new Character.Anim(mControllers.Count);
-			anm.Name	=meshFileName.Substring(meshFileName.IndexOf("Content"));
+
+			//chop at content if content is in the path
+			if(meshFileName.IndexOf("Content") != -1)
+			{
+				anm.Name	=meshFileName.Substring(meshFileName.IndexOf("Content"));
+			}
+			else
+			{
+				if(meshFileName.IndexOf("\\") != -1)
+				{
+					anm.Name	="Content" + meshFileName.Substring(meshFileName.LastIndexOf("\\"));
+				}
+				else
+				{
+					anm.Name	="Content\\" + meshFileName;
+				}
+			}
 			int	i		=0;
 			
 			//create anims we can save
@@ -189,8 +211,8 @@ namespace ColladaConvert
 
 			foreach(MeshConverter mc in mChunks)
 			{
-				mCharacter.AddMeshPart(mc.mConverted);
-				idlist.Add(mc.mGeometryID, mc.mConverted);
+				mCharacter.AddMeshPart(mc.GetCharMesh());
+				idlist.Add(mc.mGeometryID + Convert.ToString(mc.mPartIndex), mc.GetCharMesh());
 			}
 
 			//set skin pointers in meshes
@@ -203,8 +225,8 @@ namespace ColladaConvert
 				{
 					if(cnk.mGeometryID == sk.GetGeometryID())
 					{
-						idlist[cnk.mGeometryID].SetSkin(skinList[i]);
-						idlist[cnk.mGeometryID].SetSkinIndex(i);
+						idlist[cnk.mGeometryID + Convert.ToString(cnk.mPartIndex)].SetSkin(skinList[i]);
+						idlist[cnk.mGeometryID + Convert.ToString(cnk.mPartIndex)].SetSkinIndex(i);
 					}
 				}
 				i++;
@@ -226,7 +248,25 @@ namespace ColladaConvert
 			mAnimator	=new Animator(mAnimations, mRootNodes);
 
 			Character.Anim	anm	=new Character.Anim(mControllers.Count);
-			anm.Name	=path.Substring(path.IndexOf("Content"));
+
+	
+			
+			//chop at content if content is in the path
+			if(path.IndexOf("Content") != -1)
+			{
+				anm.Name	=path.Substring(path.IndexOf("Content"));
+			}
+			else
+			{
+				if(path.IndexOf("\\") != -1)
+				{
+					anm.Name	="Content" + path.Substring(path.LastIndexOf("\\"));
+				}
+				else
+				{
+					anm.Name	="Content\\" + path;
+				}
+			}
 			int	i		=0;
 			
 			//create anims we can save
@@ -260,12 +300,6 @@ namespace ColladaConvert
 			return	ret;
 		}
 
-
-		public void Draw(GraphicsDevice g)
-		{
-			mCharacter.Draw(g);
-		}
-		
 
 		private void LoadColladaEffects(XmlReader r)
 		{

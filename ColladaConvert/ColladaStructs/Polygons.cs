@@ -25,7 +25,7 @@ namespace ColladaConvert
 
 		public int GetCount()
 		{
-			return	mIndexs.Count;
+			return	mCount;
 		}
 
 

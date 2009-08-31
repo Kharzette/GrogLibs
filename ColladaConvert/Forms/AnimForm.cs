@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using System.Linq;
+using System.Diagnostics;
 using System.Text;
 using System.Windows.Forms;
 
@@ -27,6 +27,7 @@ namespace ColladaConvert
 		public event	EventHandler	eSaveLibrary;
 		public event	EventHandler	eSaveCharacter;
 		public event	EventHandler	eLoadCharacter;
+		public event	EventHandler	eLoadLibrary;
 
 		public AnimForm(Character.AnimLib anlib)
 		{
@@ -39,6 +40,7 @@ namespace ColladaConvert
 
 		private void LoadAnim_Click(object sender, EventArgs e)
 		{
+			mOFD.Multiselect	=true;
 			DialogResult	dr	=mOFD.ShowDialog();
 
 			if(dr == DialogResult.Cancel)
@@ -46,11 +48,17 @@ namespace ColladaConvert
 				return;
 			}
 
-			eLoadAnim(mOFD.FileName, null);
+			string	[]fnames	=mOFD.FileNames;
+
+			foreach(string fname in fnames)
+			{
+				eLoadAnim(fname, null);
+			}
 		}
 
 		private void LoadModel_Click(object sender, EventArgs e)
 		{
+			mOFD.Multiselect	=false;
 			DialogResult	dr	=mOFD.ShowDialog();
 
 			if(dr == DialogResult.Cancel)
@@ -64,7 +72,7 @@ namespace ColladaConvert
 
 		private void OnAnimsUpdated(object sender, EventArgs e)
 		{
-			List<Character.Anim>	anms	=(List<Character.Anim>)sender;
+			List<Character.Anim>	anms	=mAnimLib.GetAnims();
 
 			mAnimGrid	=new AnimGridModel(anms);
 
@@ -103,6 +111,7 @@ namespace ColladaConvert
 
 		private void OnLoadLibrary(object sender, EventArgs e)
 		{
+			mOFD.Multiselect	=false;
 			DialogResult	dr	=mOFD.ShowDialog();
 
 			if(dr == DialogResult.Cancel)
@@ -110,7 +119,7 @@ namespace ColladaConvert
 				return;
 			}
 
-			eLoadModel(mOFD.FileName, null);
+			eLoadLibrary(mOFD.FileName, null);
 		}
 
 
@@ -129,6 +138,7 @@ namespace ColladaConvert
 
 		private void OnLoadCharacter(object sender, EventArgs e)
 		{
+			mOFD.Multiselect	=false;
 			DialogResult	dr	=mOFD.ShowDialog();
 
 			if(dr == DialogResult.Cancel)
@@ -146,6 +156,33 @@ namespace ColladaConvert
 			{
 				mAnimLib.UpdateDictionaries();
 			}
+		}
+
+
+		private void OnRowNuking(object sender, DataGridViewRowCancelEventArgs e)
+		{
+			Character.Anim	nukeMe	=(Character.Anim)e.Row.DataBoundItem;
+			mAnimLib.NukeAnim(nukeMe.Name);
+		}
+
+
+		private void OnClearAll(object sender, EventArgs e)
+		{
+			mAnimLib.NukeAll();
+
+			List<Character.Anim>	anms	=mAnimLib.GetAnims();
+
+			mAnimGrid	=new AnimGridModel(anms);
+
+			AnimGrid.DataSource	=mAnimGrid;
+		}
+
+
+		private void OnCompress(object sender, EventArgs e)
+		{
+			mAnimLib.Reduce(
+				Convert.ToString(AnimGrid.SelectedRows[0].Cells[0].Value),
+				Convert.ToSingle(MaxError.Value));
 		}
 	}
 }

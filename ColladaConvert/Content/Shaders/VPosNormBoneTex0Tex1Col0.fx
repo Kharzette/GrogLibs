@@ -70,14 +70,14 @@ sampler TexSampler1 = sampler_state
 
 
 //vertex shader
-VSOutput DiffuseGouradSkin(float3	position	: POSITION,
-							float3	normal		: NORMAL,
-							float4	bnIdxs		: BLENDINDICES0,
-							float4	bnWeights	: BLENDWEIGHT0,
-							float2	tex0		: TEXCOORD0,
-							float2	tex1		: TEXCOORD1,
-							float4	col0		: COLOR0,
-							uniform int			lightMethod)
+VSOutput TrilightSkin(float3	position	: POSITION,
+					float3	normal		: NORMAL,
+					float4	bnIdxs		: BLENDINDICES0,
+					float4	bnWeights	: BLENDWEIGHT0,
+					float2	tex0		: TEXCOORD0,
+					float2	tex1		: TEXCOORD1,
+					float4	col0		: COLOR0,
+					uniform int			lightMethod)
 {
 	VSOutput	output;
 	float4		vertPos	=mul(float4(position, 1.0f), mBindPose);
@@ -135,56 +135,140 @@ VSOutput DiffuseGouradSkin(float3	position	: POSITION,
 	return	output;
 }
 
-float4 Gourad2TexModulate(PSInput input) : COLOR
-{
-	float4	texel0	=tex2D(TexSampler0, input.TexCoord0);
-	float4	texel1	=tex2D(TexSampler1, input.TexCoord1);
-	
-	float4	inColor	=input.Color;
-	
-//	float4	texLitColor	=inColor * texel0 * texel1;
-//	float4	texLitColor	=texel1;
-//	float4	texLitColor	=texel0;
-	float4	texLitColor	=(texel1.w * texel1) + ((1.0 - texel1.w) * texel0);
-//	float4	texLitColor	=texel1 + ((1.0 - texel1.w) * texel0);
 
-	texLitColor.w	=1.0f;
+float4 TwoTexCombine(PSInput input, uniform int pixMode) : COLOR
+{
+	float4	texel0;
+	float4	texel1;
+	float4	texLitColor;
+	
+	if(pixMode == 0)
+	{
+		texel0	=tex2D(TexSampler0, input.TexCoord0);
+		texel1	=tex2D(TexSampler1, input.TexCoord1);
+		
+		texLitColor	=(texel1.w * texel1) + ((1.0 - texel1.w) * texel0);
+		texLitColor	*=input.Color;
+	}
+	else if(pixMode == 1)
+	{
+		texel0	=tex2D(TexSampler0, input.TexCoord0);
+		
+		texLitColor	=texel0 * input.Color;
+	}
+	else if(pixMode == 2)
+	{
+		texel1	=tex2D(TexSampler1, input.TexCoord1);
+		texLitColor	=texel1 * input.Color;
+	}
 	
 	return	texLitColor;
 }
 
-technique WrapAround
+technique WrapAroundCombine
 {     
 	pass P0
 	{
 		//set the VertexShader state to the vertex shader function
-		VertexShader = compile vs_2_0 DiffuseGouradSkin(0);
+		VertexShader = compile vs_2_0 TrilightSkin(0);
 
 		//set the PixelShader state to the pixel shader function          
-		PixelShader = compile ps_2_0 Gourad2TexModulate();
+		PixelShader = compile ps_2_0 TwoTexCombine(0);
 	}
 }
 
-technique Hemispherical
+technique HemisphericalCombine
 {     
 	pass P0
 	{
 		//set the VertexShader state to the vertex shader function
-		VertexShader = compile vs_2_0 DiffuseGouradSkin(1);
+		VertexShader = compile vs_2_0 TrilightSkin(1);
 
 		//set the PixelShader state to the pixel shader function          
-		PixelShader = compile ps_2_0 Gourad2TexModulate();
+		PixelShader = compile ps_2_0 TwoTexCombine(0);
 	}
 }
 
-technique Trilight
+technique TrilightCombine
 {     
 	pass P0
 	{
 		//set the VertexShader state to the vertex shader function
-		VertexShader = compile vs_2_0 DiffuseGouradSkin(3);
+		VertexShader = compile vs_2_0 TrilightSkin(2);
 
 		//set the PixelShader state to the pixel shader function          
-		PixelShader = compile ps_2_0 Gourad2TexModulate();
+		PixelShader = compile ps_2_0 TwoTexCombine(0);
+	}
+}
+
+technique WrapAroundTex0
+{     
+	pass P0
+	{
+		//set the VertexShader state to the vertex shader function
+		VertexShader = compile vs_2_0 TrilightSkin(0);
+
+		//set the PixelShader state to the pixel shader function          
+		PixelShader = compile ps_2_0 TwoTexCombine(1);
+	}
+}
+
+technique HemisphericalTex0
+{     
+	pass P0
+	{
+		//set the VertexShader state to the vertex shader function
+		VertexShader = compile vs_2_0 TrilightSkin(1);
+
+		//set the PixelShader state to the pixel shader function          
+		PixelShader = compile ps_2_0 TwoTexCombine(1);
+	}
+}
+
+technique TrilightTex0
+{     
+	pass P0
+	{
+		//set the VertexShader state to the vertex shader function
+		VertexShader = compile vs_2_0 TrilightSkin(2);
+
+		//set the PixelShader state to the pixel shader function          
+		PixelShader = compile ps_2_0 TwoTexCombine(1);
+	}
+}
+
+technique WrapAroundTex1
+{     
+	pass P0
+	{
+		//set the VertexShader state to the vertex shader function
+		VertexShader = compile vs_2_0 TrilightSkin(0);
+
+		//set the PixelShader state to the pixel shader function          
+		PixelShader = compile ps_2_0 TwoTexCombine(2);
+	}
+}
+
+technique HemisphericalTex1
+{     
+	pass P0
+	{
+		//set the VertexShader state to the vertex shader function
+		VertexShader = compile vs_2_0 TrilightSkin(1);
+
+		//set the PixelShader state to the pixel shader function          
+		PixelShader = compile ps_2_0 TwoTexCombine(2);
+	}
+}
+
+technique TrilightTex1
+{     
+	pass P0
+	{
+		//set the VertexShader state to the vertex shader function
+		VertexShader = compile vs_2_0 TrilightSkin(2);
+
+		//set the PixelShader state to the pixel shader function          
+		PixelShader = compile ps_2_0 TwoTexCombine(2);
 	}
 }

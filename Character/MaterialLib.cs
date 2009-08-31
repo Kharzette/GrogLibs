@@ -308,6 +308,15 @@ namespace Character
 		}
 
 
+		public void NukeMaterial(string key)
+		{
+			if(mMats.ContainsKey(key))
+			{
+				mMats.Remove(key);
+			}
+		}
+
+
 		public Effect GetMaterialShader(string name)
 		{
 			if(mMats.ContainsKey(name))

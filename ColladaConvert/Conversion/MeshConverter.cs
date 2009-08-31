@@ -88,14 +88,21 @@ namespace ColladaConvert
 
 		public string	mGeometryID;
 		public int		mNumVerts, mNumTriangles, mVertSize;
+		public int		mPartIndex;
 
 		//the converted mesh
-		public Character.Mesh	mConverted;
+		Character.Mesh	mConverted;
 
 
 		public MeshConverter(string name)
 		{
 			mName	=name;
+		}
+
+
+		public Character.Mesh	GetCharMesh()
+		{
+			return	mConverted;
 		}
 
 

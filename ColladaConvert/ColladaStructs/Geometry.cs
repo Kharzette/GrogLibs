@@ -18,57 +18,63 @@ namespace ColladaConvert
 		}
 
 
-		public List<float> GetBaseVerts()
+		public int GetNumMeshParts()
 		{
-			return	mMesh.GetBaseVerts();
+			return	mMesh.GetNumParts();
 		}
 
 
-		public List<float> GetNormals()
+		public List<float> GetBaseVerts(int idx)
 		{
-			return	mMesh.GetNormals();
+			return	mMesh.GetBaseVerts(idx);
 		}
 
 
-		public List<float> GetTexCoords(int set)
+		public List<float> GetNormals(int idx)
 		{
-			return	mMesh.GetTexCoords(set);
+			return	mMesh.GetNormals(idx);
 		}
 
 
-		public List<float> GetColors(int set)
+		public List<float> GetTexCoords(int idx, int set)
 		{
-			return	mMesh.GetColors(set);
+			return	mMesh.GetTexCoords(idx, set);
 		}
 
 
-		public List<int> GetNormalIndexs()
+		public List<float> GetColors(int idx, int set)
 		{
-			return	mMesh.GetNormalIndexs();
+			return	mMesh.GetColors(idx, set);
 		}
 
 
-		public List<int> GetTexCoordIndexs(int set)
+		public List<int> GetNormalIndexs(int idx)
 		{
-			return	mMesh.GetTexCoordIndexs(set);
+			return	mMesh.GetNormalIndexs(idx);
 		}
 
 
-		public List<int> GetColorIndexs(int set)
+		public List<int> GetTexCoordIndexs(int idx, int set)
 		{
-			return	mMesh.GetColorIndexs(set);
+			return	mMesh.GetTexCoordIndexs(idx, set);
 		}
 
 
-		public List<int> GetPositionIndexs()
+		public List<int> GetColorIndexs(int idx, int set)
 		{
-			return	mMesh.GetPositionIndexs();
+			return	mMesh.GetColorIndexs(idx, set);
 		}
 
 
-		public List<int> GetVertCounts()
+		public List<int> GetPositionIndexs(int idx)
 		{
-			return	mMesh.GetVertCounts();
+			return	mMesh.GetPositionIndexs(idx);
+		}
+
+
+		public List<int> GetVertCounts(int idx)
+		{
+			return	mMesh.GetVertCounts(idx);
 		}
 
 

@@ -30,6 +30,15 @@ namespace Character
 		}
 
 
+		public void NukeMesh(Mesh m)
+		{
+			if(mMeshParts.Contains(m))
+			{
+				mMeshParts.Remove(m);
+			}
+		}
+
+
 		public void AddSkin(Skin s)
 		{
 			mSkins.Add(s);
@@ -74,7 +83,9 @@ namespace Character
 		}
 
 
-		public bool ReadFromFile(string fileName, GraphicsDevice gd)
+		//set bEditor if you want the buffers set to readable
+		//so they can be resaved if need be
+		public bool ReadFromFile(string fileName, GraphicsDevice gd, bool bEditor)
 		{
 			FileStream	file	=MaterialLib.OpenTitleFile(fileName,
 									FileMode.Open, FileAccess.Read);
@@ -98,7 +109,7 @@ namespace Character
 			{
 				Mesh	m	=new Mesh();
 
-				m.Read(br, gd);
+				m.Read(br, gd, bEditor);
 				mMeshParts.Add(m);
 			}
 

@@ -70,6 +70,13 @@ namespace ColladaConvert
 			mPitch = mYaw = mRoll = 0;
 			InitializeTransform();
 
+			//default cam pos off to one side
+			mCamPos.X	=102.0f;
+			mCamPos.Y	=-96.0f;
+			mCamPos.Z	=187.0f;
+			mYaw		=155.0f;
+			mPitch		=4.0f;
+
 			base.Initialize();
 		}
 
@@ -106,8 +113,8 @@ namespace ColladaConvert
 			Point	topLeft, bottomRight;
 			topLeft.X		=0;
 			topLeft.Y		=0;
-			bottomRight.X	=500;
-			bottomRight.Y	=500;
+			bottomRight.X	=5;
+			bottomRight.Y	=5;
 
 			//fill in some verts two quads
 			VertexPositionNormalTexture	[]verts	=new VertexPositionNormalTexture[8];
@@ -188,8 +195,9 @@ namespace ColladaConvert
 			mCF.eSaveLibrary			+=OnSaveLibrary;
 			mCF.eSaveCharacter			+=OnSaveCharacter;
 			mCF.eLoadCharacter			+=OnLoadCharacter;
+			mCF.eLoadLibrary			+=OnLoadLibrary;
 
-			mMF	=new MaterialForm(mMatLib);
+			mMF	=new MaterialForm(mMatLib, mCharacter);
 			mMF.Visible	=true;
 		}
 
@@ -265,7 +273,7 @@ namespace ColladaConvert
 			else
 			{
 				mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib, mCharacter);
-				eMeshPartListUpdated(mCharacter.GetMeshPartList(), null);
+				eMeshPartListUpdated(null, null);
 			}
 			eAnimsUpdated(mAnimLib.GetAnims(), null);
 		}
@@ -277,7 +285,7 @@ namespace ColladaConvert
 
 			mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib, mCharacter);
 
-			eMeshPartListUpdated(mCharacter.GetMeshPartList(), null);
+			eMeshPartListUpdated(null, null);
 			eAnimsUpdated(mAnimLib.GetAnims(), null);
 		}
 
@@ -287,6 +295,15 @@ namespace ColladaConvert
 			string	path	=(string)sender;
 
 			mAnimLib.SaveToFile(path);
+		}
+
+
+		private void OnLoadLibrary(object sender, EventArgs ea)
+		{
+			string	path	=(string)sender;
+
+			mAnimLib.ReadFromFile(path);
+			eAnimsUpdated(mAnimLib.GetAnims(), null);
 		}
 
 
@@ -301,8 +318,6 @@ namespace ColladaConvert
 		private void OnLoadCharacter(object sender, EventArgs ea)
 		{
 			string	path	=(string)sender;
-
-			mCharacter	=new Character.Character(mMatLib, mAnimLib);
 
 			mCharacter.ReadFromFile(path, mGDM.GraphicsDevice, true);
 
@@ -377,10 +392,7 @@ namespace ColladaConvert
 
 			//mCollada.DebugBoneModify(mBoneMatrix);
 
-			if(mCollada != null)
-			{
-				mCharacter.Animate(mCurrentAnimName, (float)(gameTime.TotalGameTime.TotalSeconds) * mTimeScale);
-			}
+			mCharacter.Animate(mCurrentAnimName, (float)(gameTime.TotalGameTime.TotalSeconds) * mTimeScale);
 
 			base.Update(gameTime);
 		}
@@ -395,10 +407,7 @@ namespace ColladaConvert
 
 			UpdateWVP();
 
-			if(mCollada != null)
-			{
-				mCollada.Draw(mGDM.GraphicsDevice);
-			}
+			mCharacter.Draw(mGDM.GraphicsDevice);
 
 			//set stream source, index, and decl
 			mGDM.GraphicsDevice.Vertices[0].SetSource(mVB, 0, 32);

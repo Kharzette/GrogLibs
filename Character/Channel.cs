@@ -32,6 +32,19 @@ namespace Character
 		
 
 		public Channel() {}
+		public Channel(string targNode, string targSID, AxisTarget at, Skeleton gs)
+		{
+			mTargetNode	=targNode;
+			mTargetSID	=targSID;
+			mAxis		=at;
+
+			if(!gs.GetChannelTarget(mTargetNode, mTargetSID, out mTarget))
+			{
+				Debug.WriteLine("GetChannelTarget failed in Channel Constructor!");
+			}
+		}
+
+
 		public Channel(string targNode, string targSID)
 		{
 			mTargetNode	=targNode;
@@ -58,6 +71,12 @@ namespace Character
 		public void SetValue(float val)
 		{
 			mTarget.SetValue(val, mAxis);
+		}
+
+
+		public ChannelType GetChannelType()
+		{
+			return	mTarget.GetChannelType();
 		}
 
 

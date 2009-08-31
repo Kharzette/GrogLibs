@@ -22,9 +22,33 @@ namespace Character
 		}
 
 
+		public void NukeAnim(string key)
+		{
+			if(mAnims.ContainsKey(key))
+			{
+				mAnims.Remove(key);
+			}
+		}
+
+
+		public void NukeAll()
+		{
+			mAnims.Clear();
+		}
+
+
 		public Skeleton GetSkeleton()
 		{
 			return	mSkeleton;
+		}
+
+
+		public void Reduce(string key, float maxError)
+		{
+			if(mAnims.ContainsKey(key))
+			{
+				mAnims[key].Reduce(maxError);
+			}
 		}
 
 

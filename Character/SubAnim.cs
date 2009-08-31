@@ -13,8 +13,10 @@ namespace Character
 	{
 		float	[]mTimes;		//keyframe times
 		float	[]mValues;		//key values
+//#if BEZIER
 		float	[]mControl1;	//first control point per value
 		float	[]mControl2;	//second control point per value
+//#endif
 		float	mTotalTime;		//total time of the animation
 
 		Channel	mTarget;	//target channel
@@ -22,6 +24,12 @@ namespace Character
 
 		public SubAnim()
 		{
+		}
+
+
+		public int GetNumKeys()
+		{
+			return	mTimes.Length;
 		}
 
 
@@ -37,15 +45,19 @@ namespace Character
 
 			mTimes		=new float[numKeys];
 			mValues		=new float[numKeys];
+#if BEZIER
 			mControl1	=new float[numKeys];
 			mControl2	=new float[numKeys];
+#endif
 
 			for(int i=0;i < numKeys;i++)
 			{
 				mTimes[i]		=times[i];
 				mValues[i]		=values[i];
+#if BEZIER
 				mControl1[i]	=control1[i];
 				mControl2[i]	=control2[i];
+#endif
 			}
 		}
 
@@ -66,6 +78,7 @@ namespace Character
 				bw.Write(val);
 			}
 
+#if BEZIER
 			//control point 1
 			bw.Write(mControl1.Length);
 			foreach(float c1 in mControl1)
@@ -79,6 +92,7 @@ namespace Character
 			{
 				bw.Write(c2);
 			}
+#endif
 
 			//total time
 			bw.Write(mTotalTime);
@@ -104,6 +118,7 @@ namespace Character
 				mValues[i]	=br.ReadSingle();
 			}
 
+//#if BEZIER
 			num	=br.ReadInt32();
 			mControl1	=new float[num];
 			for(int i=0;i < num;i++)
@@ -117,6 +132,7 @@ namespace Character
 			{
 				mControl2[i]	=br.ReadSingle();
 			}
+//#endif
 
 			mTotalTime	=br.ReadSingle();
 
@@ -128,6 +144,98 @@ namespace Character
 		public void FixChannels(Skeleton sk)
 		{
 			mTarget.FixTarget(sk);
+		}
+
+
+		//attempt to reduce the number of
+		//keyframes through interpolation
+		public void Reduce(float maxError)
+		{
+			//don't bother unless more than 2 keys
+			if(mTimes.Length < 3)
+			{
+				return;
+			}
+
+			//for rotational values, radians are used
+			//and smaller values make a much bigger
+			//difference.
+			if(mTarget.GetChannelType() == Channel.ChannelType.ROTATE)
+			{
+				maxError	=MathHelper.ToRadians(maxError);
+			}
+
+			int	startIndex	=0;
+			int	endIndex	=2;
+
+			float	errorAccum	=0.0f;
+			float	startTime	=mTimes[startIndex];
+			float	endTime		=mTimes[endIndex];
+
+			while(true)
+			{
+				while(errorAccum < maxError && errorAccum > -maxError)
+				{
+					//lerp to hit the keyframe endIndex - 1
+					float	percentage	=1.0f - (1.0f / (endIndex - startIndex));
+
+					float value	=MathHelper.Lerp(mValues[startIndex], mValues[endIndex], percentage);
+					errorAccum	+=Math.Abs(mValues[endIndex - 1] - value);
+					endIndex++;
+					if(endIndex >= mTimes.Length)
+					{
+						break;
+					}
+				}
+
+				if(endIndex < mTimes.Length)
+				{
+					//back up one as we went over error tolerance
+//					endIndex--;
+				}
+				endIndex--;
+				//gank all keys between start and end
+				float	[]newTimes	=new float[mTimes.Length - (endIndex - startIndex - 1)];
+				float	[]newVals	=new float[mTimes.Length - (endIndex - startIndex - 1)];
+#if BEZIER
+				float	[]newC1		=new float[mTimes.Length - (endIndex - startIndex - 1)];
+				float	[]newC2		=new float[mTimes.Length - (endIndex - startIndex - 1)];
+#endif
+
+				for(int i=0;i <= startIndex;i++)
+				{
+					newTimes[i]	=mTimes[i];
+					newVals[i]	=mValues[i];
+#if BEZIER
+					newC1[i]	=mControl1[i];
+					newC2[i]	=mControl2[i];
+#endif
+				}
+				for(int i=endIndex;i < mTimes.Length;i++)
+				{
+					newTimes[startIndex + 1 + (i - endIndex)]	=mTimes[i];
+					newVals[startIndex + 1 + (i - endIndex)]	=mValues[i];
+#if BEZIER
+					newC1[startIndex + 1 + (i - endIndex)]	=mControl1[i];
+					newC2[startIndex + 1 + (i - endIndex)]	=mControl2[i];
+#endif
+				}
+				mTimes	=newTimes;
+				mValues	=newVals;
+#if BEZIER
+				mControl1	=newC1;
+				mControl2	=newC2;
+#endif
+
+				//prepare to run again
+				startIndex++;
+				endIndex	=startIndex + 2;
+				errorAccum	=0.0f;
+				if(endIndex >= mTimes.Length)
+				{
+					break;
+				}
+			}
 		}
 
 
