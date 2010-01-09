@@ -118,7 +118,7 @@ namespace Character
 				mValues[i]	=br.ReadSingle();
 			}
 
-//#if BEZIER
+#if BEZIER
 			num	=br.ReadInt32();
 			mControl1	=new float[num];
 			for(int i=0;i < num;i++)
@@ -132,7 +132,7 @@ namespace Character
 			{
 				mControl2[i]	=br.ReadSingle();
 			}
-//#endif
+#endif
 
 			mTotalTime	=br.ReadSingle();
 
@@ -251,6 +251,9 @@ namespace Character
 			//bring the passed in time value into
 			//the space of our animation
 			float	animTime	=time % mTotalTime;
+
+			//Bring to start
+			animTime	+=mTimes[0];
 
 			//locate the key index to start with
 			int	startIndex;

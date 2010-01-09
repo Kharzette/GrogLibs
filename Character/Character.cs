@@ -142,6 +142,10 @@ namespace Character
 
 			foreach(Mesh m in mMeshParts)
 			{
+				if(m.MaterialName == null || m.MaterialName == "")
+				{
+					continue;	//don't bother unless it can be seen
+				}
 				m.UpdateBones(mAnimLib.GetSkeleton());
 			}
 		}

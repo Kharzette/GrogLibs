@@ -15,17 +15,17 @@ namespace ColladaConvert
 		public Translate(XmlReader r)
 		{
 			int attcnt2	=r.AttributeCount;
-			
+
 			if(attcnt2 > 0)
 			{
 				//grab SID
 				mSID	=r.GetAttribute(0);
-
-				//skip to the next element, the actual value
-				r.Read();
-
-				Collada.GetVectorFromString(r.Value, out mValue);
 			}
+
+			//skip to the next element, the actual value
+			r.Read();
+
+			Collada.GetVectorFromString(r.Value, out mValue);
 		}
 
 

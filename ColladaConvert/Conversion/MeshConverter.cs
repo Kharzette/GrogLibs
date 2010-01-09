@@ -161,12 +161,63 @@ namespace ColladaConvert
 		}
 
 
+		public void BakeTransformIntoVerts(Matrix mat)
+		{
+			for(int i=0;i < mBaseVerts.Length;i++)
+			{
+				mBaseVerts[i].Position0	=Vector3.Transform(mBaseVerts[i].Position0, mat);
+			}
+		}
+
+
 		//fill baseverts with bone indices and weights
 		public void AddWeightsToBaseVerts(Skin sk)
 		{
 			for(int i=0;i < mNumBaseVerts;i++)
 			{
 				int	numInf	=sk.GetNumInfluencesForVertIndex(i);
+
+				//fix weights over 4
+				List<int>	indexes	=new List<int>();
+				List<float>	weights	=new List<float>();
+				for(int j=0;j < numInf;j++)
+				{
+					//grab bone indices and weights
+					int		boneIdx		=sk.GetBoneIndexForVertIndex(i, j);
+					float	boneWeight	=sk.GetBoneWeightForVertIndex(i, j);
+
+					indexes.Add(boneIdx);
+					weights.Add(boneWeight);
+				}
+
+				while(weights.Count > 4)
+				{
+					//find smallest weight
+					float	smallest	=6969.69f;
+					int		smIdx		=-1;
+					for(int wt=0;wt < weights.Count;wt++)
+					{
+						if(weights[wt] < smallest)
+						{
+							smIdx		=wt;
+							smallest	=weights[wt];
+						}
+					}
+
+					//drop smallest weight
+					weights.RemoveAt(smIdx);
+					indexes.RemoveAt(smIdx);
+
+					//boost other weights by the amount
+					//diminished by the loss of the
+					//smallest weight
+					float	boost	=smallest / weights.Count;
+
+					for(int wt=0;wt < weights.Count;wt++)
+					{
+						weights[wt]	+=boost;
+					}
+				}
 
 				for(int j=0;j < numInf;j++)
 				{
@@ -178,8 +229,8 @@ namespace ColladaConvert
 					}
 
 					//grab bone indices and weights
-					int		boneIdx		=sk.GetBoneIndexForVertIndex(i, j);
-					float	boneWeight	=sk.GetBoneWeightForVertIndex(i, j);
+					int		boneIdx		=indexes[j];
+					float	boneWeight	=weights[j];
 
 					switch(j)
 					{
@@ -321,12 +372,12 @@ namespace ColladaConvert
 				if(texIdxs2 != null && texCoords2 != null)
 				{
 					tv.TexCoord2.X	=texCoords2[tidx2 * 2];
-					tv.TexCoord2.Y	=texCoords2[1 + tidx2 * 2];
+					tv.TexCoord2.Y	=-texCoords2[1 + tidx2 * 2];
 				}
 				if(texIdxs3 != null && texCoords3 != null)
 				{
 					tv.TexCoord3.X	=texCoords3[tidx3 * 2];
-					tv.TexCoord3.Y	=texCoords3[1 + tidx3 * 2];
+					tv.TexCoord3.Y	=-texCoords3[1 + tidx3 * 2];
 				}
 				if(colorIdxs0 != null && colors0 != null)
 				{

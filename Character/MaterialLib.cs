@@ -277,9 +277,12 @@ namespace Character
 			//load shaders
 			foreach(string shd in shdNeeded)
 			{
-				Effect	fx	=mContent.Load<Effect>(shd);
+				if(shd != null && shd != "")
+				{
+					Effect	fx	=mContent.Load<Effect>(shd);
 
-				mFX.Add(shd, fx);
+					mFX.Add(shd, fx);
+				}
 			}
 
 			//load textures

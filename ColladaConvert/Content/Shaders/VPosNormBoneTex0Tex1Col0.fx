@@ -1,7 +1,7 @@
 //shader using TomF's trilights
 
 //constants
-#define	MAX_BONES	30
+#define	MAX_BONES	50
 
 //matrii
 shared float4x4	mWorld;
@@ -17,6 +17,7 @@ texture mTexture1;
 //material amb & diffuse
 float4	mMatAmbient;
 float4	mMatDiffuse;
+float	mMatSpecularPower;
 
 //sunlight / moonlight
 float4	mLightColor0;		//trilights need 3 colors
@@ -99,7 +100,8 @@ VSOutput TrilightSkin(float3	position	: POSITION,
 	//transform the input position to the output
 	output.Position	=mul(vertPos, wvp);
 	
-	float3 worldNormal	=mul(normal, mWorld);
+	float3 worldNormal	=mul(normal, skinTransform);
+	worldNormal	=mul(worldNormal, mWorld);	
 	
     float3	totalLight	=float3(0,0,0);
 	float	LdotN		=dot(worldNormal, mLightDirection);

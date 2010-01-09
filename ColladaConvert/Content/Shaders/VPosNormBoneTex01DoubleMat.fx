@@ -32,18 +32,14 @@ struct VSOutput
 {
 	float4	Position	: POSITION;
 	float2	TexCoord0	: TEXCOORD0;
-	float2	TexCoord1	: TEXCOORD1;
 	float4	Color0		: COLOR0;
-	float4	Color1		: Color1;	
 };
 
 //this plugs into the pixel shader
 struct PSInput
 {
-	float4	Color0		: COLOR0;
-	float4	Color1		: COLOR1;
 	float2	TexCoord0	: TEXCOORD0;
-	float2	TexCoord1	: TEXCOORD1;
+	float4	Color0		: COLOR0;
 };
 
 sampler TexSampler0 = sampler_state
@@ -77,8 +73,6 @@ VSOutput DiffuseGouradSkin(float3	position	: POSITION,
 							float4	bnIdxs		: BLENDINDICES0,
 							float4	bnWeights	: BLENDWEIGHT0,
 							float2	tex0		: TEXCOORD0,
-							float2	tex1		: TEXCOORD1,
-							float4	col0		: COLOR0,
 							uniform int			lightMethod)
 {
 	VSOutput	output;
@@ -131,8 +125,6 @@ VSOutput DiffuseGouradSkin(float3	position	: POSITION,
 	
 	//direct copy of texcoords
 	output.TexCoord0	=tex0;
-	output.TexCoord1	=tex1;
-	output.Color1		=col0;
 	
 	//return the output structure
 	return	output;
@@ -140,25 +132,18 @@ VSOutput DiffuseGouradSkin(float3	position	: POSITION,
 
 float4 Gourad2TexModulate(PSInput input) : COLOR
 {
-	float4	texel;
-	if(input.Color1.x > 0.0f)
-	{
-		texel	=tex2D(TexSampler0, input.TexCoord0);
-	}
-	else
-	{
-		texel	=tex2D(TexSampler1, input.TexCoord1);
-	}
+	float4	texel0, texel1;
+	texel0	=tex2D(TexSampler0, input.TexCoord0);
+	texel1	=tex2D(TexSampler1, input.TexCoord0);
 	
 	float4	inColor	=input.Color0;
 	
-//	float4	texLitColor	=inColor * texel0 * texel1;
-//	float4	texLitColor	=texel1;
-//	float4	texLitColor	=texel0;
-//	float4	texLitColor	=(texel1.w * texel1) + ((1.0 - texel1.w) * texel0);
+	float4	texLitColor	=(texel1.w * texel1) + ((1.0 - texel1.w) * texel0);
 //	float4	texLitColor	=texel1 + ((1.0 - texel1.w) * texel0);
 
-	float4	texLitColor	=texel;
+//	float4	texLitColor	=texel;
+
+	texLitColor	*=inColor;
 
 	texLitColor.w	=1.0f;
 	

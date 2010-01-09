@@ -19,12 +19,12 @@ namespace ColladaConvert
 			{
 				//grab SID
 				mSID	=r.GetAttribute(0);
-
-				//skip to the next element, the actual value
-				r.Read();
-
-				Collada.GetLookAtFromString(r.Value, out mEyePos, out mInterestPos, out mUpVector);
 			}
+
+			//skip to the next element, the actual value
+			r.Read();
+
+			Collada.GetLookAtFromString(r.Value, out mEyePos, out mInterestPos, out mUpVector);
 		}
 
 

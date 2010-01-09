@@ -21,7 +21,6 @@ namespace Character
 		int					mSkinIndex, mTypeIndex;
 
 
-
 		public string Name
 		{
 			get { return mName; }
@@ -244,7 +243,10 @@ namespace Character
 
 			if(fx.Parameters["mBindPose"] != null)
 			{
-				fx.Parameters["mBindPose"].SetValue(mSkin.GetBindShapeMatrix());
+				if(mSkin != null)
+				{
+					fx.Parameters["mBindPose"].SetValue(mSkin.GetBindShapeMatrix());
+				}
 			}
 
 			fx.Begin();

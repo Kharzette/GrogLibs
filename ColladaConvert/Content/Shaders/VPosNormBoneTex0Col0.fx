@@ -1,7 +1,7 @@
 //shader using TomF's trilights
 
 //constants
-#define	MAX_BONES	30
+#define	MAX_BONES	50
 
 //matrii
 shared float4x4	mWorld;
@@ -76,9 +76,9 @@ VSOutput DiffuseGouradSkin(float3	position	: POSITION,
 							float4	col0		: COLOR0,
 							uniform int			lightMethod)
 {
-	VSOutput	output;
+	VSOutput	output;	
 	float4		vertPos	=mul(float4(position, 1.0f), mBindPose);
-//	float4		vertPos	=float4(position, 1.0f);
+
 	
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);

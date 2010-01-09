@@ -36,6 +36,25 @@ namespace ColladaConvert
 		}
 
 
+		public SceneNode GetNodeForInstanceController(string controllerName)
+		{
+			if(mInstanceControllerURL == "#" + controllerName)
+			{
+				return	this;
+			}
+
+			foreach(KeyValuePair<string, SceneNode> sn in mChildren)
+			{
+				SceneNode	n	=sn.Value.GetNodeForInstanceController(controllerName);
+				if(n != null)
+				{
+					return	n;
+				}
+			}
+			return	null;
+		}
+
+
 		public bool GetMatrixForBone(string boneName, out Matrix outMat)
 		{
 			if(mName == boneName)

@@ -81,6 +81,45 @@ namespace ColladaConvert
 				}
 			}
 
+
+			//bake scene node modifiers into controllers
+			foreach(KeyValuePair<string, Controller> cont in mControllers)
+			{
+				Skin	sk	=cont.Value.GetSkin();
+
+				if(sk == null)
+				{
+					continue;
+				}
+
+				string	gid	=sk.GetGeometryID();
+				if(gid == null || gid == "")
+				{
+					continue;
+				}
+
+				foreach(KeyValuePair<string, SceneNode> roots in mRootNodes)
+				{
+					SceneNode	node	=roots.Value.GetNodeForInstanceController(cont.Key);
+
+					if(node == null)
+					{
+						continue;
+					}
+
+					Matrix	nodeMat	=Matrix.Identity;
+					node.GetMatrixForBone(node.GetName(), out nodeMat);
+					
+					foreach(MeshConverter mc in mChunks)
+					{
+						if(mc.mGeometryID == gid)
+						{
+							mc.BakeTransformIntoVerts(nodeMat);
+						}
+					}
+				}
+			}
+
 			mGameSkeleton	=BuildGameSkeleton();
 
 			mAnimLib.SetSkeleton(mGameSkeleton);
@@ -850,6 +889,7 @@ namespace ColladaConvert
 		//to convert between handedness
 		public static Matrix ConvertMatrixCoordinateSystemMAX(Matrix inMat)
 		{
+#if TRCOORDSYSTEM
 			Vector3		scaleVec, trans;
 			Quaternion	rot;
 
@@ -865,6 +905,9 @@ namespace ColladaConvert
 			outMat	*=Matrix.CreateTranslation(trans);
 
 			return	outMat;
+#else
+			return	inMat;
+#endif
 		}
 
 

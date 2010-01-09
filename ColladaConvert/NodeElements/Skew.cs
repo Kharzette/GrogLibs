@@ -20,12 +20,12 @@ namespace ColladaConvert
 			{
 				//grab SID
 				mSID	=r.GetAttribute(0);
-
-				//skip to the next element, the actual value
-				r.Read();
-
-				Collada.GetSkewFromString(r.Value, out mAngle, out mAxisRotation, out mAxisTranslation);
 			}
+
+			//skip to the next element, the actual value
+			r.Read();
+
+			Collada.GetSkewFromString(r.Value, out mAngle, out mAxisRotation, out mAxisTranslation);
 		}
 
 

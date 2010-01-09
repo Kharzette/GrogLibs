@@ -54,24 +54,10 @@
     <Reference Include="Microsoft.Xna.Framework.Content.Pipeline.XImporter, Version=3.1.0.0, Culture=neutral, PublicKeyToken=6d5c3888ef60e27d" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Textures\hum_mf_bodysuit_v00_df.dds">
-      <Name>hum_mf_bodysuit_v00_df</Name>
-      <Importer>TextureImporter</Importer>
-      <Processor>TextureProcessor</Processor>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Shaders\VPosNormBoneTex0Col0.fx">
       <Name>VPosNormBoneTex0Col0</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Textures\hum_mf_component_briefs_v01_df.png">
-      <Name>hum_mf_component_briefs_v01_df</Name>
-      <Importer>TextureImporter</Importer>
-      <Processor>TextureProcessor</Processor>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -82,17 +68,304 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Textures\hum_mf_component_gen_v02.dds">
-      <Name>hum_mf_component_gen_v02</Name>
+    <Compile Include="Textures\body.png">
+      <Name>body</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Textures\hum_mf_skin_v01_df.dds">
-      <Name>hum_mf_skin_v01_df</Name>
+    <Compile Include="Textures\buckled_boots.png">
+      <Name>buckled_boots</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\buckled_chest.png">
+      <Name>buckled_chest</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\buckled_gloves.png">
+      <Name>buckled_gloves</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\heavyleather_boots.png">
+      <Name>heavyleather_boots</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\heavyleather_chest.png">
+      <Name>heavyleather_chest</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\heavyleather_gloves.png">
+      <Name>heavyleather_gloves</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\leather_boots.png">
+      <Name>leather_boots</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\leather_chest.png">
+      <Name>leather_chest</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\leather_gloves.png">
+      <Name>leather_gloves</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\starting_boots.png">
+      <Name>starting_boots</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\starting_chest.png">
+      <Name>starting_chest</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\starting_gloves.png">
+      <Name>starting_gloves</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanquisher_buckled_shoulder.png">
+      <Name>vanquisher_buckled_shoulder</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanquisher_hvy_leather_shoulder.png">
+      <Name>vanquisher_hvy_leather_shoulder</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanquisher_leatherhelm.png">
+      <Name>vanquisher_leatherhelm</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanquisher_leather_shoulder.png">
+      <Name>vanquisher_leather_shoulder</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Assassin_Body.png">
+      <Name>Vanq_Assassin_Body</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Assassin_Boots.png">
+      <Name>Vanq_Assassin_Boots</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Assassin_Gloves.png">
+      <Name>Vanq_Assassin_Gloves</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Assassin_Helm.png">
+      <Name>Vanq_Assassin_Helm</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Assassin_Shoulders.png">
+      <Name>Vanq_Assassin_Shoulders</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Chain_Boots.png">
+      <Name>Vanq_Chain_Boots</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Chain_Chest.png">
+      <Name>Vanq_Chain_Chest</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Chain_Gloves.png">
+      <Name>Vanq_Chain_Gloves</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Chain_Helm.png">
+      <Name>Vanq_Chain_Helm</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Chain_Shoulder.png">
+      <Name>Vanq_Chain_Shoulder</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Gun_Boots.png">
+      <Name>Vanq_Gun_Boots</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Gun_Chest.PNG">
+      <Name>Vanq_Gun_Chest</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Gun_Gloves.PNG">
+      <Name>Vanq_Gun_Gloves</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Gun_Helm.PNG">
+      <Name>Vanq_Gun_Helm</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Gun_Shoulder.PNG">
+      <Name>Vanq_Gun_Shoulder</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_HvyPlate_Boots.png">
+      <Name>Vanq_HvyPlate_Boots</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_HvyPlate_Chest.png">
+      <Name>Vanq_HvyPlate_Chest</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_HvyPlate_Gloves.png">
+      <Name>Vanq_HvyPlate_Gloves</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_HvyPlate_Helm.png">
+      <Name>Vanq_HvyPlate_Helm</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_HvyPlate_Shoulder.png">
+      <Name>Vanq_HvyPlate_Shoulder</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Plate_Boots.png">
+      <Name>Vanq_Plate_Boots</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Plate_Chest.png">
+      <Name>Vanq_Plate_Chest</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Plate_Gloves.png">
+      <Name>Vanq_Plate_Gloves</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Plate_Helm.png">
+      <Name>Vanq_Plate_Helm</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\Vanq_Plate_Shoulder.png">
+      <Name>Vanq_Plate_Shoulder</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_shadow_boots.png">
+      <Name>vanq_shadow_boots</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_shadow_chest.png">
+      <Name>vanq_shadow_chest</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_shadow_gloves.png">
+      <Name>vanq_shadow_gloves</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_shadow_helm.png">
+      <Name>vanq_shadow_helm</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_shadow_shoulder.png">
+      <Name>vanq_shadow_shoulder</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_spiked_boots.png">
+      <Name>vanq_spiked_boots</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_spiked_chest.png">
+      <Name>vanq_spiked_chest</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_spiked_gloves.png">
+      <Name>vanq_spiked_gloves</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_spiked_helm.png">
+      <Name>vanq_spiked_helm</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_spiked_shoulder.png">
+      <Name>vanq_spiked_shoulder</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_valkyrie_boots.png">
+      <Name>vanq_valkyrie_boots</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_valkyrie_chest.png">
+      <Name>vanq_valkyrie_chest</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_valkyrie_gloves.png">
+      <Name>vanq_valkyrie_gloves</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_valkyrie_helm.png">
+      <Name>vanq_valkyrie_helm</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vanq_valkyrie_shoulder.png">
+      <Name>vanq_valkyrie_shoulder</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="Textures\vaq_hair_01.png">
+      <Name>vaq_hair_01</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Shaders\VPosNormBoneTex01DoubleMat.fx">
+      <Name>VPosNormBoneTex01DoubleMat</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\$(XnaFrameworkVersion)\Microsoft.Xna.GameStudio.ContentPipeline.targets" />
