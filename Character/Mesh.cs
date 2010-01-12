@@ -5,6 +5,7 @@ using System.IO;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using GameData;
 
 namespace Character
 {
@@ -19,7 +20,8 @@ namespace Character
 		string				mMaterialName;
 		Skin				mSkin;
 		int					mSkinIndex, mTypeIndex;
-
+		bool				mbVisible;
+		Item.WearLocations	mSlot;
 
 		public string Name
 		{
@@ -35,6 +37,16 @@ namespace Character
 		{
 			get { return VertexTypes.GetTypeForIndex(mTypeIndex); }
 			private set { mTypeIndex = VertexTypes.GetIndex(value); }
+		}
+		public bool Visible
+		{
+			get { return mbVisible; }
+			set { mbVisible = value; }
+		}
+		public Item.WearLocations Slot
+		{
+			get { return mSlot; }
+			set { mSlot = value; }
 		}
 
 
@@ -115,6 +127,7 @@ namespace Character
 			bw.Write(mMaterialName);
 			bw.Write(mTypeIndex);
 			bw.Write(mSkinIndex);
+			bw.Write((UInt32)mSlot);
 
 			VertexTypes.WriteVerts(bw, mVerts, mNumVerts, mTypeIndex);
 
@@ -153,6 +166,7 @@ namespace Character
 			mMaterialName	=br.ReadString();
 			mTypeIndex		=br.ReadInt32();
 			mSkinIndex		=br.ReadInt32();
+			mSlot			=(Item.WearLocations)br.ReadUInt32();
 
 			VertexTypes.ReadVerts(br, gd, out mVerts, mNumVerts, mTypeIndex, bEditor);
 
@@ -225,6 +239,11 @@ namespace Character
 
 		public void Draw(GraphicsDevice g, MaterialLib matLib)
 		{
+			if(!mbVisible)
+			{
+				return;
+			}
+
 			g.Vertices[0].SetSource(mVerts, 0, mVertSize);
 			g.Indices			=mIndexs;
 			g.VertexDeclaration	=mVD;

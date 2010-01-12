@@ -176,6 +176,15 @@ namespace Character
 		}
 
 
+		//this merges in all the content directory
+		//textures for the tool chain after loading
+		//a material lib from a file
+		public void LoadToolTextures(GraphicsDevice gd)
+		{
+			LoadTextures(gd);
+		}
+
+
 		public Dictionary<string, Material> GetMaterials()
 		{
 			return	mMats;
@@ -549,13 +558,15 @@ namespace Character
 				string	path	=f.DirectoryName;
 				path	+="\\" + f.Name;
 
-				//create an element
-				Texture2D	tex	=Texture2D.FromFile(gd, path);
-
 				//strip extension
-				path	=f.Name.Substring(0, f.Name.LastIndexOf('.'));
+				string	pathStripped	=f.Name.Substring(0, f.Name.LastIndexOf('.'));
+				if(!mMaps.ContainsKey(pathStripped))
+				{
+					//create an element
+					Texture2D	tex	=Texture2D.FromFile(gd, path);
 
-				mMaps.Add(path, tex);
+					mMaps.Add(pathStripped, tex);
+				}
 			}
 #endif
 		}

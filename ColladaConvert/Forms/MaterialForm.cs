@@ -22,17 +22,19 @@ namespace ColladaConvert
 		ShaderList			mSL;
 		TextureForm			mTF;
 		TechniqueList		mTL;
+		GraphicsDevice		mGD;
 
 		//temporary reference to a cell being modified
 		DataGridViewCell	mEditingCell;
 
 
-		public MaterialForm(MaterialLib matlib, Character.Character chr)
+		public MaterialForm(GraphicsDevice gd, MaterialLib matlib, Character.Character chr)
 		{
 			InitializeComponent();
 
 			mMatLib		=matlib;
 			mCharacter	=chr;
+			mGD			=gd;
 
 			mMatModel	=new MaterialGridModel(mMatLib.GetMaterials());
 
@@ -223,7 +225,10 @@ namespace ColladaConvert
 			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
 			DataGridViewSelectedRowCollection	mpSel	=MeshPartGrid.SelectedRows;
 
-			mpSel[0].Cells[1].Value	=matSel[0].Cells[0].Value;
+			foreach(DataGridViewRow dgvr in mpSel)
+			{
+				dgvr.Cells[1].Value	=matSel[0].Cells[0].Value;
+			}
 		}
 
 
@@ -410,6 +415,7 @@ namespace ColladaConvert
 			mMatLib.SaveToFile(mSFD.FileName);
 		}
 
+
 		private void OnLoad(object sender, EventArgs e)
 		{
 			DialogResult	dr	=mOFD.ShowDialog();
@@ -420,6 +426,8 @@ namespace ColladaConvert
 			}
 
 			mMatLib.ReadFromFile(mOFD.FileName);
+
+			mMatLib.LoadToolTextures(mGD);
 
 			UpdateMaterials();
 

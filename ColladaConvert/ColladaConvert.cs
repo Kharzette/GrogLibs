@@ -197,7 +197,7 @@ namespace ColladaConvert
 			mCF.eLoadCharacter			+=OnLoadCharacter;
 			mCF.eLoadLibrary			+=OnLoadLibrary;
 
-			mMF	=new MaterialForm(mMatLib, mCharacter);
+			mMF	=new MaterialForm(mGDM.GraphicsDevice, mMatLib, mCharacter);
 			mMF.Visible	=true;
 		}
 

@@ -142,7 +142,7 @@ namespace Character
 
 			foreach(Mesh m in mMeshParts)
 			{
-				if(m.MaterialName == null || m.MaterialName == "")
+				if(m.MaterialName == null || m.MaterialName == "Blank" || m.MaterialName == "")
 				{
 					continue;	//don't bother unless it can be seen
 				}
