@@ -40,23 +40,6 @@ namespace ColladaConvert
 		public Skin	GetSkin()
 		{
 			return	mSkin;
-		}
-
-		
-		public void ChangeCoordinateSystemMAX()
-		{
-			//grab the list of bones from the skin
-			List<string>	jointNames	=mSkin.GetJointNameArray();
-
-			//grab the inverse bind pose matrix list
-			List<Matrix>	ibps	=mSkin.GetInverseBindPoses();
-
-			for(int i=0;i < ibps.Count;i++)
-			{
-				ibps[i]	=Collada.ConvertMatrixCoordinateSystemMAX(ibps[i]);
-			}
-
-			mSkin.ConvertBindShapeMatrixCoordinateSystemMAX();
-		}
+		}		
 	}
 }

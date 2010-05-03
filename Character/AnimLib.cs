@@ -117,6 +117,8 @@ namespace Character
 
 			if(magic != 0xA91BA7E)
 			{
+				br.Close();
+				file.Close();
 				return	false;
 			}
 

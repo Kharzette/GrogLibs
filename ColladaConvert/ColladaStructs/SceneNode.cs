@@ -76,6 +76,28 @@ namespace ColladaConvert
 		}
 
 
+		public bool GetMatrixForGeometryID(string gid, out Matrix outMat)
+		{
+			if(mInstanceGeometryURL != null
+				&& mInstanceGeometryURL.EndsWith(gid))
+			{
+				outMat	=GetMatrix();
+				return	true;
+			}
+			foreach(KeyValuePair<string, SceneNode> sn in mChildren)
+			{
+				if(sn.Value.GetMatrixForGeometryID(gid, out outMat))
+				{
+					//mul by parent
+					outMat	*=GetMatrix();
+					return	true;
+				}
+			}
+			outMat	=Matrix.Identity;
+			return	false;
+		}
+
+
 		//matrix returned here will not be multiplied by parents
 		public bool GetMatrixForBoneNonRecursive(string boneName, out Matrix outMat)
 		{
@@ -197,13 +219,6 @@ namespace ColladaConvert
 		}
 
 
-		public void AdjustRootMatrixForMax()
-		{
-			//mMat	*=Matrix.CreateTranslation(50.0f, 80.0f, 150.0f);
-			//mMat	*=Matrix.CreateFromYawPitchRoll(0, MathHelper.ToRadians(-90), MathHelper.ToRadians(180));
-		}
-
-
 		public string GetInstanceControllerURL()
 		{
 			return	mInstanceControllerURL;
@@ -218,14 +233,8 @@ namespace ColladaConvert
 			//this should probably be cached
 			foreach(KeyValuePair<string,NodeElement> el in mElements)
 			{
-				if(el.Value is Rotate)
-				{
-					mMat	*=el.Value.GetMatrix();
-				}
-				else
-				{
-					mMat	*=el.Value.GetMatrix();
-				}
+				//postmultiply per collada spec
+				mMat	=el.Value.GetMatrix() * mMat;
 			}
 
 			return	mMat;

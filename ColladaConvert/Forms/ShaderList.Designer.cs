@@ -38,7 +38,9 @@
 			// 
 			this.ShaderGrid.AllowUserToAddRows = false;
 			this.ShaderGrid.AllowUserToDeleteRows = false;
-			this.ShaderGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.ShaderGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
 			this.ShaderGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
 			this.ShaderGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this.ShaderGrid.Location = new System.Drawing.Point(12, 12);
@@ -46,7 +48,7 @@
 			this.ShaderGrid.Name = "ShaderGrid";
 			this.ShaderGrid.ReadOnly = true;
 			this.ShaderGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this.ShaderGrid.Size = new System.Drawing.Size(260, 200);
+			this.ShaderGrid.Size = new System.Drawing.Size(392, 200);
 			this.ShaderGrid.TabIndex = 5;
 			this.ShaderGrid.SelectionChanged += new System.EventHandler(this.OnSelectionChanged);
 			// 
@@ -74,11 +76,13 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(284, 264);
+			this.ClientSize = new System.Drawing.Size(416, 264);
 			this.ControlBox = false;
 			this.Controls.Add(this.Cancel);
 			this.Controls.Add(this.Ok);
 			this.Controls.Add(this.ShaderGrid);
+			this.DataBindings.Add(new System.Windows.Forms.Binding("Location", global::ColladaConvert.Properties.Settings.Default, "ShaderListPos", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+			this.Location = global::ColladaConvert.Properties.Settings.Default.ShaderListPos;
 			this.MaximizeBox = false;
 			this.Name = "ShaderList";
 			this.ShowIcon = false;

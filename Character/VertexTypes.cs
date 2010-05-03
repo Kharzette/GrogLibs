@@ -383,6 +383,38 @@ namespace Character
 		}
 
 
+		public static Bounds GetVertBounds(VertexBuffer vb, int numVerts, int typeIdx)
+		{
+			Type	vtype	=mTypes[typeIdx];
+			Array	verts	=Array.CreateInstance(vtype, numVerts);
+
+			MethodInfo genericMethod =
+				typeof (VertexBuffer).GetMethods().Where(
+					x => x.Name == "GetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
+            
+			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
+
+			typedMethod.Invoke(vb, new object[] {verts});
+
+			Bounds	bnd	=new Bounds();
+
+			FieldInfo	[]finfo	=vtype.GetFields();
+			for(int i=0;i < numVerts;i++)
+			{
+				foreach(FieldInfo fi in finfo)
+				{
+					//this might not be positional data!
+					if(fi.Name == "Position")
+					{
+						Vector3	vec	=(Vector3)GetArrayField(verts, i, fi.Name);
+						bnd.AddPointToBounds(vec);
+					}
+				}
+			}
+			return	bnd;
+		}
+
+
 		public static void WriteVerts(BinaryWriter bw, VertexBuffer vb, int numVerts, int typeIdx)
 		{
 			Type	vtype	=mTypes[typeIdx];

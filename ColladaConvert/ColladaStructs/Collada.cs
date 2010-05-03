@@ -13,25 +13,175 @@ namespace ColladaConvert
 	class Collada
 	{
 		//data from collada
-		private	Dictionary<string, Material>		mMaterials		=new Dictionary<string, Material>();
-		private Dictionary<string, LibImage>		mImages			=new Dictionary<string, LibImage>();
-		private	Dictionary<string, SceneNode>		mRootNodes		=new Dictionary<string, SceneNode>();
-		private	Dictionary<string, Controller>		mControllers	=new Dictionary<string, Controller>();
-		private	Dictionary<string, Geometry>		mGeometries		=new Dictionary<string, Geometry>();
-		private Dictionary<string, Animation>		mAnimations		=new Dictionary<string, Animation>();
-		private Dictionary<string, ColladaEffect>	mColladaEffects	=new Dictionary<string, ColladaEffect>();
+		Dictionary<string, Material>		mMaterials		=new Dictionary<string, Material>();
+		Dictionary<string, LibImage>		mImages			=new Dictionary<string, LibImage>();
+		Dictionary<string, SceneNode>		mRootNodes		=new Dictionary<string, SceneNode>();
+		Dictionary<string, Controller>		mControllers	=new Dictionary<string, Controller>();
+		Dictionary<string, Geometry>		mGeometries		=new Dictionary<string, Geometry>();
+		Dictionary<string, Animation>		mAnimations		=new Dictionary<string, Animation>();
+		Dictionary<string, ColladaEffect>	mColladaEffects	=new Dictionary<string, ColladaEffect>();
 
 		//midstep converters
-		private List<MeshConverter>	mChunks	=new List<MeshConverter>();
-		private	Character.Skeleton	mGameSkeleton;
-		public Animator				mAnimator;
+		List<MeshConverter>	mChunks	=new List<MeshConverter>();
+		Character.Skeleton	mGameSkeleton;
+
+		public Animator		mAnimator;
 
 		//actual useful data for the game
-		private	Character.MaterialLib	mMatLib;
-		private Character.AnimLib		mAnimLib;
-		private Character.Character		mCharacter;
+		Character.MaterialLib	mMatLib;
+		Character.AnimLib		mAnimLib;
+		Character.Character		mCharacter;
+		Character.StaticMeshObject	mStaticMesh;
 
-		private Dictionary<string, Texture2D>	mTextures	=new Dictionary<string,Texture2D>();
+		Dictionary<string, Texture2D>	mTextures	=new Dictionary<string,Texture2D>();
+
+
+		public Collada(string			meshFileName,
+			GraphicsDevice				g,
+			ContentManager				cm,
+			Character.MaterialLib		mlib,
+			Character.StaticMeshObject	stat)
+		{
+			Load(meshFileName);
+
+			mMatLib		=mlib;
+			mStaticMesh	=stat;
+
+			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
+			{
+				int	numParts	=geo.Value.GetNumMeshParts();
+
+				for(int j=0;j < numParts;j++)
+				{
+					List<float> verts	=geo.Value.GetBaseVerts(j);
+					
+					MeshConverter	cnk	=new MeshConverter(geo.Value.GetMeshName());
+
+					cnk.CreateBaseVerts(verts);
+
+					cnk.mPartIndex	=j;
+					cnk.SetGeometryID(geo.Key);
+					
+					mChunks.Add(cnk);
+				}
+			}
+
+			//bake scene node modifiers into geometry?
+			foreach(MeshConverter mc in mChunks)
+			{
+				string	gid	=mc.mGeometryID;
+				if(gid == null || gid == "")
+				{
+					continue;
+				}
+
+				foreach(KeyValuePair<string, SceneNode> roots in mRootNodes)
+				{
+					if(roots.Value == null)
+					{
+						continue;
+					}
+
+					Matrix	nodeMat	=Matrix.Identity;
+					if(roots.Value.GetMatrixForGeometryID(gid, out nodeMat))
+					{
+						mc.BakeTransformIntoVerts(nodeMat);
+					}
+				}
+			}
+
+			foreach(KeyValuePair<string, Geometry> geo in mGeometries)
+			{
+				//find the matching drawchunk
+				foreach(MeshConverter cnk in mChunks)
+				{
+					if(cnk.mGeometryID == geo.Key)
+					{
+						List<int>	posIdxs		=geo.Value.GetPositionIndexs(cnk.mPartIndex);
+						List<float>	norms		=geo.Value.GetNormals(cnk.mPartIndex);
+						List<int>	normIdxs	=geo.Value.GetNormalIndexs(cnk.mPartIndex);
+						List<float>	texCoords0	=geo.Value.GetTexCoords(cnk.mPartIndex, 0);
+						List<float>	texCoords1	=geo.Value.GetTexCoords(cnk.mPartIndex, 1);
+						List<float>	texCoords2	=geo.Value.GetTexCoords(cnk.mPartIndex, 2);
+						List<float>	texCoords3	=geo.Value.GetTexCoords(cnk.mPartIndex, 3);
+						List<int>	texIdxs0	=geo.Value.GetTexCoordIndexs(cnk.mPartIndex, 0);
+						List<int>	texIdxs1	=geo.Value.GetTexCoordIndexs(cnk.mPartIndex, 1);
+						List<int>	texIdxs2	=geo.Value.GetTexCoordIndexs(cnk.mPartIndex, 2);
+						List<int>	texIdxs3	=geo.Value.GetTexCoordIndexs(cnk.mPartIndex, 3);
+						List<float>	colors0		=geo.Value.GetColors(cnk.mPartIndex, 0);
+						List<float>	colors1		=geo.Value.GetColors(cnk.mPartIndex, 1);
+						List<float>	colors2		=geo.Value.GetColors(cnk.mPartIndex, 2);
+						List<float>	colors3		=geo.Value.GetColors(cnk.mPartIndex, 3);
+						List<int>	colIdxs0	=geo.Value.GetColorIndexs(cnk.mPartIndex, 0);
+						List<int>	colIdxs1	=geo.Value.GetColorIndexs(cnk.mPartIndex, 1);
+						List<int>	colIdxs2	=geo.Value.GetColorIndexs(cnk.mPartIndex, 2);
+						List<int>	colIdxs3	=geo.Value.GetColorIndexs(cnk.mPartIndex, 3);
+						List<int>	vertCounts	=geo.Value.GetVertCounts(cnk.mPartIndex);
+
+						cnk.AddNormTexByPoly(posIdxs, norms, normIdxs,
+							texCoords0, texIdxs0, texCoords1, texIdxs1,
+							texCoords2, texIdxs2, texCoords3, texIdxs3,
+							colors0, colIdxs0, colors1, colIdxs1,
+							colors2, colIdxs2, colors3, colIdxs3,
+							vertCounts);
+
+						bool	bPos	=(posIdxs != null && posIdxs.Count > 0);
+						bool	bNorm	=(norms != null && norms.Count > 0);
+						bool	bTex0	=(texCoords0 != null && texCoords0.Count > 0);
+						bool	bTex1	=(texCoords1 != null && texCoords1.Count > 0);
+						bool	bTex2	=(texCoords2 != null && texCoords2.Count > 0);
+						bool	bTex3	=(texCoords3 != null && texCoords3.Count > 0);
+						bool	bCol0	=(colors0 != null && colors0.Count > 0);
+						bool	bCol1	=(colors1 != null && colors1.Count > 0);
+						bool	bCol2	=(colors2 != null && colors2.Count > 0);
+						bool	bCol3	=(colors3 != null && colors3.Count > 0);
+						bool	bBone	=false;
+
+						//normals, if available, need to be transformed
+						//by any scene nodes that affect them
+						if(bNorm)
+						{
+							foreach(KeyValuePair<string, SceneNode> roots in mRootNodes)
+							{
+								if(roots.Value == null)
+								{
+									continue;
+								}
+
+								Matrix	nodeMat	=Matrix.Identity;
+								if(roots.Value.GetMatrixForGeometryID(geo.Key, out nodeMat))
+								{
+									cnk.BakeTransformIntoNormals(nodeMat);
+								}
+							}
+
+							//flip the normals
+							cnk.FlipNormals();
+						}
+
+						cnk.BuildBuffers(g, bPos, bNorm, bBone,
+							bBone, bTex0, bTex1, bTex2, bTex3,
+							bCol0, bCol1, bCol2, bCol3);
+					}
+				}
+			}
+
+			foreach(KeyValuePair<string, LibImage> li in mImages)
+			{
+				string	path	=li.Value.mPath;
+				if(path.StartsWith("file://"))
+				{
+					path	=path.Remove(0, 7);
+				}
+//				Texture2D	tex	=Texture2D.FromFile(g, path);
+//				mTextures.Add(li.Value.mName, tex);
+			}
+
+			foreach(MeshConverter mc in mChunks)
+			{
+				mStaticMesh.AddMeshPart(mc.GetStaticMesh());
+			}
+		}
 
 
 		public Collada(string meshFileName,
@@ -69,8 +219,6 @@ namespace ColladaConvert
 			foreach(KeyValuePair<string, Controller> cont in mControllers)
 			{
 				Skin	sk	=cont.Value.GetSkin();
-
-				cont.Value.ChangeCoordinateSystemMAX();
 
 				foreach(MeshConverter cnk in mChunks)
 				{
@@ -870,6 +1018,7 @@ namespace ColladaConvert
 		//change a floatarray of vector3's from max's
 		//coordinate system to ours
 		//not used, but nice to have for debugging
+		/*
 		private void ConvertCoordinateSystemMAX(List<float> verts)
 		{
 			Debug.Assert(verts.Count % 3 == 0);
@@ -882,41 +1031,7 @@ namespace ColladaConvert
 				verts[i * 3 + 1]	=verts[i * 3 + 2];
 				verts[i * 3 + 2]	=temp;
 			}
-		}
-
-
-		//decomposition seems the only reliable way
-		//to convert between handedness
-		public static Matrix ConvertMatrixCoordinateSystemMAX(Matrix inMat)
-		{
-#if TRCOORDSYSTEM
-			Vector3		scaleVec, trans;
-			Quaternion	rot;
-
-			//this could fail
-			bool	ret	=inMat.Decompose(out scaleVec, out rot, out trans);
-
-			Debug.Assert(ret);
-
-			//wild guess at proper order
-			Matrix	outMat;
-			outMat	=Matrix.CreateScale(scaleVec);
-			outMat	*=Matrix.CreateFromQuaternion(rot);
-			outMat	*=Matrix.CreateTranslation(trans);
-
-			return	outMat;
-#else
-			return	inMat;
-#endif
-		}
-
-
-		public static Matrix ConvertMatrixCoordinateSystemSceneNode(Matrix inMat)
-		{
-			Matrix	outMat	=inMat;
-
-			return	outMat;
-		}
+		}*/
 
 
 		//debug routine for messing with bones

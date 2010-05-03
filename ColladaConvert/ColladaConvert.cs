@@ -15,13 +15,15 @@ namespace ColladaConvert
 		SpriteBatch				mSpriteBatch;
 		Collada					mCollada;
 		GraphicsDeviceManager	mGDM;
-		VertexBuffer			mVB;
+		VertexBuffer			mVB, mBoundsVB;
 		VertexDeclaration		mVDecl;
-		IndexBuffer				mIB;
+		IndexBuffer				mIB, mBoundsIB;
 		Effect					mFX;
-		Character.MaterialLib	mMatLib;
-		Character.AnimLib		mAnimLib;
-		Character.Character		mCharacter;
+
+		Character.MaterialLib		mMatLib;
+		Character.AnimLib			mAnimLib;
+		Character.Character			mCharacter;
+		Character.StaticMeshObject	mStaticMesh;
 
 		//material gui
 		MaterialForm	mMF;
@@ -52,6 +54,9 @@ namespace ColladaConvert
 		Texture2D	mEureka;
 		Vector3		mLightDir;
 
+		//number of bounds drawing
+		int	mNumBounds;
+
 
 		public static event EventHandler	eAnimsUpdated;
 		public static event EventHandler	eMeshPartListUpdated;
@@ -63,6 +68,22 @@ namespace ColladaConvert
 
 			mCurrentAnimName	="";
 			mTimeScale			=1.0f;
+
+			//set window position
+			if(!mGDM.IsFullScreen)
+			{
+				System.Windows.Forms.Control	mainWindow
+					=System.Windows.Forms.Form.FromHandle(this.Window.Handle);
+
+				//add data binding so it will save
+				mainWindow.DataBindings.Add(new System.Windows.Forms.Binding("Location",
+					global::ColladaConvert.Properties.Settings.Default,
+					"MainWindowPos", true,
+					System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+
+				mainWindow.Location	=
+					global::ColladaConvert.Properties.Settings.Default.MainWindowPos;
+			}
 		}
 
 		protected override void Initialize()
@@ -103,9 +124,10 @@ namespace ColladaConvert
 			mMatLib		=new Character.MaterialLib(mGDM.GraphicsDevice, Content);
 			mAnimLib	=new Character.AnimLib();
 			mCharacter	=new Character.Character(mMatLib, mAnimLib);
+			mStaticMesh	=new Character.StaticMeshObject(mMatLib);
 
 			//load debug shaders
-			mFX			=Content.Load<Effect>("Shaders/Simple");
+			mFX			=Content.Load<Effect>("Shaders/Static");
 
 			mDesu	=Content.Load<Texture2D>("Textures/desu");
 			mEureka	=Content.Load<Texture2D>("Textures/Eureka");
@@ -114,7 +136,7 @@ namespace ColladaConvert
 			topLeft.X		=0;
 			topLeft.Y		=0;
 			bottomRight.X	=5;
-			bottomRight.Y	=5;
+			bottomRight.Y	=10;
 
 			//fill in some verts two quads
 			VertexPositionNormalTexture	[]verts	=new VertexPositionNormalTexture[8];
@@ -190,15 +212,20 @@ namespace ColladaConvert
 
 			mCF.eLoadAnim				+=OnOpenAnim;
 			mCF.eLoadModel				+=OnOpenModel;
+			mCF.eLoadStaticModel		+=OnOpenStaticModel;
 			mCF.eAnimSelectionChanged	+=OnAnimSelChanged;
 			mCF.eTimeScaleChanged		+=OnTimeScaleChanged;
 			mCF.eSaveLibrary			+=OnSaveLibrary;
 			mCF.eSaveCharacter			+=OnSaveCharacter;
 			mCF.eLoadCharacter			+=OnLoadCharacter;
 			mCF.eLoadLibrary			+=OnLoadLibrary;
+			mCF.eLoadStatic				+=OnLoadStatic;
+			mCF.eSaveStatic				+=OnSaveStatic;
 
-			mMF	=new MaterialForm(mGDM.GraphicsDevice, mMatLib, mCharacter);
+			mMF	=new MaterialForm(mGDM.GraphicsDevice, mMatLib, mCharacter, mStaticMesh);
 			mMF.Visible	=true;
+
+			mMF.eBoundsUpdated			+=OnBoundsChanged;
 		}
 
 		/// <summary>
@@ -254,11 +281,6 @@ namespace ColladaConvert
 			Vector4	ambColor	=new Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 			Vector3	lightDir	=new Vector3(1.0f, -1.0f, 0.1f);
 			lightDir.Normalize();
-/*
-			mTestEffect.Parameters["mLightColor"].SetValue(lightColor);
-			mTestEffect.Parameters["mLightDirection"].SetValue(lightDir);
-			mTestEffect.Parameters["mAmbientColor"].SetValue(ambColor);
-			mTestEffect.Parameters["mTexture0"].SetValue(mDesu);*/
 		}
 
 
@@ -287,6 +309,164 @@ namespace ColladaConvert
 
 			eMeshPartListUpdated(null, null);
 			eAnimsUpdated(mAnimLib.GetAnims(), null);
+		}
+
+
+		void OnBoundsChanged(object sender, EventArgs ea)
+		{
+			//clear existing
+			mBoundsVB	=null;
+			mBoundsIB	=null;
+
+			List<Character.Bounds>	bnds	=(List<Character.Bounds>)sender;
+
+			if(bnds.Count <= 0)
+			{
+				return;
+			}
+
+			int	numCorners	=0;
+			foreach(Character.Bounds bnd in bnds)
+			{
+				numCorners	+=2;
+			}
+			mBoundsVB	=new VertexBuffer(mGDM.GraphicsDevice, numCorners * 4 * 32, BufferUsage.WriteOnly);
+
+			VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[numCorners * 4];
+
+			int	idx	=0;
+			foreach(Character.Bounds bnd in bnds)
+			{
+				float	xDiff	=bnd.mMaxs.X - bnd.mMins.X;
+				float	yDiff	=bnd.mMaxs.Y - bnd.mMins.Y;
+				float	zDiff	=bnd.mMaxs.Z - bnd.mMins.Z;
+
+				vpnt[idx++].Position	=bnd.mMins;
+				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitX * xDiff;
+				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitX * xDiff + Vector3.UnitY * yDiff;
+				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitY * yDiff;
+				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitZ * zDiff;
+				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitZ * zDiff + Vector3.UnitX * xDiff;
+				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitZ * zDiff + Vector3.UnitY * yDiff;
+				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitZ * zDiff + Vector3.UnitX * xDiff + Vector3.UnitY * yDiff;
+			}
+
+			mBoundsVB.SetData<VertexPositionNormalTexture>(vpnt);
+
+			mBoundsIB	=new IndexBuffer(mGDM.GraphicsDevice, (numCorners * 3) * 6 * 2, BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
+
+			UInt16	[]inds	=new UInt16[(numCorners * 3) * 6];
+
+			mNumBounds	=numCorners / 2;
+
+			idx	=0;
+			UInt16 bndIdx	=0;
+			foreach(Character.Bounds bnd in bnds)
+			{
+				UInt16	idxOffset	=bndIdx;
+				//awesome compiler bug here, have to do this in 2 steps
+				idxOffset	*=8;
+
+				//max coordinates here
+				//-z facing 
+				//same compiler bug, two lines instead of 1
+				inds[idx]	=0;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=1;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=2;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=0;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=2;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=3;
+				inds[idx++]	+=idxOffset;
+
+				//-y facing
+				inds[idx]	=0;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=4;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=5;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=0;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=5;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=1;
+				inds[idx++]	+=idxOffset;
+
+				//-x facing
+				inds[idx]	=0;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=3;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=6;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=0;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=6;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=4;
+				inds[idx++]	+=idxOffset;
+
+				//x facing
+				inds[idx]	=1;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=5;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=7;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=1;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=7;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=2;
+				inds[idx++]	+=idxOffset;
+
+				//y facing
+				inds[idx]	=7;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=6;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=3;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=7;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=3;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=2;
+				inds[idx++]	+=idxOffset;
+
+				//z facing
+				inds[idx]	=4;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=6;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=7;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=4;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=7;
+				inds[idx++]	+=idxOffset;
+				inds[idx]	=5;
+				inds[idx++]	+=idxOffset;
+
+				bndIdx++;
+			}
+			mBoundsIB.SetData<UInt16>(inds);
+		}
+
+
+		//non skinned collada model
+		private void OnOpenStaticModel(object sender, EventArgs ea)
+		{
+			string	path	=(string)sender;
+
+			mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mStaticMesh);
+
+			eMeshPartListUpdated(null, null);
 		}
 
 
@@ -322,6 +502,24 @@ namespace ColladaConvert
 			mCharacter.ReadFromFile(path, mGDM.GraphicsDevice, true);
 
 			eMeshPartListUpdated(mCharacter.GetMeshPartList(), null);
+		}
+
+
+		private void OnLoadStatic(object sender, EventArgs ea)
+		{
+			string	path	=(string)sender;
+
+			mStaticMesh.ReadFromFile(path, mGDM.GraphicsDevice, true);
+
+			eMeshPartListUpdated(mStaticMesh.GetMeshPartList(), null);
+		}
+
+
+		private void OnSaveStatic(object sender, EventArgs ea)
+		{
+			string	path	=(string)sender;
+
+			mStaticMesh.SaveToFile(path);
 		}
 
 
@@ -382,7 +580,7 @@ namespace ColladaConvert
 			mLightDir	=Vector3.TransformNormal(mLightDir, mat);
 
 			//update it in the shader
-			mFX.Parameters["mLightDir"].SetValue(mLightDir);
+			mFX.Parameters["mLightDirection"].SetValue(mLightDir);
 			mFX.Parameters["mTexture"].SetValue(mDesu);
 
 			//put in some keys for messing with bones
@@ -397,10 +595,7 @@ namespace ColladaConvert
 			base.Update(gameTime);
 		}
 
-		/// <summary>
-		/// This is called when the game should draw itself.
-		/// </summary>
-		/// <param name="gameTime">Provides a snapshot of timing values.</param>
+
 		protected override void Draw(GameTime gameTime)
 		{
 			mGDM.GraphicsDevice.Clear(Color.CornflowerBlue);
@@ -408,33 +603,26 @@ namespace ColladaConvert
 			UpdateWVP();
 
 			mCharacter.Draw(mGDM.GraphicsDevice);
+			mStaticMesh.Draw(mGDM.GraphicsDevice);
 
 			//set stream source, index, and decl
 			mGDM.GraphicsDevice.Vertices[0].SetSource(mVB, 0, 32);
 			mGDM.GraphicsDevice.Indices				=mIB;
 			mGDM.GraphicsDevice.VertexDeclaration	=mVDecl;
 
-			mLightDir.X	=0.5f;
-			mLightDir.Y	=0.2f;
-			mLightDir.Z	=0.7f;
-
+			//default light direction
+			mLightDir.X	=-0.3f;
+			mLightDir.Y	=-1.0f;
+			mLightDir.Z	=-0.2f;
 			mLightDir.Normalize();
 
-			mFX.Parameters["mTexture"].SetValue(mDesu);
-			mFX.Parameters["mLightDir"].SetValue(mLightDir);
-			
-			mFX.Begin();
-			foreach(EffectPass pass in mFX.CurrentTechnique.Passes)
-			{
-				pass.Begin();
-				
-				//draw shizzle here
-				mGDM.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-					0, 0, 4, 0, 2);
+			mFX.Parameters["mLightDirection"].SetValue(mLightDir);
 
-				pass.End();
-			}
-			mFX.End();
+			mGDM.GraphicsDevice.RenderState.AlphaBlendEnable	=true;
+			mGDM.GraphicsDevice.RenderState.SourceBlend			=Blend.SourceAlpha;
+			mGDM.GraphicsDevice.RenderState.DestinationBlend	=Blend.InverseSourceAlpha;
+
+			mFX.CurrentTechnique	=mFX.Techniques[0];
 			
 			mFX.Parameters["mTexture"].SetValue(mEureka);
 			mFX.Begin();
@@ -442,13 +630,48 @@ namespace ColladaConvert
 			{
 				pass.Begin();
 				
-				//draw shizzle here
 				mGDM.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
 					4, 0, 4, 0, 2);
 
 				pass.End();
 			}
 			mFX.End();
+
+			mFX.Parameters["mTexture"].SetValue(mDesu);
+			mFX.Begin();
+			foreach(EffectPass pass in mFX.CurrentTechnique.Passes)
+			{
+				pass.Begin();
+				
+				mGDM.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+					0, 0, 4, 0, 2);
+
+				pass.End();
+			}
+			mFX.End();
+
+			//draw bounds if any
+			if(mBoundsVB != null && mMF.bDrawBounds())
+			{
+				mFX.Begin();
+
+				mGDM.GraphicsDevice.Vertices[0].SetSource(mBoundsVB, 0, 32);
+				mGDM.GraphicsDevice.Indices		=mBoundsIB;
+
+				foreach(EffectPass pass in mFX.CurrentTechnique.Passes)
+				{
+					pass.Begin();
+
+					mGDM.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+						0, 0, 8, 0, 6 * 2 * mNumBounds);
+
+					pass.End();
+				}
+
+				mFX.End();
+			}
+
+			mGDM.GraphicsDevice.RenderState.AlphaBlendEnable	=false;
 
 			base.Draw(gameTime);
 		}
@@ -505,34 +728,6 @@ namespace ColladaConvert
 				mCamPos -= vleft * (time * 0.1f);
 			}
 
-			//Note: apologies for hacking this shit in, I wanted the ability to turn to be able to see the map better -- Kyth
-			if(mCurrentKeyboardState.IsKeyDown(Keys.Q))
-			{
-				mYaw -= time*0.1f;
-			}
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.E))
-			{
-				mYaw += time*0.1f;
-			}
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.Z))
-			{
-				mPitch -= time*0.1f;
-			}
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.C))
-			{
-				mPitch += time*0.1f;
-			}
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.Right) ||
-				mCurrentKeyboardState.IsKeyDown(Keys.D))
-			{
-				mCamPos -= vleft * (time * 0.1f);
-			}
-
-			//Horrible mouselook hack so I can see where I'm going. Won't let me spin in circles, some kind of overflow issue?
 			if(mCurrentMouseState.RightButton == ButtonState.Pressed)
 			{
 				mPitch += (mCurrentMouseState.Y - mLastMouseState.Y) * time * 0.03f;

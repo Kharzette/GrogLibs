@@ -38,7 +38,9 @@
 			// 
 			this.TechniqueGrid.AllowUserToAddRows = false;
 			this.TechniqueGrid.AllowUserToDeleteRows = false;
-			this.TechniqueGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+			this.TechniqueGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
 			this.TechniqueGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
 			this.TechniqueGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this.TechniqueGrid.Location = new System.Drawing.Point(12, 12);
@@ -46,7 +48,7 @@
 			this.TechniqueGrid.Name = "TechniqueGrid";
 			this.TechniqueGrid.ReadOnly = true;
 			this.TechniqueGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this.TechniqueGrid.Size = new System.Drawing.Size(260, 206);
+			this.TechniqueGrid.Size = new System.Drawing.Size(366, 206);
 			this.TechniqueGrid.TabIndex = 6;
 			this.TechniqueGrid.SelectionChanged += new System.EventHandler(this.OnSelectionChanged);
 			// 
@@ -74,11 +76,13 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(284, 264);
+			this.ClientSize = new System.Drawing.Size(390, 264);
 			this.ControlBox = false;
 			this.Controls.Add(this.Cancel);
 			this.Controls.Add(this.Ok);
 			this.Controls.Add(this.TechniqueGrid);
+			this.DataBindings.Add(new System.Windows.Forms.Binding("Location", global::ColladaConvert.Properties.Settings.Default, "TechniqueListPos", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+			this.Location = global::ColladaConvert.Properties.Settings.Default.TechniqueListPos;
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
 			this.Name = "TechniqueList";

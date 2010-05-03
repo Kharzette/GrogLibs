@@ -17,6 +17,7 @@ namespace ColladaConvert
 		MaterialGridModel	mMatModel;		
 		MaterialLib			mMatLib;
 		Character.Character	mCharacter;
+		StaticMeshObject	mStaticMesh;
 		OpenFileDialog		mOFD	=new OpenFileDialog();
 		SaveFileDialog		mSFD	=new SaveFileDialog();
 		ShaderList			mSL;
@@ -27,13 +28,17 @@ namespace ColladaConvert
 		//temporary reference to a cell being modified
 		DataGridViewCell	mEditingCell;
 
+		//events
+		public event EventHandler	eBoundsUpdated;
 
-		public MaterialForm(GraphicsDevice gd, MaterialLib matlib, Character.Character chr)
+
+		public MaterialForm(GraphicsDevice gd, MaterialLib matlib, Character.Character chr, StaticMeshObject stat)
 		{
 			InitializeComponent();
 
 			mMatLib		=matlib;
 			mCharacter	=chr;
+			mStaticMesh	=stat;
 			mGD			=gd;
 
 			mMatModel	=new MaterialGridModel(mMatLib.GetMaterials());
@@ -43,7 +48,91 @@ namespace ColladaConvert
 
 			MaterialGrid.DataSource	=mMatModel;
 
+			MaterialGrid.Columns.Remove("SourceBlend");
+
+			DataGridViewComboBoxColumn	slotColumn
+				=new DataGridViewComboBoxColumn();
+
+			foreach(Blend b in Enum.GetValues(typeof(Blend)))
+			{
+				slotColumn.Items.Add(b);
+			}
+
+			slotColumn.DisplayIndex		=0;
+			slotColumn.HeaderText		="SourceBlend";
+			slotColumn.DataPropertyName	="SourceBlend";
+
+			MaterialGrid.Columns.Add(slotColumn);
+
+			MaterialGrid.Columns.Remove("DestBlend");
+
+			DataGridViewComboBoxColumn	slotColumn2
+				=new DataGridViewComboBoxColumn();
+
+			foreach(Blend b in Enum.GetValues(typeof(Blend)))
+			{
+				slotColumn2.Items.Add(b);
+			}
+
+			slotColumn2.DisplayIndex		=0;
+			slotColumn2.HeaderText			="DestBlend";
+			slotColumn2.DataPropertyName	="DestBlend";
+
+			MaterialGrid.Columns.Add(slotColumn2);
+
+			MaterialGrid.Columns.Remove("CullMode");
+
+			DataGridViewComboBoxColumn	slotColumn3
+				=new DataGridViewComboBoxColumn();
+
+			foreach(CullMode cm in Enum.GetValues(typeof(CullMode)))
+			{
+				slotColumn3.Items.Add(cm);
+			}
+
+			slotColumn3.DisplayIndex		=0;
+			slotColumn3.HeaderText			="CullMode";
+			slotColumn3.DataPropertyName	="CullMode";
+
+			MaterialGrid.Columns.Add(slotColumn3);
+
+			MaterialGrid.Columns.Remove("ZFunction");
+
+			DataGridViewComboBoxColumn	slotColumn4
+				=new DataGridViewComboBoxColumn();
+
+			foreach(CompareFunction cm in Enum.GetValues(typeof(CompareFunction)))
+			{
+				slotColumn4.Items.Add(cm);
+			}
+
+			slotColumn4.DisplayIndex		=0;
+			slotColumn4.HeaderText			="ZFunction";
+			slotColumn4.DataPropertyName	="ZFunction";
+
+			MaterialGrid.Columns.Add(slotColumn4);
+
 			ColladaConvert.eMeshPartListUpdated	+=OnMeshPartListUpdated;
+			ColladaConvert.eMeshPartListUpdated	+=OnStaticMeshPartListUpdated;
+
+			MaterialGrid.Columns.Remove("BlendFunction");
+
+			DataGridViewComboBoxColumn	slotColumn5
+				=new DataGridViewComboBoxColumn();
+
+			foreach(BlendFunction cm in Enum.GetValues(typeof(BlendFunction)))
+			{
+				slotColumn5.Items.Add(cm);
+			}
+
+			slotColumn5.DisplayIndex		=0;
+			slotColumn5.HeaderText			="BlendFunction";
+			slotColumn5.DataPropertyName	="BlendFunction";
+
+			MaterialGrid.Columns.Add(slotColumn5);
+
+			ColladaConvert.eMeshPartListUpdated	+=OnMeshPartListUpdated;
+			ColladaConvert.eMeshPartListUpdated	+=OnStaticMeshPartListUpdated;
 
 			//set shadername and technique columns to
 			//read only so text can't be entered in cell
@@ -90,12 +179,15 @@ namespace ColladaConvert
 
 			//update shader parameters
 			Character.Material	mat	=(Character.Material)matSel[0].DataBoundItem;
-			UpdateShaderParameters(mat);
+
+			Effect	fx	=mMatLib.GetMaterialShader(mat.Name);
+			mat.UpdateShaderParameters(fx);
 
 			MaterialProperties.DataSource			=mat.Parameters;
 			MaterialProperties.Columns[0].ReadOnly	=true;
 			MaterialProperties.Columns[1].ReadOnly	=true;
 			MaterialProperties.Columns[2].ReadOnly	=true;
+			MaterialProperties.Update();
 		}
 
 
@@ -121,7 +213,9 @@ namespace ColladaConvert
 
 			//update shader parameters
 			Character.Material	mat	=(Character.Material)matSel[0].DataBoundItem;
-			UpdateShaderParameters(mat);
+
+			Effect	fx	=mMatLib.GetMaterialShader(mat.Name);
+			mat.UpdateShaderParameters(fx);
 
 			MaterialProperties.DataSource			=mat.Parameters;
 			MaterialProperties.Columns[0].ReadOnly	=true;
@@ -148,6 +242,11 @@ namespace ColladaConvert
 		{
 			List<Character.Mesh>	lm	=mCharacter.GetMeshPartList();
 
+			if(lm.Count == 0)
+			{
+				return;
+			}
+
 			BindingList<Character.Mesh>	blm	=new BindingList<Character.Mesh>();
 
 			foreach(Character.Mesh m in lm)
@@ -156,8 +255,30 @@ namespace ColladaConvert
 			}
 
 			MeshPartGrid.DataSource	=blm;
-			MeshPartGrid.Columns[1].ReadOnly	=true;
-			MeshPartGrid.Columns[2].ReadOnly	=true;
+
+			BoundsChanged();
+		}
+
+
+		private void OnStaticMeshPartListUpdated(object sender, EventArgs ea)
+		{
+			List<StaticMesh>	lm	=mStaticMesh.GetMeshPartList();
+
+			if(lm.Count == 0)
+			{
+				return;
+			}
+
+			BindingList<StaticMesh>	blm	=new BindingList<StaticMesh>();
+
+			foreach(StaticMesh m in lm)
+			{
+				blm.Add(m);
+			}
+
+			MeshPartGrid.DataSource	=blm;
+
+			BoundsChanged();
 		}
 
 
@@ -175,6 +296,13 @@ namespace ColladaConvert
 			m.Name			="default";
 			m.ShaderName	="";
 			m.Technique		="";
+			m.Alpha			=false;
+			m.BlendFunction	=BlendFunction.Add;
+			m.SourceBlend	=Blend.SourceAlpha;
+			m.DestBlend		=Blend.InverseSourceAlpha;
+			m.DepthWrite	=true;
+			m.CullMode		=CullMode.CullCounterClockwiseFace;
+			m.ZFunction		=CompareFunction.Less;
 
 			mMatLib.AddMaterial(m);
 			mMatModel.Add(m);
@@ -234,6 +362,11 @@ namespace ColladaConvert
 
 		private void OnCellClick(object sender, DataGridViewCellMouseEventArgs e)
 		{
+			if(e.RowIndex == -1)
+			{
+				return;	//header click?
+			}
+
 			//if this is the shader name
 			if(e.ColumnIndex == 1)
 			{
@@ -261,89 +394,15 @@ namespace ColladaConvert
 		}
 
 
-		private void UpdateShaderParameters(Character.Material m)
-		{
-			//grab fx
-			Effect	fx	=mMatLib.GetMaterialShader(m.Name);
-
-			List<ShaderParameters>	parms	=new List<ShaderParameters>();
-
-			foreach(EffectParameter ep in fx.Parameters)
-			{
-				Debug.WriteLine("Parm: " + ep.Semantic);
-
-				//skip matrices
-				if(ep.ParameterClass == EffectParameterClass.MatrixColumns
-					|| ep.ParameterClass == EffectParameterClass.MatrixRows)
-				{
-					continue;
-				}
-
-				//skip samplers
-				if(ep.ParameterType == EffectParameterType.Sampler)
-				{
-					continue;
-				}
-
-				//skip stuff with lots of elements
-				//such as lists of bones
-				if(ep.Elements.Count > 0)
-				{
-					continue;
-				}
-
-				ShaderParameters	sp	=new ShaderParameters();
-
-				sp.Name		=ep.Name;
-				sp.Class	=ep.ParameterClass;
-				sp.Type		=ep.ParameterType;
-
-				switch(sp.Class)
-				{
-					case EffectParameterClass.MatrixColumns:
-						sp.Value	=Convert.ToString(ep.GetValueMatrix());
-						break;
-
-					case EffectParameterClass.MatrixRows:
-						sp.Value	=Convert.ToString(ep.GetValueMatrix());
-						break;
-
-					case EffectParameterClass.Vector:
-						if(ep.ColumnCount == 2)
-						{
-							Vector2	vec	=ep.GetValueVector2();
-							sp.Value	=Convert.ToString(vec.X)
-								+ " " + Convert.ToString(vec.Y);
-						}
-						else if(ep.ColumnCount == 3)
-						{
-							Vector3	vec	=ep.GetValueVector3();
-							sp.Value	=Convert.ToString(vec.X)
-								+ " " + Convert.ToString(vec.Y)
-								+ " " + Convert.ToString(vec.Z);
-						}
-						else
-						{
-							Vector4	vec	=ep.GetValueVector4();
-							sp.Value	=Convert.ToString(vec.X)
-								+ " " + Convert.ToString(vec.Y)
-								+ " " + Convert.ToString(vec.Z)
-								+ " " + Convert.ToString(vec.W);
-						}
-						break;
-				}					
-
-				parms.Add(sp);
-			}
-			m.Parameters	=parms;
-		}
-
-
 		private void OnPropCellClick(object sender, DataGridViewCellEventArgs e)
 		{
 			if(e.ColumnIndex != 3)
 			{
 				return;	//only interested in param value
+			}
+			if(e.RowIndex == -1)
+			{
+				return;
 			}
 
 			DataGridViewCell	cell	=
@@ -425,7 +484,7 @@ namespace ColladaConvert
 				return;
 			}
 
-			mMatLib.ReadFromFile(mOFD.FileName);
+			mMatLib.ReadFromFile(mOFD.FileName, true);
 
 			mMatLib.LoadToolTextures(mGD);
 
@@ -440,9 +499,94 @@ namespace ColladaConvert
 
 		private void OnMeshPartNuking(object sender, DataGridViewRowCancelEventArgs e)
 		{
-			Character.Mesh	nukeMe	=(Character.Mesh)e.Row.DataBoundItem;
+			if(e.Row.DataBoundItem.GetType() == typeof(Character.Mesh))
+			{
+				Character.Mesh	nukeMe	=(Character.Mesh)e.Row.DataBoundItem;
+				mCharacter.NukeMesh(nukeMe);
+			}
+			else
+			{
+				StaticMesh	nukeMe	=(StaticMesh)e.Row.DataBoundItem;
+				mStaticMesh.NukeMesh(nukeMe);
+			}
+			BoundsChanged();
+		}
 
-			mCharacter.NukeMesh(nukeMe);
+
+		private void OnNukeMaterial(object sender, DataGridViewRowCancelEventArgs e)
+		{
+			Character.Material	mat	=(Character.Material)e.Row.DataBoundItem;
+
+			mMatLib.NukeMaterial(mat.Name);
+		}
+
+
+		private void OnBoundMesh(object sender, EventArgs e)
+		{
+			if(MeshPartGrid.SelectedRows.Count <= 0)
+			{
+				return;
+			}
+
+			foreach(DataGridViewRow dgvr in MeshPartGrid.SelectedRows)
+			{
+				if(dgvr.DataBoundItem.GetType() == typeof(Character.Mesh))
+				{
+					Character.Mesh	boundMe	=(Character.Mesh)dgvr.DataBoundItem;
+					boundMe.Bound();
+				}
+				else
+				{
+					Character.StaticMesh	boundMe	=(Character.StaticMesh)dgvr.DataBoundItem;
+					boundMe.Bound();
+				}
+			}
+			BoundsChanged();
+		}
+
+
+		void BoundsChanged()
+		{
+			List<Bounds>	bounds	=new List<Bounds>();
+			foreach(DataGridViewRow dgvr in MeshPartGrid.Rows)
+			{
+				if(dgvr.DataBoundItem.GetType() == typeof(Character.Mesh))
+				{
+					Character.Mesh	msh	=(Character.Mesh)dgvr.DataBoundItem;
+
+					Bounds	bnd	=msh.GetBounds();
+					if(bnd != null)
+					{
+						bounds.Add(bnd);
+					}
+				}
+				else
+				{
+					Character.StaticMesh	msh	=(Character.StaticMesh)dgvr.DataBoundItem;
+
+					Bounds	bnd	=msh.GetBounds();
+					if(bnd != null)
+					{
+						bounds.Add(bnd);
+					}
+				}
+			}
+			if(eBoundsUpdated != null)
+			{
+				eBoundsUpdated(bounds, null);
+			}
+		}
+
+
+		void OnRefreshShaders(object sender, EventArgs e)
+		{
+			mMatLib.RefreshShaderParameters();
+		}
+
+
+		internal bool bDrawBounds()
+		{
+			return	DrawBounds.Checked;
 		}
 	}
 }

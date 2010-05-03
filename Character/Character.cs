@@ -16,6 +16,9 @@ namespace Character
 		MaterialLib	mMatLib;
 		AnimLib		mAnimLib;
 
+		//events
+		public event EventHandler	eRayCollision;
+
 
 		public Character(MaterialLib ml, AnimLib al)
 		{
@@ -42,6 +45,26 @@ namespace Character
 		public void AddSkin(Skin s)
 		{
 			mSkins.Add(s);
+		}
+
+
+		public void SetAppearance(List<string> meshParts, List<string> materials)
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				if(meshParts.Contains(m.Name))
+				{
+					m.Visible	=true;
+
+					int	idx	=meshParts.IndexOf(m.Name);
+
+					m.MaterialName	=materials[idx];
+				}
+				else
+				{
+					m.Visible	=false;
+				}
+			}
 		}
 
 
@@ -101,6 +124,8 @@ namespace Character
 
 			if(magic != 0xCA1EC7BE)
 			{
+				br.Close();
+				file.Close();
 				return	false;
 			}
 
@@ -142,6 +167,11 @@ namespace Character
 
 			foreach(Mesh m in mMeshParts)
 			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+
 				if(m.MaterialName == null || m.MaterialName == "Blank" || m.MaterialName == "")
 				{
 					continue;	//don't bother unless it can be seen
@@ -151,10 +181,33 @@ namespace Character
 		}
 
 
+		public void RayIntersectBounds(Vector3 start, Vector3 end)
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+				if(m.RayIntersectBounds(start, end))
+				{
+					if(eRayCollision != null)
+					{
+						eRayCollision(m, null);
+					}
+				}
+			}
+		}
+
+
 		public void Draw(GraphicsDevice gd)
 		{
 			foreach(Mesh m in mMeshParts)
 			{
+				if(!m.Visible)
+				{
+					continue;
+				}
 				m.Draw(gd, mMatLib);
 			}
 		}

@@ -22,12 +22,16 @@ namespace ColladaConvert
 		//events
 		public event	EventHandler	eLoadAnim;
 		public event	EventHandler	eLoadModel;
+		public event	EventHandler	eLoadStaticModel;
 		public event	EventHandler	eAnimSelectionChanged;
 		public event	EventHandler	eTimeScaleChanged;
 		public event	EventHandler	eSaveLibrary;
 		public event	EventHandler	eSaveCharacter;
 		public event	EventHandler	eLoadCharacter;
 		public event	EventHandler	eLoadLibrary;
+		public event	EventHandler	eSaveStatic;
+		public event	EventHandler	eLoadStatic;
+
 
 		public AnimForm(Character.AnimLib anlib)
 		{
@@ -38,25 +42,8 @@ namespace ColladaConvert
 			ColladaConvert.eAnimsUpdated	+=OnAnimsUpdated;
 		}
 
-		private void LoadAnim_Click(object sender, EventArgs e)
-		{
-			mOFD.Multiselect	=true;
-			DialogResult	dr	=mOFD.ShowDialog();
 
-			if(dr == DialogResult.Cancel)
-			{
-				return;
-			}
-
-			string	[]fnames	=mOFD.FileNames;
-
-			foreach(string fname in fnames)
-			{
-				eLoadAnim(fname, null);
-			}
-		}
-
-		private void LoadModel_Click(object sender, EventArgs e)
+		private void OnLoadModel(object sender, EventArgs e)
 		{
 			mOFD.Multiselect	=false;
 			DialogResult	dr	=mOFD.ShowDialog();
@@ -180,9 +167,78 @@ namespace ColladaConvert
 
 		private void OnCompress(object sender, EventArgs e)
 		{
+			if(AnimGrid.SelectedRows.Count <= 0)
+			{
+				return;
+			}
 			mAnimLib.Reduce(
 				Convert.ToString(AnimGrid.SelectedRows[0].Cells[0].Value),
 				Convert.ToSingle(MaxError.Value));
+		}
+
+
+		private void OnLoadStaticModel(object sender, EventArgs e)
+		{
+			mOFD.Multiselect	=false;
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			eLoadStaticModel(mOFD.FileName, null);
+		}
+
+
+		private void OnLoadAnim(object sender, EventArgs e)
+		{
+			mOFD.Multiselect	=true;
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			string	[]fnames	=mOFD.FileNames;
+
+			foreach(string fname in fnames)
+			{
+				eLoadAnim(fname, null);
+			}
+		}
+
+
+		private void OnSaveStatic(object sender, EventArgs e)
+		{
+			DialogResult	dr	=mSFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			eSaveStatic(mSFD.FileName, null);
+		}
+
+
+		private void OnLoadStatic(object sender, EventArgs e)
+		{
+			mOFD.Multiselect	=true;
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			string	[]fnames	=mOFD.FileNames;
+
+			foreach(string fname in fnames)
+			{
+				eLoadStatic(fname, null);
+			}
 		}
 	}
 }

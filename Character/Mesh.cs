@@ -5,10 +5,38 @@ using System.IO;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using GameData;
+
 
 namespace Character
 {
+	public enum WearLocations
+	{
+		NONE					=0,
+		BOOT					=1,
+		TORSO					=2,
+		GLOVE					=4,
+		HAT						=8,
+		SHOULDERS				=16,
+		FACE					=32,
+		LEFT_HAND				=64,
+		RIGHT_HAND				=128,
+		HAIR					=256,
+		BACK					=512,
+		BRACERS					=1024,
+		RING_LEFT				=2048,
+		RING_RIGHT				=4096,
+		EARRING_LEFT			=8192,
+		EARRING_RIGHT			=16384,
+		BELT					=32768,	//is this gonna overflow?
+		HAT_FACE				=24,	//orred together values
+		HAT_HAIR				=40,	//for the editor
+		FACE_HAIR				=48,
+		HAT_EARRINGS			=24584,
+		HAT_HAIR_EARRINGS		=24840,
+		HAT_FACE_HAIR_EARRINGS	=24872,
+		GLOVE_RINGS				=6148
+	}
+
 	public class Mesh
 	{
 		string				mName;
@@ -21,7 +49,8 @@ namespace Character
 		Skin				mSkin;
 		int					mSkinIndex, mTypeIndex;
 		bool				mbVisible;
-		Item.WearLocations	mSlot;
+		WearLocations		mSlot;
+		Bounds				mMeshBounds;
 
 		public string Name
 		{
@@ -43,7 +72,7 @@ namespace Character
 			get { return mbVisible; }
 			set { mbVisible = value; }
 		}
-		public Item.WearLocations Slot
+		public WearLocations Slot
 		{
 			get { return mSlot; }
 			set { mSlot = value; }
@@ -129,6 +158,8 @@ namespace Character
 			bw.Write(mSkinIndex);
 			bw.Write((UInt32)mSlot);
 
+			mMeshBounds.Write(bw);
+
 			VertexTypes.WriteVerts(bw, mVerts, mNumVerts, mTypeIndex);
 
 			ushort	[]idxs	=new ushort[mNumTriangles * 3];
@@ -166,7 +197,9 @@ namespace Character
 			mMaterialName	=br.ReadString();
 			mTypeIndex		=br.ReadInt32();
 			mSkinIndex		=br.ReadInt32();
-			mSlot			=(Item.WearLocations)br.ReadUInt32();
+			mSlot			=(WearLocations)br.ReadUInt32();
+
+			mMeshBounds.Read(br);
 
 			VertexTypes.ReadVerts(br, gd, out mVerts, mNumVerts, mTypeIndex, bEditor);
 
@@ -244,16 +277,21 @@ namespace Character
 				return;
 			}
 
-			g.Vertices[0].SetSource(mVerts, 0, mVertSize);
-			g.Indices			=mIndexs;
-			g.VertexDeclaration	=mVD;
+			Material	mat	=matLib.GetMaterial(mMaterialName);
+			if(mat == null)
+			{
+				return;
+			}
 
-			Effect	fx	=matLib.GetMaterialShader(mMaterialName);
-
+			Effect		fx	=matLib.GetShader(mat.ShaderName);
 			if(fx == null)
 			{
 				return;
 			}
+
+			g.Vertices[0].SetSource(mVerts, 0, mVertSize);
+			g.Indices			=mIndexs;
+			g.VertexDeclaration	=mVD;
 
 			UpdateShaderBones(fx);
 
@@ -267,6 +305,18 @@ namespace Character
 					fx.Parameters["mBindPose"].SetValue(mSkin.GetBindShapeMatrix());
 				}
 			}
+
+			//set renderstates from material
+			//this could also get crushingly slow
+			g.RenderState.AlphaBlendEnable			=mat.Alpha;
+			g.RenderState.AlphaFunction				=CompareFunction.Less;
+			g.RenderState.AlphaTestEnable			=mat.AlphaTest;
+			g.RenderState.BlendFunction				=mat.BlendFunction;
+			g.RenderState.SourceBlend				=mat.SourceBlend;
+			g.RenderState.DestinationBlend			=mat.DestBlend;
+			g.RenderState.DepthBufferWriteEnable	=mat.DepthWrite;
+			g.RenderState.CullMode					=mat.CullMode;
+			g.RenderState.DepthBufferFunction		=mat.ZFunction;
 
 			fx.Begin();
 			foreach(EffectPass pass in fx.CurrentTechnique.Passes)
@@ -282,6 +332,28 @@ namespace Character
 				pass.End();
 			}
 			fx.End();
+		}
+
+
+		public void Bound()
+		{
+			mMeshBounds	=VertexTypes.GetVertBounds(mVerts, mNumVerts, mTypeIndex);
+		}
+
+
+		public Bounds GetBounds()
+		{
+			return	mMeshBounds;
+		}
+
+
+		internal bool RayIntersectBounds(Vector3 start, Vector3 end)
+		{
+			if(mMeshBounds == null)
+			{
+				return	false;
+			}
+			return	mMeshBounds.RayIntersect(start, end);
 		}
 	}
 }

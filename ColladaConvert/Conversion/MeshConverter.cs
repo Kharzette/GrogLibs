@@ -90,8 +90,9 @@ namespace ColladaConvert
 		public int		mNumVerts, mNumTriangles, mVertSize;
 		public int		mPartIndex;
 
-		//the converted mesh
-		Character.Mesh	mConverted;
+		//the converted meshes
+		Character.Mesh			mConverted;
+		Character.StaticMesh	mStaticConverted;
 
 
 		public MeshConverter(string name)
@@ -103,6 +104,12 @@ namespace ColladaConvert
 		public Character.Mesh	GetCharMesh()
 		{
 			return	mConverted;
+		}
+
+
+		public Character.StaticMesh	GetStaticMesh()
+		{
+			return	mStaticConverted;
 		}
 
 
@@ -122,7 +129,8 @@ namespace ColladaConvert
 			}
 
 			//create a new gamemesh
-			mConverted	=new Character.Mesh(mName);
+			mConverted			=new Character.Mesh(mName);
+			mStaticConverted	=new StaticMesh(mName);
 		}
 
 
@@ -166,6 +174,25 @@ namespace ColladaConvert
 			for(int i=0;i < mBaseVerts.Length;i++)
 			{
 				mBaseVerts[i].Position0	=Vector3.Transform(mBaseVerts[i].Position0, mat);
+			}
+		}
+
+
+		public void BakeTransformIntoNormals(Matrix mat)
+		{
+			for(int i=0;i < mBaseVerts.Length;i++)
+			{
+				mBaseVerts[i].Normal0	=Vector3.TransformNormal(mBaseVerts[i].Normal0, mat);
+				mBaseVerts[i].Normal0.Normalize();
+			}
+		}
+
+
+		public void FlipNormals()
+		{
+			for(int i=0;i < mBaseVerts.Length;i++)
+			{
+				mBaseVerts[i].Normal0	=-mBaseVerts[i].Normal0;
 			}
 		}
 
@@ -604,6 +631,7 @@ namespace ColladaConvert
 			}
 
 			mConverted.SetVertexDeclaration(new VertexDeclaration(gd, ve));
+			mStaticConverted.SetVertexDeclaration(new VertexDeclaration(gd, ve));
 		}
 
 
@@ -693,6 +721,10 @@ namespace ColladaConvert
 			mConverted.SetNumVerts(mNumBaseVerts);
 			mConverted.SetNumTriangles(mNumTriangles);
 			mConverted.SetTypeIndex(VertexTypes.GetIndex(vtype));
+			mStaticConverted.SetVertSize(VertexTypes.GetSizeForType(vtype));
+			mStaticConverted.SetNumVerts(mNumBaseVerts);
+			mStaticConverted.SetNumTriangles(mNumTriangles);
+			mStaticConverted.SetTypeIndex(VertexTypes.GetIndex(vtype));
 
 			//set bufferusage here so that getdata can be called
 			//we'll need it to save the mesh to a file
@@ -710,6 +742,7 @@ namespace ColladaConvert
 			typedMethod.Invoke(vb, new object[] {verts});
 
 			mConverted.SetVertexBuffer(vb);
+			mStaticConverted.SetVertexBuffer(vb);
 
 //			mConverted.mVerts.SetData<vtype>(verts);
 
@@ -730,6 +763,7 @@ namespace ColladaConvert
 			indbuf.SetData<ushort>(idxs);
 
 			mConverted.SetIndexBuffer(indbuf);
+			mStaticConverted.SetIndexBuffer(indbuf);
 		}
 
 
@@ -738,5 +772,21 @@ namespace ColladaConvert
 		{
 			mConverted.UpdateShaderBones(fx);
 		}
+
+
+		//3dsmax assgoblinry
+		/*
+		internal void FixNormals()
+		{
+			Matrix	maxAdjust	=Matrix.CreateFromYawPitchRoll(0,
+									MathHelper.ToRadians(-90),
+									MathHelper.ToRadians(180));
+			for(int i=0;i < mNumBaseVerts;i++)
+			{
+				mBaseVerts[i].Normal0	=Vector3.TransformNormal(
+					mBaseVerts[i].Normal0, maxAdjust);
+				mBaseVerts[i].Normal0.Y	=-mBaseVerts[i].Normal0.Y;
+			}
+		}*/
 	}
 }

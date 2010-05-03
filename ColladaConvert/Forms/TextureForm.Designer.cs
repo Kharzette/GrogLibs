@@ -38,7 +38,9 @@
 			// 
 			this.TextureGrid.AllowUserToAddRows = false;
 			this.TextureGrid.AllowUserToDeleteRows = false;
-			this.TextureGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.TextureGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+						| System.Windows.Forms.AnchorStyles.Left)
+						| System.Windows.Forms.AnchorStyles.Right)));
 			this.TextureGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
 			this.TextureGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this.TextureGrid.Location = new System.Drawing.Point(12, 12);
@@ -46,12 +48,13 @@
 			this.TextureGrid.Name = "TextureGrid";
 			this.TextureGrid.ReadOnly = true;
 			this.TextureGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this.TextureGrid.Size = new System.Drawing.Size(260, 202);
+			this.TextureGrid.Size = new System.Drawing.Size(396, 202);
 			this.TextureGrid.TabIndex = 1;
 			this.TextureGrid.SelectionChanged += new System.EventHandler(this.OnSelectionChanged);
 			// 
 			// Ok
 			// 
+			this.Ok.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.Ok.Location = new System.Drawing.Point(12, 224);
 			this.Ok.Name = "Ok";
 			this.Ok.Size = new System.Drawing.Size(91, 28);
@@ -62,6 +65,7 @@
 			// 
 			// Cancel
 			// 
+			this.Cancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
 			this.Cancel.Location = new System.Drawing.Point(109, 224);
 			this.Cancel.Name = "Cancel";
 			this.Cancel.Size = new System.Drawing.Size(82, 28);
@@ -74,11 +78,13 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(284, 264);
+			this.ClientSize = new System.Drawing.Size(420, 264);
 			this.ControlBox = false;
 			this.Controls.Add(this.Cancel);
 			this.Controls.Add(this.Ok);
 			this.Controls.Add(this.TextureGrid);
+			this.DataBindings.Add(new System.Windows.Forms.Binding("Location", global::ColladaConvert.Properties.Settings.Default, "TextureFormPos", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+			this.Location = global::ColladaConvert.Properties.Settings.Default.TextureFormPos;
 			this.MaximizeBox = false;
 			this.Name = "TextureForm";
 			this.ShowIcon = false;
