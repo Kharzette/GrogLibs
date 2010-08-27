@@ -12,7 +12,6 @@ namespace ColladaConvert
 {
 	public class ColladaConvert : Microsoft.Xna.Framework.Game
 	{
-		SpriteBatch				mSpriteBatch;
 		Collada					mCollada;
 		GraphicsDeviceManager	mGDM;
 		VertexBuffer			mVB, mBoundsVB;
@@ -20,10 +19,10 @@ namespace ColladaConvert
 		IndexBuffer				mIB, mBoundsIB;
 		Effect					mFX;
 
-		Character.MaterialLib		mMatLib;
-		Character.AnimLib			mAnimLib;
-		Character.Character			mCharacter;
-		Character.StaticMeshObject	mStaticMesh;
+		MaterialLib.MaterialLib		mMatLib;
+		MeshLib.AnimLib				mAnimLib;
+		MeshLib.Character			mCharacter;
+		MeshLib.StaticMeshObject	mStaticMesh;
 
 		//material gui
 		MaterialForm	mMF;
@@ -121,10 +120,10 @@ namespace ColladaConvert
 		/// </summary>
 		protected override void LoadContent()
 		{
-			mMatLib		=new Character.MaterialLib(mGDM.GraphicsDevice, Content);
-			mAnimLib	=new Character.AnimLib();
-			mCharacter	=new Character.Character(mMatLib, mAnimLib);
-			mStaticMesh	=new Character.StaticMeshObject(mMatLib);
+			mMatLib		=new MaterialLib.MaterialLib(mGDM.GraphicsDevice, Content);
+			mAnimLib	=new MeshLib.AnimLib();
+			mCharacter	=new MeshLib.Character(mMatLib, mAnimLib);
+			mStaticMesh	=new MeshLib.StaticMeshObject(mMatLib);
 
 			//load debug shaders
 			mFX			=Content.Load<Effect>("Shaders/Static");
@@ -318,7 +317,7 @@ namespace ColladaConvert
 			mBoundsVB	=null;
 			mBoundsIB	=null;
 
-			List<Character.Bounds>	bnds	=(List<Character.Bounds>)sender;
+			List<MeshLib.Bounds>	bnds	=(List<MeshLib.Bounds>)sender;
 
 			if(bnds.Count <= 0)
 			{
@@ -326,7 +325,7 @@ namespace ColladaConvert
 			}
 
 			int	numCorners	=0;
-			foreach(Character.Bounds bnd in bnds)
+			foreach(MeshLib.Bounds bnd in bnds)
 			{
 				numCorners	+=2;
 			}
@@ -335,7 +334,7 @@ namespace ColladaConvert
 			VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[numCorners * 4];
 
 			int	idx	=0;
-			foreach(Character.Bounds bnd in bnds)
+			foreach(MeshLib.Bounds bnd in bnds)
 			{
 				float	xDiff	=bnd.mMaxs.X - bnd.mMins.X;
 				float	yDiff	=bnd.mMaxs.Y - bnd.mMins.Y;
@@ -361,7 +360,7 @@ namespace ColladaConvert
 
 			idx	=0;
 			UInt16 bndIdx	=0;
-			foreach(Character.Bounds bnd in bnds)
+			foreach(MeshLib.Bounds bnd in bnds)
 			{
 				UInt16	idxOffset	=bndIdx;
 				//awesome compiler bug here, have to do this in 2 steps

@@ -7,21 +7,18 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 
-namespace BuildMap
+namespace BSPLib
 {
 	public class BspNode
 	{
 		public	Plane	mPlane;
-		public	Face	mFace;
 		public	BspNode	mFront, mBack;
-		private	Bounds	mBounds;
-		public	bool	mbLeaf;
-		public	BspNode	mParent;
+		public	Brush	mBrush;
 
 
+		#region Constructors
 		public BspNode(Face f)
 		{
-			mFace	=new Face(f);
 			mPlane	=f.GetPlane();
 		}
 
@@ -29,9 +26,29 @@ namespace BuildMap
 		public BspNode()
 		{
 		}
+		#endregion
 
 
-		private bool FindGoodSplitFace(List<Brush> brushList, out Face bestFace)
+		#region Queries
+		internal void AddToBounds(ref Bounds bnd)
+		{
+			if(mBrush != null)
+			{
+				mBrush.AddToBounds(ref bnd);
+			}
+
+			if(mFront != null)
+			{
+				mFront.AddToBounds(ref bnd);
+			}
+			if(mBack != null)
+			{
+				mBack.AddToBounds(ref bnd);
+			}
+		}
+
+
+		bool FindGoodSplitFace(List<Brush> brushList, out Face bestFace)
 		{
 			int		BestIndex	=-1;
 			float	BestScore	=696969.0f;
@@ -60,8 +77,91 @@ namespace BuildMap
 		}
 
 
+		internal void GetTriangles(List<Vector3> tris, List<UInt16> ind)
+		{
+			if(mBrush != null)
+			{
+				mBrush.GetTriangles(tris, ind);
+				return;
+			}
+			mFront.GetTriangles(tris, ind);
+			mBack.GetTriangles(tris, ind);
+		}
+
+
+		internal void GetPlanes(List<Plane> planes)
+		{
+			if(mBrush != null)
+			{
+				mBrush.GetPlanes(planes);
+				return;
+			}
+			mFront.GetPlanes(planes);
+			mBack.GetPlanes(planes);
+		}
+		#endregion
+
+
+		#region IO
+		public virtual void Write(BinaryWriter bw)
+		{
+			//write plane
+			bw.Write(mPlane.mNormal.X);
+			bw.Write(mPlane.mNormal.Y);
+			bw.Write(mPlane.mDistance);
+
+			bw.Write(mBrush != null);
+			if(mBrush != null)
+			{
+				mBrush.Write(bw);
+			}
+
+			bw.Write(mFront != null);
+			if(mFront != null)
+			{
+				mFront.Write(bw);
+			}
+
+			bw.Write(mBack != null);
+			if(mBack != null)
+			{
+				mBack.Write(bw);
+			}
+		}
+
+
+		public virtual void Read(BinaryReader br)
+		{
+			mPlane.mNormal.X	=br.ReadSingle();
+			mPlane.mNormal.Y	=br.ReadSingle();
+			mPlane.mDistance	=br.ReadSingle();
+
+			bool	val	=br.ReadBoolean();
+			if(val)
+			{
+				mBrush	=new Brush();
+				mBrush.Read(br);
+			}
+
+			val	=br.ReadBoolean();
+			if(val)
+			{
+				mFront	=new BspNode();
+				mFront.Read(br);
+			}
+
+			val	=br.ReadBoolean();
+			if(val)
+			{
+				mBack	=new BspNode();
+				mBack.Read(br);
+			}
+		}
+		#endregion
+
+
 		//builds a bsp good for collision info
-		public void BuildTree(List<Brush> brushList)
+		internal void BuildTree(List<Brush> brushList)
 		{
 			List<Brush>	frontList	=new List<Brush>();
 			List<Brush>	backList	=new List<Brush>();
@@ -70,10 +170,24 @@ namespace BuildMap
 
 			if(!FindGoodSplitFace(brushList, out face))
 			{
+				if(brushList.Count != 1)
+				{
+					Debug.WriteLine("Merging " + brushList.Count + " brushes in a leaf");
+				}
+
 				//copy in the brush faces
+				//merge multiples
+				mBrush	=new Brush();
 				foreach(Brush b in brushList)
 				{
-					b.AddFacesToLeaf(this);
+					mBrush.AddFaces(b.GetFaces());
+				}
+				mBrush.SealFaces();
+				if(!mBrush.IsValid())
+				{
+					//brush is messed up, donut add it
+					mBrush	=null;
+					Debug.WriteLine("Bad brush in leaf!");
 				}
 				return;
 			}
@@ -89,11 +203,17 @@ namespace BuildMap
 
 				if(bb != null)
 				{
-					backList.Add(bb);
+					if(bb.IsValid())
+					{
+						backList.Add(bb);
+					}
 				}
 				if(bf != null)
 				{
-					frontList.Add(bf);
+					if(bf.IsValid())
+					{
+						frontList.Add(bf);
+					}
 				}
 			}
 
@@ -112,7 +232,6 @@ namespace BuildMap
 			if(frontList.Count > 0)
 			{
 				mFront			=new BspNode();
-				mFront.mParent	=this;
 				mFront.BuildTree(frontList);
 			}
 			else
@@ -123,7 +242,6 @@ namespace BuildMap
 			if(backList.Count > 0)
 			{
 				mBack			=new BspNode();
-				mBack.mParent	=this;
 				mBack.BuildTree(backList);
 			}
 			else
@@ -133,318 +251,101 @@ namespace BuildMap
 		}
 
 
-		//something is hozed so just drawing all nodes
-		public void Draw(GraphicsDevice g, Effect fx, Vector3 camPos)
+		internal void GetPortals(List<Face> portals)
 		{
-			if(mFace != null)
+			if(mBrush != null)
 			{
-				mFace.Draw(g, fx);
+				mBrush.GetPortals(portals);
+				return;
 			}
 
-			float	d	=Vector3.Dot(mPlane.Normal, camPos) - mPlane.Dist;
-			if(d > 0.0f)
+			mBack.GetPortals(portals);
+			mFront.GetPortals(portals);
+		}
+
+
+		//see if this portal lands on the back
+		internal void MergePortal(Face portal, List<Face> outPortals)
+		{
+			if(mBrush != null)
 			{
-				if(mFront != null)
-				{
-					mFront.Draw(g, fx, camPos);
-				}
-				if(mBack != null)
-				{
-					mBack.Draw(g, fx, camPos);
-				}
+				mBrush.MergePortal(portal, outPortals);
+				return;
 			}
-			else if(d < 0.0f)
+			mBack.MergePortal(portal, outPortals);
+			mFront.MergePortal(portal, outPortals);
+		}
+
+
+		internal void MarkPortal(Face portal)
+		{
+			if(mBrush != null)
 			{
-				if(mBack != null)
-				{
-					mBack.Draw(g, fx, camPos);
-				}
-				if(mFront != null)
-				{
-					mFront.Draw(g, fx, camPos);
-				}
+				mBrush.MarkPortal(portal);
+				return;
 			}
-			else
+
+			Face	planeFace	=new Face(mPlane, null);
+			Face	back		=new Face(portal);
+			Face	front		=new Face(portal);
+
+			if(back.ClipByFace(planeFace, false, true))
 			{
-				if(mFront != null)
-				{
-					mFront.Draw(g, fx, camPos);
-				}
-				if(mBack != null)
-				{
-					mBack.Draw(g, fx, camPos);
-				}
+				mBack.MarkPortal(back);
+			}
+			if(front.ClipByFace(planeFace, true, true))
+			{
+				mFront.MarkPortal(front);
 			}
 		}
 
 
-		public Bounds BoundNodes()
+		internal void BevelObtuse(float hullWidth)
 		{
-			Bounds	b, b2;
-
-			b	=b2	=null;
-
-			if(mbLeaf)
+			if(mBrush != null)
 			{
-				mBounds	=new Bounds();
+				mBrush.BevelObtuse(hullWidth);
+				return;
+			}
 
-				mFace.AddToBounds(ref mBounds);
-				return mBounds;
+			mBack.BevelObtuse(hullWidth);
+			mFront.BevelObtuse(hullWidth);
+		}
+
+		
+		//grab all the brushes in the tree
+		void GatherNodeBrushes(ref List<Brush> brushes)
+		{
+			if(mBrush != null)
+			{
+				brushes.Add(mBrush);
+				return;
 			}
 
 			if(mFront != null)
 			{
-				b	=mFront.BoundNodes();
+				mFront.GatherNodeBrushes(ref brushes);
 			}
-			if(mBack != null)
-			{
-				b2	=mBack.BoundNodes();
-			}
-			mBounds	=new Bounds();
-			mBounds.MergeBounds(b, b2);
-
-			if(mFace != null)
-			{
-				mFace.AddToBounds(ref mBounds);
-			}
-
-			return	mBounds;
+			mBack.GatherNodeBrushes(ref brushes);
 		}
 
 
-		public void WriteToFile(BinaryWriter bw)
-		{
-			//write plane
-			bw.Write(mPlane.Normal.X);
-			bw.Write(mPlane.Normal.Y);
-			bw.Write(mPlane.Normal.Z);
-			bw.Write(mPlane.Dist);
-
-			//write bounds
-			bw.Write(mBounds.mMins.X);
-			bw.Write(mBounds.mMins.Y);
-			bw.Write(mBounds.mMins.Z);
-			bw.Write(mBounds.mMaxs.X);
-			bw.Write(mBounds.mMaxs.Y);
-			bw.Write(mBounds.mMaxs.Z);
-
-			bw.Write(mbLeaf);
-
-			bw.Write(mFront != null);
-			if(mFront != null)
-			{
-				mFront.WriteToFile(bw);
-			}
-
-			bw.Write(mBack != null);
-			if(mBack != null)
-			{
-				mBack.WriteToFile(bw);
-			}
-		}
-
-
-		#region RayCastsAndContents
-		public bool ClassifyPoint(Vector3 pnt)
+		internal bool ClassifyPoint(Vector3 pnt)
 		{
 			float	d;
 
-			if(mbLeaf)
+			if(mBrush != null)
 			{
-				d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;
-				if(d > -Face.ON_EPSILON)
-				{
-					return false;
-				}
-				else
-				{
-					return true;
-				}
+				return	mBrush.IsPointInside(pnt);
 			}
 
-			d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;
+			d	=Vector3.Dot(mPlane.mNormal, pnt) - mPlane.mDistance;
 
-			if(d > -Face.ON_EPSILON)
-			{
-				if(mFront == null)
-				{
-					return false;	//landed in empty
-				}
-				return mFront.ClassifyPoint(pnt);
-			}
-			else if(d < Face.ON_EPSILON)
-			{
-				return mBack.ClassifyPoint(pnt);
-			}
-			else
-			{
-				if(mFront == null)
-				{
-					return false;	//landed in empty
-				}
-				return mFront.ClassifyPoint(pnt);
-			}
-		}
-
-
-		//returns impact point
-		public Vector3 RayCast(Vector3 pntA, Vector3 pntB)
-		{
-			float	d, d2;
-
-			if(mbLeaf)
-			{
-				d	=Vector3.Dot(mPlane.Normal, pntA) - mPlane.Dist;
-				d2	=Vector3.Dot(mPlane.Normal, pntB) - mPlane.Dist;
-
-				if(d > -Face.ON_EPSILON && d2 > -Face.ON_EPSILON)
-				{
-					return Vector3.Zero;	//no impact
-				}
-				else if(d < Face.ON_EPSILON && d2 < Face.ON_EPSILON)
-				{
-					return pntA;	//crossover point is impact
-				}
-				else	//split up segment
-				{
-					float	splitRatio	=d / (d - d2);
-					Vector3 mid			=pntA + (splitRatio * (pntB - pntA));
-
-					return	mid;
-				}
-			}
-
-			d	=Vector3.Dot(mPlane.Normal, pntA) - mPlane.Dist;
-			d2	=Vector3.Dot(mPlane.Normal, pntB) - mPlane.Dist;
-
-			if(d > -Face.ON_EPSILON && d2 > -Face.ON_EPSILON)
-			{
-				return mFront.RayCast(pntA, pntB);
-			}
-			else if(d < Face.ON_EPSILON && d2 < Face.ON_EPSILON)
-			{
-				return mBack.RayCast(pntA, pntB);
-			}
-			else	//split up segment
-			{
-				float splitRatio	=d / (d - d2);
-				Vector3 mid	=pntA + (splitRatio * (pntB - pntA));
-
-				if(d > 0.0f)
-				{
-					return mFront.RayCast(pntA, mid);
-				}
-				else
-				{
-					return mBack.RayCast(mid, pntB);
-				}
-			}
-		}
-
-
-		//returns true or false
-		public bool RayCastBool(Vector3 pntA, Vector3 pntB)
-		{
-			float	d, d2;
-
-			if(mbLeaf)
-			{
-				d	=Vector3.Dot(mPlane.Normal, pntA) - mPlane.Dist;
-				d2	=Vector3.Dot(mPlane.Normal, pntB) - mPlane.Dist;
-
-				if(d > -Face.ON_EPSILON && d2 > -Face.ON_EPSILON)
-				{
-					return true;	//no impact
-				}
-				else if(d < Face.ON_EPSILON && d2 < Face.ON_EPSILON)
-				{
-					return false;	//crossover point is impact
-				}
-				else	//split up segment
-				{
-					return false;
-				}
-			}
-
-			d	=Vector3.Dot(mPlane.Normal, pntA) - mPlane.Dist;
-			d2	=Vector3.Dot(mPlane.Normal, pntB) - mPlane.Dist;
-
-			if(d > -Face.ON_EPSILON && d2 > -Face.ON_EPSILON)
-			{
-				if(mFront == null)
-				{
-					return true;	//landed in empty
-				}
-				return mFront.RayCastBool(pntA, pntB);
-			}
-			else if(d < Face.ON_EPSILON && d2 < Face.ON_EPSILON)
-			{
-				return mBack.RayCastBool(pntA, pntB);
-			}
-			else	//split up segment
-			{
-				float	splitRatio	=d / (d - d2);
-				Vector3 mid			=pntA + (splitRatio * (pntB - pntA));
-
-				bool	bHit;
-
-				if(mFront != null)
-				{
-					if(d > 0.0f)
-					{
-						bHit	=mFront.RayCastBool(pntA, mid);
-					}
-					else
-					{
-						bHit	=mFront.RayCastBool(mid, pntB);
-					}
-					if(!bHit)
-					{
-						return bHit;
-					}
-				}
-				if(d2 > 0.0f)
-				{
-					return mBack.RayCastBool(pntA, mid);
-				}
-				else
-				{
-					return mBack.RayCastBool(mid, pntB);
-				}
-			}
-		}
-
-
-		//returns true for solid
-		public bool GetLeafLandedIn(Vector3 pnt, out BspNode bn)
-		{
-			float	d;
-
-			bn	=this;
-			if(mbLeaf)
-			{
-				d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;
-				if(d < Face.ON_EPSILON)
-				{
-					return true;
-				}
-				else
-				{
-					return true;
-				}
-			}
-
-			d	=Vector3.Dot(mPlane.Normal, pnt) - mPlane.Dist;
-
-			if(d > -Face.ON_EPSILON)
-			{
-				return	mFront.ClassifyPoint(pnt);
-			}
-			else if(d < Face.ON_EPSILON)
+			if(d < Plane.EPSILON)
 			{
 				return	mBack.ClassifyPoint(pnt);
 			}
-			else if(d > 0.0f)
+			if(d >= Plane.EPSILON)
 			{
 				return	mFront.ClassifyPoint(pnt);
 			}
@@ -453,6 +354,5 @@ namespace BuildMap
 				return	mBack.ClassifyPoint(pnt);
 			}
 		}
-		#endregion
 	}
 }

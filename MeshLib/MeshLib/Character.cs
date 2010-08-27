@@ -4,8 +4,10 @@ using System.Xml;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MaterialLib;
 
-namespace Character
+
+namespace MeshLib
 {
 	public class Character
 	{
@@ -13,14 +15,14 @@ namespace Character
 		List<Skin>	mSkins		=new List<Skin>();
 
 		//refs to anim and material libs
-		MaterialLib	mMatLib;
-		AnimLib		mAnimLib;
+		MaterialLib.MaterialLib	mMatLib;
+		AnimLib					mAnimLib;
 
 		//events
 		public event EventHandler	eRayCollision;
 
 
-		public Character(MaterialLib ml, AnimLib al)
+		public Character(MaterialLib.MaterialLib ml, AnimLib al)
 		{
 			mMatLib		=ml;
 			mAnimLib	=al;
@@ -77,7 +79,7 @@ namespace Character
 
 		public void SaveToFile(string fileName)
 		{
-			FileStream	file	=MaterialLib.OpenTitleFile(fileName,
+			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
 									FileMode.Open, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
@@ -110,7 +112,7 @@ namespace Character
 		//so they can be resaved if need be
 		public bool ReadFromFile(string fileName, GraphicsDevice gd, bool bEditor)
 		{
-			FileStream	file	=MaterialLib.OpenTitleFile(fileName,
+			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
 									FileMode.Open, FileAccess.Read);
 
 			BinaryReader	br	=new BinaryReader(file);

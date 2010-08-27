@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 
-namespace Character
+namespace MeshLib
 {
 	public enum WearLocations
 	{
@@ -270,14 +270,14 @@ namespace Character
 		}
 
 
-		public void Draw(GraphicsDevice g, MaterialLib matLib)
+		public void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib)
 		{
 			if(!mbVisible)
 			{
 				return;
 			}
 
-			Material	mat	=matLib.GetMaterial(mMaterialName);
+			MaterialLib.Material	mat	=matLib.GetMaterial(mMaterialName);
 			if(mat == null)
 			{
 				return;

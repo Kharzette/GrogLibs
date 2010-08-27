@@ -8,22 +8,22 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Character;
+using MeshLib;
 
 namespace ColladaConvert
 {
 	public partial class MaterialForm : Form
 	{
-		MaterialGridModel	mMatModel;		
-		MaterialLib			mMatLib;
-		Character.Character	mCharacter;
-		StaticMeshObject	mStaticMesh;
-		OpenFileDialog		mOFD	=new OpenFileDialog();
-		SaveFileDialog		mSFD	=new SaveFileDialog();
-		ShaderList			mSL;
-		TextureForm			mTF;
-		TechniqueList		mTL;
-		GraphicsDevice		mGD;
+		MaterialGridModel		mMatModel;		
+		MaterialLib.MaterialLib	mMatLib;
+		MeshLib.Character		mCharacter;
+		StaticMeshObject		mStaticMesh;
+		OpenFileDialog			mOFD	=new OpenFileDialog();
+		SaveFileDialog			mSFD	=new SaveFileDialog();
+		ShaderList				mSL;
+		TextureForm				mTF;
+		TechniqueList			mTL;
+		GraphicsDevice			mGD;
 
 		//temporary reference to a cell being modified
 		DataGridViewCell	mEditingCell;
@@ -32,7 +32,7 @@ namespace ColladaConvert
 		public event EventHandler	eBoundsUpdated;
 
 
-		public MaterialForm(GraphicsDevice gd, MaterialLib matlib, Character.Character chr, StaticMeshObject stat)
+		public MaterialForm(GraphicsDevice gd, MaterialLib.MaterialLib matlib, MeshLib.Character chr, StaticMeshObject stat)
 		{
 			InitializeComponent();
 
@@ -178,7 +178,7 @@ namespace ColladaConvert
 			MaterialGrid.Enabled	=true;
 
 			//update shader parameters
-			Character.Material	mat	=(Character.Material)matSel[0].DataBoundItem;
+			MaterialLib.Material	mat	=(MaterialLib.Material)matSel[0].DataBoundItem;
 
 			Effect	fx	=mMatLib.GetMaterialShader(mat.Name);
 			mat.UpdateShaderParameters(fx);
@@ -212,7 +212,7 @@ namespace ColladaConvert
 			MaterialGrid.Enabled	=true;
 
 			//update shader parameters
-			Character.Material	mat	=(Character.Material)matSel[0].DataBoundItem;
+			MaterialLib.Material	mat	=(MaterialLib.Material)matSel[0].DataBoundItem;
 
 			Effect	fx	=mMatLib.GetMaterialShader(mat.Name);
 			mat.UpdateShaderParameters(fx);
@@ -240,16 +240,16 @@ namespace ColladaConvert
 
 		private void OnMeshPartListUpdated(object sender, EventArgs ea)
 		{
-			List<Character.Mesh>	lm	=mCharacter.GetMeshPartList();
+			List<MeshLib.Mesh>	lm	=mCharacter.GetMeshPartList();
 
 			if(lm.Count == 0)
 			{
 				return;
 			}
 
-			BindingList<Character.Mesh>	blm	=new BindingList<Character.Mesh>();
+			BindingList<MeshLib.Mesh>	blm	=new BindingList<MeshLib.Mesh>();
 
-			foreach(Character.Mesh m in lm)
+			foreach(MeshLib.Mesh m in lm)
 			{
 				blm.Add(m);
 			}
@@ -291,7 +291,7 @@ namespace ColladaConvert
 
 		private void OnNewMaterial(object sender, EventArgs e)
 		{
-			Character.Material	m	=new Character.Material();
+			MaterialLib.Material	m	=new MaterialLib.Material();
 
 			m.Name			="default";
 			m.ShaderName	="";
@@ -325,7 +325,7 @@ namespace ColladaConvert
 				{
 					ApplyMaterial.Enabled	=true;
 				}
-				Character.Material	mat	=(Character.Material)matSel[0].DataBoundItem;
+				MaterialLib.Material	mat	=(MaterialLib.Material)matSel[0].DataBoundItem;
 				MaterialProperties.DataSource			=mat.Parameters;
 				MaterialProperties.Columns[0].ReadOnly	=true;
 				MaterialProperties.Columns[1].ReadOnly	=true;
@@ -378,7 +378,7 @@ namespace ColladaConvert
 			}
 			else if(e.ColumnIndex == 2)
 			{
-				Character.Material	m	=(Character.Material)
+				MaterialLib.Material	m	=(MaterialLib.Material)
 					MaterialGrid.Rows[e.RowIndex].DataBoundItem;
 
 				if(mMatLib.GetMaterialShader(m.Name) != null)
@@ -440,7 +440,7 @@ namespace ColladaConvert
 			{
 				return;
 			}
-			Character.Material	m	=(Character.Material)
+			MaterialLib.Material	m	=(MaterialLib.Material)
 				MaterialGrid.SelectedRows[0].DataBoundItem;
 
 			mMatLib.ApplyParameters(m.Name);
@@ -499,9 +499,9 @@ namespace ColladaConvert
 
 		private void OnMeshPartNuking(object sender, DataGridViewRowCancelEventArgs e)
 		{
-			if(e.Row.DataBoundItem.GetType() == typeof(Character.Mesh))
+			if(e.Row.DataBoundItem.GetType() == typeof(MeshLib.Mesh))
 			{
-				Character.Mesh	nukeMe	=(Character.Mesh)e.Row.DataBoundItem;
+				MeshLib.Mesh	nukeMe	=(MeshLib.Mesh)e.Row.DataBoundItem;
 				mCharacter.NukeMesh(nukeMe);
 			}
 			else
@@ -515,7 +515,7 @@ namespace ColladaConvert
 
 		private void OnNukeMaterial(object sender, DataGridViewRowCancelEventArgs e)
 		{
-			Character.Material	mat	=(Character.Material)e.Row.DataBoundItem;
+			MaterialLib.Material	mat	=(MaterialLib.Material)e.Row.DataBoundItem;
 
 			mMatLib.NukeMaterial(mat.Name);
 		}
@@ -530,14 +530,14 @@ namespace ColladaConvert
 
 			foreach(DataGridViewRow dgvr in MeshPartGrid.SelectedRows)
 			{
-				if(dgvr.DataBoundItem.GetType() == typeof(Character.Mesh))
+				if(dgvr.DataBoundItem.GetType() == typeof(MeshLib.Mesh))
 				{
-					Character.Mesh	boundMe	=(Character.Mesh)dgvr.DataBoundItem;
+					MeshLib.Mesh	boundMe	=(MeshLib.Mesh)dgvr.DataBoundItem;
 					boundMe.Bound();
 				}
 				else
 				{
-					Character.StaticMesh	boundMe	=(Character.StaticMesh)dgvr.DataBoundItem;
+					MeshLib.StaticMesh	boundMe	=(MeshLib.StaticMesh)dgvr.DataBoundItem;
 					boundMe.Bound();
 				}
 			}
@@ -550,9 +550,9 @@ namespace ColladaConvert
 			List<Bounds>	bounds	=new List<Bounds>();
 			foreach(DataGridViewRow dgvr in MeshPartGrid.Rows)
 			{
-				if(dgvr.DataBoundItem.GetType() == typeof(Character.Mesh))
+				if(dgvr.DataBoundItem.GetType() == typeof(MeshLib.Mesh))
 				{
-					Character.Mesh	msh	=(Character.Mesh)dgvr.DataBoundItem;
+					MeshLib.Mesh	msh	=(MeshLib.Mesh)dgvr.DataBoundItem;
 
 					Bounds	bnd	=msh.GetBounds();
 					if(bnd != null)
@@ -562,7 +562,7 @@ namespace ColladaConvert
 				}
 				else
 				{
-					Character.StaticMesh	msh	=(Character.StaticMesh)dgvr.DataBoundItem;
+					MeshLib.StaticMesh	msh	=(MeshLib.StaticMesh)dgvr.DataBoundItem;
 
 					Bounds	bnd	=msh.GetBounds();
 					if(bnd != null)

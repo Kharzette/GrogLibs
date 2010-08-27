@@ -7,13 +7,13 @@ using System.Text;
 using System.Diagnostics;
 using System.Windows.Forms;
 using Microsoft.Xna.Framework.Graphics;
-using Character;
+using MeshLib;
 
 namespace ColladaConvert
 {
 	public partial class ShaderList : Form
 	{
-		MaterialLib	mMatLib;
+		MaterialLib.MaterialLib	mMatLib;
 
 		BindingList<ShaderGridModel>	mShaders	=new BindingList<ShaderGridModel>();
 
@@ -21,7 +21,7 @@ namespace ColladaConvert
 		public event EventHandler	eCancel;
 
 
-		public ShaderList(MaterialLib matlib)
+		public ShaderList(MaterialLib.MaterialLib matlib)
 		{
 			InitializeComponent();
 

@@ -12,8 +12,8 @@ namespace ColladaConvert
 	public partial class AnimForm : Form
 	{
 		//data
-		AnimGridModel		mAnimGrid;
-		Character.AnimLib	mAnimLib;
+		AnimGridModel	mAnimGrid;
+		MeshLib.AnimLib	mAnimLib;
 
 		//file dialog
 		OpenFileDialog	mOFD	=new OpenFileDialog();
@@ -33,7 +33,7 @@ namespace ColladaConvert
 		public event	EventHandler	eLoadStatic;
 
 
-		public AnimForm(Character.AnimLib anlib)
+		public AnimForm(MeshLib.AnimLib anlib)
 		{
 			InitializeComponent();
 
@@ -59,7 +59,7 @@ namespace ColladaConvert
 
 		private void OnAnimsUpdated(object sender, EventArgs e)
 		{
-			List<Character.Anim>	anms	=mAnimLib.GetAnims();
+			List<MeshLib.Anim>	anms	=mAnimLib.GetAnims();
 
 			mAnimGrid	=new AnimGridModel(anms);
 
@@ -148,7 +148,7 @@ namespace ColladaConvert
 
 		private void OnRowNuking(object sender, DataGridViewRowCancelEventArgs e)
 		{
-			Character.Anim	nukeMe	=(Character.Anim)e.Row.DataBoundItem;
+			MeshLib.Anim	nukeMe	=(MeshLib.Anim)e.Row.DataBoundItem;
 			mAnimLib.NukeAnim(nukeMe.Name);
 		}
 
@@ -157,7 +157,7 @@ namespace ColladaConvert
 		{
 			mAnimLib.NukeAll();
 
-			List<Character.Anim>	anms	=mAnimLib.GetAnims();
+			List<MeshLib.Anim>	anms	=mAnimLib.GetAnims();
 
 			mAnimGrid	=new AnimGridModel(anms);
 

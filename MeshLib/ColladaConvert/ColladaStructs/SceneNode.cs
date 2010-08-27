@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Xml;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Character;
+using MeshLib;
 
 namespace ColladaConvert
 {
@@ -145,7 +145,7 @@ namespace ColladaConvert
 				if(ne.Value is Rotate)
 				{
 					Rotate	r	=(Rotate)ne.Value;
-					gc	=new ChannelTarget(Character.Channel.ChannelType.ROTATE, ne.Key);
+					gc	=new ChannelTarget(MeshLib.Channel.ChannelType.ROTATE, ne.Key);
 
 					val.X	=r.mValue.X;
 					val.Y	=r.mValue.Y;
@@ -155,7 +155,7 @@ namespace ColladaConvert
 				else if(ne.Value is Scale)
 				{
 					Scale	s	=(Scale)ne.Value;
-					gc	=new ChannelTarget(Character.Channel.ChannelType.SCALE, ne.Key);
+					gc	=new ChannelTarget(MeshLib.Channel.ChannelType.SCALE, ne.Key);
 
 					val.X	=s.mValue.X;
 					val.Y	=s.mValue.Y;
@@ -164,7 +164,7 @@ namespace ColladaConvert
 				else if(ne.Value is Translate)
 				{
 					Translate	t	=(Translate)ne.Value;
-					gc	=new ChannelTarget(Character.Channel.ChannelType.TRANSLATE, ne.Key);
+					gc	=new ChannelTarget(MeshLib.Channel.ChannelType.TRANSLATE, ne.Key);
 
 					val.X	=t.mValue.X;
 					val.Y	=t.mValue.Y;

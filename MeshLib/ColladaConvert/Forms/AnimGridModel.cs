@@ -8,10 +8,12 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Storage;
+using MeshLib;
+
 
 namespace ColladaConvert
 {
-	public class AnimGridModel : BindingList<Character.Anim>
+	public class AnimGridModel : BindingList<MeshLib.Anim>
 	{
 		private	float	mScrollSpeed;	//scroll speed for the layer
 
@@ -23,11 +25,11 @@ namespace ColladaConvert
 		}
 
 
-		public AnimGridModel(List<Character.Anim> anms)
+		public AnimGridModel(List<MeshLib.Anim> anms)
 		{
 			mScrollSpeed = 1.0f;	//default
 
-			foreach(Character.Anim an in anms)
+			foreach(MeshLib.Anim an in anms)
 			{
 				Add(an);
 			}

@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Character;
+using MeshLib;
 
 namespace ColladaConvert
 {
@@ -91,8 +91,8 @@ namespace ColladaConvert
 		public int		mPartIndex;
 
 		//the converted meshes
-		Character.Mesh			mConverted;
-		Character.StaticMesh	mStaticConverted;
+		MeshLib.Mesh		mConverted;
+		MeshLib.StaticMesh	mStaticConverted;
 
 
 		public MeshConverter(string name)
@@ -101,13 +101,13 @@ namespace ColladaConvert
 		}
 
 
-		public Character.Mesh	GetCharMesh()
+		public MeshLib.Mesh	GetCharMesh()
 		{
 			return	mConverted;
 		}
 
 
-		public Character.StaticMesh	GetStaticMesh()
+		public MeshLib.StaticMesh	GetStaticMesh()
 		{
 			return	mStaticConverted;
 		}
@@ -129,7 +129,7 @@ namespace ColladaConvert
 			}
 
 			//create a new gamemesh
-			mConverted			=new Character.Mesh(mName);
+			mConverted			=new MeshLib.Mesh(mName);
 			mStaticConverted	=new StaticMesh(mName);
 		}
 

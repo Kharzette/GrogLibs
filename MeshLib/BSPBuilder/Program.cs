@@ -1,17 +1,16 @@
 using System;
 
-namespace BuildMap
+namespace BSPBuilder
 {
 	static class Program
 	{
-		/// <summary>
-		/// The main entry point for the application.
-		/// </summary>
+		[STAThread]
 		static void Main(string[] args)
 		{
-			using(BuildMapMain game = new BuildMapMain(args))
+			using (BSPBuilder game = new BSPBuilder())
 			{
 				game.Run();
+				Properties.Settings.Default.Save();
 			}
 		}
 	}

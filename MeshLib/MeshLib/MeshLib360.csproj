@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">Xbox 360</Platform>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Character</RootNamespace>
-    <AssemblyName>Character</AssemblyName>
+    <RootNamespace>MeshLib</RootNamespace>
+    <AssemblyName>MeshLib</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <XnaFrameworkVersion>v3.1</XnaFrameworkVersion>
     <XnaPlatform>Xbox 360</XnaPlatform>
@@ -29,7 +29,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Xbox 360' ">
-    <OutputPath>bin\Xbox 360\Debug</OutputPath>
+    <OutputPath>..\..\Assemblies\Xbox 360\Debug\</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoStdLib>true</NoStdLib>
@@ -42,7 +42,7 @@
     <XnaCompressContent>true</XnaCompressContent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Xbox 360' ">
-    <OutputPath>bin\Xbox 360\Release</OutputPath>
+    <OutputPath>..\..\Assemblies\Xbox 360\Release\</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoStdLib>true</NoStdLib>
@@ -66,18 +66,11 @@
     <Compile Include="StaticMesh.cs" />
     <Compile Include="StaticMeshObject.cs" />
     <Compile Include="SubAnim.cs" />
-    <Compile Include="MaterialLib.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VertexStructures.cs" />
     <Compile Include="VertexTypes.cs">
       <SubType>Code</SubType>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <NestedContentProject Include="Content\Content.contentproj">
-      <Project>01907637-9667-4ef3-b64b-4dcc8919f1f5</Project>
-      <Visible>False</Visible>
-    </NestedContentProject>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -117,6 +110,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="MaterialLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Assemblies\Xbox 360\Release\MaterialLib.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Xna.Framework">
       <Private>False</Private>
     </Reference>
@@ -139,6 +136,10 @@
     <Reference Include="System.Xml.Linq">
       <Private>False</Private>
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="UtilityLib, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Assemblies\Xbox 360\Release\UtilityLib.dll</HintPath>
     </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

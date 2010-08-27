@@ -8,15 +8,15 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Storage;
-using Character;
+using MeshLib;
 
 namespace ColladaConvert
 {
-	public class MaterialGridModel : BindingList<Character.Material>
+	public class MaterialGridModel : BindingList<MaterialLib.Material>
 	{
-		public MaterialGridModel(Dictionary<string, Character.Material> mats)
+		public MaterialGridModel(Dictionary<string, MaterialLib.Material> mats)
 		{
-			foreach(KeyValuePair<string, Character.Material> m in mats)
+			foreach(KeyValuePair<string, MaterialLib.Material> m in mats)
 			{
 				Add(m.Value);
 			}

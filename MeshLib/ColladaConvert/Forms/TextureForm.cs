@@ -7,13 +7,13 @@ using System.Text;
 using System.Diagnostics;
 using System.Windows.Forms;
 using Microsoft.Xna.Framework.Graphics;
-using Character;
+using MeshLib;
 
 namespace ColladaConvert
 {
 	public partial class TextureForm : Form
 	{
-		MaterialLib	mMatLib;		
+		MaterialLib.MaterialLib	mMatLib;		
 
 		BindingList<TextureGridModel>	mTextures	=new BindingList<TextureGridModel>();
 
@@ -21,7 +21,7 @@ namespace ColladaConvert
 		public event EventHandler	eCancel;
 
 
-		public TextureForm(MaterialLib matlib)
+		public TextureForm(MaterialLib.MaterialLib matlib)
 		{
 			InitializeComponent();
 

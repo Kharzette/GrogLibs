@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Storage;
 
-namespace Character
+namespace MeshLib
 {
 	public class AnimLib
 	{
@@ -76,7 +76,7 @@ namespace Character
 		//all the textures / shaders
 		public void SaveToFile(string fileName)
 		{
-			FileStream	file	=MaterialLib.OpenTitleFile(fileName,
+			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
 									FileMode.Open, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
@@ -104,7 +104,7 @@ namespace Character
 
 		public bool ReadFromFile(string fileName)
 		{
-			FileStream	file	=MaterialLib.OpenTitleFile(fileName,
+			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
 									FileMode.Open, FileAccess.Read);
 
 			BinaryReader	br	=new BinaryReader(file);

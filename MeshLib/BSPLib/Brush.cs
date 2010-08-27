@@ -6,7 +6,7 @@ using	System.Text;
 using	Microsoft.Xna.Framework;
 using	Microsoft.Xna.Framework.Graphics;
 
-namespace BuildMap
+namespace BSPLib
 {
 	//a brush is a convex volume bounded
 	//by planes.  The space defined as being
@@ -16,6 +16,10 @@ namespace BuildMap
 	{
 		private List<Face> mFaces;
 
+		public const float	MIN_MAX_BOUNDS	=15192.0f;
+
+
+		#region Constructors
 		public Brush()
 		{
 			mFaces  =new List<Face>();
@@ -31,90 +35,471 @@ namespace BuildMap
 				mFaces.Add(new Face(f));
 			}
 		}
+		#endregion
 
 
-		public void AtlasLightMaps(GraphicsDevice g, TexAtlas al)
+		#region Modifications
+		internal void AddFaces(List<Face> faces)
+		{
+			foreach(Face f in faces)
+			{
+//				if((f.mFlags & Face.HINT) != 0)
+//				{
+//					continue;
+//				}
+				if((f.mFlags & Face.FACE_DETAIL) != 0)
+				{
+					continue;
+				}
+//				if((f.mFlags & Face.FACE_HIDDEN) != 0)
+//				{
+//					continue;
+//				}
+				if((f.mFlags & Face.TEX_CLIP) != 0)
+				{
+					continue;
+				}
+			}
+			mFaces.AddRange(faces);
+		}
+
+
+		void AddPlane(Plane p)
+		{
+			Face	f	=new Face(p, null);
+			mFaces.Add(f);
+
+			SealFaces();
+		}
+
+
+		internal void RemoveVeryThinSides()
+		{
+			List<Face>	nuke	=new List<Face>();
+			foreach(Face f in mFaces)
+			{
+				if(f.IsHowThin(1.0f))
+				{
+					nuke.Add(f);
+				}
+			}
+
+			foreach(Face f in nuke)
+			{
+				mFaces.Remove(f);
+			}
+			SealFaces();
+		}
+		#endregion
+
+
+		#region Queries
+		internal List<Face> GetFaces()
+		{
+			return	mFaces;
+		}
+
+
+		internal void AddToBounds(ref Bounds bnd)
 		{
 			foreach(Face f in mFaces)
 			{
-				f.AtlasLightMap(g, al);
+				f.AddToBounds(ref bnd);
 			}
 		}
 
 
-		public void MakeFaceFromMapLine(string szLine)
+		private Face GetFaceForPlane(Plane plane)
+		{
+			foreach(Face f in mFaces)
+			{
+				Plane	fplane	=f.GetPlane();
+
+				if(UtilityLib.Mathery.CompareVectorEpsilon(
+					plane.mNormal, fplane.mNormal,
+					UtilityLib.Mathery.VCompareEpsilon))
+				{
+					return	f;
+				}
+			}
+			return	null;
+		}
+
+
+		internal bool IsValid()
+		{
+			if(mFaces.Count < 3)
+			{
+				return	false;
+			}
+			foreach(Face f in mFaces)
+			{
+				if(f.IsTiny())
+				{
+					return	false;
+				}
+				else if(f.IsHuge())
+				{
+					return	false;
+				}
+			}
+			return	true;
+		}
+
+
+		internal bool IsPointInside(Vector3 pnt)
+		{
+			foreach(Face f in mFaces)
+			{
+				if(!f.IsPointBehind(pnt))
+				{
+					return	false;
+				}
+			}
+			return	true;
+		}
+
+
+		//checks to see if the brush
+		//is of small volume, at least
+		//on one side
+		bool IsThin()
+		{
+			foreach(Face f in mFaces)
+			{
+				if(f.IsHowThin(5.0f))
+				{
+					return	true;
+				}
+			}
+			return	false;
+		}
+
+
+		internal bool IsVeryThin()
+		{
+			foreach(Face f in mFaces)
+			{
+				if(f.IsHowThin(1.0f))
+				{
+					return	true;
+				}
+			}
+			return	false;
+		}
+
+
+		bool Intersects(Face checkFace)
+		{
+			Face	tempFace	=new Face(checkFace);
+			foreach(Face f in mFaces)
+			{
+				if(!tempFace.ClipByFace(f, false, true))
+				{
+					return	false;
+				}
+			}
+			return	true;
+		}
+
+
+		internal bool Intersects(Brush b)
+		{
+			foreach(Face f in mFaces)
+			{
+				foreach(Face f2 in b.mFaces)
+				{
+					if(Intersects(f2))
+					{
+						return	true;
+					}
+				}
+			}
+			return false;
+		}
+
+
+		bool IsBrushMostlyOnFrontSide(Plane p)
+		{
+			float frontDist, backDist;
+
+			frontDist	=0.0f;
+			backDist	=0.0f;
+			foreach(Face f in mFaces)
+			{
+				f.GetFaceMinMaxDistancesFromPlane(p, ref frontDist, ref backDist);
+			}
+			if(frontDist > (-backDist))
+			{
+				return true;
+			}
+			return false;
+		}
+
+
+		List<Face> GetPortalNeighbors(Face f)
+		{
+			List<Face>		ret		=new List<Face>();
+			List<Vector3>	pnts	=f.GetPoints();
+
+			foreach(Vector3 pnt in pnts)
+			{
+				foreach(Face brushFace in mFaces)
+				{
+					if(f == brushFace || !f.IsPortal())
+					{
+						continue;
+					}
+					if(brushFace.ContainsPoint(pnt))
+					{
+						if(!ret.Contains(brushFace))
+						{
+							ret.Add(brushFace);
+						}
+					}
+				}
+			}
+			return	ret;
+		}
+
+
+		internal void GetTriangles(List<Vector3> tris, List<UInt16> ind)
+		{
+			foreach(Face f in mFaces)
+			{
+				if((f.mFlags & Face.HINT) != 0)
+				{
+					continue;
+				}
+//				if((f.mFlags & Face.FACE_DETAIL) != 0)
+//				{
+//					continue;
+//				}
+				if((f.mFlags & Face.FACE_HIDDEN) != 0)
+				{
+					continue;
+				}
+				if((f.mFlags & Face.TEX_CLIP) != 0)
+				{
+					continue;
+				}
+				f.GetTriangles(tris, ind);
+			}
+		}
+
+
+		internal void GetPlanes(List<Plane> planes)
+		{
+			foreach(Face f in mFaces)
+			{
+				planes.Add(f.GetPlane());
+			}
+		}
+
+
+		internal void GetPortals(List<Face> portals)
+		{
+			foreach(Face f in mFaces)
+			{
+				if(f.IsPortal())				
+				{
+					portals.Add(f);
+				}
+			}
+		}
+		#endregion
+
+
+		#region IO
+		internal static void SkipVMFEditorBlock(StreamReader sr)
+		{
+			string	s	="";
+			while((s = sr.ReadLine()) != null)
+			{
+				s	=s.Trim();
+				if(s.StartsWith("}"))
+				{
+					return;	//editor done
+				}
+			}
+		}
+
+
+		internal bool ReadVMFSolidBlock(StreamReader sr)
+		{
+			string	s	="";
+			bool	ret	=true;
+			while((s = sr.ReadLine()) != null)
+			{
+				s	=s.Trim();
+				if(s == "side")
+				{
+					Face	f	=new Face();
+					if(!f.ReadVMFSideBlock(sr))
+					{
+						ret	=false;
+					}
+					mFaces.Add(f);
+				}
+				else if(s.StartsWith("}"))
+				{
+					return	ret;	//entity done
+				}
+				else if(s == "editor")
+				{
+					//skip editor block
+					SkipVMFEditorBlock(sr);
+				}
+			}
+			return	ret;
+		}
+
+
+		internal void MakeFaceFromMapLine(string szLine)
 		{
 			mFaces.Add(new Face(szLine));
 		}
 
 
-		public void Draw(GraphicsDevice g, Effect fx)
+		internal void Read(BinaryReader br)
 		{
-			foreach(Face f in mFaces)
+			int	cnt	=br.ReadInt32();
+			for(int i=0;i < cnt;i++)
 			{
-				f.Draw(g, fx);
+				Face	f	=new Face();
+				f.Read(br);
+				mFaces.Add(f);
 			}
 		}
 
 
-		public bool IsValid()
+		internal void Write(BinaryWriter bw)
 		{
-			return	(mFaces.Count >= 4);
+			bw.Write(mFaces.Count);
+			foreach(Face f in mFaces)
+			{
+				f.Write(bw);
+			}
+		}
+		#endregion
+
+
+		#region CSG
+		void ClipFaceByBrushBack(Face clipFace, bool keepOn)
+		{
+			foreach(Face f in mFaces)
+			{
+				clipFace.ClipByFace(f, false, keepOn);
+				if(clipFace.IsTiny())
+				{
+					return;	//already destroyed
+				}
+			}
+		}
+
+
+		List<Face> ClipFaceByBrushFront(Face clipFace, bool keepOn)
+		{
+			List<Face>	ret	=new List<Face>();
+			foreach(Face f in mFaces)
+			{
+				Face	cf	=new Face(clipFace, false);
+				cf.ClipByFace(f, true, keepOn);
+				clipFace.ClipByFace(f, false, keepOn);
+				if(cf.IsTiny())
+				{
+					continue;
+				}
+				ret.Add(cf);
+			}
+			return	ret;
+		}
+
+
+		float GetSplitFaceScore(Face sf, List<Brush> brushList)
+		{
+			Plane	p	=sf.GetPlane();
+
+			//test balance
+			List<Brush> copyList	=new List<Brush>(brushList);
+			List<Brush> front		=new List<Brush>();
+			List<Brush> back		=new List<Brush>();
+
+			int		numThins	=0;
+			float	score		=696969.69f;
+			foreach(Brush b2 in copyList)
+			{
+				Brush	bf, bb;
+
+				b2.SplitBrush(sf, out bf, out bb);
+
+				if(bb != null && bb.IsValid())
+				{
+					back.Add(bb);
+				}
+				if(bf != null && bf.IsValid())
+				{
+					front.Add(bf);
+				}
+			}
+
+			//check for small volumes created
+			//by this split
+			int	splitThins	=0;
+			foreach(Brush b in front)
+			{
+				if(b.IsThin())
+				{
+					splitThins++;
+				}
+			}
+			foreach(Brush b in back)
+			{
+				if(b.IsThin())
+				{
+					splitThins++;
+				}
+			}
+			splitThins	-=numThins;
+			if(splitThins < 0)
+			{
+				splitThins	=0;
+			}
+
+			if(front.Count !=0 && back.Count != 0)
+			{
+				if(front.Count > back.Count)
+				{
+					score	=(float)front.Count / back.Count;
+				}
+				else
+				{
+					score	=(float)back.Count / front.Count;
+				}
+
+				score	+=splitThins * 5;
+			}
+			return	score;
 		}
 
 
 		//return the best score in the brush
-		public float GetBestSplittingFaceScore(List<Brush> brushList)
+		internal float GetBestSplittingFaceScore(List<Brush> brushList)
 		{
 			float	BestScore	=696969.0f;	//0.5f is the goal
 
 			foreach(Face f in mFaces)
 			{
-				Plane	p	=f.GetPlane();
+				float	score	=GetSplitFaceScore(f, brushList);
 
-				//test balance
-				List<Brush> copyList	=new List<Brush>(brushList);
-				List<Brush> front		=new List<Brush>();
-				List<Brush> back		=new List<Brush>();
-
-				foreach(Brush b2 in copyList)
+				if((f.mFlags & Face.HINT) != 0)
 				{
-					Brush	bf, bb;
-
-					b2.SplitBrush(f, out bf, out bb);
-
-					if(bb != null)
-					{
-						back.Add(bb);
-					}
-					if(bf != null)
-					{
-						front.Add(bf);
-					}
+					score	-=100.0f;
 				}
 
-				if(front.Count !=0 && back.Count != 0)
+				if(score < BestScore)
 				{
-					float score;
-					if(front.Count > back.Count)
-					{
-						score	=(float)front.Count / back.Count;
-					}
-					else
-					{
-						score	=(float)back.Count / front.Count;
-					}
-
-					//weigh detail higher
-					if((f.mFlags & TexInfo.FACE_DETAIL) != 0)
-					{
-						score	+=69.0f;
-					}
-
-					if(score < BestScore)
-					{
-						BestScore	=score;
-					}
+					BestScore	=score;
 				}
 			}
 
@@ -123,53 +508,18 @@ namespace BuildMap
 
 
 		//return the best plane in the brush
-		public Face GetBestSplittingFace(List<Brush> brushList)
+		internal Face GetBestSplittingFace(List<Brush> brushList)
 		{
 			float	BestScore	=696969.0f;	//0.5f is the goal
 			int		BestIndex	=0;
 
 			foreach(Face f in mFaces)
 			{
-				Plane	p	=f.GetPlane();
-
-				//test balance
-				List<Brush> copyList	=new List<Brush>(brushList);
-				List<Brush> front		=new List<Brush>();
-				List<Brush> back		=new List<Brush>();
-
-				foreach(Brush b in copyList)
+				float	score	=GetSplitFaceScore(f, brushList);
+				if(score < BestScore)
 				{
-					Brush	bf, bb;
-
-					b.SplitBrush(f, out bf, out bb);
-
-					if(bb != null)
-					{
-						back.Add(bb);
-					}
-					if(bf != null)
-					{
-						front.Add(bf);
-					}
-				}
-
-				if(front.Count !=0 && back.Count != 0)
-				{
-					float	score;
-					if(front.Count > back.Count)
-					{
-						score	=(float)(front.Count / back.Count);
-					}
-					else
-					{
-						score	=(float)(back.Count / front.Count);
-					}
-
-					if(score < BestScore)
-					{
-						BestScore	=score;
-						BestIndex	=mFaces.IndexOf(f);
-					}
+					BestScore	=score;
+					BestIndex	=mFaces.IndexOf(f);
 				}
 			}
 
@@ -178,55 +528,9 @@ namespace BuildMap
 		}
 
 
-		public bool Intersects(Brush b)
-		{
-			foreach(Face f in mFaces)
-			{
-				Face tempFace = new Face(f);
-
-				foreach(Face f2 in b.mFaces)
-				{
-					tempFace.ClipByFace(f2, false);
-				}
-
-				//if a piece remains, then some part
-				//of the brush was poking into the other
-				if(tempFace.IsValid())
-				{
-					return true;
-				}
-			}
-			return false;
-		}
-
-
-		public void LightBrush(GraphicsDevice g, BspNode root, Vector3 lightPos, float lightVal, Vector3 color, bool bOmni)
-		{
-			foreach(Face f in mFaces)
-			{
-				f.LightFace(g, root, lightPos, lightVal, color, bOmni);
-			}
-		}
-
-
-		public bool IsClip()
-		{
-			if(mFaces.Count == 0)
-			{
-				return false;
-			}
-			//make sure brush b can legally gobble
-			if((mFaces[0].mFlags & TexInfo.TEX_CLIP) != 0)
-			{
-				return true;
-			}
-			return false;
-		}
-
-
 		//brush b gobbles thisbrush
 		//returns a bunch of parts
-		public bool SubtractBrush(Brush b, out List<Brush> outside)
+		internal bool SubtractBrush(Brush b, out List<Brush> outside)
 		{
 			Brush	bf, bb, inside;
 
@@ -234,16 +538,6 @@ namespace BuildMap
 
 			if(b.mFaces.Count == 0)
 			{
-				return false;
-			}
-
-			//make sure brush b can legally gobble
-			if(((b.mFaces[0].mFlags & TexInfo.FACE_HIDDEN) |
-				(b.mFaces[0].mFlags & TexInfo.FACE_DETAIL) |
-				(b.mFaces[0].mFlags & TexInfo.TEX_CLIP)) != 0)
-			{
-				//these face types shouldn't be gobblin
-				//goblinses
 				return false;
 			}
 
@@ -260,7 +554,7 @@ namespace BuildMap
 					outside.Add(bf);
 				}
 				inside = bb;
-				if(bb == null)
+				if(bb == null || !bb.IsValid())
 				{
 					break;
 				}
@@ -275,13 +569,13 @@ namespace BuildMap
 
 
 		//expands all faces to seal cracks
-		public void SealFaces()
+		internal void SealFaces()
 		{
 		RESTART2:
 			//check that faces are valid
 			foreach(Face f in mFaces)
 			{
-				if(!f.IsValid() || f.IsTiny())
+				if(f.IsTiny())
 				{
 					mFaces.Remove(f);
 					goto RESTART2;
@@ -300,176 +594,62 @@ namespace BuildMap
 					{
 						continue;
 					}
+					Face	f3	=new Face(f);
 
-					f.ClipByFace(f2, false);
-					if(!f.IsValid())
+					if(!f3.ClipByFace(f2, false, false))
 					{
 						mFaces.Remove(f);
 						goto RESTART;
 					}
+					f.ClipByFace(f2, false, false);
 				}
 			}
 		}
 
 
-		private bool IsBrushMostlyOnFrontSide(Plane p)
-		{
-			float frontDist, backDist;
-
-			frontDist	=0.0f;
-			backDist	=0.0f;
-			foreach(Face f in mFaces)
-			{
-				f.GetFaceMinMaxDistancesFromPlane(p, ref frontDist, ref backDist);
-			}
-			if(frontDist > (-backDist))
-			{
-				return true;
-			}
-			return false;
-		}
-
-
-		public void GetNodesFromFaces(out List<BspNode> nodes)
-		{
-			nodes	=new List<BspNode>();
-
-			foreach(Face f in mFaces)
-			{
-				nodes.Add(new BspNode(f));
-			}
-		}
-
-
-		public void GetTexFileNames(ref List<string> fn)
-		{
-			foreach(Face f in mFaces)
-			{
-				f.GetTexFileNames(ref fn);
-			}
-		}
-
-
-		public void SetTexturePointers(List<KeyValuePair<string, Texture2D>> tl)
-		{
-			foreach(Face f in mFaces)
-			{
-				f.SetTexturePointers(tl);
-			}
-		}
-
-
-		public void WriteToFile(BinaryWriter bw)
-		{
-			int numLightMapped		=0;
-			int numNonLightMapped	=0;
-
-			foreach(Face f in mFaces)
-			{
-				if((f.mFlags & TexInfo.FACE_HIDDEN) != 0)
-				{
-					continue;
-				}
-				if(f.IsLightMapped())
-				{
-					numLightMapped++;
-				}
-				else
-				{
-					numNonLightMapped++;
-				}
-			}
-
-			bw.Write(numLightMapped);
-
-			foreach(Face f in mFaces)
-			{
-				f.WriteToFile(bw, true);
-			}
-
-			bw.Write(numNonLightMapped);
-
-			foreach(Face f in mFaces)
-			{
-				f.WriteToFile(bw, false);
-			}
-		}
-
-
-		public void BuildVertexInfo()
-		{
-			foreach(Face f in mFaces)
-			{
-				f.BuildVertexInfo();
-			}
-		}
-
-
-		public void BuildVertexBuffers(GraphicsDevice g)
-		{
-			foreach(Face f in mFaces)
-			{
-				f.BuildVertexBuffers(g);
-			}
-		}
-
-
-		public void AddFacesToLeaf(BspNode bn)
-		{
-			BspNode walk	=bn;
-
-			//assign face zero to the node
-			walk.mFace	=new Face(mFaces[0]);
-			walk.mPlane	=mFaces[0].GetPlane();
-			for(int i=1;i < mFaces.Count;i++)
-			{
-				BspNode b	=new BspNode(mFaces[i]);
-				walk.mBack	=b;
-				b.mParent	=walk;
-				walk		=walk.mBack;
-			}
-			walk.mbLeaf	=true;
-		}
-
-
-		public void SplitBrush(Face splitBy, out Brush bf, out Brush bb)
+		internal void SplitBrush(Face splitBy, out Brush bf, out Brush bb)
 		{
 			float fDist, bDist;
 			Plane p	=splitBy.GetPlane();
 
-			fDist = bDist = 0.0f;
+			fDist	=-Plane.EPSILON;
+			bDist	=Plane.EPSILON;
 
 			foreach(Face f in mFaces)
 			{
 				f.GetFaceMinMaxDistancesFromPlane(p, ref fDist, ref bDist);
 			}
 
-			if(fDist < 0.1f)
+			if(bDist >= Plane.EPSILON)
+			{
+				//all in front
+				bf  =new Brush(this);
+				bb  =null;
+				return;
+			}
+			if(fDist <= -Plane.EPSILON)
 			{
 				//all behind
 				bb  =new Brush(this);
 				bf  =null;
 				return;
 			}
-			if(bDist > -0.1f)
-			{
-				bf  =new Brush(this);
-				bb  =null;
-				return;
-			}
 
 			//create a split face
-			Face splitFace = new Face(p, splitBy);
+			Face	splitFace	=new Face(p, splitBy);
 
 			//clip against all brush faces
 			foreach(Face f in mFaces)
 			{
-				splitFace.ClipByFace(f, false);
+				if(!splitFace.ClipByFace(f, false, false))
+				{
+					break;
+				}
 			}
 
-			if(!splitFace.IsValid() || splitFace.IsTiny())
+			if(splitFace.IsTiny())
 			{
-				Debug.WriteLine("Doing the mostly on side thing");
+				//Debug.WriteLine("Doing the mostly on side thing");
 				if(IsBrushMostlyOnFrontSide(p))
 				{
 					bf	=new Brush(this);
@@ -488,11 +668,11 @@ namespace BuildMap
 
 			foreach(Face f in bb.mFaces)
 			{
-				f.ClipByFace(splitFace, false);
+				f.ClipByFace(splitFace, false, false);
 			}
 			foreach(Face f in bf.mFaces)
 			{
-				f.ClipByFace(splitFace, true);
+				f.ClipByFace(splitFace, true, false);
 			}
 
 			//add split poly to both sides
@@ -503,59 +683,118 @@ namespace BuildMap
 			bf.SealFaces();
 		}
 
-		#region Unused
-		public void AddFacesToList(ref List<Face> faceList)
+
+		internal void MarkPortal(Face portal)
 		{
 			foreach(Face f in mFaces)
 			{
-				faceList.Add(new Face(f));
+				Face	port	=new Face(portal);
+				if(port.PortalClipByFace(f))
+				{
+					if(!port.IsTiny())
+					{
+						Face	pf	=GetFaceForPlane(port.GetPlane());
+						pf.mFlags	|=Face.PORTAL;
+					}
+				}
 			}
 		}
 
 
-		//for debugging the surface points
-		public int GetFirstSurface(out Vector3[] surfPoints)
+		//the passed in face is actually a real
+		//face that lives in a brush somewhere
+		internal void MergePortal(Face portal, List<Face> outPortals)
 		{
+			if(!portal.IsPortal())
+			{
+				return;
+			}
+			Face	clipped	=new Face(portal);
+
+			ClipFaceByBrushBack(clipped, true);
+
+			if(clipped.IsTiny())
+			{
+				return;
+			}
+
 			foreach(Face f in mFaces)
 			{
-				if(mFaces.IndexOf(f) < 0)
+				if(f == portal)
+				{
+					return;
+				}
+				if(clipped.WouldPortalClipBehind(f))
+				{
+					Face	clipFront	=new Face(portal);
+
+					List<Face>	fronts	=ClipFaceByBrushFront(clipFront, false);
+
+					if(fronts.Count > 0)
+					{
+						outPortals.AddRange(fronts);
+					}
+
+					//clear portal flag
+					portal.mFlags	&=(~Face.PORTAL);
+					return;
+				}
+			}
+		}
+
+
+		internal void BevelObtuse(float hullWidth)
+		{
+			List<Plane>	bevels	=new List<Plane>();
+
+			foreach(Face f in mFaces)
+			{
+				if(!f.IsPortal())
 				{
 					continue;
 				}
-				int np	=f.GetSurfPoints(out surfPoints);
-				if(np > 0)
+				List<Face>	neighbors	=GetPortalNeighbors(f);
+				Plane		fPlane		=f.GetPlane();
+
+				foreach(Face nb in neighbors)
 				{
-					return	np;
+					float	d	=f.AngleBetween(nb);
+
+					if(d < 0.0f)
+					{
+						Plane	bev		=new Plane();
+						Plane	nbPlane	=nb.GetPlane();
+						
+						bev.mNormal	=fPlane.mNormal + nbPlane.mNormal;
+						bev.mNormal.Normalize();
+
+						bev.mDistance	=Vector3.Dot(bev.mNormal, f.GetFirstSharedVert(nb));
+						bev.mDistance	-=hullWidth;
+
+						//make sure this plane is not already in the list
+						bool	bFound	=false;
+						foreach(Plane p in bevels)
+						{
+							if(p.CompareEpsilon(bev, 0.001f))
+							{
+								bFound	=true;
+							}
+						}
+						if(bFound)
+						{
+							continue;
+						}
+
+						bevels.Add(bev);
+					}
 				}
 			}
-			surfPoints	=null;
-			return	0;
-		}
 
-
-		public Plane GetCrappySplittingPlane()
-		{
-			foreach(Face f in mFaces)
+			foreach(Plane p in bevels)
 			{
-				Plane	p	=f.GetPlane();
-
-				//find an axial
-				if(Math.Abs(Vector3.Dot(p.Normal, Vector3.Left)) == 1.0f)
-				{
-					return p;
-				}
-				else if(Math.Abs(Vector3.Dot(p.Normal, Vector3.Forward)) == 1.0f)
-				{
-					return p;
-				}
-				else if(Math.Abs(Vector3.Dot(p.Normal, Vector3.Up)) == 1.0f)
-				{
-					return p;
-				}
+				AddPlane(p);
 			}
-
-			//just return the first one, whatever
-			return	mFaces[0].GetPlane();
+			SealFaces();
 		}
 		#endregion
 	}

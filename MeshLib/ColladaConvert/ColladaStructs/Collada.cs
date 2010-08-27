@@ -23,15 +23,15 @@ namespace ColladaConvert
 
 		//midstep converters
 		List<MeshConverter>	mChunks	=new List<MeshConverter>();
-		Character.Skeleton	mGameSkeleton;
+		MeshLib.Skeleton	mGameSkeleton;
 
 		public Animator		mAnimator;
 
 		//actual useful data for the game
-		Character.MaterialLib	mMatLib;
-		Character.AnimLib		mAnimLib;
-		Character.Character		mCharacter;
-		Character.StaticMeshObject	mStaticMesh;
+		MaterialLib.MaterialLib		mMatLib;
+		MeshLib.AnimLib				mAnimLib;
+		MeshLib.Character			mCharacter;
+		MeshLib.StaticMeshObject	mStaticMesh;
 
 		Dictionary<string, Texture2D>	mTextures	=new Dictionary<string,Texture2D>();
 
@@ -39,8 +39,8 @@ namespace ColladaConvert
 		public Collada(string			meshFileName,
 			GraphicsDevice				g,
 			ContentManager				cm,
-			Character.MaterialLib		mlib,
-			Character.StaticMeshObject	stat)
+			MaterialLib.MaterialLib		mlib,
+			MeshLib.StaticMeshObject	stat)
 		{
 			Load(meshFileName);
 
@@ -187,9 +187,9 @@ namespace ColladaConvert
 		public Collada(string meshFileName,
 			GraphicsDevice g,
 			ContentManager cm,
-			Character.MaterialLib mlib,
-			Character.AnimLib alib,
-			Character.Character chr)
+			MaterialLib.MaterialLib mlib,
+			MeshLib.AnimLib alib,
+			MeshLib.Character chr)
 		{
 			Load(meshFileName);
 
@@ -351,7 +351,7 @@ namespace ColladaConvert
 			//create useful anims
 			mAnimator	=new Animator(mAnimations, mRootNodes);
 
-			Character.Anim	anm	=new Character.Anim(mControllers.Count);
+			MeshLib.Anim	anm	=new MeshLib.Anim(mControllers.Count);
 
 			//chop at content if content is in the path
 			if(meshFileName.IndexOf("Content") != -1)
@@ -372,18 +372,18 @@ namespace ColladaConvert
 			int	i		=0;
 			
 			//create anims we can save
-			List<Character.Skin>	skinList	=new List<Character.Skin>();
+			List<MeshLib.Skin>	skinList	=new List<MeshLib.Skin>();
 			foreach(KeyValuePair<string, Controller> cont in mControllers)
 			{
 				Skin	sk	=cont.Value.GetSkin();
 
 				List<string>		boneNames	=sk.GetJointNameArray();
-				List<Character.SubAnim>	anims	=mAnimator.BuildGameAnims(mGameSkeleton);
+				List<MeshLib.SubAnim>	anims	=mAnimator.BuildGameAnims(mGameSkeleton);
 
 				anm.AddControllerSubAnims(i, anims);
 				i++;
 
-				Character.Skin	skin	=new Character.Skin();
+				MeshLib.Skin	skin	=new MeshLib.Skin();
 				skin.SetBindShapeMatrix(sk.GetBindShapeMatrix());
 				skin.SetBoneNames(sk.GetJointNameArray());
 				skin.SetInverseBindPoses(sk.GetInverseBindPoses());
@@ -394,7 +394,7 @@ namespace ColladaConvert
 			mAnimLib.AddAnim(anm);
 
 
-			Dictionary<string, Character.Mesh>	idlist	=new Dictionary<string,Character.Mesh>();
+			Dictionary<string, MeshLib.Mesh>	idlist	=new Dictionary<string,MeshLib.Mesh>();
 
 			foreach(MeshConverter mc in mChunks)
 			{
@@ -434,7 +434,7 @@ namespace ColladaConvert
 			//create useful anims
 			mAnimator	=new Animator(mAnimations, mRootNodes);
 
-			Character.Anim	anm	=new Character.Anim(mControllers.Count);
+			MeshLib.Anim	anm	=new MeshLib.Anim(mControllers.Count);
 
 	
 			
@@ -462,7 +462,7 @@ namespace ColladaConvert
 				Skin	sk	=cont.Value.GetSkin();
 
 				List<string>		boneNames	=sk.GetJointNameArray();
-				List<Character.SubAnim>	anims	=mAnimator.BuildGameAnims(mGameSkeleton);
+				List<MeshLib.SubAnim>	anims	=mAnimator.BuildGameAnims(mGameSkeleton);
 
 				anm.AddControllerSubAnims(i, anims);
 				i++;
@@ -472,13 +472,13 @@ namespace ColladaConvert
 		}
 
 
-		public Character.Skeleton	BuildGameSkeleton()
+		public MeshLib.Skeleton	BuildGameSkeleton()
 		{
-			Character.Skeleton	ret	=new Character.Skeleton();
+			MeshLib.Skeleton	ret	=new MeshLib.Skeleton();
 
 			foreach(KeyValuePair<string, SceneNode> sn in mRootNodes)
 			{
-				Character.GSNode	n;//	=new GSNode();
+				MeshLib.GSNode	n;//	=new GSNode();
 
 				sn.Value.AddToGameSkeleton(out n);
 
