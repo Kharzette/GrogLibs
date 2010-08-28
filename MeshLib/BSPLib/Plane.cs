@@ -75,5 +75,11 @@ namespace BSPLib
 			}
 			return	true;
 		}
+
+
+		internal float DistanceFrom(Vector3 pos)
+		{
+			return	Vector3.Dot(pos, mNormal) - mDistance;
+		}
 	}
 }

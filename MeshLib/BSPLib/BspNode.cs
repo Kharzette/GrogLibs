@@ -251,6 +251,19 @@ namespace BSPLib
 		}
 
 
+		internal void GetPortalFaces(List<PortalFace> portals)
+		{
+			if(mBrush != null)
+			{
+				mBrush.GetPortalFaces(portals);
+				return;
+			}
+
+			mBack.GetPortalFaces(portals);
+			mFront.GetPortalFaces(portals);
+		}
+
+
 		internal void GetPortals(List<Face> portals)
 		{
 			if(mBrush != null)
@@ -265,7 +278,7 @@ namespace BSPLib
 
 
 		//see if this portal lands on the back
-		internal void MergePortal(Face portal, List<Face> outPortals)
+		internal void MergePortal(Face portal, List<PortalFace> outPortals)
 		{
 			if(mBrush != null)
 			{
@@ -300,19 +313,6 @@ namespace BSPLib
 		}
 
 
-		internal void BevelObtuse(float hullWidth)
-		{
-			if(mBrush != null)
-			{
-				mBrush.BevelObtuse(hullWidth);
-				return;
-			}
-
-			mBack.BevelObtuse(hullWidth);
-			mFront.BevelObtuse(hullWidth);
-		}
-
-		
 		//grab all the brushes in the tree
 		void GatherNodeBrushes(ref List<Brush> brushes)
 		{
@@ -353,6 +353,11 @@ namespace BSPLib
 			{
 				return	mBack.ClassifyPoint(pnt);
 			}
+		}
+
+		internal void AddPlane(Plane p)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

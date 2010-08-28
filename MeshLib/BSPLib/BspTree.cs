@@ -11,8 +11,9 @@ namespace BSPLib
 	public class BspTree
 	{
 		//tree root
-		BspNode		mRoot;
-		List<Face>	mPortals;
+		BspNode				mRoot;
+		List<PortalFace>	mPortalFaces;
+		List<Portal>		mPortals;
 //		List<Brush>	mTempBrushList;	//debuggery remove
 
 
@@ -37,9 +38,15 @@ namespace BSPLib
 
 			MarkPortals();
 
+			LinkPortals();
+
 			if(bBevel)
 			{
-				mRoot.BevelObtuse(bevelDistance);
+				List<Plane>	bevs	=new List<Plane>();
+				foreach(Portal p in mPortals)
+				{
+					p.BevelObtuse(bevelDistance);
+				}
 			}
 		}
 
@@ -70,7 +77,7 @@ namespace BSPLib
 
 		internal int GetNumPortals()
 		{
-			return	mPortals.Count;
+			return	mPortalFaces.Count;
 		}
 
 
@@ -85,15 +92,14 @@ namespace BSPLib
 /*			foreach(Brush b in mTempBrushList)
 			{
 				b.GetTriangles(verts, indexes);
-			}
-			mRoot.GetTriangles(verts, indexes);
-			*/
+			}*/
+//			mRoot.GetTriangles(verts, indexes);
 			
-			foreach(Face port in mPortals)
+			
+			foreach(PortalFace port in mPortalFaces)
 			{
-				port.GetTriangles(verts, indexes);
-			}
-			
+				port.mFace.GetTriangles(verts, indexes);
+			}			
 		}
 
 
@@ -118,6 +124,17 @@ namespace BSPLib
 		#endregion
 
 
+		void LinkPortals()
+		{
+			mPortals	=new List<Portal>();
+			foreach(PortalFace prt in mPortalFaces)
+			{
+				Portal	p	=new Portal(prt, mPortalFaces);
+				mPortals.Add(p);
+			}
+		}
+
+
 		void MarkPortals()
 		{
 			List<Plane>	planes	=new List<Plane>();
@@ -134,7 +151,7 @@ namespace BSPLib
 			List<Face>	portals	=new List<Face>();
 			mRoot.GetPortals(portals);
 
-			List<Face>	newPortals	=new List<Face>();
+			List<PortalFace>	newPortals	=new List<PortalFace>();
 
 			//see which survive
 			foreach(Face f in portals)
@@ -143,10 +160,10 @@ namespace BSPLib
 			}
 			portals.Clear();
 
-			mRoot.GetPortals(portals);
+			mPortalFaces	=new List<PortalFace>();
+			mRoot.GetPortalFaces(mPortalFaces);
 
-			mPortals	=portals;
-			mPortals.AddRange(newPortals);
+			mPortalFaces.AddRange(newPortals);
 		}
 
 

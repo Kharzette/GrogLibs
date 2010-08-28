@@ -344,6 +344,21 @@ namespace BSPLib
 		}
 
 
+		internal void GetEdges(List<Edge> edges)
+		{
+			for(int i=0;i < mPoints.Count;i++)
+			{
+				int	j	=(i + 1) % mPoints.Count;
+
+				Edge	e	=new Edge();
+				e.mP0	=mPoints[i];
+				e.mP1	=mPoints[j];
+
+				edges.Add(e);
+			}
+		}
+
+
 		internal bool ContainsPoint(Vector3 pnt)
 		{
 			foreach(Vector3 p in mPoints)

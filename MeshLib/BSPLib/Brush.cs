@@ -64,7 +64,7 @@ namespace BSPLib
 		}
 
 
-		void AddPlane(Plane p)
+		internal void AddPlane(Plane p)
 		{
 			Face	f	=new Face(p, null);
 			mFaces.Add(f);
@@ -106,6 +106,23 @@ namespace BSPLib
 			{
 				f.AddToBounds(ref bnd);
 			}
+		}
+
+
+		internal bool ContainsPlane(Plane bev)
+		{
+			foreach(Face f in mFaces)
+			{
+				Plane	fplane	=f.GetPlane();
+
+				if(UtilityLib.Mathery.CompareVectorEpsilon(
+					bev.mNormal, fplane.mNormal,
+					UtilityLib.Mathery.VCompareEpsilon))
+				{
+					return	true;
+				}
+			}
+			return	false;
 		}
 
 
@@ -293,6 +310,21 @@ namespace BSPLib
 			foreach(Face f in mFaces)
 			{
 				planes.Add(f.GetPlane());
+			}
+		}
+
+
+		internal void GetPortalFaces(List<PortalFace> portals)
+		{
+			foreach(Face f in mFaces)
+			{
+				if(f.IsPortal())				
+				{
+					PortalFace	pf	=new PortalFace();
+					pf.mFace	=f;
+					pf.mBrush	=this;
+					portals.Add(pf);
+				}
 			}
 		}
 
@@ -494,7 +526,10 @@ namespace BSPLib
 
 				if((f.mFlags & Face.HINT) != 0)
 				{
-					score	-=100.0f;
+					if(score < 69000.0f)
+					{
+						score	-=100.0f;
+					}
 				}
 
 				if(score < BestScore)
@@ -607,6 +642,9 @@ namespace BSPLib
 		}
 
 
+		static Int64 recCount	=0;
+
+
 		internal void SplitBrush(Face splitBy, out Brush bf, out Brush bb)
 		{
 			float fDist, bDist;
@@ -703,7 +741,7 @@ namespace BSPLib
 
 		//the passed in face is actually a real
 		//face that lives in a brush somewhere
-		internal void MergePortal(Face portal, List<Face> outPortals)
+		internal void MergePortal(Face portal, List<PortalFace> outPortals)
 		{
 			if(!portal.IsPortal())
 			{
@@ -732,7 +770,14 @@ namespace BSPLib
 
 					if(fronts.Count > 0)
 					{
-						outPortals.AddRange(fronts);
+						foreach(Face frnt in fronts)
+						{
+							PortalFace	pf	=new PortalFace();
+							pf.mFace	=frnt;
+							pf.mBrush	=this;
+
+							outPortals.Add(pf);
+						}
 					}
 
 					//clear portal flag
@@ -740,61 +785,6 @@ namespace BSPLib
 					return;
 				}
 			}
-		}
-
-
-		internal void BevelObtuse(float hullWidth)
-		{
-			List<Plane>	bevels	=new List<Plane>();
-
-			foreach(Face f in mFaces)
-			{
-				if(!f.IsPortal())
-				{
-					continue;
-				}
-				List<Face>	neighbors	=GetPortalNeighbors(f);
-				Plane		fPlane		=f.GetPlane();
-
-				foreach(Face nb in neighbors)
-				{
-					float	d	=f.AngleBetween(nb);
-
-					if(d < 0.0f)
-					{
-						Plane	bev		=new Plane();
-						Plane	nbPlane	=nb.GetPlane();
-						
-						bev.mNormal	=fPlane.mNormal + nbPlane.mNormal;
-						bev.mNormal.Normalize();
-
-						bev.mDistance	=Vector3.Dot(bev.mNormal, f.GetFirstSharedVert(nb));
-						bev.mDistance	-=hullWidth;
-
-						//make sure this plane is not already in the list
-						bool	bFound	=false;
-						foreach(Plane p in bevels)
-						{
-							if(p.CompareEpsilon(bev, 0.001f))
-							{
-								bFound	=true;
-							}
-						}
-						if(bFound)
-						{
-							continue;
-						}
-
-						bevels.Add(bev);
-					}
-				}
-			}
-
-			foreach(Plane p in bevels)
-			{
-				AddPlane(p);
-			}
-			SealFaces();
 		}
 		#endregion
 	}

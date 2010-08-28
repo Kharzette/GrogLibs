@@ -94,6 +94,8 @@
     <Compile Include="Face.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="Plane.cs" />
+    <Compile Include="Portal.cs" />
+    <Compile Include="PortalLink.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
