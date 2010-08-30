@@ -12,42 +12,54 @@ namespace BSPLib
 	{
 		//tree root
 		BspNode				mRoot;
-		List<PortalFace>	mPortalFaces;
-		List<Portal>		mPortals;
-//		List<Brush>	mTempBrushList;	//debuggery remove
+
+		List<Brush>	mDebugBrushList;	//debuggery remove
+		List<Brush>	mDrawBrushes;		//visible geometry
+		List<Brush>	mCollisionBrushes;	//collision hull
 
 
 		#region Constructors
 		public BspTree(List<Brush> brushList, float bevelDistance, bool bBevel)
 		{
-			//ensure no overlap
-			RemoveOverlap(brushList);
+			mDebugBrushList		=new List<Brush>();
+			mDrawBrushes		=new List<Brush>();
+			mCollisionBrushes	=new List<Brush>();
 
-/*			mTempBrushList	=new List<Brush>();
-
+			//copy list
 			foreach(Brush b in brushList)
 			{
 				Brush copy	=new Brush(b);
 
-				mTempBrushList.Add(copy);
-			}*/
+				mDebugBrushList.Add(copy);
+			}
+
+			//ensure no overlap
+			RemoveOverlap(brushList);
+
+			//copy list
+			foreach(Brush b in brushList)
+			{
+				Brush copy2	=new Brush(b);
+				Brush copy3	=new Brush(b);
+
+				mDrawBrushes.Add(copy2);
+				mCollisionBrushes.Add(copy3);
+			}
 			
 			//build a tree
-			mRoot	=new BspNode();
+/*			mRoot	=new BspNode();
 			mRoot.BuildTree(brushList);
 
 			MarkPortals();
 
 			LinkPortals();
 
+			mRoot.BoundNodeBrushes();
+
 			if(bBevel)
 			{
-				List<Plane>	bevs	=new List<Plane>();
-				foreach(Portal p in mPortals)
-				{
-					p.BevelObtuse(bevelDistance);
-				}
-			}
+				mRoot.BevelNodeBrushes();
+			}*/
 		}
 
 
@@ -63,7 +75,7 @@ namespace BSPLib
 		{
 			Bounds	bnd	=new Bounds();
 
-			mRoot.AddToBounds(ref bnd);
+			mRoot.AddToBounds(bnd);
 
 			return	bnd;
 		}
@@ -77,7 +89,8 @@ namespace BSPLib
 
 		internal int GetNumPortals()
 		{
-			return	mPortalFaces.Count;
+//			return	mPortalFaces.Count;
+			return	69;
 		}
 
 
@@ -87,19 +100,27 @@ namespace BSPLib
 		}
 
 
-		public void GetTriangles(List<Vector3> verts, List<UInt16> indexes)
+		public void GetRawTriangles(List<Vector3> verts, List<UInt16> indexes)
 		{
-/*			foreach(Brush b in mTempBrushList)
+			foreach(Brush b in mDebugBrushList)
 			{
 				b.GetTriangles(verts, indexes);
-			}*/
-//			mRoot.GetTriangles(verts, indexes);
-			
-			
-			foreach(PortalFace port in mPortalFaces)
+			}
+		}
+
+
+		public void GetMergedTriangles(List<Vector3> verts, List<UInt16> indexes)
+		{
+			foreach(Brush b in mDrawBrushes)
 			{
-				port.mFace.GetTriangles(verts, indexes);
-			}			
+				b.GetTriangles(verts, indexes);
+			}
+		}
+
+
+		public void GetBSPTriangles(List<Vector3> verts, List<UInt16> indexes)
+		{
+			mRoot.GetTriangles(verts, indexes);		
 		}
 
 
@@ -124,46 +145,9 @@ namespace BSPLib
 		#endregion
 
 
-		void LinkPortals()
+		internal void RemoveOverlap()
 		{
-			mPortals	=new List<Portal>();
-			foreach(PortalFace prt in mPortalFaces)
-			{
-				Portal	p	=new Portal(prt, mPortalFaces);
-				mPortals.Add(p);
-			}
-		}
-
-
-		void MarkPortals()
-		{
-			List<Plane>	planes	=new List<Plane>();
-
-			GetPlanes(planes);
-
-			//first phase
-			foreach(Plane p in planes)
-			{
-				Face	f	=new Face(p, null);
-				mRoot.MarkPortal(f);
-			}
-
-			List<Face>	portals	=new List<Face>();
-			mRoot.GetPortals(portals);
-
-			List<PortalFace>	newPortals	=new List<PortalFace>();
-
-			//see which survive
-			foreach(Face f in portals)
-			{
-				mRoot.MergePortal(f, newPortals);
-			}
-			portals.Clear();
-
-			mPortalFaces	=new List<PortalFace>();
-			mRoot.GetPortalFaces(mPortalFaces);
-
-			mPortalFaces.AddRange(newPortals);
+			RemoveOverlap(mDrawBrushes);
 		}
 
 
@@ -301,6 +285,21 @@ namespace BSPLib
 						i--;
 					}
 				}
+			}
+		}
+
+
+		internal void AddDetailBrushes(List<Brush> list)
+		{
+			foreach(Brush b in list)
+			{
+				Brush	copy1	=new Brush(b);
+				Brush	copy2	=new Brush(b);
+				Brush	copy3	=new Brush(b);
+
+				mDebugBrushList.Add(copy1);
+				mDrawBrushes.Add(copy2);
+				mCollisionBrushes.Add(copy3);
 			}
 		}
 	}

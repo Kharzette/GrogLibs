@@ -14,9 +14,45 @@ namespace BSPLib
 	//the brush
 	public class Brush
 	{
-		private List<Face> mFaces;
+		List<Face>	mFaces;
+		Bounds		mBounds;
+		UInt32		mContents;
 
 		public const float	MIN_MAX_BOUNDS	=15192.0f;
+
+		public const UInt32	CONTENTS_SOLID			=1;		// an eye is never valid in a solid
+		public const UInt32	CONTENTS_WINDOW			=2;		// translucent, but not watery
+		public const UInt32	CONTENTS_AUX			=4;
+		public const UInt32	CONTENTS_LAVA			=8;
+		public const UInt32	CONTENTS_SLIME			=16;
+		public const UInt32	CONTENTS_WATER			=32;
+		public const UInt32	CONTENTS_MIST			=64;
+		public const UInt32	LAST_VISIBLE_CONTENTS	=64;
+
+		// remaining contents are non-visible, and don't eat brushes
+
+		public const UInt32	CONTENTS_AREAPORTAL		=0x8000;
+		public const UInt32	CONTENTS_PLAYERCLIP		=0x10000;
+		public const UInt32	CONTENTS_MONSTERCLIP	=0x20000;
+
+		// currents can be added to any other contents, and may be mixed
+		public const UInt32	CONTENTS_CURRENT_0		=0x40000;
+		public const UInt32	CONTENTS_CURRENT_90		=0x80000;
+		public const UInt32	CONTENTS_CURRENT_180	=0x100000;
+		public const UInt32	CONTENTS_CURRENT_270	=0x200000;
+		public const UInt32	CONTENTS_CURRENT_UP		=0x400000;
+		public const UInt32	CONTENTS_CURRENT_DOWN	=0x800000;
+
+		public const UInt32	CONTENTS_ORIGIN			=0x1000000;	// removed before bsping an entity
+
+		public const UInt32	CONTENTS_MONSTER		=0x2000000;	// should never be on a brush, only in game
+		public const UInt32	CONTENTS_DEADMONSTER	=0x4000000;
+		public const UInt32	CONTENTS_DETAIL			=0x8000000;	// brushes to be added after vis leafs
+		public const UInt32	CONTENTS_TRANSLUCENT	=0x10000000;	// auto set if any surface has trans
+		public const UInt32	CONTENTS_LADDER			=0x20000000;
+		public const UInt32	CONTENTS_STRUCTURAL		=0x10000000;	// brushes used for the bsp
+		public const UInt32	CONTENTS_TRIGGER		=0x40000000;
+		public const UInt32	CONTENTS_NODROP			=0x80000000;	// don't leave bodies or items (death fog, lava)
 
 
 		#region Constructors
@@ -47,18 +83,18 @@ namespace BSPLib
 //				{
 //					continue;
 //				}
-				if((f.mFlags & Face.FACE_DETAIL) != 0)
-				{
-					continue;
-				}
+//				if((f.mFlags & Face.FACE_DETAIL) != 0)
+//				{
+//					continue;
+//				}
 //				if((f.mFlags & Face.FACE_HIDDEN) != 0)
 //				{
 //					continue;
 //				}
-				if((f.mFlags & Face.TEX_CLIP) != 0)
-				{
-					continue;
-				}
+//				if((f.mFlags & Face.TEX_CLIP) != 0)
+//				{
+//					continue;
+//				}
 			}
 			mFaces.AddRange(faces);
 		}
@@ -70,6 +106,16 @@ namespace BSPLib
 			mFaces.Add(f);
 
 			SealFaces();
+		}
+
+
+		internal void BoundBrush()
+		{
+			mBounds	=new Bounds();
+			foreach(Face f in mFaces)
+			{
+				f.AddToBounds(mBounds);
+			}
 		}
 
 
@@ -94,17 +140,11 @@ namespace BSPLib
 
 
 		#region Queries
-		internal List<Face> GetFaces()
-		{
-			return	mFaces;
-		}
-
-
-		internal void AddToBounds(ref Bounds bnd)
+		internal void AddToBounds(Bounds bnd)
 		{
 			foreach(Face f in mFaces)
 			{
-				f.AddToBounds(ref bnd);
+				f.AddToBounds(bnd);
 			}
 		}
 
@@ -254,49 +294,19 @@ namespace BSPLib
 		}
 
 
-		List<Face> GetPortalNeighbors(Face f)
-		{
-			List<Face>		ret		=new List<Face>();
-			List<Vector3>	pnts	=f.GetPoints();
-
-			foreach(Vector3 pnt in pnts)
-			{
-				foreach(Face brushFace in mFaces)
-				{
-					if(f == brushFace || !f.IsPortal())
-					{
-						continue;
-					}
-					if(brushFace.ContainsPoint(pnt))
-					{
-						if(!ret.Contains(brushFace))
-						{
-							ret.Add(brushFace);
-						}
-					}
-				}
-			}
-			return	ret;
-		}
-
-
 		internal void GetTriangles(List<Vector3> tris, List<UInt16> ind)
 		{
 			foreach(Face f in mFaces)
 			{
-				if((f.mFlags & Face.HINT) != 0)
+				if((f.mFlags & Face.SURF_SKIP) != 0)
 				{
 					continue;
 				}
-//				if((f.mFlags & Face.FACE_DETAIL) != 0)
-//				{
-//					continue;
-//				}
-				if((f.mFlags & Face.FACE_HIDDEN) != 0)
+				if((f.mFlags & Face.SURF_NODRAW) != 0)
 				{
 					continue;
 				}
-				if((f.mFlags & Face.TEX_CLIP) != 0)
+				if((f.mFlags & Face.SURF_HINT) != 0)
 				{
 					continue;
 				}
@@ -314,30 +324,16 @@ namespace BSPLib
 		}
 
 
-		internal void GetPortalFaces(List<PortalFace> portals)
+		bool IsBehind(Plane ax)
 		{
 			foreach(Face f in mFaces)
 			{
-				if(f.IsPortal())				
+				if(!f.IsBehind(ax))
 				{
-					PortalFace	pf	=new PortalFace();
-					pf.mFace	=f;
-					pf.mBrush	=this;
-					portals.Add(pf);
+					return	false;
 				}
 			}
-		}
-
-
-		internal void GetPortals(List<Face> portals)
-		{
-			foreach(Face f in mFaces)
-			{
-				if(f.IsPortal())				
-				{
-					portals.Add(f);
-				}
-			}
+			return	true;
 		}
 		#endregion
 
@@ -367,7 +363,9 @@ namespace BSPLib
 				if(s == "side")
 				{
 					Face	f	=new Face();
-					if(!f.ReadVMFSideBlock(sr))
+					mContents	=f.ReadVMFSideBlock(sr);
+
+					if(mContents == CONTENTS_AUX)
 					{
 						ret	=false;
 					}
@@ -524,7 +522,7 @@ namespace BSPLib
 			{
 				float	score	=GetSplitFaceScore(f, brushList);
 
-				if((f.mFlags & Face.HINT) != 0)
+				if((f.mFlags & Face.SURF_HINT) != 0)
 				{
 					if(score < 69000.0f)
 					{
@@ -574,6 +572,18 @@ namespace BSPLib
 			if(b.mFaces.Count == 0)
 			{
 				return false;
+			}
+
+			if((b.mContents & 127) == 0)
+			{
+				//brush b can't gobble anything
+				return	false;
+			}
+
+			if((b.mContents & 127) > (mContents & 127))
+			{
+				//brush b can't gobble thisbrush
+				return	false;
 			}
 
 			inside  =new Brush(this);
@@ -640,9 +650,6 @@ namespace BSPLib
 				}
 			}
 		}
-
-
-		static Int64 recCount	=0;
 
 
 		internal void SplitBrush(Face splitBy, out Brush bf, out Brush bb)
@@ -722,69 +729,96 @@ namespace BSPLib
 		}
 
 
-		internal void MarkPortal(Face portal)
+		internal void BevelBrush()
 		{
+			//add axial planes
+			for(int i=0;i < 6;i++)
+			{
+				Plane	ax;
+				ax.mNormal	=UtilityLib.Mathery.AxialNormals[i];
+
+				if(i < 3)
+				{
+					ax.mDistance	=Vector3.Dot(mBounds.mMaxs, ax.mNormal);
+				}
+				else
+				{
+					ax.mDistance	=Vector3.Dot(mBounds.mMins, ax.mNormal);
+				}
+
+				if(ContainsPlane(ax))
+				{
+					continue;
+				}
+
+				Face	axFace	=new Face(ax, mFaces[0]);
+				axFace.mFlags	|=Face.SURF_NODRAW;
+
+				//add to the brush, but don't clip
+				//the other faces.  Seal will destroy things
+				mFaces.Add(axFace);
+			}
+
+			if(mFaces.Count == 6)
+			{
+				return;	//cube
+			}
+
+			//check edges
 			foreach(Face f in mFaces)
 			{
-				Face	port	=new Face(portal);
-				if(port.PortalClipByFace(f))
+				List<Edge>	edges	=new List<Edge>();
+				f.GetEdges(edges);
+
+				foreach(Edge e in edges)
 				{
-					if(!port.IsTiny())
+					if(e.IsAxial() || e.Length() < 0.5f)
 					{
-						Face	pf	=GetFaceForPlane(port.GetPlane());
-						pf.mFlags	|=Face.PORTAL;
+						continue;
+					}
+
+					//try to bevel using axial planes
+					for(int i=0;i < 6;i++)
+					{
+						Plane	ax;
+						ax.mNormal	=Vector3.Cross(e.GetNormal(),
+							UtilityLib.Mathery.AxialNormals[i]);
+
+						if(ax.mNormal.Length() < 0.5f)
+						{
+							continue;
+						}
+
+						ax.mNormal.Normalize();
+						ax.mDistance	=Vector3.Dot(e.mP0, ax.mNormal);
+
+						//see if already added
+						if(ContainsPlane(ax))
+						{
+							continue;
+						}
+
+						//see if rest of the brush is behind this plane
+						if(IsBehind(ax))
+						{
+							Face	axFace	=new Face(ax, mFaces[0]);
+							axFace.mFlags	|=Face.SURF_NODRAW;
+
+							mFaces.Add(axFace);
+						}
 					}
 				}
 			}
 		}
 
 
-		//the passed in face is actually a real
-		//face that lives in a brush somewhere
-		internal void MergePortal(Face portal, List<PortalFace> outPortals)
+		internal void Expand(float dist)
 		{
-			if(!portal.IsPortal())
-			{
-				return;
-			}
-			Face	clipped	=new Face(portal);
-
-			ClipFaceByBrushBack(clipped, true);
-
-			if(clipped.IsTiny())
-			{
-				return;
-			}
-
 			foreach(Face f in mFaces)
 			{
-				if(f == portal)
-				{
-					return;
-				}
-				if(clipped.WouldPortalClipBehind(f))
-				{
-					Face	clipFront	=new Face(portal);
-
-					List<Face>	fronts	=ClipFaceByBrushFront(clipFront, false);
-
-					if(fronts.Count > 0)
-					{
-						foreach(Face frnt in fronts)
-						{
-							PortalFace	pf	=new PortalFace();
-							pf.mFace	=frnt;
-							pf.mBrush	=this;
-
-							outPortals.Add(pf);
-						}
-					}
-
-					//clear portal flag
-					portal.mFlags	&=(~Face.PORTAL);
-					return;
-				}
+				f.Move(dist);
 			}
+			SealFaces();
 		}
 		#endregion
 	}

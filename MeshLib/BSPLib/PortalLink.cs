@@ -84,6 +84,30 @@ namespace BSPLib
 			}
 			return	false;
 		}
+
+
+		internal bool IsAxial()
+		{
+			Vector3	norm	=GetNormal();
+
+			return	UtilityLib.Mathery.IsAxial(norm);
+		}
+
+
+		internal Vector3 GetNormal()
+		{
+			Vector3	norm	=mP1 - mP0;
+
+			norm.Normalize();
+
+			return	norm;
+		}
+
+
+		internal float Length()
+		{
+			return	(mP1 - mP0).Length();
+		}
 	}
 
 

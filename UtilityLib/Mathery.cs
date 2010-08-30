@@ -9,7 +9,19 @@ namespace UtilityLib
 {
 	public class Mathery
 	{
-		public const float VCompareEpsilon	=0.001f;
+		public const float		VCompareEpsilon	=0.001f;
+		public static Vector3	[]AxialNormals	=new Vector3[6];
+
+
+		static Mathery()
+		{
+			AxialNormals[0]	=Vector3.UnitX;
+			AxialNormals[1]	=Vector3.UnitY;
+			AxialNormals[2]	=Vector3.UnitZ;
+			AxialNormals[3]	=-Vector3.UnitX;
+			AxialNormals[4]	=-Vector3.UnitY;
+			AxialNormals[5]	=-Vector3.UnitZ;
+		}
 
 
 		public static Color RandomColor(Random rnd)
@@ -20,6 +32,19 @@ namespace UtilityLib
 						Convert.ToByte(rnd.Next(255)),
 						Convert.ToByte(rnd.Next(255)));
 			return	randColor;
+		}
+
+
+		public static bool IsAxial(Vector3 v)
+		{
+			foreach(Vector3 ax in AxialNormals)
+			{
+				if(CompareVectorEpsilon(ax, v, 0.001f))
+				{
+					return	true;
+				}
+			}
+			return	false;
 		}
 
 
@@ -52,6 +77,19 @@ namespace UtilityLib
 				return	false;
 			}
 			return	true;
+		}
+
+
+		public static bool CompareVectorABS(Vector3 v1, Vector3 v2, float epsilon)
+		{
+			v1.X	=Math.Abs(v1.X);
+			v1.Y	=Math.Abs(v1.Y);
+			v1.Z	=Math.Abs(v1.Z);
+			v2.X	=Math.Abs(v2.X);
+			v2.Y	=Math.Abs(v2.Y);
+			v2.Z	=Math.Abs(v2.Z);
+
+			return	CompareVectorEpsilon(v1, v2, epsilon);
 		}
 
 

@@ -98,29 +98,18 @@ namespace BSPLib
 
 		public void GetTriangles(List<Vector3> verts, List<ushort> indexes, int entityIndex)
 		{
-/*			if(entityIndex >= mEntities.Count)
+			if(entityIndex == 0)
 			{
-				return;
+				mTree.GetRawTriangles(verts, indexes);
 			}
-			if(entityIndex < 0)
+			else if(entityIndex == 1)
 			{
-				return;
+				mTree.GetMergedTriangles(verts, indexes);
 			}
-
-//			if(mEntities[entityIndex].mBrushes != null)
-			foreach(Entity ent in mEntities)
+			else if(entityIndex == 2)
 			{
-				if(ent.mBrushes != null)
-				{
-//					foreach(Brush b in mEntities[entityIndex].mBrushes)
-					foreach(Brush b in ent.mBrushes)
-					{
-						b.SealFaces();
-						b.GetTriangles(verts, indexes);
-					}
-				}
-			}*/
-			mTree.GetTriangles(verts, indexes);
+				mTree.GetBSPTriangles(verts, indexes);
+			}
 		}
 
 
@@ -192,13 +181,29 @@ namespace BSPLib
 		public void BuildTree(float bevelDistance, bool bBevel)
 		{
 			//look for the worldspawn
-			Entity		e	=GetWorldSpawnEntity();
+			Entity		wse	=GetWorldSpawnEntity();
 			List<Brush>	copy;
 
-			copy	=new List<Brush>(e.mBrushes);
+			copy	=new List<Brush>(wse.mBrushes);
 
 			//use the copy so we have the old ones around to draw
 			mTree	=new BspTree(copy, bevelDistance, bBevel);
+
+			//add in entity brushes
+			foreach(Entity e in mEntities)
+			{
+				if(e.mBrushes != null)
+				{
+					if(e.mData.ContainsKey("classname"))
+					{
+						if(e.mData["classname"] == "func_detail")
+						{
+							mTree.AddDetailBrushes(e.mBrushes);
+						}
+					}
+				}
+			}
+			mTree.RemoveOverlap();
 		}
 		
 

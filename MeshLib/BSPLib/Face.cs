@@ -16,13 +16,32 @@ namespace BSPLib
 		public	UInt32	mFlags;
 
 		private	const float	EDGE_LENGTH		=0.1f;
-		public const UInt32	FACE_DETAIL		=0x8000000;
-		public const UInt32	TEX_SPECIAL		=1;
-		public const UInt32	FACE_HIDDEN		=2;
-		public const UInt32	TEX_ANIMATING	=4;
-		public const UInt32	TEX_CLIP		=8;
-		public const UInt32	PORTAL			=16;
-		public const UInt32	HINT			=32;
+
+		//Q3 style face flags
+		public const UInt32	SURF_LIGHT		=0x1;		// value will hold the light strength
+		public const UInt32	SURF_SLICK		=0x2;		// effects game physics
+		public const UInt32	SURF_SKY		=0x4;		// don't draw, but add to skybox
+		public const UInt32	SURF_WARP		=0x8;		// turbulent water warp
+		public const UInt32	SURF_TRANS33	=0x10;
+		public const UInt32	SURF_TRANS66	=0x20;
+		public const UInt32	SURF_FLOWING	=0x40;	// scroll towards angle
+		public const UInt32	SURF_NODAMAGE			=0x1;		// never give falling damage
+		public const UInt32	SURF_LADDER				=0x8;
+		public const UInt32	SURF_NOIMPACT			=0x10;	// don't make missile explosions
+		public const UInt32	SURF_NOMARKS			=0x20;	// don't leave missile marks
+		public const UInt32	SURF_FLESH				=0x40;	// make flesh sounds and effects
+		public const UInt32	SURF_NODRAW				=0x80;	// don't generate a drawsurface at all
+		public const UInt32	SURF_HINT				=0x100;	// make a primary bsp splitter
+		public const UInt32	SURF_SKIP				=0x200;	// completely ignore, allowing non-closed brushes
+		public const UInt32	SURF_NOLIGHTMAP			=0x400;	// surface doesn't need a lightmap
+		public const UInt32	SURF_POINTLIGHT			=0x800;	// generate lighting info at vertexes
+		public const UInt32	SURF_METALSTEPS			=0x1000;	// clanking footsteps
+		public const UInt32	SURF_NOSTEPS			=0x2000;	// no footstep sounds
+		public const UInt32	SURF_NONSOLID			=0x4000;	// don't collide against curves with this set
+		public const UInt32	SURF_LIGHTFILTER		=0x8000;	// act as a light filter during q3map -light
+		public const UInt32	SURF_ALPHASHADOW		=0x10000;	// do per-pixel light shadow casting in q3map
+		public const UInt32	SURF_NODLIGHT			=0x20000;	// don't dlight even if solid (solid lava, skies)
+		public const UInt32	SURF_DUST				=0x40000; // leave a dust trail when walking on this surface
 
 
 		#region Constructors
@@ -56,6 +75,29 @@ namespace BSPLib
 		}
 
 
+		public Face(Face f, bool bInvert)
+		{
+			mPoints	=new List<Vector3>();
+
+			foreach(Vector3 pnt in f.mPoints)
+			{
+				mPoints.Add(pnt);
+			}
+
+			mFacePlane	=f.mFacePlane;
+			mFlags		=f.mFlags;
+
+			if(bInvert)
+			{
+				mPoints.Reverse();
+				mFacePlane.mNormal		*=-1.0f;
+				mFacePlane.mDistance	*=-1.0f;
+			}
+		}
+		#endregion
+
+
+		#region IO
 		//parse map file stuff
 		public Face(string szLine)
 		{
@@ -86,19 +128,18 @@ namespace BSPLib
 				//grab tex name if avail
 				if(tok == "clip" || tok == "CLIP")
 				{
-					mFlags	|=TEX_CLIP;
-					mFlags	|=FACE_HIDDEN;
+					mFlags	|=SURF_NODRAW;
 					texName	=tok;
 				}
 				if(tok[0] == '*')
 				{
-					mFlags	|=TEX_SPECIAL;
+					mFlags	|=SURF_WARP;
 					texName	=tok.Substring(1);
 					continue;
 				}
 				else if(tok[0] == '#')
 				{
-					mFlags	|=TEX_SPECIAL;
+					mFlags	|=SURF_WARP;
 					texName	=tok;
 					continue;
 				}
@@ -106,7 +147,7 @@ namespace BSPLib
 				{
 					//animating I think
 					texName	=tok;
-					mFlags	|=TEX_ANIMATING;
+					mFlags	|=SURF_WARP;
 				}
 				else if(char.IsLetter(tok, 0))
 				{
@@ -144,41 +185,18 @@ namespace BSPLib
 			mPoints.Add(new Vector3(-numbers[6], numbers[8], numbers[7]));
 
 			//see if there are any quake 3 style flags
-			if(flags.Count > 0)
+/*			if(flags.Count > 0)
 			{
-				if((flags[0] & FACE_DETAIL) != 0)
+				if((flags[0] & Brush.) != 0)
 				{
-					mFlags	|=FACE_DETAIL;
+					mFlags	|=DETAIL;
 				}
-			}
+			}*/
 
 			SetPlaneFromFace();
 		}
 
 
-		public Face(Face f, bool bInvert)
-		{
-			mPoints	=new List<Vector3>();
-
-			foreach(Vector3 pnt in f.mPoints)
-			{
-				mPoints.Add(pnt);
-			}
-
-			mFacePlane	=f.mFacePlane;
-			mFlags		=f.mFlags;
-
-			if(bInvert)
-			{
-				mPoints.Reverse();
-				mFacePlane.mNormal		*=-1.0f;
-				mFacePlane.mDistance	*=-1.0f;
-			}
-		}
-		#endregion
-
-
-		#region IO
 		internal void Read(BinaryReader br)
 		{
 			mFacePlane.Read(br);
@@ -189,13 +207,6 @@ namespace BSPLib
 
 		internal void Write(BinaryWriter bw)
 		{
-			//don't write clip or hidden
-			if(((mFlags & FACE_HIDDEN) |
-				(mFlags & TEX_CLIP)) != 0)
-			{
-				return;
-			}
-
 			mFacePlane.Write(bw);
 
 			bw.Write(mFlags);
@@ -220,7 +231,6 @@ namespace BSPLib
 			Single.TryParse(vecStr[2], out ret.Y);
 
 			ret.X	=-ret.X;
-			//ret.Z	=-ret.Z;
 
 			return	ret;
 		}
@@ -249,11 +259,11 @@ namespace BSPLib
 		}
 
 
-		internal bool ReadVMFSideBlock(StreamReader sr)
+		internal UInt32 ReadVMFSideBlock(StreamReader sr)
 		{
 			string	s	="";
 			string	tex	="";
-			bool	ret	=true;
+			UInt32	ret	=0;
 			while((s = sr.ReadLine()) != null)
 			{
 				s	=s.Trim();
@@ -274,39 +284,106 @@ namespace BSPLib
 					else if(tokens[1] == "material")
 					{
 						tex	=tokens[3];
+						if(tex == "TOOLS/TOOLSAREAPORTAL")
+						{
+							ret	|=Brush.CONTENTS_AREAPORTAL;
+						}
+						if(tex == "TOOLS/TOOLSBLACK")
+						{
+							mFlags	&=~SURF_LIGHT;
+							ret		|=Brush.CONTENTS_SOLID;
+						}
+						if(tex == "TOOLS/TOOLSBLOCK_LOS")
+						{
+							mFlags	|=SURF_NODRAW;	//not correct
+						}
+						if(tex == "TOOLS/TOOLSBLOCKBULLETS")
+						{
+							mFlags	|=SURF_NODRAW;	//not correct
+						}
+						if(tex == "TOOLS/TOOLSBLOCKLIGHT")
+						{
+							mFlags	|=SURF_NODRAW;	//not correct
+						}
+						if(tex == "TOOLS/TOOLSCLIP")
+						{
+							mFlags	|=SURF_NODRAW;
+							ret		|=Brush.CONTENTS_PLAYERCLIP;
+							ret		|=Brush.CONTENTS_MONSTERCLIP;
+						}
+						if(tex == "TOOLS/TOOLSCONTROLCLIP")	//not correct
+						{
+							mFlags	|=SURF_NODRAW;
+							ret		|=Brush.CONTENTS_PLAYERCLIP;
+							ret		|=Brush.CONTENTS_MONSTERCLIP;
+						}
+						if(tex == "TOOLS/TOOLSDOTTED")
+						{
+							mFlags	|=SURF_NODRAW;	//not correct
+						}
+						if(tex == "TOOLS/TOOLSFOG")
+						{
+							mFlags	|=SURF_NODRAW;
+							ret		|=Brush.CONTENTS_MIST;
+						}
 						if(tex == "TOOLS/TOOLSHINT")
 						{
-							mFlags	|=HINT;
-//							mFlags	|=FACE_HIDDEN;
+							mFlags	|=SURF_NODRAW;
+							mFlags	|=SURF_HINT;
+							ret		|=Brush.CONTENTS_TRANSLUCENT;
 						}
-						else if(tex == "TOOLS/TOOLSSKIP")
+						if(tex == "TOOLS/TOOLSINVISIBLE")
 						{
-							mFlags	|=FACE_HIDDEN;
+							mFlags	|=SURF_NODRAW;
+						}
+						if(tex == "TOOLS/TOOLSINVISIBLELADDER")
+						{
+							mFlags	|=SURF_LADDER;
+							mFlags	|=SURF_NODRAW;
+							ret		|=Brush.CONTENTS_LADDER;
+						}
+						if(tex == "TOOLS/TOOLSNODRAW")
+						{
+							mFlags	|=SURF_NODRAW;
+						}
+						if(tex == "TOOLS/TOOLSNPCCLIP")
+						{
+							mFlags	|=SURF_NODRAW;
+							ret		|=Brush.CONTENTS_MONSTERCLIP;
+						}
+						if(tex == "TOOLS/TOOLSOCCLUDER")
+						{
+							mFlags	|=SURF_NODRAW;
+						}
+						if(tex == "TOOLS/TOOLSORIGIN")
+						{
+							ret	|=Brush.CONTENTS_ORIGIN;
+						}
+						if(tex == "TOOLS/TOOLSPLAYERCLIP")
+						{
+							mFlags	|=SURF_NODRAW;
+							ret		|=Brush.CONTENTS_PLAYERCLIP;
+						}
+						if(tex == "TOOLS/TOOLSSKIP")
+						{
+							mFlags	|=SURF_SKIP;
+						}
+						if(tex == "TOOLS/TOOLSSKYBOX")
+						{
+							mFlags	|=SURF_SKY;
+						}
+						if(tex == "TOOLS/TOOLSSKYBOX2D")
+						{
+							mFlags	|=SURF_SKY;
+						}
+						else if(tex == "TOOLS/TOOLSSKYFOG")
+						{
+							mFlags	|=SURF_SKY;
 						}
 						else if(tex == "TOOLS/TOOLSTRIGGER")
 						{
-							mFlags	|=FACE_HIDDEN;
-						}
-						else if(tex == "TOOLS/TOOLSBLACK")
-						{
-							mFlags	|=FACE_HIDDEN;
-						}
-						else if(tex == "TOOLS/TOOLSOCCLUDER")
-						{
-							mFlags	|=FACE_HIDDEN;
-						}
-						else if(tex == "TOOLS/TOOLSNODRAW")
-						{
-							mFlags	|=FACE_HIDDEN;
-						}
-						else if(tex == "TOOLS/TOOLSSKYBOX")
-						{
-							mFlags	|=FACE_HIDDEN;
-						}
-						else if(tex == "TOOLS/TOOLSPLAYERCLIP")
-						{
-							mFlags	|=FACE_HIDDEN;
-							mFlags	|=TEX_CLIP;
+							mFlags	|=SURF_NODRAW;
+							ret		|=Brush.CONTENTS_TRIGGER;
 						}
 					}
 					else if(tokens[1] == "uaxis")
@@ -329,7 +406,7 @@ namespace BSPLib
 				else if(s == "dispinfo")
 				{
 					SkipVMFDispInfoBlock(sr);
-					ret	=false;
+					ret	|=Brush.CONTENTS_AUX;
 				}
 			}
 			return	ret;
@@ -341,6 +418,19 @@ namespace BSPLib
 		internal Plane GetPlane()
 		{
 			return	mFacePlane;
+		}
+
+
+		internal bool IsBehind(Plane ax)
+		{
+			foreach(Vector3 pnt in mPoints)
+			{
+				if(ax.DistanceFrom(pnt) > Face.EDGE_LENGTH)
+				{
+					return	false;
+				}
+			}
+			return	true;
 		}
 
 
@@ -470,7 +560,7 @@ namespace BSPLib
 		}
 
 
-		internal void AddToBounds(ref Bounds bnd)
+		internal void AddToBounds(Bounds bnd)
 		{
 			foreach(Vector3 pnt in mPoints)
 			{
@@ -533,12 +623,6 @@ namespace BSPLib
 		}
 
 
-		internal bool IsPortal()
-		{
-			return	((mFlags & PORTAL) != 0);
-		}
-
-
 		internal void GetTriangles(List<Vector3> verts, List<UInt16> indexes)
 		{
 			int	ofs		=verts.Count;
@@ -569,6 +653,14 @@ namespace BSPLib
 		internal void Expand()
 		{
 			SetFaceFromPlane(mFacePlane, Brush.MIN_MAX_BOUNDS);
+		}
+
+
+		internal void Move(float dist)
+		{
+			mFacePlane.mDistance	+=dist;
+
+			Expand();
 		}
 
 

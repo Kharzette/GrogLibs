@@ -30,20 +30,20 @@ namespace BSPLib
 
 
 		#region Queries
-		internal void AddToBounds(ref Bounds bnd)
+		internal void AddToBounds(Bounds bnd)
 		{
 			if(mBrush != null)
 			{
-				mBrush.AddToBounds(ref bnd);
+				mBrush.AddToBounds(bnd);
 			}
 
 			if(mFront != null)
 			{
-				mFront.AddToBounds(ref bnd);
+				mFront.AddToBounds(bnd);
 			}
 			if(mBack != null)
 			{
-				mBack.AddToBounds(ref bnd);
+				mBack.AddToBounds(bnd);
 			}
 		}
 
@@ -161,7 +161,7 @@ namespace BSPLib
 
 
 		//builds a bsp good for collision info
-		internal void BuildTree(List<Brush> brushList)
+		internal void BuildCollisionTree(List<Brush> brushList)
 		{
 			List<Brush>	frontList	=new List<Brush>();
 			List<Brush>	backList	=new List<Brush>();
@@ -180,7 +180,7 @@ namespace BSPLib
 				mBrush	=new Brush();
 				foreach(Brush b in brushList)
 				{
-					mBrush.AddFaces(b.GetFaces());
+//					mBrush.AddFaces(b.GetSolidFaces());
 				}
 				mBrush.SealFaces();
 				if(!mBrush.IsValid())
@@ -232,7 +232,7 @@ namespace BSPLib
 			if(frontList.Count > 0)
 			{
 				mFront			=new BspNode();
-				mFront.BuildTree(frontList);
+				mFront.BuildCollisionTree(frontList);
 			}
 			else
 			{
@@ -242,7 +242,7 @@ namespace BSPLib
 			if(backList.Count > 0)
 			{
 				mBack			=new BspNode();
-				mBack.BuildTree(backList);
+				mBack.BuildCollisionTree(backList);
 			}
 			else
 			{
@@ -251,70 +251,8 @@ namespace BSPLib
 		}
 
 
-		internal void GetPortalFaces(List<PortalFace> portals)
-		{
-			if(mBrush != null)
-			{
-				mBrush.GetPortalFaces(portals);
-				return;
-			}
-
-			mBack.GetPortalFaces(portals);
-			mFront.GetPortalFaces(portals);
-		}
-
-
-		internal void GetPortals(List<Face> portals)
-		{
-			if(mBrush != null)
-			{
-				mBrush.GetPortals(portals);
-				return;
-			}
-
-			mBack.GetPortals(portals);
-			mFront.GetPortals(portals);
-		}
-
-
-		//see if this portal lands on the back
-		internal void MergePortal(Face portal, List<PortalFace> outPortals)
-		{
-			if(mBrush != null)
-			{
-				mBrush.MergePortal(portal, outPortals);
-				return;
-			}
-			mBack.MergePortal(portal, outPortals);
-			mFront.MergePortal(portal, outPortals);
-		}
-
-
-		internal void MarkPortal(Face portal)
-		{
-			if(mBrush != null)
-			{
-				mBrush.MarkPortal(portal);
-				return;
-			}
-
-			Face	planeFace	=new Face(mPlane, null);
-			Face	back		=new Face(portal);
-			Face	front		=new Face(portal);
-
-			if(back.ClipByFace(planeFace, false, true))
-			{
-				mBack.MarkPortal(back);
-			}
-			if(front.ClipByFace(planeFace, true, true))
-			{
-				mFront.MarkPortal(front);
-			}
-		}
-
-
 		//grab all the brushes in the tree
-		void GatherNodeBrushes(ref List<Brush> brushes)
+		internal void GatherNodeBrushes(List<Brush> brushes)
 		{
 			if(mBrush != null)
 			{
@@ -324,9 +262,37 @@ namespace BSPLib
 
 			if(mFront != null)
 			{
-				mFront.GatherNodeBrushes(ref brushes);
+				mFront.GatherNodeBrushes(brushes);
 			}
-			mBack.GatherNodeBrushes(ref brushes);
+			mBack.GatherNodeBrushes(brushes);
+		}
+
+
+		//make the brush bounds
+		internal void BoundNodeBrushes()
+		{
+			if(mBrush != null)
+			{
+				mBrush.BoundBrush();
+				return;
+			}
+
+			mFront.BoundNodeBrushes();
+			mBack.BoundNodeBrushes();
+		}
+
+
+		//do the beveling planes
+		internal void BevelNodeBrushes()
+		{
+			if(mBrush != null)
+			{
+				mBrush.BevelBrush();
+				return;
+			}
+
+			mFront.BevelNodeBrushes();
+			mBack.BevelNodeBrushes();
 		}
 
 
