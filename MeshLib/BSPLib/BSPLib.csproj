@@ -96,6 +96,7 @@
     <Compile Include="Plane.cs" />
     <Compile Include="Portal.cs" />
     <Compile Include="PortalLink.cs" />
+    <Compile Include="Progress.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

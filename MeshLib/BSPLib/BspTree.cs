@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Threading;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,61 +12,167 @@ namespace BSPLib
 	public class BspTree
 	{
 		//tree root
-		BspNode				mRoot;
+		BspNode	mRoot;
+		int		mThreadCount;
 
-		List<Brush>	mDebugBrushList;	//debuggery remove
-		List<Brush>	mDrawBrushes;		//visible geometry
-		List<Brush>	mCollisionBrushes;	//collision hull
+		event EventHandler	eThreadDone;
 
 
 		#region Constructors
-		public BspTree(List<Brush> brushList, float bevelDistance, bool bBevel)
+		public BspTree(List<Brush> brushList, bool bBevel)
 		{
-			mDebugBrushList		=new List<Brush>();
-			mDrawBrushes		=new List<Brush>();
-			mCollisionBrushes	=new List<Brush>();
+			eThreadDone	+=OnThreadDone;
 
-			//copy list
-			foreach(Brush b in brushList)
+			if(!BuildThreaded(brushList, bBevel))
 			{
-				Brush copy	=new Brush(b);
+				//register a progress on the number of brushes left
+				object	prog	=ProgressWatcher.RegisterProgress(0,
+					brushList.Count, brushList.Count - 1);
 
-				mDebugBrushList.Add(copy);
+				mRoot	=new BspNode();
+				mRoot.BuildTree(brushList, prog);
 			}
-
-			//ensure no overlap
-			RemoveOverlap(brushList);
-
-			//copy list
-			foreach(Brush b in brushList)
-			{
-				Brush copy2	=new Brush(b);
-				Brush copy3	=new Brush(b);
-
-				mDrawBrushes.Add(copy2);
-				mCollisionBrushes.Add(copy3);
-			}
-			
-			//build a tree
-/*			mRoot	=new BspNode();
-			mRoot.BuildTree(brushList);
-
-			MarkPortals();
-
-			LinkPortals();
-
-			mRoot.BoundNodeBrushes();
-
-			if(bBevel)
-			{
-				mRoot.BevelNodeBrushes();
-			}*/
 		}
 
 
-		public BspTree()
+		void OnThreadDone(object sender, EventArgs ea)
 		{
+			mThreadCount--;
+			if(mThreadCount == 0)
+			{
+				Map.Print("Bounding node brushes\n");
+
+				mRoot.BoundNodeBrushes();
+
+				if((bool)sender)
+				{
+					Map.Print("Beveling node brushes\n");
+					mRoot.BevelNodeBrushes();
+				}
+			}
+		}
+
+
+		void CBBuildTree(object context)
+		{
+			BuildContext	bc	=context as BuildContext;
+
+			//register a progress on the number of brushes left
+			object	prog	=ProgressWatcher.RegisterProgress(0, bc.Brushes.Count, bc.Brushes.Count - 1);
+
+			bc.This.BuildTree(bc.Brushes, prog);
+
+			Map.Print("Tree build thread complete\n");
+
+			if(eThreadDone != null)
+			{
+				eThreadDone(bc.mbBevel, null);
+			}
+		}
+
+
+		bool BuildThreaded(List<Brush> brushList, bool bBevel)
+		{
+			List<Brush>	frontList	=new List<Brush>();
+			List<Brush>	backList	=new List<Brush>();
+
+			Face	face;
+
 			mRoot	=new BspNode();
+
+			Map.Print("Searching for the best initial split plane");
+
+			object	prog	=ProgressWatcher.RegisterProgress(0, brushList.Count, 0);
+
+			if(!mRoot.FindGoodSplitFace(brushList, out face, prog))			
+			{
+				Map.Print("Failed to find a good initial split plane!");
+				return	false;
+			}
+
+			ProgressWatcher.DestroyProgress(prog);
+
+			Map.Print("Found a good initial split plane, splitting entire list");
+
+			mThreadCount	=2;
+
+			mRoot.mPlane	=face.GetPlane();
+
+			//split the entire list into front and back
+			foreach(Brush b in brushList)
+			{
+				Brush	bf, bb;
+
+				b.SplitBrush(face, out bf, out bb);
+
+				if(bb != null)
+				{
+					if(bb.IsValid())
+					{
+						backList.Add(bb);
+					}
+				}
+				if(bf != null)
+				{
+					if(bf.IsValid())
+					{
+						frontList.Add(bf);
+					}
+				}
+			}
+
+			Map.Print("Finished splitting");
+
+			//make sure we actually split something here
+			if(brushList.Count == (backList.Count + frontList.Count))
+			{
+				if(backList.Count == 0 || frontList.Count == 0)
+				{
+					Debug.Assert(false);// && "Got a bestplane but no splits!");
+				}
+			}
+
+			//nuke original
+			brushList.Clear();
+
+			if(frontList.Count > 0)
+			{
+				mRoot.mFront	=new BspNode();
+
+				BuildContext	bc	=new BuildContext();
+				bc.Brushes	=frontList;
+				bc.This		=mRoot.mFront;
+				bc.mbBevel	=bBevel;
+
+				Map.Print("Spinning a front side thread\n");
+
+				ThreadPool.QueueUserWorkItem(CBBuildTree, bc);
+			}
+			else
+			{
+				Debug.Assert(false);// && "Nonleaf node with no front side brushes!");
+			}
+
+			if(backList.Count > 0)
+			{
+				mRoot.mBack	=new BspNode();
+				BuildContext	bc	=new BuildContext();
+				bc.Brushes	=backList;
+				bc.This		=mRoot.mBack;
+				bc.mbBevel	=bBevel;
+
+				Map.Print("Spinning a back side thread\n");
+
+				ThreadPool.QueueUserWorkItem(CBBuildTree, bc);
+			}
+			else
+			{
+				Debug.Assert(false);// && "Nonleaf node with no back side brushes!");
+			}
+
+			Map.Print("Initial node complete, threads building");
+
+			return	true;
 		}
 		#endregion
 
@@ -87,38 +194,13 @@ namespace BSPLib
 		}
 
 
-		internal int GetNumPortals()
-		{
-//			return	mPortalFaces.Count;
-			return	69;
-		}
-
-
 		public BspNode GetRoot()
 		{
 			return	mRoot;
 		}
 
 
-		public void GetRawTriangles(List<Vector3> verts, List<UInt16> indexes)
-		{
-			foreach(Brush b in mDebugBrushList)
-			{
-				b.GetTriangles(verts, indexes);
-			}
-		}
-
-
-		public void GetMergedTriangles(List<Vector3> verts, List<UInt16> indexes)
-		{
-			foreach(Brush b in mDrawBrushes)
-			{
-				b.GetTriangles(verts, indexes);
-			}
-		}
-
-
-		public void GetBSPTriangles(List<Vector3> verts, List<UInt16> indexes)
+		public void GetTriangles(List<Vector3> verts, List<UInt16> indexes)
 		{
 			mRoot.GetTriangles(verts, indexes);		
 		}
@@ -143,164 +225,5 @@ namespace BSPLib
 			mRoot.Read(br);
 		}
 		#endregion
-
-
-		internal void RemoveOverlap()
-		{
-			RemoveOverlap(mDrawBrushes);
-		}
-
-
-		//makes sure that only one volume
-		//occupies any space
-		public static void RemoveOverlap(List<Brush> brushes)
-		{
-			for(int i=0;i < brushes.Count;i++)
-			{
-				for(int j=0;j < brushes.Count;j++)
-				{
-					if(i == j)
-					{
-						continue;
-					}
-
-					if(!brushes[i].Intersects(brushes[j]))
-					{
-						continue;
-					}
-
-					List<Brush>	cutup	=new List<Brush>();
-					List<Brush>	cutup2	=new List<Brush>();
-
-					if(brushes[i].SubtractBrush(brushes[j], out cutup))
-					{
-						//make sure the brush returned is
-						//not the one passed in
-						if(cutup.Count == 1)
-						{
-							Debug.Assert(!brushes[i].Equals(cutup[0]));
-						}
-					}
-					else
-					{
-						cutup.Clear();
-					}
-
-					if(brushes[j].SubtractBrush(brushes[i], out cutup2))
-					{
-						//make sure the brush returned is
-						//not the one passed in
-						if(cutup2.Count == 1)
-						{
-							Debug.Assert(!brushes[j].Equals(cutup2[0]));
-						}
-					}
-					else
-					{
-						cutup2.Clear();
-					}
-
-					if(cutup.Count==0 && cutup2.Count==0)
-					{
-						continue;
-					}
-
-					if(cutup.Count > 4 && cutup2.Count > 4)
-					{
-						continue;
-					}
-
-					if(cutup.Count < cutup2.Count)
-					{
-						cutup2.Clear();
-
-						foreach(Brush b in cutup)
-						{
-							if(b.IsValid())
-							{
-								brushes.Add(b);
-							}
-						}
-						cutup.Clear();
-						brushes.RemoveAt(i);
-						i--;
-						break;
-					}
-					else
-					{
-						cutup.Clear();
-
-						foreach(Brush b in cutup2)
-						{
-							if(b.IsValid())
-							{
-								brushes.Add(b);
-							}
-						}
-						cutup2.Clear();
-						brushes.RemoveAt(j);
-						j--;
-						continue;
-					}
-				}
-			}
-
-			//make sure no overlap was skipped
-			for(int i=0;i < brushes.Count;i++)
-			{
-				for(int j=0;j < brushes.Count;j++)
-				{
-					if(i == j)
-					{
-						continue;
-					}
-
-					if(brushes[i].Intersects(brushes[j]))
-					{
-						Debug.WriteLine("Overlap not entirely eliminated!");
-					}
-				}
-			}
-
-			//nuke thins and invalids
-			for(int i=0;i < brushes.Count;i++)
-			{
-				Brush	b	=brushes[i];
-
-				if(!b.IsValid())
-				{
-					Debug.WriteLine("Brush totally clipped away");
-					brushes.RemoveAt(i);
-					i--;
-					continue;
-				}
-
-				if(b.IsVeryThin())
-				{
-					b.RemoveVeryThinSides();
-					if(!b.IsValid())
-					{
-						Debug.WriteLine("Brush totally clipped away");
-						brushes.RemoveAt(i);
-						i--;
-					}
-				}
-			}
-		}
-
-
-		internal void AddDetailBrushes(List<Brush> list)
-		{
-			foreach(Brush b in list)
-			{
-				Brush	copy1	=new Brush(b);
-				Brush	copy2	=new Brush(b);
-				Brush	copy3	=new Brush(b);
-
-				mDebugBrushList.Add(copy1);
-				mDrawBrushes.Add(copy2);
-				mCollisionBrushes.Add(copy3);
-			}
-		}
 	}
 }

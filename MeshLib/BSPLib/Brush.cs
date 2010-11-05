@@ -70,33 +70,41 @@ namespace BSPLib
 			{
 				mFaces.Add(new Face(f));
 			}
+
+			if(b.mBounds != null)
+			{
+				mBounds		=new Bounds(b.mBounds);
+			}
+
+			mContents	=b.mContents;
 		}
 		#endregion
 
 
 		#region Modifications
+		internal void PromoteClips()
+		{
+			if((mContents & (CONTENTS_STRUCTURAL
+				| CONTENTS_PLAYERCLIP | CONTENTS_MONSTERCLIP))
+				!= 0)
+			{
+				mContents	|=CONTENTS_SOLID;
+			}
+		}
+
+
 		internal void AddFaces(List<Face> faces)
 		{
 			foreach(Face f in faces)
 			{
-//				if((f.mFlags & Face.HINT) != 0)
-//				{
-//					continue;
-//				}
-//				if((f.mFlags & Face.FACE_DETAIL) != 0)
-//				{
-//					continue;
-//				}
-//				if((f.mFlags & Face.FACE_HIDDEN) != 0)
-//				{
-//					continue;
-//				}
-//				if((f.mFlags & Face.TEX_CLIP) != 0)
-//				{
-//					continue;
-//				}
+				if((f.mFlags & (Face.SURF_HINT
+					| Face.SURF_LADDER | Face.SURF_SKIP))
+					!= 0)
+				{
+					continue;
+				}
+				mFaces.Add(f);
 			}
-			mFaces.AddRange(faces);
 		}
 
 
@@ -124,7 +132,7 @@ namespace BSPLib
 			List<Face>	nuke	=new List<Face>();
 			foreach(Face f in mFaces)
 			{
-				if(f.IsHowThin(1.0f))
+				if(f.IsHowThin(0.5f))
 				{
 					nuke.Add(f);
 				}
@@ -237,7 +245,7 @@ namespace BSPLib
 		{
 			foreach(Face f in mFaces)
 			{
-				if(f.IsHowThin(1.0f))
+				if(f.IsHowThin(0.5f))
 				{
 					return	true;
 				}
@@ -312,6 +320,12 @@ namespace BSPLib
 				}
 				f.GetTriangles(tris, ind);
 			}
+		}
+
+
+		internal List<Face> GetFaces()
+		{
+			return	mFaces;
 		}
 
 
@@ -520,6 +534,10 @@ namespace BSPLib
 
 			foreach(Face f in mFaces)
 			{
+				if((f.mFlags & (Face.SURF_LADDER | Face.SURF_SKIP)) != 0)
+				{
+					continue;
+				}
 				float	score	=GetSplitFaceScore(f, brushList);
 
 				if((f.mFlags & Face.SURF_HINT) != 0)
@@ -694,7 +712,6 @@ namespace BSPLib
 
 			if(splitFace.IsTiny())
 			{
-				//Debug.WriteLine("Doing the mostly on side thing");
 				if(IsBrushMostlyOnFrontSide(p))
 				{
 					bf	=new Brush(this);

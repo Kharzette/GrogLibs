@@ -480,7 +480,7 @@ namespace BSPLib
 					}
 				}
 			}
-			Console.WriteLine("GetFirstSharedVert returning Vector3.Zero!!!");
+			Map.Print("GetFirstSharedVert returning Vector3.Zero!!!");
 			return	Vector3.Zero;
 		}
 

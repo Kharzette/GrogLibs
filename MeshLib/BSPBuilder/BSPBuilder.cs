@@ -36,6 +36,7 @@ namespace BSPBuilder
 		int						mNumTris;
 		Vector2					mTextPos;
 		Random					mRnd	=new Random();
+		string					mDrawChoice;
 
 
 		public BSPBuilder()
@@ -79,10 +80,12 @@ namespace BSPBuilder
 		{
 			mSB	=new SpriteBatch(GraphicsDevice);
 
-			mMF	=new MainForm();
-			mMF.Visible	=true;
+			mMF						=new MainForm();
+			mMF.Visible				=true;
 			mMF.eOpenVMF			+=OnOpenVMF;
-			mMF.eEntityIndChanged	+=OnEntityIndexChanged;
+			mMF.eOpenMap			+=OnOpenMap;
+			mMF.eSaveZone			+=OnSaveZone;
+			mMF.eDrawChoiceChanged	+=OnDrawChoiceChanged;
 
 			mKoot	=Content.Load<SpriteFont>("Fonts/Kootenay");
 
@@ -94,6 +97,8 @@ namespace BSPBuilder
 			mMapEffect.TextureEnabled		=false;
 			mMapEffect.DiffuseColor			=Vector3.One;
 			mMapEffect.VertexColorEnabled	=true;
+
+			Map.ePrint	+=OnMapPrint;
 
 			//tired of that gump
 //			OnOpenVMF("C:\\Users\\kbaird\\Documents\\sdk_arena_lumberyard.vmf", null);
@@ -165,10 +170,15 @@ namespace BSPBuilder
 
 		void MakeDrawData()
 		{
+			if(mMap == null)
+			{
+				return;
+			}
+
 			List<Vector3>	verts	=new List<Vector3>();
 			List<UInt16>	indexes	=new List<UInt16>();
 
-			mMap.GetTriangles(verts, indexes, mMF.EntityInd);
+			mMap.GetTriangles(verts, indexes, mDrawChoice);
 			if(verts.Count <= 0)
 			{
 				return;
@@ -205,32 +215,35 @@ namespace BSPBuilder
 		}
 
 
-		void OnEntityIndexChanged(object sender, EventArgs ea)
-		{
-			MakeDrawData();
-			mMF.NumberOfPortals	="" + mMap.GetNumPortals(mMF.EntityInd);
-		}
-
-
 		void OnOpenVMF(object sender, EventArgs ea)
 		{
 			string	fileName	=sender as string;
 
 			if(fileName != null)
 			{
+				if(mMap != null)
+				{
+					//unregister old events
+				}
 				mMap	=new Map(fileName);
 
-//				mMap.RemoveOverlap();
-				mMap.BuildTree((float)mMF.BevelHullSize, mMF.bBevels);
+				mMap.eNumCollisionFacesChanged	+=OnNumCollisionFacesChanged;
+				mMap.eNumDrawFacesChanged		+=OnNumDrawFacesChanged;
+				mMap.eNumMapFacesChanged		+=OnNumMapFacesChanged;
+				mMap.eProgressChanged			+=OnMapProgressChanged;
 
-				MakeDrawData();
-
-				mMF.NumberOfPortals	="" + mMap.GetNumPortals(mMF.EntityInd);
+				mMap.BuildTree(mMF.bBevels, mMF.MaxNumberOfCPUCores);
 			}
 		}
 
 
-		void OnSaveVMF(object sender, EventArgs ea)
+		void OnOpenMap(object sender, EventArgs ea)
+		{
+			mMF.PrintToConsole(".map compilation not yet ready\n");
+		}
+
+
+		void OnSaveZone(object sender, EventArgs ea)
 		{
 			string	fileName	=sender as string;
 
@@ -238,6 +251,53 @@ namespace BSPBuilder
 			{
 				mMap.Save(fileName);
 			}
+		}
+
+
+		void OnMapPrint(object sender, EventArgs ea)
+		{
+			string	str	=sender as string;
+
+			mMF.PrintToConsole(str);
+		}
+
+
+		void OnDrawChoiceChanged(object sender, EventArgs ea)
+		{
+			string	choice	=sender as string;
+
+			mDrawChoice	=choice;
+
+			MakeDrawData();
+		}
+
+
+		void OnNumCollisionFacesChanged(object sender, EventArgs ea)
+		{
+			int	num	=(int)sender;
+
+			mMF.NumberOfCollisionFaces	="" + num;
+		}
+
+
+		void OnNumDrawFacesChanged(object sender, EventArgs ea)
+		{
+			int	num	=(int)sender;
+
+			mMF.NumberOfDrawFaces	="" + num;
+		}
+
+
+		void OnNumMapFacesChanged(object sender, EventArgs ea)
+		{
+			int	num	=(int)sender;
+
+			mMF.NumberOfMapFaces	="" + num;
+		}
+
+
+		void OnMapProgressChanged(object sender, EventArgs ea)
+		{
 		}
 	}
 }

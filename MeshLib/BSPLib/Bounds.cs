@@ -19,6 +19,13 @@ namespace BSPLib
 		}
 
 
+		public Bounds(Bounds bnd)
+		{
+			mMins	=bnd.mMins;
+			mMaxs	=bnd.mMaxs;
+		}
+
+
 		public void ClearBounds()
 		{
 			mMins.X	=mMins.Y =Brush.MIN_MAX_BOUNDS;

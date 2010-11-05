@@ -9,6 +9,13 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace BSPLib
 {
+	class BuildContext
+	{
+		internal	BspNode		This;
+		internal	List<Brush>	Brushes;
+		internal	bool		mbBevel;
+	}
+
 	public class BspNode
 	{
 		public	Plane	mPlane;
@@ -48,14 +55,21 @@ namespace BSPLib
 		}
 
 
-		bool FindGoodSplitFace(List<Brush> brushList, out Face bestFace)
+		internal bool FindGoodSplitFace(List<Brush> brushList, out Face bestFace, object prog)
 		{
 			int		BestIndex	=-1;
 			float	BestScore	=696969.0f;
 
+			if(prog != null)
+			{
+				ProgressWatcher.UpdateProgress(prog, 0, brushList.Count, 0);
+			}
+
 			foreach(Brush b in brushList)
 			{
 				float	score	=b.GetBestSplittingFaceScore(brushList);
+
+				ProgressWatcher.UpdateProgress(prog, 0, brushList.Count, brushList.IndexOf(b));
 
 				if(score < BestScore)
 				{
@@ -161,18 +175,20 @@ namespace BSPLib
 
 
 		//builds a bsp good for collision info
-		internal void BuildCollisionTree(List<Brush> brushList)
+		internal void BuildTree(List<Brush> brushList, object prog)
 		{
 			List<Brush>	frontList	=new List<Brush>();
 			List<Brush>	backList	=new List<Brush>();
 
 			Face	face;
 
-			if(!FindGoodSplitFace(brushList, out face))
+			ProgressWatcher.UpdateProgress(prog, brushList.Count);
+
+			if(!FindGoodSplitFace(brushList, out face, null))
 			{
 				if(brushList.Count != 1)
 				{
-					Debug.WriteLine("Merging " + brushList.Count + " brushes in a leaf");
+					Map.Print("Merging " + brushList.Count + " brushes in a leaf");
 				}
 
 				//copy in the brush faces
@@ -180,14 +196,14 @@ namespace BSPLib
 				mBrush	=new Brush();
 				foreach(Brush b in brushList)
 				{
-//					mBrush.AddFaces(b.GetSolidFaces());
+					mBrush.AddFaces(b.GetFaces());
 				}
 				mBrush.SealFaces();
 				if(!mBrush.IsValid())
 				{
 					//brush is messed up, donut add it
 					mBrush	=null;
-					Debug.WriteLine("Bad brush in leaf!");
+					Map.Print("Bad brush in leaf!");
 				}
 				return;
 			}
@@ -231,8 +247,8 @@ namespace BSPLib
 
 			if(frontList.Count > 0)
 			{
-				mFront			=new BspNode();
-				mFront.BuildCollisionTree(frontList);
+				mFront	=new BspNode();
+				mFront.BuildTree(frontList, prog);
 			}
 			else
 			{
@@ -241,8 +257,8 @@ namespace BSPLib
 
 			if(backList.Count > 0)
 			{
-				mBack			=new BspNode();
-				mBack.BuildCollisionTree(backList);
+				mBack	=new BspNode();
+				mBack.BuildTree(backList, prog);
 			}
 			else
 			{
