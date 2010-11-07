@@ -9,7 +9,7 @@ namespace MeshLib
 {
 	public class Anim
 	{
-		List<SubAnim>	[]mControllerAnims;
+		List<FloatKeys>	[]mControllerAnims;
 
 		string	mName;		//animation name for the library
 		bool	mbLooping;
@@ -35,9 +35,9 @@ namespace MeshLib
 		{
 			get {
 				int	numKeys	=0;
-				foreach(List<SubAnim> sal in mControllerAnims)
+				foreach(List<FloatKeys> sal in mControllerAnims)
 				{
-					foreach(SubAnim sa in sal)
+					foreach(FloatKeys sa in sal)
 					{
 						numKeys	+=sa.GetNumKeys();
 					}
@@ -55,9 +55,9 @@ namespace MeshLib
 
 		public void Reduce(float maxError)
 		{
-			foreach(List<SubAnim> sal in mControllerAnims)
+			foreach(List<FloatKeys> sal in mControllerAnims)
 			{
-				foreach(SubAnim sa in sal)
+				foreach(FloatKeys sa in sal)
 				{
 					sa.Reduce(maxError);
 				}
@@ -67,11 +67,11 @@ namespace MeshLib
 
 		public Anim(int numControllers)
 		{
-			mControllerAnims	=new List<SubAnim>[numControllers];
+			mControllerAnims	=new List<FloatKeys>[numControllers];
 		}
 
 
-		public void AddControllerSubAnims(int cidx, List<SubAnim> anims)
+		public void AddControllerSubAnims(int cidx, List<FloatKeys> anims)
 		{
 			mControllerAnims[cidx]	=anims;
 		}
@@ -84,10 +84,10 @@ namespace MeshLib
 			bw.Write(mbPingPong);
 
 			bw.Write(mControllerAnims.Length);
-			foreach(List<SubAnim> sal in mControllerAnims)
+			foreach(List<FloatKeys> sal in mControllerAnims)
 			{
 				bw.Write(sal.Count);
-				foreach(SubAnim sa in sal)
+				foreach(FloatKeys sa in sal)
 				{
 					sa.Write(bw);
 				}
@@ -103,15 +103,15 @@ namespace MeshLib
 
 			int	numSAL	=br.ReadInt32();
 
-			mControllerAnims	=new List<SubAnim>[numSAL];
+			mControllerAnims	=new List<FloatKeys>[numSAL];
 
 			for(int i=0;i < numSAL;i++)
 			{
 				int numSubAnims	=br.ReadInt32();
-				mControllerAnims[i]	=new List<SubAnim>();
+				mControllerAnims[i]	=new List<FloatKeys>();
 				for(int j=0;j < numSubAnims;j++)
 				{
-					SubAnim sa	=new SubAnim();
+					FloatKeys sa	=new FloatKeys();
 					sa.Read(br);
 
 					mControllerAnims[i].Add(sa);
@@ -124,9 +124,9 @@ namespace MeshLib
 		{
 			for(int i=0;i < mControllerAnims.Length;i++)
 			{
-				List<SubAnim>	subs	=mControllerAnims[i];
+				List<FloatKeys>	subs	=mControllerAnims[i];
 
-				foreach(SubAnim an in subs)
+				foreach(FloatKeys an in subs)
 				{
 					an.FixChannels(sk);
 				}
@@ -136,9 +136,9 @@ namespace MeshLib
 
 		public void Animate(int cidx, float time)
 		{
-			List<SubAnim>	subs	=mControllerAnims[cidx];
+			List<FloatKeys>	subs	=mControllerAnims[cidx];
 
-			foreach(SubAnim an in subs)
+			foreach(FloatKeys an in subs)
 			{
 				an.Animate(time);
 			}
@@ -149,11 +149,48 @@ namespace MeshLib
 		{
 			for(int i=0;i < mControllerAnims.Length;i++)
 			{
-				List<SubAnim>	subs	=mControllerAnims[i];
+				List<FloatKeys>	subs	=mControllerAnims[i];
 
-				foreach(SubAnim an in subs)
+				foreach(FloatKeys an in subs)
 				{
 					an.Animate(time);
+				}
+			}
+		}
+
+
+		public void Consolidate()
+		{
+			List<string>	handled	=new List<string>();
+
+			for(int i=0;i < mControllerAnims.Length;i++)
+			{
+				List<FloatKeys>	subs	=mControllerAnims[i];
+
+				foreach(FloatKeys an in subs)
+				{
+					string			targNode	=an.GetTargetNode();
+					List<FloatKeys>	related		=new List<FloatKeys>();
+
+					related.Add(an);
+
+					foreach(FloatKeys an2 in subs)
+					{
+						if(an2 == an)
+						{
+							continue;
+						}
+						if(an2.GetTargetNode() == targNode)
+						{
+							related.Add(an2);
+						}
+					}
+
+					//keep a list of already handled nodetargets
+					//eliminate 1.0 scales and the like
+
+					int	j=0;
+					j++;
 				}
 			}
 		}

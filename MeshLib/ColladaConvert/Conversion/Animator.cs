@@ -54,9 +54,9 @@ namespace ColladaConvert
 		}
 
 
-		public List<MeshLib.SubAnim> BuildGameAnims(MeshLib.Skeleton gs)
+		public List<MeshLib.FloatKeys> BuildGameAnims(MeshLib.Skeleton gs)
 		{
-			List<MeshLib.SubAnim>	ret	=new List<MeshLib.SubAnim>();
+			List<MeshLib.FloatKeys>	ret	=new List<MeshLib.FloatKeys>();
 			foreach(KeyValuePair<string, List<Anim>> anlist in mAnims)
 			{
 				foreach(Anim an in anlist.Value)
@@ -73,7 +73,7 @@ namespace ColladaConvert
 					gc	=new MeshLib.Channel(an.GetNodeName(),
 						an.GetOperandSID(), an.GetChannelTarget(), gs);
 
-					MeshLib.SubAnim	gsa	=new MeshLib.SubAnim(an.GetNumKeys(),
+					MeshLib.FloatKeys	gsa	=new MeshLib.FloatKeys(an.GetNumKeys(),
 						an.GetTotalTime(), gc,
 						an.GetTimes(), an.GetValues(),
 						an.GetControl1(), an.GetControl2());

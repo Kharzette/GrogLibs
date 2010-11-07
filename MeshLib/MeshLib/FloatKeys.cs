@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace MeshLib
 {
-	public class SubAnim
+	public class FloatKeys
 	{
 		float	[]mTimes;		//keyframe times
 		float	[]mValues;		//key values
@@ -18,7 +18,7 @@ namespace MeshLib
 		Channel	mTarget;	//target channel
 
 
-		public SubAnim()
+		public FloatKeys()
 		{
 		}
 
@@ -29,7 +29,13 @@ namespace MeshLib
 		}
 
 
-		public SubAnim(int numKeys, float totalTime,
+		public string GetTargetNode()
+		{
+			return	mTarget.GetTargetNode();
+		}
+
+
+		public FloatKeys(int numKeys, float totalTime,
 			Channel	targ,
 			List<float>	times,		//keyframe times
 			List<float>	values,	//key values

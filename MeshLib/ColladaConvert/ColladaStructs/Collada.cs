@@ -378,7 +378,7 @@ namespace ColladaConvert
 				Skin	sk	=cont.Value.GetSkin();
 
 				List<string>		boneNames	=sk.GetJointNameArray();
-				List<MeshLib.SubAnim>	anims	=mAnimator.BuildGameAnims(mGameSkeleton);
+				List<MeshLib.FloatKeys>	anims	=mAnimator.BuildGameAnims(mGameSkeleton);
 
 				anm.AddControllerSubAnims(i, anims);
 				i++;
@@ -391,6 +391,9 @@ namespace ColladaConvert
 				mCharacter.AddSkin(skin);
 				skinList.Add(skin);
 			}
+
+			anm.Consolidate();
+
 			mAnimLib.AddAnim(anm);
 
 
@@ -462,7 +465,7 @@ namespace ColladaConvert
 				Skin	sk	=cont.Value.GetSkin();
 
 				List<string>		boneNames	=sk.GetJointNameArray();
-				List<MeshLib.SubAnim>	anims	=mAnimator.BuildGameAnims(mGameSkeleton);
+				List<MeshLib.FloatKeys>	anims	=mAnimator.BuildGameAnims(mGameSkeleton);
 
 				anm.AddControllerSubAnims(i, anims);
 				i++;

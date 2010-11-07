@@ -59,6 +59,12 @@ namespace MeshLib
 		}
 
 
+		public string GetTargetNode()
+		{
+			return	mTargetNode;
+		}
+
+
 		public void FixTarget(Skeleton sk)
 		{
 			if(!sk.GetChannelTarget(mTargetNode, mTargetSID, out mTarget))
