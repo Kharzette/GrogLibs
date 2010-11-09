@@ -11,7 +11,7 @@ namespace MeshLib
 {
 	public class AnimLib
 	{
-		Dictionary<string, Anim>	mAnims	=new Dictionary<string,Anim>();
+		Dictionary<string, Anim>	mAnims	=new Dictionary<string, Anim>();
 
 		Skeleton	mSkeleton;
 
@@ -136,12 +136,6 @@ namespace MeshLib
 				mAnims.Add(an.Name, an);
 			}
 
-			//point channels at the skeleton
-			foreach(KeyValuePair<string, Anim> an in mAnims)
-			{
-//				an.Value.FixChannels(mSkeleton);
-			}
-
 			br.Close();
 			file.Close();
 
@@ -173,7 +167,6 @@ namespace MeshLib
 			{
 				mAnims[anim].Animate(time);
 			}
-//			BuildBones();
 		}
 	}
 }

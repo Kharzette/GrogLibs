@@ -84,6 +84,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Anim\Channel.cs" />
+    <Compile Include="Anim\ChannelTarget.cs" />
+    <Compile Include="ColladaStructs\ColladaChannel.cs" />
     <Compile Include="Forms\AnimGridModel.cs" />
     <Compile Include="Forms\AnimForm.cs">
       <SubType>Form</SubType>
@@ -96,7 +99,6 @@
     <Compile Include="ColladaStructs\Animation.cs" />
     <Compile Include="Anim\RotateAnim.cs" />
     <Compile Include="Anim\ScaleAnim.cs" />
-    <Compile Include="ColladaStructs\Channel.cs" />
     <Compile Include="ColladaStructs\Collada.cs" />
     <Compile Include="ColladaStructs\ColladaEffect.cs" />
     <Compile Include="ColladaStructs\Controller.cs" />

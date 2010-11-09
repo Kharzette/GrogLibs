@@ -119,80 +119,80 @@ namespace ColladaConvert
 
 
 		//for conversion to gamechannels
-		public MeshLib.Channel.ChannelType GetChannelType()
+		public Channel.ChannelType GetChannelType()
 		{
 			if(mOperand is Rotate)
 			{
-				return	MeshLib.Channel.ChannelType.ROTATE;
+				return	Channel.ChannelType.ROTATE;
 			}
 			else if(mOperand is Scale)
 			{
-				return	MeshLib.Channel.ChannelType.SCALE;
+				return	Channel.ChannelType.SCALE;
 			}
 			else if(mOperand is Translate)
 			{
-				return	MeshLib.Channel.ChannelType.TRANSLATE;
+				return	Channel.ChannelType.TRANSLATE;
 			}
 
 			//todo: some kind of error here maybe?
-			return MeshLib.Channel.ChannelType.LOOKAT;
+			return Channel.ChannelType.LOOKAT;
 		}
 
 
-		public MeshLib.Channel.AxisTarget GetChannelTarget()
+		public Channel.AxisTarget GetChannelTarget()
 		{
-			MeshLib.Channel.ChannelType	ct	=GetChannelType();
+			Channel.ChannelType	ct	=GetChannelType();
 
-			if(ct == MeshLib.Channel.ChannelType.ROTATE)
+			if(ct == Channel.ChannelType.ROTATE)
 			{
 				if(this is RotateXAnim)
 				{
-					return	MeshLib.Channel.AxisTarget.X;
+					return	Channel.AxisTarget.X;
 				}
 				else if(this is RotateYAnim)
 				{
-					return	MeshLib.Channel.AxisTarget.Y;
+					return	Channel.AxisTarget.Y;
 				}
 				else if(this is RotateZAnim)
 				{
-					return	MeshLib.Channel.AxisTarget.Z;
+					return	Channel.AxisTarget.Z;
 				}
 				else if(this is RotateWAnim)
 				{
-					return	MeshLib.Channel.AxisTarget.W;
+					return	Channel.AxisTarget.W;
 				}
 			}
-			else if(ct == MeshLib.Channel.ChannelType.SCALE)
+			else if(ct == Channel.ChannelType.SCALE)
 			{
 				if(this is ScaleXAnim)
 				{
-					return	MeshLib.Channel.AxisTarget.X;
+					return	Channel.AxisTarget.X;
 				}
 				else if(this is ScaleYAnim)
 				{
-					return	MeshLib.Channel.AxisTarget.Y;
+					return	Channel.AxisTarget.Y;
 				}
 				else if(this is ScaleZAnim)
 				{
-					return	MeshLib.Channel.AxisTarget.Z;
+					return	Channel.AxisTarget.Z;
 				}
 			}
-			else if(ct == MeshLib.Channel.ChannelType.TRANSLATE)
+			else if(ct == Channel.ChannelType.TRANSLATE)
 			{
 				if(this is TransXAnim)
 				{
-					return	MeshLib.Channel.AxisTarget.X;
+					return	Channel.AxisTarget.X;
 				}
 				else if(this is TransYAnim)
 				{
-					return	MeshLib.Channel.AxisTarget.Y;
+					return	Channel.AxisTarget.Y;
 				}
 				else if(this is TransZAnim)
 				{
-					return	MeshLib.Channel.AxisTarget.Z;
+					return	Channel.AxisTarget.Z;
 				}
 			}
-			return	MeshLib.Channel.AxisTarget.W;
+			return	Channel.AxisTarget.W;
 		}
 
 

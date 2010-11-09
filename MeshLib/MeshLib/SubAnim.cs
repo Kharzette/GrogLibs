@@ -1,63 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Xml;
 using System.Diagnostics;
-//using System.Reflection;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
+
 namespace MeshLib
 {
-	public class FloatKeys
+	public class SubAnim
 	{
-		public float	[]mTimes;		//keyframe times
-		public float	[]mValues;		//key values
-		float	mTotalTime;		//total time of the animation
+		KeyFrame	[]mKeys;
+		float		[]mTimes;
+		float		mTotalTime;
 
-		Channel	mTarget;	//target channel
+		KeyFrame	mBone;	//reference to corresponding bone val
+		string		mBoneName;
 
 
-		public FloatKeys()
+		public SubAnim() { }
+		public SubAnim(string boneName, List<float> times, List<KeyFrame> keys)
 		{
+			Debug.Assert(times.Count == keys.Count);
+
+			mBone		=null;
+			mBoneName	=boneName;
+			mTimes		=new float[times.Count];
+			mKeys		=new KeyFrame[times.Count];
+
+			for(int i=0;i < times.Count;i++)
+			{
+				mTimes[i]	=times[i];
+				mKeys[i]	=keys[i];
+			}
+			mTotalTime	=times[times.Count - 1] - times[0];
 		}
 
 
-		public int GetNumKeys()
+		internal void SetBoneRef(KeyFrame boneKey)
+		{
+			mBone	=boneKey;
+		}
+
+
+		internal int GetNumKeys()
 		{
 			return	mTimes.Length;
 		}
 
 
-		public string GetTargetNode()
+		internal void Write(BinaryWriter bw)
 		{
-			return	mTarget.GetTargetNode();
-		}
+			bw.Write(mBoneName);
 
-
-		public FloatKeys(int numKeys, float totalTime,
-			Channel	targ,
-			List<float>	times,		//keyframe times
-			List<float>	values,	//key values
-			List<float>	control1,	//first control point per value
-			List<float>	control2)	//second control point per value
-		{
-			mTotalTime	=totalTime;
-			mTarget		=targ;
-
-			mTimes		=new float[numKeys];
-			mValues		=new float[numKeys];
-
-			for(int i=0;i < numKeys;i++)
-			{
-				mTimes[i]		=times[i];
-				mValues[i]		=values[i];
-			}
-		}
-
-
-		public void Write(BinaryWriter bw)
-		{
 			//keyframe times
 			bw.Write(mTimes.Length);
 			foreach(float time in mTimes)
@@ -66,126 +61,50 @@ namespace MeshLib
 			}
 
 			//key values
-			bw.Write(mValues.Length);
-			foreach(float val in mValues)
+			bw.Write(mKeys.Length);
+			foreach(KeyFrame key in mKeys)
 			{
-				bw.Write(val);
+				key.Write(bw);
 			}
 
 			//total time
 			bw.Write(mTotalTime);
-
-			//channel
-			mTarget.Write(bw);
 		}
 
 
-		public void Read(BinaryReader br)
+		internal void Read(BinaryReader br)
 		{
-			int	num	=br.ReadInt32();
-			mTimes	=new float[num];
-			for(int i=0;i < num;i++)
+			mBoneName	=br.ReadString();
+
+			int	numTimes	=br.ReadInt32();
+
+			mTimes	=new float[numTimes];
+
+			for(int i=0;i < numTimes;i++)
 			{
 				mTimes[i]	=br.ReadSingle();
 			}
 
-			num	=br.ReadInt32();
-			mValues	=new float[num];
-			for(int i=0;i < num;i++)
+			int	numKeys	=br.ReadInt32();
+
+			mKeys	=new KeyFrame[numKeys];
+			
+			for(int i=0;i < numKeys;i++)
 			{
-				mValues[i]	=br.ReadSingle();
+				mKeys[i].Read(br);
 			}
 
 			mTotalTime	=br.ReadSingle();
-
-			mTarget	=new Channel();
-			mTarget.Read(br);
 		}
 
 
-		public void FixChannels(Skeleton sk)
+		internal string GetBoneName()
 		{
-			mTarget.FixTarget(sk);
+			return	mBoneName;
 		}
 
 
-		//attempt to reduce the number of
-		//keyframes through interpolation
-		public void Reduce(float maxError)
-		{
-			//don't bother unless more than 2 keys
-			if(mTimes.Length < 3)
-			{
-				return;
-			}
-
-			//for rotational values, radians are used
-			//and smaller values make a much bigger
-			//difference.
-			if(mTarget.GetChannelType() == Channel.ChannelType.ROTATE)
-			{
-				maxError	=MathHelper.ToRadians(maxError);
-			}
-
-			int	startIndex	=0;
-			int	endIndex	=2;
-
-			float	errorAccum	=0.0f;
-			float	startTime	=mTimes[startIndex];
-			float	endTime		=mTimes[endIndex];
-
-			while(true)
-			{
-				while(errorAccum < maxError && errorAccum > -maxError)
-				{
-					//lerp to hit the keyframe endIndex - 1
-					float	percentage	=1.0f - (1.0f / (endIndex - startIndex));
-
-					float value	=MathHelper.Lerp(mValues[startIndex], mValues[endIndex], percentage);
-					errorAccum	+=Math.Abs(mValues[endIndex - 1] - value);
-					endIndex++;
-					if(endIndex >= mTimes.Length)
-					{
-						break;
-					}
-				}
-
-				if(endIndex < mTimes.Length)
-				{
-					//back up one as we went over error tolerance
-//					endIndex--;
-				}
-				endIndex--;
-				//gank all keys between start and end
-				float	[]newTimes	=new float[mTimes.Length - (endIndex - startIndex - 1)];
-				float	[]newVals	=new float[mTimes.Length - (endIndex - startIndex - 1)];
-
-				for(int i=0;i <= startIndex;i++)
-				{
-					newTimes[i]	=mTimes[i];
-					newVals[i]	=mValues[i];
-				}
-				for(int i=endIndex;i < mTimes.Length;i++)
-				{
-					newTimes[startIndex + 1 + (i - endIndex)]	=mTimes[i];
-					newVals[startIndex + 1 + (i - endIndex)]	=mValues[i];
-				}
-				mTimes	=newTimes;
-				mValues	=newVals;
-
-				//prepare to run again
-				startIndex++;
-				endIndex	=startIndex + 2;
-				errorAccum	=0.0f;
-				if(endIndex >= mTimes.Length)
-				{
-					break;
-				}
-			}
-		}
-
-
-		public void Animate(float time)
+		internal void Animate(float time)
 		{
 			//make sure the time is not before our start
 			if(time < mTimes[0])
@@ -225,9 +144,7 @@ namespace MeshLib
 
 			Debug.Assert(percentage >= 0.0f && percentage <= 1.0f);
 
-			float value	=MathHelper.Lerp(mValues[startIndex], mValues[startIndex + 1], percentage);
-
-			mTarget.SetValue(value);
+			KeyFrame.Lerp(mKeys[startIndex], mKeys[startIndex + 1], percentage, mBone);
 		}
 	}
 }

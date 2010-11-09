@@ -57,10 +57,8 @@
     <Compile Include="Anim.cs" />
     <Compile Include="AnimLib.cs" />
     <Compile Include="Bounds.cs" />
-    <Compile Include="Channel.cs" />
-    <Compile Include="ChannelTarget.cs" />
     <Compile Include="Character.cs" />
-    <Compile Include="FloatKeys.cs" />
+    <Compile Include="KeyFrame.cs" />
     <Compile Include="Mesh.cs" />
     <Compile Include="Skeleton.cs" />
     <Compile Include="Skin.cs" />

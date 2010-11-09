@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace ColladaConvert
 {
-	public class Channel
+	public class ColladaChannel
 	{
 		public string	mSource;
 		public string	mTarget;

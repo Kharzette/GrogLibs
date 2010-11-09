@@ -6,7 +6,7 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace MeshLib
+namespace ColladaConvert
 {
 	public class Channel
 	{
@@ -32,7 +32,7 @@ namespace MeshLib
 		
 
 		public Channel() {}
-		public Channel(string targNode, string targSID, AxisTarget at, Skeleton gs)
+		public Channel(string targNode, string targSID, AxisTarget at, MeshLib.Skeleton gs)
 		{
 			mTargetNode	=targNode;
 			mTargetSID	=targSID;
@@ -65,7 +65,7 @@ namespace MeshLib
 		}
 
 
-		public void FixTarget(Skeleton sk)
+		public void FixTarget(MeshLib.Skeleton sk)
 		{
 //			if(!sk.GetChannelTarget(mTargetNode, mTargetSID, out mTarget))
 			{

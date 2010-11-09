@@ -12,7 +12,7 @@ namespace ColladaConvert
 	{
 		private Dictionary<string, Source>	mSources	=new Dictionary<string,Source>();
 		private Dictionary<string, Sampler>	mSamplers	=new Dictionary<string,Sampler>();
-		private List<Channel>				mChannels	=new List<Channel>();
+		private List<ColladaChannel>		mChannels	=new List<ColladaChannel>();
 
 
 
@@ -20,7 +20,7 @@ namespace ColladaConvert
 		{
 			List<float>	ret	=new List<float>();
 
-			foreach(Channel chan in mChannels)
+			foreach(ColladaChannel chan in mChannels)
 			{
 				//extract the node name and address
 				int		sidx	=chan.mTarget.IndexOf('/');
@@ -132,7 +132,7 @@ namespace ColladaConvert
 				}
 				else if(r.Name == "channel")
 				{
-					Channel	chan	=new Channel();
+					ColladaChannel	chan	=new ColladaChannel();
 
 					int	attCnt	=r.AttributeCount;
 					r.MoveToFirstAttribute();
@@ -161,7 +161,7 @@ namespace ColladaConvert
 
 		internal void SetKeys(string bone, List<float> times, List<MeshLib.KeyFrame> keys)
 		{
-			foreach(Channel chan in mChannels)
+			foreach(ColladaChannel chan in mChannels)
 			{
 				//extract the node name and address
 				int		sidx	=chan.mTarget.IndexOf('/');
