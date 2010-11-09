@@ -59,8 +59,37 @@ namespace ColladaConvert
 			List<MeshLib.FloatKeys>	ret	=new List<MeshLib.FloatKeys>();
 			foreach(KeyValuePair<string, List<Anim>> anlist in mAnims)
 			{
+				//for each anlist, get a full list of times
+				//create a set of KeyFrame values and times
+				//construct a SubAnim from these
+
+				//get times
+				List<float>	times	=new List<float>();
 				foreach(Anim an in anlist.Value)
 				{
+					List<float> anTimes	=an.GetTimes();
+
+					foreach(float time in anTimes)
+					{
+						if(times.Contains(time))
+						{
+							continue;
+						}
+						times.Add(time);
+					}
+				}
+
+				times.Sort();
+
+				List<MeshLib.KeyFrame>	keys	=new List<MeshLib.KeyFrame>();
+				foreach(float time in times)
+				{
+					foreach(Anim an in anlist.Value)
+					{
+						an.Animate(time);
+					}
+				}
+				/*
 					MeshLib.Channel	gc;
 
 					MeshLib.ChannelTarget	gct;
@@ -79,7 +108,7 @@ namespace ColladaConvert
 						an.GetControl1(), an.GetControl2());
 
 					ret.Add(gsa);
-				}
+				}*/
 			}
 			return	ret;
 		}

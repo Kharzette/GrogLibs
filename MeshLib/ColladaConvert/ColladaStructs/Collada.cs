@@ -25,8 +25,6 @@ namespace ColladaConvert
 		List<MeshConverter>	mChunks	=new List<MeshConverter>();
 		MeshLib.Skeleton	mGameSkeleton;
 
-		public Animator		mAnimator;
-
 		//actual useful data for the game
 		MaterialLib.MaterialLib		mMatLib;
 		MeshLib.AnimLib				mAnimLib;
@@ -349,9 +347,18 @@ namespace ColladaConvert
 			}
 
 			//create useful anims
-			mAnimator	=new Animator(mAnimations, mRootNodes);
+			List<MeshLib.SubAnim>	subs	=new List<MeshLib.SubAnim>();
+			foreach(KeyValuePair<string, Animation> anim in mAnimations)
+			{
+				MeshLib.SubAnim	sa	=anim.Value.GetAnims(mGameSkeleton);
+				if(sa != null)
+				{
+					subs.Add(sa);
+				}
+			}
+			MeshLib.Anim	anm	=new MeshLib.Anim(subs);
 
-			MeshLib.Anim	anm	=new MeshLib.Anim(mControllers.Count);
+			anm.SetBoneRefs(mGameSkeleton);
 
 			//chop at content if content is in the path
 			if(meshFileName.IndexOf("Content") != -1)
@@ -378,9 +385,6 @@ namespace ColladaConvert
 				Skin	sk	=cont.Value.GetSkin();
 
 				List<string>		boneNames	=sk.GetJointNameArray();
-				List<MeshLib.FloatKeys>	anims	=mAnimator.BuildGameAnims(mGameSkeleton);
-
-				anm.AddControllerSubAnims(i, anims);
 				i++;
 
 				MeshLib.Skin	skin	=new MeshLib.Skin();
@@ -391,8 +395,6 @@ namespace ColladaConvert
 				mCharacter.AddSkin(skin);
 				skinList.Add(skin);
 			}
-
-			anm.Consolidate();
 
 			mAnimLib.AddAnim(anm);
 
@@ -435,11 +437,18 @@ namespace ColladaConvert
 			LoadAnimations(r);
 
 			//create useful anims
-			mAnimator	=new Animator(mAnimations, mRootNodes);
+			List<MeshLib.SubAnim>	subs	=new List<MeshLib.SubAnim>();
+			foreach(KeyValuePair<string, Animation> anim in mAnimations)
+			{
+				MeshLib.SubAnim	sa	=anim.Value.GetAnims(mGameSkeleton);
+				if(sa != null)
+				{
+					subs.Add(sa);
+				}
+			}
+			MeshLib.Anim	anm	=new MeshLib.Anim(subs);	
 
-			MeshLib.Anim	anm	=new MeshLib.Anim(mControllers.Count);
-
-	
+			anm.SetBoneRefs(mGameSkeleton);
 			
 			//chop at content if content is in the path
 			if(path.IndexOf("Content") != -1)
@@ -457,19 +466,6 @@ namespace ColladaConvert
 					anm.Name	="Content\\" + path;
 				}
 			}
-			int	i		=0;
-			
-			//create anims we can save
-			foreach(KeyValuePair<string, Controller> cont in mControllers)
-			{
-				Skin	sk	=cont.Value.GetSkin();
-
-				List<string>		boneNames	=sk.GetJointNameArray();
-				List<MeshLib.FloatKeys>	anims	=mAnimator.BuildGameAnims(mGameSkeleton);
-
-				anm.AddControllerSubAnims(i, anims);
-				i++;
-			}
 			mAnimLib.AddAnim(anm);
 			file.Close();
 		}
@@ -481,7 +477,7 @@ namespace ColladaConvert
 
 			foreach(KeyValuePair<string, SceneNode> sn in mRootNodes)
 			{
-				MeshLib.GSNode	n;//	=new GSNode();
+				MeshLib.GSNode	n;
 
 				sn.Value.AddToGameSkeleton(out n);
 

@@ -13,8 +13,8 @@ namespace MeshLib
 		string			mName;
 		List<GSNode>	mChildren	=new List<GSNode>();
 
-		//channels for animating
-		List<ChannelTarget>	mChannels	=new List<ChannelTarget>();
+		//current pos / rot / scale
+		KeyFrame	mKeyValue	=new KeyFrame();
 
 
 
@@ -35,60 +35,13 @@ namespace MeshLib
 		}
 
 
-
-		public void SetChannels(List<ChannelTarget> chans)
-		{
-			mChannels	=chans;
-		}
-
-
 		public Matrix GetMatrix()
 		{
-			//compose from elements
-			Matrix mat	=Matrix.Identity;
-
-			//this should probably be cached
-			foreach(ChannelTarget gc in mChannels)
-			{
-				if(gc.IsRotation())
-				{
-					mat	=gc.GetMatrix() * mat;
-				}
-				else
-				{
-					mat	*=gc.GetMatrix();
-				}
-			}
+			Matrix	mat	=Matrix.CreateScale(mKeyValue.mScale) *
+				Matrix.CreateFromQuaternion(mKeyValue.mRotation) *
+				Matrix.CreateTranslation(mKeyValue.mPosition);
 
 			return	mat;
-		}
-
-
-		public bool GetChannelTarget(string node, string sid, out ChannelTarget gct)
-		{
-			if(mName == node)
-			{
-				foreach(ChannelTarget gc in mChannels)
-				{
-					if(gc.GetSID() == sid)
-					{
-						gct	=gc;
-						return	true;
-					}
-				}
-			}
-			else
-			{
-				foreach(GSNode n in mChildren)
-				{
-					if(n.GetChannelTarget(node, sid, out gct))
-					{
-						return	true;
-					}
-				}
-			}
-			gct	=null;
-			return	false;
 		}
 
 
@@ -117,15 +70,7 @@ namespace MeshLib
 		{
 			mName	=br.ReadString();
 
-			int	numChan	=br.ReadInt32();
-			mChannels.Clear();
-			for(int i=0;i < numChan;i++)
-			{
-				ChannelTarget	ct	=new ChannelTarget();
-				ct.Read(br);
-
-				mChannels.Add(ct);
-			}
+			mKeyValue.Read(br);
 
 			int	numChildren	=br.ReadInt32();
 			for(int i=0;i < numChildren;i++)
@@ -142,17 +87,49 @@ namespace MeshLib
 		{
 			bw.Write(mName);
 
-			bw.Write(mChannels.Count);
-			foreach(ChannelTarget ct in mChannels)
-			{
-				ct.Write(bw);
-			}
+			mKeyValue.Write(bw);
 
 			bw.Write(mChildren.Count);
 			foreach(GSNode n in mChildren)
 			{
 				n.Write(bw);
 			}
+		}
+
+
+		internal void GetBoneNames(List<string> names)
+		{
+			foreach(GSNode n in mChildren)
+			{
+				n.GetBoneNames(names);
+			}
+			names.Add(mName);
+		}
+
+
+		internal bool GetBoneKey(string bone, out KeyFrame ret)
+		{
+			if(mName == bone)
+			{
+				ret	=mKeyValue;
+				return	true;
+			}
+
+			foreach(GSNode n in mChildren)
+			{
+				if(n.GetBoneKey(bone, out ret))
+				{
+					return	true;
+				}
+			}
+			ret	=null;
+			return	false;
+		}
+
+
+		public void SetKey(KeyFrame keyFrame)
+		{
+			mKeyValue	=keyFrame;
 		}
 	}
 
@@ -173,17 +150,12 @@ namespace MeshLib
 		}
 
 
-		public bool GetChannelTarget(string node, string sid, out ChannelTarget gct)
+		public void GetBoneNames(List<string> names)
 		{
 			foreach(GSNode n in mRoots)
 			{
-				if(n.GetChannelTarget(node, sid, out gct))
-				{
-					return	true;
-				}
+				n.GetBoneNames(names);
 			}
-			gct	=null;
-			return	false;
 		}
 
 
@@ -224,6 +196,20 @@ namespace MeshLib
 			{
 				n.Write(bw);
 			}
+		}
+
+
+		public KeyFrame GetBoneKey(string bone)
+		{
+			KeyFrame	ret	=null;
+			foreach(GSNode n in mRoots)
+			{
+				if(n.GetBoneKey(bone, out ret))
+				{
+					return	ret;
+				}
+			}
+			return	ret;
 		}
 	}
 }

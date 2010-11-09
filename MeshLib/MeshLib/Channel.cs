@@ -38,7 +38,7 @@ namespace MeshLib
 			mTargetSID	=targSID;
 			mAxis		=at;
 
-			if(!gs.GetChannelTarget(mTargetNode, mTargetSID, out mTarget))
+//			if(!gs.GetChannelTarget(mTargetNode, mTargetSID, out mTarget))
 			{
 				Debug.WriteLine("GetChannelTarget failed in Channel Constructor!");
 			}
@@ -67,7 +67,7 @@ namespace MeshLib
 
 		public void FixTarget(Skeleton sk)
 		{
-			if(!sk.GetChannelTarget(mTargetNode, mTargetSID, out mTarget))
+//			if(!sk.GetChannelTarget(mTargetNode, mTargetSID, out mTarget))
 			{
 				Debug.WriteLine("Couldn't find channeltarget in FixTarget()");
 			}

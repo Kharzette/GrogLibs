@@ -50,7 +50,7 @@ namespace MeshLib
 		int					mSkinIndex, mTypeIndex;
 		bool				mbVisible;
 		WearLocations		mSlot;
-		Bounds				mMeshBounds;
+		Bounds				mMeshBounds	=new Bounds();
 
 		public string Name
 		{

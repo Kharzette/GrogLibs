@@ -47,7 +47,7 @@ namespace MeshLib
 		{
 			if(mAnims.ContainsKey(key))
 			{
-				mAnims[key].Reduce(maxError);
+//				mAnims[key].Reduce(maxError);
 			}
 		}
 
@@ -139,7 +139,7 @@ namespace MeshLib
 			//point channels at the skeleton
 			foreach(KeyValuePair<string, Anim> an in mAnims)
 			{
-				an.Value.FixChannels(mSkeleton);
+//				an.Value.FixChannels(mSkeleton);
 			}
 
 			br.Close();

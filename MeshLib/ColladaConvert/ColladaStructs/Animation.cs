@@ -19,14 +19,70 @@ namespace ColladaConvert
 		}
 
 
-		public List<Anim> GetAnims(Dictionary<string, SceneNode> roots)
+		internal MeshLib.SubAnim	GetAnims(MeshLib.Skeleton skel)
 		{
-			List<Anim>	ret	=new List<Anim>();
-			foreach(SubAnimation sa in mSubAnims)
+			//grab full list of bones
+			List<string>	boneNames	=new List<string>();
+
+			skel.GetBoneNames(boneNames);
+
+			//for each bone, find all keyframe times
+			foreach(string bone in boneNames)
 			{
-				ret.AddRange(sa.GetAnims(roots));
+				List<float>	times	=new List<float>();
+
+				foreach(SubAnimation sa in mSubAnims)
+				{
+					List<float>	saTimes	=sa.GetTimesForBone(bone);
+
+					foreach(float t in saTimes)
+					{
+						if(times.Contains(t))
+						{
+							continue;
+						}
+						times.Add(t);
+					}
+				}
+
+				if(times.Count == 0)
+				{
+					continue;
+				}
+
+				times.Sort();
+
+				//build list of keys for times
+				List<MeshLib.KeyFrame>	keys	=new List<MeshLib.KeyFrame>();
+				foreach(float t in times)
+				{
+					keys.Add(new MeshLib.KeyFrame());
+				}
+
+				//set keys
+				foreach(SubAnimation sa in mSubAnims)
+				{
+					sa.SetKeys(bone, times, keys);
+				}
+
+				//fix quaternions
+				foreach(MeshLib.KeyFrame kf in keys)
+				{
+					Matrix	mat	=Matrix.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(kf.mRotation.X));
+					mat	*=Matrix.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(kf.mRotation.Y));
+					mat	*=Matrix.CreateFromAxisAngle(Vector3.UnitZ, MathHelper.ToRadians(kf.mRotation.Z));
+
+					kf.mRotation	=Quaternion.CreateFromRotationMatrix(mat);
+				}
+
+
+				//find and set bone key reference
+				MeshLib.KeyFrame	boneKey	=skel.GetBoneKey(bone);
+
+				return	new MeshLib.SubAnim(bone, times, keys);
 			}
-			return	ret;
+
+			return	null;
 		}
 
 

@@ -55,6 +55,16 @@ namespace ColladaConvert
 		}
 
 
+		internal void GetNodeNames(List<string> subNames)
+		{
+			foreach(KeyValuePair<string, SceneNode> sn in mChildren)
+			{
+				sn.Value.GetNodeNames(subNames);
+			}
+			subNames.Add(mName);
+		}
+
+
 		public bool GetMatrixForBone(string boneName, out Matrix outMat)
 		{
 			if(mName == boneName)
@@ -122,7 +132,10 @@ namespace ColladaConvert
 		{
 			gsn	=new GSNode();
 			gsn.SetName(mName);
-			gsn.SetChannels(GetGameChannels());
+
+			gsn.SetKey(GetKey());
+
+//			gsn.SetChannels(GetGameChannels());
 
 			foreach(KeyValuePair<string, SceneNode> k in mChildren)
 			{
@@ -238,6 +251,26 @@ namespace ColladaConvert
 			}
 
 			return	mMat;
+		}
+
+
+		public KeyFrame GetKey()
+		{
+			//compose from elements
+			mMat	=Matrix.Identity;
+
+			//this should probably be cached
+			foreach(KeyValuePair<string,NodeElement> el in mElements)
+			{
+				//postmultiply per collada spec
+				mMat	=el.Value.GetMatrix() * mMat;
+			}
+
+			KeyFrame	ret	=new KeyFrame();
+
+			mMat.Decompose(out ret.mScale, out ret.mRotation, out ret.mPosition);
+
+			return	ret;
 		}
 
 

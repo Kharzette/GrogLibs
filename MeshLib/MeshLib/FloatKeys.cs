@@ -11,8 +11,8 @@ namespace MeshLib
 {
 	public class FloatKeys
 	{
-		float	[]mTimes;		//keyframe times
-		float	[]mValues;		//key values
+		public float	[]mTimes;		//keyframe times
+		public float	[]mValues;		//key values
 		float	mTotalTime;		//total time of the animation
 
 		Channel	mTarget;	//target channel

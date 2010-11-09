@@ -94,7 +94,6 @@
     <Compile Include="ColladaStructs\Accessor.cs" />
     <Compile Include="Anim\Anim.cs" />
     <Compile Include="ColladaStructs\Animation.cs" />
-    <Compile Include="Conversion\Animator.cs" />
     <Compile Include="Anim\RotateAnim.cs" />
     <Compile Include="Anim\ScaleAnim.cs" />
     <Compile Include="ColladaStructs\Channel.cs" />
