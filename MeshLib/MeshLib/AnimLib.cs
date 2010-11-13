@@ -52,6 +52,27 @@ namespace MeshLib
 		}
 
 
+		//ensure the passed in skeleton
+		//doesn't have any new bones
+		public bool CheckSkeleton(Skeleton sk)
+		{
+			List<string>	existingBones	=new List<string>();
+			List<string>	newBones		=new List<string>();
+
+			mSkeleton.GetBoneNames(existingBones);
+			sk.GetBoneNames(newBones);
+
+			foreach(string bone in newBones)
+			{
+				if(!existingBones.Contains(bone))
+				{
+					return	false;
+				}
+			}
+			return	true;
+		}
+
+
 		public void SetSkeleton(Skeleton sk)
 		{
 			mSkeleton	=sk;

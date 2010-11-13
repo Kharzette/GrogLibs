@@ -273,17 +273,11 @@ namespace ColladaConvert
 		private void OnOpenAnim(object sender, EventArgs ea)
 		{
 			string	path	=(string)sender;
-/*
-			if(mCollada != null)
+
+			if(ColladaFileUtils.LoadAnim(path, mAnimLib))
 			{
-//				mCollada.LoadAnim(path);
+				eAnimsUpdated(mAnimLib.GetAnims(), null);
 			}
-			else
-			{
-//				mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib, mCharacter);
-				eMeshPartListUpdated(null, null);
-			}*/
-			eAnimsUpdated(mAnimLib.GetAnims(), null);
 		}
 
 

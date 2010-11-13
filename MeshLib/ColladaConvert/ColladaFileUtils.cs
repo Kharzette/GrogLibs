@@ -26,6 +26,27 @@ namespace ColladaConvert
 		}
 
 
+		//loads an animation into an existing anim lib
+		internal static bool LoadAnim(string path, AnimLib alib)
+		{
+			COLLADA	colladaFile	=DeSerializeCOLLADA(path);
+			Skeleton	skel	=BuildSkeleton(colladaFile);
+
+			if(alib.CheckSkeleton(skel))
+			{
+				List<SubAnim>	subs	=GetSubAnimList(colladaFile, alib.GetSkeleton());
+				Anim	anm	=new Anim(subs);
+
+				anm.SetBoneRefs(alib.GetSkeleton());
+				anm.Name	="RenameThis";
+				alib.AddAnim(anm);
+
+				return	true;
+			}
+			return	false;
+		}
+
+
 		internal static Character LoadCharacter(string					path,
 												GraphicsDevice			gd,
 												MaterialLib.MaterialLib	matLib,
