@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Storage;
+using MeshLib;
 
 
 namespace ColladaConvert
@@ -20,9 +21,9 @@ namespace ColladaConvert
 		Effect					mFX;
 
 		MaterialLib.MaterialLib		mMatLib;
-		MeshLib.AnimLib				mAnimLib;
-		MeshLib.Character			mCharacter;
-		MeshLib.StaticMeshObject	mStaticMesh;
+		AnimLib				mAnimLib;
+		Character			mCharacter;
+		StaticMeshObject	mStaticMesh;
 
 		//material gui
 		MaterialForm	mMF;
@@ -117,9 +118,9 @@ namespace ColladaConvert
 		protected override void LoadContent()
 		{
 			mMatLib		=new MaterialLib.MaterialLib(mGDM.GraphicsDevice, Content);
-			mAnimLib	=new MeshLib.AnimLib();
-			mCharacter	=new MeshLib.Character(mMatLib, mAnimLib);
-			mStaticMesh	=new MeshLib.StaticMeshObject(mMatLib);
+			mAnimLib	=new AnimLib();
+			mCharacter	=new Character(mMatLib, mAnimLib);
+			mStaticMesh	=new StaticMeshObject(mMatLib);
 
 			//load debug shaders
 			mFX			=Content.Load<Effect>("Shaders/Static");
@@ -292,7 +293,7 @@ namespace ColladaConvert
 
 		void OnNukedMeshPart(object sender, EventArgs ea)
 		{
-			MeshLib.Mesh	msh	=sender as MeshLib.Mesh;
+			Mesh	msh	=sender as Mesh;
 
 			mCharacter.NukeMesh(msh);
 		}
@@ -304,7 +305,7 @@ namespace ColladaConvert
 			mBoundsVB	=null;
 			mBoundsIB	=null;
 
-			List<MeshLib.Bounds>	bnds	=(List<MeshLib.Bounds>)sender;
+			List<Bounds>	bnds	=(List<Bounds>)sender;
 
 			if(bnds.Count <= 0)
 			{
@@ -312,7 +313,7 @@ namespace ColladaConvert
 			}
 
 			int	numCorners	=0;
-			foreach(MeshLib.Bounds bnd in bnds)
+			foreach(Bounds bnd in bnds)
 			{
 				numCorners	+=2;
 			}
@@ -321,7 +322,7 @@ namespace ColladaConvert
 			VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[numCorners * 4];
 
 			int	idx	=0;
-			foreach(MeshLib.Bounds bnd in bnds)
+			foreach(Bounds bnd in bnds)
 			{
 				float	xDiff	=bnd.mMaxs.X - bnd.mMins.X;
 				float	yDiff	=bnd.mMaxs.Y - bnd.mMins.Y;
@@ -347,7 +348,7 @@ namespace ColladaConvert
 
 			idx	=0;
 			UInt16 bndIdx	=0;
-			foreach(MeshLib.Bounds bnd in bnds)
+			foreach(Bounds bnd in bnds)
 			{
 				UInt16	idxOffset	=bndIdx;
 				//awesome compiler bug here, have to do this in 2 steps
@@ -450,9 +451,9 @@ namespace ColladaConvert
 		{
 			string	path	=(string)sender;
 
-//			mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mStaticMesh);
+			mStaticMesh	=ColladaFileUtils.LoadStatic(path, mGDM.GraphicsDevice, mMatLib);
 
-			eMeshPartListUpdated(null, null);
+			eMeshPartListUpdated(mStaticMesh.GetMeshPartList(), null);
 		}
 
 
@@ -568,8 +569,6 @@ namespace ColladaConvert
 
 			//put in some keys for messing with bones
 			float	time		=(float)gameTime.ElapsedGameTime.TotalMilliseconds;
-
-			//mCollada.DebugBoneModify(mBoneMatrix);
 
 			mCharacter.Animate(mCurrentAnimName, (float)(gameTime.TotalGameTime.TotalSeconds) * mTimeScale);
 

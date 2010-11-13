@@ -91,8 +91,7 @@ namespace ColladaConvert
 		public int		mPartIndex;
 
 		//the converted meshes
-		MeshLib.Mesh		mConverted;
-		MeshLib.StaticMesh	mStaticConverted;
+		Mesh	mConverted;
 
 
 		public MeshConverter(string name)
@@ -101,15 +100,9 @@ namespace ColladaConvert
 		}
 
 
-		public MeshLib.Mesh	GetCharMesh()
+		public Mesh	GetConvertedMesh()
 		{
 			return	mConverted;
-		}
-
-
-		public MeshLib.StaticMesh	GetStaticMesh()
-		{
-			return	mStaticConverted;
 		}
 
 
@@ -121,7 +114,7 @@ namespace ColladaConvert
 
 		//this will build a base list of verts
 		//eventually these will need to expand
-		public void CreateBaseVerts(float_array verts)
+		public void CreateBaseVerts(float_array verts, bool bSkinned)
 		{
 			mNumBaseVerts	=(int)verts.count / 3;
 			mBaseVerts		=new TrackedVert[mNumBaseVerts];
@@ -135,8 +128,14 @@ namespace ColladaConvert
 			}
 
 			//create a new gamemesh
-			mConverted			=new MeshLib.Mesh(mName);
-			mStaticConverted	=new StaticMesh(mName);
+			if(bSkinned)
+			{
+				mConverted	=new SkinnedMesh(mName);
+			}
+			else
+			{
+				mConverted	=new StaticMesh(mName);
+			}
 		}
 
 
@@ -717,7 +716,6 @@ namespace ColladaConvert
 			}
 
 			mConverted.SetVertexDeclaration(new VertexDeclaration(gd, ve));
-			mStaticConverted.SetVertexDeclaration(new VertexDeclaration(gd, ve));
 		}
 
 
@@ -807,10 +805,6 @@ namespace ColladaConvert
 			mConverted.SetNumVerts(mNumBaseVerts);
 			mConverted.SetNumTriangles(mNumTriangles);
 			mConverted.SetTypeIndex(VertexTypes.GetIndex(vtype));
-			mStaticConverted.SetVertSize(VertexTypes.GetSizeForType(vtype));
-			mStaticConverted.SetNumVerts(mNumBaseVerts);
-			mStaticConverted.SetNumTriangles(mNumTriangles);
-			mStaticConverted.SetTypeIndex(VertexTypes.GetIndex(vtype));
 
 			//set bufferusage here so that getdata can be called
 			//we'll need it to save the mesh to a file
@@ -828,9 +822,6 @@ namespace ColladaConvert
 			typedMethod.Invoke(vb, new object[] {verts});
 
 			mConverted.SetVertexBuffer(vb);
-			mStaticConverted.SetVertexBuffer(vb);
-
-//			mConverted.mVerts.SetData<vtype>(verts);
 
 			ushort	[]idxs	=new ushort[mIndexList.Count];
 
@@ -849,7 +840,6 @@ namespace ColladaConvert
 			indbuf.SetData<ushort>(idxs);
 
 			mConverted.SetIndexBuffer(indbuf);
-			mStaticConverted.SetIndexBuffer(indbuf);
 		}
 	}
 }

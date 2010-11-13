@@ -56,7 +56,7 @@ namespace ColladaConvert
 
 			Character	chr	=new Character(matLib, alib);
 
-			List<MeshConverter>	chunks	=GetMeshChunks(colladaFile);
+			List<MeshConverter>	chunks	=GetMeshChunks(colladaFile, true);
 
 			AddVertexWeightsToChunks(colladaFile, chunks);
 
@@ -82,10 +82,30 @@ namespace ColladaConvert
 
 			foreach(MeshConverter mc in chunks)
 			{
-				chr.AddMeshPart(mc.GetCharMesh());
+				chr.AddMeshPart(mc.GetConvertedMesh());
 			}
 
 			return	chr;
+		}
+
+
+		internal static StaticMeshObject LoadStatic(string					path,
+													GraphicsDevice			gd,
+													MaterialLib.MaterialLib	matLib)
+		{
+			COLLADA	colladaFile	=DeSerializeCOLLADA(path);
+
+			StaticMeshObject	smo		=new StaticMeshObject(matLib);
+			List<MeshConverter>	chunks	=GetMeshChunks(colladaFile, false);
+
+			BuildFinalVerts(colladaFile, gd, chunks);
+
+			foreach(MeshConverter mc in chunks)
+			{
+				smo.AddMeshPart(mc.GetConvertedMesh());
+			}
+
+			return	smo;
 		}
 
 
@@ -160,7 +180,7 @@ namespace ColladaConvert
 					{
 						if(mc.mGeometryID == sk.source1.Substring(1))
 						{
-							Mesh	msh	=mc.GetCharMesh();
+							SkinnedMesh	msh	=mc.GetConvertedMesh() as SkinnedMesh;
 							msh.SetSkin(skin);
 							msh.SetSkinIndex(skinList.IndexOf(skin));
 						}
@@ -391,7 +411,7 @@ namespace ColladaConvert
 		}
 
 
-		static List<MeshConverter> GetMeshChunks(COLLADA colladaFile)
+		static List<MeshConverter> GetMeshChunks(COLLADA colladaFile, bool bSkinned)
 		{
 			List<MeshConverter>	chunks	=new List<MeshConverter>();
 
@@ -432,7 +452,7 @@ namespace ColladaConvert
 						
 						MeshConverter	cnk	=new MeshConverter(polys.material);
 
-						cnk.CreateBaseVerts(verts);
+						cnk.CreateBaseVerts(verts, bSkinned);
 
 						cnk.mPartIndex	=-1;
 						cnk.SetGeometryID(geom.id);

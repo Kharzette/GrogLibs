@@ -25,50 +25,26 @@ namespace MeshLib
 		}
 
 
-		public void AddMeshPart(StaticMesh m)
+		public void AddMeshPart(Mesh m)
 		{
-			mMeshParts.Add(m);
-		}
+			StaticMesh	sm	=m as StaticMesh;
 
-
-		public void NukeMesh(StaticMesh m)
-		{
-			if(mMeshParts.Contains(m))
+			if(sm != null)
 			{
-				mMeshParts.Remove(m);
+				mMeshParts.Add(sm);
 			}
 		}
 
 
-		public Vector3 GetBoundsCenter()
+		public void NukeMesh(Mesh m)
 		{
-			Vector3	accum	=Vector3.Zero;
-			foreach(StaticMesh sm in mMeshParts)
+			StaticMesh	sm	=m as StaticMesh;
+
+			if(sm != null)
 			{
-				accum	+=sm.GetBoundsCenter();
-			}
-
-			accum	/=mMeshParts.Count;
-
-			return	accum;
-		}
-
-
-		public void SetAppearance(List<string> meshParts, List<string> materials)
-		{
-			foreach(StaticMesh m in mMeshParts)
-			{
-				if(meshParts.Contains(m.Name))
+				if(mMeshParts.Contains(sm))
 				{
-					m.Visible	=true;
-
-					int	idx	=meshParts.IndexOf(m.Name);
-
-					m.MaterialName	=materials[idx];
-				}
-				else
-				{
-					m.Visible	=false;
+					mMeshParts.Remove(sm);
 				}
 			}
 		}
@@ -88,7 +64,7 @@ namespace MeshLib
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
-			//write a magic number identifying characters
+			//write a magic number identifying a static
 			UInt32	magic	=0x57A71C35;
 
 			bw.Write(magic);
@@ -149,20 +125,6 @@ namespace MeshLib
 					continue;
 				}
 				m.Draw(gd, mMatLib);
-			}
-		}
-
-
-		//for drawing with custom fx for passes
-		public void Draw(GraphicsDevice gd, Effect fx)
-		{
-			foreach(StaticMesh m in mMeshParts)
-			{
-				if(!m.Visible)
-				{
-					continue;
-				}
-				m.Draw(gd, fx);
 			}
 		}
 

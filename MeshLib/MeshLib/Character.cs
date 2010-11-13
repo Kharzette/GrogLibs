@@ -11,8 +11,8 @@ namespace MeshLib
 {
 	public class Character
 	{
-		List<Mesh>	mMeshParts	=new List<Mesh>();
-		List<Skin>	mSkins		=new List<Skin>();
+		List<SkinnedMesh>	mMeshParts	=new List<SkinnedMesh>();
+		List<Skin>			mSkins		=new List<Skin>();
 
 		//refs to anim and material libs
 		MaterialLib.MaterialLib	mMatLib;
@@ -31,15 +31,25 @@ namespace MeshLib
 
 		public void AddMeshPart(Mesh m)
 		{
-			mMeshParts.Add(m);
+			SkinnedMesh	sm	=m as SkinnedMesh;
+
+			if(sm != null)
+			{
+				mMeshParts.Add(sm);
+			}
 		}
 
 
 		public void NukeMesh(Mesh m)
 		{
-			if(mMeshParts.Contains(m))
+			SkinnedMesh	sm	=m as SkinnedMesh;
+
+			if(sm != null)
 			{
-				mMeshParts.Remove(m);
+				if(mMeshParts.Contains(sm))
+				{
+					mMeshParts.Remove(sm);
+				}
 			}
 		}
 
@@ -52,7 +62,7 @@ namespace MeshLib
 
 		public void SetAppearance(List<string> meshParts, List<string> materials)
 		{
-			foreach(Mesh m in mMeshParts)
+			foreach(SkinnedMesh m in mMeshParts)
 			{
 				if(meshParts.Contains(m.Name))
 				{
@@ -71,7 +81,7 @@ namespace MeshLib
 
 
 		//for gui
-		public List<Mesh> GetMeshPartList()
+		public List<SkinnedMesh> GetMeshPartList()
 		{
 			return	mMeshParts;
 		}
@@ -91,7 +101,7 @@ namespace MeshLib
 
 			//save mesh parts
 			bw.Write(mMeshParts.Count);
-			foreach(Mesh m in mMeshParts)
+			foreach(SkinnedMesh m in mMeshParts)
 			{
 				m.Write(bw);
 			}
@@ -134,7 +144,7 @@ namespace MeshLib
 			int	numMesh	=br.ReadInt32();
 			for(int i=0;i < numMesh;i++)
 			{
-				Mesh	m	=new Mesh();
+				SkinnedMesh	m	=new SkinnedMesh();
 
 				m.Read(br, gd, bEditor);
 				mMeshParts.Add(m);
@@ -167,7 +177,7 @@ namespace MeshLib
 		{
 			mAnimLib.Animate(anim, time);
 
-			foreach(Mesh m in mMeshParts)
+			foreach(SkinnedMesh m in mMeshParts)
 			{
 				if(!m.Visible)
 				{
@@ -185,7 +195,7 @@ namespace MeshLib
 
 		public void RayIntersectBounds(Vector3 start, Vector3 end)
 		{
-			foreach(Mesh m in mMeshParts)
+			foreach(SkinnedMesh m in mMeshParts)
 			{
 				if(!m.Visible)
 				{
@@ -204,7 +214,7 @@ namespace MeshLib
 
 		public void Draw(GraphicsDevice gd)
 		{
-			foreach(Mesh m in mMeshParts)
+			foreach(SkinnedMesh m in mMeshParts)
 			{
 				if(!m.Visible)
 				{

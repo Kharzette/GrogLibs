@@ -1,18 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Xml;
+using System.Text;
 using System.IO;
-using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 
 namespace MeshLib
 {
-	public class StaticMesh : Mesh
+	public class SkinnedMesh : Mesh
 	{
-		public StaticMesh() : base() { }
-		public StaticMesh(string name) : base(name) { }
+		Matrix			[]mBones;
+		Skin			mSkin;
+		int				mSkinIndex;
+		WearLocations	mSlot;
+
+
+		public WearLocations Slot
+		{
+			get { return mSlot; }
+			set { mSlot = value; }
+		}
+
+
+		public SkinnedMesh() : base() { }
+		public SkinnedMesh(string name) : base(name) { }
+
+
+		public void SetSkin(Skin sk)
+		{
+			mSkin	=sk;
+		}
+
+
+		public void SetSkinIndex(int idx)
+		{
+			mSkinIndex	=idx;
+		}
+
+
+		public int GetSkinIndex()
+		{
+			return	mSkinIndex;
+		}
 
 
 		public override void Write(BinaryWriter bw)
@@ -23,7 +53,8 @@ namespace MeshLib
 			bw.Write(mVertSize);
 			bw.Write(mMaterialName);
 			bw.Write(mTypeIndex);
-			bw.Write(mbVisible);
+			bw.Write(mSkinIndex);
+			bw.Write((UInt32)mSlot);
 
 			mMeshBounds.Write(bw);
 
@@ -63,7 +94,8 @@ namespace MeshLib
 			mVertSize		=br.ReadInt32();
 			mMaterialName	=br.ReadString();
 			mTypeIndex		=br.ReadInt32();
-			mbVisible		=br.ReadBoolean();
+			mSkinIndex		=br.ReadInt32();
+			mSlot			=(WearLocations)br.ReadUInt32();
 
 			mMeshBounds.Read(br);
 
@@ -106,6 +138,36 @@ namespace MeshLib
 		}
 
 
+		//copies bones into the shader
+		public void UpdateShaderBones(Effect fx)
+		{
+			//some chunks are never really drawn
+			if(mBones != null)
+			{
+				fx.Parameters["mBones"].SetValue(mBones);
+			}
+		}
+
+
+		public void UpdateBones(Skeleton sk)
+		{
+			//no need for this if not skinned
+			if(mSkin == null || sk == null)
+			{
+				return;
+			}
+
+			if(mBones == null)
+			{
+				mBones	=new Matrix[mSkin.GetNumBones()];
+			}
+			for(int i=0;i < mBones.Length;i++)
+			{
+				mBones[i]	=mSkin.GetBoneByIndex(i, sk);
+			}
+		}
+
+
 		public override void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib)
 		{
 			if(!mbVisible)
@@ -129,12 +191,23 @@ namespace MeshLib
 			g.Indices			=mIndexs;
 			g.VertexDeclaration	=mVD;
 
+			UpdateShaderBones(fx);
+
 			//this might get slow
 			matLib.ApplyParameters(mMaterialName);
+
+			if(fx.Parameters["mBindPose"] != null)
+			{
+				if(mSkin != null)
+				{
+					fx.Parameters["mBindPose"].SetValue(mSkin.GetBindShapeMatrix());
+				}
+			}
 
 			//set renderstates from material
 			//this could also get crushingly slow
 			g.RenderState.AlphaBlendEnable			=mat.Alpha;
+			g.RenderState.AlphaFunction				=CompareFunction.Less;
 			g.RenderState.AlphaTestEnable			=mat.AlphaTest;
 			g.RenderState.BlendFunction				=mat.BlendFunction;
 			g.RenderState.SourceBlend				=mat.SourceBlend;
@@ -142,8 +215,6 @@ namespace MeshLib
 			g.RenderState.DepthBufferWriteEnable	=mat.DepthWrite;
 			g.RenderState.CullMode					=mat.CullMode;
 			g.RenderState.DepthBufferFunction		=mat.ZFunction;
-
-			fx.CommitChanges();
 
 			fx.Begin();
 			foreach(EffectPass pass in fx.CurrentTechnique.Passes)
