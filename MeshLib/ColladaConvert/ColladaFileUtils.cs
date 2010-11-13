@@ -1,30 +1,41 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml;
+using System.Xml.Serialization;
 using System.IO;
 using System.Diagnostics;
 using System.ComponentModel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using MeshLib;
+
 
 namespace ColladaConvert
 {
-	class Collada
+	internal class ColladaFileUtils
 	{
-		//midstep converters
-		List<MeshConverter>	mChunks	=new List<MeshConverter>();
-
-		//actual useful data for the game
-		MeshLib.Character			mCharacter;
-
-
-		public Collada(COLLADA					colladaFile,
-					   GraphicsDevice			g,
-					   MeshLib.AnimLib			alib,
-					   MeshLib.Character		chr)
+		internal static COLLADA DeSerializeCOLLADA(string path)
 		{
-			mCharacter	=chr;
+			FileStream		fs	=new FileStream(path, FileMode.Open, FileAccess.Read);
+			XmlSerializer	xs	=new XmlSerializer(typeof(COLLADA));
+
+			COLLADA	ret	=xs.Deserialize(fs) as COLLADA;
+
+			return	ret;
+		}
+
+
+		internal static Character LoadCharacter(string					path,
+												GraphicsDevice			g,
+												MaterialLib.MaterialLib	matLib,
+												AnimLib					alib)
+		{
+			COLLADA	colladaFile	=DeSerializeCOLLADA(path);
+
+			Character	chr	=new Character(matLib, alib);
+
+			List<MeshConverter>	chunks	=new List<MeshConverter>();
 
 			foreach(object item in colladaFile.Items)
 			{
@@ -68,7 +79,7 @@ namespace ColladaConvert
 						cnk.mPartIndex	=-1;
 						cnk.SetGeometryID(geom.id);
 						
-						mChunks.Add(cnk);
+						chunks.Add(cnk);
 					}
 				}
 			}
@@ -90,7 +101,7 @@ namespace ColladaConvert
 
 					string	skinSource	=sk.source1.Substring(1);
 
-					foreach(MeshConverter cnk in mChunks)
+					foreach(MeshConverter cnk in chunks)
 					{
 						if(cnk.mGeometryID == skinSource)
 						{
@@ -146,7 +157,7 @@ namespace ColladaConvert
 									continue;
 								}
 
-								foreach(MeshConverter mc in mChunks)
+								foreach(MeshConverter mc in chunks)
 								{
 									if(mc.mGeometryID == skinSource)
 									{
@@ -175,7 +186,7 @@ namespace ColladaConvert
 					{
 						continue;
 					}
-					foreach(MeshConverter cnk in mChunks)
+					foreach(MeshConverter cnk in chunks)
 					{
 						string	name	=cnk.GetName();
 						if(cnk.mGeometryID == geom.id)
@@ -342,11 +353,11 @@ namespace ColladaConvert
 							skin.SetInverseBindPoses(mats);
 						}
 					}
-					mCharacter.AddSkin(skin);
+					chr.AddSkin(skin);
 					skinList.Add(skin);
 
 					//set mesh pointers
-					foreach(MeshConverter mc in mChunks)
+					foreach(MeshConverter mc in chunks)
 					{
 						if(mc.mGeometryID == sk.source1.Substring(1))
 						{
@@ -362,15 +373,17 @@ namespace ColladaConvert
 
 			Dictionary<string, MeshLib.Mesh>	idlist	=new Dictionary<string,MeshLib.Mesh>();
 
-			foreach(MeshConverter mc in mChunks)
+			foreach(MeshConverter mc in chunks)
 			{
-				mCharacter.AddMeshPart(mc.GetCharMesh());
+				chr.AddMeshPart(mc.GetCharMesh());
 				idlist.Add(mc.mGeometryID + mc.GetName(), mc.GetCharMesh());
 			}
+
+			return	chr;
 		}
 
 
-		string GetNodeNameForInstanceController(node n, string ic)
+		static string GetNodeNameForInstanceController(node n, string ic)
 		{
 			if(n.instance_controller != null)
 			{
@@ -401,7 +414,7 @@ namespace ColladaConvert
 		}
 
 
-		public List<int> GetGeometryIndexesBySemantic(geometry geom, string sem, int set, string material)
+		static List<int> GetGeometryIndexesBySemantic(geometry geom, string sem, int set, string material)
 		{
 			List<int>	ret	=new List<int>();
 
@@ -471,7 +484,7 @@ namespace ColladaConvert
 		}
 
 
-		public List<int> GetGeometryVertCount(geometry geom, string material)
+		static List<int> GetGeometryVertCount(geometry geom, string material)
 		{
 			List<int>	ret	=new List<int>();
 
@@ -503,7 +516,7 @@ namespace ColladaConvert
 		}
 
 
-		public float_array GetGeometryFloatArrayBySemantic(geometry geom, string sem, int set, string material)
+		static float_array GetGeometryFloatArrayBySemantic(geometry geom, string sem, int set, string material)
 		{
 			mesh	msh	=geom.Item as mesh;
 			if(msh == null)
@@ -561,7 +574,7 @@ namespace ColladaConvert
 		}
 
 
-		MeshLib.Skeleton BuildSkeleton(COLLADA colMesh)
+		static MeshLib.Skeleton BuildSkeleton(COLLADA colMesh)
 		{
 			MeshLib.Skeleton	ret	=new MeshLib.Skeleton();
 
@@ -588,7 +601,7 @@ namespace ColladaConvert
 		}
 
 
-		public MeshLib.KeyFrame GetKeyFromCNode(node n)
+		static MeshLib.KeyFrame GetKeyFromCNode(node n)
 		{
 			MeshLib.KeyFrame	key	=new MeshLib.KeyFrame();
 
@@ -646,7 +659,7 @@ namespace ColladaConvert
 		}
 
 
-		void BuildSkeleton(node n, out MeshLib.GSNode gsn)
+		static void BuildSkeleton(node n, out MeshLib.GSNode gsn)
 		{
 			gsn	=new MeshLib.GSNode();
 
@@ -669,7 +682,7 @@ namespace ColladaConvert
 		}
 
 
-		public static void GetVectorFromString(string str, out Vector3 vec)
+		internal static void GetVectorFromString(string str, out Vector3 vec)
 		{
 			string[] tokens	=str.Split(' ');
 
@@ -680,7 +693,7 @@ namespace ColladaConvert
 		}
 
 
-		public static void GetVectorFromString(string str, out Vector4 vec)
+		internal static void GetVectorFromString(string str, out Vector4 vec)
 		{
 			string[] tokens	=str.Split(' ');
 
@@ -692,7 +705,7 @@ namespace ColladaConvert
 		}
 
 
-		public static void GetQuaternionFromString(string str, out Quaternion q)
+		internal static void GetQuaternionFromString(string str, out Quaternion q)
 		{
 			string[] tokens	=str.Split(' ');
 
@@ -706,7 +719,7 @@ namespace ColladaConvert
 		}
 
 
-		public static void GetSkewFromString(string str, out float ang, out Vector3 axRot, out Vector3 axTrans)
+		internal static void GetSkewFromString(string str, out float ang, out Vector3 axRot, out Vector3 axTrans)
 		{
 			string[] tokens	=str.Split(' ');
 
@@ -721,7 +734,7 @@ namespace ColladaConvert
 		}
 
 
-		public static void GetLookAtFromString(string str, out Vector3 eyePos, out Vector3 interestPos, out Vector3 upVec)
+		internal static void GetLookAtFromString(string str, out Vector3 eyePos, out Vector3 interestPos, out Vector3 upVec)
 		{
 			string[] tokens	=str.Split(' ');
 
@@ -738,7 +751,7 @@ namespace ColladaConvert
 		}
 
 
-		public static List<Matrix> GetMatrixListFromFA(float_array fa)
+		internal static List<Matrix> GetMatrixListFromFA(float_array fa)
 		{
 			List<Matrix>	ret	=new List<Matrix>();
 
@@ -772,7 +785,7 @@ namespace ColladaConvert
 		}
 
 
-		public static void GetMatrixFromString(string str, out Matrix mat)
+		internal static void GetMatrixFromString(string str, out Matrix mat)
 		{
 			string[] tokens	=str.Split(' ', '\n', '\t');
 

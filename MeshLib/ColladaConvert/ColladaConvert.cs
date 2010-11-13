@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
-using System.Xml.Serialization;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -13,13 +12,11 @@ namespace ColladaConvert
 {
 	public class ColladaConvert : Microsoft.Xna.Framework.Game
 	{
-		Collada					mCollada;
 		GraphicsDeviceManager	mGDM;
 		VertexBuffer			mVB, mBoundsVB;
 		VertexDeclaration		mVDecl;
 		IndexBuffer				mIB, mBoundsIB;
 		Effect					mFX;
-		COLLADA					mCOLLADA;
 
 		MaterialLib.MaterialLib		mMatLib;
 		MeshLib.AnimLib				mAnimLib;
@@ -288,7 +285,7 @@ namespace ColladaConvert
 		private void OnOpenAnim(object sender, EventArgs ea)
 		{
 			string	path	=(string)sender;
-
+/*
 			if(mCollada != null)
 			{
 //				mCollada.LoadAnim(path);
@@ -297,22 +294,16 @@ namespace ColladaConvert
 			{
 //				mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib, mCharacter);
 				eMeshPartListUpdated(null, null);
-			}
+			}*/
 			eAnimsUpdated(mAnimLib.GetAnims(), null);
 		}
 
 
 		private void OnOpenModel(object sender, EventArgs ea)
 		{
-			string	path	=(string)sender;
+			mCharacter	=ColladaFileUtils.LoadCharacter(sender as string, mGDM.GraphicsDevice, mMatLib, mAnimLib);
 
-			FileStream		fs	=new FileStream(path, FileMode.Open, FileAccess.Read);
-			XmlSerializer	xs	=new XmlSerializer(typeof(COLLADA));
-
-			mCOLLADA	=xs.Deserialize(fs) as COLLADA;
-			mCollada	=new Collada(mCOLLADA, GraphicsDevice, mAnimLib, mCharacter);
-
-			eMeshPartListUpdated(null, null);
+			eMeshPartListUpdated(mCharacter.GetMeshPartList(), null);
 			eAnimsUpdated(mAnimLib.GetAnims(), null);
 		}
 

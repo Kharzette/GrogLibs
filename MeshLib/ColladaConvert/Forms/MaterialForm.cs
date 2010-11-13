@@ -131,9 +131,6 @@ namespace ColladaConvert
 
 			MaterialGrid.Columns.Add(slotColumn5);
 
-			ColladaConvert.eMeshPartListUpdated	+=OnMeshPartListUpdated;
-			ColladaConvert.eMeshPartListUpdated	+=OnStaticMeshPartListUpdated;
-
 			//set shadername and technique columns to
 			//read only so text can't be entered in cell
 			MaterialGrid.Columns[1].ReadOnly	=true;
@@ -253,7 +250,7 @@ namespace ColladaConvert
 
 		private void OnMeshPartListUpdated(object sender, EventArgs ea)
 		{
-			List<MeshLib.Mesh>	lm	=mCharacter.GetMeshPartList();
+			List<MeshLib.Mesh>	lm	=sender as List<MeshLib.Mesh>;
 
 			if(lm.Count == 0)
 			{

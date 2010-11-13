@@ -85,7 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Animation.cs" />
-    <Compile Include="Collada.cs" />
+    <Compile Include="ColladaFileUtils.cs" />
     <Compile Include="collada_schema_1_4.cs" />
     <Compile Include="Forms\AnimGridModel.cs" />
     <Compile Include="Forms\AnimForm.cs">
