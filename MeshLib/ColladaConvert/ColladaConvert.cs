@@ -291,11 +291,11 @@ namespace ColladaConvert
 
 			if(mCollada != null)
 			{
-				mCollada.LoadAnim(path);
+//				mCollada.LoadAnim(path);
 			}
 			else
 			{
-				mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib, mCharacter);
+//				mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib, mCharacter);
 				eMeshPartListUpdated(null, null);
 			}
 			eAnimsUpdated(mAnimLib.GetAnims(), null);
@@ -310,7 +310,7 @@ namespace ColladaConvert
 			XmlSerializer	xs	=new XmlSerializer(typeof(COLLADA));
 
 			mCOLLADA	=xs.Deserialize(fs) as COLLADA;
-			mCollada	=new Collada(mCOLLADA, GraphicsDevice, Content, mMatLib, mAnimLib, mCharacter);
+			mCollada	=new Collada(mCOLLADA, GraphicsDevice, mAnimLib, mCharacter);
 
 			eMeshPartListUpdated(null, null);
 			eAnimsUpdated(mAnimLib.GetAnims(), null);
@@ -469,7 +469,7 @@ namespace ColladaConvert
 		{
 			string	path	=(string)sender;
 
-			mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mStaticMesh);
+//			mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mStaticMesh);
 
 			eMeshPartListUpdated(null, null);
 		}

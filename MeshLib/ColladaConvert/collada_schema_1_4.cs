@@ -3368,8 +3368,6 @@ namespace ColladaConvert
 
         private string nameField;
 
-        private string textField;
-
 		[XmlIgnore]
         public string[] Values;
 
