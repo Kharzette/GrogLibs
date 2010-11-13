@@ -27,7 +27,7 @@ namespace ColladaConvert
 
 
 		internal static Character LoadCharacter(string					path,
-												GraphicsDevice			g,
+												GraphicsDevice			gd,
 												MaterialLib.MaterialLib	matLib,
 												AnimLib					alib)
 		{
@@ -35,86 +35,44 @@ namespace ColladaConvert
 
 			Character	chr	=new Character(matLib, alib);
 
-			List<MeshConverter>	chunks	=new List<MeshConverter>();
+			List<MeshConverter>	chunks	=GetMeshChunks(colladaFile);
 
-			foreach(object item in colladaFile.Items)
-			{
-				library_geometries	geoms	=item as library_geometries;
-				if(geoms == null)
-				{
-					continue;
-				}
-				foreach(object geomItem in geoms.geometry)
-				{
-					geometry	geom	=geomItem as geometry;
-					if(geom == null || geom.Item == null)
-					{
-						continue;
-					}
-
-					mesh	msh	=geom.Item as mesh;
-					if(msh == null || msh.Items == null)
-					{
-						continue;
-					}
-
-					foreach(object polyObj in msh.Items)
-					{
-						polygons	polys	=polyObj as polygons;
-						if(polys == null)
-						{
-							continue;
-						}
-
-						float_array	verts	=GetGeometryFloatArrayBySemantic(geom, "VERTEX", 0, polys.material);
-						if(verts == null)
-						{
-							continue;
-						}
-						
-						MeshConverter	cnk	=new MeshConverter(polys.material);
-
-						cnk.CreateBaseVerts(verts);
-
-						cnk.mPartIndex	=-1;
-						cnk.SetGeometryID(geom.id);
-						
-						chunks.Add(cnk);
-					}
-				}
-			}
-
-			foreach(object item in colladaFile.Items)
-			{
-				library_controllers	conts	=item as library_controllers;
-				if(conts == null)
-				{
-					continue;
-				}
-				foreach(controller cont in conts.controller)
-				{
-					skin	sk	=cont.Item as skin;
-					if(sk == null)
-					{
-						continue;
-					}
-
-					string	skinSource	=sk.source1.Substring(1);
-
-					foreach(MeshConverter cnk in chunks)
-					{
-						if(cnk.mGeometryID == skinSource)
-						{
-							cnk.AddWeightsToBaseVerts(sk);
-						}
-					}
-				}
-			}
+			AddVertexWeightsToChunks(colladaFile, chunks);
 
 			//build skeleton
-			MeshLib.Skeleton	skel	=BuildSkeleton(colladaFile);
+			Skeleton	skel	=BuildSkeleton(colladaFile);
 
 			//bake scene node modifiers into controllers
+			BakeSceneNodesIntoVerts(colladaFile, skel, chunks);
+
+			alib.SetSkeleton(skel);
+
+			BuildFinalVerts(colladaFile, gd, chunks);
+
+			//create useful anims
+			List<SubAnim>	subs	=GetSubAnimList(colladaFile, skel);
+			Anim	anm	=new Anim(subs);
+
+			anm.SetBoneRefs(skel);
+			anm.Name	="RenameThis";
+			alib.AddAnim(anm);
+
+			CreateSkins(colladaFile, chr, chunks);
+
+			foreach(MeshConverter mc in chunks)
+			{
+				chr.AddMeshPart(mc.GetCharMesh());
+			}
+
+			return	chr;
+		}
+
+
+		static void CreateSkins(COLLADA				colladaFile,
+								Character			chr,
+								List<MeshConverter>	chunks)
+		{
+			List<Skin>	skinList	=new List<Skin>();
 			foreach(object item in colladaFile.Items)
 			{
 				library_controllers	conts	=item as library_controllers;
@@ -133,45 +91,95 @@ namespace ColladaConvert
 					if(skinSource == null || skinSource == "")
 					{
 						continue;
-					}					
+					}
+					Skin	skin	=new Skin();
 
-					foreach(object item2 in colladaFile.Items)
+					Matrix	mat	=Matrix.Identity;
+
+					GetMatrixFromString(sk.bind_shape_matrix, out mat);
+
+					skin.SetBindShapeMatrix(mat);
+
+					string	jointSrc	="";
+					string	invSrc		="";
+					foreach(InputLocal inp in sk.joints.input)
 					{
-						library_visual_scenes	lvs	=item2 as library_visual_scenes;
-						if(lvs == null)
+						if(inp.semantic == "JOINT")
 						{
-							continue;
+							jointSrc	=inp.source.Substring(1);
 						}
-						foreach(visual_scene vs in lvs.visual_scene)
+						else if(inp.semantic == "INV_BIND_MATRIX")
 						{
-							foreach(node n in vs.node)
-							{
-								string	nname	=GetNodeNameForInstanceController(n, cont.id);
-								if(nname == "")
-								{
-									continue;
-								}
-								Matrix	mat	=Matrix.Identity;
-								if(!skel.GetMatrixForBone(nname, out mat))
-								{
-									continue;
-								}
+							invSrc	=inp.source.Substring(1);
+						}
+					}
 
-								foreach(MeshConverter mc in chunks)
-								{
-									if(mc.mGeometryID == skinSource)
-									{
-										mc.BakeTransformIntoVerts(mat);
-									}
-								}
-							}
+					foreach(source src in sk.source)
+					{
+						if(src.id == jointSrc)
+						{
+							Name_array	na	=src.Item as Name_array;
+
+							skin.SetBoneNames(na.Values);
+						}
+						else if(src.id == invSrc)
+						{
+							float_array	ma	=src.Item as float_array;
+
+							List<Matrix>	mats	=GetMatrixListFromFA(ma);
+
+							skin.SetInverseBindPoses(mats);
+						}
+					}
+					chr.AddSkin(skin);
+					skinList.Add(skin);
+
+					//set mesh pointers
+					foreach(MeshConverter mc in chunks)
+					{
+						if(mc.mGeometryID == sk.source1.Substring(1))
+						{
+							Mesh	msh	=mc.GetCharMesh();
+							msh.SetSkin(skin);
+							msh.SetSkinIndex(skinList.IndexOf(skin));
 						}
 					}
 				}
 			}
+		}
 
-			alib.SetSkeleton(skel);
 
+		static List<SubAnim> GetSubAnimList(COLLADA colladaFile, Skeleton skel)
+		{
+			//create useful anims
+			List<SubAnim>	subs	=new List<SubAnim>();
+			foreach(object item in colladaFile.Items)
+			{
+				library_animations	anims	=item as library_animations;
+				if(anims == null)
+				{
+					continue;
+				}
+
+				foreach(animation anim in anims.animation)
+				{
+					Animation	an	=new Animation(anim);
+
+					SubAnim	sa	=an.GetAnims(skel);
+					if(sa != null)
+					{
+						subs.Add(sa);
+					}
+				}
+			}
+			return	subs;
+		}
+
+
+		static void BuildFinalVerts(COLLADA				colladaFile,
+									GraphicsDevice		gd,
+									List<MeshConverter>	chunks)
+		{
 			foreach(object item in colladaFile.Items)
 			{
 				library_geometries	geoms	=item as library_geometries;
@@ -259,42 +267,21 @@ namespace ColladaConvert
 								}
 							}
 
-							cnk.BuildBuffers(g, bPos, bNorm, bBone,
+							cnk.BuildBuffers(gd, bPos, bNorm, bBone,
 								bBone, bTex0, bTex1, bTex2, bTex3,
 								bCol0, bCol1, bCol2, bCol3);
 						}
 					}
 				}
 			}
+		}
 
-			//create useful anims
-			List<MeshLib.SubAnim>	subs	=new List<MeshLib.SubAnim>();
-			foreach(object item in colladaFile.Items)
-			{
-				library_animations	anims	=item as library_animations;
-				if(anims == null)
-				{
-					continue;
-				}
 
-				foreach(animation anim in anims.animation)
-				{
-					Animation	an	=new Animation(anim);
-
-					MeshLib.SubAnim	sa	=an.GetAnims(skel);
-					if(sa != null)
-					{
-						subs.Add(sa);
-					}
-				}
-			}
-			MeshLib.Anim	anm	=new MeshLib.Anim(subs);
-
-			anm.SetBoneRefs(skel);
-			anm.Name	="RenameThis";
-
-			//create anims we can save
-			List<MeshLib.Skin>	skinList	=new List<MeshLib.Skin>();
+		static void BakeSceneNodesIntoVerts(COLLADA				colladaFile,
+											Skeleton			skel,
+											List<MeshConverter>	chunks)
+		{
+			//bake scene node modifiers into controllers
 			foreach(object item in colladaFile.Items)
 			{
 				library_controllers	conts	=item as library_controllers;
@@ -313,73 +300,127 @@ namespace ColladaConvert
 					if(skinSource == null || skinSource == "")
 					{
 						continue;
-					}
-					MeshLib.Skin	skin	=new MeshLib.Skin();
+					}					
 
-					Matrix	mat	=Matrix.Identity;
-
-					GetMatrixFromString(sk.bind_shape_matrix, out mat);
-
-					skin.SetBindShapeMatrix(mat);
-
-					string	jointSrc	="";
-					string	invSrc		="";
-					foreach(InputLocal inp in sk.joints.input)
+					foreach(object item2 in colladaFile.Items)
 					{
-						if(inp.semantic == "JOINT")
+						library_visual_scenes	lvs	=item2 as library_visual_scenes;
+						if(lvs == null)
 						{
-							jointSrc	=inp.source.Substring(1);
+							continue;
 						}
-						else if(inp.semantic == "INV_BIND_MATRIX")
+						foreach(visual_scene vs in lvs.visual_scene)
 						{
-							invSrc	=inp.source.Substring(1);
-						}
-					}
+							foreach(node n in vs.node)
+							{
+								string	nname	=GetNodeNameForInstanceController(n, cont.id);
+								if(nname == "")
+								{
+									continue;
+								}
+								Matrix	mat	=Matrix.Identity;
+								if(!skel.GetMatrixForBone(nname, out mat))
+								{
+									continue;
+								}
 
-					foreach(source src in sk.source)
-					{
-						if(src.id == jointSrc)
-						{
-							Name_array	na	=src.Item as Name_array;
-
-							skin.SetBoneNames(na.Values);
-						}
-						else if(src.id == invSrc)
-						{
-							float_array	ma	=src.Item as float_array;
-
-							List<Matrix>	mats	=GetMatrixListFromFA(ma);
-
-							skin.SetInverseBindPoses(mats);
-						}
-					}
-					chr.AddSkin(skin);
-					skinList.Add(skin);
-
-					//set mesh pointers
-					foreach(MeshConverter mc in chunks)
-					{
-						if(mc.mGeometryID == sk.source1.Substring(1))
-						{
-							MeshLib.Mesh	msh	=mc.GetCharMesh();
-							msh.SetSkin(skin);
-							msh.SetSkinIndex(skinList.IndexOf(skin));
+								foreach(MeshConverter mc in chunks)
+								{
+									if(mc.mGeometryID == skinSource)
+									{
+										mc.BakeTransformIntoVerts(mat);
+									}
+								}
+							}
 						}
 					}
 				}
 			}
+		}
 
-			alib.AddAnim(anm);
 
-			Dictionary<string, MeshLib.Mesh>	idlist	=new Dictionary<string,MeshLib.Mesh>();
-
-			foreach(MeshConverter mc in chunks)
+		static void AddVertexWeightsToChunks(COLLADA colladaFile, List<MeshConverter> chunks)
+		{
+			foreach(object item in colladaFile.Items)
 			{
-				chr.AddMeshPart(mc.GetCharMesh());
-				idlist.Add(mc.mGeometryID + mc.GetName(), mc.GetCharMesh());
-			}
+				library_controllers	conts	=item as library_controllers;
+				if(conts == null)
+				{
+					continue;
+				}
+				foreach(controller cont in conts.controller)
+				{
+					skin	sk	=cont.Item as skin;
+					if(sk == null)
+					{
+						continue;
+					}
 
-			return	chr;
+					string	skinSource	=sk.source1.Substring(1);
+
+					foreach(MeshConverter cnk in chunks)
+					{
+						if(cnk.mGeometryID == skinSource)
+						{
+							cnk.AddWeightsToBaseVerts(sk);
+						}
+					}
+				}
+			}
+		}
+
+
+		static List<MeshConverter> GetMeshChunks(COLLADA colladaFile)
+		{
+			List<MeshConverter>	chunks	=new List<MeshConverter>();
+
+			foreach(object item in colladaFile.Items)
+			{
+				library_geometries	geoms	=item as library_geometries;
+				if(geoms == null)
+				{
+					continue;
+				}
+				foreach(object geomItem in geoms.geometry)
+				{
+					geometry	geom	=geomItem as geometry;
+					if(geom == null || geom.Item == null)
+					{
+						continue;
+					}
+
+					mesh	msh	=geom.Item as mesh;
+					if(msh == null || msh.Items == null)
+					{
+						continue;
+					}
+
+					foreach(object polyObj in msh.Items)
+					{
+						polygons	polys	=polyObj as polygons;
+						if(polys == null)
+						{
+							continue;
+						}
+
+						float_array	verts	=GetGeometryFloatArrayBySemantic(geom, "VERTEX", 0, polys.material);
+						if(verts == null)
+						{
+							continue;
+						}
+						
+						MeshConverter	cnk	=new MeshConverter(polys.material);
+
+						cnk.CreateBaseVerts(verts);
+
+						cnk.mPartIndex	=-1;
+						cnk.SetGeometryID(geom.id);
+						
+						chunks.Add(cnk);
+					}
+				}
+			}
+			return	chunks;
 		}
 
 
@@ -574,9 +615,9 @@ namespace ColladaConvert
 		}
 
 
-		static MeshLib.Skeleton BuildSkeleton(COLLADA colMesh)
+		static Skeleton BuildSkeleton(COLLADA colMesh)
 		{
-			MeshLib.Skeleton	ret	=new MeshLib.Skeleton();
+			Skeleton	ret	=new Skeleton();
 
 			foreach(object item2 in colMesh.Items)
 			{
@@ -589,7 +630,7 @@ namespace ColladaConvert
 				{
 					foreach(node n in vs.node)
 					{
-						MeshLib.GSNode	gsnRoot	=new MeshLib.GSNode();
+						GSNode	gsnRoot	=new GSNode();
 
 						BuildSkeleton(n, out gsnRoot);
 
@@ -601,9 +642,9 @@ namespace ColladaConvert
 		}
 
 
-		static MeshLib.KeyFrame GetKeyFromCNode(node n)
+		static KeyFrame GetKeyFromCNode(node n)
 		{
-			MeshLib.KeyFrame	key	=new MeshLib.KeyFrame();
+			KeyFrame	key	=new KeyFrame();
 
 			if(n.Items == null)
 			{
@@ -659,9 +700,9 @@ namespace ColladaConvert
 		}
 
 
-		static void BuildSkeleton(node n, out MeshLib.GSNode gsn)
+		static void BuildSkeleton(node n, out GSNode gsn)
 		{
-			gsn	=new MeshLib.GSNode();
+			gsn	=new GSNode();
 
 			gsn.SetName(n.name);
 			gsn.SetKey(GetKeyFromCNode(n));
@@ -673,7 +714,7 @@ namespace ColladaConvert
 
 			foreach(node child in n.node1)
 			{
-				MeshLib.GSNode	kid	=new MeshLib.GSNode();
+				GSNode	kid	=new GSNode();
 
 				BuildSkeleton(child, out kid);
 

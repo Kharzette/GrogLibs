@@ -44,10 +44,8 @@ namespace ColladaConvert
 		MouseState		mLastMouseState;
 
 		//cam / player stuff will move later
-		Vector3	mCamPos, mDotPos, mBonePos;
+		Vector3	mCamPos, mDotPos;
 		float	mPitch, mYaw, mRoll;
-		float	mBonePitch, mBoneYaw, mBoneRoll;
-		Matrix	mBoneMatrix;
 
 		Texture2D	mDesu;
 		Texture2D	mEureka;
@@ -244,12 +242,6 @@ namespace ColladaConvert
 
 		private void UpdateMatrices()
 		{
-			// Compute camera matrices.
-			mBoneMatrix	=Matrix.CreateTranslation(mBonePos) *
-				Matrix.CreateRotationY(MathHelper.ToRadians(mBoneYaw)) *
-				Matrix.CreateRotationX(MathHelper.ToRadians(mBonePitch)) *
-				Matrix.CreateRotationZ(MathHelper.ToRadians(mBoneRoll));
-
 			mViewMatrix	=Matrix.CreateTranslation(mCamPos) *
 				Matrix.CreateRotationY(MathHelper.ToRadians(mYaw)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(mPitch)) *
