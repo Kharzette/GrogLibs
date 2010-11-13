@@ -16,8 +16,6 @@ namespace ColladaConvert
 	{
 		MaterialGridModel		mMatModel;		
 		MaterialLib.MaterialLib	mMatLib;
-		MeshLib.Character		mCharacter;
-		StaticMeshObject		mStaticMesh;
 		OpenFileDialog			mOFD	=new OpenFileDialog();
 		SaveFileDialog			mSFD	=new SaveFileDialog();
 		ShaderList				mSL;
@@ -30,15 +28,14 @@ namespace ColladaConvert
 
 		//events
 		public event EventHandler	eBoundsUpdated;
+		public event EventHandler	eNukedMeshPart;
 
 
-		public MaterialForm(GraphicsDevice gd, MaterialLib.MaterialLib matlib, MeshLib.Character chr, StaticMeshObject stat)
+		public MaterialForm(GraphicsDevice gd, MaterialLib.MaterialLib matlib)
 		{
 			InitializeComponent();
 
 			mMatLib		=matlib;
-			mCharacter	=chr;
-			mStaticMesh	=stat;
 			mGD			=gd;
 
 			mMatModel	=new MaterialGridModel(mMatLib.GetMaterials());
@@ -252,7 +249,7 @@ namespace ColladaConvert
 		{
 			List<MeshLib.Mesh>	lm	=sender as List<MeshLib.Mesh>;
 
-			if(lm.Count == 0)
+			if(lm == null || lm.Count == 0)
 			{
 				return;
 			}
@@ -272,9 +269,9 @@ namespace ColladaConvert
 
 		private void OnStaticMeshPartListUpdated(object sender, EventArgs ea)
 		{
-			List<StaticMesh>	lm	=mStaticMesh.GetMeshPartList();
+			List<StaticMesh>	lm	=sender as List<StaticMesh>;
 
-			if(lm.Count == 0)
+			if(lm == null || lm.Count == 0)
 			{
 				return;
 			}
@@ -512,12 +509,12 @@ namespace ColladaConvert
 			if(e.Row.DataBoundItem.GetType() == typeof(MeshLib.Mesh))
 			{
 				MeshLib.Mesh	nukeMe	=(MeshLib.Mesh)e.Row.DataBoundItem;
-				mCharacter.NukeMesh(nukeMe);
+				eNukedMeshPart(nukeMe, null);
 			}
 			else
 			{
 				StaticMesh	nukeMe	=(StaticMesh)e.Row.DataBoundItem;
-				mStaticMesh.NukeMesh(nukeMe);
+				eNukedMeshPart(nukeMe, null);
 			}
 			BoundsChanged();
 		}

@@ -620,11 +620,11 @@ namespace ColladaConvert
 					Debug.Assert(rot != null);
 
 					Vector3	axis	=Vector3.Zero;
-					axis.X	=(float)rot.Values[0];
-					axis.Y	=(float)rot.Values[1];
-					axis.Z	=(float)rot.Values[2];
+					axis.X	=rot.Values[0];
+					axis.Y	=rot.Values[1];
+					axis.Z	=rot.Values[2];
 
-					mat	=Matrix.CreateFromAxisAngle(axis, (float)rot.Values[3])
+					mat	=Matrix.CreateFromAxisAngle(axis, rot.Values[3])
 						* mat;
 				}
 				else if(n.ItemsElementName[i] == ItemsChoiceType2.translate)
@@ -632,9 +632,9 @@ namespace ColladaConvert
 					TargetableFloat3	trans	=n.Items[i] as TargetableFloat3;
 
 					Vector3	t	=Vector3.Zero;
-					t.X	=(float)trans.Values[0];
-					t.Y	=(float)trans.Values[1];
-					t.Z	=(float)trans.Values[2];
+					t.X	=trans.Values[0];
+					t.Y	=trans.Values[1];
+					t.Z	=trans.Values[2];
 
 					mat	=Matrix.CreateTranslation(t)
 						* mat;
@@ -644,9 +644,9 @@ namespace ColladaConvert
 					TargetableFloat3	scl	=n.Items[i] as TargetableFloat3;
 
 					Vector3	t	=Vector3.Zero;
-					t.X	=(float)scl.Values[0];
-					t.Y	=(float)scl.Values[1];
-					t.Z	=(float)scl.Values[2];
+					t.X	=scl.Values[0];
+					t.Y	=scl.Values[1];
+					t.Z	=scl.Values[2];
 
 					mat	=Matrix.CreateScale(t)
 						* mat;
@@ -761,22 +761,22 @@ namespace ColladaConvert
 			{
 				Matrix	mat	=new Matrix();
 
-				mat.M11	=(float)fa.Values[i + 0];
-				mat.M21	=(float)fa.Values[i + 1];
-				mat.M31	=(float)fa.Values[i + 2];
-				mat.M41	=(float)fa.Values[i + 3];
-				mat.M12	=(float)fa.Values[i + 4];
-				mat.M22	=(float)fa.Values[i + 5];
-				mat.M32	=(float)fa.Values[i + 6];
-				mat.M42	=(float)fa.Values[i + 7];
-				mat.M13	=(float)fa.Values[i + 8];
-				mat.M23	=(float)fa.Values[i + 9];
-				mat.M33	=(float)fa.Values[i + 10];
-				mat.M43	=(float)fa.Values[i + 11];
-				mat.M14	=(float)fa.Values[i + 12];
-				mat.M24	=(float)fa.Values[i + 13];
-				mat.M34	=(float)fa.Values[i + 14];
-				mat.M44	=(float)fa.Values[i + 15];
+				mat.M11	=fa.Values[i + 0];
+				mat.M21	=fa.Values[i + 1];
+				mat.M31	=fa.Values[i + 2];
+				mat.M41	=fa.Values[i + 3];
+				mat.M12	=fa.Values[i + 4];
+				mat.M22	=fa.Values[i + 5];
+				mat.M32	=fa.Values[i + 6];
+				mat.M42	=fa.Values[i + 7];
+				mat.M13	=fa.Values[i + 8];
+				mat.M23	=fa.Values[i + 9];
+				mat.M33	=fa.Values[i + 10];
+				mat.M43	=fa.Values[i + 11];
+				mat.M14	=fa.Values[i + 12];
+				mat.M24	=fa.Values[i + 13];
+				mat.M34	=fa.Values[i + 14];
+				mat.M44	=fa.Values[i + 15];
 
 				ret.Add(mat);
 			}

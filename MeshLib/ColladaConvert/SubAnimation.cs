@@ -78,9 +78,9 @@ namespace ColladaConvert
 
 				float_array	srcTimes	=mSources[srcInp].Item as float_array;
 
-				foreach(double time in srcTimes.Values)
+				foreach(float time in srcTimes.Values)
 				{
-					float	t	=(float)time;
+					float	t	=time;
 					if(ret.Contains(t))
 					{
 						continue;
@@ -96,8 +96,8 @@ namespace ColladaConvert
 		float LerpValue(float time, float_array chanTimes, float_array chanValues)
 		{
 			//calc totaltime
-			float	totalTime	=(float)chanTimes.Values[chanTimes.Values.Length - 1]
-				- (float)chanTimes.Values[0];
+			float	totalTime	=chanTimes.Values[chanTimes.Values.Length - 1]
+				- chanTimes.Values[0];
 
 			//make sure the time is not before our start
 			Debug.Assert(time >= chanTimes.Values[0]);
@@ -107,13 +107,13 @@ namespace ColladaConvert
 			float	animTime	=time % totalTime;
 
 			//Bring to start
-			animTime	+=(float)chanTimes.Values[0];
+			animTime	+=chanTimes.Values[0];
 
 			//locate the key index to start with
 			int	startIndex;
 			for(startIndex = 0;startIndex < chanTimes.Values.Length;startIndex++)
 			{
-				if(animTime < (float)chanTimes.Values[startIndex])
+				if(animTime < chanTimes.Values[startIndex])
 				{
 					//back up one
 					startIndex--;
@@ -123,19 +123,19 @@ namespace ColladaConvert
 
 			//figure out the percentage between pos1 and pos2
 			//get the deltatime
-			float	percentage	=(float)chanTimes.Values[startIndex + 1]
-				- (float)chanTimes.Values[startIndex];
+			float	percentage	=chanTimes.Values[startIndex + 1]
+				- chanTimes.Values[startIndex];
 
 			//convert to percentage
 			percentage	=1.0f / percentage;
 
 			//multiply by amount beyond p1
-			percentage	*=(animTime - (float)chanTimes.Values[startIndex]);
+			percentage	*=(animTime - chanTimes.Values[startIndex]);
 
 			Debug.Assert(percentage >= 0.0f && percentage <= 1.0f);
 
-			float value	=MathHelper.Lerp((float)chanValues.Values[startIndex],
-				(float)chanValues.Values[startIndex + 1], percentage);
+			float value	=MathHelper.Lerp(chanValues.Values[startIndex],
+				chanValues.Values[startIndex + 1], percentage);
 
 			return	value;
 		}

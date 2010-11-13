@@ -149,9 +149,9 @@ namespace ColladaConvert
 
 			for(int i=0;i < (int)verts.count;i+=3)
 			{
-				mBaseVerts[i / 3].Position0.X		=(float)verts.Values[i];
-				mBaseVerts[i / 3].Position0.Y		=(float)verts.Values[i + 1];
-				mBaseVerts[i / 3].Position0.Z		=(float)verts.Values[i + 2];
+				mBaseVerts[i / 3].Position0.X		=verts.Values[i];
+				mBaseVerts[i / 3].Position0.Y		=verts.Values[i + 1];
+				mBaseVerts[i / 3].Position0.Z		=verts.Values[i + 2];
 				mBaseVerts[i / 3].mOriginalIndex	=i / 3;
 			}
 
@@ -319,7 +319,7 @@ namespace ColladaConvert
 					//grab bone indices and weights
 					int		boneIdx		=boneIndexes[i][j];
 					int		weightIdx	=weightIndexes[i][j];
-					float	boneWeight	=(float)weightArray.Values[weightIdx];
+					float	boneWeight	=weightArray.Values[weightIdx];
 
 					indexes.Add(boneIdx);
 					weights.Add(boneWeight);
@@ -488,58 +488,58 @@ namespace ColladaConvert
 				//copy normal if exists
 				if(normIdxs != null && norms != null)
 				{
-					tv.Normal0.X	=(float)norms.Values[nidx * 3];
-					tv.Normal0.Y	=(float)norms.Values[1 + nidx * 3];
-					tv.Normal0.Z	=(float)norms.Values[2 + nidx * 3];
+					tv.Normal0.X	=norms.Values[nidx * 3];
+					tv.Normal0.Y	=norms.Values[1 + nidx * 3];
+					tv.Normal0.Z	=norms.Values[2 + nidx * 3];
 				}
 				//copy texcoords
 				if(texIdxs0 != null && texCoords0 != null)
 				{
-					tv.TexCoord0.X	=(float)texCoords0.Values[tidx0 * 2];
-					tv.TexCoord0.Y	=(float)-texCoords0.Values[1 + tidx0 * 2];
+					tv.TexCoord0.X	=texCoords0.Values[tidx0 * 2];
+					tv.TexCoord0.Y	=-texCoords0.Values[1 + tidx0 * 2];
 				}
 				if(texIdxs1 != null && texCoords1 != null)
 				{
-					tv.TexCoord1.X	=(float)texCoords1.Values[tidx1 * 2];
-					tv.TexCoord1.Y	=(float)-texCoords1.Values[1 + tidx1 * 2];
+					tv.TexCoord1.X	=texCoords1.Values[tidx1 * 2];
+					tv.TexCoord1.Y	=-texCoords1.Values[1 + tidx1 * 2];
 				}
 				if(texIdxs2 != null && texCoords2 != null)
 				{
-					tv.TexCoord2.X	=(float)texCoords2.Values[tidx2 * 2];
-					tv.TexCoord2.Y	=(float)-texCoords2.Values[1 + tidx2 * 2];
+					tv.TexCoord2.X	=texCoords2.Values[tidx2 * 2];
+					tv.TexCoord2.Y	=-texCoords2.Values[1 + tidx2 * 2];
 				}
 				if(texIdxs3 != null && texCoords3 != null)
 				{
-					tv.TexCoord3.X	=(float)texCoords3.Values[tidx3 * 2];
-					tv.TexCoord3.Y	=(float)-texCoords3.Values[1 + tidx3 * 2];
+					tv.TexCoord3.X	=texCoords3.Values[tidx3 * 2];
+					tv.TexCoord3.Y	=-texCoords3.Values[1 + tidx3 * 2];
 				}
 				if(colIdxs0 != null && colors0 != null)
 				{
-					tv.Color0.X	=(float)colors0.Values[cidx0 * 4];
-					tv.Color0.Y	=(float)colors0.Values[1 + cidx0 * 4];
-					tv.Color0.Z	=(float)colors0.Values[2 + cidx0 * 4];
-					tv.Color0.W	=(float)colors0.Values[3 + cidx0 * 4];
+					tv.Color0.X	=colors0.Values[cidx0 * 4];
+					tv.Color0.Y	=colors0.Values[1 + cidx0 * 4];
+					tv.Color0.Z	=colors0.Values[2 + cidx0 * 4];
+					tv.Color0.W	=colors0.Values[3 + cidx0 * 4];
 				}
 				if(colIdxs1 != null && colors0 != null)
 				{
-					tv.Color1.X	=(float)colors1.Values[cidx1 * 4];
-					tv.Color1.Y	=(float)colors1.Values[1 + cidx1 * 4];
-					tv.Color1.Z	=(float)colors1.Values[2 + cidx1 * 4];
-					tv.Color1.W	=(float)colors1.Values[3 + cidx1 * 4];
+					tv.Color1.X	=colors1.Values[cidx1 * 4];
+					tv.Color1.Y	=colors1.Values[1 + cidx1 * 4];
+					tv.Color1.Z	=colors1.Values[2 + cidx1 * 4];
+					tv.Color1.W	=colors1.Values[3 + cidx1 * 4];
 				}
 				if(colIdxs2 != null && colors0 != null)
 				{
-					tv.Color2.X	=(float)colors2.Values[cidx2 * 4];
-					tv.Color2.Y	=(float)colors2.Values[1 + cidx2 * 4];
-					tv.Color2.Z	=(float)colors2.Values[2 + cidx2 * 4];
-					tv.Color2.W	=(float)colors2.Values[3 + cidx2 * 4];
+					tv.Color2.X	=colors2.Values[cidx2 * 4];
+					tv.Color2.Y	=colors2.Values[1 + cidx2 * 4];
+					tv.Color2.Z	=colors2.Values[2 + cidx2 * 4];
+					tv.Color2.W	=colors2.Values[3 + cidx2 * 4];
 				}
 				if(colIdxs3 != null && colors0 != null)
 				{
-					tv.Color3.X	=(float)colors3.Values[cidx3 * 4];
-					tv.Color3.Y	=(float)colors3.Values[1 + cidx3 * 4];
-					tv.Color3.Z	=(float)colors3.Values[2 + cidx3 * 4];
-					tv.Color3.W	=(float)colors3.Values[3 + cidx3 * 4];
+					tv.Color3.X	=colors3.Values[cidx3 * 4];
+					tv.Color3.Y	=colors3.Values[1 + cidx3 * 4];
+					tv.Color3.Z	=colors3.Values[2 + cidx3 * 4];
+					tv.Color3.W	=colors3.Values[3 + cidx3 * 4];
 				}
 
 				verts.Add(tv);

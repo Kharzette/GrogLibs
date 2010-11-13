@@ -220,10 +220,11 @@ namespace ColladaConvert
 			mCF.eLoadStatic				+=OnLoadStatic;
 			mCF.eSaveStatic				+=OnSaveStatic;
 
-			mMF	=new MaterialForm(mGDM.GraphicsDevice, mMatLib, mCharacter, mStaticMesh);
+			mMF	=new MaterialForm(mGDM.GraphicsDevice, mMatLib);
 			mMF.Visible	=true;
 
-			mMF.eBoundsUpdated			+=OnBoundsChanged;
+			mMF.eBoundsUpdated	+=OnBoundsChanged;
+			mMF.eNukedMeshPart	+=OnNukedMeshPart;
 		}
 
 		/// <summary>
@@ -305,6 +306,14 @@ namespace ColladaConvert
 
 			eMeshPartListUpdated(mCharacter.GetMeshPartList(), null);
 			eAnimsUpdated(mAnimLib.GetAnims(), null);
+		}
+
+
+		void OnNukedMeshPart(object sender, EventArgs ea)
+		{
+			MeshLib.Mesh	msh	=sender as MeshLib.Mesh;
+
+			mCharacter.NukeMesh(msh);
 		}
 
 
