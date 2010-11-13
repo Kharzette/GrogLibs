@@ -532,14 +532,14 @@ namespace ColladaConvert
 
 		void BoundsChanged()
 		{
-			List<Bounds>	bounds	=new List<Bounds>();
+			List<IRayCastable>	bounds	=new List<IRayCastable>();
 			foreach(DataGridViewRow dgvr in MeshPartGrid.Rows)
 			{
 				if(dgvr.DataBoundItem.GetType().BaseType == typeof(Mesh))
 				{
 					Mesh	msh	=(Mesh)dgvr.DataBoundItem;
 
-					Bounds	bnd	=msh.GetBounds();
+					IRayCastable	bnd	=msh.GetBounds();
 					if(bnd != null)
 					{
 						bounds.Add(bnd);

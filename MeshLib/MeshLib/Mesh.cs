@@ -47,7 +47,7 @@ namespace MeshLib
 		protected string			mMaterialName;
 		protected int				mTypeIndex;
 		protected bool				mbVisible;
-		protected Bounds			mMeshBounds	=new Bounds();
+		protected IRayCastable		mMeshBounds;
 
 		public string Name
 		{
@@ -126,25 +126,21 @@ namespace MeshLib
 		public virtual void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib) { }
 
 
+		public float? RayIntersect(Vector3 start, Vector3 end)
+		{
+			return	mMeshBounds.RayIntersect(start, end);
+		}
+
+
 		public void Bound()
 		{
-			mMeshBounds	=VertexTypes.GetVertBounds(mVerts, mNumVerts, mTypeIndex);
+			VertexTypes.GetVertBounds(mVerts, mNumVerts, mTypeIndex, mMeshBounds);
 		}
 
 
-		public Bounds GetBounds()
+		public IRayCastable GetBounds()
 		{
 			return	mMeshBounds;
-		}
-
-
-		internal bool RayIntersectBounds(Vector3 start, Vector3 end)
-		{
-			if(mMeshBounds == null)
-			{
-				return	false;
-			}
-			return	mMeshBounds.RayIntersect(start, end);
 		}
 	}
 }

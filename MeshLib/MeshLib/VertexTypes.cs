@@ -383,7 +383,7 @@ namespace MeshLib
 		}
 
 
-		public static Bounds GetVertBounds(VertexBuffer vb, int numVerts, int typeIdx)
+		public static void GetVertBounds(VertexBuffer vb, int numVerts, int typeIdx, IRayCastable bound)
 		{
 			Type	vtype	=mTypes[typeIdx];
 			Array	verts	=Array.CreateInstance(vtype, numVerts);
@@ -396,7 +396,9 @@ namespace MeshLib
 
 			typedMethod.Invoke(vb, new object[] {verts});
 
-			Bounds	bnd	=new Bounds();
+			AxialBounds	bnd	=new AxialBounds();
+
+			List<Vector3>	points	=new List<Vector3>();
 
 			FieldInfo	[]finfo	=vtype.GetFields();
 			for(int i=0;i < numVerts;i++)
@@ -407,11 +409,12 @@ namespace MeshLib
 					if(fi.Name == "Position")
 					{
 						Vector3	vec	=(Vector3)GetArrayField(verts, i, fi.Name);
-						bnd.AddPointToBounds(vec);
+						points.Add(vec);
 					}
 				}
 			}
-			return	bnd;
+
+			bound.AddPointListToBounds(points);
 		}
 
 

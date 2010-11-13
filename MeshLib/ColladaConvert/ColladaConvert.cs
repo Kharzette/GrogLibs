@@ -305,7 +305,7 @@ namespace ColladaConvert
 			mBoundsVB	=null;
 			mBoundsIB	=null;
 
-			List<Bounds>	bnds	=(List<Bounds>)sender;
+			List<IRayCastable>	bnds	=(List<IRayCastable>)sender;
 
 			if(bnds.Count <= 0)
 			{
@@ -313,7 +313,7 @@ namespace ColladaConvert
 			}
 
 			int	numCorners	=0;
-			foreach(Bounds bnd in bnds)
+			foreach(IRayCastable bnd in bnds)
 			{
 				numCorners	+=2;
 			}
@@ -322,22 +322,25 @@ namespace ColladaConvert
 			VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[numCorners * 4];
 
 			int	idx	=0;
-			foreach(Bounds bnd in bnds)
+			foreach(IRayCastable bnd in bnds)
 			{
-				float	xDiff	=bnd.mMaxs.X - bnd.mMins.X;
-				float	yDiff	=bnd.mMaxs.Y - bnd.mMins.Y;
-				float	zDiff	=bnd.mMaxs.Z - bnd.mMins.Z;
+				Vector3	min, max;
 
-				vpnt[idx++].Position	=bnd.mMins;
-				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitX * xDiff;
-				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitX * xDiff + Vector3.UnitY * yDiff;
-				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitY * yDiff;
-				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitZ * zDiff;
-				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitZ * zDiff + Vector3.UnitX * xDiff;
-				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitZ * zDiff + Vector3.UnitY * yDiff;
-				vpnt[idx++].Position	=bnd.mMins + Vector3.UnitZ * zDiff + Vector3.UnitX * xDiff + Vector3.UnitY * yDiff;
+				bnd.GetMinMax(out min, out max);
+
+				float	xDiff	=max.X - min.X;
+				float	yDiff	=max.Y - min.Y;
+				float	zDiff	=max.Z - min.Z;
+
+				vpnt[idx++].Position	=min;
+				vpnt[idx++].Position	=min + Vector3.UnitX * xDiff;
+				vpnt[idx++].Position	=min + Vector3.UnitX * xDiff + Vector3.UnitY * yDiff;
+				vpnt[idx++].Position	=min + Vector3.UnitY * yDiff;
+				vpnt[idx++].Position	=min + Vector3.UnitZ * zDiff;
+				vpnt[idx++].Position	=min + Vector3.UnitZ * zDiff + Vector3.UnitX * xDiff;
+				vpnt[idx++].Position	=min + Vector3.UnitZ * zDiff + Vector3.UnitY * yDiff;
+				vpnt[idx++].Position	=min + Vector3.UnitZ * zDiff + Vector3.UnitX * xDiff + Vector3.UnitY * yDiff;
 			}
-
 			mBoundsVB.SetData<VertexPositionNormalTexture>(vpnt);
 
 			mBoundsIB	=new IndexBuffer(mGDM.GraphicsDevice, (numCorners * 3) * 6 * 2, BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
@@ -348,7 +351,7 @@ namespace ColladaConvert
 
 			idx	=0;
 			UInt16 bndIdx	=0;
-			foreach(Bounds bnd in bnds)
+			foreach(IRayCastable bnd in bnds)
 			{
 				UInt16	idxOffset	=bndIdx;
 				//awesome compiler bug here, have to do this in 2 steps

@@ -7,190 +7,193 @@ using Microsoft.Xna.Framework;
 
 namespace MeshLib
 {
-	public struct Plane3
+	public interface IRayCastable
 	{
-		public Vector3	Normal;
-		public float	Dist;
+		float?	RayIntersect(Vector3 start, Vector3 end);
+		void	AddPointListToBounds(List<Vector3> points);
+		void	Write(BinaryWriter bw);
+		void	Read(BinaryReader br);
+		void	GetMinMax(out Vector3 min, out Vector3 max);
 	}
 
 
-	public class Bounds
+	public class CollisionEventArgs : EventArgs
 	{
-		public const float	MIN_MAX_BOUNDS	=15192.0f;
-		public const float	MinimumVolume	=0.1f;
+		public float	mDistance;
 
-		public Vector3	mMins, mMaxs;
-
-		List<Plane3>	mVolumePlanes	=new List<Plane3>();
-
-
-		public Bounds()
+		public CollisionEventArgs(float dist)
 		{
-			ClearBounds();
+			mDistance	=dist;
 		}
+	}
+
+
+	public class SphereBounds : IRayCastable
+	{
+		public BoundingSphere	mSphere	=new BoundingSphere();
+
+
+		public void AddPointListToBounds(List<Vector3> points)
+		{
+			//find the center
+			Vector3	center	=Vector3.Zero;
+			foreach(Vector3 pnt in points)
+			{
+				center	+=pnt;
+			}
+			center	/=points.Count;
+
+			//find radius
+			float	radius	=0.0f;
+			foreach(Vector3 pnt in points)
+			{
+				float	dist	=Vector3.Distance(pnt, center);
+				if(dist > radius)
+				{
+					radius	=dist;
+				}
+			}
+
+			mSphere.Center	=center;
+			mSphere.Radius	=radius;
+		}
+
+
+		public float? RayIntersect(Vector3 start, Vector3 end)
+		{
+			Ray	r	=new Ray();
+
+			Vector3	dir	=end - start;
+
+			dir.Normalize();
+
+			r.Direction	=dir;
+			r.Position	=start;
+
+			return	r.Intersects(mSphere);
+		}
+
+
+		public void Write(BinaryWriter bw)
+		{
+			bw.Write(mSphere.Center.X);
+			bw.Write(mSphere.Center.Y);
+			bw.Write(mSphere.Center.Z);
+			bw.Write(mSphere.Radius);
+		}
+
+
+		public void Read(BinaryReader br)
+		{
+			mSphere.Center.X	=br.ReadSingle();
+			mSphere.Center.Y	=br.ReadSingle();
+			mSphere.Center.Z	=br.ReadSingle();
+			mSphere.Radius		=br.ReadSingle();
+		}
+
+
+		public void GetMinMax(out Vector3 min, out Vector3 max)
+		{
+			min	=Vector3.One;
+			max	=Vector3.One;
+
+			min.Normalize();
+			max.Normalize();
+
+			min	*=-mSphere.Radius;
+			max	*=mSphere.Radius;
+
+			min	+=mSphere.Center;
+			max	+=mSphere.Center;
+		}
+	}
+
+
+	public class AxialBounds : IRayCastable
+	{
+		public BoundingBox	mBox	=new BoundingBox();
 
 
 		public void ClearBounds()
 		{
-			mMins.X	=mMins.Y =	mMins.Z	=MIN_MAX_BOUNDS;
-			mMaxs	=-mMins;
-			mVolumePlanes.Clear();
+			mBox.Max	=Vector3.Zero;
+			mBox.Min	=Vector3.Zero;
 		}
 
 
-		public void AddPointToBounds(Vector3 pnt)
+		public void AddPointListToBounds(List<Vector3> points)
 		{
-			if(pnt.X < mMins.X)
+			foreach(Vector3 pnt in points)
 			{
-				mMins.X	=pnt.X;
-			}
-			if(pnt.X > mMaxs.X)
-			{
-				mMaxs.X	=pnt.X;
-			}
-			if(pnt.Y < mMins.Y)
-			{
-				mMins.Y	=pnt.Y;
-			}
-			if(pnt.Y > mMaxs.Y)
-			{
-				mMaxs.Y	=pnt.Y;
-			}
-			if(pnt.Z < mMins.Z)
-			{
-				mMins.Z	=pnt.Z;
-			}
-			if(pnt.Z > mMaxs.Z)
-			{
-				mMaxs.Z	=pnt.Z;
-			}
-			CalcVolumePlanes();
-		}
-
-
-		public void MergeBounds(Bounds b1, Bounds b2)
-		{
-			if(b1 != null)
-			{
-				AddPointToBounds(b1.mMins);
-				AddPointToBounds(b1.mMaxs);
-			}
-			if(b2 != null)
-			{
-				AddPointToBounds(b2.mMins);
-				AddPointToBounds(b2.mMaxs);
-			}
-			CalcVolumePlanes();
-		}
-
-
-		public bool RayIntersect(Vector3 start, Vector3 end)
-		{
-			if(mVolumePlanes.Count <= 0)
-			{
-				return	false;
-			}
-
-			Vector3	st	=start;
-			Vector3	ed	=end;
-
-			foreach(Plane3 p in mVolumePlanes)
-			{
-				float	ds	=Vector3.Dot(st, p.Normal) - p.Dist;
-				float	de	=Vector3.Dot(ed, p.Normal) - p.Dist;
-
-				if(ds > 0.0f && de > 0.0f)
+				if(pnt.X < mBox.Min.X)
 				{
-					return	false;	//all on front
+					mBox.Min.X	=pnt.X;
 				}
-				else if(ds < 0.0f && de < 0.0f)
+				if(pnt.X > mBox.Max.X)
 				{
-					continue;	//all on back
+					mBox.Max.X	=pnt.X;
 				}
-				else
+				if(pnt.Y < mBox.Min.Y)
 				{
-					//split, keep only back
-					float	splitRatio	=ds / (ds - de);
-
-					if(ds > 0.0f)
-					{
-						st	=st + (splitRatio * (ed - st));
-					}
-					else
-					{
-						ed	=st + (splitRatio * (ed - st));
-					}
+					mBox.Min.Y	=pnt.Y;
+				}
+				if(pnt.Y > mBox.Max.Y)
+				{
+					mBox.Max.Y	=pnt.Y;
+				}
+				if(pnt.Z < mBox.Min.Z)
+				{
+					mBox.Min.Z	=pnt.Z;
+				}
+				if(pnt.Z > mBox.Max.Z)
+				{
+					mBox.Max.Z	=pnt.Z;
 				}
 			}
-			return	true;
 		}
 
 
-		void CalcVolumePlanes()
+		public float? RayIntersect(Vector3 start, Vector3 end)
 		{
-			Vector3	vol	=mMaxs - mMins;
+			Ray	r	=new Ray();
 
-			if(vol.Length() <= MinimumVolume)
-			{
-				return;	//bail
-			}
+			Vector3	dir	=end - start;
 
-			mVolumePlanes.Clear();
+			dir.Normalize();
 
-			//x plane
-			Plane3	p	=new Plane3();
-			p.Normal	=Vector3.UnitX;
-			p.Dist		=Vector3.Dot(mMaxs, p.Normal);
-			mVolumePlanes.Add(p);
+			r.Direction	=dir;
+			r.Position	=start;
 
-			//y plane
-			p.Normal	=Vector3.UnitY;
-			p.Dist		=Vector3.Dot(mMaxs, p.Normal);
-			mVolumePlanes.Add(p);
-
-			//z plane
-			p.Normal	=Vector3.UnitZ;
-			p.Dist		=Vector3.Dot(mMaxs, p.Normal);
-			mVolumePlanes.Add(p);
-
-			//-x plane
-			p.Normal	=-Vector3.UnitX;
-			p.Dist		=Vector3.Dot(mMins, p.Normal);
-			mVolumePlanes.Add(p);
-
-			//-y plane
-			p.Normal	=-Vector3.UnitY;
-			p.Dist		=Vector3.Dot(mMins, p.Normal);
-			mVolumePlanes.Add(p);
-
-			//-z plane
-			p.Normal	=-Vector3.UnitZ;
-			p.Dist		=Vector3.Dot(mMins, p.Normal);
-			mVolumePlanes.Add(p);
+			return	r.Intersects(mBox);
 		}
 
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
-			bw.Write(mMins.X);
-			bw.Write(mMins.Y);
-			bw.Write(mMins.Z);
-			bw.Write(mMaxs.X);
-			bw.Write(mMaxs.Y);
-			bw.Write(mMaxs.Z);
+			bw.Write(mBox.Min.X);
+			bw.Write(mBox.Min.Y);
+			bw.Write(mBox.Min.Z);
+			bw.Write(mBox.Max.X);
+			bw.Write(mBox.Max.Y);
+			bw.Write(mBox.Max.Z);
 		}
 
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
-			mMins.X	=br.ReadSingle();
-			mMins.Y	=br.ReadSingle();
-			mMins.Z	=br.ReadSingle();
-			mMaxs.X	=br.ReadSingle();
-			mMaxs.Y	=br.ReadSingle();
-			mMaxs.Z	=br.ReadSingle();
+			mBox.Min.X	=br.ReadSingle();
+			mBox.Min.Y	=br.ReadSingle();
+			mBox.Min.Z	=br.ReadSingle();
+			mBox.Max.X	=br.ReadSingle();
+			mBox.Max.Y	=br.ReadSingle();
+			mBox.Max.Z	=br.ReadSingle();
+		}
 
-			CalcVolumePlanes();
+
+		public void GetMinMax(out Vector3 min, out Vector3 max)
+		{
+			min	=mBox.Min;
+			max	=mBox.Max;
 		}
 	}
 }

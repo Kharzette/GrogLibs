@@ -23,8 +23,16 @@ namespace MeshLib
 		}
 
 
-		public SkinnedMesh() : base() { }
-		public SkinnedMesh(string name) : base(name) { }
+		public SkinnedMesh() : base()
+		{
+			mMeshBounds	=new SphereBounds() as IRayCastable;
+		}
+
+
+		public SkinnedMesh(string name) : base(name)
+		{
+			mMeshBounds	=new SphereBounds() as IRayCastable;
+		}
 
 
 		public void SetSkin(Skin sk)

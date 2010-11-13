@@ -11,8 +11,16 @@ namespace MeshLib
 {
 	public class StaticMesh : Mesh
 	{
-		public StaticMesh() : base() { }
-		public StaticMesh(string name) : base(name) { }
+		public StaticMesh() : base()
+		{
+			mMeshBounds	=new AxialBounds() as IRayCastable;
+		}
+
+
+		public StaticMesh(string name) : base(name)
+		{
+			mMeshBounds	=new AxialBounds() as IRayCastable;
+		}
 
 
 		public override void Write(BinaryWriter bw)

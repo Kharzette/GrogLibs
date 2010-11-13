@@ -193,7 +193,7 @@ namespace MeshLib
 		}
 
 
-		public void RayIntersectBounds(Vector3 start, Vector3 end)
+		public void RayIntersect(Vector3 start, Vector3 end)
 		{
 			foreach(SkinnedMesh m in mMeshParts)
 			{
@@ -201,11 +201,12 @@ namespace MeshLib
 				{
 					continue;
 				}
-				if(m.RayIntersectBounds(start, end))
+				Nullable<float>	dist	=m.RayIntersect(start, end);
+				if(dist != null)
 				{
 					if(eRayCollision != null)
 					{
-						eRayCollision(m, null);
+						eRayCollision(m, new CollisionEventArgs(dist.Value));
 					}
 				}
 			}
