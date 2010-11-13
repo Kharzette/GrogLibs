@@ -110,7 +110,6 @@ namespace ColladaConvert
 			MaterialGrid.Columns.Add(slotColumn4);
 
 			ColladaConvert.eMeshPartListUpdated	+=OnMeshPartListUpdated;
-			ColladaConvert.eMeshPartListUpdated	+=OnStaticMeshPartListUpdated;
 
 			MaterialGrid.Columns.Remove("BlendFunction");
 
@@ -247,43 +246,32 @@ namespace ColladaConvert
 
 		private void OnMeshPartListUpdated(object sender, EventArgs ea)
 		{
-			List<MeshLib.Mesh>	lm	=sender as List<MeshLib.Mesh>;
+			List<SkinnedMesh>	skm	=sender as List<SkinnedMesh>;
+			List<StaticMesh>	stm	=sender as List<StaticMesh>;
 
-			if(lm == null || lm.Count == 0)
+			if(skm != null && skm.Count != 0)
 			{
-				return;
+				BindingList<Mesh>	blm	=new BindingList<Mesh>();
+
+				foreach(SkinnedMesh m in skm)
+				{
+					blm.Add(m);
+				}
+
+				MeshPartGrid.DataSource	=blm;
+			}
+			else if(stm != null && stm.Count != 0)
+			{
+				BindingList<Mesh>	blm	=new BindingList<Mesh>();
+
+				foreach(StaticMesh m in stm)
+				{
+					blm.Add(m);
+				}
+
+				MeshPartGrid.DataSource	=blm;
 			}
 
-			BindingList<MeshLib.Mesh>	blm	=new BindingList<MeshLib.Mesh>();
-
-			foreach(MeshLib.Mesh m in lm)
-			{
-				blm.Add(m);
-			}
-
-			MeshPartGrid.DataSource	=blm;
-
-			BoundsChanged();
-		}
-
-
-		private void OnStaticMeshPartListUpdated(object sender, EventArgs ea)
-		{
-			List<StaticMesh>	lm	=sender as List<StaticMesh>;
-
-			if(lm == null || lm.Count == 0)
-			{
-				return;
-			}
-
-			BindingList<StaticMesh>	blm	=new BindingList<StaticMesh>();
-
-			foreach(StaticMesh m in lm)
-			{
-				blm.Add(m);
-			}
-
-			MeshPartGrid.DataSource	=blm;
 
 			BoundsChanged();
 		}
@@ -506,14 +494,9 @@ namespace ColladaConvert
 
 		private void OnMeshPartNuking(object sender, DataGridViewRowCancelEventArgs e)
 		{
-			if(e.Row.DataBoundItem.GetType() == typeof(MeshLib.Mesh))
+			if(e.Row.DataBoundItem.GetType().BaseType == typeof(Mesh))
 			{
-				MeshLib.Mesh	nukeMe	=(MeshLib.Mesh)e.Row.DataBoundItem;
-				eNukedMeshPart(nukeMe, null);
-			}
-			else
-			{
-				StaticMesh	nukeMe	=(StaticMesh)e.Row.DataBoundItem;
+				Mesh	nukeMe	=(Mesh)e.Row.DataBoundItem;
 				eNukedMeshPart(nukeMe, null);
 			}
 			BoundsChanged();
@@ -537,14 +520,9 @@ namespace ColladaConvert
 
 			foreach(DataGridViewRow dgvr in MeshPartGrid.SelectedRows)
 			{
-				if(dgvr.DataBoundItem.GetType() == typeof(MeshLib.Mesh))
+				if(dgvr.DataBoundItem.GetType().BaseType == typeof(Mesh))
 				{
-					MeshLib.Mesh	boundMe	=(MeshLib.Mesh)dgvr.DataBoundItem;
-					boundMe.Bound();
-				}
-				else
-				{
-					MeshLib.StaticMesh	boundMe	=(MeshLib.StaticMesh)dgvr.DataBoundItem;
+					Mesh	boundMe	=(Mesh)dgvr.DataBoundItem;
 					boundMe.Bound();
 				}
 			}
@@ -557,19 +535,9 @@ namespace ColladaConvert
 			List<Bounds>	bounds	=new List<Bounds>();
 			foreach(DataGridViewRow dgvr in MeshPartGrid.Rows)
 			{
-				if(dgvr.DataBoundItem.GetType() == typeof(MeshLib.Mesh))
+				if(dgvr.DataBoundItem.GetType().BaseType == typeof(Mesh))
 				{
-					MeshLib.Mesh	msh	=(MeshLib.Mesh)dgvr.DataBoundItem;
-
-					Bounds	bnd	=msh.GetBounds();
-					if(bnd != null)
-					{
-						bounds.Add(bnd);
-					}
-				}
-				else
-				{
-					MeshLib.StaticMesh	msh	=(MeshLib.StaticMesh)dgvr.DataBoundItem;
+					Mesh	msh	=(Mesh)dgvr.DataBoundItem;
 
 					Bounds	bnd	=msh.GetBounds();
 					if(bnd != null)

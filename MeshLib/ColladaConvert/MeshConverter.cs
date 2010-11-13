@@ -498,21 +498,21 @@ namespace ColladaConvert
 					tv.Color0.Z	=colors0.Values[2 + cidx0 * 4];
 					tv.Color0.W	=colors0.Values[3 + cidx0 * 4];
 				}
-				if(colIdxs1 != null && colors0 != null)
+				if(colIdxs1 != null && colors1 != null)
 				{
 					tv.Color1.X	=colors1.Values[cidx1 * 4];
 					tv.Color1.Y	=colors1.Values[1 + cidx1 * 4];
 					tv.Color1.Z	=colors1.Values[2 + cidx1 * 4];
 					tv.Color1.W	=colors1.Values[3 + cidx1 * 4];
 				}
-				if(colIdxs2 != null && colors0 != null)
+				if(colIdxs2 != null && colors2 != null)
 				{
 					tv.Color2.X	=colors2.Values[cidx2 * 4];
 					tv.Color2.Y	=colors2.Values[1 + cidx2 * 4];
 					tv.Color2.Z	=colors2.Values[2 + cidx2 * 4];
 					tv.Color2.W	=colors2.Values[3 + cidx2 * 4];
 				}
-				if(colIdxs3 != null && colors0 != null)
+				if(colIdxs3 != null && colors3 != null)
 				{
 					tv.Color3.X	=colors3.Values[cidx3 * 4];
 					tv.Color3.Y	=colors3.Values[1 + cidx3 * 4];
