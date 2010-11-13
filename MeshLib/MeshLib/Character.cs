@@ -18,6 +18,9 @@ namespace MeshLib
 		MaterialLib.MaterialLib	mMatLib;
 		AnimLib					mAnimLib;
 
+		//collision sphere
+		IRayCastable	mBounds	=new SphereBounds();
+
 		//events
 		public event EventHandler	eRayCollision;
 
@@ -26,6 +29,12 @@ namespace MeshLib
 		{
 			mMatLib		=ml;
 			mAnimLib	=al;
+		}
+
+
+		public IRayCastable GetBounds()
+		{
+			return	mBounds;
 		}
 
 
@@ -195,21 +204,86 @@ namespace MeshLib
 
 		public void RayIntersect(Vector3 start, Vector3 end)
 		{
-			foreach(SkinnedMesh m in mMeshParts)
+			Nullable<float>	dist	=mBounds.RayIntersect(start, end);
+			if(dist != null)
 			{
-				if(!m.Visible)
+				if(eRayCollision != null)
 				{
-					continue;
-				}
-				Nullable<float>	dist	=m.RayIntersect(start, end);
-				if(dist != null)
-				{
-					if(eRayCollision != null)
-					{
-						eRayCollision(m, new CollisionEventArgs(dist.Value));
-					}
+					eRayCollision(mBounds, new CollisionEventArgs(dist.Value));
 				}
 			}
+		}
+
+
+		public void Bound()
+		{
+			if(mSkins == null || mSkins.Count == 0)
+			{
+				return;
+			}
+
+			Skeleton		skel		=mAnimLib.GetSkeleton();
+			List<string>	boneNames	=mSkins[0].GetBoneNames();
+			List<Vector3>	points		=new List<Vector3>();
+
+			if(skel == null)
+			{
+				return;
+			}
+
+			foreach(string bone in boneNames)
+			{
+				Matrix	mat	=Matrix.Identity;
+				skel.GetMatrixForBone(bone, out mat);
+
+				mat	*=Matrix.CreateRotationX((float)Math.PI / -2.0f);
+				mat	*=Matrix.CreateRotationY((float)Math.PI);
+
+				Vector3	pnt	=Vector3.Zero;
+
+				pnt	=Vector3.Transform(pnt, mat);
+
+				points.Add(pnt);
+			}
+			mBounds.AddPointListToBounds(points);
+		}
+
+
+		public List<IRayCastable> GetBoneBounds()
+		{
+			List<IRayCastable>	ret	=new List<IRayCastable>();
+			if(mSkins == null || mSkins.Count == 0)
+			{
+				return	ret;
+			}
+
+			Skeleton		skel		=mAnimLib.GetSkeleton();
+			List<string>	boneNames	=mSkins[0].GetBoneNames();
+
+			if(skel == null)
+			{
+				return	ret;
+			}
+
+			foreach(string bone in boneNames)
+			{
+				Matrix	mat	=Matrix.Identity;
+				skel.GetMatrixForBone(bone, out mat);
+
+				mat	*=Matrix.CreateRotationX((float)Math.PI / -2.0f);
+				mat	*=Matrix.CreateRotationY((float)Math.PI);
+
+				Vector3	pnt	=Vector3.Zero;
+
+				pnt	=Vector3.Transform(pnt, mat);
+
+				SphereBounds	bnd	=new SphereBounds();
+				bnd.mSphere.Center	=pnt;
+				bnd.mSphere.Radius	=1.0f;
+
+				ret.Add(bnd);
+			}
+			return	ret;
 		}
 
 

@@ -25,13 +25,13 @@ namespace MeshLib
 
 		public SkinnedMesh() : base()
 		{
-			mMeshBounds	=new SphereBounds() as IRayCastable;
+			mBounds	=new SphereBounds() as IRayCastable;
 		}
 
 
 		public SkinnedMesh(string name) : base(name)
 		{
-			mMeshBounds	=new SphereBounds() as IRayCastable;
+			mBounds	=new SphereBounds() as IRayCastable;
 		}
 
 
@@ -63,8 +63,9 @@ namespace MeshLib
 			bw.Write(mTypeIndex);
 			bw.Write(mSkinIndex);
 			bw.Write((UInt32)mSlot);
+			bw.Write(mbVisible);
 
-			mMeshBounds.Write(bw);
+			mBounds.Write(bw);
 
 			VertexTypes.WriteVerts(bw, mVerts, mNumVerts, mTypeIndex);
 
@@ -104,8 +105,9 @@ namespace MeshLib
 			mTypeIndex		=br.ReadInt32();
 			mSkinIndex		=br.ReadInt32();
 			mSlot			=(WearLocations)br.ReadUInt32();
+			mbVisible		=br.ReadBoolean();
 
-			mMeshBounds.Read(br);
+			mBounds.Read(br);
 
 			VertexTypes.ReadVerts(br, gd, out mVerts, mNumVerts, mTypeIndex, bEditor);
 
@@ -173,6 +175,12 @@ namespace MeshLib
 			{
 				mBones[i]	=mSkin.GetBoneByIndex(i, sk);
 			}
+		}
+
+
+		//just using the character bounds for now
+		public override void Bound()
+		{
 		}
 
 

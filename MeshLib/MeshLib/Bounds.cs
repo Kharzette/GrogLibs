@@ -97,9 +97,6 @@ namespace MeshLib
 			min	=Vector3.One;
 			max	=Vector3.One;
 
-			min.Normalize();
-			max.Normalize();
-
 			min	*=-mSphere.Radius;
 			max	*=mSphere.Radius;
 

@@ -91,6 +91,7 @@ namespace MeshLib
 			
 			for(int i=0;i < numKeys;i++)
 			{
+				mKeys[i]	=new KeyFrame();
 				mKeys[i].Read(br);
 			}
 
@@ -106,6 +107,11 @@ namespace MeshLib
 
 		internal void Animate(float time)
 		{
+			if(mBone == null)
+			{
+				return;
+			}
+
 			//make sure the time is not before our start
 			if(time < mTimes[0])
 			{

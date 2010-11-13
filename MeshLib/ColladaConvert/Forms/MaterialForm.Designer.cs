@@ -38,9 +38,12 @@
 			this.BoundMesh = new System.Windows.Forms.Button();
 			this.DrawBounds = new System.Windows.Forms.CheckBox();
 			this.RefreshShaders = new System.Windows.Forms.Button();
+			this.BoundRadius = new System.Windows.Forms.NumericUpDown();
+			this.label1 = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this.MeshPartGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialProperties)).BeginInit();
+			((System.ComponentModel.ISupportInitialize)(this.BoundRadius)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// MeshPartGrid
@@ -147,7 +150,7 @@
 			// DrawBounds
 			// 
 			this.DrawBounds.AutoSize = true;
-			this.DrawBounds.Location = new System.Drawing.Point(694, 539);
+			this.DrawBounds.Location = new System.Drawing.Point(593, 539);
 			this.DrawBounds.Name = "DrawBounds";
 			this.DrawBounds.Size = new System.Drawing.Size(90, 17);
 			this.DrawBounds.TabIndex = 11;
@@ -164,12 +167,35 @@
 			this.RefreshShaders.UseVisualStyleBackColor = true;
 			this.RefreshShaders.Click += new System.EventHandler(this.OnRefreshShaders);
 			// 
+			// BoundRadius
+			// 
+			this.BoundRadius.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            65536});
+			this.BoundRadius.Location = new System.Drawing.Point(689, 538);
+			this.BoundRadius.Name = "BoundRadius";
+			this.BoundRadius.Size = new System.Drawing.Size(49, 20);
+			this.BoundRadius.TabIndex = 13;
+			// 
+			// label1
+			// 
+			this.label1.AutoSize = true;
+			this.label1.Location = new System.Drawing.Point(744, 540);
+			this.label1.Name = "label1";
+			this.label1.Size = new System.Drawing.Size(40, 13);
+			this.label1.TabIndex = 14;
+			this.label1.Text = "Radius";
+			// 
 			// MaterialForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(1065, 573);
 			this.ControlBox = false;
+			this.Controls.Add(this.label1);
+			this.Controls.Add(this.BoundRadius);
 			this.Controls.Add(this.RefreshShaders);
 			this.Controls.Add(this.DrawBounds);
 			this.Controls.Add(this.BoundMesh);
@@ -191,6 +217,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.MeshPartGrid)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialProperties)).EndInit();
+			((System.ComponentModel.ISupportInitialize)(this.BoundRadius)).EndInit();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -208,5 +235,7 @@
 		private System.Windows.Forms.Button BoundMesh;
 		private System.Windows.Forms.CheckBox DrawBounds;
 		private System.Windows.Forms.Button RefreshShaders;
+		private System.Windows.Forms.NumericUpDown BoundRadius;
+		private System.Windows.Forms.Label label1;
 	}
 }

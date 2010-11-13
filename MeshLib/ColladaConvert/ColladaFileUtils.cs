@@ -38,7 +38,8 @@ namespace ColladaConvert
 				Anim	anm	=new Anim(subs);
 
 				anm.SetBoneRefs(alib.GetSkeleton());
-				anm.Name	="RenameThis";
+
+				anm.Name	=NameFromPath(path);
 				alib.AddAnim(anm);
 
 				return	true;
@@ -75,7 +76,7 @@ namespace ColladaConvert
 			Anim	anm	=new Anim(subs);
 
 			anm.SetBoneRefs(skel);
-			anm.Name	="RenameThis";
+			anm.Name	=NameFromPath(path);
 			alib.AddAnim(anm);
 
 			CreateSkins(colladaFile, chr, chunks);
@@ -822,6 +823,26 @@ namespace ColladaConvert
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M24));
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M34));
 			while(!Single.TryParse(tokens[tokIdx++],out mat.M44));
+		}
+
+
+		static string NameFromPath(string path)
+		{
+			int	lastSlash	=path.LastIndexOf('\\');
+			if(lastSlash == -1)
+			{
+				lastSlash	=0;
+			}
+			else
+			{
+				lastSlash++;
+			}
+
+			int	extension	=path.LastIndexOf('.');
+
+			string	name	=path.Substring(lastSlash, extension - lastSlash);
+
+			return	name;
 		}
 	}
 }

@@ -29,6 +29,12 @@ namespace MeshLib
 		}
 
 
+		internal List<string> GetBoneNames()
+		{
+			return	mBoneNames;
+		}
+
+
 		public void SetBoneNames(string []bnames)
 		{
 			foreach(string n in bnames)

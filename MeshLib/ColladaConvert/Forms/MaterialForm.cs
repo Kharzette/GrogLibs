@@ -29,6 +29,7 @@ namespace ColladaConvert
 		//events
 		public event EventHandler	eBoundsUpdated;
 		public event EventHandler	eNukedMeshPart;
+		public event EventHandler	eBoundMesh;
 
 
 		public MaterialForm(GraphicsDevice gd, MaterialLib.MaterialLib matlib)
@@ -520,10 +521,17 @@ namespace ColladaConvert
 
 			foreach(DataGridViewRow dgvr in MeshPartGrid.SelectedRows)
 			{
-				if(dgvr.DataBoundItem.GetType().BaseType == typeof(Mesh))
+				if(dgvr.DataBoundItem.GetType() == typeof(StaticMesh))
 				{
 					Mesh	boundMe	=(Mesh)dgvr.DataBoundItem;
 					boundMe.Bound();
+				}
+				else
+				{
+					if(eBoundMesh != null)
+					{
+						eBoundMesh(null, null);
+					}
 				}
 			}
 			BoundsChanged();
@@ -535,7 +543,7 @@ namespace ColladaConvert
 			List<IRayCastable>	bounds	=new List<IRayCastable>();
 			foreach(DataGridViewRow dgvr in MeshPartGrid.Rows)
 			{
-				if(dgvr.DataBoundItem.GetType().BaseType == typeof(Mesh))
+				if(dgvr.DataBoundItem.GetType() == typeof(StaticMesh))
 				{
 					Mesh	msh	=(Mesh)dgvr.DataBoundItem;
 

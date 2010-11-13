@@ -154,6 +154,8 @@ namespace MeshLib
 
 				an.Read(br);
 
+				an.SetBoneRefs(mSkeleton);
+
 				mAnims.Add(an.Name, an);
 			}
 

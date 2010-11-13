@@ -223,6 +223,7 @@ namespace ColladaConvert
 
 			mMF.eBoundsUpdated	+=OnBoundsChanged;
 			mMF.eNukedMeshPart	+=OnNukedMeshPart;
+			mMF.eBoundMesh		+=OnBoundMesh;
 		}
 
 
@@ -299,6 +300,12 @@ namespace ColladaConvert
 		}
 
 
+		void OnBoundMesh(object sender, EventArgs ea)
+		{
+			mCharacter.Bound();
+		}
+
+
 		void OnBoundsChanged(object sender, EventArgs ea)
 		{
 			//clear existing
@@ -308,6 +315,16 @@ namespace ColladaConvert
 			List<IRayCastable>	bnds	=(List<IRayCastable>)sender;
 
 			if(bnds.Count <= 0)
+			{
+				bnds.Add(mCharacter.GetBounds());
+			}
+			ReBuildBoundsDrawData(bnds);
+		}
+
+
+		void ReBuildBoundsDrawData(List<IRayCastable> bnds)
+		{
+			if(bnds.Count == 0)
 			{
 				return;
 			}
@@ -489,6 +506,7 @@ namespace ColladaConvert
 		{
 			string	path	=(string)sender;
 
+			mCharacter	=new Character(mMatLib, mAnimLib);
 			mCharacter.ReadFromFile(path, mGDM.GraphicsDevice, true);
 
 			eMeshPartListUpdated(mCharacter.GetMeshPartList(), null);

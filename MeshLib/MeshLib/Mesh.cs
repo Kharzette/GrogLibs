@@ -47,7 +47,7 @@ namespace MeshLib
 		protected string			mMaterialName;
 		protected int				mTypeIndex;
 		protected bool				mbVisible;
-		protected IRayCastable		mMeshBounds;
+		protected IRayCastable		mBounds;
 
 		public string Name
 		{
@@ -128,19 +128,19 @@ namespace MeshLib
 
 		public float? RayIntersect(Vector3 start, Vector3 end)
 		{
-			return	mMeshBounds.RayIntersect(start, end);
+			return	mBounds.RayIntersect(start, end);
 		}
 
 
-		public void Bound()
+		public virtual void Bound()
 		{
-			VertexTypes.GetVertBounds(mVerts, mNumVerts, mTypeIndex, mMeshBounds);
+			VertexTypes.GetVertBounds(mVerts, mNumVerts, mTypeIndex, mBounds);
 		}
 
 
 		public IRayCastable GetBounds()
 		{
-			return	mMeshBounds;
+			return	mBounds;
 		}
 	}
 }
