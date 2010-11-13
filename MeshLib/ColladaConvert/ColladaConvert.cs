@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
+using System.Xml.Serialization;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -18,6 +19,7 @@ namespace ColladaConvert
 		VertexDeclaration		mVDecl;
 		IndexBuffer				mIB, mBoundsIB;
 		Effect					mFX;
+		COLLADA					mCOLLADA;
 
 		MaterialLib.MaterialLib		mMatLib;
 		MeshLib.AnimLib				mAnimLib;
@@ -304,7 +306,11 @@ namespace ColladaConvert
 		{
 			string	path	=(string)sender;
 
-			mCollada	=new Collada(path, GraphicsDevice, Content, mMatLib, mAnimLib, mCharacter);
+			FileStream		fs	=new FileStream(path, FileMode.Open, FileAccess.Read);
+			XmlSerializer	xs	=new XmlSerializer(typeof(COLLADA));
+
+			mCOLLADA	=xs.Deserialize(fs) as COLLADA;
+			mCollada	=new Collada(mCOLLADA, GraphicsDevice, Content, mMatLib, mAnimLib, mCharacter);
 
 			eMeshPartListUpdated(null, null);
 			eAnimsUpdated(mAnimLib.GetAnims(), null);

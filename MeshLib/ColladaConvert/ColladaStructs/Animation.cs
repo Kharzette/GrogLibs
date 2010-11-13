@@ -13,6 +13,24 @@ namespace ColladaConvert
 		private List<SubAnimation>	mSubAnims	=new List<SubAnimation>();
 
 
+		public Animation(animation anim)
+		{
+			foreach(object anObj in anim.Items)
+			{
+				animation	anm	=anObj as animation;
+				if(anm == null)
+				{
+					continue;
+				}
+
+				mName	=anim.name;
+
+				SubAnimation	sa	=new SubAnimation(anm);
+				mSubAnims.Add(sa);
+			}
+		}
+
+
 		public string GetName()
 		{
 			return	mName;
@@ -83,32 +101,6 @@ namespace ColladaConvert
 			}
 
 			return	null;
-		}
-
-
-		public void Load(XmlReader r)
-		{
-			r.MoveToNextAttribute();
-			mName	=r.Value;
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;
-				}
-
-				if(r.Name == "animation")
-				{
-					if(r.NodeType == XmlNodeType.EndElement)
-					{
-						return;
-					}
-
-					SubAnimation	sub	=new SubAnimation();
-					sub.Load(r);
-					mSubAnims.Add(sub);
-				}
-			}
 		}
 	}
 }

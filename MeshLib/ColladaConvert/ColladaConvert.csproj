@@ -87,6 +87,7 @@
     <Compile Include="Anim\Channel.cs" />
     <Compile Include="Anim\ChannelTarget.cs" />
     <Compile Include="ColladaStructs\ColladaChannel.cs" />
+    <Compile Include="collada_schema_1_4.cs" />
     <Compile Include="Forms\AnimGridModel.cs" />
     <Compile Include="Forms\AnimForm.cs">
       <SubType>Form</SubType>
@@ -245,4 +246,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <PropertyGroup>
+    <PreBuildEvent>rem "../../../../../UtilityLib/xsd" /c ../../../collada_schema_1_5.xsd /out:../../../</PreBuildEvent>
+  </PropertyGroup>
 </Project>

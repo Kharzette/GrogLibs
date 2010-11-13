@@ -29,6 +29,15 @@ namespace MeshLib
 		}
 
 
+		public void SetBoneNames(string []bnames)
+		{
+			foreach(string n in bnames)
+			{
+				mBoneNames.Add(n);
+			}
+		}
+
+
 		public void SetInverseBindPoses(List<Matrix> mats)
 		{
 			mInverseBindPoses	=mats;

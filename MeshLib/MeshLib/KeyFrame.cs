@@ -14,7 +14,8 @@ namespace MeshLib
 
 		public KeyFrame()
 		{
-			mScale	=Vector3.One;
+			mScale		=Vector3.One;
+			mRotation	=Quaternion.Identity;
 		}
 
 

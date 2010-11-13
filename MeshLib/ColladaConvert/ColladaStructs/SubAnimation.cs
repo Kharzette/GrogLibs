@@ -10,21 +10,57 @@ namespace ColladaConvert
 	//animations on individual controllers
 	public class SubAnimation
 	{
-		private Dictionary<string, Source>	mSources	=new Dictionary<string,Source>();
-		private Dictionary<string, Sampler>	mSamplers	=new Dictionary<string,Sampler>();
-		private List<ColladaChannel>		mChannels	=new List<ColladaChannel>();
+		private Dictionary<string, source>	mSources	=new Dictionary<string, source>();
+		private Dictionary<string, sampler>	mSamplers	=new Dictionary<string, sampler>();
+		private List<channel>				mChannels	=new List<channel>();
 
+
+		public SubAnimation(animation anim)
+		{
+			foreach(object anObj in anim.Items)
+			{
+				if(anObj is source)
+				{
+					source	src	=anObj as source;
+					mSources.Add(src.id, src);
+				}
+				else if(anObj is sampler)
+				{
+					sampler	samp	=anObj as sampler;
+					mSamplers.Add(samp.id, samp);
+				}
+				else if(anObj is channel)
+				{
+					channel	chan	=anObj as channel;
+					mChannels.Add(chan);
+				}
+			}
+		}
+
+
+		string GetSourceForSemantic(sampler samp, string sem)
+		{
+			string	srcInp	="";
+			foreach(InputLocal inp in samp.input)
+			{
+				if(inp.semantic == sem)
+				{
+					srcInp	=inp.source.Substring(1);
+				}
+			}
+			return	srcInp;
+		}
 
 
 		internal List<float> GetTimesForBone(string bone)
 		{
 			List<float>	ret	=new List<float>();
 
-			foreach(ColladaChannel chan in mChannels)
+			foreach(channel chan in mChannels)
 			{
 				//extract the node name and address
-				int		sidx	=chan.mTarget.IndexOf('/');
-				string	nName	=chan.mTarget.Substring(0, sidx);
+				int		sidx	=chan.target.IndexOf('/');
+				string	nName	=chan.target.Substring(0, sidx);
 
 				if(nName != bone)
 				{
@@ -32,25 +68,24 @@ namespace ColladaConvert
 				}
 
 				//grab sampler key
-				string	sampKey	=chan.mSource;
+				string	sampKey	=chan.source;
 
 				//strip #
 				sampKey	=sampKey.Substring(1);
 
-				Sampler	samp	=mSamplers[sampKey];
-				string	srcInp	=samp.GetSourceForSemantic("INPUT");
+				sampler	samp	=mSamplers[sampKey];
+				string	srcInp	=GetSourceForSemantic(samp, "INPUT");
 
-				srcInp	=srcInp.Substring(1);
+				float_array	srcTimes	=mSources[srcInp].Item as float_array;
 
-				List<float>	srcTimes	=mSources[srcInp].GetFloatArray();
-
-				foreach(float time in srcTimes)
+				foreach(double time in srcTimes.Values)
 				{
-					if(ret.Contains(time))
+					float	t	=(float)time;
+					if(ret.Contains(t))
 					{
 						continue;
 					}
-					ret.Add(time);
+					ret.Add(t);
 				}
 			}
 
@@ -58,27 +93,27 @@ namespace ColladaConvert
 		}
 
 
-		float LerpValue(float time, List<float> chanTimes, List<float> chanValues)
+		float LerpValue(float time, float_array chanTimes, float_array chanValues)
 		{
 			//calc totaltime
-			float	totalTime	=chanTimes[chanTimes.Count - 1]
-				- chanTimes[0];
+			float	totalTime	=(float)chanTimes.Values[chanTimes.Values.Length - 1]
+				- (float)chanTimes.Values[0];
 
 			//make sure the time is not before our start
-			Debug.Assert(time >= chanTimes[0]);
+			Debug.Assert(time >= chanTimes.Values[0]);
 
 			//bring the passed in time value into
 			//the space of our animation
 			float	animTime	=time % totalTime;
 
 			//Bring to start
-			animTime	+=chanTimes[0];
+			animTime	+=(float)chanTimes.Values[0];
 
 			//locate the key index to start with
 			int	startIndex;
-			for(startIndex = 0;startIndex < chanTimes.Count;startIndex++)
+			for(startIndex = 0;startIndex < chanTimes.Values.Length;startIndex++)
 			{
-				if(animTime < chanTimes[startIndex])
+				if(animTime < (float)chanTimes.Values[startIndex])
 				{
 					//back up one
 					startIndex--;
@@ -88,84 +123,31 @@ namespace ColladaConvert
 
 			//figure out the percentage between pos1 and pos2
 			//get the deltatime
-			float	percentage	=chanTimes[startIndex + 1] - chanTimes[startIndex];
+			float	percentage	=(float)chanTimes.Values[startIndex + 1]
+				- (float)chanTimes.Values[startIndex];
 
 			//convert to percentage
 			percentage	=1.0f / percentage;
 
 			//multiply by amount beyond p1
-			percentage	*=(animTime - chanTimes[startIndex]);
+			percentage	*=(animTime - (float)chanTimes.Values[startIndex]);
 
 			Debug.Assert(percentage >= 0.0f && percentage <= 1.0f);
 
-			float value	=MathHelper.Lerp(chanValues[startIndex],
-				chanValues[startIndex + 1], percentage);
+			float value	=MathHelper.Lerp((float)chanValues.Values[startIndex],
+				(float)chanValues.Values[startIndex + 1], percentage);
 
 			return	value;
 		}
 
 
-		public void Load(XmlReader r)
-		{
-			while(r.Read())
-			{
-				if(r.NodeType == XmlNodeType.Whitespace)
-				{
-					continue;
-				}
-
-				if(r.Name == "source")
-				{
-					Source	src	=new Source();
-					r.MoveToFirstAttribute();
-					string	srcID	=r.Value;
-					src.Load(r);
-					mSources.Add(srcID, src);
-				}
-				else if(r.Name == "sampler")
-				{
-					Sampler	samp	=new Sampler();
-					r.MoveToFirstAttribute();
-					string	sampID	=r.Value;
-					samp.Load(r);
-					mSamplers.Add(sampID, samp);
-				}
-				else if(r.Name == "channel")
-				{
-					ColladaChannel	chan	=new ColladaChannel();
-
-					int	attCnt	=r.AttributeCount;
-					r.MoveToFirstAttribute();
-					while(attCnt > 0)
-					{
-						if(r.Name == "source")
-						{
-							chan.mSource	=r.Value;
-						}
-						else if(r.Name == "target")
-						{
-							chan.mTarget	=r.Value;
-						}
-						r.MoveToNextAttribute();
-						attCnt--;
-					}
-					mChannels.Add(chan);
-				}
-				else if(r.Name == "animation")
-				{
-					return;
-				}
-			}
-		}
-
-
 		internal void SetKeys(string bone, List<float> times, List<MeshLib.KeyFrame> keys)
 		{
-			foreach(ColladaChannel chan in mChannels)
+			foreach(channel chan in mChannels)
 			{
 				//extract the node name and address
-				int		sidx	=chan.mTarget.IndexOf('/');
-				string	nName	=chan.mTarget.Substring(0, sidx);
+				int		sidx	=chan.target.IndexOf('/');
+				string	nName	=chan.target.Substring(0, sidx);
 
 				if(nName != bone)
 				{
@@ -173,33 +155,27 @@ namespace ColladaConvert
 				}
 
 				//grab sampler key
-				string	sampKey	=chan.mSource;
+				string	sampKey	=chan.source;
 
 				//strip #
 				sampKey	=sampKey.Substring(1);
 
-				Sampler	samp	=mSamplers[sampKey];
+				sampler	samp	=mSamplers[sampKey];
 
-				string	srcInp	=samp.GetSourceForSemantic("INPUT");
-				string	srcOut	=samp.GetSourceForSemantic("OUTPUT");
-				string	srcC1	=samp.GetSourceForSemantic("IN_TANGENT");
-				string	srcC2	=samp.GetSourceForSemantic("OUT_TANGENT");
-
-				//strip #
-				srcInp	=srcInp.Substring(1);
-				srcOut	=srcOut.Substring(1);
-				srcC1	=srcC1.Substring(1);
-				srcC2	=srcC2.Substring(1);
+				string	srcInp	=GetSourceForSemantic(samp, "INPUT");
+				string	srcOut	=GetSourceForSemantic(samp, "OUTPUT");
+				string	srcC1	=GetSourceForSemantic(samp, "IN_TANGENT");
+				string	srcC2	=GetSourceForSemantic(samp, "OUT_TANGENT");
 
 				//extract the node name and address
-				string	addr	=chan.mTarget.Substring(sidx + 1);
+				string	addr	=chan.target.Substring(sidx + 1);
 				int		pidx	=addr.IndexOf('.');
 				string	elName	=addr.Substring(0, pidx);
 
 				addr	=addr.Substring(pidx + 1);
 
-				List<float>	chanTimes	=mSources[srcInp].GetFloatArray();
-				List<float>	chanValues	=mSources[srcOut].GetFloatArray();
+				float_array	chanTimes	=mSources[srcInp].Item as float_array;
+				float_array	chanValues	=mSources[srcOut].Item as float_array;
 				List<float>	outValues	=new List<float>();
 
 				//grab values for this channel

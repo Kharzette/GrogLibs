@@ -138,6 +138,19 @@ namespace ColladaConvert
 			//read only so text can't be entered in cell
 			MaterialGrid.Columns[1].ReadOnly	=true;
 			MaterialGrid.Columns[2].ReadOnly	=true;
+
+
+			//temp load stuff
+			mMatLib.ReadFromFile("C:/Sandbox/MiscLibs/VanquisherAnims/Test.matlib", true);
+
+			mMatLib.LoadToolTextures(mGD);
+
+			UpdateMaterials();
+
+			MaterialProperties.DataSource			=mMatModel[0].Parameters;
+			MaterialProperties.Columns[0].ReadOnly	=true;
+			MaterialProperties.Columns[1].ReadOnly	=true;
+			MaterialProperties.Columns[2].ReadOnly	=true;
 		}
 
 
