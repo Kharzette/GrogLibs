@@ -84,6 +84,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Animation.cs" />
+    <Compile Include="Collada.cs" />
     <Compile Include="collada_schema_1_4.cs" />
     <Compile Include="Forms\AnimGridModel.cs" />
     <Compile Include="Forms\AnimForm.cs">
@@ -92,9 +94,6 @@
     <Compile Include="Forms\AnimForm.Designer.cs">
       <DependentUpon>AnimForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="ColladaStructs\Animation.cs" />
-    <Compile Include="ColladaStructs\Collada.cs" />
-    <Compile Include="Conversion\MeshConverter.cs" />
     <Compile Include="Forms\MaterialForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -120,15 +119,16 @@
     <Compile Include="Forms\TextureForm.Designer.cs">
       <DependentUpon>TextureForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="MeshConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ColladaConvert.cs" />
-    <Compile Include="ColladaStructs\SubAnimation.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="SubAnimation.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Game.ico" />
