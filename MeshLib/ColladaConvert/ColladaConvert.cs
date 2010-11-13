@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Storage;
 
+
 namespace ColladaConvert
 {
 	public class ColladaConvert : Microsoft.Xna.Framework.Game
@@ -84,6 +85,7 @@ namespace ColladaConvert
 			}
 		}
 
+
 		protected override void Initialize()
 		{
 			mPitch = mYaw = mRoll = 0;
@@ -113,10 +115,7 @@ namespace ColladaConvert
 				1.0f, 100.0f);
 		}
 
-		/// <summary>
-		/// LoadContent will be called once per game and is the place to load
-		/// all of your content.
-		/// </summary>
+
 		protected override void LoadContent()
 		{
 			mMatLib		=new MaterialLib.MaterialLib(mGDM.GraphicsDevice, Content);
@@ -227,13 +226,9 @@ namespace ColladaConvert
 			mMF.eNukedMeshPart	+=OnNukedMeshPart;
 		}
 
-		/// <summary>
-		/// UnloadContent will be called once per game and is the place to unload
-		/// all content.
-		/// </summary>
+
 		protected override void UnloadContent()
 		{
-			// TODO: Unload any non ContentManager content here
 		}
 
 
@@ -550,16 +545,13 @@ namespace ColladaConvert
 		}
 
 
-		/// <summary>
-		/// Allows the game to run logic such as updating the world,
-		/// checking for collisions, gathering input, and playing audio.
-		/// </summary>
-		/// <param name="gameTime">Provides a snapshot of timing values.</param>
 		protected override void Update(GameTime gameTime)
 		{
-			// Allows the game to exit
-			if(GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
-				this.Exit();
+			if(GamePad.GetState(PlayerIndex.One).Buttons.Back
+				== ButtonState.Pressed)
+			{
+				Exit();
+			}
 
 			CheckGamePadInput();
 
@@ -590,8 +582,6 @@ namespace ColladaConvert
 
 			//put in some keys for messing with bones
 			float	time		=(float)gameTime.ElapsedGameTime.TotalMilliseconds;
-
-			UpdateBone(time);
 
 			//mCollada.DebugBoneModify(mBoneMatrix);
 
@@ -744,78 +734,6 @@ namespace ColladaConvert
 
 			mCamPos -= vleft * (mCurrentGamePadState.ThumbSticks.Left.X * time * 0.25f);
 			mCamPos += vin * (mCurrentGamePadState.ThumbSticks.Left.Y * time * 0.25f);
-		}
-
-
-		private void UpdateBone(float time)
-		{
-			Vector3	vup, vleft, vin;
-
-			//grab view matrix in vector transpose
-			vup.X   =mBoneMatrix.M12;
-			vup.Y   =mBoneMatrix.M22;
-			vup.Z   =mBoneMatrix.M32;
-			vleft.X =mBoneMatrix.M11;
-			vleft.Y =mBoneMatrix.M21;
-			vleft.Z =mBoneMatrix.M31;
-			vin.X   =mBoneMatrix.M13;
-			vin.Y   =mBoneMatrix.M23;
-			vin.Z   =mBoneMatrix.M33;
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.T))
-			{
-				mBonePos	+=vin * (time * 0.1f);
-			}
-			else if(mCurrentKeyboardState.IsKeyDown(Keys.V))
-			{
-				mBonePos	-=vin * (time * 0.1f);
-			}
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.F))
-			{
-				mBonePos	+=vleft * (time * 0.1f);
-			}
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.G))
-			{
-				mBonePos	-=vleft * (time * 0.1f);
-			}
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.I))
-			{
-				mBonePitch	+=(time * 0.1f);
-			}
-			else if(mCurrentKeyboardState.IsKeyDown(Keys.K))
-			{
-				mBonePitch	-=(time * 0.1f);
-			}
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.J))
-			{
-				mBoneYaw	+=(time * 0.1f);
-			}
-			else if(mCurrentKeyboardState.IsKeyDown(Keys.L))
-			{
-				mBoneYaw	-=(time * 0.1f);
-			}
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.H))
-			{
-				mBoneRoll	+=(time * 0.1f);
-			}
-			else if(mCurrentKeyboardState.IsKeyDown(Keys.U))
-			{
-				mBoneRoll	-=(time * 0.1f);
-			}
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.H))
-			{
-				mBoneRoll	+=(time * 0.1f);
-			}
-			else if(mCurrentKeyboardState.IsKeyDown(Keys.U))
-			{
-				mBoneRoll	-=(time * 0.1f);
-			}
 		}
 	}
 }
