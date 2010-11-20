@@ -21,7 +21,8 @@ namespace BSPBuilder
 		SpriteBatch				mSB;
 
 		//forms
-		MainForm	mMF;
+		MainForm		mMF;
+		CollisionForm	mCF;
 
 		Map	mMap;
 
@@ -37,6 +38,13 @@ namespace BSPBuilder
 		Vector2					mTextPos;
 		Random					mRnd	=new Random();
 		string					mDrawChoice;
+
+		//collision debuggery
+		Vector3				mStart, mEnd;
+		BasicEffect			mBFX;
+		VertexBuffer		mRayVB;
+		IndexBuffer			mRayIB;
+		List<ClipSegment>	mRayParts	=new List<ClipSegment>();
 
 
 		public BSPBuilder()
@@ -80,12 +88,24 @@ namespace BSPBuilder
 		{
 			mSB	=new SpriteBatch(GraphicsDevice);
 
+			mCF				=new CollisionForm();
+			mCF.Visible		=true;
+			mCF.eStartRay	+=OnStartRay;
+			mCF.eEndRay		+=OnEndRay;
+			mCF.eRepeatRay	+=OnRepeatRay;
+
 			mMF						=new MainForm();
 			mMF.Visible				=true;
 			mMF.eOpenVMF			+=OnOpenVMF;
 			mMF.eOpenMap			+=OnOpenMap;
+			mMF.eOpenZone			+=OnOpenZone;
 			mMF.eSaveZone			+=OnSaveZone;
 			mMF.eDrawChoiceChanged	+=OnDrawChoiceChanged;
+
+			mBFX					=new BasicEffect(GraphicsDevice, null);
+			mBFX.View				=mGameCam.View;
+			mBFX.Projection			=mGameCam.Projection;
+			mBFX.VertexColorEnabled	=true;
 
 			mKoot	=Content.Load<SpriteFont>("Fonts/Kootenay");
 
@@ -126,6 +146,10 @@ namespace BSPBuilder
 			mMapEffect.View			=mGameCam.View;
 			mMapEffect.Projection	=mGameCam.Projection;
 
+			mBFX.World		=mGameCam.World;
+			mBFX.View		=mGameCam.View;
+			mBFX.Projection	=mGameCam.Projection;
+
 			base.Update(gameTime);
 		}
 
@@ -158,9 +182,29 @@ namespace BSPBuilder
 				mMapEffect.End();
 			}
 
+			//draw ray pieces if any
+			if(mRayVB != null && mRayParts.Count > 0)
+			{
+				GraphicsDevice.Vertices[0].SetSource(mRayVB, 0, 16);
+				GraphicsDevice.VertexDeclaration	=mVD;
+				GraphicsDevice.Indices				=mRayIB;
+
+				mBFX.Begin();
+				foreach(EffectPass ep in mBFX.CurrentTechnique.Passes)
+				{
+					ep.Begin();
+
+					GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.LineList,
+						0, 0, mRayParts.Count * 2, 0, mRayParts.Count);
+
+					ep.End();
+				}
+				mBFX.End();
+			}
+
 			mSB.Begin();
 
-			mSB.DrawString(mKoot, "Coordinates: " + mGameCam.CamPos, mTextPos, Color.Yellow);
+			mSB.DrawString(mKoot, "Coordinates: " + -mGameCam.CamPos, mTextPos, Color.Yellow);
 
 			mSB.End();
 
@@ -176,7 +220,7 @@ namespace BSPBuilder
 			}
 
 			List<Vector3>	verts	=new List<Vector3>();
-			List<UInt16>	indexes	=new List<UInt16>();
+			List<UInt32>	indexes	=new List<UInt32>();
 
 			mMap.GetTriangles(verts, indexes, mDrawChoice);
 			if(verts.Count <= 0)
@@ -191,8 +235,8 @@ namespace BSPBuilder
 				VertexPositionColorTexture.SizeInBytes * verts.Count,
 				BufferUsage.WriteOnly);
 			mIB	=new IndexBuffer(mGDM.GraphicsDevice,
-				2 * indexes.Count, BufferUsage.WriteOnly,
-				IndexElementSize.SixteenBits);
+				4 * indexes.Count, BufferUsage.WriteOnly,
+				IndexElementSize.ThirtyTwoBits);
 
 			VertexPositionColorTexture	[]vpnt
 				=new VertexPositionColorTexture[mNumVerts];
@@ -211,7 +255,98 @@ namespace BSPBuilder
 			}
 
 			mVB.SetData<VertexPositionColorTexture>(vpnt);
-			mIB.SetData<UInt16>(indexes.ToArray());
+			mIB.SetData<UInt32>(indexes.ToArray());
+		}
+
+
+		void OnRepeatRay(object sender, EventArgs ea)
+		{
+			mCF.PrintToConsole("Casting ray: " +
+				mStart.X + ", " + mStart.Y + ", " + mStart.Z +
+				"  to  " + mEnd.X + ", " + mEnd.Y + ", " + mEnd.Z + "\n");
+
+			Line	ln;
+			ln.mP1	=mStart;
+			ln.mP2	=mEnd;
+
+			if(!mMap.MoveLine(ref ln, 8.0f))
+			{
+				ClipSegment	seg	=new ClipSegment();
+				seg.mSeg.mP1	=mStart;
+				seg.mSeg.mP2	=mEnd;
+
+				mRayParts.Add(seg);
+
+				mCF.PrintToConsole("No collision\n");
+			}
+			else
+			{
+				mCF.PrintToConsole("Collision!\n");
+				ClipSegment	seg	=new ClipSegment();
+				seg.mSeg.mP1	=mStart;
+				seg.mSeg.mP2	=mEnd;
+				mRayParts.Add(seg);
+
+				seg	=new ClipSegment();
+				seg.mSeg.mP1	=ln.mP1;
+				seg.mSeg.mP2	=ln.mP2;
+				mRayParts.Add(seg);
+			}
+			UpdateRayVerts();
+		}
+
+
+		void OnStartRay(object sender, EventArgs ea)
+		{
+			mStart	=mGameCam.CamPos;
+		}
+
+
+		void OnEndRay(object sender, EventArgs ea)
+		{
+			mEnd	=mGameCam.CamPos;
+
+			mRayParts.Clear();
+
+//			mStart	=-mStart;
+//			mEnd	=-mEnd;
+
+			mStart	=-mStart;
+			mEnd	=-mEnd;
+
+			OnRepeatRay(null, null);
+
+//			Matrix	transpose	=Matrix.Transpose(mGameCam.View);
+
+//			mStart	=Vector3.Transform(mStart, transpose);
+//			mEnd	=Vector3.Transform(mEnd, transpose);
+
+			//hard code from before to repro collision goblinry
+			/*
+			mStart.X	=-286.2419f;
+			mStart.Y	=4.640844f;
+			mStart.Z	=-0.1963519f;
+			mEnd.X		=337.2641f;
+			mEnd.Y		=5.518799f;
+			mEnd.Z		=81.22206f;
+			*/
+			/*
+			mMap.RayCast(mStart, mEnd, ref mRayParts);
+
+			if(mRayParts.Count == 0)
+			{
+				ClipSegment	seg	=new ClipSegment();
+				seg.mSeg.mP1	=mStart;
+				seg.mSeg.mP2	=mEnd;
+
+				mRayParts.Add(seg);
+
+				mCF.PrintToConsole("No collision\n");
+			}
+			else
+			{
+				mCF.PrintToConsole("Ray returned in " + mRayParts.Count + " pieces\n");
+			}*/
 		}
 
 
@@ -243,13 +378,38 @@ namespace BSPBuilder
 		}
 
 
+		void OnOpenZone(object sender, EventArgs ea)
+		{
+			string	fileName	=sender as string;
+
+			if(fileName != null)
+			{
+				if(mMap != null)
+				{
+					mMap.Read(fileName);
+				}
+				else
+				{
+					mMap	=new Map();
+
+					mMap.eNumCollisionFacesChanged	+=OnNumCollisionFacesChanged;
+					mMap.eNumDrawFacesChanged		+=OnNumDrawFacesChanged;
+					mMap.eNumMapFacesChanged		+=OnNumMapFacesChanged;
+					mMap.eProgressChanged			+=OnMapProgressChanged;
+
+					mMap.Read(fileName);
+				}
+			}
+		}
+
+
 		void OnSaveZone(object sender, EventArgs ea)
 		{
 			string	fileName	=sender as string;
 
 			if(fileName != null)
 			{
-				mMap.Save(fileName);
+				mMap.Write(fileName);
 			}
 		}
 
@@ -298,6 +458,60 @@ namespace BSPBuilder
 
 		void OnMapProgressChanged(object sender, EventArgs ea)
 		{
+		}
+
+
+		void UpdateRayVerts()
+		{
+			if(mRayParts == null || mRayParts.Count <= 0)
+			{
+				return;
+			}
+			mRayVB	=new VertexBuffer(GraphicsDevice, mRayParts.Count * 2 * 16, BufferUsage.WriteOnly);
+			mRayIB	=new IndexBuffer(GraphicsDevice, mRayParts.Count * 2 * 2, BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
+
+			VertexPositionColor	[]verts		=new VertexPositionColor[mRayParts.Count * 2];
+			short				[]indexs	=new short[mRayParts.Count * 2];
+
+			int	idx	=0;
+			foreach(ClipSegment seg in mRayParts)
+			{
+				Microsoft.Xna.Framework.Graphics.Color	randColor;
+
+				randColor	=new Microsoft.Xna.Framework.Graphics.Color(
+						Convert.ToByte(255),
+						Convert.ToByte(255 - idx * 20),
+						Convert.ToByte(255 - idx * 20));
+
+				indexs[idx]				=(short)idx;
+				verts[idx].Position.X	=seg.mSeg.mP1.X;
+				verts[idx].Position.Y	=seg.mSeg.mP1.Y;
+				verts[idx].Position.Z	=seg.mSeg.mP1.Z;
+				verts[idx++].Color		=randColor;
+
+				indexs[idx]				=(short)idx;
+				verts[idx].Position.X	=seg.mSeg.mP2.X;
+				verts[idx].Position.Y	=seg.mSeg.mP2.Y;
+				verts[idx].Position.Z	=seg.mSeg.mP2.Z;
+				verts[idx++].Color		=randColor;
+
+//				Line	ln	=r.mSplitPlane.CreateLine();
+
+//				indexs[idx]				=(short)idx;
+//				verts[idx].Position.X	=ln.mP1.X;
+//				verts[idx].Position.Y	=ln.mP1.Y;
+//				verts[idx].Position.Z	=0.0f;
+//				verts[idx++].Color		=Color.Blue;
+				
+//				indexs[idx]				=(short)idx;
+//				verts[idx].Position.X	=ln.mP2.X;
+//				verts[idx].Position.Y	=ln.mP2.Y;
+//				verts[idx].Position.Z	=0.0f;
+//				verts[idx++].Color		=Color.Blue;
+			}
+
+			mRayVB.SetData<VertexPositionColor>(verts);
+			mRayIB.SetData<short>(indexs);
 		}
 	}
 }

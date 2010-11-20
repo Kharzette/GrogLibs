@@ -224,7 +224,14 @@ namespace BSPLib
 					string	[]tokens;
 					tokens	=s.Split('\"');
 
-					mData.Add(tokens[1], tokens[3]);
+					if(mData.ContainsKey(tokens[1]))
+					{
+						mData[tokens[1]]	=tokens[3];
+					}
+					else
+					{
+						mData.Add(tokens[1], tokens[3]);
+					}
 				}
 				else if(s == "editor")
 				{
@@ -323,6 +330,21 @@ namespace BSPLib
 					ReadVMFWorldBlock(sr);
 					return;
 				}
+			}
+		}
+
+
+		internal void Read(BinaryReader br)
+		{
+			int	dataCount	=br.ReadInt32();
+
+			mData	=new Dictionary<string, string>();
+			for(int i=0;i < dataCount;i++)
+			{
+				string	key		=br.ReadString();
+				string	value	=br.ReadString();
+
+				mData.Add(key, value);
 			}
 		}
 

@@ -39,7 +39,10 @@ namespace BSPLib
 
 
 		#region Constructors
-		//reads a .map file
+		public Map() { }
+
+
+		//reads a text brush file
 		public Map(string mapFileName)
 		{
 			mEntities	=new List<Entity>();
@@ -100,36 +103,47 @@ namespace BSPLib
 
 
 		#region Queries
-		public void GetTriangles(List<Vector3> verts, List<ushort> indexes, string drawChoice)
+		public void GetTriangles(List<Vector3> verts, List<UInt32> indexes, string drawChoice)
 		{
 			if(drawChoice == "Map Brushes")
 			{
 				foreach(Brush b in mDebugBrushes)
 				{
-					b.GetTriangles(verts, indexes);
+					b.GetTriangles(verts, indexes, true);
+				}
+			}
+			else if(drawChoice == "Trouble Brushes")
+			{
+				lock(BspNode.TroubleBrushes)
+				{
+					foreach(Brush b in BspNode.TroubleBrushes)
+					{
+						b.SealFaces();
+						b.GetTriangles(verts, indexes, false);
+					}
 				}
 			}
 			else if(drawChoice == "Draw Brushes")
 			{
 				foreach(Brush b in mDrawBrushes)
 				{
-					b.GetTriangles(verts, indexes);
+					b.GetTriangles(verts, indexes, true);
 				}
 			}
 			else if(drawChoice == "Collision Brushes")
 			{
 				foreach(Brush b in mCollisionBrushes)
 				{
-					b.GetTriangles(verts, indexes);
+					b.GetTriangles(verts, indexes, false);
 				}
 			}
 			else if(drawChoice == "Draw Tree")
 			{
-				mDrawTree.GetTriangles(verts, indexes);
+				mDrawTree.GetTriangles(verts, indexes, true);
 			}
 			else if(drawChoice == "Collision Tree")
 			{
-				mCollisionTree.GetTriangles(verts, indexes);
+				mCollisionTree.GetTriangles(verts, indexes, false);
 			}
 		}
 
@@ -137,6 +151,32 @@ namespace BSPLib
 		public bool ClassifyPoint(Vector3 pnt)
 		{
 			return	mCollisionTree.ClassifyPoint(pnt);
+		}
+
+
+		public Vector3 GetPlayerStartPos()
+		{
+			foreach(Entity e in mEntities)
+			{
+				if(e.mData.ContainsKey("classname"))
+				{
+					if(e.mData["classname"] != "info_player_start")
+					{
+						continue;
+					}
+				}
+				else
+				{
+					continue;
+				}
+
+				Vector3	ret	=Vector3.Zero;
+				if(e.GetOrigin(out ret))
+				{
+					return	ret;
+				}
+			}
+			return	Vector3.Zero;
 		}
 
 
@@ -178,10 +218,10 @@ namespace BSPLib
 
 
 		#region IO
-		public void Save(string fileName)
+		public void Write(string fileName)
 		{
 			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.Open, FileAccess.Write);
+									FileMode.OpenOrCreate, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
@@ -193,8 +233,69 @@ namespace BSPLib
 				e.Write(bw);
 			}
 
-			//write bsp
+			//write bsps
 			mDrawTree.Write(bw);
+			mCollisionTree.Write(bw);
+
+			//write brush lists
+			bw.Write(mDrawBrushes.Count);
+			foreach(Brush b in mDrawBrushes)
+			{
+				b.Write(bw);
+			}
+			bw.Write(mCollisionBrushes.Count);
+			foreach(Brush b in mCollisionBrushes)
+			{
+				b.Write(bw);
+			}
+		}
+
+
+		public void Read(string fileName)
+		{
+			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+									FileMode.Open, FileAccess.Read);
+
+			BinaryReader	br	=new BinaryReader(file);
+
+			int	numEnts	=br.ReadInt32();
+
+			mEntities	=new List<Entity>();
+			for(int i=0;i < numEnts;i++)
+			{
+				Entity	e	=new Entity();
+				e.Read(br);
+
+				mEntities.Add(e);
+			}
+
+			mDrawTree		=new BspTree();
+			mCollisionTree	=new BspTree();
+
+			mDrawTree.Read(br);
+			mCollisionTree.Read(br);
+
+			mDrawBrushes		=new List<Brush>();
+			mCollisionBrushes	=new List<Brush>();
+			mDebugBrushes		=new List<Brush>();
+
+			int	numBrushes	=br.ReadInt32();
+			for(int i=0;i < numBrushes;i++)
+			{
+				Brush	b	=new Brush();
+				b.Read(br);
+
+				mDrawBrushes.Add(b);
+			}
+
+			numBrushes	=br.ReadInt32();
+			for(int i=0;i < numBrushes;i++)
+			{
+				Brush	b	=new Brush();
+				b.Read(br);
+
+				mCollisionBrushes.Add(b);
+			}
 		}
 		#endregion
 
@@ -318,6 +419,10 @@ namespace BSPLib
 					b.RemoveVeryThinSides();
 					if(!b.IsValid())
 					{
+//						lock(BspNode.TroubleBrushes)
+//						{
+//							BspNode.TroubleBrushes.Add(b);
+//						}
 						Print("Thin brush removed");
 						brushes.RemoveAt(i);
 						i--;
@@ -411,10 +516,10 @@ namespace BSPLib
 			PromoteClips(mCollisionBrushes);
 			if(eNumCollisionFacesChanged != null)
 			{
-				eNumCollisionFacesChanged(mDrawBrushes.Count, null);
+				eNumCollisionFacesChanged(mCollisionBrushes.Count, null);
 			}
 
-			object	prog	=ProgressWatcher.RegisterProgress(0, mDrawBrushes.Count, 0);
+			object	prog	=ProgressWatcher.RegisterProgress(0, mCollisionBrushes.Count, 0);
 
 			RemoveOverlap(mCollisionBrushes, prog);
 
@@ -424,7 +529,7 @@ namespace BSPLib
 
 			if(eNumCollisionFacesChanged != null)
 			{
-				eNumCollisionFacesChanged(mDrawBrushes.Count, null);
+				eNumCollisionFacesChanged(mCollisionBrushes.Count, null);
 			}
 
 			if(eCollisionCSGDone != null)
@@ -501,7 +606,7 @@ namespace BSPLib
 				Brush	cb	=new Brush(b);
 				mDebugBrushes.Add(cb);
 			}
-			CopyDetailBrushes(mDebugBrushes);
+//			CopyDetailBrushes(mDebugBrushes);
 			if(eNumMapFacesChanged != null)
 			{
 				eNumMapFacesChanged(mDebugBrushes.Count, null);
@@ -518,6 +623,30 @@ namespace BSPLib
 			//for the two datasets
 			ThreadPool.QueueUserWorkItem(CBRemoveDrawOverlap);
 			ThreadPool.QueueUserWorkItem(CBRemoveCollisionOverlap, bBevel ? new object() : null);
+		}
+
+
+		public bool MoveLine(ref Line ln)
+		{
+			return	mCollisionTree.MoveLine(ref ln);
+		}
+
+
+		public bool MoveLine(ref Line ln, float radius)
+		{
+			return	mCollisionTree.MoveLine(ref ln, radius);
+		}
+
+
+		public bool RayCast(Vector3 p1, Vector3 p2, ref List<ClipSegment> segs)
+		{
+			return	mCollisionTree.RayCast(p1, p2, ref segs);
+		}
+
+
+		public void RayCast3(Vector3 mStart, Vector3 mEnd, List<Ray> rayParts)
+		{
+			mCollisionTree.RayCast3(mStart, mEnd, rayParts);
 		}
 	}
 }

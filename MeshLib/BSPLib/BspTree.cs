@@ -9,19 +9,28 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace BSPLib
 {
+	class ThreadCounter
+	{
+		public int mThreadCount;
+	}
+
+
 	public class BspTree
 	{
 		//tree root
-		BspNode	mRoot;
-		int		mThreadCount;
+		BspNode			mRoot, mOutsideNode;
+		ThreadCounter	mThreadCount	=new ThreadCounter();
 
 		event EventHandler	eThreadDone;
 
 
 		#region Constructors
+		public BspTree() { }
 		public BspTree(List<Brush> brushList, bool bBevel)
 		{
 			eThreadDone	+=OnThreadDone;
+
+			mOutsideNode	=new BspNode();
 
 			if(!BuildThreaded(brushList, bBevel))
 			{
@@ -37,17 +46,24 @@ namespace BSPLib
 
 		void OnThreadDone(object sender, EventArgs ea)
 		{
-			mThreadCount--;
-			if(mThreadCount == 0)
+			int	threadCount;
+			lock(mThreadCount)
+			{
+				mThreadCount.mThreadCount--;
+				threadCount	=mThreadCount.mThreadCount;
+			}
+
+			if(threadCount == 0)
 			{
 				Map.Print("Bounding node brushes\n");
-
 				mRoot.BoundNodeBrushes();
+				Map.Print("Bounding complete\n");
 
 				if((bool)sender)
 				{
 					Map.Print("Beveling node brushes\n");
 					mRoot.BevelNodeBrushes();
+					Map.Print("Beveling complete\n");
 				}
 			}
 		}
@@ -94,7 +110,10 @@ namespace BSPLib
 
 			Map.Print("Found a good initial split plane, splitting entire list");
 
-			mThreadCount	=2;
+			lock(mThreadCount)
+			{
+				mThreadCount.mThreadCount	=2;
+			}
 
 			mRoot.mPlane	=face.GetPlane();
 
@@ -200,9 +219,9 @@ namespace BSPLib
 		}
 
 
-		public void GetTriangles(List<Vector3> verts, List<UInt16> indexes)
+		public void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
 		{
-			mRoot.GetTriangles(verts, indexes);		
+			mRoot.GetTriangles(verts, indexes, bCheckFlags);
 		}
 
 
@@ -222,8 +241,38 @@ namespace BSPLib
 
 		public void Read(BinaryReader br)
 		{
+			mRoot	=new BspNode();
 			mRoot.Read(br);
 		}
 		#endregion
+
+
+		public bool MoveLine(ref Line ln)
+		{
+			return	mRoot.MoveLine(ref ln);
+		}
+
+
+		public bool RayCast(Vector3 p1, Vector3 p2, ref List<ClipSegment> segs)
+		{
+			Line	ln	=new Line();
+			ln.mP1	=p1;
+			ln.mP2	=p2;
+
+			mRoot.RayCastBrushes(ln, ref segs);
+			return	(segs.Count <= 0);
+		}
+
+
+		internal void RayCast3(Vector3 mStart, Vector3 mEnd, List<Ray> rayParts)
+		{
+			mRoot.RayCast3(mStart, mEnd, rayParts);
+		}
+
+
+		internal bool MoveLine(ref Line ln, float radius)
+		{
+			return	mRoot.MoveLine(ref ln, radius);
+		}
 	}
 }

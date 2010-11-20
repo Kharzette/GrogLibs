@@ -81,5 +81,45 @@ namespace BSPLib
 		{
 			return	Vector3.Dot(pos, mNormal) - mDistance;
 		}
+
+
+		internal bool IsAxial()
+		{
+			return	UtilityLib.Mathery.IsAxial(mNormal);
+		}
+
+
+		//returns a new line segment that
+		//is the original ray's reflected part
+		internal Line BounceLine(Line ln, float radius)
+		{
+			float	d1	=Vector3.Dot(mNormal, ln.mP1) - mDistance;
+			float	d2	=Vector3.Dot(mNormal, ln.mP2) - mDistance;
+
+			d1	-=radius;
+			d2	-=radius;
+
+			//value type will copy
+			Line	ret	=ln;
+
+			float	splitRatio	=d1 / (d1 - d2);
+			Vector3	mid			=ln.mP1 + (splitRatio * (ln.mP2 - ln.mP1));
+			if(d1 < 0.0f && d2 >= 0.0f)
+			{
+				ret.mP1	=mid;
+				ret.mP2	=ln.mP1 - (d1 * mNormal);
+			}
+			else if(d1 >= 0.0f && d2 < 0.0f)
+			{
+				ret.mP1	=mid;
+				ret.mP2	=ln.mP2 - (d2 * mNormal);
+			}
+
+			//bump result off the plane a little
+			ret.mP1	+=mNormal * EPSILON;
+			ret.mP2	+=mNormal * EPSILON;
+
+			return	ret;
+		}
 	}
 }

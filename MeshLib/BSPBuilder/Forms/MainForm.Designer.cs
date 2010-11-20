@@ -52,6 +52,7 @@
 			this.Progress2 = new System.Windows.Forms.ProgressBar();
 			this.Progress3 = new System.Windows.Forms.ProgressBar();
 			this.Progress4 = new System.Windows.Forms.ProgressBar();
+			this.OpenZone = new System.Windows.Forms.Button();
 			this.StatsGroupBox.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxCPUCores)).BeginInit();
 			this.GroupFileIO.SuspendLayout();
@@ -187,6 +188,7 @@
             "Draw Brushes",
             "Map Brushes",
             "Collision Brushes",
+            "Trouble Brushes",
             "Draw Tree",
             "Collision Tree"});
 			this.DrawChoice.Location = new System.Drawing.Point(6, 19);
@@ -213,6 +215,7 @@
 			// 
 			// GroupFileIO
 			// 
+			this.GroupFileIO.Controls.Add(this.OpenZone);
 			this.GroupFileIO.Controls.Add(this.SaveCollisionBrushes);
 			this.GroupFileIO.Controls.Add(this.SaveDrawBrushes);
 			this.GroupFileIO.Controls.Add(this.OpenVMF);
@@ -293,6 +296,16 @@
 			this.Progress4.Size = new System.Drawing.Size(259, 19);
 			this.Progress4.TabIndex = 26;
 			// 
+			// OpenZone
+			// 
+			this.OpenZone.Location = new System.Drawing.Point(6, 77);
+			this.OpenZone.Name = "OpenZone";
+			this.OpenZone.Size = new System.Drawing.Size(75, 23);
+			this.OpenZone.TabIndex = 18;
+			this.OpenZone.Text = "Open Zone";
+			this.OpenZone.UseVisualStyleBackColor = true;
+			this.OpenZone.Click += new System.EventHandler(this.OnOpenZone);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -349,5 +362,6 @@
 		private System.Windows.Forms.ProgressBar Progress2;
 		private System.Windows.Forms.ProgressBar Progress3;
 		private System.Windows.Forms.ProgressBar Progress4;
+		private System.Windows.Forms.Button OpenZone;
 	}
 }

@@ -177,12 +177,16 @@ namespace BSPLib
 				}
 			}
 
+			mPoints.Add(new Vector3(numbers[0], numbers[1], numbers[2]));
+			mPoints.Add(new Vector3(numbers[3], numbers[4], numbers[5]));
+			mPoints.Add(new Vector3(numbers[6], numbers[7], numbers[8]));
+
 			//deal with the numbers
 			//invert x and swap y and z
 			//to convert to left handed
-			mPoints.Add(new Vector3(-numbers[0], numbers[2], numbers[1]));
-			mPoints.Add(new Vector3(-numbers[3], numbers[5], numbers[4]));
-			mPoints.Add(new Vector3(-numbers[6], numbers[8], numbers[7]));
+//			mPoints.Add(new Vector3(-numbers[0], numbers[2], numbers[1]));
+//			mPoints.Add(new Vector3(-numbers[3], numbers[5], numbers[4]));
+//			mPoints.Add(new Vector3(-numbers[6], numbers[8], numbers[7]));
 
 			//see if there are any quake 3 style flags
 /*			if(flags.Count > 0)
@@ -202,6 +206,18 @@ namespace BSPLib
 			mFacePlane.Read(br);
 
 			mFlags	=br.ReadUInt32();
+
+			int	numPoints	=br.ReadInt32();
+			for(int i=0;i < numPoints;i++)
+			{
+				Vector3	vec	=Vector3.Zero;
+
+				vec.X	=br.ReadSingle();
+				vec.Y	=br.ReadSingle();
+				vec.Z	=br.ReadSingle();
+
+				mPoints.Add(vec);
+			}
 		}
 
 
@@ -226,6 +242,7 @@ namespace BSPLib
 
 			string	[]vecStr	=tok.Split(' ');
 
+			//swap y and z
 			Single.TryParse(vecStr[0], out ret.X);
 			Single.TryParse(vecStr[1], out ret.Z);
 			Single.TryParse(vecStr[2], out ret.Y);
@@ -577,6 +594,14 @@ namespace BSPLib
 		}
 
 
+		internal bool IsPointBehind(Vector3 pnt, float radius)
+		{
+			float	dist	=Vector3.Dot(mFacePlane.mNormal, pnt) - mFacePlane.mDistance;
+
+			return	(dist < radius);
+		}
+
+
 		internal void GetFaceMinMaxDistancesFromPlane(Plane p, ref float front, ref float back)
 		{
 			float	d;
@@ -623,13 +648,11 @@ namespace BSPLib
 		}
 
 
-		internal void GetTriangles(List<Vector3> verts, List<UInt16> indexes)
+		internal void GetTriangles(List<Vector3> verts, List<UInt32> indexes)
 		{
 			int	ofs		=verts.Count;
 
-			Debug.Assert(ofs < 0xFFFF);
-
-			UInt16	offset	=(UInt16)ofs;
+			UInt32	offset	=(UInt32)ofs;
 
 			//triangulate the brush face points
 			foreach(Vector3 pos in mPoints)
@@ -642,8 +665,8 @@ namespace BSPLib
 			{
 				//initial vertex
 				indexes.Add(offset);
-				indexes.Add((UInt16)(offset + i));
-				indexes.Add((UInt16)(offset + ((i + 1) % mPoints.Count)));
+				indexes.Add((UInt32)(offset + i));
+				indexes.Add((UInt32)(offset + ((i + 1) % mPoints.Count)));
 			}
 		}
 		#endregion
@@ -873,6 +896,210 @@ namespace BSPLib
 				return	false;
 			}
 			return	true;
+		}
+
+
+		//clip line in front or behind this face
+		//returns true if line is chopped
+		//Bias is needed towards the front, as
+		//the results of this will need to be in
+		//empty space for movement
+		public bool ClipLine(ref Line ln, ref bool chopped)
+		{
+			Plane	p	=mFacePlane;
+			float	d1	=Vector3.Dot(p.mNormal, ln.mP1) - p.mDistance;
+			float	d2	=Vector3.Dot(p.mNormal, ln.mP2) - p.mDistance;
+
+			if(d1 > Plane.EPSILON && d2 > Plane.EPSILON)
+			{
+				//fully in front
+				return	false;
+			}
+			else if(d1 < -Plane.EPSILON && d2 < -Plane.EPSILON)
+			{
+				//fully behind
+				return	true;
+			}
+			else if(d1 < Plane.EPSILON && d1 >= -Plane.EPSILON && d2 < Plane.EPSILON)
+			{
+				//mostly back
+				chopped	=true;	//touching this plane
+				return	true;
+			}
+			else if(d2 < Plane.EPSILON && d2 >= -Plane.EPSILON && d1 < Plane.EPSILON)
+			{
+				//mostly back
+				chopped	=true;
+				return	true;
+			}
+			else
+			{
+				d1	=-(Plane.EPSILON - d1);
+				d2	=-(Plane.EPSILON - d2);
+				float	splitRatio	=d1 / (d1 - d2);
+				Vector3	mid			=ln.mP1 + (splitRatio * (ln.mP2 - ln.mP1));
+
+				if(d1 >= 0.0)
+				{
+					chopped	=true;
+					ln.mP1	=mid;
+					return	true;
+				}
+				else
+				{
+					chopped	=true;
+					ln.mP2	=mid;
+					return	true;
+				}
+			}
+		}
+
+
+		internal Line ClipLine(Line ln, float radius)
+		{
+			Plane	p	=mFacePlane;
+			float	d1	=Vector3.Dot(p.mNormal, ln.mP1) - p.mDistance;
+			float	d2	=Vector3.Dot(p.mNormal, ln.mP2) - p.mDistance;
+
+			d1	-=radius;
+			d2	-=radius;
+
+			float	splitRatio	=d1 / (d1 - d2);
+			Vector3	mid			=ln.mP1 + (splitRatio * (ln.mP2 - ln.mP1));
+
+			if(d1 < 0.0)
+			{
+				Line	ret;
+				ret.mP1	=mid;
+				ret.mP2	=ln.mP2;
+				return	ret;
+			}
+			else
+			{
+				Line	ret;
+				ret.mP1	=ln.mP1;
+				ret.mP2	=mid;
+				return	ret;
+			}
+		}
+
+
+		//returns -1 for back, 1 for front, 0 for crosses
+		internal int RayCheck(Line ln, float radius)
+		{
+			Plane	p	=mFacePlane;
+			float	d1	=Vector3.Dot(p.mNormal, ln.mP1) - p.mDistance;
+			float	d2	=Vector3.Dot(p.mNormal, ln.mP2) - p.mDistance;
+
+			if(d1 < radius && d2 >= radius)
+			{
+				return	0;
+			}
+			else if(d2 < radius && d1 >= radius)
+			{
+				return	0;
+			}
+			else if(d1 >= radius && d2 >= radius)
+			{
+				return	1;
+			}
+			return	-1;
+		}
+
+
+		//clip line in front or behind this face
+		//returns true if line is chopped
+		//Bias is needed towards the front, as
+		//the results of this will need to be in
+		//empty space for movement
+		public bool ClipLine(ref Line ln, ref bool chopped, float radius)
+		{
+			Plane	p	=mFacePlane;
+			float	d1	=Vector3.Dot(p.mNormal, ln.mP1) - p.mDistance;
+			float	d2	=Vector3.Dot(p.mNormal, ln.mP2) - p.mDistance;
+
+			if(d1 > radius && d2 > radius)
+			{
+				//fully in front
+				return	false;
+			}
+			else if(d1 < -radius && d2 < -radius)
+			{
+				//fully behind
+				return	true;
+			}
+			else
+			{
+				float	splitRatio	=d1 / (d1 - d2);
+				Vector3	mid			=ln.mP1 + (splitRatio * (ln.mP2 - ln.mP1));
+
+				if(d1 > d2)
+				{
+					chopped	=true;
+					ln.mP1	=mid;
+					return	true;
+				}
+				else
+				{
+					chopped	=true;
+					ln.mP2	=mid;
+					return	true;
+				}
+			}
+		}
+
+
+		//clip line in front or behind this face
+		//returns true if line is chopped
+		//Bias is needed towards the front, as
+		//the results of this will need to be in
+		//empty space for movement
+		public bool ClipLine3(ref Vector3 start, ref Vector3 end, ref bool chopped)
+		{
+			Plane	p	=mFacePlane;
+			float	d1	=Vector3.Dot(p.mNormal, start) - p.mDistance;
+			float	d2	=Vector3.Dot(p.mNormal, end) - p.mDistance;
+
+			if(d1 > Plane.EPSILON && d2 > Plane.EPSILON)
+			{
+				//fully in front
+				return	false;
+			}
+			else if(d1 < -Plane.EPSILON && d2 < -Plane.EPSILON)
+			{
+				//fully behind
+				return	true;
+			}
+			else if(d1 < Plane.EPSILON && d1 >= -Plane.EPSILON && d2 < Plane.EPSILON)
+			{
+				//mostly back
+				chopped	=true;	//touching this plane
+				return	true;
+			}
+			else if(d2 < Plane.EPSILON && d2 >= -Plane.EPSILON && d1 < Plane.EPSILON)
+			{
+				//mostly back
+				return	true;
+			}
+			else
+			{
+				d1	=-(Plane.EPSILON - d1);
+				d2	=-(Plane.EPSILON - d2);
+				float	splitRatio	=d1 / (d1 - d2);
+				Vector3	mid			=start + (splitRatio * (end - start));
+
+				if(d1 >= 0.0)
+				{
+					chopped	=true;
+					start	=mid;
+					return	true;
+				}
+				else
+				{
+					end	=mid;
+					return	true;
+				}
+			}
 		}
 
 

@@ -8,6 +8,42 @@ using	Microsoft.Xna.Framework.Graphics;
 
 namespace BSPLib
 {
+	public struct Line
+	{
+		public Vector3	mP1;
+		public Vector3	mP2;
+
+		public static Line Zero;
+	}
+
+
+	public class ClipSegment
+	{
+		public Line		mSeg;
+		public Plane	mSplitPlane;
+
+
+		public static ClipSegment GetNearest(List<ClipSegment> segs, Vector3 pos)
+		{
+			float		minDist	=6969696969.69f;
+			ClipSegment	nearest	=null;
+			foreach(ClipSegment s in segs)
+			{
+				//figure out which segment point is
+				//on the hit plane
+				Vector3	distVec	=s.mSeg.mP1 - pos;
+				float	dist	=distVec.Length();
+				if(dist < minDist)
+				{
+					minDist	=dist;
+					nearest	=s;
+				}
+			}
+			return	nearest;
+		}
+	}
+
+
 	//a brush is a convex volume bounded
 	//by planes.  The space defined as being
 	//on the back side of all the planes in
@@ -82,6 +118,20 @@ namespace BSPLib
 
 
 		#region Modifications
+		void ValidateContents()
+		{
+			if(mContents == 0)
+			{
+				mContents	=CONTENTS_SOLID;
+			}
+			else if((mContents & 127) != 1)
+			{
+				//non solid
+				mContents	&=~CONTENTS_SOLID;
+			}
+		}
+
+
 		internal void PromoteClips()
 		{
 			if((mContents & (CONTENTS_STRUCTURAL
@@ -103,7 +153,8 @@ namespace BSPLib
 				{
 					continue;
 				}
-				mFaces.Add(f);
+				Face	f2	=new Face(f);
+				mFaces.Add(f2);
 			}
 		}
 
@@ -122,6 +173,10 @@ namespace BSPLib
 			mBounds	=new Bounds();
 			foreach(Face f in mFaces)
 			{
+				if((f.mFlags & Face.SURF_SKIP) != 0)
+				{
+					continue;
+				}
 				f.AddToBounds(mBounds);
 			}
 		}
@@ -148,6 +203,12 @@ namespace BSPLib
 
 
 		#region Queries
+		internal bool IsDetail()
+		{
+			return	((mContents & CONTENTS_DETAIL) != 0);
+		}
+
+
 		internal void AddToBounds(Bounds bnd)
 		{
 			foreach(Face f in mFaces)
@@ -217,6 +278,19 @@ namespace BSPLib
 			foreach(Face f in mFaces)
 			{
 				if(!f.IsPointBehind(pnt))
+				{
+					return	false;
+				}
+			}
+			return	true;
+		}
+
+
+		internal bool IsPointInside(Vector3 pnt, float radius)
+		{
+			foreach(Face f in mFaces)
+			{
+				if(!f.IsPointBehind(pnt, radius))
 				{
 					return	false;
 				}
@@ -302,21 +376,31 @@ namespace BSPLib
 		}
 
 
-		internal void GetTriangles(List<Vector3> tris, List<UInt16> ind)
+		internal void GetTriangles(List<Vector3> tris, List<UInt32> ind, bool bCheckFlags)
 		{
 			foreach(Face f in mFaces)
 			{
-				if((f.mFlags & Face.SURF_SKIP) != 0)
+				if(bCheckFlags)
 				{
-					continue;
+					if((f.mFlags & Face.SURF_SKIP) != 0)
+					{
+						continue;
+					}
+					if((f.mFlags & Face.SURF_NODRAW) != 0)
+					{
+						continue;
+					}
+					if((f.mFlags & Face.SURF_HINT) != 0)
+					{
+						continue;
+					}
 				}
-				if((f.mFlags & Face.SURF_NODRAW) != 0)
+				else
 				{
-					continue;
-				}
-				if((f.mFlags & Face.SURF_HINT) != 0)
-				{
-					continue;
+					if((f.mFlags & Face.SURF_SKIP) != 0)
+					{
+						continue;
+					}
 				}
 				f.GetTriangles(tris, ind);
 			}
@@ -348,6 +432,124 @@ namespace BSPLib
 				}
 			}
 			return	true;
+		}
+
+
+		internal void RayCast(Line ln, ref List<ClipSegment> segs)
+		{
+			bool	chopped		=false;
+
+			List<ClipSegment>	newSegs	=new List<ClipSegment>();
+
+			foreach(Face f in mFaces)
+			{
+				if(!f.ClipLine(ref ln, ref chopped))
+				{
+					newSegs.Clear();
+					return;
+				}
+				if(chopped)
+				{
+					ClipSegment	seg	=new ClipSegment();
+					seg.mSplitPlane		=f.GetPlane();
+					seg.mSeg			=ln;
+					newSegs.Add(seg);
+				}
+				chopped	=false;
+			}
+
+			segs.AddRange(newSegs);
+		}
+
+
+		internal void RayCast2(Line ln, ref List<ClipSegment> segs, float radius)
+		{
+			foreach(Face f in mFaces)
+			{
+				int	side	=f.RayCheck(ln, radius);
+				if(side == 1)
+				{
+					return;	//no intersection
+				}
+			}
+
+			foreach(Face f in mFaces)
+			{
+				int	side	=f.RayCheck(ln, radius);
+				if(side == 0)
+				{
+					//add a segment
+					ClipSegment	cs	=new ClipSegment();
+					cs.mSeg			=f.ClipLine(ln, radius);
+					cs.mSplitPlane	=f.GetPlane();
+					segs.Add(cs);
+				}
+			}
+		}
+
+
+		internal void RayCast(Line ln, ref List<ClipSegment> segs, float radius)
+		{
+			bool	chopped		=false;
+
+			List<ClipSegment>	newSegs	=new List<ClipSegment>();
+
+			foreach(Face f in mFaces)
+			{
+				if(!f.ClipLine(ref ln, ref chopped, radius))
+				{
+					newSegs.Clear();
+					return;
+				}
+				if(chopped)
+				{
+					ClipSegment	seg	=new ClipSegment();
+					seg.mSplitPlane	=f.GetPlane();
+					seg.mSeg		=ln;
+					newSegs.Add(seg);
+				}
+				chopped	=false;
+			}
+
+			segs.AddRange(newSegs);
+		}
+
+
+		internal void RayCast3(Vector3 start, Vector3 end, List<Ray> rayParts)
+		{
+			bool	chopped		=false;
+
+			List<Ray>	newSegs	=new List<Ray>();
+
+			Vector3	newStart	=start;
+			Vector3	newEnd		=end;
+
+			foreach(Face f in mFaces)
+			{
+				if(!f.ClipLine3(ref newStart, ref newEnd, ref chopped))
+				{
+					newSegs.Clear();
+					return;
+				}
+				if(chopped)
+				{
+					Ray	r;
+					if(newStart != start)
+					{
+						r.Position	=start;
+						r.Direction	=newStart - start;
+
+						//value type will copy
+						newSegs.Add(r);
+					}
+					r.Position	=newStart;
+					r.Direction	=newEnd - newStart;
+					newSegs.Add(r);
+				}
+				chopped	=false;
+			}
+
+			rayParts.AddRange(newSegs);
 		}
 		#endregion
 
@@ -387,6 +589,7 @@ namespace BSPLib
 				}
 				else if(s.StartsWith("}"))
 				{
+					ValidateContents();
 					return	ret;	//entity done
 				}
 				else if(s == "editor")
@@ -465,9 +668,15 @@ namespace BSPLib
 			Plane	p	=sf.GetPlane();
 
 			//test balance
-			List<Brush> copyList	=new List<Brush>(brushList);
+			List<Brush> copyList	=new List<Brush>();
 			List<Brush> front		=new List<Brush>();
 			List<Brush> back		=new List<Brush>();
+
+			foreach(Brush b in brushList)
+			{
+				Brush	b2	=new Brush(b);
+				copyList.Add(b2);
+			}
 
 			int		numThins	=0;
 			float	score		=696969.69f;
@@ -521,8 +730,15 @@ namespace BSPLib
 					score	=(float)back.Count / front.Count;
 				}
 
-				score	+=splitThins * 5;
+				score	+=splitThins * 500;
 			}
+
+			//bonus for axials
+			if(p.IsAxial())
+			{
+				score	/=10.0f;
+			}
+
 			return	score;
 		}
 
@@ -564,9 +780,15 @@ namespace BSPLib
 			float	BestScore	=696969.0f;	//0.5f is the goal
 			int		BestIndex	=0;
 
+			bool	bDetail	=(mContents & CONTENTS_DETAIL) != 0;
 			foreach(Face f in mFaces)
 			{
 				float	score	=GetSplitFaceScore(f, brushList);
+				if(bDetail)
+				{
+					score	+=10000.0f;
+				}
+
 				if(score < BestScore)
 				{
 					BestScore	=score;
@@ -576,6 +798,17 @@ namespace BSPLib
 
 			//return the best plane
 			return mFaces[BestIndex];
+		}
+
+
+		bool CanGobble(Brush b)
+		{
+			if(((mContents & CONTENTS_DETAIL) != 0)
+				&& !((b.mContents & CONTENTS_DETAIL) != 0))
+			{
+				return	false;
+			}
+			return	((mContents & 127) >= (b.mContents & 127));
 		}
 
 
@@ -592,15 +825,8 @@ namespace BSPLib
 				return false;
 			}
 
-			if((b.mContents & 127) == 0)
+			if(!CanGobble(b))
 			{
-				//brush b can't gobble anything
-				return	false;
-			}
-
-			if((b.mContents & 127) > (mContents & 127))
-			{
-				//brush b can't gobble thisbrush
 				return	false;
 			}
 
@@ -770,6 +996,7 @@ namespace BSPLib
 
 				Face	axFace	=new Face(ax, mFaces[0]);
 				axFace.mFlags	|=Face.SURF_NODRAW;
+				axFace.mFlags	|=Face.SURF_SKIP;
 
 				//add to the brush, but don't clip
 				//the other faces.  Seal will destroy things
@@ -782,47 +1009,59 @@ namespace BSPLib
 			}
 
 			//check edges
-			foreach(Face f in mFaces)
+			bool	bDone	=false;
+			while(!bDone)
 			{
-				List<Edge>	edges	=new List<Edge>();
-				f.GetEdges(edges);
-
-				foreach(Edge e in edges)
+				bDone	=true;
+				foreach(Face f in mFaces)
 				{
-					if(e.IsAxial() || e.Length() < 0.5f)
+					List<Edge>	edges	=new List<Edge>();
+					f.GetEdges(edges);
+
+					foreach(Edge e in edges)
 					{
-						continue;
+						if(e.IsAxial() || e.Length() < 0.5f)
+						{
+							continue;
+						}
+
+						//try to bevel using axial planes
+						for(int i=0;i < 6;i++)
+						{
+							Plane	ax;
+							ax.mNormal	=Vector3.Cross(e.GetNormal(),
+								UtilityLib.Mathery.AxialNormals[i]);
+
+							if(ax.mNormal.Length() < 0.5f)
+							{
+								continue;
+							}
+
+							ax.mNormal.Normalize();
+							ax.mDistance	=Vector3.Dot(e.mP0, ax.mNormal);
+
+							//see if already added
+							if(ContainsPlane(ax))
+							{
+								continue;
+							}
+
+							//see if rest of the brush is behind this plane
+							if(IsBehind(ax))
+							{
+								Face	axFace	=new Face(ax, mFaces[0]);
+								axFace.mFlags	|=Face.SURF_NODRAW;
+								axFace.mFlags	|=Face.SURF_SKIP;
+
+								mFaces.Add(axFace);
+								bDone	=false;
+								break;
+							}
+						}
 					}
-
-					//try to bevel using axial planes
-					for(int i=0;i < 6;i++)
+					if(!bDone)
 					{
-						Plane	ax;
-						ax.mNormal	=Vector3.Cross(e.GetNormal(),
-							UtilityLib.Mathery.AxialNormals[i]);
-
-						if(ax.mNormal.Length() < 0.5f)
-						{
-							continue;
-						}
-
-						ax.mNormal.Normalize();
-						ax.mDistance	=Vector3.Dot(e.mP0, ax.mNormal);
-
-						//see if already added
-						if(ContainsPlane(ax))
-						{
-							continue;
-						}
-
-						//see if rest of the brush is behind this plane
-						if(IsBehind(ax))
-						{
-							Face	axFace	=new Face(ax, mFaces[0]);
-							axFace.mFlags	|=Face.SURF_NODRAW;
-
-							mFaces.Add(axFace);
-						}
+						break;
 					}
 				}
 			}

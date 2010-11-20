@@ -18,6 +18,7 @@ namespace BSPBuilder
 
 		public event EventHandler	eOpenVMF;
 		public event EventHandler	eOpenMap;
+		public event EventHandler	eOpenZone;
 		public event EventHandler	eSaveZone;
 		public event EventHandler	eDrawChoiceChanged;
 
@@ -155,6 +156,23 @@ namespace BSPBuilder
 			if(eOpenVMF != null)
 			{
 				eOpenVMF(mOFD.FileName, null);
+			}
+		}
+
+
+		void OnOpenZone(object sender, EventArgs e)
+		{
+			mOFD.DefaultExt	="*.Zone";
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			if(eOpenZone != null)
+			{
+				eOpenZone(mOFD.FileName, null);
 			}
 		}
 
