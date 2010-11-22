@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using Microsoft.Xna.Framework;
 
 
 namespace BSPLib
@@ -81,14 +81,12 @@ namespace BSPLib
 
 
 		//builds a bsp good for portals
-		internal void BuildTree(List<Brush> brushList, object prog)
+		internal void BuildTree(List<Brush> brushList)
 		{
 			List<Brush>	frontList	=new List<Brush>();
 			List<Brush>	backList	=new List<Brush>();
 
 			Face	face;
-
-			ProgressWatcher.UpdateProgress(prog, brushList.Count);
 
 			if(!BspNode.FindGoodSplitFace(brushList, out face, null))
 			{
@@ -169,7 +167,7 @@ namespace BSPLib
 			{
 				mFront	=new BspFlatNode();
 				mFront.mParent	=this;
-				mFront.BuildTree(frontList, prog);
+				mFront.BuildTree(frontList);
 			}
 			else
 			{
@@ -180,7 +178,7 @@ namespace BSPLib
 			{
 				mBack	=new BspFlatNode();
 				mBack.mParent	=this;
-				mBack.BuildTree(backList, prog);
+				mBack.BuildTree(backList);
 			}
 			else
 			{
@@ -284,6 +282,47 @@ namespace BSPLib
 			if(!back.mFace.IsTiny())
 			{
 				mBack.FilterPortalBack(back, pieces);
+			}
+		}
+
+
+		internal void GetTriangles(List<Vector3> tris, List<UInt32> ind, bool bCheckFlags)
+		{
+			foreach(Face f in mFaces)
+			{
+				if(bCheckFlags)
+				{
+					if((f.mFlags & Face.SURF_SKIP) != 0)
+					{
+						continue;
+					}
+					if((f.mFlags & Face.SURF_NODRAW) != 0)
+					{
+						continue;
+					}
+					if((f.mFlags & Face.SURF_HINT) != 0)
+					{
+						continue;
+					}
+				}
+				else
+				{
+					if((f.mFlags & Face.SURF_SKIP) != 0)
+					{
+						continue;
+					}
+				}
+				f.GetTriangles(tris, ind);
+			}
+
+			if(mFront != null)
+			{
+				mFront.GetTriangles(tris, ind, bCheckFlags);
+			}
+
+			if(mBack != null)
+			{
+				mBack.GetTriangles(tris, ind, bCheckFlags);
 			}
 		}
 	}

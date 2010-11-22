@@ -191,7 +191,8 @@
             "Trouble Brushes",
             "Draw Tree",
             "Collision Tree",
-            "Portals"});
+            "Portals",
+            "Portal Tree"});
 			this.DrawChoice.Location = new System.Drawing.Point(6, 19);
 			this.DrawChoice.Name = "DrawChoice";
 			this.DrawChoice.Size = new System.Drawing.Size(123, 21);

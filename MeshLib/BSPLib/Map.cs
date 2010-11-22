@@ -17,6 +17,7 @@ namespace BSPLib
 		List<Entity>	mEntities;
 		BspTree			mDrawTree;
 		BspTree			mCollisionTree;
+		BspFlatTree		mPortalTree;
 
 		bool		mbBuilding;
 		int			mMaxCPUCores;
@@ -157,6 +158,10 @@ namespace BSPLib
 						port.mFace.GetTriangles(verts, indexes);
 					}
 				}
+			}
+			else if(drawChoice == "Portal Tree")
+			{
+				mPortalTree.GetTriangles(verts, indexes, true);
 			}
 		}
 
@@ -605,14 +610,17 @@ namespace BSPLib
 
 			Print("Starting draw tree build\n");
 
-			//dupe draw list
+			//dupe draw list twice
 			List<Brush>	draws	=new List<Brush>();
+			List<Brush>	ports	=new List<Brush>();
 			foreach(Brush b in mDrawBrushes)
 			{
 				draws.Add(new Brush(b));
+				ports.Add(new Brush(b));
 			}
 
 			mDrawTree	=new BspTree(draws, false);
+			mPortalTree	=new BspFlatTree(ports);
 		}
 
 

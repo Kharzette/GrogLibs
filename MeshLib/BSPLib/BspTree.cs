@@ -201,7 +201,7 @@ namespace BSPLib
 		internal Dictionary<BspNode, List<Portal>> Portalize()
 		{
 			Dictionary<BspNode, List<Portal>>	portals	=new Dictionary<BspNode, List<Portal>>();
-
+			/*
 			portals.Add(mOutsideNode, new List<Portal>());
 
 			Bounds	rootBounds	=mRoot.mBounds;
@@ -269,7 +269,7 @@ namespace BSPLib
 			//grab list of splitting planes
 			//
 			//make portal and filter each one
-			/*
+			*//*
 			List<Face>	bspFaces	=new List<Face>();
 			mRoot.GetFaces(bspFaces);
 

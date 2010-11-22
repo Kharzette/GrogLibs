@@ -89,6 +89,7 @@
     <Compile Include="Bounds.cs" />
     <Compile Include="Brush.cs" />
     <Compile Include="BspFlatNode.cs" />
+    <Compile Include="BspFlatTree.cs" />
     <Compile Include="BspNode.cs" />
     <Compile Include="BspTree.cs" />
     <Compile Include="Entity.cs" />
