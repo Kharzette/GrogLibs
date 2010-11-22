@@ -56,6 +56,7 @@ namespace BSPLib
 
 		public const float	MIN_MAX_BOUNDS	=15192.0f;
 
+		public const UInt32	CONTENTS_EMPTY			=0;
 		public const UInt32	CONTENTS_SOLID			=1;		// an eye is never valid in a solid
 		public const UInt32	CONTENTS_WINDOW			=2;		// translucent, but not watery
 		public const UInt32	CONTENTS_AUX			=4;
@@ -203,6 +204,51 @@ namespace BSPLib
 
 
 		#region Queries
+		internal UInt32	GetContents()
+		{
+			return	mContents;
+		}
+
+
+		internal Bounds GetBounds()
+		{
+			return	mBounds;
+		}
+
+
+		internal Face GetSideInFrontOf(Vector3 org)
+		{
+			foreach(Face f in mFaces)
+			{
+				if(f.IsPointBehind(org))
+				{
+					continue;
+				}
+				return	f;
+			}
+			return	null;
+		}
+
+		/*
+		internal void FilterPortal(Portal port, List<Portal> pieces, bool bOutside)
+		{
+			Face	planarFace	=null;
+			if(bOutside)
+			{
+				planarFace	=GetFaceMatchingNormal(port.mPortalFace);
+			}
+			else
+			{
+				planarFace	=GetFacePlanar(port.mPortalFace);
+			}
+			if(planarFace != null)
+			{
+				port.mBrushFace		=planarFace;
+				pieces.Add(port);
+			}
+		}*/
+
+
 		internal bool IsDetail()
 		{
 			return	((mContents & CONTENTS_DETAIL) != 0);
@@ -271,6 +317,20 @@ namespace BSPLib
 			}
 			return	true;
 		}
+
+		/*
+		internal bool IsInside(Portal port)
+		{
+			List<Vector3>	pnts	=port.mPortalFace.GetPoints();
+			foreach(Vector3 pnt in pnts)
+			{
+				if(!IsPointInside(pnt))
+				{
+					return	false;
+				}
+			}
+			return	true;
+		}*/
 
 
 		internal bool IsPointInside(Vector3 pnt)
@@ -407,17 +467,19 @@ namespace BSPLib
 		}
 
 
+		//returns references, not copies
 		internal List<Face> GetFaces()
 		{
 			return	mFaces;
 		}
 
 
-		internal void GetPlanes(List<Plane> planes)
+		//returns references, not copies
+		internal void GetFaces(List<Face> faces)
 		{
 			foreach(Face f in mFaces)
 			{
-				planes.Add(f.GetPlane());
+				faces.Add(f);
 			}
 		}
 
@@ -645,21 +707,59 @@ namespace BSPLib
 		}
 
 
-		List<Face> ClipFaceByBrushFront(Face clipFace, bool keepOn)
+		Face GetFacePlanar(Face checkFace)
 		{
-			List<Face>	ret	=new List<Face>();
+			foreach(Face f in mFaces)
+			{
+				if(checkFace.IsPlanar(f))
+				{
+					return	f;
+				}
+			}
+			return	null;
+		}
+
+
+		Face GetFaceMatchingNormal(Face checkFace)
+		{
+			Plane	checkPlane	=checkFace.GetPlane();
+			foreach(Face f in mFaces)
+			{
+				Plane	fPlane	=f.GetPlane();
+				if(UtilityLib.Mathery.CompareVectorEpsilon(checkPlane.mNormal, fPlane.mNormal, 0.001f))
+				{
+					return	f;
+				}
+			}
+			return	null;
+		}
+
+
+		Face ClipPortalFaceByBrushFront(Face clipFace)
+		{
 			foreach(Face f in mFaces)
 			{
 				Face	cf	=new Face(clipFace, false);
-				cf.ClipByFace(f, true, keepOn);
-				clipFace.ClipByFace(f, false, keepOn);
-				if(cf.IsTiny())
+				if(cf.PortalClipByFaceFront(f))
 				{
-					continue;
+					return	f;
 				}
-				ret.Add(cf);
 			}
-			return	ret;
+			return	null;
+		}
+
+
+		Face ClipPortalFaceByBrushBack(Face clipFace)
+		{
+			foreach(Face f in mFaces)
+			{
+				Face	cf	=new Face(clipFace, false);
+				if(cf.PortalClipByFaceBack(f))
+				{
+					return	f;
+				}
+			}
+			return	null;
 		}
 
 
@@ -969,102 +1069,6 @@ namespace BSPLib
 
 			bb.SealFaces();
 			bf.SealFaces();
-		}
-
-
-		internal void BevelBrush()
-		{
-			//add axial planes
-			for(int i=0;i < 6;i++)
-			{
-				Plane	ax;
-				ax.mNormal	=UtilityLib.Mathery.AxialNormals[i];
-
-				if(i < 3)
-				{
-					ax.mDistance	=Vector3.Dot(mBounds.mMaxs, ax.mNormal);
-				}
-				else
-				{
-					ax.mDistance	=Vector3.Dot(mBounds.mMins, ax.mNormal);
-				}
-
-				if(ContainsPlane(ax))
-				{
-					continue;
-				}
-
-				Face	axFace	=new Face(ax, mFaces[0]);
-				axFace.mFlags	|=Face.SURF_NODRAW;
-				axFace.mFlags	|=Face.SURF_SKIP;
-
-				//add to the brush, but don't clip
-				//the other faces.  Seal will destroy things
-				mFaces.Add(axFace);
-			}
-
-			if(mFaces.Count == 6)
-			{
-				return;	//cube
-			}
-
-			//check edges
-			bool	bDone	=false;
-			while(!bDone)
-			{
-				bDone	=true;
-				foreach(Face f in mFaces)
-				{
-					List<Edge>	edges	=new List<Edge>();
-					f.GetEdges(edges);
-
-					foreach(Edge e in edges)
-					{
-						if(e.IsAxial() || e.Length() < 0.5f)
-						{
-							continue;
-						}
-
-						//try to bevel using axial planes
-						for(int i=0;i < 6;i++)
-						{
-							Plane	ax;
-							ax.mNormal	=Vector3.Cross(e.GetNormal(),
-								UtilityLib.Mathery.AxialNormals[i]);
-
-							if(ax.mNormal.Length() < 0.5f)
-							{
-								continue;
-							}
-
-							ax.mNormal.Normalize();
-							ax.mDistance	=Vector3.Dot(e.mP0, ax.mNormal);
-
-							//see if already added
-							if(ContainsPlane(ax))
-							{
-								continue;
-							}
-
-							//see if rest of the brush is behind this plane
-							if(IsBehind(ax))
-							{
-								Face	axFace	=new Face(ax, mFaces[0]);
-								axFace.mFlags	|=Face.SURF_NODRAW;
-								axFace.mFlags	|=Face.SURF_SKIP;
-
-								mFaces.Add(axFace);
-								bDone	=false;
-								break;
-							}
-						}
-					}
-					if(!bDone)
-					{
-						break;
-					}
-				}
-			}
 		}
 
 

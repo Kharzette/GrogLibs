@@ -88,6 +88,7 @@
   <ItemGroup>
     <Compile Include="Bounds.cs" />
     <Compile Include="Brush.cs" />
+    <Compile Include="BspFlatNode.cs" />
     <Compile Include="BspNode.cs" />
     <Compile Include="BspTree.cs" />
     <Compile Include="Entity.cs" />
@@ -95,9 +96,6 @@
     <Compile Include="Map.cs" />
     <Compile Include="Plane.cs" />
     <Compile Include="Portal.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="PortalLink.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Progress.cs" />

@@ -28,7 +28,7 @@ namespace BSPLib
 
 		public void ClearBounds()
 		{
-			mMins.X	=mMins.Y =Brush.MIN_MAX_BOUNDS;
+			mMins.X	=mMins.Y =mMins.Z	=Brush.MIN_MAX_BOUNDS;
 			mMaxs	=-mMins;
 		}
 
@@ -50,6 +50,14 @@ namespace BSPLib
 			if(pnt.Y > mMaxs.Y)
 			{
 				mMaxs.Y	=pnt.Y;
+			}
+			if(pnt.Z < mMins.Z)
+			{
+				mMins.Z	=pnt.Z;
+			}
+			if(pnt.Z > mMaxs.Z)
+			{
+				mMaxs.Z	=pnt.Z;
 			}
 		}
 

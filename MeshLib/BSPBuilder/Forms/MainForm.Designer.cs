@@ -44,6 +44,7 @@
 			this.MaxCPUCores = new System.Windows.Forms.NumericUpDown();
 			this.LabelCPUCores = new System.Windows.Forms.Label();
 			this.GroupFileIO = new System.Windows.Forms.GroupBox();
+			this.OpenZone = new System.Windows.Forms.Button();
 			this.SaveCollisionBrushes = new System.Windows.Forms.Button();
 			this.SaveDrawBrushes = new System.Windows.Forms.Button();
 			this.GroupBuildSettings = new System.Windows.Forms.GroupBox();
@@ -52,7 +53,6 @@
 			this.Progress2 = new System.Windows.Forms.ProgressBar();
 			this.Progress3 = new System.Windows.Forms.ProgressBar();
 			this.Progress4 = new System.Windows.Forms.ProgressBar();
-			this.OpenZone = new System.Windows.Forms.Button();
 			this.StatsGroupBox.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxCPUCores)).BeginInit();
 			this.GroupFileIO.SuspendLayout();
@@ -190,7 +190,8 @@
             "Collision Brushes",
             "Trouble Brushes",
             "Draw Tree",
-            "Collision Tree"});
+            "Collision Tree",
+            "Portals"});
 			this.DrawChoice.Location = new System.Drawing.Point(6, 19);
 			this.DrawChoice.Name = "DrawChoice";
 			this.DrawChoice.Size = new System.Drawing.Size(123, 21);
@@ -227,6 +228,16 @@
 			this.GroupFileIO.TabIndex = 20;
 			this.GroupFileIO.TabStop = false;
 			this.GroupFileIO.Text = "File IO";
+			// 
+			// OpenZone
+			// 
+			this.OpenZone.Location = new System.Drawing.Point(6, 77);
+			this.OpenZone.Name = "OpenZone";
+			this.OpenZone.Size = new System.Drawing.Size(75, 23);
+			this.OpenZone.TabIndex = 18;
+			this.OpenZone.Text = "Open Zone";
+			this.OpenZone.UseVisualStyleBackColor = true;
+			this.OpenZone.Click += new System.EventHandler(this.OnOpenZone);
 			// 
 			// SaveCollisionBrushes
 			// 
@@ -295,16 +306,6 @@
 			this.Progress4.Name = "Progress4";
 			this.Progress4.Size = new System.Drawing.Size(259, 19);
 			this.Progress4.TabIndex = 26;
-			// 
-			// OpenZone
-			// 
-			this.OpenZone.Location = new System.Drawing.Point(6, 77);
-			this.OpenZone.Name = "OpenZone";
-			this.OpenZone.Size = new System.Drawing.Size(75, 23);
-			this.OpenZone.TabIndex = 18;
-			this.OpenZone.Text = "Open Zone";
-			this.OpenZone.UseVisualStyleBackColor = true;
-			this.OpenZone.Click += new System.EventHandler(this.OnOpenZone);
 			// 
 			// MainForm
 			// 

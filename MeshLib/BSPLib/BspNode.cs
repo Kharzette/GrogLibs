@@ -18,9 +18,11 @@ namespace BSPLib
 
 	public class BspNode
 	{
-		public	Plane	mPlane;
-		public	BspNode	mFront, mBack;
-		public	Brush	mBrush;
+		public Plane	mPlane;
+		public BspNode	mFront, mBack, mParent;
+		public Brush	mBrush;
+		public Bounds	mBounds;
+		public Portal	mPortals;
 
 		public static List<Brush>	TroubleBrushes	=new List<Brush>();
 
@@ -41,19 +43,7 @@ namespace BSPLib
 
 
 		#region Queries
-		internal void AddToBounds(Bounds bnd)
-		{
-			if(mBrush != null)
-			{
-				mBrush.AddToBounds(bnd);
-			}
-
-			mFront.AddToBounds(bnd);
-			mBack.AddToBounds(bnd);
-		}
-
-
-		internal bool FindGoodSplitFace(List<Brush> brushList, out Face bestFace, object prog)
+		static internal bool FindGoodSplitFace(List<Brush> brushList, out Face bestFace, object prog)
 		{
 			int		BestIndex	=-1;
 			float	BestScore	=696969.0f;
@@ -101,15 +91,17 @@ namespace BSPLib
 		}
 
 
-		internal void GetPlanes(List<Plane> planes)
+		internal void GetFaces(List<Face> planes)
 		{
 			if(mBrush != null)
 			{
-				mBrush.GetPlanes(planes);
+				mBrush.GetFaces(planes);
 				return;
 			}
-			mFront.GetPlanes(planes);
-			mBack.GetPlanes(planes);
+			planes.Add(new Face(mPlane, null));
+
+			mFront.GetFaces(planes);
+			mBack.GetFaces(planes);
 		}
 		#endregion
 
@@ -193,12 +185,123 @@ namespace BSPLib
 		//node they land in
 
 
+		internal void FilterPortalOutside(Portal port, List<Portal> pieces)
+		{
+			if(mBrush != null)
+			{
+				port.mBack			=this;
+				port.mbBackFront	=!port.mFace.IsBehind(mPlane);
+
+				pieces.Add(port);
+				return;
+			}
+
+			//split portal
+			Portal	front		=new Portal();
+			front.mFace			=new Face(port.mFace);
+			front.mBack			=port.mBack;
+			front.mbBackFront	=port.mbBackFront;
+			front.mbFrontFront	=port.mbFrontFront;
+			front.mFront		=port.mFront;
+			front.mOnNode		=port.mOnNode;
+			front.mFace.ClipByPlane(mPlane, true, false);
+			if(!front.mFace.IsTiny())
+			{
+				mFront.FilterPortalOutside(front, pieces);
+			}
+
+			Portal	back		=new Portal();
+			back.mFace			=new Face(port.mFace);
+			back.mBack			=port.mBack;
+			back.mbBackFront	=port.mbBackFront;
+			back.mbFrontFront	=port.mbFrontFront;
+			back.mFront			=port.mFront;
+			back.mOnNode		=port.mOnNode;
+			back.mFace.ClipByPlane(mPlane, false, false);
+			if(!back.mFace.IsTiny())
+			{
+				mBack.FilterPortalOutside(back, pieces);
+			}
+		}
+
+		/*
+		internal void FilterPortalBack(Portal port, List<Portal> pieces, bool bOutside)
+		{
+			if(mBrush != null)
+			{
+
+				List<Portal>	portPieces	=new List<Portal>();
+
+				mBrush.FilterPortal(port, portPieces, bOutside);
+				foreach(Portal pp in portPieces)
+				{
+					pp.mBack	=this;
+				}
+				pieces.AddRange(portPieces);
+				return;
+			}
+
+			//split portal
+			Portal	front;
+			port.SplitFront(mPlane, out front);
+			if(front != null)
+			{
+				mFront.FilterPortalBack(front, pieces, bOutside);
+			}
+
+			Portal	back;
+			port.SplitBack(mPlane, out back);
+			if(back != null)
+			{
+				mBack.FilterPortalBack(back, pieces, bOutside);
+			}
+		}
+
+
+		internal void FilterPortalFront(Portal port, List<Portal> pieces)
+		{
+			if(mBrush != null)
+			{
+				List<Portal>	portPieces	=new List<Portal>();
+				mBrush.FilterPortal(port, portPieces, false);
+
+				foreach(Portal pp in portPieces)
+				{
+					pp.mFront	=this;
+				}
+				pieces.AddRange(portPieces);
+				return;
+			}
+
+			//split portal
+			Portal	front;
+			port.SplitFront(mPlane, out front);
+			if(front != null)
+			{
+				mFront.FilterPortalFront(front, pieces);
+			}
+
+			Portal	back;
+			port.SplitBack(mPlane, out back);
+			if(back != null)
+			{
+				mBack.FilterPortalFront(back, pieces);
+			}
+		}*/
+
+
 		void GatherFaces(List<Face> faces)
 		{
 			if(mBrush != null)
 			{
 				faces.AddRange(mBrush.GetFaces());
 				return;
+			}
+			else
+			{
+				Face	f	=new Face(mPlane, null);
+				f.mFlags	|=Face.SURF_SKIP;
+				faces.Add(f);
 			}
 			mFront.GatherFaces(faces);
 			mBack.GatherFaces(faces);
@@ -211,6 +314,8 @@ namespace BSPLib
 			{
 				Map.Print("Merging " + brushList.Count + " brushes in a leaf");
 			}
+
+			mPlane	=mParent.mPlane;
 
 			//copy in the brush faces
 			//merge multiples
@@ -452,6 +557,7 @@ namespace BSPLib
 			if(frontList.Count > 0)
 			{
 				mFront	=new BspNode();
+				mFront.mParent	=this;
 				mFront.BuildTree(frontList, prog);
 			}
 			else
@@ -462,6 +568,7 @@ namespace BSPLib
 			if(backList.Count > 0)
 			{
 				mBack	=new BspNode();
+				mBack.mParent	=this;
 				mBack.BuildTree(backList, prog);
 			}
 			else
@@ -485,30 +592,21 @@ namespace BSPLib
 		}
 
 
-		//make the brush bounds
-		internal void BoundNodeBrushes()
+		//make the node bounds
+		internal Bounds Bound()
 		{
 			if(mBrush != null)
 			{
 				mBrush.BoundBrush();
-				return;
-			}
-			mFront.BoundNodeBrushes();
-			mBack.BoundNodeBrushes();
-		}
-
-
-		//do the beveling planes
-		internal void BevelNodeBrushes()
-		{
-			if(mBrush != null)
-			{
-				mBrush.BevelBrush();
-				return;
+				mBounds	=new Bounds(mBrush.GetBounds());
+				return	mBounds;
 			}
 
-			mFront.BevelNodeBrushes();
-			mBack.BevelNodeBrushes();
+			mBounds	=new Bounds();
+			mBounds.MergeBounds(null, mFront.Bound());
+			mBounds.MergeBounds(null, mBack.Bound());
+
+			return	mBounds;
 		}
 
 
@@ -536,6 +634,37 @@ namespace BSPLib
 				Debug.Assert(false);
 				return	false;
 			}
+		}
+
+
+		internal BspNode GetNodeLandedIn(Vector3 pnt)
+		{
+			float	d;
+
+			if(mBrush != null)
+			{
+				return	this;
+			}
+
+			d	=Vector3.Dot(mPlane.mNormal, pnt) - mPlane.mDistance;
+
+			if(d < 0.0f)
+			{
+				BspNode	landed	=mBack.GetNodeLandedIn(pnt);
+				if(landed != null)
+				{
+					return	landed;
+				}
+			}
+			else
+			{
+				BspNode	landed	=mFront.GetNodeLandedIn(pnt);
+				if(landed != null)
+				{
+					return	landed;
+				}
+			}
+			return	null;
 		}
 
 

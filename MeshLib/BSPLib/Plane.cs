@@ -121,5 +121,20 @@ namespace BSPLib
 
 			return	ret;
 		}
+
+
+		internal bool IsCoPlanar(Plane plane)
+		{
+			if(CompareEpsilon(plane, 0.001f))
+			{
+				return	true;
+			}
+			plane.Invert();
+			if(CompareEpsilon(plane, 0.001f))
+			{
+				return	true;
+			}
+			return	false;
+		}
 	}
 }

@@ -432,6 +432,43 @@ namespace BSPLib
 
 
 		#region Queries
+		internal bool IsPlanar(Face f)
+		{
+			Plane	p	=f.GetPlane();
+
+			if(p.CompareEpsilon(mFacePlane, 0.001f))
+			{
+				return	true;
+			}
+
+			p.Invert();
+			if(p.CompareEpsilon(mFacePlane, 0.001f))
+			{
+				return	true;
+			}
+
+			return	false;
+		}
+
+
+		internal Vector3 GetCentroid()
+		{
+			Vector3	ret	=Vector3.Zero;
+			if(mPoints.Count == 0)
+			{
+				return	ret;
+			}
+
+			foreach(Vector3	pnt in mPoints)
+			{
+				ret	+=pnt;
+			}
+			ret	/=mPoints.Count;
+
+			return	ret;
+		}
+
+
 		internal Plane GetPlane()
 		{
 			return	mFacePlane;
@@ -448,21 +485,6 @@ namespace BSPLib
 				}
 			}
 			return	true;
-		}
-
-
-		internal void GetEdges(List<Edge> edges)
-		{
-			for(int i=0;i < mPoints.Count;i++)
-			{
-				int	j	=(i + 1) % mPoints.Count;
-
-				Edge	e	=new Edge();
-				e.mP0	=mPoints[i];
-				e.mP1	=mPoints[j];
-
-				edges.Add(e);
-			}
 		}
 
 
@@ -762,14 +784,17 @@ namespace BSPLib
 		//in front or behind unless bKeepOn is set
 		internal bool ClipByFace(Face f, bool bFront, bool bKeepOn)
 		{
+			return	ClipByPlane(f.mFacePlane, bFront, bKeepOn);
+		}
+
+
+		//clip this face in front or behind face f
+		//only keeps plane on verts if some part is
+		//in front or behind unless bKeepOn is set
+		internal bool ClipByPlane(Plane p, bool bFront, bool bKeepOn)
+		{
 			int				eitherCount	=0;
 			List<Vector3>	onBoth		=new List<Vector3>();
-
-			if(mPoints.Count == 3)
-			{
-				int	j=0;
-				j++;
-			}
 
 			for(int i = 0;i < mPoints.Count;i++)
 			{
@@ -779,10 +804,8 @@ namespace BSPLib
 				p1	=mPoints[i];
 				p2	=mPoints[j];
 
-				float	d1	=Vector3.Dot(p1, f.mFacePlane.mNormal)
-								- f.mFacePlane.mDistance;
-				float	d2	=Vector3.Dot(p2, f.mFacePlane.mNormal)
-								- f.mFacePlane.mDistance;
+				float	d1	=Vector3.Dot(p1, p.mNormal)	- p.mDistance;
+				float	d2	=Vector3.Dot(p2, p.mNormal)	- p.mDistance;
 
 				if(d1 > Plane.EPSILON)
 				{
@@ -835,11 +858,6 @@ namespace BSPLib
 
 			if(eitherCount > 0 || bKeepOn)
 			{
-				if(onBoth.Count == 3)
-				{
-					int	j=0;
-					j++;
-				}
 				mPoints	=onBoth;
 			}
 
@@ -855,47 +873,39 @@ namespace BSPLib
 
 		//clip to the front, only keeping
 		//plane on if the normals match
-		internal bool PortalClipByFace(Face f)
+		internal bool PortalClipByFaceFront(Face f)
 		{
-			if(!mFacePlane.CompareEpsilon(f.mFacePlane, 0.001f))
-			{
-				return	false;
-			}
+			return	PortalClipByPlaneFront(f.mFacePlane);
+		}
 
-			List<Vector3>	onSide		=new List<Vector3>();
 
-			for(int i = 0;i < mPoints.Count;i++)
-			{
-				Vector3	p1;
+		//clip to the front, only keeping
+		//plane on if the normals match
+		internal bool PortalClipByPlaneFront(Plane p)
+		{
+			bool	bKeepOn	=mFacePlane.CompareEpsilon(p, 0.001f);
 
-				p1	=mPoints[i];
+			return	ClipByPlane(p, true, bKeepOn);
+		}
 
-				float	d1	=Vector3.Dot(p1, f.mFacePlane.mNormal)
-								- f.mFacePlane.mDistance;
 
-				if(d1 > -Plane.EPSILON && d1 < Plane.EPSILON)
-				{
-					onSide.Add(p1);
-					continue;
-				}
-				else
-				{
-					return	false;
-				}
-			}
+		//clip to the back, only keeping
+		//plane on if the normals are opposite
+		internal bool PortalClipByFaceBack(Face f)
+		{
+			return	PortalClipByPlaneBack(f.mFacePlane);
+		}
 
-			//dump our point list
-			mPoints.Clear();
 
-			mPoints	=onSide;
+		//clip to the back, only keeping
+		//plane on if the normals are opposite
+		internal bool PortalClipByPlaneBack(Plane p)
+		{
+			p.Invert();
+			bool	bKeepOn	=mFacePlane.CompareEpsilon(p, 0.001f);
+			p.Invert();
 
-			if(!SetPlaneFromFace())
-			{
-				//whole face was clipped away, no big deal
-				mPoints.Clear();
-				return	false;
-			}
-			return	true;
+			return	ClipByPlane(p, false, bKeepOn);
 		}
 
 

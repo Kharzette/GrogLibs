@@ -26,6 +26,9 @@ namespace BSPLib
 		List<Brush>	mDrawBrushes;		//visible geometry
 		List<Brush>	mCollisionBrushes;	//collision hull
 
+		//portals
+		Dictionary<BspNode, List<Portal>>	mPortals;
+
 		public event EventHandler	eCPUCoresInUseChanged;
 		public event EventHandler	eNumMapFacesChanged;
 		public event EventHandler	eNumDrawFacesChanged;
@@ -144,6 +147,16 @@ namespace BSPLib
 			else if(drawChoice == "Collision Tree")
 			{
 				mCollisionTree.GetTriangles(verts, indexes, false);
+			}
+			else if(drawChoice == "Portals")
+			{
+				foreach(KeyValuePair<BspNode, List<Portal>> plist in mPortals)
+				{
+					foreach(Portal port in plist.Value)
+					{
+						port.mFace.GetTriangles(verts, indexes);
+					}
+				}
 			}
 		}
 
@@ -553,6 +566,36 @@ namespace BSPLib
 			}
 
 			mCollisionTree	=new BspTree(colls, sender != null);
+			mCollisionTree.eBuildComplete	+=OnCollisionTreeBuildComplete;
+		}
+
+
+		void OnCollisionTreeBuildComplete(object sender, EventArgs ea)
+		{
+			Print("Portalizing collision tree...\n");
+
+			mPortals	=mCollisionTree.Portalize();
+
+			Print("Portal generation complete with " + mPortals.Count + " nodes involved.");
+
+			Dictionary<BspNode, List<Entity>>	nodeEnts	=new Dictionary<BspNode, List<Entity>>();
+
+			foreach(Entity e in mEntities)
+			{
+				Vector3	org	=Vector3.Zero;
+				if(!e.GetOrigin(out org))
+				{
+					continue;
+				}
+				BspNode	landed	=mCollisionTree.GetNodeLandedIn(org);
+				if(!nodeEnts.ContainsKey(landed))
+				{
+					nodeEnts.Add(landed, new List<Entity>());
+				}
+				nodeEnts[landed].Add(e);
+			}
+
+			mCollisionTree.CheckForLeak(mPortals, nodeEnts);
 		}
 
 

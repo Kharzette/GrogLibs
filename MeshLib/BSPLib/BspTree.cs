@@ -23,6 +23,8 @@ namespace BSPLib
 
 		event EventHandler	eThreadDone;
 
+		public event EventHandler	eBuildComplete;
+
 
 		#region Constructors
 		public BspTree() { }
@@ -42,6 +44,7 @@ namespace BSPLib
 				mRoot.BuildTree(brushList, prog);
 			}
 		}
+		#endregion
 
 
 		void OnThreadDone(object sender, EventArgs ea)
@@ -56,14 +59,14 @@ namespace BSPLib
 			if(threadCount == 0)
 			{
 				Map.Print("Bounding node brushes\n");
-				mRoot.BoundNodeBrushes();
+				mRoot.Bound();
 				Map.Print("Bounding complete\n");
 
-				if((bool)sender)
+				Map.Print("Not beveling node brushes because I ganked that\n");
+
+				if(eBuildComplete != null)
 				{
-					Map.Print("Beveling node brushes\n");
-					mRoot.BevelNodeBrushes();
-					Map.Print("Beveling complete\n");
+					eBuildComplete(null, null);
 				}
 			}
 		}
@@ -100,7 +103,7 @@ namespace BSPLib
 
 			object	prog	=ProgressWatcher.RegisterProgress(0, brushList.Count, 0);
 
-			if(!mRoot.FindGoodSplitFace(brushList, out face, prog))			
+			if(!BspNode.FindGoodSplitFace(brushList, out face, prog))			
 			{
 				Map.Print("Failed to find a good initial split plane!");
 				return	false;
@@ -193,17 +196,124 @@ namespace BSPLib
 
 			return	true;
 		}
-		#endregion
+
+
+		internal Dictionary<BspNode, List<Portal>> Portalize()
+		{
+			Dictionary<BspNode, List<Portal>>	portals	=new Dictionary<BspNode, List<Portal>>();
+
+			portals.Add(mOutsideNode, new List<Portal>());
+
+			Bounds	rootBounds	=mRoot.mBounds;
+
+			//create outside node portals
+			List<Portal>	outPorts	=new List<Portal>();
+			for(int i=0;i < 6;i++)
+			{
+				Plane	p;
+				p.mNormal	=UtilityLib.Mathery.AxialNormals[i];
+
+				if(i < 3)
+				{
+					p.mDistance	=Vector3.Dot(mRoot.mBounds.mMaxs, p.mNormal) + 128.0f;
+				}
+				else
+				{
+					p.mDistance	=Vector3.Dot(mRoot.mBounds.mMins, p.mNormal) - 128.0f;
+				}
+
+				Face	f		=new Face(p, null);
+				Portal	port	=new Portal();
+
+				port.mFace			=f;
+				port.mFront			=mOutsideNode;
+				port.mbFrontFront	=false;
+
+				outPorts.Add(port);
+			}
+
+			//clip these against each other
+			for(int i=0;i < 6;i++)
+			{
+				for(int j=0;j < 6;j++)
+				{
+					if(i==j)
+					{
+						continue;
+					}
+					outPorts[j].mFace.ClipByFace(outPorts[i].mFace, false, true);
+				}
+			}
+
+			//filter outside portals
+			for(int i=0;i < 6;i++)
+			{
+				Portal	port	=outPorts[i];
+
+				List<Portal>	pieces	=new List<Portal>();
+
+				mRoot.FilterPortalOutside(port, pieces);
+
+				foreach(Portal piece in pieces)
+				{
+					portals[mOutsideNode].Add(piece);
+
+					if(!portals.ContainsKey(piece.mBack))
+					{
+						portals.Add(piece.mBack, new List<Portal>());
+					}
+					portals[piece.mBack].Add(piece);
+				}
+			}
+
+			//grab list of splitting planes
+			//
+			//make portal and filter each one
+			/*
+			List<Face>	bspFaces	=new List<Face>();
+			mRoot.GetFaces(bspFaces);
+
+			foreach(Face f in bspFaces)
+			{
+				Face	portFace	=new Face(f, false);
+				Portal	port		=new Portal();
+
+				port.mPortalFace	=portFace;
+
+				List<Portal>	pieces	=new List<Portal>();
+
+				mRoot.FilterPortalFront(port, pieces);
+
+				List<Portal>	backPieces	=new List<Portal>();
+				foreach(Portal piece in pieces)
+				{
+					mRoot.FilterPortalBack(piece, backPieces, false);
+				}
+
+				foreach(Portal piece in backPieces)
+				{
+					if(!portals.ContainsKey(piece.mFront))
+					{
+						portals.Add(piece.mFront, new List<Portal>());
+					}
+					portals[piece.mFront].Add(piece);
+
+					if(!portals.ContainsKey(piece.mBack))
+					{
+						portals.Add(piece.mBack, new List<Portal>());
+					}
+					portals[piece.mBack].Add(piece);
+				}
+			}*/
+
+			return	portals;
+		}
 
 
 		#region Queries
 		public Bounds GetBounds()
 		{
-			Bounds	bnd	=new Bounds();
-
-			mRoot.AddToBounds(bnd);
-
-			return	bnd;
+			return	mRoot.mBounds;
 		}
 
 
@@ -222,12 +332,6 @@ namespace BSPLib
 		public void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
 		{
 			mRoot.GetTriangles(verts, indexes, bCheckFlags);
-		}
-
-
-		void GetPlanes(List<Plane> planes)
-		{
-			mRoot.GetPlanes(planes);
 		}
 		#endregion
 
@@ -273,6 +377,57 @@ namespace BSPLib
 		internal bool MoveLine(ref Line ln, float radius)
 		{
 			return	mRoot.MoveLine(ref ln, radius);
+		}
+
+
+		internal BspNode GetNodeLandedIn(Vector3 org)
+		{
+			return	mRoot.GetNodeLandedIn(org);
+		}
+
+		internal void CheckForLeak(Dictionary<BspNode, List<Portal>> portals,
+			Dictionary<BspNode, List<Entity>> nodeEnts)
+		{
+			/*
+			BspNode	node	=mOutsideNode;
+			while(node != null)
+			{
+				foreach(Portal port in portals[node])
+				{
+					Portal	next	=port;
+
+					while(next != null)
+					{
+						if(port.mBackContents != 0)
+						{
+							continue;
+						}
+
+						//this portal looks into the empty part of the node
+						if(nodeEnts.ContainsKey(port.mBack))
+						{
+							Vector3	org	=Vector3.Zero;
+
+							foreach(Entity e in nodeEnts[port.mBack])
+							{
+								if(!e.GetOrigin(out org))
+								{
+									continue;
+								}
+								//see if portal looks to the side
+								//where the entity lies
+								Face	side	=port.mBack.mBrush.GetSideInFrontOf(org);
+								if(side == port.mBrushFace)
+								{
+									Map.Print("Leak detected near " + port.GetCentroid() + "\n");
+									BspNode.TroubleBrushes.Add(port.mBack.mBrush);
+									return;
+								}
+							}
+						}
+					}
+				}
+			}*/
 		}
 	}
 }
