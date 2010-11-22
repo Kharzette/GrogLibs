@@ -119,6 +119,12 @@ namespace BSPLib
 
 
 		#region Modifications
+		internal void SetContents(uint cont)
+		{
+			mContents	=cont;
+		}
+
+
 		void ValidateContents()
 		{
 			if(mContents == 0)

@@ -13,7 +13,7 @@ namespace BSPLib
 		public BspFlatNode	mFront, mBack, mParent;
 		public List<Face>	mFaces	=new List<Face>();
 		public Bounds		mBounds;
-		public List<Portal>	mPortals;
+		public List<Portal>	mPortals	=new List<Portal>();
 		public bool			mbLeaf;
 		public UInt32		mBrushContents;
 
@@ -31,6 +31,7 @@ namespace BSPLib
 			foreach(Brush b in brushList)
 			{
 				merge.AddFaces(b.GetFaces());
+				merge.SetContents(b.GetContents());
 			}
 			merge.SealFaces();
 			if(!merge.IsValid())
@@ -66,9 +67,9 @@ namespace BSPLib
 				node.mPlane		=f.GetPlane();
 
 				//create front side leaf
-				node.mFront					=new BspFlatNode();
-				node.mFront.mbLeaf			=true;
-				node.mFront.mBrushContents	=0;
+//				node.mFront					=new BspFlatNode();
+//				node.mFront.mbLeaf			=true;
+//				node.mFront.mBrushContents	=0;
 
 				//advance to next face / node
 				parent		=node;
@@ -255,6 +256,116 @@ namespace BSPLib
 		}
 
 
+		//do a filter that does no splits, just passes down
+		//the sides until it hits a leaf
+		internal void FilterPortal(Portal port)
+		{
+			Debug.Assert(!mbLeaf);
+
+			int	pointsFront, pointsBack, pointsOn;
+			port.mFace.GetSplitInfo(mPlane, out pointsFront, out pointsBack, out pointsOn);
+
+			if(pointsFront > 0)
+			{
+				Debug.Assert(pointsBack == 0);
+				mFront.FilterPortalFront(port);
+			}
+			else if(pointsBack > 0)
+			{
+				Debug.Assert(pointsFront == 0);
+				mBack.FilterPortalBack(port);
+			}
+			else if(pointsOn > 0)
+			{
+				mFront.FilterPortalFront(port);
+				mBack.FilterPortalBack(port);
+			}
+			else
+			{
+				Debug.Assert(false);
+			}
+		}
+
+
+		internal void FilterPortalFront(Portal port)
+		{
+			if(mbLeaf)
+			{
+				Debug.Assert(port.mFront == null);
+				port.mFront	=this;
+				return;
+			}
+
+			int	pointsFront, pointsBack, pointsOn;
+			port.mFace.GetSplitInfo(mPlane, out pointsFront, out pointsBack, out pointsOn);
+
+			if(pointsFront > 0)
+			{
+				Debug.Assert(pointsBack == 0);
+				if(mFront != null)
+				{
+					mFront.FilterPortalFront(port);
+				}
+				else
+				{
+					port.mFront	=this;
+				}
+			}
+			else if(pointsBack > 0)
+			{
+				Debug.Assert(pointsFront == 0);
+				mBack.FilterPortalFront(port);
+			}
+			else if(pointsOn > 0)
+			{
+				if(mFront != null)
+				{
+					mFront.FilterPortalFront(port);
+				}
+				else
+				{
+					port.mFront	=this;
+				}
+			}
+		}
+
+
+		internal void FilterPortalBack(Portal port)
+		{
+			if(mbLeaf)
+			{
+				Debug.Assert(port.mBack == null);
+				port.mBack	=this;
+				return;
+			}
+
+			int	pointsFront, pointsBack, pointsOn;
+			port.mFace.GetSplitInfo(mPlane, out pointsFront, out pointsBack, out pointsOn);
+
+			if(pointsFront > 0)
+			{
+				Debug.Assert(pointsBack == 0);
+				if(mFront != null)
+				{
+					mFront.FilterPortalBack(port);
+				}
+				else
+				{
+					port.mBack	=this;
+				}
+			}
+			else if(pointsBack > 0)
+			{
+				Debug.Assert(pointsFront == 0);
+				mBack.FilterPortalBack(port);
+			}
+			else if(pointsOn > 0)
+			{
+				mBack.FilterPortalBack(port);
+			}
+		}
+
+
 		//filter portal into it's OnNode
 		internal void FilterPortal(Portal port, List<Portal> pieces)
 		{
@@ -324,6 +435,161 @@ namespace BSPLib
 			{
 				mBack.GetTriangles(tris, ind, bCheckFlags);
 			}
+		}
+
+
+		internal void GatherNonLeafNodes(List<BspFlatNode> nonLeafs)
+		{
+			if(mbLeaf)
+			{
+				return;
+			}
+
+			nonLeafs.Add(this);
+
+			if(mFront != null)
+			{
+				mFront.GatherNonLeafNodes(nonLeafs);
+			}
+			if(mBack != null)
+			{
+				mBack.GatherNonLeafNodes(nonLeafs);
+			}
+		}
+
+
+		internal void GatherNonLeafPlanes(List<Plane> planes)
+		{
+			if(mbLeaf)
+			{
+				return;
+			}
+
+			bool	bFound	=false;
+			foreach(Plane p in planes)
+			{
+				if(p.IsCoPlanar(mPlane))
+				{
+					bFound	=true;
+					break;
+				}
+			}
+
+			if(!bFound)
+			{
+				planes.Add(mPlane);
+			}
+
+			if(mFront != null)
+			{
+				mFront.GatherNonLeafPlanes(planes);
+			}
+			if(mBack != null)
+			{
+				mBack.GatherNonLeafPlanes(planes);
+			}
+		}
+
+
+		//make the node bounds
+		internal Bounds Bound()
+		{
+			mBounds	=new Bounds();
+			mBounds.AddPointToBounds(Vector3.Zero);
+
+			if(mFaces.Count > 0)
+			{
+				foreach(Face f in mFaces)
+				{
+					f.AddToBounds(mBounds);
+				}
+			}
+
+			if(mFront != null)
+			{
+				mBounds.MergeBounds(null, mFront.Bound());
+			}
+
+			if(mBack != null)
+			{
+				mBounds.MergeBounds(null, mBack.Bound());
+			}
+
+			return	mBounds;
+		}
+
+
+		internal BspFlatNode GetNodeLandedIn(Vector3 pnt)
+		{
+			float	d;
+
+			if(mbLeaf)
+			{
+				return	this;
+			}
+
+			d	=Vector3.Dot(mPlane.mNormal, pnt) - mPlane.mDistance;
+
+			if(d < 0.0f)
+			{
+				if(mBack != null)
+				{
+					BspFlatNode	landed	=mBack.GetNodeLandedIn(pnt);
+					if(landed != null)
+					{
+						return	landed;
+					}
+				}
+			}
+			else
+			{
+				if(mFront != null)
+				{
+					BspFlatNode	landed	=mFront.GetNodeLandedIn(pnt);
+					if(landed != null)
+					{
+						return	landed;
+					}
+				}
+				else
+				{
+					return	this;
+				}
+			}
+			return	null;
+		}
+
+
+		internal void AddPortal(Portal port)
+		{
+			mPortals.Add(port);
+		}
+
+
+		internal bool FloodToNode(BspFlatNode node, List<BspFlatNode> flooded)
+		{
+			if(node == this)
+			{
+				return	true;
+			}
+
+			if(flooded.Contains(this))
+			{
+				return	false;
+			}
+			flooded.Add(this);
+
+			foreach(Portal port in mPortals)
+			{
+				if((port.mBack.mBrushContents & Brush.CONTENTS_SOLID) == 0)
+				{
+					if(port.mBack.FloodToNode(node, flooded))
+					{
+						return	true;
+					}
+				}
+			}
+			return	false;
 		}
 	}
 }

@@ -649,10 +649,19 @@ namespace BSPLib
 			out int pointsOnBack,
 			out int pointsOnPlane)
 		{
+			GetSplitInfo(mFacePlane, out pointsOnFront, out pointsOnBack, out pointsOnPlane);
+		}
+
+
+		internal void GetSplitInfo(Plane p,
+			out int pointsOnFront,
+			out int pointsOnBack,
+			out int pointsOnPlane)
+		{
 			pointsOnPlane	=pointsOnFront	=pointsOnBack	=0;
 			foreach(Vector3 pnt in mPoints)
 			{
-				float	dot	=Vector3.Dot(pnt, mFacePlane.mNormal) - mFacePlane.mDistance;
+				float	dot	=Vector3.Dot(pnt, p.mNormal) - p.mDistance;
 
 				if(dot > Plane.EPSILON)
 				{

@@ -151,13 +151,7 @@ namespace BSPLib
 			}
 			else if(drawChoice == "Portals")
 			{
-				foreach(KeyValuePair<BspNode, List<Portal>> plist in mPortals)
-				{
-					foreach(Portal port in plist.Value)
-					{
-						port.mFace.GetTriangles(verts, indexes);
-					}
-				}
+				mPortalTree.GetPortalTriangles(verts, indexes);
 			}
 			else if(drawChoice == "Portal Tree")
 			{
@@ -583,7 +577,8 @@ namespace BSPLib
 
 			Print("Portal generation complete with " + mPortals.Count + " nodes involved.");
 
-			Dictionary<BspNode, List<Entity>>	nodeEnts	=new Dictionary<BspNode, List<Entity>>();
+			Dictionary<BspFlatNode, List<Entity>>	nodeEnts
+				=new Dictionary<BspFlatNode, List<Entity>>();
 
 			foreach(Entity e in mEntities)
 			{
@@ -592,7 +587,7 @@ namespace BSPLib
 				{
 					continue;
 				}
-				BspNode	landed	=mCollisionTree.GetNodeLandedIn(org);
+				BspFlatNode	landed	=mPortalTree.GetNodeLandedIn(org);
 				if(!nodeEnts.ContainsKey(landed))
 				{
 					nodeEnts.Add(landed, new List<Entity>());
@@ -600,7 +595,7 @@ namespace BSPLib
 				nodeEnts[landed].Add(e);
 			}
 
-			mCollisionTree.CheckForLeak(mPortals, nodeEnts);
+			mPortalTree.CheckForLeak(nodeEnts);
 		}
 
 
