@@ -28,12 +28,12 @@ namespace BSPBuilder
 
 		//debug draw stuff
 		BasicEffect				mMapEffect;
-		VertexBuffer			mVB;
-		IndexBuffer				mIB;
+		VertexBuffer			mVB, mLineVB;
+		IndexBuffer				mIB, mLineIB;
 		VertexDeclaration		mVD;
 		GameCamera				mGameCam;
 		SpriteFont				mKoot;
-		int						mNumVerts;
+		int						mNumVerts, mNumLines;
 		int						mNumTris;
 		Vector2					mTextPos;
 		Random					mRnd	=new Random();
@@ -167,7 +167,11 @@ namespace BSPBuilder
 				g.Indices	=mIB;
 
 				g.RenderState.DepthBufferEnable	=true;
-//				g.RenderState.CullMode	=CullMode.CullClockwiseFace;
+
+				if(mDrawChoice == "Portals")
+				{
+					g.RenderState.AlphaBlendEnable	=true;
+				}
 
 				mMapEffect.Begin();
 				foreach(EffectPass pass in mMapEffect.CurrentTechnique.Passes)
@@ -180,6 +184,25 @@ namespace BSPBuilder
 					pass.End();
 				}
 				mMapEffect.End();
+
+				if(mDrawChoice == "Portals")
+				{
+					g.RenderState.CullMode	=CullMode.CullClockwiseFace;
+					mMapEffect.Begin();
+					foreach(EffectPass pass in mMapEffect.CurrentTechnique.Passes)
+					{
+						pass.Begin();
+
+						g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+							0, 0, mNumVerts, 0, mNumTris);
+
+						pass.End();
+					}
+					mMapEffect.End();
+
+					g.RenderState.CullMode			=CullMode.CullCounterClockwiseFace;
+					g.RenderState.AlphaBlendEnable	=false;
+				}
 			}
 
 			//draw ray pieces if any
@@ -202,6 +225,32 @@ namespace BSPBuilder
 				mBFX.End();
 			}
 
+			//draw portal lines if any
+			if(mLineVB != null)
+			{
+				GraphicsDevice.Vertices[0].SetSource(mLineVB, 0, VertexPositionColorTexture.SizeInBytes);
+				GraphicsDevice.VertexDeclaration	=mVD;
+				GraphicsDevice.Indices				=mLineIB;
+
+				//draw over anything
+				GraphicsDevice.RenderState.DepthBufferEnable	=false;
+
+				mBFX.Begin();
+				foreach(EffectPass ep in mBFX.CurrentTechnique.Passes)
+				{
+					ep.Begin();
+
+					GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.LineList,
+						0, 0, mNumLines * 2, 0, mNumLines);
+
+					ep.End();
+				}
+				mBFX.End();
+
+				//turn zbuffer back on
+				GraphicsDevice.RenderState.DepthBufferEnable	=true;
+			}
+
 			mSB.Begin();
 
 			mSB.DrawString(mKoot, "Coordinates: " + -mGameCam.CamPos, mTextPos, Color.Yellow);
@@ -219,13 +268,19 @@ namespace BSPBuilder
 				return;
 			}
 
-			List<Vector3>	verts	=new List<Vector3>();
-			List<UInt32>	indexes	=new List<UInt32>();
+			List<Vector3>	verts		=new List<Vector3>();
+			List<Vector3>	lineVerts	=new List<Vector3>();
+			List<UInt32>	indexes		=new List<UInt32>();
+			List<UInt32>	lineIndexes	=new List<UInt32>();
 
 			mMap.GetTriangles(verts, indexes, mDrawChoice);
 			if(verts.Count <= 0)
 			{
 				return;
+			}
+			if(mDrawChoice.StartsWith("Portal"))
+			{
+				mMap.GetPortalLines(lineVerts, lineIndexes);
 			}
 
 			mNumVerts	=verts.Count;
@@ -237,6 +292,24 @@ namespace BSPBuilder
 			mIB	=new IndexBuffer(mGDM.GraphicsDevice,
 				4 * indexes.Count, BufferUsage.WriteOnly,
 				IndexElementSize.ThirtyTwoBits);
+
+			if(lineVerts.Count > 0)
+			{
+				mNumLines	=lineVerts.Count / 2;
+
+				mLineVB	=new VertexBuffer(mGDM.GraphicsDevice,
+					VertexPositionColorTexture.SizeInBytes * lineVerts.Count,
+					BufferUsage.WriteOnly);
+				mLineIB	=new IndexBuffer(mGDM.GraphicsDevice,
+					4 * lineIndexes.Count, BufferUsage.WriteOnly,
+					IndexElementSize.ThirtyTwoBits);
+			}
+			else
+			{
+				mNumLines	=0;
+				mLineVB		=null;
+				mLineIB		=null;
+			}
 
 			VertexPositionColorTexture	[]vpnt
 				=new VertexPositionColorTexture[mNumVerts];
@@ -251,11 +324,36 @@ namespace BSPBuilder
 				}
 				vpnt[cnt].Position				=vert;
 				vpnt[cnt].Color					=col;
+				if(mDrawChoice == "Portals")
+				{
+					vpnt[cnt].Color.A	=50;
+				}
+
 				vpnt[cnt++].TextureCoordinate	=Vector2.Zero;
+
 			}
 
 			mVB.SetData<VertexPositionColorTexture>(vpnt);
 			mIB.SetData<UInt32>(indexes.ToArray());
+
+			if(lineVerts.Count <= 0)
+			{
+				return;
+			}
+
+			vpnt	=new VertexPositionColorTexture[lineVerts.Count];
+
+			cnt	=0;
+			foreach(Vector3 vert in lineVerts)
+			{
+				vpnt[cnt].Position			=vert;
+				vpnt[cnt].TextureCoordinate	=Vector2.Zero;
+				vpnt[cnt].Color				=Color.White;
+				cnt++;
+			}
+
+			mLineVB.SetData<VertexPositionColorTexture>(vpnt);
+			mLineIB.SetData<UInt32>(lineIndexes.ToArray());
 		}
 
 

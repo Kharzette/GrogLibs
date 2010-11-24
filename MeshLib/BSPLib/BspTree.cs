@@ -150,7 +150,8 @@ namespace BSPLib
 			{
 				if(backList.Count == 0 || frontList.Count == 0)
 				{
-					Debug.Assert(false);// && "Got a bestplane but no splits!");
+//					Debug.Assert(false);// && "Got a bestplane but no splits!");
+					return	false;
 				}
 			}
 

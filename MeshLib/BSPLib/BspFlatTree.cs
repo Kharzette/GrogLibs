@@ -12,6 +12,9 @@ namespace BSPLib
 		BspFlatNode		mRoot, mOutsideNode;
 		List<Portal>	mPortals	=new List<Portal>();
 
+		//debug draw
+		List<BspFlatNode>	mFlooded	=new List<BspFlatNode>();
+
 
 		internal BspFlatTree(List<Brush> brushList)
 		{
@@ -23,7 +26,9 @@ namespace BSPLib
 
 			mOutsideNode				=new BspFlatNode();
 			mOutsideNode.mbLeaf			=true;
-			mOutsideNode.mBrushContents	=Brush.CONTENTS_SOLID;
+
+			//this might be a bad idea commenting this out
+//			mOutsideNode.mBrushContents	=Brush.CONTENTS_SOLID;
 
 			Map.Print("Portalizing...\n");
 			Portalize();
@@ -103,10 +108,15 @@ namespace BSPLib
 						Portal	front, back;
 						if(pieces[i].Split(split, out front, out back))
 						{
-							Debug.Assert(front != null && back != null);
+							if(front != null)
+							{
+								pieces.Add(front);
+							}
+							if(back != null)
+							{
+								pieces.Add(back);
+							}
 
-							pieces.Add(front);
-							pieces.Add(back);
 							pieces.RemoveAt(i);
 							i--;
 						}
@@ -146,10 +156,15 @@ namespace BSPLib
 						Portal	front, back;
 						if(pieces[i].Split(split, out front, out back))
 						{
-							Debug.Assert(front != null && back != null);
+							if(front != null)
+							{
+								pieces.Add(front);
+							}
+							if(back != null)
+							{
+								pieces.Add(back);
+							}
 
-							pieces.Add(front);
-							pieces.Add(back);
 							pieces.RemoveAt(i);
 							i--;
 						}
@@ -159,19 +174,12 @@ namespace BSPLib
 			}
 
 			//filter the portals into leaves
-			//nuking those unconnected
-			List<Portal>	nuke	=new List<Portal>();
 			foreach(Portal port in mPortals)
 			{
 				mRoot.FilterPortalFront(port);
 				mRoot.FilterPortalBack(port);
 				Debug.Assert(port.mFront != null);
 				Debug.Assert(port.mBack != null);
-			}
-
-			foreach(Portal dead in nuke)
-			{
-				mPortals.Remove(dead);
 			}
 
 			//filter outer node portals
@@ -188,19 +196,98 @@ namespace BSPLib
 			foreach(Portal port in mPortals)
 			{
 				port.mFront.AddPortal(port);
-				if(port.mBack.mBrushContents != 0)
+				port.mBack.AddPortal(port);
+			}
+		}
+
+
+		internal void GetPortalLines(List<Vector3> verts, List<UInt32> indexes)
+		{
+			int	ofs		=verts.Count;
+
+			UInt32	offset	=(UInt32)ofs;
+
+			foreach(Portal p in mPortals)
+			{
+				if((p.mBack.mBrushContents & Brush.CONTENTS_SOLID) == 0)
 				{
-					int	gack	=0;
-					gack++;
+//					continue;
+				}
+				if((p.mFront.mBrushContents & Brush.CONTENTS_SOLID) == 0)
+				{
+//					continue;
+				}
+
+				Vector3	frontCentroid	=p.mFace.GetCentroid();
+
+				foreach(Face f in p.mBack.mFaces)
+				{
+					Vector3	backCentroid	=f.GetCentroid();
+
+					verts.Add(frontCentroid);
+					verts.Add(backCentroid);
+
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+				}
+			}
+
+			foreach(BspFlatNode node in mFlooded)
+			{
+				foreach(Face f in node.mFaces)
+				{
+					Vector3	centroid	=f.GetCentroid();
+
+					verts.Add(centroid);
+					verts.Add(centroid + Vector3.UnitX * 10.0f);
+					verts.Add(centroid);
+					verts.Add(centroid + Vector3.UnitY * 10.0f);
+					verts.Add(centroid);
+					verts.Add(centroid + Vector3.UnitZ * 10.0f);
+					verts.Add(centroid);
+					verts.Add(centroid - Vector3.UnitX * 10.0f);
+					verts.Add(centroid);
+					verts.Add(centroid - Vector3.UnitY * 10.0f);
+					verts.Add(centroid);
+					verts.Add(centroid - Vector3.UnitZ * 10.0f);
+
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
 				}
 			}
 		}
 
 
-		internal void GetPortalTriangles(List<Vector3> verts, List<uint> indexes)
+		internal void GetPortalTriangles(List<Vector3> verts, List<UInt32> indexes)
 		{
 			foreach(Portal p in mPortals)
 			{
+				if(!p.mBack.mbLeaf)
+				{
+//					continue;
+				}
+				if(p.mFront.mbLeaf)
+				{
+//					continue;
+				}
+				if((p.mBack.mBrushContents & Brush.CONTENTS_SOLID) == 0)
+				{
+//					continue;
+				}
+				if((p.mFront.mBrushContents & Brush.CONTENTS_SOLID) == 0)
+				{
+//					continue;
+				}
 				p.mFace.GetTriangles(verts, indexes);
 			}
 		}
@@ -216,28 +303,18 @@ namespace BSPLib
 		{
 			foreach(KeyValuePair<BspFlatNode, List<Entity>> nodeEnt in nodeEnts)
 			{
-				//flood through entity nodes to outside
-				List<BspFlatNode>	flooded	=new List<BspFlatNode>();
-				if(nodeEnt.Key.FloodToNode(mOutsideNode, flooded))
+				Debug.Assert(nodeEnt.Key.mBrushContents == 0);
+				Debug.Assert(!nodeEnt.Key.mbLeaf);
+
+				nodeEnt.Key.FloodFillEmpty(mFlooded);
+				if(mFlooded.Contains(mOutsideNode))
 				{
 					Vector3	org	=Vector3.Zero;
 					nodeEnt.Value[0].GetOrigin(out org);
 					Map.Print("Leak found near: " + org + "!!!\n");
 				}
+				break;
 			}
-			/*
-			Map.Print("No leaks found.\n");
-			foreach(KeyValuePair<BspFlatNode, List<Entity>> nodeEnt in nodeEnts)
-			{
-				//flood through outside node
-				List<BspFlatNode>	flooded	=new List<BspFlatNode>();
-				if(mOutsideNode.FloodToNode(nodeEnt.Key, flooded))
-				{
-					Vector3	org	=Vector3.Zero;
-					nodeEnt.Value[0].GetOrigin(out org);
-					Map.Print("Leak found near: " + org + "!!!\n");
-				}
-			}*/
 			Map.Print("No leaks found.\n");
 			return	false;
 		}

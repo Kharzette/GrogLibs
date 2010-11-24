@@ -57,7 +57,7 @@ namespace BSPLib
 			foreach(Face f in brushFaces)
 			{
 				//skip faces coplanar (even opposite)
-				if(parent.mPlane.IsCoPlanar(f.GetPlane()))
+				if(parent != null && parent.mPlane.IsCoPlanar(f.GetPlane()))
 				{
 					parent.mFaces.Add(new Face(f));
 					continue;
@@ -188,74 +188,6 @@ namespace BSPLib
 		}
 
 
-		internal void FilterPortalFront(Portal port, List<Portal> pieces)
-		{			
-			if(mbLeaf)
-			{
-				port.mFront	=this;
-				pieces.Add(port);
-				return;
-			}
-
-			//split portal
-			Portal	front		=new Portal();
-			front.mFace			=new Face(port.mFace);
-			front.mBack			=port.mBack;
-			front.mFront		=port.mFront;
-			front.mOnNode		=port.mOnNode;
-			front.mFace.ClipByPlane(mPlane, true, true);
-			if(!front.mFace.IsTiny())
-			{
-				mFront.FilterPortalFront(front, pieces);
-			}
-
-			Portal	back		=new Portal();
-			back.mFace			=new Face(port.mFace);
-			back.mBack			=port.mBack;
-			back.mFront			=port.mFront;
-			back.mOnNode		=port.mOnNode;
-			back.mFace.ClipByPlane(mPlane, false, true);
-			if(!back.mFace.IsTiny())
-			{
-				mBack.FilterPortalFront(back, pieces);
-			}
-		}
-
-
-		internal void FilterPortalBack(Portal port, List<Portal> pieces)
-		{			
-			if(mbLeaf)
-			{
-				port.mBack	=this;
-				pieces.Add(port);
-				return;
-			}
-
-			//split portal
-			Portal	front		=new Portal();
-			front.mFace			=new Face(port.mFace);
-			front.mBack			=port.mBack;
-			front.mFront		=port.mFront;
-			front.mOnNode		=port.mOnNode;
-			front.mFace.ClipByPlane(mPlane, true, true);
-			if(!front.mFace.IsTiny())
-			{
-				mFront.FilterPortalFront(front, pieces);
-			}
-
-			Portal	back		=new Portal();
-			back.mFace			=new Face(port.mFace);
-			back.mBack			=port.mBack;
-			back.mFront			=port.mFront;
-			back.mOnNode		=port.mOnNode;
-			back.mFace.ClipByPlane(mPlane, false, true);
-			if(!back.mFace.IsTiny())
-			{
-				mBack.FilterPortalFront(back, pieces);
-			}
-		}
-
-
 		//do a filter that does no splits, just passes down
 		//the sides until it hits a leaf
 		internal void FilterPortal(Portal port)
@@ -362,37 +294,6 @@ namespace BSPLib
 			else if(pointsOn > 0)
 			{
 				mBack.FilterPortalBack(port);
-			}
-		}
-
-
-		//filter portal into it's OnNode
-		internal void FilterPortal(Portal port, List<Portal> pieces)
-		{
-			Debug.Assert(!mbLeaf);
-			Debug.Assert(this == port.mOnNode);
-
-			//split portal
-			Portal	front		=new Portal();
-			front.mFace			=new Face(port.mFace);
-			front.mBack			=port.mBack;
-			front.mFront		=port.mFront;
-			front.mOnNode		=port.mOnNode;
-			front.mFace.ClipByPlane(mPlane, true, true);
-			if(!front.mFace.IsTiny())
-			{
-				mFront.FilterPortalFront(front, pieces);
-			}
-
-			Portal	back		=new Portal();
-			back.mFace			=new Face(port.mFace);
-			back.mBack			=port.mBack;
-			back.mFront			=port.mFront;
-			back.mOnNode		=port.mOnNode;
-			back.mFace.ClipByPlane(mPlane, false, true);
-			if(!back.mFace.IsTiny())
-			{
-				mBack.FilterPortalBack(back, pieces);
 			}
 		}
 
@@ -590,6 +491,34 @@ namespace BSPLib
 				}
 			}
 			return	false;
+		}
+
+
+		internal void FloodFillEmpty(List<BspFlatNode> flooded)
+		{
+			if(flooded.Contains(this))
+			{
+				return;
+			}
+			flooded.Add(this);
+
+			foreach(Portal port in mPortals)
+			{
+				if(port.mFront == this)
+				{
+					if((port.mBack.mBrushContents & Brush.CONTENTS_SOLID) == 0)
+					{
+						port.mBack.FloodFillEmpty(flooded);
+					}
+				}
+				else
+				{
+					if((port.mFront.mBrushContents & Brush.CONTENTS_SOLID) == 0)
+					{
+						port.mFront.FloodFillEmpty(flooded);
+					}
+				}
+			}
 		}
 	}
 }

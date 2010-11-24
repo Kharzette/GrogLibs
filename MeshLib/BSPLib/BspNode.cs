@@ -191,7 +191,10 @@ namespace BSPLib
 				Map.Print("Merging " + brushList.Count + " brushes in a leaf");
 			}
 
-			mPlane	=mParent.mPlane;
+			if(mParent != null)
+			{
+				mPlane	=mParent.mPlane;
+			}
 
 			//copy in the brush faces
 			//merge multiples

@@ -107,6 +107,57 @@ namespace BSPLib
 
 
 		#region Queries
+		public void GetPortalLines(List<Vector3> verts, List<UInt32> indexes)
+		{
+			mPortalTree.GetPortalLines(verts, indexes);
+
+			int	ofs		=verts.Count;
+
+			UInt32	offset	=(UInt32)ofs;
+
+			//add a few lines for node landed in
+			foreach(Entity e in mEntities)
+			{
+				Vector3	org	=Vector3.Zero;
+				if(!e.GetOrigin(out org))
+				{
+					continue;
+				}
+				BspFlatNode	landed	=mPortalTree.GetNodeLandedIn(org);
+				foreach(Face f in landed.mFaces)
+				{
+					Vector3	centroid	=f.GetCentroid();
+
+					verts.Add(centroid);
+					verts.Add(centroid + Vector3.UnitX * 10.0f);
+					verts.Add(centroid);
+					verts.Add(centroid + Vector3.UnitY * 10.0f);
+					verts.Add(centroid);
+					verts.Add(centroid + Vector3.UnitZ * 10.0f);
+					verts.Add(centroid);
+					verts.Add(centroid - Vector3.UnitX * 10.0f);
+					verts.Add(centroid);
+					verts.Add(centroid - Vector3.UnitY * 10.0f);
+					verts.Add(centroid);
+					verts.Add(centroid - Vector3.UnitZ * 10.0f);
+
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+					indexes.Add(offset++);
+				}
+			}
+		}
+
+
 		public void GetTriangles(List<Vector3> verts, List<UInt32> indexes, string drawChoice)
 		{
 			if(drawChoice == "Map Brushes")
@@ -564,7 +615,15 @@ namespace BSPLib
 				colls.Add(new Brush(b));
 			}
 
+			//dupe draw list
+			List<Brush>	ports	=new List<Brush>();
+			foreach(Brush b in mDrawBrushes)
+			{
+				ports.Add(new Brush(b));
+			}
+
 			mCollisionTree	=new BspTree(colls, sender != null);
+			mPortalTree		=new BspFlatTree(ports);
 			mCollisionTree.eBuildComplete	+=OnCollisionTreeBuildComplete;
 		}
 
@@ -605,17 +664,14 @@ namespace BSPLib
 
 			Print("Starting draw tree build\n");
 
-			//dupe draw list twice
+			//dupe draw list
 			List<Brush>	draws	=new List<Brush>();
-			List<Brush>	ports	=new List<Brush>();
 			foreach(Brush b in mDrawBrushes)
 			{
 				draws.Add(new Brush(b));
-				ports.Add(new Brush(b));
 			}
 
 			mDrawTree	=new BspTree(draws, false);
-			mPortalTree	=new BspFlatTree(ports);
 		}
 
 
