@@ -21,6 +21,16 @@ namespace BSPLib
 		BspNode			mRoot, mOutsideNode;
 		ThreadCounter	mThreadCount	=new ThreadCounter();
 
+		//debug draw portal stuff
+		List<Brush>			mEmptySpace		=new List<Brush>();
+		List<Portal>		mPortals		=new List<Portal>();
+		List<Face>			mEmptyToSolid	=new List<Face>();
+		List<Face>			mEmptyToEmpty	=new List<Face>();
+		public List<BrushPortal>	mBrushPortals	=new List<BrushPortal>();
+		List<Brush>			mFlooded		=new List<Brush>();
+		List<Face>			mTroubleFaces	=new List<Face>();
+		List<Face>			mVisibleFaces	=new List<Face>();
+
 		event EventHandler	eThreadDone;
 
 		public event EventHandler	eBuildComplete;
@@ -199,16 +209,14 @@ namespace BSPLib
 		}
 
 
-		internal Dictionary<BspNode, List<Portal>> Portalize()
+		internal void Portalize()
 		{
-			Dictionary<BspNode, List<Portal>>	portals	=new Dictionary<BspNode, List<Portal>>();
-			/*
-			portals.Add(mOutsideNode, new List<Portal>());
-
 			Bounds	rootBounds	=mRoot.mBounds;
 
-			//create outside node portals
-			List<Portal>	outPorts	=new List<Portal>();
+			//create outside node brush volume
+			Brush	outsideBrush	=new Brush();
+
+			List<Face>	obFaces	=new List<Face>();
 			for(int i=0;i < 6;i++)
 			{
 				Plane	p;
@@ -220,20 +228,14 @@ namespace BSPLib
 				}
 				else
 				{
-					p.mDistance	=Vector3.Dot(mRoot.mBounds.mMins, p.mNormal) - 128.0f;
+					p.mDistance	=Vector3.Dot(mRoot.mBounds.mMins, p.mNormal) + 128.0f;
 				}
 
 				Face	f		=new Face(p, null);
-				Portal	port	=new Portal();
-
-				port.mFace			=f;
-				port.mFront			=mOutsideNode;
-				port.mbFrontFront	=false;
-
-				outPorts.Add(port);
+				obFaces.Add(f);
 			}
 
-			//clip these against each other
+			//clip brush faces against each other
 			for(int i=0;i < 6;i++)
 			{
 				for(int j=0;j < 6;j++)
@@ -242,72 +244,121 @@ namespace BSPLib
 					{
 						continue;
 					}
-					outPorts[j].mFace.ClipByFace(outPorts[i].mFace, false, true);
+					obFaces[j].ClipByFace(obFaces[i], false, true);
 				}
 			}
 
-			//filter outside portals
+			outsideBrush.AddFaces(obFaces);
+
+			List<Brush>	inList	=new List<Brush>();
+
+			inList.Add(outsideBrush);
+
+			//merge the outside volume into the empty
+			//space of the tree
+			mRoot.MergeBrush(inList, mEmptySpace);
+
+			//grab brush faces
+			List<Face>	emptySpaceFaces	=new List<Face>();
+			foreach(Brush b in mEmptySpace)
+			{
+				//set empty
+				b.SetContents(Brush.CONTENTS_EMPTY);
+
+				List<Face>	brushFaces	=b.GetFaces();
+
+				//clone
+				foreach(Face f in brushFaces)
+				{
+					emptySpaceFaces.Add(new Face(f));
+				}
+			}
+
+			//get all faces that land on a single
+			//brush face, these are the empty to
+			//solid portals
+			mEmptyToSolid	=new List<Face>();
+
+			//faces that land in two brushes are
+			//empty to empty portals
+			mEmptyToEmpty	=new List<Face>();
+			foreach(Face f in emptySpaceFaces)
+			{
+				BrushPortal	bp	=new BrushPortal();
+
+				int	onCount			=0;
+				int	onOppositeCount	=0;
+				foreach(Brush b in mEmptySpace)
+				{
+					if(b.IsFaceOnBrush(f))
+					{
+						onCount++;
+					}
+					if(b.IsFaceOnBrushOpposite(f))
+					{
+						onOppositeCount++;
+						bp.mConnections.Add(b);
+					}
+				}
+
+				if(onCount > 0 && onOppositeCount == 0)
+				{
+					mEmptyToSolid.Add(f);
+				}
+				else if(onCount > 0 && onOppositeCount > 0)
+				{
+					mEmptyToEmpty.Add(f);
+
+					mBrushPortals.Add(bp);
+
+					foreach(Brush b in bp.mConnections)
+					{
+						b.mPortals.Add(bp);
+					}
+				}
+				else
+				{
+					Map.Print("Adding a face to trouble faces...\n");
+					mTroubleFaces.Add(f);
+				}
+			}
+
+			//mark outside portals
 			for(int i=0;i < 6;i++)
 			{
-				Portal	port	=outPorts[i];
+				Plane	p;
+				p.mNormal	=UtilityLib.Mathery.AxialNormals[i];
 
-				List<Portal>	pieces	=new List<Portal>();
-
-				mRoot.FilterPortalOutside(port, pieces);
-
-				foreach(Portal piece in pieces)
+				if(i < 3)
 				{
-					portals[mOutsideNode].Add(piece);
+					p.mDistance	=Vector3.Dot(mRoot.mBounds.mMaxs, p.mNormal) + 128.0f;
+				}
+				else
+				{
+					p.mDistance	=Vector3.Dot(mRoot.mBounds.mMins, p.mNormal) + 128.0f;
+				}
 
-					if(!portals.ContainsKey(piece.mBack))
+				foreach(Brush b in mEmptySpace)
+				{
+					if(b.ContainsPlane(p))
 					{
-						portals.Add(piece.mBack, new List<Portal>());
+						b.SetContents(Brush.CONTENTS_SOLID);
 					}
-					portals[piece.mBack].Add(piece);
 				}
 			}
+		}
 
-			//grab list of splitting planes
-			//
-			//make portal and filter each one
-			*//*
-			List<Face>	bspFaces	=new List<Face>();
-			mRoot.GetFaces(bspFaces);
 
-			foreach(Face f in bspFaces)
+		internal Brush GetBrushLandedIn(Vector3 pos)
+		{
+			foreach(Brush b in mEmptySpace)
 			{
-				Face	portFace	=new Face(f, false);
-				Portal	port		=new Portal();
-
-				port.mPortalFace	=portFace;
-
-				List<Portal>	pieces	=new List<Portal>();
-
-				mRoot.FilterPortalFront(port, pieces);
-
-				List<Portal>	backPieces	=new List<Portal>();
-				foreach(Portal piece in pieces)
+				if(b.IsPointInside(pos))
 				{
-					mRoot.FilterPortalBack(piece, backPieces, false);
+					return	b;
 				}
-
-				foreach(Portal piece in backPieces)
-				{
-					if(!portals.ContainsKey(piece.mFront))
-					{
-						portals.Add(piece.mFront, new List<Portal>());
-					}
-					portals[piece.mFront].Add(piece);
-
-					if(!portals.ContainsKey(piece.mBack))
-					{
-						portals.Add(piece.mBack, new List<Portal>());
-					}
-					portals[piece.mBack].Add(piece);
-				}
-			}*/
-
-			return	portals;
+			}
+			return	null;
 		}
 
 
@@ -332,7 +383,31 @@ namespace BSPLib
 
 		public void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
 		{
-			mRoot.GetTriangles(verts, indexes, bCheckFlags);
+//			foreach(Face f in mEmptyToEmpty)
+//			{
+//				f.GetTriangles(verts, indexes);
+//			}
+//			foreach(Brush b in mFlooded)
+//			{
+//				b.GetTriangles(verts, indexes, false);
+//			}
+//			foreach(Face f in mVisibleFaces)
+//			{
+//				f.GetTriangles(verts, indexes);
+//			}
+//			foreach(Face f in mTroubleFaces)
+//			{
+//				f.GetTriangles(verts, indexes);
+//			}
+			foreach(Face f in mEmptyToSolid)
+			{
+				f.GetTriangles(verts, indexes);
+			}
+//			foreach(Brush b in mEmptySpace)
+//			{
+//				b.GetTriangles(verts, indexes, bCheckFlags);
+//			}
+//			mRoot.GetTriangles(verts, indexes, bCheckFlags);
 		}
 		#endregion
 
@@ -386,49 +461,45 @@ namespace BSPLib
 			return	mRoot.GetNodeLandedIn(org);
 		}
 
-		internal void CheckForLeak(Dictionary<BspNode, List<Portal>> portals,
-			Dictionary<BspNode, List<Entity>> nodeEnts)
+
+		internal bool CheckForLeak(Dictionary<Brush, List<Entity>> brushEnts)
 		{
-			/*
-			BspNode	node	=mOutsideNode;
-			while(node != null)
+			bool	ret	=false;
+			foreach(KeyValuePair<Brush, List<Entity>> brushEnt in brushEnts)
 			{
-				foreach(Portal port in portals[node])
+				brushEnt.Key.Flood(mFlooded);
+				foreach(Brush flood in mFlooded)
 				{
-					Portal	next	=port;
-
-					while(next != null)
+					if((flood.GetContents() & Brush.CONTENTS_SOLID) != 0)
 					{
-						if(port.mBackContents != 0)
-						{
-							continue;
-						}
-
-						//this portal looks into the empty part of the node
-						if(nodeEnts.ContainsKey(port.mBack))
-						{
-							Vector3	org	=Vector3.Zero;
-
-							foreach(Entity e in nodeEnts[port.mBack])
-							{
-								if(!e.GetOrigin(out org))
-								{
-									continue;
-								}
-								//see if portal looks to the side
-								//where the entity lies
-								Face	side	=port.mBack.mBrush.GetSideInFrontOf(org);
-								if(side == port.mBrushFace)
-								{
-									Map.Print("Leak detected near " + port.GetCentroid() + "\n");
-									BspNode.TroubleBrushes.Add(port.mBack.mBrush);
-									return;
-								}
-							}
-						}
+						Vector3	org	=Vector3.Zero;
+						brushEnt.Value[0].GetOrigin(out org);
+						Map.Print("Leak found near: " + org + "!!!\n");
+						ret	=true;
 					}
 				}
-			}*/
+			}
+			return	ret;
+		}
+
+
+		//use previously flooded info
+		internal void RemoveHiddenFaces()
+		{
+			mVisibleFaces	=new List<Face>();
+			foreach(Brush b in mFlooded)
+			{
+				List<Face>	floodFaces	=b.GetFaces();
+
+				foreach(Face floodFace in floodFaces)
+				{
+					foreach(Face e2sFace in mEmptyToSolid)
+					if(floodFace.CompareEpsilon(e2sFace, 0.001f))
+					{
+						mVisibleFaces.Add(new Face(e2sFace));
+					}
+				}
+			}
 		}
 	}
 }

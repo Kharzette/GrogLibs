@@ -109,6 +109,7 @@ namespace BSPLib
 		#region Queries
 		public void GetPortalLines(List<Vector3> verts, List<UInt32> indexes)
 		{
+			return;
 			mPortalTree.GetPortalLines(verts, indexes);
 
 			int	ofs		=verts.Count;
@@ -202,11 +203,12 @@ namespace BSPLib
 			}
 			else if(drawChoice == "Portals")
 			{
-				mPortalTree.GetPortalTriangles(verts, indexes);
+				mDrawTree.GetTriangles(verts, indexes, false);
+//				mPortalTree.GetPortalTriangles(verts, indexes);
 			}
 			else if(drawChoice == "Portal Tree")
 			{
-				mPortalTree.GetTriangles(verts, indexes, true);
+//				mPortalTree.GetTriangles(verts, indexes, true);
 			}
 		}
 
@@ -623,21 +625,25 @@ namespace BSPLib
 			}
 
 			mCollisionTree	=new BspTree(colls, sender != null);
-			mPortalTree		=new BspFlatTree(ports);
+//			mPortalTree		=new BspFlatTree(ports);
 			mCollisionTree.eBuildComplete	+=OnCollisionTreeBuildComplete;
 		}
 
 
 		void OnCollisionTreeBuildComplete(object sender, EventArgs ea)
 		{
-			Print("Portalizing collision tree...\n");
+		}
 
-			mPortals	=mCollisionTree.Portalize();
+		void OnDrawTreeBuildComplete(object sender, EventArgs ea)
+		{
+			Print("Portalizing draw tree...\n");
 
-			Print("Portal generation complete with " + mPortals.Count + " nodes involved.");
+			mDrawTree.Portalize();
 
-			Dictionary<BspFlatNode, List<Entity>>	nodeEnts
-				=new Dictionary<BspFlatNode, List<Entity>>();
+			Print("Portal generation complete with " + mDrawTree.mBrushPortals.Count + " portals generated.\n");
+
+			Dictionary<Brush, List<Entity>>	brushEnts
+				=new Dictionary<Brush, List<Entity>>();
 
 			foreach(Entity e in mEntities)
 			{
@@ -646,15 +652,33 @@ namespace BSPLib
 				{
 					continue;
 				}
-				BspFlatNode	landed	=mPortalTree.GetNodeLandedIn(org);
-				if(!nodeEnts.ContainsKey(landed))
+				Brush	landed	=mDrawTree.GetBrushLandedIn(org);
+				if(landed == null)
 				{
-					nodeEnts.Add(landed, new List<Entity>());
+					Map.Print("Entity in solid space!");
+					continue;
 				}
-				nodeEnts[landed].Add(e);
+
+				if(!brushEnts.ContainsKey(landed))
+				{
+					brushEnts.Add(landed, new List<Entity>());
+				}
+				brushEnts[landed].Add(e);
 			}
 
-			mPortalTree.CheckForLeak(nodeEnts);
+			Print("Checking for leaks...\n");
+			if(mDrawTree.CheckForLeak(brushEnts))
+			{
+				Print("Leak check complete, leaks were found.  Stopping here.\n");
+			}
+			else
+			{
+				Print("Leak check complete.  No leaks found.\n");
+
+				Print("Removing hidden faces...\n");
+				mDrawTree.RemoveHiddenFaces();
+				Print("Removal complete.\n");
+			}
 		}
 
 
@@ -672,6 +696,7 @@ namespace BSPLib
 			}
 
 			mDrawTree	=new BspTree(draws, false);
+			mDrawTree.eBuildComplete	+=OnDrawTreeBuildComplete;
 		}
 
 

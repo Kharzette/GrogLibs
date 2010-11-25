@@ -6,8 +6,16 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
+	public class BrushPortal
+	{
+		public List<Brush>	mConnections	=new List<Brush>();
+		public Face			mFace;
+	}
+
+
 	public class Portal
 	{
+		public BspNode		mFrontOld, mBackOld;
 		public BspFlatNode	mOnNode, mFront, mBack;
 		public Face			mFace;
 
