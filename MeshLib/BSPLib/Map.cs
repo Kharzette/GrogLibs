@@ -27,6 +27,12 @@ namespace BSPLib
 		List<Brush>	mDrawBrushes;		//visible geometry
 		List<Brush>	mCollisionBrushes;	//collision hull
 
+		List<MapBrush>	mMapBrushes		=new List<MapBrush>();
+		List<GBSPBrush>	mGBSPBrushes	=new List<GBSPBrush>();
+
+		//planes
+		PlanePool	mPlanePool	=new PlanePool();
+
 		//portals
 		Dictionary<BspNode, List<Portal>>	mPortals;
 
@@ -34,6 +40,7 @@ namespace BSPLib
 		public event EventHandler	eNumMapFacesChanged;
 		public event EventHandler	eNumDrawFacesChanged;
 		public event EventHandler	eNumCollisionFacesChanged;
+		public event EventHandler	eNumPortalsChanged;
 		public event EventHandler	eProgressChanged;
 
 		static public event EventHandler	ePrint;
@@ -60,18 +67,8 @@ namespace BSPLib
 					//see if this is a .map or a .vmf
 					if(mapFileName.EndsWith(".map"))
 					{
-						while((s = sr.ReadLine()) != null)
-						{
-							s	=s.Trim();
-							if(s.StartsWith("{"))
-							{
-								Entity	e	=new Entity();
-
-								e.ReadFromMap(sr);
-
-								mEntities.Add(e);
-							}
-						}
+						Print(".map files not supported right now\n");
+						return;
 					}
 					else
 					{
@@ -81,13 +78,13 @@ namespace BSPLib
 							if(s == "entity")
 							{
 								Entity	e	=new Entity();
-								e.ReadVMFEntBlock(sr);
+								e.ReadVMFEntBlock(sr, mEntities.Count, mPlanePool);
 								mEntities.Add(e);
 							}
 							else if(s == "world")
 							{
 								Entity	e	=new Entity();
-								e.ReadVMFWorldBlock(sr);
+								e.ReadVMFWorldBlock(sr, mEntities.Count, mPlanePool);
 								mEntities.Add(e);
 							}
 							else if(s == "cameras")
@@ -109,7 +106,6 @@ namespace BSPLib
 		#region Queries
 		public void GetPortalLines(List<Vector3> verts, List<UInt32> indexes)
 		{
-			return;
 			mPortalTree.GetPortalLines(verts, indexes);
 
 			int	ofs		=verts.Count;
@@ -163,7 +159,7 @@ namespace BSPLib
 		{
 			if(drawChoice == "Map Brushes")
 			{
-				foreach(Brush b in mDebugBrushes)
+				foreach(MapBrush b in mMapBrushes)
 				{
 					b.GetTriangles(verts, indexes, true);
 				}
@@ -181,7 +177,7 @@ namespace BSPLib
 			}
 			else if(drawChoice == "Draw Brushes")
 			{
-				foreach(Brush b in mDrawBrushes)
+				foreach(GBSPBrush b in mGBSPBrushes)
 				{
 					b.GetTriangles(verts, indexes, true);
 				}
@@ -203,12 +199,11 @@ namespace BSPLib
 			}
 			else if(drawChoice == "Portals")
 			{
-				mDrawTree.GetTriangles(verts, indexes, false);
-//				mPortalTree.GetPortalTriangles(verts, indexes);
+				mPortalTree.GetPortalTriangles(verts, indexes);
 			}
 			else if(drawChoice == "Portal Tree")
 			{
-//				mPortalTree.GetTriangles(verts, indexes, true);
+				mPortalTree.GetTriangles(verts, indexes, true);
 			}
 		}
 
@@ -507,12 +502,12 @@ namespace BSPLib
 					{
 						if(e.mData["classname"] == "func_detail")
 						{
-							foreach(Brush db in e.mBrushes)
+/*							foreach(Brush db in e.mBrushes)
 							{
 								Brush	b	=new Brush(db);
 
 								details.Add(b);
-							}
+							}*/
 						}
 					}
 				}
@@ -525,6 +520,15 @@ namespace BSPLib
 			foreach(Brush b in brushes)
 			{
 				b.PromoteClips();
+			}
+		}
+
+
+		internal void UpdateNumPortals(int numPortals)
+		{
+			if(eNumPortalsChanged != null)
+			{
+				eNumPortalsChanged(numPortals, null);
 			}
 		}
 
@@ -625,7 +629,6 @@ namespace BSPLib
 			}
 
 			mCollisionTree	=new BspTree(colls, sender != null);
-//			mPortalTree		=new BspFlatTree(ports);
 			mCollisionTree.eBuildComplete	+=OnCollisionTreeBuildComplete;
 		}
 
@@ -634,16 +637,19 @@ namespace BSPLib
 		{
 		}
 
-		void OnDrawTreeBuildComplete(object sender, EventArgs ea)
+
+		void OnPortalTreeBuildComplete(object sender, EventArgs ea)
 		{
-			Print("Portalizing draw tree...\n");
+			Print("Portalizing...\n");
+			mPortalTree.Portalize(UpdateNumPortals);
+			Print("Portalization complete\n");
+		}
 
-			mDrawTree.Portalize();
 
-			Print("Portal generation complete with " + mDrawTree.mBrushPortals.Count + " portals generated.\n");
-
-			Dictionary<Brush, List<Entity>>	brushEnts
-				=new Dictionary<Brush, List<Entity>>();
+		void OnPortalizationComplete(object sender, EventArgs ea)
+		{
+			Dictionary<BspFlatNode, List<Entity>>	nodeEnts
+				=new Dictionary<BspFlatNode, List<Entity>>();
 
 			foreach(Entity e in mEntities)
 			{
@@ -652,32 +658,23 @@ namespace BSPLib
 				{
 					continue;
 				}
-				Brush	landed	=mDrawTree.GetBrushLandedIn(org);
-				if(landed == null)
+				BspFlatNode	landed	=mPortalTree.GetNodeLandedIn(org);
+				if(!nodeEnts.ContainsKey(landed))
 				{
-					Map.Print("Entity in solid space!");
-					continue;
+					nodeEnts.Add(landed, new List<Entity>());
 				}
-
-				if(!brushEnts.ContainsKey(landed))
-				{
-					brushEnts.Add(landed, new List<Entity>());
-				}
-				brushEnts[landed].Add(e);
+				nodeEnts[landed].Add(e);
 			}
 
 			Print("Checking for leaks...\n");
-			if(mDrawTree.CheckForLeak(brushEnts))
+
+			if(mPortalTree.CheckForLeak(nodeEnts))
 			{
-				Print("Leak check complete, leaks were found.  Stopping here.\n");
+				Print("Leak found, stopping here...\n");
 			}
 			else
 			{
-				Print("Leak check complete.  No leaks found.\n");
-
-				Print("Removing hidden faces...\n");
-				mDrawTree.RemoveHiddenFaces();
-				Print("Removal complete.\n");
+				Print("No leaks found.\n");
 			}
 		}
 
@@ -688,15 +685,23 @@ namespace BSPLib
 
 			Print("Starting draw tree build\n");
 
-			//dupe draw list
+			//dupe draw list twice
 			List<Brush>	draws	=new List<Brush>();
+			List<Brush>	ports	=new List<Brush>();
 			foreach(Brush b in mDrawBrushes)
 			{
 				draws.Add(new Brush(b));
+				ports.Add(new Brush(b));
 			}
 
 			mDrawTree	=new BspTree(draws, false);
-			mDrawTree.eBuildComplete	+=OnDrawTreeBuildComplete;
+			mPortalTree	=new BspFlatTree(ports);
+
+//			mPortalTree.eBuildComplete			+=OnPortalTreeBuildComplete;
+			mPortalTree.ePortalizationComplete	+=OnPortalizationComplete;
+
+			//not threaded yet
+			OnPortalTreeBuildComplete(null, null);
 		}
 
 
@@ -726,8 +731,23 @@ namespace BSPLib
 			//look for the worldspawn
 			Entity	wse	=GetWorldSpawnEntity();
 
+			foreach(MapBrush b in wse.mBrushes)
+			{
+				mMapBrushes.Add(b);
+			}
+
+			foreach(MapBrush b in mMapBrushes)
+			{
+				GBSPBrush	gb	=new GBSPBrush(b);
+
+				mGBSPBrushes.Add(gb);
+			}
+
+			GBSPBrush.CSGBrushes(mGBSPBrushes, mPlanePool);
+
 			//copy all starting brushes to debug
 			mDebugBrushes	=new List<Brush>();
+			/*
 			foreach(Brush b in wse.mBrushes)
 			{
 				Brush	cb	=new Brush(b);
@@ -750,6 +770,7 @@ namespace BSPLib
 			//for the two datasets
 			ThreadPool.QueueUserWorkItem(CBRemoveDrawOverlap);
 			ThreadPool.QueueUserWorkItem(CBRemoveCollisionOverlap, bBevel ? new object() : null);
+			*/
 		}
 
 

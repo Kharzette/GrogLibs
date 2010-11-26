@@ -14,7 +14,10 @@ namespace BSPLib
 
 		//debug draw
 		List<BspFlatNode>	mFlooded	=new List<BspFlatNode>();
-		List<Brush>			mEmptySpace	=new List<Brush>();
+
+		//build event
+		public event EventHandler	eBuildComplete;
+		public event EventHandler	ePortalizationComplete;
 
 
 		internal BspFlatTree(List<Brush> brushList)
@@ -30,10 +33,10 @@ namespace BSPLib
 
 			//this might be a bad idea commenting this out
 //			mOutsideNode.mBrushContents	=Brush.CONTENTS_SOLID;
-
-			Map.Print("Portalizing...\n");
-//			Portalize();
-			Map.Print("Portalization complete\n");
+			if(eBuildComplete != null)
+			{
+				eBuildComplete(null, null);
+			}
 		}
 
 
@@ -43,14 +46,16 @@ namespace BSPLib
 		}
 
 
-		internal void Portalize()
+		internal delegate void UpdateNumPortals(int val);
+
+
+		internal void Portalize(UpdateNumPortals updateNumPortals)
 		{
 			Bounds	rootBounds	=mRoot.mBounds;
 
-			//create outside node brush volume
-			Brush	outsideBrush	=new Brush();
-
-			List<Face>	obFaces	=new List<Face>();
+			//create outside node portals
+			List<Portal>	outPorts		=new List<Portal>();
+			List<Portal>	outChoppedPorts	=new List<Portal>();
 			for(int i=0;i < 6;i++)
 			{
 				Plane	p;
@@ -66,10 +71,15 @@ namespace BSPLib
 				}
 
 				Face	f		=new Face(p, null);
-				obFaces.Add(f);
+				Portal	port	=new Portal();
+
+				port.mFace			=f;
+				port.mFront			=mOutsideNode;
+
+				outPorts.Add(port);
 			}
 
-			//clip brush faces against each other
+			//clip these against each other
 			for(int i=0;i < 6;i++)
 			{
 				for(int j=0;j < 6;j++)
@@ -78,49 +88,182 @@ namespace BSPLib
 					{
 						continue;
 					}
-					obFaces[j].ClipByFace(obFaces[i], false, true);
+					outPorts[j].mFace.ClipByFace(outPorts[i].mFace, false, true);
 				}
 			}
 
-			outsideBrush.AddFaces(obFaces);
+			//grab all the non leaf nodes
+			List<Plane>	planes	=new List<Plane>();
 
-			List<Brush>	inList	=new List<Brush>();
+			mRoot.GatherNonLeafPlanes(planes);
 
-			inList.Add(outsideBrush);
-
-			//merge the outside volume into the empty
-			//space of the tree
-			mRoot.MergeBrush(inList, mEmptySpace);
-
-			//grab brush faces
-			List<Face>	emptySpaceFaces	=new List<Face>();
-			foreach(Brush b in mEmptySpace)
+			//slice up the outside portals by all the other planes
+			foreach(Portal outPort in outPorts)
 			{
-				List<Face>	brushFaces	=b.GetFaces();
-
-				//clone
-				foreach(Face f in brushFaces)
+				List<Portal>	pieces	=new List<Portal>();
+				pieces.Add(outPort);
+				for(int j=0;j < planes.Count;j++)
 				{
-					emptySpaceFaces.Add(new Face(f));
+					Plane	split	=planes[j];
+					if(outPort.mFace.GetPlane().IsCoPlanar(split))
+					{
+						continue;
+					}
+
+					for(int i=0;i < pieces.Count;i++)
+					{
+						Portal	front, back;
+						if(pieces[i].Split(split, out front, out back))
+						{
+							if(front != null)
+							{
+								pieces.Add(front);
+							}
+							if(back != null)
+							{
+								pieces.Add(back);
+							}
+
+							pieces.RemoveAt(i);
+							i--;
+						}
+					}
 				}
+				outChoppedPorts.AddRange(pieces);
 			}
 
-			foreach(Face f in emptySpaceFaces)
+			//create portals from non leaf planes
+			foreach(Plane plane in planes)
 			{
-				Portal	port	=new Portal();
+				Portal	p	=new Portal();
+				p.mFace		=new Face(plane, null);
 
-				port.mFace	=f;
+				//slice portal by the outside nodes
+				for(int i=0;i < 6;i++)
+				{
+					p.mFace.ClipByFace(outPorts[i].mFace, false, true);
+				}
 
+				Debug.Assert(!p.mFace.IsTiny());
+
+				List<Portal>	pieces	=new List<Portal>();
+				pieces.Add(p);
+
+				//slice up the portals by all the other planes
+				for(int j=0;j < planes.Count;j++)
+				{
+					Plane	split	=planes[j];
+					if(plane.IsCoPlanar(split))
+					{
+						continue;
+					}
+
+					for(int i=0;i < pieces.Count;i++)
+					{
+						Portal	front, back;
+						if(pieces[i].Split(split, out front, out back))
+						{
+							if(front != null)
+							{
+								pieces.Add(front);
+							}
+							if(back != null)
+							{
+								pieces.Add(back);
+							}
+
+							pieces.RemoveAt(i);
+							i--;
+						}
+					}
+				}
+
+				//filter the portal pieces into leaves
+				foreach(Portal port in pieces)
+				{
+					mRoot.FilterPortalFront(port);
+					mRoot.FilterPortalBack(port);
+					Debug.Assert(port.mFront != null);
+					Debug.Assert(port.mBack != null);
+				}
+
+				MergePortals(pieces);
+
+				mPortals.AddRange(pieces);
+
+				updateNumPortals(mPortals.Count);
+			}
+
+			//filter outer node portals
+			foreach(Portal port in outChoppedPorts)
+			{
 				mRoot.FilterPortalBack(port);
-				mRoot.FilterPortalFront(port);
+				Debug.Assert(port.mFront != null);
+				Debug.Assert(port.mBack != null);
+			}
 
+			MergePortals(outChoppedPorts);
+
+			mPortals.AddRange(outChoppedPorts);
+			updateNumPortals(mPortals.Count);
+
+			Map.Print("Doing final portal merge...");
+
+			MergePortals(mPortals);
+
+			updateNumPortals(mPortals.Count);
+
+			//add portals to nodes
+			foreach(Portal port in mPortals)
+			{
 				port.mFront.AddPortal(port);
 				port.mBack.AddPortal(port);
-
-				mPortals.Add(port);
 			}
 
-//			mRoot.GatherPortals(mPortals);
+			if(ePortalizationComplete != null)
+			{
+				ePortalizationComplete(null, null);
+			}
+		}
+
+
+		void MergePortals(List<Portal> pieces)
+		{
+			for(int i=0;i < pieces.Count;i++)
+			{
+				Portal	p	=pieces[i];
+
+				List<Portal>	sameOnNode	=new List<Portal>();
+				List<Portal>	dupes		=new List<Portal>();
+				foreach(Portal p2 in pieces)
+				{
+					if(p == p2)
+					{
+						continue;
+					}
+
+					if(p.mOnNode == p2.mOnNode)
+					{
+						sameOnNode.Add(p2);
+					}
+				}
+
+				foreach(Portal pOn in sameOnNode)
+				{
+					if(pOn.mFront == p.mFront && pOn.mBack == p.mBack)
+					{
+						dupes.Add(pOn);
+					}
+				}
+
+				if(dupes.Count > 0)
+				{
+					foreach(Portal nuke in dupes)
+					{
+						pieces.Remove(nuke);
+					}
+				}
+			}
 		}
 
 
@@ -129,7 +272,7 @@ namespace BSPLib
 			int	ofs		=verts.Count;
 
 			UInt32	offset	=(UInt32)ofs;
-			/*
+
 			foreach(Portal p in mPortals)
 			{
 				if((p.mBack.mBrushContents & Brush.CONTENTS_SOLID) == 0)
@@ -153,7 +296,7 @@ namespace BSPLib
 					indexes.Add(offset++);
 					indexes.Add(offset++);
 				}
-			}*/
+			}
 
 			foreach(BspFlatNode node in mFlooded)
 			{
@@ -193,15 +336,8 @@ namespace BSPLib
 
 		internal void GetPortalTriangles(List<Vector3> verts, List<UInt32> indexes)
 		{
-			/*
-			foreach(Brush b in mEmptySpace)
-			{
-				b.GetTriangles(verts, indexes, false);
-			}
-			*/
 			foreach(Portal p in mPortals)
 			{
-				
 				if(!p.mBack.mbLeaf)
 				{
 //					continue;

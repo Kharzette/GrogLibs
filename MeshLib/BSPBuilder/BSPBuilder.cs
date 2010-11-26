@@ -464,6 +464,7 @@ namespace BSPBuilder
 				mMap.eNumDrawFacesChanged		+=OnNumDrawFacesChanged;
 				mMap.eNumMapFacesChanged		+=OnNumMapFacesChanged;
 				mMap.eProgressChanged			+=OnMapProgressChanged;
+				mMap.eNumPortalsChanged			+=OnNumPortalsChanged;
 
 				mMap.BuildTree(mMF.bBevels, mMF.MaxNumberOfCPUCores);
 			}
@@ -543,6 +544,14 @@ namespace BSPBuilder
 			int	num	=(int)sender;
 
 			mMF.NumberOfDrawFaces	="" + num;
+		}
+
+
+		void OnNumPortalsChanged(object sender, EventArgs ea)
+		{
+			int	num	=(int)sender;
+
+			mMF.NumberOfPortals	="" + num;
 		}
 
 

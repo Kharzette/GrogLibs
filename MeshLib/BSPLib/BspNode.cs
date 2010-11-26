@@ -22,8 +22,7 @@ namespace BSPLib
 		public BspNode	mFront, mBack, mParent;
 		public Brush	mBrush;
 		public Bounds	mBounds;
-
-		public List<Portal>	mPortals	=new List<Portal>();
+		public Portal	mPortals;
 
 		public static List<Brush>	TroubleBrushes	=new List<Brush>();
 
@@ -167,12 +166,6 @@ namespace BSPLib
 		#endregion
 
 
-		internal void AddPortal(Portal port)
-		{
-			mPortals.Add(port);
-		}
-
-
 		void GatherFaces(List<Face> faces)
 		{
 			if(mBrush != null)
@@ -240,111 +233,118 @@ namespace BSPLib
 		}
 
 
-		internal void FilterPortalFront(Portal port)
+		internal void AddToTree(List<Brush> brushList)
 		{
-			if(mBrush != null)
-			{
-				Debug.Assert(port.mFrontOld == null);
-				port.mFrontOld	=this;
-				return;
-			}
-
-			int	pointsFront, pointsBack, pointsOn;
-			port.mFace.GetSplitInfo(mPlane, out pointsFront, out pointsBack, out pointsOn);
-
-			if(pointsFront > 0)
-			{
-				Debug.Assert(pointsBack == 0);
-				mFront.FilterPortalFront(port);
-			}
-			else if(pointsBack > 0)
-			{
-				Debug.Assert(pointsFront == 0);
-				mBack.FilterPortalFront(port);
-			}
-			else if(pointsOn > 0)
-			{
-				mFront.FilterPortalFront(port);
-			}
-		}
-
-
-		internal void FilterPortalBack(Portal port)
-		{
-			if(mBrush != null)
-			{
-				Debug.Assert(port.mBackOld == null);
-				port.mBackOld	=this;
-				return;
-			}
-
-			int	pointsFront, pointsBack, pointsOn;
-			port.mFace.GetSplitInfo(mPlane, out pointsFront, out pointsBack, out pointsOn);
-
-			if(pointsFront > 0)
-			{
-				Debug.Assert(pointsBack == 0);
-				mFront.FilterPortalBack(port);
-			}
-			else if(pointsBack > 0)
-			{
-				Debug.Assert(pointsFront == 0);
-				mBack.FilterPortalBack(port);
-			}
-			else if(pointsOn > 0)
-			{
-				mBack.FilterPortalBack(port);
-			}
-		}
-
-
-		internal void MergeBrush(List<Brush> inList, List<Brush> outList)
-		{
-			if(mBrush != null)
-			{
-				foreach(Brush b in inList)
-				{
-					List<Brush>	parts	=new List<Brush>();
-
-					if(b.SubtractBrush(mBrush, out parts))
-					{
-						outList.AddRange(parts);
-					}
-					else
-					{
-						outList.Add(b);
-					}
-				}
-				return;
-			}
-
 			List<Brush>	frontList	=new List<Brush>();
 			List<Brush>	backList	=new List<Brush>();
-			Face		splitFace	=new Face(mPlane, null);
-			foreach(Brush b in inList)
+
+			Face	splitFace	=new Face(mPlane, null);
+
+			//split the entire list into front and back
+			foreach(Brush b in brushList)
 			{
-				Brush	front, back;
+				Brush	bf, bb;
 
-				b.SplitBrush(splitFace, out front, out back);
+				b.SplitBrush(splitFace, out bf, out bb);
 
-				if(back != null)
+				if(bb != null)
 				{
-					if(back.IsValid())
+					if(bb.IsValid())
 					{
-						backList.Add(back);
+						backList.Add(bb);
 					}
 				}
-				if(front != null)
+				if(bf != null)
 				{
-					if(front.IsValid())
+					if(bf.IsValid())
 					{
-						frontList.Add(front);
+						frontList.Add(bf);
 					}
 				}
 			}
 
-			mFront.MergeBrush(frontList, outList);
-			mBack.MergeBrush(backList, outList);
+			//nuke original
+			brushList.Clear();
+
+			//see if we are at a leaf
+			bool	bLeaf	=false;
+			if(mBrush != null)
+			{
+				backList.Add(mBrush);
+				mBrush	=null;
+				bLeaf	=true;
+			}
+
+			//check both lists to ensure
+			//there's some valid space
+			bool	bFrontValid	=false;
+			bool	bBackValid	=false;
+			if(frontList.Count > 0)
+			{
+				foreach(Brush b in frontList)
+				{
+					if(b.IsValid())
+					{
+						bFrontValid	=true;
+					}
+				}
+			}
+			if(backList.Count > 0)
+			{
+				foreach(Brush b in backList)
+				{
+					if(b.IsValid())
+					{
+						bBackValid	=true;
+					}
+				}
+			}
+
+			if(bLeaf)
+			{
+				if(bFrontValid && !bBackValid)
+				{
+					//make a leaf from frontlist
+					MakeLeaf(frontList);
+					return;
+				}
+				else if(bBackValid && !bFrontValid)
+				{
+					MakeLeaf(backList);
+					return;
+				}
+				else if(!bFrontValid && !bBackValid)
+				{
+					Debug.Assert(false);
+				}
+				else
+				{
+					mFront	=new BspNode();
+					mFront.BuildTree(frontList, null);
+					mBack	=new BspNode();
+					mBack.BuildTree(backList, null);
+				}
+			}
+			else
+			{
+				if(frontList.Count > 0)
+				{
+					AddToTree(frontList);
+				}
+				else
+				{
+					Debug.Assert(false);// && "Nonleaf node with no front side brushes!");
+				}
+
+				if(backList.Count > 0)
+				{
+					AddToTree(backList);
+				}
+				else
+				{
+					Debug.Assert(false);// && "Nonleaf node with no back side brushes!");
+				}
+			}
 		}
 
 
@@ -482,8 +482,8 @@ namespace BSPLib
 			}
 
 			mBounds	=new Bounds();
-			mBounds.MergeBounds(null, mFront.Bound());
-			mBounds.MergeBounds(null, mBack.Bound());
+			mBounds.Merge(null, mFront.Bound());
+			mBounds.Merge(null, mBack.Bound());
 
 			return	mBounds;
 		}

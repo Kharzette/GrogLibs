@@ -432,45 +432,6 @@ namespace BSPLib
 
 
 		#region Queries
-		internal bool CompareEpsilon(Face f, float eps)
-		{
-			if(!IsPlanar(f, eps))
-			{
-				return	false;
-			}
-
-			//check windings
-			foreach(Vector3 pnt in mPoints)
-			{
-				if(!f.ContainsPoint(pnt))
-				{
-					return	false;
-				}
-			}
-
-			return	true;
-		}
-
-
-		internal bool IsPlanar(Face f, float eps)
-		{
-			Plane	p	=f.GetPlane();
-
-			if(p.CompareEpsilon(mFacePlane, eps))
-			{
-				return	true;
-			}
-
-			p.Invert();
-			if(p.CompareEpsilon(mFacePlane, eps))
-			{
-				return	true;
-			}
-
-			return	false;
-		}
-
-
 		internal bool IsPlanar(Face f)
 		{
 			Plane	p	=f.GetPlane();

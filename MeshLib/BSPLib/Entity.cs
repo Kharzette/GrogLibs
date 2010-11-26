@@ -10,7 +10,7 @@ namespace BSPLib
 	public class Entity
 	{
 		public Dictionary<string, string>	mData		=new Dictionary<string,string>();
-		public List<Brush>					mBrushes	=new List<Brush>();
+		public List<MapBrush>				mBrushes	=new List<MapBrush>();
 
 
 		public Entity()	{}
@@ -139,81 +139,8 @@ namespace BSPLib
 		}
 
 
-		internal void ReadFromMap(StreamReader sr)
-		{
-			string	s	="";
-			Brush	b	=null;
-
-			bool	brushComing	=false;
-			bool	patchComing	=false;
-			bool	patchBrush	=false;
-
-			while((s = sr.ReadLine()) != null)
-			{
-				s	=s.Trim();
-				if(s.StartsWith("\""))
-				{
-					string	[]tokens;
-					tokens	=s.Split('\"');
-
-					mData.Add(tokens[1], tokens[3]);
-				}
-				else if(s.StartsWith("{"))
-				{
-					if(!patchComing)
-					{
-						//brush coming I think
-						b			=new Brush();
-						brushComing	=true;
-					}
-				}
-				else if(s.StartsWith("}"))
-				{
-					if(brushComing)
-					{
-						brushComing	=false;
-
-						//seal the brush
-						b.SealFaces();
-
-						if(b.IsValid())
-						{
-							mBrushes.Add(b);
-						}
-					}
-					else if(patchComing)
-					{
-						patchComing	=false;
-					}
-					else if(patchBrush)
-					{
-						patchBrush	=false;	//I'll support these someday maybe
-					}
-					else
-					{
-						return;	//entity done
-					}
-				}
-				else if(s.StartsWith("("))
-				{
-					if(brushComing)
-					{
-						b.MakeFaceFromMapLine(s);
-					}
-				}
-				else if(s.StartsWith("patchDef2"))
-				{
-					brushComing	=false;
-					patchComing	=true;
-					patchBrush	=true;
-					b			=null;
-				}
-			}
-		}
-
-
 		//read a single entity block
-		internal void ReadVMFEntBlock(StreamReader sr)
+		internal void ReadVMFEntBlock(StreamReader sr, int entityNum, PlanePool pool)
 		{
 			string	s	="";
 			while((s = sr.ReadLine()) != null)
@@ -239,11 +166,11 @@ namespace BSPLib
 				}
 				else if(s == "solid")
 				{
-					Brush	b	=new Brush();
+					MapBrush	b	=new MapBrush();
 
-					if(b.ReadVMFSolidBlock(sr))
+					if(b.ReadVMFSolidBlock(sr, pool, entityNum))
 					{
-						b.SealFaces();
+						b.MakePolys(pool);
 						mBrushes.Add(b);
 					}
 				}
@@ -278,7 +205,7 @@ namespace BSPLib
 
 
 		//read a single entity block
-		internal void ReadVMFWorldBlock(StreamReader sr)
+		internal void ReadVMFWorldBlock(StreamReader sr, int entityNum, PlanePool pool)
 		{
 			string	s	="";
 			while((s = sr.ReadLine()) != null)
@@ -286,11 +213,11 @@ namespace BSPLib
 				s	=s.Trim();
 				if(s == "solid")
 				{
-					Brush	b	=new Brush();
+					MapBrush	b	=new MapBrush();
 
-					if(b.ReadVMFSolidBlock(sr))
+					if(b.ReadVMFSolidBlock(sr, pool, entityNum))
 					{
-						b.SealFaces();
+						b.MakePolys(pool);
 						mBrushes.Add(b);
 					}
 				}
@@ -314,7 +241,7 @@ namespace BSPLib
 
 
 		//read's hammer files
-		internal void ReadFromVMF(StreamReader sr)
+		internal void ReadFromVMF(StreamReader sr, int entityNum, PlanePool pool)
 		{
 			string	s	="";
 			while((s = sr.ReadLine()) != null)
@@ -322,12 +249,12 @@ namespace BSPLib
 				s	=s.Trim();
 				if(s == "entity")
 				{
-					ReadVMFEntBlock(sr);
+					ReadVMFEntBlock(sr, entityNum, pool);
 					return;
 				}
 				else if(s == "world")
 				{
-					ReadVMFWorldBlock(sr);
+					ReadVMFWorldBlock(sr, entityNum, pool);
 					return;
 				}
 			}

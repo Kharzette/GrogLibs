@@ -62,7 +62,21 @@ namespace BSPLib
 		}
 
 
-		public void MergeBounds(Bounds b1, Bounds b2)
+		internal bool Overlaps(Bounds b2)
+		{
+			for(int i=0;i < 3;i++)
+			{
+				if(UtilityLib.Mathery.VecIdx(mMins, i) >= UtilityLib.Mathery.VecIdx(b2.mMaxs, i) ||
+					UtilityLib.Mathery.VecIdx(mMaxs, i) <= UtilityLib.Mathery.VecIdx(b2.mMins, i))
+				{
+					return	false;
+				}
+			}
+			return	true;
+		}
+
+
+		public void Merge(Bounds b1, Bounds b2)
 		{
 			if(b1 != null)
 			{
@@ -74,6 +88,20 @@ namespace BSPLib
 				AddPointToBounds(b2.mMins);
 				AddPointToBounds(b2.mMaxs);
 			}
+		}
+
+
+		internal bool IsMaxExtents()
+		{
+			for(int i=0;i < 3;i++)
+			{
+				if(UtilityLib.Mathery.VecIdx(mMins, i) <= -Brush.MIN_MAX_BOUNDS
+					|| UtilityLib.Mathery.VecIdx(mMaxs, i) >= Brush.MIN_MAX_BOUNDS)
+				{
+					return	true;
+				}
+			}
+			return	false;
 		}
 	}
 }

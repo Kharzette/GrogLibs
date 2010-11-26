@@ -118,6 +118,12 @@ namespace BSPBuilder
 			set { SetTextBoxValue(NumMapFaces, value); }
 		}
 
+		internal string NumberOfPortals
+		{
+			get { return NumPortals.Text; }
+			set { SetTextBoxValue(NumPortals, value); }
+		}
+
 		internal string NumberOfDrawFaces
 		{
 			get { return NumDrawFaces.Text; }

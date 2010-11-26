@@ -94,8 +94,14 @@
     <Compile Include="BspTree.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="Face.cs" />
+    <Compile Include="GBSPBrush.cs" />
+    <Compile Include="GBSPPlane.cs" />
+    <Compile Include="GBSPPoly.cs" />
+    <Compile Include="GBSPSide.cs" />
     <Compile Include="Map.cs" />
+    <Compile Include="MapBrush.cs" />
     <Compile Include="Plane.cs" />
+    <Compile Include="PlanePool.cs" />
     <Compile Include="Portal.cs">
       <SubType>Code</SubType>
     </Compile>

@@ -359,184 +359,6 @@ namespace BSPLib
 		}
 
 
-		internal void MergeBrush(List<Brush> inList, List<Brush> outList)
-		{
-			if(mbLeaf)
-			{
-				outList.AddRange(inList);
-				return;
-			}
-
-			List<Brush>	frontList	=new List<Brush>();
-			List<Brush>	backList	=new List<Brush>();
-			Face		splitFace	=new Face(mPlane, null);
-			foreach(Brush b in inList)
-			{
-				Brush	front, back;
-
-				b.SplitBrush(splitFace, out front, out back);
-
-				if(back != null)
-				{
-					if(back.IsValid())
-					{
-						backList.Add(back);
-					}
-				}
-				if(front != null)
-				{
-					if(front.IsValid())
-					{
-						frontList.Add(front);
-					}
-				}
-			}
-
-			if(mFront != null)
-			{
-				mFront.MergeBrush(frontList, outList);
-			}
-			else
-			{
-				outList.AddRange(frontList);
-			}
-			if(mBack != null)
-			{
-				mBack.MergeBrush(backList, outList);
-			}
-		}
-
-
-		internal void PartitionPortals()
-		{
-			if(mbLeaf)
-			{
-				return;
-			}
-
-			//create a portal on this node
-			Portal	p	=new Portal();
-			p.mFace		=new Face(mPlane, null);
-			p.mOnNode	=this;
-
-			//slice up the portals by all the other
-			//portals attached to this node
-			foreach(Portal slicer in mPortals)
-			{
-				Plane	split	=slicer.mFace.GetPlane();
-				if(mPlane.IsCoPlanar(split))
-				{
-					continue;
-				}
-
-				p.mFace.ClipByPlane(split, this == slicer.mFront, true);
-				if(p.mFace.IsTiny())
-				{
-					break;
-				}
-			}
-
-			if(p.mFace.IsTiny())
-			{
-				Map.Print("Portal destroyed\n");
-				return;
-			}
-
-			//add portal to front & back
-			if(mFront != null)
-			{
-				p.mFront	=mFront;
-				p.mFront.mPortals.Add(p);
-			}
-			if(mBack != null)
-			{
-				p.mBack		=mBack;
-				p.mBack.mPortals.Add(p);
-			}
-
-			//split all the other portals
-			//by the one we just created
-			List<Portal>	nuke	=new List<Portal>();
-			List<Portal>	adds	=new List<Portal>();
-
-			BspFlatNode	node	=this;
-			while(node != null)
-			{
-				foreach(Portal port in node.mPortals)
-				{
-					Portal	front, back;
-					if(port.Split(mPlane, out front, out back))
-					{
-						nuke.Add(port);
-						if(front != null)
-						{
-							adds.Add(front);
-						}
-						if(back != null)
-						{
-							adds.Add(back);
-						}
-					}
-				}
-				//blast split portals
-				foreach(Portal port in nuke)
-				{
-					port.mBack.mPortals.Remove(port);
-					if(port.mFront != null)
-					{
-						port.mFront.mPortals.Remove(port);
-					}
-				}
-
-				//add split up portals to nodes
-				foreach(Portal port in adds)
-				{
-					if(port.mFront != null)
-					{
-						port.mFront.mPortals.Add(port);
-					}
-					port.mBack.mPortals.Add(port);
-				}
-
-				nuke.Clear();
-				adds.Clear();
-
-				node	=node.mParent;
-			}
-
-			if(mFront != null)
-			{
-				mFront.PartitionPortals();
-			}
-			if(mBack != null)
-			{
-				mBack.PartitionPortals();
-			}
-		}
-
-
-		internal void GatherPortals(List<Portal> portals)
-		{
-			if(mbLeaf)
-			{
-//				Debug.Assert(mPortals.Count == 0);
-				portals.AddRange(mPortals);
-				return;
-			}
-
-			portals.AddRange(mPortals);
-
-			if(mFront != null)
-			{
-				mFront.GatherPortals(portals);
-			}
-			if(mBack != null)
-			{
-				mBack.GatherPortals(portals);
-			}
-		}
-
-
 		internal void GatherNonLeafPlanes(List<Plane> planes)
 		{
 			if(mbLeaf)
@@ -586,12 +408,12 @@ namespace BSPLib
 
 			if(mFront != null)
 			{
-				mBounds.MergeBounds(null, mFront.Bound());
+				mBounds.Merge(null, mFront.Bound());
 			}
 
 			if(mBack != null)
 			{
-				mBounds.MergeBounds(null, mBack.Bound());
+				mBounds.Merge(null, mBack.Bound());
 			}
 
 			return	mBounds;
@@ -691,8 +513,7 @@ namespace BSPLib
 				}
 				else
 				{
-					if(port.mFront != null &&
-						(port.mFront.mBrushContents & Brush.CONTENTS_SOLID) == 0)
+					if((port.mFront.mBrushContents & Brush.CONTENTS_SOLID) == 0)
 					{
 						port.mFront.FloodFillEmpty(flooded);
 					}

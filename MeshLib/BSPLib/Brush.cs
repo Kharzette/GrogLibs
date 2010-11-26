@@ -54,8 +54,6 @@ namespace BSPLib
 		Bounds		mBounds;
 		UInt32		mContents;
 
-		public List<BrushPortal>	mPortals	=new List<BrushPortal>();
-
 		public const float	MIN_MAX_BOUNDS	=15192.0f;
 
 		public const UInt32	CONTENTS_EMPTY			=0;
@@ -212,54 +210,6 @@ namespace BSPLib
 
 
 		#region Queries
-		internal bool IsBehind(Face f)
-		{
-			Plane	p	=f.GetPlane();
-			foreach(Face bf in mFaces)
-			{
-				if(!bf.IsBehind(p))
-				{
-					return	false;
-				}
-			}
-			return	true;
-		}
-
-
-		internal bool IsFaceOnBrush(Face f)
-		{
-			if(!IsBehind(f))
-			{
-				return	false;
-			}
-			Face	testFace	=new Face(f);
-
-			ClipFaceByBrushBack(testFace, true);
-			if(testFace.IsTiny())
-			{
-				return	false;
-			}
-			return	true;
-		}
-
-
-		internal bool IsFaceOnBrushOpposite(Face f)
-		{
-			Face	testFace	=new Face(f, true);
-			if(!IsBehind(testFace))
-			{
-				return	false;
-			}
-
-			ClipFaceByBrushBack(testFace, true);
-			if(testFace.IsTiny())
-			{
-				return	false;
-			}
-			return	true;
-		}
-
-
 		internal UInt32	GetContents()
 		{
 			return	mContents;
@@ -326,7 +276,9 @@ namespace BSPLib
 			{
 				Plane	fplane	=f.GetPlane();
 
-				if(fplane.CompareEpsilon(bev, 0.001f))
+				if(UtilityLib.Mathery.CompareVectorEpsilon(
+					bev.mNormal, fplane.mNormal,
+					UtilityLib.Mathery.VCompareEpsilon))
 				{
 					return	true;
 				}
@@ -1123,25 +1075,6 @@ namespace BSPLib
 
 			bb.SealFaces();
 			bf.SealFaces();
-		}
-
-
-		internal void Flood(List<Brush> flooded)
-		{
-			if(flooded.Contains(this))
-			{
-				return;
-			}
-
-			flooded.Add(this);
-
-			foreach(BrushPortal bp in mPortals)
-			{
-				foreach(Brush b in bp.mConnections)
-				{
-					b.Flood(flooded);
-				}
-			}
 		}
 
 

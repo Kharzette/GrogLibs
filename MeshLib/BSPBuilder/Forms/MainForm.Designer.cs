@@ -34,6 +34,8 @@
 			this.LabelNumRawFaces = new System.Windows.Forms.Label();
 			this.NumMapFaces = new System.Windows.Forms.TextBox();
 			this.StatsGroupBox = new System.Windows.Forms.GroupBox();
+			this.LabelNumPortals = new System.Windows.Forms.Label();
+			this.NumPortals = new System.Windows.Forms.TextBox();
 			this.LabelNumCollisionFaces = new System.Windows.Forms.Label();
 			this.LabelNumDrawFaces = new System.Windows.Forms.Label();
 			this.NumCollisionFaces = new System.Windows.Forms.TextBox();
@@ -85,6 +87,7 @@
 			this.BevelBrushes.AutoSize = true;
 			this.BevelBrushes.Checked = true;
 			this.BevelBrushes.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.BevelBrushes.Enabled = false;
 			this.BevelBrushes.Location = new System.Drawing.Point(6, 45);
 			this.BevelBrushes.Name = "BevelBrushes";
 			this.BevelBrushes.Size = new System.Drawing.Size(110, 17);
@@ -95,15 +98,15 @@
 			// LabelNumRawFaces
 			// 
 			this.LabelNumRawFaces.AutoSize = true;
-			this.LabelNumRawFaces.Location = new System.Drawing.Point(47, 22);
+			this.LabelNumRawFaces.Location = new System.Drawing.Point(6, 22);
 			this.LabelNumRawFaces.Name = "LabelNumRawFaces";
-			this.LabelNumRawFaces.Size = new System.Drawing.Size(60, 13);
+			this.LabelNumRawFaces.Size = new System.Drawing.Size(69, 13);
 			this.LabelNumRawFaces.TabIndex = 12;
-			this.LabelNumRawFaces.Text = "Map Faces";
+			this.LabelNumRawFaces.Text = "Map Brushes";
 			// 
 			// NumMapFaces
 			// 
-			this.NumMapFaces.Location = new System.Drawing.Point(113, 19);
+			this.NumMapFaces.Location = new System.Drawing.Point(98, 19);
 			this.NumMapFaces.Name = "NumMapFaces";
 			this.NumMapFaces.ReadOnly = true;
 			this.NumMapFaces.Size = new System.Drawing.Size(76, 20);
@@ -111,6 +114,8 @@
 			// 
 			// StatsGroupBox
 			// 
+			this.StatsGroupBox.Controls.Add(this.LabelNumPortals);
+			this.StatsGroupBox.Controls.Add(this.NumPortals);
 			this.StatsGroupBox.Controls.Add(this.LabelNumCollisionFaces);
 			this.StatsGroupBox.Controls.Add(this.LabelNumDrawFaces);
 			this.StatsGroupBox.Controls.Add(this.NumCollisionFaces);
@@ -119,32 +124,49 @@
 			this.StatsGroupBox.Controls.Add(this.NumMapFaces);
 			this.StatsGroupBox.Location = new System.Drawing.Point(12, 12);
 			this.StatsGroupBox.Name = "StatsGroupBox";
-			this.StatsGroupBox.Size = new System.Drawing.Size(202, 104);
+			this.StatsGroupBox.Size = new System.Drawing.Size(321, 104);
 			this.StatsGroupBox.TabIndex = 14;
 			this.StatsGroupBox.TabStop = false;
 			this.StatsGroupBox.Text = "Statistics";
 			// 
+			// LabelNumPortals
+			// 
+			this.LabelNumPortals.AutoSize = true;
+			this.LabelNumPortals.Location = new System.Drawing.Point(194, 22);
+			this.LabelNumPortals.Name = "LabelNumPortals";
+			this.LabelNumPortals.Size = new System.Drawing.Size(39, 13);
+			this.LabelNumPortals.TabIndex = 20;
+			this.LabelNumPortals.Text = "Portals";
+			// 
+			// NumPortals
+			// 
+			this.NumPortals.Location = new System.Drawing.Point(239, 19);
+			this.NumPortals.Name = "NumPortals";
+			this.NumPortals.ReadOnly = true;
+			this.NumPortals.Size = new System.Drawing.Size(76, 20);
+			this.NumPortals.TabIndex = 19;
+			// 
 			// LabelNumCollisionFaces
 			// 
 			this.LabelNumCollisionFaces.AutoSize = true;
-			this.LabelNumCollisionFaces.Location = new System.Drawing.Point(30, 74);
+			this.LabelNumCollisionFaces.Location = new System.Drawing.Point(6, 74);
 			this.LabelNumCollisionFaces.Name = "LabelNumCollisionFaces";
-			this.LabelNumCollisionFaces.Size = new System.Drawing.Size(77, 13);
+			this.LabelNumCollisionFaces.Size = new System.Drawing.Size(86, 13);
 			this.LabelNumCollisionFaces.TabIndex = 18;
-			this.LabelNumCollisionFaces.Text = "Collision Faces";
+			this.LabelNumCollisionFaces.Text = "Collision Brushes";
 			// 
 			// LabelNumDrawFaces
 			// 
 			this.LabelNumDrawFaces.AutoSize = true;
-			this.LabelNumDrawFaces.Location = new System.Drawing.Point(43, 48);
+			this.LabelNumDrawFaces.Location = new System.Drawing.Point(6, 48);
 			this.LabelNumDrawFaces.Name = "LabelNumDrawFaces";
-			this.LabelNumDrawFaces.Size = new System.Drawing.Size(64, 13);
+			this.LabelNumDrawFaces.Size = new System.Drawing.Size(73, 13);
 			this.LabelNumDrawFaces.TabIndex = 17;
-			this.LabelNumDrawFaces.Text = "Draw Faces";
+			this.LabelNumDrawFaces.Text = "Draw Brushes";
 			// 
 			// NumCollisionFaces
 			// 
-			this.NumCollisionFaces.Location = new System.Drawing.Point(113, 71);
+			this.NumCollisionFaces.Location = new System.Drawing.Point(98, 71);
 			this.NumCollisionFaces.Name = "NumCollisionFaces";
 			this.NumCollisionFaces.ReadOnly = true;
 			this.NumCollisionFaces.Size = new System.Drawing.Size(76, 20);
@@ -152,7 +174,7 @@
 			// 
 			// NumDrawFaces
 			// 
-			this.NumDrawFaces.Location = new System.Drawing.Point(113, 45);
+			this.NumDrawFaces.Location = new System.Drawing.Point(98, 45);
 			this.NumDrawFaces.Name = "NumDrawFaces";
 			this.NumDrawFaces.ReadOnly = true;
 			this.NumDrawFaces.Size = new System.Drawing.Size(76, 20);
@@ -201,6 +223,7 @@
 			// 
 			// MaxCPUCores
 			// 
+			this.MaxCPUCores.Enabled = false;
 			this.MaxCPUCores.Location = new System.Drawing.Point(6, 19);
 			this.MaxCPUCores.Name = "MaxCPUCores";
 			this.MaxCPUCores.Size = new System.Drawing.Size(41, 20);
@@ -242,6 +265,7 @@
 			// 
 			// SaveCollisionBrushes
 			// 
+			this.SaveCollisionBrushes.Enabled = false;
 			this.SaveCollisionBrushes.Location = new System.Drawing.Point(87, 77);
 			this.SaveCollisionBrushes.Name = "SaveCollisionBrushes";
 			this.SaveCollisionBrushes.Size = new System.Drawing.Size(115, 41);
@@ -251,6 +275,7 @@
 			// 
 			// SaveDrawBrushes
 			// 
+			this.SaveDrawBrushes.Enabled = false;
 			this.SaveDrawBrushes.Location = new System.Drawing.Point(87, 48);
 			this.SaveDrawBrushes.Name = "SaveDrawBrushes";
 			this.SaveDrawBrushes.Size = new System.Drawing.Size(115, 23);
@@ -263,7 +288,7 @@
 			this.GroupBuildSettings.Controls.Add(this.MaxCPUCores);
 			this.GroupBuildSettings.Controls.Add(this.LabelCPUCores);
 			this.GroupBuildSettings.Controls.Add(this.BevelBrushes);
-			this.GroupBuildSettings.Location = new System.Drawing.Point(233, 74);
+			this.GroupBuildSettings.Location = new System.Drawing.Point(352, 74);
 			this.GroupBuildSettings.Name = "GroupBuildSettings";
 			this.GroupBuildSettings.Size = new System.Drawing.Size(140, 72);
 			this.GroupBuildSettings.TabIndex = 21;
@@ -273,9 +298,9 @@
 			// GroupDrawSettings
 			// 
 			this.GroupDrawSettings.Controls.Add(this.DrawChoice);
-			this.GroupDrawSettings.Location = new System.Drawing.Point(220, 12);
+			this.GroupDrawSettings.Location = new System.Drawing.Point(339, 12);
 			this.GroupDrawSettings.Name = "GroupDrawSettings";
-			this.GroupDrawSettings.Size = new System.Drawing.Size(196, 56);
+			this.GroupDrawSettings.Size = new System.Drawing.Size(153, 56);
 			this.GroupDrawSettings.TabIndex = 22;
 			this.GroupDrawSettings.TabStop = false;
 			this.GroupDrawSettings.Text = "Draw Settings";
@@ -365,5 +390,7 @@
 		private System.Windows.Forms.ProgressBar Progress3;
 		private System.Windows.Forms.ProgressBar Progress4;
 		private System.Windows.Forms.Button OpenZone;
+		private System.Windows.Forms.Label LabelNumPortals;
+		private System.Windows.Forms.TextBox NumPortals;
 	}
 }

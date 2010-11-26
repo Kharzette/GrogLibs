@@ -9,6 +9,9 @@ namespace UtilityLib
 {
 	public class Mathery
 	{
+		public const float		NORMAL_EPSILON	=0.00001f;
+		public const float		DIST_EPSILON	=0.01f;
+		public const float		ANGLE_EPSILON	=0.00001f;
 		public const float		VCompareEpsilon	=0.001f;
 		public static Vector3	[]AxialNormals	=new Vector3[6];
 
@@ -49,6 +52,20 @@ namespace UtilityLib
 
 
 		public static float VecIdx(Vector3 v, int idx)
+		{
+			if(idx == 0)
+			{
+				return	v.X;
+			}
+			else if(idx == 1)
+			{
+				return	v.Y;
+			}
+			return	v.Z;
+		}
+
+
+		public static float VecIdx(Vector3 v, UInt32 idx)
 		{
 			if(idx == 0)
 			{
@@ -106,6 +123,31 @@ namespace UtilityLib
 			else
 			{
 				v.Z	=val;
+			}
+		}
+
+
+		public static void SnapVector(ref Vector3 vec)
+		{
+			for(int i=0;i < 3;i++)
+			{
+				float	vecElement	=VecIdx(vec, i);
+				vecElement	=Math.Abs(vecElement - 1.0f);
+				if(vecElement < ANGLE_EPSILON)
+				{
+					vec	=Vector3.Zero;
+					VecIdxAssign(ref vec, i, 1.0f);
+					break;
+				}
+
+				vecElement	=VecIdx(vec, i);
+				vecElement	=Math.Abs(vecElement - -1.0f);
+				if(vecElement < ANGLE_EPSILON)
+				{
+					vec	=Vector3.Zero;
+					VecIdxAssign(ref vec, i, -1.0f);
+					break;
+				}
 			}
 		}
 	}
