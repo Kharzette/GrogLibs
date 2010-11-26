@@ -35,19 +35,19 @@ namespace BSPLib
 		public const UInt32 RESERVED7					=(1<<15);
 
 		//16-31 reserved for user contents
-		public const UInt32 BSP_CONTENTS_USER1			=(1<<16);
-		public const UInt32 BSP_CONTENTS_USER2			=(1<<17);
-		public const UInt32 BSP_CONTENTS_USER3			=(1<<18);
-		public const UInt32 BSP_CONTENTS_USER4			=(1<<19);
-		public const UInt32 BSP_CONTENTS_USER5			=(1<<20);
-		public const UInt32 BSP_CONTENTS_USER6			=(1<<21);
-		public const UInt32 BSP_CONTENTS_USER7			=(1<<22);
-		public const UInt32 BSP_CONTENTS_USER8			=(1<<23);
-		public const UInt32 BSP_CONTENTS_USER9			=(1<<24);
-		public const UInt32 BSP_CONTENTS_USER10			=(1<<25);
-		public const UInt32 BSP_CONTENTS_USER11			=(1<<26);
-		public const UInt32 BSP_CONTENTS_USER12			=(1<<27);
-		public const UInt32 BSP_CONTENTS_USER13			=(1<<28);
+		public const UInt32 BSP_CONTENTS_USER1			=(1<<16);	//I'm using this for lava
+		public const UInt32 BSP_CONTENTS_USER2			=(1<<17);	//slime
+		public const UInt32 BSP_CONTENTS_USER3			=(1<<18);	//water
+		public const UInt32 BSP_CONTENTS_USER4			=(1<<19);	//mist
+		public const UInt32 BSP_CONTENTS_USER5			=(1<<20);	//current_0
+		public const UInt32 BSP_CONTENTS_USER6			=(1<<21);	//current_90
+		public const UInt32 BSP_CONTENTS_USER7			=(1<<22);	//current_180
+		public const UInt32 BSP_CONTENTS_USER8			=(1<<23);	//current_270
+		public const UInt32 BSP_CONTENTS_USER9			=(1<<24);	//current_UP
+		public const UInt32 BSP_CONTENTS_USER10			=(1<<25);	//current_DOWN
+		public const UInt32 BSP_CONTENTS_USER11			=(1<<26);	//ladder
+		public const UInt32 BSP_CONTENTS_USER12			=(1<<27);	//trigger
+		public const UInt32 BSP_CONTENTS_USER13			=(1<<28);	//nodrop
 		public const UInt32 BSP_CONTENTS_USER14			=(1<<29);
 		public const UInt32 BSP_CONTENTS_USER15			=(1<<30);
 		public const UInt32 BSP_CONTENTS_USER16			=(0x80000000);
@@ -609,11 +609,11 @@ namespace BSPLib
 		}
 
 
-		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool p)
+		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool bCheckFlags)
 		{
 			foreach(GBSPSide s in mSides)
 			{
-				s.GetTriangles(verts, indexes);
+				s.GetTriangles(verts, indexes, bCheckFlags);
 			}
 		}
 	}

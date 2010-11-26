@@ -241,6 +241,92 @@ namespace BSPLib
 		}
 
 
+		//convert from hammer flags to genesis flags
+		internal void FixFlags()
+		{
+			UInt32	hammerFlags	=mFlags;
+
+			mFlags	=SIDE_VISIBLE;
+
+			//eventually need to convert these
+			//into genesis texinfo stuff
+			if((hammerFlags & SURF_ALPHASHADOW) != 0)
+			{
+			}
+			if((hammerFlags & SURF_DUST) != 0)
+			{
+			}
+			if((hammerFlags & SURF_FLESH) != 0)
+			{
+			}
+			if((hammerFlags & SURF_FLOWING) != 0)
+			{
+			}
+			if((hammerFlags & SURF_HINT) != 0)
+			{
+				mFlags	|=SIDE_HINT;
+			}
+			if((hammerFlags & SURF_LADDER) != 0)
+			{
+			}
+			if((hammerFlags & SURF_LIGHT) != 0)
+			{
+			}
+			if((hammerFlags & SURF_LIGHTFILTER) != 0)
+			{
+			}
+			if((hammerFlags & SURF_METALSTEPS) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NODAMAGE) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NODLIGHT) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NODRAW) != 0)
+			{
+				mFlags	&=~SIDE_VISIBLE;
+			}
+			if((hammerFlags & SURF_NOIMPACT) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NOLIGHTMAP) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NOMARKS) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NONSOLID) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NOSTEPS) != 0)
+			{
+			}
+			if((hammerFlags & SURF_POINTLIGHT) != 0)
+			{
+			}
+			if((hammerFlags & SURF_SKIP) != 0)
+			{
+			}
+			if((hammerFlags & SURF_SKY) != 0)
+			{
+			}
+			if((hammerFlags & SURF_SLICK) != 0)
+			{
+			}
+			if((hammerFlags & SURF_TRANS33) != 0)
+			{
+			}
+			if((hammerFlags & SURF_TRANS66) != 0)
+			{
+			}
+			if((hammerFlags & SURF_WARP) != 0)
+			{
+			}
+		}
+
+
 		Vector3	ParseVec(string tok)
 		{
 			Vector3	ret	=Vector3.Zero;
@@ -258,11 +344,19 @@ namespace BSPLib
 		}
 
 
-		internal void GetTriangles(List<Vector3> verts, List<UInt32> indexes)
+		internal void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
 		{
 			int	ofs		=verts.Count;
 
 			UInt32	offset	=(UInt32)ofs;
+
+			if(bCheckFlags)
+			{
+				if((mFlags & SIDE_VISIBLE) == 0)
+				{
+					return;
+				}
+			}
 
 			//triangulate the brush face points
 			foreach(Vector3 pos in mPoly.mVerts)

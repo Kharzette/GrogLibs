@@ -171,6 +171,7 @@ namespace BSPLib
 					if(b.ReadVMFSolidBlock(sr, pool, entityNum))
 					{
 						b.MakePolys(pool);
+						b.FixContents();
 						mBrushes.Add(b);
 					}
 				}
@@ -218,6 +219,7 @@ namespace BSPLib
 					if(b.ReadVMFSolidBlock(sr, pool, entityNum))
 					{
 						b.MakePolys(pool);
+						b.FixContents();
 						mBrushes.Add(b);
 					}
 				}
