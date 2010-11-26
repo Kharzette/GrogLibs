@@ -27,6 +27,8 @@ namespace BSPLib
 		List<Brush>	mDrawBrushes;		//visible geometry
 		List<Brush>	mCollisionBrushes;	//collision hull
 
+		GBSPNode	mRoot;
+
 		List<MapBrush>	mMapBrushes		=new List<MapBrush>();
 		List<GBSPBrush>	mGBSPBrushes	=new List<GBSPBrush>();
 
@@ -191,7 +193,7 @@ namespace BSPLib
 			}
 			else if(drawChoice == "Draw Tree")
 			{
-				mDrawTree.GetTriangles(verts, indexes, true);
+				mRoot.GetTriangles(verts, indexes, true);
 			}
 			else if(drawChoice == "Collision Tree")
 			{
@@ -747,6 +749,9 @@ namespace BSPLib
 
 			//copy all starting brushes to debug
 			mDebugBrushes	=new List<Brush>();
+
+			mRoot	=new GBSPNode();
+			mRoot.BuildBSP(mGBSPBrushes, mPlanePool);
 			/*
 			foreach(Brush b in wse.mBrushes)
 			{

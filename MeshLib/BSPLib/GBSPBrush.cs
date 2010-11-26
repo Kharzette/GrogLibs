@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 
 
@@ -8,11 +9,11 @@ namespace BSPLib
 {
 	public class GBSPBrush
 	{
-		Bounds		mBounds	=new Bounds();
-		Int32		mSide, mTestSide;
-		MapBrush	mOriginal;
+		public Bounds		mBounds	=new Bounds();
+		public UInt32		mSide, mTestSide;
+		public MapBrush	mOriginal;
 
-		List<GBSPSide>	mSides	=new List<GBSPSide>();
+		public List<GBSPSide>	mSides	=new List<GBSPSide>();
 
 		public const UInt32 BSP_CONTENTS_SOLID2			=(1<<0);		// Solid (Visible)
 		public const UInt32 BSP_CONTENTS_WINDOW2		=(1<<1);		// Window (Visible)
@@ -439,7 +440,7 @@ namespace BSPLib
 			}
 		}
 
-		private float Volume(PlanePool pool)
+		internal float Volume(PlanePool pool)
 		{
 			GBSPPoly	p	=null;
 			int			i	=0;
@@ -609,11 +610,322 @@ namespace BSPLib
 		}
 
 
+		internal static GBSPSide SelectSplitSide(List<GBSPBrush> Brushes, GBSPNode Node, PlanePool pool, ref int NumNonVisNodes)
+		{
+			Int32		Value, BestValue;
+			GBSPSide	Side, BestSide;
+			Int32		Pass, NumPasses;
+			Int32		PNum, PSide;
+			UInt32		s;
+			Int32		Front, Back, Both, Facing, Splits;
+			Int32		BSplits;
+			Int32		BestSplits;
+			Int32		EpsilonBrush;
+			bool		HintSplit	=false;
+
+//			if (CancelRequest)
+//				return NULL;
+
+			BestSide	=null;
+			BestValue	=-999999;
+			BestSplits	=0;
+			NumPasses	=4;
+			for(Pass = 0;Pass < NumPasses;Pass++)
+			{
+				foreach(GBSPBrush Brush in Brushes)
+				{
+					if(((Pass & 1) != 0) && ((Brush.mOriginal.mContents & BSP_CONTENTS_DETAIL2) == 0))
+					{
+						continue;
+					}
+					if(((Pass & 1) == 0) && ((Brush.mOriginal.mContents & BSP_CONTENTS_DETAIL2) != 0))
+					{
+						continue;
+					}
+					
+					for(int i=0;i < Brush.mSides.Count;i++)
+					{
+						Side	=Brush.mSides[i];
+
+						if(Side.mPoly.mVerts.Count < 3)
+						{
+							continue;
+						}
+						if((Side.mFlags & (GBSPSide.SIDE_TESTED | GBSPSide.SIDE_NODE)) != 0)
+						{
+							continue;
+						}
+						if((Side.mFlags & GBSPSide.SIDE_VISIBLE) == 0 && Pass < 2)
+						{
+							continue;
+						}
+
+						PNum	=Side.mPlaneNum;
+						PSide	=Side.mPlaneSide;
+
+						Debug.Assert(Node.CheckPlaneAgainstParents(PNum) == true);
+
+						Front			=0;
+						Back			=0;
+						Both			=0;
+						Facing			=0;
+						Splits			=0;
+						EpsilonBrush	=0;
+
+						foreach(GBSPBrush Test in Brushes)
+						{
+							s	=Test.TestBrushToPlane(PNum, PSide, pool, out BSplits, out HintSplit, ref EpsilonBrush);
+
+							Splits	+=BSplits;
+
+							if(BSplits != 0 && ((s & GBSPPlane.PSIDE_FACING) != 0))
+							{
+								Map.Print("PSIDE_FACING with splits\n");
+								return	null;
+							}
+
+							Test.mTestSide	=s;
+
+							if((s & GBSPPlane.PSIDE_FACING) != 0)
+							{
+								Facing++;
+								for(int j=0;j < Test.mSides.Count;j++)
+								{
+									if(Test.mSides[j].mPlaneNum == PNum)
+									{
+										Test.mSides[j].mFlags	|=GBSPSide.SIDE_TESTED;
+									}
+								}
+							}
+							if((s & GBSPPlane.PSIDE_FRONT) != 0)
+							{
+								Front++;
+							}
+							if((s & GBSPPlane.PSIDE_BACK) != 0)
+							{
+								Back++;
+							}
+							if(s == GBSPPlane.PSIDE_BOTH)
+							{
+								Both++;
+							}
+						}
+
+						Value	=5 * Facing - 5 * Splits - Math.Abs(Front - Back);
+						
+						if(pool.mPlanes[PNum].mType < 3)
+						{
+							Value	+=5;				
+						}
+						
+						Value	-=EpsilonBrush * 1000;	
+
+						if(HintSplit && ((Side.mFlags & GBSPSide.SIDE_HINT) == 0))
+						{
+							Value	=-999999;
+						}
+
+						if(Value > BestValue)
+						{
+							BestValue	=Value;
+							BestSide	=Side;
+							BestSplits	=Splits;
+
+							foreach(GBSPBrush Test in Brushes)
+							{
+								Test.mSide	=Test.mTestSide;
+							}
+						}
+					}
+				}
+
+				if(BestSide != null)
+				{
+					if(Pass > 1)
+					{
+						NumNonVisNodes++;
+					}
+					
+					if(Pass > 0)
+					{
+						Node.mDetail	=true;			// Not needed for vis
+						if((BestSide.mFlags & GBSPSide.SIDE_HINT) != 0)
+						{
+							Map.Print("*** Hint as Detail!!! ***\n");
+						}
+					}					
+					break;
+				}
+			}
+
+			foreach(GBSPBrush b in Brushes)
+			{
+				for(int i=0;i < b.mSides.Count;i++)
+				{
+					b.mSides[i].mFlags	&=~GBSPSide.SIDE_TESTED;
+				}
+			}
+
+			return BestSide;
+		}
+
+
+		UInt32 TestBrushToPlane(int PlaneNum, int PSide, PlanePool pool, out int NumSplits, out bool HintSplit, ref int EpsilonBrush)
+		{
+			GBSPPlane	Plane;
+			UInt32		s;
+			float		d, FrontD, BackD;
+			Int32		Front, Back;
+
+			NumSplits	=0;
+			HintSplit	=false;
+
+			for(int i=0;i < mSides.Count;i++)
+			{
+				int	Num	=mSides[i].mPlaneNum;
+				
+				if(Num == PlaneNum && mSides[i].mPlaneSide == 0)
+				{
+					return	GBSPPlane.PSIDE_BACK | GBSPPlane.PSIDE_FACING;
+				}
+
+				if(Num == PlaneNum && mSides[i].mPlaneSide != 0)
+				{
+					return	GBSPPlane.PSIDE_FRONT | GBSPPlane.PSIDE_FACING;
+				}
+			}
+			
+			//See if it's totally on one side or the other
+			Plane	=pool.mPlanes[PlaneNum];
+
+			s	=mBounds.BoxOnPlaneSide(Plane);
+
+			if(s != GBSPPlane.PSIDE_BOTH)
+			{
+				return	s;
+			}
+			
+			//The brush is split, count the number of splits 
+			FrontD	=BackD	=0.0f;
+
+			foreach(GBSPSide pSide in mSides)
+			{
+				if((pSide.mFlags & GBSPSide.SIDE_NODE) != 0)
+				{
+					continue;
+				}
+				if((pSide.mFlags & GBSPSide.SIDE_VISIBLE) == 0)
+				{
+					continue;
+				}
+				if(pSide.mPoly.mVerts.Count < 3)
+				{
+					continue;
+				}
+
+				PSide	=pSide.mPlaneSide;
+				Front	=Back	=0;
+
+				foreach(Vector3 vert in pSide.mPoly.mVerts)
+				{
+					d	=Plane.DistanceFast(vert);
+
+					if(d > FrontD)
+					{
+						FrontD	=d;
+					}
+					else if(d < BackD)
+					{
+						BackD	=d;
+					}
+
+					if(d > 0.1f)
+					{
+						Front	=1;
+					}
+					else if(d < -0.1)
+					{
+						Back	=1;
+					}
+				}
+
+				if(Front != 0 && Back != 0)
+				{
+					NumSplits++;
+					if((pSide.mFlags & GBSPSide.SIDE_HINT) != 0)
+					{
+						HintSplit	=true;
+					}
+				}
+			}
+
+			//Check to see if this split would produce a tiny brush (would result in tiny leafs, bad for vising)
+			if((FrontD > 0.0f && FrontD < 1.0f) || (BackD < 0.0f && BackD > -1.0f))
+			{
+				EpsilonBrush++;
+			}
+
+			return	s;
+		}
+
+
 		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool bCheckFlags)
 		{
 			foreach(GBSPSide s in mSides)
 			{
 				s.GetTriangles(verts, indexes, bCheckFlags);
+			}
+		}
+
+
+		internal static void SplitBrushList(List<GBSPBrush> brushes, GBSPNode Node, PlanePool pool,
+			List<GBSPBrush> childrenFront, List<GBSPBrush> childrenBack)
+		{
+			GBSPBrush	NewBrush, NewBrush2;
+
+			foreach(GBSPBrush b in brushes)
+			{
+				UInt32	Sides	=b.mSide;
+
+				if(Sides == GBSPPlane.PSIDE_BOTH)
+				{	
+					b.Split(Node.mPlaneNum, 0, (byte)GBSPSide.SIDE_NODE, false, pool, out NewBrush, out NewBrush2);
+					if(NewBrush != null)
+					{
+						childrenFront.Insert(0, NewBrush);
+					}
+					if(NewBrush2 != null)
+					{
+						childrenBack.Insert(0, NewBrush2);
+					}
+					continue;
+				}
+
+				NewBrush	=new GBSPBrush(b);
+
+				if((Sides & GBSPPlane.PSIDE_FACING) != 0)
+				{
+					for(int i=0;i < NewBrush.mSides.Count;i++)
+					{
+						GBSPSide	Side	=NewBrush.mSides[i];
+						if(Side.mPlaneNum == Node.mPlaneNum)
+						{
+							Side.mFlags	|=GBSPSide.SIDE_NODE;
+						}
+					}
+				}
+
+
+				if((Sides & GBSPPlane.PSIDE_FRONT) != 0)
+				{
+					childrenFront.Insert(0, NewBrush);
+					continue;
+				}
+				if((Sides & GBSPPlane.PSIDE_BACK) != 0)
+				{
+					childrenBack.Insert(0, NewBrush);
+					continue;
+				}
 			}
 		}
 	}

@@ -25,6 +25,8 @@ namespace BSPLib
 		public const UInt32	PSIDE_BOTH		=(PSIDE_FRONT | PSIDE_BACK);
 		public const UInt32	PSIDE_FACING	=4;
 
+		public const float PLANESIDE_EPSILON	=0.001f;
+
 
 		internal GBSPPlane(GBSPPlane copyMe)
 		{

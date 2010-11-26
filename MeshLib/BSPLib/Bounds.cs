@@ -103,5 +103,66 @@ namespace BSPLib
 			}
 			return	false;
 		}
+
+
+		internal UInt32 BoxOnPlaneSide(GBSPPlane Plane)
+		{
+			UInt32	Side;
+			Vector3	Corner1, Corner2;
+			float	Dist1, Dist2;
+
+			Corner1	=Vector3.Zero;
+			Corner2	=Vector3.Zero;
+			
+			if(Plane.mType < 3)
+			{
+				Side	=0;
+
+				if(UtilityLib.Mathery.VecIdx(mMaxs, Plane.mType)
+					> Plane.mDist + GBSPPlane.PLANESIDE_EPSILON)
+				{
+					Side	|=GBSPPlane.PSIDE_FRONT;
+				}
+
+				if(UtilityLib.Mathery.VecIdx(mMins, Plane.mType)
+					< Plane.mDist - GBSPPlane.PLANESIDE_EPSILON)
+				{
+					Side	|=GBSPPlane.PSIDE_BACK;
+				}
+				return	Side;
+			}
+			
+			for(int i=0;i < 3;i++)
+			{
+				if(UtilityLib.Mathery.VecIdx(Plane.mNormal, i) < 0)
+				{
+					UtilityLib.Mathery.VecIdxAssign(ref Corner1, i,
+						UtilityLib.Mathery.VecIdx(mMins, i));
+					UtilityLib.Mathery.VecIdxAssign(ref Corner2, i,
+						UtilityLib.Mathery.VecIdx(mMaxs, i));
+				}
+				else
+				{
+					UtilityLib.Mathery.VecIdxAssign(ref Corner2, i,
+						UtilityLib.Mathery.VecIdx(mMins, i));
+					UtilityLib.Mathery.VecIdxAssign(ref Corner1, i,
+						UtilityLib.Mathery.VecIdx(mMaxs, i));
+				}
+			}
+
+			Dist1	=Vector3.Dot(Plane.mNormal, Corner1) - Plane.mDist;
+			Dist2	=Vector3.Dot(Plane.mNormal, Corner2) - Plane.mDist;
+			Side	=0;
+			if(Dist1 >= GBSPPlane.PLANESIDE_EPSILON)
+			{
+				Side	=GBSPPlane.PSIDE_FRONT;
+			}
+			if(Dist2 < GBSPPlane.PLANESIDE_EPSILON)
+			{
+				Side	|=GBSPPlane.PSIDE_BACK;
+			}
+
+			return	Side;
+		}
 	}
 }

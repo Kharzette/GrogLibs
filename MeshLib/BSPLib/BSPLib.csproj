@@ -95,8 +95,11 @@
     <Compile Include="Entity.cs" />
     <Compile Include="Face.cs" />
     <Compile Include="GBSPBrush.cs" />
+    <Compile Include="GBSPFace.cs" />
+    <Compile Include="GBSPNode.cs" />
     <Compile Include="GBSPPlane.cs" />
     <Compile Include="GBSPPoly.cs" />
+    <Compile Include="GBSPPortal.cs" />
     <Compile Include="GBSPSide.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MapBrush.cs" />

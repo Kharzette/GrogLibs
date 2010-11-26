@@ -10,6 +10,7 @@ namespace BSPLib
 		public List<GBSPPlane>	mPlanes	=new List<GBSPPlane>();
 
 		public const Int32	MAX_BSP_PLANES		=32000;
+		public const Int32	PLANENUM_LEAF		=-1;
 		
 
 
