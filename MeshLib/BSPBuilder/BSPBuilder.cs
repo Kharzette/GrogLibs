@@ -280,7 +280,7 @@ namespace BSPBuilder
 			}
 			if(mDrawChoice.StartsWith("Portal"))
 			{
-				mMap.GetPortalLines(lineVerts, lineIndexes);
+//				mMap.GetPortalLines(lineVerts, lineIndexes);
 			}
 
 			mNumVerts	=verts.Count;

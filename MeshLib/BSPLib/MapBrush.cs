@@ -18,25 +18,6 @@ namespace BSPLib
 		public List<GBSPSide>	mOriginalSides	=new List<GBSPSide>();
 		
 
-		MapBrush AllocMapBrush(Int32 numSides)
-		{
-			return	new MapBrush();			
-		}
-
-
-		void FreeMapBrush()
-		{
-			foreach(GBSPSide side in mOriginalSides)
-			{
-				if(side.mPoly != null)
-				{
-					side.mPoly	=null;
-				}
-			}
-			mOriginalSides.Clear();
-		}
-
-
 		#region IO
 		internal static void SkipVMFEditorBlock(StreamReader sr)
 		{
@@ -52,7 +33,7 @@ namespace BSPLib
 		}
 
 
-		internal bool ReadVMFSolidBlock(StreamReader sr, PlanePool pool, int entityNum)
+		internal bool ReadVMFSolidBlock(StreamReader sr, PlanePool pool, TexInfoPool tiPool, int entityNum)
 		{
 			string	s	="";
 			bool	ret	=true;
@@ -62,7 +43,7 @@ namespace BSPLib
 				if(s == "side")
 				{
 					GBSPSide	side	=new GBSPSide();
-					mContents	=side.ReadVMFSideBlock(sr, pool);
+					mContents	=side.ReadVMFSideBlock(sr, pool, tiPool);
 
 					if(mContents == Brush.CONTENTS_AUX)
 					{

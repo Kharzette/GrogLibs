@@ -58,11 +58,14 @@ namespace BSPLib
 			this.mTexInfo	=copyMe.mTexInfo;
 		}
 
-		internal UInt32 ReadVMFSideBlock(StreamReader sr, PlanePool pool)
+		internal UInt32 ReadVMFSideBlock(StreamReader sr, PlanePool pool, TexInfoPool tiPool)
 		{
 			string	s	="";
 			string	tex	="";
 			UInt32	ret	=0;
+			TexInfo	ti	=new TexInfo();
+			float	rot	=0.0f;
+
 			while((s = sr.ReadLine()) != null)
 			{
 				s	=s.Trim();
@@ -89,8 +92,9 @@ namespace BSPLib
 						}
 						if(tex == "TOOLS/TOOLSBLACK")
 						{
-							mFlags	&=~SURF_LIGHT;
-							ret		|=Brush.CONTENTS_SOLID;
+							mFlags		&=~SURF_LIGHT;
+							ret			|=Brush.CONTENTS_SOLID;
+							ti.mFlags	|=TexInfo.TEXINFO_NO_LIGHTMAP;
 						}
 						if(tex == "TOOLS/TOOLSBLOCK_LOS")
 						{
@@ -122,8 +126,10 @@ namespace BSPLib
 						}
 						if(tex == "TOOLS/TOOLSFOG")
 						{
-							mFlags	|=SURF_NODRAW;
-							ret		|=Brush.CONTENTS_MIST;
+							mFlags		|=SURF_NOLIGHTMAP;
+							mFlags		|=SURF_NONSOLID;
+							ret			|=Brush.CONTENTS_MIST;
+							ti.mFlags	|=TexInfo.TEXINFO_TRANS;
 						}
 						if(tex == "TOOLS/TOOLSHINT")
 						{
@@ -169,32 +175,53 @@ namespace BSPLib
 						}
 						if(tex == "TOOLS/TOOLSSKYBOX")
 						{
-							mFlags	|=SURF_SKY;
+							mFlags		|=SURF_SKY;
+							ti.mFlags	|=TexInfo.TEXINFO_SKY;
 						}
 						if(tex == "TOOLS/TOOLSSKYBOX2D")
 						{
-							mFlags	|=SURF_SKY;
+							mFlags		|=SURF_SKY;
+							ti.mFlags	|=TexInfo.TEXINFO_SKY;
 						}
 						else if(tex == "TOOLS/TOOLSSKYFOG")
 						{
-							mFlags	|=SURF_SKY;
+							mFlags		|=SURF_SKY;
+							ti.mFlags	|=TexInfo.TEXINFO_SKY;
 						}
 						else if(tex == "TOOLS/TOOLSTRIGGER")
 						{
 							mFlags	|=SURF_NODRAW;
 							ret		|=Brush.CONTENTS_TRIGGER;
 						}
+						ti.mTexture	=tex;
 					}
 					else if(tokens[1] == "uaxis")
 					{
 						string	[]texVec	=tokens[3].Split('[', ' ', ']');
+						ti.mUVec.X	=Convert.ToSingle(texVec[1]);
+						ti.mUVec.Y	=Convert.ToSingle(texVec[2]);
+						ti.mUVec.Z	=Convert.ToSingle(texVec[3]);
+
+						ti.mShiftU		=Convert.ToSingle(texVec[4]);
+						ti.mDrawScaleU	=Convert.ToSingle(texVec[6]);
 					}
 					else if(tokens[1] == "vaxis")
 					{
 						string	[]texVec	=tokens[3].Split('[', ' ', ']');
+						ti.mVVec.X	=Convert.ToSingle(texVec[1]);
+						ti.mVVec.Y	=Convert.ToSingle(texVec[2]);
+						ti.mVVec.Z	=Convert.ToSingle(texVec[3]);
+
+						ti.mShiftV		=Convert.ToSingle(texVec[4]);
+						ti.mDrawScaleV	=Convert.ToSingle(texVec[6]);
+					}
+					else if(tokens[1] == "lightmapscale")
+					{
+						ti.mLightMapScale	=Convert.ToSingle(tokens[3]);
 					}
 					else if(tokens[1] == "rotation")
 					{
+						rot	=Convert.ToSingle(tokens[3]);
 					}
 				}
 				else if(s.StartsWith("}"))
@@ -205,6 +232,19 @@ namespace BSPLib
 					plane.Snap();
 
 					mPlaneNum	=pool.FindPlane(plane, out mPlaneSide);
+
+					if(rot != 0.0f)
+					{
+						Vector3	texAxis	=Vector3.Cross(ti.mUVec, ti.mVVec);
+						Matrix	texRot	=Matrix.CreateFromAxisAngle(texAxis,
+							MathHelper.ToRadians(rot));
+
+						//rotate tex vecs
+						ti.mUVec	=Vector3.TransformNormal(ti.mUVec, texRot);
+						ti.mVVec	=Vector3.TransformNormal(ti.mVVec, texRot);
+					}
+
+					mTexInfo	=tiPool.Add(ti);
 
 					return	ret;	//side done
 				}

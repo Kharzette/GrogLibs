@@ -7,13 +7,12 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class Entity
+	public class MapEntity
 	{
-		public Dictionary<string, string>	mData		=new Dictionary<string,string>();
 		public List<MapBrush>				mBrushes	=new List<MapBrush>();
-
-
-		public Entity()	{}
+		public Dictionary<string, string>	mData		=new Dictionary<string, string>();
+		public Int32						mModelNum;
+		public UInt32						mFlags;
 
 
 		public bool GetOrigin(out Vector3 org)
