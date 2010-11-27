@@ -156,6 +156,12 @@ namespace BSPLib
 		}
 
 
+		internal bool ClipPoly(GBSPPlane plane, bool bFlip)
+		{
+			return	ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, plane, bFlip);
+		}
+
+
 		internal bool ClipPolyEpsilon(float epsilon, GBSPPlane plane, bool flipTest)
 		{
 			if(mVerts.Count > 100)

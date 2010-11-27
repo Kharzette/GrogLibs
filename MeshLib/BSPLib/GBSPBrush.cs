@@ -9,9 +9,10 @@ namespace BSPLib
 {
 	public class GBSPBrush
 	{
+		public GBSPBrush	mNext;
 		public Bounds		mBounds	=new Bounds();
 		public UInt32		mSide, mTestSide;
-		public MapBrush	mOriginal;
+		public MapBrush		mOriginal;
 
 		public List<GBSPSide>	mSides	=new List<GBSPSide>();
 
@@ -137,7 +138,7 @@ namespace BSPLib
 
 		void BoundBrush()
 		{
-			mBounds.ClearBounds();
+			mBounds.Clear();
 
 			for(int i=0;i < mSides.Count;i++)
 			{
@@ -228,145 +229,164 @@ namespace BSPLib
 		}
 
 
-		void Split(Int32 pNum, sbyte pSide, byte midFlags, bool bVisible, PlanePool pool, out GBSPBrush front, out GBSPBrush back)
+		static void Split(GBSPBrush Brush, Int32 PNum, sbyte PSide, byte MidFlags, bool Visible, PlanePool pool, out GBSPBrush Front, out GBSPBrush Back)
 		{
-			GBSPPlane	plane1	=pool.mPlanes[pNum];
+			Int32		i, j;
+			GBSPPoly	p, MidPoly;
+			GBSPPlane	Plane, Plane2;
+			float		d, FrontD, BackD;
+			GBSPPlane	pPlane1;
+			GBSPBrush	[]Brushes	=new GBSPBrush[2];
 
-			plane1.mType	=GBSPPlane.PLANE_ANY;
+			pPlane1	=pool.mPlanes[PNum];
 
-			if(pSide != 0)
+			Plane		=pPlane1;
+			Plane.mType	=GBSPPlane.PLANE_ANY;
+
+			if(PSide != 0)
 			{
-				plane1.Inverse();
+				Plane.Inverse();
 			}
 
-			front	=back	=null;
+			Front	=Back	=null;
 
-			float	frontD	=0.0f;
-			float	backD	=0.0f;
+			// Check all points
+			FrontD = BackD = 0.0f;
 
-			for(int i=0;i < mSides.Count;i++)
+			for(i=0;i < Brush.mSides.Count;i++)
 			{
-				if(mSides[i].mPoly.mVerts.Count < 3)
+				p	=Brush.mSides[i].mPoly;
+
+				if(p == null)
 				{
 					continue;
 				}
 
-				for(int j=0;j < mSides[i].mPoly.mVerts.Count;j++)
+				foreach(Vector3 vert in Brush.mSides[i].mPoly.mVerts)
 				{
-					float	d	=pool.mPlanes[pNum].DistanceFast(mSides[i].mPoly.mVerts[j]);
+					d	=pPlane1.DistanceFast(vert);
 
-					if(pSide != 0)
+					if(PSide != 0)
 					{
 						d	=-d;
 					}
 
-					if(d > frontD)
+					if(d > FrontD)
 					{
-						frontD	=d;
+						FrontD	=d;
 					}
-					else if(d < backD)
+					else if(d < BackD)
 					{
-						backD	=d;
+						BackD	=d;
 					}
 				}
 			}
-
-			if(frontD < 0.1f)
+			
+			if(FrontD < 0.1f)
 			{
-				back	=new GBSPBrush(this);
-				front	=null;
+				Back	=new GBSPBrush(Brush);
 				return;
 			}
 
-			if(backD > -0.1f)
+			if(BackD > -0.1f)
 			{
-				front	=new GBSPBrush(this);
-				back	=null;
+				Front	=new GBSPBrush(Brush);
 				return;
 			}
 
-			GBSPPoly	p	=new GBSPPoly(plane1);
-
-			for(int i=0;i < mSides.Count && p.mVerts.Count > 2;i++)
+			//create a new poly from the split plane
+			p	=new GBSPPoly(Plane);
+			if(p == null)
 			{
-				GBSPPlane	plane2	=pool.mPlanes[mSides[i].mPlaneNum];
-
-				p.ClipPolyEpsilon(0.0f, plane2, mSides[i].mPlaneSide == 0);
+				Map.Print("Could not create poly.\n");
+			}
+			
+			//Clip the poly by all the planes of the brush being split
+			for(i=0;i < Brush.mSides.Count && !p.IsTiny();i++)
+			{
+				Plane2	=pool.mPlanes[Brush.mSides[i].mPlaneNum];
+				
+				p.ClipPolyEpsilon(0.0f, Plane2, Brush.mSides[i].mPlaneSide == 0);
 			}
 
 			if(p.IsTiny())
-			{
-				UInt32	side	=MostlyOnSide(plane1);
-
-				if(side == GBSPPlane.PSIDE_FRONT)
+			{	
+				UInt32	Side	=Brush.MostlyOnSide(Plane);
+				
+				if(Side == GBSPPlane.PSIDE_FRONT)
 				{
-					front	=new GBSPBrush(this);
+					Front	=new GBSPBrush(Brush);
 				}
-				if(side == GBSPPlane.PSIDE_BACK)
+				if(Side == GBSPPlane.PSIDE_BACK)
 				{
-					back	=new GBSPBrush(this);
+					Back	=new GBSPBrush(Brush);
 				}
 				return;
 			}
 
-			GBSPPoly	midPoly	=p;
+			//Store the mid poly
+			MidPoly	=p;					
 
-			front	=new GBSPBrush();
-			front.mOriginal	=mOriginal;
-
-			back	=new GBSPBrush();
-			back.mOriginal	=mOriginal;
-
-			for(int i=0;i < mSides.Count;i++)
+			//Create 2 brushes
+			for(i=0;i < 2;i++)
 			{
-				if(mSides[i].mPoly.mVerts.Count < 3)
+				Brushes[i]	=new GBSPBrush();
+				
+				if(Brushes[i] == null)
+				{
+					Map.Print("SplitBrush:  Out of memory for brush.\n");
+				}
+				
+				Brushes[i].mOriginal	=Brush.mOriginal;
+			}
+
+			//Split all the current polys of the brush being split, and distribute it to the other 2 brushes
+			foreach(GBSPSide pSide in Brush.mSides)
+			{
+				GBSPPoly	[]Poly	=new GBSPPoly[2];
+				
+				if(pSide.mPoly == null)
 				{
 					continue;
 				}
 
-				GBSPPoly	polyFront, polyBack;
-
-				p	=new GBSPPoly(mSides[i].mPoly);
-
-				if(!p.SplitEpsilon(0.0f, plane1, out polyFront, out polyBack, false))
+				p	=new GBSPPoly(pSide.mPoly);
+				if(!p.SplitEpsilon(0.0f, Plane, out Poly[0], out Poly[1], false))
 				{
 					Map.Print("Error splitting poly...\n");
 				}
 
-				if(polyFront != null)
+				for(j=0;j < 2;j++)
 				{
-					GBSPSide	frontSide	=new GBSPSide(mSides[i]);
+					GBSPSide	pDestSide;
 
-					frontSide.mPoly		=polyFront;
-					frontSide.mFlags	&=~GBSPSide.SIDE_TESTED;
+					if(Poly[j] == null)
+					{
+						continue;
+					}
 
-					front.mSides.Add(frontSide);
-				}
-				if(polyBack != null)
-				{
-					GBSPSide	backSide	=new GBSPSide(mSides[i]);
+					pDestSide	=new GBSPSide(pSide);
 
-					backSide.mPoly	=polyBack;
-					backSide.mFlags	&=~GBSPSide.SIDE_TESTED;
-
-					back.mSides.Add(backSide);
+					Brushes[j].mSides.Add(pDestSide);
+					
+					pDestSide.mPoly		= Poly[j];
+					pDestSide.mFlags	&=~GBSPSide.SIDE_TESTED;
 				}
 			}
 
-			front.BoundBrush();
-			if(!front.CheckBrush())
+			for(i=0;i < 2;i++)
 			{
-				front	=null;
-			}
-			back.BoundBrush();
-			if(!back.CheckBrush())
-			{
-				back	=null;
+				Brushes[i].BoundBrush();
+
+				if(!Brushes[i].CheckBrush())
+				{
+					Brushes[i]	=null;
+				}			
 			}
 
-			if(front == null || back == null)
-			{
-				if(front == null && back == null)
+			if(Brushes[0] == null || Brushes[1] == null)
+			{				
+				if(Brushes[0] == null && Brushes[1] == null)
 				{
 					Map.Print("Split removed brush\n");
 				}
@@ -374,71 +394,71 @@ namespace BSPLib
 				{
 					Map.Print("Split not on both sides\n");
 				}
-
-				if(front != null)
+				
+				if(Brushes[0] != null)
 				{
-					front	=new GBSPBrush(this);
+					Front	=new GBSPBrush(Brush);
 				}
-				if(back != null)
+				if(Brushes[1] != null)
 				{
-					back	=new GBSPBrush(this);
+					Back	=new GBSPBrush(Brush);
 				}
 				return;
 			}
 
-			//add in the split plane
-			GBSPSide	splitSide	=new GBSPSide();
-
-			splitSide.mPlaneNum		=pNum;
-			splitSide.mPlaneSide	=pSide;
-
-			if(bVisible)
+			for(i=0;i < 2;i++)
 			{
-				splitSide.mFlags	|=GBSPSide.SIDE_VISIBLE;
-			}
-			splitSide.mFlags	&=~GBSPSide.SIDE_TESTED;
-			splitSide.mFlags	|=midFlags;
+				GBSPSide	pSide	=new GBSPSide();
 
-			splitSide.mPlaneSide	=(pSide == 0)? (sbyte)1 : (sbyte)0;
+				Brushes[i].mSides.Add(pSide);
 
-			splitSide.mPoly	=new GBSPPoly(midPoly);
-			splitSide.mPoly.Reverse();
+				pSide.mPlaneNum		=PNum;
+				pSide.mPlaneSide	=(sbyte)PSide;
 
-			front.mSides.Add(splitSide);
+				if(Visible)
+				{
+					pSide.mFlags	|=GBSPSide.SIDE_VISIBLE;
+				}
 
-			//add back side
-			splitSide	=new GBSPSide();
+				pSide.mFlags	&=~GBSPSide.SIDE_TESTED;
+				pSide.mFlags	|=MidFlags;
+			
+				if(i == 0)
+				{
+					pSide.mPlaneSide	=(pSide.mPlaneSide == 0)? (sbyte)1 : (sbyte)0;
 
-			splitSide.mPlaneNum		=pNum;
-			splitSide.mPlaneSide	=pSide;
-
-			if(bVisible)
-			{
-				splitSide.mFlags	|=GBSPSide.SIDE_VISIBLE;
-			}
-			splitSide.mFlags	&=~GBSPSide.SIDE_TESTED;
-			splitSide.mFlags	|=midFlags;
-
-			splitSide.mPoly	=new GBSPPoly(midPoly);
-
-			back.mSides.Add(splitSide);
-
-			float	v1	=front.Volume(pool);
-			if(v1 < 1.0f)
-			{
-				front	=null;
-			}
-			v1	=back.Volume(pool);
-			if(v1 < 1.0f)
-			{
-				back	=null;
+					pSide.mPoly	=new GBSPPoly(MidPoly);
+					pSide.mPoly.Reverse();
+				}
+				else
+				{
+					//might not need to copy this
+					pSide.mPoly	=new GBSPPoly(MidPoly);
+				}
 			}
 
-			if(front == null && back == null)
+			{
+				float	v1;
+				for(int z=0;z < 2;z++)
+				{
+					v1	=Brushes[z].Volume(pool);
+					if(v1 < 1.0f)
+					{
+						Brushes[z]	=null;
+						//GHook.Printf("Tiny volume after clip\n");
+					}
+				}
+			}
+
+			if(Brushes[0] == null || Brushes[1] == null)
 			{
 				Map.Print("SplitBrush:  Brush was not split.\n");
 			}
+			
+			Front	=Brushes[0];
+			Back	=Brushes[1];
 		}
+
 
 		internal float Volume(PlanePool pool)
 		{
@@ -487,134 +507,231 @@ namespace BSPLib
 		}
 
 
-		void Subtract(GBSPBrush b, PlanePool pool, List<GBSPBrush> outList)
+		static GBSPBrush Subtract(GBSPBrush a, GBSPBrush b, PlanePool pool)
 		{
-			GBSPBrush	inside	=new GBSPBrush(this);
+			GBSPBrush	Outside, Inside;
+			GBSPBrush	Front, Back;
+			Int32		i;
 
-			for(int i=0;i < b.mSides.Count && inside != null;i++)
+			Inside	=a;	// Default a being inside b
+			Outside	=null;
+
+			//Splitting the inside list against each plane of brush b, only keeping peices that fall on the
+			//outside
+			for(i=0;i < b.mSides.Count && Inside != null;i++)
 			{
-				GBSPBrush	front, back;
+				Split(Inside, b.mSides[i].mPlaneNum, b.mSides[i].mPlaneSide, (byte)GBSPSide.SIDE_NODE, false, pool, out Front, out Back);
 
-				inside.Split(b.mSides[i].mPlaneNum, b.mSides[i].mPlaneSide, (byte)GBSPSide.SIDE_NODE, false, pool, out front, out back);
-
-				if(front != null)
+				//Make sure we don't free a, but free all other fragments
+				if(Inside != a)
 				{
-					outList.Add(front);
+					Inside	=null;
 				}
-				inside	=back;
+
+				//Keep all front sides, and put them in the Outside list
+				if(Front != null)
+				{	
+					Front.mNext	=Outside;
+					Outside		=Front;
+				}
+
+				Inside	=Back;
 			}
 
-			if(inside == null)
+			if(Inside == null)
 			{
-				outList.Clear();
+				FreeBrushList(Outside);		
+				return	a;	//Nothing on inside list, so cancel all cuts, and return original
 			}
-			else
-			{
-				//make this == inside
-				this.mBounds	=inside.mBounds;
-				this.mOriginal	=inside.mOriginal;
-				this.mSide		=inside.mSide;
+			
+			Inside	=null;	//Free all inside fragments
 
-				this.mSides.Clear();
-				foreach(GBSPSide side in inside.mSides)
-				{
-					this.mSides.Add(new GBSPSide(side));
-				}
-				this.mTestSide	=inside.mTestSide;
-			}
+			return	Outside;	//Return what was on the outside
 		}
 
 
-		internal static void CSGBrushes(List<GBSPBrush> inList, PlanePool pool)
+		internal static GBSPBrush CSGBrushes(GBSPBrush Head, PlanePool pool)
 		{
-			List<GBSPBrush>	outList	=new List<GBSPBrush>();
+			GBSPBrush	b1, b2, Next;
+			GBSPBrush	Tail;
+			GBSPBrush	Keep;
+			GBSPBrush	Sub, Sub2;
+			Int32		c1, c2;
 
 			Map.Print("---- CSGBrushes ----\n");
-			Map.Print("Num brushes before CSG : " + inList.Count + "\n");
+			Map.Print("Num brushes before CSG : " + CountBrushList(Head) + "\n");
 
-			NewList:
+			Keep	=null;
 
-			for(int i=0;i < inList.Count;i++)
+		NewList:
+
+			if(Head == null)
 			{
-				GBSPBrush	b1	=inList[i];
-				GBSPBrush	b2	=null;
+				return null;
+			}
 
-				for(int j=0;j < inList.Count;j++)
+			for(Tail=Head;Tail.mNext != null;Tail=Tail.mNext);
+
+			for(b1=Head;b1 != null;b1=Next)
+			{
+				Next = b1.mNext;
+				
+				for(b2=b1.mNext;b2 != null;b2 = b2.mNext)
 				{
-					if(i == j)
-					{
-						continue;
-					}
-
-					b2	=inList[j];
-
 					if(!b1.Overlaps(b2))
 					{
 						continue;
 					}
 
-					List<GBSPBrush>	outsides1	=new List<GBSPBrush>();
-					List<GBSPBrush>	outsides2	=new List<GBSPBrush>();
+					Sub		=null;
+					Sub2	=null;
+					c1		=999999;
+					c2		=999999;
 
 					if(b2.BrushCanBite(b1))
 					{
-						GBSPBrush	dupe	=new GBSPBrush(b1);
-						dupe.Subtract(b2, pool, outsides1);
+						Sub	=Subtract(b1, b2, pool);
 
-						if(outsides1.Count == 0)
+						if(Sub == b1)
 						{
 							continue;
 						}
+
+						if(Sub == null)
+						{
+							Head = RemoveBrushList(b1, b1);
+							goto NewList;
+						}
+						c1 = CountBrushList (Sub);
 					}
 
 					if(b1.BrushCanBite(b2))
 					{
-						GBSPBrush	dupe	=new GBSPBrush(b2);
-						dupe.Subtract(b1, pool, outsides2);
+						Sub2	=Subtract(b2, b1, pool);
 
-						if(outsides2.Count == 0)
+						if(Sub2 == b2)
 						{
 							continue;
 						}
+
+						if(Sub2 == null)
+						{	
+							FreeBrushList(Sub);
+							Head	=RemoveBrushList(b1, b2);
+							goto NewList;
+						}
+						c2	=CountBrushList(Sub2);
 					}
 
-					if(outsides1.Count == 0 && outsides2.Count == 0)
+					if(Sub == null && Sub2 == null)
 					{
 						continue;
 					}
 
-					if(outsides1.Count > 4 && outsides2.Count > 4)
+					if(c1 > 4 && c2 > 4)
 					{
-						outsides1.Clear();
-						outsides2.Clear();
+						if(Sub2 != null)
+						{
+							FreeBrushList(Sub2);
+						}
+						if(Sub != null)
+						{
+							FreeBrushList(Sub);
+						}
 						continue;
-					}
+					}					
 
-					if(outsides1.Count < outsides2.Count)
+					if(c1 < c2)
 					{
-						outsides2.Clear();
-						inList.Remove(b1);
-						inList.AddRange(outsides1);
+						if(Sub2 != null)
+						{
+							FreeBrushList(Sub2);
+						}
+						Tail	=AddBrushListToTail(Sub, Tail);
+						Head	=RemoveBrushList(b1, b1);
 						goto NewList;
 					}
 					else
 					{
-						outsides1.Clear();
-						inList.Remove(b2);
-						inList.AddRange(outsides2);
+						if(Sub != null)
+						{
+							FreeBrushList(Sub);
+						}
+						Tail	=AddBrushListToTail(Sub2, Tail);
+						Head	=RemoveBrushList(b1, b2);
 						goto NewList;
 					}
 				}
+
+				if(b2 == null)
+				{	
+					b1.mNext	=Keep;
+					Keep		=b1;
+				}
 			}
-			Map.Print("Num brushes after CSG  : " + inList.Count + "\n");
+
+			Map.Print("Num brushes after CSG  : " + CountBrushList(Keep) + "\n");
+
+			return	Keep;
 		}
 
 
-		internal static GBSPSide SelectSplitSide(List<GBSPBrush> Brushes, GBSPNode Node, PlanePool pool, ref int NumNonVisNodes)
+		static GBSPBrush AddBrushListToTail(GBSPBrush List, GBSPBrush Tail)
+		{
+			GBSPBrush	Walk, Next;
+
+			for (Walk=List;Walk != null;Walk=Next)
+			{	// add to end of list
+				Next		=Walk.mNext;
+				Walk.mNext	=null;
+				Tail.mNext	=Walk;
+				Tail		=Walk;
+			}
+			return	Tail;
+		}
+
+
+		static Int32 CountBrushList(GBSPBrush Brushes)
+		{
+			Int32	c	=0;
+			for(;Brushes != null;Brushes=Brushes.mNext)
+			{
+				c++;
+			}
+			return	c;
+		}
+
+
+		static GBSPBrush RemoveBrushList(GBSPBrush List, GBSPBrush Remove)
+		{
+			GBSPBrush	NewList;
+			GBSPBrush	Next;
+
+			NewList	=null;
+
+			for(;List != null;List = Next)
+			{
+				Next	=List.mNext;
+
+				if(List == Remove)
+				{
+					List	=null;
+					continue;
+				}
+
+				List.mNext	=NewList;
+				NewList		=List;
+			}
+			return	NewList;
+		}
+
+
+		internal static GBSPSide SelectSplitSide(GBSPBrush Brushes, GBSPNode Node, PlanePool pool, ref int NumNonVisNodes)
 		{
 			Int32		Value, BestValue;
+			GBSPBrush	Brush, Test;
 			GBSPSide	Side, BestSide;
-			Int32		Pass, NumPasses;
+			Int32		i, j, Pass, NumPasses;
 			Int32		PNum, PSide;
 			UInt32		s;
 			Int32		Front, Back, Both, Facing, Splits;
@@ -623,31 +740,30 @@ namespace BSPLib
 			Int32		EpsilonBrush;
 			bool		HintSplit	=false;
 
-//			if (CancelRequest)
-//				return NULL;
-
 			BestSide	=null;
 			BestValue	=-999999;
 			BestSplits	=0;
 			NumPasses	=4;
 			for(Pass = 0;Pass < NumPasses;Pass++)
 			{
-				foreach(GBSPBrush Brush in Brushes)
+				for(Brush = Brushes;Brush != null;Brush=Brush.mNext)
 				{
-					if(((Pass & 1) != 0) && ((Brush.mOriginal.mContents & BSP_CONTENTS_DETAIL2) == 0))
+					if(((Pass & 1) != 0)
+						&& ((Brush.mOriginal.mContents & BSP_CONTENTS_DETAIL2) == 0))
 					{
 						continue;
 					}
-					if(((Pass & 1) == 0) && ((Brush.mOriginal.mContents & BSP_CONTENTS_DETAIL2) != 0))
+					if(((Pass & 1) == 0)
+						&& ((Brush.mOriginal.mContents & BSP_CONTENTS_DETAIL2) != 0))
 					{
 						continue;
 					}
 					
-					for(int i=0;i < Brush.mSides.Count;i++)
+					for(i=0;i < Brush.mSides.Count;i++)
 					{
 						Side	=Brush.mSides[i];
 
-						if(Side.mPoly.mVerts.Count < 3)
+						if(Side.mPoly == null)
 						{
 							continue;
 						}
@@ -655,16 +771,16 @@ namespace BSPLib
 						{
 							continue;
 						}
-						if((Side.mFlags & GBSPSide.SIDE_VISIBLE) == 0 && Pass < 2)
+ 						if(((Side.mFlags & GBSPSide.SIDE_VISIBLE) == 0) && Pass<2)
 						{
 							continue;
 						}
 
 						PNum	=Side.mPlaneNum;
 						PSide	=Side.mPlaneSide;
-
+						
 						Debug.Assert(Node.CheckPlaneAgainstParents(PNum) == true);
-
+												
 						Front			=0;
 						Back			=0;
 						Both			=0;
@@ -672,7 +788,7 @@ namespace BSPLib
 						Splits			=0;
 						EpsilonBrush	=0;
 
-						foreach(GBSPBrush Test in Brushes)
+						for(Test=Brushes;Test != null;Test=Test.mNext)
 						{
 							s	=Test.TestBrushToPlane(PNum, PSide, pool, out BSplits, out HintSplit, ref EpsilonBrush);
 
@@ -681,7 +797,6 @@ namespace BSPLib
 							if(BSplits != 0 && ((s & GBSPPlane.PSIDE_FACING) != 0))
 							{
 								Map.Print("PSIDE_FACING with splits\n");
-								return	null;
 							}
 
 							Test.mTestSide	=s;
@@ -689,7 +804,7 @@ namespace BSPLib
 							if((s & GBSPPlane.PSIDE_FACING) != 0)
 							{
 								Facing++;
-								for(int j=0;j < Test.mSides.Count;j++)
+								for(j=0;j < Test.mSides.Count;j++)
 								{
 									if(Test.mSides[j].mPlaneNum == PNum)
 									{
@@ -705,7 +820,7 @@ namespace BSPLib
 							{
 								Back++;
 							}
-							if(s == GBSPPlane.PSIDE_BOTH)
+							if (s == GBSPPlane.PSIDE_BOTH)
 							{
 								Both++;
 							}
@@ -715,7 +830,7 @@ namespace BSPLib
 						
 						if(pool.mPlanes[PNum].mType < 3)
 						{
-							Value	+=5;				
+							Value	+=5;
 						}
 						
 						Value	-=EpsilonBrush * 1000;	
@@ -730,8 +845,7 @@ namespace BSPLib
 							BestValue	=Value;
 							BestSide	=Side;
 							BestSplits	=Splits;
-
-							foreach(GBSPBrush Test in Brushes)
+							for(Test=Brushes;Test != null;Test=Test.mNext)
 							{
 								Test.mSide	=Test.mTestSide;
 							}
@@ -748,7 +862,7 @@ namespace BSPLib
 					
 					if(Pass > 0)
 					{
-						Node.mDetail	=true;			// Not needed for vis
+						Node.mDetail	=true;	//Not needed for vis
 						if((BestSide.mFlags & GBSPSide.SIDE_HINT) != 0)
 						{
 							Map.Print("*** Hint as Detail!!! ***\n");
@@ -758,15 +872,15 @@ namespace BSPLib
 				}
 			}
 
-			foreach(GBSPBrush b in Brushes)
+			for(Brush = Brushes;Brush != null;Brush=Brush.mNext)
 			{
-				for(int i=0;i < b.mSides.Count;i++)
+				for(i=0;i < Brush.mSides.Count;i++)
 				{
-					b.mSides[i].mFlags	&=~GBSPSide.SIDE_TESTED;
+					Brush.mSides[i].mFlags	&=~GBSPSide.SIDE_TESTED;
 				}
 			}
 
-			return BestSide;
+			return	BestSide;
 		}
 
 
@@ -878,36 +992,59 @@ namespace BSPLib
 		}
 
 
-		internal static void SplitBrushList(List<GBSPBrush> brushes, GBSPNode Node, PlanePool pool,
-			List<GBSPBrush> childrenFront, List<GBSPBrush> childrenBack)
+		internal static void FreeBrushList(GBSPBrush brushes)
 		{
-			GBSPBrush	NewBrush, NewBrush2;
+			GBSPBrush	next;
 
-			foreach(GBSPBrush b in brushes)
+			for(;brushes != null;brushes = next)
 			{
-				UInt32	Sides	=b.mSide;
+				next	=brushes.mNext;
+
+				brushes.mSides.Clear();
+				brushes.mBounds	=null;
+				brushes			=null;
+			}
+		}
+
+
+		internal static void SplitBrushList(GBSPBrush Brushes, GBSPNode Node, PlanePool pool,
+			out GBSPBrush Front, out GBSPBrush Back)
+		{
+			GBSPBrush	Brush, NewBrush, NewBrush2, Next;
+			GBSPSide	Side;
+			UInt32		Sides;
+			Int32		i;
+
+			Front = Back = null;
+
+			for(Brush = Brushes;Brush != null;Brush = Next)
+			{
+				Next	=Brush.mNext;
+				Sides	=Brush.mSide;
 
 				if(Sides == GBSPPlane.PSIDE_BOTH)
-				{	
-					b.Split(Node.mPlaneNum, 0, (byte)GBSPSide.SIDE_NODE, false, pool, out NewBrush, out NewBrush2);
+				{
+					Split(Brush, Node.mPlaneNum, 0, (byte)GBSPSide.SIDE_NODE, false, pool, out NewBrush, out NewBrush2);
 					if(NewBrush != null)
 					{
-						childrenFront.Insert(0, NewBrush);
+						NewBrush.mNext	=Front;
+						Front			=NewBrush;
 					}
 					if(NewBrush2 != null)
 					{
-						childrenBack.Insert(0, NewBrush2);
+						NewBrush2.mNext	=Back;
+						Back			=NewBrush2;
 					}
 					continue;
 				}
 
-				NewBrush	=new GBSPBrush(b);
+				NewBrush	=new GBSPBrush(Brush);
 
 				if((Sides & GBSPPlane.PSIDE_FACING) != 0)
 				{
-					for(int i=0;i < NewBrush.mSides.Count;i++)
+					for(i=0;i < NewBrush.mSides.Count;i++)
 					{
-						GBSPSide	Side	=NewBrush.mSides[i];
+						Side	=NewBrush.mSides[i];
 						if(Side.mPlaneNum == Node.mPlaneNum)
 						{
 							Side.mFlags	|=GBSPSide.SIDE_NODE;
@@ -915,15 +1052,16 @@ namespace BSPLib
 					}
 				}
 
-
 				if((Sides & GBSPPlane.PSIDE_FRONT) != 0)
 				{
-					childrenFront.Insert(0, NewBrush);
+					NewBrush.mNext	=Front;
+					Front			=NewBrush;
 					continue;
 				}
 				if((Sides & GBSPPlane.PSIDE_BACK) != 0)
 				{
-					childrenBack.Insert(0, NewBrush);
+					NewBrush.mNext	=Back;
+					Back			=NewBrush;
 					continue;
 				}
 			}

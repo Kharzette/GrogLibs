@@ -15,7 +15,7 @@ namespace BSPLib
 
 		public Bounds()
 		{
-			ClearBounds();
+			Clear();
 		}
 
 
@@ -26,7 +26,7 @@ namespace BSPLib
 		}
 
 
-		public void ClearBounds()
+		public void Clear()
 		{
 			mMins.X	=mMins.Y =mMins.Z	=Brush.MIN_MAX_BOUNDS;
 			mMaxs	=-mMins;

@@ -22,6 +22,10 @@ namespace BSPLib
 
 		GBSPNode	mRoot;
 
+		//models
+		List<GBSPModel>	mModels	=new List<GBSPModel>();
+
+		//brushes
 		List<MapBrush>	mMapBrushes		=new List<MapBrush>();
 		List<GBSPBrush>	mGBSPBrushes	=new List<GBSPBrush>();
 
@@ -103,9 +107,9 @@ namespace BSPLib
 		{
 			if(drawChoice == "Map Brushes")
 			{
-				foreach(MapBrush b in mMapBrushes)
+				foreach(GBSPModel mod in mModels)
 				{
-					b.GetTriangles(verts, indexes, true);
+					mod.GetTriangles(verts, indexes, true);
 				}
 			}
 			else if(drawChoice == "Trouble Brushes")
@@ -257,6 +261,32 @@ namespace BSPLib
 		#endregion
 
 
+		void ProcessEntities()
+		{
+			int	index	=0;
+			foreach(MapEntity me in mEntities)
+			{
+				if(me.mBrushes.Count == 0)
+				{
+					continue;
+				}
+
+				GBSPModel	mod	=new GBSPModel();
+
+				me.GetOrigin(out mod.mOrigin);
+
+				if(index == 0)
+				{
+					mod.ProcessWorldModel(me.mBrushes, mPlanePool);
+				}
+				else
+				{
+					mod.ProcessSubModel(me.mBrushes, mPlanePool);
+				}
+				mModels.Add(mod);
+			}
+		}
+
 		internal void UpdateNumPortals(int numPortals)
 		{
 			if(eNumPortalsChanged != null)
@@ -289,25 +319,7 @@ namespace BSPLib
 			mbBevel			=bBevel;
 			mMaxCPUCores	=maxCPUCores;
 
-			//look for the worldspawn
-			MapEntity	wse	=GetWorldSpawnEntity();
-
-			foreach(MapBrush b in wse.mBrushes)
-			{
-				mMapBrushes.Add(b);
-			}
-
-			foreach(MapBrush b in mMapBrushes)
-			{
-				GBSPBrush	gb	=new GBSPBrush(b);
-
-				mGBSPBrushes.Add(gb);
-			}
-
-			GBSPBrush.CSGBrushes(mGBSPBrushes, mPlanePool);
-
-			mRoot	=new GBSPNode();
-			mRoot.BuildBSP(mGBSPBrushes, mPlanePool);
+			ProcessEntities();
 		}
 
 

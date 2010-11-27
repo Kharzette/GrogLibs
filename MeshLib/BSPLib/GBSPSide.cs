@@ -9,7 +9,7 @@ namespace BSPLib
 {
 	public class GBSPSide
 	{
-		public GBSPPoly	mPoly	=new GBSPPoly();
+		public GBSPPoly	mPoly;
 		public Int32	mPlaneNum;
 		public sbyte	mPlaneSide;
 		public Int32	mTexInfo;
@@ -77,6 +77,8 @@ namespace BSPLib
 					if(tokens[1] == "plane")
 					{
 						string	[]planePoints	=tokens[3].Split('(', ')');
+
+						mPoly	=new GBSPPoly();
 
 						//1, 3, and 5
 						mPoly.mVerts.Add(ParseVec(planePoints[1]));
