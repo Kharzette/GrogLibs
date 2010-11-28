@@ -54,9 +54,6 @@ namespace BSPLib
 			GBSPNode	root	=new GBSPNode();
 			root.BuildBSP(mGBSPBrushes, pool, ref mBounds);
 
-			//remove
-//			mRootNode[0]	=root;
-
 			if(!root.CreatePortals(this, false, pool))
 			{
 				Map.Print("Could not create the portals.\n");
@@ -103,15 +100,7 @@ namespace BSPLib
 //			{
 //				b.GetTriangles(verts, indexes, bCheck);
 //			}
-			mRootNode[0].GetTriangles(verts, indexes, bCheck);
-
-			/*int	Side	=0;
-			for(GBSPPortal p = mRootNode[0].mPortals;p != null;p=p.mNext[Side])
-			{
-				Side	=(p.mOnNode == p.mNodes[0])? 0 : 1;
-
-				p.mSide.GetTriangles(verts, indexes, bCheck);
-			}*/
+			mRootNode[0].GetPortalTriangles(verts, indexes, bCheck);
 		}
 	}
 }

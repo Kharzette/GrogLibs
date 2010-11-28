@@ -388,10 +388,6 @@ namespace BSPLib
 
 		internal void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
 		{
-			int	ofs		=verts.Count;
-
-			UInt32	offset	=(UInt32)ofs;
-
 			if(bCheckFlags)
 			{
 				if((mFlags & SIDE_VISIBLE) == 0)
@@ -399,20 +395,9 @@ namespace BSPLib
 					return;
 				}
 			}
-
-			//triangulate the brush face points
-			foreach(Vector3 pos in mPoly.mVerts)
+			if(mPoly != null)
 			{
-				verts.Add(pos);
-			}
-
-			int i	=0;
-			for(i=1;i < mPoly.mVerts.Count-1;i++)
-			{
-				//initial vertex
-				indexes.Add(offset);
-				indexes.Add((UInt32)(offset + i));
-				indexes.Add((UInt32)(offset + ((i + 1) % mPoly.mVerts.Count)));
+				mPoly.GetTriangles(verts, indexes, bCheckFlags);
 			}
 		}
 

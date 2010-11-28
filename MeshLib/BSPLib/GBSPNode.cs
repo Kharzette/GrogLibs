@@ -324,6 +324,33 @@ namespace BSPLib
 		}
 
 
+		internal void GetPortalTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
+		{
+			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
+			{
+				if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+				{
+					return;
+				}
+				if(mPortals == null)
+				{
+					return;
+				}
+				int	Side	=0;
+				for(GBSPPortal port=mPortals;port != null;port=port.mNext[Side])
+				{
+					Side	=(port.mOnNode == port.mNodes[0])? 0 : 1;
+
+					port.mPoly.GetTriangles(verts, indexes, bCheckFlags);
+				}
+				return;
+			}
+
+			mChildren[0].GetPortalTriangles(verts, indexes, bCheckFlags);
+			mChildren[1].GetPortalTriangles(verts, indexes, bCheckFlags);
+		}
+
+
 		internal void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
 		{
 			if(mSide != null)
