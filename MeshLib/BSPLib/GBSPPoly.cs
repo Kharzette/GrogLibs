@@ -10,7 +10,8 @@ namespace BSPLib
 	{
 		public List<Vector3>	mVerts	=new List<Vector3>();
 
-		public const float	EDGE_LENGTH	=0.1f;
+		public const float	EDGE_LENGTH			=0.1f;
+		public const float	DEGENERATE_EPSILON	=0.001f;
 
 
 		public GBSPPoly() { }
@@ -285,6 +286,12 @@ namespace BSPLib
 		}
 
 
+		internal bool Split(GBSPPlane plane, out GBSPPoly polyFront, out GBSPPoly polyBack, bool flipTest)
+		{
+			return	SplitEpsilon(UtilityLib.Mathery.ON_EPSILON, plane, out polyFront, out polyBack, flipTest);
+		}
+
+
 		internal bool SplitEpsilon(float epsilon, GBSPPlane plane, out GBSPPoly polyFront, out GBSPPoly polyBack, bool flipTest)
 		{
 			polyFront	=null;
@@ -399,6 +406,62 @@ namespace BSPLib
 			}
 
 			return	true;
+		}
+
+
+		internal void RemoveDegenerateEdges()
+		{
+			bool	Bad	=false;
+
+			List<Vector3>	newVerts	=new List<Vector3>();
+
+			for(int i=0;i < mVerts.Count;i++)
+			{
+				Vector3	V1	=mVerts[i];
+				Vector3	V2	=mVerts[(i + 1) % mVerts.Count];
+
+				Vector3	Vec	=V1 - V2;
+
+				if(Vec.Length() > DEGENERATE_EPSILON)
+				{
+					newVerts.Add(V1);
+				}
+				else
+				{
+					Bad	=true;
+				}
+			}
+
+			if(Bad)
+			{
+				mVerts	=newVerts;
+			}
+		}
+
+
+		internal bool EdgeExist(Vector3 []Edge1, out Int32 []EdgeIndexOut)
+		{
+			Int32		i;
+			Vector3		[]Edge2	=new Vector3[2];
+
+			EdgeIndexOut	=new int[2];
+
+			for(i=0;i < mVerts.Count;i++)
+			{
+				Edge2[0]	=mVerts[i];
+				Edge2[1]	=mVerts[(i + 1) % mVerts.Count];
+
+				if(UtilityLib.Mathery.CompareVector(Edge1[0], Edge2[0]))
+				{
+					if(UtilityLib.Mathery.CompareVector(Edge1[1], Edge2[1]))
+					{
+						EdgeIndexOut[0]	=i;
+						EdgeIndexOut[1]	=(i + 1) % mVerts.Count;
+						return	true;
+					}
+				}
+			}
+			return	false;
 		}
 
 

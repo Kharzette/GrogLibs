@@ -28,7 +28,7 @@ namespace BSPLib
 		GBSPBrush	mGBSPBrushes;
 
 
-		internal bool ProcessWorldModel(List<MapBrush> list, PlanePool pool)
+		internal bool ProcessWorldModel(List<MapBrush> list, List<MapEntity> ents, PlanePool pool, TexInfoPool tip)
 		{
 			GBSPBrush	prev	=null;
 
@@ -54,11 +54,76 @@ namespace BSPLib
 			GBSPNode	root	=new GBSPNode();
 			root.BuildBSP(mGBSPBrushes, pool, ref mBounds);
 
+			mGBSPBrushes	=null;
+			prev			=null;
+
 			if(!root.CreatePortals(this, false, pool))
 			{
 				Map.Print("Could not create the portals.\n");
 				return	false;
 			}
+
+			int	numRemovedLeafs	=0;
+			if(root.RemoveHiddenLeafs(mOutsideNode, ents, ref numRemovedLeafs, pool) == -1)
+			{
+				Map.Print("Failed to remove hidden leafs.\n");
+			}
+
+			root.MarkVisibleSides(list, pool);
+
+			if(!root.FreePortals())
+			{
+				Map.Print("BuildBSP:  Could not free portals.\n");
+				return	false;
+			}
+
+			root.FreeBSP_r();
+
+			foreach(MapBrush b in list)
+			{
+				GBSPBrush	gb	=new GBSPBrush(b);
+
+				if(prev != null)
+				{
+					prev.mNext	=gb;
+				}
+
+				if(mGBSPBrushes == null)
+				{
+					mGBSPBrushes	=gb;
+				}
+				prev	=gb;
+			}
+
+			mGBSPBrushes	=GBSPBrush.CSGBrushes(mGBSPBrushes, pool);
+
+			root.BuildBSP(mGBSPBrushes, pool, ref mBounds);
+
+			if(!root.CreatePortals(this, false, pool))
+			{
+				Map.Print("Could not create the portals.\n");
+				return	false;
+			}
+
+			numRemovedLeafs	=0;
+			if(root.RemoveHiddenLeafs(mOutsideNode, ents, ref numRemovedLeafs, pool) == -1)
+			{
+				Map.Print("Failed to remove hidden leafs.\n");
+			}
+
+			root.MarkVisibleSides(list, pool);
+
+			root.MakeFaces(pool, tip);
+
+			root.MakeLeafFaces();
+
+			if(!root.FreePortals())
+			{
+				Map.Print("BuildBSP:  Could not free portals.\n");
+				return	false;
+			}
+
+			root.MergeNodes();
 
 			mRootNode[0]	=root;
 
@@ -100,7 +165,7 @@ namespace BSPLib
 //			{
 //				b.GetTriangles(verts, indexes, bCheck);
 //			}
-			mRootNode[0].GetPortalTriangles(verts, indexes, bCheck);
+			mRootNode[0].GetLeafTriangles(verts, indexes, bCheck);
 		}
 	}
 }

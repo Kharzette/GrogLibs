@@ -277,7 +277,7 @@ namespace BSPLib
 
 				if(index == 0)
 				{
-					mod.ProcessWorldModel(me.mBrushes, mPlanePool);
+					mod.ProcessWorldModel(me.mBrushes, mEntities, mPlanePool, mTIPool);
 				}
 				else
 				{

@@ -7,7 +7,7 @@ namespace BSPLib
 {
 	public class TexInfoPool
 	{
-		List<TexInfo>	mTexInfos	=new List<TexInfo>();
+		internal List<TexInfo>	mTexInfos	=new List<TexInfo>();
 
 
 		internal int Add(TexInfo ti)
