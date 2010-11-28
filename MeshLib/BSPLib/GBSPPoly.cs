@@ -26,6 +26,7 @@ namespace BSPLib
 
 		public GBSPPoly(GBSPPlane p)
 		{
+			/*
 			float	v;
 			Vector3	vup, vright, org;
 
@@ -56,8 +57,7 @@ namespace BSPLib
 			mVerts.Add(org - vright + vup);
 			mVerts.Add(org + vright + vup);
 			mVerts.Add(org + vright - vup);
-			mVerts.Add(org - vright - vup);
-			/*
+			mVerts.Add(org - vright - vup);*/
 			Vector3	rightVec, upVec, org, vert;
 
 			if(!TextureAxisFromPlane(p, out rightVec, out upVec))
@@ -93,7 +93,7 @@ namespace BSPLib
 			vert	=org - rightVec;
 			vert	-=upVec;
 
-			mVerts.Add(vert);*/
+			mVerts.Add(vert);
 		}
 
 

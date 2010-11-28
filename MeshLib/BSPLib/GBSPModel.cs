@@ -31,6 +31,8 @@ namespace BSPLib
 		internal bool ProcessWorldModel(List<MapBrush> list, PlanePool pool)
 		{
 			GBSPBrush	prev	=null;
+
+			list.Reverse();
 			foreach(MapBrush b in list)
 			{
 				GBSPBrush	gb	=new GBSPBrush(b);
@@ -50,16 +52,16 @@ namespace BSPLib
 			mGBSPBrushes	=GBSPBrush.CSGBrushes(mGBSPBrushes, pool);
 
 			GBSPNode	root	=new GBSPNode();
-//			root.BuildBSP(mGBSPBrushes, pool, ref mBounds);
+			root.BuildBSP(mGBSPBrushes, pool, ref mBounds);
 
 			//remove
 //			mRootNode[0]	=root;
 
-/*			if(!root.CreatePortals(this, false, pool))
+			if(!root.CreatePortals(this, false, pool))
 			{
 				Map.Print("Could not create the portals.\n");
 				return	false;
-			}*/
+			}
 
 			mRootNode[0]	=root;
 
@@ -97,11 +99,11 @@ namespace BSPLib
 
 		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool bCheck)
 		{
-			for(GBSPBrush b = mGBSPBrushes;b != null;b=b.mNext)
-			{
-				b.GetTriangles(verts, indexes, bCheck);
-			}
-//			mRootNode[0].GetTriangles(verts, indexes, bCheck);
+//			for(GBSPBrush b = mGBSPBrushes;b != null;b=b.mNext)
+//			{
+//				b.GetTriangles(verts, indexes, bCheck);
+//			}
+			mRootNode[0].GetTriangles(verts, indexes, bCheck);
 
 			/*int	Side	=0;
 			for(GBSPPortal p = mRootNode[0].mPortals;p != null;p=p.mNext[Side])

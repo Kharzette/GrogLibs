@@ -771,7 +771,7 @@ namespace BSPLib
 						{
 							continue;
 						}
- 						if(((Side.mFlags & GBSPSide.SIDE_VISIBLE) == 0) && Pass<2)
+ 						if(((Side.mFlags & GBSPSide.SIDE_VISIBLE) == 0) && Pass < 2)
 						{
 							continue;
 						}

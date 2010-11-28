@@ -160,6 +160,9 @@ namespace BSPLib
 				}
 			}
 
+			mBounds.mMins	=Vector3.Zero;
+			mBounds.mMaxs	=Vector3.Zero;
+
 			mBrushList	=Brushes;
 		}
 
@@ -376,7 +379,7 @@ namespace BSPLib
 
 				Plane	=pool.mPlanes[Parent.mPlaneNum];
 
-				Side	=(Parent.mChildren[0] == this)? false : true;
+				Side	=(Parent.mChildren[0] == Node)? false : true;
 
 				if(!Poly.ClipPolyEpsilon(0.001f, Plane, Side))
 				{
