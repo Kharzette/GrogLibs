@@ -66,7 +66,16 @@ namespace BSPLib
 					//see if this is a .map or a .vmf
 					if(mapFileName.EndsWith(".map"))
 					{
-						Print(".map files not supported right now\n");
+						while((s = sr.ReadLine()) != null)
+						{
+							s	=s.Trim();
+							if(s == "{")
+							{
+								MapEntity	e	=new MapEntity();
+								e.ReadFromMap(sr, mPlanePool, mTIPool, mEntities.Count);
+								mEntities.Add(e);
+							}
+						}
 						return;
 					}
 					else
@@ -281,7 +290,7 @@ namespace BSPLib
 				}
 				else
 				{
-					mod.ProcessSubModel(me.mBrushes, mPlanePool);
+					mod.ProcessSubModel(me.mBrushes, mPlanePool, mTIPool);
 				}
 				mModels.Add(mod);
 			}

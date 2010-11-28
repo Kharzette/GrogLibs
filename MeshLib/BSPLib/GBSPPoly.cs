@@ -98,7 +98,7 @@ namespace BSPLib
 		}
 
 
-		bool TextureAxisFromPlane(GBSPPlane pln, out Vector3 Xv, out Vector3 Yv)
+		internal static bool TextureAxisFromPlane(GBSPPlane pln, out Vector3 Xv, out Vector3 Yv)
 		{
 			Int32	BestAxis;
 			float	Dot,Best;

@@ -286,5 +286,36 @@ namespace BSPLib
 				s.GetTriangles(tris, ind, bCheckFlags);
 			}
 		}
+
+
+		internal bool ReadFromMap(StreamReader sr, PlanePool pool, TexInfoPool tiPool, int entityNum)
+		{
+			string	s	="";
+			bool	ret	=true;
+			while((s = sr.ReadLine()) != null)
+			{
+				s	=s.Trim();
+				if(s.StartsWith("("))
+				{
+					GBSPSide	side	=new GBSPSide();
+					side.ReadMapLine(s, pool, tiPool);
+
+					if(mContents == Brush.CONTENTS_AUX)
+					{
+						ret	=false;
+					}
+
+					side.FixFlags();
+
+					mOriginalSides.Add(side);
+					mEntityNum	=entityNum;
+				}
+				else if(s.StartsWith("}"))
+				{
+					return	ret;	//entity done
+				}
+			}
+			return	ret;
+		}
 	}
 }

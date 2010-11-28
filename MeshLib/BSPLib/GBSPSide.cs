@@ -409,5 +409,133 @@ namespace BSPLib
 				mBounds.AddPointToBounds(vert);
 			}
 		}
+
+
+		internal void ReadMapLine(string szLine, PlanePool pool, TexInfoPool tiPool)
+		{
+			mPoly	=new GBSPPoly();
+
+			//gank (
+			szLine.TrimStart('(');
+
+			szLine.Trim();
+
+			string	[]tokens    =szLine.Split(' ');
+
+			List<float>		numbers =new List<float>();
+			List<UInt32>	flags	=new List<UInt32>();
+
+			int cnt	=0;
+
+			//grab all the numbers out
+			string	texName	="";
+			foreach(string tok in tokens)
+			{
+				//skip ()
+				if(tok[0] == '(' || tok[0] == ')')
+				{
+					continue;
+				}
+
+				//grab tex name if avail
+				if(tok == "clip" || tok == "CLIP")
+				{
+					mFlags	|=SURF_NODRAW;
+					texName	=tok;
+				}
+				if(tok[0] == '*')
+				{
+					mFlags	|=SURF_WARP;
+					texName	=tok.Substring(1);
+					continue;
+				}
+				else if(tok[0] == '#')
+				{
+					mFlags	|=SURF_WARP;
+					texName	=tok;
+					continue;
+				}
+				else if(tok[0] == '+')
+				{
+					//animating I think
+					texName	=tok;
+					mFlags	|=SURF_WARP;
+				}
+				else if(char.IsLetter(tok, 0))
+				{
+					texName	=tok;
+					continue;
+				}
+
+				float	num;
+				UInt32	inum;
+
+				if(cnt > 13)
+				{
+					if(UInt32.TryParse(tok, out inum))
+					{
+						flags.Add(inum);
+						cnt++;
+					}
+				}
+				else
+				{
+					if(Single.TryParse(tok, out num))
+					{
+						//rest are numbers
+						numbers.Add(num);
+						cnt++;
+					}
+				}
+			}
+
+//			mPoly.mVerts.Add(new Vector3(numbers[0], numbers[1], numbers[2]));
+//			mPoly.mVerts.Add(new Vector3(numbers[3], numbers[4], numbers[5]));
+//			mPoly.mVerts.Add(new Vector3(numbers[6], numbers[7], numbers[8]));
+
+			//deal with the numbers
+			//invert x and swap y and z
+			//to convert to left handed
+			mPoly.mVerts.Add(new Vector3(-numbers[0], numbers[2], numbers[1]));
+			mPoly.mVerts.Add(new Vector3(-numbers[3], numbers[5], numbers[4]));
+			mPoly.mVerts.Add(new Vector3(-numbers[6], numbers[8], numbers[7]));
+
+			//see if there are any quake 3 style flags
+/*			if(flags.Count > 0)
+			{
+				if((flags[0] & Brush.) != 0)
+				{
+					mFlags	|=DETAIL;
+				}
+			}*/
+
+			GBSPPlane	plane	=new GBSPPlane(mPoly);
+
+			plane.mType	=GBSPPlane.PLANE_ANY;
+			plane.Snap();
+
+			mPlaneNum	=pool.FindPlane(plane, out mPlaneSide);
+
+			TexInfo	ti		=new TexInfo();
+			ti.mShiftU		=numbers[9];
+			ti.mShiftV		=numbers[10];
+			ti.mDrawScaleU	=numbers[12];
+			ti.mDrawScaleV	=numbers[13];
+			ti.mTexture		=texName;
+
+			GBSPPoly.TextureAxisFromPlane(plane, out ti.mUVec, out ti.mVVec);
+
+			if(numbers[11] != 0.0f)
+			{
+				Matrix	texRot	=Matrix.CreateFromAxisAngle(plane.mNormal,
+					MathHelper.ToRadians(numbers[11]));
+
+				//rotate tex vecs
+				ti.mUVec	=Vector3.TransformNormal(ti.mUVec, texRot);
+				ti.mVVec	=Vector3.TransformNormal(ti.mVVec, texRot);
+			}
+
+			mTexInfo	=tiPool.Add(ti);
+		}
 	}
 }

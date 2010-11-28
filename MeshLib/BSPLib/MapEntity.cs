@@ -262,6 +262,46 @@ namespace BSPLib
 		}
 
 
+		//old school quake maps
+		internal void ReadFromMap(StreamReader sr, PlanePool pool, TexInfoPool tiPool, int entityNum)
+		{
+			string	s	="";
+			while((s = sr.ReadLine()) != null)
+			{
+				s	=s.Trim();
+				if(s.StartsWith("\""))
+				{
+					string	[]tokens;
+					tokens	=s.Split('\"');
+
+					if(mData.ContainsKey(tokens[1]))
+					{
+						mData[tokens[1]]	=tokens[3];
+					}
+					else
+					{
+						mData.Add(tokens[1], tokens[3]);
+					}
+				}
+				else if(s == "{")
+				{
+					MapBrush	b	=new MapBrush();
+
+					if(b.ReadFromMap(sr, pool, tiPool, entityNum))
+					{
+						b.MakePolys(pool);
+						b.FixContents();
+						mBrushes.Add(b);
+					}
+				}
+				else if(s.StartsWith("}"))
+				{
+					return;	//entity done
+				}
+			}
+		}
+
+
 		internal void Read(BinaryReader br)
 		{
 			int	dataCount	=br.ReadInt32();

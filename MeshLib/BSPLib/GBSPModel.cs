@@ -131,9 +131,11 @@ namespace BSPLib
 		}
 
 
-		internal void ProcessSubModel(List<MapBrush> list, PlanePool pool)
+		internal bool ProcessSubModel(List<MapBrush> list, PlanePool pool, TexInfoPool tip)
 		{
 			GBSPBrush	prev	=null;
+
+			list.Reverse();
 			foreach(MapBrush b in list)
 			{
 				GBSPBrush	gb	=new GBSPBrush(b);
@@ -150,12 +152,35 @@ namespace BSPLib
 				prev	=gb;
 			}
 
-			GBSPBrush.CSGBrushes(mGBSPBrushes, pool);
+			mGBSPBrushes	=GBSPBrush.CSGBrushes(mGBSPBrushes, pool);
 
 			GBSPNode	root	=new GBSPNode();
 			root.BuildBSP(mGBSPBrushes, pool, ref mBounds);
 
+			mGBSPBrushes	=null;
+			prev			=null;
+
+			if(!root.CreatePortals(this, false, pool))
+			{
+				Map.Print("Could not create the portals.\n");
+				return	false;
+			}
+
+			root.MarkVisibleSides(list, pool);
+
+			root.MakeFaces(pool, tip);
+
+			if(!root.FreePortals())
+			{
+				Map.Print("BuildBSP:  Could not free portals.\n");
+				return	false;
+			}
+
+			root.MergeNodes();
+
 			mRootNode[0]	=root;
+
+			return	true;
 		}
 
 
