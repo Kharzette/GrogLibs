@@ -37,6 +37,13 @@ namespace BSPLib
 			{
 				GBSPBrush	gb	=new GBSPBrush(b);
 
+				//if brush is being dropped, the mOriginal
+				//reference will be null
+				if(gb.mOriginal == null)
+				{
+					continue;
+				}
+
 				if(prev != null)
 				{
 					prev.mNext	=gb;
@@ -49,7 +56,17 @@ namespace BSPLib
 				prev	=gb;
 			}
 
+			for(prev = mGBSPBrushes;prev != null;prev=prev.mNext)
+			{
+				if(prev.mOriginal == null)
+				{
+					int	gack	=0;
+					gack++;
+				}
+			}
+
 			mGBSPBrushes	=GBSPBrush.CSGBrushes(mGBSPBrushes, pool);
+
 
 			GBSPNode	root	=new GBSPNode();
 			root.BuildBSP(mGBSPBrushes, pool, ref mBounds);
@@ -82,6 +99,13 @@ namespace BSPLib
 			foreach(MapBrush b in list)
 			{
 				GBSPBrush	gb	=new GBSPBrush(b);
+
+				//if brush is being dropped, the mOriginal
+				//reference will be null
+				if(gb.mOriginal == null)
+				{
+					continue;
+				}
 
 				if(prev != null)
 				{
