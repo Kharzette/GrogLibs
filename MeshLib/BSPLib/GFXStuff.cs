@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.IO;
+using System.Reflection;
 using Microsoft.Xna.Framework;
 
 
@@ -13,13 +14,13 @@ namespace BSPLib
 		public Int32	NumAreaPortals;
 		public Int32	FirstAreaPortal;
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			bw.Write(NumAreaPortals);
 			bw.Write(FirstAreaPortal);
 		}
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			NumAreaPortals	=br.ReadInt32();
 			FirstAreaPortal	=br.ReadInt32();
@@ -32,13 +33,13 @@ namespace BSPLib
 		public Int32	mModelNum;
 		public Int32	mArea;
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mModelNum);
 			bw.Write(mArea);
 		}
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			mModelNum	=br.ReadInt32();
 			mArea		=br.ReadInt32();
@@ -61,7 +62,7 @@ namespace BSPLib
 		public Int32		[]mAreas	=new Int32[2];		// Area on each side of the model
 
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mRootNode[0]);
 			bw.Write(mRootNode[1]);
@@ -84,7 +85,7 @@ namespace BSPLib
 			bw.Write(mAreas[1]);
 		}
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			mRootNode[0]	=br.ReadInt32();
 			mRootNode[1]	=br.ReadInt32();
@@ -131,7 +132,7 @@ namespace BSPLib
 		public float	mDist;
 		public UInt32	mType;	//PLANE_X, PLANE_Y, etc...
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mNormal.X);
 			bw.Write(mNormal.Y);
@@ -140,7 +141,7 @@ namespace BSPLib
 			bw.Write(mType);
 		}
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			mNormal.X	=br.ReadSingle();
 			mNormal.Y	=br.ReadSingle();
@@ -156,14 +157,14 @@ namespace BSPLib
 		Int32	[]mChildren	=new Int32[2];
 		Int32	mPlaneNum;
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mChildren[0]);
 			bw.Write(mChildren[1]);
 			bw.Write(mPlaneNum);
 		}
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			mChildren[0]	=br.ReadInt32();
 			mChildren[1]	=br.ReadInt32();
@@ -181,7 +182,7 @@ namespace BSPLib
 		public Vector3	mMins, mMaxs;
 
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mChildren[0]);
 			bw.Write(mChildren[1]);
@@ -196,7 +197,7 @@ namespace BSPLib
 			bw.Write(mMaxs.Z);
 		}
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			mChildren[0]	=br.ReadInt32();
 			mChildren[1]	=br.ReadInt32();
@@ -218,13 +219,13 @@ namespace BSPLib
 		public Int32	mPlaneNum;
 		public Int32	mPlaneSide;
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mPlaneNum);
 			bw.Write(mPlaneSide);
 		}
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			mPlaneNum	=br.ReadInt32();
 			mPlaneSide	=br.ReadInt32();
@@ -245,7 +246,7 @@ namespace BSPLib
 		public Int32	mFirstSide;
 		public Int32	mNumSides;
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mContents);
 			bw.Write(mMins.X);
@@ -264,7 +265,7 @@ namespace BSPLib
 			bw.Write(mNumSides);
 		}
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			mContents		=br.ReadUInt32();
 			mMins.X			=br.ReadSingle();
@@ -297,7 +298,7 @@ namespace BSPLib
 		public Int32	mLHeight;
 		public byte		[]mLTypes	=new byte[4];
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mFirstVert);
 			bw.Write(mNumVerts);
@@ -313,7 +314,7 @@ namespace BSPLib
 			bw.Write(mLTypes[3]);
 		}
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			mFirstVert	=br.ReadInt32();
 			mNumVerts	=br.ReadInt32();
@@ -343,7 +344,7 @@ namespace BSPLib
 		public float	mMipMapBias;
 		public Int32	mTexture;
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mVecs[0].X);
 			bw.Write(mVecs[0].Y);
@@ -363,7 +364,7 @@ namespace BSPLib
 			bw.Write(mTexture);
 		}
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			mVecs[0].X			=br.ReadSingle();
 			mVecs[0].Y			=br.ReadSingle();
@@ -390,7 +391,7 @@ namespace BSPLib
 		public Vector3	mOrigin;
 		public Int32	mLeafTo;
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mOrigin.X);
 			bw.Write(mOrigin.Y);
@@ -398,7 +399,7 @@ namespace BSPLib
 			bw.Write(mLeafTo);
 		}
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			mOrigin.X	=br.ReadSingle();
 			mOrigin.Y	=br.ReadSingle();
@@ -412,12 +413,12 @@ namespace BSPLib
 	{
 		public Int32	mVisOfs;
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mVisOfs);
 		}
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			mVisOfs	=br.ReadInt32();
 		}
@@ -471,47 +472,62 @@ namespace BSPLib
 
 		internal bool Write(BinaryWriter bw, int[] ints)
 		{
-			foreach(int i in ints)
+			bw.Write(mType);
+			bw.Write(mElements);
+
+			for(int i=0;i < mElements;i++)
 			{
-				bw.Write(i);
+				bw.Write(ints[i]);
 			}
 			return	true;
 		}
 
 		internal bool Write(BinaryWriter bw, Vector3[] vecs)
 		{
-			foreach(Vector3 vec in vecs)
+			bw.Write(mType);
+			bw.Write(mElements);
+
+			for(int i=0;i < mElements;i++)
 			{
-				bw.Write(vec.X);
-				bw.Write(vec.Y);
-				bw.Write(vec.Z);
+				bw.Write(vecs[i].X);
+				bw.Write(vecs[i].Y);
+				bw.Write(vecs[i].Z);
 			}
 			return	true;
 		}
 
 		internal bool Write(BinaryWriter bw, GFXLeafSide[] ls)
 		{
-			foreach(GFXLeafSide g in ls)
+			bw.Write(mType);
+			bw.Write(mElements);
+
+			for(int i=0;i < mElements;i++)
 			{
-				g.Write(bw);
+				ls[i].Write(bw);
 			}
 			return	true;
 		}
 
 		internal bool Write(BinaryWriter bw, GFXArea[] areas)
 		{
-			foreach(GFXArea a in areas)
+			bw.Write(mType);
+			bw.Write(mElements);
+
+			for(int i=0;i < mElements;i++)
 			{
-				a.Write(bw);
+				areas[i].Write(bw);
 			}
 			return	true;
 		}
 
 		internal bool Write(BinaryWriter bw, GFXAreaPortal[] aps)
 		{
-			foreach(GFXAreaPortal ap in aps)
+			bw.Write(mType);
+			bw.Write(mElements);
+
+			for(int i=0;i < mElements;i++)
 			{
-				ap.Write(bw);
+				aps[i].Write(bw);
 			}
 			return	true;
 		}
@@ -522,6 +538,240 @@ namespace BSPLib
 			bw.Write(mElements);
 
 			return	true;
+		}
+
+		internal bool Read(BinaryReader br, GBSPGlobals gg)
+		{
+			mType		=br.ReadInt32();
+			mElements	=br.ReadInt32();
+
+			switch(mType)
+			{
+				case GBSP_CHUNK_HEADER:
+				{
+					gg.GBSPHeader	=ReadChunkData(br, typeof(GBSPHeader), false, 0) as GBSPHeader;
+					if(gg.GBSPHeader.mTAG != "GBSP")
+					{
+						return	false;
+					}
+					if(gg.GBSPHeader.mVersion != GBSP_VERSION)
+					{
+						return	false;
+					}
+					break;
+				}
+				case GBSP_CHUNK_MODELS:
+				{
+					gg.NumGFXModels	=mElements;
+					gg.GFXModels	=new GFXModel[gg.NumGFXModels];
+                    gg.GFXModels    =ReadChunkData(br, typeof(GFXModel), true, mElements) as GFXModel[];
+					break;
+				}
+				case GBSP_CHUNK_NODES:
+				{
+					gg.NumGFXNodes	=mElements;
+					gg.GFXNodes		=new GFXNode[gg.NumGFXNodes];
+					gg.GFXNodes =ReadChunkData(br, typeof(GFXNode), true, mElements) as GFXNode[];
+					break;
+				}
+				case GBSP_CHUNK_BNODES:
+				{
+					gg.NumGFXBNodes	=mElements;
+					gg.GFXBNodes	=new GFXBNode[gg.NumGFXBNodes];
+					gg.GFXBNodes    =ReadChunkData(br, typeof(GFXBNode), true, mElements) as GFXBNode[];
+					break;
+				}
+				case GBSP_CHUNK_LEAFS:
+				{
+					gg.NumGFXLeafs	=mElements;
+					gg.GFXLeafs		=new GFXLeaf[gg.NumGFXLeafs];
+					gg.GFXLeafs =ReadChunkData(br, typeof(GFXLeaf), true, mElements) as GFXLeaf[];
+					break;
+				}
+				case GBSP_CHUNK_CLUSTERS:
+				{
+					gg.NumGFXClusters	=mElements;
+					gg.GFXClusters		=new GFXCluster[gg.NumGFXClusters];
+					gg.GFXClusters  =ReadChunkData(br, typeof(GFXCluster), true, mElements) as GFXCluster[];
+					break;
+				}
+				case GBSP_CHUNK_AREAS:
+				{
+					gg.NumGFXAreas	=mElements;
+					gg.GFXAreas		=new GFXArea[gg.NumGFXAreas];
+					gg.GFXAreas =ReadChunkData(br, typeof(GFXArea), true, mElements) as GFXArea[];
+					break;
+				}
+				case GBSP_CHUNK_AREA_PORTALS:
+				{
+					gg.NumGFXAreaPortals	=mElements;
+					gg.GFXAreaPortals		=new GFXAreaPortal[gg.NumGFXAreaPortals];
+					gg.GFXAreaPortals   =ReadChunkData(br, typeof(GFXAreaPortal), true, mElements) as GFXAreaPortal[];
+					break;
+				}
+				case GBSP_CHUNK_PORTALS:
+				{
+					gg.NumGFXPortals	=mElements;
+					gg.GFXPortals		=new GFXPortal[gg.NumGFXPortals];
+					gg.GFXPortals   =ReadChunkData(br, typeof(GFXPortal), true, mElements) as GFXPortal[];
+					break;
+				}
+				case GBSP_CHUNK_PLANES:
+				{
+					gg.NumGFXPlanes	=mElements;
+					gg.GFXPlanes	=new GFXPlane[gg.NumGFXPlanes];
+					gg.GFXPlanes    =ReadChunkData(br, typeof(GFXPlane), true, mElements) as GFXPlane[];
+					break;
+				}
+				case GBSP_CHUNK_FACES:
+				{
+					gg.NumGFXFaces	=mElements;
+					gg.GFXFaces		=new GFXFace[gg.NumGFXFaces];
+					gg.GFXFaces =ReadChunkData(br, typeof(GFXFace), true, mElements) as GFXFace[];
+					break;
+				}
+				case GBSP_CHUNK_LEAF_FACES:
+				{
+					gg.NumGFXLeafFaces	=mElements;
+					gg.GFXLeafFaces		=new int[gg.NumGFXLeafFaces];
+					gg.GFXLeafFaces =ReadChunkData(br, typeof(int), true, mElements) as int[];
+					break;
+				}
+				case GBSP_CHUNK_LEAF_SIDES:
+				{
+					gg.NumGFXLeafSides	=mElements;
+					gg.GFXLeafSides		=new GFXLeafSide[gg.NumGFXLeafSides];
+					gg.GFXLeafSides =ReadChunkData(br, typeof(GFXLeafSide), true, mElements) as GFXLeafSide[];
+					break;
+				}
+				case GBSP_CHUNK_VERTS:
+				{
+					gg.NumGFXVerts	=mElements;
+					gg.GFXVerts		=new Vector3[gg.NumGFXVerts];
+					gg.GFXVerts =ReadChunkData(br, typeof(Vector3), true, mElements) as Vector3[];
+					break;
+				}
+				case GBSP_CHUNK_VERT_INDEX:
+				{
+					gg.NumGFXVertIndexList	=mElements;
+					gg.GFXVertIndexList		=new int[gg.NumGFXVertIndexList];
+					gg.GFXVertIndexList =ReadChunkData(br, typeof(int), true, mElements) as int[];
+					break;
+				}
+				case GBSP_CHUNK_RGB_VERTS:
+				{
+					gg.NumGFXRGBVerts	=mElements;
+					gg.GFXRGBVerts		=new Vector3[gg.NumGFXRGBVerts];
+					gg.GFXRGBVerts  =ReadChunkData(br, typeof(Vector3), true, mElements) as Vector3[];
+					break;
+				}
+				case GBSP_CHUNK_TEXINFO:
+				{
+					gg.NumGFXTexInfo	=mElements;
+					gg.GFXTexInfo		=new GFXTexInfo[gg.NumGFXTexInfo];
+					gg.GFXTexInfo   =ReadChunkData(br, typeof(GFXTexInfo), true, mElements) as GFXTexInfo[];
+					break;
+				}
+				case GBSP_CHUNK_ENTDATA:
+				{
+					gg.NumGFXEntData	=mElements;
+					gg.GFXEntData		=new MapEntity[gg.NumGFXEntData];
+					gg.GFXEntData   =ReadChunkData(br, typeof(MapEntity), true, mElements) as MapEntity[];
+					break;
+				}
+				case GBSP_CHUNK_LIGHTDATA:
+				{
+					gg.NumGFXLightData	=mElements;
+					gg.GFXLightData		=new byte[gg.NumGFXLightData];
+					gg.GFXLightData =ReadChunkData(br, typeof(byte), true, mElements) as byte[];
+					break;
+				}
+				case GBSP_CHUNK_VISDATA:
+				{
+					gg.NumGFXVisData	=mElements;
+					gg.GFXVisData		=new byte[gg.NumGFXVisData];
+					gg.GFXVisData   =ReadChunkData(br, typeof(byte), true, mElements) as byte[];
+					break;
+				}
+				case GBSP_CHUNK_SKYDATA:
+				{
+					gg.GFXSkyData   =ReadChunkData(br, typeof(GFXSkyData), false, 0) as GFXSkyData;
+					break;
+				}
+				case GBSP_CHUNK_END:
+				{
+					break;
+				}
+				default:
+					return	false;
+			}
+
+			return	true;
+		}
+
+		internal object ReadChunkData(BinaryReader br, Type chunkType, bool bArray, int length)
+		{
+			//create an instance
+			Assembly	ass	=Assembly.GetExecutingAssembly();
+			object		ret	=null;
+
+			if(bArray)
+			{
+				ret	=Array.CreateInstance(chunkType, length);
+			}
+			else
+			{
+				ret	=ass.CreateInstance(chunkType.ToString());
+			}
+
+			//check for a read method
+			MethodInfo	mi	=chunkType.GetMethod("Read");
+
+			//invoke
+			if(bArray)
+			{
+				Array	arr	=ret as Array;
+
+				for(int i=0;i < arr.Length;i++)
+				{
+					object	obj	=ass.CreateInstance(chunkType.ToString());
+
+					if(mi == null)
+					{
+						//no read method, could be a primitive type
+						if(chunkType == typeof(Int32))
+						{
+							Int32	num	=br.ReadInt32();
+
+							obj	=num;
+						}
+						else if(chunkType == typeof(Vector3))
+						{
+							Vector3	vec;
+							vec.X	=br.ReadSingle();
+							vec.Y	=br.ReadSingle();
+							vec.Z	=br.ReadSingle();
+
+							obj	=vec;
+						}
+						else
+						{
+							Debug.Assert(false);
+						}
+					}
+					else
+					{
+						mi.Invoke(obj, new object[]{br});
+					}
+					arr.SetValue(obj, i);
+				}
+			}
+			else
+			{
+				mi.Invoke(ret, new object[]{br});
+			}
+
+			return	ret;
 		}
 	}
 }

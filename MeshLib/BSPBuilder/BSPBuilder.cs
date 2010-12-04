@@ -477,7 +477,10 @@ namespace BSPBuilder
 
 		void OnBuildGBSP(object sender, EventArgs ea)
 		{
-			mMap.BuildTree(mMF.BSPParameters);
+			if(mMap.BuildTree(mMF.BSPParameters))
+			{
+				mMF.SetSaveEnabled(true);
+			}
 		}
 
 

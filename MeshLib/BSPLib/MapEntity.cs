@@ -302,7 +302,7 @@ namespace BSPLib
 		}
 
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			int	dataCount	=br.ReadInt32();
 
@@ -317,7 +317,7 @@ namespace BSPLib
 		}
 
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			//write out # of key value pairs
 			bw.Write(mData.Count);

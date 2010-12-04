@@ -306,5 +306,11 @@ namespace BSPBuilder
 		{
 			BuildGBSP.Enabled	=bOn;
 		}
+
+
+		internal void SetSaveEnabled(bool bOn)
+		{
+			SaveGBSP.Enabled	=bOn;
+		}
 	}
 }

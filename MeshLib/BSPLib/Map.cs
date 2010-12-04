@@ -31,7 +31,7 @@ namespace BSPLib
 		public Vector3			[]GFXVerts;				// Verts
 		public Int32			[]GFXVertIndexList;		// Index list
 		public Vector3			[]GFXRGBVerts;
-		public byte				[]GFXEntData;
+		public MapEntity		[]GFXEntData;
 		public GFXTexInfo		[]GFXTexInfo;			// TexInfo
 		public byte				[]GFXLightData;			// Lightmap data
 		public byte				[]GFXVisData;			// Vis data
@@ -490,7 +490,7 @@ namespace BSPLib
 		#endregion
 
 
-		void ProcessEntities()
+		bool ProcessEntities()
 		{
 			int	index	=0;
 
@@ -510,7 +510,10 @@ namespace BSPLib
 
 				if(index == 0)
 				{
-					mod.ProcessWorldModel(mGlobals, me.mBrushes, mEntities, mPlanePool, mTIPool);
+					if(!mod.ProcessWorldModel(mGlobals, me.mBrushes, mEntities, mPlanePool, mTIPool))
+					{
+						return	false;
+					}
 				}
 				else
 				{
@@ -519,12 +522,18 @@ namespace BSPLib
 						mGlobals.Verbose	=false;
 					}
 
-					mod.ProcessSubModel(mGlobals, me.mBrushes, mPlanePool, mTIPool);
+					if(!mod.ProcessSubModel(mGlobals, me.mBrushes, mPlanePool, mTIPool))
+					{
+						return	false;
+					}
 				}
 				mModels.Add(mod);
 				index++;
 			}
+
 			mGlobals.Verbose	=OldVerbose;
+
+			return	true;
 		}
 
 
@@ -630,7 +639,7 @@ namespace BSPLib
 		}
 
 
-		public void BuildTree(BSPBuildParams prms)
+		public bool BuildTree(BSPBuildParams prms)
 		{
 			BeginGBSPModels();
 
@@ -639,9 +648,16 @@ namespace BSPLib
 			mGlobals.Verbose		=prms.mbVerbose;
 			mGlobals.EntityVerbose	=prms.mbEntityVerbose;
 
-			ProcessEntities();
-
-			Print("Build GBSP Complete\n");
+			if(ProcessEntities())
+			{
+				Print("Build GBSP Complete\n");
+				return	true;
+			}
+			else
+			{
+				Print("Compilation failed\n");
+				return	false;
+			}
 		}
 
 
@@ -887,6 +903,7 @@ namespace BSPLib
 			Chunk.Write(bw);
 
 			bw.Close();
+			file.Close();
 
 			Map.Print(" --- Save GBSP File --- \n");
 		 	
@@ -1001,6 +1018,13 @@ namespace BSPLib
 
 		bool SaveGFXEntData(BinaryWriter bw)
 		{
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_ENTDATA;
+			Chunk.mElements =mEntities.Count;
+
+			Chunk.Write(bw);
+
 			foreach(MapEntity me in mEntities)
 			{
 				me.Write(bw);
@@ -1285,7 +1309,7 @@ namespace BSPLib
 		}
 
 
-		public void LightGBSPFile(string fileName, LightParams prms)
+		public bool LightGBSPFile(string fileName, LightParams prms)
 		{
 			mGlobals.ExtraLightCorrection	=prms.mbExtraSamples;
 			mGlobals.FastPatch				=prms.mbFastPatch;
@@ -1297,11 +1321,196 @@ namespace BSPLib
 			mGlobals.ReflectiveScale		=prms.mMirrorReflect;
 			mGlobals.NumBounce				=prms.mNumBounces;
 			mGlobals.PatchSize				=prms.mPatchSize;
+
+			string	RecFile;
+
+			mGlobals.LVerbose	=true;
+
+			if(prms.mbExtraSamples)
+			{
+				mGlobals.NumSamples	=5;
+			}
+			else
+			{
+				mGlobals.NumSamples	=1;
+			}
+
+			Print(" --- Radiosity GBSP File --- \n");
+			
+			if(!LoadGBSPFile(fileName))
+			{
+				Print("LightGBSPFile:  Could not load GBSP file: " + fileName + "\n");
+				return	false;
+			}
+			return	true;
+			/*
+			//Allocate some RGBLight data now
+			mGlobals.NumGFXRGBVerts	=mGlobals.NumGFXVertIndexList;
+			mGlobals.GFXRGBVerts	=new Vector3[mGlobals.NumGFXRGBVerts];
+
+			if(!MakeVertNormals())
+			{
+				Print("LightGBSPFile:  MakeVertNormals failed...\n");
+				goto	ExitWithError;
+			}
+
+			//Make sure no existing light exist...
+			mGlobals.GFXLightData		=null;
+			mGlobals.NumGFXLightData	=0;
+
+			//Get the receiver file name
+			int	extPos	=fileName.LastIndexOf(".");
+			RecFile		=fileName.Substring(0, extPos);
+			RecFile		+=".rec";
+
+			if(!ConvertGFXEntDataToEntities())
+			{
+				goto	ExitWithError;
+			}
+
+			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+									FileMode.OpenOrCreate, FileAccess.Write);
+
+			if(file == null)
+			{
+				Print("LightGBSPFile:  Could not open GBSP file for writing: " + fileName + "\n");
+				goto	ExitWithError;
+			}
+			BinaryWriter	bw	=new BinaryWriter(file);
+
+			Print("Num Faces            : " + mGlobals.NumGFXFaces + "\n");
+
+			//Build the patches (before direct lights are created)
+			if(mGlobals.DoRadiosity)
+			{
+				if(!BuildPatches())
+				{
+					goto	ExitWithError;
+				}
+			}
+
+			if(!CreateDirectLights())
+			{
+				Print("LightGBSPFile:  Could not create main lights.\n");
+				goto	ExitWithError;
+			}
+			
+			//Light faces, and apply to patches
+			if(!LightFaces())		//Light all the faces lightmaps, and apply to patches
+			{
+				goto	ExitWithError;
+			}
+
+			FreeDirectLights();
+
+			if(mGlobals.DoRadiosity)
+			{
+				//Pre-calc how much light is distributed to each patch from every patch
+				if(!CalcReceivers(RecFile))	
+				{
+					goto ExitWithError;
+				}
+
+				//Bounce patches around to their receivers
+				if(!BouncePatches())	//Bounce them around
+				{
+					goto	ExitWithError;
+				}
+			
+				FreeReceivers();		//Don't need these anymore
+
+				//Apply the patches back into the light maps
+				if(!AbsorbPatches())	//Apply the patches to the lightmaps
+				{
+					goto	ExitWithError;
+				}			
+				FreePatches();	//Don't need these anymore...
+			}
+
+			FinalizeRGBVerts();
+
+			if(!StartWriting(f))	//Open bsp file and save all current bsp data (except lightmaps)
+			{
+				goto	ExitWithError;
+			}
+
+			if(!SaveLightmaps(f))	//Save them
+			{
+				goto	ExitWithError;
+			}
+
+			if(!FinishWriting(f))	//Write the END chunk to the file
+			{
+				goto	ExitWithError;
+			}
+
+			bw.Close();
+			file.Close();
+
+			CleanupLight();
+
+			Print("Num Light Maps       : " + mGlobals.RGBMaps + "\n");
+
+			return	true;
+
+			ExitWithError:
+			{
+				if(bw != null)
+				{
+					bw.Close();
+				}
+				if(file != null)
+				{
+					file.Close();
+				}
+				CleanupLight();
+
+				return	false;
+			}*/
 		}
 
 
-		public void VisGBSPFile(string fileName, VisParams prms)
+		bool LoadGBSPFile(string fileName)
 		{
+			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+									FileMode.Open, FileAccess.Read);
+
+			if(file == null)
+			{
+				return	false;
+			}
+
+			BinaryReader	br	=new BinaryReader(file);
+
+			while(true)
+			{
+				GBSPChunk	chunk	=new GBSPChunk();
+				if(!chunk.Read(br, mGlobals))
+				{
+					return	false;
+				}
+
+				if(chunk.mType == GBSPChunk.GBSP_CHUNK_END)
+				{
+					break;
+				}
+			}
+
+			return	true;
+		}
+
+
+		public bool VisGBSPFile(string fileName, VisParams prms)
+		{
+			mGlobals.FullVis	=prms.mbFullVis;
+			mGlobals.NoSort		=!prms.mbSortPortals;
+
+			if(!LoadGBSPFile(fileName))
+			{
+				Print("LightGBSPFile:  Could not load GBSP file: " + fileName + "\n");
+				return	false;
+			}
+			return	true;
 		}
 	}
 }

@@ -262,7 +262,6 @@
 			// 
 			// LightGBSP
 			// 
-			this.LightGBSP.Enabled = false;
 			this.LightGBSP.Location = new System.Drawing.Point(87, 78);
 			this.LightGBSP.Name = "LightGBSP";
 			this.LightGBSP.Size = new System.Drawing.Size(75, 23);
@@ -619,6 +618,8 @@
 			// SortPortals
 			// 
 			this.SortPortals.AutoSize = true;
+			this.SortPortals.Checked = true;
+			this.SortPortals.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.SortPortals.Location = new System.Drawing.Point(6, 42);
 			this.SortPortals.Name = "SortPortals";
 			this.SortPortals.Size = new System.Drawing.Size(80, 17);
