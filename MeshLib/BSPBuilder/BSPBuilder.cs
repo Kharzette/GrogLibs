@@ -477,7 +477,7 @@ namespace BSPBuilder
 
 		void OnBuildGBSP(object sender, EventArgs ea)
 		{
-			mMap.BuildTree(mMF.MaxNumberOfCPUCores);
+			mMap.BuildTree(mMF.BSPParameters);
 		}
 
 
@@ -497,7 +497,7 @@ namespace BSPBuilder
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
 				mMap	=new Map();
-				mMap.LightGBSPFile(fileName);
+				mMap.LightGBSPFile(fileName, mMF.LightParameters);
 			}
 		}
 
@@ -518,7 +518,7 @@ namespace BSPBuilder
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
 				mMap	=new Map();
-				mMap.VisGBSPFile(fileName);
+				mMap.VisGBSPFile(fileName, mMF.VisParameters);
 			}
 		}
 
@@ -556,7 +556,7 @@ namespace BSPBuilder
 		{
 			int	num	=(int)sender;
 
-			mMF.NumberOfCollisionFaces	="" + num;
+			mMF.NumberOfAreas	="" + num;
 		}
 
 
@@ -564,7 +564,7 @@ namespace BSPBuilder
 		{
 			int	num	=(int)sender;
 
-			mMF.NumberOfDrawFaces	="" + num;
+			mMF.NumberOfNodes	="" + num;
 		}
 
 
@@ -580,7 +580,7 @@ namespace BSPBuilder
 		{
 			int	num	=(int)sender;
 
-			mMF.NumberOfMapFaces	="" + num;
+			mMF.NumberOfFaces	="" + num;
 		}
 
 

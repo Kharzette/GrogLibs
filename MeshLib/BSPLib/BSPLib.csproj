@@ -92,6 +92,7 @@
     <Compile Include="BspFlatTree.cs" />
     <Compile Include="BspNode.cs" />
     <Compile Include="BspTree.cs" />
+    <Compile Include="BuildParams.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="Face.cs" />
     <Compile Include="GBSPBrush.cs" />

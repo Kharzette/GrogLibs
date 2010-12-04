@@ -16,6 +16,11 @@ namespace BSPBuilder
 		OpenFileDialog			mOFD	=new OpenFileDialog();
 		SaveFileDialog			mSFD	=new SaveFileDialog();
 
+		//build params
+		BSPBuildParams	mBSPParams		=new BSPBuildParams();
+		LightParams		mLightParams	=new LightParams();
+		VisParams		mVisParams		=new VisParams();
+
 		public event EventHandler	eOpenBrushFile;
 		public event EventHandler	eBuildGBSP;
 		public event EventHandler	eLightGBSP;
@@ -107,10 +112,10 @@ namespace BSPBuilder
 		}
 
 
-		internal string NumberOfMapFaces
+		internal string NumberOfFaces
 		{
-			get { return NumMapFaces.Text; }
-			set { SetTextBoxValue(NumMapFaces, value); }
+			get { return NumFaces.Text; }
+			set { SetTextBoxValue(NumFaces, value); }
 		}
 
 		internal string NumberOfPortals
@@ -119,22 +124,61 @@ namespace BSPBuilder
 			set { SetTextBoxValue(NumPortals, value); }
 		}
 
-		internal string NumberOfDrawFaces
+		internal string NumberOfNodes
 		{
-			get { return NumDrawFaces.Text; }
-			set { SetTextBoxValue(NumDrawFaces, value); }
+			get { return NumNodes.Text; }
+			set { SetTextBoxValue(NumNodes, value); }
 		}
 
-		internal string NumberOfCollisionFaces
+		internal string NumberOfAreas
 		{
-			get { return NumCollisionFaces.Text; }
-			set { SetTextBoxValue(NumCollisionFaces, value); }
+			get { return NumAreas.Text; }
+			set { SetTextBoxValue(NumAreas, value); }
 		}
 
-		internal int MaxNumberOfCPUCores
+		internal BSPBuildParams BSPParameters
 		{
-			get { return (int)MaxCPUCores.Value; }
-			set { MaxCPUCores.Value = value; }
+			get
+			{
+				mBSPParams.mbVerbose		=VerboseBSP.Checked;
+				mBSPParams.mbEntityVerbose	=VerboseEntity.Checked;
+				mBSPParams.mMaxCores		=(int)MaxCPUCores.Value;
+
+				return	mBSPParams;
+			}
+			set { }	//donut allow settery
+		}
+
+		internal LightParams LightParameters
+		{
+			get
+			{
+				mLightParams.mbExtraSamples	=ExtraSamples.Checked;
+				mLightParams.mbRadiosity	=Radiosity.Checked;
+				mLightParams.mbFastPatch	=FastPatch.Checked;
+				mLightParams.mPatchSize		=(int)PatchSize.Value;
+				mLightParams.mNumBounces	=(int)NumBounce.Value;
+				mLightParams.mLightScale	=(float)LightScale.Value;
+				mLightParams.mMinLight.X	=(float)MinLightX.Value;
+				mLightParams.mMinLight.Y	=(float)MinLightY.Value;
+				mLightParams.mMinLight.Z	=(float)MinLightZ.Value;
+				mLightParams.mMirrorReflect	=(float)ReflectiveScale.Value;
+
+				return	mLightParams;
+			}
+			set { }	//donut allow settery
+		}
+
+		internal VisParams VisParameters
+		{
+			get
+			{
+				mVisParams.mbFullVis		=FullVis.Checked;
+				mVisParams.mbSortPortals	=SortPortals.Checked;
+
+				return	mVisParams;
+			}
+			set { }	//donut allow settery
 		}
 
 

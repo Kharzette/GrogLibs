@@ -630,12 +630,14 @@ namespace BSPLib
 		}
 
 
-		public void BuildTree(int maxCPUCores)
+		public void BuildTree(BSPBuildParams prms)
 		{
 			BeginGBSPModels();
 
-			mbBuilding		=true;
-			mMaxCPUCores	=maxCPUCores;
+			mbBuilding				=true;
+			mMaxCPUCores			=prms.mMaxCores;
+			mGlobals.Verbose		=prms.mbVerbose;
+			mGlobals.EntityVerbose	=prms.mbEntityVerbose;
 
 			ProcessEntities();
 
@@ -1283,12 +1285,22 @@ namespace BSPLib
 		}
 
 
-		public void LightGBSPFile(string fileName)
+		public void LightGBSPFile(string fileName, LightParams prms)
 		{
+			mGlobals.ExtraLightCorrection	=prms.mbExtraSamples;
+			mGlobals.FastPatch				=prms.mbFastPatch;
+			mGlobals.DoRadiosity			=prms.mbRadiosity;
+			mGlobals.EntityScale			=prms.mLightScale;
+			mGlobals.MinLight.X				=prms.mMinLight.X;
+			mGlobals.MinLight.Y				=prms.mMinLight.Y;
+			mGlobals.MinLight.Z				=prms.mMinLight.Z;
+			mGlobals.ReflectiveScale		=prms.mMirrorReflect;
+			mGlobals.NumBounce				=prms.mNumBounces;
+			mGlobals.PatchSize				=prms.mPatchSize;
 		}
 
 
-		public void VisGBSPFile(string fileName)
+		public void VisGBSPFile(string fileName, VisParams prms)
 		{
 		}
 	}
