@@ -129,7 +129,9 @@ namespace BSPLib
 
 			side	=0;
 
-			if(UtilityLib.Mathery.VecIdx(mNormal, mType) < 0)
+			UInt32	type	=mType % PLANE_ANYX;
+
+			if(UtilityLib.Mathery.VecIdx(mNormal, type) < 0)
 			{
 				Inverse();
 				side	=1;

@@ -9,11 +9,11 @@ namespace BSPLib
 {
 	public class MapBrush
 	{
-		Int32		mEntityNum;
-		Int32		mBrushNum;
+		public Int32		mEntityNum;
+		public Int32		mBrushNum;
 		public UInt32		mContents;
 		public Bounds		mBounds;
-		Int32		mOrderID;
+		public Int32		mOrderID;
 
 		public List<GBSPSide>	mOriginalSides	=new List<GBSPSide>();
 		

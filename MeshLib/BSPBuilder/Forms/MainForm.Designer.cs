@@ -28,9 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.OpenVMF = new System.Windows.Forms.Button();
-			this.OpenMap = new System.Windows.Forms.Button();
-			this.BevelBrushes = new System.Windows.Forms.CheckBox();
+			this.OpenBrushFile = new System.Windows.Forms.Button();
 			this.LabelNumRawFaces = new System.Windows.Forms.Label();
 			this.NumMapFaces = new System.Windows.Forms.TextBox();
 			this.StatsGroupBox = new System.Windows.Forms.GroupBox();
@@ -40,15 +38,15 @@
 			this.LabelNumDrawFaces = new System.Windows.Forms.Label();
 			this.NumCollisionFaces = new System.Windows.Forms.TextBox();
 			this.NumDrawFaces = new System.Windows.Forms.TextBox();
-			this.SaveZone = new System.Windows.Forms.Button();
+			this.SaveGBSP = new System.Windows.Forms.Button();
 			this.ConsoleOut = new System.Windows.Forms.TextBox();
 			this.DrawChoice = new System.Windows.Forms.ComboBox();
 			this.MaxCPUCores = new System.Windows.Forms.NumericUpDown();
 			this.LabelCPUCores = new System.Windows.Forms.Label();
 			this.GroupFileIO = new System.Windows.Forms.GroupBox();
-			this.OpenZone = new System.Windows.Forms.Button();
-			this.SaveCollisionBrushes = new System.Windows.Forms.Button();
-			this.SaveDrawBrushes = new System.Windows.Forms.Button();
+			this.LightGBSP = new System.Windows.Forms.Button();
+			this.BuildGBSP = new System.Windows.Forms.Button();
+			this.VisGBSP = new System.Windows.Forms.Button();
 			this.GroupBuildSettings = new System.Windows.Forms.GroupBox();
 			this.GroupDrawSettings = new System.Windows.Forms.GroupBox();
 			this.Progress1 = new System.Windows.Forms.ProgressBar();
@@ -62,38 +60,15 @@
 			this.GroupDrawSettings.SuspendLayout();
 			this.SuspendLayout();
 			// 
-			// OpenVMF
+			// OpenBrushFile
 			// 
-			this.OpenVMF.Location = new System.Drawing.Point(6, 19);
-			this.OpenVMF.Name = "OpenVMF";
-			this.OpenVMF.Size = new System.Drawing.Size(75, 23);
-			this.OpenVMF.TabIndex = 0;
-			this.OpenVMF.Text = "Open VMF";
-			this.OpenVMF.UseVisualStyleBackColor = true;
-			this.OpenVMF.Click += new System.EventHandler(this.OnOpenVMF);
-			// 
-			// OpenMap
-			// 
-			this.OpenMap.Location = new System.Drawing.Point(6, 48);
-			this.OpenMap.Name = "OpenMap";
-			this.OpenMap.Size = new System.Drawing.Size(75, 23);
-			this.OpenMap.TabIndex = 1;
-			this.OpenMap.Text = "Open Map";
-			this.OpenMap.UseVisualStyleBackColor = true;
-			this.OpenMap.Click += new System.EventHandler(this.OnOpenMap);
-			// 
-			// BevelBrushes
-			// 
-			this.BevelBrushes.AutoSize = true;
-			this.BevelBrushes.Checked = true;
-			this.BevelBrushes.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.BevelBrushes.Enabled = false;
-			this.BevelBrushes.Location = new System.Drawing.Point(6, 45);
-			this.BevelBrushes.Name = "BevelBrushes";
-			this.BevelBrushes.Size = new System.Drawing.Size(110, 17);
-			this.BevelBrushes.TabIndex = 11;
-			this.BevelBrushes.Text = "Add Bevel Planes";
-			this.BevelBrushes.UseVisualStyleBackColor = true;
+			this.OpenBrushFile.Location = new System.Drawing.Point(6, 19);
+			this.OpenBrushFile.Name = "OpenBrushFile";
+			this.OpenBrushFile.Size = new System.Drawing.Size(75, 44);
+			this.OpenBrushFile.TabIndex = 0;
+			this.OpenBrushFile.Text = "Open Brush File";
+			this.OpenBrushFile.UseVisualStyleBackColor = true;
+			this.OpenBrushFile.Click += new System.EventHandler(this.OnOpenBrushFile);
 			// 
 			// LabelNumRawFaces
 			// 
@@ -180,15 +155,15 @@
 			this.NumDrawFaces.Size = new System.Drawing.Size(76, 20);
 			this.NumDrawFaces.TabIndex = 14;
 			// 
-			// SaveZone
+			// SaveGBSP
 			// 
-			this.SaveZone.Location = new System.Drawing.Point(87, 19);
-			this.SaveZone.Name = "SaveZone";
-			this.SaveZone.Size = new System.Drawing.Size(75, 23);
-			this.SaveZone.TabIndex = 15;
-			this.SaveZone.Text = "Save Zone";
-			this.SaveZone.UseVisualStyleBackColor = true;
-			this.SaveZone.Click += new System.EventHandler(this.OnSaveZone);
+			this.SaveGBSP.Location = new System.Drawing.Point(87, 19);
+			this.SaveGBSP.Name = "SaveGBSP";
+			this.SaveGBSP.Size = new System.Drawing.Size(75, 23);
+			this.SaveGBSP.TabIndex = 15;
+			this.SaveGBSP.Text = "Save GBSP";
+			this.SaveGBSP.UseVisualStyleBackColor = true;
+			this.SaveGBSP.Click += new System.EventHandler(this.OnSaveGBSP);
 			// 
 			// ConsoleOut
 			// 
@@ -240,12 +215,11 @@
 			// 
 			// GroupFileIO
 			// 
-			this.GroupFileIO.Controls.Add(this.OpenZone);
-			this.GroupFileIO.Controls.Add(this.SaveCollisionBrushes);
-			this.GroupFileIO.Controls.Add(this.SaveDrawBrushes);
-			this.GroupFileIO.Controls.Add(this.OpenVMF);
-			this.GroupFileIO.Controls.Add(this.OpenMap);
-			this.GroupFileIO.Controls.Add(this.SaveZone);
+			this.GroupFileIO.Controls.Add(this.LightGBSP);
+			this.GroupFileIO.Controls.Add(this.BuildGBSP);
+			this.GroupFileIO.Controls.Add(this.VisGBSP);
+			this.GroupFileIO.Controls.Add(this.OpenBrushFile);
+			this.GroupFileIO.Controls.Add(this.SaveGBSP);
 			this.GroupFileIO.Location = new System.Drawing.Point(12, 122);
 			this.GroupFileIO.Name = "GroupFileIO";
 			this.GroupFileIO.Size = new System.Drawing.Size(215, 129);
@@ -253,44 +227,45 @@
 			this.GroupFileIO.TabStop = false;
 			this.GroupFileIO.Text = "File IO";
 			// 
-			// OpenZone
+			// LightGBSP
 			// 
-			this.OpenZone.Location = new System.Drawing.Point(6, 77);
-			this.OpenZone.Name = "OpenZone";
-			this.OpenZone.Size = new System.Drawing.Size(75, 23);
-			this.OpenZone.TabIndex = 18;
-			this.OpenZone.Text = "Open Zone";
-			this.OpenZone.UseVisualStyleBackColor = true;
-			this.OpenZone.Click += new System.EventHandler(this.OnOpenZone);
+			this.LightGBSP.Location = new System.Drawing.Point(87, 78);
+			this.LightGBSP.Name = "LightGBSP";
+			this.LightGBSP.Size = new System.Drawing.Size(75, 23);
+			this.LightGBSP.TabIndex = 18;
+			this.LightGBSP.Text = "Light GBSP";
+			this.LightGBSP.UseVisualStyleBackColor = true;
+			this.LightGBSP.Click += new System.EventHandler(this.OnLightGBSP);
 			// 
-			// SaveCollisionBrushes
+			// BuildGBSP
 			// 
-			this.SaveCollisionBrushes.Enabled = false;
-			this.SaveCollisionBrushes.Location = new System.Drawing.Point(87, 77);
-			this.SaveCollisionBrushes.Name = "SaveCollisionBrushes";
-			this.SaveCollisionBrushes.Size = new System.Drawing.Size(115, 41);
-			this.SaveCollisionBrushes.TabIndex = 17;
-			this.SaveCollisionBrushes.Text = "Save Collision Brushes";
-			this.SaveCollisionBrushes.UseVisualStyleBackColor = true;
+			this.BuildGBSP.Enabled = false;
+			this.BuildGBSP.Location = new System.Drawing.Point(6, 69);
+			this.BuildGBSP.Name = "BuildGBSP";
+			this.BuildGBSP.Size = new System.Drawing.Size(75, 22);
+			this.BuildGBSP.TabIndex = 17;
+			this.BuildGBSP.Text = "Build GBSP";
+			this.BuildGBSP.UseVisualStyleBackColor = true;
+			this.BuildGBSP.Click += new System.EventHandler(this.OnBuildGBSP);
 			// 
-			// SaveDrawBrushes
+			// VisGBSP
 			// 
-			this.SaveDrawBrushes.Enabled = false;
-			this.SaveDrawBrushes.Location = new System.Drawing.Point(87, 48);
-			this.SaveDrawBrushes.Name = "SaveDrawBrushes";
-			this.SaveDrawBrushes.Size = new System.Drawing.Size(115, 23);
-			this.SaveDrawBrushes.TabIndex = 16;
-			this.SaveDrawBrushes.Text = "Save Draw Brushes";
-			this.SaveDrawBrushes.UseVisualStyleBackColor = true;
+			this.VisGBSP.Enabled = false;
+			this.VisGBSP.Location = new System.Drawing.Point(87, 48);
+			this.VisGBSP.Name = "VisGBSP";
+			this.VisGBSP.Size = new System.Drawing.Size(75, 23);
+			this.VisGBSP.TabIndex = 16;
+			this.VisGBSP.Text = "Vis GBSP";
+			this.VisGBSP.UseVisualStyleBackColor = true;
+			this.VisGBSP.Click += new System.EventHandler(this.OnVisGBSP);
 			// 
 			// GroupBuildSettings
 			// 
 			this.GroupBuildSettings.Controls.Add(this.MaxCPUCores);
 			this.GroupBuildSettings.Controls.Add(this.LabelCPUCores);
-			this.GroupBuildSettings.Controls.Add(this.BevelBrushes);
 			this.GroupBuildSettings.Location = new System.Drawing.Point(352, 74);
 			this.GroupBuildSettings.Name = "GroupBuildSettings";
-			this.GroupBuildSettings.Size = new System.Drawing.Size(140, 72);
+			this.GroupBuildSettings.Size = new System.Drawing.Size(140, 54);
 			this.GroupBuildSettings.TabIndex = 21;
 			this.GroupBuildSettings.TabStop = false;
 			this.GroupBuildSettings.Text = "Build Settings";
@@ -365,9 +340,7 @@
 
 		#endregion
 
-		private System.Windows.Forms.Button OpenVMF;
-		private System.Windows.Forms.Button OpenMap;
-		private System.Windows.Forms.CheckBox BevelBrushes;
+		private System.Windows.Forms.Button OpenBrushFile;
 		private System.Windows.Forms.Label LabelNumRawFaces;
 		private System.Windows.Forms.TextBox NumMapFaces;
 		private System.Windows.Forms.GroupBox StatsGroupBox;
@@ -375,21 +348,21 @@
 		private System.Windows.Forms.Label LabelNumDrawFaces;
 		private System.Windows.Forms.TextBox NumCollisionFaces;
 		private System.Windows.Forms.TextBox NumDrawFaces;
-		private System.Windows.Forms.Button SaveZone;
+		private System.Windows.Forms.Button SaveGBSP;
 		private System.Windows.Forms.TextBox ConsoleOut;
 		private System.Windows.Forms.ComboBox DrawChoice;
 		private System.Windows.Forms.NumericUpDown MaxCPUCores;
 		private System.Windows.Forms.Label LabelCPUCores;
 		private System.Windows.Forms.GroupBox GroupFileIO;
-		private System.Windows.Forms.Button SaveCollisionBrushes;
-		private System.Windows.Forms.Button SaveDrawBrushes;
+		private System.Windows.Forms.Button BuildGBSP;
+		private System.Windows.Forms.Button VisGBSP;
 		private System.Windows.Forms.GroupBox GroupBuildSettings;
 		private System.Windows.Forms.GroupBox GroupDrawSettings;
 		private System.Windows.Forms.ProgressBar Progress1;
 		private System.Windows.Forms.ProgressBar Progress2;
 		private System.Windows.Forms.ProgressBar Progress3;
 		private System.Windows.Forms.ProgressBar Progress4;
-		private System.Windows.Forms.Button OpenZone;
+		private System.Windows.Forms.Button LightGBSP;
 		private System.Windows.Forms.Label LabelNumPortals;
 		private System.Windows.Forms.TextBox NumPortals;
 	}

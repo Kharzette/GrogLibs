@@ -508,5 +508,18 @@ namespace BSPLib
 				indexes.Add((UInt32)(offset + ((i + 1) % mVerts.Count)));
 			}
 		}
+
+		internal Vector3 Center()
+		{
+			Vector3	ret	=Vector3.Zero;
+
+			foreach(Vector3 vert in mVerts)
+			{
+				ret	+=vert;
+			}
+			ret	/=mVerts.Count;
+
+			return	ret;
+		}
 	}
 }

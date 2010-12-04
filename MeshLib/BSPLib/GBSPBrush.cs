@@ -550,7 +550,7 @@ namespace BSPLib
 		}
 
 
-		internal static GBSPBrush CSGBrushes(GBSPBrush Head, PlanePool pool)
+		internal static GBSPBrush CSGBrushes(GBSPGlobals gbs, GBSPBrush Head, PlanePool pool)
 		{
 			GBSPBrush	b1, b2, Next;
 			GBSPBrush	Tail;
@@ -558,8 +558,11 @@ namespace BSPLib
 			GBSPBrush	Sub, Sub2;
 			Int32		c1, c2;
 
-			Map.Print("---- CSGBrushes ----\n");
-			Map.Print("Num brushes before CSG : " + CountBrushList(Head) + "\n");
+			if(gbs.Verbose)
+			{
+				Map.Print("---- CSGBrushes ----\n");
+				Map.Print("Num brushes before CSG : " + CountBrushList(Head) + "\n");
+			}
 
 			Keep	=null;
 
@@ -670,7 +673,10 @@ namespace BSPLib
 				}
 			}
 
-			Map.Print("Num brushes after CSG  : " + CountBrushList(Keep) + "\n");
+			if(gbs.Verbose)
+			{
+				Map.Print("Num brushes after CSG  : " + CountBrushList(Keep) + "\n");
+			}
 
 			return	Keep;
 		}
@@ -726,7 +732,8 @@ namespace BSPLib
 		}
 
 
-		internal static GBSPSide SelectSplitSide(GBSPBrush Brushes, GBSPNode Node, PlanePool pool, ref int NumNonVisNodes)
+		internal static GBSPSide SelectSplitSide(GBSPGlobals gbs, GBSPBrush Brushes,
+			GBSPNode Node, PlanePool pool)
 		{
 			Int32		Value, BestValue;
 			GBSPBrush	Brush, Test;
@@ -857,7 +864,7 @@ namespace BSPLib
 				{
 					if(Pass > 1)
 					{
-						NumNonVisNodes++;
+						gbs.NumNonVisNodes++;
 					}
 					
 					if(Pass > 0)

@@ -96,10 +96,11 @@ namespace BSPBuilder
 
 			mMF						=new MainForm();
 			mMF.Visible				=true;
-			mMF.eOpenVMF			+=OnOpenVMF;
-			mMF.eOpenMap			+=OnOpenMap;
-			mMF.eOpenZone			+=OnOpenZone;
-			mMF.eSaveZone			+=OnSaveZone;
+			mMF.eOpenBrushFile		+=OnOpenBrushFile;
+			mMF.eLightGBSP			+=OnLightGBSP;
+			mMF.eVisGBSP			+=OnVisGBSP;
+			mMF.eBuildGBSP			+=OnBuildGBSP;
+			mMF.eSaveGBSP			+=OnSaveGBSP;
 			mMF.eDrawChoiceChanged	+=OnDrawChoiceChanged;
 
 			mBFX					=new BasicEffect(GraphicsDevice, null);
@@ -448,7 +449,7 @@ namespace BSPBuilder
 		}
 
 
-		void OnOpenVMF(object sender, EventArgs ea)
+		void OnOpenBrushFile(object sender, EventArgs ea)
 		{
 			string	fileName	=sender as string;
 
@@ -457,27 +458,30 @@ namespace BSPBuilder
 				if(mMap != null)
 				{
 					//unregister old events
+					mMap.eNumCollisionFacesChanged	-=OnNumCollisionFacesChanged;
+					mMap.eNumDrawFacesChanged		-=OnNumDrawFacesChanged;
+					mMap.eNumMapFacesChanged		-=OnNumMapFacesChanged;
+					mMap.eProgressChanged			-=OnMapProgressChanged;
+					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
 				mMap	=new Map(fileName);
-
 				mMap.eNumCollisionFacesChanged	+=OnNumCollisionFacesChanged;
 				mMap.eNumDrawFacesChanged		+=OnNumDrawFacesChanged;
 				mMap.eNumMapFacesChanged		+=OnNumMapFacesChanged;
 				mMap.eProgressChanged			+=OnMapProgressChanged;
 				mMap.eNumPortalsChanged			+=OnNumPortalsChanged;
-
-				mMap.BuildTree(mMF.bBevels, mMF.MaxNumberOfCPUCores);
+				mMF.SetBuildEnabled(true);
 			}
 		}
 
 
-		void OnOpenMap(object sender, EventArgs ea)
+		void OnBuildGBSP(object sender, EventArgs ea)
 		{
-			mMF.PrintToConsole(".map compilation not yet ready\n");
+			mMap.BuildTree(mMF.MaxNumberOfCPUCores);
 		}
 
 
-		void OnOpenZone(object sender, EventArgs ea)
+		void OnLightGBSP(object sender, EventArgs ea)
 		{
 			string	fileName	=sender as string;
 
@@ -485,30 +489,47 @@ namespace BSPBuilder
 			{
 				if(mMap != null)
 				{
-					mMap.Read(fileName);
+					//unregister old events
+					mMap.eNumCollisionFacesChanged	-=OnNumCollisionFacesChanged;
+					mMap.eNumDrawFacesChanged		-=OnNumDrawFacesChanged;
+					mMap.eNumMapFacesChanged		-=OnNumMapFacesChanged;
+					mMap.eProgressChanged			-=OnMapProgressChanged;
+					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
-				else
-				{
-					mMap	=new Map();
-
-					mMap.eNumCollisionFacesChanged	+=OnNumCollisionFacesChanged;
-					mMap.eNumDrawFacesChanged		+=OnNumDrawFacesChanged;
-					mMap.eNumMapFacesChanged		+=OnNumMapFacesChanged;
-					mMap.eProgressChanged			+=OnMapProgressChanged;
-
-					mMap.Read(fileName);
-				}
+				mMap	=new Map();
+				mMap.LightGBSPFile(fileName);
 			}
 		}
 
 
-		void OnSaveZone(object sender, EventArgs ea)
+		void OnVisGBSP(object sender, EventArgs ea)
 		{
 			string	fileName	=sender as string;
 
 			if(fileName != null)
 			{
-				mMap.Write(fileName);
+				if(mMap != null)
+				{
+					//unregister old events
+					mMap.eNumCollisionFacesChanged	-=OnNumCollisionFacesChanged;
+					mMap.eNumDrawFacesChanged		-=OnNumDrawFacesChanged;
+					mMap.eNumMapFacesChanged		-=OnNumMapFacesChanged;
+					mMap.eProgressChanged			-=OnMapProgressChanged;
+					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
+				}
+				mMap	=new Map();
+				mMap.VisGBSPFile(fileName);
+			}
+		}
+
+
+		void OnSaveGBSP(object sender, EventArgs ea)
+		{
+			string	fileName	=sender as string;
+
+			if(fileName != null)
+			{
+				mMap.SaveGBSPFile(fileName);
 			}
 		}
 

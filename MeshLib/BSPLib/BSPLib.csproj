@@ -96,12 +96,17 @@
     <Compile Include="Face.cs" />
     <Compile Include="GBSPBrush.cs" />
     <Compile Include="GBSPFace.cs" />
+    <Compile Include="GBSPLeafSide.cs" />
     <Compile Include="GBSPModel.cs" />
     <Compile Include="GBSPNode.cs" />
     <Compile Include="GBSPPlane.cs" />
     <Compile Include="GBSPPoly.cs" />
     <Compile Include="GBSPPortal.cs" />
     <Compile Include="GBSPSide.cs" />
+    <Compile Include="GFXArea.cs" />
+    <Compile Include="GFXAreaPortal.cs" />
+    <Compile Include="GFXStuff.cs" />
+    <Compile Include="Light.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MapBrush.cs" />
     <Compile Include="MapEntity.cs" />
@@ -114,6 +119,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TexInfo.cs" />
     <Compile Include="TexInfoPool.cs" />
+    <Compile Include="VISPortal.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

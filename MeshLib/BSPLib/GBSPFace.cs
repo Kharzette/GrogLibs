@@ -23,7 +23,7 @@ namespace BSPLib
 		//For GFX file saving
 		public Int32		mOutputNum;	
 
-		public Int32		mIndexVerts;
+		public Int32		[]mIndexVerts;
 		public Int32		mFirstIndexVert;
 		public Int32		mNumIndexVerts;
 
@@ -32,6 +32,7 @@ namespace BSPLib
 		public GBSPFace		mMerged;
 
 		public const float	COLINEAR_EPSILON	=0.0001f;
+		public const float	OFF_EPSILON			=0.05f;
 
 
 		public GBSPFace() { }
@@ -228,7 +229,7 @@ namespace BSPLib
 		}
 
 
-		internal static bool MergeFaceList2(GBSPFace Faces, PlanePool pool, ref int NumMerged)
+		internal static bool MergeFaceList2(GBSPGlobals gg, GBSPFace Faces, PlanePool pool)
 		{
 			GBSPFace	Face1, Face2, End, Merged;
 
@@ -273,7 +274,7 @@ namespace BSPLib
 						continue;
 					}
 
-					NumMerged++;
+					gg.NumMerged++;
 
 					//Add the Merged to the end of the face list 
 					//so it will be checked against all the faces again
@@ -380,6 +381,249 @@ namespace BSPLib
 			{
 				mPoly.GetTriangles(verts, indexes, bCheckFlags);
 			}
+		}
+
+
+		static void FindEdgeVerts(GBSPGlobals gg, Vector3 V1, Vector3 V2)		
+		{
+			gg.NumEdgeVerts	=gg.NumWeldedVerts-1;
+
+			for(int i=0;i < gg.NumEdgeVerts;i++)
+			{
+				gg.EdgeVerts[i]	=i + 1;
+			}
+		}
+
+		static bool TestEdge_r(GBSPGlobals gg, float Start, float End,
+			Int32 p1, Int32 p2, Int32 StartVert)
+		{
+			Int32	j, k;
+			float	Dist;
+			Vector3	Delta;
+			Vector3	Exact;
+			Vector3	Off;
+			float	Error;
+			Vector3	p;
+
+			if(p1 == p2)
+			{
+				//GHook.Printf("TestEdge_r:  Degenerate Edge.\n");
+				return	true;		// degenerate edge
+			}
+
+			for(k=StartVert;k < gg.NumEdgeVerts;k++)
+			{
+				j	=gg.EdgeVerts[k];
+
+				if(j==p1 || j == p2)
+				{
+					continue;
+				}
+
+				p	=gg.WeldedVerts[j];
+
+				Delta	=p - gg.EdgeStart;
+				Dist	=Vector3.Dot(Delta, gg.EdgeDir);
+				
+				if(Dist <= Start || Dist >= End)
+				{
+					continue;
+				}
+
+				Exact	=gg.EdgeStart + (gg.EdgeDir * Dist);
+				Off		=p - Exact;
+				Error	=Off.Length();
+
+				if(Math.Abs(Error) > OFF_EPSILON)
+				{
+					continue;
+				}
+
+				// break the edge
+				gg.NumTJunctions++;
+
+				TestEdge_r(gg, Start, Dist, p1, j, k+1);
+				TestEdge_r(gg, Dist, End, j, p2, k+1);
+
+				return	true;
+			}
+
+			if(gg.NumTempIndexVerts >= GBSPGlobals.MAX_TEMP_INDEX_VERTS)
+			{
+				Map.Print("Max Temp Index Verts.\n");
+				return	false;
+			}
+
+			gg.TempIndexVerts[gg.NumTempIndexVerts]	=p1;
+			gg.NumTempIndexVerts++;
+
+			return	true;
+		}
+
+
+		internal bool FixTJunctions(GBSPGlobals gg, GBSPNode Node, TexInfoPool tip)
+		{
+			Int32	i, P1, P2;
+			Int32	[]Start	=new Int32[GBSPGlobals.MAX_TEMP_INDEX_VERTS];
+			Int32	[]Count	=new Int32[GBSPGlobals.MAX_TEMP_INDEX_VERTS];
+			Vector3	Edge2;
+			float	Len;
+			Int32	Base;
+
+			gg.NumTempIndexVerts	=0;
+			
+			for (i=0; i < mNumIndexVerts;i++)
+			{
+				P1	=mIndexVerts[i];
+				P2	=mIndexVerts[(i + 1) % mNumIndexVerts];
+
+				gg.EdgeStart	=gg.WeldedVerts[P1];
+				Edge2			=gg.WeldedVerts[P2];
+
+				FindEdgeVerts(gg, gg.EdgeStart, Edge2);
+
+				gg.EdgeDir	=Edge2 - gg.EdgeStart;
+
+				Len	=gg.EdgeDir.Length();
+				gg.EdgeDir.Normalize();
+
+				Start[i]	=gg.NumTempIndexVerts;
+
+				TestEdge_r(gg, 0.0f, Len, P1, P2, 0);
+
+				Count[i]	=gg.NumTempIndexVerts - Start[i];
+			}
+
+			if(gg.NumTempIndexVerts < 3)
+			{
+				mNumIndexVerts	=0;
+
+				//GHook.Printf("FixFaceTJunctions:  Face collapsed.\n");
+				return	true;
+			}
+
+			for(i=0;i < mNumIndexVerts;i++)
+			{
+				if(Count[i] == 1 && Count[(i + mNumIndexVerts - 1) % mNumIndexVerts] == 1)
+				{
+					break;
+				}
+			}
+
+			if(i == mNumIndexVerts)
+			{
+				Base	=0;
+			}
+			else
+			{	//rotate the vertex order
+				Base	=Start[i];
+			}
+
+			if(!Finalize(gg, Base, tip))
+			{
+				return	false;
+			}
+
+			return	true;
+		}
+
+
+		bool Finalize(GBSPGlobals gg, Int32	Base, TexInfoPool tip)
+		{
+			Int32	i;
+
+			gg.TotalIndexVerts	+=gg.NumTempIndexVerts;
+
+			if(gg.NumTempIndexVerts == mNumIndexVerts)
+			{
+				return	true;
+			}
+
+			if((tip.mTexInfos[mTexInfo].mFlags & TexInfo.TEXINFO_MIRROR) != 0)
+			{
+				return	true;
+			}
+
+			if((tip.mTexInfos[mTexInfo].mFlags & TexInfo.TEXINFO_SKY) != 0)
+			{
+				return	true;
+			}
+
+			mIndexVerts =new Int32[gg.NumTempIndexVerts];
+				
+			for(i=0;i < gg.NumTempIndexVerts;i++)
+			{
+				mIndexVerts[i]	=gg.TempIndexVerts[(i + Base) % gg.NumTempIndexVerts];
+			}
+			mNumIndexVerts	=gg.NumTempIndexVerts;
+
+			gg.NumFixedFaces++;
+
+			return	true;
+		}
+
+
+		internal bool GetFaceVertIndexNumbers(GBSPGlobals gg)
+		{
+			gg.NumTempIndexVerts	=0;
+
+			foreach(Vector3 vert in mPoly.mVerts)
+			{
+				if(gg.NumTempIndexVerts >= GBSPGlobals.MAX_TEMP_INDEX_VERTS)
+				{
+					Map.Print("GetFaceVertIndexNumbers:  Max temp index verts.\n");
+					return	false;
+				}
+
+				int	Index	=WeldVert(gg, vert);
+				if(Index == -1)
+				{
+					Map.Print("GetFaceVertIndexNumbers:  Could not find vert.\n");
+					return	false;
+				}
+
+				gg.TempIndexVerts[gg.NumTempIndexVerts]	=Index;
+				gg.NumTempIndexVerts++;
+				gg.TotalIndexVerts++;
+			}
+			mNumIndexVerts	=gg.NumTempIndexVerts;
+			mIndexVerts		=new int[mNumIndexVerts];
+
+			if(mIndexVerts == null)
+			{
+				Map.Print("GetFaceVertIndexNumbers:  Out of memory for index list.\n");
+				return	false;
+			}
+
+			for(int i=0;i < gg.NumTempIndexVerts;i++)
+			{
+				mIndexVerts[i]	=gg.TempIndexVerts[i];
+			}
+			return	true;
+		}
+
+
+		Int32 WeldVert(GBSPGlobals gg, Vector3 vert)
+		{
+			Int32	i=0;
+			for(;i < gg.NumWeldedVerts;i++)
+			{
+				if(UtilityLib.Mathery.CompareVector(vert, gg.WeldedVerts[i]))
+				{
+					return	i;
+				}
+			}
+
+			if(i >= GBSPGlobals.MAX_WELDED_VERTS)
+			{
+				Map.Print("WeldVert:  Max welded verts.\n");
+				return	-1;
+			}
+
+			gg.WeldedVerts[i]	=vert;
+			gg.NumWeldedVerts++;
+
+			return	i;
 		}
 	}
 }

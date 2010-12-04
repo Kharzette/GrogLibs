@@ -16,10 +16,11 @@ namespace BSPBuilder
 		OpenFileDialog			mOFD	=new OpenFileDialog();
 		SaveFileDialog			mSFD	=new SaveFileDialog();
 
-		public event EventHandler	eOpenVMF;
-		public event EventHandler	eOpenMap;
-		public event EventHandler	eOpenZone;
-		public event EventHandler	eSaveZone;
+		public event EventHandler	eOpenBrushFile;
+		public event EventHandler	eBuildGBSP;
+		public event EventHandler	eLightGBSP;
+		public event EventHandler	eVisGBSP;
+		public event EventHandler	eSaveGBSP;
 		public event EventHandler	eDrawChoiceChanged;
 
 
@@ -106,12 +107,6 @@ namespace BSPBuilder
 		}
 
 
-		internal bool bBevels
-		{
-			get { return BevelBrushes.Checked; }
-			set { BevelBrushes.Checked = value; }
-		}
-
 		internal string NumberOfMapFaces
 		{
 			get { return NumMapFaces.Text; }
@@ -149,7 +144,7 @@ namespace BSPBuilder
 		}
 
 
-		void OnOpenVMF(object sender, EventArgs e)
+		void OnOpenBrushFile(object sender, EventArgs e)
 		{			
 			mOFD.DefaultExt	="*.vmf";
 			DialogResult	dr	=mOFD.ShowDialog();
@@ -159,16 +154,16 @@ namespace BSPBuilder
 				return;
 			}
 
-			if(eOpenVMF != null)
+			if(eOpenBrushFile != null)
 			{
-				eOpenVMF(mOFD.FileName, null);
+				eOpenBrushFile(mOFD.FileName, null);
 			}
 		}
 
 
-		void OnOpenZone(object sender, EventArgs e)
+		void OnLightGBSP(object sender, EventArgs e)
 		{
-			mOFD.DefaultExt	="*.Zone";
+			mOFD.DefaultExt	="*.gbsp";
 			DialogResult	dr	=mOFD.ShowDialog();
 
 			if(dr == DialogResult.Cancel)
@@ -176,42 +171,9 @@ namespace BSPBuilder
 				return;
 			}
 
-			if(eOpenZone != null)
+			if(eLightGBSP != null)
 			{
-				eOpenZone(mOFD.FileName, null);
-			}
-		}
-
-
-		void OnOpenMap(object sender, EventArgs e)
-		{
-			mOFD.DefaultExt	="*.map";
-			DialogResult	dr	=mOFD.ShowDialog();
-
-			if(dr == DialogResult.Cancel)
-			{
-				return;
-			}
-
-			if(eOpenMap != null)
-			{
-				eOpenMap(mOFD.FileName, null);
-			}
-		}
-
-
-		void OnSaveZone(object sender, EventArgs e)
-		{
-			DialogResult	dr	=mSFD.ShowDialog();
-
-			if(dr == DialogResult.Cancel)
-			{
-				return;
-			}
-
-			if(eSaveZone != null)
-			{
-				eSaveZone(mSFD.FileName, null);
+				eLightGBSP(mOFD.FileName, null);
 			}
 		}
 
@@ -251,6 +213,54 @@ namespace BSPBuilder
 			{
 				UpdateProgressBar(pb, pea.mMin, pea.mMax, pea.mCurrent);
 			}
+		}
+
+
+		void OnBuildGBSP(object sender, EventArgs e)
+		{
+			if(eBuildGBSP != null)
+			{
+				eBuildGBSP(null, null);
+			}
+		}
+
+
+		void OnSaveGBSP(object sender, EventArgs e)
+		{
+			DialogResult	dr	=mSFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			if(eSaveGBSP != null)
+			{
+				eSaveGBSP(mSFD.FileName, null);
+			}
+		}
+
+
+		void OnVisGBSP(object sender, EventArgs e)
+		{
+			mOFD.DefaultExt	="*.gbsp";
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			if(eVisGBSP != null)
+			{
+				eVisGBSP(mOFD.FileName, null);
+			}
+		}
+
+
+		internal void SetBuildEnabled(bool bOn)
+		{
+			BuildGBSP.Enabled	=bOn;
 		}
 	}
 }
