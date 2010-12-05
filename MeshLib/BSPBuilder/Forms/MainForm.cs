@@ -24,6 +24,7 @@ namespace BSPBuilder
 		public event EventHandler	eOpenBrushFile;
 		public event EventHandler	eBuildGBSP;
 		public event EventHandler	eLightGBSP;
+		public event EventHandler	eLoadGBSP;
 		public event EventHandler	eVisGBSP;
 		public event EventHandler	eSaveGBSP;
 		public event EventHandler	eDrawChoiceChanged;
@@ -311,6 +312,23 @@ namespace BSPBuilder
 		internal void SetSaveEnabled(bool bOn)
 		{
 			SaveGBSP.Enabled	=bOn;
+		}
+
+
+		void OnLoadGBSP(object sender, EventArgs e)
+		{
+			mOFD.DefaultExt	="*.gbsp";
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			if(eLoadGBSP != null)
+			{
+				eLoadGBSP(mOFD.FileName, null);
+			}
 		}
 	}
 }

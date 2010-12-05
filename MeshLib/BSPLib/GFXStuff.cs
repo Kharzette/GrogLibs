@@ -149,6 +149,22 @@ namespace BSPLib
 			mDist		=br.ReadSingle();
 			mType		=br.ReadUInt32();
 		}
+
+		internal float DistanceFast(Vector3 pos)
+		{
+			switch(mType)
+			{
+				case GBSPPlane.PLANE_X:
+					return	pos.X - mDist;
+				case GBSPPlane.PLANE_Y:
+					return	pos.Y - mDist;
+				case GBSPPlane.PLANE_Z:
+					return	pos.Z - mDist;
+
+				default:
+					return	Vector3.Dot(pos, mNormal) - mDist;
+			}
+		}
 	}
 
 
@@ -482,6 +498,18 @@ namespace BSPLib
 			return	true;
 		}
 
+		internal bool Write(BinaryWriter bw, byte[] bytes)
+		{
+			bw.Write(mType);
+			bw.Write(mElements);
+
+			for(int i=0;i < mElements;i++)
+			{
+				bw.Write(bytes[i]);
+			}
+			return	true;
+		}
+
 		internal bool Write(BinaryWriter bw, Vector3[] vecs)
 		{
 			bw.Write(mType);
@@ -753,6 +781,12 @@ namespace BSPLib
 							vec.Z	=br.ReadSingle();
 
 							obj	=vec;
+						}
+						else if(chunkType == typeof(byte))
+						{
+							byte	num	=br.ReadByte();
+
+							obj	=num;
 						}
 						else
 						{

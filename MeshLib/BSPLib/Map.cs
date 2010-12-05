@@ -138,6 +138,7 @@ namespace BSPLib
 		public Int32		NumVisPortalBytes;	// Total portals / 8
 		public Int32		NumVisPortalLongs;	// Total portalbytes / sizeof(uint32)
 		public VISPortal	[]VisPortals;		// NumVisPortals
+		public VISPortal	[]VisSortedPortals;
 		public byte			[]PortalSeen;		// Temp vis array
 		public byte			[]PortalBits;
 		public Int32		NumVisLeafs;		// Total VisLeafs
@@ -146,6 +147,7 @@ namespace BSPLib
 		public byte			[]LeafVisBits;		// Should be NumVisLeafs * (NumVisLeafs / 8)
 		public VISLeaf		[]VisLeafs;			// NumVisLeafs
 		public bool			bVisPortals;
+		public Int32		LeafSee;
 
 		//build flags
 		public bool		FixTJuncts				=true;
@@ -176,6 +178,7 @@ namespace BSPLib
 		public const int	MAX_TEMP_LEAF_SIDES		=100;
 		public const int	MAX_AREAS				=256;
 		public const int	MAX_AREA_PORTALS		=1024;
+		public const int	MAX_TEMP_PORTALS		=25000;
 	}
 
 
@@ -332,13 +335,20 @@ namespace BSPLib
 
 
 		#region Queries
-		public void GetTriangles(List<Vector3> verts, List<UInt32> indexes, string drawChoice)
+		public void GetTriangles(Vector3 pos, List<Vector3> verts, List<UInt32> indexes, string drawChoice)
 		{
 			if(drawChoice == "Map Brushes")
 			{
-				foreach(GBSPModel mod in mModels)
+				foreach(MapEntity ent in mEntities)
 				{
-					mod.GetTriangles(verts, indexes, true);
+					if(ent.mBrushes.Count > 0)
+					{
+						foreach(MapBrush mb in ent.mBrushes)
+						{
+							mb.GetTriangles(verts, indexes, false);
+						}
+						break;
+					}
 				}
 			}
 			else if(drawChoice == "Trouble Brushes")
@@ -364,7 +374,9 @@ namespace BSPLib
 			}
 			else if(drawChoice == "Draw Tree")
 			{
-				mRoot.GetTriangles(verts, indexes, true);
+				int	root	=mGlobals.GFXModels[0].mRootNode[0];
+
+				RenderBSPFrontBack_r2(root, pos, verts, indexes, true);
 			}
 			else if(drawChoice == "Collision Tree")
 			{
@@ -756,7 +768,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXModelData(BinaryWriter bw)
+		bool SaveGFXModelDataFromList(BinaryWriter bw)
 		{
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
@@ -784,6 +796,26 @@ namespace BSPLib
 				GModel.mAreas[1]		=mModels[i].mAreas[1];
 
 				GModel.Write(bw);
+			}	
+			
+			return	true;	
+		}
+
+
+		bool SaveGFXModelData(BinaryWriter bw)
+		{
+			Int32		i;
+			GBSPChunk	Chunk	=new GBSPChunk();
+			GFXModel	GModel	=new GFXModel();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_MODELS;
+			Chunk.mElements	=mModels.Count;
+
+			Chunk.Write(bw);
+
+			for(i=0;i < mGlobals.NumGFXModels;i++)
+			{
+				mGlobals.GFXModels[i].Write(bw);
 			}	
 			
 			return	true;	
@@ -845,7 +877,7 @@ namespace BSPLib
 			}
 
 			//GHook.Printf("Saving GFX Model Data\n");
-			if(!SaveGFXModelData(bw))
+			if(!SaveGFXModelDataFromList(bw))
 			{
 				Map.Print("ConvertGBSPToFile:  SaveGFXModelData failed.\n");
 				return	false;
@@ -891,7 +923,7 @@ namespace BSPLib
 			{
 				return	false;
 			}
-			if(!SaveGFXEntData(bw))
+			if(!SaveGFXEntDataList(bw))
 			{
 				return	false;
 			}
@@ -1016,7 +1048,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXEntData(BinaryWriter bw)
+		bool SaveGFXEntDataList(BinaryWriter bw)
 		{
 			GBSPChunk	Chunk	=new GBSPChunk();
 
@@ -1028,6 +1060,40 @@ namespace BSPLib
 			foreach(MapEntity me in mEntities)
 			{
 				me.Write(bw);
+			}
+			return	true;
+		}
+
+
+		bool SaveGFXEntData(BinaryWriter bw)
+		{
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_ENTDATA;
+			Chunk.mElements =mGlobals.NumGFXEntData;
+
+			Chunk.Write(bw);
+
+			for(int i=0;i < mGlobals.NumGFXEntData;i++)
+			{
+				mGlobals.GFXEntData[i].Write(bw);
+			}
+			return	true;
+		}
+
+
+		bool SaveGFXLightData(BinaryWriter bw)
+		{
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LIGHTDATA;
+			Chunk.mElements =mGlobals.NumGFXLightData;
+
+			Chunk.Write(bw);
+
+			for(int i=0;i < mGlobals.NumGFXLightData;i++)
+			{
+				bw.Write(mGlobals.GFXLightData[i]);
 			}
 			return	true;
 		}
@@ -1048,7 +1114,24 @@ namespace BSPLib
 			return	true;
 		}
 
-		private bool SaveGFXVerts(BinaryWriter bw)
+
+		bool SaveGFXVisData(BinaryWriter bw)
+		{
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_VISDATA;
+			Chunk.mElements =mGlobals.NumGFXVisData;
+
+			if(!Chunk.Write(bw, mGlobals.GFXVisData))
+			{
+				Print("SaveGFXvertIndexList:  There was an error saving the VertIndexList.\n");
+				return	false;
+			}
+			return	true;
+		}
+
+
+		bool SaveGFXVerts(BinaryWriter bw)
 		{
 			GBSPChunk	Chunk	=new GBSPChunk();
 
@@ -1063,7 +1146,24 @@ namespace BSPLib
 			return	true;
 		}
 
-		private bool SaveGFXPlanes(BinaryWriter bw)
+
+		bool SaveGFXRGBVerts(BinaryWriter bw)
+		{
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_RGB_VERTS;
+			Chunk.mElements =mGlobals.NumGFXRGBVerts;
+
+			if(!Chunk.Write(bw, mGlobals.GFXRGBVerts))
+			{
+				Print("There was an error writing the rgb verts.\n");
+				return	false;
+			}
+			return	true;
+		}
+
+
+		bool SaveGFXPlanes(BinaryWriter bw)
 		{
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
@@ -1104,6 +1204,42 @@ namespace BSPLib
 				{
 					return	false;
 				}
+			}
+			return	true;
+		}
+
+
+		bool SaveGFXPortals(BinaryWriter bw)
+		{
+			Int32		i;
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_PORTALS;
+			Chunk.mElements =mGlobals.NumGFXPortals;
+
+			Chunk.Write(bw);
+
+			for(i=0;i < mGlobals.NumGFXPortals;i++)
+			{
+				mGlobals.GFXPortals[i].Write(bw);
+			}
+			return	true;
+		}
+
+
+		bool SaveGFXBNodes(BinaryWriter bw)
+		{
+			Int32		i;
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_BNODES;
+			Chunk.mElements =mGlobals.NumGFXBNodes;
+
+			Chunk.Write(bw);
+
+			for(i=0;i < mGlobals.NumGFXBNodes;i++)
+			{
+				mGlobals.GFXBNodes[i].Write(bw);
 			}
 			return	true;
 		}
@@ -1470,7 +1606,7 @@ namespace BSPLib
 		}
 
 
-		bool LoadGBSPFile(string fileName)
+		public bool LoadGBSPFile(string fileName)
 		{
 			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
 									FileMode.Open, FileAccess.Read);
@@ -1496,21 +1632,692 @@ namespace BSPLib
 				}
 			}
 
+			br.Close();
+			file.Close();
+
+			Print("Load complete\n");
+
 			return	true;
 		}
 
 
-		public bool VisGBSPFile(string fileName, VisParams prms)
+		public bool VisGBSPFile(string fileName, VisParams prms, BSPBuildParams prms2)
 		{
 			mGlobals.FullVis	=prms.mbFullVis;
 			mGlobals.NoSort		=!prms.mbSortPortals;
+			mGlobals.VisVerbose	=prms2.mbVerbose;
 
+			Print(" --- Vis GBSP File --- \n");
+
+			// Fill in the global bsp data
+			/*
 			if(!LoadGBSPFile(fileName))
 			{
-				Print("LightGBSPFile:  Could not load GBSP file: " + fileName + "\n");
+				Print("PvsGBSPFile:  Could not load GBSP file: " + fileName + "\n");
+				return	false;
+			}*/
+			string	PFile;
+
+			//Clean out any old vis data
+			FreeFileVisData();
+
+			//Open the bsp file for writing
+			FileStream	fs	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+				FileMode.OpenOrCreate, FileAccess.Write);
+
+			BinaryWriter	bw	=null;
+
+			if(fs == null)
+			{
+				Print("VisGBSPFile:  Could not open GBSP file for writing: " + fileName + "\n");
+				goto	ExitWithError;
+			}
+
+			bw	=new BinaryWriter(fs);
+
+			// Prepare the portal file name
+			int	extPos	=fileName.LastIndexOf(".");
+			PFile		=fileName.Substring(0, extPos);
+			PFile		+=".gpf";
+			
+			//Load the portal file
+			if(!LoadPortalFile(PFile))
+			{
+				goto	ExitWithError;
+			}
+
+			Print("NumPortals           : " + mGlobals.NumVisPortals + "\n");
+			
+			//Write out everything but vis info
+			if(!StartWritingVis(bw))
+			{
+				goto	ExitWithError;
+			}
+
+			//Vis'em
+			if(!VisAllLeafs())
+			{
+				goto	ExitWithError;
+			}
+
+			//Record the vis data
+			mGlobals.NumGFXVisData	=mGlobals.NumVisLeafs * mGlobals.NumVisLeafBytes;
+			mGlobals.GFXVisData		=mGlobals.LeafVisBits;
+
+			//Save the leafs, clusters, vis data, etc
+			if(!FinishWritingVis(bw))
+			{
+				goto	ExitWithError;
+			}
+
+			//Free all the vis stuff
+			FreeAllVisData();
+
+			//Free any remaining leftover bsp data
+			FreeGBSPFile();
+
+			bw.Close();
+			fs.Close();
+			bw	=null;
+			fs	=null;
+			
+			return	true;
+
+			// ==== ERROR ====
+			ExitWithError:
+			{
+				Print("PvsGBSPFile:  Could not vis the file: " + fileName + "\n");
+
+				if(bw != null)
+				{
+					bw.Close();
+				}
+				if(fs != null)
+				{
+					fs.Close();
+				}
+
+				FreeAllVisData();
+				FreeGBSPFile();
+
 				return	false;
 			}
+		}
+
+
+		bool FinishWritingVis(BinaryWriter bw)
+		{
+			if(!SaveGFXLeafs(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXClusters(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXVisData(bw))
+			{
+				return	false;
+			}
+
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_END;
+			Chunk.mElements	=0;
+			Chunk.Write(bw);
+
 			return	true;
+		}
+
+
+		bool VisAllLeafs()
+		{
+			Int32	i;
+
+			//Create PortalSeen array.  This is used by Vis flooding routines
+			//This is deleted below...
+			mGlobals.PortalSeen	=new byte[mGlobals.NumVisPortals];
+
+			//create a dictionary to map a vis portal back to an index
+			Dictionary<VISPortal, Int32>	portIndexer	=new Dictionary<VISPortal, Int32>();
+			for(i=0;i < mGlobals.NumVisPortals;i++)
+			{
+				portIndexer.Add(mGlobals.VisPortals[i], i);
+			}
+
+			//Flood all the leafs with the fast method first...
+			for(i=0;i < mGlobals.NumVisLeafs; i++)
+			{
+				FloodLeafPortalsFast(i, portIndexer);
+			}
+
+			//Sort the portals with MightSee
+			SortPortals();
+
+			if(mGlobals.FullVis)
+			{
+				/*if(!FloodPortalsSlow())
+				{
+					return	false;
+				}*/
+			}
+
+			//Don't need this anymore...
+			mGlobals.PortalSeen	=null;
+
+			mGlobals.LeafVisBits	=new byte[mGlobals.NumVisLeafs * mGlobals.NumVisLeafBytes];
+			if(mGlobals.LeafVisBits == null)
+			{
+				Print("VisAllLeafs:  Out of memory for LeafVisBits.\n");
+				goto	ExitWithError;
+			}
+
+			mGlobals.TotalVisibleLeafs	=0;
+
+			mGlobals.PortalBits	=new byte[mGlobals.NumVisPortalBytes];
+
+			if(mGlobals.PortalBits == null)
+			{
+				goto	ExitWithError;
+			}
+
+			for(i=0;i < mGlobals.NumVisLeafs;i++)
+			{
+				mGlobals.LeafSee	=0;
+				
+				if(!CollectLeafVisBits(i))
+				{
+					goto	ExitWithError;
+				}
+				mGlobals.TotalVisibleLeafs	+=mGlobals.LeafSee;
+			}
+			mGlobals.PortalBits	=null;
+
+			Print("Total visible areas           : " + mGlobals.TotalVisibleLeafs + "\n");
+			Print("Average visible from each area: " + mGlobals.TotalVisibleLeafs / mGlobals.NumVisLeafs + "\n");
+
+			return	true;
+
+			// ==== ERROR ====
+			ExitWithError:
+			{
+				// Free all the global vis data
+				FreeAllVisData();
+
+				return	false;
+			}
+		}
+
+		private bool CollectLeafVisBits(int LeafNum)
+		{
+			VISPortal	Portal, SPortal;
+			VISLeaf		Leaf;
+			Int32		k, Bit, SLeaf, LeafBitsOfs;
+			
+			Leaf	=mGlobals.VisLeafs[LeafNum];
+
+			LeafBitsOfs	=LeafNum * mGlobals.NumVisLeafBytes;
+
+			for(int i=0;i < mGlobals.NumVisPortalBytes;i++)
+			{
+				mGlobals.PortalBits[i]	=0;
+			}
+
+			//'OR' all portals that this portal can see into one list
+			for(Portal=Leaf.mPortals;Portal != null;Portal=Portal.mNext)
+			{
+				if(Portal.mFinalVisBits != null)
+				{
+					//Try to use final vis info first
+					for(k=0;k < mGlobals.NumVisPortalBytes;k++)
+					{
+						mGlobals.PortalBits[k]	|=Portal.mFinalVisBits[k];
+					}
+				}
+				else if(Portal.mVisBits != null)
+				{
+					for(k=0;k < mGlobals.NumVisPortalBytes;k++)
+					{
+						mGlobals.PortalBits[k]	|=Portal.mVisBits[k];
+					}
+				}
+				else
+				{
+					Map.Print("No VisInfo for portal.\n");
+					return	false;
+				}
+
+				Portal.mVisBits			=null;
+				Portal.mFinalVisBits	=null;
+			}
+
+			// Take this list, and or all leafs that each visible portal looks in to
+			for (k=0; k< mGlobals.NumVisPortals; k++)
+			{
+				if((mGlobals.PortalBits[k >> 3] & (1 << (k & 7))) != 0)
+				{
+					SPortal	=mGlobals.VisPortals[k];
+					SLeaf	=SPortal.mLeaf;
+					Debug.Assert((1 << (SLeaf & 7)) < 256);
+					mGlobals.LeafVisBits[LeafBitsOfs + (SLeaf >> 3)]	|=(byte)(1 << (SLeaf & 7));
+				}
+			}
+					
+			Bit	=1 << (LeafNum & 7);
+
+			Debug.Assert(Bit < 256);
+
+			//He should not have seen himself (yet...)
+			if((mGlobals.LeafVisBits[LeafBitsOfs + (LeafNum >> 3)] & Bit) != 0)
+			{
+				Map.Print("*WARNING* CollectLeafVisBits:  Leaf:" + LeafNum + " can see himself!\n");
+			}
+			mGlobals.LeafVisBits[LeafBitsOfs + (LeafNum >> 3)]	|=(byte)Bit;
+
+			for(k=0;k < mGlobals.NumVisLeafs;k++)
+			{
+				Bit	=(1 << (k & 7));
+
+				if((mGlobals.LeafVisBits[LeafBitsOfs + (k>>3)] & Bit) != 0)
+				{
+					mGlobals.LeafSee++;
+				}
+			}
+
+			if(mGlobals.LeafSee == 0)
+			{
+				Map.Print("CollectLeafVisBits:  Leaf can't see nothing.\n");
+				return	false;
+			}
+
+			mGlobals.GFXClusters[LeafNum].mVisOfs	=LeafBitsOfs;
+
+			return	true;
+		}
+
+
+		void SortPortals()
+		{
+			List<VISPortal>	sortMe	=new List<VISPortal>(mGlobals.VisPortals);
+
+			sortMe.Sort(new VisPortalComparer());
+
+			mGlobals.VisSortedPortals	=sortMe.ToArray();
+		}
+
+
+		void FloodLeafPortalsFast(int leafNum, Dictionary<VISPortal, Int32> visIndexer)
+		{
+			VISLeaf		Leaf;
+			VISPortal	Portal;
+
+			Leaf	=mGlobals.VisLeafs[leafNum];
+
+			if(Leaf.mPortals == null)
+			{
+				//GHook.Printf("*WARNING* FloodLeafPortalsFast:  Leaf with no portals.\n");
+				return;
+			}
+			
+			mGlobals.SrcLeaf	=leafNum;
+
+			for(Portal=Leaf.mPortals;Portal != null;Portal=Portal.mNext)
+			{
+				Portal.mVisBits	=new byte[mGlobals.NumVisPortalBytes];
+
+				//This portal can't see anyone yet...
+				for(int i=0;i < mGlobals.NumVisPortalBytes;i++)
+				{
+					Portal.mVisBits[i]	=0;
+				}
+				for(int i=0;i < mGlobals.NumVisPortals;i++)
+				{
+					mGlobals.PortalSeen[i]	=0;
+				}
+
+				mGlobals.MightSee	=0;
+				
+				Portal.FloodPortalsFast_r(mGlobals, Portal, visIndexer);
+			}
+		}
+
+
+		bool StartWritingVis(BinaryWriter bw)
+		{
+			GBSPHeader	header	=new GBSPHeader();
+			header.mTAG			="GBSP";
+			header.mVersion		=GBSPChunk.GBSP_VERSION;
+			header.mBSPTime		=DateTime.Now;
+
+			GBSPChunk	chunk	=new GBSPChunk();
+			chunk.mType			=GBSPChunk.GBSP_CHUNK_HEADER;
+			chunk.mElements		=1;
+			chunk.Write(bw, header);
+
+			if(!SaveGFXModelData(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXNodes(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXPortals(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXBNodes(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXPlanes(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXFaces(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXAreasAndPortals(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXLeafs(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXLeafSides(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXVerts(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXVertIndexList(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXRGBVerts(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXEntData(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXTexInfos(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXLightData(bw))
+			{
+				return	false;
+			}
+			
+			chunk.mType		=GBSPChunk.GBSP_CHUNK_END;
+			chunk.mElements	=0;
+			chunk.Write(bw);
+
+			return	true;
+		}
+
+
+		void FreeAllVisData()
+		{
+			mGlobals.LeafVisBits	=null;
+			mGlobals.GFXVisData		=null;
+			mGlobals.NumGFXVisData	=0;
+
+			if(mGlobals.VisPortals != null)
+			{
+				for(int i=0;i < mGlobals.NumVisPortals;i++)
+				{
+					mGlobals.VisPortals[i].mPoly			=null;
+					mGlobals.VisPortals[i].mFinalVisBits	=null;
+					mGlobals.VisPortals[i].mVisBits			=null;
+				}
+
+				mGlobals.VisPortals	=null;
+			}
+			mGlobals.VisPortals			=null;
+			mGlobals.VisSortedPortals	=null;
+			mGlobals.PortalSeen			=null;
+			mGlobals.VisLeafs			=null;
+
+			FreeGBSPFile();		// Free rest of GBSP GFX data
+		}
+
+
+		bool LoadPortalFile(string PFile)
+		{
+			Int32		LeafFrom, LeafTo;
+			VISPortal	pPortal;
+			VISLeaf		pLeaf;
+			GBSPPoly	pPoly;
+			Int32		i, NumVerts;
+			string		TAG;
+
+			pPoly	=null;
+
+			FileStream	fs	=UtilityLib.FileUtil.OpenTitleFile(PFile,
+				FileMode.Open, FileAccess.Read);
+
+			BinaryReader	br	=null;
+
+			if(fs == null)		// opps
+			{
+				Print("LoadPortalFile:  Could not open " + PFile + " for reading.\n");
+				goto	ExitWithError;
+			}
+
+			br	=new BinaryReader(fs);
+			
+			// 
+			//	Check the TAG
+			//
+			TAG	=br.ReadString();
+			if(TAG != "GBSP_PRTFILE")
+			{
+				Print("LoadPortalFile:  " + PFile + " is not a GBSP Portal file.\n");
+				goto	ExitWithError;
+			}
+
+			//
+			//	Get the number of portals
+			//
+			mGlobals.NumVisPortals	=br.ReadInt32();
+			if(mGlobals.NumVisPortals >= GBSPGlobals.MAX_TEMP_PORTALS)
+			{
+				Print("LoadPortalFile:  Max portals for temp buffers.\n");
+				goto	ExitWithError;
+			}
+			
+			mGlobals.VisPortals	=new VISPortal[mGlobals.NumVisPortals];
+			if(mGlobals.VisPortals == null)
+			{
+				Print("LoadPortalFile:  Out of memory for VisPortals.\n");
+				goto	ExitWithError;
+			}
+			
+			mGlobals.VisSortedPortals	=new VISPortal[mGlobals.NumVisPortals];
+			if(mGlobals.VisSortedPortals == null)
+			{
+				Print("LoadPortalFile:  Out of memory for VisSortedPortals.\n");
+				goto ExitWithError;
+			}
+
+			//
+			//	Get the number of leafs
+			//
+			mGlobals.NumVisLeafs	=br.ReadInt32();
+			if(mGlobals.NumVisLeafs > mGlobals.NumGFXLeafs)
+			{
+				goto	ExitWithError;
+			}
+			
+			mGlobals.VisLeafs	=new VISLeaf[mGlobals.NumVisLeafs];
+			if(mGlobals.VisLeafs == null)
+			{
+				Print("LoadPortalFile:  Out of memory for VisLeafs.\n");
+				goto ExitWithError;
+			}
+
+			//fill arrays with blank objects
+			for(i=0;i < mGlobals.NumVisLeafs;i++)
+			{
+				mGlobals.VisLeafs[i]	=new VISLeaf();
+			}
+
+			//
+			//	Load in the portals
+			//
+			for(i=0;i < mGlobals.NumVisPortals;i++)
+			{
+				//alloc blank portal
+				mGlobals.VisPortals[i]	=new VISPortal();
+
+				NumVerts	=br.ReadInt32();
+
+				pPoly	=new GBSPPoly();
+
+				for(int j=0;j < NumVerts;j++)
+				{
+					Vector3	vert;
+					vert.X	=br.ReadSingle();
+					vert.Y	=br.ReadSingle();
+					vert.Z	=br.ReadSingle();
+
+					pPoly.mVerts.Add(vert);
+				}
+
+				LeafFrom	=br.ReadInt32();
+				LeafTo		=br.ReadInt32();
+				
+				if(LeafFrom >= mGlobals.NumVisLeafs || LeafFrom < 0)
+				{
+					Print("LoadPortalFile:  Invalid LeafFrom: " + LeafFrom + "\n");
+					goto	ExitWithError;
+				}
+
+				if(LeafTo >= mGlobals.NumVisLeafs || LeafTo < 0)
+				{
+					Print("LoadPortalFile:  Invalid LeafTo: " + LeafTo + "\n");
+					goto	ExitWithError;
+				}
+
+				pLeaf	=mGlobals.VisLeafs[LeafFrom];
+				pPortal	=mGlobals.VisPortals[i];
+
+				pPortal.mPoly	=pPoly;
+				pPortal.mLeaf	=LeafTo;
+				pPortal.mPlane	=new GBSPPlane(pPoly);
+				pPortal.mNext	=pLeaf.mPortals;
+				pLeaf.mPortals	=pPortal;
+
+				pPortal.CalcPortalInfo();
+			}
+			
+			mGlobals.NumVisLeafBytes	=((mGlobals.NumVisLeafs+63)&~63) >> 3;
+			mGlobals.NumVisPortalBytes	=((mGlobals.NumVisPortals+63)&~63) >> 3;
+
+			mGlobals.NumVisPortalLongs	=mGlobals.NumVisPortalBytes / sizeof(UInt32);
+			mGlobals.NumVisLeafLongs	=mGlobals.NumVisLeafBytes / sizeof(UInt32);
+
+			br.Close();
+			fs.Close();
+			br	=null;
+			fs	=null;
+
+			return	true;
+
+			// ==== ERROR ===
+			ExitWithError:
+			{
+				if(br != null)
+				{
+					br.Close();
+				}
+				if(fs != null)
+				{
+					fs.Close();
+				}
+
+				mGlobals.VisPortals			=null;
+				mGlobals.VisSortedPortals	=null;
+				mGlobals.VisLeafs			=null;
+				pPoly						=null;
+
+				return	false;
+			}
+		}
+
+
+		void RenderBSPFrontBack_r2(Int32 Node, Vector3 pos,
+			List<Vector3> verts, List<uint> indexes, bool bCheck)
+		{
+			float		Dist1;
+			GFXNode		pNode;
+			Int32		Side;
+
+			if(Node < 0)		// At leaf, no more recursing
+			{
+				Int32		Leaf;
+
+				Leaf	=-(Node+1);
+
+				Debug.Assert(Leaf >= 0 && Leaf < mGlobals.NumGFXLeafs);
+
+				for(int i=0;i < mGlobals.GFXLeafs[Leaf].mNumFaces;i++)
+				{
+					int		ofs		=verts.Count;
+					UInt32	offset	=(UInt32)ofs;
+					int		face	=mGlobals.GFXLeafFaces[mGlobals.GFXLeafs[Leaf].mFirstFace + i];
+					int		nverts	=mGlobals.GFXFaces[face].mNumVerts;
+					int		fvert	=mGlobals.GFXFaces[face].mFirstVert;
+
+					for(int j=fvert;j < (fvert + nverts);j++)
+					{
+						int	idx	=mGlobals.GFXVertIndexList[j];
+						verts.Add(mGlobals.GFXVerts[idx]);
+					}
+
+					int k	=0;
+					for(k=1;k < nverts-1;k++)
+					{
+						//initial vertex
+						indexes.Add(offset);
+						indexes.Add((UInt32)(offset + k));
+						indexes.Add((UInt32)(offset + ((k + 1) % nverts)));
+					}
+				}
+				return;
+			}
+
+			pNode	=mGlobals.GFXNodes[Node];
+			
+			//Get the distance that the eye is from this plane
+			Dist1	=mGlobals.GFXPlanes[pNode.mPlaneNum].DistanceFast(pos);
+
+			if(Dist1 < 0)
+			{
+				Side	=1;
+			}
+			else
+			{
+				Side	=0;
+			}
+			
+			//Go down the side we are on first, then the other side
+			RenderBSPFrontBack_r2(pNode.mChildren[Side], pos, verts, indexes, bCheck);
+			RenderBSPFrontBack_r2(pNode.mChildren[(Side == 0)? 1 : 0], pos, verts, indexes, bCheck);
+		}
+
+
+		void FreeFileVisData()
+		{
+			mGlobals.GFXVisData		=null;
+			mGlobals.NumGFXVisData	=0;
 		}
 	}
 }

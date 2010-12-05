@@ -51,7 +51,7 @@ namespace BSPLib
 			for(i=0;i < mPoly.mVerts.Count;i++)
 			{
 				Dist	=Portal2.mPlane.DistanceFast(mPoly.mVerts[i]);
-				if(Dist < UtilityLib.Mathery.ON_EPSILON)
+				if(Dist < -UtilityLib.Mathery.ON_EPSILON)
 				{
 					break;
 				}
@@ -79,12 +79,75 @@ namespace BSPLib
 			}
 			return	true;
 		}
+
+
+		internal void FloodPortalsFast_r(GBSPGlobals gg,
+			VISPortal DestPortal, Dictionary<VISPortal, Int32> visIndexer)
+		{
+			VISLeaf		Leaf;
+			VISPortal	Portal;
+			Int32		LeafNum;
+			Int32		PNum;
+
+//			PNum	=Array.IndexOf(gg.VisPortals, DestPortal);
+			Debug.Assert(visIndexer.ContainsKey(DestPortal));
+			PNum	=visIndexer[DestPortal];
+			
+			if(gg.PortalSeen[PNum] != 0)
+			{
+				return;
+			}
+
+			gg.PortalSeen[PNum]	=1;
+
+			//Add the portal that we are Flooding into, to the original portals visbits
+			LeafNum	=DestPortal.mLeaf;
+			
+			Int32	Bit	=1 << (PNum & 7);
+			if((mVisBits[PNum >> 3] & Bit) == 0)
+			{
+				Debug.Assert(Bit < 256);
+				mVisBits[PNum>>3]	|=(byte)Bit;
+				mMightSee++;
+				gg.VisLeafs[gg.SrcLeaf].mMightSee++;
+				gg.MightSee++;
+			}
+
+			Leaf	=gg.VisLeafs[LeafNum];
+
+			//Now, try and Flood into the leafs that this portal touches
+			for(Portal=Leaf.mPortals;Portal != null;Portal=Portal.mNext)
+			{
+				//If SrcPortal can see this Portal, flood into it...
+				if(CanSeePortal(Portal))
+				{
+					FloodPortalsFast_r(gg, Portal, visIndexer);
+				}
+			}
+		}
 	}
 
 
 	class VisLeafComparer : IComparer<VISLeaf>
 	{
 		public int Compare(VISLeaf x, VISLeaf y)
+		{
+			if(x.mMightSee == y.mMightSee)
+			{
+				return	0;
+			}
+			if(x.mMightSee < y.mMightSee)
+			{
+				return	-1;
+			}
+			return	1;
+		}
+	}
+
+
+	public class VisPortalComparer : IComparer<VISPortal>
+	{
+		public int Compare(VISPortal x, VISPortal y)
 		{
 			if(x.mMightSee == y.mMightSee)
 			{

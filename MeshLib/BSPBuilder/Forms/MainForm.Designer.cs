@@ -76,6 +76,7 @@
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.SortPortals = new System.Windows.Forms.CheckBox();
 			this.FullVis = new System.Windows.Forms.CheckBox();
+			this.LoadGBSP = new System.Windows.Forms.Button();
 			this.StatsGroupBox.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxCPUCores)).BeginInit();
 			this.GroupFileIO.SuspendLayout();
@@ -96,9 +97,9 @@
 			// 
 			this.OpenBrushFile.Location = new System.Drawing.Point(6, 19);
 			this.OpenBrushFile.Name = "OpenBrushFile";
-			this.OpenBrushFile.Size = new System.Drawing.Size(75, 44);
+			this.OpenBrushFile.Size = new System.Drawing.Size(75, 23);
 			this.OpenBrushFile.TabIndex = 0;
-			this.OpenBrushFile.Text = "Open Brush File";
+			this.OpenBrushFile.Text = "Open Map";
 			this.OpenBrushFile.UseVisualStyleBackColor = true;
 			this.OpenBrushFile.Click += new System.EventHandler(this.OnOpenBrushFile);
 			// 
@@ -248,6 +249,7 @@
 			// 
 			// GroupFileIO
 			// 
+			this.GroupFileIO.Controls.Add(this.LoadGBSP);
 			this.GroupFileIO.Controls.Add(this.LightGBSP);
 			this.GroupFileIO.Controls.Add(this.BuildGBSP);
 			this.GroupFileIO.Controls.Add(this.VisGBSP);
@@ -273,9 +275,9 @@
 			// BuildGBSP
 			// 
 			this.BuildGBSP.Enabled = false;
-			this.BuildGBSP.Location = new System.Drawing.Point(6, 69);
+			this.BuildGBSP.Location = new System.Drawing.Point(6, 78);
 			this.BuildGBSP.Name = "BuildGBSP";
-			this.BuildGBSP.Size = new System.Drawing.Size(75, 22);
+			this.BuildGBSP.Size = new System.Drawing.Size(75, 23);
 			this.BuildGBSP.TabIndex = 17;
 			this.BuildGBSP.Text = "Build GBSP";
 			this.BuildGBSP.UseVisualStyleBackColor = true;
@@ -637,6 +639,16 @@
 			this.FullVis.Text = "Full Vis";
 			this.FullVis.UseVisualStyleBackColor = true;
 			// 
+			// LoadGBSP
+			// 
+			this.LoadGBSP.Location = new System.Drawing.Point(6, 48);
+			this.LoadGBSP.Name = "LoadGBSP";
+			this.LoadGBSP.Size = new System.Drawing.Size(75, 23);
+			this.LoadGBSP.TabIndex = 19;
+			this.LoadGBSP.Text = "Load GBSP";
+			this.LoadGBSP.UseVisualStyleBackColor = true;
+			this.LoadGBSP.Click += new System.EventHandler(this.OnLoadGBSP);
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -730,5 +742,6 @@
 		private System.Windows.Forms.GroupBox groupBox1;
 		private System.Windows.Forms.CheckBox SortPortals;
 		private System.Windows.Forms.CheckBox FullVis;
+		private System.Windows.Forms.Button LoadGBSP;
 	}
 }

@@ -101,6 +101,7 @@ namespace BSPBuilder
 			mMF.eVisGBSP			+=OnVisGBSP;
 			mMF.eBuildGBSP			+=OnBuildGBSP;
 			mMF.eSaveGBSP			+=OnSaveGBSP;
+			mMF.eLoadGBSP			+=OnLoadGBSP;
 			mMF.eDrawChoiceChanged	+=OnDrawChoiceChanged;
 
 			mBFX					=new BasicEffect(GraphicsDevice, null);
@@ -274,7 +275,7 @@ namespace BSPBuilder
 			List<UInt32>	indexes		=new List<UInt32>();
 			List<UInt32>	lineIndexes	=new List<UInt32>();
 
-			mMap.GetTriangles(verts, indexes, mDrawChoice);
+			mMap.GetTriangles(mGameCam.CamPos, verts, indexes, mDrawChoice);
 			if(verts.Count <= 0)
 			{
 				return;
@@ -521,7 +522,28 @@ namespace BSPBuilder
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
 				mMap	=new Map();
-				mMap.VisGBSPFile(fileName, mMF.VisParameters);
+				mMap.VisGBSPFile(fileName, mMF.VisParameters, mMF.BSPParameters);
+			}
+		}
+
+
+		void OnLoadGBSP(object sender, EventArgs ea)
+		{
+			string	fileName	=sender as string;
+
+			if(fileName != null)
+			{
+				if(mMap != null)
+				{
+					//unregister old events
+					mMap.eNumCollisionFacesChanged	-=OnNumCollisionFacesChanged;
+					mMap.eNumDrawFacesChanged		-=OnNumDrawFacesChanged;
+					mMap.eNumMapFacesChanged		-=OnNumMapFacesChanged;
+					mMap.eProgressChanged			-=OnMapProgressChanged;
+					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
+				}
+				mMap	=new Map();
+				mMap.LoadGBSPFile(fileName);
 			}
 		}
 
