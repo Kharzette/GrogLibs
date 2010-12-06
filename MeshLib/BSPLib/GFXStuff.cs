@@ -83,6 +83,8 @@ namespace BSPLib
 			bw.Write(mNumClusters);
 			bw.Write(mAreas[0]);
 			bw.Write(mAreas[1]);
+			Int32	motionPointerFakeThing	=0;
+			bw.Write(motionPointerFakeThing);
 		}
 
 		public void Read(BinaryReader br)
@@ -106,6 +108,7 @@ namespace BSPLib
 			mNumClusters	=br.ReadInt32();
 			mAreas[0]		=br.ReadInt32();
 			mAreas[1]		=br.ReadInt32();
+			Int32	fake	=br.ReadInt32();
 		}
 	}
 
@@ -568,6 +571,196 @@ namespace BSPLib
 			return	true;
 		}
 
+		internal bool Read(BinaryReader br, GBSPGlobals gg, bool bCPP)
+		{
+			if(!bCPP)
+			{
+				return	Read(br, gg);
+			}
+
+			int	size	=0;
+			mType		=br.ReadInt32();
+			size		=br.ReadInt32();
+			mElements	=br.ReadInt32();
+
+			switch(mType)
+			{
+				case GBSP_CHUNK_HEADER:
+				{
+					char	[]tag	=new char[5];
+					gg.GBSPHeader	=new GBSPHeader();
+					tag[0]	=br.ReadChar();
+					tag[1]	=br.ReadChar();
+					tag[2]	=br.ReadChar();
+					tag[3]	=br.ReadChar();
+
+					gg.GBSPHeader.mTAG		=new string(tag);
+					gg.GBSPHeader.mTAG		=gg.GBSPHeader.mTAG.Substring(0, 4);
+					gg.GBSPHeader.mVersion	=br.ReadInt32();
+					gg.GBSPHeader.mVersion	=br.ReadInt32();	//some random int in there
+
+					br.BaseStream.Seek(size - 12, SeekOrigin.Current);
+
+
+					if(gg.GBSPHeader.mTAG != "GBSP")
+					{
+						return	false;
+					}
+					if(gg.GBSPHeader.mVersion != GBSP_VERSION)
+					{
+						return	false;
+					}
+					break;
+				}
+				case GBSP_CHUNK_MODELS:
+				{
+					gg.NumGFXModels	=mElements;
+					gg.GFXModels	=new GFXModel[gg.NumGFXModels];
+                    gg.GFXModels    =ReadChunkData(br, typeof(GFXModel), true, mElements) as GFXModel[];
+					break;
+				}
+				case GBSP_CHUNK_NODES:
+				{
+					gg.NumGFXNodes	=mElements;
+					gg.GFXNodes		=new GFXNode[gg.NumGFXNodes];
+					gg.GFXNodes		=ReadChunkData(br, typeof(GFXNode), true, mElements) as GFXNode[];
+					break;
+				}
+				case GBSP_CHUNK_BNODES:
+				{
+					gg.NumGFXBNodes	=mElements;
+					gg.GFXBNodes	=new GFXBNode[gg.NumGFXBNodes];
+					gg.GFXBNodes    =ReadChunkData(br, typeof(GFXBNode), true, mElements) as GFXBNode[];
+					break;
+				}
+				case GBSP_CHUNK_LEAFS:
+				{
+					gg.NumGFXLeafs	=mElements;
+					gg.GFXLeafs		=new GFXLeaf[gg.NumGFXLeafs];
+					gg.GFXLeafs		=ReadChunkData(br, typeof(GFXLeaf), true, mElements) as GFXLeaf[];
+					break;
+				}
+				case GBSP_CHUNK_CLUSTERS:
+				{
+					gg.NumGFXClusters	=mElements;
+					gg.GFXClusters		=new GFXCluster[gg.NumGFXClusters];
+					gg.GFXClusters		=ReadChunkData(br, typeof(GFXCluster), true, mElements) as GFXCluster[];
+					break;
+				}
+				case GBSP_CHUNK_AREAS:
+				{
+					gg.NumGFXAreas	=mElements;
+					gg.GFXAreas		=new GFXArea[gg.NumGFXAreas];
+					gg.GFXAreas		=ReadChunkData(br, typeof(GFXArea), true, mElements) as GFXArea[];
+					break;
+				}
+				case GBSP_CHUNK_AREA_PORTALS:
+				{
+					gg.NumGFXAreaPortals	=mElements;
+					gg.GFXAreaPortals		=new GFXAreaPortal[gg.NumGFXAreaPortals];
+					gg.GFXAreaPortals		=ReadChunkData(br, typeof(GFXAreaPortal), true, mElements) as GFXAreaPortal[];
+					break;
+				}
+				case GBSP_CHUNK_PORTALS:
+				{
+					gg.NumGFXPortals	=mElements;
+					gg.GFXPortals		=new GFXPortal[gg.NumGFXPortals];
+					gg.GFXPortals		=ReadChunkData(br, typeof(GFXPortal), true, mElements) as GFXPortal[];
+					break;
+				}
+				case GBSP_CHUNK_PLANES:
+				{
+					gg.NumGFXPlanes	=mElements;
+					gg.GFXPlanes	=new GFXPlane[gg.NumGFXPlanes];
+					gg.GFXPlanes	=ReadChunkData(br, typeof(GFXPlane), true, mElements) as GFXPlane[];
+					break;
+				}
+				case GBSP_CHUNK_FACES:
+				{
+					gg.NumGFXFaces	=mElements;
+					gg.GFXFaces		=new GFXFace[gg.NumGFXFaces];
+					gg.GFXFaces		=ReadChunkData(br, typeof(GFXFace), true, mElements) as GFXFace[];
+					break;
+				}
+				case GBSP_CHUNK_LEAF_FACES:
+				{
+					gg.NumGFXLeafFaces	=mElements;
+					gg.GFXLeafFaces		=new int[gg.NumGFXLeafFaces];
+					gg.GFXLeafFaces		=ReadChunkData(br, typeof(int), true, mElements) as int[];
+					break;
+				}
+				case GBSP_CHUNK_LEAF_SIDES:
+				{
+					gg.NumGFXLeafSides	=mElements;
+					gg.GFXLeafSides		=new GFXLeafSide[gg.NumGFXLeafSides];
+					gg.GFXLeafSides		=ReadChunkData(br, typeof(GFXLeafSide), true, mElements) as GFXLeafSide[];
+					break;
+				}
+				case GBSP_CHUNK_VERTS:
+				{
+					gg.NumGFXVerts	=mElements;
+					gg.GFXVerts		=new Vector3[gg.NumGFXVerts];
+					gg.GFXVerts		=ReadChunkData(br, typeof(Vector3), true, mElements) as Vector3[];
+					break;
+				}
+				case GBSP_CHUNK_VERT_INDEX:
+				{
+					gg.NumGFXVertIndexList	=mElements;
+					gg.GFXVertIndexList		=new int[gg.NumGFXVertIndexList];
+					gg.GFXVertIndexList		=ReadChunkData(br, typeof(int), true, mElements) as int[];
+					break;
+				}
+				case GBSP_CHUNK_RGB_VERTS:
+				{
+					gg.NumGFXRGBVerts	=mElements;
+					gg.GFXRGBVerts		=new Vector3[gg.NumGFXRGBVerts];
+					gg.GFXRGBVerts		=ReadChunkData(br, typeof(Vector3), true, mElements) as Vector3[];
+					break;
+				}
+				case GBSP_CHUNK_TEXINFO:
+				{
+					gg.NumGFXTexInfo	=mElements;
+					gg.GFXTexInfo		=new GFXTexInfo[gg.NumGFXTexInfo];
+					gg.GFXTexInfo		=ReadChunkData(br, typeof(GFXTexInfo), true, mElements) as GFXTexInfo[];
+					break;
+				}
+				case GBSP_CHUNK_ENTDATA:
+				{
+					Int32	numEnts		=br.ReadInt32();
+					gg.NumGFXEntData	=mElements;
+					gg.GFXEntData		=new MapEntity[gg.NumGFXEntData];
+					gg.GFXEntData		=ReadChunkData(br, typeof(MapEntity), true, numEnts) as MapEntity[];
+					break;
+				}
+				case GBSP_CHUNK_LIGHTDATA:
+				{
+					gg.NumGFXLightData	=mElements;
+					gg.GFXLightData		=new byte[gg.NumGFXLightData];
+					gg.GFXLightData		=ReadChunkData(br, typeof(byte), true, mElements) as byte[];
+					break;
+				}
+				case GBSP_CHUNK_VISDATA:
+				{
+					gg.NumGFXVisData	=mElements;
+					gg.GFXVisData		=new byte[gg.NumGFXVisData];
+					gg.GFXVisData		=ReadChunkData(br, typeof(byte), true, mElements) as byte[];
+					break;
+				}
+				case GBSP_CHUNK_SKYDATA:
+				{
+					gg.GFXSkyData   =ReadChunkData(br, typeof(GFXSkyData), false, 0) as GFXSkyData;
+					break;
+				}
+				case GBSP_CHUNK_END:
+				{
+					break;
+				}
+				default:
+					return	false;
+			}
+			return	true;
+		}
+
 		internal bool Read(BinaryReader br, GBSPGlobals gg)
 		{
 			mType		=br.ReadInt32();
@@ -599,7 +792,7 @@ namespace BSPLib
 				{
 					gg.NumGFXNodes	=mElements;
 					gg.GFXNodes		=new GFXNode[gg.NumGFXNodes];
-					gg.GFXNodes =ReadChunkData(br, typeof(GFXNode), true, mElements) as GFXNode[];
+					gg.GFXNodes		=ReadChunkData(br, typeof(GFXNode), true, mElements) as GFXNode[];
 					break;
 				}
 				case GBSP_CHUNK_BNODES:
@@ -613,112 +806,112 @@ namespace BSPLib
 				{
 					gg.NumGFXLeafs	=mElements;
 					gg.GFXLeafs		=new GFXLeaf[gg.NumGFXLeafs];
-					gg.GFXLeafs =ReadChunkData(br, typeof(GFXLeaf), true, mElements) as GFXLeaf[];
+					gg.GFXLeafs		=ReadChunkData(br, typeof(GFXLeaf), true, mElements) as GFXLeaf[];
 					break;
 				}
 				case GBSP_CHUNK_CLUSTERS:
 				{
 					gg.NumGFXClusters	=mElements;
 					gg.GFXClusters		=new GFXCluster[gg.NumGFXClusters];
-					gg.GFXClusters  =ReadChunkData(br, typeof(GFXCluster), true, mElements) as GFXCluster[];
+					gg.GFXClusters		=ReadChunkData(br, typeof(GFXCluster), true, mElements) as GFXCluster[];
 					break;
 				}
 				case GBSP_CHUNK_AREAS:
 				{
 					gg.NumGFXAreas	=mElements;
 					gg.GFXAreas		=new GFXArea[gg.NumGFXAreas];
-					gg.GFXAreas =ReadChunkData(br, typeof(GFXArea), true, mElements) as GFXArea[];
+					gg.GFXAreas		=ReadChunkData(br, typeof(GFXArea), true, mElements) as GFXArea[];
 					break;
 				}
 				case GBSP_CHUNK_AREA_PORTALS:
 				{
 					gg.NumGFXAreaPortals	=mElements;
 					gg.GFXAreaPortals		=new GFXAreaPortal[gg.NumGFXAreaPortals];
-					gg.GFXAreaPortals   =ReadChunkData(br, typeof(GFXAreaPortal), true, mElements) as GFXAreaPortal[];
+					gg.GFXAreaPortals		=ReadChunkData(br, typeof(GFXAreaPortal), true, mElements) as GFXAreaPortal[];
 					break;
 				}
 				case GBSP_CHUNK_PORTALS:
 				{
 					gg.NumGFXPortals	=mElements;
 					gg.GFXPortals		=new GFXPortal[gg.NumGFXPortals];
-					gg.GFXPortals   =ReadChunkData(br, typeof(GFXPortal), true, mElements) as GFXPortal[];
+					gg.GFXPortals		=ReadChunkData(br, typeof(GFXPortal), true, mElements) as GFXPortal[];
 					break;
 				}
 				case GBSP_CHUNK_PLANES:
 				{
 					gg.NumGFXPlanes	=mElements;
 					gg.GFXPlanes	=new GFXPlane[gg.NumGFXPlanes];
-					gg.GFXPlanes    =ReadChunkData(br, typeof(GFXPlane), true, mElements) as GFXPlane[];
+					gg.GFXPlanes	=ReadChunkData(br, typeof(GFXPlane), true, mElements) as GFXPlane[];
 					break;
 				}
 				case GBSP_CHUNK_FACES:
 				{
 					gg.NumGFXFaces	=mElements;
 					gg.GFXFaces		=new GFXFace[gg.NumGFXFaces];
-					gg.GFXFaces =ReadChunkData(br, typeof(GFXFace), true, mElements) as GFXFace[];
+					gg.GFXFaces		=ReadChunkData(br, typeof(GFXFace), true, mElements) as GFXFace[];
 					break;
 				}
 				case GBSP_CHUNK_LEAF_FACES:
 				{
 					gg.NumGFXLeafFaces	=mElements;
 					gg.GFXLeafFaces		=new int[gg.NumGFXLeafFaces];
-					gg.GFXLeafFaces =ReadChunkData(br, typeof(int), true, mElements) as int[];
+					gg.GFXLeafFaces		=ReadChunkData(br, typeof(int), true, mElements) as int[];
 					break;
 				}
 				case GBSP_CHUNK_LEAF_SIDES:
 				{
 					gg.NumGFXLeafSides	=mElements;
 					gg.GFXLeafSides		=new GFXLeafSide[gg.NumGFXLeafSides];
-					gg.GFXLeafSides =ReadChunkData(br, typeof(GFXLeafSide), true, mElements) as GFXLeafSide[];
+					gg.GFXLeafSides		=ReadChunkData(br, typeof(GFXLeafSide), true, mElements) as GFXLeafSide[];
 					break;
 				}
 				case GBSP_CHUNK_VERTS:
 				{
 					gg.NumGFXVerts	=mElements;
 					gg.GFXVerts		=new Vector3[gg.NumGFXVerts];
-					gg.GFXVerts =ReadChunkData(br, typeof(Vector3), true, mElements) as Vector3[];
+					gg.GFXVerts		=ReadChunkData(br, typeof(Vector3), true, mElements) as Vector3[];
 					break;
 				}
 				case GBSP_CHUNK_VERT_INDEX:
 				{
 					gg.NumGFXVertIndexList	=mElements;
 					gg.GFXVertIndexList		=new int[gg.NumGFXVertIndexList];
-					gg.GFXVertIndexList =ReadChunkData(br, typeof(int), true, mElements) as int[];
+					gg.GFXVertIndexList		=ReadChunkData(br, typeof(int), true, mElements) as int[];
 					break;
 				}
 				case GBSP_CHUNK_RGB_VERTS:
 				{
 					gg.NumGFXRGBVerts	=mElements;
 					gg.GFXRGBVerts		=new Vector3[gg.NumGFXRGBVerts];
-					gg.GFXRGBVerts  =ReadChunkData(br, typeof(Vector3), true, mElements) as Vector3[];
+					gg.GFXRGBVerts		=ReadChunkData(br, typeof(Vector3), true, mElements) as Vector3[];
 					break;
 				}
 				case GBSP_CHUNK_TEXINFO:
 				{
 					gg.NumGFXTexInfo	=mElements;
 					gg.GFXTexInfo		=new GFXTexInfo[gg.NumGFXTexInfo];
-					gg.GFXTexInfo   =ReadChunkData(br, typeof(GFXTexInfo), true, mElements) as GFXTexInfo[];
+					gg.GFXTexInfo		=ReadChunkData(br, typeof(GFXTexInfo), true, mElements) as GFXTexInfo[];
 					break;
 				}
 				case GBSP_CHUNK_ENTDATA:
 				{
 					gg.NumGFXEntData	=mElements;
 					gg.GFXEntData		=new MapEntity[gg.NumGFXEntData];
-					gg.GFXEntData   =ReadChunkData(br, typeof(MapEntity), true, mElements) as MapEntity[];
+					gg.GFXEntData		=ReadChunkData(br, typeof(MapEntity), true, mElements) as MapEntity[];
 					break;
 				}
 				case GBSP_CHUNK_LIGHTDATA:
 				{
 					gg.NumGFXLightData	=mElements;
 					gg.GFXLightData		=new byte[gg.NumGFXLightData];
-					gg.GFXLightData =ReadChunkData(br, typeof(byte), true, mElements) as byte[];
+					gg.GFXLightData		=ReadChunkData(br, typeof(byte), true, mElements) as byte[];
 					break;
 				}
 				case GBSP_CHUNK_VISDATA:
 				{
 					gg.NumGFXVisData	=mElements;
 					gg.GFXVisData		=new byte[gg.NumGFXVisData];
-					gg.GFXVisData   =ReadChunkData(br, typeof(byte), true, mElements) as byte[];
+					gg.GFXVisData		=ReadChunkData(br, typeof(byte), true, mElements) as byte[];
 					break;
 				}
 				case GBSP_CHUNK_SKYDATA:

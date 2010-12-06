@@ -302,7 +302,7 @@ namespace BSPLib
 		}
 
 
-		public void Read(BinaryReader br)
+		public void Read2(BinaryReader br)
 		{
 			int	dataCount	=br.ReadInt32();
 
@@ -313,6 +313,48 @@ namespace BSPLib
 				string	value	=br.ReadString();
 
 				mData.Add(key, value);
+			}
+		}
+
+
+		public void Read(BinaryReader br)
+		{
+			int	dataCount	=br.ReadInt32();
+
+			//see if this is C++ genesis
+			bool	bCPP	=true;
+			long	pos		=br.BaseStream.Position;
+			string	test	=br.ReadString();
+			if(char.IsLetter(test[0]))
+			{
+				bCPP	=false;
+			}
+
+			//skip back before the test
+			br.BaseStream.Seek(pos, SeekOrigin.Begin);
+
+			mData	=new Dictionary<string, string>();
+			for(int i=0;i < dataCount;i++)
+			{
+				if(bCPP)
+				{
+					Int32	strSize	=br.ReadInt32();
+					string	key	=new string(br.ReadChars(strSize));
+					strSize	=br.ReadInt32();
+					string	value	=new string(br.ReadChars(strSize));
+
+					key		=key.Substring(0, key.Length - 1);
+					value	=value.Substring(0, value.Length - 1);
+
+					mData.Add(key, value);
+				}
+				else
+				{
+					string	key		=br.ReadString();
+					string	value	=br.ReadString();
+
+					mData.Add(key, value);
+				}
 			}
 		}
 

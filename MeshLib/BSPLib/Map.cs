@@ -12,6 +12,13 @@ using Microsoft.Xna.Framework.Storage;
 
 namespace BSPLib
 {
+	public class WorldLeaf
+	{
+		public Int32	VisFrame;
+		public Int32	Parent;
+	}
+
+
 	public class GBSPGlobals
 	{
 		//GFX Stuff
@@ -216,6 +223,13 @@ namespace BSPLib
 
 		GBSPNode	mRoot;
 
+		Int32		CurrentLeaf;
+		Int32		CurFrameStatic;
+		Int32		[]ClusterVisFrame;
+		WorldLeaf	[]LeafData;
+		Int32		[]NodeParents;
+		Int32		[]NodeVisFrame;
+
 		//models
 		internal List<GBSPModel>	mModels	=new List<GBSPModel>();
 
@@ -375,6 +389,8 @@ namespace BSPLib
 			else if(drawChoice == "Draw Tree")
 			{
 				int	root	=mGlobals.GFXModels[0].mRootNode[0];
+
+				VisWorld(root, pos);
 
 				RenderBSPFrontBack_r2(root, pos, verts, indexes, true);
 			}
@@ -770,6 +786,10 @@ namespace BSPLib
 
 		bool SaveGFXModelDataFromList(BinaryWriter bw)
 		{
+			if(mModels.Count <= 0)
+			{
+				return	true;
+			}
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
 			GFXModel	GModel	=new GFXModel();
@@ -804,12 +824,16 @@ namespace BSPLib
 
 		bool SaveGFXModelData(BinaryWriter bw)
 		{
+			if(mGlobals.NumGFXModels <= 0)
+			{
+				return	true;
+			}
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
 			GFXModel	GModel	=new GFXModel();
 
 			Chunk.mType		=GBSPChunk.GBSP_CHUNK_MODELS;
-			Chunk.mElements	=mModels.Count;
+			Chunk.mElements	=mGlobals.NumGFXModels;
 
 			Chunk.Write(bw);
 
@@ -970,8 +994,12 @@ namespace BSPLib
 		}
 
 
-		private bool SaveGFXTexInfos(BinaryWriter bw)
+		bool SaveGFXTexInfos(BinaryWriter bw)
 		{
+			if(mTIPool.mTexInfos.Count <= 0)
+			{
+				return	true;
+			}
 			GBSPChunk	Chunk	=new GBSPChunk();;
 
 			//save tex info
@@ -1000,6 +1028,27 @@ namespace BSPLib
 				gtex.mVecs[1]			=tex.mVVec;
 
 				gtex.Write(bw);
+			}
+			return	true;
+		}
+
+
+		bool SaveVisdGFXTexInfos(BinaryWriter bw)
+		{
+			if(mGlobals.NumGFXTexInfo <= 0)
+			{
+				return	true;
+			}
+			GBSPChunk	Chunk	=new GBSPChunk();;
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_TEXINFO;
+			Chunk.mElements	=mGlobals.NumGFXTexInfo;
+
+			Chunk.Write(bw);
+
+			for(int i=0;i < mGlobals.NumGFXTexInfo;i++)
+			{
+				mGlobals.GFXTexInfo[i].Write(bw);
 			}
 			return	true;
 		}
@@ -1050,6 +1099,10 @@ namespace BSPLib
 
 		bool SaveGFXEntDataList(BinaryWriter bw)
 		{
+			if(mEntities.Count <= 0)
+			{
+				return	true;
+			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
 			Chunk.mType		=GBSPChunk.GBSP_CHUNK_ENTDATA;
@@ -1067,6 +1120,10 @@ namespace BSPLib
 
 		bool SaveGFXEntData(BinaryWriter bw)
 		{
+			if(mGlobals.NumGFXEntData <= 0)			
+			{
+				return	true;
+			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
 			Chunk.mType		=GBSPChunk.GBSP_CHUNK_ENTDATA;
@@ -1084,6 +1141,10 @@ namespace BSPLib
 
 		bool SaveGFXLightData(BinaryWriter bw)
 		{
+			if(mGlobals.NumGFXLightData <= 0)
+			{
+				return	true;
+			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
 			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LIGHTDATA;
@@ -1101,6 +1162,10 @@ namespace BSPLib
 
 		bool SaveGFXVertIndexList(BinaryWriter bw)
 		{
+			if(mGlobals.NumGFXVertIndexList <= 0)
+			{
+				return	true;
+			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
 			Chunk.mType		=GBSPChunk.GBSP_CHUNK_VERT_INDEX;
@@ -1117,6 +1182,10 @@ namespace BSPLib
 
 		bool SaveGFXVisData(BinaryWriter bw)
 		{
+			if(mGlobals.NumGFXVisData <= 0)
+			{
+				return	true;
+			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
 			Chunk.mType		=GBSPChunk.GBSP_CHUNK_VISDATA;
@@ -1133,6 +1202,10 @@ namespace BSPLib
 
 		bool SaveGFXVerts(BinaryWriter bw)
 		{
+			if(mGlobals.NumGFXVerts <= 0)
+			{
+				return	true;
+			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
 			Chunk.mType		=GBSPChunk.GBSP_CHUNK_VERTS;
@@ -1149,6 +1222,10 @@ namespace BSPLib
 
 		bool SaveGFXRGBVerts(BinaryWriter bw)
 		{
+			if(mGlobals.NumGFXRGBVerts <= 0)
+			{
+				return	true;
+			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
 			Chunk.mType		=GBSPChunk.GBSP_CHUNK_RGB_VERTS;
@@ -1165,6 +1242,10 @@ namespace BSPLib
 
 		bool SaveGFXPlanes(BinaryWriter bw)
 		{
+			if(mPlanePool.mPlanes.Count <= 0)
+			{
+				return	true;
+			}
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
 			GFXPlane	GPlane	=new GFXPlane();
@@ -1188,8 +1269,34 @@ namespace BSPLib
 		}
 
 
+		bool SaveVisdGFXPlanes(BinaryWriter bw)
+		{
+			if(mGlobals.NumGFXPlanes <= 0)
+			{
+				return	true;
+			}
+			Int32		i;
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_PLANES;
+			Chunk.mElements	=mGlobals.NumGFXPlanes;
+
+			Chunk.Write(bw);
+
+			for(i=0;i < mGlobals.NumGFXPlanes;i++)
+			{
+				mGlobals.GFXPlanes[i].Write(bw);
+			}
+			return	true;
+		}
+
+
 		bool SaveGFXFaces(BinaryWriter bw)
 		{
+			if(mGlobals.NumGFXFaces <= 0)
+			{
+				return	true;
+			}
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
 
@@ -1209,8 +1316,34 @@ namespace BSPLib
 		}
 
 
+		bool SaveVisdGFXFaces(BinaryWriter bw)
+		{
+			if(mGlobals.NumGFXFaces <= 0)
+			{
+				return	true;
+			}
+			Int32		i;
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_FACES;
+			Chunk.mElements =mGlobals.NumGFXFaces;
+
+			Chunk.Write(bw);
+
+			for(i=0;i < mGlobals.NumGFXFaces;i++)
+			{
+				mGlobals.GFXFaces[i].Write(bw);
+			}
+			return	true;
+		}
+
+
 		bool SaveGFXPortals(BinaryWriter bw)
 		{
+			if(mGlobals.NumGFXPortals <= 0)
+			{
+				return	true;
+			}
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
 
@@ -1229,6 +1362,10 @@ namespace BSPLib
 
 		bool SaveGFXBNodes(BinaryWriter bw)
 		{
+			if(mGlobals.NumGFXBNodes <= 0)
+			{
+				return	true;
+			}
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
 
@@ -1247,6 +1384,10 @@ namespace BSPLib
 
 		bool SaveGFXLeafSides(BinaryWriter bw)
 		{
+			if(mGlobals.NumGFXLeafSides <= 0)
+			{
+				return	true;
+			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
 			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LEAF_SIDES;
@@ -1265,28 +1406,37 @@ namespace BSPLib
 		{
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			//
-			// Save the areas first
-			//
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_AREAS;
-			Chunk.mElements =mGlobals.NumGFXAreas;
+			if(mGlobals.NumGFXAreas > 0)
+			{
+				//
+				// Save the areas first
+				//
+				Chunk.mType		=GBSPChunk.GBSP_CHUNK_AREAS;
+				Chunk.mElements =mGlobals.NumGFXAreas;
 
-			Chunk.Write(bw, mGlobals.GFXAreas);
+				Chunk.Write(bw, mGlobals.GFXAreas);
+			}
 
-			//
-			//	Then, save the areaportals
-			//
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_AREA_PORTALS;
-			Chunk.mElements =mGlobals.NumGFXAreaPortals;
+			if(mGlobals.NumGFXAreaPortals > 0)
+			{
+				//
+				//	Then, save the areaportals
+				//
+				Chunk.mType		=GBSPChunk.GBSP_CHUNK_AREA_PORTALS;
+				Chunk.mElements =mGlobals.NumGFXAreaPortals;
 
-			Chunk.Write(bw, mGlobals.GFXAreaPortals);
-
+				Chunk.Write(bw, mGlobals.GFXAreaPortals);
+			}
 			return	true;
 		}
 
 
 		bool SaveGFXClusters(BinaryWriter bw)
 		{
+			if(mGlobals.NumLeafClusters <= 0)
+			{
+				return	true;
+			}
 			Int32		i;
 			GBSPChunk	Chunk		=new GBSPChunk();
 			GFXCluster	GCluster	=new GFXCluster();
@@ -1308,8 +1458,56 @@ namespace BSPLib
 		}
 
 
+		bool SaveVisdGFXClusters(BinaryWriter bw)
+		{
+			if(mGlobals.NumGFXClusters <= 0)
+			{
+				return	true;
+			}
+			Int32		i;
+			GBSPChunk	Chunk		=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_CLUSTERS;
+			Chunk.mElements =mGlobals.NumGFXClusters;
+
+			Chunk.Write(bw);
+
+			for(i=0;i < mGlobals.NumGFXClusters;i++)
+			{
+				mGlobals.GFXClusters[i].Write(bw);
+			}
+			return	true;
+		}
+
+
+		bool SaveVisdGFXLeafs(BinaryWriter bw)
+		{
+			if(mGlobals.NumGFXLeafs <= 0)
+			{
+				return	true;
+			}
+			Int32		i;
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LEAFS;
+			Chunk.mElements	=mGlobals.NumGFXLeafs;
+
+			Chunk.Write(bw);
+
+			for(i=0;i < Chunk.mElements;i++)
+			{
+				mGlobals.GFXLeafs[i].Write(bw);
+			}
+			return	true;
+		}
+
+
 		bool SaveGFXLeafs(BinaryWriter bw)
 		{
+			if(mGlobals.NumGFXLeafs <= 0)
+			{
+				return	true;
+			}
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
 
@@ -1346,8 +1544,35 @@ namespace BSPLib
 		}
 
 
+		bool SaveVisdGFXLeafFacesAndSides(BinaryWriter bw)
+		{
+			Int32		i;
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			if(mGlobals.NumGFXLeafFaces > 0)
+			{
+				Chunk.mType		=GBSPChunk.GBSP_CHUNK_LEAF_FACES;
+				Chunk.mElements	=mGlobals.NumGFXLeafFaces;
+				Chunk.Write(bw, mGlobals.GFXLeafFaces);
+			}
+
+			if(mGlobals.NumGFXLeafSides > 0)
+			{
+				Chunk.mType		=GBSPChunk.GBSP_CHUNK_LEAF_SIDES;
+				Chunk.mElements	=mGlobals.NumGFXLeafSides;
+				Chunk.Write(bw, mGlobals.GFXLeafSides);
+			}
+
+			return	true;
+		}
+
+
 		bool SaveGFXNodes(BinaryWriter bw)
 		{
+			if(mGlobals.NumGFXNodes <= 0)
+			{
+				return	true;
+			}
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
 
@@ -1362,6 +1587,28 @@ namespace BSPLib
 				{
 					return	false;
 				}
+			}
+			return	true;
+		}
+
+
+		bool SaveVisdGFXNodes(BinaryWriter bw)
+		{
+			if(mGlobals.NumGFXNodes <= 0)
+			{
+				return	true;
+			}
+			Int32		i;
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_NODES;
+			Chunk.mElements	=mGlobals.NumGFXNodes;
+
+			Chunk.Write(bw);
+			
+			for(i=0;i < mGlobals.NumGFXNodes; i++)
+			{
+				mGlobals.GFXNodes[i].Write(bw);
 			}
 			return	true;
 		}
@@ -1606,6 +1853,32 @@ namespace BSPLib
 		}
 
 
+		bool IsCPPGenesis(BinaryReader br)
+		{
+			int	chunkType	=br.ReadInt32();
+			int	size		=br.ReadInt32();
+			int	elements	=br.ReadInt32();
+			
+			char	[]tag	=new char[5];
+			tag[0]	=br.ReadChar();
+			tag[1]	=br.ReadChar();
+			tag[2]	=br.ReadChar();
+			tag[3]	=br.ReadChar();
+			tag[4]	=br.ReadChar();
+
+			//go back to beginning of stream
+			br.BaseStream.Seek(0, SeekOrigin.Begin);
+
+			string	stag	=new string(tag);
+			stag	=stag.Substring(0, 4);
+			if(stag == "GBSP")
+			{
+				return	true;
+			}
+			return	false;
+		}
+
+
 		public bool LoadGBSPFile(string fileName)
 		{
 			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
@@ -1618,13 +1891,20 @@ namespace BSPLib
 
 			BinaryReader	br	=new BinaryReader(file);
 
+			bool	bIsCPP	=IsCPPGenesis(br);
+
+			int		LastGoodChunkType	=0;
 			while(true)
 			{
 				GBSPChunk	chunk	=new GBSPChunk();
-				if(!chunk.Read(br, mGlobals))
+				if(!chunk.Read(br, mGlobals, bIsCPP))
 				{
+					Print("Chunk read failed.  Last good chunk type was " + LastGoodChunkType + "\n");
+					br.Close();
+					file.Close();
 					return	false;
 				}
+				LastGoodChunkType	=chunk.mType;
 
 				if(chunk.mType == GBSPChunk.GBSP_CHUNK_END)
 				{
@@ -1634,6 +1914,20 @@ namespace BSPLib
 
 			br.Close();
 			file.Close();
+
+			//make clustervisframe
+			ClusterVisFrame	=new int[mGlobals.NumGFXClusters];
+			NodeParents		=new int[mGlobals.NumGFXNodes];
+			NodeVisFrame	=new int[mGlobals.NumGFXNodes];
+			LeafData		=new WorldLeaf[mGlobals.NumGFXLeafs];
+
+			//fill in leafdata with blank worldleafs
+			for(int i=0;i < mGlobals.NumGFXLeafs;i++)
+			{
+				LeafData[i]	=new WorldLeaf();
+			}
+
+			FindParents(mGlobals.GFXModels[0].mRootNode[0]);
 
 			Print("Load complete\n");
 
@@ -1650,12 +1944,11 @@ namespace BSPLib
 			Print(" --- Vis GBSP File --- \n");
 
 			// Fill in the global bsp data
-			/*
 			if(!LoadGBSPFile(fileName))
 			{
 				Print("PvsGBSPFile:  Could not load GBSP file: " + fileName + "\n");
 				return	false;
-			}*/
+			}
 			string	PFile;
 
 			//Clean out any old vis data
@@ -1747,11 +2040,11 @@ namespace BSPLib
 
 		bool FinishWritingVis(BinaryWriter bw)
 		{
-			if(!SaveGFXLeafs(bw))
+			if(!SaveVisdGFXLeafs(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXClusters(bw))
+			if(!SaveVisdGFXClusters(bw))
 			{
 				return	false;
 			}
@@ -1998,7 +2291,7 @@ namespace BSPLib
 			{
 				return	false;
 			}
-			if(!SaveGFXNodes(bw))
+			if(!SaveVisdGFXNodes(bw))
 			{
 				return	false;
 			}
@@ -2010,11 +2303,11 @@ namespace BSPLib
 			{
 				return	false;
 			}
-			if(!SaveGFXPlanes(bw))
+			if(!SaveVisdGFXPlanes(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXFaces(bw))
+			if(!SaveVisdGFXFaces(bw))
 			{
 				return	false;
 			}
@@ -2022,11 +2315,7 @@ namespace BSPLib
 			{
 				return	false;
 			}
-			if(!SaveGFXLeafs(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXLeafSides(bw))
+			if(!SaveVisdGFXLeafFacesAndSides(bw))
 			{
 				return	false;
 			}
@@ -2046,7 +2335,7 @@ namespace BSPLib
 			{
 				return	false;
 			}
-			if(!SaveGFXTexInfos(bw))
+			if(!SaveVisdGFXTexInfos(bw))
 			{
 				return	false;
 			}
@@ -2054,11 +2343,6 @@ namespace BSPLib
 			{
 				return	false;
 			}
-			
-			chunk.mType		=GBSPChunk.GBSP_CHUNK_END;
-			chunk.mElements	=0;
-			chunk.Write(bw);
-
 			return	true;
 		}
 
@@ -2253,6 +2537,162 @@ namespace BSPLib
 		}
 
 
+		Int32	FindLeafLandedIn(Int32 node, Vector3 pos)
+		{
+			float		Dist1;
+			GFXNode		pNode;
+			Int32		Side;
+
+			if(node < 0)		// At leaf, no more recursing
+			{
+				return	node;
+			}
+
+			pNode	=mGlobals.GFXNodes[node];
+			
+			//Get the distance that the eye is from this plane
+			Dist1	=mGlobals.GFXPlanes[pNode.mPlaneNum].DistanceFast(pos);
+
+			if(Dist1 < 0)
+			{
+				Side	=1;
+			}
+			else
+			{
+				Side	=0;
+			}
+			
+			//Go down the side we are on first, then the other side
+			Int32	ret	=0;
+			ret	=FindLeafLandedIn(pNode.mChildren[Side], pos);
+			if(ret < 0)
+			{
+				return	ret;
+			}
+			ret	=FindLeafLandedIn(pNode.mChildren[(Side == 0)? 1 : 0], pos);
+			return	ret;
+		}
+
+
+		void GatherBSPTriangles(Int32 Node, Vector3 pos,
+			List<Vector3> verts, List<uint> indexes, bool bCheck)
+		{
+			Int32	nodeLandedIn	=FindLeafLandedIn(Node, pos);
+			Int32	Leaf;
+
+			Leaf	=-(nodeLandedIn + 1);
+
+			Debug.Assert(Leaf >= 0 && Leaf < mGlobals.NumGFXLeafs);
+
+			int	clust	=mGlobals.GFXLeafs[Leaf].mCluster;
+			int	visOfs	=mGlobals.GFXClusters[clust].mVisOfs;
+
+			//mGlobals.GFXVisData[visOfs]
+		}
+
+
+		bool VisWorld(Int32 rootNode, Vector3 pos)
+		{
+			Int32	k, i, Area;
+			Int32	Leaf, Cluster;
+			GFXLeaf	pLeaf;
+
+			Int32	node	=FindLeafLandedIn(rootNode, -pos);
+
+			Leaf	=-(node + 1);
+			Area	=mGlobals.GFXLeafs[Leaf].mArea;
+
+			CurrentLeaf	=Leaf;
+			CurFrameStatic++;			// Make all old vis info obsolete
+
+			Cluster	=mGlobals.GFXLeafs[Leaf].mCluster;
+
+			if(Cluster == -1 || mGlobals.GFXClusters[Cluster].mVisOfs == -1)
+			{
+				return	true;
+			}
+
+			/*
+			if (Area)
+				Vis_FloodAreas_r(World, Area);
+
+			World->VisInfo = GE_TRUE;
+			*/
+
+			//VisData = &GFXVisData[GFXClusters[Cluster].VisOfs];
+
+			int	ofs	=mGlobals.GFXClusters[Cluster].mVisOfs;
+
+			// Mark all visible clusters
+			for(i=0;i < mGlobals.GFXModels[0].mNumClusters;i++)
+			{
+				if((mGlobals.GFXVisData[ofs + (i >> 3)] & (1 << (i & 7))) != 0)
+				{
+					ClusterVisFrame[i]	=CurFrameStatic;
+				}
+			}
+
+			//Go through and find all visible leafs based on the visible clusters the leafs are in
+			for(i=0;i < mGlobals.GFXModels[0].mNumLeafs;i++)
+			{
+				pLeaf	=mGlobals.GFXLeafs[mGlobals.GFXModels[0].mFirstLeaf + i];
+				Int32	pFace;
+
+				Cluster	=pLeaf.mCluster;
+
+				if(Cluster == -1)	// No cluster info for this leaf (must be solid)
+				{
+					continue;
+				}
+
+				//If the cluster is not visible, then the leaf is not visible
+				if(ClusterVisFrame[Cluster] != CurFrameStatic)
+				{
+					continue;
+				}
+				
+				//If the area is not visible, then the leaf is not visible
+//				if (World->CurrentBSP->AreaVisFrame[pLeaf->Area] != World->CurFrameStatic)
+//					continue;
+
+				//Mark all visible nodes by bubbling up the tree from the leaf
+				MarkVisibleParents(i);
+
+				//Mark the leafs vis frame to worlds current frame
+				LeafData[i].VisFrame	=CurFrameStatic;
+					
+//				pFace = &GFXLeafFaces[pLeaf->FirstFace];
+
+				// Go ahead and vis surfaces here...
+//				for (k=0; k< pLeaf->NumFaces; k++)
+//				{
+					// Update each surface infos visframe thats touches each visible leaf
+//					SurfInfo[*pFace++].VisFrame = World->CurFrameStatic;
+//				}
+			}
+			return	true;
+		}
+
+
+		void MarkVisibleParents(Int32 Leaf)
+		{
+			Int32		Node;
+
+			Debug.Assert(Leaf >= 0);
+			Debug.Assert(Leaf < mGlobals.NumGFXLeafs);
+
+			//Find the leafs parent
+			Node	=LeafData[Leaf].Parent;
+
+			// Bubble up the tree from the current node, marking them as visible
+			while(Node >= 0)
+			{
+				NodeVisFrame[Node]	=CurFrameStatic;
+				Node	=NodeParents[Node];
+			}
+		}
+
+
 		void RenderBSPFrontBack_r2(Int32 Node, Vector3 pos,
 			List<Vector3> verts, List<uint> indexes, bool bCheck)
 		{
@@ -2265,6 +2705,11 @@ namespace BSPLib
 				Int32		Leaf;
 
 				Leaf	=-(Node+1);
+
+				if(LeafData[Leaf].VisFrame != CurFrameStatic)
+				{
+					return;
+				}
 
 				Debug.Assert(Leaf >= 0 && Leaf < mGlobals.NumGFXLeafs);
 
@@ -2294,6 +2739,11 @@ namespace BSPLib
 				return;
 			}
 
+//			if(NodeVisFrame[Node] != CurFrameStatic)
+//			{
+//				return;
+//			}
+
 			pNode	=mGlobals.GFXNodes[Node];
 			
 			//Get the distance that the eye is from this plane
@@ -2311,6 +2761,29 @@ namespace BSPLib
 			//Go down the side we are on first, then the other side
 			RenderBSPFrontBack_r2(pNode.mChildren[Side], pos, verts, indexes, bCheck);
 			RenderBSPFrontBack_r2(pNode.mChildren[(Side == 0)? 1 : 0], pos, verts, indexes, bCheck);
+		}
+
+
+		void FindParents(Int32 root)
+		{
+			FindParents_r(root, -1);
+		}
+
+
+		void FindParents_r(Int32 Node, Int32 Parent)
+		{
+			if(Node < 0)		// At a leaf, mark leaf parent and return
+			{
+				LeafData[-(Node+1)].Parent	=Parent;
+				return;
+			}
+
+			//At a node, mark node parent, and keep going till hitting a leaf
+			NodeParents[Node]	=Parent;
+
+			// Go down front and back markinf parents on the way down...
+			FindParents_r(mGlobals.GFXNodes[Node].mChildren[0], Node);
+			FindParents_r(mGlobals.GFXNodes[Node].mChildren[1], Node);
 		}
 
 
