@@ -2270,10 +2270,10 @@ namespace BSPLib
 
 			if(mGlobals.FullVis)
 			{
-				/*if(!FloodPortalsSlow())
+				if(!FloodPortalsSlow(portIndexer))
 				{
 					return	false;
-				}*/
+				}
 			}
 
 			//Don't need this anymore...
@@ -2322,7 +2322,68 @@ namespace BSPLib
 			}
 		}
 
-		private bool CollectLeafVisBits(int LeafNum)
+
+		bool FloodPortalsSlow(Dictionary<VISPortal, Int32> visIndexer)
+		{
+			VISPortal	Portal;
+			Int32		PNum;
+			VISPStack	PStack	=new VISPStack();
+			Int32		i, k;
+
+			for(k=0;k < mGlobals.NumVisPortals;k++)
+			{
+				mGlobals.VisPortals[k].mDone	=false;
+			}
+
+			for(k=0;k < mGlobals.NumVisPortals;k++)
+			{
+				Portal	=mGlobals.VisSortedPortals[k];
+				
+				Portal.mFinalVisBits	=new byte[mGlobals.NumVisPortalBytes];
+
+				//This portal can't see anyone yet...
+				for(i=0;i < mGlobals.NumVisPortalBytes;i++)
+				{
+					Portal.mFinalVisBits[i]	=0;
+				}
+				for(i=0;i < mGlobals.NumVisPortals;i++)
+				{
+					mGlobals.PortalSeen[i]	=0;
+				}
+
+				mGlobals.CanSee	=0;
+				
+				for(i=0;i < mGlobals.NumVisPortalBytes;i++)
+				{
+					PStack.mVisBits[i]	=Portal.mVisBits[i];
+				}
+
+				//Setup Source/Pass
+				PStack.mSource	=new GBSPPoly(Portal.mPoly);
+				PStack.mPass	=null;
+
+				if(!Portal.FloodPortalsSlow_r(mGlobals, Portal, PStack, visIndexer))
+				{
+					return	false;
+				}
+
+				PStack.mSource	=null;
+				Portal.mDone	=true;
+
+				PNum	=visIndexer[Portal];
+
+				if(mGlobals.VisVerbose)
+				{
+					Print("Portal: " + (k + 1) + " - Fast Vis: "
+						+ Portal.mMightSee + ", Full Vis: "
+						+ Portal.mCanSee + "\n");
+				}
+			}			
+			return	true;
+		}
+
+
+		bool CollectLeafVisBits(int LeafNum)
 		{
 			VISPortal	Portal, SPortal;
 			VISLeaf		Leaf;

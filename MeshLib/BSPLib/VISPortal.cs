@@ -8,6 +8,13 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
+	public class VISPStack
+	{
+		public byte		[]mVisBits	=new byte[GBSPGlobals.MAX_TEMP_PORTALS/8];
+		public GBSPPoly	mSource;
+		public GBSPPoly	mPass;
+	}
+
 	public class VISPortal
 	{
 		public VISPortal	mNext;
@@ -134,6 +141,282 @@ namespace BSPLib
 					FloodPortalsFast_r(gg, Portal, visIndexer, bw);
 				}
 			}
+		}
+
+
+		static bool ClipToSeperators(GBSPPoly Source, GBSPPoly Pass,
+			GBSPPoly Target, bool FlipClip, ref GBSPPoly Dest)
+		{
+			Int32		i, j, k, l;
+			GBSPPlane	Plane		=new GBSPPlane();
+			Vector3		v1, v2;
+			float		d;
+			float		Length;
+			Int32		[]Counts	=new Int32[3];
+			bool		FlipTest;
+
+			for(i=0;i < Source.mVerts.Count;i++)
+			{
+				l	=(i + 1) % Source.mVerts.Count;
+
+				v1	=Source.mVerts[l] - Source.mVerts[i];
+
+				for(j=0;j < Pass.mVerts.Count;j++)
+				{
+					v2	=Pass.mVerts[j] - Source.mVerts[i];
+
+					Plane.mNormal	=Vector3.Cross(v1, v2);
+
+					Length	=Plane.mNormal.Length();
+					Plane.mNormal.Normalize();
+					
+					if(Length < UtilityLib.Mathery.ON_EPSILON)
+					{
+						continue;
+					}
+					
+					Plane.mDist	=Vector3.Dot(Pass.mVerts[j], Plane.mNormal);						
+					FlipTest	=false;
+					for(k=0;k < Source.mVerts.Count;k++)
+					{
+						if(k == i || k == l)
+						{
+							continue;
+						}
+
+						d	=Vector3.Dot(Source.mVerts[k], Plane.mNormal) - Plane.mDist;
+						if(d < -UtilityLib.Mathery.ON_EPSILON)
+						{
+							FlipTest	=false;
+							break;
+						}
+						else if(d > UtilityLib.Mathery.ON_EPSILON)
+						{
+							FlipTest	=true;
+							break;
+						}
+					}
+					if(k == Source.mVerts.Count)
+					{
+						continue;
+					}
+					if(FlipTest)
+					{
+						Plane.Inverse();
+					}
+					Counts[0] = Counts[1] = Counts[2] = 0;
+
+					for(k=0;k < Pass.mVerts.Count;k++)
+					{
+						if(k==j)
+						{
+							continue;
+						}
+						d	=Vector3.Dot(Pass.mVerts[k], Plane.mNormal) - Plane.mDist;
+						if(d < -UtilityLib.Mathery.ON_EPSILON)
+						{
+							break;
+						}
+						else if(d > UtilityLib.Mathery.ON_EPSILON)
+						{
+							Counts[0]++;
+						}
+						else
+						{
+							Counts[2]++;
+						}
+					}
+					if(k != Pass.mVerts.Count)
+					{
+						continue;	
+					}
+						
+					if(Counts[0] == 0)
+					{
+						continue;
+					}
+					if(!Target.ClipPoly(Plane, FlipClip))
+					{
+						Map.Print("ClipToPortals:  Error clipping portal.\n");
+						return	false;
+					}
+
+					if(Target == null || Target.mVerts.Count < 3)
+					{
+						Dest	=null;
+						return	true;
+					}
+				}
+			}
+			
+			Dest	=Target;
+
+			return	true;
+		}
+
+
+		internal bool FloodPortalsSlow_r(GBSPGlobals gg, VISPortal DestPortal, VISPStack PrevStack, Dictionary<VISPortal, int> visIndexer)
+		{
+			VISLeaf		Leaf;
+			VISPortal	Portal;
+			Int32		LeafNum, j;
+			Int32		PNum;
+			UInt32		More;
+			VISPStack	Stack	=new VISPStack();
+
+			PNum	=visIndexer[DestPortal];
+
+			//Add the portal that we are Flooding into, to the original portals visbits
+			byte	Bit	=(byte)(PNum & 7);
+			Bit	=(byte)(1 << Bit);
+
+			if((mFinalVisBits[PNum >> 3] & Bit) == 0)
+			{
+				mFinalVisBits[PNum>>3] |= Bit;
+				mCanSee++;
+				gg.VisLeafs[gg.SrcLeaf].mCanSee++;
+				gg.CanSee++;
+			}
+
+			//Get the leaf that this portal looks into, and flood from there
+			LeafNum	=DestPortal.mLeaf;
+			Leaf	=gg.VisLeafs[LeafNum];
+
+//			Might	=(uint32*)Stack.VisBits;
+//			Vis		=(uint32*)mFinalVisBits;
+
+			// Now, try and Flood into the leafs that this portal touches
+			for(Portal=Leaf.mPortals;Portal != null;Portal=Portal.mNext)
+			{
+				PNum	=visIndexer[Portal];
+				Bit		=(byte)(1<<(PNum&7));
+
+				//GHook.Printf("PrevStack VisBits:  %i\n", PrevStack.mVisBits[PNum>>3]);
+
+				//If might see could'nt see it, then don't worry about it
+				if((mVisBits[PNum>>3] & Bit) == 0)
+				{
+					continue;
+				}
+
+				if((PrevStack.mVisBits[PNum>>3] & Bit) == 0)
+				{
+					continue;	// Can't possibly see it
+				}
+
+				//If the portal can't see anything we haven't allready seen, skip it
+				More	=0;
+				if(Portal.mDone)
+				{
+//					Test = (uint32*)Portal.mFinalVisBits;
+
+					for(j=0;j < gg.NumVisPortalBytes;j++)
+					{
+						//there is no & for bytes, can you believe that shit?
+						uint	worthless	=(uint)PrevStack.mVisBits[j];
+						uint	pieceof		=(uint)Portal.mFinalVisBits[j];
+						uint	shit		=worthless & pieceof;
+						Stack.mVisBits[j]	=(byte)shit;
+
+						worthless	=Stack.mVisBits[j];
+						pieceof		=mFinalVisBits[j];
+
+						More	|=worthless &~ pieceof;
+					}
+				}
+				else
+				{
+//					Test = (uint32*)Portal.mVisBits;
+					for(j=0;j < gg.NumVisPortalBytes;j++)
+					{
+						//there is no & for bytes, can you believe that shit?
+						uint	worthless	=(uint)PrevStack.mVisBits[j];
+						uint	pieceof		=(uint)Portal.mVisBits[j];
+						uint	shit		=worthless & pieceof;
+						Stack.mVisBits[j]	=(byte)shit;
+
+						worthless	=Stack.mVisBits[j];
+						pieceof		=mFinalVisBits[j];
+
+						More	|=worthless &~ pieceof;
+					}
+				}
+				
+				if(More == 0 && ((mFinalVisBits[PNum>>3] & Bit) != 0))
+				{
+					//Can't see anything new
+					continue;
+				}
+				
+				//Setup Source/Pass
+				Stack.mPass	=new GBSPPoly(Portal.mPoly);
+
+				//Cut away portion of pass portal we can't see through
+				if(!Stack.mPass.ClipPoly(mPlane, false))
+				{
+					return	false;
+				}
+				if(Stack.mPass.mVerts.Count < 3)
+				{
+					continue;
+				}
+
+				Stack.mSource	=new GBSPPoly(PrevStack.mSource);
+
+				if(!Stack.mSource.ClipPoly(Portal.mPlane, true))
+				{
+					return	false;
+				}
+				if(Stack.mSource.mVerts.Count < 3)
+				{
+					continue;
+				}
+
+				//If we don't have a PrevStack.mPass, then we don't have enough to look through.
+				//This portal can only be blocked by VisBits (Above test)...
+				if(PrevStack.mPass == null)
+				{
+					if(!FloodPortalsSlow_r(gg, Portal, Stack, visIndexer))
+					{
+						return	false;
+					}
+
+					Stack.mSource	=null;
+					Stack.mPass		=null;
+					continue;
+				}
+
+				if(!ClipToSeperators(Stack.mSource, PrevStack.mPass, Stack.mPass, false, ref Stack.mPass))
+				{
+					return	false;
+				}
+
+				if(Stack.mPass == null || Stack.mPass.mVerts.Count < 3)
+				{
+					Stack.mSource	=null;
+					continue;
+				}
+				
+				if(!ClipToSeperators(PrevStack.mPass, Stack.mSource, Stack.mPass, true, ref Stack.mPass))
+				{
+					return	false;
+				}
+				if(Stack.mPass == null || Stack.mPass.mVerts.Count < 3)
+				{
+					Stack.mSource	=null;
+					continue;
+				}
+
+				//Flood into it...
+				if(!FloodPortalsSlow_r(gg, Portal, Stack, visIndexer))
+				{
+					return	false;
+				}
+
+				Stack.mSource	=null;
+				Stack.mPass		=null;
+			}
+			return	true;
 		}
 	}
 
