@@ -29,9 +29,9 @@ namespace BSPLib
 		GBSPBrush	mGBSPBrushes;
 
 
-		void DumpBrushListToFile(GBSPBrush brushList)
+		static internal void DumpBrushListToFile(GBSPBrush brushList)
 		{
-			FileStream		fs	=new FileStream("BrushSides.txt", FileMode.CreateNew);
+			FileStream		fs	=new FileStream("BrushSides.txt", FileMode.Create, FileAccess.Write);
 			StreamWriter	sw	=new StreamWriter(fs);			
 
 			for(GBSPBrush b=brushList;b != null;b=b.mNext)
@@ -79,7 +79,7 @@ namespace BSPLib
 
 			mGBSPBrushes	=GBSPBrush.CSGBrushes(gbs, mGBSPBrushes, pool);
 
-//			DumpBrushListToFile(mGBSPBrushes);
+			DumpBrushListToFile(mGBSPBrushes);
 
 			GBSPNode	root	=new GBSPNode();
 			root.BuildBSP(gbs, mGBSPBrushes, pool);

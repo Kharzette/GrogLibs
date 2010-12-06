@@ -1979,6 +1979,15 @@ namespace BSPLib
 				goto	ExitWithError;
 			}
 
+//			string	compFile	=PFile;
+
+//			int	sIdx	=compFile.LastIndexOf('s');
+
+//			compFile	=compFile.Substring(0, sIdx);
+//			compFile	+=".gpf";
+
+//			ComparePortalFiles(PFile, compFile);
+
 			Print("NumPortals           : " + mGlobals.NumVisPortals + "\n");
 			
 			//Write out everything but vis info
@@ -2034,6 +2043,178 @@ namespace BSPLib
 				FreeGBSPFile();
 
 				return	false;
+			}
+		}
+
+		void ComparePortalFiles(string pfile1, string pfile2)
+		{
+			Int32		LeafFrom, LeafTo;
+			VISPortal	pPortal;
+			VISLeaf		pLeaf;
+			GBSPPoly	pPoly;
+			Int32		i, NumVerts;
+			string		TAG;
+
+			pPoly	=null;
+
+			FileStream	fs1	=UtilityLib.FileUtil.OpenTitleFile(pfile1,
+				FileMode.Open, FileAccess.Read);
+			FileStream	fs2	=UtilityLib.FileUtil.OpenTitleFile(pfile2,
+				FileMode.Open, FileAccess.Read);
+
+			BinaryReader	br1	=new BinaryReader(fs1);
+			BinaryReader	br2	=new BinaryReader(fs2);
+			
+			// 
+			//	Check the TAG
+			//
+			TAG	=new string(br2.ReadChars(12));
+			TAG	=br1.ReadString();
+			if(TAG != "GBSP_PRTFILE")
+			{
+				Print("LoadPortalFile:  " + pfile1 + " is not a GBSP Portal file.\n");
+				goto	ExitWithError;
+			}
+
+			//
+			//	Get the number of portals
+			//
+			mGlobals.NumVisPortals	=br1.ReadInt32();
+			mGlobals.NumVisPortals	=br2.ReadInt32();
+			if(mGlobals.NumVisPortals >= GBSPGlobals.MAX_TEMP_PORTALS)
+			{
+				Print("LoadPortalFile:  Max portals for temp buffers.\n");
+				goto	ExitWithError;
+			}
+			
+			mGlobals.VisPortals	=new VISPortal[mGlobals.NumVisPortals];
+			if(mGlobals.VisPortals == null)
+			{
+				Print("LoadPortalFile:  Out of memory for VisPortals.\n");
+				goto	ExitWithError;
+			}
+			
+			mGlobals.VisSortedPortals	=new VISPortal[mGlobals.NumVisPortals];
+			if(mGlobals.VisSortedPortals == null)
+			{
+				Print("LoadPortalFile:  Out of memory for VisSortedPortals.\n");
+				goto ExitWithError;
+			}
+
+			//
+			//	Get the number of leafs
+			//
+			mGlobals.NumVisLeafs	=br1.ReadInt32();
+			mGlobals.NumVisLeafs	=br2.ReadInt32();
+			if(mGlobals.NumVisLeafs > mGlobals.NumGFXLeafs)
+			{
+				goto	ExitWithError;
+			}
+			
+			mGlobals.VisLeafs	=new VISLeaf[mGlobals.NumVisLeafs];
+			if(mGlobals.VisLeafs == null)
+			{
+				Print("LoadPortalFile:  Out of memory for VisLeafs.\n");
+				goto ExitWithError;
+			}
+
+			//fill arrays with blank objects
+			for(i=0;i < mGlobals.NumVisLeafs;i++)
+			{
+				mGlobals.VisLeafs[i]	=new VISLeaf();
+			}
+
+			//
+			//	Load in the portals
+			//
+			for(i=0;i < mGlobals.NumVisPortals;i++)
+			{
+				//alloc blank portal
+				mGlobals.VisPortals[i]	=new VISPortal();
+
+				NumVerts	=br1.ReadInt32();
+				NumVerts	=br2.ReadInt32();
+
+				pPoly	=new GBSPPoly();
+
+				for(int j=0;j < NumVerts;j++)
+				{
+					Vector3	vert1, vert2;
+					vert1.X	=br1.ReadSingle();
+					vert1.Y	=br1.ReadSingle();
+					vert1.Z	=br1.ReadSingle();
+					vert2.X	=br2.ReadSingle();
+					vert2.Y	=br2.ReadSingle();
+					vert2.Z	=br2.ReadSingle();
+
+					if(!UtilityLib.Mathery.CompareVector(vert1, vert2))
+					{
+						int	gack	=0;
+						gack++;
+					}
+
+					pPoly.mVerts.Add(vert1);
+				}
+
+				LeafFrom	=br1.ReadInt32();
+				int	blah1	=br2.ReadInt32();
+				LeafTo		=br1.ReadInt32();
+				int blah2	=br2.ReadInt32();
+
+				if(LeafFrom != blah1 || LeafTo != blah2)
+				{
+					int	barkspawn	=0;
+					barkspawn++;
+				}
+				
+				if(LeafFrom >= mGlobals.NumVisLeafs || LeafFrom < 0)
+				{
+					Print("LoadPortalFile:  Invalid LeafFrom: " + LeafFrom + "\n");
+					goto	ExitWithError;
+				}
+
+				if(LeafTo >= mGlobals.NumVisLeafs || LeafTo < 0)
+				{
+					Print("LoadPortalFile:  Invalid LeafTo: " + LeafTo + "\n");
+					goto	ExitWithError;
+				}
+
+				pLeaf	=mGlobals.VisLeafs[LeafFrom];
+				pPortal	=mGlobals.VisPortals[i];
+
+				pPortal.mPoly	=pPoly;
+				pPortal.mLeaf	=LeafTo;
+				pPortal.mPlane	=new GBSPPlane(pPoly);
+				pPortal.mNext	=pLeaf.mPortals;
+				pLeaf.mPortals	=pPortal;
+
+				pPortal.CalcPortalInfo();
+			}
+			
+			mGlobals.NumVisLeafBytes	=((mGlobals.NumVisLeafs+63)&~63) >> 3;
+			mGlobals.NumVisPortalBytes	=((mGlobals.NumVisPortals+63)&~63) >> 3;
+
+			mGlobals.NumVisPortalLongs	=mGlobals.NumVisPortalBytes / sizeof(UInt32);
+			mGlobals.NumVisLeafLongs	=mGlobals.NumVisLeafBytes / sizeof(UInt32);
+
+			br1.Close();
+			fs1.Close();
+			br1	=null;
+			fs1	=null;
+			br2.Close();
+			fs2.Close();
+			br2	=null;
+			fs2	=null;
+
+			return;
+
+			// ==== ERROR ===
+			ExitWithError:
+			{
+				mGlobals.VisPortals			=null;
+				mGlobals.VisSortedPortals	=null;
+				mGlobals.VisLeafs			=null;
+				pPoly						=null;
 			}
 		}
 
@@ -2254,6 +2435,11 @@ namespace BSPLib
 			
 			mGlobals.SrcLeaf	=leafNum;
 
+			FileStream	fs	=UtilityLib.FileUtil.OpenTitleFile("PortalFloods.txt",
+				FileMode.Create, FileAccess.Write);
+
+			BinaryWriter	bw	=new BinaryWriter(fs);
+
 			for(Portal=Leaf.mPortals;Portal != null;Portal=Portal.mNext)
 			{
 				Portal.mVisBits	=new byte[mGlobals.NumVisPortalBytes];
@@ -2270,8 +2456,11 @@ namespace BSPLib
 
 				mGlobals.MightSee	=0;
 				
-				Portal.FloodPortalsFast_r(mGlobals, Portal, visIndexer);
+				Portal.FloodPortalsFast_r(mGlobals, Portal, visIndexer, bw);
 			}
+
+			bw.Close();
+			fs.Close();
 		}
 
 
@@ -2383,6 +2572,11 @@ namespace BSPLib
 			string		TAG;
 
 			pPoly	=null;
+
+			FileStream	dbgFile	=UtilityLib.FileUtil.OpenTitleFile("PrtPlanes.txt",
+				FileMode.Create, FileAccess.Write);
+
+			BinaryWriter	bw	=new BinaryWriter(dbgFile);
 
 			FileStream	fs	=UtilityLib.FileUtil.OpenTitleFile(PFile,
 				FileMode.Open, FileAccess.Read);
@@ -2499,6 +2693,11 @@ namespace BSPLib
 				pPortal.mNext	=pLeaf.mPortals;
 				pLeaf.mPortals	=pPortal;
 
+				bw.Write(pPortal.mPlane.mNormal.X);
+				bw.Write(pPortal.mPlane.mNormal.Y);
+				bw.Write(pPortal.mPlane.mNormal.Z);
+				bw.Write(pPortal.mPlane.mDist);
+
 				pPortal.CalcPortalInfo();
 			}
 			
@@ -2508,6 +2707,8 @@ namespace BSPLib
 			mGlobals.NumVisPortalLongs	=mGlobals.NumVisPortalBytes / sizeof(UInt32);
 			mGlobals.NumVisLeafLongs	=mGlobals.NumVisLeafBytes / sizeof(UInt32);
 
+			bw.Close();
+			dbgFile.Close();
 			br.Close();
 			fs.Close();
 			br	=null;

@@ -325,7 +325,7 @@ namespace BSPLib
 			bool	bCPP	=true;
 			long	pos		=br.BaseStream.Position;
 			string	test	=br.ReadString();
-			if(char.IsLetter(test[0]))
+			if(test != "" && char.IsLetter(test[0]))
 			{
 				bCPP	=false;
 			}
@@ -346,7 +346,14 @@ namespace BSPLib
 					key		=key.Substring(0, key.Length - 1);
 					value	=value.Substring(0, value.Length - 1);
 
-					mData.Add(key, value);
+					if(mData.ContainsKey(key))
+					{
+						Map.Print("Same key in entity!\n");
+					}
+					else
+					{
+						mData.Add(key, value);
+					}
 				}
 				else
 				{

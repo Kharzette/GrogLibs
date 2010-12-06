@@ -566,6 +566,8 @@ namespace BSPLib
 
 			Keep	=null;
 
+			Int32	iterationCount	=0;
+
 		NewList:
 
 			if(Head == null)
@@ -579,8 +581,12 @@ namespace BSPLib
 			{
 				Next = b1.mNext;
 				
-				for(b2=b1.mNext;b2 != null;b2 = b2.mNext)
+				for(b2=b1.mNext;b2 != null;b2 = b2.mNext, iterationCount++)
 				{
+					if(iterationCount == 976935)
+					{
+//						GBSPModel.DumpBrushListToFile(b1);
+					}
 					if(!b1.Overlaps(b2))
 					{
 						continue;

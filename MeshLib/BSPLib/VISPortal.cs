@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 
@@ -50,7 +51,8 @@ namespace BSPLib
 
 			for(i=0;i < mPoly.mVerts.Count;i++)
 			{
-				Dist	=Portal2.mPlane.DistanceFast(mPoly.mVerts[i]);
+				Dist	=Vector3.Dot(Portal2.mPlane.mNormal, mPoly.mVerts[i]) - Portal2.mPlane.mDist;
+//					Portal2.mPlane.DistanceFast(mPoly.mVerts[i]);
 				if(Dist < -UtilityLib.Mathery.ON_EPSILON)
 				{
 					break;
@@ -65,7 +67,8 @@ namespace BSPLib
 
 			for(i=0;i < Portal2.mPoly.mVerts.Count;i++)
 			{
-				Dist	=mPlane.DistanceFast(Portal2.mPoly.mVerts[i]);
+				Dist	=Vector3.Dot(mPlane.mNormal, Portal2.mPoly.mVerts[i]) - mPlane.mDist;
+//				Dist	=mPlane.DistanceFast(Portal2.mPoly.mVerts[i]);
 				if(Dist > UtilityLib.Mathery.ON_EPSILON)
 				{
 					break;
@@ -82,7 +85,7 @@ namespace BSPLib
 
 
 		internal void FloodPortalsFast_r(GBSPGlobals gg,
-			VISPortal DestPortal, Dictionary<VISPortal, Int32> visIndexer)
+			VISPortal DestPortal, Dictionary<VISPortal, Int32> visIndexer, BinaryWriter bw)
 		{
 			VISLeaf		Leaf;
 			VISPortal	Portal;
@@ -102,11 +105,18 @@ namespace BSPLib
 
 			//Add the portal that we are Flooding into, to the original portals visbits
 			LeafNum	=DestPortal.mLeaf;
+
 			
-			Int32	Bit	=1 << (PNum & 7);
+			byte	Bit	=(byte)(PNum & 7);
+			Bit	=(byte)(1 << Bit);
+
+			bw.Write(Bit);
+			bw.Write(LeafNum);
+			bw.Write(PNum);
+			bw.Write(gg.MightSee);
+
 			if((mVisBits[PNum >> 3] & Bit) == 0)
 			{
-				Debug.Assert(Bit < 256);
 				mVisBits[PNum>>3]	|=(byte)Bit;
 				mMightSee++;
 				gg.VisLeafs[gg.SrcLeaf].mMightSee++;
@@ -121,7 +131,7 @@ namespace BSPLib
 				//If SrcPortal can see this Portal, flood into it...
 				if(CanSeePortal(Portal))
 				{
-					FloodPortalsFast_r(gg, Portal, visIndexer);
+					FloodPortalsFast_r(gg, Portal, visIndexer, bw);
 				}
 			}
 		}
