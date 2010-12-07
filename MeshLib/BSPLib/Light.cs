@@ -8,27 +8,27 @@ namespace BSPLib
 {
 	public class LInfo
 	{
-		Vector3		[]RGBLData	=new Vector3[GBSPGlobals.MAX_LTYPE_INDEX];
-		Int32		NumLTypes;
-		bool		RGB;
-		float		[]Mins		=new float[2];
-		float		[]Maxs		=new float[2];
-		Int32		[]LMaxs		=new int[2];
-		Int32		[]LMins		=new int[2];
-		Int32		[]LSize		=new int[2];
+		public Vector3	[][]RGBLData	=new Vector3[GBSPGlobals.MAX_LTYPE_INDEX][];
+		public Int32	NumLTypes;
+		public bool		RGB;
+		public float	[]Mins		=new float[2];
+		public float	[]Maxs		=new float[2];
+		public Int32	[]LMaxs		=new int[2];
+		public Int32	[]LMins		=new int[2];
+		public Int32	[]LSize		=new int[2];
 	}
 
 	public class FInfo
 	{
-		Int32		Face;
-		GFXPlane	Plane;
-		Vector3		[]T2WVecs	=new Vector3[2];
-		Vector3		TexOrg;
-		Vector3		[]Points;
-		Int32		NumPoints;
+		public Int32	Face;
+		public GFXPlane	Plane		=new GFXPlane();
+		public Vector3	[]T2WVecs	=new Vector3[2];
+		public Vector3	TexOrg;
+		public Vector3	[]Points;
+		public Int32	NumPoints;
 
-		Vector3		Center;
-		float		Radius;
+		public Vector3	Center;
+		public float	Radius;
 	}
 
 
@@ -50,6 +50,24 @@ namespace BSPLib
 		Vector3		Reflectivity;
 		Vector3		Mins;				// Mins/ Max of patch
 		Vector3		Maxs;
+	}
+
+
+	public class DirectLight
+	{
+		public DirectLight	mNext;
+		public Int32		mLType;
+		public Vector3		mOrigin;
+		public Vector3		mNormal;
+		public float		mAngle;
+		public Vector3		mColor;
+		public float		mIntensity;
+		public UInt32		mType;
+
+		public const UInt32		DLight_Blank	=0;
+		public const UInt32		DLight_Point	=1;
+		public const UInt32		DLight_Spot		=2;
+		public const UInt32		DLight_Surface	=4;
 	}
 
 

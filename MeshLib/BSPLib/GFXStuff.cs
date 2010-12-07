@@ -198,6 +198,13 @@ namespace BSPLib
 					return	Vector3.Dot(pos, mNormal) - mDist;
 			}
 		}
+
+
+		internal void Inverse()
+		{
+			mNormal	=-mNormal;
+			mDist	=-mDist;
+		}
 	}
 
 

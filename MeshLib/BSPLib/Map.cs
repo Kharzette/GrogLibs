@@ -120,22 +120,25 @@ namespace BSPLib
 		public Int32	NumTJunctions;
 
 		//light stuff
+		public DirectLight	[]DirectClusterLights	=new DirectLight[MAX_DIRECT_CLUSTER_LIGHTS];
+		public DirectLight	[]DirectLights			=new DirectLight[MAX_DIRECT_LIGHTS];
 		public RADPatch		[]FacePatches;
 		public RADPatch		[]PatchList;
 		public float		[]RecAmount;
-		public Int32		NumPatches;
-		public Int32		NumReceivers;
+		public LInfo		[]Lightmaps;
+		public FInfo		[]FaceInfo;
 		public float		LightScale		=1.00f;
 		public float		EntityScale		=1.00f;
 		public float		MaxLight		=230.0f;
 		public Int32		NumSamples		=5;
 		public Vector3		MinLight;
-		public Int32		NumLMaps;
 		public Int32		LightOffset;
 		public Int32		RGBMaps			=0;
 		public Int32		REGMaps			=0;
-		public LInfo		[]Lightmaps;
-		public FInfo		[]FaceInfo;
+		public Int32		NumPatches;
+		public Int32		NumReceivers;
+		public Int32		NumLMaps;
+		public Int32		NumDirectLights;
 
 		//vis stuff
 		public Int32		CanSee;
@@ -172,20 +175,29 @@ namespace BSPLib
 		public bool		FullVis					=true;
 		public bool		OriginalVerbose;
 
+		//collision / raycasting
+		public bool		HitLeaf;
+		public Int32	GlobalPlane;
+		public Int32	GlobalNode;
+		public Int32	GlobalSide;
+		public Vector3	GlobalI;
+
 		//constants
-		public const int	MAX_BSP_MODELS			=2048;
-		public const int	MAX_WELDED_VERTS		=64000;
-		public const int	MAX_TEMP_INDEX_VERTS	=1024;
-		public const int	MAX_PATCHES				=65000;
-		public const int	MAX_LTYPE_INDEX			=12;
-		public const int	MAX_LTYPES				=4;
-		public const int	LGRID_SIZE				=16;
-		public const int	MAX_LMAP_SIZE			=18;
-		public const int	MAX_LEAF_SIDES			=64000 * 2;
-		public const int	MAX_TEMP_LEAF_SIDES		=100;
-		public const int	MAX_AREAS				=256;
-		public const int	MAX_AREA_PORTALS		=1024;
-		public const int	MAX_TEMP_PORTALS		=25000;
+		public const int	MAX_BSP_MODELS				=2048;
+		public const int	MAX_WELDED_VERTS			=64000;
+		public const int	MAX_TEMP_INDEX_VERTS		=1024;
+		public const int	MAX_PATCHES					=65000;
+		public const int	MAX_LTYPE_INDEX				=12;
+		public const int	MAX_LTYPES					=4;
+		public const int	LGRID_SIZE					=16;
+		public const int	MAX_LMAP_SIZE				=130;
+		public const int	MAX_LEAF_SIDES				=64000 * 2;
+		public const int	MAX_TEMP_LEAF_SIDES			=100;
+		public const int	MAX_AREAS					=256;
+		public const int	MAX_AREA_PORTALS			=1024;
+		public const int	MAX_TEMP_PORTALS			=25000;
+		public const int	MAX_DIRECT_CLUSTER_LIGHTS	=25000;
+		public const int	MAX_DIRECT_LIGHTS			=25000;
 	}
 
 
@@ -1546,7 +1558,6 @@ namespace BSPLib
 
 		bool SaveVisdGFXLeafFacesAndSides(BinaryWriter bw)
 		{
-			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
 
 			if(mGlobals.NumGFXLeafFaces > 0)
@@ -1692,6 +1703,943 @@ namespace BSPLib
 		}
 
 
+		bool MakeVertNormals()
+		{
+			mGlobals.VertNormals	=new Vector3[mGlobals.NumGFXVerts];
+
+			if(mGlobals.VertNormals == null)
+			{
+				Print("MakeVertNormals:  Out of memory for normals.\n");
+				return	false;
+			}
+
+			for(int i=0;i < mGlobals.NumGFXFaces;i++)
+			{
+				GFXFace	f	=mGlobals.GFXFaces[i];
+
+				Vector3	Normal	=mGlobals.GFXPlanes[f.mPlaneNum].mNormal;
+
+				if(f.mPlaneSide != 0)
+				{
+					Normal	=-Normal;
+				}
+
+				for(int v=0;v < f.mNumVerts;v++)
+				{
+					Int32	vn	=f.mFirstVert + v;
+
+					Int32	Index	=mGlobals.GFXVertIndexList[vn];
+
+					mGlobals.VertNormals[Index]	=mGlobals.VertNormals[Index] + Normal;
+				}
+			}
+
+			for(int i=0;i < mGlobals.NumGFXVerts;i++)
+			{
+				mGlobals.VertNormals[i].Normalize();
+			}
+			return	true;
+		}
+
+
+		bool CalcFaceInfo(FInfo FaceInfo, LInfo LightInfo)
+		{
+			Int32	i, k;
+			Vector3	Vert;
+			float	Val;
+			float	[]Mins	=new float[2];
+			float	[]Maxs	=new float[2];
+			Int32	Face	=FaceInfo.Face;
+			Vector3	TexNormal;
+			float	DistScale;
+			float	Dist, Len;
+			Int32	indOffset;
+			
+			for (i=0; i<2; i++)
+			{
+				Mins[i]	=Brush.MIN_MAX_BOUNDS;
+				Maxs[i]	=-Brush.MIN_MAX_BOUNDS;
+			}
+
+			Vector3	[]vecs	=new Vector3[2];
+
+			GBSPPlane	pln;
+
+			pln.mNormal	=FaceInfo.Plane.mNormal;
+			pln.mDist	=FaceInfo.Plane.mDist;
+			pln.mType	=FaceInfo.Plane.mType;
+
+			GBSPPoly.TextureAxisFromPlane(pln, out vecs[0], out vecs[1]);
+
+			FaceInfo.Center	=Vector3.Zero;
+
+			indOffset	=mGlobals.GFXFaces[Face].mFirstVert;
+
+			for(i=0;i < mGlobals.GFXFaces[Face].mNumVerts;i++, indOffset++)
+			{
+				int	vIndex	=mGlobals.GFXVertIndexList[indOffset];
+				Vert		=mGlobals.GFXVerts[vIndex];
+				for(k=0;k < 2;k++)
+				{
+					Val	=Vector3.Dot(Vert, vecs[k]);
+
+					if(Val > Maxs[k])
+					{
+						Maxs[k]	=Val;
+					}
+					if (Val < Mins[k])
+					{
+						Mins[k]	=Val;
+					}
+				}
+
+				//Find center
+				FaceInfo.Center	+=Vert;
+			}
+
+			// Finish center
+			FaceInfo.Center	/=mGlobals.GFXFaces[Face].mNumVerts;
+
+			// Get the Texture U/V mins/max, and Grid aligned lmap mins/max/size
+			for(i=0;i < 2;i++)
+			{
+				LightInfo.Mins[i]	=Mins[i];
+				LightInfo.Maxs[i]	=Maxs[i];
+
+				Mins[i]	=(float)Math.Floor(Mins[i] / GBSPGlobals.LGRID_SIZE);
+				Maxs[i]	=(float)Math.Ceiling(Maxs[i] / GBSPGlobals.LGRID_SIZE);
+
+				LightInfo.LMins[i]	=(Int32)Mins[i];
+				LightInfo.LMaxs[i]	=(Int32)Maxs[i];
+				LightInfo.LSize[i]	=(Int32)(Maxs[i] - Mins[i]);
+
+				if((LightInfo.LSize[i] + 1) > GBSPGlobals.MAX_LMAP_SIZE)
+				//if (LightInfo.LSize[i] > 17)
+				{
+					Print("CalcFaceInfo:  Face was not subdivided correctly.\n");
+					return	false;
+				}
+			}
+
+			//Get the texture normal from the texture vecs
+			TexNormal	=Vector3.Cross(vecs[0], vecs[1]);
+			TexNormal.Normalize();
+			
+			//Flip it towards plane normal
+			DistScale	=Vector3.Dot(TexNormal, FaceInfo.Plane.mNormal);
+			if(DistScale == 0.0f)
+			{
+				Print("CalcFaceInfo:  Invalid Texture vectors for face.\n");
+				return	false;
+			}
+			if(DistScale < 0)
+			{
+				DistScale	=-DistScale;
+				TexNormal	=-TexNormal;
+			}	
+
+			DistScale	=1 / DistScale;
+
+			//Get the tex to world vectors
+			for(i=0;i < 2;i++)
+			{
+				Len		=vecs[i].Length();
+				Dist	=Vector3.Dot(vecs[i], FaceInfo.Plane.mNormal);
+				Dist	*=DistScale;
+
+				FaceInfo.T2WVecs[i]	=vecs[i] + TexNormal * -Dist;
+				FaceInfo.T2WVecs[i]	*=((1.0f / Len) * (1.0f / Len));
+			}
+
+			for(i=0;i < 3;i++)
+			{
+				UtilityLib.Mathery.VecIdxAssign(ref FaceInfo.TexOrg, i,
+					-vecs[0].Z * UtilityLib.Mathery.VecIdx(FaceInfo.T2WVecs[0], i)
+					-vecs[1].Z * UtilityLib.Mathery.VecIdx(FaceInfo.T2WVecs[1], i));
+			}
+
+			Dist	=Vector3.Dot(FaceInfo.TexOrg, FaceInfo.Plane.mNormal)
+						- FaceInfo.Plane.mDist - 1;
+			Dist	*=DistScale;
+			FaceInfo.TexOrg	=FaceInfo.TexOrg + TexNormal * -Dist;
+
+			return	true;
+		}
+
+
+		bool LightFaces()
+		{
+			Int32	i, s;
+			bool	Hit;
+			Int32	Perc;
+
+			float	[]UOfs	=new float[5];
+			float	[]VOfs	=new float[5];
+
+			UOfs[0]	=0.0f;
+			UOfs[1]	=-0.5f;
+			UOfs[2]	=0.5f;
+			UOfs[3]	=0.5f;
+			UOfs[4]	=-0.5f;
+			VOfs[0]	=0.0f;
+			VOfs[1]	=-0.5f;
+			VOfs[2]	=-0.5f;
+			VOfs[3]	=0.5f;
+			VOfs[4]	=0.5f;
+
+			mGlobals.Lightmaps	=new LInfo[mGlobals.NumGFXFaces];
+
+			if(mGlobals.Lightmaps == null)
+			{
+				Print("LightFaces:  Out of memory for Lightmaps.\n");
+				return	false;
+			}
+
+			mGlobals.FaceInfo	=new FInfo[mGlobals.NumGFXFaces];
+
+			if(mGlobals.FaceInfo == null)
+			{
+				Print("LightFaces:  Out of memory for FaceInfo.\n");
+				return	false;
+			}
+
+			for(i=0;i < mGlobals.NumGFXFaces;i++)
+			{
+				mGlobals.Lightmaps[i]	=new LInfo();
+				mGlobals.FaceInfo[i]	=new FInfo();
+			}
+
+			mGlobals.NumLMaps	=0;
+
+			Perc	=mGlobals.NumGFXFaces / 20;
+
+			for(i=0;i < mGlobals.NumGFXFaces;i++)
+			{
+				Hit	=false;
+
+				if(Perc != 0)
+				{
+					if(((i % Perc) == 0) &&	(i / Perc) <= 20)
+					{
+						Print("." + (i/Perc));
+					}
+				}
+
+				int	pnum	=mGlobals.GFXFaces[i].mPlaneNum;
+				int	pside	=mGlobals.GFXFaces[i].mPlaneSide;
+				mGlobals.FaceInfo[i].Plane.mNormal	=mGlobals.GFXPlanes[pnum].mNormal;
+				mGlobals.FaceInfo[i].Plane.mDist	=mGlobals.GFXPlanes[pnum].mDist;
+				mGlobals.FaceInfo[i].Plane.mType	=mGlobals.GFXPlanes[pnum].mType;
+				if(pside != 0)
+				{
+					mGlobals.FaceInfo[i].Plane.Inverse();
+				}				
+				mGlobals.FaceInfo[i].Face	=i;
+
+				//kbaird - commented this section, not saving texinfos atm
+		/*		if (GFXTexInfo[GFXFaces[i].TexInfo].Flags & TEXINFO_GOURAUD)
+				{
+					if (!GouraudShadeFace(i))
+					{
+						GHook.Error("LightFaces:  GouraudShadeFace failed...\n");
+						return GE_FALSE;
+					}
+					
+					if (DoRadiosity)
+						TransferLightToPatches(i);
+					continue;
+				}*/
+				
+				/*
+				if (GFXTexInfo[GFXFaces[i].TexInfo].Flags & TEXINFO_FLAT)
+				{
+					FlatShadeFace(i);
+					continue;
+				}
+				*/
+
+		//		if (GFXTexInfo[GFXFaces[i].TexInfo].Flags & TEXINFO_NO_LIGHTMAP)
+		//			continue;		// Faces with no lightmap don't need to light them 
+
+
+				if(!CalcFaceInfo(mGlobals.FaceInfo[i], mGlobals.Lightmaps[i]))
+				{
+					return	false;
+				}
+			
+				Int32	Size	=(mGlobals.Lightmaps[i].LSize[0] + 1)
+					* (mGlobals.Lightmaps[i].LSize[1] + 1);
+
+				mGlobals.FaceInfo[i].Points	=new Vector3[Size];
+
+				if(mGlobals.FaceInfo[i].Points == null)
+				{
+					Print("LightFaces:  Out of memory for face points.\n");
+					return	false;
+				}
+				
+				for(s=0;s < mGlobals.NumSamples;s++)
+				{
+					//Hook.Printf("Sample  : %3i of %3i\n", s+1, NumSamples);
+					CalcFacePoints(mGlobals.FaceInfo[i], mGlobals.Lightmaps[i], UOfs[s], VOfs[s]);
+
+					if(!ApplyLightsToFace(mGlobals.FaceInfo[i], mGlobals.Lightmaps[i], 1 / (float)mGlobals.NumSamples))
+					{
+						return	false;
+					}
+				}
+				
+//				if (DoRadiosity)
+//				{
+//					// Update patches for this face
+//					ApplyLightmapToPatches(i);
+//				}
+			}			
+			Print("\n");
+			return	true;
+		}
+
+
+		bool ApplyLightsToFace(FInfo FaceInfo, LInfo LightInfo, float Scale)
+		{
+			Int32		c, v;
+//			Vector3		*Verts;
+			float		Dist;
+			Int32		LType;
+//			Vector3		*pRGBLData;
+			Vector3		Normal, Vect;
+			float		Val, Angle;
+//			byte		*VisData;
+			Int32		Leaf, Cluster;
+			float		Intensity;
+			DirectLight	DLight;
+
+			Normal	=FaceInfo.Plane.mNormal;
+
+//			Verts = FaceInfo.Points;
+
+			for(v=0;v < FaceInfo.NumPoints;v++)
+			{
+				Int32	nodeLandedIn	=FindLeafLandedIn(0, FaceInfo.Points[v]);
+				Leaf	=-(nodeLandedIn + 1);
+
+				if(Leaf < 0 || Leaf >= mGlobals.NumGFXLeafs)
+				{
+					Print("ApplyLightsToFace:  Invalid leaf num.\n");
+					return	false;
+				}
+
+				Cluster	=mGlobals.GFXLeafs[Leaf].mCluster;
+
+				if(Cluster < 0)
+				{
+					continue;
+				}
+
+				if(Cluster >= mGlobals.NumGFXClusters)
+				{
+					Print("*WARNING* ApplyLightsToFace:  Invalid cluster num.\n");
+					continue;
+				}
+
+//				VisData = &mGlobals.GFXVisData[mGlobals.GFXClusters[Cluster].mVisOfs];
+				
+				for(c=0;c < mGlobals.NumGFXClusters;c++)
+				{
+					if((mGlobals.GFXVisData[mGlobals.GFXClusters[Cluster].mVisOfs + (c>>3)] & (1<<(c&7))) == 0)
+					{
+						continue;
+					}
+
+					for(DLight=mGlobals.DirectClusterLights[c];DLight != null;DLight=DLight.mNext)
+					{
+						Intensity	=DLight.mIntensity;
+					
+						//Find the angle between the light, and the face normal
+						Vect	=DLight.mOrigin - FaceInfo.Points[v];
+						Dist	=Vect.Length();
+						Vect.Normalize();
+
+						Angle	=Vector3.Dot(Vect, Normal);
+						if(Angle <= 0.001f)
+						{
+							goto	Skip;
+						}
+						
+						switch(DLight.mType)
+						{
+							case DirectLight.DLight_Point:
+							{
+								Val	=(Intensity - Dist) * Angle;
+								break;
+							}
+							case DirectLight.DLight_Spot:
+							{
+								float	Angle2	=-Vector3.Dot(Vect, DLight.mNormal);
+
+								if(Angle2 < DLight.mAngle)
+								{
+									goto	Skip;
+								}
+
+								Val	=(Intensity - Dist) * Angle;
+								break;
+							}
+							case DirectLight.DLight_Surface:
+							{
+								float	Angle2	=-Vector3.Dot(Vect, DLight.mNormal);
+								if(Angle2 <= 0.001f)
+								{
+									goto	Skip;	// Behind light surface
+								}
+
+								Val	=(Intensity / (Dist * Dist)) * Angle * Angle2;
+								break;
+							}
+							default:
+							{
+								Print("ApplyLightsToFace:  Invalid light.\n");
+								return	false;
+							}
+						}
+
+						if(Val <= 0.0f)
+						{
+							goto	Skip;
+						}
+
+						// This is the slowest test, so make it last
+						Vector3	colResult	=Vector3.Zero;
+						if(RayCollision(FaceInfo.Points[v], DLight.mOrigin, ref colResult))
+						{
+							goto	Skip;	//Ray is in shadow
+						}
+
+						LType	=DLight.mLType;
+
+						//If the data for this LType has not been allocated, allocate it now...
+						if(LightInfo.RGBLData[LType] == null)
+						{
+							if(LightInfo.NumLTypes >= GBSPGlobals.MAX_LTYPES)
+							{
+								Map.Print("Max Light Types on face.\n");
+								return	false;
+							}
+						
+							LightInfo.RGBLData[LType]	=new Vector3[FaceInfo.NumPoints];
+							LightInfo.NumLTypes++;
+						}
+
+						LightInfo.RGBLData[LType][v]	+=DLight.mColor * (Val * Scale);
+
+						Skip:;
+					}
+				}
+			}
+
+			return	true;
+		}
+
+
+		void CalcFacePoints(FInfo FaceInfo, LInfo LightInfo, float UOfs, float VOfs)
+		{
+			Vector3	FaceMid, I;
+			float	MidU, MidV, StartU, StartV, CurU, CurV;
+			Int32	i, u, v, Width, Height, Leaf;
+			Vector3	Vect;
+			byte	[]InSolid	=new byte[GBSPGlobals.MAX_LMAP_SIZE * GBSPGlobals.MAX_LMAP_SIZE];
+
+			MidU	=(LightInfo.Maxs[0] + LightInfo.Mins[0]) * 0.5f;
+			MidV	=(LightInfo.Maxs[1] + LightInfo.Mins[1]) * 0.5f;
+
+			FaceMid	=FaceInfo.TexOrg + FaceInfo.T2WVecs[0] * MidU
+						+ FaceInfo.T2WVecs[1] * MidV;
+
+			Width	=(LightInfo.LSize[0]) + 1;
+			Height	=(LightInfo.LSize[1]) + 1;
+			StartU	=((float)LightInfo.LMins[0]+UOfs) * (float)GBSPGlobals.LGRID_SIZE;
+			StartV	=((float)LightInfo.LMins[1]+VOfs) * (float)GBSPGlobals.LGRID_SIZE;
+
+			FaceInfo.NumPoints = Width*Height;
+
+//			pPoint = &FaceInfo.Points[0];
+//			pInSolid = InSolid;
+
+			for(v=0;v < Height;v++)
+			{
+				for(u=0;u < Width;u++)
+				{
+					CurU	=StartU + u * GBSPGlobals.LGRID_SIZE;
+					CurV	=StartV + v * GBSPGlobals.LGRID_SIZE;
+
+					FaceInfo.Points[(v * Width) + u]
+						=FaceInfo.TexOrg + FaceInfo.T2WVecs[0] * CurU +
+							FaceInfo.T2WVecs[1] * CurV;
+					
+					Int32	nodeLandedIn	=FindLeafLandedIn(0, FaceInfo.Points[(v * Width) + u]);
+					Leaf	=-(nodeLandedIn + 1);
+
+					//Pre-compute if this point is in solid space, so we can re-use it in the code below
+					if((mGlobals.GFXLeafs[Leaf].mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+					{
+						InSolid[(v * Width) + u]	=1;
+					}
+					else
+					{
+						InSolid[(v * Width) + u]	=0;
+					}
+
+					if(!mGlobals.ExtraLightCorrection)
+					{
+						if(InSolid[(v * Width) + u] != 0)
+						{
+//							if(RayCollision(&FaceMid, pPoint, &I))
+//							{
+//								geVec3d_Subtract(&FaceMid, pPoint, &Vect);
+//								geVec3d_Normalize(&Vect);
+//								geVec3d_Add(&I, &Vect, pPoint);
+//							}
+						}
+					}
+				}
+			}
+
+			if(!mGlobals.ExtraLightCorrection)
+			{
+				return;
+			}
+
+//			pPoint = FaceInfo.Points;
+//			pInSolid = InSolid;
+			/*
+			for (v=0; v< FaceInfo.NumPoints; v++, pPoint++, pInSolid++)
+			{
+				uint8		*pInSolid2;
+				geVec3d		*pPoint2, *pBestPoint;
+				geFloat		BestDist, Dist;
+
+				if (!(*pInSolid))
+					continue;						//  Point is good, leav it alone
+
+				pPoint2 = FaceInfo.Points;
+				pInSolid2 = InSolid;
+				pBestPoint = &FaceMid;
+				BestDist = MIN_MAX_BOUNDS;
+				
+				for (u=0; u< FaceInfo.NumPoints; u++, pPoint2++, pInSolid2++)
+				{
+					if (pPoint == pPoint2)			
+						continue;					// We know this point is bad
+
+					if (*pInSolid2)
+						continue;					// We know this point is bad
+
+					// At this point, we have a good point, now see if it's closer than the current good point
+					geVec3d_Subtract(pPoint2, pPoint, &Vect);
+					Dist = geVec3d_Length(&Vect);
+					if (Dist < BestDist)
+					{
+						BestDist = Dist;
+						pBestPoint = pPoint2;
+
+						if (Dist <= (GBSPGlobals.LGRID_SIZE-0.1f))
+							break;					// This should be good enough...
+					}
+				}
+
+				*pPoint = *pBestPoint;
+			}*/
+		}
+
+
+		bool RayIntersect(Vector3 Front, Vector3 Back, Int32 Node)
+		{
+			float	Fd, Bd, Dist;
+			Int32	Side;
+			Vector3	I;
+
+			if(Node < 0)						
+			{
+				Int32	Leaf	=-(Node+1);
+
+				if((mGlobals.GFXLeafs[Leaf].mContents
+					& GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+				{
+					return	true;	//Ray collided with solid space
+				}
+				else 
+				{
+					return	false;	//Ray collided with empty space
+				}
+			}
+			GFXNode		n	=mGlobals.GFXNodes[Node];
+			GFXPlane	p	=mGlobals.GFXPlanes[n.mPlaneNum];
+
+			Fd	=p.DistanceFast(Front);
+			Bd	=p.DistanceFast(Back);
+
+			if(Fd >= -1 && Bd >= -1)
+			{
+				return(RayIntersect(Front, Back, n.mChildren[0]));
+			}
+			if(Fd < 1 && Bd < 1)
+			{
+				return(RayIntersect(Front, Back, n.mChildren[1]));
+			}
+
+			Side	=(Fd < 0)? 1 : 0;
+			Dist	=Fd / (Fd - Bd);
+
+			I	=Front + Dist * (Back - Front);
+
+			//Work our way to the front, from the back side.  As soon as there
+			//is no more collisions, we can assume that we have the front portion of the
+			//ray that is in empty space.  Once we find this, and see that the back half is in
+			//solid space, then we found the front intersection point...
+			if(RayIntersect(Front, I, n.mChildren[Side]))
+			{
+				return	true;
+			}
+			else if(RayIntersect(I, Back, n.mChildren[(Side == 0)? 1 : 0]))
+			{
+				if(!mGlobals.HitLeaf)
+				{
+					mGlobals.GlobalPlane	=n.mPlaneNum;
+					mGlobals.GlobalSide		=Side;
+					mGlobals.GlobalI		=I;
+					mGlobals.GlobalNode		=Node;
+					mGlobals.HitLeaf		=true;
+				}
+				return	true;
+			}
+			return	false;
+		}
+
+
+		bool RayCollision(Vector3 Front, Vector3 Back, ref Vector3 I)
+		{
+			mGlobals.HitLeaf	=false;
+			if(RayIntersect(Front, Back, mGlobals.GFXModels[0].mRootNode[0]))
+			{
+				I	=mGlobals.GlobalI;			// Set the intersection point
+				return	true;
+			}
+			return	false;
+		}
+
+
+		void FinalizeRGBVerts()
+		{
+			for(int i=0;i < mGlobals.NumGFXRGBVerts;i++)
+			{
+				mGlobals.GFXRGBVerts[i]	+=mGlobals.MinLight;
+
+				mGlobals.GFXRGBVerts[i]	=Vector3.Clamp(mGlobals.GFXRGBVerts[i],
+					Vector3.Zero, Vector3.One * mGlobals.MaxLight);
+			}
+		}
+
+
+		void FreeDirectLights()
+		{
+			for(int i=0;i < GBSPGlobals.MAX_DIRECT_LIGHTS;i++)
+			{
+				mGlobals.DirectLights[i]	=null;
+			}
+			for(int i=0;i < GBSPGlobals.MAX_DIRECT_CLUSTER_LIGHTS;i++)
+			{
+				mGlobals.DirectClusterLights[i]	=null;
+			}
+			mGlobals.NumDirectLights	=0;
+		}
+
+
+		bool SaveLightmaps(BinaryWriter f)
+		{
+//			LInfo		*L;
+			Int32		i, j, k,l, Size;
+			float		Max, Max2;
+			byte		[]LData	=new byte[GBSPGlobals.MAX_LMAP_SIZE * GBSPGlobals.MAX_LMAP_SIZE * 3 * 4];
+//			byte		*pLData;
+			long		Pos1, Pos2;
+			Int32		NumLTypes;
+//			FInfo		*pFaceInfo;
+			Int32		LDataOfs	=0;
+
+//			geVFile_Tell(f, &Pos1);
+			Pos1	=f.BaseStream.Position;
+			
+			// Write out fake chunk (so we can write the real one here later)
+			GBSPChunk	Chunk	=new GBSPChunk();
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LIGHTDATA;
+			Chunk.mElements	=0;
+
+			Chunk.Write(f);
+
+			//Reset the light offset
+			mGlobals.LightOffset	=0;
+			
+			//Go through all the faces
+			for(i=0;i < mGlobals.NumGFXFaces;i++)
+			{
+				LInfo	L			=mGlobals.Lightmaps[i];
+				FInfo	pFaceInfo	=mGlobals.FaceInfo[i];
+				
+				// Set face defaults
+				mGlobals.GFXFaces[i].mLightOfs	=-1;
+				mGlobals.GFXFaces[i].mLWidth	=L.LSize[0] + 1;
+				mGlobals.GFXFaces[i].mLHeight	=L.LSize[1] + 1;
+				mGlobals.GFXFaces[i].mLTypes[0]	=255;
+				mGlobals.GFXFaces[i].mLTypes[1]	=255;
+				mGlobals.GFXFaces[i].mLTypes[2]	=255;
+				mGlobals.GFXFaces[i].mLTypes[3]	=255;
+				
+				//Skip special faces with no lightmaps
+				if((mGlobals.GFXTexInfo[mGlobals.GFXFaces[i].mTexInfo].mFlags
+					& TexInfo.TEXINFO_NO_LIGHTMAP) != 0)
+				{
+					continue;
+				}
+
+				//Get the size of map
+				Size	=mGlobals.FaceInfo[i].NumPoints;
+
+				//Create style 0, if min light is set, and style 0 does not exist
+				if((L.RGBLData[0] == null) &&
+					(mGlobals.MinLight.X > 1
+					|| mGlobals.MinLight.Y > 1
+					|| mGlobals.MinLight.Z > 1))
+				{
+					L.RGBLData[0]	=new Vector3[Size];
+					if(L.RGBLData[0] == null)
+					{
+						Print("SaveLightmaps:  Out of memory for lightmap.\n");
+						return	false;
+					}
+					L.NumLTypes++;
+					for(int ld=0;ld < L.RGBLData[0].Length;ld++)
+					{
+						L.RGBLData[0][ld]	=Vector3.Zero;
+					}
+				}
+				
+				//At this point, if no styles hit the face, skip it...
+				if(L.NumLTypes == 0)
+				{
+					continue;
+				}
+
+				//Mark the start of the lightoffset
+				mGlobals.GFXFaces[i].mLightOfs	=mGlobals.LightOffset;
+
+				//At this point, all lightmaps are currently RGB
+				byte	RGB2	=1;
+				
+				if(RGB2 != 0)
+				{
+					mGlobals.RGBMaps++;
+				}
+				else
+				{
+					mGlobals.REGMaps++;
+				}
+
+				f.Write(RGB2);
+
+				mGlobals.LightOffset++;		//Skip the rgb light byte
+				
+				NumLTypes	=0;		// Reset number of LTypes for this face
+				for(k=0;k < GBSPGlobals.MAX_LTYPE_INDEX;k++)
+				{
+					if(L.RGBLData[k] == null)
+					{
+						continue;
+					}
+
+					if(NumLTypes >= GBSPGlobals.MAX_LTYPES)
+					{
+						Print("SaveLightmaps:  Max LightTypes on face.\n");
+						return	false;
+					}
+						 
+					mGlobals.GFXFaces[i].mLTypes[NumLTypes]	=(byte)k;
+					NumLTypes++;
+
+					LDataOfs	=0;
+//					pLData = LData;
+//					geVec3d *pRGB = L.RGBLData[k];
+
+					for(j=0;j < Size;j++)//, pRGB++)
+					{
+						Vector3	WorkRGB	=L.RGBLData[k][j] * mGlobals.LightScale;
+
+						if(k == 0)
+						{
+							WorkRGB	+=mGlobals.MinLight;
+						}
+						
+						Max	=0.0f;
+
+						for(l=0;l < 3;l++)
+						{
+							float	Val	=UtilityLib.Mathery.VecIdx(WorkRGB, l);
+
+							if(Val < 1.0f)
+							{
+								Val	=1.0f;
+								UtilityLib.Mathery.VecIdxAssign(ref WorkRGB, l, Val);
+							}
+
+							if(Val > Max)
+							{
+								Max	=Val;
+							}
+						}
+
+						Debug.Assert(Max > 0.0f);
+						
+						Max2	=Math.Min(Max, mGlobals.MaxLight);
+
+						for(l=0;l < 3;l++)
+						{
+							LData[LDataOfs]	=(byte)(UtilityLib.Mathery.VecIdx(WorkRGB, l) * (Max2 / Max));
+							LDataOfs++;
+							mGlobals.LightOffset++;
+						}
+					}
+
+					f.Write(LData, 0, 3 * Size);
+
+					L.RGBLData[k]	=null;
+				}
+
+				if(L.NumLTypes != NumLTypes)
+				{
+					Print("SaveLightMaps:  Num LightTypes was incorrectly calculated.\n");
+					return	false;
+				}
+			}
+
+			Print("Light Data Size      : " + mGlobals.LightOffset + "\n");
+
+			Pos2	=f.BaseStream.Position;
+
+			f.BaseStream.Seek(Pos1, SeekOrigin.Begin);
+
+			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LIGHTDATA;
+			Chunk.mElements =mGlobals.LightOffset;
+
+			Chunk.Write(f);
+
+			f.BaseStream.Seek(Pos2, SeekOrigin.Begin);
+
+			return	true;
+		}
+
+
+		bool FinishWritingLight(BinaryWriter bw)
+		{
+			GBSPHeader	header	=new GBSPHeader();
+			header.mTAG			="GBSP";
+			header.mVersion		=GBSPChunk.GBSP_VERSION;
+			header.mBSPTime		=DateTime.Now;
+
+			GBSPChunk	chunk	=new GBSPChunk();
+			chunk.mType			=GBSPChunk.GBSP_CHUNK_HEADER;
+			chunk.mElements		=1;
+			chunk.Write(bw, header);
+
+			if(!SaveGFXRGBVerts(bw))
+			{
+				return	false;
+			}
+			if(!SaveVisdGFXFaces(bw))
+			{
+				return	false;
+			}
+			chunk.mType		=GBSPChunk.GBSP_CHUNK_END;
+			chunk.mElements	=0;
+			chunk.Write(bw);
+
+			return	true;
+		}
+
+
+		bool StartWritingLight(BinaryWriter bw)
+		{
+			// Write out everything but the light data
+			// Don't include LIGHT_DATA since it was allready saved out...
+
+			GBSPHeader	header	=new GBSPHeader();
+			header.mTAG			="GBSP";
+			header.mVersion		=GBSPChunk.GBSP_VERSION;
+			header.mBSPTime		=DateTime.Now;
+
+			GBSPChunk	chunk	=new GBSPChunk();
+			chunk.mType			=GBSPChunk.GBSP_CHUNK_HEADER;
+			chunk.mElements		=1;
+			chunk.Write(bw, header);
+
+			if(!SaveGFXModelData(bw))
+			{
+				return	false;
+			}
+			if(!SaveVisdGFXNodes(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXPortals(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXBNodes(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXLeafs(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXAreasAndPortals(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXClusters(bw))
+			{
+				return	false;
+			}
+			if(!SaveVisdGFXPlanes(bw))
+			{
+				return	false;
+			}
+			if(!SaveVisdGFXLeafFacesAndSides(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXVerts(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXVertIndexList(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXEntData(bw))
+			{
+				return	false;
+			}
+			if(!SaveVisdGFXTexInfos(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXVisData(bw))
+			{
+				return	false;
+			}
+			return	true;
+		}
+
+
 		public bool LightGBSPFile(string fileName, LightParams prms)
 		{
 			mGlobals.ExtraLightCorrection	=prms.mbExtraSamples;
@@ -1719,14 +2667,16 @@ namespace BSPLib
 			}
 
 			Print(" --- Radiosity GBSP File --- \n");
+
+			BinaryWriter	bw		=null;
+			FileStream		file	=null;
 			
 			if(!LoadGBSPFile(fileName))
 			{
 				Print("LightGBSPFile:  Could not load GBSP file: " + fileName + "\n");
 				return	false;
 			}
-			return	true;
-			/*
+			
 			//Allocate some RGBLight data now
 			mGlobals.NumGFXRGBVerts	=mGlobals.NumGFXVertIndexList;
 			mGlobals.GFXRGBVerts	=new Vector3[mGlobals.NumGFXRGBVerts];
@@ -1746,12 +2696,12 @@ namespace BSPLib
 			RecFile		=fileName.Substring(0, extPos);
 			RecFile		+=".rec";
 
-			if(!ConvertGFXEntDataToEntities())
-			{
-				goto	ExitWithError;
-			}
+//			if(!ConvertGFXEntDataToEntities())
+//			{
+//				goto	ExitWithError;
+//			}
 
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+			file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
 									FileMode.OpenOrCreate, FileAccess.Write);
 
 			if(file == null)
@@ -1759,18 +2709,18 @@ namespace BSPLib
 				Print("LightGBSPFile:  Could not open GBSP file for writing: " + fileName + "\n");
 				goto	ExitWithError;
 			}
-			BinaryWriter	bw	=new BinaryWriter(file);
+			bw	=new BinaryWriter(file);
 
 			Print("Num Faces            : " + mGlobals.NumGFXFaces + "\n");
 
 			//Build the patches (before direct lights are created)
-			if(mGlobals.DoRadiosity)
-			{
-				if(!BuildPatches())
-				{
-					goto	ExitWithError;
-				}
-			}
+//			if(mGlobals.DoRadiosity)
+//			{
+//				if(!BuildPatches())
+//				{
+//					goto	ExitWithError;
+//				}
+//			}
 
 			if(!CreateDirectLights())
 			{
@@ -1786,12 +2736,13 @@ namespace BSPLib
 
 			FreeDirectLights();
 
+			/*
 			if(mGlobals.DoRadiosity)
 			{
 				//Pre-calc how much light is distributed to each patch from every patch
 				if(!CalcReceivers(RecFile))	
 				{
-					goto ExitWithError;
+					goto	ExitWithError;
 				}
 
 				//Bounce patches around to their receivers
@@ -1808,21 +2759,21 @@ namespace BSPLib
 					goto	ExitWithError;
 				}			
 				FreePatches();	//Don't need these anymore...
-			}
+			}*/
 
 			FinalizeRGBVerts();
 
-			if(!StartWriting(f))	//Open bsp file and save all current bsp data (except lightmaps)
+			if(!StartWritingLight(bw))	//Open bsp file and save all current bsp data (except lightmaps)
 			{
 				goto	ExitWithError;
 			}
 
-			if(!SaveLightmaps(f))	//Save them
+			if(!SaveLightmaps(bw))	//Save them
 			{
 				goto	ExitWithError;
 			}
 
-			if(!FinishWriting(f))	//Write the END chunk to the file
+			if(!FinishWritingLight(bw))	//Write the END chunk to the file
 			{
 				goto	ExitWithError;
 			}
@@ -1849,7 +2800,253 @@ namespace BSPLib
 				CleanupLight();
 
 				return	false;
+			}
+		}
+
+
+		void CleanupLight()
+		{
+			FreeDirectLights();
+			FreePatches();
+			FreeLightmaps();
+			FreeReceivers();
+
+			mGlobals.VertNormals	=null;
+
+			FreeGBSPFile();
+		}
+
+
+		void FreePatches()
+		{
+			if(mGlobals.PatchList != null)
+			{
+				for(int i=0;i < mGlobals.NumPatches;i++)
+				{
+					mGlobals.PatchList[i]	=null;
+				}
+				mGlobals.NumPatches	=0;
+				mGlobals.PatchList	=null;
+			}
+			mGlobals.FacePatches	=null;
+		}
+
+
+		void FreeReceivers()
+		{
+			mGlobals.NumReceivers	=0;
+		}
+
+
+		void FreeLightmaps()
+		{
+			for(int i=0;i < mGlobals.NumGFXFaces;i++)
+			{
+				if(mGlobals.FaceInfo != null)
+				{
+					mGlobals.FaceInfo[i].Points	=null;
+				}
+				if(mGlobals.Lightmaps != null)
+				{
+					for(int k=0;k < GBSPGlobals.MAX_LTYPE_INDEX;k++)
+					{
+						mGlobals.Lightmaps[i].RGBLData[k]	=null;
+					}
+				}
+			}
+
+			mGlobals.FaceInfo	=null;
+			mGlobals.Lightmaps	=null;
+		}
+
+
+		bool CreateDirectLights()
+		{
+			Int32		i, Leaf, Cluster;
+			Vector3		Color;
+			MapEntity	Entity;
+			DirectLight	DLight;
+			RADPatch	Patch;
+			Vector3		Angles;
+			Vector3		Angles2;
+			Matrix		XForm;
+			GFXTexInfo	pTexInfo;
+			Int32		NumSurfLights;
+
+			mGlobals.NumDirectLights	=0;
+			NumSurfLights				=0;
+
+			for(i=0;i < GBSPGlobals.MAX_DIRECT_CLUSTER_LIGHTS;i++)
+			{
+				mGlobals.DirectClusterLights[i]	=null;
+			}
+
+			// Create the entity lights first
+			for(i=0;i < mGlobals.NumGFXEntData;i++)
+			{
+				Entity	=mGlobals.GFXEntData[i];
+
+				if(!(Entity.mData.ContainsKey("light")
+					|| Entity.mData.ContainsKey("_light")))
+				{
+					continue;
+				}
+
+				if(mGlobals.NumDirectLights + 1 >= GBSPGlobals.MAX_DIRECT_LIGHTS)
+				{
+					Print("*WARNING* Max lights.\n");
+					goto	Done;
+				}
+
+				DLight	=new DirectLight();
+
+				Vector4	colorVec	=Vector4.Zero;
+				if(!Entity.GetLightValue(out colorVec))
+				{
+					Print("Warning:  Light entity, couldn't get color\n");
+				}
+
+				Color.X	=colorVec.X;
+				Color.Y	=colorVec.Y;
+				Color.Z	=colorVec.Z;
+
+				//Default it to 255/255/255 if no light is specified
+				if(Color.Length() < 1.0f)
+				{
+					Color	=Vector3.One;
+				}
+				else
+				{
+					Color.Normalize();
+				}
+
+				if(!Entity.GetOrigin(out DLight.mOrigin))
+				{
+					Print("Warning:  Light entity, couldn't get origin\n");
+				}
+
+				//fix coordinate system
+		//		DLight.mOrigin.X	=-DLight.mOrigin.X;
+			//	float	temp		=DLight.mOrigin.Z;
+				//DLight.mOrigin.Y	=DLight.mOrigin.Z;
+		//		DLight.mOrigin.Z	=temp;
+
+				DLight.mColor		=Color;
+				DLight.mIntensity	=colorVec.W * mGlobals.EntityScale;
+				DLight.mType		=DirectLight.DLight_Point;	//hardcode for now
+
+				/*
+				if(GetVectorForKey2 (Entity, "Angles", &Angles))
+				{
+					Angles2.X = (Angles.X / (geFloat)180) * GE_PI;
+					Angles2.Y = (Angles.Y / (geFloat)180) * GE_PI;
+					Angles2.Z = (Angles.Z / (geFloat)180) * GE_PI;
+
+					geXForm3d_SetEulerAngles(&XForm, &Angles2);
+
+					geXForm3d_GetLeft(&XForm, &Angles2);
+					DLight.mNormal.X = -Angles2.X;
+					DLight.mNormal.Y = -Angles2.Y;
+					DLight.mNormal.Z = -Angles2.Z;
+
+					DLight.mAngle = FloatForKey(Entity, "Arc");
+					DLight.mAngle = (float)cos(DLight.mAngle/180.0f*GE_PI);
+					
+				}*/
+
+				// Find out what type of light it is by it's classname...
+//				if (!stricmp(Entity.mClassName, "Light"))
+//					DLight.mType = DLight_Point;
+//				else if (!stricmp(Entity.mClassName, "SpotLight"))
+//					DLight.mType = DLight_Spot;
+					
+
+				Int32	nodeLandedIn	=FindLeafLandedIn(mGlobals.GFXModels[0].mRootNode[0], DLight.mOrigin);
+				Leaf	=-(nodeLandedIn + 1);
+				Cluster	=mGlobals.GFXLeafs[Leaf].mCluster;
+
+				if(Cluster < 0)
+				{
+					Print("*WARNING* CreateLights:  Light in solid leaf.\n");
+					continue;
+				}
+				
+				if(Cluster >= GBSPGlobals.MAX_DIRECT_CLUSTER_LIGHTS)
+				{
+					Print("*WARNING* CreateLights:  Max cluster for light.\n");
+					continue;
+				}
+
+				DLight.mNext	=mGlobals.DirectClusterLights[Cluster];
+				mGlobals.DirectClusterLights[Cluster]	=DLight;
+
+				mGlobals.DirectLights[mGlobals.NumDirectLights++]	=DLight;						
+			}
+
+			Print("Num Normal Lights   : " + mGlobals.NumDirectLights + "\n");
+
+//			if (!DoRadiosity)		// Stop here if no radisosity is going to be done
+				return	true;
+			
+			// Now create the radiosity direct lights (surface emitters)
+			/*
+			for (i=0; i< NumGFXFaces; i++)
+			{
+				pTexInfo = &GFXTexInfo[GFXFaces[i].TexInfo];
+
+				// Only look at surfaces that want to emit light
+				if (!(pTexInfo.mFlags & TEXINFO_LIGHT))
+					continue;
+
+				for (Patch = FacePatches[i]; Patch; Patch = Patch.mNext)
+				{
+					Leaf = Patch.mLeaf;
+					Cluster = GFXLeafs[Leaf].Cluster;
+
+					if (Cluster < 0)
+						continue;			// Skip, solid
+
+					if (Cluster >= MAX_DIRECT_CLUSTER_LIGHTS)
+					{
+						GHook.Printf("*WARNING* CreateLights:  Max cluster for surface light.\n");
+						continue;
+					}
+
+					if (NumDirectLights+1 >= MAX_DIRECT_LIGHTS)
+					{
+						GHook.Printf("*WARNING* Max lights.\n");
+						goto Done;
+					}
+
+					DLight = AllocDirectLight();
+
+					if (!DLight)
+						return GE_FALSE;
+
+					DLight.mOrigin = Patch.mOrigin;
+					DLight.mColor = Patch.mReflectivity;
+
+					DLight.mNormal = Patch.mPlane.Normal;
+					DLight.mType = DLight_Surface;
+					
+					DLight.mIntensity = pTexInfo.mFaceLight * Patch.mArea;
+					// Make sure the emitter ends up with some light too
+					geVec3d_AddScaled(&Patch.mRadFinal, &Patch.mReflectivity, DLight.mIntensity, &Patch.mRadFinal);
+
+					// Insert this surface direct light into the list of lights
+					DLight.mNext = DirectClusterLights[Cluster];
+					DirectClusterLights[Cluster] = DLight;
+
+					DirectLights[NumDirectLights++] = DLight;
+					NumSurfLights++;
+				}
 			}*/
+
+			Done:
+
+			Print("Num Surf Lights     : " + NumSurfLights + "\n");
+
+			return	true;
 		}
 
 

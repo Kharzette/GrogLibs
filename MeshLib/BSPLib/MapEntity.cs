@@ -82,6 +82,12 @@ namespace BSPLib
 				Single.TryParse(elements[3], out val.W);
 				return	true;
 			}
+			else if(mData.ContainsKey("light"))
+			{
+				val		=Vector4.One * 255.0f;
+				Single.TryParse(mData["light"], out val.W);
+				return	true;
+			}
 			return	false;
 		}
 
@@ -376,6 +382,11 @@ namespace BSPLib
 				bw.Write(pair.Key);
 				bw.Write(pair.Value);
 			}
+		}
+
+		internal void GetLightType(out int p)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }
