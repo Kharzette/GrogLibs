@@ -21,10 +21,13 @@ namespace BSPBuilder
 		SpriteBatch				mSB;
 
 		//forms
-		MainForm		mMF;
-		CollisionForm	mCF;
+		MainForm		mMainForm;
+		CollisionForm	mCollForm;
+		MaterialForm	mMatForm;
 
-		Map	mMap;
+		//data
+		Map						mMap;
+		MaterialLib.MaterialLib	mMatLib;
 
 		//debug draw stuff
 		BasicEffect				mMapEffect;
@@ -86,23 +89,27 @@ namespace BSPBuilder
 
 		protected override void LoadContent()
 		{
-			mSB	=new SpriteBatch(GraphicsDevice);
+			mSB		=new SpriteBatch(GraphicsDevice);
+			mMatLib	=new MaterialLib.MaterialLib(mGDM.GraphicsDevice, Content);
 
-			mCF				=new CollisionForm();
-			mCF.Visible		=true;
-			mCF.eStartRay	+=OnStartRay;
-			mCF.eEndRay		+=OnEndRay;
-			mCF.eRepeatRay	+=OnRepeatRay;
+			mCollForm				=new CollisionForm();
+			mCollForm.Visible		=false;
+			mCollForm.eStartRay		+=OnStartRay;
+			mCollForm.eEndRay		+=OnEndRay;
+			mCollForm.eRepeatRay	+=OnRepeatRay;
 
-			mMF						=new MainForm();
-			mMF.Visible				=true;
-			mMF.eOpenBrushFile		+=OnOpenBrushFile;
-			mMF.eLightGBSP			+=OnLightGBSP;
-			mMF.eVisGBSP			+=OnVisGBSP;
-			mMF.eBuildGBSP			+=OnBuildGBSP;
-			mMF.eSaveGBSP			+=OnSaveGBSP;
-			mMF.eLoadGBSP			+=OnLoadGBSP;
-			mMF.eDrawChoiceChanged	+=OnDrawChoiceChanged;
+			mMatForm			=new MaterialForm(mGDM.GraphicsDevice, mMatLib);
+			mMatForm.Visible	=true;
+
+			mMainForm						=new MainForm();
+			mMainForm.Visible				=true;
+			mMainForm.eOpenBrushFile		+=OnOpenBrushFile;
+			mMainForm.eLightGBSP			+=OnLightGBSP;
+			mMainForm.eVisGBSP				+=OnVisGBSP;
+			mMainForm.eBuildGBSP			+=OnBuildGBSP;
+			mMainForm.eSaveGBSP				+=OnSaveGBSP;
+			mMainForm.eLoadGBSP				+=OnLoadGBSP;
+			mMainForm.eDrawChoiceChanged	+=OnDrawChoiceChanged;
 
 			mBFX					=new BasicEffect(GraphicsDevice, null);
 			mBFX.View				=mGameCam.View;
@@ -361,7 +368,7 @@ namespace BSPBuilder
 
 		void OnRepeatRay(object sender, EventArgs ea)
 		{
-			mCF.PrintToConsole("Casting ray: " +
+			mCollForm.PrintToConsole("Casting ray: " +
 				mStart.X + ", " + mStart.Y + ", " + mStart.Z +
 				"  to  " + mEnd.X + ", " + mEnd.Y + ", " + mEnd.Z + "\n");
 
@@ -377,11 +384,11 @@ namespace BSPBuilder
 
 				mRayParts.Add(seg);
 
-				mCF.PrintToConsole("No collision\n");
+				mCollForm.PrintToConsole("No collision\n");
 			}
 			else
 			{
-				mCF.PrintToConsole("Collision!\n");
+				mCollForm.PrintToConsole("Collision!\n");
 				ClipSegment	seg	=new ClipSegment();
 				seg.mSeg.mP1	=mStart;
 				seg.mSeg.mP2	=mEnd;
@@ -471,16 +478,16 @@ namespace BSPBuilder
 				mMap.eNumMapFacesChanged		+=OnNumMapFacesChanged;
 				mMap.eProgressChanged			+=OnMapProgressChanged;
 				mMap.eNumPortalsChanged			+=OnNumPortalsChanged;
-				mMF.SetBuildEnabled(true);
+				mMainForm.SetBuildEnabled(true);
 			}
 		}
 
 
 		void OnBuildGBSP(object sender, EventArgs ea)
 		{
-			if(mMap.BuildTree(mMF.BSPParameters))
+			if(mMap.BuildTree(mMainForm.BSPParameters))
 			{
-				mMF.SetSaveEnabled(true);
+				mMainForm.SetSaveEnabled(true);
 			}
 		}
 
@@ -501,7 +508,7 @@ namespace BSPBuilder
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
 				mMap	=new Map();
-				mMap.LightGBSPFile(fileName, mMF.LightParameters);
+				mMap.LightGBSPFile(fileName, mMainForm.LightParameters);
 			}
 		}
 
@@ -522,7 +529,7 @@ namespace BSPBuilder
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
 				mMap	=new Map();
-				mMap.VisGBSPFile(fileName, mMF.VisParameters, mMF.BSPParameters);
+				mMap.VisGBSPFile(fileName, mMainForm.VisParameters, mMainForm.BSPParameters);
 			}
 		}
 
@@ -543,7 +550,10 @@ namespace BSPBuilder
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
 				mMap	=new Map();
-				mMap.LoadGBSPFile(fileName);
+				if(!mMap.LoadGBSPFile(fileName))
+				{
+					OnMapPrint("Load failed\n", null);
+				}
 			}
 		}
 
@@ -563,7 +573,7 @@ namespace BSPBuilder
 		{
 			string	str	=sender as string;
 
-			mMF.PrintToConsole(str);
+			mMainForm.PrintToConsole(str);
 		}
 
 
@@ -581,7 +591,7 @@ namespace BSPBuilder
 		{
 			int	num	=(int)sender;
 
-			mMF.NumberOfAreas	="" + num;
+			mMainForm.NumberOfAreas	="" + num;
 		}
 
 
@@ -589,7 +599,7 @@ namespace BSPBuilder
 		{
 			int	num	=(int)sender;
 
-			mMF.NumberOfNodes	="" + num;
+			mMainForm.NumberOfNodes	="" + num;
 		}
 
 
@@ -597,7 +607,7 @@ namespace BSPBuilder
 		{
 			int	num	=(int)sender;
 
-			mMF.NumberOfPortals	="" + num;
+			mMainForm.NumberOfPortals	="" + num;
 		}
 
 
@@ -605,7 +615,7 @@ namespace BSPBuilder
 		{
 			int	num	=(int)sender;
 
-			mMF.NumberOfFaces	="" + num;
+			mMainForm.NumberOfFaces	="" + num;
 		}
 
 

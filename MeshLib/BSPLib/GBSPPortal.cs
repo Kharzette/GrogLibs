@@ -36,7 +36,7 @@ namespace BSPLib
 		}
 
 
-		internal static GBSPPortal CreateOutsidePortal(GBSPGlobals gbs, GBSPPlane Plane, GBSPNode Node, PlanePool pool)
+		internal static GBSPPortal CreateOutsidePortal(GBSPPlane Plane, GBSPNode Node, PlanePool pool, ref GBSPNode outsideNode)
 		{
 			GBSPPortal	NewPortal;
 			sbyte		Side;
@@ -62,14 +62,14 @@ namespace BSPLib
 
 			if(Side == 0)
 			{
-				if(!GBSPNode.AddPortalToNodes(NewPortal, Node, gbs.OutsideNode))
+				if(!GBSPNode.AddPortalToNodes(NewPortal, Node, outsideNode))
 				{
 					return	null;
 				}
 			}
 			else
 			{
-				if(!GBSPNode.AddPortalToNodes(NewPortal, gbs.OutsideNode, Node))
+				if(!GBSPNode.AddPortalToNodes(NewPortal, outsideNode, Node))
 				{
 					return	null;
 				}

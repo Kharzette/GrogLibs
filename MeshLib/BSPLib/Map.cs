@@ -255,6 +255,30 @@ namespace BSPLib
 		//texinfos
 		TexInfoPool	mTIPool	=new TexInfoPool();
 
+		//texnames
+		List<string>	mTexNames	=new List<string>();
+
+		//gfx data
+		GFXModel		[]mGFXModels;
+		GFXNode			[]mGFXNodes;
+		GFXBNode		[]mGFXBNodes;
+		GFXLeaf			[]mGFXLeafs;
+		GFXCluster		[]mGFXClusters;
+		GFXArea			[]mGFXAreas;
+		GFXAreaPortal	[]mGFXAreaPortals;
+		GFXPortal		[]mGFXPortals;
+		GFXPlane		[]mGFXPlanes;
+		GFXFace			[]mGFXFaces;
+		Int32			[]mGFXLeafFaces;
+		GFXLeafSide		[]mGFXLeafSides;
+		Vector3			[]mGFXVerts;
+		Int32			[]mGFXVertIndexes;
+		Vector3			[]mGFXRGBVerts;
+		GFXTexInfo		[]mGFXTexInfos;
+		MapEntity		[]mGFXEntities;
+		byte			[]mGFXLightData;
+		byte			[]mGFXVisData;
+
 		public event EventHandler	eCPUCoresInUseChanged;
 		public event EventHandler	eNumMapFacesChanged;
 		public event EventHandler	eNumDrawFacesChanged;
@@ -802,6 +826,30 @@ namespace BSPLib
 			{
 				return	true;
 			}
+			/*
+			bw.Write(mModels.Count);
+			foreach(GBSPModel mod in mModels)
+			{
+				GFXModel	GModel	=new GFXModel();
+
+				GModel.mRootNode[0]		=mod.mRootNodeID[0];
+				GModel.mRootNode[1]		=mod.mRootNodeID[1];
+				GModel.mOrigin			=mod.mOrigin;
+				GModel.mMins			=mod.mBounds.mMins;
+				GModel.mMaxs			=mod.mBounds.mMaxs;
+				GModel.mRootNode[1]		=mod.mRootNodeID[1];
+				GModel.mFirstFace		=mod.mFirstFace;
+				GModel.mNumFaces		=mod.mNumFaces;
+				GModel.mFirstLeaf		=mod.mFirstLeaf;
+				GModel.mNumLeafs		=mod.mNumLeafs;
+				GModel.mFirstCluster	=mod.mFirstCluster;
+				GModel.mNumClusters		=mod.mNumClusters;
+				GModel.mAreas[0]		=mod.mAreas[0];
+				GModel.mAreas[1]		=mod.mAreas[1];
+
+				GModel.Write(bw);
+			}*/
+
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
 			GFXModel	GModel	=new GFXModel();
@@ -963,8 +1011,6 @@ namespace BSPLib
 			{
 				return	false;
 			}
-
-			//do save texinfo
 			
 			Chunk.mType		=GBSPChunk.GBSP_CHUNK_END;
 			Chunk.mElements	=0;
@@ -1002,6 +1048,40 @@ namespace BSPLib
 
 			FreeGBSPFile();
 
+			return	true;
+		}
+
+		bool SaveTextureNames(BinaryWriter bw)
+		{
+			if(mTexNames.Count <= 0)
+			{
+				return	true;
+			}
+			GBSPChunk	Chunk	=new GBSPChunk();;
+			Chunk.mType			=GBSPChunk.GBSP_CHUNK_TEXTURES;
+			Chunk.mElements		=mTexNames.Count;
+
+			Chunk.Write(bw);
+
+			foreach(string tex in mTexNames)
+			{
+				bw.Write(tex);
+			}
+			return	true;
+		}
+
+
+		bool LoadTextureNames(BinaryReader br)
+		{
+			Int32	cType	=br.ReadInt32();
+			Debug.Assert(cType == GBSPChunk.GBSP_CHUNK_TEXTURES);
+
+			Int32	numEl	=br.ReadInt32();
+			for(int i=0;i < numEl;i++)
+			{
+				string	tex	=br.ReadString();
+				mTexNames.Add(tex);
+			}
 			return	true;
 		}
 
@@ -3078,6 +3158,8 @@ namespace BSPLib
 
 		public bool LoadGBSPFile(string fileName)
 		{
+//			return	LoadGBSPFileNoGlobals(fileName);
+
 			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
 									FileMode.Open, FileAccess.Read);
 
@@ -3124,7 +3206,192 @@ namespace BSPLib
 				LeafData[i]	=new WorldLeaf();
 			}
 
-			FindParents(mGlobals.GFXModels[0].mRootNode[0]);
+			FindParents_r2(mGlobals.GFXModels[0].mRootNode[0], -1);
+
+			Print("Load complete\n");
+
+			return	true;
+		}
+
+
+		public bool LoadGBSPFileNoGlobals(string fileName)
+		{
+			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+									FileMode.Open, FileAccess.Read);
+
+			if(file == null)
+			{
+				return	false;
+			}
+
+			BinaryReader	br	=new BinaryReader(file);
+
+			UInt32		LastGoodChunkType	=0;
+			while(true)
+			{
+				GBSPChunk	chunk		=new GBSPChunk();
+				UInt32		chunkType	=0;
+
+				object	obj	=chunk.Read(br, out chunkType);
+				if(obj == null)
+				{
+					Print("Chunk read failed.  Last good chunk type was " + LastGoodChunkType + "\n");
+					br.Close();
+					file.Close();
+					return	false;
+				}
+				switch(chunkType)
+				{
+					case GBSPChunk.GBSP_CHUNK_HEADER:
+					{
+						GBSPHeader	head	=obj as GBSPHeader;
+						if(head.mTAG != "GBSP")
+						{
+							br.Close();
+							file.Close();
+							return	false;
+						}
+						if(head.mVersion != GBSPChunk.GBSP_VERSION)
+						{
+							br.Close();
+							file.Close();
+							return	false;
+						}
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_MODELS:
+					{
+						mGFXModels	=obj as GFXModel[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_NODES:
+					{
+						mGFXNodes	=obj as GFXNode[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_BNODES:
+					{
+						mGFXBNodes	=obj as GFXBNode[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_LEAFS:
+					{
+						mGFXLeafs	=obj as GFXLeaf[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_CLUSTERS:
+					{
+						mGFXClusters	=obj as GFXCluster[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_AREAS:
+					{
+						mGFXAreas	=obj as GFXArea[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_AREA_PORTALS:
+					{
+						mGFXAreaPortals	=obj as GFXAreaPortal[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_PORTALS:
+					{
+						mGFXPortals	=obj as GFXPortal[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_PLANES:
+					{
+						mGFXPlanes	=obj as GFXPlane[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_FACES:
+					{
+						mGFXFaces	=obj as GFXFace[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_LEAF_FACES:
+					{
+						mGFXLeafFaces	=obj as Int32[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_LEAF_SIDES:
+					{
+						mGFXLeafSides	=obj as GFXLeafSide[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_VERTS:
+					{
+						mGFXVerts	=obj as Vector3[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_VERT_INDEX:
+					{
+						mGFXVertIndexes	=obj as Int32[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_RGB_VERTS:
+					{
+						mGFXRGBVerts	=obj as Vector3[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_TEXINFO:
+					{
+						mGFXTexInfos	=obj as GFXTexInfo[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_ENTDATA:
+					{
+						mGFXEntities	=obj as MapEntity[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_LIGHTDATA:
+					{
+						mGFXLightData	=obj as byte[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_VISDATA:
+					{
+						mGFXVisData	=obj as byte[];
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_SKYDATA:
+					{
+						break;
+					}
+					case GBSPChunk.GBSP_CHUNK_END:
+					{
+						break;
+					}
+					default:
+					{
+						br.Close();
+						file.Close();
+						return	false;
+					}
+				}
+				if(chunkType == GBSPChunk.GBSP_CHUNK_END)
+				{
+					break;
+				}
+				LastGoodChunkType	=chunkType;
+			}
+
+			br.Close();
+			file.Close();
+
+			//make clustervisframe
+			ClusterVisFrame	=new int[mGFXClusters.Length];
+			NodeParents		=new int[mGFXNodes.Length];
+			NodeVisFrame	=new int[mGFXNodes.Length];
+			LeafData		=new WorldLeaf[mGFXLeafs.Length];
+
+			//fill in leafdata with blank worldleafs
+			for(int i=0;i < mGFXLeafs.Length;i++)
+			{
+				LeafData[i]	=new WorldLeaf();
+			}
+
+			FindParents_r(mGFXModels[0].mRootNode[0], -1);
 
 			Print("Load complete\n");
 
@@ -4223,12 +4490,6 @@ namespace BSPLib
 		}
 
 
-		void FindParents(Int32 root)
-		{
-			FindParents_r(root, -1);
-		}
-
-
 		void FindParents_r(Int32 Node, Int32 Parent)
 		{
 			if(Node < 0)		// At a leaf, mark leaf parent and return
@@ -4241,8 +4502,36 @@ namespace BSPLib
 			NodeParents[Node]	=Parent;
 
 			// Go down front and back markinf parents on the way down...
-			FindParents_r(mGlobals.GFXNodes[Node].mChildren[0], Node);
-			FindParents_r(mGlobals.GFXNodes[Node].mChildren[1], Node);
+			FindParents_r(mGFXNodes[Node].mChildren[0], Node);
+			FindParents_r(mGFXNodes[Node].mChildren[1], Node);
+		}
+
+
+		void FindParents_r2(Int32 Node, Int32 Parent)
+		{
+			if(Node < 0)		// At a leaf, mark leaf parent and return
+			{
+				LeafData[-(Node+1)].Parent	=Parent;
+				return;
+			}
+
+			//At a node, mark node parent, and keep going till hitting a leaf
+			NodeParents[Node]	=Parent;
+
+			// Go down front and back markinf parents on the way down...
+			FindParents_r2(mGlobals.GFXNodes[Node].mChildren[0], Node);
+			FindParents_r2(mGlobals.GFXNodes[Node].mChildren[1], Node);
+		}
+
+
+		void MakeMaterials()
+		{
+			List<string>	texList	=new List<string>();
+			foreach(GFXTexInfo ti in mGlobals.GFXTexInfo)
+			{
+				MaterialLib.Material	mat	=new MaterialLib.Material();
+				mat.Name	="" + ti.mTexture;
+			}
 		}
 
 

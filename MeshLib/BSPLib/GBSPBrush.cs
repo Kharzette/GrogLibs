@@ -550,7 +550,7 @@ namespace BSPLib
 		}
 
 
-		internal static GBSPBrush CSGBrushes(GBSPGlobals gbs, GBSPBrush Head, PlanePool pool)
+		internal static GBSPBrush CSGBrushes(bool bVerbose, GBSPBrush Head, PlanePool pool)
 		{
 			GBSPBrush	b1, b2, Next;
 			GBSPBrush	Tail;
@@ -558,15 +558,13 @@ namespace BSPLib
 			GBSPBrush	Sub, Sub2;
 			Int32		c1, c2;
 
-			if(gbs.Verbose)
+			if(bVerbose)
 			{
 				Map.Print("---- CSGBrushes ----\n");
 				Map.Print("Num brushes before CSG : " + CountBrushList(Head) + "\n");
 			}
 
 			Keep	=null;
-
-			Int32	iterationCount	=0;
 
 		NewList:
 
@@ -581,12 +579,8 @@ namespace BSPLib
 			{
 				Next = b1.mNext;
 				
-				for(b2=b1.mNext;b2 != null;b2 = b2.mNext, iterationCount++)
+				for(b2=b1.mNext;b2 != null;b2 = b2.mNext)
 				{
-					if(iterationCount == 976935)
-					{
-//						GBSPModel.DumpBrushListToFile(b1);
-					}
 					if(!b1.Overlaps(b2))
 					{
 						continue;
@@ -679,7 +673,7 @@ namespace BSPLib
 				}
 			}
 
-			if(gbs.Verbose)
+			if(bVerbose)
 			{
 				Map.Print("Num brushes after CSG  : " + CountBrushList(Keep) + "\n");
 			}

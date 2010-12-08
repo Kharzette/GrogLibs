@@ -77,7 +77,7 @@ namespace BSPLib
 				prev	=gb;
 			}
 
-			mGBSPBrushes	=GBSPBrush.CSGBrushes(gbs, mGBSPBrushes, pool);
+			mGBSPBrushes	=GBSPBrush.CSGBrushes(gbs.Verbose, mGBSPBrushes, pool);
 
 			DumpBrushListToFile(mGBSPBrushes);
 
@@ -91,7 +91,7 @@ namespace BSPLib
 			mGBSPBrushes	=null;
 			prev			=null;
 
-			if(!root.CreatePortals(gbs, this, false, pool))
+			if(!root.CreatePortals(mOutsideNode, false, gbs.Verbose, pool, mBounds.mMins, mBounds.mMaxs))
 			{
 				Map.Print("Could not create the portals.\n");
 				return	false;
@@ -135,11 +135,11 @@ namespace BSPLib
 				prev	=gb;
 			}
 
-			mGBSPBrushes	=GBSPBrush.CSGBrushes(gbs, mGBSPBrushes, pool);
+			mGBSPBrushes	=GBSPBrush.CSGBrushes(gbs.Verbose, mGBSPBrushes, pool);
 
 			root.BuildBSP(gbs, mGBSPBrushes, pool);
 
-			if(!root.CreatePortals(gbs, this, false, pool))
+			if(!root.CreatePortals(mOutsideNode, false, gbs.Verbose, pool, mBounds.mMins, mBounds.mMaxs))
 			{
 				Map.Print("Could not create the portals.\n");
 				return	false;
@@ -192,7 +192,7 @@ namespace BSPLib
 				prev	=gb;
 			}
 
-			mGBSPBrushes	=GBSPBrush.CSGBrushes(gbs, mGBSPBrushes, pool);
+			mGBSPBrushes	=GBSPBrush.CSGBrushes(gbs.Verbose, mGBSPBrushes, pool);
 
 			GBSPNode	root	=new GBSPNode();
 			root.BuildBSP(gbs, mGBSPBrushes, pool);
@@ -204,7 +204,7 @@ namespace BSPLib
 			mGBSPBrushes	=null;
 			prev			=null;
 
-			if(!root.CreatePortals(gbs, this, false, pool))
+			if(!root.CreatePortals(mOutsideNode, false, gbs.Verbose, pool, mBounds.mMins, mBounds.mMaxs))
 			{
 				Map.Print("Could not create the portals.\n");
 				return	false;
@@ -291,7 +291,7 @@ namespace BSPLib
 		{
 			if(SaveVis)
 			{
-				if(!mRootNode[0].CreatePortals(map.mGlobals, this, true, pool))
+				if(!mRootNode[0].CreatePortals(mOutsideNode, true, false, pool, mBounds.mMins, mBounds.mMaxs))
 				{
 					Map.Print("Could not create VIS portals.\n");
 					return	false;
@@ -324,7 +324,7 @@ namespace BSPLib
 				mNumClusters	=0;
 			}
 
-			if(!mRootNode[0].CreatePortals(map.mGlobals, this, false, pool))
+			if(!mRootNode[0].CreatePortals(mOutsideNode, false, false, pool, mBounds.mMins, mBounds.mMaxs))
 			{
 				Map.Print("Could not create REAL portals.\n");
 				return	false;

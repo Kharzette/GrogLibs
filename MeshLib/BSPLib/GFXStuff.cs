@@ -608,6 +608,108 @@ namespace BSPLib
 			return	true;
 		}
 
+		//this one spits the data back generic style
+		internal object Read(BinaryReader br, out UInt32 chunkType)
+		{
+			chunkType	=br.ReadUInt32();
+			mElements	=br.ReadInt32();
+
+			switch(chunkType)
+			{
+				case GBSP_CHUNK_HEADER:
+				{
+					return	ReadChunkData(br, typeof(GBSPHeader), false, 0) as GBSPHeader;
+				}
+				case GBSP_CHUNK_MODELS:
+				{
+                    return	ReadChunkData(br, typeof(GFXModel), true, mElements) as GFXModel[];
+				}
+				case GBSP_CHUNK_NODES:
+				{
+					return	ReadChunkData(br, typeof(GFXNode), true, mElements) as GFXNode[];
+				}
+				case GBSP_CHUNK_BNODES:
+				{
+					return	ReadChunkData(br, typeof(GFXBNode), true, mElements) as GFXBNode[];
+				}
+				case GBSP_CHUNK_LEAFS:
+				{
+					return	ReadChunkData(br, typeof(GFXLeaf), true, mElements) as GFXLeaf[];
+				}
+				case GBSP_CHUNK_CLUSTERS:
+				{
+					return	ReadChunkData(br, typeof(GFXCluster), true, mElements) as GFXCluster[];
+				}
+				case GBSP_CHUNK_AREAS:
+				{
+					return	ReadChunkData(br, typeof(GFXArea), true, mElements) as GFXArea[];
+				}
+				case GBSP_CHUNK_AREA_PORTALS:
+				{
+					return	ReadChunkData(br, typeof(GFXAreaPortal), true, mElements) as GFXAreaPortal[];
+				}
+				case GBSP_CHUNK_PORTALS:
+				{
+					return	ReadChunkData(br, typeof(GFXPortal), true, mElements) as GFXPortal[];
+				}
+				case GBSP_CHUNK_PLANES:
+				{
+					return	ReadChunkData(br, typeof(GFXPlane), true, mElements) as GFXPlane[];
+				}
+				case GBSP_CHUNK_FACES:
+				{
+					return	ReadChunkData(br, typeof(GFXFace), true, mElements) as GFXFace[];
+				}
+				case GBSP_CHUNK_LEAF_FACES:
+				{
+					return	ReadChunkData(br, typeof(int), true, mElements) as int[];
+				}
+				case GBSP_CHUNK_LEAF_SIDES:
+				{
+					return	ReadChunkData(br, typeof(GFXLeafSide), true, mElements) as GFXLeafSide[];
+				}
+				case GBSP_CHUNK_VERTS:
+				{
+					return	ReadChunkData(br, typeof(Vector3), true, mElements) as Vector3[];
+				}
+				case GBSP_CHUNK_VERT_INDEX:
+				{
+					return	ReadChunkData(br, typeof(int), true, mElements) as int[];
+				}
+				case GBSP_CHUNK_RGB_VERTS:
+				{
+					return	ReadChunkData(br, typeof(Vector3), true, mElements) as Vector3[];
+				}
+				case GBSP_CHUNK_TEXINFO:
+				{
+					return	ReadChunkData(br, typeof(GFXTexInfo), true, mElements) as GFXTexInfo[];
+				}
+				case GBSP_CHUNK_ENTDATA:
+				{
+					return	ReadChunkData(br, typeof(MapEntity), true, mElements) as MapEntity[];
+				}
+				case GBSP_CHUNK_LIGHTDATA:
+				{
+					return	ReadChunkData(br, typeof(byte), true, mElements) as byte[];
+				}
+				case GBSP_CHUNK_VISDATA:
+				{
+					return	ReadChunkData(br, typeof(byte), true, mElements) as byte[];
+				}
+				case GBSP_CHUNK_SKYDATA:
+				{
+					return	ReadChunkData(br, typeof(GFXSkyData), false, 0) as GFXSkyData;
+				}
+				case GBSP_CHUNK_END:
+				{
+					break;
+				}
+				default:
+					return	false;
+			}
+			return	true;
+		}
+
 		internal bool Read(BinaryReader br, GBSPGlobals gg, bool bCPP)
 		{
 			if(!bCPP)
@@ -755,7 +857,7 @@ namespace BSPLib
 					break;
 				}
 				case GBSP_CHUNK_TEXINFO:
-				{
+				{					
 					gg.NumGFXTexInfo	=mElements;
 					gg.GFXTexInfo		=new GFXTexInfo[gg.NumGFXTexInfo];
 					gg.GFXTexInfo		=ReadChunkData(br, typeof(GFXTexInfo), true, mElements) as GFXTexInfo[];

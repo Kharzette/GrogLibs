@@ -258,26 +258,20 @@ namespace BSPLib
 		}
 
 
-		internal bool CreatePortals(GBSPGlobals gbs, GBSPModel model, bool bVis, PlanePool pool)
+		internal bool CreatePortals(GBSPNode outNode, bool bVis, bool bVerbose, PlanePool pool, Vector3 nodeMins, Vector3 nodeMaxs)
 		{
-			if(gbs.Verbose)
+			if(bVerbose)
 			{
 				Map.Print(" --- Create Portals --- \n");
 			}
 
-			gbs.bVisPortals	=bVis;
-			gbs.OutsideNode	=model.mOutsideNode;
-
-			gbs.NodeMins	=model.mBounds.mMins;
-			gbs.NodeMaxs	=model.mBounds.mMaxs;
-
-			if(!CreateAllOutsidePortals(gbs, pool))
+			if(!CreateAllOutsidePortals(pool, ref outNode, nodeMins, nodeMaxs))
 			{
 				Map.Print("CreatePortals:  Could not create bbox portals.\n");
 				return	false;
 			}
 
-			if(!PartitionPortals_r(gbs, pool))
+			if(!PartitionPortals_r(pool, bVis))
 			{
 				Map.Print("CreatePortals:  Could not partition portals.\n");
 				return	false;
@@ -286,50 +280,50 @@ namespace BSPLib
 		}
 
 
-		bool CreateAllOutsidePortals(GBSPGlobals gbs, PlanePool pool)
+		bool CreateAllOutsidePortals(PlanePool pool, ref GBSPNode outsideNode, Vector3 nodeMins, Vector3 nodeMaxs)
 		{
 			GBSPPlane	[]PPlanes	=new GBSPPlane[6];
 			GBSPPortal	[]Portals	=new GBSPPortal[6];
 
 			//clear outside node
-			gbs.OutsideNode.mArea			=0;
-			gbs.OutsideNode.mBounds.mMins	=Vector3.Zero;
-			gbs.OutsideNode.mBounds.mMaxs	=Vector3.Zero;
-			gbs.OutsideNode.mBrushList		=null;
-			gbs.OutsideNode.mChildren[0]	=null;
-			gbs.OutsideNode.mChildren[1]	=null;
-			gbs.OutsideNode.mChildrenID[0]	=0;
-			gbs.OutsideNode.mChildrenID[1]	=0;
-			gbs.OutsideNode.mCluster		=0;
-			gbs.OutsideNode.mCurrentFill	=0;
-			gbs.OutsideNode.mDetail			=false;
-			gbs.OutsideNode.mEntity			=0;
-			gbs.OutsideNode.mFaces			=null;
-			gbs.OutsideNode.mFirstFace		=0;
-			gbs.OutsideNode.mFirstPortal	=0;
-			gbs.OutsideNode.mFirstSide		=0;
-			gbs.OutsideNode.mLeafFaces		=null;
-			gbs.OutsideNode.mNumFaces		=0;
-			gbs.OutsideNode.mNumLeafFaces	=0;
-			gbs.OutsideNode.mNumPortals		=0;
-			gbs.OutsideNode.mNumSides		=0;
-			gbs.OutsideNode.mOccupied		=0;
-			gbs.OutsideNode.mParent			=null;
-			gbs.OutsideNode.mPlaneSide		=0;
-			gbs.OutsideNode.mPortalLeafNum	=0;
-			gbs.OutsideNode.mPortals		=null;
-			gbs.OutsideNode.mSide			=null;
-			gbs.OutsideNode.mVolume			=null;
+			outsideNode.mArea			=0;
+			outsideNode.mBounds.mMins	=Vector3.Zero;
+			outsideNode.mBounds.mMaxs	=Vector3.Zero;
+			outsideNode.mBrushList		=null;
+			outsideNode.mChildren[0]	=null;
+			outsideNode.mChildren[1]	=null;
+			outsideNode.mChildrenID[0]	=0;
+			outsideNode.mChildrenID[1]	=0;
+			outsideNode.mCluster		=0;
+			outsideNode.mCurrentFill	=0;
+			outsideNode.mDetail			=false;
+			outsideNode.mEntity			=0;
+			outsideNode.mFaces			=null;
+			outsideNode.mFirstFace		=0;
+			outsideNode.mFirstPortal	=0;
+			outsideNode.mFirstSide		=0;
+			outsideNode.mLeafFaces		=null;
+			outsideNode.mNumFaces		=0;
+			outsideNode.mNumLeafFaces	=0;
+			outsideNode.mNumPortals		=0;
+			outsideNode.mNumSides		=0;
+			outsideNode.mOccupied		=0;
+			outsideNode.mParent			=null;
+			outsideNode.mPlaneSide		=0;
+			outsideNode.mPortalLeafNum	=0;
+			outsideNode.mPortals		=null;
+			outsideNode.mSide			=null;
+			outsideNode.mVolume			=null;
 
-			gbs.OutsideNode.mPlaneNum	=PlanePool.PLANENUM_LEAF;
-			gbs.OutsideNode.mContents	=GBSPBrush.BSP_CONTENTS_SOLID2;
+			outsideNode.mPlaneNum	=PlanePool.PLANENUM_LEAF;
+			outsideNode.mContents	=GBSPBrush.BSP_CONTENTS_SOLID2;
 
 			//So there won't be NULL volume leafs when we create the outside portals
 			for(int k=0;k < 3;k++)
 			{
-				if(UtilityLib.Mathery.VecIdx(gbs.NodeMins, k) - 128.0f
+				if(UtilityLib.Mathery.VecIdx(nodeMins, k) - 128.0f
 					<= -Brush.MIN_MAX_BOUNDS ||
-					UtilityLib.Mathery.VecIdx(gbs.NodeMaxs, k) + 128.0f
+					UtilityLib.Mathery.VecIdx(nodeMaxs, k) + 128.0f
 					>= Brush.MIN_MAX_BOUNDS)
 				{
 					Map.Print("CreateAllOutsidePortals:  World BOX out of range...\n");
@@ -337,8 +331,8 @@ namespace BSPLib
 				}
 			}
 
-			gbs.NodeMins	-=(Vector3.One * 128.0f);
-			gbs.NodeMaxs	+=(Vector3.One * 128.0f);
+			nodeMins	-=(Vector3.One * 128.0f);
+			nodeMaxs	+=(Vector3.One * 128.0f);
 
 			// Create 6 portals, and point to the outside and the RootNode
 			for(int i=0;i < 3;i++)
@@ -352,15 +346,15 @@ namespace BSPLib
 					if(k == 0)
 					{
 						UtilityLib.Mathery.VecIdxAssign(ref PPlanes[Index].mNormal, i, 1.0f);
-						PPlanes[Index].mDist	=UtilityLib.Mathery.VecIdx(gbs.NodeMins, i);
+						PPlanes[Index].mDist	=UtilityLib.Mathery.VecIdx(nodeMins, i);
 					}
 					else
 					{
 						UtilityLib.Mathery.VecIdxAssign(ref PPlanes[Index].mNormal, i, -1.0f);
-						PPlanes[Index].mDist	=-UtilityLib.Mathery.VecIdx(gbs.NodeMaxs, i);
+						PPlanes[Index].mDist	=-UtilityLib.Mathery.VecIdx(nodeMaxs, i);
 					}
 					
-					Portals[Index]	=GBSPPortal.CreateOutsidePortal(gbs, PPlanes[Index], this, pool);
+					Portals[Index]	=GBSPPortal.CreateOutsidePortal(PPlanes[Index], this, pool, ref outsideNode);
 
 					if(Portals[Index] == null)
 					{
@@ -514,7 +508,7 @@ namespace BSPLib
 		}
 
 
-		bool PartitionPortals_r(GBSPGlobals gbs, PlanePool pool)
+		bool PartitionPortals_r(PlanePool pool, bool bVisPortals)
 		{
 			GBSPPoly		NewPoly, FPoly, BPoly;
 			GBSPPlane		pPlane, pPlane2;
@@ -530,7 +524,7 @@ namespace BSPLib
 			}
 
 			//We can stop at detail seperators for the vis tree
-			if(gbs.bVisPortals && mDetail)
+			if(bVisPortals && mDetail)
 			{
 				return	true;
 			}
@@ -707,11 +701,11 @@ namespace BSPLib
 				Map.Print("*WARNING* PartitionPortals_r:  Portals still on node after distribution...\n");
 			}
 			
-			if(!Front.PartitionPortals_r(gbs, pool))
+			if(!Front.PartitionPortals_r(pool, bVisPortals))
 			{
 				return	false;
 			}
-			if(!Back.PartitionPortals_r(gbs, pool))
+			if(!Back.PartitionPortals_r(pool, bVisPortals))
 			{
 				return	false;
 			}
