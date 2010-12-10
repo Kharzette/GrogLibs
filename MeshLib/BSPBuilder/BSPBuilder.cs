@@ -550,7 +550,7 @@ namespace BSPBuilder
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
 				mMap	=new Map();
-				if(!mMap.LoadGBSPFile(fileName))
+				if(!mMap.LoadGBSPFileNoGlobals(fileName))
 				{
 					OnMapPrint("Load failed\n", null);
 				}
@@ -564,7 +564,7 @@ namespace BSPBuilder
 
 			if(fileName != null)
 			{
-				mMap.SaveGBSPFile(fileName);
+				mMap.SaveGBSPFile(fileName, true, mMainForm.BSPParameters.mbVerbose);
 			}
 		}
 

@@ -8,7 +8,7 @@ namespace BSPLib
 {
 	public class LInfo
 	{
-		public Vector3	[][]RGBLData	=new Vector3[GBSPGlobals.MAX_LTYPE_INDEX][];
+		public Vector3	[][]RGBLData	=new Vector3[MAX_LTYPE_INDEX][];
 		public Int32	NumLTypes;
 		public bool		RGB;
 		public float	[]Mins		=new float[2];
@@ -16,6 +16,10 @@ namespace BSPLib
 		public Int32	[]LMaxs		=new int[2];
 		public Int32	[]LMins		=new int[2];
 		public Int32	[]LSize		=new int[2];
+
+		public const int	MAX_LTYPE_INDEX		=12;
+		public const int	MAX_LMAP_SIZE		=130;
+		public const int	MAX_LTYPES			=4;
 	}
 
 	public class FInfo
@@ -29,6 +33,8 @@ namespace BSPLib
 
 		public Vector3	Center;
 		public float	Radius;
+
+		public const int	LGRID_SIZE	=16;
 	}
 
 

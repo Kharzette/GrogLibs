@@ -48,8 +48,9 @@ namespace BSPLib
 		}
 
 
-		internal bool ProcessWorldModel(GBSPGlobals gbs, List<MapBrush> list,
-			List<MapEntity> ents, PlanePool pool, TexInfoPool tip)
+		internal bool ProcessWorldModel(List<MapBrush> list,
+			List<MapEntity> ents, PlanePool pool,
+			TexInfoPool tip, bool bVerbose)
 		{
 			GBSPBrush	prev	=null;
 
@@ -77,32 +78,30 @@ namespace BSPLib
 				prev	=gb;
 			}
 
-			mGBSPBrushes	=GBSPBrush.CSGBrushes(gbs.Verbose, mGBSPBrushes, pool);
+			mGBSPBrushes	=GBSPBrush.CSGBrushes(bVerbose, mGBSPBrushes, pool);
 
 			DumpBrushListToFile(mGBSPBrushes);
 
 			GBSPNode	root	=new GBSPNode();
-			root.BuildBSP(gbs, mGBSPBrushes, pool);
+			root.BuildBSP(mGBSPBrushes, pool, bVerbose);
 
-			mBounds	=new Bounds();
-			mBounds.mMins	=gbs.TreeMins;
-			mBounds.mMaxs	=gbs.TreeMaxs;
+			mBounds	=new Bounds(root.mBounds);
 
 			mGBSPBrushes	=null;
 			prev			=null;
 
-			if(!root.CreatePortals(mOutsideNode, false, gbs.Verbose, pool, mBounds.mMins, mBounds.mMaxs))
+			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs))
 			{
 				Map.Print("Could not create the portals.\n");
 				return	false;
 			}
 
-			if(root.RemoveHiddenLeafs(gbs, mOutsideNode, ents, pool) == -1)
+			if(root.RemoveHiddenLeafs(mOutsideNode, ents, pool, bVerbose) == -1)
 			{
 				Map.Print("Failed to remove hidden leafs.\n");
 			}
 
-			root.MarkVisibleSides(gbs, list, pool);
+			root.MarkVisibleSides(list, pool, bVerbose);
 
 			if(!root.FreePortals())
 			{
@@ -135,24 +134,24 @@ namespace BSPLib
 				prev	=gb;
 			}
 
-			mGBSPBrushes	=GBSPBrush.CSGBrushes(gbs.Verbose, mGBSPBrushes, pool);
+			mGBSPBrushes	=GBSPBrush.CSGBrushes(bVerbose, mGBSPBrushes, pool);
 
-			root.BuildBSP(gbs, mGBSPBrushes, pool);
+			root.BuildBSP(mGBSPBrushes, pool, bVerbose);
 
-			if(!root.CreatePortals(mOutsideNode, false, gbs.Verbose, pool, mBounds.mMins, mBounds.mMaxs))
+			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs))
 			{
 				Map.Print("Could not create the portals.\n");
 				return	false;
 			}
 
-			if(root.RemoveHiddenLeafs(gbs, mOutsideNode, ents, pool) == -1)
+			if(root.RemoveHiddenLeafs(mOutsideNode, ents, pool, bVerbose) == -1)
 			{
 				Map.Print("Failed to remove hidden leafs.\n");
 			}
 
-			root.MarkVisibleSides(gbs, list, pool);
+			root.MarkVisibleSides(list, pool, bVerbose);
 
-			root.MakeFaces(gbs, pool, tip);
+			root.MakeFaces(pool, tip, bVerbose);
 
 			root.MakeLeafFaces();
 
@@ -162,7 +161,7 @@ namespace BSPLib
 				return	false;
 			}
 
-			root.MergeNodes(gbs);
+			root.MergeNodes(bVerbose);
 
 			mRootNode[0]	=root;
 
@@ -170,8 +169,8 @@ namespace BSPLib
 		}
 
 
-		internal bool ProcessSubModel(GBSPGlobals gbs, List<MapBrush> list,
-			PlanePool pool, TexInfoPool tip)
+		internal bool ProcessSubModel(List<MapBrush> list,
+			PlanePool pool, TexInfoPool tip, bool bVerbose)
 		{
 			GBSPBrush	prev	=null;
 
@@ -192,27 +191,25 @@ namespace BSPLib
 				prev	=gb;
 			}
 
-			mGBSPBrushes	=GBSPBrush.CSGBrushes(gbs.Verbose, mGBSPBrushes, pool);
+			mGBSPBrushes	=GBSPBrush.CSGBrushes(bVerbose, mGBSPBrushes, pool);
 
 			GBSPNode	root	=new GBSPNode();
-			root.BuildBSP(gbs, mGBSPBrushes, pool);
+			root.BuildBSP(mGBSPBrushes, pool, bVerbose);
 
-			mBounds			=new Bounds();
-			mBounds.mMins	=gbs.TreeMins;
-			mBounds.mMaxs	=gbs.TreeMaxs;
+			mBounds			=new Bounds(root.mBounds);
 
 			mGBSPBrushes	=null;
 			prev			=null;
 
-			if(!root.CreatePortals(mOutsideNode, false, gbs.Verbose, pool, mBounds.mMins, mBounds.mMaxs))
+			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs))
 			{
 				Map.Print("Could not create the portals.\n");
 				return	false;
 			}
 
-			root.MarkVisibleSides(gbs, list, pool);
+			root.MarkVisibleSides(list, pool, bVerbose);
 
-			root.MakeFaces(gbs, pool, tip);
+			root.MakeFaces(pool, tip, bVerbose);
 
 			if(!root.FreePortals())
 			{
@@ -220,7 +217,7 @@ namespace BSPLib
 				return	false;
 			}
 
-			root.MergeNodes(gbs);
+			root.MergeNodes(bVerbose);
 
 			mRootNode[0]	=root;
 
@@ -228,66 +225,15 @@ namespace BSPLib
 		}
 
 
-		internal bool PrepareSubModelForVis()
-		{
-			mFirstCluster	=-1;
-			mNumClusters	=0;
-
-			return	true;
-		}
-
-
 		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool bCheck)
 		{
-//			for(GBSPBrush b = mGBSPBrushes;b != null;b=b.mNext)
-//			{
-//				b.GetTriangles(verts, indexes, bCheck);
-//			}
 			mRootNode[0].GetLeafTriangles(verts, indexes, bCheck);
 		}
 
 
-		internal bool VisAllLeafs(int numLeafClusters, PlanePool pool)
-		{/*
-			Int32	NumVisLeafBytes		=((visLeafs.Count + 63)&~63) >> 3;
-			Int32	NumVisPortalBytes	=((visPortals.Count + 63)&~63) >> 3;
-			Int32	NumVisPortalLongs	=NumVisPortalBytes / sizeof(UInt32);
-			Int32	NumVisLeafLongs		=NumVisLeafBytes / sizeof(UInt32);
-
-			foreach(KeyValuePair<Int32, VISLeaf> leafs in visLeafs)
-			{
-				leafs.Value.FloodPortalsFast(leafs.Key, NumVisPortalBytes, visLeafs, visPortals);
-			}
-
-			VisLeafComparer	comp	=new VisLeafComparer();
-
-			byte	[]leafVisBits	=new byte[visLeafs.Count * NumVisLeafBytes];
-			byte	[]portalBits	=new byte[NumVisPortalBytes];
-
-			int	totalVisibleLeafs	=0;
-
-			List<GFXCluster>	gfxClusters	=new List<GFXCluster>();
-
-			foreach(KeyValuePair<Int32, VISLeaf> leafs in visLeafs)
-			{
-				int	LeafSee	=0;
-				if(!leafs.Value.CollectLeafVisBits(leafs.Key, ref LeafSee, leafVisBits,
-					portalBits, NumVisPortalBytes, NumVisLeafBytes, gfxClusters,
-					visLeafs, visPortals))
-				{
-					return	false;
-				}
-				totalVisibleLeafs	+=LeafSee;
-			}
-
-			Map.Print("Total visible areas           : " + totalVisibleLeafs + "\n");
-			Map.Print("Average visible from each area: " + (totalVisibleLeafs / visLeafs.Count) + "\n");
-			*/
-			return	true;
-		}
-
-
-		internal bool PrepGBSPModel(string VisFile, bool SaveVis, PlanePool pool, Map map)
+		internal bool PrepGBSPModel(string VisFile, bool SaveVis,
+			bool bVerbose, PlanePool pool, ref int numLeafClusters,
+			List<GFXLeafSide> leafSides)
 		{
 			if(SaveVis)
 			{
@@ -297,17 +243,17 @@ namespace BSPLib
 					return	false;
 				}
 
-				mFirstCluster	=map.mGlobals.NumLeafClusters;
+				mFirstCluster	=numLeafClusters;
 
-				if(!mRootNode[0].CreateLeafClusters(map.mGlobals))
+				if(!mRootNode[0].CreateLeafClusters(bVerbose, ref numLeafClusters))
 				{
 					Map.Print("Could not create leaf clusters.\n");
 					return	false;
 				}
 
-				mNumClusters	=map.mGlobals.NumLeafClusters - mFirstCluster;
+				mNumClusters	=numLeafClusters - mFirstCluster;
 
-				if(!SavePortalFile(map.mGlobals, VisFile, pool))
+				if(!SavePortalFile(VisFile, pool, numLeafClusters))
 				{
 					return	false;
 				}
@@ -330,35 +276,28 @@ namespace BSPLib
 				return	false;
 			}
 
-			if(!mRootNode[0].CreateLeafSides(map.mGlobals, pool))
+			if(!mRootNode[0].CreateLeafSides(pool, leafSides, bVerbose))
 			{
 				Map.Print("Could not create leaf sides.\n");
 				return	false;
 			}
-
-			//create area leafs
-			if(this == map.mModels[0])
-			{
-				if(!mRootNode[0].CreateAreas(map))
-				{
-					Map.Print("Could not create Areas.\n");
-					return	false;
-				}
-			}
-
-			mFirstFace	=map.mGlobals.NumGFXFaces;
-			mFirstLeaf	=map.mGlobals.NumGFXLeafs;
-
-			mRootNodeID[0]	=mRootNode[0].PrepGFXNodes_r(map.mGlobals, mRootNodeID[0]);
-
-			mNumFaces	=map.mGlobals.NumGFXFaces - mFirstFace;
-			mNumLeafs	=map.mGlobals.NumGFXLeafs - mFirstLeaf;
-
 			return	true;
 		}
 
 
-		bool SavePortalFile(GBSPGlobals gg, string FileName, PlanePool pool)
+		internal void PrepNodes(NodeCounter nc)
+		{
+			mFirstFace	=nc.mNumGFXFaces;
+			mFirstLeaf	=nc.mNumGFXLeafs;
+
+			mRootNodeID[0]	=mRootNode[0].PrepGFXNodes_r(mRootNodeID[0], nc);
+
+			mNumFaces	=nc.mNumGFXFaces - mFirstFace;
+			mNumLeafs	=nc.mNumGFXLeafs - mFirstLeaf;
+		}
+
+
+		bool SavePortalFile(string FileName, PlanePool pool, int numLeafClusters)
 		{
 			string	PortalFile;
 
@@ -381,10 +320,10 @@ namespace BSPLib
 
 			BinaryWriter	bw	=new BinaryWriter(fs);
 
-			gg.NumPortals		=0;	//Number of portals
-			gg.NumPortalLeafs	=0;	//Current leaf number
+			int	NumPortals		=0;	//Number of portals
+			int	NumPortalLeafs	=0;	//Current leaf number
 
-			if(!mRootNode[0].PrepPortalFile_r(gg))
+			if(!mRootNode[0].PrepPortalFile_r(ref NumPortalLeafs, ref NumPortals))
 			{
 				bw.Close();
 				fs.Close();
@@ -392,7 +331,7 @@ namespace BSPLib
 				return	false;
 			}
 
-			if(gg.NumPortalLeafs != mNumClusters)
+			if(NumPortalLeafs != mNumClusters)
 			{
 				bw.Close();
 				fs.Close();
@@ -401,10 +340,10 @@ namespace BSPLib
 			}
 
 			bw.Write("GBSP_PRTFILE");
-			bw.Write(gg.NumPortals);
+			bw.Write(NumPortals);
 			bw.Write(mNumClusters);
 
-			if(!mRootNode[0].SavePortalFile_r(gg, bw, pool))
+			if(!mRootNode[0].SavePortalFile_r(bw, pool, numLeafClusters))
 			{
 				bw.Close();
 				fs.Close();
@@ -414,8 +353,8 @@ namespace BSPLib
 			bw.Close();
 			fs.Close();
 
-			Map.Print("Num Portals          : " + gg.NumPortals + "\n");
-			Map.Print("Num Portal Leafs     : " + gg.NumPortalLeafs + "\n");
+			Map.Print("Num Portals          : " + NumPortals + "\n");
+			Map.Print("Num Portal Leafs     : " + NumPortalLeafs + "\n");
 
 			return	true;
 		}

@@ -38,5 +38,20 @@ namespace BSPLib
 
 			return	mPlanes.Count - 1;
 		}
+
+
+		internal GFXPlane[] GetGFXArray()
+		{
+			GFXPlane	[]ret	=new GFXPlane[mPlanes.Count];
+
+			for(int i=0;i < mPlanes.Count;i++)
+			{
+				ret[i]			=new GFXPlane();
+				ret[i].mNormal	=mPlanes[i].mNormal;
+				ret[i].mDist	=mPlanes[i].mDist;
+				ret[i].mType	=mPlanes[i].mType;
+			}
+			return	ret;
+		}
 	}
 }

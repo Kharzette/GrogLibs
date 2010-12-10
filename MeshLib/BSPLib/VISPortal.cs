@@ -10,9 +10,11 @@ namespace BSPLib
 {
 	public class VISPStack
 	{
-		public byte		[]mVisBits	=new byte[GBSPGlobals.MAX_TEMP_PORTALS/8];
+		public byte		[]mVisBits	=new byte[MAX_TEMP_PORTALS/8];
 		public GBSPPoly	mSource;
 		public GBSPPoly	mPass;
+
+		public const int	MAX_TEMP_PORTALS	=25000;
 	}
 
 	public class VISPortal
@@ -91,8 +93,10 @@ namespace BSPLib
 		}
 
 
-		internal void FloodPortalsFast_r(GBSPGlobals gg,
-			VISPortal DestPortal, Dictionary<VISPortal, Int32> visIndexer, BinaryWriter bw)
+		internal void FloodPortalsFastNoGlobals_r(VISPortal DestPortal,
+			Dictionary<VISPortal, Int32> visIndexer,
+			bool []portSeen, VISLeaf []visLeafs,
+			int srcLeaf, ref int mightSee)
 		{
 			VISLeaf		Leaf;
 			VISPortal	Portal;
@@ -103,12 +107,12 @@ namespace BSPLib
 			Debug.Assert(visIndexer.ContainsKey(DestPortal));
 			PNum	=visIndexer[DestPortal];
 			
-			if(gg.PortalSeen[PNum] != 0)
+			if(portSeen[PNum])
 			{
 				return;
 			}
 
-			gg.PortalSeen[PNum]	=1;
+			portSeen[PNum]	=true;
 
 			//Add the portal that we are Flooding into, to the original portals visbits
 			LeafNum	=DestPortal.mLeaf;
@@ -117,20 +121,15 @@ namespace BSPLib
 			byte	Bit	=(byte)(PNum & 7);
 			Bit	=(byte)(1 << Bit);
 
-			bw.Write(Bit);
-			bw.Write(LeafNum);
-			bw.Write(PNum);
-			bw.Write(gg.MightSee);
-
 			if((mVisBits[PNum >> 3] & Bit) == 0)
 			{
 				mVisBits[PNum>>3]	|=(byte)Bit;
 				mMightSee++;
-				gg.VisLeafs[gg.SrcLeaf].mMightSee++;
-				gg.MightSee++;
+				visLeafs[srcLeaf].mMightSee++;
+				mightSee++;
 			}
 
-			Leaf	=gg.VisLeafs[LeafNum];
+			Leaf	=visLeafs[LeafNum];
 
 			//Now, try and Flood into the leafs that this portal touches
 			for(Portal=Leaf.mPortals;Portal != null;Portal=Portal.mNext)
@@ -138,7 +137,7 @@ namespace BSPLib
 				//If SrcPortal can see this Portal, flood into it...
 				if(CanSeePortal(Portal))
 				{
-					FloodPortalsFast_r(gg, Portal, visIndexer, bw);
+					FloodPortalsFastNoGlobals_r(Portal, visIndexer, portSeen, visLeafs, srcLeaf, ref mightSee);
 				}
 			}
 		}
@@ -255,7 +254,9 @@ namespace BSPLib
 		}
 
 
-		internal bool FloodPortalsSlow_r(GBSPGlobals gg, VISPortal DestPortal, VISPStack PrevStack, Dictionary<VISPortal, int> visIndexer)
+		internal bool FloodPortalsSlow_r(VISPortal DestPortal, VISPStack PrevStack,
+			Dictionary<VISPortal, int> visIndexer, ref int canSee,
+			VISLeaf []visLeafs)
 		{
 			VISLeaf		Leaf;
 			VISPortal	Portal;
@@ -274,13 +275,13 @@ namespace BSPLib
 			{
 				mFinalVisBits[PNum>>3] |= Bit;
 				mCanSee++;
-				gg.VisLeafs[gg.SrcLeaf].mCanSee++;
-				gg.CanSee++;
+				visLeafs[mLeaf].mCanSee++;
+				canSee++;
 			}
 
 			//Get the leaf that this portal looks into, and flood from there
 			LeafNum	=DestPortal.mLeaf;
-			Leaf	=gg.VisLeafs[LeafNum];
+			Leaf	=visLeafs[LeafNum];
 
 //			Might	=(uint32*)Stack.VisBits;
 //			Vis		=(uint32*)mFinalVisBits;
@@ -310,7 +311,7 @@ namespace BSPLib
 				{
 //					Test = (uint32*)Portal.mFinalVisBits;
 
-					for(j=0;j < gg.NumVisPortalBytes;j++)
+					for(j=0;j < mFinalVisBits.Length;j++)
 					{
 						//there is no & for bytes, can you believe that shit?
 						uint	worthless	=(uint)PrevStack.mVisBits[j];
@@ -327,7 +328,7 @@ namespace BSPLib
 				else
 				{
 //					Test = (uint32*)Portal.mVisBits;
-					for(j=0;j < gg.NumVisPortalBytes;j++)
+					for(j=0;j < mFinalVisBits.Length;j++)
 					{
 						//there is no & for bytes, can you believe that shit?
 						uint	worthless	=(uint)PrevStack.mVisBits[j];
@@ -376,7 +377,7 @@ namespace BSPLib
 				//This portal can only be blocked by VisBits (Above test)...
 				if(PrevStack.mPass == null)
 				{
-					if(!FloodPortalsSlow_r(gg, Portal, Stack, visIndexer))
+					if(!FloodPortalsSlow_r(Portal, Stack, visIndexer, ref canSee, visLeafs))
 					{
 						return	false;
 					}
@@ -408,7 +409,7 @@ namespace BSPLib
 				}
 
 				//Flood into it...
-				if(!FloodPortalsSlow_r(gg, Portal, Stack, visIndexer))
+				if(!FloodPortalsSlow_r(Portal, Stack, visIndexer, ref canSee, visLeafs))
 				{
 					return	false;
 				}

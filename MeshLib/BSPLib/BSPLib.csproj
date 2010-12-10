@@ -99,6 +99,7 @@
     <Compile Include="BuildParams.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="Face.cs" />
+    <Compile Include="FaceFixer.cs" />
     <Compile Include="GBSPBrush.cs" />
     <Compile Include="GBSPFace.cs" />
     <Compile Include="GBSPLeafSide.cs" />
@@ -115,6 +116,7 @@
     <Compile Include="Map.cs" />
     <Compile Include="MapBrush.cs" />
     <Compile Include="MapEntity.cs" />
+    <Compile Include="NodeCounter.cs" />
     <Compile Include="Plane.cs" />
     <Compile Include="PlanePool.cs" />
     <Compile Include="Portal.cs">

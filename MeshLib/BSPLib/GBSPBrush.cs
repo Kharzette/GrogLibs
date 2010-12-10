@@ -732,7 +732,7 @@ namespace BSPLib
 		}
 
 
-		internal static GBSPSide SelectSplitSide(GBSPGlobals gbs, GBSPBrush Brushes,
+		internal static GBSPSide SelectSplitSide(BuildStats bs, GBSPBrush Brushes,
 			GBSPNode Node, PlanePool pool)
 		{
 			Int32		Value, BestValue;
@@ -864,7 +864,7 @@ namespace BSPLib
 				{
 					if(Pass > 1)
 					{
-						gbs.NumNonVisNodes++;
+						bs.NumNonVisNodes++;
 					}
 					
 					if(Pass > 0)
