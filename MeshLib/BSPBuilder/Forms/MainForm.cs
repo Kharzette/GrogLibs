@@ -144,6 +144,7 @@ namespace BSPBuilder
 				mBSPParams.mbVerbose		=VerboseBSP.Checked;
 				mBSPParams.mbEntityVerbose	=VerboseEntity.Checked;
 				mBSPParams.mMaxCores		=(int)MaxCPUCores.Value;
+				mBSPParams.mbFixTJunctions	=FixTJunctions.Checked;
 
 				return	mBSPParams;
 			}
@@ -164,6 +165,7 @@ namespace BSPBuilder
 				mLightParams.mMinLight.Y	=(float)MinLightY.Value;
 				mLightParams.mMinLight.Z	=(float)MinLightZ.Value;
 				mLightParams.mMirrorReflect	=(float)ReflectiveScale.Value;
+				mLightParams.mMaxIntensity	=(int)MaxIntensity.Value;
 
 				return	mLightParams;
 			}
@@ -329,6 +331,28 @@ namespace BSPBuilder
 			{
 				eLoadGBSP(mOFD.FileName, null);
 			}
+		}
+
+
+		void OnFullVisChanged(object sender, EventArgs e)
+		{
+			if(FullVis.Checked)
+			{
+				SortPortals.Checked	=true;
+				SortPortals.Enabled	=false;
+			}
+			else
+			{
+				SortPortals.Enabled	=true;
+			}
+		}
+
+
+		void OnRadiosityChanged(object sender, EventArgs e)
+		{
+			FastPatch.Enabled	=Radiosity.Checked;
+			PatchSize.Enabled	=Radiosity.Checked;
+			NumBounce.Enabled	=Radiosity.Checked;
 		}
 	}
 }

@@ -44,10 +44,12 @@
 			this.MaxCPUCores = new System.Windows.Forms.NumericUpDown();
 			this.LabelCPUCores = new System.Windows.Forms.Label();
 			this.GroupFileIO = new System.Windows.Forms.GroupBox();
+			this.LoadGBSP = new System.Windows.Forms.Button();
 			this.LightGBSP = new System.Windows.Forms.Button();
 			this.BuildGBSP = new System.Windows.Forms.Button();
 			this.VisGBSP = new System.Windows.Forms.Button();
 			this.GroupBuildSettings = new System.Windows.Forms.GroupBox();
+			this.FixTJunctions = new System.Windows.Forms.CheckBox();
 			this.VerboseEntity = new System.Windows.Forms.CheckBox();
 			this.VerboseBSP = new System.Windows.Forms.CheckBox();
 			this.GroupDrawSettings = new System.Windows.Forms.GroupBox();
@@ -56,6 +58,8 @@
 			this.Progress3 = new System.Windows.Forms.ProgressBar();
 			this.Progress4 = new System.Windows.Forms.ProgressBar();
 			this.LightSettingsGroupBox = new System.Windows.Forms.GroupBox();
+			this.label8 = new System.Windows.Forms.Label();
+			this.MaxIntensity = new System.Windows.Forms.NumericUpDown();
 			this.label7 = new System.Windows.Forms.Label();
 			this.ReflectiveScale = new System.Windows.Forms.NumericUpDown();
 			this.label6 = new System.Windows.Forms.Label();
@@ -76,13 +80,13 @@
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.SortPortals = new System.Windows.Forms.CheckBox();
 			this.FullVis = new System.Windows.Forms.CheckBox();
-			this.LoadGBSP = new System.Windows.Forms.Button();
 			this.StatsGroupBox.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxCPUCores)).BeginInit();
 			this.GroupFileIO.SuspendLayout();
 			this.GroupBuildSettings.SuspendLayout();
 			this.GroupDrawSettings.SuspendLayout();
 			this.LightSettingsGroupBox.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.MaxIntensity)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.ReflectiveScale)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightZ)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightX)).BeginInit();
@@ -130,7 +134,7 @@
 			this.StatsGroupBox.Controls.Add(this.NumNodes);
 			this.StatsGroupBox.Controls.Add(this.LabelNumRawFaces);
 			this.StatsGroupBox.Controls.Add(this.NumFaces);
-			this.StatsGroupBox.Location = new System.Drawing.Point(331, 12);
+			this.StatsGroupBox.Location = new System.Drawing.Point(192, 12);
 			this.StatsGroupBox.Name = "StatsGroupBox";
 			this.StatsGroupBox.Size = new System.Drawing.Size(134, 127);
 			this.StatsGroupBox.TabIndex = 14;
@@ -208,7 +212,7 @@
 			this.ConsoleOut.Name = "ConsoleOut";
 			this.ConsoleOut.ReadOnly = true;
 			this.ConsoleOut.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this.ConsoleOut.Size = new System.Drawing.Size(453, 153);
+			this.ConsoleOut.Size = new System.Drawing.Size(452, 153);
 			this.ConsoleOut.TabIndex = 16;
 			// 
 			// DrawChoice
@@ -262,6 +266,16 @@
 			this.GroupFileIO.TabStop = false;
 			this.GroupFileIO.Text = "File IO";
 			// 
+			// LoadGBSP
+			// 
+			this.LoadGBSP.Location = new System.Drawing.Point(6, 48);
+			this.LoadGBSP.Name = "LoadGBSP";
+			this.LoadGBSP.Size = new System.Drawing.Size(75, 23);
+			this.LoadGBSP.TabIndex = 19;
+			this.LoadGBSP.Text = "Load GBSP";
+			this.LoadGBSP.UseVisualStyleBackColor = true;
+			this.LoadGBSP.Click += new System.EventHandler(this.OnLoadGBSP);
+			// 
 			// LightGBSP
 			// 
 			this.LightGBSP.Location = new System.Drawing.Point(87, 78);
@@ -295,16 +309,29 @@
 			// 
 			// GroupBuildSettings
 			// 
+			this.GroupBuildSettings.Controls.Add(this.FixTJunctions);
 			this.GroupBuildSettings.Controls.Add(this.VerboseEntity);
 			this.GroupBuildSettings.Controls.Add(this.VerboseBSP);
 			this.GroupBuildSettings.Controls.Add(this.MaxCPUCores);
 			this.GroupBuildSettings.Controls.Add(this.LabelCPUCores);
-			this.GroupBuildSettings.Location = new System.Drawing.Point(12, 131);
+			this.GroupBuildSettings.Location = new System.Drawing.Point(192, 145);
 			this.GroupBuildSettings.Name = "GroupBuildSettings";
-			this.GroupBuildSettings.Size = new System.Drawing.Size(115, 91);
+			this.GroupBuildSettings.Size = new System.Drawing.Size(115, 123);
 			this.GroupBuildSettings.TabIndex = 21;
 			this.GroupBuildSettings.TabStop = false;
 			this.GroupBuildSettings.Text = "Build Settings";
+			// 
+			// FixTJunctions
+			// 
+			this.FixTJunctions.AutoSize = true;
+			this.FixTJunctions.Checked = true;
+			this.FixTJunctions.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.FixTJunctions.Location = new System.Drawing.Point(6, 91);
+			this.FixTJunctions.Name = "FixTJunctions";
+			this.FixTJunctions.Size = new System.Drawing.Size(94, 17);
+			this.FixTJunctions.TabIndex = 22;
+			this.FixTJunctions.Text = "Fix TJunctions";
+			this.FixTJunctions.UseVisualStyleBackColor = true;
 			// 
 			// VerboseEntity
 			// 
@@ -368,6 +395,8 @@
 			// 
 			// LightSettingsGroupBox
 			// 
+			this.LightSettingsGroupBox.Controls.Add(this.label8);
+			this.LightSettingsGroupBox.Controls.Add(this.MaxIntensity);
 			this.LightSettingsGroupBox.Controls.Add(this.label7);
 			this.LightSettingsGroupBox.Controls.Add(this.ReflectiveScale);
 			this.LightSettingsGroupBox.Controls.Add(this.label6);
@@ -385,12 +414,43 @@
 			this.LightSettingsGroupBox.Controls.Add(this.Radiosity);
 			this.LightSettingsGroupBox.Controls.Add(this.ExtraSamples);
 			this.LightSettingsGroupBox.Controls.Add(this.FastPatch);
-			this.LightSettingsGroupBox.Location = new System.Drawing.Point(192, 12);
+			this.LightSettingsGroupBox.Location = new System.Drawing.Point(332, 12);
 			this.LightSettingsGroupBox.Name = "LightSettingsGroupBox";
-			this.LightSettingsGroupBox.Size = new System.Drawing.Size(133, 274);
+			this.LightSettingsGroupBox.Size = new System.Drawing.Size(133, 307);
 			this.LightSettingsGroupBox.TabIndex = 27;
 			this.LightSettingsGroupBox.TabStop = false;
 			this.LightSettingsGroupBox.Text = "Light Settings";
+			// 
+			// label8
+			// 
+			this.label8.AutoSize = true;
+			this.label8.Location = new System.Drawing.Point(57, 272);
+			this.label8.Name = "label8";
+			this.label8.Size = new System.Drawing.Size(69, 13);
+			this.label8.TabIndex = 35;
+			this.label8.Text = "Max Intensity";
+			// 
+			// MaxIntensity
+			// 
+			this.MaxIntensity.Location = new System.Drawing.Point(6, 270);
+			this.MaxIntensity.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+			this.MaxIntensity.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+			this.MaxIntensity.Name = "MaxIntensity";
+			this.MaxIntensity.Size = new System.Drawing.Size(45, 20);
+			this.MaxIntensity.TabIndex = 34;
+			this.MaxIntensity.Value = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
 			// 
 			// label7
 			// 
@@ -436,25 +496,25 @@
 			this.label6.Name = "label6";
 			this.label6.Size = new System.Drawing.Size(60, 13);
 			this.label6.TabIndex = 33;
-			this.label6.Text = "Min Light Z";
+			this.label6.Text = "Min Light B";
 			// 
 			// label5
 			// 
 			this.label5.AutoSize = true;
 			this.label5.Location = new System.Drawing.Point(57, 194);
 			this.label5.Name = "label5";
-			this.label5.Size = new System.Drawing.Size(60, 13);
+			this.label5.Size = new System.Drawing.Size(61, 13);
 			this.label5.TabIndex = 32;
-			this.label5.Text = "Min Light Y";
+			this.label5.Text = "Min Light G";
 			// 
 			// label4
 			// 
 			this.label4.AutoSize = true;
 			this.label4.Location = new System.Drawing.Point(57, 168);
 			this.label4.Name = "label4";
-			this.label4.Size = new System.Drawing.Size(60, 13);
+			this.label4.Size = new System.Drawing.Size(61, 13);
 			this.label4.TabIndex = 31;
-			this.label4.Text = "Min Light X";
+			this.label4.Text = "Min Light R";
 			// 
 			// MinLightZ
 			// 
@@ -503,6 +563,7 @@
 			// 
 			// PatchSize
 			// 
+			this.PatchSize.Enabled = false;
 			this.PatchSize.Location = new System.Drawing.Point(6, 88);
 			this.PatchSize.Maximum = new decimal(new int[] {
             256,
@@ -566,6 +627,7 @@
 			// 
 			// NumBounce
 			// 
+			this.NumBounce.Enabled = false;
 			this.NumBounce.Location = new System.Drawing.Point(6, 114);
 			this.NumBounce.Maximum = new decimal(new int[] {
             20,
@@ -585,6 +647,7 @@
 			this.Radiosity.TabIndex = 2;
 			this.Radiosity.Text = "Radiosity";
 			this.Radiosity.UseVisualStyleBackColor = true;
+			this.Radiosity.CheckedChanged += new System.EventHandler(this.OnRadiosityChanged);
 			// 
 			// ExtraSamples
 			// 
@@ -599,6 +662,7 @@
 			// FastPatch
 			// 
 			this.FastPatch.AutoSize = true;
+			this.FastPatch.Enabled = false;
 			this.FastPatch.Location = new System.Drawing.Point(6, 65);
 			this.FastPatch.Name = "FastPatch";
 			this.FastPatch.Size = new System.Drawing.Size(77, 17);
@@ -610,7 +674,7 @@
 			// 
 			this.groupBox1.Controls.Add(this.SortPortals);
 			this.groupBox1.Controls.Add(this.FullVis);
-			this.groupBox1.Location = new System.Drawing.Point(331, 145);
+			this.groupBox1.Location = new System.Drawing.Point(12, 131);
 			this.groupBox1.Name = "groupBox1";
 			this.groupBox1.Size = new System.Drawing.Size(93, 64);
 			this.groupBox1.TabIndex = 28;
@@ -638,22 +702,13 @@
 			this.FullVis.TabIndex = 0;
 			this.FullVis.Text = "Full Vis";
 			this.FullVis.UseVisualStyleBackColor = true;
-			// 
-			// LoadGBSP
-			// 
-			this.LoadGBSP.Location = new System.Drawing.Point(6, 48);
-			this.LoadGBSP.Name = "LoadGBSP";
-			this.LoadGBSP.Size = new System.Drawing.Size(75, 23);
-			this.LoadGBSP.TabIndex = 19;
-			this.LoadGBSP.Text = "Load GBSP";
-			this.LoadGBSP.UseVisualStyleBackColor = true;
-			this.LoadGBSP.Click += new System.EventHandler(this.OnLoadGBSP);
+			this.FullVis.CheckedChanged += new System.EventHandler(this.OnFullVisChanged);
 			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(477, 561);
+			this.ClientSize = new System.Drawing.Size(476, 561);
 			this.ControlBox = false;
 			this.Controls.Add(this.groupBox1);
 			this.Controls.Add(this.LightSettingsGroupBox);
@@ -678,6 +733,7 @@
 			this.GroupDrawSettings.ResumeLayout(false);
 			this.LightSettingsGroupBox.ResumeLayout(false);
 			this.LightSettingsGroupBox.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this.MaxIntensity)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.ReflectiveScale)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightZ)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightX)).EndInit();
@@ -743,5 +799,8 @@
 		private System.Windows.Forms.CheckBox SortPortals;
 		private System.Windows.Forms.CheckBox FullVis;
 		private System.Windows.Forms.Button LoadGBSP;
+		private System.Windows.Forms.CheckBox FixTJunctions;
+		private System.Windows.Forms.Label label8;
+		private System.Windows.Forms.NumericUpDown MaxIntensity;
 	}
 }

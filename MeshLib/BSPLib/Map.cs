@@ -148,7 +148,9 @@ namespace BSPLib
 		List<GFXAreaPortal>	mAreaPorts	=new List<GFXAreaPortal>();
 
 		//build settings
-		BuildSettings	mBuildSettings	=new BuildSettings();
+		BSPBuildParams	mBSPParms;
+		LightParams		mLightParams;
+		VisParams		mVisParams;
 
 		public event EventHandler	eCPUCoresInUseChanged;
 		public event EventHandler	eNumMapFacesChanged;
@@ -171,17 +173,6 @@ namespace BSPLib
 		public Map(string mapFileName)
 		{
 			mEntities	=new List<MapEntity>();
-
-			/*
-			mGlobals.NumLeafSides			=0;
-			mGlobals.NumLeafClusters		=0;
-			mGlobals.NumLeafBevels			=0;
-			mGlobals.NumSolidBrushes		=0;
-			mGlobals.NumCutBrushes			=0;
-			mGlobals.NumHollowCutBrushes	=0;
-			mGlobals.NumDetailBrushes		=0;
-			mGlobals.NumTotalBrushes		=0;
-			*/
 
 			int	numSolids	=0;
 			int	numDetails	=0;
@@ -256,6 +247,9 @@ namespace BSPLib
 			InsertModelNumbers();
 
 			Print("Brush file load complete\n");
+			Print("" + numSolids + " solid brushes\n");
+			Print("" + numDetails + " detail brushes\n");
+			Print("" + numTotal + " total brushes\n");
 		}
 		#endregion
 
@@ -430,7 +424,7 @@ namespace BSPLib
 		#endregion
 
 
-		bool ProcessEntities(bool bVerbose, bool bEntityVerbose)
+		bool ProcessEntities()
 		{
 			int	index	=0;
 
@@ -448,14 +442,16 @@ namespace BSPLib
 
 				if(index == 0)
 				{
-					if(!mod.ProcessWorldModel(me.mBrushes, mEntities, mPlanePool, mTIPool, bVerbose))
+					if(!mod.ProcessWorldModel(me.mBrushes, mEntities,
+						mPlanePool, mTIPool, mBSPParms.mbVerbose))
 					{
 						return	false;
 					}
 				}
 				else
 				{
-					if(!mod.ProcessSubModel(me.mBrushes, mPlanePool, mTIPool, bEntityVerbose))
+					if(!mod.ProcessSubModel(me.mBrushes, mPlanePool,
+						mTIPool, mBSPParms.mbEntityVerbose))
 					{
 						return	false;
 					}
@@ -467,9 +463,12 @@ namespace BSPLib
 		}
 
 
-		public void SaveGBSPFile(string fileName, bool bFixT, bool bVerbose)
+		public void SaveGBSPFile(string fileName, BSPBuildParams parms)
 		{
-			ConvertGBSPToFile(fileName, bFixT, bVerbose);
+			mBSPParms	=parms;
+
+			ConvertGBSPToFile(fileName);
+
 			Print("GBSP save complete\n");
 		}
 
@@ -550,36 +549,11 @@ namespace BSPLib
 		}
 
 
-		void BeginGBSPModels()
-		{
-			/*
-			mGlobals.NumLeafClusters	=0;
-			mGlobals.NumSolidLeafs		=0;
-			mGlobals.NumLeafSides		=0;
-			mGlobals.NumLeafBevels		=0;
-
-			// Clear all gfx variables
-			mGlobals.NumGFXPortals			=0;
-			mGlobals.NumGFXNodes			=0;
-			mGlobals.NumGFXBNodes			=0;
-			mGlobals.NumGFXLeafs			=0;
-			mGlobals.NumGFXFaces			=0;
-			mGlobals.NumGFXVerts			=0;
-			mGlobals.NumGFXVertIndexList	=0;
-			mGlobals.NumGFXLeafFaces		=0;
-			*/
-		}
-
-
 		public bool BuildTree(BSPBuildParams prms)
 		{
-			BeginGBSPModels();
+			mBSPParms	=prms;
 
-			mBuildSettings.MaxCPUCores		=prms.mMaxCores;
-			mBuildSettings.Verbose			=prms.mbVerbose;
-			mBuildSettings.EntityVerbose	=prms.mbEntityVerbose;
-
-			if(ProcessEntities(prms.mbVerbose, prms.mbEntityVerbose))
+			if(ProcessEntities())
 			{
 				Print("Build GBSP Complete\n");
 				return	true;
@@ -615,7 +589,7 @@ namespace BSPLib
 		}
 
 
-		bool FixModelTJunctions(FaceFixer ff, bool bFixTJuncts, bool bVerbose)
+		bool FixModelTJunctions(FaceFixer ff)
 		{
 			Print(" --- Weld Model Verts --- \n");
 
@@ -628,7 +602,7 @@ namespace BSPLib
 			}
 
 			//Skip if asked to do so...
-			if(!bFixTJuncts)
+			if(!mBSPParms.mbFixTJunctions)
 			{
 				return	true;
 			}
@@ -644,7 +618,7 @@ namespace BSPLib
 				}
 			}
 
-			if(bVerbose)
+			if(mBSPParms.mbVerbose)
 			{
 				Print(" Num TJunctions        : " + ff.NumTJunctions + "\n");
 				Print(" Num Fixed Faces       : " + ff.NumFixedFaces + "\n");
@@ -693,15 +667,18 @@ namespace BSPLib
 		}
 		
 		
-		bool PrepAllGBSPModels(string visFile, bool bVerbose, NodeCounter nc)
+		bool PrepAllGBSPModels(string visFile, NodeCounter nc)
 		{
 			Int32	i;
 
 			List<GFXLeafSide>	leafSides	=new List<GFXLeafSide>();
 			for(i=0;i < mModels.Count;i++)
 			{
-				if(!mModels[i].PrepGBSPModel(visFile, i == 0, true,
-					mPlanePool, ref nc.mNumLeafClusters, leafSides))
+				if(!mModels[i].PrepGBSPModel(visFile, i == 0,
+					(i == 0)? mBSPParms.mbVerbose : mBSPParms.mbEntityVerbose,
+					mPlanePool,
+					ref nc.mNumLeafClusters,
+					leafSides))
 				{
 					Map.Print("PrepAllGBSPModels:  Could not prep model " + i + "\n");
 					return	false;
@@ -901,7 +878,7 @@ namespace BSPLib
 		}
 
 
-		internal bool ConvertGBSPToFile(string fileName, bool bFixT, bool bVerbose)
+		internal bool ConvertGBSPToFile(string fileName)
 		{
 			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
 									FileMode.OpenOrCreate, FileAccess.Write);
@@ -918,7 +895,7 @@ namespace BSPLib
 
 			FaceFixer	ff	=new FaceFixer();
 
-			if(!FixModelTJunctions(ff, bFixT, bVerbose))
+			if(!FixModelTJunctions(ff))
 			{
 				Map.Print("ConvertGBSPToFile:  FixModelTJunctions failed.\n");
 				return	false;
@@ -928,7 +905,7 @@ namespace BSPLib
 
 			NodeCounter	nc	=new NodeCounter();
 
-			if(!PrepAllGBSPModels(VisFile, bVerbose, nc))
+			if(!PrepAllGBSPModels(VisFile, nc))
 			{
 				Print("ConvertGBSPToFile:  Could not prep models.\n");
 				return	false;
@@ -2291,7 +2268,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveLightMapsNoGlobals(BinaryWriter f, Vector3 minLight, float maxLight, float lightScale, ref int numRGBMaps)
+		bool SaveLightMapsNoGlobals(BinaryWriter f, ref int numRGBMaps)
 		{
 //			LInfo		*L;
 			Int32		i, j, k,l, Size;
@@ -2342,6 +2319,8 @@ namespace BSPLib
 
 				//Get the size of map
 				Size	=mFaceInfos[i].NumPoints;
+
+				Vector3	minLight	=mLightParams.mMinLight;
 
 				//Create style 0, if min light is set, and style 0 does not exist
 				if((L.RGBLData[0] == null) &&
@@ -2410,7 +2389,7 @@ namespace BSPLib
 
 					for(j=0;j < Size;j++)//, pRGB++)
 					{
-						Vector3	WorkRGB	=L.RGBLData[k][j] * lightScale;
+						Vector3	WorkRGB	=L.RGBLData[k][j] * mLightParams.mLightScale;
 
 						if(k == 0)
 						{
@@ -2437,7 +2416,7 @@ namespace BSPLib
 
 						Debug.Assert(Max > 0.0f);
 						
-						Max2	=Math.Min(Max, maxLight);
+						Max2	=Math.Min(Max, mLightParams.mMaxIntensity);
 
 						for(l=0;l < 3;l++)
 						{
@@ -2583,6 +2562,9 @@ namespace BSPLib
 		{
 			Print(" --- Vis GBSP File --- \n");
 
+			mVisParams	=prms;
+			mBSPParms	=prms2;
+
 			// Fill in the global bsp data
 			if(!LoadGBSPFileNoGlobals(fileName))
 			{
@@ -2623,20 +2605,15 @@ namespace BSPLib
 			
 			//Write out everything but vis info
 			if(!StartWritingVisNoGlobals(bw))
-//			if(!StartWritingVis(bw))
 			{
 				goto	ExitWithError;
 			}
 
 			//Vis'em
-			if(!VisAllLeafsNoGlobals(prms.mbFullVis))
+			if(!VisAllLeafsNoGlobals())
 			{
 				goto	ExitWithError;
 			}
-
-			//Record the vis data
-//			mGlobals.NumGFXVisData	=mGlobals.NumVisLeafs * mGlobals.NumVisLeafBytes;
-//			mGlobals.GFXVisData		=mGlobals.LeafVisBits;
 
 			//Save the leafs, clusters, vis data, etc
 			if(!FinishWritingVisNoGlobals(bw))
@@ -2682,6 +2659,8 @@ namespace BSPLib
 		public bool LightGBSPFile(string fileName, LightParams prms)
 		{
 			string	RecFile;
+
+			mLightParams	=prms;
 
 			Print(" --- Radiosity GBSP File --- \n");
 
@@ -2780,7 +2759,7 @@ namespace BSPLib
 
 			int	numRGBMaps	=0;
 
-			if(!SaveLightMapsNoGlobals(bw, prms.mMinLight, 240, prms.mLightScale, ref numRGBMaps))	//Save them
+			if(!SaveLightMapsNoGlobals(bw, ref numRGBMaps))
 			{
 				goto	ExitWithError;
 			}
@@ -3248,7 +3227,7 @@ namespace BSPLib
 		}
 
 
-		bool VisAllLeafsNoGlobals(bool bFullVis)
+		bool VisAllLeafsNoGlobals()
 		{
 			Int32	i;
 
@@ -3270,9 +3249,12 @@ namespace BSPLib
 			}
 
 			//Sort the portals with MightSee
-			SortPortalsNoGlobals();
+			if(mVisParams.mbSortPortals)
+			{
+				SortPortalsNoGlobals();
+			}
 
-			if(bFullVis)
+			if(mVisParams.mbFullVis)
 			{
 				if(!FloodPortalsSlow(portIndexer, PortalSeen))
 				{
@@ -3322,7 +3304,6 @@ namespace BSPLib
 		bool FloodPortalsSlow(Dictionary<VISPortal, Int32> visIndexer, bool []PortalSeen)
 		{
 			VISPortal	Portal;
-			Int32		PNum;
 			VISPStack	PStack	=new VISPStack();
 			Int32		i, k;
 
@@ -3366,9 +3347,7 @@ namespace BSPLib
 				PStack.mSource	=null;
 				Portal.mDone	=true;
 
-//				PNum	=visIndexer[Portal];
-
-				if(true)
+				if(mBSPParms.mbVerbose)
 				{
 					Print("Portal: " + (k + 1) + " - Fast Vis: "
 						+ Portal.mMightSee + ", Full Vis: "
@@ -3805,23 +3784,6 @@ namespace BSPLib
 		}
 
 
-		void GatherBSPTriangles(Int32 Node, Vector3 pos,
-			List<Vector3> verts, List<uint> indexes, bool bCheck)
-		{
-			Int32	nodeLandedIn	=FindLeafLandedInNoGlobals(Node, pos);
-			Int32	Leaf;
-
-			Leaf	=-(nodeLandedIn + 1);
-
-			Debug.Assert(Leaf >= 0 && Leaf < mGFXLeafs.Length);
-
-			int	clust	=mGFXLeafs[Leaf].mCluster;
-			int	visOfs	=mGFXClusters[clust].mVisOfs;
-
-			//mGlobals.GFXVisData[visOfs]
-		}
-
-
 		bool VisWorld(Int32 rootNode, Vector3 pos)
 		{
 			Int32	k, i, Area;
@@ -4009,23 +3971,6 @@ namespace BSPLib
 			// Go down front and back markinf parents on the way down...
 			FindParents_r(mGFXNodes[Node].mChildren[0], Node);
 			FindParents_r(mGFXNodes[Node].mChildren[1], Node);
-		}
-
-
-		void FindParents_r2(Int32 Node, Int32 Parent)
-		{
-			if(Node < 0)		// At a leaf, mark leaf parent and return
-			{
-				LeafData[-(Node+1)].Parent	=Parent;
-				return;
-			}
-
-			//At a node, mark node parent, and keep going till hitting a leaf
-			NodeParents[Node]	=Parent;
-
-			// Go down front and back markinf parents on the way down...
-			FindParents_r2(mGFXNodes[Node].mChildren[0], Node);
-			FindParents_r2(mGFXNodes[Node].mChildren[1], Node);
 		}
 
 

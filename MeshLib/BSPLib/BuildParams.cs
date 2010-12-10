@@ -12,6 +12,7 @@ namespace BSPLib
 		public int	mMaxCores;
 		public bool	mbVerbose;
 		public bool	mbEntityVerbose;
+		public bool mbFixTJunctions;
 	}
 
 
@@ -25,6 +26,7 @@ namespace BSPLib
 		public float	mLightScale;
 		public Vector3	mMinLight;
 		public float	mMirrorReflect;
+		public int		mMaxIntensity;
 	}
 
 

@@ -113,10 +113,12 @@ namespace BSPLib
 				bounds.Merge(b.mBounds, null);
 			}
 
-			Map.Print("Total Brushes          : " + bs.NumVisBrushes + "\n");
-			Map.Print("Total Faces            : " + bs.NumVisFaces + "\n");
-			Map.Print("Faces Removed          : " + bs.NumNonVisFaces + "\n");
-						
+			if(bVerbose)
+			{
+				Map.Print("Total Brushes          : " + bs.NumVisBrushes + "\n");
+				Map.Print("Total Faces            : " + bs.NumVisFaces + "\n");
+				Map.Print("Faces Removed          : " + bs.NumNonVisFaces + "\n");
+			}						
 			bs.NumVisNodes		=0;
 			bs.NumNonVisNodes	=0;
 
@@ -1240,9 +1242,12 @@ namespace BSPLib
 
 			MakeFaces_r(pool, tip, ref NumMerged, ref NumMakeFaces);
 
-			Map.Print("TotalFaces             : " + NumMakeFaces + "\n");
-			Map.Print("Merged Faces           : " + NumMerged + "\n");
-			Map.Print("FinalFaces             : " + ((NumMakeFaces - NumMerged)) + "\n");
+			if(bVerbose)
+			{
+				Map.Print("TotalFaces             : " + NumMakeFaces + "\n");
+				Map.Print("Merged Faces           : " + NumMerged + "\n");
+				Map.Print("FinalFaces             : " + ((NumMakeFaces - NumMerged)) + "\n");
+			}
 		}
 
 

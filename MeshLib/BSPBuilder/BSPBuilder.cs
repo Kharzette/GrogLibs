@@ -564,7 +564,7 @@ namespace BSPBuilder
 
 			if(fileName != null)
 			{
-				mMap.SaveGBSPFile(fileName, true, mMainForm.BSPParameters.mbVerbose);
+				mMap.SaveGBSPFile(fileName,	mMainForm.BSPParameters);
 			}
 		}
 
