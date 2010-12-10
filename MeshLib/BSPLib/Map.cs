@@ -109,6 +109,9 @@ namespace BSPLib
 		//texnames
 		List<string>	mTexNames	=new List<string>();
 
+		//list of bad brushes for debug draw
+		public static List<MapBrush>	TroubleBrushes	=new List<MapBrush>();
+
 		//gfx data
 		GFXModel		[]mGFXModels;
 		GFXNode			[]mGFXNodes;
@@ -217,11 +220,11 @@ namespace BSPLib
 							}
 							else if(s == "cameras")
 							{
-								Brush.SkipVMFEditorBlock(sr);
+								MapEntity.SkipVMFEditorBlock(sr);
 							}
 							else if(s == "cordon")
 							{
-								Brush.SkipVMFEditorBlock(sr);
+								MapEntity.SkipVMFEditorBlock(sr);
 							}
 						}
 					}
@@ -232,11 +235,11 @@ namespace BSPLib
 			{
 				foreach(MapBrush mb in e.mBrushes)
 				{
-					if((mb.mContents & GBSPBrush.BSP_CONTENTS_DETAIL2) != 0)
+					if((mb.mContents & Contents.BSP_CONTENTS_DETAIL2) != 0)
 					{
 						numDetails++;
 					}
-					else if((mb.mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+					else if((mb.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 					{
 						numSolids++;
 					}
@@ -273,12 +276,11 @@ namespace BSPLib
 			}
 			else if(drawChoice == "Trouble Brushes")
 			{
-				lock(BspNode.TroubleBrushes)
+				lock(TroubleBrushes)
 				{
-					foreach(Brush b in BspNode.TroubleBrushes)
+					foreach(MapBrush mb in TroubleBrushes)
 					{
-						b.SealFaces();
-						b.GetTriangles(verts, indexes, false);
+						mb.GetTriangles(verts, indexes, false);
 					}
 				}
 			}
@@ -294,11 +296,18 @@ namespace BSPLib
 			}
 			else if(drawChoice == "Draw Tree")
 			{
-				int	root	=mGFXModels[0].mRootNode[0];
+				if(mGFXModels != null && mGFXModels.Length > 0)
+				{
+					int	root	=mGFXModels[0].mRootNode[0];
 
-				VisWorld(root, pos);
+					VisWorld(root, pos);
 
-				RenderBSPFrontBack_r2(root, pos, verts, indexes, true);
+					RenderBSPFrontBack_r2(root, pos, verts, indexes, true);
+				}
+				else
+				{
+					Print("No GFXModels to draw!\n");
+				}
 			}
 			else if(drawChoice == "Collision Tree")
 			{
@@ -563,24 +572,6 @@ namespace BSPLib
 				Print("Compilation failed\n");
 				return	false;
 			}
-		}
-
-
-		public bool MoveLine(ref Line ln)
-		{
-			return	false;
-		}
-
-
-		public bool MoveLine(ref Line ln, float radius)
-		{
-			return	false;
-		}
-
-
-		public bool RayCast(Vector3 p1, Vector3 p2, ref List<ClipSegment> segs)
-		{
-			return	false;
 		}
 
 
@@ -1681,8 +1672,8 @@ namespace BSPLib
 			
 			for (i=0; i<2; i++)
 			{
-				Mins[i]	=Brush.MIN_MAX_BOUNDS;
-				Maxs[i]	=-Brush.MIN_MAX_BOUNDS;
+				Mins[i]	=Bounds.MIN_MAX_BOUNDS;
+				Maxs[i]	=-Bounds.MIN_MAX_BOUNDS;
 			}
 
 			Vector3	[]vecs	=new Vector3[2];
@@ -2105,7 +2096,7 @@ namespace BSPLib
 					Leaf	=-(nodeLandedIn + 1);
 
 					//Pre-compute if this point is in solid space, so we can re-use it in the code below
-					if((mGFXLeafs[Leaf].mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+					if((mGFXLeafs[Leaf].mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 					{
 						InSolid[(v * Width) + u]	=1;
 					}
@@ -2149,7 +2140,7 @@ namespace BSPLib
 				pPoint2 = FaceInfo.Points;
 				pInSolid2 = InSolid;
 				pBestPoint = &FaceMid;
-				BestDist = MIN_MAX_BOUNDS;
+				BestDist = Bounds.MIN_MAX_BOUNDS;
 				
 				for (u=0; u< FaceInfo.NumPoints; u++, pPoint2++, pInSolid2++)
 				{
@@ -2188,7 +2179,7 @@ namespace BSPLib
 				Int32	Leaf	=-(Node+1);
 
 				if((mGFXLeafs[Leaf].mContents
-					& GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+					& Contents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					return	true;	//Ray collided with solid space
 				}

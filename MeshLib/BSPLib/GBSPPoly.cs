@@ -27,38 +27,6 @@ namespace BSPLib
 
 		public GBSPPoly(GBSPPlane p)
 		{
-			/*
-			float	v;
-			Vector3	vup, vright, org;
-
-			//find the major axis of the plane normal
-			vup.X	=vup.Y	=0.0f;
-			vup.Z	=1.0f;
-			if((System.Math.Abs(p.mNormal.Z) > System.Math.Abs(p.mNormal.X))
-                && (System.Math.Abs(p.mNormal.Z) > System.Math.Abs(p.mNormal.Y)))
-			{
-				vup.X	=1.0f;
-				vup.Y	=vup.Z	=0.0f;
-			}
-
-			v	=Vector3.Dot(vup, p.mNormal);
-
-			vup	=vup + p.mNormal * -v;
-			vup.Normalize();
-
-			org	=p.mNormal * p.mDist;
-
-			vright	=Vector3.Cross(vup, p.mNormal);
-
-			vup		*=Brush.MIN_MAX_BOUNDS;
-			vright	*=Brush.MIN_MAX_BOUNDS;
-
-			mVerts.Clear();
-
-			mVerts.Add(org - vright + vup);
-			mVerts.Add(org + vright + vup);
-			mVerts.Add(org + vright - vup);
-			mVerts.Add(org - vright - vup);*/
 			Vector3	rightVec, upVec, org, vert;
 
 			if(!TextureAxisFromPlane(p, out rightVec, out upVec))
@@ -73,8 +41,8 @@ namespace BSPLib
 			rightVec.Normalize();
 
 			org			=p.mDist * p.mNormal;
-			upVec		*=Brush.MIN_MAX_BOUNDS;
-			rightVec	*=Brush.MIN_MAX_BOUNDS;
+			upVec		*=Bounds.MIN_MAX_BOUNDS;
+			rightVec	*=Bounds.MIN_MAX_BOUNDS;
 
 			vert	=org - rightVec;
 			vert	+=upVec;

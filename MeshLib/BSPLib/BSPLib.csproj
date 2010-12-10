@@ -91,14 +91,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bounds.cs" />
-    <Compile Include="Brush.cs" />
-    <Compile Include="BspFlatNode.cs" />
-    <Compile Include="BspFlatTree.cs" />
-    <Compile Include="BspNode.cs" />
-    <Compile Include="BspTree.cs" />
     <Compile Include="BuildParams.cs" />
-    <Compile Include="Entity.cs" />
-    <Compile Include="Face.cs" />
+    <Compile Include="Contents.cs" />
     <Compile Include="FaceFixer.cs" />
     <Compile Include="GBSPBrush.cs" />
     <Compile Include="GBSPFace.cs" />
@@ -117,11 +111,7 @@
     <Compile Include="MapBrush.cs" />
     <Compile Include="MapEntity.cs" />
     <Compile Include="NodeCounter.cs" />
-    <Compile Include="Plane.cs" />
     <Compile Include="PlanePool.cs" />
-    <Compile Include="Portal.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Progress.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TexInfo.cs" />

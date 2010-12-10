@@ -16,47 +16,48 @@ namespace BSPLib
 		public UInt32	mFlags;
 
 		//Q3 style face flags
-		public const UInt32	SURF_LIGHT		=0x1;		// value will hold the light strength
-		public const UInt32	SURF_SLICK		=0x2;		// effects game physics
-		public const UInt32	SURF_SKY		=0x4;		// don't draw, but add to skybox
-		public const UInt32	SURF_WARP		=0x8;		// turbulent water warp
-		public const UInt32	SURF_TRANS33	=0x10;
-		public const UInt32	SURF_TRANS66	=0x20;
-		public const UInt32	SURF_FLOWING	=0x40;	// scroll towards angle
-		public const UInt32	SURF_NODAMAGE			=0x1;		// never give falling damage
+		public const UInt32	SURF_LIGHT				=0x1;		//value will hold the light strength
+		public const UInt32	SURF_SLICK				=0x2;		//effects game physics
+		public const UInt32	SURF_SKY				=0x4;		//don't draw, but add to skybox
+		public const UInt32	SURF_WARP				=0x8;		//turbulent water warp
+		public const UInt32	SURF_TRANS33			=0x10;
+		public const UInt32	SURF_TRANS66			=0x20;
+		public const UInt32	SURF_FLOWING			=0x40;		//scroll towards angle
+		public const UInt32	SURF_NODAMAGE			=0x1;		//never give falling damage
 		public const UInt32	SURF_LADDER				=0x8;
-		public const UInt32	SURF_NOIMPACT			=0x10;	// don't make missile explosions
-		public const UInt32	SURF_NOMARKS			=0x20;	// don't leave missile marks
-		public const UInt32	SURF_FLESH				=0x40;	// make flesh sounds and effects
-		public const UInt32	SURF_NODRAW				=0x80;	// don't generate a drawsurface at all
-		public const UInt32	SURF_HINT				=0x100;	// make a primary bsp splitter
-		public const UInt32	SURF_SKIP				=0x200;	// completely ignore, allowing non-closed brushes
-		public const UInt32	SURF_NOLIGHTMAP			=0x400;	// surface doesn't need a lightmap
-		public const UInt32	SURF_POINTLIGHT			=0x800;	// generate lighting info at vertexes
-		public const UInt32	SURF_METALSTEPS			=0x1000;	// clanking footsteps
-		public const UInt32	SURF_NOSTEPS			=0x2000;	// no footstep sounds
-		public const UInt32	SURF_NONSOLID			=0x4000;	// don't collide against curves with this set
-		public const UInt32	SURF_LIGHTFILTER		=0x8000;	// act as a light filter during q3map -light
-		public const UInt32	SURF_ALPHASHADOW		=0x10000;	// do per-pixel light shadow casting in q3map
-		public const UInt32	SURF_NODLIGHT			=0x20000;	// don't dlight even if solid (solid lava, skies)
-		public const UInt32	SURF_DUST				=0x40000; // leave a dust trail when walking on this surface
+		public const UInt32	SURF_NOIMPACT			=0x10;		//don't make missile explosions
+		public const UInt32	SURF_NOMARKS			=0x20;		//don't leave missile marks
+		public const UInt32	SURF_FLESH				=0x40;		//make flesh sounds and effects
+		public const UInt32	SURF_NODRAW				=0x80;		//don't generate a drawsurface at all
+		public const UInt32	SURF_HINT				=0x100;		//make a primary bsp splitter
+		public const UInt32	SURF_SKIP				=0x200;		//completely ignore, allowing non-closed brushes
+		public const UInt32	SURF_NOLIGHTMAP			=0x400;		//surface doesn't need a lightmap
+		public const UInt32	SURF_POINTLIGHT			=0x800;		//generate lighting info at vertexes
+		public const UInt32	SURF_METALSTEPS			=0x1000;	//clanking footsteps
+		public const UInt32	SURF_NOSTEPS			=0x2000;	//no footstep sounds
+		public const UInt32	SURF_NONSOLID			=0x4000;	//don't collide against curves with this set
+		public const UInt32	SURF_LIGHTFILTER		=0x8000;	//act as a light filter during q3map -light
+		public const UInt32	SURF_ALPHASHADOW		=0x10000;	//do per-pixel light shadow casting in q3map
+		public const UInt32	SURF_NODLIGHT			=0x20000;	//don't dlight even if solid (solid lava, skies)
+		public const UInt32	SURF_DUST				=0x40000;	//leave a dust trail when walking on this surface
 
-		public const UInt32 SIDE_HINT		=(1<<0);		// Side is a hint side
-		public const UInt32 SIDE_SHEET		=(1<<1);		// Side is a sheet (only visible face in a sheet contents)
-		public const UInt32 SIDE_VISIBLE	=(1<<2);		// 
-		public const UInt32 SIDE_TESTED		=(1<<3);		// 
-		public const UInt32 SIDE_NODE		=(1<<4);		// 
+		public const UInt32 SIDE_HINT		=(1<<0);	//Side is a hint side
+		public const UInt32 SIDE_SHEET		=(1<<1);	//Side is a sheet (only visible face in a sheet contents)
+		public const UInt32 SIDE_VISIBLE	=(1<<2);	// 
+		public const UInt32 SIDE_TESTED		=(1<<3);	// 
+		public const UInt32 SIDE_NODE		=(1<<4);	// 
 
 
 		internal GBSPSide() { }
 		internal GBSPSide(GBSPSide copyMe)
 		{
-			this.mFlags	=copyMe.mFlags;
+			this.mFlags		=copyMe.mFlags;
 			this.mPlaneNum	=copyMe.mPlaneNum;
 			this.mPlaneSide	=copyMe.mPlaneSide;
 			this.mPoly		=new GBSPPoly(copyMe.mPoly);
 			this.mTexInfo	=copyMe.mTexInfo;
 		}
+
 
 		internal UInt32 ReadVMFSideBlock(StreamReader sr, PlanePool pool, TexInfoPool tiPool)
 		{
@@ -90,12 +91,12 @@ namespace BSPLib
 						tex	=tokens[3];
 						if(tex == "TOOLS/TOOLSAREAPORTAL")
 						{
-							ret	|=Brush.CONTENTS_AREAPORTAL;
+							ret	|=Contents.CONTENTS_AREAPORTAL;
 						}
 						if(tex == "TOOLS/TOOLSBLACK")
 						{
 							mFlags		&=~SURF_LIGHT;
-							ret			|=Brush.CONTENTS_SOLID;
+							ret			|=Contents.CONTENTS_SOLID;
 							ti.mFlags	|=TexInfo.TEXINFO_NO_LIGHTMAP;
 						}
 						if(tex == "TOOLS/TOOLSBLOCK_LOS")
@@ -113,14 +114,14 @@ namespace BSPLib
 						if(tex == "TOOLS/TOOLSCLIP")
 						{
 							mFlags	|=SURF_NODRAW;
-							ret		|=Brush.CONTENTS_PLAYERCLIP;
-							ret		|=Brush.CONTENTS_MONSTERCLIP;
+							ret		|=Contents.CONTENTS_PLAYERCLIP;
+							ret		|=Contents.CONTENTS_MONSTERCLIP;
 						}
 						if(tex == "TOOLS/TOOLSCONTROLCLIP")	//not correct
 						{
 							mFlags	|=SURF_NODRAW;
-							ret		|=Brush.CONTENTS_PLAYERCLIP;
-							ret		|=Brush.CONTENTS_MONSTERCLIP;
+							ret		|=Contents.CONTENTS_PLAYERCLIP;
+							ret		|=Contents.CONTENTS_MONSTERCLIP;
 						}
 						if(tex == "TOOLS/TOOLSDOTTED")
 						{
@@ -130,14 +131,14 @@ namespace BSPLib
 						{
 							mFlags		|=SURF_NOLIGHTMAP;
 							mFlags		|=SURF_NONSOLID;
-							ret			|=Brush.CONTENTS_MIST;
+							ret			|=Contents.CONTENTS_MIST;
 							ti.mFlags	|=TexInfo.TEXINFO_TRANS;
 						}
 						if(tex == "TOOLS/TOOLSHINT")
 						{
 							mFlags	|=SURF_NODRAW;
 							mFlags	|=SURF_HINT;
-							ret		|=Brush.CONTENTS_TRANSLUCENT;
+							ret		|=Contents.CONTENTS_TRANSLUCENT;
 						}
 						if(tex == "TOOLS/TOOLSINVISIBLE")
 						{
@@ -147,7 +148,7 @@ namespace BSPLib
 						{
 							mFlags	|=SURF_LADDER;
 							mFlags	|=SURF_NODRAW;
-							ret		|=Brush.CONTENTS_LADDER;
+							ret		|=Contents.CONTENTS_LADDER;
 						}
 						if(tex == "TOOLS/TOOLSNODRAW")
 						{
@@ -156,7 +157,7 @@ namespace BSPLib
 						if(tex == "TOOLS/TOOLSNPCCLIP")
 						{
 							mFlags	|=SURF_NODRAW;
-							ret		|=Brush.CONTENTS_MONSTERCLIP;
+							ret		|=Contents.CONTENTS_MONSTERCLIP;
 						}
 						if(tex == "TOOLS/TOOLSOCCLUDER")
 						{
@@ -164,12 +165,12 @@ namespace BSPLib
 						}
 						if(tex == "TOOLS/TOOLSORIGIN")
 						{
-							ret	|=Brush.CONTENTS_ORIGIN;
+							ret	|=Contents.CONTENTS_ORIGIN;
 						}
 						if(tex == "TOOLS/TOOLSPLAYERCLIP")
 						{
 							mFlags	|=SURF_NODRAW;
-							ret		|=Brush.CONTENTS_PLAYERCLIP;
+							ret		|=Contents.CONTENTS_PLAYERCLIP;
 						}
 						if(tex == "TOOLS/TOOLSSKIP")
 						{
@@ -193,7 +194,7 @@ namespace BSPLib
 						else if(tex == "TOOLS/TOOLSTRIGGER")
 						{
 							mFlags	|=SURF_NODRAW;
-							ret		|=Brush.CONTENTS_TRIGGER;
+							ret		|=Contents.CONTENTS_TRIGGER;
 						}
 						ti.mTexture	=tex;
 					}
@@ -253,7 +254,7 @@ namespace BSPLib
 				else if(s == "dispinfo")
 				{
 					SkipVMFDispInfoBlock(sr);
-					ret	|=Brush.CONTENTS_AUX;
+					ret	|=Contents.CONTENTS_AUX;
 				}
 			}
 			return	ret;
@@ -488,10 +489,6 @@ namespace BSPLib
 					}
 				}
 			}
-
-//			mPoly.mVerts.Add(new Vector3(numbers[0], numbers[1], numbers[2]));
-//			mPoly.mVerts.Add(new Vector3(numbers[3], numbers[4], numbers[5]));
-//			mPoly.mVerts.Add(new Vector3(numbers[6], numbers[7], numbers[8]));
 
 			//deal with the numbers
 			//invert x and swap y and z

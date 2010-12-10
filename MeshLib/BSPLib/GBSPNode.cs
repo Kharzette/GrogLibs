@@ -145,7 +145,7 @@ namespace BSPLib
 			//Get the contents of this leaf, by examining all the brushes that made this leaf
 			for(GBSPBrush b=Brushes;b != null;b=b.mNext)
 			{
-				if((b.mOriginal.mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+				if((b.mOriginal.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					int	i=0;
 					for(i=0;i < b.mSides.Count;i++)
@@ -161,7 +161,7 @@ namespace BSPLib
 					if(i == b.mSides.Count)
 					{
 						//Node.mContents &= 0xffff0000;
-						mContents	|=GBSPBrush.BSP_CONTENTS_SOLID2;
+						mContents	|=Contents.BSP_CONTENTS_SOLID2;
 						//break;
 					}
 					
@@ -307,15 +307,15 @@ namespace BSPLib
 			outsideNode.mVolume			=null;
 
 			outsideNode.mPlaneNum	=PlanePool.PLANENUM_LEAF;
-			outsideNode.mContents	=GBSPBrush.BSP_CONTENTS_SOLID2;
+			outsideNode.mContents	=Contents.BSP_CONTENTS_SOLID2;
 
 			//So there won't be NULL volume leafs when we create the outside portals
 			for(int k=0;k < 3;k++)
 			{
 				if(UtilityLib.Mathery.VecIdx(nodeMins, k) - 128.0f
-					<= -Brush.MIN_MAX_BOUNDS ||
+					<= -Bounds.MIN_MAX_BOUNDS ||
 					UtilityLib.Mathery.VecIdx(nodeMaxs, k) + 128.0f
-					>= Brush.MIN_MAX_BOUNDS)
+					>= Bounds.MIN_MAX_BOUNDS)
 				{
 					Map.Print("CreateAllOutsidePortals:  World BOX out of range...\n");
 					return	false;
@@ -385,7 +385,7 @@ namespace BSPLib
 		{
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
-				if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+				if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					return;
 				}
@@ -810,7 +810,7 @@ namespace BSPLib
 					return	false;
 				}
 
-				if((Node.mContents & GBSPBrush.BSP_CONTENTS_SOLID2) == 0)
+				if((Node.mContents & Contents.BSP_CONTENTS_SOLID2) == 0)
 				{
 					Node.mEntity	=i;
 					Empty			=true;
@@ -835,7 +835,7 @@ namespace BSPLib
 			//if (HitEntity)
 			//	return GE_TRUE;
 			
-			if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return	true;
 			}
@@ -852,7 +852,7 @@ namespace BSPLib
 			{
 				//Preserve user contents
 				mContents	&=0xffff0000;
-				mContents	|=GBSPBrush.BSP_CONTENTS_SOLID2;
+				mContents	|=Contents.BSP_CONTENTS_SOLID2;
 			}
 			else 
 			{
@@ -900,7 +900,7 @@ namespace BSPLib
 			GBSPPortal	Portal;
 			Int32		Side;
 			
-			if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return	true;
 			}
@@ -959,7 +959,7 @@ namespace BSPLib
 
 				Node	=FindLeaf(org, pool);
 
-				if((Node.mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+				if((Node.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					continue;
 				}
@@ -992,7 +992,7 @@ namespace BSPLib
 				return;
 			}
 
-			if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return;		//allready solid or removed...
 			}
@@ -1001,7 +1001,7 @@ namespace BSPLib
 			{
 				//Fill er in with solid so it does not show up...(Preserve user contents)
 				mContents	&=(0xffff0000);
-				mContents	|=GBSPBrush.BSP_CONTENTS_SOLID2;
+				mContents	|=Contents.BSP_CONTENTS_SOLID2;
 				numRemovedLeafs++;
 			}
 		}
@@ -1106,8 +1106,8 @@ namespace BSPLib
 				if(p.mSide != null)
 				{
 					int	sOpposite	=(s == 0)? 1 : 0;
-					if(((p.mNodes[sOpposite].mContents & GBSPBrush.BSP_CONTENTS_SOLID2) == 0)
-						&& ((p.mNodes[s].mContents & GBSPBrush.BSP_CONTENTS_SHEET) != 0)
+					if(((p.mNodes[sOpposite].mContents & Contents.BSP_CONTENTS_SOLID2) == 0)
+						&& ((p.mNodes[s].mContents & Contents.BSP_CONTENTS_SHEET) != 0)
 						&& ((p.mSide.mFlags & GBSPSide.SIDE_SHEET) == 0))
 					{ 
 						p.mSide.mFlags	&=~GBSPSide.SIDE_VISIBLE;
@@ -1271,7 +1271,7 @@ namespace BSPLib
 			}
 
 			//Solid leafs never have visible faces
-			if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return;
 			}
@@ -1312,7 +1312,7 @@ namespace BSPLib
 			}
 
 			//Solid leafs never have visible faces
-			if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return;
 			}
@@ -1402,8 +1402,8 @@ namespace BSPLib
 			if(mChildren[0].mPlaneNum == PlanePool.PLANENUM_LEAF
 				&& mChildren[1].mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
-				if(((mChildren[0].mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
-					&& ((mChildren[1].mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0))
+				if(((mChildren[0].mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+					&& ((mChildren[1].mContents & Contents.BSP_CONTENTS_SOLID2) != 0))
 				{
 					if((mChildren[0].mContents & 0xffff0000)
 						== (mChildren[1].mContents & 0xffff0000))
@@ -1492,7 +1492,7 @@ namespace BSPLib
 			}
 			
 			//Either a leaf or detail node
-			if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				mCluster	=-1;
 				return	true;
@@ -1510,7 +1510,7 @@ namespace BSPLib
 		{
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
-				if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+				if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					mCluster	=-1;
 				}
@@ -1565,7 +1565,7 @@ namespace BSPLib
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
 				//Don't convert empty leafs
-				if((mContents & GBSPBrush.BSP_CONTENTS_SOLID_CLIP) == 0)
+				if((mContents & Contents.BSP_CONTENTS_SOLID_CLIP) == 0)
 				{
 					return	true;
 				}
@@ -1777,12 +1777,12 @@ namespace BSPLib
 			GBSPPortal	Portal;
 			Int32		Side;
 
-			if ((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+			if ((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return	true;	//Stop at solid leafs
 			}
 
-			if((mContents & GBSPBrush.BSP_CONTENTS_AREA2) != 0)
+			if((mContents & Contents.BSP_CONTENTS_AREA2) != 0)
 			{
 				GBSPModel	Model;
 
@@ -1840,13 +1840,13 @@ namespace BSPLib
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
 				//Stop at solid
-				if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+				if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					return	true;
 				}
 
 				//Don't start at area portals
-				if((mContents & GBSPBrush.BSP_CONTENTS_AREA2) != 0)
+				if((mContents & Contents.BSP_CONTENTS_AREA2) != 0)
 				{
 					return	true;
 				}
@@ -1895,7 +1895,7 @@ namespace BSPLib
 				}
 			}
 
-			if((mContents & GBSPBrush.BSP_CONTENTS_AREA2) == 0)
+			if((mContents & Contents.BSP_CONTENTS_AREA2) == 0)
 			{
 				return	true;	//Only interested in area portals
 			}
@@ -1923,7 +1923,7 @@ namespace BSPLib
 
 		internal UInt32 ClusterContents()
 		{
-			UInt32	c1, c2, Contents;
+			UInt32	c1, c2, con;
 
 			// Stop at leafs, and start returning contents
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
@@ -1934,14 +1934,14 @@ namespace BSPLib
 			c1	=mChildren[0].ClusterContents();
 			c2	=mChildren[1].ClusterContents();
 
-			Contents	=(c1 | c2);	//Or together children, and return
+			con	=(c1 | c2);	//Or together children, and return
 
-			if(((c1 & GBSPBrush.BSP_CONTENTS_SOLID2) == 0)
-				|| ((c2 & GBSPBrush.BSP_CONTENTS_SOLID2) == 0))
+			if(((c1 & Contents.BSP_CONTENTS_SOLID2) == 0)
+				|| ((c2 & Contents.BSP_CONTENTS_SOLID2) == 0))
 			{
-				Contents	&=~GBSPBrush.BSP_CONTENTS_SOLID2;
+				con	&=~Contents.BSP_CONTENTS_SOLID2;
 			}
-			return	(Contents);
+			return	(con);
 		}
 
 
@@ -1951,7 +1951,7 @@ namespace BSPLib
 		{
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF || mDetail)
 			{
-				if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+				if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					return	true;
 				}
@@ -2117,7 +2117,7 @@ namespace BSPLib
 			//Stop at leafs, and detail nodes (stop at beginning of clusters)
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF || mDetail)
 			{
-				if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+				if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					return	true;
 				}
@@ -2194,7 +2194,7 @@ namespace BSPLib
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF || mDetail)
 			{
 				//Can't see from solid
-				if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+				if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					return	true;
 				}
@@ -2381,7 +2381,7 @@ namespace BSPLib
 			//Prep the leaf and it's portals
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
-				if((mContents & GBSPBrush.BSP_CONTENTS_SOLID2) != 0)
+				if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					nc.mNumSolidLeafs++;	// Remember how many solid leafs there are
 				}
@@ -2426,7 +2426,7 @@ namespace BSPLib
 
 			for(Face=mFaces;Face != null;Face=Face.mNext)
 			{
-				if(Face.mVisible == 0)
+				if(!Face.mbVisible)
 				{
 					continue;
 				}
@@ -2440,7 +2440,7 @@ namespace BSPLib
 
 				//Skip output of face, if IndexVerts not > 0
 				//NOTE - The leaf faces output stage will also skip these same faces...
-				if(Face.mNumIndexVerts <= 0)
+				if(Face.mIndexVerts.Length <= 0)
 				{
 					continue;
 				}
@@ -2448,7 +2448,7 @@ namespace BSPLib
 				Face.mFirstIndexVert	=nc.VertIndexListCount;
 				Face.mOutputNum			=nc.mNumGFXFaces;
 
-				for(i=0;i < Face.mNumIndexVerts;i++)
+				for(i=0;i < Face.mIndexVerts.Length;i++)
 				{
 					nc.AddIndex(Face.mIndexVerts[i]);
 				}
@@ -2485,14 +2485,14 @@ namespace BSPLib
 
 				for(i=0;i < mNumLeafFaces;i++)
 				{
-					if(mLeafFaces[i].mVisible == 0)
+					if(!mLeafFaces[i].mbVisible)
 					{
 						continue;
 					}
 					
 					//Don't output mark face if it was skipped in the face output stage
 					//(or it will reference an invalid face...)
-					if(mLeafFaces[i].mNumIndexVerts <= 0)
+					if(mLeafFaces[i].mIndexVerts.Length <= 0)
 					{
 						continue;
 					}
@@ -2531,7 +2531,7 @@ namespace BSPLib
 			
 			for(Face = mFaces;Face != null;Face = Face.mNext)
 			{
-				if(Face.mVisible == 0)
+				if(!Face.mbVisible)
 				{
 					continue;
 				}
@@ -2543,10 +2543,10 @@ namespace BSPLib
 					continue;
 				}
 
-				if(Face.mNumIndexVerts > 0)
+				if(Face.mIndexVerts.Length > 0)
 				{
 					GFace.mFirstVert	=Face.mFirstIndexVert;
-					GFace.mNumVerts		=Face.mNumIndexVerts;
+					GFace.mNumVerts		=Face.mIndexVerts.Length;
 					GFace.mPlaneNum		=Face.mPlaneNum;
 					GFace.mPlaneSide	=Face.mPlaneSide;
 					GFace.mTexInfo		=Face.mTexInfo;

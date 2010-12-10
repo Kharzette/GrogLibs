@@ -47,7 +47,6 @@ namespace BSPBuilder
 		BasicEffect			mBFX;
 		VertexBuffer		mRayVB;
 		IndexBuffer			mRayIB;
-		List<ClipSegment>	mRayParts	=new List<ClipSegment>();
 
 
 		public BSPBuilder()
@@ -215,6 +214,7 @@ namespace BSPBuilder
 			}
 
 			//draw ray pieces if any
+			/*
 			if(mRayVB != null && mRayParts.Count > 0)
 			{
 				GraphicsDevice.Vertices[0].SetSource(mRayVB, 0, 16);
@@ -232,7 +232,7 @@ namespace BSPBuilder
 					ep.End();
 				}
 				mBFX.End();
-			}
+			}*/
 
 			//draw portal lines if any
 			if(mLineVB != null)
@@ -368,6 +368,7 @@ namespace BSPBuilder
 
 		void OnRepeatRay(object sender, EventArgs ea)
 		{
+			/*
 			mCollForm.PrintToConsole("Casting ray: " +
 				mStart.X + ", " + mStart.Y + ", " + mStart.Z +
 				"  to  " + mEnd.X + ", " + mEnd.Y + ", " + mEnd.Z + "\n");
@@ -399,7 +400,7 @@ namespace BSPBuilder
 				seg.mSeg.mP2	=ln.mP2;
 				mRayParts.Add(seg);
 			}
-			UpdateRayVerts();
+			UpdateRayVerts();*/
 		}
 
 
@@ -411,6 +412,7 @@ namespace BSPBuilder
 
 		void OnEndRay(object sender, EventArgs ea)
 		{
+			/*
 			mEnd	=mGameCam.CamPos;
 
 			mRayParts.Clear();
@@ -421,7 +423,7 @@ namespace BSPBuilder
 			mStart	=-mStart;
 			mEnd	=-mEnd;
 
-			OnRepeatRay(null, null);
+			OnRepeatRay(null, null);*/
 
 //			Matrix	transpose	=Matrix.Transpose(mGameCam.View);
 
@@ -626,6 +628,7 @@ namespace BSPBuilder
 
 		void UpdateRayVerts()
 		{
+			/*
 			if(mRayParts == null || mRayParts.Count <= 0)
 			{
 				return;
@@ -674,7 +677,7 @@ namespace BSPBuilder
 			}
 
 			mRayVB.SetData<VertexPositionColor>(verts);
-			mRayIB.SetData<short>(indexs);
+			mRayIB.SetData<short>(indexs);*/
 		}
 	}
 }

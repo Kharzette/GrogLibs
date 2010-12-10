@@ -12,6 +12,8 @@ namespace BSPLib
 	{
 		public Vector3	mMins, mMaxs;
 
+		public const float	MIN_MAX_BOUNDS	=15192.0f;
+
 
 		public Bounds()
 		{
@@ -28,7 +30,7 @@ namespace BSPLib
 
 		public void Clear()
 		{
-			mMins.X	=mMins.Y =mMins.Z	=Brush.MIN_MAX_BOUNDS;
+			mMins.X	=mMins.Y =mMins.Z	=MIN_MAX_BOUNDS;
 			mMaxs	=-mMins;
 		}
 
@@ -95,8 +97,8 @@ namespace BSPLib
 		{
 			for(int i=0;i < 3;i++)
 			{
-				if(UtilityLib.Mathery.VecIdx(mMins, i) <= -Brush.MIN_MAX_BOUNDS
-					|| UtilityLib.Mathery.VecIdx(mMaxs, i) >= Brush.MIN_MAX_BOUNDS)
+				if(UtilityLib.Mathery.VecIdx(mMins, i) <= -MIN_MAX_BOUNDS
+					|| UtilityLib.Mathery.VecIdx(mMaxs, i) >= MIN_MAX_BOUNDS)
 				{
 					return	true;
 				}

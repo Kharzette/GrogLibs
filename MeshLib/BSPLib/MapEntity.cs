@@ -167,7 +167,7 @@ namespace BSPLib
 				}
 				else if(s == "editor")
 				{
-					Brush.SkipVMFEditorBlock(sr);
+					SkipVMFEditorBlock(sr);
 				}
 				else if(s == "solid")
 				{
@@ -182,11 +182,25 @@ namespace BSPLib
 				}
 				else if(s == "connections")
 				{
-					Brush.SkipVMFEditorBlock(sr);
+					SkipVMFEditorBlock(sr);
 				}
 				else if(s.StartsWith("}"))
 				{
 					return;	//entity done
+				}
+			}
+		}
+
+
+		static internal void SkipVMFEditorBlock(StreamReader sr)
+		{
+			string	s	="";
+			while((s = sr.ReadLine()) != null)
+			{
+				s	=s.Trim();
+				if(s.StartsWith("}"))
+				{
+					return;	//editor done
 				}
 			}
 		}
@@ -204,7 +218,7 @@ namespace BSPLib
 				}
 				else if(s == "editor")
 				{
-					Brush.SkipVMFEditorBlock(sr);
+					MapEntity.SkipVMFEditorBlock(sr);
 				}
 			}
 		}

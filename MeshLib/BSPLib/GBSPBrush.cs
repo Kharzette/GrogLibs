@@ -16,53 +16,6 @@ namespace BSPLib
 
 		public List<GBSPSide>	mSides	=new List<GBSPSide>();
 
-		public const UInt32 BSP_CONTENTS_SOLID2			=(1<<0);		// Solid (Visible)
-		public const UInt32 BSP_CONTENTS_WINDOW2		=(1<<1);		// Window (Visible)
-		public const UInt32 BSP_CONTENTS_EMPTY2			=(1<<2);		// Empty but Visible (water, lava, etc...)
-
-		public const UInt32 BSP_CONTENTS_TRANSLUCENT2	=(1<<3);		// Vis will see through it
-		public const UInt32 BSP_CONTENTS_WAVY2			=(1<<4);		// Wavy (Visible)
-		public const UInt32 BSP_CONTENTS_DETAIL2		=(1<<5);		// Won't be included in vis oclusion
-
-		public const UInt32 BSP_CONTENTS_CLIP2			=(1<<6);		// Structural but not visible
-		public const UInt32 BSP_CONTENTS_HINT2			=(1<<7);		// Primary splitter (Non-Visible)
-		public const UInt32 BSP_CONTENTS_AREA2			=(1<<8);		// Area seperator leaf (Non-Visible)
-
-		public const UInt32 BSP_CONTENTS_FLOCKING		=(1<<9);		// flocking flag.  Not really a contents type
-		public const UInt32 BSP_CONTENTS_SHEET			=(1<<10);
-		public const UInt32 RESERVED3					=(1<<11);
-		public const UInt32 RESERVED4					=(1<<12);
-		public const UInt32 RESERVED5					=(1<<13);
-		public const UInt32 RESERVED6					=(1<<14);
-		public const UInt32 RESERVED7					=(1<<15);
-
-		//16-31 reserved for user contents
-		public const UInt32 BSP_CONTENTS_USER1			=(1<<16);	//I'm using this for lava
-		public const UInt32 BSP_CONTENTS_USER2			=(1<<17);	//slime
-		public const UInt32 BSP_CONTENTS_USER3			=(1<<18);	//water
-		public const UInt32 BSP_CONTENTS_USER4			=(1<<19);	//mist
-		public const UInt32 BSP_CONTENTS_USER5			=(1<<20);	//current_0
-		public const UInt32 BSP_CONTENTS_USER6			=(1<<21);	//current_90
-		public const UInt32 BSP_CONTENTS_USER7			=(1<<22);	//current_180
-		public const UInt32 BSP_CONTENTS_USER8			=(1<<23);	//current_270
-		public const UInt32 BSP_CONTENTS_USER9			=(1<<24);	//current_UP
-		public const UInt32 BSP_CONTENTS_USER10			=(1<<25);	//current_DOWN
-		public const UInt32 BSP_CONTENTS_USER11			=(1<<26);	//ladder
-		public const UInt32 BSP_CONTENTS_USER12			=(1<<27);	//trigger
-		public const UInt32 BSP_CONTENTS_USER13			=(1<<28);	//nodrop
-		public const UInt32 BSP_CONTENTS_USER14			=(1<<29);
-		public const UInt32 BSP_CONTENTS_USER15			=(1<<30);
-		public const UInt32 BSP_CONTENTS_USER16			=(0x80000000);
-		
-		//These contents are all solid types
-		public const UInt32 BSP_CONTENTS_SOLID_CLIP		=(BSP_CONTENTS_SOLID2 | BSP_CONTENTS_WINDOW2 | BSP_CONTENTS_CLIP2);
-		
-		//These contents are all visible types
-		public const UInt32 BSP_VISIBLE_CONTENTS		=(BSP_CONTENTS_SOLID2 | BSP_CONTENTS_EMPTY2 | BSP_CONTENTS_WINDOW2 | BSP_CONTENTS_SHEET | BSP_CONTENTS_WAVY2);
-		
-		//These contents define where faces are NOT allowed to merge across
-		public const UInt32 BSP_MERGE_SEP_CONTENTS		=(BSP_CONTENTS_WAVY2 | BSP_CONTENTS_HINT2 | BSP_CONTENTS_AREA2);
-
 
 		public GBSPBrush() { }
 		public GBSPBrush(GBSPBrush copyMe)
@@ -177,18 +130,18 @@ namespace BSPLib
 			c1	=mOriginal.mContents;
 			c2	=otherBrush.mOriginal.mContents;
 
-			if(((c1 & BSP_CONTENTS_DETAIL2) != 0) &&
-				!((c2 & BSP_CONTENTS_DETAIL2) != 0))
+			if(((c1 & Contents.BSP_CONTENTS_DETAIL2) != 0) &&
+				!((c2 & Contents.BSP_CONTENTS_DETAIL2) != 0))
 			{
 				return	false;
 			}
 
-			if(((c1|c2) & BSP_CONTENTS_FLOCKING) != 0)
+			if(((c1|c2) & Contents.BSP_CONTENTS_FLOCKING) != 0)
 			{
 				return	false;
 			}
 
-			if((c1 & BSP_CONTENTS_SOLID2) != 0)
+			if((c1 & Contents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return	true;
 			}
@@ -756,12 +709,12 @@ namespace BSPLib
 				for(Brush = Brushes;Brush != null;Brush=Brush.mNext)
 				{
 					if(((Pass & 1) != 0)
-						&& ((Brush.mOriginal.mContents & BSP_CONTENTS_DETAIL2) == 0))
+						&& ((Brush.mOriginal.mContents & Contents.BSP_CONTENTS_DETAIL2) == 0))
 					{
 						continue;
 					}
 					if(((Pass & 1) == 0)
-						&& ((Brush.mOriginal.mContents & BSP_CONTENTS_DETAIL2) != 0))
+						&& ((Brush.mOriginal.mContents & Contents.BSP_CONTENTS_DETAIL2) != 0))
 					{
 						continue;
 					}

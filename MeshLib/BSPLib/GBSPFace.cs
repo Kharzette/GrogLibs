@@ -16,16 +16,15 @@ namespace BSPLib
 		public Int32		mPlaneNum;
 		public Int32		mPlaneSide;
 
-		public Int32		mEntity;					// Originating entity
+		public Int32		mEntity;	//Originating entity
 
-		public byte			mVisible;			
+		public bool			mbVisible;			
 
 		//For GFX file saving
 		public Int32		mOutputNum;	
 
 		public Int32		[]mIndexVerts;
 		public Int32		mFirstIndexVert;
-		public Int32		mNumIndexVerts;
 
 		public GBSPPortal	mPortal;
 		public GBSPFace		[]mSplit	=new GBSPFace[2];
@@ -46,11 +45,10 @@ namespace BSPLib
 			mPlaneNum		=copyMe.mPlaneNum;
 			mPlaneSide		=copyMe.mPlaneSide;
 			mEntity			=copyMe.mEntity;
-			mVisible		=copyMe.mVisible;
+			mbVisible		=copyMe.mbVisible;
 			mOutputNum		=copyMe.mOutputNum;
 			mIndexVerts		=copyMe.mIndexVerts;
 			mFirstIndexVert	=copyMe.mFirstIndexVert;
-			mNumIndexVerts	=copyMe.mNumIndexVerts;
 			mPortal			=copyMe.mPortal;
 			mSplit[0]		=copyMe.mSplit[0];
 			mSplit[1]		=copyMe.mSplit[1];
@@ -82,13 +80,13 @@ namespace BSPLib
 				return null;
 			}
 
-			if((Face1.mContents[0] & GBSPBrush.BSP_MERGE_SEP_CONTENTS)
-				!= (Face2.mContents[0] & GBSPBrush.BSP_MERGE_SEP_CONTENTS))
+			if((Face1.mContents[0] & Contents.BSP_MERGE_SEP_CONTENTS)
+				!= (Face2.mContents[0] & Contents.BSP_MERGE_SEP_CONTENTS))
 			{
 				return	null;
 			}
-			if((Face1.mContents[1] & GBSPBrush.BSP_MERGE_SEP_CONTENTS)
-				!= (Face2.mContents[1] & GBSPBrush.BSP_MERGE_SEP_CONTENTS))
+			if((Face1.mContents[1] & Contents.BSP_MERGE_SEP_CONTENTS)
+				!= (Face2.mContents[1] & Contents.BSP_MERGE_SEP_CONTENTS))
 			{
 				return	null;
 			}
@@ -385,18 +383,13 @@ namespace BSPLib
 
 		internal bool FixTJunctions(FaceFixer ff, TexInfoPool tip)
 		{
-			bool	bRet	=ff.FixTJunctions(ref mIndexVerts, tip.mTexInfos[mTexInfo]);
-
-			mNumIndexVerts	=mIndexVerts.Length;
-
-			return	bRet;
+			return	ff.FixTJunctions(ref mIndexVerts, tip.mTexInfos[mTexInfo]);
 		}
 
 
 		internal bool GetFaceVertIndexNumbers(FaceFixer ff)
 		{
 			mIndexVerts		=ff.IndexFaceVerts(mPoly.mVerts);
-			mNumIndexVerts	=mIndexVerts.Length;
 			return	true;
 		}
 	}
