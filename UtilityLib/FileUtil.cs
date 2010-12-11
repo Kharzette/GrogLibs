@@ -28,5 +28,15 @@ namespace UtilityLib
 				return	File.Open(fullPath, mode, access);
 			}
 		}
+
+
+		public static bool FileExists(string fileName)
+		{
+			string	fullPath	=Path.Combine(
+									StorageContainer.TitleLocation,
+									fileName);
+
+			return	File.Exists(fullPath);
+		}
 	}
 }

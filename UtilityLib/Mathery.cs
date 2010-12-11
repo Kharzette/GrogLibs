@@ -9,6 +9,7 @@ namespace UtilityLib
 {
 	public class Mathery
 	{
+		public const float		ON_EPSILON		=0.1f;
 		public const float		NORMAL_EPSILON	=0.00001f;
 		public const float		DIST_EPSILON	=0.01f;
 		public const float		ANGLE_EPSILON	=0.00001f;
@@ -94,6 +95,12 @@ namespace UtilityLib
 				return	false;
 			}
 			return	true;
+		}
+
+
+		public static bool CompareVector(Vector3 v1, Vector3 v2)
+		{
+			return	CompareVectorEpsilon(v1, v2, VCompareEpsilon);
 		}
 
 
