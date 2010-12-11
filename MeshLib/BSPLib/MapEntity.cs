@@ -12,7 +12,6 @@ namespace BSPLib
 		public List<MapBrush>				mBrushes	=new List<MapBrush>();
 		public Dictionary<string, string>	mData		=new Dictionary<string, string>();
 		public Int32						mModelNum;
-		public UInt32						mFlags;
 
 
 		public bool GetOrigin(out Vector3 org)
@@ -23,6 +22,58 @@ namespace BSPLib
 				return	false;
 			}
 			string	[]szVec	=mData["origin"].Split(' ');
+			if(szVec.Length != 3)
+			{
+				return	false;
+			}
+
+			if(!Single.TryParse(szVec[0], out org.X))
+			{
+				return	false;
+			}
+			if(!Single.TryParse(szVec[1], out org.Y))
+			{
+				return	false;
+			}
+			if(!Single.TryParse(szVec[2], out org.Z))
+			{
+				return	false;
+			}
+			//flip x
+			org.X	=-org.X;
+
+			//swap y and z
+			float	zTemp	=org.Z;
+			org.Z	=org.Y;
+			org.Y	=zTemp;
+
+			return	true;
+		}
+
+
+		public bool GetFloat(string key, out float val)
+		{
+			val	=0.0f;
+			if(!mData.ContainsKey(key))
+			{
+				return	false;
+			}
+			if(!Single.TryParse(mData[key], out val))
+			{
+				return	false;
+			}
+			return	true;
+		}
+
+
+		public bool GetVector(string key, out Vector3 org)
+		{
+			org	=Vector3.Zero;
+			if(!mData.ContainsKey(key))
+			{
+				return	false;
+			}
+			string	[]szVec	=mData[key].Split(' ');
 			if(szVec.Length != 3)
 			{
 				return	false;
@@ -398,9 +449,22 @@ namespace BSPLib
 			}
 		}
 
-		internal void GetLightType(out int p)
+
+		internal void GetLightType(out UInt32 type)
 		{
-			throw new NotImplementedException();
+			string	className	="";
+			if(mData.ContainsKey("classname"))
+			{
+				className	=mData["classname"];
+			}
+			if(className == "light_spot")
+			{
+				type	=DirectLight.DLight_Spot;
+			}
+			else
+			{
+				type	=DirectLight.DLight_Point;
+			}
 		}
 	}
 }

@@ -85,8 +85,6 @@ namespace BSPLib
 			bw.Write(mNumClusters);
 			bw.Write(mAreas[0]);
 			bw.Write(mAreas[1]);
-			Int32	motionPointerFakeThing	=0;
-			bw.Write(motionPointerFakeThing);
 		}
 
 		public void Read(BinaryReader br)
@@ -110,7 +108,6 @@ namespace BSPLib
 			mNumClusters	=br.ReadInt32();
 			mAreas[0]		=br.ReadInt32();
 			mAreas[1]		=br.ReadInt32();
-			Int32	fake	=br.ReadInt32();
 		}
 	}
 

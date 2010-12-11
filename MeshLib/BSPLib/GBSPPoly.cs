@@ -15,6 +15,18 @@ namespace BSPLib
 
 
 		public GBSPPoly() { }
+		internal GBSPPoly(GFXFace Face, Int32 []vertInds, Vector3 []verts)
+		{
+			for(int i=0;i < Face.mNumVerts;i++)
+			{
+				int	ind	=vertInds[i + Face.mFirstVert];
+
+				mVerts.Add(verts[ind]);
+			}
+			RemoveDegenerateEdges();			
+		}
+
+
 		internal GBSPPoly(GBSPPoly copyMe)
 		{
 			mVerts.Clear();

@@ -23,7 +23,7 @@ namespace BSPLib
 		public const UInt32	TEXINFO_SKY			=(1<<2);
 		public const UInt32	TEXINFO_LIGHT		=(1<<3);
 		public const UInt32	TEXINFO_TRANS		=(1<<4);
-		public const UInt32	TEXINFO_GOURAD		=(1<<5);
+		public const UInt32	TEXINFO_GOURAUD		=(1<<5);
 		public const UInt32	TEXINFO_FLAT		=(1<<6);
 		public const UInt32	TEXINFO_NO_LIGHTMAP	=(1<<15);
 

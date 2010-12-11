@@ -40,22 +40,32 @@ namespace BSPLib
 
 	public class RADPatch
 	{
-		RADPatch	Next;				// Next patch in list
-		GBSPPoly	Poly;				// Poly for patch	(Not used thoughout entire life)
-		Vector3		Origin;				// Origin
-		Int32		Leaf;				// Leaf patch is looking into
-		float		Area;				// Area of patch
-		GBSPPlane	Plane;				// Plane
-		UInt16		NumReceivers;
-		RADReceiver	[]Receivers;			// What patches this patch emits to
-		Int32		NumSamples;			// Number of samples lightmaps has contributed
-		Vector3		RadStart;			// Power of patch from original lightmap
-		Vector3		RadSend;			// How much to send each bounce
-		Vector3		RadReceive;			// How much received from current bounce
-		Vector3		RadFinal;			// How much received from all bounces (what to add back to the lightmap)
-		Vector3		Reflectivity;
-		Vector3		Mins;				// Mins/ Max of patch
-		Vector3		Maxs;
+		public RADPatch		mNext;				//Next patch in list
+		public GBSPPoly		mPoly;				//Poly for patch	(Not used thoughout entire life)
+		public Vector3		mOrigin;				//Origin
+		public Int32		mLeaf;				//Leaf patch is looking into
+		public float		mArea;				//Area of patch
+		public GBSPPlane	mPlane;				//Plane
+		public UInt16		mNumReceivers;
+		public RADReceiver	[]mReceivers;		//What patches this patch emits to
+		public Int32		mNumSamples;			//Number of samples lightmaps has contributed
+		public Vector3		mRadStart;			//Power of patch from original lightmap
+		public Vector3		mRadSend;			//How much to send each bounce
+		public Vector3		mRadReceive;			//How much received from current bounce
+		public Vector3		mRadFinal;			//How much received from all bounces (what to add back to the lightmap)
+		public Vector3		mReflectivity;
+		public Bounds		mBounds;
+
+
+		internal bool CalcInfo()
+		{
+			mBounds	=new Bounds();
+			foreach(Vector3 pnt in mPoly.mVerts)
+			{
+				mBounds.AddPointToBounds(pnt);
+			}
+			return	true;
+		}
 	}
 
 
@@ -77,9 +87,76 @@ namespace BSPLib
 	}
 
 
+	public class TriEdge
+	{
+		public Int32		p0, p1;
+		public Vector3		mNormal;
+		public float		mDist;
+		public Tri			mTri;
+	}
+
+
+	public class Tri
+	{
+		public TriEdge	[]mEdges	=new TriEdge[3];
+	}
+
+
+	public class PlaneFace
+	{
+		public PlaneFace	mNext;
+		public Int32		mGFXFace;
+	}
+
+
+	public class TriPatch
+	{
+		public int			mNumPoints;
+		public int			mNumEdges;
+		public int			mNumTris;
+		public GBSPPlane	mPlane;
+		public TriEdge		[][]mEdgeMatrix;
+		public RADPatch		[]mPoints;
+		public TriEdge		[]mEdges;
+		public Tri			[]mTriList;
+
+		public const Int32	MAX_TRI_POINTS		=1024;
+		public const Int32	MAX_TRI_EDGES		=(MAX_TRI_POINTS * 6);
+		public const Int32	MAX_TRI_TRIS		=(MAX_TRI_POINTS * 2);
+		public const float	MIN_MAX_BOUNDS2		=Bounds.MIN_MAX_BOUNDS * 2;
+
+
+		public TriPatch()
+		{
+			mEdgeMatrix	=new TriEdge[MAX_TRI_POINTS][];
+			for(int i=0;i < MAX_TRI_POINTS;i++)
+			{
+				mEdgeMatrix[i]	=new TriEdge[MAX_TRI_POINTS];
+			}
+			mPoints		=new RADPatch[MAX_TRI_POINTS];
+			mEdges		=new TriEdge[MAX_TRI_EDGES];
+			mTriList	=new Tri[MAX_TRI_TRIS];
+		}
+	}
+
+
 	public class RADReceiver
 	{
-		UInt16	Patch;
-		UInt16	Amount;
+		public UInt16	mPatch;
+		public UInt16	mAmount;
+
+
+		internal void Read(System.IO.BinaryReader br)
+		{
+			mPatch	=br.ReadUInt16();
+			mAmount	=br.ReadUInt16();
+		}
+
+
+		internal void Write(System.IO.BinaryWriter bw)
+		{
+			bw.Write(mPatch);
+			bw.Write(mAmount);
+		}
 	}
 }

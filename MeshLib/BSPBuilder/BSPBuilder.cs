@@ -510,7 +510,9 @@ namespace BSPBuilder
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
 				mMap	=new Map();
-				mMap.LightGBSPFile(fileName, mMainForm.LightParameters);
+				mMap.LightGBSPFile(fileName,
+					mMainForm.LightParameters,
+					mMainForm.BSPParameters);
 			}
 		}
 
