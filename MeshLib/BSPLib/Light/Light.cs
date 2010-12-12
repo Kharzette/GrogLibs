@@ -385,6 +385,56 @@ namespace BSPLib
 		public Bounds		mBounds;
 
 
+		internal bool PatchNeedsSplit(bool bFastPatch, int patchSize, out GBSPPlane Plane)
+		{
+			Int32	i;
+
+			if(bFastPatch)
+			{
+				float	Dist;
+				
+				for(i=0;i < 3;i++)
+				{
+					Dist	=UtilityLib.Mathery.VecIdx(mBounds.mMaxs, i)
+								- UtilityLib.Mathery.VecIdx(mBounds.mMins, i);
+					
+					if(Dist > patchSize)
+					{
+						//Cut it right through the center...
+						Plane.mNormal	=Vector3.Zero;
+						UtilityLib.Mathery.VecIdxAssign(ref Plane.mNormal, i, 1.0f);
+						Plane.mDist	=(UtilityLib.Mathery.VecIdx(mBounds.mMaxs, i)
+							+ UtilityLib.Mathery.VecIdx(mBounds.mMins, i))
+								/ 2.0f;
+						Plane.mType	=GBSPPlane.PLANE_ANY;
+						return	true;
+					}
+				}
+			}
+			else
+			{
+				float	Min, Max;
+				for(i=0;i < 3;i++)
+				{
+					Min	=UtilityLib.Mathery.VecIdx(mBounds.mMins, i) + 1.0f;
+					Max	=UtilityLib.Mathery.VecIdx(mBounds.mMaxs, i) - 1.0f;
+
+					if(Math.Floor(Min / patchSize)
+						< Math.Floor(Max / patchSize))
+					{
+						Plane.mNormal	=Vector3.Zero;
+						UtilityLib.Mathery.VecIdxAssign(ref Plane.mNormal, i, 1.0f);
+						Plane.mDist	=patchSize * (1.0f + (float)Math.Floor(Min / patchSize));
+						Plane.mType	=GBSPPlane.PLANE_ANY;
+						return	true;
+					}
+				}
+			}
+			Plane	=new GBSPPlane();
+			return	false;
+		}
+
+
 		internal bool CalcInfo()
 		{
 			mBounds	=new Bounds();

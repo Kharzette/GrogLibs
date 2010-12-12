@@ -128,7 +128,7 @@ namespace BSPLib
 			{
 				NextPatch	=CPatch.mNext;
 
-				if(PatchNeedsSplit(CPatch, out Plane))
+				if(CPatch.PatchNeedsSplit(mLightParams.mbFastPatch, mLightParams.mPatchSize, out Plane))
 				{
 					NumPatches++;
 

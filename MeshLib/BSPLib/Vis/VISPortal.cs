@@ -66,7 +66,6 @@ namespace BSPLib
 			Int32		LeafNum;
 			Int32		PNum;
 
-//			PNum	=Array.IndexOf(gg.VisPortals, DestPortal);
 			Debug.Assert(visIndexer.ContainsKey(DestPortal));
 			PNum	=visIndexer[DestPortal];
 			
@@ -142,9 +141,6 @@ namespace BSPLib
 			LeafNum	=DestPortal.mLeaf;
 			Leaf	=visLeafs[LeafNum];
 
-//			Might	=(uint32*)Stack.VisBits;
-//			Vis		=(uint32*)mFinalVisBits;
-
 			// Now, try and Flood into the leafs that this portal touches
 			for(Portal=Leaf.mPortals;Portal != null;Portal=Portal.mNext)
 			{
@@ -186,7 +182,6 @@ namespace BSPLib
 				}
 				else
 				{
-//					Test = (uint32*)Portal.mVisBits;
 					for(j=0;j < mFinalVisBits.Length;j++)
 					{
 						//there is no & for bytes, can you believe that shit?
