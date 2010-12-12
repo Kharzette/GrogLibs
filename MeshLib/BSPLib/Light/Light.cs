@@ -8,7 +8,7 @@ namespace BSPLib
 {
 	public class LInfo
 	{
-		public Vector3	[][]RGBLData	=new Vector3[MAX_LTYPE_INDEX][];
+		Vector3	[][]RGBLData	=new Vector3[MAX_LTYPE_INDEX][];
 		public Int32	NumLTypes;
 		public bool		RGB;
 		public float	[]Mins		=new float[2];
@@ -20,6 +20,16 @@ namespace BSPLib
 		public const int	MAX_LTYPE_INDEX		=12;
 		public const int	MAX_LMAP_SIZE		=130;
 		public const int	MAX_LTYPES			=4;
+
+
+		internal Vector3 []GetRGBLightData(Int32 lightIndex)
+		{
+			if(lightIndex > NumLTypes)
+			{
+				return	null;
+			}
+			return	RGBLData[lightIndex];
+		}
 
 
 		internal void ApplyLightToPatchList(RADPatch rp, Vector3 []facePoints)
@@ -53,21 +63,48 @@ namespace BSPLib
 				}
 			}
 		}
+
+
+		internal void AllocLightType(int lightIndex, Int32 size)
+		{
+			if(RGBLData[lightIndex] == null)
+			{
+				if(NumLTypes >= LInfo.MAX_LTYPES)
+				{
+					Map.Print("Max Light Types on face.\n");
+					return;
+				}
+			
+				RGBLData[lightIndex]	=new Vector3[size];
+				NumLTypes++;
+			}
+		}
+
+
+		internal void FreeLightType(int lightIndex)
+		{
+			RGBLData[lightIndex]	=null;
+		}
 	}
 
 
 	public class FInfo
 	{
-		public Int32	mFace;
-		public GFXPlane	mPlane		=new GFXPlane();
-		Vector3	[]mT2WVecs	=new Vector3[2];
-		Vector3	mTexOrg;
-		public Vector3	[]mPoints;
-		public Int32	mNumPoints;
-		public Vector3	mCenter;
-		public float	mRadius;
+		Int32		mFace;
+		GFXPlane	mPlane		=new GFXPlane();
+		Vector3		[]mT2WVecs	=new Vector3[2];
+		Vector3		mTexOrg;
+		Vector3		[]mPoints;
+		Vector3		mCenter;
+		float		mRadius;
 
 		public const int	LGRID_SIZE	=16;
+
+
+		internal Int32 GetFaceIndex()
+		{
+			return	mFace;
+		}
 
 
 		internal void CalcFaceLightInfo(LInfo lightInfo, List<Vector3> verts)
@@ -165,7 +202,7 @@ namespace BSPLib
 		{
 			Vector3	FaceMid;
 			float	MidU, MidV, StartU, StartV, CurU, CurV;
-			Int32	u, v, Width, Height, Leaf;
+			Int32	u, v, Width, Height;
 			bool	[]InSolid	=new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE];
 
 			MidU	=(LightInfo.Maxs[0] + LightInfo.Mins[0]) * 0.5f;
@@ -177,8 +214,6 @@ namespace BSPLib
 			Height	=(LightInfo.LSize[1]) + 1;
 			StartU	=((float)LightInfo.LMins[0]+UOfs) * (float)FInfo.LGRID_SIZE;
 			StartV	=((float)LightInfo.LMins[1]+VOfs) * (float)FInfo.LGRID_SIZE;
-
-			mNumPoints = Width*Height;
 
 			for(v=0;v < Height;v++)
 			{
@@ -215,7 +250,7 @@ namespace BSPLib
 				return;
 			}
 
-			for(v=0;v < mNumPoints;v++)
+			for(v=0;v < mPoints.Length;v++)
 			{
 				float	BestDist, Dist;
 
@@ -228,7 +263,7 @@ namespace BSPLib
 				Vector3	pBestPoint	=FaceMid;
 				BestDist	=Bounds.MIN_MAX_BOUNDS;
 				
-				for(u=0;u < mNumPoints;u++)
+				for(u=0;u < mPoints.Length;u++)
 				{
 					if(mPoints[v] == mPoints[u])
 					{
@@ -260,6 +295,36 @@ namespace BSPLib
 
 			//free cached vis stuff
 			InSolid	=null;
+		}
+
+
+		internal void SetFaceIndex(int fidx)
+		{
+			mFace	=fidx;
+		}
+
+
+		internal Vector3 GetPlaneNormal()
+		{
+			return	mPlane.mNormal;
+		}
+
+
+		internal void SetPlane(GFXPlane pln)
+		{
+			mPlane	=pln;
+		}
+
+
+		internal Vector3[] GetPoints()
+		{
+			return	mPoints;
+		}
+
+
+		internal void AllocPoints(int size)
+		{
+			mPoints	=new Vector3[size];
 		}
 	}
 

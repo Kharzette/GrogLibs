@@ -919,12 +919,13 @@ namespace BSPLib
 
 		bool CalcFaceInfo(FInfo FaceInfo, LInfo LightInfo)
 		{
-			Int32	Face	=FaceInfo.mFace;
+			Int32	fidx	=FaceInfo.GetFaceIndex();
 			Int32	indOffset;
 			
 			List<Vector3>	verts	=new List<Vector3>();
-			indOffset	=mGFXFaces[Face].mFirstVert;
-			for(int i=0;i < mGFXFaces[Face].mNumVerts;i++, indOffset++)
+			indOffset				=mGFXFaces[fidx].mFirstVert;
+
+			for(int i=0;i < mGFXFaces[fidx].mNumVerts;i++, indOffset++)
 			{
 				int	vIndex	=mGFXVertIndexes[indOffset];
 				verts.Add(mGFXVerts[vIndex]);
@@ -968,7 +969,7 @@ namespace BSPLib
 
 				if((pGFXTexInfo.mFlags & TexInfo.TEXINFO_FLAT) != 0)
 				{
-					Normal	=mFaceInfos[FaceNum].mPlane.mNormal;
+					Normal	=mFaceInfos[FaceNum].GetPlaneNormal();
 				}
 				else
 				{
@@ -1159,14 +1160,16 @@ namespace BSPLib
 
 				int	pnum	=mGFXFaces[i].mPlaneNum;
 				int	pside	=mGFXFaces[i].mPlaneSide;
-				mFaceInfos[i].mPlane.mNormal	=mGFXPlanes[pnum].mNormal;
-				mFaceInfos[i].mPlane.mDist	=mGFXPlanes[pnum].mDist;
-				mFaceInfos[i].mPlane.mType	=mGFXPlanes[pnum].mType;
+				GFXPlane	pln	=new GFXPlane();
+				pln.mNormal	=mGFXPlanes[pnum].mNormal;
+				pln.mDist	=mGFXPlanes[pnum].mDist;
+				pln.mType	=mGFXPlanes[pnum].mType;
 				if(pside != 0)
 				{
-					mFaceInfos[i].mPlane.Inverse();
-				}				
-				mFaceInfos[i].mFace	=i;
+					pln.Inverse();
+				}
+				mFaceInfos[i].SetPlane(pln);
+				mFaceInfos[i].SetFaceIndex(i);
 
 				GFXTexInfo	tex		=mGFXTexInfos[mGFXFaces[i].mTexInfo];
 				GFXFace		face	=mGFXFaces[i];
@@ -1206,14 +1209,8 @@ namespace BSPLib
 				Int32	Size	=(mLightMaps[i].LSize[0] + 1)
 					* (mLightMaps[i].LSize[1] + 1);
 
-				mFaceInfos[i].mPoints	=new Vector3[Size];
+				mFaceInfos[i].AllocPoints(Size);
 
-				if(mFaceInfos[i].mPoints == null)
-				{
-					Print("LightFaces:  Out of memory for face points.\n");
-					return	false;
-				}
-				
 				for(s=0;s < numSamples;s++)
 				{
 					//Hook.Printf("Sample  : %3i of %3i\n", s+1, NumSamples);
@@ -1238,7 +1235,7 @@ namespace BSPLib
 
 		void ApplyLightmapToPatches(Int32 Face)
 		{
-			mLightMaps[Face].ApplyLightToPatchList(mFacePatches[Face], mFaceInfos[Face].mPoints);			
+			mLightMaps[Face].ApplyLightToPatchList(mFacePatches[Face], mFaceInfos[Face].GetPoints());
 		}
 
 
@@ -1253,11 +1250,13 @@ namespace BSPLib
 			float		Intensity;
 			DirectLight	DLight;
 
-			Normal	=FaceInfo.mPlane.mNormal;
+			Normal	=FaceInfo.GetPlaneNormal();
 
-			for(v=0;v < FaceInfo.mNumPoints;v++)
+			Vector3	[]facePoints	=FaceInfo.GetPoints();
+
+			for(v=0;v < facePoints.Length;v++)
 			{
-				Int32	nodeLandedIn	=FindNodeLandedIn(0, FaceInfo.mPoints[v]);
+				Int32	nodeLandedIn	=FindNodeLandedIn(0, facePoints[v]);
 				Leaf	=-(nodeLandedIn + 1);
 
 				if(Leaf < 0 || Leaf >= mGFXLeafs.Length)
@@ -1296,7 +1295,7 @@ namespace BSPLib
 						Intensity	=DLight.mIntensity;
 					
 						//Find the angle between the light, and the face normal
-						Vect	=DLight.mOrigin - FaceInfo.mPoints[v];
+						Vect	=DLight.mOrigin - facePoints[v];
 						Dist	=Vect.Length();
 						Vect.Normalize();
 
@@ -1350,7 +1349,7 @@ namespace BSPLib
 
 						// This is the slowest test, so make it last
 						Vector3	colResult	=Vector3.Zero;
-						if(RayCollision(FaceInfo.mPoints[v], DLight.mOrigin, ref colResult))
+						if(RayCollision(facePoints[v], DLight.mOrigin, ref colResult))
 						{
 							goto	Skip;	//Ray is in shadow
 						}
@@ -1358,19 +1357,11 @@ namespace BSPLib
 						LType	=DLight.mLType;
 
 						//If the data for this LType has not been allocated, allocate it now...
-						if(LightInfo.RGBLData[LType] == null)
-						{
-							if(LightInfo.NumLTypes >= LInfo.MAX_LTYPES)
-							{
-								Map.Print("Max Light Types on face.\n");
-								return	false;
-							}
-						
-							LightInfo.RGBLData[LType]	=new Vector3[FaceInfo.mNumPoints];
-							LightInfo.NumLTypes++;
-						}
+						LightInfo.AllocLightType(LType, facePoints.Length);
 
-						LightInfo.RGBLData[LType][v]	+=DLight.mColor * (Val * Scale);
+						Vector3	[]rgb	=LightInfo.GetRGBLightData(LType);
+
+						rgb[v]	+=DLight.mColor * (Val * Scale);
 
 						Skip:;
 					}
@@ -1490,17 +1481,13 @@ namespace BSPLib
 
 		bool SaveLightMaps(BinaryWriter f, ref int numRGBMaps)
 		{
-//			LInfo		*L;
 			Int32		i, j, k,l, Size;
 			float		Max, Max2;
 			byte		[]LData	=new byte[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE * 3 * 4];
-//			byte		*pLData;
 			long		Pos1, Pos2;
 			Int32		NumLTypes;
-//			FInfo		*pFaceInfo;
 			Int32		LDataOfs	=0;
 
-//			geVFile_Tell(f, &Pos1);
 			Pos1	=f.BaseStream.Position;
 			
 			// Write out fake chunk (so we can write the real one here later)
@@ -1538,26 +1525,21 @@ namespace BSPLib
 				}
 
 				//Get the size of map
-				Size	=mFaceInfos[i].mNumPoints;
+				Size	=mFaceInfos[i].GetPoints().Length;
 
 				Vector3	minLight	=mLightParams.mMinLight;
 
+				Vector3	[]rgb	=L.GetRGBLightData(0);
+
 				//Create style 0, if min light is set, and style 0 does not exist
-				if((L.RGBLData[0] == null) &&
-					(minLight.X > 1
-					|| minLight.Y > 1
-					|| minLight.Z > 1))
+				if((rgb == null) &&
+					(minLight.X > 1 || minLight.Y > 1 || minLight.Z > 1))
 				{
-					L.RGBLData[0]	=new Vector3[Size];
-					if(L.RGBLData[0] == null)
+					L.AllocLightType(0, Size);
+					rgb	=L.GetRGBLightData(0);
+					for(int ld=0;ld < rgb.Length;ld++)
 					{
-						Print("SaveLightmaps:  Out of memory for lightmap.\n");
-						return	false;
-					}
-					L.NumLTypes++;
-					for(int ld=0;ld < L.RGBLData[0].Length;ld++)
-					{
-						L.RGBLData[0][ld]	=Vector3.Zero;
+						rgb[ld]	=Vector3.Zero;
 					}
 				}
 				
@@ -1589,7 +1571,8 @@ namespace BSPLib
 				NumLTypes	=0;		// Reset number of LTypes for this face
 				for(k=0;k < LInfo.MAX_LTYPE_INDEX;k++)
 				{
-					if(L.RGBLData[k] == null)
+					rgb	=L.GetRGBLightData(k);
+					if(rgb == null)
 					{
 						continue;
 					}
@@ -1604,12 +1587,10 @@ namespace BSPLib
 					NumLTypes++;
 
 					LDataOfs	=0;
-//					pLData = LData;
-//					geVec3d *pRGB = L.RGBLData[k];
 
-					for(j=0;j < Size;j++)//, pRGB++)
+					for(j=0;j < Size;j++)
 					{
-						Vector3	WorkRGB	=L.RGBLData[k][j] * mLightParams.mLightScale;
+						Vector3	WorkRGB	=rgb[j] * mLightParams.mLightScale;
 
 						if(k == 0)
 						{
@@ -1648,7 +1629,7 @@ namespace BSPLib
 
 					f.Write(LData, 0, 3 * Size);
 
-					L.RGBLData[k]	=null;
+					L.FreeLightType(k);
 				}
 
 				if(L.NumLTypes != NumLTypes)
@@ -2928,12 +2909,15 @@ namespace BSPLib
 				}
 				else
 				{
-					bool	Created	=(mLightMaps[i].RGBLData[0] != null);
+					Vector3	[]rgb	=mLightMaps[i].GetRGBLightData(0);
+					bool	Created	=(rgb != null);
+
+					Vector3	[]facePoints	=mFaceInfos[i].GetPoints();
 
 					int	rgbOfs	=0;				
-					for(k=0;k < mFaceInfos[i].mNumPoints;k++, rgbOfs++)
+					for(k=0;k < facePoints.Length;k++, rgbOfs++)
 					{
-						pPoint	=mFaceInfos[i].mPoints[k];
+						pPoint	=facePoints[k];
 						if(!SampleTriangulation(pPoint, Tri, out Add))
 						{
 							Print("AbsorbPatches:  Could not sample from patch triangles.\n");
@@ -2944,25 +2928,14 @@ namespace BSPLib
 						{
 							if(Add.X > 0 || Add.Y > 0 || Add.Z > 0)
 							{
-								if(mLightMaps[i].NumLTypes > LInfo.MAX_LTYPES)
-								{
-									Print("AbsorbPatches:  Too many Light Types on Face.\n");
-									return	false;
-								}
-
-								mLightMaps[i].RGBLData[0]	=new Vector3[mFaceInfos[i].mNumPoints];
-								if(mLightMaps[i].RGBLData[0] == null)
-								{
-									Print("AbsorbPAtches:  Out of memory for lightmap.\n");
-									return	false;
-								}
-								mLightMaps[i].NumLTypes++;
+								mLightMaps[i].AllocLightType(0, facePoints.Length);
 								Created	=true;
 							}
 						}
 						if(Created)
 						{
-							mLightMaps[i].RGBLData[0][k]	+=Add;
+							rgb	=mLightMaps[i].GetRGBLightData(0);
+							rgb[k]	+=Add;
 						}
 					}
 				}
