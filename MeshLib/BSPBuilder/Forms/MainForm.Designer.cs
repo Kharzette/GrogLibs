@@ -207,6 +207,7 @@
 			// 
 			this.ConsoleOut.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
+			this.ConsoleOut.Font = new System.Drawing.Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.ConsoleOut.Location = new System.Drawing.Point(12, 396);
 			this.ConsoleOut.Multiline = true;
 			this.ConsoleOut.Name = "ConsoleOut";
@@ -579,7 +580,7 @@
 			this.PatchSize.Size = new System.Drawing.Size(45, 20);
 			this.PatchSize.TabIndex = 8;
 			this.PatchSize.Value = new decimal(new int[] {
-            16,
+            64,
             0,
             0,
             0});
