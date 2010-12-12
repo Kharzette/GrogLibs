@@ -8,37 +8,42 @@ namespace BSPLib
 {
 	public class LInfo
 	{
-		Vector3	[][]RGBLData	=new Vector3[MAX_LTYPE_INDEX][];
-		public Int32	NumLTypes;
-		public bool		RGB;
-		public float	[]Mins		=new float[2];
-		public float	[]Maxs		=new float[2];
-		public Int32	[]LMaxs		=new int[2];
-		public Int32	[]LMins		=new int[2];
-		public Int32	[]LSize		=new int[2];
+		Vector3	[][]mRGBLData	=new Vector3[MAX_LTYPE_INDEX][];
+		Int32	mNumLTypes;
+		float	[]mMins		=new float[2];
+		float	[]mMaxs		=new float[2];
+		Int32	[]mLMaxs		=new int[2];
+		Int32	[]mLMins		=new int[2];
+		Int32	[]mLSize		=new int[2];
 
 		public const int	MAX_LTYPE_INDEX		=12;
 		public const int	MAX_LMAP_SIZE		=130;
 		public const int	MAX_LTYPES			=4;
 
 
+		internal Int32 GetNumLightTypes()
+		{
+			return	mNumLTypes;
+		}
+
+
 		internal Vector3 []GetRGBLightData(Int32 lightIndex)
 		{
-			if(lightIndex > NumLTypes)
+			if(lightIndex > mNumLTypes)
 			{
 				return	null;
 			}
-			return	RGBLData[lightIndex];
+			return	mRGBLData[lightIndex];
 		}
 
 
 		internal void ApplyLightToPatchList(RADPatch rp, Vector3 []facePoints)
 		{
-			if(RGBLData[0] == null)
+			if(mRGBLData[0] == null)
 			{
 				return;
 			}
-			RADPatch.ApplyLightList(rp, RGBLData[0], facePoints);
+			RADPatch.ApplyLightList(rp, mRGBLData[0], facePoints);
 		}
 
 
@@ -47,17 +52,17 @@ namespace BSPLib
 			//Get the Texture U/V mins/max, and Grid aligned lmap mins/max/size
 			for(int i=0;i < 2;i++)
 			{
-				Mins[i]	=mins[i];
-				Maxs[i]	=maxs[i];
+				mMins[i]	=mins[i];
+				mMaxs[i]	=maxs[i];
 
 				mins[i]	=(float)Math.Floor(mins[i] / FInfo.LGRID_SIZE);
 				maxs[i]	=(float)Math.Ceiling(maxs[i] / FInfo.LGRID_SIZE);
 
-				LMins[i]	=(Int32)mins[i];
-				LMaxs[i]	=(Int32)maxs[i];
-				LSize[i]	=(Int32)(maxs[i] - mins[i]);
+				mLMins[i]	=(Int32)mins[i];
+				mLMaxs[i]	=(Int32)maxs[i];
+				mLSize[i]	=(Int32)(maxs[i] - mins[i]);
 
-				if((LSize[i] + 1) > LInfo.MAX_LMAP_SIZE)
+				if((mLSize[i] + 1) > LInfo.MAX_LMAP_SIZE)
 				{
 					Map.Print("CalcFaceInfo:  Face was not subdivided correctly.\n");
 				}
@@ -67,23 +72,58 @@ namespace BSPLib
 
 		internal void AllocLightType(int lightIndex, Int32 size)
 		{
-			if(RGBLData[lightIndex] == null)
+			if(mRGBLData[lightIndex] == null)
 			{
-				if(NumLTypes >= LInfo.MAX_LTYPES)
+				if(mNumLTypes >= LInfo.MAX_LTYPES)
 				{
 					Map.Print("Max Light Types on face.\n");
 					return;
 				}
 			
-				RGBLData[lightIndex]	=new Vector3[size];
-				NumLTypes++;
+				mRGBLData[lightIndex]	=new Vector3[size];
+				mNumLTypes++;
 			}
 		}
 
 
 		internal void FreeLightType(int lightIndex)
 		{
-			RGBLData[lightIndex]	=null;
+			mRGBLData[lightIndex]	=null;
+		}
+
+
+		internal void CalcMids(out float MidU, out float MidV)
+		{
+			MidU	=(mMaxs[0] + mMins[0]) * 0.5f;
+			MidV	=(mMaxs[1] + mMins[1]) * 0.5f;
+		}
+
+
+		internal void CalcSizeAndStart(float uOffset, float vOffset,
+			out int w, out int h, out float startU, out float startV)
+		{
+			w		=(mLSize[0]) + 1;
+			h		=(mLSize[1]) + 1;
+			startU	=((float)mLMins[0] + uOffset) * (float)FInfo.LGRID_SIZE;
+			startV	=((float)mLMins[1] + vOffset) * (float)FInfo.LGRID_SIZE;
+		}
+
+
+		internal Int32 GetLWidth()
+		{
+			return	mLSize[0] + 1;
+		}
+
+
+		internal Int32 GetLHeight()
+		{
+			return	mLSize[1] + 1;
+		}
+
+
+		internal Int32 CalcSize()
+		{
+			return	(mLSize[0] + 1)	* (mLSize[1] + 1);
 		}
 	}
 
@@ -205,15 +245,12 @@ namespace BSPLib
 			Int32	u, v, Width, Height;
 			bool	[]InSolid	=new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE];
 
-			MidU	=(LightInfo.Maxs[0] + LightInfo.Mins[0]) * 0.5f;
-			MidV	=(LightInfo.Maxs[1] + LightInfo.Mins[1]) * 0.5f;
+
+			LightInfo.CalcMids(out MidU, out MidV);
 
 			FaceMid	=mTexOrg + mT2WVecs[0] * MidU + mT2WVecs[1] * MidV;
 
-			Width	=(LightInfo.LSize[0]) + 1;
-			Height	=(LightInfo.LSize[1]) + 1;
-			StartU	=((float)LightInfo.LMins[0]+UOfs) * (float)FInfo.LGRID_SIZE;
-			StartV	=((float)LightInfo.LMins[1]+VOfs) * (float)FInfo.LGRID_SIZE;
+			LightInfo.CalcSizeAndStart(UOfs, VOfs, out Width, out Height, out StartU, out StartV);
 
 			for(v=0;v < Height;v++)
 			{
