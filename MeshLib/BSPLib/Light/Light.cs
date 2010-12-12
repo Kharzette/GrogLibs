@@ -60,8 +60,8 @@ namespace BSPLib
 	{
 		public Int32	mFace;
 		public GFXPlane	mPlane		=new GFXPlane();
-		public Vector3	[]mT2WVecs	=new Vector3[2];
-		public Vector3	mTexOrg;
+		Vector3	[]mT2WVecs	=new Vector3[2];
+		Vector3	mTexOrg;
 		public Vector3	[]mPoints;
 		public Int32	mNumPoints;
 		public Vector3	mCenter;
@@ -154,6 +154,112 @@ namespace BSPLib
 							- mPlane.mDist - 1;
 			Dist	*=distScale;
 			mTexOrg	=mTexOrg + texNormal * -Dist;
+		}
+
+		internal delegate bool IsPointInSolid(Vector3 pos);
+		internal delegate bool RayCollision(Vector3 front, Vector3 back, ref Vector3 Impacto);
+
+		internal void CalcFacePoints(LInfo LightInfo, float UOfs, float VOfs,
+			bool bExtraLightCorrection, IsPointInSolid pointInSolid,
+			RayCollision rayCollide)
+		{
+			Vector3	FaceMid;
+			float	MidU, MidV, StartU, StartV, CurU, CurV;
+			Int32	u, v, Width, Height, Leaf;
+			bool	[]InSolid	=new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE];
+
+			MidU	=(LightInfo.Maxs[0] + LightInfo.Mins[0]) * 0.5f;
+			MidV	=(LightInfo.Maxs[1] + LightInfo.Mins[1]) * 0.5f;
+
+			FaceMid	=mTexOrg + mT2WVecs[0] * MidU + mT2WVecs[1] * MidV;
+
+			Width	=(LightInfo.LSize[0]) + 1;
+			Height	=(LightInfo.LSize[1]) + 1;
+			StartU	=((float)LightInfo.LMins[0]+UOfs) * (float)FInfo.LGRID_SIZE;
+			StartV	=((float)LightInfo.LMins[1]+VOfs) * (float)FInfo.LGRID_SIZE;
+
+			mNumPoints = Width*Height;
+
+			for(v=0;v < Height;v++)
+			{
+				for(u=0;u < Width;u++)
+				{
+					CurU	=StartU + u * FInfo.LGRID_SIZE;
+					CurV	=StartV + v * FInfo.LGRID_SIZE;
+
+					mPoints[(v * Width) + u]
+						=mTexOrg + mT2WVecs[0] * CurU +
+							mT2WVecs[1] * CurV;
+
+					InSolid[(v * Width) + u]	=pointInSolid(mPoints[(v * Width) + u]);
+
+					if(!bExtraLightCorrection)
+					{
+						if(InSolid[(v * Width) + u])
+						{
+							Vector3	colResult	=Vector3.Zero;
+							if(rayCollide(FaceMid,
+								mPoints[(v * Width) + u], ref colResult))
+							{
+								Vector3	vect	=FaceMid - mPoints[(v * Width) + u];
+								vect.Normalize();
+								mPoints[(v * Width) + u]	=colResult + vect;
+							}
+						}
+					}
+				}
+			}
+
+			if(!bExtraLightCorrection)
+			{
+				return;
+			}
+
+			for(v=0;v < mNumPoints;v++)
+			{
+				float	BestDist, Dist;
+
+				if(!InSolid[v])
+				{
+					//Point is good, leave it alone
+					continue;
+				}
+
+				Vector3	pBestPoint	=FaceMid;
+				BestDist	=Bounds.MIN_MAX_BOUNDS;
+				
+				for(u=0;u < mNumPoints;u++)
+				{
+					if(mPoints[v] == mPoints[u])
+					{
+						continue;	//We know this point is bad
+					}
+
+					if(InSolid[u])
+					{
+						continue;	// We know this point is bad
+					}
+
+					//At this point, we have a good point,
+					//now see if it's closer than the current good point
+					Vector3	Vect	=mPoints[u] - mPoints[v];
+					Dist	=Vect.Length();
+					if(Dist < BestDist)
+					{
+						BestDist	=Dist;
+						pBestPoint	=mPoints[u];
+
+						if(Dist <= (FInfo.LGRID_SIZE - 0.1f))
+						{
+							break;	//This should be good enough...
+						}
+					}
+				}
+				mPoints[v]	=pBestPoint;
+			}
+
+			//free cached vis stuff
+			InSolid	=null;
 		}
 	}
 

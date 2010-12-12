@@ -1257,7 +1257,7 @@ namespace BSPLib
 
 			for(v=0;v < FaceInfo.mNumPoints;v++)
 			{
-				Int32	nodeLandedIn	=FindLeafLandedIn(0, FaceInfo.mPoints[v]);
+				Int32	nodeLandedIn	=FindNodeLandedIn(0, FaceInfo.mPoints[v]);
 				Leaf	=-(nodeLandedIn + 1);
 
 				if(Leaf < 0 || Leaf >= mGFXLeafs.Length)
@@ -1383,115 +1383,17 @@ namespace BSPLib
 
 		void CalcFacePoints(FInfo FaceInfo, LInfo LightInfo, float UOfs, float VOfs, bool bExtraLightCorrection)
 		{
-			Vector3	FaceMid;
-			float	MidU, MidV, StartU, StartV, CurU, CurV;
-			Int32	u, v, Width, Height, Leaf;
-			bool	[]InSolid	=new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE];
+			FaceInfo.CalcFacePoints(LightInfo, UOfs, VOfs, bExtraLightCorrection, IsPointInSolid, RayCollision);
+		}
 
-			MidU	=(LightInfo.Maxs[0] + LightInfo.Mins[0]) * 0.5f;
-			MidV	=(LightInfo.Maxs[1] + LightInfo.Mins[1]) * 0.5f;
 
-			FaceMid	=FaceInfo.mTexOrg + FaceInfo.mT2WVecs[0] * MidU
-						+ FaceInfo.mT2WVecs[1] * MidV;
+		bool IsPointInSolid(Vector3 pos)
+		{
+			Int32	node	=FindNodeLandedIn(0, pos);
 
-			Width	=(LightInfo.LSize[0]) + 1;
-			Height	=(LightInfo.LSize[1]) + 1;
-			StartU	=((float)LightInfo.LMins[0]+UOfs) * (float)FInfo.LGRID_SIZE;
-			StartV	=((float)LightInfo.LMins[1]+VOfs) * (float)FInfo.LGRID_SIZE;
+			Int32	Leaf	=-(node + 1);
 
-			FaceInfo.mNumPoints = Width*Height;
-
-			for(v=0;v < Height;v++)
-			{
-				for(u=0;u < Width;u++)
-				{
-					CurU	=StartU + u * FInfo.LGRID_SIZE;
-					CurV	=StartV + v * FInfo.LGRID_SIZE;
-
-					FaceInfo.mPoints[(v * Width) + u]
-						=FaceInfo.mTexOrg + FaceInfo.mT2WVecs[0] * CurU +
-							FaceInfo.mT2WVecs[1] * CurV;
-					
-					Int32	nodeLandedIn	=FindLeafLandedIn(0, FaceInfo.mPoints[(v * Width) + u]);
-					Leaf	=-(nodeLandedIn + 1);
-
-					//Pre-compute if this point is in solid space, so we can re-use it in the code below
-					if((mGFXLeafs[Leaf].mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
-					{
-						InSolid[(v * Width) + u]	=true;
-					}
-					else
-					{
-						InSolid[(v * Width) + u]	=false;
-					}
-
-					if(!bExtraLightCorrection)
-					{
-						if(InSolid[(v * Width) + u])
-						{
-							Vector3	colResult	=Vector3.Zero;
-							if(RayCollision(FaceMid,
-								FaceInfo.mPoints[(v * Width) + u], ref colResult))
-							{
-								Vector3	vect	=FaceMid - FaceInfo.mPoints[(v * Width) + u];
-								vect.Normalize();
-								FaceInfo.mPoints[(v * Width) + u]	=colResult + vect;
-							}
-						}
-					}
-				}
-			}
-
-			if(!bExtraLightCorrection)
-			{
-				return;
-			}
-
-			for(v=0;v < FaceInfo.mNumPoints;v++)
-			{
-				float	BestDist, Dist;
-
-				if(!InSolid[v])
-				{
-					//Point is good, leave it alone
-					continue;
-				}
-
-				Vector3	pBestPoint	=FaceMid;
-				BestDist	=Bounds.MIN_MAX_BOUNDS;
-				
-				for(u=0;u < FaceInfo.mNumPoints;u++)
-				{
-					if(FaceInfo.mPoints[v] == FaceInfo.mPoints[u])
-					{
-						continue;	//We know this point is bad
-					}
-
-					if(InSolid[u])
-					{
-						continue;	// We know this point is bad
-					}
-
-					//At this point, we have a good point,
-					//now see if it's closer than the current good point
-					Vector3	Vect	=FaceInfo.mPoints[u] - FaceInfo.mPoints[v];
-					Dist	=Vect.Length();
-					if(Dist < BestDist)
-					{
-						BestDist	=Dist;
-						pBestPoint	=FaceInfo.mPoints[u];
-
-						if(Dist <= (FInfo.LGRID_SIZE - 0.1f))
-						{
-							break;	//This should be good enough...
-						}
-					}
-				}
-				FaceInfo.mPoints[v]	=pBestPoint;
-			}
-
-			//free cached vis stuff
-			InSolid	=null;
+			return	((mGFXLeafs[Leaf].mContents & Contents.BSP_CONTENTS_SOLID2) != 0);
 		}
 
 
@@ -2198,7 +2100,7 @@ namespace BSPLib
 			}
 			Patch.mOrigin	+=Patch.mPlane.mNormal * 2.0f;
 
-			Int32	nodeLandedIn	=FindLeafLandedIn(0, Patch.mOrigin);
+			Int32	nodeLandedIn	=FindNodeLandedIn(0, Patch.mOrigin);
 			Patch.mLeaf	=-(nodeLandedIn + 1);
 
 			Patch.mArea	=Patch.mPoly.Area();
@@ -3531,7 +3433,7 @@ namespace BSPLib
 				//Find out what type of light it is by it's classname...
 				Entity.GetLightType(out DLight.mType);
 
-				Int32	nodeLandedIn	=FindLeafLandedIn(mGFXModels[0].mRootNode[0], DLight.mOrigin);
+				Int32	nodeLandedIn	=FindNodeLandedIn(mGFXModels[0].mRootNode[0], DLight.mOrigin);
 				Leaf	=-(nodeLandedIn + 1);
 				Cluster	=mGFXLeafs[Leaf].mCluster;
 
@@ -4373,7 +4275,7 @@ namespace BSPLib
 		}
 
 
-		Int32	FindLeafLandedIn(Int32 node, Vector3 pos)
+		Int32	FindNodeLandedIn(Int32 node, Vector3 pos)
 		{
 			float		Dist1;
 			GFXNode		pNode;
@@ -4400,12 +4302,12 @@ namespace BSPLib
 			
 			//Go down the side we are on first, then the other side
 			Int32	ret	=0;
-			ret	=FindLeafLandedIn(pNode.mChildren[Side], pos);
+			ret	=FindNodeLandedIn(pNode.mChildren[Side], pos);
 			if(ret < 0)
 			{
 				return	ret;
 			}
-			ret	=FindLeafLandedIn(pNode.mChildren[(Side == 0)? 1 : 0], pos);
+			ret	=FindNodeLandedIn(pNode.mChildren[(Side == 0)? 1 : 0], pos);
 			return	ret;
 		}
 
@@ -4416,7 +4318,7 @@ namespace BSPLib
 			Int32	Leaf, Cluster;
 			GFXLeaf	pLeaf;
 
-			Int32	node	=FindLeafLandedIn(rootNode, -pos);
+			Int32	node	=FindNodeLandedIn(rootNode, -pos);
 
 			Leaf	=-(node + 1);
 			Area	=mGFXLeafs[Leaf].mArea;
