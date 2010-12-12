@@ -56,7 +56,7 @@ namespace BSPLib
 		}
 
 
-		internal void FloodPortalsFastNoGlobals_r(VISPortal DestPortal,
+		internal void FloodPortalsFast_r(VISPortal DestPortal,
 			Dictionary<VISPortal, Int32> visIndexer,
 			bool []portSeen, VISLeaf []visLeafs,
 			int srcLeaf, ref int mightSee)
@@ -100,7 +100,7 @@ namespace BSPLib
 				//If SrcPortal can see this Portal, flood into it...
 				if(CanSeePortal(Portal))
 				{
-					FloodPortalsFastNoGlobals_r(Portal, visIndexer, portSeen, visLeafs, srcLeaf, ref mightSee);
+					FloodPortalsFast_r(Portal, visIndexer, portSeen, visLeafs, srcLeaf, ref mightSee);
 				}
 			}
 		}

@@ -554,7 +554,7 @@ namespace BSPBuilder
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
 				mMap	=new Map();
-				if(!mMap.LoadGBSPFileNoGlobals(fileName))
+				if(!mMap.LoadGBSPFile(fileName))
 				{
 					OnMapPrint("Load failed\n", null);
 				}

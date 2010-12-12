@@ -661,7 +661,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXModelDataNoGlobals(BinaryWriter bw)
+		bool SaveGFXModelData(BinaryWriter bw)
 		{
 			if(mGFXModels == null || mGFXModels.Length <= 0)
 			{
@@ -683,7 +683,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXLeafSidesNoGlobals(BinaryWriter bw)
+		bool SaveGFXLeafSides(BinaryWriter bw)
 		{
 			if(mGFXLeafSides.Length <= 0)
 			{
@@ -703,7 +703,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXNodesNoGlobals(BinaryWriter bw, NodeCounter nc)
+		bool SaveGFXNodes(BinaryWriter bw, NodeCounter nc)
 		{
 			if(nc.mNumGFXNodes <= 0)
 			{
@@ -728,7 +728,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXFacesNoGlobals(BinaryWriter bw, NodeCounter nc)
+		bool SaveGFXFaces(BinaryWriter bw, NodeCounter nc)
 		{
 			if(nc.mNumGFXFaces <= 0)
 			{
@@ -753,7 +753,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveEmptyGFXClustersNoGlobals(BinaryWriter bw, NodeCounter nc)
+		bool SaveEmptyGFXClusters(BinaryWriter bw, NodeCounter nc)
 		{
 			if(nc.mNumLeafClusters <= 0)
 			{
@@ -831,16 +831,16 @@ namespace BSPLib
 				Map.Print("ConvertGBSPToFile:  SaveGFXModelData failed.\n");
 				return	false;
 			}
-			if(!SaveGFXNodesNoGlobals(bw, nc))
+			if(!SaveGFXNodes(bw, nc))
 			{
 				return	false;
 			}
-			if(!SaveGFXLeafsNoGlobals(bw, nc))
+			if(!SaveGFXLeafs(bw, nc))
 			{
 				Map.Print("ConvertGBSPToFile:  SaveGFXLeafs failed.\n");
 				return	false;
 			}
-			if(!SaveEmptyGFXClustersNoGlobals(bw, nc))
+			if(!SaveEmptyGFXClusters(bw, nc))
 			{
 				return	false;
 			}
@@ -849,30 +849,30 @@ namespace BSPLib
 			mGFXAreas		=mAreas.ToArray();
 			mGFXAreaPortals	=mAreaPorts.ToArray();
 
-			if(!SaveGFXAreasAndPortalsNoGlobals(bw))
+			if(!SaveGFXAreasAndPortals(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXLeafSidesNoGlobals(bw))
+			if(!SaveGFXLeafSides(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXFacesNoGlobals(bw, nc))
+			if(!SaveGFXFaces(bw, nc))
 			{
 				return	false;
 			}
 
 			mGFXPlanes	=mPlanePool.GetGFXArray();
 
-			if(!SaveVisdGFXPlanesNoGlobals(bw))
+			if(!SaveVisdGFXPlanes(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXVertsNoGlobals(bw))
+			if(!SaveGFXVerts(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXVertIndexListNoGlobals(bw))
+			if(!SaveGFXVertIndexList(bw))
 			{
 				return	false;
 			}
@@ -910,7 +910,7 @@ namespace BSPLib
 			Map.Print("Num Verts            : " + mGFXVerts.Length + "\n");
 			Map.Print("Num FaceInfo         : " + mTIPool.mTexInfos.Count + "\n");
 
-			FreeGBSPFileNoGlobals();
+			FreeGBSPFile();
 
 			return	true;
 		}
@@ -987,7 +987,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveVisdGFXTexInfosNoGlobals(BinaryWriter bw)
+		bool SaveVisdGFXTexInfos(BinaryWriter bw)
 		{
 			if(mGFXTexInfos == null || mGFXTexInfos.Length <= 0)
 			{
@@ -1008,7 +1008,7 @@ namespace BSPLib
 		}
 
 
-		void FreeGBSPFileNoGlobals()
+		void FreeGBSPFile()
 		{
 			mGFXModels		=null;
 			mGFXNodes		=null;
@@ -1052,7 +1052,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXEntDataNoGlobals(BinaryWriter bw)
+		bool SaveGFXEntData(BinaryWriter bw)
 		{
 			if(mGFXEntities == null || mGFXEntities.Length <= 0)			
 			{
@@ -1073,7 +1073,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXLightDataNoGlobals(BinaryWriter bw)
+		bool SaveGFXLightData(BinaryWriter bw)
 		{
 			if(mGFXLightData == null || mGFXLightData.Length <= 0)
 			{
@@ -1089,7 +1089,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXVertIndexListNoGlobals(BinaryWriter bw)
+		bool SaveGFXVertIndexList(BinaryWriter bw)
 		{
 			if(mGFXVertIndexes == null || mGFXVertIndexes.Length <= 0)
 			{
@@ -1109,7 +1109,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXVisDataNoGlobals(BinaryWriter bw)
+		bool SaveGFXVisData(BinaryWriter bw)
 		{
 			if(mGFXVisData == null || mGFXVisData.Length <= 0)
 			{
@@ -1129,7 +1129,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXVertsNoGlobals(BinaryWriter bw)
+		bool SaveGFXVerts(BinaryWriter bw)
 		{
 			if(mGFXVerts == null || mGFXVerts.Length <= 0)
 			{
@@ -1149,7 +1149,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXRGBVertsNoGlobals(BinaryWriter bw)
+		bool SaveGFXRGBVerts(BinaryWriter bw)
 		{
 			if(mGFXRGBVerts == null || mGFXRGBVerts.Length <= 0)
 			{
@@ -1169,7 +1169,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveVisdGFXPlanesNoGlobals(BinaryWriter bw)
+		bool SaveVisdGFXPlanes(BinaryWriter bw)
 		{
 			if(mGFXPlanes == null || mGFXPlanes.Length <= 0)
 			{
@@ -1190,7 +1190,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveVisdGFXFacesNoGlobals(BinaryWriter bw)
+		bool SaveVisdGFXFaces(BinaryWriter bw)
 		{
 			if(mGFXFaces == null || mGFXFaces.Length <= 0)
 			{
@@ -1211,7 +1211,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXPortalsNoGlobals(BinaryWriter bw)
+		bool SaveGFXPortals(BinaryWriter bw)
 		{
 			if(mGFXPortals == null || mGFXPortals.Length <= 0)
 			{
@@ -1232,7 +1232,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXBNodesNoGlobals(BinaryWriter bw)
+		bool SaveGFXBNodes(BinaryWriter bw)
 		{
 			if(mGFXBNodes == null || mGFXBNodes.Length <= 0)
 			{
@@ -1253,7 +1253,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXAreasAndPortalsNoGlobals(BinaryWriter bw)
+		bool SaveGFXAreasAndPortals(BinaryWriter bw)
 		{
 			GBSPChunk	Chunk	=new GBSPChunk();
 
@@ -1282,7 +1282,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXClustersNoGlobals(BinaryWriter bw)
+		bool SaveGFXClusters(BinaryWriter bw)
 		{
 			if(mGFXClusters.Length <= 0)
 			{
@@ -1302,7 +1302,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveVisdGFXClustersNoGlobals(BinaryWriter bw)
+		bool SaveVisdGFXClusters(BinaryWriter bw)
 		{
 			if(mGFXClusters == null || mGFXClusters.Length <= 0)
 			{
@@ -1323,7 +1323,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveVisdGFXLeafsNoGlobals(BinaryWriter bw)
+		bool SaveVisdGFXLeafs(BinaryWriter bw)
 		{
 			if(mGFXLeafs == null || mGFXLeafs.Length <= 0)
 			{
@@ -1344,7 +1344,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveGFXLeafsNoGlobals(BinaryWriter bw, NodeCounter nc)
+		bool SaveGFXLeafs(BinaryWriter bw, NodeCounter nc)
 		{
 			if(nc.mNumGFXLeafs <= 0)
 			{
@@ -1384,7 +1384,7 @@ namespace BSPLib
 		}
 		
 		
-		bool SaveGFXLeafsNoGlobals(BinaryWriter bw)
+		bool SaveGFXLeafs(BinaryWriter bw)
 		{
 			if(mGFXLeafs.Length <= 0)
 			{
@@ -1405,7 +1405,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveVisdGFXLeafFacesAndSidesNoGlobals(BinaryWriter bw)
+		bool SaveVisdGFXLeafFacesAndSides(BinaryWriter bw)
 		{
 			GBSPChunk	Chunk	=new GBSPChunk();
 
@@ -1427,7 +1427,7 @@ namespace BSPLib
 		}
 
 
-		bool SaveVisdGFXNodesNoGlobals(BinaryWriter bw)
+		bool SaveVisdGFXNodes(BinaryWriter bw)
 		{
 			if(mGFXNodes == null || mGFXNodes.Length <= 0)
 			{
@@ -1527,7 +1527,7 @@ namespace BSPLib
 		}
 
 
-		bool MakeVertNormalsNoGlobals()
+		bool MakeVertNormals()
 		{
 			VertNormals	=new Vector3[mGFXVerts.Length];
 
@@ -1566,7 +1566,7 @@ namespace BSPLib
 		}
 
 
-		bool CalcFaceInfoNoGlobals(FInfo FaceInfo, LInfo LightInfo)
+		bool CalcFaceInfo(FInfo FaceInfo, LInfo LightInfo)
 		{
 			Int32	i, k;
 			Vector3	Vert;
@@ -1791,7 +1791,7 @@ namespace BSPLib
 
 					//This is the slowest test, so make it last
 					Vector3	colResult	=Vector3.Zero;
-					if(RayCollisionNoGlobals(pVert, DLight.mOrigin, ref colResult))
+					if(RayCollision(pVert, DLight.mOrigin, ref colResult))
 					{
 						goto	Skip;	//Ray is in shadow
 					}
@@ -1859,7 +1859,7 @@ namespace BSPLib
 		}
 
 
-		bool LightFacesNoGlobals(int numSamples, bool bExtraSamples)
+		bool LightFaces(int numSamples, bool bExtraSamples)
 		{
 			Int32	i, s;
 			Int32	Perc;
@@ -1953,7 +1953,7 @@ namespace BSPLib
 					continue;
 				}
 
-				if(!CalcFaceInfoNoGlobals(mFaceInfos[i], mLightMaps[i]))
+				if(!CalcFaceInfo(mFaceInfos[i], mLightMaps[i]))
 				{
 					return	false;
 				}
@@ -1972,9 +1972,9 @@ namespace BSPLib
 				for(s=0;s < numSamples;s++)
 				{
 					//Hook.Printf("Sample  : %3i of %3i\n", s+1, NumSamples);
-					CalcFacePointsNoGlobals(mFaceInfos[i], mLightMaps[i], UOfs[s], VOfs[s], bExtraSamples);
+					CalcFacePoints(mFaceInfos[i], mLightMaps[i], UOfs[s], VOfs[s], bExtraSamples);
 
-					if(!ApplyLightsToFaceNoGlobals(mFaceInfos[i], mLightMaps[i], 1 / (float)numSamples))
+					if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i], 1 / (float)numSamples))
 					{
 						return	false;
 					}
@@ -1997,7 +1997,7 @@ namespace BSPLib
 		}
 
 
-		bool ApplyLightsToFaceNoGlobals(FInfo FaceInfo, LInfo LightInfo, float Scale)
+		bool ApplyLightsToFace(FInfo FaceInfo, LInfo LightInfo, float Scale)
 		{
 			Int32		c, v;
 			float		Dist;
@@ -2012,7 +2012,7 @@ namespace BSPLib
 
 			for(v=0;v < FaceInfo.NumPoints;v++)
 			{
-				Int32	nodeLandedIn	=FindLeafLandedInNoGlobals(0, FaceInfo.Points[v]);
+				Int32	nodeLandedIn	=FindLeafLandedIn(0, FaceInfo.Points[v]);
 				Leaf	=-(nodeLandedIn + 1);
 
 				if(Leaf < 0 || Leaf >= mGFXLeafs.Length)
@@ -2105,7 +2105,7 @@ namespace BSPLib
 
 						// This is the slowest test, so make it last
 						Vector3	colResult	=Vector3.Zero;
-						if(RayCollisionNoGlobals(FaceInfo.Points[v], DLight.mOrigin, ref colResult))
+						if(RayCollision(FaceInfo.Points[v], DLight.mOrigin, ref colResult))
 						{
 							goto	Skip;	//Ray is in shadow
 						}
@@ -2136,7 +2136,7 @@ namespace BSPLib
 		}
 
 
-		void CalcFacePointsNoGlobals(FInfo FaceInfo, LInfo LightInfo, float UOfs, float VOfs, bool bExtraLightCorrection)
+		void CalcFacePoints(FInfo FaceInfo, LInfo LightInfo, float UOfs, float VOfs, bool bExtraLightCorrection)
 		{
 			Vector3	FaceMid;
 			float	MidU, MidV, StartU, StartV, CurU, CurV;
@@ -2167,7 +2167,7 @@ namespace BSPLib
 						=FaceInfo.TexOrg + FaceInfo.T2WVecs[0] * CurU +
 							FaceInfo.T2WVecs[1] * CurV;
 					
-					Int32	nodeLandedIn	=FindLeafLandedInNoGlobals(0, FaceInfo.Points[(v * Width) + u]);
+					Int32	nodeLandedIn	=FindLeafLandedIn(0, FaceInfo.Points[(v * Width) + u]);
 					Leaf	=-(nodeLandedIn + 1);
 
 					//Pre-compute if this point is in solid space, so we can re-use it in the code below
@@ -2185,7 +2185,7 @@ namespace BSPLib
 						if(InSolid[(v * Width) + u])
 						{
 							Vector3	colResult	=Vector3.Zero;
-							if(RayCollisionNoGlobals(FaceMid,
+							if(RayCollision(FaceMid,
 								FaceInfo.Points[(v * Width) + u], ref colResult))
 							{
 								Vector3	vect	=FaceMid - FaceInfo.Points[(v * Width) + u];
@@ -2250,7 +2250,7 @@ namespace BSPLib
 		}
 
 
-		bool RayIntersectNoGlobals(Vector3 Front, Vector3 Back, Int32 Node, ref Vector3 intersectionPoint, ref bool hitLeaf)
+		bool RayIntersect(Vector3 Front, Vector3 Back, Int32 Node, ref Vector3 intersectionPoint, ref bool hitLeaf)
 		{
 			float	Fd, Bd, Dist;
 			Int32	Side;
@@ -2278,11 +2278,11 @@ namespace BSPLib
 
 			if(Fd >= -1 && Bd >= -1)
 			{
-				return(RayIntersectNoGlobals(Front, Back, n.mChildren[0], ref intersectionPoint, ref hitLeaf));
+				return(RayIntersect(Front, Back, n.mChildren[0], ref intersectionPoint, ref hitLeaf));
 			}
 			if(Fd < 1 && Bd < 1)
 			{
-				return(RayIntersectNoGlobals(Front, Back, n.mChildren[1], ref intersectionPoint, ref hitLeaf));
+				return(RayIntersect(Front, Back, n.mChildren[1], ref intersectionPoint, ref hitLeaf));
 			}
 
 			Side	=(Fd < 0)? 1 : 0;
@@ -2294,11 +2294,11 @@ namespace BSPLib
 			//is no more collisions, we can assume that we have the front portion of the
 			//ray that is in empty space.  Once we find this, and see that the back half is in
 			//solid space, then we found the front intersection point...
-			if(RayIntersectNoGlobals(Front, I, n.mChildren[Side], ref intersectionPoint, ref hitLeaf))
+			if(RayIntersect(Front, I, n.mChildren[Side], ref intersectionPoint, ref hitLeaf))
 			{
 				return	true;
 			}
-			else if(RayIntersectNoGlobals(I, Back, n.mChildren[(Side == 0)? 1 : 0], ref intersectionPoint, ref hitLeaf))
+			else if(RayIntersect(I, Back, n.mChildren[(Side == 0)? 1 : 0], ref intersectionPoint, ref hitLeaf))
 			{
 				if(!hitLeaf)
 				{
@@ -2311,10 +2311,10 @@ namespace BSPLib
 		}
 
 
-		bool RayCollisionNoGlobals(Vector3 Front, Vector3 Back, ref Vector3 I)
+		bool RayCollision(Vector3 Front, Vector3 Back, ref Vector3 I)
 		{
 			bool	hitLeaf	=false;
-			if(RayIntersectNoGlobals(Front, Back, mGFXModels[0].mRootNode[0], ref I, ref hitLeaf))
+			if(RayIntersect(Front, Back, mGFXModels[0].mRootNode[0], ref I, ref hitLeaf))
 			{
 				return	true;
 			}
@@ -2322,7 +2322,7 @@ namespace BSPLib
 		}
 
 
-		void FinalizeRGBVertsNoGlobals(Vector3 minLight, float maxLight)
+		void FinalizeRGBVerts(Vector3 minLight, float maxLight)
 		{
 			for(int i=0;i < mGFXRGBVerts.Length;i++)
 			{
@@ -2334,14 +2334,14 @@ namespace BSPLib
 		}
 
 
-		void FreeDirectLightsNoGlobals()
+		void FreeDirectLights()
 		{
 			DirectLights.Clear();
 			DirectClusterLights.Clear();
 		}
 
 
-		bool SaveLightMapsNoGlobals(BinaryWriter f, ref int numRGBMaps)
+		bool SaveLightMaps(BinaryWriter f, ref int numRGBMaps)
 		{
 //			LInfo		*L;
 			Int32		i, j, k,l, Size;
@@ -2528,7 +2528,7 @@ namespace BSPLib
 		}
 
 
-		bool FinishWritingLightNoGlobals(BinaryWriter bw)
+		bool FinishWritingLight(BinaryWriter bw)
 		{
 			GBSPHeader	header	=new GBSPHeader();
 			header.mTAG			="GBSP";
@@ -2540,11 +2540,11 @@ namespace BSPLib
 			chunk.mElements		=1;
 			chunk.Write(bw, header);
 
-			if(!SaveGFXRGBVertsNoGlobals(bw))
+			if(!SaveGFXRGBVerts(bw))
 			{
 				return	false;
 			}
-			if(!SaveVisdGFXFacesNoGlobals(bw))
+			if(!SaveVisdGFXFaces(bw))
 			{
 				return	false;
 			}
@@ -2556,7 +2556,7 @@ namespace BSPLib
 		}
 
 
-		bool StartWritingLightNoGlobals(BinaryWriter bw)
+		bool StartWritingLight(BinaryWriter bw)
 		{
 			// Write out everything but the light data
 			// Don't include LIGHT_DATA since it was allready saved out...
@@ -2571,59 +2571,59 @@ namespace BSPLib
 			chunk.mElements		=1;
 			chunk.Write(bw, header);
 
-			if(!SaveGFXModelDataNoGlobals(bw))
+			if(!SaveGFXModelData(bw))
 			{
 				return	false;
 			}
-			if(!SaveVisdGFXNodesNoGlobals(bw))
+			if(!SaveVisdGFXNodes(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXPortalsNoGlobals(bw))
+			if(!SaveGFXPortals(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXBNodesNoGlobals(bw))
+			if(!SaveGFXBNodes(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXLeafsNoGlobals(bw))
+			if(!SaveGFXLeafs(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXAreasAndPortalsNoGlobals(bw))
+			if(!SaveGFXAreasAndPortals(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXClustersNoGlobals(bw))
+			if(!SaveGFXClusters(bw))
 			{
 				return	false;
 			}
-			if(!SaveVisdGFXPlanesNoGlobals(bw))
+			if(!SaveVisdGFXPlanes(bw))
 			{
 				return	false;
 			}
-			if(!SaveVisdGFXLeafFacesAndSidesNoGlobals(bw))
+			if(!SaveVisdGFXLeafFacesAndSides(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXVertsNoGlobals(bw))
+			if(!SaveGFXVerts(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXVertIndexListNoGlobals(bw))
+			if(!SaveGFXVertIndexList(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXEntDataNoGlobals(bw))
+			if(!SaveGFXEntData(bw))
 			{
 				return	false;
 			}
-			if(!SaveVisdGFXTexInfosNoGlobals(bw))
+			if(!SaveVisdGFXTexInfos(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXVisDataNoGlobals(bw))
+			if(!SaveGFXVisData(bw))
 			{
 				return	false;
 			}
@@ -2639,7 +2639,7 @@ namespace BSPLib
 			mBSPParms	=prms2;
 
 			// Fill in the global bsp data
-			if(!LoadGBSPFileNoGlobals(fileName))
+			if(!LoadGBSPFile(fileName))
 			{
 				Print("PvsGBSPFile:  Could not load GBSP file: " + fileName + "\n");
 				return	false;
@@ -2669,7 +2669,7 @@ namespace BSPLib
 			PFile		+=".gpf";
 			
 			//Load the portal file
-			if(!LoadPortalFileNoGlobals(PFile))
+			if(!LoadPortalFile(PFile))
 			{
 				goto	ExitWithError;
 			}
@@ -2677,28 +2677,28 @@ namespace BSPLib
 			Print("NumPortals           : " + VisPortals.Length + "\n");
 			
 			//Write out everything but vis info
-			if(!StartWritingVisNoGlobals(bw))
+			if(!StartWritingVis(bw))
 			{
 				goto	ExitWithError;
 			}
 
 			//Vis'em
-			if(!VisAllLeafsNoGlobals())
+			if(!VisAllLeafs())
 			{
 				goto	ExitWithError;
 			}
 
 			//Save the leafs, clusters, vis data, etc
-			if(!FinishWritingVisNoGlobals(bw))
+			if(!FinishWritingVis(bw))
 			{
 				goto	ExitWithError;
 			}
 
 			//Free all the vis stuff
-			FreeAllVisDataNoGlobals();
+			FreeAllVisData();
 
 			//Free any remaining leftover bsp data
-			FreeGBSPFileNoGlobals();
+			FreeGBSPFile();
 
 			bw.Close();
 			fs.Close();
@@ -2721,8 +2721,8 @@ namespace BSPLib
 					fs.Close();
 				}
 
-				FreeAllVisDataNoGlobals();
-				FreeGBSPFileNoGlobals();
+				FreeAllVisData();
+				FreeGBSPFile();
 
 				return	false;
 			}
@@ -2953,7 +2953,7 @@ namespace BSPLib
 			}
 			Patch.mOrigin	+=Patch.mPlane.mNormal * 2.0f;
 
-			Int32	nodeLandedIn	=FindLeafLandedInNoGlobals(0, Patch.mOrigin);
+			Int32	nodeLandedIn	=FindLeafLandedIn(0, Patch.mOrigin);
 			Patch.mLeaf	=-(nodeLandedIn + 1);
 
 			Patch.mArea	=Patch.mPoly.Area();
@@ -3931,7 +3931,7 @@ namespace BSPLib
 				}
 
 				Vector3	colResult	=Vector3.Zero;
-				if(RayCollisionNoGlobals(Patch.mOrigin, Patch2.mOrigin, ref colResult))
+				if(RayCollision(Patch.mOrigin, Patch2.mOrigin, ref colResult))
 				{
 					//blocked by something in the world
 					continue;
@@ -4036,7 +4036,7 @@ namespace BSPLib
 			BinaryWriter	bw		=null;
 			FileStream		file	=null;
 			
-			if(!LoadGBSPFileNoGlobals(fileName))
+			if(!LoadGBSPFile(fileName))
 			{
 				Print("LightGBSPFile:  Could not load GBSP file: " + fileName + "\n");
 				return	false;
@@ -4045,7 +4045,7 @@ namespace BSPLib
 			//Allocate some RGBLight data now
 			mGFXRGBVerts	=new Vector3[mGFXVertIndexes.Length];
 
-			if(!MakeVertNormalsNoGlobals())
+			if(!MakeVertNormals())
 			{
 				Print("LightGBSPFile:  MakeVertNormals failed...\n");
 				goto	ExitWithError;
@@ -4080,19 +4080,19 @@ namespace BSPLib
 				}
 			}
 
-			if(!CreateDirectLightsNoGlobals())
+			if(!CreateDirectLights())
 			{
 				Print("LightGBSPFile:  Could not create main lights.\n");
 				goto	ExitWithError;
 			}
 			
 			//Light faces, and apply to patches
-			if(!LightFacesNoGlobals(5, false))	//Light all the faces lightmaps, and apply to patches
+			if(!LightFaces(5, false))	//Light all the faces lightmaps, and apply to patches
 			{
 				goto	ExitWithError;
 			}
 
-			FreeDirectLightsNoGlobals();
+			FreeDirectLights();
 
 			if(mLightParams.mbRadiosity)
 			{
@@ -4118,21 +4118,21 @@ namespace BSPLib
 				FreePatches();	//Don't need these anymore...
 			}
 
-			FinalizeRGBVertsNoGlobals(lightParams.mMinLight, lightParams.mMaxIntensity);
+			FinalizeRGBVerts(lightParams.mMinLight, lightParams.mMaxIntensity);
 
-			if(!StartWritingLightNoGlobals(bw))	//Open bsp file and save all current bsp data (except lightmaps)
+			if(!StartWritingLight(bw))	//Open bsp file and save all current bsp data (except lightmaps)
 			{
 				goto	ExitWithError;
 			}
 
 			int	numRGBMaps	=0;
 
-			if(!SaveLightMapsNoGlobals(bw, ref numRGBMaps))
+			if(!SaveLightMaps(bw, ref numRGBMaps))
 			{
 				goto	ExitWithError;
 			}
 
-			if(!FinishWritingLightNoGlobals(bw))	//Write the END chunk to the file
+			if(!FinishWritingLight(bw))	//Write the END chunk to the file
 			{
 				goto	ExitWithError;
 			}
@@ -4140,7 +4140,7 @@ namespace BSPLib
 			bw.Close();
 			file.Close();
 
-			CleanupLightNoGlobals();
+			CleanupLight();
 
 			Print("Num Light Maps       : " + numRGBMaps + "\n");
 
@@ -4156,7 +4156,7 @@ namespace BSPLib
 				{
 					file.Close();
 				}
-				CleanupLightNoGlobals();
+				CleanupLight();
 
 				return	false;
 			}
@@ -4177,16 +4177,16 @@ namespace BSPLib
 		}
 
 
-		void CleanupLightNoGlobals()
+		void CleanupLight()
 		{
-			FreeDirectLightsNoGlobals();
+			FreeDirectLights();
 			FreePatches();
-			FreeLightMapsNoGlobals();
+			FreeLightMaps();
 			FreeReceivers();
 
 			VertNormals	=null;
 
-			FreeGBSPFileNoGlobals();
+			FreeGBSPFile();
 		}
 
 
@@ -4203,14 +4203,14 @@ namespace BSPLib
 		}
 
 
-		void FreeLightMapsNoGlobals()
+		void FreeLightMaps()
 		{
 			mLightMaps	=null;
 			mFaceInfos	=null;
 		}
 
 
-		bool CreateDirectLightsNoGlobals()
+		bool CreateDirectLights()
 		{
 			Int32		i, Leaf, Cluster;
 			Vector3		Color;
@@ -4289,7 +4289,7 @@ namespace BSPLib
 				//Find out what type of light it is by it's classname...
 				Entity.GetLightType(out DLight.mType);
 
-				Int32	nodeLandedIn	=FindLeafLandedInNoGlobals(mGFXModels[0].mRootNode[0], DLight.mOrigin);
+				Int32	nodeLandedIn	=FindLeafLandedIn(mGFXModels[0].mRootNode[0], DLight.mOrigin);
 				Leaf	=-(nodeLandedIn + 1);
 				Cluster	=mGFXLeafs[Leaf].mCluster;
 
@@ -4401,7 +4401,7 @@ namespace BSPLib
 		}
 
 
-		public bool LoadGBSPFileNoGlobals(string fileName)
+		public bool LoadGBSPFile(string fileName)
 		{
 			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
 									FileMode.Open, FileAccess.Read);
@@ -4586,17 +4586,17 @@ namespace BSPLib
 		}
 
 
-		bool FinishWritingVisNoGlobals(BinaryWriter bw)
+		bool FinishWritingVis(BinaryWriter bw)
 		{
-			if(!SaveVisdGFXLeafsNoGlobals(bw))
+			if(!SaveVisdGFXLeafs(bw))
 			{
 				return	false;
 			}
-			if(!SaveVisdGFXClustersNoGlobals(bw))
+			if(!SaveVisdGFXClusters(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXVisDataNoGlobals(bw))
+			if(!SaveGFXVisData(bw))
 			{
 				return	false;
 			}
@@ -4611,7 +4611,7 @@ namespace BSPLib
 		}
 
 
-		bool VisAllLeafsNoGlobals()
+		bool VisAllLeafs()
 		{
 			Int32	i;
 
@@ -4629,13 +4629,13 @@ namespace BSPLib
 			//Flood all the leafs with the fast method first...
 			for(i=0;i < VisLeafs.Length; i++)
 			{
-				FloodLeafPortalsFastNoGlobals(i, PortalSeen, portIndexer);
+				FloodLeafPortalsFast(i, PortalSeen, portIndexer);
 			}
 
 			//Sort the portals with MightSee
 			if(mVisParams.mbSortPortals)
 			{
-				SortPortalsNoGlobals();
+				SortPortals();
 			}
 
 			if(mVisParams.mbFullVis)
@@ -4662,7 +4662,7 @@ namespace BSPLib
 			{
 				int	leafSee	=0;
 				
-				if(!CollectLeafVisBitsNoGlobals(i, ref leafSee))
+				if(!CollectLeafVisBits(i, ref leafSee))
 				{
 					goto	ExitWithError;
 				}
@@ -4678,7 +4678,7 @@ namespace BSPLib
 			ExitWithError:
 			{
 				// Free all the global vis data
-				FreeAllVisDataNoGlobals();
+				FreeAllVisData();
 
 				return	false;
 			}
@@ -4742,7 +4742,7 @@ namespace BSPLib
 		}
 
 
-		bool CollectLeafVisBitsNoGlobals(int LeafNum, ref int leafSee)
+		bool CollectLeafVisBits(int LeafNum, ref int leafSee)
 		{
 			VISPortal	Portal, SPortal;
 			VISLeaf		Leaf;
@@ -4827,7 +4827,7 @@ namespace BSPLib
 		}
 
 
-		void SortPortalsNoGlobals()
+		void SortPortals()
 		{
 			List<VISPortal>	sortMe	=new List<VISPortal>(VisPortals);
 
@@ -4837,7 +4837,7 @@ namespace BSPLib
 		}
 
 
-		void FloodLeafPortalsFastNoGlobals(int leafNum, bool []portSeen,
+		void FloodLeafPortalsFast(int leafNum, bool []portSeen,
 			Dictionary<VISPortal, Int32> visIndexer)
 		{
 			VISLeaf		Leaf;
@@ -4869,13 +4869,13 @@ namespace BSPLib
 
 				int	mightSee	=0;
 				
-				Portal.FloodPortalsFastNoGlobals_r(Portal, visIndexer,
+				Portal.FloodPortalsFast_r(Portal, visIndexer,
 					portSeen, VisLeafs, srcLeaf, ref mightSee);
 			}
 		}
 
 
-		bool StartWritingVisNoGlobals(BinaryWriter bw)
+		bool StartWritingVis(BinaryWriter bw)
 		{
 			GBSPHeader	header	=new GBSPHeader();
 			header.mTAG			="GBSP";
@@ -4887,59 +4887,59 @@ namespace BSPLib
 			chunk.mElements		=1;
 			chunk.Write(bw, header);
 
-			if(!SaveGFXModelDataNoGlobals(bw))
+			if(!SaveGFXModelData(bw))
 			{
 				return	false;
 			}
-			if(!SaveVisdGFXNodesNoGlobals(bw))
+			if(!SaveVisdGFXNodes(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXPortalsNoGlobals(bw))
+			if(!SaveGFXPortals(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXBNodesNoGlobals(bw))
+			if(!SaveGFXBNodes(bw))
 			{
 				return	false;
 			}
-			if(!SaveVisdGFXPlanesNoGlobals(bw))
+			if(!SaveVisdGFXPlanes(bw))
 			{
 				return	false;
 			}
-			if(!SaveVisdGFXFacesNoGlobals(bw))
+			if(!SaveVisdGFXFaces(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXAreasAndPortalsNoGlobals(bw))
+			if(!SaveGFXAreasAndPortals(bw))
 			{
 				return	false;
 			}
-			if(!SaveVisdGFXLeafFacesAndSidesNoGlobals(bw))
+			if(!SaveVisdGFXLeafFacesAndSides(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXVertsNoGlobals(bw))
+			if(!SaveGFXVerts(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXVertIndexListNoGlobals(bw))
+			if(!SaveGFXVertIndexList(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXRGBVertsNoGlobals(bw))
+			if(!SaveGFXRGBVerts(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXEntDataNoGlobals(bw))
+			if(!SaveGFXEntData(bw))
 			{
 				return	false;
 			}
-			if(!SaveVisdGFXTexInfosNoGlobals(bw))
+			if(!SaveVisdGFXTexInfos(bw))
 			{
 				return	false;
 			}
-			if(!SaveGFXLightDataNoGlobals(bw))
+			if(!SaveGFXLightData(bw))
 			{
 				return	false;
 			}
@@ -4947,7 +4947,7 @@ namespace BSPLib
 		}
 
 
-		void FreeAllVisDataNoGlobals()
+		void FreeAllVisData()
 		{
 			mGFXVisData		=null;
 
@@ -4966,11 +4966,11 @@ namespace BSPLib
 			VisSortedPortals	=null;
 			VisLeafs			=null;
 
-			FreeGBSPFileNoGlobals();	//Free rest of GBSP GFX data
+			FreeGBSPFile();	//Free rest of GBSP GFX data
 		}
 
 
-		bool LoadPortalFileNoGlobals(string PFile)
+		bool LoadPortalFile(string PFile)
 		{
 			Int32		LeafFrom, LeafTo;
 			VISPortal	pPortal;
@@ -5131,7 +5131,7 @@ namespace BSPLib
 		}
 
 
-		Int32	FindLeafLandedInNoGlobals(Int32 node, Vector3 pos)
+		Int32	FindLeafLandedIn(Int32 node, Vector3 pos)
 		{
 			float		Dist1;
 			GFXNode		pNode;
@@ -5158,12 +5158,12 @@ namespace BSPLib
 			
 			//Go down the side we are on first, then the other side
 			Int32	ret	=0;
-			ret	=FindLeafLandedInNoGlobals(pNode.mChildren[Side], pos);
+			ret	=FindLeafLandedIn(pNode.mChildren[Side], pos);
 			if(ret < 0)
 			{
 				return	ret;
 			}
-			ret	=FindLeafLandedInNoGlobals(pNode.mChildren[(Side == 0)? 1 : 0], pos);
+			ret	=FindLeafLandedIn(pNode.mChildren[(Side == 0)? 1 : 0], pos);
 			return	ret;
 		}
 
@@ -5174,7 +5174,7 @@ namespace BSPLib
 			Int32	Leaf, Cluster;
 			GFXLeaf	pLeaf;
 
-			Int32	node	=FindLeafLandedInNoGlobals(rootNode, -pos);
+			Int32	node	=FindLeafLandedIn(rootNode, -pos);
 
 			Leaf	=-(node + 1);
 			Area	=mGFXLeafs[Leaf].mArea;
