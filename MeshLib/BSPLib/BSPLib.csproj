@@ -94,15 +94,6 @@
     <Compile Include="BuildParams.cs" />
     <Compile Include="Contents.cs" />
     <Compile Include="FaceFixer.cs" />
-    <Compile Include="GBSPBrush.cs" />
-    <Compile Include="GBSPFace.cs" />
-    <Compile Include="GBSPLeafSide.cs" />
-    <Compile Include="GBSPModel.cs" />
-    <Compile Include="GBSPNode.cs" />
-    <Compile Include="GBSPPlane.cs" />
-    <Compile Include="GBSPPoly.cs" />
-    <Compile Include="GBSPPortal.cs" />
-    <Compile Include="GBSPSide.cs" />
     <Compile Include="GFXArea.cs" />
     <Compile Include="GFXAreaPortal.cs" />
     <Compile Include="GFXStuff.cs" />

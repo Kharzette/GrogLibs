@@ -1998,77 +1998,22 @@ namespace BSPLib
 
 		void ApplyLightmapToPatches(Int32 Face)
 		{
-			Int32		i, k;
-			RADPatch	Patch;
-			
-			//Only contribute light type 0 to patches
-			if(mLightMaps[Face].RGBLData[0] == null)
-			{
-				return;
-			}
-
-			//Check each patch and see if the points lands in it's BBox
-			for(Patch = mFacePatches[Face];Patch != null;Patch=Patch.mNext)
-			{
-				Vector3	[]pVert	=mFaceInfos[Face].Points;
-				Vector3	[]pRGB	=mLightMaps[Face].RGBLData[0];	// Only contribute light type 0 to patches
-
-				int	vertOfs	=0;
-				int	rgbOfs	=0;
-
-				Patch.mNumSamples	=0;
-				//geVec3d_Clear(&Patch->RadStart);
-
-				for(i=0;i < mFaceInfos[Face].NumPoints;i++)
-				{
-					for(k=0;k < 3;k++)
-					{
-						if(UtilityLib.Mathery.VecIdx(Patch.mBounds.mMins, k)
-							> UtilityLib.Mathery.VecIdx(pVert[vertOfs], k) + 16)
-						{
-							break;
-						}
-						if(UtilityLib.Mathery.VecIdx(Patch.mBounds.mMaxs, k)
-							< UtilityLib.Mathery.VecIdx(pVert[vertOfs], k) - 16)
-						{
-							break;
-						}
-					}
-
-					if(k == 3)
-					{
-						//Add the Color to the patch 
-						Patch.mNumSamples++;
-						Patch.mRadStart	+=pRGB[rgbOfs];
-					}
-					rgbOfs++;
-					vertOfs++;
-				}				
-				if(Patch.mNumSamples != 0)
-				{
-					Patch.mRadStart	*=(1.0f / (float)Patch.mNumSamples);
-				}
-			}
+			mLightMaps[Face].ApplyLightToPatchList(mFacePatches[Face], mFaceInfos[Face].Points);			
 		}
 
 
 		bool ApplyLightsToFaceNoGlobals(FInfo FaceInfo, LInfo LightInfo, float Scale)
 		{
 			Int32		c, v;
-//			Vector3		*Verts;
 			float		Dist;
 			Int32		LType;
-//			Vector3		*pRGBLData;
 			Vector3		Normal, Vect;
 			float		Val, Angle;
-//			byte		*VisData;
 			Int32		Leaf, Cluster;
 			float		Intensity;
 			DirectLight	DLight;
 
 			Normal	=FaceInfo.Plane.mNormal;
-
-//			Verts = FaceInfo.Points;
 
 			for(v=0;v < FaceInfo.NumPoints;v++)
 			{

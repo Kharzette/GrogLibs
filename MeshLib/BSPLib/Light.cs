@@ -20,6 +20,16 @@ namespace BSPLib
 		public const int	MAX_LTYPE_INDEX		=12;
 		public const int	MAX_LMAP_SIZE		=130;
 		public const int	MAX_LTYPES			=4;
+
+
+		internal void ApplyLightToPatchList(RADPatch rp, Vector3 []facePoints)
+		{
+			if(RGBLData[0] == null)
+			{
+				return;
+			}
+			RADPatch.ApplyLightList(rp, RGBLData[0], facePoints);
+		}
 	}
 
 	public class FInfo
@@ -62,6 +72,50 @@ namespace BSPLib
 			mBounds	=new Bounds();
 			mPoly.AddToBounds(mBounds);
 			return	true;
+		}
+
+
+		static internal void ApplyLightList(RADPatch rpList, Vector3 []rgb, Vector3 []facePoints)
+		{
+			//Check each patch and see if the points lands in it's BBox
+			for(RADPatch p=rpList;p != null;p=p.mNext)
+			{
+				int	vertOfs	=0;
+				int	rgbOfs	=0;
+
+				p.mNumSamples	=0;
+
+				for(int i=0;i < facePoints.Length;i++)
+				{
+					int	k	=0;
+					for(k=0;k < 3;k++)
+					{
+						if(UtilityLib.Mathery.VecIdx(p.mBounds.mMins, k)
+							> UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) + 16)
+						{
+							break;
+						}
+						if(UtilityLib.Mathery.VecIdx(p.mBounds.mMaxs, k)
+							< UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) - 16)
+						{
+							break;
+						}
+					}
+
+					if(k == 3)
+					{
+						//Add the Color to the patch 
+						p.mNumSamples++;
+						p.mRadStart	+=rgb[rgbOfs];
+					}
+					rgbOfs++;
+					vertOfs++;
+				}				
+				if(p.mNumSamples != 0)
+				{
+					p.mRadStart	*=(1.0f / (float)p.mNumSamples);
+				}
+			}
 		}
 	}
 
