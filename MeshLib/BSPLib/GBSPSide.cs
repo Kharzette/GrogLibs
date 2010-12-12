@@ -82,9 +82,9 @@ namespace BSPLib
 						mPoly	=new GBSPPoly();
 
 						//1, 3, and 5
-						mPoly.mVerts.Add(ParseVec(planePoints[1]));
-						mPoly.mVerts.Add(ParseVec(planePoints[3]));
-						mPoly.mVerts.Add(ParseVec(planePoints[5]));
+						mPoly.AddVert(ParseVec(planePoints[1]));
+						mPoly.AddVert(ParseVec(planePoints[3]));
+						mPoly.AddVert(ParseVec(planePoints[5]));
 					}
 					else if(tokens[1] == "material")
 					{
@@ -403,12 +403,9 @@ namespace BSPLib
 		}
 
 
-		internal void AddToBounds(Bounds mBounds)
+		internal void AddToBounds(Bounds bnd)
 		{
-			foreach(Vector3 vert in mPoly.mVerts)
-			{
-				mBounds.AddPointToBounds(vert);
-			}
+			mPoly.AddToBounds(bnd);
 		}
 
 
@@ -493,9 +490,9 @@ namespace BSPLib
 			//deal with the numbers
 			//invert x and swap y and z
 			//to convert to left handed
-			mPoly.mVerts.Add(new Vector3(-numbers[0], numbers[2], numbers[1]));
-			mPoly.mVerts.Add(new Vector3(-numbers[3], numbers[5], numbers[4]));
-			mPoly.mVerts.Add(new Vector3(-numbers[6], numbers[8], numbers[7]));
+			mPoly.AddVert(new Vector3(-numbers[0], numbers[2], numbers[1]));
+			mPoly.AddVert(new Vector3(-numbers[3], numbers[5], numbers[4]));
+			mPoly.AddVert(new Vector3(-numbers[6], numbers[8], numbers[7]));
 
 			//see if there are any quake 3 style flags
 /*			if(flags.Count > 0)

@@ -80,7 +80,6 @@ namespace BSPLib
 
 		internal GBSPFace FaceFromPortal(Int32 PSide)
 		{
-			GBSPFace	f;
 			GBSPSide	Side;
 
 			Int32	NotPSide	=(PSide == 0)? 1 : 0;
@@ -91,156 +90,25 @@ namespace BSPLib
 				return	null;	//Portal does not bridge different visible contents
 			}
 
-			if(((mNodes[PSide].mContents & Contents.BSP_CONTENTS_WINDOW2) != 0)
-				&& VisibleContents(mNodes[NotPSide].mContents
-				^ mNodes[PSide].mContents) == Contents.BSP_CONTENTS_WINDOW2)
+			if(GBSPNode.WindowCheck(mNodes[PSide], mNodes[NotPSide]))
 			{
 				return	null;
 			}
 
-			f	=new GBSPFace();
-
-//			if(Side.mTexInfo >= NumTexInfo || Side.mTexInfo < 0)
-//			{
-//				Map.Print("*WARNING* FaceFromPortal:  Bad texinfo.\n");
-//			}
-
-			f.mTexInfo		=Side.mTexInfo;
-			f.mPlaneNum		=Side.mPlaneNum;
-			f.mPlaneSide	=PSide;
-			f.mPortal		=this;
-			f.mbVisible		=true;
-
-			if(PSide != 0)
-			{
-				f.mPoly	=new GBSPPoly(mPoly);
-				f.mPoly.Reverse();
-			}
-			else
-			{
-				f.mPoly	=new GBSPPoly(mPoly);
-			}
-
-			return f;
+			return	new GBSPFace(this, PSide);
 		}
-
-
-		static UInt32 VisibleContents(UInt32 con)
-		{
-			Int32	j;
-			UInt32	MajorContents;
-
-			if(con == 0)
-			{
-				return 0;
-			}
-
-			//Only check visible contents
-			con	&=Contents.BSP_VISIBLE_CONTENTS;
-			
-			//Return the strongest one, return the first lsb
-			for(j=0;j < 32;j++)
-			{
-				MajorContents	=(con & (UInt32)(1<<j));
-
-				if(MajorContents != 0)
-				{
-					return	MajorContents;
-				}
-			}
-
-			return 0;
-		}	
 
 
 		internal void FindPortalSide(Int32 PSide, PlanePool pool)
 		{
-			UInt32		VisContents, MajorContents;
-			GBSPBrush	Brush;
-			Int32		j;
-			Int32		PlaneNum;
-			GBSPSide	BestSide;
-			float		Dot, BestDot;
-			GBSPPlane	p1, p2;
-
-			//First, check to see if the contents are intersecting sheets (special case)
-			if(((mNodes[0].mContents & Contents.BSP_CONTENTS_SHEET) != 0)
-				&& ((mNodes[1].mContents & Contents.BSP_CONTENTS_SHEET) != 0))
-			{
-				//The contents are intersecting sheets, so or them together
-				VisContents	=mNodes[0].mContents | mNodes[1].mContents;
-			}
-			else
-			{
-				//Make sure the contents on both sides are not the same
-				VisContents	=mNodes[0].mContents ^ mNodes[1].mContents;
-			}
-
-			//There must be a visible contents on at least one side of the portal...
-			MajorContents	=VisibleContents(VisContents);
-
-			if(MajorContents == 0)
+			GBSPSide	bestSide	=mOnNode.GetBestPortalSide(mNodes[0], mNodes[1], pool);
+			if(bestSide == null)
 			{
 				return;
 			}
 
-			PlaneNum	=mOnNode.mPlaneNum;
-			BestSide	=null;
-			BestDot		=0.0f;
-			for(j=0;j < 2;j++)
-			{
-				GBSPNode	Node	=mNodes[j];
-
-				p1	=pool.mPlanes[mOnNode.mPlaneNum];
-
-				for(Brush=Node.mBrushList;Brush != null;Brush=Brush.mNext)
-				{
-					MapBrush	MapBrush;
-
-					MapBrush	=Brush.mOriginal;
-
-					//Only use the brush that contains a major contents (solid)
-					if((MapBrush.mContents & MajorContents) == 0)
-					{
-						continue;
-					}
-
-					foreach(GBSPSide pSide in MapBrush.mOriginalSides)
-					{
-						if((pSide.mFlags & GBSPSide.SIDE_NODE) != 0)
-						{
-							continue;		// Side not visible (result of a csg'd topbrush)
-						}
-
-						//First, Try an exact match
-						if(pSide.mPlaneNum == PlaneNum)
-						{	
-							BestSide	=pSide;
-
-							goto GotSide;
-						}
-
-						//In the mean time, try for the closest match
-						p2	=pool.mPlanes[pSide.mPlaneNum];
-						Dot	=Vector3.Dot(p1.mNormal, p2.mNormal);
-						if(Dot > BestDot)
-						{
-							BestDot		=Dot;
-							BestSide	=pSide;
-						}
-					}
-				}
-			}
-
-			GotSide:
-
-			if(BestSide == null)
-			{
-				Map.Print("WARNING: Could not map portal to original brush...\n");
-			}
-
 			mSideFound	=1;
-			mSide		=BestSide;
+			mSide		=bestSide;
 		}
 
 
@@ -249,8 +117,7 @@ namespace BSPLib
 			UInt32	c1, c2;
 
 			//Can't see into or from solid
-			if(((mNodes[0].mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
-				|| ((mNodes[1].mContents & Contents.BSP_CONTENTS_SOLID2) != 0))
+			if(mNodes[0].IsContentsSolid() || mNodes[1].IsContentsSolid())
 			{
 				return	false;
 			}
@@ -332,29 +199,16 @@ namespace BSPLib
 
 		internal bool Check()
 		{
-			if(mPoly.mVerts.Count < 3)
+			if(mPoly.VertCount() < 3)
 			{
 				Map.Print("CheckPortal:  NumVerts < 3.\n");
 				return	false;
 			}
 
-			for(int i=0;i < mPoly.mVerts.Count;i++)
+			if(mPoly.IsMaxExtents())
 			{
-				for(int k=0;k < 3;k++)
-				{
-					float	val	=UtilityLib.Mathery.VecIdx(mPoly.mVerts[i], k);
-
-					if(val == Bounds.MIN_MAX_BOUNDS)
-					{
-						Map.Print("CheckPortal:  Portal was not clipped on all sides!!!\n");
-						return	false;
-					}
-					if(val == -Bounds.MIN_MAX_BOUNDS)
-					{
-						Map.Print("CheckPortal:  Portal was not clipped on all sides!!!\n");
-						return	false;
-					}
-				}
+				Map.Print("CheckPortal:  Portal was not clipped on all sides!!!\n");
+				return	false;
 			}
 			return	true;
 		}

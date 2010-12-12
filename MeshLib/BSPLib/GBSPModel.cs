@@ -9,10 +9,10 @@ namespace BSPLib
 {
 	public class GBSPModel
 	{
-		public GBSPNode	[]mRootNode	=new GBSPNode[2];
-		public Vector3	mOrigin;
-		public GBSPNode	mOutsideNode	=new GBSPNode();
-		public Bounds	mBounds;
+		GBSPNode	[]mRootNode		=new GBSPNode[2];
+		Vector3		mOrigin;
+		GBSPNode	mOutsideNode	=new GBSPNode();
+		Bounds		mBounds;
 
 		//for saving, might delete
 		public int		[]mRootNodeID	=new int[2];
@@ -22,73 +22,27 @@ namespace BSPLib
 		public int		mNumSolidLeafs;
 
 		//area portal stuff, probably won't use
-		public bool		mbAreaPortal;
-		public int		[]mAreas	=new int[2];
+		internal bool	mbAreaPortal;
+		internal int	[]mAreas	=new int[2];
 
 		//temporary
 		GBSPBrush	mGBSPBrushes;
-
-
-		static internal void DumpBrushListToFile(GBSPBrush brushList)
-		{
-			FileStream		fs	=new FileStream("BrushSides.txt", FileMode.Create, FileAccess.Write);
-			StreamWriter	sw	=new StreamWriter(fs);			
-
-			for(GBSPBrush b=brushList;b != null;b=b.mNext)
-			{
-				for(int i=0;i < b.mSides.Count;i++)
-				{
-					sw.Write("" + b.mSides[i].mPlaneNum + ", " +
-						b.mSides[i].mPlaneSide + ", " +
-						b.mSides[i].mFlags + "\n");
-				}
-			}
-			sw.Close();
-			fs.Close();
-		}
 
 
 		internal bool ProcessWorldModel(List<MapBrush> list,
 			List<MapEntity> ents, PlanePool pool,
 			TexInfoPool tip, bool bVerbose)
 		{
-			GBSPBrush	prev	=null;
-
 			list.Reverse();
-			foreach(MapBrush b in list)
-			{
-				GBSPBrush	gb	=new GBSPBrush(b);
-
-				//if brush is being dropped, the mOriginal
-				//reference will be null
-				if(gb.mOriginal == null)
-				{
-					continue;
-				}
-
-				if(prev != null)
-				{
-					prev.mNext	=gb;
-				}
-
-				if(mGBSPBrushes == null)
-				{
-					mGBSPBrushes	=gb;
-				}
-				prev	=gb;
-			}
-
+			mGBSPBrushes	=GBSPBrush.ConvertMapBrushList(list);
 			mGBSPBrushes	=GBSPBrush.CSGBrushes(bVerbose, mGBSPBrushes, pool);
-
-			DumpBrushListToFile(mGBSPBrushes);
 
 			GBSPNode	root	=new GBSPNode();
 			root.BuildBSP(mGBSPBrushes, pool, bVerbose);
 
-			mBounds	=new Bounds(root.mBounds);
+			mBounds	=new Bounds(root.GetBounds());
 
 			mGBSPBrushes	=null;
-			prev			=null;
 
 			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs))
 			{
@@ -111,29 +65,7 @@ namespace BSPLib
 
 			root.FreeBSP_r();
 
-			foreach(MapBrush b in list)
-			{
-				GBSPBrush	gb	=new GBSPBrush(b);
-
-				//if brush is being dropped, the mOriginal
-				//reference will be null
-				if(gb.mOriginal == null)
-				{
-					continue;
-				}
-
-				if(prev != null)
-				{
-					prev.mNext	=gb;
-				}
-
-				if(mGBSPBrushes == null)
-				{
-					mGBSPBrushes	=gb;
-				}
-				prev	=gb;
-			}
-
+			mGBSPBrushes	=GBSPBrush.ConvertMapBrushList(list);
 			mGBSPBrushes	=GBSPBrush.CSGBrushes(bVerbose, mGBSPBrushes, pool);
 
 			root.BuildBSP(mGBSPBrushes, pool, bVerbose);
@@ -172,34 +104,16 @@ namespace BSPLib
 		internal bool ProcessSubModel(List<MapBrush> list,
 			PlanePool pool, TexInfoPool tip, bool bVerbose)
 		{
-			GBSPBrush	prev	=null;
-
 			list.Reverse();
-			foreach(MapBrush b in list)
-			{
-				GBSPBrush	gb	=new GBSPBrush(b);
-
-				if(prev != null)
-				{
-					prev.mNext	=gb;
-				}
-
-				if(mGBSPBrushes == null)
-				{
-					mGBSPBrushes	=gb;
-				}
-				prev	=gb;
-			}
-
+			mGBSPBrushes	=GBSPBrush.ConvertMapBrushList(list);
 			mGBSPBrushes	=GBSPBrush.CSGBrushes(bVerbose, mGBSPBrushes, pool);
 
 			GBSPNode	root	=new GBSPNode();
 			root.BuildBSP(mGBSPBrushes, pool, bVerbose);
 
-			mBounds			=new Bounds(root.mBounds);
+			mBounds			=new Bounds(root.GetBounds());
 
 			mGBSPBrushes	=null;
-			prev			=null;
 
 			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs))
 			{
@@ -357,6 +271,76 @@ namespace BSPLib
 			Map.Print("Num Portal Leafs     : " + NumPortalLeafs + "\n");
 
 			return	true;
+		}
+
+
+		internal void SetOrigin(Vector3 org)
+		{
+			mOrigin	=org;
+		}
+
+
+		internal bool GetFaceVertIndexNumbers(FaceFixer ff)
+		{
+			return	mRootNode[0].GetFaceVertIndexNumbers_r(ff);
+		}
+
+
+		internal bool FixTJunctions(FaceFixer ff, TexInfoPool tip)
+		{
+			return	mRootNode[0].FixTJunctions_r(ff, tip);
+		}
+
+
+		internal void ConvertToGFXAndSave(BinaryWriter bw)
+		{
+			GFXModel	GModel	=new GFXModel();
+
+			GModel.mRootNode[0]		=mRootNodeID[0];
+			GModel.mOrigin			=mOrigin;
+			GModel.mMins			=mBounds.mMins;
+			GModel.mMaxs			=mBounds.mMaxs;
+			GModel.mRootNode[1]		=mRootNodeID[1];
+			GModel.mFirstFace		=mFirstFace;
+			GModel.mNumFaces		=mNumFaces;
+			GModel.mFirstLeaf		=mFirstLeaf;
+			GModel.mNumLeafs		=mNumLeafs;
+			GModel.mFirstCluster	=mFirstCluster;
+			GModel.mNumClusters		=mNumClusters;
+			GModel.mAreas[0]		=mAreas[0];
+			GModel.mAreas[1]		=mAreas[1];
+
+			GModel.Write(bw);
+		}
+
+
+		internal bool CreateAreas(ref int numAreas, GBSPNode.ModelForLeafNode mod4leaf)
+		{
+			return	mRootNode[0].CreateAreas_r(ref numAreas, mod4leaf);
+		}
+
+
+		internal bool FinishAreaPortals(GBSPNode.ModelForLeafNode mod4leaf)
+		{
+			return	mRootNode[0].FinishAreaPortals_r(mod4leaf);
+		}
+
+
+		internal bool SaveGFXNodes_r(BinaryWriter bw)
+		{
+			return	mRootNode[0].SaveGFXNodes_r(bw);
+		}
+
+
+		internal bool SaveGFXFaces_r(BinaryWriter bw)
+		{
+			return	mRootNode[0].SaveGFXFaces_r(bw);
+		}
+
+
+		internal bool SaveGFXLeafs_r(BinaryWriter bw, List<int> gfxLeafFaces, ref int TotalLeafSize)
+		{
+			return	mRootNode[0].SaveGFXLeafs_r(bw, gfxLeafFaces, ref TotalLeafSize);
 		}
 	}
 }

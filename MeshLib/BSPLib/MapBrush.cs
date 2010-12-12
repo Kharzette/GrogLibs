@@ -84,7 +84,7 @@ namespace BSPLib
 				}
 				GBSPPoly	p	=new GBSPPoly(plane);
 
-				for(int j=0;j < mOriginalSides.Count && p.mVerts.Count != 0;j++)
+				for(int j=0;j < mOriginalSides.Count && p.VertCount() != 0;j++)
 				{
 					if(i == j)
 					{
@@ -97,13 +97,10 @@ namespace BSPLib
 				GBSPSide	side	=mOriginalSides[i];
 				side.mPoly	=p;
 
-				if(p.mVerts.Count > 2)
+				if(p.VertCount() > 2)
 				{
 					side.mFlags	|=GBSPSide.SIDE_VISIBLE;
-					for(int j=0;j < p.mVerts.Count;j++)
-					{
-						mBounds.AddPointToBounds(p.mVerts[j]);
-					}
+					p.AddToBounds(mBounds);
 				}
 			}
 

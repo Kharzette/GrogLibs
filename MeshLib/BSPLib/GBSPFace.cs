@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 using Microsoft.Xna.Framework;
 
 
@@ -8,17 +9,17 @@ namespace BSPLib
 {
 	public class GBSPFace
 	{
-		public GBSPFace		mNext;
-		public GBSPFace		mOriginal;
-		public GBSPPoly		mPoly;
-		public UInt32		[]mContents	=new UInt32[2];
-		public Int32		mTexInfo;
-		public Int32		mPlaneNum;
-		public Int32		mPlaneSide;
+		GBSPFace	mNext;
+		GBSPFace	mOriginal;
+		GBSPPoly	mPoly;
+		UInt32		[]mContents	=new UInt32[2];
+		Int32		mTexInfo;
+		Int32		mPlaneNum;
+		Int32		mPlaneSide;
 
-		public Int32		mEntity;	//Originating entity
+		Int32		mEntity;	//Originating entity
 
-		public bool			mbVisible;			
+		bool		mbVisible;			
 
 		//For GFX file saving
 		public Int32		mOutputNum;	
@@ -55,18 +56,31 @@ namespace BSPLib
 			mMerged			=copyMe.mMerged;
 		}
 
+
+		public GBSPFace(GBSPPortal port, Int32 pside)
+		{
+			mTexInfo	=port.mSide.mTexInfo;
+			mPlaneNum	=port.mSide.mPlaneNum;
+			mPlaneSide	=pside;
+			mPortal		=port;
+			mbVisible	=true;
+
+			if(pside != 0)
+			{
+				mPoly	=new GBSPPoly(port.mPoly);
+				mPoly.Reverse();
+			}
+			else
+			{
+				mPoly	=new GBSPPoly(port.mPoly);
+			}
+		}
+
 		static GBSPFace MergeFace(GBSPFace Face1, GBSPFace Face2, PlanePool pool)
 		{
-			Vector3		[]Edge1	=new Vector3[2];
-			Int32		i, k, NumVerts, NumVerts2;
-			Int32		[]EdgeIndex	=new Int32[2];
-			Int32		NumNewVerts;
 			GBSPPoly	NewPoly = null, Poly1, Poly2;
-			Vector3		Normal1, Normal2, Vec1, Vec2;
+			Vector3		Normal1;
 			GBSPFace	NewFace	=null;
-			float		Dot;
-			//int32		Start, End;
-			bool		Keep1	=true, Keep2	=true;
 
 			//
 			// Planes and Sides MUST match before even trying to merge
@@ -99,125 +113,24 @@ namespace BSPLib
 			Poly1	=Face1.mPoly;
 			Poly2	=Face2.mPoly;
 
-			if(Poly1.mVerts.Count == -1 || Poly2.mVerts.Count == -1)
-			{
-				return	null;
-			}
-
-			NumVerts	=Poly1.mVerts.Count;
-
-			//
-			// Go through each edge of Poly1, and see if the reverse of it exist in Poly2
-			//
-			for(i=0;i < NumVerts;i++)		
-			{
-				Edge1[1]	=Poly1.mVerts[i];
-				Edge1[0]	=Poly1.mVerts[(i + 1) % NumVerts];
-
-				if(Poly2.EdgeExist(Edge1, out EdgeIndex))
-				{
-					break;
-				}
-			}
-
-			if(i >= NumVerts)							// Did'nt find an edge, return nothing
-			{
-				return	null;
-			}
-
-			NumVerts2	=Poly2.mVerts.Count;
-
-			//
-			//	See if the 2 joined make a convex poly, connect them, and return new one
-			//
 			Normal1	=pool.mPlanes[Face1.mPlaneNum].mNormal;	// Get the normal
 			if(Face1.mPlaneSide != 0)
 			{
 				Normal1	=Vector3.Zero - Normal1;
 			}
 
-			//Get the normal of the edge just behind edge1
-			Vec1	=Poly1.mVerts[(i + NumVerts - 1) % NumVerts];
-			Vec1	-=Edge1[1];
-
-			Normal2	=Vector3.Cross(Normal1, Vec1);
-			Normal2.Normalize();
-
-			Vec2	=Poly2.mVerts[(EdgeIndex[1] + 1) % NumVerts2] - Poly2.mVerts[EdgeIndex[1]];
-
-			Dot		=Vector3.Dot(Vec2, Normal2);
-			if(Dot > COLINEAR_EPSILON)
+			NewPoly	=GBSPPoly.Merge(Poly1, Poly2, Normal1, pool);
+			if(NewPoly == null)
 			{
-				return null;			//Edge makes a non-convex poly
-			}
-			if(Dot >= -COLINEAR_EPSILON)	//Drop point, on colinear edge
-			{
-				Keep1	=false;
-			}
-
-			//Get the normal of the edge just behind edge1
-			Vec1	=Poly1.mVerts[(i+2)%NumVerts];
-			Vec1	-=Edge1[0];
-
-			Normal2	=Vector3.Cross(Normal1, Vec1);
-			Normal2.Normalize();
-
-			Vec2	=Poly2.mVerts[(EdgeIndex[0] + NumVerts2 - 1) % NumVerts2] -
-						Poly2.mVerts[EdgeIndex[0]];
-
-			Dot	=Vector3.Dot(Vec2, Normal2);
-			if(Dot > COLINEAR_EPSILON)
-			{
-				return	null;	//Edge makes a non-convex poly
-			}
-			if(Dot >= -COLINEAR_EPSILON)	//Drop point, on colinear edge
-			{
-				Keep2	=false;
-			}
-
-			//if (NumVerts+NumVerts2 > 30)
-			//	return null;
-			
-			NewFace			=new GBSPFace();
-			NewFace.mPoly	=new GBSPPoly();
-			NewPoly			=NewFace.mPoly;
+				return	null;
+			}			
+			NewFace			=new GBSPFace(Face2);
+			NewFace.mPoly	=NewPoly;
 			if(NewFace == null)
 			{
 				Map.Print("*WARNING* MergeFace:  Out of memory for new face!\n");
 				return	null;
 			}
-
-			//
-			// Make a new poly, free the old ones...
-			//
-			NumNewVerts	=0;
-
-			for(k = (i + 1) % NumVerts;k != i;k = (k + 1) % NumVerts)
-			{
-				if(k == (i + 1) % NumVerts && !Keep2)
-				{
-					continue;
-				}
-				NewPoly.mVerts.Add(Poly1.mVerts[k]);
-				NumNewVerts++;
-			}
-
-			i	=EdgeIndex[0];
-
-			for(k = (i + 1) % NumVerts2;k != i;k = (k + 1) % NumVerts2)
-			{
-				if(k == (i + 1) % NumVerts2 && !Keep1)
-				{
-					continue;
-				}
-				NewPoly.mVerts.Add(Poly2.mVerts[k]);
-				NumNewVerts++;
-			}
-
-			NewFace			=new GBSPFace(Face2);
-			NewFace.mPoly	=NewPoly;
-
-			//Hook.Printf("Merged face: %i\n", NumNewVerts);
 
 			Face1.mMerged	=NewFace;
 			Face2.mMerged	=NewFace;
@@ -232,7 +145,7 @@ namespace BSPLib
 
 			for(Face1 = Faces;Face1 != null;Face1 = Face1.mNext)
 			{
-				if(Face1.mPoly.mVerts.Count == -1)
+				if(Face1.mPoly.VertCount() == -1)
 				{
 					continue;
 				}
@@ -244,7 +157,7 @@ namespace BSPLib
 
 				for (Face2 = Faces ; Face2 != Face1 ; Face2 = Face2.mNext)
 				{
-					if(Face2.mPoly.mVerts.Count == -1)
+					if(Face2.mPoly.VertCount() == -1)
 					{
 						continue;
 					}
@@ -290,18 +203,17 @@ namespace BSPLib
 		{
 			if(mPoly != null)
 			{
-				mPoly.mVerts.Clear();
+				mPoly.Free();
 			}
 		}
 
 
 		private bool Check(bool Verb, PlanePool pool)
 		{
-			Int32		i, j;
-			Vector3		Vect1, Normal, V1, V2, EdgeNormal;
-			float		Dist, PDist, EdgeDist;
+			Vector3		Normal;
+			float		PDist;
 			
-			if(mPoly.mVerts.Count < 3)
+			if(mPoly.VertCount() < 3)
 			{
 				if(Verb)
 				{
@@ -321,54 +233,19 @@ namespace BSPLib
 			//
 			//	Check for degenerate edges, convexity, and make sure it's planar
 			//
-			for(i=0;i < mPoly.mVerts.Count;i++)
-			{
-				V1	=mPoly.mVerts[i];
-				V2	=mPoly.mVerts[(i + 1) % mPoly.mVerts.Count];
+			return	mPoly.Check(Verb, Normal, PDist);
+		}
 
-				//Check for degenreate edge
-				Vect1	=V2 - V1;
-				Dist	=Vect1.Length();
-				if(Math.Abs(Dist) < GBSPPoly.DEGENERATE_EPSILON)
-				{
-					if(Verb)
-					{
-						Map.Print("WARNING CheckFace:  Degenerate Edge.\n");
-					}
-					return	false;
-				}
 
-				//Check for planar
-				Dist	=Vector3.Dot(V1, Normal) - PDist;
-				if(Dist > UtilityLib.Mathery.ON_EPSILON
-					|| Dist < -UtilityLib.Mathery.ON_EPSILON)
-				{
-					if(Verb)
-					{
-						Map.Print("WARNING CheckFace:  Non planar: " + Dist + "\n");
-					}
-					return	false;
-				}
+		internal void SetContents(int idx, UInt32 val)
+		{
+			mContents[idx]	=val;
+		}
 
-				EdgeNormal	=Vector3.Cross(Normal, Vect1);
-				EdgeNormal.Normalize();
-				EdgeDist	=Vector3.Dot(V1, EdgeNormal);
-				
-				//Check for convexity
-				for(j=0;j < mPoly.mVerts.Count;j++)
-				{
-					Dist	=Vector3.Dot(mPoly.mVerts[j], EdgeNormal) - EdgeDist;
-					if(Dist > UtilityLib.Mathery.ON_EPSILON)
-					{
-						if(Verb)
-						{
-							Map.Print("CheckFace:  Face not convex.\n");
-						}
-						return	false;
-					}
-				}
-			}
-			return	true;
+
+		internal UInt32 GetContents(int idx)
+		{
+			return	mContents[idx];
 		}
 
 
@@ -381,16 +258,155 @@ namespace BSPLib
 		}
 
 
-		internal bool FixTJunctions(FaceFixer ff, TexInfoPool tip)
+		bool FixTJunctions(FaceFixer ff, TexInfoPool tip)
 		{
 			return	ff.FixTJunctions(ref mIndexVerts, tip.mTexInfos[mTexInfo]);
 		}
 
 
-		internal bool GetFaceVertIndexNumbers(FaceFixer ff)
+		static internal void FreeFaceList(GBSPFace listHead)
 		{
-			mIndexVerts		=ff.IndexFaceVerts(mPoly.mVerts);
+			GBSPFace	Next	=null;
+			for(GBSPFace f=listHead;f != null;f=Next)
+			{
+				Next	=f.mNext;
+				f		=null;
+			}
+		}
+
+
+		static internal void AddToListStart(ref GBSPFace listHead, GBSPFace newFace)
+		{
+			newFace.mNext	=listHead;
+			listHead		=newFace;
+		}
+
+
+		static internal bool GetFaceListVertIndexNumbers(GBSPFace listHead, FaceFixer ff)
+		{
+			for(GBSPFace f=listHead;f != null;f = f.mNext)
+			{
+				if(f.mMerged != null
+					|| f.mSplit[0] != null
+					|| f.mSplit[1] != null)
+				{
+					continue;
+				}
+
+				if(!f.GetFaceVertIndexNumbers(ff))
+				{
+					return	false;
+				}
+			}
 			return	true;
+		}
+
+
+		static internal bool FixFaceListTJunctions(GBSPFace listHead, FaceFixer ff, TexInfoPool tip)
+		{
+			for(GBSPFace f=listHead;f != null;f = f.mNext)
+			{
+				if(f.mMerged != null
+					|| f.mSplit[0] != null
+					|| f.mSplit[1] != null)
+				{
+					continue;
+				}
+
+				f.FixTJunctions(ff, tip);
+			}
+			return	true;
+		}
+
+
+		bool GetFaceVertIndexNumbers(FaceFixer ff)
+		{
+			mIndexVerts		=mPoly.IndexVerts(ff);
+			return	true;
+		}
+
+
+		internal bool IsVisible()
+		{
+			return	mbVisible;
+		}
+
+
+		//prepares faces for writing
+		internal static int PrepFaceList(GBSPFace listHead, NodeCounter nc)
+		{
+			int	numFaces	=0;
+			for(GBSPFace f=listHead;f != null;f=f.mNext)
+			{
+				if(!f.mbVisible)
+				{
+					continue;
+				}
+
+				if(f.mMerged != null ||
+					f.mSplit[0] != null ||
+					f.mSplit[1] != null)
+				{
+					continue;
+				}
+
+				//Skip output of face, if IndexVerts not > 0
+				//NOTE - The leaf faces output stage will also skip these same faces...
+				if(f.mIndexVerts.Length <= 0)
+				{
+					continue;
+				}
+
+				f.mFirstIndexVert	=nc.VertIndexListCount;
+				f.mOutputNum		=nc.mNumGFXFaces;
+
+				for(int i=0;i < f.mIndexVerts.Length;i++)
+				{
+					nc.AddIndex(f.mIndexVerts[i]);
+				}
+				nc.mNumGFXFaces++;
+				numFaces++;
+			}
+			return	numFaces;
+		}
+
+
+		internal static void ConvertListToGFXAndSave(GBSPFace listHead, BinaryWriter bw)
+		{
+			for(GBSPFace f=listHead;f != null;f=f.mNext)
+			{
+				if(!f.mbVisible)
+				{
+					continue;
+				}
+
+				if(f.mMerged != null
+					|| f.mSplit[0] != null
+					|| f.mSplit[1] != null)
+				{
+					continue;
+				}
+
+				if(f.mIndexVerts.Length > 0)
+				{
+					GFXFace	GFace	=new GFXFace();
+
+					GFace.mFirstVert	=f.mFirstIndexVert;
+					GFace.mNumVerts		=f.mIndexVerts.Length;
+					GFace.mPlaneNum		=f.mPlaneNum;
+					GFace.mPlaneSide	=f.mPlaneSide;
+					GFace.mTexInfo		=f.mTexInfo;
+					GFace.mLWidth		=0;
+					GFace.mLHeight		=0;
+					GFace.mLightOfs		=-1;	//No light info yet
+					GFace.mLTypes[0]	=255;	//Of course, no styles yet either
+					GFace.mLTypes[1]	=255;
+					GFace.mLTypes[2]	=255;
+					GFace.mLTypes[3]	=255;
+
+					GFace.Write(bw);
+				}
+			}
 		}
 	}
 }

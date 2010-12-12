@@ -36,55 +36,18 @@ namespace BSPLib
 		internal void CalcPortalInfo()
 		{
 			mCenter	=mPoly.Center();
-
-			float	bestDist = 0.0f;
-
-			foreach(Vector3	vert in mPoly.mVerts)
-			{
-				Vector3	toCent	=vert - mCenter;
-
-				float	dist	=toCent.Length();
-				if(dist > bestDist)
-				{
-					bestDist	=dist;
-				}
-			}
-			mRadius	=bestDist;
+			mRadius	=mPoly.Radius();
 		}
 
 
-		internal bool CanSeePortal(VISPortal Portal2)
+		internal bool CanSeePortal(VISPortal port2)
 		{
-			Int32	i;
-			float	Dist;
-
-			for(i=0;i < mPoly.mVerts.Count;i++)
-			{
-				Dist	=Vector3.Dot(Portal2.mPlane.mNormal, mPoly.mVerts[i]) - Portal2.mPlane.mDist;
-//					Portal2.mPlane.DistanceFast(mPoly.mVerts[i]);
-				if(Dist < -UtilityLib.Mathery.ON_EPSILON)
-				{
-					break;
-				}
-			}
-
-			if(i == mPoly.mVerts.Count)
+			if(!mPoly.AnyPartBehind(port2.mPlane))
 			{
 				//No points of Portal1 behind Portal2, can't possibly see
 				return	false;
 			}
-
-			for(i=0;i < Portal2.mPoly.mVerts.Count;i++)
-			{
-				Dist	=Vector3.Dot(mPlane.mNormal, Portal2.mPoly.mVerts[i]) - mPlane.mDist;
-//				Dist	=mPlane.DistanceFast(Portal2.mPoly.mVerts[i]);
-				if(Dist > UtilityLib.Mathery.ON_EPSILON)
-				{
-					break;
-				}
-			}
-
-			if(i == Portal2.mPoly.mVerts.Count)
+			if(!port2.mPoly.AnyPartInFront(mPlane))
 			{
 				//No points of Portal2 in front of Portal1, can't possibly see
 				return	false;
@@ -146,111 +109,7 @@ namespace BSPLib
 		static bool ClipToSeperators(GBSPPoly Source, GBSPPoly Pass,
 			GBSPPoly Target, bool FlipClip, ref GBSPPoly Dest)
 		{
-			Int32		i, j, k, l;
-			GBSPPlane	Plane		=new GBSPPlane();
-			Vector3		v1, v2;
-			float		d;
-			float		Length;
-			Int32		[]Counts	=new Int32[3];
-			bool		FlipTest;
-
-			for(i=0;i < Source.mVerts.Count;i++)
-			{
-				l	=(i + 1) % Source.mVerts.Count;
-
-				v1	=Source.mVerts[l] - Source.mVerts[i];
-
-				for(j=0;j < Pass.mVerts.Count;j++)
-				{
-					v2	=Pass.mVerts[j] - Source.mVerts[i];
-
-					Plane.mNormal	=Vector3.Cross(v1, v2);
-
-					Length	=Plane.mNormal.Length();
-					Plane.mNormal.Normalize();
-					
-					if(Length < UtilityLib.Mathery.ON_EPSILON)
-					{
-						continue;
-					}
-					
-					Plane.mDist	=Vector3.Dot(Pass.mVerts[j], Plane.mNormal);						
-					FlipTest	=false;
-					for(k=0;k < Source.mVerts.Count;k++)
-					{
-						if(k == i || k == l)
-						{
-							continue;
-						}
-
-						d	=Vector3.Dot(Source.mVerts[k], Plane.mNormal) - Plane.mDist;
-						if(d < -UtilityLib.Mathery.ON_EPSILON)
-						{
-							FlipTest	=false;
-							break;
-						}
-						else if(d > UtilityLib.Mathery.ON_EPSILON)
-						{
-							FlipTest	=true;
-							break;
-						}
-					}
-					if(k == Source.mVerts.Count)
-					{
-						continue;
-					}
-					if(FlipTest)
-					{
-						Plane.Inverse();
-					}
-					Counts[0] = Counts[1] = Counts[2] = 0;
-
-					for(k=0;k < Pass.mVerts.Count;k++)
-					{
-						if(k==j)
-						{
-							continue;
-						}
-						d	=Vector3.Dot(Pass.mVerts[k], Plane.mNormal) - Plane.mDist;
-						if(d < -UtilityLib.Mathery.ON_EPSILON)
-						{
-							break;
-						}
-						else if(d > UtilityLib.Mathery.ON_EPSILON)
-						{
-							Counts[0]++;
-						}
-						else
-						{
-							Counts[2]++;
-						}
-					}
-					if(k != Pass.mVerts.Count)
-					{
-						continue;	
-					}
-						
-					if(Counts[0] == 0)
-					{
-						continue;
-					}
-					if(!Target.ClipPoly(Plane, FlipClip))
-					{
-						Map.Print("ClipToPortals:  Error clipping portal.\n");
-						return	false;
-					}
-
-					if(Target == null || Target.mVerts.Count < 3)
-					{
-						Dest	=null;
-						return	true;
-					}
-				}
-			}
-			
-			Dest	=Target;
-
-			return	true;
+			return	Target.SeperatorClip(Source, Pass, FlipClip, ref Dest);
 		}
 
 
@@ -357,7 +216,7 @@ namespace BSPLib
 				{
 					return	false;
 				}
-				if(Stack.mPass.mVerts.Count < 3)
+				if(Stack.mPass.VertCount() < 3)
 				{
 					continue;
 				}
@@ -368,7 +227,7 @@ namespace BSPLib
 				{
 					return	false;
 				}
-				if(Stack.mSource.mVerts.Count < 3)
+				if(Stack.mSource.VertCount() < 3)
 				{
 					continue;
 				}
@@ -392,7 +251,7 @@ namespace BSPLib
 					return	false;
 				}
 
-				if(Stack.mPass == null || Stack.mPass.mVerts.Count < 3)
+				if(Stack.mPass == null || Stack.mPass.VertCount() < 3)
 				{
 					Stack.mSource	=null;
 					continue;
@@ -402,7 +261,7 @@ namespace BSPLib
 				{
 					return	false;
 				}
-				if(Stack.mPass == null || Stack.mPass.mVerts.Count < 3)
+				if(Stack.mPass == null || Stack.mPass.VertCount() < 3)
 				{
 					Stack.mSource	=null;
 					continue;

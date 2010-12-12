@@ -38,39 +38,7 @@ namespace BSPLib
 
 		internal GBSPPlane(GBSPPoly poly)
 		{
-			int i;
-
-			mNormal	=Vector3.Zero;
-
-			//catches colinear points now
-			for(i=0;i < poly.mVerts.Count;i++)
-			{
-				//gen a plane normal from the cross of edge vectors
-				Vector3	v1  =poly.mVerts[i] - poly.mVerts[(i + 1) % poly.mVerts.Count];
-				Vector3	v2  =poly.mVerts[(i + 2) % poly.mVerts.Count] - poly.mVerts[(i + 1) % poly.mVerts.Count];
-
-				mNormal   =Vector3.Cross(v1, v2);
-
-				if(!mNormal.Equals(Vector3.Zero))
-				{
-					break;
-				}
-				//try the next three if there are three
-			}
-			if(i >= poly.mVerts.Count)
-			{
-				//need a talky flag
-				//in some cases this isn't worthy of a warning
-				Map.Print("Face with no normal!");
-				mNormal	=Vector3.UnitX;
-				mDist	=0.0f;
-				mType	=PLANE_ANY;
-				return;
-			}
-
-			mNormal.Normalize();
-			mDist	=Vector3.Dot(poly.mVerts[1], mNormal);
-			mType	=GetPlaneType(mNormal);
+			this	=poly.GenPlane();
 		}
 
 

@@ -60,10 +60,7 @@ namespace BSPLib
 		internal bool CalcInfo()
 		{
 			mBounds	=new Bounds();
-			foreach(Vector3 pnt in mPoly.mVerts)
-			{
-				mBounds.AddPointToBounds(pnt);
-			}
+			mPoly.AddToBounds(mBounds);
 			return	true;
 		}
 	}

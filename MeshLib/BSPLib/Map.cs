@@ -44,8 +44,6 @@ namespace BSPLib
 	{
 		List<MapEntity>	mEntities;
 
-		GBSPNode	mRoot;
-
 		Int32		CurrentLeaf;
 		Int32		CurFrameStatic;
 		Int32		[]ClusterVisFrame;
@@ -410,7 +408,10 @@ namespace BSPLib
 
 				GBSPModel	mod	=new GBSPModel();
 
-				me.GetOrigin(out mod.mOrigin);
+				Vector3	org;
+				me.GetOrigin(out org);
+
+				mod.SetOrigin(org);
 
 				if(index == 0)
 				{
@@ -473,28 +474,19 @@ namespace BSPLib
 
 		internal GBSPModel ModelForLeafNode(GBSPNode Node)
 		{
-			GBSPBrush	Brush;
-
-			if(Node.mPlaneNum != PlanePool.PLANENUM_LEAF)
+			if(Node.IsLeaf())
 			{
 				Print("ModelForLeafNode:  Node not a leaf!\n");
 				return	null;
 			}
 
-			for(Brush = Node.mBrushList;Brush != null;Brush = Brush.mNext)
-			{
-				if(Brush.mOriginal.mEntityNum != 0)
-				{
-					break;
-				}
-			}
-
-			if(Brush == null)
+			int	entNum	=Node.GetOriginalEntityNum();
+			if(entNum == -1)
 			{
 				return	null;
 			}
 
-			return	mModels[mEntities[Brush.mOriginal.mEntityNum].mModelNum];
+			return	mModels[mEntities[entNum].mModelNum];
 		}
 
 
@@ -549,7 +541,7 @@ namespace BSPLib
 
 			for(int i=0;i < mModels.Count;i++)
 			{
-				if(!mModels[i].mRootNode[0].GetFaceVertIndexNumbers_r(ff))
+				if(!mModels[i].GetFaceVertIndexNumbers(ff))
 				{
 					return	false;
 				}
@@ -566,7 +558,7 @@ namespace BSPLib
 
 			for(int i=0;i < mModels.Count;i++)
 			{
-				if(!mModels[i].mRootNode[0].FixTJunctions_r(ff, mTIPool))
+				if(!mModels[i].FixTJunctions(ff, mTIPool))
 				{
 					return false;
 				}
@@ -581,7 +573,7 @@ namespace BSPLib
 		}
 
 
-		bool CreateAreas(GBSPNode root, NodeCounter nc)
+		bool CreateAreas(GBSPModel worldModel, NodeCounter nc)
 		{
 			Print(" --- Create Area Leafs --- \n");
 
@@ -594,13 +586,13 @@ namespace BSPLib
 
 			int	numAreas	=1;
 
-			if(!root.CreateAreas_r(ref numAreas, ModelForLeafNode))
+			if(!worldModel.CreateAreas(ref numAreas, ModelForLeafNode))
 			{
 				Map.Print("Could not create model areas.\n");
 				return	false;
 			}
 
-			if(!root.FinishAreaPortals_r(ModelForLeafNode))
+			if(!worldModel.FinishAreaPortals(ModelForLeafNode))
 			{
 				Map.Print("CreateAreas: FinishAreaPortals_r failed.\n");
 				return	false;
@@ -641,9 +633,7 @@ namespace BSPLib
 				//create areas
 				if(i == 0)
 				{
-					GBSPNode	root	=mModels[i].mRootNode[0];
-
-					CreateAreas(root, nc);
+					CreateAreas(mModels[i], nc);
 				}
 			}
 
@@ -670,23 +660,8 @@ namespace BSPLib
 
 			for(i=0;i < mModels.Count;i++)
 			{
-				GModel.mRootNode[0]		=mModels[i].mRootNodeID[0];
-				GModel.mOrigin			=mModels[i].mOrigin;
-				GModel.mMins			=mModels[i].mBounds.mMins;
-				GModel.mMaxs			=mModels[i].mBounds.mMaxs;
-				GModel.mRootNode[1]		=mModels[i].mRootNodeID[1];
-				GModel.mFirstFace		=mModels[i].mFirstFace;
-				GModel.mNumFaces		=mModels[i].mNumFaces;
-				GModel.mFirstLeaf		=mModels[i].mFirstLeaf;
-				GModel.mNumLeafs		=mModels[i].mNumLeafs;
-				GModel.mFirstCluster	=mModels[i].mFirstCluster;
-				GModel.mNumClusters		=mModels[i].mNumClusters;
-				GModel.mAreas[0]		=mModels[i].mAreas[0];
-				GModel.mAreas[1]		=mModels[i].mAreas[1];
-
-				GModel.Write(bw);
-			}	
-			
+				mModels[i].ConvertToGFXAndSave(bw);
+			}			
 			return	true;	
 		}
 
@@ -749,7 +724,7 @@ namespace BSPLib
 			
 			for(i=0;i < mModels.Count; i++)
 			{
-				if(!mModels[i].mRootNode[0].SaveGFXNodes_r(bw))
+				if(!mModels[i].SaveGFXNodes_r(bw))
 				{
 					return	false;
 				}
@@ -774,7 +749,7 @@ namespace BSPLib
 
 			for(i=0;i < mModels.Count;i++)
 			{
-				if(!mModels[i].mRootNode[0].SaveGFXFaces_r(bw))
+				if(!mModels[i].SaveGFXFaces_r(bw))
 				{
 					return	false;
 				}
@@ -1395,7 +1370,7 @@ namespace BSPLib
 			for(i=0;i < mModels.Count;i++)
 			{
 				//Save all the leafs for this model
-				if(!mModels[i].mRootNode[0].SaveGFXLeafs_r(bw, gfxLeafFaces, ref TotalLeafSize))
+				if(!mModels[i].SaveGFXLeafs_r(bw, gfxLeafFaces, ref TotalLeafSize))
 				{
 					Map.Print("SaveGFXLeafs:  SaveGFXLeafs_r failed.\n");
 					return	false;
@@ -1892,7 +1867,6 @@ namespace BSPLib
 		bool LightFacesNoGlobals(int numSamples, bool bExtraSamples)
 		{
 			Int32	i, s;
-			bool	Hit;
 			Int32	Perc;
 
 			float	[]UOfs	=new float[5];
@@ -1935,8 +1909,6 @@ namespace BSPLib
 
 			for(i=0;i < mGFXFaces.Length;i++)
 			{
-				Hit	=false;
-
 				if(Perc != 0)
 				{
 					if(((i % Perc) == 0) &&	(i / Perc) <= 20)
@@ -2226,10 +2198,9 @@ namespace BSPLib
 
 		void CalcFacePointsNoGlobals(FInfo FaceInfo, LInfo LightInfo, float UOfs, float VOfs, bool bExtraLightCorrection)
 		{
-			Vector3	FaceMid, I;
+			Vector3	FaceMid;
 			float	MidU, MidV, StartU, StartV, CurU, CurV;
-			Int32	i, u, v, Width, Height, Leaf;
-			Vector3	Vect;
+			Int32	u, v, Width, Height, Leaf;
 			byte	[]InSolid	=new byte[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE];
 
 			MidU	=(LightInfo.Maxs[0] + LightInfo.Mins[0]) * 0.5f;
@@ -2244,9 +2215,6 @@ namespace BSPLib
 			StartV	=((float)LightInfo.LMins[1]+VOfs) * (float)FInfo.LGRID_SIZE;
 
 			FaceInfo.NumPoints = Width*Height;
-
-//			pPoint = &FaceInfo.Points[0];
-//			pInSolid = InSolid;
 
 			for(v=0;v < Height;v++)
 			{
@@ -2276,12 +2244,14 @@ namespace BSPLib
 					{
 						if(InSolid[(v * Width) + u] != 0)
 						{
-//							if(RayCollision(&FaceMid, pPoint, &I))
-//							{
-//								geVec3d_Subtract(&FaceMid, pPoint, &Vect);
-//								geVec3d_Normalize(&Vect);
-//								geVec3d_Add(&I, &Vect, pPoint);
-//							}
+							Vector3	colResult	=Vector3.Zero;
+							if(RayCollisionNoGlobals(FaceMid,
+								FaceInfo.Points[(v * Width) + u], ref colResult))
+							{
+								Vector3	vect	=FaceMid - FaceInfo.Points[(v * Width) + u];
+								vect.Normalize();
+								FaceInfo.Points[(v * Width) + u]	=colResult + vect;
+							}
 						}
 					}
 				}
@@ -2817,12 +2787,12 @@ namespace BSPLib
 		void CalcPatchReflectivity(Int32 Face, RADPatch Patch)
 		{
 //			GFXTexture		*pTexture;
-			Vector3			Color;
-			Int32			i, Size;
+//			Vector3			Color;
+//			Int32			i, Size;
 //			byte			*pGFXTexData;
 //			DRV_Palette		*Palette;
 			GFXTexInfo		pTexInfo;
-			float			Scale;
+//			float			Scale;
 			
 			pTexInfo	=mGFXTexInfos[mGFXFaces[Face].mTexInfo];
 //			pTexture = &GFXTextures[pTexInfo->Texture];
@@ -3017,7 +2987,6 @@ namespace BSPLib
 		bool FinalizePatchInfo(Int32 Face, RADPatch Patch)
 		{
 			GBSPPoly	Poly;
-			Int32		i;
 
 			Poly	=Patch.mPoly;
 
@@ -3027,13 +2996,7 @@ namespace BSPLib
 				return	false;
 			}
 
-			Patch.mOrigin	=Vector3.Zero;
-
-			for(i=0;i < Poly.mVerts.Count;i++)
-			{
-				Patch.mOrigin	+=Poly.mVerts[i];
-			}
-			Patch.mOrigin	/=Poly.mVerts.Count;
+			Patch.mOrigin	=Poly.Center();
 
 			Patch.mPlane.mNormal	=mGFXPlanes[mGFXFaces[Face].mPlaneNum].mNormal;
 			Patch.mPlane.mDist		=mGFXPlanes[mGFXFaces[Face].mPlaneNum].mDist;
@@ -3249,23 +3212,21 @@ namespace BSPLib
 
 		float CollectPatchLight()
 		{
-			int			i, j;
-			RADPatch	Patch;
-			float		Total	=0.0f;
+			float	total	=0.0f;
 			
-			for(i=0;i < NumPatches;i++)
+			for(int i=0;i < NumPatches;i++)
 			{
-				Patch	=mPatchList[i];
+				RADPatch	patch	=mPatchList[i];
 				
 				//Add receive amount to Final amount
-				Patch.mRadFinal	+=Patch.mRadReceive / Patch.mArea;
-				Patch.mRadSend	=Patch.mRadReceive * Patch.mReflectivity;
+				patch.mRadFinal	+=patch.mRadReceive / patch.mArea;
+				patch.mRadSend	=patch.mRadReceive * patch.mReflectivity;
 
-				Total	+=Patch.mRadSend.X + Patch.mRadSend.Y + Patch.mRadSend.Z;
+				total	+=patch.mRadSend.X + patch.mRadSend.Y + patch.mRadSend.Z;
 
-				Patch.mRadReceive	=Vector3.Zero;
+				patch.mRadReceive	=Vector3.Zero;
 			}
-			return	Total;
+			return	total;
 		}
 
 
@@ -3561,7 +3522,7 @@ namespace BSPLib
 		{
 			RADPatch	p1, p2, p3;
 			Vector3		bse, d1, d2;
-			float		x, y, x1, y1, x2, y2;
+			float		x, y, y1, x2;
 
 			p1	=TriPatch.mPoints[t.mEdges[0].p0];
 			p2	=TriPatch.mPoints[t.mEdges[1].p0];
@@ -3573,12 +3534,8 @@ namespace BSPLib
 
 			x	=Vector3.Dot(Point, t.mEdges[0].mNormal) - t.mEdges[0].mDist;
 			y	=Vector3.Dot(Point, t.mEdges[2].mNormal) - t.mEdges[2].mDist;
-
-			x1	=0.0f;
 			y1	=Vector3.Dot(p2.mOrigin, t.mEdges[2].mNormal) - t.mEdges[2].mDist;
-
 			x2	=Vector3.Dot(p3.mOrigin, t.mEdges[0].mNormal) - t.mEdges[0].mDist;
-			y2	=0.0f;
 
 			if(Math.Abs(y1) < UtilityLib.Mathery.ON_EPSILON
 				|| Math.Abs(x2) < UtilityLib.Mathery.ON_EPSILON)
@@ -3599,7 +3556,6 @@ namespace BSPLib
 			float		d;
 			RADPatch	p0, p1;
 			Vector3		v1, v2;
-			int			i, j;
 
 			if(TriPatch.mNumPoints == 0)
 			{
@@ -3613,7 +3569,7 @@ namespace BSPLib
 			}
 			
 			//See of the Point is inside a tri in the patch
-			for(j=0;j < TriPatch.mNumTris;j++)
+			for(int j=0;j < TriPatch.mNumTris;j++)
 			{
 				t	=TriPatch.mTriList[j];
 				if(!TriPointInside(t, Point))
@@ -3625,7 +3581,7 @@ namespace BSPLib
 				return	true;
 			}
 			
-			for(j=0;j < TriPatch.mNumEdges;j++)
+			for(int j=0;j < TriPatch.mNumEdges;j++)
 			{
 				e	=TriPatch.mEdges[j];
 				if(e.mTri != null)
@@ -3777,9 +3733,8 @@ namespace BSPLib
 			GBSPPlane	Plane;
 			Vector3		Add;
 			Vector3		pPoint;
-			Vector3		[]pRGB;
 			Int32		i, k, PNum, FNum, PSide;
-			RADPatch	Patch, OPatch, TempPatches;
+			RADPatch	Patch, OPatch;
 			PlaneFace	PFace;
 
 			//We need all the faces that belong to each Plane
@@ -3920,7 +3875,6 @@ namespace BSPLib
 					}
 				}
 				Tri			=null;
-				TempPatches	=null;
 			}
 
 			planeFaces	=null;
@@ -5170,7 +5124,7 @@ namespace BSPLib
 					vert.Y	=br.ReadSingle();
 					vert.Z	=br.ReadSingle();
 
-					pPoly.mVerts.Add(vert);
+					pPoly.AddVert(vert);
 				}
 
 				LeafFrom	=br.ReadInt32();
@@ -5271,7 +5225,7 @@ namespace BSPLib
 
 		bool VisWorld(Int32 rootNode, Vector3 pos)
 		{
-			Int32	k, i, Area;
+			Int32	i, Area;
 			Int32	Leaf, Cluster;
 			GFXLeaf	pLeaf;
 
@@ -5314,7 +5268,6 @@ namespace BSPLib
 			for(i=0;i < mGFXModels[0].mNumLeafs;i++)
 			{
 				pLeaf	=mGFXLeafs[mGFXModels[0].mFirstLeaf + i];
-				Int32	pFace;
 
 				Cluster	=pLeaf.mCluster;
 
