@@ -110,6 +110,7 @@
     <Compile Include="Map.cs" />
     <Compile Include="MapBrush.cs" />
     <Compile Include="MapEntity.cs" />
+    <Compile Include="MapFile.cs" />
     <Compile Include="NodeCounter.cs" />
     <Compile Include="PlanePool.cs" />
     <Compile Include="Progress.cs" />

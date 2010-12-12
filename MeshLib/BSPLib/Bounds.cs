@@ -166,5 +166,11 @@ namespace BSPLib
 
 			return	Side;
 		}
+
+
+		internal Vector3 GetCenter()
+		{
+			return	(mMins + mMaxs) / 2.0f;
+		}
 	}
 }
