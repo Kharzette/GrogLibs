@@ -18,7 +18,7 @@ namespace BSPLib
 		public Int32	Parent;
 	}
 
-	public class GBSPHeader : IChunkable
+	public class GBSPHeader
 	{
 		public string	mTAG;
 		public Int32	mVersion;
