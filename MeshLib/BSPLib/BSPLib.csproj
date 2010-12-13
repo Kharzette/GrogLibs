@@ -106,7 +106,14 @@
     <Compile Include="GFXArea.cs" />
     <Compile Include="GFXAreaPortal.cs" />
     <Compile Include="GFXStuff.cs" />
+    <Compile Include="Light\DirectLight.cs" />
+    <Compile Include="Light\FInfo.cs" />
     <Compile Include="Light\Light.cs" />
+    <Compile Include="Light\LInfo.cs" />
+    <Compile Include="Light\PlaneFace.cs" />
+    <Compile Include="Light\RADPatch.cs" />
+    <Compile Include="Light\RADReceiver.cs" />
+    <Compile Include="Light\TriPatch.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MapBrush.cs" />
     <Compile Include="MapEntity.cs" />

@@ -132,13 +132,13 @@ namespace BSPLib
 
 			int	numAreas	=1;
 
-			if(!worldModel.CreateAreas(ref numAreas, ModelForLeafNode))
+			if(!worldModel.CreateAreas(ref numAreas, GetModelForLeafNode))
 			{
 				Map.Print("Could not create model areas.\n");
 				return	false;
 			}
 
-			if(!worldModel.FinishAreaPortals(ModelForLeafNode))
+			if(!worldModel.FinishAreaPortals(GetModelForLeafNode))
 			{
 				Map.Print("CreateAreas: FinishAreaPortals_r failed.\n");
 				return	false;

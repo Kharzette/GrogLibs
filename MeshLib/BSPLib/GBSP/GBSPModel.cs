@@ -314,13 +314,13 @@ namespace BSPLib
 		}
 
 
-		internal bool CreateAreas(ref int numAreas, GBSPNode.ModelForLeafNode mod4leaf)
+		internal bool CreateAreas(ref int numAreas, Map.ModelForLeafNode mod4leaf)
 		{
 			return	mRootNode[0].CreateAreas_r(ref numAreas, mod4leaf);
 		}
 
 
-		internal bool FinishAreaPortals(GBSPNode.ModelForLeafNode mod4leaf)
+		internal bool FinishAreaPortals(Map.ModelForLeafNode mod4leaf)
 		{
 			return	mRootNode[0].FinishAreaPortals_r(mod4leaf);
 		}

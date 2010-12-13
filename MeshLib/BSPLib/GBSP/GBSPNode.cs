@@ -1651,9 +1651,7 @@ namespace BSPLib
 		}
 
 
-		internal delegate GBSPModel ModelForLeafNode(GBSPNode n);
-
-		bool FillAreas_r(Int32 Area, ModelForLeafNode modForLeaf)
+		bool FillAreas_r(Int32 Area, Map.ModelForLeafNode modForLeaf)
 		{
 			GBSPPortal	Portal;
 			Int32		Side;
@@ -1716,7 +1714,7 @@ namespace BSPLib
 		}
 
 
-		internal bool CreateAreas_r(ref int numAreas, ModelForLeafNode modForLeaf)
+		internal bool CreateAreas_r(ref int numAreas, Map.ModelForLeafNode modForLeaf)
 		{
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
@@ -1760,7 +1758,7 @@ namespace BSPLib
 		}
 
 
-		internal bool FinishAreaPortals_r(ModelForLeafNode modForLeaf)
+		internal bool FinishAreaPortals_r(Map.ModelForLeafNode modForLeaf)
 		{
 			GBSPModel	Model;
 

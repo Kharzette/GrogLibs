@@ -118,79 +118,6 @@ namespace BSPLib
 		}
 
 
-		RADPatch SubdivideFacePatches(RADPatch Patch)
-		{
-			RADPatch	CPatch, NewPatch, NextPatch;
-			GBSPPoly	Poly, FPoly, BPoly;
-			GBSPPlane	Plane;
-
-			for(CPatch=Patch;CPatch != null;CPatch=NextPatch)
-			{
-				NextPatch	=CPatch.mNext;
-
-				if(CPatch.PatchNeedsSplit(mLightParams.mbFastPatch, mLightParams.mPatchSize, out Plane))
-				{
-					NumPatches++;
-
-					Poly	=CPatch.mPoly;
-					if(!Poly.Split(Plane, out FPoly, out BPoly, false))
-					{
-						return	null;
-					}
-					
-					if(FPoly == null || BPoly == null)
-					{
-						Print("SubdivideFacePatches:  Patch was not split.\n");
-						return	null;
-					}
-					
-					NewPatch	=new RADPatch();
-					if(NewPatch == null)
-					{
-						Print("SubdivideFacePatches:  Out of memory for new patch.\n");
-						return	null;
-					}
-
-					//Make it take on all the attributes of it's parent
-					NewPatch.mArea			=CPatch.mArea;
-					NewPatch.mBounds		=CPatch.mBounds;
-					NewPatch.mLeaf			=CPatch.mLeaf;
-					NewPatch.mNumReceivers	=CPatch.mNumReceivers;
-					NewPatch.mNumSamples	=CPatch.mNumSamples;
-					NewPatch.mOrigin		=CPatch.mOrigin;
-					NewPatch.mPlane			=CPatch.mPlane;
-					NewPatch.mRadFinal		=CPatch.mRadFinal;
-					NewPatch.mRadReceive	=CPatch.mRadReceive;
-					NewPatch.mRadSend		=CPatch.mRadSend;
-					NewPatch.mRadStart		=CPatch.mRadStart;
-					NewPatch.mReceivers		=CPatch.mReceivers;
-					NewPatch.mReflectivity	=CPatch.mReflectivity;
-
-					NewPatch.mNext	=NextPatch;
-					NewPatch.mPoly	=FPoly;
-					if(!NewPatch.CalcInfo())
-					{
-						Print("SubdivideFacePatches:  Could not calculate patch info.\n");
-						return	null;
-					}
-
-					//Re-use the first patch
-					CPatch.mNext	=NewPatch;
-					CPatch.mPoly	=BPoly;
-
-					if(!CPatch.CalcInfo())
-					{
-						Print("SubdivideFacePatches:  Could not calculate patch info.\n");
-						return	null;
-					}
-
-					NextPatch	=CPatch;	// Keep working from here till satisfied...
-				}
-			}
-			return Patch;
-		}
-
-
 		bool BuildPatch(Int32 Face)
 		{
 			mFacePatches[Face]	=new RADPatch();
@@ -210,7 +137,8 @@ namespace BSPLib
 				return	false;
 			}
 
-			mFacePatches[Face]	=SubdivideFacePatches(mFacePatches[Face]);
+			mFacePatches[Face]	=RADPatch.SubdivideFacePatches(mFacePatches[Face],
+				mLightParams.mbFastPatch, mLightParams.mPatchSize, ref NumPatches);
 
 			if(mFacePatches[Face] == null)
 			{
@@ -223,39 +151,8 @@ namespace BSPLib
 
 		bool FinalizePatchInfo(Int32 Face, RADPatch Patch)
 		{
-			GBSPPoly	Poly;
-
-			Poly	=Patch.mPoly;
-
-			if(Poly == null)
-			{
-				Print("FinalizePatchInfo:  No Poly!\n");
-				return	false;
-			}
-
-			Patch.mOrigin	=Poly.Center();
-
-			Patch.mPlane.mNormal	=mGFXPlanes[mGFXFaces[Face].mPlaneNum].mNormal;
-			Patch.mPlane.mDist		=mGFXPlanes[mGFXFaces[Face].mPlaneNum].mDist;
-			Patch.mPlane.mType		=GBSPPlane.PLANE_ANY;
-
-			if(mGFXFaces[Face].mPlaneSide != 0)
-			{
-				Patch.mPlane.Inverse();
-			}
-			Patch.mOrigin	+=Patch.mPlane.mNormal * 2.0f;
-
-			Int32	nodeLandedIn	=FindNodeLandedIn(0, Patch.mOrigin);
-			Patch.mLeaf	=-(nodeLandedIn + 1);
-
-			Patch.mArea	=Patch.mPoly.Area();
-			if(Patch.mArea < 1.0f)
-			{
-				Patch.mArea	=1.0f;
-			}
-			Patch.mPoly	=null;
-
-			return	true;
+			GFXFace	f	=mGFXFaces[Face];
+			return	Patch.Finalize(mGFXPlanes[f.mPlaneNum], f.mPlaneSide, FindNodeLandedIn);
 		}
 
 
@@ -427,26 +324,6 @@ namespace BSPLib
 		}
 
 
-		void SendPatch(RADPatch Patch)
-		{
-			Vector3		Send;
-			RADPatch	RPatch;
-			Int32		k;
-			RADReceiver	Receiver;
-
-			Send	=Patch.mRadSend / (float)0x10000;
-
-			//Send light out to each pre-computed receiver
-			for(k=0;k < Patch.mNumReceivers;k++)
-			{
-				Receiver	=Patch.mReceivers[k];
-				RPatch		=mPatchList[Receiver.mPatch];
-
-				RPatch.mRadReceive	+=Send * Receiver.mAmount;
-			}
-		}
-
-
 		float CollectPatchLight()
 		{
 			float	total	=0.0f;
@@ -494,7 +371,7 @@ namespace BSPLib
 				for(j=0;j < NumPatches;j++)
 				{
 					Patch	=mPatchList[j];
-					SendPatch(Patch);
+					Patch.Send(mPatchList);
 				}
 
 				//For each patch, collect any light it might have received
@@ -510,7 +387,7 @@ namespace BSPLib
 			for(j=0;j < NumPatches;j++)
 			{
 				Patch	=mPatchList[j];
-				if(!CheckPatch(Patch))
+				if(!Patch.Check())
 				{
 					return	false;
 				}
@@ -551,419 +428,6 @@ namespace BSPLib
 		}
 
 
-		bool AddPointToTriangulation(RADPatch patch, TriPatch TriPatch)
-		{
-			int	pnum	=TriPatch.mNumPoints;
-			if(pnum == TriPatch.MAX_TRI_POINTS)
-			{
-				Print("TriPatch->NumPoints == MAX_TRI_POINTS");
-				return	false;
-			}
-			TriPatch.mPoints[pnum]	=patch;
-			TriPatch.mNumPoints++;
-
-			return	true;
-		}
-
-
-		TriEdge FindEdge(TriPatch TriPatch, int p0, int p1)
-		{
-			TriEdge	e, be;
-			Vector3	v1;
-			Vector3	normal;
-			float	dist;
-
-			if(TriPatch.mEdgeMatrix[p0][p1] != null)
-			{
-				return	TriPatch.mEdgeMatrix[p0][p1];
-			}
-
-			if(TriPatch.mNumEdges > TriPatch.MAX_TRI_EDGES - 2)
-			{
-				Print("TriPatch.mNumEdges > MAX_TRI_EDGES - 2");
-				return	null;
-			}
-
-			v1	=TriPatch.mPoints[p1].mOrigin - TriPatch.mPoints[p0].mOrigin;
-			v1.Normalize();
-
-			normal	=Vector3.Cross(v1, TriPatch.mPlane.mNormal);
-			dist	=Vector3.Dot(TriPatch.mPoints[p0].mOrigin, normal);
-
-			e			=TriPatch.mEdges[TriPatch.mNumEdges];
-			e.p0		=p0;
-			e.p1		=p1;
-			e.mTri		=null;
-			e.mNormal	=normal;
-			e.mDist		=dist;
-			TriPatch.mNumEdges++;
-			TriPatch.mEdgeMatrix[p0][p1]	=e;
-
-			//Go ahead and make the reverse edge ahead of time
-			be			=TriPatch.mEdges[TriPatch.mNumEdges];
-			be.p0		=p1;
-			be.p1		=p0;
-			be.mTri		=null;
-			be.mNormal	=-normal;
-			be.mDist	=-dist;
-			TriPatch.mNumEdges++;
-			TriPatch.mEdgeMatrix[p1][p0]	=be;
-
-			return	e;
-		}
-
-
-		Tri	AllocTriangle(TriPatch TriPatch)
-		{
-			if(TriPatch.mNumTris >= TriPatch.MAX_TRI_TRIS)
-			{
-				Print("TriPatch->NumTris >= MAX_TRI_TRIS");
-				return	null;
-			}
-			TriPatch.mTriList[TriPatch.mNumTris]	=new Tri();
-			Tri	ret	=TriPatch.mTriList[TriPatch.mNumTris];
-			TriPatch.mNumTris++;
-
-			return	ret;
-		}
-
-
-		bool Tri_Edge_r(TriPatch TriPatch, TriEdge e)
-		{
-			int		i, bestp	=0;
-			Vector3	v1, v2;
-			Vector3	p0, p1, p;
-			float	best, ang;
-			Tri		nt;
-			TriEdge	e2;
-
-			if(e.mTri != null)
-			{
-				return	true;
-			}
-
-			p0		=TriPatch.mPoints[e.p0].mOrigin;
-			p1		=TriPatch.mPoints[e.p1].mOrigin;
-			best	=1.1f;
-			for(i=0;i < TriPatch.mNumPoints;i++)
-			{
-				p	=TriPatch.mPoints[i].mOrigin;
-
-				if(Vector3.Dot(p, e.mNormal) - e.mDist < 0.0f)
-				{
-					continue;
-				}
-
-				v1	=p0 - p;
-				v2	=p1 - p;
-
-				if(v1.Length() == 0.0f)
-				{
-					continue;
-				}
-				if(v2.Length() == 0.0f)
-				{
-					continue;
-				}
-
-				v1.Normalize();
-				v2.Normalize();				
-				
-				ang	=Vector3.Dot(v1, v2);
-				if(ang < best)
-				{
-					best	=ang;
-					bestp	=i;
-				}
-			}
-			if(best >= 1)
-			{
-				return true;
-			}
-			
-			nt	=AllocTriangle(TriPatch);
-			if(nt == null)
-			{
-				Print("Tri_Edge_r:  Could not allocate triangle.\n");
-				return	false;
-			}
-			nt.mEdges[0]	=e;
-			if(nt.mEdges[0] == null)
-			{
-				Print("Tri_Edge_r:  There was an error finding an edge.\n");
-				return	false;
-			}
-			nt.mEdges[1]	=FindEdge(TriPatch, e.p1, bestp);
-			if(nt.mEdges[1] == null)
-			{
-				Print("Tri_Edge_r:  There was an error finding an edge.\n");
-				return	false;
-			}
-			nt.mEdges[2]	=FindEdge(TriPatch, bestp, e.p0);
-			if(nt.mEdges[2] == null)
-			{
-				Print("Tri_Edge_r:  There was an error finding an edge.\n");
-				return	false;
-			}
-			for(i=0;i < 3;i++)
-			{
-				nt.mEdges[i].mTri	=nt;
-			}
-
-			e2	=FindEdge(TriPatch, bestp, e.p1);
-			if(e2 == null)
-			{
-				Print("Tri_Edge_r:  There was an error finding an edge.\n");
-				return	false;
-			}
-			if(!Tri_Edge_r(TriPatch, e2))
-			{
-				return	false;
-			}
-			
-			e2	=FindEdge(TriPatch, e.p0, bestp);
-			if(e2 == null)
-			{
-				Print("Tri_Edge_r:  There was an error finding an edge.\n");
-				return	false;
-			}
-			if(!Tri_Edge_r(TriPatch, e2))
-			{
-				return	false;
-			}
-			return	true;
-		}
-
-
-		bool TriPointInside(Tri Tri, Vector3 Point)
-		{
-			for(int i=0;i < 3;i++)
-			{
-				float	Dist;
-				TriEdge	pEdge;
-
-				pEdge	=Tri.mEdges[i];
-
-				Dist	=Vector3.Dot(pEdge.mNormal, Point) - pEdge.mDist;
-
-				if(Dist < 0.0f)
-				{
-					return	false;
-				}
-			}
-			return	true;
-		}
-
-
-		void LerpTriangle(TriPatch TriPatch, Tri t, Vector3 Point, out Vector3 color)
-		{
-			RADPatch	p1, p2, p3;
-			Vector3		bse, d1, d2;
-			float		x, y, y1, x2;
-
-			p1	=TriPatch.mPoints[t.mEdges[0].p0];
-			p2	=TriPatch.mPoints[t.mEdges[1].p0];
-			p3	=TriPatch.mPoints[t.mEdges[2].p0];
-
-			bse	=p1.mRadFinal;
-			d1	=p2.mRadFinal - bse;
-			d2	=p3.mRadFinal - bse;
-
-			x	=Vector3.Dot(Point, t.mEdges[0].mNormal) - t.mEdges[0].mDist;
-			y	=Vector3.Dot(Point, t.mEdges[2].mNormal) - t.mEdges[2].mDist;
-			y1	=Vector3.Dot(p2.mOrigin, t.mEdges[2].mNormal) - t.mEdges[2].mDist;
-			x2	=Vector3.Dot(p3.mOrigin, t.mEdges[0].mNormal) - t.mEdges[0].mDist;
-
-			if(Math.Abs(y1) < UtilityLib.Mathery.ON_EPSILON
-				|| Math.Abs(x2) < UtilityLib.Mathery.ON_EPSILON)
-			{
-				color	=bse;
-				return;
-			}
-
-			color	=bse + d2 * (x / x2);
-			color	+=d1 * (y / y1);
-		}
-
-
-		bool SampleTriangulation(Vector3 Point, TriPatch TriPatch, out Vector3 color)
-		{
-			Tri			t;
-			TriEdge		e;
-			float		d;
-			RADPatch	p0, p1;
-			Vector3		v1, v2;
-
-			if(TriPatch.mNumPoints == 0)
-			{
-				color	=Vector3.Zero;
-				return	true;
-			}
-			if(TriPatch.mNumPoints == 1)
-			{
-				color	=TriPatch.mPoints[0].mRadFinal;
-				return	true;
-			}
-			
-			//See of the Point is inside a tri in the patch
-			for(int j=0;j < TriPatch.mNumTris;j++)
-			{
-				t	=TriPatch.mTriList[j];
-				if(!TriPointInside(t, Point))
-				{
-					continue;
-				}
-				LerpTriangle(TriPatch, t, Point, out color);
-
-				return	true;
-			}
-			
-			for(int j=0;j < TriPatch.mNumEdges;j++)
-			{
-				e	=TriPatch.mEdges[j];
-				if(e.mTri != null)
-				{
-					continue;		// not an exterior edge
-				}
-
-				d	=Vector3.Dot(Point, e.mNormal) - e.mDist;
-				if(d < 0)
-				{
-					continue;	// not in front of edge
-				}
-
-				p0	=TriPatch.mPoints[e.p0];
-				p1	=TriPatch.mPoints[e.p1];
-
-				v1	=p1.mOrigin - p0.mOrigin;
-				v1.Normalize();
-
-				v2	=Point - p0.mOrigin;
-				d	=Vector3.Dot(v2, v1);
-				if(d < 0)
-				{
-					continue;
-				}
-				if(d > 1)
-				{
-					continue;
-				}
-				color	=p0.mRadFinal + (d * p1.mRadFinal -p0.mRadFinal);
-
-				return	true;
-			}
-			
-			if(!FindClosestTriPoint(Point, TriPatch, out color))
-			{
-				Print("SampleTriangulation:  Could not find closest Color.\n");
-				return	false;
-			}
-			return	true;
-		}
-
-
-		bool FindClosestTriPoint(Vector3 Point, TriPatch Tri, out Vector3 col)
-		{
-			Int32		i;
-			RADPatch	p0, BestPatch;
-			float		BestDist, d;
-			Vector3		v1;
-
-			col	=Vector3.Zero;
-
-			//Search for nearest Point
-			BestDist	=TriPatch.MIN_MAX_BOUNDS2;
-			BestPatch	=null;
-
-			for(i=0;i < Tri.mNumPoints;i++)
-			{
-				p0	=Tri.mPoints[i];
-				v1	=Point - p0.mOrigin;
-				d	=v1.Length();
-				if(d < BestDist)
-				{
-					BestDist	=d;
-					BestPatch	=p0;
-				}
-			}
-			if(BestPatch == null)
-			{
-				Print("FindClosestTriPoint: No Points.\n");
-				return	false;
-			}
-
-			col	=BestPatch.mRadFinal;
-			return	true;
-		}
-
-
-		bool TriangulatePoints(TriPatch TriPatch)
-		{
-			float	d, bestd;
-			Vector3	v1;
-			int		bp1, bp2, i, j;
-			Vector3	p1, p2;
-			TriEdge	e, e2;
-
-			//zero out edgematrix
-			for(i=0;i < TriPatch.mNumPoints;i++)
-			{
-				for(j=0;j < TriPatch.mNumPoints;j++)
-				{
-					TriPatch.mEdgeMatrix[i][j]	=new TriEdge();
-				}
-			}
-
-			if(TriPatch.mNumPoints < 2)
-			{
-				return	true;
-			}
-
-			//Find the two closest Points
-			bestd	=TriPatch.MIN_MAX_BOUNDS2;
-			bp1		=0;
-			bp2		=0;
-			for(i=0;i < TriPatch.mNumPoints;i++)
-			{
-				p1	=TriPatch.mPoints[i].mOrigin;
-				for(j=i+1;j < TriPatch.mNumPoints;j++)
-				{
-					p2	=TriPatch.mPoints[j].mOrigin;
-					v1	=p2 - p1;
-					d	=v1.Length();
-					if(d < bestd && d > .05f)
-					{
-						bestd	=d;
-						bp1		=i;
-						bp2		=j;
-					}
-				}
-			}
-
-			e	=FindEdge(TriPatch, bp1, bp2);
-			if(e == null)
-			{
-				Print("There was an error finding an edge.\n");
-				return	false;
-			}
-			e2	=FindEdge(TriPatch, bp2, bp1);
-			if(e2 == null)
-			{
-				Print("There was an error finding an edge.\n");
-				return	false;
-			}
-			if(!Tri_Edge_r(TriPatch, e))
-			{
-				return	false;
-			}
-			if(!Tri_Edge_r(TriPatch, e2))
-			{
-				return	false;
-			}
-			return	true;
-		}
-
-
 		bool AbsorbPatches()
 		{
 			TriPatch	Tri;
@@ -999,7 +463,7 @@ namespace BSPLib
 				Plane.mDist		=mGFXPlanes[mGFXFaces[i].mPlaneNum].mDist;
 				Plane.mType		=GBSPPlane.PLANE_ANY;
 
-				Tri	=TriPatchCreate(Plane);
+				Tri	=new TriPatch(Plane);
 				if(Tri == null)
 				{
 					Print("AbsorbPatches:  Tri_PatchCreate failed.\n");
@@ -1043,14 +507,14 @@ namespace BSPLib
 							continue;
 						}
 						
-						if(!AddPointToTriangulation(Patch, Tri))
+						if(!Tri.AddPoint(Patch))
 						{
 							Print("AbsorbPatches:  Could not add patch to triangulation.\n");
 							return	false;
 						}						
 					}
 				}
-				if(!TriangulatePoints(Tri))
+				if(!Tri.TriangulatePoints())
 				{
 					Print("AbsorbPatches:  Could not triangulate patches.\n");
 					return	false;
@@ -1066,7 +530,7 @@ namespace BSPLib
 
 						pPoint	=mGFXVerts[mGFXVertIndexes[vn]];
 
-						SampleTriangulation(pPoint, Tri, out Add);
+						Tri.SampleTriangulation(pPoint, out Add);
 
 						mGFXRGBVerts[vn]	+=Add;
 					}
@@ -1082,7 +546,7 @@ namespace BSPLib
 					for(k=0;k < facePoints.Length;k++, rgbOfs++)
 					{
 						pPoint	=facePoints[k];
-						if(!SampleTriangulation(pPoint, Tri, out Add))
+						if(!Tri.SampleTriangulation(pPoint, out Add))
 						{
 							Print("AbsorbPatches:  Could not sample from patch triangles.\n");
 							continue;
@@ -1108,33 +572,6 @@ namespace BSPLib
 
 			planeFaces	=null;
 
-			return	true;
-		}
-
-
-		TriPatch TriPatchCreate(GBSPPlane Plane)
-		{
-			TriPatch	Patch	=new TriPatch();
-
-			Patch.mNumPoints	=0;
-			Patch.mNumEdges		=0;
-			Patch.mNumTris		=0;
-			Patch.mPlane		=Plane;
-
-			return	Patch;
-		}
-
-
-		bool CheckPatch(RADPatch Patch)
-		{
-			for(int i=0;i < 3;i++)
-			{
-				if(UtilityLib.Mathery.VecIdx(Patch.mRadFinal, i) < 0.0f)
-				{
-					Print("CheckPatch:  Bad final radiosity Color in patch.\n");
-					return	false;
-				}
-			}
 			return	true;
 		}
 
@@ -1215,7 +652,7 @@ namespace BSPLib
 				}
 
 				Vector3	colResult	=Vector3.Zero;
-				if(RayCollision(Patch.mOrigin, Patch2.mOrigin, ref colResult))
+				if(RayCollide(Patch.mOrigin, Patch2.mOrigin, ref colResult))
 				{
 					//blocked by something in the world
 					continue;
@@ -1776,7 +1213,7 @@ namespace BSPLib
 
 					//This is the slowest test, so make it last
 					Vector3	colResult	=Vector3.Zero;
-					if(RayCollision(pVert, DLight.mOrigin, ref colResult))
+					if(RayCollide(pVert, DLight.mOrigin, ref colResult))
 					{
 						goto	Skip;	//Ray is in shadow
 					}
@@ -2081,7 +1518,7 @@ namespace BSPLib
 
 						// This is the slowest test, so make it last
 						Vector3	colResult	=Vector3.Zero;
-						if(RayCollision(facePoints[v], DLight.mOrigin, ref colResult))
+						if(RayCollide(facePoints[v], DLight.mOrigin, ref colResult))
 						{
 							goto	Skip;	//Ray is in shadow
 						}
@@ -2106,7 +1543,7 @@ namespace BSPLib
 
 		void CalcFacePoints(FInfo FaceInfo, LInfo LightInfo, float UOfs, float VOfs, bool bExtraLightCorrection)
 		{
-			FaceInfo.CalcFacePoints(LightInfo, UOfs, VOfs, bExtraLightCorrection, IsPointInSolid, RayCollision);
+			FaceInfo.CalcFacePoints(LightInfo, UOfs, VOfs, bExtraLightCorrection, IsPointInSolidSpace, RayCollide);
 		}
 
 

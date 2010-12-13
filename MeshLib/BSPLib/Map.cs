@@ -108,6 +108,11 @@ namespace BSPLib
 		event EventHandler	eDrawCSGDone;
 		event EventHandler	eCollisionCSGDone;
 
+		//method delegates
+		internal delegate GBSPModel ModelForLeafNode(GBSPNode n);
+		internal delegate bool IsPointInSolid(Vector3 pos);
+		internal delegate bool RayCollision(Vector3 front, Vector3 back, ref Vector3 Impacto);
+		internal delegate Int32 GetNodeLandedIn(Int32 node, Vector3 pos);
 
 		#region Constructors
 		public Map() { }
@@ -452,7 +457,7 @@ namespace BSPLib
 		}
 
 
-		internal GBSPModel ModelForLeafNode(GBSPNode Node)
+		internal GBSPModel GetModelForLeafNode(GBSPNode Node)
 		{
 			if(Node.IsLeaf())
 			{
@@ -778,7 +783,7 @@ namespace BSPLib
 		}
 
 
-		bool IsPointInSolid(Vector3 pos)
+		bool IsPointInSolidSpace(Vector3 pos)
 		{
 			Int32	node	=FindNodeLandedIn(0, pos);
 
@@ -849,7 +854,7 @@ namespace BSPLib
 		}
 
 
-		bool RayCollision(Vector3 Front, Vector3 Back, ref Vector3 I)
+		bool RayCollide(Vector3 Front, Vector3 Back, ref Vector3 I)
 		{
 			bool	hitLeaf	=false;
 			if(RayIntersect(Front, Back, mGFXModels[0].mRootNode[0], ref I, ref hitLeaf))
