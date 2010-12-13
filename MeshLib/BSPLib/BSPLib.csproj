@@ -108,8 +108,8 @@
     <Compile Include="GFXStuff.cs" />
     <Compile Include="Light\DirectLight.cs" />
     <Compile Include="Light\FInfo.cs" />
-    <Compile Include="Light\Light.cs" />
     <Compile Include="Light\LInfo.cs" />
+    <Compile Include="Light\MapLight.cs" />
     <Compile Include="Light\PlaneFace.cs" />
     <Compile Include="Light\RADPatch.cs" />
     <Compile Include="Light\RADReceiver.cs" />
@@ -118,7 +118,6 @@
     <Compile Include="MapBrush.cs" />
     <Compile Include="MapEntity.cs" />
     <Compile Include="MapFile.cs" />
-    <Compile Include="MapLight.cs" />
     <Compile Include="MapVis.cs" />
     <Compile Include="NodeCounter.cs" />
     <Compile Include="PlanePool.cs" />
