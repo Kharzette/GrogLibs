@@ -14,7 +14,6 @@ namespace BSPLib
 		Vector3		mTexOrg;
 		Vector3		[]mPoints;
 		Vector3		mCenter;
-		float		mRadius;
 
 		public const int	LGRID_SIZE	=16;
 

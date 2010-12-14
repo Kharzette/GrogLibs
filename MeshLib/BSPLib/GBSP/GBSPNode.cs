@@ -41,7 +41,6 @@ namespace BSPLib
 		Int32	mCluster;
 		Int32	mArea;		//Area number, 0 == invalid area
 
-		GBSPBrush	mVolume;
 		GBSPSide	mSide;
 		GBSPBrush	mBrushList;
 
@@ -226,7 +225,6 @@ namespace BSPLib
 			outsideNode.mPortalLeafNum	=0;
 			outsideNode.mPortals		=null;
 			outsideNode.mSide			=null;
-			outsideNode.mVolume			=null;
 
 			outsideNode.mPlaneNum	=PlanePool.PLANENUM_LEAF;
 			outsideNode.mContents	=Contents.BSP_CONTENTS_SOLID2;

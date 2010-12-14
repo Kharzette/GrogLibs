@@ -394,7 +394,7 @@ namespace BSPLib
 
 		bool CollectLeafVisBits(int LeafNum, ref int leafSee)
 		{
-			VISPortal	Portal, SPortal;
+			VISPortal	sport;
 			VISLeaf		Leaf;
 			Int32		k, Bit, SLeaf, LeafBitsOfs;
 			
@@ -404,32 +404,9 @@ namespace BSPLib
 
 			byte	[]PortalBits	=new byte[NumVisPortalBytes];
 
-			//'OR' all portals that this portal can see into one list
-			for(Portal=Leaf.mPortals;Portal != null;Portal=Portal.mNext)
+			if(!VISPortal.CollectBits(Leaf.mPortals, PortalBits))
 			{
-				if(Portal.mFinalVisBits != null)
-				{
-					//Try to use final vis info first
-					for(k=0;k < NumVisPortalBytes;k++)
-					{
-						PortalBits[k]	|=Portal.mFinalVisBits[k];
-					}
-				}
-				else if(Portal.mVisBits != null)
-				{
-					for(k=0;k < NumVisPortalBytes;k++)
-					{
-						PortalBits[k]	|=Portal.mVisBits[k];
-					}
-				}
-				else
-				{
-					Map.Print("No VisInfo for portal.\n");
-					return	false;
-				}
-
-				Portal.mVisBits			=null;
-				Portal.mFinalVisBits	=null;
+				return	false;
 			}
 
 			// Take this list, and or all leafs that each visible portal looks in to
@@ -437,8 +414,8 @@ namespace BSPLib
 			{
 				if((PortalBits[k >> 3] & (1 << (k & 7))) != 0)
 				{
-					SPortal	=VisPortals[k];
-					SLeaf	=SPortal.mLeaf;
+					sport	=VisPortals[k];
+					SLeaf	=sport.mLeaf;
 					Debug.Assert((1 << (SLeaf & 7)) < 256);
 					mGFXVisData[LeafBitsOfs + (SLeaf >> 3)]	|=(byte)(1 << (SLeaf & 7));
 				}

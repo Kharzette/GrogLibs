@@ -129,13 +129,13 @@
     <Compile Include="MapBrush.cs" />
     <Compile Include="MapEntity.cs" />
     <Compile Include="MapFile.cs" />
-    <Compile Include="MapVis.cs" />
     <Compile Include="NodeCounter.cs" />
     <Compile Include="PlanePool.cs" />
     <Compile Include="Progress.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TexInfo.cs" />
     <Compile Include="TexInfoPool.cs" />
+    <Compile Include="Vis\MapVis.cs" />
     <Compile Include="Vis\VISPortal.cs" />
   </ItemGroup>
   <ItemGroup>

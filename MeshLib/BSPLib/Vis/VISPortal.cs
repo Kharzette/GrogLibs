@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class VISPStack
+	class VISPStack
 	{
 		public byte		[]mVisBits	=new byte[MAX_TEMP_PORTALS/8];
 		public GBSPPoly	mSource;
@@ -16,6 +16,7 @@ namespace BSPLib
 
 		public const int	MAX_TEMP_PORTALS	=25000;
 	}
+
 
 	public class VISPortal
 	{
@@ -37,6 +38,39 @@ namespace BSPLib
 		{
 			mCenter	=mPoly.Center();
 			mRadius	=mPoly.Radius();
+		}
+
+
+		static internal bool CollectBits(VISPortal port, byte []portBits)
+		{
+			//'OR' all portals that this portal can see into one list
+			for(VISPortal p=port;p != null;p=p.mNext)
+			{
+				if(p.mFinalVisBits != null)
+				{
+					//Try to use final vis info first
+					for(int k=0;k < portBits.Length;k++)
+					{
+						portBits[k]	|=port.mFinalVisBits[k];
+					}
+				}
+				else if(port.mVisBits != null)
+				{
+					for(int k=0;k < portBits.Length;k++)
+					{
+						portBits[k]	|=port.mVisBits[k];
+					}
+				}
+				else
+				{
+					Map.Print("No VisInfo for portal.\n");
+					return	false;
+				}
+
+				port.mVisBits		=null;
+				port.mFinalVisBits	=null;
+			}
+			return	true;
 		}
 
 
@@ -315,178 +349,5 @@ namespace BSPLib
 		public VISPortal	mPortals;
 		public Int32		mMightSee;
 		public Int32		mCanSee;
-
-
-		internal void FloodPortalsFast(Int32 leafNum, Int32 numVisPortalBytes,
-			Dictionary<Int32, VISLeaf> visLeafs, List<VISPortal> visPortals)
-		{
-			if(mPortals == null)
-			{
-				//GHook.Printf("*WARNING* FloodLeafPortalsFast:  Leaf with no portals.\n");
-				return;
-			}
-			
-			Int32	SrcLeaf	=leafNum;
-
-			for(VISPortal Portal = mPortals;Portal != null;Portal = Portal.mNext)
-			{
-				Portal.mVisBits	=new byte[numVisPortalBytes];
-
-				//This portal can't see anyone yet...
-				int	mightSee	=0;
-
-				Dictionary<Int32, byte>	portalSeen	=new Dictionary<Int32, byte>();
-				
-				FloodPortalsFast_r(Portal, Portal, SrcLeaf, visLeafs, visPortals, portalSeen, ref mightSee);
-			}
-		}
-
-
-		void FloodPortalsFast_r(VISPortal SrcPortal, VISPortal DestPortal,
-			Int32 SrcLeaf, Dictionary<Int32, VISLeaf> visLeafs, List<VISPortal> visPortals,
-			Dictionary<Int32, byte>	portalSeen, ref Int32 mightSee)
-		{
-			VISLeaf		Leaf;
-			VISPortal	Portal;
-			Int32		LeafNum;
-			Int32		PNum	=-1;
-
-			//this is gonna be slow
-			PNum	=visPortals.IndexOf(DestPortal);
-
-			if(portalSeen.ContainsKey(PNum))
-			{
-				if(portalSeen[PNum] != 0)
-				{
-					return;
-				}
-				portalSeen[PNum]	=1;
-			}
-			else
-			{
-				portalSeen.Add(PNum, 1);
-			}
-
-			//Add the portal that we are Flooding into, to the original portals visbits
-			LeafNum	=DestPortal.mLeaf;
-			
-			Int32	Bit	=1 << (PNum & 7);
-			if((SrcPortal.mVisBits[PNum>>3] & Bit) == 0)
-			{
-				SrcPortal.mVisBits[PNum>>3]	|=(byte)Bit;
-				SrcPortal.mMightSee++;
-				visLeafs[SrcLeaf].mMightSee++;
-				mightSee++;
-			}
-
-			Leaf	=visLeafs[LeafNum];
-
-			//Now, try and Flood into the leafs that this portal touches
-			for(Portal = mPortals;Portal != null;Portal = Portal.mNext)
-			{
-				//If SrcPortal can see this Portal, flood into it...
-				if(SrcPortal.CanSeePortal(Portal))
-				{
-					FloodPortalsFast_r(SrcPortal, Portal, SrcLeaf, visLeafs, visPortals, portalSeen, ref mightSee);
-				}
-			}
-		}
-
-
-		internal bool CollectLeafVisBits(int LeafNum, ref int LeafSee,
-			byte[] leafVisBits, byte[] portalBits,
-			int NumVisPortalBytes, int NumVisLeafBytes,
-			List<GFXCluster> gfxClusters, Dictionary<Int32, VISLeaf> visLeafs,
-			List<VISPortal> visPortals)
-		{
-			VISPortal	Portal, SPortal;
-			VISLeaf		Leaf;
-			Int32		k, Bit, SLeaf;
-			Int32		LeafBitsOfs;
-			
-			Leaf	=visLeafs[LeafNum];
-
-			LeafBitsOfs	=LeafNum * NumVisLeafBytes;
-
-			for(int i=0;i < NumVisPortalBytes;i++)
-			{
-				portalBits[i]	=0;
-			}
-
-			//'OR' all portals that this portal can see into one list
-			for(Portal = mPortals;Portal != null;Portal = Portal.mNext)
-			{
-				if(Portal.mFinalVisBits != null)
-				{
-					//Try to use final vis info first
-					for(k=0;k < NumVisPortalBytes;k++)
-					{
-						portalBits[k]	|=Portal.mFinalVisBits[k];
-					}
-				}
-				else if(Portal.mVisBits != null)
-				{
-					for(k=0;k < NumVisPortalBytes;k++)
-					{
-						portalBits[k]	|=Portal.mVisBits[k];
-					}
-				}
-				else
-				{
-					Map.Print("No VisInfo for portal.\n");
-					return	false;
-				}
-
-				Portal.mVisBits			=null;
-				Portal.mFinalVisBits	=null;
-			}
-
-			//Take this list, and or all leafs that each visible portal looks in to
-			for(k=0;k < visPortals.Count;k++)
-			{
-				if((portalBits[k>>3] & (1<<(k&7))) != 0)
-				{
-					SPortal	=visPortals[k];
-					SLeaf	=SPortal.mLeaf;
-					leafVisBits[LeafBitsOfs + (SLeaf >> 3)]	|=(byte)(1 << (SLeaf & 7));
-				}
-			}
-					
-			Bit	=1 << (LeafNum & 7);
-
-			//He should not have seen himself (yet...)
-			if((leafVisBits[LeafBitsOfs + (LeafNum >> 3)] & Bit) != 0)
-			{
-				Map.Print("*WARNING* CollectLeafVisBits:  Leaf:" + LeafNum + " can see himself!\n");
-			}
-
-			// Make sure he can see himself!!!
-			leafVisBits[LeafBitsOfs + (LeafNum >> 3)]	|=(byte)Bit;
-
-			for(k=0;k < visLeafs.Count;k++)
-			{
-				Bit	=1 << (k & 7);
-				if((leafVisBits[LeafBitsOfs + (k >> 3)] & Bit) != 0)
-				{
-					LeafSee++;
-				}
-			}
-
-			if(LeafSee == 0)
-			{
-				Map.Print("CollectLeafVisBits:  Leaf can't see nothing.\n");
-				return	false;
-			}
-
-			GFXCluster	clust	=new GFXCluster();
-
-			clust.mVisOfs	=LeafBitsOfs;
-
-			gfxClusters.Add(clust);
-
-			Debug.Assert(gfxClusters.Count == LeafNum + 1);
-
-			return	true;
-		}
 	}
 }

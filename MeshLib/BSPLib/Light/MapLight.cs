@@ -983,8 +983,9 @@ namespace BSPLib
 				DLight.mType		=DirectLight.DLight_Point;	//hardcode for now
 
 				Vector3	Angles;
-				if(!Entity.GetVector("Angles", out Angles))
+				if(Entity.GetVector("angles", out Angles))
 				{
+					//hammer style
 					Vector3	Angles2	=Vector3.Zero;
 					Angles2.X	=(Angles.X / 180) * (float)Math.PI;
 					Angles2.Y	=(Angles.Y / 180) * (float)Math.PI;
@@ -997,10 +998,23 @@ namespace BSPLib
 					DLight.mNormal.Y	=-Angles2.Y;
 					DLight.mNormal.Z	=-Angles2.Z;
 
-					if(!Entity.GetFloat("Arc", out DLight.mAngle))
-					{
-						Print("Arc element of entity not found!\n");
-					}
+					DLight.mAngle	=(float)Math.Cos(DLight.mAngle / 180.0f * Math.PI);					
+				}
+				else if(Entity.GetVector("mangle", out Angles))
+				{
+					//quake 1 style
+					Vector3	Angles2	=Vector3.Zero;
+					Angles2.X	=(Angles.X / 180) * (float)Math.PI;
+					Angles2.Y	=(Angles.Y / 180) * (float)Math.PI;
+					Angles2.Z	=(Angles.Z / 180) * (float)Math.PI;
+
+					Matrix	mat	=Matrix.CreateFromYawPitchRoll(Angles2.X, Angles2.Y, Angles2.Z); 
+
+					Angles2	=mat.Left;
+					DLight.mNormal.X	=-Angles2.X;
+					DLight.mNormal.Y	=-Angles2.Y;
+					DLight.mNormal.Z	=-Angles2.Z;
+
 					DLight.mAngle	=(float)Math.Cos(DLight.mAngle / 180.0f * Math.PI);					
 				}
 
