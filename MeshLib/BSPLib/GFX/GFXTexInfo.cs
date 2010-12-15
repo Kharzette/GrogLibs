@@ -17,7 +17,8 @@ namespace BSPLib
 		public float	mReflectiveScale;
 		public float	mAlpha;
 		public float	mMipMapBias;
-		public Int32	mTexture;
+		public string	mMaterial;	//index into MaterialLib
+
 
 		public void Write(BinaryWriter bw)
 		{
@@ -36,8 +37,9 @@ namespace BSPLib
 			bw.Write(mReflectiveScale);
 			bw.Write(mAlpha);
 			bw.Write(mMipMapBias);
-			bw.Write(mTexture);
+			bw.Write(mMaterial);
 		}
+
 
 		public void Read(BinaryReader br)
 		{
@@ -56,7 +58,7 @@ namespace BSPLib
 			mReflectiveScale	=br.ReadSingle();
 			mAlpha				=br.ReadSingle();
 			mMipMapBias			=br.ReadSingle();
-			mTexture			=br.ReadInt32();
+			mMaterial			=br.ReadString();
 		}
 	}
 }

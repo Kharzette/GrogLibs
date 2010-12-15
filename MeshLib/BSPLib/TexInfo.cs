@@ -16,6 +16,7 @@ namespace BSPLib
 		public float		mLightMapScale;
 		public float		mAlpha;
 		public string		mTexture;
+		public string		mMaterial;
 
 		//genesis texinfo flags
 		public const UInt32	TEXINFO_MIRROR		=(1<<0);

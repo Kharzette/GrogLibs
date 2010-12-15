@@ -69,7 +69,7 @@ namespace BSPLib
 				gtex.mReflectiveScale	=tex.mReflectiveScale;
 				gtex.mShift[0]			=tex.mShiftU;
 				gtex.mShift[1]			=tex.mShiftV;
-				gtex.mTexture			=-1;			//no texture stuff yet
+				gtex.mMaterial			=tex.mMaterial;
 				gtex.mVecs[0]			=tex.mUVec;
 				gtex.mVecs[1]			=tex.mVVec;
 

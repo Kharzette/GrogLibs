@@ -228,7 +228,7 @@ namespace BSPBuilder
 		}
 
 
-		private void UpdateMaterials()
+		internal void UpdateMaterials()
 		{
 			mMatModel	=new MaterialGridModel(mMatLib.GetMaterials());
 			MaterialGrid.DataSource	=mMatModel;

@@ -478,6 +478,8 @@ namespace BSPLib
 		{
 			mBSPParms	=prms;
 
+			mTIPool.AssignMaterials();
+
 			if(ProcessEntities())
 			{
 				Print("Build GBSP Complete\n");
@@ -1345,6 +1347,45 @@ namespace BSPLib
 		}
 
 
+		public List<MaterialLib.Material> GetMaterials()
+		{
+			List<string>	matNames	=new List<string>();
+			foreach(GFXTexInfo tex in mGFXTexInfos)
+			{
+				if(!matNames.Contains(tex.mMaterial))
+				{
+					matNames.Add(tex.mMaterial);
+				}
+			}
+
+			//build material list
+			List<MaterialLib.Material>	ret	=new List<MaterialLib.Material>();
+			foreach(string matName in matNames)
+			{
+				MaterialLib.Material	mat	=new MaterialLib.Material();
+				mat.Name	=matName;
+				if(matName.EndsWith("Alpha"))
+				{
+					mat.Alpha	=true;
+				}
+				else if(matName.EndsWith("Mirror"))
+				{
+					mat.Alpha	=true;
+				}
+				mat.ShaderName		="";
+				mat.Technique		="";
+				mat.BlendFunction	=BlendFunction.Add;
+				mat.SourceBlend		=Blend.SourceAlpha;
+				mat.DestBlend		=Blend.InverseSourceAlpha;
+				mat.DepthWrite		=true;
+				mat.CullMode		=CullMode.CullCounterClockwiseFace;
+				mat.ZFunction		=CompareFunction.Less;
+				ret.Add(mat);
+			}
+			return	ret;
+		}
+
+
 		void FindParents_r(Int32 Node, Int32 Parent)
 		{
 			if(Node < 0)		// At a leaf, mark leaf parent and return
@@ -1359,17 +1400,6 @@ namespace BSPLib
 			// Go down front and back markinf parents on the way down...
 			FindParents_r(mGFXNodes[Node].mChildren[0], Node);
 			FindParents_r(mGFXNodes[Node].mChildren[1], Node);
-		}
-
-
-		void MakeMaterials()
-		{
-			List<string>	texList	=new List<string>();
-			foreach(GFXTexInfo ti in mGFXTexInfos)
-			{
-				MaterialLib.Material	mat	=new MaterialLib.Material();
-				mat.Name	="" + ti.mTexture;
-			}
 		}
 	}
 }

@@ -558,6 +558,16 @@ namespace BSPBuilder
 				{
 					OnMapPrint("Load failed\n", null);
 				}
+				else
+				{
+					List<MaterialLib.Material>	mats	=mMap.GetMaterials();
+					mMatLib.NukeAllMaterials();
+					foreach(MaterialLib.Material mat in mats)
+					{
+						mMatLib.AddMaterial(mat);
+					}
+					mMatForm.UpdateMaterials();
+				}
 			}
 		}
 

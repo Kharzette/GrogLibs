@@ -225,6 +225,12 @@ namespace MaterialLib
 		}
 
 
+		public void NukeAllMaterials()
+		{
+			mMats.Clear();
+		}
+
+
 		public Effect GetMaterialShader(string name)
 		{
 			if(mMats.ContainsKey(name))
