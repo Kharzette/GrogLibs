@@ -9,20 +9,21 @@ namespace BSPLib
 	public class RADPatch
 	{
 		public RADPatch		mNext;				//Next patch in list
-		public GBSPPoly		mPoly;				//Poly for patch	(Not used thoughout entire life)
-		public Vector3		mOrigin;				//Origin
 		public Int32		mLeaf;				//Leaf patch is looking into
-		public float		mArea;				//Area of patch
-		public GBSPPlane	mPlane;				//Plane
 		public UInt16		mNumReceivers;
 		public RADReceiver	[]mReceivers;		//What patches this patch emits to
-		public Int32		mNumSamples;			//Number of samples lightmaps has contributed
-		public Vector3		mRadStart;			//Power of patch from original lightmap
-		public Vector3		mRadSend;			//How much to send each bounce
-		public Vector3		mRadReceive;			//How much received from current bounce
 		public Vector3		mRadFinal;			//How much received from all bounces (what to add back to the lightmap)
 		public Vector3		mReflectivity;
 		public Bounds		mBounds;
+
+		GBSPPoly	mPoly;			//Poly for patch	(Not used thoughout entire life)
+		Vector3		mOrigin;		//Origin
+		float		mArea;			//Area of patch
+		GBSPPlane	mPlane;			//Plane
+		Int32		mNumSamples;	//Number of samples lightmaps has contributed
+		Vector3		mRadStart;		//Power of patch from original lightmap
+		Vector3		mRadSend;		//How much to send each bounce
+		Vector3		mRadReceive;	//How much received from current bounce
 
 
 		internal void Send(RADPatch []patchList)
@@ -37,6 +38,115 @@ namespace BSPLib
 
 				RPatch.mRadReceive	+=Send * Receiver.mAmount;
 			}
+		}
+
+
+		internal void ResetSamples()
+		{
+			mNumSamples	=0;
+		}
+
+
+		internal Vector3 GetPlaneNormal()
+		{
+			return	mPlane.mNormal;
+		}
+
+
+		internal Vector3 GetOrigin()
+		{
+			return	mOrigin;
+		}
+
+
+		internal float GetArea()
+		{
+			return	mArea;
+		}
+
+
+		internal void SetFirstPassSendAmount()
+		{
+			mRadSend	=mRadStart * mReflectivity * mArea;
+		}
+
+
+		internal void Collect(ref float total)
+		{
+			//Add receive amount to Final amount
+			mRadFinal	+=mRadReceive / mArea;
+			mRadSend	=mRadReceive * mReflectivity;
+
+			total	+=mRadSend.X + mRadSend.Y + mRadSend.Z;
+
+			mRadReceive	=Vector3.Zero;
+		}
+
+
+		internal float DistVecBetween(RADPatch other, out Vector3 vec)
+		{
+			vec	=other.mOrigin - mOrigin;
+
+			float	ret	=vec.Length();
+
+			vec.Normalize();
+
+			return	ret;
+		}
+
+
+		internal bool RayCastBetween(RADPatch other, Map.RayCollision ray)
+		{
+			Vector3	imp	=Vector3.Zero;
+			return	ray(mOrigin, other.mOrigin, ref imp);
+		}
+
+
+		internal void InitDLight(DirectLight dLight, float faceLight)
+		{
+			dLight.mOrigin	=mOrigin;
+			dLight.mColor	=mReflectivity;
+			dLight.mNormal	=mPlane.mNormal;
+			dLight.mType	=DirectLight.DLight_Surface;
+			
+			dLight.mIntensity	=faceLight * mArea;
+
+			//Make sure the emitter ends up with some light too
+			mRadFinal	+=mReflectivity * dLight.mIntensity;
+		}
+
+
+		static internal bool BuildTriPatchFromList(RADPatch startPatch,
+			Bounds bounds, TriPatch tri, int patchSize)
+		{
+			for(RADPatch patch=startPatch;patch != null;patch=patch.mNext)
+			{
+				int	k;
+				for(k=0;k < 3;k++)
+				{
+					if(UtilityLib.Mathery.VecIdx(patch.mOrigin, k)
+						< UtilityLib.Mathery.VecIdx(bounds.mMins, k) - (patchSize * 2))
+					{
+						break;
+					}
+					if(UtilityLib.Mathery.VecIdx(patch.mOrigin, k)
+						> UtilityLib.Mathery.VecIdx(bounds.mMaxs, k) + (patchSize * 2))
+					{
+						break;
+					}
+				}
+				if(k != 3)
+				{
+					continue;
+				}
+				
+				if(!tri.AddPoint(patch))
+				{
+					Map.Print("AbsorbPatches:  Could not add patch to triangulation.\n");
+					return	false;
+				}						
+			}
+			return	true;
 		}
 
 
@@ -258,6 +368,28 @@ namespace BSPLib
 				{
 					p.mRadStart	*=(1.0f / (float)p.mNumSamples);
 				}
+			}
+		}
+
+
+		internal void AllocPoly(GFXFace gfxFace, int[] indexes, Vector3[] verts)
+		{
+			mPoly	=new GBSPPoly(gfxFace, indexes, verts);
+		}
+
+
+		internal void AddSample(Vector3 rgb)
+		{
+			mNumSamples++;
+			mRadStart	+=rgb;
+		}
+
+
+		internal void AverageRadStart()
+		{
+			if(mNumSamples > 0)
+			{
+				mRadStart	/=mNumSamples;
 			}
 		}
 	}

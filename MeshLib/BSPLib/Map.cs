@@ -12,44 +12,9 @@ using Microsoft.Xna.Framework.Storage;
 
 namespace BSPLib
 {
-	public class WorldLeaf
-	{
-		public Int32	VisFrame;
-		public Int32	Parent;
-	}
-
-	public class GBSPHeader
-	{
-		public string	mTAG;
-		public Int32	mVersion;
-		public DateTime	mBSPTime;
-
-		public void Write(BinaryWriter bw)
-		{
-			bw.Write(mTAG);
-			bw.Write(mVersion);
-			bw.Write(mBSPTime.ToBinary());
-		}
-
-		public void Read(BinaryReader br)
-		{
-			mTAG		=br.ReadString();
-			mVersion	=br.ReadInt32();
-			mBSPTime	=DateTime.FromBinary(br.ReadInt64());
-		}
-	}
-
-
 	public partial class Map
 	{
 		List<MapEntity>	mEntities;
-
-		Int32		CurrentLeaf;
-		Int32		CurFrameStatic;
-		Int32		[]ClusterVisFrame;
-		WorldLeaf	[]LeafData;
-		Int32		[]NodeParents;
-		Int32		[]NodeVisFrame;
 
 		//models
 		internal List<GBSPModel>	mModels	=new List<GBSPModel>();
@@ -67,7 +32,13 @@ namespace BSPLib
 		//texnames
 		List<string>	mTexNames	=new List<string>();
 
-		//list of bad brushes for debug draw
+		//stuff for debug draw
+		Int32		mCurrentLeaf;
+		Int32		mCurFrameStatic;
+		Int32		[]mClusterVisFrame;
+		WorldLeaf	[]mLeafData;
+		Int32		[]mNodeParents;
+		Int32		[]mNodeVisFrame;
 		public static List<MapBrush>	TroubleBrushes	=new List<MapBrush>();
 
 		//gfx data
@@ -249,6 +220,11 @@ namespace BSPLib
 					VisWorld(root, pos);
 
 					RenderBSPFrontBack_r2(root, pos, verts, indexes, true);
+
+					for(int i=1;i < mGFXModels.Length;i++)
+					{
+						RenderModelBSPFrontBack_r2(mGFXModels[i].mRootNode[0], pos, verts, indexes);
+					}
 				}
 				else
 				{
@@ -1057,15 +1033,15 @@ namespace BSPLib
 			file.Close();
 
 			//make clustervisframe
-			ClusterVisFrame	=new int[mGFXClusters.Length];
-			NodeParents		=new int[mGFXNodes.Length];
-			NodeVisFrame	=new int[mGFXNodes.Length];
-			LeafData		=new WorldLeaf[mGFXLeafs.Length];
+			mClusterVisFrame	=new int[mGFXClusters.Length];
+			mNodeParents		=new int[mGFXNodes.Length];
+			mNodeVisFrame	=new int[mGFXNodes.Length];
+			mLeafData		=new WorldLeaf[mGFXLeafs.Length];
 
 			//fill in leafdata with blank worldleafs
 			for(int i=0;i < mGFXLeafs.Length;i++)
 			{
-				LeafData[i]	=new WorldLeaf();
+				mLeafData[i]	=new WorldLeaf();
 			}
 
 			FindParents_r(mGFXModels[0].mRootNode[0], -1);
@@ -1124,8 +1100,8 @@ namespace BSPLib
 			Leaf	=-(node + 1);
 			Area	=mGFXLeafs[Leaf].mArea;
 
-			CurrentLeaf	=Leaf;
-			CurFrameStatic++;			// Make all old vis info obsolete
+			mCurrentLeaf	=Leaf;
+			mCurFrameStatic++;			// Make all old vis info obsolete
 
 			Cluster	=mGFXLeafs[Leaf].mCluster;
 
@@ -1150,7 +1126,7 @@ namespace BSPLib
 			{
 				if((mGFXVisData[ofs + (i >> 3)] & (1 << (i & 7))) != 0)
 				{
-					ClusterVisFrame[i]	=CurFrameStatic;
+					mClusterVisFrame[i]	=mCurFrameStatic;
 				}
 			}
 
@@ -1167,7 +1143,7 @@ namespace BSPLib
 				}
 
 				//If the cluster is not visible, then the leaf is not visible
-				if(ClusterVisFrame[Cluster] != CurFrameStatic)
+				if(mClusterVisFrame[Cluster] != mCurFrameStatic)
 				{
 					continue;
 				}
@@ -1180,7 +1156,7 @@ namespace BSPLib
 				MarkVisibleParents(i);
 
 				//Mark the leafs vis frame to worlds current frame
-				LeafData[i].VisFrame	=CurFrameStatic;
+				mLeafData[i].mVisFrame	=mCurFrameStatic;
 					
 //				pFace = &GFXLeafFaces[pLeaf->FirstFace];
 
@@ -1203,13 +1179,13 @@ namespace BSPLib
 			Debug.Assert(Leaf < mGFXLeafs.Length);
 
 			//Find the leafs parent
-			Node	=LeafData[Leaf].Parent;
+			Node	=mLeafData[Leaf].mParent;
 
 			// Bubble up the tree from the current node, marking them as visible
 			while(Node >= 0)
 			{
-				NodeVisFrame[Node]	=CurFrameStatic;
-				Node	=NodeParents[Node];
+				mNodeVisFrame[Node]	=mCurFrameStatic;
+				Node	=mNodeParents[Node];
 			}
 		}
 
@@ -1227,7 +1203,7 @@ namespace BSPLib
 
 				Leaf	=-(Node+1);
 
-				if(LeafData[Leaf].VisFrame != CurFrameStatic)
+				if(bCheck && mLeafData[Leaf].mVisFrame != mCurFrameStatic)
 				{
 					return;
 				}
@@ -1285,16 +1261,100 @@ namespace BSPLib
 		}
 
 
+		void RenderModelBSPFrontBack_r2(Int32 Node, Vector3 pos,
+						List<Vector3> verts, List<uint> indexes)
+		{
+			float		Dist1;
+			GFXNode		pNode;
+			Int32		Side;
+
+			if(Node < 0)		// At leaf, no more recursing
+			{
+				Int32		Leaf;
+
+				Leaf	=-(Node+1);
+
+				Debug.Assert(Leaf >= 0 && Leaf < mGFXLeafs.Length);
+
+				for(int i=0;i < mGFXLeafs[Leaf].mNumFaces;i++)
+				{
+					int		ofs		=verts.Count;
+					UInt32	offset	=(UInt32)ofs;
+					int		face	=mGFXLeafFaces[mGFXLeafs[Leaf].mFirstFace + i];
+					int		nverts	=mGFXFaces[face].mNumVerts;
+					int		fvert	=mGFXFaces[face].mFirstVert;
+
+					for(int j=fvert;j < (fvert + nverts);j++)
+					{
+						int	idx	=mGFXVertIndexes[j];
+						verts.Add(mGFXVerts[idx]);
+					}
+
+					int k	=0;
+					for(k=1;k < nverts-1;k++)
+					{
+						//initial vertex
+						indexes.Add(offset);
+						indexes.Add((UInt32)(offset + k));
+						indexes.Add((UInt32)(offset + ((k + 1) % nverts)));
+					}
+				}
+				return;
+			}
+
+			pNode	=mGFXNodes[Node];
+			
+			for(int i=0;i < pNode.mNumFaces;i++)
+			{
+				int		ofs		=verts.Count;
+				UInt32	offset	=(UInt32)ofs;
+				int		face	=pNode.mFirstFace + i;
+				int		nverts	=mGFXFaces[face].mNumVerts;
+				int		fvert	=mGFXFaces[face].mFirstVert;
+
+				for(int j=fvert;j < (fvert + nverts);j++)
+				{
+					int	idx	=mGFXVertIndexes[j];
+					verts.Add(mGFXVerts[idx]);
+				}
+
+				int k	=0;
+				for(k=1;k < nverts-1;k++)
+				{
+					//initial vertex
+					indexes.Add(offset);
+					indexes.Add((UInt32)(offset + k));
+					indexes.Add((UInt32)(offset + ((k + 1) % nverts)));
+				}
+			}
+			//Get the distance that the eye is from this plane
+			Dist1	=mGFXPlanes[pNode.mPlaneNum].DistanceFast(pos);
+
+			if(Dist1 < 0)
+			{
+				Side	=1;
+			}
+			else
+			{
+				Side	=0;
+			}
+			
+			//Go down the side we are on first, then the other side
+			RenderModelBSPFrontBack_r2(pNode.mChildren[Side], pos, verts, indexes);
+			RenderModelBSPFrontBack_r2(pNode.mChildren[(Side == 0)? 1 : 0], pos, verts, indexes);
+		}
+
+
 		void FindParents_r(Int32 Node, Int32 Parent)
 		{
 			if(Node < 0)		// At a leaf, mark leaf parent and return
 			{
-				LeafData[-(Node+1)].Parent	=Parent;
+				mLeafData[-(Node+1)].mParent	=Parent;
 				return;
 			}
 
 			//At a node, mark node parent, and keep going till hitting a leaf
-			NodeParents[Node]	=Parent;
+			mNodeParents[Node]	=Parent;
 
 			// Go down front and back markinf parents on the way down...
 			FindParents_r(mGFXNodes[Node].mChildren[0], Node);

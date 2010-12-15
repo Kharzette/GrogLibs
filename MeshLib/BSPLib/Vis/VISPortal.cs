@@ -51,14 +51,14 @@ namespace BSPLib
 					//Try to use final vis info first
 					for(int k=0;k < portBits.Length;k++)
 					{
-						portBits[k]	|=port.mFinalVisBits[k];
+						portBits[k]	|=p.mFinalVisBits[k];
 					}
 				}
-				else if(port.mVisBits != null)
+				else if(p.mVisBits != null)
 				{
 					for(int k=0;k < portBits.Length;k++)
 					{
-						portBits[k]	|=port.mVisBits[k];
+						portBits[k]	|=p.mVisBits[k];
 					}
 				}
 				else
@@ -67,8 +67,8 @@ namespace BSPLib
 					return	false;
 				}
 
-				port.mVisBits		=null;
-				port.mFinalVisBits	=null;
+				p.mVisBits		=null;
+				p.mFinalVisBits	=null;
 			}
 			return	true;
 		}
@@ -90,220 +90,206 @@ namespace BSPLib
 		}
 
 
-		internal void FloodPortalsFast_r(VISPortal DestPortal,
+		internal void FloodPortalsFast_r(VISPortal destPortal,
 			Dictionary<VISPortal, Int32> visIndexer,
 			bool []portSeen, VISLeaf []visLeafs,
 			int srcLeaf, ref int mightSee)
 		{
-			VISLeaf		Leaf;
-			VISPortal	Portal;
-			Int32		LeafNum;
-			Int32		PNum;
-
-			Debug.Assert(visIndexer.ContainsKey(DestPortal));
-			PNum	=visIndexer[DestPortal];
+			Debug.Assert(visIndexer.ContainsKey(destPortal));
+			Int32	portNum	=visIndexer[destPortal];
 			
-			if(portSeen[PNum])
+			if(portSeen[portNum])
 			{
 				return;
 			}
 
-			portSeen[PNum]	=true;
+			portSeen[portNum]	=true;
 
 			//Add the portal that we are Flooding into, to the original portals visbits
-			LeafNum	=DestPortal.mLeaf;
-
+			Int32	leafNum	=destPortal.mLeaf;
 			
-			byte	Bit	=(byte)(PNum & 7);
+			byte	Bit	=(byte)(portNum & 7);
 			Bit	=(byte)(1 << Bit);
 
-			if((mVisBits[PNum >> 3] & Bit) == 0)
+			if((mVisBits[portNum >> 3] & Bit) == 0)
 			{
-				mVisBits[PNum>>3]	|=(byte)Bit;
+				mVisBits[portNum>>3]	|=(byte)Bit;
 				mMightSee++;
 				visLeafs[srcLeaf].mMightSee++;
 				mightSee++;
 			}
 
-			Leaf	=visLeafs[LeafNum];
+			VISLeaf	leaf	=visLeafs[leafNum];
 
 			//Now, try and Flood into the leafs that this portal touches
-			for(Portal=Leaf.mPortals;Portal != null;Portal=Portal.mNext)
+			for(VISPortal port=leaf.mPortals;port != null;port=port.mNext)
 			{
 				//If SrcPortal can see this Portal, flood into it...
-				if(CanSeePortal(Portal))
+				if(CanSeePortal(port))
 				{
-					FloodPortalsFast_r(Portal, visIndexer, portSeen, visLeafs, srcLeaf, ref mightSee);
+					FloodPortalsFast_r(port, visIndexer, portSeen, visLeafs, srcLeaf, ref mightSee);
 				}
 			}
 		}
 
 
-		static bool ClipToSeperators(GBSPPoly Source, GBSPPoly Pass,
-			GBSPPoly Target, bool FlipClip, ref GBSPPoly Dest)
+		static bool ClipToSeperators(GBSPPoly src, GBSPPoly pass,
+			GBSPPoly targ, bool bFlipClip, ref GBSPPoly dest)
 		{
-			return	Target.SeperatorClip(Source, Pass, FlipClip, ref Dest);
+			return	targ.SeperatorClip(src, pass, bFlipClip, ref dest);
 		}
 
 
-		internal bool FloodPortalsSlow_r(VISPortal DestPortal, VISPStack PrevStack,
-			Dictionary<VISPortal, int> visIndexer, ref int canSee,
-			VISLeaf []visLeafs)
+		internal bool FloodPortalsSlow_r(VISPortal destPort, VISPStack prevStack,
+			Dictionary<VISPortal, int> visIndexer, ref int canSee, VISLeaf []visLeafs)
 		{
-			VISLeaf		Leaf;
-			VISPortal	Portal;
-			Int32		LeafNum, j;
-			Int32		PNum;
-			UInt32		More;
-			VISPStack	Stack	=new VISPStack();
+			VISPStack	stack	=new VISPStack();
 
-			PNum	=visIndexer[DestPortal];
+			Int32	portNum	=visIndexer[destPort];
 
 			//Add the portal that we are Flooding into, to the original portals visbits
-			byte	Bit	=(byte)(PNum & 7);
+			byte	Bit	=(byte)(portNum & 7);
 			Bit	=(byte)(1 << Bit);
 
-			if((mFinalVisBits[PNum >> 3] & Bit) == 0)
+			if((mFinalVisBits[portNum >> 3] & Bit) == 0)
 			{
-				mFinalVisBits[PNum>>3] |= Bit;
+				mFinalVisBits[portNum>>3] |= Bit;
 				mCanSee++;
 				visLeafs[mLeaf].mCanSee++;
 				canSee++;
 			}
 
 			//Get the leaf that this portal looks into, and flood from there
-			LeafNum	=DestPortal.mLeaf;
-			Leaf	=visLeafs[LeafNum];
+			Int32	leafNum	=destPort.mLeaf;
+			VISLeaf	leaf	=visLeafs[leafNum];
 
 			// Now, try and Flood into the leafs that this portal touches
-			for(Portal=Leaf.mPortals;Portal != null;Portal=Portal.mNext)
+			for(VISPortal port=leaf.mPortals;port != null;port=port.mNext)
 			{
-				PNum	=visIndexer[Portal];
-				Bit		=(byte)(1<<(PNum&7));
+				portNum	=visIndexer[port];
+				Bit		=(byte)(1<<(portNum&7));
 
 				//GHook.Printf("PrevStack VisBits:  %i\n", PrevStack.mVisBits[PNum>>3]);
 
 				//If might see could'nt see it, then don't worry about it
-				if((mVisBits[PNum>>3] & Bit) == 0)
+				if((mVisBits[portNum>>3] & Bit) == 0)
 				{
 					continue;
 				}
 
-				if((PrevStack.mVisBits[PNum>>3] & Bit) == 0)
+				if((prevStack.mVisBits[portNum>>3] & Bit) == 0)
 				{
 					continue;	// Can't possibly see it
 				}
 
 				//If the portal can't see anything we haven't allready seen, skip it
-				More	=0;
-				if(Portal.mDone)
+				UInt32	more	=0;
+				if(port.mDone)
 				{
-//					Test = (uint32*)Portal.mFinalVisBits;
-
-					for(j=0;j < mFinalVisBits.Length;j++)
+					for(int j=0;j < mFinalVisBits.Length;j++)
 					{
-						//there is no & for bytes, can you believe that shit?
-						uint	worthless	=(uint)PrevStack.mVisBits[j];
-						uint	pieceof		=(uint)Portal.mFinalVisBits[j];
-						uint	shit		=worthless & pieceof;
-						Stack.mVisBits[j]	=(byte)shit;
+						//there is no & for bytes, can you believe that?
+						uint	prevBit	=(uint)prevStack.mVisBits[j];
+						uint	portBit		=(uint)port.mFinalVisBits[j];
+						uint	bothBit		=prevBit & portBit;
+						stack.mVisBits[j]	=(byte)bothBit;
 
-						worthless	=Stack.mVisBits[j];
-						pieceof		=mFinalVisBits[j];
+						prevBit	=stack.mVisBits[j];
+						portBit		=mFinalVisBits[j];
 
-						More	|=worthless &~ pieceof;
+						more	|=prevBit &~ portBit;
 					}
 				}
 				else
 				{
-					for(j=0;j < mFinalVisBits.Length;j++)
+					for(int j=0;j < mFinalVisBits.Length;j++)
 					{
-						//there is no & for bytes, can you believe that shit?
-						uint	worthless	=(uint)PrevStack.mVisBits[j];
-						uint	pieceof		=(uint)Portal.mVisBits[j];
-						uint	shit		=worthless & pieceof;
-						Stack.mVisBits[j]	=(byte)shit;
+						//there is no & for bytes, can you believe that?
+						uint	prevBit	=(uint)prevStack.mVisBits[j];
+						uint	portBit		=(uint)port.mVisBits[j];
+						uint	bothBit		=prevBit & portBit;
+						stack.mVisBits[j]	=(byte)bothBit;
 
-						worthless	=Stack.mVisBits[j];
-						pieceof		=mFinalVisBits[j];
+						prevBit	=stack.mVisBits[j];
+						portBit		=mFinalVisBits[j];
 
-						More	|=worthless &~ pieceof;
+						more	|=prevBit &~ portBit;
 					}
 				}
 				
-				if(More == 0 && ((mFinalVisBits[PNum>>3] & Bit) != 0))
+				if(more == 0 && ((mFinalVisBits[portNum>>3] & Bit) != 0))
 				{
 					//Can't see anything new
 					continue;
 				}
 				
 				//Setup Source/Pass
-				Stack.mPass	=new GBSPPoly(Portal.mPoly);
+				stack.mPass	=new GBSPPoly(port.mPoly);
 
 				//Cut away portion of pass portal we can't see through
-				if(!Stack.mPass.ClipPoly(mPlane, false))
+				if(!stack.mPass.ClipPoly(mPlane, false))
 				{
 					return	false;
 				}
-				if(Stack.mPass.VertCount() < 3)
+				if(stack.mPass.VertCount() < 3)
 				{
 					continue;
 				}
 
-				Stack.mSource	=new GBSPPoly(PrevStack.mSource);
+				stack.mSource	=new GBSPPoly(prevStack.mSource);
 
-				if(!Stack.mSource.ClipPoly(Portal.mPlane, true))
+				if(!stack.mSource.ClipPoly(port.mPlane, true))
 				{
 					return	false;
 				}
-				if(Stack.mSource.VertCount() < 3)
+				if(stack.mSource.VertCount() < 3)
 				{
 					continue;
 				}
 
 				//If we don't have a PrevStack.mPass, then we don't have enough to look through.
 				//This portal can only be blocked by VisBits (Above test)...
-				if(PrevStack.mPass == null)
+				if(prevStack.mPass == null)
 				{
-					if(!FloodPortalsSlow_r(Portal, Stack, visIndexer, ref canSee, visLeafs))
+					if(!FloodPortalsSlow_r(port, stack, visIndexer, ref canSee, visLeafs))
 					{
 						return	false;
 					}
 
-					Stack.mSource	=null;
-					Stack.mPass		=null;
+					stack.mSource	=null;
+					stack.mPass		=null;
 					continue;
 				}
 
-				if(!ClipToSeperators(Stack.mSource, PrevStack.mPass, Stack.mPass, false, ref Stack.mPass))
+				if(!ClipToSeperators(stack.mSource, prevStack.mPass, stack.mPass, false, ref stack.mPass))
 				{
 					return	false;
 				}
 
-				if(Stack.mPass == null || Stack.mPass.VertCount() < 3)
+				if(stack.mPass == null || stack.mPass.VertCount() < 3)
 				{
-					Stack.mSource	=null;
+					stack.mSource	=null;
 					continue;
 				}
 				
-				if(!ClipToSeperators(PrevStack.mPass, Stack.mSource, Stack.mPass, true, ref Stack.mPass))
+				if(!ClipToSeperators(prevStack.mPass, stack.mSource, stack.mPass, true, ref stack.mPass))
 				{
 					return	false;
 				}
-				if(Stack.mPass == null || Stack.mPass.VertCount() < 3)
+				if(stack.mPass == null || stack.mPass.VertCount() < 3)
 				{
-					Stack.mSource	=null;
+					stack.mSource	=null;
 					continue;
 				}
 
 				//Flood into it...
-				if(!FloodPortalsSlow_r(Portal, Stack, visIndexer, ref canSee, visLeafs))
+				if(!FloodPortalsSlow_r(port, stack, visIndexer, ref canSee, visLeafs))
 				{
 					return	false;
 				}
 
-				Stack.mSource	=null;
-				Stack.mPass		=null;
+				stack.mSource	=null;
+				stack.mPass		=null;
 			}
 			return	true;
 		}

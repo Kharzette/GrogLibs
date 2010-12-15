@@ -68,79 +68,76 @@ namespace BSPLib
 		}
 
 
-		bool PatchNeedsSplit(RADPatch Patch, out GBSPPlane Plane)
+		bool PatchNeedsSplit(RADPatch patch, out GBSPPlane plane)
 		{
 			Int32	i;
 
 			if(mLightParams.mbFastPatch)
 			{
-				float	Dist;
-				
 				for(i=0;i < 3;i++)
 				{
-					Dist	=UtilityLib.Mathery.VecIdx(Patch.mBounds.mMaxs, i)
-								- UtilityLib.Mathery.VecIdx(Patch.mBounds.mMins, i);
+					float	dist	=UtilityLib.Mathery.VecIdx(patch.mBounds.mMaxs, i)
+								- UtilityLib.Mathery.VecIdx(patch.mBounds.mMins, i);
 					
-					if(Dist > mLightParams.mPatchSize)
+					if(dist > mLightParams.mPatchSize)
 					{
 						//Cut it right through the center...
-						Plane.mNormal	=Vector3.Zero;
-						UtilityLib.Mathery.VecIdxAssign(ref Plane.mNormal, i, 1.0f);
-						Plane.mDist	=(UtilityLib.Mathery.VecIdx(Patch.mBounds.mMaxs, i)
-							+ UtilityLib.Mathery.VecIdx(Patch.mBounds.mMins, i))
+						plane.mNormal	=Vector3.Zero;
+						UtilityLib.Mathery.VecIdxAssign(ref plane.mNormal, i, 1.0f);
+						plane.mDist	=(UtilityLib.Mathery.VecIdx(patch.mBounds.mMaxs, i)
+							+ UtilityLib.Mathery.VecIdx(patch.mBounds.mMins, i))
 								/ 2.0f;
-						Plane.mType	=GBSPPlane.PLANE_ANY;
+						plane.mType	=GBSPPlane.PLANE_ANY;
 						return	true;
 					}
 				}
 			}
 			else
 			{
-				float	Min, Max;
 				for(i=0;i < 3;i++)
 				{
-					Min	=UtilityLib.Mathery.VecIdx(Patch.mBounds.mMins, i) + 1.0f;
-					Max	=UtilityLib.Mathery.VecIdx(Patch.mBounds.mMaxs, i) - 1.0f;
+					float	min	=UtilityLib.Mathery.VecIdx(patch.mBounds.mMins, i) + 1.0f;
+					float	max	=UtilityLib.Mathery.VecIdx(patch.mBounds.mMaxs, i) - 1.0f;
 
-					if(Math.Floor(Min / mLightParams.mPatchSize)
-						< Math.Floor(Max / mLightParams.mPatchSize))
+					if(Math.Floor(min / mLightParams.mPatchSize)
+						< Math.Floor(max / mLightParams.mPatchSize))
 					{
-						Plane.mNormal	=Vector3.Zero;
-						UtilityLib.Mathery.VecIdxAssign(ref Plane.mNormal, i, 1.0f);
-						Plane.mDist	=mLightParams.mPatchSize * (1.0f + (float)Math.Floor(Min / mLightParams.mPatchSize));
-						Plane.mType	=GBSPPlane.PLANE_ANY;
+						plane.mNormal	=Vector3.Zero;
+						UtilityLib.Mathery.VecIdxAssign(ref plane.mNormal, i, 1.0f);
+						plane.mDist	=mLightParams.mPatchSize * (1.0f + (float)Math.Floor(min / mLightParams.mPatchSize));
+						plane.mType	=GBSPPlane.PLANE_ANY;
 						return	true;
 					}
 				}
 			}
-			Plane	=new GBSPPlane();
+			plane	=new GBSPPlane();
 			return	false;
 		}
 
 
-		bool BuildPatch(Int32 Face)
+		bool BuildPatch(Int32 f)
 		{
-			mFacePatches[Face]	=new RADPatch();
-			if(mFacePatches[Face] == null)
+			mFacePatches[f]	=new RADPatch();
+			if(mFacePatches[f] == null)
 			{
 				Print("BuildPatch:  Could not allocate patch.\n");
 				return	false;
 			}
 
-			CalcPatchReflectivity(Face, mFacePatches[Face]);
+			CalcPatchReflectivity(f, mFacePatches[f]);
 			
-			mFacePatches[Face].mPoly	=new GBSPPoly(mGFXFaces[Face], mGFXVertIndexes, mGFXVerts);
+			mFacePatches[f].AllocPoly(mGFXFaces[f], mGFXVertIndexes, mGFXVerts);
 
-			if(!mFacePatches[Face].CalcInfo())
+			if(!mFacePatches[f].CalcInfo())
 			{
 				Print("BuildPatch:  Could not calculate patch info.\n");
 				return	false;
 			}
 
-			mFacePatches[Face]	=RADPatch.SubdivideFacePatches(mFacePatches[Face],
+			mFacePatches[f]	=RADPatch.SubdivideFacePatches(mFacePatches[f],
 				mLightParams.mbFastPatch, mLightParams.mPatchSize, ref NumPatches);
 
-			if(mFacePatches[Face] == null)
+			if(mFacePatches[f] == null)
 			{
 				Print("BuildPatch:  Could not subdivide patch.\n");
 				return	false;
@@ -149,10 +146,10 @@ namespace BSPLib
 		}
 
 
-		bool FinalizePatchInfo(Int32 Face, RADPatch Patch)
+		bool FinalizePatchInfo(Int32 face, RADPatch patch)
 		{
-			GFXFace	f	=mGFXFaces[Face];
-			return	Patch.Finalize(mGFXPlanes[f.mPlaneNum], f.mPlaneSide, FindNodeLandedIn);
+			GFXFace	f	=mGFXFaces[face];
+			return	patch.Finalize(mGFXPlanes[f.mPlaneNum], f.mPlaneSide, FindNodeLandedIn);
 		}
 
 
@@ -193,15 +190,14 @@ namespace BSPLib
 
 		bool FinalizePatches()
 		{
-			RADPatch	Patch;
-			Int32		i, k;
+			RADPatch	patch;
 
 			NumPatches	=0;
-			for(i=0;i < mGFXFaces.Length;i++)
+			for(int i=0;i < mGFXFaces.Length;i++)
 			{
-				for(Patch=mFacePatches[i];Patch!=null;Patch=Patch.mNext)
+				for(patch=mFacePatches[i];patch!=null;patch=patch.mNext)
 				{
-					FinalizePatchInfo(i, Patch);
+					FinalizePatchInfo(i, patch);
 					NumPatches++;
 				}
 			}
@@ -213,12 +209,12 @@ namespace BSPLib
 			}
 			
 			//Build the patch list, so we can use indexing, instead of pointers (for receivers)...
-			k	=0;
-			for(i=0;i < mGFXFaces.Length;i++)
+			int	k	=0;
+			for(int i=0;i < mGFXFaces.Length;i++)
 			{
-				for(Patch=mFacePatches[i];Patch != null;Patch=Patch.mNext)
+				for(patch=mFacePatches[i];patch != null;patch=patch.mNext)
 				{
-					mPatchList[k]	=Patch;
+					mPatchList[k]	=patch;
 					k++;
 				}
 			}
@@ -333,12 +329,7 @@ namespace BSPLib
 				RADPatch	patch	=mPatchList[i];
 				
 				//Add receive amount to Final amount
-				patch.mRadFinal	+=patch.mRadReceive / patch.mArea;
-				patch.mRadSend	=patch.mRadReceive * patch.mReflectivity;
-
-				total	+=patch.mRadSend.X + patch.mRadSend.Y + patch.mRadSend.Z;
-
-				patch.mRadReceive	=Vector3.Zero;
+				patch.Collect(ref total);
 			}
 			return	total;
 		}
@@ -346,21 +337,16 @@ namespace BSPLib
 
 		bool BouncePatches()
 		{
-			Int32		i, j;
-			RADPatch	Patch;
-			float		Total;
-
 			Print("--- Bounce Patches --- \n");
 			
-			for(i=0;i < NumPatches;i++)
+			for(int i=0;i < NumPatches;i++)
 			{
 				//Set each patches first pass send amount with what was obtained
-				//from their lightmaps... 
-				Patch			=mPatchList[i];
-				Patch.mRadSend	=Patch.mRadStart * Patch.mReflectivity * Patch.mArea;
+				//from their lightmaps...
+				mPatchList[i].SetFirstPassSendAmount();
 			}
 
-			for(i=0;i < mLightParams.mNumBounces;i++)
+			for(int i=0;i < mLightParams.mNumBounces;i++)
 			{
 				if(mBSPParms.mbVerbose)
 				{
@@ -368,26 +354,26 @@ namespace BSPLib
 				}
 				
 				//For each patch, send it's energy to each pre-computed receiver
-				for(j=0;j < NumPatches;j++)
+				for(int j=0;j < NumPatches;j++)
 				{
-					Patch	=mPatchList[j];
-					Patch.Send(mPatchList);
+					RADPatch	patch	=mPatchList[j];
+					patch.Send(mPatchList);
 				}
 
 				//For each patch, collect any light it might have received
 				//and throw into patch RadFinal
-				Total	=CollectPatchLight();
+				float	total	=CollectPatchLight();
 
 				if(mBSPParms.mbVerbose)
 				{
-					Print("Energy: " + Total + "\n");
+					Print("Energy: " + total + "\n");
 				}
 			}
 			
-			for(j=0;j < NumPatches;j++)
+			for(int j=0;j < NumPatches;j++)
 			{
-				Patch	=mPatchList[j];
-				if(!Patch.Check())
+				RADPatch	patch	=mPatchList[j];
+				if(!patch.Check())
 				{
 					return	false;
 				}
@@ -398,31 +384,26 @@ namespace BSPLib
 
 		PlaneFace	[]LinkPlaneFaces()
 		{
-			PlaneFace	PFace;
-			Int32		i, PlaneNum;
-
 			PlaneFace	[]ret	=new PlaneFace[mGFXPlanes.Length];
 
-			for(i=0;i < mGFXFaces.Length;i++)
+			for(int i=0;i < mGFXFaces.Length;i++)
 			{
-				PFace			=new PlaneFace();
-				PlaneNum		=mGFXFaces[i].mPlaneNum;
-				PFace.mGFXFace	=i;
-				PFace.mNext		=ret[PlaneNum];
-				ret[PlaneNum]	=PFace;
+				PlaneFace	p	=new PlaneFace();
+				int	PlaneNum	=mGFXFaces[i].mPlaneNum;
+				p.mGFXFace		=i;
+				p.mNext			=ret[PlaneNum];
+				ret[PlaneNum]	=p;
 			}
 			return	ret;
 		}
 
 
-		void GetFaceMinsMaxs(Int32 Face, out Bounds bnd)
+		void GetFaceMinsMaxs(Int32 face, out Bounds bnd)
 		{
-			Int32	i, Index;
-
 			bnd	=new Bounds();
-			for(i=0;i < mGFXFaces[Face].mNumVerts;i++)
+			for(int i=0;i < mGFXFaces[face].mNumVerts;i++)
 			{
-				Index	=mGFXVertIndexes[mGFXFaces[Face].mFirstVert + i];
+				int	Index	=mGFXVertIndexes[mGFXFaces[face].mFirstVert + i];
 				bnd.AddPointToBounds(mGFXVerts[Index]);
 			}			
 		}
@@ -430,26 +411,15 @@ namespace BSPLib
 
 		bool AbsorbPatches()
 		{
-			TriPatch	Tri;
-			GBSPPlane	Plane;
-			Vector3		Add;
-			Vector3		pPoint;
-			Int32		i, k, PNum, FNum, PSide;
-			RADPatch	Patch, OPatch;
-			PlaneFace	PFace;
-
 			//We need all the faces that belong to each Plane
 			PlaneFace	[]planeFaces	=LinkPlaneFaces();
 
-			for(i=0;i < mGFXFaces.Length;i++)
+			for(int i=0;i < mGFXFaces.Length;i++)
 			{
 				UInt32	Flags;
 				GFXFace	pGFXFace;
 
 				pGFXFace	=mGFXFaces[i];
-
-//				pPoint	=mFaceInfos[i].mPoints;
-//				pRGB	=mLightMaps[i].RGBLData[0];
 
 				Flags	=mGFXTexInfos[mGFXFaces[i].mTexInfo].mFlags;
 
@@ -459,62 +429,39 @@ namespace BSPLib
 					continue;
 				}
 
-				Plane.mNormal	=mGFXPlanes[mGFXFaces[i].mPlaneNum].mNormal;
-				Plane.mDist		=mGFXPlanes[mGFXFaces[i].mPlaneNum].mDist;
-				Plane.mType		=GBSPPlane.PLANE_ANY;
+				GBSPPlane	plane;
+				plane.mNormal	=mGFXPlanes[mGFXFaces[i].mPlaneNum].mNormal;
+				plane.mDist		=mGFXPlanes[mGFXFaces[i].mPlaneNum].mDist;
+				plane.mType		=GBSPPlane.PLANE_ANY;
 
-				Tri	=new TriPatch(Plane);
-				if(Tri == null)
+				TriPatch	tri	=new TriPatch(plane);
+				if(tri == null)
 				{
 					Print("AbsorbPatches:  Tri_PatchCreate failed.\n");
 					return	false;
 				}
 				
-				PNum	=mGFXFaces[i].mPlaneNum;
-				PSide	=mGFXFaces[i].mPlaneSide;
+				int	planeNum	=mGFXFaces[i].mPlaneNum;
+				int	planeSide	=mGFXFaces[i].mPlaneSide;
 				
-				OPatch	=mFacePatches[i];
+				RADPatch	opatch	=mFacePatches[i];
 
 				Bounds	bounds;
 				GetFaceMinsMaxs(i, out bounds);
 				
-				for(PFace=planeFaces[PNum];PFace != null;PFace=PFace.mNext)
+				for(PlaneFace planeFace=planeFaces[planeNum];planeFace != null;planeFace=planeFace.mNext)
 				{
-					FNum	=PFace.mGFXFace;
+					int	faceNum	=planeFace.mGFXFace;
 
-					if(mGFXFaces[FNum].mPlaneSide != PSide)
+					if(mGFXFaces[faceNum].mPlaneSide != planeSide)
 					{
 						continue;
 					}
 
-					for(Patch=mFacePatches[FNum];Patch != null;Patch=Patch.mNext)
-					{
-						for(k=0;k < 3;k++)
-						{
-							if(UtilityLib.Mathery.VecIdx(Patch.mOrigin, k)
-								< UtilityLib.Mathery.VecIdx(bounds.mMins, k) - (mLightParams.mPatchSize * 2))
-							{
-								break;
-							}
-							if(UtilityLib.Mathery.VecIdx(Patch.mOrigin, k)
-								> UtilityLib.Mathery.VecIdx(bounds.mMaxs, k) + (mLightParams.mPatchSize * 2))
-							{
-								break;
-							}
-						}
-						if(k != 3)
-						{
-							continue;
-						}
-						
-						if(!Tri.AddPoint(Patch))
-						{
-							Print("AbsorbPatches:  Could not add patch to triangulation.\n");
-							return	false;
-						}						
-					}
+					RADPatch.BuildTriPatchFromList(mFacePatches[faceNum], bounds, tri,
+													mLightParams.mPatchSize);
 				}
-				if(!Tri.TriangulatePoints())
+				if(!tri.TriangulatePoints())
 				{
 					Print("AbsorbPatches:  Could not triangulate patches.\n");
 					return	false;
@@ -522,17 +469,18 @@ namespace BSPLib
 				
 				if((Flags & TexInfo.TEXINFO_GOURAUD) != 0)
 				{
-					for(k=0;k < pGFXFace.mNumVerts;k++)
+					for(int k=0;k < pGFXFace.mNumVerts;k++)
 					{
 						Int32	vn;
 
 						vn	=pGFXFace.mFirstVert + k;
 
-						pPoint	=mGFXVerts[mGFXVertIndexes[vn]];
+						Vector3	point	=mGFXVerts[mGFXVertIndexes[vn]];
 
-						Tri.SampleTriangulation(pPoint, out Add);
+						Vector3	add;
+						tri.SampleTriangulation(point, out add);
 
-						mGFXRGBVerts[vn]	+=Add;
+						mGFXRGBVerts[vn]	+=add;
 					}
 				}
 				else
@@ -543,10 +491,11 @@ namespace BSPLib
 					Vector3	[]facePoints	=mFaceInfos[i].GetPoints();
 
 					int	rgbOfs	=0;				
-					for(k=0;k < facePoints.Length;k++, rgbOfs++)
+					for(int k=0;k < facePoints.Length;k++, rgbOfs++)
 					{
-						pPoint	=facePoints[k];
-						if(!Tri.SampleTriangulation(pPoint, out Add))
+						Vector3	point	=facePoints[k];
+						Vector3	add;
+						if(!tri.SampleTriangulation(point, out add))
 						{
 							Print("AbsorbPatches:  Could not sample from patch triangles.\n");
 							continue;
@@ -554,7 +503,7 @@ namespace BSPLib
 
 						if(!Created)
 						{
-							if(Add.X > 0 || Add.Y > 0 || Add.Z > 0)
+							if(add.X > 0 || add.Y > 0 || add.Z > 0)
 							{
 								mLightMaps[i].AllocLightType(0, facePoints.Length);
 								Created	=true;
@@ -563,11 +512,11 @@ namespace BSPLib
 						if(Created)
 						{
 							rgb	=mLightMaps[i].GetRGBLightData(0);
-							rgb[k]	+=Add;
+							rgb[k]	+=add;
 						}
 					}
 				}
-				Tri			=null;
+				tri			=null;
 			}
 
 			planeFaces	=null;
@@ -576,112 +525,104 @@ namespace BSPLib
 		}
 
 
-		bool FindPatchReceivers(RADPatch Patch, float []recAmount)
+		bool FindPatchReceivers(RADPatch patch, float []recAmount)
 		{
-			RADPatch	Patch2;
-			bool		VisInfo;
-			float		Dist;
-			float		Amount;
-			float		Total, Scale;
-			Int32		i, Cluster;
-			Vector3		Vect, Normal;
-			GFXLeaf		pLeaf;
-			Int32		Area, VisOfs	=0;
+			GFXLeaf	leaf	=mGFXLeafs[patch.mLeaf];
+			Int32	clust	=leaf.mCluster;
+			Int32	area	=leaf.mArea;
 
-			pLeaf	=mGFXLeafs[Patch.mLeaf];
-			Cluster	=pLeaf.mCluster;
-			Area	=pLeaf.mArea;
-
-			if(Cluster >= 0 && mGFXClusters[Cluster].mVisOfs >= 0)
+			bool	bVisInfo;
+			Int32	visOfs	=0;
+			if(clust >= 0 && mGFXClusters[clust].mVisOfs >= 0)
 			{
-				VisOfs	=mGFXClusters[Cluster].mVisOfs;
-				VisInfo	=true;
+				visOfs	=mGFXClusters[clust].mVisOfs;
+				bVisInfo	=true;
 			}
 			else
 			{
-				VisInfo	=false;
+				bVisInfo	=false;
 			}
-			Total	=0.0f;
-			Normal	=Patch.mPlane.mNormal;
+
+			float	total	=0.0f;
+			Vector3	norm	=patch.GetPlaneNormal();
 
 			//For each face, go through all it's patches
-			for(i=0;i < NumPatches;i++)
+			for(int i=0;i < NumPatches;i++)
 			{
-				Patch2	=mPatchList[i];
+				RADPatch	patch2	=mPatchList[i];
 				
 				recAmount[i]	=0.0f;
 
-				if(Patch2 == Patch)
+				if(patch2 == patch)
 				{
 					continue;
 				}
 
-				pLeaf	=mGFXLeafs[Patch2.mLeaf];
+				leaf	=mGFXLeafs[patch2.mLeaf];
 
 				//Radiosity only bounces in it's original area
-				if(pLeaf.mArea != Area)
+				if(leaf.mArea != area)
 				{
 					continue;
 				}
 
-				if(VisInfo)
+				if(bVisInfo)
 				{
-					Cluster	=pLeaf.mCluster;
-					if(Cluster >= 0 && ((mGFXVisData[VisOfs + Cluster>>3]
-						& (1 << (Cluster & 7))) == 0))
+					clust	=leaf.mCluster;
+					if(clust >= 0 && ((mGFXVisData[visOfs + clust>>3]
+						& (1 << (clust & 7))) == 0))
 					{
 						continue;
 					}
 				}
-				Vect	=Patch2.mOrigin - Patch.mOrigin;
-				Dist	=Vect.Length();
-				Vect.Normalize();
+
+				Vector3	vect;
+				float	dist	=patch.DistVecBetween(patch2, out vect);
 
 				//if (Dist > PatchSize)
-				if(Dist == 0.0f)
+				if(dist == 0.0f)
 				{
 					continue;	// Error
 				}
 				
-				Scale	=Vector3.Dot(Vect, Normal);
-				Scale	*=-Vector3.Dot(Vect, Patch2.mPlane.mNormal);
+				float	scale	=Vector3.Dot(vect, norm);
+				scale			*=-Vector3.Dot(vect, patch2.GetPlaneNormal());
 
-				if(Scale <= 0)
+				if(scale <= 0)
 				{
 					continue;
 				}
 
-				Vector3	colResult	=Vector3.Zero;
-				if(RayCollide(Patch.mOrigin, Patch2.mOrigin, ref colResult))
+				if(patch.RayCastBetween(patch2, RayCollide))
 				{
 					//blocked by something in the world
 					continue;
 				}
-				Amount	=Scale * Patch2.mArea / (Dist * Dist);
 
-				if(Amount <= 0.0f)
+				float	amount	=scale * patch2.GetArea() / (dist * dist);
+				if(amount <= 0.0f)
 				{
 					continue;
 				}
-				recAmount[i]	=Amount;
+				recAmount[i]	=amount;
 
 				//Add the receiver
-				Total	+=Amount;
+				total	+=amount;
 				NumReceivers++;
-				Patch.mNumReceivers++;
+				patch.mNumReceivers++;
 			}
 
-			Patch.mReceivers	=new RADReceiver[Patch.mNumReceivers];
+			patch.mReceivers	=new RADReceiver[patch.mNumReceivers];
 			int	roffs	=0;
-			for(i=0;i < NumPatches;i++)
+			for(int i=0;i < NumPatches;i++)
 			{
 				if(recAmount[i] == 0.0f)
 				{
 					continue;
 				}
-				Patch.mReceivers[roffs]			=new RADReceiver();
-				Patch.mReceivers[roffs].mPatch	=(UInt16)i;
-				Patch.mReceivers[roffs].mAmount	=(UInt16)(recAmount[i] * 0x10000 / Total);
+				patch.mReceivers[roffs]			=new RADReceiver();
+				patch.mReceivers[roffs].mPatch	=(UInt16)i;
+				patch.mReceivers[roffs].mAmount	=(UInt16)(recAmount[i] * 0x10000 / total);
 				roffs++;
 			}
 			return	true;
@@ -690,10 +631,6 @@ namespace BSPLib
 
 		bool CalcReceivers(string fileName)
 		{
-			Int32		i;
-			RADPatch	Patch;
-			Int32		Perc;
-
 			NumReceivers	=0;
 
 			//Try to load the receiver file first!!!
@@ -707,19 +644,19 @@ namespace BSPLib
 
 			float	[]recAmount	=new float[mPatchList.Length];
 
-			Perc	=(mPatchList.Length / 20);
-			for(i=0;i < mPatchList.Length;i++)
+			int	percentage	=(mPatchList.Length / 20);
+			for(int i=0;i < mPatchList.Length;i++)
 			{
-				if(Perc != 0)
+				if(percentage != 0)
 				{
-					if(((i % Perc) == 0) && (i / Perc) <= 20)
+					if(((i % percentage) == 0) && (i / percentage) <= 20)
 					{
-						Print("." + (i / Perc));
+						Print("." + (i / percentage));
 					}
 				}				
-				Patch	=mPatchList[i];
+				RADPatch	patch	=mPatchList[i];
 
-				if(!FindPatchReceivers(Patch, recAmount))
+				if(!FindPatchReceivers(patch, recAmount))
 				{
 					Print("CalcReceivers:  There was an error calculating receivers.\n");
 					return	false;
@@ -930,60 +867,56 @@ namespace BSPLib
 
 		bool CreateDirectLights()
 		{
-			Int32		i, Leaf, Cluster;
-			Vector3		Color;
-			MapEntity	Entity;
-			DirectLight	DLight;
-
-			Int32	NumDirectLights	=0;
-			Int32	NumSurfLights	=0;
+			Int32	numDirectLights	=0;
+			Int32	numSurfLights	=0;
 
 			DirectClusterLights.Clear();
 
 			// Create the entity lights first
-			for(i=0;i < mGFXEntities.Length;i++)
+			for(int i=0;i < mGFXEntities.Length;i++)
 			{
-				Entity	=mGFXEntities[i];
+				MapEntity	ent	=mGFXEntities[i];
 
-				if(!(Entity.mData.ContainsKey("light")
-					|| Entity.mData.ContainsKey("_light")))
+				if(!(ent.mData.ContainsKey("light")
+					|| ent.mData.ContainsKey("_light")))
 				{
 					continue;
 				}
 
-				DLight	=new DirectLight();
+				DirectLight	dLight	=new DirectLight();
 
 				Vector4	colorVec	=Vector4.Zero;
-				if(!Entity.GetLightValue(out colorVec))
+				if(!ent.GetLightValue(out colorVec))
 				{
 					Print("Warning:  Light entity, couldn't get color\n");
 				}
 
-				Color.X	=colorVec.X;
-				Color.Y	=colorVec.Y;
-				Color.Z	=colorVec.Z;
+				Vector3	color;
+				color.X	=colorVec.X;
+				color.Y	=colorVec.Y;
+				color.Z	=colorVec.Z;
 
 				//Default it to 255/255/255 if no light is specified
-				if(Color.Length() < 1.0f)
+				if(color.Length() < 1.0f)
 				{
-					Color	=Vector3.One;
+					color	=Vector3.One;
 				}
 				else
 				{
-					Color.Normalize();
+					color.Normalize();
 				}
 
-				if(!Entity.GetOrigin(out DLight.mOrigin))
+				if(!ent.GetOrigin(out dLight.mOrigin))
 				{
 					Print("Warning:  Light entity, couldn't get origin\n");
 				}
 
-				DLight.mColor		=Color;
-				DLight.mIntensity	=colorVec.W;// * mGlobals.EntityScale;
-				DLight.mType		=DirectLight.DLight_Point;	//hardcode for now
+				dLight.mColor		=color;
+				dLight.mIntensity	=colorVec.W;// * mGlobals.EntityScale;
+				dLight.mType		=DirectLight.DLight_Point;	//hardcode for now
 
 				Vector3	Angles;
-				if(Entity.GetVector("angles", out Angles))
+				if(ent.GetVector("angles", out Angles))
 				{
 					//hammer style
 					Vector3	Angles2	=Vector3.Zero;
@@ -994,13 +927,13 @@ namespace BSPLib
 					Matrix	mat	=Matrix.CreateFromYawPitchRoll(Angles2.X, Angles2.Y, Angles2.Z); 
 
 					Angles2	=mat.Left;
-					DLight.mNormal.X	=-Angles2.X;
-					DLight.mNormal.Y	=-Angles2.Y;
-					DLight.mNormal.Z	=-Angles2.Z;
+					dLight.mNormal.X	=-Angles2.X;
+					dLight.mNormal.Y	=-Angles2.Y;
+					dLight.mNormal.Z	=-Angles2.Z;
 
-					DLight.mAngle	=(float)Math.Cos(DLight.mAngle / 180.0f * Math.PI);					
+					dLight.mAngle	=(float)Math.Cos(dLight.mAngle / 180.0f * Math.PI);					
 				}
-				else if(Entity.GetVector("mangle", out Angles))
+				else if(ent.GetVector("mangle", out Angles))
 				{
 					//quake 1 style
 					Vector3	Angles2	=Vector3.Zero;
@@ -1011,41 +944,41 @@ namespace BSPLib
 					Matrix	mat	=Matrix.CreateFromYawPitchRoll(Angles2.X, Angles2.Y, Angles2.Z); 
 
 					Angles2	=mat.Left;
-					DLight.mNormal.X	=-Angles2.X;
-					DLight.mNormal.Y	=-Angles2.Y;
-					DLight.mNormal.Z	=-Angles2.Z;
+					dLight.mNormal.X	=-Angles2.X;
+					dLight.mNormal.Y	=-Angles2.Y;
+					dLight.mNormal.Z	=-Angles2.Z;
 
-					DLight.mAngle	=(float)Math.Cos(DLight.mAngle / 180.0f * Math.PI);					
+					dLight.mAngle	=(float)Math.Cos(dLight.mAngle / 180.0f * Math.PI);					
 				}
 
 				//Find out what type of light it is by it's classname...
-				Entity.GetLightType(out DLight.mType);
+				ent.GetLightType(out dLight.mType);
 
-				Int32	nodeLandedIn	=FindNodeLandedIn(mGFXModels[0].mRootNode[0], DLight.mOrigin);
-				Leaf	=-(nodeLandedIn + 1);
-				Cluster	=mGFXLeafs[Leaf].mCluster;
+				Int32	nodeLandedIn	=FindNodeLandedIn(mGFXModels[0].mRootNode[0], dLight.mOrigin);
+				Int32	leaf	=-(nodeLandedIn + 1);
+				Int32	clust	=mGFXLeafs[leaf].mCluster;
 
-				if(Cluster < 0)
+				if(clust < 0)
 				{
 					Print("*WARNING* CreateLights:  Light in solid leaf.\n");
 					continue;
 				}
-				if(DirectClusterLights.ContainsKey(Cluster))
+				if(DirectClusterLights.ContainsKey(clust))
 				{
-					DLight.mNext	=DirectClusterLights[Cluster];
-					DirectClusterLights[Cluster]	=DLight;
+					dLight.mNext	=DirectClusterLights[clust];
+					DirectClusterLights[clust]	=dLight;
 				}
 				else
 				{
-					DLight.mNext	=null;
-					DirectClusterLights.Add(Cluster, DLight);
+					dLight.mNext	=null;
+					DirectClusterLights.Add(clust, dLight);
 				}
 
-				DirectLights.Add(DLight);
-				NumDirectLights++;
+				DirectLights.Add(dLight);
+				numDirectLights++;
 			}
 
-			Print("Num Normal Lights   : " + NumDirectLights + "\n");
+			Print("Num Normal Lights   : " + numDirectLights + "\n");
 
 			//Stop here if no radisosity is going to be done
 			if(!mLightParams.mbRadiosity)
@@ -1054,62 +987,54 @@ namespace BSPLib
 			}
 			
 			//Now create the radiosity direct lights (surface emitters)
-			for(i=0;i < mGFXFaces.Length;i++)
+			for(int i=0;i < mGFXFaces.Length;i++)
 			{
-				GFXTexInfo	pTexInfo	=mGFXTexInfos[mGFXFaces[i].mTexInfo];
+				GFXTexInfo	tex	=mGFXTexInfos[mGFXFaces[i].mTexInfo];
 
 				//Only look at surfaces that want to emit light
-				if((pTexInfo.mFlags & TexInfo.TEXINFO_LIGHT) == 0)
+				if((tex.mFlags & TexInfo.TEXINFO_LIGHT) == 0)
 				{
 					continue;
 				}
 
-				for(RADPatch Patch=mFacePatches[i];Patch != null;Patch=Patch.mNext)
+				for(RADPatch p=mFacePatches[i];p != null;p=p.mNext)
 				{
-					Leaf	=Patch.mLeaf;
-					Cluster	=mGFXLeafs[Leaf].mCluster;
+					Int32	leaf	=p.mLeaf;
+					Int32	clust	=mGFXLeafs[leaf].mCluster;
 
-					if(Cluster < 0)
+					if(clust < 0)
 					{
 						continue;	//Skip, solid
 					}
 
-					DLight	=new DirectLight();
+					DirectLight	dLight	=new DirectLight();
 
-					DLight.mOrigin	=Patch.mOrigin;
-					DLight.mColor	=Patch.mReflectivity;
-					DLight.mNormal	=Patch.mPlane.mNormal;
-					DLight.mType	=DirectLight.DLight_Surface;
-					
-					DLight.mIntensity	=pTexInfo.mFaceLight * Patch.mArea;
-
-					//Make sure the emitter ends up with some light too
-					Patch.mRadFinal	+=Patch.mReflectivity * DLight.mIntensity;
+					p.InitDLight(dLight, tex.mFaceLight);
 
 					//Insert this surface direct light into the list of lights
-					if(DirectClusterLights.ContainsKey(Cluster))
+					if(DirectClusterLights.ContainsKey(clust))
 					{
-						DLight.mNext	=DirectClusterLights[Cluster];
-						DirectClusterLights[Cluster]	=DLight;
+						dLight.mNext	=DirectClusterLights[clust];
+						DirectClusterLights[clust]	=dLight;
 					}
 					else
 					{
-						DLight.mNext	=null;
-						DirectClusterLights.Add(Cluster, DLight);
+						dLight.mNext	=null;
+						DirectClusterLights.Add(clust, dLight);
 					}
 
-					DirectLights.Add(DLight);
-					NumSurfLights++;
+					DirectLights.Add(dLight);
+					numSurfLights++;
 				}
 			}
-			Print("Num Surf Lights     : " + NumSurfLights + "\n");
+			Print("Num Surf Lights     : " + numSurfLights + "\n");
 			return	true;
 		}
 
 
-		bool CalcFaceInfo(FInfo FaceInfo, LInfo LightInfo)
+		bool CalcFaceInfo(FInfo faceInfo, LInfo lightInfo)
 		{
-			Int32	fidx	=FaceInfo.GetFaceIndex();
+			Int32	fidx	=faceInfo.GetFaceIndex();
 			Int32	indOffset;
 			
 			List<Vector3>	verts	=new List<Vector3>();
@@ -1121,97 +1046,84 @@ namespace BSPLib
 				verts.Add(mGFXVerts[vIndex]);
 			}
 
-			FaceInfo.CalcFaceLightInfo(LightInfo, verts);
+			faceInfo.CalcFaceLightInfo(lightInfo, verts);
 
 			return	true;
 		}
 
 
-		bool GouraudShadeFace(Int32 FaceNum)
+		bool GouraudShadeFace(Int32 faceNum)
 		{
-			Int32		NumVerts;
-			DirectLight	DLight;
-			GFXFace		pGFXFace;
-			Int32		v;
-			GFXTexInfo	pGFXTexInfo;
-
 			if(mGFXRGBVerts == null || mGFXRGBVerts.Length == 0)
 			{
 				return	false;
 			}
 
-			pGFXFace	=mGFXFaces[FaceNum];
-			
-			pGFXTexInfo	=mGFXTexInfos[pGFXFace.mTexInfo];
+			GFXFace		gfxFace		=mGFXFaces[faceNum];			
+			GFXTexInfo	tex			=mGFXTexInfos[gfxFace.mTexInfo];
+			Int32		numVerts	=gfxFace.mNumVerts;
 
-			NumVerts	=pGFXFace.mNumVerts;
-
-			for(v=0;v < pGFXFace.mNumVerts;v++)
+			for(int v=0;v < gfxFace.mNumVerts;v++)
 			{
-				Int32		vn, Index, i;
-				Vector3		pVert, Normal;
-				float		Dist, Angle, Val, Intensity;
+				Int32	vn		=gfxFace.mFirstVert + v;
+				Int32	index	=mGFXVertIndexes[vn];
+				Vector3	vert	=mGFXVerts[index];
 
-				vn	=pGFXFace.mFirstVert + v;
-
-				Index	=mGFXVertIndexes[vn];
-				pVert	=mGFXVerts[Index];
-
-				if((pGFXTexInfo.mFlags & TexInfo.TEXINFO_FLAT) != 0)
+				Vector3	norm;
+				if((tex.mFlags & TexInfo.TEXINFO_FLAT) != 0)
 				{
-					Normal	=mFaceInfos[FaceNum].GetPlaneNormal();
+					norm	=mFaceInfos[faceNum].GetPlaneNormal();
 				}
 				else
 				{
-					Normal	=VertNormals[Index];
+					norm	=VertNormals[index];
 				}
 				
-				for(i=0;i < DirectLights.Count;i++)
+				for(int i=0;i < DirectLights.Count;i++)
 				{
-					Vector3	Vect;
+					DirectLight	dLight	=DirectLights[i];
 
-					DLight	=DirectLights[i];
-
-					Intensity	=DLight.mIntensity;
+					float	intensity	=dLight.mIntensity;
 
 					//Find the angle between the light, and the face normal
-					Vect	=DLight.mOrigin - pVert;				
-					Dist	=Vect.Length();
-					Vect.Normalize();
+					Vector3	vect	=dLight.mOrigin - vert;				
+					float	dist	=vect.Length();
+					vect.Normalize();
 
-					Angle	=Vector3.Dot(Vect, Normal);
+					float	angle	=Vector3.Dot(vect, norm);
 
-					if(Angle <= 0.001f)
+					if(angle <= 0.001f)
 					{
 						goto Skip;
 					}
-						
-					switch(DLight.mType)
+
+					float	val;
+					switch(dLight.mType)
 					{
 						case DirectLight.DLight_Point:
 						{
-							Val	=(Intensity - Dist) * Angle;//(Angle*0.5f+0.5f);
+							val	=(intensity - dist) * angle;//(Angle*0.5f+0.5f);
 							break;
 						}
 						case DirectLight.DLight_Spot:
 						{
-							float Angle2	=-Vector3.Dot(Vect, DLight.mNormal);
-							if(Angle2 < DLight.mAngle)
+							float Angle2	=-Vector3.Dot(vect, dLight.mNormal);
+							if(Angle2 < dLight.mAngle)
 							{
 								goto Skip;
 							}
 
-							Val	=(Intensity - Dist) * Angle;
+							val	=(intensity - dist) * angle;
 							break;
 						}
 						case DirectLight.DLight_Surface:
 						{
-							float Angle2	=-Vector3.Dot(Vect, DLight.mNormal);
+							float Angle2	=-Vector3.Dot(vect, dLight.mNormal);
 							if(Angle2 <= 0.001f)
 							{
 								goto Skip;	//Behind light surface
 							}
-							Val	=(Intensity / (Dist * Dist)) * Angle * Angle2;
+							val	=(intensity / (dist * dist)) * angle * Angle2;
 							break;
 						}
 						default:
@@ -1220,18 +1132,18 @@ namespace BSPLib
 							return	false;
 						}
 					}
-					if(Val <= 0.0f)
+					if(val <= 0.0f)
 					{
 						goto	Skip;
 					}
 
 					//This is the slowest test, so make it last
 					Vector3	colResult	=Vector3.Zero;
-					if(RayCollide(pVert, DLight.mOrigin, ref colResult))
+					if(RayCollide(vert, dLight.mOrigin, ref colResult))
 					{
 						goto	Skip;	//Ray is in shadow
 					}
-					mGFXRGBVerts[vn]	+=(DLight.mColor * Val);
+					mGFXRGBVerts[vn]	+=(dLight.mColor * val);
 
 					Skip:;				
 				}
@@ -1240,38 +1152,33 @@ namespace BSPLib
 		}
 
 
-		void TransferLightToPatches(Int32 Face)
+		void TransferLightToPatches(Int32 face)
 		{
-			GFXFace		pGFXFace;
-			RADPatch	Patch;
+			GFXFace	gfxFace	=mGFXFaces[face];
 
-			pGFXFace	=mGFXFaces[Face];
-
-			for(Patch=mFacePatches[Face];Patch != null;Patch=Patch.mNext)
+			for(RADPatch patch=mFacePatches[face];patch != null;patch=patch.mNext)
 			{
-				Vector3	pRGB, pVert;
-				Int32	i, rgbOfs	=pGFXFace.mFirstVert;
+				Vector3	rgb, vert;
+				Int32	rgbOfs	=gfxFace.mFirstVert;
 
-				pRGB	=mGFXRGBVerts[rgbOfs];
+				rgb	=mGFXRGBVerts[rgbOfs];
 
-				Patch.mNumSamples	=0;
-				//geVec3d_Clear(&Patch.mRadStart);
-
-				for(i=0;i < pGFXFace.mNumVerts;i++)
+				patch.ResetSamples();
+				for(int i=0;i < gfxFace.mNumVerts;i++)
 				{
 					Int32	k;
 
-					pVert	=mGFXVerts[mGFXVertIndexes[i+pGFXFace.mFirstVert]];
+					vert	=mGFXVerts[mGFXVertIndexes[i+gfxFace.mFirstVert]];
 
 					for(k=0;k < 3;k++)
 					{
-						if(UtilityLib.Mathery.VecIdx(Patch.mBounds.mMins, k)
-							> UtilityLib.Mathery.VecIdx(pVert, k) + 16)
+						if(UtilityLib.Mathery.VecIdx(patch.mBounds.mMins, k)
+							> UtilityLib.Mathery.VecIdx(vert, k) + 16)
 						{
 							break;
 						}				
-						if(UtilityLib.Mathery.VecIdx(Patch.mBounds.mMaxs, k)
-							< UtilityLib.Mathery.VecIdx(pVert, k) - 16)
+						if(UtilityLib.Mathery.VecIdx(patch.mBounds.mMaxs, k)
+							< UtilityLib.Mathery.VecIdx(vert, k) - 16)
 						{
 							break;
 						}				
@@ -1279,26 +1186,20 @@ namespace BSPLib
 
 					if(k == 3)
 					{
-						//Add the Color to the patch 
-						Patch.mNumSamples++;
-						Patch.mRadStart	+=pRGB;
+						//Add the Color to the patch
+						patch.AddSample(rgb);
 					}
 					rgbOfs++;
-					pRGB	=mGFXRGBVerts[rgbOfs];
+					rgb	=mGFXRGBVerts[rgbOfs];
 				}
-				
-				if(Patch.mNumSamples != 0)
-				{
-					Patch.mRadStart	*=(1.0f / Patch.mNumSamples);
-				}
+				patch.AverageRadStart();
 			}
 		}
 
 
 		bool LightFaces(int numSamples, bool bExtraSamples)
 		{
-			Int32	i, s;
-			Int32	Perc;
+			Int32	percentage;
 
 			float	[]UOfs	=new float[5];
 			float	[]VOfs	=new float[5];
@@ -1330,21 +1231,21 @@ namespace BSPLib
 				return	false;
 			}
 
-			for(i=0;i < mGFXFaces.Length;i++)
+			for(int i=0;i < mGFXFaces.Length;i++)
 			{
 				mLightMaps[i]	=new LInfo();
 				mFaceInfos[i]	=new FInfo();
 			}
 
-			Perc	=mGFXFaces.Length / 20;
+			percentage	=mGFXFaces.Length / 20;
 
-			for(i=0;i < mGFXFaces.Length;i++)
+			for(int i=0;i < mGFXFaces.Length;i++)
 			{
-				if(Perc != 0)
+				if(percentage != 0)
 				{
-					if(((i % Perc) == 0) &&	(i / Perc) <= 20)
+					if(((i % percentage) == 0) &&	(i / percentage) <= 20)
 					{
-						Print("." + (i/Perc));
+						Print("." + (i/percentage));
 					}
 				}
 
@@ -1390,11 +1291,11 @@ namespace BSPLib
 					return	false;
 				}
 			
-				Int32	Size	=mLightMaps[i].CalcSize();
+				Int32	size	=mLightMaps[i].CalcSize();
 
-				mFaceInfos[i].AllocPoints(Size);
+				mFaceInfos[i].AllocPoints(size);
 
-				for(s=0;s < numSamples;s++)
+				for(int s=0;s < numSamples;s++)
 				{
 					//Hook.Printf("Sample  : %3i of %3i\n", s+1, NumSamples);
 					CalcFacePoints(mFaceInfos[i], mLightMaps[i], UOfs[s], VOfs[s], bExtraSamples);
@@ -1416,54 +1317,44 @@ namespace BSPLib
 		}
 
 
-		void ApplyLightmapToPatches(Int32 Face)
+		void ApplyLightmapToPatches(Int32 face)
 		{
-			mLightMaps[Face].ApplyLightToPatchList(mFacePatches[Face], mFaceInfos[Face].GetPoints());
+			mLightMaps[face].ApplyLightToPatchList(mFacePatches[face], mFaceInfos[face].GetPoints());
 		}
 
 
-		bool ApplyLightsToFace(FInfo FaceInfo, LInfo LightInfo, float Scale)
+		bool ApplyLightsToFace(FInfo faceInfo, LInfo lightInfo, float scale)
 		{
-			Int32		c, v;
-			float		Dist;
-			Int32		LType;
-			Vector3		Normal, Vect;
-			float		Val, Angle;
-			Int32		Leaf, Cluster;
-			float		Intensity;
-			DirectLight	DLight;
+			Vector3	norm	=faceInfo.GetPlaneNormal();
 
-			Normal	=FaceInfo.GetPlaneNormal();
+			Vector3	[]facePoints	=faceInfo.GetPoints();
 
-			Vector3	[]facePoints	=FaceInfo.GetPoints();
-
-			for(v=0;v < facePoints.Length;v++)
+			for(int v=0;v < facePoints.Length;v++)
 			{
 				Int32	nodeLandedIn	=FindNodeLandedIn(0, facePoints[v]);
-				Leaf	=-(nodeLandedIn + 1);
+				Int32	leaf	=-(nodeLandedIn + 1);
 
-				if(Leaf < 0 || Leaf >= mGFXLeafs.Length)
+				if(leaf < 0 || leaf >= mGFXLeafs.Length)
 				{
 					Print("ApplyLightsToFace:  Invalid leaf num.\n");
 					return	false;
 				}
 
-				Cluster	=mGFXLeafs[Leaf].mCluster;
-
-				if(Cluster < 0)
+				Int32	clust	=mGFXLeafs[leaf].mCluster;
+				if(clust < 0)
 				{
 					continue;
 				}
 
-				if(Cluster >= mGFXClusters.Length)
+				if(clust >= mGFXClusters.Length)
 				{
 					Print("*WARNING* ApplyLightsToFace:  Invalid cluster num.\n");
 					continue;
 				}
 
-				for(c=0;c < mGFXClusters.Length;c++)
+				for(int c=0;c < mGFXClusters.Length;c++)
 				{
-					if((mGFXVisData[mGFXClusters[Cluster].mVisOfs + (c>>3)] & (1<<(c&7))) == 0)
+					if((mGFXVisData[mGFXClusters[clust].mVisOfs + (c >> 3)] & (1 << (c & 7))) == 0)
 					{
 						continue;
 					}
@@ -1473,49 +1364,50 @@ namespace BSPLib
 						continue;
 					}
 
-					for(DLight=DirectClusterLights[c];DLight != null;DLight=DLight.mNext)
+					for(DirectLight dLight=DirectClusterLights[c];dLight != null;dLight=dLight.mNext)
 					{
-						Intensity	=DLight.mIntensity;
+						float	intensity	=dLight.mIntensity;
 					
 						//Find the angle between the light, and the face normal
-						Vect	=DLight.mOrigin - facePoints[v];
-						Dist	=Vect.Length();
-						Vect.Normalize();
+						Vector3	vect	=dLight.mOrigin - facePoints[v];
+						float	dist	=vect.Length();
+						vect.Normalize();
 
-						Angle	=Vector3.Dot(Vect, Normal);
-						if(Angle <= 0.001f)
+						float	angle	=Vector3.Dot(vect, norm);
+						if(angle <= 0.001f)
 						{
 							goto	Skip;
 						}
 						
-						switch(DLight.mType)
+						float	val;
+						switch(dLight.mType)
 						{
 							case DirectLight.DLight_Point:
 							{
-								Val	=(Intensity - Dist) * Angle;
+								val	=(intensity - dist) * angle;
 								break;
 							}
 							case DirectLight.DLight_Spot:
 							{
-								float	Angle2	=-Vector3.Dot(Vect, DLight.mNormal);
+								float	Angle2	=-Vector3.Dot(vect, dLight.mNormal);
 
-								if(Angle2 < DLight.mAngle)
+								if(Angle2 < dLight.mAngle)
 								{
 									goto	Skip;
 								}
 
-								Val	=(Intensity - Dist) * Angle;
+								val	=(intensity - dist) * angle;
 								break;
 							}
 							case DirectLight.DLight_Surface:
 							{
-								float	Angle2	=-Vector3.Dot(Vect, DLight.mNormal);
+								float	Angle2	=-Vector3.Dot(vect, dLight.mNormal);
 								if(Angle2 <= 0.001f)
 								{
 									goto	Skip;	// Behind light surface
 								}
 
-								Val	=(Intensity / (Dist * Dist)) * Angle * Angle2;
+								val	=(intensity / (dist * dist)) * angle * Angle2;
 								break;
 							}
 							default:
@@ -1525,26 +1417,26 @@ namespace BSPLib
 							}
 						}
 
-						if(Val <= 0.0f)
+						if(val <= 0.0f)
 						{
 							goto	Skip;
 						}
 
 						// This is the slowest test, so make it last
 						Vector3	colResult	=Vector3.Zero;
-						if(RayCollide(facePoints[v], DLight.mOrigin, ref colResult))
+						if(RayCollide(facePoints[v], dLight.mOrigin, ref colResult))
 						{
 							goto	Skip;	//Ray is in shadow
 						}
 
-						LType	=DLight.mLType;
+						Int32	lightType	=dLight.mLType;
 
 						//If the data for this LType has not been allocated, allocate it now...
-						LightInfo.AllocLightType(LType, facePoints.Length);
+						lightInfo.AllocLightType(lightType, facePoints.Length);
 
-						Vector3	[]rgb	=LightInfo.GetRGBLightData(LType);
+						Vector3	[]rgb	=lightInfo.GetRGBLightData(lightType);
 
-						rgb[v]	+=DLight.mColor * (Val * Scale);
+						rgb[v]	+=dLight.mColor * (val * scale);
 
 						Skip:;
 					}
@@ -1555,9 +1447,9 @@ namespace BSPLib
 		}
 
 
-		void CalcFacePoints(FInfo FaceInfo, LInfo LightInfo, float UOfs, float VOfs, bool bExtraLightCorrection)
+		void CalcFacePoints(FInfo faceInfo, LInfo lightInfo, float UOfs, float VOfs, bool bExtraLightCorrection)
 		{
-			FaceInfo.CalcFacePoints(LightInfo, UOfs, VOfs, bExtraLightCorrection, IsPointInSolidSpace, RayCollide);
+			faceInfo.CalcFacePoints(lightInfo, UOfs, VOfs, bExtraLightCorrection, IsPointInSolidSpace, RayCollide);
 		}
 
 
@@ -1582,14 +1474,9 @@ namespace BSPLib
 
 		bool SaveLightMaps(BinaryWriter f, ref int numRGBMaps)
 		{
-			Int32		i, j, k,l, Size;
-			float		Max, Max2;
-			byte		[]LData	=new byte[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE * 3 * 4];
-			long		Pos1, Pos2;
-			Int32		NumLTypes;
-			Int32		LDataOfs	=0;
-
-			Pos1	=f.BaseStream.Position;
+			Int32	LDataOfs	=0;
+			byte	[]LData		=new byte[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE * 3 * 4];
+			long	pos1		=f.BaseStream.Position;
 			
 			// Write out fake chunk (so we can write the real one here later)
 			GBSPChunk	Chunk	=new GBSPChunk();
@@ -1604,10 +1491,10 @@ namespace BSPLib
 			int	REGMaps		=0;
 			
 			//Go through all the faces
-			for(i=0;i < mGFXFaces.Length;i++)
+			for(int i=0;i < mGFXFaces.Length;i++)
 			{
-				LInfo	L			=mLightMaps[i];
-				FInfo	pFaceInfo	=mFaceInfos[i];
+				LInfo	L		=mLightMaps[i];
+				FInfo	fInfo	=mFaceInfos[i];
 				
 				// Set face defaults
 				mGFXFaces[i].mLightOfs	=-1;
@@ -1626,7 +1513,7 @@ namespace BSPLib
 				}
 
 				//Get the size of map
-				Size	=mFaceInfos[i].GetPoints().Length;
+				int	size	=fInfo.GetPoints().Length;
 
 				Vector3	minLight	=mLightParams.mMinLight;
 
@@ -1636,7 +1523,7 @@ namespace BSPLib
 				if((rgb == null) &&
 					(minLight.X > 1 || minLight.Y > 1 || minLight.Z > 1))
 				{
-					L.AllocLightType(0, Size);
+					L.AllocLightType(0, size);
 					rgb	=L.GetRGBLightData(0);
 					for(int ld=0;ld < rgb.Length;ld++)
 					{
@@ -1669,8 +1556,8 @@ namespace BSPLib
 
 				LightOffset++;		//Skip the rgb light byte
 				
-				NumLTypes	=0;		// Reset number of LTypes for this face
-				for(k=0;k < LInfo.MAX_LTYPE_INDEX;k++)
+				int	numLTypes	=0;		// Reset number of LTypes for this face
+				for(int k=0;k < LInfo.MAX_LTYPE_INDEX;k++)
 				{
 					rgb	=L.GetRGBLightData(k);
 					if(rgb == null)
@@ -1678,18 +1565,18 @@ namespace BSPLib
 						continue;
 					}
 
-					if(NumLTypes >= LInfo.MAX_LTYPES)
+					if(numLTypes >= LInfo.MAX_LTYPES)
 					{
 						Print("SaveLightmaps:  Max LightTypes on face.\n");
 						return	false;
 					}
 						 
-					mGFXFaces[i].mLTypes[NumLTypes]	=(byte)k;
-					NumLTypes++;
+					mGFXFaces[i].mLTypes[numLTypes]	=(byte)k;
+					numLTypes++;
 
 					LDataOfs	=0;
 
-					for(j=0;j < Size;j++)
+					for(int j=0;j < size;j++)
 					{
 						Vector3	WorkRGB	=rgb[j] * mLightParams.mLightScale;
 
@@ -1698,9 +1585,9 @@ namespace BSPLib
 							WorkRGB	+=minLight;
 						}
 						
-						Max	=0.0f;
+						float	max	=0.0f;
 
-						for(l=0;l < 3;l++)
+						for(int l=0;l < 3;l++)
 						{
 							float	Val	=UtilityLib.Mathery.VecIdx(WorkRGB, l);
 
@@ -1710,30 +1597,30 @@ namespace BSPLib
 								UtilityLib.Mathery.VecIdxAssign(ref WorkRGB, l, Val);
 							}
 
-							if(Val > Max)
+							if(Val > max)
 							{
-								Max	=Val;
+								max	=Val;
 							}
 						}
 
-						Debug.Assert(Max > 0.0f);
+						Debug.Assert(max > 0.0f);
 						
-						Max2	=Math.Min(Max, mLightParams.mMaxIntensity);
+						float	max2	=Math.Min(max, mLightParams.mMaxIntensity);
 
-						for(l=0;l < 3;l++)
+						for(int l=0;l < 3;l++)
 						{
-							LData[LDataOfs]	=(byte)(UtilityLib.Mathery.VecIdx(WorkRGB, l) * (Max2 / Max));
+							LData[LDataOfs]	=(byte)(UtilityLib.Mathery.VecIdx(WorkRGB, l) * (max2 / max));
 							LDataOfs++;
 							LightOffset++;
 						}
 					}
 
-					f.Write(LData, 0, 3 * Size);
+					f.Write(LData, 0, 3 * size);
 
 					L.FreeLightType(k);
 				}
 
-				if(L.GetNumLightTypes() != NumLTypes)
+				if(L.GetNumLightTypes() != numLTypes)
 				{
 					Print("SaveLightMaps:  Num LightTypes was incorrectly calculated.\n");
 					return	false;
@@ -1742,16 +1629,16 @@ namespace BSPLib
 
 			Print("Light Data Size      : " + LightOffset + "\n");
 
-			Pos2	=f.BaseStream.Position;
+			long	pos2	=f.BaseStream.Position;
 
-			f.BaseStream.Seek(Pos1, SeekOrigin.Begin);
+			f.BaseStream.Seek(pos1, SeekOrigin.Begin);
 
 			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LIGHTDATA;
 			Chunk.mElements =LightOffset;
 
 			Chunk.Write(f);
 
-			f.BaseStream.Seek(Pos2, SeekOrigin.Begin);
+			f.BaseStream.Seek(pos2, SeekOrigin.Begin);
 
 			return	true;
 		}

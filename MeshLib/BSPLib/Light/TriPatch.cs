@@ -43,117 +43,81 @@ namespace BSPLib
 
 	public class TriPatch
 	{
-		TriEdge		[][]mEdgeMatrix;
-		TriEdge		[]mEdges;
-		Tri			[]mTriList;
+		Dictionary<UInt64, TriEdge>	mEdgeMatrix	=new Dictionary<UInt64, TriEdge>();
 
-		int			mNumPoints;
-		int			mNumEdges;
-		int			mNumTris;
-		GBSPPlane	mPlane;
-		RADPatch	[]mPoints;
+		List<TriEdge>	mEdges		=new List<TriEdge>();
+		List<Tri>		mTriList	=new List<Tri>();
 
-		public const Int32	MAX_TRI_POINTS		=1024;
-		public const Int32	MAX_TRI_EDGES		=(MAX_TRI_POINTS * 6);
-		public const Int32	MAX_TRI_TRIS		=(MAX_TRI_POINTS * 2);
+		GBSPPlane		mPlane;
+		List<RADPatch>	mPoints	=new List<RADPatch>();
+
 		public const float	MIN_MAX_BOUNDS2		=Bounds.MIN_MAX_BOUNDS * 2;
 
 
 		public TriPatch()
 		{
-			mEdgeMatrix	=new TriEdge[MAX_TRI_POINTS][];
-			for(int i=0;i < MAX_TRI_POINTS;i++)
-			{
-				mEdgeMatrix[i]	=new TriEdge[MAX_TRI_POINTS];
-			}
-			mPoints		=new RADPatch[MAX_TRI_POINTS];
-			mEdges		=new TriEdge[MAX_TRI_EDGES];
-			mTriList	=new Tri[MAX_TRI_TRIS];
 		}
 
 
 		internal TriPatch(GBSPPlane plane)
 		{
-			mEdgeMatrix	=new TriEdge[MAX_TRI_POINTS][];
-			for(int i=0;i < MAX_TRI_POINTS;i++)
-			{
-				mEdgeMatrix[i]	=new TriEdge[MAX_TRI_POINTS];
-			}
-			mPoints		=new RADPatch[MAX_TRI_POINTS];
-			mEdges		=new TriEdge[MAX_TRI_EDGES];
-			mTriList	=new Tri[MAX_TRI_TRIS];
 			mPlane		=plane;
 		}
 
 
 		Tri	AllocTriangle()
 		{
-			if(mNumTris >= MAX_TRI_TRIS)
-			{
-				Map.Print("mNumTris >= MAX_TRI_TRIS");
-				return	null;
-			}
-			mTriList[mNumTris]	=new Tri();
-			Tri	ret	=mTriList[mNumTris];
-			mNumTris++;
-
+			Tri	ret	=new Tri();
+			mTriList.Add(ret);
 			return	ret;
 		}
 
 
-		internal bool SampleTriangulation(Vector3 Point, out Vector3 color)
+		internal bool SampleTriangulation(Vector3 pnt, out Vector3 color)
 		{
-			Tri			t;
-			TriEdge		e;
-			float		d;
-			RADPatch	p0, p1;
-			Vector3		v1, v2;
-
-			if(mNumPoints == 0)
+			if(mPoints.Count == 0)
 			{
 				color	=Vector3.Zero;
 				return	true;
 			}
-			if(mNumPoints == 1)
+			if(mPoints.Count == 1)
 			{
 				color	=mPoints[0].mRadFinal;
 				return	true;
 			}
 			
 			//See of the Point is inside a tri in the patch
-			for(int j=0;j < mNumTris;j++)
+			foreach(Tri t in mTriList)
 			{
-				t	=mTriList[j];
-				if(!t.IsPointInside(Point))
+				if(!t.IsPointInside(pnt))
 				{
 					continue;
 				}
-				LerpTriangle(t, Point, out color);
+				LerpTriangle(t, pnt, out color);
 
 				return	true;
 			}
-			
-			for(int j=0;j < mNumEdges;j++)
+
+			foreach(TriEdge e in mEdges)
 			{
-				e	=mEdges[j];
 				if(e.mTri != null)
 				{
 					continue;		// not an exterior edge
 				}
 
-				d	=Vector3.Dot(Point, e.mNormal) - e.mDist;
+				float	d	=Vector3.Dot(pnt, e.mNormal) - e.mDist;
 				if(d < 0)
 				{
 					continue;	// not in front of edge
 				}
 
-				p0	=mPoints[e.p0];
-				p1	=mPoints[e.p1];
+				RADPatch	p0	=mPoints[e.p0];
+				RADPatch	p1	=mPoints[e.p1];
 
-				v1	=p1.mOrigin - p0.mOrigin;
+				Vector3	v1	=p1.GetOrigin() - p0.GetOrigin();
 				v1.Normalize();
 
-				v2	=Point - p0.mOrigin;
+				Vector3	v2	=pnt - p0.GetOrigin();
 				d	=Vector3.Dot(v2, v1);
 				if(d < 0)
 				{
@@ -168,7 +132,7 @@ namespace BSPLib
 				return	true;
 			}
 			
-			if(!FindClosestTriPoint(Point, out color))
+			if(!FindClosestTriPoint(pnt, out color))
 			{
 				Map.Print("SampleTriangulation:  Could not find closest Color.\n");
 				return	false;
@@ -177,75 +141,56 @@ namespace BSPLib
 		}
 
 
-		bool FindClosestTriPoint(Vector3 Point, out Vector3 col)
+		bool FindClosestTriPoint(Vector3 pnt, out Vector3 col)
 		{
-			Int32		i;
-			RADPatch	p0, BestPatch;
-			float		BestDist, d;
-			Vector3		v1;
-
 			col	=Vector3.Zero;
 
 			//Search for nearest Point
-			BestDist	=TriPatch.MIN_MAX_BOUNDS2;
-			BestPatch	=null;
+			float		bestDist	=TriPatch.MIN_MAX_BOUNDS2;
+			RADPatch	bestPatch	=null;
 
-			for(i=0;i < mNumPoints;i++)
+			foreach(RADPatch p0 in mPoints)
 			{
-				p0	=mPoints[i];
-				v1	=Point - p0.mOrigin;
-				d	=v1.Length();
-				if(d < BestDist)
+				Vector3	v1	=pnt - p0.GetOrigin();
+				float	d	=v1.Length();
+				if(d < bestDist)
 				{
-					BestDist	=d;
-					BestPatch	=p0;
+					bestDist	=d;
+					bestPatch	=p0;
 				}
 			}
-			if(BestPatch == null)
+			if(bestPatch == null)
 			{
 				Map.Print("FindClosestTriPoint: No Points.\n");
 				return	false;
 			}
-
-			col	=BestPatch.mRadFinal;
+			col	=bestPatch.mRadFinal;
 			return	true;
 		}
 
 
 		internal bool TriangulatePoints()
 		{
-			float	d, bestd;
-			Vector3	v1;
-			int		bp1, bp2, i, j;
-			Vector3	p1, p2;
-			TriEdge	e, e2;
-
 			//zero out edgematrix
-			for(i=0;i < mNumPoints;i++)
-			{
-				for(j=0;j < mNumPoints;j++)
-				{
-					mEdgeMatrix[i][j]	=new TriEdge();
-				}
-			}
+			mEdgeMatrix.Clear();
 
-			if(mNumPoints < 2)
+			if(mPoints.Count < 2)
 			{
 				return	true;
 			}
 
 			//Find the two closest Points
-			bestd	=MIN_MAX_BOUNDS2;
-			bp1		=0;
-			bp2		=0;
-			for(i=0;i < mNumPoints;i++)
+			float	bestd	=MIN_MAX_BOUNDS2;
+			int		bp1		=0;
+			int		bp2		=0;
+			for(int i=0;i < mPoints.Count;i++)
 			{
-				p1	=mPoints[i].mOrigin;
-				for(j=i+1;j < mNumPoints;j++)
+				Vector3	p1	=mPoints[i].GetOrigin();
+				for(int j=i+1;j < mPoints.Count;j++)
 				{
-					p2	=mPoints[j].mOrigin;
-					v1	=p2 - p1;
-					d	=v1.Length();
+					Vector3	p2	=mPoints[j].GetOrigin();
+					Vector3	v1	=p2 - p1;
+					float	d	=v1.Length();
 					if(d < bestd && d > .05f)
 					{
 						bestd	=d;
@@ -255,13 +200,13 @@ namespace BSPLib
 				}
 			}
 
-			e	=FindEdge(bp1, bp2);
+			TriEdge	e	=FindEdge(bp1, bp2);
 			if(e == null)
 			{
 				Map.Print("There was an error finding an edge.\n");
 				return	false;
 			}
-			e2	=FindEdge(bp2, bp1);
+			TriEdge	e2	=FindEdge(bp2, bp1);
 			if(e2 == null)
 			{
 				Map.Print("There was an error finding an edge.\n");
@@ -279,24 +224,20 @@ namespace BSPLib
 		}
 
 
-		void LerpTriangle(Tri t, Vector3 Point, out Vector3 color)
+		void LerpTriangle(Tri t, Vector3 pnt, out Vector3 color)
 		{
-			RADPatch	p1, p2, p3;
-			Vector3		bse, d1, d2;
-			float		x, y, y1, x2;
+			RADPatch	p1	=mPoints[t.mEdges[0].p0];
+			RADPatch	p2	=mPoints[t.mEdges[1].p0];
+			RADPatch	p3	=mPoints[t.mEdges[2].p0];
 
-			p1	=mPoints[t.mEdges[0].p0];
-			p2	=mPoints[t.mEdges[1].p0];
-			p3	=mPoints[t.mEdges[2].p0];
+			Vector3	bse	=p1.mRadFinal;
+			Vector3	d1	=p2.mRadFinal - bse;
+			Vector3	d2	=p3.mRadFinal - bse;
 
-			bse	=p1.mRadFinal;
-			d1	=p2.mRadFinal - bse;
-			d2	=p3.mRadFinal - bse;
-
-			x	=Vector3.Dot(Point, t.mEdges[0].mNormal) - t.mEdges[0].mDist;
-			y	=Vector3.Dot(Point, t.mEdges[2].mNormal) - t.mEdges[2].mDist;
-			y1	=Vector3.Dot(p2.mOrigin, t.mEdges[2].mNormal) - t.mEdges[2].mDist;
-			x2	=Vector3.Dot(p3.mOrigin, t.mEdges[0].mNormal) - t.mEdges[0].mDist;
+			float	x	=Vector3.Dot(pnt, t.mEdges[0].mNormal) - t.mEdges[0].mDist;
+			float	y	=Vector3.Dot(pnt, t.mEdges[2].mNormal) - t.mEdges[2].mDist;
+			float	y1	=Vector3.Dot(p2.GetOrigin(), t.mEdges[2].mNormal) - t.mEdges[2].mDist;
+			float	x2	=Vector3.Dot(p3.GetOrigin(), t.mEdges[0].mNormal) - t.mEdges[0].mDist;
 
 			if(Math.Abs(y1) < UtilityLib.Mathery.ON_EPSILON
 				|| Math.Abs(x2) < UtilityLib.Mathery.ON_EPSILON)
@@ -312,32 +253,26 @@ namespace BSPLib
 
 		bool Tri_Edge_r(TriEdge e)
 		{
-			int		i, bestp	=0;
-			Vector3	v1, v2;
-			Vector3	p0, p1, p;
-			float	best, ang;
-			Tri		nt;
-			TriEdge	e2;
-
 			if(e.mTri != null)
 			{
 				return	true;
 			}
 
-			p0		=mPoints[e.p0].mOrigin;
-			p1		=mPoints[e.p1].mOrigin;
-			best	=1.1f;
-			for(i=0;i < mNumPoints;i++)
+			Vector3	p0		=mPoints[e.p0].GetOrigin();
+			Vector3	p1		=mPoints[e.p1].GetOrigin();
+			float	best	=1.1f;
+			int		bestp	=0;
+			for(int i=0;i < mPoints.Count;i++)
 			{
-				p	=mPoints[i].mOrigin;
+				Vector3	p	=mPoints[i].GetOrigin();
 
 				if(Vector3.Dot(p, e.mNormal) - e.mDist < 0.0f)
 				{
 					continue;
 				}
 
-				v1	=p0 - p;
-				v2	=p1 - p;
+				Vector3	v1	=p0 - p;
+				Vector3	v2	=p1 - p;
 
 				if(v1.Length() == 0.0f)
 				{
@@ -351,7 +286,7 @@ namespace BSPLib
 				v1.Normalize();
 				v2.Normalize();				
 				
-				ang	=Vector3.Dot(v1, v2);
+				float	ang	=Vector3.Dot(v1, v2);
 				if(ang < best)
 				{
 					best	=ang;
@@ -363,7 +298,7 @@ namespace BSPLib
 				return true;
 			}
 			
-			nt	=AllocTriangle();
+			Tri	nt	=AllocTriangle();
 			if(nt == null)
 			{
 				Map.Print("Tri_Edge_r:  Could not allocate triangle.\n");
@@ -387,12 +322,12 @@ namespace BSPLib
 				Map.Print("Tri_Edge_r:  There was an error finding an edge.\n");
 				return	false;
 			}
-			for(i=0;i < 3;i++)
+			for(int i=0;i < 3;i++)
 			{
 				nt.mEdges[i].mTri	=nt;
 			}
 
-			e2	=FindEdge(bestp, e.p1);
+			TriEdge	e2	=FindEdge(bestp, e.p1);
 			if(e2 == null)
 			{
 				Map.Print("Tri_Edge_r:  There was an error finding an edge.\n");
@@ -417,48 +352,70 @@ namespace BSPLib
 		}
 
 
+		void AddTriEdgeToMatrix(int idx1, int idx2, TriEdge edge)
+		{
+			UInt64	key	=((UInt64)idx1 << 32);
+			key	|=((UInt32)idx2);
+
+			if(mEdgeMatrix.ContainsKey(key))
+			{
+				Map.Print("Tri edge matrix already contains key " + key + " !\n");
+				return;
+			}
+
+			mEdgeMatrix.Add(key, edge);
+		}
+
+
+		bool EdgeMatrixContainsKey(int idx1, int idx2)
+		{
+			UInt64	key	=((UInt64)idx1 << 32);
+			key	|=((UInt32)idx2);
+
+			return	mEdgeMatrix.ContainsKey(key);
+		}
+
+
+		TriEdge GetEdgeMatrixValue(int idx1, int idx2)
+		{
+			UInt64	key	=((UInt64)idx1 << 32);
+			key	|=((UInt32)idx2);
+
+			return	mEdgeMatrix[key];
+		}
+
+
 		TriEdge FindEdge(int p0, int p1)
 		{
-			TriEdge	e, be;
-			Vector3	v1;
-			Vector3	normal;
-			float	dist;
-
-			if(mEdgeMatrix[p0][p1] != null)
+			if(EdgeMatrixContainsKey(p0, p1))
 			{
-				return	mEdgeMatrix[p0][p1];
+				return	GetEdgeMatrixValue(p0, p1);
 			}
 
-			if(mNumEdges > MAX_TRI_EDGES - 2)
-			{
-				Map.Print("mNumEdges > MAX_TRI_EDGES - 2");
-				return	null;
-			}
-
-			v1	=mPoints[p1].mOrigin - mPoints[p0].mOrigin;
+			Vector3	v1	=mPoints[p1].GetOrigin() - mPoints[p0].GetOrigin();
 			v1.Normalize();
 
-			normal	=Vector3.Cross(v1, mPlane.mNormal);
-			dist	=Vector3.Dot(mPoints[p0].mOrigin, normal);
+			Vector3	normal	=Vector3.Cross(v1, mPlane.mNormal);
+			float	dist	=Vector3.Dot(mPoints[p0].GetOrigin(), normal);
 
-			e			=mEdges[mNumEdges];
+			TriEdge	e	=new TriEdge();
 			e.p0		=p0;
 			e.p1		=p1;
 			e.mTri		=null;
 			e.mNormal	=normal;
 			e.mDist		=dist;
-			mNumEdges++;
-			mEdgeMatrix[p0][p1]	=e;
+			AddTriEdgeToMatrix(p0, p1, e);
+			mEdges.Add(e);
 
 			//Go ahead and make the reverse edge ahead of time
-			be			=mEdges[mNumEdges];
+			TriEdge	be	=new TriEdge();
 			be.p0		=p1;
 			be.p1		=p0;
 			be.mTri		=null;
 			be.mNormal	=-normal;
 			be.mDist	=-dist;
-			mNumEdges++;
-			mEdgeMatrix[p1][p0]	=be;
+			AddTriEdgeToMatrix(p1, p0, be);
+			mEdges.Add(be);
 
 			return	e;
 		}
@@ -466,15 +423,7 @@ namespace BSPLib
 
 		internal bool AddPoint(RADPatch patch)
 		{
-			int	pnum	=mNumPoints;
-			if(pnum == MAX_TRI_POINTS)
-			{
-				Map.Print("TriPatch->NumPoints == MAX_TRI_POINTS");
-				return	false;
-			}
-			mPoints[pnum]	=patch;
-			mNumPoints++;
-
+			mPoints.Add(patch);
 			return	true;
 		}
 	}

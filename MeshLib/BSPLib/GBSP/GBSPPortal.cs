@@ -36,70 +36,69 @@ namespace BSPLib
 		}
 
 
-		internal static GBSPPortal CreateOutsidePortal(GBSPPlane Plane, GBSPNode Node, PlanePool pool, ref GBSPNode outsideNode)
+		internal static GBSPPortal CreateOutsidePortal(GBSPPlane plane,
+			GBSPNode node, PlanePool pool, ref GBSPNode outsideNode)
 		{
-			GBSPPortal	NewPortal;
-			sbyte		Side;
+			GBSPPortal	newPortal;
+			sbyte		side;
 
-			NewPortal	=new GBSPPortal();
-			if(NewPortal == null)
+			newPortal	=new GBSPPortal();
+			if(newPortal == null)
 			{
 				return	null;
 			}
 
-			NewPortal.mPoly	=new GBSPPoly(Plane);
-			if(NewPortal.mPoly == null || NewPortal.mPoly.IsTiny())
+			newPortal.mPoly	=new GBSPPoly(plane);
+			if(newPortal.mPoly == null || newPortal.mPoly.IsTiny())
 			{
 				return	null;
 			}
-			NewPortal.mPlaneNum	=pool.FindPlane(Plane, out Side);
+			newPortal.mPlaneNum	=pool.FindPlane(plane, out side);
 
-			if(NewPortal.mPlaneNum == -1)
+			if(newPortal.mPlaneNum == -1)
 			{
 				Map.Print("CreateOutsidePortal:  Could not create plane.\n");
 				return	null;
 			}
 
-			if(Side == 0)
+			if(side == 0)
 			{
-				if(!GBSPNode.AddPortalToNodes(NewPortal, Node, outsideNode))
+				if(!GBSPNode.AddPortalToNodes(newPortal, node, outsideNode))
 				{
 					return	null;
 				}
 			}
 			else
 			{
-				if(!GBSPNode.AddPortalToNodes(NewPortal, outsideNode, Node))
+				if(!GBSPNode.AddPortalToNodes(newPortal, outsideNode, node))
 				{
 					return	null;
 				}
 			}
-			return	NewPortal;
+			return	newPortal;
 		}
 
 
-		internal GBSPFace FaceFromPortal(Int32 PSide)
+		internal GBSPFace FaceFromPortal(Int32 planeSide)
 		{
-			GBSPSide	Side;
+			Int32	notPlaneSide	=(planeSide == 0)? 1 : 0;
 
-			Int32	NotPSide	=(PSide == 0)? 1 : 0;
-
-			Side	=mSide;			
+			GBSPSide	Side	=mSide;			
 			if(Side == null)
 			{
 				return	null;	//Portal does not bridge different visible contents
 			}
 
-			if(GBSPNode.WindowCheck(mNodes[PSide], mNodes[NotPSide]))
+			if(GBSPNode.WindowCheck(mNodes[planeSide], mNodes[notPlaneSide]))
 			{
 				return	null;
 			}
 
-			return	new GBSPFace(this, PSide);
+			return	new GBSPFace(this, planeSide);
 		}
 
 
-		internal void FindPortalSide(Int32 PSide, PlanePool pool)
+		internal void FindPortalSide(PlanePool pool)
 		{
 			GBSPSide	bestSide	=mOnNode.GetBestPortalSide(mNodes[0], mNodes[1], pool);
 			if(bestSide == null)

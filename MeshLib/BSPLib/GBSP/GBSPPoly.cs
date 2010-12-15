@@ -16,11 +16,11 @@ namespace BSPLib
 
 
 		public GBSPPoly() { }
-		internal GBSPPoly(GFXFace Face, Int32 []vertInds, Vector3 []verts)
+		internal GBSPPoly(GFXFace f, Int32 []vertInds, Vector3 []verts)
 		{
-			for(int i=0;i < Face.mNumVerts;i++)
+			for(int i=0;i < f.mNumVerts;i++)
 			{
-				int	ind	=vertInds[i + Face.mFirstVert];
+				int	ind	=vertInds[i + f.mFirstVert];
 
 				mVerts.Add(verts[ind]);
 			}
@@ -87,26 +87,26 @@ namespace BSPLib
 
 		internal static bool TextureAxisFromPlane(GBSPPlane pln, out Vector3 Xv, out Vector3 Yv)
 		{
-			Int32	BestAxis;
-			float	Dot,Best;
+			Int32	bestAxis;
+			float	dot, best;
 			
-			Best		=0.0f;
-			BestAxis	=-1;
+			best		=0.0f;
+			bestAxis	=-1;
 
 			Xv	=Vector3.Zero;
 			Yv	=Vector3.Zero;
 			
 			for(int i=0;i < 3;i++)
 			{
-				Dot	=Math.Abs(UtilityLib.Mathery.VecIdx(pln.mNormal, i));
-				if(Dot > Best)
+				dot	=Math.Abs(UtilityLib.Mathery.VecIdx(pln.mNormal, i));
+				if(dot > best)
 				{
-					Best		=Dot;
-					BestAxis	=i;
+					best		=dot;
+					bestAxis	=i;
 				}
 			}
 
-			switch(BestAxis)
+			switch(bestAxis)
 			{
 				case 0:						// X
 					Xv.X	=0;
@@ -139,7 +139,6 @@ namespace BSPLib
 					Map.Print("TextureAxisFromPlane: No Axis found.\n");
 					return	false;
 			}
-
 			return	true;
 		}
 
@@ -426,24 +425,24 @@ namespace BSPLib
 		}
 
 
-		internal bool EdgeExist(Vector3 []Edge1, out Int32 []EdgeIndexOut)
+		internal bool EdgeExist(Vector3 []edge1, out Int32 []edgeIndexOut)
 		{
 			Int32		i;
-			Vector3		[]Edge2	=new Vector3[2];
+			Vector3		[]edge2	=new Vector3[2];
 
-			EdgeIndexOut	=new int[2];
+			edgeIndexOut	=new int[2];
 
 			for(i=0;i < mVerts.Count;i++)
 			{
-				Edge2[0]	=mVerts[i];
-				Edge2[1]	=mVerts[(i + 1) % mVerts.Count];
+				edge2[0]	=mVerts[i];
+				edge2[1]	=mVerts[(i + 1) % mVerts.Count];
 
-				if(UtilityLib.Mathery.CompareVector(Edge1[0], Edge2[0]))
+				if(UtilityLib.Mathery.CompareVector(edge1[0], edge2[0]))
 				{
-					if(UtilityLib.Mathery.CompareVector(Edge1[1], Edge2[1]))
+					if(UtilityLib.Mathery.CompareVector(edge1[1], edge2[1]))
 					{
-						EdgeIndexOut[0]	=i;
-						EdgeIndexOut[1]	=(i + 1) % mVerts.Count;
+						edgeIndexOut[0]	=i;
+						edgeIndexOut[1]	=(i + 1) % mVerts.Count;
 						return	true;
 					}
 				}
@@ -499,12 +498,6 @@ namespace BSPLib
 
 		static internal GBSPPoly Merge(GBSPPoly p1, GBSPPoly p2, Vector3 normal, PlanePool pool)
 		{
-			Vector3		[]edge1	=new Vector3[2];
-			Int32		i, numVerts, numVerts2;
-			Int32		[]edgeIndex	=new Int32[2];
-			Int32		numNewVerts;
-			Vector3		normal2, v1, v2;
-			float		dot;
 			bool		keep1	=true, keep2	=true;
 
 			if(p1.mVerts.Count == -1 || p2.mVerts.Count == -1)
@@ -512,11 +505,14 @@ namespace BSPLib
 				return	null;
 			}
 
-			numVerts	=p1.mVerts.Count;
+			int	numVerts	=p1.mVerts.Count;
 
 			//
 			// Go through each edge of p1, and see if the reverse of it exist in p2
 			//
+			Int32		[]edgeIndex	=new Int32[2];
+			Vector3		[]edge1		=new Vector3[2];
+			int			i;
 			for(i=0;i < numVerts;i++)		
 			{
 				edge1[1]	=p1.mVerts[i];
@@ -533,22 +529,22 @@ namespace BSPLib
 				return	null;
 			}
 
-			numVerts2	=p2.mVerts.Count;
+			int	numVerts2	=p2.mVerts.Count;
 
 			//
 			//	See if the 2 joined make a convex poly, connect them, and return new one
 			//
 
 			//Get the normal of the edge just behind edge1
-			v1	=p1.mVerts[(i + numVerts - 1) % numVerts];
+			Vector3	v1	=p1.mVerts[(i + numVerts - 1) % numVerts];
 			v1	-=edge1[1];
 
-			normal2	=Vector3.Cross(normal, v1);
+			Vector3	normal2	=Vector3.Cross(normal, v1);
 			normal2.Normalize();
 
-			v2	=p2.mVerts[(edgeIndex[1] + 1) % numVerts2] - p2.mVerts[edgeIndex[1]];
+			Vector3	v2	=p2.mVerts[(edgeIndex[1] + 1) % numVerts2] - p2.mVerts[edgeIndex[1]];
 
-			dot		=Vector3.Dot(v2, normal2);
+			float	dot		=Vector3.Dot(v2, normal2);
 			if(dot > COLINEAR_EPSILON)
 			{
 				return null;			//Edge makes a non-convex poly
@@ -582,8 +578,8 @@ namespace BSPLib
 			// Make a new poly, free the old ones...
 			//
 			GBSPPoly	ret	=new GBSPPoly();
-			numNewVerts	=0;
 
+			int	numNewVerts	=0;
 			for(int k = (i + 1) % numVerts;k != i;k = (k + 1) % numVerts)
 			{
 				if(k == (i + 1) % numVerts && !keep2)
@@ -871,36 +867,31 @@ namespace BSPLib
 		internal bool SeperatorClip(GBSPPoly source, GBSPPoly pass,
 									bool bFlipClip, ref GBSPPoly dest)
 		{
-			Int32		i, j, k, l;
-			GBSPPlane	Plane		=new GBSPPlane();
-			Vector3		v1, v2;
-			float		d;
-			float		Length;
-			Int32		[]Counts	=new Int32[3];
-			bool		FlipTest;
-
-			for(i=0;i < source.mVerts.Count;i++)
+			for(int i=0;i < source.mVerts.Count;i++)
 			{
-				l	=(i + 1) % source.mVerts.Count;
+				int	l	=(i + 1) % source.mVerts.Count;
 
-				v1	=source.mVerts[l] - source.mVerts[i];
+				Vector3	v1	=source.mVerts[l] - source.mVerts[i];
 
-				for(j=0;j < pass.mVerts.Count;j++)
+				for(int j=0;j < pass.mVerts.Count;j++)
 				{
-					v2	=pass.mVerts[j] - source.mVerts[i];
+					Vector3	v2	=pass.mVerts[j] - source.mVerts[i];
 
-					Plane.mNormal	=Vector3.Cross(v1, v2);
+					GBSPPlane	plane		=new GBSPPlane();
+					plane.mNormal	=Vector3.Cross(v1, v2);
 
-					Length	=Plane.mNormal.Length();
-					Plane.mNormal.Normalize();
+					float	len	=plane.mNormal.Length();
+					plane.mNormal.Normalize();
 					
-					if(Length < UtilityLib.Mathery.ON_EPSILON)
+					if(len < UtilityLib.Mathery.ON_EPSILON)
 					{
 						continue;
 					}
 					
-					Plane.mDist	=Vector3.Dot(pass.mVerts[j], Plane.mNormal);						
-					FlipTest	=false;
+					plane.mDist	=Vector3.Dot(pass.mVerts[j], plane.mNormal);						
+
+					bool	bFlipTest	=false;
+					int		k;
 					for(k=0;k < source.mVerts.Count;k++)
 					{
 						if(k == i || k == l)
@@ -908,15 +899,15 @@ namespace BSPLib
 							continue;
 						}
 
-						d	=Vector3.Dot(source.mVerts[k], Plane.mNormal) - Plane.mDist;
+						float	d	=Vector3.Dot(source.mVerts[k], plane.mNormal) - plane.mDist;
 						if(d < -UtilityLib.Mathery.ON_EPSILON)
 						{
-							FlipTest	=false;
+							bFlipTest	=false;
 							break;
 						}
 						else if(d > UtilityLib.Mathery.ON_EPSILON)
 						{
-							FlipTest	=true;
+							bFlipTest	=true;
 							break;
 						}
 					}
@@ -924,11 +915,13 @@ namespace BSPLib
 					{
 						continue;
 					}
-					if(FlipTest)
+					if(bFlipTest)
 					{
-						Plane.Inverse();
+						plane.Inverse();
 					}
-					Counts[0] = Counts[1] = Counts[2] = 0;
+
+					Int32	[]counts	=new Int32[3];
+					counts[0] = counts[1] = counts[2] = 0;
 
 					for(k=0;k < pass.mVerts.Count;k++)
 					{
@@ -936,18 +929,18 @@ namespace BSPLib
 						{
 							continue;
 						}
-						d	=Vector3.Dot(pass.mVerts[k], Plane.mNormal) - Plane.mDist;
+						float	d	=Vector3.Dot(pass.mVerts[k], plane.mNormal) - plane.mDist;
 						if(d < -UtilityLib.Mathery.ON_EPSILON)
 						{
 							break;
 						}
 						else if(d > UtilityLib.Mathery.ON_EPSILON)
 						{
-							Counts[0]++;
+							counts[0]++;
 						}
 						else
 						{
-							Counts[2]++;
+							counts[2]++;
 						}
 					}
 					if(k != pass.mVerts.Count)
@@ -955,11 +948,11 @@ namespace BSPLib
 						continue;	
 					}
 						
-					if(Counts[0] == 0)
+					if(counts[0] == 0)
 					{
 						continue;
 					}
-					if(!ClipPoly(Plane, bFlipClip))
+					if(!ClipPoly(plane, bFlipClip))
 					{
 						Map.Print("ClipToPortals:  Error clipping portal.\n");
 						return	false;

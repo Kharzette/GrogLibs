@@ -97,6 +97,7 @@
     <Compile Include="GBSP\GBSPBrush.cs" />
     <Compile Include="GBSP\GBSPChunk.cs" />
     <Compile Include="GBSP\GBSPFace.cs" />
+    <Compile Include="GBSP\GBSPHeader.cs" />
     <Compile Include="GBSP\GBSPLeafSide.cs" />
     <Compile Include="GBSP\GBSPModel.cs" />
     <Compile Include="GBSP\GBSPNode.cs" />

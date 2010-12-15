@@ -76,122 +76,117 @@ namespace BSPLib
 			}
 		}
 
-		static GBSPFace MergeFace(GBSPFace Face1, GBSPFace Face2, PlanePool pool)
+		static GBSPFace MergeFace(GBSPFace face1, GBSPFace face2, PlanePool pool)
 		{
-			GBSPPoly	NewPoly = null, Poly1, Poly2;
-			Vector3		Normal1;
-			GBSPFace	NewFace	=null;
-
 			//
 			// Planes and Sides MUST match before even trying to merge
 			//
-			if(Face1.mPlaneNum != Face2.mPlaneNum)
+			if(face1.mPlaneNum != face2.mPlaneNum)
 			{
 				return	null;
 			}
-			if (Face1.mPlaneSide != Face2.mPlaneSide)
+			if (face1.mPlaneSide != face2.mPlaneSide)
 			{
 				return null;
 			}
 
-			if((Face1.mContents[0] & Contents.BSP_MERGE_SEP_CONTENTS)
-				!= (Face2.mContents[0] & Contents.BSP_MERGE_SEP_CONTENTS))
+			if((face1.mContents[0] & Contents.BSP_MERGE_SEP_CONTENTS)
+				!= (face2.mContents[0] & Contents.BSP_MERGE_SEP_CONTENTS))
 			{
 				return	null;
 			}
-			if((Face1.mContents[1] & Contents.BSP_MERGE_SEP_CONTENTS)
-				!= (Face2.mContents[1] & Contents.BSP_MERGE_SEP_CONTENTS))
+			if((face1.mContents[1] & Contents.BSP_MERGE_SEP_CONTENTS)
+				!= (face2.mContents[1] & Contents.BSP_MERGE_SEP_CONTENTS))
 			{
 				return	null;
 			}
 
-			if(Face1.mTexInfo != Face2.mTexInfo)
+			if(face1.mTexInfo != face2.mTexInfo)
 			{
 				return	null;
 			}
 			
-			Poly1	=Face1.mPoly;
-			Poly2	=Face2.mPoly;
+			GBSPPoly	poly1	=face1.mPoly;
+			GBSPPoly	poly2	=face2.mPoly;
 
-			Normal1	=pool.mPlanes[Face1.mPlaneNum].mNormal;	// Get the normal
-			if(Face1.mPlaneSide != 0)
+			Vector3	norm	=pool.mPlanes[face1.mPlaneNum].mNormal;	// Get the normal
+			if(face1.mPlaneSide != 0)
 			{
-				Normal1	=Vector3.Zero - Normal1;
+				norm	=Vector3.Zero - norm;
 			}
 
-			NewPoly	=GBSPPoly.Merge(Poly1, Poly2, Normal1, pool);
-			if(NewPoly == null)
+			GBSPPoly	newPoly	=GBSPPoly.Merge(poly1, poly2, norm, pool);
+			if(newPoly == null)
 			{
 				return	null;
 			}			
-			NewFace			=new GBSPFace(Face2);
-			NewFace.mPoly	=NewPoly;
-			if(NewFace == null)
+			GBSPFace	newFace		=new GBSPFace(face2);
+			newFace.mPoly	=newPoly;
+			if(newFace == null)
 			{
 				Map.Print("*WARNING* MergeFace:  Out of memory for new face!\n");
 				return	null;
 			}
 
-			Face1.mMerged	=NewFace;
-			Face2.mMerged	=NewFace;
+			face1.mMerged	=newFace;
+			face2.mMerged	=newFace;
 
-			return	NewFace;
+			return	newFace;
 		}
 
 
-		internal static bool MergeFaceList2(GBSPFace Faces, PlanePool pool, ref int NumMerged)
+		internal static bool MergeFaceList(GBSPFace faces, PlanePool pool, ref int numMerged)
 		{
-			GBSPFace	Face1, Face2, End, Merged;
-
-			for(Face1 = Faces;Face1 != null;Face1 = Face1.mNext)
+			for(GBSPFace face1 = faces;face1 != null;face1 = face1.mNext)
 			{
-				if(Face1.mPoly.VertCount() == -1)
+				if(face1.mPoly.VertCount() == -1)
 				{
 					continue;
 				}
 
-				if(Face1.mMerged != null || Face1.mSplit[0] != null || Face1.mSplit[1] != null)
+				if(face1.mMerged != null || face1.mSplit[0] != null || face1.mSplit[1] != null)
 				{
 					continue;
 				}
 
-				for (Face2 = Faces ; Face2 != Face1 ; Face2 = Face2.mNext)
+				for(GBSPFace face2 = faces ; face2 != face1 ; face2 = face2.mNext)
 				{
-					if(Face2.mPoly.VertCount() == -1)
+					if(face2.mPoly.VertCount() == -1)
 					{
 						continue;
 					}
 
-					if(Face2.mMerged != null || Face2.mSplit[0] != null || Face2.mSplit[1] != null)
+					if(face2.mMerged != null || face2.mSplit[0] != null || face2.mSplit[1] != null)
 					{
 						continue;
 					}
 					
-					Merged	=MergeFace(Face1, Face2, pool);
+					GBSPFace	merged	=MergeFace(face1, face2, pool);
 
-					if(Merged == null)
+					if(merged == null)
 					{
 						continue;
 					}
 
-					Merged.mPoly.RemoveDegenerateEdges();
+					merged.mPoly.RemoveDegenerateEdges();
 					
-					if(!Merged.Check(false, pool))
+					if(!merged.Check(false, pool))
 					{
-						Merged.Free();
-						Face1.mMerged	=null;
-						Face2.mMerged	=null;
+						merged.Free();
+						face1.mMerged	=null;
+						face2.mMerged	=null;
 						continue;
 					}
 
-					NumMerged++;
+					numMerged++;
 
 					//Add the Merged to the end of the face list 
 					//so it will be checked against all the faces again
-					for(End = Faces;End.mNext != null;End = End.mNext);
+					GBSPFace	end;
+					for(end = faces;end.mNext != null;end = end.mNext);
 						
-					Merged.mNext	=null;
-					End.mNext		=Merged;
+					merged.mNext	=null;
+					end.mNext		=merged;
 					break;
 				}
 			}
@@ -208,32 +203,29 @@ namespace BSPLib
 		}
 
 
-		private bool Check(bool Verb, PlanePool pool)
+		private bool Check(bool bVerb, PlanePool pool)
 		{
-			Vector3		Normal;
-			float		PDist;
-			
 			if(mPoly.VertCount() < 3)
 			{
-				if(Verb)
+				if(bVerb)
 				{
 					Map.Print("CheckFace:  NumVerts < 3.\n");
 				}
 				return	false;
 			}
 			
-			Normal	=pool.mPlanes[mPlaneNum].mNormal;
-			PDist	=pool.mPlanes[mPlaneNum].mDist;
+			Vector3	norm	=pool.mPlanes[mPlaneNum].mNormal;
+			float	dist	=pool.mPlanes[mPlaneNum].mDist;
 			if(mPlaneSide != 0)
 			{
-				Normal	=-Normal;
-				PDist	=-PDist;
+				norm	=-norm;
+				dist	=-dist;
 			}
 
 			//
 			//	Check for degenerate edges, convexity, and make sure it's planar
 			//
-			return	mPoly.Check(Verb, Normal, PDist);
+			return	mPoly.Check(bVerb, norm, dist);
 		}
 
 

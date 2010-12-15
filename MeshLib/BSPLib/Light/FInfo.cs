@@ -111,46 +111,45 @@ namespace BSPLib
 		}
 
 
-		internal void CalcFacePoints(LInfo LightInfo, float UOfs, float VOfs,
+		internal void CalcFacePoints(LInfo lightInfo, float UOfs, float VOfs,
 			bool bExtraLightCorrection, Map.IsPointInSolid pointInSolid,
 			Map.RayCollision rayCollide)
 		{
-			Vector3	FaceMid;
-			float	MidU, MidV, StartU, StartV, CurU, CurV;
-			Int32	u, v, Width, Height;
 			bool	[]InSolid	=new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE];
 
+			float	midU, midV;
+			lightInfo.CalcMids(out midU, out midV);
 
-			LightInfo.CalcMids(out MidU, out MidV);
+			Vector3	faceMid	=mTexOrg + mT2WVecs[0] * midU + mT2WVecs[1] * midV;
 
-			FaceMid	=mTexOrg + mT2WVecs[0] * MidU + mT2WVecs[1] * MidV;
+			float	startU, startV;
+			Int32	width, height;
+			lightInfo.CalcSizeAndStart(UOfs, VOfs, out width, out height, out startU, out startV);
 
-			LightInfo.CalcSizeAndStart(UOfs, VOfs, out Width, out Height, out StartU, out StartV);
-
-			for(v=0;v < Height;v++)
+			for(int v=0;v < height;v++)
 			{
-				for(u=0;u < Width;u++)
+				for(int u=0;u < width;u++)
 				{
-					CurU	=StartU + u * FInfo.LGRID_SIZE;
-					CurV	=StartV + v * FInfo.LGRID_SIZE;
+					float	curU	=startU + u * FInfo.LGRID_SIZE;
+					float	curV	=startV + v * FInfo.LGRID_SIZE;
 
-					mPoints[(v * Width) + u]
-						=mTexOrg + mT2WVecs[0] * CurU +
-							mT2WVecs[1] * CurV;
+					mPoints[(v * width) + u]
+						=mTexOrg + mT2WVecs[0] * curU +
+							mT2WVecs[1] * curV;
 
-					InSolid[(v * Width) + u]	=pointInSolid(mPoints[(v * Width) + u]);
+					InSolid[(v * width) + u]	=pointInSolid(mPoints[(v * width) + u]);
 
 					if(!bExtraLightCorrection)
 					{
-						if(InSolid[(v * Width) + u])
+						if(InSolid[(v * width) + u])
 						{
 							Vector3	colResult	=Vector3.Zero;
-							if(rayCollide(FaceMid,
-								mPoints[(v * Width) + u], ref colResult))
+							if(rayCollide(faceMid,
+								mPoints[(v * width) + u], ref colResult))
 							{
-								Vector3	vect	=FaceMid - mPoints[(v * Width) + u];
+								Vector3	vect	=faceMid - mPoints[(v * width) + u];
 								vect.Normalize();
-								mPoints[(v * Width) + u]	=colResult + vect;
+								mPoints[(v * width) + u]	=colResult + vect;
 							}
 						}
 					}
@@ -162,20 +161,18 @@ namespace BSPLib
 				return;
 			}
 
-			for(v=0;v < mPoints.Length;v++)
+			for(int v=0;v < mPoints.Length;v++)
 			{
-				float	BestDist, Dist;
-
 				if(!InSolid[v])
 				{
 					//Point is good, leave it alone
 					continue;
 				}
 
-				Vector3	pBestPoint	=FaceMid;
-				BestDist	=Bounds.MIN_MAX_BOUNDS;
+				Vector3	bestPoint	=faceMid;
+				float	bestDist	=Bounds.MIN_MAX_BOUNDS;
 				
-				for(u=0;u < mPoints.Length;u++)
+				for(int u=0;u < mPoints.Length;u++)
 				{
 					if(mPoints[v] == mPoints[u])
 					{
@@ -189,12 +186,12 @@ namespace BSPLib
 
 					//At this point, we have a good point,
 					//now see if it's closer than the current good point
-					Vector3	Vect	=mPoints[u] - mPoints[v];
-					Dist	=Vect.Length();
-					if(Dist < BestDist)
+					Vector3	vect	=mPoints[u] - mPoints[v];
+					float	Dist	=vect.Length();
+					if(Dist < bestDist)
 					{
-						BestDist	=Dist;
-						pBestPoint	=mPoints[u];
+						bestDist	=Dist;
+						bestPoint	=mPoints[u];
 
 						if(Dist <= (FInfo.LGRID_SIZE - 0.1f))
 						{
@@ -202,7 +199,7 @@ namespace BSPLib
 						}
 					}
 				}
-				mPoints[v]	=pBestPoint;
+				mPoints[v]	=bestPoint;
 			}
 
 			//free cached vis stuff
