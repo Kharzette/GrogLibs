@@ -110,29 +110,29 @@ namespace BSPLib
 			{
 				case 0:						// X
 					xv.X	=0.0f;
-					xv.Y	=1.0f;
+					xv.Y	=0.0f;
+					xv.Z	=1.0f;
+
+					yv.X	=0.0f;
+					yv.Y	=-1.0f;
+					yv.Z	=0.0f;
+					break;
+				case 1:						// Y
+					xv.X	=1.0f;
+					xv.Y	=0.0f;
 					xv.Z	=0.0f;
 
 					yv.X	=0.0f;
 					yv.Y	=0.0f;
 					yv.Z	=1.0f;
 					break;
-				case 1:						// Y
-					xv.X	=0.0f;
-					xv.Y	=0.0f;
-					xv.Z	=1.0f;
-
-					yv.X	=1.0f;
-					yv.Y	=0.0f;
-					yv.Z	=0.0f;
-					break;
 				case 2:						// Z
-					xv.X	=0.0f;
-					xv.Y	=1.0f;
+					xv.X	=1.0f;
+					xv.Y	=0.0f;
 					xv.Z	=0.0f;
 
-					yv.X	=1.0f;
-					yv.Y	=0.0f;
+					yv.X	=0.0f;
+					yv.Y	=-1.0f;
 					yv.Z	=0.0f;
 					break;
 				default:

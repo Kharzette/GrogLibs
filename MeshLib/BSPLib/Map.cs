@@ -1944,81 +1944,14 @@ namespace BSPLib
 			out IndexBuffer solidIB,
 			out int numSolidVerts, out int numSolidTris)
 		{
-			//grab face verts
-			List<Vector3>	faceVerts	=new List<Vector3>();
-			List<Vector2>	faceTex0	=new List<Vector2>();
-			foreach(GFXFace f in mGFXFaces)
-			{
-				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
+			MapGrinder	mg	=new MapGrinder(g);
 
-				List<Vector2>	coords	=new List<Vector2>();
+			mg.BuildFaceData(mGFXVerts, mGFXVertIndexes, mGFXTexInfos, mGFXFaces);
 
-				int		nverts	=f.mNumVerts;
-				int		fvert	=f.mFirstVert;
-				int		k		=0;
-				for(k=0;k < nverts;k++)
-				{
-					int	idx	=mGFXVertIndexes[fvert + k];
-					Vector3	pnt	=mGFXVerts[idx];
-					Vector2	crd;
-					crd.X	=Vector3.Dot(tex.mVecs[0], pnt);
-					crd.Y	=Vector3.Dot(tex.mVecs[1], pnt);
+			mg.GetBuffers(out solidVB, out solidIB);
 
-					coords.Add(crd);
-
-					faceVerts.Add(pnt);
-				}
-
-				Bounds	bnd	=new Bounds();
-				foreach(Vector2 crd in coords)
-				{
-					bnd.AddPointToBounds(crd);
-				}
-
-				for(k=0;k < nverts;k++)
-				{
-					int	idx	=mGFXVertIndexes[fvert + k];
-
-					Vector2	tc	=Vector2.Zero;
-					tc.X	=coords[k].X - bnd.mMins.X;
-					tc.Y	=coords[k].Y - bnd.mMins.Y;
-					faceTex0.Add(tc);
-				}
-				f.mFirstVert	=faceVerts.Count - f.mNumVerts;
-			}
-
-			List<int>	solidIndexes	=new List<int>();
-			foreach(GFXFace f in mGFXFaces)
-			{
-				int		nverts	=f.mNumVerts;
-				int		fvert	=f.mFirstVert;
-				int		k		=0;
-
-				//triangulate
-				for(k=1;k < nverts-1;k++)
-				{
-					solidIndexes.Add(fvert);
-					solidIndexes.Add(fvert + k);
-					solidIndexes.Add(fvert + ((k + 1) % nverts));
-				}
-			}
-
-			VPosTex0Tex1	[]solidVArray	=new VPosTex0Tex1[faceVerts.Count];
-			for(int i=0;i < faceVerts.Count;i++)
-			{
-				solidVArray[i].Position		=faceVerts[i];
-				solidVArray[i].TexCoord0	=faceTex0[i];
-				solidVArray[i].TexCoord1	=faceTex0[i];	//duping texcoord0!
-			}
-
-			solidVB	=new VertexBuffer(g, 28 * solidVArray.Length, BufferUsage.WriteOnly);
-			solidVB.SetData<VPosTex0Tex1>(solidVArray);
-
-			solidIB	=new IndexBuffer(g, 4 * solidIndexes.Count, BufferUsage.WriteOnly, IndexElementSize.ThirtyTwoBits);
-			solidIB.SetData<int>(solidIndexes.ToArray());
-
-			numSolidVerts	=faceVerts.Count;
-			numSolidTris	=solidIndexes.Count / 3;
+			numSolidVerts	=mg.GetNumVerts();
+			numSolidTris	=mg.GetNumTris();
 		}
 
 

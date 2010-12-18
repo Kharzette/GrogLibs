@@ -237,6 +237,7 @@ namespace BSPBuilder
 
 			g.Clear(Color.CornflowerBlue);
 
+			GraphicsDevice.RenderState.DepthBufferEnable	=true;
 			DrawSolids();
 			/*
 			if(mVB != null)
