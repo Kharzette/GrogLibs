@@ -13,15 +13,23 @@ namespace BSPLib
 	{
 		GraphicsDevice	mGD;
 
+		//geometry
 		List<Vector3>	mFaceVerts	=new List<Vector3>();
 		List<Vector2>	mFaceTex0	=new List<Vector2>();
 		List<Vector2>	mFaceTex1	=new List<Vector2>();
 		List<Int32>		mIndexes	=new List<Int32>();
 
+		//material stuff
+		List<string>	mMaterialNames		=new List<string>();
+		List<Int32>		mMaterialOffsets	=new List<Int32>();
+		List<Int32>		mMaterialNumVerts	=new List<Int32>();
+		List<Int32>		mMaterialNumTris	=new List<Int32>();
 
-		public MapGrinder(GraphicsDevice gd)
+
+		public MapGrinder(GraphicsDevice gd, List<string> matNames)
 		{
-			mGD	=gd;
+			mGD				=gd;
+			mMaterialNames	=matNames;
 		}
 
 
@@ -37,18 +45,28 @@ namespace BSPLib
 		}
 
 
+		internal void GetMaterialData(out Int32 []matOffsets,
+			out Int32 []matNumVerts, out Int32 []matNumTris)
+		{
+			matOffsets	=mMaterialOffsets.ToArray();
+			matNumVerts	=mMaterialNumVerts.ToArray();
+			matNumTris	=mMaterialNumTris.ToArray();
+		}
+
+
+
 		internal void GetBuffers(out VertexBuffer vb, out IndexBuffer ib)
 		{
-			VPosTex0Tex1	[]solidVArray	=new VPosTex0Tex1[mFaceVerts.Count];
+			VPosTex0Tex1	[]varray	=new VPosTex0Tex1[mFaceVerts.Count];
 			for(int i=0;i < mFaceVerts.Count;i++)
 			{
-				solidVArray[i].Position		=mFaceVerts[i];
-				solidVArray[i].TexCoord0	=mFaceTex0[i];
-				solidVArray[i].TexCoord1	=mFaceTex0[i];	//duping texcoord0!
+				varray[i].Position	=mFaceVerts[i];
+				varray[i].TexCoord0	=mFaceTex0[i];
+				varray[i].TexCoord1	=mFaceTex0[i];	//duping texcoord0!
 			}
 
-			vb	=new VertexBuffer(mGD, 28 * solidVArray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosTex0Tex1>(solidVArray);
+			vb	=new VertexBuffer(mGD, 28 * varray.Length, BufferUsage.WriteOnly);
+			vb.SetData<VPosTex0Tex1>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
@@ -61,64 +79,97 @@ namespace BSPLib
 		{
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
+			List<Int32>	numFace		=new List<Int32>();
 
-			foreach(GFXFace f in faces)
+			foreach(string mat in mMaterialNames)
 			{
-				GFXTexInfo	tex	=texInfos[f.mTexInfo];
+				int	numFaceVerts	=mFaceVerts.Count;
+				int	numFaces		=0;
 
-				List<Vector2>	coords	=new List<Vector2>();
-
-				int		nverts	=f.mNumVerts;
-				int		fvert	=f.mFirstVert;
-				int		k		=0;
-				for(k=0;k < nverts;k++)
+				foreach(GFXFace f in faces)
 				{
-					int		idx	=indexes[fvert + k];
-					Vector3	pnt	=verts[idx];
-					Vector2	crd;
-					crd.X	=Vector3.Dot(tex.mVecs[0], pnt);
-					crd.Y	=Vector3.Dot(tex.mVecs[1], pnt);
+					GFXTexInfo	tex	=texInfos[f.mTexInfo];
 
-					coords.Add(crd);
+					if(tex.mMaterial != mat)
+					{
+						continue;
+					}
 
-					mFaceVerts.Add(pnt);
+					numFaces++;
+
+					List<Vector2>	coords	=new List<Vector2>();
+
+					int		nverts	=f.mNumVerts;
+					int		fvert	=f.mFirstVert;
+					int		k		=0;
+					for(k=0;k < nverts;k++)
+					{
+						int		idx	=indexes[fvert + k];
+						Vector3	pnt	=verts[idx];
+						Vector2	crd;
+						crd.X	=Vector3.Dot(tex.mVecs[0], pnt);
+						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt);
+
+						coords.Add(crd);
+
+						mFaceVerts.Add(pnt);
+					}
+
+					Bounds	bnd	=new Bounds();
+					foreach(Vector2 crd in coords)
+					{
+						bnd.AddPointToBounds(crd);
+					}
+
+					for(k=0;k < nverts;k++)
+					{
+						int	idx	=indexes[fvert + k];
+
+						Vector2	tc	=Vector2.Zero;
+						tc.X	=coords[k].X - bnd.mMins.X;
+						tc.Y	=coords[k].Y - bnd.mMins.Y;
+						mFaceTex0.Add(tc);
+
+						//tex1 here for now
+						mFaceTex1.Add(tc);
+					}
+					firstVert.Add(mFaceVerts.Count - f.mNumVerts);
+					numVert.Add(f.mNumVerts);
 				}
 
-				Bounds	bnd	=new Bounds();
-				foreach(Vector2 crd in coords)
-				{
-					bnd.AddPointToBounds(crd);
-				}
-
-				for(k=0;k < nverts;k++)
-				{
-					int	idx	=indexes[fvert + k];
-
-					Vector2	tc	=Vector2.Zero;
-					tc.X	=coords[k].X - bnd.mMins.X;
-					tc.Y	=coords[k].Y - bnd.mMins.Y;
-					mFaceTex0.Add(tc);
-
-					//tex1 here for now
-					mFaceTex1.Add(tc);
-				}
-				firstVert.Add(mFaceVerts.Count - f.mNumVerts);
-				numVert.Add(f.mNumVerts);
+				numFace.Add(numFaces);
+				mMaterialNumVerts.Add(mFaceVerts.Count - numFaceVerts);
 			}
 
-			for(int i=0;i < numVert.Count;i++)
+			int	faceOfs	=0;
+			for(int j=0;j < mMaterialNames.Count;j++)
 			{
-				int		nverts	=numVert[i];
-				int		fvert	=firstVert[i];
-				int		k		=0;
+				int	cnt	=mIndexes.Count;
 
-				//triangulate
-				for(k=1;k < nverts-1;k++)
+				mMaterialOffsets.Add(cnt);
+
+				for(int i=faceOfs;i < (numFace[j] + faceOfs);i++)
 				{
-					mIndexes.Add(fvert);
-					mIndexes.Add(fvert + k);
-					mIndexes.Add(fvert + ((k + 1) % nverts));
+					int		nverts	=numVert[i];
+					int		fvert	=firstVert[i];
+					int		k		=0;
+
+					//triangulate
+					for(k=1;k < nverts-1;k++)
+					{
+						mIndexes.Add(fvert);
+						mIndexes.Add(fvert + k);
+						mIndexes.Add(fvert + ((k + 1) % nverts));
+					}
 				}
+
+				faceOfs	+=numFace[j];
+
+				int	numTris	=(mIndexes.Count - cnt);
+
+				numTris	/=3;
+
+				mMaterialNumTris.Add(numTris);
 			}
 		}
 	}

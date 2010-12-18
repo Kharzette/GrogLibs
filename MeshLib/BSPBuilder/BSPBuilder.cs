@@ -49,6 +49,11 @@ namespace BSPBuilder
 		TexAtlas			mLMapAtlas;
 		int					mNumSolidVerts, mNumSolidTris;
 
+		//material draw stuff
+		Int32	[]mMatOffsets;
+		Int32	[]mMatNumVerts;
+		Int32	[]mMatNumTris;
+
 		//collision debuggery
 		Vector3				mStart, mEnd;
 		BasicEffect			mBFX;
@@ -186,6 +191,8 @@ namespace BSPBuilder
 			g.Vertices[0].SetSource(mSolidVB, 0, 28);
 			g.Indices	=mSolidIB;
 
+			int	idx	=0;
+
 			foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
 			{
 				Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
@@ -193,7 +200,10 @@ namespace BSPBuilder
 				{
 					return;
 				}
-
+				if(mMatNumVerts[idx] <= 0)
+				{
+					continue;
+				}
 
 				//this might get slow
 				mMatLib.ApplyParameters(mat.Key);
@@ -218,15 +228,15 @@ namespace BSPBuilder
 
 					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
 						0, 0,
-						mNumSolidVerts,
-						0,
-						mNumSolidTris);
+						mMatNumVerts[idx],
+						mMatOffsets[idx],
+						mMatNumTris[idx]);
 
 					pass.End();
 				}
 				fx.End();
 
-				break;
+				idx++;
 			}
 		}
 
@@ -643,7 +653,8 @@ namespace BSPBuilder
 //					mMap.BuildRenderData(mGDM.GraphicsDevice, out mSolidVB,
 //						out mSolidIB, out mLMapAtlas, out mNumSolidVerts, out mNumSolidTris);
 					mMap.BuildRenderData3(mGDM.GraphicsDevice, out mSolidVB,
-						out mSolidIB, out mNumSolidVerts, out mNumSolidTris);
+						out mSolidIB, out mMatOffsets, out mMatNumVerts, out mMatNumTris,
+						out mNumSolidVerts, out mNumSolidTris);
 
 					VertexElement	[]ve	=new VertexElement[3];
 					ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
