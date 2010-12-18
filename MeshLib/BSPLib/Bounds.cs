@@ -172,5 +172,14 @@ namespace BSPLib
 		{
 			return	(mMins + mMaxs) / 2.0f;
 		}
+
+		internal void AddPointToBounds(Vector2 vec2)
+		{
+			Vector3	vec3	=Vector3.Zero;
+			vec3.X	=vec2.X;
+			vec3.Y	=vec2.Y;
+
+			AddPointToBounds(vec3);
+		}
 	}
 }

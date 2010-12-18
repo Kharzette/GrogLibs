@@ -60,5 +60,28 @@ namespace BSPLib
 			mMipMapBias			=br.ReadSingle();
 			mMaterial			=br.ReadString();
 		}
+
+
+		internal bool IsLightMapped()
+		{
+			return	((mFlags & TexInfo.TEXINFO_NO_LIGHTMAP) == 0);
+		}
+
+
+		internal bool IsAlpha()
+		{
+			return	((mFlags & TexInfo.TEXINFO_TRANS) != 0);
+		}
+
+
+		internal Vector2 GetTexCoord(Vector3 vert)
+		{
+			Vector2	ret	=Vector2.Zero;
+
+			ret.X	=Vector3.Dot(vert, mVecs[0]);
+			ret.Y	=Vector3.Dot(vert, mVecs[1]);
+
+			return	ret;
+		}
 	}
 }

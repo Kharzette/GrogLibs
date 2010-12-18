@@ -1386,6 +1386,642 @@ namespace BSPLib
 		}
 
 
+		public void BuildRenderData2(GraphicsDevice g, out VertexBuffer solidVB,
+			out IndexBuffer solidIB,
+			out int numSolidVerts, out int numSolidTris)
+		{
+			//do vec to texcoord conversions
+			Vector2	[]solidTex0		=new Vector2[mGFXVertIndexes.Length];
+			Vector2	[]solidTex1		=new Vector2[mGFXVertIndexes.Length];
+			foreach(GFXFace f in mGFXFaces)
+			{
+				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
+
+				int	nverts	=f.mNumVerts;
+				int	fvert	=f.mFirstVert;
+				for(int i=fvert;i < (nverts + fvert);i++)
+				{
+					int	idx	=mGFXVertIndexes[i];
+					solidTex0[i].X	=Vector3.Dot(mGFXVerts[idx], tex.mVecs[0]);
+					solidTex0[i].Y	=Vector3.Dot(mGFXVerts[idx], tex.mVecs[1]);
+
+					solidTex1[i].X	=solidTex0[i].X;
+					solidTex1[i].Y	=solidTex0[i].Y;
+				}
+			}
+
+			//misc stuff related to lightmaps
+			Vector2	[]surfShifts	=new Vector2[mGFXFaces.Length];
+			Vector3	[]surfVMins		=new Vector3[mGFXFaces.Length];
+			Vector3	[]surfVMaxs		=new Vector3[mGFXFaces.Length];
+			Point	[]surfMin		=new Point[mGFXFaces.Length];
+			for(int i=0;i < mGFXFaces.Length;i++)
+			{
+				GFXFace		f	=mGFXFaces[i];
+				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
+
+				List<Vector2>	coords	=new List<Vector2>();
+
+				float	xScale	=tex.mVecs[0].Length();
+				float	yScale	=tex.mVecs[1].Length();
+
+				float	[]mins	=new float[2];
+				float	[]maxs	=new float[2];
+				Vector3	vmins	=Vector3.Zero;
+				Vector3	vmaxs	=Vector3.Zero;
+
+				for(int k=0;k < 2;k++)
+				{
+					mins[k] = 99999.0f;
+					maxs[k] =-99999.0f;
+				}
+				for(int k=0;k < 3;k++)
+				{
+					UtilityLib.Mathery.VecIdxAssign(ref vmins, k, 99999.0f);
+					UtilityLib.Mathery.VecIdxAssign(ref vmaxs, k, -99999.0f);
+				}
+
+				for(int v=0;v < f.mNumVerts;v++)
+				{
+					int	vn	=v + f.mFirstVert;
+
+					float	U	=solidTex0[vn].X;
+					float	V	=solidTex0[vn].Y;
+
+					if(U < mins[0])
+					{
+						mins[0]	=U;
+					}
+					if(U > maxs[0])
+					{
+						maxs[0]	=U;
+					}
+					if(V < mins[1])
+					{
+						mins[1]	=V;
+					}
+					if(V > maxs[1])
+					{
+						maxs[1]	=V;
+					}
+
+					int	Index	=mGFXVertIndexes[vn];
+
+					for(int k=0;k < 3;k++)
+					{
+						if(UtilityLib.Mathery.VecIdx(mGFXVerts[Index], k)
+							< UtilityLib.Mathery.VecIdx(vmins, k))
+						{
+							UtilityLib.Mathery.VecIdxAssign(ref vmins, k, UtilityLib.Mathery.VecIdx(mGFXVerts[Index], k));
+						}
+						if(UtilityLib.Mathery.VecIdx(mGFXVerts[Index], k)
+							> UtilityLib.Mathery.VecIdx(vmaxs, k))
+						{
+							UtilityLib.Mathery.VecIdxAssign(ref vmaxs, k, UtilityLib.Mathery.VecIdx(mGFXVerts[Index], k));
+						}
+					}
+				}
+				//Calculate Shift values
+				{
+//					Int32	Width, Height;
+					float	au, av, ScaleU, ScaleV;
+
+					ScaleU	=1.0f / tex.mDrawScale[0];
+					ScaleV	=1.0f / tex.mDrawScale[1];
+					
+//					Width	=pTexture->Width;
+//					Height	=pTexture->Height;
+
+					//Interpret the uv's the same way the drivers will
+//					au	=(float)(((Int32)((mins[0] * ScaleU + tex.mShift[0]) / Width )) * Width);
+//					av	=(float)(((Int32)((mins[1] * ScaleV + tex.mShift[1]) / Height)) * Height);
+					au	=(float)((Int32)(mins[0] * ScaleU + tex.mShift[0]));
+					av	=(float)((Int32)(mins[1] * ScaleV + tex.mShift[1]));
+
+					surfShifts[i].X	=tex.mShift[0] - au;
+					surfShifts[i].Y	=tex.mShift[1] - av;
+				}
+				surfVMins[i]	=vmins;
+				surfVMaxs[i]	=vmaxs;
+
+				if((tex.mFlags & TexInfo.TEXINFO_NO_LIGHTMAP) != 0)
+				{
+					continue;
+				}
+
+				Int32	[]size	=new int[2];
+
+				for(int k=0;k < 2;k++)
+				{
+					mins[k]	=(float)Math.Floor(mins[k] / 16);
+					maxs[k]	=(float)Math.Ceiling(maxs[k] / 16);
+					
+					size[k]	=(Int32)(maxs[k] - mins[k]) + 1;
+					
+					if(size[k] > LInfo.MAX_LMAP_SIZE)
+					{
+						Print("size > MAX_LMAP_SIZE");
+					}
+				}
+				size[0]	=mGFXFaces[i].mLWidth;
+				size[1]	=mGFXFaces[i].mLHeight;
+
+				surfMin[i].X	=(Int32)(mins[0] * 16);
+				surfMin[i].Y	=(Int32)(mins[1] * 16);
+			}
+
+			for(int i=0;i < mGFXFaces.Length;i++)
+			{
+				GFXFace		f	=mGFXFaces[i];
+				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
+				float		InvScale, u, v, u2, v2;
+				float		ShiftU, ShiftV, ScaleU, ScaleV;
+				float		InvScale2, ShiftU2, ShiftV2;
+
+				// Set up shifts and scaled for texture uv's
+				ShiftU	=surfShifts[i].X;
+				ShiftV	=surfShifts[i].Y;
+					
+		 		ScaleU	=1.0f / tex.mDrawScale[0];
+				ScaleV	=1.0f / tex.mDrawScale[1];
+
+				// Get scale value for vertices
+//				InvScale = 1.0f / (float)((1<<pPoly->THandle->Log));
+
+				// Set up shifts and scaled for lightmap uv's
+				ShiftU2	=(float)-surfMin[i].X + 8.0f;
+				ShiftV2	=(float)-surfMin[i].Y + 8.0f;
+
+				int	nverts	=f.mNumVerts;
+				int	fvert	=f.mFirstVert;
+				for(int j=fvert;j < (nverts + fvert);j++)
+				{
+					u	=solidTex0[j].X * ScaleU + ShiftU;
+					v	=solidTex0[j].Y * ScaleV + ShiftV;
+
+					solidTex0[j].X	=u;	// div by texwidth
+					solidTex0[j].Y	=v;	// div by texwidth
+
+					u2	=solidTex1[j].X + ShiftU2;
+					v2	=solidTex1[j].Y + ShiftV2;
+
+					solidTex1[j].X	=u;//div by something * InvScale2;
+					solidTex1[j].Y	=v;//div by something * InvScale2;
+				}
+			}
+
+			List<int>	solidIndexes	=new List<int>();
+			foreach(GFXFace f in mGFXFaces)
+			{
+				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
+				int		nverts	=f.mNumVerts;
+				int		fvert	=f.mFirstVert;
+				int		k		=0;
+
+				//triangulate
+				for(k=1;k < nverts-1;k++)
+				{
+					int	idx	=mGFXVertIndexes[fvert];
+					solidIndexes.Add(mGFXVertIndexes[fvert]);
+					solidIndexes.Add(mGFXVertIndexes[fvert + k]);
+					solidIndexes.Add(mGFXVertIndexes[fvert + ((k + 1) % nverts)]);
+				}
+			}
+
+			VPosTex0Tex1	[]solidVArray	=new VPosTex0Tex1[mGFXVerts.Length];
+			for(int i=0;i < mGFXVerts.Length;i++)
+			{
+				solidVArray[i].Position		=mGFXVerts[i];
+				solidVArray[i].TexCoord0	=solidTex0[i];
+				solidVArray[i].TexCoord1	=solidTex0[i];
+			}
+
+			solidVB	=new VertexBuffer(g, 28 * solidVArray.Length, BufferUsage.WriteOnly);
+			solidVB.SetData<VPosTex0Tex1>(solidVArray);
+
+			solidIB	=new IndexBuffer(g, 4 * solidIndexes.Count, BufferUsage.WriteOnly, IndexElementSize.ThirtyTwoBits);
+			solidIB.SetData<int>(solidIndexes.ToArray());
+
+			numSolidVerts	=mGFXVerts.Length;
+			numSolidTris	=solidIndexes.Count / 3;
+		}
+
+
+		public void BuildRenderData(GraphicsDevice g, out VertexBuffer solidVB,
+			out IndexBuffer solidIB, out TexAtlas texAtlas,
+			out int numSolidVerts, out int numSolidTris)
+		{
+			//find all gfxverts that are in use by
+			//regular solid lightmapped faces
+			List<int>	solids	=new List<int>();
+			foreach(GFXFace f in mGFXFaces)
+			{
+				if(!mGFXTexInfos[f.mTexInfo].IsLightMapped())
+				{
+					continue;
+				}
+				if(mGFXTexInfos[f.mTexInfo].IsAlpha())
+				{
+					continue;
+				}
+				if(f.mLightOfs < 0)
+				{
+					continue;
+				}
+
+				int	nverts	=f.mNumVerts;
+				int	fvert	=f.mFirstVert;
+				for(int i=fvert;i < (nverts + fvert);i++)
+				{
+					int	idx	=mGFXVertIndexes[i];
+					if(!solids.Contains(idx))
+					{
+						solids.Add(idx);
+					}
+				}
+			}
+
+			//get transparent verts
+			List<int>	trans	=new List<int>();
+			foreach(GFXFace f in mGFXFaces)
+			{
+				if(!mGFXTexInfos[f.mTexInfo].IsAlpha())
+				{
+					continue;
+				}
+				if(mGFXTexInfos[f.mTexInfo].IsLightMapped())
+				{
+					continue;
+				}
+
+				int	nverts	=f.mNumVerts;
+				int	fvert	=f.mFirstVert;
+				for(int i=fvert;i < (nverts + fvert);i++)
+				{
+					int	idx	=mGFXVertIndexes[i];
+					if(!trans.Contains(idx))
+					{
+						trans.Add(idx);
+					}
+				}
+			}
+
+			//map new indexes back to original indexes
+			Dictionary<int, int>	solidOGIndexMap	=new Dictionary<int, int>();
+
+			//grab list of solid verts in use
+			List<Vector3>	solidVerts	=new List<Vector3>();
+			foreach(int v in solids)
+			{
+				solidOGIndexMap.Add(v, solidVerts.Count);
+				solidVerts.Add(mGFXVerts[v]);
+			}
+
+			//map new indexes back to original indexes
+			Dictionary<int, int>	transOGIndexMap	=new Dictionary<int, int>();
+
+			List<Vector3>	transVerts	=new List<Vector3>();
+			foreach(int v in trans)
+			{
+				transOGIndexMap.Add(v, transVerts.Count);
+				transVerts.Add(mGFXRGBVerts[v]);
+			}
+
+			//grab list of materials
+			List<string>	matNames	=new List<string>();
+			foreach(GFXTexInfo tex in mGFXTexInfos)
+			{
+				if(!matNames.Contains(tex.mMaterial))
+				{
+					matNames.Add(tex.mMaterial);
+				}
+			}
+
+			texAtlas	=new TexAtlas(g);
+
+			//grab texcoords
+			Vector2	[]solidTex0		=new Vector2[solidVerts.Count];
+			Vector2	[]solidTex1		=new Vector2[solidVerts.Count];
+			foreach(string mat in matNames)
+			{
+				foreach(GFXFace f in mGFXFaces)
+				{
+					GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
+					if(tex.mMaterial != mat)
+					{
+						continue;
+					}
+					if(tex.IsAlpha())
+					{
+						continue;
+					}
+					if(!tex.IsLightMapped())
+					{
+						continue;
+					}
+					if(f.mLightOfs < 0)
+					{
+						continue;
+					}
+
+					List<Vector2>	coords	=new List<Vector2>();
+
+					float	minS, minT;
+
+					minS	=Bounds.MIN_MAX_BOUNDS;
+					minT	=Bounds.MIN_MAX_BOUNDS;
+
+					int		nverts	=f.mNumVerts;
+					int		fvert	=f.mFirstVert;
+					int		k		=0;
+
+					//calculate the min values for s and t
+					for(k=0;k < nverts;k++)
+					{
+						int	idx	=mGFXVertIndexes[fvert + k];
+						Vector3	pnt	=mGFXVerts[idx];
+						float	d	=Vector3.Dot(tex.mVecs[0], pnt);
+
+						if(d < minS)
+						{
+							minS	=d;
+						}
+
+						d	=Vector3.Dot(tex.mVecs[1], pnt);
+						if(d < minT)
+						{
+							minT	=d;
+						}
+					}
+
+					float	shiftU	=-minS + FInfo.LGRID_SIZE;
+					float	shiftV	=-minT + FInfo.LGRID_SIZE;
+
+					for(k=0;k < nverts;k++)
+					{
+						int	idx	=mGFXVertIndexes[fvert + k];
+						Vector3	pnt	=mGFXVerts[idx];
+						Vector2	crd;
+						crd.X	=Vector3.Dot(tex.mVecs[0], pnt);
+						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt);
+
+						crd.X	+=shiftU;
+						crd.Y	+=shiftV;
+
+//						if(mTexInfo.mTexture != null)
+//						{
+//							crd.X	/=mTexInfo.mTexture.Width;
+//							crd.Y	/=mTexInfo.mTexture.Height;
+//						}
+
+						crd.X	/=1024;
+						crd.Y	/=1024;
+
+						coords.Add(crd);
+					}
+
+					//get UV0
+					for(k=0;k < nverts;k++)
+					{
+						int	idx	=mGFXVertIndexes[fvert + k];
+						solidTex0[solidOGIndexMap[idx]]	=coords[k];
+					}
+
+					//grab lightmap
+					Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
+
+					for(int i=0;i < lmap.Length;i++)
+					{
+						lmap[i].R	=mGFXLightData[f.mLightOfs + (i * 3)];
+						lmap[i].G	=mGFXLightData[f.mLightOfs + (i * 3) + 1];
+						lmap[i].B	=mGFXLightData[f.mLightOfs + (i * 3) + 2];
+						lmap[i].A	=0xFF;
+					}
+
+					double	scaleU, scaleV, offsetU, offsetV;
+
+					texAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
+						out scaleU, out scaleV, out offsetU, out offsetV);
+
+					//compute lightmap coords
+					shiftU	=-minS + (FInfo.LGRID_SIZE / 2);
+					shiftV	=-minT + (FInfo.LGRID_SIZE / 2);
+
+					coords.Clear();
+					for(k=0;k < nverts;k++)
+					{
+						int	idx	=mGFXVertIndexes[fvert + k];
+						Vector3	pnt	=mGFXVerts[idx];
+						Vector2	crd;
+						crd.X	=Vector3.Dot(tex.mVecs[0], pnt);
+						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt);
+
+						crd.X	+=shiftU;
+						crd.Y	+=shiftV;
+
+						//scale down to a zero to one range
+						crd.X	/=((float)(f.mLWidth + 1) * FInfo.LGRID_SIZE);
+						crd.Y	/=((float)(f.mLHeight + 1) * FInfo.LGRID_SIZE);
+
+						coords.Add(crd);
+					}
+
+					//scale our UV coordinates to fit the atlas
+					for(int i=0;i < coords.Count;i++)
+					{
+						Vector2	texCoord	=coords[i];
+
+						//scale
+						texCoord.X	=(float)((double)coords[i].X * scaleU);
+						texCoord.Y	=(float)((double)coords[i].Y * scaleV);
+
+						//offset
+						texCoord.X	=(float)((double)texCoord.X + offsetU);
+						texCoord.Y	=(float)((double)texCoord.X + offsetV);
+
+						int	idx	=mGFXVertIndexes[fvert + i];
+						solidTex1[solidOGIndexMap[idx]]	=texCoord;
+					}
+				}
+			}
+
+			//build an index buffer in solid material order
+			//TODO: maintain an offset per material
+			List<int>	solidIndexes	=new List<int>();
+			foreach(string mat in matNames)
+			{
+				foreach(GFXFace f in mGFXFaces)
+				{
+					GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
+					if(tex.mMaterial != mat)
+					{
+						continue;
+					}
+					if(tex.IsAlpha())
+					{
+						continue;
+					}
+					if(!tex.IsLightMapped())
+					{
+						continue;
+					}
+					if(f.mLightOfs < 0)
+					{
+						continue;
+					}
+
+					int		nverts	=f.mNumVerts;
+					int		fvert	=f.mFirstVert;
+					int		k		=0;
+
+					//triangulate
+					for(k=1;k < nverts-1;k++)
+					{
+						int	idx	=mGFXVertIndexes[fvert];
+						solidIndexes.Add(solidOGIndexMap[mGFXVertIndexes[fvert]]);
+						solidIndexes.Add(solidOGIndexMap[mGFXVertIndexes[fvert + k]]);
+						solidIndexes.Add(solidOGIndexMap[mGFXVertIndexes[fvert + ((k + 1) % nverts)]]);
+					}
+				}
+			}
+
+			//build an index buffer in trans material order
+			//TODO: maintain an offset per material
+			List<int>	transIndexes	=new List<int>();
+			foreach(string mat in matNames)
+			{
+				foreach(GFXFace f in mGFXFaces)
+				{
+					GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
+					if(tex.mMaterial != mat)
+					{
+						continue;
+					}
+					if(!tex.IsAlpha())
+					{
+						continue;
+					}
+					if(tex.IsLightMapped())
+					{
+						continue;
+					}
+
+					int		nverts	=f.mNumVerts;
+					int		fvert	=f.mFirstVert;
+					int		k		=0;
+
+					//triangulate
+					for(k=1;k < nverts-1;k++)
+					{
+						int	idx	=mGFXVertIndexes[fvert];
+						transIndexes.Add(transOGIndexMap[mGFXVertIndexes[fvert]]);
+						transIndexes.Add(transOGIndexMap[mGFXVertIndexes[fvert + k]]);
+						transIndexes.Add(transOGIndexMap[mGFXVertIndexes[fvert + ((k + 1) % nverts)]]);
+					}
+				}
+			}
+
+			VPosTex0Tex1	[]solidVArray	=new VPosTex0Tex1[solidVerts.Count];
+			for(int i=0;i < solidVerts.Count;i++)
+			{
+				solidVArray[i].Position		=solidVerts[i];
+				solidVArray[i].TexCoord0	=solidTex0[i];
+				solidVArray[i].TexCoord1	=solidTex1[i];
+			}
+
+			solidVB	=new VertexBuffer(g, 28 * solidVArray.Length, BufferUsage.WriteOnly);
+			solidVB.SetData<VPosTex0Tex1>(solidVArray);
+
+			solidIB	=new IndexBuffer(g, 4 * solidIndexes.Count, BufferUsage.WriteOnly, IndexElementSize.ThirtyTwoBits);
+			solidIB.SetData<int>(solidIndexes.ToArray());
+
+			numSolidVerts	=solidVerts.Count;
+			numSolidTris	=solids.Count / 3;
+		}
+
+
+		public void BuildRenderData3(GraphicsDevice g, out VertexBuffer solidVB,
+			out IndexBuffer solidIB,
+			out int numSolidVerts, out int numSolidTris)
+		{
+			//grab face verts
+			List<Vector3>	faceVerts	=new List<Vector3>();
+			List<Vector2>	faceTex0	=new List<Vector2>();
+			foreach(GFXFace f in mGFXFaces)
+			{
+				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
+
+				List<Vector2>	coords	=new List<Vector2>();
+
+				int		nverts	=f.mNumVerts;
+				int		fvert	=f.mFirstVert;
+				int		k		=0;
+				for(k=0;k < nverts;k++)
+				{
+					int	idx	=mGFXVertIndexes[fvert + k];
+					Vector3	pnt	=mGFXVerts[idx];
+					Vector2	crd;
+					crd.X	=Vector3.Dot(tex.mVecs[0], pnt);
+					crd.Y	=Vector3.Dot(tex.mVecs[1], pnt);
+
+					coords.Add(crd);
+
+					faceVerts.Add(pnt);
+				}
+
+				Bounds	bnd	=new Bounds();
+				foreach(Vector2 crd in coords)
+				{
+					bnd.AddPointToBounds(crd);
+				}
+
+				for(k=0;k < nverts;k++)
+				{
+					int	idx	=mGFXVertIndexes[fvert + k];
+
+					Vector2	tc	=Vector2.Zero;
+					tc.X	=coords[k].X - bnd.mMins.X;
+					tc.Y	=coords[k].Y - bnd.mMins.Y;
+					faceTex0.Add(tc);
+				}
+				f.mFirstVert	=faceVerts.Count - f.mNumVerts;
+			}
+
+			List<int>	solidIndexes	=new List<int>();
+			foreach(GFXFace f in mGFXFaces)
+			{
+				int		nverts	=f.mNumVerts;
+				int		fvert	=f.mFirstVert;
+				int		k		=0;
+
+				//triangulate
+				for(k=1;k < nverts-1;k++)
+				{
+					solidIndexes.Add(fvert);
+					solidIndexes.Add(fvert + k);
+					solidIndexes.Add(fvert + ((k + 1) % nverts));
+				}
+			}
+
+			VPosTex0Tex1	[]solidVArray	=new VPosTex0Tex1[faceVerts.Count];
+			for(int i=0;i < faceVerts.Count;i++)
+			{
+				solidVArray[i].Position		=faceVerts[i];
+				solidVArray[i].TexCoord0	=faceTex0[i];
+				solidVArray[i].TexCoord1	=faceTex0[i];	//duping texcoord0!
+			}
+
+			solidVB	=new VertexBuffer(g, 28 * solidVArray.Length, BufferUsage.WriteOnly);
+			solidVB.SetData<VPosTex0Tex1>(solidVArray);
+
+			solidIB	=new IndexBuffer(g, 4 * solidIndexes.Count, BufferUsage.WriteOnly, IndexElementSize.ThirtyTwoBits);
+			solidIB.SetData<int>(solidIndexes.ToArray());
+
+			numSolidVerts	=faceVerts.Count;
+			numSolidTris	=solidIndexes.Count / 3;
+		}
+
+
 		void FindParents_r(Int32 Node, Int32 Parent)
 		{
 			if(Node < 0)		// At a leaf, mark leaf parent and return

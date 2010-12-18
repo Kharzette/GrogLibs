@@ -205,6 +205,12 @@ namespace BSPLib
 						ti.mUVec.Y	=Convert.ToSingle(texVec[2]);
 						ti.mUVec.Z	=Convert.ToSingle(texVec[3]);
 
+						//negate x and swap y and z
+//						ti.mUVec.X	=-ti.mUVec.X;
+//						float	y	=ti.mUVec.Y;
+//						ti.mUVec.Y	=ti.mUVec.Z;
+//						ti.mUVec.Z	=y;
+
 						ti.mShiftU		=Convert.ToSingle(texVec[4]);
 						ti.mDrawScaleU	=Convert.ToSingle(texVec[6]);
 					}
@@ -214,6 +220,12 @@ namespace BSPLib
 						ti.mVVec.X	=Convert.ToSingle(texVec[1]);
 						ti.mVVec.Y	=Convert.ToSingle(texVec[2]);
 						ti.mVVec.Z	=Convert.ToSingle(texVec[3]);
+
+						//negate x and swap y and z
+//						ti.mVVec.X	=-ti.mVVec.X;
+//						float	y	=ti.mVVec.Y;
+//						ti.mVVec.Y	=ti.mVVec.Z;
+//						ti.mVVec.Z	=y;
 
 						ti.mShiftV		=Convert.ToSingle(texVec[4]);
 						ti.mDrawScaleV	=Convert.ToSingle(texVec[6]);
@@ -236,6 +248,8 @@ namespace BSPLib
 
 					mPlaneNum	=pool.FindPlane(plane, out mPlaneSide);
 
+					GBSPPoly.TextureAxisFromPlane(plane, out ti.mUVec, out ti.mVVec);
+
 					if(rot != 0.0f)
 					{
 						Vector3	texAxis	=Vector3.Cross(ti.mUVec, ti.mVVec);
@@ -246,6 +260,9 @@ namespace BSPLib
 						ti.mUVec	=Vector3.TransformNormal(ti.mUVec, texRot);
 						ti.mVVec	=Vector3.TransformNormal(ti.mVVec, texRot);
 					}
+
+					ti.mUVec	/=ti.mDrawScaleU;
+					ti.mVVec	/=ti.mDrawScaleV;
 
 					mTexInfo	=tiPool.Add(ti);
 

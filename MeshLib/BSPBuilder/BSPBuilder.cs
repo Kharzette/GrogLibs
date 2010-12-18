@@ -42,6 +42,13 @@ namespace BSPBuilder
 		Random					mRnd	=new Random();
 		string					mDrawChoice;
 
+		//new debug draw stuff
+		VertexBuffer		mSolidVB;
+		VertexDeclaration	mSolidVD;
+		IndexBuffer			mSolidIB;
+		TexAtlas			mLMapAtlas;
+		int					mNumSolidVerts, mNumSolidTris;
+
 		//collision debuggery
 		Vector3				mStart, mEnd;
 		BasicEffect			mBFX;
@@ -158,7 +165,69 @@ namespace BSPBuilder
 			mBFX.View		=mGameCam.View;
 			mBFX.Projection	=mGameCam.Projection;
 
+			mMatLib.UpdateWVP(mGameCam.World, mGameCam.View, mGameCam.Projection);
+
 			base.Update(gameTime);
+		}
+
+
+		void DrawSolids()
+		{
+			if(mSolidVB == null)
+			{
+				return;
+			}
+
+			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
+
+			GraphicsDevice	g	=mGDM.GraphicsDevice;
+
+			g.VertexDeclaration	=mSolidVD;
+			g.Vertices[0].SetSource(mSolidVB, 0, 28);
+			g.Indices	=mSolidIB;
+
+			foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
+			{
+				Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
+				if(fx == null)
+				{
+					return;
+				}
+
+
+				//this might get slow
+				mMatLib.ApplyParameters(mat.Key);
+
+				//set renderstates from material
+				//this could also get crushingly slow
+				g.RenderState.AlphaBlendEnable			=mat.Value.Alpha;
+				g.RenderState.AlphaTestEnable			=mat.Value.AlphaTest;
+				g.RenderState.BlendFunction				=mat.Value.BlendFunction;
+				g.RenderState.SourceBlend				=mat.Value.SourceBlend;
+				g.RenderState.DestinationBlend			=mat.Value.DestBlend;
+				g.RenderState.DepthBufferWriteEnable	=mat.Value.DepthWrite;
+				g.RenderState.CullMode					=mat.Value.CullMode;
+				g.RenderState.DepthBufferFunction		=mat.Value.ZFunction;
+
+				fx.CommitChanges();
+
+				fx.Begin();
+				foreach(EffectPass pass in fx.CurrentTechnique.Passes)
+				{
+					pass.Begin();
+
+					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+						0, 0,
+						mNumSolidVerts,
+						0,
+						mNumSolidTris);
+
+					pass.End();
+				}
+				fx.End();
+
+				break;
+			}
 		}
 
 
@@ -168,6 +237,8 @@ namespace BSPBuilder
 
 			g.Clear(Color.CornflowerBlue);
 
+			DrawSolids();
+			/*
 			if(mVB != null)
 			{
 				g.VertexDeclaration		=mVD;
@@ -211,7 +282,7 @@ namespace BSPBuilder
 					g.RenderState.CullMode			=CullMode.CullCounterClockwiseFace;
 					g.RenderState.AlphaBlendEnable	=false;
 				}
-			}
+			}*/
 
 			//draw ray pieces if any
 			/*
@@ -235,7 +306,7 @@ namespace BSPBuilder
 			}*/
 
 			//draw portal lines if any
-			if(mLineVB != null)
+			/*if(mLineVB != null)
 			{
 				GraphicsDevice.Vertices[0].SetSource(mLineVB, 0, VertexPositionColorTexture.SizeInBytes);
 				GraphicsDevice.VertexDeclaration	=mVD;
@@ -259,7 +330,7 @@ namespace BSPBuilder
 				//turn zbuffer back on
 				GraphicsDevice.RenderState.DepthBufferEnable	=true;
 			}
-
+			*/
 			mSB.Begin();
 
 			mSB.DrawString(mKoot, "Coordinates: " + -mGameCam.CamPos, mTextPos, Color.Yellow);
@@ -567,6 +638,20 @@ namespace BSPBuilder
 						mMatLib.AddMaterial(mat);
 					}
 					mMatForm.UpdateMaterials();
+
+//					mMap.BuildRenderData(mGDM.GraphicsDevice, out mSolidVB,
+//						out mSolidIB, out mLMapAtlas, out mNumSolidVerts, out mNumSolidTris);
+					mMap.BuildRenderData3(mGDM.GraphicsDevice, out mSolidVB,
+						out mSolidIB, out mNumSolidVerts, out mNumSolidTris);
+
+					VertexElement	[]ve	=new VertexElement[3];
+					ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+						VertexElementMethod.Default, VertexElementUsage.Position, 0);
+					ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+						VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+					ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector2,
+						VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
+					mSolidVD	=new VertexDeclaration(mGDM.GraphicsDevice, ve);
 				}
 			}
 		}

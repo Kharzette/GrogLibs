@@ -85,7 +85,7 @@ namespace BSPLib
 		}
 
 
-		internal static bool TextureAxisFromPlane(GBSPPlane pln, out Vector3 Xv, out Vector3 Yv)
+		internal static bool TextureAxisFromPlane(GBSPPlane pln, out Vector3 xv, out Vector3 yv)
 		{
 			Int32	bestAxis;
 			float	dot, best;
@@ -93,8 +93,8 @@ namespace BSPLib
 			best		=0.0f;
 			bestAxis	=-1;
 
-			Xv	=Vector3.Zero;
-			Yv	=Vector3.Zero;
+			xv	=Vector3.Zero;
+			yv	=Vector3.Zero;
 			
 			for(int i=0;i < 3;i++)
 			{
@@ -109,35 +109,42 @@ namespace BSPLib
 			switch(bestAxis)
 			{
 				case 0:						// X
-					Xv.X	=0;
-					Xv.Y	=0;
-					Xv.Z	=1;
+					xv.X	=0.0f;
+					xv.Y	=1.0f;
+					xv.Z	=0.0f;
 
-					Yv.X	=0;
-					Yv.Y	=-1;
-					Yv.Z	=0;
+					yv.X	=0.0f;
+					yv.Y	=0.0f;
+					yv.Z	=1.0f;
 					break;
 				case 1:						// Y
-					Xv.X	=1;
-					Xv.Y	=0;
-					Xv.Z	=0;
+					xv.X	=0.0f;
+					xv.Y	=0.0f;
+					xv.Z	=1.0f;
 
-					Yv.X	=0;
-					Yv.Y	=0;
-					Yv.Z	=1;
+					yv.X	=1.0f;
+					yv.Y	=0.0f;
+					yv.Z	=0.0f;
 					break;
 				case 2:						// Z
-					Xv.X	=1;
-					Xv.Y	=0;
-					Xv.Z	=0;
+					xv.X	=0.0f;
+					xv.Y	=1.0f;
+					xv.Z	=0.0f;
 
-					Yv.X	=0;
-					Yv.Y	=-1;
-					Yv.Z	=0;
+					yv.X	=1.0f;
+					yv.Y	=0.0f;
+					yv.Z	=0.0f;
 					break;
 				default:
-					Map.Print("TextureAxisFromPlane: No Axis found.\n");
-					return	false;
+					xv.X	=0.0f;
+					xv.Y	=0.0f;
+					xv.Z	=1.0f;
+
+					yv.X	=0.0f;
+					yv.Y	=-1.0f;
+					yv.Z	=0.0f;
+					Map.Print("GetTextureAxis: No Axis found.");
+					return false;
 			}
 			return	true;
 		}
