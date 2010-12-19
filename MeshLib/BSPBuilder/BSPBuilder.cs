@@ -198,10 +198,12 @@ namespace BSPBuilder
 				Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
 				if(fx == null)
 				{
-					return;
+					idx++;
+					continue;
 				}
 				if(mMatNumVerts[idx] <= 0)
 				{
+					idx++;
 					continue;
 				}
 
@@ -249,7 +251,7 @@ namespace BSPBuilder
 
 			GraphicsDevice.RenderState.DepthBufferEnable	=true;
 			DrawSolids();
-			/*
+			
 			if(mVB != null)
 			{
 				g.VertexDeclaration		=mVD;
@@ -293,7 +295,7 @@ namespace BSPBuilder
 					g.RenderState.CullMode			=CullMode.CullCounterClockwiseFace;
 					g.RenderState.AlphaBlendEnable	=false;
 				}
-			}*/
+			}
 
 			//draw ray pieces if any
 			/*

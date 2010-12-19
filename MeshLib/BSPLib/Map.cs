@@ -203,10 +203,25 @@ namespace BSPLib
 			}
 			else if(drawChoice == "Draw Brushes")
 			{
-				foreach(GBSPBrush b in mGBSPBrushes)
+				if(mGFXModels != null && mGFXModels.Length > 0)
 				{
-					b.GetTriangles(verts, indexes, true);
+					int	root	=mGFXModels[0].mRootNode[0];
+
+					RenderBSPFrontBack_r2(root, pos, verts, indexes, false);
+
+					for(int i=1;i < mGFXModels.Length;i++)
+					{
+						RenderModelBSPFrontBack_r2(mGFXModels[i].mRootNode[0], pos, verts, indexes);
+					}
 				}
+				else
+				{
+					Print("No GFXModels to draw!\n");
+				}
+//				foreach(GBSPBrush b in mGBSPBrushes)
+//				{
+//					b.GetTriangles(verts, indexes, true);
+//				}
 			}
 			else if(drawChoice == "Collision Brushes")
 			{
