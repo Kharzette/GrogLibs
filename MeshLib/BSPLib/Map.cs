@@ -1958,6 +1958,7 @@ namespace BSPLib
 		public void BuildRenderData3(GraphicsDevice g, out VertexBuffer solidVB,
 			out IndexBuffer solidIB, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris,
+			out TexAtlas lightAtlas,
 			out int numSolidVerts, out int numSolidTris)
 		{
 			List<string>	matNames	=new List<string>();
@@ -1970,12 +1971,14 @@ namespace BSPLib
 			}
 			MapGrinder	mg	=new MapGrinder(g, matNames);
 
-			mg.BuildFaceData(mGFXVerts, mGFXVertIndexes, mGFXTexInfos, mGFXFaces);
+			mg.BuildFaceData(mGFXVerts, mGFXVertIndexes, mGFXTexInfos, mGFXFaces, mGFXLightData);
 
 			mg.GetBuffers(out solidVB, out solidIB);
 
 			numSolidVerts	=mg.GetNumVerts();
 			numSolidTris	=mg.GetNumTris();
+
+			lightAtlas	=mg.GetLightMapAtlas();
 
 			mg.GetMaterialData(out matOffsets, out matNumVerts, out matNumTris);
 		}

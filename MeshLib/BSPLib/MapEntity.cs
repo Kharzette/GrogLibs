@@ -228,6 +228,11 @@ namespace BSPLib
 					{
 						b.MakePolys(pool);
 						b.FixContents();
+
+						if(mData["classname"] == "func_detail")
+						{
+							b.mContents	|=Contents.BSP_CONTENTS_DETAIL2;
+						}
 						mBrushes.Add(b);
 					}
 				}

@@ -25,11 +25,16 @@ namespace BSPLib
 		List<Int32>		mMaterialNumVerts	=new List<Int32>();
 		List<Int32>		mMaterialNumTris	=new List<Int32>();
 
+		//lightmap atlas
+		TexAtlas	mLMAtlas;
+
 
 		public MapGrinder(GraphicsDevice gd, List<string> matNames)
 		{
 			mGD				=gd;
 			mMaterialNames	=matNames;
+
+			mLMAtlas	=new TexAtlas(gd);
 		}
 
 
@@ -75,7 +80,7 @@ namespace BSPLib
 
 
 		internal void BuildFaceData(Vector3 []verts, int[] indexes,
-			GFXTexInfo []texInfos, GFXFace []faces)
+			GFXTexInfo []texInfos, GFXFace []faces, byte []lightData)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
@@ -96,6 +101,24 @@ namespace BSPLib
 					}
 
 					numFaces++;
+
+					//grab lightmap
+					double	scaleU, scaleV, offsetU, offsetV;
+					scaleU	=scaleV	=offsetU	=offsetV	=0.0;
+					if(f.mLightOfs != -1)
+					{
+						Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
+
+						for(int i=0;i < lmap.Length;i++)
+						{
+							lmap[i].R	=lightData[f.mLightOfs + (i * 3)];
+							lmap[i].G	=lightData[f.mLightOfs + (i * 3) + 1];
+							lmap[i].B	=lightData[f.mLightOfs + (i * 3) + 2];
+							lmap[i].A	=0xFF;
+						}
+						mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
+							out scaleU, out scaleV, out offsetU, out offsetV);
+					}
 
 					List<Vector2>	coords	=new List<Vector2>();
 
@@ -129,6 +152,19 @@ namespace BSPLib
 						tc.X	=coords[k].X;// - bnd.mMins.X;
 						tc.Y	=coords[k].Y;// - bnd.mMins.Y;
 						mFaceTex0.Add(tc);
+
+						//lightmap coords
+						tc.X	-=bnd.mMins.X;
+						tc.Y	-=bnd.mMins.Y;
+//						tc		/=16;
+//						tc.X	/=f.mLWidth;
+//						tc.Y	/=f.mLHeight;
+						tc.X	+=(float)offsetU;
+						tc.Y	+=(float)offsetV;
+						tc.X	*=(float)scaleU;
+						tc.Y	*=(float)scaleV;
+//						tc.X	-=bnd.mMins.X / 16;
+//						tc.Y	-=bnd.mMins.Y / 16;
 
 						//tex1 here for now
 						mFaceTex1.Add(tc);
@@ -171,6 +207,12 @@ namespace BSPLib
 
 				mMaterialNumTris.Add(numTris);
 			}
+		}
+
+
+		internal TexAtlas GetLightMapAtlas()
+		{
+			return	mLMAtlas;
 		}
 	}
 }

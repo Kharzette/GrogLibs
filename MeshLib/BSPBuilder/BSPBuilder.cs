@@ -655,8 +655,11 @@ namespace BSPBuilder
 //					mMap.BuildRenderData(mGDM.GraphicsDevice, out mSolidVB,
 //						out mSolidIB, out mLMapAtlas, out mNumSolidVerts, out mNumSolidTris);
 					mMap.BuildRenderData3(mGDM.GraphicsDevice, out mSolidVB,
-						out mSolidIB, out mMatOffsets, out mMatNumVerts, out mMatNumTris,
+						out mSolidIB, out mMatOffsets, out mMatNumVerts,
+						out mMatNumTris, out mLMapAtlas,
 						out mNumSolidVerts, out mNumSolidTris);
+
+					mMatLib.AddMap("LightMapAtlas", mLMapAtlas.GetAtlasTexture());
 
 					VertexElement	[]ve	=new VertexElement[3];
 					ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
