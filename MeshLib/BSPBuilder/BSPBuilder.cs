@@ -344,6 +344,13 @@ namespace BSPBuilder
 				GraphicsDevice.RenderState.DepthBufferEnable	=true;
 			}
 			*/
+
+			KeyboardState	kbstate	=Keyboard.GetState();
+			if(kbstate.IsKeyDown(Keys.L))
+			{
+				mMatLib.DrawMap("LightMapAtlas", mSB);
+			}
+
 			mSB.Begin();
 
 			mSB.DrawString(mKoot, "Coordinates: " + -mGameCam.CamPos, mTextPos, Color.Yellow);
