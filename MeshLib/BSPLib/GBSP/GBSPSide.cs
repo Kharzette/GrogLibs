@@ -206,10 +206,10 @@ namespace BSPLib
 						ti.mUVec.Z	=Convert.ToSingle(texVec[3]);
 
 						//negate x and swap y and z
-//						ti.mUVec.X	=-ti.mUVec.X;
-//						float	y	=ti.mUVec.Y;
-//						ti.mUVec.Y	=ti.mUVec.Z;
-//						ti.mUVec.Z	=y;
+						ti.mUVec.X	=-ti.mUVec.X;
+						float	y	=ti.mUVec.Y;
+						ti.mUVec.Y	=ti.mUVec.Z;
+						ti.mUVec.Z	=y;
 
 						ti.mShiftU		=Convert.ToSingle(texVec[4]);
 						ti.mDrawScaleU	=Convert.ToSingle(texVec[6]);
@@ -222,10 +222,10 @@ namespace BSPLib
 						ti.mVVec.Z	=Convert.ToSingle(texVec[3]);
 
 						//negate x and swap y and z
-//						ti.mVVec.X	=-ti.mVVec.X;
-//						float	y	=ti.mVVec.Y;
-//						ti.mVVec.Y	=ti.mVVec.Z;
-//						ti.mVVec.Z	=y;
+						ti.mVVec.X	=-ti.mVVec.X;
+						float	y	=ti.mVVec.Y;
+						ti.mVVec.Y	=ti.mVVec.Z;
+						ti.mVVec.Z	=y;
 
 						ti.mShiftV		=Convert.ToSingle(texVec[4]);
 						ti.mDrawScaleV	=Convert.ToSingle(texVec[6]);
@@ -248,9 +248,10 @@ namespace BSPLib
 
 					mPlaneNum	=pool.FindPlane(plane, out mPlaneSide);
 
-					GBSPPoly.TextureAxisFromPlane(plane, out ti.mUVec, out ti.mVVec);
+//					GBSPPoly.TextureAxisFromPlane(plane, out ti.mUVec, out ti.mVVec);
 
-					if(rot != 0.0f)
+					//hammer prerotates texvecs!
+					if(false && rot != 0.0f)
 					{
 						Vector3	texAxis	=Vector3.Cross(ti.mUVec, ti.mVVec);
 						Matrix	texRot	=Matrix.CreateFromAxisAngle(texAxis,

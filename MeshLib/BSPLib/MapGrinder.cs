@@ -107,8 +107,8 @@ namespace BSPLib
 						int		idx	=indexes[fvert + k];
 						Vector3	pnt	=verts[idx];
 						Vector2	crd;
-						crd.X	=Vector3.Dot(tex.mVecs[0], pnt);
-						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt);
+						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
+						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
 
 						coords.Add(crd);
 
@@ -126,8 +126,8 @@ namespace BSPLib
 						int	idx	=indexes[fvert + k];
 
 						Vector2	tc	=Vector2.Zero;
-						tc.X	=coords[k].X - bnd.mMins.X;
-						tc.Y	=coords[k].Y - bnd.mMins.Y;
+						tc.X	=coords[k].X;// - bnd.mMins.X;
+						tc.Y	=coords[k].Y;// - bnd.mMins.Y;
 						mFaceTex0.Add(tc);
 
 						//tex1 here for now
