@@ -1528,8 +1528,8 @@ namespace BSPLib
 
 				for(int k=0;k < 2;k++)
 				{
-					mins[k]	=(float)Math.Floor(mins[k] / 16);
-					maxs[k]	=(float)Math.Ceiling(maxs[k] / 16);
+					mins[k]	=(float)Math.Floor(mins[k] / FInfo.LGRID_SIZE);
+					maxs[k]	=(float)Math.Ceiling(maxs[k] / FInfo.LGRID_SIZE);
 					
 					size[k]	=(Int32)(maxs[k] - mins[k]) + 1;
 					
@@ -1541,17 +1541,18 @@ namespace BSPLib
 				size[0]	=mGFXFaces[i].mLWidth;
 				size[1]	=mGFXFaces[i].mLHeight;
 
-				surfMin[i].X	=(Int32)(mins[0] * 16);
-				surfMin[i].Y	=(Int32)(mins[1] * 16);
+				surfMin[i].X	=(Int32)(mins[0] * FInfo.LGRID_SIZE);
+				surfMin[i].Y	=(Int32)(mins[1] * FInfo.LGRID_SIZE);
 			}
 
 			for(int i=0;i < mGFXFaces.Length;i++)
 			{
 				GFXFace		f	=mGFXFaces[i];
 				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
-				float		InvScale, u, v, u2, v2;
+
+				float		u, v, u2, v2;
 				float		ShiftU, ShiftV, ScaleU, ScaleV;
-				float		InvScale2, ShiftU2, ShiftV2;
+				float		ShiftU2, ShiftV2;
 
 				// Set up shifts and scaled for texture uv's
 				ShiftU	=surfShifts[i].X;
@@ -1559,9 +1560,6 @@ namespace BSPLib
 					
 		 		ScaleU	=1.0f / tex.mDrawScale[0];
 				ScaleV	=1.0f / tex.mDrawScale[1];
-
-				// Get scale value for vertices
-//				InvScale = 1.0f / (float)((1<<pPoly->THandle->Log));
 
 				// Set up shifts and scaled for lightmap uv's
 				ShiftU2	=(float)-surfMin[i].X + 8.0f;

@@ -344,12 +344,12 @@ namespace BSPLib
 					for(k=0;k < 3;k++)
 					{
 						if(UtilityLib.Mathery.VecIdx(p.mBounds.mMins, k)
-							> UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) + 16)
+							> UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) + FInfo.LGRID_SIZE)
 						{
 							break;
 						}
 						if(UtilityLib.Mathery.VecIdx(p.mBounds.mMaxs, k)
-							< UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) - 16)
+							< UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) - FInfo.LGRID_SIZE)
 						{
 							break;
 						}

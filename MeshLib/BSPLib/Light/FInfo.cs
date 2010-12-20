@@ -15,7 +15,7 @@ namespace BSPLib
 		Vector3		[]mPoints;
 		Vector3		mCenter;
 
-		public const int	LGRID_SIZE	=16;
+		public const int	LGRID_SIZE	=8;
 
 
 		internal Int32 GetFaceIndex()

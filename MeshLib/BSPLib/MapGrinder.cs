@@ -120,7 +120,6 @@ namespace BSPLib
 							out scaleU, out scaleV, out offsetU, out offsetV);
 					}
 
-					List<Vector2>	coords	=new List<Vector2>();
 					List<Vector3>	fverts	=new List<Vector3>();
 
 					int		nverts	=f.mNumVerts;
@@ -134,28 +133,13 @@ namespace BSPLib
 						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
 						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
 
-						coords.Add(crd);
+						mFaceTex0.Add(crd);
 						fverts.Add(pnt);
 
 						mFaceVerts.Add(pnt);
 					}
 
-					Bounds	bnd	=new Bounds();
-					foreach(Vector2 crd in coords)
-					{
-						bnd.AddPointToBounds(crd);
-					}
-
-					for(k=0;k < nverts;k++)
-					{
-						int	idx	=indexes[fvert + k];
-
-						Vector2	tc	=Vector2.Zero;
-						tc.X	=coords[k].X;// - bnd.mMins.X;
-						tc.Y	=coords[k].Y;// - bnd.mMins.Y;
-						mFaceTex0.Add(tc);
-					}
-
+					List<Vector2>	coords	=new List<Vector2>();
 					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
 
 					for(k=0;k < nverts;k++)
@@ -234,23 +218,24 @@ namespace BSPLib
 			pln.mDist	=0;
 			pln.mType	=GBSPPlane.PLANE_ANY;
 
+			//get a proper set of texvecs for lighting
 			Vector3	xv, yv;
-
 			GBSPPoly.TextureAxisFromPlane(pln, out xv, out yv);
+
+			//scale down to light space
+			xv	/=FInfo.LGRID_SIZE;
+			yv	/=FInfo.LGRID_SIZE;
 
 			//calculate the min values for s and t
 			foreach(Vector3 pnt in verts)
 			{
-				Vector3	lvec	=xv / 16;
-				float	d	=Vector3.Dot(lvec, pnt);
-
+				float	d	=Vector3.Dot(xv, pnt);
 				if(d < minS)
 				{
 					minS	=d;
 				}
 
-				lvec	=yv / 16;
-				d	=Vector3.Dot(lvec, pnt);
+				d	=Vector3.Dot(yv, pnt);
 				if(d < minT)
 				{
 					minT	=d;
@@ -258,26 +243,20 @@ namespace BSPLib
 			}
 
 			//in light space at this point
+			//no idea why I need this 1.5
+			//the math makes no sense, should be
+			//only 0.5
 			float	shiftU	=-minS + 1.5f;
 			float	shiftV	=-minT + 1.5f;
 
 			foreach(Vector3 pnt in verts)
 			{
 				Vector2	crd;
-				Vector3	lvec	=xv / 16;
-				crd.X	=Vector3.Dot(lvec, pnt);
-				lvec	=yv / 16;
-				crd.Y	=Vector3.Dot(lvec, pnt);
+				crd.X	=Vector3.Dot(xv, pnt);
+				crd.Y	=Vector3.Dot(yv, pnt);
 
 				crd.X	+=shiftU;
 				crd.Y	+=shiftV;
-
-				//scale down to a zero to one range
-//				crd.X	/=((float)(lwidth + 1) * 16);	//LIGHTMAPSCALE
-//				crd.Y	/=((float)(lheight + 1) * 16);
-
-//				crd.X	/=(lwidth + 1);
-//				crd.Y	/=(lwidth + 1);
 
 				coords.Add(crd);
 			}

@@ -1173,12 +1173,12 @@ namespace BSPLib
 					for(k=0;k < 3;k++)
 					{
 						if(UtilityLib.Mathery.VecIdx(patch.mBounds.mMins, k)
-							> UtilityLib.Mathery.VecIdx(vert, k) + 16)
+							> UtilityLib.Mathery.VecIdx(vert, k) + FInfo.LGRID_SIZE)
 						{
 							break;
 						}				
 						if(UtilityLib.Mathery.VecIdx(patch.mBounds.mMaxs, k)
-							< UtilityLib.Mathery.VecIdx(vert, k) - 16)
+							< UtilityLib.Mathery.VecIdx(vert, k) - FInfo.LGRID_SIZE)
 						{
 							break;
 						}				
@@ -1540,22 +1540,7 @@ namespace BSPLib
 				//Mark the start of the lightoffset
 				mGFXFaces[i].mLightOfs	=LightOffset;
 
-				//At this point, all lightmaps are currently RGB
-				byte	RGB2	=1;
-				
-				if(RGB2 != 0)
-				{
-					numRGBMaps++;
-				}
-				else
-				{
-					REGMaps++;
-				}
-
-				f.Write(RGB2);
-
-				LightOffset++;		//Skip the rgb light byte
-				
+				numRGBMaps++;
 				int	numLTypes	=0;		// Reset number of LTypes for this face
 				for(int k=0;k < LInfo.MAX_LTYPE_INDEX;k++)
 				{
