@@ -14,33 +14,31 @@ namespace BSPLib
 		public Int32	mType;
 		public Int32	mElements;
 
-		public const int	GBSP_VERSION				=15;
-		public const int	GBSP_CHUNK_HEADER			=0;
-		public const int	GBSP_CHUNK_MODELS			=1;
-		public const int	GBSP_CHUNK_NODES			=2;
-		public const int	GBSP_CHUNK_BNODES			=3;
-		public const int	GBSP_CHUNK_LEAFS			=4;
-		public const int	GBSP_CHUNK_CLUSTERS			=5;	
-		public const int	GBSP_CHUNK_AREAS			=6;	
-		public const int	GBSP_CHUNK_AREA_PORTALS		=7;	
-		public const int	GBSP_CHUNK_LEAF_SIDES		=8;
-		public const int	GBSP_CHUNK_PORTALS			=9;
-		public const int	GBSP_CHUNK_PLANES			=10;
-		public const int	GBSP_CHUNK_FACES			=11;
-		public const int	GBSP_CHUNK_LEAF_FACES		=12;
-		public const int	GBSP_CHUNK_VERT_INDEX		=13;
-		public const int	GBSP_CHUNK_VERTS			=14;
-		public const int	GBSP_CHUNK_RGB_VERTS		=15;
-		public const int	GBSP_CHUNK_ENTDATA			=16;
-		public const int	GBSP_CHUNK_TEXINFO			=17;
-		public const int	GBSP_CHUNK_TEXTURES			=18 ;
-		public const int	GBSP_CHUNK_TEXDATA			=19;
-		public const int	GBSP_CHUNK_LIGHTDATA		=20;
-		public const int	GBSP_CHUNK_VISDATA			=21;
-		public const int	GBSP_CHUNK_SKYDATA			=22;
-		public const int	GBSP_CHUNK_PALETTES			=23;
-		public const int	GBSP_CHUNK_MOTIONS			=24;
-		public const int	GBSP_CHUNK_END				=0xffff;
+		public const int	VERSION			=15;
+		public const int	HEADER			=0;
+		public const int	MODELS			=1;
+		public const int	NODES			=2;
+		public const int	BNODES			=3;
+		public const int	LEAFS			=4;
+		public const int	CLUSTERS		=5;	
+		public const int	AREAS			=6;	
+		public const int	AREA_PORTALS	=7;	
+		public const int	LEAF_SIDES		=8;
+		public const int	PORTALS			=9;
+		public const int	PLANES			=10;
+		public const int	FACES			=11;
+		public const int	LEAF_FACES		=12;
+		public const int	VERT_INDEX		=13;
+		public const int	VERTS			=14;
+		public const int	RGB_VERTS		=15;
+		public const int	ENTDATA			=16;
+		public const int	TEXINFO			=17;
+		public const int	TEXTURES		=18 ;
+		public const int	TEXDATA			=19;
+		public const int	LIGHTDATA		=20;
+		public const int	VISDATA			=21;
+		public const int	SKYDATA			=22;
+		public const int	END				=0xffff;
 
 
 		internal bool Write(BinaryWriter bw, GBSPHeader hdr)
@@ -143,91 +141,91 @@ namespace BSPLib
 
 			switch(chunkType)
 			{
-				case GBSP_CHUNK_HEADER:
+				case HEADER:
 				{
 					return	ReadChunkData(br, typeof(GBSPHeader), false, 0) as GBSPHeader;
 				}
-				case GBSP_CHUNK_MODELS:
+				case MODELS:
 				{
                     return	ReadChunkData(br, typeof(GFXModel), true, mElements) as GFXModel[];
 				}
-				case GBSP_CHUNK_NODES:
+				case NODES:
 				{
 					return	ReadChunkData(br, typeof(GFXNode), true, mElements) as GFXNode[];
 				}
-				case GBSP_CHUNK_BNODES:
+				case BNODES:
 				{
 					return	ReadChunkData(br, typeof(GFXBNode), true, mElements) as GFXBNode[];
 				}
-				case GBSP_CHUNK_LEAFS:
+				case LEAFS:
 				{
 					return	ReadChunkData(br, typeof(GFXLeaf), true, mElements) as GFXLeaf[];
 				}
-				case GBSP_CHUNK_CLUSTERS:
+				case CLUSTERS:
 				{
 					return	ReadChunkData(br, typeof(GFXCluster), true, mElements) as GFXCluster[];
 				}
-				case GBSP_CHUNK_AREAS:
+				case AREAS:
 				{
 					return	ReadChunkData(br, typeof(GFXArea), true, mElements) as GFXArea[];
 				}
-				case GBSP_CHUNK_AREA_PORTALS:
+				case AREA_PORTALS:
 				{
 					return	ReadChunkData(br, typeof(GFXAreaPortal), true, mElements) as GFXAreaPortal[];
 				}
-				case GBSP_CHUNK_PORTALS:
+				case PORTALS:
 				{
 					return	ReadChunkData(br, typeof(GFXPortal), true, mElements) as GFXPortal[];
 				}
-				case GBSP_CHUNK_PLANES:
+				case PLANES:
 				{
 					return	ReadChunkData(br, typeof(GFXPlane), true, mElements) as GFXPlane[];
 				}
-				case GBSP_CHUNK_FACES:
+				case FACES:
 				{
 					return	ReadChunkData(br, typeof(GFXFace), true, mElements) as GFXFace[];
 				}
-				case GBSP_CHUNK_LEAF_FACES:
+				case LEAF_FACES:
 				{
 					return	ReadChunkData(br, typeof(int), true, mElements) as int[];
 				}
-				case GBSP_CHUNK_LEAF_SIDES:
+				case LEAF_SIDES:
 				{
 					return	ReadChunkData(br, typeof(GFXLeafSide), true, mElements) as GFXLeafSide[];
 				}
-				case GBSP_CHUNK_VERTS:
+				case VERTS:
 				{
 					return	ReadChunkData(br, typeof(Vector3), true, mElements) as Vector3[];
 				}
-				case GBSP_CHUNK_VERT_INDEX:
+				case VERT_INDEX:
 				{
 					return	ReadChunkData(br, typeof(int), true, mElements) as int[];
 				}
-				case GBSP_CHUNK_RGB_VERTS:
+				case RGB_VERTS:
 				{
 					return	ReadChunkData(br, typeof(Vector3), true, mElements) as Vector3[];
 				}
-				case GBSP_CHUNK_TEXINFO:
+				case TEXINFO:
 				{
 					return	ReadChunkData(br, typeof(GFXTexInfo), true, mElements) as GFXTexInfo[];
 				}
-				case GBSP_CHUNK_ENTDATA:
+				case ENTDATA:
 				{
 					return	ReadChunkData(br, typeof(MapEntity), true, mElements) as MapEntity[];
 				}
-				case GBSP_CHUNK_LIGHTDATA:
+				case LIGHTDATA:
 				{
 					return	ReadChunkData(br, typeof(byte), true, mElements) as byte[];
 				}
-				case GBSP_CHUNK_VISDATA:
+				case VISDATA:
 				{
 					return	ReadChunkData(br, typeof(byte), true, mElements) as byte[];
 				}
-				case GBSP_CHUNK_SKYDATA:
+				case SKYDATA:
 				{
 					return	ReadChunkData(br, typeof(GFXSkyData), false, 0) as GFXSkyData;
 				}
-				case GBSP_CHUNK_END:
+				case END:
 				{
 					break;
 				}

@@ -17,7 +17,7 @@ namespace BSPLib
 		Int32	mNumLTypes;
 
 		public const int	MAX_LTYPE_INDEX		=12;
-		public const int	MAX_LMAP_SIZE		=130;
+		public const int	MAX_LMAP_SIZE		=1024;
 		public const int	MAX_LTYPES			=4;
 
 

@@ -148,12 +148,12 @@ namespace BSPLib
 				return	true;
 			}
 
-			if((tex.mFlags & TexInfo.TEXINFO_MIRROR) != 0)
+			if((tex.mFlags & TexInfo.MIRROR) != 0)
 			{
 				return	true;
 			}
 
-			if((tex.mFlags & TexInfo.TEXINFO_SKY) != 0)
+			if((tex.mFlags & TexInfo.SKY) != 0)
 			{
 				return	true;
 			}

@@ -97,7 +97,7 @@ namespace BSPLib
 						{
 							mFlags		&=~SURF_LIGHT;
 							ret			|=Contents.CONTENTS_SOLID;
-							ti.mFlags	|=TexInfo.TEXINFO_NO_LIGHTMAP;
+							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 						}
 						if(tex == "TOOLS/TOOLSBLOCK_LOS")
 						{
@@ -132,7 +132,7 @@ namespace BSPLib
 							mFlags		|=SURF_NOLIGHTMAP;
 							mFlags		|=SURF_NONSOLID;
 							ret			|=Contents.CONTENTS_MIST;
-							ti.mFlags	|=TexInfo.TEXINFO_TRANS;
+							ti.mFlags	|=TexInfo.TRANS;
 						}
 						if(tex == "TOOLS/TOOLSHINT")
 						{
@@ -179,17 +179,17 @@ namespace BSPLib
 						if(tex == "TOOLS/TOOLSSKYBOX")
 						{
 							mFlags		|=SURF_SKY;
-							ti.mFlags	|=TexInfo.TEXINFO_SKY;
+							ti.mFlags	|=TexInfo.SKY;
 						}
 						if(tex == "TOOLS/TOOLSSKYBOX2D")
 						{
 							mFlags		|=SURF_SKY;
-							ti.mFlags	|=TexInfo.TEXINFO_SKY;
+							ti.mFlags	|=TexInfo.SKY;
 						}
 						else if(tex == "TOOLS/TOOLSSKYFOG")
 						{
 							mFlags		|=SURF_SKY;
-							ti.mFlags	|=TexInfo.TEXINFO_SKY;
+							ti.mFlags	|=TexInfo.SKY;
 						}
 						else if(tex == "TOOLS/TOOLSTRIGGER")
 						{

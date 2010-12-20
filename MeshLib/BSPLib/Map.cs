@@ -615,11 +615,11 @@ namespace BSPLib
 
 			GBSPHeader	header	=new GBSPHeader();
 			header.mTAG			="GBSP";
-			header.mVersion		=GBSPChunk.GBSP_VERSION;
+			header.mVersion		=GBSPChunk.VERSION;
 			header.mBSPTime		=DateTime.Now;
 
 			GBSPChunk	chunk	=new GBSPChunk();
-			chunk.mType			=GBSPChunk.GBSP_CHUNK_HEADER;
+			chunk.mType			=GBSPChunk.HEADER;
 			chunk.mElements		=1;
 			chunk.Write(bw, header);
 
@@ -684,7 +684,7 @@ namespace BSPLib
 				return	false;
 			}
 			
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_END;
+			Chunk.mType		=GBSPChunk.END;
 			Chunk.mElements	=0;
 			Chunk.Write(bw);
 
@@ -912,7 +912,7 @@ namespace BSPLib
 				}
 				switch(chunkType)
 				{
-					case GBSPChunk.GBSP_CHUNK_HEADER:
+					case GBSPChunk.HEADER:
 					{
 						GBSPHeader	head	=obj as GBSPHeader;
 						if(head.mTAG != "GBSP")
@@ -921,7 +921,7 @@ namespace BSPLib
 							file.Close();
 							return	false;
 						}
-						if(head.mVersion != GBSPChunk.GBSP_VERSION)
+						if(head.mVersion != GBSPChunk.VERSION)
 						{
 							br.Close();
 							file.Close();
@@ -929,106 +929,106 @@ namespace BSPLib
 						}
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_MODELS:
+					case GBSPChunk.MODELS:
 					{
 						mGFXModels	=obj as GFXModel[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_NODES:
+					case GBSPChunk.NODES:
 					{
 						mGFXNodes	=obj as GFXNode[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_BNODES:
+					case GBSPChunk.BNODES:
 					{
 						mGFXBNodes	=obj as GFXBNode[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_LEAFS:
+					case GBSPChunk.LEAFS:
 					{
 						mGFXLeafs	=obj as GFXLeaf[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_CLUSTERS:
+					case GBSPChunk.CLUSTERS:
 					{
 						mGFXClusters	=obj as GFXCluster[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_AREAS:
+					case GBSPChunk.AREAS:
 					{
 						mGFXAreas	=obj as GFXArea[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_AREA_PORTALS:
+					case GBSPChunk.AREA_PORTALS:
 					{
 						mGFXAreaPortals	=obj as GFXAreaPortal[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_PORTALS:
+					case GBSPChunk.PORTALS:
 					{
 						mGFXPortals	=obj as GFXPortal[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_PLANES:
+					case GBSPChunk.PLANES:
 					{
 						mGFXPlanes	=obj as GFXPlane[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_FACES:
+					case GBSPChunk.FACES:
 					{
 						mGFXFaces	=obj as GFXFace[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_LEAF_FACES:
+					case GBSPChunk.LEAF_FACES:
 					{
 						mGFXLeafFaces	=obj as Int32[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_LEAF_SIDES:
+					case GBSPChunk.LEAF_SIDES:
 					{
 						mGFXLeafSides	=obj as GFXLeafSide[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_VERTS:
+					case GBSPChunk.VERTS:
 					{
 						mGFXVerts	=obj as Vector3[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_VERT_INDEX:
+					case GBSPChunk.VERT_INDEX:
 					{
 						mGFXVertIndexes	=obj as Int32[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_RGB_VERTS:
+					case GBSPChunk.RGB_VERTS:
 					{
 						mGFXRGBVerts	=obj as Vector3[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_TEXINFO:
+					case GBSPChunk.TEXINFO:
 					{
 						mGFXTexInfos	=obj as GFXTexInfo[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_ENTDATA:
+					case GBSPChunk.ENTDATA:
 					{
 						mGFXEntities	=obj as MapEntity[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_LIGHTDATA:
+					case GBSPChunk.LIGHTDATA:
 					{
 						mGFXLightData	=obj as byte[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_VISDATA:
+					case GBSPChunk.VISDATA:
 					{
 						mGFXVisData	=obj as byte[];
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_SKYDATA:
+					case GBSPChunk.SKYDATA:
 					{
 						break;
 					}
-					case GBSPChunk.GBSP_CHUNK_END:
+					case GBSPChunk.END:
 					{
 						break;
 					}
@@ -1039,7 +1039,7 @@ namespace BSPLib
 						return	false;
 					}
 				}
-				if(chunkType == GBSPChunk.GBSP_CHUNK_END)
+				if(chunkType == GBSPChunk.END)
 				{
 					break;
 				}
@@ -1519,7 +1519,7 @@ namespace BSPLib
 				surfVMins[i]	=vmins;
 				surfVMaxs[i]	=vmaxs;
 
-				if((tex.mFlags & TexInfo.TEXINFO_NO_LIGHTMAP) != 0)
+				if((tex.mFlags & TexInfo.NO_LIGHTMAP) != 0)
 				{
 					continue;
 				}

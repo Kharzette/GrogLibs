@@ -54,7 +54,6 @@ namespace BSPLib
 		public Int32	mFirstSide;			// For bevel bbox clipping
 		public Int32	mNumSides;
 
-		public const float	SUBDIVIDESIZE		=235.0f;
 		public const int	MAX_TEMP_LEAF_SIDES	=100;
 		public const int	MAX_LEAF_SIDES		=64000 * 2;
 		public const int	MAX_AREAS			=256;

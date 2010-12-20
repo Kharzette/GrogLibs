@@ -64,13 +64,13 @@ namespace BSPLib
 
 		internal bool IsLightMapped()
 		{
-			return	((mFlags & TexInfo.TEXINFO_NO_LIGHTMAP) == 0);
+			return	((mFlags & TexInfo.NO_LIGHTMAP) == 0);
 		}
 
 
 		internal bool IsAlpha()
 		{
-			return	((mFlags & TexInfo.TEXINFO_TRANS) != 0);
+			return	((mFlags & TexInfo.TRANS) != 0);
 		}
 
 

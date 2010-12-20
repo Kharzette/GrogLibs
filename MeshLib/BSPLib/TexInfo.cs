@@ -19,14 +19,14 @@ namespace BSPLib
 		public string		mMaterial;
 
 		//genesis texinfo flags
-		public const UInt32	TEXINFO_MIRROR		=(1<<0);
-		public const UInt32	TEXINFO_FULLBRIGHT	=(1<<1);
-		public const UInt32	TEXINFO_SKY			=(1<<2);
-		public const UInt32	TEXINFO_LIGHT		=(1<<3);
-		public const UInt32	TEXINFO_TRANS		=(1<<4);
-		public const UInt32	TEXINFO_GOURAUD		=(1<<5);
-		public const UInt32	TEXINFO_FLAT		=(1<<6);
-		public const UInt32	TEXINFO_NO_LIGHTMAP	=(1<<15);
+		public const UInt32	MIRROR		=(1<<0);
+		public const UInt32	FULLBRIGHT	=(1<<1);
+		public const UInt32	SKY			=(1<<2);
+		public const UInt32	LIGHT		=(1<<3);
+		public const UInt32	TRANS		=(1<<4);
+		public const UInt32	GOURAUD		=(1<<5);
+		public const UInt32	FLAT		=(1<<6);
+		public const UInt32	NO_LIGHTMAP	=(1<<15);
 
 
 		internal bool Compare(TexInfo other)

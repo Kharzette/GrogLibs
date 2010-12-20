@@ -262,7 +262,7 @@ namespace BSPLib
 
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_END;
+			Chunk.mType		=GBSPChunk.END;
 			Chunk.mElements	=0;
 			Chunk.Write(bw);
 
@@ -516,11 +516,11 @@ namespace BSPLib
 		{
 			GBSPHeader	header	=new GBSPHeader();
 			header.mTAG			="GBSP";
-			header.mVersion		=GBSPChunk.GBSP_VERSION;
+			header.mVersion		=GBSPChunk.VERSION;
 			header.mBSPTime		=DateTime.Now;
 
 			GBSPChunk	chunk	=new GBSPChunk();
-			chunk.mType			=GBSPChunk.GBSP_CHUNK_HEADER;
+			chunk.mType			=GBSPChunk.HEADER;
 			chunk.mElements		=1;
 			chunk.Write(bw, header);
 

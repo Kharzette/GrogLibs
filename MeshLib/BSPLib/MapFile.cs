@@ -15,7 +15,7 @@ namespace BSPLib
 				return	true;
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();;
-			Chunk.mType			=GBSPChunk.GBSP_CHUNK_TEXTURES;
+			Chunk.mType			=GBSPChunk.TEXTURES;
 			Chunk.mElements		=mTexNames.Count;
 
 			Chunk.Write(bw);
@@ -31,7 +31,7 @@ namespace BSPLib
 		bool LoadTextureNames(BinaryReader br)
 		{
 			Int32	cType	=br.ReadInt32();
-			Debug.Assert(cType == GBSPChunk.GBSP_CHUNK_TEXTURES);
+			Debug.Assert(cType == GBSPChunk.TEXTURES);
 
 			Int32	numEl	=br.ReadInt32();
 			for(int i=0;i < numEl;i++)
@@ -51,7 +51,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();;
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_TEXINFO;
+			Chunk.mType		=GBSPChunk.TEXINFO;
 			Chunk.mElements	=mTIPool.mTexInfos.Count;
 
 			Chunk.Write(bw);
@@ -87,7 +87,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_ENTDATA;
+			Chunk.mType		=GBSPChunk.ENTDATA;
 			Chunk.mElements =mEntities.Count;
 
 			Chunk.Write(bw);
@@ -108,7 +108,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_ENTDATA;
+			Chunk.mType		=GBSPChunk.ENTDATA;
 			Chunk.mElements =mGFXEntities.Length;
 
 			Chunk.Write(bw);
@@ -129,7 +129,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LIGHTDATA;
+			Chunk.mType		=GBSPChunk.LIGHTDATA;
 			Chunk.mElements =mGFXLightData.Length;
 
 			Chunk.Write(bw, mGFXLightData);
@@ -145,7 +145,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_VERT_INDEX;
+			Chunk.mType		=GBSPChunk.VERT_INDEX;
 			Chunk.mElements =mGFXVertIndexes.Length;
 
 			if(!Chunk.Write(bw, mGFXVertIndexes))
@@ -165,7 +165,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_VISDATA;
+			Chunk.mType		=GBSPChunk.VISDATA;
 			Chunk.mElements =mGFXVisData.Length;
 
 			if(!Chunk.Write(bw, mGFXVisData))
@@ -187,7 +187,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_PLANES;
+			Chunk.mType		=GBSPChunk.PLANES;
 			Chunk.mElements	=mGFXPlanes.Length;
 
 			Chunk.Write(bw);
@@ -208,7 +208,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_FACES;
+			Chunk.mType		=GBSPChunk.FACES;
 			Chunk.mElements =mGFXFaces.Length;
 
 			Chunk.Write(bw);
@@ -229,7 +229,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_PORTALS;
+			Chunk.mType		=GBSPChunk.PORTALS;
 			Chunk.mElements =mGFXPortals.Length;
 
 			Chunk.Write(bw);
@@ -250,7 +250,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_BNODES;
+			Chunk.mType		=GBSPChunk.BNODES;
 			Chunk.mElements =mGFXBNodes.Length;
 
 			Chunk.Write(bw);
@@ -272,7 +272,7 @@ namespace BSPLib
 				//
 				// Save the areas first
 				//
-				Chunk.mType		=GBSPChunk.GBSP_CHUNK_AREAS;
+				Chunk.mType		=GBSPChunk.AREAS;
 				Chunk.mElements =mGFXAreas.Length;
 
 				Chunk.Write(bw, mGFXAreas);
@@ -283,7 +283,7 @@ namespace BSPLib
 				//
 				//	Then, save the areaportals
 				//
-				Chunk.mType		=GBSPChunk.GBSP_CHUNK_AREA_PORTALS;
+				Chunk.mType		=GBSPChunk.AREA_PORTALS;
 				Chunk.mElements =mGFXAreaPortals.Length;
 
 				Chunk.Write(bw, mGFXAreaPortals);
@@ -299,7 +299,7 @@ namespace BSPLib
 				return	true;
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
-			Chunk.mType			=GBSPChunk.GBSP_CHUNK_CLUSTERS;
+			Chunk.mType			=GBSPChunk.CLUSTERS;
 			Chunk.mElements		=mGFXClusters.Length;
 
 			Chunk.Write(bw);
@@ -320,7 +320,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk		=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_CLUSTERS;
+			Chunk.mType		=GBSPChunk.CLUSTERS;
 			Chunk.mElements =mGFXClusters.Length;
 
 			Chunk.Write(bw);
@@ -341,7 +341,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LEAFS;
+			Chunk.mType		=GBSPChunk.LEAFS;
 			Chunk.mElements	=mGFXLeafs.Length;
 
 			Chunk.Write(bw);
@@ -363,7 +363,7 @@ namespace BSPLib
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LEAFS;
+			Chunk.mType		=GBSPChunk.LEAFS;
 			Chunk.mElements	=nc.mNumGFXLeafs;
 
 			Chunk.Write(bw);
@@ -385,7 +385,7 @@ namespace BSPLib
 			mGFXLeafFaces	=gfxLeafFaces.ToArray();
 
 			//Save gfx leaf faces here...
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LEAF_FACES;
+			Chunk.mType		=GBSPChunk.LEAF_FACES;
 			Chunk.mElements =nc.mNumGFXLeafFaces;
 
 			Chunk.Write(bw, mGFXLeafFaces);
@@ -402,7 +402,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LEAFS;
+			Chunk.mType		=GBSPChunk.LEAFS;
 			Chunk.mElements	=mGFXLeafs.Length;
 
 			Chunk.Write(bw);
@@ -421,14 +421,14 @@ namespace BSPLib
 
 			if(mGFXLeafFaces.Length > 0)
 			{
-				Chunk.mType		=GBSPChunk.GBSP_CHUNK_LEAF_FACES;
+				Chunk.mType		=GBSPChunk.LEAF_FACES;
 				Chunk.mElements	=mGFXLeafFaces.Length;
 				Chunk.Write(bw, mGFXLeafFaces);
 			}
 
 			if(mGFXLeafSides.Length > 0)
 			{
-				Chunk.mType		=GBSPChunk.GBSP_CHUNK_LEAF_SIDES;
+				Chunk.mType		=GBSPChunk.LEAF_SIDES;
 				Chunk.mElements	=mGFXLeafSides.Length;
 				Chunk.Write(bw, mGFXLeafSides);
 			}
@@ -445,7 +445,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_NODES;
+			Chunk.mType		=GBSPChunk.NODES;
 			Chunk.mElements	=mGFXNodes.Length;
 
 			Chunk.Write(bw);
@@ -466,7 +466,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();;
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_TEXINFO;
+			Chunk.mType		=GBSPChunk.TEXINFO;
 			Chunk.mElements	=mGFXTexInfos.Length;
 
 			Chunk.Write(bw);
@@ -489,7 +489,7 @@ namespace BSPLib
 			GBSPChunk	Chunk	=new GBSPChunk();
 			GFXModel	GModel	=new GFXModel();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_MODELS;
+			Chunk.mType		=GBSPChunk.MODELS;
 			Chunk.mElements	=mModels.Count;
 
 			Chunk.Write(bw);
@@ -510,7 +510,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_MODELS;
+			Chunk.mType		=GBSPChunk.MODELS;
 			Chunk.mElements	=mGFXModels.Length;
 
 			Chunk.Write(bw);
@@ -532,7 +532,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LEAF_SIDES;
+			Chunk.mType		=GBSPChunk.LEAF_SIDES;
 			Chunk.mElements =mGFXLeafSides.Length;
 
 			if(!Chunk.Write(bw, mGFXLeafSides))
@@ -553,7 +553,7 @@ namespace BSPLib
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_NODES;
+			Chunk.mType		=GBSPChunk.NODES;
 			Chunk.mElements	=nc.mNumGFXNodes;
 
 			Chunk.Write(bw);
@@ -578,7 +578,7 @@ namespace BSPLib
 			Int32		i;
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_FACES;
+			Chunk.mType		=GBSPChunk.FACES;
 			Chunk.mElements =nc.mNumGFXFaces;
 
 			Chunk.Write(bw);
@@ -604,7 +604,7 @@ namespace BSPLib
 			GBSPChunk	Chunk		=new GBSPChunk();
 			GFXCluster	GCluster	=new GFXCluster();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_CLUSTERS;
+			Chunk.mType		=GBSPChunk.CLUSTERS;
 			Chunk.mElements =nc.mNumLeafClusters;
 
 			Chunk.Write(bw);
@@ -627,7 +627,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_VERTS;
+			Chunk.mType		=GBSPChunk.VERTS;
 			Chunk.mElements =mGFXVerts.Length;
 
 			if(!Chunk.Write(bw, mGFXVerts))
@@ -647,7 +647,7 @@ namespace BSPLib
 			}
 			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_RGB_VERTS;
+			Chunk.mType		=GBSPChunk.RGB_VERTS;
 			Chunk.mElements =mGFXRGBVerts.Length;
 
 			if(!Chunk.Write(bw, mGFXRGBVerts))

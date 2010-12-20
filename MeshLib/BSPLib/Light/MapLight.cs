@@ -242,7 +242,7 @@ namespace BSPLib
 			DateTime	dt			=DateTime.FromBinary(br.ReadInt64());
 			Int32		numPatches	=br.ReadInt32();
 
-			if(ver != GBSPChunk.GBSP_VERSION)
+			if(ver != GBSPChunk.VERSION)
 			{
 				Print("*WARNING*  LoadReceiverFile:  Versions do not match, skipping...\n");
 				br.Close();
@@ -296,7 +296,7 @@ namespace BSPLib
 
 			BinaryWriter	bw	=new BinaryWriter(fs);
 
-			bw.Write(GBSPChunk.GBSP_VERSION);
+			bw.Write(GBSPChunk.VERSION);
 			bw.Write(DateTime.Now.ToBinary());
 			bw.Write(NumPatches);
 
@@ -423,8 +423,8 @@ namespace BSPLib
 
 				Flags	=mGFXTexInfos[mGFXFaces[i].mTexInfo].mFlags;
 
-				if (((Flags & TexInfo.TEXINFO_NO_LIGHTMAP) != 0)
-					&& ((Flags & TexInfo.TEXINFO_GOURAUD)) == 0)
+				if (((Flags & TexInfo.NO_LIGHTMAP) != 0)
+					&& ((Flags & TexInfo.GOURAUD)) == 0)
 				{
 					continue;
 				}
@@ -467,7 +467,7 @@ namespace BSPLib
 					return	false;
 				}
 				
-				if((Flags & TexInfo.TEXINFO_GOURAUD) != 0)
+				if((Flags & TexInfo.GOURAUD) != 0)
 				{
 					for(int k=0;k < pGFXFace.mNumVerts;k++)
 					{
@@ -1026,7 +1026,7 @@ namespace BSPLib
 				GFXTexInfo	tex	=mGFXTexInfos[mGFXFaces[i].mTexInfo];
 
 				//Only look at surfaces that want to emit light
-				if((tex.mFlags & TexInfo.TEXINFO_LIGHT) == 0)
+				if((tex.mFlags & TexInfo.LIGHT) == 0)
 				{
 					continue;
 				}
@@ -1104,7 +1104,7 @@ namespace BSPLib
 				Vector3	vert	=mGFXVerts[index];
 
 				Vector3	norm;
-				if((tex.mFlags & TexInfo.TEXINFO_FLAT) != 0)
+				if((tex.mFlags & TexInfo.FLAT) != 0)
 				{
 					norm	=mFaceInfos[faceNum].GetPlaneNormal();
 				}
@@ -1299,7 +1299,7 @@ namespace BSPLib
 				GFXTexInfo	tex		=mGFXTexInfos[mGFXFaces[i].mTexInfo];
 				GFXFace		face	=mGFXFaces[i];
 
-				if((tex.mFlags & TexInfo.TEXINFO_GOURAUD) != 0)
+				if((tex.mFlags & TexInfo.GOURAUD) != 0)
 				{
 					if(!GouraudShadeFace(i))
 					{
@@ -1315,7 +1315,7 @@ namespace BSPLib
 				}
 								
 				//Faces with no lightmap don't need to light them 
-				if((tex.mFlags & TexInfo.TEXINFO_NO_LIGHTMAP) != 0)
+				if((tex.mFlags & TexInfo.NO_LIGHTMAP) != 0)
 				{
 					continue;
 				}
@@ -1514,7 +1514,7 @@ namespace BSPLib
 			
 			// Write out fake chunk (so we can write the real one here later)
 			GBSPChunk	Chunk	=new GBSPChunk();
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LIGHTDATA;
+			Chunk.mType		=GBSPChunk.LIGHTDATA;
 			Chunk.mElements	=0;
 
 			Chunk.Write(f);
@@ -1541,7 +1541,7 @@ namespace BSPLib
 				
 				//Skip special faces with no lightmaps
 				if((mGFXTexInfos[mGFXFaces[i].mTexInfo].mFlags
-					& TexInfo.TEXINFO_NO_LIGHTMAP) != 0)
+					& TexInfo.NO_LIGHTMAP) != 0)
 				{
 					continue;
 				}
@@ -1652,7 +1652,7 @@ namespace BSPLib
 
 			f.BaseStream.Seek(pos1, SeekOrigin.Begin);
 
-			Chunk.mType		=GBSPChunk.GBSP_CHUNK_LIGHTDATA;
+			Chunk.mType		=GBSPChunk.LIGHTDATA;
 			Chunk.mElements =LightOffset;
 
 			Chunk.Write(f);
@@ -1667,11 +1667,11 @@ namespace BSPLib
 		{
 			GBSPHeader	header	=new GBSPHeader();
 			header.mTAG			="GBSP";
-			header.mVersion		=GBSPChunk.GBSP_VERSION;
+			header.mVersion		=GBSPChunk.VERSION;
 			header.mBSPTime		=DateTime.Now;
 
 			GBSPChunk	chunk	=new GBSPChunk();
-			chunk.mType			=GBSPChunk.GBSP_CHUNK_HEADER;
+			chunk.mType			=GBSPChunk.HEADER;
 			chunk.mElements		=1;
 			chunk.Write(bw, header);
 
@@ -1683,7 +1683,7 @@ namespace BSPLib
 			{
 				return	false;
 			}
-			chunk.mType		=GBSPChunk.GBSP_CHUNK_END;
+			chunk.mType		=GBSPChunk.END;
 			chunk.mElements	=0;
 			chunk.Write(bw);
 
@@ -1698,11 +1698,11 @@ namespace BSPLib
 
 			GBSPHeader	header	=new GBSPHeader();
 			header.mTAG			="GBSP";
-			header.mVersion		=GBSPChunk.GBSP_VERSION;
+			header.mVersion		=GBSPChunk.VERSION;
 			header.mBSPTime		=DateTime.Now;
 
 			GBSPChunk	chunk	=new GBSPChunk();
-			chunk.mType			=GBSPChunk.GBSP_CHUNK_HEADER;
+			chunk.mType			=GBSPChunk.HEADER;
 			chunk.mElements		=1;
 			chunk.Write(bw, header);
 

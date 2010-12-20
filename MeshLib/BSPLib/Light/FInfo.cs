@@ -181,7 +181,7 @@ namespace BSPLib
 
 					if(InSolid[u])
 					{
-						continue;	// We know this point is bad
+						continue;	//We know this point is bad
 					}
 
 					//At this point, we have a good point,
