@@ -68,6 +68,27 @@ namespace BSPLib
 
 		public bool GetVector(string key, out Vector3 org)
 		{
+			if(GetVectorNoConversion(key, out org))
+			{
+				//flip x
+				org.X	=-org.X;
+
+				//swap y and z
+				float	zTemp	=org.Z;
+				org.Z	=org.Y;
+				org.Y	=zTemp;
+
+				return	true;
+			}
+			else
+			{
+				return	false;
+			}
+		}
+
+
+		public bool GetVectorNoConversion(string key, out Vector3 org)
+		{
 			org	=Vector3.Zero;
 			if(!mData.ContainsKey(key))
 			{
@@ -91,13 +112,6 @@ namespace BSPLib
 			{
 				return	false;
 			}
-			//flip x
-			org.X	=-org.X;
-
-			//swap y and z
-			float	zTemp	=org.Z;
-			org.Z	=org.Y;
-			org.Y	=zTemp;
 
 			return	true;
 		}

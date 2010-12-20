@@ -696,6 +696,13 @@ namespace BSPLib
 				Print("LightGBSPFile:  Could not load GBSP file: " + fileName + "\n");
 				return	false;
 			}
+
+			//ensure vis is built
+			if(mGFXVisData == null)
+			{
+				Print("No vis data for lighting!\n");
+				return	false;
+			}
 			
 			//Allocate some RGBLight data now
 			mGFXRGBVerts	=new Vector3[mGFXVertIndexes.Length];
@@ -916,22 +923,49 @@ namespace BSPLib
 				dLight.mType		=DirectLight.DLight_Point;	//hardcode for now
 
 				Vector3	Angles;
-				if(ent.GetVector("angles", out Angles))
+				if(ent.GetVectorNoConversion("angles", out Angles))
 				{
 					//hammer style
 					Vector3	Angles2	=Vector3.Zero;
-					Angles2.X	=(Angles.X / 180) * (float)Math.PI;
-					Angles2.Y	=(Angles.Y / 180) * (float)Math.PI;
-					Angles2.Z	=(Angles.Z / 180) * (float)Math.PI;
+					Angles2.X	=MathHelper.ToRadians(Angles.X);
+					Angles2.Y	=MathHelper.ToRadians(Angles.Y);
+					Angles2.Z	=MathHelper.ToRadians(Angles.Z);
 
-					Matrix	mat	=Matrix.CreateFromYawPitchRoll(Angles2.X, Angles2.Y, Angles2.Z); 
+					//coord system conversion needs this
+					Angles2.Y	+=(float)(Math.PI / 2.0f);
 
-					Angles2	=mat.Left;
-					dLight.mNormal.X	=-Angles2.X;
-					dLight.mNormal.Y	=-Angles2.Y;
-					dLight.mNormal.Z	=-Angles2.Z;
+					Matrix	mat	=Matrix.Identity;
+
+					//check for pitch
+					float	pitch	=0.0f;
+					if(ent.GetFloat("pitch", out pitch))
+					{
+						pitch	=MathHelper.ToRadians(pitch);
+						mat		=Matrix.CreateFromYawPitchRoll(Angles2.Y, pitch, Angles2.Z); 
+					}
+					else
+					{
+						mat	=Matrix.CreateFromYawPitchRoll(Angles2.Y, Angles2.X, Angles2.Z); 
+					}
+
+					dLight.mNormal	=mat.Forward;
 
 					dLight.mAngle	=(float)Math.Cos(dLight.mAngle / 180.0f * Math.PI);					
+
+					//check for cone
+					float	cone	=0.0f;
+					if(ent.GetFloat("_cone", out cone))
+					{
+						dLight.mAngle	=MathHelper.ToRadians(cone);
+					}
+
+					//check for inner cone
+					float	inner	=0.0f;
+					if(ent.GetFloat("_inner_cone", out inner))					
+					{
+						//no use for this yet
+//						dLight.mAngle	+=MathHelper.ToRadians(inner);
+					}
 				}
 				else if(ent.GetVector("mangle", out Angles))
 				{
