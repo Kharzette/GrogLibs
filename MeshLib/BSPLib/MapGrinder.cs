@@ -162,53 +162,19 @@ namespace BSPLib
 					{
 						Vector2	tc	=coords[k];
 
-//						tc.X	-=bnd.mMins.X;
-//						tc.Y	-=bnd.mMins.Y;
-
-//						tc	/=16.0f;
-//						tc	/=4.0f;
-
-
-						tc.X	/=f.mLWidth;
-						tc.X	/=4096;
-						tc.Y	/=f.mLHeight;
-						tc.Y	/=4096;
+						tc.X	/=(f.mLWidth + 1);
+						tc.X	/=TexAtlas.TEXATLAS_WIDTH;
+						tc.Y	/=(f.mLHeight + 1);
+						tc.Y	/=TexAtlas.TEXATLAS_HEIGHT;
 
 						tc.X	*=f.mLWidth;
 						tc.Y	*=f.mLHeight;
 
-
-//						tc.X	*=(float)scaleU;
-//						tc.Y	*=(float)scaleV;
 						tc.X	+=(float)offsetU;
 						tc.Y	+=(float)offsetV;
-
-
-//						tc	/=4;
 
 						mFaceTex1.Add(tc);
 					}
-					/*
-						bnd.mMins	/=16;
-
-						//lightmap coords
-						tc		/=16;
-						tc.X	-=bnd.mMins.X;
-						tc.Y	-=bnd.mMins.Y;
-						tc.X	+=0.5f;
-						tc.Y	+=0.5f;
-//						tc.X	/=f.mLWidth;
-//						tc.Y	/=f.mLHeight;
-						tc.X	*=(float)scaleU;
-						tc.Y	*=(float)scaleV;
-						tc.X	+=(float)offsetU;
-						tc.Y	+=(float)offsetV;
-//						tc.X	-=bnd.mMins.X / 16;
-//						tc.Y	-=bnd.mMins.Y / 16;
-
-						//tex1 here for now
-						mFaceTex1.Add(tc);
-					}*/
 					firstVert.Add(mFaceVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
 				}
@@ -262,7 +228,7 @@ namespace BSPLib
 			minT	=Bounds.MIN_MAX_BOUNDS;
 
 			GBSPPlane	pln;
-			pln.mNormal	=Vector3.Cross(tex.mVecs[1], tex.mVecs[0]);
+			pln.mNormal	=Vector3.Cross(tex.mVecs[0], tex.mVecs[1]);
 
 			pln.mNormal.Normalize();
 			pln.mDist	=0;
@@ -291,10 +257,9 @@ namespace BSPLib
 				}
 			}
 
-//			float	shiftU	=-minS + 8.0f;//TexInfo.LIGHTMAPHALFSCALE;
-//			float	shiftV	=-minT + 8.0f;//TexInfo.LIGHTMAPHALFSCALE;
-			float	shiftU	=-minS;// - 0.5f;//TexInfo.LIGHTMAPHALFSCALE;
-			float	shiftV	=-minT;// - 0.5f;//TexInfo.LIGHTMAPHALFSCALE;
+			//in light space at this point
+			float	shiftU	=-minS + 1.5f;
+			float	shiftV	=-minT + 1.5f;
 
 			foreach(Vector3 pnt in verts)
 			{
