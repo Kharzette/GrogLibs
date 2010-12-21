@@ -1056,15 +1056,10 @@ namespace BSPLib
 			br.Close();
 			file.Close();
 
-			//grab list of material names
-			List<string>	matNames	=new List<string>();
-			foreach(GFXTexInfo tex in mGFXTexInfos)
-			{
-				if(!matNames.Contains(tex.mMaterial))
-				{
-					matNames.Add(tex.mMaterial);
-				}
-			}
+			//grab list of material names from grinder
+			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, 69);
+
+			List<string>	matNames	=mg.GetMaterialNames();
 
 			//for material vis
 			mNumVisMaterialBytes	=((matNames.Count + 63) & ~63) >> 3;
@@ -1384,290 +1379,42 @@ namespace BSPLib
 
 		public List<MaterialLib.Material> GetMaterials()
 		{
-			List<string>	matNames	=new List<string>();
-			foreach(GFXTexInfo tex in mGFXTexInfos)
-			{
-				if(!matNames.Contains(tex.mMaterial))
-				{
-					matNames.Add(tex.mMaterial);
-				}
-			}
+			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, 69);
 
-			//build material list
-			List<MaterialLib.Material>	ret	=new List<MaterialLib.Material>();
-			foreach(string matName in matNames)
-			{
-				MaterialLib.Material	mat	=new MaterialLib.Material();
-				mat.Name	=matName;
-				if(matName.EndsWith("Alpha"))
-				{
-					mat.Alpha	=true;
-				}
-				else if(matName.EndsWith("Mirror"))
-				{
-					mat.Alpha	=true;
-				}
-				mat.ShaderName		="";
-				mat.Technique		="";
-				mat.BlendFunction	=BlendFunction.Add;
-				mat.SourceBlend		=Blend.SourceAlpha;
-				mat.DestBlend		=Blend.InverseSourceAlpha;
-				mat.DepthWrite		=true;
-				mat.CullMode		=CullMode.CullCounterClockwiseFace;
-				mat.ZFunction		=CompareFunction.Less;
-				ret.Add(mat);
-			}
-			return	ret;
+			return	mg.GetMaterials();
 		}
 
 
-		public void BuildRenderData2(GraphicsDevice g, out VertexBuffer solidVB,
-			out IndexBuffer solidIB,
-			out int numSolidVerts, out int numSolidTris)
-		{
-			//do vec to texcoord conversions
-			Vector2	[]solidTex0		=new Vector2[mGFXVertIndexes.Length];
-			Vector2	[]solidTex1		=new Vector2[mGFXVertIndexes.Length];
-			foreach(GFXFace f in mGFXFaces)
-			{
-				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
-
-				int	nverts	=f.mNumVerts;
-				int	fvert	=f.mFirstVert;
-				for(int i=fvert;i < (nverts + fvert);i++)
-				{
-					int	idx	=mGFXVertIndexes[i];
-					solidTex0[i].X	=Vector3.Dot(mGFXVerts[idx], tex.mVecs[0]);
-					solidTex0[i].Y	=Vector3.Dot(mGFXVerts[idx], tex.mVecs[1]);
-
-					solidTex1[i].X	=solidTex0[i].X;
-					solidTex1[i].Y	=solidTex0[i].Y;
-				}
-			}
-
-			//misc stuff related to lightmaps
-			Vector2	[]surfShifts	=new Vector2[mGFXFaces.Length];
-			Vector3	[]surfVMins		=new Vector3[mGFXFaces.Length];
-			Vector3	[]surfVMaxs		=new Vector3[mGFXFaces.Length];
-			Point	[]surfMin		=new Point[mGFXFaces.Length];
-			for(int i=0;i < mGFXFaces.Length;i++)
-			{
-				GFXFace		f	=mGFXFaces[i];
-				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
-
-				List<Vector2>	coords	=new List<Vector2>();
-
-				float	xScale	=tex.mVecs[0].Length();
-				float	yScale	=tex.mVecs[1].Length();
-
-				float	[]mins	=new float[2];
-				float	[]maxs	=new float[2];
-				Vector3	vmins	=Vector3.Zero;
-				Vector3	vmaxs	=Vector3.Zero;
-
-				for(int k=0;k < 2;k++)
-				{
-					mins[k] = 99999.0f;
-					maxs[k] =-99999.0f;
-				}
-				for(int k=0;k < 3;k++)
-				{
-					UtilityLib.Mathery.VecIdxAssign(ref vmins, k, 99999.0f);
-					UtilityLib.Mathery.VecIdxAssign(ref vmaxs, k, -99999.0f);
-				}
-
-				for(int v=0;v < f.mNumVerts;v++)
-				{
-					int	vn	=v + f.mFirstVert;
-
-					float	U	=solidTex0[vn].X;
-					float	V	=solidTex0[vn].Y;
-
-					if(U < mins[0])
-					{
-						mins[0]	=U;
-					}
-					if(U > maxs[0])
-					{
-						maxs[0]	=U;
-					}
-					if(V < mins[1])
-					{
-						mins[1]	=V;
-					}
-					if(V > maxs[1])
-					{
-						maxs[1]	=V;
-					}
-
-					int	Index	=mGFXVertIndexes[vn];
-
-					for(int k=0;k < 3;k++)
-					{
-						if(UtilityLib.Mathery.VecIdx(mGFXVerts[Index], k)
-							< UtilityLib.Mathery.VecIdx(vmins, k))
-						{
-							UtilityLib.Mathery.VecIdxAssign(ref vmins, k, UtilityLib.Mathery.VecIdx(mGFXVerts[Index], k));
-						}
-						if(UtilityLib.Mathery.VecIdx(mGFXVerts[Index], k)
-							> UtilityLib.Mathery.VecIdx(vmaxs, k))
-						{
-							UtilityLib.Mathery.VecIdxAssign(ref vmaxs, k, UtilityLib.Mathery.VecIdx(mGFXVerts[Index], k));
-						}
-					}
-				}
-				//Calculate Shift values
-				{
-//					Int32	Width, Height;
-					float	au, av, ScaleU, ScaleV;
-
-					ScaleU	=1.0f / tex.mDrawScale[0];
-					ScaleV	=1.0f / tex.mDrawScale[1];
-					
-//					Width	=pTexture->Width;
-//					Height	=pTexture->Height;
-
-					//Interpret the uv's the same way the drivers will
-//					au	=(float)(((Int32)((mins[0] * ScaleU + tex.mShift[0]) / Width )) * Width);
-//					av	=(float)(((Int32)((mins[1] * ScaleV + tex.mShift[1]) / Height)) * Height);
-					au	=(float)((Int32)(mins[0] * ScaleU + tex.mShift[0]));
-					av	=(float)((Int32)(mins[1] * ScaleV + tex.mShift[1]));
-
-					surfShifts[i].X	=tex.mShift[0] - au;
-					surfShifts[i].Y	=tex.mShift[1] - av;
-				}
-				surfVMins[i]	=vmins;
-				surfVMaxs[i]	=vmaxs;
-
-				if((tex.mFlags & TexInfo.NO_LIGHTMAP) != 0)
-				{
-					continue;
-				}
-
-				Int32	[]size	=new int[2];
-
-				for(int k=0;k < 2;k++)
-				{
-					mins[k]	=(float)Math.Floor(mins[k] / mLightParams.mLightGridSize);
-					maxs[k]	=(float)Math.Ceiling(maxs[k] / mLightParams.mLightGridSize);
-					
-					size[k]	=(Int32)(maxs[k] - mins[k]) + 1;
-					
-					if(size[k] > LInfo.MAX_LMAP_SIZE)
-					{
-						Print("size > MAX_LMAP_SIZE");
-					}
-				}
-				size[0]	=mGFXFaces[i].mLWidth;
-				size[1]	=mGFXFaces[i].mLHeight;
-
-				surfMin[i].X	=(Int32)(mins[0] * mLightParams.mLightGridSize);
-				surfMin[i].Y	=(Int32)(mins[1] * mLightParams.mLightGridSize);
-			}
-
-			for(int i=0;i < mGFXFaces.Length;i++)
-			{
-				GFXFace		f	=mGFXFaces[i];
-				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
-
-				float		u, v, u2, v2;
-				float		ShiftU, ShiftV, ScaleU, ScaleV;
-				float		ShiftU2, ShiftV2;
-
-				// Set up shifts and scaled for texture uv's
-				ShiftU	=surfShifts[i].X;
-				ShiftV	=surfShifts[i].Y;
-					
-		 		ScaleU	=1.0f / tex.mDrawScale[0];
-				ScaleV	=1.0f / tex.mDrawScale[1];
-
-				// Set up shifts and scaled for lightmap uv's
-				ShiftU2	=(float)-surfMin[i].X + 8.0f;
-				ShiftV2	=(float)-surfMin[i].Y + 8.0f;
-
-				int	nverts	=f.mNumVerts;
-				int	fvert	=f.mFirstVert;
-				for(int j=fvert;j < (nverts + fvert);j++)
-				{
-					u	=solidTex0[j].X * ScaleU + ShiftU;
-					v	=solidTex0[j].Y * ScaleV + ShiftV;
-
-					solidTex0[j].X	=u;	// div by texwidth
-					solidTex0[j].Y	=v;	// div by texwidth
-
-					u2	=solidTex1[j].X + ShiftU2;
-					v2	=solidTex1[j].Y + ShiftV2;
-
-					solidTex1[j].X	=u;//div by something * InvScale2;
-					solidTex1[j].Y	=v;//div by something * InvScale2;
-				}
-			}
-
-			List<int>	solidIndexes	=new List<int>();
-			foreach(GFXFace f in mGFXFaces)
-			{
-				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
-				int		nverts	=f.mNumVerts;
-				int		fvert	=f.mFirstVert;
-				int		k		=0;
-
-				//triangulate
-				for(k=1;k < nverts-1;k++)
-				{
-					int	idx	=mGFXVertIndexes[fvert];
-					solidIndexes.Add(mGFXVertIndexes[fvert]);
-					solidIndexes.Add(mGFXVertIndexes[fvert + k]);
-					solidIndexes.Add(mGFXVertIndexes[fvert + ((k + 1) % nverts)]);
-				}
-			}
-
-			VPosTex0Tex1	[]solidVArray	=new VPosTex0Tex1[mGFXVerts.Length];
-			for(int i=0;i < mGFXVerts.Length;i++)
-			{
-				solidVArray[i].Position		=mGFXVerts[i];
-				solidVArray[i].TexCoord0	=solidTex0[i];
-				solidVArray[i].TexCoord1	=solidTex0[i];
-			}
-
-			solidVB	=new VertexBuffer(g, 28 * solidVArray.Length, BufferUsage.WriteOnly);
-			solidVB.SetData<VPosTex0Tex1>(solidVArray);
-
-			solidIB	=new IndexBuffer(g, 4 * solidIndexes.Count, BufferUsage.WriteOnly, IndexElementSize.ThirtyTwoBits);
-			solidIB.SetData<int>(solidIndexes.ToArray());
-
-			numSolidVerts	=mGFXVerts.Length;
-			numSolidTris	=solidIndexes.Count / 3;
-		}
-
-
-		public void BuildRenderData3(GraphicsDevice g, out VertexBuffer solidVB,
-			out IndexBuffer solidIB, out Int32 []matOffsets,
+		public void BuildLMRenderData(GraphicsDevice g, out VertexBuffer lmVB,
+			out IndexBuffer lmIB, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris,
-			out TexAtlas lightAtlas,
-			out int numSolidVerts, out int numSolidTris)
+			out TexAtlas lightAtlas)
 		{
-			List<string>	matNames	=new List<string>();
-			foreach(GFXTexInfo tex in mGFXTexInfos)
-			{
-				if(!matNames.Contains(tex.mMaterial))
-				{
-					matNames.Add(tex.mMaterial);
-				}
-			}
+			//todo: fix light map scale at the end there
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
 
-			//todo:fix
-			MapGrinder	mg	=new MapGrinder(g, matNames, 4);
+			mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData);
 
-			mg.BuildFaceData(mGFXVerts, mGFXVertIndexes, mGFXTexInfos, mGFXFaces, mGFXLightData);
-
-			mg.GetBuffers(out solidVB, out solidIB);
-
-			numSolidVerts	=mg.GetNumVerts();
-			numSolidTris	=mg.GetNumTris();
+			mg.GetLMBuffers(out lmVB, out lmIB);
 
 			lightAtlas	=mg.GetLightMapAtlas();
 
-			mg.GetMaterialData(out matOffsets, out matNumVerts, out matNumTris);
+			mg.GetLMMaterialData(out matOffsets, out matNumVerts, out matNumTris);
+		}
+
+
+		public void BuildNonLMRenderData(GraphicsDevice g, out VertexBuffer nonLMVB,
+			out IndexBuffer nonLMIB, out Int32 []matOffsets,
+			out Int32 []matNumVerts, out Int32 []matNumTris)
+		{
+			//todo:fix
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
+
+			mg.BuildNonLMFaceData(mGFXVerts, mGFXVertIndexes);
+
+			mg.GetNonLMBuffers(out nonLMVB, out nonLMIB);
+
+			mg.GetNonLMMaterialData(out matOffsets, out matNumVerts, out matNumTris);
 		}
 
 

@@ -238,9 +238,8 @@ namespace BSPLib
 					mGFXMaterialVisData[visMat.Key * mNumVisMaterialBytes + (idx >> 3)]
 						|=(byte)(1 << (idx & 7));
 				}
-//				gfxMatVisData[visMat.Key * numVisMatBytes + (visMat.Key >> 3)]
-//					|=(byte)(1 << (visMat.Key & 7));
 			}
+			Print("Material Vis Complete:  " + mGFXMaterialVisData.Length + " bytes.\n");
 		}
 
 

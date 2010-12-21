@@ -43,17 +43,16 @@ namespace BSPBuilder
 		string					mDrawChoice;
 
 		//new debug draw stuff
-		VertexBuffer		mSolidVB;
-		VertexDeclaration	mSolidVD;
-		IndexBuffer			mSolidIB;
+		VertexBuffer		mLMVB, mNonLMVB, mLMAnimVB;
+		VertexDeclaration	mLMVD, mNonLMVD, mLMAnimVD;
+		IndexBuffer			mLMIB, mNonLMIB, mLMAnimIB;
 		TexAtlas			mLMapAtlas;
-		int					mNumSolidVerts, mNumSolidTris;
 		Int32				mDebugLeaf;
 
 		//material draw stuff
-		Int32	[]mMatOffsets;
-		Int32	[]mMatNumVerts;
-		Int32	[]mMatNumTris;
+		Int32[]	mLMMatOffsets, mNonLMMatOffsets, mLMAnimMatOffsets;
+		Int32[]	mLMMatNumVerts, mNonLMMatNumVerts, mLMAnimMatNumVerts;
+		Int32[]	mLMMatNumTris, mNonLMMatNumTris, mLMAnimMatNumTris;
 
 		//collision debuggery
 		Vector3				mStart, mEnd;
@@ -143,6 +142,43 @@ namespace BSPBuilder
 
 			Map.ePrint	+=OnMapPrint;
 
+			//make vertex declarations
+			//lightmapped
+			VertexElement	[]ve	=new VertexElement[3];
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
+			mLMVD	=new VertexDeclaration(mGDM.GraphicsDevice, ve);
+
+			//non lightmapped (single texture)
+			ve	=new VertexElement[2];
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+			mNonLMVD	=new VertexDeclaration(mGDM.GraphicsDevice, ve);
+
+			//animated lightmapped
+			ve	=new VertexElement[7];
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
+			ve[3]	=new VertexElement(0, 28, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 2);
+			ve[4]	=new VertexElement(0, 36, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 3);
+			ve[5]	=new VertexElement(0, 44, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 4);
+			ve[6]	=new VertexElement(0, 52, VertexElementFormat.Vector4,
+				VertexElementMethod.Default, VertexElementUsage.Color, 4);
+			mLMAnimVD	=new VertexDeclaration(mGDM.GraphicsDevice, ve);
+
 			//tired of that gump
 //			OnOpenVMF("C:\\Users\\kbaird\\Documents\\sdk_arena_lumberyard.vmf", null);
 		}
@@ -185,9 +221,9 @@ namespace BSPBuilder
 		}
 
 
-		void DrawSolids()
+		void DrawLightMapped()
 		{
-			if(mSolidVB == null)
+			if(mLMVB == null)
 			{
 				return;
 			}
@@ -196,9 +232,9 @@ namespace BSPBuilder
 
 			GraphicsDevice	g	=mGDM.GraphicsDevice;
 
-			g.VertexDeclaration	=mSolidVD;
-			g.Vertices[0].SetSource(mSolidVB, 0, 28);
-			g.Indices	=mSolidIB;
+			g.VertexDeclaration	=mLMVD;
+			g.Vertices[0].SetSource(mLMVB, 0, 28);
+			g.Indices	=mLMIB;
 
 			int	idx	=0;
 
@@ -210,7 +246,7 @@ namespace BSPBuilder
 					idx++;
 					continue;
 				}
-				if(mMatNumVerts[idx] <= 0)
+				if(mLMMatNumVerts[idx] <= 0)
 				{
 					idx++;
 					continue;
@@ -244,9 +280,153 @@ namespace BSPBuilder
 
 					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
 						0, 0,
-						mMatNumVerts[idx],
-						mMatOffsets[idx],
-						mMatNumTris[idx]);
+						mLMMatNumVerts[idx],
+						mLMMatOffsets[idx],
+						mLMMatNumTris[idx]);
+
+					pass.End();
+				}
+				fx.End();
+
+				idx++;
+			}
+		}
+
+
+		void DrawAnimatedLightMapped()
+		{
+			if(mLMAnimVB == null)
+			{
+				return;
+			}
+
+			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
+
+			GraphicsDevice	g	=mGDM.GraphicsDevice;
+
+			g.VertexDeclaration	=mLMAnimVD;
+			g.Vertices[0].SetSource(mLMAnimVB, 0, 68);
+			g.Indices	=mLMAnimIB;
+
+			int	idx	=0;
+
+			foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
+			{
+				Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
+				if(fx == null)
+				{
+					idx++;
+					continue;
+				}
+				if(mLMAnimMatNumVerts[idx] <= 0)
+				{
+					idx++;
+					continue;
+				}
+				if(!mMap.IsMaterialVisible(mDebugLeaf, idx))
+				{
+					idx++;
+					continue;
+				}
+
+				//this might get slow
+				mMatLib.ApplyParameters(mat.Key);
+
+				//set renderstates from material
+				//this could also get crushingly slow
+				g.RenderState.AlphaBlendEnable			=mat.Value.Alpha;
+				g.RenderState.AlphaTestEnable			=mat.Value.AlphaTest;
+				g.RenderState.BlendFunction				=mat.Value.BlendFunction;
+				g.RenderState.SourceBlend				=mat.Value.SourceBlend;
+				g.RenderState.DestinationBlend			=mat.Value.DestBlend;
+				g.RenderState.DepthBufferWriteEnable	=mat.Value.DepthWrite;
+				g.RenderState.CullMode					=mat.Value.CullMode;
+				g.RenderState.DepthBufferFunction		=mat.Value.ZFunction;
+
+				fx.CommitChanges();
+
+				fx.Begin();
+				foreach(EffectPass pass in fx.CurrentTechnique.Passes)
+				{
+					pass.Begin();
+
+					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+						0, 0,
+						mLMAnimMatNumVerts[idx],
+						mLMAnimMatOffsets[idx],
+						mLMAnimMatNumTris[idx]);
+
+					pass.End();
+				}
+				fx.End();
+
+				idx++;
+			}
+		}
+
+
+		void DrawNonLightMapped()
+		{
+			if(mNonLMVB == null)
+			{
+				return;
+			}
+
+			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
+
+			GraphicsDevice	g	=mGDM.GraphicsDevice;
+
+			g.VertexDeclaration	=mNonLMVD;
+			g.Vertices[0].SetSource(mNonLMVB, 0, 20);
+			g.Indices	=mNonLMIB;
+
+			int	idx	=0;
+
+			foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
+			{
+				Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
+				if(fx == null)
+				{
+					idx++;
+					continue;
+				}
+				if(mNonLMMatNumVerts[idx] <= 0)
+				{
+					idx++;
+					continue;
+				}
+				if(!mMap.IsMaterialVisible(mDebugLeaf, idx))
+				{
+					idx++;
+					continue;
+				}
+
+				//this might get slow
+				mMatLib.ApplyParameters(mat.Key);
+
+				//set renderstates from material
+				//this could also get crushingly slow
+				g.RenderState.AlphaBlendEnable			=mat.Value.Alpha;
+				g.RenderState.AlphaTestEnable			=mat.Value.AlphaTest;
+				g.RenderState.BlendFunction				=mat.Value.BlendFunction;
+				g.RenderState.SourceBlend				=mat.Value.SourceBlend;
+				g.RenderState.DestinationBlend			=mat.Value.DestBlend;
+				g.RenderState.DepthBufferWriteEnable	=mat.Value.DepthWrite;
+				g.RenderState.CullMode					=mat.Value.CullMode;
+				g.RenderState.DepthBufferFunction		=mat.Value.ZFunction;
+
+				fx.CommitChanges();
+
+				fx.Begin();
+				foreach(EffectPass pass in fx.CurrentTechnique.Passes)
+				{
+					pass.Begin();
+
+					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+						0, 0,
+						mNonLMMatNumVerts[idx],
+						mNonLMMatOffsets[idx],
+						mNonLMMatNumTris[idx]);
 
 					pass.End();
 				}
@@ -264,7 +444,9 @@ namespace BSPBuilder
 			g.Clear(Color.CornflowerBlue);
 
 			GraphicsDevice.RenderState.DepthBufferEnable	=true;
-			DrawSolids();
+
+			DrawLightMapped();
+			DrawNonLightMapped();
 			
 			if(mVB != null)
 			{
@@ -665,31 +847,31 @@ namespace BSPBuilder
 				}
 				else
 				{
-					List<MaterialLib.Material>	mats	=mMap.GetMaterials();
 					mMatLib.NukeAllMaterials();
-					foreach(MaterialLib.Material mat in mats)
-					{
-						mMatLib.AddMaterial(mat);
-					}
-					mMatForm.UpdateMaterials();
 
-//					mMap.BuildRenderData(mGDM.GraphicsDevice, out mSolidVB,
-//						out mSolidIB, out mLMapAtlas, out mNumSolidVerts, out mNumSolidTris);
-					mMap.BuildRenderData3(mGDM.GraphicsDevice, out mSolidVB,
-						out mSolidIB, out mMatOffsets, out mMatNumVerts,
-						out mMatNumTris, out mLMapAtlas,
-						out mNumSolidVerts, out mNumSolidTris);
+					List<MaterialLib.Material>	mats	=mMap.GetMaterials();
+
+					mMap.BuildLMRenderData(mGDM.GraphicsDevice, out mLMVB,
+						out mLMIB, out mLMMatOffsets, out mLMMatNumVerts,
+						out mLMMatNumTris, out mLMapAtlas);
+
+					mMap.BuildNonLMRenderData(mGDM.GraphicsDevice, out mNonLMVB,
+						out mNonLMIB, out mNonLMMatOffsets, out mNonLMMatNumVerts,
+						out mNonLMMatNumTris);
 
 					mMatLib.AddMap("LightMapAtlas", mLMapAtlas.GetAtlasTexture());
 
-					VertexElement	[]ve	=new VertexElement[3];
-					ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
-						VertexElementMethod.Default, VertexElementUsage.Position, 0);
-					ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
-						VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
-					ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector2,
-						VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
-					mSolidVD	=new VertexDeclaration(mGDM.GraphicsDevice, ve);
+					//add some default parameters
+					foreach(MaterialLib.Material mat in mats)
+					{
+						if(mat.GetParameterValue("mbLightMapEnabled") == "true")
+						{
+							mat.ShaderName	="Shaders/LightMap";
+						}
+
+						mMatLib.AddMaterial(mat);
+					}
+					mMatForm.UpdateMaterials();
 				}
 			}
 		}
