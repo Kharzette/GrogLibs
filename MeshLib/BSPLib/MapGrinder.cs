@@ -165,6 +165,13 @@ namespace BSPLib
 
 		internal void GetLMAnimBuffers(out VertexBuffer vb, out IndexBuffer ib)
 		{
+			if(mLMAnimVerts.Count == 0)
+			{
+				vb	=null;
+				ib	=null;
+				return;
+			}
+
 			VPosTex0Tex1Tex2Tex3Tex4Style4	[]varray	=new VPosTex0Tex1Tex2Tex3Tex4Style4[mLMAnimVerts.Count];
 			for(int i=0;i < mLMAnimVerts.Count;i++)
 			{
@@ -199,7 +206,14 @@ namespace BSPLib
 				int	numFaceVerts	=mLMAnimVerts.Count;
 				int	numFaces		=0;
 
-				Map.Print("Light for material: " + mat + ".\n");
+				if(!mat.Name.EndsWith("Anim"))
+				{
+					numFace.Add(numFaces);
+					mLMAnimMaterialNumVerts.Add(mLMAnimVerts.Count - numFaceVerts);
+					continue;
+				}
+
+				Map.Print("Animated light for material: " + mat.Name + ".\n");
 
 				foreach(GFXFace f in mFaces)
 				{
@@ -214,7 +228,7 @@ namespace BSPLib
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
-					if(tex.mMaterial != mat.Name)
+					if(!mat.Name.StartsWith(tex.mMaterial))
 					{
 						continue;
 					}
@@ -367,6 +381,12 @@ namespace BSPLib
 
 				numFace.Add(numFaces);
 				mLMAnimMaterialNumVerts.Add(mLMAnimVerts.Count - numFaceVerts);
+			}
+
+			//might not be any
+			if(mLMAnimVerts.Count == 0)
+			{
+				return;
 			}
 
 			mLMAtlas.Finish();
@@ -771,7 +791,7 @@ namespace BSPLib
 						mMaterialNames.Add(tex.mMaterial);
 					}
 				}
-				else
+				else if(numStyles > 1)
 				{
 					//animated lights
 					if(!mMaterialNames.Contains(tex.mMaterial + "Anim"))

@@ -1385,7 +1385,36 @@ namespace BSPLib
 		}
 
 
-		public void BuildLMRenderData(GraphicsDevice g, out VertexBuffer lmVB,
+		public void BuildLMRenderData(GraphicsDevice g,
+			out VertexBuffer lmVB,
+			out IndexBuffer lmIB,
+			out Int32 []matOffsets,
+			out Int32 []matNumVerts,
+			out Int32 []matNumTris,
+			out VertexBuffer lmAnimVB,
+			out IndexBuffer lmAnimIB,
+			out Int32 []matAnimOffsets,
+			out Int32 []matAnimNumVerts,
+			out Int32 []matAnimNumTris,
+			out TexAtlas lightAtlas)
+		{
+			//todo: fix light map scale at the end there
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
+
+			mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData);
+			mg.GetLMBuffers(out lmVB, out lmIB);
+
+			mg.BuildLMAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData);
+			mg.GetLMAnimBuffers(out lmAnimVB, out lmAnimIB);
+
+			lightAtlas	=mg.GetLightMapAtlas();
+
+			mg.GetLMMaterialData(out matOffsets, out matNumVerts, out matNumTris);
+			mg.GetLMAnimMaterialData(out matAnimOffsets, out matAnimNumVerts, out matAnimNumTris);
+		}
+
+
+		public void BuildLMAnimRenderData(GraphicsDevice g, out VertexBuffer lmVB,
 			out IndexBuffer lmIB, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris,
 			out TexAtlas lightAtlas)

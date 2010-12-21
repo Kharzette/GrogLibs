@@ -446,6 +446,7 @@ namespace BSPBuilder
 			GraphicsDevice.RenderState.DepthBufferEnable	=true;
 
 			DrawLightMapped();
+			DrawAnimatedLightMapped();
 			DrawNonLightMapped();
 			
 			if(mVB != null)
@@ -851,9 +852,18 @@ namespace BSPBuilder
 
 					List<MaterialLib.Material>	mats	=mMap.GetMaterials();
 
-					mMap.BuildLMRenderData(mGDM.GraphicsDevice, out mLMVB,
-						out mLMIB, out mLMMatOffsets, out mLMMatNumVerts,
-						out mLMMatNumTris, out mLMapAtlas);
+					mMap.BuildLMRenderData(mGDM.GraphicsDevice,
+						out mLMVB,
+						out mLMIB,
+						out mLMMatOffsets,
+						out mLMMatNumVerts,
+						out mLMMatNumTris,
+						out mLMAnimVB,
+						out mLMAnimIB,
+						out mLMAnimMatOffsets,
+						out mLMAnimMatNumVerts,
+						out mLMAnimMatNumTris,
+						out mLMapAtlas);
 
 					mMap.BuildNonLMRenderData(mGDM.GraphicsDevice, out mNonLMVB,
 						out mNonLMIB, out mNonLMMatOffsets, out mNonLMMatNumVerts,
