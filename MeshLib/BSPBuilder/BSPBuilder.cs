@@ -48,6 +48,7 @@ namespace BSPBuilder
 		IndexBuffer			mSolidIB;
 		TexAtlas			mLMapAtlas;
 		int					mNumSolidVerts, mNumSolidTris;
+		Int32				mDebugLeaf;
 
 		//material draw stuff
 		Int32	[]mMatOffsets;
@@ -109,8 +110,10 @@ namespace BSPBuilder
 			mCollForm.eEndRay		+=OnEndRay;
 			mCollForm.eRepeatRay	+=OnRepeatRay;
 
-			mMatForm			=new MaterialForm(mGDM.GraphicsDevice, mMatLib);
-			mMatForm.Visible	=true;
+			mMatForm					=new MaterialForm(mGDM.GraphicsDevice, mMatLib);
+			mMatForm.Visible			=true;
+			mMatForm.eMaterialNuked		+=OnMaterialNuked;
+			mMatForm.eLibraryCleared	+=OnMaterialsCleared;
 
 			mMainForm						=new MainForm();
 			mMainForm.Visible				=true;
@@ -160,6 +163,12 @@ namespace BSPBuilder
 
 			KeyboardState	kbs	=Keyboard.GetState();
 
+			if(kbs.IsKeyDown(Keys.V))
+			{
+				mDebugLeaf	=mMap.FindNodeLandedIn(0, -mGameCam.CamPos);
+				mDebugLeaf	=-(mDebugLeaf + 1);
+			}
+
 			mGameCam.Update(msDelta, kbs, Mouse.GetState());
 
 			mMapEffect.World		=mGameCam.World;
@@ -202,6 +211,11 @@ namespace BSPBuilder
 					continue;
 				}
 				if(mMatNumVerts[idx] <= 0)
+				{
+					idx++;
+					continue;
+				}
+				if(!mMap.IsMaterialVisible(mDebugLeaf, idx))
 				{
 					idx++;
 					continue;
@@ -697,6 +711,22 @@ namespace BSPBuilder
 			string	str	=sender as string;
 
 			mMainForm.PrintToConsole(str);
+		}
+
+
+		void OnMaterialNuked(object sender, EventArgs ea)
+		{
+			//rebuild material vis
+			mMap.VisMaterials();
+		}
+
+
+		void OnMaterialsCleared(object sender, EventArgs ea)
+		{
+			if(mLMapAtlas != null)
+			{
+				mMatLib.AddMap("LightMapAtlas", mLMapAtlas.GetAtlasTexture());
+			}
 		}
 
 

@@ -749,7 +749,7 @@ namespace BSPLib
 			}
 			
 			//Light faces, and apply to patches
-			if(!LightFaces(5, false))	//Light all the faces lightmaps, and apply to patches
+			if(!LightFaces(5, mLightParams.mbExtraSamples))	//Light all the faces lightmaps, and apply to patches
 			{
 				goto	ExitWithError;
 			}
@@ -1080,7 +1080,7 @@ namespace BSPLib
 				verts.Add(mGFXVerts[vIndex]);
 			}
 
-			faceInfo.CalcFaceLightInfo(lightInfo, verts);
+			faceInfo.CalcFaceLightInfo(lightInfo, verts, mLightParams.mLightGridSize);
 
 			return	true;
 		}
@@ -1207,12 +1207,12 @@ namespace BSPLib
 					for(k=0;k < 3;k++)
 					{
 						if(UtilityLib.Mathery.VecIdx(patch.mBounds.mMins, k)
-							> UtilityLib.Mathery.VecIdx(vert, k) + FInfo.LGRID_SIZE)
+							> UtilityLib.Mathery.VecIdx(vert, k) + mLightParams.mLightGridSize)
 						{
 							break;
 						}				
 						if(UtilityLib.Mathery.VecIdx(patch.mBounds.mMaxs, k)
-							< UtilityLib.Mathery.VecIdx(vert, k) - FInfo.LGRID_SIZE)
+							< UtilityLib.Mathery.VecIdx(vert, k) - mLightParams.mLightGridSize)
 						{
 							break;
 						}				
@@ -1353,7 +1353,8 @@ namespace BSPLib
 
 		void ApplyLightmapToPatches(Int32 face)
 		{
-			mLightMaps[face].ApplyLightToPatchList(mFacePatches[face], mFaceInfos[face].GetPoints());
+			mLightMaps[face].ApplyLightToPatchList(mFacePatches[face],
+				mLightParams.mLightGridSize, mFaceInfos[face].GetPoints());
 		}
 
 
@@ -1483,7 +1484,8 @@ namespace BSPLib
 
 		void CalcFacePoints(FInfo faceInfo, LInfo lightInfo, float UOfs, float VOfs, bool bExtraLightCorrection)
 		{
-			faceInfo.CalcFacePoints(lightInfo, UOfs, VOfs, bExtraLightCorrection, IsPointInSolidSpace, RayCollide);
+			faceInfo.CalcFacePoints(lightInfo, mLightParams.mLightGridSize,
+				UOfs, VOfs, bExtraLightCorrection, IsPointInSolidSpace, RayCollide);
 		}
 
 
@@ -1522,7 +1524,6 @@ namespace BSPLib
 			//Reset the light offset
 			int	LightOffset	=0;
 			numRGBMaps		=0;
-			int	REGMaps		=0;
 			
 			//Go through all the faces
 			for(int i=0;i < mGFXFaces.Length;i++)
@@ -1759,6 +1760,10 @@ namespace BSPLib
 				return	false;
 			}
 			if(!SaveGFXVisData(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXMaterialVisData(bw))
 			{
 				return	false;
 			}

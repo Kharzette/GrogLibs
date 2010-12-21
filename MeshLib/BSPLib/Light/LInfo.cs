@@ -37,17 +37,17 @@ namespace BSPLib
 		}
 
 
-		internal void ApplyLightToPatchList(RADPatch rp, Vector3 []facePoints)
+		internal void ApplyLightToPatchList(RADPatch rp, int lightGridSize, Vector3 []facePoints)
 		{
 			if(mRGBLData[0] == null)
 			{
 				return;
 			}
-			RADPatch.ApplyLightList(rp, mRGBLData[0], facePoints);
+			RADPatch.ApplyLightList(rp, lightGridSize, mRGBLData[0], facePoints);
 		}
 
 
-		internal void CalcInfo(float[] mins, float []maxs)
+		internal void CalcInfo(float[] mins, float []maxs, int lightGridSize)
 		{
 			//Get the Texture U/V mins/max, and Grid aligned lmap mins/max/size
 			for(int i=0;i < 2;i++)
@@ -55,8 +55,8 @@ namespace BSPLib
 				mMins[i]	=mins[i];
 				mMaxs[i]	=maxs[i];
 
-				mins[i]	=(float)Math.Floor(mins[i] / FInfo.LGRID_SIZE);
-				maxs[i]	=(float)Math.Ceiling(maxs[i] / FInfo.LGRID_SIZE);
+				mins[i]	=(float)Math.Floor(mins[i] / lightGridSize);
+				maxs[i]	=(float)Math.Ceiling(maxs[i] / lightGridSize);
 
 				mLMins[i]	=(Int32)mins[i];
 				mLMaxs[i]	=(Int32)maxs[i];
@@ -99,13 +99,13 @@ namespace BSPLib
 		}
 
 
-		internal void CalcSizeAndStart(float uOffset, float vOffset,
+		internal void CalcSizeAndStart(float uOffset, float vOffset, int lightGridSize,
 			out int w, out int h, out float startU, out float startV)
 		{
 			w		=(mLSize[0]) + 1;
 			h		=(mLSize[1]) + 1;
-			startU	=((float)mLMins[0] + uOffset) * (float)FInfo.LGRID_SIZE;
-			startV	=((float)mLMins[1] + vOffset) * (float)FInfo.LGRID_SIZE;
+			startU	=((float)mLMins[0] + uOffset) * (float)lightGridSize;
+			startV	=((float)mLMins[1] + vOffset) * (float)lightGridSize;
 		}
 
 

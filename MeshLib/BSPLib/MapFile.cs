@@ -170,13 +170,31 @@ namespace BSPLib
 
 			if(!Chunk.Write(bw, mGFXVisData))
 			{
-				Print("SaveGFXvertIndexList:  There was an error saving the VertIndexList.\n");
+				Print("SaveGFXVisData:  There was an error saving the VertIndexList.\n");
 				return	false;
 			}
 			return	true;
 		}
 
 
+		bool SaveGFXMaterialVisData(BinaryWriter bw)
+		{
+			if(mGFXMaterialVisData == null || mGFXMaterialVisData.Length <= 0)
+			{
+				return	true;
+			}
+			GBSPChunk	Chunk	=new GBSPChunk();
+
+			Chunk.mType		=GBSPChunk.MATERIALVISDATA;
+			Chunk.mElements =mGFXMaterialVisData.Length;
+
+			if(!Chunk.Write(bw, mGFXMaterialVisData))
+			{
+				Print("SaveGFXMaterialVisData:  There was an error saving the VertIndexList.\n");
+				return	false;
+			}
+			return	true;
+		}
 
 
 		bool SaveVisdGFXPlanes(BinaryWriter bw)

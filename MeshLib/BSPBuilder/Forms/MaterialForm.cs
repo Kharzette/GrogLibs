@@ -28,6 +28,8 @@ namespace BSPBuilder
 
 		//events
 		public event EventHandler	eBoundsUpdated;
+		public event EventHandler	eMaterialNuked;
+		public event EventHandler	eLibraryCleared;
 
 
 		public MaterialForm(GraphicsDevice gd, MaterialLib.MaterialLib matlib)
@@ -434,6 +436,12 @@ namespace BSPBuilder
 
 			mMatLib.LoadToolTextures(mGD);
 
+			//notify anyone interested
+			if(eLibraryCleared != null)
+			{
+				eLibraryCleared(null, null);
+			}
+
 			UpdateMaterials();
 
 			MaterialProperties.DataSource			=mMatModel[0].Parameters;
@@ -453,6 +461,11 @@ namespace BSPBuilder
 			MaterialLib.Material	mat	=(MaterialLib.Material)e.Row.DataBoundItem;
 
 			mMatLib.NukeMaterial(mat.Name);
+
+			if(eMaterialNuked != null)
+			{
+				eMaterialNuked(mat.Name, null);
+			}
 		}
 
 

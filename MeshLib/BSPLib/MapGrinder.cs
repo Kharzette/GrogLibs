@@ -25,14 +25,18 @@ namespace BSPLib
 		List<Int32>		mMaterialNumVerts	=new List<Int32>();
 		List<Int32>		mMaterialNumTris	=new List<Int32>();
 
+		//light density
+		int	mLightGridSize;
+
 		//lightmap atlas
 		TexAtlas	mLMAtlas;
 
 
-		public MapGrinder(GraphicsDevice gd, List<string> matNames)
+		public MapGrinder(GraphicsDevice gd, List<string> matNames, int lightGridSize)
 		{
 			mGD				=gd;
 			mMaterialNames	=matNames;
+			mLightGridSize	=lightGridSize;
 
 			mLMAtlas	=new TexAtlas(gd);
 		}
@@ -86,10 +90,14 @@ namespace BSPLib
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
 
+			Map.Print("Atlasing " + lightData.Length + " bytes of light data...");
+
 			foreach(string mat in mMaterialNames)
 			{
 				int	numFaceVerts	=mFaceVerts.Count;
 				int	numFaces		=0;
+
+				Map.Print("Light for material: " + mat + ".\n");
 
 				foreach(GFXFace f in faces)
 				{
@@ -142,18 +150,26 @@ namespace BSPLib
 					List<Vector2>	coords	=new List<Vector2>();
 					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
 
+					float	crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
+					float	crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
+
 					for(k=0;k < nverts;k++)
 					{
 						Vector2	tc	=coords[k];
 
-						tc.X	/=(f.mLWidth + 1);
+						//stretch coords to +1 size
+						tc.X	*=crunchX;
+						tc.Y	*=crunchY;
+
+						//scale to atlas space
 						tc.X	/=TexAtlas.TEXATLAS_WIDTH;
-						tc.Y	/=(f.mLHeight + 1);
 						tc.Y	/=TexAtlas.TEXATLAS_HEIGHT;
 
-						tc.X	*=f.mLWidth;
-						tc.Y	*=f.mLHeight;
+						//step half a pixel in atlas space
+						tc.X	+=1.0f / (TexAtlas.TEXATLAS_WIDTH * 2.0f);
+						tc.Y	+=1.0f / (TexAtlas.TEXATLAS_HEIGHT * 2.0f);
 
+						//move to atlas position
 						tc.X	+=(float)offsetU;
 						tc.Y	+=(float)offsetV;
 
@@ -166,6 +182,8 @@ namespace BSPLib
 				numFace.Add(numFaces);
 				mMaterialNumVerts.Add(mFaceVerts.Count - numFaceVerts);
 			}
+
+			mLMAtlas.Finish();
 
 			int	faceOfs	=0;
 			for(int j=0;j < mMaterialNames.Count;j++)
@@ -223,8 +241,8 @@ namespace BSPLib
 			GBSPPoly.TextureAxisFromPlane(pln, out xv, out yv);
 
 			//scale down to light space
-			xv	/=FInfo.LGRID_SIZE;
-			yv	/=FInfo.LGRID_SIZE;
+			xv	/=mLightGridSize;
+			yv	/=mLightGridSize;
 
 			//calculate the min values for s and t
 			foreach(Vector3 pnt in verts)
@@ -246,8 +264,8 @@ namespace BSPLib
 			//no idea why I need this 1.5
 			//the math makes no sense, should be
 			//only 0.5
-			float	shiftU	=-minS + 1.5f;
-			float	shiftV	=-minT + 1.5f;
+			float	shiftU	=-minS;
+			float	shiftV	=-minT;
 
 			foreach(Vector3 pnt in verts)
 			{

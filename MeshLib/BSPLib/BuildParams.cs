@@ -27,6 +27,7 @@ namespace BSPLib
 		public Vector3	mMinLight;
 		public float	mMirrorReflect;
 		public int		mMaxIntensity;
+		public int		mLightGridSize;
 	}
 
 

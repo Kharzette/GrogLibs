@@ -80,6 +80,8 @@
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.SortPortals = new System.Windows.Forms.CheckBox();
 			this.FullVis = new System.Windows.Forms.CheckBox();
+			this.LightGridSize = new System.Windows.Forms.NumericUpDown();
+			this.label9 = new System.Windows.Forms.Label();
 			this.StatsGroupBox.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxCPUCores)).BeginInit();
 			this.GroupFileIO.SuspendLayout();
@@ -95,6 +97,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.LightScale)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.NumBounce)).BeginInit();
 			this.groupBox1.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.LightGridSize)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// OpenBrushFile
@@ -396,6 +399,8 @@
 			// 
 			// LightSettingsGroupBox
 			// 
+			this.LightSettingsGroupBox.Controls.Add(this.label9);
+			this.LightSettingsGroupBox.Controls.Add(this.LightGridSize);
 			this.LightSettingsGroupBox.Controls.Add(this.label8);
 			this.LightSettingsGroupBox.Controls.Add(this.MaxIntensity);
 			this.LightSettingsGroupBox.Controls.Add(this.label7);
@@ -417,7 +422,7 @@
 			this.LightSettingsGroupBox.Controls.Add(this.FastPatch);
 			this.LightSettingsGroupBox.Location = new System.Drawing.Point(332, 12);
 			this.LightSettingsGroupBox.Name = "LightSettingsGroupBox";
-			this.LightSettingsGroupBox.Size = new System.Drawing.Size(133, 307);
+			this.LightSettingsGroupBox.Size = new System.Drawing.Size(133, 335);
 			this.LightSettingsGroupBox.TabIndex = 27;
 			this.LightSettingsGroupBox.TabStop = false;
 			this.LightSettingsGroupBox.Text = "Light Settings";
@@ -588,7 +593,7 @@
 			// label2
 			// 
 			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(55, 143);
+			this.label2.Location = new System.Drawing.Point(57, 142);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(60, 13);
 			this.label2.TabIndex = 7;
@@ -705,6 +710,37 @@
 			this.FullVis.UseVisualStyleBackColor = true;
 			this.FullVis.CheckedChanged += new System.EventHandler(this.OnFullVisChanged);
 			// 
+			// LightGridSize
+			// 
+			this.LightGridSize.Location = new System.Drawing.Point(6, 296);
+			this.LightGridSize.Maximum = new decimal(new int[] {
+            256,
+            0,
+            0,
+            0});
+			this.LightGridSize.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+			this.LightGridSize.Name = "LightGridSize";
+			this.LightGridSize.Size = new System.Drawing.Size(45, 20);
+			this.LightGridSize.TabIndex = 36;
+			this.LightGridSize.Value = new decimal(new int[] {
+            8,
+            0,
+            0,
+            0});
+			// 
+			// label9
+			// 
+			this.label9.AutoSize = true;
+			this.label9.Location = new System.Drawing.Point(57, 298);
+			this.label9.Name = "label9";
+			this.label9.Size = new System.Drawing.Size(75, 13);
+			this.label9.TabIndex = 37;
+			this.label9.Text = "Light Grid Size";
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -744,6 +780,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.NumBounce)).EndInit();
 			this.groupBox1.ResumeLayout(false);
 			this.groupBox1.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this.LightGridSize)).EndInit();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -803,5 +840,7 @@
 		private System.Windows.Forms.CheckBox FixTJunctions;
 		private System.Windows.Forms.Label label8;
 		private System.Windows.Forms.NumericUpDown MaxIntensity;
+		private System.Windows.Forms.NumericUpDown LightGridSize;
+		private System.Windows.Forms.Label label9;
 	}
 }

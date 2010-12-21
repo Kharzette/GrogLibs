@@ -328,7 +328,7 @@ namespace BSPLib
 		}
 
 
-		static internal void ApplyLightList(RADPatch rpList, Vector3 []rgb, Vector3 []facePoints)
+		static internal void ApplyLightList(RADPatch rpList, int lightGridSize, Vector3 []rgb, Vector3 []facePoints)
 		{
 			//Check each patch and see if the points lands in it's BBox
 			for(RADPatch p=rpList;p != null;p=p.mNext)
@@ -344,12 +344,12 @@ namespace BSPLib
 					for(k=0;k < 3;k++)
 					{
 						if(UtilityLib.Mathery.VecIdx(p.mBounds.mMins, k)
-							> UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) + FInfo.LGRID_SIZE)
+							> UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) + lightGridSize)
 						{
 							break;
 						}
 						if(UtilityLib.Mathery.VecIdx(p.mBounds.mMaxs, k)
-							< UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) - FInfo.LGRID_SIZE)
+							< UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) - lightGridSize)
 						{
 							break;
 						}

@@ -33,11 +33,12 @@ namespace BSPLib
 		public const int	RGB_VERTS		=15;
 		public const int	ENTDATA			=16;
 		public const int	TEXINFO			=17;
-		public const int	TEXTURES		=18 ;
+		public const int	TEXTURES		=18;
 		public const int	TEXDATA			=19;
 		public const int	LIGHTDATA		=20;
 		public const int	VISDATA			=21;
 		public const int	SKYDATA			=22;
+		public const int	MATERIALVISDATA	=23;
 		public const int	END				=0xffff;
 
 
@@ -224,6 +225,10 @@ namespace BSPLib
 				case SKYDATA:
 				{
 					return	ReadChunkData(br, typeof(GFXSkyData), false, 0) as GFXSkyData;
+				}
+				case MATERIALVISDATA:
+				{
+					return	ReadChunkData(br, typeof(byte), true, mElements) as byte[];
 				}
 				case END:
 				{

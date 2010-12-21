@@ -22,6 +22,7 @@ namespace BSPLib
 		VISPortal	[]mVisSortedPortals;
 		VISLeaf		[]mVisLeafs;
 		Int32		mNumVisLeafBytes, mNumVisPortalBytes;
+		Int32		mNumVisMaterialBytes;
 
 		//area stuff
 		List<GFXArea>		mAreas		=new List<GFXArea>();
@@ -85,6 +86,10 @@ namespace BSPLib
 				goto	ExitWithError;
 			}
 
+			//make a material vis, what materials
+			//can be seen from each leaf
+			VisMaterials();
+
 			//Save the leafs, clusters, vis data, etc
 			if(!FinishWritingVis(bw))
 			{
@@ -122,6 +127,119 @@ namespace BSPLib
 				FreeGBSPFile();
 
 				return	false;
+			}
+		}
+
+
+		public bool IsMaterialVisible(int leaf, int matIndex)
+		{
+			if(mGFXLeafs == null)
+			{
+				return	false;
+			}
+
+			int	clust	=mGFXLeafs[leaf].mCluster;
+
+			if(clust == -1 || mGFXClusters[clust].mVisOfs == -1)
+			{
+				return	true;	//this will make everything vis
+								//when outside of the map
+			}
+
+			int	ofs	=leaf * mNumVisMaterialBytes;
+			
+			return	((mGFXMaterialVisData[ofs + (matIndex >> 3)] & (1 << (matIndex & 7))) != 0);
+		}
+
+
+		public void VisMaterials()
+		{
+			Dictionary<Int32, List<string>>	visibleMaterials
+				=new Dictionary<Int32, List<string>>();
+
+			Print("Computing visible materials from each leaf...\n");
+
+			for(int leaf=0;leaf < mGFXLeafs.Length;leaf++)
+			{
+				if(leaf % (mGFXLeafs.Length / 10) == 0)
+				{
+					Print("" + (leaf / (mGFXLeafs.Length / 10)) + ", ");
+				}
+
+				int	clust	=mGFXLeafs[leaf].mCluster;
+				if(clust == -1)
+				{
+					continue;
+				}
+
+				int	ofs		=mGFXClusters[clust].mVisOfs;
+				if(ofs == -1)
+				{
+					continue;
+				}
+
+				visibleMaterials.Add(leaf, new List<string>());
+
+				List<int>	visibleClusters	=new List<int>();
+
+				//Mark all visible clusters
+				for(int i=0;i < mGFXModels[0].mNumClusters;i++)
+				{
+					if((mGFXVisData[ofs + (i >> 3)] & (1 << (i & 7))) != 0)
+					{
+						visibleClusters.Add(i);
+					}
+				}
+
+				for(int i=0;i < mGFXModels[0].mNumLeafs;i++)
+				{
+					GFXLeaf	checkLeaf	=mGFXLeafs[mGFXModels[0].mFirstLeaf + i];
+					int		checkClust	=checkLeaf.mCluster;
+
+					if(checkClust == -1 || !visibleClusters.Contains(checkClust))
+					{
+						continue;
+					}
+					for(int k=0;k < checkLeaf.mNumFaces;k++)
+					{
+						GFXFace	f	=mGFXFaces[mGFXLeafFaces[k + checkLeaf.mFirstFace]];
+
+						GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
+
+						if(!visibleMaterials[leaf].Contains(tex.mMaterial))
+						{
+							visibleMaterials[leaf].Add(tex.mMaterial);
+						}
+					}
+				}
+			}
+
+			//grab list of material names
+			List<string>	matNames	=new List<string>();
+			foreach(GFXTexInfo tex in mGFXTexInfos)
+			{
+				if(!matNames.Contains(tex.mMaterial))
+				{
+					matNames.Add(tex.mMaterial);
+				}
+			}
+
+			//alloc compressed bytes
+			mNumVisMaterialBytes	=((matNames.Count + 63) & ~63) >> 3;
+
+			mGFXMaterialVisData	=new byte[mGFXLeafs.Length * mNumVisMaterialBytes];
+
+			//compress
+			foreach(KeyValuePair<Int32, List<string>> visMat in visibleMaterials)
+			{
+				foreach(string mname in visMat.Value)
+				{
+					int	idx	=matNames.IndexOf(mname);
+					mGFXMaterialVisData[visMat.Key * mNumVisMaterialBytes + (idx >> 3)]
+						|=(byte)(1 << (idx & 7));
+				}
+//				gfxMatVisData[visMat.Key * numVisMatBytes + (visMat.Key >> 3)]
+//					|=(byte)(1 << (visMat.Key & 7));
 			}
 		}
 
@@ -256,6 +374,10 @@ namespace BSPLib
 				return	false;
 			}
 			if(!SaveGFXVisData(bw))
+			{
+				return	false;
+			}
+			if(!SaveGFXMaterialVisData(bw))
 			{
 				return	false;
 			}
@@ -508,7 +630,8 @@ namespace BSPLib
 
 		void FreeFileVisData()
 		{
-			mGFXVisData		=null;
+			mGFXVisData			=null;
+			mGFXMaterialVisData	=null;
 		}
 
 
@@ -586,7 +709,8 @@ namespace BSPLib
 
 		void FreeAllVisData()
 		{
-			mGFXVisData		=null;
+			mGFXVisData			=null;
+			mGFXMaterialVisData	=null;
 
 			if(mVisPortals != null)
 			{

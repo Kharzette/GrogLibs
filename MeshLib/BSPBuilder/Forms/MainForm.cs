@@ -166,6 +166,7 @@ namespace BSPBuilder
 				mLightParams.mMinLight.Z	=(float)MinLightZ.Value;
 				mLightParams.mMirrorReflect	=(float)ReflectiveScale.Value;
 				mLightParams.mMaxIntensity	=(int)MaxIntensity.Value;
+				mLightParams.mLightGridSize	=(int)LightGridSize.Value;
 
 				return	mLightParams;
 			}

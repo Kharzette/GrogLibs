@@ -15,8 +15,6 @@ namespace BSPLib
 		Vector3		[]mPoints;
 		Vector3		mCenter;
 
-		public const int	LGRID_SIZE	=8;
-
 
 		internal Int32 GetFaceIndex()
 		{
@@ -24,7 +22,7 @@ namespace BSPLib
 		}
 
 
-		internal void CalcFaceLightInfo(LInfo lightInfo, List<Vector3> verts)
+		internal void CalcFaceLightInfo(LInfo lightInfo, List<Vector3> verts, int lightGridSize)
 		{
 			float	[]mins	=new float[2];
 			float	[]maxs	=new float[2];
@@ -66,7 +64,7 @@ namespace BSPLib
 
 			mCenter	/=verts.Count;
 
-			lightInfo.CalcInfo(mins, maxs);
+			lightInfo.CalcInfo(mins, maxs, lightGridSize);
 
 			//Get the texture normal from the texture vecs
 			Vector3	texNormal	=Vector3.Cross(vecs[0], vecs[1]);
@@ -111,7 +109,8 @@ namespace BSPLib
 		}
 
 
-		internal void CalcFacePoints(LInfo lightInfo, float UOfs, float VOfs,
+		internal void CalcFacePoints(LInfo lightInfo, int lightGridSize,
+			float UOfs, float VOfs,
 			bool bExtraLightCorrection, Map.IsPointInSolid pointInSolid,
 			Map.RayCollision rayCollide)
 		{
@@ -124,14 +123,14 @@ namespace BSPLib
 
 			float	startU, startV;
 			Int32	width, height;
-			lightInfo.CalcSizeAndStart(UOfs, VOfs, out width, out height, out startU, out startV);
+			lightInfo.CalcSizeAndStart(UOfs, VOfs, lightGridSize, out width, out height, out startU, out startV);
 
 			for(int v=0;v < height;v++)
 			{
 				for(int u=0;u < width;u++)
 				{
-					float	curU	=startU + u * FInfo.LGRID_SIZE;
-					float	curV	=startV + v * FInfo.LGRID_SIZE;
+					float	curU	=startU + u * lightGridSize;
+					float	curV	=startV + v * lightGridSize;
 
 					mPoints[(v * width) + u]
 						=mTexOrg + mT2WVecs[0] * curU +
@@ -193,7 +192,7 @@ namespace BSPLib
 						bestDist	=Dist;
 						bestPoint	=mPoints[u];
 
-						if(Dist <= (FInfo.LGRID_SIZE - 0.1f))
+						if(Dist <= (lightGridSize - 0.1f))
 						{
 							break;	//This should be good enough...
 						}
