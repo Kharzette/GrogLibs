@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
@@ -49,6 +49,10 @@ namespace BSPBuilder
 		TexAtlas			mLMapAtlas;
 		Int32				mDebugLeaf;
 
+		//debug lightmap animation stuff
+		Dictionary<int, string>	mStyles			=new Dictionary<int, string>();
+		Dictionary<int, float>	mCurStylePos	=new Dictionary<int, float>();
+
 		//material draw stuff
 		Int32[]	mLMMatOffsets, mNonLMMatOffsets, mLMAnimMatOffsets;
 		Int32[]	mLMMatNumVerts, mNonLMMatNumVerts, mLMAnimMatNumVerts;
@@ -59,6 +63,9 @@ namespace BSPBuilder
 		BasicEffect			mBFX;
 		VertexBuffer		mRayVB;
 		IndexBuffer			mRayIB;
+
+		//constants
+		const float		ThirtyFPS	=(1000.0f / 30.0f);
 
 
 		public BSPBuilder()
@@ -93,6 +100,62 @@ namespace BSPBuilder
 			mGameCam	=new GameCamera(mGDM.GraphicsDevice.Viewport.Width,
 				mGDM.GraphicsDevice.Viewport.Height,
 				mGDM.GraphicsDevice.Viewport.AspectRatio);
+
+			//Quake1 styled lights 'a' is total darkness, 'z' is maxbright.
+			// 0 normal
+			mStyles.Add(0, "m");
+				
+			//1 FLICKER (first variety)
+			mStyles.Add(1, "mmnmmommommnonmmonqnmmo");
+			
+			//2 SLOW STRONG PULSE
+			mStyles.Add(2, "abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba");
+			
+			//3 CANDLE (first variety)
+			mStyles.Add(3, "mmmmmaaaaammmmmaaaaaabcdefgabcdefg");
+			
+			//4 FAST STROBE
+			mStyles.Add(4, "mamamamamama");
+			
+			//5 GENTLE PULSE 1
+			mStyles.Add(5,"jklmnopqrstuvwxyzyxwvutsrqponmlkj");
+			
+			//6 FLICKER (second variety)
+			mStyles.Add(6, "nmonqnmomnmomomno");
+			
+			//7 CANDLE (second variety)
+			mStyles.Add(7, "mmmaaaabcdefgmmmmaaaammmaamm");
+			
+			//8 CANDLE (third variety)
+			mStyles.Add(8, "mmmaaammmaaammmabcdefaaaammmmabcdefmmmaaaa");
+			
+			//9 SLOW STROBE (fourth variety)
+			mStyles.Add(9, "aaaaaaaazzzzzzzz");
+			
+			//10 FLUORESCENT FLICKER
+			mStyles.Add(10, "mmamammmmammamamaaamammma");
+
+			//11 SLOW PULSE NOT FADE TO BLACK
+			mStyles.Add(11, "abcdefghijklmnopqrrqponmlkjihgfedcba");
+			
+			//12 UNDERWATER LIGHT MUTATION
+			//this light only distorts the lightmap - no contribution
+			//is made to the brightness of affected surfaces
+			mStyles.Add(12, "mmnnmmnnnmmnn");
+
+			mCurStylePos.Add(0, 0.0f);
+			mCurStylePos.Add(1, 0.0f);
+			mCurStylePos.Add(2, 0.0f);
+			mCurStylePos.Add(3, 0.0f);
+			mCurStylePos.Add(4, 0.0f);
+			mCurStylePos.Add(5, 0.0f);
+			mCurStylePos.Add(6, 0.0f);
+			mCurStylePos.Add(7, 0.0f);
+			mCurStylePos.Add(8, 0.0f);
+			mCurStylePos.Add(9, 0.0f);
+			mCurStylePos.Add(10, 0.0f);
+			mCurStylePos.Add(11, 0.0f);
+			mCurStylePos.Add(12, 0.0f);
 
 			base.Initialize();
 		}
@@ -176,7 +239,7 @@ namespace BSPBuilder
 			ve[5]	=new VertexElement(0, 44, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 4);
 			ve[6]	=new VertexElement(0, 52, VertexElementFormat.Vector4,
-				VertexElementMethod.Default, VertexElementUsage.Color, 4);
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 5);
 			mLMAnimVD	=new VertexDeclaration(mGDM.GraphicsDevice, ve);
 
 			//tired of that gump
@@ -204,6 +267,8 @@ namespace BSPBuilder
 				mDebugLeaf	=mMap.FindNodeLandedIn(0, -mGameCam.CamPos);
 				mDebugLeaf	=-(mDebugLeaf + 1);
 			}
+
+			UpdateAnimatedLightMaps(msDelta);
 
 			mGameCam.Update(msDelta, kbs, Mouse.GetState());
 
@@ -361,6 +426,73 @@ namespace BSPBuilder
 				fx.End();
 
 				idx++;
+			}
+		}
+
+
+		float StyleVal(string szVal)
+		{
+			char	first	=szVal[0];
+			char	topVal	='z';
+
+			//get from zero to 25
+			float	val	=topVal - first;
+
+			//scale up to 0 to 255
+			val	*=(255.0f / 25.0f);
+
+			Debug.Assert(val >= 0.0f);
+			Debug.Assert(val <= 255.0f);
+
+			return	(255.0f - val) / 255.0f;
+		}
+
+
+		void UpdateAnimatedLightMaps(float msDelta)
+		{
+			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
+
+			string	intensities	="";
+
+			for(int i=0;i < 12;i++)
+			{
+				mCurStylePos[i]	+=msDelta;
+
+				float	endTime	=mStyles[i].Length * ThirtyFPS;
+
+				while(mCurStylePos[i] >= endTime)
+				{
+					mCurStylePos[i]	-=endTime;
+				}
+
+				int	curPos	=(int)Math.Floor(mCurStylePos[i] / ThirtyFPS);
+
+				float	val		=StyleVal(mStyles[i].Substring(curPos, 1));
+				float	nextVal	=StyleVal(mStyles[i].Substring((curPos + 1) % mStyles[i].Length, 1));
+
+				float	ratio	=mCurStylePos[i] - (curPos * ThirtyFPS);
+
+				ratio	/=ThirtyFPS;
+
+				if(i == 11)
+				{
+					intensities	+="" + MathHelper.Lerp(val, nextVal, ratio);
+				}
+				else
+				{
+					intensities	+="" + MathHelper.Lerp(val, nextVal, ratio) + " ";
+				}
+			}
+
+			foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
+			{
+				if(mat.Key.EndsWith("Anim"))
+				{
+					mat.Value.AddParameter("mAniIntensities",
+						EffectParameterClass.Scalar,
+						EffectParameterType.Single,
+						intensities);
+				}
 			}
 		}
 

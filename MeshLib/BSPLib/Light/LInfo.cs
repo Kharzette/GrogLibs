@@ -16,7 +16,7 @@ namespace BSPLib
 		Int32	[]mLSize		=new int[2];
 		Int32	mNumLTypes;
 
-		public const int	MAX_LTYPE_INDEX		=12;
+		public const int	MAX_LTYPE_INDEX		=13;	//switchable will go higher TODO
 		public const int	MAX_LMAP_SIZE		=1024;
 		public const int	MAX_LTYPES			=4;
 
