@@ -762,7 +762,7 @@ namespace BSPLib
 			{
 				MaterialLib.Material	mat	=new MaterialLib.Material();
 				mat.Name			=matName;
-				mat.ShaderName		="";
+				mat.ShaderName		="Shaders\\LightMap";
 				mat.Technique		="";
 				mat.BlendFunction	=BlendFunction.Add;
 				mat.SourceBlend		=Blend.SourceAlpha;
@@ -770,6 +770,28 @@ namespace BSPLib
 				mat.DepthWrite		=true;
 				mat.CullMode		=CullMode.CullCounterClockwiseFace;
 				mat.ZFunction		=CompareFunction.Less;
+
+				//set some parameter defaults
+				if(mat.Name.EndsWith("NonLM"))
+				{
+					mat.Technique	="FullDark";
+				}
+				else if(mat.Name.EndsWith("Anim"))
+				{
+					mat.Technique	="LightMapAnim";
+					mat.AddParameter("mLightMap",
+						EffectParameterClass.Object,
+						EffectParameterType.Texture,
+						"LightMapAtlas");
+				}
+				else
+				{
+					mat.Technique	="LightMap";
+					mat.AddParameter("mLightMap",
+						EffectParameterClass.Object,
+						EffectParameterType.Texture,
+						"LightMapAtlas");
+				}
 
 				mMaterials.Add(mat);
 			}

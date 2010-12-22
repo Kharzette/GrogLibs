@@ -26,6 +26,7 @@ namespace BSPBuilder
 		public event EventHandler	eLightGBSP;
 		public event EventHandler	eLoadGBSP;
 		public event EventHandler	eVisGBSP;
+		public event EventHandler	eMaterialVisGBSP;
 		public event EventHandler	eSaveGBSP;
 		public event EventHandler	eDrawChoiceChanged;
 
@@ -155,7 +156,7 @@ namespace BSPBuilder
 		{
 			get
 			{
-				mLightParams.mbExtraSamples	=ExtraSamples.Checked;
+				mLightParams.mbSeamCorrection	=SeamCorrection.Checked;
 				mLightParams.mbRadiosity	=Radiosity.Checked;
 				mLightParams.mbFastPatch	=FastPatch.Checked;
 				mLightParams.mPatchSize		=(int)PatchSize.Value;
@@ -164,7 +165,7 @@ namespace BSPBuilder
 				mLightParams.mMinLight.X	=(float)MinLightX.Value;
 				mLightParams.mMinLight.Y	=(float)MinLightY.Value;
 				mLightParams.mMinLight.Z	=(float)MinLightZ.Value;
-				mLightParams.mMirrorReflect	=(float)ReflectiveScale.Value;
+				mLightParams.mSurfaceReflect	=(float)ReflectiveScale.Value;
 				mLightParams.mMaxIntensity	=(int)MaxIntensity.Value;
 				mLightParams.mLightGridSize	=(int)LightGridSize.Value;
 
@@ -285,6 +286,23 @@ namespace BSPBuilder
 			if(eSaveGBSP != null)
 			{
 				eSaveGBSP(mSFD.FileName, null);
+			}
+		}
+
+
+		private void OnMaterialVis(object sender, EventArgs e)
+		{
+			mOFD.DefaultExt	="*.gbsp";
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			if(eMaterialVisGBSP != null)
+			{
+				eMaterialVisGBSP(mOFD.FileName, null);
 			}
 		}
 

@@ -135,13 +135,29 @@ namespace BSPBuilder
 
 		private void OnTextureListOk(object sender, EventArgs ea)
 		{
-			DataGridViewSelectedRowCollection	matSel	=MaterialProperties.SelectedRows;
+			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
 
 			mEditingCell.Value	=sender;
 			mEditingCell		=null;
 
 			mTF.eOk		-=OnTextureListOk;
 			mTF.eCancel	-=OnTextureListCancel;
+
+			//hack to autoset width / height
+			Texture2D	tex	=mMatLib.GetTexture(sender as string);
+
+			//add / update the tex size parameter
+			MaterialLib.Material	mat	=(MaterialLib.Material)matSel[0].DataBoundItem;
+			mat.AddParameter("mTexSize",
+				EffectParameterClass.Vector,
+				EffectParameterType.Single,
+				"" + tex.Width + " " + tex.Height);
+
+			//set texture enabled
+			mat.AddParameter("mbTextureEnabled",
+				EffectParameterClass.Scalar,
+				EffectParameterType.Bool,
+				"true");
 
 			MaterialGrid.Enabled		=true;
 			MaterialProperties.Enabled	=true;

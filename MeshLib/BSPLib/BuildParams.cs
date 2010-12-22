@@ -18,14 +18,14 @@ namespace BSPLib
 
 	public class LightParams
 	{
-		public bool		mbExtraSamples;
+		public bool		mbSeamCorrection;
 		public bool		mbRadiosity;
 		public bool		mbFastPatch;
 		public int		mPatchSize;
 		public int		mNumBounces;
 		public float	mLightScale;
 		public Vector3	mMinLight;
-		public float	mMirrorReflect;
+		public float	mSurfaceReflect;
 		public int		mMaxIntensity;
 		public int		mLightGridSize;
 	}

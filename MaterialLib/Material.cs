@@ -159,6 +159,54 @@ namespace MaterialLib
 		}
 
 
+		public string GetParameterValue(string name)
+		{
+			foreach(ShaderParameters sp in mParameters)
+			{
+				if(sp.Name == name)
+				{
+					return	sp.Value;
+				}
+			}
+			return	"";
+		}
+
+
+		public void AddParameter(string name, EffectParameterClass epc,
+								EffectParameterType ept, string value)
+		{
+			ShaderParameters	parm	=null;
+
+			//see if the parameter already exists
+			foreach(ShaderParameters sp in mParameters)
+			{
+				if(sp.Name == name)
+				{
+					parm	=sp;
+					break;
+				}
+			}
+
+			bool	bNew	=false;
+
+			if(parm == null)
+			{
+				bNew	=true;
+				parm	=new ShaderParameters();
+			}
+
+			parm.Name	=name;
+			parm.Class	=epc;
+			parm.Type	=ept;
+			parm.Value	=value;
+
+			if(bNew)
+			{
+				mParameters.Add(parm);
+			}
+		}
+
+
 		public void UpdateShaderParameters(Effect fx)
 		{
 			List<ShaderParameters>	parms	=new List<ShaderParameters>();

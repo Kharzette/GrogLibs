@@ -182,6 +182,7 @@ namespace BSPBuilder
 			mMainForm.eOpenBrushFile		+=OnOpenBrushFile;
 			mMainForm.eLightGBSP			+=OnLightGBSP;
 			mMainForm.eVisGBSP				+=OnVisGBSP;
+			mMainForm.eMaterialVisGBSP		+=OnMaterialVisGBSP;
 			mMainForm.eBuildGBSP			+=OnBuildGBSP;
 			mMainForm.eSaveGBSP				+=OnSaveGBSP;
 			mMainForm.eLoadGBSP				+=OnLoadGBSP;
@@ -958,6 +959,27 @@ namespace BSPBuilder
 		}
 
 
+		void OnMaterialVisGBSP(object sender, EventArgs ea)
+		{
+			string	fileName	=sender as string;
+
+			if(fileName != null)
+			{
+				if(mMap != null)
+				{
+					//unregister old events
+					mMap.eNumCollisionFacesChanged	-=OnNumCollisionFacesChanged;
+					mMap.eNumDrawFacesChanged		-=OnNumDrawFacesChanged;
+					mMap.eNumMapFacesChanged		-=OnNumMapFacesChanged;
+					mMap.eProgressChanged			-=OnMapProgressChanged;
+					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
+				}
+				mMap	=new Map();
+				mMap.MaterialVisGBSPFile(fileName, mMainForm.VisParameters, mMainForm.BSPParameters);
+			}
+		}
+
+
 		void OnLoadGBSP(object sender, EventArgs ea)
 		{
 			string	fileName	=sender as string;
@@ -1003,16 +1025,11 @@ namespace BSPBuilder
 
 					mMatLib.AddMap("LightMapAtlas", mLMapAtlas.GetAtlasTexture());
 
-					//add some default parameters
 					foreach(MaterialLib.Material mat in mats)
 					{
-						if(mat.GetParameterValue("mbLightMapEnabled") == "true")
-						{
-							mat.ShaderName	="Shaders/LightMap";
-						}
-
 						mMatLib.AddMaterial(mat);
 					}
+					mMatLib.RefreshShaderParameters();
 					mMatForm.UpdateMaterials();
 				}
 			}

@@ -77,11 +77,12 @@
 			this.label1 = new System.Windows.Forms.Label();
 			this.NumBounce = new System.Windows.Forms.NumericUpDown();
 			this.Radiosity = new System.Windows.Forms.CheckBox();
-			this.ExtraSamples = new System.Windows.Forms.CheckBox();
+			this.SeamCorrection = new System.Windows.Forms.CheckBox();
 			this.FastPatch = new System.Windows.Forms.CheckBox();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.SortPortals = new System.Windows.Forms.CheckBox();
 			this.FullVis = new System.Windows.Forms.CheckBox();
+			this.MaterialVis = new System.Windows.Forms.Button();
 			this.StatsGroupBox.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxCPUCores)).BeginInit();
 			this.GroupFileIO.SuspendLayout();
@@ -257,6 +258,7 @@
 			// 
 			// GroupFileIO
 			// 
+			this.GroupFileIO.Controls.Add(this.MaterialVis);
 			this.GroupFileIO.Controls.Add(this.LoadGBSP);
 			this.GroupFileIO.Controls.Add(this.LightGBSP);
 			this.GroupFileIO.Controls.Add(this.BuildGBSP);
@@ -265,7 +267,7 @@
 			this.GroupFileIO.Controls.Add(this.SaveGBSP);
 			this.GroupFileIO.Location = new System.Drawing.Point(12, 12);
 			this.GroupFileIO.Name = "GroupFileIO";
-			this.GroupFileIO.Size = new System.Drawing.Size(174, 113);
+			this.GroupFileIO.Size = new System.Drawing.Size(174, 137);
 			this.GroupFileIO.TabIndex = 20;
 			this.GroupFileIO.TabStop = false;
 			this.GroupFileIO.Text = "File IO";
@@ -282,7 +284,7 @@
 			// 
 			// LightGBSP
 			// 
-			this.LightGBSP.Location = new System.Drawing.Point(87, 78);
+			this.LightGBSP.Location = new System.Drawing.Point(87, 77);
 			this.LightGBSP.Name = "LightGBSP";
 			this.LightGBSP.Size = new System.Drawing.Size(75, 23);
 			this.LightGBSP.TabIndex = 18;
@@ -293,7 +295,7 @@
 			// BuildGBSP
 			// 
 			this.BuildGBSP.Enabled = false;
-			this.BuildGBSP.Location = new System.Drawing.Point(6, 78);
+			this.BuildGBSP.Location = new System.Drawing.Point(6, 77);
 			this.BuildGBSP.Name = "BuildGBSP";
 			this.BuildGBSP.Size = new System.Drawing.Size(75, 23);
 			this.BuildGBSP.TabIndex = 17;
@@ -418,7 +420,7 @@
 			this.LightSettingsGroupBox.Controls.Add(this.label1);
 			this.LightSettingsGroupBox.Controls.Add(this.NumBounce);
 			this.LightSettingsGroupBox.Controls.Add(this.Radiosity);
-			this.LightSettingsGroupBox.Controls.Add(this.ExtraSamples);
+			this.LightSettingsGroupBox.Controls.Add(this.SeamCorrection);
 			this.LightSettingsGroupBox.Controls.Add(this.FastPatch);
 			this.LightSettingsGroupBox.Location = new System.Drawing.Point(332, 12);
 			this.LightSettingsGroupBox.Name = "LightSettingsGroupBox";
@@ -432,9 +434,9 @@
 			this.label9.AutoSize = true;
 			this.label9.Location = new System.Drawing.Point(57, 298);
 			this.label9.Name = "label9";
-			this.label9.Size = new System.Drawing.Size(75, 13);
+			this.label9.Size = new System.Drawing.Size(68, 13);
 			this.label9.TabIndex = 37;
-			this.label9.Text = "Light Grid Size";
+			this.label9.Text = "Light Density";
 			// 
 			// LightGridSize
 			// 
@@ -494,9 +496,9 @@
 			this.label7.AutoSize = true;
 			this.label7.Location = new System.Drawing.Point(57, 246);
 			this.label7.Name = "label7";
-			this.label7.Size = new System.Drawing.Size(70, 13);
+			this.label7.Size = new System.Drawing.Size(63, 13);
 			this.label7.TabIndex = 28;
-			this.label7.Text = "Mirror Reflect";
+			this.label7.Text = "Surf Reflect";
 			// 
 			// ReflectiveScale
 			// 
@@ -686,17 +688,17 @@
 			this.Radiosity.UseVisualStyleBackColor = true;
 			this.Radiosity.CheckedChanged += new System.EventHandler(this.OnRadiosityChanged);
 			// 
-			// ExtraSamples
+			// SeamCorrection
 			// 
-			this.ExtraSamples.AutoSize = true;
-			this.ExtraSamples.Checked = true;
-			this.ExtraSamples.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.ExtraSamples.Location = new System.Drawing.Point(6, 19);
-			this.ExtraSamples.Name = "ExtraSamples";
-			this.ExtraSamples.Size = new System.Drawing.Size(93, 17);
-			this.ExtraSamples.TabIndex = 1;
-			this.ExtraSamples.Text = "Extra Samples";
-			this.ExtraSamples.UseVisualStyleBackColor = true;
+			this.SeamCorrection.AutoSize = true;
+			this.SeamCorrection.Checked = true;
+			this.SeamCorrection.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.SeamCorrection.Location = new System.Drawing.Point(6, 19);
+			this.SeamCorrection.Name = "SeamCorrection";
+			this.SeamCorrection.Size = new System.Drawing.Size(104, 17);
+			this.SeamCorrection.TabIndex = 1;
+			this.SeamCorrection.Text = "Seam Correction";
+			this.SeamCorrection.UseVisualStyleBackColor = true;
 			// 
 			// FastPatch
 			// 
@@ -713,7 +715,7 @@
 			// 
 			this.groupBox1.Controls.Add(this.SortPortals);
 			this.groupBox1.Controls.Add(this.FullVis);
-			this.groupBox1.Location = new System.Drawing.Point(12, 131);
+			this.groupBox1.Location = new System.Drawing.Point(12, 155);
 			this.groupBox1.Name = "groupBox1";
 			this.groupBox1.Size = new System.Drawing.Size(93, 64);
 			this.groupBox1.TabIndex = 28;
@@ -742,6 +744,16 @@
 			this.FullVis.Text = "Full Vis";
 			this.FullVis.UseVisualStyleBackColor = true;
 			this.FullVis.CheckedChanged += new System.EventHandler(this.OnFullVisChanged);
+			// 
+			// MaterialVis
+			// 
+			this.MaterialVis.Location = new System.Drawing.Point(87, 106);
+			this.MaterialVis.Name = "MaterialVis";
+			this.MaterialVis.Size = new System.Drawing.Size(75, 23);
+			this.MaterialVis.TabIndex = 20;
+			this.MaterialVis.Text = "Material Vis";
+			this.MaterialVis.UseVisualStyleBackColor = true;
+			this.MaterialVis.Click += new System.EventHandler(this.OnMaterialVis);
 			// 
 			// MainForm
 			// 
@@ -819,7 +831,7 @@
 		private System.Windows.Forms.CheckBox VerboseBSP;
 		private System.Windows.Forms.GroupBox LightSettingsGroupBox;
 		private System.Windows.Forms.CheckBox Radiosity;
-		private System.Windows.Forms.CheckBox ExtraSamples;
+		private System.Windows.Forms.CheckBox SeamCorrection;
 		private System.Windows.Forms.CheckBox FastPatch;
 		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.NumericUpDown LightScale;
@@ -844,5 +856,6 @@
 		private System.Windows.Forms.NumericUpDown MaxIntensity;
 		private System.Windows.Forms.NumericUpDown LightGridSize;
 		private System.Windows.Forms.Label label9;
+		private System.Windows.Forms.Button MaterialVis;
 	}
 }

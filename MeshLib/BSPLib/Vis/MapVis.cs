@@ -86,12 +86,8 @@ namespace BSPLib
 				goto	ExitWithError;
 			}
 
-			//make a material vis, what materials
-			//can be seen from each leaf
-			VisMaterials();
-
 			//Save the leafs, clusters, vis data, etc
-			if(!FinishWritingVis(bw))
+			if(!FinishWritingVis(bw, false))
 			{
 				goto	ExitWithError;
 			}
@@ -131,6 +127,92 @@ namespace BSPLib
 		}
 
 
+		public bool MaterialVisGBSPFile(string fileName, VisParams prms, BSPBuildParams prms2)
+		{
+			Print(" --- Material Vis GBSP File --- \n");
+
+			mVisParams	=prms;
+			mBSPParms	=prms2;
+
+			// Fill in the global bsp data
+			if(!LoadGBSPFile(fileName))
+			{
+				Print("MatVis:  Could not load GBSP file: " + fileName + "\n");
+				return	false;
+			}
+
+			//make sure it is lit
+			if(mGFXLightData == null)
+			{
+				Print("Map needs to be lit before material vis can work properly.\n");
+				return	false;
+			}
+
+			//Open the bsp file for writing
+			FileStream	fs	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+				FileMode.OpenOrCreate, FileAccess.Write);
+
+			BinaryWriter	bw	=null;
+
+			if(fs == null)
+			{
+				Print("MatVisGBSPFile:  Could not open GBSP file for writing: " + fileName + "\n");
+				goto	ExitWithError;
+			}
+
+			bw	=new BinaryWriter(fs);
+
+			//Write out everything but vis info
+			if(!StartWritingVis(bw))
+			{
+				goto	ExitWithError;
+			}
+
+			//make a material vis, what materials
+			//can be seen from each leaf
+			VisMaterials();
+
+			//Save the leafs, clusters, vis data, etc
+			if(!FinishWritingVis(bw, true))
+			{
+				goto	ExitWithError;
+			}
+
+			//Free all the vis stuff
+			FreeAllVisData();
+
+			//Free any remaining leftover bsp data
+			FreeGBSPFile();
+
+			bw.Close();
+			fs.Close();
+			bw	=null;
+			fs	=null;
+			
+			return	true;
+
+			// ==== ERROR ====
+			ExitWithError:
+			{
+				Print("MatPvsGBSPFile:  Could not vis the file: " + fileName + "\n");
+
+				if(bw != null)
+				{
+					bw.Close();
+				}
+				if(fs != null)
+				{
+					fs.Close();
+				}
+
+				FreeAllVisData();
+				FreeGBSPFile();
+
+				return	false;
+			}
+		}
+
+
 		public bool IsMaterialVisible(int leaf, int matIndex)
 		{
 			if(mGFXLeafs == null)
@@ -145,6 +227,9 @@ namespace BSPLib
 				return	true;	//this will make everything vis
 								//when outside of the map
 			}
+
+			//plus one to avoid 0 problem
+			matIndex++;
 
 			int	ofs	=leaf * mNumVisMaterialBytes;
 			
@@ -206,23 +291,42 @@ namespace BSPLib
 
 						GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
 
-						if(!visibleMaterials[leaf].Contains(tex.mMaterial))
+						string	matName	=tex.mMaterial;
+						if(f.mLightOfs == -1)
 						{
-							visibleMaterials[leaf].Add(tex.mMaterial);
+							matName	+="NonLM";
+						}
+
+						int	numStyles	=0;
+						for(int s=0;s < 4;s++)
+						{
+							if(f.mLTypes[s] != 255)
+							{
+								numStyles++;
+							}
+						}
+
+						if(numStyles == 1)
+						{
+							//standard static light
+						}
+						else if(numStyles > 1)
+						{
+							//animated lights
+							matName	+="Anim";
+						}
+
+						if(!visibleMaterials[leaf].Contains(matName))
+						{
+							visibleMaterials[leaf].Add(matName);
 						}
 					}
 				}
 			}
 
 			//grab list of material names
-			List<string>	matNames	=new List<string>();
-			foreach(GFXTexInfo tex in mGFXTexInfos)
-			{
-				if(!matNames.Contains(tex.mMaterial))
-				{
-					matNames.Add(tex.mMaterial);
-				}
-			}
+			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, 69);
+			List<string>	matNames	=mg.GetMaterialNames();
 
 			//alloc compressed bytes
 			mNumVisMaterialBytes	=((matNames.Count + 63) & ~63) >> 3;
@@ -234,7 +338,8 @@ namespace BSPLib
 			{
 				foreach(string mname in visMat.Value)
 				{
-					int	idx	=matNames.IndexOf(mname);
+					//zero doesn't or very well, so + 1 here
+					int	idx	=matNames.IndexOf(mname) + 1;
 					mGFXMaterialVisData[visMat.Key * mNumVisMaterialBytes + (idx >> 3)]
 						|=(byte)(1 << (idx & 7));
 				}
@@ -362,7 +467,7 @@ namespace BSPLib
 		}
 
 
-		bool FinishWritingVis(BinaryWriter bw)
+		bool FinishWritingVis(BinaryWriter bw, bool bMaterialVis)
 		{
 			if(!SaveVisdGFXLeafs(bw))
 			{
@@ -376,9 +481,12 @@ namespace BSPLib
 			{
 				return	false;
 			}
-			if(!SaveGFXMaterialVisData(bw))
+			if(bMaterialVis)
 			{
-				return	false;
+				if(!SaveGFXMaterialVisData(bw))
+				{
+					return	false;
+				}
 			}
 
 			GBSPChunk	Chunk	=new GBSPChunk();

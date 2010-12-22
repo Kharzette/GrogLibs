@@ -749,7 +749,7 @@ namespace BSPLib
 			}
 			
 			//Light faces, and apply to patches
-			if(!LightFaces(5, mLightParams.mbExtraSamples))	//Light all the faces lightmaps, and apply to patches
+			if(!LightFaces(5, mLightParams.mbSeamCorrection))	//Light all the faces lightmaps, and apply to patches
 			{
 				goto	ExitWithError;
 			}

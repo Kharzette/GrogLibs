@@ -231,6 +231,27 @@ namespace MaterialLib
 		}
 
 
+		public void AddMap(string name, Texture2D map)
+		{
+			//check if exists
+			if(mMaps.ContainsKey(name))
+			{
+				mMaps.Remove(name);
+			}
+			mMaps.Add(name, map);
+		}
+
+
+		public Texture2D GetTexture(string name)
+		{
+			if(mMaps.ContainsKey(name))
+			{
+				return	mMaps[name];
+			}
+			return	null;
+		}
+
+
 		public Effect GetMaterialShader(string name)
 		{
 			if(mMats.ContainsKey(name))
@@ -285,7 +306,7 @@ namespace MaterialLib
 
 			foreach(ShaderParameters sp in mat.Parameters)
 			{
-				if(sp.Value == null || sp.Value == "")
+				if(sp.Value == null || sp.Value == "" || fx.Parameters[sp.Name] == null)
 				{
 					continue;	//skip anything blank
 				}
@@ -296,13 +317,25 @@ namespace MaterialLib
 						{
 							fx.Parameters[sp.Name].SetValue(mMaps[sp.Value]);
 						}
+						else
+						{
+							fx.Parameters[sp.Name].SetValue(sp.Value);
+						}
 						break;
 
 					case EffectParameterClass.Scalar:
 						if(sp.Type == EffectParameterType.Single)
 						{
-							fx.Parameters[sp.Name].SetValue(
-								Convert.ToSingle(sp.Value));
+							EffectParameter	ep	=fx.Parameters[sp.Name];
+							if(ep.Elements.Count > 1)
+							{
+								float	[]vals	=ParseFloatArray(sp.Value);
+								ep.SetValue(vals);
+							}
+							else
+							{
+								ep.SetValue(Convert.ToSingle(sp.Value));
+							}
 						}
 						else if(sp.Type == EffectParameterType.Bool)
 						{
@@ -313,18 +346,18 @@ namespace MaterialLib
 
 					case EffectParameterClass.Vector:
 						//get the number of columns
-						EffectParameter	ep	=fx.Parameters[sp.Name];
+						EffectParameter	ep2	=fx.Parameters[sp.Name];
 
-						if(ep.ColumnCount == 2)
+						if(ep2.ColumnCount == 2)
 						{
 							Vector2	vec	=Vector2.Zero;
 							string	[]tokens;
 							tokens	=sp.Value.Split(' ');
 							vec.X	=Convert.ToSingle(tokens[0]);
 							vec.Y	=Convert.ToSingle(tokens[1]);
-							ep.SetValue(vec);
+							ep2.SetValue(vec);
 						}
-						else if(ep.ColumnCount == 3)
+						else if(ep2.ColumnCount == 3)
 						{
 							Vector3	vec	=Vector3.Zero;
 							string	[]tokens;
@@ -332,9 +365,9 @@ namespace MaterialLib
 							vec.X	=Convert.ToSingle(tokens[0]);
 							vec.Y	=Convert.ToSingle(tokens[1]);
 							vec.Z	=Convert.ToSingle(tokens[2]);
-							ep.SetValue(vec);
+							ep2.SetValue(vec);
 						}
-						else if(ep.ColumnCount == 4)
+						else if(ep2.ColumnCount == 4)
 						{
 							Vector4	vec	=Vector4.Zero;
 							string	[]tokens;
@@ -343,7 +376,7 @@ namespace MaterialLib
 							vec.Y	=Convert.ToSingle(tokens[1]);
 							vec.Z	=Convert.ToSingle(tokens[2]);
 							vec.W	=Convert.ToSingle(tokens[3]);
-							ep.SetValue(vec);
+							ep2.SetValue(vec);
 						}
 						else
 						{
@@ -352,6 +385,23 @@ namespace MaterialLib
 						break;
 				}
 			}
+		}
+
+
+		float[] ParseFloatArray(string floats)
+		{
+			string	[]toks	=floats.Split(' ');
+
+			List<float>	ret	=new List<float>();
+
+			foreach(string tok in toks)
+			{
+				float	f;
+
+				f	=Convert.ToSingle(tok);
+				ret.Add(f);
+			}
+			return	ret.ToArray();
 		}
 
 
@@ -389,6 +439,19 @@ namespace MaterialLib
 					fx.Value.Parameters["mProjection"].SetValue(proj);
 				}
 			}
+		}
+
+
+		public void DrawMap(string map, SpriteBatch sb)
+		{
+			if(!mMaps.ContainsKey(map))
+			{
+				return;
+			}
+
+			sb.Begin();
+			sb.Draw(mMaps[map], Vector2.One * 130.0f, Color.White);
+			sb.End();
 		}
 
 
