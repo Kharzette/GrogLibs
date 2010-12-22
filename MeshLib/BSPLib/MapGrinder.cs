@@ -238,20 +238,17 @@ namespace BSPLib
 					//grab lightmap0
 					double	scaleU, scaleV, offsetU, offsetV;
 					scaleU	=scaleV	=offsetU	=offsetV	=0.0;
-					if(f.mLightOfs != -1)
-					{
-						Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
+					Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
 
-						for(int i=0;i < lmap.Length;i++)
-						{
-							lmap[i].R	=lightData[f.mLightOfs + (i * 3)];
-							lmap[i].G	=lightData[f.mLightOfs + (i * 3) + 1];
-							lmap[i].B	=lightData[f.mLightOfs + (i * 3) + 2];
-							lmap[i].A	=0xFF;
-						}
-						mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-							out scaleU, out scaleV, out offsetU, out offsetV);
+					for(int i=0;i < lmap.Length;i++)
+					{
+						lmap[i].R	=lightData[f.mLightOfs + (i * 3)];
+						lmap[i].G	=lightData[f.mLightOfs + (i * 3) + 1];
+						lmap[i].B	=lightData[f.mLightOfs + (i * 3) + 2];
+						lmap[i].A	=0xFF;
 					}
+					mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
+						out scaleU, out scaleV, out offsetU, out offsetV);
 
 					List<Vector3>	fverts	=new List<Vector3>();
 
@@ -271,11 +268,6 @@ namespace BSPLib
 
 						mLMAnimVerts.Add(pnt);
 					}
-					if(f.mLightOfs == -1)
-					{
-						continue;	//donut need extra texcoords
-					}
-
 					List<Vector2>	coords	=new List<Vector2>();
 					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
 
@@ -313,12 +305,28 @@ namespace BSPLib
 					{
 						if(f.mLTypes[s] == 255)
 						{
+							//fill with zeros for empty spots
+							for(k=0;k < nverts;k++)
+							{
+								if(s == 1)
+								{
+									mLMAnimFaceTex2.Add(Vector2.Zero);
+								}
+								else if(s == 2)
+								{
+									mLMAnimFaceTex3.Add(Vector2.Zero);
+								}
+								else if(s == 3)
+								{
+									mLMAnimFaceTex4.Add(Vector2.Zero);
+								}
+							}
 							continue;
 						}
 
 						//grab animated lightmaps
 						scaleU	=scaleV	=offsetU	=offsetV	=0.0;
-						Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
+						lmap	=new Color[f.mLHeight * f.mLWidth];
 
 						int	sizeOffset	=f.mLHeight * f.mLWidth;
 
@@ -376,6 +384,16 @@ namespace BSPLib
 								mLMAnimFaceTex4.Add(tc);
 							}
 						}
+					}
+
+					//style index
+					for(k=0;k < nverts;k++)
+					{
+						Vector4	styleIndex	=Vector4.Zero;
+						styleIndex.X	=f.mLTypes[1];
+						styleIndex.Y	=f.mLTypes[2];
+						styleIndex.Z	=f.mLTypes[3];
+						mLMAnimStyle.Add(styleIndex);
 					}
 				}
 

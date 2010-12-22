@@ -885,7 +885,9 @@ namespace BSPLib
 				MapEntity	ent	=mGFXEntities[i];
 
 				if(!(ent.mData.ContainsKey("light")
-					|| ent.mData.ContainsKey("_light")))
+					|| ent.mData.ContainsKey("_light")
+					|| ent.mData.ContainsKey("light_torch_small_walltorch")
+					))
 				{
 					continue;
 				}
@@ -896,6 +898,7 @@ namespace BSPLib
 				if(!ent.GetLightValue(out colorVec))
 				{
 					Print("Warning:  Light entity, couldn't get color\n");
+					colorVec.W	=200.0f;	//default
 				}
 
 				Vector3	color;
@@ -920,7 +923,10 @@ namespace BSPLib
 
 				dLight.mColor		=color;
 				dLight.mIntensity	=colorVec.W;// * mGlobals.EntityScale;
-				dLight.mType		=DirectLight.DLight_Point;	//hardcode for now
+				dLight.mType		=DirectLight.DLight_Point;	//default
+				
+				//animated light styles
+				ent.GetInt("style", out dLight.mLType);
 
 				Vector3	Angles;
 				if(ent.GetVectorNoConversion("angles", out Angles))

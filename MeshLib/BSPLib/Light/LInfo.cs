@@ -29,7 +29,7 @@ namespace BSPLib
 
 		internal Vector3 []GetRGBLightData(Int32 lightIndex)
 		{
-			if(lightIndex > mNumLTypes)
+			if(lightIndex > MAX_LTYPE_INDEX)
 			{
 				return	null;
 			}

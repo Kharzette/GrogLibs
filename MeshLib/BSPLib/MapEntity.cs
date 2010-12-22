@@ -51,6 +51,21 @@ namespace BSPLib
 		}
 
 
+		internal bool GetInt(string key, out int val)
+		{
+			val	=0;
+			if(!mData.ContainsKey(key))
+			{
+				return	false;
+			}
+			if(!Int32.TryParse(mData[key], out val))
+			{
+				return	false;
+			}
+			return	true;
+		}
+
+
 		public bool GetFloat(string key, out float val)
 		{
 			val	=0.0f;
