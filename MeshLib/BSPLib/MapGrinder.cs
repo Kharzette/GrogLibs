@@ -20,10 +20,31 @@ namespace BSPLib
 		List<Vector2>	mLMFaceTex1		=new List<Vector2>();
 		List<Int32>		mLMIndexes		=new List<Int32>();
 
-		//computed non lightmapped geometry
-		List<Vector3>	mNonLMVerts		=new List<Vector3>();
-		List<Vector2>	mNonLMFaceTex0	=new List<Vector2>();
-		List<Int32>		mNonLMIndexes	=new List<Int32>();
+		//computed vertex lit geometry
+		List<Vector3>	mVLitVerts		=new List<Vector3>();
+		List<Vector2>	mVLitTex0		=new List<Vector2>();
+		List<Vector3>	mVLitNormals	=new List<Vector3>();
+		List<Int32>		mVLitIndexes	=new List<Int32>();
+
+		//computed fullbright geometry
+		List<Vector3>	mFBVerts	=new List<Vector3>();
+		List<Vector2>	mFBTex0		=new List<Vector2>();
+		List<Int32>		mFBIndexes	=new List<Int32>();
+
+		//computed alpha geometry
+		List<Vector3>	mAlphaVerts		=new List<Vector3>();
+		List<Vector2>	mAlphaTex0		=new List<Vector2>();
+		List<Int32>		mAlphaIndexes	=new List<Int32>();
+
+		//computed mirror geometry
+		List<Vector3>	mMirrorVerts	=new List<Vector3>();
+		List<Vector2>	mMirrorTex0		=new List<Vector2>();
+		List<Int32>		mMirrorIndexes	=new List<Int32>();
+
+		//computed sky geometry
+		List<Vector3>	mSkyVerts	=new List<Vector3>();
+		List<Vector2>	mSkyTex0	=new List<Vector2>();
+		List<Int32>		mSkyIndexes	=new List<Int32>();
 
 		//animated lightmap geometry
 		List<Vector3>	mLMAnimVerts	=new List<Vector3>();
@@ -44,10 +65,30 @@ namespace BSPLib
 		List<Int32>		mLMMaterialNumVerts	=new List<Int32>();
 		List<Int32>		mLMMaterialNumTris	=new List<Int32>();
 
-		//non lightmap material stuff
-		List<Int32>		mNonLMMaterialOffsets	=new List<Int32>();
-		List<Int32>		mNonLMMaterialNumVerts	=new List<Int32>();
-		List<Int32>		mNonLMMaterialNumTris	=new List<Int32>();
+		//vert lit material stuff
+		List<Int32>		mVLitMaterialOffsets	=new List<Int32>();
+		List<Int32>		mVLitMaterialNumVerts	=new List<Int32>();
+		List<Int32>		mVLitMaterialNumTris	=new List<Int32>();
+
+		//alpha material stuff
+		List<Int32>		mAlphaMaterialOffsets	=new List<Int32>();
+		List<Int32>		mAlphaMaterialNumVerts	=new List<Int32>();
+		List<Int32>		mAlphaMaterialNumTris	=new List<Int32>();
+
+		//fullbright material stuff
+		List<Int32>		mFBMaterialOffsets	=new List<Int32>();
+		List<Int32>		mFBMaterialNumVerts	=new List<Int32>();
+		List<Int32>		mFBMaterialNumTris	=new List<Int32>();
+
+		//mirror material stuff
+		List<Int32>		mMirrorMaterialOffsets	=new List<Int32>();
+		List<Int32>		mMirrorMaterialNumVerts	=new List<Int32>();
+		List<Int32>		mMirrorMaterialNumTris	=new List<Int32>();
+
+		//sky material stuff
+		List<Int32>		mSkyMaterialOffsets		=new List<Int32>();
+		List<Int32>		mSkyMaterialNumVerts	=new List<Int32>();
+		List<Int32>		mSkyMaterialNumTris		=new List<Int32>();
 
 		//animated lightmap material stuff
 		List<Int32>		mLMAnimMaterialOffsets	=new List<Int32>();
@@ -81,18 +122,6 @@ namespace BSPLib
 		}
 
 
-		internal Int32 GetNumLMVerts()
-		{
-			return	mLMVerts.Count;
-		}
-
-
-		internal Int32 GetNumLMTris()
-		{
-			return	mLMIndexes.Count / 3;
-		}
-
-
 		internal List<Material> GetMaterials()
 		{
 			return	mMaterials;
@@ -108,12 +137,48 @@ namespace BSPLib
 		}
 
 
-		internal void GetNonLMMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
+		internal void GetVLitMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
 											out Int32 []matNumTris)
 		{
-			matOffsets	=mNonLMMaterialOffsets.ToArray();
-			matNumVerts	=mNonLMMaterialNumVerts.ToArray();
-			matNumTris	=mNonLMMaterialNumTris.ToArray();
+			matOffsets	=mVLitMaterialOffsets.ToArray();
+			matNumVerts	=mVLitMaterialNumVerts.ToArray();
+			matNumTris	=mVLitMaterialNumTris.ToArray();
+		}
+
+
+		internal void GetFullBrightMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
+												out Int32 []matNumTris)
+		{
+			matOffsets	=mFBMaterialOffsets.ToArray();
+			matNumVerts	=mFBMaterialNumVerts.ToArray();
+			matNumTris	=mFBMaterialNumTris.ToArray();
+		}
+
+
+		internal void GetAlphaMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
+											out Int32 []matNumTris)
+		{
+			matOffsets	=mAlphaMaterialOffsets.ToArray();
+			matNumVerts	=mAlphaMaterialNumVerts.ToArray();
+			matNumTris	=mAlphaMaterialNumTris.ToArray();
+		}
+
+
+		internal void GetMirrorMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
+											out Int32 []matNumTris)
+		{
+			matOffsets	=mMirrorMaterialOffsets.ToArray();
+			matNumVerts	=mMirrorMaterialNumVerts.ToArray();
+			matNumTris	=mMirrorMaterialNumTris.ToArray();
+		}
+
+
+		internal void GetSkyMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
+											out Int32 []matNumTris)
+		{
+			matOffsets	=mSkyMaterialOffsets.ToArray();
+			matNumVerts	=mSkyMaterialNumVerts.ToArray();
+			matNumTris	=mSkyMaterialNumTris.ToArray();
 		}
 
 
@@ -145,21 +210,98 @@ namespace BSPLib
 		}
 
 
-		internal void GetNonLMBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetVLitBuffers(out VertexBuffer vb, out IndexBuffer ib)
 		{
-			VPosTex0	[]varray	=new VPosTex0[mNonLMVerts.Count];
-			for(int i=0;i < mNonLMVerts.Count;i++)
+			VPosTex0Norm0	[]varray	=new VPosTex0Norm0[mVLitVerts.Count];
+			for(int i=0;i < mVLitVerts.Count;i++)
 			{
-				varray[i].Position	=mNonLMVerts[i];
-				varray[i].TexCoord0	=mNonLMFaceTex0[i];
+				varray[i].Position	=mVLitVerts[i];
+				varray[i].TexCoord0	=mVLitTex0[i];
+				varray[i].Normal	=mVLitNormals[i];
+			}
+
+			vb	=new VertexBuffer(mGD, 32 * varray.Length, BufferUsage.WriteOnly);
+			vb.SetData<VPosTex0Norm0>(varray);
+
+			ib	=new IndexBuffer(mGD, 4 * mVLitIndexes.Count, BufferUsage.WriteOnly,
+					IndexElementSize.ThirtyTwoBits);
+			ib.SetData<Int32>(mVLitIndexes.ToArray());
+		}
+
+
+		internal void GetAlphaBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		{
+			VPosTex0Col0	[]varray	=new VPosTex0Col0[mAlphaVerts.Count];
+			for(int i=0;i < mAlphaVerts.Count;i++)
+			{
+				varray[i].Position	=mAlphaVerts[i];
+				varray[i].TexCoord0	=mAlphaTex0[i];
+				varray[i].Color0	=Vector4.One;
+				varray[i].Color0.W	=0.5f;	//TODO: donut hardcode
+			}
+
+			vb	=new VertexBuffer(mGD, 36 * varray.Length, BufferUsage.WriteOnly);
+			vb.SetData<VPosTex0Col0>(varray);
+
+			ib	=new IndexBuffer(mGD, 4 * mAlphaIndexes.Count, BufferUsage.WriteOnly,
+					IndexElementSize.ThirtyTwoBits);
+			ib.SetData<Int32>(mAlphaIndexes.ToArray());
+		}
+
+
+		internal void GetFullBrightBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		{
+			VPosTex0	[]varray	=new VPosTex0[mFBVerts.Count];
+			for(int i=0;i < mFBVerts.Count;i++)
+			{
+				varray[i].Position	=mFBVerts[i];
+				varray[i].TexCoord0	=mFBTex0[i];
 			}
 
 			vb	=new VertexBuffer(mGD, 20 * varray.Length, BufferUsage.WriteOnly);
 			vb.SetData<VPosTex0>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mNonLMIndexes.Count, BufferUsage.WriteOnly,
+			ib	=new IndexBuffer(mGD, 4 * mFBIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
-			ib.SetData<Int32>(mNonLMIndexes.ToArray());
+			ib.SetData<Int32>(mFBIndexes.ToArray());
+		}
+
+
+		internal void GetMirrorBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		{
+			VPosTex0Col0	[]varray	=new VPosTex0Col0[mMirrorVerts.Count];
+			for(int i=0;i < mMirrorVerts.Count;i++)
+			{
+				varray[i].Position	=mMirrorVerts[i];
+				varray[i].TexCoord0	=mMirrorTex0[i];
+				varray[i].Color0	=Vector4.One;
+				varray[i].Color0.W	=0.5f;	//TODO: donut hardcode
+			}
+
+			vb	=new VertexBuffer(mGD, 36 * varray.Length, BufferUsage.WriteOnly);
+			vb.SetData<VPosTex0Col0>(varray);
+
+			ib	=new IndexBuffer(mGD, 4 * mMirrorIndexes.Count, BufferUsage.WriteOnly,
+					IndexElementSize.ThirtyTwoBits);
+			ib.SetData<Int32>(mMirrorIndexes.ToArray());
+		}
+
+
+		internal void GetSkyBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		{
+			VPosTex0	[]varray	=new VPosTex0[mSkyVerts.Count];
+			for(int i=0;i < mSkyVerts.Count;i++)
+			{
+				varray[i].Position	=mSkyVerts[i];
+				varray[i].TexCoord0	=mSkyTex0[i];
+			}
+
+			vb	=new VertexBuffer(mGD, 20 * varray.Length, BufferUsage.WriteOnly);
+			vb.SetData<VPosTex0>(varray);
+
+			ib	=new IndexBuffer(mGD, 4 * mSkyIndexes.Count, BufferUsage.WriteOnly,
+					IndexElementSize.ThirtyTwoBits);
+			ib.SetData<Int32>(mSkyIndexes.ToArray());
 		}
 
 
@@ -409,36 +551,8 @@ namespace BSPLib
 
 			mLMAtlas.Finish();
 
-			int	faceOfs	=0;
-			for(int j=0;j < mMaterialNames.Count;j++)
-			{
-				int	cnt	=mLMAnimIndexes.Count;
-
-				mLMAnimMaterialOffsets.Add(cnt);
-
-				for(int i=faceOfs;i < (numFace[j] + faceOfs);i++)
-				{
-					int		nverts	=numVert[i];
-					int		fvert	=firstVert[i];
-					int		k		=0;
-
-					//triangulate
-					for(k=1;k < nverts-1;k++)
-					{
-						mLMAnimIndexes.Add(fvert);
-						mLMAnimIndexes.Add(fvert + k);
-						mLMAnimIndexes.Add(fvert + ((k + 1) % nverts));
-					}
-				}
-
-				faceOfs	+=numFace[j];
-
-				int	numTris	=(mLMAnimIndexes.Count - cnt);
-
-				numTris	/=3;
-
-				mLMAnimMaterialNumTris.Add(numTris);
-			}
+			ComputeIndexes(mLMAnimIndexes, mLMAnimMaterialOffsets,
+				mLMAnimMaterialNumTris, numFace, firstVert, numVert);
 		}
 
 
@@ -551,56 +665,27 @@ namespace BSPLib
 
 			mLMAtlas.Finish();
 
-			int	faceOfs	=0;
-			for(int j=0;j < mMaterialNames.Count;j++)
-			{
-				int	cnt	=mLMIndexes.Count;
-
-				mLMMaterialOffsets.Add(cnt);
-
-				for(int i=faceOfs;i < (numFace[j] + faceOfs);i++)
-				{
-					int		nverts	=numVert[i];
-					int		fvert	=firstVert[i];
-					int		k		=0;
-
-					//triangulate
-					for(k=1;k < nverts-1;k++)
-					{
-						mLMIndexes.Add(fvert);
-						mLMIndexes.Add(fvert + k);
-						mLMIndexes.Add(fvert + ((k + 1) % nverts));
-					}
-				}
-
-				faceOfs	+=numFace[j];
-
-				int	numTris	=(mLMIndexes.Count - cnt);
-
-				numTris	/=3;
-
-				mLMMaterialNumTris.Add(numTris);
-			}
+			ComputeIndexes(mLMIndexes, mLMMaterialOffsets, mLMMaterialNumTris, numFace, firstVert, numVert);
 		}
 
 
-		internal void BuildNonLMFaceData(Vector3 []verts, int[] indexes)
+		internal void BuildVLitFaceData(Vector3 []verts, int[] indexes)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
 
-			Map.Print("Building non light mapped face data...");
+			Map.Print("Building vertex lit face data...");
 
 			foreach(Material mat in mMaterials)
 			{
-				int	numFaceVerts	=mNonLMVerts.Count;
+				int	numFaceVerts	=mVLitVerts.Count;
 				int	numFaces		=0;
 
-				if(!mat.Name.EndsWith("NonLM"))
+				if(!mat.Name.EndsWith("*VertLit"))
 				{
 					numFace.Add(numFaces);
-					mNonLMMaterialNumVerts.Add(mNonLMVerts.Count - numFaceVerts);
+					mVLitMaterialNumVerts.Add(mVLitVerts.Count - numFaceVerts);
 					continue;
 				}
 
@@ -641,24 +726,336 @@ namespace BSPLib
 						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
 						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
 
-						mNonLMFaceTex0.Add(crd);
+						mVLitTex0.Add(crd);
 						fverts.Add(pnt);
 
-						mNonLMVerts.Add(pnt);
+						mVLitVerts.Add(pnt);
 					}
-					firstVert.Add(mNonLMVerts.Count - f.mNumVerts);
+
+					//flat shading only for now
+					ComputeNormals(fverts, mVLitNormals);
+
+					firstVert.Add(mVLitVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
 				}
 				numFace.Add(numFaces);
-				mNonLMMaterialNumVerts.Add(mNonLMVerts.Count - numFaceVerts);
+				mVLitMaterialNumVerts.Add(mVLitVerts.Count - numFaceVerts);
 			}
 
+			ComputeIndexes(mVLitIndexes, mVLitMaterialOffsets,
+				mVLitMaterialNumTris, numFace, firstVert, numVert);
+		}
+
+
+		internal void BuildMirrorFaceData(Vector3 []verts, int[] indexes)
+		{
+			List<Int32>	firstVert	=new List<Int32>();
+			List<Int32>	numVert		=new List<Int32>();
+			List<Int32>	numFace		=new List<Int32>();
+
+			Map.Print("Building mirror face data...");
+
+			foreach(Material mat in mMaterials)
+			{
+				int	numFaceVerts	=mMirrorVerts.Count;
+				int	numFaces		=0;
+
+				if(!mat.Name.EndsWith("*Mirror"))
+				{
+					numFace.Add(numFaces);
+					mMirrorMaterialNumVerts.Add(mMirrorVerts.Count - numFaceVerts);
+					continue;
+				}
+
+				Map.Print("Material: " + mat.Name + ".\n");
+
+				foreach(GFXFace f in mFaces)
+				{
+					if(f.mLightOfs != -1)
+					{
+						continue;	//only interested in non lightmapped
+					}
+
+					//check anim lights for good measure
+					Debug.Assert(f.mLTypes[0] == 255);
+					Debug.Assert(f.mLTypes[1] == 255);
+					Debug.Assert(f.mLTypes[2] == 255);
+					Debug.Assert(f.mLTypes[3] == 255);
+
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.Name.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					numFaces++;
+
+					List<Vector3>	fverts	=new List<Vector3>();
+
+					int		nverts	=f.mNumVerts;
+					int		fvert	=f.mFirstVert;
+					int		k		=0;
+					for(k=0;k < nverts;k++)
+					{
+						int		idx	=indexes[fvert + k];
+						Vector3	pnt	=verts[idx];
+						Vector2	crd;
+						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
+						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
+
+						mMirrorTex0.Add(crd);
+						fverts.Add(pnt);
+
+						mMirrorVerts.Add(pnt);
+					}
+
+					firstVert.Add(mMirrorVerts.Count - f.mNumVerts);
+					numVert.Add(f.mNumVerts);
+				}
+				numFace.Add(numFaces);
+				mMirrorMaterialNumVerts.Add(mMirrorVerts.Count - numFaceVerts);
+			}
+
+			ComputeIndexes(mMirrorIndexes, mMirrorMaterialOffsets,
+				mMirrorMaterialNumTris, numFace, firstVert, numVert);
+		}
+
+
+		internal void BuildAlphaFaceData(Vector3 []verts, int[] indexes)
+		{
+			List<Int32>	firstVert	=new List<Int32>();
+			List<Int32>	numVert		=new List<Int32>();
+			List<Int32>	numFace		=new List<Int32>();
+
+			Map.Print("Building alpha face data...");
+
+			foreach(Material mat in mMaterials)
+			{
+				int	numFaceVerts	=mAlphaVerts.Count;
+				int	numFaces		=0;
+
+				if(!mat.Name.EndsWith("*Alpha"))
+				{
+					numFace.Add(numFaces);
+					mAlphaMaterialNumVerts.Add(mAlphaVerts.Count - numFaceVerts);
+					continue;
+				}
+
+				Map.Print("Material: " + mat.Name + ".\n");
+
+				foreach(GFXFace f in mFaces)
+				{
+					if(f.mLightOfs != -1)
+					{
+						continue;	//only interested in non lightmapped
+					}
+
+					//check anim lights for good measure
+					Debug.Assert(f.mLTypes[0] == 255);
+					Debug.Assert(f.mLTypes[1] == 255);
+					Debug.Assert(f.mLTypes[2] == 255);
+					Debug.Assert(f.mLTypes[3] == 255);
+
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.Name.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					numFaces++;
+
+					List<Vector3>	fverts	=new List<Vector3>();
+
+					int		nverts	=f.mNumVerts;
+					int		fvert	=f.mFirstVert;
+					int		k		=0;
+					for(k=0;k < nverts;k++)
+					{
+						int		idx	=indexes[fvert + k];
+						Vector3	pnt	=verts[idx];
+						Vector2	crd;
+						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
+						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
+
+						mAlphaTex0.Add(crd);
+						fverts.Add(pnt);
+
+						mAlphaVerts.Add(pnt);
+					}
+
+					firstVert.Add(mAlphaVerts.Count - f.mNumVerts);
+					numVert.Add(f.mNumVerts);
+				}
+				numFace.Add(numFaces);
+				mAlphaMaterialNumVerts.Add(mAlphaVerts.Count - numFaceVerts);
+			}
+
+			ComputeIndexes(mAlphaIndexes, mAlphaMaterialOffsets,
+				mAlphaMaterialNumTris, numFace, firstVert, numVert);
+		}
+
+
+		internal void BuildFullBrightFaceData(Vector3 []verts, int[] indexes)
+		{
+			List<Int32>	firstVert	=new List<Int32>();
+			List<Int32>	numVert		=new List<Int32>();
+			List<Int32>	numFace		=new List<Int32>();
+
+			Map.Print("Building full bright face data...");
+
+			foreach(Material mat in mMaterials)
+			{
+				int	numFaceVerts	=mFBVerts.Count;
+				int	numFaces		=0;
+
+				if(!mat.Name.EndsWith("*FullBright"))
+				{
+					numFace.Add(numFaces);
+					mFBMaterialNumVerts.Add(mFBVerts.Count - numFaceVerts);
+					continue;
+				}
+
+				Map.Print("Material: " + mat.Name + ".\n");
+
+				foreach(GFXFace f in mFaces)
+				{
+					if(f.mLightOfs != -1)
+					{
+						continue;	//only interested in non lightmapped
+					}
+
+					//check anim lights for good measure
+					Debug.Assert(f.mLTypes[0] == 255);
+					Debug.Assert(f.mLTypes[1] == 255);
+					Debug.Assert(f.mLTypes[2] == 255);
+					Debug.Assert(f.mLTypes[3] == 255);
+
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.Name.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					numFaces++;
+
+					List<Vector3>	fverts	=new List<Vector3>();
+
+					int		nverts	=f.mNumVerts;
+					int		fvert	=f.mFirstVert;
+					int		k		=0;
+					for(k=0;k < nverts;k++)
+					{
+						int		idx	=indexes[fvert + k];
+						Vector3	pnt	=verts[idx];
+						Vector2	crd;
+						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
+						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
+
+						mFBTex0.Add(crd);
+						fverts.Add(pnt);
+
+						mFBVerts.Add(pnt);
+					}
+
+					firstVert.Add(mFBVerts.Count - f.mNumVerts);
+					numVert.Add(f.mNumVerts);
+				}
+				numFace.Add(numFaces);
+				mFBMaterialNumVerts.Add(mFBVerts.Count - numFaceVerts);
+			}
+
+			ComputeIndexes(mFBIndexes, mFBMaterialOffsets,
+				mFBMaterialNumTris, numFace, firstVert, numVert);
+		}
+
+
+		internal void BuildSkyFaceData(Vector3 []verts, int[] indexes)
+		{
+			List<Int32>	firstVert	=new List<Int32>();
+			List<Int32>	numVert		=new List<Int32>();
+			List<Int32>	numFace		=new List<Int32>();
+
+			Map.Print("Building sky face data...");
+
+			foreach(Material mat in mMaterials)
+			{
+				int	numFaceVerts	=mSkyVerts.Count;
+				int	numFaces		=0;
+
+				if(!mat.Name.EndsWith("*FullBright"))
+				{
+					numFace.Add(numFaces);
+					mSkyMaterialNumVerts.Add(mSkyVerts.Count - numFaceVerts);
+					continue;
+				}
+
+				Map.Print("Material: " + mat.Name + ".\n");
+
+				foreach(GFXFace f in mFaces)
+				{
+					if(f.mLightOfs != -1)
+					{
+						continue;	//only interested in non lightmapped
+					}
+
+					//check anim lights for good measure
+					Debug.Assert(f.mLTypes[0] == 255);
+					Debug.Assert(f.mLTypes[1] == 255);
+					Debug.Assert(f.mLTypes[2] == 255);
+					Debug.Assert(f.mLTypes[3] == 255);
+
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.Name.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					numFaces++;
+
+					List<Vector3>	fverts	=new List<Vector3>();
+
+					int		nverts	=f.mNumVerts;
+					int		fvert	=f.mFirstVert;
+					int		k		=0;
+					for(k=0;k < nverts;k++)
+					{
+						int		idx	=indexes[fvert + k];
+						Vector3	pnt	=verts[idx];
+						Vector2	crd;
+						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
+						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
+
+						mSkyTex0.Add(crd);
+						fverts.Add(pnt);
+
+						mSkyVerts.Add(pnt);
+					}
+
+					firstVert.Add(mSkyVerts.Count - f.mNumVerts);
+					numVert.Add(f.mNumVerts);
+				}
+				numFace.Add(numFaces);
+				mSkyMaterialNumVerts.Add(mSkyVerts.Count - numFaceVerts);
+			}
+
+			ComputeIndexes(mSkyIndexes, mSkyMaterialOffsets,
+				mSkyMaterialNumTris, numFace, firstVert, numVert);
+		}
+
+
+		void ComputeIndexes(List<int> inds, List<int> matOffsets, List<int> matTris,
+						List<int> numFace, List<int> firstVert, List<int> numVert)
+		{
 			int	faceOfs	=0;
 			for(int j=0;j < mMaterialNames.Count;j++)
 			{
-				int	cnt	=mNonLMIndexes.Count;
+				int	cnt	=inds.Count;
 
-				mNonLMMaterialOffsets.Add(cnt);
+				matOffsets.Add(cnt);
 
 				for(int i=faceOfs;i < (numFace[j] + faceOfs);i++)
 				{
@@ -669,19 +1066,30 @@ namespace BSPLib
 					//triangulate
 					for(k=1;k < nverts-1;k++)
 					{
-						mNonLMIndexes.Add(fvert);
-						mNonLMIndexes.Add(fvert + k);
-						mNonLMIndexes.Add(fvert + ((k + 1) % nverts));
+						inds.Add(fvert);
+						inds.Add(fvert + k);
+						inds.Add(fvert + ((k + 1) % nverts));
 					}
 				}
 
 				faceOfs	+=numFace[j];
 
-				int	numTris	=(mNonLMIndexes.Count - cnt);
+				int	numTris	=(inds.Count - cnt);
 
 				numTris	/=3;
 
-				mNonLMMaterialNumTris.Add(numTris);
+				matTris.Add(numTris);
+			}
+		}
+
+
+		void ComputeNormals(List<Vector3> verts, List<Vector3> norms)
+		{
+			GBSPPlane	p	=new GBSPPlane(verts);
+
+			foreach(Vector3 v in verts)
+			{
+				norms.Add(p.mNormal);
 			}
 		}
 
@@ -772,11 +1180,28 @@ namespace BSPLib
 				mat.ZFunction		=CompareFunction.Less;
 
 				//set some parameter defaults
-				if(mat.Name.EndsWith("NonLM"))
+				if(mat.Name.EndsWith("*Alpha"))
 				{
-					mat.Technique	="FullDark";
+					mat.Alpha		=true;
+					mat.Technique	="Alpha";
 				}
-				else if(mat.Name.EndsWith("Anim"))
+				else if(mat.Name.EndsWith("*VertLit"))
+				{
+					mat.Technique	="VertexLighting";
+				}
+				else if(mat.Name.EndsWith("*FullBright"))
+				{
+					mat.Technique	="FullBright";
+				}
+				else if(mat.Name.EndsWith("*Mirror"))
+				{
+					mat.Technique	="Mirror";
+				}
+				else if(mat.Name.EndsWith("*Sky"))
+				{
+					mat.Technique	="Sky";
+				}
+				else if(mat.Name.EndsWith("*Anim"))
 				{
 					mat.Technique	="LightMapAnim";
 					mat.AddParameter("mLightMap",
@@ -798,46 +1223,72 @@ namespace BSPLib
 		}
 
 
+		internal string ScryTrueName(GFXFace f)
+		{
+			GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+			string	matName	=tex.mMaterial;
+
+			if(tex.IsLightMapped())
+			{
+				if(f.mLightOfs == -1)
+				{
+					matName	+="*VertLit";
+				}
+			}
+			else if(tex.IsAlpha())
+			{
+				matName	+="*Alpha";
+			}
+			else if(tex.IsFlat() || tex.IsGouraud())
+			{
+				matName	+="*VertLit";
+			}
+			else if(tex.IsFullBright() || tex.IsLight())
+			{
+				matName	+="*FullBright";
+			}
+			else if(tex.IsMirror())
+			{
+				matName	+="*Mirror";
+			}
+			else if(tex.IsSky())
+			{
+				matName	+="*Sky";
+			}
+
+			int	numStyles	=0;
+			for(int i=0;i < 4;i++)
+			{
+				if(f.mLTypes[i] != 255)
+				{
+					numStyles++;
+				}
+			}
+
+			if(numStyles > 1)
+			{
+				Debug.Assert(tex.IsLightMapped());
+
+				//animated lights
+				matName	+="*Anim";
+			}
+
+			return	matName;
+		}
+
+
 		void CalcMaterialNames()
 		{
 			mMaterialNames.Clear();
 
 			foreach(GFXFace f in mFaces)
 			{
-				GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+				string	matName	=ScryTrueName(f);
 
-				if(f.mLightOfs == -1)
+				if(!mMaterialNames.Contains(matName))
 				{
-					if(!mMaterialNames.Contains(tex.mMaterial + "NonLM"))
-					{
-						mMaterialNames.Add(tex.mMaterial + "NonLM");
-					}
-				}
-
-				int	numStyles	=0;
-				for(int i=0;i < 4;i++)
-				{
-					if(f.mLTypes[i] != 255)
-					{
-						numStyles++;
-					}
-				}
-
-				if(numStyles == 1)
-				{
-					//standard static light
-					if(!mMaterialNames.Contains(tex.mMaterial))
-					{
-						mMaterialNames.Add(tex.mMaterial);
-					}
-				}
-				else if(numStyles > 1)
-				{
-					//animated lights
-					if(!mMaterialNames.Contains(tex.mMaterial + "Anim"))
-					{
-						mMaterialNames.Add(tex.mMaterial + "Anim");
-					}
+					mMaterialNames.Add(matName);
 				}
 			}
 		}

@@ -15,7 +15,14 @@ float2	mTexSize;
 float	mAniIntensities[16];
 
 
-struct LMVS_INPUT
+struct VPosTex0
+{
+	float4 Position : POSITION0;
+	float2 TexCoord0 : TEXCOORD0;
+};
+
+
+struct VPosTex0Tex1
 {
 	float4 Position : POSITION0;
 	float2 TexCoord0 : TEXCOORD0;
@@ -23,14 +30,15 @@ struct LMVS_INPUT
 };
 
 
-struct NonLMVS_INPUT
+struct VPosTex0Norm0
 {
 	float4 Position : POSITION0;
 	float2 TexCoord0 : TEXCOORD0;
+	float3 Normal : NORMAL0;
 };
 
 
-struct LMAnimVS_INPUT
+struct VPosTex0Tex1Tex2Tex3Tex4Style
 {
 	float4 Position : POSITION0;
 	float2 TexCoord0 : TEXCOORD0;
@@ -42,22 +50,15 @@ struct LMAnimVS_INPUT
 };
 
 
-struct LMVS_OUTPUT
+struct VPosTex0Col0
 {
 	float4 Position : POSITION0;
 	float2 TexCoord0 : TEXCOORD0;
-	float2 TexCoord1 : TEXCOORD1;
+	float4 Color0 : COLOR0;
 };
 
 
-struct NonLMVS_OUTPUT
-{
-	float4 Position : POSITION0;
-	float2 TexCoord0 : TEXCOORD0;
-};
-
-
-struct LMAnimVS_OUTPUT
+struct VPosTex0Tex1Tex2Tex3Tex4Intensity
 {
 	float4 Position : POSITION0;
 	float2 TexCoord0 : TEXCOORD0;
@@ -69,9 +70,40 @@ struct LMAnimVS_OUTPUT
 };
 
 
-LMVS_OUTPUT LMVertexShader(LMVS_INPUT input)
+struct VTex0
 {
-	LMVS_OUTPUT output;
+	float2 TexCoord0 : TEXCOORD0;
+};
+
+
+struct VTex0Tex1
+{
+	float2 TexCoord0 : TEXCOORD0;
+	float2 TexCoord1 : TEXCOORD1;
+};
+
+
+struct VTex0Col0
+{
+	float2 TexCoord0 : TEXCOORD0;
+	float4 Color0 : COLOR0;
+};
+
+
+struct VTex0Tex1Tex2Tex3Tex4Intensity
+{
+	float2 TexCoord0 : TEXCOORD0;
+	float2 TexCoord1 : TEXCOORD1;
+	float2 TexCoord2 : TEXCOORD2;
+	float2 TexCoord3 : TEXCOORD3;
+	float2 TexCoord4 : TEXCOORD4;
+	float4 StyleIntensity : TEXCOORD5;
+};
+
+
+VPosTex0Tex1 LMVertexShader(VPosTex0Tex1 input)
+{
+	VPosTex0Tex1	output;
 
 	float4	worldPosition	=mul(input.Position, mWorld);
 
@@ -84,9 +116,24 @@ LMVS_OUTPUT LMVertexShader(LMVS_INPUT input)
 }
 
 
-NonLMVS_OUTPUT NonLMVertexShader(NonLMVS_INPUT input)
+//todo n dot l lighting
+VPosTex0Col0 VLitVertexShader(VPosTex0Norm0 input)
 {
-	NonLMVS_OUTPUT output;
+	VPosTex0Col0	output;
+
+	float4	worldPosition	=mul(input.Position, mWorld);
+
+	output.Position		=mul(mul(worldPosition, mView), mProjection);
+	output.TexCoord0	=input.TexCoord0;
+	output.Color0		=float4(1, 1, 1, 1);
+
+	return	output;
+}
+
+
+VPosTex0 FullBrightVertexShader(VPosTex0 input)
+{
+	VPosTex0	output;
 
 	float4	worldPosition	=mul(input.Position, mWorld);
 
@@ -97,9 +144,23 @@ NonLMVS_OUTPUT NonLMVertexShader(NonLMVS_INPUT input)
 }
 
 
-LMAnimVS_OUTPUT LMAnimVertexShader(LMAnimVS_INPUT input)
+VPosTex0Col0 AlphaVertexShader(VPosTex0Col0 input)
 {
-	LMAnimVS_OUTPUT output;
+	VPosTex0Col0	output;
+
+	float4	worldPosition	=mul(input.Position, mWorld);
+
+	output.Position		=mul(mul(worldPosition, mView), mProjection);
+	output.TexCoord0	=input.TexCoord0;
+	output.Color0		=input.Color0;
+
+	return	output;
+}
+
+
+VPosTex0Tex1Tex2Tex3Tex4Intensity LMAnimVertexShader(VPosTex0Tex1Tex2Tex3Tex4Style input)
+{
+	VPosTex0Tex1Tex2Tex3Tex4Intensity	output;
 
 	float4	worldPosition	=mul(input.Position, mWorld);
 
@@ -133,30 +194,6 @@ LMAnimVS_OUTPUT LMAnimVertexShader(LMAnimVS_INPUT input)
 }
 
 
-struct LMPS_INPUT
-{
-	float2 TexCoord0 : TEXCOORD0;
-	float2 TexCoord1 : TEXCOORD1;
-};
-
-
-struct NonLMPS_INPUT
-{
-	float2 TexCoord0 : TEXCOORD0;
-};
-
-
-struct LMAnimPS_INPUT
-{
-	float2 TexCoord0 : TEXCOORD0;
-	float2 TexCoord1 : TEXCOORD1;
-	float2 TexCoord2 : TEXCOORD2;
-	float2 TexCoord3 : TEXCOORD3;
-	float2 TexCoord4 : TEXCOORD4;
-	float4 StyleIntensity : TEXCOORD5;
-};
-
-
 sampler TextureSampler = sampler_state
 {
 	Texture	=(mTexture);
@@ -183,7 +220,7 @@ sampler LightMapSampler = sampler_state
 };
 
 
-float4 LMPixelShader(LMPS_INPUT input) : COLOR0
+float4 LMPixelShader(VTex0Tex1 input) : COLOR0
 {
 	float3	color;
 	float2	tex0	=input.TexCoord0;
@@ -209,16 +246,39 @@ float4 LMPixelShader(LMPS_INPUT input) : COLOR0
 }
 
 
-float4 NonLMPixelShader(NonLMPS_INPUT input) : COLOR0
+float4 VLitPixelShader(VTex0Col0 input) : COLOR0
 {
-	float3	color;
+	float4	color;
 	
-	color	=float3(0.0, 0.0, 0.0);
-	return	float4(color, 1);
+	float2	tex0	=input.TexCoord0;
+	
+	tex0.x	/=mTexSize.x;
+	tex0.y	/=mTexSize.y;
+	
+	color	=tex2D(TextureSampler, tex0);
+	
+	color	*=input.Color0;
+	
+	return	color;
 }
 
 
-float4 LMAnimPixelShader(LMAnimPS_INPUT input) : COLOR0
+float4 FullBrightPixelShader(VTex0 input) : COLOR0
+{
+	float4	color;
+	
+	float2	tex0	=input.TexCoord0;
+	
+	tex0.x	/=mTexSize.x;
+	tex0.y	/=mTexSize.y;
+	
+	color	=tex2D(TextureSampler, tex0);
+	
+	return	color;
+}
+
+
+float4 LMAnimPixelShader(VTex0Tex1Tex2Tex3Tex4Intensity input) : COLOR0
 {
 	float3	color;
 	
@@ -269,12 +329,48 @@ technique LightMap
 	}
 }
 
-technique FullDark
+technique Alpha
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 NonLMVertexShader();
-		PixelShader = compile ps_2_0 NonLMPixelShader();
+		VertexShader = compile vs_2_0 AlphaVertexShader();
+		PixelShader = compile ps_2_0 VLitPixelShader();
+	}
+}
+
+technique VertexLighting
+{
+	pass Pass1
+	{
+		VertexShader = compile vs_2_0 VLitVertexShader();
+		PixelShader = compile ps_2_0 VLitPixelShader();
+	}
+}
+
+technique FullBright
+{
+	pass Pass1
+	{
+		VertexShader = compile vs_2_0 FullBrightVertexShader();
+		PixelShader = compile ps_2_0 FullBrightPixelShader();
+	}
+}
+
+technique Mirror
+{
+	pass Pass1
+	{
+		VertexShader = compile vs_2_0 AlphaVertexShader();
+		PixelShader = compile ps_2_0 VLitPixelShader();
+	}
+}
+
+technique Sky
+{
+	pass Pass1
+	{
+		VertexShader = compile vs_2_0 FullBrightVertexShader();
+		PixelShader = compile ps_2_0 FullBrightPixelShader();
 	}
 }
 

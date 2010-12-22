@@ -74,6 +74,42 @@ namespace BSPLib
 		}
 
 
+		internal bool IsSky()
+		{
+			return	((mFlags & TexInfo.SKY) != 0);
+		}
+
+
+		internal bool IsMirror()
+		{
+			return	((mFlags & TexInfo.MIRROR) != 0);
+		}
+
+
+		internal bool IsGouraud()
+		{
+			return	((mFlags & TexInfo.GOURAUD) != 0);
+		}
+
+
+		internal bool IsFlat()
+		{
+			return	((mFlags & TexInfo.FLAT) != 0);
+		}
+
+
+		internal bool IsFullBright()
+		{
+			return	((mFlags & TexInfo.FULLBRIGHT) != 0);
+		}
+
+
+		internal bool IsLight()
+		{
+			return	((mFlags & TexInfo.LIGHT) != 0);
+		}
+
+
 		internal Vector2 GetTexCoord(Vector3 vert)
 		{
 			Vector2	ret	=Vector2.Zero;

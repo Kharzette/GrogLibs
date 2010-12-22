@@ -244,6 +244,10 @@ namespace BSPLib
 
 			Print("Computing visible materials from each leaf...\n");
 
+			//make a temporary mapgrinder to help sync
+			//up material names and indexes and such
+			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, 69);
+
 			for(int leaf=0;leaf < mGFXLeafs.Length;leaf++)
 			{
 				if(leaf % (mGFXLeafs.Length / 10) == 0)
@@ -289,32 +293,7 @@ namespace BSPLib
 					{
 						GFXFace	f	=mGFXFaces[mGFXLeafFaces[k + checkLeaf.mFirstFace]];
 
-						GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
-
-						string	matName	=tex.mMaterial;
-						if(f.mLightOfs == -1)
-						{
-							matName	+="NonLM";
-						}
-
-						int	numStyles	=0;
-						for(int s=0;s < 4;s++)
-						{
-							if(f.mLTypes[s] != 255)
-							{
-								numStyles++;
-							}
-						}
-
-						if(numStyles == 1)
-						{
-							//standard static light
-						}
-						else if(numStyles > 1)
-						{
-							//animated lights
-							matName	+="Anim";
-						}
+						string	matName	=mg.ScryTrueName(f);
 
 						if(!visibleMaterials[leaf].Contains(matName))
 						{
@@ -325,7 +304,6 @@ namespace BSPLib
 			}
 
 			//grab list of material names
-			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, 69);
 			List<string>	matNames	=mg.GetMaterialNames();
 
 			//alloc compressed bytes

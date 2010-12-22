@@ -43,9 +43,9 @@ namespace BSPBuilder
 		string					mDrawChoice;
 
 		//new debug draw stuff
-		VertexBuffer		mLMVB, mNonLMVB, mLMAnimVB;
-		VertexDeclaration	mLMVD, mNonLMVD, mLMAnimVD;
-		IndexBuffer			mLMIB, mNonLMIB, mLMAnimIB;
+		VertexBuffer		mLMVB, mVLitVB, mLMAnimVB;
+		VertexDeclaration	mLMVD, mVLitVD, mLMAnimVD;
+		IndexBuffer			mLMIB, mVLitIB, mLMAnimIB;
 		TexAtlas			mLMapAtlas;
 		Int32				mDebugLeaf;
 
@@ -217,13 +217,15 @@ namespace BSPBuilder
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
 			mLMVD	=new VertexDeclaration(mGDM.GraphicsDevice, ve);
 
-			//non lightmapped (single texture)
-			ve	=new VertexElement[2];
+			//vertex lit
+			ve	=new VertexElement[3];
 			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
 				VertexElementMethod.Default, VertexElementUsage.Position, 0);
 			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
-			mNonLMVD	=new VertexDeclaration(mGDM.GraphicsDevice, ve);
+			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
+			mVLitVD	=new VertexDeclaration(mGDM.GraphicsDevice, ve);
 
 			//animated lightmapped
 			ve	=new VertexElement[7];
@@ -500,7 +502,7 @@ namespace BSPBuilder
 
 		void DrawNonLightMapped()
 		{
-			if(mNonLMVB == null)
+			if(mVLitVB == null)
 			{
 				return;
 			}
@@ -509,9 +511,9 @@ namespace BSPBuilder
 
 			GraphicsDevice	g	=mGDM.GraphicsDevice;
 
-			g.VertexDeclaration	=mNonLMVD;
-			g.Vertices[0].SetSource(mNonLMVB, 0, 20);
-			g.Indices	=mNonLMIB;
+			g.VertexDeclaration	=mVLitVD;
+			g.Vertices[0].SetSource(mVLitVB, 0, 32);
+			g.Indices	=mVLitIB;
 
 			int	idx	=0;
 
@@ -1019,8 +1021,8 @@ namespace BSPBuilder
 						out mLMAnimMatNumTris,
 						out mLMapAtlas);
 
-					mMap.BuildNonLMRenderData(mGDM.GraphicsDevice, out mNonLMVB,
-						out mNonLMIB, out mNonLMMatOffsets, out mNonLMMatNumVerts,
+					mMap.BuildNonLMRenderData(mGDM.GraphicsDevice, out mVLitVB,
+						out mVLitIB, out mNonLMMatOffsets, out mNonLMMatNumVerts,
 						out mNonLMMatNumTris);
 
 					mMatLib.AddMap("LightMapAtlas", mLMapAtlas.GetAtlasTexture());

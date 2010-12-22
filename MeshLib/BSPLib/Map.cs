@@ -1421,11 +1421,11 @@ namespace BSPLib
 			//todo:fix
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
 
-			mg.BuildNonLMFaceData(mGFXVerts, mGFXVertIndexes);
+			mg.BuildVLitFaceData(mGFXVerts, mGFXVertIndexes);
 
-			mg.GetNonLMBuffers(out nonLMVB, out nonLMIB);
+			mg.GetVLitBuffers(out nonLMVB, out nonLMIB);
 
-			mg.GetNonLMMaterialData(out matOffsets, out matNumVerts, out matNumTris);
+			mg.GetVLitMaterialData(out matOffsets, out matNumVerts, out matNumTris);
 		}
 
 
