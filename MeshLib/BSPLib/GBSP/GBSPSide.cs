@@ -427,8 +427,10 @@ namespace BSPLib
 		}
 
 
-		internal void ReadMapLine(string szLine, PlanePool pool, TexInfoPool tiPool)
+		internal UInt32 ReadMapLine(string szLine, PlanePool pool, TexInfoPool tiPool)
 		{
+			UInt32	ret	=0;
+
 			mPoly	=new GBSPPoly();
 
 			//gank (
@@ -442,6 +444,8 @@ namespace BSPLib
 			List<UInt32>	flags	=new List<UInt32>();
 
 			int cnt	=0;
+
+			TexInfo	ti		=new TexInfo();
 
 			//grab all the numbers out
 			string	texName	="";
@@ -458,11 +462,42 @@ namespace BSPLib
 				{
 					mFlags	|=SURF_NODRAW;
 					texName	=tok;
+					ret	|=Contents.BSP_CONTENTS_CLIP2;
 				}
 				if(tok[0] == '*')
 				{
 					mFlags	|=SURF_WARP;
 					texName	=tok.Substring(1);
+					if(texName.StartsWith("lava") || texName.StartsWith("LAVA"))
+					{
+						ret			|=Contents.BSP_CONTENTS_EMPTY2;
+						ret			|=Contents.BSP_CONTENTS_USER1;
+						ti.mFlags	|=TexInfo.FULLBRIGHT;
+					}
+					else if(texName.StartsWith("water") || texName.StartsWith("WATER"))
+					{
+						ret			|=Contents.BSP_CONTENTS_TRANSLUCENT2;
+						ret			|=Contents.BSP_CONTENTS_EMPTY2;
+						ret			|=Contents.BSP_CONTENTS_WAVY2;
+						ret			|=Contents.BSP_CONTENTS_USER3;
+						ti.mFlags	|=TexInfo.FULLBRIGHT;
+						ti.mFlags	|=TexInfo.TRANS;
+					}
+					else if(texName.StartsWith("slime") || texName.StartsWith("SLIME"))
+					{
+						ret			|=Contents.BSP_CONTENTS_TRANSLUCENT2;
+						ret			|=Contents.BSP_CONTENTS_EMPTY2;
+						ret			|=Contents.BSP_CONTENTS_WAVY2;
+						ret			|=Contents.BSP_CONTENTS_USER2;
+						ti.mFlags	|=TexInfo.FULLBRIGHT;
+						ti.mFlags	|=TexInfo.TRANS;
+					}
+					else
+					{
+						//generic transparent I guess
+						ret			|=Contents.BSP_CONTENTS_TRANSLUCENT2;
+						ti.mFlags	|=TexInfo.TRANS;
+					}
 					continue;
 				}
 				else if(tok[0] == '#')
@@ -476,6 +511,11 @@ namespace BSPLib
 					//animating I think
 					texName	=tok;
 					mFlags	|=SURF_WARP;
+				}
+				else if(tok.StartsWith("sky") || tok.StartsWith("SKY"))
+				{
+					texName	=tok;
+					mFlags	|=SURF_SKY;
 				}
 				else if(char.IsLetter(tok, 0))
 				{
@@ -528,7 +568,6 @@ namespace BSPLib
 
 			mPlaneNum	=pool.FindPlane(plane, out mPlaneSide);
 
-			TexInfo	ti		=new TexInfo();
 			ti.mShiftU		=numbers[9];
 			ti.mShiftV		=numbers[10];
 			ti.mDrawScaleU	=numbers[12];
@@ -548,6 +587,7 @@ namespace BSPLib
 			}
 
 			mTexInfo	=tiPool.Add(ti);
+			return	ret;
 		}
 	}
 }

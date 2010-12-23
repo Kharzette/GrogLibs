@@ -135,7 +135,7 @@ namespace BSPLib
 				if(s.StartsWith("("))
 				{
 					GBSPSide	side	=new GBSPSide();
-					side.ReadMapLine(s, pool, tiPool);
+					mContents	=side.ReadMapLine(s, pool, tiPool);
 
 					if(mContents == Contents.CONTENTS_AUX)
 					{
