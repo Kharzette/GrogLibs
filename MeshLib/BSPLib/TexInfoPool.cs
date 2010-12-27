@@ -49,18 +49,7 @@ namespace BSPLib
 						continue;
 					}
 
-					if((tex.mFlags & TexInfo.MIRROR) != 0)
-					{
-						tex.mMaterial	=tname + "Mirror";
-					}
-					else if((tex.mFlags & TexInfo.TRANS) != 0)
-					{
-						tex.mMaterial	=tname + "Alpha";
-					}
-					else
-					{
-						tex.mMaterial	=tname;
-					}
+					tex.mMaterial	=tname;
 				}
 			}
 		}

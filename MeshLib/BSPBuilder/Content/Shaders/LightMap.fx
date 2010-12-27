@@ -30,6 +30,15 @@ struct VPosTex0Tex1
 };
 
 
+struct VPosTex0Tex1Col0
+{
+	float4 Position : POSITION0;
+	float2 TexCoord0 : TEXCOORD0;
+	float2 TexCoord1 : TEXCOORD1;
+	float4 Color0 : COLOR0;
+};
+
+
 struct VPosTex0Norm0
 {
 	float4 Position : POSITION0;
@@ -83,6 +92,14 @@ struct VTex0Tex1
 };
 
 
+struct VTex0Tex1Col0
+{
+	float2 TexCoord0 : TEXCOORD0;
+	float2 TexCoord1 : TEXCOORD1;
+	float4 Color0 : COLOR0;
+};
+
+
 struct VTex0Col0
 {
 	float2 TexCoord0 : TEXCOORD0;
@@ -111,6 +128,22 @@ VPosTex0Tex1 LMVertexShader(VPosTex0Tex1 input)
 
 	output.TexCoord0	=input.TexCoord0;
 	output.TexCoord1	=input.TexCoord1;
+
+	return	output;
+}
+
+
+VPosTex0Tex1Col0 LMAlphaVertexShader(VPosTex0Tex1Col0 input)
+{
+	VPosTex0Tex1Col0	output;
+
+	float4	worldPosition	=mul(input.Position, mWorld);
+
+	output.Position	=mul(mul(worldPosition, mView), mProjection);
+
+	output.TexCoord0	=input.TexCoord0;
+	output.TexCoord1	=input.TexCoord1;
+	output.Color0		=input.Color0;
 
 	return	output;
 }
@@ -246,6 +279,32 @@ float4 LMPixelShader(VTex0Tex1 input) : COLOR0
 }
 
 
+float4 LMAlphaPixelShader(VTex0Tex1Col0 input) : COLOR0
+{
+	float3	color;
+	float2	tex0	=input.TexCoord0;
+	
+	tex0.x	/=mTexSize.x;
+	tex0.y	/=mTexSize.y;
+	
+	if(mbTextureEnabled)
+	{
+		color	=tex2D(TextureSampler, tex0);
+	}
+	else
+	{
+		color	=float3(1.0, 1.0, 1.0);
+	}
+	
+	float3	lm	=tex2D(LightMapSampler, input.TexCoord1);
+	
+	//Apply lighting.
+	color	*=lm;
+	
+	return	float4(color, input.Color0.w);
+}
+
+
 float4 VLitPixelShader(VTex0Col0 input) : COLOR0
 {
 	float4	color;
@@ -320,12 +379,63 @@ float4 LMAnimPixelShader(VTex0Tex1Tex2Tex3Tex4Intensity input) : COLOR0
 }
 
 
+float4 LMAnimAlphaPixelShader(VTex0Tex1Tex2Tex3Tex4Intensity input) : COLOR0
+{
+	float3	color;
+	
+	float2	tex0	=input.TexCoord0;
+	
+	tex0.x	/=mTexSize.x;
+	tex0.y	/=mTexSize.y;
+	
+	if(mbTextureEnabled)
+	{
+		color	=tex2D(TextureSampler, tex0);
+	}
+	else
+	{
+		color	=float3(1.0, 1.0, 1.0);
+	}
+	
+	float3	lm	=tex2D(LightMapSampler, input.TexCoord1);
+	
+	//grab style intensity
+	if(input.StyleIntensity.x > 0)
+	{
+		lm	+=(input.StyleIntensity.x * tex2D(LightMapSampler, input.TexCoord2));
+	}
+	if(input.StyleIntensity.y > 0)
+	{
+		lm	+=(input.StyleIntensity.y * tex2D(LightMapSampler, input.TexCoord3));
+	}
+	if(input.StyleIntensity.z > 0)
+	{
+		lm	+=(input.StyleIntensity.z * tex2D(LightMapSampler, input.TexCoord4));
+	}
+	
+	lm	=saturate(lm);
+	
+	//Apply lighting.
+	color	*=lm;
+	return	float4(color, input.StyleIntensity.w);
+}
+
+
 technique LightMap
 {
 	pass Pass1
 	{
 		VertexShader = compile vs_2_0 LMVertexShader();
 		PixelShader = compile ps_2_0 LMPixelShader();
+	}
+}
+
+technique LightMapAlpha
+{
+	pass Pass1
+	{
+		VertexShader = compile vs_2_0 LMAlphaVertexShader();
+		PixelShader = compile ps_2_0 LMAlphaPixelShader();
 	}
 }
 
@@ -380,5 +490,14 @@ technique LightMapAnim
 	{
 		VertexShader = compile vs_2_0 LMAnimVertexShader();
 		PixelShader = compile ps_2_0 LMAnimPixelShader();
+	}
+}
+
+technique LightMapAnimAlpha
+{
+	pass Pass1
+	{
+		VertexShader = compile vs_2_0 LMAnimVertexShader();
+		PixelShader = compile ps_2_0 LMAnimAlphaPixelShader();
 	}
 }

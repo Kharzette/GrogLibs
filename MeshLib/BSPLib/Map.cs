@@ -1386,18 +1386,38 @@ namespace BSPLib
 
 
 		public void BuildLMRenderData(GraphicsDevice g,
+			//lightmap stuff
 			out VertexBuffer lmVB,
 			out IndexBuffer lmIB,
 			out VertexDeclaration lmVD,
 			out Int32 []matOffsets,
 			out Int32 []matNumVerts,
 			out Int32 []matNumTris,
+
+			//animated lightmap stuff
 			out VertexBuffer lmAnimVB,
 			out IndexBuffer lmAnimIB,
 			out VertexDeclaration lmAnimVD,
 			out Int32 []matAnimOffsets,
 			out Int32 []matAnimNumVerts,
 			out Int32 []matAnimNumTris,
+
+			//lightmapped alpha stuff
+			out VertexBuffer lmaVB,
+			out IndexBuffer lmaIB,
+			out VertexDeclaration lmaVD,
+			out Int32 []amatOffsets,
+			out Int32 []amatNumVerts,
+			out Int32 []amatNumTris,
+
+			//animated alpha lightmap stuff
+			out VertexBuffer lmaAnimVB,
+			out IndexBuffer lmaAnimIB,
+			out VertexDeclaration lmaAnimVD,
+			out Int32 []amatAnimOffsets,
+			out Int32 []amatAnimNumVerts,
+			out Int32 []amatAnimNumTris,
+
 			out TexAtlas lightAtlas)
 		{
 			//todo: fix light map scale at the end there
@@ -1409,10 +1429,18 @@ namespace BSPLib
 			mg.BuildLMAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData);
 			mg.GetLMAnimBuffers(out lmAnimVB, out lmAnimIB, out lmAnimVD);
 
+			mg.BuildLMAFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData);
+			mg.GetLMABuffers(out lmaVB, out lmaIB, out lmaVD);
+
+			mg.BuildLMAAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData);
+			mg.GetLMAAnimBuffers(out lmaAnimVB, out lmaAnimIB, out lmaAnimVD);
+
 			lightAtlas	=mg.GetLightMapAtlas();
 
 			mg.GetLMMaterialData(out matOffsets, out matNumVerts, out matNumTris);
 			mg.GetLMAnimMaterialData(out matAnimOffsets, out matAnimNumVerts, out matAnimNumTris);
+			mg.GetLMAMaterialData(out amatOffsets, out amatNumVerts, out amatNumTris);
+			mg.GetLMAAnimMaterialData(out amatAnimOffsets, out amatAnimNumVerts, out amatAnimNumTris);
 		}
 
 

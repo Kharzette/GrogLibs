@@ -17,12 +17,19 @@ namespace BSPLib
 		//vertex declarations
 		VertexDeclaration	mLMVD, mVLitVD, mFBVD, mAlphaVD;
 		VertexDeclaration	mMirrorVD, mSkyVD, mLMAnimVD;
+		VertexDeclaration	mLMAVD, mLMAAnimVD;
 
 		//computed lightmapped geometry
 		List<Vector3>	mLMVerts		=new List<Vector3>();
 		List<Vector2>	mLMFaceTex0		=new List<Vector2>();
 		List<Vector2>	mLMFaceTex1		=new List<Vector2>();
 		List<Int32>		mLMIndexes		=new List<Int32>();
+
+		//computed lightmapped alpha geometry
+		List<Vector3>	mLMAVerts		=new List<Vector3>();
+		List<Vector2>	mLMAFaceTex0	=new List<Vector2>();
+		List<Vector2>	mLMAFaceTex1	=new List<Vector2>();
+		List<Int32>		mLMAIndexes		=new List<Int32>();
 
 		//computed vertex lit geometry
 		List<Vector3>	mVLitVerts		=new List<Vector3>();
@@ -60,6 +67,16 @@ namespace BSPLib
 		List<Int32>		mLMAnimIndexes	=new List<Int32>();
 		List<Vector4>	mLMAnimStyle	=new List<Vector4>();
 
+		//animated lightmap alpha geometry
+		List<Vector3>	mLMAAnimVerts		=new List<Vector3>();
+		List<Vector2>	mLMAAnimFaceTex0	=new List<Vector2>();
+		List<Vector2>	mLMAAnimFaceTex1	=new List<Vector2>();
+		List<Vector2>	mLMAAnimFaceTex2	=new List<Vector2>();
+		List<Vector2>	mLMAAnimFaceTex3	=new List<Vector2>();
+		List<Vector2>	mLMAAnimFaceTex4	=new List<Vector2>();
+		List<Int32>		mLMAAnimIndexes		=new List<Int32>();
+		List<Vector4>	mLMAAnimStyle		=new List<Vector4>();
+
 		//computed material stuff
 		List<string>	mMaterialNames		=new List<string>();
 		List<Material>	mMaterials			=new List<Material>();
@@ -68,6 +85,11 @@ namespace BSPLib
 		List<Int32>		mLMMaterialOffsets	=new List<Int32>();
 		List<Int32>		mLMMaterialNumVerts	=new List<Int32>();
 		List<Int32>		mLMMaterialNumTris	=new List<Int32>();
+
+		//lightmap alpha material stuff
+		List<Int32>		mLMAMaterialOffsets		=new List<Int32>();
+		List<Int32>		mLMAMaterialNumVerts	=new List<Int32>();
+		List<Int32>		mLMAMaterialNumTris		=new List<Int32>();
 
 		//vert lit material stuff
 		List<Int32>		mVLitMaterialOffsets	=new List<Int32>();
@@ -99,6 +121,11 @@ namespace BSPLib
 		List<Int32>		mLMAnimMaterialNumVerts	=new List<Int32>();
 		List<Int32>		mLMAnimMaterialNumTris	=new List<Int32>();
 
+		//animated lightmap alpha material stuff
+		List<Int32>		mLMAAnimMaterialOffsets		=new List<Int32>();
+		List<Int32>		mLMAAnimMaterialNumVerts	=new List<Int32>();
+		List<Int32>		mLMAAnimMaterialNumTris		=new List<Int32>();
+
 		//computed lightmap atlas
 		TexAtlas	mLMAtlas;
 
@@ -106,6 +133,8 @@ namespace BSPLib
 		int			mLightGridSize;
 		GFXTexInfo	[]mTexInfos;
 		GFXFace		[]mFaces;
+
+		const float	AlphaValue	=0.8f;	//vertex alpha hardcode (TODO Fix)
 
 
 		public MapGrinder(GraphicsDevice gd, GFXTexInfo []texs,
@@ -145,6 +174,18 @@ namespace BSPLib
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
 			mLMVD	=new VertexDeclaration(gd, ve);
 
+			//lightmapped alpha
+			ve	=new VertexElement[4];
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
+			ve[3]	=new VertexElement(0, 28, VertexElementFormat.Vector4,
+				VertexElementMethod.Default, VertexElementUsage.Color, 0);
+			mLMAVD	=new VertexDeclaration(gd, ve);
+
 			//vertex lit
 			ve	=new VertexElement[3];
 			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
@@ -155,7 +196,8 @@ namespace BSPLib
 				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
 			mVLitVD	=new VertexDeclaration(gd, ve);
 
-			//animated lightmapped
+			//animated lightmapped, and alpha as well
+			//alpha is stored in the style vector4
 			ve	=new VertexElement[7];
 			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
 				VertexElementMethod.Default, VertexElementUsage.Position, 0);
@@ -172,6 +214,7 @@ namespace BSPLib
 			ve[6]	=new VertexElement(0, 52, VertexElementFormat.Vector4,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 5);
 			mLMAnimVD	=new VertexDeclaration(gd, ve);
+			mLMAAnimVD	=new VertexDeclaration(gd, ve);
 
 			//FullBright
 			ve	=new VertexElement[2];
@@ -179,7 +222,7 @@ namespace BSPLib
 				VertexElementMethod.Default, VertexElementUsage.Position, 0);
 			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
-			mVLitVD	=new VertexDeclaration(gd, ve);
+			mFBVD	=new VertexDeclaration(gd, ve);
 
 			//sky
 			ve	=new VertexElement[2];
@@ -223,6 +266,15 @@ namespace BSPLib
 			matOffsets	=mLMMaterialOffsets.ToArray();
 			matNumVerts	=mLMMaterialNumVerts.ToArray();
 			matNumTris	=mLMMaterialNumTris.ToArray();
+		}
+
+
+		internal void GetLMAMaterialData(out Int32 []matOffsets, out Int32 []matNumVerts,
+										out Int32 []matNumTris)
+		{
+			matOffsets	=mLMAMaterialOffsets.ToArray();
+			matNumVerts	=mLMAMaterialNumVerts.ToArray();
+			matNumTris	=mLMAMaterialNumTris.ToArray();
 		}
 
 
@@ -280,6 +332,15 @@ namespace BSPLib
 		}
 
 
+		internal void GetLMAAnimMaterialData(out Int32 []matOffsets, out Int32 []matNumVerts,
+											 out Int32 []matNumTris)
+		{
+			matOffsets	=mLMAAnimMaterialOffsets.ToArray();
+			matNumVerts	=mLMAAnimMaterialNumVerts.ToArray();
+			matNumTris	=mLMAAnimMaterialNumTris.ToArray();
+		}
+
+
 		internal void GetLMBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
 		{
 			if(mLMVerts.Count == 0)
@@ -306,6 +367,37 @@ namespace BSPLib
 			ib.SetData<Int32>(mLMIndexes.ToArray());
 
 			vd	=mLMVD;
+		}
+
+
+		internal void GetLMABuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
+		{
+			if(mLMAVerts.Count == 0)
+			{
+				vb	=null;
+				ib	=null;
+				vd	=null;
+				return;
+			}
+
+			VPosTex0Tex1Col0	[]varray	=new VPosTex0Tex1Col0[mLMAVerts.Count];
+			for(int i=0;i < mLMAVerts.Count;i++)
+			{
+				varray[i].Position	=mLMAVerts[i];
+				varray[i].TexCoord0	=mLMAFaceTex0[i];
+				varray[i].TexCoord1	=mLMAFaceTex1[i];
+				varray[i].Color0	=Vector4.One;
+				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
+			}
+
+			vb	=new VertexBuffer(mGD, 44 * varray.Length, BufferUsage.WriteOnly);
+			vb.SetData<VPosTex0Tex1Col0>(varray);
+
+			ib	=new IndexBuffer(mGD, 4 * mLMAIndexes.Count, BufferUsage.WriteOnly,
+					IndexElementSize.ThirtyTwoBits);
+			ib.SetData<Int32>(mLMAIndexes.ToArray());
+
+			vd	=mLMAVD;
 		}
 
 
@@ -354,7 +446,7 @@ namespace BSPLib
 				varray[i].Position	=mAlphaVerts[i];
 				varray[i].TexCoord0	=mAlphaTex0[i];
 				varray[i].Color0	=Vector4.One;
-				varray[i].Color0.W	=0.5f;	//TODO: donut hardcode
+				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
 			}
 
 			vb	=new VertexBuffer(mGD, 36 * varray.Length, BufferUsage.WriteOnly);
@@ -412,7 +504,7 @@ namespace BSPLib
 				varray[i].Position	=mMirrorVerts[i];
 				varray[i].TexCoord0	=mMirrorTex0[i];
 				varray[i].Color0	=Vector4.One;
-				varray[i].Color0.W	=0.5f;	//TODO: donut hardcode
+				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
 			}
 
 			vb	=new VertexBuffer(mGD, 36 * varray.Length, BufferUsage.WriteOnly);
@@ -484,6 +576,39 @@ namespace BSPLib
 			ib.SetData<Int32>(mLMAnimIndexes.ToArray());
 
 			vd	=mLMAnimVD;
+		}
+
+
+		internal void GetLMAAnimBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
+		{
+			if(mLMAAnimVerts.Count == 0)
+			{
+				vb	=null;
+				ib	=null;
+				vd	=null;
+				return;
+			}
+
+			VPosTex0Tex1Tex2Tex3Tex4Style4	[]varray	=new VPosTex0Tex1Tex2Tex3Tex4Style4[mLMAAnimVerts.Count];
+			for(int i=0;i < mLMAAnimVerts.Count;i++)
+			{
+				varray[i].Position		=mLMAAnimVerts[i];
+				varray[i].TexCoord0		=mLMAAnimFaceTex0[i];
+				varray[i].TexCoord1		=mLMAAnimFaceTex1[i];
+				varray[i].TexCoord2		=mLMAAnimFaceTex2[i];
+				varray[i].TexCoord3		=mLMAAnimFaceTex3[i];
+				varray[i].TexCoord4		=mLMAAnimFaceTex4[i];
+				varray[i].StyleIndex	=mLMAAnimStyle[i];
+			}
+
+			vb	=new VertexBuffer(mGD, 68 * varray.Length, BufferUsage.WriteOnly);
+			vb.SetData<VPosTex0Tex1Tex2Tex3Tex4Style4>(varray);
+
+			ib	=new IndexBuffer(mGD, 4 * mLMAAnimIndexes.Count, BufferUsage.WriteOnly,
+					IndexElementSize.ThirtyTwoBits);
+			ib.SetData<Int32>(mLMAAnimIndexes.ToArray());
+
+			vd	=mLMAAnimVD;
 		}
 
 
@@ -708,6 +833,228 @@ namespace BSPLib
 		}
 
 
+		internal void BuildLMAAnimFaceData(Vector3 []verts, int[] indexes, byte []lightData)
+		{
+			List<Int32>	firstVert	=new List<Int32>();
+			List<Int32>	numVert		=new List<Int32>();
+			List<Int32>	numFace		=new List<Int32>();
+
+			Map.Print("Handling alpha animated lightmaps...\n");
+
+			foreach(Material mat in mMaterials)
+			{
+				int	numFaceVerts	=mLMAAnimVerts.Count;
+				int	numFaces		=0;
+
+				if(!mat.Name.EndsWith("*LitAlphaAnim"))
+				{
+					numFace.Add(numFaces);
+					mLMAAnimMaterialNumVerts.Add(mLMAAnimVerts.Count - numFaceVerts);
+					continue;
+				}
+
+				Map.Print("Animated light for material: " + mat.Name + ".\n");
+
+				foreach(GFXFace f in mFaces)
+				{
+					if(f.mLightOfs == -1)
+					{
+						continue;	//only interested in lightmapped
+					}
+					if(f.mLTypes[1] == 255)
+					{
+						continue;	//only interested in animated
+					}
+
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.Name.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					numFaces++;
+
+					//grab lightmap0
+					double	scaleU, scaleV, offsetU, offsetV;
+					scaleU	=scaleV	=offsetU	=offsetV	=0.0;
+					Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
+
+					for(int i=0;i < lmap.Length;i++)
+					{
+						lmap[i].R	=lightData[f.mLightOfs + (i * 3)];
+						lmap[i].G	=lightData[f.mLightOfs + (i * 3) + 1];
+						lmap[i].B	=lightData[f.mLightOfs + (i * 3) + 2];
+						lmap[i].A	=0xFF;
+					}
+					mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
+						out scaleU, out scaleV, out offsetU, out offsetV);
+
+					List<Vector3>	fverts	=new List<Vector3>();
+
+					int		nverts	=f.mNumVerts;
+					int		fvert	=f.mFirstVert;
+					int		k		=0;
+					for(k=0;k < nverts;k++)
+					{
+						int		idx	=indexes[fvert + k];
+						Vector3	pnt	=verts[idx];
+						Vector2	crd;
+						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
+						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
+
+						mLMAAnimFaceTex0.Add(crd);
+						fverts.Add(pnt);
+
+						mLMAAnimVerts.Add(pnt);
+					}
+					List<Vector2>	coords	=new List<Vector2>();
+					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
+
+					float	crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
+					float	crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
+
+					for(k=0;k < nverts;k++)
+					{
+						Vector2	tc	=coords[k];
+
+						//stretch coords to +1 size
+						tc.X	*=crunchX;
+						tc.Y	*=crunchY;
+
+						//scale to atlas space
+						tc.X	/=TexAtlas.TEXATLAS_WIDTH;
+						tc.Y	/=TexAtlas.TEXATLAS_HEIGHT;
+
+						//step half a pixel in atlas space
+						tc.X	+=1.0f / (TexAtlas.TEXATLAS_WIDTH * 2.0f);
+						tc.Y	+=1.0f / (TexAtlas.TEXATLAS_HEIGHT * 2.0f);
+
+						//move to atlas position
+						tc.X	+=(float)offsetU;
+						tc.Y	+=(float)offsetV;
+
+						mLMAAnimFaceTex1.Add(tc);
+					}
+
+					firstVert.Add(mLMAAnimVerts.Count - f.mNumVerts);
+					numVert.Add(f.mNumVerts);
+
+					//now add the animated lights if need be
+					for(int s=1;s < 4;s++)
+					{
+						if(f.mLTypes[s] == 255)
+						{
+							//fill with zeros for empty spots
+							for(k=0;k < nverts;k++)
+							{
+								if(s == 1)
+								{
+									mLMAAnimFaceTex2.Add(Vector2.Zero);
+								}
+								else if(s == 2)
+								{
+									mLMAAnimFaceTex3.Add(Vector2.Zero);
+								}
+								else if(s == 3)
+								{
+									mLMAAnimFaceTex4.Add(Vector2.Zero);
+								}
+							}
+							continue;
+						}
+
+						//grab animated lightmaps
+						scaleU	=scaleV	=offsetU	=offsetV	=0.0;
+						lmap	=new Color[f.mLHeight * f.mLWidth];
+
+						int	sizeOffset	=f.mLHeight * f.mLWidth;
+
+						sizeOffset	*=s;
+
+						for(int i=0;i < lmap.Length;i++)
+						{
+							lmap[i].R	=lightData[sizeOffset + f.mLightOfs + (i * 3)];
+							lmap[i].G	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 1];
+							lmap[i].B	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 2];
+							lmap[i].A	=0xFF;
+						}
+
+						//insert animated map
+						mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
+							out scaleU, out scaleV, out offsetU, out offsetV);
+
+						//grab texcoords to animated map location
+						coords	=new List<Vector2>();
+						GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
+
+						crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
+						crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
+
+						for(k=0;k < nverts;k++)
+						{
+							Vector2	tc	=coords[k];
+
+							//stretch coords to +1 size
+							tc.X	*=crunchX;
+							tc.Y	*=crunchY;
+
+							//scale to atlas space
+							tc.X	/=TexAtlas.TEXATLAS_WIDTH;
+							tc.Y	/=TexAtlas.TEXATLAS_HEIGHT;
+
+							//step half a pixel in atlas space
+							tc.X	+=1.0f / (TexAtlas.TEXATLAS_WIDTH * 2.0f);
+							tc.Y	+=1.0f / (TexAtlas.TEXATLAS_HEIGHT * 2.0f);
+
+							//move to atlas position
+							tc.X	+=(float)offsetU;
+							tc.Y	+=(float)offsetV;
+
+							if(s == 1)
+							{
+								mLMAAnimFaceTex2.Add(tc);
+							}
+							else if(s == 2)
+							{
+								mLMAAnimFaceTex3.Add(tc);
+							}
+							else if(s == 3)
+							{
+								mLMAAnimFaceTex4.Add(tc);
+							}
+						}
+					}
+
+					//style index
+					for(k=0;k < nverts;k++)
+					{
+						Vector4	styleIndex	=Vector4.Zero;
+						styleIndex.X	=f.mLTypes[1];
+						styleIndex.Y	=f.mLTypes[2];
+						styleIndex.Z	=f.mLTypes[3];
+						styleIndex.W	=AlphaValue;
+						mLMAAnimStyle.Add(styleIndex);
+					}
+				}
+
+				numFace.Add(numFaces);
+				mLMAAnimMaterialNumVerts.Add(mLMAAnimVerts.Count - numFaceVerts);
+			}
+
+			//might not be any
+			if(mLMAAnimVerts.Count == 0)
+			{
+				return;
+			}
+
+			mLMAtlas.Finish();
+
+			ComputeIndexes(mLMAAnimIndexes, mLMAAnimMaterialOffsets,
+				mLMAAnimMaterialNumTris, numFace, firstVert, numVert);
+		}
+
+
 		internal void BuildLMFaceData(Vector3 []verts, int[] indexes, byte []lightData)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
@@ -720,6 +1067,13 @@ namespace BSPLib
 			{
 				int	numFaceVerts	=mLMVerts.Count;
 				int	numFaces		=0;
+
+				if(mat.Name.EndsWith("*LitAlpha"))
+				{
+					numFace.Add(numFaces);
+					mLMMaterialNumVerts.Add(mLMVerts.Count - numFaceVerts);
+					continue;
+				}
 
 				Map.Print("Light for material: " + mat.Name + ".\n");
 
@@ -818,6 +1172,126 @@ namespace BSPLib
 			mLMAtlas.Finish();
 
 			ComputeIndexes(mLMIndexes, mLMMaterialOffsets, mLMMaterialNumTris, numFace, firstVert, numVert);
+		}
+
+
+		internal void BuildLMAFaceData(Vector3 []verts, int[] indexes, byte []lightData)
+		{
+			List<Int32>	firstVert	=new List<Int32>();
+			List<Int32>	numVert		=new List<Int32>();
+			List<Int32>	numFace		=new List<Int32>();
+
+			Map.Print("Handling lightmapped alpha materials");
+
+			foreach(Material mat in mMaterials)
+			{
+				int	numFaceVerts	=mLMAVerts.Count;
+				int	numFaces		=0;
+
+				if(!mat.Name.EndsWith("*LitAlpha"))
+				{
+					numFace.Add(numFaces);
+					mLMAMaterialNumVerts.Add(mLMAVerts.Count - numFaceVerts);
+					continue;
+				}
+
+				Map.Print("Light for material: " + mat.Name + ".\n");
+
+				foreach(GFXFace f in mFaces)
+				{
+					if(f.mLightOfs == -1)
+					{
+						continue;	//only interested in lightmapped
+					}
+
+					if(f.mLTypes[1] != 255)
+					{
+						continue;	//only interested in non animated
+					}
+
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.Name.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					numFaces++;
+
+					//grab lightmap0
+					double	scaleU, scaleV, offsetU, offsetV;
+					scaleU	=scaleV	=offsetU	=offsetV	=0.0;
+					Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
+
+					for(int i=0;i < lmap.Length;i++)
+					{
+						lmap[i].R	=lightData[f.mLightOfs + (i * 3)];
+						lmap[i].G	=lightData[f.mLightOfs + (i * 3) + 1];
+						lmap[i].B	=lightData[f.mLightOfs + (i * 3) + 2];
+						lmap[i].A	=0xFF;
+					}
+					mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
+						out scaleU, out scaleV, out offsetU, out offsetV);
+
+					List<Vector3>	fverts	=new List<Vector3>();
+
+					int		nverts	=f.mNumVerts;
+					int		fvert	=f.mFirstVert;
+					int		k		=0;
+					for(k=0;k < nverts;k++)
+					{
+						int		idx	=indexes[fvert + k];
+						Vector3	pnt	=verts[idx];
+						Vector2	crd;
+						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
+						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
+
+						mLMAFaceTex0.Add(crd);
+						fverts.Add(pnt);
+
+						mLMAVerts.Add(pnt);
+					}
+
+					List<Vector2>	coords	=new List<Vector2>();
+					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
+
+					float	crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
+					float	crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
+
+					for(k=0;k < nverts;k++)
+					{
+						Vector2	tc	=coords[k];
+
+						//stretch coords to +1 size
+						tc.X	*=crunchX;
+						tc.Y	*=crunchY;
+
+						//scale to atlas space
+						tc.X	/=TexAtlas.TEXATLAS_WIDTH;
+						tc.Y	/=TexAtlas.TEXATLAS_HEIGHT;
+
+						//step half a pixel in atlas space
+						tc.X	+=1.0f / (TexAtlas.TEXATLAS_WIDTH * 2.0f);
+						tc.Y	+=1.0f / (TexAtlas.TEXATLAS_HEIGHT * 2.0f);
+
+						//move to atlas position
+						tc.X	+=(float)offsetU;
+						tc.Y	+=(float)offsetV;
+
+						mLMAFaceTex1.Add(tc);
+					}
+
+					firstVert.Add(mLMAVerts.Count - f.mNumVerts);
+					numVert.Add(f.mNumVerts);
+				}
+
+				numFace.Add(numFaces);
+				mLMAMaterialNumVerts.Add(mLMAVerts.Count - numFaceVerts);
+			}
+
+			mLMAtlas.Finish();
+
+			ComputeIndexes(mLMAIndexes, mLMAMaterialOffsets, mLMAMaterialNumTris, numFace, firstVert, numVert);
 		}
 
 
@@ -1335,7 +1809,28 @@ namespace BSPLib
 				if(mat.Name.EndsWith("*Alpha"))
 				{
 					mat.Alpha		=true;
+					mat.DepthWrite	=false;
 					mat.Technique	="Alpha";
+				}
+				else if(mat.Name.EndsWith("*LitAlpha"))
+				{
+					mat.Alpha		=true;
+					mat.DepthWrite	=false;
+					mat.Technique	="LightMapAlpha";
+					mat.AddParameter("mLightMap",
+						EffectParameterClass.Object,
+						EffectParameterType.Texture,
+						"LightMapAtlas");
+				}
+				else if(mat.Name.EndsWith("*LitAlphaAnim"))
+				{
+					mat.Alpha		=true;
+					mat.DepthWrite	=false;
+					mat.Technique	="LightMapAnimAlpha";
+					mat.AddParameter("mLightMap",
+						EffectParameterClass.Object,
+						EffectParameterType.Texture,
+						"LightMapAtlas");
 				}
 				else if(mat.Name.EndsWith("*VertLit"))
 				{
@@ -1383,7 +1878,15 @@ namespace BSPLib
 
 			if(tex.IsLightMapped())
 			{
-				if(f.mLightOfs == -1)
+				if(tex.IsAlpha() && f.mLightOfs != -1)
+				{
+					matName	+="*LitAlpha";
+				}
+				else if(tex.IsAlpha())
+				{
+					matName	+="*Alpha";
+				}
+				else if(f.mLightOfs == -1)
 				{
 					matName	+="*VertLit";
 				}
@@ -1418,12 +1921,20 @@ namespace BSPLib
 				}
 			}
 
+			//animated lights ?
 			if(numStyles > 1)
 			{
 				Debug.Assert(tex.IsLightMapped());
 
-				//animated lights
-				matName	+="*Anim";
+				//see if material is already alpha
+				if(matName.Contains("*LitAlpha"))
+				{
+					matName	+="Anim";	//*LitAlphaAnim
+				}
+				else
+				{
+					matName	+="*Anim";
+				}
 			}
 
 			return	matName;

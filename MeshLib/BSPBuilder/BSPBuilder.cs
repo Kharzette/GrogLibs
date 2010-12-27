@@ -43,9 +43,9 @@ namespace BSPBuilder
 		string					mDrawChoice;
 
 		//new debug draw stuff
-		VertexBuffer		mLMVB, mVLitVB, mLMAnimVB, mAlphaVB, mSkyVB, mFBVB, mMirrorVB;
-		VertexDeclaration	mLMVD, mVLitVD, mLMAnimVD, mAlphaVD, mSkyVD, mFBVD, mMirrorVD;
-		IndexBuffer			mLMIB, mVLitIB, mLMAnimIB, mAlphaIB, mSkyIB, mFBIB, mMirrorIB;
+		VertexBuffer		mLMVB, mVLitVB, mLMAnimVB, mAlphaVB, mSkyVB, mFBVB, mMirrorVB, mLMAVB, mLMAAnimVB;
+		VertexDeclaration	mLMVD, mVLitVD, mLMAnimVD, mAlphaVD, mSkyVD, mFBVD, mMirrorVD, mLMAVD, mLMAAnimVD;
+		IndexBuffer			mLMIB, mVLitIB, mLMAnimIB, mAlphaIB, mSkyIB, mFBIB, mMirrorIB, mLMAIB, mLMAAnimIB;
 		TexAtlas			mLMapAtlas;
 		Int32				mDebugLeaf;
 
@@ -60,14 +60,17 @@ namespace BSPBuilder
 		//offsets into the vbuffer per material
 		Int32[]	mLMMatOffsets, mVLitMatOffsets, mLMAnimMatOffsets;
 		Int32[]	mAlphaMatOffsets, mSkyMatOffsets, mFBMatOffsets, mMirrorMatOffsets;
+		Int32[]	mLMAMatOffsets, mLMAAnimMatOffsets;
 
 		//numverts for drawprim call per material
 		Int32[]	mLMMatNumVerts, mVLitMatNumVerts, mLMAnimMatNumVerts;
 		Int32[] mAlphaNumVerts, mSkyNumVerts, mFBNumVerts, mMirrorNumVerts;
+		Int32[]	mLMAMatNumVerts, mLMAAnimMatNumVerts;
 
 		//primcount per material
 		Int32[]	mLMMatNumTris, mVLitMatNumTris, mLMAnimMatNumTris;
 		Int32[]	mAlphaNumTris, mSkyNumTris, mFBNumTris, mMirrorNumTris;
+		Int32[]	mLMAMatNumTris, mLMAAnimMatNumTris;
 
 		//collision debuggery
 		Vector3				mStart, mEnd;
@@ -476,6 +479,8 @@ namespace BSPBuilder
 			//alphas
 			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, 36, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris);
 			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, 36, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris);
+			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, 44, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris);
+			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, 68, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris);
 			
 			if(mVB != null)
 			{
@@ -916,6 +921,18 @@ namespace BSPBuilder
 						out mLMAnimMatOffsets,
 						out mLMAnimMatNumVerts,
 						out mLMAnimMatNumTris,
+						out mLMAVB,
+						out mLMAIB,
+						out mLMAVD,
+						out mLMAMatOffsets,
+						out mLMAMatNumVerts,
+						out mLMAMatNumTris,
+						out mLMAAnimVB,
+						out mLMAAnimIB,
+						out mLMAAnimVD,
+						out mLMAAnimMatOffsets,
+						out mLMAAnimMatNumVerts,
+						out mLMAAnimMatNumTris,
 						out mLMapAtlas);
 
 					mMap.BuildVLitRenderData(g, out mVLitVB, out mVLitIB,
