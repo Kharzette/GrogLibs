@@ -464,7 +464,7 @@ namespace BSPLib
 					texName	=tok;
 					ret	|=Contents.BSP_CONTENTS_CLIP2;
 				}
-				if(tok[0] == '*')
+				if(tok[0] == '*' || tok[0] == '#')
 				{
 					mFlags	|=SURF_WARP;
 					texName	=tok.Substring(1);
@@ -500,22 +500,49 @@ namespace BSPLib
 					}
 					continue;
 				}
-				else if(tok[0] == '#')
-				{
-					mFlags	|=SURF_WARP;
-					texName	=tok;
-					continue;
-				}
 				else if(tok[0] == '+')
 				{
 					//animating I think
-					texName	=tok;
-					mFlags	|=SURF_WARP;
+					texName		=tok;
+					mFlags		|=SURF_LIGHT;
+					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 				}
 				else if(tok.StartsWith("sky") || tok.StartsWith("SKY"))
 				{
 					texName	=tok;
 					mFlags	|=SURF_SKY;
+					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+					ti.mFlags	|=TexInfo.SKY;
+				}
+				else if(tok.StartsWith("lava") || tok.StartsWith("LAVA"))
+				{
+					ret			|=Contents.BSP_CONTENTS_EMPTY2;
+					ret			|=Contents.BSP_CONTENTS_USER1;
+					ti.mFlags	|=TexInfo.FULLBRIGHT;
+				}
+				else if(tok.StartsWith("water") || tok.StartsWith("WATER"))
+				{
+					ret			|=Contents.BSP_CONTENTS_TRANSLUCENT2;
+					ret			|=Contents.BSP_CONTENTS_EMPTY2;
+					ret			|=Contents.BSP_CONTENTS_WAVY2;
+					ret			|=Contents.BSP_CONTENTS_USER3;
+					ti.mFlags	|=TexInfo.FULLBRIGHT;
+					ti.mFlags	|=TexInfo.TRANS;
+				}
+				else if(tok.StartsWith("slime") || tok.StartsWith("SLIME"))
+				{
+					ret			|=Contents.BSP_CONTENTS_TRANSLUCENT2;
+					ret			|=Contents.BSP_CONTENTS_EMPTY2;
+					ret			|=Contents.BSP_CONTENTS_WAVY2;
+					ret			|=Contents.BSP_CONTENTS_USER2;
+					ti.mFlags	|=TexInfo.FULLBRIGHT;
+					ti.mFlags	|=TexInfo.TRANS;
+				}
+				else if(tok.StartsWith("trigger") || tok.StartsWith("TRIGGER"))
+				{
+					ret			|=Contents.BSP_CONTENTS_USER12;
+					ti.mFlags	|=TexInfo.FULLBRIGHT;
+					mFlags		|=SURF_NODRAW;
 				}
 				else if(char.IsLetter(tok, 0))
 				{

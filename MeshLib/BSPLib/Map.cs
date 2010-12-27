@@ -1388,11 +1388,13 @@ namespace BSPLib
 		public void BuildLMRenderData(GraphicsDevice g,
 			out VertexBuffer lmVB,
 			out IndexBuffer lmIB,
+			out VertexDeclaration lmVD,
 			out Int32 []matOffsets,
 			out Int32 []matNumVerts,
 			out Int32 []matNumTris,
 			out VertexBuffer lmAnimVB,
 			out IndexBuffer lmAnimIB,
+			out VertexDeclaration lmAnimVD,
 			out Int32 []matAnimOffsets,
 			out Int32 []matAnimNumVerts,
 			out Int32 []matAnimNumTris,
@@ -1402,10 +1404,10 @@ namespace BSPLib
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
 
 			mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData);
-			mg.GetLMBuffers(out lmVB, out lmIB);
+			mg.GetLMBuffers(out lmVB, out lmIB, out lmVD);
 
 			mg.BuildLMAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData);
-			mg.GetLMAnimBuffers(out lmAnimVB, out lmAnimIB);
+			mg.GetLMAnimBuffers(out lmAnimVB, out lmAnimIB, out lmAnimVD);
 
 			lightAtlas	=mg.GetLightMapAtlas();
 
@@ -1414,8 +1416,8 @@ namespace BSPLib
 		}
 
 
-		public void BuildNonLMRenderData(GraphicsDevice g, out VertexBuffer nonLMVB,
-			out IndexBuffer nonLMIB, out Int32 []matOffsets,
+		public void BuildVLitRenderData(GraphicsDevice g, out VertexBuffer vb,
+			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris)
 		{
 			//todo:fix
@@ -1423,9 +1425,69 @@ namespace BSPLib
 
 			mg.BuildVLitFaceData(mGFXVerts, mGFXVertIndexes);
 
-			mg.GetVLitBuffers(out nonLMVB, out nonLMIB);
+			mg.GetVLitBuffers(out vb, out ib, out vd);
 
 			mg.GetVLitMaterialData(out matOffsets, out matNumVerts, out matNumTris);
+		}
+
+
+		public void BuildAlphaRenderData(GraphicsDevice g, out VertexBuffer vb,
+			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out Int32 []matNumVerts, out Int32 []matNumTris)
+		{
+			//todo:fix
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
+
+			mg.BuildAlphaFaceData(mGFXVerts, mGFXVertIndexes);
+
+			mg.GetAlphaBuffers(out vb, out ib, out vd);
+
+			mg.GetAlphaMaterialData(out matOffsets, out matNumVerts, out matNumTris);
+		}
+
+
+		public void BuildFullBrightRenderData(GraphicsDevice g, out VertexBuffer vb,
+			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out Int32 []matNumVerts, out Int32 []matNumTris)
+		{
+			//todo:fix
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
+
+			mg.BuildFullBrightFaceData(mGFXVerts, mGFXVertIndexes);
+
+			mg.GetFullBrightBuffers(out vb, out ib, out vd);
+
+			mg.GetFullBrightMaterialData(out matOffsets, out matNumVerts, out matNumTris);
+		}
+
+
+		public void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
+			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out Int32 []matNumVerts, out Int32 []matNumTris)
+		{
+			//todo:fix
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
+
+			mg.BuildMirrorFaceData(mGFXVerts, mGFXVertIndexes);
+
+			mg.GetMirrorBuffers(out vb, out ib, out vd);
+
+			mg.GetMirrorMaterialData(out matOffsets, out matNumVerts, out matNumTris);
+		}
+
+
+		public void BuildSkyRenderData(GraphicsDevice g, out VertexBuffer vb,
+			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out Int32 []matNumVerts, out Int32 []matNumTris)
+		{
+			//todo:fix
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
+
+			mg.BuildSkyFaceData(mGFXVerts, mGFXVertIndexes);
+
+			mg.GetSkyBuffers(out vb, out ib, out vd);
+
+			mg.GetSkyMaterialData(out matOffsets, out matNumVerts, out matNumTris);
 		}
 
 

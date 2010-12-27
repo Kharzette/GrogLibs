@@ -207,6 +207,19 @@ namespace MaterialLib
 		}
 
 
+		public void ApplyRenderStates(GraphicsDevice g)
+		{
+			g.RenderState.AlphaBlendEnable			=Alpha;
+			g.RenderState.AlphaTestEnable			=AlphaTest;
+			g.RenderState.BlendFunction				=BlendFunction;
+			g.RenderState.SourceBlend				=SourceBlend;
+			g.RenderState.DestinationBlend			=DestBlend;
+			g.RenderState.DepthBufferWriteEnable	=DepthWrite;
+			g.RenderState.CullMode					=CullMode;
+			g.RenderState.DepthBufferFunction		=ZFunction;
+		}
+
+
 		public void UpdateShaderParameters(Effect fx)
 		{
 			List<ShaderParameters>	parms	=new List<ShaderParameters>();

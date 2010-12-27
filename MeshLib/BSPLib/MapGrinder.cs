@@ -14,6 +14,10 @@ namespace BSPLib
 	{
 		GraphicsDevice	mGD;
 
+		//vertex declarations
+		VertexDeclaration	mLMVD, mVLitVD, mFBVD, mAlphaVD;
+		VertexDeclaration	mMirrorVD, mSkyVD, mLMAnimVD;
+
 		//computed lightmapped geometry
 		List<Vector3>	mLMVerts		=new List<Vector3>();
 		List<Vector2>	mLMFaceTex0		=new List<Vector2>();
@@ -119,6 +123,91 @@ namespace BSPLib
 
 			CalcMaterialNames();
 			CalcMaterials();
+			InitVertexDeclarations(gd);
+		}
+
+
+		void InitVertexDeclarations(GraphicsDevice gd)
+		{
+			if(gd == null)
+			{
+				return;
+			}
+
+			//make vertex declarations
+			//lightmapped
+			VertexElement	[]ve	=new VertexElement[3];
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
+			mLMVD	=new VertexDeclaration(gd, ve);
+
+			//vertex lit
+			ve	=new VertexElement[3];
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
+			mVLitVD	=new VertexDeclaration(gd, ve);
+
+			//animated lightmapped
+			ve	=new VertexElement[7];
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
+			ve[3]	=new VertexElement(0, 28, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 2);
+			ve[4]	=new VertexElement(0, 36, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 3);
+			ve[5]	=new VertexElement(0, 44, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 4);
+			ve[6]	=new VertexElement(0, 52, VertexElementFormat.Vector4,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 5);
+			mLMAnimVD	=new VertexDeclaration(gd, ve);
+
+			//FullBright
+			ve	=new VertexElement[2];
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+			mVLitVD	=new VertexDeclaration(gd, ve);
+
+			//sky
+			ve	=new VertexElement[2];
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+			mSkyVD	=new VertexDeclaration(gd, ve);
+
+			//Alpha
+			ve	=new VertexElement[3];
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector4,
+				VertexElementMethod.Default, VertexElementUsage.Color, 0);
+			mAlphaVD	=new VertexDeclaration(gd, ve);
+
+			//Mirror
+			ve	=new VertexElement[3];
+			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector4,
+				VertexElementMethod.Default, VertexElementUsage.Color, 0);
+			mMirrorVD	=new VertexDeclaration(gd, ve);
 		}
 
 
@@ -191,8 +280,16 @@ namespace BSPLib
 		}
 
 
-		internal void GetLMBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetLMBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
 		{
+			if(mLMVerts.Count == 0)
+			{
+				vb	=null;
+				ib	=null;
+				vd	=null;
+				return;
+			}
+
 			VPosTex0Tex1	[]varray	=new VPosTex0Tex1[mLMVerts.Count];
 			for(int i=0;i < mLMVerts.Count;i++)
 			{
@@ -207,11 +304,21 @@ namespace BSPLib
 			ib	=new IndexBuffer(mGD, 4 * mLMIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mLMIndexes.ToArray());
+
+			vd	=mLMVD;
 		}
 
 
-		internal void GetVLitBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetVLitBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
 		{
+			if(mVLitVerts.Count == 0)
+			{
+				vb	=null;
+				ib	=null;
+				vd	=null;
+				return;
+			}
+
 			VPosTex0Norm0	[]varray	=new VPosTex0Norm0[mVLitVerts.Count];
 			for(int i=0;i < mVLitVerts.Count;i++)
 			{
@@ -226,11 +333,21 @@ namespace BSPLib
 			ib	=new IndexBuffer(mGD, 4 * mVLitIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mVLitIndexes.ToArray());
+
+			vd	=mVLitVD;
 		}
 
 
-		internal void GetAlphaBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetAlphaBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
 		{
+			if(mAlphaVerts.Count == 0)
+			{
+				vb	=null;
+				ib	=null;
+				vd	=null;
+				return;
+			}
+
 			VPosTex0Col0	[]varray	=new VPosTex0Col0[mAlphaVerts.Count];
 			for(int i=0;i < mAlphaVerts.Count;i++)
 			{
@@ -246,11 +363,21 @@ namespace BSPLib
 			ib	=new IndexBuffer(mGD, 4 * mAlphaIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mAlphaIndexes.ToArray());
+
+			vd	=mAlphaVD;
 		}
 
 
-		internal void GetFullBrightBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetFullBrightBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
 		{
+			if(mFBVerts.Count == 0)
+			{
+				vb	=null;
+				ib	=null;
+				vd	=null;
+				return;
+			}
+
 			VPosTex0	[]varray	=new VPosTex0[mFBVerts.Count];
 			for(int i=0;i < mFBVerts.Count;i++)
 			{
@@ -264,11 +391,21 @@ namespace BSPLib
 			ib	=new IndexBuffer(mGD, 4 * mFBIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mFBIndexes.ToArray());
+
+			vd	=mFBVD;
 		}
 
 
-		internal void GetMirrorBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetMirrorBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
 		{
+			if(mMirrorVerts.Count == 0)
+			{
+				vb	=null;
+				ib	=null;
+				vd	=null;
+				return;
+			}
+
 			VPosTex0Col0	[]varray	=new VPosTex0Col0[mMirrorVerts.Count];
 			for(int i=0;i < mMirrorVerts.Count;i++)
 			{
@@ -284,11 +421,21 @@ namespace BSPLib
 			ib	=new IndexBuffer(mGD, 4 * mMirrorIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mMirrorIndexes.ToArray());
+
+			vd	=mMirrorVD;
 		}
 
 
-		internal void GetSkyBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetSkyBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
 		{
+			if(mSkyVerts.Count == 0)
+			{
+				vb	=null;
+				ib	=null;
+				vd	=null;
+				return;
+			}
+
 			VPosTex0	[]varray	=new VPosTex0[mSkyVerts.Count];
 			for(int i=0;i < mSkyVerts.Count;i++)
 			{
@@ -302,15 +449,18 @@ namespace BSPLib
 			ib	=new IndexBuffer(mGD, 4 * mSkyIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mSkyIndexes.ToArray());
+
+			vd	=mSkyVD;
 		}
 
 
-		internal void GetLMAnimBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetLMAnimBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
 		{
 			if(mLMAnimVerts.Count == 0)
 			{
 				vb	=null;
 				ib	=null;
+				vd	=null;
 				return;
 			}
 
@@ -332,6 +482,8 @@ namespace BSPLib
 			ib	=new IndexBuffer(mGD, 4 * mLMAnimIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mLMAnimIndexes.ToArray());
+
+			vd	=mLMAnimVD;
 		}
 
 
@@ -348,7 +500,7 @@ namespace BSPLib
 				int	numFaceVerts	=mLMAnimVerts.Count;
 				int	numFaces		=0;
 
-				if(!mat.Name.EndsWith("Anim"))
+				if(!mat.Name.EndsWith("*Anim"))
 				{
 					numFace.Add(numFaces);
 					mLMAnimMaterialNumVerts.Add(mLMAnimVerts.Count - numFaceVerts);
@@ -985,7 +1137,7 @@ namespace BSPLib
 				int	numFaceVerts	=mSkyVerts.Count;
 				int	numFaces		=0;
 
-				if(!mat.Name.EndsWith("*FullBright"))
+				if(!mat.Name.EndsWith("*Sky"))
 				{
 					numFace.Add(numFaces);
 					mSkyMaterialNumVerts.Add(mSkyVerts.Count - numFaceVerts);
