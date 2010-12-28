@@ -263,6 +263,10 @@ namespace MaterialLib
 						break;
 
 					case EffectParameterClass.Vector:
+						if(ep.Name == "mEyePos")
+						{
+							continue;	//HACK, don't add eye pos to UI
+						}
 						if(ep.ColumnCount == 2)
 						{
 							Vector2	vec	=ep.GetValueVector2();

@@ -680,7 +680,7 @@ namespace ColladaConvert
 
 		private void UpdateWVP()
 		{
-			mMatLib.UpdateWVP(mWorldMatrix, mViewMatrix, mProjectionMatrix);
+			mMatLib.UpdateWVP(mWorldMatrix, mViewMatrix, mProjectionMatrix, -mCamPos);
 		}
 
 

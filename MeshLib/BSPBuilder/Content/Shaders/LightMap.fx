@@ -1,6 +1,7 @@
-float4x4 mWorld;
-float4x4 mView;
-float4x4 mProjection;
+float4x4	mWorld;
+float4x4	mView;
+float4x4	mProjection;
+float3		mEyePos;
 
 texture mTexture;
 texture mLightMap;
@@ -19,6 +20,13 @@ struct VPosTex0
 {
 	float4 Position : POSITION0;
 	float2 TexCoord0 : TEXCOORD0;
+};
+
+
+struct VPosCubeTex0
+{
+	float4 Position : POSITION0;
+	float3 TexCoord0 : TEXCOORD0;
 };
 
 
@@ -82,6 +90,12 @@ struct VPosTex0Tex1Tex2Tex3Tex4Intensity
 struct VTex0
 {
 	float2 TexCoord0 : TEXCOORD0;
+};
+
+
+struct VCubeTex0
+{
+	float3 TexCoord0 : TEXCOORD0;
 };
 
 
@@ -177,6 +191,25 @@ VPosTex0 FullBrightVertexShader(VPosTex0 input)
 }
 
 
+VPosCubeTex0 SkyVertexShader(VPosTex0 input)
+{
+	VPosCubeTex0	output;
+
+	float4	worldPosition	=mul(input.Position, mWorld);
+
+	output.Position		=mul(mul(worldPosition, mView), mProjection);
+	
+	//calculate vector from eye to pos
+	float3	eyeVec	=worldPosition - mEyePos;
+	
+	eyeVec	=normalize(eyeVec);
+	
+	output.TexCoord0	=eyeVec;
+
+	return	output;
+}
+
+
 VPosTex0Col0 AlphaVertexShader(VPosTex0Col0 input)
 {
 	VPosTex0Col0	output;
@@ -237,6 +270,20 @@ sampler TextureSampler = sampler_state
 
 	AddressU	=Wrap;
 	AddressV	=Wrap;
+};
+
+
+sampler SkySampler = sampler_state
+{
+	Texture	=(mTexture);
+
+	MinFilter	=Linear;
+	MagFilter	=Linear;
+	MipFilter	=Linear;
+
+	AddressU	=MirrorOnce;
+	AddressV	=MirrorOnce;
+	AddressW	=MirrorOnce;
 };
 
 
@@ -332,6 +379,18 @@ float4 FullBrightPixelShader(VTex0 input) : COLOR0
 	tex0.y	/=mTexSize.y;
 	
 	color	=tex2D(TextureSampler, tex0);
+	
+	return	color;
+}
+
+
+float4 SkyPixelShader(VCubeTex0 input) : COLOR0
+{
+	float4	color;
+	
+	float3	tex0	=input.TexCoord0;
+	
+	color	=texCUBE(SkySampler, tex0);
 	
 	return	color;
 }
@@ -503,8 +562,8 @@ technique Sky
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 FullBrightVertexShader();
-		PixelShader = compile ps_2_0 FullBrightPixelShader();
+		VertexShader = compile vs_2_0 SkyVertexShader();
+		PixelShader = compile ps_2_0 SkyPixelShader();
 	}
 }
 

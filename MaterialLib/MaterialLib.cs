@@ -422,7 +422,7 @@ namespace MaterialLib
 		}
 
 
-		public void UpdateWVP(Matrix world, Matrix view, Matrix proj)
+		public void UpdateWVP(Matrix world, Matrix view, Matrix proj, Vector3 eyePos)
 		{
 			foreach(KeyValuePair<string, Effect> fx in mFX)
 			{
@@ -437,6 +437,10 @@ namespace MaterialLib
 				if(fx.Value.Parameters["mProjection"] != null)
 				{
 					fx.Value.Parameters["mProjection"].SetValue(proj);
+				}
+				if(fx.Value.Parameters["mEyePos"] != null)
+				{
+					fx.Value.Parameters["mEyePos"].SetValue(eyePos);
 				}
 			}
 		}
