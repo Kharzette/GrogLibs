@@ -222,7 +222,7 @@ namespace BSPLib
 							ret			|=Contents.BSP_CONTENTS_WAVY2;
 							ret			|=Contents.BSP_CONTENTS_USER3;
 							ti.mFlags	|=TexInfo.TRANS;
-							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+//							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 						}
 						if(tex == "DEV/DEV_SLIME")
 						{
@@ -231,7 +231,7 @@ namespace BSPLib
 							ret			|=Contents.BSP_CONTENTS_WAVY2;
 							ret			|=Contents.BSP_CONTENTS_USER2;
 							ti.mFlags	|=TexInfo.TRANS;
-							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+//							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 						}
 						ti.mTexture	=tex;
 					}
@@ -563,7 +563,7 @@ namespace BSPLib
 					ret			|=Contents.BSP_CONTENTS_EMPTY2;
 					ret			|=Contents.BSP_CONTENTS_WAVY2;
 					ret			|=Contents.BSP_CONTENTS_USER3;
-					ti.mFlags	|=TexInfo.FULLBRIGHT;
+//					ti.mFlags	|=TexInfo.FULLBRIGHT;
 					ti.mFlags	|=TexInfo.TRANS;
 				}
 				else if(tok.StartsWith("slime") || tok.StartsWith("SLIME"))
@@ -572,7 +572,7 @@ namespace BSPLib
 					ret			|=Contents.BSP_CONTENTS_EMPTY2;
 					ret			|=Contents.BSP_CONTENTS_WAVY2;
 					ret			|=Contents.BSP_CONTENTS_USER2;
-					ti.mFlags	|=TexInfo.FULLBRIGHT;
+//					ti.mFlags	|=TexInfo.FULLBRIGHT;
 					ti.mFlags	|=TexInfo.TRANS;
 				}
 				else if(tok.StartsWith("trigger") || tok.StartsWith("TRIGGER"))

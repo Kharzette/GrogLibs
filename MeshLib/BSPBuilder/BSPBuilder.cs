@@ -425,13 +425,21 @@ namespace BSPBuilder
 			DrawMaterials(mLMAnimVB, mLMAnimIB, mLMAnimVD, 68, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null);
 
 			//alphas
-//			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, 36, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, true, mAlphaSortPoints);
-//			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, 36, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, true, mMirrorSortPoints);
-//			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, 44, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints);
-//			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, 68, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints);
+#if false
+			//draw immediately for pix
+			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, 36, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, false, mAlphaSortPoints);
+			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, 36, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, false, mMirrorSortPoints);
+			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, 44, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints);
+			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, 68, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints);
+#else
+			//pix freaks out about the alpha sorting
+			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, 36, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, true, mAlphaSortPoints);
+			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, 36, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, true, mMirrorSortPoints);
+			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, 44, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints);
+			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, 68, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints);
 
-//			mAlphaPool.DrawAll(g, mMatLib, -mGameCam.CamPos);
-			
+			mAlphaPool.DrawAll(g, mMatLib, -mGameCam.CamPos);
+#endif		
 			if(mVB != null)
 			{
 				g.VertexDeclaration		=mVD;

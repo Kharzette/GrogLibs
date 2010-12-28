@@ -216,7 +216,7 @@ namespace BSPLib
 			ve[5]	=new VertexElement(0, 44, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 4);
 			ve[6]	=new VertexElement(0, 52, VertexElementFormat.Vector4,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 5);
+				VertexElementMethod.Default, VertexElementUsage.BlendIndices, 0);
 			mLMAnimVD	=new VertexDeclaration(gd, ve);
 			mLMAAnimVD	=new VertexDeclaration(gd, ve);
 
@@ -648,10 +648,6 @@ namespace BSPLib
 					{
 						continue;	//only interested in lightmapped
 					}
-					if(f.mLTypes[1] == 255)
-					{
-						continue;	//only interested in animated
-					}
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
@@ -817,9 +813,9 @@ namespace BSPLib
 					for(k=0;k < nverts;k++)
 					{
 						Vector4	styleIndex	=Vector4.Zero;
-						styleIndex.X	=f.mLTypes[1];
-						styleIndex.Y	=f.mLTypes[2];
-						styleIndex.Z	=f.mLTypes[3];
+						styleIndex.X	=f.mLTypes[0];
+						styleIndex.Y	=f.mLTypes[1];
+						styleIndex.Z	=f.mLTypes[2];
 						mLMAnimStyle.Add(styleIndex);
 					}
 				}
@@ -868,10 +864,6 @@ namespace BSPLib
 					if(f.mLightOfs == -1)
 					{
 						continue;	//only interested in lightmapped
-					}
-					if(f.mLTypes[1] == 255)
-					{
-						continue;	//only interested in animated
 					}
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
@@ -1038,9 +1030,9 @@ namespace BSPLib
 					for(k=0;k < nverts;k++)
 					{
 						Vector4	styleIndex	=Vector4.Zero;
-						styleIndex.X	=f.mLTypes[1];
-						styleIndex.Y	=f.mLTypes[2];
-						styleIndex.Z	=f.mLTypes[3];
+						styleIndex.X	=f.mLTypes[0];
+						styleIndex.Y	=f.mLTypes[1];
+						styleIndex.Z	=f.mLTypes[2];
 						styleIndex.W	=AlphaValue;
 						mLMAAnimStyle.Add(styleIndex);
 					}
@@ -1097,6 +1089,11 @@ namespace BSPLib
 					if(f.mLTypes[1] != 255)
 					{
 						continue;	//only interested in non animated
+					}
+
+					if(f.mLTypes[0] != 0)
+					{
+						continue;
 					}
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
@@ -1966,7 +1963,7 @@ namespace BSPLib
 			}
 
 			//animated lights ?
-			if(numStyles > 1)
+			if(numStyles > 1 || (numStyles == 1 && f.mLTypes[0] != 0))
 			{
 				Debug.Assert(tex.IsLightMapped());
 

@@ -240,22 +240,28 @@ VPosTex0Tex1Tex2Tex3Tex4Intensity LMAnimVertexShader(VPosTex0Tex1Tex2Tex3Tex4Sty
 	
 	output.StyleIntensity	=float4(-1, -1, -1, 1);
 	
+	float4	sidx	=input.StyleIndex;
+	
 	//look up style intensities
-	if(input.StyleIndex.x < 17)
+	if(sidx.x < 17)
 	{
-		output.StyleIntensity.x	=mAniIntensities[input.StyleIndex.x];		
+		output.StyleIntensity.x	=mAniIntensities[sidx.x];
 	}
 	
 	//next anim style if any
-	if(input.StyleIndex.y < 17)
+	if(sidx.y < 17)
 	{
-		output.StyleIntensity.y	=mAniIntensities[input.StyleIndex.y];
+		output.StyleIntensity.y	=mAniIntensities[sidx.y];
 	}
 	
-	if(input.StyleIndex.z < 17)
+	if(sidx.z < 17)
 	{
-		output.StyleIntensity.z	=mAniIntensities[input.StyleIndex.z];
+		output.StyleIntensity.z	=mAniIntensities[sidx.z];
 	}
+	
+	//for alpha if any
+	output.StyleIntensity.w	=sidx.w;
+	
 	return	output;
 }
 
