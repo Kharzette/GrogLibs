@@ -151,7 +151,7 @@ namespace BSPBuilder
 			mat.AddParameter("mTexSize",
 				EffectParameterClass.Vector,
 				EffectParameterType.Single,
-				"" + tex.Width + " " + tex.Height);
+				"" + (tex.Width * 2) + " " + (tex.Height * 2));
 
 			//set texture enabled
 			mat.AddParameter("mbTextureEnabled",

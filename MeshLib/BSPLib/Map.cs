@@ -1409,6 +1409,7 @@ namespace BSPLib
 			out Int32 []amatOffsets,
 			out Int32 []amatNumVerts,
 			out Int32 []amatNumTris,
+			out Vector3 []amatSortPoints,
 
 			//animated alpha lightmap stuff
 			out VertexBuffer lmaAnimVB,
@@ -1417,6 +1418,7 @@ namespace BSPLib
 			out Int32 []amatAnimOffsets,
 			out Int32 []amatAnimNumVerts,
 			out Int32 []amatAnimNumTris,
+			out Vector3 []amatAnimSortPoints,
 
 			out TexAtlas lightAtlas)
 		{
@@ -1439,8 +1441,8 @@ namespace BSPLib
 
 			mg.GetLMMaterialData(out matOffsets, out matNumVerts, out matNumTris);
 			mg.GetLMAnimMaterialData(out matAnimOffsets, out matAnimNumVerts, out matAnimNumTris);
-			mg.GetLMAMaterialData(out amatOffsets, out amatNumVerts, out amatNumTris);
-			mg.GetLMAAnimMaterialData(out amatAnimOffsets, out amatAnimNumVerts, out amatAnimNumTris);
+			mg.GetLMAMaterialData(out amatOffsets, out amatNumVerts, out amatNumTris, out amatSortPoints);
+			mg.GetLMAAnimMaterialData(out amatAnimOffsets, out amatAnimNumVerts, out amatAnimNumTris, out amatAnimSortPoints);
 		}
 
 
@@ -1461,7 +1463,7 @@ namespace BSPLib
 
 		public void BuildAlphaRenderData(GraphicsDevice g, out VertexBuffer vb,
 			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
-			out Int32 []matNumVerts, out Int32 []matNumTris)
+			out Int32 []matNumVerts, out Int32 []matNumTris, out Vector3 []matSortPoints)
 		{
 			//todo:fix
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
@@ -1470,7 +1472,7 @@ namespace BSPLib
 
 			mg.GetAlphaBuffers(out vb, out ib, out vd);
 
-			mg.GetAlphaMaterialData(out matOffsets, out matNumVerts, out matNumTris);
+			mg.GetAlphaMaterialData(out matOffsets, out matNumVerts, out matNumTris, out matSortPoints);
 		}
 
 
@@ -1491,7 +1493,7 @@ namespace BSPLib
 
 		public void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
 			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
-			out Int32 []matNumVerts, out Int32 []matNumTris)
+			out Int32 []matNumVerts, out Int32 []matNumTris, out Vector3 []matSortPoints)
 		{
 			//todo:fix
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
@@ -1500,7 +1502,7 @@ namespace BSPLib
 
 			mg.GetMirrorBuffers(out vb, out ib, out vd);
 
-			mg.GetMirrorMaterialData(out matOffsets, out matNumVerts, out matNumTris);
+			mg.GetMirrorMaterialData(out matOffsets, out matNumVerts, out matNumTris, out matSortPoints);
 		}
 
 

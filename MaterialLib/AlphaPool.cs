@@ -34,13 +34,17 @@ namespace MaterialLib
 			{
 				an.Draw(g, mlib);
 			}
+
+			//clear nodes when done
+			mAlphas.Clear();
 		}
 
 
 		void Sort(Vector3 eyePos)
 		{
 			AlphaNodeComparer	anc	=new AlphaNodeComparer(eyePos);
-			mAlphas.Sort();
+
+			mAlphas.Sort(anc);
 		}
 	}
 }

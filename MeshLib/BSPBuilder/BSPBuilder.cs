@@ -72,6 +72,9 @@ namespace BSPBuilder
 		Int32[]	mAlphaNumTris, mSkyNumTris, mFBNumTris, mMirrorNumTris;
 		Int32[]	mLMAMatNumTris, mLMAAnimMatNumTris;
 
+		//sort points for alphas
+		Vector3[] mLMASortPoints, mAlphaSortPoints, mMirrorSortPoints, mLMAAnimSortPoints;
+
 		//collision debuggery
 		Vector3				mStart, mEnd;
 		BasicEffect			mBFX;
@@ -397,7 +400,8 @@ namespace BSPBuilder
 
 
 		void DrawMaterials(VertexBuffer vb, IndexBuffer ib, VertexDeclaration vd,
-			int vbStride, Int32 []offsets, Int32 []numVerts, Int32 []numTris)
+			int vbStride, Int32 []offsets, Int32 []numVerts, Int32 []numTris,
+			bool bAlpha, Vector3 []sortPoints)
 		{
 			if(vb == null)
 			{
@@ -429,6 +433,15 @@ namespace BSPBuilder
 				}
 				if(!mMap.IsMaterialVisible(mDebugLeaf, idx))
 				{
+					idx++;
+					continue;
+				}
+
+				if(bAlpha)
+				{
+					mAlphaPool.StoreDraw(sortPoints[idx], mat.Value,
+						vb, ib, vd, vbStride, 0, 0, numVerts[idx],
+						offsets[idx], numTris[idx]);
 					idx++;
 					continue;
 				}
@@ -470,17 +483,19 @@ namespace BSPBuilder
 
 			GraphicsDevice.RenderState.DepthBufferEnable	=true;
 
-			DrawMaterials(mFBVB, mFBIB, mFBVD, 20, mFBMatOffsets, mFBNumVerts, mFBNumTris);
-			DrawMaterials(mVLitVB, mVLitIB, mVLitVD, 32, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris);
-			DrawMaterials(mSkyVB, mSkyIB, mSkyVD, 20, mSkyMatOffsets, mSkyNumVerts, mSkyNumTris);
-			DrawMaterials(mLMVB, mLMIB, mLMVD, 28, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris);
-			DrawMaterials(mLMAnimVB, mLMAnimIB, mLMAnimVD, 68, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris);
+			DrawMaterials(mFBVB, mFBIB, mFBVD, 20, mFBMatOffsets, mFBNumVerts, mFBNumTris, false, null);
+			DrawMaterials(mVLitVB, mVLitIB, mVLitVD, 32, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null);
+			DrawMaterials(mSkyVB, mSkyIB, mSkyVD, 20, mSkyMatOffsets, mSkyNumVerts, mSkyNumTris, false, null);
+			DrawMaterials(mLMVB, mLMIB, mLMVD, 28, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null);
+			DrawMaterials(mLMAnimVB, mLMAnimIB, mLMAnimVD, 68, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null);
 
 			//alphas
-			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, 36, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris);
-			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, 36, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris);
-			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, 44, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris);
-			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, 68, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris);
+			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, 36, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, true, mAlphaSortPoints);
+			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, 36, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, true, mMirrorSortPoints);
+			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, 44, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints);
+			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, 68, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints);
+
+			mAlphaPool.DrawAll(g, mMatLib, -mGameCam.CamPos);
 			
 			if(mVB != null)
 			{
@@ -927,12 +942,14 @@ namespace BSPBuilder
 						out mLMAMatOffsets,
 						out mLMAMatNumVerts,
 						out mLMAMatNumTris,
+						out mLMASortPoints,
 						out mLMAAnimVB,
 						out mLMAAnimIB,
 						out mLMAAnimVD,
 						out mLMAAnimMatOffsets,
 						out mLMAAnimMatNumVerts,
 						out mLMAAnimMatNumTris,
+						out mLMAAnimSortPoints,
 						out mLMapAtlas);
 
 					mMap.BuildVLitRenderData(g, out mVLitVB, out mVLitIB,
@@ -940,13 +957,13 @@ namespace BSPBuilder
 						out mVLitMatNumTris);
 
 					mMap.BuildAlphaRenderData(g, out mAlphaVB, out mAlphaIB, out mAlphaVD,
-						out mAlphaMatOffsets, out mAlphaNumVerts, out mAlphaNumTris);
+						out mAlphaMatOffsets, out mAlphaNumVerts, out mAlphaNumTris, out mAlphaSortPoints);
 
 					mMap.BuildFullBrightRenderData(g, out mFBVB, out mFBIB, out mFBVD,
 						out mFBMatOffsets, out mFBNumVerts, out mFBNumTris);
 
 					mMap.BuildMirrorRenderData(g, out mMirrorVB, out mMirrorIB, out mMirrorVD,
-						out mMirrorMatOffsets, out mMirrorNumVerts, out mMirrorNumTris);
+						out mMirrorMatOffsets, out mMirrorNumVerts, out mMirrorNumTris, out mMirrorSortPoints);
 
 					mMap.BuildSkyRenderData(g, out mSkyVB, out mSkyIB, out mSkyVD,
 						out mSkyMatOffsets, out mSkyNumVerts, out mSkyNumTris);

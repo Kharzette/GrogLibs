@@ -90,6 +90,7 @@ namespace BSPLib
 		List<Int32>		mLMAMaterialOffsets		=new List<Int32>();
 		List<Int32>		mLMAMaterialNumVerts	=new List<Int32>();
 		List<Int32>		mLMAMaterialNumTris		=new List<Int32>();
+		List<Vector3>	mLMAMaterialSortPoints	=new List<Vector3>();
 
 		//vert lit material stuff
 		List<Int32>		mVLitMaterialOffsets	=new List<Int32>();
@@ -97,9 +98,10 @@ namespace BSPLib
 		List<Int32>		mVLitMaterialNumTris	=new List<Int32>();
 
 		//alpha material stuff
-		List<Int32>		mAlphaMaterialOffsets	=new List<Int32>();
-		List<Int32>		mAlphaMaterialNumVerts	=new List<Int32>();
-		List<Int32>		mAlphaMaterialNumTris	=new List<Int32>();
+		List<Int32>		mAlphaMaterialOffsets		=new List<Int32>();
+		List<Int32>		mAlphaMaterialNumVerts		=new List<Int32>();
+		List<Int32>		mAlphaMaterialNumTris		=new List<Int32>();
+		List<Vector3>	mAlphaMaterialSortPoints	=new List<Vector3>();
 
 		//fullbright material stuff
 		List<Int32>		mFBMaterialOffsets	=new List<Int32>();
@@ -107,9 +109,10 @@ namespace BSPLib
 		List<Int32>		mFBMaterialNumTris	=new List<Int32>();
 
 		//mirror material stuff
-		List<Int32>		mMirrorMaterialOffsets	=new List<Int32>();
-		List<Int32>		mMirrorMaterialNumVerts	=new List<Int32>();
-		List<Int32>		mMirrorMaterialNumTris	=new List<Int32>();
+		List<Int32>		mMirrorMaterialOffsets		=new List<Int32>();
+		List<Int32>		mMirrorMaterialNumVerts		=new List<Int32>();
+		List<Int32>		mMirrorMaterialNumTris		=new List<Int32>();
+		List<Vector3>	mMirrorMaterialSortPoints	=new List<Vector3>();
 
 		//sky material stuff
 		List<Int32>		mSkyMaterialOffsets		=new List<Int32>();
@@ -125,6 +128,7 @@ namespace BSPLib
 		List<Int32>		mLMAAnimMaterialOffsets		=new List<Int32>();
 		List<Int32>		mLMAAnimMaterialNumVerts	=new List<Int32>();
 		List<Int32>		mLMAAnimMaterialNumTris		=new List<Int32>();
+		List<Vector3>	mLMAAnimMaterialSortPoints	=new List<Vector3>();
 
 		//computed lightmap atlas
 		TexAtlas	mLMAtlas;
@@ -270,11 +274,12 @@ namespace BSPLib
 
 
 		internal void GetLMAMaterialData(out Int32 []matOffsets, out Int32 []matNumVerts,
-										out Int32 []matNumTris)
+										 out Int32 []matNumTris, out Vector3 []matSortPoints)
 		{
-			matOffsets	=mLMAMaterialOffsets.ToArray();
-			matNumVerts	=mLMAMaterialNumVerts.ToArray();
-			matNumTris	=mLMAMaterialNumTris.ToArray();
+			matOffsets		=mLMAMaterialOffsets.ToArray();
+			matNumVerts		=mLMAMaterialNumVerts.ToArray();
+			matNumTris		=mLMAMaterialNumTris.ToArray();
+			matSortPoints	=mLMAMaterialSortPoints.ToArray();
 		}
 
 
@@ -297,20 +302,22 @@ namespace BSPLib
 
 
 		internal void GetAlphaMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
-											out Int32 []matNumTris)
+											out Int32 []matNumTris, out Vector3 []matSortPoints)
 		{
-			matOffsets	=mAlphaMaterialOffsets.ToArray();
-			matNumVerts	=mAlphaMaterialNumVerts.ToArray();
-			matNumTris	=mAlphaMaterialNumTris.ToArray();
+			matOffsets		=mAlphaMaterialOffsets.ToArray();
+			matNumVerts		=mAlphaMaterialNumVerts.ToArray();
+			matNumTris		=mAlphaMaterialNumTris.ToArray();
+			matSortPoints	=mAlphaMaterialSortPoints.ToArray();
 		}
 
 
 		internal void GetMirrorMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
-											out Int32 []matNumTris)
+											out Int32 []matNumTris, out Vector3 []matSortPoints)
 		{
-			matOffsets	=mMirrorMaterialOffsets.ToArray();
-			matNumVerts	=mMirrorMaterialNumVerts.ToArray();
-			matNumTris	=mMirrorMaterialNumTris.ToArray();
+			matOffsets		=mMirrorMaterialOffsets.ToArray();
+			matNumVerts		=mMirrorMaterialNumVerts.ToArray();
+			matNumTris		=mMirrorMaterialNumTris.ToArray();
+			matSortPoints	=mMirrorMaterialSortPoints.ToArray();
 		}
 
 
@@ -333,11 +340,12 @@ namespace BSPLib
 
 
 		internal void GetLMAAnimMaterialData(out Int32 []matOffsets, out Int32 []matNumVerts,
-											 out Int32 []matNumTris)
+											 out Int32 []matNumTris, out Vector3 []matSortPoints)
 		{
-			matOffsets	=mLMAAnimMaterialOffsets.ToArray();
-			matNumVerts	=mLMAAnimMaterialNumVerts.ToArray();
-			matNumTris	=mLMAAnimMaterialNumTris.ToArray();
+			matOffsets		=mLMAAnimMaterialOffsets.ToArray();
+			matNumVerts		=mLMAAnimMaterialNumVerts.ToArray();
+			matNumTris		=mLMAAnimMaterialNumTris.ToArray();
+			matSortPoints	=mLMAAnimMaterialSortPoints.ToArray();
 		}
 
 
@@ -829,7 +837,7 @@ namespace BSPLib
 			mLMAtlas.Finish();
 
 			ComputeIndexes(mLMAnimIndexes, mLMAnimMaterialOffsets,
-				mLMAnimMaterialNumTris, numFace, firstVert, numVert);
+				mLMAnimMaterialNumTris, numFace, firstVert, numVert, null, null);
 		}
 
 
@@ -1051,7 +1059,8 @@ namespace BSPLib
 			mLMAtlas.Finish();
 
 			ComputeIndexes(mLMAAnimIndexes, mLMAAnimMaterialOffsets,
-				mLMAAnimMaterialNumTris, numFace, firstVert, numVert);
+				mLMAAnimMaterialNumTris, numFace, firstVert, numVert,
+				verts, mLMAAnimMaterialSortPoints);
 		}
 
 
@@ -1068,7 +1077,8 @@ namespace BSPLib
 				int	numFaceVerts	=mLMVerts.Count;
 				int	numFaces		=0;
 
-				if(mat.Name.EndsWith("*LitAlpha"))
+				//skip all special materials
+				if(mat.Name.Contains("*"))
 				{
 					numFace.Add(numFaces);
 					mLMMaterialNumVerts.Add(mLMVerts.Count - numFaceVerts);
@@ -1171,7 +1181,8 @@ namespace BSPLib
 
 			mLMAtlas.Finish();
 
-			ComputeIndexes(mLMIndexes, mLMMaterialOffsets, mLMMaterialNumTris, numFace, firstVert, numVert);
+			ComputeIndexes(mLMIndexes, mLMMaterialOffsets, mLMMaterialNumTris,
+				numFace, firstVert, numVert, null, null);
 		}
 
 
@@ -1291,7 +1302,8 @@ namespace BSPLib
 
 			mLMAtlas.Finish();
 
-			ComputeIndexes(mLMAIndexes, mLMAMaterialOffsets, mLMAMaterialNumTris, numFace, firstVert, numVert);
+			ComputeIndexes(mLMAIndexes, mLMAMaterialOffsets, mLMAMaterialNumTris,
+				numFace, firstVert, numVert, verts, mLMAMaterialSortPoints);
 		}
 
 
@@ -1369,7 +1381,7 @@ namespace BSPLib
 			}
 
 			ComputeIndexes(mVLitIndexes, mVLitMaterialOffsets,
-				mVLitMaterialNumTris, numFace, firstVert, numVert);
+				mVLitMaterialNumTris, numFace, firstVert, numVert, null, null);
 		}
 
 
@@ -1444,7 +1456,8 @@ namespace BSPLib
 			}
 
 			ComputeIndexes(mMirrorIndexes, mMirrorMaterialOffsets,
-				mMirrorMaterialNumTris, numFace, firstVert, numVert);
+				mMirrorMaterialNumTris, numFace, firstVert,
+				numVert, verts, mMirrorMaterialSortPoints);
 		}
 
 
@@ -1519,7 +1532,8 @@ namespace BSPLib
 			}
 
 			ComputeIndexes(mAlphaIndexes, mAlphaMaterialOffsets,
-				mAlphaMaterialNumTris, numFace, firstVert, numVert);
+				mAlphaMaterialNumTris, numFace, firstVert,
+				numVert, verts, mAlphaMaterialSortPoints);
 		}
 
 
@@ -1594,7 +1608,7 @@ namespace BSPLib
 			}
 
 			ComputeIndexes(mFBIndexes, mFBMaterialOffsets,
-				mFBMaterialNumTris, numFace, firstVert, numVert);
+				mFBMaterialNumTris, numFace, firstVert, numVert, null, null);
 		}
 
 
@@ -1669,12 +1683,13 @@ namespace BSPLib
 			}
 
 			ComputeIndexes(mSkyIndexes, mSkyMaterialOffsets,
-				mSkyMaterialNumTris, numFace, firstVert, numVert);
+				mSkyMaterialNumTris, numFace, firstVert, numVert, null, null);
 		}
 
 
-		void ComputeIndexes(List<int> inds, List<int> matOffsets, List<int> matTris,
-						List<int> numFace, List<int> firstVert, List<int> numVert)
+		void ComputeIndexes(List<int> inds, List<int> matOffsets,
+			List<int> matTris, List<int> numFace, List<int> firstVert,
+			List<int> numVert, Vector3 []verts, List<Vector3> sortPoints)
 		{
 			int	faceOfs	=0;
 			for(int j=0;j < mMaterialNames.Count;j++)
@@ -1682,6 +1697,35 @@ namespace BSPLib
 				int	cnt	=inds.Count;
 
 				matOffsets.Add(cnt);
+
+				if(sortPoints != null)
+				{
+					double	X	=0.0;
+					double	Y	=0.0;
+					double	Z	=0.0;
+
+					//compute sort point
+					int	numAvg	=0;
+					for(int i=faceOfs;i < (numFace[j] + faceOfs);i++)
+					{
+						int		nverts	=numVert[i];
+						int		fvert	=firstVert[i];
+						for(int k=0;k < nverts;k++)
+						{
+							X	+=verts[k].X;
+							Y	+=verts[k].Y;
+							Z	+=verts[k].Z;
+
+							numAvg++;
+						}
+					}
+
+					X	/=numAvg;
+					Y	/=numAvg;
+					Z	/=numAvg;
+
+					sortPoints.Add(new Vector3((float)X, (float)Y, (float)Z));
+				}
 
 				for(int i=faceOfs;i < (numFace[j] + faceOfs);i++)
 				{

@@ -337,6 +337,21 @@ float4 FullBrightPixelShader(VTex0 input) : COLOR0
 }
 
 
+float4 FullDarkPixelShader(VTex0 input) : COLOR0
+{
+	float4	color;
+	
+	float2	tex0	=input.TexCoord0;
+	
+	tex0.x	/=mTexSize.x;
+	tex0.y	/=mTexSize.y;
+	
+	color	=tex2D(TextureSampler, tex0);
+	
+	return	color * float4(0.01, 0.01, 0.01, 1.0);
+}
+
+
 float4 LMAnimPixelShader(VTex0Tex1Tex2Tex3Tex4Intensity input) : COLOR0
 {
 	float3	color;
@@ -463,6 +478,15 @@ technique FullBright
 	{
 		VertexShader = compile vs_2_0 FullBrightVertexShader();
 		PixelShader = compile ps_2_0 FullBrightPixelShader();
+	}
+}
+
+technique FullDark
+{
+	pass Pass1
+	{
+		VertexShader = compile vs_2_0 FullBrightVertexShader();
+		PixelShader = compile ps_2_0 FullDarkPixelShader();
 	}
 }
 

@@ -89,6 +89,12 @@ namespace BSPLib
 					else if(tokens[1] == "material")
 					{
 						tex	=tokens[3];
+						if(tex.StartsWith("DEV/DEV_GLASS")
+							|| tex.StartsWith("GLASS/"))
+						{
+							mFlags		|=SURF_TRANS66;
+							ti.mFlags	|=TexInfo.TRANS;
+						}
 						if(tex == "TOOLS/TOOLSAREAPORTAL")
 						{
 							ret	|=Contents.CONTENTS_AREAPORTAL;
