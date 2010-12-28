@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class GFXPlane
+	public class GFXPlane : IReadWriteable
 	{
 		public Vector3	mNormal;
 		public float	mDist;

@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class GFXBNode
+	public class GFXBNode : IReadWriteable
 	{
 		Int32	[]mChildren	=new Int32[2];
 		Int32	mPlaneNum;

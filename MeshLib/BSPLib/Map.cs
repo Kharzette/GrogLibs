@@ -44,12 +44,10 @@ namespace BSPLib
 		//gfx data
 		GFXModel		[]mGFXModels;
 		GFXNode			[]mGFXNodes;
-		GFXBNode		[]mGFXBNodes;
 		GFXLeaf			[]mGFXLeafs;
 		GFXCluster		[]mGFXClusters;
 		GFXArea			[]mGFXAreas;
 		GFXAreaPortal	[]mGFXAreaPortals;
-		GFXPortal		[]mGFXPortals;
 		GFXPlane		[]mGFXPlanes;
 		GFXFace			[]mGFXFaces;
 		Int32			[]mGFXLeafFaces;
@@ -588,8 +586,6 @@ namespace BSPLib
 				return	false;
 			}
 
-			GBSPChunk	Chunk	=new GBSPChunk();
-
 			string	VisFile	=fileName;
 
 			FaceFixer	ff	=new FaceFixer();
@@ -614,81 +610,36 @@ namespace BSPLib
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
-			GBSPHeader	header	=new GBSPHeader();
-			header.mTAG			="GBSP";
-			header.mVersion		=GBSPChunk.VERSION;
-			header.mBSPTime		=DateTime.Now;
+			GFXHeader	header	=new GFXHeader();
 
-			GBSPChunk	chunk	=new GBSPChunk();
-			chunk.mType			=GBSPChunk.HEADER;
-			chunk.mElements		=1;
-			chunk.Write(bw, header);
+			header.mTag				=0x47425350;	//"GBSP"
+			header.mbHasLight		=false;
+			header.mbHasVis			=false;
+			header.mbHasMaterialVis	=false;
+			header.Write(bw);
 
-			//GHook.Printf("Saving GFX Model Data\n");
-			if(!SaveGFXModelDataFromList(bw))
-			{
-				Map.Print("ConvertGBSPToFile:  SaveGFXModelData failed.\n");
-				return	false;
-			}
-			if(!SaveGFXNodes(bw, nc))
-			{
-				return	false;
-			}
-			if(!SaveGFXLeafs(bw, nc))
-			{
-				Map.Print("ConvertGBSPToFile:  SaveGFXLeafs failed.\n");
-				return	false;
-			}
-			if(!SaveEmptyGFXClusters(bw, nc))
-			{
-				return	false;
-			}
+			SaveGFXModelDataFromList(bw);
+			SaveGFXNodes(bw, nc);
+			SaveGFXLeafs(bw, nc);
+			SaveEmptyGFXClusters(bw, nc);
 
 			//set gfx area stuff from lists
 			mGFXAreas		=mAreas.ToArray();
 			mGFXAreaPortals	=mAreaPorts.ToArray();
 
-			if(!SaveGFXAreasAndPortals(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXLeafSides(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXFaces(bw, nc))
-			{
-				return	false;
-			}
+			SaveGFXAreasAndPortals(bw);
+			SaveGFXLeafSides(bw);
+			SaveGFXFaces(bw, nc);
 
 			mGFXPlanes	=mPlanePool.GetGFXArray();
 
-			if(!SaveVisdGFXPlanes(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXVerts(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXVertIndexList(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXTexInfos(bw))
-			{
-				return	false;
-			}
+			SaveGFXPlanes(bw);
+			SaveGFXVerts(bw);
+			SaveGFXVertIndexes(bw);
+			mTIPool.Write(bw);
 
-			if(!SaveGFXEntDataList(bw))
-			{
-				return	false;
-			}
+			SaveGFXEntDataList(bw);
 			
-			Chunk.mType		=GBSPChunk.END;
-			Chunk.mElements	=0;
-			Chunk.Write(bw);
-
 			bw.Close();
 			file.Close();
 
@@ -719,7 +670,6 @@ namespace BSPLib
 		{
 			mGFXModels			=null;
 			mGFXNodes			=null;
-			mGFXBNodes			=null;
 			mGFXLeafs			=null;
 			mGFXClusters		=null;		// CHANGE: CLUSTER
 			mGFXAreas			=null;
@@ -734,7 +684,6 @@ namespace BSPLib
 			mGFXTexInfos		=null;
 			mGFXLightData		=null;
 			mGFXVisData			=null;
-			mGFXPortals			=null;
 			mGFXMaterialVisData	=null;
 		}
 
@@ -886,171 +835,70 @@ namespace BSPLib
 		}
 
 
-		public bool LoadGBSPFile(string fileName)
+		public GFXHeader LoadGBSPFile(string fileName)
 		{
 			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
 									FileMode.Open, FileAccess.Read);
 
 			if(file == null)
 			{
-				return	false;
+				return	null;
 			}
 
 			BinaryReader	br	=new BinaryReader(file);
 
-			UInt32		LastGoodChunkType	=0;
-			while(true)
-			{
-				GBSPChunk	chunk		=new GBSPChunk();
-				UInt32		chunkType	=0;
+			//read header
+			GFXHeader	header	=new GFXHeader();
+			header.Read(br);
 
-				object	obj	=chunk.Read(br, out chunkType);
-				if(obj == null)
-				{
-					Print("Chunk read failed.  Last good chunk type was " + LastGoodChunkType + "\n");
-					br.Close();
-					file.Close();
-					return	false;
-				}
-				switch(chunkType)
-				{
-					case GBSPChunk.HEADER:
-					{
-						GBSPHeader	head	=obj as GBSPHeader;
-						if(head.mTAG != "GBSP")
-						{
-							br.Close();
-							file.Close();
-							return	false;
-						}
-						if(head.mVersion != GBSPChunk.VERSION)
-						{
-							br.Close();
-							file.Close();
-							return	false;
-						}
-						break;
-					}
-					case GBSPChunk.MODELS:
-					{
-						mGFXModels	=obj as GFXModel[];
-						break;
-					}
-					case GBSPChunk.NODES:
-					{
-						mGFXNodes	=obj as GFXNode[];
-						break;
-					}
-					case GBSPChunk.BNODES:
-					{
-						mGFXBNodes	=obj as GFXBNode[];
-						break;
-					}
-					case GBSPChunk.LEAFS:
-					{
-						mGFXLeafs	=obj as GFXLeaf[];
-						break;
-					}
-					case GBSPChunk.CLUSTERS:
-					{
-						mGFXClusters	=obj as GFXCluster[];
-						break;
-					}
-					case GBSPChunk.AREAS:
-					{
-						mGFXAreas	=obj as GFXArea[];
-						break;
-					}
-					case GBSPChunk.AREA_PORTALS:
-					{
-						mGFXAreaPortals	=obj as GFXAreaPortal[];
-						break;
-					}
-					case GBSPChunk.PORTALS:
-					{
-						mGFXPortals	=obj as GFXPortal[];
-						break;
-					}
-					case GBSPChunk.PLANES:
-					{
-						mGFXPlanes	=obj as GFXPlane[];
-						break;
-					}
-					case GBSPChunk.FACES:
-					{
-						mGFXFaces	=obj as GFXFace[];
-						break;
-					}
-					case GBSPChunk.LEAF_FACES:
-					{
-						mGFXLeafFaces	=obj as Int32[];
-						break;
-					}
-					case GBSPChunk.LEAF_SIDES:
-					{
-						mGFXLeafSides	=obj as GFXLeafSide[];
-						break;
-					}
-					case GBSPChunk.VERTS:
-					{
-						mGFXVerts	=obj as Vector3[];
-						break;
-					}
-					case GBSPChunk.VERT_INDEX:
-					{
-						mGFXVertIndexes	=obj as Int32[];
-						break;
-					}
-					case GBSPChunk.RGB_VERTS:
-					{
-						mGFXRGBVerts	=obj as Vector3[];
-						break;
-					}
-					case GBSPChunk.TEXINFO:
-					{
-						mGFXTexInfos	=obj as GFXTexInfo[];
-						break;
-					}
-					case GBSPChunk.ENTDATA:
-					{
-						mGFXEntities	=obj as MapEntity[];
-						break;
-					}
-					case GBSPChunk.LIGHTDATA:
-					{
-						mGFXLightData	=obj as byte[];
-						break;
-					}
-					case GBSPChunk.VISDATA:
-					{
-						mGFXVisData	=obj as byte[];
-						break;
-					}
-					case GBSPChunk.SKYDATA:
-					{
-						break;
-					}
-					case GBSPChunk.MATERIALVISDATA:
-					{
-						mGFXMaterialVisData	=obj as byte[];
-						break;
-					}
-					case GBSPChunk.END:
-					{
-						break;
-					}
-					default:
-					{
-						br.Close();
-						file.Close();
-						return	false;
-					}
-				}
-				if(chunkType == GBSPChunk.END)
-				{
-					break;
-				}
-				LastGoodChunkType	=chunkType;
+			if(header.mTag != 0x47425350)	//"GBSP"
+			{
+				return	null;
+			}
+
+			//read regular bsp crap
+			mGFXModels		=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXModel>(count); }) as GFXModel[];
+			mGFXNodes		=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXNode>(count); }) as GFXNode[];
+			mGFXLeafs		=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXLeaf>(count); }) as GFXLeaf[];
+
+			LoadGFXLeafFaces(br);
+
+			mGFXClusters	=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXCluster>(count); }) as GFXCluster[];
+			mGFXAreas		=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXArea>(count); }) as GFXArea[];
+			mGFXAreaPortals	=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXAreaPortal>(count); }) as GFXAreaPortal[];
+			mGFXLeafSides	=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXLeafSide>(count); }) as GFXLeafSide[];
+			mGFXFaces		=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXFace>(count); }) as GFXFace[];
+			mGFXPlanes		=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXPlane>(count); }) as GFXPlane[];
+
+			LoadGFXVerts(br);
+			LoadGFXVertIndexes(br);
+
+			mGFXTexInfos	=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXTexInfo>(count); }) as GFXTexInfo[];
+			mGFXEntities	=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<MapEntity>(count); }) as MapEntity[];
+
+			if(header.mbHasVis)
+			{
+				LoadGFXVisData(br);
+			}
+			if(header.mbHasMaterialVis)
+			{
+				LoadGFXMaterialVisData(br);
+			}
+			if(header.mbHasLight)
+			{
+				LoadGFXRGBVerts(br);
+				LoadGFXLightData(br);
 			}
 
 			br.Close();
@@ -1080,7 +928,7 @@ namespace BSPLib
 
 			Print("Load complete\n");
 
-			return	true;
+			return	header;
 		}
 
 

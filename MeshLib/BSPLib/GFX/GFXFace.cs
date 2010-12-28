@@ -6,7 +6,7 @@ using System.Text;
 
 namespace BSPLib
 {
-	public class GFXFace
+	public class GFXFace : IReadWriteable
 	{
 		public Int32	mFirstVert;
 		public Int32	mNumVerts;

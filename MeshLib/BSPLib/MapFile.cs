@@ -3,677 +3,416 @@ using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Text;
+using Microsoft.Xna.Framework;
+
 
 namespace BSPLib
 {
 	public partial class Map
 	{
-		bool SaveTextureNames(BinaryWriter bw)
+		public delegate IReadWriteable[] CreateRWArray(Int32 count);
+
+		void SaveArray(IReadWriteable []arr, BinaryWriter bw)
 		{
-			if(mTexNames.Count <= 0)
+			bw.Write(arr.Length);
+			foreach(IReadWriteable obj in arr)
 			{
-				return	true;
+				obj.Write(bw);
 			}
-			GBSPChunk	Chunk	=new GBSPChunk();;
-			Chunk.mType			=GBSPChunk.TEXTURES;
-			Chunk.mElements		=mTexNames.Count;
-
-			Chunk.Write(bw);
-
-			foreach(string tex in mTexNames)
-			{
-				bw.Write(tex);
-			}
-			return	true;
 		}
 
 
-		bool LoadTextureNames(BinaryReader br)
+		object[] LoadArray(BinaryReader br, CreateRWArray crwa)
 		{
-			Int32	cType	=br.ReadInt32();
-			Debug.Assert(cType == GBSPChunk.TEXTURES);
+			int	count	=br.ReadInt32();
 
-			Int32	numEl	=br.ReadInt32();
-			for(int i=0;i < numEl;i++)
+			IReadWriteable	[]arr	=crwa(count);
+
+			for(int i=0;i < count;i++)
 			{
-				string	tex	=br.ReadString();
-				mTexNames.Add(tex);
+				arr[i].Read(br);
 			}
-			return	true;
+			return	arr;
 		}
 
 
-		bool SaveGFXTexInfos(BinaryWriter bw)
+		void SaveGFXEntDataList(BinaryWriter bw)
 		{
-			if(mTIPool.mTexInfos.Count <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();;
-
-			Chunk.mType		=GBSPChunk.TEXINFO;
-			Chunk.mElements	=mTIPool.mTexInfos.Count;
-
-			Chunk.Write(bw);
-
-			foreach(TexInfo tex in mTIPool.mTexInfos)
-			{
-				GFXTexInfo	gtex	=new GFXTexInfo();
-
-				gtex.mAlpha				=tex.mAlpha;
-				gtex.mDrawScale[0]		=tex.mDrawScaleU;
-				gtex.mDrawScale[1]		=tex.mDrawScaleV;
-				gtex.mFaceLight			=tex.mFaceLight;
-				gtex.mFlags				=tex.mFlags;
-				gtex.mMipMapBias		=1.0f;	//is this right?
-				gtex.mReflectiveScale	=tex.mReflectiveScale;
-				gtex.mShift[0]			=tex.mShiftU;
-				gtex.mShift[1]			=tex.mShiftV;
-				gtex.mMaterial			=tex.mMaterial;
-				gtex.mVecs[0]			=tex.mUVec;
-				gtex.mVecs[1]			=tex.mVVec;
-
-				gtex.Write(bw);
-			}
-			return	true;
-		}
-
-
-		bool SaveGFXEntDataList(BinaryWriter bw)
-		{
-			if(mEntities.Count <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.ENTDATA;
-			Chunk.mElements =mEntities.Count;
-
-			Chunk.Write(bw);
-
+			bw.Write(mEntities.Count);
 			foreach(MapEntity me in mEntities)
 			{
 				me.Write(bw);
 			}
-			return	true;
+		}
+
+		ArrayType []InitArray<ArrayType>(int count) where ArrayType : new()
+		{
+			ArrayType	[]ret	=new ArrayType[count];
+			for(int i=0;i < count;i++)
+			{
+				ret[i]	=new ArrayType();
+			}
+			return	ret;
 		}
 
 
-		bool SaveGFXEntData(BinaryWriter bw)
+		void SaveGFXEntData(BinaryWriter bw)
 		{
-			if(mGFXEntities == null || mGFXEntities.Length <= 0)			
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.ENTDATA;
-			Chunk.mElements =mGFXEntities.Length;
-
-			Chunk.Write(bw);
-
+			bw.Write(mGFXEntities.Length);
 			foreach(MapEntity me in mGFXEntities)
 			{
 				me.Write(bw);
 			}
-			return	true;
 		}
 
 
-		bool SaveGFXLightData(BinaryWriter bw)
+		void SaveGFXLightData(BinaryWriter bw)
 		{
-			if(mGFXLightData == null || mGFXLightData.Length <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.LIGHTDATA;
-			Chunk.mElements =mGFXLightData.Length;
-
-			Chunk.Write(bw, mGFXLightData);
-			return	true;
+			bw.Write(mGFXLightData.Length);
+			bw.Write(mGFXLightData, 0, mGFXLightData.Length);
 		}
 
 
-		bool SaveGFXVertIndexList(BinaryWriter bw)
+		void LoadGFXLightData(BinaryReader br)
 		{
-			if(mGFXVertIndexes == null || mGFXVertIndexes.Length <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.VERT_INDEX;
-			Chunk.mElements =mGFXVertIndexes.Length;
-
-			if(!Chunk.Write(bw, mGFXVertIndexes))
-			{
-				Print("SaveGFXvertIndexList:  There was an error saving the VertIndexList.\n");
-				return	false;
-			}
-			return	true;
+			int	count		=br.ReadInt32();
+			mGFXLightData	=br.ReadBytes(count);
 		}
 
 
-		bool SaveGFXVisData(BinaryWriter bw)
+		void SaveGFXVertIndexes(BinaryWriter bw)
 		{
-			if(mGFXVisData == null || mGFXVisData.Length <= 0)
+			bw.Write(mGFXVertIndexes.Length);
+			foreach(Int32 vi in mGFXVertIndexes)
 			{
-				return	true;
+				bw.Write(vi);
 			}
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.VISDATA;
-			Chunk.mElements =mGFXVisData.Length;
-
-			if(!Chunk.Write(bw, mGFXVisData))
-			{
-				Print("SaveGFXVisData:  There was an error saving the VertIndexList.\n");
-				return	false;
-			}
-			return	true;
 		}
 
 
-		bool SaveGFXMaterialVisData(BinaryWriter bw)
+		void LoadGFXVertIndexes(BinaryReader br)
 		{
-			if(mGFXMaterialVisData == null || mGFXMaterialVisData.Length <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();
+			int	count	=br.ReadInt32();
 
-			Chunk.mType		=GBSPChunk.MATERIALVISDATA;
-			Chunk.mElements =mGFXMaterialVisData.Length;
-
-			if(!Chunk.Write(bw, mGFXMaterialVisData))
+			mGFXVertIndexes	=new Int32[count];
+			for(int i=0;i < count;i++)
 			{
-				Print("SaveGFXMaterialVisData:  There was an error saving the VertIndexList.\n");
-				return	false;
+				int	idx	=br.ReadInt32();
+
+				mGFXVertIndexes[i]	=idx;
 			}
-			return	true;
 		}
 
 
-		bool SaveVisdGFXPlanes(BinaryWriter bw)
+		void SaveGFXVisData(BinaryWriter bw)
 		{
-			if(mGFXPlanes == null || mGFXPlanes.Length <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();
+			bw.Write(mGFXVisData.Length);
+			bw.Write(mGFXVisData, 0, mGFXVisData.Length);
+		}
 
-			Chunk.mType		=GBSPChunk.PLANES;
-			Chunk.mElements	=mGFXPlanes.Length;
 
-			Chunk.Write(bw);
+		void LoadGFXVisData(BinaryReader br)
+		{
+			int	count	=br.ReadInt32();
+			mGFXVisData	=br.ReadBytes(count);
+		}
 
+
+		void SaveGFXMaterialVisData(BinaryWriter bw)
+		{
+			bw.Write(mGFXMaterialVisData.Length);
+			bw.Write(mGFXMaterialVisData, 0, mGFXMaterialVisData.Length);
+		}
+
+
+		void LoadGFXMaterialVisData(BinaryReader br)
+		{
+			int	count			=br.ReadInt32();
+			mGFXMaterialVisData	=br.ReadBytes(count);
+		}
+
+
+		void SaveGFXPlanes(BinaryWriter bw)
+		{
+			bw.Write(mGFXPlanes.Length);
 			foreach(GFXPlane gp in mGFXPlanes)
 			{
 				gp.Write(bw);
 			}
-			return	true;
 		}
 
 
-		bool SaveVisdGFXFaces(BinaryWriter bw)
+		void SaveVisdGFXFaces(BinaryWriter bw)
 		{
-			if(mGFXFaces == null || mGFXFaces.Length <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.FACES;
-			Chunk.mElements =mGFXFaces.Length;
-
-			Chunk.Write(bw);
-
+			bw.Write(mGFXFaces.Length);
 			foreach(GFXFace f in mGFXFaces)
 			{
 				f.Write(bw);
 			}
-			return	true;
 		}
 
 
-		bool SaveGFXPortals(BinaryWriter bw)
+		void SaveGFXAreasAndPortals(BinaryWriter bw)
 		{
-			if(mGFXPortals == null || mGFXPortals.Length <= 0)
+			bw.Write(mGFXAreas.Length);
+			foreach(GFXArea a in mGFXAreas)
 			{
-				return	true;
+				a.Write(bw);
 			}
-			GBSPChunk	Chunk	=new GBSPChunk();
 
-			Chunk.mType		=GBSPChunk.PORTALS;
-			Chunk.mElements =mGFXPortals.Length;
-
-			Chunk.Write(bw);
-
-			foreach(GFXPortal port in mGFXPortals)
+			bw.Write(mGFXAreaPortals.Length);
+			foreach(GFXAreaPortal ap in mGFXAreaPortals)
 			{
-				port.Write(bw);
+				ap.Write(bw);
 			}
-			return	true;
 		}
 
 
-		bool SaveGFXBNodes(BinaryWriter bw)
+		void SaveGFXClusters(BinaryWriter bw)
 		{
-			if(mGFXBNodes == null || mGFXBNodes.Length <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.BNODES;
-			Chunk.mElements =mGFXBNodes.Length;
-
-			Chunk.Write(bw);
-
-			foreach(GFXBNode gbn in mGFXBNodes)
-			{
-				gbn.Write(bw);
-			}
-			return	true;
-		}
-
-
-		bool SaveGFXAreasAndPortals(BinaryWriter bw)
-		{
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			if(mGFXAreas != null && mGFXAreas.Length > 0)
-			{
-				//
-				// Save the areas first
-				//
-				Chunk.mType		=GBSPChunk.AREAS;
-				Chunk.mElements =mGFXAreas.Length;
-
-				Chunk.Write(bw, mGFXAreas);
-			}
-
-			if(mGFXAreaPortals != null && mGFXAreaPortals.Length > 0)
-			{
-				//
-				//	Then, save the areaportals
-				//
-				Chunk.mType		=GBSPChunk.AREA_PORTALS;
-				Chunk.mElements =mGFXAreaPortals.Length;
-
-				Chunk.Write(bw, mGFXAreaPortals);
-			}
-			return	true;
-		}
-
-
-		bool SaveGFXClusters(BinaryWriter bw)
-		{
-			if(mGFXClusters.Length <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();
-			Chunk.mType			=GBSPChunk.CLUSTERS;
-			Chunk.mElements		=mGFXClusters.Length;
-
-			Chunk.Write(bw);
-
+			bw.Write(mGFXClusters.Length);
 			foreach(GFXCluster clust in mGFXClusters)
 			{
 				clust.Write(bw);
 			}
-			return	true;
 		}
 
 
-		bool SaveVisdGFXClusters(BinaryWriter bw)
+		void SaveVisdGFXClusters(BinaryWriter bw)
 		{
-			if(mGFXClusters == null || mGFXClusters.Length <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk		=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.CLUSTERS;
-			Chunk.mElements =mGFXClusters.Length;
-
-			Chunk.Write(bw);
-
+			bw.Write(mGFXClusters.Length);
 			foreach(GFXCluster gc in mGFXClusters)
 			{
 				gc.Write(bw);
 			}
-			return	true;
 		}
 
 
-		bool SaveVisdGFXLeafs(BinaryWriter bw)
+		void SaveVisdGFXLeafs(BinaryWriter bw)
 		{
-			if(mGFXLeafs == null || mGFXLeafs.Length <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.LEAFS;
-			Chunk.mElements	=mGFXLeafs.Length;
-
-			Chunk.Write(bw);
-
+			bw.Write(mGFXLeafs.Length);
 			foreach(GFXLeaf leaf in mGFXLeafs)
 			{
 				leaf.Write(bw);
 			}
-			return	true;
 		}
 
 
-		bool SaveGFXLeafs(BinaryWriter bw, NodeCounter nc)
+		void SaveGFXLeafs(BinaryWriter bw, NodeCounter nc)
 		{
-			if(nc.mNumGFXLeafs <= 0)
-			{
-				return	true;
-			}
-			Int32		i;
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.LEAFS;
-			Chunk.mElements	=nc.mNumGFXLeafs;
-
-			Chunk.Write(bw);
+			bw.Write(nc.mNumGFXLeafs);
 
 			int	TotalLeafSize	=0;
 
 			List<Int32>	gfxLeafFaces	=new List<Int32>();
 
-			for(i=0;i < mModels.Count;i++)
+			foreach(GBSPModel mod in mModels)
 			{
 				//Save all the leafs for this model
-				if(!mModels[i].SaveGFXLeafs_r(bw, gfxLeafFaces, ref TotalLeafSize))
+				if(!mod.SaveGFXLeafs_r(bw, gfxLeafFaces, ref TotalLeafSize))
 				{
 					Map.Print("SaveGFXLeafs:  SaveGFXLeafs_r failed.\n");
-					return	false;
+					return;
 				}
 			}
 
 			mGFXLeafFaces	=gfxLeafFaces.ToArray();
 
-			//Save gfx leaf faces here...
-			Chunk.mType		=GBSPChunk.LEAF_FACES;
-			Chunk.mElements =nc.mNumGFXLeafFaces;
-
-			Chunk.Write(bw, mGFXLeafFaces);
-
-			return	true;
+			bw.Write(nc.mNumGFXLeafFaces);
+			foreach(Int32 leafFace in mGFXLeafFaces)
+			{
+				bw.Write(leafFace);
+			}
 		}
 		
 		
-		bool SaveGFXLeafs(BinaryWriter bw)
+		void LoadGFXLeafFaces(BinaryReader br)
 		{
-			if(mGFXLeafs.Length <= 0)
+			int	count	=br.ReadInt32();
+
+			mGFXLeafFaces	=new Int32[count];
+			for(int i=0;i < count;i++)
 			{
-				return	true;
+				Int32	lf	=br.ReadInt32();
+				mGFXLeafFaces[i]	=lf;
 			}
-			GBSPChunk	Chunk	=new GBSPChunk();
+		}
 
-			Chunk.mType		=GBSPChunk.LEAFS;
-			Chunk.mElements	=mGFXLeafs.Length;
 
-			Chunk.Write(bw);
-
+		void SaveGFXLeafs(BinaryWriter bw)
+		{
+			bw.Write(mGFXLeafs.Length);
 			foreach(GFXLeaf leaf in mGFXLeafs)
 			{
 				leaf.Write(bw);
 			}
-			return	true;
 		}
 
 
-		bool SaveVisdGFXLeafFacesAndSides(BinaryWriter bw)
+		void SaveVisdGFXLeafFaces(BinaryWriter bw)
 		{
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			if(mGFXLeafFaces.Length > 0)
+			bw.Write(mGFXLeafFaces.Length);
+			foreach(Int32 lf in mGFXLeafFaces)
 			{
-				Chunk.mType		=GBSPChunk.LEAF_FACES;
-				Chunk.mElements	=mGFXLeafFaces.Length;
-				Chunk.Write(bw, mGFXLeafFaces);
+				bw.Write(lf);
 			}
-
-			if(mGFXLeafSides.Length > 0)
-			{
-				Chunk.mType		=GBSPChunk.LEAF_SIDES;
-				Chunk.mElements	=mGFXLeafSides.Length;
-				Chunk.Write(bw, mGFXLeafSides);
-			}
-
-			return	true;
 		}
 
 
-		bool SaveVisdGFXNodes(BinaryWriter bw)
+		void SaveVisdGFXLeafSides(BinaryWriter bw)
 		{
-			if(mGFXNodes == null || mGFXNodes.Length <= 0)
+			bw.Write(mGFXLeafSides.Length);
+			foreach(GFXLeafSide ls in mGFXLeafSides)
 			{
-				return	true;
+				ls.Write(bw);
 			}
-			GBSPChunk	Chunk	=new GBSPChunk();
+		}
 
-			Chunk.mType		=GBSPChunk.NODES;
-			Chunk.mElements	=mGFXNodes.Length;
 
-			Chunk.Write(bw);
-
+		void SaveVisdGFXNodes(BinaryWriter bw)
+		{
+			bw.Write(mGFXNodes.Length);
 			foreach(GFXNode gn in mGFXNodes)
 			{
 				gn.Write(bw);
 			}
-			return	true;
 		}
 
 
-		bool SaveVisdGFXTexInfos(BinaryWriter bw)
+		void SaveGFXTexInfos(BinaryWriter bw)
 		{
-			if(mGFXTexInfos == null || mGFXTexInfos.Length <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();;
-
-			Chunk.mType		=GBSPChunk.TEXINFO;
-			Chunk.mElements	=mGFXTexInfos.Length;
-
-			Chunk.Write(bw);
-
+			bw.Write(mGFXTexInfos.Length);
 			foreach(GFXTexInfo tex in mGFXTexInfos)
 			{
 				tex.Write(bw);
 			}
-			return	true;
 		}
 
 
-		bool SaveGFXModelDataFromList(BinaryWriter bw)
+		void SaveGFXModelDataFromList(BinaryWriter bw)
 		{
-			if(mModels.Count <= 0)
+			bw.Write(mModels.Count);
+			foreach(GBSPModel mod in mModels)
 			{
-				return	true;
-			}
-			Int32		i;
-			GBSPChunk	Chunk	=new GBSPChunk();
-			GFXModel	GModel	=new GFXModel();
-
-			Chunk.mType		=GBSPChunk.MODELS;
-			Chunk.mElements	=mModels.Count;
-
-			Chunk.Write(bw);
-
-			for(i=0;i < mModels.Count;i++)
-			{
-				mModels[i].ConvertToGFXAndSave(bw);
+				mod.ConvertToGFXAndSave(bw);
 			}			
-			return	true;	
 		}
 
 
-		bool SaveGFXModelData(BinaryWriter bw)
+		void SaveGFXModelData(BinaryWriter bw)
 		{
-			if(mGFXModels == null || mGFXModels.Length <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.MODELS;
-			Chunk.mElements	=mGFXModels.Length;
-
-			Chunk.Write(bw);
-
+			bw.Write(mGFXModels.Length);
 			foreach(GFXModel gmod in mGFXModels)
 			{
 				gmod.Write(bw);
 			}
-			
-			return	true;	
 		}
 
 
-		bool SaveGFXLeafSides(BinaryWriter bw)
+		void SaveGFXLeafSides(BinaryWriter bw)
 		{
-			if(mGFXLeafSides.Length <= 0)
+			bw.Write(mGFXLeafSides.Length);
+			foreach(GFXLeafSide ls in mGFXLeafSides)
 			{
-				return	true;
+				ls.Write(bw);
 			}
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.LEAF_SIDES;
-			Chunk.mElements =mGFXLeafSides.Length;
-
-			if(!Chunk.Write(bw, mGFXLeafSides))
-			{
-				Print("There was an error writing the verts.\n");
-				return	false;
-			}
-			return	true;
 		}
 
 
-		bool SaveGFXNodes(BinaryWriter bw, NodeCounter nc)
+		void SaveGFXNodes(BinaryWriter bw, NodeCounter nc)
 		{
-			if(nc.mNumGFXNodes <= 0)
+			bw.Write(nc.mNumGFXNodes);			
+			foreach(GBSPModel mod in mModels)
 			{
-				return	true;
-			}
-			Int32		i;
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.NODES;
-			Chunk.mElements	=nc.mNumGFXNodes;
-
-			Chunk.Write(bw);
-			
-			for(i=0;i < mModels.Count; i++)
-			{
-				if(!mModels[i].SaveGFXNodes_r(bw))
+				if(!mod.SaveGFXNodes_r(bw))
 				{
-					return	false;
+					return;
 				}
 			}
-			return	true;
 		}
 
 
-		bool SaveGFXFaces(BinaryWriter bw, NodeCounter nc)
+		void SaveGFXFaces(BinaryWriter bw, NodeCounter nc)
 		{
-			if(nc.mNumGFXFaces <= 0)
+			bw.Write(nc.mNumGFXFaces);
+
+			foreach(GBSPModel mod in mModels)
 			{
-				return	true;
+				mod.SaveGFXFaces_r(bw);
 			}
-			Int32		i;
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.FACES;
-			Chunk.mElements =nc.mNumGFXFaces;
-
-			Chunk.Write(bw);
-
-			for(i=0;i < mModels.Count;i++)
-			{
-				if(!mModels[i].SaveGFXFaces_r(bw))
-				{
-					return	false;
-				}
-			}
-			return	true;
 		}
 
 
-		bool SaveEmptyGFXClusters(BinaryWriter bw, NodeCounter nc)
+		void SaveEmptyGFXClusters(BinaryWriter bw, NodeCounter nc)
 		{
-			if(nc.mNumLeafClusters <= 0)
-			{
-				return	true;
-			}
-			Int32		i;
-			GBSPChunk	Chunk		=new GBSPChunk();
+			bw.Write(nc.mNumLeafClusters);
+
 			GFXCluster	GCluster	=new GFXCluster();
 
-			Chunk.mType		=GBSPChunk.CLUSTERS;
-			Chunk.mElements =nc.mNumLeafClusters;
-
-			Chunk.Write(bw);
-
-			for(i=0;i < nc.mNumLeafClusters;i++)
+			for(int i=0;i < nc.mNumLeafClusters;i++)
 			{
 				GCluster.mVisOfs	=-1;
 
 				GCluster.Write(bw);
 			}
-			return	true;
 		}
 
 
-		bool SaveGFXVerts(BinaryWriter bw)
+		void SaveGFXVerts(BinaryWriter bw)
 		{
-			if(mGFXVerts == null || mGFXVerts.Length <= 0)
+			bw.Write(mGFXVerts.Length);
+			foreach(Vector3 vert in mGFXVerts)
 			{
-				return	true;
+				bw.Write(vert.X);
+				bw.Write(vert.Y);
+				bw.Write(vert.Z);
 			}
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.VERTS;
-			Chunk.mElements =mGFXVerts.Length;
-
-			if(!Chunk.Write(bw, mGFXVerts))
-			{
-				Print("There was an error writing the verts.\n");
-				return	false;
-			}
-			return	true;
 		}
 
 
-		bool SaveGFXRGBVerts(BinaryWriter bw)
+		void LoadGFXVerts(BinaryReader br)
 		{
-			if(mGFXRGBVerts == null || mGFXRGBVerts.Length <= 0)
-			{
-				return	true;
-			}
-			GBSPChunk	Chunk	=new GBSPChunk();
+			int	count	=br.ReadInt32();
 
-			Chunk.mType		=GBSPChunk.RGB_VERTS;
-			Chunk.mElements =mGFXRGBVerts.Length;
-
-			if(!Chunk.Write(bw, mGFXRGBVerts))
+			mGFXVerts	=new Vector3[count];
+			for(int i=0;i < count;i++)
 			{
-				Print("There was an error writing the rgb verts.\n");
-				return	false;
+				Vector3	vert	=Vector3.Zero;
+				vert.X	=br.ReadSingle();
+				vert.Y	=br.ReadSingle();
+				vert.Z	=br.ReadSingle();
+
+				mGFXVerts[i]	=vert;
 			}
-			return	true;
+		}
+
+
+		void SaveGFXRGBVerts(BinaryWriter bw)
+		{
+			bw.Write(mGFXRGBVerts.Length);
+			foreach(Vector3 vert in mGFXRGBVerts)
+			{
+				bw.Write(vert.X);
+				bw.Write(vert.Y);
+				bw.Write(vert.Z);
+			}
+		}
+
+
+		void LoadGFXRGBVerts(BinaryReader br)
+		{
+			int	count	=br.ReadInt32();
+
+			mGFXRGBVerts	=new Vector3[count];
+			for(int i=0;i < count;i++)
+			{
+				Vector3	vert	=Vector3.Zero;
+				vert.X	=br.ReadSingle();
+				vert.Y	=br.ReadSingle();
+				vert.Z	=br.ReadSingle();
+
+				mGFXRGBVerts[i]	=vert;
+			}
 		}
 	}
 }

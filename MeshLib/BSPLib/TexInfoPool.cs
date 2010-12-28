@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 using MaterialLib;
 
 namespace BSPLib
@@ -9,6 +10,30 @@ namespace BSPLib
 	{
 		internal List<TexInfo>	mTexInfos	=new List<TexInfo>();
 
+
+		internal void Write(BinaryWriter bw)
+		{
+			bw.Write(mTexInfos.Count);
+			foreach(TexInfo tex in mTexInfos)
+			{
+				GFXTexInfo	gtex	=new GFXTexInfo();
+
+				gtex.mAlpha				=tex.mAlpha;
+				gtex.mDrawScale[0]		=tex.mDrawScaleU;
+				gtex.mDrawScale[1]		=tex.mDrawScaleV;
+				gtex.mFaceLight			=tex.mFaceLight;
+				gtex.mFlags				=tex.mFlags;
+				gtex.mMipMapBias		=1.0f;	//is this right?
+				gtex.mReflectiveScale	=tex.mReflectiveScale;
+				gtex.mShift[0]			=tex.mShiftU;
+				gtex.mShift[1]			=tex.mShiftV;
+				gtex.mMaterial			=tex.mMaterial;
+				gtex.mVecs[0]			=tex.mUVec;
+				gtex.mVecs[1]			=tex.mVVec;
+
+				gtex.Write(bw);
+			}
+		}
 
 		internal int Add(TexInfo ti)
 		{

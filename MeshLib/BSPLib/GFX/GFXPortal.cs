@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class GFXPortal
+	public class GFXPortal : IReadWriteable
 	{
 		public Vector3	mOrigin;
 		public Int32	mLeafTo;

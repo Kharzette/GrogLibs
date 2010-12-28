@@ -36,8 +36,8 @@ namespace BSPLib
 			mVisParams	=prms;
 			mBSPParms	=prms2;
 
-			// Fill in the global bsp data
-			if(!LoadGBSPFile(fileName))
+			GFXHeader	header	=LoadGBSPFile(fileName);
+			if(header == null)
 			{
 				Print("PvsGBSPFile:  Could not load GBSP file: " + fileName + "\n");
 				return	false;
@@ -59,9 +59,7 @@ namespace BSPLib
 				goto	ExitWithError;
 			}
 
-			bw	=new BinaryWriter(fs);
-
-			// Prepare the portal file name
+			//Prepare the portal file name
 			int	extPos	=fileName.LastIndexOf(".");
 			PFile		=fileName.Substring(0, extPos);
 			PFile		+=".gpf";
@@ -74,23 +72,16 @@ namespace BSPLib
 
 			Print("NumPortals           : " + mVisPortals.Length + "\n");
 			
-			//Write out everything but vis info
-			if(!StartWritingVis(bw))
-			{
-				goto	ExitWithError;
-			}
-
 			//Vis'em
 			if(!VisAllLeafs())
 			{
 				goto	ExitWithError;
 			}
 
+			bw	=new BinaryWriter(fs);
+
 			//Save the leafs, clusters, vis data, etc
-			if(!FinishWritingVis(bw, false))
-			{
-				goto	ExitWithError;
-			}
+			WriteVis(bw, header.mbHasLight, false);
 
 			//Free all the vis stuff
 			FreeAllVisData();
@@ -134,10 +125,10 @@ namespace BSPLib
 			mVisParams	=prms;
 			mBSPParms	=prms2;
 
-			// Fill in the global bsp data
-			if(!LoadGBSPFile(fileName))
+			GFXHeader	header	=LoadGBSPFile(fileName);
+			if(header == null)
 			{
-				Print("MatVis:  Could not load GBSP file: " + fileName + "\n");
+				Print("PvsGBSPFile:  Could not load GBSP file: " + fileName + "\n");
 				return	false;
 			}
 
@@ -160,23 +151,13 @@ namespace BSPLib
 				goto	ExitWithError;
 			}
 
-			bw	=new BinaryWriter(fs);
-
-			//Write out everything but vis info
-			if(!StartWritingVis(bw))
-			{
-				goto	ExitWithError;
-			}
-
 			//make a material vis, what materials
 			//can be seen from each leaf
 			VisMaterials();
 
 			//Save the leafs, clusters, vis data, etc
-			if(!FinishWritingVis(bw, true))
-			{
-				goto	ExitWithError;
-			}
+			bw	=new BinaryWriter(fs);
+			WriteVis(bw, header.mbHasLight, true);
 
 			//Free all the vis stuff
 			FreeAllVisData();
@@ -222,7 +203,8 @@ namespace BSPLib
 
 			int	clust	=mGFXLeafs[leaf].mCluster;
 
-			if(clust == -1 || mGFXClusters[clust].mVisOfs == -1)
+			if(clust == -1 || mGFXClusters[clust].mVisOfs == -1
+				|| mGFXMaterialVisData == null)
 			{
 				return	true;	//this will make everything vis
 								//when outside of the map
@@ -445,35 +427,40 @@ namespace BSPLib
 		}
 
 
-		bool FinishWritingVis(BinaryWriter bw, bool bMaterialVis)
+		void WriteVis(BinaryWriter bw, bool bHasLight, bool bMaterialVis)
 		{
-			if(!SaveVisdGFXLeafs(bw))
-			{
-				return	false;
-			}
-			if(!SaveVisdGFXClusters(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXVisData(bw))
-			{
-				return	false;
-			}
+			GFXHeader	header	=new GFXHeader();
+
+			header.mTag				=0x47425350;	//"GBSP"
+			header.mbHasLight		=bHasLight;
+			header.mbHasVis			=true;
+			header.mbHasMaterialVis	=bMaterialVis;
+			header.Write(bw);
+
+			SaveGFXModelData(bw);
+			SaveVisdGFXNodes(bw);
+			SaveVisdGFXLeafs(bw);
+			SaveVisdGFXLeafFaces(bw);
+			SaveVisdGFXClusters(bw);
+			SaveGFXAreasAndPortals(bw);
+			SaveVisdGFXLeafSides(bw);
+			SaveVisdGFXFaces(bw);
+			SaveGFXPlanes(bw);
+			SaveGFXVerts(bw);
+			SaveGFXVertIndexes(bw);
+			SaveGFXTexInfos(bw);
+			SaveGFXEntData(bw);
+
+			SaveGFXVisData(bw);
 			if(bMaterialVis)
 			{
-				if(!SaveGFXMaterialVisData(bw))
-				{
-					return	false;
-				}
+				SaveGFXMaterialVisData(bw);
 			}
-
-			GBSPChunk	Chunk	=new GBSPChunk();
-
-			Chunk.mType		=GBSPChunk.END;
-			Chunk.mElements	=0;
-			Chunk.Write(bw);
-
-			return	true;
+			if(bHasLight)
+			{
+				SaveGFXRGBVerts(bw);
+				SaveGFXLightData(bw);
+			}
 		}
 
 
@@ -717,78 +704,6 @@ namespace BSPLib
 		{
 			mGFXVisData			=null;
 			mGFXMaterialVisData	=null;
-		}
-
-
-		bool StartWritingVis(BinaryWriter bw)
-		{
-			GBSPHeader	header	=new GBSPHeader();
-			header.mTAG			="GBSP";
-			header.mVersion		=GBSPChunk.VERSION;
-			header.mBSPTime		=DateTime.Now;
-
-			GBSPChunk	chunk	=new GBSPChunk();
-			chunk.mType			=GBSPChunk.HEADER;
-			chunk.mElements		=1;
-			chunk.Write(bw, header);
-
-			if(!SaveGFXModelData(bw))
-			{
-				return	false;
-			}
-			if(!SaveVisdGFXNodes(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXPortals(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXBNodes(bw))
-			{
-				return	false;
-			}
-			if(!SaveVisdGFXPlanes(bw))
-			{
-				return	false;
-			}
-			if(!SaveVisdGFXFaces(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXAreasAndPortals(bw))
-			{
-				return	false;
-			}
-			if(!SaveVisdGFXLeafFacesAndSides(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXVerts(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXVertIndexList(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXRGBVerts(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXEntData(bw))
-			{
-				return	false;
-			}
-			if(!SaveVisdGFXTexInfos(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXLightData(bw))
-			{
-				return	false;
-			}
-			return	true;
 		}
 
 

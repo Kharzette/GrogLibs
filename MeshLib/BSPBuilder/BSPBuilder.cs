@@ -854,7 +854,10 @@ namespace BSPBuilder
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
 				mMap	=new Map();
-				if(!mMap.LoadGBSPFile(fileName))
+
+				GFXHeader	hdr	=mMap.LoadGBSPFile(fileName);
+
+				if(hdr == null)
 				{
 					OnMapPrint("Load failed\n", null);
 				}

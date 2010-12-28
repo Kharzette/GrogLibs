@@ -242,6 +242,7 @@ namespace BSPLib
 			DateTime	dt			=DateTime.FromBinary(br.ReadInt64());
 			Int32		numPatches	=br.ReadInt32();
 
+			/*
 			if(ver != GBSPChunk.VERSION)
 			{
 				Print("*WARNING*  LoadReceiverFile:  Versions do not match, skipping...\n");
@@ -249,7 +250,8 @@ namespace BSPLib
 				fs.Close();
 				return	false;
 			}
-			
+			*/
+
 			//Make sure the number of patches in the receiver file
 			//matches the number loaded for this BSP
 			if(numPatches != NumPatches)
@@ -296,7 +298,7 @@ namespace BSPLib
 
 			BinaryWriter	bw	=new BinaryWriter(fs);
 
-			bw.Write(GBSPChunk.VERSION);
+//			bw.Write(GBSPChunk.VERSION);
 			bw.Write(DateTime.Now.ToBinary());
 			bw.Write(NumPatches);
 
@@ -691,16 +693,17 @@ namespace BSPLib
 			BinaryWriter	bw		=null;
 			FileStream		file	=null;
 			
-			if(!LoadGBSPFile(fileName))
+			GFXHeader	header	=LoadGBSPFile(fileName);
+			if(header == null)
 			{
 				Print("LightGBSPFile:  Could not load GBSP file: " + fileName + "\n");
 				return	false;
 			}
 
 			//ensure vis is built
-			if(mGFXVisData == null)
+			if(!header.mbHasVis)
 			{
-				Print("No vis data for lighting!\n");
+				Print("No vis data for lighting.  Please run a vis on the map before attempting light.\n");
 				return	false;
 			}
 			
@@ -782,22 +785,17 @@ namespace BSPLib
 
 			FinalizeRGBVerts(lightParams.mMinLight, lightParams.mMaxIntensity);
 
-			if(!StartWritingLight(bw))	//Open bsp file and save all current bsp data (except lightmaps)
-			{
-				goto	ExitWithError;
-			}
-
 			int	numRGBMaps	=0;
 
-			if(!SaveLightMaps(bw, ref numRGBMaps))
+			//grab combined lightmap data
+			List<byte>	lightData	=BuildLightMaps(ref numRGBMaps);
+			if(lightData == null)
 			{
 				goto	ExitWithError;
 			}
+			mGFXLightData	=lightData.ToArray();
 
-			if(!FinishWritingLight(bw))	//Write the END chunk to the file
-			{
-				goto	ExitWithError;
-			}
+			WriteLight(bw, header.mbHasMaterialVis);
 
 			bw.Close();
 			file.Close();
@@ -1514,19 +1512,13 @@ namespace BSPLib
 		}
 
 
-		bool SaveLightMaps(BinaryWriter f, ref int numRGBMaps)
+		List<byte> BuildLightMaps(ref int numRGBMaps)
 		{
 			Int32	LDataOfs	=0;
 			byte	[]LData		=new byte[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE * 3 * 4];
-			long	pos1		=f.BaseStream.Position;
+
+			List<byte>	lightData	=new List<byte>();
 			
-			// Write out fake chunk (so we can write the real one here later)
-			GBSPChunk	Chunk	=new GBSPChunk();
-			Chunk.mType		=GBSPChunk.LIGHTDATA;
-			Chunk.mElements	=0;
-
-			Chunk.Write(f);
-
 			//Reset the light offset
 			int	LightOffset	=0;
 			numRGBMaps		=0;
@@ -1594,7 +1586,7 @@ namespace BSPLib
 					if(numLTypes >= LInfo.MAX_LTYPES)
 					{
 						Print("SaveLightmaps:  Max LightTypes on face.\n");
-						return	false;
+						return	null;
 					}
 						 
 					mGFXFaces[i].mLTypes[numLTypes]	=(byte)k;
@@ -1641,139 +1633,60 @@ namespace BSPLib
 						}
 					}
 
-					f.Write(LData, 0, 3 * size);
-
+					for(int lidx=0;lidx < (3 * size);lidx++)
+					{
+						lightData.Add(LData[lidx]);
+					}
 					L.FreeLightType(k);
 				}
 
 				if(L.GetNumLightTypes() != numLTypes)
 				{
 					Print("SaveLightMaps:  Num LightTypes was incorrectly calculated.\n");
-					return	false;
+					return	null;
 				}
 			}
 
 			Print("Light Data Size      : " + LightOffset + "\n");
 
-			long	pos2	=f.BaseStream.Position;
-
-			f.BaseStream.Seek(pos1, SeekOrigin.Begin);
-
-			Chunk.mType		=GBSPChunk.LIGHTDATA;
-			Chunk.mElements =LightOffset;
-
-			Chunk.Write(f);
-
-			f.BaseStream.Seek(pos2, SeekOrigin.Begin);
-
-			return	true;
+			return	lightData;
 		}
 
 
-		bool FinishWritingLight(BinaryWriter bw)
+		void WriteLight(BinaryWriter bw, bool bMaterialVis)
 		{
-			GBSPHeader	header	=new GBSPHeader();
-			header.mTAG			="GBSP";
-			header.mVersion		=GBSPChunk.VERSION;
-			header.mBSPTime		=DateTime.Now;
+			GFXHeader	header	=new GFXHeader();
 
-			GBSPChunk	chunk	=new GBSPChunk();
-			chunk.mType			=GBSPChunk.HEADER;
-			chunk.mElements		=1;
-			chunk.Write(bw, header);
+			header.mTag				=0x47425350;	//"GBSP"
+			header.mbHasLight		=true;
+			header.mbHasVis			=true;
+			header.mbHasMaterialVis	=bMaterialVis;
+			header.Write(bw);
 
-			if(!SaveGFXRGBVerts(bw))
-			{
-				return	false;
-			}
-			if(!SaveVisdGFXFaces(bw))
-			{
-				return	false;
-			}
-			chunk.mType		=GBSPChunk.END;
-			chunk.mElements	=0;
-			chunk.Write(bw);
+			SaveGFXModelData(bw);
+			SaveVisdGFXNodes(bw);
+			SaveVisdGFXLeafs(bw);
+			SaveVisdGFXLeafFaces(bw);
+			SaveVisdGFXClusters(bw);
+			SaveGFXAreasAndPortals(bw);
+			SaveVisdGFXLeafSides(bw);
+			SaveVisdGFXFaces(bw);
+			SaveGFXPlanes(bw);
+			SaveGFXVerts(bw);
+			SaveGFXVertIndexes(bw);
+			SaveGFXTexInfos(bw);
+			SaveGFXEntData(bw);
 
-			return	true;
-		}
+			//vis stuff
+			SaveGFXVisData(bw);
+			if(bMaterialVis)
+			{
+				SaveGFXMaterialVisData(bw);
+			}
 
-
-		bool StartWritingLight(BinaryWriter bw)
-		{
-			// Write out everything but the light data
-			// Don't include LIGHT_DATA since it was allready saved out...
-
-			GBSPHeader	header	=new GBSPHeader();
-			header.mTAG			="GBSP";
-			header.mVersion		=GBSPChunk.VERSION;
-			header.mBSPTime		=DateTime.Now;
-
-			GBSPChunk	chunk	=new GBSPChunk();
-			chunk.mType			=GBSPChunk.HEADER;
-			chunk.mElements		=1;
-			chunk.Write(bw, header);
-
-			if(!SaveGFXModelData(bw))
-			{
-				return	false;
-			}
-			if(!SaveVisdGFXNodes(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXPortals(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXBNodes(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXLeafs(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXAreasAndPortals(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXClusters(bw))
-			{
-				return	false;
-			}
-			if(!SaveVisdGFXPlanes(bw))
-			{
-				return	false;
-			}
-			if(!SaveVisdGFXLeafFacesAndSides(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXVerts(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXVertIndexList(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXEntData(bw))
-			{
-				return	false;
-			}
-			if(!SaveVisdGFXTexInfos(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXVisData(bw))
-			{
-				return	false;
-			}
-			if(!SaveGFXMaterialVisData(bw))
-			{
-				return	false;
-			}
-			return	true;
+			//light stuff
+			SaveGFXRGBVerts(bw);
+			SaveGFXLightData(bw);
 		}
 	}
 }

@@ -95,7 +95,6 @@
     <Compile Include="Contents.cs" />
     <Compile Include="FaceFixer.cs" />
     <Compile Include="GBSP\GBSPBrush.cs" />
-    <Compile Include="GBSP\GBSPChunk.cs" />
     <Compile Include="GBSP\GBSPFace.cs" />
     <Compile Include="GBSP\GBSPHeader.cs" />
     <Compile Include="GBSP\GBSPLeafSide.cs" />
@@ -107,17 +106,17 @@
     <Compile Include="GBSP\GBSPSide.cs" />
     <Compile Include="GFX\GFXArea.cs" />
     <Compile Include="GFX\GFXAreaPortal.cs" />
-    <Compile Include="GFX\GFXBNode.cs" />
     <Compile Include="GFX\GFXCluster.cs" />
     <Compile Include="GFX\GFXFace.cs" />
+    <Compile Include="GFX\GFXHeader.cs" />
     <Compile Include="GFX\GFXLeaf.cs" />
     <Compile Include="GFX\GFXLeafSide.cs" />
     <Compile Include="GFX\GFXModel.cs" />
     <Compile Include="GFX\GFXNode.cs" />
     <Compile Include="GFX\GFXPlane.cs" />
-    <Compile Include="GFX\GFXPortal.cs" />
     <Compile Include="GFX\GFXSkyData.cs" />
     <Compile Include="GFX\GFXTexInfo.cs" />
+    <Compile Include="IReadWriteable.cs" />
     <Compile Include="Light\DirectLight.cs" />
     <Compile Include="Light\FInfo.cs" />
     <Compile Include="Light\LInfo.cs" />

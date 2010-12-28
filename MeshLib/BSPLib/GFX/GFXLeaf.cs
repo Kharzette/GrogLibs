@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class GFXLeaf
+	public class GFXLeaf : IReadWriteable
 	{
 		public UInt32	mContents;
 		public Vector3	mMins, mMaxs;

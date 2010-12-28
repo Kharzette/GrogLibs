@@ -1058,6 +1058,11 @@ namespace BSPLib
 
 		internal void BuildLMFaceData(Vector3 []verts, int[] indexes, byte []lightData)
 		{
+			if(lightData == null)
+			{
+				return;
+			}
+
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();

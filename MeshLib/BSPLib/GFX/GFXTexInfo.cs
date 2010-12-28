@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class GFXTexInfo
+	public class GFXTexInfo : IReadWriteable
 	{
 		public Vector3	[]mVecs			=new Vector3[2];
 		public float	[]mShift		=new float[2];

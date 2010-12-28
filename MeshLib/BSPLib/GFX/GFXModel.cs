@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class GFXModel
+	public class GFXModel : IReadWriteable
 	{
 		public Int32		[]mRootNode	=new Int32[2];	// Top level Node in GFXNodes/GFXBNodes
 		public Vector3		mMins;

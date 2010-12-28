@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BSPLib
 {
-	public class GFXArea
+	public class GFXArea : IReadWriteable
 	{
 		public Int32	NumAreaPortals;
 		public Int32	FirstAreaPortal;
