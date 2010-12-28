@@ -25,7 +25,7 @@ namespace MaterialLib
 			{
 				return	0;
 			}
-			if(x.DistSquared(mEye) < y.DistSquared(mEye))
+			if(x.DistSquared(mEye) > y.DistSquared(mEye))
 			{
 				return	-1;
 			}

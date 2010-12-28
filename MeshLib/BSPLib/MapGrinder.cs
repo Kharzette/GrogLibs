@@ -1060,7 +1060,7 @@ namespace BSPLib
 
 			ComputeIndexes(mLMAAnimIndexes, mLMAAnimMaterialOffsets,
 				mLMAAnimMaterialNumTris, numFace, firstVert, numVert,
-				verts, mLMAAnimMaterialSortPoints);
+				mLMAAnimVerts, mLMAAnimMaterialSortPoints);
 		}
 
 
@@ -1303,7 +1303,7 @@ namespace BSPLib
 			mLMAtlas.Finish();
 
 			ComputeIndexes(mLMAIndexes, mLMAMaterialOffsets, mLMAMaterialNumTris,
-				numFace, firstVert, numVert, verts, mLMAMaterialSortPoints);
+				numFace, firstVert, numVert, mLMAVerts, mLMAMaterialSortPoints);
 		}
 
 
@@ -1457,7 +1457,7 @@ namespace BSPLib
 
 			ComputeIndexes(mMirrorIndexes, mMirrorMaterialOffsets,
 				mMirrorMaterialNumTris, numFace, firstVert,
-				numVert, verts, mMirrorMaterialSortPoints);
+				numVert, mMirrorVerts, mMirrorMaterialSortPoints);
 		}
 
 
@@ -1533,7 +1533,7 @@ namespace BSPLib
 
 			ComputeIndexes(mAlphaIndexes, mAlphaMaterialOffsets,
 				mAlphaMaterialNumTris, numFace, firstVert,
-				numVert, verts, mAlphaMaterialSortPoints);
+				numVert, mAlphaVerts, mAlphaMaterialSortPoints);
 		}
 
 
@@ -1689,7 +1689,7 @@ namespace BSPLib
 
 		void ComputeIndexes(List<int> inds, List<int> matOffsets,
 			List<int> matTris, List<int> numFace, List<int> firstVert,
-			List<int> numVert, Vector3 []verts, List<Vector3> sortPoints)
+			List<int> numVert, List<Vector3> verts, List<Vector3> sortPoints)
 		{
 			int	faceOfs	=0;
 			for(int j=0;j < mMaterialNames.Count;j++)
@@ -1710,7 +1710,7 @@ namespace BSPLib
 					{
 						int		nverts	=numVert[i];
 						int		fvert	=firstVert[i];
-						for(int k=0;k < nverts;k++)
+						for(int k=fvert;k < (fvert + nverts);k++)
 						{
 							X	+=verts[k].X;
 							Y	+=verts[k].Y;

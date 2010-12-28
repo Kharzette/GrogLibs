@@ -186,21 +186,52 @@ namespace BSPLib
 						{
 							mFlags		|=SURF_SKY;
 							ti.mFlags	|=TexInfo.SKY;
+							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 						}
 						if(tex == "TOOLS/TOOLSSKYBOX2D")
 						{
 							mFlags		|=SURF_SKY;
 							ti.mFlags	|=TexInfo.SKY;
+							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 						}
 						else if(tex == "TOOLS/TOOLSSKYFOG")
 						{
 							mFlags		|=SURF_SKY;
 							ti.mFlags	|=TexInfo.SKY;
 						}
-						else if(tex == "TOOLS/TOOLSTRIGGER")
+						if(tex == "TOOLS/TOOLSTRIGGER")
 						{
-							mFlags	|=SURF_NODRAW;
-							ret		|=Contents.CONTENTS_TRIGGER;
+							ret			|=Contents.BSP_CONTENTS_USER12;
+							ti.mFlags	|=TexInfo.FULLBRIGHT;
+							mFlags		|=SURF_NODRAW;
+							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+						}
+						if(tex == "TEST/COLOR_RED")
+						{
+							//using this as lava
+							ret			|=Contents.BSP_CONTENTS_EMPTY2;
+							ret			|=Contents.BSP_CONTENTS_USER1;
+							ret			|=Contents.BSP_CONTENTS_WAVY2;
+							ti.mFlags	|=TexInfo.TRANS;
+							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+						}
+						if(tex.StartsWith("DEV/DEV_WATER") || tex.StartsWith("WATER"))
+						{
+							ret			|=Contents.BSP_CONTENTS_TRANSLUCENT2;
+							ret			|=Contents.BSP_CONTENTS_EMPTY2;
+							ret			|=Contents.BSP_CONTENTS_WAVY2;
+							ret			|=Contents.BSP_CONTENTS_USER3;
+							ti.mFlags	|=TexInfo.TRANS;
+							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+						}
+						if(tex == "DEV/DEV_SLIME")
+						{
+							ret			|=Contents.BSP_CONTENTS_TRANSLUCENT2;
+							ret			|=Contents.BSP_CONTENTS_EMPTY2;
+							ret			|=Contents.BSP_CONTENTS_WAVY2;
+							ret			|=Contents.BSP_CONTENTS_USER2;
+							ti.mFlags	|=TexInfo.TRANS;
+							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 						}
 						ti.mTexture	=tex;
 					}
