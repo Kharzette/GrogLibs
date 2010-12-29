@@ -224,6 +224,7 @@ namespace BSPLib
 							ret			|=Contents.BSP_CONTENTS_WAVY2;
 							ti.mFlags	|=TexInfo.TRANS;
 							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+							ti.mFlags	|=TexInfo.FLAT;
 						}
 						if(tex.StartsWith("DEV/DEV_WATER") || tex.StartsWith("WATER"))
 						{
