@@ -1172,7 +1172,9 @@ namespace BSPLib
 			//todo:fix
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
 
-			mg.BuildVLitFaceData(mGFXVerts, mGFXVertIndexes);
+			Vector3	[]vnorms	=MakeVertNormals();
+
+			mg.BuildVLitFaceData(mGFXVerts, mGFXRGBVerts, vnorms, mGFXVertIndexes);
 
 			mg.GetVLitBuffers(out vb, out ib, out vd);
 

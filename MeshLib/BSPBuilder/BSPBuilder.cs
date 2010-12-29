@@ -41,6 +41,7 @@ namespace BSPBuilder
 		Vector2					mTextPos;
 		Random					mRnd	=new Random();
 		string					mDrawChoice;
+		Vector3					mDynamicLightPos;
 
 		//new debug draw stuff
 		VertexBuffer		mLMVB, mVLitVB, mLMAnimVB, mAlphaVB, mSkyVB, mFBVB, mMirrorVB, mLMAVB, mLMAAnimVB;
@@ -248,6 +249,11 @@ namespace BSPBuilder
 				mDebugLeaf	=mMap.FindNodeLandedIn(0, -mGameCam.CamPos);
 				mDebugLeaf	=-(mDebugLeaf + 1);
 			}
+			if(kbs.IsKeyDown(Keys.L))
+			{
+				mDynamicLightPos	=-mGameCam.CamPos;
+				mMatLib.SetParameterOnAll("mLight0Position", mDynamicLightPos);
+			}
 
 			UpdateAnimatedLightMaps(msDelta);
 
@@ -418,19 +424,19 @@ namespace BSPBuilder
 
 			GraphicsDevice.RenderState.DepthBufferEnable	=true;
 
-			DrawMaterials(mFBVB, mFBIB, mFBVD, mFBMatOffsets, mFBNumVerts, mFBNumTris, false, null);
+//			DrawMaterials(mFBVB, mFBIB, mFBVD, mFBMatOffsets, mFBNumVerts, mFBNumTris, false, null);
 			DrawMaterials(mVLitVB, mVLitIB, mVLitVD, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null);
-			DrawMaterials(mSkyVB, mSkyIB, mSkyVD, mSkyMatOffsets, mSkyNumVerts, mSkyNumTris, false, null);
+//			DrawMaterials(mSkyVB, mSkyIB, mSkyVD, mSkyMatOffsets, mSkyNumVerts, mSkyNumTris, false, null);
 			DrawMaterials(mLMVB, mLMIB, mLMVD, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null);
-			DrawMaterials(mLMAnimVB, mLMAnimIB, mLMAnimVD, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null);
+//			DrawMaterials(mLMAnimVB, mLMAnimIB, mLMAnimVD, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null);
 
 			//alphas
-#if false
+#if true
 			//draw immediately for pix
-			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, false, mAlphaSortPoints);
-			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, false, mMirrorSortPoints);
+//			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, false, mAlphaSortPoints);
+//			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, false, mMirrorSortPoints);
 			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints);
-			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints);
+//			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints);
 #else
 			//pix freaks out about the alpha sorting
 			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, true, mAlphaSortPoints);

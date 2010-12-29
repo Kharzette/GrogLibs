@@ -1088,7 +1088,7 @@ namespace BSPLib
 		}
 
 
-		bool GouraudShadeFace(Int32 faceNum, Vector3 []vertNormals)
+		bool VertexShadeFace(Int32 faceNum, Vector3 []vertNormals)
 		{
 			if(mGFXRGBVerts == null || mGFXRGBVerts.Length == 0)
 			{
@@ -1301,11 +1301,11 @@ namespace BSPLib
 				GFXTexInfo	tex		=mGFXTexInfos[mGFXFaces[i].mTexInfo];
 				GFXFace		face	=mGFXFaces[i];
 
-				if((tex.mFlags & TexInfo.GOURAUD) != 0)
+				if(tex.IsGouraud() || tex.IsFlat())
 				{
-					if(!GouraudShadeFace(i, vertNormals))
+					if(!VertexShadeFace(i, vertNormals))
 					{
-						Map.Print("LightFaces:  GouraudShadeFace failed...\n");
+						Map.Print("LightFaces:  VertexShadeFace failed...\n");
 						return	false;
 					}
 					

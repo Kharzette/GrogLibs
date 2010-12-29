@@ -37,6 +37,7 @@ namespace BSPLib
 		List<Vector3>	mVLitVerts		=new List<Vector3>();
 		List<Vector2>	mVLitTex0		=new List<Vector2>();
 		List<Vector3>	mVLitNormals	=new List<Vector3>();
+		List<Vector4>	mVLitColors		=new List<Vector4>();
 		List<Int32>		mVLitIndexes	=new List<Int32>();
 
 		//computed fullbright geometry
@@ -205,7 +206,7 @@ namespace BSPLib
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
 			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector3,
 				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
-			ve[3]	=new VertexElement(0, 32, VertexElementFormat.Vector3,
+			ve[3]	=new VertexElement(0, 32, VertexElementFormat.Vector4,
 				VertexElementMethod.Default, VertexElementUsage.Color, 0);
 			mVLitVD	=new VertexDeclaration(gd, ve);
 
@@ -434,17 +435,18 @@ namespace BSPLib
 				return;
 			}
 
-			VPosTex0Norm0	[]varray	=new VPosTex0Norm0[mVLitVerts.Count];
+			VPosTex0Norm0Col0	[]varray	=new VPosTex0Norm0Col0[mVLitVerts.Count];
 			for(int i=0;i < mVLitVerts.Count;i++)
 			{
 				varray[i].Position	=mVLitVerts[i];
 				varray[i].TexCoord0	=mVLitTex0[i];
 				varray[i].Normal	=mVLitNormals[i];
+				varray[i].Color0	=mVLitColors[i];
 			}
 
 			vd	=mVLitVD;
 			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosTex0Norm0>(varray);
+			vb.SetData<VPosTex0Norm0Col0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mVLitIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
@@ -1323,7 +1325,8 @@ namespace BSPLib
 		}
 
 
-		internal void BuildVLitFaceData(Vector3 []verts, int[] indexes)
+		internal void BuildVLitFaceData(Vector3 []verts,
+			Vector3 []rgbVerts, Vector3 []vnorms, int[] indexes)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
@@ -1384,10 +1387,22 @@ namespace BSPLib
 						fverts.Add(pnt);
 
 						mVLitVerts.Add(pnt);
+
+						if(tex.IsGouraud())						
+						{
+							mVLitNormals.Add(vnorms[idx]);
+						}
+						Vector4	col	=Vector4.One;
+						col.X	=rgbVerts[fvert + k].X;
+						col.Y	=rgbVerts[fvert + k].Y;
+						col.Z	=rgbVerts[fvert + k].Z;
+						mVLitColors.Add(col);
 					}
 
-					//flat shading only for now
-					ComputeNormals(fverts, mVLitNormals);
+					if(!tex.IsGouraud())
+					{
+						ComputeNormals(fverts, mVLitNormals);
+					}
 
 					firstVert.Add(mVLitVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
@@ -1924,6 +1939,15 @@ namespace BSPLib
 						EffectParameterType.Texture,
 						"LightMapAtlas");
 				}
+
+				//add stuff to ignore
+				//this hides it in the gui
+				mat.IgnoreParameter("mEyePos");
+				mat.IgnoreParameter("mLight0Position");
+//				mat.IgnoreParameter("mLight0Color");
+//				mat.IgnoreParameter("mLightRange");
+//				mat.IgnoreParameter("mLightFalloffRange");
+				mat.IgnoreParameter("mAniIntensities");
 
 				mMaterials.Add(mat);
 			}

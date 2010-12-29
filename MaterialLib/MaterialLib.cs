@@ -304,7 +304,9 @@ namespace MaterialLib
 				fx.CurrentTechnique	=fx.Techniques[mat.Technique];
 			}
 
-			foreach(ShaderParameters sp in mat.Parameters)
+			List<ShaderParameters>	matParms	=mat.GetRealShaderParameters();
+
+			foreach(ShaderParameters sp in matParms)
 			{
 				if(sp.Value == null || sp.Value == "" || fx.Parameters[sp.Name] == null)
 				{
@@ -405,6 +407,16 @@ namespace MaterialLib
 		}
 
 
+		public void SetParameterOnAll(string paramName, Vector3 vec)
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				string	val	="" + vec.X + " " + vec.Y + " " + vec.Z;
+				mat.Value.SetParameter(paramName, val);
+			}
+		}
+
+
 		public void RefreshShaderParameters()
 		{
 			foreach(KeyValuePair<string, Material> mat in mMats)
@@ -438,11 +450,10 @@ namespace MaterialLib
 				{
 					fx.Value.Parameters["mProjection"].SetValue(proj);
 				}
-				if(fx.Value.Parameters["mEyePos"] != null)
-				{
-					fx.Value.Parameters["mEyePos"].SetValue(eyePos);
-				}
 			}
+
+			//update eyepos in material parameters
+			SetParameterOnAll("mEyePos", eyePos);
 		}
 
 

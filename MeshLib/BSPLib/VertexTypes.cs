@@ -32,11 +32,12 @@ namespace BSPLib
 	}
 
 
-	public struct VPosTex0Norm0
+	public struct VPosTex0Norm0Col0
 	{
 		public Vector3	Position;
 		public Vector2	TexCoord0;
 		public Vector3	Normal;
+		public Vector4	Color0;
 	}
 
 

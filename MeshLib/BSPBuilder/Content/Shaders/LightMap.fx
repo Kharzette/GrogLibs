@@ -10,9 +10,10 @@ bool	mbTextureEnabled;
 float2	mTexSize;
 
 //nearby dynamic lights?
-float3		mLight0Direction;
+float3		mLight0Position;
 float3		mLight0Color;
-const float	LightRange	=300;
+float		mLightRange;
+float		mLightFalloffRange;	//under this light at full strength
 
 //intensity levels for the animted light styles
 float	mAniIntensities[16];
@@ -60,11 +61,12 @@ struct VPosTex0Tex1Norm0Col0
 };
 
 
-struct VPosTex0Norm0
+struct VPosTex0Norm0Col0
 {
 	float4 Position : POSITION0;
 	float2 TexCoord0 : TEXCOORD0;
-	float3 Normal : NORMAL0;
+	float3 Normal0 : NORMAL0;
+	float4 Color0 : COLOR0;
 };
 
 
@@ -156,11 +158,18 @@ VPosTex0Tex1Col0 LMVertexShader(VPosTex0Tex1Norm0 input)
 	output.TexCoord0	=input.TexCoord0;
 	output.TexCoord1	=input.TexCoord1;
 	
-	float	dist	=distance(worldPosition, mLight0Direction);
-	if(dist < LightRange)
+	float	dist	=distance(worldPosition, mLight0Position);
+	if(dist < mLightRange)
 	{
-		float3	worldNormal	=mul(input.Normal0, mWorld);
-		float	ndl			=dot(worldNormal, mLight0Direction);
+		float3	lightDirection	=normalize(mLight0Position - worldPosition);
+		float3	worldNormal		=mul(input.Normal0, mWorld);
+		float	ndl				=dot(worldNormal, lightDirection);
+		
+		//distance falloff
+		if(dist > mLightFalloffRange)
+		{
+			ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));
+		}
 		
 		output.Color0	=float4(mLight0Color * ndl, 1);
 	}
@@ -184,11 +193,19 @@ VPosTex0Tex1Col0 LMAlphaVertexShader(VPosTex0Tex1Norm0Col0 input)
 
 	output.TexCoord0	=input.TexCoord0;
 	output.TexCoord1	=input.TexCoord1;
-	float	dist	=distance(worldPosition, mLight0Direction);
-	if(dist < LightRange)
+	
+	float	dist	=distance(worldPosition, mLight0Position);
+	if(dist < mLightRange)
 	{
-		float3	worldNormal	=mul(input.Normal0, mWorld);
-		float	ndl			=dot(worldNormal, mLight0Direction);
+		float3	lightDirection	=normalize(mLight0Position - worldPosition);
+		float3	worldNormal		=mul(input.Normal0, mWorld);
+		float	ndl				=dot(worldNormal, lightDirection);
+		
+		//distance falloff
+		if(dist > mLightFalloffRange)
+		{
+			ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));
+		}
 		
 		output.Color0	=float4(mLight0Color * ndl, input.Color0.w);
 	}
@@ -200,8 +217,7 @@ VPosTex0Tex1Col0 LMAlphaVertexShader(VPosTex0Tex1Norm0Col0 input)
 }
 
 
-//todo n dot l lighting
-VPosTex0Col0 VLitVertexShader(VPosTex0Norm0 input)
+VPosTex0Col0 VLitVertexShader(VPosTex0Norm0Col0 input)
 {
 	VPosTex0Col0	output;
 
@@ -209,8 +225,27 @@ VPosTex0Col0 VLitVertexShader(VPosTex0Norm0 input)
 
 	output.Position		=mul(mul(worldPosition, mView), mProjection);
 	output.TexCoord0	=input.TexCoord0;
-	output.Color0		=float4(1, 1, 1, 1);
-
+	
+	float	dist	=distance(worldPosition, mLight0Position);
+	if(dist < mLightRange)
+	{
+		float3	lightDirection	=normalize(mLight0Position - worldPosition);
+		float3	worldNormal		=mul(input.Normal0, mWorld);
+		float	ndl				=dot(worldNormal, lightDirection);
+		
+		//distance falloff
+		if(dist > mLightFalloffRange)
+		{
+			ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));
+		}
+		
+		output.Color0	=input.Color0 + float4(mLight0Color * ndl, 0);		
+		output.Color0	=saturate(output.Color0);
+	}
+	else
+	{
+		output.Color0	=input.Color0;
+	}	
 	return	output;
 }
 

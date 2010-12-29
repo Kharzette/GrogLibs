@@ -27,9 +27,13 @@ namespace MaterialLib
 		CullMode		mCullMode;
 		CompareFunction	mZFunction;
 
-
 		//parameters for the chosen shader
-		BindingList<ShaderParameters>	mParameters	=new BindingList<ShaderParameters>();
+		List<ShaderParameters>			mParameters		=new List<ShaderParameters>();
+		BindingList<ShaderParameters>	mGUIParameters	=new BindingList<ShaderParameters>();
+
+		//list of parameters to ignore
+		//these will be updated by code at runtime
+		List<string>	mIgnoreParameters	=new List<string>();
 
 
 		public string Name
@@ -49,8 +53,8 @@ namespace MaterialLib
 		}
 		public BindingList<ShaderParameters> Parameters
 		{
-			get { return mParameters; }
-			set { mParameters = value; }
+			get { return mGUIParameters; }
+			set { mGUIParameters = value; }
 		}
 		public bool Alpha
 		{
@@ -113,6 +117,12 @@ namespace MaterialLib
 			{
 				sp.Write(bw);
 			}
+
+			bw.Write(mIgnoreParameters.Count);
+			foreach(string ig in mIgnoreParameters)
+			{
+				bw.Write(ig);
+			}
 		}
 
 
@@ -130,6 +140,7 @@ namespace MaterialLib
 			mCullMode		=(CullMode)br.ReadUInt32();
 			mZFunction		=(CompareFunction)br.ReadUInt32();
 
+			mParameters.Clear();
 			int	numParameters	=br.ReadInt32();
 			for(int i=0;i < numParameters;i++)
 			{
@@ -138,6 +149,15 @@ namespace MaterialLib
 
 				mParameters.Add(sp);
 			}
+
+			mIgnoreParameters.Clear();
+			int	numIgnores	=br.ReadInt32();
+			for(int i=0;i < numIgnores;i++)
+			{
+				string	ig	=br.ReadString();
+				mIgnoreParameters.Add(ig);
+			}
+			UpdateGUIParams();
 		}
 
 
@@ -156,6 +176,18 @@ namespace MaterialLib
 				}
 			}
 			return	ret;
+		}
+
+
+		internal void SetParameter(string paramName, string value)
+		{
+			foreach(ShaderParameters sp in mParameters)
+			{
+				if(sp.Name == paramName)
+				{
+					sp.Value	=value;
+				}
+			}
 		}
 
 
@@ -203,6 +235,28 @@ namespace MaterialLib
 			if(bNew)
 			{
 				mParameters.Add(parm);
+				UpdateGUIParams();
+			}
+		}
+
+
+		public void IgnoreParameter(string paramName)
+		{
+			if(!mIgnoreParameters.Contains(paramName))
+			{
+				mIgnoreParameters.Add(paramName);
+			}
+			UpdateGUIParams();
+		}
+
+
+		public void StopIgnoringParameter(string paramName)
+		{
+			if(mIgnoreParameters.Contains(paramName))
+			{
+				mIgnoreParameters.Remove(paramName);
+
+				UpdateGUIParams();
 			}
 		}
 
@@ -263,10 +317,6 @@ namespace MaterialLib
 						break;
 
 					case EffectParameterClass.Vector:
-						if(ep.Name == "mEyePos")
-						{
-							continue;	//HACK, don't add eye pos to UI
-						}
 						if(ep.ColumnCount == 2)
 						{
 							Vector2	vec	=ep.GetValueVector2();
@@ -309,6 +359,7 @@ namespace MaterialLib
 				if(!bFound)
 				{
 					mParameters.Add(newSp);
+					UpdateGUIParams();
 				}
 			}
 
@@ -338,6 +389,30 @@ namespace MaterialLib
 			{
 				mParameters.Remove(sp);
 			}
+			if(gank.Count > 0)
+			{
+				UpdateGUIParams();
+			}
+		}
+
+
+		void UpdateGUIParams()
+		{
+			mGUIParameters.Clear();
+
+			foreach(ShaderParameters sp in mParameters)
+			{
+				if(!mIgnoreParameters.Contains(sp.Name))
+				{
+					mGUIParameters.Add(sp);
+				}
+			}
+		}
+
+
+		internal List<ShaderParameters> GetRealShaderParameters()
+		{
+			return	mParameters;
 		}
 	}
 }
