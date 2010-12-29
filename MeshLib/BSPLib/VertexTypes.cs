@@ -49,9 +49,10 @@ namespace BSPLib
 	}
 
 
-	public struct VPosTex0Tex1Tex2Tex3Tex4Style4
+	public struct VPosNorm0Tex0Tex1Tex2Tex3Tex4Style4
 	{
 		public Vector3	Position;
+		public Vector3	Normal;
 		public Vector2	TexCoord0;
 		public Vector2	TexCoord1;
 		public Vector2	TexCoord2;

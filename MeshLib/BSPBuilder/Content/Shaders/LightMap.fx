@@ -70,9 +70,10 @@ struct VPosTex0Norm0Col0
 };
 
 
-struct VPosTex0Tex1Tex2Tex3Tex4Style
+struct VPosNorm0Tex0Tex1Tex2Tex3Tex4Style
 {
 	float4 Position : POSITION0;
+	float3 Normal0 : NORMAL0;
 	float2 TexCoord0 : TEXCOORD0;
 	float2 TexCoord1 : TEXCOORD1;
 	float2 TexCoord2 : TEXCOORD1;
@@ -90,7 +91,7 @@ struct VPosTex0Col0
 };
 
 
-struct VPosTex0Tex1Tex2Tex3Tex4Intensity
+struct VPosTex0Tex1Tex2Tex3Tex4Color0Intensity
 {
 	float4 Position : POSITION0;
 	float2 TexCoord0 : TEXCOORD0;
@@ -98,6 +99,7 @@ struct VPosTex0Tex1Tex2Tex3Tex4Intensity
 	float2 TexCoord2 : TEXCOORD2;
 	float2 TexCoord3 : TEXCOORD3;
 	float2 TexCoord4 : TEXCOORD4;
+	float4 Color0 : Color0;
 	float4 StyleIntensity : TEXCOORD5;
 };
 
@@ -136,13 +138,14 @@ struct VTex0Col0
 };
 
 
-struct VTex0Tex1Tex2Tex3Tex4Intensity
+struct VTex0Tex1Tex2Tex3Tex4Color0Intensity
 {
 	float2 TexCoord0 : TEXCOORD0;
 	float2 TexCoord1 : TEXCOORD1;
 	float2 TexCoord2 : TEXCOORD2;
 	float2 TexCoord3 : TEXCOORD3;
 	float2 TexCoord4 : TEXCOORD4;
+	float4 Color0 : COLOR0;
 	float4 StyleIntensity : TEXCOORD5;
 };
 
@@ -282,9 +285,9 @@ VPosCubeTex0 SkyVertexShader(VPosTex0 input)
 }
 
 
-VPosTex0Tex1Tex2Tex3Tex4Intensity LMAnimVertexShader(VPosTex0Tex1Tex2Tex3Tex4Style input)
+VPosTex0Tex1Tex2Tex3Tex4Color0Intensity LMAnimVertexShader(VPosNorm0Tex0Tex1Tex2Tex3Tex4Style input)
 {
-	VPosTex0Tex1Tex2Tex3Tex4Intensity	output;
+	VPosTex0Tex1Tex2Tex3Tex4Color0Intensity	output;
 
 	float4	worldPosition	=mul(input.Position, mWorld);
 
@@ -315,6 +318,27 @@ VPosTex0Tex1Tex2Tex3Tex4Intensity LMAnimVertexShader(VPosTex0Tex1Tex2Tex3Tex4Sty
 	if(sidx.z < 17)
 	{
 		output.StyleIntensity.z	=mAniIntensities[sidx.z];
+	}
+	
+	float	dist	=distance(worldPosition, mLight0Position);
+	if(dist < mLightRange)
+	{
+		float3	lightDirection	=normalize(mLight0Position - worldPosition);
+		float3	worldNormal		=mul(input.Normal0, mWorld);
+		float	ndl				=dot(worldNormal, lightDirection);
+		
+		//distance falloff
+		if(dist > mLightFalloffRange)
+		{
+			ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));
+		}
+		
+		output.Color0	=float4(mLight0Color * ndl, 1);
+	}
+	else
+	{
+		//let the lightmap do all the work
+		output.Color0	=float4(0, 0, 0, 1);
 	}
 	
 	//for alpha if any
@@ -481,7 +505,7 @@ float4 FullDarkPixelShader(VTex0 input) : COLOR0
 }
 
 
-float4 LMAnimPixelShader(VTex0Tex1Tex2Tex3Tex4Intensity input) : COLOR0
+float4 LMAnimPixelShader(VTex0Tex1Tex2Tex3Tex4Color0Intensity input) : COLOR0
 {
 	float3	color;
 	
@@ -514,6 +538,8 @@ float4 LMAnimPixelShader(VTex0Tex1Tex2Tex3Tex4Intensity input) : COLOR0
 	{
 		lm	+=(input.StyleIntensity.z * tex2D(LightMapSampler, input.TexCoord4));
 	}
+	
+	lm	+=input.Color0;
 	
 	lm	=saturate(lm);
 	
@@ -523,7 +549,7 @@ float4 LMAnimPixelShader(VTex0Tex1Tex2Tex3Tex4Intensity input) : COLOR0
 }
 
 
-float4 LMAnimAlphaPixelShader(VTex0Tex1Tex2Tex3Tex4Intensity input) : COLOR0
+float4 LMAnimAlphaPixelShader(VTex0Tex1Tex2Tex3Tex4Color0Intensity input) : COLOR0
 {
 	float3	color;
 	
@@ -557,6 +583,7 @@ float4 LMAnimAlphaPixelShader(VTex0Tex1Tex2Tex3Tex4Intensity input) : COLOR0
 		lm	+=(input.StyleIntensity.z * tex2D(LightMapSampler, input.TexCoord4));
 	}
 	
+	lm	+=input.Color0;
 	lm	=saturate(lm);
 	
 	//Apply lighting.

@@ -66,6 +66,7 @@ namespace BSPLib
 
 		//animated lightmap geometry
 		List<Vector3>	mLMAnimVerts	=new List<Vector3>();
+		List<Vector3>	mLMAnimNormals	=new List<Vector3>();
 		List<Vector2>	mLMAnimFaceTex0	=new List<Vector2>();
 		List<Vector2>	mLMAnimFaceTex1	=new List<Vector2>();
 		List<Vector2>	mLMAnimFaceTex2	=new List<Vector2>();
@@ -76,6 +77,7 @@ namespace BSPLib
 
 		//animated lightmap alpha geometry
 		List<Vector3>	mLMAAnimVerts		=new List<Vector3>();
+		List<Vector3>	mLMAAnimNormals		=new List<Vector3>();
 		List<Vector2>	mLMAAnimFaceTex0	=new List<Vector2>();
 		List<Vector2>	mLMAAnimFaceTex1	=new List<Vector2>();
 		List<Vector2>	mLMAAnimFaceTex2	=new List<Vector2>();
@@ -553,10 +555,11 @@ namespace BSPLib
 				return;
 			}
 
-			VPosTex0Tex1Tex2Tex3Tex4Style4	[]varray	=new VPosTex0Tex1Tex2Tex3Tex4Style4[mLMAnimVerts.Count];
+			VPosNorm0Tex0Tex1Tex2Tex3Tex4Style4	[]varray	=new VPosNorm0Tex0Tex1Tex2Tex3Tex4Style4[mLMAnimVerts.Count];
 			for(int i=0;i < mLMAnimVerts.Count;i++)
 			{
 				varray[i].Position		=mLMAnimVerts[i];
+				varray[i].Normal		=mLMAnimNormals[i];
 				varray[i].TexCoord0		=mLMAnimFaceTex0[i];
 				varray[i].TexCoord1		=mLMAnimFaceTex1[i];
 				varray[i].TexCoord2		=mLMAnimFaceTex2[i];
@@ -567,7 +570,7 @@ namespace BSPLib
 
 			vd	=mLMAnimVD;
 			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosTex0Tex1Tex2Tex3Tex4Style4>(varray);
+			vb.SetData<VPosNorm0Tex0Tex1Tex2Tex3Tex4Style4>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mLMAnimIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
@@ -585,10 +588,11 @@ namespace BSPLib
 				return;
 			}
 
-			VPosTex0Tex1Tex2Tex3Tex4Style4	[]varray	=new VPosTex0Tex1Tex2Tex3Tex4Style4[mLMAAnimVerts.Count];
+			VPosNorm0Tex0Tex1Tex2Tex3Tex4Style4	[]varray	=new VPosNorm0Tex0Tex1Tex2Tex3Tex4Style4[mLMAAnimVerts.Count];
 			for(int i=0;i < mLMAAnimVerts.Count;i++)
 			{
 				varray[i].Position		=mLMAAnimVerts[i];
+				varray[i].Normal		=mLMAAnimNormals[i];
 				varray[i].TexCoord0		=mLMAAnimFaceTex0[i];
 				varray[i].TexCoord1		=mLMAAnimFaceTex1[i];
 				varray[i].TexCoord2		=mLMAAnimFaceTex2[i];
@@ -599,7 +603,7 @@ namespace BSPLib
 
 			vd	=mLMAAnimVD;
 			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosTex0Tex1Tex2Tex3Tex4Style4>(varray);
+			vb.SetData<VPosNorm0Tex0Tex1Tex2Tex3Tex4Style4>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mLMAAnimIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
@@ -678,6 +682,10 @@ namespace BSPLib
 
 						mLMAnimVerts.Add(pnt);
 					}
+
+					//flat shaded normals for lightmapped surfaces
+					ComputeNormals(fverts, mLMAnimNormals);
+
 					List<Vector2>	coords	=new List<Vector2>();
 					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
 
@@ -895,6 +903,10 @@ namespace BSPLib
 
 						mLMAAnimVerts.Add(pnt);
 					}
+
+					//flat shaded normals for lightmapped surfaces
+					ComputeNormals(fverts, mLMAAnimNormals);
+
 					List<Vector2>	coords	=new List<Vector2>();
 					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
 

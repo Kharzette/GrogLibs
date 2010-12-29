@@ -428,7 +428,7 @@ namespace BSPBuilder
 			DrawMaterials(mVLitVB, mVLitIB, mVLitVD, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null);
 //			DrawMaterials(mSkyVB, mSkyIB, mSkyVD, mSkyMatOffsets, mSkyNumVerts, mSkyNumTris, false, null);
 			DrawMaterials(mLMVB, mLMIB, mLMVD, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null);
-//			DrawMaterials(mLMAnimVB, mLMAnimIB, mLMAnimVD, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null);
+			DrawMaterials(mLMAnimVB, mLMAnimIB, mLMAnimVD, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null);
 
 			//alphas
 #if false
@@ -442,7 +442,7 @@ namespace BSPBuilder
 			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, true, mAlphaSortPoints);
 			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, true, mMirrorSortPoints);
 			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints);
-//			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints);
+			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints);
 
 			mAlphaPool.DrawAll(g, mMatLib, -mGameCam.CamPos);
 #endif		
