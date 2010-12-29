@@ -38,6 +38,9 @@
 			this.BoundMesh = new System.Windows.Forms.Button();
 			this.DrawBounds = new System.Windows.Forms.CheckBox();
 			this.RefreshShaders = new System.Windows.Forms.Button();
+			this.GuessTextures = new System.Windows.Forms.Button();
+			this.TexSizeUp = new System.Windows.Forms.Button();
+			this.TexSizeDown = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.MeshPartGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialProperties)).BeginInit();
@@ -167,12 +170,48 @@
 			this.RefreshShaders.UseVisualStyleBackColor = true;
 			this.RefreshShaders.Click += new System.EventHandler(this.OnRefreshShaders);
 			// 
+			// GuessTextures
+			// 
+			this.GuessTextures.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.GuessTextures.Location = new System.Drawing.Point(323, 532);
+			this.GuessTextures.Name = "GuessTextures";
+			this.GuessTextures.Size = new System.Drawing.Size(94, 29);
+			this.GuessTextures.TabIndex = 13;
+			this.GuessTextures.Text = "Guess Textures";
+			this.GuessTextures.UseVisualStyleBackColor = true;
+			this.GuessTextures.Click += new System.EventHandler(this.OnGuessTextures);
+			// 
+			// TexSizeUp
+			// 
+			this.TexSizeUp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.TexSizeUp.Location = new System.Drawing.Point(423, 532);
+			this.TexSizeUp.Name = "TexSizeUp";
+			this.TexSizeUp.Size = new System.Drawing.Size(75, 29);
+			this.TexSizeUp.TabIndex = 14;
+			this.TexSizeUp.Text = "TexSize Up";
+			this.TexSizeUp.UseVisualStyleBackColor = true;
+			this.TexSizeUp.Click += new System.EventHandler(this.OnTexSizeUp);
+			// 
+			// TexSizeDown
+			// 
+			this.TexSizeDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.TexSizeDown.Location = new System.Drawing.Point(504, 532);
+			this.TexSizeDown.Name = "TexSizeDown";
+			this.TexSizeDown.Size = new System.Drawing.Size(89, 29);
+			this.TexSizeDown.TabIndex = 15;
+			this.TexSizeDown.Text = "TexSize Down";
+			this.TexSizeDown.UseVisualStyleBackColor = true;
+			this.TexSizeDown.Click += new System.EventHandler(this.OnTexSizeDown);
+			// 
 			// MaterialForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(1065, 573);
 			this.ControlBox = false;
+			this.Controls.Add(this.TexSizeDown);
+			this.Controls.Add(this.TexSizeUp);
+			this.Controls.Add(this.GuessTextures);
 			this.Controls.Add(this.RefreshShaders);
 			this.Controls.Add(this.DrawBounds);
 			this.Controls.Add(this.BoundMesh);
@@ -211,5 +250,8 @@
 		private System.Windows.Forms.Button BoundMesh;
 		private System.Windows.Forms.CheckBox DrawBounds;
 		private System.Windows.Forms.Button RefreshShaders;
+		private System.Windows.Forms.Button GuessTextures;
+		private System.Windows.Forms.Button TexSizeUp;
+		private System.Windows.Forms.Button TexSizeDown;
 	}
 }

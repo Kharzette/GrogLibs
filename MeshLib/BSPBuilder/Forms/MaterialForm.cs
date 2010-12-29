@@ -201,8 +201,8 @@ namespace BSPBuilder
 
 		private void OnTechniqueListCancel(object sender, EventArgs ea)
 		{
-			mSL.eOk		-=OnTechniqueListOk;
-			mSL.eCancel	-=OnTechniqueListCancel;
+			mTL.eOk		-=OnTechniqueListOk;
+			mTL.eCancel	-=OnTechniqueListCancel;
 
 			MaterialGrid.Enabled	=true;
 		}
@@ -504,6 +504,45 @@ namespace BSPBuilder
 		internal bool bDrawBounds()
 		{
 			return	DrawBounds.Checked;
+		}
+
+
+		void OnGuessTextures(object sender, EventArgs e)
+		{
+			mMatLib.GuessTextures();
+			UpdateMaterials();
+		}
+
+
+		void OnTexSizeDown(object sender, EventArgs e)
+		{
+			if(Microsoft.Xna.Framework.Input.Keyboard.GetState()
+				.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
+			{
+				mMatLib.BoostTexSizes(true);
+			}
+			else
+			{
+				MaterialLib.Material	m	=(MaterialLib.Material)
+					MaterialGrid.SelectedRows[0].DataBoundItem;
+				mMatLib.BoostTexSize(m.Name, true);
+			}
+		}
+
+
+		void OnTexSizeUp(object sender, EventArgs e)
+		{
+			if(Microsoft.Xna.Framework.Input.Keyboard.GetState()
+				.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
+			{
+				mMatLib.BoostTexSizes(false);
+			}
+			else
+			{
+				MaterialLib.Material	m	=(MaterialLib.Material)
+					MaterialGrid.SelectedRows[0].DataBoundItem;
+				mMatLib.BoostTexSize(m.Name, false);
+			}
 		}
 	}
 }

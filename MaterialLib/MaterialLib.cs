@@ -225,6 +225,73 @@ namespace MaterialLib
 		}
 
 
+		public void BoostTexSizes(bool bUp)
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				BoostTexSize(mat.Key, bUp);
+			}
+		}
+
+
+		public void BoostTexSize(string matName, bool bUp)
+		{
+			if(mMats.ContainsKey(matName))
+			{
+				string	val	=mMats[matName].GetParameterValue("mTexSize");
+				if(val == "")
+				{
+					return;
+				}
+
+				Vector2	size	=Vector2.Zero;
+
+				string	[]toks	=val.Split(' ');
+				size.X	=Convert.ToSingle(toks[0]);
+				size.Y	=Convert.ToSingle(toks[1]);
+
+				if(bUp)
+				{
+					size	*=2;
+				}
+				else
+				{
+					size	*=0.5f;
+				}
+				mMats[matName].SetParameter("mTexSize", "" + size.X + " " + size.Y);
+			}
+		}
+
+
+		public void GuessTextures()
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				if(mat.Value.GetParameterValue("mTexture") != "")
+				{
+					continue;
+				}
+
+				string	rawMatName	=mat.Key;
+				if(rawMatName.Contains("*"))
+				{
+					rawMatName	=rawMatName.Substring(0, rawMatName.IndexOf('*'));
+				}
+
+				foreach(KeyValuePair<string, Texture2D> tex in mMaps)
+				{
+					if(tex.Key.Contains(rawMatName))
+					{
+						mat.Value.SetParameter("mTexture", tex.Key);
+						mat.Value.SetParameter("mbTextureEnabled", "true");
+						mat.Value.SetParameter("mTexSize", "" + tex.Value.Width + " " + tex.Value.Height);
+						break;
+					}
+				}
+			}
+		}
+
+
 		public void NukeAllMaterials()
 		{
 			mMats.Clear();
