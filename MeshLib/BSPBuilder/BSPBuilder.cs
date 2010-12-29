@@ -42,6 +42,8 @@ namespace BSPBuilder
 		Random					mRnd	=new Random();
 		string					mDrawChoice;
 		Vector3					mDynamicLightPos;
+		RenderTarget2D			mMirrorRenderTarget;
+		Texture2D				mMirrorTexture;
 
 		//new debug draw stuff
 		VertexBuffer		mLMVB, mVLitVB, mLMAnimVB, mAlphaVB, mSkyVB, mFBVB, mMirrorVB, mLMAVB, mLMAAnimVB;
@@ -49,6 +51,7 @@ namespace BSPBuilder
 		IndexBuffer			mLMIB, mVLitIB, mLMAnimIB, mAlphaIB, mSkyIB, mFBIB, mMirrorIB, mLMAIB, mLMAAnimIB;
 		TexAtlas			mLMapAtlas;
 		Int32				mDebugLeaf;
+		bool				mDebugBool;
 
 		//for sorting alphas
 		MaterialLib.AlphaPool	mAlphaPool	=new MaterialLib.AlphaPool();
@@ -75,6 +78,9 @@ namespace BSPBuilder
 
 		//sort points for alphas
 		Vector3[] mLMASortPoints, mAlphaSortPoints, mMirrorSortPoints, mLMAAnimSortPoints;
+
+		//mirror polys for rendering through
+		List<List<Vector3>>	mMirrorPolys	=new List<List<Vector3>>();
 
 		//collision debuggery
 		Vector3				mStart, mEnd;
@@ -118,6 +124,10 @@ namespace BSPBuilder
 			mGameCam	=new GameCamera(mGDM.GraphicsDevice.Viewport.Width,
 				mGDM.GraphicsDevice.Viewport.Height,
 				mGDM.GraphicsDevice.Viewport.AspectRatio);
+
+			mMirrorRenderTarget	=new RenderTarget2D(mGDM.GraphicsDevice, 256, 256, 1,
+				mGDM.GraphicsDevice.PresentationParameters.BackBufferFormat,
+				RenderTargetUsage.DiscardContents);
 
 			//Quake1 styled lights 'a' is total darkness, 'z' is maxbright.
 			// 0 normal
@@ -420,13 +430,48 @@ namespace BSPBuilder
 		{
 			GraphicsDevice	g	=mGDM.GraphicsDevice;
 
-			g.Clear(Color.CornflowerBlue);
-
 			GraphicsDevice.RenderState.DepthBufferEnable	=true;
 
-//			DrawMaterials(mFBVB, mFBIB, mFBVD, mFBMatOffsets, mFBNumVerts, mFBNumTris, false, null);
+			//draw mirrored world if need be
+			List<Matrix>	mirrorMats;
+			List<Vector3>	mirrorCenters;
+			List<Rectangle>	scissors	=GetMirrorRects(out mirrorMats, out mirrorCenters);
+
+			for(int i=0;i < scissors.Count;i++)
+			{
+				mMatLib.UpdateWVP(mGameCam.World, mirrorMats[i], mGameCam.Projection, mirrorCenters[i]);
+
+				g.SetRenderTarget(0, mMirrorRenderTarget);
+//				g.Clear(Color.CornflowerBlue);
+
+				//render world
+				DrawMaterials(mFBVB, mFBIB, mFBVD, mFBMatOffsets, mFBNumVerts, mFBNumTris, false, null);
+				DrawMaterials(mVLitVB, mVLitIB, mVLitVD, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null);
+				DrawMaterials(mSkyVB, mSkyIB, mSkyVD, mSkyMatOffsets, mSkyNumVerts, mSkyNumTris, false, null);
+				DrawMaterials(mLMVB, mLMIB, mLMVD, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null);
+				DrawMaterials(mLMAnimVB, mLMAnimIB, mLMAnimVD, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null);
+				DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, true, mAlphaSortPoints);
+				DrawMaterials(mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints);
+				DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints);
+				mAlphaPool.DrawAll(g, mMatLib, -mGameCam.CamPos);
+			}
+
+			if(scissors.Count > 0)
+			{
+				g.SetRenderTarget(0, null);
+
+				mMirrorTexture	=mMirrorRenderTarget.GetTexture();
+				mMatLib.AddMap("MirrorTexture", mMirrorTexture);
+
+				//reset matrices
+				mMatLib.UpdateWVP(mGameCam.World, mGameCam.View, mGameCam.Projection, -mGameCam.CamPos);
+			}
+
+			g.Clear(Color.CornflowerBlue);
+
+			DrawMaterials(mFBVB, mFBIB, mFBVD, mFBMatOffsets, mFBNumVerts, mFBNumTris, false, null);
 			DrawMaterials(mVLitVB, mVLitIB, mVLitVD, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null);
-//			DrawMaterials(mSkyVB, mSkyIB, mSkyVD, mSkyMatOffsets, mSkyNumVerts, mSkyNumTris, false, null);
+			DrawMaterials(mSkyVB, mSkyIB, mSkyVD, mSkyMatOffsets, mSkyNumVerts, mSkyNumTris, false, null);
 			DrawMaterials(mLMVB, mLMIB, mLMVD, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null);
 			DrawMaterials(mLMAnimVB, mLMAnimIB, mLMAnimVD, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null);
 
@@ -434,18 +479,22 @@ namespace BSPBuilder
 #if false
 			//draw immediately for pix
 			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, false, mAlphaSortPoints);
-			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, false, mMirrorSortPoints);
 			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints);
 			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints);
 #else
 			//pix freaks out about the alpha sorting
 			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, true, mAlphaSortPoints);
-			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, true, mMirrorSortPoints);
 			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints);
 			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints);
+			if(scissors.Count > 0)
+			{
+				//draw mirror surface itself
+				DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, true, mMirrorSortPoints);
+			}
 
 			mAlphaPool.DrawAll(g, mMatLib, -mGameCam.CamPos);
 #endif		
+
 			if(mVB != null)
 			{
 				g.VertexDeclaration		=mVD;
@@ -547,11 +596,92 @@ namespace BSPBuilder
 
 			mSB.Begin();
 
-			mSB.DrawString(mKoot, "Coordinates: " + -mGameCam.CamPos, mTextPos, Color.Yellow);
+			if(scissors.Count > 0)
+			{
+//				mSB.Draw(mMirrorTexture, Vector2.One * 50.0f, Color.White);
+			}
+
+			if(mDebugBool)
+			{
+				mSB.DrawString(mKoot, "MIV! Coordinates: " + -mGameCam.CamPos, mTextPos, Color.Yellow);
+			}
+			else
+			{
+				mSB.DrawString(mKoot, "Coordinates: " + -mGameCam.CamPos, mTextPos, Color.Yellow);
+			}
 
 			mSB.End();
 
 			base.Draw(gameTime);
+		}
+
+
+		List<Rectangle> GetMirrorRects(out List<Matrix> mirrorMats,
+									   out List<Vector3> mirrorCenters)
+		{
+			List<Rectangle>	scissorRects	=new List<Rectangle>();
+
+			mirrorMats		=new List<Matrix>();
+			mirrorCenters	=new List<Vector3>();
+
+			mDebugBool	=false;
+
+			foreach(List<Vector3> poly in mMirrorPolys)
+			{
+				//see if we are behind the mirror
+				GBSPPlane	pln	=new GBSPPlane(poly);
+				if(Vector3.Dot(-mGameCam.CamPos, pln.mNormal) - pln.mDist < 0)
+				{
+					continue;
+				}
+
+				BoundingBox	box	=GetExtents(poly);
+				if(mGameCam.IsBoxOnScreen(box))
+				{
+					mDebugBool	=true;
+					scissorRects.Add(mGameCam.GetScreenCoverage(poly));
+
+					//calculate centerpoint
+					Vector3	center	=Vector3.Zero;
+					foreach(Vector3 vert in poly)
+					{
+						center	+=vert;
+					}
+					center	/=poly.Count;
+					mirrorCenters.Add(center);
+
+					Vector3	eyeVec	=center - -mGameCam.CamPos;
+
+					Vector3	reflect	=Vector3.Reflect(eyeVec, pln.mNormal);
+
+					reflect.Normalize();
+
+					//get view matrix
+					Vector3	side	=Vector3.Cross(reflect, Vector3.Up);
+					if(side.LengthSquared() == 0.0f)
+					{
+						side	=Vector3.Cross(reflect, Vector3.Right);
+					}
+					Vector3	up	=Vector3.Cross(reflect, side);
+
+					Matrix	mirrorView	=Matrix.CreateLookAt(center, center + reflect, up);
+					mirrorMats.Add(mirrorView);
+				}
+			}
+			return	scissorRects;
+		}
+
+
+		BoundingBox GetExtents(List<Vector3> poly)
+		{
+			Bounds	bnd	=new Bounds();
+
+			foreach(Vector3	pnt in poly)
+			{
+				bnd.AddPointToBounds(pnt);
+			}
+
+			return	new BoundingBox(bnd.mMins, bnd.mMaxs);
 		}
 
 
@@ -915,7 +1045,8 @@ namespace BSPBuilder
 						out mFBMatOffsets, out mFBNumVerts, out mFBNumTris);
 
 					mMap.BuildMirrorRenderData(g, out mMirrorVB, out mMirrorIB, out mMirrorVD,
-						out mMirrorMatOffsets, out mMirrorNumVerts, out mMirrorNumTris, out mMirrorSortPoints);
+						out mMirrorMatOffsets, out mMirrorNumVerts,
+						out mMirrorNumTris, out mMirrorSortPoints, out mMirrorPolys);
 
 					mMap.BuildSkyRenderData(g, out mSkyVB, out mSkyIB, out mSkyVD,
 						out mSkyMatOffsets, out mSkyNumVerts, out mSkyNumTris);

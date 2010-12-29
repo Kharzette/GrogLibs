@@ -36,7 +36,7 @@ namespace BSPLib
 		}
 
 
-		internal GBSPPlane(List<Vector3> verts)
+		public GBSPPlane(List<Vector3> verts)
 		{
 			int	i;
 

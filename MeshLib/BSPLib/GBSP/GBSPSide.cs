@@ -102,8 +102,9 @@ namespace BSPLib
 						{
 							//mirror surface
 							//TODO: reflectivity amount
-							mFlags		|=SURF_TRANS66;
 							ti.mFlags	|=TexInfo.MIRROR;
+							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+							ti.mFlags	|=TexInfo.FLAT;
 						}
 						if(tex == "TOOLS/TOOLSAREAPORTAL")
 						{

@@ -1216,7 +1216,8 @@ namespace BSPLib
 
 		public void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
 			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
-			out Int32 []matNumVerts, out Int32 []matNumTris, out Vector3 []matSortPoints)
+			out Int32 []matNumVerts, out Int32 []matNumTris,
+			out Vector3 []matSortPoints, out List<List<Vector3>> mirrorPolys)
 		{
 			//todo:fix
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
@@ -1227,7 +1228,8 @@ namespace BSPLib
 
 			mg.GetMirrorBuffers(out vb, out ib, out vd);
 
-			mg.GetMirrorMaterialData(out matOffsets, out matNumVerts, out matNumTris, out matSortPoints);
+			mg.GetMirrorMaterialData(out matOffsets, out matNumVerts,
+				out matNumTris, out matSortPoints, out mirrorPolys);
 		}
 
 

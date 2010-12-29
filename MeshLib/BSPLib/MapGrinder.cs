@@ -53,11 +53,12 @@ namespace BSPLib
 		List<Int32>		mAlphaIndexes	=new List<Int32>();
 
 		//computed mirror geometry
-		List<Vector3>	mMirrorVerts	=new List<Vector3>();
-		List<Vector3>	mMirrorNormals	=new List<Vector3>();
-		List<Vector2>	mMirrorTex0		=new List<Vector2>();
-		List<Vector4>	mMirrorColors	=new List<Vector4>();
-		List<Int32>		mMirrorIndexes	=new List<Int32>();
+		List<Vector3>		mMirrorVerts	=new List<Vector3>();
+		List<Vector3>		mMirrorNormals	=new List<Vector3>();
+		List<Vector2>		mMirrorTex0		=new List<Vector2>();
+		List<Vector4>		mMirrorColors	=new List<Vector4>();
+		List<Int32>			mMirrorIndexes	=new List<Int32>();
+		List<List<Vector3>>	mMirrorPolys	=new List<List<Vector3>>();
 
 		//computed sky geometry
 		List<Vector3>	mSkyVerts	=new List<Vector3>();
@@ -305,12 +306,14 @@ namespace BSPLib
 
 
 		internal void GetMirrorMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
-											out Int32 []matNumTris, out Vector3 []matSortPoints)
+											out Int32 []matNumTris, out Vector3 []matSortPoints,
+											out List<List<Vector3>> matPolys)
 		{
 			matOffsets		=mMirrorMaterialOffsets.ToArray();
 			matNumVerts		=mMirrorMaterialNumVerts.ToArray();
 			matNumTris		=mMirrorMaterialNumTris.ToArray();
 			matSortPoints	=mMirrorMaterialSortPoints.ToArray();
+			matPolys		=mMirrorPolys;
 		}
 
 
@@ -1464,8 +1467,8 @@ namespace BSPLib
 						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
 
 						mMirrorTex0.Add(crd);
-						fverts.Add(pnt);
 
+						fverts.Add(pnt);
 						mMirrorVerts.Add(pnt);
 
 						if(tex.IsGouraud())						
@@ -1478,6 +1481,8 @@ namespace BSPLib
 						col.Z	=rgbVerts[fvert + k].Z;
 						mMirrorColors.Add(col);
 					}
+
+					mMirrorPolys.Add(fverts);
 
 					if(!tex.IsGouraud())
 					{
@@ -1939,6 +1944,14 @@ namespace BSPLib
 				else if(mat.Name.EndsWith("*Mirror"))
 				{
 					mat.Technique	="Mirror";
+					mat.AddParameter("mTexture",
+						EffectParameterClass.Object,
+						EffectParameterType.Texture,
+						"MirrorTexture");
+					mat.AddParameter("mTexSize",
+						EffectParameterClass.Vector,
+						EffectParameterType.Single,
+						"256 256");
 				}
 				else if(mat.Name.EndsWith("*Sky"))
 				{

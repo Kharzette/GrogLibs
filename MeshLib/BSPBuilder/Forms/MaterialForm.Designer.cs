@@ -136,6 +136,7 @@
 			// 
 			// BoundMesh
 			// 
+			this.BoundMesh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.BoundMesh.Location = new System.Drawing.Point(790, 532);
 			this.BoundMesh.Name = "BoundMesh";
 			this.BoundMesh.Size = new System.Drawing.Size(103, 29);
@@ -146,6 +147,7 @@
 			// 
 			// DrawBounds
 			// 
+			this.DrawBounds.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.DrawBounds.AutoSize = true;
 			this.DrawBounds.Location = new System.Drawing.Point(694, 539);
 			this.DrawBounds.Name = "DrawBounds";

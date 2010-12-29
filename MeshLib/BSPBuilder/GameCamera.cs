@@ -15,6 +15,8 @@ namespace BSPBuilder
 		Matrix	mMATViewTranspose;
 		Matrix	mMATProjection;
 
+		BoundingFrustum	mFrust	=new BoundingFrustum(Matrix.Identity);
+
 		Vector3	mCamPos;
 		float	mPitch, mYaw, mRoll;
 		float	mAspect, mWidth, mHeight;
@@ -123,6 +125,62 @@ namespace BSPBuilder
 		}
 
 
+		public Rectangle GetScreenCoverage(List<Vector3> points)
+		{
+			Rectangle	rect	=new Rectangle();
+
+			rect.X		=5000;
+			rect.Y		=5000;
+			rect.Width	=-5000;
+			rect.Height	=-5000;
+
+			foreach(Vector3 pnt in points)
+			{
+				Vector3	transformed	=Vector3.Transform(pnt, mFrust.Matrix);
+
+				if(transformed.X < rect.X)
+				{
+					rect.X	=(int)transformed.X;
+				}
+				if(transformed.X > rect.Width)
+				{
+					rect.Width	=(int)transformed.X;
+				}
+				if(transformed.Y < rect.Y)
+				{
+					rect.Y	=(int)transformed.Y;
+				}
+				if(transformed.Y > rect.Height)
+				{
+					rect.Height	=(int)transformed.Y;
+				}
+			}
+
+			rect.Width	-=rect.X;
+			rect.Height	-=rect.Y;
+
+			return	rect;
+		}
+
+
+		internal bool IsBoxOnScreen(BoundingBox box)
+		{
+			return	mFrust.Intersects(box);
+		}
+
+
+		public bool IsPointOnScreen(Vector3 point)
+		{
+			ContainmentType	ct	=mFrust.Contains(point);
+
+			if(ct == ContainmentType.Contains)
+			{
+				return	true;
+			}
+			return	false;
+		}
+
+
 		void UpdateMatrices()
 		{
 			mMATView	=Matrix.CreateTranslation(mCamPos) *
@@ -132,6 +190,8 @@ namespace BSPBuilder
 			
 			mMATProjection	=Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
 				mAspect, 1, 50000);
+
+			mFrust.Matrix	=mMATWorld * mMATView * mMATProjection;
 			
 			Matrix.Transpose(ref mMATView, out mMATViewTranspose);
 		}
