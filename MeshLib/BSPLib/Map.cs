@@ -411,16 +411,6 @@ namespace BSPLib
 		}
 
 
-		public void SaveGBSPFile(string fileName, BSPBuildParams parms)
-		{
-			mBSPParms	=parms;
-
-			ConvertGBSPToFile(fileName);
-
-			Print("GBSP save complete\n");
-		}
-
-
 		internal void UpdateNumPortals(int numPortals)
 		{
 			if(eNumPortalsChanged != null)
@@ -688,20 +678,21 @@ namespace BSPLib
 		}
 
 
-		bool MakeVertNormals()
+		Vector3	[]MakeVertNormals()
 		{
-			VertNormals	=new Vector3[mGFXVerts.Length];
-
-			if(VertNormals == null)
+			Vector3	[]ret	=new Vector3[mGFXVerts.Length];
+			if(ret == null)
 			{
 				Print("MakeVertNormals:  Out of memory for normals.\n");
-				return	false;
+				return	null;
 			}
 
 			for(int i=0;i < mGFXFaces.Length;i++)
 			{
-				GFXFace	f	=mGFXFaces[i];
+				GFXFace		f	=mGFXFaces[i];
+				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
 
+				//grab face normal
 				Vector3	Normal	=mGFXPlanes[f.mPlaneNum].mNormal;
 
 				if(f.mPlaneSide != 0)
@@ -709,21 +700,24 @@ namespace BSPLib
 					Normal	=-Normal;
 				}
 
+				//adds adjacent faces, not sure what happens
+				//if you get stuff that is two sided
+				//this smooths normals for gouraud
 				for(int v=0;v < f.mNumVerts;v++)
 				{
 					Int32	vn	=f.mFirstVert + v;
 
 					Int32	Index	=mGFXVertIndexes[vn];
 
-					VertNormals[Index]	=VertNormals[Index] + Normal;
+					ret[Index]	=ret[Index] + Normal;
 				}
 			}
 
 			for(int i=0;i < mGFXVerts.Length;i++)
 			{
-				VertNormals[i].Normalize();
+				ret[i].Normalize();
 			}
-			return	true;
+			return	ret;
 		}
 
 
@@ -806,129 +800,6 @@ namespace BSPLib
 				return	true;
 			}
 			return	false;
-		}
-
-
-		bool IsCPPGenesis(BinaryReader br)
-		{
-			int	chunkType	=br.ReadInt32();
-			int	size		=br.ReadInt32();
-			int	elements	=br.ReadInt32();
-			
-			char	[]tag	=new char[5];
-			tag[0]	=br.ReadChar();
-			tag[1]	=br.ReadChar();
-			tag[2]	=br.ReadChar();
-			tag[3]	=br.ReadChar();
-			tag[4]	=br.ReadChar();
-
-			//go back to beginning of stream
-			br.BaseStream.Seek(0, SeekOrigin.Begin);
-
-			string	stag	=new string(tag);
-			stag	=stag.Substring(0, 4);
-			if(stag == "GBSP")
-			{
-				return	true;
-			}
-			return	false;
-		}
-
-
-		public GFXHeader LoadGBSPFile(string fileName)
-		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.Open, FileAccess.Read);
-
-			if(file == null)
-			{
-				return	null;
-			}
-
-			BinaryReader	br	=new BinaryReader(file);
-
-			//read header
-			GFXHeader	header	=new GFXHeader();
-			header.Read(br);
-
-			if(header.mTag != 0x47425350)	//"GBSP"
-			{
-				return	null;
-			}
-
-			//read regular bsp crap
-			mGFXModels		=LoadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXModel>(count); }) as GFXModel[];
-			mGFXNodes		=LoadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXNode>(count); }) as GFXNode[];
-			mGFXLeafs		=LoadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXLeaf>(count); }) as GFXLeaf[];
-
-			LoadGFXLeafFaces(br);
-
-			mGFXClusters	=LoadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXCluster>(count); }) as GFXCluster[];
-			mGFXAreas		=LoadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXArea>(count); }) as GFXArea[];
-			mGFXAreaPortals	=LoadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXAreaPortal>(count); }) as GFXAreaPortal[];
-			mGFXLeafSides	=LoadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXLeafSide>(count); }) as GFXLeafSide[];
-			mGFXFaces		=LoadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXFace>(count); }) as GFXFace[];
-			mGFXPlanes		=LoadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXPlane>(count); }) as GFXPlane[];
-
-			LoadGFXVerts(br);
-			LoadGFXVertIndexes(br);
-
-			mGFXTexInfos	=LoadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXTexInfo>(count); }) as GFXTexInfo[];
-			mGFXEntities	=LoadArray(br, delegate(Int32 count)
-							{ return InitArray<MapEntity>(count); }) as MapEntity[];
-
-			if(header.mbHasVis)
-			{
-				LoadGFXVisData(br);
-			}
-			if(header.mbHasMaterialVis)
-			{
-				LoadGFXMaterialVisData(br);
-			}
-			if(header.mbHasLight)
-			{
-				LoadGFXRGBVerts(br);
-				LoadGFXLightData(br);
-			}
-
-			br.Close();
-			file.Close();
-
-			//grab list of material names from grinder
-			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, 69);
-
-			List<string>	matNames	=mg.GetMaterialNames();
-
-			//for material vis
-			mNumVisMaterialBytes	=((matNames.Count + 63) & ~63) >> 3;
-
-			//make clustervisframe
-			mClusterVisFrame	=new int[mGFXClusters.Length];
-			mNodeParents		=new int[mGFXNodes.Length];
-			mNodeVisFrame	=new int[mGFXNodes.Length];
-			mLeafData		=new WorldLeaf[mGFXLeafs.Length];
-
-			//fill in leafdata with blank worldleafs
-			for(int i=0;i < mGFXLeafs.Length;i++)
-			{
-				mLeafData[i]	=new WorldLeaf();
-			}
-
-			FindParents_r(mGFXModels[0].mRootNode[0], -1);
-
-			Print("Load complete\n");
-
-			return	header;
 		}
 
 

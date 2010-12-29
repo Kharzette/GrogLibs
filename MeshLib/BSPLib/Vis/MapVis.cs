@@ -427,43 +427,6 @@ namespace BSPLib
 		}
 
 
-		void WriteVis(BinaryWriter bw, bool bHasLight, bool bMaterialVis)
-		{
-			GFXHeader	header	=new GFXHeader();
-
-			header.mTag				=0x47425350;	//"GBSP"
-			header.mbHasLight		=bHasLight;
-			header.mbHasVis			=true;
-			header.mbHasMaterialVis	=bMaterialVis;
-			header.Write(bw);
-
-			SaveGFXModelData(bw);
-			SaveVisdGFXNodes(bw);
-			SaveVisdGFXLeafs(bw);
-			SaveVisdGFXLeafFaces(bw);
-			SaveVisdGFXClusters(bw);
-			SaveGFXAreasAndPortals(bw);
-			SaveVisdGFXLeafSides(bw);
-			SaveVisdGFXFaces(bw);
-			SaveGFXPlanes(bw);
-			SaveGFXVerts(bw);
-			SaveGFXVertIndexes(bw);
-			SaveGFXTexInfos(bw);
-			SaveGFXEntData(bw);
-
-			SaveGFXVisData(bw);
-			if(bMaterialVis)
-			{
-				SaveGFXMaterialVisData(bw);
-			}
-			if(bHasLight)
-			{
-				SaveGFXRGBVerts(bw);
-				SaveGFXLightData(bw);
-			}
-		}
-
-
 		bool VisAllLeafs()
 		{
 			//Create PortalSeen array.  This is used by Vis flooding routines

@@ -43,7 +43,6 @@ namespace MaterialLib
 		VertexBuffer		mVB;
 		IndexBuffer			mIB;
 		VertexDeclaration	mVD;
-		Int32				mVertStride;
 
 		//drawprim call numbers
 		Int32	mBaseVertex;
@@ -55,7 +54,7 @@ namespace MaterialLib
 
 		internal AlphaNode(Vector3 sortPoint, Material matRef,
 			VertexBuffer vb, IndexBuffer ib, VertexDeclaration vd,
-			Int32 vbStride, Int32 baseVert, Int32 minVertIndex,
+			Int32 baseVert, Int32 minVertIndex,
 			Int32 numVerts, Int32 startIndex, Int32 primCount)
 		{
 			mSortPoint		=sortPoint;
@@ -63,7 +62,6 @@ namespace MaterialLib
 			mVB				=vb;
 			mIB				=ib;
 			mVD				=vd;
-			mVertStride		=vbStride;
 			mBaseVertex		=baseVert;
 			mMinVertexIndex	=minVertIndex;
 			mNumVerts		=numVerts;
@@ -75,7 +73,7 @@ namespace MaterialLib
 		internal void Draw(GraphicsDevice g, MaterialLib mlib)
 		{
 			g.VertexDeclaration	=mVD;
-			g.Vertices[0].SetSource(mVB, 0, mVertStride);
+			g.Vertices[0].SetSource(mVB, 0, mVD.GetVertexStrideSize(0));
 			g.Indices	=mIB;
 
 			if(mNumVerts == 0 || mPrimCount == 0)

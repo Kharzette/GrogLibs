@@ -40,6 +40,9 @@ namespace BSPLib
 		public const UInt32	SURF_ALPHASHADOW		=0x10000;	//do per-pixel light shadow casting in q3map
 		public const UInt32	SURF_NODLIGHT			=0x20000;	//don't dlight even if solid (solid lava, skies)
 		public const UInt32	SURF_DUST				=0x40000;	//leave a dust trail when walking on this surface
+		public const UInt32 SMOOTHING_GOURAUD		=0x1;		//for smoothing group stuff from hammer
+		public const UInt32 SMOOTHING_FLAT			=0x1000000;	//for smoothing group stuff from hammer
+
 
 		public const UInt32 SIDE_HINT		=(1<<0);	//Side is a hint side
 		public const UInt32 SIDE_SHEET		=(1<<1);	//Side is a sheet (only visible face in a sheet contents)
@@ -274,6 +277,20 @@ namespace BSPLib
 					else if(tokens[1] == "rotation")
 					{
 						rot	=Convert.ToSingle(tokens[3]);
+					}
+					else if(tokens[1] == "smoothing_groups")
+					{
+						UInt32	smoove	=Convert.ToUInt32(tokens[3]);
+						if(smoove >= SMOOTHING_GOURAUD && smoove < SMOOTHING_FLAT)
+						{
+							ti.mFlags	|=TexInfo.GOURAUD;
+							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+						}
+						else if(smoove >= SMOOTHING_FLAT)
+						{
+							ti.mFlags	|=TexInfo.FLAT;
+							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+						}
 					}
 				}
 				else if(s.StartsWith("}"))

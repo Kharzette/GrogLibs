@@ -335,7 +335,7 @@ namespace BSPBuilder
 
 
 		void DrawMaterials(VertexBuffer vb, IndexBuffer ib, VertexDeclaration vd,
-			int vbStride, Int32 []offsets, Int32 []numVerts, Int32 []numTris,
+			Int32 []offsets, Int32 []numVerts, Int32 []numTris,
 			bool bAlpha, Vector3 []sortPoints)
 		{
 			if(vb == null)
@@ -348,7 +348,7 @@ namespace BSPBuilder
 			GraphicsDevice	g	=mGDM.GraphicsDevice;
 
 			g.VertexDeclaration	=vd;
-			g.Vertices[0].SetSource(vb, 0, vbStride);
+			g.Vertices[0].SetSource(vb, 0, vd.GetVertexStrideSize(0));
 			g.Indices	=ib;
 
 			int	idx	=0;
@@ -375,7 +375,7 @@ namespace BSPBuilder
 				if(bAlpha)
 				{
 					mAlphaPool.StoreDraw(sortPoints[idx], mat.Value,
-						vb, ib, vd, vbStride, 0, 0, numVerts[idx],
+						vb, ib, vd, 0, 0, numVerts[idx],
 						offsets[idx], numTris[idx]);
 					idx++;
 					continue;
@@ -418,25 +418,25 @@ namespace BSPBuilder
 
 			GraphicsDevice.RenderState.DepthBufferEnable	=true;
 
-			DrawMaterials(mFBVB, mFBIB, mFBVD, 20, mFBMatOffsets, mFBNumVerts, mFBNumTris, false, null);
-			DrawMaterials(mVLitVB, mVLitIB, mVLitVD, 32, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null);
-			DrawMaterials(mSkyVB, mSkyIB, mSkyVD, 20, mSkyMatOffsets, mSkyNumVerts, mSkyNumTris, false, null);
-			DrawMaterials(mLMVB, mLMIB, mLMVD, 28, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null);
-			DrawMaterials(mLMAnimVB, mLMAnimIB, mLMAnimVD, 68, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null);
+			DrawMaterials(mFBVB, mFBIB, mFBVD, mFBMatOffsets, mFBNumVerts, mFBNumTris, false, null);
+			DrawMaterials(mVLitVB, mVLitIB, mVLitVD, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null);
+			DrawMaterials(mSkyVB, mSkyIB, mSkyVD, mSkyMatOffsets, mSkyNumVerts, mSkyNumTris, false, null);
+			DrawMaterials(mLMVB, mLMIB, mLMVD, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null);
+			DrawMaterials(mLMAnimVB, mLMAnimIB, mLMAnimVD, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null);
 
 			//alphas
 #if false
 			//draw immediately for pix
-			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, 36, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, false, mAlphaSortPoints);
-			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, 36, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, false, mMirrorSortPoints);
-			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, 44, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints);
-			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, 68, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints);
+			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, false, mAlphaSortPoints);
+			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, false, mMirrorSortPoints);
+			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints);
+			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints);
 #else
 			//pix freaks out about the alpha sorting
-			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, 36, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, true, mAlphaSortPoints);
-			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, 36, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, true, mMirrorSortPoints);
-			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, 44, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints);
-			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, 68, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints);
+			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, true, mAlphaSortPoints);
+			DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, true, mMirrorSortPoints);
+			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints);
+			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints);
 
 			mAlphaPool.DrawAll(g, mMatLib, -mGameCam.CamPos);
 #endif		

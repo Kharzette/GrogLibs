@@ -12,6 +12,7 @@ namespace BSPLib
 	{
 		public delegate IReadWriteable[] CreateRWArray(Int32 count);
 
+
 		void SaveArray(IReadWriteable []arr, BinaryWriter bw)
 		{
 			bw.Write(arr.Length);
@@ -33,6 +34,187 @@ namespace BSPLib
 				arr[i].Read(br);
 			}
 			return	arr;
+		}
+
+
+		public GFXHeader LoadGBSPFile(string fileName)
+		{
+			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+									FileMode.Open, FileAccess.Read);
+
+			if(file == null)
+			{
+				return	null;
+			}
+
+			BinaryReader	br	=new BinaryReader(file);
+
+			//read header
+			GFXHeader	header	=new GFXHeader();
+			header.Read(br);
+
+			if(header.mTag != 0x47425350)	//"GBSP"
+			{
+				return	null;
+			}
+
+			//read regular bsp crap
+			mGFXModels		=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXModel>(count); }) as GFXModel[];
+			mGFXNodes		=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXNode>(count); }) as GFXNode[];
+			mGFXLeafs		=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXLeaf>(count); }) as GFXLeaf[];
+
+			LoadGFXLeafFaces(br);
+
+			mGFXClusters	=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXCluster>(count); }) as GFXCluster[];
+			mGFXAreas		=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXArea>(count); }) as GFXArea[];
+			mGFXAreaPortals	=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXAreaPortal>(count); }) as GFXAreaPortal[];
+			mGFXLeafSides	=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXLeafSide>(count); }) as GFXLeafSide[];
+			mGFXFaces		=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXFace>(count); }) as GFXFace[];
+			mGFXPlanes		=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXPlane>(count); }) as GFXPlane[];
+
+			LoadGFXVerts(br);
+			LoadGFXVertIndexes(br);
+
+			mGFXTexInfos	=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<GFXTexInfo>(count); }) as GFXTexInfo[];
+			mGFXEntities	=LoadArray(br, delegate(Int32 count)
+							{ return InitArray<MapEntity>(count); }) as MapEntity[];
+
+			if(header.mbHasVis)
+			{
+				LoadGFXVisData(br);
+			}
+			if(header.mbHasMaterialVis)
+			{
+				LoadGFXMaterialVisData(br);
+			}
+			if(header.mbHasLight)
+			{
+				LoadGFXRGBVerts(br);
+				LoadGFXLightData(br);
+			}
+
+			br.Close();
+			file.Close();
+
+			//grab list of material names from grinder
+			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, 69);
+
+			List<string>	matNames	=mg.GetMaterialNames();
+
+			//for material vis
+			mNumVisMaterialBytes	=((matNames.Count + 63) & ~63) >> 3;
+
+			//make clustervisframe
+			mClusterVisFrame	=new int[mGFXClusters.Length];
+			mNodeParents		=new int[mGFXNodes.Length];
+			mNodeVisFrame	=new int[mGFXNodes.Length];
+			mLeafData		=new WorldLeaf[mGFXLeafs.Length];
+
+			//fill in leafdata with blank worldleafs
+			for(int i=0;i < mGFXLeafs.Length;i++)
+			{
+				mLeafData[i]	=new WorldLeaf();
+			}
+
+			FindParents_r(mGFXModels[0].mRootNode[0], -1);
+
+			Print("Load complete\n");
+
+			return	header;
+		}
+
+
+		public void SaveGBSPFile(string fileName, BSPBuildParams parms)
+		{
+			mBSPParms	=parms;
+
+			ConvertGBSPToFile(fileName);
+
+			Print("GBSP save complete\n");
+		}
+
+
+		void WriteVis(BinaryWriter bw, bool bHasLight, bool bMaterialVis)
+		{
+			GFXHeader	header	=new GFXHeader();
+
+			header.mTag				=0x47425350;	//"GBSP"
+			header.mbHasLight		=bHasLight;
+			header.mbHasVis			=true;
+			header.mbHasMaterialVis	=bMaterialVis;
+			header.Write(bw);
+
+			SaveGFXModelData(bw);
+			SaveVisdGFXNodes(bw);
+			SaveVisdGFXLeafs(bw);
+			SaveVisdGFXLeafFaces(bw);
+			SaveVisdGFXClusters(bw);
+			SaveGFXAreasAndPortals(bw);
+			SaveVisdGFXLeafSides(bw);
+			SaveVisdGFXFaces(bw);
+			SaveGFXPlanes(bw);
+			SaveGFXVerts(bw);
+			SaveGFXVertIndexes(bw);
+			SaveGFXTexInfos(bw);
+			SaveGFXEntData(bw);
+
+			SaveGFXVisData(bw);
+			if(bMaterialVis)
+			{
+				SaveGFXMaterialVisData(bw);
+			}
+			if(bHasLight)
+			{
+				SaveGFXRGBVerts(bw);
+				SaveGFXLightData(bw);
+			}
+		}
+
+
+		void WriteLight(BinaryWriter bw, bool bMaterialVis)
+		{
+			GFXHeader	header	=new GFXHeader();
+
+			header.mTag				=0x47425350;	//"GBSP"
+			header.mbHasLight		=true;
+			header.mbHasVis			=true;
+			header.mbHasMaterialVis	=bMaterialVis;
+			header.Write(bw);
+
+			SaveGFXModelData(bw);
+			SaveVisdGFXNodes(bw);
+			SaveVisdGFXLeafs(bw);
+			SaveVisdGFXLeafFaces(bw);
+			SaveVisdGFXClusters(bw);
+			SaveGFXAreasAndPortals(bw);
+			SaveVisdGFXLeafSides(bw);
+			SaveVisdGFXFaces(bw);
+			SaveGFXPlanes(bw);
+			SaveGFXVerts(bw);
+			SaveGFXVertIndexes(bw);
+			SaveGFXTexInfos(bw);
+			SaveGFXEntData(bw);
+
+			//vis stuff
+			SaveGFXVisData(bw);
+			if(bMaterialVis)
+			{
+				SaveGFXMaterialVisData(bw);
+			}
+
+			//light stuff
+			SaveGFXRGBVerts(bw);
+			SaveGFXLightData(bw);
 		}
 
 

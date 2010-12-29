@@ -3,14 +3,16 @@ float4x4	mView;
 float4x4	mProjection;
 float3		mEyePos;
 
+//texture stuff
 texture mTexture;
 texture mLightMap;
-
-bool mbTextureEnabled;
-bool mbLightMapEnabled;
-bool mbFullBright;
-
+bool	mbTextureEnabled;
 float2	mTexSize;
+
+//nearby dynamic lights?
+float3		mLight0Direction;
+float3		mLight0Color;
+const float	LightRange	=300;
 
 //intensity levels for the animted light styles
 float	mAniIntensities[16];
@@ -30,11 +32,12 @@ struct VPosCubeTex0
 };
 
 
-struct VPosTex0Tex1
+struct VPosTex0Tex1Norm0
 {
 	float4 Position : POSITION0;
 	float2 TexCoord0 : TEXCOORD0;
 	float2 TexCoord1 : TEXCOORD1;
+	float3 Normal0 : NORMAL0;
 };
 
 
@@ -43,6 +46,16 @@ struct VPosTex0Tex1Col0
 	float4 Position : POSITION0;
 	float2 TexCoord0 : TEXCOORD0;
 	float2 TexCoord1 : TEXCOORD1;
+	float4 Color0 : COLOR0;
+};
+
+
+struct VPosTex0Tex1Norm0Col0
+{
+	float4 Position : POSITION0;
+	float2 TexCoord0 : TEXCOORD0;
+	float2 TexCoord1 : TEXCOORD1;
+	float3 Normal0 : NORMAL0;
 	float4 Color0 : COLOR0;
 };
 
@@ -132,22 +145,7 @@ struct VTex0Tex1Tex2Tex3Tex4Intensity
 };
 
 
-VPosTex0Tex1 LMVertexShader(VPosTex0Tex1 input)
-{
-	VPosTex0Tex1	output;
-
-	float4	worldPosition	=mul(input.Position, mWorld);
-
-	output.Position	=mul(mul(worldPosition, mView), mProjection);
-
-	output.TexCoord0	=input.TexCoord0;
-	output.TexCoord1	=input.TexCoord1;
-
-	return	output;
-}
-
-
-VPosTex0Tex1Col0 LMAlphaVertexShader(VPosTex0Tex1Col0 input)
+VPosTex0Tex1Col0 LMVertexShader(VPosTex0Tex1Norm0 input)
 {
 	VPosTex0Tex1Col0	output;
 
@@ -157,8 +155,47 @@ VPosTex0Tex1Col0 LMAlphaVertexShader(VPosTex0Tex1Col0 input)
 
 	output.TexCoord0	=input.TexCoord0;
 	output.TexCoord1	=input.TexCoord1;
-	output.Color0		=input.Color0;
+	
+	float	dist	=distance(worldPosition, mLight0Direction);
+	if(dist < LightRange)
+	{
+		float3	worldNormal	=mul(input.Normal0, mWorld);
+		float	ndl			=dot(worldNormal, mLight0Direction);
+		
+		output.Color0	=float4(mLight0Color * ndl, 1);
+	}
+	else
+	{
+		//let the lightmap do all the work
+		output.Color0	=float4(0, 0, 0, 1);
+	}
 
+	return	output;
+}
+
+
+VPosTex0Tex1Col0 LMAlphaVertexShader(VPosTex0Tex1Norm0Col0 input)
+{
+	VPosTex0Tex1Col0	output;
+
+	float4	worldPosition	=mul(input.Position, mWorld);
+
+	output.Position	=mul(mul(worldPosition, mView), mProjection);
+
+	output.TexCoord0	=input.TexCoord0;
+	output.TexCoord1	=input.TexCoord1;
+	float	dist	=distance(worldPosition, mLight0Direction);
+	if(dist < LightRange)
+	{
+		float3	worldNormal	=mul(input.Normal0, mWorld);
+		float	ndl			=dot(worldNormal, mLight0Direction);
+		
+		output.Color0	=float4(mLight0Color * ndl, input.Color0.w);
+	}
+	else
+	{
+		output.Color0	=input.Color0;
+	}
 	return	output;
 }
 
@@ -306,7 +343,7 @@ sampler LightMapSampler = sampler_state
 };
 
 
-float4 LMPixelShader(VTex0Tex1 input) : COLOR0
+float4 LMPixelShader(VTex0Tex1Col0 input) : COLOR0
 {
 	float3	color;
 	float2	tex0	=input.TexCoord0;
@@ -324,6 +361,9 @@ float4 LMPixelShader(VTex0Tex1 input) : COLOR0
 	}
 	
 	float3	lm	=tex2D(LightMapSampler, input.TexCoord1);
+	
+	lm	+=input.Color0;
+	lm	=saturate(lm);
 	
 	//Apply lighting.
 	color	*=lm;
@@ -350,6 +390,9 @@ float4 LMAlphaPixelShader(VTex0Tex1Col0 input) : COLOR0
 	}
 	
 	float3	lm	=tex2D(LightMapSampler, input.TexCoord1);
+	
+	lm	+=float3(input.Color0.x, input.Color0.y, input.Color0.z);	
+	lm	=saturate(lm);
 	
 	//Apply lighting.
 	color	*=lm;

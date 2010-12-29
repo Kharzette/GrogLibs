@@ -21,12 +21,14 @@ namespace BSPLib
 
 		//computed lightmapped geometry
 		List<Vector3>	mLMVerts		=new List<Vector3>();
+		List<Vector3>	mLMNormals		=new List<Vector3>();
 		List<Vector2>	mLMFaceTex0		=new List<Vector2>();
 		List<Vector2>	mLMFaceTex1		=new List<Vector2>();
 		List<Int32>		mLMIndexes		=new List<Int32>();
 
 		//computed lightmapped alpha geometry
 		List<Vector3>	mLMAVerts		=new List<Vector3>();
+		List<Vector3>	mLMANormals		=new List<Vector3>();
 		List<Vector2>	mLMAFaceTex0	=new List<Vector2>();
 		List<Vector2>	mLMAFaceTex1	=new List<Vector2>();
 		List<Int32>		mLMAIndexes		=new List<Int32>();
@@ -138,6 +140,7 @@ namespace BSPLib
 		GFXTexInfo	[]mTexInfos;
 		GFXFace		[]mFaces;
 
+		//constants
 		const float	AlphaValue	=0.8f;	//vertex alpha hardcode (TODO Fix)
 
 
@@ -169,53 +172,61 @@ namespace BSPLib
 
 			//make vertex declarations
 			//lightmapped
-			VertexElement	[]ve	=new VertexElement[3];
+			VertexElement	[]ve	=new VertexElement[4];
 			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
 				VertexElementMethod.Default, VertexElementUsage.Position, 0);
 			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
 			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
+			ve[3]	=new VertexElement(0, 28, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
 			mLMVD	=new VertexDeclaration(gd, ve);
 
 			//lightmapped alpha
-			ve	=new VertexElement[4];
+			ve	=new VertexElement[5];
 			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
 				VertexElementMethod.Default, VertexElementUsage.Position, 0);
 			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
 			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
-			ve[3]	=new VertexElement(0, 28, VertexElementFormat.Vector4,
+			ve[3]	=new VertexElement(0, 28, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
+			ve[4]	=new VertexElement(0, 40, VertexElementFormat.Vector4,
 				VertexElementMethod.Default, VertexElementUsage.Color, 0);
 			mLMAVD	=new VertexDeclaration(gd, ve);
 
 			//vertex lit
-			ve	=new VertexElement[3];
+			ve	=new VertexElement[4];
 			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
 				VertexElementMethod.Default, VertexElementUsage.Position, 0);
 			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
 			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector3,
 				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
+			ve[3]	=new VertexElement(0, 32, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Color, 0);
 			mVLitVD	=new VertexDeclaration(gd, ve);
 
 			//animated lightmapped, and alpha as well
 			//alpha is stored in the style vector4
-			ve	=new VertexElement[7];
+			ve	=new VertexElement[8];
 			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
 				VertexElementMethod.Default, VertexElementUsage.Position, 0);
-			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
+			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
+			ve[2]	=new VertexElement(0, 24, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
-			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector2,
+			ve[3]	=new VertexElement(0, 32, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
-			ve[3]	=new VertexElement(0, 28, VertexElementFormat.Vector2,
+			ve[4]	=new VertexElement(0, 40, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 2);
-			ve[4]	=new VertexElement(0, 36, VertexElementFormat.Vector2,
+			ve[5]	=new VertexElement(0, 48, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 3);
-			ve[5]	=new VertexElement(0, 44, VertexElementFormat.Vector2,
+			ve[6]	=new VertexElement(0, 56, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 4);
-			ve[6]	=new VertexElement(0, 52, VertexElementFormat.Vector4,
+			ve[7]	=new VertexElement(0, 64, VertexElementFormat.Vector4,
 				VertexElementMethod.Default, VertexElementUsage.BlendIndices, 0);
 			mLMAnimVD	=new VertexDeclaration(gd, ve);
 			mLMAAnimVD	=new VertexDeclaration(gd, ve);
@@ -237,23 +248,27 @@ namespace BSPLib
 			mSkyVD	=new VertexDeclaration(gd, ve);
 
 			//Alpha
-			ve	=new VertexElement[3];
+			ve	=new VertexElement[4];
 			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
 				VertexElementMethod.Default, VertexElementUsage.Position, 0);
 			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
 			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector4,
 				VertexElementMethod.Default, VertexElementUsage.Color, 0);
+			ve[3]	=new VertexElement(0, 36, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
 			mAlphaVD	=new VertexDeclaration(gd, ve);
 
 			//Mirror
-			ve	=new VertexElement[3];
+			ve	=new VertexElement[4];
 			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
 				VertexElementMethod.Default, VertexElementUsage.Position, 0);
 			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
 			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector4,
 				VertexElementMethod.Default, VertexElementUsage.Color, 0);
+			ve[3]	=new VertexElement(0, 36, VertexElementFormat.Vector3,
+				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
 			mMirrorVD	=new VertexDeclaration(gd, ve);
 		}
 
@@ -359,22 +374,22 @@ namespace BSPLib
 				return;
 			}
 
-			VPosTex0Tex1	[]varray	=new VPosTex0Tex1[mLMVerts.Count];
+			VPosTex0Tex1Norm0	[]varray	=new VPosTex0Tex1Norm0[mLMVerts.Count];
 			for(int i=0;i < mLMVerts.Count;i++)
 			{
 				varray[i].Position	=mLMVerts[i];
 				varray[i].TexCoord0	=mLMFaceTex0[i];
 				varray[i].TexCoord1	=mLMFaceTex1[i];
+				varray[i].Normal0	=mLMNormals[i];
 			}
 
-			vb	=new VertexBuffer(mGD, 28 * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosTex0Tex1>(varray);
+			vd	=mLMVD;
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
+			vb.SetData<VPosTex0Tex1Norm0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mLMIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mLMIndexes.ToArray());
-
-			vd	=mLMVD;
 		}
 
 
@@ -388,24 +403,24 @@ namespace BSPLib
 				return;
 			}
 
-			VPosTex0Tex1Col0	[]varray	=new VPosTex0Tex1Col0[mLMAVerts.Count];
+			VPosTex0Tex1Norm0Col0	[]varray	=new VPosTex0Tex1Norm0Col0[mLMAVerts.Count];
 			for(int i=0;i < mLMAVerts.Count;i++)
 			{
 				varray[i].Position	=mLMAVerts[i];
 				varray[i].TexCoord0	=mLMAFaceTex0[i];
 				varray[i].TexCoord1	=mLMAFaceTex1[i];
+				varray[i].Normal0	=mLMANormals[i];
 				varray[i].Color0	=Vector4.One;
 				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
 			}
 
-			vb	=new VertexBuffer(mGD, 44 * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosTex0Tex1Col0>(varray);
+			vd	=mLMAVD;
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
+			vb.SetData<VPosTex0Tex1Norm0Col0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mLMAIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mLMAIndexes.ToArray());
-
-			vd	=mLMAVD;
 		}
 
 
@@ -427,14 +442,13 @@ namespace BSPLib
 				varray[i].Normal	=mVLitNormals[i];
 			}
 
-			vb	=new VertexBuffer(mGD, 32 * varray.Length, BufferUsage.WriteOnly);
+			vd	=mVLitVD;
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
 			vb.SetData<VPosTex0Norm0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mVLitIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mVLitIndexes.ToArray());
-
-			vd	=mVLitVD;
 		}
 
 
@@ -457,14 +471,13 @@ namespace BSPLib
 				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
 			}
 
-			vb	=new VertexBuffer(mGD, 36 * varray.Length, BufferUsage.WriteOnly);
+			vd	=mAlphaVD;
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
 			vb.SetData<VPosTex0Col0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mAlphaIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mAlphaIndexes.ToArray());
-
-			vd	=mAlphaVD;
 		}
 
 
@@ -485,14 +498,13 @@ namespace BSPLib
 				varray[i].TexCoord0	=mFBTex0[i];
 			}
 
-			vb	=new VertexBuffer(mGD, 20 * varray.Length, BufferUsage.WriteOnly);
+			vd	=mFBVD;
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
 			vb.SetData<VPosTex0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mFBIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mFBIndexes.ToArray());
-
-			vd	=mFBVD;
 		}
 
 
@@ -515,14 +527,13 @@ namespace BSPLib
 				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
 			}
 
-			vb	=new VertexBuffer(mGD, 36 * varray.Length, BufferUsage.WriteOnly);
+			vd	=mMirrorVD;
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
 			vb.SetData<VPosTex0Col0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mMirrorIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mMirrorIndexes.ToArray());
-
-			vd	=mMirrorVD;
 		}
 
 
@@ -543,14 +554,13 @@ namespace BSPLib
 				varray[i].TexCoord0	=mSkyTex0[i];
 			}
 
-			vb	=new VertexBuffer(mGD, 20 * varray.Length, BufferUsage.WriteOnly);
+			vd	=mSkyVD;
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
 			vb.SetData<VPosTex0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mSkyIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mSkyIndexes.ToArray());
-
-			vd	=mSkyVD;
 		}
 
 
@@ -576,14 +586,13 @@ namespace BSPLib
 				varray[i].StyleIndex	=mLMAnimStyle[i];
 			}
 
-			vb	=new VertexBuffer(mGD, 68 * varray.Length, BufferUsage.WriteOnly);
+			vd	=mLMAnimVD;
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
 			vb.SetData<VPosTex0Tex1Tex2Tex3Tex4Style4>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mLMAnimIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mLMAnimIndexes.ToArray());
-
-			vd	=mLMAnimVD;
 		}
 
 
@@ -609,14 +618,13 @@ namespace BSPLib
 				varray[i].StyleIndex	=mLMAAnimStyle[i];
 			}
 
-			vb	=new VertexBuffer(mGD, 68 * varray.Length, BufferUsage.WriteOnly);
+			vd	=mLMAAnimVD;
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
 			vb.SetData<VPosTex0Tex1Tex2Tex3Tex4Style4>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mLMAAnimIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mLMAAnimIndexes.ToArray());
-
-			vd	=mLMAAnimVD;
 		}
 
 
@@ -1125,7 +1133,7 @@ namespace BSPLib
 					mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
 						out scaleU, out scaleV, out offsetU, out offsetV);
 
-					List<Vector3>	fverts	=new List<Vector3>();
+					List<Vector3>	fverts		=new List<Vector3>();
 
 					int		nverts	=f.mNumVerts;
 					int		fvert	=f.mFirstVert;
@@ -1143,6 +1151,9 @@ namespace BSPLib
 
 						mLMVerts.Add(pnt);
 					}
+
+					//flat shaded normals for lightmapped surfaces
+					ComputeNormals(fverts, mLMNormals);
 
 					List<Vector2>	coords	=new List<Vector2>();
 					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
@@ -1264,6 +1275,9 @@ namespace BSPLib
 
 						mLMAVerts.Add(pnt);
 					}
+
+					//flat shaded normals for lightmapped surfaces
+					ComputeNormals(fverts, mLMANormals);
 
 					List<Vector2>	coords	=new List<Vector2>();
 					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);

@@ -11,7 +11,6 @@ namespace BSPLib
 	public partial class Map
 	{
 		//light related stuff
-		Vector3							[]VertNormals;
 		Dictionary<Int32, DirectLight>	DirectClusterLights	=new Dictionary<Int32, DirectLight>();
 		List<DirectLight>				DirectLights		=new List<DirectLight>();
 		LInfo							[]mLightMaps;
@@ -710,7 +709,8 @@ namespace BSPLib
 			//Allocate some RGBLight data now
 			mGFXRGBVerts	=new Vector3[mGFXVertIndexes.Length];
 
-			if(!MakeVertNormals())
+			Vector3	[]vertNormals	=MakeVertNormals();
+			if(vertNormals == null)
 			{
 				Print("LightGBSPFile:  MakeVertNormals failed...\n");
 				goto	ExitWithError;
@@ -752,7 +752,7 @@ namespace BSPLib
 			}
 			
 			//Light faces, and apply to patches
-			if(!LightFaces(5, mLightParams.mbSeamCorrection))	//Light all the faces lightmaps, and apply to patches
+			if(!LightFaces(5, mLightParams.mbSeamCorrection, vertNormals))	//Light all the faces lightmaps, and apply to patches
 			{
 				goto	ExitWithError;
 			}
@@ -843,8 +843,6 @@ namespace BSPLib
 			FreePatches();
 			FreeLightMaps();
 			FreeReceivers();
-
-			VertNormals	=null;
 
 			FreeGBSPFile();
 		}
@@ -1090,7 +1088,7 @@ namespace BSPLib
 		}
 
 
-		bool GouraudShadeFace(Int32 faceNum)
+		bool GouraudShadeFace(Int32 faceNum, Vector3 []vertNormals)
 		{
 			if(mGFXRGBVerts == null || mGFXRGBVerts.Length == 0)
 			{
@@ -1114,7 +1112,7 @@ namespace BSPLib
 				}
 				else
 				{
-					norm	=VertNormals[index];
+					norm	=vertNormals[index];
 				}
 				
 				for(int i=0;i < DirectLights.Count;i++)
@@ -1235,7 +1233,7 @@ namespace BSPLib
 		}
 
 
-		bool LightFaces(int numSamples, bool bExtraSamples)
+		bool LightFaces(int numSamples, bool bExtraSamples, Vector3 []vertNormals)
 		{
 			Int32	percentage;
 
@@ -1305,7 +1303,7 @@ namespace BSPLib
 
 				if((tex.mFlags & TexInfo.GOURAUD) != 0)
 				{
-					if(!GouraudShadeFace(i))
+					if(!GouraudShadeFace(i, vertNormals))
 					{
 						Map.Print("LightFaces:  GouraudShadeFace failed...\n");
 						return	false;
@@ -1650,43 +1648,6 @@ namespace BSPLib
 			Print("Light Data Size      : " + LightOffset + "\n");
 
 			return	lightData;
-		}
-
-
-		void WriteLight(BinaryWriter bw, bool bMaterialVis)
-		{
-			GFXHeader	header	=new GFXHeader();
-
-			header.mTag				=0x47425350;	//"GBSP"
-			header.mbHasLight		=true;
-			header.mbHasVis			=true;
-			header.mbHasMaterialVis	=bMaterialVis;
-			header.Write(bw);
-
-			SaveGFXModelData(bw);
-			SaveVisdGFXNodes(bw);
-			SaveVisdGFXLeafs(bw);
-			SaveVisdGFXLeafFaces(bw);
-			SaveVisdGFXClusters(bw);
-			SaveGFXAreasAndPortals(bw);
-			SaveVisdGFXLeafSides(bw);
-			SaveVisdGFXFaces(bw);
-			SaveGFXPlanes(bw);
-			SaveGFXVerts(bw);
-			SaveGFXVertIndexes(bw);
-			SaveGFXTexInfos(bw);
-			SaveGFXEntData(bw);
-
-			//vis stuff
-			SaveGFXVisData(bw);
-			if(bMaterialVis)
-			{
-				SaveGFXMaterialVisData(bw);
-			}
-
-			//light stuff
-			SaveGFXRGBVerts(bw);
-			SaveGFXLightData(bw);
 		}
 	}
 }

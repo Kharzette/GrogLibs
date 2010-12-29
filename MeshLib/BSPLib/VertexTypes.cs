@@ -6,19 +6,21 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public struct VPosTex0Tex1
+	public struct VPosTex0Tex1Norm0
 	{
 		public Vector3	Position;
 		public Vector2	TexCoord0;
 		public Vector2	TexCoord1;
+		public Vector3	Normal0;
 	}
 
 
-	public struct VPosTex0Tex1Col0
+	public struct VPosTex0Tex1Norm0Col0
 	{
 		public Vector3	Position;
 		public Vector2	TexCoord0;
 		public Vector2	TexCoord1;
+		public Vector3	Normal0;
 		public Vector4	Color0;
 	}
 
