@@ -98,6 +98,13 @@ namespace BSPLib
 							mFlags		|=SURF_TRANS66;
 							ti.mFlags	|=TexInfo.TRANS;
 						}
+						if(tex.StartsWith("DEV/REFLECTIVITY"))
+						{
+							//mirror surface
+							//TODO: reflectivity amount
+							mFlags		|=SURF_TRANS66;
+							ti.mFlags	|=TexInfo.MIRROR;
+						}
 						if(tex == "TOOLS/TOOLSAREAPORTAL")
 						{
 							ret	|=Contents.CONTENTS_AREAPORTAL;

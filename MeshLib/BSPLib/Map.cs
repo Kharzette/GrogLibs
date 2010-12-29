@@ -1189,7 +1189,9 @@ namespace BSPLib
 			//todo:fix
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
 
-			mg.BuildAlphaFaceData(mGFXVerts, mGFXVertIndexes);
+			Vector3	[]vnorms	=MakeVertNormals();
+
+			mg.BuildAlphaFaceData(mGFXVerts, mGFXRGBVerts, vnorms, mGFXVertIndexes);
 
 			mg.GetAlphaBuffers(out vb, out ib, out vd);
 
@@ -1219,7 +1221,9 @@ namespace BSPLib
 			//todo:fix
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
 
-			mg.BuildMirrorFaceData(mGFXVerts, mGFXVertIndexes);
+			Vector3	[]vnorms	=MakeVertNormals();
+
+			mg.BuildMirrorFaceData(mGFXVerts, mGFXRGBVerts, vnorms, mGFXVertIndexes);
 
 			mg.GetMirrorBuffers(out vb, out ib, out vd);
 

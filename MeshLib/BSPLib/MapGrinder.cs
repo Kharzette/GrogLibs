@@ -48,11 +48,15 @@ namespace BSPLib
 		//computed alpha geometry
 		List<Vector3>	mAlphaVerts		=new List<Vector3>();
 		List<Vector2>	mAlphaTex0		=new List<Vector2>();
+		List<Vector3>	mAlphaNormals	=new List<Vector3>();
+		List<Vector4>	mAlphaColors	=new List<Vector4>();
 		List<Int32>		mAlphaIndexes	=new List<Int32>();
 
 		//computed mirror geometry
 		List<Vector3>	mMirrorVerts	=new List<Vector3>();
+		List<Vector3>	mMirrorNormals	=new List<Vector3>();
 		List<Vector2>	mMirrorTex0		=new List<Vector2>();
+		List<Vector4>	mMirrorColors	=new List<Vector4>();
 		List<Int32>		mMirrorIndexes	=new List<Int32>();
 
 		//computed sky geometry
@@ -198,7 +202,7 @@ namespace BSPLib
 				VertexElementMethod.Default, VertexElementUsage.Color, 0);
 			mLMAVD	=new VertexDeclaration(gd, ve);
 
-			//vertex lit
+			//vertex lit, alpha, and mirror
 			ve	=new VertexElement[4];
 			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
 				VertexElementMethod.Default, VertexElementUsage.Position, 0);
@@ -208,7 +212,9 @@ namespace BSPLib
 				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
 			ve[3]	=new VertexElement(0, 32, VertexElementFormat.Vector4,
 				VertexElementMethod.Default, VertexElementUsage.Color, 0);
-			mVLitVD	=new VertexDeclaration(gd, ve);
+			mVLitVD		=new VertexDeclaration(gd, ve);
+			mAlphaVD	=new VertexDeclaration(gd, ve);
+			mMirrorVD	=new VertexDeclaration(gd, ve);
 
 			//animated lightmapped, and alpha as well
 			//alpha is stored in the style vector4
@@ -232,45 +238,14 @@ namespace BSPLib
 			mLMAnimVD	=new VertexDeclaration(gd, ve);
 			mLMAAnimVD	=new VertexDeclaration(gd, ve);
 
-			//FullBright
+			//FullBright and sky
 			ve	=new VertexElement[2];
 			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
 				VertexElementMethod.Default, VertexElementUsage.Position, 0);
 			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
 				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
 			mFBVD	=new VertexDeclaration(gd, ve);
-
-			//sky
-			ve	=new VertexElement[2];
-			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Position, 0);
-			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
 			mSkyVD	=new VertexDeclaration(gd, ve);
-
-			//Alpha
-			ve	=new VertexElement[4];
-			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Position, 0);
-			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
-			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector4,
-				VertexElementMethod.Default, VertexElementUsage.Color, 0);
-			ve[3]	=new VertexElement(0, 36, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
-			mAlphaVD	=new VertexDeclaration(gd, ve);
-
-			//Mirror
-			ve	=new VertexElement[4];
-			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Position, 0);
-			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
-			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector4,
-				VertexElementMethod.Default, VertexElementUsage.Color, 0);
-			ve[3]	=new VertexElement(0, 36, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
-			mMirrorVD	=new VertexDeclaration(gd, ve);
 		}
 
 
@@ -464,18 +439,19 @@ namespace BSPLib
 				return;
 			}
 
-			VPosTex0Col0	[]varray	=new VPosTex0Col0[mAlphaVerts.Count];
+			VPosTex0Norm0Col0	[]varray	=new VPosTex0Norm0Col0[mAlphaVerts.Count];
 			for(int i=0;i < mAlphaVerts.Count;i++)
 			{
 				varray[i].Position	=mAlphaVerts[i];
 				varray[i].TexCoord0	=mAlphaTex0[i];
-				varray[i].Color0	=Vector4.One;
+				varray[i].Normal	=mAlphaNormals[i];
+				varray[i].Color0	=mAlphaColors[i];
 				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
 			}
 
 			vd	=mAlphaVD;
 			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosTex0Col0>(varray);
+			vb.SetData<VPosTex0Norm0Col0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mAlphaIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
@@ -520,18 +496,19 @@ namespace BSPLib
 				return;
 			}
 
-			VPosTex0Col0	[]varray	=new VPosTex0Col0[mMirrorVerts.Count];
+			VPosTex0Norm0Col0	[]varray	=new VPosTex0Norm0Col0[mMirrorVerts.Count];
 			for(int i=0;i < mMirrorVerts.Count;i++)
 			{
 				varray[i].Position	=mMirrorVerts[i];
 				varray[i].TexCoord0	=mMirrorTex0[i];
-				varray[i].Color0	=Vector4.One;
+				varray[i].Normal	=mMirrorNormals[i];
+				varray[i].Color0	=mMirrorColors[i];
 				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
 			}
 
 			vd	=mMirrorVD;
 			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosTex0Col0>(varray);
+			vb.SetData<VPosTex0Norm0Col0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mMirrorIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
@@ -1416,7 +1393,8 @@ namespace BSPLib
 		}
 
 
-		internal void BuildMirrorFaceData(Vector3 []verts, int[] indexes)
+		internal void BuildMirrorFaceData(Vector3 []verts,
+			Vector3 []rgbVerts, Vector3 []vnorms, int[] indexes)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
@@ -1477,6 +1455,21 @@ namespace BSPLib
 						fverts.Add(pnt);
 
 						mMirrorVerts.Add(pnt);
+
+						if(tex.IsGouraud())						
+						{
+							mMirrorNormals.Add(vnorms[idx]);
+						}
+						Vector4	col	=Vector4.One;
+						col.X	=rgbVerts[fvert + k].X;
+						col.Y	=rgbVerts[fvert + k].Y;
+						col.Z	=rgbVerts[fvert + k].Z;
+						mMirrorColors.Add(col);
+					}
+
+					if(!tex.IsGouraud())
+					{
+						ComputeNormals(fverts, mMirrorNormals);
 					}
 
 					firstVert.Add(mMirrorVerts.Count - f.mNumVerts);
@@ -1492,7 +1485,8 @@ namespace BSPLib
 		}
 
 
-		internal void BuildAlphaFaceData(Vector3 []verts, int[] indexes)
+		internal void BuildAlphaFaceData(Vector3 []verts,
+			Vector3 []rgbVerts, Vector3 []vnorms, int[] indexes)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
@@ -1553,6 +1547,21 @@ namespace BSPLib
 						fverts.Add(pnt);
 
 						mAlphaVerts.Add(pnt);
+
+						if(tex.IsGouraud())						
+						{
+							mAlphaNormals.Add(vnorms[idx]);
+						}
+						Vector4	col	=Vector4.One;
+						col.X	=rgbVerts[fvert + k].X;
+						col.Y	=rgbVerts[fvert + k].Y;
+						col.Z	=rgbVerts[fvert + k].Z;
+						mAlphaColors.Add(col);
+					}
+
+					if(!tex.IsGouraud())
+					{
+						ComputeNormals(fverts, mAlphaNormals);
 					}
 
 					firstVert.Add(mAlphaVerts.Count - f.mNumVerts);
@@ -1975,6 +1984,10 @@ namespace BSPLib
 					matName	+="*VertLit";
 				}
 			}
+			else if(tex.IsMirror())
+			{
+				matName	+="*Mirror";
+			}
 			else if(tex.IsAlpha())
 			{
 				matName	+="*Alpha";
@@ -1986,10 +1999,6 @@ namespace BSPLib
 			else if(tex.IsFullBright() || tex.IsLight())
 			{
 				matName	+="*FullBright";
-			}
-			else if(tex.IsMirror())
-			{
-				matName	+="*Mirror";
 			}
 			else if(tex.IsSky())
 			{

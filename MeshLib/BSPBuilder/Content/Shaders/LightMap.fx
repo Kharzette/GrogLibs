@@ -282,20 +282,6 @@ VPosCubeTex0 SkyVertexShader(VPosTex0 input)
 }
 
 
-VPosTex0Col0 AlphaVertexShader(VPosTex0Col0 input)
-{
-	VPosTex0Col0	output;
-
-	float4	worldPosition	=mul(input.Position, mWorld);
-
-	output.Position		=mul(mul(worldPosition, mView), mProjection);
-	output.TexCoord0	=input.TexCoord0;
-	output.Color0		=input.Color0;
-
-	return	output;
-}
-
-
 VPosTex0Tex1Tex2Tex3Tex4Intensity LMAnimVertexShader(VPosTex0Tex1Tex2Tex3Tex4Style input)
 {
 	VPosTex0Tex1Tex2Tex3Tex4Intensity	output;
@@ -601,7 +587,7 @@ technique Alpha
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 AlphaVertexShader();
+		VertexShader = compile vs_2_0 VLitVertexShader();
 		PixelShader = compile ps_2_0 VLitPixelShader();
 	}
 }
@@ -637,7 +623,7 @@ technique Mirror
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 AlphaVertexShader();
+		VertexShader = compile vs_2_0 VLitVertexShader();
 		PixelShader = compile ps_2_0 VLitPixelShader();
 	}
 }
