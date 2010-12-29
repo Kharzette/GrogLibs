@@ -228,7 +228,7 @@ namespace BSPLib
 
 			//make a temporary mapgrinder to help sync
 			//up material names and indexes and such
-			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, 69);
+			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize);
 
 			for(int leaf=0;leaf < mGFXLeafs.Length;leaf++)
 			{

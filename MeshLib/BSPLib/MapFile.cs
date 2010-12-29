@@ -107,7 +107,7 @@ namespace BSPLib
 			file.Close();
 
 			//grab list of material names from grinder
-			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, 69);
+			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize);
 
 			List<string>	matNames	=mg.GetMaterialNames();
 
@@ -250,6 +250,7 @@ namespace BSPLib
 
 		void SaveGFXLightData(BinaryWriter bw)
 		{
+			bw.Write(mLightMapGridSize);
 			bw.Write(mGFXLightData.Length);
 			bw.Write(mGFXLightData, 0, mGFXLightData.Length);
 		}
@@ -257,8 +258,9 @@ namespace BSPLib
 
 		void LoadGFXLightData(BinaryReader br)
 		{
-			int	count		=br.ReadInt32();
-			mGFXLightData	=br.ReadBytes(count);
+			mLightMapGridSize	=br.ReadInt32();
+			int	count			=br.ReadInt32();
+			mGFXLightData		=br.ReadBytes(count);
 		}
 
 

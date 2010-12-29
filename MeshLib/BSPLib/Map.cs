@@ -60,6 +60,7 @@ namespace BSPLib
 		byte			[]mGFXLightData;
 		byte			[]mGFXVisData;
 		byte			[]mGFXMaterialVisData;
+		int				mLightMapGridSize;
 
 		//build settings
 		BSPBuildParams	mBSPParms;
@@ -1098,7 +1099,7 @@ namespace BSPLib
 
 		public List<MaterialLib.Material> GetMaterials()
 		{
-			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, 69);
+			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize);
 
 			return	mg.GetMaterials();
 		}
@@ -1141,8 +1142,7 @@ namespace BSPLib
 
 			out TexAtlas lightAtlas)
 		{
-			//todo: fix light map scale at the end there
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize);
 
 			mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData);
 			mg.GetLMBuffers(out lmVB, out lmIB, out lmVD);
@@ -1169,8 +1169,7 @@ namespace BSPLib
 			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris)
 		{
-			//todo:fix
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize);
 
 			Vector3	[]vnorms	=MakeVertNormals();
 
@@ -1186,8 +1185,7 @@ namespace BSPLib
 			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris, out Vector3 []matSortPoints)
 		{
-			//todo:fix
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize);
 
 			Vector3	[]vnorms	=MakeVertNormals();
 
@@ -1203,8 +1201,7 @@ namespace BSPLib
 			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris)
 		{
-			//todo:fix
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize);
 
 			mg.BuildFullBrightFaceData(mGFXVerts, mGFXVertIndexes);
 
@@ -1219,8 +1216,7 @@ namespace BSPLib
 			out Int32 []matNumVerts, out Int32 []matNumTris,
 			out Vector3 []matSortPoints, out List<List<Vector3>> mirrorPolys)
 		{
-			//todo:fix
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize);
 
 			Vector3	[]vnorms	=MakeVertNormals();
 
@@ -1237,8 +1233,7 @@ namespace BSPLib
 			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris)
 		{
-			//todo:fix
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, 4);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize);
 
 			mg.BuildSkyFaceData(mGFXVerts, mGFXVertIndexes);
 

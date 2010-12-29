@@ -1466,8 +1466,6 @@ namespace BSPLib
 						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
 						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
 
-						mMirrorTex0.Add(crd);
-
 						fverts.Add(pnt);
 						mMirrorVerts.Add(pnt);
 
@@ -1481,6 +1479,10 @@ namespace BSPLib
 						col.Z	=rgbVerts[fvert + k].Z;
 						mMirrorColors.Add(col);
 					}
+
+					List<Vector2>	coords	=new List<Vector2>();
+					GetMirrorTexCoords(fverts, 256, 256, tex, out coords);
+					mMirrorTex0.AddRange(coords);
 
 					mMirrorPolys.Add(fverts);
 
@@ -1863,10 +1865,6 @@ namespace BSPLib
 				}
 			}
 
-			//in light space at this point
-			//no idea why I need this 1.5
-			//the math makes no sense, should be
-			//only 0.5
 			float	shiftU	=-minS;
 			float	shiftV	=-minT;
 
@@ -1878,6 +1876,78 @@ namespace BSPLib
 
 				crd.X	+=shiftU;
 				crd.Y	+=shiftV;
+
+				coords.Add(crd);
+			}
+		}
+
+
+		void GetMirrorTexCoords(List<Vector3> verts,
+			int	lwidth, int lheight, GFXTexInfo tex,
+			out List<Vector2> coords)
+		{
+			coords	=new List<Vector2>();
+
+			float	minS, minT;
+			float	maxS, maxT;
+
+			minS	=Bounds.MIN_MAX_BOUNDS;
+			minT	=Bounds.MIN_MAX_BOUNDS;
+			maxS	=-Bounds.MIN_MAX_BOUNDS;
+			maxT	=-Bounds.MIN_MAX_BOUNDS;
+
+			GBSPPlane	pln;
+			pln.mNormal	=Vector3.Cross(tex.mVecs[0], tex.mVecs[1]);
+
+			pln.mNormal.Normalize();
+			pln.mDist	=0;
+			pln.mType	=GBSPPlane.PLANE_ANY;
+
+			//get a proper set of texvecs for lighting
+			Vector3	xv, yv;
+			GBSPPoly.TextureAxisFromPlane(pln, out xv, out yv);
+
+			//calculate the min values for s and t
+			foreach(Vector3 pnt in verts)
+			{
+				float	d	=Vector3.Dot(xv, pnt);
+				if(d < minS)
+				{
+					minS	=d;
+				}
+				if(d > maxS)
+				{
+					maxS	=d;
+				}
+
+				d	=Vector3.Dot(yv, pnt);
+				if(d < minT)
+				{
+					minT	=d;
+				}
+				if(d > maxT)
+				{
+					maxT	=d;
+				}
+			}
+
+			float	shiftU	=-minS;
+			float	shiftV	=-minT;
+
+			Vector2	scale	=Vector2.Zero;
+			scale.X	=maxS - minS;
+			scale.Y	=maxT - minT;
+
+			foreach(Vector3 pnt in verts)
+			{
+				Vector2	crd;
+				crd.X	=Vector3.Dot(xv, pnt);
+				crd.Y	=Vector3.Dot(yv, pnt);
+
+				crd.X	+=shiftU;
+				crd.Y	+=shiftV;
+
+				crd	/=scale;
 
 				coords.Add(crd);
 			}
@@ -1951,7 +2021,7 @@ namespace BSPLib
 					mat.AddParameter("mTexSize",
 						EffectParameterClass.Vector,
 						EffectParameterType.Single,
-						"256 256");
+						"1 1");
 				}
 				else if(mat.Name.EndsWith("*Sky"))
 				{

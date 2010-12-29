@@ -705,6 +705,8 @@ namespace BSPLib
 				Print("No vis data for lighting.  Please run a vis on the map before attempting light.\n");
 				return	false;
 			}
+
+			mLightMapGridSize	=lightParams.mLightGridSize;
 			
 			//Allocate some RGBLight data now
 			mGFXRGBVerts	=new Vector3[mGFXVertIndexes.Length];
