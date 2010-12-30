@@ -315,10 +315,10 @@ namespace BSPLib
 			}
 
 			vd	=mLMVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormTex0Tex1>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mLMIndexes.Count, BufferUsage.WriteOnly,
+			ib	=new IndexBuffer(mGD, 4 * mLMIndexes.Count, BufferUsage.None,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mLMIndexes.ToArray());
 		}
@@ -346,10 +346,10 @@ namespace BSPLib
 			}
 
 			vd	=mLMAVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormTex0Tex1Col0>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mLMAIndexes.Count, BufferUsage.WriteOnly,
+			ib	=new IndexBuffer(mGD, 4 * mLMAIndexes.Count, BufferUsage.None,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mLMAIndexes.ToArray());
 		}
@@ -375,10 +375,10 @@ namespace BSPLib
 			}
 
 			vd	=mVLitVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormTex0Col0>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mVLitIndexes.Count, BufferUsage.WriteOnly,
+			ib	=new IndexBuffer(mGD, 4 * mVLitIndexes.Count, BufferUsage.None,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mVLitIndexes.ToArray());
 		}
@@ -405,10 +405,10 @@ namespace BSPLib
 			}
 
 			vd	=mAlphaVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormTex0Col0>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mAlphaIndexes.Count, BufferUsage.WriteOnly,
+			ib	=new IndexBuffer(mGD, 4 * mAlphaIndexes.Count, BufferUsage.None,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mAlphaIndexes.ToArray());
 		}
@@ -432,10 +432,10 @@ namespace BSPLib
 			}
 
 			vd	=mFBVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
 			vb.SetData<VPosTex0>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mFBIndexes.Count, BufferUsage.WriteOnly,
+			ib	=new IndexBuffer(mGD, 4 * mFBIndexes.Count, BufferUsage.None,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mFBIndexes.ToArray());
 		}
@@ -462,10 +462,10 @@ namespace BSPLib
 			}
 
 			vd	=mMirrorVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormTex0Col0>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mMirrorIndexes.Count, BufferUsage.WriteOnly,
+			ib	=new IndexBuffer(mGD, 4 * mMirrorIndexes.Count, BufferUsage.None,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mMirrorIndexes.ToArray());
 		}
@@ -489,10 +489,10 @@ namespace BSPLib
 			}
 
 			vd	=mSkyVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
 			vb.SetData<VPosTex0>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mSkyIndexes.Count, BufferUsage.WriteOnly,
+			ib	=new IndexBuffer(mGD, 4 * mSkyIndexes.Count, BufferUsage.None,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mSkyIndexes.ToArray());
 		}
@@ -523,10 +523,10 @@ namespace BSPLib
 			}
 
 			vd	=mLMAnimVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormBlendTex0Tex1Tex2Tex3Tex4>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mLMAnimIndexes.Count, BufferUsage.WriteOnly,
+			ib	=new IndexBuffer(mGD, 4 * mLMAnimIndexes.Count, BufferUsage.None,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mLMAnimIndexes.ToArray());
 		}
@@ -557,10 +557,10 @@ namespace BSPLib
 			}
 
 			vd	=mLMAAnimVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
+			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormBlendTex0Tex1Tex2Tex3Tex4>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mLMAAnimIndexes.Count, BufferUsage.WriteOnly,
+			ib	=new IndexBuffer(mGD, 4 * mLMAAnimIndexes.Count, BufferUsage.None,
 					IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(mLMAAnimIndexes.ToArray());
 		}
@@ -1041,7 +1041,7 @@ namespace BSPLib
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
 
-			Map.Print("Atlasing " + lightData.Length + " bytes of light data...");
+			Map.Print("Atlasing " + lightData.Length + " bytes of light data...\n");
 
 			foreach(Material mat in mMaterials)
 			{
@@ -1178,7 +1178,7 @@ namespace BSPLib
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
 
-			Map.Print("Handling lightmapped alpha materials");
+			Map.Print("Handling lightmapped alpha materials\n");
 
 			foreach(Material mat in mMaterials)
 			{
@@ -1309,7 +1309,7 @@ namespace BSPLib
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
 
-			Map.Print("Building vertex lit face data...");
+			Map.Print("Building vertex lit face data...\n");
 
 			foreach(Material mat in mMaterials)
 			{
@@ -1402,7 +1402,7 @@ namespace BSPLib
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
 
-			Map.Print("Building mirror face data...");
+			Map.Print("Building mirror face data...\n");
 
 			foreach(Material mat in mMaterials)
 			{
@@ -1500,7 +1500,7 @@ namespace BSPLib
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
 
-			Map.Print("Building alpha face data...");
+			Map.Print("Building alpha face data...\n");
 
 			foreach(Material mat in mMaterials)
 			{
@@ -1593,7 +1593,7 @@ namespace BSPLib
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
 
-			Map.Print("Building full bright face data...");
+			Map.Print("Building full bright face data...\n");
 
 			foreach(Material mat in mMaterials)
 			{
@@ -1670,7 +1670,7 @@ namespace BSPLib
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
 
-			Map.Print("Building sky face data...");
+			Map.Print("Building sky face data...\n");
 
 			foreach(Material mat in mMaterials)
 			{

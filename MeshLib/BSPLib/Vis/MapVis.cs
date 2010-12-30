@@ -317,7 +317,7 @@ namespace BSPLib
 						|=(byte)(1 << (idx & 7));
 				}
 			}
-			Print("Material Vis Complete:  " + mGFXMaterialVisData.Length + " bytes.\n");
+			Print("\nMaterial Vis Complete:  " + mGFXMaterialVisData.Length + " bytes.\n");
 		}
 
 

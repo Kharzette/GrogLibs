@@ -139,6 +139,66 @@ namespace MeshLib
 			return	mTypes.IndexOf(t);
 		}
 
+
+		public static int GetIndexForVertexDeclaration(VertexDeclaration vd)
+		{
+			Type	t	=GetTypeForVertexDeclaration(vd);
+
+			return	GetIndex(t);
+		}
+
+
+		public static Type GetTypeForVertexDeclaration(VertexDeclaration vd)
+		{
+			VertexElement	[]elems	=vd.GetVertexElements();
+
+			bool	bPos, bNorm, bBoneIdx, bBoneWeight;
+			int		numTex, numColor;
+
+			bPos	=bNorm	=bBoneIdx	=bBoneWeight	=false;
+			numTex	=numColor	=0;
+
+			foreach(VertexElement el in elems)
+			{
+				if(el.VertexElementFormat == VertexElementFormat.Vector3)
+				{
+					if(el.VertexElementUsage == VertexElementUsage.Position)
+					{
+						bPos	=true;
+					}
+					else if(el.VertexElementUsage == VertexElementUsage.Normal)
+					{
+						bNorm	=true;
+					}
+				}
+				else if(el.VertexElementFormat == VertexElementFormat.Vector4)
+				{
+					if(el.VertexElementUsage == VertexElementUsage.BlendIndices)
+					{
+						bBoneIdx	=true;
+					}
+					else if(el.VertexElementUsage == VertexElementUsage.BlendWeight)
+					{
+						bBoneWeight	=true;
+					}
+					else if(el.VertexElementUsage == VertexElementUsage.Color)
+					{
+						numColor++;
+					}
+				}
+				else if(el.VertexElementFormat == VertexElementFormat.Vector2)
+				{
+					if(el.VertexElementUsage == VertexElementUsage.TextureCoordinate)
+					{
+						numTex++;
+					}
+				}
+			}
+
+			return	GetMatch(bPos, bNorm, bBoneIdx, bBoneWeight, numTex, numColor);
+		}
+
+
 		public static int GetSizeForType(Type t)
 		{
 			int			i			=0;
@@ -293,7 +353,7 @@ namespace MeshLib
 
 		//match up vertex characteristics to one of the
 		//structure types in VertexStructures
-		public static Type GetMatch(bool bPos, bool bNorm, bool bBone, int numTex, int numColor)
+		public static Type GetMatch(bool bPos, bool bNorm, bool bBoneIdx, bool bBoneWeight, int numTex, int numColor)
 		{
 			foreach(Type t in mTypes)
 			{
@@ -315,14 +375,17 @@ namespace MeshLib
 						continue;
 					}
 				}
-				if(bBone)
+				if(bBoneIdx)
 				{
 					FieldInfo	fi	=t.GetField("BoneIndex");
 					if(fi == null)
 					{
 						continue;
 					}
-					fi	=t.GetField("BoneWeights");
+				}
+				if(bBoneWeight)
+				{
+					FieldInfo	fi	=t.GetField("BoneWeights");
 					if(fi == null)
 					{
 						continue;

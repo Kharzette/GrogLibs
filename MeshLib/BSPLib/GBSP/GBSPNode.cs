@@ -1406,8 +1406,8 @@ namespace BSPLib
 
 			if(bVerbose)
 			{
-				Map.Print("Num Leaf Sides       : " + leafSides.Count);
-				Map.Print("Num Leaf Bevels      : " + numLeafBevels);
+				Map.Print("Num Leaf Sides       : " + leafSides.Count + "\n");
+				Map.Print("Num Leaf Bevels      : " + numLeafBevels + "\n");
 			}
 			return	true;
 		}

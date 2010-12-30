@@ -263,7 +263,7 @@ namespace BSPLib
 
 		public Vector3 GetPlayerStartPos()
 		{
-			foreach(MapEntity e in mEntities)
+			foreach(MapEntity e in mGFXEntities)
 			{
 				if(e.mData.ContainsKey("classname"))
 				{
@@ -343,6 +343,8 @@ namespace BSPLib
 			SaveArray(mGFXVisData, bw);
 			SaveArray(mGFXMaterialVisData, bw);
 			bw.Write(mLightMapGridSize);
+			bw.Write(mNumVisLeafBytes);
+			bw.Write(mNumVisMaterialBytes);
 
 			bw.Close();
 			file.Close();
@@ -374,7 +376,9 @@ namespace BSPLib
 							{ return InitArray<MapEntity>(count); }) as MapEntity[];
 			LoadGFXVisData(br);
 			LoadGFXMaterialVisData(br);
-			mLightMapGridSize	=br.ReadInt32();
+			mLightMapGridSize		=br.ReadInt32();
+			mNumVisLeafBytes		=br.ReadInt32();
+			mNumVisMaterialBytes	=br.ReadInt32();
 
 			//make clustervisframe
 			mClusterVisFrame	=new int[mGFXClusters.Length];
@@ -452,14 +456,7 @@ namespace BSPLib
 			EventHandler	evt	=ePrint;
 			if(evt != null)
 			{
-				if(str.EndsWith("\n"))
-				{
-					evt(str, null);
-				}
-				else
-				{
-					evt(str + "\n", null);
-				}
+				evt(str, null);
 			}
 		}
 

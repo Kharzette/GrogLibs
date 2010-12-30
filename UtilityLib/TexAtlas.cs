@@ -139,6 +139,7 @@ namespace UtilityLib
 			mRect.Y			=br.ReadInt32();
 			mRect.Width		=br.ReadInt32();
 			mRect.Height	=br.ReadInt32();
+			mbOccupied		=br.ReadBoolean();
 
 			bool	bFront	=br.ReadBoolean();
 			bool	bBack	=br.ReadBoolean();
@@ -261,12 +262,17 @@ namespace UtilityLib
 		}
 
 
-		public void Read(BinaryReader br)
+		public void Read(GraphicsDevice g, BinaryReader br)
 		{
 			mWidth	=br.ReadInt32();
 			mHeight	=br.ReadInt32();
 
 			byte	[]atlasBytes	=br.ReadBytes(mWidth * mHeight * 4);
+
+			mAtlasTexture	=new Texture2D(g, mWidth,
+								mHeight, 1,
+								TextureUsage.None,
+								SurfaceFormat.Color);
 
 			mAtlasTexture.SetData<byte>(atlasBytes);
 

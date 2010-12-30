@@ -196,10 +196,16 @@ namespace MaterialLib
 					}
 
 					//strip extension
-					string	texPath	=tex.Substring(0, tex.LastIndexOf('.'));
-					Texture2D	t	=mContent.Load<Texture2D>(texPath);
+					//if no extension, it is likely
+					//not loaded from content
+					int	dotPos	=tex.LastIndexOf('.');
+					if(dotPos != -1)
+					{
+						string	texPath	=tex.Substring(0, dotPos);
+						Texture2D	t	=mContent.Load<Texture2D>(texPath);
 
-					mMaps.Add(tex, t);
+						mMaps.Add(tex, t);
+					}
 				}
 			}
 

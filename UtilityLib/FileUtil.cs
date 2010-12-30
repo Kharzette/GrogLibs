@@ -108,6 +108,27 @@ namespace UtilityLib
 		}
 
 
+		public static void ReadVertexDeclaration(BinaryReader br, out VertexDeclaration vd, GraphicsDevice g)
+		{
+			int	numElements	=br.ReadInt32();
+			VertexElement	[]vels	=new VertexElement[numElements];
+			for(int i=0;i < numElements;i++)
+			{
+				short	streamIdx	=br.ReadInt16();
+				short	offset		=br.ReadInt16();
+
+				VertexElementFormat	vef	=(VertexElementFormat)br.ReadUInt32();
+				VertexElementMethod	vem	=(VertexElementMethod)br.ReadUInt32();
+				VertexElementUsage	veu	=(VertexElementUsage)br.ReadUInt32();
+
+				byte	usageIndex	=br.ReadByte();
+
+				vels[i]	=new VertexElement(streamIdx, offset, vef, vem, veu, usageIndex);
+			}
+			vd	=new VertexDeclaration(g, vels);
+		}
+
+
 		public static void WriteIndexBuffer(BinaryWriter bw, IndexBuffer ib)
 		{
 			int	numIdx	=ib.SizeInBytes / 4;
@@ -121,6 +142,23 @@ namespace UtilityLib
 			{
 				bw.Write(idxArray[i]);
 			}
+		}
+
+
+		public static void ReadIndexBuffer(BinaryReader br, out IndexBuffer ib, GraphicsDevice g, bool bEditor)
+		{
+			int	numIdx	=br.ReadInt32();
+
+			Int32	[]idxArray	=new Int32[numIdx];
+
+			for(int i=0;i < numIdx;i++)
+			{
+				idxArray[i]	=br.ReadInt32();
+			}
+			ib	=new IndexBuffer(g, numIdx * 4,
+				(bEditor)? BufferUsage.None : BufferUsage.WriteOnly,
+				IndexElementSize.ThirtyTwoBits);
+			ib.SetData<Int32>(idxArray);
 		}
 	}
 }

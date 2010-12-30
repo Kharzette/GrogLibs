@@ -745,7 +745,7 @@ namespace ColladaConvert
 			if(bColor1)		numColor++;
 			if(bColor2)		numColor++;
 			if(bColor3)		numColor++;
-			Type vtype	=VertexTypes.GetMatch(bPositions, bNormals, bBoneIndices, numTex, numColor);
+			Type vtype	=VertexTypes.GetMatch(bPositions, bNormals, bBoneIndices, bBoneWeights, numTex, numColor);
 
 			Array	verts	=Array.CreateInstance(vtype, mNumBaseVerts);
 

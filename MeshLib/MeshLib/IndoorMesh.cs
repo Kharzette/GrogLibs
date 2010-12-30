@@ -274,7 +274,7 @@ namespace MeshLib
 				DrawMaterials(gd, -gameCam.CamPos, mSkyVB, mSkyIB, mSkyVD, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
 				DrawMaterials(gd, -gameCam.CamPos, mLMVB, mLMIB, mLMVD, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null, bMatVis);
 				DrawMaterials(gd, -gameCam.CamPos, mLMAnimVB, mLMAnimIB, mLMAnimVD, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
-#if true
+#if false
 				DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, false, mAlphaSortPoints, bMatVis);
 				DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints, bMatVis);
 				DrawMaterials(gd, -gameCam.CamPos, mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints, bMatVis);
@@ -306,7 +306,7 @@ namespace MeshLib
 			DrawMaterials(gd, -gameCam.CamPos, mLMAnimVB, mLMAnimIB, mLMAnimVD, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
 
 			//alphas
-#if true
+#if false
 			//draw immediately for pix
 			DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, false, mAlphaSortPoints, bMatVis);
 			DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints, bMatVis);
@@ -561,6 +561,156 @@ namespace MeshLib
 		}
 
 
+		public void Read(GraphicsDevice g, string fileName, bool bEditor)
+		{
+			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+									FileMode.Open, FileAccess.Read);
+
+			BinaryReader	br	=new BinaryReader(file);
+
+			UInt32	tag	=br.ReadUInt32();
+
+			if(tag != 0x57415244)
+			{
+				return;
+			}
+
+			mLightMapAtlas	=new UtilityLib.TexAtlas(g, 1, 1);
+			mLightMapAtlas.Read(g, br);
+
+			mMatLib.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasTexture());
+
+			int	numVerts	=br.ReadInt32();
+			if(numVerts != 0)
+			{
+				int	typeIdx		=br.ReadInt32();
+				VertexTypes.ReadVerts(br, g, out mLMVB, numVerts, typeIdx, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMIB, g, bEditor);
+				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mLMVD, g);
+			}
+
+			numVerts	=br.ReadInt32();
+			if(numVerts != 0)
+			{
+				int	typeIdx		=br.ReadInt32();
+				VertexTypes.ReadVerts(br, g, out mVLitVB, numVerts, typeIdx, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mVLitIB, g, bEditor);
+				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mVLitVD, g);
+			}
+
+			numVerts	=br.ReadInt32();
+			if(numVerts != 0)
+			{
+				int	typeIdx		=br.ReadInt32();
+				VertexTypes.ReadVerts(br, g, out mLMAnimVB, numVerts, typeIdx, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAnimIB, g, bEditor);
+				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mLMAnimVD, g);
+			}
+
+			numVerts	=br.ReadInt32();
+			if(numVerts != 0)
+			{
+				int	typeIdx		=br.ReadInt32();
+				VertexTypes.ReadVerts(br, g, out mAlphaVB, numVerts, typeIdx, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mAlphaIB, g, bEditor);
+				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mAlphaVD, g);
+			}
+
+			numVerts	=br.ReadInt32();
+			if(numVerts != 0)
+			{
+				int	typeIdx		=br.ReadInt32();
+				VertexTypes.ReadVerts(br, g, out mSkyVB, numVerts, typeIdx, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mSkyIB, g, bEditor);
+				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mSkyVD, g);
+			}
+
+			numVerts	=br.ReadInt32();
+			if(numVerts != 0)
+			{
+				int	typeIdx		=br.ReadInt32();
+				VertexTypes.ReadVerts(br, g, out mFBVB, numVerts, typeIdx, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mFBIB, g, bEditor);
+				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mFBVD, g);
+			}
+
+			numVerts	=br.ReadInt32();
+			if(numVerts != 0)
+			{
+				int	typeIdx		=br.ReadInt32();
+				VertexTypes.ReadVerts(br, g, out mMirrorVB, numVerts, typeIdx, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mMirrorIB, g, bEditor);
+				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mMirrorVD, g);
+			}
+
+			numVerts	=br.ReadInt32();
+			if(numVerts != 0)
+			{
+				int	typeIdx		=br.ReadInt32();
+				VertexTypes.ReadVerts(br, g, out mLMAVB, numVerts, typeIdx, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAIB, g, bEditor);
+				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mLMAVD, g);
+			}
+
+			numVerts	=br.ReadInt32();
+			if(numVerts != 0)
+			{
+				int	typeIdx		=br.ReadInt32();
+				VertexTypes.ReadVerts(br, g, out mLMAAnimVB, numVerts, typeIdx, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAAnimIB, g, bEditor);
+				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mLMAAnimVD, g);
+			}
+
+			mLMMatOffsets		=UtilityLib.FileUtil.ReadIntArray(br);
+			mVLitMatOffsets		=UtilityLib.FileUtil.ReadIntArray(br);
+			mLMAnimMatOffsets	=UtilityLib.FileUtil.ReadIntArray(br);
+			mAlphaMatOffsets	=UtilityLib.FileUtil.ReadIntArray(br);
+			mSkyMatOffsets		=UtilityLib.FileUtil.ReadIntArray(br);
+			mFBMatOffsets		=UtilityLib.FileUtil.ReadIntArray(br);
+			mMirrorMatOffsets	=UtilityLib.FileUtil.ReadIntArray(br);
+			mLMAMatOffsets		=UtilityLib.FileUtil.ReadIntArray(br);
+			mLMAAnimMatOffsets	=UtilityLib.FileUtil.ReadIntArray(br);
+
+			mLMMatNumVerts		=UtilityLib.FileUtil.ReadIntArray(br);
+			mVLitMatNumVerts	=UtilityLib.FileUtil.ReadIntArray(br);
+			mLMAnimMatNumVerts	=UtilityLib.FileUtil.ReadIntArray(br);
+			mAlphaMatNumVerts	=UtilityLib.FileUtil.ReadIntArray(br);
+			mSkyMatNumVerts		=UtilityLib.FileUtil.ReadIntArray(br);
+			mFBMatNumVerts		=UtilityLib.FileUtil.ReadIntArray(br);
+			mMirrorMatNumVerts	=UtilityLib.FileUtil.ReadIntArray(br);
+			mLMAMatNumVerts		=UtilityLib.FileUtil.ReadIntArray(br);
+			mLMAAnimMatNumVerts	=UtilityLib.FileUtil.ReadIntArray(br);
+
+			mLMMatNumTris		=UtilityLib.FileUtil.ReadIntArray(br);
+			mVLitMatNumTris		=UtilityLib.FileUtil.ReadIntArray(br);
+			mLMAnimMatNumTris	=UtilityLib.FileUtil.ReadIntArray(br);
+			mAlphaMatNumTris	=UtilityLib.FileUtil.ReadIntArray(br);
+			mSkyMatNumTris		=UtilityLib.FileUtil.ReadIntArray(br);
+			mFBMatNumTris		=UtilityLib.FileUtil.ReadIntArray(br);
+			mMirrorMatNumTris	=UtilityLib.FileUtil.ReadIntArray(br);
+			mLMAMatNumTris		=UtilityLib.FileUtil.ReadIntArray(br);
+			mLMAAnimMatNumTris	=UtilityLib.FileUtil.ReadIntArray(br);
+
+			mLMASortPoints		=UtilityLib.FileUtil.ReadVecArray(br);
+			mAlphaSortPoints	=UtilityLib.FileUtil.ReadVecArray(br);
+			mMirrorSortPoints	=UtilityLib.FileUtil.ReadVecArray(br);
+			mLMAAnimSortPoints	=UtilityLib.FileUtil.ReadVecArray(br);
+
+			int	mirrorCount	=br.ReadInt32();
+			for(int i=0;i < mirrorCount;i++)
+			{
+				Vector3	[]verts	=UtilityLib.FileUtil.ReadVecArray(br);
+
+				List<Vector3>	vlist	=new List<Vector3>(verts);
+
+				mMirrorPolys.Add(vlist);
+			}
+
+			br.Close();
+			file.Close();
+		}
+
+
 		public void Write(string fileName)
 		{
 			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
@@ -572,78 +722,141 @@ namespace MeshLib
 
 			mLightMapAtlas.Write(bw);
 
-			int	numVerts	=mLMVB.SizeInBytes / mLMVD.GetVertexStrideSize(0);
-			int	typeIdx		=MeshLib.VertexTypes.GetIndex(typeof(MeshLib.VPosNormTex0Tex1));
+			if(mLMVB == null)
+			{
+				bw.Write(0);
+			}
+			else
+			{
+				int	numVerts	=mLMVB.SizeInBytes / mLMVD.GetVertexStrideSize(0);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mLMVD);
 
-			bw.Write(numVerts);
-			bw.Write(typeIdx);
-			MeshLib.VertexTypes.WriteVerts(bw, mLMVB, numVerts, typeIdx);
-			UtilityLib.FileUtil.WriteIndexBuffer(bw, mLMIB);
-			UtilityLib.FileUtil.WriteVertexDeclaration(bw, mLMVD);
+				bw.Write(numVerts);
+				bw.Write(typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mLMVB, numVerts, typeIdx);
+				UtilityLib.FileUtil.WriteIndexBuffer(bw, mLMIB);
+				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mLMVD);
+			}
 
-			numVerts	=mVLitVB.SizeInBytes / mVLitVD.GetVertexStrideSize(0);
-			typeIdx		=MeshLib.VertexTypes.GetIndex(typeof(MeshLib.VPosNormTex0Col0));
-			bw.Write(numVerts);
-			bw.Write(typeIdx);
-			MeshLib.VertexTypes.WriteVerts(bw, mVLitVB, numVerts, typeIdx);
-			UtilityLib.FileUtil.WriteIndexBuffer(bw, mVLitIB);
-			UtilityLib.FileUtil.WriteVertexDeclaration(bw, mVLitVD);
+			if(mVLitVB == null)
+			{
+				bw.Write(0);
+			}
+			else
+			{
+				int	numVerts	=mVLitVB.SizeInBytes / mVLitVD.GetVertexStrideSize(0);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mVLitVD);
+				bw.Write(numVerts);
+				bw.Write(typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mVLitVB, numVerts, typeIdx);
+				UtilityLib.FileUtil.WriteIndexBuffer(bw, mVLitIB);
+				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mVLitVD);
+			}
 
-			numVerts	=mLMAnimVB.SizeInBytes / mLMAnimVD.GetVertexStrideSize(0);
-			typeIdx		=MeshLib.VertexTypes.GetIndex(typeof(MeshLib.VPosNormTex0Col0));
-			bw.Write(numVerts);
-			bw.Write(typeIdx);
-			MeshLib.VertexTypes.WriteVerts(bw, mLMAnimVB, numVerts, typeIdx);
-			UtilityLib.FileUtil.WriteIndexBuffer(bw, mLMAnimIB);
-			UtilityLib.FileUtil.WriteVertexDeclaration(bw, mLMAnimVD);
+			if(mLMAnimVB == null)
+			{
+				bw.Write(0);
+			}
+			else
+			{
+				int	numVerts	=mLMAnimVB.SizeInBytes / mLMAnimVD.GetVertexStrideSize(0);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mLMAnimVD);
+				bw.Write(numVerts);
+				bw.Write(typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mLMAnimVB, numVerts, typeIdx);
+				UtilityLib.FileUtil.WriteIndexBuffer(bw, mLMAnimIB);
+				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mLMAnimVD);
+			}
 
-			numVerts	=mAlphaVB.SizeInBytes / mAlphaVD.GetVertexStrideSize(0);
-			typeIdx		=MeshLib.VertexTypes.GetIndex(typeof(MeshLib.VPosNormTex0Col0));
-			bw.Write(typeIdx);
-			bw.Write(numVerts);
-			MeshLib.VertexTypes.WriteVerts(bw, mAlphaVB, numVerts, typeIdx);
-			UtilityLib.FileUtil.WriteIndexBuffer(bw, mAlphaIB);
-			UtilityLib.FileUtil.WriteVertexDeclaration(bw, mAlphaVD);
+			if(mAlphaVB == null)
+			{
+				bw.Write(0);
+			}
+			else
+			{
+				int	numVerts	=mAlphaVB.SizeInBytes / mAlphaVD.GetVertexStrideSize(0);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mAlphaVD);
+				bw.Write(numVerts);
+				bw.Write(typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mAlphaVB, numVerts, typeIdx);
+				UtilityLib.FileUtil.WriteIndexBuffer(bw, mAlphaIB);
+				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mAlphaVD);
+			}
 
-			numVerts	=mSkyVB.SizeInBytes / mSkyVD.GetVertexStrideSize(0);
-			typeIdx		=MeshLib.VertexTypes.GetIndex(typeof(MeshLib.VPosNormTex0Col0));
-			bw.Write(numVerts);
-			bw.Write(typeIdx);
-			MeshLib.VertexTypes.WriteVerts(bw, mSkyVB, numVerts, typeIdx);
-			UtilityLib.FileUtil.WriteIndexBuffer(bw, mSkyIB);
-			UtilityLib.FileUtil.WriteVertexDeclaration(bw, mSkyVD);
+			if(mSkyVB == null)
+			{
+				bw.Write(0);
+			}
+			else
+			{
+				int	numVerts	=mSkyVB.SizeInBytes / mSkyVD.GetVertexStrideSize(0);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mSkyVD);
+				bw.Write(numVerts);
+				bw.Write(typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mSkyVB, numVerts, typeIdx);
+				UtilityLib.FileUtil.WriteIndexBuffer(bw, mSkyIB);
+				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mSkyVD);
+			}
 
-			numVerts	=mFBVB.SizeInBytes / mFBVD.GetVertexStrideSize(0);
-			typeIdx		=MeshLib.VertexTypes.GetIndex(typeof(MeshLib.VPosNormTex0Col0));
-			bw.Write(numVerts);
-			bw.Write(typeIdx);
-			MeshLib.VertexTypes.WriteVerts(bw, mFBVB, numVerts, typeIdx);
-			UtilityLib.FileUtil.WriteIndexBuffer(bw, mFBIB);
-			UtilityLib.FileUtil.WriteVertexDeclaration(bw, mFBVD);
+			if(mFBVB == null)
+			{
+				bw.Write(0);
+			}
+			else
+			{
+				int	numVerts	=mFBVB.SizeInBytes / mFBVD.GetVertexStrideSize(0);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mFBVD);
+				bw.Write(numVerts);
+				bw.Write(typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mFBVB, numVerts, typeIdx);
+				UtilityLib.FileUtil.WriteIndexBuffer(bw, mFBIB);
+				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mFBVD);
+			}
 
-			numVerts	=mMirrorVB.SizeInBytes / mMirrorVD.GetVertexStrideSize(0);
-			typeIdx		=MeshLib.VertexTypes.GetIndex(typeof(MeshLib.VPosNormTex0Col0));
-			bw.Write(numVerts);
-			bw.Write(typeIdx);
-			MeshLib.VertexTypes.WriteVerts(bw, mMirrorVB, numVerts, typeIdx);
-			UtilityLib.FileUtil.WriteIndexBuffer(bw, mMirrorIB);
-			UtilityLib.FileUtil.WriteVertexDeclaration(bw, mMirrorVD);
+			if(mMirrorVB == null)
+			{
+				bw.Write(0);
+			}
+			else
+			{
+				int	numVerts	=mMirrorVB.SizeInBytes / mMirrorVD.GetVertexStrideSize(0);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mMirrorVD);
+				bw.Write(numVerts);
+				bw.Write(typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mMirrorVB, numVerts, typeIdx);
+				UtilityLib.FileUtil.WriteIndexBuffer(bw, mMirrorIB);
+				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mMirrorVD);
+			}
 
-			numVerts	=mLMAVB.SizeInBytes / mLMAVD.GetVertexStrideSize(0);
-			typeIdx		=MeshLib.VertexTypes.GetIndex(typeof(MeshLib.VPosNormTex0Col0));
-			bw.Write(numVerts);
-			bw.Write(typeIdx);
-			MeshLib.VertexTypes.WriteVerts(bw, mLMAVB, numVerts, typeIdx);
-			UtilityLib.FileUtil.WriteIndexBuffer(bw, mLMAIB);
-			UtilityLib.FileUtil.WriteVertexDeclaration(bw, mLMAVD);
+			if(mLMAVB == null)
+			{
+				bw.Write(0);
+			}
+			else
+			{
+				int	numVerts	=mLMAVB.SizeInBytes / mLMAVD.GetVertexStrideSize(0);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mLMAVD);
+				bw.Write(numVerts);
+				bw.Write(typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mLMAVB, numVerts, typeIdx);
+				UtilityLib.FileUtil.WriteIndexBuffer(bw, mLMAIB);
+				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mLMAVD);
+			}
 
-			numVerts	=mLMAAnimVB.SizeInBytes / mLMAAnimVD.GetVertexStrideSize(0);
-			typeIdx		=MeshLib.VertexTypes.GetIndex(typeof(MeshLib.VPosNormTex0Col0));
-			bw.Write(numVerts);
-			bw.Write(typeIdx);
-			MeshLib.VertexTypes.WriteVerts(bw, mLMAAnimVB, numVerts, typeIdx);
-			UtilityLib.FileUtil.WriteIndexBuffer(bw, mLMAAnimIB);
-			UtilityLib.FileUtil.WriteVertexDeclaration(bw, mLMAAnimVD);
+			if(mLMAAnimVB == null)
+			{
+				bw.Write(0);
+			}
+			else
+			{
+				int	numVerts	=mLMAAnimVB.SizeInBytes / mLMAAnimVD.GetVertexStrideSize(0);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mLMAAnimVD);
+				bw.Write(numVerts);
+				bw.Write(typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mLMAAnimVB, numVerts, typeIdx);
+				UtilityLib.FileUtil.WriteIndexBuffer(bw, mLMAAnimIB);
+				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mLMAAnimVD);
+			}
 
 			//material offsets
 			UtilityLib.FileUtil.WriteArray(bw, mLMMatOffsets);
