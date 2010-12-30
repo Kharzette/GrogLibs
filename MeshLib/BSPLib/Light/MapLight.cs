@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Diagnostics;
+using System.Threading;
 using Microsoft.Xna.Framework;
 
 
@@ -633,9 +634,10 @@ namespace BSPLib
 		}
 
 
-		public bool LightGBSPFile(string fileName, GetEmissiveForMaterial c4m,
-			LightParams lightParams, BSPBuildParams buildParams)
+		void LightGBSPFileCB(object threadContext)
 		{
+			LightParameters	lp	=threadContext as LightParameters;
+
 			string	RecFile;
 
 			Print(" --- Radiosity GBSP File --- \n");
@@ -643,21 +645,29 @@ namespace BSPLib
 			BinaryWriter	bw		=null;
 			FileStream		file	=null;
 			
-			GFXHeader	header	=LoadGBSPFile(fileName);
+			GFXHeader	header	=LoadGBSPFile(lp.mFileName);
 			if(header == null)
 			{
-				Print("LightGBSPFile:  Could not load GBSP file: " + fileName + "\n");
-				return	false;
+				Print("LightGBSPFile:  Could not load GBSP file: " + lp.mFileName + "\n");
+				if(eLightDone != null)
+				{
+					eLightDone(false, null);
+				}
+				return;
 			}
 
 			//ensure vis is built
 			if(!header.mbHasVis)
 			{
 				Print("No vis data for lighting.  Please run a vis on the map before attempting light.\n");
-				return	false;
+				if(eLightDone != null)
+				{
+					eLightDone(false, null);
+				}
+				return;
 			}
 
-			mLightMapGridSize	=lightParams.mLightGridSize;
+			mLightMapGridSize	=lp.mLightParams.mLightGridSize;
 			
 			//Allocate some RGBLight data now
 			mGFXRGBVerts	=new Vector3[mGFXVertIndexes.Length];
@@ -673,16 +683,16 @@ namespace BSPLib
 			mGFXLightData	=null;
 
 			//Get the receiver file name
-			int	extPos	=fileName.LastIndexOf(".");
-			RecFile		=fileName.Substring(0, extPos);
+			int	extPos	=lp.mFileName.LastIndexOf(".");
+			RecFile		=lp.mFileName.Substring(0, extPos);
 			RecFile		+=".rec";
 
-			file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+			file	=UtilityLib.FileUtil.OpenTitleFile(lp.mFileName,
 									FileMode.OpenOrCreate, FileAccess.Write);
 
 			if(file == null)
 			{
-				Print("LightGBSPFile:  Could not open GBSP file for writing: " + fileName + "\n");
+				Print("LightGBSPFile:  Could not open GBSP file for writing: " + lp.mFileName + "\n");
 				goto	ExitWithError;
 			}
 			bw	=new BinaryWriter(file);
@@ -690,32 +700,32 @@ namespace BSPLib
 			Print("Num Faces            : " + mGFXFaces.Length + "\n");
 
 			//Build the patches (before direct lights are created)
-			if(lightParams.mbRadiosity)
+			if(lp.mLightParams.mbRadiosity)
 			{
-				if(!BuildPatches(c4m, lightParams.mSurfaceReflect,
-					lightParams.mPatchSize, lightParams.mbFastPatch,
-					buildParams.mbVerbose))
+				if(!BuildPatches(lp.mC4M, lp.mLightParams.mSurfaceReflect,
+					lp.mLightParams.mPatchSize, lp.mLightParams.mbFastPatch,
+					lp.mBSPParams.mbVerbose))
 				{
 					goto	ExitWithError;
 				}
 			}
 
-			if(!CreateDirectLights(lightParams.mbRadiosity))
+			if(!CreateDirectLights(lp.mLightParams.mbRadiosity))
 			{
 				Print("LightGBSPFile:  Could not create main lights.\n");
 				goto	ExitWithError;
 			}
 			
 			//Light faces, and apply to patches
-			if(!LightFaces(5, lightParams.mbSeamCorrection, vertNormals,
-				lightParams.mLightGridSize, lightParams.mbRadiosity))	//Light all the faces lightmaps, and apply to patches
+			if(!LightFaces(5, lp.mLightParams.mbSeamCorrection, vertNormals,
+				lp.mLightParams.mLightGridSize, lp.mLightParams.mbRadiosity))	//Light all the faces lightmaps, and apply to patches
 			{
 				goto	ExitWithError;
 			}
 
 			FreeDirectLights();
 
-			if(lightParams.mbRadiosity)
+			if(lp.mLightParams.mbRadiosity)
 			{
 				//Pre-calc how much light is distributed to each patch from every patch
 				if(!CalcReceivers(RecFile))	
@@ -724,7 +734,7 @@ namespace BSPLib
 				}
 
 				//Bounce patches around to their receivers
-				if(!BouncePatches(lightParams.mNumBounces, buildParams.mbVerbose))	//Bounce them around
+				if(!BouncePatches(lp.mLightParams.mNumBounces, lp.mBSPParams.mbVerbose))	//Bounce them around
 				{
 					goto	ExitWithError;
 				}
@@ -732,20 +742,21 @@ namespace BSPLib
 				FreeReceivers();		//Don't need these anymore
 
 				//Apply the patches back into the light maps
-				if(!AbsorbPatches(lightParams.mPatchSize))	//Apply the patches to the lightmaps
+				if(!AbsorbPatches(lp.mLightParams.mPatchSize))	//Apply the patches to the lightmaps
 				{
 					goto	ExitWithError;
 				}			
 				FreePatches();	//Don't need these anymore...
 			}
 
-			FinalizeRGBVerts(lightParams.mMinLight, lightParams.mMaxIntensity);
+			FinalizeRGBVerts(lp.mLightParams.mMinLight, lp.mLightParams.mMaxIntensity);
 
 			int	numRGBMaps	=0;
 
 			//grab combined lightmap data
 			List<byte>	lightData	=BuildLightMaps(ref numRGBMaps,
-				lightParams.mMinLight, lightParams.mLightScale, lightParams.mMaxIntensity);
+				lp.mLightParams.mMinLight, lp.mLightParams.mLightScale,
+				lp.mLightParams.mMaxIntensity);
 			if(lightData == null)
 			{
 				goto	ExitWithError;
@@ -761,7 +772,11 @@ namespace BSPLib
 
 			Print("Num Light Maps       : " + numRGBMaps + "\n");
 
-			return	true;
+			if(eLightDone != null)
+			{
+				eLightDone(true, null);
+			}
+			return;
 
 			ExitWithError:
 			{
@@ -775,8 +790,25 @@ namespace BSPLib
 				}
 				CleanupLight();
 
-				return	false;
+				if(eLightDone != null)
+				{
+					eLightDone(false, null);
+				}
+				return;
 			}
+		}
+
+
+		public void LightGBSPFile(string fileName, GetEmissiveForMaterial c4m,
+			LightParams lightParams, BSPBuildParams buildParams)
+		{
+			LightParameters	lp	=new LightParameters();
+			lp.mBSPParams	=buildParams;
+			lp.mLightParams	=lightParams;
+			lp.mC4M			=c4m;
+			lp.mFileName	=fileName;
+
+			ThreadPool.QueueUserWorkItem(LightGBSPFileCB, lp);
 		}
 
 

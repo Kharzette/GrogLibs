@@ -654,6 +654,7 @@ namespace BSPBuilder
 				mMap	=new Map();
 				RegisterMapEvents(true);
 				mMap.MaterialVisGBSPFile(fileName, mMainForm.VisParameters, mMainForm.BSPParameters);
+				mMainForm.EnableFileIO(true);	//not threaded
 			}
 		}
 

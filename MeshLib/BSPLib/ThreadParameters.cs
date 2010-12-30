@@ -34,8 +34,9 @@ namespace BSPLib
 
 	public class LightParameters
 	{
-		public BSPBuildParams	mBSPParams;
-		public LightParameters	mLightParams;
-		public string			mFileName;
+		public BSPBuildParams				mBSPParams;
+		public LightParams					mLightParams;
+		public Map.GetEmissiveForMaterial	mC4M;
+		public string						mFileName;
 	}
 }
