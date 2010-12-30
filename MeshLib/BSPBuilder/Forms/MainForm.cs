@@ -371,9 +371,10 @@ namespace BSPBuilder
 
 		void OnRadiosityChanged(object sender, EventArgs e)
 		{
-			FastPatch.Enabled	=Radiosity.Checked;
-			PatchSize.Enabled	=Radiosity.Checked;
-			NumBounce.Enabled	=Radiosity.Checked;
+			FastPatch.Enabled		=Radiosity.Checked;
+			PatchSize.Enabled		=Radiosity.Checked;
+			ReflectiveScale.Enabled	=Radiosity.Checked;
+//			NumBounce.Enabled		=Radiosity.Checked;
 		}
 
 

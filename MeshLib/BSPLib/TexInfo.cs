@@ -28,6 +28,9 @@ namespace BSPLib
 		public const UInt32	FLAT		=(1<<6);
 		public const UInt32	NO_LIGHTMAP	=(1<<15);
 
+		//constants
+		public const float	FaceLightIntensity	=20.0f;
+
 
 		internal bool Compare(TexInfo other)
 		{

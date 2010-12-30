@@ -196,6 +196,10 @@ namespace BSPLib
 
 		public bool IsMaterialVisibleFromPos(Vector3 pos, int matIndex)
 		{
+			if(mGFXNodes == null)
+			{
+				return	true;	//no map data
+			}
 			Int32	node	=FindNodeLandedIn(0, pos);
 			if(node > 0)
 			{

@@ -223,12 +223,15 @@ namespace BSPLib
 						if(tex == "TEST/COLOR_RED")
 						{
 							//using this as lava
-							ret			|=Contents.BSP_CONTENTS_EMPTY2;
-							ret			|=Contents.BSP_CONTENTS_USER1;
-							ret			|=Contents.BSP_CONTENTS_WAVY2;
-							ti.mFlags	|=TexInfo.TRANS;
-							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
-							ti.mFlags	|=TexInfo.FLAT;
+							ret				|=Contents.BSP_CONTENTS_EMPTY2;
+							ret				|=Contents.BSP_CONTENTS_USER1;
+							ret				|=Contents.BSP_CONTENTS_WAVY2;
+							ti.mFlags		|=TexInfo.TRANS;
+							ti.mFlags		|=TexInfo.FLAT;
+							ti.mFlags		|=TexInfo.LIGHT;				//lava emits light by default?
+							ti.mFaceLight	=TexInfo.FaceLightIntensity;	//TODO: donut hardcode
+							ti.mFlags		|=TexInfo.FULLBRIGHT;
+							ti.mFlags		|=TexInfo.NO_LIGHTMAP;
 						}
 						if(tex.StartsWith("DEV/DEV_WATER") || tex.StartsWith("WATER"))
 						{
@@ -295,17 +298,26 @@ namespace BSPLib
 						UInt32	smoove	=Convert.ToUInt32(tokens[3]);
 						if((smoove & SMOOTHING_SURFLIGHT) != 0)
 						{
-							ti.mFlags	=TexInfo.LIGHT;
+							ti.mFlags		|=TexInfo.LIGHT;
+							ti.mFaceLight	=TexInfo.FaceLightIntensity;	//TODO: donut hardcode
+							ti.mFlags		|=TexInfo.FULLBRIGHT;			//emit light so ...?
+							ti.mFlags		|=TexInfo.NO_LIGHTMAP;
 						}
 						if(smoove >= SMOOTHING_GOURAUD && smoove < SMOOTHING_FLAT)
 						{
-							ti.mFlags	|=TexInfo.GOURAUD;
-							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+							if((ti.mFlags & TexInfo.FULLBRIGHT) == 0)
+							{
+								ti.mFlags	|=TexInfo.GOURAUD;
+								ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+							}
 						}
 						else if(smoove >= SMOOTHING_FLAT)
 						{
-							ti.mFlags	|=TexInfo.FLAT;
-							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+							if((ti.mFlags & TexInfo.FULLBRIGHT) == 0)
+							{
+								ti.mFlags	|=TexInfo.FLAT;
+								ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+							}
 						}
 					}
 				}

@@ -60,8 +60,9 @@ namespace BSPLib
 //			}
 
 			//hard coding a value here till I get textures
-			Patch.mReflectivity	=Vector3.One * 100.0f;
-			Patch.mReflectivity	*=pTexInfo.mReflectiveScale;
+			Patch.mReflectivity	=Vector3.UnitZ * 220.0f;
+			Patch.mReflectivity	*=mLightParams.mSurfaceReflect;
+//			Patch.mReflectivity	*=pTexInfo.mReflectiveScale;
 
 //			geVec3d_Scale(&Patch->Reflectivity, ReflectiveScale*pTexInfo->ReflectiveScale, &Patch->Reflectivity);
 		}
@@ -237,19 +238,8 @@ namespace BSPLib
 
 			BinaryReader	br	=new BinaryReader(fs);
 
-			UInt32		ver			=br.ReadUInt32();
 			DateTime	dt			=DateTime.FromBinary(br.ReadInt64());
 			Int32		numPatches	=br.ReadInt32();
-
-			/*
-			if(ver != GBSPChunk.VERSION)
-			{
-				Print("*WARNING*  LoadReceiverFile:  Versions do not match, skipping...\n");
-				br.Close();
-				fs.Close();
-				return	false;
-			}
-			*/
 
 			//Make sure the number of patches in the receiver file
 			//matches the number loaded for this BSP
@@ -297,7 +287,6 @@ namespace BSPLib
 
 			BinaryWriter	bw	=new BinaryWriter(fs);
 
-//			bw.Write(GBSPChunk.VERSION);
 			bw.Write(DateTime.Now.ToBinary());
 			bw.Write(NumPatches);
 
@@ -1097,7 +1086,7 @@ namespace BSPLib
 				return	false;
 			}
 
-			GFXFace		gfxFace		=mGFXFaces[faceNum];			
+			GFXFace		gfxFace		=mGFXFaces[faceNum];
 			GFXTexInfo	tex			=mGFXTexInfos[gfxFace.mTexInfo];
 			Int32		numVerts	=gfxFace.mNumVerts;
 

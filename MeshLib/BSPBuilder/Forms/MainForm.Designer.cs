@@ -666,7 +666,6 @@
 			// 
 			// PatchSize
 			// 
-			this.PatchSize.Enabled = false;
 			this.PatchSize.Location = new System.Drawing.Point(6, 88);
 			this.PatchSize.Maximum = new decimal(new int[] {
             256,
@@ -744,6 +743,8 @@
 			// Radiosity
 			// 
 			this.Radiosity.AutoSize = true;
+			this.Radiosity.Checked = true;
+			this.Radiosity.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.Radiosity.Location = new System.Drawing.Point(6, 42);
 			this.Radiosity.Name = "Radiosity";
 			this.Radiosity.Size = new System.Drawing.Size(69, 17);
