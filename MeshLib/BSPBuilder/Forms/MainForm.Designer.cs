@@ -30,14 +30,14 @@
 		{
 			this.OpenBrushFile = new System.Windows.Forms.Button();
 			this.LabelNumRawFaces = new System.Windows.Forms.Label();
-			this.NumFaces = new System.Windows.Forms.TextBox();
+			this.NumPlanes = new System.Windows.Forms.TextBox();
 			this.StatsGroupBox = new System.Windows.Forms.GroupBox();
 			this.LabelNumPortals = new System.Windows.Forms.Label();
 			this.NumPortals = new System.Windows.Forms.TextBox();
 			this.LabelNumCollisionFaces = new System.Windows.Forms.Label();
 			this.LabelNumDrawFaces = new System.Windows.Forms.Label();
-			this.NumAreas = new System.Windows.Forms.TextBox();
-			this.NumNodes = new System.Windows.Forms.TextBox();
+			this.NumClusters = new System.Windows.Forms.TextBox();
+			this.NumVerts = new System.Windows.Forms.TextBox();
 			this.SaveGBSP = new System.Windows.Forms.Button();
 			this.ConsoleOut = new System.Windows.Forms.TextBox();
 			this.DrawChoice = new System.Windows.Forms.ComboBox();
@@ -120,17 +120,17 @@
 			this.LabelNumRawFaces.AutoSize = true;
 			this.LabelNumRawFaces.Location = new System.Drawing.Point(6, 22);
 			this.LabelNumRawFaces.Name = "LabelNumRawFaces";
-			this.LabelNumRawFaces.Size = new System.Drawing.Size(36, 13);
+			this.LabelNumRawFaces.Size = new System.Drawing.Size(39, 13);
 			this.LabelNumRawFaces.TabIndex = 12;
-			this.LabelNumRawFaces.Text = "Faces";
+			this.LabelNumRawFaces.Text = "Planes";
 			// 
-			// NumFaces
+			// NumPlanes
 			// 
-			this.NumFaces.Location = new System.Drawing.Point(51, 19);
-			this.NumFaces.Name = "NumFaces";
-			this.NumFaces.ReadOnly = true;
-			this.NumFaces.Size = new System.Drawing.Size(76, 20);
-			this.NumFaces.TabIndex = 13;
+			this.NumPlanes.Location = new System.Drawing.Point(51, 19);
+			this.NumPlanes.Name = "NumPlanes";
+			this.NumPlanes.ReadOnly = true;
+			this.NumPlanes.Size = new System.Drawing.Size(76, 20);
+			this.NumPlanes.TabIndex = 13;
 			// 
 			// StatsGroupBox
 			// 
@@ -138,10 +138,10 @@
 			this.StatsGroupBox.Controls.Add(this.NumPortals);
 			this.StatsGroupBox.Controls.Add(this.LabelNumCollisionFaces);
 			this.StatsGroupBox.Controls.Add(this.LabelNumDrawFaces);
-			this.StatsGroupBox.Controls.Add(this.NumAreas);
-			this.StatsGroupBox.Controls.Add(this.NumNodes);
+			this.StatsGroupBox.Controls.Add(this.NumClusters);
+			this.StatsGroupBox.Controls.Add(this.NumVerts);
 			this.StatsGroupBox.Controls.Add(this.LabelNumRawFaces);
-			this.StatsGroupBox.Controls.Add(this.NumFaces);
+			this.StatsGroupBox.Controls.Add(this.NumPlanes);
 			this.StatsGroupBox.Location = new System.Drawing.Point(192, 12);
 			this.StatsGroupBox.Name = "StatsGroupBox";
 			this.StatsGroupBox.Size = new System.Drawing.Size(134, 127);
@@ -171,34 +171,34 @@
 			this.LabelNumCollisionFaces.AutoSize = true;
 			this.LabelNumCollisionFaces.Location = new System.Drawing.Point(6, 74);
 			this.LabelNumCollisionFaces.Name = "LabelNumCollisionFaces";
-			this.LabelNumCollisionFaces.Size = new System.Drawing.Size(34, 13);
+			this.LabelNumCollisionFaces.Size = new System.Drawing.Size(44, 13);
 			this.LabelNumCollisionFaces.TabIndex = 18;
-			this.LabelNumCollisionFaces.Text = "Areas";
+			this.LabelNumCollisionFaces.Text = "Clusters";
 			// 
 			// LabelNumDrawFaces
 			// 
 			this.LabelNumDrawFaces.AutoSize = true;
 			this.LabelNumDrawFaces.Location = new System.Drawing.Point(6, 48);
 			this.LabelNumDrawFaces.Name = "LabelNumDrawFaces";
-			this.LabelNumDrawFaces.Size = new System.Drawing.Size(38, 13);
+			this.LabelNumDrawFaces.Size = new System.Drawing.Size(31, 13);
 			this.LabelNumDrawFaces.TabIndex = 17;
-			this.LabelNumDrawFaces.Text = "Nodes";
+			this.LabelNumDrawFaces.Text = "Verts";
 			// 
-			// NumAreas
+			// NumClusters
 			// 
-			this.NumAreas.Location = new System.Drawing.Point(51, 71);
-			this.NumAreas.Name = "NumAreas";
-			this.NumAreas.ReadOnly = true;
-			this.NumAreas.Size = new System.Drawing.Size(76, 20);
-			this.NumAreas.TabIndex = 15;
+			this.NumClusters.Location = new System.Drawing.Point(51, 71);
+			this.NumClusters.Name = "NumClusters";
+			this.NumClusters.ReadOnly = true;
+			this.NumClusters.Size = new System.Drawing.Size(76, 20);
+			this.NumClusters.TabIndex = 15;
 			// 
-			// NumNodes
+			// NumVerts
 			// 
-			this.NumNodes.Location = new System.Drawing.Point(51, 45);
-			this.NumNodes.Name = "NumNodes";
-			this.NumNodes.ReadOnly = true;
-			this.NumNodes.Size = new System.Drawing.Size(76, 20);
-			this.NumNodes.TabIndex = 14;
+			this.NumVerts.Location = new System.Drawing.Point(51, 45);
+			this.NumVerts.Name = "NumVerts";
+			this.NumVerts.ReadOnly = true;
+			this.NumVerts.Size = new System.Drawing.Size(76, 20);
+			this.NumVerts.TabIndex = 14;
 			// 
 			// SaveGBSP
 			// 
@@ -860,12 +860,12 @@
 
 		private System.Windows.Forms.Button OpenBrushFile;
 		private System.Windows.Forms.Label LabelNumRawFaces;
-		private System.Windows.Forms.TextBox NumFaces;
+		private System.Windows.Forms.TextBox NumPlanes;
 		private System.Windows.Forms.GroupBox StatsGroupBox;
 		private System.Windows.Forms.Label LabelNumCollisionFaces;
 		private System.Windows.Forms.Label LabelNumDrawFaces;
-		private System.Windows.Forms.TextBox NumAreas;
-		private System.Windows.Forms.TextBox NumNodes;
+		private System.Windows.Forms.TextBox NumClusters;
+		private System.Windows.Forms.TextBox NumVerts;
 		private System.Windows.Forms.Button SaveGBSP;
 		private System.Windows.Forms.TextBox ConsoleOut;
 		private System.Windows.Forms.ComboBox DrawChoice;

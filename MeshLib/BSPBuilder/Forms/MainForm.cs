@@ -115,10 +115,10 @@ namespace BSPBuilder
 		}
 
 
-		internal string NumberOfFaces
+		internal string NumberOfPlanes
 		{
-			get { return NumFaces.Text; }
-			set { SetTextBoxValue(NumFaces, value); }
+			get { return NumPlanes.Text; }
+			set { SetTextBoxValue(NumPlanes, value); }
 		}
 
 		internal string NumberOfPortals
@@ -127,16 +127,16 @@ namespace BSPBuilder
 			set { SetTextBoxValue(NumPortals, value); }
 		}
 
-		internal string NumberOfNodes
+		internal string NumberOfVerts
 		{
-			get { return NumNodes.Text; }
-			set { SetTextBoxValue(NumNodes, value); }
+			get { return NumVerts.Text; }
+			set { SetTextBoxValue(NumVerts, value); }
 		}
 
-		internal string NumberOfAreas
+		internal string NumberOfClusters
 		{
-			get { return NumAreas.Text; }
-			set { SetTextBoxValue(NumAreas, value); }
+			get { return NumClusters.Text; }
+			set { SetTextBoxValue(NumClusters, value); }
 		}
 
 		internal BSPBuildParams BSPParameters
@@ -328,13 +328,13 @@ namespace BSPBuilder
 
 		internal void SetBuildEnabled(bool bOn)
 		{
-			BuildGBSP.Enabled	=bOn;
+			EnableControl(BuildGBSP, bOn);
 		}
 
 
 		internal void SetSaveEnabled(bool bOn)
 		{
-			SaveGBSP.Enabled	=bOn;
+			EnableControl(SaveGBSP, bOn);
 		}
 
 
@@ -394,9 +394,36 @@ namespace BSPBuilder
 		}
 
 
-		internal void SetZoneSaveEnabled(bool p)
+		internal void SetZoneSaveEnabled(bool bOn)
 		{
-			SaveZone.Enabled	=true;
+			EnableControl(SaveZone, bOn);
+		}
+
+
+		delegate void EnableControlCB(Control c, bool bOn);
+
+		void EnableControl(Control control, bool bOn)
+		{
+			if(control.InvokeRequired)
+			{
+				EnableControlCB	enable	=delegate(Control c, bool bEn) { c.Enabled = bEn; };
+
+				object	[]pms	=new object[2];
+
+				pms[0]	=control;
+				pms[1]	=bOn;
+
+				control.Invoke(enable, pms);
+			}
+			else
+			{
+				control.Enabled	=bOn;
+			}
+		}
+
+		internal void EnableFileIO(bool bOn)
+		{
+			EnableControl(GroupFileIO, bOn);
 		}
 	}
 }

@@ -60,21 +60,22 @@ namespace BSPLib
 		int				mLightMapGridSize;
 
 		//build settings
-		BSPBuildParams	mBSPParms;
-		LightParams		mLightParams;
-		VisParams		mVisParams;
+//		BSPBuildParams	mBSPParms;
+//		LightParams		mLightParams;
+//		VisParams		mVisParams;
 
-		public event EventHandler	eCPUCoresInUseChanged;
-		public event EventHandler	eNumMapFacesChanged;
-		public event EventHandler	eNumDrawFacesChanged;
-		public event EventHandler	eNumCollisionFacesChanged;
+		public event EventHandler	eNumPlanesChanged;
+		public event EventHandler	eNumVertsChanged;
+		public event EventHandler	eNumClustersChanged;
 		public event EventHandler	eNumPortalsChanged;
 		public event EventHandler	eProgressChanged;
+		public event EventHandler	eGBSPSaveDone;
+		public event EventHandler	eVisDone;
+		public event EventHandler	eLightDone;
+		public event EventHandler	eBuildDone;
 
 		static public event EventHandler	ePrint;
 
-		event EventHandler	eDrawCSGDone;
-		event EventHandler	eCollisionCSGDone;
 
 		//method delegates
 		internal delegate GBSPModel ModelForLeafNode(GBSPNode n);
@@ -83,93 +84,8 @@ namespace BSPLib
 		internal delegate Int32 GetNodeLandedIn(Int32 node, Vector3 pos);
 		public delegate Vector3 GetEmissiveForMaterial(string matName);
 
-		#region Constructors
+
 		public Map() { }
-
-
-		//reads a text brush file
-		public Map(string mapFileName)
-		{
-			mEntities	=new List<MapEntity>();
-
-			int	numSolids	=0;
-			int	numDetails	=0;
-			int	numTotal	=0;
-
-			if(File.Exists(mapFileName))
-			{
-				using(StreamReader sr = File.OpenText(mapFileName))
-				{
-					string	s	="";
-
-					//see if this is a .map or a .vmf
-					if(mapFileName.EndsWith(".map"))
-					{
-						while((s = sr.ReadLine()) != null)
-						{
-							s	=s.Trim();
-							if(s == "{")
-							{
-								MapEntity	e	=new MapEntity();
-								e.ReadFromMap(sr, mPlanePool, mTIPool, mEntities.Count);
-								mEntities.Add(e);
-							}
-						}
-					}
-					else
-					{
-						while((s = sr.ReadLine()) != null)
-						{
-							s	=s.Trim();
-							if(s == "entity")
-							{
-								MapEntity	e	=new MapEntity();
-								e.ReadVMFEntBlock(sr, mEntities.Count, mPlanePool, mTIPool);
-								mEntities.Add(e);
-							}
-							else if(s == "world")
-							{
-								MapEntity	e	=new MapEntity();
-								e.ReadVMFWorldBlock(sr, mEntities.Count, mPlanePool, mTIPool);
-								mEntities.Add(e);
-							}
-							else if(s == "cameras")
-							{
-								MapEntity.SkipVMFEditorBlock(sr);
-							}
-							else if(s == "cordon")
-							{
-								MapEntity.SkipVMFEditorBlock(sr);
-							}
-						}
-					}
-				}
-			}
-
-			foreach(MapEntity e in mEntities)
-			{
-				foreach(MapBrush mb in e.mBrushes)
-				{
-					if((mb.mContents & Contents.BSP_CONTENTS_DETAIL2) != 0)
-					{
-						numDetails++;
-					}
-					else if((mb.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
-					{
-						numSolids++;
-					}
-					numTotal++;
-				}
-			}
-
-			InsertModelNumbers();
-
-			Print("Brush file load complete\n");
-			Print("" + numSolids + " solid brushes\n");
-			Print("" + numDetails + " detail brushes\n");
-			Print("" + numTotal + " total brushes\n");
-		}
-		#endregion
 
 
 		#region Queries
@@ -401,7 +317,103 @@ namespace BSPLib
 		#endregion
 
 
-		bool ProcessEntities()
+		public void LoadBrushFile(string mapFileName)
+		{
+			mEntities	=new List<MapEntity>();
+
+			int	numSolids	=0;
+			int	numDetails	=0;
+			int	numTotal	=0;
+
+			if(File.Exists(mapFileName))
+			{
+				using(StreamReader sr = File.OpenText(mapFileName))
+				{
+					string	s	="";
+
+					//see if this is a .map or a .vmf
+					if(mapFileName.EndsWith(".map"))
+					{
+						while((s = sr.ReadLine()) != null)
+						{
+							s	=s.Trim();
+							if(s == "{")
+							{
+								MapEntity	e	=new MapEntity();
+								e.ReadFromMap(sr, mPlanePool, mTIPool, mEntities.Count);
+								mEntities.Add(e);
+
+								if(eNumPlanesChanged != null)
+								{
+									eNumPlanesChanged(mPlanePool.mPlanes.Count, null);
+								}
+							}
+						}
+					}
+					else
+					{
+						while((s = sr.ReadLine()) != null)
+						{
+							s	=s.Trim();
+							if(s == "entity")
+							{
+								MapEntity	e	=new MapEntity();
+								e.ReadVMFEntBlock(sr, mEntities.Count, mPlanePool, mTIPool);
+								mEntities.Add(e);
+								if(eNumPlanesChanged != null)
+								{
+									eNumPlanesChanged(mPlanePool.mPlanes.Count, null);
+								}
+							}
+							else if(s == "world")
+							{
+								MapEntity	e	=new MapEntity();
+								e.ReadVMFWorldBlock(sr, mEntities.Count, mPlanePool, mTIPool);
+								mEntities.Add(e);
+								if(eNumPlanesChanged != null)
+								{
+									eNumPlanesChanged(mPlanePool.mPlanes.Count, null);
+								}
+							}
+							else if(s == "cameras")
+							{
+								MapEntity.SkipVMFEditorBlock(sr);
+							}
+							else if(s == "cordon")
+							{
+								MapEntity.SkipVMFEditorBlock(sr);
+							}
+						}
+					}
+				}
+			}
+
+			foreach(MapEntity e in mEntities)
+			{
+				foreach(MapBrush mb in e.mBrushes)
+				{
+					if((mb.mContents & Contents.BSP_CONTENTS_DETAIL2) != 0)
+					{
+						numDetails++;
+					}
+					else if((mb.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+					{
+						numSolids++;
+					}
+					numTotal++;
+				}
+			}
+
+			InsertModelNumbers();
+
+			Print("Brush file load complete\n");
+			Print("" + numSolids + " solid brushes\n");
+			Print("" + numDetails + " detail brushes\n");
+			Print("" + numTotal + " total brushes\n");
+		}
+
+
+		bool ProcessEntities(bool bVerbose, bool bEntityVerbose)
 		{
 			int	index	=0;
 
@@ -423,7 +435,7 @@ namespace BSPLib
 				if(index == 0)
 				{
 					if(!mod.ProcessWorldModel(me.mBrushes, mEntities,
-						mPlanePool, mTIPool, mBSPParms.mbVerbose))
+						mPlanePool, mTIPool, bVerbose, eNumPlanesChanged))
 					{
 						return	false;
 					}
@@ -431,7 +443,7 @@ namespace BSPLib
 				else
 				{
 					if(!mod.ProcessSubModel(me.mBrushes, mPlanePool,
-						mTIPool, mBSPParms.mbEntityVerbose))
+						mTIPool, bEntityVerbose))
 					{
 						return	false;
 					}
@@ -503,26 +515,38 @@ namespace BSPLib
 		}
 
 
-		public bool BuildTree(BSPBuildParams prms)
+		void BuildTreeCB(object threadContext)
 		{
-			mBSPParms	=prms;
+			BSPBuildParams	bp	=threadContext as BSPBuildParams;
 
 			mTIPool.AssignMaterials();
 
-			if(ProcessEntities())
+			if(ProcessEntities(bp.mbVerbose, bp.mbEntityVerbose))
 			{
 				Print("Build GBSP Complete\n");
-				return	true;
+				if(eBuildDone != null)
+				{
+					eBuildDone(true, null);
+				}
 			}
 			else
 			{
 				Print("Compilation failed\n");
-				return	false;
+				if(eBuildDone != null)
+				{
+					eBuildDone(false, null);
+				}
 			}
 		}
 
 
-		bool FixModelTJunctions(FaceFixer ff)
+		public void BuildTree(BSPBuildParams prms)
+		{
+			ThreadPool.QueueUserWorkItem(BuildTreeCB, prms);
+		}
+
+
+		bool FixModelTJunctions(FaceFixer ff, bool bFixTJunctions, bool bVerbose)
 		{
 			Print(" --- Weld Model Verts --- \n");
 
@@ -535,7 +559,7 @@ namespace BSPLib
 			}
 
 			//Skip if asked to do so...
-			if(!mBSPParms.mbFixTJunctions)
+			if(!bFixTJunctions)
 			{
 				return	true;
 			}
@@ -551,7 +575,7 @@ namespace BSPLib
 				}
 			}
 
-			if(mBSPParms.mbVerbose)
+			if(bVerbose)
 			{
 				Print(" Num TJunctions        : " + ff.NumTJunctions + "\n");
 				Print(" Num Fixed Faces       : " + ff.NumFixedFaces + "\n");
@@ -560,7 +584,7 @@ namespace BSPLib
 		}
 
 
-		bool PrepAllGBSPModels(string visFile, NodeCounter nc)
+		bool PrepAllGBSPModels(string visFile, NodeCounter nc, bool bVerbose, bool bEntityVerbose)
 		{
 			Int32	i;
 
@@ -568,7 +592,7 @@ namespace BSPLib
 			for(i=0;i < mModels.Count;i++)
 			{
 				if(!mModels[i].PrepGBSPModel(visFile, i == 0,
-					(i == 0)? mBSPParms.mbVerbose : mBSPParms.mbEntityVerbose,
+					(i == 0)? bVerbose : bEntityVerbose,
 					mPlanePool,
 					ref nc.mNumLeafClusters,
 					leafSides))
@@ -590,35 +614,59 @@ namespace BSPLib
 		}
 
 
-		internal bool ConvertGBSPToFile(string fileName)
+		void ConvertGBSPToFileCB(object threadContext)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+			GBSPSaveParameters sp	=threadContext as GBSPSaveParameters;
+
+			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(sp.mFileName,
 									FileMode.OpenOrCreate, FileAccess.Write);
 
 			if(file == null)
 			{
 				Map.Print("ConvertGBSPToFile:  geVFile_OpenNewSystem failed.\n");
-				return	false;
+				if(eGBSPSaveDone != null)
+				{
+					eGBSPSaveDone(false, null);
+				}
+				return;
 			}
 
-			string	VisFile	=fileName;
+			string	VisFile	=sp.mFileName;
 
 			FaceFixer	ff	=new FaceFixer();
 
-			if(!FixModelTJunctions(ff))
+			if(!FixModelTJunctions(ff, sp.mBSPParams.mbFixTJunctions, sp.mBSPParams.mbVerbose))
 			{
 				Map.Print("ConvertGBSPToFile:  FixModelTJunctions failed.\n");
-				return	false;
+				if(eGBSPSaveDone != null)
+				{
+					eGBSPSaveDone(false, null);
+				}
+				return;
 			}
 
 			mGFXVerts		=ff.GetWeldedVertArray();
 
+			if(eNumVertsChanged != null)
+			{
+				eNumVertsChanged(mGFXVerts.Length, null);
+			}
+
 			NodeCounter	nc	=new NodeCounter();
 
-			if(!PrepAllGBSPModels(VisFile, nc))
+			if(!PrepAllGBSPModels(VisFile, nc, sp.mBSPParams.mbVerbose, sp.mBSPParams.mbEntityVerbose))
 			{
 				Print("ConvertGBSPToFile:  Could not prep models.\n");
-				return	false;
+				if(eGBSPSaveDone != null)
+				{
+					eGBSPSaveDone(false, null);
+				}
+				return;
+			}
+
+			if(eNumClustersChanged != null)
+			{
+				eNumClustersChanged(nc.mNumLeafClusters, null);
 			}
 
 			mGFXVertIndexes	=nc.GetIndexArray();
@@ -677,7 +725,10 @@ namespace BSPLib
 
 			FreeGBSPFile();
 
-			return	true;
+			if(eGBSPSaveDone != null)
+			{
+				eGBSPSaveDone(true, null);
+			}
 		}
 
 

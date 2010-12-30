@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 using Microsoft.Xna.Framework;
 
 
@@ -143,11 +144,13 @@ namespace BSPLib
 
 		public void SaveGBSPFile(string fileName, BSPBuildParams parms)
 		{
-			mBSPParms	=parms;
+			GBSPSaveParameters	sp	=new GBSPSaveParameters();
+			sp.mBSPParams	=parms;
+			sp.mFileName	=fileName;
 
-			ConvertGBSPToFile(fileName);
+			ThreadPool.QueueUserWorkItem(ConvertGBSPToFileCB, sp);
 
-			Print("GBSP save complete\n");
+//			Print("GBSP save complete\n");
 		}
 
 

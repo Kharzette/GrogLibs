@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Diagnostics;
+using System.Threading;
 using Microsoft.Xna.Framework;
 
 
@@ -29,18 +30,19 @@ namespace BSPLib
 		List<GFXAreaPortal>	mAreaPorts	=new List<GFXAreaPortal>();
 
 
-		public bool VisGBSPFile(string fileName, VisParams prms, BSPBuildParams prms2)
+		void ThreadVisCB(object threadContext)
 		{
-			Print(" --- Vis GBSP File --- \n");
+			VisParameters	vp	=threadContext as VisParameters;
 
-			mVisParams	=prms;
-			mBSPParms	=prms2;
-
-			GFXHeader	header	=LoadGBSPFile(fileName);
+			GFXHeader	header	=LoadGBSPFile(vp.mFileName);
 			if(header == null)
 			{
-				Print("PvsGBSPFile:  Could not load GBSP file: " + fileName + "\n");
-				return	false;
+				Print("PvsGBSPFile:  Could not load GBSP file: " + vp.mFileName + "\n");
+				if(eVisDone != null)
+				{
+					eVisDone(false, null);
+				}
+				return;
 			}
 			string	PFile;
 
@@ -48,20 +50,20 @@ namespace BSPLib
 			FreeFileVisData();
 
 			//Open the bsp file for writing
-			FileStream	fs	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+			FileStream	fs	=UtilityLib.FileUtil.OpenTitleFile(vp.mFileName,
 				FileMode.OpenOrCreate, FileAccess.Write);
 
 			BinaryWriter	bw	=null;
 
 			if(fs == null)
 			{
-				Print("VisGBSPFile:  Could not open GBSP file for writing: " + fileName + "\n");
+				Print("VisGBSPFile:  Could not open GBSP file for writing: " + vp.mFileName + "\n");
 				goto	ExitWithError;
 			}
 
 			//Prepare the portal file name
-			int	extPos	=fileName.LastIndexOf(".");
-			PFile		=fileName.Substring(0, extPos);
+			int	extPos	=vp.mFileName.LastIndexOf(".");
+			PFile		=vp.mFileName.Substring(0, extPos);
 			PFile		+=".gpf";
 			
 			//Load the portal file
@@ -70,10 +72,18 @@ namespace BSPLib
 				goto	ExitWithError;
 			}
 
+			if(eNumPortalsChanged != null)
+			{
+				eNumPortalsChanged(mVisPortals.Length, null);
+			}
+
 			Print("NumPortals           : " + mVisPortals.Length + "\n");
 			
 			//Vis'em
-			if(!VisAllLeafs())
+			if(!VisAllLeafs(vp.mBSPParams.mMaxCores,
+				vp.mVisParams.mbSortPortals,
+				vp.mVisParams.mbFullVis,
+				vp.mBSPParams.mbVerbose))
 			{
 				goto	ExitWithError;
 			}
@@ -94,12 +104,16 @@ namespace BSPLib
 			bw	=null;
 			fs	=null;
 			
-			return	true;
+			if(eVisDone != null)
+			{
+				eVisDone(true, null);
+			}
+			return;
 
 			// ==== ERROR ====
 			ExitWithError:
 			{
-				Print("PvsGBSPFile:  Could not vis the file: " + fileName + "\n");
+				Print("PvsGBSPFile:  Could not vis the file: " + vp.mFileName + "\n");
 
 				if(bw != null)
 				{
@@ -113,17 +127,29 @@ namespace BSPLib
 				FreeAllVisData();
 				FreeGBSPFile();
 
-				return	false;
+				if(eVisDone != null)
+				{
+					eVisDone(false, null);
+				}
+				return;
 			}
+		}
+
+
+		public void VisGBSPFile(string fileName, VisParams prms, BSPBuildParams prms2)
+		{
+			VisParameters	vp	=new VisParameters();
+			vp.mBSPParams	=prms2;
+			vp.mVisParams	=prms;
+			vp.mFileName	=fileName;
+
+			ThreadPool.QueueUserWorkItem(ThreadVisCB, vp);
 		}
 
 
 		public bool MaterialVisGBSPFile(string fileName, VisParams prms, BSPBuildParams prms2)
 		{
 			Print(" --- Material Vis GBSP File --- \n");
-
-			mVisParams	=prms;
-			mBSPParms	=prms2;
 
 			GFXHeader	header	=LoadGBSPFile(fileName);
 			if(header == null)
@@ -444,8 +470,34 @@ namespace BSPLib
 		}
 
 
-		bool VisAllLeafs()
+		void ThreadFloodSlowCB(object threadContext)
 		{
+			VisFloodParameters	vp	=threadContext as VisFloodParameters;
+
+			int	portsPerCore	=mVisPortals.Length / vp.mCores;
+
+			int	startPortal	=portsPerCore * vp.mCore;
+			int	endPortal	=portsPerCore * (vp.mCore + 1);
+
+			//make sure the end is the end
+			if(vp.mCore == (vp.mCores - 1))
+			{
+				endPortal	=mVisPortals.Length;
+			}
+
+			if(!FloodPortalsSlow(vp.mPortIndexer, vp.mPortalSeen,
+				startPortal, endPortal, vp.mbVerbose))
+			{
+				Print("Something's wrong\n");
+			}
+			vp.mDoneEvent.Set();
+		}
+
+
+		bool VisAllLeafs(int maxCores, bool bSortPortals, bool bFullVis, bool bVerbose)
+		{
+			int	leafsPerCore	=mVisLeafs.Length / maxCores;
+
 			//Create PortalSeen array.  This is used by Vis flooding routines
 			//This is deleted below...
 			bool	[]portalSeen	=new bool[mVisPortals.Length];
@@ -457,6 +509,7 @@ namespace BSPLib
 				portIndexer.Add(mVisPortals[i], i);
 			}
 
+
 			//Flood all the leafs with the fast method first...
 			for(int i=0;i < mVisLeafs.Length; i++)
 			{
@@ -464,16 +517,50 @@ namespace BSPLib
 			}
 
 			//Sort the portals with MightSee
-			if(mVisParams.mbSortPortals)
+			if(bSortPortals)
 			{
 				SortPortals();
 			}
 
-			if(mVisParams.mbFullVis)
+			if(bFullVis)
 			{
-				if(!FloodPortalsSlow(portIndexer, portalSeen))
+				//worth it to thread?
+				if(false)//leafsPerCore > 100)
 				{
-					return	false;
+					ManualResetEvent	[]res	=new ManualResetEvent[maxCores];
+
+					for(int i=0;i < maxCores;i++)
+					{
+						res[i]	=new ManualResetEvent(false);
+					}
+
+					for(int i=0;i < maxCores;i++)
+					{
+						//make a copy for this thread
+						VisFloodParameters	vp	=new VisFloodParameters();
+						vp.mPortalSeen	=new bool[mVisPortals.Length];
+						portalSeen.CopyTo(vp.mPortalSeen, 0);
+
+						vp.mPortIndexer	=portIndexer;
+						vp.mCores		=maxCores;
+						vp.mCore		=i;
+						vp.mDoneEvent	=res[i];
+						vp.mbVerbose	=bVerbose;
+
+						ThreadPool.QueueUserWorkItem(ThreadFloodSlowCB, vp);
+					}
+					Print("Vis cores running, waiting for finish...\n");
+
+					WaitHandle.WaitAll(res);
+
+					Print("Vis threads done.\n");
+				}
+				else
+				{
+					if(!FloodPortalsSlow(portIndexer, portalSeen, 0, mVisPortals.Length, bVerbose))
+					{
+						return	false;
+					}
 				}
 			}
 
@@ -516,18 +603,19 @@ namespace BSPLib
 		}
 
 
-		bool FloodPortalsSlow(Dictionary<VISPortal, Int32> visIndexer, bool []portalSeen)
+		bool FloodPortalsSlow(Dictionary<VISPortal, Int32> visIndexer,
+			bool []portalSeen, int startPort, int endPort, bool bVerbose)
 		{
 			VISPortal	port;
 			VISPStack	portStack	=new VISPStack();
 			Int32		i, k;
 
-			for(k=0;k < mVisPortals.Length;k++)
+			for(k=startPort;k < endPort;k++)
 			{
 				mVisPortals[k].mDone	=false;
 			}
 
-			for(k=0;k < mVisPortals.Length;k++)
+			for(k=startPort;k < endPort;k++)
 			{
 				port	=mVisSortedPortals[k];
 				
@@ -562,7 +650,7 @@ namespace BSPLib
 				portStack.mSource	=null;
 				port.mDone			=true;
 
-				if(mBSPParms.mbVerbose)
+				if(bVerbose)
 				{
 					Print("Portal: " + (k + 1) + " - Fast Vis: "
 						+ port.mMightSee + ", Full Vis: "

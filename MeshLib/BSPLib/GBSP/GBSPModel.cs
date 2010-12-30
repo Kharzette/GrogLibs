@@ -28,15 +28,23 @@ namespace BSPLib
 
 		internal bool ProcessWorldModel(List<MapBrush> list,
 			List<MapEntity> ents, PlanePool pool,
-			TexInfoPool tip, bool bVerbose)
+			TexInfoPool tip, bool bVerbose, EventHandler planesChanged)
 		{
 			list.Reverse();
 			GBSPBrush	glist	=GBSPBrush.ConvertMapBrushList(list);
 
 			glist	=GBSPBrush.CSGBrushes(bVerbose, glist, pool);
+			if(planesChanged != null)
+			{
+				planesChanged(pool.mPlanes.Count, null);
+			}
 
 			GBSPNode	root	=new GBSPNode();
 			root.BuildBSP(glist, pool, bVerbose);
+			if(planesChanged != null)
+			{
+				planesChanged(pool.mPlanes.Count, null);
+			}
 
 			mBounds	=new Bounds(root.GetBounds());
 
@@ -65,8 +73,16 @@ namespace BSPLib
 
 			glist	=GBSPBrush.ConvertMapBrushList(list);
 			glist	=GBSPBrush.CSGBrushes(bVerbose, glist, pool);
+			if(planesChanged != null)
+			{
+				planesChanged(pool.mPlanes.Count, null);
+			}
 
 			root.BuildBSP(glist, pool, bVerbose);
+			if(planesChanged != null)
+			{
+				planesChanged(pool.mPlanes.Count, null);
+			}
 
 			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs))
 			{

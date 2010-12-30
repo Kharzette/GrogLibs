@@ -531,18 +531,11 @@ namespace BSPBuilder
 				if(mMap != null)
 				{
 					//unregister old events
-					mMap.eNumCollisionFacesChanged	-=OnNumCollisionFacesChanged;
-					mMap.eNumDrawFacesChanged		-=OnNumDrawFacesChanged;
-					mMap.eNumMapFacesChanged		-=OnNumMapFacesChanged;
-					mMap.eProgressChanged			-=OnMapProgressChanged;
-					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
+					RegisterMapEvents(false);
 				}
-				mMap	=new Map(fileName);
-				mMap.eNumCollisionFacesChanged	+=OnNumCollisionFacesChanged;
-				mMap.eNumDrawFacesChanged		+=OnNumDrawFacesChanged;
-				mMap.eNumMapFacesChanged		+=OnNumMapFacesChanged;
-				mMap.eProgressChanged			+=OnMapProgressChanged;
-				mMap.eNumPortalsChanged			+=OnNumPortalsChanged;
+				mMap	=new Map();
+				RegisterMapEvents(true);
+				mMap.LoadBrushFile(fileName);
 				mMainForm.SetBuildEnabled(true);
 				mMainForm.SetZoneSaveEnabled(false);
 				mMainForm.SetSaveEnabled(false);
@@ -552,11 +545,8 @@ namespace BSPBuilder
 
 		void OnBuildGBSP(object sender, EventArgs ea)
 		{
-			if(mMap.BuildTree(mMainForm.BSPParameters))
-			{
-				mMainForm.SetSaveEnabled(true);
-				mMainForm.SetBuildEnabled(false);
-			}
+			mMainForm.EnableFileIO(false);
+			mMap.BuildTree(mMainForm.BSPParameters);
 		}
 
 
@@ -571,6 +561,35 @@ namespace BSPBuilder
 		}
 
 
+		void RegisterMapEvents(bool bReg)
+		{
+			if(bReg)
+			{
+				mMap.eProgressChanged			+=OnMapProgressChanged;
+				mMap.eNumPortalsChanged			+=OnNumPortalsChanged;
+				mMap.eNumClustersChanged		+=OnNumClustersChanged;
+				mMap.eNumPlanesChanged			+=OnNumPlanesChanged;
+				mMap.eNumVertsChanged			+=OnNumVertsChanged;
+				mMap.eBuildDone					+=OnBuildDone;
+				mMap.eLightDone					+=OnLightDone;
+				mMap.eVisDone					+=OnVisDone;
+				mMap.eGBSPSaveDone				+=OnGBSPSaveDone;
+			}
+			else
+			{
+				mMap.eProgressChanged			-=OnMapProgressChanged;
+				mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
+				mMap.eNumClustersChanged		-=OnNumClustersChanged;
+				mMap.eNumPlanesChanged			-=OnNumPlanesChanged;
+				mMap.eNumVertsChanged			-=OnNumVertsChanged;
+				mMap.eBuildDone					-=OnBuildDone;
+				mMap.eLightDone					-=OnLightDone;
+				mMap.eVisDone					-=OnVisDone;
+				mMap.eGBSPSaveDone				-=OnGBSPSaveDone;
+			}
+		}
+
+
 		void OnLightGBSP(object sender, EventArgs ea)
 		{
 			string	fileName	=sender as string;
@@ -580,16 +599,14 @@ namespace BSPBuilder
 				if(mMap != null)
 				{
 					//unregister old events
-					mMap.eNumCollisionFacesChanged	-=OnNumCollisionFacesChanged;
-					mMap.eNumDrawFacesChanged		-=OnNumDrawFacesChanged;
-					mMap.eNumMapFacesChanged		-=OnNumMapFacesChanged;
-					mMap.eProgressChanged			-=OnMapProgressChanged;
-					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
+					RegisterMapEvents(false);
 				}
 				mMainForm.SetSaveEnabled(false);
 				mMainForm.SetBuildEnabled(false);
 				mMainForm.SetZoneSaveEnabled(false);
+				mMainForm.EnableFileIO(false);
 				mMap	=new Map();
+				RegisterMapEvents(true);
 				mMap.LightGBSPFile(fileName, EmissiveForMaterial,
 					mMainForm.LightParameters,
 					mMainForm.BSPParameters);
@@ -606,16 +623,14 @@ namespace BSPBuilder
 				if(mMap != null)
 				{
 					//unregister old events
-					mMap.eNumCollisionFacesChanged	-=OnNumCollisionFacesChanged;
-					mMap.eNumDrawFacesChanged		-=OnNumDrawFacesChanged;
-					mMap.eNumMapFacesChanged		-=OnNumMapFacesChanged;
-					mMap.eProgressChanged			-=OnMapProgressChanged;
-					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
+					RegisterMapEvents(false);
 				}
 				mMainForm.SetSaveEnabled(false);
 				mMainForm.SetBuildEnabled(false);
 				mMainForm.SetZoneSaveEnabled(false);
+				mMainForm.EnableFileIO(false);
 				mMap	=new Map();
+				RegisterMapEvents(true);
 				mMap.VisGBSPFile(fileName, mMainForm.VisParameters, mMainForm.BSPParameters);
 			}
 		}
@@ -630,16 +645,14 @@ namespace BSPBuilder
 				if(mMap != null)
 				{
 					//unregister old events
-					mMap.eNumCollisionFacesChanged	-=OnNumCollisionFacesChanged;
-					mMap.eNumDrawFacesChanged		-=OnNumDrawFacesChanged;
-					mMap.eNumMapFacesChanged		-=OnNumMapFacesChanged;
-					mMap.eProgressChanged			-=OnMapProgressChanged;
-					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
+					RegisterMapEvents(false);
 				}
 				mMainForm.SetSaveEnabled(false);
 				mMainForm.SetBuildEnabled(false);
 				mMainForm.SetZoneSaveEnabled(false);
+				mMainForm.EnableFileIO(false);
 				mMap	=new Map();
+				RegisterMapEvents(true);
 				mMap.MaterialVisGBSPFile(fileName, mMainForm.VisParameters, mMainForm.BSPParameters);
 			}
 		}
@@ -654,16 +667,15 @@ namespace BSPBuilder
 				if(mMap != null)
 				{
 					//unregister old events
-					mMap.eNumCollisionFacesChanged	-=OnNumCollisionFacesChanged;
-					mMap.eNumDrawFacesChanged		-=OnNumDrawFacesChanged;
-					mMap.eNumMapFacesChanged		-=OnNumMapFacesChanged;
-					mMap.eProgressChanged			-=OnMapProgressChanged;
-					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
+					RegisterMapEvents(false);
 				}
 				mMainForm.SetSaveEnabled(false);
 				mMainForm.SetBuildEnabled(false);
 				mMainForm.SetZoneSaveEnabled(false);
+				mMainForm.EnableFileIO(false);
 				mMap	=new Map();
+
+				RegisterMapEvents(true);
 
 				GFXHeader	hdr	=mMap.LoadGBSPFile(fileName);
 
@@ -680,67 +692,12 @@ namespace BSPBuilder
 					List<MaterialLib.Material>	mats	=mMap.GetMaterials();
 
 					mIndoorMesh.BuildLM(g, mMainForm.LightParameters.mAtlasSize, mMap.BuildLMRenderData);
-
-					/*
-					if(!mMap.BuildLMRenderData(g,
-						out mLMVB,
-						out mLMIB,
-						out mLMVD,
-						out mLMMatOffsets,
-						out mLMMatNumVerts,
-						out mLMMatNumTris,
-						out mLMAnimVB,
-						out mLMAnimIB,
-						out mLMAnimVD,
-						out mLMAnimMatOffsets,
-						out mLMAnimMatNumVerts,
-						out mLMAnimMatNumTris,
-						out mLMAVB,
-						out mLMAIB,
-						out mLMAVD,
-						out mLMAMatOffsets,
-						out mLMAMatNumVerts,
-						out mLMAMatNumTris,
-						out mLMASortPoints,
-						out mLMAAnimVB,
-						out mLMAAnimIB,
-						out mLMAAnimVD,
-						out mLMAAnimMatOffsets,
-						out mLMAAnimMatNumVerts,
-						out mLMAAnimMatNumTris,
-						out mLMAAnimSortPoints,
-						mMainForm.LightParameters.mAtlasSize,
-						out mLMapAtlas))
-					{
-						return;
-					}*/
-
 					mIndoorMesh.BuildVLit(g, mMap.BuildVLitRenderData);
 					mIndoorMesh.BuildAlpha(g, mMap.BuildAlphaRenderData);
 					mIndoorMesh.BuildFullBright(g, mMap.BuildFullBrightRenderData);
 					mIndoorMesh.BuildMirror(g, mMap.BuildMirrorRenderData);
 					mIndoorMesh.BuildSky(g, mMap.BuildSkyRenderData);
 
-					/*
-					mMap.BuildVLitRenderData(g, out mVLitVB, out mVLitIB,
-						out mVLitVD, out mVLitMatOffsets, out mVLitMatNumVerts,
-						out mVLitMatNumTris);
-
-					mMap.BuildAlphaRenderData(g, out mAlphaVB, out mAlphaIB, out mAlphaVD,
-						out mAlphaMatOffsets, out mAlphaMatNumVerts, out mAlphaMatNumTris, out mAlphaSortPoints);
-
-					mMap.BuildFullBrightRenderData(g, out mFBVB, out mFBIB, out mFBVD,
-						out mFBMatOffsets, out mFBMatNumVerts, out mFBMatNumTris);
-
-					mMap.BuildMirrorRenderData(g, out mMirrorVB, out mMirrorIB, out mMirrorVD,
-						out mMirrorMatOffsets, out mMirrorMatNumVerts,
-						out mMirrorMatNumTris, out mMirrorSortPoints, out mMirrorPolys);
-
-					mMap.BuildSkyRenderData(g, out mSkyVB, out mSkyIB, out mSkyVD,
-						out mSkyMatOffsets, out mSkyMatNumVerts, out mSkyMatNumTris);
-
-					mMatLib.AddMap("LightMapAtlas", mLMapAtlas.GetAtlasTexture());
-					*/
 					foreach(MaterialLib.Material mat in mats)
 					{
 						mMatLib.AddMaterial(mat);
@@ -749,6 +706,7 @@ namespace BSPBuilder
 					mMatForm.UpdateMaterials();
 					mMainForm.SetZoneSaveEnabled(true);
 				}
+				mMainForm.EnableFileIO(true);
 			}
 		}
 
@@ -759,6 +717,7 @@ namespace BSPBuilder
 
 			if(fileName != null)
 			{
+				mMainForm.EnableFileIO(false);
 				mMap.SaveGBSPFile(fileName,	mMainForm.BSPParameters);
 			}
 		}
@@ -809,19 +768,19 @@ namespace BSPBuilder
 		}
 
 
-		void OnNumCollisionFacesChanged(object sender, EventArgs ea)
+		void OnNumClustersChanged(object sender, EventArgs ea)
 		{
 			int	num	=(int)sender;
 
-			mMainForm.NumberOfAreas	="" + num;
+			mMainForm.NumberOfClusters	="" + num;
 		}
 
 
-		void OnNumDrawFacesChanged(object sender, EventArgs ea)
+		void OnNumVertsChanged(object sender, EventArgs ea)
 		{
 			int	num	=(int)sender;
 
-			mMainForm.NumberOfNodes	="" + num;
+			mMainForm.NumberOfVerts	="" + num;
 		}
 
 
@@ -833,11 +792,45 @@ namespace BSPBuilder
 		}
 
 
-		void OnNumMapFacesChanged(object sender, EventArgs ea)
+		void OnNumPlanesChanged(object sender, EventArgs ea)
 		{
 			int	num	=(int)sender;
 
-			mMainForm.NumberOfFaces	="" + num;
+			mMainForm.NumberOfPlanes	="" + num;
+		}
+
+
+		void OnBuildDone(object sender, EventArgs ea)
+		{
+			bool	bSuccess	=(bool)sender;
+
+			mMainForm.EnableFileIO(true);
+			mMainForm.SetSaveEnabled(true);
+			mMainForm.SetBuildEnabled(false);
+		}
+
+
+		void OnLightDone(object sender, EventArgs ea)
+		{
+			bool	bSuccess	=(bool)sender;
+
+			mMainForm.EnableFileIO(true);
+		}
+
+
+		void OnVisDone(object sender, EventArgs ea)
+		{
+			bool	bSuccess	=(bool)sender;
+
+			mMainForm.EnableFileIO(true);
+		}
+
+
+		void OnGBSPSaveDone(object sender, EventArgs ea)
+		{
+			bool	bSuccess	=(bool)sender;
+
+			mMainForm.EnableFileIO(true);
 		}
 
 
