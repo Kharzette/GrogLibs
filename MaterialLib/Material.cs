@@ -16,9 +16,12 @@ namespace MaterialLib
 		string	mShaderName;	//name of the shader
 		string	mName;			//name of the overall material
 		string	mTechnique;		//technique to use with this material
-		bool	mbAlpha;		//alpha blending
+
+		//emmisive color for radiosity
+		Color	mEmissiveColor	=Color.White;	//default white
 
 		//renderstate flags
+		bool			mbAlpha;
 		Blend			mSourceBlend;
 		Blend			mDestBlend;
 		BlendFunction	mBlendFunction;
@@ -55,6 +58,11 @@ namespace MaterialLib
 		{
 			get { return mGUIParameters; }
 			set { mGUIParameters = value; }
+		}
+		public Color Emissive
+		{
+			get { return mEmissiveColor; }
+			set { mEmissiveColor = value; }
 		}
 		public bool Alpha
 		{

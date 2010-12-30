@@ -130,6 +130,14 @@ namespace BSPBuilder
 			//read only so text can't be entered in cell
 			MaterialGrid.Columns[1].ReadOnly	=true;
 			MaterialGrid.Columns[2].ReadOnly	=true;
+
+			DataGridViewColorColumn	colorColumn	=new DataGridViewColorColumn();
+			colorColumn.HeaderText			="Emissive";
+			colorColumn.DataPropertyName	="Emissive";
+
+			MaterialGrid.Columns.Remove("Emissive");
+
+			MaterialGrid.Columns.Add(colorColumn);
 		}
 
 
@@ -353,6 +361,23 @@ namespace BSPBuilder
 					mTL.eCancel				+=OnTechniqueListCancel;
 					mTL.Visible				=true;
 					MaterialGrid.Enabled	=false;
+				}
+			}
+			else if(e.ColumnIndex == 3)
+			{
+				ColorDialog	cd	=new ColorDialog();
+
+				cd.AllowFullOpen	=true;
+				cd.SolidColorOnly	=true;
+
+				DialogResult	dr	=cd.ShowDialog();
+
+				if(dr == DialogResult.OK)
+				{
+					MaterialLib.Material	m	=(MaterialLib.Material)
+						MaterialGrid.Rows[e.RowIndex].DataBoundItem;
+
+					m.Emissive	=DataGridViewColorCell.ConvertColor(cd.Color);
 				}
 			}
 		}

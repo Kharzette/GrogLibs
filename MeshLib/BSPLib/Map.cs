@@ -81,6 +81,7 @@ namespace BSPLib
 		internal delegate bool IsPointInSolid(Vector3 pos);
 		internal delegate bool RayCollision(Vector3 front, Vector3 back, ref Vector3 Impacto);
 		internal delegate Int32 GetNodeLandedIn(Int32 node, Vector3 pos);
+		public delegate Vector3 GetEmissiveForMaterial(string matName);
 
 		#region Constructors
 		public Map() { }

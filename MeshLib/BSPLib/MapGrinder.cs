@@ -2053,10 +2053,8 @@ namespace BSPLib
 		}
 
 
-		internal string ScryTrueName(GFXFace f)
+		internal static string ScryTrueName(GFXFace f, GFXTexInfo tex)
 		{
-			GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
-
 			string	matName	=tex.mMaterial;
 
 			if(tex.IsLightMapped())
@@ -2130,7 +2128,7 @@ namespace BSPLib
 
 			foreach(GFXFace f in mFaces)
 			{
-				string	matName	=ScryTrueName(f);
+				string	matName	=ScryTrueName(f, mTexInfos[f.mTexInfo]);
 
 				if(!mMaterialNames.Contains(matName))
 				{

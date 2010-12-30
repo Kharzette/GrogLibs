@@ -292,7 +292,7 @@ namespace BSPLib
 					{
 						GFXFace	f	=mGFXFaces[mGFXLeafFaces[k + checkLeaf.mFirstFace]];
 
-						string	matName	=mg.ScryTrueName(f);
+						string	matName	=MapGrinder.ScryTrueName(f, mGFXTexInfos[f.mTexInfo]);
 
 						if(!visibleMaterials[leaf].Contains(matName))
 						{

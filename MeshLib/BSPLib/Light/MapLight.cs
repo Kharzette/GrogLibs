@@ -20,51 +20,13 @@ namespace BSPLib
 		Int32							NumPatches, NumReceivers;
 
 
-		void CalcPatchReflectivity(Int32 Face, RADPatch Patch)
+		void CalcPatchReflectivity(Int32 Face, RADPatch Patch, GetEmissiveForMaterial c4m)
 		{
-//			GFXTexture		*pTexture;
-//			Vector3			Color;
-//			Int32			i, Size;
-//			byte			*pGFXTexData;
-//			DRV_Palette		*Palette;
-			GFXTexInfo		pTexInfo;
-//			float			Scale;
-			
-			pTexInfo	=mGFXTexInfos[mGFXFaces[Face].mTexInfo];
-//			pTexture = &GFXTextures[pTexInfo->Texture];
+			string	trueName	=MapGrinder.ScryTrueName(mGFXFaces[Face],
+				mGFXTexInfos[mGFXFaces[Face].mTexInfo]);
 
-//			pGFXTexData = &GFXTexData[pTexture->Offset];
-//			Size = pTexture->Width*pTexture->Height;
-
-//			Palette = &GFXPalettes[pTexture->PaletteIndex];
-
-//			for (i=0; i< Size; i++, pGFXTexData++)
-//			{
-//				DRV_RGB *	RGB;
-
-//				RGB = &(*Palette)[*pGFXTexData];
-//				Color.X += (geFloat)RGB->r;
-//				Color.Y += (geFloat)RGB->g;
-//				Color.Z += (geFloat)RGB->b;
-//			}
-
-//			geVec3d_Scale(&Color, 1.0f/(geFloat)Size, &Color);
-//			geVec3d_Scale(&Color, 1.0f/255.0f, &Color);
-
-//			Scale = ColorNormalize(&Color, &Patch->Reflectivity);
-			
-//			if (Scale < 0.5f)
-//			{
-//				Scale *= 2;
-//				geVec3d_Scale(&Patch->Reflectivity, Scale, &Patch->Reflectivity);
-//			}
-
-			//hard coding a value here till I get textures
-			Patch.mReflectivity	=Vector3.UnitZ * 220.0f;
+			Patch.mReflectivity	=c4m(trueName) * 255.0f;
 			Patch.mReflectivity	*=mLightParams.mSurfaceReflect;
-//			Patch.mReflectivity	*=pTexInfo.mReflectiveScale;
-
-//			geVec3d_Scale(&Patch->Reflectivity, ReflectiveScale*pTexInfo->ReflectiveScale, &Patch->Reflectivity);
 		}
 
 
@@ -115,7 +77,7 @@ namespace BSPLib
 		}
 
 
-		bool BuildPatch(Int32 f)
+		bool BuildPatch(Int32 f, GetEmissiveForMaterial c4m)
 		{
 			mFacePatches[f]	=new RADPatch();
 			if(mFacePatches[f] == null)
@@ -124,7 +86,7 @@ namespace BSPLib
 				return	false;
 			}
 
-			CalcPatchReflectivity(f, mFacePatches[f]);
+			CalcPatchReflectivity(f, mFacePatches[f], c4m);
 			
 			mFacePatches[f].AllocPoly(mGFXFaces[f], mGFXVertIndexes, mGFXVerts);
 
@@ -153,7 +115,7 @@ namespace BSPLib
 		}
 
 
-		bool BuildPatches()
+		bool BuildPatches(GetEmissiveForMaterial c4m)
 		{
 			Int32	i;
 
@@ -168,7 +130,7 @@ namespace BSPLib
 
 			for(i=0;i < mFacePatches.Length;i++)
 			{
-				if(!BuildPatch(i))
+				if(!BuildPatch(i, c4m))
 				{
 					return	false;
 				}
@@ -668,7 +630,7 @@ namespace BSPLib
 		}
 
 
-		public bool LightGBSPFile(string fileName,
+		public bool LightGBSPFile(string fileName, GetEmissiveForMaterial c4m,
 			LightParams lightParams, BSPBuildParams buildParams)
 		{
 			string	RecFile;
@@ -730,7 +692,7 @@ namespace BSPLib
 			//Build the patches (before direct lights are created)
 			if(mLightParams.mbRadiosity)
 			{
-				if(!BuildPatches())
+				if(!BuildPatches(c4m))
 				{
 					goto	ExitWithError;
 				}
@@ -1096,8 +1058,14 @@ namespace BSPLib
 				Int32	index	=mGFXVertIndexes[vn];
 				Vector3	vert	=mGFXVerts[index];
 
+				if(tex.IsLight())
+				{
+					//lights should glow
+					mGFXRGBVerts[vn]	=Vector3.One * 255.0f;
+				}
+
 				Vector3	norm;
-				if((tex.mFlags & TexInfo.FLAT) != 0)
+				if(tex.IsFlat())
 				{
 					norm	=mFaceInfos[faceNum].GetPlaneNormal();
 				}

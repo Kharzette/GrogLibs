@@ -560,6 +560,17 @@ namespace BSPBuilder
 		}
 
 
+		Vector3 EmissiveForMaterial(string matName)
+		{
+			MaterialLib.Material	mat	=mMatLib.GetMaterial(matName);
+			if(mat == null)
+			{
+				return	Vector3.One;
+			}
+			return	mat.Emissive.ToVector3();
+		}
+
+
 		void OnLightGBSP(object sender, EventArgs ea)
 		{
 			string	fileName	=sender as string;
@@ -579,7 +590,7 @@ namespace BSPBuilder
 				mMainForm.SetBuildEnabled(false);
 				mMainForm.SetZoneSaveEnabled(false);
 				mMap	=new Map();
-				mMap.LightGBSPFile(fileName,
+				mMap.LightGBSPFile(fileName, EmissiveForMaterial,
 					mMainForm.LightParameters,
 					mMainForm.BSPParameters);
 			}

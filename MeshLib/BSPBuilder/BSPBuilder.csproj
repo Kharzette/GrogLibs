@@ -100,6 +100,7 @@
     <Compile Include="Forms\CollisionForm.Designer.cs">
       <DependentUpon>CollisionForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\DataGridViewColorColumn.cs" />
     <Compile Include="Forms\GridModel.cs" />
     <Compile Include="Forms\MainForm.cs">
       <SubType>Form</SubType>
