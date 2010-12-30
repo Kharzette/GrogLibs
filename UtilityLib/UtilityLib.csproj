@@ -120,7 +120,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FileUtil.cs" />
+    <Compile Include="GameCamera.cs" />
     <Compile Include="Mathery.cs" />
+    <Compile Include="TexAtlas.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

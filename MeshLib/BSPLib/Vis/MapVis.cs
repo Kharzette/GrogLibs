@@ -194,6 +194,19 @@ namespace BSPLib
 		}
 
 
+		public bool IsMaterialVisibleFromPos(Vector3 pos, int matIndex)
+		{
+			Int32	node	=FindNodeLandedIn(0, pos);
+			if(node > 0)
+			{
+				return	true;	//in solid space
+			}
+
+			Int32	leaf	=-(node + 1);
+			return	IsMaterialVisible(leaf, matIndex);
+		}
+
+
 		public bool IsMaterialVisible(int leaf, int matIndex)
 		{
 			if(mGFXLeafs == null)
@@ -228,7 +241,7 @@ namespace BSPLib
 
 			//make a temporary mapgrinder to help sync
 			//up material names and indexes and such
-			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize);
+			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			for(int leaf=0;leaf < mGFXLeafs.Length;leaf++)
 			{

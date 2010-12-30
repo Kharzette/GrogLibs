@@ -23,6 +23,13 @@ namespace BSPLib
 		}
 
 
+		void SaveArray(byte []arr, BinaryWriter bw)
+		{
+			bw.Write(arr.Length);
+			bw.Write(arr, 0, arr.Length);
+		}
+
+
 		object[] LoadArray(BinaryReader br, CreateRWArray crwa)
 		{
 			int	count	=br.ReadInt32();
@@ -107,7 +114,7 @@ namespace BSPLib
 			file.Close();
 
 			//grab list of material names from grinder
-			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize);
+			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			List<string>	matNames	=mg.GetMaterialNames();
 

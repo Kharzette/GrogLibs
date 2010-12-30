@@ -28,6 +28,7 @@ namespace BSPBuilder
 		public event EventHandler	eVisGBSP;
 		public event EventHandler	eMaterialVisGBSP;
 		public event EventHandler	eSaveGBSP;
+		public event EventHandler	eSaveZone;
 		public event EventHandler	eDrawChoiceChanged;
 
 
@@ -157,17 +158,18 @@ namespace BSPBuilder
 			get
 			{
 				mLightParams.mbSeamCorrection	=SeamCorrection.Checked;
-				mLightParams.mbRadiosity	=Radiosity.Checked;
-				mLightParams.mbFastPatch	=FastPatch.Checked;
-				mLightParams.mPatchSize		=(int)PatchSize.Value;
-				mLightParams.mNumBounces	=(int)NumBounce.Value;
-				mLightParams.mLightScale	=(float)LightScale.Value;
-				mLightParams.mMinLight.X	=(float)MinLightX.Value;
-				mLightParams.mMinLight.Y	=(float)MinLightY.Value;
-				mLightParams.mMinLight.Z	=(float)MinLightZ.Value;
+				mLightParams.mbRadiosity		=Radiosity.Checked;
+				mLightParams.mbFastPatch		=FastPatch.Checked;
+				mLightParams.mPatchSize			=(int)PatchSize.Value;
+				mLightParams.mNumBounces		=(int)NumBounce.Value;
+				mLightParams.mLightScale		=(float)LightScale.Value;
+				mLightParams.mMinLight.X		=(float)MinLightX.Value;
+				mLightParams.mMinLight.Y		=(float)MinLightY.Value;
+				mLightParams.mMinLight.Z		=(float)MinLightZ.Value;
 				mLightParams.mSurfaceReflect	=(float)ReflectiveScale.Value;
-				mLightParams.mMaxIntensity	=(int)MaxIntensity.Value;
-				mLightParams.mLightGridSize	=(int)LightGridSize.Value;
+				mLightParams.mMaxIntensity		=(int)MaxIntensity.Value;
+				mLightParams.mLightGridSize		=(int)LightGridSize.Value;
+				mLightParams.mAtlasSize			=(int)AtlasSize.Value;
 
 				return	mLightParams;
 			}
@@ -372,6 +374,28 @@ namespace BSPBuilder
 			FastPatch.Enabled	=Radiosity.Checked;
 			PatchSize.Enabled	=Radiosity.Checked;
 			NumBounce.Enabled	=Radiosity.Checked;
+		}
+
+
+		void OnSaveZone(object sender, EventArgs e)
+		{
+			DialogResult	dr	=mSFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			if(eSaveZone != null)
+			{
+				eSaveZone(mSFD.FileName, null);
+			}
+		}
+
+
+		internal void SetZoneSaveEnabled(bool p)
+		{
+			SaveZone.Enabled	=true;
 		}
 	}
 }

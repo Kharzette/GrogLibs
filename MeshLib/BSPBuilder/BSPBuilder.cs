@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
@@ -28,13 +29,14 @@ namespace BSPBuilder
 		//data
 		Map						mMap;
 		MaterialLib.MaterialLib	mMatLib;
+		MeshLib.IndoorMesh		mIndoorMesh;
 
 		//debug draw stuff
 		BasicEffect				mMapEffect;
 		VertexBuffer			mVB, mLineVB;
 		IndexBuffer				mIB, mLineIB;
 		VertexDeclaration		mVD;
-		GameCamera				mGameCam;
+		UtilityLib.GameCamera	mGameCam;
 		SpriteFont				mKoot;
 		int						mNumVerts, mNumLines;
 		int						mNumTris;
@@ -42,54 +44,15 @@ namespace BSPBuilder
 		Random					mRnd	=new Random();
 		string					mDrawChoice;
 		Vector3					mDynamicLightPos;
-		RenderTarget2D			mMirrorRenderTarget;
-		Texture2D				mMirrorTexture;
 
-		//new debug draw stuff
-		VertexBuffer		mLMVB, mVLitVB, mLMAnimVB, mAlphaVB, mSkyVB, mFBVB, mMirrorVB, mLMAVB, mLMAAnimVB;
-		VertexDeclaration	mLMVD, mVLitVD, mLMAnimVD, mAlphaVD, mSkyVD, mFBVD, mMirrorVD, mLMAVD, mLMAAnimVD;
-		IndexBuffer			mLMIB, mVLitIB, mLMAnimIB, mAlphaIB, mSkyIB, mFBIB, mMirrorIB, mLMAIB, mLMAAnimIB;
-		TexAtlas			mLMapAtlas;
 		Int32				mDebugLeaf;
 		bool				mDebugBool;
-
-		//for sorting alphas
-		MaterialLib.AlphaPool	mAlphaPool	=new MaterialLib.AlphaPool();
-
-		//debug lightmap animation stuff
-		Dictionary<int, string>	mStyles			=new Dictionary<int, string>();
-		Dictionary<int, float>	mCurStylePos	=new Dictionary<int, float>();
-
-		//material draw stuff
-		//offsets into the vbuffer per material
-		Int32[]	mLMMatOffsets, mVLitMatOffsets, mLMAnimMatOffsets;
-		Int32[]	mAlphaMatOffsets, mSkyMatOffsets, mFBMatOffsets, mMirrorMatOffsets;
-		Int32[]	mLMAMatOffsets, mLMAAnimMatOffsets;
-
-		//numverts for drawprim call per material
-		Int32[]	mLMMatNumVerts, mVLitMatNumVerts, mLMAnimMatNumVerts;
-		Int32[] mAlphaNumVerts, mSkyNumVerts, mFBNumVerts, mMirrorNumVerts;
-		Int32[]	mLMAMatNumVerts, mLMAAnimMatNumVerts;
-
-		//primcount per material
-		Int32[]	mLMMatNumTris, mVLitMatNumTris, mLMAnimMatNumTris;
-		Int32[]	mAlphaNumTris, mSkyNumTris, mFBNumTris, mMirrorNumTris;
-		Int32[]	mLMAMatNumTris, mLMAAnimMatNumTris;
-
-		//sort points for alphas
-		Vector3[] mLMASortPoints, mAlphaSortPoints, mMirrorSortPoints, mLMAAnimSortPoints;
-
-		//mirror polys for rendering through
-		List<List<Vector3>>	mMirrorPolys	=new List<List<Vector3>>();
 
 		//collision debuggery
 		Vector3				mStart, mEnd;
 		BasicEffect			mBFX;
 		VertexBuffer		mRayVB;
 		IndexBuffer			mRayIB;
-
-		//constants
-		const float		ThirtyFPS	=(1000.0f / 30.0f);
 
 
 		public BSPBuilder()
@@ -121,69 +84,9 @@ namespace BSPBuilder
 		{
 			mTextPos	=Vector2.One * 20.0f;
 
-			mGameCam	=new GameCamera(mGDM.GraphicsDevice.Viewport.Width,
+			mGameCam	=new UtilityLib.GameCamera(mGDM.GraphicsDevice.Viewport.Width,
 				mGDM.GraphicsDevice.Viewport.Height,
 				mGDM.GraphicsDevice.Viewport.AspectRatio);
-
-			mMirrorRenderTarget	=new RenderTarget2D(mGDM.GraphicsDevice, 256, 256, 1,
-				mGDM.GraphicsDevice.PresentationParameters.BackBufferFormat,
-				RenderTargetUsage.DiscardContents);
-
-			//Quake1 styled lights 'a' is total darkness, 'z' is maxbright.
-			// 0 normal
-			mStyles.Add(0, "m");
-				
-			//1 FLICKER (first variety)
-			mStyles.Add(1, "mmnmmommommnonmmonqnmmo");
-			
-			//2 SLOW STRONG PULSE
-			mStyles.Add(2, "abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba");
-			
-			//3 CANDLE (first variety)
-			mStyles.Add(3, "mmmmmaaaaammmmmaaaaaabcdefgabcdefg");
-			
-			//4 FAST STROBE
-			mStyles.Add(4, "mamamamamama");
-			
-			//5 GENTLE PULSE 1
-			mStyles.Add(5,"jklmnopqrstuvwxyzyxwvutsrqponmlkj");
-			
-			//6 FLICKER (second variety)
-			mStyles.Add(6, "nmonqnmomnmomomno");
-			
-			//7 CANDLE (second variety)
-			mStyles.Add(7, "mmmaaaabcdefgmmmmaaaammmaamm");
-			
-			//8 CANDLE (third variety)
-			mStyles.Add(8, "mmmaaammmaaammmabcdefaaaammmmabcdefmmmaaaa");
-			
-			//9 SLOW STROBE (fourth variety)
-			mStyles.Add(9, "aaaaaaaazzzzzzzz");
-			
-			//10 FLUORESCENT FLICKER
-			mStyles.Add(10, "mmamammmmammamamaaamammma");
-
-			//11 SLOW PULSE NOT FADE TO BLACK
-			mStyles.Add(11, "abcdefghijklmnopqrrqponmlkjihgfedcba");
-			
-			//12 UNDERWATER LIGHT MUTATION
-			//this light only distorts the lightmap - no contribution
-			//is made to the brightness of affected surfaces
-			mStyles.Add(12, "mmnnmmnnnmmnn");
-
-			mCurStylePos.Add(0, 0.0f);
-			mCurStylePos.Add(1, 0.0f);
-			mCurStylePos.Add(2, 0.0f);
-			mCurStylePos.Add(3, 0.0f);
-			mCurStylePos.Add(4, 0.0f);
-			mCurStylePos.Add(5, 0.0f);
-			mCurStylePos.Add(6, 0.0f);
-			mCurStylePos.Add(7, 0.0f);
-			mCurStylePos.Add(8, 0.0f);
-			mCurStylePos.Add(9, 0.0f);
-			mCurStylePos.Add(10, 0.0f);
-			mCurStylePos.Add(11, 0.0f);
-			mCurStylePos.Add(12, 0.0f);
 
 			base.Initialize();
 		}
@@ -193,6 +96,8 @@ namespace BSPBuilder
 		{
 			mSB		=new SpriteBatch(GraphicsDevice);
 			mMatLib	=new MaterialLib.MaterialLib(mGDM.GraphicsDevice, Content);
+
+			mIndoorMesh	=new MeshLib.IndoorMesh(GraphicsDevice, mMatLib);
 
 			mCollForm				=new CollisionForm();
 			mCollForm.Visible		=false;
@@ -213,6 +118,7 @@ namespace BSPBuilder
 			mMainForm.eMaterialVisGBSP		+=OnMaterialVisGBSP;
 			mMainForm.eBuildGBSP			+=OnBuildGBSP;
 			mMainForm.eSaveGBSP				+=OnSaveGBSP;
+			mMainForm.eSaveZone				+=OnSaveZone;
 			mMainForm.eLoadGBSP				+=OnLoadGBSP;
 			mMainForm.eDrawChoiceChanged	+=OnDrawChoiceChanged;
 
@@ -265,7 +171,7 @@ namespace BSPBuilder
 				mMatLib.SetParameterOnAll("mLight0Position", mDynamicLightPos);
 			}
 
-			UpdateAnimatedLightMaps(msDelta);
+			mIndoorMesh.Update(msDelta);
 
 			mGameCam.Update(msDelta, kbs, Mouse.GetState());
 
@@ -301,200 +207,16 @@ namespace BSPBuilder
 		}
 
 
-		void UpdateAnimatedLightMaps(float msDelta)
-		{
-			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
-
-			string	intensities	="";
-
-			for(int i=0;i < 12;i++)
-			{
-				mCurStylePos[i]	+=msDelta;
-
-				float	endTime	=mStyles[i].Length * ThirtyFPS;
-
-				while(mCurStylePos[i] >= endTime)
-				{
-					mCurStylePos[i]	-=endTime;
-				}
-
-				int	curPos	=(int)Math.Floor(mCurStylePos[i] / ThirtyFPS);
-
-				float	val		=StyleVal(mStyles[i].Substring(curPos, 1));
-				float	nextVal	=StyleVal(mStyles[i].Substring((curPos + 1) % mStyles[i].Length, 1));
-
-				float	ratio	=mCurStylePos[i] - (curPos * ThirtyFPS);
-
-				ratio	/=ThirtyFPS;
-
-				if(i == 11)
-				{
-					intensities	+="" + MathHelper.Lerp(val, nextVal, ratio);
-				}
-				else
-				{
-					intensities	+="" + MathHelper.Lerp(val, nextVal, ratio) + " ";
-				}
-			}
-
-			foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
-			{
-				if(mat.Key.EndsWith("Anim"))
-				{
-					mat.Value.AddParameter("mAniIntensities",
-						EffectParameterClass.Scalar,
-						EffectParameterType.Single,
-						intensities);
-				}
-			}
-		}
-
-
-		void DrawMaterials(VertexBuffer vb, IndexBuffer ib, VertexDeclaration vd,
-			Int32 []offsets, Int32 []numVerts, Int32 []numTris,
-			bool bAlpha, Vector3 []sortPoints)
-		{
-			if(vb == null)
-			{
-				return;
-			}
-
-			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
-
-			GraphicsDevice	g	=mGDM.GraphicsDevice;
-
-			g.VertexDeclaration	=vd;
-			g.Vertices[0].SetSource(vb, 0, vd.GetVertexStrideSize(0));
-			g.Indices	=ib;
-
-			int	idx	=0;
-
-			foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
-			{
-				Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
-				if(fx == null)
-				{
-					idx++;
-					continue;
-				}
-				if(numVerts[idx] <= 0)
-				{
-					idx++;
-					continue;
-				}
-				if(!mMap.IsMaterialVisible(mDebugLeaf, idx))
-				{
-					idx++;
-					continue;
-				}
-
-				if(bAlpha)
-				{
-					mAlphaPool.StoreDraw(sortPoints[idx], mat.Value,
-						vb, ib, vd, 0, 0, numVerts[idx],
-						offsets[idx], numTris[idx]);
-					idx++;
-					continue;
-				}
-
-				//this might get slow
-				mMatLib.ApplyParameters(mat.Key);
-
-				//set renderstates from material
-				//this could also get crushingly slow
-				mat.Value.ApplyRenderStates(g);
-
-				fx.CommitChanges();
-
-				fx.Begin();
-				foreach(EffectPass pass in fx.CurrentTechnique.Passes)
-				{
-					pass.Begin();
-
-					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-						0, 0,
-						numVerts[idx],
-						offsets[idx],
-						numTris[idx]);
-
-					pass.End();
-				}
-				fx.End();
-
-				idx++;
-			}
-		}
-
-
 		protected override void Draw(GameTime gameTime)
 		{
 			GraphicsDevice	g	=mGDM.GraphicsDevice;
 
 			GraphicsDevice.RenderState.DepthBufferEnable	=true;
 
-			//draw mirrored world if need be
-			List<Matrix>	mirrorMats;
-			List<Vector3>	mirrorCenters;
-			List<Rectangle>	scissors	=GetMirrorRects(out mirrorMats, out mirrorCenters);
-
-			for(int i=0;i < scissors.Count;i++)
+			if(mMap != null)
 			{
-				mMatLib.UpdateWVP(mGameCam.World, mirrorMats[i], mGameCam.Projection, mirrorCenters[i]);
-
-				g.SetRenderTarget(0, mMirrorRenderTarget);
-//				g.Clear(Color.CornflowerBlue);
-
-				//render world
-				DrawMaterials(mFBVB, mFBIB, mFBVD, mFBMatOffsets, mFBNumVerts, mFBNumTris, false, null);
-				DrawMaterials(mVLitVB, mVLitIB, mVLitVD, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null);
-				DrawMaterials(mSkyVB, mSkyIB, mSkyVD, mSkyMatOffsets, mSkyNumVerts, mSkyNumTris, false, null);
-				DrawMaterials(mLMVB, mLMIB, mLMVD, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null);
-				DrawMaterials(mLMAnimVB, mLMAnimIB, mLMAnimVD, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null);
-				DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, true, mAlphaSortPoints);
-				DrawMaterials(mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints);
-				DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints);
-				mAlphaPool.DrawAll(g, mMatLib, -mGameCam.CamPos);
+				mIndoorMesh.Draw(g, mGameCam, mMap.IsMaterialVisibleFromPos);
 			}
-
-			if(scissors.Count > 0)
-			{
-				g.SetRenderTarget(0, null);
-
-				mMirrorTexture	=mMirrorRenderTarget.GetTexture();
-				mMatLib.AddMap("MirrorTexture", mMirrorTexture);
-
-				//reset matrices
-				mMatLib.UpdateWVP(mGameCam.World, mGameCam.View, mGameCam.Projection, -mGameCam.CamPos);
-			}
-
-			g.Clear(Color.CornflowerBlue);
-
-			DrawMaterials(mFBVB, mFBIB, mFBVD, mFBMatOffsets, mFBNumVerts, mFBNumTris, false, null);
-			DrawMaterials(mVLitVB, mVLitIB, mVLitVD, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null);
-			DrawMaterials(mSkyVB, mSkyIB, mSkyVD, mSkyMatOffsets, mSkyNumVerts, mSkyNumTris, false, null);
-			DrawMaterials(mLMVB, mLMIB, mLMVD, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null);
-			DrawMaterials(mLMAnimVB, mLMAnimIB, mLMAnimVD, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null);
-
-			//alphas
-#if false
-			//draw immediately for pix
-			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, false, mAlphaSortPoints);
-			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints);
-			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints);
-#else
-			//pix freaks out about the alpha sorting
-			DrawMaterials(mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaNumVerts, mAlphaNumTris, true, mAlphaSortPoints);
-			DrawMaterials(mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints);
-			DrawMaterials(mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints);
-			if(scissors.Count > 0)
-			{
-				//draw mirror surface itself
-				DrawMaterials(mMirrorVB, mMirrorIB, mMirrorVD, mMirrorMatOffsets, mMirrorNumVerts, mMirrorNumTris, true, mMirrorSortPoints);
-			}
-
-			mAlphaPool.DrawAll(g, mMatLib, -mGameCam.CamPos);
-#endif		
-
 			if(mVB != null)
 			{
 				g.VertexDeclaration		=mVD;
@@ -596,11 +318,6 @@ namespace BSPBuilder
 
 			mSB.Begin();
 
-			if(scissors.Count > 0)
-			{
-//				mSB.Draw(mMirrorTexture, Vector2.One * 50.0f, Color.White);
-			}
-
 			if(mDebugBool)
 			{
 				mSB.DrawString(mKoot, "MIV! Coordinates: " + -mGameCam.CamPos, mTextPos, Color.Yellow);
@@ -613,75 +330,6 @@ namespace BSPBuilder
 			mSB.End();
 
 			base.Draw(gameTime);
-		}
-
-
-		List<Rectangle> GetMirrorRects(out List<Matrix> mirrorMats,
-									   out List<Vector3> mirrorCenters)
-		{
-			List<Rectangle>	scissorRects	=new List<Rectangle>();
-
-			mirrorMats		=new List<Matrix>();
-			mirrorCenters	=new List<Vector3>();
-
-			mDebugBool	=false;
-
-			foreach(List<Vector3> poly in mMirrorPolys)
-			{
-				//see if we are behind the mirror
-				GBSPPlane	pln	=new GBSPPlane(poly);
-				if(Vector3.Dot(-mGameCam.CamPos, pln.mNormal) - pln.mDist < 0)
-				{
-					continue;
-				}
-
-				BoundingBox	box	=GetExtents(poly);
-				if(mGameCam.IsBoxOnScreen(box))
-				{
-					mDebugBool	=true;
-					scissorRects.Add(mGameCam.GetScreenCoverage(poly));
-
-					//calculate centerpoint
-					Vector3	center	=Vector3.Zero;
-					foreach(Vector3 vert in poly)
-					{
-						center	+=vert;
-					}
-					center	/=poly.Count;
-					mirrorCenters.Add(center);
-
-					Vector3	eyeVec	=center - -mGameCam.CamPos;
-
-					Vector3	reflect	=Vector3.Reflect(eyeVec, pln.mNormal);
-
-					reflect.Normalize();
-
-					//get view matrix
-					Vector3	side	=Vector3.Cross(reflect, Vector3.Up);
-					if(side.LengthSquared() == 0.0f)
-					{
-						side	=Vector3.Cross(reflect, Vector3.Right);
-					}
-					Vector3	up	=Vector3.Cross(reflect, side);
-
-					Matrix	mirrorView	=Matrix.CreateLookAt(center, center + reflect, up);
-					mirrorMats.Add(mirrorView);
-				}
-			}
-			return	scissorRects;
-		}
-
-
-		BoundingBox GetExtents(List<Vector3> poly)
-		{
-			Bounds	bnd	=new Bounds();
-
-			foreach(Vector3	pnt in poly)
-			{
-				bnd.AddPointToBounds(pnt);
-			}
-
-			return	new BoundingBox(bnd.mMins, bnd.mMaxs);
 		}
 
 
@@ -896,6 +544,8 @@ namespace BSPBuilder
 				mMap.eProgressChanged			+=OnMapProgressChanged;
 				mMap.eNumPortalsChanged			+=OnNumPortalsChanged;
 				mMainForm.SetBuildEnabled(true);
+				mMainForm.SetZoneSaveEnabled(false);
+				mMainForm.SetSaveEnabled(false);
 			}
 		}
 
@@ -905,6 +555,7 @@ namespace BSPBuilder
 			if(mMap.BuildTree(mMainForm.BSPParameters))
 			{
 				mMainForm.SetSaveEnabled(true);
+				mMainForm.SetBuildEnabled(false);
 			}
 		}
 
@@ -924,6 +575,9 @@ namespace BSPBuilder
 					mMap.eProgressChanged			-=OnMapProgressChanged;
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
+				mMainForm.SetSaveEnabled(false);
+				mMainForm.SetBuildEnabled(false);
+				mMainForm.SetZoneSaveEnabled(false);
 				mMap	=new Map();
 				mMap.LightGBSPFile(fileName,
 					mMainForm.LightParameters,
@@ -947,6 +601,9 @@ namespace BSPBuilder
 					mMap.eProgressChanged			-=OnMapProgressChanged;
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
+				mMainForm.SetSaveEnabled(false);
+				mMainForm.SetBuildEnabled(false);
+				mMainForm.SetZoneSaveEnabled(false);
 				mMap	=new Map();
 				mMap.VisGBSPFile(fileName, mMainForm.VisParameters, mMainForm.BSPParameters);
 			}
@@ -968,6 +625,9 @@ namespace BSPBuilder
 					mMap.eProgressChanged			-=OnMapProgressChanged;
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
+				mMainForm.SetSaveEnabled(false);
+				mMainForm.SetBuildEnabled(false);
+				mMainForm.SetZoneSaveEnabled(false);
 				mMap	=new Map();
 				mMap.MaterialVisGBSPFile(fileName, mMainForm.VisParameters, mMainForm.BSPParameters);
 			}
@@ -989,6 +649,9 @@ namespace BSPBuilder
 					mMap.eProgressChanged			-=OnMapProgressChanged;
 					mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				}
+				mMainForm.SetSaveEnabled(false);
+				mMainForm.SetBuildEnabled(false);
+				mMainForm.SetZoneSaveEnabled(false);
 				mMap	=new Map();
 
 				GFXHeader	hdr	=mMap.LoadGBSPFile(fileName);
@@ -1005,7 +668,10 @@ namespace BSPBuilder
 
 					List<MaterialLib.Material>	mats	=mMap.GetMaterials();
 
-					mMap.BuildLMRenderData(g,
+					mIndoorMesh.BuildLM(g, mMainForm.LightParameters.mAtlasSize, mMap.BuildLMRenderData);
+
+					/*
+					if(!mMap.BuildLMRenderData(g,
 						out mLMVB,
 						out mLMIB,
 						out mLMVD,
@@ -1032,33 +698,45 @@ namespace BSPBuilder
 						out mLMAAnimMatNumVerts,
 						out mLMAAnimMatNumTris,
 						out mLMAAnimSortPoints,
-						out mLMapAtlas);
+						mMainForm.LightParameters.mAtlasSize,
+						out mLMapAtlas))
+					{
+						return;
+					}*/
 
+					mIndoorMesh.BuildVLit(g, mMap.BuildVLitRenderData);
+					mIndoorMesh.BuildAlpha(g, mMap.BuildAlphaRenderData);
+					mIndoorMesh.BuildFullBright(g, mMap.BuildFullBrightRenderData);
+					mIndoorMesh.BuildMirror(g, mMap.BuildMirrorRenderData);
+					mIndoorMesh.BuildSky(g, mMap.BuildSkyRenderData);
+
+					/*
 					mMap.BuildVLitRenderData(g, out mVLitVB, out mVLitIB,
 						out mVLitVD, out mVLitMatOffsets, out mVLitMatNumVerts,
 						out mVLitMatNumTris);
 
 					mMap.BuildAlphaRenderData(g, out mAlphaVB, out mAlphaIB, out mAlphaVD,
-						out mAlphaMatOffsets, out mAlphaNumVerts, out mAlphaNumTris, out mAlphaSortPoints);
+						out mAlphaMatOffsets, out mAlphaMatNumVerts, out mAlphaMatNumTris, out mAlphaSortPoints);
 
 					mMap.BuildFullBrightRenderData(g, out mFBVB, out mFBIB, out mFBVD,
-						out mFBMatOffsets, out mFBNumVerts, out mFBNumTris);
+						out mFBMatOffsets, out mFBMatNumVerts, out mFBMatNumTris);
 
 					mMap.BuildMirrorRenderData(g, out mMirrorVB, out mMirrorIB, out mMirrorVD,
-						out mMirrorMatOffsets, out mMirrorNumVerts,
-						out mMirrorNumTris, out mMirrorSortPoints, out mMirrorPolys);
+						out mMirrorMatOffsets, out mMirrorMatNumVerts,
+						out mMirrorMatNumTris, out mMirrorSortPoints, out mMirrorPolys);
 
 					mMap.BuildSkyRenderData(g, out mSkyVB, out mSkyIB, out mSkyVD,
-						out mSkyMatOffsets, out mSkyNumVerts, out mSkyNumTris);
+						out mSkyMatOffsets, out mSkyMatNumVerts, out mSkyMatNumTris);
 
 					mMatLib.AddMap("LightMapAtlas", mLMapAtlas.GetAtlasTexture());
-
+					*/
 					foreach(MaterialLib.Material mat in mats)
 					{
 						mMatLib.AddMaterial(mat);
 					}
 					mMatLib.RefreshShaderParameters();
 					mMatForm.UpdateMaterials();
+					mMainForm.SetZoneSaveEnabled(true);
 				}
 			}
 		}
@@ -1071,6 +749,20 @@ namespace BSPBuilder
 			if(fileName != null)
 			{
 				mMap.SaveGBSPFile(fileName,	mMainForm.BSPParameters);
+			}
+		}
+
+
+		void OnSaveZone(object sender, EventArgs ea)
+		{
+			string	fileName	=sender as string;
+
+			if(fileName != null)
+			{
+				mMap.Write(fileName);
+
+				//write out the zoneDraw
+				mIndoorMesh.Write(fileName + "Draw");
 			}
 		}
 
@@ -1092,10 +784,7 @@ namespace BSPBuilder
 
 		void OnMaterialsCleared(object sender, EventArgs ea)
 		{
-			if(mLMapAtlas != null)
-			{
-				mMatLib.AddMap("LightMapAtlas", mLMapAtlas.GetAtlasTexture());
-			}
+			//might need to readd lightmap tex
 		}
 
 

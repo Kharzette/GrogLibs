@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MaterialLib;
+using MeshLib;
 
 
 namespace BSPLib
@@ -141,7 +142,7 @@ namespace BSPLib
 		List<Vector3>	mLMAAnimMaterialSortPoints	=new List<Vector3>();
 
 		//computed lightmap atlas
-		TexAtlas	mLMAtlas;
+		UtilityLib.TexAtlas	mLMAtlas;
 
 		//passed in data
 		int			mLightGridSize;
@@ -153,7 +154,7 @@ namespace BSPLib
 
 
 		public MapGrinder(GraphicsDevice gd, GFXTexInfo []texs,
-			GFXFace []faces, int lightGridSize)
+			GFXFace []faces, int lightGridSize, int atlasSize)
 		{
 			mGD				=gd;
 			mTexInfos		=texs;
@@ -162,7 +163,7 @@ namespace BSPLib
 
 			if(gd != null)
 			{
-				mLMAtlas	=new TexAtlas(gd);
+				mLMAtlas	=new UtilityLib.TexAtlas(gd, atlasSize, atlasSize);
 			}
 
 			CalcMaterialNames();
@@ -180,75 +181,24 @@ namespace BSPLib
 
 			//make vertex declarations
 			//lightmapped
-			VertexElement	[]ve	=new VertexElement[4];
-			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Position, 0);
-			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
-			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
-			ve[3]	=new VertexElement(0, 28, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
-			mLMVD	=new VertexDeclaration(gd, ve);
+			mLMVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormTex0Tex1));
 
 			//lightmapped alpha
-			ve	=new VertexElement[5];
-			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Position, 0);
-			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
-			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
-			ve[3]	=new VertexElement(0, 28, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
-			ve[4]	=new VertexElement(0, 40, VertexElementFormat.Vector4,
-				VertexElementMethod.Default, VertexElementUsage.Color, 0);
-			mLMAVD	=new VertexDeclaration(gd, ve);
+			mLMAVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormTex0Tex1Col0));
 
 			//vertex lit, alpha, and mirror
-			ve	=new VertexElement[4];
-			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Position, 0);
-			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
-			ve[2]	=new VertexElement(0, 20, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
-			ve[3]	=new VertexElement(0, 32, VertexElementFormat.Vector4,
-				VertexElementMethod.Default, VertexElementUsage.Color, 0);
-			mVLitVD		=new VertexDeclaration(gd, ve);
-			mAlphaVD	=new VertexDeclaration(gd, ve);
-			mMirrorVD	=new VertexDeclaration(gd, ve);
+			mVLitVD		=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormTex0Col0));
+			mAlphaVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormTex0Col0));
+			mMirrorVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormTex0Col0));
 
 			//animated lightmapped, and alpha as well
 			//alpha is stored in the style vector4
-			ve	=new VertexElement[8];
-			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Position, 0);
-			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Normal, 0);
-			ve[2]	=new VertexElement(0, 24, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
-			ve[3]	=new VertexElement(0, 32, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
-			ve[4]	=new VertexElement(0, 40, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 2);
-			ve[5]	=new VertexElement(0, 48, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 3);
-			ve[6]	=new VertexElement(0, 56, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 4);
-			ve[7]	=new VertexElement(0, 64, VertexElementFormat.Vector4,
-				VertexElementMethod.Default, VertexElementUsage.BlendIndices, 0);
-			mLMAnimVD	=new VertexDeclaration(gd, ve);
-			mLMAAnimVD	=new VertexDeclaration(gd, ve);
+			mLMAnimVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormBlendTex0Tex1Tex2Tex3Tex4));
+			mLMAAnimVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormBlendTex0Tex1Tex2Tex3Tex4));
 
 			//FullBright and sky
-			ve	=new VertexElement[2];
-			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
-				VertexElementMethod.Default, VertexElementUsage.Position, 0);
-			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector2,
-				VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
-			mFBVD	=new VertexDeclaration(gd, ve);
-			mSkyVD	=new VertexDeclaration(gd, ve);
+			mFBVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosTex0));
+			mSkyVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosTex0));
 		}
 
 
@@ -355,18 +305,18 @@ namespace BSPLib
 				return;
 			}
 
-			VPosTex0Tex1Norm0	[]varray	=new VPosTex0Tex1Norm0[mLMVerts.Count];
+			VPosNormTex0Tex1	[]varray	=new VPosNormTex0Tex1[mLMVerts.Count];
 			for(int i=0;i < mLMVerts.Count;i++)
 			{
 				varray[i].Position	=mLMVerts[i];
 				varray[i].TexCoord0	=mLMFaceTex0[i];
 				varray[i].TexCoord1	=mLMFaceTex1[i];
-				varray[i].Normal0	=mLMNormals[i];
+				varray[i].Normal	=mLMNormals[i];
 			}
 
 			vd	=mLMVD;
 			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosTex0Tex1Norm0>(varray);
+			vb.SetData<VPosNormTex0Tex1>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mLMIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
@@ -384,20 +334,20 @@ namespace BSPLib
 				return;
 			}
 
-			VPosTex0Tex1Norm0Col0	[]varray	=new VPosTex0Tex1Norm0Col0[mLMAVerts.Count];
+			VPosNormTex0Tex1Col0	[]varray	=new VPosNormTex0Tex1Col0[mLMAVerts.Count];
 			for(int i=0;i < mLMAVerts.Count;i++)
 			{
 				varray[i].Position	=mLMAVerts[i];
 				varray[i].TexCoord0	=mLMAFaceTex0[i];
 				varray[i].TexCoord1	=mLMAFaceTex1[i];
-				varray[i].Normal0	=mLMANormals[i];
+				varray[i].Normal	=mLMANormals[i];
 				varray[i].Color0	=Vector4.One;
 				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
 			}
 
 			vd	=mLMAVD;
 			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosTex0Tex1Norm0Col0>(varray);
+			vb.SetData<VPosNormTex0Tex1Col0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mLMAIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
@@ -415,7 +365,7 @@ namespace BSPLib
 				return;
 			}
 
-			VPosTex0Norm0Col0	[]varray	=new VPosTex0Norm0Col0[mVLitVerts.Count];
+			VPosNormTex0Col0	[]varray	=new VPosNormTex0Col0[mVLitVerts.Count];
 			for(int i=0;i < mVLitVerts.Count;i++)
 			{
 				varray[i].Position	=mVLitVerts[i];
@@ -426,7 +376,7 @@ namespace BSPLib
 
 			vd	=mVLitVD;
 			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosTex0Norm0Col0>(varray);
+			vb.SetData<VPosNormTex0Col0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mVLitIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
@@ -444,7 +394,7 @@ namespace BSPLib
 				return;
 			}
 
-			VPosTex0Norm0Col0	[]varray	=new VPosTex0Norm0Col0[mAlphaVerts.Count];
+			VPosNormTex0Col0	[]varray	=new VPosNormTex0Col0[mAlphaVerts.Count];
 			for(int i=0;i < mAlphaVerts.Count;i++)
 			{
 				varray[i].Position	=mAlphaVerts[i];
@@ -456,7 +406,7 @@ namespace BSPLib
 
 			vd	=mAlphaVD;
 			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosTex0Norm0Col0>(varray);
+			vb.SetData<VPosNormTex0Col0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mAlphaIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
@@ -501,7 +451,7 @@ namespace BSPLib
 				return;
 			}
 
-			VPosTex0Norm0Col0	[]varray	=new VPosTex0Norm0Col0[mMirrorVerts.Count];
+			VPosNormTex0Col0	[]varray	=new VPosNormTex0Col0[mMirrorVerts.Count];
 			for(int i=0;i < mMirrorVerts.Count;i++)
 			{
 				varray[i].Position	=mMirrorVerts[i];
@@ -513,7 +463,7 @@ namespace BSPLib
 
 			vd	=mMirrorVD;
 			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosTex0Norm0Col0>(varray);
+			vb.SetData<VPosNormTex0Col0>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mMirrorIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
@@ -558,22 +508,23 @@ namespace BSPLib
 				return;
 			}
 
-			VPosNorm0Tex0Tex1Tex2Tex3Tex4Style4	[]varray	=new VPosNorm0Tex0Tex1Tex2Tex3Tex4Style4[mLMAnimVerts.Count];
+			VPosNormBlendTex0Tex1Tex2Tex3Tex4	[]varray
+				=new VPosNormBlendTex0Tex1Tex2Tex3Tex4[mLMAnimVerts.Count];
 			for(int i=0;i < mLMAnimVerts.Count;i++)
 			{
-				varray[i].Position		=mLMAnimVerts[i];
-				varray[i].Normal		=mLMAnimNormals[i];
-				varray[i].TexCoord0		=mLMAnimFaceTex0[i];
-				varray[i].TexCoord1		=mLMAnimFaceTex1[i];
-				varray[i].TexCoord2		=mLMAnimFaceTex2[i];
-				varray[i].TexCoord3		=mLMAnimFaceTex3[i];
-				varray[i].TexCoord4		=mLMAnimFaceTex4[i];
-				varray[i].StyleIndex	=mLMAnimStyle[i];
+				varray[i].Position	=mLMAnimVerts[i];
+				varray[i].Normal	=mLMAnimNormals[i];
+				varray[i].TexCoord0	=mLMAnimFaceTex0[i];
+				varray[i].TexCoord1	=mLMAnimFaceTex1[i];
+				varray[i].TexCoord2	=mLMAnimFaceTex2[i];
+				varray[i].TexCoord3	=mLMAnimFaceTex3[i];
+				varray[i].TexCoord4	=mLMAnimFaceTex4[i];
+				varray[i].BoneIndex	=mLMAnimStyle[i];
 			}
 
 			vd	=mLMAnimVD;
 			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosNorm0Tex0Tex1Tex2Tex3Tex4Style4>(varray);
+			vb.SetData<VPosNormBlendTex0Tex1Tex2Tex3Tex4>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mLMAnimIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
@@ -591,22 +542,23 @@ namespace BSPLib
 				return;
 			}
 
-			VPosNorm0Tex0Tex1Tex2Tex3Tex4Style4	[]varray	=new VPosNorm0Tex0Tex1Tex2Tex3Tex4Style4[mLMAAnimVerts.Count];
+			VPosNormBlendTex0Tex1Tex2Tex3Tex4	[]varray
+				=new VPosNormBlendTex0Tex1Tex2Tex3Tex4[mLMAAnimVerts.Count];
 			for(int i=0;i < mLMAAnimVerts.Count;i++)
 			{
-				varray[i].Position		=mLMAAnimVerts[i];
-				varray[i].Normal		=mLMAAnimNormals[i];
-				varray[i].TexCoord0		=mLMAAnimFaceTex0[i];
-				varray[i].TexCoord1		=mLMAAnimFaceTex1[i];
-				varray[i].TexCoord2		=mLMAAnimFaceTex2[i];
-				varray[i].TexCoord3		=mLMAAnimFaceTex3[i];
-				varray[i].TexCoord4		=mLMAAnimFaceTex4[i];
-				varray[i].StyleIndex	=mLMAAnimStyle[i];
+				varray[i].Position	=mLMAAnimVerts[i];
+				varray[i].Normal	=mLMAAnimNormals[i];
+				varray[i].TexCoord0	=mLMAAnimFaceTex0[i];
+				varray[i].TexCoord1	=mLMAAnimFaceTex1[i];
+				varray[i].TexCoord2	=mLMAAnimFaceTex2[i];
+				varray[i].TexCoord3	=mLMAAnimFaceTex3[i];
+				varray[i].TexCoord4	=mLMAAnimFaceTex4[i];
+				varray[i].BoneIndex	=mLMAAnimStyle[i];
 			}
 
 			vd	=mLMAAnimVD;
 			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.WriteOnly);
-			vb.SetData<VPosNorm0Tex0Tex1Tex2Tex3Tex4Style4>(varray);
+			vb.SetData<VPosNormBlendTex0Tex1Tex2Tex3Tex4>(varray);
 
 			ib	=new IndexBuffer(mGD, 4 * mLMAAnimIndexes.Count, BufferUsage.WriteOnly,
 					IndexElementSize.ThirtyTwoBits);
@@ -614,7 +566,7 @@ namespace BSPLib
 		}
 
 
-		internal void BuildLMAnimFaceData(Vector3 []verts, int[] indexes, byte []lightData)
+		internal bool BuildLMAnimFaceData(Vector3 []verts, int[] indexes, byte []lightData)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
@@ -664,8 +616,12 @@ namespace BSPLib
 						lmap[i].B	=lightData[f.mLightOfs + (i * 3) + 2];
 						lmap[i].A	=0xFF;
 					}
-					mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-						out scaleU, out scaleV, out offsetU, out offsetV);
+					if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
+						out scaleU, out scaleV, out offsetU, out offsetV))
+					{
+						Map.Print("Lightmap atlas out of space, try increasing it's size.\n");
+						return	false;
+					}
 
 					List<Vector3>	fverts	=new List<Vector3>();
 
@@ -704,12 +660,12 @@ namespace BSPLib
 						tc.Y	*=crunchY;
 
 						//scale to atlas space
-						tc.X	/=TexAtlas.TEXATLAS_WIDTH;
-						tc.Y	/=TexAtlas.TEXATLAS_HEIGHT;
+						tc.X	/=mLMAtlas.Width;
+						tc.Y	/=mLMAtlas.Height;
 
 						//step half a pixel in atlas space
-						tc.X	+=1.0f / (TexAtlas.TEXATLAS_WIDTH * 2.0f);
-						tc.Y	+=1.0f / (TexAtlas.TEXATLAS_HEIGHT * 2.0f);
+						tc.X	+=1.0f / (mLMAtlas.Width * 2.0f);
+						tc.Y	+=1.0f / (mLMAtlas.Height * 2.0f);
 
 						//move to atlas position
 						tc.X	+=(float)offsetU;
@@ -762,8 +718,12 @@ namespace BSPLib
 						}
 
 						//insert animated map
-						mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-							out scaleU, out scaleV, out offsetU, out offsetV);
+						if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
+							out scaleU, out scaleV, out offsetU, out offsetV))
+						{
+							Map.Print("Lightmap atlas out of space, try increasing it's size.\n");
+							return	false;
+						}
 
 						//grab texcoords to animated map location
 						coords	=new List<Vector2>();
@@ -781,12 +741,12 @@ namespace BSPLib
 							tc.Y	*=crunchY;
 
 							//scale to atlas space
-							tc.X	/=TexAtlas.TEXATLAS_WIDTH;
-							tc.Y	/=TexAtlas.TEXATLAS_HEIGHT;
+							tc.X	/=mLMAtlas.Width;
+							tc.Y	/=mLMAtlas.Height;
 
 							//step half a pixel in atlas space
-							tc.X	+=1.0f / (TexAtlas.TEXATLAS_WIDTH * 2.0f);
-							tc.Y	+=1.0f / (TexAtlas.TEXATLAS_HEIGHT * 2.0f);
+							tc.X	+=1.0f / (mLMAtlas.Width * 2.0f);
+							tc.Y	+=1.0f / (mLMAtlas.Height * 2.0f);
 
 							//move to atlas position
 							tc.X	+=(float)offsetU;
@@ -825,17 +785,19 @@ namespace BSPLib
 			//might not be any
 			if(mLMAnimVerts.Count == 0)
 			{
-				return;
+				return	true;
 			}
 
 			mLMAtlas.Finish();
 
 			ComputeIndexes(mLMAnimIndexes, mLMAnimMaterialOffsets,
 				mLMAnimMaterialNumTris, numFace, firstVert, numVert, null, null);
+
+			return	true;
 		}
 
 
-		internal void BuildLMAAnimFaceData(Vector3 []verts, int[] indexes, byte []lightData)
+		internal bool BuildLMAAnimFaceData(Vector3 []verts, int[] indexes, byte []lightData)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
@@ -885,8 +847,12 @@ namespace BSPLib
 						lmap[i].B	=lightData[f.mLightOfs + (i * 3) + 2];
 						lmap[i].A	=0xFF;
 					}
-					mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-						out scaleU, out scaleV, out offsetU, out offsetV);
+					if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
+						out scaleU, out scaleV, out offsetU, out offsetV))
+					{
+						Map.Print("Lightmap atlas out of space, try increasing it's size.\n");
+						return	false;
+					}
 
 					List<Vector3>	fverts	=new List<Vector3>();
 
@@ -925,12 +891,12 @@ namespace BSPLib
 						tc.Y	*=crunchY;
 
 						//scale to atlas space
-						tc.X	/=TexAtlas.TEXATLAS_WIDTH;
-						tc.Y	/=TexAtlas.TEXATLAS_HEIGHT;
+						tc.X	/=mLMAtlas.Width;
+						tc.Y	/=mLMAtlas.Height;
 
 						//step half a pixel in atlas space
-						tc.X	+=1.0f / (TexAtlas.TEXATLAS_WIDTH * 2.0f);
-						tc.Y	+=1.0f / (TexAtlas.TEXATLAS_HEIGHT * 2.0f);
+						tc.X	+=1.0f / (mLMAtlas.Width * 2.0f);
+						tc.Y	+=1.0f / (mLMAtlas.Height * 2.0f);
 
 						//move to atlas position
 						tc.X	+=(float)offsetU;
@@ -983,8 +949,12 @@ namespace BSPLib
 						}
 
 						//insert animated map
-						mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-							out scaleU, out scaleV, out offsetU, out offsetV);
+						if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
+							out scaleU, out scaleV, out offsetU, out offsetV))
+						{
+							Map.Print("Lightmap atlas out of space, try increasing it's size.\n");
+							return	false;
+						}
 
 						//grab texcoords to animated map location
 						coords	=new List<Vector2>();
@@ -1002,12 +972,12 @@ namespace BSPLib
 							tc.Y	*=crunchY;
 
 							//scale to atlas space
-							tc.X	/=TexAtlas.TEXATLAS_WIDTH;
-							tc.Y	/=TexAtlas.TEXATLAS_HEIGHT;
+							tc.X	/=mLMAtlas.Width;
+							tc.Y	/=mLMAtlas.Height;
 
 							//step half a pixel in atlas space
-							tc.X	+=1.0f / (TexAtlas.TEXATLAS_WIDTH * 2.0f);
-							tc.Y	+=1.0f / (TexAtlas.TEXATLAS_HEIGHT * 2.0f);
+							tc.X	+=1.0f / (mLMAtlas.Width * 2.0f);
+							tc.Y	+=1.0f / (mLMAtlas.Height * 2.0f);
 
 							//move to atlas position
 							tc.X	+=(float)offsetU;
@@ -1047,7 +1017,7 @@ namespace BSPLib
 			//might not be any
 			if(mLMAAnimVerts.Count == 0)
 			{
-				return;
+				return	true;
 			}
 
 			mLMAtlas.Finish();
@@ -1055,14 +1025,16 @@ namespace BSPLib
 			ComputeIndexes(mLMAAnimIndexes, mLMAAnimMaterialOffsets,
 				mLMAAnimMaterialNumTris, numFace, firstVert, numVert,
 				mLMAAnimVerts, mLMAAnimMaterialSortPoints);
+
+			return	true;
 		}
 
 
-		internal void BuildLMFaceData(Vector3 []verts, int[] indexes, byte []lightData)
+		internal bool BuildLMFaceData(Vector3 []verts, int[] indexes, byte []lightData)
 		{
 			if(lightData == null)
 			{
-				return;
+				return	false;
 			}
 
 			List<Int32>	firstVert	=new List<Int32>();
@@ -1124,8 +1096,13 @@ namespace BSPLib
 						lmap[i].B	=lightData[f.mLightOfs + (i * 3) + 2];
 						lmap[i].A	=0xFF;
 					}
-					mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-						out scaleU, out scaleV, out offsetU, out offsetV);
+
+					if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
+						out scaleU, out scaleV, out offsetU, out offsetV))
+					{
+						Map.Print("Lightmap atlas out of space, try increasing it's size.\n");
+						return	false;
+					}
 
 					List<Vector3>	fverts		=new List<Vector3>();
 
@@ -1164,12 +1141,12 @@ namespace BSPLib
 						tc.Y	*=crunchY;
 
 						//scale to atlas space
-						tc.X	/=TexAtlas.TEXATLAS_WIDTH;
-						tc.Y	/=TexAtlas.TEXATLAS_HEIGHT;
+						tc.X	/=mLMAtlas.Width;
+						tc.Y	/=mLMAtlas.Height;
 
 						//step half a pixel in atlas space
-						tc.X	+=1.0f / (TexAtlas.TEXATLAS_WIDTH * 2.0f);
-						tc.Y	+=1.0f / (TexAtlas.TEXATLAS_HEIGHT * 2.0f);
+						tc.X	+=1.0f / (mLMAtlas.Width * 2.0f);
+						tc.Y	+=1.0f / (mLMAtlas.Height * 2.0f);
 
 						//move to atlas position
 						tc.X	+=(float)offsetU;
@@ -1190,10 +1167,12 @@ namespace BSPLib
 
 			ComputeIndexes(mLMIndexes, mLMMaterialOffsets, mLMMaterialNumTris,
 				numFace, firstVert, numVert, null, null);
+
+			return	true;
 		}
 
 
-		internal void BuildLMAFaceData(Vector3 []verts, int[] indexes, byte []lightData)
+		internal bool BuildLMAFaceData(Vector3 []verts, int[] indexes, byte []lightData)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
@@ -1248,8 +1227,12 @@ namespace BSPLib
 						lmap[i].B	=lightData[f.mLightOfs + (i * 3) + 2];
 						lmap[i].A	=0xFF;
 					}
-					mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-						out scaleU, out scaleV, out offsetU, out offsetV);
+					if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
+						out scaleU, out scaleV, out offsetU, out offsetV))
+					{
+						Map.Print("Lightmap atlas out of space, try increasing it's size.\n");
+						return	false;
+					}
 
 					List<Vector3>	fverts	=new List<Vector3>();
 
@@ -1288,12 +1271,12 @@ namespace BSPLib
 						tc.Y	*=crunchY;
 
 						//scale to atlas space
-						tc.X	/=TexAtlas.TEXATLAS_WIDTH;
-						tc.Y	/=TexAtlas.TEXATLAS_HEIGHT;
+						tc.X	/=mLMAtlas.Width;
+						tc.Y	/=mLMAtlas.Height;
 
 						//step half a pixel in atlas space
-						tc.X	+=1.0f / (TexAtlas.TEXATLAS_WIDTH * 2.0f);
-						tc.Y	+=1.0f / (TexAtlas.TEXATLAS_HEIGHT * 2.0f);
+						tc.X	+=1.0f / (mLMAtlas.Width * 2.0f);
+						tc.Y	+=1.0f / (mLMAtlas.Height * 2.0f);
 
 						//move to atlas position
 						tc.X	+=(float)offsetU;
@@ -1314,10 +1297,12 @@ namespace BSPLib
 
 			ComputeIndexes(mLMAIndexes, mLMAMaterialOffsets, mLMAMaterialNumTris,
 				numFace, firstVert, numVert, mLMAVerts, mLMAMaterialSortPoints);
+
+			return	true;
 		}
 
 
-		internal void BuildVLitFaceData(Vector3 []verts,
+		internal bool BuildVLitFaceData(Vector3 []verts,
 			Vector3 []rgbVerts, Vector3 []vnorms, int[] indexes)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
@@ -1405,10 +1390,12 @@ namespace BSPLib
 
 			ComputeIndexes(mVLitIndexes, mVLitMaterialOffsets,
 				mVLitMaterialNumTris, numFace, firstVert, numVert, null, null);
+
+			return	true;
 		}
 
 
-		internal void BuildMirrorFaceData(Vector3 []verts,
+		internal bool BuildMirrorFaceData(Vector3 []verts,
 			Vector3 []rgbVerts, Vector3 []vnorms, int[] indexes)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
@@ -1501,10 +1488,12 @@ namespace BSPLib
 			ComputeIndexes(mMirrorIndexes, mMirrorMaterialOffsets,
 				mMirrorMaterialNumTris, numFace, firstVert,
 				numVert, mMirrorVerts, mMirrorMaterialSortPoints);
+
+			return	true;
 		}
 
 
-		internal void BuildAlphaFaceData(Vector3 []verts,
+		internal bool BuildAlphaFaceData(Vector3 []verts,
 			Vector3 []rgbVerts, Vector3 []vnorms, int[] indexes)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
@@ -1593,10 +1582,12 @@ namespace BSPLib
 			ComputeIndexes(mAlphaIndexes, mAlphaMaterialOffsets,
 				mAlphaMaterialNumTris, numFace, firstVert,
 				numVert, mAlphaVerts, mAlphaMaterialSortPoints);
+
+			return	true;
 		}
 
 
-		internal void BuildFullBrightFaceData(Vector3 []verts, int[] indexes)
+		internal bool BuildFullBrightFaceData(Vector3 []verts, int[] indexes)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
@@ -1668,10 +1659,12 @@ namespace BSPLib
 
 			ComputeIndexes(mFBIndexes, mFBMaterialOffsets,
 				mFBMaterialNumTris, numFace, firstVert, numVert, null, null);
+
+			return	true;
 		}
 
 
-		internal void BuildSkyFaceData(Vector3 []verts, int[] indexes)
+		internal bool BuildSkyFaceData(Vector3 []verts, int[] indexes)
 		{
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
@@ -1743,6 +1736,8 @@ namespace BSPLib
 
 			ComputeIndexes(mSkyIndexes, mSkyMaterialOffsets,
 				mSkyMaterialNumTris, numFace, firstVert, numVert, null, null);
+
+			return	true;
 		}
 
 
@@ -2145,7 +2140,7 @@ namespace BSPLib
 		}
 
 
-		internal TexAtlas GetLightMapAtlas()
+		internal UtilityLib.TexAtlas GetLightMapAtlas()
 		{
 			return	mLMAtlas;
 		}

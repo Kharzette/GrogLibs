@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 
-namespace BSPBuilder
+namespace UtilityLib
 {
 	public class GameCamera
 	{
@@ -70,9 +70,9 @@ namespace BSPBuilder
 
 		public void Update(float msDelta, KeyboardState ks, MouseState ms)
 		{
-			Vector3 vup;
-			Vector3 vleft;
-			Vector3 vin;
+			Vector3 vup		=Vector3.Zero;
+			Vector3 vleft	=Vector3.Zero;
+			Vector3 vin		=Vector3.Zero;
 
 			//grab view matrix in vector transpose
 			vup.X   =mMATView.M12;
@@ -163,7 +163,7 @@ namespace BSPBuilder
 		}
 
 
-		internal bool IsBoxOnScreen(BoundingBox box)
+		public bool IsBoxOnScreen(BoundingBox box)
 		{
 			return	mFrust.Intersects(box);
 		}

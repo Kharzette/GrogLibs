@@ -157,5 +157,37 @@ namespace UtilityLib
 				}
 			}
 		}
+
+
+		public static void PlaneFromVerts(List<Vector3> verts, out Vector3 norm, out float dist)
+		{
+			int	i;
+
+			norm	=Vector3.Zero;
+
+			for(i=0;i < verts.Count;i++)
+			{
+				//gen a plane normal from the cross of edge vectors
+				Vector3	v1  =verts[i] - verts[(i + 1) % verts.Count];
+				Vector3	v2  =verts[(i + 2) % verts.Count] - verts[(i + 1) % verts.Count];
+
+				norm   =Vector3.Cross(v1, v2);
+
+				if(!norm.Equals(Vector3.Zero))
+				{
+					break;
+				}
+				//try the next three if there are three
+			}
+			if(i >= verts.Count)
+			{
+				norm	=Vector3.UnitX;
+				dist	=0.0f;
+				return;
+			}
+
+			norm.Normalize();
+			dist	=Vector3.Dot(verts[1], norm);
+		}
 	}
 }

@@ -33,12 +33,12 @@ struct VPosCubeTex0
 };
 
 
-struct VPosTex0Tex1Norm0
+struct VPosNormTex0Tex1
 {
 	float4 Position : POSITION0;
+	float3 Normal0 : NORMAL0;
 	float2 TexCoord0 : TEXCOORD0;
 	float2 TexCoord1 : TEXCOORD1;
-	float3 Normal0 : NORMAL0;
 };
 
 
@@ -51,7 +51,7 @@ struct VPosTex0Tex1Col0
 };
 
 
-struct VPosTex0Tex1Norm0Col0
+struct VPosNormTex0Tex1Col0
 {
 	float4 Position : POSITION0;
 	float2 TexCoord0 : TEXCOORD0;
@@ -61,7 +61,7 @@ struct VPosTex0Tex1Norm0Col0
 };
 
 
-struct VPosTex0Norm0Col0
+struct VPosNormTex0Col0
 {
 	float4 Position : POSITION0;
 	float2 TexCoord0 : TEXCOORD0;
@@ -70,16 +70,16 @@ struct VPosTex0Norm0Col0
 };
 
 
-struct VPosNorm0Tex0Tex1Tex2Tex3Tex4Style
+struct VPosNormBlendTex0Tex1Tex2Tex3Tex4
 {
 	float4 Position : POSITION0;
 	float3 Normal0 : NORMAL0;
+	float4 StyleIndex : BLENDINDICES0;	
 	float2 TexCoord0 : TEXCOORD0;
 	float2 TexCoord1 : TEXCOORD1;
-	float2 TexCoord2 : TEXCOORD1;
-	float2 TexCoord3 : TEXCOORD1;
-	float2 TexCoord4 : TEXCOORD1;
-	float4 StyleIndex : BLENDINDICES0;
+	float2 TexCoord2 : TEXCOORD2;
+	float2 TexCoord3 : TEXCOORD3;
+	float2 TexCoord4 : TEXCOORD4;
 };
 
 
@@ -150,7 +150,7 @@ struct VTex0Tex1Tex2Tex3Tex4Color0Intensity
 };
 
 
-VPosTex0Tex1Col0 LMVertexShader(VPosTex0Tex1Norm0 input)
+VPosTex0Tex1Col0 LMVertexShader(VPosNormTex0Tex1 input)
 {
 	VPosTex0Tex1Col0	output;
 
@@ -186,7 +186,7 @@ VPosTex0Tex1Col0 LMVertexShader(VPosTex0Tex1Norm0 input)
 }
 
 
-VPosTex0Tex1Col0 LMAlphaVertexShader(VPosTex0Tex1Norm0Col0 input)
+VPosTex0Tex1Col0 LMAlphaVertexShader(VPosNormTex0Tex1Col0 input)
 {
 	VPosTex0Tex1Col0	output;
 
@@ -220,7 +220,7 @@ VPosTex0Tex1Col0 LMAlphaVertexShader(VPosTex0Tex1Norm0Col0 input)
 }
 
 
-VPosTex0Col0 VLitVertexShader(VPosTex0Norm0Col0 input)
+VPosTex0Col0 VLitVertexShader(VPosNormTex0Col0 input)
 {
 	VPosTex0Col0	output;
 
@@ -285,7 +285,7 @@ VPosCubeTex0 SkyVertexShader(VPosTex0 input)
 }
 
 
-VPosTex0Tex1Tex2Tex3Tex4Color0Intensity LMAnimVertexShader(VPosNorm0Tex0Tex1Tex2Tex3Tex4Style input)
+VPosTex0Tex1Tex2Tex3Tex4Color0Intensity LMAnimVertexShader(VPosNormBlendTex0Tex1Tex2Tex3Tex4 input)
 {
 	VPosTex0Tex1Tex2Tex3Tex4Color0Intensity	output;
 
@@ -522,68 +522,23 @@ float4 LMAnimPixelShader(VTex0Tex1Tex2Tex3Tex4Color0Intensity input) : COLOR0
 	{
 		color	=float3(1.0, 1.0, 1.0);
 	}
-	
-	float3	lm	=tex2D(LightMapSampler, input.TexCoord1);
-	
-	//grab style intensity
-	if(input.StyleIntensity.x > 0)
-	{
-		lm	+=(input.StyleIntensity.x * tex2D(LightMapSampler, input.TexCoord2));
-	}
-	if(input.StyleIntensity.y > 0)
-	{
-		lm	+=(input.StyleIntensity.y * tex2D(LightMapSampler, input.TexCoord3));
-	}
-	if(input.StyleIntensity.z > 0)
-	{
-		lm	+=(input.StyleIntensity.z * tex2D(LightMapSampler, input.TexCoord4));
-	}
-	
-	lm	+=input.Color0;
-	
-	lm	=saturate(lm);
-	
-	//Apply lighting.
-	color	*=lm;
-	return	float4(color, 1);
-}
-
-
-float4 LMAnimAlphaPixelShader(VTex0Tex1Tex2Tex3Tex4Color0Intensity input) : COLOR0
-{
-	float3	color;
-	
-	float2	tex0	=input.TexCoord0;
-	
-	tex0.x	/=mTexSize.x;
-	tex0.y	/=mTexSize.y;
-	
-	if(mbTextureEnabled)
-	{
-		color	=tex2D(TextureSampler, tex0);
-	}
-	else
-	{
-		color	=float3(1.0, 1.0, 1.0);
-	}
-	
-	float3	lm	=tex2D(LightMapSampler, input.TexCoord1);
+	float3	lm	=float3(0, 0, 0);
 	
 	//grab style intensity
 	if(input.StyleIntensity.x > 0)
 	{
-		lm	+=(input.StyleIntensity.x * tex2D(LightMapSampler, input.TexCoord2));
+		lm	+=(input.StyleIntensity.x * tex2D(LightMapSampler, input.TexCoord1));
 	}
 	if(input.StyleIntensity.y > 0)
 	{
-		lm	+=(input.StyleIntensity.y * tex2D(LightMapSampler, input.TexCoord3));
+		lm	+=(input.StyleIntensity.y * tex2D(LightMapSampler, input.TexCoord2));
 	}
 	if(input.StyleIntensity.z > 0)
 	{
-		lm	+=(input.StyleIntensity.z * tex2D(LightMapSampler, input.TexCoord4));
+		lm	+=(input.StyleIntensity.z * tex2D(LightMapSampler, input.TexCoord3));
 	}
 	
-	lm	+=input.Color0;
+	lm	+=input.Color0;	
 	lm	=saturate(lm);
 	
 	//Apply lighting.
@@ -678,6 +633,6 @@ technique LightMapAnimAlpha
 	pass Pass1
 	{
 		VertexShader = compile vs_2_0 LMAnimVertexShader();
-		PixelShader = compile ps_2_0 LMAnimAlphaPixelShader();
+		PixelShader = compile ps_2_0 LMAnimPixelShader();
 	}
 }

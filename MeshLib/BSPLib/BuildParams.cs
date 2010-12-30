@@ -28,6 +28,7 @@ namespace BSPLib
 		public float	mSurfaceReflect;
 		public int		mMaxIntensity;
 		public int		mLightGridSize;
+		public int		mAtlasSize;
 	}
 
 

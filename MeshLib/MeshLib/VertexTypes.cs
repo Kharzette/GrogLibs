@@ -119,6 +119,7 @@ namespace MeshLib
 			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2Tex3Col0Col1Col2));
 			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2Tex3Col0Col1Col2Col3));
 			VertexTypes.AddType(typeof(VPosNormBone));
+			VertexTypes.AddType(typeof(VPosNormBlendTex0Tex1Tex2Tex3Tex4));
 		}
 
 		public static void AddType(Type t)
@@ -198,38 +199,51 @@ namespace MeshLib
 			short				sizeSoFar	=0;
 			FieldInfo			fi;
 
-			while(true)
+			fi	=t.GetField("Position");
+			if(fi != null)
 			{
-				fi	=t.GetField("Position" + i);
-				if(fi == null)
-				{
-					break;
-				}
 				VertexElement ve	=new VertexElement(0,
 					sizeSoFar, VertexElementFormat.Vector3,
 					VertexElementMethod.Default,
 					VertexElementUsage.Position,
 					(byte)i);
 				ves.Add(ve);
-				i++;
 				sizeSoFar	+=12;
 			}
-			i	=0;
-			while(true)
+			fi	=t.GetField("Normal");
+			if(fi != null)
 			{
-				fi	=t.GetField("Normal" + i);
-				if(fi == null)
-				{
-					break;
-				}
 				VertexElement ve	=new VertexElement(0,
 					sizeSoFar, VertexElementFormat.Vector3,
 					VertexElementMethod.Default,
 					VertexElementUsage.Normal,
 					(byte)i);
 				ves.Add(ve);
-				i++;
 				sizeSoFar	+=12;
+			}
+			fi	=t.GetField("BoneIndex");
+			if(fi != null)
+			{
+				VertexElement ve	=new VertexElement(0,
+					sizeSoFar, VertexElementFormat.Vector4,
+					VertexElementMethod.Default,
+					VertexElementUsage.BlendIndices,
+					(byte)i);
+				ves.Add(ve);
+				i++;
+				sizeSoFar	+=16;
+			}
+			fi	=t.GetField("BoneWeights");
+			if(fi != null)
+			{
+				VertexElement ve	=new VertexElement(0,
+					sizeSoFar, VertexElementFormat.Vector4,
+					VertexElementMethod.Default,
+					VertexElementUsage.BlendWeight,
+					(byte)i);
+				ves.Add(ve);
+				i++;
+				sizeSoFar	+=16;
 			}
 			i	=0;
 			while(true)

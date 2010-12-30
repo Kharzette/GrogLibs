@@ -44,6 +44,8 @@
 			this.MaxCPUCores = new System.Windows.Forms.NumericUpDown();
 			this.LabelCPUCores = new System.Windows.Forms.Label();
 			this.GroupFileIO = new System.Windows.Forms.GroupBox();
+			this.SaveZone = new System.Windows.Forms.Button();
+			this.MaterialVis = new System.Windows.Forms.Button();
 			this.LoadGBSP = new System.Windows.Forms.Button();
 			this.LightGBSP = new System.Windows.Forms.Button();
 			this.BuildGBSP = new System.Windows.Forms.Button();
@@ -58,6 +60,8 @@
 			this.Progress3 = new System.Windows.Forms.ProgressBar();
 			this.Progress4 = new System.Windows.Forms.ProgressBar();
 			this.LightSettingsGroupBox = new System.Windows.Forms.GroupBox();
+			this.label10 = new System.Windows.Forms.Label();
+			this.AtlasSize = new System.Windows.Forms.NumericUpDown();
 			this.label9 = new System.Windows.Forms.Label();
 			this.LightGridSize = new System.Windows.Forms.NumericUpDown();
 			this.label8 = new System.Windows.Forms.Label();
@@ -82,13 +86,13 @@
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.SortPortals = new System.Windows.Forms.CheckBox();
 			this.FullVis = new System.Windows.Forms.CheckBox();
-			this.MaterialVis = new System.Windows.Forms.Button();
 			this.StatsGroupBox.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxCPUCores)).BeginInit();
 			this.GroupFileIO.SuspendLayout();
 			this.GroupBuildSettings.SuspendLayout();
 			this.GroupDrawSettings.SuspendLayout();
 			this.LightSettingsGroupBox.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.AtlasSize)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.LightGridSize)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaxIntensity)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.ReflectiveScale)).BeginInit();
@@ -258,6 +262,7 @@
 			// 
 			// GroupFileIO
 			// 
+			this.GroupFileIO.Controls.Add(this.SaveZone);
 			this.GroupFileIO.Controls.Add(this.MaterialVis);
 			this.GroupFileIO.Controls.Add(this.LoadGBSP);
 			this.GroupFileIO.Controls.Add(this.LightGBSP);
@@ -271,6 +276,27 @@
 			this.GroupFileIO.TabIndex = 20;
 			this.GroupFileIO.TabStop = false;
 			this.GroupFileIO.Text = "File IO";
+			// 
+			// SaveZone
+			// 
+			this.SaveZone.Enabled = false;
+			this.SaveZone.Location = new System.Drawing.Point(6, 106);
+			this.SaveZone.Name = "SaveZone";
+			this.SaveZone.Size = new System.Drawing.Size(75, 23);
+			this.SaveZone.TabIndex = 21;
+			this.SaveZone.Text = "Save Zone";
+			this.SaveZone.UseVisualStyleBackColor = true;
+			this.SaveZone.Click += new System.EventHandler(this.OnSaveZone);
+			// 
+			// MaterialVis
+			// 
+			this.MaterialVis.Location = new System.Drawing.Point(87, 106);
+			this.MaterialVis.Name = "MaterialVis";
+			this.MaterialVis.Size = new System.Drawing.Size(75, 23);
+			this.MaterialVis.TabIndex = 20;
+			this.MaterialVis.Text = "Material Vis";
+			this.MaterialVis.UseVisualStyleBackColor = true;
+			this.MaterialVis.Click += new System.EventHandler(this.OnMaterialVis);
 			// 
 			// LoadGBSP
 			// 
@@ -401,6 +427,8 @@
 			// 
 			// LightSettingsGroupBox
 			// 
+			this.LightSettingsGroupBox.Controls.Add(this.label10);
+			this.LightSettingsGroupBox.Controls.Add(this.AtlasSize);
 			this.LightSettingsGroupBox.Controls.Add(this.label9);
 			this.LightSettingsGroupBox.Controls.Add(this.LightGridSize);
 			this.LightSettingsGroupBox.Controls.Add(this.label8);
@@ -424,10 +452,46 @@
 			this.LightSettingsGroupBox.Controls.Add(this.FastPatch);
 			this.LightSettingsGroupBox.Location = new System.Drawing.Point(332, 12);
 			this.LightSettingsGroupBox.Name = "LightSettingsGroupBox";
-			this.LightSettingsGroupBox.Size = new System.Drawing.Size(133, 335);
+			this.LightSettingsGroupBox.Size = new System.Drawing.Size(133, 349);
 			this.LightSettingsGroupBox.TabIndex = 27;
 			this.LightSettingsGroupBox.TabStop = false;
 			this.LightSettingsGroupBox.Text = "Light Settings";
+			// 
+			// label10
+			// 
+			this.label10.AutoSize = true;
+			this.label10.Location = new System.Drawing.Point(64, 324);
+			this.label10.Name = "label10";
+			this.label10.Size = new System.Drawing.Size(53, 13);
+			this.label10.TabIndex = 39;
+			this.label10.Text = "Atlas Size";
+			// 
+			// AtlasSize
+			// 
+			this.AtlasSize.Increment = new decimal(new int[] {
+            16,
+            0,
+            0,
+            0});
+			this.AtlasSize.Location = new System.Drawing.Point(6, 322);
+			this.AtlasSize.Maximum = new decimal(new int[] {
+            4096,
+            0,
+            0,
+            0});
+			this.AtlasSize.Minimum = new decimal(new int[] {
+            256,
+            0,
+            0,
+            0});
+			this.AtlasSize.Name = "AtlasSize";
+			this.AtlasSize.Size = new System.Drawing.Size(53, 20);
+			this.AtlasSize.TabIndex = 38;
+			this.AtlasSize.Value = new decimal(new int[] {
+            1024,
+            0,
+            0,
+            0});
 			// 
 			// label9
 			// 
@@ -745,16 +809,6 @@
 			this.FullVis.UseVisualStyleBackColor = true;
 			this.FullVis.CheckedChanged += new System.EventHandler(this.OnFullVisChanged);
 			// 
-			// MaterialVis
-			// 
-			this.MaterialVis.Location = new System.Drawing.Point(87, 106);
-			this.MaterialVis.Name = "MaterialVis";
-			this.MaterialVis.Size = new System.Drawing.Size(75, 23);
-			this.MaterialVis.TabIndex = 20;
-			this.MaterialVis.Text = "Material Vis";
-			this.MaterialVis.UseVisualStyleBackColor = true;
-			this.MaterialVis.Click += new System.EventHandler(this.OnMaterialVis);
-			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -784,6 +838,7 @@
 			this.GroupDrawSettings.ResumeLayout(false);
 			this.LightSettingsGroupBox.ResumeLayout(false);
 			this.LightSettingsGroupBox.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this.AtlasSize)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.LightGridSize)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaxIntensity)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.ReflectiveScale)).EndInit();
@@ -857,5 +912,8 @@
 		private System.Windows.Forms.NumericUpDown LightGridSize;
 		private System.Windows.Forms.Label label9;
 		private System.Windows.Forms.Button MaterialVis;
+		private System.Windows.Forms.Button SaveZone;
+		private System.Windows.Forms.Label label10;
+		private System.Windows.Forms.NumericUpDown AtlasSize;
 	}
 }

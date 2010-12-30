@@ -131,7 +131,6 @@
     <Compile Include="Forms\TextureForm.Designer.cs">
       <DependentUpon>TextureForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="GameCamera.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="BSPBuilder.cs" />
@@ -155,6 +154,10 @@
     <ProjectReference Include="..\BSPLib\BSPLib.csproj">
       <Project>{41BAFD5D-C192-4369-B96E-6B62C6DAA3A6}</Project>
       <Name>BSPLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MeshLib\MeshLib.csproj">
+      <Project>{EEC34A30-ACD3-4240-A4FE-5A3F8D5D7B13}</Project>
+      <Name>MeshLib</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
