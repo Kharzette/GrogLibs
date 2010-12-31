@@ -68,7 +68,6 @@ namespace BSPLib
 		public event EventHandler	eNumVertsChanged;
 		public event EventHandler	eNumClustersChanged;
 		public event EventHandler	eNumPortalsChanged;
-		public event EventHandler	eProgressChanged;
 		public event EventHandler	eGBSPSaveDone;
 		public event EventHandler	eVisDone;
 		public event EventHandler	eLightDone;
@@ -1177,6 +1176,20 @@ namespace BSPLib
 			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			return	mg.GetMaterials();
+		}
+
+
+		//an intermediate step to generate a set of materials
+		//so the user can set up emissives for radiosity
+		public List<MaterialLib.Material> GenerateMaterials(string fileName)
+		{
+			LoadGBSPFile(fileName);
+
+			List<MaterialLib.Material>	ret	=GetMaterials();
+
+			FreeGBSPFile();
+
+			return	ret;
 		}
 
 

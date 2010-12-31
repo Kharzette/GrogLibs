@@ -705,7 +705,7 @@ namespace BSPLib
 						scaleU	=scaleV	=offsetU	=offsetV	=0.0;
 						lmap	=new Color[f.mLHeight * f.mLWidth];
 
-						int	sizeOffset	=f.mLHeight * f.mLWidth;
+						int	sizeOffset	=f.mLHeight * f.mLWidth * 3;
 
 						sizeOffset	*=s;
 
@@ -2125,6 +2125,11 @@ namespace BSPLib
 		void CalcMaterialNames()
 		{
 			mMaterialNames.Clear();
+
+			if(mFaces == null)
+			{
+				return;
+			}
 
 			foreach(GFXFace f in mFaces)
 			{

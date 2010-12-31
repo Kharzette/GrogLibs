@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.IO;
 using System.Text;
 
 namespace BSPLib
@@ -11,9 +12,9 @@ namespace BSPLib
 		public Dictionary<VISPortal, Int32>	mPortIndexer;
 		public bool							[]mPortalSeen;
 
-		public int				mCore, mCores;
-		public ManualResetEvent	mDoneEvent;
-		public bool				mbVerbose;
+		public int			mCore, mCores;
+		public bool			mbVerbose, mbHasLight;
+		public FileStream	mFS;
 	}
 
 
@@ -36,6 +37,7 @@ namespace BSPLib
 	{
 		public BSPBuildParams				mBSPParams;
 		public LightParams					mLightParams;
+		public VisParams					mVisParams;
 		public Map.GetEmissiveForMaterial	mC4M;
 		public string						mFileName;
 	}

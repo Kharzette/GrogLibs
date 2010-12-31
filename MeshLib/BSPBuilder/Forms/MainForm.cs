@@ -26,7 +26,7 @@ namespace BSPBuilder
 		public event EventHandler	eLightGBSP;
 		public event EventHandler	eLoadGBSP;
 		public event EventHandler	eVisGBSP;
-		public event EventHandler	eMaterialVisGBSP;
+		public event EventHandler	eGenerateMaterials;
 		public event EventHandler	eSaveGBSP;
 		public event EventHandler	eSaveZone;
 		public event EventHandler	eDrawChoiceChanged;
@@ -36,7 +36,7 @@ namespace BSPBuilder
 		{
 			InitializeComponent();
 
-			MaxCPUCores.Maximum	=Environment.ProcessorCount;
+			MaxCPUCores.Maximum	=Environment.ProcessorCount * 2;
 			MaxCPUCores.Minimum	=1;
 			MaxCPUCores.Value	=Environment.ProcessorCount;
 
@@ -292,7 +292,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnMaterialVis(object sender, EventArgs e)
+		private void OnGenerateMaterials(object sender, EventArgs e)
 		{
 			mOFD.DefaultExt	="*.gbsp";
 			DialogResult	dr	=mOFD.ShowDialog();
@@ -302,9 +302,9 @@ namespace BSPBuilder
 				return;
 			}
 
-			if(eMaterialVisGBSP != null)
+			if(eGenerateMaterials != null)
 			{
-				eMaterialVisGBSP(mOFD.FileName, null);
+				eGenerateMaterials(mOFD.FileName, null);
 			}
 		}
 
@@ -424,6 +424,36 @@ namespace BSPBuilder
 		internal void EnableFileIO(bool bOn)
 		{
 			EnableControl(GroupFileIO, bOn);
+		}
+
+
+		internal void UpdateProgress(ProgressEventArgs pea)
+		{
+			if(pea.mIndex == 0)
+			{
+				UpdateProgressBar(Progress1, pea.mMin, pea.mMax, pea.mCurrent);
+			}
+			else if(pea.mIndex == 1)
+			{
+				UpdateProgressBar(Progress2, pea.mMin, pea.mMax, pea.mCurrent);
+			}
+			else if(pea.mIndex == 2)
+			{
+				UpdateProgressBar(Progress3, pea.mMin, pea.mMax, pea.mCurrent);
+			}
+			else if(pea.mIndex == 3)
+			{
+				UpdateProgressBar(Progress4, pea.mMin, pea.mMax, pea.mCurrent);
+			}
+		}
+
+
+		internal void ClearProgress()
+		{
+			UpdateProgressBar(Progress1, 0, 0, 0);
+			UpdateProgressBar(Progress2, 0, 0, 0);
+			UpdateProgressBar(Progress3, 0, 0, 0);
+			UpdateProgressBar(Progress4, 0, 0, 0);
 		}
 	}
 }

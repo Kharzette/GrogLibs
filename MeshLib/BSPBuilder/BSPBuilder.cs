@@ -46,7 +46,6 @@ namespace BSPBuilder
 		Vector3					mDynamicLightPos;
 
 		Int32				mDebugLeaf;
-		bool				mDebugBool;
 
 		//collision debuggery
 		Vector3				mStart, mEnd;
@@ -115,7 +114,7 @@ namespace BSPBuilder
 			mMainForm.eOpenBrushFile		+=OnOpenBrushFile;
 			mMainForm.eLightGBSP			+=OnLightGBSP;
 			mMainForm.eVisGBSP				+=OnVisGBSP;
-			mMainForm.eMaterialVisGBSP		+=OnMaterialVisGBSP;
+			mMainForm.eGenerateMaterials	+=OnGenerateMaterials;
 			mMainForm.eBuildGBSP			+=OnBuildGBSP;
 			mMainForm.eSaveGBSP				+=OnSaveGBSP;
 			mMainForm.eSaveZone				+=OnSaveZone;
@@ -318,14 +317,7 @@ namespace BSPBuilder
 
 			mSB.Begin();
 
-			if(mDebugBool)
-			{
-				mSB.DrawString(mKoot, "MIV! Coordinates: " + -mGameCam.CamPos, mTextPos, Color.Yellow);
-			}
-			else
-			{
-				mSB.DrawString(mKoot, "Coordinates: " + -mGameCam.CamPos, mTextPos, Color.Yellow);
-			}
+			mSB.DrawString(mKoot, "Coordinates: " + -mGameCam.CamPos, mTextPos, Color.Yellow);
 
 			mSB.End();
 
@@ -565,7 +557,6 @@ namespace BSPBuilder
 		{
 			if(bReg)
 			{
-				mMap.eProgressChanged			+=OnMapProgressChanged;
 				mMap.eNumPortalsChanged			+=OnNumPortalsChanged;
 				mMap.eNumClustersChanged		+=OnNumClustersChanged;
 				mMap.eNumPlanesChanged			+=OnNumPlanesChanged;
@@ -577,7 +568,6 @@ namespace BSPBuilder
 			}
 			else
 			{
-				mMap.eProgressChanged			-=OnMapProgressChanged;
 				mMap.eNumPortalsChanged			-=OnNumPortalsChanged;
 				mMap.eNumClustersChanged		-=OnNumClustersChanged;
 				mMap.eNumPlanesChanged			-=OnNumPlanesChanged;
@@ -609,7 +599,8 @@ namespace BSPBuilder
 				RegisterMapEvents(true);
 				mMap.LightGBSPFile(fileName, EmissiveForMaterial,
 					mMainForm.LightParameters,
-					mMainForm.BSPParameters);
+					mMainForm.BSPParameters,
+					mMainForm.VisParameters);
 			}
 		}
 
@@ -631,12 +622,15 @@ namespace BSPBuilder
 				mMainForm.EnableFileIO(false);
 				mMap	=new Map();
 				RegisterMapEvents(true);
+
+				ProgressWatcher.eProgressUpdated	+=OnProgressUpdated;
+
 				mMap.VisGBSPFile(fileName, mMainForm.VisParameters, mMainForm.BSPParameters);
 			}
 		}
 
 
-		void OnMaterialVisGBSP(object sender, EventArgs ea)
+		void OnGenerateMaterials(object sender, EventArgs ea)
 		{
 			string	fileName	=sender as string;
 
@@ -653,7 +647,17 @@ namespace BSPBuilder
 				mMainForm.EnableFileIO(false);
 				mMap	=new Map();
 				RegisterMapEvents(true);
-				mMap.MaterialVisGBSPFile(fileName, mMainForm.VisParameters, mMainForm.BSPParameters);
+
+				mMatLib.NukeAllMaterials();
+				List<MaterialLib.Material>	mats	=mMap.GenerateMaterials(fileName);
+
+				foreach(MaterialLib.Material mat in mats)
+				{
+					mMatLib.AddMaterial(mat);
+				}
+				mMatLib.RefreshShaderParameters();
+				mMatForm.UpdateMaterials();
+
 				mMainForm.EnableFileIO(true);	//not threaded
 			}
 		}
@@ -824,6 +828,9 @@ namespace BSPBuilder
 			bool	bSuccess	=(bool)sender;
 
 			mMainForm.EnableFileIO(true);
+			ProgressWatcher.eProgressUpdated	-=OnProgressUpdated;
+
+			mMainForm.ClearProgress();
 		}
 
 
@@ -835,8 +842,11 @@ namespace BSPBuilder
 		}
 
 
-		void OnMapProgressChanged(object sender, EventArgs ea)
+		void OnProgressUpdated(object sender, EventArgs ea)
 		{
+			ProgressEventArgs	pea	=ea as ProgressEventArgs;
+
+			mMainForm.UpdateProgress(pea);
 		}
 
 

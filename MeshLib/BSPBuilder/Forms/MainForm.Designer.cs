@@ -45,7 +45,7 @@
 			this.LabelCPUCores = new System.Windows.Forms.Label();
 			this.GroupFileIO = new System.Windows.Forms.GroupBox();
 			this.SaveZone = new System.Windows.Forms.Button();
-			this.MaterialVis = new System.Windows.Forms.Button();
+			this.GenerateMaterials = new System.Windows.Forms.Button();
 			this.LoadGBSP = new System.Windows.Forms.Button();
 			this.LightGBSP = new System.Windows.Forms.Button();
 			this.BuildGBSP = new System.Windows.Forms.Button();
@@ -245,7 +245,6 @@
 			// 
 			// MaxCPUCores
 			// 
-			this.MaxCPUCores.Enabled = false;
 			this.MaxCPUCores.Location = new System.Drawing.Point(6, 19);
 			this.MaxCPUCores.Name = "MaxCPUCores";
 			this.MaxCPUCores.Size = new System.Drawing.Size(41, 20);
@@ -263,7 +262,7 @@
 			// GroupFileIO
 			// 
 			this.GroupFileIO.Controls.Add(this.SaveZone);
-			this.GroupFileIO.Controls.Add(this.MaterialVis);
+			this.GroupFileIO.Controls.Add(this.GenerateMaterials);
 			this.GroupFileIO.Controls.Add(this.LoadGBSP);
 			this.GroupFileIO.Controls.Add(this.LightGBSP);
 			this.GroupFileIO.Controls.Add(this.BuildGBSP);
@@ -288,15 +287,15 @@
 			this.SaveZone.UseVisualStyleBackColor = true;
 			this.SaveZone.Click += new System.EventHandler(this.OnSaveZone);
 			// 
-			// MaterialVis
+			// GenerateMaterials
 			// 
-			this.MaterialVis.Location = new System.Drawing.Point(87, 106);
-			this.MaterialVis.Name = "MaterialVis";
-			this.MaterialVis.Size = new System.Drawing.Size(75, 23);
-			this.MaterialVis.TabIndex = 20;
-			this.MaterialVis.Text = "Material Vis";
-			this.MaterialVis.UseVisualStyleBackColor = true;
-			this.MaterialVis.Click += new System.EventHandler(this.OnMaterialVis);
+			this.GenerateMaterials.Location = new System.Drawing.Point(87, 48);
+			this.GenerateMaterials.Name = "GenerateMaterials";
+			this.GenerateMaterials.Size = new System.Drawing.Size(75, 23);
+			this.GenerateMaterials.TabIndex = 20;
+			this.GenerateMaterials.Text = "Gen Mats";
+			this.GenerateMaterials.UseVisualStyleBackColor = true;
+			this.GenerateMaterials.Click += new System.EventHandler(this.OnGenerateMaterials);
 			// 
 			// LoadGBSP
 			// 
@@ -310,7 +309,7 @@
 			// 
 			// LightGBSP
 			// 
-			this.LightGBSP.Location = new System.Drawing.Point(87, 77);
+			this.LightGBSP.Location = new System.Drawing.Point(87, 106);
 			this.LightGBSP.Name = "LightGBSP";
 			this.LightGBSP.Size = new System.Drawing.Size(75, 23);
 			this.LightGBSP.TabIndex = 18;
@@ -331,7 +330,7 @@
 			// 
 			// VisGBSP
 			// 
-			this.VisGBSP.Location = new System.Drawing.Point(87, 48);
+			this.VisGBSP.Location = new System.Drawing.Point(87, 77);
 			this.VisGBSP.Name = "VisGBSP";
 			this.VisGBSP.Size = new System.Drawing.Size(75, 23);
 			this.VisGBSP.TabIndex = 16;
@@ -729,7 +728,6 @@
 			// 
 			// NumBounce
 			// 
-			this.NumBounce.Enabled = false;
 			this.NumBounce.Location = new System.Drawing.Point(6, 114);
 			this.NumBounce.Maximum = new decimal(new int[] {
             20,
@@ -768,7 +766,6 @@
 			// FastPatch
 			// 
 			this.FastPatch.AutoSize = true;
-			this.FastPatch.Enabled = false;
 			this.FastPatch.Location = new System.Drawing.Point(6, 65);
 			this.FastPatch.Name = "FastPatch";
 			this.FastPatch.Size = new System.Drawing.Size(77, 17);
@@ -912,7 +909,7 @@
 		private System.Windows.Forms.NumericUpDown MaxIntensity;
 		private System.Windows.Forms.NumericUpDown LightGridSize;
 		private System.Windows.Forms.Label label9;
-		private System.Windows.Forms.Button MaterialVis;
+		private System.Windows.Forms.Button GenerateMaterials;
 		private System.Windows.Forms.Button SaveZone;
 		private System.Windows.Forms.Label label10;
 		private System.Windows.Forms.NumericUpDown AtlasSize;

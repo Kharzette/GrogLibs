@@ -772,6 +772,8 @@ namespace BSPLib
 
 			Print("Num Light Maps       : " + numRGBMaps + "\n");
 
+			MaterialVisGBSPFile(lp.mFileName, lp.mVisParams, lp.mBSPParams);
+
 			if(eLightDone != null)
 			{
 				eLightDone(true, null);
@@ -800,11 +802,12 @@ namespace BSPLib
 
 
 		public void LightGBSPFile(string fileName, GetEmissiveForMaterial c4m,
-			LightParams lightParams, BSPBuildParams buildParams)
+			LightParams lightParams, BSPBuildParams buildParams, VisParams vp)
 		{
 			LightParameters	lp	=new LightParameters();
 			lp.mBSPParams	=buildParams;
 			lp.mLightParams	=lightParams;
+			lp.mVisParams	=vp;
 			lp.mC4M			=c4m;
 			lp.mFileName	=fileName;
 

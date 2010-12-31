@@ -25,6 +25,10 @@ namespace BSPLib
 		Int32		mNumVisLeafBytes, mNumVisPortalBytes;
 		Int32		mNumVisMaterialBytes;
 
+		//threading
+		List<int>	mCoresInUse	=new List<int>();
+		event EventHandler	eVisFloodSlowCoreDone;
+
 		//area stuff
 		List<GFXArea>		mAreas		=new List<GFXArea>();
 		List<GFXAreaPortal>	mAreaPorts	=new List<GFXAreaPortal>();
@@ -80,12 +84,20 @@ namespace BSPLib
 			Print("NumPortals           : " + mVisPortals.Length + "\n");
 			
 			//Vis'em
+			bool	bThreading;
 			if(!VisAllLeafs(vp.mBSPParams.mMaxCores,
 				vp.mVisParams.mbSortPortals,
 				vp.mVisParams.mbFullVis,
-				vp.mBSPParams.mbVerbose))
+				vp.mBSPParams.mbVerbose,
+				fs, header.mbHasLight,
+				out bThreading))
 			{
 				goto	ExitWithError;
+			}
+
+			if(bThreading)
+			{
+				return;
 			}
 
 			bw	=new BinaryWriter(fs);
@@ -147,7 +159,7 @@ namespace BSPLib
 		}
 
 
-		public bool MaterialVisGBSPFile(string fileName, VisParams prms, BSPBuildParams prms2)
+		bool MaterialVisGBSPFile(string fileName, VisParams prms, BSPBuildParams prms2)
 		{
 			Print(" --- Material Vis GBSP File --- \n");
 
@@ -267,6 +279,11 @@ namespace BSPLib
 			Dictionary<Int32, List<string>>	visibleMaterials
 				=new Dictionary<Int32, List<string>>();
 
+			if(mGFXLeafs == null)
+			{
+				return;
+			}
+
 			Print("Computing visible materials from each leaf...\n");
 
 			//make a temporary mapgrinder to help sync
@@ -347,7 +364,7 @@ namespace BSPLib
 						|=(byte)(1 << (idx & 7));
 				}
 			}
-			Print("\nMaterial Vis Complete:  " + mGFXMaterialVisData.Length + " bytes.\n");
+			Print("\n \nMaterial Vis Complete:  " + mGFXMaterialVisData.Length + " bytes.\n");
 		}
 
 
@@ -470,33 +487,170 @@ namespace BSPLib
 		}
 
 
+		void OnVisFloodSlowCoreDone(object sender, EventArgs ea)
+		{
+			VisFloodParameters	vp	=sender as VisFloodParameters;
+
+			bool	bDone	=false;
+			lock(mCoresInUse)
+			{
+				mCoresInUse.Remove(vp.mCore);
+
+				if(mCoresInUse.Count == 0)
+				{
+					bDone	=true;
+				}
+			}
+
+			if(bDone)
+			{
+				eVisFloodSlowCoreDone	-=OnVisFloodSlowCoreDone;
+				mGFXVisData	=new byte[mVisLeafs.Length * mNumVisLeafBytes];
+				if(mGFXVisData == null)
+				{
+					Print("VisAllLeafs:  Out of memory for LeafVisBits.\n");
+					goto	ExitWithError;
+				}
+
+				int	TotalVisibleLeafs	=0;
+
+				for(int i=0;i < mVisLeafs.Length;i++)
+				{
+					int	leafSee	=0;
+					
+					if(!CollectLeafVisBits(i, ref leafSee))
+					{
+						goto	ExitWithError;
+					}
+					TotalVisibleLeafs	+=leafSee;
+				}
+
+				Print("Total visible areas           : " + TotalVisibleLeafs + "\n");
+				Print("Average visible from each area: " + TotalVisibleLeafs / mVisLeafs.Length + "\n");
+
+				BinaryWriter	bw	=new BinaryWriter(vp.mFS);
+
+				//Save the leafs, clusters, vis data, etc
+				WriteVis(bw, vp.mbHasLight, false);
+
+				//Free all the vis stuff
+				FreeAllVisData();
+
+				//Free any remaining leftover bsp data
+				FreeGBSPFile();
+
+				bw.Close();
+				vp.mFS.Close();
+				bw		=null;
+				vp.mFS	=null;
+				
+				if(eVisDone != null)
+				{
+					eVisDone(true, null);
+				}
+				return;
+
+				// ==== ERROR ====
+				ExitWithError:
+				{
+					// Free all the global vis data
+					FreeAllVisData();
+					return;
+				}
+			}
+		}
+
+
 		void ThreadFloodSlowCB(object threadContext)
 		{
 			VisFloodParameters	vp	=threadContext as VisFloodParameters;
 
-			int	portsPerCore	=mVisPortals.Length / vp.mCores;
+			//threads should take 75% of remaining
+			List<int>	coreAmounts	=new List<int>();
 
-			int	startPortal	=portsPerCore * vp.mCore;
-			int	endPortal	=portsPerCore * (vp.mCore + 1);
+			coreAmounts.Add(0);
 
+			int	portalCount	=mVisPortals.Length;
+			int	total		=0;
+			for(int i=0;i < vp.mCores - 1;i++)
+			{
+				portalCount	=(int)(0.7f * (float)portalCount);
+				coreAmounts.Add(portalCount);
+
+				total	+=portalCount;
+
+				portalCount	=mVisPortals.Length - total;
+			}
+			coreAmounts.Add(portalCount);
+
+			int	endPortal	=0;
+			for(int i=(vp.mCore + 1);i > 0;i--)
+			{
+				endPortal	+=coreAmounts[i];
+			}
+
+			int	startPortal	=0;
+			for(int i=vp.mCore;i > 0;i--)
+			{
+				startPortal	+=coreAmounts[i];
+			}
+
+#if doubling
+			int	coreAmount	=(mVisPortals.Length / (vp.mCores * vp.mCores));
+
+			List<int>	coreAmounts	=new List<int>();
+
+			coreAmounts.Add(0);
+			coreAmounts.Add(coreAmount);
+			for(int i=1;i < vp.mCores;i++)
+			{
+				coreAmount		=(coreAmount * 2);
+				coreAmounts.Add(coreAmount);
+			}
+
+			int	startPortal	=0;
+			for(int i=vp.mCores;i > (vp.mCores - vp.mCore);i--)
+			{
+				startPortal	+=coreAmounts[i];
+			}
+			int	endPortal	=coreAmounts[vp.mCores - vp.mCore];
+
+			endPortal	+=startPortal;
+#endif
 			//make sure the end is the end
 			if(vp.mCore == (vp.mCores - 1))
 			{
 				endPortal	=mVisPortals.Length;
 			}
 
+			Print("Core " + vp.mCore + " doing " + startPortal + " to " + endPortal + ".\n");
+
+			object	prog	=ProgressWatcher.RegisterProgress(
+								startPortal, endPortal, startPortal);
+
 			if(!FloodPortalsSlow(vp.mPortIndexer, vp.mPortalSeen,
-				startPortal, endPortal, vp.mbVerbose))
+				startPortal, endPortal, false,prog))//vp.mbVerbose, prog))
 			{
 				Print("Something's wrong\n");
 			}
-			vp.mDoneEvent.Set();
+			else
+			{
+				Print("Core " + vp.mCore + " completed slow flood.\n");
+			}
+
+			if(eVisFloodSlowCoreDone != null)
+			{
+				eVisFloodSlowCoreDone(vp, null);
+			}
 		}
 
 
-		bool VisAllLeafs(int maxCores, bool bSortPortals, bool bFullVis, bool bVerbose)
+		bool VisAllLeafs(int maxCores, bool bSortPortals,
+			bool bFullVis, bool bVerbose,
+			FileStream fs, bool bHasLight,
+			out bool bThreading)
 		{
-			int	leafsPerCore	=mVisLeafs.Length / maxCores;
+			int	portalsPerCore	=mVisPortals.Length / maxCores;
 
 			//Create PortalSeen array.  This is used by Vis flooding routines
 			//This is deleted below...
@@ -509,6 +663,7 @@ namespace BSPLib
 				portIndexer.Add(mVisPortals[i], i);
 			}
 
+			Map.Print("Quick vis for " + mVisLeafs.Length + " portals...\n");
 
 			//Flood all the leafs with the fast method first...
 			for(int i=0;i < mVisLeafs.Length; i++)
@@ -522,20 +677,24 @@ namespace BSPLib
 				SortPortals();
 			}
 
+			bThreading	=false;
+
 			if(bFullVis)
 			{
 				//worth it to thread?
-				if(false)//leafsPerCore > 100)
+				if(portalsPerCore > 100)
 				{
-					ManualResetEvent	[]res	=new ManualResetEvent[maxCores];
+					eVisFloodSlowCoreDone	+=OnVisFloodSlowCoreDone;
+
+					bThreading	=true;
 
 					for(int i=0;i < maxCores;i++)
 					{
-						res[i]	=new ManualResetEvent(false);
-					}
+						lock(mCoresInUse)
+						{
+							mCoresInUse.Add(i);
+						}
 
-					for(int i=0;i < maxCores;i++)
-					{
 						//make a copy for this thread
 						VisFloodParameters	vp	=new VisFloodParameters();
 						vp.mPortalSeen	=new bool[mVisPortals.Length];
@@ -544,20 +703,19 @@ namespace BSPLib
 						vp.mPortIndexer	=portIndexer;
 						vp.mCores		=maxCores;
 						vp.mCore		=i;
-						vp.mDoneEvent	=res[i];
 						vp.mbVerbose	=bVerbose;
+						vp.mbHasLight	=bHasLight;
+						vp.mFS			=fs;
 
 						ThreadPool.QueueUserWorkItem(ThreadFloodSlowCB, vp);
 					}
 					Print("Vis cores running, waiting for finish...\n");
-
-					WaitHandle.WaitAll(res);
-
-					Print("Vis threads done.\n");
+					return	true;
 				}
 				else
 				{
-					if(!FloodPortalsSlow(portIndexer, portalSeen, 0, mVisPortals.Length, bVerbose))
+					bThreading	=false;
+					if(!FloodPortalsSlow(portIndexer, portalSeen, 0, mVisPortals.Length, bVerbose, null))
 					{
 						return	false;
 					}
@@ -604,7 +762,7 @@ namespace BSPLib
 
 
 		bool FloodPortalsSlow(Dictionary<VISPortal, Int32> visIndexer,
-			bool []portalSeen, int startPort, int endPort, bool bVerbose)
+			bool []portalSeen, int startPort, int endPort, bool bVerbose, object prog)
 		{
 			VISPortal	port;
 			VISPStack	portStack	=new VISPStack();
@@ -617,6 +775,11 @@ namespace BSPLib
 
 			for(k=startPort;k < endPort;k++)
 			{
+				if(prog != null)
+				{
+					ProgressWatcher.UpdateProgress(prog, k);
+				}
+
 				port	=mVisSortedPortals[k];
 				
 				port.mFinalVisBits	=new byte[mNumVisPortalBytes];

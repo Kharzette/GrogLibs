@@ -137,7 +137,7 @@ namespace MeshLib
 
 			//Quake1 styled lights 'a' is total darkness, 'z' is maxbright.
 			//0 normal
-			mStyles.Add(0, "m");
+			mStyles.Add(0, "z");
 				
 			//1 FLICKER (first variety)
 			mStyles.Add(1, "mmnmmommommnonmmonqnmmo");
