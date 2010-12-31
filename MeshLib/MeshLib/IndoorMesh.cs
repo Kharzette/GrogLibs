@@ -203,8 +203,11 @@ namespace MeshLib
 				out mLMAAnimVD, out mLMAAnimMatOffsets, out mLMAAnimMatNumVerts,
 				out mLMAAnimMatNumTris, out mLMAAnimSortPoints, atlasSize, out mLightMapAtlas);
 
-			mMatLib.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasTexture());
-			mMatLib.RefreshShaderParameters();
+			if(mLightMapAtlas != null)
+			{
+				mMatLib.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasTexture());
+				mMatLib.RefreshShaderParameters();
+			}
 		}
 
 

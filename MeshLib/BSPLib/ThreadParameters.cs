@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.IO;
 using System.Text;
+using Microsoft.Xna.Framework;
+
 
 namespace BSPLib
 {
@@ -30,6 +32,23 @@ namespace BSPLib
 	{
 		public BSPBuildParams	mBSPParams;
 		public string			mFileName;
+	}
+
+
+	public class LightFacesParameters
+	{
+		public int		mCore, mCores;
+		public int		mStartFace;
+		public int		mEndFace;
+		public Vector3	[]mVertNormals;
+		public bool		mbSuccess;
+		public object	mProg;
+
+		public LightParameters	mParams;
+		public BinaryWriter		mBW;
+		public FileStream		mFS;
+		public GFXHeader		mHeader;
+		public string			mRecFile;
 	}
 
 

@@ -597,6 +597,9 @@ namespace BSPBuilder
 				mMainForm.EnableFileIO(false);
 				mMap	=new Map();
 				RegisterMapEvents(true);
+
+				ProgressWatcher.eProgressUpdated	+=OnProgressUpdated;
+
 				mMap.LightGBSPFile(fileName, EmissiveForMaterial,
 					mMainForm.LightParameters,
 					mMainForm.BSPParameters,
@@ -819,6 +822,8 @@ namespace BSPBuilder
 		{
 			bool	bSuccess	=(bool)sender;
 
+			ProgressWatcher.eProgressUpdated	-=OnProgressUpdated;
+			mMainForm.ClearProgress();
 			mMainForm.EnableFileIO(true);
 		}
 
@@ -827,10 +832,9 @@ namespace BSPBuilder
 		{
 			bool	bSuccess	=(bool)sender;
 
-			mMainForm.EnableFileIO(true);
 			ProgressWatcher.eProgressUpdated	-=OnProgressUpdated;
-
 			mMainForm.ClearProgress();
+			mMainForm.EnableFileIO(true);
 		}
 
 

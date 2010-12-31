@@ -203,7 +203,7 @@
 			// SaveGBSP
 			// 
 			this.SaveGBSP.Enabled = false;
-			this.SaveGBSP.Location = new System.Drawing.Point(87, 19);
+			this.SaveGBSP.Location = new System.Drawing.Point(6, 77);
 			this.SaveGBSP.Name = "SaveGBSP";
 			this.SaveGBSP.Size = new System.Drawing.Size(75, 23);
 			this.SaveGBSP.TabIndex = 15;
@@ -263,9 +263,9 @@
 			// 
 			this.GroupFileIO.Controls.Add(this.SaveZone);
 			this.GroupFileIO.Controls.Add(this.GenerateMaterials);
-			this.GroupFileIO.Controls.Add(this.LoadGBSP);
 			this.GroupFileIO.Controls.Add(this.LightGBSP);
 			this.GroupFileIO.Controls.Add(this.BuildGBSP);
+			this.GroupFileIO.Controls.Add(this.LoadGBSP);
 			this.GroupFileIO.Controls.Add(this.VisGBSP);
 			this.GroupFileIO.Controls.Add(this.OpenBrushFile);
 			this.GroupFileIO.Controls.Add(this.SaveGBSP);
@@ -279,7 +279,7 @@
 			// SaveZone
 			// 
 			this.SaveZone.Enabled = false;
-			this.SaveZone.Location = new System.Drawing.Point(6, 106);
+			this.SaveZone.Location = new System.Drawing.Point(87, 106);
 			this.SaveZone.Name = "SaveZone";
 			this.SaveZone.Size = new System.Drawing.Size(75, 23);
 			this.SaveZone.TabIndex = 21;
@@ -289,7 +289,7 @@
 			// 
 			// GenerateMaterials
 			// 
-			this.GenerateMaterials.Location = new System.Drawing.Point(87, 48);
+			this.GenerateMaterials.Location = new System.Drawing.Point(87, 19);
 			this.GenerateMaterials.Name = "GenerateMaterials";
 			this.GenerateMaterials.Size = new System.Drawing.Size(75, 23);
 			this.GenerateMaterials.TabIndex = 20;
@@ -299,17 +299,17 @@
 			// 
 			// LoadGBSP
 			// 
-			this.LoadGBSP.Location = new System.Drawing.Point(6, 48);
+			this.LoadGBSP.Location = new System.Drawing.Point(87, 77);
 			this.LoadGBSP.Name = "LoadGBSP";
 			this.LoadGBSP.Size = new System.Drawing.Size(75, 23);
 			this.LoadGBSP.TabIndex = 19;
-			this.LoadGBSP.Text = "Load GBSP";
+			this.LoadGBSP.Text = "Zone GBSP";
 			this.LoadGBSP.UseVisualStyleBackColor = true;
 			this.LoadGBSP.Click += new System.EventHandler(this.OnLoadGBSP);
 			// 
 			// LightGBSP
 			// 
-			this.LightGBSP.Location = new System.Drawing.Point(87, 106);
+			this.LightGBSP.Location = new System.Drawing.Point(87, 48);
 			this.LightGBSP.Name = "LightGBSP";
 			this.LightGBSP.Size = new System.Drawing.Size(75, 23);
 			this.LightGBSP.TabIndex = 18;
@@ -320,7 +320,7 @@
 			// BuildGBSP
 			// 
 			this.BuildGBSP.Enabled = false;
-			this.BuildGBSP.Location = new System.Drawing.Point(6, 77);
+			this.BuildGBSP.Location = new System.Drawing.Point(6, 48);
 			this.BuildGBSP.Name = "BuildGBSP";
 			this.BuildGBSP.Size = new System.Drawing.Size(75, 23);
 			this.BuildGBSP.TabIndex = 17;
@@ -330,7 +330,7 @@
 			// 
 			// VisGBSP
 			// 
-			this.VisGBSP.Location = new System.Drawing.Point(87, 77);
+			this.VisGBSP.Location = new System.Drawing.Point(6, 106);
 			this.VisGBSP.Name = "VisGBSP";
 			this.VisGBSP.Size = new System.Drawing.Size(75, 23);
 			this.VisGBSP.TabIndex = 16;
