@@ -9,9 +9,10 @@ namespace BSPLib
 {
 	public class MapEntity : IReadWriteable
 	{
-		public List<MapBrush>				mBrushes	=new List<MapBrush>();
-		public Dictionary<string, string>	mData		=new Dictionary<string, string>();
-		public Int32						mModelNum;
+		List<MapBrush>	mBrushes	=new List<MapBrush>();
+
+		internal Dictionary<string, string>	mData		=new Dictionary<string, string>();
+		internal Int32						mModelNum;
 
 
 		public bool GetOrigin(out Vector3 org)
@@ -499,6 +500,46 @@ namespace BSPLib
 			{
 				type	=DirectLight.DLight_Point;
 			}
+		}
+
+
+		internal void GetTriangles(List<Vector3> verts, List<uint> indexes)
+		{
+			if(mBrushes.Count > 0)
+			{
+				foreach(MapBrush mb in mBrushes)
+				{
+					mb.GetTriangles(verts, indexes, false);
+				}
+			}
+		}
+
+		internal void CountBrushes(ref int numDetails, ref int numSolids, ref int numTotal)
+		{
+			foreach(MapBrush mb in mBrushes)
+			{
+				if((mb.mContents & Contents.BSP_CONTENTS_DETAIL2) != 0)
+				{
+					numDetails++;
+				}
+				else if((mb.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+				{
+					numSolids++;
+				}
+				numTotal++;
+			}
+		}
+
+
+		internal List<MapBrush> GetBrushes()
+		{
+			return	mBrushes;
+		}
+
+
+		internal int GetBrushCount()
+		{
+			return	mBrushes.Count;
 		}
 	}
 }

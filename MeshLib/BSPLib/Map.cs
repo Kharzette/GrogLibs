@@ -36,7 +36,7 @@ namespace BSPLib
 		WorldLeaf	[]mLeafData;
 		Int32		[]mNodeParents;
 		Int32		[]mNodeVisFrame;
-		public static List<MapBrush>	TroubleBrushes	=new List<MapBrush>();
+		internal static List<MapBrush>	TroubleBrushes	=new List<MapBrush>();
 
 		//gfx data
 		GFXModel		[]mGFXModels;
@@ -94,14 +94,7 @@ namespace BSPLib
 			{
 				foreach(MapEntity ent in mEntities)
 				{
-					if(ent.mBrushes.Count > 0)
-					{
-						foreach(MapBrush mb in ent.mBrushes)
-						{
-							mb.GetTriangles(verts, indexes, false);
-						}
-						break;
-					}
+					ent.GetTriangles(verts, indexes);
 				}
 			}
 			else if(drawChoice == "Trouble Brushes")
@@ -389,18 +382,7 @@ namespace BSPLib
 
 			foreach(MapEntity e in mEntities)
 			{
-				foreach(MapBrush mb in e.mBrushes)
-				{
-					if((mb.mContents & Contents.BSP_CONTENTS_DETAIL2) != 0)
-					{
-						numDetails++;
-					}
-					else if((mb.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
-					{
-						numSolids++;
-					}
-					numTotal++;
-				}
+				e.CountBrushes(ref numDetails, ref numSolids, ref numTotal);
 			}
 
 			InsertModelNumbers();
@@ -418,7 +400,8 @@ namespace BSPLib
 
 			foreach(MapEntity me in mEntities)
 			{
-				if(me.mBrushes.Count == 0)
+				List<MapBrush>	brushery	=me.GetBrushes();
+				if(brushery.Count == 0)
 				{
 					index++;
 					continue;
@@ -433,7 +416,7 @@ namespace BSPLib
 
 				if(index == 0)
 				{
-					if(!mod.ProcessWorldModel(me.mBrushes, mEntities,
+					if(!mod.ProcessWorldModel(brushery, mEntities,
 						mPlanePool, mTIPool, bVerbose, eNumPlanesChanged))
 					{
 						return	false;
@@ -441,7 +424,7 @@ namespace BSPLib
 				}
 				else
 				{
-					if(!mod.ProcessSubModel(me.mBrushes, mPlanePool,
+					if(!mod.ProcessSubModel(brushery, mPlanePool,
 						mTIPool, bEntityVerbose))
 					{
 						return	false;
@@ -497,7 +480,7 @@ namespace BSPLib
 
 			for(i=0;i < mEntities.Count;i++)
 			{
-				if(mEntities[i].mBrushes.Count == 0)	//No model if no brushes
+				if(mEntities[i].GetBrushCount() == 0)	//No model if no brushes
 				{
 					continue;
 				}

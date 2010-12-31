@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class GBSPBrush
+	internal class GBSPBrush
 	{
 		GBSPBrush	mNext;
 		Bounds		mBounds	=new Bounds();
@@ -18,8 +18,8 @@ namespace BSPLib
 		List<GBSPSide>	mSides	=new List<GBSPSide>();
 
 
-		public GBSPBrush() { }
-		public GBSPBrush(GBSPBrush copyMe)
+		internal GBSPBrush() { }
+		internal GBSPBrush(GBSPBrush copyMe)
 		{
 			mBounds		=new Bounds(copyMe.mBounds);
 			mOriginal	=copyMe.mOriginal;
@@ -35,7 +35,7 @@ namespace BSPLib
 		}
 
 
-		public GBSPBrush(MapBrush mb)
+		internal GBSPBrush(MapBrush mb)
 		{
 			Int32	Vis	=0;
 

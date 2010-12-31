@@ -5,12 +5,12 @@ using System.Text;
 
 namespace BSPLib
 {
-	public class PlanePool
+	internal class PlanePool
 	{
-		public List<GBSPPlane>	mPlanes	=new List<GBSPPlane>();
+		internal List<GBSPPlane>	mPlanes	=new List<GBSPPlane>();
 
-		public const Int32	MAX_BSP_PLANES		=32000;
-		public const Int32	PLANENUM_LEAF		=-1;
+		internal const Int32	MAX_BSP_PLANES		=32000;
+		internal const Int32	PLANENUM_LEAF		=-1;
 		
 
 

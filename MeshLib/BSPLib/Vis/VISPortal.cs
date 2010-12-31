@@ -18,20 +18,20 @@ namespace BSPLib
 	}
 
 
-	public class VISPortal
+	internal class VISPortal
 	{
-		public VISPortal	mNext;
-		public GBSPPoly		mPoly;
-		public GBSPPlane	mPlane;
-		public Vector3		mCenter;
-		public float		mRadius;
+		internal VISPortal	mNext;
+		internal GBSPPoly	mPoly;
+		internal GBSPPlane	mPlane;
+		internal Vector3	mCenter;
+		internal float		mRadius;
 
-		public byte		[]mVisBits;
-		public byte		[]mFinalVisBits;
-		public Int32	mLeaf;
-		public Int32	mMightSee;
-		public Int32	mCanSee;
-		public bool		mDone;
+		internal byte	[]mVisBits;
+		internal byte	[]mFinalVisBits;
+		internal Int32	mLeaf;
+		internal Int32	mMightSee;
+		internal Int32	mCanSee;
+		internal bool	mbDone;
 
 
 		internal void CalcPortalInfo()
@@ -184,7 +184,7 @@ namespace BSPLib
 
 				//If the portal can't see anything we haven't allready seen, skip it
 				UInt32	more	=0;
-				if(port.mDone)
+				if(port.mbDone)
 				{
 					for(int j=0;j < mFinalVisBits.Length;j++)
 					{
@@ -313,7 +313,7 @@ namespace BSPLib
 	}
 
 
-	public class VisPortalComparer : IComparer<VISPortal>
+	internal class VisPortalComparer : IComparer<VISPortal>
 	{
 		public int Compare(VISPortal x, VISPortal y)
 		{
@@ -330,10 +330,10 @@ namespace BSPLib
 	}
 
 
-	public class VISLeaf
+	internal class VISLeaf
 	{
-		public VISPortal	mPortals;
-		public Int32		mMightSee;
-		public Int32		mCanSee;
+		internal VISPortal	mPortals;
+		internal Int32		mMightSee;
+		internal Int32		mCanSee;
 	}
 }

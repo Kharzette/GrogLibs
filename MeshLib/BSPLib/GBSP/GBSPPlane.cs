@@ -6,26 +6,26 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public struct GBSPPlane
+	internal struct GBSPPlane
 	{
-		public Vector3	mNormal;
-		public float	mDist;
-		public UInt32	mType;
+		internal Vector3	mNormal;
+		internal float		mDist;
+		internal UInt32		mType;
 
-		public const UInt32	PLANE_X		=0;
-		public const UInt32	PLANE_Y		=1;
-		public const UInt32	PLANE_Z		=2;
-		public const UInt32	PLANE_ANYX	=3;
-		public const UInt32	PLANE_ANYY	=4;
-		public const UInt32	PLANE_ANYZ	=5;
-		public const UInt32	PLANE_ANY	=6;
+		internal const UInt32	PLANE_X		=0;
+		internal const UInt32	PLANE_Y		=1;
+		internal const UInt32	PLANE_Z		=2;
+		internal const UInt32	PLANE_ANYX	=3;
+		internal const UInt32	PLANE_ANYY	=4;
+		internal const UInt32	PLANE_ANYZ	=5;
+		internal const UInt32	PLANE_ANY	=6;
 
-		public const UInt32	PSIDE_FRONT		=1;
-		public const UInt32	PSIDE_BACK		=2;
-		public const UInt32	PSIDE_BOTH		=(PSIDE_FRONT | PSIDE_BACK);
-		public const UInt32	PSIDE_FACING	=4;
+		internal const UInt32	PSIDE_FRONT		=1;
+		internal const UInt32	PSIDE_BACK		=2;
+		internal const UInt32	PSIDE_BOTH		=(PSIDE_FRONT | PSIDE_BACK);
+		internal const UInt32	PSIDE_FACING	=4;
 
-		public const float PLANESIDE_EPSILON	=0.001f;
+		internal const float PLANESIDE_EPSILON	=0.001f;
 
 
 		internal GBSPPlane(GBSPPlane copyMe)
@@ -36,7 +36,7 @@ namespace BSPLib
 		}
 
 
-		public GBSPPlane(List<Vector3> verts)
+		internal GBSPPlane(List<Vector3> verts)
 		{
 			int	i;
 

@@ -770,7 +770,7 @@ namespace BSPLib
 
 			for(k=startPort;k < endPort;k++)
 			{
-				mVisPortals[k].mDone	=false;
+				mVisPortals[k].mbDone	=false;
 			}
 
 			for(k=startPort;k < endPort;k++)
@@ -811,7 +811,7 @@ namespace BSPLib
 				}
 
 				portStack.mSource	=null;
-				port.mDone			=true;
+				port.mbDone			=true;
 
 				if(bVerbose)
 				{

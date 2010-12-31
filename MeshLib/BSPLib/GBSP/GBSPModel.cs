@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class GBSPModel
+	internal class GBSPModel
 	{
 		GBSPNode	[]mRootNode		=new GBSPNode[2];
 		Vector3		mOrigin;
@@ -15,11 +15,11 @@ namespace BSPLib
 		Bounds		mBounds;
 
 		//for saving, might delete
-		public int		[]mRootNodeID	=new int[2];
-		public int		mFirstFace, mNumFaces;
-		public int		mFirstLeaf, mNumLeafs;
-		public int		mFirstCluster, mNumClusters;
-		public int		mNumSolidLeafs;
+		internal int		[]mRootNodeID	=new int[2];
+		internal int		mFirstFace, mNumFaces;
+		internal int		mFirstLeaf, mNumLeafs;
+		internal int		mFirstCluster, mNumClusters;
+		internal int		mNumSolidLeafs;
 
 		//area portal stuff, probably won't use
 		internal bool	mbAreaPortal;

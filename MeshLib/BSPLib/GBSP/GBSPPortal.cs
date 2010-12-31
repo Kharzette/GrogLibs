@@ -6,17 +6,17 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class GBSPPortal
+	internal class GBSPPortal
 	{
-		public GBSPPoly		mPoly;							//Convex poly that holds the shape of the portal
-		public GBSPNode		[]mNodes	=new GBSPNode[2];	//Node on each side of the portal
-		public GBSPPortal	[]mNext		=new GBSPPortal[2];	//Next portal for each node
-		public Int32		mPlaneNum;
+		internal GBSPPoly	mPoly;							//Convex poly that holds the shape of the portal
+		internal GBSPNode	[]mNodes	=new GBSPNode[2];	//Node on each side of the portal
+		internal GBSPPortal	[]mNext		=new GBSPPortal[2];	//Next portal for each node
+		internal Int32		mPlaneNum;
 
-		public GBSPNode	mOnNode;
-		public GBSPFace	[]mFace	=new GBSPFace[2];
-		public GBSPSide	mSide;
-		public byte		mSideFound;
+		internal GBSPNode	mOnNode;
+		internal GBSPFace	[]mFace	=new GBSPFace[2];
+		internal GBSPSide	mSide;
+		internal byte		mSideFound;
 
 
 		internal GBSPPortal() { }

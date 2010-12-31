@@ -8,15 +8,15 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class VisFloodParameters
+	internal class VisFloodParameters
 	{
 		//data to work on
-		public Dictionary<VISPortal, Int32>	mPortIndexer;
-		public bool							[]mPortalSeen;
+		internal Dictionary<VISPortal, Int32>	mPortIndexer;
+		internal bool							[]mPortalSeen;
 
-		public int			mCore, mCores;
-		public bool			mbVerbose, mbHasLight;
-		public FileStream	mFS;
+		internal int		mCore, mCores;
+		internal bool		mbVerbose, mbHasLight;
+		internal FileStream	mFS;
 	}
 
 
@@ -35,20 +35,20 @@ namespace BSPLib
 	}
 
 
-	public class LightFacesParameters
+	internal class LightFacesParameters
 	{
-		public int		mCore, mCores;
-		public int		mStartFace;
-		public int		mEndFace;
-		public Vector3	[]mVertNormals;
-		public bool		mbSuccess;
-		public object	mProg;
+		internal int		mCore, mCores;
+		internal int		mStartFace;
+		internal int		mEndFace;
+		internal Vector3	[]mVertNormals;
+		internal bool		mbSuccess;
+		internal object		mProg;
 
-		public LightParameters	mParams;
-		public BinaryWriter		mBW;
-		public FileStream		mFS;
-		public GFXHeader		mHeader;
-		public string			mRecFile;
+		internal LightParameters	mParams;
+		internal BinaryWriter		mBW;
+		internal FileStream			mFS;
+		internal GFXHeader			mHeader;
+		internal string				mRecFile;
 	}
 
 

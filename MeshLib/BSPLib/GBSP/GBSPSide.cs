@@ -7,51 +7,51 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class GBSPSide
+	internal class GBSPSide
 	{
-		public GBSPPoly	mPoly;
-		public Int32	mPlaneNum;
-		public sbyte	mPlaneSide;
-		public Int32	mTexInfo;
-		public UInt32	mFlags;
+		internal GBSPPoly	mPoly;
+		internal Int32		mPlaneNum;
+		internal sbyte		mPlaneSide;
+		internal Int32		mTexInfo;
+		internal UInt32		mFlags;
 
 		//Q3 style face flags
-		public const UInt32	SURF_LIGHT				=0x1;		//value will hold the light strength
-		public const UInt32	SURF_SLICK				=0x2;		//effects game physics
-		public const UInt32	SURF_SKY				=0x4;		//don't draw, but add to skybox
-		public const UInt32	SURF_WARP				=0x8;		//turbulent water warp
-		public const UInt32	SURF_TRANS33			=0x10;
-		public const UInt32	SURF_TRANS66			=0x20;
-		public const UInt32	SURF_FLOWING			=0x40;		//scroll towards angle
-		public const UInt32	SURF_NODAMAGE			=0x1;		//never give falling damage
-		public const UInt32	SURF_LADDER				=0x8;
-		public const UInt32	SURF_NOIMPACT			=0x10;		//don't make missile explosions
-		public const UInt32	SURF_NOMARKS			=0x20;		//don't leave missile marks
-		public const UInt32	SURF_FLESH				=0x40;		//make flesh sounds and effects
-		public const UInt32	SURF_NODRAW				=0x80;		//don't generate a drawsurface at all
-		public const UInt32	SURF_HINT				=0x100;		//make a primary bsp splitter
-		public const UInt32	SURF_SKIP				=0x200;		//completely ignore, allowing non-closed brushes
-		public const UInt32	SURF_NOLIGHTMAP			=0x400;		//surface doesn't need a lightmap
-		public const UInt32	SURF_POINTLIGHT			=0x800;		//generate lighting info at vertexes
-		public const UInt32	SURF_METALSTEPS			=0x1000;	//clanking footsteps
-		public const UInt32	SURF_NOSTEPS			=0x2000;	//no footstep sounds
-		public const UInt32	SURF_NONSOLID			=0x4000;	//don't collide against curves with this set
-		public const UInt32	SURF_LIGHTFILTER		=0x8000;	//act as a light filter during q3map -light
-		public const UInt32	SURF_ALPHASHADOW		=0x10000;	//do per-pixel light shadow casting in q3map
-		public const UInt32	SURF_NODLIGHT			=0x20000;	//don't dlight even if solid (solid lava, skies)
-		public const UInt32	SURF_DUST				=0x40000;	//leave a dust trail when walking on this surface
+		internal const UInt32	SURF_LIGHT				=0x1;		//value will hold the light strength
+		internal const UInt32	SURF_SLICK				=0x2;		//effects game physics
+		internal const UInt32	SURF_SKY				=0x4;		//don't draw, but add to skybox
+		internal const UInt32	SURF_WARP				=0x8;		//turbulent water warp
+		internal const UInt32	SURF_TRANS33			=0x10;
+		internal const UInt32	SURF_TRANS66			=0x20;
+		internal const UInt32	SURF_FLOWING			=0x40;		//scroll towards angle
+		internal const UInt32	SURF_NODAMAGE			=0x1;		//never give falling damage
+		internal const UInt32	SURF_LADDER				=0x8;
+		internal const UInt32	SURF_NOIMPACT			=0x10;		//don't make missile explosions
+		internal const UInt32	SURF_NOMARKS			=0x20;		//don't leave missile marks
+		internal const UInt32	SURF_FLESH				=0x40;		//make flesh sounds and effects
+		internal const UInt32	SURF_NODRAW				=0x80;		//don't generate a drawsurface at all
+		internal const UInt32	SURF_HINT				=0x100;		//make a primary bsp splitter
+		internal const UInt32	SURF_SKIP				=0x200;		//completely ignore, allowing non-closed brushes
+		internal const UInt32	SURF_NOLIGHTMAP			=0x400;		//surface doesn't need a lightmap
+		internal const UInt32	SURF_POINTLIGHT			=0x800;		//generate lighting info at vertexes
+		internal const UInt32	SURF_METALSTEPS			=0x1000;	//clanking footsteps
+		internal const UInt32	SURF_NOSTEPS			=0x2000;	//no footstep sounds
+		internal const UInt32	SURF_NONSOLID			=0x4000;	//don't collide against curves with this set
+		internal const UInt32	SURF_LIGHTFILTER		=0x8000;	//act as a light filter during q3map -light
+		internal const UInt32	SURF_ALPHASHADOW		=0x10000;	//do per-pixel light shadow casting in q3map
+		internal const UInt32	SURF_NODLIGHT			=0x20000;	//don't dlight even if solid (solid lava, skies)
+		internal const UInt32	SURF_DUST				=0x40000;	//leave a dust trail when walking on this surface
 
 		//smoothing stuff is also quite hackily used
 		//as a way to pass flags
-		public const UInt32 SMOOTHING_GOURAUD		=0x1;		//for smoothing group stuff from hammer
-		public const UInt32 SMOOTHING_FLAT			=0x1000000;	//for smoothing group stuff from hammer
-		public const UInt32 SMOOTHING_SURFLIGHT		=0x10000;	//turns on radiosity surface lighting
+		internal const UInt32 SMOOTHING_GOURAUD		=0x1;		//for smoothing group stuff from hammer
+		internal const UInt32 SMOOTHING_FLAT			=0x1000000;	//for smoothing group stuff from hammer
+		internal const UInt32 SMOOTHING_SURFLIGHT		=0x10000;	//turns on radiosity surface lighting
 
-		public const UInt32 SIDE_HINT		=(1<<0);	//Side is a hint side
-		public const UInt32 SIDE_SHEET		=(1<<1);	//Side is a sheet (only visible face in a sheet contents)
-		public const UInt32 SIDE_VISIBLE	=(1<<2);	// 
-		public const UInt32 SIDE_TESTED		=(1<<3);	// 
-		public const UInt32 SIDE_NODE		=(1<<4);	// 
+		internal const UInt32 SIDE_HINT		=(1<<0);	//Side is a hint side
+		internal const UInt32 SIDE_SHEET	=(1<<1);	//Side is a sheet (only visible face in a sheet contents)
+		internal const UInt32 SIDE_VISIBLE	=(1<<2);	// 
+		internal const UInt32 SIDE_TESTED	=(1<<3);	// 
+		internal const UInt32 SIDE_NODE		=(1<<4);	// 
 
 
 		internal GBSPSide() { }

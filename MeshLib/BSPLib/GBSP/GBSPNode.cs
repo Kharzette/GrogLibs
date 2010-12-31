@@ -8,17 +8,17 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class BuildStats
+	internal class BuildStats
 	{
-		public Int32	NumVisFaces;
-		public Int32	NumNonVisFaces;
-		public Int32	NumVisBrushes;
-		public Int32	NumVisNodes;
-		public Int32	NumNonVisNodes;
+		internal Int32	NumVisFaces;
+		internal Int32	NumNonVisFaces;
+		internal Int32	NumVisBrushes;
+		internal Int32	NumVisNodes;
+		internal Int32	NumNonVisNodes;
 	}
 
 
-	public class GBSPNode
+	internal class GBSPNode
 	{
 		//Info for this node as a node or leaf
 		Int32		mPlaneNum;						//-1 if a leaf
@@ -45,19 +45,19 @@ namespace BSPLib
 		GBSPBrush	mBrushList;
 
 		// For GFX file saving
-		public Int32	[]mChildrenID	=new int[2];
-		public Int32	mFirstFace;
-		public Int32	mNumFaces;
-		public Int32	mFirstPortal;
-		public Int32	mNumPortals;
+		internal Int32	[]mChildrenID	=new int[2];
+		internal Int32	mFirstFace;
+		internal Int32	mNumFaces;
+		internal Int32	mFirstPortal;
+		internal Int32	mNumPortals;
 
-		public Int32	mFirstSide;			// For bevel bbox clipping
-		public Int32	mNumSides;
+		internal Int32	mFirstSide;			// For bevel bbox clipping
+		internal Int32	mNumSides;
 
-		public const int	MAX_TEMP_LEAF_SIDES	=100;
-		public const int	MAX_LEAF_SIDES		=64000 * 2;
-		public const int	MAX_AREAS			=256;
-		public const int	MAX_AREA_PORTALS	=1024;
+		internal const int	MAX_TEMP_LEAF_SIDES	=100;
+		internal const int	MAX_LEAF_SIDES		=64000 * 2;
+		internal const int	MAX_AREAS			=256;
+		internal const int	MAX_AREA_PORTALS	=1024;
 
 
 		internal void BuildBSP(GBSPBrush brushList, PlanePool pool, bool bVerbose)

@@ -6,16 +6,16 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class GBSPPoly
+	internal class GBSPPoly
 	{
 		List<Vector3>	mVerts	=new List<Vector3>();
 
-		public const float	EDGE_LENGTH			=0.1f;
-		public const float	DEGENERATE_EPSILON	=0.001f;
-		public const float	COLINEAR_EPSILON	=0.0001f;
+		internal const float	EDGE_LENGTH			=0.1f;
+		internal const float	DEGENERATE_EPSILON	=0.001f;
+		internal const float	COLINEAR_EPSILON	=0.0001f;
 
 
-		public GBSPPoly() { }
+		internal GBSPPoly() { }
 		internal GBSPPoly(GFXFace f, Int32 []vertInds, Vector3 []verts)
 		{
 			for(int i=0;i < f.mNumVerts;i++)
@@ -38,7 +38,7 @@ namespace BSPLib
 		}
 
 
-		public GBSPPoly(GBSPPlane p)
+		internal GBSPPoly(GBSPPlane p)
 		{
 			Vector3	rightVec, upVec, org, vert;
 

@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class GBSPFace
+	internal class GBSPFace
 	{
 		GBSPFace	mNext;
 		GBSPFace	mOriginal;
@@ -22,20 +22,20 @@ namespace BSPLib
 		bool		mbVisible;			
 
 		//For GFX file saving
-		public Int32		mOutputNum;	
+		internal Int32	mOutputNum;	
 
-		public Int32		[]mIndexVerts;
-		public Int32		mFirstIndexVert;
+		internal Int32	[]mIndexVerts;
+		internal Int32	mFirstIndexVert;
 
-		public GBSPPortal	mPortal;
-		public GBSPFace		[]mSplit	=new GBSPFace[2];
-		public GBSPFace		mMerged;
+		internal GBSPPortal	mPortal;
+		internal GBSPFace	[]mSplit	=new GBSPFace[2];
+		internal GBSPFace	mMerged;
 
-		public const float	COLINEAR_EPSILON	=0.0001f;
+		internal const float	COLINEAR_EPSILON	=0.0001f;
 
 
-		public GBSPFace() { }
-		public GBSPFace(GBSPFace copyMe)
+		internal GBSPFace() { }
+		internal GBSPFace(GBSPFace copyMe)
 		{
 			mNext			=copyMe.mNext;
 			mOriginal		=copyMe.mOriginal;
@@ -57,7 +57,7 @@ namespace BSPLib
 		}
 
 
-		public GBSPFace(GBSPPortal port, Int32 pside)
+		internal GBSPFace(GBSPPortal port, Int32 pside)
 		{
 			mTexInfo	=port.mSide.mTexInfo;
 			mPlaneNum	=port.mSide.mPlaneNum;

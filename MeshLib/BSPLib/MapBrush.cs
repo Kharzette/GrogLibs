@@ -7,15 +7,15 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class MapBrush
+	internal class MapBrush
 	{
-		public Int32		mEntityNum;
-		public Int32		mBrushNum;
-		public UInt32		mContents;
-		public Bounds		mBounds;
-		public Int32		mOrderID;
+		internal Int32		mEntityNum;
+		internal Int32		mBrushNum;
+		internal UInt32		mContents;
+		internal Bounds		mBounds;
+		internal Int32		mOrderID;
 
-		public List<GBSPSide>	mOriginalSides	=new List<GBSPSide>();
+		internal List<GBSPSide>	mOriginalSides	=new List<GBSPSide>();
 		
 
 		#region IO
