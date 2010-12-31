@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Microsoft.Xna.Framework;
+
 
 namespace BSPZone
 {
@@ -27,8 +29,6 @@ namespace BSPZone
 		byte	[]mMaterialVisData;
 
 		//vis stuff
-		Int32		mCurrentLeaf;
-		Int32		mCurFrameStatic;
 		Int32		[]mClusterVisFrame;
 		WorldLeaf	[]mLeafData;
 		Int32		[]mNodeParents;
@@ -112,6 +112,111 @@ namespace BSPZone
 
 			br.Close();
 			file.Close();
+		}
+
+
+		bool IsMaterialVisible(int leaf, int matIndex)
+		{
+			if(mZoneLeafs == null)
+			{
+				return	false;
+			}
+
+			int	clust	=mZoneLeafs[leaf].mCluster;
+
+			if(clust == -1 || mVisClusters[clust].mVisOfs == -1
+				|| mMaterialVisData == null)
+			{
+				return	true;	//this will make everything vis
+								//when outside of the map
+			}
+
+			//plus one to avoid 0 problem
+			matIndex++;
+
+			int	ofs	=leaf * mNumVisMaterialBytes;
+			
+			return	((mMaterialVisData[ofs + (matIndex >> 3)] & (1 << (matIndex & 7))) != 0);
+		}
+
+
+		public bool IsMaterialVisibleFromPos(Vector3 pos, int matIndex)
+		{
+			if(mZoneNodes == null)
+			{
+				return	true;	//no map data
+			}
+			Int32	node	=FindNodeLandedIn(0, pos);
+			if(node > 0)
+			{
+				return	true;	//in solid space
+			}
+
+			Int32	leaf	=-(node + 1);
+			return	IsMaterialVisible(leaf, matIndex);
+		}
+
+
+		public Vector3 GetPlayerStartPos()
+		{
+			foreach(ZoneEntity e in mZoneEntities)
+			{
+				if(e.mData.ContainsKey("classname"))
+				{
+					if(e.mData["classname"] != "info_player_start")
+					{
+						continue;
+					}
+				}
+				else
+				{
+					continue;
+				}
+
+				Vector3	ret	=Vector3.Zero;
+				if(e.GetOrigin(out ret))
+				{
+					return	ret;
+				}
+			}
+			return	Vector3.Zero;
+		}
+
+
+		Int32 FindNodeLandedIn(Int32 node, Vector3 pos)
+		{
+			float		Dist1;
+			ZoneNode	pNode;
+			Int32		Side;
+
+			if(node < 0)		// At leaf, no more recursing
+			{
+				return	node;
+			}
+
+			pNode	=mZoneNodes[node];
+			
+			//Get the distance that the eye is from this plane
+			Dist1	=mZonePlanes[pNode.mPlaneNum].DistanceFast(pos);
+
+			if(Dist1 < 0)
+			{
+				Side	=1;
+			}
+			else
+			{
+				Side	=0;
+			}
+			
+			//Go down the side we are on first, then the other side
+			Int32	ret	=0;
+			ret	=FindNodeLandedIn(pNode.mChildren[Side], pos);
+			if(ret < 0)
+			{
+				return	ret;
+			}
+			ret	=FindNodeLandedIn(pNode.mChildren[(Side == 0)? 1 : 0], pos);
+			return	ret;
 		}
 
 

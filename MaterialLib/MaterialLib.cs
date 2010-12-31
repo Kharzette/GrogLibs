@@ -231,6 +231,64 @@ namespace MaterialLib
 		}
 
 
+		//fill in the material emissive colors
+		//based on an average of the colors in the textures
+		public void AssignEmissives()
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				AssignEmissive(mat.Key);
+			}
+		}
+
+
+		void AssignEmissive(string matName)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return;
+			}
+
+			Material	mat	=mMats[matName];
+			string		val	=mat.GetParameterValue("mTexture");
+			if(val == "")
+			{
+				return;
+			}
+
+			if(!mMaps.ContainsKey(val))
+			{
+				return;
+			}
+
+			Texture2D	map		=mMaps[val];
+			int			size	=map.Width * map.Height;
+
+			Color	[]colors	=new Color[size];
+			map.GetData<Color>(colors);
+
+			Int64	red		=0;
+			Int64	green	=0;
+			Int64	blue	=0;
+			foreach(Color c in colors)
+			{
+				red		+=c.R;
+				green	+=c.G;
+				blue	+=c.B;
+			}
+
+			red		/=size;
+			green	/=size;
+			blue	/=size;
+
+			Debug.Assert(red < 256);
+			Debug.Assert(green < 256);
+			Debug.Assert(blue < 256);
+
+			mat.SetEmissive((byte)red, (byte)green, (byte)blue);
+		}
+
+
 		public void BoostTexSizes(bool bUp)
 		{
 			foreach(KeyValuePair<string, Material> mat in mMats)

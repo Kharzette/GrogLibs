@@ -27,8 +27,8 @@ namespace BSPBuilder
 			Color		fcol	=ConvertColor(col);
 			SolidBrush	b		=new SolidBrush(fcol);
 
-			Size	sz	=new Size(-1, -1);
-			cellBounds.Inflate(sz);
+			cellBounds.Width--;
+			cellBounds.Height--;
 
 			graphics.FillRectangle(b, cellBounds);
 		}

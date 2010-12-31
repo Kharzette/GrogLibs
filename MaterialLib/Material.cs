@@ -422,5 +422,11 @@ namespace MaterialLib
 		{
 			return	mParameters;
 		}
+
+
+		internal void SetEmissive(byte red, byte green, byte blue)
+		{
+			mEmissiveColor	=new Color(red, green, blue, 255);
+		}
 	}
 }

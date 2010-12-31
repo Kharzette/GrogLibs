@@ -1208,7 +1208,7 @@ namespace BSPLib
 			out Vector3 []amatAnimSortPoints,
 
 			int lightAtlasSize,
-			out UtilityLib.TexAtlas lightAtlas)
+			out MaterialLib.TexAtlas lightAtlas)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lightAtlasSize);
 

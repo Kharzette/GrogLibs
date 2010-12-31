@@ -42,8 +42,6 @@ namespace BSPBuilder
 			mMatModel	=new MaterialGridModel(mMatLib.GetMaterials());
 
 			NewMaterial.Enabled		=true;
-			ApplyMaterial.Enabled	=false;
-
 			MaterialGrid.DataSource	=mMatModel;
 
 			MaterialGrid.Columns.Remove("SourceBlend");
@@ -141,7 +139,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnTextureListOk(object sender, EventArgs ea)
+		void OnTextureListOk(object sender, EventArgs ea)
 		{
 			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
 
@@ -172,7 +170,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnTextureListCancel(object sender, EventArgs ea)
+		void OnTextureListCancel(object sender, EventArgs ea)
 		{
 			mTF.eOk		-=OnTextureListOk;
 			mTF.eCancel	-=OnTextureListCancel;
@@ -182,7 +180,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnTechniqueListOk(object sender, EventArgs ea)
+		void OnTechniqueListOk(object sender, EventArgs ea)
 		{
 			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
 
@@ -207,7 +205,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnTechniqueListCancel(object sender, EventArgs ea)
+		void OnTechniqueListCancel(object sender, EventArgs ea)
 		{
 			mTL.eOk		-=OnTechniqueListOk;
 			mTL.eCancel	-=OnTechniqueListCancel;
@@ -216,7 +214,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnShaderListOk(object sender, EventArgs ea)
+		void OnShaderListOk(object sender, EventArgs ea)
 		{
 			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
 
@@ -240,7 +238,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnShaderListCancel(object sender, EventArgs ea)
+		void OnShaderListCancel(object sender, EventArgs ea)
 		{
 			mSL.eOk		-=OnShaderListOk;
 			mSL.eCancel	-=OnShaderListCancel;
@@ -249,7 +247,7 @@ namespace BSPBuilder
 		}
 
 
-		private void MeshPartGrid_SelectionChanged(object sender, EventArgs e)
+		void MeshPartGrid_SelectionChanged(object sender, EventArgs e)
 		{
 		}
 
@@ -261,7 +259,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnNewMaterial(object sender, EventArgs e)
+		void OnNewMaterial(object sender, EventArgs e)
 		{
 			MaterialLib.Material	m	=new MaterialLib.Material();
 
@@ -286,31 +284,22 @@ namespace BSPBuilder
 		}
 
 
-		private void OnSelectionChanged(object sender, EventArgs e)
+		void OnSelectionChanged(object sender, EventArgs e)
 		{
 			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-			DataGridViewSelectedRowCollection	mpSel	=MeshPartGrid.SelectedRows;
 
 			if(matSel.Count > 0)
 			{
-				if(mpSel.Count > 0)
-				{
-					ApplyMaterial.Enabled	=true;
-				}
 				MaterialLib.Material	mat	=(MaterialLib.Material)matSel[0].DataBoundItem;
 				MaterialProperties.DataSource			=mat.Parameters;
 				MaterialProperties.Columns[0].ReadOnly	=true;
 				MaterialProperties.Columns[1].ReadOnly	=true;
 				MaterialProperties.Columns[2].ReadOnly	=true;
 			}
-			else
-			{
-				ApplyMaterial.Enabled	=false;
-			}
 		}
 
 
-		private void OnCellValidated(object sender, DataGridViewCellEventArgs e)
+		void OnCellValidated(object sender, DataGridViewCellEventArgs e)
 		{
 			//update name?
 			if(e.ColumnIndex == 0)
@@ -320,19 +309,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnApplyMaterial(object sender, EventArgs e)
-		{
-			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-			DataGridViewSelectedRowCollection	mpSel	=MeshPartGrid.SelectedRows;
-
-			foreach(DataGridViewRow dgvr in mpSel)
-			{
-				dgvr.Cells[1].Value	=matSel[0].Cells[0].Value;
-			}
-		}
-
-
-		private void OnCellClick(object sender, DataGridViewCellMouseEventArgs e)
+		void OnCellClick(object sender, DataGridViewCellMouseEventArgs e)
 		{
 			if(e.RowIndex == -1)
 			{
@@ -383,7 +360,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnPropCellClick(object sender, DataGridViewCellEventArgs e)
+		void OnPropCellClick(object sender, DataGridViewCellEventArgs e)
 		{
 			if(e.ColumnIndex != 3)
 			{
@@ -423,7 +400,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnPropValueValidated(object sender, DataGridViewCellEventArgs e)
+		void OnPropValueValidated(object sender, DataGridViewCellEventArgs e)
 		{
 			if(e.ColumnIndex != 3)
 			{
@@ -436,22 +413,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnSizeChanged(object sender, EventArgs e)
-		{
-			//get the mesh part grid out of the material
-			//grid's junk
-			int	adjust	=MaterialGrid.Top - 6;
-
-			adjust	-=(MeshPartGrid.Top + MeshPartGrid.Size.Height);
-
-			MeshPartGrid.SetBounds(MeshPartGrid.Left,
-				MeshPartGrid.Top + adjust,
-				MeshPartGrid.Width,
-				MeshPartGrid.Height);
-		}
-
-
-		private void OnSave(object sender, EventArgs e)
+		void OnSave(object sender, EventArgs e)
 		{
 			DialogResult	dr	=mSFD.ShowDialog();
 
@@ -464,7 +426,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnLoad(object sender, EventArgs e)
+		void OnLoad(object sender, EventArgs e)
 		{
 			DialogResult	dr	=mOFD.ShowDialog();
 
@@ -492,12 +454,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnMeshPartNuking(object sender, DataGridViewRowCancelEventArgs e)
-		{
-		}
-
-
-		private void OnNukeMaterial(object sender, DataGridViewRowCancelEventArgs e)
+		void OnNukeMaterial(object sender, DataGridViewRowCancelEventArgs e)
 		{
 			MaterialLib.Material	mat	=(MaterialLib.Material)e.Row.DataBoundItem;
 
@@ -510,25 +467,9 @@ namespace BSPBuilder
 		}
 
 
-		private void OnBoundMesh(object sender, EventArgs e)
-		{
-		}
-
-
-		void BoundsChanged()
-		{
-		}
-
-
 		void OnRefreshShaders(object sender, EventArgs e)
 		{
 			mMatLib.RefreshShaderParameters();
-		}
-
-
-		internal bool bDrawBounds()
-		{
-			return	DrawBounds.Checked;
 		}
 
 
@@ -568,6 +509,12 @@ namespace BSPBuilder
 					MaterialGrid.SelectedRows[0].DataBoundItem;
 				mMatLib.BoostTexSize(m.Name, false);
 			}
+		}
+
+
+		void OnGetEmissive(object sender, EventArgs e)
+		{
+			mMatLib.AssignEmissives();
 		}
 	}
 }

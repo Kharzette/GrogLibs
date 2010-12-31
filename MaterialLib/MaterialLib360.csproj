@@ -60,6 +60,7 @@
     <Compile Include="MaterialLib.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShaderParameters.cs" />
+    <Compile Include="TexAtlas.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

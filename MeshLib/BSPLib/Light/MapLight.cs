@@ -1390,7 +1390,6 @@ namespace BSPLib
 					ApplyLightmapToPatches(i, lfp.mParams.mLightParams.mLightGridSize);
 				}
 			}			
-			Print("\n");
 			lfp.mbSuccess	=true;
 			eLightFacesCoreDone(lfp, null);
 		}

@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Storage;
 
 
-namespace MaterialLib
+namespace UtilityLib
 {
 	//based on this article
 	//http://www.blackpawn.com/texts/lightmaps/default.html

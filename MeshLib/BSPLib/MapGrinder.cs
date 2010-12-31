@@ -142,7 +142,7 @@ namespace BSPLib
 		List<Vector3>	mLMAAnimMaterialSortPoints	=new List<Vector3>();
 
 		//computed lightmap atlas
-		UtilityLib.TexAtlas	mLMAtlas;
+		TexAtlas	mLMAtlas;
 
 		//passed in data
 		int			mLightGridSize;
@@ -163,7 +163,7 @@ namespace BSPLib
 
 			if(gd != null)
 			{
-				mLMAtlas	=new UtilityLib.TexAtlas(gd, atlasSize, atlasSize);
+				mLMAtlas	=new TexAtlas(gd, atlasSize, atlasSize);
 			}
 
 			CalcMaterialNames();
@@ -2143,7 +2143,7 @@ namespace BSPLib
 		}
 
 
-		internal UtilityLib.TexAtlas GetLightMapAtlas()
+		internal TexAtlas GetLightMapAtlas()
 		{
 			return	mLMAtlas;
 		}

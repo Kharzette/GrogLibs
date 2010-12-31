@@ -26,7 +26,7 @@ namespace MeshLib
 		MaterialLib.MaterialLib	mMatLib;
 
 		//light map atlas
-		UtilityLib.TexAtlas	mLightMapAtlas;
+		MaterialLib.TexAtlas	mLightMapAtlas;
 
 		//lightmap animation stuff
 		Dictionary<int, string>	mStyles			=new Dictionary<int, string>();
@@ -102,7 +102,7 @@ namespace MeshLib
 			out Vector3 []amatAnimSortPoints,
 
 			int lightAtlasSize,
-			out UtilityLib.TexAtlas lightAtlas);
+			out MaterialLib.TexAtlas lightAtlas);
 
 		public delegate void BuildVLitRenderData(GraphicsDevice g, out VertexBuffer vb,
 			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
@@ -578,7 +578,7 @@ namespace MeshLib
 				return;
 			}
 
-			mLightMapAtlas	=new UtilityLib.TexAtlas(g, 1, 1);
+			mLightMapAtlas	=new MaterialLib.TexAtlas(g, 1, 1);
 			mLightMapAtlas.Read(g, br);
 
 			mMatLib.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasTexture());
