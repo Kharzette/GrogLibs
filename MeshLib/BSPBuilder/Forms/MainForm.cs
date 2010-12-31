@@ -139,6 +139,12 @@ namespace BSPBuilder
 			set { SetTextBoxValue(NumClusters, value); }
 		}
 
+		internal bool DrawNWork
+		{
+			get { return DrawAndWork.Checked; }
+			set { DrawAndWork.Checked = value; }
+		}
+
 		internal BSPBuildParams BSPParameters
 		{
 			get
@@ -292,7 +298,7 @@ namespace BSPBuilder
 		}
 
 
-		private void OnGenerateMaterials(object sender, EventArgs e)
+		void OnGenerateMaterials(object sender, EventArgs e)
 		{
 			mOFD.DefaultExt	="*.gbsp";
 			DialogResult	dr	=mOFD.ShowDialog();

@@ -45,7 +45,8 @@ namespace BSPBuilder
 		string					mDrawChoice;
 		Vector3					mDynamicLightPos;
 
-		Int32				mDebugLeaf;
+		//working?
+		bool	mbWorking;
 
 		//collision debuggery
 		Vector3				mStart, mEnd;
@@ -151,19 +152,16 @@ namespace BSPBuilder
 
 		protected override void Update(GameTime gameTime)
 		{
-			if(GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
+			if(mbWorking && !mMainForm.DrawNWork)
 			{
-				this.Exit();
+				base.Update(gameTime);
+				return;
 			}
+
 			float	msDelta	=gameTime.ElapsedGameTime.Milliseconds;
 
 			KeyboardState	kbs	=Keyboard.GetState();
 
-			if(kbs.IsKeyDown(Keys.V))
-			{
-				mDebugLeaf	=mMap.FindNodeLandedIn(0, -mGameCam.CamPos);
-				mDebugLeaf	=-(mDebugLeaf + 1);
-			}
 			if(kbs.IsKeyDown(Keys.L))
 			{
 				mDynamicLightPos	=-mGameCam.CamPos;
@@ -208,6 +206,11 @@ namespace BSPBuilder
 
 		protected override void Draw(GameTime gameTime)
 		{
+			if(mbWorking && !mMainForm.DrawNWork)
+			{
+				return;
+			}
+
 			GraphicsDevice	g	=mGDM.GraphicsDevice;
 
 			GraphicsDevice.RenderState.DepthBufferEnable	=true;
@@ -537,6 +540,7 @@ namespace BSPBuilder
 
 		void OnBuildGBSP(object sender, EventArgs ea)
 		{
+			mbWorking	=true;
 			mMainForm.EnableFileIO(false);
 			mMap.BuildTree(mMainForm.BSPParameters);
 		}
@@ -594,6 +598,7 @@ namespace BSPBuilder
 				mMainForm.SetSaveEnabled(false);
 				mMainForm.SetBuildEnabled(false);
 				mMainForm.SetZoneSaveEnabled(false);
+				mbWorking	=true;
 				mMainForm.EnableFileIO(false);
 				mMap	=new Map();
 				RegisterMapEvents(true);
@@ -622,6 +627,7 @@ namespace BSPBuilder
 				mMainForm.SetSaveEnabled(false);
 				mMainForm.SetBuildEnabled(false);
 				mMainForm.SetZoneSaveEnabled(false);
+				mbWorking	=true;
 				mMainForm.EnableFileIO(false);
 				mMap	=new Map();
 				RegisterMapEvents(true);
@@ -647,6 +653,7 @@ namespace BSPBuilder
 				mMainForm.SetSaveEnabled(false);
 				mMainForm.SetBuildEnabled(false);
 				mMainForm.SetZoneSaveEnabled(false);
+				mbWorking	=true;
 				mMainForm.EnableFileIO(false);
 				mMap	=new Map();
 				RegisterMapEvents(true);
@@ -661,6 +668,7 @@ namespace BSPBuilder
 				mMatLib.RefreshShaderParameters();
 				mMatForm.UpdateMaterials();
 
+				mbWorking	=false;
 				mMainForm.EnableFileIO(true);	//not threaded
 			}
 		}
@@ -680,6 +688,7 @@ namespace BSPBuilder
 				mMainForm.SetSaveEnabled(false);
 				mMainForm.SetBuildEnabled(false);
 				mMainForm.SetZoneSaveEnabled(false);
+				mbWorking	=true;
 				mMainForm.EnableFileIO(false);
 				mMap	=new Map();
 
@@ -714,6 +723,7 @@ namespace BSPBuilder
 					mMatForm.UpdateMaterials();
 					mMainForm.SetZoneSaveEnabled(true);
 				}
+				mbWorking	=false;
 				mMainForm.EnableFileIO(true);
 			}
 		}
@@ -725,6 +735,7 @@ namespace BSPBuilder
 
 			if(fileName != null)
 			{
+				mbWorking	=true;
 				mMainForm.EnableFileIO(false);
 				mMap.SaveGBSPFile(fileName,	mMainForm.BSPParameters);
 			}
@@ -812,6 +823,7 @@ namespace BSPBuilder
 		{
 			bool	bSuccess	=(bool)sender;
 
+			mbWorking	=false;
 			mMainForm.EnableFileIO(true);
 			mMainForm.SetSaveEnabled(true);
 			mMainForm.SetBuildEnabled(false);
@@ -824,6 +836,7 @@ namespace BSPBuilder
 
 			ProgressWatcher.eProgressUpdated	-=OnProgressUpdated;
 			mMainForm.ClearProgress();
+			mbWorking	=false;
 			mMainForm.EnableFileIO(true);
 		}
 
@@ -834,6 +847,7 @@ namespace BSPBuilder
 
 			ProgressWatcher.eProgressUpdated	-=OnProgressUpdated;
 			mMainForm.ClearProgress();
+			mbWorking	=false;
 			mMainForm.EnableFileIO(true);
 		}
 
@@ -842,6 +856,7 @@ namespace BSPBuilder
 		{
 			bool	bSuccess	=(bool)sender;
 
+			mbWorking	=false;
 			mMainForm.EnableFileIO(true);
 		}
 

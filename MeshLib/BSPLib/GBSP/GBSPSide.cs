@@ -552,9 +552,15 @@ namespace BSPLib
 					texName	=tok.Substring(1);
 					if(texName.StartsWith("lava") || texName.StartsWith("LAVA"))
 					{
-						ret			|=Contents.BSP_CONTENTS_EMPTY2;
-						ret			|=Contents.BSP_CONTENTS_USER1;
-						ti.mFlags	|=TexInfo.FULLBRIGHT;
+						ret				|=Contents.BSP_CONTENTS_EMPTY2;
+						ret				|=Contents.BSP_CONTENTS_USER1;
+						ret				|=Contents.BSP_CONTENTS_WAVY2;
+						ti.mFlags		|=TexInfo.TRANS;
+						ti.mFlags		|=TexInfo.FLAT;
+						ti.mFlags		|=TexInfo.LIGHT;				//lava emits light by default?
+						ti.mFaceLight	=TexInfo.FaceLightIntensity;	//TODO: donut hardcode
+						ti.mFlags		|=TexInfo.FULLBRIGHT;
+						ti.mFlags		|=TexInfo.NO_LIGHTMAP;
 					}
 					else if(texName.StartsWith("water") || texName.StartsWith("WATER"))
 					{
@@ -562,8 +568,8 @@ namespace BSPLib
 						ret			|=Contents.BSP_CONTENTS_EMPTY2;
 						ret			|=Contents.BSP_CONTENTS_WAVY2;
 						ret			|=Contents.BSP_CONTENTS_USER3;
-						ti.mFlags	|=TexInfo.FULLBRIGHT;
 						ti.mFlags	|=TexInfo.TRANS;
+//						ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 					}
 					else if(texName.StartsWith("slime") || texName.StartsWith("SLIME"))
 					{
@@ -571,7 +577,12 @@ namespace BSPLib
 						ret			|=Contents.BSP_CONTENTS_EMPTY2;
 						ret			|=Contents.BSP_CONTENTS_WAVY2;
 						ret			|=Contents.BSP_CONTENTS_USER2;
-						ti.mFlags	|=TexInfo.FULLBRIGHT;
+						ti.mFlags	|=TexInfo.TRANS;
+//						ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+					}
+					else if(texName.StartsWith("glass") || texName.StartsWith("GLASS"))
+					{
+						mFlags		|=SURF_TRANS66;
 						ti.mFlags	|=TexInfo.TRANS;
 					}
 					else
@@ -598,9 +609,15 @@ namespace BSPLib
 				}
 				else if(tok.StartsWith("lava") || tok.StartsWith("LAVA"))
 				{
-					ret			|=Contents.BSP_CONTENTS_EMPTY2;
-					ret			|=Contents.BSP_CONTENTS_USER1;
-					ti.mFlags	|=TexInfo.FULLBRIGHT;
+					ret				|=Contents.BSP_CONTENTS_EMPTY2;
+					ret				|=Contents.BSP_CONTENTS_USER1;
+					ret				|=Contents.BSP_CONTENTS_WAVY2;
+					ti.mFlags		|=TexInfo.TRANS;
+					ti.mFlags		|=TexInfo.FLAT;
+					ti.mFlags		|=TexInfo.LIGHT;				//lava emits light by default?
+					ti.mFaceLight	=TexInfo.FaceLightIntensity;	//TODO: donut hardcode
+					ti.mFlags		|=TexInfo.FULLBRIGHT;
+					ti.mFlags		|=TexInfo.NO_LIGHTMAP;
 				}
 				else if(tok.StartsWith("water") || tok.StartsWith("WATER"))
 				{
@@ -608,8 +625,8 @@ namespace BSPLib
 					ret			|=Contents.BSP_CONTENTS_EMPTY2;
 					ret			|=Contents.BSP_CONTENTS_WAVY2;
 					ret			|=Contents.BSP_CONTENTS_USER3;
-//					ti.mFlags	|=TexInfo.FULLBRIGHT;
 					ti.mFlags	|=TexInfo.TRANS;
+//					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 				}
 				else if(tok.StartsWith("slime") || tok.StartsWith("SLIME"))
 				{
@@ -617,14 +634,15 @@ namespace BSPLib
 					ret			|=Contents.BSP_CONTENTS_EMPTY2;
 					ret			|=Contents.BSP_CONTENTS_WAVY2;
 					ret			|=Contents.BSP_CONTENTS_USER2;
-//					ti.mFlags	|=TexInfo.FULLBRIGHT;
 					ti.mFlags	|=TexInfo.TRANS;
+//					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 				}
 				else if(tok.StartsWith("trigger") || tok.StartsWith("TRIGGER"))
 				{
 					ret			|=Contents.BSP_CONTENTS_USER12;
 					ti.mFlags	|=TexInfo.FULLBRIGHT;
 					mFlags		|=SURF_NODRAW;
+					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 				}
 				else if(char.IsLetter(tok, 0))
 				{

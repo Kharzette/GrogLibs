@@ -18,7 +18,7 @@ namespace BSPLib
 
 		public const int	MAX_LTYPE_INDEX		=13;	//switchable will go higher TODO
 		public const int	MAX_LMAP_SIZE		=1024;
-		public const int	MAX_LTYPES			=3;
+		public const int	MAX_LTYPES			=4;
 
 
 		internal Int32 GetNumLightTypes()

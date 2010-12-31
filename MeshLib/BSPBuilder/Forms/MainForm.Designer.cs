@@ -86,6 +86,7 @@
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.SortPortals = new System.Windows.Forms.CheckBox();
 			this.FullVis = new System.Windows.Forms.CheckBox();
+			this.DrawAndWork = new System.Windows.Forms.CheckBox();
 			this.StatsGroupBox.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxCPUCores)).BeginInit();
 			this.GroupFileIO.SuspendLayout();
@@ -340,6 +341,7 @@
 			// 
 			// GroupBuildSettings
 			// 
+			this.GroupBuildSettings.Controls.Add(this.DrawAndWork);
 			this.GroupBuildSettings.Controls.Add(this.FixTJunctions);
 			this.GroupBuildSettings.Controls.Add(this.VerboseEntity);
 			this.GroupBuildSettings.Controls.Add(this.VerboseBSP);
@@ -347,7 +349,7 @@
 			this.GroupBuildSettings.Controls.Add(this.LabelCPUCores);
 			this.GroupBuildSettings.Location = new System.Drawing.Point(192, 145);
 			this.GroupBuildSettings.Name = "GroupBuildSettings";
-			this.GroupBuildSettings.Size = new System.Drawing.Size(115, 123);
+			this.GroupBuildSettings.Size = new System.Drawing.Size(115, 141);
 			this.GroupBuildSettings.TabIndex = 21;
 			this.GroupBuildSettings.TabStop = false;
 			this.GroupBuildSettings.Text = "Build Settings";
@@ -807,6 +809,16 @@
 			this.FullVis.UseVisualStyleBackColor = true;
 			this.FullVis.CheckedChanged += new System.EventHandler(this.OnFullVisChanged);
 			// 
+			// DrawAndWork
+			// 
+			this.DrawAndWork.AutoSize = true;
+			this.DrawAndWork.Location = new System.Drawing.Point(6, 114);
+			this.DrawAndWork.Name = "DrawAndWork";
+			this.DrawAndWork.Size = new System.Drawing.Size(89, 17);
+			this.DrawAndWork.TabIndex = 23;
+			this.DrawAndWork.Text = "Draw n Work";
+			this.DrawAndWork.UseVisualStyleBackColor = true;
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -913,5 +925,6 @@
 		private System.Windows.Forms.Button SaveZone;
 		private System.Windows.Forms.Label label10;
 		private System.Windows.Forms.NumericUpDown AtlasSize;
+		private System.Windows.Forms.CheckBox DrawAndWork;
 	}
 }
