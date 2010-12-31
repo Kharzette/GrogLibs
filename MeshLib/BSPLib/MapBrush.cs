@@ -10,10 +10,8 @@ namespace BSPLib
 	internal class MapBrush
 	{
 		internal Int32		mEntityNum;
-		internal Int32		mBrushNum;
 		internal UInt32		mContents;
 		internal Bounds		mBounds;
-		internal Int32		mOrderID;
 
 		internal List<GBSPSide>	mOriginalSides	=new List<GBSPSide>();
 		
@@ -109,7 +107,7 @@ namespace BSPLib
 				if(UtilityLib.Mathery.VecIdx(mBounds.mMins, i) <= -Bounds.MIN_MAX_BOUNDS
 					|| UtilityLib.Mathery.VecIdx(mBounds.mMaxs, i) >= Bounds.MIN_MAX_BOUNDS)
 				{
-					Map.Print("Entity " + mEntityNum + ", Brush " + mBrushNum + ": Bounds out of range\n");
+					Map.Print("Entity " + mEntityNum + ", Brush bounds out of range\n");
 				}
 			}
 			return	true;

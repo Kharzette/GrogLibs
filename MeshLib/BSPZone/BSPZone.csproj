@@ -1,17 +1,17 @@
 ﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
-    <ProjectGuid>{BB91910C-2595-4EB6-B48C-30BCC41457F6}</ProjectGuid>
+    <ProjectGuid>{AC062C9A-21A8-4B6B-83D9-3BF6DFE5337C}</ProjectGuid>
     <ProjectTypeGuids>{6D335F3A-9D43-41b4-9D22-F6F17C4BE596};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>UtilityLib</RootNamespace>
-    <AssemblyName>UtilityLib</AssemblyName>
+    <RootNamespace>BSPZone</RootNamespace>
+    <AssemblyName>BSPZone</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <XnaFrameworkVersion>v3.1</XnaFrameworkVersion>
     <XnaPlatform>Windows</XnaPlatform>
-    <XnaCrossPlatformGroupID>749ec9a9-9456-46bb-92b5-c1984f1d9566</XnaCrossPlatformGroupID>
+    <XnaCrossPlatformGroupID>16959a57-2ab1-4b17-b012-c2b05ae1a6e9</XnaCrossPlatformGroupID>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -32,7 +32,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\Assemblies\x86\Debug\</OutputPath>
+    <OutputPath>bin\x86\Debug</OutputPath>
     <DefineConstants>DEBUG;TRACE;WINDOWS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -44,7 +44,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\Assemblies\x86\Release\</OutputPath>
+    <OutputPath>bin\x86\Release</OutputPath>
     <DefineConstants>TRACE;WINDOWS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -80,6 +80,22 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UtilityLib, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Assemblies\x86\Debug\UtilityLib.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="VisArea.cs" />
+    <Compile Include="VisAreaPortal.cs" />
+    <Compile Include="VisCluster.cs" />
+    <Compile Include="Zone.cs" />
+    <Compile Include="ZoneLeaf.cs" />
+    <Compile Include="ZoneModel.cs" />
+    <Compile Include="ZoneNode.cs" />
+    <Compile Include="ZonePlane.cs" />
+    <Compile Include="ZoneEntity.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -117,16 +133,6 @@
       <ProductName>Microsoft XNA Framework Redistributable 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="FileUtil.cs" />
-    <Compile Include="GameCamera.cs" />
-    <Compile Include="IReadWriteable.cs" />
-    <Compile Include="Mathery.cs" />
-    <Compile Include="TexAtlas.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\Microsoft.Xna.GameStudio.targets" />

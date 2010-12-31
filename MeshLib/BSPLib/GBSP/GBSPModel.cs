@@ -19,7 +19,6 @@ namespace BSPLib
 		internal int		mFirstFace, mNumFaces;
 		internal int		mFirstLeaf, mNumLeafs;
 		internal int		mFirstCluster, mNumClusters;
-		internal int		mNumSolidLeafs;
 
 		//area portal stuff, probably won't use
 		internal bool	mbAreaPortal;

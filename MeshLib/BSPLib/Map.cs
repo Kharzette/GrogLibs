@@ -19,10 +19,6 @@ namespace BSPLib
 		//models
 		internal List<GBSPModel>	mModels	=new List<GBSPModel>();
 
-		//brushes
-		List<MapBrush>	mMapBrushes		=new List<MapBrush>();
-		List<GBSPBrush>	mGBSPBrushes	=new List<GBSPBrush>();
-
 		//planes
 		PlanePool	mPlanePool	=new PlanePool();
 

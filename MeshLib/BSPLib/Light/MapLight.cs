@@ -813,10 +813,6 @@ namespace BSPLib
 			//Light faces, and apply to patches
 			LightFaces(lfp);	//Light all the faces lightmaps, and apply to patches
 
-			if(eLightDone != null)
-			{
-				eLightDone(true, null);
-			}
 			return;
 
 			ExitWithError:

@@ -51,6 +51,13 @@ namespace UtilityLib
 		}
 
 
+		public static byte []ReadByteArray(BinaryReader br)
+		{
+			int	count	=br.ReadInt32();
+			return	br.ReadBytes(count);
+		}
+
+
 		public static Int32 []ReadIntArray(BinaryReader br)
 		{
 			int	len	=br.ReadInt32();
@@ -159,6 +166,51 @@ namespace UtilityLib
 				(bEditor)? BufferUsage.None : BufferUsage.WriteOnly,
 				IndexElementSize.ThirtyTwoBits);
 			ib.SetData<Int32>(idxArray);
+		}
+
+
+		public delegate IReadWriteable[] CreateRWArray(Int32 count);
+
+
+		public static ArrayType []InitArray<ArrayType>(int count) where ArrayType : new()
+		{
+			ArrayType	[]ret	=new ArrayType[count];
+			for(int i=0;i < count;i++)
+			{
+				ret[i]	=new ArrayType();
+			}
+			return	ret;
+		}
+
+
+		public static void WriteArray(IReadWriteable []arr, BinaryWriter bw)
+		{
+			bw.Write(arr.Length);
+			foreach(IReadWriteable obj in arr)
+			{
+				obj.Write(bw);
+			}
+		}
+
+
+		public static void WriteArray(byte []arr, BinaryWriter bw)
+		{
+			bw.Write(arr.Length);
+			bw.Write(arr, 0, arr.Length);
+		}
+
+
+		public static object[] ReadArray(BinaryReader br, CreateRWArray crwa)
+		{
+			int	count	=br.ReadInt32();
+
+			IReadWriteable	[]arr	=crwa(count);
+
+			for(int i=0;i < count;i++)
+			{
+				arr[i].Read(br);
+			}
+			return	arr;
 		}
 	}
 }
