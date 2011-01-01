@@ -245,6 +245,7 @@ namespace BSPLib
 			UtilityLib.FileUtil.WriteArray(mGFXAreaPortals, bw);
 			UtilityLib.FileUtil.WriteArray(mGFXPlanes, bw);
 			UtilityLib.FileUtil.WriteArray(mGFXEntities, bw);
+			UtilityLib.FileUtil.WriteArray(mGFXLeafSides, bw);
 			UtilityLib.FileUtil.WriteArray(mGFXVisData, bw);
 			UtilityLib.FileUtil.WriteArray(mGFXMaterialVisData, bw);
 			bw.Write(mLightMapGridSize);
@@ -264,21 +265,23 @@ namespace BSPLib
 			BinaryReader	br	=new BinaryReader(file);
 
 			mGFXModels		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXModel>(count); }) as GFXModel[];
+							{ return UtilityLib.FileUtil.InitArray<GFXModel>(count); }) as GFXModel[];
 			mGFXNodes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXNode>(count); }) as GFXNode[];
+							{ return UtilityLib.FileUtil.InitArray<GFXNode>(count); }) as GFXNode[];
 			mGFXLeafs		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXLeaf>(count); }) as GFXLeaf[];
+							{ return UtilityLib.FileUtil.InitArray<GFXLeaf>(count); }) as GFXLeaf[];
 			mGFXClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXCluster>(count); }) as GFXCluster[];
+							{ return UtilityLib.FileUtil.InitArray<GFXCluster>(count); }) as GFXCluster[];
 			mGFXAreas		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXArea>(count); }) as GFXArea[];
+							{ return UtilityLib.FileUtil.InitArray<GFXArea>(count); }) as GFXArea[];
 			mGFXAreaPortals	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXAreaPortal>(count); }) as GFXAreaPortal[];
+							{ return UtilityLib.FileUtil.InitArray<GFXAreaPortal>(count); }) as GFXAreaPortal[];
 			mGFXPlanes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXPlane>(count); }) as GFXPlane[];
+							{ return UtilityLib.FileUtil.InitArray<GFXPlane>(count); }) as GFXPlane[];
 			mGFXEntities	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<MapEntity>(count); }) as MapEntity[];
+							{ return UtilityLib.FileUtil.InitArray<MapEntity>(count); }) as MapEntity[];
+			mGFXLeafSides	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<GFXLeafSide>(count); }) as GFXLeafSide[];
 			LoadGFXVisData(br);
 			LoadGFXMaterialVisData(br);
 			mLightMapGridSize		=br.ReadInt32();

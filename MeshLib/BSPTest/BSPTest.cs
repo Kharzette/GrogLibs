@@ -19,14 +19,16 @@ namespace BSPTest
 	{
 		GraphicsDeviceManager	mGDM;
 		SpriteBatch				mSB;
+		SpriteFont				mKoot;
 
-		Zone	mZone;
-
-		MeshLib.IndoorMesh	mLevel;
-
+		Zone					mZone;
+		MeshLib.IndoorMesh		mLevel;
 		UtilityLib.GameCamera	mGameCam;
-
 		MaterialLib.MaterialLib	mMatLib;
+
+		Vector3	mVelocity;
+		Vector3	mBodyMins, mBodyMaxs;
+		Vector3	mStart, mEnd, mImpacto;
 
 
 		public BSPTest()
@@ -43,12 +45,22 @@ namespace BSPTest
 				mGDM.GraphicsDevice.Viewport.Height,
 				mGDM.GraphicsDevice.Viewport.AspectRatio);
 
+			//70, 32
+			mBodyMins	=-Vector3.UnitX * 16;
+			mBodyMins	+=-Vector3.UnitZ * 16;
+			mBodyMins	+=-Vector3.UnitY * 35;
+
+			mBodyMaxs	=Vector3.UnitX * 16;
+			mBodyMaxs	+=Vector3.UnitZ * 16;
+			mBodyMaxs	+=Vector3.UnitY * 35;
+
 			base.Initialize();
 		}
 
 		protected override void LoadContent()
 		{
-			mSB	=new SpriteBatch(GraphicsDevice);
+			mSB		=new SpriteBatch(GraphicsDevice);
+			mKoot	=Content.Load<SpriteFont>("Fonts/Kootenay");
 
 			mMatLib	=new MaterialLib.MaterialLib(GraphicsDevice, Content, "Content/eels.MatLib", false);
 
@@ -79,20 +91,62 @@ namespace BSPTest
 
 			KeyboardState	kbs	=Keyboard.GetState();
 
-			Vector3	startPos	=mGameCam.CamPos;
+			Vector3	startPos	=-mGameCam.CamPos;
 
+			//do a movement update
 			mGameCam.Update(msDelta, kbs, Mouse.GetState());
 
-			Vector3	endPos	=mGameCam.CamPos;
-			/*
-			Line	ln;
-			ln.mP1	=-startPos;
-			ln.mP2	=-endPos;
-			if(mMap.MoveLine(ref ln, 16.0f))
-//			if(mMap.MoveLine(ref ln))
+			Vector3	endPos	=-mGameCam.CamPos;
+
+			mVelocity	+=endPos - startPos;
+			mVelocity.Y	-=((9.8f / 1000.0f) * msDelta);	//gravity
+
+			endPos	+=mVelocity;
+
+			Vector3		impacto		=Vector3.Zero;
+			ZonePlane	planeHit	=new ZonePlane();
+			if(mZone.Trace_WorldCollisionBBox(mBodyMins, mBodyMaxs,
+				startPos, endPos, 0, ref impacto, ref planeHit))
 			{
-				mGameCam.CamPos	=-ln.mP2;
+				//reset velocity
+				mVelocity	=Vector3.Zero;
+
+				//reflect the ray's energy
+				float	dist	=planeHit.DistanceFast(endPos);
+
+				//push out of the plane
+				endPos	+=(planeHit.mNormal * dist);
+
+				//ray cast again
+				if(mZone.Trace_WorldCollisionBBox(mBodyMins, mBodyMaxs,
+					startPos, endPos, 0, ref impacto, ref planeHit))
+				{
+					//just use second impact point
+					endPos	=impacto;
+				}
+			}
+
+			mGameCam.CamPos	=-endPos;
+			/*
+			if(kbs.IsKeyDown(Keys.O))
+			{
+				mStart	=-mGameCam.CamPos;
+			}
+			if(kbs.IsKeyDown(Keys.P))
+			{
+				mEnd	=-mGameCam.CamPos;
+			}
+			if(kbs.IsKeyDown(Keys.C))
+			{
+				Vector3		impacto		=Vector3.Zero;
+				ZonePlane	planeHit	=new ZonePlane();
+				if(mZone.Trace_WorldCollisionBBox(mBodyMins, mBodyMaxs,
+					mStart, mEnd, 0, ref impacto, ref planeHit))
+				{
+					mImpacto	=impacto;
+				}
 			}*/
+
 			mLevel.Update(msDelta);
 			mMatLib.UpdateWVP(mGameCam.World, mGameCam.View, mGameCam.Projection, -mGameCam.CamPos);
 
@@ -106,7 +160,17 @@ namespace BSPTest
 
 			g.Clear(Color.CornflowerBlue);
 
+			//spritebatch turns this off
+			g.RenderState.DepthBufferEnable	=true;
+
 			mLevel.Draw(g, mGameCam, mZone.IsMaterialVisibleFromPos);
+
+			mSB.Begin();
+			mSB.DrawString(mKoot, "Coordinates: " + -mGameCam.CamPos,
+				Vector2.One * 20.0f, Color.Yellow);
+//			mSB.DrawString(mKoot, "Impacto: " + mImpacto,
+//				Vector2.One * 20.0f + Vector2.UnitY * 80, Color.Yellow);
+			mSB.End();
 
 			base.Draw(gameTime);
 		}

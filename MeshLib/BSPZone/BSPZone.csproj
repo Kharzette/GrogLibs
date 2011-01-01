@@ -86,10 +86,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Contents.cs" />
+    <Compile Include="ZoneLeafSide.cs" />
     <Compile Include="VisArea.cs" />
     <Compile Include="VisAreaPortal.cs" />
     <Compile Include="VisCluster.cs" />
     <Compile Include="Zone.cs" />
+    <Compile Include="ZoneCollision.cs" />
     <Compile Include="ZoneLeaf.cs" />
     <Compile Include="ZoneModel.cs" />
     <Compile Include="ZoneNode.cs" />

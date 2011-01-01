@@ -249,5 +249,12 @@ namespace BSPZone
 				bw.Write(pair.Value);
 			}
 		}
+
+
+		internal bool IsLight()
+		{
+			Vector4	val;
+			return	GetLightValue(out val);
+		}
 	}
 }

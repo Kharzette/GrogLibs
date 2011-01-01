@@ -34,34 +34,34 @@ namespace BSPLib
 
 			//read regular bsp crap
 			mGFXModels		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXModel>(count); }) as GFXModel[];
+							{ return UtilityLib.FileUtil.InitArray<GFXModel>(count); }) as GFXModel[];
 			mGFXNodes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXNode>(count); }) as GFXNode[];
+							{ return UtilityLib.FileUtil.InitArray<GFXNode>(count); }) as GFXNode[];
 			mGFXLeafs		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXLeaf>(count); }) as GFXLeaf[];
+							{ return UtilityLib.FileUtil.InitArray<GFXLeaf>(count); }) as GFXLeaf[];
 
 			LoadGFXLeafFaces(br);
 
 			mGFXClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXCluster>(count); }) as GFXCluster[];
+							{ return UtilityLib.FileUtil.InitArray<GFXCluster>(count); }) as GFXCluster[];
 			mGFXAreas		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXArea>(count); }) as GFXArea[];
+							{ return UtilityLib.FileUtil.InitArray<GFXArea>(count); }) as GFXArea[];
 			mGFXAreaPortals	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXAreaPortal>(count); }) as GFXAreaPortal[];
+							{ return UtilityLib.FileUtil.InitArray<GFXAreaPortal>(count); }) as GFXAreaPortal[];
 			mGFXLeafSides	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXLeafSide>(count); }) as GFXLeafSide[];
+							{ return UtilityLib.FileUtil.InitArray<GFXLeafSide>(count); }) as GFXLeafSide[];
 			mGFXFaces		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXFace>(count); }) as GFXFace[];
+							{ return UtilityLib.FileUtil.InitArray<GFXFace>(count); }) as GFXFace[];
 			mGFXPlanes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXPlane>(count); }) as GFXPlane[];
+							{ return UtilityLib.FileUtil.InitArray<GFXPlane>(count); }) as GFXPlane[];
 
 			LoadGFXVerts(br);
 			LoadGFXVertIndexes(br);
 
 			mGFXTexInfos	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<GFXTexInfo>(count); }) as GFXTexInfo[];
+							{ return UtilityLib.FileUtil.InitArray<GFXTexInfo>(count); }) as GFXTexInfo[];
 			mGFXEntities	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return InitArray<MapEntity>(count); }) as MapEntity[];
+							{ return UtilityLib.FileUtil.InitArray<MapEntity>(count); }) as MapEntity[];
 
 			if(header.mbHasVis)
 			{
@@ -199,16 +199,6 @@ namespace BSPLib
 			{
 				me.Write(bw);
 			}
-		}
-
-		ArrayType []InitArray<ArrayType>(int count) where ArrayType : new()
-		{
-			ArrayType	[]ret	=new ArrayType[count];
-			for(int i=0;i < count;i++)
-			{
-				ret[i]	=new ArrayType();
-			}
-			return	ret;
 		}
 
 

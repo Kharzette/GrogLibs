@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPZone
 {
-	public class ZonePlane : UtilityLib.IReadWriteable
+	public struct ZonePlane : UtilityLib.IReadWriteable
 	{
 		public Vector3	mNormal;
 		public float	mDist;
@@ -19,6 +19,11 @@ namespace BSPZone
 		internal const UInt32	PLANE_ANYY	=4;
 		internal const UInt32	PLANE_ANYZ	=5;
 		internal const UInt32	PLANE_ANY	=6;
+
+		internal const UInt32	PSIDE_FRONT		=1;
+		internal const UInt32	PSIDE_BACK		=2;
+		internal const UInt32	PSIDE_BOTH		=(PSIDE_FRONT | PSIDE_BACK);
+		internal const UInt32	PSIDE_FACING	=4;
 
 
 		public void Write(BinaryWriter bw)
@@ -41,7 +46,7 @@ namespace BSPZone
 		}
 
 
-		internal float DistanceFast(Vector3 pos)
+		public float DistanceFast(Vector3 pos)
 		{
 			switch(mType)
 			{
