@@ -37,9 +37,9 @@ namespace BSPLib
 		internal GBSPFace() { }
 		internal GBSPFace(GBSPFace copyMe)
 		{
+			mPoly			=new GBSPPoly(copyMe.mPoly);
 			mNext			=copyMe.mNext;
 			mOriginal		=copyMe.mOriginal;
-			mPoly			=new GBSPPoly(copyMe.mPoly);
 			mContents[0]	=copyMe.mContents[0];
 			mContents[1]	=copyMe.mContents[1];
 			mTexInfo		=copyMe.mTexInfo;
@@ -75,6 +75,7 @@ namespace BSPLib
 				mPoly	=new GBSPPoly(port.mPoly);
 			}
 		}
+
 
 		static GBSPFace MergeFace(GBSPFace face1, GBSPFace face2, PlanePool pool)
 		{
@@ -194,7 +195,7 @@ namespace BSPLib
 		}
 
 
-		private void Free()
+		void Free()
 		{
 			if(mPoly != null)
 			{
@@ -203,7 +204,7 @@ namespace BSPLib
 		}
 
 
-		private bool Check(bool bVerb, PlanePool pool)
+		bool Check(bool bVerb, PlanePool pool)
 		{
 			if(mPoly.VertCount() < 3)
 			{

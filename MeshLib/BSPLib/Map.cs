@@ -237,16 +237,16 @@ namespace BSPLib
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
-			SaveArray(mGFXModels, bw);
-			SaveArray(mGFXNodes, bw);
-			SaveArray(mGFXLeafs, bw);
-			SaveArray(mGFXClusters, bw);
-			SaveArray(mGFXAreas, bw);
-			SaveArray(mGFXAreaPortals, bw);
-			SaveArray(mGFXPlanes, bw);
-			SaveArray(mGFXEntities, bw);
-			SaveArray(mGFXVisData, bw);
-			SaveArray(mGFXMaterialVisData, bw);
+			UtilityLib.FileUtil.WriteArray(mGFXModels, bw);
+			UtilityLib.FileUtil.WriteArray(mGFXNodes, bw);
+			UtilityLib.FileUtil.WriteArray(mGFXLeafs, bw);
+			UtilityLib.FileUtil.WriteArray(mGFXClusters, bw);
+			UtilityLib.FileUtil.WriteArray(mGFXAreas, bw);
+			UtilityLib.FileUtil.WriteArray(mGFXAreaPortals, bw);
+			UtilityLib.FileUtil.WriteArray(mGFXPlanes, bw);
+			UtilityLib.FileUtil.WriteArray(mGFXEntities, bw);
+			UtilityLib.FileUtil.WriteArray(mGFXVisData, bw);
+			UtilityLib.FileUtil.WriteArray(mGFXMaterialVisData, bw);
 			bw.Write(mLightMapGridSize);
 			bw.Write(mNumVisLeafBytes);
 			bw.Write(mNumVisMaterialBytes);
@@ -263,21 +263,21 @@ namespace BSPLib
 
 			BinaryReader	br	=new BinaryReader(file);
 
-			mGFXModels		=LoadArray(br, delegate(Int32 count)
+			mGFXModels		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXModel>(count); }) as GFXModel[];
-			mGFXNodes		=LoadArray(br, delegate(Int32 count)
+			mGFXNodes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXNode>(count); }) as GFXNode[];
-			mGFXLeafs		=LoadArray(br, delegate(Int32 count)
+			mGFXLeafs		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXLeaf>(count); }) as GFXLeaf[];
-			mGFXClusters	=LoadArray(br, delegate(Int32 count)
+			mGFXClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXCluster>(count); }) as GFXCluster[];
-			mGFXAreas		=LoadArray(br, delegate(Int32 count)
+			mGFXAreas		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXArea>(count); }) as GFXArea[];
-			mGFXAreaPortals	=LoadArray(br, delegate(Int32 count)
+			mGFXAreaPortals	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXAreaPortal>(count); }) as GFXAreaPortal[];
-			mGFXPlanes		=LoadArray(br, delegate(Int32 count)
+			mGFXPlanes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXPlane>(count); }) as GFXPlane[];
-			mGFXEntities	=LoadArray(br, delegate(Int32 count)
+			mGFXEntities	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<MapEntity>(count); }) as MapEntity[];
 			LoadGFXVisData(br);
 			LoadGFXMaterialVisData(br);

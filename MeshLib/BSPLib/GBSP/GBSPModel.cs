@@ -15,10 +15,10 @@ namespace BSPLib
 		Bounds		mBounds;
 
 		//for saving, might delete
-		internal int		[]mRootNodeID	=new int[2];
-		internal int		mFirstFace, mNumFaces;
-		internal int		mFirstLeaf, mNumLeafs;
-		internal int		mFirstCluster, mNumClusters;
+		internal int	[]mRootNodeID	=new int[2];
+		internal int	mFirstFace, mNumFaces;
+		internal int	mFirstLeaf, mNumLeafs;
+		internal int	mFirstCluster, mNumClusters;
 
 		//area portal stuff, probably won't use
 		internal bool	mbAreaPortal;
@@ -26,8 +26,8 @@ namespace BSPLib
 
 
 		internal bool ProcessWorldModel(List<MapBrush> list,
-			List<MapEntity> ents, PlanePool pool,
-			TexInfoPool tip, bool bVerbose, EventHandler planesChanged)
+			List<MapEntity> ents, PlanePool pool, TexInfoPool tip,
+			bool bVerbose, EventHandler planesChanged)
 		{
 			list.Reverse();
 			GBSPBrush	glist	=GBSPBrush.ConvertMapBrushList(list);

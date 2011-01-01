@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class GFXSkyData : IReadWriteable
+	public class GFXSkyData : UtilityLib.IReadWriteable
 	{
 		public Vector3	mAxis;						// Axis of rotation
 		public float	mDpm;						// Degres per minute

@@ -16,6 +16,8 @@ namespace BSPLib
 		internal UInt32		mFlags;
 
 		//Q3 style face flags
+		//found in the Q3 Radiant open source
+		//Q3 support is kind of non existant though
 		internal const UInt32	SURF_LIGHT				=0x1;		//value will hold the light strength
 		internal const UInt32	SURF_SLICK				=0x2;		//effects game physics
 		internal const UInt32	SURF_SKY				=0x4;		//don't draw, but add to skybox
@@ -41,12 +43,15 @@ namespace BSPLib
 		internal const UInt32	SURF_NODLIGHT			=0x20000;	//don't dlight even if solid (solid lava, skies)
 		internal const UInt32	SURF_DUST				=0x40000;	//leave a dust trail when walking on this surface
 
-		//smoothing stuff is also quite hackily used
+		//hammer smoothing flags found as a number in the vmfs
+		//smoothing stuff is quite hackily used
 		//as a way to pass flags
+		//just made these up
 		internal const UInt32 SMOOTHING_GOURAUD		=0x1;		//for smoothing group stuff from hammer
-		internal const UInt32 SMOOTHING_FLAT			=0x1000000;	//for smoothing group stuff from hammer
-		internal const UInt32 SMOOTHING_SURFLIGHT		=0x10000;	//turns on radiosity surface lighting
+		internal const UInt32 SMOOTHING_FLAT		=0x1000000;	//for smoothing group stuff from hammer
+		internal const UInt32 SMOOTHING_SURFLIGHT	=0x10000;	//turns on radiosity surface lighting
 
+		//flags from Genesis
 		internal const UInt32 SIDE_HINT		=(1<<0);	//Side is a hint side
 		internal const UInt32 SIDE_SHEET	=(1<<1);	//Side is a sheet (only visible face in a sheet contents)
 		internal const UInt32 SIDE_VISIBLE	=(1<<2);	// 

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace BSPLib
 {
-	public class GFXHeader : IReadWriteable
+	public class GFXHeader : UtilityLib.IReadWriteable
 	{
 		public UInt32	mTag;
 

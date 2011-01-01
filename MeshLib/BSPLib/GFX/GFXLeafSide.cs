@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BSPLib
 {
-	public class GFXLeafSide : IReadWriteable
+	public class GFXLeafSide : UtilityLib.IReadWriteable
 	{
 		public Int32	mPlaneNum;
 		public Int32	mPlaneSide;

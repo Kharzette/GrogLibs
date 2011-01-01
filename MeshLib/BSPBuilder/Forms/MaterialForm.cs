@@ -27,7 +27,6 @@ namespace BSPBuilder
 		DataGridViewCell	mEditingCell;
 
 		//events
-		public event EventHandler	eBoundsUpdated;
 		public event EventHandler	eMaterialNuked;
 		public event EventHandler	eLibraryCleared;
 
@@ -515,6 +514,8 @@ namespace BSPBuilder
 		void OnGetEmissive(object sender, EventArgs e)
 		{
 			mMatLib.AssignEmissives();
+
+			MaterialGrid.Refresh();
 		}
 	}
 }

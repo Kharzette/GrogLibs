@@ -523,6 +523,7 @@ namespace BSPBuilder
 
 			if(fileName != null)
 			{
+				mMainForm.Text	=fileName;
 				if(mMap != null)
 				{
 					//unregister old events
@@ -590,6 +591,7 @@ namespace BSPBuilder
 
 			if(fileName != null)
 			{
+				mMainForm.Text	=fileName;
 				if(mMap != null)
 				{
 					//unregister old events
@@ -619,6 +621,7 @@ namespace BSPBuilder
 
 			if(fileName != null)
 			{
+				mMainForm.Text	=fileName;
 				if(mMap != null)
 				{
 					//unregister old events
@@ -645,6 +648,7 @@ namespace BSPBuilder
 
 			if(fileName != null)
 			{
+				mMainForm.Text	=fileName;
 				if(mMap != null)
 				{
 					//unregister old events
@@ -680,6 +684,7 @@ namespace BSPBuilder
 
 			if(fileName != null)
 			{
+				mMainForm.Text	=fileName;
 				if(mMap != null)
 				{
 					//unregister old events
@@ -735,7 +740,8 @@ namespace BSPBuilder
 
 			if(fileName != null)
 			{
-				mbWorking	=true;
+				mMainForm.Text	=fileName;
+				mbWorking		=true;
 				mMainForm.EnableFileIO(false);
 				mMap.SaveGBSPFile(fileName,	mMainForm.BSPParameters);
 			}
@@ -748,6 +754,7 @@ namespace BSPBuilder
 
 			if(fileName != null)
 			{
+				mMainForm.Text	=fileName;
 				mMap.Write(fileName);
 
 				//write out the zoneDraw

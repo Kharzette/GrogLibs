@@ -84,6 +84,35 @@ namespace BSPLib
 		}
 
 
+		public static void Clear()
+		{
+			List<int>	resets	=new List<int>();
+			lock(mProgs)
+			{
+				foreach(Progress prog in mProgs)
+				{
+					resets.Add(mProgs.IndexOf(prog));
+				}
+				mProgs.Clear();
+			}
+
+			foreach(int i in resets)
+			{
+				//clear the bar for the next use
+				ProgressEventArgs	pea		=new ProgressEventArgs();
+				pea.mCurrent	=0;
+				pea.mIndex		=i;
+				pea.mMax		=0;
+				pea.mMin		=0;
+
+				if(eProgressUpdated != null)
+				{
+					eProgressUpdated(null, pea);
+				}
+			}
+		}
+
+
 		public static void UpdateProgress(object prog, int cur)
 		{
 			Progress	pr	=prog as Progress;

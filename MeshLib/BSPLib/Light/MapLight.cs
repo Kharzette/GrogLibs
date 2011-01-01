@@ -1230,15 +1230,13 @@ namespace BSPLib
 				Vector3	rgb, vert;
 				Int32	rgbOfs	=gfxFace.mFirstVert;
 
-				rgb	=mGFXRGBVerts[rgbOfs];
-
 				patch.ResetSamples();
 				for(int i=0;i < gfxFace.mNumVerts;i++)
 				{
 					Int32	k;
 
 					vert	=mGFXVerts[mGFXVertIndexes[i+gfxFace.mFirstVert]];
-
+					rgb		=mGFXRGBVerts[rgbOfs];	//bug in original genesis
 					for(k=0;k < 3;k++)
 					{
 						if(UtilityLib.Mathery.VecIdx(patch.mBounds.mMins, k)
@@ -1259,7 +1257,6 @@ namespace BSPLib
 						patch.AddSample(rgb);
 					}
 					rgbOfs++;
-					rgb	=mGFXRGBVerts[rgbOfs];
 				}
 				patch.AverageRadStart();
 			}
@@ -1285,6 +1282,7 @@ namespace BSPLib
 
 			if(bDone)
 			{
+				ProgressWatcher.Clear();
 				eLightFacesCoreDone	-=OnLightFacesCoreDone;
 				LightStageTwo(lfp);
 			}

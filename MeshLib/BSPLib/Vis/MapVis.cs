@@ -292,9 +292,18 @@ namespace BSPLib
 
 			for(int leaf=0;leaf < mGFXLeafs.Length;leaf++)
 			{
-				if(leaf % (mGFXLeafs.Length / 10) == 0)
+				int	prog	=leaf % (mGFXLeafs.Length / 10);
+				if(prog == 0)
 				{
-					Print("" + (leaf / (mGFXLeafs.Length / 10)) + ", ");
+					int	progAmt	=(leaf / (mGFXLeafs.Length / 10));
+					if(progAmt != 10)
+					{
+						Print("" + progAmt + ", ");
+					}
+					else
+					{
+						Print("" + progAmt + "\n");
+					}
 				}
 
 				int	clust	=mGFXLeafs[leaf].mCluster;
@@ -364,7 +373,7 @@ namespace BSPLib
 						|=(byte)(1 << (idx & 7));
 				}
 			}
-			Print("\n \nMaterial Vis Complete:  " + mGFXMaterialVisData.Length + " bytes.\n");
+			Print("Material Vis Complete:  " + mGFXMaterialVisData.Length + " bytes.\n");
 		}
 
 
@@ -505,6 +514,9 @@ namespace BSPLib
 			if(bDone)
 			{
 				eVisFloodSlowCoreDone	-=OnVisFloodSlowCoreDone;
+
+				ProgressWatcher.Clear();
+
 				mGFXVisData	=new byte[mVisLeafs.Length * mNumVisLeafBytes];
 				if(mGFXVisData == null)
 				{

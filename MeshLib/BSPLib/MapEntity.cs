@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	public class MapEntity : IReadWriteable
+	public class MapEntity : UtilityLib.IReadWriteable
 	{
 		List<MapBrush>	mBrushes	=new List<MapBrush>();
 

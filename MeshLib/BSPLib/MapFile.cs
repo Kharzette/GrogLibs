@@ -11,40 +11,6 @@ namespace BSPLib
 {
 	public partial class Map
 	{
-		public delegate IReadWriteable[] CreateRWArray(Int32 count);
-
-
-		void SaveArray(IReadWriteable []arr, BinaryWriter bw)
-		{
-			bw.Write(arr.Length);
-			foreach(IReadWriteable obj in arr)
-			{
-				obj.Write(bw);
-			}
-		}
-
-
-		void SaveArray(byte []arr, BinaryWriter bw)
-		{
-			bw.Write(arr.Length);
-			bw.Write(arr, 0, arr.Length);
-		}
-
-
-		object[] LoadArray(BinaryReader br, CreateRWArray crwa)
-		{
-			int	count	=br.ReadInt32();
-
-			IReadWriteable	[]arr	=crwa(count);
-
-			for(int i=0;i < count;i++)
-			{
-				arr[i].Read(br);
-			}
-			return	arr;
-		}
-
-
 		public GFXHeader LoadGBSPFile(string fileName)
 		{
 			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
@@ -67,34 +33,34 @@ namespace BSPLib
 			}
 
 			//read regular bsp crap
-			mGFXModels		=LoadArray(br, delegate(Int32 count)
+			mGFXModels		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXModel>(count); }) as GFXModel[];
-			mGFXNodes		=LoadArray(br, delegate(Int32 count)
+			mGFXNodes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXNode>(count); }) as GFXNode[];
-			mGFXLeafs		=LoadArray(br, delegate(Int32 count)
+			mGFXLeafs		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXLeaf>(count); }) as GFXLeaf[];
 
 			LoadGFXLeafFaces(br);
 
-			mGFXClusters	=LoadArray(br, delegate(Int32 count)
+			mGFXClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXCluster>(count); }) as GFXCluster[];
-			mGFXAreas		=LoadArray(br, delegate(Int32 count)
+			mGFXAreas		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXArea>(count); }) as GFXArea[];
-			mGFXAreaPortals	=LoadArray(br, delegate(Int32 count)
+			mGFXAreaPortals	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXAreaPortal>(count); }) as GFXAreaPortal[];
-			mGFXLeafSides	=LoadArray(br, delegate(Int32 count)
+			mGFXLeafSides	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXLeafSide>(count); }) as GFXLeafSide[];
-			mGFXFaces		=LoadArray(br, delegate(Int32 count)
+			mGFXFaces		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXFace>(count); }) as GFXFace[];
-			mGFXPlanes		=LoadArray(br, delegate(Int32 count)
+			mGFXPlanes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXPlane>(count); }) as GFXPlane[];
 
 			LoadGFXVerts(br);
 			LoadGFXVertIndexes(br);
 
-			mGFXTexInfos	=LoadArray(br, delegate(Int32 count)
+			mGFXTexInfos	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<GFXTexInfo>(count); }) as GFXTexInfo[];
-			mGFXEntities	=LoadArray(br, delegate(Int32 count)
+			mGFXEntities	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return InitArray<MapEntity>(count); }) as MapEntity[];
 
 			if(header.mbHasVis)
@@ -149,8 +115,6 @@ namespace BSPLib
 			sp.mFileName	=fileName;
 
 			ThreadPool.QueueUserWorkItem(ConvertGBSPToFileCB, sp);
-
-//			Print("GBSP save complete\n");
 		}
 
 

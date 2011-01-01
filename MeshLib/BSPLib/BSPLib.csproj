@@ -98,6 +98,7 @@
     <Compile Include="GBSP\GBSPFace.cs" />
     <Compile Include="GBSP\GBSPModel.cs" />
     <Compile Include="GBSP\GBSPNode.cs" />
+    <Compile Include="GBSP\GBSPNodePortalStuff.cs" />
     <Compile Include="GBSP\GBSPPlane.cs" />
     <Compile Include="GBSP\GBSPPoly.cs" />
     <Compile Include="GBSP\GBSPPortal.cs" />
@@ -114,7 +115,6 @@
     <Compile Include="GFX\GFXPlane.cs" />
     <Compile Include="GFX\GFXSkyData.cs" />
     <Compile Include="GFX\GFXTexInfo.cs" />
-    <Compile Include="IReadWriteable.cs" />
     <Compile Include="Light\DirectLight.cs" />
     <Compile Include="Light\FInfo.cs" />
     <Compile Include="Light\LInfo.cs" />

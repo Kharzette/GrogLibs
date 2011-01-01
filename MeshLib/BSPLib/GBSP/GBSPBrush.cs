@@ -1052,8 +1052,8 @@ namespace BSPLib
 		}
 
 
-		internal static void SplitBrushList(GBSPBrush listHead, Int32 nodePlaneNum, PlanePool pool,
-			out GBSPBrush front, out GBSPBrush back)
+		internal static void SplitBrushList(GBSPBrush listHead, Int32 nodePlaneNum,
+			PlanePool pool,	out GBSPBrush front, out GBSPBrush back)
 		{
 			GBSPBrush	next;
 
@@ -1110,6 +1110,7 @@ namespace BSPLib
 		}
 
 
+		//unused, but handy for debuggerizing
 		static internal void DumpBrushListToFile(GBSPBrush brushList)
 		{
 			FileStream		fs	=new FileStream("BrushSides.txt", FileMode.Create, FileAccess.Write);

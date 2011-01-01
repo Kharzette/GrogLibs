@@ -279,13 +279,16 @@ namespace BSPLib
 		}
 
 
-		internal bool Split(GBSPPlane plane, out GBSPPoly polyFront, out GBSPPoly polyBack, bool flipTest)
+		internal bool Split(GBSPPlane plane, out GBSPPoly polyFront,
+							out GBSPPoly polyBack, bool flipTest)
 		{
-			return	SplitEpsilon(UtilityLib.Mathery.ON_EPSILON, plane, out polyFront, out polyBack, flipTest);
+			return	SplitEpsilon(UtilityLib.Mathery.ON_EPSILON, plane,
+						out polyFront, out polyBack, flipTest);
 		}
 
 
-		internal bool SplitEpsilon(float epsilon, GBSPPlane plane, out GBSPPoly polyFront, out GBSPPoly polyBack, bool flipTest)
+		internal bool SplitEpsilon(float epsilon, GBSPPlane plane,
+			out GBSPPoly polyFront, out GBSPPoly polyBack, bool flipTest)
 		{
 			polyFront	=null;
 			polyBack	=null;

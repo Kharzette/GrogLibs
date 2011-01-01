@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace BSPLib
+namespace UtilityLib
 {
 	public interface IReadWriteable
 	{

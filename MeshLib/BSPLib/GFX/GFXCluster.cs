@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BSPLib
 {
-	public class GFXCluster : IReadWriteable
+	public class GFXCluster : UtilityLib.IReadWriteable
 	{
 		public Int32	mVisOfs;
 
