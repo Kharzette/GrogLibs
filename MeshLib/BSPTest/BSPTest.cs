@@ -28,6 +28,9 @@ namespace BSPTest
 
 		Vector3		mVelocity;
 		BoundingBox	mCharBox;
+		bool		mbOnGround;
+
+		const float MidAirMoveScale	=0.4f;
 
 
 		public BSPTest()
@@ -109,20 +112,30 @@ namespace BSPTest
 			//flatten movement
 			moveDelta.Y	=0;
 			mVelocity	+=moveDelta;
+
+			//if not on the ground, limit midair movement
+			if(!mbOnGround)
+			{
+				mVelocity.X	*=MidAirMoveScale;
+				mVelocity.Z	*=MidAirMoveScale;
+			}
+
 			mVelocity.Y	-=((9.8f / 1000.0f) * msDelta);	//gravity
 
 			//get ideal final position
 			endPos	=startPos + mVelocity;
 
 			//move it through the bsp
-			if(mZone.MoveBox(mCharBox, startPos, endPos, ref endPos))
+			if(mZone.BipedMoveBox(mCharBox, startPos, endPos, ref endPos))
 			{
 				//on ground, zero out velocity
 				mVelocity	=Vector3.Zero;
+				mbOnGround	=true;
 			}
 			else
 			{
 				mVelocity	=endPos - startPos;
+				mbOnGround	=false;
 			}
 
 			//bump position back to eye height

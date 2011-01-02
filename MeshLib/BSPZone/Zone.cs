@@ -40,6 +40,7 @@ namespace BSPZone
 		int	mNumVisMaterialBytes;
 
 		const float	GroundAngle	=0.8f;	//how sloped can you be to be considered ground
+		const float StepHeight	=18.0f;	//stair step height for bipeds
 
 
 		#region IO
@@ -310,9 +311,95 @@ namespace BSPZone
 		}
 
 
+		//returns true if on ground
+		//this one assumes 2 legs, so navigates stairs
+		public bool BipedMoveBox(BoundingBox box, Vector3 start,
+								Vector3 end, ref Vector3 finalPos)
+		{
+			//try the original movement with no sliding
+			Vector3		firstPos		=Vector3.Zero;
+			Vector3		originalDelta	=end - start;
+			ZonePlane	impactPlane		=new ZonePlane();
+
+			//slide forward
+			bool	bOn	=MoveBox(box, start, end, ref firstPos);
+			if(!bOn)
+			{
+				//not on the ground
+				finalPos	=firstPos;
+				return	false;
+			}
+
+			//check the delta
+			Vector3	firstDelta	=firstPos - start;
+			float	delta		=originalDelta.LengthSquared() - firstDelta.LengthSquared();
+
+			if(delta < UtilityLib.Mathery.ON_EPSILON &&
+				delta > -UtilityLib.Mathery.ON_EPSILON)
+			{
+				//close enough to original
+				finalPos	=firstPos;
+				return	true;
+			}
+
+			//try a step height up with the regular
+			//box raycast (no sliding)
+			Vector3		secondPos	=Vector3.Zero;
+			Vector3		stepPos		=Vector3.Zero;
+			if(Trace_WorldCollisionBBox(box.Min, box.Max, start, start + Vector3.Up * StepHeight, 0, ref stepPos, ref impactPlane))
+			{
+				//hit something trying to step up
+				//see if it's enough to bother with
+				if((stepPos - start).LengthSquared() < 4)
+				{
+					stepPos	=start;
+				}
+			}
+			else
+			{
+				stepPos	=start + Vector3.Up * StepHeight;
+			}
+
+			//try movement stepped
+			bOn	=MoveBox(box, stepPos, end + Vector3.Up * StepHeight, ref stepPos);
+
+			//raycast down a step height
+			if(Trace_WorldCollisionBBox(box.Min, box.Max, stepPos, stepPos - Vector3.Up * StepHeight, 0, ref stepPos, ref impactPlane))
+			{
+				if(!IsGround(impactPlane))
+				{
+					//use the non stepped movement
+					finalPos	=firstPos;
+					return	true;
+				}
+			}
+			else			
+			{
+				//no impact, stepped off into midair
+				//use the non stepped movement in this case
+				finalPos	=firstPos;
+				return	true;
+			}
+
+			Vector3	stepDelta	=stepPos - start;
+			
+			//see which went farther
+			if(firstDelta.LengthSquared() > stepDelta.LengthSquared())
+			{
+				finalPos	=firstPos;
+				return	true;
+			}
+			else
+			{
+				finalPos	=stepPos;
+				return	true;
+			}
+		}
+
+
 		//positions should be in the middle base of the box
 		//returns true if on the ground
-		public bool MoveBox(BoundingBox boxSize, Vector3 start,
+		public bool MoveBox(BoundingBox box, Vector3 start,
 							Vector3 end, ref Vector3 finalPos)
 		{
 			Vector3		impacto		=Vector3.Zero;
@@ -320,7 +407,7 @@ namespace BSPZone
 			ZonePlane	secondPHit	=new ZonePlane();
 			ZonePlane	thirdPHit	=new ZonePlane();
 
-			if(Trace_WorldCollisionBBox(boxSize.Min, boxSize.Max,
+			if(Trace_WorldCollisionBBox(box.Min, box.Max,
 				start, end, 0, ref impacto, ref firstPHit))
 			{
 				//collisions from inside out will leave
@@ -334,7 +421,7 @@ namespace BSPZone
 					end	-=(firstPHit.mNormal * dist);
 
 					//ray cast again
-					if(Trace_WorldCollisionBBox(boxSize.Min, boxSize.Max,
+					if(Trace_WorldCollisionBBox(box.Min, box.Max,
 						start, end, 0, ref impacto, ref secondPHit))
 					{
 						if(!(impacto == Vector3.Zero && secondPHit.mNormal == Vector3.Zero))
@@ -344,7 +431,7 @@ namespace BSPZone
 							end		-=(secondPHit.mNormal * dist);
 
 							//ray cast again
-							if(Trace_WorldCollisionBBox(boxSize.Min, boxSize.Max,
+							if(Trace_WorldCollisionBBox(box.Min, box.Max,
 								start, end, 0, ref impacto, ref thirdPHit))
 							{
 								if(!(impacto == Vector3.Zero && thirdPHit.mNormal == Vector3.Zero))
