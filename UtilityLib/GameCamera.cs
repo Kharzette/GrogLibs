@@ -23,6 +23,7 @@ namespace UtilityLib
 
 		KeyboardState	mLastKBS	=new KeyboardState();
 		MouseState		mLastMS		=new MouseState();
+		MouseState		mOriginalMS;
 
 		const float	CamSpeed			=0.1f;
 		const float	MouseSensitivity	=0.01f;
@@ -38,6 +39,10 @@ namespace UtilityLib
 			mYaw	=140.0f;
 			mPitch	=-10.0f;
 			mRoll	=0.0f;
+
+			//set up mouselook on right button
+			Mouse.SetPosition((int)(width / 2), (int)(height / 2));
+			mOriginalMS	=Mouse.GetState();
 
 			InitializeMats();
 		}
@@ -88,7 +93,7 @@ namespace UtilityLib
 			float	speed	=0.0f;
 			if(ks.IsKeyDown(Keys.RightShift) || ks.IsKeyDown(Keys.LeftShift))
 			{
-				speed	=CamSpeed * msDelta * 20.0f;
+				speed	=CamSpeed * msDelta * 2.0f;
 			}
 			else
 			{
@@ -114,8 +119,14 @@ namespace UtilityLib
 
 			if(ms.RightButton == ButtonState.Pressed)
 			{
-				mPitch	+=(ms.Y - mLastMS.Y) * msDelta * MouseSensitivity;
-				mYaw	+=(ms.X - mLastMS.X) * msDelta * MouseSensitivity;
+				Vector2	delta	=Vector2.Zero;
+				delta.X	=mOriginalMS.X - ms.X;
+				delta.Y	=mOriginalMS.Y - ms.Y;
+
+				Mouse.SetPosition(mOriginalMS.X, mOriginalMS.Y);
+
+				mPitch	-=(delta.Y) * msDelta * MouseSensitivity;
+				mYaw	-=(delta.X) * msDelta * MouseSensitivity;
 			}
 
 			mLastKBS	=ks;
@@ -181,7 +192,7 @@ namespace UtilityLib
 		}
 
 
-		void UpdateMatrices()
+		public void UpdateMatrices()
 		{
 			mMATView	=Matrix.CreateTranslation(mCamPos) *
 				Matrix.CreateRotationY(MathHelper.ToRadians(mYaw)) *

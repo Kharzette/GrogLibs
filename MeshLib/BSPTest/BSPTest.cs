@@ -26,9 +26,8 @@ namespace BSPTest
 		UtilityLib.GameCamera	mGameCam;
 		MaterialLib.MaterialLib	mMatLib;
 
-		Vector3	mVelocity;
-		Vector3	mBodyMins, mBodyMaxs;
-		Vector3	mStart, mEnd, mImpacto;
+		Vector3		mVelocity;
+		BoundingBox	mCharBox;
 
 
 		public BSPTest()
@@ -45,14 +44,16 @@ namespace BSPTest
 				mGDM.GraphicsDevice.Viewport.Height,
 				mGDM.GraphicsDevice.Viewport.AspectRatio);
 
-			//70, 32
-			mBodyMins	=-Vector3.UnitX * 16;
-			mBodyMins	+=-Vector3.UnitZ * 16;
-			mBodyMins	+=-Vector3.UnitY * 35;
+			//70, 32 is the general character size
 
-			mBodyMaxs	=Vector3.UnitX * 16;
-			mBodyMaxs	+=Vector3.UnitZ * 16;
-			mBodyMaxs	+=Vector3.UnitY * 35;
+			//bottom
+			mCharBox.Min	=-Vector3.UnitX * 16;
+			mCharBox.Min	+=-Vector3.UnitZ * 16;
+
+			//top
+			mCharBox.Max	=Vector3.UnitX * 16;
+			mCharBox.Max	+=Vector3.UnitZ * 16;
+			mCharBox.Max	+=Vector3.UnitY * 70;
 
 			base.Initialize();
 		}
@@ -91,42 +92,45 @@ namespace BSPTest
 
 			KeyboardState	kbs	=Keyboard.GetState();
 
+			//lower ray pos down to foot level
 			Vector3	startPos	=-mGameCam.CamPos;
+			startPos			-=Vector3.UnitY * 65.0f;
+
+			//set for a movement update (will move this eventually)
+			mGameCam.CamPos	=-startPos;
 
 			//do a movement update
 			mGameCam.Update(msDelta, kbs, Mouse.GetState());
 
-			Vector3	endPos	=-mGameCam.CamPos;
+			//use the result for the raycast
+			Vector3	endPos		=-mGameCam.CamPos;
+			Vector3	moveDelta	=endPos - startPos;
 
-			mVelocity	+=endPos - startPos;
+			//flatten movement
+			moveDelta.Y	=0;
+			mVelocity	+=moveDelta;
 			mVelocity.Y	-=((9.8f / 1000.0f) * msDelta);	//gravity
 
-			endPos	+=mVelocity;
+			//get ideal final position
+			endPos	=startPos + mVelocity;
 
-			Vector3		impacto		=Vector3.Zero;
-			ZonePlane	planeHit	=new ZonePlane();
-			if(mZone.Trace_WorldCollisionBBox(mBodyMins, mBodyMaxs,
-				startPos, endPos, 0, ref impacto, ref planeHit))
+			//move it through the bsp
+			if(mZone.MoveBox(mCharBox, startPos, endPos, ref endPos))
 			{
-				//reset velocity
+				//on ground, zero out velocity
 				mVelocity	=Vector3.Zero;
-
-				//reflect the ray's energy
-				float	dist	=planeHit.DistanceFast(endPos);
-
-				//push out of the plane
-				endPos	+=(planeHit.mNormal * dist);
-
-				//ray cast again
-				if(mZone.Trace_WorldCollisionBBox(mBodyMins, mBodyMaxs,
-					startPos, endPos, 0, ref impacto, ref planeHit))
-				{
-					//just use second impact point
-					endPos	=impacto;
-				}
+			}
+			else
+			{
+				mVelocity	=endPos - startPos;
 			}
 
+			//bump position back to eye height
+			endPos			+=Vector3.UnitY * 65.0f;
 			mGameCam.CamPos	=-endPos;
+
+			mGameCam.UpdateMatrices();
+
 			/*
 			if(kbs.IsKeyDown(Keys.O))
 			{

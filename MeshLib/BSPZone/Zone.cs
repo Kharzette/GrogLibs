@@ -39,6 +39,8 @@ namespace BSPZone
 		int	mNumVisLeafBytes;
 		int	mNumVisMaterialBytes;
 
+		const float	GroundAngle	=0.8f;	//how sloped can you be to be considered ground
+
 
 		#region IO
 		void WritePlaneArray(BinaryWriter bw)
@@ -141,23 +143,7 @@ namespace BSPZone
 		#endregion
 
 
-		public bool IsMaterialVisibleFromPos(Vector3 pos, int matIndex)
-		{
-			if(mZoneNodes == null)
-			{
-				return	true;	//no map data
-			}
-			Int32	node	=FindNodeLandedIn(0, pos);
-			if(node > 0)
-			{
-				return	true;	//in solid space
-			}
-
-			Int32	leaf	=-(node + 1);
-			return	IsMaterialVisible(leaf, matIndex);
-		}
-
-
+		#region Entity Related
 		public Vector3 GetPlayerStartPos()
 		{
 			foreach(ZoneEntity e in mZoneEntities)
@@ -231,8 +217,10 @@ namespace BSPZone
 			}
 			return	positions;
 		}
+		#endregion
 
 
+		#region Ray Casts and Movement
 		bool RayIntersect(Vector3 start, Vector3 end, Int32 node,
 			ref Vector3 intersectionPoint, ref bool hitLeaf,
 			ref Int32 leafHit, ref Int32 nodeHit)
@@ -316,6 +304,127 @@ namespace BSPZone
 		}
 
 
+		bool IsGround(ZonePlane p)
+		{
+			return	(Vector3.Dot(p.mNormal, Vector3.UnitY) > GroundAngle);
+		}
+
+
+		//positions should be in the middle base of the box
+		//returns true if on the ground
+		public bool MoveBox(BoundingBox boxSize, Vector3 start,
+							Vector3 end, ref Vector3 finalPos)
+		{
+			Vector3		impacto		=Vector3.Zero;
+			ZonePlane	firstPHit	=new ZonePlane();
+			ZonePlane	secondPHit	=new ZonePlane();
+			ZonePlane	thirdPHit	=new ZonePlane();
+
+			if(Trace_WorldCollisionBBox(boxSize.Min, boxSize.Max,
+				start, end, 0, ref impacto, ref firstPHit))
+			{
+				//collisions from inside out will leave
+				//an empty plane and impact
+				if(!(impacto == Vector3.Zero && firstPHit.mNormal == Vector3.Zero))
+				{
+					//reflect the ray's energy
+					float	dist	=firstPHit.DistanceFast(end);
+
+					//push out of the plane
+					end	-=(firstPHit.mNormal * dist);
+
+					//ray cast again
+					if(Trace_WorldCollisionBBox(boxSize.Min, boxSize.Max,
+						start, end, 0, ref impacto, ref secondPHit))
+					{
+						if(!(impacto == Vector3.Zero && secondPHit.mNormal == Vector3.Zero))
+						{
+							//push out of second plane
+							dist	=secondPHit.DistanceFast(end);
+							end		-=(secondPHit.mNormal * dist);
+
+							//ray cast again
+							if(Trace_WorldCollisionBBox(boxSize.Min, boxSize.Max,
+								start, end, 0, ref impacto, ref thirdPHit))
+							{
+								if(!(impacto == Vector3.Zero && thirdPHit.mNormal == Vector3.Zero))
+								{
+									//just use impact point
+									end	=impacto;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			finalPos	=end;
+
+			//check for a floorish plane
+			if(IsGround(firstPHit) || IsGround(secondPHit) || IsGround(thirdPHit))
+			{
+				return	true;
+			}
+			return	false;
+		}
+
+
+		Int32 FindNodeLandedIn(Int32 node, Vector3 pos)
+		{
+			float		Dist1;
+			ZoneNode	pNode;
+			Int32		Side;
+
+			if(node < 0)		// At leaf, no more recursing
+			{
+				return	node;
+			}
+
+			pNode	=mZoneNodes[node];
+			
+			//Get the distance that the eye is from this plane
+			Dist1	=mZonePlanes[pNode.mPlaneNum].DistanceFast(pos);
+
+			if(Dist1 < 0)
+			{
+				Side	=1;
+			}
+			else
+			{
+				Side	=0;
+			}
+			
+			//Go down the side we are on first, then the other side
+			Int32	ret	=0;
+			ret	=FindNodeLandedIn(pNode.mChildren[Side], pos);
+			if(ret < 0)
+			{
+				return	ret;
+			}
+			ret	=FindNodeLandedIn(pNode.mChildren[(Side == 0)? 1 : 0], pos);
+			return	ret;
+		}
+		#endregion
+
+
+		#region Vis Stuff
+		public bool IsMaterialVisibleFromPos(Vector3 pos, int matIndex)
+		{
+			if(mZoneNodes == null)
+			{
+				return	true;	//no map data
+			}
+			Int32	node	=FindNodeLandedIn(0, pos);
+			if(node > 0)
+			{
+				return	true;	//in solid space
+			}
+
+			Int32	leaf	=-(node + 1);
+			return	IsMaterialVisible(leaf, matIndex);
+		}
+
+
 		public bool IsVisibleFrom(Vector3 posA, Vector3 posB)
 		{
 			Int32	posANode	=FindNodeLandedIn(0, posA);
@@ -355,12 +464,6 @@ namespace BSPZone
 		}
 
 
-		public ZonePlane GetNodePlane(int node)
-		{
-			return	mZonePlanes[mZoneNodes[node].mPlaneNum];
-		}
-
-
 		bool IsMaterialVisible(int leaf, int matIndex)
 		{
 			if(mZoneLeafs == null)
@@ -386,43 +489,6 @@ namespace BSPZone
 		}
 
 
-		Int32 FindNodeLandedIn(Int32 node, Vector3 pos)
-		{
-			float		Dist1;
-			ZoneNode	pNode;
-			Int32		Side;
-
-			if(node < 0)		// At leaf, no more recursing
-			{
-				return	node;
-			}
-
-			pNode	=mZoneNodes[node];
-			
-			//Get the distance that the eye is from this plane
-			Dist1	=mZonePlanes[pNode.mPlaneNum].DistanceFast(pos);
-
-			if(Dist1 < 0)
-			{
-				Side	=1;
-			}
-			else
-			{
-				Side	=0;
-			}
-			
-			//Go down the side we are on first, then the other side
-			Int32	ret	=0;
-			ret	=FindNodeLandedIn(pNode.mChildren[Side], pos);
-			if(ret < 0)
-			{
-				return	ret;
-			}
-			ret	=FindNodeLandedIn(pNode.mChildren[(Side == 0)? 1 : 0], pos);
-			return	ret;
-		}
-
-
 		void FindParents_r(Int32 Node, Int32 Parent)
 		{
 			if(Node < 0)		// At a leaf, mark leaf parent and return
@@ -438,5 +504,6 @@ namespace BSPZone
 			FindParents_r(mZoneNodes[Node].mChildren[0], Node);
 			FindParents_r(mZoneNodes[Node].mChildren[1], Node);
 		}
+		#endregion
 	}
 }
