@@ -15,12 +15,9 @@ namespace MeshLib
 		//GPU stuff
 		VertexBuffer		mLMVB, mVLitVB, mLMAnimVB, mAlphaVB, mSkyVB;
 		VertexBuffer		mFBVB, mMirrorVB, mLMAVB, mLMAAnimVB;
-		VertexDeclaration	mLMVD, mVLitVD, mLMAnimVD, mAlphaVD, mSkyVD;
-		VertexDeclaration	mFBVD, mMirrorVD, mLMAVD, mLMAAnimVD;
 		IndexBuffer			mLMIB, mVLitIB, mLMAnimIB, mAlphaIB;
 		IndexBuffer			mSkyIB, mFBIB, mMirrorIB, mLMAIB, mLMAAnimIB;
 		RenderTarget2D		mMirrorRenderTarget;
-		Texture2D			mMirrorTexture;
 
 		//material library reference
 		MaterialLib.MaterialLib	mMatLib;
@@ -70,7 +67,6 @@ namespace MeshLib
 			//lightmap stuff
 			out VertexBuffer lmVB,
 			out IndexBuffer lmIB,
-			out VertexDeclaration lmVD,
 			out Int32 []matOffsets,
 			out Int32 []matNumVerts,
 			out Int32 []matNumTris,
@@ -78,7 +74,6 @@ namespace MeshLib
 			//animated lightmap stuff
 			out VertexBuffer lmAnimVB,
 			out IndexBuffer lmAnimIB,
-			out VertexDeclaration lmAnimVD,
 			out Int32 []matAnimOffsets,
 			out Int32 []matAnimNumVerts,
 			out Int32 []matAnimNumTris,
@@ -86,7 +81,6 @@ namespace MeshLib
 			//lightmapped alpha stuff
 			out VertexBuffer lmaVB,
 			out IndexBuffer lmaIB,
-			out VertexDeclaration lmaVD,
 			out Int32 []amatOffsets,
 			out Int32 []amatNumVerts,
 			out Int32 []amatNumTris,
@@ -95,7 +89,6 @@ namespace MeshLib
 			//animated alpha lightmap stuff
 			out VertexBuffer lmaAnimVB,
 			out IndexBuffer lmaAnimIB,
-			out VertexDeclaration lmaAnimVD,
 			out Int32 []amatAnimOffsets,
 			out Int32 []amatAnimNumVerts,
 			out Int32 []amatAnimNumTris,
@@ -105,24 +98,24 @@ namespace MeshLib
 			out MaterialLib.TexAtlas lightAtlas);
 
 		public delegate void BuildVLitRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out IndexBuffer ib, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris);
 
 		public delegate void BuildAlphaRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out IndexBuffer ib, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris, out Vector3 []matSortPoints);
 
 		public delegate void BuildFullBrightRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out IndexBuffer ib, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris);
 
 		public delegate void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out IndexBuffer ib, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris,
 			out Vector3 []matSortPoints, out List<List<Vector3>> mirrorPolys);
 
 		public delegate void BuildSkyRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out IndexBuffer ib, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris);
 		#endregion
 
@@ -131,9 +124,10 @@ namespace MeshLib
 		{
 			mMatLib	=matLib;
 
-			mMirrorRenderTarget	=new RenderTarget2D(gd, 256, 256, 1,
+			mMirrorRenderTarget	=new RenderTarget2D(gd, 256, 256, false,
 				gd.PresentationParameters.BackBufferFormat,
-				RenderTargetUsage.DiscardContents);
+				gd.PresentationParameters.DepthStencilFormat,
+				0, RenderTargetUsage.DiscardContents);
 
 			//Quake1 styled lights 'a' is total darkness, 'z' is maxbright.
 			//0 normal
@@ -195,12 +189,12 @@ namespace MeshLib
 
 		public void BuildLM(GraphicsDevice g, int atlasSize, BuildLMRenderData brd)
 		{
-			brd(g, out mLMVB, out mLMIB, out mLMVD, out mLMMatOffsets, out mLMMatNumVerts,
-				out mLMMatNumTris, out mLMAnimVB, out mLMAnimIB, out mLMAnimVD,
+			brd(g, out mLMVB, out mLMIB, out mLMMatOffsets, out mLMMatNumVerts,
+				out mLMMatNumTris, out mLMAnimVB, out mLMAnimIB,
 				out mLMAnimMatOffsets, out mLMAnimMatNumVerts, out mLMAnimMatNumTris,
-				out mLMAVB, out mLMAIB, out mLMAVD, out mLMAMatOffsets, out mLMAMatNumVerts,
+				out mLMAVB, out mLMAIB, out mLMAMatOffsets, out mLMAMatNumVerts,
 				out mLMAMatNumTris, out mLMASortPoints, out mLMAAnimVB, out mLMAAnimIB,
-				out mLMAAnimVD, out mLMAAnimMatOffsets, out mLMAAnimMatNumVerts,
+				out mLMAAnimMatOffsets, out mLMAAnimMatNumVerts,
 				out mLMAAnimMatNumTris, out mLMAAnimSortPoints, atlasSize, out mLightMapAtlas);
 
 			if(mLightMapAtlas != null)
@@ -213,39 +207,36 @@ namespace MeshLib
 
 		public void BuildVLit(GraphicsDevice g, BuildVLitRenderData brd)
 		{
-			brd(g, out mVLitVB, out mVLitIB,
-						out mVLitVD, out mVLitMatOffsets, out mVLitMatNumVerts,
-						out mVLitMatNumTris);
+			brd(g, out mVLitVB, out mVLitIB, out mVLitMatOffsets,
+						out mVLitMatNumVerts, out mVLitMatNumTris);
 		}
 
 
 		public void BuildAlpha(GraphicsDevice g, BuildAlphaRenderData brd)
 		{
-			brd(g, out mAlphaVB, out mAlphaIB, out mAlphaVD,
-						out mAlphaMatOffsets, out mAlphaMatNumVerts,
-						out mAlphaMatNumTris, out mAlphaSortPoints);
+			brd(g, out mAlphaVB, out mAlphaIB, out mAlphaMatOffsets,
+					out mAlphaMatNumVerts, out mAlphaMatNumTris, out mAlphaSortPoints);
 		}
 
 
 		public void BuildFullBright(GraphicsDevice g, BuildFullBrightRenderData brd)
 		{
-			brd(g, out mFBVB, out mFBIB, out mFBVD,
-						out mFBMatOffsets, out mFBMatNumVerts, out mFBMatNumTris);
+			brd(g, out mFBVB, out mFBIB, out mFBMatOffsets,
+					out mFBMatNumVerts, out mFBMatNumTris);
 		}
 
 
 		public void BuildMirror(GraphicsDevice g, BuildMirrorRenderData brd)
 		{
-			brd(g, out mMirrorVB, out mMirrorIB, out mMirrorVD,
-						out mMirrorMatOffsets, out mMirrorMatNumVerts,
+			brd(g, out mMirrorVB, out mMirrorIB, out mMirrorMatOffsets, out mMirrorMatNumVerts,
 						out mMirrorMatNumTris, out mMirrorSortPoints, out mMirrorPolys);
 		}
 
 
 		public void BuildSky(GraphicsDevice g, BuildSkyRenderData brd)
 		{
-			brd(g, out mSkyVB, out mSkyIB, out mSkyVD,
-						out mSkyMatOffsets, out mSkyMatNumVerts, out mSkyMatNumTris);
+			brd(g, out mSkyVB, out mSkyIB, out mSkyMatOffsets,
+					out mSkyMatNumVerts, out mSkyMatNumTris);
 		}
 
 
@@ -268,33 +259,31 @@ namespace MeshLib
 			{
 				mMatLib.UpdateWVP(gameCam.World, mirrorMats[i], gameCam.Projection, mirrorCenters[i]);
 
-				gd.SetRenderTarget(0, mMirrorRenderTarget);
+				gd.SetRenderTarget(mMirrorRenderTarget);
 //				g.Clear(Color.CornflowerBlue);
 
 				//render world
-				DrawMaterials(gd, -gameCam.CamPos, mFBVB, mFBIB, mFBVD, mFBMatOffsets, mFBMatNumVerts, mFBMatNumTris, false, null, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mVLitVB, mVLitIB, mVLitVD, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mSkyVB, mSkyIB, mSkyVD, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mLMVB, mLMIB, mLMVD, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mLMAnimVB, mLMAnimIB, mLMAnimVD, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
+				DrawMaterials(gd, -gameCam.CamPos, mFBVB, mFBIB, mFBMatOffsets, mFBMatNumVerts, mFBMatNumTris, false, null, bMatVis);
+				DrawMaterials(gd, -gameCam.CamPos, mVLitVB, mVLitIB, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null, bMatVis);
+				DrawMaterials(gd, -gameCam.CamPos, mSkyVB, mSkyIB, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
+				DrawMaterials(gd, -gameCam.CamPos, mLMVB, mLMIB, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null, bMatVis);
+				DrawMaterials(gd, -gameCam.CamPos, mLMAnimVB, mLMAnimIB, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
 #if false
-				DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, false, mAlphaSortPoints, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints, bMatVis);
+				DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, false, mAlphaSortPoints, bMatVis);
+				DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints, bMatVis);
+				DrawMaterials(gd, -gameCam.CamPos, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints, bMatVis);
 #else
-				DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, true, mAlphaSortPoints, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints, bMatVis);
+				DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, true, mAlphaSortPoints, bMatVis);
+				DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints, bMatVis);
+				DrawMaterials(gd, -gameCam.CamPos, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints, bMatVis);
 				mAlphaPool.DrawAll(gd, mMatLib, -gameCam.CamPos);
 #endif
 			}
 
 			if(scissors.Count > 0)
 			{
-				gd.SetRenderTarget(0, null);
-
-				mMirrorTexture	=mMirrorRenderTarget.GetTexture();
-				mMatLib.AddMap("MirrorTexture", mMirrorTexture);
+				gd.SetRenderTarget(null);
+				mMatLib.AddMap("MirrorTexture", mMirrorRenderTarget);
 
 				//reset matrices
 				mMatLib.UpdateWVP(gameCam.World, gameCam.View, gameCam.Projection, -gameCam.CamPos);
@@ -302,27 +291,27 @@ namespace MeshLib
 
 			gd.Clear(Color.CornflowerBlue);
 
-			DrawMaterials(gd, -gameCam.CamPos, mFBVB, mFBIB, mFBVD, mFBMatOffsets, mFBMatNumVerts, mFBMatNumTris, false, null, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mVLitVB, mVLitIB, mVLitVD, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mSkyVB, mSkyIB, mSkyVD, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mLMVB, mLMIB, mLMVD, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mLMAnimVB, mLMAnimIB, mLMAnimVD, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -gameCam.CamPos, mFBVB, mFBIB, mFBMatOffsets, mFBMatNumVerts, mFBMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -gameCam.CamPos, mVLitVB, mVLitIB, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -gameCam.CamPos, mSkyVB, mSkyIB, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -gameCam.CamPos, mLMVB, mLMIB, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -gameCam.CamPos, mLMAnimVB, mLMAnimIB, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
 
 			//alphas
 #if false
 			//draw immediately for pix
-			DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, false, mAlphaSortPoints, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints, bMatVis);
+			DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, false, mAlphaSortPoints, bMatVis);
+			DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints, bMatVis);
+			DrawMaterials(gd, -gameCam.CamPos, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints, bMatVis);
 #else
 			//pix freaks out about the alpha sorting
-			DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaVD, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, true, mAlphaSortPoints, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAVD, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mLMAAnimVB, mLMAAnimIB, mLMAAnimVD, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints, bMatVis);
+			DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, true, mAlphaSortPoints, bMatVis);
+			DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints, bMatVis);
+			DrawMaterials(gd, -gameCam.CamPos, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints, bMatVis);
 			if(scissors.Count > 0)
 			{
 				//draw mirror surface itself
-				DrawMaterials(gd, -gameCam.CamPos, mMirrorVB, mMirrorIB, mMirrorVD, mMirrorMatOffsets, mMirrorMatNumVerts, mMirrorMatNumTris, true, mMirrorSortPoints, bMatVis);
+				DrawMaterials(gd, -gameCam.CamPos, mMirrorVB, mMirrorIB, mMirrorMatOffsets, mMirrorMatNumVerts, mMirrorMatNumTris, true, mMirrorSortPoints, bMatVis);
 			}
 
 			mAlphaPool.DrawAll(gd, mMatLib, -gameCam.CamPos);
@@ -331,7 +320,7 @@ namespace MeshLib
 
 
 		void DrawMaterials(GraphicsDevice g, Vector3 eyePos,
-			VertexBuffer vb, IndexBuffer ib, VertexDeclaration vd,
+			VertexBuffer vb, IndexBuffer ib,
 			Int32 []offsets, Int32 []numVerts, Int32 []numTris,
 			bool bAlpha, Vector3 []sortPoints, IsMaterialVisible bMatVis)
 		{
@@ -342,8 +331,7 @@ namespace MeshLib
 
 			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
 
-			g.VertexDeclaration	=vd;
-			g.Vertices[0].SetSource(vb, 0, vd.GetVertexStrideSize(0));
+			g.SetVertexBuffer(vb);
 			g.Indices	=ib;
 
 			int	idx	=0;
@@ -370,7 +358,7 @@ namespace MeshLib
 				if(bAlpha)
 				{
 					mAlphaPool.StoreDraw(sortPoints[idx], mat.Value,
-						vb, ib, vd, 0, 0, numVerts[idx],
+						vb, ib, 0, 0, numVerts[idx],
 						offsets[idx], numTris[idx]);
 					idx++;
 					continue;
@@ -383,23 +371,13 @@ namespace MeshLib
 				//this could also get crushingly slow
 				mat.Value.ApplyRenderStates(g);
 
-				fx.CommitChanges();
+				fx.CurrentTechnique.Passes[0].Apply();
 
-				fx.Begin();
-				foreach(EffectPass pass in fx.CurrentTechnique.Passes)
-				{
-					pass.Begin();
-
-					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-						0, 0,
-						numVerts[idx],
-						offsets[idx],
-						numTris[idx]);
-
-					pass.End();
-				}
-				fx.End();
-
+				g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+					0, 0,
+					numVerts[idx],
+					offsets[idx],
+					numTris[idx]);
 				idx++;
 			}
 		}
@@ -566,8 +544,7 @@ namespace MeshLib
 
 		public void Read(GraphicsDevice g, string fileName, bool bEditor)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.Open, FileAccess.Read);
+			Stream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
 
 			BinaryReader	br	=new BinaryReader(file);
 
@@ -589,7 +566,6 @@ namespace MeshLib
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mLMVB, numVerts, typeIdx, bEditor);
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMIB, g, bEditor);
-				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mLMVD, g);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -598,7 +574,6 @@ namespace MeshLib
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mVLitVB, numVerts, typeIdx, bEditor);
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mVLitIB, g, bEditor);
-				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mVLitVD, g);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -607,7 +582,6 @@ namespace MeshLib
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mLMAnimVB, numVerts, typeIdx, bEditor);
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAnimIB, g, bEditor);
-				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mLMAnimVD, g);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -616,7 +590,6 @@ namespace MeshLib
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mAlphaVB, numVerts, typeIdx, bEditor);
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mAlphaIB, g, bEditor);
-				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mAlphaVD, g);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -625,7 +598,6 @@ namespace MeshLib
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mSkyVB, numVerts, typeIdx, bEditor);
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mSkyIB, g, bEditor);
-				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mSkyVD, g);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -634,7 +606,6 @@ namespace MeshLib
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mFBVB, numVerts, typeIdx, bEditor);
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mFBIB, g, bEditor);
-				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mFBVD, g);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -643,7 +614,6 @@ namespace MeshLib
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mMirrorVB, numVerts, typeIdx, bEditor);
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mMirrorIB, g, bEditor);
-				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mMirrorVD, g);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -652,7 +622,6 @@ namespace MeshLib
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mLMAVB, numVerts, typeIdx, bEditor);
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAIB, g, bEditor);
-				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mLMAVD, g);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -661,7 +630,6 @@ namespace MeshLib
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mLMAAnimVB, numVerts, typeIdx, bEditor);
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAAnimIB, g, bEditor);
-				UtilityLib.FileUtil.ReadVertexDeclaration(br, out mLMAAnimVD, g);
 			}
 
 			mLMMatOffsets		=UtilityLib.FileUtil.ReadIntArray(br);
@@ -716,8 +684,7 @@ namespace MeshLib
 
 		public void Write(string fileName)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.OpenOrCreate, FileAccess.Write);
+			FileStream	file	=new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
@@ -731,14 +698,12 @@ namespace MeshLib
 			}
 			else
 			{
-				int	numVerts	=mLMVB.SizeInBytes / mLMVD.GetVertexStrideSize(0);
-				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mLMVD);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mLMVB.VertexDeclaration);
 
-				bw.Write(numVerts);
+				bw.Write(mLMVB.VertexCount);
 				bw.Write(typeIdx);
-				MeshLib.VertexTypes.WriteVerts(bw, mLMVB, numVerts, typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mLMVB, typeIdx);
 				UtilityLib.FileUtil.WriteIndexBuffer(bw, mLMIB);
-				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mLMVD);
 			}
 
 			if(mVLitVB == null)
@@ -747,13 +712,11 @@ namespace MeshLib
 			}
 			else
 			{
-				int	numVerts	=mVLitVB.SizeInBytes / mVLitVD.GetVertexStrideSize(0);
-				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mVLitVD);
-				bw.Write(numVerts);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mVLitVB.VertexDeclaration);
+				bw.Write(mVLitVB.VertexCount);
 				bw.Write(typeIdx);
-				MeshLib.VertexTypes.WriteVerts(bw, mVLitVB, numVerts, typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mVLitVB, typeIdx);
 				UtilityLib.FileUtil.WriteIndexBuffer(bw, mVLitIB);
-				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mVLitVD);
 			}
 
 			if(mLMAnimVB == null)
@@ -762,13 +725,11 @@ namespace MeshLib
 			}
 			else
 			{
-				int	numVerts	=mLMAnimVB.SizeInBytes / mLMAnimVD.GetVertexStrideSize(0);
-				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mLMAnimVD);
-				bw.Write(numVerts);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mLMAnimVB.VertexDeclaration);
+				bw.Write(mLMAnimVB.VertexCount);
 				bw.Write(typeIdx);
-				MeshLib.VertexTypes.WriteVerts(bw, mLMAnimVB, numVerts, typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mLMAnimVB, typeIdx);
 				UtilityLib.FileUtil.WriteIndexBuffer(bw, mLMAnimIB);
-				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mLMAnimVD);
 			}
 
 			if(mAlphaVB == null)
@@ -777,13 +738,11 @@ namespace MeshLib
 			}
 			else
 			{
-				int	numVerts	=mAlphaVB.SizeInBytes / mAlphaVD.GetVertexStrideSize(0);
-				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mAlphaVD);
-				bw.Write(numVerts);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mAlphaVB.VertexDeclaration);
+				bw.Write(mAlphaVB.VertexCount);
 				bw.Write(typeIdx);
-				MeshLib.VertexTypes.WriteVerts(bw, mAlphaVB, numVerts, typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mAlphaVB, typeIdx);
 				UtilityLib.FileUtil.WriteIndexBuffer(bw, mAlphaIB);
-				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mAlphaVD);
 			}
 
 			if(mSkyVB == null)
@@ -792,13 +751,11 @@ namespace MeshLib
 			}
 			else
 			{
-				int	numVerts	=mSkyVB.SizeInBytes / mSkyVD.GetVertexStrideSize(0);
-				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mSkyVD);
-				bw.Write(numVerts);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mSkyVB.VertexDeclaration);
+				bw.Write(mSkyVB.VertexCount);
 				bw.Write(typeIdx);
-				MeshLib.VertexTypes.WriteVerts(bw, mSkyVB, numVerts, typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mSkyVB, typeIdx);
 				UtilityLib.FileUtil.WriteIndexBuffer(bw, mSkyIB);
-				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mSkyVD);
 			}
 
 			if(mFBVB == null)
@@ -807,13 +764,11 @@ namespace MeshLib
 			}
 			else
 			{
-				int	numVerts	=mFBVB.SizeInBytes / mFBVD.GetVertexStrideSize(0);
-				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mFBVD);
-				bw.Write(numVerts);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mFBVB.VertexDeclaration);
+				bw.Write(mFBVB.VertexCount);
 				bw.Write(typeIdx);
-				MeshLib.VertexTypes.WriteVerts(bw, mFBVB, numVerts, typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mFBVB, typeIdx);
 				UtilityLib.FileUtil.WriteIndexBuffer(bw, mFBIB);
-				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mFBVD);
 			}
 
 			if(mMirrorVB == null)
@@ -822,13 +777,11 @@ namespace MeshLib
 			}
 			else
 			{
-				int	numVerts	=mMirrorVB.SizeInBytes / mMirrorVD.GetVertexStrideSize(0);
-				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mMirrorVD);
-				bw.Write(numVerts);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mMirrorVB.VertexDeclaration);
+				bw.Write(mMirrorVB.VertexCount);
 				bw.Write(typeIdx);
-				MeshLib.VertexTypes.WriteVerts(bw, mMirrorVB, numVerts, typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mMirrorVB, typeIdx);
 				UtilityLib.FileUtil.WriteIndexBuffer(bw, mMirrorIB);
-				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mMirrorVD);
 			}
 
 			if(mLMAVB == null)
@@ -837,13 +790,11 @@ namespace MeshLib
 			}
 			else
 			{
-				int	numVerts	=mLMAVB.SizeInBytes / mLMAVD.GetVertexStrideSize(0);
-				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mLMAVD);
-				bw.Write(numVerts);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mLMAVB.VertexDeclaration);
+				bw.Write(mLMAVB.VertexCount);
 				bw.Write(typeIdx);
-				MeshLib.VertexTypes.WriteVerts(bw, mLMAVB, numVerts, typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mLMAVB, typeIdx);
 				UtilityLib.FileUtil.WriteIndexBuffer(bw, mLMAIB);
-				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mLMAVD);
 			}
 
 			if(mLMAAnimVB == null)
@@ -852,13 +803,11 @@ namespace MeshLib
 			}
 			else
 			{
-				int	numVerts	=mLMAAnimVB.SizeInBytes / mLMAAnimVD.GetVertexStrideSize(0);
-				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mLMAAnimVD);
-				bw.Write(numVerts);
+				int	typeIdx		=MeshLib.VertexTypes.GetIndexForVertexDeclaration(mLMAAnimVB.VertexDeclaration);
+				bw.Write(mLMAAnimVB.VertexCount);
 				bw.Write(typeIdx);
-				MeshLib.VertexTypes.WriteVerts(bw, mLMAAnimVB, numVerts, typeIdx);
+				MeshLib.VertexTypes.WriteVerts(bw, mLMAAnimVB, typeIdx);
 				UtilityLib.FileUtil.WriteIndexBuffer(bw, mLMAAnimIB);
-				UtilityLib.FileUtil.WriteVertexDeclaration(bw, mLMAAnimVD);
 			}
 
 			//material offsets

@@ -13,7 +13,8 @@ namespace BSPLib
 	//grind up a map into gpu friendly data
 	public class MapGrinder
 	{
-		GraphicsDevice	mGD;
+		GraphicsDevice			mGD;
+		MaterialLib.MaterialLib	mMatLib;
 
 		//vertex declarations
 		VertexDeclaration	mLMVD, mVLitVD, mFBVD, mAlphaVD;
@@ -160,6 +161,7 @@ namespace BSPLib
 			mTexInfos		=texs;
 			mLightGridSize	=lightGridSize;
 			mFaces			=faces;
+			mMatLib			=new MaterialLib.MaterialLib();
 
 			if(gd != null)
 			{
@@ -181,24 +183,24 @@ namespace BSPLib
 
 			//make vertex declarations
 			//lightmapped
-			mLMVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormTex0Tex1));
+			mLMVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Tex1));
 
 			//lightmapped alpha
-			mLMAVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormTex0Tex1Col0));
+			mLMAVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Tex1Col0));
 
 			//vertex lit, alpha, and mirror
-			mVLitVD		=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormTex0Col0));
-			mAlphaVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormTex0Col0));
-			mMirrorVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormTex0Col0));
+			mVLitVD		=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Col0));
+			mAlphaVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Col0));
+			mMirrorVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Col0));
 
 			//animated lightmapped, and alpha as well
 			//alpha is stored in the style vector4
-			mLMAnimVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormBlendTex0Tex1Tex2Tex3Tex4));
-			mLMAAnimVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosNormBlendTex0Tex1Tex2Tex3Tex4));
+			mLMAnimVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormBlendTex0Tex1Tex2Tex3Tex4));
+			mLMAAnimVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormBlendTex0Tex1Tex2Tex3Tex4));
 
 			//FullBright and sky
-			mFBVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosTex0));
-			mSkyVD	=VertexTypes.GetVertexDeclarationForType(gd, typeof(VPosTex0));
+			mFBVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosTex0));
+			mSkyVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosTex0));
 		}
 
 
@@ -295,13 +297,12 @@ namespace BSPLib
 		}
 
 
-		internal void GetLMBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
+		internal void GetLMBuffers(out VertexBuffer vb, out IndexBuffer ib)
 		{
 			if(mLMVerts.Count == 0)
 			{
 				vb	=null;
 				ib	=null;
-				vd	=null;
 				return;
 			}
 
@@ -314,23 +315,20 @@ namespace BSPLib
 				varray[i].Normal	=mLMNormals[i];
 			}
 
-			vd	=mLMVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
+			vb	=new VertexBuffer(mGD, mLMVD, varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormTex0Tex1>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mLMIndexes.Count, BufferUsage.None,
-					IndexElementSize.ThirtyTwoBits);
+			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mLMIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mLMIndexes.ToArray());
 		}
 
 
-		internal void GetLMABuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
+		internal void GetLMABuffers(out VertexBuffer vb, out IndexBuffer ib)
 		{
 			if(mLMAVerts.Count == 0)
 			{
 				vb	=null;
 				ib	=null;
-				vd	=null;
 				return;
 			}
 
@@ -345,23 +343,20 @@ namespace BSPLib
 				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
 			}
 
-			vd	=mLMAVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
+			vb	=new VertexBuffer(mGD, mLMAVD, varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormTex0Tex1Col0>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mLMAIndexes.Count, BufferUsage.None,
-					IndexElementSize.ThirtyTwoBits);
+			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mLMAIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mLMAIndexes.ToArray());
 		}
 
 
-		internal void GetVLitBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
+		internal void GetVLitBuffers(out VertexBuffer vb, out IndexBuffer ib)
 		{
 			if(mVLitVerts.Count == 0)
 			{
 				vb	=null;
 				ib	=null;
-				vd	=null;
 				return;
 			}
 
@@ -374,23 +369,20 @@ namespace BSPLib
 				varray[i].Color0	=mVLitColors[i];
 			}
 
-			vd	=mVLitVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
+			vb	=new VertexBuffer(mGD, mVLitVD, varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormTex0Col0>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mVLitIndexes.Count, BufferUsage.None,
-					IndexElementSize.ThirtyTwoBits);
+			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mVLitIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mVLitIndexes.ToArray());
 		}
 
 
-		internal void GetAlphaBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
+		internal void GetAlphaBuffers(out VertexBuffer vb, out IndexBuffer ib)
 		{
 			if(mAlphaVerts.Count == 0)
 			{
 				vb	=null;
 				ib	=null;
-				vd	=null;
 				return;
 			}
 
@@ -404,23 +396,20 @@ namespace BSPLib
 				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
 			}
 
-			vd	=mAlphaVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
+			vb	=new VertexBuffer(mGD, mAlphaVD, varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormTex0Col0>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mAlphaIndexes.Count, BufferUsage.None,
-					IndexElementSize.ThirtyTwoBits);
+			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mAlphaIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mAlphaIndexes.ToArray());
 		}
 
 
-		internal void GetFullBrightBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
+		internal void GetFullBrightBuffers(out VertexBuffer vb, out IndexBuffer ib)
 		{
 			if(mFBVerts.Count == 0)
 			{
 				vb	=null;
 				ib	=null;
-				vd	=null;
 				return;
 			}
 
@@ -431,23 +420,20 @@ namespace BSPLib
 				varray[i].TexCoord0	=mFBTex0[i];
 			}
 
-			vd	=mFBVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
+			vb	=new VertexBuffer(mGD, mFBVD, varray.Length, BufferUsage.None);
 			vb.SetData<VPosTex0>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mFBIndexes.Count, BufferUsage.None,
-					IndexElementSize.ThirtyTwoBits);
+			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mFBIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mFBIndexes.ToArray());
 		}
 
 
-		internal void GetMirrorBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
+		internal void GetMirrorBuffers(out VertexBuffer vb, out IndexBuffer ib)
 		{
 			if(mMirrorVerts.Count == 0)
 			{
 				vb	=null;
 				ib	=null;
-				vd	=null;
 				return;
 			}
 
@@ -461,23 +447,20 @@ namespace BSPLib
 				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
 			}
 
-			vd	=mMirrorVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
+			vb	=new VertexBuffer(mGD, mMirrorVD, varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormTex0Col0>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mMirrorIndexes.Count, BufferUsage.None,
-					IndexElementSize.ThirtyTwoBits);
+			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mMirrorIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mMirrorIndexes.ToArray());
 		}
 
 
-		internal void GetSkyBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
+		internal void GetSkyBuffers(out VertexBuffer vb, out IndexBuffer ib)
 		{
 			if(mSkyVerts.Count == 0)
 			{
 				vb	=null;
 				ib	=null;
-				vd	=null;
 				return;
 			}
 
@@ -488,23 +471,20 @@ namespace BSPLib
 				varray[i].TexCoord0	=mSkyTex0[i];
 			}
 
-			vd	=mSkyVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
+			vb	=new VertexBuffer(mGD, mSkyVD, varray.Length, BufferUsage.None);
 			vb.SetData<VPosTex0>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mSkyIndexes.Count, BufferUsage.None,
-					IndexElementSize.ThirtyTwoBits);
+			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mSkyIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mSkyIndexes.ToArray());
 		}
 
 
-		internal void GetLMAnimBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
+		internal void GetLMAnimBuffers(out VertexBuffer vb, out IndexBuffer ib)
 		{
 			if(mLMAnimVerts.Count == 0)
 			{
 				vb	=null;
 				ib	=null;
-				vd	=null;
 				return;
 			}
 
@@ -522,23 +502,20 @@ namespace BSPLib
 				varray[i].BoneIndex	=mLMAnimStyle[i];
 			}
 
-			vd	=mLMAnimVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
+			vb	=new VertexBuffer(mGD, mLMAnimVD, varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormBlendTex0Tex1Tex2Tex3Tex4>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mLMAnimIndexes.Count, BufferUsage.None,
-					IndexElementSize.ThirtyTwoBits);
+			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mLMAnimIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mLMAnimIndexes.ToArray());
 		}
 
 
-		internal void GetLMAAnimBuffers(out VertexBuffer vb, out IndexBuffer ib, out VertexDeclaration vd)
+		internal void GetLMAAnimBuffers(out VertexBuffer vb, out IndexBuffer ib)
 		{
 			if(mLMAAnimVerts.Count == 0)
 			{
 				vb	=null;
 				ib	=null;
-				vd	=null;
 				return;
 			}
 
@@ -556,12 +533,10 @@ namespace BSPLib
 				varray[i].BoneIndex	=mLMAAnimStyle[i];
 			}
 
-			vd	=mLMAAnimVD;
-			vb	=new VertexBuffer(mGD, vd.GetVertexStrideSize(0) * varray.Length, BufferUsage.None);
+			vb	=new VertexBuffer(mGD, mLMAAnimVD, varray.Length, BufferUsage.None);
 			vb.SetData<VPosNormBlendTex0Tex1Tex2Tex3Tex4>(varray);
 
-			ib	=new IndexBuffer(mGD, 4 * mLMAAnimIndexes.Count, BufferUsage.None,
-					IndexElementSize.ThirtyTwoBits);
+			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mLMAAnimIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mLMAAnimIndexes.ToArray());
 		}
 
@@ -1959,29 +1934,26 @@ namespace BSPLib
 		{
 			//build material list
 			foreach(string matName in mMaterialNames)
-			{
-				MaterialLib.Material	mat	=new MaterialLib.Material();
-				mat.Name			=matName;
-				mat.ShaderName		="Shaders\\LightMap";
-				mat.Technique		="";
-				mat.BlendFunction	=BlendFunction.Add;
-				mat.SourceBlend		=Blend.SourceAlpha;
-				mat.DestBlend		=Blend.InverseSourceAlpha;
-				mat.DepthWrite		=true;
-				mat.CullMode		=CullMode.CullCounterClockwiseFace;
-				mat.ZFunction		=CompareFunction.Less;
+			{				
+				MaterialLib.Material	mat	=mMatLib.CreateMaterial();
+				mat.Name				=matName;
+				mat.ShaderName			="Shaders\\LightMap";
+				mat.Technique			="";
+				mat.BlendState			=BlendState.Opaque;
+				mat.DepthState			=DepthStencilState.Default;
+				mat.RasterState			=RasterizerState.CullCounterClockwise;
 
 				//set some parameter defaults
 				if(mat.Name.EndsWith("*Alpha"))
 				{
-					mat.Alpha		=true;
-					mat.DepthWrite	=false;
+					mat.BlendState	=BlendState.AlphaBlend;
+					mat.DepthState	=DepthStencilState.DepthRead;
 					mat.Technique	="Alpha";
 				}
 				else if(mat.Name.EndsWith("*LitAlpha"))
 				{
-					mat.Alpha		=true;
-					mat.DepthWrite	=false;
+					mat.BlendState	=BlendState.AlphaBlend;
+					mat.DepthState	=DepthStencilState.DepthRead;
 					mat.Technique	="LightMapAlpha";
 					mat.AddParameter("mLightMap",
 						EffectParameterClass.Object,
@@ -1990,8 +1962,8 @@ namespace BSPLib
 				}
 				else if(mat.Name.EndsWith("*LitAlphaAnim"))
 				{
-					mat.Alpha		=true;
-					mat.DepthWrite	=false;
+					mat.BlendState	=BlendState.AlphaBlend;
+					mat.DepthState	=DepthStencilState.DepthRead;
 					mat.Technique	="LightMapAnimAlpha";
 					mat.AddParameter("mLightMap",
 						EffectParameterClass.Object,

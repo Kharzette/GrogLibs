@@ -12,13 +12,13 @@ using Microsoft.Xna.Framework.Storage;
 
 namespace BSPBuilder
 {
-	public class MaterialGridModel : BindingList<MaterialLib.Material>
+	public class MaterialGridModel : BindingList<MaterialLib.GUIStates>
 	{
 		public MaterialGridModel(Dictionary<string, MaterialLib.Material> mats)
 		{
 			foreach(KeyValuePair<string, MaterialLib.Material> m in mats)
 			{
-				Add(m.Value);
+				Add(m.Value.GetGUIStates());
 			}
 		}
 	}

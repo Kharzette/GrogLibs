@@ -21,8 +21,8 @@ namespace BSPBuilder
 				cellState, value, formattedValue, errorText, cellStyle,
 				advancedBorderStyle, paintParts);
 
-			Microsoft.Xna.Framework.Graphics.Color	col
-				=(Microsoft.Xna.Framework.Graphics.Color)value;
+			Microsoft.Xna.Framework.Color	col
+				=(Microsoft.Xna.Framework.Color)value;
 
 			Color		fcol	=ConvertColor(col);
 			SolidBrush	b		=new SolidBrush(fcol);
@@ -34,13 +34,13 @@ namespace BSPBuilder
 		}
 
 
-		internal static Microsoft.Xna.Framework.Graphics.Color ConvertColor(Color val)
+		internal static Microsoft.Xna.Framework.Color ConvertColor(Color val)
 		{
-			return	new	Microsoft.Xna.Framework.Graphics.Color(val.R, val.G, val.B, val.A);
+			return	new	Microsoft.Xna.Framework.Color(val.R, val.G, val.B, val.A);
 		}
 
 
-		internal static Color ConvertColor(Microsoft.Xna.Framework.Graphics.Color val)
+		internal static Color ConvertColor(Microsoft.Xna.Framework.Color val)
 		{
 			return	Color.FromArgb(val.A, val.R, val.G, val.B);
 		}

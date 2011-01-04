@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace UtilityLib
 {
-	public class Mathery
+	public static class Mathery
 	{
 		public const float		ON_EPSILON		=0.1f;
 		public const float		NORMAL_EPSILON	=0.00001f;
@@ -30,8 +30,8 @@ namespace UtilityLib
 
 		public static Color RandomColor(Random rnd)
 		{
-			Microsoft.Xna.Framework.Graphics.Color	randColor
-				=new Microsoft.Xna.Framework.Graphics.Color(
+			Microsoft.Xna.Framework.Color	randColor
+				=new Microsoft.Xna.Framework.Color(
 						Convert.ToByte(rnd.Next(255)),
 						Convert.ToByte(rnd.Next(255)),
 						Convert.ToByte(rnd.Next(255)));
@@ -188,6 +188,82 @@ namespace UtilityLib
 
 			norm.Normalize();
 			dist	=Vector3.Dot(verts[1], norm);
+		}
+
+
+		public static bool TryParse(string str, out float val)
+		{
+#if XBOX
+			try
+			{
+				val	=float.Parse(str);
+				return	true;
+			}
+			catch
+			{
+				val	=float.NaN;
+				return	false;
+			}
+#else
+			return	float.TryParse(str, out val);
+#endif
+		}
+
+
+		public static bool TryParse(string str, out int val)
+		{
+#if XBOX
+			try
+			{
+				val	=int.Parse(str);
+				return	true;
+			}
+			catch
+			{
+				val	=0;
+				return	false;
+			}
+#else
+			return	int.TryParse(str, out val);
+#endif
+		}
+
+
+		public static bool TryParse(string str, out UInt32 val)
+		{
+#if XBOX
+			try
+			{
+				val	=UInt32.Parse(str);
+				return	true;
+			}
+			catch
+			{
+				val	=0;
+				return	false;
+			}
+#else
+			return	UInt32.TryParse(str, out val);
+#endif
+		}
+
+
+		public static bool TryParse(string str, out bool val)
+		{
+#if XBOX
+			try
+			{
+				val	=bool.Parse(str);
+				return	true;
+			}
+			catch
+			{
+				val	=false;
+				return	false;
+			}
+#else
+			return	bool.TryParse(str, out val);
+#endif
 		}
 	}
 }

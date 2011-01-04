@@ -598,7 +598,7 @@ namespace ColladaConvert
 		}
 
 
-		private void DetermineVertexDeclaration(GraphicsDevice gd,
+		private VertexDeclaration DetermineVertexDeclaration(
 			bool bPositions, bool bNormals, bool bBoneIndices,
 			bool bBoneWeights, bool bTexCoord0, bool bTexCoord1,
 			bool bTexCoord2, bool bTexCoord3, bool bColor0,
@@ -608,7 +608,7 @@ namespace ColladaConvert
 			//are no positions?
 			if(!bPositions)
 			{
-				return;
+				return	null;
 			}
 
 			//count up the number of vertex elements needed
@@ -632,90 +632,94 @@ namespace ColladaConvert
 
 			if(bPositions)
 			{
-				ve[index]	=new VertexElement(0, offset, VertexElementFormat.Vector3,
-					VertexElementMethod.Default, VertexElementUsage.Position, 0);
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Vector3,
+					VertexElementUsage.Position, 0);
 				index++;
 				offset	+=12;
 			}
 			if(bNormals)
 			{
-				ve[index]	=new VertexElement(0, offset, VertexElementFormat.Vector3,
-					VertexElementMethod.Default, VertexElementUsage.Normal, 0);
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Vector3,
+					VertexElementUsage.Normal, 0);
 				index++;
 				offset	+=12;
 			}
 			if(bBoneIndices)
 			{
-				ve[index]	=new VertexElement(0, offset, VertexElementFormat.Vector4,
-					VertexElementMethod.Default, VertexElementUsage.BlendIndices, 0);
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Vector4,
+					VertexElementUsage.BlendIndices, 0);
 				index++;
 				offset	+=16;
 			}
 			if(bBoneWeights)
 			{
-				ve[index]	=new VertexElement(0, offset, VertexElementFormat.Vector4,
-					VertexElementMethod.Default, VertexElementUsage.BlendWeight, 0);
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Vector4,
+					VertexElementUsage.BlendWeight, 0);
 				index++;
 				offset	+=16;
 			}
 			if(bTexCoord0)
 			{
-				ve[index]	=new VertexElement(0, offset, VertexElementFormat.Vector2,
-					VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Vector2,
+					VertexElementUsage.TextureCoordinate, 0);
 				index++;
 				offset	+=8;
 			}
 			if(bTexCoord1)
 			{
-				ve[index]	=new VertexElement(0, offset, VertexElementFormat.Vector2,
-					VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 1);
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Vector2,
+					VertexElementUsage.TextureCoordinate, 1);
 				index++;
 				offset	+=8;
 			}
 			if(bTexCoord2)
 			{
-				ve[index]	=new VertexElement(0, offset, VertexElementFormat.Vector2,
-					VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 2);
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Vector2,
+					VertexElementUsage.TextureCoordinate, 2);
 				index++;
 				offset	+=8;
 			}
 			if(bTexCoord3)
 			{
-				ve[index]	=new VertexElement(0, offset, VertexElementFormat.Vector2,
-					VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 3);
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Vector2,
+					VertexElementUsage.TextureCoordinate, 3);
 				index++;
 				offset	+=8;
 			}
 			if(bColor0)
 			{
-				ve[index]	=new VertexElement(0, offset, VertexElementFormat.Color,
-					VertexElementMethod.Default, VertexElementUsage.Color, 0);
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Color,
+					VertexElementUsage.Color, 0);
 				index++;
 				offset	+=4;
 			}
 			if(bColor1)
 			{
-				ve[index]	=new VertexElement(0, offset, VertexElementFormat.Color,
-					VertexElementMethod.Default, VertexElementUsage.Color, 1);
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Color,
+					VertexElementUsage.Color, 1);
 				index++;
 				offset	+=4;
 			}
 			if(bColor2)
 			{
-				ve[index]	=new VertexElement(0, offset, VertexElementFormat.Color,
-					VertexElementMethod.Default, VertexElementUsage.Color, 2);
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Color,
+					VertexElementUsage.Color, 2);
 				index++;
 				offset	+=4;
 			}
 			if(bColor3)
 			{
-				ve[index]	=new VertexElement(0, offset, VertexElementFormat.Color,
-					VertexElementMethod.Default, VertexElementUsage.Color, 3);
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Color,
+					VertexElementUsage.Color, 3);
 				index++;
 				offset	+=4;
 			}
 
-			mConverted.SetVertexDeclaration(new VertexDeclaration(gd, ve));
+			VertexDeclaration	ret	=new VertexDeclaration(ve);
+
+			mConverted.SetVertexDeclaration(ret);
+
+			return	ret;
 		}
 
 
@@ -728,7 +732,7 @@ namespace ColladaConvert
 			bool bColor1, bool bColor2, bool bColor3)
 		{
 			//build vertex decl
-			DetermineVertexDeclaration(gd, bPositions,
+			VertexDeclaration	dec	=DetermineVertexDeclaration(bPositions,
 				bNormals, bBoneIndices, bBoneWeights,
 				bTexCoord0, bTexCoord1, bTexCoord2,
 				bTexCoord3, bColor0, bColor1,
@@ -808,9 +812,7 @@ namespace ColladaConvert
 
 			//set bufferusage here so that getdata can be called
 			//we'll need it to save the mesh to a file
-			VertexBuffer vb	=new VertexBuffer(gd,
-				mNumBaseVerts * VertexTypes.GetSizeForType(vtype),
-				BufferUsage.None);
+			VertexBuffer vb	=new VertexBuffer(gd, dec, mNumBaseVerts, BufferUsage.None);
 
 
 			MethodInfo genericMethod =
@@ -833,9 +835,9 @@ namespace ColladaConvert
 			//set bufferusage here so that getdata can be called
 			//we'll need it to save the mesh to a file
 			IndexBuffer	indbuf	=new IndexBuffer(gd,
-						2 * mIndexList.Count,
-						BufferUsage.None,
-						IndexElementSize.SixteenBits);
+						IndexElementSize.SixteenBits,
+						mIndexList.Count,
+						BufferUsage.None);
 
 			indbuf.SetData<ushort>(idxs);
 

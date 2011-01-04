@@ -11,26 +11,23 @@ namespace UtilityLib
 {
 	public class FileUtil
 	{
-		public static FileStream OpenTitleFile(string fileName,
-			FileMode mode, FileAccess access)
+		public static Stream OpenTitleFile(string fileName)
 		{
-			string	fullPath	=Path.Combine(
-									StorageContainer.TitleLocation,
-									fileName);
-
-			if(!File.Exists(fullPath) &&
-				(access == FileAccess.Write ||
-				access == FileAccess.ReadWrite))
-			{
-				return	File.Create(fullPath);
-			}
-			else
-			{
-				return	File.Open(fullPath, mode, access);
-			}
+			return	TitleContainer.OpenStream(fileName);
 		}
 
 
+		public static string StripExtension(string fileName)
+		{
+			int	dotPos	=fileName.LastIndexOf('.');
+			if(dotPos != -1)
+			{
+				return	fileName.Substring(0, dotPos);
+			}
+			return	fileName;
+		}
+
+		/*
 		public static bool FileExists(string fileName)
 		{
 			string	fullPath	=Path.Combine(
@@ -38,7 +35,7 @@ namespace UtilityLib
 									fileName);
 
 			return	File.Exists(fullPath);
-		}
+		}*/
 
 
 		public static void WriteArray(BinaryWriter bw, Int32 []intArray)
@@ -105,40 +102,36 @@ namespace UtilityLib
 			bw.Write(elms.Length);
 			foreach(VertexElement ve in elms)
 			{
-				bw.Write(ve.Stream);
 				bw.Write(ve.Offset);
 				bw.Write((UInt32)ve.VertexElementFormat);
-				bw.Write((UInt32)ve.VertexElementMethod);
 				bw.Write((UInt32)ve.VertexElementUsage);
 				bw.Write(ve.UsageIndex);
 			}
 		}
 
 
-		public static void ReadVertexDeclaration(BinaryReader br, out VertexDeclaration vd, GraphicsDevice g)
+		public static void ReadVertexDeclaration(BinaryReader br, out VertexDeclaration vd)
 		{
 			int	numElements	=br.ReadInt32();
 			VertexElement	[]vels	=new VertexElement[numElements];
 			for(int i=0;i < numElements;i++)
 			{
-				short	streamIdx	=br.ReadInt16();
 				short	offset		=br.ReadInt16();
 
 				VertexElementFormat	vef	=(VertexElementFormat)br.ReadUInt32();
-				VertexElementMethod	vem	=(VertexElementMethod)br.ReadUInt32();
 				VertexElementUsage	veu	=(VertexElementUsage)br.ReadUInt32();
 
 				byte	usageIndex	=br.ReadByte();
 
-				vels[i]	=new VertexElement(streamIdx, offset, vef, vem, veu, usageIndex);
+				vels[i]	=new VertexElement(offset, vef, veu, usageIndex);
 			}
-			vd	=new VertexDeclaration(g, vels);
+			vd	=new VertexDeclaration(vels);
 		}
 
 
 		public static void WriteIndexBuffer(BinaryWriter bw, IndexBuffer ib)
 		{
-			int	numIdx	=ib.SizeInBytes / 4;
+			int	numIdx	=ib.IndexCount;
 
 			Int32	[]idxArray	=new Int32[numIdx];
 
@@ -162,9 +155,8 @@ namespace UtilityLib
 			{
 				idxArray[i]	=br.ReadInt32();
 			}
-			ib	=new IndexBuffer(g, numIdx * 4,
-				(bEditor)? BufferUsage.None : BufferUsage.WriteOnly,
-				IndexElementSize.ThirtyTwoBits);
+			ib	=new IndexBuffer(g, IndexElementSize.ThirtyTwoBits, numIdx,
+							(bEditor)? BufferUsage.None : BufferUsage.WriteOnly);
 			ib.SetData<Int32>(idxArray);
 		}
 

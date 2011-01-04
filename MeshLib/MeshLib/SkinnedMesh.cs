@@ -67,7 +67,7 @@ namespace MeshLib
 
 			mBounds.Write(bw);
 
-			VertexTypes.WriteVerts(bw, mVerts, mNumVerts, mTypeIndex);
+			VertexTypes.WriteVerts(bw, mVerts, mTypeIndex);
 
 			ushort	[]idxs	=new ushort[mNumTriangles * 3];
 
@@ -80,18 +80,7 @@ namespace MeshLib
 				bw.Write(idxs[i]);
 			}
 
-			VertexElement	[]elms	=mVD.GetVertexElements();
-
-			bw.Write(elms.Length);
-			foreach(VertexElement ve in elms)
-			{
-				bw.Write(ve.Stream);
-				bw.Write(ve.Offset);
-				bw.Write((UInt32)ve.VertexElementFormat);
-				bw.Write((UInt32)ve.VertexElementMethod);
-				bw.Write((UInt32)ve.VertexElementUsage);
-				bw.Write(ve.UsageIndex);
-			}
+			UtilityLib.FileUtil.WriteVertexDeclaration(bw, mVD);
 		}
 
 
@@ -121,30 +110,15 @@ namespace MeshLib
 
 			if(bEditor)
 			{
-				mIndexs	=new IndexBuffer(gd, numIdx * 2, BufferUsage.None, IndexElementSize.SixteenBits);
+				mIndexs	=new IndexBuffer(gd, IndexElementSize.SixteenBits, numIdx, BufferUsage.None);
 			}
 			else
 			{
-				mIndexs	=new IndexBuffer(gd, numIdx * 2, BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
+				mIndexs	=new IndexBuffer(gd, IndexElementSize.SixteenBits, numIdx, BufferUsage.WriteOnly);
 			}
 			mIndexs.SetData<ushort>(idxs);
 
-			int	numElements	=br.ReadInt32();
-			VertexElement	[]vels	=new VertexElement[numElements];
-			for(int i=0;i < numElements;i++)
-			{
-				short	streamIdx	=br.ReadInt16();
-				short	offset		=br.ReadInt16();
-
-				VertexElementFormat	vef	=(VertexElementFormat)br.ReadUInt32();
-				VertexElementMethod	vem	=(VertexElementMethod)br.ReadUInt32();
-				VertexElementUsage	veu	=(VertexElementUsage)br.ReadUInt32();
-
-				byte	usageIndex	=br.ReadByte();
-
-				vels[i]	=new VertexElement(streamIdx, offset, vef, vem, veu, usageIndex);
-			}
-			mVD	=new VertexDeclaration(gd, vels);
+			UtilityLib.FileUtil.ReadVertexDeclaration(br, out mVD);
 		}
 
 
@@ -203,13 +177,11 @@ namespace MeshLib
 				return;
 			}
 
-			g.Vertices[0].SetSource(mVerts, 0, mVertSize);
-			g.Indices			=mIndexs;
-			g.VertexDeclaration	=mVD;
+			g.SetVertexBuffer(mVerts);
+			g.Indices	=mIndexs;
 
 			UpdateShaderBones(fx);
 
-			//this might get slow
 			matLib.ApplyParameters(mMaterialName);
 
 			if(fx.Parameters["mBindPose"] != null)
@@ -220,32 +192,15 @@ namespace MeshLib
 				}
 			}
 
-			//set renderstates from material
-			//this could also get crushingly slow
-			g.RenderState.AlphaBlendEnable			=mat.Alpha;
-			g.RenderState.AlphaFunction				=CompareFunction.Less;
-			g.RenderState.AlphaTestEnable			=mat.AlphaTest;
-			g.RenderState.BlendFunction				=mat.BlendFunction;
-			g.RenderState.SourceBlend				=mat.SourceBlend;
-			g.RenderState.DestinationBlend			=mat.DestBlend;
-			g.RenderState.DepthBufferWriteEnable	=mat.DepthWrite;
-			g.RenderState.CullMode					=mat.CullMode;
-			g.RenderState.DepthBufferFunction		=mat.ZFunction;
+			mat.ApplyRenderStates(g);
 
-			fx.Begin();
-			foreach(EffectPass pass in fx.CurrentTechnique.Passes)
-			{
-				pass.Begin();
+			fx.CurrentTechnique.Passes[0].Apply();
 
-				g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-					0, 0,
-					mNumVerts,
-					0,
-					mNumTriangles);
-
-				pass.End();
-			}
-			fx.End();
+			g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+				0, 0,
+				mNumVerts,
+				0,
+				mNumTriangles);
 		}
 	}
 }

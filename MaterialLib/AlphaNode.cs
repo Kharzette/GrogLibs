@@ -42,7 +42,6 @@ namespace MaterialLib
 		//drawprim setup stuff
 		VertexBuffer		mVB;
 		IndexBuffer			mIB;
-		VertexDeclaration	mVD;
 
 		//drawprim call numbers
 		Int32	mBaseVertex;
@@ -53,7 +52,7 @@ namespace MaterialLib
 
 
 		internal AlphaNode(Vector3 sortPoint, Material matRef,
-			VertexBuffer vb, IndexBuffer ib, VertexDeclaration vd,
+			VertexBuffer vb, IndexBuffer ib,
 			Int32 baseVert, Int32 minVertIndex,
 			Int32 numVerts, Int32 startIndex, Int32 primCount)
 		{
@@ -61,7 +60,6 @@ namespace MaterialLib
 			mMaterial		=matRef;
 			mVB				=vb;
 			mIB				=ib;
-			mVD				=vd;
 			mBaseVertex		=baseVert;
 			mMinVertexIndex	=minVertIndex;
 			mNumVerts		=numVerts;
@@ -72,8 +70,8 @@ namespace MaterialLib
 
 		internal void Draw(GraphicsDevice g, MaterialLib mlib)
 		{
-			g.VertexDeclaration	=mVD;
-			g.Vertices[0].SetSource(mVB, 0, mVD.GetVertexStrideSize(0));
+            g.SetVertexBuffer(mVB, 0);
+//			g.Vertices[0].SetSource(mVB, 0, mVD.GetVertexStrideSize(0));
 			g.Indices	=mIB;
 
 			if(mNumVerts == 0 || mPrimCount == 0)
@@ -89,30 +87,13 @@ namespace MaterialLib
 
 			mlib.ApplyParameters(mMaterial.Name);
 
-			//set renderstates from material
-			g.RenderState.AlphaBlendEnable			=mMaterial.Alpha;
-			g.RenderState.AlphaTestEnable			=mMaterial.AlphaTest;
-			g.RenderState.BlendFunction				=mMaterial.BlendFunction;
-			g.RenderState.SourceBlend				=mMaterial.SourceBlend;
-			g.RenderState.DestinationBlend			=mMaterial.DestBlend;
-			g.RenderState.DepthBufferWriteEnable	=mMaterial.DepthWrite;
-			g.RenderState.CullMode					=mMaterial.CullMode;
-			g.RenderState.DepthBufferFunction		=mMaterial.ZFunction;
+			mMaterial.ApplyRenderStates(g);
 
-			fx.CommitChanges();
+			fx.CurrentTechnique.Passes[0].Apply();
 
-			fx.Begin();
-			foreach(EffectPass pass in fx.CurrentTechnique.Passes)
-			{
-				pass.Begin();
-
-				g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-					mBaseVertex, mMinVertexIndex, mNumVerts,
-					mStartIndex, mPrimCount);
-
-				pass.End();
-			}
-			fx.End();
+			g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+				mBaseVertex, mMinVertexIndex, mNumVerts,
+				mStartIndex, mPrimCount);
 		}
 
 

@@ -54,7 +54,7 @@ namespace BSPLib
 			FreeFileVisData();
 
 			//Open the bsp file for writing
-			FileStream	fs	=UtilityLib.FileUtil.OpenTitleFile(vp.mFileName,
+			FileStream	fs	=new FileStream(vp.mFileName,
 				FileMode.OpenOrCreate, FileAccess.Write);
 
 			BinaryWriter	bw	=null;
@@ -178,7 +178,7 @@ namespace BSPLib
 			}
 
 			//Open the bsp file for writing
-			FileStream	fs	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+			FileStream	fs	=new FileStream(fileName,
 				FileMode.OpenOrCreate, FileAccess.Write);
 
 			BinaryWriter	bw	=null;
@@ -976,7 +976,7 @@ namespace BSPLib
 
 		bool LoadPortalFile(string portFile)
 		{
-			FileStream	fs	=UtilityLib.FileUtil.OpenTitleFile(portFile,
+			FileStream	fs	=new FileStream(portFile,
 				FileMode.Open, FileAccess.Read);
 
 			BinaryReader	br	=null;

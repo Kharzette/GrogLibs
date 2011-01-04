@@ -26,15 +26,15 @@ namespace BSPZone
 				return	false;
 			}
 
-			if(!Single.TryParse(szVec[0], out org.X))
+			if(!UtilityLib.Mathery.TryParse(szVec[0], out org.X))
 			{
 				return	false;
 			}
-			if(!Single.TryParse(szVec[1], out org.Y))
+			if(!UtilityLib.Mathery.TryParse(szVec[1], out org.Y))
 			{
 				return	false;
 			}
-			if(!Single.TryParse(szVec[2], out org.Z))
+			if(!UtilityLib.Mathery.TryParse(szVec[2], out org.Z))
 			{
 				return	false;
 			}
@@ -57,7 +57,7 @@ namespace BSPZone
 			{
 				return	false;
 			}
-			if(!Int32.TryParse(mData[key], out val))
+			if(!UtilityLib.Mathery.TryParse(mData[key], out val))
 			{
 				return	false;
 			}
@@ -72,7 +72,7 @@ namespace BSPZone
 			{
 				return	false;
 			}
-			if(!Single.TryParse(mData[key], out val))
+			if(!UtilityLib.Mathery.TryParse(mData[key], out val))
 			{
 				return	false;
 			}
@@ -114,15 +114,15 @@ namespace BSPZone
 				return	false;
 			}
 
-			if(!Single.TryParse(szVec[0], out org.X))
+			if(!UtilityLib.Mathery.TryParse(szVec[0], out org.X))
 			{
 				return	false;
 			}
-			if(!Single.TryParse(szVec[1], out org.Y))
+			if(!UtilityLib.Mathery.TryParse(szVec[1], out org.Y))
 			{
 				return	false;
 			}
-			if(!Single.TryParse(szVec[2], out org.Z))
+			if(!UtilityLib.Mathery.TryParse(szVec[2], out org.Z))
 			{
 				return	false;
 			}
@@ -137,7 +137,7 @@ namespace BSPZone
 
 			if(mData.ContainsKey("light"))
 			{
-				if(!Single.TryParse(mData["light"], out dist))
+				if(!UtilityLib.Mathery.TryParse(mData["light"], out dist))
 				{
 					return	false;
 				}
@@ -155,16 +155,16 @@ namespace BSPZone
 			{
 				string	[]elements	=mData["_light"].Split(' ');
 
-				Single.TryParse(elements[0], out val.X);
-				Single.TryParse(elements[1], out val.Y);
-				Single.TryParse(elements[2], out val.Z);
-				Single.TryParse(elements[3], out val.W);
+				UtilityLib.Mathery.TryParse(elements[0], out val.X);
+				UtilityLib.Mathery.TryParse(elements[1], out val.Y);
+				UtilityLib.Mathery.TryParse(elements[2], out val.Z);
+				UtilityLib.Mathery.TryParse(elements[3], out val.W);
 				return	true;
 			}
 			else if(mData.ContainsKey("light"))
 			{
 				val		=Vector4.One * 255.0f;
-				Single.TryParse(mData["light"], out val.W);
+				UtilityLib.Mathery.TryParse(mData["light"], out val.W);
 				return	true;
 			}
 			return	false;
@@ -207,15 +207,15 @@ namespace BSPZone
 				return	false;
 			}
 
-			if(!Single.TryParse(szVec[0], out color.X))
+			if(!UtilityLib.Mathery.TryParse(szVec[0], out color.X))
 			{
 				return	false;
 			}
-			if(!Single.TryParse(szVec[1], out color.Y))
+			if(!UtilityLib.Mathery.TryParse(szVec[1], out color.Y))
 			{
 				return	false;
 			}
-			if(!Single.TryParse(szVec[2], out color.Z))
+			if(!UtilityLib.Mathery.TryParse(szVec[2], out color.Z))
 			{
 				return	false;
 			}

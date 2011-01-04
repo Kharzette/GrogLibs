@@ -59,9 +59,7 @@ namespace MeshLib
 
 		public void SaveToFile(string fileName)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.Open, FileAccess.Write);
-
+			FileStream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Write);
 			BinaryWriter	bw	=new BinaryWriter(file);
 
 			//write a magic number identifying a static
@@ -85,8 +83,7 @@ namespace MeshLib
 		//so they can be resaved if need be
 		public bool ReadFromFile(string fileName, GraphicsDevice gd, bool bEditor)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.Open, FileAccess.Read);
+			Stream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
 
 			BinaryReader	br	=new BinaryReader(file);
 

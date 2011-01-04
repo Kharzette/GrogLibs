@@ -97,8 +97,7 @@ namespace MeshLib
 		//all the textures / shaders
 		public void SaveToFile(string fileName)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.Open, FileAccess.Write);
+			FileStream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
@@ -125,8 +124,7 @@ namespace MeshLib
 
 		public bool ReadFromFile(string fileName)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.Open, FileAccess.Read);
+			Stream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
 
 			BinaryReader	br	=new BinaryReader(file);
 

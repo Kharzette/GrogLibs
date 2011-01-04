@@ -16,7 +16,6 @@ namespace ColladaConvert
 	{
 		GraphicsDeviceManager	mGDM;
 		VertexBuffer			mVB, mBoundsVB;
-		VertexDeclaration		mVDecl;
 		IndexBuffer				mIB, mBoundsIB;
 		Effect					mFX;
 
@@ -163,22 +162,9 @@ namespace ColladaConvert
 			verts[5].TextureCoordinate	=Vector2.UnitX + Vector2.UnitY;
 			verts[7].TextureCoordinate	=Vector2.UnitX;
 
-			//set up a simple vertex element
-			VertexElement	[]ve	=new VertexElement[3];
-
-			ve[0]	=new VertexElement(0, 0, VertexElementFormat.Vector3,
-						VertexElementMethod.Default, VertexElementUsage.Position, 0);
-			ve[1]	=new VertexElement(0, 12, VertexElementFormat.Vector3,
-						VertexElementMethod.Default, VertexElementUsage.Normal, 0);
-			ve[2]	=new VertexElement(0, 24, VertexElementFormat.Vector2,
-						VertexElementMethod.Default, VertexElementUsage.TextureCoordinate, 0);
-
-			//create vertex declaration
-			mVDecl	=new VertexDeclaration(mGDM.GraphicsDevice, ve);
-
 			//create vertex and index buffers
-			mVB	=new VertexBuffer(mGDM.GraphicsDevice, 32 * 8, BufferUsage.WriteOnly);
-			mIB	=new IndexBuffer(mGDM.GraphicsDevice, 2 * 12, BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
+			mIB	=new IndexBuffer(mGDM.GraphicsDevice, IndexElementSize.SixteenBits, 12, BufferUsage.WriteOnly);
+			mVB	=new VertexBuffer(mGDM.GraphicsDevice, typeof(VertexPositionNormalTexture), 8, BufferUsage.WriteOnly);
 
 			//put our data into the vertex buffer
 			mVB.SetData<VertexPositionNormalTexture>(verts);
@@ -334,7 +320,7 @@ namespace ColladaConvert
 			{
 				numCorners	+=2;
 			}
-			mBoundsVB	=new VertexBuffer(mGDM.GraphicsDevice, numCorners * 4 * 32, BufferUsage.WriteOnly);
+			mBoundsVB	=new VertexBuffer(mGDM.GraphicsDevice, typeof(VertexPositionNormalTexture), numCorners * 4, BufferUsage.WriteOnly);
 
 			VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[numCorners * 4];
 
@@ -360,7 +346,7 @@ namespace ColladaConvert
 			}
 			mBoundsVB.SetData<VertexPositionNormalTexture>(vpnt);
 
-			mBoundsIB	=new IndexBuffer(mGDM.GraphicsDevice, (numCorners * 3) * 6 * 2, BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
+			mBoundsIB	=new IndexBuffer(mGDM.GraphicsDevice, IndexElementSize.SixteenBits, (numCorners * 3) * 6, BufferUsage.WriteOnly);
 
 			UInt16	[]inds	=new UInt16[(numCorners * 3) * 6];
 
@@ -599,17 +585,17 @@ namespace ColladaConvert
 
 		protected override void Draw(GameTime gameTime)
 		{
-			mGDM.GraphicsDevice.Clear(Color.CornflowerBlue);
+			GraphicsDevice	g	=mGDM.GraphicsDevice;
+
+			g.Clear(Color.CornflowerBlue);
 
 			UpdateWVP();
 
-			mCharacter.Draw(mGDM.GraphicsDevice);
-			mStaticMesh.Draw(mGDM.GraphicsDevice);
+			mCharacter.Draw(g);
+			mStaticMesh.Draw(g);
 
-			//set stream source, index, and decl
-			mGDM.GraphicsDevice.Vertices[0].SetSource(mVB, 0, 32);
-			mGDM.GraphicsDevice.Indices				=mIB;
-			mGDM.GraphicsDevice.VertexDeclaration	=mVDecl;
+			g.SetVertexBuffer(mVB);
+			g.Indices	=mIB;
 
 			//default light direction
 			mLightDir.X	=-0.3f;
@@ -619,60 +605,36 @@ namespace ColladaConvert
 
 			mFX.Parameters["mLightDirection"].SetValue(mLightDir);
 
-			mGDM.GraphicsDevice.RenderState.AlphaBlendEnable	=true;
-			mGDM.GraphicsDevice.RenderState.SourceBlend			=Blend.SourceAlpha;
-			mGDM.GraphicsDevice.RenderState.DestinationBlend	=Blend.InverseSourceAlpha;
+			g.BlendState	=BlendState.AlphaBlend;
 
 			mFX.CurrentTechnique	=mFX.Techniques[0];
 			
 			mFX.Parameters["mTexture"].SetValue(mEureka);
-			mFX.Begin();
-			foreach(EffectPass pass in mFX.CurrentTechnique.Passes)
-			{
-				pass.Begin();
-				
-				mGDM.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-					4, 0, 4, 0, 2);
 
-				pass.End();
-			}
-			mFX.End();
+			mFX.CurrentTechnique.Passes[0].Apply();
+
+			g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+				4, 0, 4, 0, 2);
+
 
 			mFX.Parameters["mTexture"].SetValue(mDesu);
-			mFX.Begin();
-			foreach(EffectPass pass in mFX.CurrentTechnique.Passes)
-			{
-				pass.Begin();
-				
-				mGDM.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-					0, 0, 4, 0, 2);
 
-				pass.End();
-			}
-			mFX.End();
+			mFX.CurrentTechnique.Passes[0].Apply();
+
+			g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+				0, 0, 4, 0, 2);
 
 			//draw bounds if any
 			if(mBoundsVB != null && mMF.bDrawBounds())
 			{
-				mFX.Begin();
+				g.SetVertexBuffer(mBoundsVB);
+				g.Indices	=mBoundsIB;
 
-				mGDM.GraphicsDevice.Vertices[0].SetSource(mBoundsVB, 0, 32);
-				mGDM.GraphicsDevice.Indices		=mBoundsIB;
+				mFX.CurrentTechnique.Passes[0].Apply();
 
-				foreach(EffectPass pass in mFX.CurrentTechnique.Passes)
-				{
-					pass.Begin();
-
-					mGDM.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-						0, 0, 8, 0, 6 * 2 * mNumBounds);
-
-					pass.End();
-				}
-
-				mFX.End();
+				g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+					0, 0, 8, 0, 6 * 2 * mNumBounds);
 			}
-
-			mGDM.GraphicsDevice.RenderState.AlphaBlendEnable	=false;
 
 			base.Draw(gameTime);
 		}

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using MaterialLib;
+using Microsoft.Xna.Framework.Graphics;
+
 
 namespace BSPLib
 {
@@ -92,18 +94,21 @@ namespace BSPLib
 			}
 
 			//build material list
-			List<Material>	ret	=new List<Material>();
+			MaterialLib.MaterialLib	matLib	=new MaterialLib.MaterialLib();
+			List<Material>			ret		=new List<Material>();
 			foreach(string matName in mats)
 			{
-				Material	mat	=new Material();
-				mat.Name	=matName;
+				Material	mat	=matLib.CreateMaterial();
+				mat.Name		=matName;
 				if(matName.EndsWith("Alpha"))
 				{
-					mat.Alpha	=true;
+					mat.BlendState	=BlendState.AlphaBlend;
+					mat.DepthState	=DepthStencilState.DepthRead;
 				}
 				else if(matName.EndsWith("Mirror"))
 				{
-					mat.Alpha	=true;
+					mat.BlendState	=BlendState.AlphaBlend;
+					mat.DepthState	=DepthStencilState.DepthRead;
 				}
 				ret.Add(mat);
 			}

@@ -30,6 +30,11 @@ namespace BSPBuilder
 		public event EventHandler	eMaterialNuked;
 		public event EventHandler	eLibraryCleared;
 
+		//constants
+		const int	ShaderColumn	=3;
+		const int	TechniqueColumn	=4;
+		const int	EmissiveColumn	=5;
+
 
 		public MaterialForm(GraphicsDevice gd, MaterialLib.MaterialLib matlib)
 		{
@@ -43,7 +48,7 @@ namespace BSPBuilder
 			NewMaterial.Enabled		=true;
 			MaterialGrid.DataSource	=mMatModel;
 
-			MaterialGrid.Columns.Remove("SourceBlend");
+			MaterialGrid.Columns.Remove("AlphaSourceBlend");
 
 			DataGridViewComboBoxColumn	slotColumn
 				=new DataGridViewComboBoxColumn();
@@ -54,12 +59,12 @@ namespace BSPBuilder
 			}
 
 			slotColumn.DisplayIndex		=0;
-			slotColumn.HeaderText		="SourceBlend";
-			slotColumn.DataPropertyName	="SourceBlend";
+			slotColumn.HeaderText		="AlphaSrcBlend";
+			slotColumn.DataPropertyName	="AlphaSrcBlend";
 
 			MaterialGrid.Columns.Add(slotColumn);
 
-			MaterialGrid.Columns.Remove("DestBlend");
+			MaterialGrid.Columns.Remove("AlphaDestBlend");
 
 			DataGridViewComboBoxColumn	slotColumn2
 				=new DataGridViewComboBoxColumn();
@@ -70,8 +75,8 @@ namespace BSPBuilder
 			}
 
 			slotColumn2.DisplayIndex		=0;
-			slotColumn2.HeaderText			="DestBlend";
-			slotColumn2.DataPropertyName	="DestBlend";
+			slotColumn2.HeaderText			="AlphaDestBlend";
+			slotColumn2.DataPropertyName	="AlphaDestBlend";
 
 			MaterialGrid.Columns.Add(slotColumn2);
 
@@ -91,7 +96,7 @@ namespace BSPBuilder
 
 			MaterialGrid.Columns.Add(slotColumn3);
 
-			MaterialGrid.Columns.Remove("ZFunction");
+			MaterialGrid.Columns.Remove("DepthFunction");
 
 			DataGridViewComboBoxColumn	slotColumn4
 				=new DataGridViewComboBoxColumn();
@@ -102,12 +107,12 @@ namespace BSPBuilder
 			}
 
 			slotColumn4.DisplayIndex		=0;
-			slotColumn4.HeaderText			="ZFunction";
-			slotColumn4.DataPropertyName	="ZFunction";
+			slotColumn4.HeaderText			="DepthFunc";
+			slotColumn4.DataPropertyName	="DepthFunc";
 
 			MaterialGrid.Columns.Add(slotColumn4);
 
-			MaterialGrid.Columns.Remove("BlendFunction");
+			MaterialGrid.Columns.Remove("AlphaBlendFunc");
 
 			DataGridViewComboBoxColumn	slotColumn5
 				=new DataGridViewComboBoxColumn();
@@ -118,8 +123,8 @@ namespace BSPBuilder
 			}
 
 			slotColumn5.DisplayIndex		=0;
-			slotColumn5.HeaderText			="BlendFunction";
-			slotColumn5.DataPropertyName	="BlendFunction";
+			slotColumn5.HeaderText			="AlphaBlendFunc";
+			slotColumn5.DataPropertyName	="AlphaBlendFunc";
 
 			MaterialGrid.Columns.Add(slotColumn5);
 
@@ -183,7 +188,7 @@ namespace BSPBuilder
 		{
 			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
 
-			matSel[0].Cells[2].Value	=sender;
+			matSel[0].Cells[TechniqueColumn].Value	=sender;
 
 			mTL.eOk		-=OnTechniqueListOk;
 			mTL.eCancel	-=OnTechniqueListCancel;
@@ -217,7 +222,7 @@ namespace BSPBuilder
 		{
 			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
 
-			matSel[0].Cells[1].Value	=sender;
+			matSel[0].Cells[ShaderColumn].Value	=sender;
 
 			mSL.eOk		-=OnShaderListOk;
 			mSL.eCancel	-=OnShaderListCancel;
@@ -260,21 +265,14 @@ namespace BSPBuilder
 
 		void OnNewMaterial(object sender, EventArgs e)
 		{
-			MaterialLib.Material	m	=new MaterialLib.Material();
+			MaterialLib.Material	m	=mMatLib.CreateMaterial();
 
 			m.Name			="default";
 			m.ShaderName	="";
 			m.Technique		="";
-			m.Alpha			=false;
-			m.BlendFunction	=BlendFunction.Add;
-			m.SourceBlend	=Blend.SourceAlpha;
-			m.DestBlend		=Blend.InverseSourceAlpha;
-			m.DepthWrite	=true;
-			m.CullMode		=CullMode.CullCounterClockwiseFace;
-			m.ZFunction		=CompareFunction.Less;
 
 			mMatLib.AddMaterial(m);
-			mMatModel.Add(m);
+			mMatModel.Add(m.GetGUIStates());
 
 			MaterialProperties.DataSource			=m.Parameters;
 			MaterialProperties.Columns[0].ReadOnly	=true;
@@ -289,8 +287,8 @@ namespace BSPBuilder
 
 			if(matSel.Count > 0)
 			{
-				MaterialLib.Material	mat	=(MaterialLib.Material)matSel[0].DataBoundItem;
-				MaterialProperties.DataSource			=mat.Parameters;
+				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
+				MaterialProperties.DataSource			=gs.Parameters;
 				MaterialProperties.Columns[0].ReadOnly	=true;
 				MaterialProperties.Columns[1].ReadOnly	=true;
 				MaterialProperties.Columns[2].ReadOnly	=true;
@@ -316,7 +314,7 @@ namespace BSPBuilder
 			}
 
 			//if this is the shader name
-			if(e.ColumnIndex == 1)
+			if(e.ColumnIndex == ShaderColumn)
 			{
 				mSL	=new ShaderList(mMatLib);
 				mSL.eOk					+=OnShaderListOk;
@@ -324,7 +322,7 @@ namespace BSPBuilder
 				mSL.Visible				=true;
 				MaterialGrid.Enabled	=false;
 			}
-			else if(e.ColumnIndex == 2)
+			else if(e.ColumnIndex == TechniqueColumn)
 			{
 				MaterialLib.Material	m	=(MaterialLib.Material)
 					MaterialGrid.Rows[e.RowIndex].DataBoundItem;
@@ -339,7 +337,7 @@ namespace BSPBuilder
 					MaterialGrid.Enabled	=false;
 				}
 			}
-			else if(e.ColumnIndex == 3)
+			else if(e.ColumnIndex == EmissiveColumn)
 			{
 				ColorDialog	cd	=new ColorDialog();
 

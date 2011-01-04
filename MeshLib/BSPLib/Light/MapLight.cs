@@ -192,11 +192,11 @@ namespace BSPLib
 
 		bool LoadReceiverFile(string fileName)
 		{
-			if(!UtilityLib.FileUtil.FileExists(fileName))
+			if(!File.Exists(fileName))
 			{
 				return	false;
 			}
-			FileStream	fs	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+			FileStream	fs	=new FileStream(fileName,
 								FileMode.Open, FileAccess.Read);
 
 			if(fs == null)
@@ -244,7 +244,7 @@ namespace BSPLib
 		{
 			Print("--- Save Receiver File --- \n");
 
-			FileStream	fs	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+			FileStream	fs	=new FileStream(fileName,
 								FileMode.Create, FileAccess.Write);
 
 			if(fs == null)
@@ -773,7 +773,7 @@ namespace BSPLib
 			recFile		=lp.mFileName.Substring(0, extPos);
 			recFile		+=".rec";
 
-			file	=UtilityLib.FileUtil.OpenTitleFile(lp.mFileName,
+			file	=new FileStream(lp.mFileName,
 									FileMode.OpenOrCreate, FileAccess.Write);
 
 			if(file == null)

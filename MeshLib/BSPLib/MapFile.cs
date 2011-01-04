@@ -13,9 +13,7 @@ namespace BSPLib
 	{
 		public GFXHeader LoadGBSPFile(string fileName)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.Open, FileAccess.Read);
-
+			FileStream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
 			if(file == null)
 			{
 				return	null;

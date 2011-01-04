@@ -98,8 +98,7 @@ namespace MeshLib
 
 		public void SaveToFile(string fileName)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.Open, FileAccess.Write);
+			FileStream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
@@ -131,8 +130,7 @@ namespace MeshLib
 		//so they can be resaved if need be
 		public bool ReadFromFile(string fileName, GraphicsDevice gd, bool bEditor)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.Open, FileAccess.Read);
+			FileStream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
 
 			BinaryReader	br	=new BinaryReader(file);
 

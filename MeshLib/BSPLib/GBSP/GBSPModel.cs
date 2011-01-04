@@ -234,7 +234,7 @@ namespace BSPLib
 			portalFile	=portalFile.Substring(0, dotPos);
 			portalFile	+=".gpf";
 
-			FileStream	fs	=UtilityLib.FileUtil.OpenTitleFile(portalFile,
+			FileStream	fs	=new FileStream(portalFile,
 				FileMode.OpenOrCreate, FileAccess.Write);
 
 			if(fs == null)

@@ -261,9 +261,10 @@ namespace BSPLib
 					else if(tokens[1] == "uaxis")
 					{
 						string	[]texVec	=tokens[3].Split('[', ' ', ']');
-						ti.mUVec.X	=Convert.ToSingle(texVec[1]);
-						ti.mUVec.Y	=Convert.ToSingle(texVec[2]);
-						ti.mUVec.Z	=Convert.ToSingle(texVec[3]);
+
+						UtilityLib.Mathery.TryParse(texVec[1], out ti.mUVec.X);
+						UtilityLib.Mathery.TryParse(texVec[2], out ti.mUVec.Y);
+						UtilityLib.Mathery.TryParse(texVec[3], out ti.mUVec.Z);
 
 						//negate x and swap y and z
 						ti.mUVec.X	=-ti.mUVec.X;
@@ -271,15 +272,15 @@ namespace BSPLib
 						ti.mUVec.Y	=ti.mUVec.Z;
 						ti.mUVec.Z	=y;
 
-						ti.mShiftU		=Convert.ToSingle(texVec[4]);
-						ti.mDrawScaleU	=Convert.ToSingle(texVec[6]);
+						UtilityLib.Mathery.TryParse(texVec[4], out ti.mShiftU);
+						UtilityLib.Mathery.TryParse(texVec[6], out ti.mDrawScaleU);
 					}
 					else if(tokens[1] == "vaxis")
 					{
 						string	[]texVec	=tokens[3].Split('[', ' ', ']');
-						ti.mVVec.X	=Convert.ToSingle(texVec[1]);
-						ti.mVVec.Y	=Convert.ToSingle(texVec[2]);
-						ti.mVVec.Z	=Convert.ToSingle(texVec[3]);
+						UtilityLib.Mathery.TryParse(texVec[1], out ti.mVVec.X);
+						UtilityLib.Mathery.TryParse(texVec[2], out ti.mVVec.Y);
+						UtilityLib.Mathery.TryParse(texVec[3], out ti.mVVec.Z);
 
 						//negate x and swap y and z
 						ti.mVVec.X	=-ti.mVVec.X;
@@ -287,20 +288,21 @@ namespace BSPLib
 						ti.mVVec.Y	=ti.mVVec.Z;
 						ti.mVVec.Z	=y;
 
-						ti.mShiftV		=Convert.ToSingle(texVec[4]);
-						ti.mDrawScaleV	=Convert.ToSingle(texVec[6]);
+						UtilityLib.Mathery.TryParse(texVec[4], out ti.mShiftV);
+						UtilityLib.Mathery.TryParse(texVec[6], out ti.mDrawScaleV);
 					}
 					else if(tokens[1] == "lightmapscale")
 					{
-						ti.mLightMapScale	=Convert.ToSingle(tokens[3]);
+						UtilityLib.Mathery.TryParse(tokens[3], out ti.mLightMapScale);
 					}
 					else if(tokens[1] == "rotation")
 					{
-						rot	=Convert.ToSingle(tokens[3]);
+						UtilityLib.Mathery.TryParse(tokens[3], out rot);
 					}
 					else if(tokens[1] == "smoothing_groups")
 					{
-						UInt32	smoove	=Convert.ToUInt32(tokens[3]);
+						UInt32	smoove;
+						UtilityLib.Mathery.TryParse(tokens[3], out smoove);
 						if((smoove & SMOOTHING_SURFLIGHT) != 0)
 						{
 							ti.mFlags		|=TexInfo.LIGHT;
@@ -482,9 +484,9 @@ namespace BSPLib
 			string	[]vecStr	=tok.Split(' ');
 
 			//swap y and z
-			Single.TryParse(vecStr[0], out ret.X);
-			Single.TryParse(vecStr[1], out ret.Z);
-			Single.TryParse(vecStr[2], out ret.Y);
+			UtilityLib.Mathery.TryParse(vecStr[0], out ret.X);
+			UtilityLib.Mathery.TryParse(vecStr[1], out ret.Z);
+			UtilityLib.Mathery.TryParse(vecStr[2], out ret.Y);
 
 			ret.X	=-ret.X;
 
@@ -660,7 +662,7 @@ namespace BSPLib
 
 				if(cnt > 13)
 				{
-					if(UInt32.TryParse(tok, out inum))
+					if(UtilityLib.Mathery.TryParse(tok, out inum))
 					{
 						flags.Add(inum);
 						cnt++;
@@ -668,7 +670,7 @@ namespace BSPLib
 				}
 				else
 				{
-					if(Single.TryParse(tok, out num))
+					if(UtilityLib.Mathery.TryParse(tok, out num))
 					{
 						//rest are numbers
 						numbers.Add(num);

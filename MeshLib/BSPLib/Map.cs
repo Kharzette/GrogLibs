@@ -232,7 +232,7 @@ namespace BSPLib
 		#region IO
 		public void Write(string fileName)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+			FileStream	file	=new FileStream(fileName,
 									FileMode.OpenOrCreate, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
@@ -259,7 +259,7 @@ namespace BSPLib
 
 		public void Read(string fileName)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
+			FileStream	file	=new FileStream(fileName,
 									FileMode.Open, FileAccess.Read);
 
 			BinaryReader	br	=new BinaryReader(file);
@@ -599,7 +599,7 @@ namespace BSPLib
 		{
 			GBSPSaveParameters sp	=threadContext as GBSPSaveParameters;
 
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(sp.mFileName,
+			FileStream	file	=new FileStream(sp.mFileName,
 									FileMode.OpenOrCreate, FileAccess.Write);
 
 			if(file == null)
@@ -1179,7 +1179,6 @@ namespace BSPLib
 			//lightmap stuff
 			out VertexBuffer lmVB,
 			out IndexBuffer lmIB,
-			out VertexDeclaration lmVD,
 			out Int32 []matOffsets,
 			out Int32 []matNumVerts,
 			out Int32 []matNumTris,
@@ -1187,7 +1186,6 @@ namespace BSPLib
 			//animated lightmap stuff
 			out VertexBuffer lmAnimVB,
 			out IndexBuffer lmAnimIB,
-			out VertexDeclaration lmAnimVD,
 			out Int32 []matAnimOffsets,
 			out Int32 []matAnimNumVerts,
 			out Int32 []matAnimNumTris,
@@ -1195,7 +1193,6 @@ namespace BSPLib
 			//lightmapped alpha stuff
 			out VertexBuffer lmaVB,
 			out IndexBuffer lmaIB,
-			out VertexDeclaration lmaVD,
 			out Int32 []amatOffsets,
 			out Int32 []amatNumVerts,
 			out Int32 []amatNumTris,
@@ -1204,7 +1201,6 @@ namespace BSPLib
 			//animated alpha lightmap stuff
 			out VertexBuffer lmaAnimVB,
 			out IndexBuffer lmaAnimIB,
-			out VertexDeclaration lmaAnimVD,
 			out Int32 []amatAnimOffsets,
 			out Int32 []amatAnimNumVerts,
 			out Int32 []amatAnimNumTris,
@@ -1217,63 +1213,63 @@ namespace BSPLib
 
 			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData))
 			{
-				lmVB	=null;	lmIB	=null;	lmVD	=null;	matOffsets	=null;
+				lmVB	=null;	lmIB	=null;	matOffsets	=null;
 				matNumVerts	=null;	matNumTris	=null;	lmAnimVB	=null;
-				lmAnimIB	=null;	lmAnimVB	=null;	lmAnimVD	=null;
+				lmAnimIB	=null;	lmAnimVB	=null;
 				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
-				lmaVB	=null;	lmaIB	=null;	lmaVD	=null;	amatOffsets	=null;
+				lmaVB	=null;	lmaIB	=null;	amatOffsets	=null;
 				amatNumVerts	=null;	amatNumTris	=null;	lmaAnimVB	=null;
-				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaAnimVD	=null;
+				lmaAnimIB	=null;	lmaAnimVB	=null;
 				amatAnimOffsets	=null;	amatAnimNumVerts	=null;	amatAnimNumTris	=null;
 				amatSortPoints	=null;	amatAnimSortPoints	=null;	lightAtlas	=null;
 				return	false;
 			}
-			mg.GetLMBuffers(out lmVB, out lmIB, out lmVD);
+			mg.GetLMBuffers(out lmVB, out lmIB);
 
 			if(!mg.BuildLMAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData))
 			{
-				lmVB	=null;	lmIB	=null;	lmVD	=null;	matOffsets	=null;
+				lmVB	=null;	lmIB	=null;	matOffsets	=null;
 				matNumVerts	=null;	matNumTris	=null;	lmAnimVB	=null;
-				lmAnimIB	=null;	lmAnimVB	=null;	lmAnimVD	=null;
+				lmAnimIB	=null;	lmAnimVB	=null;
 				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
-				lmaVB	=null;	lmaIB	=null;	lmaVD	=null;	amatOffsets	=null;
+				lmaVB	=null;	lmaIB	=null;	amatOffsets	=null;
 				amatNumVerts	=null;	amatNumTris	=null;	lmaAnimVB	=null;
-				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaAnimVD	=null;
+				lmaAnimIB	=null;	lmaAnimVB	=null;
 				amatAnimOffsets	=null;	amatAnimNumVerts	=null;	amatAnimNumTris	=null;
 				amatSortPoints	=null;	amatAnimSortPoints	=null;	lightAtlas	=null;
 				return	false;
 			}
-			mg.GetLMAnimBuffers(out lmAnimVB, out lmAnimIB, out lmAnimVD);
+			mg.GetLMAnimBuffers(out lmAnimVB, out lmAnimIB);
 
 			if(!mg.BuildLMAFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData))
 			{
-				lmVB	=null;	lmIB	=null;	lmVD	=null;	matOffsets	=null;
+				lmVB	=null;	lmIB	=null;	matOffsets	=null;
 				matNumVerts	=null;	matNumTris	=null;	lmAnimVB	=null;
-				lmAnimIB	=null;	lmAnimVB	=null;	lmAnimVD	=null;
+				lmAnimIB	=null;	lmAnimVB	=null;
 				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
-				lmaVB	=null;	lmaIB	=null;	lmaVD	=null;	amatOffsets	=null;
+				lmaVB	=null;	lmaIB	=null;	amatOffsets	=null;
 				amatNumVerts	=null;	amatNumTris	=null;	lmaAnimVB	=null;
-				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaAnimVD	=null;
+				lmaAnimIB	=null;	lmaAnimVB	=null;
 				amatAnimOffsets	=null;	amatAnimNumVerts	=null;	amatAnimNumTris	=null;
 				amatSortPoints	=null;	amatAnimSortPoints	=null;	lightAtlas	=null;
 				return	false;
 			}
-			mg.GetLMABuffers(out lmaVB, out lmaIB, out lmaVD);
+			mg.GetLMABuffers(out lmaVB, out lmaIB);
 
 			if(!mg.BuildLMAAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData))
 			{
-				lmVB	=null;	lmIB	=null;	lmVD	=null;	matOffsets	=null;
+				lmVB	=null;	lmIB	=null;	matOffsets	=null;
 				matNumVerts	=null;	matNumTris	=null;	lmAnimVB	=null;
-				lmAnimIB	=null;	lmAnimVB	=null;	lmAnimVD	=null;
+				lmAnimIB	=null;	lmAnimVB	=null;
 				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
-				lmaVB	=null;	lmaIB	=null;	lmaVD	=null;	amatOffsets	=null;
+				lmaVB	=null;	lmaIB	=null;	amatOffsets	=null;
 				amatNumVerts	=null;	amatNumTris	=null;	lmaAnimVB	=null;
-				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaAnimVD	=null;
+				lmaAnimIB	=null;	lmaAnimVB	=null;
 				amatAnimOffsets	=null;	amatAnimNumVerts	=null;	amatAnimNumTris	=null;
 				amatSortPoints	=null;	amatAnimSortPoints	=null;	lightAtlas	=null;
 				return	false;
 			}
-			mg.GetLMAAnimBuffers(out lmaAnimVB, out lmaAnimIB, out lmaAnimVD);
+			mg.GetLMAAnimBuffers(out lmaAnimVB, out lmaAnimIB);
 
 			lightAtlas	=mg.GetLightMapAtlas();
 
@@ -1287,7 +1283,7 @@ namespace BSPLib
 
 
 		public void BuildVLitRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out IndexBuffer ib, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
@@ -1296,14 +1292,14 @@ namespace BSPLib
 
 			mg.BuildVLitFaceData(mGFXVerts, mGFXRGBVerts, vnorms, mGFXVertIndexes);
 
-			mg.GetVLitBuffers(out vb, out ib, out vd);
+			mg.GetVLitBuffers(out vb, out ib);
 
 			mg.GetVLitMaterialData(out matOffsets, out matNumVerts, out matNumTris);
 		}
 
 
 		public void BuildAlphaRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out IndexBuffer ib, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris, out Vector3 []matSortPoints)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
@@ -1312,28 +1308,28 @@ namespace BSPLib
 
 			mg.BuildAlphaFaceData(mGFXVerts, mGFXRGBVerts, vnorms, mGFXVertIndexes);
 
-			mg.GetAlphaBuffers(out vb, out ib, out vd);
+			mg.GetAlphaBuffers(out vb, out ib);
 
 			mg.GetAlphaMaterialData(out matOffsets, out matNumVerts, out matNumTris, out matSortPoints);
 		}
 
 
 		public void BuildFullBrightRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out IndexBuffer ib, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			mg.BuildFullBrightFaceData(mGFXVerts, mGFXVertIndexes);
 
-			mg.GetFullBrightBuffers(out vb, out ib, out vd);
+			mg.GetFullBrightBuffers(out vb, out ib);
 
 			mg.GetFullBrightMaterialData(out matOffsets, out matNumVerts, out matNumTris);
 		}
 
 
 		public void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out IndexBuffer ib, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris,
 			out Vector3 []matSortPoints, out List<List<Vector3>> mirrorPolys)
 		{
@@ -1343,7 +1339,7 @@ namespace BSPLib
 
 			mg.BuildMirrorFaceData(mGFXVerts, mGFXRGBVerts, vnorms, mGFXVertIndexes);
 
-			mg.GetMirrorBuffers(out vb, out ib, out vd);
+			mg.GetMirrorBuffers(out vb, out ib);
 
 			mg.GetMirrorMaterialData(out matOffsets, out matNumVerts,
 				out matNumTris, out matSortPoints, out mirrorPolys);
@@ -1351,14 +1347,14 @@ namespace BSPLib
 
 
 		public void BuildSkyRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out VertexDeclaration vd, out Int32 []matOffsets,
+			out IndexBuffer ib, out Int32 []matOffsets,
 			out Int32 []matNumVerts, out Int32 []matNumTris)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			mg.BuildSkyFaceData(mGFXVerts, mGFXVertIndexes);
 
-			mg.GetSkyBuffers(out vb, out ib, out vd);
+			mg.GetSkyBuffers(out vb, out ib);
 
 			mg.GetSkyMaterialData(out matOffsets, out matNumVerts, out matNumTris);
 		}

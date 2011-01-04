@@ -252,7 +252,7 @@ namespace MeshLib
 
 
 		//don't think this is in use
-		public static VertexDeclaration GetVertexDeclarationForType(GraphicsDevice g, Type t)
+		public static VertexDeclaration GetVertexDeclarationForType(Type t)
 		{
 			List<VertexElement>	ves			=new List<VertexElement>();
 			int					i			=0;
@@ -262,9 +262,8 @@ namespace MeshLib
 			fi	=t.GetField("Position");
 			if(fi != null)
 			{
-				VertexElement ve	=new VertexElement(0,
+				VertexElement ve	=new VertexElement(
 					sizeSoFar, VertexElementFormat.Vector3,
-					VertexElementMethod.Default,
 					VertexElementUsage.Position,
 					(byte)i);
 				ves.Add(ve);
@@ -273,9 +272,8 @@ namespace MeshLib
 			fi	=t.GetField("Normal");
 			if(fi != null)
 			{
-				VertexElement ve	=new VertexElement(0,
+				VertexElement ve	=new VertexElement(
 					sizeSoFar, VertexElementFormat.Vector3,
-					VertexElementMethod.Default,
 					VertexElementUsage.Normal,
 					(byte)i);
 				ves.Add(ve);
@@ -284,9 +282,8 @@ namespace MeshLib
 			fi	=t.GetField("BoneIndex");
 			if(fi != null)
 			{
-				VertexElement ve	=new VertexElement(0,
+				VertexElement ve	=new VertexElement(
 					sizeSoFar, VertexElementFormat.Vector4,
-					VertexElementMethod.Default,
 					VertexElementUsage.BlendIndices,
 					(byte)i);
 				ves.Add(ve);
@@ -296,9 +293,8 @@ namespace MeshLib
 			fi	=t.GetField("BoneWeights");
 			if(fi != null)
 			{
-				VertexElement ve	=new VertexElement(0,
+				VertexElement ve	=new VertexElement(
 					sizeSoFar, VertexElementFormat.Vector4,
-					VertexElementMethod.Default,
 					VertexElementUsage.BlendWeight,
 					(byte)i);
 				ves.Add(ve);
@@ -313,9 +309,8 @@ namespace MeshLib
 				{
 					break;
 				}
-				VertexElement ve	=new VertexElement(0,
+				VertexElement ve	=new VertexElement(
 					sizeSoFar, VertexElementFormat.Vector2,
-					VertexElementMethod.Default,
 					VertexElementUsage.TextureCoordinate,
 					(byte)i);
 				ves.Add(ve);
@@ -330,9 +325,8 @@ namespace MeshLib
 				{
 					break;
 				}
-				VertexElement ve	=new VertexElement(0,
+				VertexElement ve	=new VertexElement(
 					sizeSoFar, VertexElementFormat.Vector4,
-					VertexElementMethod.Default,
 					VertexElementUsage.Color,
 					(byte)i);
 				ves.Add(ve);
@@ -347,7 +341,7 @@ namespace MeshLib
 				vel[i]	=ves[i];
 			}
 			
-			return	new VertexDeclaration(g, vel);
+			return	new VertexDeclaration(vel);
 		}
 
 
@@ -495,10 +489,13 @@ namespace MeshLib
 		}
 
 
-		public static void WriteVerts(BinaryWriter bw, VertexBuffer vb, int numVerts, int typeIdx)
+		public static void WriteVerts(BinaryWriter bw, VertexBuffer vb, int typeIdx)
 		{
 			Type	vtype	=mTypes[typeIdx];
-			Array	verts	=Array.CreateInstance(vtype, numVerts);
+			Array	verts	=Array.CreateInstance(vtype, vb.VertexCount);
+
+			//save vertex declaration first
+			UtilityLib.FileUtil.WriteVertexDeclaration(bw, vb.VertexDeclaration);
 
 			MethodInfo genericMethod =
 				typeof (VertexBuffer).GetMethods().Where(
@@ -509,7 +506,7 @@ namespace MeshLib
 			typedMethod.Invoke(vb, new object[] {verts});
 
 			FieldInfo	[]finfo	=vtype.GetFields();
-			for(int i=0;i < numVerts;i++)
+			for(int i=0;i < vb.VertexCount;i++)
 			{
 				foreach(FieldInfo fi in finfo)
 				{
@@ -551,6 +548,10 @@ namespace MeshLib
 
 			MethodInfo	[]meths	=typeof (VertexBuffer).GetMethods();
 			MethodInfo	genericMethod	=null;
+			
+			//read the vertex declaration
+			VertexDeclaration	vd;
+			UtilityLib.FileUtil.ReadVertexDeclaration(br, out vd);
 
 			foreach(MethodInfo mi in meths)
 			{
@@ -573,11 +574,11 @@ namespace MeshLib
 
 			if(bEditor)
 			{
-				vb	=new VertexBuffer(gd, numVerts * GetSizeForType(vtype), BufferUsage.None);
+				vb	=new VertexBuffer(gd, vd, numVerts, BufferUsage.None);
 			}
 			else
 			{
-				vb	=new VertexBuffer(gd, numVerts * GetSizeForType(vtype), BufferUsage.WriteOnly);
+				vb	=new VertexBuffer(gd, vd, numVerts, BufferUsage.WriteOnly);
 			}
 
 			FieldInfo	[]finfo	=vtype.GetFields();

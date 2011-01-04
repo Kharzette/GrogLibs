@@ -369,9 +369,9 @@ sampler SkySampler = sampler_state
 	MagFilter	=Linear;
 	MipFilter	=Linear;
 
-	AddressU	=MirrorOnce;
-	AddressV	=MirrorOnce;
-	AddressW	=MirrorOnce;
+	AddressU	=Clamp;
+	AddressV	=Clamp;
+	AddressW	=Clamp;
 };
 
 

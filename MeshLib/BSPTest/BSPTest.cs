@@ -8,7 +8,6 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
-using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
 using BSPZone;
 
@@ -43,7 +42,8 @@ namespace BSPTest
 
 		protected override void Initialize()
 		{
-			mGameCam	=new UtilityLib.GameCamera(mGDM.GraphicsDevice.Viewport.Width,
+			mGameCam	=new UtilityLib.GameCamera(
+				mGDM.GraphicsDevice.Viewport.Width,
 				mGDM.GraphicsDevice.Viewport.Height,
 				mGDM.GraphicsDevice.Viewport.AspectRatio);
 
@@ -178,7 +178,7 @@ namespace BSPTest
 			g.Clear(Color.CornflowerBlue);
 
 			//spritebatch turns this off
-			g.RenderState.DepthBufferEnable	=true;
+//			g.RenderState.DepthBufferEnable	=true;
 
 			mLevel.Draw(g, mGameCam, mZone.IsMaterialVisibleFromPos);
 

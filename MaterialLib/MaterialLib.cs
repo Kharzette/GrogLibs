@@ -17,8 +17,13 @@ namespace MaterialLib
 		Dictionary<string, Effect>		mFX		=new Dictionary<string, Effect>();
 		Dictionary<string, Texture2D>	mMaps	=new Dictionary<string, Texture2D>();
 
-		//reference to the content manager
-		ContentManager	mContent;
+		//state block pool
+		StateBlockPool	mStateBlockPool	=new StateBlockPool();
+
+		//references to the content managers
+		ContentManager	mContent, mSharedContent;
+		private GraphicsDevice gd;
+		private bool p;
 
 
 		//tool side constructor, loads up everything
@@ -44,6 +49,26 @@ namespace MaterialLib
 		}
 
 
+		//two content managers
+		public MaterialLib(GraphicsDevice gd, ContentManager cm, ContentManager scm, bool bTool)
+		{
+			mContent		=cm;
+			mSharedContent	=scm;
+
+			if(bTool)
+			{
+				LoadShaders();
+				LoadTextures(gd);
+			}
+		}
+
+
+		//for just material creation, nothing else will work
+		public MaterialLib()
+		{
+		}
+
+
 		//this merges in all the content directory
 		//textures for the tool chain after loading
 		//a material lib from a file
@@ -51,6 +76,14 @@ namespace MaterialLib
 		{
 			LoadTextures(gd);
 			LoadShaders();
+		}
+
+
+		public Material CreateMaterial()
+		{
+			Material	mat	=new Material(mStateBlockPool);
+
+			return	mat;
 		}
 
 
@@ -97,8 +130,7 @@ namespace MaterialLib
 		//all the textures / shaders
 		public void SaveToFile(string fileName)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.Open, FileAccess.Write);
+			Stream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
@@ -122,8 +154,7 @@ namespace MaterialLib
 
 		public bool ReadFromFile(string fileName, bool bTool)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.Open, FileAccess.Read);
+			Stream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
 
 			BinaryReader	br	=new BinaryReader(file);
 
@@ -150,7 +181,7 @@ namespace MaterialLib
 
 			for(int i=0;i < numMaterials;i++)
 			{
-				Material	m	=new Material();
+				Material	m	=new Material(mStateBlockPool);
 
 				m.Read(br);
 
@@ -311,8 +342,8 @@ namespace MaterialLib
 				Vector2	size	=Vector2.Zero;
 
 				string	[]toks	=val.Split(' ');
-				size.X	=Convert.ToSingle(toks[0]);
-				size.Y	=Convert.ToSingle(toks[1]);
+				UtilityLib.Mathery.TryParse(toks[0], out size.X);
+				UtilityLib.Mathery.TryParse(toks[1], out size.Y);
 
 				if(bUp)
 				{
@@ -467,13 +498,20 @@ namespace MaterialLib
 							}
 							else
 							{
-								ep.SetValue(Convert.ToSingle(sp.Value));
+								float	val;
+								if(UtilityLib.Mathery.TryParse(sp.Value, out val))
+								{
+									ep.SetValue(val);
+								}
 							}
 						}
 						else if(sp.Type == EffectParameterType.Bool)
 						{
-							fx.Parameters[sp.Name].SetValue(
-								Convert.ToBoolean(sp.Value));
+							bool	val;
+							if(UtilityLib.Mathery.TryParse(sp.Value, out val))
+							{
+								fx.Parameters[sp.Name].SetValue(val);
+							}
 						}
 						break;
 
@@ -486,30 +524,48 @@ namespace MaterialLib
 							Vector2	vec	=Vector2.Zero;
 							string	[]tokens;
 							tokens	=sp.Value.Split(' ');
-							vec.X	=Convert.ToSingle(tokens[0]);
-							vec.Y	=Convert.ToSingle(tokens[1]);
-							ep2.SetValue(vec);
+							if(UtilityLib.Mathery.TryParse(tokens[0], out vec.X))
+							{
+								if(UtilityLib.Mathery.TryParse(tokens[1], out vec.Y))
+								{
+									ep2.SetValue(vec);
+								}
+							}
 						}
 						else if(ep2.ColumnCount == 3)
 						{
 							Vector3	vec	=Vector3.Zero;
 							string	[]tokens;
 							tokens	=sp.Value.Split(' ');
-							vec.X	=Convert.ToSingle(tokens[0]);
-							vec.Y	=Convert.ToSingle(tokens[1]);
-							vec.Z	=Convert.ToSingle(tokens[2]);
-							ep2.SetValue(vec);
+							if(UtilityLib.Mathery.TryParse(tokens[0], out vec.X))
+							{
+								if(UtilityLib.Mathery.TryParse(tokens[1], out vec.Y))
+								{
+									if(UtilityLib.Mathery.TryParse(tokens[2], out vec.Z))
+									{
+										ep2.SetValue(vec);
+									}
+								}
+							}
 						}
 						else if(ep2.ColumnCount == 4)
 						{
 							Vector4	vec	=Vector4.Zero;
 							string	[]tokens;
 							tokens	=sp.Value.Split(' ');
-							vec.X	=Convert.ToSingle(tokens[0]);
-							vec.Y	=Convert.ToSingle(tokens[1]);
-							vec.Z	=Convert.ToSingle(tokens[2]);
-							vec.W	=Convert.ToSingle(tokens[3]);
-							ep2.SetValue(vec);
+							if(UtilityLib.Mathery.TryParse(tokens[0], out vec.X))
+							{
+								if(UtilityLib.Mathery.TryParse(tokens[1], out vec.Y))
+								{
+									if(UtilityLib.Mathery.TryParse(tokens[2], out vec.Z))
+									{
+										if(UtilityLib.Mathery.TryParse(tokens[3], out vec.W))
+										{
+											ep2.SetValue(vec);
+										}
+									}
+								}
+							}
 						}
 						else
 						{
@@ -530,9 +586,10 @@ namespace MaterialLib
 			foreach(string tok in toks)
 			{
 				float	f;
-
-				f	=Convert.ToSingle(tok);
-				ret.Add(f);
+				if(UtilityLib.Mathery.TryParse(tok, out f))
+				{
+					ret.Add(f);
+				}
 			}
 			return	ret.ToArray();
 		}
@@ -602,38 +659,70 @@ namespace MaterialLib
 
 
 		//load shaders in the content/shaders folder
-		private void LoadShaders()
+		void LoadShaders()
 		{
 #if XBOX
 			//this is a toolside method, stubbed out on xbox
 			return;
 #else
-			DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
-				+ "../../../Content/Shaders/");
-
-			//stupid getfiles won't take multiple wildcards
-			FileInfo[]		fi	=di.GetFiles("*.fx", SearchOption.AllDirectories);
-
-			foreach(FileInfo f in fi)
+			//see if Shader folder exists in Content
+			if(Directory.Exists("Content/Shaders"))
 			{
-				Console.WriteLine("{0,-25} {1,25}", f.Name, f.LastWriteTime);
+				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
+					+ "Content/Shaders/");
 
-				string	path	=f.DirectoryName.Substring(f.DirectoryName.LastIndexOf("Content") + 8);
-				path	+="\\" + f.Name;
+				FileInfo[]		fi	=di.GetFiles("*.xnb", SearchOption.AllDirectories);
+				foreach(FileInfo f in fi)
+				{
+					LoadShader(f.DirectoryName, f.Name);
+				}
+			}
 
-				//strip extension
-				path	=path.Substring(0, path.LastIndexOf('.'));
+			//try shared as well
+			if(Directory.Exists("SharedContent/Shaders"))
+			{
+				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
+					+ "SharedContent/Shaders/");
 
-				//load shader
-				Effect	fx	=mContent.Load<Effect>(path);
-
-				mFX.Add(path, fx);
+				FileInfo[]		fi	=di.GetFiles("*.xnb", SearchOption.AllDirectories);
+				foreach(FileInfo f in fi)
+				{
+					LoadSharedShader(f.DirectoryName, f.Name);
+				}
 			}
 #endif
 		}
 
 
-		private void LoadTextures(GraphicsDevice gd)
+		void LoadShader(string dirName, string fileName)
+		{
+			string	path	=dirName + "\\" + fileName;
+
+			path	=UtilityLib.FileUtil.StripExtension(path);
+			path	=path.Substring(path.LastIndexOf("Content") + 8);
+
+			//load shader
+			Effect	fx	=mContent.Load<Effect>(path);
+
+			mFX.Add(path, fx);
+		}
+
+
+		void LoadSharedShader(string dirName, string fileName)
+		{
+			string	path	=dirName + "\\" + fileName;
+
+			path	=UtilityLib.FileUtil.StripExtension(path);
+			path	=path.Substring(path.LastIndexOf("SharedContent") + 14);
+
+			//load shader
+			Effect	fx	=mSharedContent.Load<Effect>(path);
+
+			mFX.Add(path, fx);
+		}
+
+
+		void LoadTextures(GraphicsDevice gd)
 		{
 #if XBOX
 			//this is a toolside method, stubbed out on xbox
@@ -643,51 +732,16 @@ namespace MaterialLib
 				+ "../../../Content/Textures/");
 
 			//stupid getfiles won't take multiple wildcards
-			FileInfo[]		fi0	=di.GetFiles("*.bmp", SearchOption.AllDirectories);
-			FileInfo[]		fi1	=di.GetFiles("*.dds", SearchOption.AllDirectories);
-			FileInfo[]		fi2	=di.GetFiles("*.dib", SearchOption.AllDirectories);
-			FileInfo[]		fi3	=di.GetFiles("*.hdr", SearchOption.AllDirectories);
 			FileInfo[]		fi4	=di.GetFiles("*.jpg", SearchOption.AllDirectories);
-			FileInfo[]		fi5	=di.GetFiles("*.pfm", SearchOption.AllDirectories);
 			FileInfo[]		fi6	=di.GetFiles("*.png", SearchOption.AllDirectories);
-			FileInfo[]		fi7	=di.GetFiles("*.ppm", SearchOption.AllDirectories);
-			FileInfo[]		fi8	=di.GetFiles("*.tga", SearchOption.AllDirectories);
 
 			//merge these
 			List<FileInfo>	fi	=new List<FileInfo>();
-			foreach(FileInfo f in fi0)
-			{
-				fi.Add(f);
-			}
-			foreach(FileInfo f in fi1)
-			{
-				fi.Add(f);
-			}
-			foreach(FileInfo f in fi2)
-			{
-				fi.Add(f);
-			}
-			foreach(FileInfo f in fi3)
-			{
-				fi.Add(f);
-			}
 			foreach(FileInfo f in fi4)
 			{
 				fi.Add(f);
 			}
-			foreach(FileInfo f in fi5)
-			{
-				fi.Add(f);
-			}
 			foreach(FileInfo f in fi6)
-			{
-				fi.Add(f);
-			}
-			foreach(FileInfo f in fi7)
-			{
-				fi.Add(f);
-			}
-			foreach(FileInfo f in fi8)
 			{
 				fi.Add(f);
 			}
@@ -704,7 +758,8 @@ namespace MaterialLib
 				if(!mMaps.ContainsKey(relPath))
 				{
 					//create an element
-					Texture2D	tex	=Texture2D.FromFile(gd, fullPath);
+					FileStream	fs	=new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+					Texture2D	tex	=Texture2D.FromStream(gd, fs);
 
 					mMaps.Add(relPath, tex);
 				}

@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C# Express 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010 Express for Windows Phone
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UtilityLib", "UtilityLib.csproj", "{BB91910C-2595-4EB6-B48C-30BCC41457F6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UtilityLib360", "UtilityLib360.csproj", "{FA72E344-794D-483E-8373-B2ABD7CD9478}"
@@ -20,8 +20,8 @@ Global
 		{BB91910C-2595-4EB6-B48C-30BCC41457F6}.Debug|x86.ActiveCfg = Debug|x86
 		{BB91910C-2595-4EB6-B48C-30BCC41457F6}.Debug|x86.Build.0 = Debug|x86
 		{BB91910C-2595-4EB6-B48C-30BCC41457F6}.Debug|Xbox 360.ActiveCfg = Debug|x86
-		{BB91910C-2595-4EB6-B48C-30BCC41457F6}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{BB91910C-2595-4EB6-B48C-30BCC41457F6}.Release|Mixed Platforms.Build.0 = Release|x86
+		{BB91910C-2595-4EB6-B48C-30BCC41457F6}.Release|Mixed Platforms.ActiveCfg = Debug|x86
+		{BB91910C-2595-4EB6-B48C-30BCC41457F6}.Release|Mixed Platforms.Build.0 = Debug|x86
 		{BB91910C-2595-4EB6-B48C-30BCC41457F6}.Release|x86.ActiveCfg = Release|x86
 		{BB91910C-2595-4EB6-B48C-30BCC41457F6}.Release|x86.Build.0 = Release|x86
 		{BB91910C-2595-4EB6-B48C-30BCC41457F6}.Release|Xbox 360.ActiveCfg = Release|x86
@@ -30,8 +30,8 @@ Global
 		{FA72E344-794D-483E-8373-B2ABD7CD9478}.Debug|x86.ActiveCfg = Debug|Xbox 360
 		{FA72E344-794D-483E-8373-B2ABD7CD9478}.Debug|Xbox 360.ActiveCfg = Debug|Xbox 360
 		{FA72E344-794D-483E-8373-B2ABD7CD9478}.Debug|Xbox 360.Build.0 = Debug|Xbox 360
-		{FA72E344-794D-483E-8373-B2ABD7CD9478}.Release|Mixed Platforms.ActiveCfg = Release|Xbox 360
-		{FA72E344-794D-483E-8373-B2ABD7CD9478}.Release|Mixed Platforms.Build.0 = Release|Xbox 360
+		{FA72E344-794D-483E-8373-B2ABD7CD9478}.Release|Mixed Platforms.ActiveCfg = Debug|Xbox 360
+		{FA72E344-794D-483E-8373-B2ABD7CD9478}.Release|Mixed Platforms.Build.0 = Debug|Xbox 360
 		{FA72E344-794D-483E-8373-B2ABD7CD9478}.Release|x86.ActiveCfg = Release|Xbox 360
 		{FA72E344-794D-483E-8373-B2ABD7CD9478}.Release|Xbox 360.ActiveCfg = Release|Xbox 360
 		{FA72E344-794D-483E-8373-B2ABD7CD9478}.Release|Xbox 360.Build.0 = Release|Xbox 360

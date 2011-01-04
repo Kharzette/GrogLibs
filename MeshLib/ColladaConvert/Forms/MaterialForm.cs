@@ -45,7 +45,7 @@ namespace ColladaConvert
 			ApplyMaterial.Enabled	=false;
 
 			MaterialGrid.DataSource	=mMatModel;
-
+			/*
 			MaterialGrid.Columns.Remove("SourceBlend");
 
 			DataGridViewComboBoxColumn	slotColumn
@@ -110,7 +110,6 @@ namespace ColladaConvert
 
 			MaterialGrid.Columns.Add(slotColumn4);
 
-			ColladaConvert.eMeshPartListUpdated	+=OnMeshPartListUpdated;
 
 			MaterialGrid.Columns.Remove("BlendFunction");
 
@@ -136,15 +135,15 @@ namespace ColladaConvert
 
 			//temp load stuff
 			mMatLib.ReadFromFile("C:/Sandbox/MiscLibs/VanquisherAnims/Test.matlib", true);
+			*/
 
-			mMatLib.LoadToolTextures(mGD);
-
+			ColladaConvert.eMeshPartListUpdated	+=OnMeshPartListUpdated;
 			UpdateMaterials();
 
-			MaterialProperties.DataSource			=mMatModel[0].Parameters;
-			MaterialProperties.Columns[0].ReadOnly	=true;
-			MaterialProperties.Columns[1].ReadOnly	=true;
-			MaterialProperties.Columns[2].ReadOnly	=true;
+//			MaterialProperties.DataSource			=mMatModel[0].Parameters;
+	//		MaterialProperties.Columns[0].ReadOnly	=true;
+		//	MaterialProperties.Columns[1].ReadOnly	=true;
+			//MaterialProperties.Columns[2].ReadOnly	=true;
 		}
 
 
@@ -287,18 +286,12 @@ namespace ColladaConvert
 
 		private void OnNewMaterial(object sender, EventArgs e)
 		{
-			MaterialLib.Material	m	=new MaterialLib.Material();
+			MaterialLib.Material	m	=mMatLib.CreateMaterial();
 
 			m.Name			="default";
 			m.ShaderName	="";
 			m.Technique		="";
-			m.Alpha			=false;
-			m.BlendFunction	=BlendFunction.Add;
-			m.SourceBlend	=Blend.SourceAlpha;
-			m.DestBlend		=Blend.InverseSourceAlpha;
-			m.DepthWrite	=true;
-			m.CullMode		=CullMode.CullCounterClockwiseFace;
-			m.ZFunction		=CompareFunction.Less;
+			m.Emissive		=Microsoft.Xna.Framework.Color.White;
 
 			mMatLib.AddMaterial(m);
 			mMatModel.Add(m);

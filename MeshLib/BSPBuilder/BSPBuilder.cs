@@ -9,7 +9,6 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
-using Microsoft.Xna.Framework.Net;
 using Microsoft.Xna.Framework.Storage;
 using BSPLib;
 
@@ -20,6 +19,7 @@ namespace BSPBuilder
 	{
 		GraphicsDeviceManager	mGDM;
 		SpriteBatch				mSB;
+		ContentManager			mSharedCM;
 
 		//forms
 		MainForm		mMainForm;
@@ -94,8 +94,10 @@ namespace BSPBuilder
 
 		protected override void LoadContent()
 		{
-			mSB		=new SpriteBatch(GraphicsDevice);
-			mMatLib	=new MaterialLib.MaterialLib(mGDM.GraphicsDevice, Content);
+			mSB			=new SpriteBatch(GraphicsDevice);
+			mSharedCM	=new ContentManager(Services, "SharedContent");
+
+			mMatLib	=new MaterialLib.MaterialLib(mGDM.GraphicsDevice, Content, mSharedCM, true);
 
 			mIndoorMesh	=new MeshLib.IndoorMesh(GraphicsDevice, mMatLib);
 
@@ -122,17 +124,14 @@ namespace BSPBuilder
 			mMainForm.eLoadGBSP				+=OnLoadGBSP;
 			mMainForm.eDrawChoiceChanged	+=OnDrawChoiceChanged;
 
-			mBFX					=new BasicEffect(GraphicsDevice, null);
+			mBFX					=new BasicEffect(GraphicsDevice);
 			mBFX.View				=mGameCam.View;
 			mBFX.Projection			=mGameCam.Projection;
 			mBFX.VertexColorEnabled	=true;
 
-			mKoot	=Content.Load<SpriteFont>("Fonts/Kootenay");
+			mKoot	=mSharedCM.Load<SpriteFont>("Fonts/Koot20");
 
-			mVD	=new VertexDeclaration(mGDM.GraphicsDevice,
-				VertexPositionColorTexture.VertexElements);
-
-			mMapEffect	=new BasicEffect(mGDM.GraphicsDevice, null);
+			mMapEffect	=new BasicEffect(mGDM.GraphicsDevice);
 
 			mMapEffect.TextureEnabled		=false;
 			mMapEffect.DiffuseColor			=Vector3.One;
@@ -213,12 +212,13 @@ namespace BSPBuilder
 
 			GraphicsDevice	g	=mGDM.GraphicsDevice;
 
-			GraphicsDevice.RenderState.DepthBufferEnable	=true;
+//			GraphicsDevice.RenderState.DepthBufferEnable	=true;
 
 			if(mMap != null)
 			{
 				mIndoorMesh.Draw(g, mGameCam, mMap.IsMaterialVisibleFromPos);
 			}
+			/*
 			if(mVB != null)
 			{
 				g.VertexDeclaration		=mVD;
@@ -262,7 +262,7 @@ namespace BSPBuilder
 					g.RenderState.CullMode			=CullMode.CullCounterClockwiseFace;
 					g.RenderState.AlphaBlendEnable	=false;
 				}
-			}
+			}*/
 
 			//draw ray pieces if any
 			/*
@@ -327,7 +327,7 @@ namespace BSPBuilder
 			base.Draw(gameTime);
 		}
 
-
+		/*
 		void MakeDrawData()
 		{
 			if(mMap == null)
@@ -421,7 +421,7 @@ namespace BSPBuilder
 
 			mLineVB.SetData<VertexPositionColorTexture>(vpnt);
 			mLineIB.SetData<UInt32>(lineIndexes.ToArray());
-		}
+		}*/
 
 
 		void OnRepeatRay(object sender, EventArgs ea)
@@ -773,8 +773,11 @@ namespace BSPBuilder
 
 		void OnMaterialNuked(object sender, EventArgs ea)
 		{
-			//rebuild material vis
-			mMap.VisMaterials();
+			if(mMap != null)
+			{
+				//rebuild material vis
+				mMap.VisMaterials();
+			}
 		}
 
 
@@ -790,7 +793,7 @@ namespace BSPBuilder
 
 			mDrawChoice	=choice;
 
-			MakeDrawData();
+//			MakeDrawData();
 		}
 
 

@@ -67,8 +67,7 @@ namespace BSPZone
 
 		public void Write(string fileName)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.OpenOrCreate, FileAccess.Write);
+			FileStream	file	=new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
@@ -94,8 +93,7 @@ namespace BSPZone
 
 		public void Read(string fileName)
 		{
-			FileStream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName,
-									FileMode.Open, FileAccess.Read);
+			FileStream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
 
 			BinaryReader	br	=new BinaryReader(file);
 

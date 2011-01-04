@@ -14,12 +14,12 @@ namespace MaterialLib
 
 
 		public void StoreDraw(Vector3 sortPoint, Material matRef,
-			VertexBuffer vb, IndexBuffer ib, VertexDeclaration vd,
+			VertexBuffer vb, IndexBuffer ib,
 			Int32 baseVert, Int32 minVertIndex,
 			Int32 numVerts, Int32 startIndex, Int32 primCount)
 		{
 			AlphaNode	an	=new AlphaNode(sortPoint, matRef,
-				vb, ib, vd, baseVert, minVertIndex,
+				vb, ib, baseVert, minVertIndex,
 				numVerts, startIndex, primCount);
 
 			mAlphas.Add(an);

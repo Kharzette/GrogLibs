@@ -182,10 +182,8 @@ namespace MaterialLib
 			mHeight	=height;
 
 			mRoot			=new TexNode(width, height);
-			mAtlasTexture	=new Texture2D(g, width,
-								height, 1,
-								TextureUsage.None,
-								SurfaceFormat.Color);
+			mAtlasTexture	=new Texture2D(g, width, height,
+								false, SurfaceFormat.Color);
 		}
 
 
@@ -269,10 +267,8 @@ namespace MaterialLib
 
 			byte	[]atlasBytes	=br.ReadBytes(mWidth * mHeight * 4);
 
-			mAtlasTexture	=new Texture2D(g, mWidth,
-								mHeight, 1,
-								TextureUsage.None,
-								SurfaceFormat.Color);
+			mAtlasTexture	=new Texture2D(g, mWidth, mHeight,
+								false, SurfaceFormat.Color);
 
 			mAtlasTexture.SetData<byte>(atlasBytes);
 

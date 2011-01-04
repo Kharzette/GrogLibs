@@ -20,23 +20,31 @@ namespace MaterialLib
 		//emmisive color for radiosity
 		Color	mEmissiveColor	=Color.White;	//default white
 
-		//renderstate flags
-		bool			mbAlpha;
-		Blend			mSourceBlend;
-		Blend			mDestBlend;
-		BlendFunction	mBlendFunction;
-		bool			mbDepthWrite;
-		bool			mbAlphaTest;
-		CullMode		mCullMode;
-		CompareFunction	mZFunction;
+		//state objects, don't modify these directly
+		BlendState			mBlendState			=BlendState.Opaque;
+		DepthStencilState	mDepthStencilState	=DepthStencilState.Default;
+		RasterizerState		mRasterizeState		=RasterizerState.CullCounterClockwise;
 
 		//parameters for the chosen shader
 		List<ShaderParameters>			mParameters		=new List<ShaderParameters>();
-		BindingList<ShaderParameters>	mGUIParameters	=new BindingList<ShaderParameters>();
+
+		//tool side stuff
+#if !XBOX
+		GUIStates	mGUIStates;
+#endif
 
 		//list of parameters to ignore
 		//these will be updated by code at runtime
 		List<string>	mIgnoreParameters	=new List<string>();
+
+
+		//tool side constructor for editing
+		internal Material(StateBlockPool sbp)
+		{
+#if !XBOX
+			mGUIStates	=new GUIStates(this, sbp);
+#endif
+		}
 
 
 		public string Name
@@ -54,55 +62,38 @@ namespace MaterialLib
 			get { return mTechnique; }
 			set { mTechnique = value; }
 		}
+#if !XBOX
 		public BindingList<ShaderParameters> Parameters
 		{
-			get { return mGUIParameters; }
-			set { mGUIParameters = value; }
+			get { return mGUIStates.Parameters; }
+			set { mGUIStates.Parameters = value; }
 		}
+#endif
 		public Color Emissive
 		{
 			get { return mEmissiveColor; }
 			set { mEmissiveColor = value; }
 		}
-		public bool Alpha
+		public BlendState BlendState
 		{
-			get { return mbAlpha; }
-			set { mbAlpha = value; }
+			get { return mBlendState; }
+#if !XBOX
+			set { mGUIStates.SetBlendState(value); }
+#endif
 		}
-		public Blend SourceBlend
+		public DepthStencilState DepthState
 		{
-			get { return mSourceBlend; }
-			set { mSourceBlend = value; }
+			get { return mDepthStencilState; }
+#if !XBOX
+			set { mGUIStates.SetDepthState(value); }
+#endif
 		}
-		public Blend DestBlend
+		public RasterizerState RasterState
 		{
-			get { return mDestBlend; }
-			set { mDestBlend = value; }
-		}
-		public BlendFunction BlendFunction
-		{
-			get { return mBlendFunction; }
-			set { mBlendFunction = value; }
-		}
-		public bool DepthWrite
-		{
-			get { return mbDepthWrite; }
-			set { mbDepthWrite = value; }
-		}
-		public bool AlphaTest
-		{
-			get { return mbAlphaTest; }
-			set { mbAlphaTest = value; }
-		}
-		public CullMode CullMode
-		{
-			get { return mCullMode; }
-			set { mCullMode = value; }
-		}
-		public CompareFunction ZFunction
-		{
-			get { return mZFunction; }
-			set { mZFunction = value; }
+			get { return mRasterizeState; }
+#if !XBOX
+			set { mGUIStates.SetRasterState(value); }
+#endif
 		}
 
 
@@ -111,14 +102,29 @@ namespace MaterialLib
 			bw.Write(mName);
 			bw.Write(mShaderName);
 			bw.Write(mTechnique);
-			bw.Write(mbAlpha);
-			bw.Write((UInt32)mSourceBlend);
-			bw.Write((UInt32)mDestBlend);
-			bw.Write((UInt32)mBlendFunction);
-			bw.Write(mbDepthWrite);
-			bw.Write(mbAlphaTest);
-			bw.Write((UInt32)mCullMode);
-			bw.Write((UInt32)mZFunction);
+			bw.Write(mEmissiveColor.PackedValue);
+
+			//blend state
+			bw.Write((UInt32)mBlendState.AlphaBlendFunction);
+			bw.Write((UInt32)mBlendState.AlphaDestinationBlend);
+			bw.Write((UInt32)mBlendState.AlphaSourceBlend);
+			bw.Write(mBlendState.BlendFactor.PackedValue);
+			bw.Write((UInt32)mBlendState.ColorBlendFunction);
+			bw.Write((UInt32)mBlendState.ColorDestinationBlend);
+			bw.Write((UInt32)mBlendState.ColorSourceBlend);
+			bw.Write((UInt32)mBlendState.ColorWriteChannels);
+			bw.Write((UInt32)mBlendState.ColorWriteChannels1);
+			bw.Write((UInt32)mBlendState.ColorWriteChannels2);
+			bw.Write((UInt32)mBlendState.ColorWriteChannels3);
+			bw.Write(mBlendState.MultiSampleMask);
+
+			//depth state
+			bw.Write(mDepthStencilState.DepthBufferEnable);
+			bw.Write((UInt32)mDepthStencilState.DepthBufferFunction);
+			bw.Write(mDepthStencilState.DepthBufferWriteEnable);
+
+			//cullmode
+			bw.Write((UInt32)mRasterizeState.CullMode);
 
 			bw.Write(mParameters.Count);
 			foreach(ShaderParameters sp in mParameters)
@@ -139,14 +145,39 @@ namespace MaterialLib
 			mName			=br.ReadString();
 			mShaderName		=br.ReadString();
 			mTechnique		=br.ReadString();
-			mbAlpha			=br.ReadBoolean();
-			mSourceBlend	=(Blend)br.ReadUInt32();
-			mDestBlend		=(Blend)br.ReadUInt32();
-			mBlendFunction	=(BlendFunction)br.ReadUInt32();
-			mbDepthWrite	=br.ReadBoolean();
-			mbAlphaTest		=br.ReadBoolean();
-			mCullMode		=(CullMode)br.ReadUInt32();
-			mZFunction		=(CompareFunction)br.ReadUInt32();
+
+			UInt32	emCol	=br.ReadUInt32();
+
+			//what a pain in the ass
+			mEmissiveColor	=new Color(emCol & 0xff,
+				emCol & 0xff00 >> 8,
+				emCol & 0xff0000 >> 16,
+				emCol & 0xff000000 >> 24);
+
+			mBlendState.AlphaBlendFunction		=(BlendFunction)br.ReadUInt32();
+			mBlendState.AlphaDestinationBlend	=(Blend)br.ReadUInt32();
+			mBlendState.AlphaSourceBlend		=(Blend)br.ReadUInt32();
+
+			emCol	=br.ReadUInt32();
+			mBlendState.BlendFactor	=new Color(emCol & 0xff,
+				emCol & 0xff00 >> 8,
+				emCol & 0xff0000 >> 16,
+				emCol & 0xff000000 >> 24);
+
+			mBlendState.ColorBlendFunction		=(BlendFunction)br.ReadUInt32();
+			mBlendState.ColorDestinationBlend	=(Blend)br.ReadUInt32();
+			mBlendState.ColorSourceBlend		=(Blend)br.ReadUInt32();
+			mBlendState.ColorWriteChannels		=(ColorWriteChannels)br.ReadUInt32();
+			mBlendState.ColorWriteChannels1		=(ColorWriteChannels)br.ReadUInt32();
+			mBlendState.ColorWriteChannels2		=(ColorWriteChannels)br.ReadUInt32();
+			mBlendState.ColorWriteChannels3		=(ColorWriteChannels)br.ReadUInt32();
+			mBlendState.MultiSampleMask			=br.ReadInt32();
+
+			mDepthStencilState.DepthBufferEnable		=br.ReadBoolean();
+			mDepthStencilState.DepthBufferFunction		=(CompareFunction)br.ReadUInt32();
+			mDepthStencilState.DepthBufferWriteEnable	=br.ReadBoolean();
+
+			mRasterizeState.CullMode	=(CullMode)br.ReadUInt32();
 
 			mParameters.Clear();
 			int	numParameters	=br.ReadInt32();
@@ -271,14 +302,9 @@ namespace MaterialLib
 
 		public void ApplyRenderStates(GraphicsDevice g)
 		{
-			g.RenderState.AlphaBlendEnable			=Alpha;
-			g.RenderState.AlphaTestEnable			=AlphaTest;
-			g.RenderState.BlendFunction				=BlendFunction;
-			g.RenderState.SourceBlend				=SourceBlend;
-			g.RenderState.DestinationBlend			=DestBlend;
-			g.RenderState.DepthBufferWriteEnable	=DepthWrite;
-			g.RenderState.CullMode					=CullMode;
-			g.RenderState.DepthBufferFunction		=ZFunction;
+			g.BlendState		=mBlendState;
+			g.DepthStencilState	=mDepthStencilState;
+			g.RasterizerState	=mRasterizeState;
 		}
 
 
@@ -289,14 +315,7 @@ namespace MaterialLib
 			foreach(EffectParameter ep in fx.Parameters)
 			{
 				//skip matrices
-				if(ep.ParameterClass == EffectParameterClass.MatrixColumns
-					|| ep.ParameterClass == EffectParameterClass.MatrixRows)
-				{
-					continue;
-				}
-
-				//skip samplers
-				if(ep.ParameterType == EffectParameterType.Sampler)
+				if(ep.ParameterClass == EffectParameterClass.Matrix)
 				{
 					continue;
 				}
@@ -316,11 +335,7 @@ namespace MaterialLib
 
 				switch(sp.Class)
 				{
-					case EffectParameterClass.MatrixColumns:
-						sp.Value	=Convert.ToString(ep.GetValueMatrix());
-						break;
-
-					case EffectParameterClass.MatrixRows:
+					case EffectParameterClass.Matrix:
 						sp.Value	=Convert.ToString(ep.GetValueMatrix());
 						break;
 
@@ -406,15 +421,17 @@ namespace MaterialLib
 
 		void UpdateGUIParams()
 		{
-			mGUIParameters.Clear();
+#if !XBOX
+			mGUIStates.Parameters.Clear();
 
 			foreach(ShaderParameters sp in mParameters)
 			{
 				if(!mIgnoreParameters.Contains(sp.Name))
 				{
-					mGUIParameters.Add(sp);
+					mGUIStates.Parameters.Add(sp);
 				}
 			}
+#endif
 		}
 
 
@@ -428,5 +445,35 @@ namespace MaterialLib
 		{
 			mEmissiveColor	=new Color(red, green, blue, 255);
 		}
+
+
+		//should only be set from the state pool
+		internal void SetBlendState(BlendState bs)
+		{
+			mBlendState	=bs;
+		}
+
+
+		//should only be set from the state pool
+		internal void SetDepthState(DepthStencilState ds)
+		{
+			mDepthStencilState	=ds;
+		}
+
+
+		//should only be set from the state pool
+		internal void SetRasterState(RasterizerState rs)
+		{
+			mRasterizeState	=rs;
+		}
+
+
+		//expose gui stuff to gui
+#if !XBOX
+		public GUIStates GetGUIStates()
+		{
+			return	mGUIStates;
+		}
+#endif
 	}
 }
