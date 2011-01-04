@@ -236,8 +236,6 @@
 			this.Controls.Add(this.FileGroup);
 			this.Controls.Add(this.MaterialProperties);
 			this.Controls.Add(this.MaterialGrid);
-			this.DataBindings.Add(new System.Windows.Forms.Binding("Location", global::SharedForms.Settings.Default, "MaterialFormPos", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-			this.Location = global::SharedForms.Settings.Default.MaterialFormPos;
 			this.MaximizeBox = false;
 			this.Name = "MaterialForm";
 			this.ShowIcon = false;

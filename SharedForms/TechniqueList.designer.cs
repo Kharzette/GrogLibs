@@ -81,8 +81,6 @@
 			this.Controls.Add(this.Cancel);
 			this.Controls.Add(this.Ok);
 			this.Controls.Add(this.TechniqueGrid);
-            this.DataBindings.Add(new System.Windows.Forms.Binding("Location", global::SharedForms.Settings.Default, "TechniqueListPos", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            this.Location = global::SharedForms.Settings.Default.TechniqueListPos;
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
 			this.Name = "TechniqueList";

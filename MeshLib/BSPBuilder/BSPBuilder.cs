@@ -68,12 +68,12 @@ namespace BSPBuilder
 
 				//add data binding so it will save
 				mainWindow.DataBindings.Add(new System.Windows.Forms.Binding("Location",
-					global::BSPBuilder.Properties.Settings.Default,
+					global::BSPBuilder.Settings.Default,
 					"MainWindowPos", true,
 					System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
 
 				mainWindow.Location	=
-					global::BSPBuilder.Properties.Settings.Default.MainWindowPos;
+					global::BSPBuilder.Settings.Default.MainWindowPos;
 
 				IsMouseVisible	=true;
 			}
@@ -106,11 +106,19 @@ namespace BSPBuilder
 			mCollForm.eStartRay		+=OnStartRay;
 			mCollForm.eEndRay		+=OnEndRay;
 			mCollForm.eRepeatRay	+=OnRepeatRay;
+//			mCollForm.Location		=Properties.Settings.
 
 			mMatForm					=new SharedForms.MaterialForm(mGDM.GraphicsDevice, mMatLib, false);
 			mMatForm.Visible			=true;
 			mMatForm.eMaterialNuked		+=OnMaterialNuked;
 			mMatForm.eLibraryCleared	+=OnMaterialsCleared;
+			mMatForm.DataBindings.Add(new System.Windows.Forms.Binding("Location",
+				global::BSPBuilder.Settings.Default,
+				"MaterialFormPos", true,
+				System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+
+			mMatForm.Location	=
+				global::BSPBuilder.Settings.Default.MaterialFormPos;
 
 			mMainForm						=new MainForm();
 			mMainForm.Visible				=true;

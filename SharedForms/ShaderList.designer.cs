@@ -81,8 +81,6 @@
 			this.Controls.Add(this.Cancel);
 			this.Controls.Add(this.Ok);
 			this.Controls.Add(this.ShaderGrid);
-            this.DataBindings.Add(new System.Windows.Forms.Binding("Location", global::SharedForms.Settings.Default, "ShaderListPos", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            this.Location = global::SharedForms.Settings.Default.ShaderListPos;
 			this.MaximizeBox = false;
 			this.Name = "ShaderList";
 			this.ShowIcon = false;

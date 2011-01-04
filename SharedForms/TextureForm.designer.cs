@@ -83,8 +83,6 @@
 			this.Controls.Add(this.Cancel);
 			this.Controls.Add(this.Ok);
 			this.Controls.Add(this.TextureGrid);
-            this.DataBindings.Add(new System.Windows.Forms.Binding("Location", global::SharedForms.Settings.Default, "TextureFormPos", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            this.Location = global::SharedForms.Settings.Default.TextureFormPos;
 			this.MaximizeBox = false;
 			this.Name = "TextureForm";
 			this.ShowIcon = false;

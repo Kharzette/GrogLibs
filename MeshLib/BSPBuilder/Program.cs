@@ -10,7 +10,7 @@ namespace BSPBuilder
 			using (BSPBuilder game = new BSPBuilder())
 			{
 				game.Run();
-				Properties.Settings.Default.Save();
+				Settings.Default.Save();
 			}
 		}
 	}

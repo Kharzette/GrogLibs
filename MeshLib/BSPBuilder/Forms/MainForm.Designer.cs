@@ -46,11 +46,12 @@
 			this.GroupFileIO = new System.Windows.Forms.GroupBox();
 			this.SaveZone = new System.Windows.Forms.Button();
 			this.GenerateMaterials = new System.Windows.Forms.Button();
-			this.LoadGBSP = new System.Windows.Forms.Button();
 			this.LightGBSP = new System.Windows.Forms.Button();
 			this.BuildGBSP = new System.Windows.Forms.Button();
+			this.LoadGBSP = new System.Windows.Forms.Button();
 			this.VisGBSP = new System.Windows.Forms.Button();
 			this.GroupBuildSettings = new System.Windows.Forms.GroupBox();
+			this.DrawAndWork = new System.Windows.Forms.CheckBox();
 			this.FixTJunctions = new System.Windows.Forms.CheckBox();
 			this.VerboseEntity = new System.Windows.Forms.CheckBox();
 			this.VerboseBSP = new System.Windows.Forms.CheckBox();
@@ -86,7 +87,6 @@
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.SortPortals = new System.Windows.Forms.CheckBox();
 			this.FullVis = new System.Windows.Forms.CheckBox();
-			this.DrawAndWork = new System.Windows.Forms.CheckBox();
 			this.StatsGroupBox.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxCPUCores)).BeginInit();
 			this.GroupFileIO.SuspendLayout();
@@ -298,16 +298,6 @@
 			this.GenerateMaterials.UseVisualStyleBackColor = true;
 			this.GenerateMaterials.Click += new System.EventHandler(this.OnGenerateMaterials);
 			// 
-			// LoadGBSP
-			// 
-			this.LoadGBSP.Location = new System.Drawing.Point(87, 77);
-			this.LoadGBSP.Name = "LoadGBSP";
-			this.LoadGBSP.Size = new System.Drawing.Size(75, 23);
-			this.LoadGBSP.TabIndex = 19;
-			this.LoadGBSP.Text = "Zone GBSP";
-			this.LoadGBSP.UseVisualStyleBackColor = true;
-			this.LoadGBSP.Click += new System.EventHandler(this.OnLoadGBSP);
-			// 
 			// LightGBSP
 			// 
 			this.LightGBSP.Location = new System.Drawing.Point(87, 48);
@@ -328,6 +318,16 @@
 			this.BuildGBSP.Text = "Build GBSP";
 			this.BuildGBSP.UseVisualStyleBackColor = true;
 			this.BuildGBSP.Click += new System.EventHandler(this.OnBuildGBSP);
+			// 
+			// LoadGBSP
+			// 
+			this.LoadGBSP.Location = new System.Drawing.Point(87, 77);
+			this.LoadGBSP.Name = "LoadGBSP";
+			this.LoadGBSP.Size = new System.Drawing.Size(75, 23);
+			this.LoadGBSP.TabIndex = 19;
+			this.LoadGBSP.Text = "Zone GBSP";
+			this.LoadGBSP.UseVisualStyleBackColor = true;
+			this.LoadGBSP.Click += new System.EventHandler(this.OnLoadGBSP);
 			// 
 			// VisGBSP
 			// 
@@ -353,6 +353,16 @@
 			this.GroupBuildSettings.TabIndex = 21;
 			this.GroupBuildSettings.TabStop = false;
 			this.GroupBuildSettings.Text = "Build Settings";
+			// 
+			// DrawAndWork
+			// 
+			this.DrawAndWork.AutoSize = true;
+			this.DrawAndWork.Location = new System.Drawing.Point(6, 114);
+			this.DrawAndWork.Name = "DrawAndWork";
+			this.DrawAndWork.Size = new System.Drawing.Size(89, 17);
+			this.DrawAndWork.TabIndex = 23;
+			this.DrawAndWork.Text = "Draw n Work";
+			this.DrawAndWork.UseVisualStyleBackColor = true;
 			// 
 			// FixTJunctions
 			// 
@@ -809,16 +819,6 @@
 			this.FullVis.UseVisualStyleBackColor = true;
 			this.FullVis.CheckedChanged += new System.EventHandler(this.OnFullVisChanged);
 			// 
-			// DrawAndWork
-			// 
-			this.DrawAndWork.AutoSize = true;
-			this.DrawAndWork.Location = new System.Drawing.Point(6, 114);
-			this.DrawAndWork.Name = "DrawAndWork";
-			this.DrawAndWork.Size = new System.Drawing.Size(89, 17);
-			this.DrawAndWork.TabIndex = 23;
-			this.DrawAndWork.Text = "Draw n Work";
-			this.DrawAndWork.UseVisualStyleBackColor = true;
-			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -836,6 +836,8 @@
 			this.Controls.Add(this.GroupDrawSettings);
 			this.Controls.Add(this.GroupBuildSettings);
 			this.Controls.Add(this.ConsoleOut);
+			this.DataBindings.Add(new System.Windows.Forms.Binding("Location", global::BSPBuilder.Settings.Default, "MainFormPos", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+			this.Location = global::BSPBuilder.Settings.Default.MainFormPos;
 			this.Name = "MainForm";
 			this.ShowInTaskbar = false;
 			this.Text = "MainForm";

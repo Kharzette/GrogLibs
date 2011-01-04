@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace BSPBuilder.Properties {
+namespace BSPBuilder {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -20,66 +20,6 @@ namespace BSPBuilder.Properties {
         public static Settings Default {
             get {
                 return defaultInstance;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Point AnimFormPos {
-            get {
-                return ((global::System.Drawing.Point)(this["AnimFormPos"]));
-            }
-            set {
-                this["AnimFormPos"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Point MaterialFormPos {
-            get {
-                return ((global::System.Drawing.Point)(this["MaterialFormPos"]));
-            }
-            set {
-                this["MaterialFormPos"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Point ShaderListPos {
-            get {
-                return ((global::System.Drawing.Point)(this["ShaderListPos"]));
-            }
-            set {
-                this["ShaderListPos"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Point TechniqueListPos {
-            get {
-                return ((global::System.Drawing.Point)(this["TechniqueListPos"]));
-            }
-            set {
-                this["TechniqueListPos"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Point TextureFormPos {
-            get {
-                return ((global::System.Drawing.Point)(this["TextureFormPos"]));
-            }
-            set {
-                this["TextureFormPos"] = value;
             }
         }
         
@@ -104,6 +44,54 @@ namespace BSPBuilder.Properties {
             }
             set {
                 this["MainFormPos"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point MaterialFormPos {
+            get {
+                return ((global::System.Drawing.Point)(this["MaterialFormPos"]));
+            }
+            set {
+                this["MaterialFormPos"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point ShaderListFormPos {
+            get {
+                return ((global::System.Drawing.Point)(this["ShaderListFormPos"]));
+            }
+            set {
+                this["ShaderListFormPos"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point TextureListFormPos {
+            get {
+                return ((global::System.Drawing.Point)(this["TextureListFormPos"]));
+            }
+            set {
+                this["TextureListFormPos"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point CollisionFormPos {
+            get {
+                return ((global::System.Drawing.Point)(this["CollisionFormPos"]));
+            }
+            set {
+                this["CollisionFormPos"] = value;
             }
         }
     }
