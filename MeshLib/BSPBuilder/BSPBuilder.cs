@@ -22,9 +22,9 @@ namespace BSPBuilder
 		ContentManager			mSharedCM;
 
 		//forms
-		MainForm		mMainForm;
-		CollisionForm	mCollForm;
-		MaterialForm	mMatForm;
+		MainForm					mMainForm;
+		SharedForms.CollisionForm	mCollForm;
+		SharedForms.MaterialForm	mMatForm;
 
 		//data
 		Map						mMap;
@@ -101,13 +101,13 @@ namespace BSPBuilder
 
 			mIndoorMesh	=new MeshLib.IndoorMesh(GraphicsDevice, mMatLib);
 
-			mCollForm				=new CollisionForm();
+			mCollForm				=new SharedForms.CollisionForm();
 			mCollForm.Visible		=false;
 			mCollForm.eStartRay		+=OnStartRay;
 			mCollForm.eEndRay		+=OnEndRay;
 			mCollForm.eRepeatRay	+=OnRepeatRay;
 
-			mMatForm					=new MaterialForm(mGDM.GraphicsDevice, mMatLib);
+			mMatForm					=new SharedForms.MaterialForm(mGDM.GraphicsDevice, mMatLib, false);
 			mMatForm.Visible			=true;
 			mMatForm.eMaterialNuked		+=OnMaterialNuked;
 			mMatForm.eLibraryCleared	+=OnMaterialsCleared;

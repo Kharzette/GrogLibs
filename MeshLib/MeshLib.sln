@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSPZone360", "BSPZone\BSPZo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedContent", "..\SharedContent\SharedContent.contentproj", "{9E3808C2-1EF9-49BC-BCD6-5B80C519BC19}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedForms", "..\SharedForms\SharedForms.csproj", "{29C0FFE8-5702-48A3-840D-54706748FF68}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		BSPBuilderDebug|Any CPU = BSPBuilderDebug|Any CPU
@@ -330,6 +332,24 @@ Global
 		{9E3808C2-1EF9-49BC-BCD6-5B80C519BC19}.Release|Mixed Platforms.ActiveCfg = Debug|Any CPU
 		{9E3808C2-1EF9-49BC-BCD6-5B80C519BC19}.Release|x86.ActiveCfg = Debug|Any CPU
 		{9E3808C2-1EF9-49BC-BCD6-5B80C519BC19}.Release|Xbox 360.ActiveCfg = Debug|Any CPU
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.BSPBuilderDebug|Any CPU.ActiveCfg = Debug|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.BSPBuilderDebug|Mixed Platforms.ActiveCfg = Debug|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.BSPBuilderDebug|Mixed Platforms.Build.0 = Debug|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.BSPBuilderDebug|x86.ActiveCfg = Debug|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.BSPBuilderDebug|x86.Build.0 = Debug|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.BSPBuilderDebug|Xbox 360.ActiveCfg = Debug|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.Debug|x86.ActiveCfg = Debug|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.Debug|x86.Build.0 = Debug|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.Debug|Xbox 360.ActiveCfg = Debug|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.Release|Any CPU.ActiveCfg = Release|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.Release|Mixed Platforms.Build.0 = Release|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.Release|x86.ActiveCfg = Release|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.Release|x86.Build.0 = Release|x86
+		{29C0FFE8-5702-48A3-840D-54706748FF68}.Release|Xbox 360.ActiveCfg = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

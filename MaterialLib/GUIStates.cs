@@ -46,16 +46,9 @@ namespace MaterialLib
 			mSBPool	=sbp;
 
 			//set up initial values from the parent states
-			mAlphaBlendFunc		=mMat.BlendState.AlphaBlendFunction;
-			mAlphaDestBlend		=mMat.BlendState.AlphaDestinationBlend;
-			mAlphaSrcBlend		=mMat.BlendState.AlphaSourceBlend;
-			mBlendFactor		=mMat.BlendState.BlendFactor;
-			mColorBlendFunc		=mMat.BlendState.ColorBlendFunction;
-			mColorDestBlend		=mMat.BlendState.ColorDestinationBlend;
-			mColorSrcBlend		=mMat.BlendState.ColorSourceBlend;
-			mbDepthEnable		=mMat.DepthState.DepthBufferEnable;
-			mDepthFunc			=mMat.DepthState.DepthBufferFunction;
-			mbDepthWriteEnable	=mMat.DepthState.DepthBufferWriteEnable;
+			SetBlendValues(mMat.BlendState);
+			SetDepthValues(mMat.DepthState);
+			SetRasterValues(mMat.RasterState);
 		}
 
 
@@ -98,7 +91,7 @@ namespace MaterialLib
 			get { return mAlphaDestBlend; }
 			set { mAlphaDestBlend = value; }
 		}
-		public Blend AlphaSourceBlend
+		public Blend AlphaSrcBlend
 		{
 			get { return mAlphaSrcBlend; }
 			set { mAlphaSrcBlend = value; }
@@ -118,7 +111,7 @@ namespace MaterialLib
 			get { return mColorDestBlend; }
 			set { mColorDestBlend = value; }
 		}
-		public Blend ColorSourceBlend
+		public Blend ColorSrcBlend
 		{
 			get { return mColorSrcBlend; }
 			set { mColorSrcBlend = value; }
@@ -157,7 +150,7 @@ namespace MaterialLib
 			get { return mbDepthEnable; }
 			set { mbDepthEnable = value; }
 		}
-		public CompareFunction DepthFunction
+		public CompareFunction DepthFunc
 		{
 			get { return mDepthFunc; }
 			set { mDepthFunc = value; }
@@ -176,30 +169,72 @@ namespace MaterialLib
 		}
 
 
+		public Material GetParentMaterial()
+		{
+			return	mMat;
+		}
+
+
 		//for setting the state directly
 		internal void SetBlendState(BlendState bs)
 		{
-			mMat.SetBlendState(
-				mSBPool.FindBlendState(bs.AlphaBlendFunction, bs.AlphaDestinationBlend,
+			BlendState	fbs	=mSBPool.FindBlendState(bs.AlphaBlendFunction, bs.AlphaDestinationBlend,
 				bs.AlphaSourceBlend, bs.BlendFactor, bs.ColorBlendFunction,
-				bs.ColorDestinationBlend, bs.ColorSourceBlend));
+				bs.ColorDestinationBlend, bs.ColorSourceBlend);
+
+			SetBlendValues(fbs);
+
+			mMat.SetBlendState(fbs);
 		}
 
 
 		//for setting the state directly
 		internal void SetDepthState(DepthStencilState ds)
 		{
-			mMat.SetDepthState(
-				mSBPool.FindDepthStencilState(ds.DepthBufferEnable,
-				ds.DepthBufferFunction, ds.DepthBufferWriteEnable));
+			DepthStencilState	fds	=mSBPool.FindDepthStencilState(
+				ds.DepthBufferEnable, ds.DepthBufferFunction,
+				ds.DepthBufferWriteEnable);
+
+			SetDepthValues(fds);
+
+			mMat.SetDepthState(fds);
 		}
 
 
 		//for setting the state directly
 		internal void SetRasterState(RasterizerState rs)
 		{
-			mMat.SetRasterState(
-				mSBPool.FindRasterizerState(rs.CullMode));
+			RasterizerState	frs	=mSBPool.FindRasterizerState(rs.CullMode);
+
+			SetRasterValues(frs);
+
+			mMat.SetRasterState(frs);
+		}
+
+
+		void SetBlendValues(BlendState bs)
+		{
+			mAlphaBlendFunc		=bs.AlphaBlendFunction;
+			mAlphaDestBlend		=bs.AlphaDestinationBlend;
+			mAlphaSrcBlend		=bs.AlphaSourceBlend;
+			mBlendFactor		=bs.BlendFactor;
+			mColorBlendFunc		=bs.ColorBlendFunction;
+			mColorDestBlend		=bs.ColorDestinationBlend;
+			mColorSrcBlend		=bs.ColorSourceBlend;
+		}
+
+
+		void SetDepthValues(DepthStencilState dss)
+		{
+			mbDepthEnable		=dss.DepthBufferEnable;
+			mDepthFunc			=dss.DepthBufferFunction;
+			mbDepthWriteEnable	=dss.DepthBufferWriteEnable;
+		}
+
+
+		void SetRasterValues(RasterizerState rs)
+		{
+			mCullMode	=rs.CullMode;
 		}
 #endif
 	}
