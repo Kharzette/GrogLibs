@@ -710,12 +710,10 @@ namespace MaterialLib
 		{
 			string	path	=dirName + "\\" + fileName;
 
-			FileStream	fs	=new FileStream(path, FileMode.Open, FileAccess.Read);
-
-			Texture2D	tex	=Texture2D.FromStream(gd, fs);
-
 			path	=UtilityLib.FileUtil.StripExtension(path);
 			path	=path.Substring(path.LastIndexOf("SharedContent") + 14);
+
+			Texture2D	tex	=mSharedContent.Load<Texture2D>(path);
 			mMaps.Add(path, tex);
 		}
 
@@ -766,6 +764,8 @@ namespace MaterialLib
 					LoadTexture(gd, f.DirectoryName, f.Name);
 				}
 			}
+
+			//shared textures will always use the content manager
 			if(Directory.Exists("SharedContent/Textures"))
 			{
 				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory

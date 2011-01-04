@@ -73,7 +73,7 @@
 			this.MaterialGrid.MultiSelect = false;
 			this.MaterialGrid.Name = "MaterialGrid";
 			this.MaterialGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this.MaterialGrid.Size = new System.Drawing.Size(1219, 120);
+			this.MaterialGrid.Size = new System.Drawing.Size(1480, 120);
 			this.MaterialGrid.TabIndex = 5;
 			this.MaterialGrid.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.OnCellClick);
 			this.MaterialGrid.CellValidated += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnCellValidated);
@@ -89,7 +89,7 @@
 			this.MaterialProperties.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this.MaterialProperties.Location = new System.Drawing.Point(12, 12);
 			this.MaterialProperties.Name = "MaterialProperties";
-			this.MaterialProperties.Size = new System.Drawing.Size(1219, 196);
+			this.MaterialProperties.Size = new System.Drawing.Size(1480, 196);
 			this.MaterialProperties.TabIndex = 7;
 			this.MaterialProperties.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnPropCellClick);
 			this.MaterialProperties.CellValidated += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnPropValueValidated);
@@ -201,7 +201,7 @@
 			this.MeshPartGrid.Location = new System.Drawing.Point(12, 214);
 			this.MeshPartGrid.Name = "MeshPartGrid";
 			this.MeshPartGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-			this.MeshPartGrid.Size = new System.Drawing.Size(1219, 146);
+			this.MeshPartGrid.Size = new System.Drawing.Size(1480, 146);
 			this.MeshPartGrid.TabIndex = 19;
 			// 
 			// ApplyMaterial
@@ -228,7 +228,7 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(1243, 554);
+			this.ClientSize = new System.Drawing.Size(1504, 554);
 			this.ControlBox = false;
 			this.Controls.Add(this.MeshPartGroup);
 			this.Controls.Add(this.MeshPartGrid);

@@ -157,7 +157,7 @@ namespace SharedForms
 				MaterialProperties.SetBounds(MaterialProperties.Left,
 					MaterialProperties.Top,
 					MaterialGrid.Width,
-					MaterialGrid.Height + (MeshPartGrid.Height / 2));
+					MaterialGrid.Height + (MeshPartGrid.Height));
 
 				MaterialGrid.SetBounds(MaterialGrid.Left,
 					MaterialGrid.Top - (MeshPartGrid.Height / 2),

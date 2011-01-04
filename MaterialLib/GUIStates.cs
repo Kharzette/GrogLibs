@@ -84,37 +84,37 @@ namespace MaterialLib
 		public BlendFunction AlphaBlendFunc
 		{
 			get { return mAlphaBlendFunc; }
-			set { mAlphaBlendFunc = value; }
+			set { mAlphaBlendFunc = value; UpdateMaterialBlendState(); }
 		}
 		public Blend AlphaDestBlend
 		{
 			get { return mAlphaDestBlend; }
-			set { mAlphaDestBlend = value; }
+			set { mAlphaDestBlend = value; UpdateMaterialBlendState(); }
 		}
 		public Blend AlphaSrcBlend
 		{
 			get { return mAlphaSrcBlend; }
-			set { mAlphaSrcBlend = value; }
+			set { mAlphaSrcBlend = value; UpdateMaterialBlendState(); }
 		}
 		public Color BlendFactor
 		{
 			get { return mBlendFactor; }
-			set { mBlendFactor = value; }
+			set { mBlendFactor = value; UpdateMaterialBlendState(); }
 		}
 		public BlendFunction ColorBlendFunc
 		{
 			get { return mColorBlendFunc; }
-			set { mColorBlendFunc = value; }
+			set { mColorBlendFunc = value; UpdateMaterialBlendState(); }
 		}
 		public Blend ColorDestBlend
 		{
 			get { return mColorDestBlend; }
-			set { mColorDestBlend = value; }
+			set { mColorDestBlend = value; UpdateMaterialBlendState(); }
 		}
 		public Blend ColorSrcBlend
 		{
 			get { return mColorSrcBlend; }
-			set { mColorSrcBlend = value; }
+			set { mColorSrcBlend = value; UpdateMaterialBlendState(); }
 		}
 		/*
 		public ColorWriteChannels ColorWriteChans0
@@ -148,24 +148,24 @@ namespace MaterialLib
 		public bool DepthEnable
 		{
 			get { return mbDepthEnable; }
-			set { mbDepthEnable = value; }
+			set { mbDepthEnable = value; UpdateMaterialDepthState(); }
 		}
 		public CompareFunction DepthFunc
 		{
 			get { return mDepthFunc; }
-			set { mDepthFunc = value; }
+			set { mDepthFunc = value; UpdateMaterialDepthState(); }
 		}
 		public bool DepthWriteEnable
 		{
 			get { return mbDepthWriteEnable; }
-			set { mbDepthWriteEnable = value; }
+			set { mbDepthWriteEnable = value; UpdateMaterialDepthState(); }
 		}
 
 		//raster stuff
 		public CullMode CullMode
 		{
 			get { return mCullMode; }
-			set { mCullMode = value; }
+			set { mCullMode = value; UpdateMaterialRasterState(); }
 		}
 
 
@@ -229,6 +229,33 @@ namespace MaterialLib
 			mbDepthEnable		=dss.DepthBufferEnable;
 			mDepthFunc			=dss.DepthBufferFunction;
 			mbDepthWriteEnable	=dss.DepthBufferWriteEnable;
+		}
+
+
+		void UpdateMaterialBlendState()
+		{
+			BlendState	bs	=mSBPool.FindBlendState(mAlphaBlendFunc,
+				mAlphaDestBlend, mAlphaSrcBlend, mBlendFactor,
+				mColorBlendFunc, mColorDestBlend, mColorSrcBlend);
+
+			mMat.SetBlendState(bs);
+		}
+
+
+		void UpdateMaterialDepthState()
+		{
+			DepthStencilState	dss	=mSBPool.FindDepthStencilState(
+				mbDepthEnable, mDepthFunc, mbDepthWriteEnable);
+
+			mMat.SetDepthState(dss);
+		}
+
+
+		void UpdateMaterialRasterState()
+		{
+			RasterizerState	rs	=mSBPool.FindRasterizerState(mCullMode);
+
+			mMat.SetRasterState(rs);
 		}
 
 
