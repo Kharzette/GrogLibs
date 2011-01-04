@@ -22,8 +22,6 @@ namespace MaterialLib
 
 		//references to the content managers
 		ContentManager	mContent, mSharedContent;
-		private GraphicsDevice gd;
-		private bool p;
 
 
 		//tool side constructor, loads up everything
@@ -694,6 +692,34 @@ namespace MaterialLib
 		}
 
 
+		void LoadTexture(GraphicsDevice gd, string dirName, string fileName)
+		{
+			string	path	=dirName + "\\" + fileName;
+
+			FileStream	fs	=new FileStream(path, FileMode.Open, FileAccess.Read);
+
+			Texture2D	tex	=Texture2D.FromStream(gd, fs);
+
+			path	=UtilityLib.FileUtil.StripExtension(path);
+			path	=path.Substring(path.LastIndexOf("Content") + 8);
+			mMaps.Add(path, tex);
+		}
+
+
+		void LoadSharedTexture(GraphicsDevice gd, string dirName, string fileName)
+		{
+			string	path	=dirName + "\\" + fileName;
+
+			FileStream	fs	=new FileStream(path, FileMode.Open, FileAccess.Read);
+
+			Texture2D	tex	=Texture2D.FromStream(gd, fs);
+
+			path	=UtilityLib.FileUtil.StripExtension(path);
+			path	=path.Substring(path.LastIndexOf("SharedContent") + 14);
+			mMaps.Add(path, tex);
+		}
+
+
 		void LoadShader(string dirName, string fileName)
 		{
 			string	path	=dirName + "\\" + fileName;
@@ -728,40 +754,28 @@ namespace MaterialLib
 			//this is a toolside method, stubbed out on xbox
 			return;
 #else
-			DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
-				+ "../../../Content/Textures/");
-
-			//stupid getfiles won't take multiple wildcards
-			FileInfo[]		fi4	=di.GetFiles("*.jpg", SearchOption.AllDirectories);
-			FileInfo[]		fi6	=di.GetFiles("*.png", SearchOption.AllDirectories);
-
-			//merge these
-			List<FileInfo>	fi	=new List<FileInfo>();
-			foreach(FileInfo f in fi4)
+			if(Directory.Exists("../../../Content/Textures"))
 			{
-				fi.Add(f);
-			}
-			foreach(FileInfo f in fi6)
-			{
-				fi.Add(f);
-			}
+				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
+					+ "../../../Content/Textures/");
 
-			foreach(FileInfo f in fi)
-			{
-				Console.WriteLine("{0,-25} {1,25}", f.Name, f.LastWriteTime);
-
-				string	relPath	=f.DirectoryName.Substring(f.DirectoryName.LastIndexOf("Content") + 8);
-				relPath	+="\\" + f.Name;
-
-				string	fullPath	=f.DirectoryName + "\\" + f.Name;
-
-				if(!mMaps.ContainsKey(relPath))
+				//stupid getfiles won't take multiple wildcards
+				FileInfo[]		fi	=di.GetFiles("*.png", SearchOption.AllDirectories);
+				foreach(FileInfo f in fi)
 				{
-					//create an element
-					FileStream	fs	=new FileStream(fullPath, FileMode.Open, FileAccess.Read);
-					Texture2D	tex	=Texture2D.FromStream(gd, fs);
+					LoadTexture(gd, f.DirectoryName, f.Name);
+				}
+			}
+			if(Directory.Exists("SharedContent/Textures"))
+			{
+				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
+					+ "SharedContent/Textures/");
 
-					mMaps.Add(relPath, tex);
+				//stupid getfiles won't take multiple wildcards
+				FileInfo[]		fi	=di.GetFiles("*.xnb", SearchOption.AllDirectories);
+				foreach(FileInfo f in fi)
+				{
+					LoadSharedTexture(gd, f.DirectoryName, f.Name);
 				}
 			}
 #endif
