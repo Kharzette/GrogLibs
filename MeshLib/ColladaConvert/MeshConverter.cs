@@ -688,31 +688,31 @@ namespace ColladaConvert
 			}
 			if(bColor0)
 			{
-				ve[index]	=new VertexElement(offset, VertexElementFormat.Color,
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Vector4,
 					VertexElementUsage.Color, 0);
 				index++;
-				offset	+=4;
+				offset	+=16;
 			}
 			if(bColor1)
 			{
-				ve[index]	=new VertexElement(offset, VertexElementFormat.Color,
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Vector4,
 					VertexElementUsage.Color, 1);
 				index++;
-				offset	+=4;
+				offset	+=16;
 			}
 			if(bColor2)
 			{
-				ve[index]	=new VertexElement(offset, VertexElementFormat.Color,
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Vector4,
 					VertexElementUsage.Color, 2);
 				index++;
-				offset	+=4;
+				offset	+=16;
 			}
 			if(bColor3)
 			{
-				ve[index]	=new VertexElement(offset, VertexElementFormat.Color,
+				ve[index]	=new VertexElement(offset, VertexElementFormat.Vector4,
 					VertexElementUsage.Color, 3);
 				index++;
-				offset	+=4;
+				offset	+=16;
 			}
 
 			VertexDeclaration	ret	=new VertexDeclaration(ve);

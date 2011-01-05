@@ -42,6 +42,11 @@
     <Folder Include="Textures\" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\CommonFunctions.fxh">
+      <Name>CommonFunctions</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+    </None>
     <None Include="Shaders\Types.fxh">
       <Name>Types</Name>
       <Importer>EffectImporter</Importer>

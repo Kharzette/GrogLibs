@@ -1,4 +1,7 @@
 //commonly used types
+#ifndef _TYPESFXH
+#define _TYPESFXH
+
 struct VPosTex0
 {
 	float4	Position	: POSITION;
@@ -169,3 +172,4 @@ struct VTex0Tex1Tex2Tex3Tex4Col0Intensity
 	float4	Color		: COLOR0;
 	float4	Intensity	: TEXCOORD5;
 };
+#endif	//_TYPESFXH

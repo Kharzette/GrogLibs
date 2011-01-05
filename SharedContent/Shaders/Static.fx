@@ -1,9 +1,4 @@
 //ui fx, basic textured
-//matrii
-shared float4x4	mWorld;
-shared float4x4 mView;
-shared float4x4 mProjection;
-
 //texture layers used on the surface
 texture	mTexture;
 texture	mNMap;
@@ -24,6 +19,7 @@ float	mToonThresholds[2] = { 0.8, 0.4 };
 float	mToonBrightnessLevels[3] = { 1.3, 0.9, 0.5 };
 
 #include "Types.fxh"
+#include "CommonFunctions.fxh"
 
 
 sampler TexSampler0 = sampler_state
@@ -63,17 +59,9 @@ VPosTex0Col0 TrilightVS(VPosNormTex0 input)
 	output.Position	=mul(input.Position, wvp);
 	
 	float3 worldNormal	=mul(input.Normal, mWorld);
-	
-    float3	totalLight	=float3(0,0,0);
-	float	LdotN		=dot(worldNormal, mLightDirection);
-	
-	//trilight
-	totalLight	+=(mLightColor0 * max(0, LdotN))
-		+ (mLightColor1 * (1 - abs(LdotN)))
-		+ (mLightColor2 * max(0, -LdotN));
-		
-	output.Color.rgb	=totalLight;
-	output.Color.a		=1.0f;
+
+	output.Color	=ComputeTrilight(worldNormal, mLightDirection,
+						mLightColor0, mLightColor1, mLightColor2);
 	
 	//direct copy of texcoords
 	output.TexCoord0	=input.TexCoord0;
@@ -84,9 +72,7 @@ VPosTex0Col0 TrilightVS(VPosNormTex0 input)
 
 
 //regular N dot L lighting
-VPosTex0Col0 GouradVS(float3 position	: POSITION,
-				  float3 normal		: NORMAL,
-				  float2 tex0		: TEXCOORD0)
+VPosTex0Col0 GouradVS(VPosNormTex0 input)
 {
 	VPosTex0Col0	output;
 	
@@ -94,24 +80,22 @@ VPosTex0Col0 GouradVS(float3 position	: POSITION,
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 	
 	//transform the input position to the output
-	output.Position	=mul(float4(position, 1.0f), wvp);
+	output.Position	=mul(input.Position, wvp);
 	
-	float3 worldNormal	=mul(normal, mWorld);
+	float3 worldNormal	=mul(input.Normal, mWorld);
 	float	LdotN		=dot(worldNormal, mLightDirection);
 	
 	output.Color	=float4(LdotN, LdotN, LdotN, 1.0);
 	
 	//direct copy of texcoords
-	output.TexCoord0	=tex0;
+	output.TexCoord0	=input.TexCoord0;
 	
 	//return the output structure
 	return	output;
 }
 
 
-VPosTex0Col0 FullBrightVS(float3 position	: POSITION,
-					  float3 normal		: NORMAL,
-					  float2 tex0		: TEXCOORD0)
+VPosTex0Col0 FullBrightVS(VPosNormTex0 input)
 {
 	VPosTex0Col0	output;
 	
@@ -119,21 +103,19 @@ VPosTex0Col0 FullBrightVS(float3 position	: POSITION,
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 	
 	//transform the input position to the output
-	output.Position	=mul(float4(position, 1.0f), wvp);
+	output.Position	=mul(input.Position, wvp);
 	
 	output.Color	=float4(1.0, 1.0, 1.0, 1.0);
 	
 	//direct copy of texcoords
-	output.TexCoord0	=tex0;
+	output.TexCoord0	=input.TexCoord0;
 	
 	//return the output structure
 	return	output;
 }
 
 
-VPosTex0SingleTex1 OutlineVS(float4	pos		: POSITION,
-					float3	normal	: NORMAL,
-					float2	tex0	: TEXCOORD0)
+VPosTex0SingleTex1 OutlineVS(VPosNormTex0 input)
 {
 	VPosTex0SingleTex1	output;
 	
@@ -141,22 +123,20 @@ VPosTex0SingleTex1 OutlineVS(float4	pos		: POSITION,
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 	
 	//transform the input position to the output
-	output.Position	=mul(pos, wvp);
+	output.Position	=mul(input.Position, wvp);
 	
 	//direct copy of texcoord0
-	output.TexCoord0	=tex0;
+	output.TexCoord0	=input.TexCoord0;
 	
 	//lighting calculation
-	float3 worldNormal	=mul(normal, mWorld);
+	float3 worldNormal	=mul(input.Normal, mWorld);
 	output.TexCoord1	=dot(worldNormal, mLightDirection);
 	
 	return	output;
 }
 
 
-VPosCol0 NormalDepthVS(float4	pos		: POSITION,
-								  float3	normal	: NORMAL,
-								  float2	tex0	: TEXCOORD0)
+VPosCol0 NormalDepthVS(VPosNormTex0 input)
 {
 	VPosCol0	output;
 	
@@ -164,10 +144,10 @@ VPosCol0 NormalDepthVS(float4	pos		: POSITION,
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 	
 	//transform the input position to the output
-	output.Position	=mul(pos, wvp);
+	output.Position	=mul(input.Position, wvp);
 	
 	//lighting calculation
-	float3 worldNormal	=mul(normal, mWorld);
+	float3 worldNormal	=mul(input.Normal, mWorld);
 	
 	output.Color.rgb	=(worldNormal + 1) / 2;	
 	output.Color.a		=output.Position.z / output.Position.w;

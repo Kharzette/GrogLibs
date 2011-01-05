@@ -3,11 +3,8 @@
 #define	MAX_BONES	50
 
 //matrii
-shared float4x4	mWorld;
-shared float4x4 mView;
-shared float4x4 mProjection;
 shared float4x4	mBindPose;
-float4x4		mBones[MAX_BONES];
+shared float4x4	mBones[MAX_BONES];
 
 //texture layers used on the surface
 texture	mTexture0;
@@ -25,6 +22,7 @@ float3	mLightDirection;
 
 
 #include "Types.fxh"
+#include "CommonFunctions.fxh"
 
 
 sampler TexSampler0 = sampler_state
@@ -52,65 +50,6 @@ sampler TexSampler1 = sampler_state
 };
 
 
-//look up the skin transform
-float4x4 GetSkinXForm(float4 bnIdxs, float4 bnWeights)
-{
-	float4x4 skinTransform	=0;
-	skinTransform	+=mBones[bnIdxs.x] * bnWeights.x;
-	skinTransform	+=mBones[bnIdxs.y] * bnWeights.y;
-	skinTransform	+=mBones[bnIdxs.z] * bnWeights.z;
-	skinTransform	+=mBones[bnIdxs.w] * bnWeights.w;
-	
-	return	skinTransform;
-}
-
-
-//compute the 3 light effects on the vert
-float4 ComputeTrilight(float3 normal, float3 lightDir)
-{
-    float4	totalLight	=float4(0,0,0,1);
-	float	LdotN		=dot(normal, lightDir);
-	
-	//trilight
-	totalLight	+=(mLightColor0 * max(0, LdotN))
-		+ (mLightColor1 * (1 - abs(LdotN)))
-		+ (mLightColor2 * max(0, -LdotN));
-		
-	return	totalLight;
-}
-
-
-//compute the position and color of a skinned vert
-VPosCol0 ComputeSkinTrilight(VPosNormBone input)
-{
-	VPosCol0	output;
-	
-	float4	vertPos	=mul(input.Position, mBindPose);
-	
-	//generate the world-view-proj matrix
-	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
-	
-	//do the bone influences
-	float4x4 skinTransform	=GetSkinXForm(input.Blend0, input.Weight0);
-	
-	//xform the vert to the character's boney pos
-	vertPos	=mul(vertPos, skinTransform);
-	
-	//transform the input position to the output
-	output.Position	=mul(vertPos, wvp);
-
-	//skin transform the normal
-	float3	worldNormal	=mul(input.Normal, skinTransform);
-	
-	//world transform the normal
-	worldNormal	=mul(worldNormal, mWorld);
-	
-	output.Color	=ComputeTrilight(worldNormal, mLightDirection);
-	
-	return	output;
-}
-
-
 //vertex shader for skinned dual texcoord, single color
 VPosTex0Tex1Col0 TrilightSkinTex0Tex1Col0VS(VPosNormBoneTex0Tex1 input)
 {
@@ -120,7 +59,8 @@ VPosTex0Tex1Col0 TrilightSkinTex0Tex1Col0VS(VPosNormBoneTex0Tex1 input)
 	skVert.Blend0	=input.Blend0;
 	skVert.Weight0	=input.Weight0;
 	
-	VPosCol0	singleOut	=ComputeSkinTrilight(skVert);
+	VPosCol0	singleOut	=ComputeSkinTrilight(skVert, mBones, mBindPose,
+								mLightDirection, mLightColor0, mLightColor1, mLightColor2);
 	
 	VPosTex0Tex1Col0	output;
 	output.Position		=singleOut.Position;
@@ -141,7 +81,8 @@ VPosTex0Col0 TrilightSkinTex0Col0VS(VPosNormBoneTex0 input)
 	skVert.Blend0	=input.Blend0;
 	skVert.Weight0	=input.Weight0;
 	
-	VPosCol0	singleOut	=ComputeSkinTrilight(skVert);
+	VPosCol0	singleOut	=ComputeSkinTrilight(skVert, mBones, mBindPose,
+								mLightDirection, mLightColor0, mLightColor1, mLightColor2);
 	
 	VPosTex0Col0		output;
 	output.Position		=singleOut.Position;
