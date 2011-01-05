@@ -142,11 +142,12 @@ namespace SharedForms
 			}
 			
 
-			//set shadername and technique columns to
+			//set custom columns to
 			//read only so text can't be entered in cell
 			MaterialGrid.Columns[mShaderColumn].ReadOnly		=true;
-			MaterialGrid.Columns[mTechniqueColumn].ReadOnly	=true;
-
+			MaterialGrid.Columns[mTechniqueColumn].ReadOnly		=true;
+			MaterialGrid.Columns[mEmissiveColumn].ReadOnly		=true;
+			MaterialGrid.Columns[mBlendFactorColumn].ReadOnly	=true;
 
 			//adjust size
 			if(!mbMeshPartGridVisible)

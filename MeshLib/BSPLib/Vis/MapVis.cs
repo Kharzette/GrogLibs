@@ -675,7 +675,7 @@ namespace BSPLib
 				portIndexer.Add(mVisPortals[i], i);
 			}
 
-			Map.Print("Quick vis for " + mVisLeafs.Length + " portals...\n");
+			Map.Print("Quick vis for " + mVisPortals.Length + " portals...\n");
 
 			//Flood all the leafs with the fast method first...
 			for(int i=0;i < mVisLeafs.Length; i++)

@@ -15,6 +15,63 @@ namespace MaterialLib
 		List<RasterizerState>	mRasterStates	=new List<RasterizerState>();
 
 
+		internal void PurgeBlendStates(List<BlendState> blendStates)
+		{
+			List<BlendState>	nukes	=new List<BlendState>();
+
+			foreach(BlendState bs in mBlendStates)
+			{
+				if(!blendStates.Contains(bs))
+				{
+					nukes.Add(bs);
+				}
+			}
+
+			foreach(BlendState nuke in nukes)
+			{
+				mBlendStates.Remove(nuke);
+			}
+		}
+
+
+		internal void PurgeDepthStates(List<DepthStencilState> depthStates)
+		{
+			List<DepthStencilState>	nukes	=new List<DepthStencilState>();
+
+			foreach(DepthStencilState bs in mDepthStates)
+			{
+				if(!depthStates.Contains(bs))
+				{
+					nukes.Add(bs);
+				}
+			}
+
+			foreach(DepthStencilState nuke in nukes)
+			{
+				mDepthStates.Remove(nuke);
+			}
+		}
+
+
+		internal void PurgeRasterStates(List<RasterizerState> rastStates)
+		{
+			List<RasterizerState>	nukes	=new List<RasterizerState>();
+
+			foreach(RasterizerState bs in mRasterStates)
+			{
+				if(!rastStates.Contains(bs))
+				{
+					nukes.Add(bs);
+				}
+			}
+
+			foreach(RasterizerState nuke in nukes)
+			{
+				mRasterStates.Remove(nuke);
+			}
+		}
+
+
 		internal BlendState FindBlendState(BlendFunction abf, Blend adb,
 			Blend asb, Color bf, BlendFunction cbf, Blend cdb, Blend csb)
 		{

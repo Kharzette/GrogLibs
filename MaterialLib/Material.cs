@@ -28,10 +28,9 @@ namespace MaterialLib
 		//parameters for the chosen shader
 		List<ShaderParameters>			mParameters		=new List<ShaderParameters>();
 
-		//tool side stuff
-#if !XBOX
+		//for datagrid and editing, but also
+		//access to the state pool
 		GUIStates	mGUIStates;
-#endif
 
 		//list of parameters to ignore
 		//these will be updated by code at runtime
@@ -41,9 +40,7 @@ namespace MaterialLib
 		//tool side constructor for editing
 		internal Material(StateBlockPool sbp)
 		{
-#if !XBOX
 			mGUIStates	=new GUIStates(this, sbp);
-#endif
 		}
 
 
@@ -154,30 +151,36 @@ namespace MaterialLib
 				emCol & 0xff0000 >> 16,
 				emCol & 0xff000000 >> 24);
 
-			mBlendState.AlphaBlendFunction		=(BlendFunction)br.ReadUInt32();
-			mBlendState.AlphaDestinationBlend	=(Blend)br.ReadUInt32();
-			mBlendState.AlphaSourceBlend		=(Blend)br.ReadUInt32();
+			BlendState	bs	=new BlendState();
+			bs.AlphaBlendFunction		=(BlendFunction)br.ReadUInt32();
+			bs.AlphaDestinationBlend	=(Blend)br.ReadUInt32();
+			bs.AlphaSourceBlend			=(Blend)br.ReadUInt32();
 
 			emCol	=br.ReadUInt32();
-			mBlendState.BlendFactor	=new Color(emCol & 0xff,
+			bs.BlendFactor	=new Color(emCol & 0xff,
 				emCol & 0xff00 >> 8,
 				emCol & 0xff0000 >> 16,
 				emCol & 0xff000000 >> 24);
 
-			mBlendState.ColorBlendFunction		=(BlendFunction)br.ReadUInt32();
-			mBlendState.ColorDestinationBlend	=(Blend)br.ReadUInt32();
-			mBlendState.ColorSourceBlend		=(Blend)br.ReadUInt32();
-			mBlendState.ColorWriteChannels		=(ColorWriteChannels)br.ReadUInt32();
-			mBlendState.ColorWriteChannels1		=(ColorWriteChannels)br.ReadUInt32();
-			mBlendState.ColorWriteChannels2		=(ColorWriteChannels)br.ReadUInt32();
-			mBlendState.ColorWriteChannels3		=(ColorWriteChannels)br.ReadUInt32();
-			mBlendState.MultiSampleMask			=br.ReadInt32();
+			bs.ColorBlendFunction		=(BlendFunction)br.ReadUInt32();
+			bs.ColorDestinationBlend	=(Blend)br.ReadUInt32();
+			bs.ColorSourceBlend			=(Blend)br.ReadUInt32();
+			bs.ColorWriteChannels		=(ColorWriteChannels)br.ReadUInt32();
+			bs.ColorWriteChannels1		=(ColorWriteChannels)br.ReadUInt32();
+			bs.ColorWriteChannels2		=(ColorWriteChannels)br.ReadUInt32();
+			bs.ColorWriteChannels3		=(ColorWriteChannels)br.ReadUInt32();
+			bs.MultiSampleMask			=br.ReadInt32();
+			mGUIStates.SetBlendState(bs);
 
-			mDepthStencilState.DepthBufferEnable		=br.ReadBoolean();
-			mDepthStencilState.DepthBufferFunction		=(CompareFunction)br.ReadUInt32();
-			mDepthStencilState.DepthBufferWriteEnable	=br.ReadBoolean();
+			DepthStencilState	dss	=new DepthStencilState();
+			dss.DepthBufferEnable		=br.ReadBoolean();
+			dss.DepthBufferFunction		=(CompareFunction)br.ReadUInt32();
+			dss.DepthBufferWriteEnable	=br.ReadBoolean();
+			mGUIStates.SetDepthState(dss);
 
-			mRasterizeState.CullMode	=(CullMode)br.ReadUInt32();
+			RasterizerState	rs	=new RasterizerState();
+			rs.CullMode	=(CullMode)br.ReadUInt32();
+			mGUIStates.SetRasterState(rs);
 
 			mParameters.Clear();
 			int	numParameters	=br.ReadInt32();

@@ -116,12 +116,12 @@ namespace UtilityLib
 			VertexElement	[]vels	=new VertexElement[numElements];
 			for(int i=0;i < numElements;i++)
 			{
-				short	offset		=br.ReadInt16();
+				int	offset		=br.ReadInt32();
 
 				VertexElementFormat	vef	=(VertexElementFormat)br.ReadUInt32();
 				VertexElementUsage	veu	=(VertexElementUsage)br.ReadUInt32();
 
-				byte	usageIndex	=br.ReadByte();
+				int	usageIndex	=br.ReadInt32();
 
 				vels[i]	=new VertexElement(offset, vef, veu, usageIndex);
 			}

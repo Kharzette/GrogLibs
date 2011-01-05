@@ -128,9 +128,8 @@ namespace MaterialLib
 		//all the textures / shaders
 		public void SaveToFile(string fileName)
 		{
-			Stream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
-
-			BinaryWriter	bw	=new BinaryWriter(file);
+			FileStream		fs	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
+			BinaryWriter	bw	=new BinaryWriter(fs);
 
 			//write a magic number identifying matlibs
 			UInt32	magic	=0xFA77DA77;
@@ -146,15 +145,25 @@ namespace MaterialLib
 			}
 
 			bw.Close();
-			file.Close();
+			fs.Close();
 		}
 
 
 		public bool ReadFromFile(string fileName, bool bTool)
 		{
-			Stream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
-
-			BinaryReader	br	=new BinaryReader(file);
+			FileStream		fs		=null;
+			Stream			file	=null;
+			BinaryReader	br		=null;
+			if(bTool)
+			{
+				fs	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+				br	=new BinaryReader(fs);
+			}
+			else
+			{
+				file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
+				br	=new BinaryReader(file);
+			}
 
 			//clear existing data
 			mMaps.Clear();
@@ -210,9 +219,20 @@ namespace MaterialLib
 				{
 					if(shd != null && shd != "")
 					{
-						Effect	fx	=mContent.Load<Effect>(shd);
+						Effect	fx	=null;
+						if(File.Exists("Content/" + shd + ".xnb"))
+						{
+							fx	=mContent.Load<Effect>(shd);
+						}
+						else if(File.Exists("SharedContent/" + shd + ".xnb"))
+						{
+							fx	=mSharedContent.Load<Effect>(shd);
+						}
 
-						mFX.Add(shd, fx);
+						if(fx != null)
+						{
+							mFX.Add(shd, fx);
+						}
 					}
 				}
 
@@ -239,7 +259,15 @@ namespace MaterialLib
 			}
 
 			br.Close();
-			file.Close();
+
+			if(bTool)
+			{
+				fs.Close();
+			}
+			else
+			{
+				file.Close();
+			}
 
 			return	true;
 		}
@@ -640,6 +668,24 @@ namespace MaterialLib
 
 			//update eyepos in material parameters
 			SetParameterOnAll("mEyePos", eyePos);
+		}
+
+
+		void PurgeStates()
+		{
+			List<BlendState>		bss	=new List<BlendState>();
+			List<DepthStencilState>	dss	=new List<DepthStencilState>();
+			List<RasterizerState>	rss	=new List<RasterizerState>();
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				bss.Add(mat.Value.BlendState);
+				dss.Add(mat.Value.DepthState);
+				rss.Add(mat.Value.RasterState);
+			}
+
+			mStateBlockPool.PurgeBlendStates(bss);
+			mStateBlockPool.PurgeDepthStates(dss);
+			mStateBlockPool.PurgeRasterStates(rss);
 		}
 
 

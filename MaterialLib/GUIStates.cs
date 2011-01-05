@@ -12,16 +12,16 @@ namespace MaterialLib
 	//by editors
 	public class GUIStates
 	{
-#if !XBOX
 		//reference to the material that owns us
 		Material	mMat;
 
 		//reference to the state block pool
 		StateBlockPool	mSBPool;
 
+#if !XBOX
 		//tool side shader parameters
 		BindingList<ShaderParameters>	mGUIParameters	=new BindingList<ShaderParameters>();
-
+#endif
 		//blend state data
 		BlendFunction	mAlphaBlendFunc;
 		Blend			mAlphaDestBlend;
@@ -168,7 +168,6 @@ namespace MaterialLib
 			set { mCullMode = value; UpdateMaterialRasterState(); }
 		}
 
-
 		public Material GetParentMaterial()
 		{
 			return	mMat;
@@ -263,6 +262,5 @@ namespace MaterialLib
 		{
 			mCullMode	=rs.CullMode;
 		}
-#endif
 	}
 }

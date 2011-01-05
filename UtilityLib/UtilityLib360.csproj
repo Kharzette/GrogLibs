@@ -74,6 +74,17 @@
     <LangVersion>3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'BSPTestDebug|Xbox 360'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Xbox 360\BSPTestDebug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;XBOX;XBOX360</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <LangVersion>3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="FileUtil.cs" />
     <Compile Include="GameCamera.cs" />

@@ -18,6 +18,7 @@ namespace BSPTest
 	{
 		GraphicsDeviceManager	mGDM;
 		SpriteBatch				mSB;
+		ContentManager			mSharedCM;
 		SpriteFont				mKoot;
 
 		Zone					mZone;
@@ -61,19 +62,24 @@ namespace BSPTest
 			base.Initialize();
 		}
 
+
 		protected override void LoadContent()
 		{
-			mSB		=new SpriteBatch(GraphicsDevice);
-			mKoot	=Content.Load<SpriteFont>("Fonts/Kootenay");
+			mSB			=new SpriteBatch(GraphicsDevice);
+			mSharedCM	=new ContentManager(Services, "SharedContent");
+			mKoot		=mSharedCM.Load<SpriteFont>("Fonts/Koot20");
 
-			mMatLib	=new MaterialLib.MaterialLib(GraphicsDevice, Content, "Content/eels.MatLib", false);
+			mMatLib	=new MaterialLib.MaterialLib(GraphicsDevice,
+				Content, mSharedCM, false);
+
+			mMatLib.ReadFromFile("Content/dm4ish.MatLib", false);
 
 			mZone	=new Zone();
 			mLevel	=new MeshLib.IndoorMesh(GraphicsDevice, mMatLib);
 			
-			mZone.Read("Content/eels.Zone");
+			mZone.Read("Content/dm4ish.Zone");
 
-			mLevel.Read(GraphicsDevice, "Content/eels.ZoneDraw", false);
+			mLevel.Read(GraphicsDevice, "Content/dm4ish.ZoneDraw", false);
 
 			mGameCam.CamPos	=-mZone.GetPlayerStartPos();
 		}
