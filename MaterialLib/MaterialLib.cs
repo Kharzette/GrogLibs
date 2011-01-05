@@ -499,7 +499,10 @@ namespace MaterialLib
 					case EffectParameterClass.Object:
 						if(sp.Type == EffectParameterType.Texture)
 						{
-							fx.Parameters[sp.Name].SetValue(mMaps[sp.Value]);
+							if(mMaps.ContainsKey(sp.Value))
+							{
+								fx.Parameters[sp.Name].SetValue(mMaps[sp.Value]);
+							}
 						}
 						else
 						{
@@ -740,8 +743,8 @@ namespace MaterialLib
 
 			Texture2D	tex	=Texture2D.FromStream(gd, fs);
 
-			path	=UtilityLib.FileUtil.StripExtension(path);
 			path	=path.Substring(path.LastIndexOf("Content") + 8);
+
 			mMaps.Add(path, tex);
 		}
 
@@ -750,10 +753,11 @@ namespace MaterialLib
 		{
 			string	path	=dirName + "\\" + fileName;
 
-			path	=UtilityLib.FileUtil.StripExtension(path);
 			path	=path.Substring(path.LastIndexOf("SharedContent") + 14);
 
-			Texture2D	tex	=mSharedContent.Load<Texture2D>(path);
+			string	sansExt	=UtilityLib.FileUtil.StripExtension(path);
+
+			Texture2D	tex	=mSharedContent.Load<Texture2D>(sansExt);
 			mMaps.Add(path, tex);
 		}
 

@@ -158,7 +158,7 @@ namespace MeshLib
 		}
 
 
-		public override void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib)
+		public override void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib, Matrix world)
 		{
 			if(!mbVisible)
 			{
@@ -183,6 +183,8 @@ namespace MeshLib
 			UpdateShaderBones(fx);
 
 			matLib.ApplyParameters(mMaterialName);
+
+			fx.Parameters["mWorld"].SetValue(world);
 
 			if(fx.Parameters["mBindPose"] != null)
 			{

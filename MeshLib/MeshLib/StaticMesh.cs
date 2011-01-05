@@ -88,7 +88,7 @@ namespace MeshLib
 		}
 
 
-		public override void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib)
+		public override void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib, Matrix world)
 		{
 			if(!mbVisible)
 			{
@@ -112,6 +112,8 @@ namespace MeshLib
 
 			matLib.ApplyParameters(mMaterialName);
 			mat.ApplyRenderStates(g);
+
+			fx.Parameters["mWorld"].SetValue(world);
 
 			fx.CurrentTechnique.Passes[0].Apply();
 

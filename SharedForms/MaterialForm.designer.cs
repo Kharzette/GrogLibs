@@ -203,6 +203,7 @@
 			this.MeshPartGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this.MeshPartGrid.Size = new System.Drawing.Size(1480, 146);
 			this.MeshPartGrid.TabIndex = 19;
+			this.MeshPartGrid.UserDeletingRow += new System.Windows.Forms.DataGridViewRowCancelEventHandler(this.OnMeshPartNuking);
 			// 
 			// ApplyMaterial
 			// 

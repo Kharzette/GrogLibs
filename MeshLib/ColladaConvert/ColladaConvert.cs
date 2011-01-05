@@ -67,6 +67,8 @@ namespace ColladaConvert
 
 				mainWindow.Location	=
 					global::ColladaConvert.Properties.Settings.Default.MainWindowPos;
+
+				IsMouseVisible	=true;
 			}
 		}
 

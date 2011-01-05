@@ -11,12 +11,16 @@ namespace MeshLib
 {
 	public class Character
 	{
+		//parts
 		List<SkinnedMesh>	mMeshParts	=new List<SkinnedMesh>();
 		List<Skin>			mSkins		=new List<Skin>();
 
 		//refs to anim and material libs
 		MaterialLib.MaterialLib	mMatLib;
 		AnimLib					mAnimLib;
+
+		//transform
+		Matrix	mTransform;
 
 		//collision sphere
 		IRayCastable	mBounds	=new SphereBounds();
@@ -35,6 +39,12 @@ namespace MeshLib
 		public IRayCastable GetBounds()
 		{
 			return	mBounds;
+		}
+
+
+		public void SetTransform(Matrix mat)
+		{
+			mTransform	=mat;
 		}
 
 
@@ -305,7 +315,7 @@ namespace MeshLib
 				{
 					continue;
 				}
-				m.Draw(gd, mMatLib);
+				m.Draw(gd, mMatLib, mTransform);
 			}
 		}
 	}

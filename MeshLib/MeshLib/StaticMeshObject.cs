@@ -15,6 +15,9 @@ namespace MeshLib
 		//refs to anim and material libs
 		MaterialLib.MaterialLib	mMatLib;
 
+		//transform
+		Matrix	mTransform;
+
 		//events
 		public event EventHandler	eRayCollision;
 
@@ -134,7 +137,7 @@ namespace MeshLib
 				{
 					continue;
 				}
-				m.Draw(gd, mMatLib);
+				m.Draw(gd, mMatLib, mTransform);
 			}
 		}
 

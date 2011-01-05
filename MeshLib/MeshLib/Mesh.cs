@@ -123,7 +123,7 @@ namespace MeshLib
 
 		public virtual void Write(BinaryWriter bw) { }
 		public virtual void Read(BinaryReader br, GraphicsDevice gd, bool bEditor) { }
-		public virtual void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib) { }
+		public virtual void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib, Matrix world) { }
 
 
 		public float? RayIntersect(Vector3 start, Vector3 end)

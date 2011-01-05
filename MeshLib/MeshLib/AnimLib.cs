@@ -27,6 +27,11 @@ namespace MeshLib
 			if(mAnims.ContainsKey(key))
 			{
 				mAnims.Remove(key);
+
+				if(mAnims.Count == 0)
+				{
+					mSkeleton	=null;
+				}
 			}
 		}
 
@@ -34,6 +39,7 @@ namespace MeshLib
 		public void NukeAll()
 		{
 			mAnims.Clear();
+			mSkeleton	=null;
 		}
 
 

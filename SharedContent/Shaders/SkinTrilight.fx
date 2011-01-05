@@ -10,10 +10,6 @@ shared float4x4	mBones[MAX_BONES];
 texture	mTexture0;
 texture mTexture1;
 
-//material amb & diffuse
-float4	mMatAmbient;
-float4	mMatDiffuse;
-
 //These are considered directional (no falloff)
 float4	mLightColor0;		//trilights need 3 colors
 float4	mLightColor1;		//trilights need 3 colors
