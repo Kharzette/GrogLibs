@@ -15,17 +15,18 @@ namespace ColladaConvert
 	public class ColladaConvert : Microsoft.Xna.Framework.Game
 	{
 		GraphicsDeviceManager	mGDM;
+		ContentManager			mSharedCM;
 		VertexBuffer			mVB, mBoundsVB;
 		IndexBuffer				mIB, mBoundsIB;
 		Effect					mFX;
 
-		MaterialLib.MaterialLib		mMatLib;
-		AnimLib				mAnimLib;
-		Character			mCharacter;
-		StaticMeshObject	mStaticMesh;
+		MaterialLib.MaterialLib	mMatLib;
+		AnimLib					mAnimLib;
+		Character				mCharacter;
+		StaticMeshObject		mStaticMesh;
 
 		//material gui
-		MaterialForm	mMF;
+		SharedForms.MaterialForm	mMF;
 
 		//animation gui
 		AnimForm	mCF;
@@ -56,7 +57,6 @@ namespace ColladaConvert
 
 
 		public static event EventHandler	eAnimsUpdated;
-		public static event EventHandler	eMeshPartListUpdated;
 
 		public ColladaConvert()
 		{
@@ -116,13 +116,14 @@ namespace ColladaConvert
 
 		protected override void LoadContent()
 		{
-			mMatLib		=new MaterialLib.MaterialLib(mGDM.GraphicsDevice, Content);
+			mSharedCM	=new ContentManager(Services, "SharedContent");
+			mMatLib		=new MaterialLib.MaterialLib(mGDM.GraphicsDevice, Content, mSharedCM, true);
 			mAnimLib	=new AnimLib();
 			mCharacter	=new Character(mMatLib, mAnimLib);
 			mStaticMesh	=new StaticMeshObject(mMatLib);
 
 			//load debug shaders
-			mFX			=Content.Load<Effect>("Shaders/Static");
+			mFX	=mSharedCM.Load<Effect>("Shaders/Static");
 
 			mDesu	=Content.Load<Texture2D>("Textures/desu");
 			mEureka	=Content.Load<Texture2D>("Textures/Eureka");
@@ -204,12 +205,18 @@ namespace ColladaConvert
 			mCF.eLoadStatic				+=OnLoadStatic;
 			mCF.eSaveStatic				+=OnSaveStatic;
 
-			mMF	=new MaterialForm(mGDM.GraphicsDevice, mMatLib);
+			mMF	=new SharedForms.MaterialForm(mGDM.GraphicsDevice, mMatLib, true);
 			mMF.Visible	=true;
 
-			mMF.eBoundsUpdated	+=OnBoundsChanged;
+			//bind matform window position
+			mMF.DataBindings.Add(new System.Windows.Forms.Binding("Location",
+				global::ColladaConvert.Properties.Settings.Default,
+				"MaterialFormPos", true,
+				System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+
+//			mMF.eBoundsUpdated	+=OnBoundsChanged;
 			mMF.eNukedMeshPart	+=OnNukedMeshPart;
-			mMF.eBoundMesh		+=OnBoundMesh;
+//			mMF.eBoundMesh		+=OnBoundMesh;
 		}
 
 
@@ -273,7 +280,7 @@ namespace ColladaConvert
 		{
 			mCharacter	=ColladaFileUtils.LoadCharacter(sender as string, mGDM.GraphicsDevice, mMatLib, mAnimLib);
 
-			eMeshPartListUpdated(mCharacter.GetMeshPartList(), null);
+			mMF.UpdateMeshPartList(mCharacter.GetMeshPartList(), null);
 			eAnimsUpdated(mAnimLib.GetAnims(), null);
 		}
 
@@ -459,7 +466,7 @@ namespace ColladaConvert
 
 			mStaticMesh	=ColladaFileUtils.LoadStatic(path, mGDM.GraphicsDevice, mMatLib);
 
-			eMeshPartListUpdated(mStaticMesh.GetMeshPartList(), null);
+			mMF.UpdateMeshPartList(null, mStaticMesh.GetMeshPartList());
 		}
 
 
@@ -495,7 +502,7 @@ namespace ColladaConvert
 			mCharacter	=new Character(mMatLib, mAnimLib);
 			mCharacter.ReadFromFile(path, mGDM.GraphicsDevice, true);
 
-			eMeshPartListUpdated(mCharacter.GetMeshPartList(), null);
+			mMF.UpdateMeshPartList(mCharacter.GetMeshPartList(), null);
 		}
 
 
@@ -505,7 +512,7 @@ namespace ColladaConvert
 
 			mStaticMesh.ReadFromFile(path, mGDM.GraphicsDevice, true);
 
-			eMeshPartListUpdated(mStaticMesh.GetMeshPartList(), null);
+			mMF.UpdateMeshPartList(null, mStaticMesh.GetMeshPartList());
 		}
 
 
@@ -625,7 +632,7 @@ namespace ColladaConvert
 				0, 0, 4, 0, 2);
 
 			//draw bounds if any
-			if(mBoundsVB != null && mMF.bDrawBounds())
+			if(mBoundsVB != null)// && mMF.bDrawBounds())
 			{
 				g.SetVertexBuffer(mBoundsVB);
 				g.Indices	=mBoundsIB;

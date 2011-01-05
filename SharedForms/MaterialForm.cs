@@ -33,6 +33,7 @@ namespace SharedForms
 		//events
 		public event EventHandler	eMaterialNuked;
 		public event EventHandler	eLibraryCleared;
+		public event EventHandler	eNukedMeshPart;
 
 		//column indexes for special behavior
 		int	mShaderColumn;
@@ -309,6 +310,31 @@ namespace SharedForms
 		}
 
 
+		public void UpdateMeshPartList(List<SkinnedMesh> skm, List<StaticMesh> stm)
+		{
+			BindingList<Mesh>	blm	=new BindingList<Mesh>();
+
+			if(skm != null && skm.Count != 0)
+			{
+				foreach(SkinnedMesh m in skm)
+				{
+					blm.Add(m);
+				}
+			}
+
+			if(stm != null && stm.Count != 0)
+			{
+				foreach(StaticMesh m in stm)
+				{
+					blm.Add(m);
+				}
+			}
+			MeshPartGrid.DataSource	=blm;
+
+//			BoundsChanged();
+		}
+
+
 		public void UpdateMaterials()
 		{
 			mMatModel	=new MaterialGridModel(mMatLib.GetMaterials());
@@ -554,6 +580,16 @@ namespace SharedForms
 			MaterialProperties.Columns[0].ReadOnly	=true;
 			MaterialProperties.Columns[1].ReadOnly	=true;
 			MaterialProperties.Columns[2].ReadOnly	=true;
+		}
+
+
+		void OnMeshPartNuking(object sender, DataGridViewRowCancelEventArgs e)
+		{
+			if(e.Row.DataBoundItem.GetType().BaseType == typeof(Mesh))
+			{
+				Mesh	nukeMe	=(Mesh)e.Row.DataBoundItem;
+				eNukedMeshPart(nukeMe, null);
+			}
 		}
 
 

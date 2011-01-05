@@ -90,6 +90,19 @@
     <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
     <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ColladaConvertDebug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\ColladaConvertDebug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WINDOWS</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+    <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
     <Reference Include="Microsoft.Xna.Framework.Game, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
@@ -127,31 +140,6 @@
     </Compile>
     <Compile Include="Forms\AnimForm.Designer.cs">
       <DependentUpon>AnimForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\MaterialForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\MaterialForm.Designer.cs">
-      <DependentUpon>MaterialForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\GridModel.cs" />
-    <Compile Include="Forms\ShaderList.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\ShaderList.Designer.cs">
-      <DependentUpon>ShaderList.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\TechniqueList.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\TechniqueList.Designer.cs">
-      <DependentUpon>TechniqueList.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\TextureForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\TextureForm.Designer.cs">
-      <DependentUpon>TextureForm.cs</DependentUpon>
     </Compile>
     <Compile Include="MeshConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -220,18 +208,6 @@
     <EmbeddedResource Include="Forms\AnimForm.resx">
       <DependentUpon>AnimForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\MaterialForm.resx">
-      <DependentUpon>MaterialForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Forms\ShaderList.resx">
-      <DependentUpon>ShaderList.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Forms\TechniqueList.resx">
-      <DependentUpon>TechniqueList.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Forms\TextureForm.resx">
-      <DependentUpon>TextureForm.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -249,6 +225,10 @@
       <Project>{9E3808C2-1EF9-49BC-BCD6-5B80C519BC19}</Project>
       <Name>SharedContent</Name>
       <XnaReferenceType>Content</XnaReferenceType>
+    </ProjectReference>
+    <ProjectReference Include="..\..\SharedForms\SharedForms.csproj">
+      <Project>{29C0FFE8-5702-48A3-840D-54706748FF68}</Project>
+      <Name>SharedForms</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\UtilityLib\UtilityLib.csproj">
       <Project>{BB91910C-2595-4EB6-B48C-30BCC41457F6}</Project>

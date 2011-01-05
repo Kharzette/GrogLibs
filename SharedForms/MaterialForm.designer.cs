@@ -212,6 +212,7 @@
 			this.ApplyMaterial.TabIndex = 20;
 			this.ApplyMaterial.Text = "Apply Material";
 			this.ApplyMaterial.UseVisualStyleBackColor = true;
+			this.ApplyMaterial.Click += new System.EventHandler(this.OnApplyMaterial);
 			// 
 			// MeshPartGroup
 			// 

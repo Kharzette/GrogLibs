@@ -56,6 +56,11 @@ namespace MeshLib
 		//doesn't have any new bones
 		public bool CheckSkeleton(Skeleton sk)
 		{
+			if(mSkeleton == null)
+			{
+				return	false;
+			}
+
 			List<string>	existingBones	=new List<string>();
 			List<string>	newBones		=new List<string>();
 
@@ -97,7 +102,7 @@ namespace MeshLib
 		//all the textures / shaders
 		public void SaveToFile(string fileName)
 		{
-			FileStream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Write);
+			FileStream	file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
@@ -124,9 +129,8 @@ namespace MeshLib
 
 		public bool ReadFromFile(string fileName)
 		{
-			Stream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
-
-			BinaryReader	br	=new BinaryReader(file);
+			FileStream		fs	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			BinaryReader	br	=new BinaryReader(fs);
 
 			//clear existing data
 			mAnims.Clear();
@@ -137,7 +141,7 @@ namespace MeshLib
 			if(magic != 0xA91BA7E)
 			{
 				br.Close();
-				file.Close();
+				fs.Close();
 				return	false;
 			}
 
@@ -158,7 +162,7 @@ namespace MeshLib
 			}
 
 			br.Close();
-			file.Close();
+			fs.Close();
 
 			return	true;
 		}

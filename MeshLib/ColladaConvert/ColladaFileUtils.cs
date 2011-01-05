@@ -32,19 +32,28 @@ namespace ColladaConvert
 			COLLADA	colladaFile	=DeSerializeCOLLADA(path);
 			Skeleton	skel	=BuildSkeleton(colladaFile);
 
-			if(alib.CheckSkeleton(skel))
+			//see if animlib has a skeleton yet
+			if(alib.GetSkeleton() == null)
 			{
-				List<SubAnim>	subs	=GetSubAnimList(colladaFile, alib.GetSkeleton());
-				Anim	anm	=new Anim(subs);
-
-				anm.SetBoneRefs(alib.GetSkeleton());
-
-				anm.Name	=NameFromPath(path);
-				alib.AddAnim(anm);
-
-				return	true;
+				alib.SetSkeleton(skel);
 			}
-			return	false;
+			else
+			{
+				//make sure they match
+				if(!alib.CheckSkeleton(skel))
+				{
+					return	false;
+				}
+			}
+			List<SubAnim>	subs	=GetSubAnimList(colladaFile, alib.GetSkeleton());
+			Anim	anm	=new Anim(subs);
+
+			anm.SetBoneRefs(alib.GetSkeleton());
+
+			anm.Name	=NameFromPath(path);
+			alib.AddAnim(anm);
+
+			return	true;
 		}
 
 

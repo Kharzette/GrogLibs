@@ -98,7 +98,7 @@ namespace MeshLib
 
 		public void SaveToFile(string fileName)
 		{
-			FileStream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Write);
+			FileStream	file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
