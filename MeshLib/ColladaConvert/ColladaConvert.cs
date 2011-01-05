@@ -25,6 +25,8 @@ namespace ColladaConvert
 		Character				mCharacter;
 		StaticMeshObject		mStaticMesh;
 
+		UtilityLib.GameCamera	mGameCam;
+
 		//material gui
 		SharedForms.MaterialForm	mMF;
 
@@ -32,21 +34,6 @@ namespace ColladaConvert
 		AnimForm	mCF;
 		string		mCurrentAnimName;
 		float		mTimeScale;			//anim playback speed
-
-		Matrix	mWorldMatrix;
-		Matrix	mViewMatrix;
-		Matrix	mViewTranspose;
-		Matrix	mProjectionMatrix;
-
-		GamePadState	mCurrentGamePadState;
-		GamePadState	mLastGamePadState;
-		KeyboardState	mCurrentKeyboardState;
-		MouseState		mCurrentMouseState;
-		MouseState		mLastMouseState;
-
-		//cam / player stuff will move later
-		Vector3	mCamPos, mDotPos;
-		float	mPitch, mYaw, mRoll;
 
 		Texture2D	mDesu;
 		Texture2D	mEureka;
@@ -86,31 +73,19 @@ namespace ColladaConvert
 
 		protected override void Initialize()
 		{
-			mPitch = mYaw = mRoll = 0;
-			InitializeTransform();
+			mGameCam	=new UtilityLib.GameCamera(mGDM.GraphicsDevice.Viewport.Width,
+				mGDM.GraphicsDevice.Viewport.Height,
+				mGDM.GraphicsDevice.Viewport.AspectRatio);
 
 			//default cam pos off to one side
-			mCamPos.X	=102.0f;
-			mCamPos.Y	=-96.0f;
-			mCamPos.Z	=187.0f;
-			mYaw		=155.0f;
-			mPitch		=4.0f;
+//			Vector3	camPos	=Vector3.Zero;
+//			camPos.X	=102.0f;
+//			camPos.Y	=-96.0f;
+//			camPos.Z	=187.0f;
+
+//			mGameCam.CamPos	=-camPos;
 
 			base.Initialize();
-		}
-
-
-		private void InitializeTransform()
-		{
-			mWorldMatrix    =Matrix.CreateTranslation(new Vector3(0.0f, 0.0f, 0.0f));
-
-			mViewMatrix =Matrix.CreateTranslation(new Vector3(0.0f, 0.0f, 0.0f));
-
-			mProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
-				MathHelper.ToRadians(45),
-				(float)mGDM.GraphicsDevice.Viewport.Width /
-				(float)mGDM.GraphicsDevice.Viewport.Height,
-				1.0f, 100.0f);
 		}
 
 
@@ -225,34 +200,7 @@ namespace ColladaConvert
 		}
 
 
-		private void CheckGamePadInput()
-		{
-			mLastMouseState         =mCurrentMouseState;
-			mLastGamePadState       =mCurrentGamePadState;
-			mCurrentGamePadState    =GamePad.GetState(PlayerIndex.One);
-			mCurrentKeyboardState   =Keyboard.GetState();
-			mCurrentMouseState      =Mouse.GetState();
-		}
-
-
-		private void UpdateMatrices()
-		{
-			mViewMatrix	=Matrix.CreateTranslation(mCamPos) *
-				Matrix.CreateRotationY(MathHelper.ToRadians(mYaw)) *
-				Matrix.CreateRotationX(MathHelper.ToRadians(mPitch)) *
-				Matrix.CreateRotationZ(MathHelper.ToRadians(mRoll));
-			mProjectionMatrix   =Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
-										GraphicsDevice.DisplayMode.AspectRatio,
-										1,
-										10000);
-
-			Matrix.Transpose(ref mViewMatrix, out mViewTranspose);
-
-			mDotPos	=-mCamPos + mViewTranspose.Forward * 10.0f;
-		}
-
-
-		private void InitializeEffect()
+		void InitializeEffect()
 		{
 			Vector4	[]lightColor	=new Vector4[3];
 			lightColor[0]	=new Vector4(0.9f, 0.9f, 0.9f, 1.0f);
@@ -265,7 +213,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnOpenAnim(object sender, EventArgs ea)
+		void OnOpenAnim(object sender, EventArgs ea)
 		{
 			string	path	=(string)sender;
 
@@ -276,7 +224,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnOpenModel(object sender, EventArgs ea)
+		void OnOpenModel(object sender, EventArgs ea)
 		{
 			mCharacter	=ColladaFileUtils.LoadCharacter(sender as string, mGDM.GraphicsDevice, mMatLib, mAnimLib);
 
@@ -460,7 +408,7 @@ namespace ColladaConvert
 
 
 		//non skinned collada model
-		private void OnOpenStaticModel(object sender, EventArgs ea)
+		void OnOpenStaticModel(object sender, EventArgs ea)
 		{
 			string	path	=(string)sender;
 
@@ -470,7 +418,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnSaveLibrary(object sender, EventArgs ea)
+		void OnSaveLibrary(object sender, EventArgs ea)
 		{
 			string	path	=(string)sender;
 
@@ -478,16 +426,16 @@ namespace ColladaConvert
 		}
 
 
-		private void OnLoadLibrary(object sender, EventArgs ea)
+		void OnLoadLibrary(object sender, EventArgs ea)
 		{
 			string	path	=(string)sender;
 
-			mAnimLib.ReadFromFile(path);
+			mAnimLib.ReadFromFile(path, true);
 			eAnimsUpdated(mAnimLib.GetAnims(), null);
 		}
 
 
-		private void OnSaveCharacter(object sender, EventArgs ea)
+		void OnSaveCharacter(object sender, EventArgs ea)
 		{
 			string	path	=(string)sender;
 
@@ -495,7 +443,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnLoadCharacter(object sender, EventArgs ea)
+		void OnLoadCharacter(object sender, EventArgs ea)
 		{
 			string	path	=(string)sender;
 
@@ -506,7 +454,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnLoadStatic(object sender, EventArgs ea)
+		void OnLoadStatic(object sender, EventArgs ea)
 		{
 			string	path	=(string)sender;
 
@@ -516,7 +464,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnSaveStatic(object sender, EventArgs ea)
+		void OnSaveStatic(object sender, EventArgs ea)
 		{
 			string	path	=(string)sender;
 
@@ -524,7 +472,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnAnimSelChanged(object sender, EventArgs ea)
+		void OnAnimSelChanged(object sender, EventArgs ea)
 		{
 			System.Windows.Forms.DataGridViewSelectedRowCollection
 				src	=(System.Windows.Forms.DataGridViewSelectedRowCollection)sender;
@@ -538,7 +486,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnTimeScaleChanged(object sender, EventArgs ea)
+		void OnTimeScaleChanged(object sender, EventArgs ea)
 		{
 			Decimal	val	=(Decimal)sender;
 
@@ -554,11 +502,11 @@ namespace ColladaConvert
 				Exit();
 			}
 
-			CheckGamePadInput();
+			float	msDelta	=gameTime.ElapsedGameTime.Milliseconds;
 
-			UpdateCamera(gameTime);
+			KeyboardState	kbs	=Keyboard.GetState();
 
-			UpdateMatrices();
+			mGameCam.Update(msDelta, kbs, Mouse.GetState());
 
 			//rotate the light vector
 
@@ -581,6 +529,8 @@ namespace ColladaConvert
 			mFX.Parameters["mLightDirection"].SetValue(mLightDir);
 			mFX.Parameters["mTexture"].SetValue(mDesu);
 
+			mMatLib.UpdateWVP(mGameCam.World, mGameCam.View, mGameCam.Projection, -mGameCam.CamPos);
+
 			//put in some keys for messing with bones
 			float	time		=(float)gameTime.ElapsedGameTime.TotalMilliseconds;
 
@@ -595,8 +545,6 @@ namespace ColladaConvert
 			GraphicsDevice	g	=mGDM.GraphicsDevice;
 
 			g.Clear(Color.CornflowerBlue);
-
-			UpdateWVP();
 
 			mCharacter.Draw(g);
 			mStaticMesh.Draw(g);
@@ -644,71 +592,6 @@ namespace ColladaConvert
 			}
 
 			base.Draw(gameTime);
-		}
-
-
-		private void UpdateWVP()
-		{
-			mMatLib.UpdateWVP(mWorldMatrix, mViewMatrix, mProjectionMatrix, -mCamPos);
-		}
-
-
-		private void UpdateCamera(GameTime gameTime)
-		{
-			float time = (float)gameTime.ElapsedGameTime.TotalMilliseconds;
-
-			Vector3 vup;
-			Vector3 vleft;
-			Vector3 vin;
-
-			//grab view matrix in vector transpose
-			vup.X   =mViewMatrix.M12;
-			vup.Y   =mViewMatrix.M22;
-			vup.Z   =mViewMatrix.M32;
-			vleft.X =mViewMatrix.M11;
-			vleft.Y =mViewMatrix.M21;
-			vleft.Z =mViewMatrix.M31;
-			vin.X   =mViewMatrix.M13;
-			vin.Y   =mViewMatrix.M23;
-			vin.Z   =mViewMatrix.M33;
-
-			Matrix.Transpose(ref mViewMatrix, out mViewTranspose);
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.Up) ||
-				mCurrentKeyboardState.IsKeyDown(Keys.W))
-			{
-				mCamPos += vin * (time * 0.1f);
-			}
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.Down) ||
-				mCurrentKeyboardState.IsKeyDown(Keys.S))
-			{
-				mCamPos -= vin * (time * 0.1f);
-			}
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.Left) ||
-				mCurrentKeyboardState.IsKeyDown(Keys.A))
-			{
-				mCamPos += vleft * (time * 0.1f);
-			}
-
-			if(mCurrentKeyboardState.IsKeyDown(Keys.Right) ||
-				mCurrentKeyboardState.IsKeyDown(Keys.D))
-			{
-				mCamPos -= vleft * (time * 0.1f);
-			}
-
-			if(mCurrentMouseState.RightButton == ButtonState.Pressed)
-			{
-				mPitch += (mCurrentMouseState.Y - mLastMouseState.Y) * time * 0.03f;
-				mYaw += (mCurrentMouseState.X - mLastMouseState.X) * time * 0.03f;
-			}
-
-			mPitch += mCurrentGamePadState.ThumbSticks.Right.Y * time * 0.25f;
-			mYaw += mCurrentGamePadState.ThumbSticks.Right.X * time * 0.25f;
-
-			mCamPos -= vleft * (mCurrentGamePadState.ThumbSticks.Left.X * time * 0.25f);
-			mCamPos += vin * (mCurrentGamePadState.ThumbSticks.Left.Y * time * 0.25f);
 		}
 	}
 }

@@ -151,19 +151,21 @@ namespace MaterialLib
 
 		public bool ReadFromFile(string fileName, bool bTool)
 		{
-			FileStream		fs		=null;
 			Stream			file	=null;
-			BinaryReader	br		=null;
 			if(bTool)
 			{
-				fs	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
-				br	=new BinaryReader(fs);
+				file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
 			}
 			else
 			{
 				file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
-				br	=new BinaryReader(file);
 			}
+
+			if(file == null)
+			{
+				return	false;
+			}
+			BinaryReader	br	=new BinaryReader(file);
 
 			//clear existing data
 			mMaps.Clear();
@@ -259,15 +261,7 @@ namespace MaterialLib
 			}
 
 			br.Close();
-
-			if(bTool)
-			{
-				fs.Close();
-			}
-			else
-			{
-				file.Close();
-			}
+			file.Close();
 
 			return	true;
 		}

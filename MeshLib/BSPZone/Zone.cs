@@ -91,10 +91,22 @@ namespace BSPZone
 		}
 
 
-		public void Read(string fileName)
+		public void Read(string fileName, bool bTool)
 		{
-			FileStream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			Stream			file	=null;
+			if(bTool)
+			{
+				file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			}
+			else
+			{
+				file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
+			}
 
+			if(file == null)
+			{
+				return;
+			}
 			BinaryReader	br	=new BinaryReader(file);
 
 			mZoneModels		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)

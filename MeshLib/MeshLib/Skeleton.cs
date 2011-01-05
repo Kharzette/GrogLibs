@@ -136,7 +136,7 @@ namespace MeshLib
 
 	public class Skeleton
 	{
-		private	List<GSNode>	mRoots	=new List<GSNode>();
+		List<GSNode>	mRoots	=new List<GSNode>();
 
 
 		public Skeleton()

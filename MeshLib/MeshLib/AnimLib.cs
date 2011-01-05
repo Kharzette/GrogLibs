@@ -127,10 +127,23 @@ namespace MeshLib
 		}
 
 
-		public bool ReadFromFile(string fileName)
+		public bool ReadFromFile(string fileName, bool bTool)
 		{
-			FileStream		fs	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
-			BinaryReader	br	=new BinaryReader(fs);
+			Stream			file	=null;
+			if(bTool)
+			{
+				file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			}
+			else
+			{
+				file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
+			}
+
+			if(file == null)
+			{
+				return	false;
+			}
+			BinaryReader	br	=new BinaryReader(file);
 
 			//clear existing data
 			mAnims.Clear();
@@ -141,7 +154,7 @@ namespace MeshLib
 			if(magic != 0xA91BA7E)
 			{
 				br.Close();
-				fs.Close();
+				file.Close();
 				return	false;
 			}
 
@@ -162,7 +175,7 @@ namespace MeshLib
 			}
 
 			br.Close();
-			fs.Close();
+			file.Close();
 
 			return	true;
 		}

@@ -8,9 +8,9 @@ namespace ColladaConvert
 {
 	public class Animation
 	{
-		private string	mName;
+		string	mName;
 
-		private List<SubAnimation>	mSubAnims	=new List<SubAnimation>();
+		List<SubAnimation>	mSubAnims	=new List<SubAnimation>();
 
 
 		public Animation(animation anim)

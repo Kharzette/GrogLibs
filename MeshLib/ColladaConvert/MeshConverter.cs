@@ -558,7 +558,7 @@ namespace ColladaConvert
 		}
 
 
-		private void ReplaceIndex(ushort find, ushort replace)
+		void ReplaceIndex(ushort find, ushort replace)
 		{
 			for(int i=0;i < mIndexList.Count;i++)
 			{
@@ -570,7 +570,7 @@ namespace ColladaConvert
 		}
 
 
-		private void Triangulate(List<int> vertCounts)
+		void Triangulate(List<int> vertCounts)
 		{
 			List<ushort>	newIdxs	=new List<ushort>();
 
@@ -598,7 +598,7 @@ namespace ColladaConvert
 		}
 
 
-		private VertexDeclaration DetermineVertexDeclaration(
+		VertexDeclaration DetermineVertexDeclaration(
 			bool bPositions, bool bNormals, bool bBoneIndices,
 			bool bBoneWeights, bool bTexCoord0, bool bTexCoord1,
 			bool bTexCoord2, bool bTexCoord3, bool bColor0,

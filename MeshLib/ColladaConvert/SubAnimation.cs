@@ -10,9 +10,9 @@ namespace ColladaConvert
 	//animations on individual controllers
 	public class SubAnimation
 	{
-		private Dictionary<string, source>	mSources	=new Dictionary<string, source>();
-		private Dictionary<string, sampler>	mSamplers	=new Dictionary<string, sampler>();
-		private List<channel>				mChannels	=new List<channel>();
+		Dictionary<string, source>	mSources	=new Dictionary<string, source>();
+		Dictionary<string, sampler>	mSamplers	=new Dictionary<string, sampler>();
+		List<channel>				mChannels	=new List<channel>();
 
 
 		public SubAnimation(animation anim)

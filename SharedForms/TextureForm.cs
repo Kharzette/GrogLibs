@@ -40,7 +40,7 @@ namespace SharedForms
 		}
 
 
-		private void OnSelectionChanged(object sender, EventArgs e)
+		void OnSelectionChanged(object sender, EventArgs e)
 		{
 			DataGridViewSelectedRowCollection
 				texSel	=TextureGrid.SelectedRows;
@@ -56,7 +56,7 @@ namespace SharedForms
 		}
 
 
-		private void OnOk(object sender, EventArgs e)
+		void OnOk(object sender, EventArgs e)
 		{
 			Debug.Assert(TextureGrid.CurrentRow != null);
 
@@ -66,7 +66,7 @@ namespace SharedForms
 		}
 
 
-		private void OnCancel(object sender, EventArgs e)
+		void OnCancel(object sender, EventArgs e)
 		{
 			eCancel(null, null);
 

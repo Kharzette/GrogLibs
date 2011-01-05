@@ -38,7 +38,7 @@ namespace SharedForms
 			TechniqueGrid.DataSource	=mTechniques;
 		}
 
-		private void OnSelectionChanged(object sender, EventArgs e)
+		void OnSelectionChanged(object sender, EventArgs e)
 		{
 			DataGridViewSelectedRowCollection
 				sel	=TechniqueGrid.SelectedRows;
@@ -53,7 +53,7 @@ namespace SharedForms
 			}
 		}
 
-		private void OnOk(object sender, EventArgs e)
+		void OnOk(object sender, EventArgs e)
 		{
 			Debug.Assert(TechniqueGrid.CurrentRow != null);
 
@@ -62,7 +62,7 @@ namespace SharedForms
 			Close();
 		}
 
-		private void OnCancel(object sender, EventArgs e)
+		void OnCancel(object sender, EventArgs e)
 		{
 			eCancel(null, null);
 			Close();

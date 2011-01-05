@@ -544,8 +544,20 @@ namespace MeshLib
 
 		public void Read(GraphicsDevice g, string fileName, bool bEditor)
 		{
-			Stream	file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
+			Stream			file	=null;
+			if(bEditor)
+			{
+				file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			}
+			else
+			{
+				file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
+			}
 
+			if(file == null)
+			{
+				return;
+			}
 			BinaryReader	br	=new BinaryReader(file);
 
 			UInt32	tag	=br.ReadUInt32();

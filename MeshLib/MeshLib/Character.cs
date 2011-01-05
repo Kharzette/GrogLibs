@@ -130,8 +130,20 @@ namespace MeshLib
 		//so they can be resaved if need be
 		public bool ReadFromFile(string fileName, GraphicsDevice gd, bool bEditor)
 		{
-			FileStream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			Stream			file	=null;
+			if(bEditor)
+			{
+				file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			}
+			else
+			{
+				file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
+			}
 
+			if(file == null)
+			{
+				return	false;
+			}
 			BinaryReader	br	=new BinaryReader(file);
 
 			//clear existing data

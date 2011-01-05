@@ -43,7 +43,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnLoadModel(object sender, EventArgs e)
+		void OnLoadModel(object sender, EventArgs e)
 		{
 			mOFD.Multiselect	=false;
 			DialogResult	dr	=mOFD.ShowDialog();
@@ -57,7 +57,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnAnimsUpdated(object sender, EventArgs e)
+		void OnAnimsUpdated(object sender, EventArgs e)
 		{
 			List<MeshLib.Anim>	anms	=mAnimLib.GetAnims();
 
@@ -67,7 +67,7 @@ namespace ColladaConvert
 		}
 
 
-		private void AnimGrid_SelectionChanged(object sender, EventArgs e)
+		void AnimGrid_SelectionChanged(object sender, EventArgs e)
 		{
 			DataGridViewSelectedRowCollection	row	=AnimGrid.SelectedRows;
 
@@ -77,13 +77,13 @@ namespace ColladaConvert
 			}
 		}
 
-		private void TimeScale_ValueChanged(object sender, EventArgs e)
+		void TimeScale_ValueChanged(object sender, EventArgs e)
 		{
 			eTimeScaleChanged(TimeScale.Value, null);
 		}
 
 
-		private void OnSaveLibrary(object sender, EventArgs e)
+		void OnSaveLibrary(object sender, EventArgs e)
 		{
 			DialogResult	dr	=mSFD.ShowDialog();
 
@@ -96,7 +96,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnLoadLibrary(object sender, EventArgs e)
+		void OnLoadLibrary(object sender, EventArgs e)
 		{
 			mOFD.Multiselect	=false;
 			DialogResult	dr	=mOFD.ShowDialog();
@@ -110,7 +110,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnSaveCharacter(object sender, EventArgs e)
+		void OnSaveCharacter(object sender, EventArgs e)
 		{
 			DialogResult	dr	=mSFD.ShowDialog();
 
@@ -123,7 +123,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnLoadCharacter(object sender, EventArgs e)
+		void OnLoadCharacter(object sender, EventArgs e)
 		{
 			mOFD.Multiselect	=false;
 			DialogResult	dr	=mOFD.ShowDialog();
@@ -136,7 +136,7 @@ namespace ColladaConvert
 			eLoadCharacter(mOFD.FileName, null);
 		}
 
-		private void OnCellValidated(object sender, DataGridViewCellEventArgs e)
+		void OnCellValidated(object sender, DataGridViewCellEventArgs e)
 		{
 			//update name?
 			if(e.ColumnIndex == 0)
@@ -146,14 +146,14 @@ namespace ColladaConvert
 		}
 
 
-		private void OnRowNuking(object sender, DataGridViewRowCancelEventArgs e)
+		void OnRowNuking(object sender, DataGridViewRowCancelEventArgs e)
 		{
 			MeshLib.Anim	nukeMe	=(MeshLib.Anim)e.Row.DataBoundItem;
 			mAnimLib.NukeAnim(nukeMe.Name);
 		}
 
 
-		private void OnClearAll(object sender, EventArgs e)
+		void OnClearAll(object sender, EventArgs e)
 		{
 			mAnimLib.NukeAll();
 
@@ -165,7 +165,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnCompress(object sender, EventArgs e)
+		void OnCompress(object sender, EventArgs e)
 		{
 			if(AnimGrid.SelectedRows.Count <= 0)
 			{
@@ -177,7 +177,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnLoadStaticModel(object sender, EventArgs e)
+		void OnLoadStaticModel(object sender, EventArgs e)
 		{
 			mOFD.Multiselect	=false;
 			DialogResult	dr	=mOFD.ShowDialog();
@@ -191,7 +191,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnLoadAnim(object sender, EventArgs e)
+		void OnLoadAnim(object sender, EventArgs e)
 		{
 			mOFD.Multiselect	=true;
 			DialogResult	dr	=mOFD.ShowDialog();
@@ -210,7 +210,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnSaveStatic(object sender, EventArgs e)
+		void OnSaveStatic(object sender, EventArgs e)
 		{
 			DialogResult	dr	=mSFD.ShowDialog();
 
@@ -223,7 +223,7 @@ namespace ColladaConvert
 		}
 
 
-		private void OnLoadStatic(object sender, EventArgs e)
+		void OnLoadStatic(object sender, EventArgs e)
 		{
 			mOFD.Multiselect	=true;
 			DialogResult	dr	=mOFD.ShowDialog();

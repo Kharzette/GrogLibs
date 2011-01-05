@@ -15,7 +15,7 @@ namespace ColladaConvert
 {
 	public class AnimGridModel : BindingList<MeshLib.Anim>
 	{
-		private	float	mScrollSpeed;	//scroll speed for the layer
+		float	mScrollSpeed;	//scroll speed for the layer
 
 
 		public float ScrollSpeed
