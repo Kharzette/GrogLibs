@@ -21,6 +21,20 @@ namespace MeshLib
 			get { return mName; }
 			set { mName = value; }
 		}
+		public float TotalTime
+		{
+			get {
+				float	totTime	=0.0f;
+				foreach(SubAnim sa in mSubAnims)
+				{
+					if(totTime < sa.GetTotalTime())
+					{
+						totTime	=sa.GetTotalTime();
+					}
+				}
+				return	totTime;
+			}
+		}
 		public bool Looping
 		{
 			get { return mbLooping; }

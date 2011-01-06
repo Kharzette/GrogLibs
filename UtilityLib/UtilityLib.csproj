@@ -164,6 +164,8 @@
     <Compile Include="GameCamera.cs" />
     <Compile Include="IReadWriteable.cs" />
     <Compile Include="Mathery.cs" />
+    <Compile Include="Misc.cs" />
+    <Compile Include="Mover.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

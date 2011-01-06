@@ -10,16 +10,16 @@ namespace UtilityLib
 	public class GameCamera
 	{
 		//mats
-		Matrix	mMATWorld;
-		Matrix	mMATView;
-		Matrix	mMATViewTranspose;
-		Matrix	mMATProjection;
+		protected Matrix	mMATWorld;
+		protected Matrix	mMATView;
+		protected Matrix	mMATViewTranspose;
+		protected Matrix	mMATProjection;
 
 		BoundingFrustum	mFrust	=new BoundingFrustum(Matrix.Identity);
 
-		Vector3	mCamPos;
-		float	mPitch, mYaw, mRoll;
-		float	mAspect, mWidth, mHeight;
+		protected Vector3	mCamPos;
+		protected float		mPitch, mYaw, mRoll;
+		protected float		mAspect, mWidth, mHeight;
 
 		KeyboardState	mLastKBS	=new KeyboardState();
 		MouseState		mLastMS		=new MouseState();
@@ -27,6 +27,7 @@ namespace UtilityLib
 
 		const float	CamSpeed			=0.1f;
 		const float	MouseSensitivity	=0.01f;
+		const float GamePadSensitivity	=0.25f;
 
 
 		public GameCamera(float width, float height, float aspect)
@@ -64,6 +65,12 @@ namespace UtilityLib
 		{
 			get { return mMATView; }
 			set { mMATView = value; }
+		}
+
+		public Matrix ViewTranspose
+		{
+			get { return mMATViewTranspose; }
+			set { mMATViewTranspose = value; }
 		}
 
 		public Matrix Projection

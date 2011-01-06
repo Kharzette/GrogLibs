@@ -72,14 +72,14 @@ namespace BSPTest
 			mMatLib	=new MaterialLib.MaterialLib(GraphicsDevice,
 				Content, mSharedCM, false);
 
-			mMatLib.ReadFromFile("Content/dm4ish.MatLib", false);
+			mMatLib.ReadFromFile("Content/dm3ish.MatLib", false);
 
 			mZone	=new Zone();
 			mLevel	=new MeshLib.IndoorMesh(GraphicsDevice, mMatLib);
 			
-			mZone.Read("Content/dm4ish.Zone");
+			mZone.Read("Content/dm3ish.Zone", false);
 
-			mLevel.Read(GraphicsDevice, "Content/dm4ish.ZoneDraw", false);
+			mLevel.Read(GraphicsDevice, "Content/dm3ish.ZoneDraw", false);
 
 			mGameCam.CamPos	=-mZone.GetPlayerStartPos();
 		}

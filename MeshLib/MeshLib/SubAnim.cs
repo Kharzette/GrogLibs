@@ -43,6 +43,12 @@ namespace MeshLib
 		}
 
 
+		internal float GetTotalTime()
+		{
+			return	mTotalTime;
+		}
+
+
 		internal int GetNumKeys()
 		{
 			return	mTimes.Length;

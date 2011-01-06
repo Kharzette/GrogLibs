@@ -221,7 +221,7 @@ namespace MaterialLib
 		}
 
 
-		internal void SetParameter(string paramName, string value)
+		public void SetParameter(string paramName, string value)
 		{
 			foreach(ShaderParameters sp in mParameters)
 			{

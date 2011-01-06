@@ -183,18 +183,14 @@ namespace SharedForms
 			Texture2D	tex	=mMatLib.GetTexture(sender as string);
 
 			//add / update the tex size parameter
+			//but only if it is already there
 			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
 			MaterialLib.Material	mat	=gs.GetParentMaterial();
-			mat.AddParameter("mTexSize",
-				EffectParameterClass.Vector,
-				EffectParameterType.Single,
+			mat.SetParameter("mTexSize",
 				"" + (tex.Width * 2) + " " + (tex.Height * 2));
 
 			//set texture enabled
-			mat.AddParameter("mbTextureEnabled",
-				EffectParameterClass.Scalar,
-				EffectParameterType.Bool,
-				"true");
+			mat.SetParameter("mbTextureEnabled", "true");
 
 			MaterialGrid.Enabled		=true;
 			MaterialProperties.Enabled	=true;

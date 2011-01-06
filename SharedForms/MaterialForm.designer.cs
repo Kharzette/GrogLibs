@@ -86,6 +86,7 @@
 			this.MaterialProperties.AllowUserToDeleteRows = false;
 			this.MaterialProperties.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
+			this.MaterialProperties.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
 			this.MaterialProperties.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this.MaterialProperties.Location = new System.Drawing.Point(12, 12);
 			this.MaterialProperties.Name = "MaterialProperties";

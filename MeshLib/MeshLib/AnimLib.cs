@@ -16,6 +16,16 @@ namespace MeshLib
 		Skeleton	mSkeleton;
 
 
+		public float GetAnimTime(string key)
+		{
+			if(mAnims.ContainsKey(key))
+			{
+				return	mAnims[key].TotalTime;
+			}
+			return	-1;
+		}
+
+
 		public void AddAnim(Anim an)
 		{
 			mAnims.Add(an.Name, an);
