@@ -177,7 +177,7 @@ namespace BSPBuilder
 
 			mIndoorMesh.Update(msDelta);
 
-			mGameCam.Update(msDelta, kbs, Mouse.GetState());
+			mGameCam.Update(msDelta, kbs, Mouse.GetState(), GamePad.GetState(0));
 
 			mMapEffect.World		=mGameCam.World;
 			mMapEffect.View			=mGameCam.View;

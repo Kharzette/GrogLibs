@@ -29,6 +29,9 @@ namespace BSPTest
 		Vector3		mVelocity;
 		BoundingBox	mCharBox;
 		bool		mbOnGround;
+		bool		mbFlyMode;
+
+		GamePadState	mOldGPS	=new GamePadState();
 
 		const float MidAirMoveScale	=0.4f;
 
@@ -38,6 +41,8 @@ namespace BSPTest
 			mGDM	=new GraphicsDeviceManager(this);
 
 			Content.RootDirectory	="Content";
+
+			IsFixedTimeStep	=false;
 		}
 
 
@@ -72,16 +77,20 @@ namespace BSPTest
 			mMatLib	=new MaterialLib.MaterialLib(GraphicsDevice,
 				Content, mSharedCM, false);
 
-			mMatLib.ReadFromFile("Content/dm3ish.MatLib", false);
+			mMatLib.ReadFromFile("Content/eels.MatLib", false);
 
 			mZone	=new Zone();
 			mLevel	=new MeshLib.IndoorMesh(GraphicsDevice, mMatLib);
 			
-			mZone.Read("Content/dm3ish.Zone", false);
+			mZone.Read("Content/eels.Zone", false);
 
-			mLevel.Read(GraphicsDevice, "Content/dm3ish.ZoneDraw", false);
+			mLevel.Read(GraphicsDevice, "Content/eels.ZoneDraw", false);
 
 			mGameCam.CamPos	=-mZone.GetPlayerStartPos();
+
+			mMatLib.SetParameterOnAll("mLight0Color", Vector3.One);
+			mMatLib.SetParameterOnAll("mLightRange", 300.0f);
+			mMatLib.SetParameterOnAll("mLightFalloffRange", 150.0f);
 		}
 
 
@@ -99,57 +108,79 @@ namespace BSPTest
 
 			float	msDelta	=gameTime.ElapsedGameTime.Milliseconds;
 
+			GamePadState	gps	=GamePad.GetState(0);
+
+			if(gps.IsButtonDown(Buttons.A))
+			{
+				Vector3	dynamicLight	=-mGameCam.CamPos;
+				mMatLib.SetParameterOnAll("mLight0Position", dynamicLight);
+			}
 			KeyboardState	kbs	=Keyboard.GetState();
 
-			//lower ray pos down to foot level
-			Vector3	startPos	=-mGameCam.CamPos;
-			startPos			-=Vector3.UnitY * 65.0f;
-
-			//set for a movement update (will move this eventually)
-			mGameCam.CamPos	=-startPos;
-
-			//do a movement update
-			mGameCam.Update(msDelta, kbs, Mouse.GetState());
-
-			//use the result for the raycast
-			Vector3	endPos		=-mGameCam.CamPos;
-			Vector3	moveDelta	=endPos - startPos;
-
-			//flatten movement
-			moveDelta.Y	=0;
-			mVelocity	+=moveDelta;
-
-			//if not on the ground, limit midair movement
-			if(!mbOnGround)
+			if(gps.IsButtonUp(Buttons.LeftShoulder))
 			{
-				mVelocity.X	*=MidAirMoveScale;
-				mVelocity.Z	*=MidAirMoveScale;
+				if(mOldGPS.IsButtonDown(Buttons.LeftShoulder))
+				{
+					mbFlyMode	=!mbFlyMode;
+				}
 			}
 
-			mVelocity.Y	-=((9.8f / 1000.0f) * msDelta);	//gravity
-
-			//get ideal final position
-			endPos	=startPos + mVelocity;
-
-			//move it through the bsp
-			if(mZone.BipedMoveBox(mCharBox, startPos, endPos, ref endPos))
+			if(!mbFlyMode)
 			{
-				//on ground, zero out velocity
-				mVelocity	=Vector3.Zero;
-				mbOnGround	=true;
+				//lower ray pos down to foot level
+				Vector3	startPos	=-mGameCam.CamPos;
+				startPos			-=Vector3.UnitY * 65.0f;
+
+				//set for a movement update (will move this eventually)
+				mGameCam.CamPos	=-startPos;
+
+				//do a movement update
+				mGameCam.Update(msDelta, kbs, Mouse.GetState(), GamePad.GetState(0));
+
+				//use the result for the raycast
+				Vector3	endPos		=-mGameCam.CamPos;
+				Vector3	moveDelta	=endPos - startPos;
+
+				//flatten movement
+				moveDelta.Y	=0;
+				mVelocity	+=moveDelta;
+
+				//if not on the ground, limit midair movement
+				if(!mbOnGround)
+				{
+					mVelocity.X	*=MidAirMoveScale;
+					mVelocity.Z	*=MidAirMoveScale;
+				}
+
+				mVelocity.Y	-=((9.8f / 1000.0f) * msDelta);	//gravity
+
+				//get ideal final position
+				endPos	=startPos + mVelocity;
+
+				//move it through the bsp
+				if(mZone.BipedMoveBox(mCharBox, startPos, endPos, ref endPos))
+				{
+					//on ground, zero out velocity
+					mVelocity	=Vector3.Zero;
+					mbOnGround	=true;
+				}
+				else
+				{
+					mVelocity	=endPos - startPos;
+					mbOnGround	=false;
+				}
+
+				//bump position back to eye height
+				endPos			+=Vector3.UnitY * 65.0f;
+				mGameCam.CamPos	=-endPos;
+
+				mGameCam.UpdateMatrices();
 			}
 			else
 			{
-				mVelocity	=endPos - startPos;
-				mbOnGround	=false;
+				//do a movement update
+				mGameCam.Update(msDelta, kbs, Mouse.GetState(), GamePad.GetState(0));
 			}
-
-			//bump position back to eye height
-			endPos			+=Vector3.UnitY * 65.0f;
-			mGameCam.CamPos	=-endPos;
-
-			mGameCam.UpdateMatrices();
-
 			/*
 			if(kbs.IsKeyDown(Keys.O))
 			{
@@ -173,6 +204,8 @@ namespace BSPTest
 			mLevel.Update(msDelta);
 			mMatLib.UpdateWVP(mGameCam.World, mGameCam.View, mGameCam.Projection, -mGameCam.CamPos);
 
+			mOldGPS	=gps;
+
 			base.Update(gameTime);
 		}
 
@@ -189,10 +222,16 @@ namespace BSPTest
 			mLevel.Draw(g, mGameCam, mZone.IsMaterialVisibleFromPos);
 
 			mSB.Begin();
-			mSB.DrawString(mKoot, "Coordinates: " + -mGameCam.CamPos,
-				Vector2.One * 20.0f, Color.Yellow);
-//			mSB.DrawString(mKoot, "Impacto: " + mImpacto,
-//				Vector2.One * 20.0f + Vector2.UnitY * 80, Color.Yellow);
+			if(mbFlyMode)
+			{
+				mSB.DrawString(mKoot, "FlyMode Coords: " + -mGameCam.CamPos,
+					Vector2.One * 20.0f, Color.Yellow);
+			}
+			else
+			{
+				mSB.DrawString(mKoot, "Coords: " + -mGameCam.CamPos,
+					Vector2.One * 20.0f, Color.Yellow);
+			}
 			mSB.End();
 
 			base.Draw(gameTime);
