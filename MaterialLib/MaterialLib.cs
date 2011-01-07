@@ -253,6 +253,14 @@ namespace MaterialLib
 					if(dotPos != -1)
 					{
 						string	texPath	=tex.Substring(0, dotPos);
+						if(texPath.Contains("+"))
+						{
+							int	plusPos	=texPath.LastIndexOf('+');
+							string	front	=texPath.Substring(0, plusPos);
+							string	back	=texPath.Substring(plusPos + 1, texPath.Length - plusPos - 1);
+
+							texPath	=front + back;
+						}
 						Texture2D	t	=mContent.Load<Texture2D>(texPath);
 
 						mMaps.Add(tex, t);
@@ -624,6 +632,16 @@ namespace MaterialLib
 			{
 				string	val	="" + vec.X + " " + vec.Y + " " + vec.Z;
 				mat.Value.SetParameter(paramName, val);
+			}
+		}
+
+
+		public void SetParameterOnAll(string paramName, float val)
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				string	sval	="" + val;
+				mat.Value.SetParameter(paramName, sval);
 			}
 		}
 

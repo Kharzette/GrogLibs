@@ -265,13 +265,33 @@ namespace MaterialLib
 			mWidth	=br.ReadInt32();
 			mHeight	=br.ReadInt32();
 
-			byte	[]atlasBytes	=br.ReadBytes(mWidth * mHeight * 4);
-
 			mAtlasTexture	=new Texture2D(g, mWidth, mHeight,
 								false, SurfaceFormat.Color);
+#if XBOX
+			Color	[]atlas	=new Color[mWidth * mHeight];
+			for(int i=0;i < (mWidth * mHeight);i++)
+			{
+				byte	R	=br.ReadByte();
+				byte	G	=br.ReadByte();
+				byte	B	=br.ReadByte();
+				byte	A	=br.ReadByte();
 
-			mAtlasTexture.SetData<byte>(atlasBytes);
+				int	ir	=R;
+				int	ig	=G;
+				int	ib	=B;
 
+				ir	*=2;
+				ig	*=2;
+				ib	*=2;
+
+				atlas[i]	=new Color(ir, ig, ib, A);
+			}
+			mAtlasTexture.SetData<Color>(atlas);
+#else
+			byte	[]atlas	=br.ReadBytes(mWidth * mHeight * 4);
+
+			mAtlasTexture.SetData<byte>(atlas);
+#endif
 			mRoot	=new TexNode(mWidth, mHeight);
 			mRoot.Read(br);
 		}

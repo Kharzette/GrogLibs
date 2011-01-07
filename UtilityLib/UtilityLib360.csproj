@@ -103,6 +103,8 @@
     <Compile Include="GameCamera.cs" />
     <Compile Include="IReadWriteable.cs" />
     <Compile Include="Mathery.cs" />
+    <Compile Include="Misc.cs" />
+    <Compile Include="Mover.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

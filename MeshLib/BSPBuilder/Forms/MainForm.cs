@@ -248,8 +248,6 @@ namespace BSPBuilder
 		{
 			ProgressEventArgs	pea	=ea as ProgressEventArgs;
 
-			Console.WriteLine("Updating " + pea.mIndex + " with " + pea.mCurrent);
-
 			ProgressBar	pb	=null;
 			switch(pea.mIndex)
 			{

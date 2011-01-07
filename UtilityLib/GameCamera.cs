@@ -23,6 +23,7 @@ namespace UtilityLib
 
 		KeyboardState	mLastKBS	=new KeyboardState();
 		MouseState		mLastMS		=new MouseState();
+		GamePadState	mLastGS		=new GamePadState();
 		MouseState		mOriginalMS;
 
 		const float	CamSpeed			=0.1f;
@@ -80,7 +81,7 @@ namespace UtilityLib
 		}
 
 
-		public void Update(float msDelta, KeyboardState ks, MouseState ms)
+		public void Update(float msDelta, KeyboardState ks, MouseState ms, GamePadState gs)
 		{
 			Vector3 vup		=Vector3.Zero;
 			Vector3 vleft	=Vector3.Zero;
@@ -136,8 +137,15 @@ namespace UtilityLib
 				mYaw	-=(delta.X) * msDelta * MouseSensitivity;
 			}
 
+			mPitch	+=gs.ThumbSticks.Right.Y * msDelta * 0.25f;
+			mYaw	+=gs.ThumbSticks.Right.X * msDelta * 0.25f;
+
+			mCamPos	-=vleft * (gs.ThumbSticks.Left.X * msDelta * 0.25f);
+			mCamPos	+=vin * (gs.ThumbSticks.Left.Y * msDelta * 0.25f);
+
 			mLastKBS	=ks;
 			mLastMS		=ms;
+			mLastGS		=gs;
 
 			UpdateMatrices();
 		}
