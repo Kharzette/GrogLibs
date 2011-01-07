@@ -57,9 +57,6 @@
 			this.VerboseBSP = new System.Windows.Forms.CheckBox();
 			this.GroupDrawSettings = new System.Windows.Forms.GroupBox();
 			this.Progress1 = new System.Windows.Forms.ProgressBar();
-			this.Progress2 = new System.Windows.Forms.ProgressBar();
-			this.Progress3 = new System.Windows.Forms.ProgressBar();
-			this.Progress4 = new System.Windows.Forms.ProgressBar();
 			this.LightSettingsGroupBox = new System.Windows.Forms.GroupBox();
 			this.label10 = new System.Windows.Forms.Label();
 			this.AtlasSize = new System.Windows.Forms.NumericUpDown();
@@ -217,12 +214,12 @@
 			this.ConsoleOut.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
 						| System.Windows.Forms.AnchorStyles.Right)));
 			this.ConsoleOut.Font = new System.Drawing.Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.ConsoleOut.Location = new System.Drawing.Point(12, 396);
+			this.ConsoleOut.Location = new System.Drawing.Point(12, 367);
 			this.ConsoleOut.Multiline = true;
 			this.ConsoleOut.Name = "ConsoleOut";
 			this.ConsoleOut.ReadOnly = true;
 			this.ConsoleOut.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this.ConsoleOut.Size = new System.Drawing.Size(452, 153);
+			this.ConsoleOut.Size = new System.Drawing.Size(452, 182);
 			this.ConsoleOut.TabIndex = 16;
 			// 
 			// DrawChoice
@@ -410,31 +407,10 @@
 			// 
 			// Progress1
 			// 
-			this.Progress1.Location = new System.Drawing.Point(12, 292);
+			this.Progress1.Location = new System.Drawing.Point(12, 342);
 			this.Progress1.Name = "Progress1";
 			this.Progress1.Size = new System.Drawing.Size(300, 19);
 			this.Progress1.TabIndex = 23;
-			// 
-			// Progress2
-			// 
-			this.Progress2.Location = new System.Drawing.Point(12, 317);
-			this.Progress2.Name = "Progress2";
-			this.Progress2.Size = new System.Drawing.Size(300, 19);
-			this.Progress2.TabIndex = 24;
-			// 
-			// Progress3
-			// 
-			this.Progress3.Location = new System.Drawing.Point(12, 342);
-			this.Progress3.Name = "Progress3";
-			this.Progress3.Size = new System.Drawing.Size(300, 19);
-			this.Progress3.TabIndex = 25;
-			// 
-			// Progress4
-			// 
-			this.Progress4.Location = new System.Drawing.Point(12, 367);
-			this.Progress4.Name = "Progress4";
-			this.Progress4.Size = new System.Drawing.Size(300, 19);
-			this.Progress4.TabIndex = 26;
 			// 
 			// LightSettingsGroupBox
 			// 
@@ -827,9 +803,6 @@
 			this.ControlBox = false;
 			this.Controls.Add(this.groupBox1);
 			this.Controls.Add(this.LightSettingsGroupBox);
-			this.Controls.Add(this.Progress4);
-			this.Controls.Add(this.Progress3);
-			this.Controls.Add(this.Progress2);
 			this.Controls.Add(this.Progress1);
 			this.Controls.Add(this.GroupFileIO);
 			this.Controls.Add(this.StatsGroupBox);
@@ -888,9 +861,6 @@
 		private System.Windows.Forms.GroupBox GroupBuildSettings;
 		private System.Windows.Forms.GroupBox GroupDrawSettings;
 		private System.Windows.Forms.ProgressBar Progress1;
-		private System.Windows.Forms.ProgressBar Progress2;
-		private System.Windows.Forms.ProgressBar Progress3;
-		private System.Windows.Forms.ProgressBar Progress4;
 		private System.Windows.Forms.Button LightGBSP;
 		private System.Windows.Forms.Label LabelNumPortals;
 		private System.Windows.Forms.TextBox NumPortals;

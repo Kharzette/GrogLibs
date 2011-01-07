@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 
 
@@ -19,8 +20,6 @@ namespace BSPLib
 		RADPatch						[]mFacePatches;
 		RADPatch						[]mPatchList;
 		Int32							NumPatches, NumReceivers;
-
-		event EventHandler	eLightFacesCoreDone;
 
 
 		void CalcPatchReflectivity(Int32 Face, RADPatch Patch,
@@ -636,90 +635,6 @@ namespace BSPLib
 		}
 
 
-		void LightStageTwo(LightFacesParameters lfp)
-		{
-			FreeDirectLights();
-
-			if(lfp.mParams.mLightParams.mbRadiosity)
-			{
-				//Pre-calc how much light is distributed to each patch from every patch
-				if(!CalcReceivers(lfp.mRecFile))	
-				{
-					goto	ExitWithError;
-				}
-
-				//Bounce patches around to their receivers
-				if(!BouncePatches(lfp.mParams.mLightParams.mNumBounces,
-					lfp.mParams.mBSPParams.mbVerbose))	//Bounce them around
-				{
-					goto	ExitWithError;
-				}
-			
-				FreeReceivers();		//Don't need these anymore
-
-				//Apply the patches back into the light maps
-				if(!AbsorbPatches(lfp.mParams.mLightParams.mPatchSize))	//Apply the patches to the lightmaps
-				{
-					goto	ExitWithError;
-				}			
-				FreePatches();	//Don't need these anymore...
-			}
-
-			FinalizeRGBVerts(lfp.mParams.mLightParams.mMinLight,
-				lfp.mParams.mLightParams.mMaxIntensity);
-
-			int	numRGBMaps	=0;
-
-			//grab combined lightmap data
-			List<byte>	lightData	=BuildLightMaps(ref numRGBMaps,
-				lfp.mParams.mLightParams.mMinLight,
-				lfp.mParams.mLightParams.mLightScale,
-				lfp.mParams.mLightParams.mMaxIntensity);
-			if(lightData == null)
-			{
-				goto	ExitWithError;
-			}
-			mGFXLightData	=lightData.ToArray();
-
-			WriteLight(lfp.mBW, lfp.mHeader.mbHasMaterialVis);
-
-			lfp.mBW.Close();
-			lfp.mFS.Close();
-
-			CleanupLight();
-
-			Print("Num Light Maps       : " + numRGBMaps + "\n");
-
-			MaterialVisGBSPFile(lfp.mParams.mFileName,
-				lfp.mParams.mVisParams, lfp.mParams.mBSPParams);
-
-			if(eLightDone != null)
-			{
-				eLightDone(true, null);
-			}
-			return;
-
-			ExitWithError:
-			{
-				if(lfp.mBW != null)
-				{
-					lfp.mBW.Close();
-				}
-				if(lfp.mFS != null)
-				{
-					lfp.mFS.Close();
-				}
-				CleanupLight();
-
-				if(eLightDone != null)
-				{
-					eLightDone(false, null);
-				}
-				return;
-			}
-		}
-
-
 		void LightGBSPFileCB(object threadContext)
 		{
 			LightParameters	lp	=threadContext as LightParameters;
@@ -802,17 +717,69 @@ namespace BSPLib
 				goto	ExitWithError;
 			}
 
-			LightFacesParameters	lfp	=new LightFacesParameters();
-			lfp.mBW				=bw;
-			lfp.mFS				=file;
-			lfp.mHeader			=header;
-			lfp.mParams			=lp;
-			lfp.mRecFile		=recFile;
-			lfp.mVertNormals	=vertNormals;
-			
 			//Light faces, and apply to patches
-			LightFaces(lfp);	//Light all the faces lightmaps, and apply to patches
+			if(!LightFaces(5, lp.mLightParams.mbSeamCorrection, vertNormals,
+				lp.mLightParams.mLightGridSize, lp.mLightParams.mbRadiosity))	//Light all the faces lightmaps, and apply to patches
+			{
+				goto	ExitWithError;
+			}
 
+			FreeDirectLights();
+
+			if(lp.mLightParams.mbRadiosity)
+			{
+				//Pre-calc how much light is distributed to each patch from every patch
+				if(!CalcReceivers(recFile))	
+				{
+					goto	ExitWithError;
+				}
+
+				//Bounce patches around to their receivers
+				if(!BouncePatches(lp.mLightParams.mNumBounces, lp.mBSPParams.mbVerbose))	//Bounce them around
+				{
+					goto	ExitWithError;
+				}
+			
+				FreeReceivers();		//Don't need these anymore
+
+				//Apply the patches back into the light maps
+				if(!AbsorbPatches(lp.mLightParams.mPatchSize))	//Apply the patches to the lightmaps
+				{
+					goto	ExitWithError;
+				}			
+				FreePatches();	//Don't need these anymore...
+			}
+
+			FinalizeRGBVerts(lp.mLightParams.mMinLight, lp.mLightParams.mMaxIntensity);
+
+			int	numRGBMaps	=0;
+
+			//grab combined lightmap data
+			List<byte>	lightData	=BuildLightMaps(ref numRGBMaps,
+				lp.mLightParams.mMinLight, lp.mLightParams.mLightScale,
+				lp.mLightParams.mMaxIntensity);
+
+			if(lightData == null)
+			{
+				goto	ExitWithError;
+			}
+			mGFXLightData	=lightData.ToArray();
+
+			WriteLight(bw, header.mbHasMaterialVis);
+
+			bw.Close();
+			file.Close();
+
+			CleanupLight();
+
+			Print("Num Light Maps       : " + numRGBMaps + "\n");
+
+			MaterialVisGBSPFile(lp.mFileName, lp.mVisParams, lp.mBSPParams);
+
+			if(eLightDone != null)
+			{
+				eLightDone(true, null);
+			}
 			return;
 
 			ExitWithError:
@@ -1263,36 +1230,9 @@ namespace BSPLib
 		}
 
 
-		void OnLightFacesCoreDone(object sender, EventArgs ea)
+		bool LightFaces(int numSamples, bool bExtraSamples, Vector3 []vertNormals,
+						int lightGridSize, bool bRadiosity)
 		{
-			LightFacesParameters	lfp	=sender as LightFacesParameters;
-
-			Print("Core " + lfp.mCore + " completed light faces.\n");
-
-			bool	bDone	=false;
-			lock(mCoresInUse)
-			{
-				mCoresInUse.Remove(lfp.mCore);
-
-				if(mCoresInUse.Count == 0)
-				{
-					bDone	=true;
-				}
-			}
-
-			if(bDone)
-			{
-				ProgressWatcher.Clear();
-				eLightFacesCoreDone	-=OnLightFacesCoreDone;
-				LightStageTwo(lfp);
-			}
-		}
-
-
-		void ZapFacesCB(object threadContext)
-		{
-			LightFacesParameters	lfp	=threadContext as LightFacesParameters;
-
 			float	[]UOfs	=new float[5];
 			float	[]VOfs	=new float[5];
 
@@ -1307,12 +1247,33 @@ namespace BSPLib
 			VOfs[3]	=0.5f;
 			VOfs[4]	=0.5f;
 
-			for(int i=lfp.mStartFace;i < lfp.mEndFace;i++)
+			mLightMaps	=new LInfo[mGFXFaces.Length];
+
+			if(mLightMaps == null)
 			{
-				if(lfp.mProg != null)
-				{
-					ProgressWatcher.UpdateProgress(lfp.mProg, i);
-				}
+				Print("LightFaces:  Out of memory for Lightmaps.\n");
+				return	false;
+			}
+
+			mFaceInfos	=new FInfo[mGFXFaces.Length];
+
+			if(mFaceInfos == null)
+			{
+				Print("LightFaces:  Out of memory for FaceInfo.\n");
+				return	false;
+			}
+
+			for(int i=0;i < mGFXFaces.Length;i++)
+			{
+				mLightMaps[i]	=new LInfo();
+				mFaceInfos[i]	=new FInfo();
+			}
+
+			object	prog	=ProgressWatcher.RegisterProgress(0, mGFXFaces.Length, 0);
+	
+			Parallel.For(0, mGFXFaces.Length, i =>
+			{
+				ProgressWatcher.UpdateProgressIncremental(prog);
 
 				int	pnum	=mGFXFaces[i].mPlaneNum;
 				int	pside	=mGFXFaces[i].mPlaneSide;
@@ -1332,116 +1293,51 @@ namespace BSPLib
 
 				if(tex.IsGouraud() || tex.IsFlat())
 				{
-					if(!VertexShadeFace(i, lfp.mVertNormals))
+					if(!VertexShadeFace(i, vertNormals))
 					{
 						Map.Print("LightFaces:  VertexShadeFace failed...\n");
-						lfp.mbSuccess	=false;
-						eLightFacesCoreDone(lfp, null);
 						return;
 					}
 					
-					if(lfp.mParams.mLightParams.mbRadiosity)
+					if(bRadiosity)
 					{
-						TransferLightToPatches(i, lfp.mParams.mLightParams.mLightGridSize);
+						TransferLightToPatches(i, lightGridSize);
 					}
-					continue;
 				}
-								
-				//Faces with no lightmap don't need to light them 
-				if((tex.mFlags & TexInfo.NO_LIGHTMAP) != 0)
+				else if(tex.IsLightMapped())
 				{
-					continue;
-				}
-
-				if(!CalcFaceInfo(mFaceInfos[i], mLightMaps[i], lfp.mParams.mLightParams.mLightGridSize))
-				{
-					lfp.mbSuccess	=false;
-					eLightFacesCoreDone(lfp, null);
-					return;
-				}
-			
-				Int32	size	=mLightMaps[i].CalcSize();
-
-				mFaceInfos[i].AllocPoints(size);
-
-				int	numSamples	=(lfp.mParams.mLightParams.mbSeamCorrection)? 5 : 1;
-
-				for(int s=0;s < numSamples;s++)
-				{
-					//Hook.Printf("Sample  : %3i of %3i\n", s+1, NumSamples);
-					CalcFacePoints(mFaceInfos[i], mLightMaps[i],
-						lfp.mParams.mLightParams.mLightGridSize,
-						UOfs[s], VOfs[s],
-						lfp.mParams.mLightParams.mbSeamCorrection);
-
-					if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i], 1 / (float)numSamples))
+					if(!CalcFaceInfo(mFaceInfos[i], mLightMaps[i], lightGridSize))
 					{
-						lfp.mbSuccess	=false;
-						eLightFacesCoreDone(lfp, null);
 						return;
 					}
-				}
+			
+					Int32	size	=mLightMaps[i].CalcSize();
+
+					mFaceInfos[i].AllocPoints(size);
+
+					for(int s=0;s < numSamples;s++)
+					{
+						//Hook.Printf("Sample  : %3i of %3i\n", s+1, NumSamples);
+						CalcFacePoints(mFaceInfos[i], mLightMaps[i], lightGridSize, UOfs[s], VOfs[s], bExtraSamples);
+
+						if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i], 1 / (float)numSamples))
+						{
+							return;
+						}
+					}
 				
-				if(lfp.mParams.mLightParams.mbRadiosity)
-				{
-					// Update patches for this face
-					ApplyLightmapToPatches(i, lfp.mParams.mLightParams.mLightGridSize);
+					if(bRadiosity)
+					{
+						// Update patches for this face
+						ApplyLightmapToPatches(i, lightGridSize);
+					}
 				}
-			}			
-			lfp.mbSuccess	=true;
-			eLightFacesCoreDone(lfp, null);
-		}
+								
+			});
 
+			ProgressWatcher.Clear();
 
-		void LightFaces(LightFacesParameters parms)
-		{
-			mLightMaps	=new LInfo[mGFXFaces.Length];
-			mFaceInfos	=new FInfo[mGFXFaces.Length];
-
-			for(int i=0;i < mGFXFaces.Length;i++)
-			{
-				mLightMaps[i]	=new LInfo();
-				mFaceInfos[i]	=new FInfo();
-			}
-
-			eLightFacesCoreDone	+=OnLightFacesCoreDone;
-
-			for(int i=0;i < parms.mParams.mBSPParams.mMaxCores;i++)
-			{
-				lock(mCoresInUse)
-				{
-					mCoresInUse.Add(i);
-				}
-				LightFacesParameters	lfp	=new LightFacesParameters();
-
-				lfp.mBW				=parms.mBW;
-				lfp.mFS				=parms.mFS;
-				lfp.mHeader			=parms.mHeader;
-				lfp.mParams			=parms.mParams;
-				lfp.mRecFile		=parms.mRecFile;
-				lfp.mVertNormals	=parms.mVertNormals;
-
-				lfp.mCore	=i;
-				lfp.mCores	=parms.mParams.mBSPParams.mMaxCores;
-
-				int	facesPerCore	=mGFXFaces.Length / lfp.mCores;
-
-				lfp.mStartFace	=facesPerCore * i;
-				lfp.mEndFace	=facesPerCore * (i + 1);
-
-				if(i == (lfp.mCores - 1))
-				{
-					lfp.mEndFace	=mGFXFaces.Length;
-				}
-
-				Print("Core " + lfp.mCore + " doing " + lfp.mStartFace + " to " + lfp.mEndFace + ".\n");
-
-				lfp.mProg	=ProgressWatcher.RegisterProgress(
-									lfp.mStartFace, lfp.mEndFace, lfp.mStartFace);
-
-				ThreadPool.QueueUserWorkItem(ZapFacesCB, lfp);
-			}
-			Print("Light faces cores running, waiting for finish...\n");
+			return	true;
 		}
 
 

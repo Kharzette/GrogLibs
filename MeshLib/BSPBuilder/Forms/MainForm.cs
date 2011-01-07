@@ -39,8 +39,6 @@ namespace BSPBuilder
 			MaxCPUCores.Maximum	=Environment.ProcessorCount * 2;
 			MaxCPUCores.Minimum	=1;
 			MaxCPUCores.Value	=Environment.ProcessorCount;
-
-			ProgressWatcher.eProgressUpdated	+=OnProgressUpdated;
 		}
 
 
@@ -244,33 +242,6 @@ namespace BSPBuilder
 		}
 
 
-		void OnProgressUpdated(object sender, EventArgs ea)
-		{
-			ProgressEventArgs	pea	=ea as ProgressEventArgs;
-
-			ProgressBar	pb	=null;
-			switch(pea.mIndex)
-			{
-				case	0:
-					pb	=Progress1;
-					break;
-				case	1:
-					pb	=Progress2;
-					break;
-				case	2:
-					pb	=Progress3;
-					break;
-				case	3:
-					pb	=Progress4;
-					break;
-			}
-			if(pb != null)
-			{
-				UpdateProgressBar(pb, pea.mMin, pea.mMax, pea.mCurrent);
-			}
-		}
-
-
 		void OnBuildGBSP(object sender, EventArgs e)
 		{
 			if(eBuildGBSP != null)
@@ -433,31 +404,13 @@ namespace BSPBuilder
 
 		internal void UpdateProgress(ProgressEventArgs pea)
 		{
-			if(pea.mIndex == 0)
-			{
-				UpdateProgressBar(Progress1, pea.mMin, pea.mMax, pea.mCurrent);
-			}
-			else if(pea.mIndex == 1)
-			{
-				UpdateProgressBar(Progress2, pea.mMin, pea.mMax, pea.mCurrent);
-			}
-			else if(pea.mIndex == 2)
-			{
-				UpdateProgressBar(Progress3, pea.mMin, pea.mMax, pea.mCurrent);
-			}
-			else if(pea.mIndex == 3)
-			{
-				UpdateProgressBar(Progress4, pea.mMin, pea.mMax, pea.mCurrent);
-			}
+			UpdateProgressBar(Progress1, pea.mMin, pea.mMax, pea.mCurrent);
 		}
 
 
 		internal void ClearProgress()
 		{
 			UpdateProgressBar(Progress1, 0, 0, 0);
-			UpdateProgressBar(Progress2, 0, 0, 0);
-			UpdateProgressBar(Progress3, 0, 0, 0);
-			UpdateProgressBar(Progress4, 0, 0, 0);
 		}
 	}
 }

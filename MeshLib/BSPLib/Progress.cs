@@ -175,5 +175,36 @@ namespace BSPLib
 				eProgressUpdated(null, pea);
 			}
 		}
+
+
+		internal static void UpdateProgressIncremental(object prog)
+		{
+			Progress	pr	=prog as Progress;
+			if(pr == null)
+			{
+				return;
+			}
+
+			bool				bFound	=false;
+			ProgressEventArgs	pea		=null;
+			lock(mProgs)
+			{
+				if(mProgs.Contains(pr))
+				{
+					bFound		=true;
+					pr.mCurrent++;
+
+					pea				=new ProgressEventArgs();
+					pea.mCurrent	=pr.mCurrent;
+					pea.mIndex		=mProgs.IndexOf(pr);
+					pea.mMax		=pr.mMax;
+					pea.mMin		=pr.mMin;
+				}
+			}
+			if(bFound)
+			{
+				eProgressUpdated(null, pea);
+			}
+		}
 	}
 }

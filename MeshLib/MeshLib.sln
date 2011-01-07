@@ -96,7 +96,6 @@ Global
 		{83BEB70A-940A-49E7-AD48-528BFD560F12}.BSPBuilderDebug|Any CPU.ActiveCfg = BSPBuilderDebug|x86
 		{83BEB70A-940A-49E7-AD48-528BFD560F12}.BSPBuilderDebug|Mixed Platforms.ActiveCfg = BSPBuilderDebug|x86
 		{83BEB70A-940A-49E7-AD48-528BFD560F12}.BSPBuilderDebug|x86.ActiveCfg = BSPBuilderDebug|x86
-		{83BEB70A-940A-49E7-AD48-528BFD560F12}.BSPBuilderDebug|x86.Build.0 = BSPBuilderDebug|x86
 		{83BEB70A-940A-49E7-AD48-528BFD560F12}.BSPBuilderDebug|Xbox 360.ActiveCfg = BSPBuilderDebug|x86
 		{83BEB70A-940A-49E7-AD48-528BFD560F12}.BSPTestDebug|Any CPU.ActiveCfg = BSPTestDebug|x86
 		{83BEB70A-940A-49E7-AD48-528BFD560F12}.BSPTestDebug|Mixed Platforms.ActiveCfg = BSPTestDebug|x86

@@ -508,7 +508,7 @@ namespace ColladaConvert
 
 			KeyboardState	kbs	=Keyboard.GetState();
 
-			mGameCam.Update(msDelta, kbs, Mouse.GetState());
+			mGameCam.Update(msDelta, kbs, Mouse.GetState(), GamePad.GetState(0));
 
 			//rotate the light vector
 
