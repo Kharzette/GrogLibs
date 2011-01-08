@@ -977,6 +977,7 @@ namespace BSPLib
 
 		internal void WriteReverse(System.IO.BinaryWriter bw)
 		{
+			bw.Write(mVerts.Count);
 			for(int i=mVerts.Count - 1;i >=0;i--)
 			{
 				bw.Write(mVerts[i].X);
@@ -988,11 +989,28 @@ namespace BSPLib
 
 		internal void Write(System.IO.BinaryWriter bw)
 		{
+			bw.Write(mVerts.Count);
 			foreach(Vector3 vert in mVerts)
 			{
 				bw.Write(vert.X);
 				bw.Write(vert.Y);
 				bw.Write(vert.Z);
+			}
+		}
+
+
+		internal void Read(System.IO.BinaryReader br)
+		{
+			int	count	=br.ReadInt32();
+			for(int i=0;i < count;i++)
+			{
+				Vector3	vert	=Vector3.Zero;
+
+				vert.X	=br.ReadSingle();
+				vert.Y	=br.ReadSingle();
+				vert.Z	=br.ReadSingle();
+
+				mVerts.Add(vert);
 			}
 		}
 	}

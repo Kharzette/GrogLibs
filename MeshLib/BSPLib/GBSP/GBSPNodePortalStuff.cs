@@ -1037,8 +1037,6 @@ namespace BSPLib
 						return	false;
 					}
 
-					bw.Write(poly.VertCount());
-
 					if(side == 0)
 					{
 						//If on front side, reverse so it points to the other leaf

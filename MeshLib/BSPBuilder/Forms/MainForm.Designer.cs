@@ -84,6 +84,8 @@
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.SortPortals = new System.Windows.Forms.CheckBox();
 			this.FullVis = new System.Windows.Forms.CheckBox();
+			this.DistributeVis = new System.Windows.Forms.CheckBox();
+			this.button1 = new System.Windows.Forms.Button();
 			this.StatsGroupBox.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxCPUCores)).BeginInit();
 			this.GroupFileIO.SuspendLayout();
@@ -338,6 +340,7 @@
 			// 
 			// GroupBuildSettings
 			// 
+			this.GroupBuildSettings.Controls.Add(this.button1);
 			this.GroupBuildSettings.Controls.Add(this.DrawAndWork);
 			this.GroupBuildSettings.Controls.Add(this.FixTJunctions);
 			this.GroupBuildSettings.Controls.Add(this.VerboseEntity);
@@ -346,7 +349,7 @@
 			this.GroupBuildSettings.Controls.Add(this.LabelCPUCores);
 			this.GroupBuildSettings.Location = new System.Drawing.Point(192, 145);
 			this.GroupBuildSettings.Name = "GroupBuildSettings";
-			this.GroupBuildSettings.Size = new System.Drawing.Size(115, 141);
+			this.GroupBuildSettings.Size = new System.Drawing.Size(115, 169);
 			this.GroupBuildSettings.TabIndex = 21;
 			this.GroupBuildSettings.TabStop = false;
 			this.GroupBuildSettings.Text = "Build Settings";
@@ -398,7 +401,7 @@
 			// GroupDrawSettings
 			// 
 			this.GroupDrawSettings.Controls.Add(this.DrawChoice);
-			this.GroupDrawSettings.Location = new System.Drawing.Point(12, 228);
+			this.GroupDrawSettings.Location = new System.Drawing.Point(12, 251);
 			this.GroupDrawSettings.Name = "GroupDrawSettings";
 			this.GroupDrawSettings.Size = new System.Drawing.Size(135, 58);
 			this.GroupDrawSettings.TabIndex = 22;
@@ -763,11 +766,12 @@
 			// 
 			// groupBox1
 			// 
+			this.groupBox1.Controls.Add(this.DistributeVis);
 			this.groupBox1.Controls.Add(this.SortPortals);
 			this.groupBox1.Controls.Add(this.FullVis);
 			this.groupBox1.Location = new System.Drawing.Point(12, 155);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(93, 64);
+			this.groupBox1.Size = new System.Drawing.Size(93, 90);
 			this.groupBox1.TabIndex = 28;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Vis Settings";
@@ -794,6 +798,28 @@
 			this.FullVis.Text = "Full Vis";
 			this.FullVis.UseVisualStyleBackColor = true;
 			this.FullVis.CheckedChanged += new System.EventHandler(this.OnFullVisChanged);
+			// 
+			// DistributeVis
+			// 
+			this.DistributeVis.AutoSize = true;
+			this.DistributeVis.Checked = true;
+			this.DistributeVis.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.DistributeVis.Location = new System.Drawing.Point(6, 65);
+			this.DistributeVis.Name = "DistributeVis";
+			this.DistributeVis.Size = new System.Drawing.Size(70, 17);
+			this.DistributeVis.TabIndex = 3;
+			this.DistributeVis.Text = "Distribute";
+			this.DistributeVis.UseVisualStyleBackColor = true;
+			// 
+			// button1
+			// 
+			this.button1.Location = new System.Drawing.Point(6, 137);
+			this.button1.Name = "button1";
+			this.button1.Size = new System.Drawing.Size(103, 23);
+			this.button1.TabIndex = 24;
+			this.button1.Text = "Query BuildFarm";
+			this.button1.UseVisualStyleBackColor = true;
+			this.button1.Click += new System.EventHandler(this.OnQueryBuildFarm);
 			// 
 			// MainForm
 			// 
@@ -898,5 +924,7 @@
 		private System.Windows.Forms.Label label10;
 		private System.Windows.Forms.NumericUpDown AtlasSize;
 		private System.Windows.Forms.CheckBox DrawAndWork;
+		private System.Windows.Forms.Button button1;
+		private System.Windows.Forms.CheckBox DistributeVis;
 	}
 }

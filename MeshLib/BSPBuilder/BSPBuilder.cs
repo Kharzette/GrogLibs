@@ -21,6 +21,8 @@ namespace BSPBuilder
 		SpriteBatch				mSB;
 		ContentManager			mSharedCM;
 
+		List<MapVisClient>	mBuildFarm	=new List<MapVisClient>();
+
 		//forms
 		MainForm					mMainForm;
 		SharedForms.CollisionForm	mCollForm;
@@ -131,6 +133,7 @@ namespace BSPBuilder
 			mMainForm.eSaveZone				+=OnSaveZone;
 			mMainForm.eLoadGBSP				+=OnLoadGBSP;
 			mMainForm.eDrawChoiceChanged	+=OnDrawChoiceChanged;
+			mMainForm.eQueryBuildFarm		+=OnQueryBuildFarm;
 
 			mBFX					=new BasicEffect(GraphicsDevice);
 			mBFX.View				=mGameCam.View;
@@ -149,6 +152,19 @@ namespace BSPBuilder
 
 			//tired of that gump
 //			OnOpenVMF("C:\\Users\\kbaird\\Documents\\sdk_arena_lumberyard.vmf", null);
+
+			//load renderfarm contacts
+			FileStream	fs	=new FileStream("Content/BuildFarm.txt", FileMode.Open, FileAccess.Read);
+			StreamReader	sr	=new StreamReader(fs);
+
+			while(!sr.EndOfStream)
+			{
+				string	url	=sr.ReadLine();
+
+				MapVisClient	mvc	=new MapVisClient("WSHttpBinding_IMapVis", url);
+
+				mBuildFarm.Add(mvc);
+			}
 		}
 
 
@@ -645,7 +661,14 @@ namespace BSPBuilder
 
 				ProgressWatcher.eProgressUpdated	+=OnProgressUpdated;
 
-				mMap.VisGBSPFile(fileName, mMainForm.VisParameters, mMainForm.BSPParameters);
+				if(mMainForm.VisParameters.mbDistribute)
+				{
+					mMap.VisGBSPFile(fileName, mMainForm.VisParameters, mMainForm.BSPParameters, mBuildFarm);
+				}
+				else
+				{
+					mMap.VisGBSPFile(fileName, mMainForm.VisParameters, mMainForm.BSPParameters);
+				}
 			}
 		}
 
@@ -861,6 +884,7 @@ namespace BSPBuilder
 
 		void OnVisDone(object sender, EventArgs ea)
 		{
+//			mMVC.Close();
 			bool	bSuccess	=(bool)sender;
 
 			ProgressWatcher.eProgressUpdated	-=OnProgressUpdated;
@@ -884,6 +908,37 @@ namespace BSPBuilder
 			ProgressEventArgs	pea	=ea as ProgressEventArgs;
 
 			mMainForm.UpdateProgress(pea);
+		}
+
+
+		void OnQueryBuildFarm(object sender, EventArgs ea)
+		{
+			foreach(MapVisClient mvc in mBuildFarm)
+			{
+				BuildFarmCaps	bfc	=null;
+				try
+				{
+					bfc	=mvc.QueryCapabilities();
+				}
+				catch
+				{
+				}
+
+				if(bfc != null)
+				{
+					mMainForm.PrintToConsole("Build farm capabilities for " + mvc.Endpoint.Address + "\n");
+					mMainForm.PrintToConsole("Cpu speed in mhz:  " + bfc.mMHZ + "\n");
+					mMainForm.PrintToConsole("Number of cpu cores:  " + bfc.mNumCores + "\n");
+					mvc.mbActive	=true;
+					mvc.mBuildCaps	=bfc;
+				}
+				else
+				{
+					mMainForm.PrintToConsole("Build farm node " + mvc.Endpoint.Address + " is not responding.\n");
+					mvc.mbActive	=false;
+					mvc.mBuildCaps	=null;
+				}
+			}
 		}
 
 

@@ -30,6 +30,7 @@ namespace BSPBuilder
 		public event EventHandler	eSaveGBSP;
 		public event EventHandler	eSaveZone;
 		public event EventHandler	eDrawChoiceChanged;
+		public event EventHandler	eQueryBuildFarm;
 
 
 		public MainForm()
@@ -186,6 +187,7 @@ namespace BSPBuilder
 			{
 				mVisParams.mbFullVis		=FullVis.Checked;
 				mVisParams.mbSortPortals	=SortPortals.Checked;
+				mVisParams.mbDistribute		=DistributeVis.Checked;
 
 				return	mVisParams;
 			}
@@ -209,10 +211,7 @@ namespace BSPBuilder
 				return;
 			}
 
-			if(eOpenBrushFile != null)
-			{
-				eOpenBrushFile(mOFD.FileName, null);
-			}
+			UtilityLib.Misc.SafeInvoke(eOpenBrushFile, mOFD.FileName);
 		}
 
 
@@ -226,28 +225,19 @@ namespace BSPBuilder
 				return;
 			}
 
-			if(eLightGBSP != null)
-			{
-				eLightGBSP(mOFD.FileName, null);
-			}
+			UtilityLib.Misc.SafeInvoke(eLightGBSP, mOFD.FileName);
 		}
 
 
 		void OnDrawChoiceChanged(object sender, EventArgs e)
 		{
-			if(eDrawChoiceChanged != null)
-			{
-				eDrawChoiceChanged(DrawChoice.SelectedItem, null);
-			}
+			UtilityLib.Misc.SafeInvoke(eDrawChoiceChanged, DrawChoice.SelectedItem);
 		}
 
 
 		void OnBuildGBSP(object sender, EventArgs e)
 		{
-			if(eBuildGBSP != null)
-			{
-				eBuildGBSP(null, null);
-			}
+			UtilityLib.Misc.SafeInvoke(eBuildGBSP, null);
 		}
 
 
@@ -260,10 +250,7 @@ namespace BSPBuilder
 				return;
 			}
 
-			if(eSaveGBSP != null)
-			{
-				eSaveGBSP(mSFD.FileName, null);
-			}
+			UtilityLib.Misc.SafeInvoke(eSaveGBSP, mSFD.FileName);
 		}
 
 
@@ -277,10 +264,7 @@ namespace BSPBuilder
 				return;
 			}
 
-			if(eGenerateMaterials != null)
-			{
-				eGenerateMaterials(mOFD.FileName, null);
-			}
+			UtilityLib.Misc.SafeInvoke(eGenerateMaterials, mOFD.FileName);
 		}
 
 
@@ -294,10 +278,7 @@ namespace BSPBuilder
 				return;
 			}
 
-			if(eVisGBSP != null)
-			{
-				eVisGBSP(mOFD.FileName, null);
-			}
+			UtilityLib.Misc.SafeInvoke(eVisGBSP, mOFD.FileName);
 		}
 
 
@@ -323,10 +304,7 @@ namespace BSPBuilder
 				return;
 			}
 
-			if(eLoadGBSP != null)
-			{
-				eLoadGBSP(mOFD.FileName, null);
-			}
+			UtilityLib.Misc.SafeInvoke(eLoadGBSP, mOFD.FileName);
 		}
 
 
@@ -362,10 +340,7 @@ namespace BSPBuilder
 				return;
 			}
 
-			if(eSaveZone != null)
-			{
-				eSaveZone(mSFD.FileName, null);
-			}
+			UtilityLib.Misc.SafeInvoke(eSaveZone, mSFD.FileName);
 		}
 
 
@@ -411,6 +386,12 @@ namespace BSPBuilder
 		internal void ClearProgress()
 		{
 			UpdateProgressBar(Progress1, 0, 0, 0);
+		}
+
+
+		void OnQueryBuildFarm(object sender, EventArgs e)
+		{
+			UtilityLib.Misc.SafeInvoke(eQueryBuildFarm, null);
 		}
 	}
 }

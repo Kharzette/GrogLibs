@@ -183,5 +183,25 @@ namespace BSPLib
 					return	Vector3.Dot(pos, mNormal) - mDist;
 			}
 		}
+
+
+		internal void Write(System.IO.BinaryWriter bw)
+		{
+			bw.Write(mNormal.X);
+			bw.Write(mNormal.Y);
+			bw.Write(mNormal.Z);
+			bw.Write(mDist);
+			bw.Write(mType);
+		}
+
+
+		internal void Read(System.IO.BinaryReader br)
+		{
+			mNormal.X	=br.ReadSingle();
+			mNormal.Y	=br.ReadSingle();
+			mNormal.Z	=br.ReadSingle();
+			mDist		=br.ReadSingle();
+			mType		=br.ReadUInt32();
+		}
 	}
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 using Microsoft.Xna.Framework;
 
 
@@ -14,6 +15,12 @@ namespace BSPLib
 	{
 		public Int32	mVisFrame;
 		public Int32	mParent;
+	}
+
+
+	class WorkDivided
+	{
+		public Int32	startPort, endPort;
 	}
 
 
@@ -29,6 +36,9 @@ namespace BSPLib
 		//area stuff
 		List<GFXArea>		mAreas		=new List<GFXArea>();
 		List<GFXAreaPortal>	mAreaPorts	=new List<GFXAreaPortal>();
+
+		//threading
+		TaskScheduler	mTaskSched	=TaskScheduler.FromCurrentSynchronizationContext();
 
 
 		void ThreadVisCB(object threadContext)
@@ -81,7 +91,7 @@ namespace BSPLib
 			Print("NumPortals           : " + mVisPortals.Length + "\n");
 			
 			//Vis'em
-			if(!VisAllLeafs(vp.mVisParams.mbSortPortals, vp.mVisParams.mbFullVis, vp.mBSPParams.mbVerbose))
+			if(!VisAllLeafs(vp.mVisParams.mbSortPortals, vp.mVisParams.mbFullVis, vp.mBSPParams.mbVerbose, vp.mMVCs))
 			{
 				goto	ExitWithError;
 			}
@@ -140,6 +150,18 @@ namespace BSPLib
 			vp.mBSPParams	=prms2;
 			vp.mVisParams	=prms;
 			vp.mFileName	=fileName;
+
+			ThreadPool.QueueUserWorkItem(ThreadVisCB, vp);
+		}
+
+
+		public void VisGBSPFile(string fileName, VisParams prms, BSPBuildParams prms2, List<MapVisClient> mvcs)
+		{
+			VisParameters	vp	=new VisParameters();
+			vp.mBSPParams	=prms2;
+			vp.mVisParams	=prms;
+			vp.mFileName	=fileName;
+			vp.mMVCs		=mvcs;
 
 			ThreadPool.QueueUserWorkItem(ThreadVisCB, vp);
 		}
@@ -474,7 +496,61 @@ namespace BSPLib
 		}
 
 
-		bool VisAllLeafs(bool bSortPortals,	bool bFullVis, bool bVerbose)
+		void ProcessWork(Dictionary<VISPortal, Int32> portIndexer,
+			ConcurrentQueue<WorkDivided> work, MapVisClient amvc)
+		{
+			MemoryStream	ms	=new MemoryStream();
+			BinaryWriter	bw	=new BinaryWriter(ms);
+
+			bw.Write(mVisSortedPortals.Length);
+			foreach(VISPortal vp in mVisPortals)
+			{
+				vp.Write(bw, portIndexer);
+			}
+
+			bw.Write(mVisLeafs.Length);
+			foreach(VISLeaf vl in mVisLeafs)
+			{
+				vl.Write(bw, portIndexer);
+			}
+
+			bw.Write(mNumVisPortalBytes);
+
+			BinaryReader	br	=new BinaryReader(ms);
+			br.BaseStream.Seek(0, SeekOrigin.Begin);
+
+			byte	[]visDat	=br.ReadBytes((int)ms.Length);
+
+			bw.Close();
+			br.Close();
+			ms.Close();
+
+			WorkDivided	wrk;
+			work.TryDequeue(out wrk);
+
+			byte	[]ports	=amvc.FloodPortalsSlow(visDat,
+				wrk.startPort, wrk.endPort);
+
+			ms	=new MemoryStream();
+			bw	=new BinaryWriter(ms);
+
+			bw.Write(ports, 0, ports.Length);
+
+			br	=new BinaryReader(ms);
+			br.BaseStream.Seek(0, SeekOrigin.Begin);
+
+			for(int j=wrk.startPort;j < wrk.endPort;j++)
+			{
+				mVisPortals[j].ReadVisBits(br);
+			}
+
+			bw.Close();
+			br.Close();
+			ms.Close();
+		}
+
+
+		bool VisAllLeafs(bool bSortPortals,	bool bFullVis, bool bVerbose, List<MapVisClient> mvcs)
 		{
 			//create a dictionary to map a vis portal back to an index
 			Dictionary<VISPortal, Int32>	portIndexer	=new Dictionary<VISPortal, Int32>();
@@ -508,10 +584,117 @@ namespace BSPLib
 
 			if(bFullVis)
 			{
-				prog	=ProgressWatcher.RegisterProgress(0, mVisPortals.Length, 0);
-				if(!FloodPortalsSlow(portIndexer, 0, mVisPortals.Length, bVerbose, prog))
+				if(mvcs != null)
 				{
-					return	false;
+					//see how many cores we have to work with
+					int	totalCores	=0;
+					int	numActive	=0;
+					List<MapVisClient>	actives	=new List<MapVisClient>();
+					List<bool>			actBusy	=new List<bool>();
+					foreach(MapVisClient mvc in mvcs)
+					{
+						if(mvc.mbActive)
+						{
+							totalCores	+=mvc.mBuildCaps.mNumCores;
+							numActive++;
+							actives.Add(mvc);
+							actBusy.Add(false);
+						}
+					}
+
+					//make a list of work to be done
+					ConcurrentQueue<WorkDivided>	work	=new ConcurrentQueue<WorkDivided>();
+
+					for(int i=0;i < (mVisPortals.Length / 100);i++)
+					{
+						WorkDivided	wd	=new WorkDivided();
+						wd.startPort	=i * 100;
+						wd.endPort		=(i + 1) * 100;
+
+						work.Enqueue(wd);
+					}
+
+					if(((mVisPortals.Length / 100) * 100) != mVisPortals.Length)
+					{
+						WorkDivided	remainder	=new WorkDivided();
+						remainder.startPort	=(mVisPortals.Length / 100) * 100;
+						remainder.endPort	=mVisPortals.Length;
+
+						work.Enqueue(remainder);
+					}
+
+					List<Task>	tasks	=new List<Task>();
+
+					prog	=ProgressWatcher.RegisterProgress(0, work.Count, 0);
+					while(!work.IsEmpty)					
+					{
+						MapVisClient	amvc	=null;
+						foreach(MapVisClient mv in actives)
+						{
+							lock(actBusy)
+							{
+								if(!actBusy[actives.IndexOf(mv)])
+								{
+									amvc	=mv;
+									actBusy[actives.IndexOf(mv)]	=true;
+									break;
+								}
+							}
+						}
+
+						if(amvc != null)
+						{
+							Task	task	=Task.Factory.StartNew(() =>
+							{
+								ProcessWork(portIndexer, work, amvc);
+								lock(actBusy)
+								{
+									actBusy[actives.IndexOf(amvc)]	=false;
+								}
+								ProgressWatcher.UpdateProgressIncremental(prog);
+							});
+
+							tasks.Add(task);
+						}
+						else
+						{
+							Thread.Sleep(100);
+						}
+					}
+
+					//wait till all unbusy
+					while(true)
+					{
+						bool	stillBusy	=false;
+						foreach(MapVisClient mv in actives)
+						{
+							lock(actBusy)
+							{
+								if(actBusy[actives.IndexOf(mv)])
+								{
+									stillBusy	=true;
+									break;
+								}
+							}
+						}
+
+						if(!stillBusy)
+						{
+							break;
+						}
+						else
+						{
+							Thread.Sleep(100);
+						}
+					}
+				}
+				else
+				{
+					prog	=ProgressWatcher.RegisterProgress(0, mVisPortals.Length, 0);
+					if(!FloodPortalsSlow(portIndexer, 0, mVisPortals.Length, bVerbose, prog))
+					{
+						return	false;
+					}
 				}
 			}
 
@@ -564,8 +747,7 @@ namespace BSPLib
 				mVisPortals[k].mbDone	=false;
 			}
 
-//			Parallel.For(startPort, endPort, (k) =>
-			for(int k=startPort;k < endPort;k++)
+			Parallel.For(startPort, endPort, (k) =>
 			{
 				if(prog != null)
 				{
@@ -596,7 +778,7 @@ namespace BSPLib
 
 				if(!port.FloodPortalsSlow_r(port, portStack, visIndexer, ref CanSee, mVisLeafs))
 				{
-					return	false;
+					return;
 				}
 
 				portStack.mSource	=null;
@@ -608,8 +790,126 @@ namespace BSPLib
 						+ port.mMightSee + ", Full Vis: "
 						+ port.mCanSee + "\n");
 				}
-			}//);
+			});
 			return	true;
+		}
+
+
+		public static byte []FloodPortalsSlow(byte []visData, int startPort, int endPort)
+		{
+			//convert the bytes to something usable
+			MemoryStream	ms	=new MemoryStream();
+			BinaryWriter	bw	=new BinaryWriter(ms);
+
+			bw.Write(visData, 0, visData.Length);
+
+			BinaryReader	br	=new BinaryReader(ms);
+			br.BaseStream.Seek(0, SeekOrigin.Begin);
+
+			int	portCount	=br.ReadInt32();
+
+			List<Int32>	indexes			=new List<Int32>();
+			VISPortal	[]visPortals	=new VISPortal[portCount];
+			for(int i=0;i < portCount;i++)
+			{
+				visPortals[i]	=new VISPortal();
+				visPortals[i].Read(br, indexes);
+			}
+
+			//rebuild indexes
+			for(int i=0;i < portCount;i++)
+			{
+				if(indexes[i] > 0)
+				{
+					visPortals[i].mNext	=visPortals[indexes[i]];
+				}
+			}
+
+			//rebuild visindexer
+			Dictionary<VISPortal, Int32>	portIndexer	=new Dictionary<VISPortal, Int32>();
+			for(int i=0;i < visPortals.Length;i++)
+			{
+				portIndexer.Add(visPortals[i], i);
+			}
+
+			//read visleafs
+			int	leafCount	=br.ReadInt32();
+			VISLeaf	[]visLeafs	=new VISLeaf[leafCount];
+			for(int i=0;i < leafCount;i++)
+			{
+				visLeafs[i]	=new VISLeaf();
+				visLeafs[i].Read(br, visPortals);
+			}
+
+			//read numbytes
+			int	numVisPortalBytes	=br.ReadInt32();
+
+			for(int k=startPort;k < endPort;k++)
+			{
+				visPortals[k].mbDone	=false;
+			}
+
+			bw.Close();
+			br.Close();
+			ms.Close();
+
+			Parallel.For(startPort, endPort, (k) =>
+			{
+				VISPortal	port	=visPortals[k];
+				
+				port.mFinalVisBits	=new byte[numVisPortalBytes];
+
+				//This portal can't see anyone yet...
+				for(int i=0;i < numVisPortalBytes;i++)
+				{
+					port.mFinalVisBits[i]	=0;
+				}
+
+				int	CanSee	=0;
+
+				VISPStack	portStack	=new VISPStack();				
+				for(int i=0;i < numVisPortalBytes;i++)
+				{
+					portStack.mVisBits[i]	=port.mVisBits[i];
+				}
+
+				//Setup Source/Pass
+				portStack.mSource	=new GBSPPoly(port.mPoly);
+				portStack.mPass		=null;
+
+				if(!port.FloodPortalsSlow_r(port, portStack, portIndexer, ref CanSee, visLeafs))
+				{
+					return;
+				}
+
+				portStack.mSource	=null;
+				port.mbDone			=true;
+
+				Console.WriteLine("Portal: " + (k + 1) + " - Fast Vis: "
+					+ port.mMightSee + ", Full Vis: "
+					+ port.mCanSee + "\n");
+			});
+
+			//put vis bits in return data
+			ms	=new MemoryStream();
+			bw	=new BinaryWriter(ms);
+
+			for(int i=startPort;i < endPort;i++)
+			{
+				visPortals[i].WriteVisBits(bw);
+			}
+
+			//read into memory
+			br	=new BinaryReader(ms);
+			br.BaseStream.Seek(0, SeekOrigin.Begin);
+
+			byte	[]returnBytes	=br.ReadBytes((int)ms.Length);
+
+			bw.Close();
+			br.Close();
+			ms.Close();
+
+			return	returnBytes;
 		}
 
 
@@ -830,19 +1130,8 @@ namespace BSPLib
 				//alloc blank portal
 				mVisPortals[i]	=new VISPortal();
 
-				int	numVerts	=br.ReadInt32();
-
 				GBSPPoly	poly	=new GBSPPoly();
-
-				for(int j=0;j < numVerts;j++)
-				{
-					Vector3	vert;
-					vert.X	=br.ReadSingle();
-					vert.Y	=br.ReadSingle();
-					vert.Z	=br.ReadSingle();
-
-					poly.AddVert(vert);
-				}
+				poly.Read(br);
 
 				int	leafFrom	=br.ReadInt32();
 				int	leafTo		=br.ReadInt32();

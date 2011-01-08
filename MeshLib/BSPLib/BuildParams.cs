@@ -36,5 +36,6 @@ namespace BSPLib
 	{
 		public bool	mbFullVis;
 		public bool	mbSortPortals;
+		public bool mbDistribute;
 	}
 }

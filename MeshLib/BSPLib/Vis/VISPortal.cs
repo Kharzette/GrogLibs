@@ -34,6 +34,115 @@ namespace BSPLib
 		internal bool	mbDone;
 
 
+		internal void Read(BinaryReader br, List<int> indexes)
+		{
+			int	idx	=br.ReadInt32();
+			indexes.Add(idx);
+
+			mPoly	=new GBSPPoly();
+			mPoly.Read(br);
+			mPlane.Read(br);
+			mCenter.X	=br.ReadSingle();
+			mCenter.Y	=br.ReadSingle();
+			mCenter.Z	=br.ReadSingle();
+			mRadius		=br.ReadSingle();
+
+			int	vblen	=br.ReadInt32();
+			if(vblen > 0)
+			{
+				mVisBits	=br.ReadBytes(vblen);
+			}
+
+			int	fvblen	=br.ReadInt32();
+			if(fvblen > 0)
+			{
+				mFinalVisBits	=br.ReadBytes(fvblen);
+			}
+
+			mLeaf		=br.ReadInt32();
+			mMightSee	=br.ReadInt32();
+			mCanSee		=br.ReadInt32();
+			mbDone		=br.ReadBoolean();
+		}
+
+
+		internal void WriteVisBits(BinaryWriter bw)
+		{
+			if(mFinalVisBits == null)
+			{
+				bw.Write(-1);
+			}
+			else
+			{
+				bw.Write(mFinalVisBits.Length);
+				if(mFinalVisBits.Length > 0)
+				{
+					bw.Write(mFinalVisBits, 0, mFinalVisBits.Length);
+				}
+			}
+		}
+
+
+		internal void ReadVisBits(BinaryReader br)
+		{
+			int	fvblen	=br.ReadInt32();
+			if(fvblen > 0)
+			{
+				mFinalVisBits	=br.ReadBytes(fvblen);
+			}
+		}
+
+
+		internal void Write(BinaryWriter bw, Dictionary<VISPortal, Int32> portIndexer)
+		{
+			if(mNext != null)
+			{
+				bw.Write(portIndexer[mNext]);
+			}
+			else
+			{
+				bw.Write(-1);
+			}
+			mPoly.Write(bw);
+			mPlane.Write(bw);
+			bw.Write(mCenter.X);
+			bw.Write(mCenter.Y);
+			bw.Write(mCenter.Z);
+			bw.Write(mRadius);
+
+			if(mVisBits == null)
+			{
+				bw.Write(-1);
+			}
+			else
+			{
+				bw.Write(mVisBits.Length);
+				if(mVisBits.Length > 0)
+				{
+					bw.Write(mVisBits, 0, mVisBits.Length);
+				}
+			}
+
+			if(mFinalVisBits == null)
+			{
+				bw.Write(-1);
+			}
+			else
+			{
+				bw.Write(mFinalVisBits.Length);
+				if(mFinalVisBits.Length > 0)
+				{
+					bw.Write(mFinalVisBits, 0, mFinalVisBits.Length);
+				}
+			}
+
+			bw.Write(mLeaf);
+			bw.Write(mMightSee);
+			bw.Write(mCanSee);
+			bw.Write(mbDone);
+		}
+
+
 		internal void CalcPortalInfo()
 		{
 			mCenter	=mPoly.Center();
@@ -335,5 +444,24 @@ namespace BSPLib
 		internal VISPortal	mPortals;
 		internal Int32		mMightSee;
 		internal Int32		mCanSee;
+
+
+		internal void Write(BinaryWriter bw, Dictionary<VISPortal, Int32> portIndexer)
+		{
+			bw.Write(portIndexer[mPortals]);
+			bw.Write(mMightSee);
+			bw.Write(mCanSee);
+		}
+
+
+		internal void Read(BinaryReader br, VISPortal[] ports)
+		{
+			Int32	idx	=br.ReadInt32();
+
+			mPortals	=ports[idx];
+
+			mMightSee	=br.ReadInt32();
+			mCanSee		=br.ReadInt32();
+		}
 	}
 }
