@@ -38,6 +38,7 @@ namespace BSPLib
 	{
 		public BuildFarmCaps	mBuildCaps;
 		public bool				mbActive;
+		public int				mNumFailures;
 
 
 		public MapVisClient()

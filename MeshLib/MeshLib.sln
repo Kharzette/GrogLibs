@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSPBuilder", "BSPBuilder\BS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSPTest", "BSPTest\BSPTest.csproj", "{EC7300F0-FC66-4539-A38F-54AF2F8462A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SplitDbgCompare", "SplitDbgCompare\SplitDbgCompare.csproj", "{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSPZone", "BSPZone\BSPZone.csproj", "{AC062C9A-21A8-4B6B-83D9-3BF6DFE5337C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ColladaConvertContent", "ColladaConvert\Content\ColladaConvertContent.contentproj", "{5D053E77-1EB7-43AE-A6C8-E5A93C050766}"
@@ -237,33 +235,6 @@ Global
 		{EC7300F0-FC66-4539-A38F-54AF2F8462A6}.Release|x86.ActiveCfg = Release|x86
 		{EC7300F0-FC66-4539-A38F-54AF2F8462A6}.Release|x86.Build.0 = Release|x86
 		{EC7300F0-FC66-4539-A38F-54AF2F8462A6}.Release|Xbox 360.ActiveCfg = Release|x86
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.BSPBuilderDebug|Any CPU.ActiveCfg = BSPBuilderDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.BSPBuilderDebug|Any CPU.Build.0 = BSPBuilderDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.BSPBuilderDebug|Mixed Platforms.ActiveCfg = BSPBuilderDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.BSPBuilderDebug|x86.ActiveCfg = BSPBuilderDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.BSPBuilderDebug|Xbox 360.ActiveCfg = BSPBuilderDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.BSPTestDebug|Any CPU.ActiveCfg = BSPTestDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.BSPTestDebug|Any CPU.Build.0 = BSPTestDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.BSPTestDebug|Mixed Platforms.ActiveCfg = BSPTestDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.BSPTestDebug|x86.ActiveCfg = BSPTestDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.BSPTestDebug|Xbox 360.ActiveCfg = BSPTestDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.ColladaConvertDebug|Any CPU.ActiveCfg = ColladaConvertDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.ColladaConvertDebug|Any CPU.Build.0 = ColladaConvertDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.ColladaConvertDebug|Mixed Platforms.ActiveCfg = ColladaConvertDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.ColladaConvertDebug|x86.ActiveCfg = ColladaConvertDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.ColladaConvertDebug|Xbox 360.ActiveCfg = ColladaConvertDebug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.Debug|Xbox 360.ActiveCfg = Debug|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.Release|x86.ActiveCfg = Release|Any CPU
-		{A5311A1B-36DC-412D-AB37-4C4504D1C9C2}.Release|Xbox 360.ActiveCfg = Release|Any CPU
 		{AC062C9A-21A8-4B6B-83D9-3BF6DFE5337C}.BSPBuilderDebug|Any CPU.ActiveCfg = BSPBuilderDebug|x86
 		{AC062C9A-21A8-4B6B-83D9-3BF6DFE5337C}.BSPBuilderDebug|Mixed Platforms.ActiveCfg = BSPBuilderDebug|x86
 		{AC062C9A-21A8-4B6B-83D9-3BF6DFE5337C}.BSPBuilderDebug|Mixed Platforms.Build.0 = BSPBuilderDebug|x86

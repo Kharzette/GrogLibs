@@ -21,7 +21,8 @@ namespace BSPBuilder
 		SpriteBatch				mSB;
 		ContentManager			mSharedCM;
 
-		List<MapVisClient>	mBuildFarm	=new List<MapVisClient>();
+		//build farm end points
+		List<string>	mBuildFarm	=new List<string>();
 
 		//forms
 		MainForm					mMainForm;
@@ -160,10 +161,7 @@ namespace BSPBuilder
 			while(!sr.EndOfStream)
 			{
 				string	url	=sr.ReadLine();
-
-				MapVisClient	mvc	=new MapVisClient("WSHttpBinding_IMapVis", url);
-
-				mBuildFarm.Add(mvc);
+				mBuildFarm.Add(url);
 			}
 		}
 
@@ -913,12 +911,15 @@ namespace BSPBuilder
 
 		void OnQueryBuildFarm(object sender, EventArgs ea)
 		{
-			foreach(MapVisClient mvc in mBuildFarm)
+//			System.Threading.Tasks.Parallel.For(0, mBuildFarm.Count, i =>
+			for(int i=0;i < mBuildFarm.Count;i++)
 			{
+				MapVisClient	mvc	=new MapVisClient("WSHttpBinding_IMapVis", mBuildFarm[i]);
 				BuildFarmCaps	bfc	=null;
 				try
 				{
 					bfc	=mvc.QueryCapabilities();
+					mvc.Close();
 				}
 				catch
 				{
@@ -938,7 +939,7 @@ namespace BSPBuilder
 					mvc.mbActive	=false;
 					mvc.mBuildCaps	=null;
 				}
-			}
+			}//);
 		}
 
 

@@ -10,10 +10,10 @@ namespace BSPLib
 {
 	public class VisParameters
 	{
-		public BSPBuildParams		mBSPParams;
-		public VisParams			mVisParams;
-		public string				mFileName;
-		public List<MapVisClient>	mMVCs;
+		public BSPBuildParams	mBSPParams;
+		public VisParams		mVisParams;
+		public string			mFileName;
+		public List<string>		mEndPoints;
 	}
 
 

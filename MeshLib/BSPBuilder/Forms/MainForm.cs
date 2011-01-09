@@ -37,9 +37,14 @@ namespace BSPBuilder
 		{
 			InitializeComponent();
 
-			MaxCPUCores.Maximum	=Environment.ProcessorCount * 2;
+			int	coreCount	=0;
+			foreach(var item in new System.Management.ManagementObjectSearcher("Select * from Win32_Processor").Get())
+			{
+				coreCount	+=int.Parse(item["NumberOfCores"].ToString());
+			}
+			MaxCPUCores.Maximum	=coreCount;
 			MaxCPUCores.Minimum	=1;
-			MaxCPUCores.Value	=Environment.ProcessorCount;
+			MaxCPUCores.Value	=coreCount;
 		}
 
 

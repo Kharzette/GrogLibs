@@ -91,7 +91,7 @@ namespace BSPLib
 			Print("NumPortals           : " + mVisPortals.Length + "\n");
 			
 			//Vis'em
-			if(!VisAllLeafs(vp.mVisParams.mbSortPortals, vp.mVisParams.mbFullVis, vp.mBSPParams.mbVerbose, vp.mMVCs))
+			if(!VisAllLeafs(vp.mVisParams.mbSortPortals, vp.mVisParams.mbFullVis, vp.mBSPParams.mbVerbose, vp.mEndPoints))
 			{
 				goto	ExitWithError;
 			}
@@ -155,13 +155,13 @@ namespace BSPLib
 		}
 
 
-		public void VisGBSPFile(string fileName, VisParams prms, BSPBuildParams prms2, List<MapVisClient> mvcs)
+		public void VisGBSPFile(string fileName, VisParams prms, BSPBuildParams prms2, List<string> endPoints)
 		{
 			VisParameters	vp	=new VisParameters();
 			vp.mBSPParams	=prms2;
 			vp.mVisParams	=prms;
 			vp.mFileName	=fileName;
-			vp.mMVCs		=mvcs;
+			vp.mEndPoints	=endPoints;
 
 			ThreadPool.QueueUserWorkItem(ThreadVisCB, vp);
 		}
@@ -496,8 +496,8 @@ namespace BSPLib
 		}
 
 
-		void ProcessWork(Dictionary<VISPortal, Int32> portIndexer,
-			ConcurrentQueue<WorkDivided> work, MapVisClient amvc)
+		bool ProcessWork(Dictionary<VISPortal, Int32> portIndexer,
+			WorkDivided wrk, MapVisClient amvc)
 		{
 			MemoryStream	ms	=new MemoryStream();
 			BinaryWriter	bw	=new BinaryWriter(ms);
@@ -525,11 +525,16 @@ namespace BSPLib
 			br.Close();
 			ms.Close();
 
-			WorkDivided	wrk;
-			work.TryDequeue(out wrk);
-
-			byte	[]ports	=amvc.FloodPortalsSlow(visDat,
-				wrk.startPort, wrk.endPort);
+			byte	[]ports	=null;
+			try
+			{
+				ports	=amvc.FloodPortalsSlow(visDat,
+					wrk.startPort, wrk.endPort);
+			}
+			catch
+			{
+				return	false;
+			}
 
 			ms	=new MemoryStream();
 			bw	=new BinaryWriter(ms);
@@ -547,10 +552,12 @@ namespace BSPLib
 			bw.Close();
 			br.Close();
 			ms.Close();
+
+			return	true;
 		}
 
 
-		bool VisAllLeafs(bool bSortPortals,	bool bFullVis, bool bVerbose, List<MapVisClient> mvcs)
+		bool VisAllLeafs(bool bSortPortals,	bool bFullVis, bool bVerbose, List<string> endPoints)
 		{
 			//create a dictionary to map a vis portal back to an index
 			Dictionary<VISPortal, Int32>	portIndexer	=new Dictionary<VISPortal, Int32>();
@@ -584,22 +591,16 @@ namespace BSPLib
 
 			if(bFullVis)
 			{
-				if(mvcs != null)
+				if(endPoints != null)
 				{
-					//see how many cores we have to work with
-					int	totalCores	=0;
-					int	numActive	=0;
+					//list up the endpoints
 					List<MapVisClient>	actives	=new List<MapVisClient>();
 					List<bool>			actBusy	=new List<bool>();
-					foreach(MapVisClient mvc in mvcs)
+					foreach(string address in endPoints)
 					{
-						if(mvc.mbActive)
-						{
-							totalCores	+=mvc.mBuildCaps.mNumCores;
-							numActive++;
-							actives.Add(mvc);
-							actBusy.Add(false);
-						}
+						MapVisClient	amvc	=new MapVisClient("WSHttpBinding_IMapVis", address);
+						actives.Add(amvc);
+						actBusy.Add(false);
 					}
 
 					//make a list of work to be done
@@ -623,21 +624,25 @@ namespace BSPLib
 						work.Enqueue(remainder);
 					}
 
-					List<Task>	tasks	=new List<Task>();
+					List<Task>		tasks	=new List<Task>();
+					List<string>	failing	=new List<string>();
 
 					prog	=ProgressWatcher.RegisterProgress(0, work.Count, 0);
 					while(!work.IsEmpty)					
 					{
 						MapVisClient	amvc	=null;
-						foreach(MapVisClient mv in actives)
+						lock(actives)
 						{
-							lock(actBusy)
+							foreach(MapVisClient mv in actives)
 							{
-								if(!actBusy[actives.IndexOf(mv)])
+								lock(actBusy)
 								{
-									amvc	=mv;
-									actBusy[actives.IndexOf(mv)]	=true;
-									break;
+									if(!actBusy[actives.IndexOf(mv)])
+									{
+										amvc	=mv;
+										actBusy[actives.IndexOf(mv)]	=true;
+										break;
+									}
 								}
 							}
 						}
@@ -646,19 +651,87 @@ namespace BSPLib
 						{
 							Task	task	=Task.Factory.StartNew(() =>
 							{
-								ProcessWork(portIndexer, work, amvc);
-								lock(actBusy)
+								WorkDivided	wrk;
+								work.TryDequeue(out wrk);
+								if(!ProcessWork(portIndexer, wrk, amvc))
 								{
-									actBusy[actives.IndexOf(amvc)]	=false;
+									//failed, requeue
+									work.Enqueue(wrk);
+
+									Print("Build Farm Node : " + amvc.Endpoint.Address + " failed a work unit.  Requeueing it.\n");
+
+									amvc.mNumFailures++;
+
+									//at this point the client is likely hozed
+									int	actIndex	=0;
+									lock(actives)
+									{
+										actIndex	=actives.IndexOf(amvc);
+										actives.Remove(amvc);
+										lock(actBusy)
+										{
+											actBusy.RemoveAt(actIndex);
+										}
+									}
+
+									lock(failing)
+									{
+										failing.Add(amvc.Endpoint.Address.ToString());
+									}
 								}
-								ProgressWatcher.UpdateProgressIncremental(prog);
+								else
+								{
+									ProgressWatcher.UpdateProgressIncremental(prog);
+									lock(actBusy)
+									{
+										actBusy[actives.IndexOf(amvc)]	=false;
+									}
+								}
 							});
 
 							tasks.Add(task);
 						}
 						else
 						{
-							Thread.Sleep(100);
+							Thread.Sleep(1000);
+
+							//see if any of the failing clients have woken back up
+							MapVisClient	failure	=null;
+							lock(failing)
+							{
+								for(int f=0;f < failing.Count;f++)
+								{
+									bool			bWorked	=false;
+									MapVisClient	retry	=null;
+									try
+									{
+										//try to remake item zero
+										retry	=new MapVisClient("WSHttpBinding_IMapVis", failing[f]);
+
+										retry.Open();
+
+										bWorked	=true;
+									}
+									catch
+									{
+										bWorked	=false;
+									}
+
+									if(bWorked)
+									{
+										lock(actives)
+										{
+											actives.Add(retry);
+											lock(actBusy)
+											{
+												actBusy.Add(false);
+											}
+										}
+										failing.RemoveAt(f);
+										f--;
+									}
+								}
+							}
 						}
 					}
 
