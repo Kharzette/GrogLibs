@@ -82,7 +82,7 @@
 			this.Radiosity = new System.Windows.Forms.CheckBox();
 			this.SeamCorrection = new System.Windows.Forms.CheckBox();
 			this.FastPatch = new System.Windows.Forms.CheckBox();
-			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.VisGroup = new System.Windows.Forms.GroupBox();
 			this.label12 = new System.Windows.Forms.Label();
 			this.label11 = new System.Windows.Forms.Label();
 			this.NumRetries = new System.Windows.Forms.NumericUpDown();
@@ -106,7 +106,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.PatchSize)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.LightScale)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.NumBounce)).BeginInit();
-			this.groupBox1.SuspendLayout();
+			this.VisGroup.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.NumRetries)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.VisGranularity)).BeginInit();
 			this.SuspendLayout();
@@ -776,21 +776,21 @@
 			this.FastPatch.Text = "Fast Patch";
 			this.FastPatch.UseVisualStyleBackColor = true;
 			// 
-			// groupBox1
+			// VisGroup
 			// 
-			this.groupBox1.Controls.Add(this.label12);
-			this.groupBox1.Controls.Add(this.label11);
-			this.groupBox1.Controls.Add(this.NumRetries);
-			this.groupBox1.Controls.Add(this.VisGranularity);
-			this.groupBox1.Controls.Add(this.DistributeVis);
-			this.groupBox1.Controls.Add(this.SortPortals);
-			this.groupBox1.Controls.Add(this.FullVis);
-			this.groupBox1.Location = new System.Drawing.Point(12, 155);
-			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(174, 116);
-			this.groupBox1.TabIndex = 28;
-			this.groupBox1.TabStop = false;
-			this.groupBox1.Text = "Vis Settings";
+			this.VisGroup.Controls.Add(this.label12);
+			this.VisGroup.Controls.Add(this.label11);
+			this.VisGroup.Controls.Add(this.NumRetries);
+			this.VisGroup.Controls.Add(this.VisGranularity);
+			this.VisGroup.Controls.Add(this.DistributeVis);
+			this.VisGroup.Controls.Add(this.SortPortals);
+			this.VisGroup.Controls.Add(this.FullVis);
+			this.VisGroup.Location = new System.Drawing.Point(12, 155);
+			this.VisGroup.Name = "VisGroup";
+			this.VisGroup.Size = new System.Drawing.Size(174, 116);
+			this.VisGroup.TabIndex = 28;
+			this.VisGroup.TabStop = false;
+			this.VisGroup.Text = "Vis Settings";
 			// 
 			// label12
 			// 
@@ -904,7 +904,7 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(476, 561);
 			this.ControlBox = false;
-			this.Controls.Add(this.groupBox1);
+			this.Controls.Add(this.VisGroup);
 			this.Controls.Add(this.LightSettingsGroupBox);
 			this.Controls.Add(this.Progress1);
 			this.Controls.Add(this.GroupFileIO);
@@ -936,8 +936,8 @@
 			((System.ComponentModel.ISupportInitialize)(this.PatchSize)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.LightScale)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.NumBounce)).EndInit();
-			this.groupBox1.ResumeLayout(false);
-			this.groupBox1.PerformLayout();
+			this.VisGroup.ResumeLayout(false);
+			this.VisGroup.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this.NumRetries)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.VisGranularity)).EndInit();
 			this.ResumeLayout(false);
@@ -989,7 +989,7 @@
 		private System.Windows.Forms.NumericUpDown MinLightY;
 		private System.Windows.Forms.Label label7;
 		private System.Windows.Forms.NumericUpDown ReflectiveScale;
-		private System.Windows.Forms.GroupBox groupBox1;
+		private System.Windows.Forms.GroupBox VisGroup;
 		private System.Windows.Forms.CheckBox SortPortals;
 		private System.Windows.Forms.CheckBox FullVis;
 		private System.Windows.Forms.Button LoadGBSP;

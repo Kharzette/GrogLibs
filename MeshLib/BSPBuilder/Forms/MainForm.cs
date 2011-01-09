@@ -412,5 +412,11 @@ namespace BSPBuilder
 			VisGranularity.Enabled	=DistributeVis.Checked;
 			NumRetries.Enabled		=DistributeVis.Checked;
 		}
+
+
+		internal void EnableVisGroup(bool bOn)
+		{
+			EnableControl(VisGroup, bOn);
+		}
 	}
 }

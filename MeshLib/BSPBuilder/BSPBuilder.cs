@@ -404,6 +404,7 @@ namespace BSPBuilder
 				mMainForm.SetZoneSaveEnabled(false);
 				mbWorking	=true;
 				mMainForm.EnableFileIO(false);
+				mMainForm.EnableVisGroup(false);
 				mMap	=new Map();
 				RegisterMapEvents(true);
 
@@ -635,6 +636,7 @@ namespace BSPBuilder
 			mMainForm.ClearProgress();
 			mbWorking	=false;
 			mMainForm.EnableFileIO(true);
+			mMainForm.EnableVisGroup(true);
 		}
 
 
