@@ -26,7 +26,6 @@ namespace BSPBuilder
 
 		//forms
 		MainForm					mMainForm;
-		SharedForms.CollisionForm	mCollForm;
 		SharedForms.MaterialForm	mMatForm;
 
 		//data
@@ -36,26 +35,16 @@ namespace BSPBuilder
 
 		//debug draw stuff
 		BasicEffect				mMapEffect;
-		VertexBuffer			mVB, mLineVB;
-		IndexBuffer				mIB, mLineIB;
-		VertexDeclaration		mVD;
+		VertexBuffer			mVB;
+		IndexBuffer				mIB;
 		UtilityLib.GameCamera	mGameCam;
 		SpriteFont				mKoot;
-		int						mNumVerts, mNumLines;
-		int						mNumTris;
 		Vector2					mTextPos;
 		Random					mRnd	=new Random();
-		string					mDrawChoice;
 		Vector3					mDynamicLightPos;
 
 		//working?
 		bool	mbWorking;
-
-		//collision debuggery
-		Vector3				mStart, mEnd;
-		BasicEffect			mBFX;
-		VertexBuffer		mRayVB;
-		IndexBuffer			mRayIB;
 
 
 		public BSPBuilder()
@@ -104,13 +93,6 @@ namespace BSPBuilder
 
 			mIndoorMesh	=new MeshLib.IndoorMesh(GraphicsDevice, mMatLib);
 
-			mCollForm				=new SharedForms.CollisionForm();
-			mCollForm.Visible		=false;
-			mCollForm.eStartRay		+=OnStartRay;
-			mCollForm.eEndRay		+=OnEndRay;
-			mCollForm.eRepeatRay	+=OnRepeatRay;
-//			mCollForm.Location		=Properties.Settings.
-
 			mMatForm					=new SharedForms.MaterialForm(mGDM.GraphicsDevice, mMatLib, false);
 			mMatForm.Visible			=true;
 			mMatForm.eMaterialNuked		+=OnMaterialNuked;
@@ -136,23 +118,14 @@ namespace BSPBuilder
 			mMainForm.eDrawChoiceChanged	+=OnDrawChoiceChanged;
 			mMainForm.eQueryBuildFarm		+=OnQueryBuildFarm;
 
-			mBFX					=new BasicEffect(GraphicsDevice);
-			mBFX.View				=mGameCam.View;
-			mBFX.Projection			=mGameCam.Projection;
-			mBFX.VertexColorEnabled	=true;
-
 			mKoot	=mSharedCM.Load<SpriteFont>("Fonts/Koot20");
 
 			mMapEffect	=new BasicEffect(mGDM.GraphicsDevice);
-
 			mMapEffect.TextureEnabled		=false;
 			mMapEffect.DiffuseColor			=Vector3.One;
 			mMapEffect.VertexColorEnabled	=true;
 
 			Map.ePrint	+=OnMapPrint;
-
-			//tired of that gump
-//			OnOpenVMF("C:\\Users\\kbaird\\Documents\\sdk_arena_lumberyard.vmf", null);
 
 			//load renderfarm contacts
 			FileStream	fs	=new FileStream("Content/BuildFarm.txt", FileMode.Open, FileAccess.Read);
@@ -197,10 +170,6 @@ namespace BSPBuilder
 			mMapEffect.View			=mGameCam.View;
 			mMapEffect.Projection	=mGameCam.Projection;
 
-			mBFX.World		=mGameCam.World;
-			mBFX.View		=mGameCam.View;
-			mBFX.Projection	=mGameCam.Projection;
-
 			mMatLib.UpdateWVP(mGameCam.World, mGameCam.View, mGameCam.Projection, -mGameCam.CamPos);
 
 			base.Update(gameTime);
@@ -234,105 +203,25 @@ namespace BSPBuilder
 
 			GraphicsDevice	g	=mGDM.GraphicsDevice;
 
-//			GraphicsDevice.RenderState.DepthBufferEnable	=true;
-
-			if(mMap != null)
+			if(mMap != null && mVB == null)
 			{
 				mIndoorMesh.Draw(g, mGameCam, mMap.IsMaterialVisibleFromPos);
 			}
-			/*
+
 			if(mVB != null)
 			{
-				g.VertexDeclaration		=mVD;
-				g.Vertices[0].SetSource(mVB, 0, VertexPositionColorTexture.SizeInBytes);
+				g.SetVertexBuffer(mVB);
 				g.Indices	=mIB;
 
-				g.RenderState.DepthBufferEnable	=true;
+				g.BlendState		=BlendState.Opaque;
+				g.DepthStencilState	=DepthStencilState.Default;
+				g.RasterizerState	=RasterizerState.CullCounterClockwise;
 
-				if(mDrawChoice == "Portals")
-				{
-					g.RenderState.AlphaBlendEnable	=true;
-				}
+				mMapEffect.CurrentTechnique.Passes[0].Apply();
 
-				mMapEffect.Begin();
-				foreach(EffectPass pass in mMapEffect.CurrentTechnique.Passes)
-				{
-					pass.Begin();
-
-					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-						0, 0, mNumVerts, 0, mNumTris);
-
-					pass.End();
-				}
-				mMapEffect.End();
-
-				if(mDrawChoice == "Portals")
-				{
-					g.RenderState.CullMode	=CullMode.CullClockwiseFace;
-					mMapEffect.Begin();
-					foreach(EffectPass pass in mMapEffect.CurrentTechnique.Passes)
-					{
-						pass.Begin();
-
-						g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-							0, 0, mNumVerts, 0, mNumTris);
-
-						pass.End();
-					}
-					mMapEffect.End();
-
-					g.RenderState.CullMode			=CullMode.CullCounterClockwiseFace;
-					g.RenderState.AlphaBlendEnable	=false;
-				}
-			}*/
-
-			//draw ray pieces if any
-			/*
-			if(mRayVB != null && mRayParts.Count > 0)
-			{
-				GraphicsDevice.Vertices[0].SetSource(mRayVB, 0, 16);
-				GraphicsDevice.VertexDeclaration	=mVD;
-				GraphicsDevice.Indices				=mRayIB;
-
-				mBFX.Begin();
-				foreach(EffectPass ep in mBFX.CurrentTechnique.Passes)
-				{
-					ep.Begin();
-
-					GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.LineList,
-						0, 0, mRayParts.Count * 2, 0, mRayParts.Count);
-
-					ep.End();
-				}
-				mBFX.End();
-			}*/
-
-			//draw portal lines if any
-			/*if(mLineVB != null)
-			{
-				GraphicsDevice.Vertices[0].SetSource(mLineVB, 0, VertexPositionColorTexture.SizeInBytes);
-				GraphicsDevice.VertexDeclaration	=mVD;
-				GraphicsDevice.Indices				=mLineIB;
-
-				//draw over anything
-				GraphicsDevice.RenderState.DepthBufferEnable	=false;
-
-				mBFX.Begin();
-				foreach(EffectPass ep in mBFX.CurrentTechnique.Passes)
-				{
-					ep.Begin();
-
-					GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.LineList,
-						0, 0, mNumLines * 2, 0, mNumLines);
-
-					ep.End();
-				}
-				mBFX.End();
-
-				//turn zbuffer back on
-				GraphicsDevice.RenderState.DepthBufferEnable	=true;
+				g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+						0, 0, mVB.VertexCount, 0, mIB.IndexCount / 3);
 			}
-			*/
 
 			KeyboardState	kbstate	=Keyboard.GetState();
 			if(kbstate.IsKeyDown(Keys.L))
@@ -349,59 +238,37 @@ namespace BSPBuilder
 			base.Draw(gameTime);
 		}
 
-		/*
-		void MakeDrawData()
+		
+		void MakeDrawData(string drawChoice)
 		{
+			if(drawChoice == "None")
+			{
+				mVB	=null;
+				mIB	=null;
+
+				return;
+			}
+
 			if(mMap == null)
 			{
 				return;
 			}
 
 			List<Vector3>	verts		=new List<Vector3>();
-			List<Vector3>	lineVerts	=new List<Vector3>();
 			List<UInt32>	indexes		=new List<UInt32>();
-			List<UInt32>	lineIndexes	=new List<UInt32>();
 
-			mMap.GetTriangles(mGameCam.CamPos, verts, indexes, mDrawChoice);
+			mMap.GetTriangles(mGameCam.CamPos, verts, indexes, drawChoice);
 			if(verts.Count <= 0)
 			{
 				return;
 			}
-			if(mDrawChoice.StartsWith("Portal"))
-			{
-//				mMap.GetPortalLines(lineVerts, lineIndexes);
-			}
 
-			mNumVerts	=verts.Count;
-			mNumTris	=indexes.Count / 3;
+			mVB	=new VertexBuffer(mGDM.GraphicsDevice, typeof(VertexPositionColorTexture),
+				verts.Count, BufferUsage.WriteOnly);
+			mIB	=new IndexBuffer(mGDM.GraphicsDevice, IndexElementSize.ThirtyTwoBits,
+				indexes.Count, BufferUsage.WriteOnly);
 
-			mVB	=new VertexBuffer(mGDM.GraphicsDevice,
-				VertexPositionColorTexture.SizeInBytes * verts.Count,
-				BufferUsage.WriteOnly);
-			mIB	=new IndexBuffer(mGDM.GraphicsDevice,
-				4 * indexes.Count, BufferUsage.WriteOnly,
-				IndexElementSize.ThirtyTwoBits);
-
-			if(lineVerts.Count > 0)
-			{
-				mNumLines	=lineVerts.Count / 2;
-
-				mLineVB	=new VertexBuffer(mGDM.GraphicsDevice,
-					VertexPositionColorTexture.SizeInBytes * lineVerts.Count,
-					BufferUsage.WriteOnly);
-				mLineIB	=new IndexBuffer(mGDM.GraphicsDevice,
-					4 * lineIndexes.Count, BufferUsage.WriteOnly,
-					IndexElementSize.ThirtyTwoBits);
-			}
-			else
-			{
-				mNumLines	=0;
-				mLineVB		=null;
-				mLineIB		=null;
-			}
-
-			VertexPositionColorTexture	[]vpnt
-				=new VertexPositionColorTexture[mNumVerts];
+			VertexPositionColorTexture	[]vpnt	=new VertexPositionColorTexture[verts.Count];
 
 			int		cnt	=0;
 			Color	col	=Color.White;
@@ -413,129 +280,12 @@ namespace BSPBuilder
 				}
 				vpnt[cnt].Position				=vert;
 				vpnt[cnt].Color					=col;
-				if(mDrawChoice == "Portals")
-				{
-					vpnt[cnt].Color.A	=50;
-				}
 
 				vpnt[cnt++].TextureCoordinate	=Vector2.Zero;
-
 			}
 
 			mVB.SetData<VertexPositionColorTexture>(vpnt);
 			mIB.SetData<UInt32>(indexes.ToArray());
-
-			if(lineVerts.Count <= 0)
-			{
-				return;
-			}
-
-			vpnt	=new VertexPositionColorTexture[lineVerts.Count];
-
-			cnt	=0;
-			foreach(Vector3 vert in lineVerts)
-			{
-				vpnt[cnt].Position			=vert;
-				vpnt[cnt].TextureCoordinate	=Vector2.Zero;
-				vpnt[cnt].Color				=Color.White;
-				cnt++;
-			}
-
-			mLineVB.SetData<VertexPositionColorTexture>(vpnt);
-			mLineIB.SetData<UInt32>(lineIndexes.ToArray());
-		}*/
-
-
-		void OnRepeatRay(object sender, EventArgs ea)
-		{
-			/*
-			mCollForm.PrintToConsole("Casting ray: " +
-				mStart.X + ", " + mStart.Y + ", " + mStart.Z +
-				"  to  " + mEnd.X + ", " + mEnd.Y + ", " + mEnd.Z + "\n");
-
-			Line	ln;
-			ln.mP1	=mStart;
-			ln.mP2	=mEnd;
-
-			if(!mMap.MoveLine(ref ln, 8.0f))
-			{
-				ClipSegment	seg	=new ClipSegment();
-				seg.mSeg.mP1	=mStart;
-				seg.mSeg.mP2	=mEnd;
-
-				mRayParts.Add(seg);
-
-				mCollForm.PrintToConsole("No collision\n");
-			}
-			else
-			{
-				mCollForm.PrintToConsole("Collision!\n");
-				ClipSegment	seg	=new ClipSegment();
-				seg.mSeg.mP1	=mStart;
-				seg.mSeg.mP2	=mEnd;
-				mRayParts.Add(seg);
-
-				seg	=new ClipSegment();
-				seg.mSeg.mP1	=ln.mP1;
-				seg.mSeg.mP2	=ln.mP2;
-				mRayParts.Add(seg);
-			}
-			UpdateRayVerts();*/
-		}
-
-
-		void OnStartRay(object sender, EventArgs ea)
-		{
-			mStart	=mGameCam.CamPos;
-		}
-
-
-		void OnEndRay(object sender, EventArgs ea)
-		{
-			/*
-			mEnd	=mGameCam.CamPos;
-
-			mRayParts.Clear();
-
-//			mStart	=-mStart;
-//			mEnd	=-mEnd;
-
-			mStart	=-mStart;
-			mEnd	=-mEnd;
-
-			OnRepeatRay(null, null);*/
-
-//			Matrix	transpose	=Matrix.Transpose(mGameCam.View);
-
-//			mStart	=Vector3.Transform(mStart, transpose);
-//			mEnd	=Vector3.Transform(mEnd, transpose);
-
-			//hard code from before to repro collision goblinry
-			/*
-			mStart.X	=-286.2419f;
-			mStart.Y	=4.640844f;
-			mStart.Z	=-0.1963519f;
-			mEnd.X		=337.2641f;
-			mEnd.Y		=5.518799f;
-			mEnd.Z		=81.22206f;
-			*/
-			/*
-			mMap.RayCast(mStart, mEnd, ref mRayParts);
-
-			if(mRayParts.Count == 0)
-			{
-				ClipSegment	seg	=new ClipSegment();
-				seg.mSeg.mP1	=mStart;
-				seg.mSeg.mP2	=mEnd;
-
-				mRayParts.Add(seg);
-
-				mCF.PrintToConsole("No collision\n");
-			}
-			else
-			{
-				mCF.PrintToConsole("Ray returned in " + mRayParts.Count + " pieces\n");
-			}*/
 		}
 
 
@@ -819,10 +569,7 @@ namespace BSPBuilder
 		void OnDrawChoiceChanged(object sender, EventArgs ea)
 		{
 			string	choice	=sender as string;
-
-			mDrawChoice	=choice;
-
-//			MakeDrawData();
+			MakeDrawData(choice);
 		}
 
 
@@ -882,7 +629,6 @@ namespace BSPBuilder
 
 		void OnVisDone(object sender, EventArgs ea)
 		{
-//			mMVC.Close();
 			bool	bSuccess	=(bool)sender;
 
 			ProgressWatcher.eProgressUpdated	-=OnProgressUpdated;
@@ -911,7 +657,6 @@ namespace BSPBuilder
 
 		void OnQueryBuildFarm(object sender, EventArgs ea)
 		{
-//			System.Threading.Tasks.Parallel.For(0, mBuildFarm.Count, i =>
 			for(int i=0;i < mBuildFarm.Count;i++)
 			{
 				MapVisClient	mvc	=new MapVisClient("WSHttpBinding_IMapVis", mBuildFarm[i]);
@@ -939,62 +684,7 @@ namespace BSPBuilder
 					mvc.mbActive	=false;
 					mvc.mBuildCaps	=null;
 				}
-			}//);
-		}
-
-
-		void UpdateRayVerts()
-		{
-			/*
-			if(mRayParts == null || mRayParts.Count <= 0)
-			{
-				return;
 			}
-			mRayVB	=new VertexBuffer(GraphicsDevice, mRayParts.Count * 2 * 16, BufferUsage.WriteOnly);
-			mRayIB	=new IndexBuffer(GraphicsDevice, mRayParts.Count * 2 * 2, BufferUsage.WriteOnly, IndexElementSize.SixteenBits);
-
-			VertexPositionColor	[]verts		=new VertexPositionColor[mRayParts.Count * 2];
-			short				[]indexs	=new short[mRayParts.Count * 2];
-
-			int	idx	=0;
-			foreach(ClipSegment seg in mRayParts)
-			{
-				Microsoft.Xna.Framework.Graphics.Color	randColor;
-
-				randColor	=new Microsoft.Xna.Framework.Graphics.Color(
-						Convert.ToByte(255),
-						Convert.ToByte(255 - idx * 20),
-						Convert.ToByte(255 - idx * 20));
-
-				indexs[idx]				=(short)idx;
-				verts[idx].Position.X	=seg.mSeg.mP1.X;
-				verts[idx].Position.Y	=seg.mSeg.mP1.Y;
-				verts[idx].Position.Z	=seg.mSeg.mP1.Z;
-				verts[idx++].Color		=randColor;
-
-				indexs[idx]				=(short)idx;
-				verts[idx].Position.X	=seg.mSeg.mP2.X;
-				verts[idx].Position.Y	=seg.mSeg.mP2.Y;
-				verts[idx].Position.Z	=seg.mSeg.mP2.Z;
-				verts[idx++].Color		=randColor;
-
-//				Line	ln	=r.mSplitPlane.CreateLine();
-
-//				indexs[idx]				=(short)idx;
-//				verts[idx].Position.X	=ln.mP1.X;
-//				verts[idx].Position.Y	=ln.mP1.Y;
-//				verts[idx].Position.Z	=0.0f;
-//				verts[idx++].Color		=Color.Blue;
-				
-//				indexs[idx]				=(short)idx;
-//				verts[idx].Position.X	=ln.mP2.X;
-//				verts[idx].Position.Y	=ln.mP2.Y;
-//				verts[idx].Position.Z	=0.0f;
-//				verts[idx++].Color		=Color.Blue;
-			}
-
-			mRayVB.SetData<VertexPositionColor>(verts);
-			mRayIB.SetData<short>(indexs);*/
 		}
 	}
 }

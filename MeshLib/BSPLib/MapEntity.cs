@@ -503,13 +503,23 @@ namespace BSPLib
 		}
 
 
-		internal void GetTriangles(List<Vector3> verts, List<uint> indexes)
+		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool bGetClipOnly)
 		{
 			if(mBrushes.Count > 0)
 			{
 				foreach(MapBrush mb in mBrushes)
 				{
-					mb.GetTriangles(verts, indexes, false);
+					if(bGetClipOnly)
+					{
+						if((mb.mContents & Contents.BSP_CONTENTS_CLIP2) != 0)
+						{
+							mb.GetTriangles(verts, indexes, false);
+						}
+					}
+					else
+					{
+						mb.GetTriangles(verts, indexes, false);
+					}
 				}
 			}
 		}

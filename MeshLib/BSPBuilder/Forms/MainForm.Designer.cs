@@ -51,6 +51,7 @@
 			this.LoadGBSP = new System.Windows.Forms.Button();
 			this.VisGBSP = new System.Windows.Forms.Button();
 			this.GroupBuildSettings = new System.Windows.Forms.GroupBox();
+			this.button1 = new System.Windows.Forms.Button();
 			this.DrawAndWork = new System.Windows.Forms.CheckBox();
 			this.FixTJunctions = new System.Windows.Forms.CheckBox();
 			this.VerboseEntity = new System.Windows.Forms.CheckBox();
@@ -82,10 +83,9 @@
 			this.SeamCorrection = new System.Windows.Forms.CheckBox();
 			this.FastPatch = new System.Windows.Forms.CheckBox();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.DistributeVis = new System.Windows.Forms.CheckBox();
 			this.SortPortals = new System.Windows.Forms.CheckBox();
 			this.FullVis = new System.Windows.Forms.CheckBox();
-			this.DistributeVis = new System.Windows.Forms.CheckBox();
-			this.button1 = new System.Windows.Forms.Button();
 			this.StatsGroupBox.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxCPUCores)).BeginInit();
 			this.GroupFileIO.SuspendLayout();
@@ -229,14 +229,10 @@
 			this.DrawChoice.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.DrawChoice.FormattingEnabled = true;
 			this.DrawChoice.Items.AddRange(new object[] {
-            "Draw Brushes",
+            "None",
             "Map Brushes",
             "Collision Brushes",
-            "Trouble Brushes",
-            "Draw Tree",
-            "Collision Tree",
-            "Portals",
-            "Portal Tree"});
+            "Vis Tree"});
 			this.DrawChoice.Location = new System.Drawing.Point(6, 19);
 			this.DrawChoice.Name = "DrawChoice";
 			this.DrawChoice.Size = new System.Drawing.Size(123, 21);
@@ -353,6 +349,16 @@
 			this.GroupBuildSettings.TabIndex = 21;
 			this.GroupBuildSettings.TabStop = false;
 			this.GroupBuildSettings.Text = "Build Settings";
+			// 
+			// button1
+			// 
+			this.button1.Location = new System.Drawing.Point(6, 137);
+			this.button1.Name = "button1";
+			this.button1.Size = new System.Drawing.Size(103, 23);
+			this.button1.TabIndex = 24;
+			this.button1.Text = "Query BuildFarm";
+			this.button1.UseVisualStyleBackColor = true;
+			this.button1.Click += new System.EventHandler(this.OnQueryBuildFarm);
 			// 
 			// DrawAndWork
 			// 
@@ -776,6 +782,18 @@
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Vis Settings";
 			// 
+			// DistributeVis
+			// 
+			this.DistributeVis.AutoSize = true;
+			this.DistributeVis.Checked = true;
+			this.DistributeVis.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.DistributeVis.Location = new System.Drawing.Point(6, 65);
+			this.DistributeVis.Name = "DistributeVis";
+			this.DistributeVis.Size = new System.Drawing.Size(70, 17);
+			this.DistributeVis.TabIndex = 3;
+			this.DistributeVis.Text = "Distribute";
+			this.DistributeVis.UseVisualStyleBackColor = true;
+			// 
 			// SortPortals
 			// 
 			this.SortPortals.AutoSize = true;
@@ -798,28 +816,6 @@
 			this.FullVis.Text = "Full Vis";
 			this.FullVis.UseVisualStyleBackColor = true;
 			this.FullVis.CheckedChanged += new System.EventHandler(this.OnFullVisChanged);
-			// 
-			// DistributeVis
-			// 
-			this.DistributeVis.AutoSize = true;
-			this.DistributeVis.Checked = true;
-			this.DistributeVis.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.DistributeVis.Location = new System.Drawing.Point(6, 65);
-			this.DistributeVis.Name = "DistributeVis";
-			this.DistributeVis.Size = new System.Drawing.Size(70, 17);
-			this.DistributeVis.TabIndex = 3;
-			this.DistributeVis.Text = "Distribute";
-			this.DistributeVis.UseVisualStyleBackColor = true;
-			// 
-			// button1
-			// 
-			this.button1.Location = new System.Drawing.Point(6, 137);
-			this.button1.Name = "button1";
-			this.button1.Size = new System.Drawing.Size(103, 23);
-			this.button1.TabIndex = 24;
-			this.button1.Text = "Query BuildFarm";
-			this.button1.UseVisualStyleBackColor = true;
-			this.button1.Click += new System.EventHandler(this.OnQueryBuildFarm);
 			// 
 			// MainForm
 			// 

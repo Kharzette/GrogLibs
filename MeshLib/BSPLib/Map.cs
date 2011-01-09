@@ -88,47 +88,33 @@ namespace BSPLib
 		{
 			if(drawChoice == "Map Brushes")
 			{
-				foreach(MapEntity ent in mEntities)
+				if(mEntities != null)
 				{
-					ent.GetTriangles(verts, indexes);
-				}
-			}
-			else if(drawChoice == "Trouble Brushes")
-			{
-				lock(TroubleBrushes)
-				{
-					foreach(MapBrush mb in TroubleBrushes)
+					foreach(MapEntity ent in mEntities)
 					{
-						mb.GetTriangles(verts, indexes, false);
-					}
-				}
-			}
-			else if(drawChoice == "Draw Brushes")
-			{
-				if(mGFXModels != null && mGFXModels.Length > 0)
-				{
-					int	root	=mGFXModels[0].mRootNode[0];
-
-					RenderBSPFrontBack_r2(root, pos, verts, indexes, false);
-
-					for(int i=1;i < mGFXModels.Length;i++)
-					{
-						RenderModelBSPFrontBack_r2(mGFXModels[i].mRootNode[0], pos, verts, indexes);
+						ent.GetTriangles(verts, indexes, false);
 					}
 				}
 				else
 				{
-					Print("No GFXModels to draw!\n");
+					Print("This is intended for use pre build.\n");
 				}
-//				foreach(GBSPBrush b in mGBSPBrushes)
-//				{
-//					b.GetTriangles(verts, indexes, true);
-//				}
 			}
 			else if(drawChoice == "Collision Brushes")
 			{
+				if(mEntities != null)
+				{
+					foreach(MapEntity ent in mEntities)
+					{
+						ent.GetTriangles(verts, indexes, true);
+					}
+				}
+				else
+				{
+					Print("This is intended for use pre build.\n");
+				}
 			}
-			else if(drawChoice == "Draw Tree")
+			else if(drawChoice == "Vis Tree")
 			{
 				if(mGFXModels != null && mGFXModels.Length > 0)
 				{
@@ -147,15 +133,6 @@ namespace BSPLib
 				{
 					Print("No GFXModels to draw!\n");
 				}
-			}
-			else if(drawChoice == "Collision Tree")
-			{
-			}
-			else if(drawChoice == "Portals")
-			{
-			}
-			else if(drawChoice == "Portal Tree")
-			{
 			}
 		}
 
