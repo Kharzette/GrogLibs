@@ -83,6 +83,10 @@
 			this.SeamCorrection = new System.Windows.Forms.CheckBox();
 			this.FastPatch = new System.Windows.Forms.CheckBox();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.label12 = new System.Windows.Forms.Label();
+			this.label11 = new System.Windows.Forms.Label();
+			this.NumRetries = new System.Windows.Forms.NumericUpDown();
+			this.VisGranularity = new System.Windows.Forms.NumericUpDown();
 			this.DistributeVis = new System.Windows.Forms.CheckBox();
 			this.SortPortals = new System.Windows.Forms.CheckBox();
 			this.FullVis = new System.Windows.Forms.CheckBox();
@@ -103,6 +107,8 @@
 			((System.ComponentModel.ISupportInitialize)(this.LightScale)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.NumBounce)).BeginInit();
 			this.groupBox1.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.NumRetries)).BeginInit();
+			((System.ComponentModel.ISupportInitialize)(this.VisGranularity)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// OpenBrushFile
@@ -407,7 +413,7 @@
 			// GroupDrawSettings
 			// 
 			this.GroupDrawSettings.Controls.Add(this.DrawChoice);
-			this.GroupDrawSettings.Location = new System.Drawing.Point(12, 251);
+			this.GroupDrawSettings.Location = new System.Drawing.Point(12, 278);
 			this.GroupDrawSettings.Name = "GroupDrawSettings";
 			this.GroupDrawSettings.Size = new System.Drawing.Size(135, 58);
 			this.GroupDrawSettings.TabIndex = 22;
@@ -772,34 +778,109 @@
 			// 
 			// groupBox1
 			// 
+			this.groupBox1.Controls.Add(this.label12);
+			this.groupBox1.Controls.Add(this.label11);
+			this.groupBox1.Controls.Add(this.NumRetries);
+			this.groupBox1.Controls.Add(this.VisGranularity);
 			this.groupBox1.Controls.Add(this.DistributeVis);
 			this.groupBox1.Controls.Add(this.SortPortals);
 			this.groupBox1.Controls.Add(this.FullVis);
 			this.groupBox1.Location = new System.Drawing.Point(12, 155);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(93, 90);
+			this.groupBox1.Size = new System.Drawing.Size(174, 116);
 			this.groupBox1.TabIndex = 28;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Vis Settings";
+			// 
+			// label12
+			// 
+			this.label12.AutoSize = true;
+			this.label12.Location = new System.Drawing.Point(71, 47);
+			this.label12.Name = "label12";
+			this.label12.Size = new System.Drawing.Size(40, 13);
+			this.label12.TabIndex = 34;
+			this.label12.Text = "Retries";
+			// 
+			// label11
+			// 
+			this.label11.AutoSize = true;
+			this.label11.Location = new System.Drawing.Point(71, 21);
+			this.label11.Name = "label11";
+			this.label11.Size = new System.Drawing.Size(78, 13);
+			this.label11.TabIndex = 33;
+			this.label11.Text = "Dist Granularity";
+			// 
+			// NumRetries
+			// 
+			this.NumRetries.Enabled = false;
+			this.NumRetries.Location = new System.Drawing.Point(6, 45);
+			this.NumRetries.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+			this.NumRetries.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+			this.NumRetries.Name = "NumRetries";
+			this.NumRetries.Size = new System.Drawing.Size(59, 20);
+			this.NumRetries.TabIndex = 32;
+			this.NumRetries.Value = new decimal(new int[] {
+            20,
+            0,
+            0,
+            0});
+			// 
+			// VisGranularity
+			// 
+			this.VisGranularity.Enabled = false;
+			this.VisGranularity.Increment = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+			this.VisGranularity.Location = new System.Drawing.Point(6, 19);
+			this.VisGranularity.Maximum = new decimal(new int[] {
+            5000,
+            0,
+            0,
+            0});
+			this.VisGranularity.Minimum = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+			this.VisGranularity.Name = "VisGranularity";
+			this.VisGranularity.Size = new System.Drawing.Size(59, 20);
+			this.VisGranularity.TabIndex = 31;
+			this.VisGranularity.Value = new decimal(new int[] {
+            500,
+            0,
+            0,
+            0});
 			// 
 			// DistributeVis
 			// 
 			this.DistributeVis.AutoSize = true;
 			this.DistributeVis.Checked = true;
 			this.DistributeVis.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.DistributeVis.Location = new System.Drawing.Point(6, 65);
+			this.DistributeVis.Enabled = false;
+			this.DistributeVis.Location = new System.Drawing.Point(6, 71);
 			this.DistributeVis.Name = "DistributeVis";
 			this.DistributeVis.Size = new System.Drawing.Size(70, 17);
 			this.DistributeVis.TabIndex = 3;
 			this.DistributeVis.Text = "Distribute";
 			this.DistributeVis.UseVisualStyleBackColor = true;
+			this.DistributeVis.CheckedChanged += new System.EventHandler(this.OnDistributeChanged);
 			// 
 			// SortPortals
 			// 
 			this.SortPortals.AutoSize = true;
 			this.SortPortals.Checked = true;
 			this.SortPortals.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.SortPortals.Location = new System.Drawing.Point(6, 42);
+			this.SortPortals.Location = new System.Drawing.Point(88, 93);
 			this.SortPortals.Name = "SortPortals";
 			this.SortPortals.Size = new System.Drawing.Size(80, 17);
 			this.SortPortals.TabIndex = 2;
@@ -809,7 +890,7 @@
 			// FullVis
 			// 
 			this.FullVis.AutoSize = true;
-			this.FullVis.Location = new System.Drawing.Point(6, 19);
+			this.FullVis.Location = new System.Drawing.Point(6, 93);
 			this.FullVis.Name = "FullVis";
 			this.FullVis.Size = new System.Drawing.Size(59, 17);
 			this.FullVis.TabIndex = 0;
@@ -857,6 +938,8 @@
 			((System.ComponentModel.ISupportInitialize)(this.NumBounce)).EndInit();
 			this.groupBox1.ResumeLayout(false);
 			this.groupBox1.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this.NumRetries)).EndInit();
+			((System.ComponentModel.ISupportInitialize)(this.VisGranularity)).EndInit();
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -922,5 +1005,9 @@
 		private System.Windows.Forms.CheckBox DrawAndWork;
 		private System.Windows.Forms.Button button1;
 		private System.Windows.Forms.CheckBox DistributeVis;
+		private System.Windows.Forms.Label label12;
+		private System.Windows.Forms.Label label11;
+		private System.Windows.Forms.NumericUpDown NumRetries;
+		private System.Windows.Forms.NumericUpDown VisGranularity;
 	}
 }

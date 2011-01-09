@@ -651,6 +651,11 @@ namespace BSPLib
 					mFlags		|=SURF_NODRAW;
 					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 				}
+				else if(tok.StartsWith("window") || tok.StartsWith("WINDOW"))
+				{
+					mFlags		|=SURF_TRANS66;
+					ti.mFlags	|=TexInfo.TRANS;
+				}
 				else if(char.IsLetter(tok, 0))
 				{
 					texName	=tok;

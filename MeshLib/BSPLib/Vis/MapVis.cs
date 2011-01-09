@@ -91,7 +91,9 @@ namespace BSPLib
 			Print("NumPortals           : " + mVisPortals.Length + "\n");
 			
 			//Vis'em
-			if(!VisAllLeafs(vp.mVisParams.mbSortPortals, vp.mVisParams.mbFullVis, vp.mBSPParams.mbVerbose, vp.mEndPoints))
+			if(!VisAllLeafs(vp.mVisParams.mbSortPortals, vp.mVisParams.mbFullVis,
+				vp.mBSPParams.mbVerbose, vp.mVisParams.mGranularity,
+				vp.mVisParams.mNumRetries, vp.mEndPoints))
 			{
 				goto	ExitWithError;
 			}
@@ -557,7 +559,8 @@ namespace BSPLib
 		}
 
 
-		bool VisAllLeafs(bool bSortPortals,	bool bFullVis, bool bVerbose, List<string> endPoints)
+		bool VisAllLeafs(bool bSortPortals,	bool bFullVis, bool bVerbose,
+			int granularity, int numRetries, List<string> endPoints)
 		{
 			//create a dictionary to map a vis portal back to an index
 			Dictionary<VISPortal, Int32>	portIndexer	=new Dictionary<VISPortal, Int32>();
@@ -606,19 +609,19 @@ namespace BSPLib
 					//make a list of work to be done
 					ConcurrentQueue<WorkDivided>	work	=new ConcurrentQueue<WorkDivided>();
 
-					for(int i=0;i < (mVisPortals.Length / 100);i++)
+					for(int i=0;i < (mVisPortals.Length / granularity);i++)
 					{
 						WorkDivided	wd	=new WorkDivided();
-						wd.startPort	=i * 100;
-						wd.endPort		=(i + 1) * 100;
+						wd.startPort	=i * granularity;
+						wd.endPort		=(i + 1) * granularity;
 
 						work.Enqueue(wd);
 					}
 
-					if(((mVisPortals.Length / 100) * 100) != mVisPortals.Length)
+					if(((mVisPortals.Length / granularity) * granularity) != mVisPortals.Length)
 					{
 						WorkDivided	remainder	=new WorkDivided();
-						remainder.startPort	=(mVisPortals.Length / 100) * 100;
+						remainder.startPort	=(mVisPortals.Length / granularity) * granularity;
 						remainder.endPort	=mVisPortals.Length;
 
 						work.Enqueue(remainder);
@@ -626,6 +629,16 @@ namespace BSPLib
 
 					List<Task>		tasks	=new List<Task>();
 					List<string>	failing	=new List<string>();
+
+					ConcurrentDictionary<string, int>	retries	=new ConcurrentDictionary<string, int>();
+
+					//add the endpoints
+					foreach(string endp in endPoints)
+					{
+						retries.AddOrUpdate(endp, 0, (key, oldValue) => oldValue + 1);
+					}
+
+					Print("Beginning distributed visibility with " + endPoints.Count + " possible work machines\n");
 
 					prog	=ProgressWatcher.RegisterProgress(0, work.Count, 0);
 					while(!work.IsEmpty)					
@@ -696,11 +709,15 @@ namespace BSPLib
 							Thread.Sleep(1000);
 
 							//see if any of the failing clients have woken back up
-							MapVisClient	failure	=null;
 							lock(failing)
 							{
 								for(int f=0;f < failing.Count;f++)
 								{
+									if(retries[failing[f]] >= numRetries)
+									{
+										continue;
+									}
+
 									bool			bWorked	=false;
 									MapVisClient	retry	=null;
 									try
@@ -729,6 +746,12 @@ namespace BSPLib
 										}
 										failing.RemoveAt(f);
 										f--;
+									}
+									else
+									{
+										retries.AddOrUpdate(failing[f], 0, (key, oldValue) => oldValue + 1);
+
+										Print("Num Retries for " + failing[f] + " is : " + retries[failing[f]] + "\n");
 									}
 								}
 							}

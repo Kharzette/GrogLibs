@@ -193,6 +193,8 @@ namespace BSPBuilder
 				mVisParams.mbFullVis		=FullVis.Checked;
 				mVisParams.mbSortPortals	=SortPortals.Checked;
 				mVisParams.mbDistribute		=DistributeVis.Checked;
+				mVisParams.mNumRetries		=(int)NumRetries.Value;
+				mVisParams.mGranularity		=(int)VisGranularity.Value;
 
 				return	mVisParams;
 			}
@@ -315,10 +317,15 @@ namespace BSPBuilder
 
 		void OnFullVisChanged(object sender, EventArgs e)
 		{
+			DistributeVis.Enabled	=FullVis.Checked;
+
 			if(FullVis.Checked)
 			{
 				SortPortals.Checked	=true;
 				SortPortals.Enabled	=false;
+
+				NumRetries.Enabled		=DistributeVis.Checked;
+				VisGranularity.Enabled	=DistributeVis.Checked;
 			}
 			else
 			{
@@ -397,6 +404,13 @@ namespace BSPBuilder
 		void OnQueryBuildFarm(object sender, EventArgs e)
 		{
 			UtilityLib.Misc.SafeInvoke(eQueryBuildFarm, null);
+		}
+
+
+		void OnDistributeChanged(object sender, EventArgs e)
+		{
+			VisGranularity.Enabled	=DistributeVis.Checked;
+			NumRetries.Enabled		=DistributeVis.Checked;
 		}
 	}
 }
