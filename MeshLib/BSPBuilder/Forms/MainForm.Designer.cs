@@ -247,6 +247,7 @@
 			// 
 			// MaxCPUCores
 			// 
+			this.MaxCPUCores.Enabled = false;
 			this.MaxCPUCores.Location = new System.Drawing.Point(6, 19);
 			this.MaxCPUCores.Name = "MaxCPUCores";
 			this.MaxCPUCores.Size = new System.Drawing.Size(41, 20);
@@ -255,6 +256,7 @@
 			// LabelCPUCores
 			// 
 			this.LabelCPUCores.AutoSize = true;
+			this.LabelCPUCores.Enabled = false;
 			this.LabelCPUCores.Location = new System.Drawing.Point(53, 21);
 			this.LabelCPUCores.Name = "LabelCPUCores";
 			this.LabelCPUCores.Size = new System.Drawing.Size(57, 13);

@@ -32,6 +32,7 @@ namespace BSPTest
 		bool		mbFlyMode;
 
 		GamePadState	mOldGPS	=new GamePadState();
+		KeyboardState	mOldKBS	=new KeyboardState();
 
 		const float MidAirMoveScale	=0.4f;
 
@@ -89,8 +90,8 @@ namespace BSPTest
 			mGameCam.CamPos	=-mZone.GetPlayerStartPos();
 
 			mMatLib.SetParameterOnAll("mLight0Color", Vector3.One);
-			mMatLib.SetParameterOnAll("mLightRange", 300.0f);
-			mMatLib.SetParameterOnAll("mLightFalloffRange", 150.0f);
+			mMatLib.SetParameterOnAll("mLightRange", 200.0f);
+			mMatLib.SetParameterOnAll("mLightFalloffRange", 50.0f);
 		}
 
 
@@ -108,15 +109,22 @@ namespace BSPTest
 
 			float	msDelta	=gameTime.ElapsedGameTime.Milliseconds;
 
-			GamePadState	gps	=GamePad.GetState(0);
+			GamePadState	gps	=GamePad.GetState(PlayerIndex.One);
+			KeyboardState	kbs	=Keyboard.GetState();
 
-			if(gps.IsButtonDown(Buttons.A))
+			if(gps.IsButtonDown(Buttons.A) || kbs.IsKeyDown(Keys.G))
 			{
 				Vector3	dynamicLight	=-mGameCam.CamPos;
 				mMatLib.SetParameterOnAll("mLight0Position", dynamicLight);
 			}
-			KeyboardState	kbs	=Keyboard.GetState();
 
+			if(kbs.IsKeyUp(Keys.F))
+			{
+				if(mOldKBS.IsKeyDown(Keys.F))
+				{
+					mbFlyMode	=!mbFlyMode;
+				}
+			}
 			if(gps.IsButtonUp(Buttons.LeftShoulder))
 			{
 				if(mOldGPS.IsButtonDown(Buttons.LeftShoulder))
@@ -181,30 +189,12 @@ namespace BSPTest
 				//do a movement update
 				mGameCam.Update(msDelta, kbs, Mouse.GetState(), GamePad.GetState(0));
 			}
-			/*
-			if(kbs.IsKeyDown(Keys.O))
-			{
-				mStart	=-mGameCam.CamPos;
-			}
-			if(kbs.IsKeyDown(Keys.P))
-			{
-				mEnd	=-mGameCam.CamPos;
-			}
-			if(kbs.IsKeyDown(Keys.C))
-			{
-				Vector3		impacto		=Vector3.Zero;
-				ZonePlane	planeHit	=new ZonePlane();
-				if(mZone.Trace_WorldCollisionBBox(mBodyMins, mBodyMaxs,
-					mStart, mEnd, 0, ref impacto, ref planeHit))
-				{
-					mImpacto	=impacto;
-				}
-			}*/
 
 			mLevel.Update(msDelta);
 			mMatLib.UpdateWVP(mGameCam.World, mGameCam.View, mGameCam.Projection, -mGameCam.CamPos);
 
 			mOldGPS	=gps;
+			mOldKBS	=kbs;
 
 			base.Update(gameTime);
 		}

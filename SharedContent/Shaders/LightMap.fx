@@ -29,7 +29,7 @@ float3 ComputeLight(float3 worldPos, float3 lightPos, float3 normal)
 	{
 		float3	lightDirection	=normalize(lightPos - worldPos);
 		float3	worldNormal		=mul(normal, mWorld);
-		float	ndl				=dot(worldNormal, lightPos);
+		float	ndl				=dot(worldNormal, lightDirection);
 		
 		//distance falloff
 		if(dist > mLightFalloffRange)
@@ -272,7 +272,7 @@ float4 LMAlphaPixelShader(VTex0Tex1Col0 input) : COLOR0
 
 float4 VLitPixelShader(VTex0Col0 input) : COLOR0
 {
-	float4	color;
+	float3	color;
 	
 	float2	tex0	=input.TexCoord0;
 	
@@ -282,8 +282,9 @@ float4 VLitPixelShader(VTex0Col0 input) : COLOR0
 	color	=tex2D(TextureSampler, tex0);
 	
 	color	*=input.Color;
-	
-	return	color;
+	color	=saturate(color);
+
+	return	float4(color, input.Color.w);
 }
 
 

@@ -280,10 +280,6 @@ namespace MaterialLib
 				int	ig	=G;
 				int	ib	=B;
 
-				ir	*=2;
-				ig	*=2;
-				ib	*=2;
-
 				atlas[i]	=new Color(ir, ig, ib, A);
 			}
 			mAtlasTexture.SetData<Color>(atlas);

@@ -100,7 +100,6 @@ Global
 		{83BEB70A-940A-49E7-AD48-528BFD560F12}.BSPTestDebug|Any CPU.ActiveCfg = BSPTestDebug|x86
 		{83BEB70A-940A-49E7-AD48-528BFD560F12}.BSPTestDebug|Mixed Platforms.ActiveCfg = BSPTestDebug|x86
 		{83BEB70A-940A-49E7-AD48-528BFD560F12}.BSPTestDebug|x86.ActiveCfg = BSPTestDebug|x86
-		{83BEB70A-940A-49E7-AD48-528BFD560F12}.BSPTestDebug|x86.Build.0 = BSPTestDebug|x86
 		{83BEB70A-940A-49E7-AD48-528BFD560F12}.BSPTestDebug|Xbox 360.ActiveCfg = BSPTestDebug|x86
 		{83BEB70A-940A-49E7-AD48-528BFD560F12}.ColladaConvertDebug|Any CPU.ActiveCfg = ColladaConvertDebug|x86
 		{83BEB70A-940A-49E7-AD48-528BFD560F12}.ColladaConvertDebug|Mixed Platforms.ActiveCfg = ColladaConvertDebug|x86
@@ -188,7 +187,6 @@ Global
 		{2C6CA50C-4DB2-4C18-9627-9A38D187EFA7}.BSPTestDebug|Any CPU.ActiveCfg = BSPTestDebug|x86
 		{2C6CA50C-4DB2-4C18-9627-9A38D187EFA7}.BSPTestDebug|Mixed Platforms.ActiveCfg = BSPTestDebug|x86
 		{2C6CA50C-4DB2-4C18-9627-9A38D187EFA7}.BSPTestDebug|x86.ActiveCfg = BSPTestDebug|x86
-		{2C6CA50C-4DB2-4C18-9627-9A38D187EFA7}.BSPTestDebug|x86.Build.0 = BSPTestDebug|x86
 		{2C6CA50C-4DB2-4C18-9627-9A38D187EFA7}.BSPTestDebug|Xbox 360.ActiveCfg = BSPTestDebug|x86
 		{2C6CA50C-4DB2-4C18-9627-9A38D187EFA7}.ColladaConvertDebug|Any CPU.ActiveCfg = ColladaConvertDebug|x86
 		{2C6CA50C-4DB2-4C18-9627-9A38D187EFA7}.ColladaConvertDebug|Mixed Platforms.ActiveCfg = ColladaConvertDebug|x86
@@ -503,7 +501,6 @@ Global
 		{29C0FFE8-5702-48A3-840D-54706748FF68}.BSPTestDebug|Any CPU.ActiveCfg = BSPTestDebug|x86
 		{29C0FFE8-5702-48A3-840D-54706748FF68}.BSPTestDebug|Mixed Platforms.ActiveCfg = BSPTestDebug|x86
 		{29C0FFE8-5702-48A3-840D-54706748FF68}.BSPTestDebug|x86.ActiveCfg = BSPTestDebug|x86
-		{29C0FFE8-5702-48A3-840D-54706748FF68}.BSPTestDebug|x86.Build.0 = BSPTestDebug|x86
 		{29C0FFE8-5702-48A3-840D-54706748FF68}.BSPTestDebug|Xbox 360.ActiveCfg = BSPTestDebug|x86
 		{29C0FFE8-5702-48A3-840D-54706748FF68}.ColladaConvertDebug|Any CPU.ActiveCfg = ColladaConvertDebug|x86
 		{29C0FFE8-5702-48A3-840D-54706748FF68}.ColladaConvertDebug|Mixed Platforms.ActiveCfg = ColladaConvertDebug|x86
