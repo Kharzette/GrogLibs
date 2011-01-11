@@ -448,7 +448,14 @@ namespace BSPLib
 
 		internal void Write(BinaryWriter bw, Dictionary<VISPortal, Int32> portIndexer)
 		{
-			bw.Write(portIndexer[mPortals]);
+			if(mPortals == null)
+			{
+				bw.Write(-1);
+			}
+			else
+			{
+				bw.Write(portIndexer[mPortals]);
+			}
 			bw.Write(mMightSee);
 			bw.Write(mCanSee);
 		}
@@ -458,8 +465,10 @@ namespace BSPLib
 		{
 			Int32	idx	=br.ReadInt32();
 
-			mPortals	=ports[idx];
-
+			if(idx >= 0)
+			{
+				mPortals	=ports[idx];
+			}
 			mMightSee	=br.ReadInt32();
 			mCanSee		=br.ReadInt32();
 		}

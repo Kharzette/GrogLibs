@@ -640,8 +640,10 @@ namespace BSPLib
 
 					Print("Beginning distributed visibility with " + endPoints.Count + " possible work machines\n");
 
+					bool	bReallyDone	=false;
+
 					prog	=ProgressWatcher.RegisterProgress(0, work.Count, 0);
-					while(!work.IsEmpty)					
+					while(!work.IsEmpty || !bReallyDone)
 					{
 						MapVisClient	amvc	=null;
 						lock(actives)
@@ -665,39 +667,48 @@ namespace BSPLib
 							Task	task	=Task.Factory.StartNew(() =>
 							{
 								WorkDivided	wrk;
-								work.TryDequeue(out wrk);
-								if(!ProcessWork(portIndexer, wrk, amvc))
+								bool		bLastOne	=false;
+								if(work.TryDequeue(out wrk))
 								{
-									//failed, requeue
-									work.Enqueue(wrk);
-
-									Print("Build Farm Node : " + amvc.Endpoint.Address + " failed a work unit.  Requeueing it.\n");
-
-									amvc.mNumFailures++;
-
-									//at this point the client is likely hozed
-									int	actIndex	=0;
-									lock(actives)
+									bLastOne	=work.IsEmpty;
+									if(!ProcessWork(portIndexer, wrk, amvc))
 									{
-										actIndex	=actives.IndexOf(amvc);
-										actives.Remove(amvc);
-										lock(actBusy)
+										//failed, requeue
+										work.Enqueue(wrk);
+
+										Print("Build Farm Node : " + amvc.Endpoint.Address + " failed a work unit.  Requeueing it.\n");
+
+										amvc.mNumFailures++;
+
+										//at this point the client is likely hozed
+										int	actIndex	=0;
+										lock(actives)
 										{
-											actBusy.RemoveAt(actIndex);
+											actIndex	=actives.IndexOf(amvc);
+											actives.Remove(amvc);
+											lock(actBusy)
+											{
+												actBusy.RemoveAt(actIndex);
+											}
+										}
+
+										lock(failing)
+										{
+											failing.Add(amvc.Endpoint.Address.ToString());
 										}
 									}
+									else
+									{
+										ProgressWatcher.UpdateProgressIncremental(prog);
+										lock(actBusy)
+										{
+											actBusy[actives.IndexOf(amvc)]	=false;
+										}
 
-									lock(failing)
-									{
-										failing.Add(amvc.Endpoint.Address.ToString());
-									}
-								}
-								else
-								{
-									ProgressWatcher.UpdateProgressIncremental(prog);
-									lock(actBusy)
-									{
-										actBusy[actives.IndexOf(amvc)]	=false;
+										if(bLastOne && work.IsEmpty)
+										{
+											bReallyDone	=true;
+										}
 									}
 								}
 							});
@@ -722,7 +733,7 @@ namespace BSPLib
 									MapVisClient	retry	=null;
 									try
 									{
-										//try to remake item zero
+										//try to remake
 										retry	=new MapVisClient("WSHttpBinding_IMapVis", failing[f]);
 
 										retry.Open();
@@ -776,11 +787,12 @@ namespace BSPLib
 
 						if(!stillBusy)
 						{
+							Debug.Assert(work.IsEmpty);
 							break;
 						}
 						else
 						{
-							Thread.Sleep(100);
+							Thread.Sleep(1000);
 						}
 					}
 				}
@@ -891,6 +903,7 @@ namespace BSPLib
 		}
 
 
+		//used by the external distributed vis
 		public static byte []FloodPortalsSlow(byte []visData, int startPort, int endPort)
 		{
 			//convert the bytes to something usable
@@ -983,7 +996,7 @@ namespace BSPLib
 
 				Console.WriteLine("Portal: " + (k + 1) + " - Fast Vis: "
 					+ port.mMightSee + ", Full Vis: "
-					+ port.mCanSee + "\n");
+					+ port.mCanSee);
 			});
 
 			//put vis bits in return data

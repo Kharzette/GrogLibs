@@ -300,7 +300,7 @@ namespace BSPLib
 					string	s	="";
 
 					//see if this is a .map or a .vmf
-					if(mapFileName.EndsWith(".map"))
+					if(mapFileName.EndsWith(".map") || mapFileName.EndsWith(".MAP"))
 					{
 						while((s = sr.ReadLine()) != null)
 						{

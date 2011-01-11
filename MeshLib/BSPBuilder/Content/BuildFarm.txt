@@ -1,0 +1,3 @@
+http://localhost:8000/ServiceModelSamples/Service/MapVisService
+http://bankai:8000/ServiceModelSamples/Service/MapVisService
+http://homonculus:8000/ServiceModelSamples/Service/MapVisService

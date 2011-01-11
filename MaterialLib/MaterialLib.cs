@@ -403,7 +403,8 @@ namespace MaterialLib
 
 				foreach(KeyValuePair<string, Texture2D> tex in mMaps)
 				{
-					if(tex.Key.Contains(rawMatName))
+					if(tex.Key.Contains(rawMatName)
+						|| tex.Key.Contains(rawMatName.ToLower()))
 					{
 						mat.Value.SetParameter("mTexture", tex.Key);
 						mat.Value.SetParameter("mbTextureEnabled", "true");
@@ -821,6 +822,12 @@ namespace MaterialLib
 
 				//stupid getfiles won't take multiple wildcards
 				FileInfo[]		fi	=di.GetFiles("*.png", SearchOption.AllDirectories);
+				foreach(FileInfo f in fi)
+				{
+					LoadTexture(gd, f.DirectoryName, f.Name);
+				}
+
+				fi	=di.GetFiles("*.jpg", SearchOption.AllDirectories);
 				foreach(FileInfo f in fi)
 				{
 					LoadTexture(gd, f.DirectoryName, f.Name);
