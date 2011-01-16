@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace ColladaConvert.Properties {
+namespace ColladaConvert {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -20,6 +20,18 @@ namespace ColladaConvert.Properties {
         public static Settings Default {
             get {
                 return defaultInstance;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point MainWindowPos {
+            get {
+                return ((global::System.Drawing.Point)(this["MainWindowPos"]));
+            }
+            set {
+                this["MainWindowPos"] = value;
             }
         }
         
@@ -80,18 +92,6 @@ namespace ColladaConvert.Properties {
             }
             set {
                 this["TextureFormPos"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Point MainWindowPos {
-            get {
-                return ((global::System.Drawing.Point)(this["MainWindowPos"]));
-            }
-            set {
-                this["MainWindowPos"] = value;
             }
         }
     }

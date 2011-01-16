@@ -61,12 +61,12 @@ namespace ColladaConvert
 
 				//add data binding so it will save
 				mainWindow.DataBindings.Add(new System.Windows.Forms.Binding("Location",
-					global::ColladaConvert.Properties.Settings.Default,
+					global::ColladaConvert.Settings.Default,
 					"MainWindowPos", true,
 					System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
 
 				mainWindow.Location	=
-					global::ColladaConvert.Properties.Settings.Default.MainWindowPos;
+					global::ColladaConvert.Settings.Default.MainWindowPos;
 
 				IsMouseVisible	=true;
 			}
@@ -98,6 +98,9 @@ namespace ColladaConvert
 			mAnimLib	=new AnimLib();
 			mCharacter	=new Character(mMatLib, mAnimLib);
 			mStaticMesh	=new StaticMeshObject(mMatLib);
+
+			mStaticMesh.SetTransform(Matrix.Identity);
+			mCharacter.SetTransform(Matrix.Identity);
 
 			//load debug shaders
 			mFX	=mSharedCM.Load<Effect>("Shaders/Static");
@@ -181,14 +184,22 @@ namespace ColladaConvert
 			mCF.eLoadLibrary			+=OnLoadLibrary;
 			mCF.eLoadStatic				+=OnLoadStatic;
 			mCF.eSaveStatic				+=OnSaveStatic;
+			mCF.eLoadMotionDat			+=OnLoadMotionDat;
+			mCF.eLoadBoneMap			+=OnLoadBoneMap;
 
 			mMF	=new SharedForms.MaterialForm(mGDM.GraphicsDevice, mMatLib, true);
 			mMF.Visible	=true;
 
 			//bind matform window position
 			mMF.DataBindings.Add(new System.Windows.Forms.Binding("Location",
-				global::ColladaConvert.Properties.Settings.Default,
+				global::ColladaConvert.Settings.Default,
 				"MaterialFormPos", true,
+				System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+
+			//bind animform window position
+			mCF.DataBindings.Add(new System.Windows.Forms.Binding("Location",
+				global::ColladaConvert.Settings.Default,
+				"AnimFormPos", true,
 				System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
 
 //			mMF.eBoundsUpdated	+=OnBoundsChanged;
@@ -230,8 +241,28 @@ namespace ColladaConvert
 		{
 			mCharacter	=ColladaFileUtils.LoadCharacter(sender as string, mGDM.GraphicsDevice, mMatLib, mAnimLib);
 
+			mCharacter.SetTransform(Matrix.Identity);
+
 			mMF.UpdateMeshPartList(mCharacter.GetMeshPartList(), null);
 			eAnimsUpdated(mAnimLib.GetAnims(), null);
+		}
+
+
+		void OnLoadMotionDat(object sender, EventArgs ea)
+		{
+			string	fileName	=sender as string;
+
+			mAnimLib.LoadKinectMotionDat(fileName);
+
+			UtilityLib.Misc.SafeInvoke(eAnimsUpdated, mAnimLib.GetAnims());
+		}
+
+
+		void OnLoadBoneMap(object sender, EventArgs ea)
+		{
+			string	fileName	=sender as string;
+
+			mAnimLib.LoadBoneMap(fileName);
 		}
 
 
@@ -239,7 +270,9 @@ namespace ColladaConvert
 		{
 			Mesh	msh	=sender as Mesh;
 
+			//try both, not sure which it would be in
 			mCharacter.NukeMesh(msh);
+			mStaticMesh.NukeMesh(msh);
 		}
 
 
@@ -416,6 +449,8 @@ namespace ColladaConvert
 
 			mStaticMesh	=ColladaFileUtils.LoadStatic(path, mGDM.GraphicsDevice, mMatLib);
 
+			mStaticMesh.SetTransform(Matrix.Identity);
+
 			mMF.UpdateMeshPartList(null, mStaticMesh.GetMeshPartList());
 		}
 
@@ -451,6 +486,7 @@ namespace ColladaConvert
 
 			mCharacter	=new Character(mMatLib, mAnimLib);
 			mCharacter.ReadFromFile(path, mGDM.GraphicsDevice, true);
+			mCharacter.SetTransform(Matrix.Identity);
 
 			mMF.UpdateMeshPartList(mCharacter.GetMeshPartList(), null);
 		}

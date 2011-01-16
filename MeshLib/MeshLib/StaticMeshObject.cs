@@ -28,6 +28,12 @@ namespace MeshLib
 		}
 
 
+		public void SetTransform(Matrix mat)
+		{
+			mTransform	=mat;
+		}
+
+
 		public void AddMeshPart(Mesh m)
 		{
 			StaticMesh	sm	=m as StaticMesh;

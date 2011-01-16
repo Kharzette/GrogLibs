@@ -13,7 +13,7 @@ namespace ColladaConvert
 			using(ColladaConvert game = new ColladaConvert())
 			{
 				game.Run();
-				Properties.Settings.Default.Save();
+				Settings.Default.Save();
 			}
 		}
 	}

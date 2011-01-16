@@ -105,6 +105,21 @@ namespace MeshLib
 		}
 
 
+		public void LoadKinectMotionDat(string fn, Dictionary<string, int> kinectJoints)
+		{
+			FileStream		fs	=new FileStream(fn, FileMode.Open, FileAccess.Read);
+			StreamReader	sr	=new StreamReader(fs);
+
+			while(!sr.EndOfStream)
+			{
+				string	frame	=sr.ReadLine();
+				string	[]toks	=frame.Split(' ');
+
+				
+			}
+		}
+
+
 		public void SetBoneRefs(Skeleton skel)
 		{
 			for(int i=0;i < mSubAnims.Length;i++)

@@ -31,6 +31,8 @@ namespace ColladaConvert
 		public event	EventHandler	eLoadLibrary;
 		public event	EventHandler	eSaveStatic;
 		public event	EventHandler	eLoadStatic;
+		public event	EventHandler	eLoadMotionDat;
+		public event	EventHandler	eLoadBoneMap;
 
 
 		public AnimForm(MeshLib.AnimLib anlib)
@@ -239,6 +241,34 @@ namespace ColladaConvert
 			{
 				eLoadStatic(fname, null);
 			}
+		}
+
+
+		void OnLoadBoneMap(object sender, EventArgs e)
+		{
+			mOFD.Multiselect	=false;
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			UtilityLib.Misc.SafeInvoke(eLoadBoneMap, mOFD.FileName);
+		}
+
+
+		void OnLoadMotionDat(object sender, EventArgs e)
+		{
+			mOFD.Multiselect	=false;
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			UtilityLib.Misc.SafeInvoke(eLoadMotionDat, mOFD.FileName);
 		}
 	}
 }
