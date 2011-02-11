@@ -78,16 +78,18 @@ namespace BSPTest
 			mMatLib	=new MaterialLib.MaterialLib(GraphicsDevice,
 				Content, mSharedCM, false);
 
-			mMatLib.ReadFromFile("Content/eels.MatLib", false);
+			mMatLib.ReadFromFile("Content/dm2.MatLib", false);
+//			mMatLib.ReadFromFile("Content/eels.MatLib", false);
 
 			mZone	=new Zone();
 			mLevel	=new MeshLib.IndoorMesh(GraphicsDevice, mMatLib);
 			
-			mZone.Read("Content/eels.Zone", false);
+			mZone.Read("Content/dm2.Zone", false);
+			mLevel.Read(GraphicsDevice, "Content/dm2.ZoneDraw", false);
+//			mZone.Read("Content/eels.Zone", false);
+//			mLevel.Read(GraphicsDevice, "Content/eels.ZoneDraw", false);
 
-			mLevel.Read(GraphicsDevice, "Content/eels.ZoneDraw", false);
-
-			mGameCam.CamPos	=-mZone.GetPlayerStartPos();
+			mGameCam.CamPos	=-(mZone.GetPlayerStartPos() + (Vector3.Up * 66.0f));
 
 			mMatLib.SetParameterOnAll("mLight0Color", Vector3.One);
 			mMatLib.SetParameterOnAll("mLightRange", 200.0f);
