@@ -27,15 +27,15 @@ namespace UtilityLib
 			return	fileName;
 		}
 
-		/*
+		
 		public static bool FileExists(string fileName)
 		{
-			string	fullPath	=Path.Combine(
-									StorageContainer.TitleLocation,
-									fileName);
-
-			return	File.Exists(fullPath);
-		}*/
+#if !XBOX
+			return	File.Exists(fileName);
+#else
+			return	false;
+#endif
+		}
 
 
 		public static void WriteArray(BinaryWriter bw, Int32 []intArray)
