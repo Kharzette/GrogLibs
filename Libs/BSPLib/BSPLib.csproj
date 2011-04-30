@@ -128,6 +128,7 @@
     <Compile Include="Bounds.cs" />
     <Compile Include="BuildParams.cs" />
     <Compile Include="Contents.cs" />
+    <Compile Include="EditorBrush.cs" />
     <Compile Include="FaceFixer.cs" />
     <Compile Include="GBSP\GBSPBrush.cs" />
     <Compile Include="GBSP\GBSPFace.cs" />
@@ -217,17 +218,17 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\MaterialLib\MaterialLib.csproj">
+    <ProjectReference Include="..\MaterialLib\MaterialLib.csproj">
       <Project>{E6EAA6B0-1140-4BE3-AEFD-0DF83A7A705B}</Project>
       <Name>MaterialLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\UtilityLib\UtilityLib.csproj">
-      <Project>{BB91910C-2595-4EB6-B48C-30BCC41457F6}</Project>
-      <Name>UtilityLib</Name>
     </ProjectReference>
     <ProjectReference Include="..\MeshLib\MeshLib.csproj">
       <Project>{EEC34A30-ACD3-4240-A4FE-5A3F8D5D7B13}</Project>
       <Name>MeshLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\UtilityLib\UtilityLib.csproj">
+      <Project>{BB91910C-2595-4EB6-B48C-30BCC41457F6}</Project>
+      <Name>UtilityLib</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

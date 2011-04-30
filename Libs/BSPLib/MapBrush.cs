@@ -123,6 +123,15 @@ namespace BSPLib
 		}
 
 
+		internal void GetLines(List<Vector3> tris, List<UInt32> ind, bool bCheckFlags)
+		{
+			foreach(GBSPSide s in mOriginalSides)
+			{
+				s.GetLines(tris, ind, bCheckFlags);
+			}
+		}
+
+
 		internal bool ReadFromMap(StreamReader sr, PlanePool pool, TexInfoPool tiPool, int entityNum)
 		{
 			string	s	="";

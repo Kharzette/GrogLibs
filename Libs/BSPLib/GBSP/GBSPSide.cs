@@ -510,6 +510,22 @@ namespace BSPLib
 		}
 
 
+		internal void GetLines(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
+		{
+			if(bCheckFlags)
+			{
+				if((mFlags & SIDE_VISIBLE) == 0)
+				{
+					return;
+				}
+			}
+			if(mPoly != null)
+			{
+				mPoly.GetLines(verts, indexes, bCheckFlags);
+			}
+		}
+
+
 		internal void AddToBounds(Bounds bnd)
 		{
 			mPoly.AddToBounds(bnd);
