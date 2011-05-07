@@ -169,6 +169,7 @@ namespace MaterialLib
 			//not found
 			RasterizerState	nrs	=new RasterizerState();
 			nrs.CullMode		=cm;
+//			nrs.FillMode		=FillMode.WireFrame;
 
 			mRasterStates.Add(nrs);
 

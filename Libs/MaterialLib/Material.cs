@@ -203,6 +203,21 @@ namespace MaterialLib
 		}
 
 
+		internal void StripTextureExtensions()
+		{
+			foreach(ShaderParameters sp in mParameters)
+			{
+				if(sp.Type == EffectParameterType.Texture)
+				{
+					if(sp.Value != null && sp.Value != "")
+					{
+						sp.Value	=UtilityLib.FileUtil.StripExtension(sp.Value);
+					}
+				}
+			}
+		}
+
+
 		public List<string>	GetReferencedTextures()
 		{
 			List<string>	ret	=new List<string>();

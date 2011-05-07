@@ -168,9 +168,7 @@ namespace MaterialLib
 			BinaryReader	br	=new BinaryReader(file);
 
 			//clear existing data
-			mMaps.Clear();
 			mMats.Clear();
-			mFX.Clear();
 
 			//read magic number
 			UInt32	magic	=br.ReadUInt32();
@@ -195,6 +193,8 @@ namespace MaterialLib
 				m.Read(br);
 
 				mMats.Add(m.Name, m);
+
+				m.StripTextureExtensions();
 
 				texNeeded.AddRange(m.GetReferencedTextures());
 
@@ -777,7 +777,7 @@ namespace MaterialLib
 			string	sansExt	=UtilityLib.FileUtil.StripExtension(path);
 
 			Texture2D	tex	=mSharedContent.Load<Texture2D>(sansExt);
-			mMaps.Add(path, tex);
+			mMaps.Add(sansExt, tex);
 		}
 
 
