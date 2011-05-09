@@ -466,7 +466,7 @@ namespace BSPZone
 		}
 
 
-		Int32 FindNodeLandedIn(Int32 node, Vector3 pos)
+		public Int32 FindNodeLandedIn(Int32 node, Vector3 pos)
 		{
 			float		Dist1;
 			ZoneNode	pNode;
@@ -602,5 +602,18 @@ namespace BSPZone
 			FindParents_r(mZoneNodes[Node].mChildren[1], Node);
 		}
 		#endregion
+
+
+		public void GetBounds(out Vector3 mins, out Vector3 maxs)
+		{
+			if(mZoneModels.Length <= 0)
+			{
+				mins	=Vector3.Zero;
+				maxs	=Vector3.Zero;
+				return;
+			}
+			mins	=mZoneModels[0].mMins;
+			maxs	=mZoneModels[0].mMaxs;
+		}
 	}
 }
