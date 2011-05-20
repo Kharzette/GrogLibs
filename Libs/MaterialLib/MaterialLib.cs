@@ -151,7 +151,7 @@ namespace MaterialLib
 
 		public bool ReadFromFile(string fileName, bool bTool)
 		{
-			Stream			file	=null;
+			Stream	file	=null;
 			if(bTool)
 			{
 				file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
@@ -246,23 +246,22 @@ namespace MaterialLib
 						continue;
 					}
 
-					//strip extension
-					//if no extension, it is likely
-					//not loaded from content
-					int	dotPos	=tex.LastIndexOf('.');
-					if(dotPos != -1)
+					Texture2D	t	=null;
+					if(tex.Contains("+"))
 					{
-						string	texPath	=tex.Substring(0, dotPos);
-						if(texPath.Contains("+"))
-						{
-							int	plusPos	=texPath.LastIndexOf('+');
-							string	front	=texPath.Substring(0, plusPos);
-							string	back	=texPath.Substring(plusPos + 1, texPath.Length - plusPos - 1);
+						int		plusPos	=tex.LastIndexOf('+');
+						string	front	=tex.Substring(0, plusPos);
+						string	back	=tex.Substring(plusPos + 1, tex.Length - plusPos - 1);
 
-							texPath	=front + back;
-						}
-						Texture2D	t	=mContent.Load<Texture2D>(texPath);
+						t	=mContent.Load<Texture2D>(front + back);
+					}
+					else
+					{
+						t	=mContent.Load<Texture2D>(tex);
+					}
 
+					if(t != null)
+					{
 						mMaps.Add(tex, t);
 					}
 				}
