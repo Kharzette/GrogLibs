@@ -203,6 +203,42 @@ namespace BSPLib
 			}
 			return	null;
 		}
+
+
+		public int GetNumWorldBrushes()
+		{
+			if(mEntities != null && mEntities.Count > 0)
+			{
+				List<MapBrush>	brushes	=mEntities[0].GetBrushes();
+				return	brushes.Count;
+			}
+			else
+			{
+				Print("This is intended for use pre build.\n");
+			}
+			return	0;
+		}
+
+
+		public void GetWorldBrushTrianglesByIndex(int brushIndex, List<Vector3> verts, List<UInt32> indexes)
+		{
+			if(mEntities != null && mEntities.Count > 0)
+			{
+				List<MapBrush>	brushes	=mEntities[0].GetBrushes();
+				if(brushes.Count > brushIndex)
+				{
+					brushes[brushIndex].GetTriangles(verts, indexes, false);
+				}
+				else
+				{
+					Print("Brush index out of range!\n");
+				}
+			}
+			else
+			{
+				Print("This is intended for use pre build.\n");
+			}
+		}
 		#endregion
 
 
