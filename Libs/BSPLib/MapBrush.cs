@@ -14,6 +14,26 @@ namespace BSPLib
 		internal Bounds		mBounds;
 
 		internal List<GBSPSide>	mOriginalSides	=new List<GBSPSide>();
+
+
+		internal MapBrush()
+		{
+		}
+
+
+		internal MapBrush(PlanePool pp, List<int> planeNums, List<sbyte> sides)
+		{
+			for(int i=0;i < planeNums.Count;i++)
+			{
+				GBSPSide	side	=new GBSPSide();
+
+				side.mPlaneNum	=planeNums[i];
+				side.mPlaneSide	=sides[i];
+
+				mOriginalSides.Add(side);
+			}
+			MakePolys(pp);
+		}
 		
 
 		#region IO

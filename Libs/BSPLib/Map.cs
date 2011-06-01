@@ -406,6 +406,64 @@ namespace BSPLib
 		}
 
 
+		//mainly used from the 2D editor
+		public void AddSingleBrush(Vector3 []verts)
+		{
+			//make sure entity list exists
+			if(mEntities == null)
+			{
+				mEntities	=new List<MapEntity>();
+			}
+
+			List<int>	planeNums	=new List<int>();
+			List<sbyte>	sides		=new List<sbyte>();
+
+			for(int i=0;i < verts.Length/3;i++)
+			{
+				List<Vector3>	face	=new List<Vector3>();
+
+				face.Add(verts[i * 3]);
+				face.Add(verts[(i * 3) + 1]);
+				face.Add(verts[(i * 3) + 2]);
+
+				GBSPPlane	p	=new GBSPPlane(face);
+
+				int		planeNum	=0;
+				sbyte	side		=0;
+				planeNum	=mPlanePool.FindPlane(p, out side);
+
+				//make sure unique
+				if(planeNums.Contains(planeNum))
+				{
+					int	ind	=planeNums.IndexOf(planeNum);
+
+					if(side == sides[ind])
+					{
+						continue;
+					}
+				}
+
+				planeNums.Add(planeNum);
+				sides.Add(side);
+			}
+
+			MapBrush	mb	=new MapBrush(mPlanePool, planeNums, sides);
+			MapEntity	me	=GetWorldSpawnEntity();
+			if(me == null)
+			{
+				me	=new MapEntity();
+
+				me.mData.Add("classname", "worldspawn");
+
+				mEntities.Add(me);
+			}
+
+			List<MapBrush>	brushes	=me.GetBrushes();
+
+			brushes.Add(mb);
+		}
+
+
 		bool ProcessEntities(bool bVerbose, bool bEntityVerbose)
 		{
 			int	index	=0;
