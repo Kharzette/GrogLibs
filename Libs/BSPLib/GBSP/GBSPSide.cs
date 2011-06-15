@@ -70,6 +70,7 @@ namespace BSPLib
 		}
 
 
+		#region IO
 		internal UInt32 ReadVMFSideBlock(StreamReader sr, PlanePool pool, TexInfoPool tiPool)
 		{
 			string	s	="";
@@ -391,144 +392,27 @@ namespace BSPLib
 		}
 
 
-		//convert from hammer flags to genesis flags
-		internal void FixFlags()
+		internal void Write(BinaryWriter bw)
 		{
-			UInt32	hammerFlags	=mFlags;
+			mPoly.Write(bw);
 
-			mFlags	=SIDE_VISIBLE;
-
-			//eventually need to convert these
-			//into genesis texinfo stuff
-			if((hammerFlags & SURF_ALPHASHADOW) != 0)
-			{
-			}
-			if((hammerFlags & SURF_DUST) != 0)
-			{
-			}
-			if((hammerFlags & SURF_FLESH) != 0)
-			{
-			}
-			if((hammerFlags & SURF_FLOWING) != 0)
-			{
-			}
-			if((hammerFlags & SURF_HINT) != 0)
-			{
-				mFlags	|=SIDE_HINT;
-			}
-			if((hammerFlags & SURF_LADDER) != 0)
-			{
-			}
-			if((hammerFlags & SURF_LIGHT) != 0)
-			{
-			}
-			if((hammerFlags & SURF_LIGHTFILTER) != 0)
-			{
-			}
-			if((hammerFlags & SURF_METALSTEPS) != 0)
-			{
-			}
-			if((hammerFlags & SURF_NODAMAGE) != 0)
-			{
-			}
-			if((hammerFlags & SURF_NODLIGHT) != 0)
-			{
-			}
-			if((hammerFlags & SURF_NODRAW) != 0)
-			{
-				mFlags	&=~SIDE_VISIBLE;
-			}
-			if((hammerFlags & SURF_NOIMPACT) != 0)
-			{
-			}
-			if((hammerFlags & SURF_NOLIGHTMAP) != 0)
-			{
-			}
-			if((hammerFlags & SURF_NOMARKS) != 0)
-			{
-			}
-			if((hammerFlags & SURF_NONSOLID) != 0)
-			{
-			}
-			if((hammerFlags & SURF_NOSTEPS) != 0)
-			{
-			}
-			if((hammerFlags & SURF_POINTLIGHT) != 0)
-			{
-			}
-			if((hammerFlags & SURF_SKIP) != 0)
-			{
-			}
-			if((hammerFlags & SURF_SKY) != 0)
-			{
-			}
-			if((hammerFlags & SURF_SLICK) != 0)
-			{
-			}
-			if((hammerFlags & SURF_TRANS33) != 0)
-			{
-			}
-			if((hammerFlags & SURF_TRANS66) != 0)
-			{
-			}
-			if((hammerFlags & SURF_WARP) != 0)
-			{
-			}
+			bw.Write(mPlaneNum);
+			bw.Write(mPlaneSide);
+			bw.Write(mTexInfo);
+			bw.Write(mFlags);
 		}
 
 
-		Vector3	ParseVec(string tok)
+		internal void Read(BinaryReader br)
 		{
-			Vector3	ret	=Vector3.Zero;
+			mPoly	=new GBSPPoly();
 
-			string	[]vecStr	=tok.Split(' ');
+			mPoly.Read(br);
 
-			//swap y and z
-			UtilityLib.Mathery.TryParse(vecStr[0], out ret.X);
-			UtilityLib.Mathery.TryParse(vecStr[1], out ret.Z);
-			UtilityLib.Mathery.TryParse(vecStr[2], out ret.Y);
-
-			ret.X	=-ret.X;
-
-			return	ret;
-		}
-
-
-		internal void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
-		{
-			if(bCheckFlags)
-			{
-				if((mFlags & SIDE_VISIBLE) == 0)
-				{
-					return;
-				}
-			}
-			if(mPoly != null)
-			{
-				mPoly.GetTriangles(verts, indexes, bCheckFlags);
-			}
-		}
-
-
-		internal void GetLines(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
-		{
-			if(bCheckFlags)
-			{
-				if((mFlags & SIDE_VISIBLE) == 0)
-				{
-					return;
-				}
-			}
-			if(mPoly != null)
-			{
-				mPoly.GetLines(verts, indexes, bCheckFlags);
-			}
-		}
-
-
-		internal void AddToBounds(Bounds bnd)
-		{
-			mPoly.AddToBounds(bnd);
+			mPlaneNum	=br.ReadInt32();
+			mPlaneSide	=br.ReadSByte();
+			mTexInfo	=br.ReadInt32();
+			mFlags		=br.ReadUInt32();
 		}
 
 
@@ -743,6 +627,148 @@ namespace BSPLib
 
 			mTexInfo	=tiPool.Add(ti);
 			return	ret;
+		}
+		#endregion
+
+
+		//convert from hammer flags to genesis flags
+		internal void FixFlags()
+		{
+			UInt32	hammerFlags	=mFlags;
+
+			mFlags	=SIDE_VISIBLE;
+
+			//eventually need to convert these
+			//into genesis texinfo stuff
+			if((hammerFlags & SURF_ALPHASHADOW) != 0)
+			{
+			}
+			if((hammerFlags & SURF_DUST) != 0)
+			{
+			}
+			if((hammerFlags & SURF_FLESH) != 0)
+			{
+			}
+			if((hammerFlags & SURF_FLOWING) != 0)
+			{
+			}
+			if((hammerFlags & SURF_HINT) != 0)
+			{
+				mFlags	|=SIDE_HINT;
+			}
+			if((hammerFlags & SURF_LADDER) != 0)
+			{
+			}
+			if((hammerFlags & SURF_LIGHT) != 0)
+			{
+			}
+			if((hammerFlags & SURF_LIGHTFILTER) != 0)
+			{
+			}
+			if((hammerFlags & SURF_METALSTEPS) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NODAMAGE) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NODLIGHT) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NODRAW) != 0)
+			{
+				mFlags	&=~SIDE_VISIBLE;
+			}
+			if((hammerFlags & SURF_NOIMPACT) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NOLIGHTMAP) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NOMARKS) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NONSOLID) != 0)
+			{
+			}
+			if((hammerFlags & SURF_NOSTEPS) != 0)
+			{
+			}
+			if((hammerFlags & SURF_POINTLIGHT) != 0)
+			{
+			}
+			if((hammerFlags & SURF_SKIP) != 0)
+			{
+			}
+			if((hammerFlags & SURF_SKY) != 0)
+			{
+			}
+			if((hammerFlags & SURF_SLICK) != 0)
+			{
+			}
+			if((hammerFlags & SURF_TRANS33) != 0)
+			{
+			}
+			if((hammerFlags & SURF_TRANS66) != 0)
+			{
+			}
+			if((hammerFlags & SURF_WARP) != 0)
+			{
+			}
+		}
+
+
+		Vector3	ParseVec(string tok)
+		{
+			Vector3	ret	=Vector3.Zero;
+
+			string	[]vecStr	=tok.Split(' ');
+
+			//swap y and z
+			UtilityLib.Mathery.TryParse(vecStr[0], out ret.X);
+			UtilityLib.Mathery.TryParse(vecStr[1], out ret.Z);
+			UtilityLib.Mathery.TryParse(vecStr[2], out ret.Y);
+
+			ret.X	=-ret.X;
+
+			return	ret;
+		}
+
+
+		internal void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
+		{
+			if(bCheckFlags)
+			{
+				if((mFlags & SIDE_VISIBLE) == 0)
+				{
+					return;
+				}
+			}
+			if(mPoly != null)
+			{
+				mPoly.GetTriangles(verts, indexes, bCheckFlags);
+			}
+		}
+
+
+		internal void GetLines(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
+		{
+			if(bCheckFlags)
+			{
+				if((mFlags & SIDE_VISIBLE) == 0)
+				{
+					return;
+				}
+			}
+			if(mPoly != null)
+			{
+				mPoly.GetLines(verts, indexes, bCheckFlags);
+			}
+		}
+
+
+		internal void AddToBounds(Bounds bnd)
+		{
+			mPoly.AddToBounds(bnd);
 		}
 	}
 }

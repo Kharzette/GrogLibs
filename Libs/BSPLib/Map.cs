@@ -55,11 +55,6 @@ namespace BSPLib
 		byte			[]mGFXMaterialVisData;
 		int				mLightMapGridSize;
 
-		//build settings
-//		BSPBuildParams	mBSPParms;
-//		LightParams		mLightParams;
-//		VisParams		mVisParams;
-
 		public event EventHandler	eNumPlanesChanged;
 		public event EventHandler	eNumVertsChanged;
 		public event EventHandler	eNumClustersChanged;
@@ -409,12 +404,6 @@ namespace BSPLib
 		//mainly used from the 2D editor
 		public void AddSingleBrush(Vector3 []verts)
 		{
-			//make sure entity list exists
-			if(mEntities == null)
-			{
-				mEntities	=new List<MapEntity>();
-			}
-
 			List<int>	planeNums	=new List<int>();
 			List<sbyte>	sides		=new List<sbyte>();
 
@@ -448,6 +437,19 @@ namespace BSPLib
 			}
 
 			MapBrush	mb	=new MapBrush(mPlanePool, planeNums, sides);
+
+			AddSingleBrush(mb);
+		}
+
+
+		void AddSingleBrush(MapBrush mb)
+		{
+			//make sure entity list exists
+			if(mEntities == null)
+			{
+				mEntities	=new List<MapEntity>();
+			}
+
 			MapEntity	me	=GetWorldSpawnEntity();
 			if(me == null)
 			{
@@ -595,6 +597,127 @@ namespace BSPLib
 		public void BuildTree(BSPBuildParams prms)
 		{
 			ThreadPool.QueueUserWorkItem(BuildTreeCB, prms);
+		}
+
+
+		//This is for 2D maps.
+		//Creates a box around the extents
+		public void BuildTree2D(BSPBuildParams prms)
+		{
+			Bounds	bnd	=new Bounds();
+
+			foreach(MapEntity me in mEntities)
+			{
+				List<MapBrush>	brushery	=me.GetBrushes();
+				if(brushery.Count == 0)
+				{
+					continue;
+				}
+
+				foreach(MapBrush mb in brushery)
+				{
+					bnd.Merge(null, mb.GetBounds());
+				}
+			}
+
+			//create 6 sides around the extents
+			Bounds			sideBounds		=new Bounds(bnd);
+			float			hullThickness	=16.0f;
+			List<MapBrush>	sideBrushes		=new List<MapBrush>();
+
+			//Y pos, expand the y plane xz to overlap also
+			sideBounds.mMins.Y	=bnd.mMaxs.Y;
+			sideBounds.mMaxs.Y	=bnd.mMaxs.Y + hullThickness;
+			sideBounds.mMins.X	-=hullThickness;
+			sideBounds.mMaxs.X	+=hullThickness;
+			sideBounds.mMins.Z	-=hullThickness;
+			sideBounds.mMaxs.Z	+=hullThickness;
+			sideBrushes.Add(new MapBrush(sideBounds, mPlanePool));
+
+			//Y neg
+			sideBounds.mMaxs.Y	=bnd.mMins.Y;
+			sideBounds.mMins.Y	=bnd.mMins.Y - hullThickness;
+			sideBrushes.Add(new MapBrush(sideBounds, mPlanePool));
+
+			//reset
+			sideBounds.mMins	=bnd.mMins;
+			sideBounds.mMaxs	=bnd.mMaxs;
+
+			//X pos, expand z for overlap
+			sideBounds.mMins.X	=bnd.mMaxs.X;
+			sideBounds.mMaxs.X	=bnd.mMaxs.X + hullThickness;
+			sideBounds.mMins.Z	-=hullThickness;
+			sideBounds.mMaxs.Z	+=hullThickness;
+			sideBrushes.Add(new MapBrush(sideBounds, mPlanePool));
+
+			//X neg
+			sideBounds.mMaxs.X	=bnd.mMins.X;
+			sideBounds.mMins.X	=bnd.mMins.X - hullThickness;
+			sideBrushes.Add(new MapBrush(sideBounds, mPlanePool));
+
+			//reset
+			sideBounds.mMins	=bnd.mMins;
+			sideBounds.mMaxs	=bnd.mMaxs;
+
+			//Z pos, expand x for overlap
+			sideBounds.mMins.Z	=bnd.mMaxs.Z;
+			sideBounds.mMaxs.Z	=bnd.mMaxs.Z + hullThickness;
+			sideBounds.mMins.X	-=hullThickness;
+			sideBounds.mMaxs.X	+=hullThickness;
+			sideBrushes.Add(new MapBrush(sideBounds, mPlanePool));
+
+			//Z neg
+			sideBounds.mMaxs.Z	=bnd.mMins.Z;
+			sideBounds.mMins.Z	=bnd.mMins.Z - hullThickness;
+			sideBrushes.Add(new MapBrush(sideBounds, mPlanePool));
+
+			//reset
+			sideBounds.mMins	=bnd.mMins;
+			sideBounds.mMaxs	=bnd.mMaxs;
+
+			//add in the encircling brushery
+			foreach(MapEntity me in mEntities)
+			{
+				List<MapBrush>	brushery	=me.GetBrushes();
+				if(brushery.Count == 0)
+				{
+					continue;
+				}
+
+				brushery.AddRange(sideBrushes);
+
+				FileStream		fs	=new FileStream("buggery.MapBrushes", FileMode.Create, FileAccess.Write);
+				BinaryWriter	bw	=new BinaryWriter(fs);
+
+				bw.Write(brushery.Count);
+
+				foreach(MapBrush mb in brushery)
+				{
+					mb.Write(bw);
+				}
+
+				bw.Close();
+				fs.Close();
+				break;
+			}
+
+//			ThreadPool.QueueUserWorkItem(BuildTreeCB, prms);
+		}
+
+
+		public void LoadBuggeryBrushes(string path)
+		{
+			FileStream		fs	=new FileStream(path, FileMode.Open, FileAccess.Read);
+			BinaryReader	br	=new BinaryReader(fs);
+
+			int	numBrushes	=br.ReadInt32();
+			for(int i=0;i < numBrushes;i++)
+			{
+				MapBrush	mb	=new MapBrush();
+				mb.Read(br);
+
+				AddSingleBrush(mb);
+			}
 		}
 
 

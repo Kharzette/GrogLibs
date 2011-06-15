@@ -21,6 +21,40 @@ namespace BSPLib
 		}
 
 
+		//this constructor will create a box
+		//brush to fit the passed in bounds
+		internal MapBrush(Bounds bnd, PlanePool pp)
+		{
+			for(int i=0;i < 3;i++)
+			{
+				GBSPPlane	p	=new GBSPPlane();
+
+				p.mNormal	=Vector3.Zero;
+
+				UtilityLib.Mathery.VecIdxAssign(ref p.mNormal, i, 1.0f);
+				p.mDist	=UtilityLib.Mathery.VecIdx(bnd.mMaxs, i) + 1.0f;
+
+				GBSPSide	side	=new GBSPSide();
+				side.mPlaneNum		=pp.FindPlane(p, out side.mPlaneSide);
+
+				UtilityLib.Mathery.VecIdxAssign(ref p.mNormal, i, -1.0f);
+				p.mDist	=-(UtilityLib.Mathery.VecIdx(bnd.mMins, i) - 1.0f);
+
+				GBSPSide	side2	=new GBSPSide();
+				side2.mPlaneNum		=pp.FindPlane(p, out side2.mPlaneSide);
+
+				side.FixFlags();
+				side2.FixFlags();
+
+				mOriginalSides.Add(side);
+				mOriginalSides.Add(side2);
+			}
+
+			MakePolys(pp);
+			FixContents();
+		}
+
+
 		internal MapBrush(PlanePool pp, List<int> planeNums, List<sbyte> sides)
 		{
 			for(int i=0;i < planeNums.Count;i++)
@@ -84,6 +118,83 @@ namespace BSPLib
 				}
 			}
 			return	ret;
+		}
+
+
+		internal bool ReadFromMap(StreamReader sr, PlanePool pool, TexInfoPool tiPool, int entityNum)
+		{
+			string	s	="";
+			bool	ret	=true;
+			while((s = sr.ReadLine()) != null)
+			{
+				s	=s.Trim();
+				if(s.StartsWith("("))
+				{
+					GBSPSide	side	=new GBSPSide();
+					mContents	=side.ReadMapLine(s, pool, tiPool);
+
+					if(mContents == Contents.CONTENTS_AUX)
+					{
+						ret	=false;
+					}
+
+					side.FixFlags();
+
+					mOriginalSides.Add(side);
+					mEntityNum	=entityNum;
+				}
+				else if(s.StartsWith("}"))
+				{
+					return	ret;	//entity done
+				}
+			}
+			return	ret;
+		}
+
+
+		internal void Read(BinaryReader br)
+		{
+			mEntityNum	=br.ReadInt32();
+			mContents	=br.ReadUInt32();
+
+			mBounds	=new Bounds();
+
+			mBounds.mMins.X	=br.ReadSingle();
+			mBounds.mMins.Y	=br.ReadSingle();
+			mBounds.mMins.Z	=br.ReadSingle();
+			mBounds.mMaxs.X	=br.ReadSingle();
+			mBounds.mMaxs.Y	=br.ReadSingle();
+			mBounds.mMaxs.Z	=br.ReadSingle();
+
+			int	numSides	=br.ReadInt32();
+			for(int i=0;i < numSides;i++)
+			{
+				GBSPSide	s	=new GBSPSide();
+				s.Read(br);
+
+				mOriginalSides.Add(s);
+			}
+		}
+
+
+		internal void Write(BinaryWriter bw)
+		{
+			bw.Write(mEntityNum);
+			bw.Write(mContents);
+			
+			bw.Write(mBounds.mMins.X);
+			bw.Write(mBounds.mMins.Y);
+			bw.Write(mBounds.mMins.Z);
+			bw.Write(mBounds.mMaxs.X);
+			bw.Write(mBounds.mMaxs.Y);
+			bw.Write(mBounds.mMaxs.Z);
+
+			bw.Write(mOriginalSides.Count);
+
+			foreach(GBSPSide s in mOriginalSides)
+			{
+				s.Write(bw);
+			}
 		}
 		#endregion
 
@@ -152,37 +263,6 @@ namespace BSPLib
 		}
 
 
-		internal bool ReadFromMap(StreamReader sr, PlanePool pool, TexInfoPool tiPool, int entityNum)
-		{
-			string	s	="";
-			bool	ret	=true;
-			while((s = sr.ReadLine()) != null)
-			{
-				s	=s.Trim();
-				if(s.StartsWith("("))
-				{
-					GBSPSide	side	=new GBSPSide();
-					mContents	=side.ReadMapLine(s, pool, tiPool);
-
-					if(mContents == Contents.CONTENTS_AUX)
-					{
-						ret	=false;
-					}
-
-					side.FixFlags();
-
-					mOriginalSides.Add(side);
-					mEntityNum	=entityNum;
-				}
-				else if(s.StartsWith("}"))
-				{
-					return	ret;	//entity done
-				}
-			}
-			return	ret;
-		}
-
-
 		internal void FixContents()
 		{
 			mContents	=Contents.FixContents(mContents);
@@ -234,6 +314,12 @@ namespace BSPLib
 					mContents	&=~Contents.BSP_CONTENTS_DETAIL2;
 				}
 			}			
+		}
+
+
+		internal Bounds GetBounds()
+		{
+			return	mBounds;
 		}
 	}
 }
