@@ -234,6 +234,41 @@ namespace BSPLib
 				Print("This is intended for use pre build.\n");
 			}
 		}
+
+
+		public List<GFXPlane> GetWorldBrushPlanesByIndex(int brushIndex)
+		{
+			List<GFXPlane>	ret	=new List<GFXPlane>();
+
+			if(mEntities != null && mEntities.Count > 0)
+			{
+				List<MapBrush>	brushes	=mEntities[0].GetBrushes();
+				if(brushes.Count > brushIndex)
+				{
+					foreach(GBSPSide gs in brushes[brushIndex].mOriginalSides)
+					{
+						GBSPPlane	p	=mPlanePool.mPlanes[gs.mPlaneNum];
+						if(gs.mPlaneSide != 0)
+						{
+							p.Inverse();
+						}
+
+						GFXPlane	gfxp	=new GFXPlane(p);
+
+						ret.Add(gfxp);
+					}
+				}
+				else
+				{
+					Print("Brush index out of range!\n");
+				}
+			}
+			else
+			{
+				Print("This is intended for use pre build.\n");
+			}
+			return	ret;
+		}
 		#endregion
 
 
@@ -402,21 +437,13 @@ namespace BSPLib
 
 
 		//mainly used from the 2D editor
-		public void AddSingleBrush(Vector3 []verts)
+		public void AddSingleBrush(List<GFXPlane> planes)
 		{
 			List<int>	planeNums	=new List<int>();
 			List<sbyte>	sides		=new List<sbyte>();
 
-			for(int i=0;i < verts.Length/3;i++)
+			foreach(GFXPlane p in planes)
 			{
-				List<Vector3>	face	=new List<Vector3>();
-
-				face.Add(verts[i * 3]);
-				face.Add(verts[(i * 3) + 1]);
-				face.Add(verts[(i * 3) + 2]);
-
-				GBSPPlane	p	=new GBSPPlane(face);
-
 				int		planeNum	=0;
 				sbyte	side		=0;
 				planeNum	=mPlanePool.FindPlane(p, out side);
@@ -428,6 +455,7 @@ namespace BSPLib
 
 					if(side == sides[ind])
 					{
+						Debug.Assert(false);
 						continue;
 					}
 				}

@@ -40,6 +40,32 @@ namespace BSPLib
 		}
 
 
+		internal Int32 FindPlane(GFXPlane plane, out sbyte side)
+		{
+			GBSPPlane	plane1	=new GBSPPlane(plane);
+
+			plane1.Snap();
+			plane1.Side(out side);
+
+			for(int i=0;i < mPlanes.Count;i++)
+			{
+				if(plane1.Compare(mPlanes[i]))
+				{
+					return	i;
+				}
+			}
+
+			if(mPlanes.Count > MAX_BSP_PLANES)
+			{
+				return	-1;
+			}
+
+			mPlanes.Add(plane1);
+
+			return	mPlanes.Count - 1;
+		}
+
+
 		internal GFXPlane[] GetGFXArray()
 		{
 			GFXPlane	[]ret	=new GFXPlane[mPlanes.Count];

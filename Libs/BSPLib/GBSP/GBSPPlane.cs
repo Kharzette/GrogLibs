@@ -36,6 +36,14 @@ namespace BSPLib
 		}
 
 
+		internal GBSPPlane(GFXPlane copyMe)
+		{
+			mNormal	=copyMe.mNormal;
+			mDist	=copyMe.mDist;
+			mType	=copyMe.mType;
+		}
+
+
 		internal GBSPPlane(List<Vector3> verts)
 		{
 			int	i;

@@ -12,6 +12,16 @@ namespace BSPLib
 		public float	mDist;
 		public UInt32	mType;	//PLANE_X, PLANE_Y, etc...
 
+
+		public GFXPlane() { }
+
+		internal GFXPlane(GBSPPlane p)
+		{
+			mNormal =p.mNormal;
+			mDist	=p.mDist;
+			mType	=p.mType;
+		}
+
 		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mNormal.X);
@@ -28,6 +38,11 @@ namespace BSPLib
 			mNormal.Z	=br.ReadSingle();
 			mDist		=br.ReadSingle();
 			mType		=br.ReadUInt32();
+		}
+
+		public void Move(Vector3 move)
+		{
+			mDist	+=Vector3.Dot(move, mNormal);
 		}
 
 		internal float DistanceFast(Vector3 pos)
