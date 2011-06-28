@@ -466,6 +466,9 @@ namespace BSPLib
 
 			MapBrush	mb	=new MapBrush(mPlanePool, planeNums, sides);
 
+			//set to solid
+			mb.mContents	=Contents.BSP_CONTENTS_SOLID2;
+
 			AddSingleBrush(mb);
 		}
 
@@ -630,9 +633,37 @@ namespace BSPLib
 
 		//This is for 2D maps.
 		//Creates a box around the extents
-		public void BuildTree2D(BSPBuildParams prms)
+		public void BuildTree2D(BSPBuildParams prms,
+			EntityLib.EntitySystem es,
+			List<EntityLib.Entity> ents)
 		{
 			Bounds	bnd	=new Bounds();
+
+			foreach(EntityLib.Entity e in ents)
+			{
+				//extract location
+				List<EntityLib.Component>	comps	=
+					es.GetComponents(e, typeof(EntityLib.Components.Physical.Position3D));
+
+				if(comps.Count == 0)
+				{
+					continue;
+				}
+
+				EntityLib.Components.Physical.Position3D	pos
+					=comps[0] as EntityLib.Components.Physical.Position3D;
+
+				if(pos == null)
+				{
+					continue;
+				}
+
+				MapEntity	me	=new MapEntity();
+				me.mData.Add("origin", "" + pos.Position.X
+					+ " " + pos.Position.Y + " " + pos.Position.Z);
+
+				mEntities.Add(me);
+			}
 
 			foreach(MapEntity me in mEntities)
 			{
@@ -714,11 +745,43 @@ namespace BSPLib
 
 				brushery.AddRange(sideBrushes);
 
+				//add a bogus texinfo to the brushes
+				foreach(MapBrush mb in brushery)
+				{
+					foreach(GBSPSide s in mb.mOriginalSides)
+					{
+						TexInfo	ti		=new TexInfo();
+						ti.mMaterial	="Bogus";
+						ti.mTexture		="Bogus";
+						ti.mFlags		|=TexInfo.NO_LIGHTMAP;
+						ti.mFlags		|=TexInfo.FULLBRIGHT;
+						ti.mUVec		=Vector3.UnitX;
+						ti.mVVec		=Vector3.UnitY;
+						s.mTexInfo		=mTIPool.Add(ti);
+					}
+					mb.mContents	=Contents.BSP_CONTENTS_SOLID2;
+				}
+
+				
 				FileStream		fs	=new FileStream("buggery.MapBrushes", FileMode.Create, FileAccess.Write);
 				BinaryWriter	bw	=new BinaryWriter(fs);
 
-				bw.Write(brushery.Count);
 
+				//write texinfos
+				mTIPool.Write(bw);
+
+				//write planes
+				mPlanePool.Write(bw);
+
+				//write entities
+				bw.Write(mEntities.Count);
+				foreach(MapEntity e in mEntities)
+				{
+					e.Write(bw);
+				}
+
+				//write brushes
+				bw.Write(brushery.Count);
 				foreach(MapBrush mb in brushery)
 				{
 					mb.Write(bw);
@@ -737,6 +800,23 @@ namespace BSPLib
 		{
 			FileStream		fs	=new FileStream(path, FileMode.Open, FileAccess.Read);
 			BinaryReader	br	=new BinaryReader(fs);
+
+			mEntities	=new List<MapEntity>();
+
+			//load texinfos
+			mTIPool.Read(br);
+
+			//load planepool
+			mPlanePool.Read(br);
+
+			int	numEnts	=br.ReadInt32();
+			for(int i=0;i < numEnts;i++)
+			{
+				MapEntity	me	=new MapEntity();
+				me.Read2(br);
+
+				mEntities.Add(me);
+			}
 
 			int	numBrushes	=br.ReadInt32();
 			for(int i=0;i < numBrushes;i++)

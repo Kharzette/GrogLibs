@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
+
 
 namespace BSPLib
 {
@@ -78,6 +80,34 @@ namespace BSPLib
 				ret[i].mType	=mPlanes[i].mType;
 			}
 			return	ret;
+		}
+
+
+		internal void Write(BinaryWriter bw)
+		{
+			bw.Write(mPlanes.Count);
+
+			foreach(GBSPPlane p in mPlanes)
+			{
+				p.Write(bw);
+			}
+		}
+
+
+		internal void Read(BinaryReader br)
+		{
+			int	cnt	=br.ReadInt32();
+
+			mPlanes.Clear();
+
+			for(int i=0;i < cnt;i++)
+			{
+				GBSPPlane	p	=new GBSPPlane();
+
+				p.Read(br);
+
+				mPlanes.Add(p);
+			}
 		}
 	}
 }

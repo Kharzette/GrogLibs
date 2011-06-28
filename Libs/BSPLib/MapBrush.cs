@@ -32,13 +32,13 @@ namespace BSPLib
 				p.mNormal	=Vector3.Zero;
 
 				UtilityLib.Mathery.VecIdxAssign(ref p.mNormal, i, 1.0f);
-				p.mDist	=UtilityLib.Mathery.VecIdx(bnd.mMaxs, i) + 1.0f;
+				p.mDist	=UtilityLib.Mathery.VecIdx(bnd.mMaxs, i);
 
 				GBSPSide	side	=new GBSPSide();
 				side.mPlaneNum		=pp.FindPlane(p, out side.mPlaneSide);
 
 				UtilityLib.Mathery.VecIdxAssign(ref p.mNormal, i, -1.0f);
-				p.mDist	=-(UtilityLib.Mathery.VecIdx(bnd.mMins, i) - 1.0f);
+				p.mDist	=-(UtilityLib.Mathery.VecIdx(bnd.mMins, i));
 
 				GBSPSide	side2	=new GBSPSide();
 				side2.mPlaneNum		=pp.FindPlane(p, out side2.mPlaneSide);

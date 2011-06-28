@@ -37,6 +37,36 @@ namespace BSPLib
 			}
 		}
 
+
+		internal void Read(BinaryReader br)
+		{
+			int	cnt	=br.ReadInt32();
+			for(int i=0;i < cnt;i++)
+			{
+				GFXTexInfo	gtex	=new GFXTexInfo();
+
+				gtex.Read(br);
+
+				TexInfo	tex	=new TexInfo();
+
+				tex.mAlpha				=gtex.mAlpha;
+				tex.mDrawScaleU			=gtex.mDrawScale[0];
+				tex.mDrawScaleV			=gtex.mDrawScale[1];
+				tex.mFaceLight			=gtex.mFaceLight;
+				tex.mFlags				=gtex.mFlags;
+				tex.mReflectiveScale	=gtex.mReflectiveScale;
+				tex.mShiftU				=gtex.mShift[0];
+				tex.mShiftV				=gtex.mShift[1];
+				tex.mMaterial			=gtex.mMaterial;
+				tex.mTexture			=gtex.mMaterial;
+				tex.mUVec				=gtex.mVecs[0];
+				tex.mVVec				=gtex.mVecs[1];
+
+				mTexInfos.Add(tex);
+			}
+		}
+
+
 		internal int Add(TexInfo ti)
 		{
 			foreach(TexInfo tex in mTexInfos)

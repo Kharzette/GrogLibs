@@ -218,6 +218,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\EntityLib\EntityLib.csproj">
+      <Project>{35F3FD2E-0DFE-49D9-B143-1DD8B5F3383D}</Project>
+      <Name>EntityLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\MaterialLib\MaterialLib.csproj">
       <Project>{E6EAA6B0-1140-4BE3-AEFD-0DF83A7A705B}</Project>
       <Name>MaterialLib</Name>
