@@ -127,8 +127,17 @@ namespace BSPZone
 			mZoneLeafSides	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return UtilityLib.FileUtil.InitArray<ZoneLeafSide>(count); }) as ZoneLeafSide[];
 
-			mVisData			=UtilityLib.FileUtil.ReadByteArray(br);
-			mMaterialVisData	=UtilityLib.FileUtil.ReadByteArray(br);
+			bool	bVis	=br.ReadBoolean();
+			if(bVis)
+			{
+				mVisData			=UtilityLib.FileUtil.ReadByteArray(br);
+			}
+
+			bVis	=br.ReadBoolean();
+			if(bVis)
+			{
+				mMaterialVisData	=UtilityLib.FileUtil.ReadByteArray(br);
+			}
 
 			mLightMapGridSize		=br.ReadInt32();
 			mNumVisLeafBytes		=br.ReadInt32();

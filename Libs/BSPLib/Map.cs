@@ -301,8 +301,19 @@ namespace BSPLib
 			UtilityLib.FileUtil.WriteArray(mGFXPlanes, bw);
 			UtilityLib.FileUtil.WriteArray(mGFXEntities, bw);
 			UtilityLib.FileUtil.WriteArray(mGFXLeafSides, bw);
-			UtilityLib.FileUtil.WriteArray(mGFXVisData, bw);
-			UtilityLib.FileUtil.WriteArray(mGFXMaterialVisData, bw);
+
+			bw.Write(mGFXVisData != null);
+			if(mGFXVisData != null)
+			{
+				UtilityLib.FileUtil.WriteArray(mGFXVisData, bw);
+			}
+
+			bw.Write(mGFXMaterialVisData != null);
+			if(mGFXMaterialVisData != null)
+			{
+				UtilityLib.FileUtil.WriteArray(mGFXMaterialVisData, bw);
+			}
+
 			bw.Write(mLightMapGridSize);
 			bw.Write(mNumVisLeafBytes);
 			bw.Write(mNumVisMaterialBytes);
