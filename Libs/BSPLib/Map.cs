@@ -202,36 +202,50 @@ namespace BSPLib
 
 		public int GetNumWorldBrushes()
 		{
-			if(mEntities != null && mEntities.Count > 0)
+			MapEntity	me	=GetWorldSpawnEntity();
+			if(me == null)
 			{
-				List<MapBrush>	brushes	=mEntities[0].GetBrushes();
-				return	brushes.Count;
+				return	0;
 			}
-			else
-			{
-				Print("This is intended for use pre build.\n");
-			}
-			return	0;
+
+			return	me.GetBrushes().Count;
 		}
 
 
 		public void GetWorldBrushTrianglesByIndex(int brushIndex, List<Vector3> verts, List<UInt32> indexes)
 		{
-			if(mEntities != null && mEntities.Count > 0)
+			MapEntity	me	=GetWorldSpawnEntity();
+			if(me == null)
 			{
-				List<MapBrush>	brushes	=mEntities[0].GetBrushes();
-				if(brushes.Count > brushIndex)
-				{
-					brushes[brushIndex].GetTriangles(verts, indexes, false);
-				}
-				else
-				{
-					Print("Brush index out of range!\n");
-				}
+				return;
+			}
+			if(me.GetBrushes().Count > brushIndex)
+			{
+				me.GetBrushes()[brushIndex].GetTriangles(verts, indexes, false);
 			}
 			else
 			{
-				Print("This is intended for use pre build.\n");
+				Print("Brush index out of range!\n");
+			}
+		}
+
+
+		public Bounds GetWorldBrushBoundsByIndex(int brushIndex)
+		{
+			MapEntity	me	=GetWorldSpawnEntity();
+			if(me == null)
+			{
+				return	null;
+			}
+
+			if(me.GetBrushes().Count > brushIndex)
+			{
+				return	me.GetBrushes()[brushIndex].GetBounds();
+			}
+			else
+			{
+				Print("Brush index out of range!\n");
+				return	null;
 			}
 		}
 
@@ -240,32 +254,30 @@ namespace BSPLib
 		{
 			List<GFXPlane>	ret	=new List<GFXPlane>();
 
-			if(mEntities != null && mEntities.Count > 0)
+			MapEntity	me	=GetWorldSpawnEntity();
+			if(me == null)
 			{
-				List<MapBrush>	brushes	=mEntities[0].GetBrushes();
-				if(brushes.Count > brushIndex)
+				return	null;
+			}
+
+			if(me.GetBrushes().Count > brushIndex)
+			{
+				foreach(GBSPSide gs in me.GetBrushes()[brushIndex].mOriginalSides)
 				{
-					foreach(GBSPSide gs in brushes[brushIndex].mOriginalSides)
+					GBSPPlane	p	=mPlanePool.mPlanes[gs.mPlaneNum];
+					if(gs.mPlaneSide != 0)
 					{
-						GBSPPlane	p	=mPlanePool.mPlanes[gs.mPlaneNum];
-						if(gs.mPlaneSide != 0)
-						{
-							p.Inverse();
-						}
-
-						GFXPlane	gfxp	=new GFXPlane(p);
-
-						ret.Add(gfxp);
+						p.Inverse();
 					}
-				}
-				else
-				{
-					Print("Brush index out of range!\n");
+
+					GFXPlane	gfxp	=new GFXPlane(p);
+
+					ret.Add(gfxp);
 				}
 			}
 			else
 			{
-				Print("This is intended for use pre build.\n");
+				Print("Brush index out of range!\n");
 			}
 			return	ret;
 		}
@@ -491,9 +503,7 @@ namespace BSPLib
 				mEntities.Add(me);
 			}
 
-			List<MapBrush>	brushes	=me.GetBrushes();
-
-			brushes.Add(mb);
+			me.GetBrushes().Add(mb);
 		}
 
 
@@ -503,8 +513,7 @@ namespace BSPLib
 
 			foreach(MapEntity me in mEntities)
 			{
-				List<MapBrush>	brushery	=me.GetBrushes();
-				if(brushery.Count == 0)
+				if(me.GetBrushes().Count == 0)
 				{
 					index++;
 					continue;
@@ -519,7 +528,8 @@ namespace BSPLib
 
 				if(index == 0)
 				{
-					if(!mod.ProcessWorldModel(brushery, mEntities,
+					List<MapBrush>	brushes	=new List<MapBrush>(me.GetBrushes());
+					if(!mod.ProcessWorldModel(brushes, mEntities,
 						mPlanePool, mTIPool, bVerbose, eNumPlanesChanged))
 					{
 						return	false;
@@ -527,7 +537,8 @@ namespace BSPLib
 				}
 				else
 				{
-					if(!mod.ProcessSubModel(brushery, mPlanePool,
+					List<MapBrush>	brushes	=new List<MapBrush>(me.GetBrushes());
+					if(!mod.ProcessSubModel(brushes, mPlanePool,
 						mTIPool, bEntityVerbose))
 					{
 						return	false;
@@ -667,13 +678,12 @@ namespace BSPLib
 
 			foreach(MapEntity me in mEntities)
 			{
-				List<MapBrush>	brushery	=me.GetBrushes();
-				if(brushery.Count == 0)
+				if(me.GetBrushes().Count == 0)
 				{
 					continue;
 				}
 
-				foreach(MapBrush mb in brushery)
+				foreach(MapBrush mb in me.GetBrushes())
 				{
 					bnd.Merge(null, mb.GetBounds());
 				}
@@ -737,16 +747,18 @@ namespace BSPLib
 			//add in the encircling brushery
 			foreach(MapEntity me in mEntities)
 			{
-				List<MapBrush>	brushery	=me.GetBrushes();
-				if(brushery.Count == 0)
+				if(me.GetBrushes().Count == 0)
 				{
 					continue;
 				}
 
-				brushery.AddRange(sideBrushes);
+				foreach(MapBrush sideBrush in sideBrushes)
+				{
+					me.GetBrushes().Add(sideBrush);
+				}
 
 				//add a bogus texinfo to the brushes
-				foreach(MapBrush mb in brushery)
+				foreach(MapBrush mb in me.GetBrushes())
 				{
 					foreach(GBSPSide s in mb.mOriginalSides)
 					{
@@ -781,14 +793,20 @@ namespace BSPLib
 				}
 
 				//write brushes
-				bw.Write(brushery.Count);
-				foreach(MapBrush mb in brushery)
+				bw.Write(me.GetBrushes().Count);
+				foreach(MapBrush mb in me.GetBrushes())
 				{
 					mb.Write(bw);
 				}
 
 				bw.Close();
 				fs.Close();
+
+				//remove encircling
+				foreach(MapBrush sideBrush in sideBrushes)
+				{
+					me.GetBrushes().Remove(sideBrush);
+				}
 				break;
 			}
 

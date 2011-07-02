@@ -128,7 +128,6 @@
     <Compile Include="Bounds.cs" />
     <Compile Include="BuildParams.cs" />
     <Compile Include="Contents.cs" />
-    <Compile Include="EditorBrush.cs" />
     <Compile Include="FaceFixer.cs" />
     <Compile Include="GBSP\GBSPBrush.cs" />
     <Compile Include="GBSP\GBSPFace.cs" />

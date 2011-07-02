@@ -7,13 +7,20 @@ using Microsoft.Xna.Framework;
 
 namespace BSPLib
 {
-	internal class MapBrush
+	public class MapBrush
 	{
 		internal Int32		mEntityNum;
 		internal UInt32		mContents;
 		internal Bounds		mBounds;
 
 		internal List<GBSPSide>	mOriginalSides	=new List<GBSPSide>();
+
+
+		public int NumSides
+		{
+			get { return mOriginalSides.Count; }
+			set { }
+		}
 
 
 		internal MapBrush()

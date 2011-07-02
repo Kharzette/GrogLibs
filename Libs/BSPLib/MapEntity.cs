@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.Xna.Framework;
+using System.ComponentModel;
 
 
 namespace BSPLib
 {
 	public class MapEntity : UtilityLib.IReadWriteable
 	{
-		List<MapBrush>	mBrushes	=new List<MapBrush>();
+		BindingList<MapBrush>	mBrushes	=new BindingList<MapBrush>();
 
 		internal Dictionary<string, string>	mData		=new Dictionary<string, string>();
 		internal Int32						mModelNum;
@@ -540,8 +541,7 @@ namespace BSPLib
 			}
 		}
 
-
-		internal List<MapBrush> GetBrushes()
+		public BindingList<MapBrush> GetBrushes()
 		{
 			return	mBrushes;
 		}
