@@ -22,6 +22,12 @@ namespace BSPLib
 			set { }
 		}
 
+		public Vector3 Center
+		{
+			get { return mBounds.GetCenter(); }
+			set { }
+		}
+
 
 		internal MapBrush()
 		{

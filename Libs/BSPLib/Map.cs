@@ -644,11 +644,12 @@ namespace BSPLib
 
 		//This is for 2D maps.
 		//Creates a box around the extents
+		//only builds world brushes (no models)
 		public void BuildTree2D(BSPBuildParams prms,
 			EntityLib.EntitySystem es,
 			List<EntityLib.Entity> ents)
 		{
-			Bounds	bnd	=new Bounds();
+			mEntities.RemoveRange(1, mEntities.Count - 1);
 
 			foreach(EntityLib.Entity e in ents)
 			{
@@ -670,23 +671,29 @@ namespace BSPLib
 				}
 
 				MapEntity	me	=new MapEntity();
-				me.mData.Add("origin", "" + pos.Position.X
-					+ " " + pos.Position.Y + " " + pos.Position.Z);
+
+				//negate x and swap Y and Z
+				me.mData.Add("origin", "" + -pos.Position.X
+					+ " " + pos.Position.Z + " " + pos.Position.Y);
 
 				mEntities.Add(me);
 			}
 
-			foreach(MapEntity me in mEntities)
+			MapEntity	wse	=GetWorldSpawnEntity();
+			if(wse == null)
 			{
-				if(me.GetBrushes().Count == 0)
-				{
-					continue;
-				}
+				Print("No world spawn entity!");
+			}
 
-				foreach(MapBrush mb in me.GetBrushes())
-				{
-					bnd.Merge(null, mb.GetBounds());
-				}
+			if(wse.GetBrushes().Count <= 0)
+			{
+				Print("No brushes!");
+			}
+
+			Bounds	bnd	=new Bounds();
+			foreach(MapBrush mb in wse.GetBrushes())
+			{
+				bnd.Merge(null, mb.GetBounds());
 			}
 
 			//create 6 sides around the extents
@@ -745,72 +752,63 @@ namespace BSPLib
 			sideBounds.mMaxs	=bnd.mMaxs;
 
 			//add in the encircling brushery
-			foreach(MapEntity me in mEntities)
+			foreach(MapBrush sideBrush in sideBrushes)
 			{
-				if(me.GetBrushes().Count == 0)
-				{
-					continue;
-				}
-
-				foreach(MapBrush sideBrush in sideBrushes)
-				{
-					me.GetBrushes().Add(sideBrush);
-				}
-
-				//add a bogus texinfo to the brushes
-				foreach(MapBrush mb in me.GetBrushes())
-				{
-					foreach(GBSPSide s in mb.mOriginalSides)
-					{
-						TexInfo	ti		=new TexInfo();
-						ti.mMaterial	="Bogus";
-						ti.mTexture		="Bogus";
-						ti.mFlags		|=TexInfo.NO_LIGHTMAP;
-						ti.mFlags		|=TexInfo.FULLBRIGHT;
-						ti.mUVec		=Vector3.UnitX;
-						ti.mVVec		=Vector3.UnitY;
-						s.mTexInfo		=mTIPool.Add(ti);
-					}
-					mb.mContents	=Contents.BSP_CONTENTS_SOLID2;
-				}
-
-				
-				FileStream		fs	=new FileStream("buggery.MapBrushes", FileMode.Create, FileAccess.Write);
-				BinaryWriter	bw	=new BinaryWriter(fs);
-
-
-				//write texinfos
-				mTIPool.Write(bw);
-
-				//write planes
-				mPlanePool.Write(bw);
-
-				//write entities
-				bw.Write(mEntities.Count);
-				foreach(MapEntity e in mEntities)
-				{
-					e.Write(bw);
-				}
-
-				//write brushes
-				bw.Write(me.GetBrushes().Count);
-				foreach(MapBrush mb in me.GetBrushes())
-				{
-					mb.Write(bw);
-				}
-
-				bw.Close();
-				fs.Close();
-
-				//remove encircling
-				foreach(MapBrush sideBrush in sideBrushes)
-				{
-					me.GetBrushes().Remove(sideBrush);
-				}
-				break;
+				wse.GetBrushes().Add(sideBrush);
 			}
 
-//			ThreadPool.QueueUserWorkItem(BuildTreeCB, prms);
+			//add a bogus texinfo to the brushes
+			foreach(MapBrush mb in wse.GetBrushes())
+			{
+				foreach(GBSPSide s in mb.mOriginalSides)
+				{
+					TexInfo	ti		=new TexInfo();
+					ti.mMaterial	="Bogus";
+					ti.mTexture		="Bogus";
+					ti.mFlags		|=TexInfo.NO_LIGHTMAP;
+					ti.mFlags		|=TexInfo.FULLBRIGHT;
+					ti.mUVec		=Vector3.UnitX;
+					ti.mVVec		=Vector3.UnitY;
+					s.mTexInfo		=mTIPool.Add(ti);
+				}
+				mb.mContents	=Contents.BSP_CONTENTS_SOLID2;
+			}
+
+/*				
+			FileStream		fs	=new FileStream("buggery.MapBrushes", FileMode.Create, FileAccess.Write);
+			BinaryWriter	bw	=new BinaryWriter(fs);
+
+
+			//write texinfos
+			mTIPool.Write(bw);
+
+			//write planes
+			mPlanePool.Write(bw);
+
+			//write entities
+			bw.Write(mEntities.Count);
+			foreach(MapEntity e in mEntities)
+			{
+				e.Write(bw);
+			}
+
+			//write brushes
+			bw.Write(me.GetBrushes().Count);
+			foreach(MapBrush mb in wse.GetBrushes())
+			{
+				mb.Write(bw);
+			}
+
+			bw.Close();
+			fs.Close();*/
+
+				//remove encircling
+//				foreach(MapBrush sideBrush in sideBrushes)
+//				{
+//					me.GetBrushes().Remove(sideBrush);
+//				}
+
+			ThreadPool.QueueUserWorkItem(BuildTreeCB, prms);
 		}
 
 
