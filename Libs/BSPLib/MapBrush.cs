@@ -29,7 +29,7 @@ namespace BSPLib
 		}
 
 
-		internal MapBrush()
+		public MapBrush()
 		{
 		}
 
@@ -165,7 +165,7 @@ namespace BSPLib
 		}
 
 
-		internal void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 			mEntityNum	=br.ReadInt32();
 			mContents	=br.ReadUInt32();
@@ -190,7 +190,7 @@ namespace BSPLib
 		}
 
 
-		internal void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mEntityNum);
 			bw.Write(mContents);

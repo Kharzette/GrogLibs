@@ -496,7 +496,7 @@ namespace BSPLib
 		}
 
 
-		void AddSingleBrush(MapBrush mb)
+		public void AddSingleBrush(MapBrush mb)
 		{
 			//make sure entity list exists
 			if(mEntities == null)

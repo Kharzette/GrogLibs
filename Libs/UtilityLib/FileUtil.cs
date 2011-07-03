@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Storage;
@@ -203,6 +204,65 @@ namespace UtilityLib
 				arr[i].Read(br);
 			}
 			return	arr;
+		}
+
+
+		//saves out enough info to recreate
+		//the object from reflection
+		public static void SaveProps(BinaryWriter bw, object obj)
+		{
+			bw.Write(obj.GetType().AssemblyQualifiedName);
+
+			PropertyInfo	[]props	=obj.GetType().GetProperties();
+			foreach(PropertyInfo pi in props)
+			{
+				object	madProp	=pi.GetValue(obj, null);
+
+				if(madProp is string)
+				{
+					bw.Write(madProp as string);
+				}
+				else if(madProp is UInt32)
+				{
+					UInt32	gack	=(UInt32)madProp;
+					bw.Write(gack);
+				}
+				else if(madProp is Int32)
+				{
+					Int32	gack	=(Int32)madProp;
+					bw.Write(gack);
+				}
+			}
+		}
+
+
+		public static object ReadProps(BinaryReader br)
+		{
+			string	typeName	=br.ReadString();
+
+			Type	t	=Type.GetType(typeName);
+			object	ret	=Activator.CreateInstance(t);
+
+			PropertyInfo	[]props	=ret.GetType().GetProperties();
+			for(int i=0;i < props.Length;i++)
+			{
+				if(props[i].PropertyType == typeof(string))
+				{
+					string	val	=br.ReadString();
+					props[i].SetValue(ret, val, null);
+				}
+				else if(props[i].PropertyType == typeof(UInt32))
+				{
+					UInt32	val	=br.ReadUInt32();
+					props[i].SetValue(ret, val, null);
+				}
+				else if(props[i].PropertyType == typeof(Int32))
+				{
+					Int32	val	=br.ReadInt32();
+					props[i].SetValue(ret, val, null);
+				}
+			}
+			return	ret;
 		}
 	}
 }
