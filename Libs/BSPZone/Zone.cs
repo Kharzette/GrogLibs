@@ -241,6 +241,29 @@ namespace BSPZone
 
 
 		#region Ray Casts and Movement
+		public bool IsSphereInSolid(Vector3 pnt, float dist)
+		{
+			bool	bHitLeaf	=false;
+			int		leafHit		=0;
+			int		nodeHit		=0;
+			return	SphereIntersect(pnt, dist, 0, ref bHitLeaf, ref leafHit, ref nodeHit);
+		}
+
+
+		public bool IsPointInSolid(Vector3 pnt)
+		{
+			int	node	=FindNodeLandedIn(0, pnt);
+
+			if(node > 0)
+			{
+				return	true;	//is that right?  Can't remember
+			}
+			Int32	leaf	=-(node + 1);
+
+			return	((mZoneLeafs[leaf].mContents & Contents.BSP_CONTENTS_SOLID2) != 0);
+		}
+
+
 		bool RayIntersect(Vector3 start, Vector3 end, Int32 node,
 			ref Vector3 intersectionPoint, ref bool hitLeaf,
 			ref Int32 leafHit, ref Int32 nodeHit)
@@ -306,6 +329,55 @@ namespace BSPZone
 					nodeHit				=node;
 				}
 				return	true;
+			}
+			return	false;
+		}
+
+
+		bool SphereIntersect(Vector3 pnt, float radius, Int32 node,
+			ref bool hitLeaf, ref Int32 leafHit, ref Int32 nodeHit)
+		{
+			if(node < 0)
+			{
+				Int32	leaf	=-(node + 1);
+
+				leafHit	=leaf;
+
+				if((mZoneLeafs[leaf].mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+				{
+					return	true;	//Ray collided with solid space
+				}
+				else 
+				{
+					return	false;	//Ray collided with empty space
+				}
+			}
+			ZoneNode	n	=mZoneNodes[node];
+			ZonePlane	p	=mZonePlanes[n.mPlaneNum];
+
+			float	dist	=p.DistanceFast(pnt);
+
+			if(dist >= -radius && dist < radius)
+			{
+				//sphere overlaps plane
+				bool	ret	=SphereIntersect(pnt, radius, n.mChildren[0],
+								ref hitLeaf, ref leafHit, ref nodeHit);
+				if(ret)
+				{
+					return	true;
+				}
+				return	SphereIntersect(pnt, radius, n.mChildren[1],
+							ref hitLeaf, ref leafHit, ref nodeHit);
+			}
+			else if(dist >= -radius)
+			{
+				return(SphereIntersect(pnt, radius, n.mChildren[0],
+					ref hitLeaf, ref leafHit, ref nodeHit));
+			}
+			else if(dist < radius)
+			{
+				return(SphereIntersect(pnt, radius, n.mChildren[1],
+					ref hitLeaf, ref leafHit, ref nodeHit));
 			}
 			return	false;
 		}

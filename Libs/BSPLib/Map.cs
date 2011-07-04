@@ -668,7 +668,7 @@ namespace BSPLib
 				List<EntityLib.Component>	comps	=
 					es.GetComponents(e, typeof(EntityLib.Components.Physical.Position3D));
 
-				if(comps.Count == 0)
+				if(comps == null || comps.Count == 0)
 				{
 					continue;
 				}

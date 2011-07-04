@@ -60,7 +60,7 @@ namespace UtilityLib
 
 		public static byte []ReadByteArray(BinaryReader br)
 		{
-			bool	bNull	=br.ReadBoolean();
+			bool	bNull	=!br.ReadBoolean();
 			if(bNull)
 			{
 				return	null;
@@ -72,7 +72,7 @@ namespace UtilityLib
 
 		public static Int32 []ReadIntArray(BinaryReader br)
 		{
-			bool	bNull	=br.ReadBoolean();
+			bool	bNull	=!br.ReadBoolean();
 			if(bNull)
 			{
 				return	null;
@@ -111,7 +111,7 @@ namespace UtilityLib
 
 		public static Vector3 []ReadVecArray(BinaryReader br)
 		{
-			bool	bNull	=br.ReadBoolean();
+			bool	bNull	=!br.ReadBoolean();
 			if(bNull)
 			{
 				return	null;
