@@ -77,10 +77,7 @@ namespace BSPLib
 			pea.mMax		=0;
 			pea.mMin		=0;
 
-			if(eProgressUpdated != null)
-			{
-				eProgressUpdated(null, pea);
-			}
+			UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
 		}
 
 
@@ -105,10 +102,7 @@ namespace BSPLib
 				pea.mMax		=0;
 				pea.mMin		=0;
 
-				if(eProgressUpdated != null)
-				{
-					eProgressUpdated(null, pea);
-				}
+				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 
@@ -139,7 +133,7 @@ namespace BSPLib
 			}
 			if(bFound)
 			{
-				eProgressUpdated(null, pea);
+				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 
@@ -172,7 +166,7 @@ namespace BSPLib
 			}
 			if(bFound)
 			{
-				eProgressUpdated(null, pea);
+				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 
@@ -203,7 +197,7 @@ namespace BSPLib
 			}
 			if(bFound)
 			{
-				eProgressUpdated(null, pea);
+				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 	}

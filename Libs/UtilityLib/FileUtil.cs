@@ -41,6 +41,15 @@ namespace UtilityLib
 
 		public static void WriteArray(BinaryWriter bw, Int32 []intArray)
 		{
+			if(intArray == null)
+			{
+				bw.Write(false);
+				return;
+			}
+			else
+			{
+				bw.Write(true);
+			}
 			bw.Write(intArray.Length);
 			for(int i=0;i < intArray.Length;i++)
 			{
@@ -51,6 +60,11 @@ namespace UtilityLib
 
 		public static byte []ReadByteArray(BinaryReader br)
 		{
+			bool	bNull	=br.ReadBoolean();
+			if(bNull)
+			{
+				return	null;
+			}
 			int	count	=br.ReadInt32();
 			return	br.ReadBytes(count);
 		}
@@ -58,6 +72,11 @@ namespace UtilityLib
 
 		public static Int32 []ReadIntArray(BinaryReader br)
 		{
+			bool	bNull	=br.ReadBoolean();
+			if(bNull)
+			{
+				return	null;
+			}
 			int	len	=br.ReadInt32();
 
 			Int32	[]ret	=new Int32[len];
@@ -71,6 +90,15 @@ namespace UtilityLib
 
 		public static void WriteArray(BinaryWriter bw, Vector3 []vecArray)
 		{
+			if(vecArray == null)
+			{
+				bw.Write(false);
+				return;
+			}
+			else
+			{
+				bw.Write(true);
+			}
 			bw.Write(vecArray.Length);
 			for(int i=0;i < vecArray.Length;i++)
 			{
@@ -83,6 +111,11 @@ namespace UtilityLib
 
 		public static Vector3 []ReadVecArray(BinaryReader br)
 		{
+			bool	bNull	=br.ReadBoolean();
+			if(bNull)
+			{
+				return	null;
+			}
 			int	len	=br.ReadInt32();
 
 			Vector3	[]ret	=new Vector3[len];
@@ -188,6 +221,15 @@ namespace UtilityLib
 
 		public static void WriteArray(byte []arr, BinaryWriter bw)
 		{
+			if(arr == null)
+			{
+				bw.Write(false);
+				return;
+			}
+			else
+			{
+				bw.Write(true);
+			}
 			bw.Write(arr.Length);
 			bw.Write(arr, 0, arr.Length);
 		}
@@ -232,6 +274,70 @@ namespace UtilityLib
 					Int32	gack	=(Int32)madProp;
 					bw.Write(gack);
 				}
+				else if(madProp is bool)
+				{
+					bool	gack	=(bool)madProp;
+					bw.Write(gack);
+				}
+				else if(madProp is Int16)
+				{
+					Int16	gack	=(Int16)madProp;
+					bw.Write(gack);
+				}
+				else if(madProp is UInt16)
+				{
+					UInt16	gack	=(UInt16)madProp;
+					bw.Write(gack);
+				}
+				else if(madProp is Vector2)
+				{
+					Vector2	gack	=(Vector2)madProp;
+					bw.Write(gack.X);
+					bw.Write(gack.Y);
+				}
+				else if(madProp is Vector3)
+				{
+					Vector3	gack	=(Vector3)madProp;
+					bw.Write(gack.X);
+					bw.Write(gack.Y);
+					bw.Write(gack.Z);
+				}
+				else if(madProp is Vector4)
+				{
+					Vector4	gack	=(Vector4)madProp;
+					bw.Write(gack.X);
+					bw.Write(gack.Y);
+					bw.Write(gack.Z);
+					bw.Write(gack.W);
+				}
+				else if(madProp is Quaternion)
+				{
+					Quaternion	gack	=(Quaternion)madProp;
+					bw.Write(gack.X);
+					bw.Write(gack.Y);
+					bw.Write(gack.Z);
+					bw.Write(gack.W);
+				}
+				else if(madProp is Matrix)
+				{
+					Matrix	gack	=(Matrix)madProp;
+					bw.Write(gack.M11);
+					bw.Write(gack.M12);
+					bw.Write(gack.M13);
+					bw.Write(gack.M14);
+					bw.Write(gack.M21);
+					bw.Write(gack.M22);
+					bw.Write(gack.M23);
+					bw.Write(gack.M24);
+					bw.Write(gack.M31);
+					bw.Write(gack.M32);
+					bw.Write(gack.M33);
+					bw.Write(gack.M34);
+					bw.Write(gack.M41);
+					bw.Write(gack.M42);
+					bw.Write(gack.M43);
+					bw.Write(gack.M44);
+				}
 			}
 		}
 
@@ -259,6 +365,85 @@ namespace UtilityLib
 				else if(props[i].PropertyType == typeof(Int32))
 				{
 					Int32	val	=br.ReadInt32();
+					props[i].SetValue(ret, val, null);
+				}
+				else if(props[i].PropertyType == typeof(bool))
+				{
+					bool	val	=br.ReadBoolean();
+					props[i].SetValue(ret, val, null);
+				}
+				else if(props[i].PropertyType == typeof(Int16))
+				{
+					Int16	val	=br.ReadInt16();
+					props[i].SetValue(ret, val, null);
+				}
+				else if(props[i].PropertyType == typeof(UInt16))
+				{
+					UInt16	val	=br.ReadUInt16();
+					props[i].SetValue(ret, val, null);
+				}
+				else if(props[i].PropertyType == typeof(Vector2))
+				{
+					Vector2	val	=Vector2.Zero;
+
+					val.X	=br.ReadSingle();
+					val.Y	=br.ReadSingle();
+
+					props[i].SetValue(ret, val, null);
+				}
+				else if(props[i].PropertyType == typeof(Vector3))
+				{
+					Vector3	val	=Vector3.Zero;
+
+					val.X	=br.ReadSingle();
+					val.Y	=br.ReadSingle();
+					val.Z	=br.ReadSingle();
+
+					props[i].SetValue(ret, val, null);
+				}
+				else if(props[i].PropertyType == typeof(Vector4))
+				{
+					Vector4	val	=Vector4.Zero;
+
+					val.X	=br.ReadSingle();
+					val.Y	=br.ReadSingle();
+					val.Z	=br.ReadSingle();
+					val.W	=br.ReadSingle();
+
+					props[i].SetValue(ret, val, null);
+				}
+				else if(props[i].PropertyType == typeof(Quaternion))
+				{
+					Quaternion	val	=Quaternion.Identity;
+
+					val.X	=br.ReadSingle();
+					val.Y	=br.ReadSingle();
+					val.Z	=br.ReadSingle();
+					val.W	=br.ReadSingle();
+
+					props[i].SetValue(ret, val, null);
+				}
+				else if(props[i].PropertyType == typeof(Matrix))
+				{
+					Matrix	val	=Matrix.Identity;
+
+					val.M11	=br.ReadSingle();
+					val.M12	=br.ReadSingle();
+					val.M13	=br.ReadSingle();
+					val.M14	=br.ReadSingle();
+					val.M21	=br.ReadSingle();
+					val.M22	=br.ReadSingle();
+					val.M23	=br.ReadSingle();
+					val.M24	=br.ReadSingle();
+					val.M31	=br.ReadSingle();
+					val.M32	=br.ReadSingle();
+					val.M33	=br.ReadSingle();
+					val.M34	=br.ReadSingle();
+					val.M41	=br.ReadSingle();
+					val.M42	=br.ReadSingle();
+					val.M43	=br.ReadSingle();
+					val.M44	=br.ReadSingle();
+
 					props[i].SetValue(ret, val, null);
 				}
 			}

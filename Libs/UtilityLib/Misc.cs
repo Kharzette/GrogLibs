@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+
 namespace UtilityLib
 {
 	public static class Misc
@@ -12,6 +13,15 @@ namespace UtilityLib
 			if(eh != null)
 			{
 				eh(sender, EventArgs.Empty);
+			}
+		}
+
+
+		public static void SafeInvoke(this EventHandler eh, object sender, EventArgs ea)
+		{
+			if(eh != null)
+			{
+				eh(sender, ea);
 			}
 		}
 

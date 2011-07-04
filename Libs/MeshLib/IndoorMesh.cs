@@ -568,7 +568,13 @@ namespace MeshLib
 			}
 
 			mLightMapAtlas	=new MaterialLib.TexAtlas(g, 1, 1);
-			mLightMapAtlas.Read(g, br);
+
+			bool	bLightMapNeeded	=br.ReadBoolean();
+
+			if(bLightMapNeeded)
+			{
+				mLightMapAtlas.Read(g, br);
+			}
 
 			mMatLib.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasTexture());
 
@@ -702,7 +708,12 @@ namespace MeshLib
 
 			bw.Write(0x57415244);	//DRAW
 
-			mLightMapAtlas.Write(bw);
+			bw.Write(mLightMapAtlas != null);
+
+			if(mLightMapAtlas != null)
+			{
+				mLightMapAtlas.Write(bw);
+			}
 
 			if(mLMVB == null)
 			{

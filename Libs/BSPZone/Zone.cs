@@ -599,7 +599,7 @@ namespace BSPZone
 		{
 			if(Node < 0)		// At a leaf, mark leaf parent and return
 			{
-				mLeafData[-(Node+1)].mParent	=Parent;
+				mLeafData[-(Node + 1)].mParent	=Parent;
 				return;
 			}
 

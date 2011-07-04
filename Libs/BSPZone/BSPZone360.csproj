@@ -97,7 +97,7 @@
     <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\UtilityLib\UtilityLib360.csproj">
+    <ProjectReference Include="..\UtilityLib\UtilityLib360.csproj">
       <Project>{FA72E344-794D-483E-8373-B2ABD7CD9478}</Project>
       <Name>UtilityLib360</Name>
     </ProjectReference>
