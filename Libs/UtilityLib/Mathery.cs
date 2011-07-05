@@ -14,6 +14,7 @@ namespace UtilityLib
 		public const float		DIST_EPSILON	=0.01f;
 		public const float		ANGLE_EPSILON	=0.00001f;
 		public const float		VCompareEpsilon	=0.001f;
+		public const float		MIN_MAX_BOUNDS	=15192.0f;
 		public static Vector3	[]AxialNormals	=new Vector3[6];
 
 
@@ -25,6 +26,43 @@ namespace UtilityLib
 			AxialNormals[3]	=-Vector3.UnitX;
 			AxialNormals[4]	=-Vector3.UnitY;
 			AxialNormals[5]	=-Vector3.UnitZ;
+		}
+
+
+		//extension methods don't work on value types :(
+		public static void ClearBoundingBox(ref BoundingBox bb)
+		{
+			bb.Min	=Vector3.One * MIN_MAX_BOUNDS;
+			bb.Max	=-bb.Min;
+		}
+
+
+		public static void AddPointToBoundingBox(ref BoundingBox bb, Vector3 pnt)
+		{
+			if(pnt.X < bb.Min.X)
+			{
+				bb.Min.X	=pnt.X;
+			}
+			if(pnt.X > bb.Max.X)
+			{
+				bb.Max.X	=pnt.X;
+			}
+			if(pnt.Y < bb.Min.Y)
+			{
+				bb.Min.Y	=pnt.Y;
+			}
+			if(pnt.Y > bb.Max.Y)
+			{
+				bb.Max.Y	=pnt.Y;
+			}
+			if(pnt.Z < bb.Min.Z)
+			{
+				bb.Min.Z	=pnt.Z;
+			}
+			if(pnt.Z > bb.Max.Z)
+			{
+				bb.Max.Z	=pnt.Z;
+			}
 		}
 
 

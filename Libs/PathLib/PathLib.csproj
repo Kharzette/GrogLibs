@@ -96,6 +96,7 @@
     <Compile Include="PathConnection.cs" />
     <Compile Include="PathFinder.cs" />
     <Compile Include="PathGrid.cs" />
+    <Compile Include="PathGrid2D.cs" />
     <Compile Include="PathNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

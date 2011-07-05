@@ -6,9 +6,9 @@ using System.Threading;
 using Microsoft.Xna.Framework;
 
 
-namespace SpriteMapLib
+namespace PathLib
 {
-	class PathFinder
+	internal class PathFinder
 	{
 		AStarNode	mStartNode;
 		AStarNode	mEndNode;

@@ -437,7 +437,7 @@ namespace BSPZone
 			//box raycast (no sliding)
 			Vector3		secondPos	=Vector3.Zero;
 			Vector3		stepPos		=Vector3.Zero;
-			if(Trace_WorldCollisionBBox(box.Min, box.Max, start, start + Vector3.Up * StepHeight, 0, ref stepPos, ref impactPlane))
+			if(Trace_WorldCollisionBBox(box, start, start + Vector3.Up * StepHeight, ref stepPos, ref impactPlane))
 			{
 				//hit something trying to step up
 				//see if it's enough to bother with
@@ -455,7 +455,7 @@ namespace BSPZone
 			bOn	=MoveBox(box, stepPos, end + Vector3.Up * StepHeight, ref stepPos);
 
 			//raycast down a step height
-			if(Trace_WorldCollisionBBox(box.Min, box.Max, stepPos, stepPos - Vector3.Up * StepHeight, 0, ref stepPos, ref impactPlane))
+			if(Trace_WorldCollisionBBox(box, stepPos, stepPos - Vector3.Up * StepHeight, ref stepPos, ref impactPlane))
 			{
 				if(!IsGround(impactPlane))
 				{
@@ -498,8 +498,7 @@ namespace BSPZone
 			ZonePlane	secondPHit	=new ZonePlane();
 			ZonePlane	thirdPHit	=new ZonePlane();
 
-			if(Trace_WorldCollisionBBox(box.Min, box.Max,
-				start, end, 0, ref impacto, ref firstPHit))
+			if(Trace_WorldCollisionBBox(box, start, end, ref impacto, ref firstPHit))
 			{
 				//collisions from inside out will leave
 				//an empty plane and impact
@@ -512,8 +511,7 @@ namespace BSPZone
 					end	-=(firstPHit.mNormal * dist);
 
 					//ray cast again
-					if(Trace_WorldCollisionBBox(box.Min, box.Max,
-						start, end, 0, ref impacto, ref secondPHit))
+					if(Trace_WorldCollisionBBox(box, start, end, ref impacto, ref secondPHit))
 					{
 						if(!(impacto == Vector3.Zero && secondPHit.mNormal == Vector3.Zero))
 						{
@@ -522,8 +520,7 @@ namespace BSPZone
 							end		-=(secondPHit.mNormal * dist);
 
 							//ray cast again
-							if(Trace_WorldCollisionBBox(box.Min, box.Max,
-								start, end, 0, ref impacto, ref thirdPHit))
+							if(Trace_WorldCollisionBBox(box, start, end, ref impacto, ref thirdPHit))
 							{
 								if(!(impacto == Vector3.Zero && thirdPHit.mNormal == Vector3.Zero))
 								{
@@ -693,8 +690,8 @@ namespace BSPZone
 				maxs	=Vector3.Zero;
 				return;
 			}
-			mins	=mZoneModels[0].mMins;
-			maxs	=mZoneModels[0].mMaxs;
+			mins	=mZoneModels[0].mBounds.Min;
+			maxs	=mZoneModels[0].mBounds.Max;
 		}
 	}
 }

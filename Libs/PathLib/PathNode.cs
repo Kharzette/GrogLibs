@@ -5,7 +5,7 @@ using System.IO;
 using Microsoft.Xna.Framework;
 
 
-namespace SpriteMapLib
+namespace PathLib
 {
 	public class PathNode
 	{
