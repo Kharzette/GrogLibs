@@ -334,6 +334,72 @@ namespace BSPZone
 		}
 
 
+		bool CapsuleIntersect(Vector3 start, Vector3 end, float radius,
+			Int32 node,	ref Vector3 intersectionPoint, ref bool hitLeaf,
+			ref Int32 leafHit, ref Int32 nodeHit)
+		{
+			if(node < 0)						
+			{
+				Int32	leaf	=-(node + 1);
+
+				leafHit	=leaf;
+
+				if((mZoneLeafs[leaf].mContents
+					& Contents.BSP_CONTENTS_SOLID2) != 0)
+				{
+					return	true;	//Ray collided with solid space
+				}
+				else 
+				{
+					return	false;	//Ray collided with empty space
+				}
+			}
+			ZoneNode	n	=mZoneNodes[node];
+			ZonePlane	p	=mZonePlanes[n.mPlaneNum];
+
+			float	frontDist	=p.DistanceFast(start);
+			float	backDist	=p.DistanceFast(end);
+
+			if(frontDist >= -(radius - 1) && backDist >= -(radius - 1))
+			{
+				return(CapsuleIntersect(start, end, radius, n.mChildren[0],
+					ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit));
+			}
+			if(frontDist < (radius + 1) && backDist < (radius + 1))
+			{
+				return(CapsuleIntersect(start, end, radius, n.mChildren[1],
+					ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit));
+			}
+
+			Int32	side	=(frontDist < 0)? 1 : 0;
+			float	dist	=frontDist / (frontDist - backDist);
+
+			Vector3	intersection	=start + dist * (end - start);
+
+			//Work our way to the front, from the back side.  As soon as there
+			//is no more collisions, we can assume that we have the front portion of the
+			//ray that is in empty space.  Once we find this, and see that the back half is in
+			//solid space, then we found the front intersection point...
+			if(CapsuleIntersect(start, intersection, radius, n.mChildren[side],
+				ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit))
+			{
+				return	true;
+			}
+			else if(CapsuleIntersect(intersection, end, radius, n.mChildren[(side == 0)? 1 : 0],
+				ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit))
+			{
+				if(!hitLeaf)
+				{
+					intersectionPoint	=intersection;
+					hitLeaf				=true;
+					nodeHit				=node;
+				}
+				return	true;
+			}
+			return	false;
+		}
+
+
 		bool SphereIntersect(Vector3 pnt, float radius, Int32 node,
 			ref bool hitLeaf, ref Int32 leafHit, ref Int32 nodeHit)
 		{

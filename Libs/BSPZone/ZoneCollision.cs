@@ -9,13 +9,14 @@ namespace BSPZone
 {
 	class RayTrace
 	{
-		internal Vector3	mOriginalStart, mOriginalEnd;
-		internal Vector3	mIntersection;
-		internal Int32		mLeaf;
-		internal float		mBestDist;
-		internal ZonePlane	mBestPlane;
-		internal float		mRatio;
-		internal bool		mbHitSet, mbLeafHit;
+		internal Vector3		mOriginalStart, mOriginalEnd;
+		internal Vector3		mIntersection;
+		internal Int32			mLeaf;
+		internal float			mBestDist;
+		internal ZonePlane		mBestPlane;
+		internal float			mRatio;
+		internal bool			mbHitSet, mbLeafHit;
+		internal BoundingBox	mRayBox, mMoveBox;
 
 		internal RayTrace()
 		{
@@ -32,17 +33,22 @@ namespace BSPZone
 		public bool Trace_WorldCollisionBBox(BoundingBox boxBounds,
 			Vector3 start, Vector3 end, ref Vector3 I, ref ZonePlane P)
 		{
-			BoundingBox	moveBox	=Trace_GetMoveBox(boxBounds, start, end);
+			RayTrace	trace		=new RayTrace();
+
+			//set boxes
+			trace.mRayBox	=boxBounds;
+			trace.mMoveBox	=Trace_GetMoveBox(boxBounds, start, end);
 
 			ZoneModel	worldModel	=mZoneModels[0];
 
-			if(!moveBox.Intersects(worldModel.mBounds))
+			if(!trace.mMoveBox.Intersects(worldModel.mBounds))
 			{
 				return	false;
 			}
 
-			RayTrace	trace	=new RayTrace();
-			FindClosestLeafIntersection_r(trace, worldModel.mRootNode[0], moveBox);
+			trace.mOriginalStart	=start;
+			trace.mOriginalEnd		=end;
+			FindClosestLeafIntersection_r(trace, worldModel.mRootNode[0]);
 
 			if(trace.mbLeafHit)
 			{
@@ -54,7 +60,7 @@ namespace BSPZone
 		}
 
 
-		void FindClosestLeafIntersection_r(RayTrace trace, Int32 node, BoundingBox box)
+		void FindClosestLeafIntersection_r(RayTrace trace, Int32 node)
 		{
 			if(node < 0)
 			{
@@ -73,21 +79,21 @@ namespace BSPZone
 					return;
 				}
 
-				IntersectLeafSides_r(trace, trace.mOriginalStart, trace.mOriginalEnd, box, leaf, 0, 1);
+				IntersectLeafSides_r(trace, trace.mOriginalStart, trace.mOriginalEnd, leaf, 0, 1);
 				return;
 			}
 
-			UInt32	side	=Trace_BoxOnPlaneSide(box, mZonePlanes[mZoneNodes[node].mPlaneNum]);
+			UInt32	side	=Trace_BoxOnPlaneSide(trace.mMoveBox, mZonePlanes[mZoneNodes[node].mPlaneNum]);
 
 			//Go down the sides that the box lands in
 			if((side & ZonePlane.PSIDE_FRONT) != 0)
 			{
-				FindClosestLeafIntersection_r(trace, mZoneNodes[node].mChildren[0], box);
+				FindClosestLeafIntersection_r(trace, mZoneNodes[node].mChildren[0]);
 			}
 
 			if((side & ZonePlane.PSIDE_BACK) != 0)
 			{
-				FindClosestLeafIntersection_r(trace, mZoneNodes[node].mChildren[1], box);
+				FindClosestLeafIntersection_r(trace, mZoneNodes[node].mChildren[1]);
 			}
 		}
 
@@ -126,7 +132,7 @@ namespace BSPZone
 
 
 		bool IntersectLeafSides_r(RayTrace trace, Vector3 start, Vector3 end,
-			BoundingBox	box, Int32 leaf, Int32 side, Int32 pSide)
+			Int32 leaf, Int32 side, Int32 pSide)
 		{
 			if(pSide == 0)
 			{
@@ -150,7 +156,7 @@ namespace BSPZone
 			}
 			
 			//Simulate the point having a box, by pushing the plane out by the box size
-			Trace_ExpandPlaneForBox(ref p, box);
+			Trace_ExpandPlaneForBox(ref p, trace.mRayBox);
 
 			float	frontDist	=p.DistanceFast(start);
 			float	backDist	=p.DistanceFast(end);
@@ -158,12 +164,12 @@ namespace BSPZone
 			if(frontDist >= 0 && backDist >= 0)
 			{
 				//Leaf sides are convex hulls, so front side is totally outside
-				return	IntersectLeafSides_r(trace, start, end, box, leaf, side + 1, 0);
+				return	IntersectLeafSides_r(trace, start, end, leaf, side + 1, 0);
 			}
 
 			if(frontDist < 0 && backDist < 0)
 			{
-				return	IntersectLeafSides_r(trace, start, end, box, leaf, side + 1, 1);
+				return	IntersectLeafSides_r(trace, start, end, leaf, side + 1, 1);
 			}
 
 			Int32	splitSide	=(frontDist < 0)? 1 : 0;
@@ -193,12 +199,12 @@ namespace BSPZone
 			Vector3	intersect	=start + splitDist * (end - start);
 
 			//Only go down the back side, since the front side is empty in a convex tree
-			if(IntersectLeafSides_r(trace, start, intersect, box, leaf, side + 1, splitSide))
+			if(IntersectLeafSides_r(trace, start, intersect, leaf, side + 1, splitSide))
 			{
 				trace.mbLeafHit	=true;
 				return	true;
 			}
-			else if(IntersectLeafSides_r(trace, intersect, end, box, leaf, side + 1, (splitSide == 0)? 1 : 0))
+			else if(IntersectLeafSides_r(trace, intersect, end, leaf, side + 1, (splitSide == 0)? 1 : 0))
 			{
 				splitDist	=(intersect - trace.mOriginalStart).Length();
 
