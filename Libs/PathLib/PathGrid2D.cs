@@ -85,49 +85,49 @@ namespace PathLib
 					//check connectivity to upper left
 					if(z > 0 && x > 0)
 					{
-						mNodes[z, x].ConnectIfLOS(mNodes[z - 1, x - 1], tree);
+						mNodes[z, x].ConnectIfPassable(mNodes[z - 1, x - 1], tree, nodeRadius);
 					}
 
 					//check straight up
 					if(z > 0)
 					{
-						mNodes[z, x].ConnectIfLOS(mNodes[z - 1, x], tree);
+						mNodes[z, x].ConnectIfPassable(mNodes[z - 1, x], tree, nodeRadius);
 					}
 
 					//check upper right
 					if(z > 0 && x < (numXNodes - 1))
 					{
-						mNodes[z, x].ConnectIfLOS(mNodes[z - 1, x + 1], tree);
+						mNodes[z, x].ConnectIfPassable(mNodes[z - 1, x + 1], tree, nodeRadius);
 					}
 
 					//check left
 					if(x > 0)
 					{
-						mNodes[z, x].ConnectIfLOS(mNodes[z, x - 1], tree);
+						mNodes[z, x].ConnectIfPassable(mNodes[z, x - 1], tree, nodeRadius);
 					}
 
 					//check right
 					if(x < (numXNodes - 1))
 					{
-						mNodes[z, x].ConnectIfLOS(mNodes[z, x + 1], tree);
+						mNodes[z, x].ConnectIfPassable(mNodes[z, x + 1], tree, nodeRadius);
 					}
 
 					//check lower left
 					if(z < (numZNodes - 1) && x > 0)
 					{
-						mNodes[z, x].ConnectIfLOS(mNodes[z + 1, x - 1], tree);
+						mNodes[z, x].ConnectIfPassable(mNodes[z + 1, x - 1], tree, nodeRadius);
 					}
 
 					//check straight down
 					if(z < (numZNodes - 1))
 					{
-						mNodes[z, x].ConnectIfLOS(mNodes[z + 1, x], tree);
+						mNodes[z, x].ConnectIfPassable(mNodes[z + 1, x], tree, nodeRadius);
 					}
 
 					//check lower right
 					if(z < (numZNodes - 1) && x < (numXNodes - 1))
 					{
-						mNodes[z, x].ConnectIfLOS(mNodes[z + 1, x + 1], tree);
+						mNodes[z, x].ConnectIfPassable(mNodes[z + 1, x + 1], tree, nodeRadius);
 					}
 				}
 			}

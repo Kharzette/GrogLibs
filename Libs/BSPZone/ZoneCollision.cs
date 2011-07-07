@@ -30,6 +30,225 @@ namespace BSPZone
 
 	public partial class Zone
 	{
+		bool CapsuleIntersect(RayTrace trace, Vector3 start, Vector3 end, float radius, Int32 node)
+		{
+			if(node < 0)
+			{
+				Int32	leaf	=-(node + 1);
+
+				trace.mLeaf	=leaf;
+
+				if((mZoneLeafs[leaf].mContents
+					& Contents.BSP_CONTENTS_SOLID2) != 0)
+				{
+					return	true;	//Ray collided with solid space
+				}
+				else 
+				{
+					return	false;	//Ray collided with empty space
+				}
+			}
+			ZoneNode	n	=mZoneNodes[node];
+			ZonePlane	p	=mZonePlanes[n.mPlaneNum];
+
+			float	frontDist	=p.DistanceFast(start);
+			float	backDist	=p.DistanceFast(end);
+
+			if(frontDist >= radius && backDist >= radius)
+			{
+				return	CapsuleIntersect(trace, start, end, radius, n.mChildren[0]);
+			}
+			if(frontDist < -radius && backDist < -radius)
+			{
+				return	CapsuleIntersect(trace, start, end, radius, n.mChildren[1]);
+			}
+
+			//bias the split towards the front
+			if(frontDist >= radius || backDist >= radius)
+			{
+				//split biased to the front
+				float	frontFront	=frontDist + radius;
+				float	frontBack	=backDist + radius;
+				Int32	sideFront	=(frontFront < 0)? 1 : 0;
+				float	distFront	=frontFront / (frontFront - frontBack);
+
+				Vector3	frontSplit	=start + distFront * (end - start);
+
+				return	CapsuleIntersect(trace, start, frontSplit, radius, n.mChildren[sideFront]);
+			}
+			else
+			{
+				//treat as if on the back side
+				return	CapsuleIntersect(trace, start, end, radius, n.mChildren[1]);
+			}
+
+			/*
+
+			//see if there's any piece going down the back side
+			if(frontDist < -radius || backDist < -radius)
+			{
+				//split biased to the back
+				float	backFront	=frontDist + radius;
+				float	backBack	=backDist + radius;
+				Int32	sideBack	=(backFront < 0)? 1 : 0;
+				float	distBack	=backFront / (backFront - backBack);
+
+				Vector3	backSplit	=start + distBack * (end - start);
+
+				if(CapsuleIntersect(trace, backSplit, end, radius, n.mChildren[sideBack]))
+				{
+				}
+			}
+
+
+			Int32	side	=(frontDist < 0)? 1 : 0;
+			float	dist	=frontDist / (frontDist - backDist);
+
+			Vector3	intersection	=start + dist * (end - start);
+
+			//Work our way to the front, from the back side.  As soon as there
+			//is no more collisions, we can assume that we have the front portion of the
+			//ray that is in empty space.  Once we find this, and see that the back half is in
+			//solid space, then we found the front intersection point...
+			if(CapsuleIntersect(start, intersection, radius, n.mChildren[side],
+				ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit))
+			{
+				return	true;
+			}
+			else if(CapsuleIntersect(intersection, end, radius, n.mChildren[(side == 0)? 1 : 0],
+				ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit))
+			{
+				if(!hitLeaf)
+				{
+					intersectionPoint	=intersection;
+					hitLeaf				=true;
+					nodeHit				=node;
+				}
+				return	true;
+			}
+			return	false;*/
+		}
+
+
+		bool SphereIntersect(Vector3 pnt, float radius, Int32 node,
+			ref bool hitLeaf, ref Int32 leafHit, ref Int32 nodeHit)
+		{
+			if(node < 0)
+			{
+				Int32	leaf	=-(node + 1);
+
+				leafHit	=leaf;
+
+				if((mZoneLeafs[leaf].mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+				{
+					return	true;	//Ray collided with solid space
+				}
+				else 
+				{
+					return	false;	//Ray collided with empty space
+				}
+			}
+			ZoneNode	n	=mZoneNodes[node];
+			ZonePlane	p	=mZonePlanes[n.mPlaneNum];
+
+			float	dist	=p.DistanceFast(pnt);
+
+			if(dist >= -radius && dist < radius)
+			{
+				//sphere overlaps plane
+				bool	ret	=SphereIntersect(pnt, radius, n.mChildren[0],
+								ref hitLeaf, ref leafHit, ref nodeHit);
+				if(ret)
+				{
+					return	true;
+				}
+				return	SphereIntersect(pnt, radius, n.mChildren[1],
+							ref hitLeaf, ref leafHit, ref nodeHit);
+			}
+			else if(dist >= -radius)
+			{
+				return(SphereIntersect(pnt, radius, n.mChildren[0],
+					ref hitLeaf, ref leafHit, ref nodeHit));
+			}
+			else if(dist < radius)
+			{
+				return(SphereIntersect(pnt, radius, n.mChildren[1],
+					ref hitLeaf, ref leafHit, ref nodeHit));
+			}
+			return	false;
+		}
+
+
+		bool RayIntersect(Vector3 start, Vector3 end, Int32 node,
+			ref Vector3 intersectionPoint, ref bool hitLeaf,
+			ref Int32 leafHit, ref Int32 nodeHit)
+		{
+			float	Fd, Bd, dist;
+			Int32	side;
+			Vector3	I;
+
+			if(node < 0)						
+			{
+				Int32	leaf	=-(node+1);
+
+				leafHit	=leaf;
+
+				if((mZoneLeafs[leaf].mContents
+					& Contents.BSP_CONTENTS_SOLID2) != 0)
+				{
+					return	true;	//Ray collided with solid space
+				}
+				else 
+				{
+					return	false;	//Ray collided with empty space
+				}
+			}
+			ZoneNode	n	=mZoneNodes[node];
+			ZonePlane	p	=mZonePlanes[n.mPlaneNum];
+
+			Fd	=p.DistanceFast(start);
+			Bd	=p.DistanceFast(end);
+
+			if(Fd >= -1 && Bd >= -1)
+			{
+				return(RayIntersect(start, end, n.mChildren[0],
+					ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit));
+			}
+			if(Fd < 1 && Bd < 1)
+			{
+				return(RayIntersect(start, end, n.mChildren[1],
+					ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit));
+			}
+
+			side	=(Fd < 0)? 1 : 0;
+			dist	=Fd / (Fd - Bd);
+
+			I	=start + dist * (end - start);
+
+			//Work our way to the front, from the back side.  As soon as there
+			//is no more collisions, we can assume that we have the front portion of the
+			//ray that is in empty space.  Once we find this, and see that the back half is in
+			//solid space, then we found the front intersection point...
+			if(RayIntersect(start, I, n.mChildren[side],
+				ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit))
+			{
+				return	true;
+			}
+			else if(RayIntersect(I, end, n.mChildren[(side == 0)? 1 : 0],
+				ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit))
+			{
+				if(!hitLeaf)
+				{
+					intersectionPoint	=I;
+					hitLeaf				=true;
+					nodeHit				=node;
+				}
+				return	true;
+			}
+			return	false;
+		}
+
+
 		public bool Trace_WorldCollisionBBox(BoundingBox boxBounds,
 			Vector3 start, Vector3 end, ref Vector3 I, ref ZonePlane P)
 		{
@@ -54,6 +273,42 @@ namespace BSPZone
 			{
 				I	=trace.mIntersection;
 				P	=trace.mBestPlane;
+				return	true;
+			}
+			return	false;
+		}
+
+
+		public bool Trace_WorldCollisionCapsule(Vector3 start, Vector3 end,
+			float radius, ref Vector3 impacto, ref ZonePlane hitPlane)
+		{
+			RayTrace	trace	=new RayTrace();
+
+			//set boxes
+			trace.mRayBox	=new BoundingBox();
+
+			trace.mRayBox.Min	=-Vector3.One * radius;
+			trace.mRayBox.Max	=Vector3.One * radius;
+			trace.mRayBox.Min.Y	=0.0f;
+			trace.mRayBox.Max.Y	*=2.0f;
+
+			trace.mMoveBox	=Trace_GetMoveBox(trace.mRayBox, start, end);
+
+			ZoneModel	worldModel	=mZoneModels[0];
+
+			if(!trace.mMoveBox.Intersects(worldModel.mBounds))
+			{
+				return	false;
+			}
+
+			trace.mOriginalStart	=start;
+			trace.mOriginalEnd		=end;
+			FindClosestLeafIntersection_r(trace, worldModel.mRootNode[0]);
+
+			if(trace.mbLeafHit)
+			{
+				impacto		=trace.mIntersection;
+				hitPlane	=trace.mBestPlane;
 				return	true;
 			}
 			return	false;

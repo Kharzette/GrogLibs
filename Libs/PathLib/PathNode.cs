@@ -14,17 +14,16 @@ namespace PathLib
 		public List<PathConnection>	mConnections	=new List<PathConnection>();
 
 
-		public void ConnectIfLOS(PathNode pn, BSPZone.Zone tree)
+		public void ConnectIfPassable(PathNode pn, BSPZone.Zone tree, float radius)
 		{
 			if(pn == null || tree == null)
 			{
 				return;
 			}
 
-			Vector3	impacto	=Vector3.Zero;
-			int		leafHit	=0;
-			int		nodeHit	=0;
-			if(!tree.RayCollide(mPosition, pn.mPosition, ref impacto, ref leafHit, ref nodeHit))
+			Vector3				impacto		=Vector3.Zero;
+			BSPZone.ZonePlane	hitPlane	=new BSPZone.ZonePlane();
+			if(!tree.CapsuleCollide(mPosition, pn.mPosition, radius, ref impacto, ref hitPlane))
 			{
 				PathConnection	pc	=new PathConnection();
 				pc.mConnectedTo	=pn;
