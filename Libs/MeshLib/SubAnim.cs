@@ -24,7 +24,7 @@ namespace MeshLib
 			Debug.Assert(times.Count == keys.Count);
 
 			mBone		=null;
-			mBoneName	=boneName;
+			mBoneName	=UtilityLib.Misc.AssignValue(boneName);
 			mTimes		=new float[times.Count];
 			mKeys		=new KeyFrame[times.Count];
 

@@ -31,7 +31,7 @@ namespace MeshLib
 
 		public void SetName(string name)
 		{
-			mName	=name;
+			mName	=UtilityLib.Misc.AssignValue(name);
 		}
 
 

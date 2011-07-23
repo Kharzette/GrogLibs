@@ -81,52 +81,6 @@ namespace BSPZone
 				//treat as if on the back side
 				return	CapsuleIntersect(trace, start, end, radius, n.mChildren[1]);
 			}
-
-			/*
-
-			//see if there's any piece going down the back side
-			if(frontDist < -radius || backDist < -radius)
-			{
-				//split biased to the back
-				float	backFront	=frontDist + radius;
-				float	backBack	=backDist + radius;
-				Int32	sideBack	=(backFront < 0)? 1 : 0;
-				float	distBack	=backFront / (backFront - backBack);
-
-				Vector3	backSplit	=start + distBack * (end - start);
-
-				if(CapsuleIntersect(trace, backSplit, end, radius, n.mChildren[sideBack]))
-				{
-				}
-			}
-
-
-			Int32	side	=(frontDist < 0)? 1 : 0;
-			float	dist	=frontDist / (frontDist - backDist);
-
-			Vector3	intersection	=start + dist * (end - start);
-
-			//Work our way to the front, from the back side.  As soon as there
-			//is no more collisions, we can assume that we have the front portion of the
-			//ray that is in empty space.  Once we find this, and see that the back half is in
-			//solid space, then we found the front intersection point...
-			if(CapsuleIntersect(start, intersection, radius, n.mChildren[side],
-				ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit))
-			{
-				return	true;
-			}
-			else if(CapsuleIntersect(intersection, end, radius, n.mChildren[(side == 0)? 1 : 0],
-				ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit))
-			{
-				if(!hitLeaf)
-				{
-					intersectionPoint	=intersection;
-					hitLeaf				=true;
-					nodeHit				=node;
-				}
-				return	true;
-			}
-			return	false;*/
 		}
 
 

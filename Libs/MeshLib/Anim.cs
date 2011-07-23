@@ -19,8 +19,9 @@ namespace MeshLib
 		public string Name
 		{
 			get { return mName; }
-			set { mName = value; }
+			set { mName = UtilityLib.Misc.AssignValue(value); }
 		}
+
 		public float TotalTime
 		{
 			get {
@@ -35,16 +36,19 @@ namespace MeshLib
 				return	totTime;
 			}
 		}
+
 		public bool Looping
 		{
 			get { return mbLooping; }
 			set { mbLooping = value; }
 		}
+
 		public bool PingPong
 		{
 			get { return mbPingPong; }
 			set { mbPingPong = value; }
 		}
+
 		public int NumKeyFrames
 		{
 			get {

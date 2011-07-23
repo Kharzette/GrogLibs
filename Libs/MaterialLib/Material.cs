@@ -47,17 +47,17 @@ namespace MaterialLib
 		public string Name
 		{
 			get { return mName; }
-			set { mName = value; }
+			set { mName = UtilityLib.Misc.AssignValue(value); }
 		}
 		public string ShaderName
 		{
 			get { return mShaderName; }
-			set { mShaderName = value; }
+			set { mShaderName = UtilityLib.Misc.AssignValue(value); }
 		}
 		public string Technique
 		{
 			get { return mTechnique; }
-			set { mTechnique = value; }
+			set { mTechnique = UtilityLib.Misc.AssignValue(value); }
 		}
 #if !XBOX
 		public BindingList<ShaderParameters> Parameters

@@ -30,7 +30,7 @@ namespace MaterialLib
 		public string Name
 		{
 			get { return mName; }
-			set { mName = value; }
+			set { mName = UtilityLib.Misc.AssignValue(value); }
 		}
 		public EffectParameterClass Class
 		{
@@ -45,7 +45,7 @@ namespace MaterialLib
 		public string Value
 		{
 			get { return mValue; }
-			set { mValue = value; }
+			set { mValue = UtilityLib.Misc.AssignValue(value); }
 		}
 
 

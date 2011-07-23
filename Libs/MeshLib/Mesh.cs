@@ -52,12 +52,12 @@ namespace MeshLib
 		public string Name
 		{
 			get { return mName; }
-			set { mName = value; }
+			set { mName = UtilityLib.Misc.AssignValue(value); }
 		}
 		public string MaterialName
 		{
 			get { return mMaterialName; }
-			set { mMaterialName = value; }
+			set { mMaterialName = UtilityLib.Misc.AssignValue(value); }
 		}
 		public Type VertexType
 		{
@@ -74,7 +74,7 @@ namespace MeshLib
 		public Mesh() { }
 		public Mesh(string name)
 		{
-			mName			=name;
+			Name			=name;
 			mMaterialName	="";
 		}
 
