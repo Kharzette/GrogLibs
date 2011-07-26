@@ -38,7 +38,7 @@ namespace BSPLib
 		List<GFXAreaPortal>	mAreaPorts	=new List<GFXAreaPortal>();
 
 		//threading
-		TaskScheduler	mTaskSched	=TaskScheduler.FromCurrentSynchronizationContext();
+		TaskScheduler	mTaskSched	=TaskScheduler.Default;
 
 
 		void ThreadVisCB(object threadContext)

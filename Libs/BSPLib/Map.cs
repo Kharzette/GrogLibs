@@ -823,6 +823,47 @@ namespace BSPLib
 		}
 
 
+		public void LoadEditorBrushFile(BinaryReader br)
+		{
+			//load planepool
+			mPlanePool.Read(br);
+
+			//load brushes
+			int	cnt	=br.ReadInt32();
+			for(int i=0;i < cnt;i++)
+			{
+				MapBrush	mb	=new MapBrush();
+				mb.Read(br);
+
+				AddSingleBrush(mb);
+			}
+		}
+
+
+		public void SaveEditorBrushFile(BinaryWriter bw)
+		{
+			MapEntity	me	=GetWorldSpawnEntity();
+			if(me == null)
+			{
+				Print("No worldspawn entity!\n");
+				return;
+			}
+			List<MapBrush>	brushes	=new List<MapBrush>(me.GetBrushes());
+			if(brushes == null || brushes.Count == 0)
+			{
+				Print("Worldspawn entity contains no brushes!\n");
+				return;
+			}
+			mPlanePool.Write(bw);
+
+			bw.Write(brushes.Count);
+			foreach(MapBrush mb in brushes)
+			{
+				mb.Write(bw);
+			}
+		}
+
+
 		public void LoadBuggeryBrushes(string path)
 		{
 			FileStream		fs	=new FileStream(path, FileMode.Open, FileAccess.Read);
