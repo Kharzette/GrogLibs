@@ -1,472 +1,451 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.IO;
 using System.Diagnostics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Net;
-using Microsoft.Xna.Framework.Storage;
-using Microsoft.Surface;
-using Microsoft.Surface.Core;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 
-namespace Terrain
+namespace TerrainLib
 {
-	public class Terrain : Microsoft.Xna.Framework.Game
+	//constructs and stores multiple heightmaps
+	//handles the tiling and other such
+	public class Terrain
 	{
-		//drawing
-		private	GraphicsDeviceManager	mGDM;
-		private	SpriteBatch				mSpriteBatch;
-		private	Effect					mFXFlyer;
-
-		//surface
-		private ContactTarget	mContactTarget;
-		private UserOrientation	mOrientation;
-		private bool			mbAppActive	=true;
-		private bool			mbAppPreview;
-		private bool			mbLoadComplete;
-
-		//mats
-		private	Matrix	mMATWorld;
-		private	Matrix	mMATView;
-		private	Matrix	mMATViewTranspose;
-		private	Matrix	mMATProjection;
-
-		//control
-		private	GamePadState	mGPStateCurrent;
-		private	GamePadState	mGPStateLast;
-		private	KeyboardState	mKBStateCurrent;
-		private	MouseState		mMStateCurrent;
-		private	MouseState		mMStateLast;
-
-		//cam / player stuff will move later
-		private Vector3	mCamPos;
-		private float	mPitch, mYaw, mRoll;
+		const int	CHUNKDIM			=64;		//modify this to affect heightmap data size
 
 		//height maps
-		private	HeightMap	mMap0, mMap1;
-		private	Vector3		mMap0Position, mMap1Position;
-		private	Vector3		mMap0Direction, mMap1Direction;
+		List<HeightMap>	mMaps;
 
-		//player ship
-		private	Flyer	mPlayerShip;
-		private	Vector3	mPlayerPos;
-		private	float	mPlayerSpeed;	//expressed mainly in terrain movement
+		//tex & shading
+		Texture2D			mTEXTerrain0;
+		Texture2D			mTEXTerrain1;
+		Texture2D			mTEXTerrain2;
+		Texture2D			mTEXTerrain3;
+		Texture2D			mTEXTerrain4;
+		Texture2D			mTEXTerrain5;
+		Texture2D			mTEXTerrain6;
+		Texture2D			mTEXTerrain7;
+		Effect				mFXTerrain;
+		VertexDeclaration	mVDTerrain;
+
+		//locations
+		Vector3	mLevelPos;
+		Vector3	mEyePos;
 
 
-		public Terrain(string[] args)
+		//set up textures and such
+		public Terrain(string			tex0FileName,
+					   string			tex1FileName,
+					   string			tex2FileName,
+					   string			tex3FileName,
+					   string			tex4FileName,
+					   string			tex5FileName,
+					   string			tex6FileName,
+					   string			tex7FileName,
+					   GraphicsDevice	gd,
+					   ContentManager	cm)
 		{
-			mGDM	=new GraphicsDeviceManager(this);
-			Content.RootDirectory	="Content";
+			mTEXTerrain0	=cm.Load<Texture2D>(tex0FileName);
+			mTEXTerrain1	=cm.Load<Texture2D>(tex1FileName);
+			mTEXTerrain2	=cm.Load<Texture2D>(tex2FileName);
+			mTEXTerrain3	=cm.Load<Texture2D>(tex3FileName);
+			mTEXTerrain4	=cm.Load<Texture2D>(tex4FileName);
+			mTEXTerrain5	=cm.Load<Texture2D>(tex5FileName);
+			mTEXTerrain6	=cm.Load<Texture2D>(tex6FileName);
+			mTEXTerrain7	=cm.Load<Texture2D>(tex7FileName);
 
-			mbLoadComplete	=false;
-
-			InteractiveSurface	IASurf	=InteractiveSurface.DefaultInteractiveSurface;
-
-			int	maxHeight	=mGDM.PreferredBackBufferHeight;
-			int	maxWidth	=mGDM.PreferredBackBufferWidth;
-			if(IASurf != null)
-			{
-				maxHeight	=IASurf.Height;
-				maxWidth	=IASurf.Width;
-			}
-
-			if(args.Length <= 0)
-			{
-				this.Exit();
-				return;
-			}
-
-			//check the command line args
-			if(args.GetLength(0) < 1)
-			{
-				this.Exit();
-				return;
-			}
-
-			//not using arguments yet
-			/*blah   =args[0];
-			for(int i = 0;i < args.GetLength(0);i++)
-			{
-				Debug.WriteLine(args[i]);
-			}*/
+			InitVertexDeclaration();
+			InitEffect(cm);
 		}
 
 
-		protected override void Initialize()
+		//load from a 2D float array
+		public void Build(float				[,]data,
+						  GraphicsDevice	gd,
+						  bool				bSmooth)
 		{
-			SetWindowOnSurface();
-			InitializeSurfaceInput();
+			//alloc/clear map list
+			mMaps	=new List<HeightMap>();
 
-			mOrientation	=ApplicationLauncher.Orientation;
-
-			//Subscribe to surface application activation events
-			ApplicationLauncher.ApplicationActivated	+=OnApplicationActivated;
-			ApplicationLauncher.ApplicationPreviewed	+=OnApplicationPreviewed;
-			ApplicationLauncher.ApplicationDeactivated	+=OnApplicationDeactivated;
-
-			mYaw	=mRoll	=0.0f;
-			mPitch	=90.0f;
-
-			//initial camera position
-			mCamPos	=Vector3.UnitY * -450.0f;
-
-			//center the maps
-			mMap0Position	=-Vector3.UnitX * (64 / 2) * 10.0f;
-			mMap0Position	+=Vector3.UnitY * (64 / 2) * 10.0f;
-
-			mMap1Position	=mMap0Position + (Vector3.UnitY * 630.0f);
-
-			mMap0Direction	=-Vector3.UnitY;
-			mMap1Direction	=-Vector3.UnitY;
-
-			mPlayerPos	=Vector3.UnitY * 30000.0f;
-			mPlayerPos	+=Vector3.UnitZ * 3000.0f;
-
-			InitializeEffect();
-			InitializeTransform();
-
-			base.Initialize();
-		}
-
-
-		protected override void LoadContent()
-		{
-			mSpriteBatch	=new SpriteBatch(GraphicsDevice);
-			mFXFlyer		=Content.Load<Effect>("Shaders/Flyer");
-
-			mMap0	=new HeightMap("../../../content/height.jpg",
-				"../../../content/dirt_simple_df_.dds",
-				"../../../content/dirt_mottledsand_df_.dds",
-				3.0f, 7.0f,
-				mGDM.GraphicsDevice, Content);
-
-			mMap1	=new HeightMap("../../../content/height.jpg",
-				"../../../content/dirt_simple_df_.dds",
-				"../../../content/dirt_mottledsand_df_.dds",
-				3.0f, 7.0f,
-				mGDM.GraphicsDevice, Content);
-
-			mPlayerShip	=new Flyer("Models/p1_saucer", Content, mFXFlyer);
-		}
-
-
-		protected override void UnloadContent()
-		{
-			// TODO: Unload any non ContentManager content here
-		}
-
-
-		protected override void Update(GameTime gameTime)
-		{
-			//Allows the game to exit
-			if(GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
+			if(bSmooth)
 			{
-				this.Exit();
+				SmoothPass(data);
 			}
 
-			if(mbAppActive || mbAppPreview)
+			int	w	=data.GetLength(1);
+			int	h	=data.GetLength(0);
+
+			//set to nearest power of two
+			int	pow	=0;
+			while(w > 0)
 			{
-				CheckGamePadInput();
+				w	>>=1;
+				pow++;
+			}
+			w	=1 << (pow - 1);
 
-				UpdateCamera(gameTime);
+			pow	=0;
+			while(h > 0)
+			{
+				h	>>=1;
+				pow++;
+			}
+			h	=1 << (pow - 1);
 
-				UpdateMatrices();
+			//chunk o ram for the chunk o rama
+			//allocate enough extra to have an extra
+			//height on each side of the chunk
+			float	[,]chunk	=new float[CHUNKDIM + 3, CHUNKDIM + 3];
 
-				mPlayerShip.Update(gameTime, mKBStateCurrent);
-
-				//update the height map positions
-				float	time	=(float)gameTime.ElapsedGameTime.TotalMilliseconds;
-				mMap0Position	+=mMap0Direction * mPlayerSpeed * (time * 0.1f);
-				mMap1Position	+=mMap1Direction * mPlayerSpeed * (time * 0.1f);
-
-				//wrap
-				if(mMap0Position.Y < -(64 * 3))
+			for(int chunkY=0;chunkY < (h / CHUNKDIM);chunkY++)
+			{
+				for(int chunkX=0;chunkX < (w / CHUNKDIM);chunkX++)
 				{
-					mMap0Position	=mMap1Position + (Vector3.UnitY * 630.0f);
+					int	startY	=(CHUNKDIM * chunkY);
+					int	startX	=(CHUNKDIM * chunkX);
+					if(startY > 0)
+					{
+						startY--;	//back up one if possible
+					}
+					if(startX > 0)
+					{
+						startX--;
+					}
+
+					int	endY	=(CHUNKDIM * (chunkY + 1)) + 1;
+					int	endX	=(CHUNKDIM * (chunkX + 1)) + 1;
+					if(endY < h)
+					{
+						endY++;	//increase by one if possible
+					}
+					if(endX < w)
+					{
+						endX++;
+					}
+
+					for(int y=startY, t=0;y < endY;y++,t++)
+					{
+						for(int x=startX, s=0;x < endX;x++,s++)
+						{
+							chunk[t, s]	=data[y, x];
+						}
+					}
+
+					HeightMap	map	=new HeightMap(chunk,
+						endX - startX, endY - startY,
+						CHUNKDIM + 1, CHUNKDIM + 1,
+						(CHUNKDIM * chunkX) - startX,
+						(CHUNKDIM * chunkY) - startY, gd, mVDTerrain);
+
+					Vector3	pos	=Vector3.Zero;
+					pos.X	=chunkX * (CHUNKDIM) * 10.0f;
+					pos.Z	=chunkY * (CHUNKDIM) * 10.0f;
+					pos.Y	=0.0f;
+
+					map.SetPos(pos);
+
+					mMaps.Add(map);
 				}
-				if(mMap1Position.Y < -(64 * 3))
+			}
+		}
+
+
+		void SmoothPass(float [,]data)
+		{
+			int	w	=data.GetLength(1);
+			int	h	=data.GetLength(0);
+			for(int y=0;y < h;y++)
+			{
+				for(int x=0;x < w;x++)
 				{
-					mMap1Position	=mMap0Position + (Vector3.UnitY * 630.0f);
+					float	upLeft, up, upRight;
+					float	left, right;
+					float	downLeft, down, downRight;
+
+					if(y > 0)
+					{
+						if(x > 0)
+						{
+							upLeft	=data[y - 1, x - 1];
+						}
+						else
+						{
+							upLeft	=data[y - 1, x];
+						}
+						if(x < (w - 1))
+						{
+							upRight	=data[y - 1, x + 1];
+						}
+						else
+						{
+							upRight	=data[y - 1, x];
+						}
+						up	=data[y - 1, x];
+					}
+					else
+					{
+						if(x > 0)
+						{
+							upLeft	=data[y, x - 1];
+						}
+						else
+						{
+							upLeft	=data[y, x];
+						}
+						if(x < (w - 1))
+						{
+							upRight	=data[y, x + 1];
+						}
+						else
+						{
+							upRight	=data[y, x];
+						}
+						up	=data[y, x];
+					}
+
+					if(x > 0)
+					{
+						left	=data[y, x - 1];
+					}
+					else
+					{
+						left	=data[y, x];
+					}
+
+					if(x < (w - 1))
+					{
+						right	=data[y, x + 1];
+					}
+					else
+					{
+						right	=data[y, x];
+					}
+
+					if(y < (h - 1))
+					{
+						if(x > 0)
+						{
+							downLeft	=data[y + 1, x - 1];
+						}
+						else
+						{
+							downLeft	=data[y + 1, x];
+						}
+
+						if(x < (w - 1))
+						{
+							downRight	=data[y + 1, x + 1];
+						}
+						else
+						{
+							downRight	=data[y + 1, x];
+						}
+
+						down	=data[y + 1, x];
+					}
+					else
+					{
+						if(x > 0)
+						{
+							downLeft	=data[y, x - 1];
+						}
+						else
+						{
+							downLeft	=data[y, x];
+						}
+
+						if(x < (w - 1))
+						{
+							downRight	=data[y, x + 1];
+						}
+						else
+						{
+							downRight	=data[y, x];
+						}
+
+						down	=data[y, x];
+					}
+
+					float	sum	=upLeft + up + upRight + left
+						+ right + downLeft + down + downRight;
+
+					sum	/=8.0f;
+
+//					data[y, x]	=(sum + data[y, x]) / 2.0f;
+					data[y, x]	=sum;
 				}
-
-				mMap0.SetPos(mMap0Position);
-				mMap1.SetPos(mMap1Position);
-
-				UpdatePlayer(gameTime);
 			}
-
-			base.Update(gameTime);
 		}
 
 
-		protected override void Draw(GameTime gameTime)
+		void InitEffect(ContentManager cm)
 		{
-			if(!mbLoadComplete)
-			{
-				//Dismiss the loading screen now that we are starting to draw
-				mbLoadComplete = true;
-				ApplicationLauncher.SignalApplicationLoadComplete();
-			}
-			mGDM.GraphicsDevice.Clear(Color.CornflowerBlue);
+			mFXTerrain	=cm.Load<Effect>("Shaders/Terrain");
 
-			mMap0.Draw(mGDM.GraphicsDevice);
-			mMap1.Draw(mGDM.GraphicsDevice);
-			mPlayerShip.Draw(mGDM.GraphicsDevice);
+			//set up shader stuff that won't change for now
+			Vector4	colr	=Vector4.Zero;
+			colr.X	=1.0f;
+			colr.Y	=1.0f;
+			colr.Z	=1.0f;
+			colr.W	=1.0f;
+			mFXTerrain.Parameters["mLightColor"].SetValue(colr);
 
-			base.Draw(gameTime);
+			colr.X	=0.2f;
+			colr.Y	=0.2f;
+			colr.Z	=0.2f;
+			colr.W	=1.0f;
+			mFXTerrain.Parameters["mAmbientColor"].SetValue(colr);
+
+			Vector3	dir	=Vector3.Zero;
+			dir.X	=0.4f;
+			dir.Z	=-0.2f;
+			dir.Y	=-0.4f;
+			dir.Normalize();
+
+			mFXTerrain.Parameters["mLightDirection"].SetValue(dir);
+
+			mFXTerrain.Parameters["mTerTexture0"].SetValue(mTEXTerrain0);
+			mFXTerrain.Parameters["mTerTexture1"].SetValue(mTEXTerrain1);
+			mFXTerrain.Parameters["mTerTexture2"].SetValue(mTEXTerrain2);
+			mFXTerrain.Parameters["mTerTexture3"].SetValue(mTEXTerrain3);
+			mFXTerrain.Parameters["mTerTexture4"].SetValue(mTEXTerrain4);
+			mFXTerrain.Parameters["mTerTexture5"].SetValue(mTEXTerrain5);
+			mFXTerrain.Parameters["mTerTexture6"].SetValue(mTEXTerrain6);
+			mFXTerrain.Parameters["mTerTexture7"].SetValue(mTEXTerrain7);
+
+			//fog stuff
+			Vector3	fogColor	=Vector3.Zero;
+			fogColor.X	=0.8f;
+			fogColor.Y	=0.9f;
+			fogColor.Z	=1.0f;
+			mFXTerrain.Parameters["mFogEnabled"].SetValue(1.0f);
+			mFXTerrain.Parameters["mFogStart"].SetValue(3300.0f);
+			mFXTerrain.Parameters["mFogEnd"].SetValue(6500.0f);
+			mFXTerrain.Parameters["mFogColor"].SetValue(fogColor);
+			mFXTerrain.Parameters["mEyePosition"].SetValue(Vector3.Zero);
+			mFXTerrain.Parameters["mCamRange"].SetValue(8000.0f);
 		}
 
 
-		private void UpdateMatrices()
+		void InitVertexDeclaration()
 		{
-			mMATView	=Matrix.CreateTranslation(mCamPos) *
-				Matrix.CreateRotationY(MathHelper.ToRadians(mYaw)) *
-				Matrix.CreateRotationX(MathHelper.ToRadians(mPitch)) *
-				Matrix.CreateRotationZ(MathHelper.ToRadians(mRoll));
-			
-			mMATProjection	=Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
-				GraphicsDevice.DisplayMode.AspectRatio, 1, 10000);
-			
-			Matrix.Transpose(ref mMATView, out mMATViewTranspose);
-			//Vector3	shipPos	=-mCamPos + mMATViewTranspose.Forward * 10.0f;
+			//set up a 2 texcoord vert element
+			VertexElement	[]ve	=new VertexElement[4];
 
-			//mPlayerShip.UpdatePosition(shipPos);
+			ve[0]	=new VertexElement(0, VertexElementFormat.Vector3,
+						VertexElementUsage.Position, 0);
+			ve[1]	=new VertexElement(12, VertexElementFormat.Vector3,
+						VertexElementUsage.Normal, 0);
+			ve[2]	=new VertexElement(24, VertexElementFormat.Vector4,
+						VertexElementUsage.Color, 0);
+			ve[3]	=new VertexElement(40, VertexElementFormat.Vector4,
+						VertexElementUsage.Color, 1);
 
-			//update height map
-			mMap0.UpdateMatrices(mMATWorld, mMATView, mMATProjection);
-			mPlayerShip.UpdateMatrices(mMATWorld, mMATView, mMATProjection);
+			mVDTerrain	=new VertexDeclaration(ve);
 		}
 
 
-		private void InitializeEffect()
+		public void Draw(GraphicsDevice gd, bool bDepthPass)
 		{
+			foreach(HeightMap m in mMaps)
+			{
+				Vector3	dist	=m.GetPos();
+				dist	+=mLevelPos;
+				dist	+=mEyePos;
+//				if(dist.Length() < 6000.0f)
+				{
+					m.Draw(gd, mFXTerrain, bDepthPass);
+				}
+			}			
 		}
 
 
-		private void InitializeTransform()
+		//get the peak of the heightmap closest to pos
+		public float GetLocalHeight(Vector3 pos)
 		{
-			mMATWorld	=Matrix.CreateTranslation(new Vector3(0.0f, 0.0f, 0.0f));
-			mMATView	=Matrix.CreateTranslation(new Vector3(0.0f, 0.0f, 0.0f));
-
-			mMATProjection	=Matrix.CreatePerspectiveFieldOfView(
-				MathHelper.ToRadians(45),
-				(float)mGDM.GraphicsDevice.Viewport.Width /
-				(float)mGDM.GraphicsDevice.Viewport.Height,
-				1.0f, 100.0f);
-		}
-		
-		
-		private void CheckGamePadInput()
-		{
-			mMStateLast		=mMStateCurrent;
-			mGPStateLast	=mGPStateCurrent;
-			mGPStateCurrent	=GamePad.GetState(PlayerIndex.One);
-			mKBStateCurrent	=Keyboard.GetState();
-			mMStateCurrent	=Mouse.GetState();
-		}
-
-
-		private void UpdateCamera(GameTime gameTime)
-		{
-			float	time	=(float)gameTime.ElapsedGameTime.TotalMilliseconds;
-
-			Vector3	vup;
-			Vector3	vleft;
-			Vector3	vin;
-
-			//grab view matrix in vector transpose
-			vup.X	=mMATView.M12;
-			vup.Y	=mMATView.M22;
-			vup.Z	=mMATView.M32;
-			vleft.X	=mMATView.M11;
-			vleft.Y	=mMATView.M21;
-			vleft.Z	=mMATView.M31;
-			vin.X	=mMATView.M13;
-			vin.Y	=mMATView.M23;
-			vin.Z	=mMATView.M33;
-
-			Matrix.Transpose(ref mMATView, out mMATViewTranspose);
-
-			/*
-			if(mKBStateCurrent.IsKeyDown(Keys.Left) ||
-				mKBStateCurrent.IsKeyDown(Keys.A))
+			HeightMap	closeMap	=null;
+			float		closest		=696969.0f;
+			foreach(HeightMap m in mMaps)
 			{
-				mCamPos	+=vleft * (time * 0.1f);
+				Vector3	dist	=m.GetPos();
+				dist	+=mLevelPos;
+				dist	+=mEyePos;
+
+				float	len	=dist.Length();
+
+				if(len < closest)
+				{
+					closest		=len;
+					closeMap	=m;
+				}
 			}
-
-			if(mKBStateCurrent.IsKeyDown(Keys.Right) ||
-				mKBStateCurrent.IsKeyDown(Keys.D))
+			if(closeMap != null)
 			{
-				mCamPos	-=vleft * (time * 0.1f);
-			}
-
-			//Note: apologies for hacking this shit in, I wanted the ability to turn to be able to see the map better -- Kyth
-			if(mKBStateCurrent.IsKeyDown(Keys.Q))
-			{
-				mYaw	-=time*0.1f;
-			}
-
-			if(mKBStateCurrent.IsKeyDown(Keys.E))
-			{
-				mYaw	+=time*0.1f;
-			}
-
-			if(mKBStateCurrent.IsKeyDown(Keys.Z))
-			{
-				mPitch	-=time*0.1f;
-			}
-
-			if(mKBStateCurrent.IsKeyDown(Keys.C))
-			{
-				mPitch	+=time*0.1f;
-			}
-			*/
-			//Horrible mouselook hack so I can see where I'm going. Won't let me spin in circles, some kind of overflow issue?
-			if(mMStateCurrent.RightButton == ButtonState.Pressed)
-			{
-				mPitch	+=(mMStateCurrent.Y - mMStateLast.Y) * time * 0.03f;
-				mYaw	+=(mMStateCurrent.X - mMStateLast.X) * time * 0.03f;
-			}
-
-			mPitch	+=mGPStateCurrent.ThumbSticks.Right.Y * time * 0.25f;
-			mYaw	+=mGPStateCurrent.ThumbSticks.Right.X * time * 0.25f;
-
-			mCamPos	-=vleft * (mGPStateCurrent.ThumbSticks.Left.X * time * 0.25f);
-			mCamPos	+=vin * (mGPStateCurrent.ThumbSticks.Left.Y * time * 0.25f);
-		}
-
-
-		private void UpdatePlayer(GameTime gameTime)
-		{
-			float	time	=(float)gameTime.ElapsedGameTime.TotalMilliseconds;
-
-			if(mKBStateCurrent.IsKeyDown(Keys.Left) ||
-				mKBStateCurrent.IsKeyDown(Keys.A))
-			{
-				mPlayerPos	-=Vector3.UnitX * mPlayerSpeed * time;
-			}
-
-			if(mKBStateCurrent.IsKeyDown(Keys.Right) ||
-				mKBStateCurrent.IsKeyDown(Keys.D))
-			{
-				mPlayerPos	+=Vector3.UnitX * mPlayerSpeed * time;
-			}
-
-			//keep player confined
-			//his power level must not go over 9000!
-			if(mPlayerPos.X > 8000.0f)
-			{
-				mPlayerPos.X	=8000.0f;
-			}
-			else if(mPlayerPos.X < -8000.0f)
-			{
-				mPlayerPos.X	=-8000.0f;
-			}
-
-			if(mKBStateCurrent.IsKeyDown(Keys.Up) ||
-				mKBStateCurrent.IsKeyDown(Keys.W))
-			{
-				mPlayerSpeed	=10.0f;
-			}
-			else if(mKBStateCurrent.IsKeyDown(Keys.Down) ||
-				mKBStateCurrent.IsKeyDown(Keys.S))
-			{
-				mPlayerSpeed	=3.0f;
+				return	closeMap.GetPeak();
 			}
 			else
 			{
-				mPlayerSpeed	=5.0f;
+				return	6969.0f;
 			}
-
-
-			mPlayerShip.UpdatePosition(mPlayerPos);
 		}
 
 
-		public static FileStream OpenTitleFile(string fileName,
-			FileMode mode, FileAccess access)
+		//matrices, matrii, matrixs?
+		public void UpdateMatrices(Matrix world, Matrix view, Matrix proj)
 		{
-			string	fullPath	=Path.Combine(
-									StorageContainer.TitleLocation,
-									fileName);
+			mFXTerrain.Parameters["mWorld"].SetValue(world);
+			mFXTerrain.Parameters["mView"].SetValue(view);
+			mFXTerrain.Parameters["mProjection"].SetValue(proj);
+		}
 
-			if(!File.Exists(fullPath) &&
-				(access == FileAccess.Write ||
-				access == FileAccess.ReadWrite))
+
+		public void UpdateLightColor(Vector4 lightColor)
+		{
+			mFXTerrain.Parameters["mLightColor"].SetValue(lightColor);
+		}
+
+
+		public void UpdateLightDirection(Vector3 lightDir)
+		{
+			mFXTerrain.Parameters["mLightDirection"].SetValue(lightDir);
+		}
+
+
+		public void UpdateAmbientColor(Vector4 ambient)
+		{
+			mFXTerrain.Parameters["mAmbientColor"].SetValue(ambient);
+		}
+
+
+		public void UpdatePosition(Vector3 pos)
+		{
+			Matrix	mat	=Matrix.CreateTranslation(pos);
+
+			mLevelPos	=pos;
+
+			mFXTerrain.Parameters["mLevel"].SetValue(mat);
+		}
+
+
+		public void UpdateEyePos(Vector3 pos)
+		{
+			mEyePos	=pos;
+			mFXTerrain.Parameters["mEyePosition"].SetValue(pos);
+		}
+
+
+		public void SetFogEnabled(bool bFog)
+		{
+			if(bFog)
 			{
-				return	File.Create(fullPath);
+				mFXTerrain.Parameters["mFogEnabled"].SetValue(1.0f);
 			}
 			else
 			{
-				return	File.Open(fullPath, mode, access);
+				mFXTerrain.Parameters["mFogEnabled"].SetValue(0.0f);
 			}
-		}
-
-
-		private void SetWindowOnSurface()
-		{
-			System.Diagnostics.Debug.Assert(Window.Handle != System.IntPtr.Zero,
-				"Window initialization must be complete before SetWindowOnSurface is called");
-
-			// We don't want to run in full-screen mode because we need
-			// overlapped windows, so instead run in windowed mode
-			// and resize to take up the whole surface with no border.
-
-			// Make sure the graphics device has the correct back buffer size.
-			InteractiveSurface interactiveSurface = InteractiveSurface.DefaultInteractiveSurface;
-			if(interactiveSurface != null)
-			{
-				mGDM.PreferredBackBufferWidth = interactiveSurface.Width;
-				mGDM.PreferredBackBufferHeight = interactiveSurface.Height;
-				mGDM.ApplyChanges();
-
-				// Remove the border and position the window.
-				Program.RemoveBorder(Window.Handle);
-				Program.PositionWindow(Window,
-					interactiveSurface.Left,
-					interactiveSurface.Top);
-			}
-		}
-
-		//==========================================================//
-		/// <summary>
-		/// Initializes the surface input system. This should be called after any window
-		/// initialization is done, and should only be called once.
-		/// </summary>
-		private void InitializeSurfaceInput()
-		{
-			System.Diagnostics.Debug.Assert(Window.Handle != System.IntPtr.Zero,
-				"Window initialization must be complete before InitializeSurfaceInput is called");
-			System.Diagnostics.Debug.Assert(mContactTarget == null,
-				"Surface input already initialized");
-
-			//Create a target for surface input.
-			mContactTarget	=new ContactTarget(Window.Handle, EventThreadChoice.OnBackgroundThread);
-			mContactTarget.EnableInput();
-		}
-
-
-		private void OnApplicationActivated(object sender, EventArgs e)
-		{
-			mbAppActive		=true;
-			mbAppPreview	=false;
-		}
-
-
-		private void OnApplicationPreviewed(object sender, EventArgs e)
-		{
-			mbAppActive		=false;
-			mbAppPreview	=true;
-		}
-
-		private void OnApplicationDeactivated(object sender, EventArgs e)
-		{
-			mbAppActive		=false;
-			mbAppPreview	=false;
 		}
 	}
 }

@@ -20,22 +20,25 @@ namespace UtilityLib
 		protected Vector3	mCamPos;
 		protected float		mPitch, mYaw, mRoll;
 		protected float		mAspect, mWidth, mHeight;
+		protected float		mNearClip, mFarClip;
+		protected float		mCamSpeed	=0.1f;
 
 		KeyboardState	mLastKBS	=new KeyboardState();
 		MouseState		mLastMS		=new MouseState();
 		GamePadState	mLastGS		=new GamePadState();
 		MouseState		mOriginalMS;
 
-		const float	CamSpeed			=0.1f;
 		const float	MouseSensitivity	=0.01f;
 		const float GamePadSensitivity	=0.25f;
 
 
-		public GameCamera(float width, float height, float aspect)
+		public GameCamera(float width, float height, float aspect, float near, float far)
 		{
-			mWidth	=width;
-			mHeight	=height;
-			mAspect	=aspect;
+			mWidth		=width;
+			mHeight		=height;
+			mAspect		=aspect;
+			mNearClip	=near;
+			mFarClip	=far;
 
 			//starting cam will drift a bit
 			mYaw	=140.0f;
@@ -49,6 +52,12 @@ namespace UtilityLib
 			InitializeMats();
 		}
 
+
+		public float CamSpeed
+		{
+			get { return mCamSpeed; }
+			set { mCamSpeed = value; }
+		}
 
 		public Vector3 CamPos
 		{
@@ -214,9 +223,6 @@ namespace UtilityLib
 				Matrix.CreateRotationX(MathHelper.ToRadians(mPitch)) *
 				Matrix.CreateRotationZ(MathHelper.ToRadians(mRoll));
 			
-			mMATProjection	=Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
-				mAspect, 1, 50000);
-
 			mFrust.Matrix	=mMATWorld * mMATView * mMATProjection;
 			
 			Matrix.Transpose(ref mMATView, out mMATViewTranspose);
@@ -230,7 +236,7 @@ namespace UtilityLib
 
 			mMATProjection	=Matrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(45),
-				mWidth / mHeight, 1.0f, 100.0f);
+				mWidth / mHeight, mNearClip, mFarClip);
 		}
 	}
 }

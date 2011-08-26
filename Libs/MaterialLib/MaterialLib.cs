@@ -584,6 +584,12 @@ namespace MaterialLib
 							Vector4	vec	=Vector4.Zero;
 							string	[]tokens;
 							tokens	=sp.Value.Split(' ');
+
+							if(tokens.Length < 4)
+							{
+								break;
+							}
+
 							if(UtilityLib.Mathery.TryParse(tokens[0], out vec.X))
 							{
 								if(UtilityLib.Mathery.TryParse(tokens[1], out vec.Y))
