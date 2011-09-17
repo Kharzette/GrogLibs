@@ -101,10 +101,12 @@
   <ItemGroup>
     <Compile Include="FileUtil.cs" />
     <Compile Include="GameCamera.cs" />
+    <Compile Include="Input.cs" />
     <Compile Include="IReadWriteable.cs" />
     <Compile Include="Mathery.cs" />
     <Compile Include="Misc.cs" />
     <Compile Include="Mover.cs" />
+    <Compile Include="PlayerSteering.cs" />
     <Compile Include="RenderHelper.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -146,6 +148,8 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Xna.Framework.Avatar, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Xna.Framework.GamerServices, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Xna.Framework.Storage, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=MSIL" />
     <Reference Include="mscorlib">
