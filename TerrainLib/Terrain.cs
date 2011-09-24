@@ -64,6 +64,7 @@ namespace TerrainLib
 		//load from a 2D float array
 		public void Build(float				[,]data,
 						  GraphicsDevice	gd,
+						  float				polySize,
 						  bool				bSmooth)
 		{
 			//alloc/clear map list
@@ -140,8 +141,8 @@ namespace TerrainLib
 						(CHUNKDIM * chunkY) - startY, gd, mVDTerrain);
 
 					Vector3	pos	=Vector3.Zero;
-					pos.X	=chunkX * (CHUNKDIM) * 10.0f;
-					pos.Z	=chunkY * (CHUNKDIM) * 10.0f;
+					pos.X	=chunkX * (CHUNKDIM) * polySize;
+					pos.Z	=chunkY * (CHUNKDIM) * polySize;
 					pos.Y	=0.0f;
 
 					map.SetPos(pos);

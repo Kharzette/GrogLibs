@@ -19,8 +19,9 @@ namespace UtilityLib
 
 		//movement settings
 		float	mSpeed				=0.1f;
-		float	MouseSensitivity	=0.01f;
-		float	GamePadSensitivity	=0.25f;
+		float	mMouseSensitivity	=0.01f;
+		float	mGamePadSensitivity	=0.05f;
+		float	mTurnSpeed			=3.0f;
 
 		//position info
 		Vector3	mPosition, mDelta;
@@ -47,6 +48,12 @@ namespace UtilityLib
 		{
 			get { return mPosition; }
 			set { mPosition = value; }
+		}
+
+		public float Speed
+		{
+			get { return mSpeed; }
+			set { mSpeed = value; }
 		}
 
 		public Vector3 Delta
@@ -115,16 +122,18 @@ namespace UtilityLib
 			vin.Y   =view.M23;
 			vin.Z   =view.M33;
 
-			mPitch	=0.0f;
+			mPitch	=45.0f;
 			mRoll	=0.0f;
 
 			Vector3	lastPos	=mPosition;
 
 			if(gs.IsConnected)
 			{
-				mPosition	+=vleft * (gs.ThumbSticks.Left.X * msDelta * 0.05f * mSpeed);
-				mPosition	-=vin * (gs.ThumbSticks.Left.Y * msDelta * 0.05f * mSpeed);
+				mPosition	-=vleft * (gs.ThumbSticks.Left.X * msDelta * mGamePadSensitivity * mSpeed);
+				mPosition	+=vin * (gs.ThumbSticks.Left.Y * msDelta * mGamePadSensitivity * mSpeed);
 				mPosition.Y	=0.0f;	//zero out the Y
+
+				mYaw	+=gs.ThumbSticks.Right.X * mGamePadSensitivity * msDelta * mTurnSpeed;
 			}
 			else
 			{
@@ -214,8 +223,8 @@ namespace UtilityLib
 
 				Mouse.SetPosition(mOriginalMS.X, mOriginalMS.Y);
 
-				mPitch	-=(delta.Y) * msDelta * MouseSensitivity;
-				mYaw	-=(delta.X) * msDelta * MouseSensitivity;
+				mPitch	-=(delta.Y) * msDelta * mMouseSensitivity;
+				mYaw	-=(delta.X) * msDelta * mMouseSensitivity;
 			}
 
 			mPitch	+=gs.ThumbSticks.Right.Y * msDelta * 0.25f;

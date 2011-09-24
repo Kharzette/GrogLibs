@@ -21,17 +21,17 @@ namespace TerrainLib
 	public class HeightMap
 	{
 		const float	UNITS_PER_HEIGHT	=0.1f;		//res of the output in units
-		const float	HEIGHT_SCALAR		=10.0f;		//a good mountain setting
+		const float	HEIGHT_SCALAR		=1.0f;		//a good mountain setting
 
 		//height settings
-		const float	SnowHeight			=1500.0f;
-		const float	StoneHighHeight		=1500.0f;
-		const float	StoneMossyHeight	=800.0f;
-		const float	ForestHeight		=800.0f;
-		const float	GrassHeight			=300.0f;
+		const float	SnowHeight			=150.0f;
+		const float	StoneHighHeight		=150.0f;
+		const float	StoneMossyHeight	=80.0f;
+		const float	ForestHeight		=80.0f;
+		const float	GrassHeight			=30.0f;
 		const float	SandHeight			=0.0f;
-		const float	WaterHeight			=250.0f;
-		const float	TransitionHeight	=400.0f;
+		const float	WaterHeight			=25.0f;
+		const float	TransitionHeight	=40.0f;
 		const float	SteepnessThreshold	=0.7f;
 
 		VertexBuffer		mVBTerrain;
@@ -80,8 +80,8 @@ namespace TerrainLib
 				for(int x=0;x < w;x++)
 				{
 					int	dex	=x + (y * w);
-					verts[dex].Position.X	=(float)(x - offsetX) * 10.0f;
-					verts[dex].Position.Z	=(float)(y - offsetY) * 10.0f;
+					verts[dex].Position.X	=(float)(x - offsetX);
+					verts[dex].Position.Z	=(float)(y - offsetY);
 					verts[dex].Position.Y	=data[y, x] * HEIGHT_SCALAR;
 
 					if(verts[dex].Position.Y > mPeak)

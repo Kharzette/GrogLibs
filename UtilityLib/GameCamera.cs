@@ -12,15 +12,15 @@ namespace UtilityLib
 		//mats
 		protected Matrix	mMATWorld;
 		protected Matrix	mMATView;
-		protected Matrix	mMATViewTranspose;
 		protected Matrix	mMATProjection;
 
 		BoundingFrustum	mFrust	=new BoundingFrustum(Matrix.Identity);
 
+		//camera settings
 		protected float		mAspect, mWidth, mHeight;
 		protected float		mNearClip, mFarClip;
 
-
+		
 		public GameCamera(float width, float height, float aspect, float near, float far)
 		{
 			mWidth		=width;
@@ -45,12 +45,6 @@ namespace UtilityLib
 			set { mMATView = value; }
 		}
 
-		public Matrix ViewTranspose
-		{
-			get { return mMATViewTranspose; }
-			set { mMATViewTranspose = value; }
-		}
-
 		public Matrix Projection
 		{
 			get { return mMATProjection; }
@@ -58,9 +52,9 @@ namespace UtilityLib
 		}
 
 
-		public void Update(float msDelta, PlayerSteering ps)
+		public void Update(float msDelta, Vector3 camPos, float pitch, float yaw, float roll)
 		{
-			UpdateMatrices(ps.Position, ps.Pitch, ps.Yaw, ps.Roll);
+			UpdateMatrices(camPos, pitch, yaw, roll);
 		}
 
 
@@ -128,8 +122,6 @@ namespace UtilityLib
 				Matrix.CreateRotationZ(MathHelper.ToRadians(roll));
 			
 			mFrust.Matrix	=mMATWorld * mMATView * mMATProjection;
-			
-			Matrix.Transpose(ref mMATView, out mMATViewTranspose);
 		}
 
 
