@@ -75,6 +75,8 @@ namespace TerrainLib
 				SmoothPass(data);
 			}
 
+			MiddleBias(data);
+
 			int	w	=data.GetLength(1);
 			int	h	=data.GetLength(0);
 
@@ -276,6 +278,37 @@ namespace TerrainLib
 
 //					data[y, x]	=(sum + data[y, x]) / 2.0f;
 					data[y, x]	=sum;
+				}
+			}
+		}
+
+
+		//bias the middle of the map towards height
+		void MiddleBias(float [,]data)
+		{
+			int	w	=data.GetLength(1);
+			int	h	=data.GetLength(0);
+
+			Vector2	center	=Vector2.UnitX * (w / 2);
+			center			+=Vector2.UnitY * (h / 2);
+
+			for(int y=0;y < h;y++)
+			{
+				for(int x=0;x < w;x++)
+				{
+					float	heightBias	=0.0f;
+
+					Vector2	xyVec	=Vector2.UnitX * x;
+					xyVec			+=Vector2.UnitY * y;
+
+					heightBias	=Vector2.Distance(center, xyVec);
+
+					if(heightBias > 0.0f)
+					{
+						heightBias	/=2.5f;
+					}
+
+					data[y, x]	-=heightBias;
 				}
 			}
 		}

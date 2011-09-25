@@ -84,5 +84,80 @@ namespace TerrainLib
 
 			return	ret;
 		}
+
+
+		public float GetGoodCloudHeight()
+		{
+			float	max	=float.MinValue;
+			float	min	=float.MaxValue;
+
+			//trace the outer edge of the map
+
+			//top horiz
+			for(int x=0;x < mGridSize;x++)
+			{
+				float	height	=mHeightGrid[0, x];
+
+				if(height < min)
+				{
+					min	=height;
+				}
+
+				if(height > max)
+				{
+					max	=height;
+				}
+			}
+
+			//bottom horiz
+			for(int x=0;x < mGridSize;x++)
+			{
+				float	height	=mHeightGrid[mGridSize - 1, x];
+
+				if(height < min)
+				{
+					min	=height;
+				}
+
+				if(height > max)
+				{
+					max	=height;
+				}
+			}
+
+			//left vert
+			for(int y=0;y < mGridSize;y++)
+			{
+				float	height	=mHeightGrid[y, 0];
+
+				if(height < min)
+				{
+					min	=height;
+				}
+
+				if(height > max)
+				{
+					max	=height;
+				}
+			}
+
+			//right vert
+			for(int y=0;y < mGridSize;y++)
+			{
+				float	height	=mHeightGrid[y, mGridSize - 1];
+
+				if(height < min)
+				{
+					min	=height;
+				}
+
+				if(height > max)
+				{
+					max	=height;
+				}
+			}
+
+			return	max;
+		}
 	}
 }
