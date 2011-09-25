@@ -44,6 +44,60 @@ namespace TerrainLib
 				return	-1.0f;
 			}
 
+			float	topLeft		=mHeightGrid[y, x];
+			float	topRight	=mHeightGrid[y, x + 1];
+			float	botLeft		=mHeightGrid[y + 1, x];
+			float	botRight	=mHeightGrid[y + 1, x + 1];
+
+			//see if over the upper left or lower right triangle
+			Vector2	upLeft	=Vector2.Zero;
+			Vector2	lwRight	=Vector2.Zero;
+
+			upLeft.X	=x * mPolySize;
+			upLeft.Y	=y * mPolySize;
+			lwRight.X	=(x + 1) * mPolySize;
+			lwRight.Y	=(y + 1) * mPolySize;
+
+			Vector2	inPos	=Vector2.Zero;
+			inPos.X	=coord.X;
+			inPos.Y	=coord.Z;
+
+			if(Vector2.DistanceSquared(inPos, upLeft) <= Vector2.DistanceSquared(inPos, lwRight))
+			{
+				//top left tri
+				//find gradient... reminds me of software rendering
+				float	deltaX	=(topRight - topLeft) / mPolySize;
+				float	deltaY	=(botLeft - topLeft) / mPolySize;
+
+				ret	=topLeft + (deltaX * (coord.X - xgrid)) + (deltaY * (coord.Z - ygrid));
+			}
+			else
+			{
+				//lower right tri
+				float	deltaX	=(botLeft - botRight) / mPolySize;
+				float	deltaY	=(topRight - botRight) / mPolySize;
+
+				ret	=botRight + (deltaX * ((xgrid + mPolySize) - coord.X)) + (deltaY * ((ygrid + mPolySize) - coord.Z));
+			}
+
+			return	ret;
+		}
+
+
+		public Plane GetGroundPlane(Vector3 coord)
+		{
+			Plane	ret	=new Plane();
+
+			int	x	=(int)Math.Floor(coord.X / mPolySize);
+			int	y	=(int)Math.Floor(coord.Z / mPolySize);
+
+			float	xgrid	=x * mPolySize;
+			float	ygrid	=y * mPolySize;
+
+			if(x >= (mGridSize - 1) || x < 0 || y >= (mGridSize - 1) || y < 0)
+			{				
+				return	ret;
+			}
 
 			float	topLeft		=mHeightGrid[y, x];
 			float	topRight	=mHeightGrid[y, x + 1];
@@ -66,21 +120,48 @@ namespace TerrainLib
 			if(Vector2.DistanceSquared(inPos, upLeft) <= Vector2.DistanceSquared(inPos, lwRight))
 			{
 				//top left tri
+				Vector3	topLeftVert	=Vector3.Zero;
+				topLeftVert.X		=xgrid;
+				topLeftVert.Y		=topLeft;
+				topLeftVert.Z		=ygrid;
 
-				//find gradient... reminds me of software rendering
-				float	deltaX	=(topRight - topLeft) / mPolySize;
-				float	deltaY	=(botLeft - topLeft) / mPolySize;
+				Vector3	topRightVert	=Vector3.Zero;
+				topRightVert.X			=xgrid + mPolySize;
+				topRightVert.Y			=topRight;
+				topRightVert.Z			=ygrid;
 
-				ret	=topLeft + (deltaX * (coord.X - xgrid)) + (deltaY * (coord.Z - ygrid));
+				Vector3	botLeftVert	=Vector3.Zero;
+				botLeftVert.X		=xgrid;
+				botLeftVert.Y		=botLeft;
+				botLeftVert.Z		=ygrid + mPolySize;
+
+				ret.Normal	=Vector3.Cross(topLeftVert - botLeftVert, topLeftVert - topRightVert);
+				ret.Normal.Normalize();
+				ret.D		=-Vector3.Dot(topLeftVert, ret.Normal);
 			}
 			else
 			{
-				//lower right tri
-				float	deltaX	=(botLeft - botRight) / mPolySize;
-				float	deltaY	=(topRight - botRight) / mPolySize;
+				//bottom right tri
+				Vector3	botRightVert	=Vector3.Zero;
+				botRightVert.X			=xgrid;
+				botRightVert.Y			=topLeft;
+				botRightVert.Z			=ygrid;
 
-				ret	=botRight + (deltaX * ((xgrid + mPolySize) - coord.X)) + (deltaY * ((ygrid + mPolySize) - coord.Z));
+				Vector3	topRightVert	=Vector3.Zero;
+				topRightVert.X			=xgrid + mPolySize;
+				topRightVert.Y			=topRight;
+				topRightVert.Z			=ygrid;
+
+				Vector3	botLeftVert	=Vector3.Zero;
+				botLeftVert.X		=xgrid;
+				botLeftVert.Y		=botLeft;
+				botLeftVert.Z		=ygrid + mPolySize;
+
+				ret.Normal	=Vector3.Cross(botRightVert - botLeftVert, botRightVert - topRightVert);
+				ret.Normal.Normalize();
+				ret.D		=-Vector3.Dot(botRightVert, ret.Normal);
 			}
+
 
 			return	ret;
 		}

@@ -381,8 +381,10 @@ namespace TerrainLib
 		}
 
 
-		public void Draw(GraphicsDevice gd, bool bDepthPass)
+		public void Draw(GraphicsDevice gd, bool bDepthPass, RenderTarget2D shad)
 		{
+			mFXTerrain.Parameters["mShadowTex"].SetValue(shad);
+
 			foreach(HeightMap m in mMaps)
 			{
 				Vector3	dist	=m.GetPos();

@@ -552,6 +552,7 @@ namespace TerrainLib
 			}
 		}
 
+
 		public void Draw(GraphicsDevice gd, Effect fx, bool bDepthPass)
 		{
 			gd.SetVertexBuffer(mVBTerrain);
