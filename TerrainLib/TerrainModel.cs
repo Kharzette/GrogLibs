@@ -162,7 +162,6 @@ namespace TerrainLib
 				ret.D		=-Vector3.Dot(botRightVert, ret.Normal);
 			}
 
-
 			return	ret;
 		}
 
@@ -239,6 +238,37 @@ namespace TerrainLib
 			}
 
 			return	max;
+		}
+
+
+		public Vector3 GetPeak()
+		{
+			float	max		=float.MinValue;
+			float	min		=float.MaxValue;
+			Vector3	peak	=Vector3.Zero;
+
+			for(int y=0;y < mGridSize;y++)
+			{
+				for(int x=0;x < mGridSize;x++)
+				{
+					float	height	=mHeightGrid[y, x];
+
+					if(height < min)
+					{
+						min	=height;
+					}
+
+					if(height > max)
+					{
+						max		=height;
+						peak.Y	=height;
+						peak.X	=x * mPolySize;
+						peak.Z	=y * mPolySize;
+					}
+				}
+			}
+
+			return	peak;
 		}
 	}
 }

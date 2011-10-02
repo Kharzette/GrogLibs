@@ -105,7 +105,7 @@ namespace UtilityLib
 		}
 
 
-		public void UpdateTwinStick(float msDelta, Matrix view, KeyboardState ks, MouseState ms, GamePadState gs)
+		void UpdateTwinStick(float msDelta, Matrix view, KeyboardState ks, MouseState ms, GamePadState gs)
 		{
 			Vector3 vup		=Vector3.Zero;
 			Vector3 vleft	=Vector3.Zero;
@@ -171,7 +171,7 @@ namespace UtilityLib
 		}
 
 
-		public void UpdateFly(float msDelta, Matrix view, KeyboardState ks, MouseState ms, GamePadState gs)
+		void UpdateFly(float msDelta, Matrix view, KeyboardState ks, MouseState ms, GamePadState gs)
 		{
 			Vector3 vup		=Vector3.Zero;
 			Vector3 vleft	=Vector3.Zero;

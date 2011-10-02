@@ -263,20 +263,20 @@ namespace MeshLib
 //				g.Clear(Color.CornflowerBlue);
 
 				//render world
-				DrawMaterials(gd, -gameCam.CamPos, mFBVB, mFBIB, mFBMatOffsets, mFBMatNumVerts, mFBMatNumTris, false, null, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mVLitVB, mVLitIB, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mSkyVB, mSkyIB, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mLMVB, mLMIB, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mLMAnimVB, mLMAnimIB, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
+				DrawMaterials(gd, -gameCam.View.Translation, mFBVB, mFBIB, mFBMatOffsets, mFBMatNumVerts, mFBMatNumTris, false, null, bMatVis);
+				DrawMaterials(gd, -gameCam.View.Translation, mVLitVB, mVLitIB, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null, bMatVis);
+				DrawMaterials(gd, -gameCam.View.Translation, mSkyVB, mSkyIB, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
+				DrawMaterials(gd, -gameCam.View.Translation, mLMVB, mLMIB, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null, bMatVis);
+				DrawMaterials(gd, -gameCam.View.Translation, mLMAnimVB, mLMAnimIB, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
 #if false
-				DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, false, mAlphaSortPoints, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints, bMatVis);
+				DrawMaterials(gd, -gameCam.View.Translation, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, false, mAlphaSortPoints, bMatVis);
+				DrawMaterials(gd, -gameCam.View.Translation, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints, bMatVis);
+				DrawMaterials(gd, -gameCam.View.Translation, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints, bMatVis);
 #else
-				DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, true, mAlphaSortPoints, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints, bMatVis);
-				DrawMaterials(gd, -gameCam.CamPos, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints, bMatVis);
-				mAlphaPool.DrawAll(gd, mMatLib, -gameCam.CamPos);
+				DrawMaterials(gd, -gameCam.View.Translation, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, true, mAlphaSortPoints, bMatVis);
+				DrawMaterials(gd, -gameCam.View.Translation, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints, bMatVis);
+				DrawMaterials(gd, -gameCam.View.Translation, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints, bMatVis);
+				mAlphaPool.DrawAll(gd, mMatLib, -gameCam.View.Translation);
 #endif
 			}
 
@@ -286,35 +286,35 @@ namespace MeshLib
 				mMatLib.AddMap("MirrorTexture", mMirrorRenderTarget);
 
 				//reset matrices
-				mMatLib.UpdateWVP(gameCam.World, gameCam.View, gameCam.Projection, -gameCam.CamPos);
+				mMatLib.UpdateWVP(gameCam.World, gameCam.View, gameCam.Projection, -gameCam.View.Translation);
 			}
 
 			gd.Clear(Color.CornflowerBlue);
 
-			DrawMaterials(gd, -gameCam.CamPos, mFBVB, mFBIB, mFBMatOffsets, mFBMatNumVerts, mFBMatNumTris, false, null, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mVLitVB, mVLitIB, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mSkyVB, mSkyIB, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mLMVB, mLMIB, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mLMAnimVB, mLMAnimIB, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -gameCam.View.Translation, mFBVB, mFBIB, mFBMatOffsets, mFBMatNumVerts, mFBMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -gameCam.View.Translation, mVLitVB, mVLitIB, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -gameCam.View.Translation, mSkyVB, mSkyIB, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -gameCam.View.Translation, mLMVB, mLMIB, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -gameCam.View.Translation, mLMAnimVB, mLMAnimIB, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
 
 			//alphas
 #if false
 			//draw immediately for pix
-			DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, false, mAlphaSortPoints, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints, bMatVis);
+			DrawMaterials(gd, -gameCam.View.Translation, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, false, mAlphaSortPoints, bMatVis);
+			DrawMaterials(gd, -gameCam.View.Translation, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints, bMatVis);
+			DrawMaterials(gd, -gameCam.View.Translation, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints, bMatVis);
 #else
 			//pix freaks out about the alpha sorting
-			DrawMaterials(gd, -gameCam.CamPos, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, true, mAlphaSortPoints, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints, bMatVis);
-			DrawMaterials(gd, -gameCam.CamPos, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints, bMatVis);
+			DrawMaterials(gd, -gameCam.View.Translation, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, true, mAlphaSortPoints, bMatVis);
+			DrawMaterials(gd, -gameCam.View.Translation, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints, bMatVis);
+			DrawMaterials(gd, -gameCam.View.Translation, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints, bMatVis);
 			if(scissors.Count > 0)
 			{
 				//draw mirror surface itself
-				DrawMaterials(gd, -gameCam.CamPos, mMirrorVB, mMirrorIB, mMirrorMatOffsets, mMirrorMatNumVerts, mMirrorMatNumTris, true, mMirrorSortPoints, bMatVis);
+				DrawMaterials(gd, -gameCam.View.Translation, mMirrorVB, mMirrorIB, mMirrorMatOffsets, mMirrorMatNumVerts, mMirrorMatNumTris, true, mMirrorSortPoints, bMatVis);
 			}
 
-			mAlphaPool.DrawAll(gd, mMatLib, -gameCam.CamPos);
+			mAlphaPool.DrawAll(gd, mMatLib, -gameCam.View.Translation);
 #endif		
 		}
 
@@ -465,7 +465,7 @@ namespace MeshLib
 				Vector3	norm;
 				float	dist;
 				UtilityLib.Mathery.PlaneFromVerts(poly, out norm, out dist);
-				if(Vector3.Dot(-gameCam.CamPos, norm) - dist < 0)
+				if(Vector3.Dot(-gameCam.View.Translation, norm) - dist < 0)
 				{
 					continue;
 				}
@@ -484,7 +484,7 @@ namespace MeshLib
 					center	/=poly.Count;
 					mirrorCenters.Add(center);
 
-					Vector3	eyeVec	=center - -gameCam.CamPos;
+					Vector3	eyeVec	=center - -gameCam.View.Translation;
 
 					Vector3	reflect	=Vector3.Reflect(eyeVec, norm);
 

@@ -14,6 +14,7 @@ namespace UtilityLib
 		public class PlayerInput
 		{
 			public bool					mbActive;
+			public bool					mbSigningIn;
 			public GamePadState			mGPS, mLastGPS;
 			public KeyboardState		mKBS, mLastKBS;
 			public MouseState			mMS, mLastMS;
@@ -27,12 +28,11 @@ namespace UtilityLib
 		PlayerInput	mPlayer3	=new PlayerInput();
 		PlayerInput	mPlayer4	=new PlayerInput();
 
-		List<PlayerInput>	mActives	=new List<PlayerInput>();
-
 
 		public Input()
 		{
 			SignedInGamer.SignedIn	+=OnSignedIn;
+			SignedInGamer.SignedOut	+=OnSignedOut;
 		}
 
 
@@ -40,9 +40,9 @@ namespace UtilityLib
 		{
 			get
 			{
-				if(mActives.Count > 0)
+				if(mPlayer1.mbActive)
 				{
-					return	mActives[0];
+					return	mPlayer1;
 				}
 				return	null;
 			}
@@ -52,9 +52,9 @@ namespace UtilityLib
 		{
 			get
 			{
-				if(mActives.Count > 1)
+				if(mPlayer2.mbActive)
 				{
-					return	mActives[1];
+					return	mPlayer2;
 				}
 				return	null;
 			}
@@ -64,9 +64,9 @@ namespace UtilityLib
 		{
 			get
 			{
-				if(mActives.Count > 2)
+				if(mPlayer3.mbActive)
 				{
-					return	mActives[2];
+					return	mPlayer3;
 				}
 				return	null;
 			}
@@ -76,9 +76,9 @@ namespace UtilityLib
 		{
 			get
 			{
-				if(mActives.Count > 3)
+				if(mPlayer4.mbActive)
 				{
-					return	mActives[3];
+					return	mPlayer4;
 				}
 				return	null;
 			}
@@ -87,42 +87,28 @@ namespace UtilityLib
 
 		public void Update(float msDelta)
 		{
-			mActives.Clear();
-
 			GamePadState	gps	=GamePad.GetState(PlayerIndex.One);
 			if(gps.IsConnected)
 			{
-				mPlayer1.mbActive	=true;
-				mPlayer1.mLastGPS	=mPlayer1.mGPS;
-				mPlayer1.mGPS		=gps;
-				mActives.Add(mPlayer1);
+				UpdatePlayer(mPlayer1, gps);
 			}
 
 			gps	=GamePad.GetState(PlayerIndex.Two);
 			if(gps.IsConnected)
 			{
-				mPlayer2.mbActive	=true;
-				mPlayer2.mLastGPS	=mPlayer1.mGPS;
-				mPlayer2.mGPS		=gps;
-				mActives.Add(mPlayer2);
+				UpdatePlayer(mPlayer2, gps);
 			}
 
 			gps	=GamePad.GetState(PlayerIndex.Three);
 			if(gps.IsConnected)
 			{
-				mPlayer3.mbActive	=true;
-				mPlayer3.mLastGPS	=mPlayer1.mGPS;
-				mPlayer3.mGPS		=gps;
-				mActives.Add(mPlayer3);
+				UpdatePlayer(mPlayer3, gps);
 			}
 
 			gps	=GamePad.GetState(PlayerIndex.Four);
 			if(gps.IsConnected)
 			{
-				mPlayer4.mbActive	=true;
-				mPlayer4.mLastGPS	=mPlayer1.mGPS;
-				mPlayer4.mGPS		=gps;
-				mActives.Add(mPlayer4);
+				UpdatePlayer(mPlayer4, gps);
 			}
 
 			//keyboard and mouse go to player 1
@@ -155,6 +141,11 @@ namespace UtilityLib
 			{
 				ar	=new AvatarRenderer(ad);
 			}
+			else
+			{
+				ad	=AvatarDescription.CreateRandom();
+				ar	=new AvatarRenderer(ad);
+			}
 
 			if(pi.Value == PlayerIndex.One)
 			{
@@ -183,6 +174,34 @@ namespace UtilityLib
 		}
 
 
+		void OnSignedOut(object sender, EventArgs ea)
+		{
+			SignedOutEventArgs	siea	=ea as SignedOutEventArgs;
+
+			if(siea == null)
+			{
+				return;
+			}
+
+			if(siea.Gamer.PlayerIndex == PlayerIndex.One)
+			{
+				FreePlayerInput(mPlayer1);
+			}
+			else if(siea.Gamer.PlayerIndex == PlayerIndex.Two)
+			{
+				FreePlayerInput(mPlayer2);
+			}
+			else if(siea.Gamer.PlayerIndex == PlayerIndex.Three)
+			{
+				FreePlayerInput(mPlayer3);
+			}
+			else if(siea.Gamer.PlayerIndex == PlayerIndex.Four)
+			{
+				FreePlayerInput(mPlayer4);
+			}
+		}
+
+
 		void OnSignedIn(object sender, EventArgs ea)
 		{
 			SignedInEventArgs	siea	=ea as SignedInEventArgs;
@@ -194,24 +213,93 @@ namespace UtilityLib
 
 			if(siea.Gamer.PlayerIndex == PlayerIndex.One)
 			{
-				mPlayer1.mGamer	=siea.Gamer;
-
+				lock(mPlayer1)
+				{
+					mPlayer1.mbSigningIn	=true;
+					mPlayer1.mGamer			=siea.Gamer;
+				}
 				AvatarDescription.BeginGetFromGamer(siea.Gamer, LoadAvatar,
 					new Nullable<PlayerIndex>(siea.Gamer.PlayerIndex));
 			}
 			else if(siea.Gamer.PlayerIndex == PlayerIndex.Two)
 			{
-				mPlayer2.mGamer	=siea.Gamer;
+				lock(mPlayer2)
+				{
+					mPlayer2.mbSigningIn	=true;
+					mPlayer2.mGamer			=siea.Gamer;
+				}
+				AvatarDescription.BeginGetFromGamer(siea.Gamer, LoadAvatar,
+					new Nullable<PlayerIndex>(siea.Gamer.PlayerIndex));
 			}
 			else if(siea.Gamer.PlayerIndex == PlayerIndex.Three)
 			{
-				mPlayer3.mGamer	=siea.Gamer;
+				lock(mPlayer3)
+				{
+					mPlayer3.mbSigningIn	=true;
+					mPlayer3.mGamer			=siea.Gamer;
+				}
+				AvatarDescription.BeginGetFromGamer(siea.Gamer, LoadAvatar,
+					new Nullable<PlayerIndex>(siea.Gamer.PlayerIndex));
 			}
 			else if(siea.Gamer.PlayerIndex == PlayerIndex.Four)
 			{
-				mPlayer4.mGamer	=siea.Gamer;
+				lock(mPlayer4)
+				{
+					mPlayer4.mbSigningIn	=true;
+					mPlayer4.mGamer			=siea.Gamer;
+				}
+				AvatarDescription.BeginGetFromGamer(siea.Gamer, LoadAvatar,
+					new Nullable<PlayerIndex>(siea.Gamer.PlayerIndex));
+			}
+		}
+
+
+		void UpdatePlayer(PlayerInput pi, GamePadState gps)
+		{
+			lock(pi)
+			{
+				if(!pi.mbActive)
+				{
+					pi.mbActive	=true;
+
+					//if the player is not signed in, they might
+					//not have an avatar description
+					if(!pi.mbSigningIn)
+					{
+						pi.mAvatarDesc		=AvatarDescription.CreateRandom();
+						pi.mAvatarRenderer	=new AvatarRenderer(pi.mAvatarDesc);
+					}
+				}
+				pi.mLastGPS	=pi.mGPS;
+				pi.mGPS		=gps;
+			}
+		}
+
+
+		void FreePlayerInput(PlayerInput pi)
+		{
+			pi.mbActive	=false;
+
+			if(pi.mGamer.PlayerIndex == PlayerIndex.One)
+			{
+				pi.mAvatarDesc.Changed	-=OnPlayer1AvatarChanged;
+			}
+			else if(pi.mGamer.PlayerIndex == PlayerIndex.Two)
+			{
+				pi.mAvatarDesc.Changed	-=OnPlayer2AvatarChanged;
+			}
+			else if(pi.mGamer.PlayerIndex == PlayerIndex.Three)
+			{
+				pi.mAvatarDesc.Changed	-=OnPlayer3AvatarChanged;
+			}
+			else if(pi.mGamer.PlayerIndex == PlayerIndex.Four)
+			{
+				pi.mAvatarDesc.Changed	-=OnPlayer4AvatarChanged;
 			}
 
+			pi.mAvatarDesc		=null;
+			pi.mAvatarRenderer	=null;
+			pi.mbSigningIn		=false;
 		}
 
 
