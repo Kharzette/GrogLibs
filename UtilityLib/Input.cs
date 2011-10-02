@@ -40,11 +40,15 @@ namespace UtilityLib
 		{
 			get
 			{
+#if XBOX
 				if(mPlayer1.mbActive)
 				{
 					return	mPlayer1;
 				}
 				return	null;
+#else
+				return	mPlayer1;
+#endif
 			}
 		}
 
@@ -92,11 +96,21 @@ namespace UtilityLib
 			{
 				UpdatePlayer(mPlayer1, gps);
 			}
+			else
+			{
+				mPlayer1.mLastGPS	=mPlayer1.mGPS;
+				mPlayer1.mGPS		=gps;
+			}
 
 			gps	=GamePad.GetState(PlayerIndex.Two);
 			if(gps.IsConnected)
 			{
 				UpdatePlayer(mPlayer2, gps);
+			}
+			else
+			{
+				mPlayer2.mLastGPS	=mPlayer2.mGPS;
+				mPlayer2.mGPS		=gps;
 			}
 
 			gps	=GamePad.GetState(PlayerIndex.Three);
@@ -104,11 +118,21 @@ namespace UtilityLib
 			{
 				UpdatePlayer(mPlayer3, gps);
 			}
+			else
+			{
+				mPlayer3.mLastGPS	=mPlayer3.mGPS;
+				mPlayer3.mGPS		=gps;
+			}
 
 			gps	=GamePad.GetState(PlayerIndex.Four);
 			if(gps.IsConnected)
 			{
 				UpdatePlayer(mPlayer4, gps);
+			}
+			else
+			{
+				mPlayer4.mLastGPS	=mPlayer4.mGPS;
+				mPlayer4.mGPS		=gps;
 			}
 
 			//keyboard and mouse go to player 1
