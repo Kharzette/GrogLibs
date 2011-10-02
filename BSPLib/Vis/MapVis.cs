@@ -640,10 +640,8 @@ namespace BSPLib
 
 					Print("Beginning distributed visibility with " + endPoints.Count + " possible work machines\n");
 
-					bool	bReallyDone	=false;
-
 					prog	=ProgressWatcher.RegisterProgress(0, work.Count, 0);
-					while(!work.IsEmpty || !bReallyDone)
+					while(!work.IsEmpty)
 					{
 						MapVisClient	amvc	=null;
 						lock(actives)
@@ -667,10 +665,8 @@ namespace BSPLib
 							Task	task	=Task.Factory.StartNew(() =>
 							{
 								WorkDivided	wrk;
-								bool		bLastOne	=false;
 								if(work.TryDequeue(out wrk))
 								{
-									bLastOne	=work.IsEmpty;
 									if(!ProcessWork(portIndexer, wrk, amvc))
 									{
 										//failed, requeue
@@ -703,11 +699,6 @@ namespace BSPLib
 										lock(actBusy)
 										{
 											actBusy[actives.IndexOf(amvc)]	=false;
-										}
-
-										if(bLastOne && work.IsEmpty)
-										{
-											bReallyDone	=true;
 										}
 									}
 								}

@@ -768,6 +768,7 @@ namespace MaterialLib
 			Texture2D	tex	=Texture2D.FromStream(gd, fs);
 
 			path	=path.Substring(path.LastIndexOf("Content") + 8);
+			path	=UtilityLib.FileUtil.StripExtension(path);
 
 			mMaps.Add(path, tex);
 		}
