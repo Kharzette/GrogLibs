@@ -5,9 +5,9 @@ using System.Text;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
-	public class GFXPortal : IReadWriteable
+	public class GFXPortal
 	{
 		public Vector3	mOrigin;
 		public Int32	mLeafTo;

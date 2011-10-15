@@ -4,9 +4,9 @@ using System.Text;
 using System.IO;
 using Microsoft.Xna.Framework;
 
-namespace BSPLib
+namespace BSPCore
 {
-	public class GFXPlane : UtilityLib.IReadWriteable
+	public class GFXPlane : Utility64.IReadWriteable
 	{
 		public Vector3	mNormal;
 		public float	mDist;

@@ -6,7 +6,7 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	public class BuildFarmCaps
 	{

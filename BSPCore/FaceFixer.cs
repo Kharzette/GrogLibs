@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	public class FaceFixer
 	{
@@ -187,7 +187,7 @@ namespace BSPLib
 			Int32	i=0;
 			for(;i < mWelded.Count;i++)
 			{
-				if(UtilityLib.Mathery.CompareVector(vert, mWelded[i]))
+				if(Utility64.Mathery.CompareVector(vert, mWelded[i]))
 				{
 					return	i;
 				}

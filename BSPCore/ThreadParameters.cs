@@ -6,7 +6,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	public class VisParameters
 	{
@@ -26,10 +26,10 @@ namespace BSPLib
 
 	public class LightParameters
 	{
-		public BSPBuildParams				mBSPParams;
-		public LightParams					mLightParams;
-		public VisParams					mVisParams;
-		public Map.GetEmissiveForMaterial	mC4M;
-		public string						mFileName;
+		public BSPBuildParams						mBSPParams;
+		public LightParams							mLightParams;
+		public VisParams							mVisParams;
+		public CoreDelegates.GetEmissiveForMaterial	mC4M;
+		public string								mFileName;
 	}
 }

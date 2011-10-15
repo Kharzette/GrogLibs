@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	public class FInfo
 	{
@@ -97,9 +97,9 @@ namespace BSPLib
 
 			for(int i=0;i < 3;i++)
 			{
-				UtilityLib.Mathery.VecIdxAssign(ref mTexOrg, i,
-					-vecs[0].Z * UtilityLib.Mathery.VecIdx(mT2WVecs[0], i)
-					-vecs[1].Z * UtilityLib.Mathery.VecIdx(mT2WVecs[1], i));
+				Utility64.Mathery.VecIdxAssign(ref mTexOrg, i,
+					-vecs[0].Z * Utility64.Mathery.VecIdx(mT2WVecs[0], i)
+					-vecs[1].Z * Utility64.Mathery.VecIdx(mT2WVecs[1], i));
 			}
 
 			float Dist	=Vector3.Dot(mTexOrg, mPlane.mNormal)
@@ -111,8 +111,8 @@ namespace BSPLib
 
 		internal void CalcFacePoints(LInfo lightInfo, int lightGridSize,
 			float UOfs, float VOfs,
-			bool bExtraLightCorrection, Map.IsPointInSolid pointInSolid,
-			Map.RayCollision rayCollide)
+			bool bExtraLightCorrection, CoreDelegates.IsPointInSolid pointInSolid,
+			CoreDelegates.RayCollision rayCollide)
 		{
 			bool	[]InSolid	=new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE];
 

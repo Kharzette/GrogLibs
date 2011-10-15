@@ -6,9 +6,9 @@ using Microsoft.Xna.Framework;
 using System.ComponentModel;
 
 
-namespace BSPLib
+namespace BSPCore
 {
-	public class MapEntity : UtilityLib.IReadWriteable
+	public class MapEntity : Utility64.IReadWriteable
 	{
 		BindingList<MapBrush>	mBrushes	=new BindingList<MapBrush>();
 
@@ -29,15 +29,15 @@ namespace BSPLib
 				return	false;
 			}
 
-			if(!UtilityLib.Mathery.TryParse(szVec[0], out org.X))
+			if(!Utility64.Mathery.TryParse(szVec[0], out org.X))
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(szVec[1], out org.Y))
+			if(!Utility64.Mathery.TryParse(szVec[1], out org.Y))
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(szVec[2], out org.Z))
+			if(!Utility64.Mathery.TryParse(szVec[2], out org.Z))
 			{
 				return	false;
 			}
@@ -75,7 +75,7 @@ namespace BSPLib
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(mData[key], out val))
+			if(!Utility64.Mathery.TryParse(mData[key], out val))
 			{
 				return	false;
 			}
@@ -117,15 +117,15 @@ namespace BSPLib
 				return	false;
 			}
 
-			if(!UtilityLib.Mathery.TryParse(szVec[0], out org.X))
+			if(!Utility64.Mathery.TryParse(szVec[0], out org.X))
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(szVec[1], out org.Y))
+			if(!Utility64.Mathery.TryParse(szVec[1], out org.Y))
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(szVec[2], out org.Z))
+			if(!Utility64.Mathery.TryParse(szVec[2], out org.Z))
 			{
 				return	false;
 			}
@@ -140,7 +140,7 @@ namespace BSPLib
 
 			if(mData.ContainsKey("light"))
 			{
-				if(!UtilityLib.Mathery.TryParse(mData["light"], out dist))
+				if(!Utility64.Mathery.TryParse(mData["light"], out dist))
 				{
 					return	false;
 				}
@@ -158,16 +158,16 @@ namespace BSPLib
 			{
 				string	[]elements	=mData["_light"].Split(' ');
 
-				UtilityLib.Mathery.TryParse(elements[0], out val.X);
-				UtilityLib.Mathery.TryParse(elements[1], out val.Y);
-				UtilityLib.Mathery.TryParse(elements[2], out val.Z);
-				UtilityLib.Mathery.TryParse(elements[3], out val.W);
+				Utility64.Mathery.TryParse(elements[0], out val.X);
+				Utility64.Mathery.TryParse(elements[1], out val.Y);
+				Utility64.Mathery.TryParse(elements[2], out val.Z);
+				Utility64.Mathery.TryParse(elements[3], out val.W);
 				return	true;
 			}
 			else if(mData.ContainsKey("light"))
 			{
 				val		=Vector4.One * 255.0f;
-				UtilityLib.Mathery.TryParse(mData["light"], out val.W);
+				Utility64.Mathery.TryParse(mData["light"], out val.W);
 				return	true;
 			}
 			return	false;
@@ -210,15 +210,15 @@ namespace BSPLib
 				return	false;
 			}
 
-			if(!UtilityLib.Mathery.TryParse(szVec[0], out color.X))
+			if(!Utility64.Mathery.TryParse(szVec[0], out color.X))
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(szVec[1], out color.Y))
+			if(!Utility64.Mathery.TryParse(szVec[1], out color.Y))
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(szVec[2], out color.Z))
+			if(!Utility64.Mathery.TryParse(szVec[2], out color.Z))
 			{
 				return	false;
 			}
@@ -482,24 +482,6 @@ namespace BSPLib
 			{
 				bw.Write(pair.Key);
 				bw.Write(pair.Value);
-			}
-		}
-
-
-		internal void GetLightType(out UInt32 type)
-		{
-			string	className	="";
-			if(mData.ContainsKey("classname"))
-			{
-				className	=mData["classname"];
-			}
-			if(className == "light_spot")
-			{
-				type	=DirectLight.DLight_Spot;
-			}
-			else
-			{
-				type	=DirectLight.DLight_Point;
 			}
 		}
 

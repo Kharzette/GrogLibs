@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	public class RADPatch
 	{
@@ -95,7 +95,7 @@ namespace BSPLib
 		}
 
 
-		internal bool RayCastBetween(RADPatch other, Map.RayCollision ray)
+		internal bool RayCastBetween(RADPatch other, CoreDelegates.RayCollision ray)
 		{
 			Vector3	imp	=Vector3.Zero;
 			return	ray(mOrigin, other.mOrigin, ref imp);
@@ -124,13 +124,13 @@ namespace BSPLib
 				int	k;
 				for(k=0;k < 3;k++)
 				{
-					if(UtilityLib.Mathery.VecIdx(patch.mOrigin, k)
-						< UtilityLib.Mathery.VecIdx(bounds.mMins, k) - (patchSize * 2))
+					if(Utility64.Mathery.VecIdx(patch.mOrigin, k)
+						< Utility64.Mathery.VecIdx(bounds.mMins, k) - (patchSize * 2))
 					{
 						break;
 					}
-					if(UtilityLib.Mathery.VecIdx(patch.mOrigin, k)
-						> UtilityLib.Mathery.VecIdx(bounds.mMaxs, k) + (patchSize * 2))
+					if(Utility64.Mathery.VecIdx(patch.mOrigin, k)
+						> Utility64.Mathery.VecIdx(bounds.mMaxs, k) + (patchSize * 2))
 					{
 						break;
 					}
@@ -154,7 +154,7 @@ namespace BSPLib
 		{
 			for(int i=0;i < 3;i++)
 			{
-				if(UtilityLib.Mathery.VecIdx(mRadFinal, i) < 0.0f)
+				if(Utility64.Mathery.VecIdx(mRadFinal, i) < 0.0f)
 				{
 					Map.Print("CheckPatch:  Bad final radiosity Color in patch.\n");
 					return	false;
@@ -164,7 +164,7 @@ namespace BSPLib
 		}
 
 
-		internal bool Finalize(GFXPlane facePlane, int planeSide, Map.GetNodeLandedIn findNode)
+		internal bool Finalize(GFXPlane facePlane, int planeSide, CoreDelegates.GetNodeLandedIn findNode)
 		{
 			if(mPoly == null)
 			{
@@ -280,16 +280,16 @@ namespace BSPLib
 				
 				for(i=0;i < 3;i++)
 				{
-					Dist	=UtilityLib.Mathery.VecIdx(mBounds.mMaxs, i)
-								- UtilityLib.Mathery.VecIdx(mBounds.mMins, i);
+					Dist	=Utility64.Mathery.VecIdx(mBounds.mMaxs, i)
+								- Utility64.Mathery.VecIdx(mBounds.mMins, i);
 					
 					if(Dist > patchSize)
 					{
 						//Cut it right through the center...
 						Plane.mNormal	=Vector3.Zero;
-						UtilityLib.Mathery.VecIdxAssign(ref Plane.mNormal, i, 1.0f);
-						Plane.mDist	=(UtilityLib.Mathery.VecIdx(mBounds.mMaxs, i)
-							+ UtilityLib.Mathery.VecIdx(mBounds.mMins, i))
+						Utility64.Mathery.VecIdxAssign(ref Plane.mNormal, i, 1.0f);
+						Plane.mDist	=(Utility64.Mathery.VecIdx(mBounds.mMaxs, i)
+							+ Utility64.Mathery.VecIdx(mBounds.mMins, i))
 								/ 2.0f;
 						Plane.mType	=GBSPPlane.PLANE_ANY;
 						return	true;
@@ -301,14 +301,14 @@ namespace BSPLib
 				float	Min, Max;
 				for(i=0;i < 3;i++)
 				{
-					Min	=UtilityLib.Mathery.VecIdx(mBounds.mMins, i) + 1.0f;
-					Max	=UtilityLib.Mathery.VecIdx(mBounds.mMaxs, i) - 1.0f;
+					Min	=Utility64.Mathery.VecIdx(mBounds.mMins, i) + 1.0f;
+					Max	=Utility64.Mathery.VecIdx(mBounds.mMaxs, i) - 1.0f;
 
 					if(Math.Floor(Min / patchSize)
 						< Math.Floor(Max / patchSize))
 					{
 						Plane.mNormal	=Vector3.Zero;
-						UtilityLib.Mathery.VecIdxAssign(ref Plane.mNormal, i, 1.0f);
+						Utility64.Mathery.VecIdxAssign(ref Plane.mNormal, i, 1.0f);
 						Plane.mDist	=patchSize * (1.0f + (float)Math.Floor(Min / patchSize));
 						Plane.mType	=GBSPPlane.PLANE_ANY;
 						return	true;
@@ -343,13 +343,13 @@ namespace BSPLib
 					int	k	=0;
 					for(k=0;k < 3;k++)
 					{
-						if(UtilityLib.Mathery.VecIdx(p.mBounds.mMins, k)
-							> UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) + lightGridSize)
+						if(Utility64.Mathery.VecIdx(p.mBounds.mMins, k)
+							> Utility64.Mathery.VecIdx(facePoints[vertOfs], k) + lightGridSize)
 						{
 							break;
 						}
-						if(UtilityLib.Mathery.VecIdx(p.mBounds.mMaxs, k)
-							< UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) - lightGridSize)
+						if(Utility64.Mathery.VecIdx(p.mBounds.mMaxs, k)
+							< Utility64.Mathery.VecIdx(facePoints[vertOfs], k) - lightGridSize)
 						{
 							break;
 						}

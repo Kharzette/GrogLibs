@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace BSPLib
+namespace BSPCore
 {
-	public class GFXLeafSide : UtilityLib.IReadWriteable
+	public class GFXLeafSide : Utility64.IReadWriteable
 	{
 		public Int32	mPlaneNum;
 		public Int32	mPlaneSide;

@@ -210,6 +210,10 @@ namespace MaterialLib
 				List<string>	texs	=new List<string>();
 				foreach(string tex in texNeeded)
 				{
+					if(tex == "LightMapAtlas")
+					{
+						continue;
+					}
 					if(!texs.Contains(tex))
 					{
 						texs.Add(tex);

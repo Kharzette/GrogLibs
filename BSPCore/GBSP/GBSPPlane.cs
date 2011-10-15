@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	internal struct GBSPPlane
 	{
@@ -90,11 +90,11 @@ namespace BSPLib
 
 		internal void Snap()
 		{
-			UtilityLib.Mathery.SnapVector(ref mNormal);
+			Utility64.Mathery.SnapVector(ref mNormal);
 
 			float	roundedDist	=(float)Math.Round((double)mDist);
 
-			if(Math.Abs(mDist - roundedDist) < UtilityLib.Mathery.DIST_EPSILON)
+			if(Math.Abs(mDist - roundedDist) < Utility64.Mathery.DIST_EPSILON)
 			{
 				mDist	=roundedDist;
 			}
@@ -145,7 +145,7 @@ namespace BSPLib
 
 			UInt32	type	=mType % PLANE_ANYX;
 
-			if(UtilityLib.Mathery.VecIdx(mNormal, type) < 0)
+			if(Utility64.Mathery.VecIdx(mNormal, type) < 0)
 			{
 				Inverse();
 				side	=1;
@@ -158,10 +158,10 @@ namespace BSPLib
 			Vector3	norm	=mNormal - other.mNormal;
 			float	dist	=mDist - other.mDist;
 
-			if(Math.Abs(norm.X) < UtilityLib.Mathery.NORMAL_EPSILON &&
-				Math.Abs(norm.Y) < UtilityLib.Mathery.NORMAL_EPSILON &&
-				Math.Abs(norm.Z) < UtilityLib.Mathery.NORMAL_EPSILON &&
-				Math.Abs(dist) < UtilityLib.Mathery.DIST_EPSILON)
+			if(Math.Abs(norm.X) < Utility64.Mathery.NORMAL_EPSILON &&
+				Math.Abs(norm.Y) < Utility64.Mathery.NORMAL_EPSILON &&
+				Math.Abs(norm.Z) < Utility64.Mathery.NORMAL_EPSILON &&
+				Math.Abs(dist) < Utility64.Mathery.DIST_EPSILON)
 			{
 				return	true;
 			}

@@ -4,9 +4,9 @@ using System.IO;
 using System.Text;
 
 
-namespace BSPLib
+namespace BSPCore
 {
-	public class GFXHeader : UtilityLib.IReadWriteable
+	public class GFXHeader
 	{
 		public UInt32	mTag;
 

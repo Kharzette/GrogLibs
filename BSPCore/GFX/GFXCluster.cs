@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace BSPLib
+namespace BSPCore
 {
-	public class GFXCluster : UtilityLib.IReadWriteable
+	public class GFXCluster : Utility64.IReadWriteable
 	{
 		public Int32	mVisOfs;
 

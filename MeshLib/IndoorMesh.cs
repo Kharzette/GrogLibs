@@ -576,9 +576,9 @@ namespace MeshLib
 			if(bLightMapNeeded)
 			{
 				mLightMapAtlas.Read(g, br);
+				mMatLib.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasTexture());
 			}
 
-			mMatLib.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasTexture());
 
 			int	numVerts	=br.ReadInt32();
 			if(numVerts != 0)

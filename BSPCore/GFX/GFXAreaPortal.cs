@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace BSPLib
+namespace BSPCore
 {
-	public class GFXAreaPortal : UtilityLib.IReadWriteable
+	public class GFXAreaPortal : Utility64.IReadWriteable
 	{
 		public Int32	mModelNum;
 		public Int32	mArea;

@@ -6,7 +6,7 @@ using System.IO;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	internal class BuildStats
 	{

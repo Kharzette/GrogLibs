@@ -7,9 +7,9 @@ using System.Reflection;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
-	public class GFXNode : UtilityLib.IReadWriteable
+	public class GFXNode : Utility64.IReadWriteable
 	{
 		public Int32	[]mChildren	=new Int32[2];
 		public Int32	mNumFaces;

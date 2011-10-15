@@ -4,9 +4,9 @@ using System.Text;
 using System.IO;
 using Microsoft.Xna.Framework;
 
-namespace BSPLib
+namespace BSPCore
 {
-	public class GFXSkyData : UtilityLib.IReadWriteable
+	public class GFXSkyData
 	{
 		public Vector3	mAxis;						// Axis of rotation
 		public float	mDpm;						// Degres per minute

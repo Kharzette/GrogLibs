@@ -5,9 +5,9 @@ using System.Text;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
-	public class GFXLeaf : UtilityLib.IReadWriteable
+	public class GFXLeaf : Utility64.IReadWriteable
 	{
 		public UInt32	mContents;
 		public Vector3	mMins, mMaxs;

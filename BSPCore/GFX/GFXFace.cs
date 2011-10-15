@@ -4,9 +4,9 @@ using System.IO;
 using System.Text;
 
 
-namespace BSPLib
+namespace BSPCore
 {
-	public class GFXFace : UtilityLib.IReadWriteable
+	public class GFXFace : Utility64.IReadWriteable
 	{
 		public Int32	mFirstVert;
 		public Int32	mNumVerts;

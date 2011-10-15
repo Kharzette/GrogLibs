@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using MaterialLib;
-using Microsoft.Xna.Framework.Graphics;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	public class TexInfoPool
 	{
@@ -111,7 +109,7 @@ namespace BSPLib
 			}
 		}
 
-
+		/*
 		List<Material>	GetMaterials()
 		{
 			List<string>	mats	=new List<string>();
@@ -143,6 +141,6 @@ namespace BSPLib
 				ret.Add(mat);
 			}
 			return	ret;
-		}
+		}*/
 	}
 }

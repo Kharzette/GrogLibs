@@ -6,7 +6,7 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	class VISPStack
 	{
@@ -172,7 +172,7 @@ namespace BSPLib
 				}
 				else
 				{
-					Map.Print("No VisInfo for portal.\n");
+					CoreEvents.Print("No VisInfo for portal.\n");
 					return	false;
 				}
 

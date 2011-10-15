@@ -6,7 +6,7 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	public class Bounds
 	{
@@ -68,8 +68,8 @@ namespace BSPLib
 		{
 			for(int i=0;i < 3;i++)
 			{
-				if(UtilityLib.Mathery.VecIdx(mMins, i) >= UtilityLib.Mathery.VecIdx(b2.mMaxs, i) ||
-					UtilityLib.Mathery.VecIdx(mMaxs, i) <= UtilityLib.Mathery.VecIdx(b2.mMins, i))
+				if(Utility64.Mathery.VecIdx(mMins, i) >= Utility64.Mathery.VecIdx(b2.mMaxs, i) ||
+					Utility64.Mathery.VecIdx(mMaxs, i) <= Utility64.Mathery.VecIdx(b2.mMins, i))
 				{
 					return	false;
 				}
@@ -97,8 +97,8 @@ namespace BSPLib
 		{
 			for(int i=0;i < 3;i++)
 			{
-				if(UtilityLib.Mathery.VecIdx(mMins, i) <= -MIN_MAX_BOUNDS
-					|| UtilityLib.Mathery.VecIdx(mMaxs, i) >= MIN_MAX_BOUNDS)
+				if(Utility64.Mathery.VecIdx(mMins, i) <= -MIN_MAX_BOUNDS
+					|| Utility64.Mathery.VecIdx(mMaxs, i) >= MIN_MAX_BOUNDS)
 				{
 					return	true;
 				}
@@ -120,13 +120,13 @@ namespace BSPLib
 			{
 				Side	=0;
 
-				if(UtilityLib.Mathery.VecIdx(mMaxs, Plane.mType)
+				if(Utility64.Mathery.VecIdx(mMaxs, Plane.mType)
 					> Plane.mDist + GBSPPlane.PLANESIDE_EPSILON)
 				{
 					Side	|=GBSPPlane.PSIDE_FRONT;
 				}
 
-				if(UtilityLib.Mathery.VecIdx(mMins, Plane.mType)
+				if(Utility64.Mathery.VecIdx(mMins, Plane.mType)
 					< Plane.mDist - GBSPPlane.PLANESIDE_EPSILON)
 				{
 					Side	|=GBSPPlane.PSIDE_BACK;
@@ -136,19 +136,19 @@ namespace BSPLib
 			
 			for(int i=0;i < 3;i++)
 			{
-				if(UtilityLib.Mathery.VecIdx(Plane.mNormal, i) < 0)
+				if(Utility64.Mathery.VecIdx(Plane.mNormal, i) < 0)
 				{
-					UtilityLib.Mathery.VecIdxAssign(ref Corner1, i,
-						UtilityLib.Mathery.VecIdx(mMins, i));
-					UtilityLib.Mathery.VecIdxAssign(ref Corner2, i,
-						UtilityLib.Mathery.VecIdx(mMaxs, i));
+					Utility64.Mathery.VecIdxAssign(ref Corner1, i,
+						Utility64.Mathery.VecIdx(mMins, i));
+					Utility64.Mathery.VecIdxAssign(ref Corner2, i,
+						Utility64.Mathery.VecIdx(mMaxs, i));
 				}
 				else
 				{
-					UtilityLib.Mathery.VecIdxAssign(ref Corner2, i,
-						UtilityLib.Mathery.VecIdx(mMins, i));
-					UtilityLib.Mathery.VecIdxAssign(ref Corner1, i,
-						UtilityLib.Mathery.VecIdx(mMaxs, i));
+					Utility64.Mathery.VecIdxAssign(ref Corner2, i,
+						Utility64.Mathery.VecIdx(mMins, i));
+					Utility64.Mathery.VecIdxAssign(ref Corner1, i,
+						Utility64.Mathery.VecIdx(mMaxs, i));
 				}
 			}
 

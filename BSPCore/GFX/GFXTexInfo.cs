@@ -5,9 +5,9 @@ using System.Text;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
-	public class GFXTexInfo : UtilityLib.IReadWriteable
+	public class GFXTexInfo : Utility64.IReadWriteable
 	{
 		public Vector3	[]mVecs			=new Vector3[2];
 		public float	[]mShift		=new float[2];

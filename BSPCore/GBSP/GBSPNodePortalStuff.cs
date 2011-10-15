@@ -6,7 +6,7 @@ using System.IO;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	internal partial class GBSPNode
 	{
@@ -15,18 +15,18 @@ namespace BSPLib
 		{
 			if(bVerbose)
 			{
-				Map.Print(" --- Create Portals --- \n");
+				CoreEvents.Print(" --- Create Portals --- \n");
 			}
 
 			if(!CreateAllOutsidePortals(pool, ref outNode, nodeMins, nodeMaxs))
 			{
-				Map.Print("CreatePortals:  Could not create bbox portals.\n");
+				CoreEvents.Print("CreatePortals:  Could not create bbox portals.\n");
 				return	false;
 			}
 
 			if(!PartitionPortals_r(pool, bVis))
 			{
-				Map.Print("CreatePortals:  Could not partition portals.\n");
+				CoreEvents.Print("CreatePortals:  Could not partition portals.\n");
 				return	false;
 			}
 			return	true;
@@ -57,7 +57,7 @@ namespace BSPLib
 			GBSPPoly	newPoly;
 			if(!CreatePolyOnNode(out newPoly, pool))
 			{
-				Map.Print("PartitionPortals_r:  CreatePolyOnNode failed.\n");
+				CoreEvents.Print("PartitionPortals_r:  CreatePolyOnNode failed.\n");
 				return false;
 			}
 
@@ -75,7 +75,7 @@ namespace BSPLib
 				}
 				else
 				{
-					Map.Print("PartitionPortals_r:  Portal does not look at either node.\n");
+					CoreEvents.Print("PartitionPortals_r:  Portal does not look at either node.\n");
 					return false;
 				}
 
@@ -83,13 +83,13 @@ namespace BSPLib
 
 				if(!newPoly.ClipPolyEpsilon(0.001f, portPlane, side != 0))
 				{
-					Map.Print("PartitionPortals_r:  There was an error clipping the poly.\n");
+					CoreEvents.Print("PartitionPortals_r:  There was an error clipping the poly.\n");
 					return false;
 				}
 
 				if(newPoly.VertCount() < 3)
 				{
-					Map.Print("PartitionPortals_r:  Portal was cut away.\n");
+					CoreEvents.Print("PartitionPortals_r:  Portal was cut away.\n");
 					break;
 				}
 			}
@@ -104,7 +104,7 @@ namespace BSPLib
 				GBSPPortal	newPort	=new GBSPPortal();
 				if(newPort == null)
 				{
-					Map.Print("PartitionPortals_r:  Out of memory for portal.\n");
+					CoreEvents.Print("PartitionPortals_r:  Out of memory for portal.\n");
 					return	false;
 				}
 				newPort.mPoly		=newPoly;
@@ -113,7 +113,7 @@ namespace BSPLib
 
 				if(!newPort.Check())
 				{
-					Map.Print("PartiionPortals_r:  Check Portal failed.\n");
+					CoreEvents.Print("PartiionPortals_r:  Check Portal failed.\n");
 					return	false;
 				}
 				else
@@ -136,7 +136,7 @@ namespace BSPLib
 				}
 				else
 				{
-					Map.Print("PartitionPortals_r:  Portal does not look at either node.\n");
+					CoreEvents.Print("PartitionPortals_r:  Portal does not look at either node.\n");
 					return	false;
 				}
 
@@ -150,7 +150,7 @@ namespace BSPLib
 				GBSPPoly	frontPoly, backPoly;
 				if(!port.mPoly.SplitEpsilon(0.001f, thisPlane, out frontPoly, out backPoly, false))
 				{
-					Map.Print("PartitionPortals_r:  Could not split portal.\n");
+					CoreEvents.Print("PartitionPortals_r:  Could not split portal.\n");
 					return false;
 				}
 
@@ -202,7 +202,7 @@ namespace BSPLib
 				GBSPPortal	newPort		=new GBSPPortal(port);
 				if(newPort == null)
 				{
-					Map.Print("PartitionPortals_r:  Out of memory for portal.\n");
+					CoreEvents.Print("PartitionPortals_r:  Out of memory for portal.\n");
 					return	false;
 				}
 				newPort.mPoly	=backPoly;
@@ -221,7 +221,7 @@ namespace BSPLib
 
 			if(mPortals != null)
 			{
-				Map.Print("*WARNING* PartitionPortals_r:  Portals still on node after distribution...\n");
+				CoreEvents.Print("*WARNING* PartitionPortals_r:  Portals still on node after distribution...\n");
 			}
 			
 			if(!front.PartitionPortals_r(pool, bVisPortals))
@@ -273,7 +273,7 @@ namespace BSPLib
 		{
 			if(port.mNodes[0] != null || port.mNodes[1] != null)
 			{
-				Map.Print("LinkPortal:  Portal allready looks at one of the nodes.\n");
+				CoreEvents.Print("LinkPortal:  Portal allready looks at one of the nodes.\n");
 				return	false;
 			}
 
@@ -329,12 +329,12 @@ namespace BSPLib
 			//So there won't be NULL volume leafs when we create the outside portals
 			for(int k=0;k < 3;k++)
 			{
-				if(UtilityLib.Mathery.VecIdx(nodeMins, k) - 128.0f
+				if(Utility64.Mathery.VecIdx(nodeMins, k) - 128.0f
 					<= -Bounds.MIN_MAX_BOUNDS ||
-					UtilityLib.Mathery.VecIdx(nodeMaxs, k) + 128.0f
+					Utility64.Mathery.VecIdx(nodeMaxs, k) + 128.0f
 					>= Bounds.MIN_MAX_BOUNDS)
 				{
-					Map.Print("CreateAllOutsidePortals:  World BOX out of range...\n");
+					CoreEvents.Print("CreateAllOutsidePortals:  World BOX out of range...\n");
 					return	false;
 				}
 			}
@@ -353,13 +353,13 @@ namespace BSPLib
 
 					if(k == 0)
 					{
-						UtilityLib.Mathery.VecIdxAssign(ref PPlanes[Index].mNormal, i, 1.0f);
-						PPlanes[Index].mDist	=UtilityLib.Mathery.VecIdx(nodeMins, i);
+						Utility64.Mathery.VecIdxAssign(ref PPlanes[Index].mNormal, i, 1.0f);
+						PPlanes[Index].mDist	=Utility64.Mathery.VecIdx(nodeMins, i);
 					}
 					else
 					{
-						UtilityLib.Mathery.VecIdxAssign(ref PPlanes[Index].mNormal, i, -1.0f);
-						PPlanes[Index].mDist	=-UtilityLib.Mathery.VecIdx(nodeMaxs, i);
+						Utility64.Mathery.VecIdxAssign(ref PPlanes[Index].mNormal, i, -1.0f);
+						PPlanes[Index].mDist	=-Utility64.Mathery.VecIdx(nodeMaxs, i);
 					}
 					
 					Portals[Index]	=GBSPPortal.CreateOutsidePortal(PPlanes[Index], this, pool, ref outsideNode);
@@ -382,13 +382,13 @@ namespace BSPLib
 
 					if(!Portals[i].mPoly.ClipPoly(PPlanes[k], false))
 					{
-						Map.Print("CreateAllOutsidePortals:  There was an error clipping the portal.\n");
+						CoreEvents.Print("CreateAllOutsidePortals:  There was an error clipping the portal.\n");
 						return	false;
 					}
 
 					if(Portals[i].mPoly.VertCount() < 3)
 					{
-						Map.Print("CreateAllOutsidePortals:  Portal was clipped away.\n");
+						CoreEvents.Print("CreateAllOutsidePortals:  Portal was clipped away.\n");
 						return	false;
 					}
 				}
@@ -484,7 +484,7 @@ namespace BSPLib
 				}
 				else
 				{
-					Map.Print("FillLeafs_r:  Portal does not look at either node.\n");
+					CoreEvents.Print("FillLeafs_r:  Portal does not look at either node.\n");
 					return	false;
 				}
 				
@@ -526,7 +526,7 @@ namespace BSPLib
 				}
 				else
 				{
-					Map.Print("RemoveOutside2_r:  Portal does not look at either node.\n");
+					CoreEvents.Print("RemoveOutside2_r:  Portal does not look at either node.\n");
 					return	false;
 				}
 
@@ -572,7 +572,7 @@ namespace BSPLib
 
 			if(!bEmpty)
 			{
-				Map.Print("FillFromEntities:  No valid entities for operation.\n");
+				CoreEvents.Print("FillFromEntities:  No valid entities for operation.\n");
 				return	false;
 			}
 			return	true;
@@ -607,7 +607,7 @@ namespace BSPLib
 			List<MapEntity> ents,
 			PlanePool pool, bool bVerbose)
 		{
-			Map.Print(" --- Remove Hidden Leafs --- \n");
+			CoreEvents.Print(" --- Remove Hidden Leafs --- \n");
 
 			GBSPNode	outsideNode	=oNode;
 
@@ -631,11 +631,11 @@ namespace BSPLib
 
 			if(bHitEntity)
 			{
-				Map.Print("*****************************************\n");
-				Map.Print("*           *** LEAK ***                *\n");
-				Map.Print("* Level is NOT sealed.                  *\n");
-				Map.Print("* Optimal removal will not be performed.*\n");
-				Map.Print("*****************************************\n");
+				CoreEvents.Print("*****************************************\n");
+				CoreEvents.Print("*           *** LEAK ***                *\n");
+				CoreEvents.Print("* Level is NOT sealed.                  *\n");
+				CoreEvents.Print("* Optimal removal will not be performed.*\n");
+				CoreEvents.Print("*****************************************\n");
 
 //				WriteLeakFile("Test", HitNode, ONode);
 				return	-1;
@@ -652,7 +652,7 @@ namespace BSPLib
 
 			if(bVerbose)
 			{
-				Map.Print("Removed Leafs          : " + numRemovedLeafs + "\n");
+				CoreEvents.Print("Removed Leafs          : " + numRemovedLeafs + "\n");
 			}
 
 			return	numRemovedLeafs;
@@ -716,7 +716,7 @@ namespace BSPLib
 		{
 			if(bVerbose)
 			{
-				Map.Print("--- Map Portals to Brushes ---\n");
+				CoreEvents.Print("--- Map Portals to Brushes ---\n");
 			}
 
 			//Clear all the visible flags
@@ -754,7 +754,7 @@ namespace BSPLib
 				}
 				else
 				{
-					Map.Print("FreePortals_r:  Portal does not look at either node.\n");
+					CoreEvents.Print("FreePortals_r:  Portal does not look at either node.\n");
 					return	false;
 				}
 
@@ -829,7 +829,7 @@ namespace BSPLib
 					
 					if(nodes[0].mCluster == nodes[1].mCluster)	
 					{
-						Map.Print("GetVisInfo:  Portal seperating the same cluster.\n");
+						CoreEvents.Print("GetVisInfo:  Portal seperating the same cluster.\n");
 						return	false;
 					}
 					VISPortal	vport	=new VISPortal();
@@ -858,7 +858,7 @@ namespace BSPLib
 
 					if(nodes[side2].mCluster < 0 || nodes[side2].mCluster > numLeafClusters)
 					{
-						Map.Print("GetVisInfo: Bad leaf cluster number.\n");
+						CoreEvents.Print("GetVisInfo: Bad leaf cluster number.\n");
 						return	false;
 					}
 
@@ -866,7 +866,7 @@ namespace BSPLib
 					Int32	oppSide2	=(side2 == 0)? 1 : 0;
 					if(nodes[oppSide2].mCluster < 0 || nodes[oppSide2].mCluster > numLeafClusters)
 					{
-						Map.Print("GetVisInfo: Bad leaf cluster number 2.\n");
+						CoreEvents.Print("GetVisInfo: Bad leaf cluster number 2.\n");
 						return	false;
 					}
 
@@ -902,7 +902,7 @@ namespace BSPLib
 
 			if(mPortals != null)
 			{
-				Map.Print("*WARNING* SavePortalFile_r:  Node with portal.\n");
+				CoreEvents.Print("*WARNING* SavePortalFile_r:  Node with portal.\n");
 			}
 
 			if(!mChildren[0].GetVisInfo(visPortals, visLeafs, pool, numLeafClusters))
@@ -933,7 +933,7 @@ namespace BSPLib
 
 				if(mPortals == null)
 				{
-					Map.Print("*WARNING* PrepPortalFile_r:  Leaf without any portals.\n");
+					CoreEvents.Print("*WARNING* PrepPortalFile_r:  Leaf without any portals.\n");
 					return	true;
 				}
 
@@ -949,7 +949,7 @@ namespace BSPLib
 
 					if(port.mPoly == null)
 					{
-						Map.Print("*WARNING*  SavePortalFile_r:  Portal with NULL poly.\n");
+						CoreEvents.Print("*WARNING*  SavePortalFile_r:  Portal with NULL poly.\n");
 						continue;
 					}
 
@@ -960,7 +960,7 @@ namespace BSPLib
 					
 					if(nodes[0].mCluster == nodes[1].mCluster)	
 					{
-						Map.Print("PrepPortalFile_r:  Portal seperating the same cluster.\n");
+						CoreEvents.Print("PrepPortalFile_r:  Portal seperating the same cluster.\n");
 						return	false;
 					}
 					
@@ -975,7 +975,7 @@ namespace BSPLib
 
 			if(mPortals != null)
 			{
-				Map.Print("*WARNING* PrepPortalFile_r:  Node with portal.\n");
+				CoreEvents.Print("*WARNING* PrepPortalFile_r:  Node with portal.\n");
 			}
 
 			if(!mChildren[0].PrepPortalFile_r(ref numPortalLeafs, ref numPortals))
@@ -1025,7 +1025,7 @@ namespace BSPLib
 
 					if(nodes[0].mCluster == nodes[1].mCluster)	
 					{
-						Map.Print("PrepPortalFile_r:  Portal seperating the same cluster.\n");
+						CoreEvents.Print("PrepPortalFile_r:  Portal seperating the same cluster.\n");
 						return	false;
 					}
 
@@ -1033,7 +1033,7 @@ namespace BSPLib
 
 					if(poly.VertCount() < 3)
 					{
-						Map.Print("SavePortalFile_r:  Portal poly verts < 3.\n");
+						CoreEvents.Print("SavePortalFile_r:  Portal poly verts < 3.\n");
 						return	false;
 					}
 
@@ -1059,7 +1059,7 @@ namespace BSPLib
 					if(nodes[side2].mCluster < 0
 						|| nodes[side2].mCluster > numLeafClusters)
 					{
-						Map.Print("SavePortalFile_r:  Bad Leaf Cluster Number.\n");
+						CoreEvents.Print("SavePortalFile_r:  Bad Leaf Cluster Number.\n");
 						return	false;
 					}
 
@@ -1071,7 +1071,7 @@ namespace BSPLib
 					if (nodes[Side2Opposite].mCluster < 0
 						|| nodes[Side2Opposite].mCluster > numLeafClusters)
 					{
-						Map.Print("SavePortalFile_r:  Bad Leaf Cluster Number.\n");
+						CoreEvents.Print("SavePortalFile_r:  Bad Leaf Cluster Number.\n");
 						return	false;
 					}
 
@@ -1083,7 +1083,7 @@ namespace BSPLib
 
 			if(mPortals != null)
 			{
-				Map.Print("*WARNING* SavePortalFile_r:  Node with portal.\n");
+				CoreEvents.Print("*WARNING* SavePortalFile_r:  Node with portal.\n");
 			}
 
 			if(!mChildren[0].SavePortalFile_r(bw, pool, numLeafClusters))
@@ -1156,7 +1156,7 @@ namespace BSPLib
 			}
 			if(bestSide == null)
 			{
-				Map.Print("WARNING: Could not map portal to original brush...\n");
+				CoreEvents.Print("WARNING: Could not map portal to original brush...\n");
 			}
 			return	bestSide;
 		}
@@ -1167,7 +1167,7 @@ namespace BSPLib
 		{
 			if(bVerbose)
 			{
-				Map.Print(" --- Create Leaf Sides --- \n");
+				CoreEvents.Print(" --- Create Leaf Sides --- \n");
 			}
 
 			int	numLeafBevels	=0;
@@ -1179,8 +1179,8 @@ namespace BSPLib
 
 			if(bVerbose)
 			{
-				Map.Print("Num Leaf Sides       : " + leafSides.Count + "\n");
-				Map.Print("Num Leaf Bevels      : " + numLeafBevels + "\n");
+				CoreEvents.Print("Num Leaf Sides       : " + leafSides.Count + "\n");
+				CoreEvents.Print("Num Leaf Bevels      : " + numLeafBevels + "\n");
 			}
 			return	true;
 		}
@@ -1203,7 +1203,7 @@ namespace BSPLib
 
 				if(mPortals == null)
 				{
-					Map.Print("*WARNING* CreateLeafSides:  Contents leaf with no portals!\n");
+					CoreEvents.Print("*WARNING* CreateLeafSides:  Contents leaf with no portals!\n");
 					return	true;
 				}
 
@@ -1233,7 +1233,7 @@ namespace BSPLib
 					//Make sure we don't duplicate planes (this happens with portals)
 					if(i >= MAX_TEMP_LEAF_SIDES)
 					{
-						Map.Print("CreateLeafSides_r:  Max portal leaf sides.\n");
+						CoreEvents.Print("CreateLeafSides_r:  Max portal leaf sides.\n");
 						return	false;
 					}
 
@@ -1276,13 +1276,13 @@ namespace BSPLib
 
 			if(!GetLeafBBoxFromPortals(out bnd))
 			{
-				Map.Print("FinishLeafSides:  Could not get leaf portal BBox.\n");
+				CoreEvents.Print("FinishLeafSides:  Could not get leaf portal BBox.\n");
 				return	false;
 			}
 			
 			if(cNumLeafSides < 4)
 			{
-				Map.Print("*WARNING*  FinishLeafSides:  Incomplete leaf volume.\n");
+				CoreEvents.Print("*WARNING*  FinishLeafSides:  Incomplete leaf volume.\n");
 			}
 			else
 			{
@@ -1302,7 +1302,7 @@ namespace BSPLib
 							{
 								plane.Inverse();
 							}
-							if(UtilityLib.Mathery.VecIdx(plane.mNormal, Axis) == Dir)
+							if(Utility64.Mathery.VecIdx(plane.mNormal, Axis) == Dir)
 							{
 								break;
 							}
@@ -1312,16 +1312,16 @@ namespace BSPLib
 							//Add a new axial aligned side
 							plane.mNormal	=Vector3.Zero;
 
-							UtilityLib.Mathery.VecIdxAssign(ref plane.mNormal, Axis, Dir);
+							Utility64.Mathery.VecIdxAssign(ref plane.mNormal, Axis, Dir);
 
 							//get the mins/maxs from the gbsp brush
 							if(Dir == 1)
 							{
-								plane.mDist	=UtilityLib.Mathery.VecIdx(bnd.mMaxs, Axis);
+								plane.mDist	=Utility64.Mathery.VecIdx(bnd.mMaxs, Axis);
 							}
 							else
 							{
-								plane.mDist	=-UtilityLib.Mathery.VecIdx(bnd.mMins, Axis);
+								plane.mDist	=-Utility64.Mathery.VecIdx(bnd.mMins, Axis);
 							}
 
 							sbyte	side;
@@ -1330,7 +1330,7 @@ namespace BSPLib
 							
 							if(LPlaneNumbers[i] == -1)
 							{
-								Map.Print("FinishLeafSides:  Could not create the plane.\n");
+								CoreEvents.Print("FinishLeafSides:  Could not create the plane.\n");
 								return	false;
 							}
 
@@ -1347,7 +1347,7 @@ namespace BSPLib
 			{
 				if(cNumLeafSides >= MAX_LEAF_SIDES)
 				{
-					Map.Print("FinishLeafSides:  Max Leaf Sides.\n");
+					CoreEvents.Print("FinishLeafSides:  Max Leaf Sides.\n");
 					return	false;
 				}
 				GFXLeafSide	ls	=new GFXLeafSide();
@@ -1366,7 +1366,7 @@ namespace BSPLib
 
 			if(mPlaneNum != PlanePool.PLANENUM_LEAF)
 			{
-				Map.Print("GetLeafBBoxFromPortals:  Not a leaf.\n");
+				CoreEvents.Print("GetLeafBBoxFromPortals:  Not a leaf.\n");
 				return	false;
 			}
 
@@ -1381,7 +1381,7 @@ namespace BSPLib
 		}
 
 
-		bool FillAreas_r(Int32 Area, Map.ModelForLeafNode modForLeaf)
+		bool FillAreas_r(Int32 Area, CoreDelegates.ModelForLeafNode modForLeaf)
 		{
 			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
 			{
@@ -1395,7 +1395,7 @@ namespace BSPLib
 				Model	=modForLeaf(this);
 				if(Model == null)
 				{
-					Map.Print("FillAreas_r:  No model for leaf.\n");
+					CoreEvents.Print("FillAreas_r:  No model for leaf.\n");
 					return	false;
 				}
 
@@ -1414,7 +1414,7 @@ namespace BSPLib
 				}
 				else
 				{
-					Map.Print("*WARNING* FillAreas_r:  Area Portal touched more than 2 areas.\n");
+					CoreEvents.Print("*WARNING* FillAreas_r:  Area Portal touched more than 2 areas.\n");
 				}
 				return	true;
 			}
@@ -1442,7 +1442,7 @@ namespace BSPLib
 		}
 
 
-		internal bool CreateAreas_r(ref int numAreas, Map.ModelForLeafNode modForLeaf)
+		internal bool CreateAreas_r(ref int numAreas, CoreDelegates.ModelForLeafNode modForLeaf)
 		{
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
@@ -1486,7 +1486,7 @@ namespace BSPLib
 		}
 
 
-		internal bool FinishAreaPortals_r(Map.ModelForLeafNode modForLeaf)
+		internal bool FinishAreaPortals_r(CoreDelegates.ModelForLeafNode modForLeaf)
 		{
 			GBSPModel	mod;
 
@@ -1516,7 +1516,7 @@ namespace BSPLib
 
 			if(mod == null)
 			{
-				Map.Print("FinishAreaPortals_r:  No model for leaf.\n");
+				CoreEvents.Print("FinishAreaPortals_r:  No model for leaf.\n");
 				return	false;
 			}
 

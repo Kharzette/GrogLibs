@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	class TriEdge
 	{
@@ -239,8 +239,8 @@ namespace BSPLib
 			float	y1	=Vector3.Dot(p2.GetOrigin(), t.mEdges[2].mNormal) - t.mEdges[2].mDist;
 			float	x2	=Vector3.Dot(p3.GetOrigin(), t.mEdges[0].mNormal) - t.mEdges[0].mDist;
 
-			if(Math.Abs(y1) < UtilityLib.Mathery.ON_EPSILON
-				|| Math.Abs(x2) < UtilityLib.Mathery.ON_EPSILON)
+			if(Math.Abs(y1) < Utility64.Mathery.ON_EPSILON
+				|| Math.Abs(x2) < Utility64.Mathery.ON_EPSILON)
 			{
 				color	=bse;
 				return;

@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	internal class GBSPPoly
 	{
@@ -98,7 +98,7 @@ namespace BSPLib
 			
 			for(int i=0;i < 3;i++)
 			{
-				dot	=Math.Abs(UtilityLib.Mathery.VecIdx(pln.mNormal, i));
+				dot	=Math.Abs(Utility64.Mathery.VecIdx(pln.mNormal, i));
 				if(dot > best)
 				{
 					best		=dot;
@@ -152,7 +152,7 @@ namespace BSPLib
 
 		internal bool ClipPoly(GBSPPlane plane, bool bFlip)
 		{
-			return	ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, plane, bFlip);
+			return	ClipPolyEpsilon(Utility64.Mathery.ON_EPSILON, plane, bFlip);
 		}
 
 
@@ -282,7 +282,7 @@ namespace BSPLib
 		internal bool Split(GBSPPlane plane, out GBSPPoly polyFront,
 							out GBSPPoly polyBack, bool flipTest)
 		{
-			return	SplitEpsilon(UtilityLib.Mathery.ON_EPSILON, plane,
+			return	SplitEpsilon(Utility64.Mathery.ON_EPSILON, plane,
 						out polyFront, out polyBack, flipTest);
 		}
 
@@ -447,9 +447,9 @@ namespace BSPLib
 				edge2[0]	=mVerts[i];
 				edge2[1]	=mVerts[(i + 1) % mVerts.Count];
 
-				if(UtilityLib.Mathery.CompareVector(edge1[0], edge2[0]))
+				if(Utility64.Mathery.CompareVector(edge1[0], edge2[0]))
 				{
-					if(UtilityLib.Mathery.CompareVector(edge1[1], edge2[1]))
+					if(Utility64.Mathery.CompareVector(edge1[1], edge2[1]))
 					{
 						edgeIndexOut[0]	=i;
 						edgeIndexOut[1]	=(i + 1) % mVerts.Count;
@@ -667,7 +667,7 @@ namespace BSPLib
 			foreach(Vector3 vert in mVerts)
 			{
 				float	d	=Vector3.Dot(p.mNormal, vert) - p.mDist;
-				if(d < -UtilityLib.Mathery.ON_EPSILON)
+				if(d < -Utility64.Mathery.ON_EPSILON)
 				{
 					return	true;
 				}
@@ -695,7 +695,7 @@ namespace BSPLib
 			foreach(Vector3 vert in mVerts)
 			{
 				float	d	=Vector3.Dot(p.mNormal, vert) - p.mDist;
-				if(d > UtilityLib.Mathery.ON_EPSILON)
+				if(d > Utility64.Mathery.ON_EPSILON)
 				{
 					return	true;
 				}
@@ -748,8 +748,8 @@ namespace BSPLib
 
 				//Check for planar
 				d	=Vector3.Dot(v1, norm) - dist;
-				if(d > UtilityLib.Mathery.ON_EPSILON
-					|| d < -UtilityLib.Mathery.ON_EPSILON)
+				if(d > Utility64.Mathery.ON_EPSILON
+					|| d < -Utility64.Mathery.ON_EPSILON)
 				{
 					if(bVerb)
 					{
@@ -766,7 +766,7 @@ namespace BSPLib
 				for(int j=0;j < mVerts.Count;j++)
 				{
 					d	=Vector3.Dot(mVerts[j], edgeNorm) - edgeDist;
-					if(d > UtilityLib.Mathery.ON_EPSILON)
+					if(d > Utility64.Mathery.ON_EPSILON)
 					{
 						if(bVerb)
 						{
@@ -881,7 +881,7 @@ namespace BSPLib
 					float	len	=plane.mNormal.Length();
 					plane.mNormal.Normalize();
 					
-					if(len < UtilityLib.Mathery.ON_EPSILON)
+					if(len < Utility64.Mathery.ON_EPSILON)
 					{
 						continue;
 					}
@@ -898,12 +898,12 @@ namespace BSPLib
 						}
 
 						float	d	=Vector3.Dot(source.mVerts[k], plane.mNormal) - plane.mDist;
-						if(d < -UtilityLib.Mathery.ON_EPSILON)
+						if(d < -Utility64.Mathery.ON_EPSILON)
 						{
 							bFlipTest	=false;
 							break;
 						}
-						else if(d > UtilityLib.Mathery.ON_EPSILON)
+						else if(d > Utility64.Mathery.ON_EPSILON)
 						{
 							bFlipTest	=true;
 							break;
@@ -928,11 +928,11 @@ namespace BSPLib
 							continue;
 						}
 						float	d	=Vector3.Dot(pass.mVerts[k], plane.mNormal) - plane.mDist;
-						if(d < -UtilityLib.Mathery.ON_EPSILON)
+						if(d < -Utility64.Mathery.ON_EPSILON)
 						{
 							break;
 						}
-						else if(d > UtilityLib.Mathery.ON_EPSILON)
+						else if(d > Utility64.Mathery.ON_EPSILON)
 						{
 							counts[0]++;
 						}
@@ -974,7 +974,7 @@ namespace BSPLib
 			{
 				for(int k=0;k < 3;k++)
 				{
-					float	val	=UtilityLib.Mathery.VecIdx(mVerts[i], k);
+					float	val	=Utility64.Mathery.VecIdx(mVerts[i], k);
 
 					if(val == Bounds.MIN_MAX_BOUNDS)
 					{
@@ -987,12 +987,6 @@ namespace BSPLib
 				}
 			}
 			return	false;
-		}
-
-
-		internal Int32[] IndexVerts(FaceFixer ff)
-		{
-			return	ff.IndexFaceVerts(mVerts);
 		}
 
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace BSPLib
+namespace BSPCore
 {
 	public class ProgressEventArgs : EventArgs
 	{
@@ -77,7 +77,7 @@ namespace BSPLib
 			pea.mMax		=0;
 			pea.mMin		=0;
 
-			UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
+			Utility64.Misc.SafeInvoke(eProgressUpdated, null, pea);
 		}
 
 
@@ -102,7 +102,7 @@ namespace BSPLib
 				pea.mMax		=0;
 				pea.mMin		=0;
 
-				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
+				Utility64.Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 
@@ -133,7 +133,7 @@ namespace BSPLib
 			}
 			if(bFound)
 			{
-				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
+				Utility64.Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 
@@ -166,7 +166,7 @@ namespace BSPLib
 			}
 			if(bFound)
 			{
-				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
+				Utility64.Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 
@@ -197,7 +197,7 @@ namespace BSPLib
 			}
 			if(bFound)
 			{
-				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
+				Utility64.Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 	}

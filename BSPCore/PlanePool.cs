@@ -5,7 +5,7 @@ using System.Text;
 using System.IO;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	internal class PlanePool
 	{

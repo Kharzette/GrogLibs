@@ -7,9 +7,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using Microsoft.Xna.Framework;
+using BSPCore;
 
 
-namespace BSPLib
+namespace BSPCore
 {
 	public class WorldLeaf
 	{
@@ -31,7 +32,6 @@ namespace BSPLib
 		VISPortal	[]mVisSortedPortals;
 		VISLeaf		[]mVisLeafs;
 		Int32		mNumVisLeafBytes, mNumVisPortalBytes;
-		Int32		mNumVisMaterialBytes;
 
 		//area stuff
 		List<GFXArea>		mAreas		=new List<GFXArea>();
@@ -49,10 +49,7 @@ namespace BSPLib
 			if(header == null)
 			{
 				Print("PvsGBSPFile:  Could not load GBSP file: " + vp.mFileName + "\n");
-				if(eVisDone != null)
-				{
-					eVisDone(false, null);
-				}
+				CoreEvents.FireVisDoneEvent(false, null);
 				return;
 			}
 			string	PFile;
@@ -83,10 +80,7 @@ namespace BSPLib
 				goto	ExitWithError;
 			}
 
-			if(eNumPortalsChanged != null)
-			{
-				eNumPortalsChanged(mVisPortals.Length, null);
-			}
+			CoreEvents.FireNumPortalsChangedEvent(mVisPortals.Length, null);
 
 			Print("NumPortals           : " + mVisPortals.Length + "\n");
 			
@@ -113,11 +107,8 @@ namespace BSPLib
 			fs.Close();
 			bw	=null;
 			fs	=null;
-			
-			if(eVisDone != null)
-			{
-				eVisDone(true, null);
-			}
+
+			CoreEvents.FireVisDoneEvent(true, null);
 			return;
 
 			// ==== ERROR ====
@@ -137,10 +128,7 @@ namespace BSPLib
 				FreeAllVisData();
 				FreeGBSPFile();
 
-				if(eVisDone != null)
-				{
-					eVisDone(false, null);
-				}
+				CoreEvents.FireVisDoneEvent(false, null);
 				return;
 			}
 		}
@@ -166,335 +154,6 @@ namespace BSPLib
 			vp.mEndPoints	=endPoints;
 
 			ThreadPool.QueueUserWorkItem(ThreadVisCB, vp);
-		}
-
-
-		bool MaterialVisGBSPFile(string fileName, VisParams prms, BSPBuildParams prms2)
-		{
-			Print(" --- Material Vis GBSP File --- \n");
-
-			GFXHeader	header	=LoadGBSPFile(fileName);
-			if(header == null)
-			{
-				Print("PvsGBSPFile:  Could not load GBSP file: " + fileName + "\n");
-				return	false;
-			}
-
-			//make sure it is lit
-			if(mGFXLightData == null)
-			{
-				Print("Map needs to be lit before material vis can work properly.\n");
-				return	false;
-			}
-
-			//Open the bsp file for writing
-			FileStream	fs	=new FileStream(fileName,
-				FileMode.OpenOrCreate, FileAccess.Write);
-
-			BinaryWriter	bw	=null;
-
-			if(fs == null)
-			{
-				Print("MatVisGBSPFile:  Could not open GBSP file for writing: " + fileName + "\n");
-				goto	ExitWithError;
-			}
-
-			//make a material vis, what materials
-			//can be seen from each leaf
-			VisMaterials();
-
-			//Save the leafs, clusters, vis data, etc
-			bw	=new BinaryWriter(fs);
-			WriteVis(bw, header.mbHasLight, true);
-
-			//Free all the vis stuff
-			FreeAllVisData();
-
-			//Free any remaining leftover bsp data
-			FreeGBSPFile();
-
-			bw.Close();
-			fs.Close();
-			bw	=null;
-			fs	=null;
-			
-			return	true;
-
-			// ==== ERROR ====
-			ExitWithError:
-			{
-				Print("MatPvsGBSPFile:  Could not vis the file: " + fileName + "\n");
-
-				if(bw != null)
-				{
-					bw.Close();
-				}
-				if(fs != null)
-				{
-					fs.Close();
-				}
-
-				FreeAllVisData();
-				FreeGBSPFile();
-
-				return	false;
-			}
-		}
-
-
-		public bool IsMaterialVisibleFromPos(Vector3 pos, int matIndex)
-		{
-			if(mGFXNodes == null)
-			{
-				return	true;	//no map data
-			}
-			Int32	node	=FindNodeLandedIn(0, pos);
-			if(node > 0)
-			{
-				return	true;	//in solid space
-			}
-
-			Int32	leaf	=-(node + 1);
-			return	IsMaterialVisible(leaf, matIndex);
-		}
-
-
-		public bool IsMaterialVisible(int leaf, int matIndex)
-		{
-			if(mGFXLeafs == null)
-			{
-				return	false;
-			}
-
-			int	clust	=mGFXLeafs[leaf].mCluster;
-
-			if(clust == -1 || mGFXClusters[clust].mVisOfs == -1
-				|| mGFXMaterialVisData == null)
-			{
-				return	true;	//this will make everything vis
-								//when outside of the map
-			}
-
-			//plus one to avoid 0 problem
-			matIndex++;
-
-			int	ofs	=leaf * mNumVisMaterialBytes;
-			
-			return	((mGFXMaterialVisData[ofs + (matIndex >> 3)] & (1 << (matIndex & 7))) != 0);
-		}
-
-
-		public void VisMaterials()
-		{
-			Dictionary<Int32, List<string>>	visibleMaterials
-				=new Dictionary<Int32, List<string>>();
-
-			if(mGFXLeafs == null)
-			{
-				return;
-			}
-
-			Print("Computing visible materials from each leaf...\n");
-
-			//make a temporary mapgrinder to help sync
-			//up material names and indexes and such
-			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
-
-			object	prog	=ProgressWatcher.RegisterProgress(0, mGFXLeafs.Length, 0);
-
-			for(int leaf=0;leaf < mGFXLeafs.Length;leaf++)
-			{
-				ProgressWatcher.UpdateProgress(prog, leaf);
-
-				int	clust	=mGFXLeafs[leaf].mCluster;
-				if(clust == -1)
-				{
-					continue;
-				}
-
-				int	ofs		=mGFXClusters[clust].mVisOfs;
-				if(ofs == -1)
-				{
-					continue;
-				}
-
-				visibleMaterials.Add(leaf, new List<string>());
-
-				List<int>	visibleClusters	=new List<int>();
-
-				//Mark all visible clusters
-				for(int i=0;i < mGFXModels[0].mNumClusters;i++)
-				{
-					if((mGFXVisData[ofs + (i >> 3)] & (1 << (i & 7))) != 0)
-					{
-						visibleClusters.Add(i);
-					}
-				}
-
-				for(int i=0;i < mGFXModels[0].mNumLeafs;i++)
-				{
-					GFXLeaf	checkLeaf	=mGFXLeafs[mGFXModels[0].mFirstLeaf + i];
-					int		checkClust	=checkLeaf.mCluster;
-
-					if(checkClust == -1 || !visibleClusters.Contains(checkClust))
-					{
-						continue;
-					}
-					for(int k=0;k < checkLeaf.mNumFaces;k++)
-					{
-						GFXFace	f	=mGFXFaces[mGFXLeafFaces[k + checkLeaf.mFirstFace]];
-
-						string	matName	=MapGrinder.ScryTrueName(f, mGFXTexInfos[f.mTexInfo]);
-
-						if(!visibleMaterials[leaf].Contains(matName))
-						{
-							visibleMaterials[leaf].Add(matName);
-						}
-					}
-				}
-			}
-
-			ProgressWatcher.Clear();
-
-			//grab list of material names
-			List<string>	matNames	=mg.GetMaterialNames();
-
-			//alloc compressed bytes
-			mNumVisMaterialBytes	=((matNames.Count + 63) & ~63) >> 3;
-
-			mGFXMaterialVisData	=new byte[mGFXLeafs.Length * mNumVisMaterialBytes];
-
-			//compress
-			foreach(KeyValuePair<Int32, List<string>> visMat in visibleMaterials)
-			{
-				foreach(string mname in visMat.Value)
-				{
-					//zero doesn't or very well, so + 1 here
-					int	idx	=matNames.IndexOf(mname) + 1;
-					mGFXMaterialVisData[visMat.Key * mNumVisMaterialBytes + (idx >> 3)]
-						|=(byte)(1 << (idx & 7));
-				}
-			}
-			Print("Material Vis Complete:  " + mGFXMaterialVisData.Length + " bytes.\n");
-		}
-
-
-		bool CreateAreas(GBSPModel worldModel, NodeCounter nc)
-		{
-			Print(" --- Create Area Leafs --- \n");
-
-			//Clear all model area info
-			foreach(GBSPModel mod in mModels)
-			{
-				mod.mAreas[0]		=mod.mAreas[1]	=0;
-				mod.mbAreaPortal	=false;
-			}
-
-			int	numAreas	=1;
-
-			if(!worldModel.CreateAreas(ref numAreas, GetModelForLeafNode))
-			{
-				Map.Print("Could not create model areas.\n");
-				return	false;
-			}
-
-			if(!worldModel.FinishAreaPortals(GetModelForLeafNode))
-			{
-				Map.Print("CreateAreas: FinishAreaPortals_r failed.\n");
-				return	false;
-			}
-
-			if(!FinishAreas(numAreas))
-			{
-				Map.Print("Could not finalize model areas.\n");
-				return	false;
-			}
-
-			foreach(GBSPModel mod in mModels)
-			{
-				mod.PrepNodes(nc);
-			}
-
-			return	true;
-		}
-		
-		
-		internal bool FinishAreas(int numAreas)
-		{
-			//First, go through and print out all errors pertaining to model areas
-			for(int i=1;i < mModels.Count;i++)
-			{
-				if(!mModels[i].mbAreaPortal)
-				{
-					continue;
-				}
-
-				if(mModels[i].mAreas[0] == 0)
-				{
-					Print("*WARNING* FinishAreas:  AreaPortal did not touch any areas!\n");
-				}
-				else if(mModels[i].mAreas[1] == 0)
-				{
-					Print("*WARNING* FinishAreas:  AreaPortal only touched one area.\n");
-				}
-			}
-
-			//Area 0 is the invalid area, set it here, and skip it in the loop below
-			GFXArea	areaZero			=new GFXArea();
-			areaZero.FirstAreaPortal	=0;
-			areaZero.NumAreaPortals		=0;
-			mAreas.Add(areaZero);
-			
-			for(int i=1;i < numAreas;i++)
-			{
-				GFXArea	area			=new GFXArea();
-				area.FirstAreaPortal	=mAreas.Count;
-
-				for(int m=1;m < mModels.Count;m++)
-				{
-					int	a0	=mModels[m].mAreas[0];
-					int	a1	=mModels[m].mAreas[1];
-
-					if(a0 == 0 || a1 == 0)
-					{
-						continue;
-					}
-
-					if(a0 == a1)
-					{
-						continue;
-					}
-
-					if(a0 != i && a1 != i)
-					{
-						continue;
-					}
-
-					if(mAreaPorts.Count >= GFXAreaPortal.MAX_AREA_PORTALS)
-					{
-						Print("FinishAreas:  Max area portals.\n");
-						return	false;
-					}
-
-					GFXAreaPortal	p	=new GFXAreaPortal();
-
-					//Grab the area on the opposite side of the portal
-					if(a0 == i)
-					{
-						p.mArea =a1;
-					}
-					else if(a1 == i)
-					{
-						p.mArea	=a0;
-					}
-					p.mModelNum	=m;	//Set the portals model number
-
-					mAreaPorts.Add(p);
-				}
-
-				area.NumAreaPortals	=mAreaPorts.Count - area.FirstAreaPortal;
-			}
-			return	true;
 		}
 
 
@@ -533,7 +192,7 @@ namespace BSPLib
 				ports	=amvc.FloodPortalsSlow(visDat,
 					wrk.startPort, wrk.endPort);
 			}
-			catch
+			catch(Exception e)
 			{
 				return	false;
 			}
