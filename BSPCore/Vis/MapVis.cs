@@ -18,12 +18,17 @@ namespace BSPCore
 		public Int32	mParent;
 	}
 
-
 	class WorkDivided
 	{
 		public Int32	startPort, endPort;
 	}
 
+	public class VisState
+	{
+		public byte	[]mVisData;
+		public int	mStartPort;
+		public int	mEndPort;
+	}
 
 	public partial class Map
 	{
@@ -39,6 +44,9 @@ namespace BSPCore
 
 		//threading
 		TaskScheduler	mTaskSched	=TaskScheduler.Default;
+
+		//events
+		public static event EventHandler	eFloodSlowDone;
 
 
 		void ThreadVisCB(object threadContext)
@@ -186,14 +194,24 @@ namespace BSPCore
 			br.Close();
 			ms.Close();
 
+			VisState	vs	=new VisState();
+
+			vs.mVisData		=visDat;
+			vs.mStartPort	=wrk.startPort;
+			vs.mEndPort		=wrk.endPort;			
+
 			byte	[]ports	=null;
 			try
 			{
-				ports	=amvc.FloodPortalsSlow(visDat,
-					wrk.startPort, wrk.endPort);
+				var task	=Task<byte []>.Factory.FromAsync(amvc.BeginFloodPortalsSlow,
+					amvc.EndFloodPortalsSlow, (object)vs, (object)vs);
+
+				//grab data
+				ports	=task.Result;
 			}
 			catch(Exception e)
 			{
+				Print("Exception: " + e.Message + " for portals " + wrk.startPort + " to " + wrk.endPort + ".  Will requeue...\n");
 				return	false;
 			}
 

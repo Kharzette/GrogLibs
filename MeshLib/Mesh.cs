@@ -121,6 +121,126 @@ namespace MeshLib
 		}
 
 
+		//borrowed from http://www.terathon.com/code/tangent.html
+		public void GenTangents(GraphicsDevice gd, int texCoordSet)
+		{
+			UInt16	[]inds	=new UInt16[mNumTriangles * 3];
+
+			mIndexs.GetData<UInt16>(inds);
+
+			List<Vector3>	verts	=VertexTypes.GetPositions(mVerts, mNumVerts, mTypeIndex);			
+			List<Vector2>	texs	=VertexTypes.GetTexCoord(mVerts, mNumVerts, mTypeIndex, texCoordSet);
+			List<Vector3>	norms	=VertexTypes.GetNormals(mVerts, mNumVerts, mTypeIndex);
+
+			Vector3	[]stan	=new Vector3[mNumVerts];
+			Vector3	[]ttan	=new Vector3[mNumVerts];
+			Vector4	[]tang	=new Vector4[mNumVerts];
+
+			for(int i=0;i < mNumTriangles;i++)
+			{
+				int	idx0	=inds[0 + (i * 3)];
+				int	idx1	=inds[1 + (i * 3)];
+				int	idx2	=inds[2 + (i * 3)];
+
+				Vector3	v0	=verts[idx0];
+				Vector3	v1	=verts[idx1];
+				Vector3	v2	=verts[idx2];
+
+				Vector2	w0	=texs[idx0];
+				Vector2	w1	=texs[idx1];
+				Vector2	w2	=texs[idx2];
+				/*
+				Vector3	Edge1	=v1 - v0;
+				Vector3	Edge2	=v2 - v0;
+				
+				float	DeltaU1	=w1.X - w0.X;
+				float	DeltaV1	=w1.Y - w0.Y;
+				float	DeltaU2	=w2.X - w0.X;
+				float	DeltaV2	=w2.Y - w0.Y;
+				
+				float	f	=1.0f / (DeltaU1 * DeltaV2 - DeltaU2 * DeltaV1);
+				
+				Vector3	Tangent, Bitangent;
+				
+				Tangent.X	=f * (DeltaV2 * Edge1.X - DeltaV1 * Edge2.X);
+				Tangent.Y	=f * (DeltaV2 * Edge1.Y - DeltaV1 * Edge2.Y);
+				Tangent.Z	=f * (DeltaV2 * Edge1.Z - DeltaV1 * Edge2.Z);
+				
+				Bitangent.X	=f * (-DeltaU2 * Edge1.X - DeltaU1 * Edge2.X);
+				Bitangent.Y	=f * (-DeltaU2 * Edge1.Y - DeltaU1 * Edge2.Y);
+				Bitangent.Z	=f * (-DeltaU2 * Edge1.Z - DeltaU1 * Edge2.Z);
+
+				stan[idx0]	=Tangent;
+				stan[idx1]	=Tangent;
+				stan[idx2]	=Tangent;
+
+				ttan[idx0]	=Bitangent;
+				ttan[idx1]	=Bitangent;
+				ttan[idx2]	=Bitangent;
+				*/
+				float	x0	=v1.X - v0.X;
+				float	x1	=v2.X - v0.X;
+				float	y0	=v1.Y - v0.Y;
+				float	y1	=v2.Y - v0.Y;
+				float	z0	=v1.Z - v0.Z;
+				float	z1	=v2.Z - v0.Z;
+				float	s0	=w1.X - w0.X;
+				float	s1	=w2.X - w0.X;
+				float	t0	=w1.Y - w0.Y;
+				float	t1	=w2.Y - w0.Y;
+				float	r	=1.0F / (s0 * t1 - s1 * t0);
+
+				Vector3	sdir	=Vector3.Zero;
+				Vector3	tdir	=Vector3.Zero;
+
+				sdir.X	=(t1 * x0 - t0 * x1) * r;
+				sdir.Y	=(t1 * y0 - t0 * y1) * r;
+				sdir.Z	=(t1 * z0 - t0 * z1) * r;
+
+				tdir.X	=(s0 * x1 - s1 * x0) * r;
+				tdir.Y	=(s0 * y1 - s1 * y0) * r;
+				tdir.Z	=(s0 * z1 - s1 * z0) * r;
+
+				stan[idx0]	=sdir;
+				stan[idx1]	=sdir;
+				stan[idx2]	=sdir;
+
+				ttan[idx0]	=tdir;
+				ttan[idx1]	=tdir;
+				ttan[idx2]	=tdir;
+			}
+
+			for(int i=0;i < mNumVerts;i++)
+			{
+				Vector3	norm	=norms[i];
+				Vector3	t		=stan[i];
+
+				float	dot	=Vector3.Dot(norm, t);
+
+				Vector3	tan	=t - norm * dot;
+				tan.Normalize();
+
+				Vector3	norm2	=Vector3.Cross(norm, t);
+
+				dot	=Vector3.Dot(norm2, ttan[i]);
+
+				float	hand	=(dot < 0.0f)? -1.0f : 1.0f;
+
+				tang[i].X	=tan.X;
+				tang[i].Y	=tan.Y;
+				tang[i].Z	=tan.Z;
+
+				stan[i]	=tan;
+				ttan[i]	=norm2 * hand;
+
+				ttan[i].Normalize();
+			}
+
+//			mVerts	=VertexTypes.AddTangents(gd, mVerts, mNumVerts, mTypeIndex, tang, out mTypeIndex);
+			mVerts	=VertexTypes.AddTangents(gd, mVerts, mNumVerts, mTypeIndex, stan, ttan, out mTypeIndex);
+		}
+
+
 		public virtual void Write(BinaryWriter bw) { }
 		public virtual void Read(BinaryReader br, GraphicsDevice gd, bool bEditor) { }
 		public virtual void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib, Matrix world) { }

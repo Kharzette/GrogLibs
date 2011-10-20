@@ -15,16 +15,18 @@ namespace BSPCore
 	}
 
 
-	[ServiceContractAttribute(Namespace="http://Microsoft.ServiceModel.Samples", ConfigurationName="IMapVis")]
+	[ServiceContract(Namespace="http://Microsoft.ServiceModel.Samples")]
+	[ServiceKnownType(typeof(VisState))]
 	public interface IMapVis
 	{
-		[OperationContractAttribute(Action="http://Microsoft.ServiceModel.Samples/IMapVis/FloodPortalsSlow",
-			ReplyAction="http://Microsoft.ServiceModel.Samples/IMapVis/FloodPortalsSlowResponse")]
-		byte	[]FloodPortalsSlow(byte []visData, int startPort, int endPort);
+		[OperationContract(AsyncPattern = true)]
+		IAsyncResult	BeginFloodPortalsSlow(object visState, AsyncCallback callBack, object aSyncState);
 
-		[OperationContractAttribute(Action="http://Microsoft.ServiceModel.Samples/IMapVis/QueryCapabilities",
-			ReplyAction="http://Microsoft.ServiceModel.Samples/IMapVis/QueryCapabilitiesResponse")]
-		BuildFarmCaps QueryCapabilities();
+		//no operationcontract for the end method
+		byte	[]EndFloodPortalsSlow(IAsyncResult result);
+
+		[OperationContract]
+		BuildFarmCaps	QueryCapabilities();
 	}
 	
 	
@@ -63,10 +65,15 @@ namespace BSPCore
 			: base(binding, remoteAddress)
 		{
 		}
-		
-		public byte []FloodPortalsSlow(byte []visData, int startPort, int endPort)
+
+		public byte []EndFloodPortalsSlow(IAsyncResult result)
 		{
-			return base.Channel.FloodPortalsSlow(visData, startPort, endPort);
+			return	base.Channel.EndFloodPortalsSlow(result);
+		}
+		
+		public IAsyncResult BeginFloodPortalsSlow(object visState, AsyncCallback callBack, object aSyncState)
+		{
+			return	base.Channel.BeginFloodPortalsSlow(visState, callBack, aSyncState);
 		}
 
 		public BuildFarmCaps QueryCapabilities()

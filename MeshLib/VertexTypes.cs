@@ -120,6 +120,7 @@ namespace MeshLib
 			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2Tex3Col0Col1Col2Col3));
 			VertexTypes.AddType(typeof(VPosNormBone));
 			VertexTypes.AddType(typeof(VPosNormBlendTex0Tex1Tex2Tex3Tex4));
+			VertexTypes.AddType(typeof(VPosNormTanBiTanTex0));
 		}
 
 		public static void AddType(Type t)
@@ -152,10 +153,10 @@ namespace MeshLib
 		{
 			VertexElement	[]elems	=vd.GetVertexElements();
 
-			bool	bPos, bNorm, bBoneIdx, bBoneWeight;
+			bool	bPos, bNorm, bBoneIdx, bBoneWeight, bTan, bBiTan;
 			int		numTex, numColor;
 
-			bPos	=bNorm	=bBoneIdx	=bBoneWeight	=false;
+			bPos	=bNorm	=bBoneIdx	=bTan	=bBoneWeight	=bBiTan	=false;
 			numTex	=numColor	=0;
 
 			foreach(VertexElement el in elems)
@@ -169,6 +170,14 @@ namespace MeshLib
 					else if(el.VertexElementUsage == VertexElementUsage.Normal)
 					{
 						bNorm	=true;
+					}
+					else if(el.VertexElementUsage == VertexElementUsage.Tangent)
+					{
+						bTan	=true;
+					}
+					else if(el.VertexElementUsage == VertexElementUsage.Binormal)
+					{
+						bBiTan	=true;
 					}
 				}
 				else if(el.VertexElementFormat == VertexElementFormat.Vector4)
@@ -195,7 +204,14 @@ namespace MeshLib
 				}
 			}
 
-			return	GetMatch(bPos, bNorm, bBoneIdx, bBoneWeight, numTex, numColor);
+			return	GetMatch(bPos, bNorm, bBoneIdx, bBoneWeight, bTan, bBiTan, numTex, numColor);
+		}
+
+
+		public static bool HasElement(Type t, string eleName)
+		{
+			FieldInfo	fi	=t.GetField(eleName);
+			return	(fi != null);
 		}
 
 
@@ -211,6 +227,16 @@ namespace MeshLib
 				sizeSoFar	+=12;
 			}
 			fi	=t.GetField("Normal");
+			if(fi != null)
+			{
+				sizeSoFar	+=12;
+			}
+			fi	=t.GetField("Tangent");
+			if(fi != null)
+			{
+				sizeSoFar	+=12;
+			}
+			fi	=t.GetField("BiTangent");
 			if(fi != null)
 			{
 				sizeSoFar	+=12;
@@ -275,6 +301,26 @@ namespace MeshLib
 				VertexElement ve	=new VertexElement(
 					sizeSoFar, VertexElementFormat.Vector3,
 					VertexElementUsage.Normal,
+					(byte)i);
+				ves.Add(ve);
+				sizeSoFar	+=12;
+			}
+			fi	=t.GetField("Tangent");
+			if(fi != null)
+			{
+				VertexElement ve	=new VertexElement(
+					sizeSoFar, VertexElementFormat.Vector3,
+					VertexElementUsage.Tangent,
+					(byte)i);
+				ves.Add(ve);
+				sizeSoFar	+=12;
+			}
+			fi	=t.GetField("BiTangent");
+			if(fi != null)
+			{
+				VertexElement ve	=new VertexElement(
+					sizeSoFar, VertexElementFormat.Vector3,
+					VertexElementUsage.Binormal,
 					(byte)i);
 				ves.Add(ve);
 				sizeSoFar	+=12;
@@ -347,7 +393,8 @@ namespace MeshLib
 
 		//match up vertex characteristics to one of the
 		//structure types in VertexStructures
-		public static Type GetMatch(bool bPos, bool bNorm, bool bBoneIdx, bool bBoneWeight, int numTex, int numColor)
+		public static Type GetMatch(bool bPos, bool bNorm, bool bBoneIdx,
+			bool bBoneWeight, bool bTan, bool bBiTan, int numTex, int numColor)
 		{
 			foreach(Type t in mTypes)
 			{
@@ -364,6 +411,24 @@ namespace MeshLib
 				if(bNorm)
 				{
 					FieldInfo	fi	=t.GetField("Normal");
+					if(fi == null)
+					{
+						continue;
+					}
+				}
+				//only support 1 tangent set
+				if(bTan)
+				{
+					FieldInfo	fi	=t.GetField("Tangent");
+					if(fi == null)
+					{
+						continue;
+					}
+				}
+				//only support 1 bitangent set
+				if(bTan)
+				{
+					FieldInfo	fi	=t.GetField("BiTangent");
 					if(fi == null)
 					{
 						continue;
@@ -454,7 +519,7 @@ namespace MeshLib
 		}
 
 
-		public static void GetVertBounds(VertexBuffer vb, int numVerts, int typeIdx, IRayCastable bound)
+		static Array GetVertArray(VertexBuffer vb, int numVerts, int typeIdx)
 		{
 			Type	vtype	=mTypes[typeIdx];
 			Array	verts	=Array.CreateInstance(vtype, numVerts);
@@ -467,9 +532,16 @@ namespace MeshLib
 
 			typedMethod.Invoke(vb, new object[] {verts});
 
-			AxialBounds	bnd	=new AxialBounds();
+			return	verts;
+		}
 
-			List<Vector3>	points	=new List<Vector3>();
+
+		public static List<Vector3> GetPositions(VertexBuffer vb, int numVerts, int typeIdx)
+		{
+			List<Vector3>	vecs	=new List<Vector3>();
+
+			Type	vtype	=mTypes[typeIdx];
+			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
 
 			FieldInfo	[]finfo	=vtype.GetFields();
 			for(int i=0;i < numVerts;i++)
@@ -480,10 +552,248 @@ namespace MeshLib
 					if(fi.Name == "Position")
 					{
 						Vector3	vec	=(Vector3)GetArrayField(verts, i, fi.Name);
-						points.Add(vec);
+						vecs.Add(vec);
 					}
 				}
 			}
+
+			return	vecs;
+		}
+
+
+		public static List<Vector3> GetNormals(VertexBuffer vb, int numVerts, int typeIdx)
+		{
+			List<Vector3>	norms	=new List<Vector3>();
+
+			Type	vtype	=mTypes[typeIdx];
+			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
+
+			FieldInfo	[]finfo	=vtype.GetFields();
+			for(int i=0;i < numVerts;i++)
+			{
+				foreach(FieldInfo fi in finfo)
+				{
+					//this might not be positional data!
+					if(fi.Name == "Normal")
+					{
+						Vector3	vec	=(Vector3)GetArrayField(verts, i, fi.Name);
+						norms.Add(vec);
+					}
+				}
+			}
+
+			return	norms;
+		}
+
+
+		public static List<Vector2> GetTexCoord(VertexBuffer vb, int numVerts, int typeIdx, int set)
+		{
+			Type	vtype	=mTypes[typeIdx];
+			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
+
+			List<Vector2>	texs	=new List<Vector2>();
+
+			FieldInfo	[]finfo	=vtype.GetFields();
+			for(int i=0;i < numVerts;i++)
+			{
+				foreach(FieldInfo fi in finfo)
+				{
+					//this might not be positional data!
+					if(fi.Name == "TexCoord" + set)
+					{
+						Vector2	vec	=(Vector2)GetArrayField(verts, i, fi.Name);
+						texs.Add(vec);
+					}
+				}
+			}
+
+			return	texs;
+		}
+
+
+		//create a new vertexbuffer with tangents added
+		public static VertexBuffer AddTangents(GraphicsDevice gd, VertexBuffer vb, int numVerts, int typeIdx, Vector4 []tans, out int typeIndex)
+		{
+			Type	vtype	=mTypes[typeIdx];
+			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
+
+			//count texcoords
+			int	texCnt	=0;
+			while(HasElement(vtype, "TexCoord" + texCnt))
+			{
+				texCnt++;
+			}
+
+			//count colors
+			int	colCnt	=0;
+			while(HasElement(vtype, "Color" + colCnt))
+			{
+				colCnt++;
+			}
+
+			bool	bPos		=HasElement(vtype, "Position");
+			bool	bNorm		=HasElement(vtype, "Normal");
+			bool	bBoneIdx	=HasElement(vtype, "BoneIndex");
+			bool	bBoneWeight	=HasElement(vtype, "BoneWeights");
+
+			//build the new type
+			Type	vtypeNew	=GetMatch(
+				bPos,
+				bNorm,
+				bBoneIdx,
+				bBoneWeight,
+				true,
+				false,
+				texCnt,
+				colCnt);
+
+			Array	newVerts	=Array.CreateInstance(vtypeNew, numVerts);
+
+			for(int i=0;i < numVerts;i++)
+			{
+				if(bPos)
+				{
+					SetArrayField(newVerts, i, "Position", GetArrayField(verts, i, "Position"));
+				}
+				if(bNorm)
+				{
+					SetArrayField(newVerts, i, "Normal", GetArrayField(verts, i, "Normal"));
+				}
+				if(bBoneIdx)
+				{
+					SetArrayField(newVerts, i, "BoneIndex", GetArrayField(verts, i, "BoneIndex"));
+				}
+				if(bBoneWeight)
+				{
+					SetArrayField(newVerts, i, "BoneWeights", GetArrayField(verts, i, "BoneWeights"));
+				}
+				for(int j=0;j < texCnt;j++)
+				{
+					SetArrayField(newVerts, i, "TexCoord" + j, GetArrayField(verts, i, "TexCoord" + j));
+				}
+				for(int j=0;j < colCnt;j++)
+				{
+					SetArrayField(newVerts, i, "Color" + j, GetArrayField(verts, i, "Color" + j));
+				}
+
+				//tangents
+				SetArrayField(newVerts, i, "Tangent", tans[i]);
+			}
+
+			typeIndex	=GetIndex(vtypeNew);
+
+			VertexDeclaration	dec	=GetVertexDeclarationForType(vtypeNew);
+
+			VertexBuffer vb2	=new VertexBuffer(gd, dec, numVerts, BufferUsage.None);
+			
+			MethodInfo genericMethod =
+				typeof (VertexBuffer).GetMethods().Where(
+					x => x.Name == "SetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
+            
+			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtypeNew});
+
+			typedMethod.Invoke(vb2, new object[] {newVerts});
+
+			return	vb2;
+		}
+
+
+		//create a new vertexbuffer with tangents and bitangents added
+		public static VertexBuffer AddTangents(GraphicsDevice gd, VertexBuffer vb, int numVerts,
+			int typeIdx, Vector3 []tans, Vector3 []bitans, out int typeIndex)
+		{
+			Type	vtype	=mTypes[typeIdx];
+			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
+
+			//count texcoords
+			int	texCnt	=0;
+			while(HasElement(vtype, "TexCoord" + texCnt))
+			{
+				texCnt++;
+			}
+
+			//count colors
+			int	colCnt	=0;
+			while(HasElement(vtype, "Color" + colCnt))
+			{
+				colCnt++;
+			}
+
+			bool	bPos		=HasElement(vtype, "Position");
+			bool	bNorm		=HasElement(vtype, "Normal");
+			bool	bBoneIdx	=HasElement(vtype, "BoneIndex");
+			bool	bBoneWeight	=HasElement(vtype, "BoneWeights");
+
+			//build the new type
+			Type	vtypeNew	=GetMatch(
+				bPos,
+				bNorm,
+				bBoneIdx,
+				bBoneWeight,
+				true,
+				true,
+				texCnt,
+				colCnt);
+
+			Array	newVerts	=Array.CreateInstance(vtypeNew, numVerts);
+
+			for(int i=0;i < numVerts;i++)
+			{
+				if(bPos)
+				{
+					SetArrayField(newVerts, i, "Position", GetArrayField(verts, i, "Position"));
+				}
+				if(bNorm)
+				{
+					SetArrayField(newVerts, i, "Normal", GetArrayField(verts, i, "Normal"));
+				}
+				if(bBoneIdx)
+				{
+					SetArrayField(newVerts, i, "BoneIndex", GetArrayField(verts, i, "BoneIndex"));
+				}
+				if(bBoneWeight)
+				{
+					SetArrayField(newVerts, i, "BoneWeights", GetArrayField(verts, i, "BoneWeights"));
+				}
+				for(int j=0;j < texCnt;j++)
+				{
+					SetArrayField(newVerts, i, "TexCoord" + j, GetArrayField(verts, i, "TexCoord" + j));
+				}
+				for(int j=0;j < colCnt;j++)
+				{
+					SetArrayField(newVerts, i, "Color" + j, GetArrayField(verts, i, "Color" + j));
+				}
+
+				//tangents
+				SetArrayField(newVerts, i, "Tangent", tans[i]);
+
+				//tangents
+				SetArrayField(newVerts, i, "BiTangent", bitans[i]);
+			}
+
+			typeIndex	=GetIndex(vtypeNew);
+
+			VertexDeclaration	dec	=GetVertexDeclarationForType(vtypeNew);
+
+			VertexBuffer vb2	=new VertexBuffer(gd, dec, numVerts, BufferUsage.None);
+			
+			MethodInfo genericMethod =
+				typeof (VertexBuffer).GetMethods().Where(
+					x => x.Name == "SetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
+            
+			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtypeNew});
+
+			typedMethod.Invoke(vb2, new object[] {newVerts});
+
+			return	vb2;
+		}
+
+
+		public static void GetVertBounds(VertexBuffer vb, int numVerts, int typeIdx, IRayCastable bound)
+		{
+			AxialBounds	bnd	=new AxialBounds();
+
+			List<Vector3>	points	=GetPositions(vb, numVerts, typeIdx);
 
 			bound.AddPointListToBounds(points);
 		}
