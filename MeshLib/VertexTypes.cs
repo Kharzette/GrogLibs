@@ -120,6 +120,7 @@ namespace MeshLib
 			VertexTypes.AddType(typeof(VPosNormBoneTex0Tex1Tex2Tex3Col0Col1Col2Col3));
 			VertexTypes.AddType(typeof(VPosNormBone));
 			VertexTypes.AddType(typeof(VPosNormBlendTex0Tex1Tex2Tex3Tex4));
+			VertexTypes.AddType(typeof(VPosNormTanTex0));
 			VertexTypes.AddType(typeof(VPosNormTanBiTanTex0));
 		}
 
@@ -171,10 +172,6 @@ namespace MeshLib
 					{
 						bNorm	=true;
 					}
-					else if(el.VertexElementUsage == VertexElementUsage.Tangent)
-					{
-						bTan	=true;
-					}
 					else if(el.VertexElementUsage == VertexElementUsage.Binormal)
 					{
 						bBiTan	=true;
@@ -193,6 +190,10 @@ namespace MeshLib
 					else if(el.VertexElementUsage == VertexElementUsage.Color)
 					{
 						numColor++;
+					}
+					else if(el.VertexElementUsage == VertexElementUsage.Tangent)
+					{
+						bTan	=true;
 					}
 				}
 				else if(el.VertexElementFormat == VertexElementFormat.Vector2)
@@ -234,7 +235,7 @@ namespace MeshLib
 			fi	=t.GetField("Tangent");
 			if(fi != null)
 			{
-				sizeSoFar	+=12;
+				sizeSoFar	+=16;
 			}
 			fi	=t.GetField("BiTangent");
 			if(fi != null)
@@ -309,11 +310,11 @@ namespace MeshLib
 			if(fi != null)
 			{
 				VertexElement ve	=new VertexElement(
-					sizeSoFar, VertexElementFormat.Vector3,
+					sizeSoFar, VertexElementFormat.Vector4,
 					VertexElementUsage.Tangent,
 					(byte)i);
 				ves.Add(ve);
-				sizeSoFar	+=12;
+				sizeSoFar	+=16;
 			}
 			fi	=t.GetField("BiTangent");
 			if(fi != null)
@@ -426,7 +427,7 @@ namespace MeshLib
 					}
 				}
 				//only support 1 bitangent set
-				if(bTan)
+				if(bBiTan)
 				{
 					FieldInfo	fi	=t.GetField("BiTangent");
 					if(fi == null)
@@ -767,7 +768,7 @@ namespace MeshLib
 				//tangents
 				SetArrayField(newVerts, i, "Tangent", tans[i]);
 
-				//tangents
+				//bitangents
 				SetArrayField(newVerts, i, "BiTangent", bitans[i]);
 			}
 

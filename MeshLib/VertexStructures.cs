@@ -521,6 +521,14 @@ namespace MeshLib
 		public Vector2	TexCoord0;
 	}
 
+	public struct VPosNormTanTex0
+	{
+		public Vector3	Position;
+		public Vector3	Normal;
+		public Vector4	Tangent;
+		public Vector2	TexCoord0;
+	}
+
 	public struct VPosNormTanBiTanTex0
 	{
 		public Vector3	Position;

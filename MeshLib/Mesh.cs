@@ -149,35 +149,7 @@ namespace MeshLib
 				Vector2	w0	=texs[idx0];
 				Vector2	w1	=texs[idx1];
 				Vector2	w2	=texs[idx2];
-				/*
-				Vector3	Edge1	=v1 - v0;
-				Vector3	Edge2	=v2 - v0;
-				
-				float	DeltaU1	=w1.X - w0.X;
-				float	DeltaV1	=w1.Y - w0.Y;
-				float	DeltaU2	=w2.X - w0.X;
-				float	DeltaV2	=w2.Y - w0.Y;
-				
-				float	f	=1.0f / (DeltaU1 * DeltaV2 - DeltaU2 * DeltaV1);
-				
-				Vector3	Tangent, Bitangent;
-				
-				Tangent.X	=f * (DeltaV2 * Edge1.X - DeltaV1 * Edge2.X);
-				Tangent.Y	=f * (DeltaV2 * Edge1.Y - DeltaV1 * Edge2.Y);
-				Tangent.Z	=f * (DeltaV2 * Edge1.Z - DeltaV1 * Edge2.Z);
-				
-				Bitangent.X	=f * (-DeltaU2 * Edge1.X - DeltaU1 * Edge2.X);
-				Bitangent.Y	=f * (-DeltaU2 * Edge1.Y - DeltaU1 * Edge2.Y);
-				Bitangent.Z	=f * (-DeltaU2 * Edge1.Z - DeltaU1 * Edge2.Z);
 
-				stan[idx0]	=Tangent;
-				stan[idx1]	=Tangent;
-				stan[idx2]	=Tangent;
-
-				ttan[idx0]	=Bitangent;
-				ttan[idx1]	=Bitangent;
-				ttan[idx2]	=Bitangent;
-				*/
 				float	x0	=v1.X - v0.X;
 				float	x1	=v2.X - v0.X;
 				float	y0	=v1.Y - v0.Y;
@@ -229,15 +201,10 @@ namespace MeshLib
 				tang[i].X	=tan.X;
 				tang[i].Y	=tan.Y;
 				tang[i].Z	=tan.Z;
-
-				stan[i]	=tan;
-				ttan[i]	=norm2 * hand;
-
-				ttan[i].Normalize();
+				tang[i].W	=hand;
 			}
 
-//			mVerts	=VertexTypes.AddTangents(gd, mVerts, mNumVerts, mTypeIndex, tang, out mTypeIndex);
-			mVerts	=VertexTypes.AddTangents(gd, mVerts, mNumVerts, mTypeIndex, stan, ttan, out mTypeIndex);
+			mVerts	=VertexTypes.AddTangents(gd, mVerts, mNumVerts, mTypeIndex, tang, out mTypeIndex);
 		}
 
 
