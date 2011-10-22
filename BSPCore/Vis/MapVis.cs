@@ -28,6 +28,7 @@ namespace BSPCore
 		public byte	[]mVisData;
 		public int	mStartPort;
 		public int	mEndPort;
+		public int	mTotalPorts;
 	}
 
 	public partial class Map
@@ -164,8 +165,61 @@ namespace BSPCore
 		}
 
 
-		bool ProcessWork(Dictionary<VISPortal, Int32> portIndexer,
-			WorkDivided wrk, MapVisClient amvc, out bool bRealFailure)
+		bool ClientHasPortals(MapVisClient amvc, int numPorts, out bool bRealFailure)
+		{
+			bRealFailure	=false;
+
+			VisState	vs	=new VisState();
+
+			vs.mVisData		=null;
+			vs.mStartPort	=0;
+			vs.mEndPort		=0;
+			vs.mTotalPorts	=numPorts;
+
+			bool	bHasSuccess	=false;
+
+			try
+			{
+				bHasSuccess	=amvc.HasPortals(vs);
+			}
+			catch(Exception e)
+			{
+				//check for normal no worries exceptions
+				if(e is System.AggregateException)
+				{
+					System.AggregateException	ae	=e as System.AggregateException;
+					foreach(Exception ee in ae.InnerExceptions)
+					{
+						if(ee is System.ServiceModel.EndpointNotFoundException)
+						{
+						}
+						else
+						{
+							bRealFailure	=true;
+						}
+					}
+				}
+				else if(e is System.ServiceModel.EndpointNotFoundException)
+				{
+				}
+				else
+				{
+					bRealFailure	=true;
+				}
+
+				if(bRealFailure)
+				{
+					Print("Exception: " + e.Message + " for HasPortals.  Will requeue...\n");
+				}
+
+				return	false;
+			}
+			return	bHasSuccess;
+		}
+
+
+		bool FeedPortalsToRemote(Dictionary<VISPortal, Int32> portIndexer,
+			MapVisClient amvc, out bool bRealFailure)
 		{
 			MemoryStream	ms	=new MemoryStream();
 			BinaryWriter	bw	=new BinaryWriter(ms);
@@ -198,6 +252,60 @@ namespace BSPCore
 			VisState	vs	=new VisState();
 
 			vs.mVisData		=visDat;
+			vs.mStartPort	=0;
+			vs.mEndPort		=0;
+			vs.mTotalPorts	=mVisPortals.Length;
+
+			bool	bReadSuccess	=false;
+
+			try
+			{
+				bReadSuccess	=amvc.ReadPortals(vs);
+			}
+			catch(Exception e)
+			{
+				//check for normal no worries exceptions
+				if(e is System.AggregateException)
+				{
+					System.AggregateException	ae	=e as System.AggregateException;
+					foreach(Exception ee in ae.InnerExceptions)
+					{
+						if(ee is System.ServiceModel.EndpointNotFoundException)
+						{
+						}
+						else
+						{
+							bRealFailure	=true;
+						}
+					}
+				}
+				else if(e is System.ServiceModel.EndpointNotFoundException)
+				{
+				}
+				else
+				{
+					bRealFailure	=true;
+				}
+
+				if(bRealFailure)
+				{
+					Print("Exception: " + e.Message + " for ReadPortals.  Will requeue...\n");
+				}
+
+				return	false;
+			}
+
+			return	bReadSuccess;
+		}
+
+
+		bool ProcessWork(WorkDivided wrk, MapVisClient amvc, out bool bRealFailure)
+		{
+			bRealFailure	=false;
+
+			VisState	vs	=new VisState();
+
+			vs.mVisData		=null;
 			vs.mStartPort	=wrk.startPort;
 			vs.mEndPort		=wrk.endPort;			
 
@@ -212,20 +320,49 @@ namespace BSPCore
 			}
 			catch(Exception e)
 			{
-				if(!(e is System.ServiceModel.CommunicationObjectFaultedException))
+				//check for normal no worries exceptions
+				if(e is System.AggregateException)
 				{
-					Print("Exception: " + e.Message + " for portals " + wrk.startPort + " to " + wrk.endPort + ".  Will requeue...\n");
+					System.AggregateException	ae	=e as System.AggregateException;
+					foreach(Exception ee in ae.InnerExceptions)
+					{
+						if(ee is System.ServiceModel.EndpointNotFoundException)
+						{
+						}
+						else
+						{
+							bRealFailure	=true;
+						}
+					}
+				}
+				else if(e is System.ServiceModel.EndpointNotFoundException)
+				{
+				}
+				else
+				{
 					bRealFailure	=true;
 				}
+
+				if(bRealFailure)
+				{
+					Print("Exception: " + e.Message + " for portals " + wrk.startPort + " to " + wrk.endPort + ".  Will requeue...\n");
+				}
+
 				return	false;
 			}
 
-			ms	=new MemoryStream();
-			bw	=new BinaryWriter(ms);
+			if(ports == null)
+			{
+				bRealFailure	=true;
+				return	false;
+			}
+
+			MemoryStream	ms	=new MemoryStream();
+			BinaryWriter	bw	=new BinaryWriter(ms);
 
 			bw.Write(ports, 0, ports.Length);
 
-			br	=new BinaryReader(ms);
+			BinaryReader	br	=new BinaryReader(ms);
 			br.BaseStream.Seek(0, SeekOrigin.Begin);
 
 			for(int j=wrk.startPort;j < wrk.endPort;j++)
@@ -303,38 +440,68 @@ namespace BSPCore
 				{
 					if(amvc != null)
 					{
-						Task	task	=Task.Factory.StartNew(() =>
+						//small potential for jumping out of the while
+						//before getting here
+						lock(working) {	working.Add(amvc); }
+
+						bool	bRecreate;
+						if(amvc.IsReadyOrTrashed(out bRecreate))
 						{
-							WorkDivided	wrk;
-							if(work.TryDequeue(out wrk))
+							Task	task	=Task.Factory.StartNew(() =>
 							{
-								lock(working) {	working.Add(amvc); }
-
-								bool	bRealFailure;
-								if(!ProcessWork(portIndexer, wrk, amvc, out bRealFailure))
+								WorkDivided	wrk;
+								if(work.TryDequeue(out wrk))
 								{
-									//failed, requeue
-									work.Enqueue(wrk);
+									bool	bRealFailure;
 
-									lock(working) { working.Remove(amvc); }
+									//see if client has portals
+									bool	bHasPortals	=ClientHasPortals(amvc, mVisPortals.Length, out bRealFailure);
 
-									clients.Enqueue(amvc);
+									if(!bRealFailure)
+									{
+										bool	bFed	=false;
+										if(!bHasPortals)
+										{
+											bFed	=FeedPortalsToRemote(portIndexer, amvc, out bRealFailure);
+										}
 
+										if(!bRealFailure && (bFed || bHasPortals))
+										{
+											if(!ProcessWork(wrk, amvc, out bRealFailure))
+											{
+												//failed, requeue
+												work.Enqueue(wrk);
+											}
+											else
+											{
+												ProgressWatcher.UpdateProgressIncremental(prog);
+											}
+										}
+									}
 									if(bRealFailure)
 									{
 										Print("Build Farm Node : " + amvc.Endpoint.Address + " failed a work unit.  Requeueing it.\n");
 										amvc.mNumFailures++;
 									}
 								}
-								else
-								{
-									lock(working) { working.Remove(amvc); }
-									clients.Enqueue(amvc);
-
-									ProgressWatcher.UpdateProgressIncremental(prog);
-								}
+							});
+							lock(working) { working.Remove(amvc); }
+							clients.Enqueue(amvc);
+						}
+						else
+						{
+							if(bRecreate)
+							{
+								//existing client hozed, make a new one
+								//this will probably go on a lot if the endpoint is down
+								MapVisClient	newMVC	=new MapVisClient("WSHttpBinding_IMapVis", amvc.mEndPointURI);
+								clients.Enqueue(newMVC);
 							}
-						});
+							else
+							{
+								clients.Enqueue(amvc);
+							}
+						}
 					}
 				}
 				Thread.Sleep(1000);

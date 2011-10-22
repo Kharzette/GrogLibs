@@ -26,6 +26,15 @@ namespace BSPCore
 		byte	[]EndFloodPortalsSlow(IAsyncResult result);
 
 		[OperationContract]
+		bool	HasPortals(object visState);
+
+		[OperationContract]
+		bool	ReadPortals(object visState);
+
+		[OperationContract]
+		bool	FreePortals();
+
+		[OperationContract]
 		BuildFarmCaps	QueryCapabilities();
 	}
 	
@@ -35,12 +44,12 @@ namespace BSPCore
 	}
 
 
-	[System.Diagnostics.DebuggerStepThroughAttribute()]
+//	[System.Diagnostics.DebuggerStepThroughAttribute()]
 	public partial class MapVisClient : ClientBase<IMapVis>, IMapVis
 	{
 		public BuildFarmCaps	mBuildCaps;
-		public bool				mbActive;
 		public int				mNumFailures;
+		public string			mEndPointURI;
 
 
 		public MapVisClient()
@@ -54,21 +63,35 @@ namespace BSPCore
 		public MapVisClient(string endpointConfigurationName, string remoteAddress)
 			: base(endpointConfigurationName, remoteAddress)
 		{
+			mEndPointURI	=remoteAddress;
 		}
 		
 		public MapVisClient(string endpointConfigurationName, EndpointAddress remoteAddress)
 			: base(endpointConfigurationName, remoteAddress)
 		{
+			mEndPointURI	=remoteAddress.ToString();
 		}
 		
 		public MapVisClient(Binding binding, EndpointAddress remoteAddress)
 			: base(binding, remoteAddress)
 		{
+			mEndPointURI	=remoteAddress.ToString();
 		}
 
 		public byte []EndFloodPortalsSlow(IAsyncResult result)
 		{
-			return	base.Channel.EndFloodPortalsSlow(result);
+			byte	[]ret	=null;
+
+			//this can fire a comm exception if
+			//the client service is killed off mid process
+			try
+			{
+				ret	=base.Channel.EndFloodPortalsSlow(result);
+			}
+			catch
+			{
+			}
+			return	ret;
 		}
 		
 		public IAsyncResult BeginFloodPortalsSlow(object visState, AsyncCallback callBack, object aSyncState)
@@ -76,9 +99,60 @@ namespace BSPCore
 			return	base.Channel.BeginFloodPortalsSlow(visState, callBack, aSyncState);
 		}
 
+		public bool HasPortals(object visState)
+		{
+			return	base.Channel.HasPortals(visState);
+		}
+
+		public bool ReadPortals(object visState)
+		{
+			return	base.Channel.ReadPortals(visState);
+		}
+
+		public bool FreePortals()
+		{
+			return	base.Channel.FreePortals();
+		}
+
 		public BuildFarmCaps QueryCapabilities()
 		{
 			return	base.Channel.QueryCapabilities();
+		}
+
+		public bool IsReadyOrTrashed(out bool bRecreate)
+		{
+			bRecreate	=false;
+
+			if(State == System.ServiceModel.CommunicationState.Opened)
+			{
+				return	true;
+			}
+
+			if(State == System.ServiceModel.CommunicationState.Faulted)
+			{
+				bRecreate	=true;
+				Abort();
+				return	false;
+			}
+			else if(State == System.ServiceModel.CommunicationState.Closed)
+			{
+				bRecreate	=true;
+				return	false;
+			}
+			else if(State == System.ServiceModel.CommunicationState.Created)
+			{
+				try
+				{
+					Open();
+				}
+				catch
+				{
+				}
+				return	false;
+			}
+
+			//transitioning
+			return	false;
 		}
 	}
 }
