@@ -35,6 +35,9 @@ namespace BSPCore
 		bool	FreePortals();
 
 		[OperationContract]
+		VisState	GetAbandoned(int startPort, int endPort);
+
+		[OperationContract]
 		BuildFarmCaps	QueryCapabilities();
 	}
 	
@@ -112,6 +115,11 @@ namespace BSPCore
 		public bool FreePortals()
 		{
 			return	base.Channel.FreePortals();
+		}
+
+		public VisState GetAbandoned(int startPort, int endPort)
+		{
+			return	base.Channel.GetAbandoned(startPort, endPort);
 		}
 
 		public BuildFarmCaps QueryCapabilities()

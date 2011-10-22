@@ -21,6 +21,8 @@ namespace BSPCore
 	class WorkDivided
 	{
 		public Int32	startPort, endPort;
+		public bool		bAttempted;
+		public bool		bFinished;
 	}
 
 	public class VisState
@@ -29,6 +31,7 @@ namespace BSPCore
 		public int	mStartPort;
 		public int	mEndPort;
 		public int	mTotalPorts;
+		public bool	mbVisInProgress;
 	}
 
 	public partial class Map
@@ -48,6 +51,7 @@ namespace BSPCore
 
 		//events
 		public static event EventHandler	eFloodSlowDone;
+		public static event EventHandler	eSlowVisPieceDone;
 
 
 		void ThreadVisCB(object threadContext)
@@ -357,6 +361,14 @@ namespace BSPCore
 				return	false;
 			}
 
+			BytesToVisBits(ports, wrk.startPort, wrk.endPort);
+
+			return	true;
+		}
+
+
+		void BytesToVisBits(byte []ports, int startPort, int endPort)
+		{
 			MemoryStream	ms	=new MemoryStream();
 			BinaryWriter	bw	=new BinaryWriter(ms);
 
@@ -365,7 +377,7 @@ namespace BSPCore
 			BinaryReader	br	=new BinaryReader(ms);
 			br.BaseStream.Seek(0, SeekOrigin.Begin);
 
-			for(int j=wrk.startPort;j < wrk.endPort;j++)
+			for(int j=startPort;j < endPort;j++)
 			{
 				mVisPortals[j].ReadVisBits(br);
 			}
@@ -373,8 +385,34 @@ namespace BSPCore
 			bw.Close();
 			br.Close();
 			ms.Close();
+		}
 
-			return	true;
+
+		//see if this work unit has already been attempted
+		void CheckForAbandonedData(ConcurrentQueue<MapVisClient> mvcq,
+			ConcurrentQueue<WorkDivided> workq)
+		{
+			//sometimes pieces take so long to finish
+			//that the connection times out, or a network
+			//glitch or something else goes wrong
+			foreach(WorkDivided wd in workq)
+			{
+				if(!wd.bAttempted || wd.bFinished)
+				{
+					continue;
+				}
+
+				foreach(MapVisClient mvc in mvcq)
+				{
+					VisState	vs	=mvc.GetAbandoned(wd.startPort, wd.endPort);
+					if(vs != null)
+					{
+						BytesToVisBits(vs.mVisData, wd.startPort, wd.endPort);
+						wd.bFinished	=true;
+						return;
+					}
+				}
+			}
 		}
 
 
@@ -431,10 +469,19 @@ namespace BSPCore
 
 			Print("Beginning distributed visibility with " + clients.Count + " possible work machines\n");
 
+			DateTime	startTime	=DateTime.Now;
+			DateTime	trackTime	=DateTime.Now;
+
 			object	prog	=ProgressWatcher.RegisterProgress(0, work.Count, 0);
 			while(!work.IsEmpty || working.Count != 0)
 			{
 				MapVisClient	amvc	=null;
+
+				if((DateTime.Now - trackTime).Minutes > 15)
+				{
+					trackTime	=DateTime.Now;
+					CheckForAbandonedData(clients, work);
+				}
 
 				if(clients.TryDequeue(out amvc))
 				{
@@ -454,34 +501,46 @@ namespace BSPCore
 								{
 									bool	bRealFailure;
 
-									//see if client has portals
-									bool	bHasPortals	=ClientHasPortals(amvc, mVisPortals.Length, out bRealFailure);
-
-									if(!bRealFailure)
+									//see if this work unit has already been attempted
+									if(wrk.bFinished)
 									{
-										bool	bFed	=false;
-										if(!bHasPortals)
-										{
-											bFed	=FeedPortalsToRemote(portIndexer, amvc, out bRealFailure);
-										}
-
-										if(!bRealFailure && (bFed || bHasPortals))
-										{
-											if(!ProcessWork(wrk, amvc, out bRealFailure))
-											{
-												//failed, requeue
-												work.Enqueue(wrk);
-											}
-											else
-											{
-												ProgressWatcher.UpdateProgressIncremental(prog);
-											}
-										}
+										//this work unit was grabbed in the check for
+										//abandoned stuff
+										ProgressWatcher.UpdateProgressIncremental(prog);
 									}
-									if(bRealFailure)
+									else
 									{
-										Print("Build Farm Node : " + amvc.Endpoint.Address + " failed a work unit.  Requeueing it.\n");
-										amvc.mNumFailures++;
+										//see if client has portals
+										bool	bHasPortals	=ClientHasPortals(amvc, mVisPortals.Length, out bRealFailure);
+
+										if(!bRealFailure)
+										{
+											bool	bFed	=false;
+											if(!bHasPortals)
+											{
+												bFed	=FeedPortalsToRemote(portIndexer, amvc, out bRealFailure);
+											}
+
+											if(!bRealFailure && (bFed || bHasPortals))
+											{
+												wrk.bAttempted	=true;
+
+												if(!ProcessWork(wrk, amvc, out bRealFailure))
+												{
+													//failed, requeue
+													work.Enqueue(wrk);
+												}
+												else
+												{
+													ProgressWatcher.UpdateProgressIncremental(prog);
+												}
+											}
+										}
+										if(bRealFailure)
+										{
+											Print("Build Farm Node : " + amvc.Endpoint.Address + " failed a work unit.  Requeueing it.\n");
+											amvc.mNumFailures++;
+										}
 									}
 								}
 							});
@@ -657,6 +716,8 @@ namespace BSPCore
 		//used by the external distributed vis
 		public static byte []FloodPortalsSlow(byte []visData, int startPort, int endPort)
 		{
+			DateTime	visTime	=DateTime.Now;
+
 			//convert the bytes to something usable
 			MemoryStream	ms	=new MemoryStream();
 			BinaryWriter	bw	=new BinaryWriter(ms);
@@ -768,6 +829,23 @@ namespace BSPCore
 			bw.Close();
 			br.Close();
 			ms.Close();
+
+			DateTime	endVisTime	=DateTime.Now;
+
+			TimeSpan	totalTime	=endVisTime - visTime;
+
+			//if more than an hour has gone by, store the portals
+			//as the connection might have been broken
+			if(totalTime.Hours > 1)
+			{
+				VisState	vs	=new VisState();
+				vs.mStartPort	=startPort;
+				vs.mEndPort		=endPort;
+				vs.mTotalPorts	=0;
+				vs.mVisData		=returnBytes;
+
+				Utility64.Misc.SafeInvoke(eSlowVisPieceDone, vs);
+			}
 
 			return	returnBytes;
 		}
