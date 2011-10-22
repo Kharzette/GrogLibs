@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.IO;
 using System.Text;
@@ -13,7 +14,8 @@ namespace BSPCore
 		public BSPBuildParams	mBSPParams;
 		public VisParams		mVisParams;
 		public string			mFileName;
-		public List<string>		mEndPoints;
+
+		public ConcurrentQueue<MapVisClient>	mClients;
 	}
 
 

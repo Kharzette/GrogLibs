@@ -77,6 +77,20 @@ namespace UtilityLib
 		}
 
 
+		//for radians use mathhelper
+		public static void WrapAngleDegrees(ref float angle)
+		{
+			while(angle < 0.0f)
+			{
+				angle	+=360.0f;
+			}
+			while(angle > 360.0f)
+			{
+				angle	-=360.0f;
+			}
+		}
+
+
 		public static bool IsAxial(Vector3 v)
 		{
 			foreach(Vector3 ax in AxialNormals)

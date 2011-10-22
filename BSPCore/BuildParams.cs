@@ -37,7 +37,5 @@ namespace BSPCore
 		public bool	mbFullVis;
 		public bool	mbSortPortals;
 		public bool mbDistribute;
-		public int	mNumRetries;
-		public int	mGranularity;
 	}
 }
