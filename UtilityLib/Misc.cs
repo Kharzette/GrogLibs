@@ -46,6 +46,7 @@ namespace UtilityLib
 		}
 
 
+#if !X64
 		public static Color ModulateColour(Color a, Color b)
 		{
 			int	A	=a.A * b.A;
@@ -62,6 +63,7 @@ namespace UtilityLib
 
 			return	ret;
 		}
+#endif
 
 
 		public static bool bFlagSet(UInt32 val, UInt32 flag)

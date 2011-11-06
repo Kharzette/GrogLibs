@@ -74,14 +74,32 @@ namespace BSPZone
 			UtilityLib.FileUtil.WriteArray(mZoneModels, bw);
 			UtilityLib.FileUtil.WriteArray(mZoneNodes, bw);
 			UtilityLib.FileUtil.WriteArray(mZoneLeafs, bw);
-			UtilityLib.FileUtil.WriteArray(mVisClusters, bw);
 			UtilityLib.FileUtil.WriteArray(mVisAreas, bw);
 			UtilityLib.FileUtil.WriteArray(mVisAreaPortals, bw);
 			WritePlaneArray(bw);
 			UtilityLib.FileUtil.WriteArray(mZoneEntities, bw);
 			UtilityLib.FileUtil.WriteArray(mZoneLeafSides, bw);
-			UtilityLib.FileUtil.WriteArray(mVisData, bw);
-			UtilityLib.FileUtil.WriteArray(mMaterialVisData, bw);
+
+			if(mVisData != null && mVisData.Length > 0)
+			{
+				bw.Write(true);
+				UtilityLib.FileUtil.WriteArray(mVisData, bw);
+			}
+			else
+			{
+				bw.Write(false);
+			}
+
+			if(mMaterialVisData != null && mMaterialVisData.Length > 0)
+			{
+				bw.Write(true);
+				UtilityLib.FileUtil.WriteArray(mMaterialVisData, bw);
+			}
+			else
+			{
+				bw.Write(false);
+			}
+			UtilityLib.FileUtil.WriteArray(mVisClusters, bw);
 			bw.Write(mLightMapGridSize);
 			bw.Write(mNumVisLeafBytes);
 			bw.Write(mNumVisMaterialBytes);
@@ -115,8 +133,6 @@ namespace BSPZone
 							{ return UtilityLib.FileUtil.InitArray<ZoneNode>(count); }) as ZoneNode[];
 			mZoneLeafs		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return UtilityLib.FileUtil.InitArray<ZoneLeaf>(count); }) as ZoneLeaf[];
-			mVisClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<VisCluster>(count); }) as VisCluster[];
 			mVisAreas		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return UtilityLib.FileUtil.InitArray<VisArea>(count); }) as VisArea[];
 			mVisAreaPortals	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
@@ -138,6 +154,9 @@ namespace BSPZone
 			{
 				mMaterialVisData	=UtilityLib.FileUtil.ReadByteArray(br);
 			}
+
+			mVisClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<VisCluster>(count); }) as VisCluster[];
 
 			mLightMapGridSize		=br.ReadInt32();
 			mNumVisLeafBytes		=br.ReadInt32();

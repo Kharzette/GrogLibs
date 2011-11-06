@@ -72,6 +72,7 @@
     <Compile Include="Misc.cs" />
     <Compile Include="Mover.cs" />
     <Compile Include="PlayerSteering.cs" />
+    <Compile Include="Pool.cs" />
     <Compile Include="RenderHelper.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -4,18 +4,21 @@ using System.Text;
 using System.IO;
 using System.Reflection;
 using Microsoft.Xna.Framework;
+#if !X64
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Storage;
-
+#endif
 
 namespace UtilityLib
 {
 	public class FileUtil
 	{
+#if !X64
 		public static Stream OpenTitleFile(string fileName)
 		{
 			return	TitleContainer.OpenStream(fileName);
 		}
+#endif
 
 
 		public static string StripExtension(string fileName)
@@ -129,6 +132,7 @@ namespace UtilityLib
 		}
 
 
+#if !X64
 		public static void WriteVertexDeclaration(BinaryWriter bw, VertexDeclaration vd)
 		{
 			VertexElement	[]elms	=vd.GetVertexElements();
@@ -193,6 +197,7 @@ namespace UtilityLib
 							(bEditor)? BufferUsage.None : BufferUsage.WriteOnly);
 			ib.SetData<Int32>(idxArray);
 		}
+#endif
 
 
 		public delegate IReadWriteable[] CreateRWArray(Int32 count);

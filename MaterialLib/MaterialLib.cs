@@ -304,6 +304,33 @@ namespace MaterialLib
 		}
 
 
+		//writes out the emissive values in the material lib
+		//this is useful for the lighting stage, so radiosity
+		//can pick up material colours to bounce around
+		public void SaveEmissives(string fileName)
+		{
+			string	emmName	=UtilityLib.FileUtil.StripExtension(fileName);
+
+			emmName	+=".Emissives";
+
+			FileStream		fs	=new FileStream(emmName, FileMode.Create, FileAccess.Write);
+			BinaryWriter	bw	=new BinaryWriter(fs);
+
+			UInt32	magic	=0xED1551BE;
+			bw.Write(magic);
+
+			bw.Write(mMats.Count);
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				bw.Write(mat.Value.Name);
+				bw.Write(mat.Value.Emissive.PackedValue);
+			}
+
+			bw.Close();
+			fs.Close();
+		}
+
+
 		void AssignEmissive(string matName)
 		{
 			if(!mMats.ContainsKey(matName))
