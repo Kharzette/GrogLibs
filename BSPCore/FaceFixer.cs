@@ -43,7 +43,7 @@ namespace BSPCore
 		}
 
 
-		internal Int32[] IndexFaceVerts(List<Vector3> verts)
+		internal Int32[] IndexFaceVerts(Vector3 []verts)
 		{
 			mTempIndexes.Clear();
 
@@ -51,14 +51,14 @@ namespace BSPCore
 			{
 				if(mTempIndexes.Count >= MAX_TEMP_INDEX_VERTS)
 				{
-					Map.Print("IndexFaceVerts:  Max temp index verts.\n");
+					CoreEvents.Print("IndexFaceVerts:  Max temp index verts.\n");
 					return	null;
 				}
 
 				int	Index	=WeldVert(vert);
 				if(Index == -1)
 				{
-					Map.Print("IndexFaceVerts:  Could not find vert.\n");
+					CoreEvents.Print("IndexFaceVerts:  Could not find vert.\n");
 					return	null;
 				}
 
@@ -106,7 +106,7 @@ namespace BSPCore
 			{
 				indexVerts	=null;
 
-				Map.Print("FixTJunctions:  Face collapsed.\n");
+				CoreEvents.Print("FixTJunctions:  Face collapsed.\n");
 				return	true;
 			}
 
@@ -187,7 +187,7 @@ namespace BSPCore
 			Int32	i=0;
 			for(;i < mWelded.Count;i++)
 			{
-				if(Utility64.Mathery.CompareVector(vert, mWelded[i]))
+				if(UtilityLib.Mathery.CompareVector(vert, mWelded[i]))
 				{
 					return	i;
 				}
@@ -195,7 +195,7 @@ namespace BSPCore
 
 			if(i >= MAX_WELDED_VERTS)
 			{
-				Map.Print("WeldVert:  Max welded verts.\n");
+				CoreEvents.Print("WeldVert:  Max welded verts.\n");
 				return	-1;
 			}
 
@@ -260,7 +260,7 @@ namespace BSPCore
 
 			if(mTempIndexes.Count >= MAX_TEMP_INDEX_VERTS)
 			{
-				Map.Print("Max Temp Index Verts.\n");
+				CoreEvents.Print("Max Temp Index Verts.\n");
 				return	false;
 			}
 

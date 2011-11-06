@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BSPCore
 {
-	public class GFXAreaPortal : Utility64.IReadWriteable
+	public class GFXAreaPortal : UtilityLib.IReadWriteable
 	{
 		public Int32	mModelNum;
 		public Int32	mArea;

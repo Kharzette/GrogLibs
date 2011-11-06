@@ -32,44 +32,36 @@ namespace BSPCore
 			}
 
 			//read regular bsp crap
-			mGFXModels		=Utility64.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return Utility64.FileUtil.InitArray<GFXModel>(count); }) as GFXModel[];
-			mGFXNodes		=Utility64.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return Utility64.FileUtil.InitArray<GFXNode>(count); }) as GFXNode[];
-			mGFXLeafs		=Utility64.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return Utility64.FileUtil.InitArray<GFXLeaf>(count); }) as GFXLeaf[];
+			mGFXModels		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<GFXModel>(count); }) as GFXModel[];
+			mGFXNodes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<GFXNode>(count); }) as GFXNode[];
+			mGFXLeafs		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<GFXLeaf>(count); }) as GFXLeaf[];
 
 			LoadGFXLeafFaces(br);
 
-			mGFXClusters	=Utility64.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return Utility64.FileUtil.InitArray<GFXCluster>(count); }) as GFXCluster[];
-			mGFXAreas		=Utility64.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return Utility64.FileUtil.InitArray<GFXArea>(count); }) as GFXArea[];
-			mGFXAreaPortals	=Utility64.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return Utility64.FileUtil.InitArray<GFXAreaPortal>(count); }) as GFXAreaPortal[];
-			mGFXLeafSides	=Utility64.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return Utility64.FileUtil.InitArray<GFXLeafSide>(count); }) as GFXLeafSide[];
-			mGFXFaces		=Utility64.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return Utility64.FileUtil.InitArray<GFXFace>(count); }) as GFXFace[];
-			mGFXPlanes		=Utility64.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return Utility64.FileUtil.InitArray<GFXPlane>(count); }) as GFXPlane[];
+			mGFXClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<GFXCluster>(count); }) as GFXCluster[];
+			mGFXAreas		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<GFXArea>(count); }) as GFXArea[];
+			mGFXAreaPortals	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<GFXAreaPortal>(count); }) as GFXAreaPortal[];
+			mGFXLeafSides	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<GFXLeafSide>(count); }) as GFXLeafSide[];
+			mGFXFaces		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<GFXFace>(count); }) as GFXFace[];
+			mGFXPlanes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<GFXPlane>(count); }) as GFXPlane[];
 
 			LoadGFXVerts(br);
 			LoadGFXVertIndexes(br);
 
-			mGFXTexInfos	=Utility64.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return Utility64.FileUtil.InitArray<GFXTexInfo>(count); }) as GFXTexInfo[];
-			mGFXEntities	=Utility64.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return Utility64.FileUtil.InitArray<MapEntity>(count); }) as MapEntity[];
+			mGFXTexInfos	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<GFXTexInfo>(count); }) as GFXTexInfo[];
+			mGFXEntities	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<MapEntity>(count); }) as MapEntity[];
 
-			if(header.mbHasVis)
-			{
-				LoadGFXVisData(br);
-			}
-			if(header.mbHasMaterialVis)
-			{
-				LoadGFXMaterialVisData(br);
-			}
 			if(header.mbHasLight)
 			{
 				LoadGFXRGBVerts(br);
@@ -79,13 +71,13 @@ namespace BSPCore
 			br.Close();
 			file.Close();
 
-			Print("Load complete\n");
+			CoreEvents.Print("Load complete\n");
 
 			return	header;
 		}
 
 
-		void FreeGBSPFile()
+		public void FreeGBSPFile()
 		{
 			mGFXModels			=null;
 			mGFXNodes			=null;
@@ -102,17 +94,15 @@ namespace BSPCore
 			mGFXEntities		=null;			
 			mGFXTexInfos		=null;
 			mGFXLightData		=null;
-			mGFXVisData			=null;
-			mGFXMaterialVisData	=null;
 		}
 
 
-		void WriteVis(BinaryWriter bw, bool bHasLight, bool bMaterialVis)
+		void WriteLight(BinaryWriter bw, bool bMaterialVis)
 		{
 			GFXHeader	header	=new GFXHeader();
 
 			header.mTag				=0x47425350;	//"GBSP"
-			header.mbHasLight		=bHasLight;
+			header.mbHasLight		=true;
 			header.mbHasVis			=true;
 			header.mbHasMaterialVis	=bMaterialVis;
 			header.Write(bw);
@@ -121,7 +111,6 @@ namespace BSPCore
 			SaveVisdGFXNodes(bw);
 			SaveVisdGFXLeafs(bw);
 			SaveVisdGFXLeafFaces(bw);
-			SaveVisdGFXClusters(bw);
 			SaveGFXAreasAndPortals(bw);
 			SaveVisdGFXLeafSides(bw);
 			SaveVisdGFXFaces(bw);
@@ -131,15 +120,28 @@ namespace BSPCore
 			SaveGFXTexInfos(bw);
 			SaveGFXEntData(bw);
 
-			SaveGFXVisData(bw);
-			if(bMaterialVis)
+			//light stuff
+			SaveGFXRGBVerts(bw);
+			SaveGFXLightData(bw);
+		}
+
+
+		public void SaveGBSPFile(string fileName, BSPBuildParams parms)
+		{
+			GBSPSaveParameters	sp	=new GBSPSaveParameters();
+			sp.mBSPParams	=parms;
+			sp.mFileName	=fileName;
+
+			ThreadPool.QueueUserWorkItem(ConvertGBSPToFileCB, sp);
+		}
+
+
+		void SaveGFXEntDataList(BinaryWriter bw)
+		{
+			bw.Write(mEntities.Count);
+			foreach(MapEntity me in mEntities)
 			{
-				SaveGFXMaterialVisData(bw);
-			}
-			if(bHasLight)
-			{
-				SaveGFXRGBVerts(bw);
-				SaveGFXLightData(bw);
+				me.Write(bw);
 			}
 		}
 
@@ -191,34 +193,6 @@ namespace BSPCore
 
 				mGFXVertIndexes[i]	=idx;
 			}
-		}
-
-
-		void SaveGFXVisData(BinaryWriter bw)
-		{
-			bw.Write(mGFXVisData.Length);
-			bw.Write(mGFXVisData, 0, mGFXVisData.Length);
-		}
-
-
-		void LoadGFXVisData(BinaryReader br)
-		{
-			int	count	=br.ReadInt32();
-			mGFXVisData	=br.ReadBytes(count);
-		}
-
-
-		void SaveGFXMaterialVisData(BinaryWriter bw)
-		{
-			bw.Write(mGFXMaterialVisData.Length);
-			bw.Write(mGFXMaterialVisData, 0, mGFXMaterialVisData.Length);
-		}
-
-
-		void LoadGFXMaterialVisData(BinaryReader br)
-		{
-			int	count			=br.ReadInt32();
-			mGFXMaterialVisData	=br.ReadBytes(count);
 		}
 
 
@@ -288,6 +262,34 @@ namespace BSPCore
 		}
 
 
+		void SaveGFXLeafs(BinaryWriter bw, NodeCounter nc)
+		{
+			bw.Write(nc.mNumGFXLeafs);
+
+			int	TotalLeafSize	=0;
+
+			List<Int32>	gfxLeafFaces	=new List<Int32>();
+
+			foreach(GBSPModel mod in mModels)
+			{
+				//Save all the leafs for this model
+				if(!mod.SaveGFXLeafs_r(bw, gfxLeafFaces, ref TotalLeafSize))
+				{
+					CoreEvents.Print("SaveGFXLeafs:  SaveGFXLeafs_r failed.\n");
+					return;
+				}
+			}
+
+			mGFXLeafFaces	=gfxLeafFaces.ToArray();
+
+			bw.Write(nc.mNumGFXLeafFaces);
+			foreach(Int32 leafFace in mGFXLeafFaces)
+			{
+				bw.Write(leafFace);
+			}
+		}
+		
+		
 		void LoadGFXLeafFaces(BinaryReader br)
 		{
 			int	count	=br.ReadInt32();
@@ -297,6 +299,16 @@ namespace BSPCore
 			{
 				Int32	lf	=br.ReadInt32();
 				mGFXLeafFaces[i]	=lf;
+			}
+		}
+
+
+		void SaveGFXLeafs(BinaryWriter bw)
+		{
+			bw.Write(mGFXLeafs.Length);
+			foreach(GFXLeaf leaf in mGFXLeafs)
+			{
+				leaf.Write(bw);
 			}
 		}
 
@@ -341,6 +353,16 @@ namespace BSPCore
 		}
 
 
+		void SaveGFXModelDataFromList(BinaryWriter bw)
+		{
+			bw.Write(mModels.Count);
+			foreach(GBSPModel mod in mModels)
+			{
+				mod.ConvertToGFXAndSave(bw);
+			}			
+		}
+
+
 		void SaveGFXModelData(BinaryWriter bw)
 		{
 			bw.Write(mGFXModels.Length);
@@ -357,6 +379,30 @@ namespace BSPCore
 			foreach(GFXLeafSide ls in mGFXLeafSides)
 			{
 				ls.Write(bw);
+			}
+		}
+
+
+		void SaveGFXNodes(BinaryWriter bw, NodeCounter nc)
+		{
+			bw.Write(nc.mNumGFXNodes);			
+			foreach(GBSPModel mod in mModels)
+			{
+				if(!mod.SaveGFXNodes_r(bw))
+				{
+					return;
+				}
+			}
+		}
+
+
+		void SaveGFXFaces(BinaryWriter bw, NodeCounter nc)
+		{
+			bw.Write(nc.mNumGFXFaces);
+
+			foreach(GBSPModel mod in mModels)
+			{
+				mod.SaveGFXFaces_r(bw);
 			}
 		}
 

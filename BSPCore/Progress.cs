@@ -77,7 +77,7 @@ namespace BSPCore
 			pea.mMax		=0;
 			pea.mMin		=0;
 
-			Utility64.Misc.SafeInvoke(eProgressUpdated, null, pea);
+			UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
 		}
 
 
@@ -102,7 +102,7 @@ namespace BSPCore
 				pea.mMax		=0;
 				pea.mMin		=0;
 
-				Utility64.Misc.SafeInvoke(eProgressUpdated, null, pea);
+				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 
@@ -133,7 +133,7 @@ namespace BSPCore
 			}
 			if(bFound)
 			{
-				Utility64.Misc.SafeInvoke(eProgressUpdated, null, pea);
+				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 
@@ -166,12 +166,12 @@ namespace BSPCore
 			}
 			if(bFound)
 			{
-				Utility64.Misc.SafeInvoke(eProgressUpdated, null, pea);
+				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 
 
-		internal static void UpdateProgressIncremental(object prog)
+		public static void UpdateProgressIncremental(object prog)
 		{
 			Progress	pr	=prog as Progress;
 			if(pr == null)
@@ -197,7 +197,7 @@ namespace BSPCore
 			}
 			if(bFound)
 			{
-				Utility64.Misc.SafeInvoke(eProgressUpdated, null, pea);
+				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 	}

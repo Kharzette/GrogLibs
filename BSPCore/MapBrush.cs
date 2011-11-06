@@ -44,14 +44,14 @@ namespace BSPCore
 
 				p.mNormal	=Vector3.Zero;
 
-				Utility64.Mathery.VecIdxAssign(ref p.mNormal, i, 1.0f);
-				p.mDist	=Utility64.Mathery.VecIdx(bnd.mMaxs, i);
+				UtilityLib.Mathery.VecIdxAssign(ref p.mNormal, i, 1.0f);
+				p.mDist	=UtilityLib.Mathery.VecIdx(bnd.mMaxs, i);
 
 				GBSPSide	side	=new GBSPSide();
 				side.mPlaneNum		=pp.FindPlane(p, out side.mPlaneSide);
 
-				Utility64.Mathery.VecIdxAssign(ref p.mNormal, i, -1.0f);
-				p.mDist	=-(Utility64.Mathery.VecIdx(bnd.mMins, i));
+				UtilityLib.Mathery.VecIdxAssign(ref p.mNormal, i, -1.0f);
+				p.mDist	=-(UtilityLib.Mathery.VecIdx(bnd.mMins, i));
 
 				GBSPSide	side2	=new GBSPSide();
 				side2.mPlaneNum		=pp.FindPlane(p, out side2.mPlaneSide);
@@ -248,10 +248,10 @@ namespace BSPCore
 
 			for(int i=0;i < 3;i++)
 			{
-				if(Utility64.Mathery.VecIdx(mBounds.mMins, i) <= -Bounds.MIN_MAX_BOUNDS
-					|| Utility64.Mathery.VecIdx(mBounds.mMaxs, i) >= Bounds.MIN_MAX_BOUNDS)
+				if(UtilityLib.Mathery.VecIdx(mBounds.mMins, i) <= -Bounds.MIN_MAX_BOUNDS
+					|| UtilityLib.Mathery.VecIdx(mBounds.mMaxs, i) >= Bounds.MIN_MAX_BOUNDS)
 				{
-					Map.Print("Entity " + mEntityNum + ", Brush bounds out of range\n");
+					CoreEvents.Print("Entity " + mEntityNum + ", Brush bounds out of range\n");
 				}
 			}
 			return	true;

@@ -6,35 +6,56 @@ using Microsoft.Xna.Framework;
 
 namespace BSPCore
 {
-	internal class GBSPPoly
+	public class GBSPPoly
 	{
-		List<Vector3>	mVerts	=new List<Vector3>();
+		public Vector3	[]mVerts;
 
 		internal const float	EDGE_LENGTH			=0.1f;
 		internal const float	DEGENERATE_EPSILON	=0.001f;
 		internal const float	COLINEAR_EPSILON	=0.0001f;
 
 
-		internal GBSPPoly() { }
+		public GBSPPoly(int numVerts)
+		{
+			if(numVerts > 0)
+			{
+				mVerts	=new Vector3[numVerts];
+			}
+		}
+
+
+		internal GBSPPoly(Vector3 p1, Vector3 p2, Vector3 p3)
+		{
+			mVerts	=new Vector3[3];
+
+			mVerts[0]	=p1;
+			mVerts[1]	=p2;
+			mVerts[2]	=p3;
+		}
+
+
 		internal GBSPPoly(GFXFace f, Int32 []vertInds, Vector3 []verts)
 		{
+			mVerts	=new Vector3[f.mNumVerts];
 			for(int i=0;i < f.mNumVerts;i++)
 			{
 				int	ind	=vertInds[i + f.mFirstVert];
 
-				mVerts.Add(verts[ind]);
+				mVerts[i]	=verts[ind];
 			}
 			RemoveDegenerateEdges();			
 		}
 
 
-		internal GBSPPoly(GBSPPoly copyMe)
+		public GBSPPoly(GBSPPoly copyMe)
 		{
-			mVerts.Clear();
-			foreach(Vector3 vert in copyMe.mVerts)
+			if(copyMe.mVerts == null)
 			{
-				mVerts.Add(vert);
+				mVerts	=null;
+				return;
 			}
+			mVerts	=new Vector3[copyMe.mVerts.Length];
+			copyMe.mVerts.CopyTo(mVerts, 0);
 		}
 
 
@@ -42,9 +63,10 @@ namespace BSPCore
 		{
 			Vector3	rightVec, upVec, org, vert;
 
+			mVerts	=new Vector3[4];
+
 			if(!TextureAxisFromPlane(p, out rightVec, out upVec))
 			{
-				mVerts.Clear();
 			}
 
 			Vector3.Cross(ref p.mNormal, ref upVec, out rightVec);
@@ -60,32 +82,36 @@ namespace BSPCore
 			vert	=org - rightVec;
 			vert	+=upVec;
 
-			mVerts.Add(vert);
+			mVerts[0]	=vert;
 
 			vert	=org + rightVec;
 			vert	+=upVec;
 
-			mVerts.Add(vert);
+			mVerts[1]	=vert;
 
 			vert	=org + rightVec;
 			vert	-=upVec;
 
-			mVerts.Add(vert);
+			mVerts[2]	=vert;
 
 			vert	=org - rightVec;
 			vert	-=upVec;
 
-			mVerts.Add(vert);
+			mVerts[3]	=vert;
 		}
 
 
-		internal int VertCount()
+		public int VertCount()
 		{
-			return	mVerts.Count;
+			if(mVerts == null)
+			{
+				return	0;
+			}
+			return	mVerts.Length;
 		}
 
 
-		internal static bool TextureAxisFromPlane(GBSPPlane pln, out Vector3 xv, out Vector3 yv)
+		public static bool TextureAxisFromPlane(GBSPPlane pln, out Vector3 xv, out Vector3 yv)
 		{
 			Int32	bestAxis;
 			float	dot, best;
@@ -98,7 +124,7 @@ namespace BSPCore
 			
 			for(int i=0;i < 3;i++)
 			{
-				dot	=Math.Abs(Utility64.Mathery.VecIdx(pln.mNormal, i));
+				dot	=Math.Abs(UtilityLib.Mathery.VecIdx(pln.mNormal, i));
 				if(dot > best)
 				{
 					best		=dot;
@@ -143,24 +169,30 @@ namespace BSPCore
 					yv.X	=0.0f;
 					yv.Y	=-1.0f;
 					yv.Z	=0.0f;
-					Map.Print("GetTextureAxis: No Axis found.");
+					CoreEvents.Print("GetTextureAxis: No Axis found.");
 					return false;
 			}
 			return	true;
 		}
 
 
-		internal bool ClipPoly(GBSPPlane plane, bool bFlip)
+		public bool ClipPoly(GBSPPlane plane, bool bFlip)
 		{
-			return	ClipPolyEpsilon(Utility64.Mathery.ON_EPSILON, plane, bFlip);
+			return	ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, plane, bFlip);
 		}
 
 
-		internal bool ClipPolyEpsilon(float epsilon, GBSPPlane plane, bool flipTest)
+		public bool ClipPoly(GBSPPlane plane, bool bFlip, ClipPools cPools)
 		{
-			if(mVerts.Count > 100)
+			return	ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, plane, bFlip, cPools);
+		}
+
+
+		public bool ClipPolyEpsilon(float epsilon, GBSPPlane plane, bool flipTest, ClipPools cPools)
+		{
+			if(mVerts.Length > ClipPools.ClipArraySize)
 			{
-				Map.Print("ClipPoly:  Too many verts.\n");
+				CoreEvents.Print("ClipPoly:  Too many verts.\n");
 				return	false;
 			}
 
@@ -173,13 +205,124 @@ namespace BSPCore
 				dist	=-dist;
 			}
 
-			float	[]VDist			=new float[mVerts.Count];
-			Int32	[]VSides		=new int[mVerts.Count];
+			float	[]VDist		=cPools.mClipFloats.GetFreeItem();
+			Int32	[]VSides	=cPools.mClipInts.GetFreeItem();
+
+			Int32	countSides0	=0;
+			Int32	countSides1	=0;
+			Int32	countSides2	=0;
+
+			for(int i=0;i < mVerts.Length;i++)
+			{
+				VDist[i]	=Vector3.Dot(mVerts[i], normal) - dist;
+				if(VDist[i] > epsilon)
+				{
+					VSides[i]	=0;
+					countSides0++;
+				}
+				else if(VDist[i] < -epsilon)
+				{
+					VSides[i]	=1;
+					countSides1++;
+				}
+				else
+				{
+					VSides[i]	=2;
+					countSides2++;
+				}
+			}
+
+			if(countSides0 == 0)
+			{
+				cPools.FreeVerts(mVerts);
+				mVerts	=null;
+				cPools.mClipFloats.FlagFreeItem(VDist);
+				cPools.mClipInts.FlagFreeItem(VSides);
+				return	true;
+			}
+			if(countSides1 == 0)
+			{
+				cPools.mClipFloats.FlagFreeItem(VDist);
+				cPools.mClipInts.FlagFreeItem(VSides);
+				return	true;
+			}
+
+			Vector3	[]frontVerts	=cPools.mClipVecs.GetFreeItem();
+
+			int	idx	=0;
+			for(int i=0;i < mVerts.Length;i++)
+			{
+				Vector3	vert1	=mVerts[i];
+
+				if(VSides[i] == 2)
+				{
+					frontVerts[idx++]	=vert1;
+					continue;
+				}
+
+				if(VSides[i] == 0)
+				{
+					frontVerts[idx++]	=vert1;
+				}
+
+				int	nextVert	=(i + 1) % mVerts.Length;
+
+				if(VSides[nextVert] == 2 || VSides[nextVert] == VSides[i])
+				{
+					continue;
+				}
+
+				Vector3	vert2	=mVerts[nextVert];
+				float	scale	=VDist[i] / (VDist[i] - VDist[nextVert]);
+
+				frontVerts[idx++]	=(vert1 + (vert2 - vert1) * scale);
+			}
+
+			cPools.FreeVerts(mVerts);
+			mVerts	=null;
+
+			if(idx > 2)
+			{
+				mVerts	=cPools.DupeVerts(frontVerts, idx);
+			}
+
+			cPools.mClipFloats.FlagFreeItem(VDist);
+			cPools.mClipInts.FlagFreeItem(VSides);
+			cPools.mClipVecs.FlagFreeItem(frontVerts);
+
+			if(idx < 3)
+			{
+				return	false;
+			}
+
+			return	true;
+		}
+
+
+		internal bool ClipPolyEpsilon(float epsilon, GBSPPlane plane, bool flipTest)
+		{
+			if(mVerts.Length > 100)
+			{
+				CoreEvents.Print("ClipPoly:  Too many verts.\n");
+				return	false;
+			}
+
+			Vector3	normal	=plane.mNormal;
+			float	dist	=plane.mDist;
+
+			if(flipTest)
+			{
+				normal	=-normal;
+				dist	=-dist;
+			}
+
+			float	[]VDist			=new float[mVerts.Length];
+			Int32	[]VSides		=new int[mVerts.Length];
 			Int32	[]countSides	=new int[3];
 
 			List<Vector3>	frontVerts	=new List<Vector3>();
 
-			for(int i=0;i < mVerts.Count;i++)
+			for(int i=0;i < mVerts.Length;i++)
 			{
 				VDist[i]	=Vector3.Dot(mVerts[i], normal) - dist;
 				if(VDist[i] > epsilon)
@@ -200,7 +343,7 @@ namespace BSPCore
 
 			if(countSides[0] == 0)
 			{
-				mVerts.Clear();
+				mVerts	=null;
 				return	true;
 			}
 			if(countSides[1] == 0)
@@ -208,7 +351,7 @@ namespace BSPCore
 				return	true;
 			}
 
-			for(int i=0;i < mVerts.Count;i++)
+			for(int i=0;i < mVerts.Length;i++)
 			{
 				Vector3	vert1	=mVerts[i];
 
@@ -223,7 +366,7 @@ namespace BSPCore
 					frontVerts.Add(vert1);
 				}
 
-				int	nextVert	=(i + 1) % mVerts.Count;
+				int	nextVert	=(i + 1) % mVerts.Length;
 
 				if(VSides[nextVert] == 2 || VSides[nextVert] == VSides[i])
 				{
@@ -236,14 +379,12 @@ namespace BSPCore
 				frontVerts.Add(vert1 + (vert2 - vert1) * scale);
 			}
 
-			mVerts.Clear();
-			mVerts	=frontVerts;
-
-			if(mVerts.Count < 3)
+			if(frontVerts.Count < 3)
 			{
-				mVerts.Clear();
+				mVerts	=null;
 				return	false;
 			}
+			mVerts	=frontVerts.ToArray();
 
 			return	true;
 		}
@@ -251,16 +392,16 @@ namespace BSPCore
 
 		internal bool IsTiny()
 		{
-			if(mVerts.Count < 3)
+			if(mVerts == null || mVerts.Length < 3)
 			{
 				return	true;
 			}
 
 			int	edges	=0;
 
-			for(int i=0;i < mVerts.Count;i++)
+			for(int i=0;i < mVerts.Length;i++)
 			{
-				int	j	=(i == mVerts.Count - 1) ? 0 : i + 1;
+				int	j	=(i == mVerts.Length - 1) ? 0 : i + 1;
 
 				Vector3	delta	=mVerts[j] - mVerts[i];
 
@@ -282,7 +423,7 @@ namespace BSPCore
 		internal bool Split(GBSPPlane plane, out GBSPPoly polyFront,
 							out GBSPPoly polyBack, bool flipTest)
 		{
-			return	SplitEpsilon(Utility64.Mathery.ON_EPSILON, plane,
+			return	SplitEpsilon(UtilityLib.Mathery.ON_EPSILON, plane,
 						out polyFront, out polyBack, flipTest);
 		}
 
@@ -293,9 +434,14 @@ namespace BSPCore
 			polyFront	=null;
 			polyBack	=null;
 
-			if(mVerts.Count > 100)
+			if(mVerts == null)
 			{
-				Map.Print("ClipPoly:  Too many verts.\n");
+				return	false;
+			}
+
+			if(mVerts.Length > 100)
+			{
+				CoreEvents.Print("ClipPoly:  Too many verts.\n");
 				return	false;
 			}
 
@@ -308,14 +454,14 @@ namespace BSPCore
 				dist	=-dist;
 			}
 
-			float	[]VDist			=new float[mVerts.Count];
-			Int32	[]VSides		=new int[mVerts.Count];
+			float	[]VDist			=new float[mVerts.Length];
+			Int32	[]VSides		=new int[mVerts.Length];
 			Int32	[]countSides	=new int[3];
 
 			List<Vector3>	frontVerts	=new List<Vector3>();
 			List<Vector3>	backVerts	=new List<Vector3>();
 
-			for(int i=0;i < mVerts.Count;i++)
+			for(int i=0;i < mVerts.Length;i++)
 			{
 				VDist[i]	=Vector3.Dot(mVerts[i], normal) - dist;
 				if(VDist[i] > epsilon)
@@ -345,7 +491,7 @@ namespace BSPCore
 				return	true;
 			}
 
-			for(int i=0;i < mVerts.Count;i++)
+			for(int i=0;i < mVerts.Length;i++)
 			{
 				Vector3	vert1	=mVerts[i];
 
@@ -365,7 +511,7 @@ namespace BSPCore
 					backVerts.Add(vert1);
 				}
 
-				int	nextVert	=(i + 1) % mVerts.Count;
+				int	nextVert	=(i + 1) % mVerts.Length;
 
 				if(VSides[nextVert] == 2 || VSides[nextVert] == VSides[i])
 				{
@@ -387,8 +533,8 @@ namespace BSPCore
 			}
 			else
 			{
-				polyFront	=new GBSPPoly();
-				polyFront.mVerts	=frontVerts;
+				polyFront			=new GBSPPoly(0);
+				polyFront.mVerts	=frontVerts.ToArray();
 			}
 
 			if(backVerts.Count < 3)
@@ -397,8 +543,8 @@ namespace BSPCore
 			}
 			else
 			{
-				polyBack	=new GBSPPoly();
-				polyBack.mVerts	=backVerts;
+				polyBack		=new GBSPPoly(0);
+				polyBack.mVerts	=backVerts.ToArray();
 			}
 
 			return	true;
@@ -411,10 +557,10 @@ namespace BSPCore
 
 			List<Vector3>	newVerts	=new List<Vector3>();
 
-			for(int i=0;i < mVerts.Count;i++)
+			for(int i=0;i < mVerts.Length;i++)
 			{
 				Vector3	V1	=mVerts[i];
-				Vector3	V2	=mVerts[(i + 1) % mVerts.Count];
+				Vector3	V2	=mVerts[(i + 1) % mVerts.Length];
 
 				Vector3	Vec	=V1 - V2;
 
@@ -430,47 +576,44 @@ namespace BSPCore
 
 			if(Bad)
 			{
-				mVerts	=newVerts;
+				mVerts	=newVerts.ToArray();
 			}
 		}
 
 
-		internal bool EdgeExist(Vector3 []edge1, out Int32 []edgeIndexOut)
+		internal bool EdgeExist(Vector3 edge10, Vector3 edge11,
+			out Int32 edgeIndexOut0, out Int32 edgeIndexOut1)
 		{
 			Int32		i;
-			Vector3		[]edge2	=new Vector3[2];
+			Vector3		edge20, edge21;
 
-			edgeIndexOut	=new int[2];
-
-			for(i=0;i < mVerts.Count;i++)
+			for(i=0;i < mVerts.Length;i++)
 			{
-				edge2[0]	=mVerts[i];
-				edge2[1]	=mVerts[(i + 1) % mVerts.Count];
+				edge20	=mVerts[i];
+				edge21	=mVerts[(i + 1) % mVerts.Length];
 
-				if(Utility64.Mathery.CompareVector(edge1[0], edge2[0]))
+				if(UtilityLib.Mathery.CompareVector(edge10, edge20))
 				{
-					if(Utility64.Mathery.CompareVector(edge1[1], edge2[1]))
+					if(UtilityLib.Mathery.CompareVector(edge11, edge21))
 					{
-						edgeIndexOut[0]	=i;
-						edgeIndexOut[1]	=(i + 1) % mVerts.Count;
+						edgeIndexOut0	=i;
+						edgeIndexOut1	=(i + 1) % mVerts.Length;
 						return	true;
 					}
 				}
 			}
+
+			edgeIndexOut0	=0;
+			edgeIndexOut1	=0;
+
 			return	false;
-		}
-
-
-		internal void Reverse()
-		{
-			mVerts.Reverse();
 		}
 
 
 		internal float Area()
 		{
 			float	total	=0.0f;
-			for(int i=2;i < mVerts.Count;i++)
+			for(int i=2;i < VertCount();i++)
 			{
 				Vector3	vect1	=mVerts[i - 1] - mVerts[0];
 				Vector3	vect2	=mVerts[i] - mVerts[0];
@@ -496,12 +639,12 @@ namespace BSPCore
 			}
 
 			int i	=0;
-			for(i=1;i < mVerts.Count-1;i++)
+			for(i=1;i < mVerts.Length-1;i++)
 			{
 				//initial vertex
 				indexes.Add(offset);
 				indexes.Add((UInt32)(offset + i));
-				indexes.Add((UInt32)(offset + ((i + 1) % mVerts.Count)));
+				indexes.Add((UInt32)(offset + ((i + 1) % mVerts.Length)));
 			}
 		}
 
@@ -518,12 +661,23 @@ namespace BSPCore
 				verts.Add(pos);
 			}
 
-			for(int i=0;i < mVerts.Count;i++)
+			for(int i=0;i < mVerts.Length;i++)
 			{
 				//initial vertex
 				indexes.Add((UInt32)(offset + i));
-				indexes.Add((UInt32)(offset + ((i + 1) % mVerts.Count)));
+				indexes.Add((UInt32)(offset + ((i + 1) % mVerts.Length)));
 			}
+		}
+
+
+		//lazy
+		public void Reverse()
+		{
+			List<Vector3>	flip	=new List<Vector3>(mVerts);
+
+			flip.Reverse();
+
+			mVerts	=flip.ToArray();
 		}
 
 
@@ -531,25 +685,27 @@ namespace BSPCore
 		{
 			bool		keep1	=true, keep2	=true;
 
-			if(p1.mVerts.Count == -1 || p2.mVerts.Count == -1)
+			if(p1.mVerts.Length == -1 || p2.mVerts.Length == -1)
 			{
 				return	null;
 			}
 
-			int	numVerts	=p1.mVerts.Count;
+			int	numVerts	=p1.mVerts.Length;
 
 			//
 			// Go through each edge of p1, and see if the reverse of it exist in p2
 			//
-			Int32		[]edgeIndex	=new Int32[2];
-			Vector3		[]edge1		=new Vector3[2];
+			Int32		edgeIndex0	=0;
+			Int32		edgeIndex1	=0;
+			Vector3		edge10		=Vector3.Zero;
+			Vector3		edge11		=Vector3.Zero;
 			int			i;
 			for(i=0;i < numVerts;i++)		
 			{
-				edge1[1]	=p1.mVerts[i];
-				edge1[0]	=p1.mVerts[(i + 1) % numVerts];
+				edge11	=p1.mVerts[i];
+				edge10	=p1.mVerts[(i + 1) % numVerts];
 
-				if(p2.EdgeExist(edge1, out edgeIndex))
+				if(p2.EdgeExist(edge10, edge11, out edgeIndex0, out edgeIndex1))
 				{
 					break;
 				}
@@ -560,7 +716,7 @@ namespace BSPCore
 				return	null;
 			}
 
-			int	numVerts2	=p2.mVerts.Count;
+			int	numVerts2	=p2.mVerts.Length;
 
 			//
 			//	See if the 2 joined make a convex poly, connect them, and return new one
@@ -568,12 +724,12 @@ namespace BSPCore
 
 			//Get the normal of the edge just behind edge1
 			Vector3	v1	=p1.mVerts[(i + numVerts - 1) % numVerts];
-			v1	-=edge1[1];
+			v1	-=edge11;
 
 			Vector3	normal2	=Vector3.Cross(normal, v1);
 			normal2.Normalize();
 
-			Vector3	v2	=p2.mVerts[(edgeIndex[1] + 1) % numVerts2] - p2.mVerts[edgeIndex[1]];
+			Vector3	v2	=p2.mVerts[(edgeIndex1 + 1) % numVerts2] - p2.mVerts[edgeIndex1];
 
 			float	dot		=Vector3.Dot(v2, normal2);
 			if(dot > COLINEAR_EPSILON)
@@ -587,13 +743,13 @@ namespace BSPCore
 
 			//Get the normal of the edge just behind edge1
 			v1	=p1.mVerts[(i+2)%numVerts];
-			v1	-=edge1[0];
+			v1	-=edge10;
 
 			normal2	=Vector3.Cross(normal, v1);
 			normal2.Normalize();
 
-			v2	=p2.mVerts[(edgeIndex[0] + numVerts2 - 1) % numVerts2] -
-						p2.mVerts[edgeIndex[0]];
+			v2	=p2.mVerts[(edgeIndex0 + numVerts2 - 1) % numVerts2] -
+						p2.mVerts[edgeIndex0];
 
 			dot	=Vector3.Dot(v2, normal2);
 			if(dot > COLINEAR_EPSILON)
@@ -604,12 +760,8 @@ namespace BSPCore
 			{
 				keep2	=false;
 			}
-			
-			//
-			// Make a new poly, free the old ones...
-			//
-			GBSPPoly	ret	=new GBSPPoly();
 
+			//count total verts
 			int	numNewVerts	=0;
 			for(int k = (i + 1) % numVerts;k != i;k = (k + 1) % numVerts)
 			{
@@ -617,11 +769,11 @@ namespace BSPCore
 				{
 					continue;
 				}
-				ret.mVerts.Add(p1.mVerts[k]);
 				numNewVerts++;
 			}
 
-			i	=edgeIndex[0];
+			int	temp	=i;
+			i			=edgeIndex0;
 
 			for(int k = (i + 1) % numVerts2;k != i;k = (k + 1) % numVerts2)
 			{
@@ -629,14 +781,38 @@ namespace BSPCore
 				{
 					continue;
 				}
-				ret.mVerts.Add(p2.mVerts[k]);
 				numNewVerts++;
+			}
+
+			i	=temp;
+
+			//make a new poly
+			GBSPPoly	ret	=new GBSPPoly(numNewVerts);
+			int			j	=0;
+			for(int k = (i + 1) % numVerts;k != i;k = (k + 1) % numVerts)
+			{
+				if(k == (i + 1) % numVerts && !keep2)
+				{
+					continue;
+				}
+				ret.mVerts[j++]	=p1.mVerts[k];
+			}
+
+			i	=edgeIndex0;
+
+			for(int k = (i + 1) % numVerts2;k != i;k = (k + 1) % numVerts2)
+			{
+				if(k == (i + 1) % numVerts2 && !keep1)
+				{
+					continue;
+				}
+				ret.mVerts[j++]	=(p2.mVerts[k]);
 			}
 			return	ret;
 		}
 
 
-		internal float Radius()
+		public float Radius()
 		{
 			Vector3	center	=Center();
 
@@ -662,12 +838,12 @@ namespace BSPCore
 		}
 
 
-		internal bool AnyPartBehind(GBSPPlane p)
+		public bool AnyPartBehind(GBSPPlane p)
 		{
 			foreach(Vector3 vert in mVerts)
 			{
 				float	d	=Vector3.Dot(p.mNormal, vert) - p.mDist;
-				if(d < -Utility64.Mathery.ON_EPSILON)
+				if(d < -UtilityLib.Mathery.ON_EPSILON)
 				{
 					return	true;
 				}
@@ -676,7 +852,7 @@ namespace BSPCore
 		}
 
 
-		internal Vector3 Center()
+		public Vector3 Center()
 		{
 			Vector3	ret	=Vector3.Zero;
 
@@ -684,18 +860,18 @@ namespace BSPCore
 			{
 				ret	+=vert;
 			}
-			ret	/=mVerts.Count;
+			ret	/=mVerts.Length;
 
 			return	ret;
 		}
 
 
-		internal bool AnyPartInFront(GBSPPlane p)
+		public bool AnyPartInFront(GBSPPlane p)
 		{
 			foreach(Vector3 vert in mVerts)
 			{
 				float	d	=Vector3.Dot(p.mNormal, vert) - p.mDist;
-				if(d > Utility64.Mathery.ON_EPSILON)
+				if(d > UtilityLib.Mathery.ON_EPSILON)
 				{
 					return	true;
 				}
@@ -706,6 +882,10 @@ namespace BSPCore
 
 		internal void AddToBounds(Bounds bnd)
 		{
+			if(mVerts == null)
+			{
+				return;
+			}
 			foreach(Vector3 pnt in mVerts)
 			{
 				bnd.AddPointToBounds(pnt);
@@ -713,15 +893,8 @@ namespace BSPCore
 		}
 
 
-		internal void AddVert(Vector3 v)
-		{
-			mVerts.Add(v);
-		}
-
-
 		internal void Free()
 		{
-			mVerts.Clear();
 			mVerts	=null;
 		}
 
@@ -729,10 +902,10 @@ namespace BSPCore
 		internal bool Check(bool bVerb, Vector3 norm, float dist)
 		{
 			int	i;
-			for(i=0;i < mVerts.Count;i++)
+			for(i=0;i < mVerts.Length;i++)
 			{
 				Vector3	v1	=mVerts[i];
-				Vector3	v2	=mVerts[(i + 1) % mVerts.Count];
+				Vector3	v2	=mVerts[(i + 1) % mVerts.Length];
 
 				//Check for degenreate edge
 				Vector3	vect1	=v2 - v1;
@@ -741,19 +914,19 @@ namespace BSPCore
 				{
 					if(bVerb)
 					{
-						Map.Print("WARNING CheckFace:  Degenerate Edge.\n");
+						CoreEvents.Print("WARNING CheckFace:  Degenerate Edge.\n");
 					}
 					return	false;
 				}
 
 				//Check for planar
 				d	=Vector3.Dot(v1, norm) - dist;
-				if(d > Utility64.Mathery.ON_EPSILON
-					|| d < -Utility64.Mathery.ON_EPSILON)
+				if(d > UtilityLib.Mathery.ON_EPSILON
+					|| d < -UtilityLib.Mathery.ON_EPSILON)
 				{
 					if(bVerb)
 					{
-						Map.Print("WARNING CheckFace:  Non planar: " + d + "\n");
+						CoreEvents.Print("WARNING CheckFace:  Non planar: " + d + "\n");
 					}
 					return	false;
 				}
@@ -763,14 +936,14 @@ namespace BSPCore
 				float	edgeDist	=Vector3.Dot(v1, edgeNorm);
 				
 				//Check for convexity
-				for(int j=0;j < mVerts.Count;j++)
+				for(int j=0;j < mVerts.Length;j++)
 				{
 					d	=Vector3.Dot(mVerts[j], edgeNorm) - edgeDist;
-					if(d > Utility64.Mathery.ON_EPSILON)
+					if(d > UtilityLib.Mathery.ON_EPSILON)
 					{
 						if(bVerb)
 						{
-							Map.Print("CheckFace:  Face not convex.\n");
+							CoreEvents.Print("CheckFace:  Face not convex.\n");
 						}
 						return	false;
 					}
@@ -841,6 +1014,10 @@ namespace BSPCore
 		internal void GetSplitMaxDist(GBSPPlane plane, int pside,
 			ref float frontDist, ref float backDist)
 		{
+			if(mVerts == null)
+			{
+				return;
+			}
 			foreach(Vector3 vert in mVerts)
 			{
 				float	d	=plane.DistanceFast(vert);
@@ -862,26 +1039,25 @@ namespace BSPCore
 		}
 
 
-		internal bool SeperatorClip(GBSPPoly source, GBSPPoly pass,
-									bool bFlipClip, ref GBSPPoly dest)
+		public bool SeperatorClip(GBSPPoly source, GBSPPoly pass, bool bFlipClip, ClipPools cPools)
 		{
-			for(int i=0;i < source.mVerts.Count;i++)
+			for(int i=0;i < source.mVerts.Length;i++)
 			{
-				int	l	=(i + 1) % source.mVerts.Count;
+				int	l	=(i + 1) % source.mVerts.Length;
 
 				Vector3	v1	=source.mVerts[l] - source.mVerts[i];
 
-				for(int j=0;j < pass.mVerts.Count;j++)
+				for(int j=0;j < pass.mVerts.Length;j++)
 				{
 					Vector3	v2	=pass.mVerts[j] - source.mVerts[i];
 
-					GBSPPlane	plane		=new GBSPPlane();
+					GBSPPlane	plane	=new GBSPPlane();
 					plane.mNormal	=Vector3.Cross(v1, v2);
 
 					float	len	=plane.mNormal.Length();
 					plane.mNormal.Normalize();
 					
-					if(len < Utility64.Mathery.ON_EPSILON)
+					if(len < UtilityLib.Mathery.ON_EPSILON)
 					{
 						continue;
 					}
@@ -890,7 +1066,7 @@ namespace BSPCore
 
 					bool	bFlipTest	=false;
 					int		k;
-					for(k=0;k < source.mVerts.Count;k++)
+					for(k=0;k < source.mVerts.Length;k++)
 					{
 						if(k == i || k == l)
 						{
@@ -898,18 +1074,18 @@ namespace BSPCore
 						}
 
 						float	d	=Vector3.Dot(source.mVerts[k], plane.mNormal) - plane.mDist;
-						if(d < -Utility64.Mathery.ON_EPSILON)
+						if(d < -UtilityLib.Mathery.ON_EPSILON)
 						{
 							bFlipTest	=false;
 							break;
 						}
-						else if(d > Utility64.Mathery.ON_EPSILON)
+						else if(d > UtilityLib.Mathery.ON_EPSILON)
 						{
 							bFlipTest	=true;
 							break;
 						}
 					}
-					if(k == source.mVerts.Count)
+					if(k == source.mVerts.Length)
 					{
 						continue;
 					}
@@ -918,63 +1094,60 @@ namespace BSPCore
 						plane.Inverse();
 					}
 
-					Int32	[]counts	=new Int32[3];
-					counts[0] = counts[1] = counts[2] = 0;
-
-					for(k=0;k < pass.mVerts.Count;k++)
+					Int32	count0	=0;
+					Int32	count2	=0;
+					for(k=0;k < pass.mVerts.Length;k++)
 					{
 						if(k==j)
 						{
 							continue;
 						}
 						float	d	=Vector3.Dot(pass.mVerts[k], plane.mNormal) - plane.mDist;
-						if(d < -Utility64.Mathery.ON_EPSILON)
+						if(d < -UtilityLib.Mathery.ON_EPSILON)
 						{
 							break;
 						}
-						else if(d > Utility64.Mathery.ON_EPSILON)
+						else if(d > UtilityLib.Mathery.ON_EPSILON)
 						{
-							counts[0]++;
+							count0++;
 						}
 						else
 						{
-							counts[2]++;
+							count2++;
 						}
 					}
-					if(k != pass.mVerts.Count)
+					if(k != pass.mVerts.Length)
 					{
 						continue;	
 					}
 						
-					if(counts[0] == 0)
+					if(count0 == 0)
 					{
 						continue;
 					}
-					if(!ClipPoly(plane, bFlipClip))
+					if(!ClipPoly(plane, bFlipClip, cPools))
 					{
-						Map.Print("ClipToPortals:  Error clipping portal.\n");
+						CoreEvents.Print("ClipToPortals:  Error clipping portal.\n");
 						return	false;
 					}
 
-					if(mVerts.Count < 3)
+					if(mVerts == null || mVerts.Length < 3)
 					{
-						dest	=null;
 						return	true;
 					}
 				}
 			}			
-			dest	=this;
 			return	true;
 		}
 
 
 		internal bool IsMaxExtents()
 		{
-			for(int i=0;i < mVerts.Count;i++)
+			for(int i=0;i < mVerts.Length;i++)
 			{
 				for(int k=0;k < 3;k++)
 				{
-					float	val	=Utility64.Mathery.VecIdx(mVerts[i], k);
+					float	val	=UtilityLib.Mathery.VecIdx(mVerts[i], k);
 
 					if(val == Bounds.MIN_MAX_BOUNDS)
 					{
@@ -990,10 +1163,16 @@ namespace BSPCore
 		}
 
 
+		internal Int32[] IndexVerts(FaceFixer ff)
+		{
+			return	ff.IndexFaceVerts(mVerts);
+		}
+
+
 		internal void WriteReverse(System.IO.BinaryWriter bw)
 		{
-			bw.Write(mVerts.Count);
-			for(int i=mVerts.Count - 1;i >=0;i--)
+			bw.Write(mVerts.Length);
+			for(int i=mVerts.Length - 1;i >=0;i--)
 			{
 				bw.Write(mVerts[i].X);
 				bw.Write(mVerts[i].Y);
@@ -1002,9 +1181,9 @@ namespace BSPCore
 		}
 
 
-		internal void Write(System.IO.BinaryWriter bw)
+		public void Write(System.IO.BinaryWriter bw)
 		{
-			bw.Write(mVerts.Count);
+			bw.Write(mVerts.Length);
 			foreach(Vector3 vert in mVerts)
 			{
 				bw.Write(vert.X);
@@ -1014,18 +1193,16 @@ namespace BSPCore
 		}
 
 
-		internal void Read(System.IO.BinaryReader br)
+		public void Read(System.IO.BinaryReader br)
 		{
 			int	count	=br.ReadInt32();
+
+			mVerts	=new Vector3[count];
 			for(int i=0;i < count;i++)
 			{
-				Vector3	vert	=Vector3.Zero;
-
-				vert.X	=br.ReadSingle();
-				vert.Y	=br.ReadSingle();
-				vert.Z	=br.ReadSingle();
-
-				mVerts.Add(vert);
+				mVerts[i].X	=br.ReadSingle();
+				mVerts[i].Y	=br.ReadSingle();
+				mVerts[i].Z	=br.ReadSingle();
 			}
 		}
 	}

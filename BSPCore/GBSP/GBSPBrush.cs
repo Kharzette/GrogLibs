@@ -69,7 +69,7 @@ namespace BSPCore
 
 			if(!CheckBrush())
 			{
-				Map.Print("MakeBSPBrushes:  Bad brush.\n");
+				CoreEvents.Print("MakeBSPBrushes:  Bad brush.\n");
 				return;
 			}
 		}
@@ -179,7 +179,7 @@ namespace BSPCore
 				
 				if(b.Volume(pool) < 0.1f)
 				{
-					Map.Print("**WARNING** BuildBSP: Brush with NULL volume\n");
+					CoreEvents.Print("**WARNING** BuildBSP: Brush with NULL volume\n");
 				}
 				
 				for(int i=0;i < b.mSides.Count;i++)
@@ -360,7 +360,7 @@ namespace BSPCore
 			GBSPPoly	midPoly	=new GBSPPoly(plane);
 			if(midPoly == null)
 			{
-				Map.Print("Could not create poly.\n");
+				CoreEvents.Print("Could not create poly.\n");
 			}
 			
 			//Clip the poly by all the planes of the brush being split
@@ -397,7 +397,7 @@ namespace BSPCore
 				
 				if(resultBrushes[i] == null)
 				{
-					Map.Print("SplitBrush:  Out of memory for brush.\n");
+					CoreEvents.Print("SplitBrush:  Out of memory for brush.\n");
 				}
 				
 				resultBrushes[i].mOriginal	=mOriginal;
@@ -417,7 +417,7 @@ namespace BSPCore
 				GBSPPoly	sidePoly	=new GBSPPoly(s.mPoly);
 				if(!sidePoly.SplitEpsilon(0.0f, plane, out poly[0], out poly[1], false))
 				{
-					Map.Print("Error splitting poly...\n");
+					CoreEvents.Print("Error splitting poly...\n");
 				}
 
 				for(int j=0;j < 2;j++)
@@ -452,11 +452,11 @@ namespace BSPCore
 			{				
 				if(resultBrushes[0] == null && resultBrushes[1] == null)
 				{
-					Map.Print("Split removed brush\n");
+					CoreEvents.Print("Split removed brush\n");
 				}
 				else
 				{
-					Map.Print("Split not on both sides\n");
+					CoreEvents.Print("Split not on both sides\n");
 				}
 				
 				if(resultBrushes[0] != null)
@@ -516,7 +516,7 @@ namespace BSPCore
 
 			if(resultBrushes[0] == null || resultBrushes[1] == null)
 			{
-				Map.Print("SplitBrush:  Brush was not split.\n");
+				CoreEvents.Print("SplitBrush:  Brush was not split.\n");
 			}
 			
 			front	=resultBrushes[0];
@@ -617,8 +617,8 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				Map.Print("---- CSGBrushes ----\n");
-				Map.Print("Num brushes before CSG : " + CountBrushList(listHead) + "\n");
+				CoreEvents.Print("---- CSGBrushes ----\n");
+				CoreEvents.Print("Num brushes before CSG : " + CountBrushList(listHead) + "\n");
 			}
 
 			listKeep	=null;
@@ -735,7 +735,7 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				Map.Print("Num brushes after CSG  : " + CountBrushList(listKeep) + "\n");
+				CoreEvents.Print("Num brushes after CSG  : " + CountBrushList(listKeep) + "\n");
 			}
 
 			return	listKeep;
@@ -821,11 +821,19 @@ namespace BSPCore
 						{
 							continue;
 						}
-						if((side.mFlags & (GBSPSide.SIDE_TESTED | GBSPSide.SIDE_NODE)) != 0)
+						if((side.mFlags & (GBSPSide.SIDE_TESTED)) != 0)
+						{
+							continue;
+						}
+						if((side.mFlags & (GBSPSide.SIDE_NODE)) != 0)
 						{
 							continue;
 						}
  						if(((side.mFlags & GBSPSide.SIDE_VISIBLE) == 0) && pass < 2)
+						{
+							continue;
+						}
+ 						if(((side.mFlags & GBSPSide.SIDE_VISIBLE) != 0) && pass >= 2)
 						{
 							continue;
 						}
@@ -851,7 +859,7 @@ namespace BSPCore
 
 							if(brushSplits != 0 && ((sideFlag & GBSPPlane.PSIDE_FACING) != 0))
 							{
-								Map.Print("PSIDE_FACING with splits\n");
+								CoreEvents.Print("PSIDE_FACING with splits\n");
 							}
 
 							test.mTestSide	=sideFlag;
@@ -920,7 +928,7 @@ namespace BSPCore
 						node.SetDetail(true);	//Not needed for vis
 						if((bestSide.mFlags & GBSPSide.SIDE_HINT) != 0)
 						{
-							Map.Print("*** Hint as Detail!!! ***\n");
+							CoreEvents.Print("*** Hint as Detail!!! ***\n");
 						}
 					}					
 					break;

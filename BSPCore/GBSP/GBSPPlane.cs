@@ -6,26 +6,26 @@ using Microsoft.Xna.Framework;
 
 namespace BSPCore
 {
-	internal struct GBSPPlane
+	public struct GBSPPlane
 	{
-		internal Vector3	mNormal;
-		internal float		mDist;
-		internal UInt32		mType;
+		public Vector3	mNormal;
+		public float		mDist;
+		public UInt32		mType;
 
-		internal const UInt32	PLANE_X		=0;
-		internal const UInt32	PLANE_Y		=1;
-		internal const UInt32	PLANE_Z		=2;
-		internal const UInt32	PLANE_ANYX	=3;
-		internal const UInt32	PLANE_ANYY	=4;
-		internal const UInt32	PLANE_ANYZ	=5;
-		internal const UInt32	PLANE_ANY	=6;
+		public const UInt32	PLANE_X		=0;
+		public const UInt32	PLANE_Y		=1;
+		public const UInt32	PLANE_Z		=2;
+		public const UInt32	PLANE_ANYX	=3;
+		public const UInt32	PLANE_ANYY	=4;
+		public const UInt32	PLANE_ANYZ	=5;
+		public const UInt32	PLANE_ANY	=6;
 
-		internal const UInt32	PSIDE_FRONT		=1;
-		internal const UInt32	PSIDE_BACK		=2;
-		internal const UInt32	PSIDE_BOTH		=(PSIDE_FRONT | PSIDE_BACK);
-		internal const UInt32	PSIDE_FACING	=4;
+		public const UInt32	PSIDE_FRONT		=1;
+		public const UInt32	PSIDE_BACK		=2;
+		public const UInt32	PSIDE_BOTH		=(PSIDE_FRONT | PSIDE_BACK);
+		public const UInt32	PSIDE_FACING	=4;
 
-		internal const float PLANESIDE_EPSILON	=0.001f;
+		public const float PLANESIDE_EPSILON	=0.001f;
 
 
 		internal GBSPPlane(GBSPPlane copyMe)
@@ -44,18 +44,18 @@ namespace BSPCore
 		}
 
 
-		internal GBSPPlane(List<Vector3> verts)
+		public GBSPPlane(Vector3 []verts)
 		{
 			int	i;
 
 			mNormal	=Vector3.Zero;
 
 			//catches colinear points now
-			for(i=0;i < verts.Count;i++)
+			for(i=0;i < verts.Length;i++)
 			{
 				//gen a plane normal from the cross of edge vectors
-				Vector3	v1  =verts[i] - verts[(i + 1) % verts.Count];
-				Vector3	v2  =verts[(i + 2) % verts.Count] - verts[(i + 1) % verts.Count];
+				Vector3	v1  =verts[i] - verts[(i + 1) % verts.Length];
+				Vector3	v2  =verts[(i + 2) % verts.Length] - verts[(i + 1) % verts.Length];
 
 				mNormal   =Vector3.Cross(v1, v2);
 
@@ -65,11 +65,11 @@ namespace BSPCore
 				}
 				//try the next three if there are three
 			}
-			if(i >= verts.Count)
+			if(i >= verts.Length)
 			{
 				//need a talky flag
 				//in some cases this isn't worthy of a warning
-				Map.Print("Face with no normal!");
+				CoreEvents.Print("Face with no normal!");
 				mNormal	=Vector3.UnitX;
 				mDist	=0.0f;
 				mType	=GBSPPlane.PLANE_ANY;
@@ -82,7 +82,7 @@ namespace BSPCore
 		}
 
 
-		internal GBSPPlane(GBSPPoly poly)
+		public GBSPPlane(GBSPPoly poly)
 		{
 			this	=poly.GenPlane();
 		}
@@ -90,11 +90,11 @@ namespace BSPCore
 
 		internal void Snap()
 		{
-			Utility64.Mathery.SnapVector(ref mNormal);
+			UtilityLib.Mathery.SnapVector(ref mNormal);
 
 			float	roundedDist	=(float)Math.Round((double)mDist);
 
-			if(Math.Abs(mDist - roundedDist) < Utility64.Mathery.DIST_EPSILON)
+			if(Math.Abs(mDist - roundedDist) < UtilityLib.Mathery.DIST_EPSILON)
 			{
 				mDist	=roundedDist;
 			}
@@ -145,7 +145,7 @@ namespace BSPCore
 
 			UInt32	type	=mType % PLANE_ANYX;
 
-			if(Utility64.Mathery.VecIdx(mNormal, type) < 0)
+			if(UtilityLib.Mathery.VecIdx(mNormal, type) < 0)
 			{
 				Inverse();
 				side	=1;
@@ -158,10 +158,10 @@ namespace BSPCore
 			Vector3	norm	=mNormal - other.mNormal;
 			float	dist	=mDist - other.mDist;
 
-			if(Math.Abs(norm.X) < Utility64.Mathery.NORMAL_EPSILON &&
-				Math.Abs(norm.Y) < Utility64.Mathery.NORMAL_EPSILON &&
-				Math.Abs(norm.Z) < Utility64.Mathery.NORMAL_EPSILON &&
-				Math.Abs(dist) < Utility64.Mathery.DIST_EPSILON)
+			if(Math.Abs(norm.X) < UtilityLib.Mathery.NORMAL_EPSILON &&
+				Math.Abs(norm.Y) < UtilityLib.Mathery.NORMAL_EPSILON &&
+				Math.Abs(norm.Z) < UtilityLib.Mathery.NORMAL_EPSILON &&
+				Math.Abs(dist) < UtilityLib.Mathery.DIST_EPSILON)
 			{
 				return	true;
 			}
@@ -169,7 +169,7 @@ namespace BSPCore
 		}
 
 
-		internal void Inverse()
+		public void Inverse()
 		{
 			mNormal	=-mNormal;
 			mDist	=-mDist;
@@ -193,7 +193,7 @@ namespace BSPCore
 		}
 
 
-		internal void Write(System.IO.BinaryWriter bw)
+		public void Write(System.IO.BinaryWriter bw)
 		{
 			bw.Write(mNormal.X);
 			bw.Write(mNormal.Y);
@@ -203,7 +203,7 @@ namespace BSPCore
 		}
 
 
-		internal void Read(System.IO.BinaryReader br)
+		public void Read(System.IO.BinaryReader br)
 		{
 			mNormal.X	=br.ReadSingle();
 			mNormal.Y	=br.ReadSingle();

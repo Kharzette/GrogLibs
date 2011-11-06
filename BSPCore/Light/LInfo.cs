@@ -64,7 +64,7 @@ namespace BSPCore
 
 				if((mLSize[i] + 1) > LInfo.MAX_LMAP_SIZE)
 				{
-					Map.Print("CalcFaceInfo:  Face was not subdivided correctly.\n");
+					CoreEvents.Print("CalcFaceInfo:  Face was not subdivided correctly.\n");
 				}
 			}
 		}
@@ -76,7 +76,7 @@ namespace BSPCore
 			{
 				if(mNumLTypes >= LInfo.MAX_LTYPES)
 				{
-					Map.Print("Max Light Types on face.\n");
+					CoreEvents.Print("Max Light Types on face.\n");
 					return;
 				}
 			

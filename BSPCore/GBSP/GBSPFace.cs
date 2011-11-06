@@ -125,7 +125,7 @@ namespace BSPCore
 			newFace.mPoly	=newPoly;
 			if(newFace == null)
 			{
-				Map.Print("*WARNING* MergeFace:  Out of memory for new face!\n");
+				CoreEvents.Print("*WARNING* MergeFace:  Out of memory for new face!\n");
 				return	null;
 			}
 
@@ -210,7 +210,7 @@ namespace BSPCore
 			{
 				if(bVerb)
 				{
-					Map.Print("CheckFace:  NumVerts < 3.\n");
+					CoreEvents.Print("CheckFace:  NumVerts < 3.\n");
 				}
 				return	false;
 			}

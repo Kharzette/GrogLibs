@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 
 
 namespace BSPCore
 {
-	public class GFXTexInfo : Utility64.IReadWriteable
+	public class GFXTexInfo : UtilityLib.IReadWriteable
 	{
 		public Vector3	[]mVecs			=new Vector3[2];
 		public float	[]mShift		=new float[2];
@@ -62,55 +63,55 @@ namespace BSPCore
 		}
 
 
-		internal bool IsLightMapped()
+		public bool IsLightMapped()
 		{
 			return	((mFlags & TexInfo.NO_LIGHTMAP) == 0);
 		}
 
 
-		internal bool IsAlpha()
+		public bool IsAlpha()
 		{
 			return	((mFlags & TexInfo.TRANS) != 0);
 		}
 
 
-		internal bool IsSky()
+		public bool IsSky()
 		{
 			return	((mFlags & TexInfo.SKY) != 0);
 		}
 
 
-		internal bool IsMirror()
+		public bool IsMirror()
 		{
 			return	((mFlags & TexInfo.MIRROR) != 0);
 		}
 
 
-		internal bool IsGouraud()
+		public bool IsGouraud()
 		{
 			return	((mFlags & TexInfo.GOURAUD) != 0);
 		}
 
 
-		internal bool IsFlat()
+		public bool IsFlat()
 		{
 			return	((mFlags & TexInfo.FLAT) != 0);
 		}
 
 
-		internal bool IsFullBright()
+		public bool IsFullBright()
 		{
 			return	((mFlags & TexInfo.FULLBRIGHT) != 0);
 		}
 
 
-		internal bool IsLight()
+		public bool IsLight()
 		{
 			return	((mFlags & TexInfo.LIGHT) != 0);
 		}
 
 
-		internal Vector2 GetTexCoord(Vector3 vert)
+		public Vector2 GetTexCoord(Vector3 vert)
 		{
 			Vector2	ret	=Vector2.Zero;
 
@@ -118,6 +119,75 @@ namespace BSPCore
 			ret.Y	=Vector3.Dot(vert, mVecs[1]);
 
 			return	ret;
+		}
+
+
+		internal static string ScryTrueName(GFXFace f, GFXTexInfo tex)
+		{
+			string	matName	=tex.mMaterial;
+
+			if(tex.IsLightMapped())
+			{
+				if(tex.IsAlpha() && f.mLightOfs != -1)
+				{
+					matName	+="*LitAlpha";
+				}
+				else if(tex.IsAlpha())
+				{
+					matName	+="*Alpha";
+				}
+				else if(f.mLightOfs == -1)
+				{
+					matName	+="*VertLit";
+				}
+			}
+			else if(tex.IsMirror())
+			{
+				matName	+="*Mirror";
+			}
+			else if(tex.IsAlpha())
+			{
+				matName	+="*Alpha";
+			}
+			else if(tex.IsFlat() || tex.IsGouraud())
+			{
+				matName	+="*VertLit";
+			}
+			else if(tex.IsFullBright() || tex.IsLight())
+			{
+				matName	+="*FullBright";
+			}
+			else if(tex.IsSky())
+			{
+				matName	+="*Sky";
+			}
+
+			int	numStyles	=0;
+			for(int i=0;i < 4;i++)
+			{
+				if(f.mLTypes[i] != 255)
+				{
+					numStyles++;
+				}
+			}
+
+			//animated lights ?
+			if(numStyles > 1 || (numStyles == 1 && f.mLTypes[0] != 0))
+			{
+				Debug.Assert(tex.IsLightMapped());
+
+				//see if material is already alpha
+				if(matName.Contains("*LitAlpha"))
+				{
+					matName	+="Anim";	//*LitAlphaAnim
+				}
+				else
+				{
+					matName	+="*Anim";
+				}
+			}
+
+			return	matName;
 		}
 	}
 }

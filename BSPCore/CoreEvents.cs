@@ -30,49 +30,49 @@ namespace BSPCore
 
 		public static void FireBuildDoneEvent(object sender, EventArgs ea)
 		{
-			Utility64.Misc.SafeInvoke(eBuildDone, sender);
+			UtilityLib.Misc.SafeInvoke(eBuildDone, sender);
 		}
 
 
 		public static void FireVisDoneEvent(object sender, EventArgs ea)
 		{
-			Utility64.Misc.SafeInvoke(eVisDone, sender);
+			UtilityLib.Misc.SafeInvoke(eVisDone, sender);
 		}
 
 
 		public static void FireGBSPSaveDoneEvent(object sender, EventArgs ea)
 		{
-			Utility64.Misc.SafeInvoke(eGBSPSaveDone, sender);
+			UtilityLib.Misc.SafeInvoke(eGBSPSaveDone, sender);
 		}
 
 
 		public static void FireLightDoneDoneEvent(object sender, EventArgs ea)
 		{
-			Utility64.Misc.SafeInvoke(eLightDone, sender);
+			UtilityLib.Misc.SafeInvoke(eLightDone, sender);
 		}
 
 
 		public static void FireNumPortalsChangedEvent(object sender, EventArgs ea)
 		{
-			Utility64.Misc.SafeInvoke(eNumPortalsChanged, sender);
+			UtilityLib.Misc.SafeInvoke(eNumPortalsChanged, sender);
 		}
 
 
 		public static void FireNumVertsChangedEvent(object sender, EventArgs ea)
 		{
-			Utility64.Misc.SafeInvoke(eNumVertsChanged, sender);
+			UtilityLib.Misc.SafeInvoke(eNumVertsChanged, sender);
 		}
 
 
 		public static void FireNumClustersChangedEvent(object sender, EventArgs ea)
 		{
-			Utility64.Misc.SafeInvoke(eNumClustersChanged, sender);
+			UtilityLib.Misc.SafeInvoke(eNumClustersChanged, sender);
 		}
 
 
 		public static void FireNumPlanesChangedEvent(object sender, EventArgs ea)
 		{
-			Utility64.Misc.SafeInvoke(eNumPlanesChanged, sender);
+			UtilityLib.Misc.SafeInvoke(eNumPlanesChanged, sender);
 		}
 	}
 }

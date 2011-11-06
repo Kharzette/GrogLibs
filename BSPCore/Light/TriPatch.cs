@@ -134,7 +134,7 @@ namespace BSPCore
 			
 			if(!FindClosestTriPoint(pnt, out color))
 			{
-				Map.Print("SampleTriangulation:  Could not find closest Color.\n");
+				CoreEvents.Print("SampleTriangulation:  Could not find closest Color.\n");
 				return	false;
 			}
 			return	true;
@@ -161,7 +161,7 @@ namespace BSPCore
 			}
 			if(bestPatch == null)
 			{
-				Map.Print("FindClosestTriPoint: No Points.\n");
+				CoreEvents.Print("FindClosestTriPoint: No Points.\n");
 				return	false;
 			}
 			col	=bestPatch.mRadFinal;
@@ -203,13 +203,13 @@ namespace BSPCore
 			TriEdge	e	=FindEdge(bp1, bp2);
 			if(e == null)
 			{
-				Map.Print("There was an error finding an edge.\n");
+				CoreEvents.Print("There was an error finding an edge.\n");
 				return	false;
 			}
 			TriEdge	e2	=FindEdge(bp2, bp1);
 			if(e2 == null)
 			{
-				Map.Print("There was an error finding an edge.\n");
+				CoreEvents.Print("There was an error finding an edge.\n");
 				return	false;
 			}
 			if(!Tri_Edge_r(e))
@@ -239,8 +239,8 @@ namespace BSPCore
 			float	y1	=Vector3.Dot(p2.GetOrigin(), t.mEdges[2].mNormal) - t.mEdges[2].mDist;
 			float	x2	=Vector3.Dot(p3.GetOrigin(), t.mEdges[0].mNormal) - t.mEdges[0].mDist;
 
-			if(Math.Abs(y1) < Utility64.Mathery.ON_EPSILON
-				|| Math.Abs(x2) < Utility64.Mathery.ON_EPSILON)
+			if(Math.Abs(y1) < UtilityLib.Mathery.ON_EPSILON
+				|| Math.Abs(x2) < UtilityLib.Mathery.ON_EPSILON)
 			{
 				color	=bse;
 				return;
@@ -301,25 +301,25 @@ namespace BSPCore
 			Tri	nt	=AllocTriangle();
 			if(nt == null)
 			{
-				Map.Print("Tri_Edge_r:  Could not allocate triangle.\n");
+				CoreEvents.Print("Tri_Edge_r:  Could not allocate triangle.\n");
 				return	false;
 			}
 			nt.mEdges[0]	=e;
 			if(nt.mEdges[0] == null)
 			{
-				Map.Print("Tri_Edge_r:  There was an error finding an edge.\n");
+				CoreEvents.Print("Tri_Edge_r:  There was an error finding an edge.\n");
 				return	false;
 			}
 			nt.mEdges[1]	=FindEdge(e.p1, bestp);
 			if(nt.mEdges[1] == null)
 			{
-				Map.Print("Tri_Edge_r:  There was an error finding an edge.\n");
+				CoreEvents.Print("Tri_Edge_r:  There was an error finding an edge.\n");
 				return	false;
 			}
 			nt.mEdges[2]	=FindEdge(bestp, e.p0);
 			if(nt.mEdges[2] == null)
 			{
-				Map.Print("Tri_Edge_r:  There was an error finding an edge.\n");
+				CoreEvents.Print("Tri_Edge_r:  There was an error finding an edge.\n");
 				return	false;
 			}
 			for(int i=0;i < 3;i++)
@@ -330,7 +330,7 @@ namespace BSPCore
 			TriEdge	e2	=FindEdge(bestp, e.p1);
 			if(e2 == null)
 			{
-				Map.Print("Tri_Edge_r:  There was an error finding an edge.\n");
+				CoreEvents.Print("Tri_Edge_r:  There was an error finding an edge.\n");
 				return	false;
 			}
 			if(!Tri_Edge_r(e2))
@@ -341,7 +341,7 @@ namespace BSPCore
 			e2	=FindEdge(e.p0, bestp);
 			if(e2 == null)
 			{
-				Map.Print("Tri_Edge_r:  There was an error finding an edge.\n");
+				CoreEvents.Print("Tri_Edge_r:  There was an error finding an edge.\n");
 				return	false;
 			}
 			if(!Tri_Edge_r(e2))
@@ -359,7 +359,7 @@ namespace BSPCore
 
 			if(mEdgeMatrix.ContainsKey(key))
 			{
-				Map.Print("Tri edge matrix already contains key " + key + " !\n");
+				CoreEvents.Print("Tri edge matrix already contains key " + key + " !\n");
 				return;
 			}
 

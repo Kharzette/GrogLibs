@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{2911756D-D18A-4B8F-9EB4-0B8C619E098D}</ProjectGuid>
+    <ProjectGuid>{B1FB8732-424A-4598-B850-A7D650CEBF53}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>BSPCore</RootNamespace>
@@ -33,7 +33,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;X64</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
@@ -48,6 +48,26 @@
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;X64</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -61,18 +81,27 @@
   <ItemGroup>
     <Compile Include="Bounds.cs" />
     <Compile Include="BuildParams.cs" />
+    <Compile Include="ClipPools.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Contents.cs" />
     <Compile Include="CoreDelegates.cs" />
     <Compile Include="CoreEvents.cs" />
+    <Compile Include="FaceFixer.cs" />
+    <Compile Include="GBSP\GBSPBrush.cs" />
+    <Compile Include="GBSP\GBSPFace.cs" />
+    <Compile Include="GBSP\GBSPModel.cs" />
+    <Compile Include="GBSP\GBSPNode.cs" />
+    <Compile Include="GBSP\GBSPNodePortalStuff.cs" />
     <Compile Include="GBSP\GBSPPlane.cs" />
     <Compile Include="GBSP\GBSPPoly.cs" />
+    <Compile Include="GBSP\GBSPPortal.cs" />
     <Compile Include="GBSP\GBSPSide.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="GBSP\GBSPVisLeaf.cs" />
+    <Compile Include="GBSP\GBSPVisPortal.cs" />
     <Compile Include="GFX\GFXArea.cs" />
     <Compile Include="GFX\GFXAreaPortal.cs" />
-    <Compile Include="GFX\GFXBNode.cs" />
     <Compile Include="GFX\GFXCluster.cs" />
     <Compile Include="GFX\GFXFace.cs" />
     <Compile Include="GFX\GFXHeader.cs" />
@@ -81,9 +110,18 @@
     <Compile Include="GFX\GFXModel.cs" />
     <Compile Include="GFX\GFXNode.cs" />
     <Compile Include="GFX\GFXPlane.cs" />
-    <Compile Include="GFX\GFXPortal.cs" />
-    <Compile Include="GFX\GFXSkyData.cs" />
+    <Compile Include="GFX\GFXSkyData.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="GFX\GFXTexInfo.cs" />
+    <Compile Include="Light\DirectLight.cs" />
+    <Compile Include="Light\FInfo.cs" />
+    <Compile Include="Light\LInfo.cs" />
+    <Compile Include="Light\MapLight.cs" />
+    <Compile Include="Light\PlaneFace.cs" />
+    <Compile Include="Light\RADPatch.cs" />
+    <Compile Include="Light\RADReceiver.cs" />
+    <Compile Include="Light\TriPatch.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MapBrush.cs" />
     <Compile Include="MapEntity.cs" />
@@ -95,14 +133,11 @@
     <Compile Include="TexInfo.cs" />
     <Compile Include="TexInfoPool.cs" />
     <Compile Include="ThreadParameters.cs" />
-    <Compile Include="Vis\MapVis.cs" />
-    <Compile Include="Vis\VisClient.cs" />
-    <Compile Include="Vis\VISPortal.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Utility64\Utility64.csproj">
-      <Project>{6B5BA213-F4D8-4B2F-9B4F-020455B99D28}</Project>
-      <Name>Utility64</Name>
+    <ProjectReference Include="..\UtilityLib\UtilityLib64.csproj">
+      <Project>{44142343-F71A-4BA3-9776-5F1E659190C7}</Project>
+      <Name>UtilityLib64</Name>
     </ProjectReference>
     <ProjectReference Include="..\XNAMathery\XNAMathery.csproj">
       <Project>{7AF20683-E58F-4EBF-B33E-FE550841AF31}</Project>

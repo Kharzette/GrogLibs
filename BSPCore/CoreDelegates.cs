@@ -12,5 +12,7 @@ namespace BSPCore
 		public delegate bool RayCollision(Vector3 front, Vector3 back, ref Vector3 Impacto);
 		public delegate Int32 GetNodeLandedIn(Int32 node, Vector3 pos);
 		public delegate Vector3 GetEmissiveForMaterial(string matName);
+		internal delegate GBSPModel ModelForLeafNode(GBSPNode n);
+		public delegate void SaveVisZoneData(System.IO.BinaryWriter bw);
 	}
 }

@@ -74,7 +74,7 @@ namespace BSPCore
 			float	distScale	=Vector3.Dot(texNormal, mPlane.mNormal);
 			if(distScale == 0.0f)
 			{
-				Map.Print("CalcFaceInfo:  Invalid Texture vectors for face.\n");
+				CoreEvents.Print("CalcFaceInfo:  Invalid Texture vectors for face.\n");
 			}
 			if(distScale < 0)
 			{
@@ -97,9 +97,9 @@ namespace BSPCore
 
 			for(int i=0;i < 3;i++)
 			{
-				Utility64.Mathery.VecIdxAssign(ref mTexOrg, i,
-					-vecs[0].Z * Utility64.Mathery.VecIdx(mT2WVecs[0], i)
-					-vecs[1].Z * Utility64.Mathery.VecIdx(mT2WVecs[1], i));
+				UtilityLib.Mathery.VecIdxAssign(ref mTexOrg, i,
+					-vecs[0].Z * UtilityLib.Mathery.VecIdx(mT2WVecs[0], i)
+					-vecs[1].Z * UtilityLib.Mathery.VecIdx(mT2WVecs[1], i));
 			}
 
 			float Dist	=Vector3.Dot(mTexOrg, mPlane.mNormal)

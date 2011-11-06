@@ -91,12 +91,10 @@ namespace BSPCore
 					{
 						string	[]planePoints	=tokens[3].Split('(', ')');
 
-						mPoly	=new GBSPPoly();
-
 						//1, 3, and 5
-						mPoly.AddVert(ParseVec(planePoints[1]));
-						mPoly.AddVert(ParseVec(planePoints[3]));
-						mPoly.AddVert(ParseVec(planePoints[5]));
+						mPoly	=new GBSPPoly(ParseVec(planePoints[1]),
+							ParseVec(planePoints[3]),
+							ParseVec(planePoints[5]));
 					}
 					else if(tokens[1] == "material")
 					{
@@ -263,9 +261,9 @@ namespace BSPCore
 					{
 						string	[]texVec	=tokens[3].Split('[', ' ', ']');
 
-						Utility64.Mathery.TryParse(texVec[1], out ti.mUVec.X);
-						Utility64.Mathery.TryParse(texVec[2], out ti.mUVec.Y);
-						Utility64.Mathery.TryParse(texVec[3], out ti.mUVec.Z);
+						UtilityLib.Mathery.TryParse(texVec[1], out ti.mUVec.X);
+						UtilityLib.Mathery.TryParse(texVec[2], out ti.mUVec.Y);
+						UtilityLib.Mathery.TryParse(texVec[3], out ti.mUVec.Z);
 
 						//negate x and swap y and z
 						ti.mUVec.X	=-ti.mUVec.X;
@@ -273,15 +271,15 @@ namespace BSPCore
 						ti.mUVec.Y	=ti.mUVec.Z;
 						ti.mUVec.Z	=y;
 
-						Utility64.Mathery.TryParse(texVec[4], out ti.mShiftU);
-						Utility64.Mathery.TryParse(texVec[6], out ti.mDrawScaleU);
+						UtilityLib.Mathery.TryParse(texVec[4], out ti.mShiftU);
+						UtilityLib.Mathery.TryParse(texVec[6], out ti.mDrawScaleU);
 					}
 					else if(tokens[1] == "vaxis")
 					{
 						string	[]texVec	=tokens[3].Split('[', ' ', ']');
-						Utility64.Mathery.TryParse(texVec[1], out ti.mVVec.X);
-						Utility64.Mathery.TryParse(texVec[2], out ti.mVVec.Y);
-						Utility64.Mathery.TryParse(texVec[3], out ti.mVVec.Z);
+						UtilityLib.Mathery.TryParse(texVec[1], out ti.mVVec.X);
+						UtilityLib.Mathery.TryParse(texVec[2], out ti.mVVec.Y);
+						UtilityLib.Mathery.TryParse(texVec[3], out ti.mVVec.Z);
 
 						//negate x and swap y and z
 						ti.mVVec.X	=-ti.mVVec.X;
@@ -289,21 +287,21 @@ namespace BSPCore
 						ti.mVVec.Y	=ti.mVVec.Z;
 						ti.mVVec.Z	=y;
 
-						Utility64.Mathery.TryParse(texVec[4], out ti.mShiftV);
-						Utility64.Mathery.TryParse(texVec[6], out ti.mDrawScaleV);
+						UtilityLib.Mathery.TryParse(texVec[4], out ti.mShiftV);
+						UtilityLib.Mathery.TryParse(texVec[6], out ti.mDrawScaleV);
 					}
 					else if(tokens[1] == "lightmapscale")
 					{
-						Utility64.Mathery.TryParse(tokens[3], out ti.mLightMapScale);
+						UtilityLib.Mathery.TryParse(tokens[3], out ti.mLightMapScale);
 					}
 					else if(tokens[1] == "rotation")
 					{
-						Utility64.Mathery.TryParse(tokens[3], out rot);
+						UtilityLib.Mathery.TryParse(tokens[3], out rot);
 					}
 					else if(tokens[1] == "smoothing_groups")
 					{
 						UInt32	smoove;
-						Utility64.Mathery.TryParse(tokens[3], out smoove);
+						UtilityLib.Mathery.TryParse(tokens[3], out smoove);
 						if((smoove & SMOOTHING_SURFLIGHT) != 0)
 						{
 							ti.mFlags		|=TexInfo.LIGHT;
@@ -405,7 +403,7 @@ namespace BSPCore
 
 		internal void Read(BinaryReader br)
 		{
-			mPoly	=new GBSPPoly();
+			mPoly	=new GBSPPoly(0);
 
 			mPoly.Read(br);
 
@@ -419,8 +417,6 @@ namespace BSPCore
 		internal UInt32 ReadMapLine(string szLine, PlanePool pool, TexInfoPool tiPool)
 		{
 			UInt32	ret	=0;
-
-			mPoly	=new GBSPPoly();
 
 			//gank (
 			szLine.TrimStart('(');
@@ -567,7 +563,7 @@ namespace BSPCore
 
 				if(cnt > 13)
 				{
-					if(Utility64.Mathery.TryParse(tok, out inum))
+					if(UtilityLib.Mathery.TryParse(tok, out inum))
 					{
 						flags.Add(inum);
 						cnt++;
@@ -575,7 +571,7 @@ namespace BSPCore
 				}
 				else
 				{
-					if(Utility64.Mathery.TryParse(tok, out num))
+					if(UtilityLib.Mathery.TryParse(tok, out num))
 					{
 						//rest are numbers
 						numbers.Add(num);
@@ -587,9 +583,9 @@ namespace BSPCore
 			//deal with the numbers
 			//invert x and swap y and z
 			//to convert to left handed
-			mPoly.AddVert(new Vector3(-numbers[0], numbers[2], numbers[1]));
-			mPoly.AddVert(new Vector3(-numbers[3], numbers[5], numbers[4]));
-			mPoly.AddVert(new Vector3(-numbers[6], numbers[8], numbers[7]));
+			mPoly	=new GBSPPoly(new Vector3(-numbers[0], numbers[2], numbers[1]),
+				new Vector3(-numbers[3], numbers[5], numbers[4]),
+				new Vector3(-numbers[6], numbers[8], numbers[7]));
 
 			//see if there are any quake 3 style flags
 /*			if(flags.Count > 0)
@@ -724,9 +720,9 @@ namespace BSPCore
 			string	[]vecStr	=tok.Split(' ');
 
 			//swap y and z
-			Utility64.Mathery.TryParse(vecStr[0], out ret.X);
-			Utility64.Mathery.TryParse(vecStr[1], out ret.Z);
-			Utility64.Mathery.TryParse(vecStr[2], out ret.Y);
+			UtilityLib.Mathery.TryParse(vecStr[0], out ret.X);
+			UtilityLib.Mathery.TryParse(vecStr[1], out ret.Z);
+			UtilityLib.Mathery.TryParse(vecStr[2], out ret.Y);
 
 			ret.X	=-ret.X;
 

@@ -6,7 +6,7 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 
 
-namespace BSPCore
+namespace BSPVis
 {
 	public class BuildFarmCaps
 	{
@@ -19,11 +19,11 @@ namespace BSPCore
 	[ServiceKnownType(typeof(VisState))]
 	public interface IMapVis
 	{
-		[OperationContract(AsyncPattern = true)]
-		IAsyncResult	BeginFloodPortalsSlow(object visState, AsyncCallback callBack, object aSyncState);
+		[OperationContract]
+		bool	BeginFloodPortalsSlow(object visState);
 
-		//no operationcontract for the end method
-		byte	[]EndFloodPortalsSlow(IAsyncResult result);
+		[OperationContract]
+		byte	[]IsFinished(object visState);
 
 		[OperationContract]
 		bool	HasPortals(object visState);
@@ -33,9 +33,6 @@ namespace BSPCore
 
 		[OperationContract]
 		bool	FreePortals();
-
-		[OperationContract]
-		VisState	GetAbandoned(int startPort, int endPort);
 
 		[OperationContract]
 		BuildFarmCaps	QueryCapabilities();
@@ -81,25 +78,9 @@ namespace BSPCore
 			mEndPointURI	=remoteAddress.ToString();
 		}
 
-		public byte []EndFloodPortalsSlow(IAsyncResult result)
+		public bool BeginFloodPortalsSlow(object visState)
 		{
-			byte	[]ret	=null;
-
-			//this can fire a comm exception if
-			//the client service is killed off mid process
-			try
-			{
-				ret	=base.Channel.EndFloodPortalsSlow(result);
-			}
-			catch
-			{
-			}
-			return	ret;
-		}
-		
-		public IAsyncResult BeginFloodPortalsSlow(object visState, AsyncCallback callBack, object aSyncState)
-		{
-			return	base.Channel.BeginFloodPortalsSlow(visState, callBack, aSyncState);
+			return	base.Channel.BeginFloodPortalsSlow(visState);
 		}
 
 		public bool HasPortals(object visState)
@@ -117,9 +98,9 @@ namespace BSPCore
 			return	base.Channel.FreePortals();
 		}
 
-		public VisState GetAbandoned(int startPort, int endPort)
+		public byte []IsFinished(object visState)
 		{
-			return	base.Channel.GetAbandoned(startPort, endPort);
+			return	base.Channel.IsFinished(visState);
 		}
 
 		public BuildFarmCaps QueryCapabilities()

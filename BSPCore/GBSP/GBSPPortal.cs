@@ -57,7 +57,7 @@ namespace BSPCore
 
 			if(newPortal.mPlaneNum == -1)
 			{
-				Map.Print("CreateOutsidePortal:  Could not create plane.\n");
+				CoreEvents.Print("CreateOutsidePortal:  Could not create plane.\n");
 				return	null;
 			}
 
@@ -200,16 +200,101 @@ namespace BSPCore
 		{
 			if(mPoly.VertCount() < 3)
 			{
-				Map.Print("CheckPortal:  NumVerts < 3.\n");
+				CoreEvents.Print("CheckPortal:  NumVerts < 3.\n");
 				return	false;
 			}
 
 			if(mPoly.IsMaxExtents())
 			{
-				Map.Print("CheckPortal:  Portal was not clipped on all sides!!!\n");
+				CoreEvents.Print("CheckPortal:  Portal was not clipped on all sides!!!\n");
 				return	false;
 			}
 			return	true;
+		}
+
+
+		internal void Merge(GBSPNode n, PlanePool pool)
+		{
+			//make a list of possible merge candidates
+			List<GBSPPortal>	nextPorts	=new List<GBSPPortal>();
+
+			Vector3	norm	=pool.mPlanes[mPlaneNum].mNormal;
+
+			for(GBSPPortal port=this;port != null;)
+			{
+				if(port == this)
+				{
+					port	=port.GetNextPortal(n);
+					continue;
+				}
+				if(port.mPoly == null || port.mPoly.VertCount() < 3)
+				{
+					port	=port.GetNextPortal(n);
+					continue;
+				}
+				if(!port.CanSeeThroughPortal())
+				{
+					port	=port.GetNextPortal(n);
+					continue;
+				}
+
+				nextPorts.Add(port);
+
+				port	=port.GetNextPortal(n);
+			}
+
+			GBSPPoly	merged	=new GBSPPoly(mPoly);
+
+			List<GBSPPortal>	removed	=new List<GBSPPortal>();
+
+			foreach(GBSPPortal port in nextPorts)
+			{
+				GBSPPoly	reMerged	=GBSPPoly.Merge(merged, port.mPoly, norm, pool);
+
+				if(reMerged == null || reMerged.VertCount() < 3)
+				{
+					continue;
+				}
+
+				merged	=new GBSPPoly(reMerged);
+
+				removed.Add(port);
+			}
+
+			mPoly	=merged;
+
+			for(GBSPPortal port=this;port != null;)
+			{
+				GBSPPortal	next	=port.GetNextPortal(n);
+				while(next != null && removed.Contains(next))
+				{
+					next	=next.GetNextPortal(n);
+				}
+
+				if(mNodes[0] == n)
+				{
+					port.mNext[0]	=next;
+				}
+				else
+				{
+					port.mNext[1]	=next;
+				}
+
+				port	=next;
+			}
+		}
+
+
+		GBSPPortal GetNextPortal(GBSPNode n)
+		{
+			if(mNodes[0] == n)
+			{
+				return	mNext[0];
+			}
+			else
+			{
+				return	mNext[1];
+			}
 		}
 	}
 }

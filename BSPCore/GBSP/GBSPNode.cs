@@ -64,7 +64,7 @@ namespace BSPCore
 		{
 			if(bVerbose)
 			{
-				Map.Print("--- Build BSP Tree ---\n");
+				CoreEvents.Print("--- Build BSP Tree ---\n");
 			}
 
 			BuildStats	bs		=new BuildStats();
@@ -73,9 +73,9 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				Map.Print("Total Brushes          : " + bs.NumVisBrushes + "\n");
-				Map.Print("Total Faces            : " + bs.NumVisFaces + "\n");
-				Map.Print("Faces Removed          : " + bs.NumNonVisFaces + "\n");
+				CoreEvents.Print("Total Brushes          : " + bs.NumVisBrushes + "\n");
+				CoreEvents.Print("Total Faces            : " + bs.NumVisFaces + "\n");
+				CoreEvents.Print("Faces Removed          : " + bs.NumNonVisFaces + "\n");
 			}
 			bs.NumVisNodes		=0;
 			bs.NumNonVisNodes	=0;
@@ -88,9 +88,9 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				Map.Print("Total Nodes            : " + (bs.NumVisNodes/2 - bs.NumNonVisNodes) + "\n");
-				Map.Print("Nodes Removed          : " + bs.NumNonVisNodes + "\n");
-				Map.Print("Total Leafs            : " + (bs.NumVisNodes+1)/2 + "\n");
+				CoreEvents.Print("Total Nodes            : " + (bs.NumVisNodes/2 - bs.NumNonVisNodes) + "\n");
+				CoreEvents.Print("Nodes Removed          : " + bs.NumNonVisNodes + "\n");
+				CoreEvents.Print("Total Leafs            : " + (bs.NumVisNodes+1)/2 + "\n");
 			}
 		}
 
@@ -118,7 +118,7 @@ namespace BSPCore
 			{
 				if(p.mPlaneNum == planeNum)
 				{
-					Map.Print("Tried parent");
+					CoreEvents.Print("Tried parent");
 					return	false;
 				}
 			}
@@ -210,7 +210,7 @@ namespace BSPCore
 			GBSPPoly	poly	=new GBSPPoly(pool.mPlanes[mPlaneNum]);
 			if(poly == null)
 			{
-				Map.Print("CreatePolyOnNode:  Could not create poly.\n");
+				CoreEvents.Print("CreatePolyOnNode:  Could not create poly.\n");
 				return	false;
 			}
 
@@ -260,7 +260,7 @@ namespace BSPCore
 
 			if(node == null)
 			{
-				Map.Print("FindLeaf:  NULL Node/Leaf.\n");
+				CoreEvents.Print("FindLeaf:  NULL Node/Leaf.\n");
 			}
 			return	node;
 		}
@@ -295,7 +295,7 @@ namespace BSPCore
 			
 			if(!bEmpty)
 			{
-				Map.Print("PlaceEntities:  No valid entities for operation");
+				CoreEvents.Print("PlaceEntities:  No valid entities for operation");
 				return	false;
 			}			
 			return	true;
@@ -325,7 +325,7 @@ namespace BSPCore
 		{
 			if(bVerbose)
 			{
-				Map.Print("--- Finalize Faces ---\n");
+				CoreEvents.Print("--- Finalize Faces ---\n");
 			}
 			
 			int	numMerged		=0;
@@ -335,9 +335,9 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				Map.Print("TotalFaces             : " + numMakeFaces + "\n");
-				Map.Print("Merged Faces           : " + numMerged + "\n");
-				Map.Print("FinalFaces             : " + ((numMakeFaces - numMerged)) + "\n");
+				CoreEvents.Print("TotalFaces             : " + numMakeFaces + "\n");
+				CoreEvents.Print("Merged Faces           : " + numMerged + "\n");
+				CoreEvents.Print("FinalFaces             : " + ((numMakeFaces - numMerged)) + "\n");
 			}
 		}
 
@@ -495,12 +495,12 @@ namespace BSPCore
 					{
 						if(mFaces != null)
 						{
-							Map.Print("Node.mFaces seperating BSP_CONTENTS_SOLID!");
+							CoreEvents.Print("Node.mFaces seperating BSP_CONTENTS_SOLID!");
 						}
 
 						if(mChildren[0].mFaces != null || mChildren[1].mFaces != null)
 						{
-							Map.Print("!Node.mFaces with children");
+							CoreEvents.Print("!Node.mFaces with children");
 						}
 
 						// FIXME: free stuff
@@ -512,7 +512,7 @@ namespace BSPCore
 
 						if(mBrushList != null)
 						{
-							Map.Print("MergeNodes: node.mBrushList");
+							CoreEvents.Print("MergeNodes: node.mBrushList");
 						}
 
 						//combine brush lists
@@ -529,7 +529,7 @@ namespace BSPCore
 		{
 			if(bVerbose)
 			{
-				Map.Print("--- Merge Nodes ---\n");
+				CoreEvents.Print("--- Merge Nodes ---\n");
 			}
 
 			int	mergedNodes	=0;
@@ -538,24 +538,24 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				Map.Print("Num Merged             : " + mergedNodes + "\n");
+				CoreEvents.Print("Num Merged             : " + mergedNodes + "\n");
 			}
 		}
 
 
 		internal bool CreateLeafClusters(bool bVerbose, ref int numLeafClusters)
 		{
-			Map.Print(" --- CreateLeafClusters --- \n");
+			CoreEvents.Print(" --- CreateLeafClusters --- \n");
 
 			if(!CreateLeafClusters_r(ref numLeafClusters))
 			{
-				Map.Print("CreateLeafClusters:  Failed to find leaf clusters.\n");
+				CoreEvents.Print("CreateLeafClusters:  Failed to find leaf clusters.\n");
 				return	false;
 			}
 
 			if(bVerbose)
 			{
-				Map.Print("Num Clusters       : " + numLeafClusters + "\n");
+				CoreEvents.Print("Num Clusters       : " + numLeafClusters + "\n");
 			}
 			return	true;
 		}

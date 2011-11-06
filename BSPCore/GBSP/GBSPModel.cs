@@ -25,14 +25,14 @@ namespace BSPCore
 		internal int	[]mAreas	=new int[2];
 
 
-		internal bool ProcessWorldModel(List<MapBrush> list,
-			List<MapEntity> ents, PlanePool pool, TexInfoPool tip,
-			bool bVerbose)
+		internal bool ProcessWorldModel(List<MapBrush> list, List<MapEntity> ents,
+			PlanePool pool, TexInfoPool tip, bool bVerbose)
 		{
 			list.Reverse();
 			GBSPBrush	glist	=GBSPBrush.ConvertMapBrushList(list);
 
 			glist	=GBSPBrush.CSGBrushes(bVerbose, glist, pool);
+
 			CoreEvents.FireNumPlanesChangedEvent(pool.mPlanes.Count, null);
 
 			GBSPNode	root	=new GBSPNode();
@@ -45,20 +45,20 @@ namespace BSPCore
 
 			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs))
 			{
-				Map.Print("Could not create the portals.\n");
+				CoreEvents.Print("Could not create the portals.\n");
 				return	false;
 			}
 
 			if(root.RemoveHiddenLeafs(mOutsideNode, ents, pool, bVerbose) == -1)
 			{
-				Map.Print("Failed to remove hidden leafs.\n");
+				CoreEvents.Print("Failed to remove hidden leafs.\n");
 			}
 
 			root.MarkVisibleSides(list, pool, bVerbose);
 
 			if(!root.FreePortals())
 			{
-				Map.Print("BuildBSP:  Could not free portals.\n");
+				CoreEvents.Print("BuildBSP:  Could not free portals.\n");
 				return	false;
 			}
 
@@ -73,13 +73,13 @@ namespace BSPCore
 
 			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs))
 			{
-				Map.Print("Could not create the portals.\n");
+				CoreEvents.Print("Could not create the portals.\n");
 				return	false;
 			}
 
 			if(root.RemoveHiddenLeafs(mOutsideNode, ents, pool, bVerbose) == -1)
 			{
-				Map.Print("Failed to remove hidden leafs.\n");
+				CoreEvents.Print("Failed to remove hidden leafs.\n");
 			}
 
 			root.MarkVisibleSides(list, pool, bVerbose);
@@ -90,7 +90,7 @@ namespace BSPCore
 
 			if(!root.FreePortals())
 			{
-				Map.Print("BuildBSP:  Could not free portals.\n");
+				CoreEvents.Print("BuildBSP:  Could not free portals.\n");
 				return	false;
 			}
 
@@ -118,7 +118,7 @@ namespace BSPCore
 
 			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs))
 			{
-				Map.Print("Could not create the portals.\n");
+				CoreEvents.Print("Could not create the portals.\n");
 				return	false;
 			}
 
@@ -128,7 +128,7 @@ namespace BSPCore
 
 			if(!root.FreePortals())
 			{
-				Map.Print("BuildBSP:  Could not free portals.\n");
+				CoreEvents.Print("BuildBSP:  Could not free portals.\n");
 				return	false;
 			}
 
@@ -154,7 +154,7 @@ namespace BSPCore
 			{
 				if(!mRootNode[0].CreatePortals(mOutsideNode, true, false, pool, mBounds.mMins, mBounds.mMaxs))
 				{
-					Map.Print("Could not create VIS portals.\n");
+					CoreEvents.Print("Could not create VIS portals.\n");
 					return	false;
 				}
 
@@ -162,7 +162,7 @@ namespace BSPCore
 
 				if(!mRootNode[0].CreateLeafClusters(bVerbose, ref numLeafClusters))
 				{
-					Map.Print("Could not create leaf clusters.\n");
+					CoreEvents.Print("Could not create leaf clusters.\n");
 					return	false;
 				}
 
@@ -175,7 +175,7 @@ namespace BSPCore
 
 				if(!mRootNode[0].FreePortals())
 				{
-					Map.Print("PrepGBSPModel:  Could not free portals.\n");
+					CoreEvents.Print("PrepGBSPModel:  Could not free portals.\n");
 					return	false;
 				}
 			}
@@ -187,13 +187,13 @@ namespace BSPCore
 
 			if(!mRootNode[0].CreatePortals(mOutsideNode, false, false, pool, mBounds.mMins, mBounds.mMaxs))
 			{
-				Map.Print("Could not create REAL portals.\n");
+				CoreEvents.Print("Could not create REAL portals.\n");
 				return	false;
 			}
 
 			if(!mRootNode[0].CreateLeafSides(pool, leafSides, bVerbose))
 			{
-				Map.Print("Could not create leaf sides.\n");
+				CoreEvents.Print("Could not create leaf sides.\n");
 				return	false;
 			}
 			return	true;
@@ -216,7 +216,7 @@ namespace BSPCore
 		{
 			string	portalFile	=fileName;
 
-			Map.Print(" --- Save Portal File --- \n");
+			CoreEvents.Print(" --- Save Portal File --- \n");
 			  
 			int	dotPos	=portalFile.LastIndexOf('.');
 			portalFile	=portalFile.Substring(0, dotPos);
@@ -227,7 +227,7 @@ namespace BSPCore
 
 			if(fs == null)
 			{
-				Map.Print("SavePortalFile:  Error opening " + portalFile + " for writing.\n");
+				CoreEvents.Print("SavePortalFile:  Error opening " + portalFile + " for writing.\n");
 				return	false;
 			}
 
@@ -236,11 +236,15 @@ namespace BSPCore
 			int	numPortals		=0;	//Number of portals
 			int	numPortalLeafs	=0;	//Current leaf number
 
+//			bool	bMergey	=mRootNode[0].MergePortals_r(pool);
+
+//			mRootNode[0].NumberLeafs_r(ref numPortalLeafs, ref numPortals);
+
 			if(!mRootNode[0].PrepPortalFile_r(ref numPortalLeafs, ref numPortals))
 			{
 				bw.Close();
 				fs.Close();
-				Map.Print("SavePortalFile:  Could not PrepPortalFile.\n");
+				CoreEvents.Print("SavePortalFile:  Could not PrepPortalFile.\n");
 				return	false;
 			}
 
@@ -248,7 +252,7 @@ namespace BSPCore
 			{
 				bw.Close();
 				fs.Close();
-				Map.Print("SavePortalFile:  Invalid number of clusters!!!\n");
+				CoreEvents.Print("SavePortalFile:  Invalid number of clusters!!!\n");
 				return	false;
 			}
 
@@ -266,8 +270,8 @@ namespace BSPCore
 			bw.Close();
 			fs.Close();
 
-			Map.Print("Num Portals          : " + numPortals + "\n");
-			Map.Print("Num Portal Leafs     : " + numPortalLeafs + "\n");
+			CoreEvents.Print("Num Portals          : " + numPortals + "\n");
+			CoreEvents.Print("Num Portal Leafs     : " + numPortalLeafs + "\n");
 
 			return	true;
 		}

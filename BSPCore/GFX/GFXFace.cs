@@ -6,7 +6,7 @@ using System.Text;
 
 namespace BSPCore
 {
-	public class GFXFace : Utility64.IReadWriteable
+	public class GFXFace : UtilityLib.IReadWriteable
 	{
 		public Int32	mFirstVert;
 		public Int32	mNumVerts;

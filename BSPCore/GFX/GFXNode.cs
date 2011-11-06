@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPCore
 {
-	public class GFXNode : Utility64.IReadWriteable
+	public class GFXNode : UtilityLib.IReadWriteable
 	{
 		public Int32	[]mChildren	=new Int32[2];
 		public Int32	mNumFaces;

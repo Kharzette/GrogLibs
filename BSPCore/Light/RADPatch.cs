@@ -124,13 +124,13 @@ namespace BSPCore
 				int	k;
 				for(k=0;k < 3;k++)
 				{
-					if(Utility64.Mathery.VecIdx(patch.mOrigin, k)
-						< Utility64.Mathery.VecIdx(bounds.mMins, k) - (patchSize * 2))
+					if(UtilityLib.Mathery.VecIdx(patch.mOrigin, k)
+						< UtilityLib.Mathery.VecIdx(bounds.mMins, k) - (patchSize * 2))
 					{
 						break;
 					}
-					if(Utility64.Mathery.VecIdx(patch.mOrigin, k)
-						> Utility64.Mathery.VecIdx(bounds.mMaxs, k) + (patchSize * 2))
+					if(UtilityLib.Mathery.VecIdx(patch.mOrigin, k)
+						> UtilityLib.Mathery.VecIdx(bounds.mMaxs, k) + (patchSize * 2))
 					{
 						break;
 					}
@@ -142,7 +142,7 @@ namespace BSPCore
 				
 				if(!tri.AddPoint(patch))
 				{
-					Map.Print("AbsorbPatches:  Could not add patch to triangulation.\n");
+					CoreEvents.Print("AbsorbPatches:  Could not add patch to triangulation.\n");
 					return	false;
 				}						
 			}
@@ -154,9 +154,9 @@ namespace BSPCore
 		{
 			for(int i=0;i < 3;i++)
 			{
-				if(Utility64.Mathery.VecIdx(mRadFinal, i) < 0.0f)
+				if(UtilityLib.Mathery.VecIdx(mRadFinal, i) < 0.0f)
 				{
-					Map.Print("CheckPatch:  Bad final radiosity Color in patch.\n");
+					CoreEvents.Print("CheckPatch:  Bad final radiosity Color in patch.\n");
 					return	false;
 				}
 			}
@@ -168,7 +168,7 @@ namespace BSPCore
 		{
 			if(mPoly == null)
 			{
-				Map.Print("FinalizePatchInfo:  No Poly!\n");
+				CoreEvents.Print("FinalizePatchInfo:  No Poly!\n");
 				return	false;
 			}
 
@@ -219,14 +219,14 @@ namespace BSPCore
 					
 					if(FPoly == null || BPoly == null)
 					{
-						Map.Print("SubdivideFacePatches:  Patch was not split.\n");
+						CoreEvents.Print("SubdivideFacePatches:  Patch was not split.\n");
 						return	null;
 					}
 					
 					NewPatch	=new RADPatch();
 					if(NewPatch == null)
 					{
-						Map.Print("SubdivideFacePatches:  Out of memory for new patch.\n");
+						CoreEvents.Print("SubdivideFacePatches:  Out of memory for new patch.\n");
 						return	null;
 					}
 
@@ -249,7 +249,7 @@ namespace BSPCore
 					NewPatch.mPoly	=FPoly;
 					if(!NewPatch.CalcInfo())
 					{
-						Map.Print("SubdivideFacePatches:  Could not calculate patch info.\n");
+						CoreEvents.Print("SubdivideFacePatches:  Could not calculate patch info.\n");
 						return	null;
 					}
 
@@ -259,7 +259,7 @@ namespace BSPCore
 
 					if(!CPatch.CalcInfo())
 					{
-						Map.Print("SubdivideFacePatches:  Could not calculate patch info.\n");
+						CoreEvents.Print("SubdivideFacePatches:  Could not calculate patch info.\n");
 						return	null;
 					}
 
@@ -280,16 +280,16 @@ namespace BSPCore
 				
 				for(i=0;i < 3;i++)
 				{
-					Dist	=Utility64.Mathery.VecIdx(mBounds.mMaxs, i)
-								- Utility64.Mathery.VecIdx(mBounds.mMins, i);
+					Dist	=UtilityLib.Mathery.VecIdx(mBounds.mMaxs, i)
+								- UtilityLib.Mathery.VecIdx(mBounds.mMins, i);
 					
 					if(Dist > patchSize)
 					{
 						//Cut it right through the center...
 						Plane.mNormal	=Vector3.Zero;
-						Utility64.Mathery.VecIdxAssign(ref Plane.mNormal, i, 1.0f);
-						Plane.mDist	=(Utility64.Mathery.VecIdx(mBounds.mMaxs, i)
-							+ Utility64.Mathery.VecIdx(mBounds.mMins, i))
+						UtilityLib.Mathery.VecIdxAssign(ref Plane.mNormal, i, 1.0f);
+						Plane.mDist	=(UtilityLib.Mathery.VecIdx(mBounds.mMaxs, i)
+							+ UtilityLib.Mathery.VecIdx(mBounds.mMins, i))
 								/ 2.0f;
 						Plane.mType	=GBSPPlane.PLANE_ANY;
 						return	true;
@@ -301,14 +301,14 @@ namespace BSPCore
 				float	Min, Max;
 				for(i=0;i < 3;i++)
 				{
-					Min	=Utility64.Mathery.VecIdx(mBounds.mMins, i) + 1.0f;
-					Max	=Utility64.Mathery.VecIdx(mBounds.mMaxs, i) - 1.0f;
+					Min	=UtilityLib.Mathery.VecIdx(mBounds.mMins, i) + 1.0f;
+					Max	=UtilityLib.Mathery.VecIdx(mBounds.mMaxs, i) - 1.0f;
 
 					if(Math.Floor(Min / patchSize)
 						< Math.Floor(Max / patchSize))
 					{
 						Plane.mNormal	=Vector3.Zero;
-						Utility64.Mathery.VecIdxAssign(ref Plane.mNormal, i, 1.0f);
+						UtilityLib.Mathery.VecIdxAssign(ref Plane.mNormal, i, 1.0f);
 						Plane.mDist	=patchSize * (1.0f + (float)Math.Floor(Min / patchSize));
 						Plane.mType	=GBSPPlane.PLANE_ANY;
 						return	true;
@@ -343,13 +343,13 @@ namespace BSPCore
 					int	k	=0;
 					for(k=0;k < 3;k++)
 					{
-						if(Utility64.Mathery.VecIdx(p.mBounds.mMins, k)
-							> Utility64.Mathery.VecIdx(facePoints[vertOfs], k) + lightGridSize)
+						if(UtilityLib.Mathery.VecIdx(p.mBounds.mMins, k)
+							> UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) + lightGridSize)
 						{
 							break;
 						}
-						if(Utility64.Mathery.VecIdx(p.mBounds.mMaxs, k)
-							< Utility64.Mathery.VecIdx(facePoints[vertOfs], k) - lightGridSize)
+						if(UtilityLib.Mathery.VecIdx(p.mBounds.mMaxs, k)
+							< UtilityLib.Mathery.VecIdx(facePoints[vertOfs], k) - lightGridSize)
 						{
 							break;
 						}

@@ -4,9 +4,10 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
+using BSPCore;
 
 
-namespace BSPCore
+namespace BSPVis
 {
 	class VISPStack
 	{
@@ -15,6 +16,37 @@ namespace BSPCore
 		public GBSPPoly	mPass;
 
 		public const int	MAX_TEMP_PORTALS	=25000;
+
+
+		internal void FreeAll(VisPools vp, ClipPools cp)
+		{
+			Free(vp, cp);
+
+			vp.mStacks.FlagFreeItem(this);
+		}
+
+		internal void Free(VisPools vp, ClipPools cp)
+		{
+			if(mSource != null)
+			{
+				if(mSource.mVerts != null)
+				{
+					cp.FreeVerts(mSource.mVerts);
+				}
+				vp.mPolys.FlagFreeItem(mSource);
+				mSource	=null;
+			}
+
+			if(mPass != null)
+			{
+				if(mPass.mVerts != null)
+				{
+					cp.FreeVerts(mPass.mVerts);
+				}
+				vp.mPolys.FlagFreeItem(mPass);
+				mPass	=null;
+			}
+		}
 	}
 
 
@@ -28,6 +60,7 @@ namespace BSPCore
 
 		internal byte	[]mVisBits;
 		internal byte	[]mFinalVisBits;
+		internal Int32	mPortNum;		//index into portal array or portal num for vis
 		internal Int32	mLeaf;
 		internal Int32	mMightSee;
 		internal Int32	mCanSee;
@@ -39,7 +72,7 @@ namespace BSPCore
 			int	idx	=br.ReadInt32();
 			indexes.Add(idx);
 
-			mPoly	=new GBSPPoly();
+			mPoly	=new GBSPPoly(0);
 			mPoly.Read(br);
 			mPlane.Read(br);
 			mCenter.X	=br.ReadSingle();
@@ -59,6 +92,7 @@ namespace BSPCore
 				mFinalVisBits	=br.ReadBytes(fvblen);
 			}
 
+			mPortNum	=br.ReadInt32();
 			mLeaf		=br.ReadInt32();
 			mMightSee	=br.ReadInt32();
 			mCanSee		=br.ReadInt32();
@@ -93,11 +127,11 @@ namespace BSPCore
 		}
 
 
-		internal void Write(BinaryWriter bw, Dictionary<VISPortal, Int32> portIndexer)
+		internal void Write(BinaryWriter bw)
 		{
 			if(mNext != null)
 			{
-				bw.Write(portIndexer[mNext]);
+				bw.Write(mNext.mPortNum);
 			}
 			else
 			{
@@ -136,6 +170,7 @@ namespace BSPCore
 				}
 			}
 
+			bw.Write(mPortNum);
 			bw.Write(mLeaf);
 			bw.Write(mMightSee);
 			bw.Write(mCanSee);
@@ -200,12 +235,10 @@ namespace BSPCore
 
 
 		internal void FloodPortalsFast_r(VISPortal destPortal,
-			Dictionary<VISPortal, Int32> visIndexer,
 			bool []portSeen, VISLeaf []visLeafs,
 			int srcLeaf, ref int mightSee)
 		{
-			Debug.Assert(visIndexer.ContainsKey(destPortal));
-			Int32	portNum	=visIndexer[destPortal];
+			Int32	portNum	=destPortal.mPortNum;
 			
 			if(portSeen[portNum])
 			{
@@ -236,25 +269,18 @@ namespace BSPCore
 				//If SrcPortal can see this Portal, flood into it...
 				if(CanSeePortal(port))
 				{
-					FloodPortalsFast_r(port, visIndexer, portSeen, visLeafs, srcLeaf, ref mightSee);
+					FloodPortalsFast_r(port, portSeen, visLeafs, srcLeaf, ref mightSee);
 				}
 			}
 		}
 
 
-		static bool ClipToSeperators(GBSPPoly src, GBSPPoly pass,
-			GBSPPoly targ, bool bFlipClip, ref GBSPPoly dest)
-		{
-			return	targ.SeperatorClip(src, pass, bFlipClip, ref dest);
-		}
-
-
 		internal bool FloodPortalsSlow_r(VISPortal destPort, VISPStack prevStack,
-			Dictionary<VISPortal, int> visIndexer, ref int canSee, VISLeaf []visLeafs)
+			ref int canSee, VISLeaf []visLeafs, VisPools vPools, ClipPools cPools)
 		{
-			VISPStack	stack	=new VISPStack();
+			VISPStack	stack	=vPools.mStacks.GetFreeItem();
 
-			Int32	portNum	=visIndexer[destPort];
+			Int32	portNum	=destPort.mPortNum;
 
 			//Add the portal that we are Flooding into, to the original portals visbits
 			byte	Bit	=(byte)(portNum & 7);
@@ -275,7 +301,11 @@ namespace BSPCore
 			// Now, try and Flood into the leafs that this portal touches
 			for(VISPortal port=leaf.mPortals;port != null;port=port.mNext)
 			{
-				portNum	=visIndexer[port];
+				if(destPort.mPortNum == 7765)
+				{
+					Console.WriteLine("EvilPort port: " + port.mPortNum);
+				}
+				portNum	=port.mPortNum;
 				Bit		=(byte)(1<<(portNum&7));
 
 				//GHook.Printf("PrevStack VisBits:  %i\n", PrevStack.mVisBits[PNum>>3]);
@@ -298,13 +328,13 @@ namespace BSPCore
 					for(int j=0;j < mFinalVisBits.Length;j++)
 					{
 						//there is no & for bytes, can you believe that?
-						uint	prevBit	=(uint)prevStack.mVisBits[j];
+						uint	prevBit		=(uint)prevStack.mVisBits[j];
 						uint	portBit		=(uint)port.mFinalVisBits[j];
 						uint	bothBit		=prevBit & portBit;
 						stack.mVisBits[j]	=(byte)bothBit;
 
 						prevBit	=stack.mVisBits[j];
-						portBit		=mFinalVisBits[j];
+						portBit	=mFinalVisBits[j];
 
 						more	|=prevBit &~ portBit;
 					}
@@ -314,13 +344,13 @@ namespace BSPCore
 					for(int j=0;j < mFinalVisBits.Length;j++)
 					{
 						//there is no & for bytes, can you believe that?
-						uint	prevBit	=(uint)prevStack.mVisBits[j];
+						uint	prevBit		=(uint)prevStack.mVisBits[j];
 						uint	portBit		=(uint)port.mVisBits[j];
 						uint	bothBit		=prevBit & portBit;
 						stack.mVisBits[j]	=(byte)bothBit;
 
 						prevBit	=stack.mVisBits[j];
-						portBit		=mFinalVisBits[j];
+						portBit	=mFinalVisBits[j];
 
 						more	|=prevBit &~ portBit;
 					}
@@ -331,28 +361,40 @@ namespace BSPCore
 					//Can't see anything new
 					continue;
 				}
-				
+
 				//Setup Source/Pass
-				stack.mPass	=new GBSPPoly(port.mPoly);
+				stack.mPass			=vPools.mPolys.GetFreeItem();
+				stack.mPass.mVerts	=cPools.DupeVerts(port.mPoly.mVerts);
 
 				//Cut away portion of pass portal we can't see through
-				if(!stack.mPass.ClipPoly(mPlane, false))
+				if(!stack.mPass.ClipPoly(mPlane, false, cPools))
 				{
+					stack.FreeAll(vPools, cPools);
 					return	false;
 				}
 				if(stack.mPass.VertCount() < 3)
 				{
+					stack.Free(vPools, cPools);
+//					cPools.FreeVerts(stack.mPass.mVerts);
+//					vPools.mPolys.FlagFreeItem(stack.mPass);
+//					stack.mPass	=null;
 					continue;
 				}
 
-				stack.mSource	=new GBSPPoly(prevStack.mSource);
+				stack.mSource			=vPools.mPolys.GetFreeItem();
+				stack.mSource.mVerts	=cPools.DupeVerts(prevStack.mSource.mVerts);
 
-				if(!stack.mSource.ClipPoly(port.mPlane, true))
+				if(!stack.mSource.ClipPoly(port.mPlane, true, cPools))
 				{
+					stack.FreeAll(vPools, cPools);
 					return	false;
 				}
 				if(stack.mSource.VertCount() < 3)
 				{
+					stack.Free(vPools, cPools);
+//					cPools.FreeVerts(stack.mSource.mVerts);
+//					vPools.mPolys.FlagFreeItem(stack.mSource);
+//					stack.mSource	=null;
 					continue;
 				}
 
@@ -360,46 +402,55 @@ namespace BSPCore
 				//This portal can only be blocked by VisBits (Above test)...
 				if(prevStack.mPass == null)
 				{
-					if(!FloodPortalsSlow_r(port, stack, visIndexer, ref canSee, visLeafs))
+					if(!FloodPortalsSlow_r(port, stack, ref canSee, visLeafs, vPools, cPools))
 					{
+						stack.FreeAll(vPools, cPools);
 						return	false;
 					}
-
-					stack.mSource	=null;
-					stack.mPass		=null;
+					stack.Free(vPools, cPools);
 					continue;
 				}
 
-				if(!ClipToSeperators(stack.mSource, prevStack.mPass, stack.mPass, false, ref stack.mPass))
+				if(!stack.mPass.SeperatorClip(stack.mSource, prevStack.mPass, false, cPools))
 				{
-					return	false;
-				}
-
-				if(stack.mPass == null || stack.mPass.VertCount() < 3)
-				{
-					stack.mSource	=null;
-					continue;
-				}
-				
-				if(!ClipToSeperators(prevStack.mPass, stack.mSource, stack.mPass, true, ref stack.mPass))
-				{
+					stack.FreeAll(vPools, cPools);
 					return	false;
 				}
 				if(stack.mPass == null || stack.mPass.VertCount() < 3)
 				{
-					stack.mSource	=null;
+					stack.Free(vPools, cPools);
+//					cPools.FreeVerts(stack.mSource.mVerts);
+//					vPools.mPolys.FlagFreeItem(stack.mSource);
+//					stack.mSource	=null;
+					continue;
+				}
+
+				if(!stack.mPass.SeperatorClip(prevStack.mPass, stack.mSource, true, cPools))
+				{
+					stack.FreeAll(vPools, cPools);
+					return	false;
+				}
+				if(stack.mPass == null || stack.mPass.VertCount() < 3)
+				{
+					stack.Free(vPools, cPools);
+//					cPools.FreeVerts(stack.mSource.mVerts);
+//					vPools.mPolys.FlagFreeItem(stack.mSource);
+//					stack.mSource	=null;
 					continue;
 				}
 
 				//Flood into it...
-				if(!FloodPortalsSlow_r(port, stack, visIndexer, ref canSee, visLeafs))
+				if(!FloodPortalsSlow_r(port, stack, ref canSee, visLeafs, vPools, cPools))
 				{
+					stack.FreeAll(vPools, cPools);
 					return	false;
 				}
 
-				stack.mSource	=null;
-				stack.mPass		=null;
+				stack.Free(vPools, cPools);
 			}
+
+			stack.FreeAll(vPools, cPools);
+
 			return	true;
 		}
 	}
@@ -446,7 +497,7 @@ namespace BSPCore
 		internal Int32		mCanSee;
 
 
-		internal void Write(BinaryWriter bw, Dictionary<VISPortal, Int32> portIndexer)
+		internal void Write(BinaryWriter bw)
 		{
 			if(mPortals == null)
 			{
@@ -454,7 +505,7 @@ namespace BSPCore
 			}
 			else
 			{
-				bw.Write(portIndexer[mPortals]);
+				bw.Write(mPortals.mPortNum);
 			}
 			bw.Write(mMightSee);
 			bw.Write(mCanSee);
