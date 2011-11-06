@@ -652,20 +652,11 @@ namespace BSPCore
 
 			byte	[]ret	=null;
 
-			bool	bVisData	=br.ReadBoolean();
-
-			if(bVisData)
-			{
-				ret	=UtilityLib.FileUtil.ReadByteArray(br);
-			}
+			ret	=UtilityLib.FileUtil.ReadByteArray(br);
 
 			//check material vis, but
 			//donut need it for lighting
-			bVisData	=br.ReadBoolean();
-			if(bVisData)
-			{
-				byte	[]donutNeed	=UtilityLib.FileUtil.ReadByteArray(br);
-			}
+			byte	[]donutNeed	=UtilityLib.FileUtil.ReadByteArray(br);
 
 			//load clusters
 			mGFXClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)

@@ -206,27 +206,8 @@ namespace BSPVis
 
 		public void SaveVisZoneData(BinaryWriter bw)
 		{
-			if(mGFXVisData != null && mGFXVisData.Length > 0)
-			{
-				bw.Write(true);
-				UtilityLib.FileUtil.WriteArray(mGFXVisData, bw);
-			}
-			else
-			{
-				bw.Write(false);
-			}
-
-			if(mGFXMaterialVisData != null && mGFXMaterialVisData.Length > 0)
-			{
-				bw.Write(true);
-				UtilityLib.FileUtil.WriteArray(mGFXMaterialVisData, bw);
-			}
-			else
-			{
-				bw.Write(false);
-			}
-
-			//write clusters
+			UtilityLib.FileUtil.WriteArray(mGFXVisData, bw);
+			UtilityLib.FileUtil.WriteArray(mGFXMaterialVisData, bw);
 			UtilityLib.FileUtil.WriteArray(mGFXClusters, bw); 
 		}
 
@@ -247,20 +228,8 @@ namespace BSPVis
 				return;
 			}
 
-			bool	bVisData	=br.ReadBoolean();
-
-			if(bVisData)
-			{
-				mGFXVisData	=UtilityLib.FileUtil.ReadByteArray(br);
-			}
-
-			//material vis?
-			bVisData	=br.ReadBoolean();
-
-			if(bVisData)
-			{
-				mGFXMaterialVisData	=UtilityLib.FileUtil.ReadByteArray(br);
-			}
+			mGFXVisData	=UtilityLib.FileUtil.ReadByteArray(br);
+			mGFXMaterialVisData	=UtilityLib.FileUtil.ReadByteArray(br);
 
 			//load clusters
 			mGFXClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
