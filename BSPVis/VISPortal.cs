@@ -301,21 +301,12 @@ namespace BSPVis
 			// Now, try and Flood into the leafs that this portal touches
 			for(VISPortal port=leaf.mPortals;port != null;port=port.mNext)
 			{
-				if(destPort.mPortNum == 7765)
-				{
-					Console.WriteLine("EvilPort port: " + port.mPortNum);
-				}
 				portNum	=port.mPortNum;
 				Bit		=(byte)(1<<(portNum&7));
 
 				//GHook.Printf("PrevStack VisBits:  %i\n", PrevStack.mVisBits[PNum>>3]);
 
 				//If might see could'nt see it, then don't worry about it
-				if((mVisBits[portNum>>3] & Bit) == 0)
-				{
-					continue;
-				}
-
 				if((prevStack.mVisBits[portNum>>3] & Bit) == 0)
 				{
 					continue;	// Can't possibly see it
@@ -375,9 +366,6 @@ namespace BSPVis
 				if(stack.mPass.VertCount() < 3)
 				{
 					stack.Free(vPools, cPools);
-//					cPools.FreeVerts(stack.mPass.mVerts);
-//					vPools.mPolys.FlagFreeItem(stack.mPass);
-//					stack.mPass	=null;
 					continue;
 				}
 
@@ -392,9 +380,6 @@ namespace BSPVis
 				if(stack.mSource.VertCount() < 3)
 				{
 					stack.Free(vPools, cPools);
-//					cPools.FreeVerts(stack.mSource.mVerts);
-//					vPools.mPolys.FlagFreeItem(stack.mSource);
-//					stack.mSource	=null;
 					continue;
 				}
 
@@ -419,9 +404,6 @@ namespace BSPVis
 				if(stack.mPass == null || stack.mPass.VertCount() < 3)
 				{
 					stack.Free(vPools, cPools);
-//					cPools.FreeVerts(stack.mSource.mVerts);
-//					vPools.mPolys.FlagFreeItem(stack.mSource);
-//					stack.mSource	=null;
 					continue;
 				}
 
@@ -433,9 +415,6 @@ namespace BSPVis
 				if(stack.mPass == null || stack.mPass.VertCount() < 3)
 				{
 					stack.Free(vPools, cPools);
-//					cPools.FreeVerts(stack.mSource.mVerts);
-//					vPools.mPolys.FlagFreeItem(stack.mSource);
-//					stack.mSource	=null;
 					continue;
 				}
 

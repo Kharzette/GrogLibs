@@ -71,6 +71,9 @@ namespace BSPVis
 		//threading
 		TaskScheduler	mTaskSched	=TaskScheduler.Default;
 
+		//done event for slow flood
+		public static event EventHandler	eSlowFloodPartDone;
+
 
 		void ThreadVisCB(object threadContext)
 		{
@@ -122,6 +125,10 @@ namespace BSPVis
 			CoreEvents.FireNumPortalsChangedEvent(mVisPortals.Length, null);
 
 			CoreEvents.Print("NumPortals           : " + mVisPortals.Length + "\n");
+
+			DateTime	startTime	=DateTime.Now;
+
+			CoreEvents.Print("Starting vis at " + startTime + "\n");
 			
 			//Vis'em
 			if(!VisAllLeafs(vp.mClients, vp.mFileName, vp))
@@ -143,6 +150,11 @@ namespace BSPVis
 			fs.Close();
 			bw	=null;
 			fs	=null;
+
+			DateTime	done	=DateTime.Now;
+
+			CoreEvents.Print("Finished vis at " + done + "\n");
+			CoreEvents.Print(done - startTime + " elapsed\n");
 
 			CoreEvents.FireVisDoneEvent(true, null);
 			return;
@@ -1117,8 +1129,7 @@ namespace BSPVis
 			}
 
 			int	count	=startPort;
-			for(int k=startPort;k < endPort;k++)
-//			Parallel.For(startPort, endPort, (k) =>
+			Parallel.For(startPort, endPort, (k) =>
 			{
 				VISPortal	port	=mVisSortedPortals[k];
 				
@@ -1146,7 +1157,7 @@ namespace BSPVis
 				portStack.mPass				=null;
 				if(!port.FloodPortalsSlow_r(port, portStack, ref CanSee, mVisLeafs, vPools, cPools))
 				{
-					return	false;
+					return;
 				}
 
 				portStack.mSource	=null;
@@ -1165,7 +1176,7 @@ namespace BSPVis
 						+ port.mCanSee + ", remaining: "
 						+ (endPort - count) + "\n");
 				}
-			}//);
+			});
 			return	true;
 		}
 
@@ -1268,6 +1279,8 @@ namespace BSPVis
 			vs.mEndPort		=endPort;
 			vs.mTotalPorts	=0;
 			vs.mVisData		=returnBytes;
+
+			UtilityLib.Misc.SafeInvoke(eSlowFloodPartDone, vs);
 
 			return	returnBytes;
 		}
