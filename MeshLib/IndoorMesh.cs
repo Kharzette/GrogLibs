@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define PIXGOBLINRY	//use this to remove alpha sorting, which somehow makes pix crash
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -18,6 +20,8 @@ namespace MeshLib
 		IndexBuffer			mLMIB, mVLitIB, mLMAnimIB, mAlphaIB;
 		IndexBuffer			mSkyIB, mFBIB, mMirrorIB, mLMAIB, mLMAAnimIB;
 		RenderTarget2D		mMirrorRenderTarget;
+
+		int	mLMTypeIdx;
 
 		//material library reference
 		MaterialLib.MaterialLib	mMatLib;
@@ -95,6 +99,7 @@ namespace MeshLib
 			out Vector3 []amatAnimSortPoints,
 
 			int lightAtlasSize,
+			object pp,
 			out MaterialLib.TexAtlas lightAtlas);
 
 		public delegate void BuildVLitRenderData(GraphicsDevice g, out VertexBuffer vb,
@@ -187,7 +192,7 @@ namespace MeshLib
 		}
 
 
-		public void BuildLM(GraphicsDevice g, int atlasSize, BuildLMRenderData brd)
+		public void BuildLM(GraphicsDevice g, int atlasSize, BuildLMRenderData brd, object pp)
 		{
 			brd(g, out mLMVB, out mLMIB, out mLMMatOffsets, out mLMMatNumVerts,
 				out mLMMatNumTris, out mLMAnimVB, out mLMAnimIB,
@@ -195,7 +200,7 @@ namespace MeshLib
 				out mLMAVB, out mLMAIB, out mLMAMatOffsets, out mLMAMatNumVerts,
 				out mLMAMatNumTris, out mLMASortPoints, out mLMAAnimVB, out mLMAAnimIB,
 				out mLMAAnimMatOffsets, out mLMAAnimMatNumVerts,
-				out mLMAAnimMatNumTris, out mLMAAnimSortPoints, atlasSize, out mLightMapAtlas);
+				out mLMAAnimMatNumTris, out mLMAAnimSortPoints, atlasSize, pp, out mLightMapAtlas);
 
 			if(mLightMapAtlas != null)
 			{
@@ -269,7 +274,7 @@ namespace MeshLib
 				DrawMaterials(gd, -position, mSkyVB, mSkyIB, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
 				DrawMaterials(gd, -position, mLMVB, mLMIB, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null, bMatVis);
 				DrawMaterials(gd, -position, mLMAnimVB, mLMAnimIB, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
-#if false
+#if PIXGOBLINRY
 				DrawMaterials(gd, -position, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, false, mAlphaSortPoints, bMatVis);
 				DrawMaterials(gd, -position, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints, bMatVis);
 				DrawMaterials(gd, -position, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints, bMatVis);
@@ -292,30 +297,30 @@ namespace MeshLib
 
 			gd.Clear(Color.CornflowerBlue);
 
-			DrawMaterials(gd, -position, mFBVB, mFBIB, mFBMatOffsets, mFBMatNumVerts, mFBMatNumTris, false, null, bMatVis);
-			DrawMaterials(gd, -position, mVLitVB, mVLitIB, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null, bMatVis);
-			DrawMaterials(gd, -position, mSkyVB, mSkyIB, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
+//			DrawMaterials(gd, -position, mFBVB, mFBIB, mFBMatOffsets, mFBMatNumVerts, mFBMatNumTris, false, null, bMatVis);
+//			DrawMaterials(gd, -position, mVLitVB, mVLitIB, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null, bMatVis);
+//			DrawMaterials(gd, -position, mSkyVB, mSkyIB, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
 			DrawMaterials(gd, -position, mLMVB, mLMIB, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null, bMatVis);
-			DrawMaterials(gd, -position, mLMAnimVB, mLMAnimIB, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
+//			DrawMaterials(gd, -position, mLMAnimVB, mLMAnimIB, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
 
 			//alphas
-#if false
+#if PIXGOBLINRY
 			//draw immediately for pix
 			DrawMaterials(gd, -position, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, false, mAlphaSortPoints, bMatVis);
 			DrawMaterials(gd, -position, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, false, mLMASortPoints, bMatVis);
 			DrawMaterials(gd, -position, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints, bMatVis);
 #else
 			//pix freaks out about the alpha sorting
-			DrawMaterials(gd, -position, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, true, mAlphaSortPoints, bMatVis);
-			DrawMaterials(gd, -position, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints, bMatVis);
-			DrawMaterials(gd, -position, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints, bMatVis);
+//			DrawMaterials(gd, -position, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, true, mAlphaSortPoints, bMatVis);
+//			DrawMaterials(gd, -position, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints, bMatVis);
+//			DrawMaterials(gd, -position, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints, bMatVis);
 			if(scissors.Count > 0)
 			{
 				//draw mirror surface itself
 				DrawMaterials(gd, -position, mMirrorVB, mMirrorIB, mMirrorMatOffsets, mMirrorMatNumVerts, mMirrorMatNumTris, true, mMirrorSortPoints, bMatVis);
 			}
 
-			mAlphaPool.DrawAll(gd, mMatLib, -position);
+//			mAlphaPool.DrawAll(gd, mMatLib, -position);
 #endif		
 		}
 
@@ -508,6 +513,12 @@ namespace MeshLib
 		}
 
 
+		public List<Vector3>	GetNormals()
+		{
+			return	VertexTypes.GetNormals(mLMVB, mLMTypeIdx);
+		}
+
+
 		BoundingBox GetExtents(List<Vector3> poly)
 		{
 			Vector3	mins	=Vector3.One * 696969.0f;
@@ -583,8 +594,8 @@ namespace MeshLib
 			int	numVerts	=br.ReadInt32();
 			if(numVerts != 0)
 			{
-				int	typeIdx		=br.ReadInt32();
-				VertexTypes.ReadVerts(br, g, out mLMVB, numVerts, typeIdx, bEditor);
+				mLMTypeIdx		=br.ReadInt32();
+				VertexTypes.ReadVerts(br, g, out mLMVB, numVerts, mLMTypeIdx, bEditor);
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMIB, g, bEditor);
 			}
 

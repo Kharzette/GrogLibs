@@ -30,6 +30,9 @@ namespace UtilityLib
 		//for mouselook
 		MouseState	mOriginalMS;
 
+		//constants
+		const float	PitchClamp	=85.0f;
+
 
 		public PlayerSteering(float width, float height)
 		{
@@ -90,6 +93,7 @@ namespace UtilityLib
 
 			if(mMethod == SteeringMethod.FirstPerson)
 			{
+				UpdateGroundMovement(msDelta, view, ks, ms, gs);
 			}
 			else if(mMethod == SteeringMethod.Fly)
 			{
@@ -97,6 +101,7 @@ namespace UtilityLib
 			}
 			else if(mMethod == SteeringMethod.ThirdPerson)
 			{
+				UpdateGroundMovement(msDelta, view, ks, ms, gs);
 			}
 			else if(mMethod == SteeringMethod.TwinStick)
 			{
@@ -234,6 +239,72 @@ namespace UtilityLib
 
 				mPosition	-=vleft * (gs.ThumbSticks.Left.X * msDelta * 0.25f);
 				mPosition	+=vin * (gs.ThumbSticks.Left.Y * msDelta * 0.25f);
+			}
+		}
+
+
+		void UpdateGroundMovement(float msDelta, Matrix view, KeyboardState ks, MouseState ms, GamePadState gs)
+		{
+			Vector3 vup		=Vector3.Zero;
+			Vector3 vleft	=Vector3.Zero;
+			Vector3 vin		=Vector3.Zero;
+
+			//grab view matrix in vector transpose
+			vup.X   =view.M12;
+			vup.Y   =view.M22;
+			vup.Z   =view.M32;
+			vleft.X =view.M11;
+			vleft.Y =view.M21;
+			vleft.Z =view.M31;
+			vin.X   =view.M13;
+			vin.Y   =view.M23;
+			vin.Z   =view.M33;
+
+			if(ks.IsKeyDown(Keys.Left) || ks.IsKeyDown(Keys.A))
+			{
+				mPosition	+=vleft * mSpeed;
+			}
+			if(ks.IsKeyDown(Keys.Right) || ks.IsKeyDown(Keys.D))
+			{
+				mPosition	-=vleft * mSpeed;
+			}
+			if(ks.IsKeyDown(Keys.Up) || ks.IsKeyDown(Keys.W))
+			{
+				mPosition	+=vin * mSpeed;
+			}
+			if(ks.IsKeyDown(Keys.Down) || ks.IsKeyDown(Keys.S))
+			{
+				mPosition	-=vin * mSpeed;
+			}
+
+			if(ms.RightButton == ButtonState.Pressed)
+			{
+				Vector2	delta	=Vector2.Zero;
+				delta.X	=mOriginalMS.X - ms.X;
+				delta.Y	=mOriginalMS.Y - ms.Y;
+
+				Mouse.SetPosition(mOriginalMS.X, mOriginalMS.Y);
+
+				mPitch	-=(delta.Y) * msDelta * mMouseSensitivity;
+				mYaw	-=(delta.X) * msDelta * mMouseSensitivity;
+			}
+
+			if(gs.IsConnected)
+			{
+				mPitch	+=gs.ThumbSticks.Right.Y * msDelta * 0.25f;
+				mYaw	+=gs.ThumbSticks.Right.X * msDelta * 0.25f;
+
+				mPosition	-=vleft * (gs.ThumbSticks.Left.X * msDelta * 0.25f);
+				mPosition	+=vin * (gs.ThumbSticks.Left.Y * msDelta * 0.25f);
+			}
+
+			if(mPitch > PitchClamp)
+			{
+				mPitch	=PitchClamp;
+			}
+			else if(mPitch < -PitchClamp)
+			{
+				mPitch	=-PitchClamp;
 			}
 		}
 	}

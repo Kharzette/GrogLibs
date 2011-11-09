@@ -1281,6 +1281,50 @@ namespace BSPCore
 		}
 
 
+		//get normals for rendering them
+		public List<Vector3> GetFaceNormals()
+		{
+			List<Vector3>	ret	=new List<Vector3>();
+
+			for(int i=0;i < mGFXFaces.Length;i++)
+			{
+				GFXFace	f	=mGFXFaces[i];
+
+				Vector3	center	=Vector3.Zero;
+
+				for(int j=0;j < f.mNumVerts;j++)
+				{
+					int	idx	=mGFXVertIndexes[f.mFirstVert + j];
+
+					center	+=mGFXVerts[idx];
+				}
+
+				center	/=f.mNumVerts;
+
+				ret.Add(center);
+
+				GFXPlane	p	=mGFXPlanes[f.mPlaneNum];
+
+				if(f.mPlaneSide > 0)
+				{
+					ret.Add(center + (-p.mNormal * 5));
+				}
+				else
+				{
+					ret.Add(center + (p.mNormal * 5));
+				}
+			}
+			return	ret;
+		}
+
+
+		//todo: remove when done testing
+		public GFXPlane []GetPlanes()
+		{
+			return	mGFXPlanes;
+		}
+
+
 		public bool BuildLMRenderData(GraphicsDevice g,
 			//lightmap stuff
 			out VertexBuffer lmVB,
@@ -1313,11 +1357,12 @@ namespace BSPCore
 			out Vector3 []amatAnimSortPoints,
 
 			int lightAtlasSize,
+			object	pp,
 			out MaterialLib.TexAtlas lightAtlas)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lightAtlasSize);
 
-			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData))
+			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp))
 			{
 				lmVB	=null;	lmIB	=null;	matOffsets	=null;
 				matNumVerts	=null;	matNumTris	=null;	lmAnimVB	=null;

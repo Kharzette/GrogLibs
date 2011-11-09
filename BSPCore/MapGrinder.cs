@@ -1005,8 +1005,9 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildLMFaceData(Vector3 []verts, int[] indexes, byte []lightData)
+		internal bool BuildLMFaceData(Vector3 []verts, int[] indexes, byte []lightData, object pobj)
 		{
+			GFXPlane	[]pp	=pobj as GFXPlane [];
 			if(lightData == null)
 			{
 				return	false;
@@ -1098,8 +1099,25 @@ namespace BSPCore
 						mLMVerts.Add(pnt);
 					}
 
+					GFXPlane	pl		=pp[f.mPlaneNum];
+					Vector3		plNorm	=pl.mNormal;
+					if(f.mPlaneSide > 0)
+					{
+						plNorm	=-plNorm;
+					}
+
 					//flat shaded normals for lightmapped surfaces
-					ComputeNormals(fverts, mLMNormals);
+					for(int n=0;n < nverts;n++)
+					{
+						mLMNormals.Add(plNorm);
+					}
+
+//					ComputeNormals(fverts, mLMNormals);
+//					if(!UtilityLib.Mathery.CompareVectorABS(pl.mNormal, mLMNormals[mLMNormals.Count - 1], UtilityLib.Mathery.VCompareEpsilon))
+//					{
+//						int	blah	=0;
+//						blah++;
+//					}
 
 					List<Vector2>	coords	=new List<Vector2>();
 					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);

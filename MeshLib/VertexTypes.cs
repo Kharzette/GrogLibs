@@ -800,6 +800,43 @@ namespace MeshLib
 		}
 
 
+		public static List<Vector3> GetNormals(VertexBuffer vb, int typeIdx)
+		{
+			List<Vector3>	ret		=new List<Vector3>();
+			Type			vtype	=mTypes[typeIdx];
+			Array			verts	=Array.CreateInstance(vtype, vb.VertexCount);
+
+			MethodInfo genericMethod =
+				typeof (VertexBuffer).GetMethods().Where(
+					x => x.Name == "GetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
+            
+			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
+
+			typedMethod.Invoke(vb, new object[] {verts});
+
+			FieldInfo	[]finfo	=vtype.GetFields();
+			for(int i=0;i < vb.VertexCount;i++)
+			{
+				Vector3	pos	=Vector3.Zero;
+				foreach(FieldInfo fi in finfo)
+				{
+					if(fi.Name == "Position")
+					{
+						pos	=(Vector3)GetArrayField(verts, i, fi.Name);
+						ret.Add(pos);
+					}
+					else if(fi.Name == "Normal")
+					{
+						Vector3	vec	=(Vector3)GetArrayField(verts, i, fi.Name);
+						ret.Add(pos + (vec * 5));
+					}
+				}
+			}
+
+			return	ret;
+		}
+
+
 		public static void WriteVerts(BinaryWriter bw, VertexBuffer vb, int typeIdx)
 		{
 			Type	vtype	=mTypes[typeIdx];
