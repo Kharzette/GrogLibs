@@ -728,6 +728,13 @@ namespace BSPVis
 				}
 			}
 
+			if(current != null)
+			{
+				//never reached the end
+				current.mEndPort	=mVisPortals.Length - 1;
+				workRemaining.Add(current);
+			}
+
 			//reset mbDone
 			for(int i=0;i < mVisPortals.Length;i++)
 			{
@@ -1236,6 +1243,12 @@ namespace BSPVis
 			ms.Close();
 
 			int	count	=startPort;
+
+//			for(int i=0;i < startPort;i++)
+//			{
+//				VisLoop(visPortals, visLeafs, numVisPortalBytes, i, endPort, ref count);
+//			}
+
 			Parallel.For(startPort, endPort, (k) =>
 				{
 					VisLoop(visPortals, visLeafs, numVisPortalBytes, k, endPort, ref count);

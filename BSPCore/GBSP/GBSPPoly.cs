@@ -1054,8 +1054,8 @@ namespace BSPCore
 					GBSPPlane	plane	=new GBSPPlane();
 					plane.mNormal	=Vector3.Cross(v1, v2);
 
-					float	len	=plane.mNormal.Length();
-					plane.mNormal.Normalize();
+					float	len		=plane.mNormal.Length();
+					plane.mNormal	/=len;
 					
 					if(len < UtilityLib.Mathery.ON_EPSILON)
 					{

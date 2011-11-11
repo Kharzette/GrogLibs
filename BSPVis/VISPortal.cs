@@ -275,6 +275,96 @@ namespace BSPVis
 		}
 
 
+		static unsafe UInt32 AndTogetherDWords(byte []src1, byte []src2, byte []src3, byte []dest)
+		{
+			int		len	=src2.Length;
+			UInt32	ret	=0;
+
+			fixed(byte *pSrc1 = src1, pSrc2 = src2, pSrc3 = src3, pDest = dest)
+			{
+				byte	*pS1	=pSrc1;
+				byte	*pS2	=pSrc2;
+				byte	*pS3	=pSrc3;
+				byte	*pD		=pDest;
+
+				for(int i=0;i < len / 4;i++)
+				{
+					UInt32	anded=*((UInt32 *)pS1) & *((UInt32 *)pS2);
+
+					*((UInt32 *)pD)	=anded;
+
+					ret	|=anded &~ *((UInt32 *)pS3);
+
+					pS1	+=4;
+					pS2	+=4;
+					pS3	+=4;
+					pD	+=4;
+				}
+
+				//get leftover
+				for(int i=0;i < len % 4;i++)
+				{
+					UInt32	anded	=*((UInt32 *)pSrc1) & *((UInt32 *)pSrc2);
+
+					*pD	=(byte)anded;
+
+					ret	|=(byte)(anded &~ *((UInt32 *)pS3));
+
+					pS1++;
+					pS2++;
+					pS3++;
+					pD++;
+				}
+			}
+			return	ret;
+		}
+
+
+		static unsafe UInt64 AndTogetherQWords(byte []src1, byte []src2, byte []src3, byte []dest)
+		{
+			int		len	=src2.Length;
+			UInt64	ret	=0;
+
+			fixed(byte *pSrc1 = src1, pSrc2 = src2, pSrc3 = src3, pDest = dest)
+			{
+				byte	*pS1	=pSrc1;
+				byte	*pS2	=pSrc2;
+				byte	*pS3	=pSrc3;
+				byte	*pD		=pDest;
+
+				for(int i=0;i < len / 8;i++)
+				{
+					UInt64	anded=*((UInt64 *)pS1) & *((UInt64 *)pS2);
+
+					*((UInt64 *)pD)	=anded;
+
+					ret	|=anded &~ *((UInt64 *)pS3);
+
+					pS1	+=8;
+					pS2	+=8;
+					pS3	+=8;
+					pD	+=8;
+				}
+
+				//get leftover
+				for(int i=0;i < len % 8;i++)
+				{
+					UInt32	anded	=*((UInt32 *)pSrc1) & *((UInt32 *)pSrc2);
+
+					*pD	=(byte)anded;
+
+					ret	|=(byte)(anded &~ *((UInt32 *)pS3));
+
+					pS1++;
+					pS2++;
+					pS3++;
+					pD++;
+				}
+			}
+			return	ret;
+		}
+
+
 		internal bool FloodPortalsSlow_r(VISPortal destPort, VISPStack prevStack,
 			ref int canSee, VISLeaf []visLeafs, VisPools vPools, ClipPools cPools)
 		{
@@ -313,7 +403,7 @@ namespace BSPVis
 				}
 
 				//If the portal can't see anything we haven't allready seen, skip it
-				UInt32	more	=0;
+				UInt64	more	=0;
 				if(port.mbDone)
 				{
 					for(int j=0;j < mFinalVisBits.Length;j++)
@@ -332,19 +422,8 @@ namespace BSPVis
 				}
 				else
 				{
-					for(int j=0;j < mFinalVisBits.Length;j++)
-					{
-						//there is no & for bytes, can you believe that?
-						uint	prevBit		=(uint)prevStack.mVisBits[j];
-						uint	portBit		=(uint)port.mVisBits[j];
-						uint	bothBit		=prevBit & portBit;
-						stack.mVisBits[j]	=(byte)bothBit;
-
-						prevBit	=stack.mVisBits[j];
-						portBit	=mFinalVisBits[j];
-
-						more	|=prevBit &~ portBit;
-					}
+					//qwords and dwords seem about the same performancewise
+					more	=AndTogetherDWords(prevStack.mVisBits, port.mVisBits, mFinalVisBits, stack.mVisBits);
 				}
 				
 				if(more == 0 && ((mFinalVisBits[portNum>>3] & Bit) != 0))
