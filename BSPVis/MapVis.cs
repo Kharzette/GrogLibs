@@ -812,6 +812,17 @@ namespace BSPVis
 
 				foreach(WorkDivided wd in remainingWork)
 				{
+					if(((wd.mEndPort - wd.mStartPort) / granularity) == 0)
+					{
+						WorkDivided	wdd		=new WorkDivided();
+						wdd.mStartPort		=wd.mStartPort;
+						wdd.mEndPort		=wd.mEndPort;
+						wdd.mPollSeconds	=5;
+
+						work.Enqueue(wdd);
+						continue;
+					}
+
 					for(int i=0;i < ((wd.mEndPort - wd.mStartPort) / granularity);i++)
 					{
 						WorkDivided	wdd		=new WorkDivided();
@@ -1136,7 +1147,8 @@ namespace BSPVis
 			}
 
 			int	count	=startPort;
-			Parallel.For(startPort, endPort, (k) =>
+			for(int k=startPort;k < endPort;k++)
+//			Parallel.For(startPort, endPort, (k) =>
 			{
 				VISPortal	port	=mVisSortedPortals[k];
 				
@@ -1162,9 +1174,10 @@ namespace BSPVis
 				portStack.mSource			=vPools.mPolys.GetFreeItem();
 				portStack.mSource.mVerts	=cPools.DupeVerts(port.mPoly.mVerts);
 				portStack.mPass				=null;
-				if(!port.FloodPortalsSlow_r(port, portStack, ref CanSee, mVisLeafs, vPools, cPools))
+//				if(!port.FloodPortalsSlow_r(port, portStack, ref CanSee, mVisLeafs, vPools, cPools))
+				if(!port.FloodPortalsSlowNoR(port, portStack, ref CanSee, mVisLeafs, vPools, cPools))
 				{
-					return;
+					return	false;
 				}
 
 				portStack.mSource	=null;
@@ -1183,7 +1196,7 @@ namespace BSPVis
 						+ port.mCanSee + ", remaining: "
 						+ (endPort - count) + "\n");
 				}
-			});
+			}//);
 			return	true;
 		}
 
