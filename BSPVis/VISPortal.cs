@@ -3,20 +3,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using BSPCore;
 
 
 namespace BSPVis
 {
-	class ReturnCondition
-	{
-		internal VISPortal	mListSpot;
-		internal VISPortal	mDPort;
-		internal VISPStack	mPrevStack;
-		internal VISPStack	mCurStack;
-	}
-
 	class VISPStack
 	{
 		public byte		[]mVisBits	=new byte[MAX_TEMP_PORTALS/8];
@@ -55,6 +48,214 @@ namespace BSPVis
 				mPass	=null;
 			}
 		}
+	}
+
+
+	class Q2Stack
+	{
+		internal byte		[]mVisBits	=new byte[MAX_TEMP_PORTALS/8];
+		internal GBSPPoly	mSource;
+		internal GBSPPoly	mPass;
+		internal Q2Portal	mPortal;
+		internal Q2VisLeaf	mLeaf;
+		internal Q2Stack	mNext;
+		internal GBSPPlane	mPortalPlane;
+
+		internal const int	MAX_TEMP_PORTALS	=25000;
+	}
+
+
+	internal class Q2Portal
+	{
+		internal GBSPPlane	mPlane;
+		internal int		mLeaf;
+		internal Vector3	mOrigin;
+		internal float		mRadius;
+		internal GBSPPoly	mWinding;
+
+		internal byte		[]mPortalFront;
+		internal byte		[]mPortalFlood;
+		internal byte		[]mPortalVis;
+
+		internal int	mPortNum;
+		internal int	mNumMightSee;
+		internal bool	mbDone;
+
+
+		internal bool FloodPortalsSlow_r(Q2Portal destPort, VISPStack prevStack, VisPools vPools)
+		{
+			Int32	portNum	=destPort.mPortNum;
+
+			Interlocked.Increment(ref vPools.mIterations);
+
+			//Add the portal that we are Flooding into, to the original portals visbits
+			byte	Bit	=(byte)(portNum & 7);
+			Bit	=(byte)(1 << Bit);
+
+			if((mPortalVis[portNum >> 3] & Bit) == 0)
+			{
+				mPortalVis[portNum>>3] |= Bit;
+//				mCanSee++;
+//				vPools.mQ2VisLeafs[mLeaf].mCanSee++;
+				vPools.mCanSee++;
+			}
+
+			//Get the leaf that this portal looks into, and flood from there
+			Int32		leafNum	=destPort.mLeaf;
+			Q2VisLeaf	leaf	=vPools.mQ2VisLeafs[leafNum];
+			VISPStack	stack	=null;
+
+			// Now, try and Flood into the leafs that this portal touches
+			for(int i=0;i < leaf.mNumPortals;i++)
+			{
+				Q2Portal	port	=leaf.mPortals[i];
+
+				portNum	=port.mPortNum;
+				Bit		=(byte)(1<<(portNum&7));
+
+				//GHook.Printf("PrevStack VisBits:  %i\n", PrevStack.mVisBits[PNum>>3]);
+
+				//If might see could'nt see it, then don't worry about it
+				if((prevStack.mVisBits[portNum>>3] & Bit) == 0)
+				{
+					continue;	// Can't possibly see it
+				}
+
+				if(stack == null)
+				{
+					stack	=vPools.mStacks.GetFreeItem();
+				}
+
+				//If the portal can't see anything we haven't allready seen, skip it
+				UInt64	more	=0;
+				if(port.mbDone)
+				{
+					for(int j=0;j < mPortalVis.Length;j++)
+					{
+						//there is no & for bytes, can you believe that?
+						uint	prevBit		=(uint)prevStack.mVisBits[j];
+						uint	portBit		=(uint)port.mPortalVis[j];
+						uint	bothBit		=prevBit & portBit;
+						stack.mVisBits[j]	=(byte)bothBit;
+
+						prevBit	=stack.mVisBits[j];
+						portBit	=mPortalVis[j];
+
+						more	|=prevBit &~ portBit;
+					}
+				}
+				else
+				{
+					//qwords and dwords seem about the same performancewise
+					more	=VISPortal.AndTogetherQWords(prevStack.mVisBits, port.mPortalFront, mPortalVis, stack.mVisBits);
+				}
+				
+				if(more == 0 && ((mPortalVis[portNum>>3] & Bit) != 0))
+				{
+					//Can't see anything new
+					continue;
+				}
+
+				//Setup Source/Pass
+				stack.mPass			=vPools.mPolys.GetFreeItem();
+				stack.mPass.mVerts	=vPools.mClipPools.DupeVerts(port.mWinding.mVerts);
+
+				//Cut away portion of pass portal we can't see through
+				if(!stack.mPass.ClipPoly(mPlane, true, vPools.mClipPools))
+				{
+					stack.FreeAll(vPools, vPools.mClipPools);
+					return	false;
+				}
+				if(stack.mPass.VertCount() < 3)
+				{
+					stack.Free(vPools, vPools.mClipPools);
+					continue;
+				}
+
+				stack.mSource			=vPools.mPolys.GetFreeItem();
+				stack.mSource.mVerts	=vPools.mClipPools.DupeVerts(prevStack.mSource.mVerts);
+
+				if(!stack.mSource.ClipPoly(port.mPlane, false, vPools.mClipPools))
+				{
+					stack.FreeAll(vPools, vPools.mClipPools);
+					return	false;
+				}
+				if(stack.mSource.VertCount() < 3)
+				{
+					stack.Free(vPools, vPools.mClipPools);
+					continue;
+				}
+
+				//If we don't have a PrevStack.mPass, then we don't have enough to look through.
+				//This portal can only be blocked by VisBits (Above test)...
+				if(prevStack.mPass == null)
+				{
+					if(!FloodPortalsSlow_r(port, stack, vPools))
+					{
+						stack.FreeAll(vPools, vPools.mClipPools);
+						return	false;
+					}
+					stack.Free(vPools, vPools.mClipPools);
+					continue;
+				}
+
+				if(!stack.mPass.SeperatorClip(stack.mSource, prevStack.mPass, false, vPools.mClipPools))
+				{
+					stack.FreeAll(vPools, vPools.mClipPools);
+					return	false;
+				}
+				if(stack.mPass == null || stack.mPass.VertCount() < 3)
+				{
+					stack.Free(vPools, vPools.mClipPools);
+					continue;
+				}
+
+				if(!stack.mPass.SeperatorClip(prevStack.mPass, stack.mSource, true, vPools.mClipPools))
+				{
+					stack.FreeAll(vPools, vPools.mClipPools);
+					return	false;
+				}
+				if(stack.mPass == null || stack.mPass.VertCount() < 3)
+				{
+					stack.Free(vPools, vPools.mClipPools);
+					continue;
+				}
+
+				//Flood into it...
+				if(!FloodPortalsSlow_r(port, stack, vPools))
+				{
+					stack.FreeAll(vPools, vPools.mClipPools);
+					return	false;
+				}
+
+				stack.Free(vPools, vPools.mClipPools);
+			}
+
+			if(stack != null)
+			{
+				stack.FreeAll(vPools, vPools.mClipPools);
+			}
+
+			return	true;
+		}
+	}
+
+
+	internal class Q2Leaf
+	{
+		internal int		mContents;
+		internal Int16		mCluster;
+		internal Int16		mArea;
+		internal Vector3	mMins, mMaxs;
+		internal UInt16		mFirstLeafFace, mNumLeafFaces;
+		internal UInt16		mFirstLeafBrush, mNumLeafBrushes;
+	}
+
+
+	internal class Q2VisLeaf
+	{
+		internal int		mNumPortals;
+		internal Q2Portal	[]mPortals	=new Q2Portal[64];
 	}
 
 
@@ -328,7 +529,7 @@ namespace BSPVis
 		}
 
 
-		static unsafe UInt64 AndTogetherQWords(byte []src1, byte []src2, byte []src3, byte []dest)
+		internal static unsafe UInt64 AndTogetherQWords(byte []src1, byte []src2, byte []src3, byte []dest)
 		{
 			int		len	=src2.Length;
 			UInt64	ret	=0;
@@ -373,246 +574,11 @@ namespace BSPVis
 		}
 
 
-		internal bool FloodPortalsSlowNoR(VISPortal destPort, VISPStack prevStack,
-			ref int canSee, VISLeaf []visLeafs, VisPools vPools, ClipPools cPools)
+		internal bool FloodPortalsSlow_r(VISPortal destPort, VISPStack prevStack, VisPools vPools)
 		{
-			Stack<VISPortal>	destPorts	=new Stack<VISPortal>();
-			Stack<VISPStack>	prevStacks	=new Stack<VISPStack>();
-
-			Stack<ReturnCondition>	rets	=new Stack<ReturnCondition>();
-
-			VISPStack	stack	=null;
-
-			int	maxStackDepth	=0;
-			int	maxRetDepth		=0;
-
-			destPorts.Push(destPort);
-			prevStacks.Push(prevStack);
-
-			while(destPorts.Count > 0 || rets.Count > 0)
-			{
-				VISPortal	port	=null;
-				VISPortal	dPort	=null;
-				VISPStack	prStack	=null;
-
-				if(rets.Count > maxRetDepth)
-				{
-					maxRetDepth	=rets.Count;
-				}
-
-				if(rets.Count > 0)
-				{
-					ReturnCondition	ret	=rets.Pop();
-					dPort		=ret.mDPort;
-					prStack		=ret.mPrevStack;
-					port		=ret.mListSpot;
-					stack		=ret.mCurStack;
-					stack.Free(vPools, cPools);
-				}
-
-startLoop:
-				if(destPorts.Count > maxStackDepth)
-				{
-					maxStackDepth	=destPorts.Count;
-				}
-				bool	nullStuff	=(dPort == null);
-				if(nullStuff)
-				{
-					dPort	=destPorts.Pop();
-					prStack	=prevStacks.Pop();
-					stack	=vPools.mStacks.GetFreeItem();
-				}
-
-				Int32	portNum	=dPort.mPortNum;
-				byte	Bit		=(byte)(portNum & 7);
-				Bit				=(byte)(1 << Bit);
-				bool	bNoFree	=false;
-
-				if(nullStuff)
-				{
-					//Add the portal that we are Flooding into, to the original portals visbits
-					if((mFinalVisBits[portNum >> 3] & Bit) == 0)
-					{
-						mFinalVisBits[portNum >> 3]	|=Bit;
-						mCanSee++;
-						visLeafs[mLeaf].mCanSee++;
-						canSee++;
-					}
-				}
-
-				//Get the leaf that this portal looks into, and flood from there
-				Int32	leafNum	=dPort.mLeaf;
-				VISLeaf	leaf	=visLeafs[leafNum];
-
-				bool	retFalse	=false;
-
-				// Now, try and Flood into the leafs that this portal touches
-				for(port=(port == null)? leaf.mPortals : port;port != null;port=port.mNext)
-				{
-					//note this reuse of portNum
-					portNum	=port.mPortNum;
-					Bit		=(byte)(1 << (portNum & 7));
-
-					//If might see could'nt see it, then don't worry about it
-					if((prStack.mVisBits[portNum >> 3] & Bit) == 0)
-					{
-						continue;	//Can't possibly see it
-					}
-
-					//If the portal can't see anything we haven't allready seen, skip it
-					UInt64	more	=0;
-					if(port.mbDone)
-					{
-						for(int j=0;j < mFinalVisBits.Length;j++)
-						{
-							//there is no & for bytes, can you believe that?
-							uint	prevBit		=(uint)prStack.mVisBits[j];
-							uint	portBit		=(uint)port.mFinalVisBits[j];
-							uint	bothBit		=prevBit & portBit;
-							stack.mVisBits[j]	=(byte)bothBit;
-
-							prevBit	=stack.mVisBits[j];
-							portBit	=mFinalVisBits[j];
-
-							more	|=prevBit &~ portBit;
-						}
-					}
-					else
-					{
-						//qwords and dwords seem about the same performancewise
-						more	=AndTogetherQWords(prStack.mVisBits, port.mVisBits, mFinalVisBits, stack.mVisBits);
-					}
-				
-					if(more == 0 && ((mFinalVisBits[portNum>>3] & Bit) != 0))
-					{
-						//Can't see anything new
-						continue;
-					}
-
-					//Setup Source/Pass
-					stack.mPass			=vPools.mPolys.GetFreeItem();
-					stack.mPass.mVerts	=cPools.DupeVerts(port.mPoly.mVerts);
-
-					//Cut away portion of pass portal we can't see through
-					if(!stack.mPass.ClipPoly(mPlane, false, cPools))
-					{
-						stack.FreeAll(vPools, cPools);
-						retFalse	=true;
-						break;
-					}
-					if(stack.mPass.VertCount() < 3)
-					{
-						stack.Free(vPools, cPools);
-						continue;
-					}
-
-					stack.mSource			=vPools.mPolys.GetFreeItem();
-					stack.mSource.mVerts	=cPools.DupeVerts(prStack.mSource.mVerts);
-
-					if(!stack.mSource.ClipPoly(port.mPlane, true, cPools))
-					{
-						stack.FreeAll(vPools, cPools);
-						retFalse	=true;
-						break;
-					}
-					if(stack.mSource.VertCount() < 3)
-					{
-						stack.Free(vPools, cPools);
-						continue;
-					}
-
-					//If we don't have a PrevStack.mPass, then we don't have enough to look through.
-					//This portal can only be blocked by VisBits (Above test)...
-					if(prStack.mPass == null)
-					{
-						destPorts.Push(port);
-						prevStacks.Push(stack);
-
-						Debug.Assert(port != dPort);
-
-						if(port.mNext != null)
-						{
-							ReturnCondition	ret	=new ReturnCondition();
-							ret.mListSpot	=port.mNext;
-							ret.mDPort		=dPort;
-							ret.mPrevStack	=prStack;
-							ret.mCurStack	=stack;
-							rets.Push(ret);
-						}
-						dPort	=null;
-						port	=null;
-						goto	startLoop;
-					}
-
-					if(!stack.mPass.SeperatorClip(stack.mSource, prStack.mPass, false, cPools))
-					{
-						stack.FreeAll(vPools, cPools);
-						retFalse	=true;
-						break;
-					}
-					if(stack.mPass == null || stack.mPass.VertCount() < 3)
-					{
-						stack.Free(vPools, cPools);
-						continue;
-					}
-
-					if(!stack.mPass.SeperatorClip(prStack.mPass, stack.mSource, true, cPools))
-					{
-						stack.FreeAll(vPools, cPools);
-						retFalse	=true;
-						break;
-					}
-					if(stack.mPass == null || stack.mPass.VertCount() < 3)
-					{
-						stack.Free(vPools, cPools);
-						continue;
-					}
-
-					//Flood into it...
-					destPorts.Push(port);
-					prevStacks.Push(stack);
-
-					if(port.mNext != null)
-					{
-						ReturnCondition	ret	=new ReturnCondition();
-						ret.mListSpot	=port.mNext;
-						ret.mDPort		=dPort;
-						ret.mPrevStack	=prStack;
-						ret.mCurStack	=stack;
-						rets.Push(ret);
-					}
-					dPort	=null;
-					port	=null;
-					bNoFree	=true;
-					goto	startLoop;
-				}
-
-				if(bNoFree)
-				{
-					bNoFree	=false;
-				}
-				else
-				{
-					stack.FreeAll(vPools, cPools);
-				}
-
-				if(retFalse)
-				{
-					CoreEvents.Print("Max Depth: " + maxStackDepth + " , Max Ret Depth: " + maxRetDepth + "\n");
-					return	false;
-				}
-			}
-			CoreEvents.Print("Max Depth: " + maxStackDepth + " , Max Ret Depth: " + maxRetDepth + "\n");
-			return	true;
-		}
-
-
-		internal bool FloodPortalsSlow_r(VISPortal destPort, VISPStack prevStack,
-			ref int canSee, VISLeaf []visLeafs, VisPools vPools, ClipPools cPools)
-		{
-			VISPStack	stack	=vPools.mStacks.GetFreeItem();
-
 			Int32	portNum	=destPort.mPortNum;
+
+			Interlocked.Increment(ref vPools.mIterations);
 
 			//Add the portal that we are Flooding into, to the original portals visbits
 			byte	Bit	=(byte)(portNum & 7);
@@ -622,13 +588,14 @@ startLoop:
 			{
 				mFinalVisBits[portNum>>3] |= Bit;
 				mCanSee++;
-				visLeafs[mLeaf].mCanSee++;
-				canSee++;
+				vPools.mVisLeafs[mLeaf].mCanSee++;
+				vPools.mCanSee++;
 			}
 
 			//Get the leaf that this portal looks into, and flood from there
-			Int32	leafNum	=destPort.mLeaf;
-			VISLeaf	leaf	=visLeafs[leafNum];
+			Int32		leafNum	=destPort.mLeaf;
+			VISLeaf		leaf	=vPools.mVisLeafs[leafNum];
+			VISPStack	stack	=null;
 
 			// Now, try and Flood into the leafs that this portal touches
 			for(VISPortal port=leaf.mPortals;port != null;port=port.mNext)
@@ -642,6 +609,11 @@ startLoop:
 				if((prevStack.mVisBits[portNum>>3] & Bit) == 0)
 				{
 					continue;	// Can't possibly see it
+				}
+
+				if(stack == null)
+				{
+					stack	=vPools.mStacks.GetFreeItem();
 				}
 
 				//If the portal can't see anything we haven't allready seen, skip it
@@ -665,7 +637,7 @@ startLoop:
 				else
 				{
 					//qwords and dwords seem about the same performancewise
-					more	=AndTogetherDWords(prevStack.mVisBits, port.mVisBits, mFinalVisBits, stack.mVisBits);
+					more	=AndTogetherQWords(prevStack.mVisBits, port.mVisBits, mFinalVisBits, stack.mVisBits);
 				}
 				
 				if(more == 0 && ((mFinalVisBits[portNum>>3] & Bit) != 0))
@@ -676,31 +648,31 @@ startLoop:
 
 				//Setup Source/Pass
 				stack.mPass			=vPools.mPolys.GetFreeItem();
-				stack.mPass.mVerts	=cPools.DupeVerts(port.mPoly.mVerts);
+				stack.mPass.mVerts	=vPools.mClipPools.DupeVerts(port.mPoly.mVerts);
 
 				//Cut away portion of pass portal we can't see through
-				if(!stack.mPass.ClipPoly(mPlane, false, cPools))
+				if(!stack.mPass.ClipPoly(mPlane, false, vPools.mClipPools))
 				{
-					stack.FreeAll(vPools, cPools);
+					stack.FreeAll(vPools, vPools.mClipPools);
 					return	false;
 				}
 				if(stack.mPass.VertCount() < 3)
 				{
-					stack.Free(vPools, cPools);
+					stack.Free(vPools, vPools.mClipPools);
 					continue;
 				}
 
 				stack.mSource			=vPools.mPolys.GetFreeItem();
-				stack.mSource.mVerts	=cPools.DupeVerts(prevStack.mSource.mVerts);
+				stack.mSource.mVerts	=vPools.mClipPools.DupeVerts(prevStack.mSource.mVerts);
 
-				if(!stack.mSource.ClipPoly(port.mPlane, true, cPools))
+				if(!stack.mSource.ClipPoly(port.mPlane, true, vPools.mClipPools))
 				{
-					stack.FreeAll(vPools, cPools);
+					stack.FreeAll(vPools, vPools.mClipPools);
 					return	false;
 				}
 				if(stack.mSource.VertCount() < 3)
 				{
-					stack.Free(vPools, cPools);
+					stack.Free(vPools, vPools.mClipPools);
 					continue;
 				}
 
@@ -708,48 +680,51 @@ startLoop:
 				//This portal can only be blocked by VisBits (Above test)...
 				if(prevStack.mPass == null)
 				{
-					if(!FloodPortalsSlow_r(port, stack, ref canSee, visLeafs, vPools, cPools))
+					if(!FloodPortalsSlow_r(port, stack, vPools))
 					{
-						stack.FreeAll(vPools, cPools);
+						stack.FreeAll(vPools, vPools.mClipPools);
 						return	false;
 					}
-					stack.Free(vPools, cPools);
+					stack.Free(vPools, vPools.mClipPools);
 					continue;
 				}
 
-				if(!stack.mPass.SeperatorClip(stack.mSource, prevStack.mPass, false, cPools))
+				if(!stack.mPass.SeperatorClip(stack.mSource, prevStack.mPass, false, vPools.mClipPools))
 				{
-					stack.FreeAll(vPools, cPools);
+					stack.FreeAll(vPools, vPools.mClipPools);
 					return	false;
 				}
 				if(stack.mPass == null || stack.mPass.VertCount() < 3)
 				{
-					stack.Free(vPools, cPools);
+					stack.Free(vPools, vPools.mClipPools);
 					continue;
 				}
 
-				if(!stack.mPass.SeperatorClip(prevStack.mPass, stack.mSource, true, cPools))
+				if(!stack.mPass.SeperatorClip(prevStack.mPass, stack.mSource, true, vPools.mClipPools))
 				{
-					stack.FreeAll(vPools, cPools);
+					stack.FreeAll(vPools, vPools.mClipPools);
 					return	false;
 				}
 				if(stack.mPass == null || stack.mPass.VertCount() < 3)
 				{
-					stack.Free(vPools, cPools);
+					stack.Free(vPools, vPools.mClipPools);
 					continue;
 				}
 
 				//Flood into it...
-				if(!FloodPortalsSlow_r(port, stack, ref canSee, visLeafs, vPools, cPools))
+				if(!FloodPortalsSlow_r(port, stack, vPools))
 				{
-					stack.FreeAll(vPools, cPools);
+					stack.FreeAll(vPools, vPools.mClipPools);
 					return	false;
 				}
 
-				stack.Free(vPools, cPools);
+				stack.Free(vPools, vPools.mClipPools);
 			}
 
-			stack.FreeAll(vPools, cPools);
+			if(stack != null)
+			{
+				stack.FreeAll(vPools, vPools.mClipPools);
+			}
 
 			return	true;
 		}
@@ -782,6 +757,23 @@ startLoop:
 				return	0;
 			}
 			if(x.mMightSee < y.mMightSee)
+			{
+				return	-1;
+			}
+			return	1;
+		}
+	}
+
+
+	internal class Q2PortalComparer : IComparer<Q2Portal>
+	{
+		public int Compare(Q2Portal x, Q2Portal y)
+		{
+			if(x.mNumMightSee == y.mNumMightSee)
+			{
+				return	0;
+			}
+			if(x.mNumMightSee < y.mNumMightSee)
 			{
 				return	-1;
 			}

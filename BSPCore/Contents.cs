@@ -96,7 +96,7 @@ namespace BSPCore
 
 
 		//convert hammer contents to genesis style contents
-		static internal UInt32 FixContents(UInt32 hammerContents)
+		static public UInt32 FixContents(UInt32 hammerContents)
 		{
 			UInt32	ret	=0;
 

@@ -301,6 +301,10 @@ namespace BSPCore
 
 		internal bool ClipPolyEpsilon(float epsilon, GBSPPlane plane, bool flipTest)
 		{
+			if(mVerts == null)
+			{
+				return	false;
+			}
 			if(mVerts.Length > 100)
 			{
 				CoreEvents.Print("ClipPoly:  Too many verts.\n");
@@ -1126,6 +1130,108 @@ namespace BSPCore
 						continue;
 					}
 					if(!ClipPoly(plane, bFlipClip, cPools))
+					{
+						CoreEvents.Print("ClipToPortals:  Error clipping portal.\n");
+						return	false;
+					}
+
+					if(mVerts == null || mVerts.Length < 3)
+					{
+						return	true;
+					}
+				}
+			}			
+			return	true;
+		}
+
+
+		public bool SeperatorClip(GBSPPoly source, GBSPPoly pass, bool bFlipClip)
+		{
+			for(int i=0;i < source.mVerts.Length;i++)
+			{
+				int	l	=(i + 1) % source.mVerts.Length;
+
+				Vector3	v1	=source.mVerts[l] - source.mVerts[i];
+
+				for(int j=0;j < pass.mVerts.Length;j++)
+				{
+					Vector3	v2	=pass.mVerts[j] - source.mVerts[i];
+
+					GBSPPlane	plane	=new GBSPPlane();
+					plane.mNormal	=Vector3.Cross(v1, v2);
+
+					float	len		=plane.mNormal.Length();
+					plane.mNormal	/=len;
+					
+					if(len < UtilityLib.Mathery.ON_EPSILON)
+					{
+						continue;
+					}
+					
+					plane.mDist	=Vector3.Dot(pass.mVerts[j], plane.mNormal);						
+
+					bool	bFlipTest	=false;
+					int		k;
+					for(k=0;k < source.mVerts.Length;k++)
+					{
+						if(k == i || k == l)
+						{
+							continue;
+						}
+
+						float	d	=Vector3.Dot(source.mVerts[k], plane.mNormal) - plane.mDist;
+						if(d < -UtilityLib.Mathery.ON_EPSILON)
+						{
+							bFlipTest	=false;
+							break;
+						}
+						else if(d > UtilityLib.Mathery.ON_EPSILON)
+						{
+							bFlipTest	=true;
+							break;
+						}
+					}
+					if(k == source.mVerts.Length)
+					{
+						continue;
+					}
+					if(bFlipTest)
+					{
+						plane.Inverse();
+					}
+
+					Int32	count0	=0;
+					Int32	count2	=0;
+					for(k=0;k < pass.mVerts.Length;k++)
+					{
+						if(k==j)
+						{
+							continue;
+						}
+						float	d	=Vector3.Dot(pass.mVerts[k], plane.mNormal) - plane.mDist;
+						if(d < -UtilityLib.Mathery.ON_EPSILON)
+						{
+							break;
+						}
+						else if(d > UtilityLib.Mathery.ON_EPSILON)
+						{
+							count0++;
+						}
+						else
+						{
+							count2++;
+						}
+					}
+					if(k != pass.mVerts.Length)
+					{
+						continue;	
+					}
+						
+					if(count0 == 0)
+					{
+						continue;
+					}
+					if(!ClipPoly(plane, bFlipClip))
 					{
 						CoreEvents.Print("ClipToPortals:  Error clipping portal.\n");
 						return	false;

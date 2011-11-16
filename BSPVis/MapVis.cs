@@ -51,6 +51,12 @@ namespace BSPVis
 		//bspmap
 		Map	mMap	=new Map();
 
+		//q2 vis related
+		Q2Leaf		[]mQ2Leafs;
+		Q2Portal	[]mQ2Portals;
+		Q2Portal	[]mQ2SortedPortals;
+		Q2VisLeaf	[]mQ2VisLeafs;
+
 		//vis related stuff
 		GFXLeaf		[]mGFXLeafs;
 		GFXCluster	[]mGFXClusters;
@@ -79,6 +85,7 @@ namespace BSPVis
 		{
 			VisParameters	vp	=threadContext as VisParameters;
 
+#if false
 			GFXHeader	header	=mMap.LoadGBSPFile(vp.mFileName);
 			if(header == null)
 			{
@@ -90,6 +97,9 @@ namespace BSPVis
 			//copy out vis related stuff
 			mGFXLeafs		=mMap.GetGFXLeafs();
 			mGFXClusters	=mMap.GetGFXClusters();
+#else
+			LoadQ2Leaves(vp.mFileName);
+#endif
 
 			//Clean out any old vis data
 			FreeFileVisData();
@@ -114,6 +124,7 @@ namespace BSPVis
 			string	PFile;
 			int	extPos	=vp.mFileName.LastIndexOf(".");
 			PFile		=vp.mFileName.Substring(0, extPos);
+#if false
 			PFile		+=".gpf";
 			
 			//Load the portal file
@@ -121,10 +132,19 @@ namespace BSPVis
 			{
 				goto	ExitWithError;
 			}
+#else
+			PFile		+=".prt";
+			
+			//Load the portal file
+			if(!LoadQ2PortalFile(PFile))
+			{
+				goto	ExitWithError;
+			}
+#endif
 
-			CoreEvents.FireNumPortalsChangedEvent(mVisPortals.Length, null);
+//			CoreEvents.FireNumPortalsChangedEvent(mVisPortals.Length, null);
 
-			CoreEvents.Print("NumPortals           : " + mVisPortals.Length + "\n");
+//			CoreEvents.Print("NumPortals           : " + mVisPortals.Length + "\n");
 
 			DateTime	startTime	=DateTime.Now;
 
@@ -136,9 +156,9 @@ namespace BSPVis
 				goto	ExitWithError;
 			}
 
-			bw	=new BinaryWriter(fs);
+//			bw	=new BinaryWriter(fs);
 
-			WriteVis(bw);
+//			WriteVis(bw);
 
 			//Free all the vis stuff
 			FreeAllVisData();
@@ -146,7 +166,7 @@ namespace BSPVis
 			//Free any remaining leftover bsp data
 			mMap.FreeGBSPFile();
 
-			bw.Close();
+//			bw.Close();
 			fs.Close();
 			bw	=null;
 			fs	=null;
@@ -1061,18 +1081,163 @@ namespace BSPVis
 				CoreEvents.Print(mvc.Endpoint.Address.ToString() + " with " + mvc.mNumFailures + " failures.\n");
 			}
 		}
+		
+		
+		void RecursiveLeafFlow(Q2Portal destPort, int leafNum, Q2Stack prevStack)
+		{
+			Q2VisLeaf	leaf	=mQ2VisLeafs[leafNum];
+			
+			Q2Stack	stack	=new Q2Stack();
+
+			prevStack.mNext	=stack;
+			
+			stack.mNext		=null;
+			stack.mLeaf		=leaf;
+			stack.mPortal	=null;
+			
+			byte	[]might	=stack.mVisBits;
+			byte	[]vis	=destPort.mPortalVis;
+			
+			//check all portals for flowing into other leafs
+			for(int i=0;i < leaf.mNumPortals;i++)
+			{
+				Q2Portal	p	=leaf.mPortals[i];
+
+				int	pnum	=p.mPortNum;
+
+				if((prevStack.mVisBits[pnum >> 3] & (1<<(pnum&7))) == 0)
+				{
+					continue;	// can't possibly see it
+				}
+				
+				//if the portal can't see anything we haven't allready seen, skip it
+				byte	[]test	=null;
+				if(p.mbDone)
+				{
+					test	=p.mPortalVis;
+				}
+				else
+				{
+					test	=p.mPortalFlood;
+				}
+
+				Int32	more	=0;
+				for(int j=0;j < mNumVisPortalBytes;j++)
+				{
+					might[j]	=(byte)(prevStack.mVisBits[j] & test[j]);
+					more		|=(might[j] & ~vis[j]);
+				}
+		
+				if((more == 0) && (vis[pnum >> 3] & (1 << (pnum & 7))) != 0)
+				{	//can't see anything new
+					continue;
+				}
+
+				//get plane of portal, point normal into the neighbor leaf
+				stack.mPortalPlane	=p.mPlane;
+				stack.mPortal		=p;
+				stack.mNext			=null;
+
+				stack.mPass	=new GBSPPoly(p.mWinding);
+				if(!stack.mPass.ClipPoly(destPort.mPlane, true))
+				{
+					continue;
+				}
+				if(stack.mPass.mVerts == null)
+				{
+					stack.mPass	=null;
+					continue;
+				}
+
+				stack.mSource	=new GBSPPoly(prevStack.mSource);
+				if(!stack.mSource.ClipPoly(p.mPlane, false))
+				{
+					continue;
+				}
+				if(stack.mSource.mVerts == null)
+				{
+					stack.mSource	=null;
+					continue;
+				}
+
+				if(prevStack.mPass == null)
+				{	//the second leaf can only be blocked if coplanar
+
+					//mark the portal as visible
+					vis[pnum >> 3]	|=(byte)(1 << (pnum & 7));
+
+					RecursiveLeafFlow(destPort, p.mLeaf, stack);
+					continue;
+				}
+
+				if(!stack.mPass.SeperatorClip(stack.mSource, prevStack.mPass, false))
+				{
+					continue;
+				}
+				if(stack.mPass.mVerts == null)
+				{
+					stack.mPass	=null;
+					continue;
+				}
+				if(!stack.mPass.SeperatorClip(prevStack.mPass, stack.mSource, true))
+				{
+					continue;
+				}
+				if(stack.mPass.mVerts == null)
+				{
+					stack.mPass	=null;
+					continue;
+				}
+
+				//mark the portal as visible
+				vis[pnum >> 3]	|=(byte)(1 << (pnum & 7));
+
+				//flow through it for real
+				RecursiveLeafFlow(destPort, p.mLeaf, stack);
+			}	
+		}
+
+
+		void	PortalFlow(int portalnum)
+		{
+			Q2Portal	p	=mQ2SortedPortals[portalnum];
+
+			p.mbDone	=false;
+
+			int	c_might	=CountBits(p.mPortalFlood, mQ2SortedPortals.Length);
+
+			Q2Stack	vps	=new Q2Stack();
+			vps.mSource	=p.mWinding;
+			p.mPortalFlood.CopyTo(vps.mVisBits, 0);
+
+			RecursiveLeafFlow(p, p.mLeaf, vps);
+
+			p.mbDone	=true;
+
+			int	c_can	=CountBits(p.mPortalVis, mQ2SortedPortals.Length);
+			CoreEvents.Print("portal:" + p.mPortNum + " mightsee:" + c_might +
+				" cansee:" + c_can + "\n");
+		}
 
 
 		bool VisAllLeafs(ConcurrentQueue<MapVisClient> clients, string fileName, VisParameters vp)
 		{
-			CoreEvents.Print("Quick vis for " + mVisPortals.Length + " portals...\n");
+//			CoreEvents.Print("Quick vis for " + mVisPortals.Length + " portals...\n");
 
 			//Create PortalSeen array.  This is used by Vis flooding routines
 			//This is deleted below...
-			bool	[]portalSeen	=new bool[mVisPortals.Length];
+//			bool	[]portalSeen	=new bool[mVisPortals.Length];
 
-			object	prog	=ProgressWatcher.RegisterProgress(0, mVisLeafs.Length, 0);
+			object	prog	=ProgressWatcher.RegisterProgress(0, mQ2Portals.Length, 0);
 
+#if true
+			for(int i=0;i < mQ2Portals.Length;i++)
+			{
+				BasePortalVis(i);
+				ProgressWatcher.UpdateProgress(prog, i);
+			}
+			ProgressWatcher.Clear();
+#else
 			//Flood all the leafs with the fast method first...
 			for(int i=0;i < mVisLeafs.Length; i++)
 			{
@@ -1081,9 +1246,12 @@ namespace BSPVis
 				ProgressWatcher.UpdateProgress(prog, i);
 			}
 			ProgressWatcher.Clear();
-
+#endif
 			//Sort the portals with MightSee
 			SortPortals();
+
+			//turning off sorting
+			mQ2Portals.CopyTo(mQ2SortedPortals, 0);
 
 			if(vp.mVisParams.mbDistribute)
 			{
@@ -1091,8 +1259,8 @@ namespace BSPVis
 			}
 			else
 			{
-				prog	=ProgressWatcher.RegisterProgress(0, mVisPortals.Length, 0);
-				if(!FloodPortalsSlow(0, mVisPortals.Length, vp.mBSPParams.mbVerbose, prog))
+				prog	=ProgressWatcher.RegisterProgress(0, mQ2Portals.Length, 0);
+				if(!FloodPortalsSlow(0, mQ2Portals.Length, vp.mBSPParams.mbVerbose, prog))
 				{
 					return	false;
 				}
@@ -1101,9 +1269,9 @@ namespace BSPVis
 			ProgressWatcher.Clear();
 
 			//Don't need this anymore...
-			portalSeen	=null;
+//			portalSeen	=null;
 
-			mGFXVisData	=new byte[mVisLeafs.Length * mNumVisLeafBytes];
+			mGFXVisData	=new byte[mQ2VisLeafs.Length * mNumVisLeafBytes];
 			if(mGFXVisData == null)
 			{
 				CoreEvents.Print("VisAllLeafs:  Out of memory for LeafVisBits.\n");
@@ -1111,8 +1279,8 @@ namespace BSPVis
 			}
 
 			int	TotalVisibleLeafs	=0;
-
-			for(int i=0;i < mVisLeafs.Length;i++)
+			/*
+			for(int i=0;i < mQ2VisLeafs.Length;i++)
 			{
 				int	leafSee	=0;
 				
@@ -1121,10 +1289,10 @@ namespace BSPVis
 					goto	ExitWithError;
 				}
 				TotalVisibleLeafs	+=leafSee;
-			}
+			}*/
 
 			CoreEvents.Print("Total visible areas           : " + TotalVisibleLeafs + "\n");
-			CoreEvents.Print("Average visible from each area: " + TotalVisibleLeafs / mVisLeafs.Length + "\n");
+			CoreEvents.Print("Average visible from each area: " + TotalVisibleLeafs / mQ2VisLeafs.Length + "\n");
 
 			return	true;
 
@@ -1143,44 +1311,42 @@ namespace BSPVis
 		{
 			for(int k=startPort;k < endPort;k++)
 			{
-				mVisPortals[k].mbDone	=false;
+				mQ2Portals[k].mbDone	=false;
 			}
 
 			int	count	=startPort;
 			for(int k=startPort;k < endPort;k++)
 //			Parallel.For(startPort, endPort, (k) =>
 			{
-				VISPortal	port	=mVisSortedPortals[k];
+				Q2Portal	port	=mQ2SortedPortals[k];
 				
-				port.mFinalVisBits	=new byte[mNumVisPortalBytes];
+//				port.mFinalVisBits	=new byte[mNumVisPortalBytes];
 
 				//This portal can't see anyone yet...
 				for(int i=0;i < mNumVisPortalBytes;i++)
 				{
-					port.mFinalVisBits[i]	=0;
+					port.mPortalVis[i]	=0;
 				}
-
-				int	CanSee	=0;
-
-				VisPools	vPools		=new VisPools();
-				ClipPools	cPools		=new ClipPools();
-				VISPStack	portStack	=vPools.mStacks.GetFreeItem();
+//				port.mPortalVis	=new byte[mNumVisPortalBytes];
+				/*
+				VisPools	vPools		=new VisPools(mQ2VisLeafs, new ClipPools());
+				VISPStack	portStack	=vPools.mStacks.GetFreeItem();				
 				for(int i=0;i < mNumVisPortalBytes;i++)
 				{
-					portStack.mVisBits[i]	=port.mVisBits[i];
+					portStack.mVisBits[i]	=port.mPortalFront[i];
 				}
 
 				//Setup Source/Pass
 				portStack.mSource			=vPools.mPolys.GetFreeItem();
-				portStack.mSource.mVerts	=cPools.DupeVerts(port.mPoly.mVerts);
+				portStack.mSource.mVerts	=vPools.mClipPools.DupeVerts(port.mWinding.mVerts);
 				portStack.mPass				=null;
-//				if(!port.FloodPortalsSlow_r(port, portStack, ref CanSee, mVisLeafs, vPools, cPools))
-				if(!port.FloodPortalsSlowNoR(port, portStack, ref CanSee, mVisLeafs, vPools, cPools))
+				if(!port.FloodPortalsSlow_r(port, portStack, vPools))
 				{
 					return	false;
-				}
+				}*/
+				PortalFlow(k);
 
-				portStack.mSource	=null;
+//				portStack.mSource	=null;
 				port.mbDone			=true;
 
 				Interlocked.Increment(ref count);
@@ -1191,10 +1357,14 @@ namespace BSPVis
 
 				if(bVerbose)
 				{
-					CoreEvents.Print("Portal: " + (k + 1) + " - Fast Vis: "
-						+ port.mMightSee + ", Full Vis: "
-						+ port.mCanSee + ", remaining: "
-						+ (endPort - count) + "\n");
+//					CoreEvents.Print("Portal: " + (k + 1) + " - Fast Vis: "
+//						+ port.mMightSee + ", Full Vis: "
+//						+ port.mCanSee + ", remaining: "
+//						+ (endPort - count) + "\n");
+//					CoreEvents.Print("Portal: " + (k + 1) + " - Fast Vis: "
+//						+ port.mNumMightSee + ", Full Vis: "
+//						+ vPools.mCanSee + ", iterations: "
+//						+ vPools.mIterations + "\n");
 				}
 			}//);
 			return	true;
@@ -1266,6 +1436,7 @@ namespace BSPVis
 				{
 					VisLoop(visPortals, visLeafs, numVisPortalBytes, k, endPort, ref count);
 				});
+
 /*
 			List<Task>	tasks	=new List<Task>();
 
@@ -1325,10 +1496,7 @@ namespace BSPVis
 				port.mFinalVisBits[i]	=0;
 			}
 
-			int	CanSee	=0;
-
-			VisPools	vPools		=new VisPools();
-			ClipPools	cPools		=new ClipPools();
+			VisPools	vPools		=new VisPools(visLeafs, new ClipPools());
 			VISPStack	portStack	=vPools.mStacks.GetFreeItem();
 			for(int i=0;i < numVisPortalBytes;i++)
 			{
@@ -1337,9 +1505,10 @@ namespace BSPVis
 
 			//Setup Source/Pass
 			portStack.mSource			=vPools.mPolys.GetFreeItem();
-			portStack.mSource.mVerts	=cPools.DupeVerts(port.mPoly.mVerts);
+			portStack.mSource.mVerts	=vPools.mClipPools.DupeVerts(port.mPoly.mVerts);
 			portStack.mPass				=null;
-			if(!port.FloodPortalsSlow_r(port, portStack, ref CanSee, visLeafs, vPools, cPools))
+
+			if(!port.FloodPortalsSlow_r(port, portStack, vPools))
 			{
 				return;
 			}
@@ -1351,7 +1520,11 @@ namespace BSPVis
 
 			Console.WriteLine("Portal: " + (k + 1) + " - Fast Vis: "
 				+ port.mMightSee + ", Full Vis: "
-				+ port.mCanSee + ", remaining: " + (endPort - count));
+				+ port.mCanSee + ", recursions: "
+				+ vPools.mIterations);
+//			Console.WriteLine("Portal: " + (k + 1) + " - Fast Vis: "
+//				+ port.mMightSee + ", Full Vis: "
+//				+ port.mCanSee + ", remaining: " + (endPort - count));
 		}
 
 
@@ -1419,11 +1592,117 @@ namespace BSPVis
 
 		void SortPortals()
 		{
+#if false
 			List<VISPortal>	sortMe	=new List<VISPortal>(mVisPortals);
 
 			sortMe.Sort(new VisPortalComparer());
 
 			mVisSortedPortals	=sortMe.ToArray();
+#else
+			List<Q2Portal>	sortMe	=new List<Q2Portal>(mQ2Portals);
+
+			sortMe.Sort(new Q2PortalComparer());
+
+			mQ2SortedPortals	=sortMe.ToArray();
+#endif
+		}
+
+
+		void BasePortalVis(int portNum)
+		{
+			Q2Portal	p	=mQ2Portals[portNum];
+
+			p.mPortalFront	=new byte[mNumVisPortalBytes];
+			p.mPortalFlood	=new byte[mNumVisPortalBytes];
+			p.mPortalVis	=new byte[mNumVisPortalBytes];
+
+			for(int i=0;i < mQ2Portals.Length;i++)
+			{
+				if(i == portNum)
+				{
+					continue;
+				}
+
+				Q2Portal	tp	=mQ2Portals[i];
+
+				int	k=0;
+				for(k=0;k < tp.mWinding.mVerts.Length;k++)
+				{
+					float	d	=Vector3.Dot(tp.mWinding.mVerts[k], p.mPlane.mNormal)
+									- p.mPlane.mDist;
+					if(d < -UtilityLib.Mathery.ON_EPSILON)
+					{
+						break;
+					}
+				}
+				if(k == tp.mWinding.mVerts.Length)
+				{
+					continue;
+				}
+
+				for(k=0;k < p.mWinding.mVerts.Length;k++)
+				{
+					float	d	=Vector3.Dot(p.mWinding.mVerts[k], tp.mPlane.mNormal)
+									- tp.mPlane.mDist;
+					if(d > UtilityLib.Mathery.ON_EPSILON)
+					{
+						break;
+					}
+				}
+				if(k == p.mWinding.mVerts.Length)
+				{
+					continue;
+				}
+
+				p.mPortalFront[i >> 3]	|=(byte)(1 << (i & 7));
+			}
+
+			SimpleFlood(p, p.mLeaf);
+
+			p.mNumMightSee	=CountBits(p.mPortalFlood, mQ2Portals.Length);
+		}
+		
+		
+		int CountBits(byte []bits, int numbits)
+		{
+			int		i;
+			int		c = 0;
+			
+			for(i=0 ; i<numbits ; i++)
+			{
+				if((bits[i>>3] & (1<<(i&7))) != 0)
+				{
+					c++;
+				}
+			}
+			return	c;
+		}
+
+
+		void SimpleFlood(Q2Portal src, int leafNum)
+		{
+			Q2VisLeaf	leaf	=mQ2VisLeafs[leafNum];
+
+			for(int i=0;i < leaf.mNumPortals;i++)
+			{
+				Q2Portal	port	=leaf.mPortals[i];
+
+				int	pNum	=port.mPortNum;
+
+				if((src.mPortalFront[pNum >> 3] & (1 << (pNum & 7))) == 0)
+				{
+					continue;
+				}
+
+				if((src.mPortalFlood[pNum >> 3] & (1 << (pNum & 7))) != 0)
+				{
+					continue;
+				}
+
+				src.mPortalFlood[pNum >> 3]	|=(byte)(1 << (pNum & 7));
+
+				SimpleFlood(src, port.mLeaf);
+			}
 		}
 
 
@@ -1515,6 +1794,283 @@ namespace BSPVis
 			mVisLeafs			=null;
 
 			mMap.FreeGBSPFile();	//Free rest of GBSP GFX data
+		}
+
+
+		bool LoadQ2Leaves(string fileName)
+		{
+			FileStream	fs	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			if(fs == null)
+			{
+				return	false;
+			}
+
+			BinaryReader	br	=new BinaryReader(fs);
+
+			UInt32	magic	=br.ReadUInt32();
+			UInt32	ver		=br.ReadUInt32();
+
+			List<int>	offsets	=new List<int>();
+			List<int>	lengths	=new List<int>();
+
+			for(int i=0;i < 19;i++)
+			{
+				offsets.Add(br.ReadInt32());
+				lengths.Add(br.ReadInt32());
+			}
+
+			//leafs are index 8
+			br.BaseStream.Seek(offsets[8], SeekOrigin.Begin);
+
+			int	numLeaves	=lengths[8] / 28;	//q2leaf size 28
+
+//			mGFXLeafs	=new GFXLeaf[numLeaves];
+			mQ2Leafs	=new Q2Leaf[numLeaves];
+
+			for(int i=0;i < numLeaves;i++)
+			{
+#if false
+				mGFXLeafs[i]	=new GFXLeaf();
+
+				UInt32	contents	=br.ReadUInt32();
+
+				//invert x and swap y and z
+				mGFXLeafs[i].mContents	=contents;//Contents.FixContents(contents);
+				mGFXLeafs[i].mCluster	=br.ReadInt16();
+				mGFXLeafs[i].mArea		=br.ReadInt16();
+				mGFXLeafs[i].mMins.X	=-br.ReadInt16();
+				mGFXLeafs[i].mMins.Z	=br.ReadInt16();
+				mGFXLeafs[i].mMins.Y	=br.ReadInt16();
+				mGFXLeafs[i].mMaxs.X	=-br.ReadInt16();
+				mGFXLeafs[i].mMaxs.Z	=br.ReadInt16();
+				mGFXLeafs[i].mMaxs.Y	=br.ReadInt16();
+				mGFXLeafs[i].mFirstFace	=br.ReadUInt16();
+				mGFXLeafs[i].mNumFaces	=br.ReadUInt16();
+				mGFXLeafs[i].mFirstSide	=br.ReadUInt16();
+				mGFXLeafs[i].mNumSides	=br.ReadUInt16();
+#else
+				mQ2Leafs[i]		=new Q2Leaf();
+
+				Int32	contents	=br.ReadInt32();
+
+				//invert x and swap y and z
+				mQ2Leafs[i].mContents		=contents;//Contents.FixContents(contents);
+				mQ2Leafs[i].mCluster		=br.ReadInt16();
+				mQ2Leafs[i].mArea			=br.ReadInt16();
+				mQ2Leafs[i].mMins.X			=-br.ReadInt16();
+				mQ2Leafs[i].mMins.Z			=br.ReadInt16();
+				mQ2Leafs[i].mMins.Y			=br.ReadInt16();
+				mQ2Leafs[i].mMaxs.X			=-br.ReadInt16();
+				mQ2Leafs[i].mMaxs.Z			=br.ReadInt16();
+				mQ2Leafs[i].mMaxs.Y			=br.ReadInt16();
+				mQ2Leafs[i].mFirstLeafFace	=br.ReadUInt16();
+				mQ2Leafs[i].mNumLeafFaces	=br.ReadUInt16();
+				mQ2Leafs[i].mFirstLeafBrush	=br.ReadUInt16();
+				mQ2Leafs[i].mNumLeafBrushes	=br.ReadUInt16();
+#endif
+			}
+			return	true;
+		}
+
+
+		bool LoadQ2PortalFile(string portFile)
+		{
+			FileStream		fs	=new FileStream(portFile, FileMode.Open, FileAccess.Read);
+			StreamReader	sr	=null;
+
+			if(fs == null)		// opps
+			{
+				CoreEvents.Print("LoadQ2PortalFile:  Could not open " + portFile + " for reading.\n");
+				goto	ExitWithError;
+			}
+
+			sr	=new StreamReader(fs);
+			
+			string	TAG	=sr.ReadLine();
+			if(TAG != "PRT1")
+			{
+				CoreEvents.Print("LoadPortalFile:  " + portFile + " is not a GBSP Portal file.\n");
+				goto	ExitWithError;
+			}
+
+			string	tmp				=sr.ReadLine();
+			int		NumVisLeafs		=0;
+			int		NumVisPortals	=0;
+
+			if(!Int32.TryParse(tmp, out NumVisLeafs))
+			{
+				goto	ExitWithError;
+			}
+
+			tmp	=sr.ReadLine();
+			if(!Int32.TryParse(tmp, out NumVisPortals))
+			{
+				goto	ExitWithError;
+			}
+			
+			mQ2Portals	=new Q2Portal[NumVisPortals * 2];
+//			mVisPortals	=new VISPortal[NumVisPortals * 2];
+//			if(mVisPortals == null)
+//			{
+//				CoreEvents.Print("LoadPortalFile:  Out of memory for VisPortals.\n");
+//				goto	ExitWithError;
+//			}
+			
+//			mVisSortedPortals	=new VISPortal[NumVisPortals * 2];
+//			if(mVisSortedPortals == null)
+//			{
+//				CoreEvents.Print("LoadPortalFile:  Out of memory for VisSortedPortals.\n");
+//				goto ExitWithError;
+//			}
+	
+			mQ2VisLeafs	=new Q2VisLeaf[NumVisLeafs];
+//			mVisLeafs	=new VISLeaf[NumVisLeafs];
+//			if(mVisLeafs == null)
+//			{
+//				CoreEvents.Print("LoadPortalFile:  Out of memory for VisLeafs.\n");
+//				goto ExitWithError;
+//			}
+
+			//fill arrays with blank objects
+			for(int i=0;i < NumVisLeafs;i++)
+			{
+//				mVisLeafs[i]	=new VISLeaf();
+				mQ2VisLeafs[i]	=new Q2VisLeaf();
+			}
+
+			//
+			//	Load in the portals
+			//
+			for(int i=0;i < NumVisPortals * 2;i+=2)
+			{
+				//alloc blank portals
+//				mVisPortals[i]		=new VISPortal();
+//				mVisPortals[i + 1]	=new VISPortal();
+				mQ2Portals[i]		=new Q2Portal();
+				mQ2Portals[i + 1]	=new Q2Portal();
+
+				tmp	=sr.ReadLine();
+
+				string	[]tokens	=tmp.Split(' ');
+
+				int	numPoint	=0;
+				int	leaf0		=0;
+				int	leaf1		=0;
+
+				if(!Int32.TryParse(tokens[0], out numPoint))
+				{
+					goto ExitWithError;
+				}
+				if(!Int32.TryParse(tokens[1], out leaf0))
+				{
+					goto ExitWithError;
+				}
+				if(!Int32.TryParse(tokens[2], out leaf1))
+				{
+					goto ExitWithError;
+				}
+/*
+				if(leafFrom >= NumVisLeafs || leafFrom < 0)
+				{
+					CoreEvents.Print("LoadPortalFile:  Invalid LeafFrom: " + leafFrom + "\n");
+					goto	ExitWithError;
+				}
+
+				if(leafTo >= NumVisLeafs || leafTo < 0)
+				{
+					CoreEvents.Print("LoadPortalFile:  Invalid LeafTo: " + leafTo + "\n");
+					goto	ExitWithError;
+				}*/
+
+				List<Vector3>	points	=new List<Vector3>();
+				for(int j=0;j < numPoint;j++)
+				{
+					float	v0, v1, v2;
+
+					string	stripPer	=tokens[3 + (j * 4)].TrimStart('(');
+
+					if(!Single.TryParse(stripPer, out v0))
+					{
+						goto ExitWithError;
+					}
+
+					if(!Single.TryParse(tokens[4 + (j * 4)], out v1))
+					{
+						goto ExitWithError;
+					}
+					if(!Single.TryParse(tokens[5 + (j * 4)], out v2))
+					{
+						goto ExitWithError;
+					}
+
+					//invert x and swap y and z
+					points.Add(new Vector3(-v0, v2, v1));
+				}
+
+				GBSPPoly	poly	=new GBSPPoly(numPoint);
+
+				poly.mVerts	=points.ToArray();
+				
+
+				GBSPPlane	pln	=new GBSPPlane(poly);
+
+//				VISLeaf		fleaf	=mVisLeafs[leafFrom];
+//				VISLeaf		bleaf	=mVisLeafs[leafTo];
+//				VISPortal	fport	=mVisPortals[i];
+//				VISPortal	bport	=mVisPortals[i + 1];
+
+				Q2VisLeaf	fleaf	=mQ2VisLeafs[leaf0];
+				Q2VisLeaf	bleaf	=mQ2VisLeafs[leaf1];
+				Q2Portal	fport	=mQ2Portals[i];
+				Q2Portal	bport	=mQ2Portals[i + 1];
+
+				fport.mPortNum	=i;
+				fport.mWinding	=poly;
+				fport.mLeaf		=leaf1;
+				fport.mPlane	=pln;
+				fleaf.mPortals[fleaf.mNumPortals++]	=fport;
+//				fport.CalcPortalInfo();
+
+				bport.mPortNum	=i + 1;
+				bport.mWinding	=new GBSPPoly(poly);
+				bport.mLeaf		=leaf0;
+				bport.mPlane	=pln;
+				bleaf.mPortals[bleaf.mNumPortals++]	=bport;
+
+				bport.mWinding.Reverse();
+				bport.mPlane.Inverse();
+
+//				bport.CalcPortalInfo();
+			}
+			
+			mNumVisLeafBytes	=((NumVisLeafs+63)&~63) >> 3;
+			mNumVisPortalBytes	=(((NumVisPortals * 2)+63)&~63) >> 3;
+
+			sr.Close();
+			fs.Close();
+			sr	=null;
+			fs	=null;
+
+			return	true;
+
+			// ==== ERROR ===
+			ExitWithError:
+			{
+				if(sr != null)
+				{
+					sr.Close();
+				}
+				if(fs != null)
+				{
+					fs.Close();
+				}
+
+				mVisPortals			=null;
+				mVisSortedPortals	=null;
+				mVisLeafs			=null;
+
+				return	false;
+			}
 		}
 
 
