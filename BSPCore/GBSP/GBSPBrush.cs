@@ -315,8 +315,8 @@ namespace BSPCore
 		}
 
 
-		void Split(Int32 planeNum, sbyte planeSide, byte splitFaceFlags, bool bVisible,
-					PlanePool pool, out GBSPBrush front, out GBSPBrush back)
+		internal void Split(Int32 planeNum, sbyte planeSide, byte splitFaceFlags, bool bVisible,
+					PlanePool pool, out GBSPBrush front, out GBSPBrush back, bool bVerbose)
 		{
 			GBSPPlane	plane, plane2;
 			float		frontDist, backDist;
@@ -358,7 +358,7 @@ namespace BSPCore
 
 			//create a new poly from the split plane
 			GBSPPoly	midPoly	=new GBSPPoly(plane);
-			if(midPoly == null)
+			if(midPoly == null && bVerbose)
 			{
 				CoreEvents.Print("Could not create poly.\n");
 			}
@@ -395,7 +395,7 @@ namespace BSPCore
 			{
 				resultBrushes[i]	=new GBSPBrush();
 				
-				if(resultBrushes[i] == null)
+				if(resultBrushes[i] == null && bVerbose)
 				{
 					CoreEvents.Print("SplitBrush:  Out of memory for brush.\n");
 				}
@@ -415,7 +415,7 @@ namespace BSPCore
 				}
 
 				GBSPPoly	sidePoly	=new GBSPPoly(s.mPoly);
-				if(!sidePoly.SplitEpsilon(0.0f, plane, out poly[0], out poly[1], false))
+				if(!sidePoly.SplitEpsilon(0.0f, plane, out poly[0], out poly[1], false) && bVerbose)
 				{
 					CoreEvents.Print("Error splitting poly...\n");
 				}
@@ -449,14 +449,17 @@ namespace BSPCore
 			}
 
 			if(resultBrushes[0] == null || resultBrushes[1] == null)
-			{				
-				if(resultBrushes[0] == null && resultBrushes[1] == null)
+			{
+				if(bVerbose)
 				{
-					CoreEvents.Print("Split removed brush\n");
-				}
-				else
-				{
-					CoreEvents.Print("Split not on both sides\n");
+					if(resultBrushes[0] == null && resultBrushes[1] == null)
+					{
+						CoreEvents.Print("Split removed brush\n");
+					}
+					else
+					{
+						CoreEvents.Print("Split not on both sides\n");
+					}
 				}
 				
 				if(resultBrushes[0] != null)
@@ -514,7 +517,7 @@ namespace BSPCore
 				}
 			}
 
-			if(resultBrushes[0] == null || resultBrushes[1] == null)
+			if(bVerbose && (resultBrushes[0] == null || resultBrushes[1] == null))
 			{
 				CoreEvents.Print("SplitBrush:  Brush was not split.\n");
 			}
@@ -580,7 +583,8 @@ namespace BSPCore
 			//outside
 			for(int i=0;i < b.mSides.Count && inside != null;i++)
 			{
-				inside.Split(b.mSides[i].mPlaneNum, b.mSides[i].mPlaneSide, (byte)GBSPSide.SIDE_NODE, false, pool, out front, out back);
+				inside.Split(b.mSides[i].mPlaneNum, b.mSides[i].mPlaneSide,
+					(byte)GBSPSide.SIDE_NODE, false, pool, out front, out back, true);
 
 				//Make sure we don't free a, but free all other fragments
 				if(inside != a)
@@ -842,6 +846,11 @@ namespace BSPCore
 						Int32	planeSide	=side.mPlaneSide;
 						
 						Debug.Assert(node.CheckPlaneAgainstParents(planeNum) == true);
+
+						if(!node.CheckPlaneAgainstVolume(planeNum, pool))
+						{
+							continue;	//borrowing a volume check from Q2
+						}
 												
 						Int32	frontCount		=0;
 						Int32	backCount		=0;
@@ -1075,7 +1084,8 @@ namespace BSPCore
 				if(sideFlag == GBSPPlane.PSIDE_BOTH)
 				{
 					GBSPBrush	newFront, newBack;
-					b.Split(nodePlaneNum, 0, (byte)GBSPSide.SIDE_NODE, false, pool, out newFront, out newBack);
+					b.Split(nodePlaneNum, 0, (byte)GBSPSide.SIDE_NODE,
+						false, pool, out newFront, out newBack, true);
 					if(newFront != null)
 					{
 						newFront.mNext	=front;

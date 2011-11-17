@@ -27,6 +27,7 @@ namespace BSPCore
 		GBSPNode	[]mChildren	=new GBSPNode[2];	//Front and back child
 		GBSPNode	mParent;						//Parent of this node
 		Bounds		mBounds	=new Bounds();			//Current BBox of node
+		GBSPBrush	mVolume;
 
 		//Info for this node as a leaf
 		GBSPPortal		mPortals;							//Portals on this leaf
@@ -80,8 +81,9 @@ namespace BSPCore
 			bs.NumVisNodes		=0;
 			bs.NumNonVisNodes	=0;
 
-			BuildTree_r(bs, brushList, pool);
+			mVolume	=new GBSPBrush(new MapBrush(bounds, pool));
 
+			BuildTree_r(bs, brushList, pool);
 
 			//Top node is always valid, this way portals can use top node to get box of entire bsp...
 			mBounds	=new Bounds(bounds);
@@ -109,6 +111,16 @@ namespace BSPCore
 			mBounds.mMaxs	=Vector3.Zero;
 
 			mBrushList	=listHead;
+		}
+
+
+		internal bool CheckPlaneAgainstVolume(Int32 planeNum, PlanePool pp)
+		{
+			GBSPBrush	front, back;
+
+			mVolume.Split(planeNum, 0, 0, true, pp, out front, out back, false);
+
+			return	(front != null && back != null);
 		}
 
 
@@ -161,6 +173,8 @@ namespace BSPCore
 				mChildren[i]			=new GBSPNode();
 				mChildren[i].mParent	=this;
 			}
+
+			mVolume.Split(mPlaneNum, 0, 0, true, pool, out mChildren[0].mVolume, out mChildren[1].mVolume, false);
 
 			//Recursively process children
 			mChildren[0].BuildTree_r(bs, childrenFront, pool);
