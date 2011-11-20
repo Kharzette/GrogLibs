@@ -111,6 +111,7 @@ namespace BSPCore
 			SaveVisdGFXNodes(bw);
 			SaveVisdGFXLeafs(bw);
 			SaveVisdGFXLeafFaces(bw);
+			SaveVisdGFXClusters(bw);
 			SaveGFXAreasAndPortals(bw);
 			SaveVisdGFXLeafSides(bw);
 			SaveVisdGFXFaces(bw);

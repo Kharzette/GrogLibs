@@ -12,9 +12,13 @@ namespace BSPVis
 {
 	class VISPStack
 	{
-		public byte		[]mVisBits	=new byte[MAX_TEMP_PORTALS/8];
-		public GBSPPoly	mSource;
-		public GBSPPoly	mPass;
+		internal byte		[]mVisBits	=new byte[MAX_TEMP_PORTALS/8];
+		internal GBSPPoly	mSource;
+		internal GBSPPoly	mPass;
+		internal VISPortal	mPortal;
+		internal VISLeaf	mLeaf;
+		internal VISPStack	mNext;
+		internal GBSPPlane	mPortalPlane;
 
 		public const int	MAX_TEMP_PORTALS	=25000;
 
@@ -261,14 +265,15 @@ namespace BSPVis
 
 	internal class VISPortal
 	{
-		internal VISPortal	mNext;
-		internal GBSPPoly	mPoly;
 		internal GBSPPlane	mPlane;
 		internal Vector3	mCenter;
 		internal float		mRadius;
+		internal GBSPPoly	mPoly;
 
-		internal byte	[]mVisBits;
-		internal byte	[]mFinalVisBits;
+		internal byte	[]mPortalFront;
+		internal byte	[]mPortalFlood;
+		internal byte	[]mPortalVis;
+
 		internal Int32	mPortNum;		//index into portal array or portal num for vis
 		internal Int32	mLeaf;
 		internal Int32	mMightSee;
@@ -278,28 +283,17 @@ namespace BSPVis
 
 		internal void Read(BinaryReader br, List<int> indexes)
 		{
-			int	idx	=br.ReadInt32();
-			indexes.Add(idx);
-
-			mPoly	=new GBSPPoly(0);
-			mPoly.Read(br);
 			mPlane.Read(br);
 			mCenter.X	=br.ReadSingle();
 			mCenter.Y	=br.ReadSingle();
 			mCenter.Z	=br.ReadSingle();
 			mRadius		=br.ReadSingle();
+			mPoly		=new GBSPPoly(0);
+			mPoly.Read(br);
 
-			int	vblen	=br.ReadInt32();
-			if(vblen > 0)
-			{
-				mVisBits	=br.ReadBytes(vblen);
-			}
-
-			int	fvblen	=br.ReadInt32();
-			if(fvblen > 0)
-			{
-				mFinalVisBits	=br.ReadBytes(fvblen);
-			}
+			mPortalFront	=UtilityLib.FileUtil.ReadByteArray(br);
+			mPortalFlood	=UtilityLib.FileUtil.ReadByteArray(br);
+			mPortalVis		=UtilityLib.FileUtil.ReadByteArray(br);
 
 			mPortNum	=br.ReadInt32();
 			mLeaf		=br.ReadInt32();
@@ -309,81 +303,36 @@ namespace BSPVis
 		}
 
 
-		internal void WriteVisBits(BinaryWriter bw)
-		{
-			if(mFinalVisBits == null)
-			{
-				bw.Write(-1);
-			}
-			else
-			{
-				bw.Write(mFinalVisBits.Length);
-				if(mFinalVisBits.Length > 0)
-				{
-					bw.Write(mFinalVisBits, 0, mFinalVisBits.Length);
-				}
-			}
-		}
-
-
-		internal void ReadVisBits(BinaryReader br)
-		{
-			int	fvblen	=br.ReadInt32();
-			if(fvblen > 0)
-			{
-				mFinalVisBits	=br.ReadBytes(fvblen);
-			}
-		}
-
-
 		internal void Write(BinaryWriter bw)
 		{
-			if(mNext != null)
-			{
-				bw.Write(mNext.mPortNum);
-			}
-			else
-			{
-				bw.Write(-1);
-			}
-			mPoly.Write(bw);
 			mPlane.Write(bw);
 			bw.Write(mCenter.X);
 			bw.Write(mCenter.Y);
 			bw.Write(mCenter.Z);
 			bw.Write(mRadius);
+			mPoly.Write(bw);
 
-			if(mVisBits == null)
-			{
-				bw.Write(-1);
-			}
-			else
-			{
-				bw.Write(mVisBits.Length);
-				if(mVisBits.Length > 0)
-				{
-					bw.Write(mVisBits, 0, mVisBits.Length);
-				}
-			}
-
-			if(mFinalVisBits == null)
-			{
-				bw.Write(-1);
-			}
-			else
-			{
-				bw.Write(mFinalVisBits.Length);
-				if(mFinalVisBits.Length > 0)
-				{
-					bw.Write(mFinalVisBits, 0, mFinalVisBits.Length);
-				}
-			}
+			UtilityLib.FileUtil.WriteArray(mPortalFront, bw);
+			UtilityLib.FileUtil.WriteArray(mPortalFlood, bw);
+			UtilityLib.FileUtil.WriteArray(mPortalVis, bw);
 
 			bw.Write(mPortNum);
 			bw.Write(mLeaf);
 			bw.Write(mMightSee);
 			bw.Write(mCanSee);
 			bw.Write(mbDone);
+		}
+
+
+		internal void WriteVisBits(BinaryWriter bw)
+		{
+			UtilityLib.FileUtil.WriteArray(mPortalVis, bw);
+		}
+
+
+		internal void ReadVisBits(BinaryReader br)
+		{
+			mPortalVis	=UtilityLib.FileUtil.ReadByteArray(br);
 		}
 
 
@@ -394,24 +343,24 @@ namespace BSPVis
 		}
 
 
-		static internal bool CollectBits(VISPortal port, byte []portBits)
+		static internal bool CollectBits(List<VISPortal> ports, byte []portBits)
 		{
 			//'OR' all portals that this portal can see into one list
-			for(VISPortal p=port;p != null;p=p.mNext)
+			foreach(VISPortal p in ports)
 			{
-				if(p.mFinalVisBits != null)
+				if(p.mPortalVis != null)
 				{
 					//Try to use final vis info first
 					for(int k=0;k < portBits.Length;k++)
 					{
-						portBits[k]	|=p.mFinalVisBits[k];
+						portBits[k]	|=p.mPortalVis[k];
 					}
 				}
-				else if(p.mVisBits != null)
+				else if(p.mPortalFront != null)
 				{
 					for(int k=0;k < portBits.Length;k++)
 					{
-						portBits[k]	|=p.mVisBits[k];
+						portBits[k]	|=p.mPortalFront[k];
 					}
 				}
 				else
@@ -420,8 +369,9 @@ namespace BSPVis
 					return	false;
 				}
 
-				p.mVisBits		=null;
-				p.mFinalVisBits	=null;
+				p.mPortalFlood	=null;
+				p.mPortalFront	=null;
+				p.mPortalVis	=null;
 			}
 			return	true;
 		}
@@ -442,7 +392,7 @@ namespace BSPVis
 			return	true;
 		}
 
-
+		/*
 		internal void FloodPortalsFast_r(VISPortal destPortal,
 			bool []portSeen, VISLeaf []visLeafs,
 			int srcLeaf, ref int mightSee)
@@ -481,7 +431,7 @@ namespace BSPVis
 					FloodPortalsFast_r(port, portSeen, visLeafs, srcLeaf, ref mightSee);
 				}
 			}
-		}
+		}*/
 
 
 		static unsafe UInt32 AndTogetherDWords(byte []src1, byte []src2, byte []src3, byte []dest)
@@ -573,7 +523,7 @@ namespace BSPVis
 			return	ret;
 		}
 
-
+		/*
 		internal bool FloodPortalsSlow_r(VISPortal destPort, VISPStack prevStack, VisPools vPools)
 		{
 			Int32	portNum	=destPort.mPortNum;
@@ -620,16 +570,16 @@ namespace BSPVis
 				UInt64	more	=0;
 				if(port.mbDone)
 				{
-					for(int j=0;j < mFinalVisBits.Length;j++)
+					for(int j=0;j < mPortalVis.Length;j++)
 					{
 						//there is no & for bytes, can you believe that?
 						uint	prevBit		=(uint)prevStack.mVisBits[j];
-						uint	portBit		=(uint)port.mFinalVisBits[j];
+						uint	portBit		=(uint)port.mPortalVis[j];
 						uint	bothBit		=prevBit & portBit;
 						stack.mVisBits[j]	=(byte)bothBit;
 
 						prevBit	=stack.mVisBits[j];
-						portBit	=mFinalVisBits[j];
+						portBit	=mPortalVis[j];
 
 						more	|=prevBit &~ portBit;
 					}
@@ -637,10 +587,10 @@ namespace BSPVis
 				else
 				{
 					//qwords and dwords seem about the same performancewise
-					more	=AndTogetherQWords(prevStack.mVisBits, port.mVisBits, mFinalVisBits, stack.mVisBits);
+					more	=AndTogetherQWords(prevStack.mVisBits, port.mPortalFront, mPortalVis, stack.mVisBits);
 				}
 				
-				if(more == 0 && ((mFinalVisBits[portNum>>3] & Bit) != 0))
+				if(more == 0 && ((mPortalVis[portNum>>3] & Bit) != 0))
 				{
 					//Can't see anything new
 					continue;
@@ -727,7 +677,7 @@ namespace BSPVis
 			}
 
 			return	true;
-		}
+		}*/
 	}
 
 
@@ -784,20 +734,17 @@ namespace BSPVis
 
 	internal class VISLeaf
 	{
-		internal VISPortal	mPortals;
-		internal Int32		mMightSee;
-		internal Int32		mCanSee;
+		internal List<VISPortal>	mPortals	=new List<VISPortal>();
+		internal Int32				mMightSee;
+		internal Int32				mCanSee;
 
 
 		internal void Write(BinaryWriter bw)
 		{
-			if(mPortals == null)
+			bw.Write(mPortals.Count);
+			foreach(VISPortal vp in mPortals)
 			{
-				bw.Write(-1);
-			}
-			else
-			{
-				bw.Write(mPortals.mPortNum);
+				bw.Write(vp.mPortNum);
 			}
 			bw.Write(mMightSee);
 			bw.Write(mCanSee);
@@ -806,11 +753,11 @@ namespace BSPVis
 
 		internal void Read(BinaryReader br, VISPortal[] ports)
 		{
-			Int32	idx	=br.ReadInt32();
-
-			if(idx >= 0)
+			Int32	numPorts	=br.ReadInt32();
+			for(int i=0;i < numPorts;i++)
 			{
-				mPortals	=ports[idx];
+				int	idx	=br.ReadInt32();
+				mPortals.Add(ports[idx]);
 			}
 			mMightSee	=br.ReadInt32();
 			mCanSee		=br.ReadInt32();

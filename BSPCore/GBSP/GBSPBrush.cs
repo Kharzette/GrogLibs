@@ -939,7 +939,7 @@ namespace BSPCore
 						{
 							CoreEvents.Print("*** Hint as Detail!!! ***\n");
 						}
-					}					
+					}
 					break;
 				}
 			}
