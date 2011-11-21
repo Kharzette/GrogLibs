@@ -1482,23 +1482,21 @@ namespace BSPVis
 			//Sort the portals with MightSee
 			SortPortals();
 
-			//turning off sorting
-//			mQ2Portals.CopyTo(mQ2SortedPortals, 0);
-
-			if(vp.mVisParams.mbDistribute)
+			if(vp.mVisParams.mbFullVis)
 			{
-				DistributedVis(clients, fileName, vp.mVisParams.mbResume, vp.mBSPParams.mbVerbose);
-			}
-			else
-			{
-				prog	=ProgressWatcher.RegisterProgress(0, mVisPortals.Length, 0);
-//				if(!FloodPortalsSlow(0, mQ2Portals.Length, vp.mBSPParams.mbVerbose, prog))
-				if(!FloodPortalsSlowGenesis(0, mVisPortals.Length, vp.mBSPParams.mbVerbose, prog))
+				if(vp.mVisParams.mbDistribute)
 				{
-					return	false;
+					DistributedVis(clients, fileName, vp.mVisParams.mbResume, vp.mBSPParams.mbVerbose);
+				}
+				else
+				{
+					prog	=ProgressWatcher.RegisterProgress(0, mVisPortals.Length, 0);
+					if(!FloodPortalsSlowGenesis(0, mVisPortals.Length, vp.mBSPParams.mbVerbose, prog))
+					{
+						return	false;
+					}
 				}
 			}
-
 			ProgressWatcher.Clear();
 
 			mGFXVisData	=new byte[mVisLeafs.Length * mNumVisLeafBytes];
@@ -1508,11 +1506,20 @@ namespace BSPVis
 				goto	ExitWithError;
 			}
 
+			//null out full vis arrays if no full vis
+			if(!vp.mVisParams.mbFullVis)
+			{
+				foreach(VISPortal vsp in mVisPortals)
+				{
+					vsp.mPortalVis	=null;
+				}
+			}
 			int	TotalVisibleLeafs	=0;
 
 			for(int i=0;i < mVisLeafs.Length;i++)
 			{
 				int	leafSee	=0;
+
 				
 				if(!CollectLeafVisBits(i, ref leafSee))
 				{

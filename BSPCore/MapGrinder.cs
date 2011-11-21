@@ -541,8 +541,9 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildLMAnimFaceData(Vector3 []verts, int[] indexes, byte []lightData)
+		internal bool BuildLMAnimFaceData(Vector3 []verts, int[] indexes, byte []lightData, object pobj)
 		{
+			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
@@ -618,7 +619,19 @@ namespace BSPCore
 					}
 
 					//flat shaded normals for lightmapped surfaces
-					ComputeNormals(fverts, mLMAnimNormals);
+					GFXPlane	pl		=pp[f.mPlaneNum];
+					Vector3		plNorm	=pl.mNormal;
+					if(f.mPlaneSide > 0)
+					{
+						plNorm	=-plNorm;
+					}
+
+					//flat shaded normals for lightmapped surfaces
+					for(int n=0;n < nverts;n++)
+					{
+						mLMAnimNormals.Add(plNorm);
+					}
+//					ComputeNormals(fverts, mLMAnimNormals);
 
 					List<Vector2>	coords	=new List<Vector2>();
 					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
@@ -772,8 +785,9 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildLMAAnimFaceData(Vector3 []verts, int[] indexes, byte []lightData)
+		internal bool BuildLMAAnimFaceData(Vector3 []verts, int[] indexes, byte []lightData, object pobj)
 		{
+			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
@@ -849,7 +863,19 @@ namespace BSPCore
 					}
 
 					//flat shaded normals for lightmapped surfaces
-					ComputeNormals(fverts, mLMAAnimNormals);
+					GFXPlane	pl		=pp[f.mPlaneNum];
+					Vector3		plNorm	=pl.mNormal;
+					if(f.mPlaneSide > 0)
+					{
+						plNorm	=-plNorm;
+					}
+
+					//flat shaded normals for lightmapped surfaces
+					for(int n=0;n < nverts;n++)
+					{
+						mLMAAnimNormals.Add(plNorm);
+					}
+//					ComputeNormals(fverts, mLMAAnimNormals);
 
 					List<Vector2>	coords	=new List<Vector2>();
 					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
@@ -1165,8 +1191,9 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildLMAFaceData(Vector3 []verts, int[] indexes, byte []lightData)
+		internal bool BuildLMAFaceData(Vector3 []verts, int[] indexes, byte []lightData, object pobj)
 		{
+			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
@@ -1247,7 +1274,19 @@ namespace BSPCore
 					}
 
 					//flat shaded normals for lightmapped surfaces
-					ComputeNormals(fverts, mLMANormals);
+					GFXPlane	pl		=pp[f.mPlaneNum];
+					Vector3		plNorm	=pl.mNormal;
+					if(f.mPlaneSide > 0)
+					{
+						plNorm	=-plNorm;
+					}
+
+					//flat shaded normals for lightmapped surfaces
+					for(int n=0;n < nverts;n++)
+					{
+						mLMANormals.Add(plNorm);
+					}
+//					ComputeNormals(fverts, mLMANormals);
 
 					List<Vector2>	coords	=new List<Vector2>();
 					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
@@ -1295,9 +1334,11 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildVLitFaceData(Vector3 []verts,
-			Vector3 []rgbVerts, Vector3 []vnorms, int[] indexes)
+		internal bool BuildVLitFaceData(Vector3 []verts, Vector3 []rgbVerts,
+			Vector3 []vnorms, int[] indexes, object pobj)
 		{
+			GFXPlane	[]pp	=pobj as GFXPlane [];
+
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
@@ -1363,16 +1404,28 @@ namespace BSPCore
 							mVLitNormals.Add(vnorms[idx]);
 						}
 						Vector4	col	=Vector4.One;
-						col.X	=rgbVerts[fvert + k].X;
-						col.Y	=rgbVerts[fvert + k].Y;
-						col.Z	=rgbVerts[fvert + k].Z;
+						col.X	=rgbVerts[fvert + k].X / 255.0f;
+						col.Y	=rgbVerts[fvert + k].Y / 255.0f;
+						col.Z	=rgbVerts[fvert + k].Z / 255.0f;
 						mVLitColors.Add(col);
 					}
 
-					if(!tex.IsGouraud())
+					GFXPlane	pl		=pp[f.mPlaneNum];
+					Vector3		plNorm	=pl.mNormal;
+					if(f.mPlaneSide > 0)
 					{
-						ComputeNormals(fverts, mVLitNormals);
+						plNorm	=-plNorm;
 					}
+
+					//flat shaded normals for lightmapped surfaces
+					for(int n=0;n < nverts;n++)
+					{
+						mVLitNormals.Add(plNorm);
+					}
+//					if(!tex.IsGouraud())
+//					{
+//						ComputeNormals(fverts, mVLitNormals);
+//					}
 
 					firstVert.Add(mVLitVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
@@ -1389,8 +1442,9 @@ namespace BSPCore
 
 
 		internal bool BuildMirrorFaceData(Vector3 []verts,
-			Vector3 []rgbVerts, Vector3 []vnorms, int[] indexes)
+			Vector3 []rgbVerts, Vector3 []vnorms, int[] indexes, object pobj)
 		{
+			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
@@ -1454,9 +1508,9 @@ namespace BSPCore
 							mMirrorNormals.Add(vnorms[idx]);
 						}
 						Vector4	col	=Vector4.One;
-						col.X	=rgbVerts[fvert + k].X;
-						col.Y	=rgbVerts[fvert + k].Y;
-						col.Z	=rgbVerts[fvert + k].Z;
+						col.X	=rgbVerts[fvert + k].X / 255.0f;
+						col.Y	=rgbVerts[fvert + k].Y / 255.0f;
+						col.Z	=rgbVerts[fvert + k].Z / 255.0f;
 						mMirrorColors.Add(col);
 					}
 
@@ -1466,10 +1520,22 @@ namespace BSPCore
 
 					mMirrorPolys.Add(fverts);
 
-					if(!tex.IsGouraud())
+					GFXPlane	pl		=pp[f.mPlaneNum];
+					Vector3		plNorm	=pl.mNormal;
+					if(f.mPlaneSide > 0)
 					{
-						ComputeNormals(fverts, mMirrorNormals);
+						plNorm	=-plNorm;
 					}
+
+					//flat shaded normals for lightmapped surfaces
+					for(int n=0;n < nverts;n++)
+					{
+						mMirrorNormals.Add(plNorm);
+					}
+//					if(!tex.IsGouraud())
+//					{
+//						ComputeNormals(fverts, mMirrorNormals);
+//					}
 
 					firstVert.Add(mMirrorVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
@@ -1487,8 +1553,9 @@ namespace BSPCore
 
 
 		internal bool BuildAlphaFaceData(Vector3 []verts,
-			Vector3 []rgbVerts, Vector3 []vnorms, int[] indexes)
+			Vector3 []rgbVerts, Vector3 []vnorms, int[] indexes, object pobj)
 		{
+			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
@@ -1554,16 +1621,28 @@ namespace BSPCore
 							mAlphaNormals.Add(vnorms[idx]);
 						}
 						Vector4	col	=Vector4.One;
-						col.X	=rgbVerts[fvert + k].X;
-						col.Y	=rgbVerts[fvert + k].Y;
-						col.Z	=rgbVerts[fvert + k].Z;
+						col.X	=rgbVerts[fvert + k].X / 255.0f;
+						col.Y	=rgbVerts[fvert + k].Y / 255.0f;
+						col.Z	=rgbVerts[fvert + k].Z / 255.0f;
 						mAlphaColors.Add(col);
 					}
 
-					if(!tex.IsGouraud())
+					GFXPlane	pl		=pp[f.mPlaneNum];
+					Vector3		plNorm	=pl.mNormal;
+					if(f.mPlaneSide > 0)
 					{
-						ComputeNormals(fverts, mAlphaNormals);
+						plNorm	=-plNorm;
 					}
+
+					//flat shaded normals for lightmapped surfaces
+					for(int n=0;n < nverts;n++)
+					{
+						mAlphaNormals.Add(plNorm);
+					}
+//					if(!tex.IsGouraud())
+//					{
+//						ComputeNormals(fverts, mAlphaNormals);
+//					}
 
 					firstVert.Add(mAlphaVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
@@ -1580,8 +1659,9 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildFullBrightFaceData(Vector3 []verts, int[] indexes)
+		internal bool BuildFullBrightFaceData(Vector3 []verts, int[] indexes, object pobj)
 		{
+			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();
@@ -1657,8 +1737,9 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildSkyFaceData(Vector3 []verts, int[] indexes)
+		internal bool BuildSkyFaceData(Vector3 []verts, int[] indexes, object pobj)
 		{
+			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
 			List<Int32>	numVert		=new List<Int32>();
 			List<Int32>	numFace		=new List<Int32>();

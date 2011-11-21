@@ -104,24 +104,24 @@ namespace MeshLib
 
 		public delegate void BuildVLitRenderData(GraphicsDevice g, out VertexBuffer vb,
 			out IndexBuffer ib, out Int32 []matOffsets,
-			out Int32 []matNumVerts, out Int32 []matNumTris);
+			out Int32 []matNumVerts, out Int32 []matNumTris, object pp);
 
 		public delegate void BuildAlphaRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Int32 []matOffsets,
-			out Int32 []matNumVerts, out Int32 []matNumTris, out Vector3 []matSortPoints);
+			out IndexBuffer ib, out Int32 []matOffsets,	out Int32 []matNumVerts,
+			out Int32 []matNumTris, out Vector3 []matSortPoints, object pp);
 
 		public delegate void BuildFullBrightRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Int32 []matOffsets,
-			out Int32 []matNumVerts, out Int32 []matNumTris);
+			out IndexBuffer ib, out Int32 []matOffsets,	out Int32 []matNumVerts,
+			out Int32 []matNumTris, object pp);
 
 		public delegate void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Int32 []matOffsets,
-			out Int32 []matNumVerts, out Int32 []matNumTris,
-			out Vector3 []matSortPoints, out List<List<Vector3>> mirrorPolys);
+			out IndexBuffer ib, out Int32 []matOffsets,	out Int32 []matNumVerts,
+			out Int32 []matNumTris,	out Vector3 []matSortPoints,
+			out List<List<Vector3>> mirrorPolys, object pp);
 
 		public delegate void BuildSkyRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Int32 []matOffsets,
-			out Int32 []matNumVerts, out Int32 []matNumTris);
+			out IndexBuffer ib, out Int32 []matOffsets,	out Int32 []matNumVerts,
+			out Int32 []matNumTris, object pp);
 		#endregion
 
 
@@ -210,38 +210,38 @@ namespace MeshLib
 		}
 
 
-		public void BuildVLit(GraphicsDevice g, BuildVLitRenderData brd)
+		public void BuildVLit(GraphicsDevice g, BuildVLitRenderData brd, object pp)
 		{
 			brd(g, out mVLitVB, out mVLitIB, out mVLitMatOffsets,
-						out mVLitMatNumVerts, out mVLitMatNumTris);
+						out mVLitMatNumVerts, out mVLitMatNumTris, pp);
 		}
 
 
-		public void BuildAlpha(GraphicsDevice g, BuildAlphaRenderData brd)
+		public void BuildAlpha(GraphicsDevice g, BuildAlphaRenderData brd, object pp)
 		{
 			brd(g, out mAlphaVB, out mAlphaIB, out mAlphaMatOffsets,
-					out mAlphaMatNumVerts, out mAlphaMatNumTris, out mAlphaSortPoints);
+					out mAlphaMatNumVerts, out mAlphaMatNumTris, out mAlphaSortPoints, pp);
 		}
 
 
-		public void BuildFullBright(GraphicsDevice g, BuildFullBrightRenderData brd)
+		public void BuildFullBright(GraphicsDevice g, BuildFullBrightRenderData brd, object pp)
 		{
 			brd(g, out mFBVB, out mFBIB, out mFBMatOffsets,
-					out mFBMatNumVerts, out mFBMatNumTris);
+					out mFBMatNumVerts, out mFBMatNumTris, pp);
 		}
 
 
-		public void BuildMirror(GraphicsDevice g, BuildMirrorRenderData brd)
+		public void BuildMirror(GraphicsDevice g, BuildMirrorRenderData brd, object pp)
 		{
 			brd(g, out mMirrorVB, out mMirrorIB, out mMirrorMatOffsets, out mMirrorMatNumVerts,
-						out mMirrorMatNumTris, out mMirrorSortPoints, out mMirrorPolys);
+						out mMirrorMatNumTris, out mMirrorSortPoints, out mMirrorPolys, pp);
 		}
 
 
-		public void BuildSky(GraphicsDevice g, BuildSkyRenderData brd)
+		public void BuildSky(GraphicsDevice g, BuildSkyRenderData brd, object pp)
 		{
 			brd(g, out mSkyVB, out mSkyIB, out mSkyMatOffsets,
-					out mSkyMatNumVerts, out mSkyMatNumTris);
+					out mSkyMatNumVerts, out mSkyMatNumTris, pp);
 		}
 
 
@@ -297,11 +297,11 @@ namespace MeshLib
 
 			gd.Clear(Color.CornflowerBlue);
 
-//			DrawMaterials(gd, -position, mFBVB, mFBIB, mFBMatOffsets, mFBMatNumVerts, mFBMatNumTris, false, null, bMatVis);
-//			DrawMaterials(gd, -position, mVLitVB, mVLitIB, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null, bMatVis);
-//			DrawMaterials(gd, -position, mSkyVB, mSkyIB, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -position, mFBVB, mFBIB, mFBMatOffsets, mFBMatNumVerts, mFBMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -position, mVLitVB, mVLitIB, mVLitMatOffsets, mVLitMatNumVerts, mVLitMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -position, mSkyVB, mSkyIB, mSkyMatOffsets, mSkyMatNumVerts, mSkyMatNumTris, false, null, bMatVis);
 			DrawMaterials(gd, -position, mLMVB, mLMIB, mLMMatOffsets, mLMMatNumVerts, mLMMatNumTris, false, null, bMatVis);
-//			DrawMaterials(gd, -position, mLMAnimVB, mLMAnimIB, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
+			DrawMaterials(gd, -position, mLMAnimVB, mLMAnimIB, mLMAnimMatOffsets, mLMAnimMatNumVerts, mLMAnimMatNumTris, false, null, bMatVis);
 
 			//alphas
 #if PIXGOBLINRY
@@ -311,16 +311,16 @@ namespace MeshLib
 			DrawMaterials(gd, -position, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, false, mLMAAnimSortPoints, bMatVis);
 #else
 			//pix freaks out about the alpha sorting
-//			DrawMaterials(gd, -position, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, true, mAlphaSortPoints, bMatVis);
-//			DrawMaterials(gd, -position, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints, bMatVis);
-//			DrawMaterials(gd, -position, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints, bMatVis);
+			DrawMaterials(gd, -position, mAlphaVB, mAlphaIB, mAlphaMatOffsets, mAlphaMatNumVerts, mAlphaMatNumTris, true, mAlphaSortPoints, bMatVis);
+			DrawMaterials(gd, -position, mLMAVB, mLMAIB, mLMAMatOffsets, mLMAMatNumVerts, mLMAMatNumTris, true, mLMASortPoints, bMatVis);
+			DrawMaterials(gd, -position, mLMAAnimVB, mLMAAnimIB, mLMAAnimMatOffsets, mLMAAnimMatNumVerts, mLMAAnimMatNumTris, true, mLMAAnimSortPoints, bMatVis);
 			if(scissors.Count > 0)
 			{
 				//draw mirror surface itself
 				DrawMaterials(gd, -position, mMirrorVB, mMirrorIB, mMirrorMatOffsets, mMirrorMatNumVerts, mMirrorMatNumTris, true, mMirrorSortPoints, bMatVis);
 			}
 
-//			mAlphaPool.DrawAll(gd, mMatLib, -position);
+			mAlphaPool.DrawAll(gd, mMatLib, -position);
 #endif		
 		}
 
