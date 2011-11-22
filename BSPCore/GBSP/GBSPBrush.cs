@@ -316,11 +316,13 @@ namespace BSPCore
 
 
 		internal void Split(Int32 planeNum, sbyte planeSide, byte splitFaceFlags, bool bVisible,
-					PlanePool pool, out GBSPBrush front, out GBSPBrush back, bool bVerbose)
+					PlanePool pool, out GBSPBrush front, out GBSPBrush back, bool bVerbose, out bool bTinySplit)
 		{
 			GBSPPlane	plane, plane2;
 			float		frontDist, backDist;
 			GBSPBrush	[]resultBrushes	=new GBSPBrush[2];
+
+			bTinySplit	=false;
 
 			plane		=pool.mPlanes[planeNum];
 			plane.mType	=GBSPPlane.PLANE_ANY;
@@ -512,6 +514,7 @@ namespace BSPCore
 					if(v1 < 1.0f)
 					{
 						resultBrushes[z]	=null;
+						bTinySplit			=true;
 						//GHook.Printf("Tiny volume after clip\n");
 					}
 				}
@@ -519,7 +522,7 @@ namespace BSPCore
 
 			if(bVerbose && (resultBrushes[0] == null || resultBrushes[1] == null))
 			{
-				CoreEvents.Print("SplitBrush:  Brush was not split.\n");
+				CoreEvents.Print("SplitBrush:  Brush was not split for plane " + planeNum + "\n");
 			}
 			
 			front	=resultBrushes[0];
@@ -583,8 +586,9 @@ namespace BSPCore
 			//outside
 			for(int i=0;i < b.mSides.Count && inside != null;i++)
 			{
+				bool	bt;
 				inside.Split(b.mSides[i].mPlaneNum, b.mSides[i].mPlaneSide,
-					(byte)GBSPSide.SIDE_NODE, false, pool, out front, out back, true);
+					(byte)GBSPSide.SIDE_NODE, false, pool, out front, out back, true, out bt);
 
 				//Make sure we don't free a, but free all other fragments
 				if(inside != a)
@@ -844,7 +848,7 @@ namespace BSPCore
 
 						Int32	planeNum	=side.mPlaneNum;
 						Int32	planeSide	=side.mPlaneSide;
-						
+
 						Debug.Assert(node.CheckPlaneAgainstParents(planeNum) == true);
 
 						if(!node.CheckPlaneAgainstVolume(planeNum, pool))
@@ -858,13 +862,20 @@ namespace BSPCore
 						Int32	facing			=0;
 						Int32	splits			=0;
 						Int32	EpsilonBrush	=0;
+						double	frontVol		=0.0;
+						double	backVol			=0.0;
 
 						for(GBSPBrush test=listHead;test != null;test=test.mNext)
 						{
 							Int32	brushSplits;
-							UInt32	sideFlag	=test.TestBrushToPlane(planeNum, planeSide, pool, out brushSplits, out bHintSplit, ref EpsilonBrush);
+							double	fVol, bVol;
+							UInt32	sideFlag	=test.TestBrushToPlane(planeNum, planeSide, pool,
+								out brushSplits, out bHintSplit, ref EpsilonBrush);
+//								out fVol, out bVol);
 
-							splits	+=brushSplits;
+							splits		+=brushSplits;
+//							frontVol	+=fVol;
+//							backVol		+=bVol;
 
 							if(brushSplits != 0 && ((sideFlag & GBSPPlane.PSIDE_FACING) != 0))
 							{
@@ -899,13 +910,15 @@ namespace BSPCore
 						}
 
 						Int32	value	=5 * facing - 5 * splits - Math.Abs(frontCount - backCount);
+
+//						value	-=(int)((frontVol / backVol) * 30.0);
 						
 						if(pool.mPlanes[planeNum].mType < 3)
 						{
 							value	+=5;
 						}
 						
-						value	-=EpsilonBrush * 1000;	
+						value	-=EpsilonBrush * 1000;
 
 						if(bHintSplit && ((side.mFlags & GBSPSide.SIDE_HINT) == 0))
 						{
@@ -942,6 +955,11 @@ namespace BSPCore
 					}
 					break;
 				}
+				else
+				{
+					int	gack	=0;
+					gack++;
+				}
 			}
 
 			for(GBSPBrush b = listHead;b != null;b=b.mNext)
@@ -953,6 +971,42 @@ namespace BSPCore
 			}
 
 			return	bestSide;
+		}
+
+
+		UInt32	ThoroughTestBrushToPlane(int planeNum, int planeSide, PlanePool pool,
+			out int numSplits, out bool bHintSplit, ref int EpsilonBrush,
+			out double frontVol, out double backVol)
+		{
+			UInt32	ret	=TestBrushToPlane(planeNum, planeSide, pool, out numSplits, out bHintSplit, ref EpsilonBrush);
+
+			GBSPBrush	copy	=new GBSPBrush(this);
+
+			GBSPBrush	front, back;
+
+			bool	bTinyVol;
+
+			copy.Split(planeNum, (sbyte)planeSide, 0, true, pool, out front, out back, false, out bTinyVol);
+
+			if(bTinyVol)
+			{
+				CoreEvents.Print("Tiny volume test plane " + planeNum + "\n");
+				EpsilonBrush++;
+			}
+
+			frontVol	=0.0;
+			backVol		=0.0;
+
+			if(front != null)
+			{
+				frontVol	=front.Volume(pool);
+			}
+			if(back != null)
+			{
+				backVol	=back.Volume(pool);
+			}
+
+			return	ret;
 		}
 
 
@@ -1084,8 +1138,9 @@ namespace BSPCore
 				if(sideFlag == GBSPPlane.PSIDE_BOTH)
 				{
 					GBSPBrush	newFront, newBack;
+					bool		bt;
 					b.Split(nodePlaneNum, 0, (byte)GBSPSide.SIDE_NODE,
-						false, pool, out newFront, out newBack, true);
+						false, pool, out newFront, out newBack, true, out bt);
 					if(newFront != null)
 					{
 						newFront.mNext	=front;
