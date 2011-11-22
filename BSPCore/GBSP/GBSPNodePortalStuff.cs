@@ -329,9 +329,9 @@ namespace BSPCore
 			//So there won't be NULL volume leafs when we create the outside portals
 			for(int k=0;k < 3;k++)
 			{
-				if(UtilityLib.Mathery.VecIdx(nodeMins, k) - 128.0f
+				if(UtilityLib.Mathery.VecIdx(nodeMins, k) - 8.0f
 					<= -Bounds.MIN_MAX_BOUNDS ||
-					UtilityLib.Mathery.VecIdx(nodeMaxs, k) + 128.0f
+					UtilityLib.Mathery.VecIdx(nodeMaxs, k) + 8.0f
 					>= Bounds.MIN_MAX_BOUNDS)
 				{
 					CoreEvents.Print("CreateAllOutsidePortals:  World BOX out of range...\n");
@@ -339,8 +339,8 @@ namespace BSPCore
 				}
 			}
 
-			nodeMins	-=(Vector3.One * 128.0f);
-			nodeMaxs	+=(Vector3.One * 128.0f);
+			nodeMins	-=(Vector3.One * 8.0f);
+			nodeMaxs	+=(Vector3.One * 8.0f);
 
 			//Create 6 portals, and point to the outside and the RootNode
 			for(int i=0;i < 3;i++)

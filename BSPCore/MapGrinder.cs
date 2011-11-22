@@ -541,7 +541,8 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildLMAnimFaceData(Vector3 []verts, int[] indexes, byte []lightData, object pobj)
+		internal bool BuildLMAnimFaceData(Vector3 []verts, int[] indexes,
+			int firstFace, int nFaces, byte []lightData, object pobj)
 		{
 			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
@@ -564,8 +565,9 @@ namespace BSPCore
 
 				CoreEvents.Print("Animated light for material: " + mat.Name + ".\n");
 
-				foreach(GFXFace f in mFaces)
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
+					GFXFace	f	=mFaces[face];
 					if(f.mLightOfs == -1)
 					{
 						continue;	//only interested in lightmapped
@@ -619,22 +621,22 @@ namespace BSPCore
 					}
 
 					//flat shaded normals for lightmapped surfaces
-					GFXPlane	pl		=pp[f.mPlaneNum];
-					Vector3		plNorm	=pl.mNormal;
+					GFXPlane	pl	=pp[f.mPlaneNum];
+					GBSPPlane	pln	=new GBSPPlane(pl);
 					if(f.mPlaneSide > 0)
 					{
-						plNorm	=-plNorm;
+						pln.Inverse();
 					}
 
 					//flat shaded normals for lightmapped surfaces
 					for(int n=0;n < nverts;n++)
 					{
-						mLMAnimNormals.Add(plNorm);
+						mLMAnimNormals.Add(pln.mNormal);
 					}
 //					ComputeNormals(fverts, mLMAnimNormals);
 
 					List<Vector2>	coords	=new List<Vector2>();
-					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
+					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coords);
 
 					float	crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
 					float	crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
@@ -715,7 +717,7 @@ namespace BSPCore
 
 						//grab texcoords to animated map location
 						coords	=new List<Vector2>();
-						GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
+						GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coords);
 
 						crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
 						crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
@@ -785,7 +787,8 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildLMAAnimFaceData(Vector3 []verts, int[] indexes, byte []lightData, object pobj)
+		internal bool BuildLMAAnimFaceData(Vector3 []verts, int[] indexes,
+			int firstFace, int nFaces, byte []lightData, object pobj)
 		{
 			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
@@ -808,8 +811,9 @@ namespace BSPCore
 
 				CoreEvents.Print("Animated light for material: " + mat.Name + ".\n");
 
-				foreach(GFXFace f in mFaces)
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
+					GFXFace	f	=mFaces[face];
 					if(f.mLightOfs == -1)
 					{
 						continue;	//only interested in lightmapped
@@ -863,22 +867,21 @@ namespace BSPCore
 					}
 
 					//flat shaded normals for lightmapped surfaces
-					GFXPlane	pl		=pp[f.mPlaneNum];
-					Vector3		plNorm	=pl.mNormal;
+					GFXPlane	pl	=pp[f.mPlaneNum];
+					GBSPPlane	pln	=new GBSPPlane(pl);
 					if(f.mPlaneSide > 0)
 					{
-						plNorm	=-plNorm;
+						pln.Inverse();
 					}
 
 					//flat shaded normals for lightmapped surfaces
 					for(int n=0;n < nverts;n++)
 					{
-						mLMAAnimNormals.Add(plNorm);
+						mLMAAnimNormals.Add(pln.mNormal);
 					}
-//					ComputeNormals(fverts, mLMAAnimNormals);
 
 					List<Vector2>	coords	=new List<Vector2>();
-					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
+					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coords);
 
 					float	crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
 					float	crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
@@ -959,7 +962,7 @@ namespace BSPCore
 
 						//grab texcoords to animated map location
 						coords	=new List<Vector2>();
-						GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
+						GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coords);
 
 						crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
 						crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
@@ -1031,7 +1034,8 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildLMFaceData(Vector3 []verts, int[] indexes, byte []lightData, object pobj)
+		internal bool BuildLMFaceData(Vector3 []verts, int[] indexes,
+			int firstFace, int nFaces, byte []lightData, object pobj)
 		{
 			GFXPlane	[]pp	=pobj as GFXPlane [];
 			if(lightData == null)
@@ -1060,8 +1064,9 @@ namespace BSPCore
 
 				CoreEvents.Print("Light for material: " + mat.Name + ".\n");
 
-				foreach(GFXFace f in mFaces)
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
+					GFXFace	f	=mFaces[face];
 					if(f.mLightOfs == -1)
 					{
 						continue;	//only interested in lightmapped
@@ -1125,28 +1130,22 @@ namespace BSPCore
 						mLMVerts.Add(pnt);
 					}
 
-					GFXPlane	pl		=pp[f.mPlaneNum];
-					Vector3		plNorm	=pl.mNormal;
+					//flat shaded normals for lightmapped surfaces
+					GFXPlane	pl	=pp[f.mPlaneNum];
+					GBSPPlane	pln	=new GBSPPlane(pl);
 					if(f.mPlaneSide > 0)
 					{
-						plNorm	=-plNorm;
+						pln.Inverse();
 					}
 
 					//flat shaded normals for lightmapped surfaces
 					for(int n=0;n < nverts;n++)
 					{
-						mLMNormals.Add(plNorm);
+						mLMNormals.Add(pln.mNormal);
 					}
 
-//					ComputeNormals(fverts, mLMNormals);
-//					if(!UtilityLib.Mathery.CompareVectorABS(pl.mNormal, mLMNormals[mLMNormals.Count - 1], UtilityLib.Mathery.VCompareEpsilon))
-//					{
-//						int	blah	=0;
-//						blah++;
-//					}
-
 					List<Vector2>	coords	=new List<Vector2>();
-					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
+					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coords);
 
 					float	crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
 					float	crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
@@ -1191,7 +1190,8 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildLMAFaceData(Vector3 []verts, int[] indexes, byte []lightData, object pobj)
+		internal bool BuildLMAFaceData(Vector3 []verts, int[] indexes,
+			int firstFace, int nFaces, byte []lightData, object pobj)
 		{
 			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
@@ -1214,8 +1214,9 @@ namespace BSPCore
 
 				CoreEvents.Print("Light for material: " + mat.Name + ".\n");
 
-				foreach(GFXFace f in mFaces)
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
+					GFXFace	f	=mFaces[face];
 					if(f.mLightOfs == -1)
 					{
 						continue;	//only interested in lightmapped
@@ -1274,22 +1275,21 @@ namespace BSPCore
 					}
 
 					//flat shaded normals for lightmapped surfaces
-					GFXPlane	pl		=pp[f.mPlaneNum];
-					Vector3		plNorm	=pl.mNormal;
+					GFXPlane	pl	=pp[f.mPlaneNum];
+					GBSPPlane	pln	=new GBSPPlane(pl);
 					if(f.mPlaneSide > 0)
 					{
-						plNorm	=-plNorm;
+						pln.Inverse();
 					}
 
 					//flat shaded normals for lightmapped surfaces
 					for(int n=0;n < nverts;n++)
 					{
-						mLMANormals.Add(plNorm);
+						mLMANormals.Add(pln.mNormal);
 					}
-//					ComputeNormals(fverts, mLMANormals);
 
 					List<Vector2>	coords	=new List<Vector2>();
-					GetTexCoords1(fverts, f.mLWidth, f.mLHeight, tex, out coords);
+					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coords);
 
 					float	crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
 					float	crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
@@ -1334,8 +1334,8 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildVLitFaceData(Vector3 []verts, Vector3 []rgbVerts,
-			Vector3 []vnorms, int[] indexes, object pobj)
+		internal bool BuildVLitFaceData(Vector3 []verts, Vector3 []rgbVerts, Vector3 []vnorms,
+			int firstFace, int nFaces, int[] indexes, object pobj)
 		{
 			GFXPlane	[]pp	=pobj as GFXPlane [];
 
@@ -1359,8 +1359,9 @@ namespace BSPCore
 
 				CoreEvents.Print("Material: " + mat.Name + ".\n");
 
-				foreach(GFXFace f in mFaces)
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
+					GFXFace	f	=mFaces[face];
 					if(f.mLightOfs != -1)
 					{
 						continue;	//only interested in non lightmapped
@@ -1410,17 +1411,18 @@ namespace BSPCore
 						mVLitColors.Add(col);
 					}
 
-					GFXPlane	pl		=pp[f.mPlaneNum];
-					Vector3		plNorm	=pl.mNormal;
+					//flat shaded normals for lightmapped surfaces
+					GFXPlane	pl	=pp[f.mPlaneNum];
+					GBSPPlane	pln	=new GBSPPlane(pl);
 					if(f.mPlaneSide > 0)
 					{
-						plNorm	=-plNorm;
+						pln.Inverse();
 					}
 
 					//flat shaded normals for lightmapped surfaces
 					for(int n=0;n < nverts;n++)
 					{
-						mVLitNormals.Add(plNorm);
+						mVLitNormals.Add(pln.mNormal);
 					}
 //					if(!tex.IsGouraud())
 //					{
@@ -1441,8 +1443,8 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildMirrorFaceData(Vector3 []verts,
-			Vector3 []rgbVerts, Vector3 []vnorms, int[] indexes, object pobj)
+		internal bool BuildMirrorFaceData(Vector3 []verts, Vector3 []rgbVerts, Vector3 []vnorms,
+			int firstFace, int nFaces, int[] indexes, object pobj)
 		{
 			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
@@ -1465,8 +1467,9 @@ namespace BSPCore
 
 				CoreEvents.Print("Material: " + mat.Name + ".\n");
 
-				foreach(GFXFace f in mFaces)
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
+					GFXFace	f	=mFaces[face];
 					if(f.mLightOfs != -1)
 					{
 						continue;	//only interested in non lightmapped
@@ -1520,17 +1523,18 @@ namespace BSPCore
 
 					mMirrorPolys.Add(fverts);
 
-					GFXPlane	pl		=pp[f.mPlaneNum];
-					Vector3		plNorm	=pl.mNormal;
+					//flat shaded normals for lightmapped surfaces
+					GFXPlane	pl	=pp[f.mPlaneNum];
+					GBSPPlane	pln	=new GBSPPlane(pl);
 					if(f.mPlaneSide > 0)
 					{
-						plNorm	=-plNorm;
+						pln.Inverse();
 					}
 
 					//flat shaded normals for lightmapped surfaces
 					for(int n=0;n < nverts;n++)
 					{
-						mMirrorNormals.Add(plNorm);
+						mMirrorNormals.Add(pln.mNormal);
 					}
 //					if(!tex.IsGouraud())
 //					{
@@ -1552,8 +1556,8 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildAlphaFaceData(Vector3 []verts,
-			Vector3 []rgbVerts, Vector3 []vnorms, int[] indexes, object pobj)
+		internal bool BuildAlphaFaceData(Vector3 []verts, Vector3 []rgbVerts, Vector3 []vnorms,
+			int firstFace, int nFaces, int[] indexes, object pobj)
 		{
 			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
@@ -1576,8 +1580,9 @@ namespace BSPCore
 
 				CoreEvents.Print("Material: " + mat.Name + ".\n");
 
-				foreach(GFXFace f in mFaces)
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
+					GFXFace	f	=mFaces[face];
 					if(f.mLightOfs != -1)
 					{
 						continue;	//only interested in non lightmapped
@@ -1627,17 +1632,18 @@ namespace BSPCore
 						mAlphaColors.Add(col);
 					}
 
-					GFXPlane	pl		=pp[f.mPlaneNum];
-					Vector3		plNorm	=pl.mNormal;
+					//flat shaded normals for lightmapped surfaces
+					GFXPlane	pl	=pp[f.mPlaneNum];
+					GBSPPlane	pln	=new GBSPPlane(pl);
 					if(f.mPlaneSide > 0)
 					{
-						plNorm	=-plNorm;
+						pln.Inverse();
 					}
 
 					//flat shaded normals for lightmapped surfaces
 					for(int n=0;n < nverts;n++)
 					{
-						mAlphaNormals.Add(plNorm);
+						mAlphaNormals.Add(pln.mNormal);
 					}
 //					if(!tex.IsGouraud())
 //					{
@@ -1659,7 +1665,8 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildFullBrightFaceData(Vector3 []verts, int[] indexes, object pobj)
+		internal bool BuildFullBrightFaceData(Vector3 []verts,
+			int firstFace, int nFaces, int[] indexes, object pobj)
 		{
 			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
@@ -1682,8 +1689,9 @@ namespace BSPCore
 
 				CoreEvents.Print("Material: " + mat.Name + ".\n");
 
-				foreach(GFXFace f in mFaces)
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
+					GFXFace	f	=mFaces[face];
 					if(f.mLightOfs != -1)
 					{
 						continue;	//only interested in non lightmapped
@@ -1737,7 +1745,8 @@ namespace BSPCore
 		}
 
 
-		internal bool BuildSkyFaceData(Vector3 []verts, int[] indexes, object pobj)
+		internal bool BuildSkyFaceData(Vector3 []verts,
+			int firstFace, int nFaces, int[] indexes, object pobj)
 		{
 			GFXPlane	[]pp		=pobj as GFXPlane [];
 			List<Int32>	firstVert	=new List<Int32>();
@@ -1760,8 +1769,9 @@ namespace BSPCore
 
 				CoreEvents.Print("Material: " + mat.Name + ".\n");
 
-				foreach(GFXFace f in mFaces)
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
+					GFXFace	f	=mFaces[face];
 					if(f.mLightOfs != -1)
 					{
 						continue;	//only interested in non lightmapped
@@ -1895,7 +1905,7 @@ namespace BSPCore
 		}
 
 
-		void GetTexCoords1(List<Vector3> verts,
+		void GetTexCoords1(List<Vector3> verts, GBSPPlane pln,
 			int	lwidth, int lheight, GFXTexInfo tex,
 			out List<Vector2> coords)
 		{
@@ -1905,13 +1915,6 @@ namespace BSPCore
 
 			minS	=Bounds.MIN_MAX_BOUNDS;
 			minT	=Bounds.MIN_MAX_BOUNDS;
-
-			GBSPPlane	pln;
-			pln.mNormal	=Vector3.Cross(tex.mVecs[0], tex.mVecs[1]);
-
-			pln.mNormal.Normalize();
-			pln.mDist	=0;
-			pln.mType	=GBSPPlane.PLANE_ANY;
 
 			//get a proper set of texvecs for lighting
 			Vector3	xv, yv;
