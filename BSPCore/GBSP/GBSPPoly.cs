@@ -1015,8 +1015,7 @@ namespace BSPCore
 		}
 
 
-		internal void GetSplitMaxDist(GBSPPlane plane, int pside,
-			ref float frontDist, ref float backDist)
+		internal void GetSplitMaxDist(GBSPPlane plane, sbyte side, ref float frontDist, ref float backDist)
 		{
 			if(mVerts == null)
 			{
@@ -1026,7 +1025,7 @@ namespace BSPCore
 			{
 				float	d	=plane.DistanceFast(vert);
 
-				if(pside != 0)
+				if(side != 0)
 				{
 					d	=-d;
 				}

@@ -90,6 +90,62 @@ namespace BSPCore
 		}
 
 
+		static internal GBSPBrush BlockChopBrushes(GBSPBrush listHead, Bounds block, PlanePool pp)
+		{
+			GBSPBrush	ret	=null;
+
+			int		[]blockPlanes;
+			block.GetPlanes(pp, out blockPlanes);
+
+			for(GBSPBrush b = listHead;b != null;b = b.mNext)
+			{
+				b.BoundBrush();
+
+				if(!b.mBounds.Overlaps(block))
+				{
+					continue;
+				}
+
+				GBSPBrush	boxedCopy	=b.ChopToBoxAndClone(blockPlanes, pp);
+
+				if(boxedCopy == null)
+				{
+					continue;
+				}
+
+				if(ret == null)
+				{
+					ret	=boxedCopy;
+				}
+				else
+				{
+					boxedCopy.mNext	=ret.mNext;
+					ret.mNext		=boxedCopy;
+				}
+			}
+			return	ret;
+		}
+
+
+		internal static bool TestListInBounds(GBSPBrush listHead, Bounds bound)
+		{
+			for(GBSPBrush b=listHead;b != null;b=b.mNext)
+			{
+				foreach(GBSPSide s in b.mSides)
+				{
+					foreach(Vector3 v in s.mPoly.mVerts)
+					{
+						if(!bound.IsPointInbounds(v))
+						{
+							return	false;
+						}
+					}
+				}
+			}
+			return	true;
+		}
+
+
 		internal static int GetOriginalEntityNum(GBSPBrush listHead)
 		{
 			for(GBSPBrush b=listHead;b != null;b=b.mNext)
@@ -236,6 +292,47 @@ namespace BSPCore
 		}
 
 
+		GBSPBrush	ChopToBoxAndClone(int []planes, PlanePool pp)
+		{
+			GBSPBrush	ret	=new GBSPBrush(this);
+			for(int i=0;i < 6;i++)
+			{
+				GBSPBrush	front, back;
+				if(i < 3)
+				{
+					ret.Split(planes[i], 0, 0, false, pp, out front, out back, false);
+					if(back == null)
+					{
+						return	null;
+					}
+					ret	=back;
+				}
+				else
+				{
+					ret.Split(planes[i], 1, 0, false, pp, out front, out back, false);
+					if(front == null)
+					{
+						return	null;
+					}
+					ret	=front;
+				}
+			}
+
+			for(int i=0;i < ret.mSides.Count;i++)
+			{
+				int	pnum	=ret.mSides[i].mPlaneNum;
+				if(pnum == planes[0] || pnum == planes[2]
+					|| pnum == planes[3] || pnum == planes[5])
+				{
+					ret.mSides[i].mTexInfo	=-1;
+					ret.mSides[i].mFlags	=GBSPSide.SIDE_NODE;
+				}
+			}
+
+			return	ret;
+		}
+
+
 		void BoundBrush()
 		{
 			mBounds.Clear();
@@ -266,6 +363,50 @@ namespace BSPCore
 					}
 				}
 			}
+			return	true;
+		}
+
+
+		bool PointInside(Vector3 point, PlanePool pp)
+		{
+			foreach(GBSPSide s in mSides)
+			{
+				GBSPPlane	p	=pp.mPlanes[s.mPlaneNum];
+
+				if(s.mPlaneSide != 0)
+				{
+					p.Inverse();
+				}
+
+				float	dist	=p.DistanceFast(point);
+				if(dist < 0.0f)
+				{
+					return	true;
+				}
+			}
+			return	false;
+		}
+
+
+		bool ReallyOverlaps(GBSPBrush otherBrush, PlanePool pp)
+		{
+			//check bounds first
+			if(!mBounds.Overlaps(otherBrush.mBounds))
+			{
+				return	false;
+			}
+
+			for(int j=0;j < otherBrush.mSides.Count;j++)
+			{
+				for(int i=0;i < otherBrush.mSides[i].mPoly.mVerts.Length;i++)
+				{
+					if(PointInside(otherBrush.mSides[i].mPoly.mVerts[i], pp))
+					{
+						return	true;
+					}
+				}
+			}
+
 			return	true;
 		}
 
@@ -495,14 +636,12 @@ namespace BSPCore
 				if(i == 0)
 				{
 					newSide.mPlaneSide	=(newSide.mPlaneSide == 0)? (sbyte)1 : (sbyte)0;
-
-					newSide.mPoly	=new GBSPPoly(midPoly);
+					newSide.mPoly		=new GBSPPoly(midPoly);
 					newSide.mPoly.Reverse();
 				}
 				else
 				{
-					//might not need to copy this
-					newSide.mPoly	=new GBSPPoly(midPoly);
+					newSide.mPoly		=new GBSPPoly(midPoly);
 				}
 			}
 
@@ -528,7 +667,6 @@ namespace BSPCore
 			front	=resultBrushes[0];
 			back	=resultBrushes[1];
 		}
-
 
 		internal float Volume(PlanePool pool)
 		{
@@ -586,9 +724,8 @@ namespace BSPCore
 			//outside
 			for(int i=0;i < b.mSides.Count && inside != null;i++)
 			{
-				bool	bt;
-				inside.Split(b.mSides[i].mPlaneNum, b.mSides[i].mPlaneSide,
-					(byte)GBSPSide.SIDE_NODE, false, pool, out front, out back, true, out bt);
+				inside.Split(b.mSides[i].mPlaneNum,	b.mSides[i].mPlaneSide, (byte)GBSPSide.SIDE_NODE,
+					false, pool, out front, out back, true);
 
 				//Make sure we don't free a, but free all other fragments
 				if(inside != a)
@@ -618,6 +755,53 @@ namespace BSPCore
 		}
 
 
+		internal static void DumpOverlapping(GBSPBrush listHead, PlanePool pp)
+		{
+			List<GBSPBrush>	list	=BrushListToList(listHead);
+			DumpOverlapping(list, pp);
+		}
+
+
+		internal static void DumpOverlapping(List<GBSPBrush> list, PlanePool pp)
+		{
+			List<GBSPBrush>	overlapping	=new List<GBSPBrush>();
+
+			foreach(GBSPBrush b1 in list)
+			{
+				foreach(GBSPBrush b2 in list)
+				{
+					if(b1 == b2)
+					{
+						continue;
+					}
+					if(!b1.Overlaps(b2))
+					{
+						continue;
+					}
+
+					if(!b1.ReallyOverlaps(b2, pp))
+					{
+						continue;
+					}
+
+					if(!overlapping.Contains(b1))
+					{
+						overlapping.Add(b1);
+					}
+					if(!overlapping.Contains(b2))
+					{
+						overlapping.Add(b2);
+					}
+				}
+			}
+			if(overlapping.Count > 0)
+			{
+				DumpBrushListToFile(overlapping, "Overlapped" + gack++ + ".map");
+			}
+		}
+
+
+		static int	gack	=0;
 		internal static GBSPBrush CSGBrushes(bool bVerbose, GBSPBrush listHead, PlanePool pool)
 		{
 			GBSPBrush	listTail;
@@ -653,6 +837,19 @@ namespace BSPCore
 					{
 						continue;
 					}
+/*
+					if(UtilityLib.Mathery.CompareVector(b1.mOriginal.Center, new Vector3(-1004, -40, 40)))
+					{
+						gack++;
+
+						GBSPBrush	b1Copy	=new GBSPBrush(b1);
+						GBSPBrush	b2Copy	=new GBSPBrush(b2);
+
+						b1Copy.mNext	=b2Copy;
+						b2Copy.mNext	=null;
+
+						DumpBrushListToFile(b1Copy, "Overlapping" + gack + ".map");
+					}*/
 
 					GBSPBrush	subResult	=null;
 					GBSPBrush	subResult2	=null;
@@ -699,7 +896,7 @@ namespace BSPCore
 						continue;
 					}
 
-					if(c1 > 4 && c2 > 4)
+					if(false && c1 > 4 && c2 > 4)
 					{
 						if(subResult2 != null)
 						{
@@ -718,6 +915,9 @@ namespace BSPCore
 						{
 							FreeBrushList(subResult2);
 						}
+						{
+							DumpBrushListToFile(subResult, "Chopped" + gack++ + ".map");
+						}
 						listTail	=AddBrushListToTail(subResult, listTail);
 						listHead	=RemoveBrushList(b1, b1);
 						goto NewList;
@@ -727,6 +927,9 @@ namespace BSPCore
 						if(subResult != null)
 						{
 							FreeBrushList(subResult);
+						}
+						{
+							DumpBrushListToFile(subResult2, "Chopped" + gack++ + ".map");
 						}
 						listTail	=AddBrushListToTail(subResult2, listTail);
 						listHead	=RemoveBrushList(b1, b2);
@@ -750,6 +953,111 @@ namespace BSPCore
 		}
 
 
+		internal static List<GBSPBrush> CSGBrushes(bool bVerbose, List<GBSPBrush> list, PlanePool pool)
+		{
+			List<GBSPBrush>	keep	=new List<GBSPBrush>();
+
+			if(bVerbose)
+			{
+				CoreEvents.Print("---- CSGBrushes ----\n");
+				CoreEvents.Print("Num brushes before CSG : " + list.Count + "\n");
+			}
+
+		startOver:
+
+			foreach(GBSPBrush b1 in list)
+			{
+				foreach(GBSPBrush b2 in list)
+				{
+					if(!b1.Overlaps(b2))
+					{
+						continue;
+					}
+
+					GBSPBrush	subResult	=null;
+					GBSPBrush	subResult2	=null;
+					Int32		c1			=999999;
+					Int32		c2			=999999;
+
+					if(b2.BrushCanBite(b1))
+					{
+						subResult	=Subtract(b1, b2, pool);
+
+						if(subResult == b1)
+						{
+							continue;
+						}
+
+						if(subResult == null)
+						{
+							list.Remove(b1);
+							goto	startOver;
+						}
+						c1	=CountBrushList(subResult);
+					}
+
+					if(b1.BrushCanBite(b2))
+					{
+						subResult2	=Subtract(b2, b1, pool);
+
+						if(subResult2 == b2)
+						{
+							continue;
+						}
+
+						if(subResult2 == null)
+						{	
+							FreeBrushList(subResult);
+							list.Remove(b2);
+							goto	startOver;
+						}
+						c2	=CountBrushList(subResult2);
+					}
+
+					if(subResult == null && subResult2 == null)
+					{
+						continue;
+					}
+
+					if(c1 < c2)
+					{
+						if(subResult2 != null)
+						{
+							FreeBrushList(subResult2);
+						}
+						for(GBSPBrush piece = subResult;piece != null;piece = piece.mNext)
+						{
+							list.Add(piece);
+						}
+						list.Remove(b1);
+						goto	startOver;
+					}
+					else
+					{
+						if(subResult != null)
+						{
+							FreeBrushList(subResult);
+						}
+						for(GBSPBrush piece = subResult2;piece != null;piece = piece.mNext)
+						{
+							list.Add(piece);
+						}
+						list.Remove(b2);
+						goto	startOver;
+					}
+
+				}
+			}
+
+			if(bVerbose)
+			{
+				CoreEvents.Print("Num brushes after CSG  : " + keep.Count + "\n");
+			}
+
+			return	keep;
+		}
+
+
 		static GBSPBrush AddBrushListToTail(GBSPBrush list, GBSPBrush tail)
 		{
 			GBSPBrush	walk, next;
@@ -765,7 +1073,7 @@ namespace BSPCore
 		}
 
 
-		static Int32 CountBrushList(GBSPBrush listHead)
+		static internal Int32 CountBrushList(GBSPBrush listHead)
 		{
 			Int32	c	=0;
 			for(;listHead != null;listHead=listHead.mNext)
@@ -1183,21 +1491,58 @@ namespace BSPCore
 		}
 
 
-		//unused, but handy for debuggerizing
-		static internal void DumpBrushListToFile(GBSPBrush brushList)
+		static internal List<GBSPBrush> BrushListToList(GBSPBrush listHead)
 		{
-			FileStream		fs	=new FileStream("BrushSides.txt", FileMode.Create, FileAccess.Write);
-			StreamWriter	sw	=new StreamWriter(fs);			
+			List<GBSPBrush>	brushes	=new List<GBSPBrush>();
 
-			for(GBSPBrush b=brushList;b != null;b=b.mNext)
+			for(GBSPBrush b=listHead;b != null;b=b.mNext)
 			{
+				brushes.Add(b);
+			}
+			return	brushes;
+		}
+
+
+		//unused, but handy for debuggerizing
+		static internal void DumpBrushListToFile(GBSPBrush brushList, string fileName)
+		{
+			List<GBSPBrush>	brushes	=BrushListToList(brushList);
+			DumpBrushListToFile(brushes, fileName);
+		}
+
+
+		//unused, but handy for debuggerizing
+		static internal void DumpBrushListToFile(List<GBSPBrush> brushList, string fileName)
+		{
+			FileStream		fs	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
+			StreamWriter	sw	=new StreamWriter(fs);
+
+			sw.WriteLine("{");
+			sw.WriteLine("\"sounds\"	\"10\"");
+			sw.WriteLine("\"wad\"	\"gfx/metal.wad\"");
+			sw.WriteLine("\"classname\"	\"worldspawn\"");
+			sw.WriteLine("\"message\"	\"the Wind Tunnels\"");
+			sw.WriteLine("\"worldtype\"	\"1\"");
+			foreach(GBSPBrush b in brushList)
+			{
+				sw.WriteLine("{");
+
 				for(int i=0;i < b.mSides.Count;i++)
 				{
-					sw.Write("" + b.mSides[i].mPlaneNum + ", " +
-						b.mSides[i].mPlaneSide + ", " +
-						b.mSides[i].mFlags + "\n");
+					sw.WriteLine("( " +
+						-b.mSides[i].mPoly.mVerts[0].X + " " +
+						b.mSides[i].mPoly.mVerts[0].Z + " " +
+						b.mSides[i].mPoly.mVerts[0].Y + " ) ( " +
+						-b.mSides[i].mPoly.mVerts[1].X + " " +
+						b.mSides[i].mPoly.mVerts[1].Z + " " +
+						b.mSides[i].mPoly.mVerts[1].Y + " ) ( " +
+						-b.mSides[i].mPoly.mVerts[2].X + " " +
+						b.mSides[i].mPoly.mVerts[2].Z + " " +
+						b.mSides[i].mPoly.mVerts[2].Y + " ) BOGUS 0 0 0 1.0 1.0");
 				}
+				sw.WriteLine("}");
 			}
+			sw.WriteLine("}");
 			sw.Close();
 			fs.Close();
 		}

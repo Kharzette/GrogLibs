@@ -24,22 +24,66 @@ namespace BSPCore
 		internal bool	mbAreaPortal;
 		internal int	[]mAreas	=new int[2];
 
+		//blockery
+		Array	mBlockNodes	=Array.CreateInstance(typeof(GBSPNode), 10, 10);
+
 
 		internal bool ProcessWorldModel(List<MapBrush> list, List<MapEntity> ents,
 			PlanePool pool, TexInfoPool tip, bool bVerbose)
 		{
+			int	block_xl	=-8;
+			int	block_xh	=7;
+			int	block_zl	=-8;
+			int	block_zh	=7;
+
+			Bounds	modelBounds	=MapBrush.GetListBounds(list);
+
 			list.Reverse();
 			GBSPBrush	glist	=GBSPBrush.ConvertMapBrushList(list);
+			
+			if(block_xh * 1024 > modelBounds.mMaxs.X)
+			{
+				block_xh	=(int)Math.Floor(modelBounds.mMaxs.X / 1024.0);
+			}
+			if((block_xl + 1) * 1024 < modelBounds.mMins.X)
+			{
+				block_xl	=(int)Math.Floor(modelBounds.mMins.X / 1024.0);
+			}
+			if(block_zh * 1024 > modelBounds.mMaxs.Z)
+			{
+				block_zh	=(int)Math.Floor(modelBounds.mMaxs.Z / 1024.0);
+			}
+			if((block_zl + 1) * 1024 < modelBounds.mMins.Z)
+			{
+				block_zl	=(int)Math.Floor(modelBounds.mMins.Z / 1024.0);
+			}
+			
+			if(block_xl < -4)
+			{
+				block_xl	=-4;
+			}
+			if(block_zl <-4)
+			{
+				block_zl	=-4;
+			}
+			if(block_xh > 3)
+			{
+				block_xh	=3;
+			}
+			if(block_zh > 3)
+			{
+				block_zh	=3;
+			}
 
-			glist	=GBSPBrush.CSGBrushes(bVerbose, glist, pool);
+			for(int i=0;i < 16;i++)
+			{
+				ProcessBlock(glist, pool, i, block_xl, block_xh, block_zl, block_zh);
+			}
 
-			CoreEvents.FireNumPlanesChangedEvent(pool.mPlanes.Count, null);
+			GBSPNode	root	=GBSPNode.BlockTree(mBlockNodes, pool,
+				block_xl - 1, block_zl -1, block_xh + 1, block_zh + 1);
 
-			GBSPNode	root	=new GBSPNode();
-			root.BuildBSP(glist, pool, bVerbose);
-			CoreEvents.FireNumPlanesChangedEvent(pool.mPlanes.Count, null);
-
-			mBounds	=new Bounds(root.GetBounds());
+			mBounds	=modelBounds;
 
 			glist	=null;
 
@@ -99,6 +143,54 @@ namespace BSPCore
 			mRootNode[0]	=root;
 
 			return	true;
+		}
+
+
+		internal void ProcessBlock(GBSPBrush listHead, PlanePool pp, int blockNum, int block_xl, int block_xh, int block_zl, int block_zh)
+		{
+			int		xblock, zblock;
+
+			zblock	=block_zl + blockNum / (block_xh - block_xl + 1);
+			xblock	=block_xl + blockNum % (block_xh - block_xl + 1);
+
+			CoreEvents.Print("############### block " + xblock + "," + zblock + " ###############\n");
+
+			Bounds	blockBounds	=new Bounds();
+
+			blockBounds.mMins.X	=xblock * 1024;
+			blockBounds.mMins.Z	=zblock * 1024;
+			blockBounds.mMins.Y	=-4096;
+			blockBounds.mMaxs.X	=(xblock + 1) * 1024;
+			blockBounds.mMaxs.Z	=(zblock + 1) * 1024;
+			blockBounds.mMaxs.Y	=4096;
+
+			GBSPBrush	blocked	=GBSPBrush.BlockChopBrushes(listHead, blockBounds, pp);
+
+			int	brushCount	=GBSPBrush.CountBrushList(blocked);
+
+			if(!GBSPBrush.TestListInBounds(blocked, blockBounds))
+			{
+				CoreEvents.Print("Brush out of bounds after choppery!\n");
+			}
+
+			GBSPBrush.DumpBrushListToFile(blocked, "Brush_x" + xblock + "_z" + zblock + ".map");
+
+//			blocked	=GBSPBrush.CSGBrushes(true, blocked, pp);
+
+			List<GBSPBrush>	blockList	=GBSPBrush.BrushListToList(blocked);
+
+			List<GBSPBrush>	newList	=GBSPBrush.CSGBrushes(true, blockList, pp);			
+
+			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
+
+			//print out brushes that are still overlapping
+			GBSPBrush.DumpOverlapping(newList, pp);
+
+			GBSPNode	root	=new GBSPNode();
+			root.BuildBSP(blocked, pp, true);
+			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
+
+			mBlockNodes.SetValue(root, xblock + 5, zblock + 5);
 		}
 
 

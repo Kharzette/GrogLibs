@@ -107,6 +107,45 @@ namespace BSPCore
 		}
 
 
+		internal void GetPlanes(PlanePool pp, out int []planes)
+		{
+			planes	=new int[6];
+
+			GBSPPlane	p	=new GBSPPlane();
+			sbyte		side;
+
+			//max x
+			p.mNormal	=Vector3.UnitX;
+			p.mDist		=mMaxs.X;
+			planes[0]	=pp.FindPlane(p, out side);
+
+			//max y
+			p.mNormal	=Vector3.UnitY;
+			p.mDist		=mMaxs.Y;
+			planes[1]	=pp.FindPlane(p, out side);
+
+			//max z
+			p.mNormal	=Vector3.UnitZ;
+			p.mDist		=mMaxs.Z;
+			planes[2]	=pp.FindPlane(p, out side);
+
+			//min x
+			p.mNormal	=-Vector3.UnitX;
+			p.mDist		=-mMins.X;
+			planes[3]	=pp.FindPlane(p, out side);
+
+			//min y
+			p.mNormal	=-Vector3.UnitY;
+			p.mDist		=-mMins.Y;
+			planes[4]	=pp.FindPlane(p, out side);
+
+			//min z
+			p.mNormal	=-Vector3.UnitZ;
+			p.mDist		=-mMins.Z;
+			planes[5]	=pp.FindPlane(p, out side);
+		}
+
+
 		internal UInt32 BoxOnPlaneSide(GBSPPlane Plane)
 		{
 			UInt32	Side;
@@ -165,6 +204,36 @@ namespace BSPCore
 			}
 
 			return	Side;
+		}
+
+
+		internal bool IsPointInbounds(Vector3 pnt)
+		{
+			if(pnt.X < mMins.X)
+			{
+				return	false;
+			}
+			if(pnt.Y < mMins.Y)
+			{
+				return	false;
+			}
+			if(pnt.Z < mMins.Z)
+			{
+				return	false;
+			}
+			if(pnt.X > mMaxs.X)
+			{
+				return	false;
+			}
+			if(pnt.Y > mMaxs.Y)
+			{
+				return	false;
+			}
+			if(pnt.Z > mMaxs.Z)
+			{
+				return	false;
+			}
+			return	true;
 		}
 
 

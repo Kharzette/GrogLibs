@@ -96,6 +96,48 @@ namespace BSPCore
 			}
 		}
 
+		static internal GBSPNode BlockTree(Array blockNodes, PlanePool pp, int xl, int zl, int xh, int zh)
+		{
+			if(xl == xh && zl == zh)
+			{
+				GBSPNode	ret	=(GBSPNode)blockNodes.GetValue(xl + 5, zl + 5);
+				if(ret == null)
+				{
+					ret	=new GBSPNode();
+					ret.LeafNode(null);
+				}
+				return	ret;
+			}
+
+			//create a seperator along the largest axis
+			GBSPNode	n	=new GBSPNode();
+			GBSPPlane	p	=new GBSPPlane();
+			
+			if(xh - xl > zh - zl)
+			{
+				//split x axis
+				int	mid		=xl + (xh - xl) / 2 + 1;
+				p.mNormal	=Vector3.UnitX;
+				p.mDist		=mid * 1024;
+
+				sbyte	side;
+				n.mPlaneNum		=pp.FindPlane(p, out side);
+				n.mChildren[0]	=BlockTree(blockNodes, pp, mid, zl, xh, zh);
+				n.mChildren[1]	=BlockTree(blockNodes, pp, xl, zl, mid - 1, zh);
+			}
+			else
+			{
+				int	mid		=zl + (zh - zl) / 2 + 1;
+				p.mNormal	=Vector3.UnitZ;
+				p.mDist		=mid * 1024;
+
+				sbyte	side;
+				n.mPlaneNum		=pp.FindPlane(p, out side);
+				n.mChildren[0]	=BlockTree(blockNodes, pp, xl, mid, xh, zh);
+				n.mChildren[1]	=BlockTree(blockNodes, pp, xl, zl, xh, mid - 1);
+			}
+			return	n;
+		}
 
 		void LeafNode(GBSPBrush listHead)
 		{

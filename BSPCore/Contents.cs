@@ -96,7 +96,7 @@ namespace BSPCore
 
 
 		//convert hammer contents to genesis style contents
-		static public UInt32 FixContents(UInt32 hammerContents)
+		static public UInt32 FixHammerContents(UInt32 hammerContents)
 		{
 			UInt32	ret	=0;
 
@@ -202,6 +202,21 @@ namespace BSPCore
 			{
 				ret	|=BSP_CONTENTS_TRANSLUCENT2;
 				ret	|=BSP_CONTENTS_DETAIL2;
+			}
+
+			return	ret;			
+		}
+
+
+		//convert quake contents to genesis style contents
+		static public UInt32 FixQuakeContents(UInt32 quakeContents)
+		{
+			UInt32	ret	=quakeContents;
+
+			if(quakeContents == 0)
+			{
+				//set to solid by default?
+				ret	|=BSP_CONTENTS_SOLID2;
 			}
 
 			return	ret;			

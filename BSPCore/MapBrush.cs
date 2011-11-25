@@ -64,7 +64,7 @@ namespace BSPCore
 			}
 
 			MakePolys(pp);
-			FixContents();
+			FixContents(false);
 		}
 
 
@@ -212,6 +212,20 @@ namespace BSPCore
 		#endregion
 
 
+		static internal Bounds GetListBounds(List<MapBrush> list)
+		{
+			Bounds	ret	=new Bounds();
+
+			foreach(MapBrush mb in list)
+			{
+				Bounds	b	=mb.GetBounds();
+
+				ret.Merge(b, ret);
+			}
+			return	ret;
+		}
+
+
 		internal bool MakePolys(PlanePool pool)
 		{
 			mBounds	=new Bounds();
@@ -276,9 +290,16 @@ namespace BSPCore
 		}
 
 
-		internal void FixContents()
+		internal void FixContents(bool bHammer)
 		{
-			mContents	=Contents.FixContents(mContents);
+			if(bHammer)
+			{
+				mContents	=Contents.FixHammerContents(mContents);
+			}
+			else
+			{
+				mContents	=Contents.FixQuakeContents(mContents);
+			}
 
 			//fix faces as well
 			//Force clip to solid/detail, and mark faces as not visible (they will get put last in the tree)
