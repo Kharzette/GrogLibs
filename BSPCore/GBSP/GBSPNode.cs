@@ -21,13 +21,13 @@ namespace BSPCore
 	internal partial class GBSPNode
 	{
 		//Info for this node as a node or leaf
-		Int32		mPlaneNum;						//-1 if a leaf
-		UInt32		mContents;						//Contents node/leaf
-		GBSPFace	mFaces;							//Faces on this node
-		GBSPNode	[]mChildren	=new GBSPNode[2];	//Front and back child
-		GBSPNode	mParent;						//Parent of this node
-		Bounds		mBounds	=new Bounds();			//Current BBox of node
-		GBSPBrush	mVolume;
+		Int32			mPlaneNum;						//-1 if a leaf
+		UInt32			mContents;						//Contents node/leaf
+		List<GBSPFace>	mFaces	=new List<GBSPFace>();	//Faces on this node
+		GBSPNode		mFront, mBack;					//Front and back child
+		GBSPNode		mParent;						//Parent of this node
+		Bounds			mBounds	=new Bounds();			//Current BBox of node
+		GBSPBrush		mVolume;
 
 		//Info for this node as a leaf
 		GBSPPortal		mPortals;							//Portals on this leaf
@@ -46,7 +46,7 @@ namespace BSPCore
 		List<GBSPBrush>	mBrushList;
 
 		//For GFX file saving
-		internal Int32	[]mChildrenID	=new int[2];
+		internal Int32	mFrontID, mBackID;
 		internal Int32	mFirstFace;
 		internal Int32	mNumFaces;
 		internal Int32	mFirstPortal;
@@ -122,8 +122,8 @@ namespace BSPCore
 
 				sbyte	side;
 				n.mPlaneNum		=pp.FindPlane(p, out side);
-				n.mChildren[0]	=BlockTree(blockNodes, pp, mid, zl, xh, zh);
-				n.mChildren[1]	=BlockTree(blockNodes, pp, xl, zl, mid - 1, zh);
+				n.mFront	=BlockTree(blockNodes, pp, mid, zl, xh, zh);
+				n.mBack		=BlockTree(blockNodes, pp, xl, zl, mid - 1, zh);
 			}
 			else
 			{
@@ -133,8 +133,8 @@ namespace BSPCore
 
 				sbyte	side;
 				n.mPlaneNum		=pp.FindPlane(p, out side);
-				n.mChildren[0]	=BlockTree(blockNodes, pp, xl, mid, xh, zh);
-				n.mChildren[1]	=BlockTree(blockNodes, pp, xl, zl, xh, mid - 1);
+				n.mFront	=BlockTree(blockNodes, pp, xl, mid, xh, zh);
+				n.mBack		=BlockTree(blockNodes, pp, xl, zl, xh, mid - 1);
 			}
 			return	n;
 		}
@@ -210,17 +210,15 @@ namespace BSPCore
 			brushes.Clear();
 
 			//Allocate children before recursing
-			for(int i=0;i < 2;i++)
-			{
-				mChildren[i]			=new GBSPNode();
-				mChildren[i].mParent	=this;
-			}
+			mFront	=new GBSPNode();
+			mBack	=new GBSPNode();
+			mFront.mParent	=mBack.mParent	=this;
 
-			mVolume.Split(mPlaneNum, 0, 0, true, pool, out mChildren[0].mVolume, out mChildren[1].mVolume, false);
+			mVolume.Split(mPlaneNum, 0, 0, true, pool, out mFront.mVolume, out mBack.mVolume, false);
 
 			//Recursively process children
-			mChildren[0].BuildTree_r(bs, childrenFront, pool);
-			mChildren[1].BuildTree_r(bs, childrenBack, pool);
+			mFront.BuildTree_r(bs, childrenFront, pool);
+			mBack.BuildTree_r(bs, childrenBack, pool);
 		}
 
 
@@ -235,8 +233,8 @@ namespace BSPCore
 				return;
 			}
 
-			mChildren[0].GetTriangles(verts, indexes, bCheckFlags);
-			mChildren[1].GetTriangles(verts, indexes, bCheckFlags);
+			mFront.GetTriangles(verts, indexes, bCheckFlags);
+			mBack.GetTriangles(verts, indexes, bCheckFlags);
 		}
 
 
@@ -254,8 +252,8 @@ namespace BSPCore
 				return;
 			}
 
-			mChildren[0].GetLeafTriangles(verts, indexes, bCheckFlags);
-			mChildren[1].GetLeafTriangles(verts, indexes, bCheckFlags);
+			mFront.GetLeafTriangles(verts, indexes, bCheckFlags);
+			mBack.GetLeafTriangles(verts, indexes, bCheckFlags);
 		}
 
 
@@ -278,7 +276,7 @@ namespace BSPCore
 
 				GBSPPlane	plane	=pool.mPlanes[parent.mPlaneNum];
 
-				bSide	=(parent.mChildren[0] == node)? false : true;
+				bSide	=(parent.mFront == node)? false : true;
 
 				if(!poly.ClipPolyEpsilon(0.001f, plane, bSide))
 				{
@@ -306,11 +304,11 @@ namespace BSPCore
 
 				if(dist > 0)
 				{
-					node	=node.mChildren[0];
+					node	=node.mFront;
 				}
 				else
 				{
-					node	=node.mChildren[1];
+					node	=node.mBack;
 				}
 			}
 
@@ -364,16 +362,18 @@ namespace BSPCore
 			{
 				mLeafFaces	=null;
 
-				GBSPFace.FreeFaceList(mFaces);
+				mFaces.Clear();
+
+//				GBSPFace.FreeFaceList(mFaces);
 				mBrushList.Clear();
 				return;
 			}
 
-			mChildren[0].FreeBSP_r();
-			mChildren[1].FreeBSP_r();
+			mFront.FreeBSP_r();
+			mBack.FreeBSP_r();
 
-			mChildren[0]	=null;
-			mChildren[1]	=null;
+			mFront	=null;
+			mBack	=null;
 		}
 
 
@@ -403,8 +403,8 @@ namespace BSPCore
 			//Recurse down to leafs
 			if(mPlaneNum != PlanePool.PLANENUM_LEAF)
 			{
-				mChildren[0].MakeFaces_r(pool, tip, ref numMerged, ref numMake);
-				mChildren[1].MakeFaces_r(pool, tip, ref numMerged, ref numMake);
+				mFront.MakeFaces_r(pool, tip, ref numMerged, ref numMake);
+				mBack.MakeFaces_r(pool, tip, ref numMerged, ref numMake);
 				
 				//Marge list (keepin that typo, funny)
 				GBSPFace.MergeFaceList(mFaces, pool, ref numMerged);
@@ -435,7 +435,9 @@ namespace BSPCore
 
 					//Add the face to the list of faces on the node
 					//that originaly created the portal
-					GBSPFace.AddToListStart(ref p.mOnNode.mFaces, p.mFace[side]);
+//					GBSPFace.AddToListStart(ref p.mOnNode.mFaces, p.mFace[side]);
+
+					p.mOnNode.mFaces.Add(p.mFace[side]);
 
 					numMake++;
 				}
@@ -448,8 +450,8 @@ namespace BSPCore
 			//Recurse down to leafs
 			if(mPlaneNum != PlanePool.PLANENUM_LEAF)
 			{
-				mChildren[0].MakeLeafFaces();
-				mChildren[1].MakeLeafFaces();
+				mFront.MakeLeafFaces();
+				mBack.MakeLeafFaces();
 				return;
 			}
 
@@ -501,10 +503,10 @@ namespace BSPCore
 				f	=f.mMerged;
 			}
 
-			if(f.mSplit[0] != null)
+			if(f.mSplit0 != null)
 			{
-				GetLeafFaces_r(f.mSplit[0]);
-				GetLeafFaces_r(f.mSplit[1]);
+				GetLeafFaces_r(f.mSplit0);
+				GetLeafFaces_r(f.mSplit1);
 				return;
 			}
 			mLeafFaces.Add(f);
@@ -519,10 +521,10 @@ namespace BSPCore
 				f	=f.mMerged;
 			}
 
-			if(f.mSplit[0] != null)
+			if(f.mSplit0 != null)
 			{
-				CountLeafFaces_r(f.mSplit[0]);
-				CountLeafFaces_r(f.mSplit[1]);
+				CountLeafFaces_r(f.mSplit0);
+				CountLeafFaces_r(f.mSplit1);
 				return;
 			}
 
@@ -537,32 +539,32 @@ namespace BSPCore
 				return;
 			}
 
-			mChildren[0].MergeNodes_r(ref mergedNodes);
-			mChildren[1].MergeNodes_r(ref mergedNodes);
+			mFront.MergeNodes_r(ref mergedNodes);
+			mBack.MergeNodes_r(ref mergedNodes);
 
-			if(mChildren[0].mPlaneNum == PlanePool.PLANENUM_LEAF
-				&& mChildren[1].mPlaneNum == PlanePool.PLANENUM_LEAF)
+			if(mFront.mPlaneNum == PlanePool.PLANENUM_LEAF
+				&& mBack.mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
-				if(((mChildren[0].mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
-					&& ((mChildren[1].mContents & Contents.BSP_CONTENTS_SOLID2) != 0))
+				if(((mFront.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+					&& ((mBack.mContents & Contents.BSP_CONTENTS_SOLID2) != 0))
 				{
-					if((mChildren[0].mContents & 0xffff0000)
-						== (mChildren[1].mContents & 0xffff0000))
+					if((mFront.mContents & 0xffff0000)
+						== (mBack.mContents & 0xffff0000))
 					{
 						if(mFaces != null)
 						{
 							CoreEvents.Print("Node.mFaces seperating BSP_CONTENTS_SOLID!");
 						}
 
-						if(mChildren[0].mFaces != null || mChildren[1].mFaces != null)
+						if(mFront.mFaces != null || mBack.mFaces != null)
 						{
 							CoreEvents.Print("!Node.mFaces with children");
 						}
 
 						// FIXME: free stuff
 						mPlaneNum	=PlanePool.PLANENUM_LEAF;
-						mContents	=mChildren[0].mContents;
-						mContents	|=mChildren[1].mContents;
+						mContents	=mFront.mContents;
+						mContents	|=mBack.mContents;
 
 						mbDetail	=false;
 
@@ -572,8 +574,8 @@ namespace BSPCore
 						}
 
 						//combine brush lists
-						mBrushList	=mChildren[1].mBrushList;
-						mBrushList.AddRange(mChildren[0].mBrushList);
+						mBrushList	=mBack.mBrushList;
+						mBrushList.AddRange(mFront.mBrushList);
 						mergedNodes++;
 					}
 				}
@@ -621,8 +623,8 @@ namespace BSPCore
 		{
 			if(mPlaneNum != PlanePool.PLANENUM_LEAF && !mbDetail)
 			{
-				mChildren[0].CreateLeafClusters_r(ref numLeafClusters);
-				mChildren[1].CreateLeafClusters_r(ref numLeafClusters);
+				mFront.CreateLeafClusters_r(ref numLeafClusters);
+				mBack.CreateLeafClusters_r(ref numLeafClusters);
 				return	true;
 			}
 			
@@ -658,8 +660,8 @@ namespace BSPCore
 		
 			mCluster	=cluster;
 
-			mChildren[0].FillLeafClusters_r(cluster);
-			mChildren[1].FillLeafClusters_r(cluster);
+			mFront.FillLeafClusters_r(cluster);
+			mBack.FillLeafClusters_r(cluster);
 		}
 
 
@@ -673,8 +675,8 @@ namespace BSPCore
 				return	mContents;
 			}
 
-			c1	=mChildren[0].ClusterContents();
-			c2	=mChildren[1].ClusterContents();
+			c1	=mFront.ClusterContents();
+			c2	=mBack.ClusterContents();
 
 			con	=(c1 | c2);	//Or together children, and return
 
@@ -699,11 +701,11 @@ namespace BSPCore
 				return	false;
 			}
 
-			if(!mChildren[0].GetFaceVertIndexNumbers_r(ff))
+			if(!mFront.GetFaceVertIndexNumbers_r(ff))
 			{
 				return	false;
 			}
-			if(!mChildren[1].GetFaceVertIndexNumbers_r(ff))
+			if(!mBack.GetFaceVertIndexNumbers_r(ff))
 			{
 				return	false;
 			}
@@ -720,8 +722,8 @@ namespace BSPCore
 				return	true;
 			}
 			
-			GNode.mChildren[0]	=mChildrenID[0];
-			GNode.mChildren[1]	=mChildrenID[1];
+			GNode.mChildren[0]	=mFrontID;
+			GNode.mChildren[1]	=mBackID;
 			GNode.mNumFaces		=mNumFaces;
 			GNode.mFirstFace	=mFirstFace;
 			GNode.mPlaneNum		=mPlaneNum;
@@ -730,11 +732,11 @@ namespace BSPCore
 
 			GNode.Write(bw);
 
-			if(!mChildren[0].SaveGFXNodes_r(bw))
+			if(!mFront.SaveGFXNodes_r(bw))
 			{
 				return	false;
 			}
-			if(!mChildren[1].SaveGFXNodes_r(bw))
+			if(!mBack.SaveGFXNodes_r(bw))
 			{
 				return	false;
 			}
@@ -751,11 +753,11 @@ namespace BSPCore
 
 			GBSPFace.FixFaceListTJunctions(mFaces, ff, tip);
 			
-			if(!mChildren[0].FixTJunctions_r(ff, tip))
+			if(!mFront.FixTJunctions_r(ff, tip))
 			{
 				return	false;
 			}
-			if(!mChildren[1].FixTJunctions_r(ff, tip))
+			if(!mBack.FixTJunctions_r(ff, tip))
 			{
 				return	false;
 			}
@@ -797,8 +799,8 @@ namespace BSPCore
 
 			nc.mNumGFXNodes++;
 
-			mChildrenID[0]	=mChildren[0].PrepGFXNodes_r(mChildrenID[0], nc);
-			mChildrenID[1]	=mChildren[1].PrepGFXNodes_r(mChildrenID[1], nc);
+			mFrontID	=mFront.PrepGFXNodes_r(mFrontID, nc);
+			mBackID		=mBack.PrepGFXNodes_r(mBackID, nc);
 
 			return currentNode;
 		}
@@ -860,11 +862,11 @@ namespace BSPCore
 				return	true;
 			}
 
-			if(!mChildren[0].SaveGFXLeafs_r(bw, gfxLeafFaces, ref totalLeafSize))
+			if(!mFront.SaveGFXLeafs_r(bw, gfxLeafFaces, ref totalLeafSize))
 			{
 				return	false;
 			}
-			if(!mChildren[1].SaveGFXLeafs_r(bw, gfxLeafFaces, ref totalLeafSize))
+			if(!mBack.SaveGFXLeafs_r(bw, gfxLeafFaces, ref totalLeafSize))
 			{
 				return	false;
 			}
@@ -881,11 +883,11 @@ namespace BSPCore
 
 			GBSPFace.ConvertListToGFXAndSave(mFaces, bw);
 			
-			if(!mChildren[0].SaveGFXFaces_r(bw))
+			if(!mFront.SaveGFXFaces_r(bw))
 			{
 				return	false;
 			}
-			if(!mChildren[1].SaveGFXFaces_r(bw))
+			if(!mBack.SaveGFXFaces_r(bw))
 			{
 				return	false;
 			}

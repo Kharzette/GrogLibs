@@ -1065,7 +1065,7 @@ namespace BSPCore
 				//Find out what type of light it is by it's classname...
 				ent.GetLightType(out dLight.mType);
 
-				Int32	nodeLandedIn	=FindNodeLandedIn(mGFXModels[0].mRootNode[0], dLight.mOrigin);
+				Int32	nodeLandedIn	=FindNodeLandedIn(mGFXModels[0].mRootNode, dLight.mOrigin);
 				Int32	leaf	=-(nodeLandedIn + 1);
 				Int32	clust	=mGFXLeafs[leaf].mCluster;
 

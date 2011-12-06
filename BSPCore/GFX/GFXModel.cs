@@ -9,23 +9,22 @@ namespace BSPCore
 {
 	public class GFXModel : UtilityLib.IReadWriteable
 	{
-		public Int32		[]mRootNode	=new Int32[2];	// Top level Node in GFXNodes/GFXBNodes
+		public Int32		mRootNode;					// Top level Node in GFXNodes/GFXBNodes
 		public Vector3		mMins;
 		public Vector3		mMaxs;
-		public Vector3		mOrigin;						// Center of model
+		public Vector3		mOrigin;					// Center of model
 		public Int32		mFirstFace;					// First face in GFXFaces
 		public Int32		mNumFaces;					// Number of faces
 		public Int32		mFirstLeaf;					// First leaf in GFXLeafs;
 		public Int32		mNumLeafs;					// Number of leafs (not including solid leaf)
 		public Int32		mFirstCluster;
 		public Int32		mNumClusters;
-		public Int32		[]mAreas	=new Int32[2];		// Area on each side of the model
+		public Int32		[]mAreas	=new Int32[2];	// Area on each side of the model
 
 
 		public void Write(BinaryWriter bw)
 		{
-			bw.Write(mRootNode[0]);
-			bw.Write(mRootNode[1]);
+			bw.Write(mRootNode);
 			bw.Write(mMins.X);
 			bw.Write(mMins.Y);
 			bw.Write(mMins.Z);
@@ -47,8 +46,7 @@ namespace BSPCore
 
 		public void Read(BinaryReader br)
 		{
-			mRootNode[0]	=br.ReadInt32();
-			mRootNode[1]	=br.ReadInt32();
+			mRootNode		=br.ReadInt32();
 			mMins.X			=br.ReadSingle();
 			mMins.Y			=br.ReadSingle();
 			mMins.Z			=br.ReadSingle();

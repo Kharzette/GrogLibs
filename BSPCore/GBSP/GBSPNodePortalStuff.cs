@@ -48,8 +48,8 @@ namespace BSPCore
 				return	true;
 			}
 
-			GBSPNode	front	=mChildren[0];
-			GBSPNode	back	=mChildren[1];
+			GBSPNode	front	=mFront;
+			GBSPNode	back	=mBack;
 
 			GBSPPlane	thisPlane	=pool.mPlanes[mPlaneNum];
 
@@ -300,10 +300,10 @@ namespace BSPCore
 			outsideNode.mBounds.mMins	=Vector3.Zero;
 			outsideNode.mBounds.mMaxs	=Vector3.Zero;
 			outsideNode.mBrushList		=null;
-			outsideNode.mChildren[0]	=null;
-			outsideNode.mChildren[1]	=null;
-			outsideNode.mChildrenID[0]	=0;
-			outsideNode.mChildrenID[1]	=0;
+			outsideNode.mFront			=null;
+			outsideNode.mBack			=null;
+			outsideNode.mFrontID		=0;
+			outsideNode.mBackID			=0;
 			outsideNode.mCluster		=0;
 			outsideNode.mCurrentFill	=0;
 			outsideNode.mbDetail		=false;
@@ -420,8 +420,8 @@ namespace BSPCore
 				return;
 			}
 
-			mChildren[0].GetPortalTriangles(verts, indexes, bCheckFlags);
-			mChildren[1].GetPortalTriangles(verts, indexes, bCheckFlags);
+			mFront.GetPortalTriangles(verts, indexes, bCheckFlags);
+			mBack.GetPortalTriangles(verts, indexes, bCheckFlags);
 		}
 
 
@@ -583,8 +583,8 @@ namespace BSPCore
 		{
 			if(mPlaneNum != PlanePool.PLANENUM_LEAF)
 			{
-				mChildren[0].FillUnTouchedLeafs_r(curFill, ref numRemovedLeafs);
-				mChildren[1].FillUnTouchedLeafs_r(curFill, ref numRemovedLeafs);
+				mFront.FillUnTouchedLeafs_r(curFill, ref numRemovedLeafs);
+				mBack.FillUnTouchedLeafs_r(curFill, ref numRemovedLeafs);
 				return;
 			}
 
@@ -664,8 +664,8 @@ namespace BSPCore
 			//Recurse to leafs 
 			if(mPlaneNum != PlanePool.PLANENUM_LEAF)
 			{
-				mChildren[0].MarkVisibleSides_r(pool);
-				mChildren[1].MarkVisibleSides_r(pool);
+				mFront.MarkVisibleSides_r(pool);
+				mBack.MarkVisibleSides_r(pool);
 				return;
 			}
 
@@ -773,12 +773,12 @@ namespace BSPCore
 				return	true;
 			}
 
-			if(!FreePortals_r(node.mChildren[0]))
+			if(!FreePortals_r(node.mFront))
 			{
 				return	false;
 			}
 
-			if(!FreePortals_r(node.mChildren[1]))
+			if(!FreePortals_r(node.mBack))
 			{
 				return	false;
 			}
@@ -905,11 +905,11 @@ namespace BSPCore
 				CoreEvents.Print("*WARNING* SavePortalFile_r:  Node with portal.\n");
 			}
 
-			if(!mChildren[0].GetVisInfo(visPortals, visLeafs, pool, numLeafClusters))
+			if(!mFront.GetVisInfo(visPortals, visLeafs, pool, numLeafClusters))
 			{
 				return	false;
 			}
-			if(!mChildren[1].GetVisInfo(visPortals, visLeafs, pool, numLeafClusters))
+			if(!mBack.GetVisInfo(visPortals, visLeafs, pool, numLeafClusters))
 			{
 				return	false;
 			}
@@ -934,8 +934,8 @@ namespace BSPCore
 
 			mPortalLeafNum	=numPortalLeafs;
 
-			mChildren[0].FillLeafNumbers_r(ref numPortalLeafs, ref numPortals);
-			mChildren[1].FillLeafNumbers_r(ref numPortalLeafs, ref numPortals);
+			mFront.FillLeafNumbers_r(ref numPortalLeafs, ref numPortals);
+			mBack.FillLeafNumbers_r(ref numPortalLeafs, ref numPortals);
 		}
 
 
@@ -944,8 +944,8 @@ namespace BSPCore
 			if(mPlaneNum != PlanePool.PLANENUM_LEAF && !mbDetail)
 			{
 				mPortalLeafNum	=-99;
-				mChildren[0].NumberLeafs_r(ref numPortalLeafs, ref numPortals);
-				mChildren[1].NumberLeafs_r(ref numPortalLeafs, ref numPortals);
+				mFront.NumberLeafs_r(ref numPortalLeafs, ref numPortals);
+				mBack.NumberLeafs_r(ref numPortalLeafs, ref numPortals);
 				return;
 			}
 
@@ -1000,11 +1000,11 @@ namespace BSPCore
 			if(mPlaneNum != PlanePool.PLANENUM_LEAF && !mbDetail)
 			{
 				mPortalLeafNum	=-99;
-				if(!mChildren[0].PrepPortalFile_r(ref numPortalLeafs, ref numPortals))
+				if(!mFront.PrepPortalFile_r(ref numPortalLeafs, ref numPortals))
 				{
 					return	false;
 				}
-				if(!mChildren[1].PrepPortalFile_r(ref numPortalLeafs, ref numPortals))
+				if(!mBack.PrepPortalFile_r(ref numPortalLeafs, ref numPortals))
 				{
 					return	false;
 				}
@@ -1167,11 +1167,11 @@ namespace BSPCore
 				CoreEvents.Print("*WARNING* SavePortalFile_r:  Node with portal.\n");
 			}
 
-			if(!mChildren[0].SavePortalFile_r(bw, pool, numLeafClusters))
+			if(!mFront.SavePortalFile_r(bw, pool, numLeafClusters))
 			{
 				return	false;
 			}
-			if(!mChildren[1].SavePortalFile_r(bw, pool, numLeafClusters))
+			if(!mBack.SavePortalFile_r(bw, pool, numLeafClusters))
 			{
 				return	false;
 			}
@@ -1203,11 +1203,11 @@ namespace BSPCore
 				CoreEvents.Print("*WARNING* MergePortals_r:  Node with portal.\n");
 			}
 
-			if(!mChildren[0].MergePortals_r(pool))
+			if(!mFront.MergePortals_r(pool))
 			{
 				return	false;
 			}
-			if(!mChildren[1].MergePortals_r(pool))
+			if(!mBack.MergePortals_r(pool))
 			{
 				return	false;
 			}
@@ -1372,11 +1372,11 @@ namespace BSPCore
 				return	true;
 			}
 
-			if(!mChildren[0].CreateLeafSides_r(pool, ref numLeafBevels, leafSides))
+			if(!mFront.CreateLeafSides_r(pool, ref numLeafBevels, leafSides))
 			{
 				return	false;
 			}
-			if(!mChildren[1].CreateLeafSides_r(pool, ref numLeafBevels, leafSides))
+			if(!mBack.CreateLeafSides_r(pool, ref numLeafBevels, leafSides))
 			{
 				return	false;
 			}
@@ -1591,11 +1591,11 @@ namespace BSPCore
 				return	true;
 			}
 
-			if(!mChildren[0].CreateAreas_r(ref numAreas, modForLeaf))
+			if(!mFront.CreateAreas_r(ref numAreas, modForLeaf))
 			{
 				return	false;
 			}
-			if(!mChildren[1].CreateAreas_r(ref numAreas, modForLeaf))
+			if(!mBack.CreateAreas_r(ref numAreas, modForLeaf))
 			{
 				return	false;
 			}
@@ -1609,11 +1609,11 @@ namespace BSPCore
 
 			if(mPlaneNum != PlanePool.PLANENUM_LEAF)
 			{
-				if(!mChildren[0].FinishAreaPortals_r(modForLeaf))
+				if(!mFront.FinishAreaPortals_r(modForLeaf))
 				{
 					return	false;
 				}
-				if(!mChildren[1].FinishAreaPortals_r(modForLeaf))
+				if(!mBack.FinishAreaPortals_r(modForLeaf))
 				{
 					return	false;
 				}

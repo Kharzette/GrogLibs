@@ -126,7 +126,7 @@ namespace BSPCore
 				{
 					foreach(Vector3 v in s.mPoly.mVerts)
 					{
-						if(!bound.IsPointInbounds(v, 0.1f))
+						if(!bound.IsPointInbounds(v, UtilityLib.Mathery.ON_EPSILON))
 						{
 							return	false;
 						}

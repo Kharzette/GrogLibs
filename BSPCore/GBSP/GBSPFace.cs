@@ -12,7 +12,7 @@ namespace BSPCore
 		GBSPFace	mNext;
 		GBSPFace	mOriginal;
 		GBSPPoly	mPoly;
-		UInt32		[]mContents	=new UInt32[2];
+		UInt32		mFrontContents, mBackContents;
 		Int32		mTexInfo;
 		Int32		mPlaneNum;
 		Int32		mPlaneSide;
@@ -28,7 +28,7 @@ namespace BSPCore
 		internal Int32	mFirstIndexVert;
 
 		internal GBSPPortal	mPortal;
-		internal GBSPFace	[]mSplit	=new GBSPFace[2];
+		internal GBSPFace	mSplit0, mSplit1;
 		internal GBSPFace	mMerged;
 
 		internal const float	COLINEAR_EPSILON	=0.0001f;
@@ -40,8 +40,8 @@ namespace BSPCore
 			mPoly			=new GBSPPoly(copyMe.mPoly);
 			mNext			=copyMe.mNext;
 			mOriginal		=copyMe.mOriginal;
-			mContents[0]	=copyMe.mContents[0];
-			mContents[1]	=copyMe.mContents[1];
+			mFrontContents	=copyMe.mFrontContents;
+			mBackContents	=copyMe.mBackContents;
 			mTexInfo		=copyMe.mTexInfo;
 			mPlaneNum		=copyMe.mPlaneNum;
 			mPlaneSide		=copyMe.mPlaneSide;
@@ -51,8 +51,8 @@ namespace BSPCore
 			mIndexVerts		=copyMe.mIndexVerts;
 			mFirstIndexVert	=copyMe.mFirstIndexVert;
 			mPortal			=copyMe.mPortal;
-			mSplit[0]		=copyMe.mSplit[0];
-			mSplit[1]		=copyMe.mSplit[1];
+			mSplit0			=copyMe.mSplit0;
+			mSplit1			=copyMe.mSplit1;
 			mMerged			=copyMe.mMerged;
 		}
 
@@ -91,13 +91,13 @@ namespace BSPCore
 				return null;
 			}
 
-			if((face1.mContents[0] & Contents.BSP_MERGE_SEP_CONTENTS)
-				!= (face2.mContents[0] & Contents.BSP_MERGE_SEP_CONTENTS))
+			if((face1.mFrontContents & Contents.BSP_MERGE_SEP_CONTENTS)
+				!= (face2.mFrontContents & Contents.BSP_MERGE_SEP_CONTENTS))
 			{
 				return	null;
 			}
-			if((face1.mContents[1] & Contents.BSP_MERGE_SEP_CONTENTS)
-				!= (face2.mContents[1] & Contents.BSP_MERGE_SEP_CONTENTS))
+			if((face1.mBackContents & Contents.BSP_MERGE_SEP_CONTENTS)
+				!= (face2.mBackContents & Contents.BSP_MERGE_SEP_CONTENTS))
 			{
 				return	null;
 			}
@@ -145,7 +145,7 @@ namespace BSPCore
 					continue;
 				}
 
-				if(face1.mMerged != null || face1.mSplit[0] != null || face1.mSplit[1] != null)
+				if(face1.mMerged != null || face1.mSplit0 != null || face1.mSplit1 != null)
 				{
 					continue;
 				}
@@ -157,7 +157,7 @@ namespace BSPCore
 						continue;
 					}
 
-					if(face2.mMerged != null || face2.mSplit[0] != null || face2.mSplit[1] != null)
+					if(face2.mMerged != null || face2.mSplit0 != null || face2.mSplit1 != null)
 					{
 						continue;
 					}
@@ -188,6 +188,61 @@ namespace BSPCore
 						
 					merged.mNext	=null;
 					end.mNext		=merged;
+					break;
+				}
+			}
+			return	true;
+		}
+
+
+		internal static bool MergeFaceList(List<GBSPFace> faces, PlanePool pool, ref int numMerged)
+		{
+			foreach(GBSPFace face1 in faces)
+			{
+				if(face1.mPoly.VertCount() == -1)
+				{
+					continue;
+				}
+
+				if(face1.mMerged != null || face1.mSplit0 != null || face1.mSplit1 != null)
+				{
+					continue;
+				}
+
+				foreach(GBSPFace face2 in faces)
+				{
+					if(face2.mPoly.VertCount() == -1)
+					{
+						continue;
+					}
+
+					if(face2.mMerged != null || face2.mSplit0 != null || face2.mSplit1 != null)
+					{
+						continue;
+					}
+					
+					GBSPFace	merged	=MergeFace(face1, face2, pool);
+
+					if(merged == null)
+					{
+						continue;
+					}
+
+					merged.mPoly.RemoveDegenerateEdges();
+					
+					if(!merged.Check(false, pool))
+					{
+						merged.Free();
+						face1.mMerged	=null;
+						face2.mMerged	=null;
+						continue;
+					}
+
+					numMerged++;
+
+					//Add the Merged to the end of the face list 
+					//so it will be checked against all the faces again
+					faces.Add(merged);
 					break;
 				}
 			}
@@ -232,13 +287,24 @@ namespace BSPCore
 
 		internal void SetContents(int idx, UInt32 val)
 		{
-			mContents[idx]	=val;
+			if(idx == 0)
+			{
+				mFrontContents	=val;
+			}
+			else
+			{
+				mBackContents	=val;
+			}
 		}
 
 
 		internal UInt32 GetContents(int idx)
 		{
-			return	mContents[idx];
+			if(idx == 0)
+			{
+				return	mFrontContents;
+			}
+			return	mBackContents;
 		}
 
 
@@ -257,31 +323,13 @@ namespace BSPCore
 		}
 
 
-		static internal void FreeFaceList(GBSPFace listHead)
+		static internal bool GetFaceListVertIndexNumbers(List<GBSPFace> list, FaceFixer ff)
 		{
-			GBSPFace	Next	=null;
-			for(GBSPFace f=listHead;f != null;f=Next)
-			{
-				Next	=f.mNext;
-				f		=null;
-			}
-		}
-
-
-		static internal void AddToListStart(ref GBSPFace listHead, GBSPFace newFace)
-		{
-			newFace.mNext	=listHead;
-			listHead		=newFace;
-		}
-
-
-		static internal bool GetFaceListVertIndexNumbers(GBSPFace listHead, FaceFixer ff)
-		{
-			for(GBSPFace f=listHead;f != null;f = f.mNext)
+			foreach(GBSPFace f in list)
 			{
 				if(f.mMerged != null
-					|| f.mSplit[0] != null
-					|| f.mSplit[1] != null)
+					|| f.mSplit0 != null
+					|| f.mSplit1 != null)
 				{
 					continue;
 				}
@@ -295,13 +343,13 @@ namespace BSPCore
 		}
 
 
-		static internal bool FixFaceListTJunctions(GBSPFace listHead, FaceFixer ff, TexInfoPool tip)
+		static internal bool FixFaceListTJunctions(List<GBSPFace> list, FaceFixer ff, TexInfoPool tip)
 		{
-			for(GBSPFace f=listHead;f != null;f = f.mNext)
+			foreach(GBSPFace f in list)
 			{
 				if(f.mMerged != null
-					|| f.mSplit[0] != null
-					|| f.mSplit[1] != null)
+					|| f.mSplit0 != null
+					|| f.mSplit1 != null)
 				{
 					continue;
 				}
@@ -326,10 +374,10 @@ namespace BSPCore
 
 
 		//prepares faces for writing
-		internal static int PrepFaceList(GBSPFace listHead, NodeCounter nc)
+		internal static int PrepFaceList(List<GBSPFace> list, NodeCounter nc)
 		{
 			int	numFaces	=0;
-			for(GBSPFace f=listHead;f != null;f=f.mNext)
+			foreach(GBSPFace f in list)
 			{
 				if(!f.mbVisible)
 				{
@@ -337,8 +385,8 @@ namespace BSPCore
 				}
 
 				if(f.mMerged != null ||
-					f.mSplit[0] != null ||
-					f.mSplit[1] != null)
+					f.mSplit0 != null ||
+					f.mSplit1 != null)
 				{
 					continue;
 				}
@@ -364,9 +412,9 @@ namespace BSPCore
 		}
 
 
-		internal static void ConvertListToGFXAndSave(GBSPFace listHead, BinaryWriter bw)
+		internal static void ConvertListToGFXAndSave(List<GBSPFace> list, BinaryWriter bw)
 		{
-			for(GBSPFace f=listHead;f != null;f=f.mNext)
+			foreach(GBSPFace f in list)
 			{
 				if(!f.mbVisible)
 				{
@@ -374,8 +422,8 @@ namespace BSPCore
 				}
 
 				if(f.mMerged != null
-					|| f.mSplit[0] != null
-					|| f.mSplit[1] != null)
+					|| f.mSplit0 != null
+					|| f.mSplit1 != null)
 				{
 					continue;
 				}

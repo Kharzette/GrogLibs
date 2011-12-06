@@ -128,7 +128,7 @@ namespace BSPCore
 		bool RayCollide(Vector3 Front, Vector3 Back, ref Vector3 I)
 		{
 			bool	hitLeaf	=false;
-			if(RayIntersect(Front, Back, mGFXModels[0].mRootNode[0], ref I, ref hitLeaf))
+			if(RayIntersect(Front, Back, mGFXModels[0].mRootNode, ref I, ref hitLeaf))
 			{
 				return	true;
 			}

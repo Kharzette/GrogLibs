@@ -9,13 +9,13 @@ namespace BSPCore
 {
 	internal class GBSPModel
 	{
-		GBSPNode	[]mRootNode		=new GBSPNode[2];
+		GBSPNode	mRootNode;
 		Vector3		mOrigin;
 		GBSPNode	mOutsideNode	=new GBSPNode();
 		Bounds		mBounds;
 
 		//for saving, might delete
-		internal int	[]mRootNodeID	=new int[2];
+		internal int	mRootNodeID;
 		internal int	mFirstFace, mNumFaces;
 		internal int	mFirstLeaf, mNumLeafs;
 		internal int	mFirstCluster, mNumClusters;
@@ -140,7 +140,7 @@ namespace BSPCore
 
 			root.MergeNodes(bVerbose);
 
-			mRootNode[0]	=root;
+			mRootNode	=root;
 
 			return	true;
 		}
@@ -224,7 +224,7 @@ namespace BSPCore
 
 			root.MergeNodes(bVerbose);
 
-			mRootNode[0]	=root;
+			mRootNode	=root;
 
 			return	true;
 		}
@@ -232,7 +232,7 @@ namespace BSPCore
 
 		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool bCheck)
 		{
-			mRootNode[0].GetLeafTriangles(verts, indexes, bCheck);
+			mRootNode.GetLeafTriangles(verts, indexes, bCheck);
 		}
 
 
@@ -242,7 +242,7 @@ namespace BSPCore
 		{
 			if(bSaveVis)
 			{
-				if(!mRootNode[0].CreatePortals(mOutsideNode, true, false, pool, mBounds.mMins, mBounds.mMaxs))
+				if(!mRootNode.CreatePortals(mOutsideNode, true, false, pool, mBounds.mMins, mBounds.mMaxs))
 				{
 					CoreEvents.Print("Could not create VIS portals.\n");
 					return	false;
@@ -250,7 +250,7 @@ namespace BSPCore
 
 				mFirstCluster	=numLeafClusters;
 
-				if(!mRootNode[0].CreateLeafClusters(bVerbose, ref numLeafClusters))
+				if(!mRootNode.CreateLeafClusters(bVerbose, ref numLeafClusters))
 				{
 					CoreEvents.Print("Could not create leaf clusters.\n");
 					return	false;
@@ -263,7 +263,7 @@ namespace BSPCore
 					return	false;
 				}
 
-				if(!mRootNode[0].FreePortals())
+				if(!mRootNode.FreePortals())
 				{
 					CoreEvents.Print("PrepGBSPModel:  Could not free portals.\n");
 					return	false;
@@ -275,13 +275,13 @@ namespace BSPCore
 				mNumClusters	=0;
 			}
 
-			if(!mRootNode[0].CreatePortals(mOutsideNode, false, false, pool, mBounds.mMins, mBounds.mMaxs))
+			if(!mRootNode.CreatePortals(mOutsideNode, false, false, pool, mBounds.mMins, mBounds.mMaxs))
 			{
 				CoreEvents.Print("Could not create REAL portals.\n");
 				return	false;
 			}
 
-			if(!mRootNode[0].CreateLeafSides(pool, leafSides, bVerbose))
+			if(!mRootNode.CreateLeafSides(pool, leafSides, bVerbose))
 			{
 				CoreEvents.Print("Could not create leaf sides.\n");
 				return	false;
@@ -295,7 +295,7 @@ namespace BSPCore
 			mFirstFace	=nc.mNumGFXFaces;
 			mFirstLeaf	=nc.mNumGFXLeafs;
 
-			mRootNodeID[0]	=mRootNode[0].PrepGFXNodes_r(mRootNodeID[0], nc);
+			mRootNodeID	=mRootNode.PrepGFXNodes_r(mRootNodeID, nc);
 
 			mNumFaces	=nc.mNumGFXFaces - mFirstFace;
 			mNumLeafs	=nc.mNumGFXLeafs - mFirstLeaf;
@@ -330,7 +330,7 @@ namespace BSPCore
 
 //			mRootNode[0].NumberLeafs_r(ref numPortalLeafs, ref numPortals);
 
-			if(!mRootNode[0].PrepPortalFile_r(ref numPortalLeafs, ref numPortals))
+			if(!mRootNode.PrepPortalFile_r(ref numPortalLeafs, ref numPortals))
 			{
 				bw.Close();
 				fs.Close();
@@ -350,7 +350,7 @@ namespace BSPCore
 			bw.Write(numPortals);
 			bw.Write(mNumClusters);
 
-			if(!mRootNode[0].SavePortalFile_r(bw, pool, numLeafClusters))
+			if(!mRootNode.SavePortalFile_r(bw, pool, numLeafClusters))
 			{
 				bw.Close();
 				fs.Close();
@@ -375,13 +375,13 @@ namespace BSPCore
 
 		internal bool GetFaceVertIndexNumbers(FaceFixer ff)
 		{
-			return	mRootNode[0].GetFaceVertIndexNumbers_r(ff);
+			return	mRootNode.GetFaceVertIndexNumbers_r(ff);
 		}
 
 
 		internal bool FixTJunctions(FaceFixer ff, TexInfoPool tip)
 		{
-			return	mRootNode[0].FixTJunctions_r(ff, tip);
+			return	mRootNode.FixTJunctions_r(ff, tip);
 		}
 
 
@@ -389,11 +389,10 @@ namespace BSPCore
 		{
 			GFXModel	GModel	=new GFXModel();
 
-			GModel.mRootNode[0]		=mRootNodeID[0];
+			GModel.mRootNode		=mRootNodeID;
 			GModel.mOrigin			=mOrigin;
 			GModel.mMins			=mBounds.mMins;
 			GModel.mMaxs			=mBounds.mMaxs;
-			GModel.mRootNode[1]		=mRootNodeID[1];
 			GModel.mFirstFace		=mFirstFace;
 			GModel.mNumFaces		=mNumFaces;
 			GModel.mFirstLeaf		=mFirstLeaf;
@@ -409,31 +408,31 @@ namespace BSPCore
 
 		internal bool CreateAreas(ref int numAreas, CoreDelegates.ModelForLeafNode mod4leaf)
 		{
-			return	mRootNode[0].CreateAreas_r(ref numAreas, mod4leaf);
+			return	mRootNode.CreateAreas_r(ref numAreas, mod4leaf);
 		}
 
 
 		internal bool FinishAreaPortals(CoreDelegates.ModelForLeafNode mod4leaf)
 		{
-			return	mRootNode[0].FinishAreaPortals_r(mod4leaf);
+			return	mRootNode.FinishAreaPortals_r(mod4leaf);
 		}
 
 
 		internal bool SaveGFXNodes_r(BinaryWriter bw)
 		{
-			return	mRootNode[0].SaveGFXNodes_r(bw);
+			return	mRootNode.SaveGFXNodes_r(bw);
 		}
 
 
 		internal bool SaveGFXFaces_r(BinaryWriter bw)
 		{
-			return	mRootNode[0].SaveGFXFaces_r(bw);
+			return	mRootNode.SaveGFXFaces_r(bw);
 		}
 
 
 		internal bool SaveGFXLeafs_r(BinaryWriter bw, List<int> gfxLeafFaces, ref int TotalLeafSize)
 		{
-			return	mRootNode[0].SaveGFXLeafs_r(bw, gfxLeafFaces, ref TotalLeafSize);
+			return	mRootNode.SaveGFXLeafs_r(bw, gfxLeafFaces, ref TotalLeafSize);
 		}
 	}
 }
