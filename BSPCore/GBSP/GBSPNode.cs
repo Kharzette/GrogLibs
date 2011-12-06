@@ -42,8 +42,8 @@ namespace BSPCore
 		Int32	mCluster;
 		Int32	mArea;		//Area number, 0 == invalid area
 
-		GBSPSide	mSide;
-		GBSPBrush	mBrushList;
+		GBSPSide		mSide;
+		List<GBSPBrush>	mBrushList;
 
 		//For GFX file saving
 		internal Int32	[]mChildrenID	=new int[2];
@@ -61,7 +61,7 @@ namespace BSPCore
 		internal const int	MAX_AREA_PORTALS	=1024;
 
 
-		internal void BuildBSP(GBSPBrush brushList, PlanePool pool, bool bVerbose)
+		internal void BuildBSP(List<GBSPBrush> brushList, PlanePool pool, bool bVerbose)
 		{
 			if(bVerbose)
 			{
@@ -139,20 +139,20 @@ namespace BSPCore
 			return	n;
 		}
 
-		void LeafNode(GBSPBrush listHead)
+		void LeafNode(List<GBSPBrush> list)
 		{
 			mPlaneNum	=PlanePool.PLANENUM_LEAF;
-			mContents	=GBSPBrush.GetLeafContents(listHead);
+			mContents	=GBSPBrush.GetLeafContents(list);
 
 			//Once brushes get down to the leafs, we don't need
 			//to keep the polys on them anymore...
 			//We can free them now...
-			GBSPBrush.FreeSidePolys(listHead);
+			GBSPBrush.FreeSidePolys(list);
 
 			mBounds.mMins	=Vector3.Zero;
 			mBounds.mMaxs	=Vector3.Zero;
 
-			mBrushList	=listHead;
+			mBrushList	=list;
 		}
 
 
@@ -180,12 +180,12 @@ namespace BSPCore
 		}
 
 
-		void BuildTree_r(BuildStats bs, GBSPBrush brushes, PlanePool pool)
+		void BuildTree_r(BuildStats bs, List<GBSPBrush> brushes, PlanePool pool)
 		{
 			GBSPSide	BestSide;
 
-			GBSPBrush	childrenFront;
-			GBSPBrush	childrenBack;
+			List<GBSPBrush>	childrenFront;
+			List<GBSPBrush>	childrenBack;
 
 			bs.NumVisNodes++;
 
@@ -207,8 +207,8 @@ namespace BSPCore
 
 			GBSPBrush.SplitBrushList(brushes, mPlaneNum, pool, out childrenFront, out childrenBack);
 
-			GBSPBrush.FreeBrushList(brushes);
-			
+			brushes.Clear();
+
 			//Allocate children before recursing
 			for(int i=0;i < 2;i++)
 			{
@@ -365,7 +365,7 @@ namespace BSPCore
 				mLeafFaces	=null;
 
 				GBSPFace.FreeFaceList(mFaces);
-				GBSPBrush.FreeBrushList(mBrushList);
+				mBrushList.Clear();
 				return;
 			}
 
@@ -573,7 +573,7 @@ namespace BSPCore
 
 						//combine brush lists
 						mBrushList	=mChildren[1].mBrushList;
-						GBSPBrush.MergeLists(mChildren[0].mBrushList, mBrushList);
+						mBrushList.AddRange(mChildren[0].mBrushList);
 						mergedNodes++;
 					}
 				}

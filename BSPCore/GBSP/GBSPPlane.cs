@@ -176,20 +176,10 @@ namespace BSPCore
 		}
 
 
+		//negative planes were messing up
 		internal float DistanceFast(Vector3 pos)
 		{
-			switch(mType)
-			{
-				case PLANE_X:
-					return	pos.X - mDist;
-				case PLANE_Y:
-					return	pos.Y - mDist;
-				case PLANE_Z:
-					return	pos.Z - mDist;
-
-				default:
-					return	Vector3.Dot(pos, mNormal) - mDist;
-			}
+			return	Vector3.Dot(pos, mNormal) - mDist;
 		}
 
 

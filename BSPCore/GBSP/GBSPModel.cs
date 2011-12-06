@@ -39,7 +39,7 @@ namespace BSPCore
 			Bounds	modelBounds	=MapBrush.GetListBounds(list);
 
 			list.Reverse();
-			GBSPBrush	glist	=GBSPBrush.ConvertMapBrushList(list);
+			List<GBSPBrush>	glist	=GBSPBrush.ConvertMapBrushList(list);
 			
 			if(block_xh * 1024 > modelBounds.mMaxs.X)
 			{
@@ -146,7 +146,7 @@ namespace BSPCore
 		}
 
 
-		internal void ProcessBlock(GBSPBrush listHead, PlanePool pp, int blockNum, int block_xl, int block_xh, int block_zl, int block_zh)
+		internal void ProcessBlock(List<GBSPBrush> brushes, PlanePool pp, int blockNum, int block_xl, int block_xh, int block_zl, int block_zh)
 		{
 			int		xblock, zblock;
 
@@ -164,9 +164,9 @@ namespace BSPCore
 			blockBounds.mMaxs.Z	=(zblock + 1) * 1024;
 			blockBounds.mMaxs.Y	=4096;
 
-			GBSPBrush	blocked	=GBSPBrush.BlockChopBrushes(listHead, blockBounds, pp);
+			List<GBSPBrush>	blocked	=GBSPBrush.BlockChopBrushes(brushes, blockBounds, pp);
 
-			int	brushCount	=GBSPBrush.CountBrushList(blocked);
+			int	brushCount	=blocked.Count;
 
 			if(!GBSPBrush.TestListInBounds(blocked, blockBounds))
 			{
@@ -175,19 +175,15 @@ namespace BSPCore
 
 			GBSPBrush.DumpBrushListToFile(blocked, "Brush_x" + xblock + "_z" + zblock + ".map");
 
-//			blocked	=GBSPBrush.CSGBrushes(true, blocked, pp);
-
-			List<GBSPBrush>	blockList	=GBSPBrush.BrushListToList(blocked);
-
-			List<GBSPBrush>	newList	=GBSPBrush.CSGBrushes(true, blockList, pp);			
+			List<GBSPBrush>	csgList	=GBSPBrush.CSGBrushes(true, blocked, pp);			
 
 			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
 
 			//print out brushes that are still overlapping
-			GBSPBrush.DumpOverlapping(newList, pp);
+			GBSPBrush.DumpOverlapping(csgList, pp);
 
 			GBSPNode	root	=new GBSPNode();
-			root.BuildBSP(blocked, pp, true);
+			root.BuildBSP(csgList, pp, true);
 			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
 
 			mBlockNodes.SetValue(root, xblock + 5, zblock + 5);
@@ -198,11 +194,13 @@ namespace BSPCore
 			PlanePool pool, TexInfoPool tip, bool bVerbose)
 		{
 			list.Reverse();
-			GBSPBrush	glist	=GBSPBrush.ConvertMapBrushList(list);
-			glist	=GBSPBrush.CSGBrushes(bVerbose, glist, pool);
+
+			List<GBSPBrush>	glist	=GBSPBrush.ConvertMapBrushList(list);
+
+			List<GBSPBrush>	csgList	=GBSPBrush.CSGBrushes(bVerbose, glist, pool);
 
 			GBSPNode	root	=new GBSPNode();
-			root.BuildBSP(glist, pool, bVerbose);
+			root.BuildBSP(csgList, pool, bVerbose);
 
 			mBounds			=new Bounds(root.GetBounds());
 

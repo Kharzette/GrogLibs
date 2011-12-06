@@ -209,27 +209,33 @@ namespace BSPCore
 
 		internal bool IsPointInbounds(Vector3 pnt)
 		{
-			if(pnt.X < mMins.X)
+			return	IsPointInbounds(pnt, 0.0f);
+		}
+
+
+		internal bool IsPointInbounds(Vector3 pnt, float epsilon)
+		{
+			if(pnt.X < (mMins.X - epsilon))
 			{
 				return	false;
 			}
-			if(pnt.Y < mMins.Y)
+			if(pnt.Y < (mMins.Y - epsilon))
 			{
 				return	false;
 			}
-			if(pnt.Z < mMins.Z)
+			if(pnt.Z < (mMins.Z - epsilon))
 			{
 				return	false;
 			}
-			if(pnt.X > mMaxs.X)
+			if(pnt.X > (mMaxs.X + epsilon))
 			{
 				return	false;
 			}
-			if(pnt.Y > mMaxs.Y)
+			if(pnt.Y > (mMaxs.Y + epsilon))
 			{
 				return	false;
 			}
-			if(pnt.Z > mMaxs.Z)
+			if(pnt.Z > (mMaxs.Z + epsilon))
 			{
 				return	false;
 			}
