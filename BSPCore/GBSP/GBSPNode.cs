@@ -257,10 +257,8 @@ namespace BSPCore
 		}
 
 
-		bool CreatePolyOnNode(out GBSPPoly outPoly, PlanePool pool)
+		bool CreatePortalOnNode(PlanePool pool)
 		{
-			outPoly	=null;
-
 			GBSPPoly	poly	=new GBSPPoly(pool.mPlanes[mPlaneNum]);
 			if(poly == null)
 			{
@@ -268,7 +266,7 @@ namespace BSPCore
 				return	false;
 			}
 
-			//Clip this portal by all the parents of this node
+			//clip by parents
 			GBSPNode	node	=this;
 			for(GBSPNode parent = mParent;parent != null && !poly.IsTiny();)
 			{
@@ -287,7 +285,25 @@ namespace BSPCore
 				parent	=parent.mParent;
 			}
 
-			outPoly	=poly;
+			//clip by portals on the node
+			for(GBSPPortal port = mPortals;port != null;port = NextPortal(port))
+			{
+				bool	bFlipSide	=(port.mFrontNode != this);
+
+				poly.ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, port.mPlane, bFlipSide);
+			}
+
+			if(poly.IsTiny())
+			{
+				return	false;
+			}
+
+			GBSPPortal	newPortal	=new GBSPPortal();
+			newPortal.mPlane		=pool.mPlanes[mPlaneNum];
+			newPortal.mOnNode		=this;
+			newPortal.mPoly			=poly;
+
+			AddPortalToNodes(newPortal, mFront, mBack);
 
 			return	true;
 		}
@@ -422,24 +438,51 @@ namespace BSPCore
 
 			//See which portals are valid
 			Int32	side;
-			for(GBSPPortal p=mPortals;p != null;p=p.mNext[side])
+			for(GBSPPortal p = mPortals;p != null;)
 			{
-				side	=(p.mNodes[1] == this)? 1 : 0;
+				side	=(p.mBackNode == this)? 1 : 0;
 
-				p.mFace[side]	=p.FaceFromPortal(side);
-				if(p.mFace[side] != null)
+				GBSPFace	newFace;
+				if(side == 0)
+				{
+					p.mFrontFace	=p.FaceFromPortal(side);
+					newFace			=p.mFrontFace;
+				}
+				else
+				{
+					p.mBackFace		=p.FaceFromPortal(side);
+					newFace			=p.mBackFace;
+				}
+
+				if(newFace != null)
 				{
 					//Record the contents on each side of the face
-					p.mFace[side].SetContents(0, mContents);
-					p.mFace[side].SetContents(1, p.mNodes[(side == 0)? 1 : 0].mContents);	// Back side contents is the leaf on the other side of this portal
+					newFace.SetContents(0, mContents);
+
+					//Back side contents is the leaf on the other side of this portal
+					if(side == 0)
+					{
+						newFace.SetContents(1, p.mBackNode.mContents);
+					}
+					else
+					{
+						newFace.SetContents(1, p.mFrontNode.mContents);
+					}					
 
 					//Add the face to the list of faces on the node
 					//that originaly created the portal
-//					GBSPFace.AddToListStart(ref p.mOnNode.mFaces, p.mFace[side]);
-
-					p.mOnNode.mFaces.Add(p.mFace[side]);
+					p.mOnNode.mFaces.Add(newFace);
 
 					numMake++;
+				}
+
+				if(side == 0)
+				{
+					p	=p.mFrontPort;
+				}
+				else
+				{
+					p	=p.mBackPort;
 				}
 			}
 		}
@@ -466,32 +509,65 @@ namespace BSPCore
 
 			//See which portals are valid
 			Int32	side;
-			for(GBSPPortal p=mPortals;p != null;p=p.mNext[side])
+			for(GBSPPortal p=mPortals;p != null;)
 			{
-				side	=(p.mNodes[1] == this)? 1 : 0;
+				side	=(p.mBackNode == this)? 1 : 0;
 
-				if(p.mFace[side] == null)
+				if(side == 0)
 				{
-					continue;
-				}
+					if(p.mFrontFace == null)
+					{
+						continue;
+					}
 
-				CountLeafFaces_r(p.mFace[side]);
+					CountLeafFaces_r(p.mFrontFace);
+
+					p	=p.mFrontPort;
+				}
+				else
+				{
+					if(p.mBackFace == null)
+					{
+						continue;
+					}
+
+					CountLeafFaces_r(p.mBackFace);
+
+					p	=p.mBackPort;
+				}
 			}
+
 
 			//Reset counter
 			mNumLeafFaces	=0;
 			
 			//See which portals are valid
-			for(GBSPPortal p=mPortals;p != null;p=p.mNext[side])
+			for(GBSPPortal p=mPortals;p != null;)
 			{
-				side	=(p.mNodes[1] == this)? 1 : 0;
+				side	=(p.mBackNode == this)? 1 : 0;
 
-				if(p.mFace[side] == null)
+				if(side == 0)
 				{
-					continue;
-				}
+					if(p.mFrontFace == null)
+					{
+						continue;
+					}
 
-				GetLeafFaces_r(p.mFace[side]);
+					GetLeafFaces_r(p.mFrontFace);
+
+					p	=p.mFrontPort;
+				}
+				else
+				{
+					if(p.mBackFace == null)
+					{
+						continue;
+					}
+
+					GetLeafFaces_r(p.mBackFace);
+
+					p	=p.mBackPort;
+				}
 			}
 		}
 

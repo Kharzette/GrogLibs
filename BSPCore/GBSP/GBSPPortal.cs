@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
 using Microsoft.Xna.Framework;
 
 
@@ -8,13 +9,13 @@ namespace BSPCore
 {
 	internal class GBSPPortal
 	{
-		internal GBSPPoly	mPoly;							//Convex poly that holds the shape of the portal
-		internal GBSPNode	[]mNodes	=new GBSPNode[2];	//Node on each side of the portal
-		internal GBSPPortal	[]mNext		=new GBSPPortal[2];	//Next portal for each node
-		internal Int32		mPlaneNum;
+		internal GBSPPoly	mPoly;					//Convex poly that holds the shape of the portal
+		internal GBSPNode	mFrontNode, mBackNode;	//Node on each side of the portal
+		internal GBSPPortal	mFrontPort, mBackPort;	//Next portal for each node
+		internal GBSPPlane	mPlane;
 
 		internal GBSPNode	mOnNode;
-		internal GBSPFace	[]mFace	=new GBSPFace[2];
+		internal GBSPFace	mFrontFace, mBackFace;
 		internal GBSPSide	mSide;
 		internal byte		mSideFound;
 
@@ -23,84 +24,47 @@ namespace BSPCore
 		internal GBSPPortal(GBSPPortal copyMe)
 		{
 			mPoly		=new GBSPPoly(copyMe.mPoly);
-			mNodes[0]	=copyMe.mNodes[0];
-			mNodes[1]	=copyMe.mNodes[1];
-			mNext[0]	=copyMe.mNext[0];
-			mNext[1]	=copyMe.mNext[1];
-			mPlaneNum	=copyMe.mPlaneNum;
+			mFrontNode	=copyMe.mFrontNode;
+			mBackNode	=copyMe.mBackNode;
+			mFrontPort	=copyMe.mFrontPort;
+			mBackPort	=copyMe.mBackPort;
+			mPlane		=copyMe.mPlane;
 			mOnNode		=copyMe.mOnNode;
-			mFace[0]	=copyMe.mFace[0];
-			mFace[1]	=copyMe.mFace[1];
+			mFrontFace	=copyMe.mFrontFace;
+			mBackFace	=copyMe.mBackFace;
 			mSide		=copyMe.mSide;
 			mSideFound	=copyMe.mSideFound;
 		}
 
 
-		internal static GBSPPortal CreateOutsidePortal(GBSPPlane plane,
-			GBSPNode node, PlanePool pool, ref GBSPNode outsideNode)
+		internal GBSPFace FaceFromPortal(Int32 planeSide)
 		{
-			GBSPPortal	newPortal;
-			sbyte		side;
-
-			newPortal	=new GBSPPortal();
-			if(newPortal == null)
+			if(mSide == null)
 			{
-				return	null;
+				return	null;	//Portal does not bridge different visible contents
 			}
 
-			newPortal.mPoly	=new GBSPPoly(plane);
-			if(newPortal.mPoly == null || newPortal.mPoly.IsTiny())
+			if(planeSide == 0)
 			{
-				return	null;
-			}
-			newPortal.mPlaneNum	=pool.FindPlane(plane, out side);
-
-			if(newPortal.mPlaneNum == -1)
-			{
-				CoreEvents.Print("CreateOutsidePortal:  Could not create plane.\n");
-				return	null;
-			}
-
-			if(side == 0)
-			{
-				if(!GBSPNode.AddPortalToNodes(newPortal, node, outsideNode))
+				if(GBSPNode.WindowCheck(mFrontNode, mBackNode))
 				{
 					return	null;
 				}
 			}
 			else
 			{
-				if(!GBSPNode.AddPortalToNodes(newPortal, outsideNode, node))
+				if(GBSPNode.WindowCheck(mBackNode, mFrontNode))
 				{
 					return	null;
 				}
 			}
-			return	newPortal;
-		}
-
-
-		internal GBSPFace FaceFromPortal(Int32 planeSide)
-		{
-			Int32	notPlaneSide	=(planeSide == 0)? 1 : 0;
-
-			GBSPSide	Side	=mSide;			
-			if(Side == null)
-			{
-				return	null;	//Portal does not bridge different visible contents
-			}
-
-			if(GBSPNode.WindowCheck(mNodes[planeSide], mNodes[notPlaneSide]))
-			{
-				return	null;
-			}
-
 			return	new GBSPFace(this, planeSide);
 		}
 
 
 		internal void FindPortalSide(PlanePool pool)
 		{
-			GBSPSide	bestSide	=mOnNode.GetBestPortalSide(mNodes[0], mNodes[1], pool);
+			GBSPSide	bestSide	=mOnNode.GetBestPortalSide(mFrontNode, mBackNode, pool);
 			if(bestSide == null)
 			{
 				return;
@@ -116,7 +80,7 @@ namespace BSPCore
 			UInt32	c1, c2;
 
 			//Can't see into or from solid
-			if(mNodes[0].IsContentsSolid() || mNodes[1].IsContentsSolid())
+			if(mFrontNode.IsContentsSolid() || mBackNode.IsContentsSolid())
 			{
 				return	false;
 			}
@@ -127,8 +91,8 @@ namespace BSPCore
 			}
 
 			//'Or' together all cluster contents under portals nodes
-			c1	=mNodes[0].ClusterContents();
-			c2	=mNodes[1].ClusterContents();
+			c1	=mFrontNode.ClusterContents();
+			c2	=mBackNode.ClusterContents();
 
 			//Can only see through portal if contents on both sides are translucent...
 			//if ((c1 & BSP_CONTENTS_TRANSLUCENT) && (c2 & BSP_CONTENTS_TRANSLUCENT))
@@ -213,88 +177,9 @@ namespace BSPCore
 		}
 
 
-		internal void Merge(GBSPNode n, PlanePool pool)
+		internal void Write(BinaryWriter bw)
 		{
-			//make a list of possible merge candidates
-			List<GBSPPortal>	nextPorts	=new List<GBSPPortal>();
-
-			Vector3	norm	=pool.mPlanes[mPlaneNum].mNormal;
-
-			for(GBSPPortal port=this;port != null;)
-			{
-				if(port == this)
-				{
-					port	=port.GetNextPortal(n);
-					continue;
-				}
-				if(port.mPoly == null || port.mPoly.VertCount() < 3)
-				{
-					port	=port.GetNextPortal(n);
-					continue;
-				}
-				if(!port.CanSeeThroughPortal())
-				{
-					port	=port.GetNextPortal(n);
-					continue;
-				}
-
-				nextPorts.Add(port);
-
-				port	=port.GetNextPortal(n);
-			}
-
-			GBSPPoly	merged	=new GBSPPoly(mPoly);
-
-			List<GBSPPortal>	removed	=new List<GBSPPortal>();
-
-			foreach(GBSPPortal port in nextPorts)
-			{
-				GBSPPoly	reMerged	=GBSPPoly.Merge(merged, port.mPoly, norm, pool);
-
-				if(reMerged == null || reMerged.VertCount() < 3)
-				{
-					continue;
-				}
-
-				merged	=new GBSPPoly(reMerged);
-
-				removed.Add(port);
-			}
-
-			mPoly	=merged;
-
-			for(GBSPPortal port=this;port != null;)
-			{
-				GBSPPortal	next	=port.GetNextPortal(n);
-				while(next != null && removed.Contains(next))
-				{
-					next	=next.GetNextPortal(n);
-				}
-
-				if(mNodes[0] == n)
-				{
-					port.mNext[0]	=next;
-				}
-				else
-				{
-					port.mNext[1]	=next;
-				}
-
-				port	=next;
-			}
-		}
-
-
-		GBSPPortal GetNextPortal(GBSPNode n)
-		{
-			if(mNodes[0] == n)
-			{
-				return	mNext[0];
-			}
-			else
-			{
-				return	mNext[1];
-			}
+			mPoly.Write(bw);
 		}
 	}
 }

@@ -9,8 +9,8 @@ namespace BSPCore
 	public struct GBSPPlane
 	{
 		public Vector3	mNormal;
-		public float		mDist;
-		public UInt32		mType;
+		public float	mDist;
+		public UInt32	mType;
 
 		public const UInt32	PLANE_X		=0;
 		public const UInt32	PLANE_Y		=1;

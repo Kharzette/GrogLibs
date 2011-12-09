@@ -630,7 +630,7 @@ namespace BSPCore
 		}
 
 
-		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool bCheckFlags)
+		public void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
 		{
 			int	ofs		=verts.Count;
 

@@ -83,7 +83,16 @@ namespace BSPCore
 			GBSPNode	root	=GBSPNode.BlockTree(mBlockNodes, pool,
 				block_xl - 1, block_zl -1, block_xh + 1, block_zh + 1);
 
-			mBounds	=modelBounds;
+			mBounds	=new Bounds();
+
+			//crank out the bounds to the blocks used
+			mBounds.mMins.X	=(block_xl) * 1024.0f;
+			mBounds.mMins.Y	=modelBounds.mMins.Y - 8.0f;
+			mBounds.mMins.Z	=(block_zl) * 1024.0f;
+
+			mBounds.mMaxs.X	=(block_xh + 1) * 1024.0f;
+			mBounds.mMaxs.Y	=modelBounds.mMaxs.Y + 8.0f;
+			mBounds.mMaxs.Z	=(block_zh + 1) * 1024.0f;
 
 			glist	=null;
 
