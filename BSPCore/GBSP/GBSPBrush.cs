@@ -118,6 +118,18 @@ namespace BSPCore
 		}
 
 
+		internal static void TestBrushListValid(List<GBSPBrush> list)
+		{
+			foreach(GBSPBrush b in list)
+			{
+				if(!b.CheckBrush())
+				{
+					CoreEvents.Print("Bad brush in list!\n");
+				}
+			}
+		}
+
+
 		internal static bool TestListInBounds(List<GBSPBrush> list, Bounds bound)
 		{
 			foreach(GBSPBrush b in list)
@@ -393,6 +405,12 @@ namespace BSPCore
 			}
 
 			return	false;
+		}
+
+
+		internal static bool SameContents(GBSPBrush b1, GBSPBrush b2)
+		{
+			return	(b1.mOriginal.mContents == b2.mOriginal.mContents);
 		}
 
 
@@ -845,6 +863,28 @@ namespace BSPCore
 							goto	startOver;
 						}
 						c2	=subResult2.Count;
+					}
+
+					//check for non solid stuff poking into each other
+					//like water or something
+					if(!b1.BrushCanBite(b2) && !b2.BrushCanBite(b1))
+					{
+						if(GBSPBrush.SameContents(b1, b2))
+						{
+							subResult1	=Subtract(b1, b2, pool);
+
+							if(subResult1.Contains(b1))
+							{
+								continue;
+							}
+
+							if(subResult1.Count == 0)
+							{
+								list.Remove(b1);
+								goto	startOver;
+							}
+							c1	=subResult1.Count;
+						}
 					}
 
 					if(subResult1.Count == 0 && subResult2.Count == 0)

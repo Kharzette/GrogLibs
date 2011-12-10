@@ -1300,6 +1300,12 @@ namespace BSPCore
 				}
 
 				center	/=f.mNumVerts;
+				if(UtilityLib.Mathery.CompareVectorEpsilon(center,
+					new Vector3(64, -32, -27), 1.1f))
+				{
+					int	gack	=0;
+					gack++;
+				}
 
 				ret.Add(center);
 

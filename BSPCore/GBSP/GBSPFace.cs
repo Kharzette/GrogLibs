@@ -9,7 +9,6 @@ namespace BSPCore
 {
 	internal class GBSPFace
 	{
-		GBSPFace	mNext;
 		GBSPFace	mOriginal;
 		GBSPPoly	mPoly;
 		UInt32		mFrontContents, mBackContents;
@@ -38,7 +37,6 @@ namespace BSPCore
 		internal GBSPFace(GBSPFace copyMe)
 		{
 			mPoly			=new GBSPPoly(copyMe.mPoly);
-			mNext			=copyMe.mNext;
 			mOriginal		=copyMe.mOriginal;
 			mFrontContents	=copyMe.mFrontContents;
 			mBackContents	=copyMe.mBackContents;
@@ -136,67 +134,9 @@ namespace BSPCore
 		}
 
 
-		internal static bool MergeFaceList(GBSPFace faces, PlanePool pool, ref int numMerged)
-		{
-			for(GBSPFace face1 = faces;face1 != null;face1 = face1.mNext)
-			{
-				if(face1.mPoly.VertCount() == -1)
-				{
-					continue;
-				}
-
-				if(face1.mMerged != null || face1.mSplit0 != null || face1.mSplit1 != null)
-				{
-					continue;
-				}
-
-				for(GBSPFace face2 = faces ; face2 != face1 ; face2 = face2.mNext)
-				{
-					if(face2.mPoly.VertCount() == -1)
-					{
-						continue;
-					}
-
-					if(face2.mMerged != null || face2.mSplit0 != null || face2.mSplit1 != null)
-					{
-						continue;
-					}
-					
-					GBSPFace	merged	=MergeFace(face1, face2, pool);
-
-					if(merged == null)
-					{
-						continue;
-					}
-
-					merged.mPoly.RemoveDegenerateEdges();
-					
-					if(!merged.Check(false, pool))
-					{
-						merged.Free();
-						face1.mMerged	=null;
-						face2.mMerged	=null;
-						continue;
-					}
-
-					numMerged++;
-
-					//Add the Merged to the end of the face list 
-					//so it will be checked against all the faces again
-					GBSPFace	end;
-					for(end = faces;end.mNext != null;end = end.mNext);
-						
-					merged.mNext	=null;
-					end.mNext		=merged;
-					break;
-				}
-			}
-			return	true;
-		}
-
-
 		internal static bool MergeFaceList(List<GBSPFace> faces, PlanePool pool, ref int numMerged)
 		{
+			restartMerge:
 			for(int i=0;i < faces.Count;i++)
 			{
 				GBSPFace	face1	=faces[i];
@@ -249,7 +189,7 @@ namespace BSPCore
 					//Add the Merged to the end of the face list 
 					//so it will be checked against all the faces again
 					faces.Add(merged);
-					break;
+					goto	restartMerge;
 				}
 			}
 			return	true;

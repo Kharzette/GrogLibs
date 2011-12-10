@@ -472,7 +472,6 @@ namespace BSPCore
 						ret			|=Contents.BSP_CONTENTS_WAVY2;
 						ret			|=Contents.BSP_CONTENTS_USER3;
 						ti.mFlags	|=TexInfo.TRANS;
-//						ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 					}
 					else if(texName.StartsWith("slime") || texName.StartsWith("SLIME"))
 					{
@@ -481,7 +480,6 @@ namespace BSPCore
 						ret			|=Contents.BSP_CONTENTS_WAVY2;
 						ret			|=Contents.BSP_CONTENTS_USER2;
 						ti.mFlags	|=TexInfo.TRANS;
-//						ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 					}
 					else if(texName.StartsWith("glass") || texName.StartsWith("GLASS"))
 					{
@@ -500,13 +498,15 @@ namespace BSPCore
 				{
 					//animating I think
 					texName		=tok;
-					mFlags		|=SURF_LIGHT;
-					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+
+					//these and perhaps some others could use
+					//a sort of emissive material flag, where
+					//the bright parts of the texture emit light and glow
 				}
 				else if(tok.StartsWith("sky") || tok.StartsWith("SKY"))
 				{
-					texName	=tok;
-					mFlags	|=SURF_SKY;
+					texName		=tok;
+					mFlags		|=SURF_SKY;
 					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 					ti.mFlags	|=TexInfo.SKY;
 				}
@@ -529,7 +529,6 @@ namespace BSPCore
 					ret			|=Contents.BSP_CONTENTS_WAVY2;
 					ret			|=Contents.BSP_CONTENTS_USER3;
 					ti.mFlags	|=TexInfo.TRANS;
-//					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 				}
 				else if(tok.StartsWith("slime") || tok.StartsWith("SLIME"))
 				{
@@ -538,7 +537,6 @@ namespace BSPCore
 					ret			|=Contents.BSP_CONTENTS_WAVY2;
 					ret			|=Contents.BSP_CONTENTS_USER2;
 					ti.mFlags	|=TexInfo.TRANS;
-//					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 				}
 				else if(tok.StartsWith("trigger") || tok.StartsWith("TRIGGER"))
 				{

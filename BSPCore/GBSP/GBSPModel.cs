@@ -160,6 +160,7 @@ namespace BSPCore
 		}
 
 
+		static int dumps	=0;
 		internal void ProcessBlock(List<GBSPBrush> brushes, PlanePool pp, int blockNum, int block_xl, int block_xh, int block_zl, int block_zh)
 		{
 			int		xblock, zblock;
@@ -182,16 +183,19 @@ namespace BSPCore
 
 			int	brushCount	=blocked.Count;
 
+			GBSPBrush.TestBrushListValid(blocked);
+
 			if(!GBSPBrush.TestListInBounds(blocked, blockBounds))
 			{
 				CoreEvents.Print("Brush out of bounds after choppery!\n");
+				GBSPBrush.DumpBrushListToFile(blocked, "Brush_x" + xblock + "_z" + zblock + ".map");
 			}
-
-			GBSPBrush.DumpBrushListToFile(blocked, "Brush_x" + xblock + "_z" + zblock + ".map");
 
 			List<GBSPBrush>	csgList	=GBSPBrush.CSGBrushes(true, blocked, pp);			
 
 			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
+
+			GBSPBrush.DumpBrushListToFile(csgList, "CSG" + dumps++ + ".map");
 
 			//print out brushes that are still overlapping
 			GBSPBrush.DumpOverlapping(csgList, pp);

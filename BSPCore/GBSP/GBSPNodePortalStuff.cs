@@ -24,8 +24,6 @@ namespace BSPCore
 				return	false;
 			}
 
-			outNode.DumpPortals();
-
 			if(!PartitionPortals_r(pool, bVis))
 			{
 				CoreEvents.Print("CreatePortals:  Could not partition portals.\n");
@@ -191,16 +189,11 @@ namespace BSPCore
 				return false;
 			}
 
-			DumpPortals();
-
 			if(!SplitNodePortals(pool))
 			{
 				CoreEvents.Print("PartitionPortals_r:  SplitNodePortals failed.\n");
 				return false;
 			}
-
-			mFront.DumpPortals();
-			mBack.DumpPortals();
 
 			if(mPortals.Count > 0)
 			{
@@ -1059,20 +1052,7 @@ namespace BSPCore
 
 				foreach(GBSPPortal port in mPortals)
 				{
-					Int32	side;
-
 					GBSPPlane	portPlane	=port.mPlane;
-
-					if(port.mFrontNode == this)
-					{
-						//side is opposite
-						portPlane.Inverse();
-						side		=1;
-					}
-					else
-					{
-						side		=0;
-					}
 
 					int	numPlanes	=pool.mPlanes.Count;
 
