@@ -531,7 +531,7 @@ namespace BSPVis
 					{
 						continue;
 					}
-					for(int k=0;k < checkLeaf.mNumFaces;k++)
+/*					for(int k=0;k < checkLeaf.mNumFaces;k++)
 					{
 						string	matName	=mMap.GetMaterialNameForLeafFace(k + checkLeaf.mFirstFace);
 
@@ -539,7 +539,7 @@ namespace BSPVis
 						{
 							visibleMaterials[leaf].Add(matName);
 						}
-					}
+					}*/
 				}
 			}
 

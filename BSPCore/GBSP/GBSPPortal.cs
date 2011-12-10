@@ -11,7 +11,6 @@ namespace BSPCore
 	{
 		internal GBSPPoly	mPoly;					//Convex poly that holds the shape of the portal
 		internal GBSPNode	mFrontNode, mBackNode;	//Node on each side of the portal
-		internal GBSPPortal	mFrontPort, mBackPort;	//Next portal for each node
 		internal GBSPPlane	mPlane;
 
 		internal GBSPNode	mOnNode;
@@ -26,8 +25,6 @@ namespace BSPCore
 			mPoly		=new GBSPPoly(copyMe.mPoly);
 			mFrontNode	=copyMe.mFrontNode;
 			mBackNode	=copyMe.mBackNode;
-			mFrontPort	=copyMe.mFrontPort;
-			mBackPort	=copyMe.mBackPort;
 			mPlane		=copyMe.mPlane;
 			mOnNode		=copyMe.mOnNode;
 			mFrontFace	=copyMe.mFrontFace;

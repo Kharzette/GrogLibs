@@ -118,10 +118,15 @@ namespace BSPCore
 			root.FreeBSP_r();
 
 			glist	=GBSPBrush.ConvertMapBrushList(list);
-			glist	=GBSPBrush.CSGBrushes(bVerbose, glist, pool);
-			CoreEvents.FireNumPlanesChangedEvent(pool.mPlanes.Count, null);
 
-			root.BuildBSP(glist, pool, bVerbose);
+			for(int i=0;i < 16;i++)
+			{
+				ProcessBlock(glist, pool, i, block_xl, block_xh, block_zl, block_zh);
+			}
+
+			root	=GBSPNode.BlockTree(mBlockNodes, pool,
+				block_xl - 1, block_zl -1, block_xh + 1, block_zh + 1);
+
 			CoreEvents.FireNumPlanesChangedEvent(pool.mPlanes.Count, null);
 
 			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs))
@@ -290,7 +295,7 @@ namespace BSPCore
 				return	false;
 			}
 
-			if(!mRootNode.CreateLeafSides(pool, leafSides, bVerbose))
+			if(!mRootNode.CreateLeafSides(pool, leafSides, mOutsideNode, bVerbose))
 			{
 				CoreEvents.Print("Could not create leaf sides.\n");
 				return	false;

@@ -30,20 +30,22 @@ namespace BSPCore
 		GBSPBrush		mVolume;
 
 		//Info for this node as a leaf
-		GBSPPortal		mPortals;							//Portals on this leaf
-		Int32			mNumLeafFaces;						//Number of faces touching this leaf
-		List<GBSPFace>	mLeafFaces	=new List<GBSPFace>();	//Pointer to Faces touching this leaf
-		Int32			mCurrentFill;						//For the outside filling stage
-		Int32			mEntity;							//1 if entity touching leaf
-		Int32			mOccupied;							//FIXME:  Can use Entity!!!
-		Int32			mPortalLeafNum;						//For portal saving
+		List<GBSPPortal>	mPortals	=new List<GBSPPortal>();//Portals on this leaf
+		Int32				mNumLeafFaces;						//Number of faces touching this leaf
+		List<GBSPFace>		mLeafFaces	=new List<GBSPFace>();	//Pointer to Faces touching this leaf
+		Int32				mCurrentFill;						//For the outside filling stage
+		Int32				mEntity;							//1 if entity touching leaf
+		Int32				mOccupied;							//FIXME:  Can use Entity!!!
+		Int32				mPortalLeafNum;						//For portal saving
 
 		bool	mbDetail;
 		Int32	mCluster;
 		Int32	mArea;		//Area number, 0 == invalid area
 
 		GBSPSide		mSide;
-		List<GBSPBrush>	mBrushList;
+		List<GBSPBrush>	mBrushList	=new List<GBSPBrush>();
+		internal Int32	mFirstSide;			//For bevel bbox clipping
+		internal Int32	mNumSides;
 
 		//For GFX file saving
 		internal Int32	mFrontID, mBackID;
@@ -52,11 +54,6 @@ namespace BSPCore
 		internal Int32	mFirstPortal;
 		internal Int32	mNumPortals;
 
-		internal Int32	mFirstSide;			//For bevel bbox clipping
-		internal Int32	mNumSides;
-
-		internal const int	MAX_TEMP_LEAF_SIDES	=100;
-		internal const int	MAX_LEAF_SIDES		=64000 * 2;
 		internal const int	MAX_AREAS			=256;
 		internal const int	MAX_AREA_PORTALS	=1024;
 
@@ -152,7 +149,10 @@ namespace BSPCore
 			mBounds.mMins	=Vector3.Zero;
 			mBounds.mMaxs	=Vector3.Zero;
 
-			mBrushList	=list;
+			if(list != null)
+			{
+				mBrushList	=list;
+			}
 		}
 
 
@@ -286,7 +286,7 @@ namespace BSPCore
 			}
 
 			//clip by portals on the node
-			for(GBSPPortal port = mPortals;port != null;port = NextPortal(port))
+			foreach(GBSPPortal port in mPortals)
 			{
 				bool	bFlipSide	=(port.mFrontNode != this);
 
@@ -303,7 +303,10 @@ namespace BSPCore
 			newPortal.mOnNode		=this;
 			newPortal.mPoly			=poly;
 
-			AddPortalToNodes(newPortal, mFront, mBack);
+			newPortal.mFrontNode	=mFront;
+			newPortal.mBackNode		=mBack;
+			mFront.mPortals.Add(newPortal);
+			mBack.mPortals.Add(newPortal);
 
 			return	true;
 		}
@@ -376,11 +379,8 @@ namespace BSPCore
 		{
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
-				mLeafFaces	=null;
-
+				mLeafFaces.Clear();
 				mFaces.Clear();
-
-//				GBSPFace.FreeFaceList(mFaces);
 				mBrushList.Clear();
 				return;
 			}
@@ -426,6 +426,7 @@ namespace BSPCore
 				GBSPFace.MergeFaceList(mFaces, pool, ref numMerged);
 
 				//Subdivide them for lightmaps
+				//using big atlas'd lightmaps now, no need to subdiv
 				//SubdivideNodeFaces(tip, ref NumSubdivided);
 				return;
 			}
@@ -438,7 +439,7 @@ namespace BSPCore
 
 			//See which portals are valid
 			Int32	side;
-			for(GBSPPortal p = mPortals;p != null;)
+			foreach(GBSPPortal p in mPortals)
 			{
 				side	=(p.mBackNode == this)? 1 : 0;
 
@@ -475,15 +476,6 @@ namespace BSPCore
 
 					numMake++;
 				}
-
-				if(side == 0)
-				{
-					p	=p.mFrontPort;
-				}
-				else
-				{
-					p	=p.mBackPort;
-				}
 			}
 		}
 
@@ -509,7 +501,7 @@ namespace BSPCore
 
 			//See which portals are valid
 			Int32	side;
-			for(GBSPPortal p=mPortals;p != null;)
+			foreach(GBSPPortal p in mPortals)
 			{
 				side	=(p.mBackNode == this)? 1 : 0;
 
@@ -521,8 +513,6 @@ namespace BSPCore
 					}
 
 					CountLeafFaces_r(p.mFrontFace);
-
-					p	=p.mFrontPort;
 				}
 				else
 				{
@@ -532,17 +522,14 @@ namespace BSPCore
 					}
 
 					CountLeafFaces_r(p.mBackFace);
-
-					p	=p.mBackPort;
 				}
 			}
-
 
 			//Reset counter
 			mNumLeafFaces	=0;
 			
 			//See which portals are valid
-			for(GBSPPortal p=mPortals;p != null;)
+			foreach(GBSPPortal p in mPortals)
 			{
 				side	=(p.mBackNode == this)? 1 : 0;
 
@@ -554,8 +541,6 @@ namespace BSPCore
 					}
 
 					GetLeafFaces_r(p.mFrontFace);
-
-					p	=p.mFrontPort;
 				}
 				else
 				{
@@ -565,8 +550,6 @@ namespace BSPCore
 					}
 
 					GetLeafFaces_r(p.mBackFace);
-
-					p	=p.mBackPort;
 				}
 			}
 		}
@@ -627,14 +610,14 @@ namespace BSPCore
 					if((mFront.mContents & 0xffff0000)
 						== (mBack.mContents & 0xffff0000))
 					{
-						if(mFaces != null)
+						if(mFaces.Count > 0)
 						{
-							CoreEvents.Print("Node.mFaces seperating BSP_CONTENTS_SOLID!");
+							CoreEvents.Print("Node.mFaces seperating BSP_CONTENTS_SOLID!\n");
 						}
 
-						if(mFront.mFaces != null || mBack.mFaces != null)
+						if(mFront.mFaces.Count > 0 || mBack.mFaces.Count > 0)
 						{
-							CoreEvents.Print("!Node.mFaces with children");
+							CoreEvents.Print("!Node.mFaces with children\n");
 						}
 
 						// FIXME: free stuff
@@ -644,9 +627,9 @@ namespace BSPCore
 
 						mbDetail	=false;
 
-						if(mBrushList != null)
+						if(mBrushList.Count > 0)
 						{
-							CoreEvents.Print("MergeNodes: node.mBrushList");
+							CoreEvents.Print("MergeNodes: node.mBrushList\n");
 						}
 
 						//combine brush lists

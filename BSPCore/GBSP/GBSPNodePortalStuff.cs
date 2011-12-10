@@ -39,17 +39,17 @@ namespace BSPCore
 		{
 			GBSPPlane	thisPlane	=pool.mPlanes[mPlaneNum];
 
-			GBSPPortal	nextPortal;
-			for(GBSPPortal p = mPortals;p != null;p = nextPortal)
+			//dupe the portal list so removes work
+			List<GBSPPortal>	ports	=new List<GBSPPortal>(mPortals);
+
+			foreach(GBSPPortal p in ports)
 			{
 				bool	bFront	=(this == p.mFrontNode);
 
 				GBSPNode	otherNode	=(bFront)? p.mBackNode : p.mFrontNode;
 
-				nextPortal	=NextPortal(p);
-
-				p.mFrontNode.RemovePortal(p);
-				p.mBackNode.RemovePortal(p);
+				p.mFrontNode.mPortals.Remove(p);
+				p.mBackNode.mPortals.Remove(p);
 
 				GBSPPoly	front, back;
 				p.mPoly.SplitEpsilon(UtilityLib.Mathery.VCompareEpsilon, thisPlane, out front, out back, false);
@@ -74,11 +74,17 @@ namespace BSPCore
 					p.mPoly	=back;
 					if(bFront)
 					{
-						AddPortalToNodes(p, mBack, otherNode);
+						mBack.mPortals.Add(p);
+						otherNode.mPortals.Add(p);
+						p.mFrontNode	=mBack;
+						p.mBackNode		=otherNode;
 					}
 					else
 					{
-						AddPortalToNodes(p, otherNode, mBack);
+						otherNode.mPortals.Add(p);
+						mBack.mPortals.Add(p);
+						p.mFrontNode	=otherNode;
+						p.mBackNode		=mBack;
 					}
 					continue;
 				}
@@ -88,11 +94,17 @@ namespace BSPCore
 					p.mPoly	=front;
 					if(bFront)
 					{
-						AddPortalToNodes(p, mFront, otherNode);
+						mFront.mPortals.Add(p);
+						otherNode.mPortals.Add(p);
+						p.mFrontNode	=mFront;
+						p.mBackNode		=otherNode;
 					}
 					else
 					{
-						AddPortalToNodes(p, otherNode, mFront);
+						otherNode.mPortals.Add(p);
+						mFront.mPortals.Add(p);
+						p.mFrontNode	=otherNode;
+						p.mBackNode		=mFront;
 					}
 					continue;
 				}
@@ -110,17 +122,29 @@ namespace BSPCore
 				
 				if(bFront)
 				{
-					AddPortalToNodes(p, mFront, otherNode);
-					AddPortalToNodes(newPort, mBack, otherNode);
+					mFront.mPortals.Add(p);
+					otherNode.mPortals.Add(p);
+					mBack.mPortals.Add(newPort);
+					otherNode.mPortals.Add(newPort);
+					p.mFrontNode		=mFront;
+					p.mBackNode			=otherNode;
+					newPort.mFrontNode	=mBack;
+					newPort.mBackNode	=otherNode;
 				}
 				else
 				{
-					AddPortalToNodes(p, otherNode, mFront);
-					AddPortalToNodes(newPort, otherNode, mBack);
+					otherNode.mPortals.Add(p);
+					mFront.mPortals.Add(p);
+					otherNode.mPortals.Add(newPort);
+					mBack.mPortals.Add(newPort);
+					p.mFrontNode		=otherNode;
+					p.mBackNode			=mFront;
+					newPort.mFrontNode	=otherNode;
+					newPort.mBackNode	=mBack;
 				}
 			}
 
-			mPortals	=null;
+			Debug.Assert(mPortals.Count == 0);
 
 			return	true;
 		}
@@ -132,16 +156,10 @@ namespace BSPCore
 			FileStream		fs	=new FileStream("Portals" + portDumps++ + ".portals", FileMode.Create, FileAccess.Write);
 			BinaryWriter	bw	=new BinaryWriter(fs);
 
-			int	numPorts	=0;
-			for(GBSPPortal p = mPortals;p != null;p = NextPortal(p))
+			bw.Write(mPortals.Count);
+			foreach(GBSPPortal p in mPortals)
 			{
-				numPorts++;
-			}
-
-			bw.Write(numPorts);
-			for(GBSPPortal p = mPortals;p != null;p = NextPortal(p))
-			{
-				p.Write(bw);
+				p.mPoly.Write(bw);
 			}
 
 			bw.Close();
@@ -184,7 +202,7 @@ namespace BSPCore
 			mFront.DumpPortals();
 			mBack.DumpPortals();
 
-			if(mPortals != null)
+			if(mPortals.Count > 0)
 			{
 				CoreEvents.Print("*WARNING* PartitionPortals_r:  Portals still on node after distribution...\n");
 			}
@@ -197,73 +215,6 @@ namespace BSPCore
 			{
 				return	false;
 			}
-			return	true;
-		}
-
-
-		void RemovePortal(GBSPPortal port)
-		{
-			Debug.Assert(mPortals != null);
-			Debug.Assert(!(mPortals.mFrontNode == this && mPortals.mBackNode == this));
-			Debug.Assert(mPortals.mFrontNode == this || mPortals.mBackNode == this);
-
-			GBSPPortal	foundPortal	=null;
-			for(foundPortal = mPortals;;)
-			{
-				if(foundPortal == null)
-				{
-					CoreEvents.Print("RemovePortal: passed in portal is not in the node's list!\n");
-					return;
-				}
-
-				if(foundPortal == port)
-				{
-					break;
-				}
-
-				if(foundPortal.mFrontNode == this)
-				{
-					foundPortal	=foundPortal.mFrontPort;
-				}
-				else if(foundPortal.mBackNode == this)
-				{
-					foundPortal	=foundPortal.mBackPort;
-				}
-				else
-				{
-					CoreEvents.Print("RemovePortal: passed in portal isn't alongside this node!\n");
-				}
-			}
-
-			if(port.mFrontNode == this)
-			{
-				this.mPortals	=port.mFrontPort;
-				port.mFrontNode	=null;
-			}
-			else if(port.mBackNode == this)
-			{
-				this.mPortals	=port.mBackPort;
-				port.mBackNode	=null;
-			}
-		}
-
-
-		internal static bool AddPortalToNodes(GBSPPortal port, GBSPNode front, GBSPNode back)
-		{
-			if(port.mFrontNode != null || port.mBackNode != null)
-			{
-				CoreEvents.Print("LinkPortal:  Portal allready looks at one of the nodes.\n");
-				return	false;
-			}
-
-			port.mFrontNode	=front;
-			port.mFrontPort	=front.mPortals;
-			front.mPortals	=port;
-
-			port.mBackNode	=back;
-			port.mBackPort	=back.mPortals;
-			back.mPortals	=port;
-
 			return	true;
 		}
 
@@ -312,7 +263,11 @@ namespace BSPCore
 
 					p.mPoly	=new GBSPPoly(p.mPlane);
 
-					GBSPNode.AddPortalToNodes(p, this, outsideNode);
+					mPortals.Add(p);
+					outsideNode.mPortals.Add(p);
+
+					p.mFrontNode	=this;
+					p.mBackNode		=outsideNode;
 
 					outPorts.Add(p);
 				}
@@ -358,13 +313,10 @@ namespace BSPCore
 					return;
 				}
 
-				for(GBSPPortal port=mPortals;port != null;)
+				foreach(GBSPPortal port in mPortals)
 				{
 					port.mPoly.GetTriangles(verts, indexes, bCheckFlags);
-
-					port	=(port.mOnNode == port.mFrontNode)? port.mFrontPort : port.mBackPort;
 				}
-
 				return;
 			}
 
@@ -377,11 +329,9 @@ namespace BSPCore
 		{
 			mBounds.Clear();
 
-			for(GBSPPortal p = mPortals;p != null;)
+			foreach(GBSPPortal p in mPortals)
 			{
 				p.mPoly.AddToBounds(mBounds);
-
-				p	=(p.mFrontNode == this)? p.mFrontPort : p.mBackPort;
 			}
 		}
 
@@ -418,12 +368,10 @@ namespace BSPCore
 				}
 			}
 
-			for(GBSPPortal port=mPortals;port != null;)
+			foreach(GBSPPortal port in mPortals)
 			{
-				GBSPPortal	next;
 				if(port.mFrontNode == this)
 				{
-					next	=port.mFrontPort;
 					if(!port.mFrontNode.FillLeafs_r(bFill, dist + 1, curFill, ref bHitEnt, ref hitNode))
 					{
 						return	false;
@@ -431,7 +379,6 @@ namespace BSPCore
 				}
 				else if(port.mBackNode == this)
 				{
-					next	=port.mBackPort;
 					if(!port.mBackNode.FillLeafs_r(bFill, dist + 1, curFill, ref bHitEnt, ref hitNode))
 					{
 						return	false;
@@ -442,27 +389,9 @@ namespace BSPCore
 					CoreEvents.Print("FillLeafs_r:  Portal does not look at either node.\n");
 					return	false;
 				}
-				port	=next;
 			}
 
 			return	true;
-		}
-
-
-		GBSPPortal	NextPortal(GBSPPortal port)
-		{
-			if(port.mFrontNode == this)
-			{
-				return	port.mFrontPort;
-			}
-			else if(port.mBackNode == this)
-			{
-				return	port.mBackPort;
-			}
-			else
-			{
-				return	null;
-			}
 		}
 
 
@@ -480,7 +409,7 @@ namespace BSPCore
 
 			mCurrentFill	=curFill;
 
-			for(GBSPPortal port=mPortals;port != null;port = NextPortal(port))
+			foreach(GBSPPortal port in mPortals)
 			{
 				if(port == null)
 				{
@@ -590,13 +519,13 @@ namespace BSPCore
 			GBSPNode	hitNode		=null;
 			int			currentFill	=1;
 			GBSPNode	oppositeNode;
-			if(outsideNode.mPortals.mFrontNode == outsideNode)
+			if(outsideNode.mPortals[0].mFrontNode == outsideNode)
 			{
-				oppositeNode	=outsideNode.mPortals.mBackNode;
+				oppositeNode	=outsideNode.mPortals[0].mBackNode;
 			}
 			else
 			{
-				oppositeNode	=outsideNode.mPortals.mFrontNode;
+				oppositeNode	=outsideNode.mPortals[0].mFrontNode;
 			}
 
 			if(!oppositeNode.FillLeafs_r(false, 1, currentFill, ref bHitEntity, ref hitNode))
@@ -650,7 +579,7 @@ namespace BSPCore
 				return;
 			}
 
-			for(GBSPPortal p=mPortals;p != null;p = NextPortal(p))
+			foreach(GBSPPortal p in mPortals)
 			{
 				if(p.mOnNode == null)
 				{
@@ -722,29 +651,9 @@ namespace BSPCore
 			{
 				return	true;
 			}
+
+			node.mPortals.Clear();
 			
-			for(GBSPPortal port=node.mPortals;port != null;port = node.NextPortal(port))
-			{
-				if(port.mFrontNode == node)
-				{
-				}
-				else if(port.mBackNode == node)
-				{
-				}
-				else
-				{
-					CoreEvents.Print("FreePortals_r:  Portal does not look at either node.\n");
-					return	false;
-				}
-
-				port.mFrontNode.RemovePortal(port);
-				port.mBackNode.RemovePortal(port);
-
-				//free portal here
-			}
-
-			node.mPortals	=null;
-
 			if(node.mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
 				return	true;
@@ -766,131 +675,6 @@ namespace BSPCore
 		internal bool FreePortals()
 		{
 			return	FreePortals_r(this);
-		}
-
-
-		internal bool GetVisInfo(List<GBSPVisPortal> visPortals,
-			Dictionary<Int32, GBSPVisLeaf> visLeafs,
-			PlanePool pool, int numLeafClusters)
-		{
-			if(mPlaneNum == PlanePool.PLANENUM_LEAF || mbDetail)
-			{
-				if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
-				{
-					return	true;
-				}
-
-				if(mPortals == null)
-				{
-					return	true;
-				}
-
-				Int32		side;
-				GBSPNode	[]nodes	=new GBSPNode[2];
-				for(GBSPPortal port=mPortals;port != null;port=NextPortal(port))
-				{					
-					nodes[0]	=port.mFrontNode;
-					nodes[1]	=port.mBackNode;
-			
-					side	=(nodes[1] == this)? 1 : 0;
-
-					if(port.mPoly == null)
-					{
-						continue;
-					}
-
-					if(!port.CanSeeThroughPortal())
-					{
-						continue;
-					}
-					
-					if(nodes[0].mCluster == nodes[1].mCluster)	
-					{
-						CoreEvents.Print("GetVisInfo:  Portal seperating the same cluster.\n");
-						return	false;
-					}
-					GBSPVisPortal	vport	=new GBSPVisPortal();
-
-					vport.mPoly	=new GBSPPoly(port.mPoly);
-					if(side == 0)
-					{
-						vport.mPoly.Reverse();
-					}
-
-					Int32	side2	=side;
-
-					vport.mPlane	=new GBSPPlane(vport.mPoly);
-
-					if(Vector3.Dot(port.mPlane.mNormal, vport.mPlane.mNormal) < 0.99f)
-					{
-						if(side != 0)
-						{
-							side2	=0;
-						}
-						else
-						{
-							side2	=1;
-						}
-					}
-
-					if(nodes[side2].mCluster < 0 || nodes[side2].mCluster > numLeafClusters)
-					{
-						CoreEvents.Print("GetVisInfo: Bad leaf cluster number.\n");
-						return	false;
-					}
-
-					Int32	leafFrom	=nodes[side2].mCluster;
-					Int32	oppSide2	=(side2 == 0)? 1 : 0;
-					if(nodes[oppSide2].mCluster < 0 || nodes[oppSide2].mCluster > numLeafClusters)
-					{
-						CoreEvents.Print("GetVisInfo: Bad leaf cluster number 2.\n");
-						return	false;
-					}
-
-					Int32	leafTo	=nodes[oppSide2].mCluster;
-
-					if(leafFrom == 0)
-					{
-						int	gack	=0;
-						gack++;
-					}
-
-					GBSPVisLeaf		leaf	=null;
-					if(visLeafs.ContainsKey(leafFrom))
-					{
-						leaf	=visLeafs[leafFrom];
-					}
-					else
-					{
-						leaf	=new GBSPVisLeaf();
-						visLeafs.Add(leafFrom, leaf);
-					}
-					vport.mLeaf		=leafTo;
-					vport.mNext		=leaf.mPortals;
-					leaf.mPortals	=vport;
-
-					vport.CalcPortalInfo();
-
-					visPortals.Add(vport);
-				}
-
-				return	true;
-			}
-
-			if(mPortals != null)
-			{
-				CoreEvents.Print("*WARNING* SavePortalFile_r:  Node with portal.\n");
-			}
-
-			if(!mFront.GetVisInfo(visPortals, visLeafs, pool, numLeafClusters))
-			{
-				return	false;
-			}
-			if(!mBack.GetVisInfo(visPortals, visLeafs, pool, numLeafClusters))
-			{
-				return	false;
-			}
-			return	true;
 		}
 
 
@@ -936,7 +720,7 @@ namespace BSPCore
 			numPortalLeafs++;
 			int	side;
 
-			for(GBSPPortal port=mPortals;port != null;port=NextPortal(port))
+			foreach(GBSPPortal port in mPortals)
 			{
 				GBSPNode	[]nodes	=new GBSPNode[2];
 				nodes[0]	=port.mFrontNode;
@@ -1006,7 +790,7 @@ namespace BSPCore
 
 			//Save out all the portals that belong to this leaf...
 			int	side;
-			for(GBSPPortal port=mPortals;port != null;port = NextPortal(port))
+			foreach(GBSPPortal port in mPortals)
 			{
 				GBSPNode	[]nodes	=new GBSPNode[2];
 				nodes[0]	=port.mFrontNode;
@@ -1058,7 +842,7 @@ namespace BSPCore
 					return	true;
 				}
 				int	side;
-				for(GBSPPortal port=mPortals;port!=null;port = NextPortal(port))
+				foreach(GBSPPortal port in mPortals)
 				{
 					GBSPNode	[]nodes	=new GBSPNode[2];
 					nodes[0]	=port.mFrontNode;
@@ -1139,7 +923,7 @@ namespace BSPCore
 				return	true;
 			}
 
-			if(mPortals != null)
+			if(mPortals.Count > 0)
 			{
 				CoreEvents.Print("*WARNING* SavePortalFile_r:  Node with portal.\n");
 			}
@@ -1220,8 +1004,8 @@ namespace BSPCore
 		}
 
 
-		internal bool CreateLeafSides(PlanePool pool,
-			List<GFXLeafSide> leafSides, bool bVerbose)
+		internal bool CreateLeafSides(PlanePool pool, List<GFXLeafSide> leafSides,
+			GBSPNode outsideNode, bool bVerbose)
 		{
 			if(bVerbose)
 			{
@@ -1230,7 +1014,7 @@ namespace BSPCore
 
 			int	numLeafBevels	=0;
 			
-			if(!CreateLeafSides_r(pool, ref numLeafBevels, leafSides))
+			if(!CreateLeafSides_r(pool, ref numLeafBevels, leafSides, outsideNode))
 			{
 				return	false;
 			}
@@ -1246,7 +1030,7 @@ namespace BSPCore
 
 		//todo:  rewrite all of this
 		bool CreateLeafSides_r(PlanePool pool, ref int numLeafBevels,
-			List<GFXLeafSide> leafSides)
+			List<GFXLeafSide> leafSides, GBSPNode outsideNode)
 		{
 			mFirstSide	=-1;
 			mNumSides	=0;
@@ -1273,48 +1057,51 @@ namespace BSPCore
 				List<Int32>	LPlaneNumbers	=new List<int>();
 				List<Int32>	LPlaneSides		=new List<int>();
 
-				GBSPPortal	nextPort;
-				for(GBSPPortal port=mPortals;port != null;port=nextPort)
+				foreach(GBSPPortal port in mPortals)
 				{
 					Int32	side;
+
+					GBSPPlane	portPlane	=port.mPlane;
 
 					if(port.mFrontNode == this)
 					{
 						//side is opposite
+						portPlane.Inverse();
 						side		=1;
-
-						//next portal is not
-						nextPort	=port.mFrontPort;
 					}
 					else
 					{
 						side		=0;
-						nextPort	=port.mBackPort;
 					}
-/*
+
+					int	numPlanes	=pool.mPlanes.Count;
+
+					sbyte	portSide;
+					int		portPlaneNum	=pool.FindPlane(portPlane, out portSide);
+
+					//make sure we aren't adding new planes at this late stage
+					//unless the outside node is involved
+					if(port.mBackNode != outsideNode)
+					{
+						Debug.Assert(numPlanes == pool.mPlanes.Count);
+					}
+
 					int	i;
 					for(i=0;i < CNumLeafSides;i++)
 					{
-						if(LPlaneNumbers[i] == port.mPlaneNum
-							&& LPlaneSides[i] == side)
+						if(LPlaneNumbers[i] == portPlaneNum
+							&& LPlaneSides[i] == portSide)
 						{
 							break;
 						}
 					}
 
-					//Make sure we don't duplicate planes (this happens with portals)
-					if(i >= MAX_TEMP_LEAF_SIDES)
-					{
-						CoreEvents.Print("CreateLeafSides_r:  Max portal leaf sides.\n");
-						return	false;
-					}
-
 					if(i >= CNumLeafSides)
 					{
-						LPlaneNumbers.Add(port.mPlaneNum);
-						LPlaneSides.Add(side);
+						LPlaneNumbers.Add(portPlaneNum);
+						LPlaneSides.Add(portSide);
 						CNumLeafSides++;
-					}*/
+					}
 				}
 				
 				if(!FinishLeafSides(pool, ref CNumLeafSides,
@@ -1327,11 +1114,11 @@ namespace BSPCore
 				return	true;
 			}
 
-			if(!mFront.CreateLeafSides_r(pool, ref numLeafBevels, leafSides))
+			if(!mFront.CreateLeafSides_r(pool, ref numLeafBevels, leafSides, outsideNode))
 			{
 				return	false;
 			}
-			if(!mBack.CreateLeafSides_r(pool, ref numLeafBevels, leafSides))
+			if(!mBack.CreateLeafSides_r(pool, ref numLeafBevels, leafSides, outsideNode))
 			{
 				return	false;
 			}
@@ -1417,11 +1204,6 @@ namespace BSPCore
 			
 			for(int i=0;i < cNumLeafSides;i++)
 			{
-				if(cNumLeafSides >= MAX_LEAF_SIDES)
-				{
-					CoreEvents.Print("FinishLeafSides:  Max Leaf Sides.\n");
-					return	false;
-				}
 				GFXLeafSide	ls	=new GFXLeafSide();
 				ls.mPlaneNum	=LPlaneNumbers[i];
 				ls.mPlaneSide	=LPlaneSides[i];
@@ -1442,17 +1224,14 @@ namespace BSPCore
 				return	false;
 			}
 
-			Int32	side;
-			for(GBSPPortal port=mPortals;port != null;port = NextPortal(port))
+			foreach(GBSPPortal port in mPortals)
 			{
-				side	=(port.mBackNode == this)? 1 : 0;
-
 				port.mPoly.AddToBounds(bnd);
 			}
 			return	true;
 		}
-
-
+		
+		
 		bool FillAreas_r(Int32 Area, CoreDelegates.ModelForLeafNode modForLeaf)
 		{
 			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
@@ -1500,7 +1279,7 @@ namespace BSPCore
 			mArea	=Area;
 
 			//Flood through all of this leafs portals
-			for(GBSPPortal port=mPortals;port != null;port = NextPortal(port))
+			foreach(GBSPPortal port in mPortals)
 			{
 				//flood through opposite node
 				if(port.mBackNode == this)

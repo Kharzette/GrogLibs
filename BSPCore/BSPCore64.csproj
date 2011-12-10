@@ -69,7 +69,9 @@
     <Compile Include="GFX\GFXFace.cs" />
     <Compile Include="GFX\GFXHeader.cs" />
     <Compile Include="GFX\GFXLeaf.cs" />
-    <Compile Include="GFX\GFXLeafSide.cs" />
+    <Compile Include="GFX\GFXLeafSide.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="GFX\GFXModel.cs" />
     <Compile Include="GFX\GFXNode.cs" />
     <Compile Include="GFX\GFXPlane.cs" />

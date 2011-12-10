@@ -197,8 +197,9 @@ namespace BSPCore
 
 		internal static bool MergeFaceList(List<GBSPFace> faces, PlanePool pool, ref int numMerged)
 		{
-			foreach(GBSPFace face1 in faces)
+			for(int i=0;i < faces.Count;i++)
 			{
+				GBSPFace	face1	=faces[i];
 				if(face1.mPoly.VertCount() == -1)
 				{
 					continue;
@@ -209,8 +210,13 @@ namespace BSPCore
 					continue;
 				}
 
-				foreach(GBSPFace face2 in faces)
+				for(int j=0;j < faces.Count;j++)
 				{
+					GBSPFace	face2	=faces[j];
+					if(face2 == face1)
+					{
+						break;
+					}
 					if(face2.mPoly.VertCount() == -1)
 					{
 						continue;
