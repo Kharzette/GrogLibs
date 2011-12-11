@@ -106,10 +106,17 @@ namespace BSPCore
 				}
 
 				GBSPBrush	boxedCopy	=b.ChopToBoxAndClone(blockPlanes, pp);
-
 				if(boxedCopy == null)
 				{
 					continue;
+				}
+
+				boxedCopy.BoundBrush();
+
+				if(!boxedCopy.CheckBrush())
+				{
+					int	gack	=0;
+					gack++;
 				}
 
 				ret.Add(boxedCopy);
@@ -136,6 +143,10 @@ namespace BSPCore
 			{
 				foreach(GBSPSide s in b.mSides)
 				{
+					if(s.mPoly.mVerts == null)
+					{
+						continue;
+					}
 					foreach(Vector3 v in s.mPoly.mVerts)
 					{
 						if(!bound.IsPointInbounds(v, UtilityLib.Mathery.ON_EPSILON))
@@ -395,9 +406,16 @@ namespace BSPCore
 
 			for(int j=0;j < otherBrush.mSides.Count;j++)
 			{
-				for(int i=0;i < otherBrush.mSides[i].mPoly.mVerts.Length;i++)
+				GBSPPoly	p	=otherBrush.mSides[j].mPoly;
+
+				if(p.mVerts == null)
 				{
-					if(PointInside(otherBrush.mSides[i].mPoly.mVerts[i], pp, -0.1f))
+					continue;
+				}
+
+				for(int i=0;i < p.mVerts.Length;i++)
+				{
+					if(PointInside(p.mVerts[i], pp, -0.1f))
 					{
 						return	true;
 					}
@@ -791,7 +809,7 @@ namespace BSPCore
 			}
 			if(overlapping.Count > 0)
 			{				
-				DumpBrushListToFile(overlapping, "Overlapped" + oCount++ + ".map");
+				DumpBrushListToFile(overlapping, pp, "Overlapped" + oCount++ + ".map");
 			}
 		}
 
@@ -1225,7 +1243,7 @@ namespace BSPCore
 
 
 		//handy for debuggerizing
-		static internal void DumpBrushListToFile(List<GBSPBrush> brushList, string fileName)
+		static internal void DumpBrushListToFile(List<GBSPBrush> brushList, PlanePool pool, string fileName)
 		{
 			FileStream		fs	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
 			StreamWriter	sw	=new StreamWriter(fs);
@@ -1242,16 +1260,23 @@ namespace BSPCore
 
 				for(int i=0;i < b.mSides.Count;i++)
 				{
+					GBSPPlane	sidePlane	=pool.mPlanes[b.mSides[i].mPlaneNum];
+					if(b.mSides[i].mPlaneSide != 0)
+					{
+						sidePlane.Inverse();
+					}
+					GBSPPoly	planePoly	=new GBSPPoly(sidePlane);
+
 					sw.WriteLine("( " +
-						-b.mSides[i].mPoly.mVerts[0].X + " " +
-						b.mSides[i].mPoly.mVerts[0].Z + " " +
-						b.mSides[i].mPoly.mVerts[0].Y + " ) ( " +
-						-b.mSides[i].mPoly.mVerts[1].X + " " +
-						b.mSides[i].mPoly.mVerts[1].Z + " " +
-						b.mSides[i].mPoly.mVerts[1].Y + " ) ( " +
-						-b.mSides[i].mPoly.mVerts[2].X + " " +
-						b.mSides[i].mPoly.mVerts[2].Z + " " +
-						b.mSides[i].mPoly.mVerts[2].Y + " ) BOGUS 0 0 0 1.0 1.0");
+						-planePoly.mVerts[0].X + " " +
+						planePoly.mVerts[0].Z + " " +
+						planePoly.mVerts[0].Y + " ) ( " +
+						-planePoly.mVerts[1].X + " " +
+						planePoly.mVerts[1].Z + " " +
+						planePoly.mVerts[1].Y + " ) ( " +
+						-planePoly.mVerts[2].X + " " +
+						planePoly.mVerts[2].Z + " " +
+						planePoly.mVerts[2].Y + " ) BOGUS 0 0 0 1.0 1.0");
 				}
 				sw.WriteLine("}");
 			}

@@ -25,74 +25,52 @@ namespace BSPCore
 		internal int	[]mAreas	=new int[2];
 
 		//blockery
-		Array	mBlockNodes	=Array.CreateInstance(typeof(GBSPNode), 10, 10);
+		Array	mBlockNodes;
 
 
 		internal bool ProcessWorldModel(List<MapBrush> list, List<MapEntity> ents,
 			PlanePool pool, TexInfoPool tip, bool bVerbose)
 		{
-			int	block_xl	=-8;
-			int	block_xh	=7;
-			int	block_zl	=-8;
-			int	block_zh	=7;
-
 			Bounds	modelBounds	=MapBrush.GetListBounds(list);
+
+			//find the min and max extents rounded out on K boundaries
+			//sort of the way quake 2 does it
+			int	kMinX	=(int)Math.Floor(modelBounds.mMins.X / 1024.0f);
+			int	kMinZ	=(int)Math.Floor(modelBounds.mMins.Z / 1024.0f);
+			int	kMaxX	=(int)Math.Ceiling(modelBounds.mMaxs.X / 1024.0f);
+			int	kMaxZ	=(int)Math.Ceiling(modelBounds.mMaxs.Z / 1024.0f);
+
+			mBlockNodes	=Array.CreateInstance(typeof(GBSPNode),
+				(kMaxX - kMinX) + 1,
+				(kMaxZ - kMinZ) + 1);
 
 			list.Reverse();
 			List<GBSPBrush>	glist	=GBSPBrush.ConvertMapBrushList(list);
-			
-			if(block_xh * 1024 > modelBounds.mMaxs.X)
+
+			for(int z=kMinZ;z < kMaxZ;z++)
 			{
-				block_xh	=(int)Math.Floor(modelBounds.mMaxs.X / 1024.0);
-			}
-			if((block_xl + 1) * 1024 < modelBounds.mMins.X)
-			{
-				block_xl	=(int)Math.Floor(modelBounds.mMins.X / 1024.0);
-			}
-			if(block_zh * 1024 > modelBounds.mMaxs.Z)
-			{
-				block_zh	=(int)Math.Floor(modelBounds.mMaxs.Z / 1024.0);
-			}
-			if((block_zl + 1) * 1024 < modelBounds.mMins.Z)
-			{
-				block_zl	=(int)Math.Floor(modelBounds.mMins.Z / 1024.0);
+				for(int x=kMinX;x < kMaxX;x++)
+				{
+					GBSPNode	blockNode	=ProcessBlock(glist, pool, x, z);
+					mBlockNodes.SetValue(blockNode, x - kMinX, z - kMinZ);
+				}
 			}
 			
-			if(block_xl < -4)
-			{
-				block_xl	=-4;
-			}
-			if(block_zl <-4)
-			{
-				block_zl	=-4;
-			}
-			if(block_xh > 3)
-			{
-				block_xh	=3;
-			}
-			if(block_zh > 3)
-			{
-				block_zh	=3;
-			}
-
-			for(int i=0;i < 16;i++)
-			{
-				ProcessBlock(glist, pool, i, block_xl, block_xh, block_zl, block_zh);
-			}
-
 			GBSPNode	root	=GBSPNode.BlockTree(mBlockNodes, pool,
-				block_xl - 1, block_zl -1, block_xh + 1, block_zh + 1);
+				kMinX, kMinZ,
+//				kMinX - 1, kMinZ - 1, kMaxX + 1, kMaxZ + 1);
+				kMinX, kMinZ, kMaxX, kMaxZ);
 
 			mBounds	=new Bounds();
 
 			//crank out the bounds to the blocks used
-			mBounds.mMins.X	=(block_xl) * 1024.0f;
-			mBounds.mMins.Y	=modelBounds.mMins.Y - 8.0f;
-			mBounds.mMins.Z	=(block_zl) * 1024.0f;
+			mBounds.mMins.X	=kMinX * 1024.0f;
+			mBounds.mMins.Y	=modelBounds.mMins.Y;
+			mBounds.mMins.Z	=kMinZ * 1024.0f;
 
-			mBounds.mMaxs.X	=(block_xh + 1) * 1024.0f;
+			mBounds.mMaxs.X	=(kMaxX + 1) * 1024.0f;
 			mBounds.mMaxs.Y	=modelBounds.mMaxs.Y + 8.0f;
-			mBounds.mMaxs.Z	=(block_zh + 1) * 1024.0f;
+			mBounds.mMaxs.Z	=(kMaxZ + 1) * 1024.0f;
 
 			glist	=null;
 
@@ -119,13 +97,19 @@ namespace BSPCore
 
 			glist	=GBSPBrush.ConvertMapBrushList(list);
 
-			for(int i=0;i < 16;i++)
+			for(int z=kMinZ;z < kMaxZ;z++)
 			{
-				ProcessBlock(glist, pool, i, block_xl, block_xh, block_zl, block_zh);
+				for(int x=kMinX;x < kMaxX;x++)
+				{
+					GBSPNode	blockNode	=ProcessBlock(glist, pool, x, z);
+					mBlockNodes.SetValue(blockNode, x - kMinX, z - kMinZ);
+				}
 			}
 
 			root	=GBSPNode.BlockTree(mBlockNodes, pool,
-				block_xl - 1, block_zl -1, block_xh + 1, block_zh + 1);
+				kMinX, kMinZ,
+//				kMinX - 1, kMinZ - 1, kMaxX + 1, kMaxZ + 1);
+				kMinX, kMinZ, kMaxX, kMaxZ);
 
 			CoreEvents.FireNumPlanesChangedEvent(pool.mPlanes.Count, null);
 
@@ -161,13 +145,8 @@ namespace BSPCore
 
 
 		static int dumps	=0;
-		internal void ProcessBlock(List<GBSPBrush> brushes, PlanePool pp, int blockNum, int block_xl, int block_xh, int block_zl, int block_zh)
+		internal GBSPNode ProcessBlock(List<GBSPBrush> brushes, PlanePool pp, int xblock, int zblock)
 		{
-			int		xblock, zblock;
-
-			zblock	=block_zl + blockNum / (block_xh - block_xl + 1);
-			xblock	=block_xl + blockNum % (block_xh - block_xl + 1);
-
 			CoreEvents.Print("############### block " + xblock + "," + zblock + " ###############\n");
 
 			Bounds	blockBounds	=new Bounds();
@@ -179,6 +158,8 @@ namespace BSPCore
 			blockBounds.mMaxs.Z	=(zblock + 1) * 1024;
 			blockBounds.mMaxs.Y	=4096;
 
+			CoreEvents.Print("" + blockBounds.mMins + ", " + blockBounds.mMaxs + "\n");
+
 			List<GBSPBrush>	blocked	=GBSPBrush.BlockChopBrushes(brushes, blockBounds, pp);
 
 			int	brushCount	=blocked.Count;
@@ -188,14 +169,14 @@ namespace BSPCore
 			if(!GBSPBrush.TestListInBounds(blocked, blockBounds))
 			{
 				CoreEvents.Print("Brush out of bounds after choppery!\n");
-				GBSPBrush.DumpBrushListToFile(blocked, "Brush_x" + xblock + "_z" + zblock + ".map");
+				GBSPBrush.DumpBrushListToFile(blocked, pp, "Brush_x" + xblock + "_z" + zblock + ".map");
 			}
 
 			List<GBSPBrush>	csgList	=GBSPBrush.CSGBrushes(true, blocked, pp);			
 
 			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
 
-			GBSPBrush.DumpBrushListToFile(csgList, "CSG" + dumps++ + ".map");
+//			GBSPBrush.DumpBrushListToFile(csgList, pp, "CSG" + dumps++ + ".map");
 
 			//print out brushes that are still overlapping
 			GBSPBrush.DumpOverlapping(csgList, pp);
@@ -204,7 +185,7 @@ namespace BSPCore
 			root.BuildBSP(csgList, pp, true);
 			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
 
-			mBlockNodes.SetValue(root, xblock + 5, zblock + 5);
+			return	root;
 		}
 
 

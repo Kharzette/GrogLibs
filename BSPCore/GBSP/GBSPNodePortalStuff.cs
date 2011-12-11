@@ -165,6 +165,65 @@ namespace BSPCore
 		}
 
 
+		void DumpPortals_r(BinaryWriter bw)
+		{
+//			bw.Write(mPortals.Count);
+			foreach(GBSPPortal p in mPortals)
+			{
+				if(mPlaneNum == -1)
+				{
+					p.mPoly.Write(bw);
+				}
+			}
+
+			if(mFront != null)
+			{
+				mFront.DumpPortals_r(bw);
+			}
+			if(mBack != null)
+			{
+				mBack.DumpPortals_r(bw);
+			}
+		}
+
+
+		int CountPortals_r()
+		{
+			int	ret	=0;
+			if(mFront != null)
+			{
+				ret	+=mFront.CountPortals_r();
+			}
+			if(mBack != null)
+			{
+				ret	+=mBack.CountPortals_r();
+			}
+
+			if(this.mPlaneNum == -1)
+			{
+				ret	+=mPortals.Count;
+			}
+
+			return	ret;
+		}
+
+
+		internal void DumpAllPortals()
+		{
+			int	portCount	=CountPortals_r();
+
+			FileStream		fs	=new FileStream("Portals" + portDumps++ + ".portals", FileMode.Create, FileAccess.Write);
+			BinaryWriter	bw	=new BinaryWriter(fs);
+
+			bw.Write(portCount);
+
+			DumpPortals_r(bw);
+
+			bw.Close();
+			fs.Close();
+		}
+
+
 		bool PartitionPortals_r(PlanePool pool, bool bVisPortals)
 		{
 			CalcBoundsFromPortals();

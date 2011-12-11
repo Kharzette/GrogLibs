@@ -93,11 +93,11 @@ namespace BSPCore
 			}
 		}
 
-		static internal GBSPNode BlockTree(Array blockNodes, PlanePool pp, int xl, int zl, int xh, int zh)
+		static internal GBSPNode BlockTree(Array blockNodes, PlanePool pp, int xMin, int zMin, int xl, int zl, int xh, int zh)
 		{
 			if(xl == xh && zl == zh)
 			{
-				GBSPNode	ret	=(GBSPNode)blockNodes.GetValue(xl + 5, zl + 5);
+				GBSPNode	ret	=(GBSPNode)blockNodes.GetValue(xl - xMin, zl - zMin);
 				if(ret == null)
 				{
 					ret	=new GBSPNode();
@@ -119,8 +119,8 @@ namespace BSPCore
 
 				sbyte	side;
 				n.mPlaneNum		=pp.FindPlane(p, out side);
-				n.mFront	=BlockTree(blockNodes, pp, mid, zl, xh, zh);
-				n.mBack		=BlockTree(blockNodes, pp, xl, zl, mid - 1, zh);
+				n.mFront	=BlockTree(blockNodes, pp, xMin, zMin, mid, zl, xh, zh);
+				n.mBack		=BlockTree(blockNodes, pp, xMin, zMin, xl, zl, mid - 1, zh);
 			}
 			else
 			{
@@ -130,8 +130,8 @@ namespace BSPCore
 
 				sbyte	side;
 				n.mPlaneNum		=pp.FindPlane(p, out side);
-				n.mFront	=BlockTree(blockNodes, pp, xl, mid, xh, zh);
-				n.mBack		=BlockTree(blockNodes, pp, xl, zl, xh, mid - 1);
+				n.mFront	=BlockTree(blockNodes, pp, xMin, zMin, xl, mid, xh, zh);
+				n.mBack		=BlockTree(blockNodes, pp, xMin, zMin, xl, zl, xh, mid - 1);
 			}
 			return	n;
 		}
