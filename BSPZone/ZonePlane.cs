@@ -46,8 +46,12 @@ namespace BSPZone
 		}
 
 
+		//there's something badly wrong with this
+		//TODO: fix
 		public float DistanceFast(Vector3 pos)
 		{
+			return	Vector3.Dot(pos, mNormal) - mDist;
+			/*
 			switch(mType)
 			{
 				case PLANE_X:
@@ -59,7 +63,7 @@ namespace BSPZone
 
 				default:
 					return	Vector3.Dot(pos, mNormal) - mDist;
-			}
+			}*/
 		}
 
 

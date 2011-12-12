@@ -465,7 +465,7 @@ namespace BSPCore
 						ti.mFlags		|=TexInfo.FULLBRIGHT;
 						ti.mFlags		|=TexInfo.NO_LIGHTMAP;
 					}
-					else if(texName.StartsWith("water") || texName.StartsWith("WATER"))
+					else if(texName.StartsWith("water") || texName.StartsWith("WATER") || texName.Contains("WAT"))
 					{
 						ret			|=Contents.BSP_CONTENTS_TRANSLUCENT2;
 						ret			|=Contents.BSP_CONTENTS_EMPTY2;

@@ -92,11 +92,11 @@ namespace BSPCore
 
 			if(Fd >= -1 && Bd >= -1)
 			{
-				return(RayIntersect(Front, Back, n.mChildren[0], ref intersectionPoint, ref hitLeaf));
+				return(RayIntersect(Front, Back, n.mFront, ref intersectionPoint, ref hitLeaf));
 			}
 			if(Fd < 1 && Bd < 1)
 			{
-				return(RayIntersect(Front, Back, n.mChildren[1], ref intersectionPoint, ref hitLeaf));
+				return(RayIntersect(Front, Back, n.mBack, ref intersectionPoint, ref hitLeaf));
 			}
 
 			Side	=(Fd < 0)? 1 : 0;
@@ -108,11 +108,15 @@ namespace BSPCore
 			//is no more collisions, we can assume that we have the front portion of the
 			//ray that is in empty space.  Once we find this, and see that the back half is in
 			//solid space, then we found the front intersection point...
-			if(RayIntersect(Front, I, n.mChildren[Side], ref intersectionPoint, ref hitLeaf))
+			if(RayIntersect(Front, I,
+				(Fd < 0)? n.mBack : n.mFront,
+				ref intersectionPoint, ref hitLeaf))
 			{
 				return	true;
 			}
-			else if(RayIntersect(I, Back, n.mChildren[(Side == 0)? 1 : 0], ref intersectionPoint, ref hitLeaf))
+			else if(RayIntersect(I, Back,
+				(Fd < 0)? n.mFront : n.mBack,
+				ref intersectionPoint, ref hitLeaf))
 			{
 				if(!hitLeaf)
 				{
@@ -1077,7 +1081,7 @@ namespace BSPCore
 			//Clear all model area info
 			foreach(GBSPModel mod in mModels)
 			{
-				mod.mAreas[0]		=mod.mAreas[1]	=0;
+				mod.mAreaFront		=mod.mAreaBack	=0;
 				mod.mbAreaPortal	=false;
 			}
 
@@ -1120,11 +1124,11 @@ namespace BSPCore
 					continue;
 				}
 
-				if(mModels[i].mAreas[0] == 0)
+				if(mModels[i].mAreaFront == 0)
 				{
 					CoreEvents.Print("*WARNING* FinishAreas:  AreaPortal did not touch any areas!\n");
 				}
-				else if(mModels[i].mAreas[1] == 0)
+				else if(mModels[i].mAreaBack == 0)
 				{
 					CoreEvents.Print("*WARNING* FinishAreas:  AreaPortal only touched one area.\n");
 				}
@@ -1143,8 +1147,8 @@ namespace BSPCore
 
 				for(int m=1;m < mModels.Count;m++)
 				{
-					int	a0	=mModels[m].mAreas[0];
-					int	a1	=mModels[m].mAreas[1];
+					int	a0	=mModels[m].mAreaFront;
+					int	a1	=mModels[m].mAreaBack;
 
 					if(a0 == 0 || a1 == 0)
 					{
@@ -1203,9 +1207,8 @@ namespace BSPCore
 
 		public Int32 FindNodeLandedIn(Int32 node, Vector3 pos)
 		{
-			float		Dist1;
+			float		dist;
 			GFXNode		pNode;
-			Int32		Side;
 
 			if(node < 0)		// At leaf, no more recursing
 			{
@@ -1215,25 +1218,16 @@ namespace BSPCore
 			pNode	=mGFXNodes[node];
 			
 			//Get the distance that the eye is from this plane
-			Dist1	=mGFXPlanes[pNode.mPlaneNum].DistanceFast(pos);
+			dist	=mGFXPlanes[pNode.mPlaneNum].DistanceFast(pos);
 
-			if(Dist1 < 0)
-			{
-				Side	=1;
-			}
-			else
-			{
-				Side	=0;
-			}
-			
 			//Go down the side we are on first, then the other side
 			Int32	ret	=0;
-			ret	=FindNodeLandedIn(pNode.mChildren[Side], pos);
+			ret	=FindNodeLandedIn((dist < 0)? pNode.mBack : pNode.mFront, pos);
 			if(ret < 0)
 			{
 				return	ret;
 			}
-			ret	=FindNodeLandedIn(pNode.mChildren[(Side == 0)? 1 : 0], pos);
+			ret	=FindNodeLandedIn((dist < 0)? pNode.mFront : pNode.mBack, pos);
 			return	ret;
 		}
 

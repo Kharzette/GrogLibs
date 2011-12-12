@@ -56,11 +56,11 @@ namespace BSPZone
 
 			if(frontDist >= radius && backDist >= radius)
 			{
-				return	CapsuleIntersect(trace, start, end, radius, n.mChildren[0]);
+				return	CapsuleIntersect(trace, start, end, radius, n.mFront);
 			}
 			if(frontDist < -radius && backDist < -radius)
 			{
-				return	CapsuleIntersect(trace, start, end, radius, n.mChildren[1]);
+				return	CapsuleIntersect(trace, start, end, radius, n.mBack);
 			}
 
 			//bias the split towards the front
@@ -74,12 +74,13 @@ namespace BSPZone
 
 				Vector3	frontSplit	=start + distFront * (end - start);
 
-				return	CapsuleIntersect(trace, start, frontSplit, radius, n.mChildren[sideFront]);
+				return	CapsuleIntersect(trace, start, frontSplit, radius,
+					(frontFront < 0)? n.mBack : n.mFront);
 			}
 			else
 			{
 				//treat as if on the back side
-				return	CapsuleIntersect(trace, start, end, radius, n.mChildren[1]);
+				return	CapsuleIntersect(trace, start, end, radius, n.mBack);
 			}
 		}
 
@@ -110,23 +111,23 @@ namespace BSPZone
 			if(dist >= -radius && dist < radius)
 			{
 				//sphere overlaps plane
-				bool	ret	=SphereIntersect(pnt, radius, n.mChildren[0],
+				bool	ret	=SphereIntersect(pnt, radius, n.mFront,
 								ref hitLeaf, ref leafHit, ref nodeHit);
 				if(ret)
 				{
 					return	true;
 				}
-				return	SphereIntersect(pnt, radius, n.mChildren[1],
+				return	SphereIntersect(pnt, radius, n.mBack,
 							ref hitLeaf, ref leafHit, ref nodeHit);
 			}
 			else if(dist >= -radius)
 			{
-				return(SphereIntersect(pnt, radius, n.mChildren[0],
+				return(SphereIntersect(pnt, radius, n.mFront,
 					ref hitLeaf, ref leafHit, ref nodeHit));
 			}
 			else if(dist < radius)
 			{
-				return(SphereIntersect(pnt, radius, n.mChildren[1],
+				return(SphereIntersect(pnt, radius, n.mBack,
 					ref hitLeaf, ref leafHit, ref nodeHit));
 			}
 			return	false;
@@ -138,7 +139,6 @@ namespace BSPZone
 			ref Int32 leafHit, ref Int32 nodeHit)
 		{
 			float	Fd, Bd, dist;
-			Int32	side;
 			Vector3	I;
 
 			if(node < 0)						
@@ -165,16 +165,15 @@ namespace BSPZone
 
 			if(Fd >= -1 && Bd >= -1)
 			{
-				return(RayIntersect(start, end, n.mChildren[0],
+				return(RayIntersect(start, end, n.mFront,
 					ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit));
 			}
 			if(Fd < 1 && Bd < 1)
 			{
-				return(RayIntersect(start, end, n.mChildren[1],
+				return(RayIntersect(start, end, n.mBack,
 					ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit));
 			}
 
-			side	=(Fd < 0)? 1 : 0;
 			dist	=Fd / (Fd - Bd);
 
 			I	=start + dist * (end - start);
@@ -183,12 +182,14 @@ namespace BSPZone
 			//is no more collisions, we can assume that we have the front portion of the
 			//ray that is in empty space.  Once we find this, and see that the back half is in
 			//solid space, then we found the front intersection point...
-			if(RayIntersect(start, I, n.mChildren[side],
+			if(RayIntersect(start, I,
+				(Fd < 0)? n.mBack : n.mFront,
 				ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit))
 			{
 				return	true;
 			}
-			else if(RayIntersect(I, end, n.mChildren[(side == 0)? 1 : 0],
+			else if(RayIntersect(I, end,
+				(Fd < 0)? n.mFront : n.mBack,
 				ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit))
 			{
 				if(!hitLeaf)
@@ -221,7 +222,7 @@ namespace BSPZone
 
 			trace.mOriginalStart	=start;
 			trace.mOriginalEnd		=end;
-			FindClosestLeafIntersection_r(trace, worldModel.mRootNode[0]);
+			FindClosestLeafIntersection_r(trace, worldModel.mRootNode);
 
 			if(trace.mbLeafHit)
 			{
@@ -257,7 +258,7 @@ namespace BSPZone
 
 			trace.mOriginalStart	=start;
 			trace.mOriginalEnd		=end;
-			FindClosestLeafIntersection_r(trace, worldModel.mRootNode[0]);
+			FindClosestLeafIntersection_r(trace, worldModel.mRootNode);
 
 			if(trace.mbLeafHit)
 			{
@@ -297,12 +298,12 @@ namespace BSPZone
 			//Go down the sides that the box lands in
 			if((side & ZonePlane.PSIDE_FRONT) != 0)
 			{
-				FindClosestLeafIntersection_r(trace, mZoneNodes[node].mChildren[0]);
+				FindClosestLeafIntersection_r(trace, mZoneNodes[node].mFront);
 			}
 
 			if((side & ZonePlane.PSIDE_BACK) != 0)
 			{
-				FindClosestLeafIntersection_r(trace, mZoneNodes[node].mChildren[1]);
+				FindClosestLeafIntersection_r(trace, mZoneNodes[node].mBack);
 			}
 		}
 

@@ -11,7 +11,7 @@ namespace BSPCore
 {
 	public class GFXNode : UtilityLib.IReadWriteable
 	{
-		public Int32	[]mChildren	=new Int32[2];
+		public Int32	mFront, mBack;
 		public Int32	mNumFaces;
 		public Int32	mFirstFace;
 		public Int32	mPlaneNum;
@@ -20,8 +20,8 @@ namespace BSPCore
 
 		public void Write(BinaryWriter bw)
 		{
-			bw.Write(mChildren[0]);
-			bw.Write(mChildren[1]);
+			bw.Write(mFront);
+			bw.Write(mBack);
 			bw.Write(mNumFaces);
 			bw.Write(mFirstFace);
 			bw.Write(mPlaneNum);
@@ -35,17 +35,17 @@ namespace BSPCore
 
 		public void Read(BinaryReader br)
 		{
-			mChildren[0]	=br.ReadInt32();
-			mChildren[1]	=br.ReadInt32();
-			mNumFaces		=br.ReadInt32();
-			mFirstFace		=br.ReadInt32();
-			mPlaneNum		=br.ReadInt32();
-			mMins.X			=br.ReadSingle();
-			mMins.Y			=br.ReadSingle();
-			mMins.Z			=br.ReadSingle();
-			mMaxs.X			=br.ReadSingle();
-			mMaxs.Y			=br.ReadSingle();
-			mMaxs.Z			=br.ReadSingle();
+			mFront		=br.ReadInt32();
+			mBack		=br.ReadInt32();
+			mNumFaces	=br.ReadInt32();
+			mFirstFace	=br.ReadInt32();
+			mPlaneNum	=br.ReadInt32();
+			mMins.X		=br.ReadSingle();
+			mMins.Y		=br.ReadSingle();
+			mMins.Z		=br.ReadSingle();
+			mMaxs.X		=br.ReadSingle();
+			mMaxs.Y		=br.ReadSingle();
+			mMaxs.Z		=br.ReadSingle();
 		}
 	}
 }

@@ -781,8 +781,8 @@ namespace BSPCore
 				return	true;
 			}
 			
-			GNode.mChildren[0]	=mFrontID;
-			GNode.mChildren[1]	=mBackID;
+			GNode.mFront		=mFrontID;
+			GNode.mBack			=mBackID;
 			GNode.mNumFaces		=mNumFaces;
 			GNode.mFirstFace	=mFirstFace;
 			GNode.mPlaneNum		=mPlaneNum;

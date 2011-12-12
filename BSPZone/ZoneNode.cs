@@ -11,7 +11,7 @@ namespace BSPZone
 {
 	internal class ZoneNode : UtilityLib.IReadWriteable
 	{
-		internal Int32		[]mChildren	=new Int32[2];
+		internal Int32		mFront, mBack;
 		internal Int32		mNumFaces;
 		internal Int32		mFirstFace;
 		internal Int32		mPlaneNum;
@@ -20,8 +20,8 @@ namespace BSPZone
 
 		public void Write(BinaryWriter bw)
 		{
-			bw.Write(mChildren[0]);
-			bw.Write(mChildren[1]);
+			bw.Write(mFront);
+			bw.Write(mBack);
 			bw.Write(mNumFaces);
 			bw.Write(mFirstFace);
 			bw.Write(mPlaneNum);
@@ -35,8 +35,8 @@ namespace BSPZone
 
 		public void Read(BinaryReader br)
 		{
-			mChildren[0]	=br.ReadInt32();
-			mChildren[1]	=br.ReadInt32();
+			mFront			=br.ReadInt32();
+			mBack			=br.ReadInt32();
 			mNumFaces		=br.ReadInt32();
 			mFirstFace		=br.ReadInt32();
 			mPlaneNum		=br.ReadInt32();

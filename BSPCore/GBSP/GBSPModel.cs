@@ -22,7 +22,7 @@ namespace BSPCore
 
 		//area portal stuff, probably won't use
 		internal bool	mbAreaPortal;
-		internal int	[]mAreas	=new int[2];
+		internal int	mAreaFront, mAreaBack;
 
 		//blockery
 		Array	mBlockNodes;
@@ -285,6 +285,7 @@ namespace BSPCore
 				CoreEvents.Print("Could not create leaf sides.\n");
 				return	false;
 			}
+
 			return	true;
 		}
 
@@ -398,8 +399,8 @@ namespace BSPCore
 			GModel.mNumLeafs		=mNumLeafs;
 			GModel.mFirstCluster	=mFirstCluster;
 			GModel.mNumClusters		=mNumClusters;
-			GModel.mAreas[0]		=mAreas[0];
-			GModel.mAreas[1]		=mAreas[1];
+			GModel.mAreaFront		=mAreaFront;
+			GModel.mAreaBack		=mAreaBack;
 
 			GModel.Write(bw);
 		}

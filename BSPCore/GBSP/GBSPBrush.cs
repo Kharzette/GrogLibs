@@ -217,12 +217,17 @@ namespace BSPCore
 		//Get the contents of this leaf, by examining all the brushes that made this leaf
 		static internal UInt32 GetLeafContents(List<GBSPBrush> list)
 		{
-			UInt32	ret	=0;
-
 			if(list == null)
 			{
 				return	Contents.BSP_CONTENTS_SOLID2;
 			}
+
+			if(list.Count == 0)
+			{
+				return	Contents.BSP_CONTENTS_EMPTY2;
+			}
+
+			UInt32	ret	=0;
 
 			foreach(GBSPBrush b in list)
 			{

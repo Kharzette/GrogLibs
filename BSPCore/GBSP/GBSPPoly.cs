@@ -132,6 +132,7 @@ namespace BSPCore
 				}
 			}
 
+			//note that this is set up for quake 1 texcoords
 			switch(bestAxis)
 			{
 				case 0:						// X
@@ -144,16 +145,16 @@ namespace BSPCore
 					yv.Z	=0.0f;
 					break;
 				case 1:						// Y
-					xv.X	=1.0f;
+					xv.X	=-1.0f;
 					xv.Y	=0.0f;
 					xv.Z	=0.0f;
 
 					yv.X	=0.0f;
 					yv.Y	=0.0f;
-					yv.Z	=1.0f;
+					yv.Z	=-1.0f;
 					break;
 				case 2:						// Z
-					xv.X	=1.0f;
+					xv.X	=-1.0f;
 					xv.Y	=0.0f;
 					xv.Z	=0.0f;
 

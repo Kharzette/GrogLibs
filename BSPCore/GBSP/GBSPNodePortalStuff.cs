@@ -1118,6 +1118,13 @@ namespace BSPCore
 					sbyte	portSide;
 					int		portPlaneNum	=pool.FindPlane(portPlane, out portSide);
 
+					int	actualSide	=(port.mFrontNode == this)? 1 : 0;
+
+					if(portSide != 0)
+					{
+						actualSide	=(actualSide == 0)? 1 : 0;
+					}
+
 					//make sure we aren't adding new planes at this late stage
 					//unless the outside node is involved
 					if(port.mBackNode != outsideNode)
@@ -1129,7 +1136,7 @@ namespace BSPCore
 					for(i=0;i < CNumLeafSides;i++)
 					{
 						if(LPlaneNumbers[i] == portPlaneNum
-							&& LPlaneSides[i] == portSide)
+							&& LPlaneSides[i] == actualSide)
 						{
 							break;
 						}
@@ -1138,7 +1145,7 @@ namespace BSPCore
 					if(i >= CNumLeafSides)
 					{
 						LPlaneNumbers.Add(portPlaneNum);
-						LPlaneSides.Add(portSide);
+						LPlaneSides.Add(actualSide);
 						CNumLeafSides++;
 					}
 				}
@@ -1289,18 +1296,18 @@ namespace BSPCore
 					return	false;
 				}
 
-				if(Model.mAreas[0] == Area || Model.mAreas[1] == Area)
+				if(Model.mAreaFront == Area || Model.mAreaBack == Area)
 				{
 					return	true;	//Already flooded into this portal from this area
 				}
 
-				if(Model.mAreas[0] == 0)
+				if(Model.mAreaFront == 0)
 				{
-					Model.mAreas[0]	=Area;
+					Model.mAreaFront	=Area;
 				}
-				else if(Model.mAreas[1] == 0)
+				else if(Model.mAreaBack == 0)
 				{
-					Model.mAreas[1]	=Area;
+					Model.mAreaBack	=Area;
 				}
 				else
 				{
@@ -1419,7 +1426,7 @@ namespace BSPCore
 			}
 
 			//Set to first area that flooded into portal
-			mArea	=mod.mAreas[0];
+			mArea				=mod.mAreaFront;
 			mod.mbAreaPortal	=true;
 			
 			return	true;
