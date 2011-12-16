@@ -749,7 +749,7 @@ namespace MaterialLib
 			}
 
 			sb.Begin();
-			sb.Draw(mMaps[map], Vector2.One * 130.0f, Color.White);
+			sb.Draw(mMaps[map], Vector2.One * 10.0f, Color.White);
 			sb.End();
 		}
 

@@ -5,6 +5,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 using Microsoft.Xna.Framework;
 
 
@@ -1351,7 +1352,10 @@ namespace BSPCore
 			}
 
 			object	prog	=ProgressWatcher.RegisterProgress(0, mGFXFaces.Length, 0);
-	
+
+			ConcurrentBag<Vector3>	debugRayStarts	=new ConcurrentBag<Vector3>();
+			ConcurrentBag<Vector3>	debugRayEnds	=new ConcurrentBag<Vector3>();
+
 			Parallel.For(0, mGFXFaces.Length, i =>
 			{
 				ProgressWatcher.UpdateProgressIncremental(prog);
@@ -1401,7 +1405,8 @@ namespace BSPCore
 						//Hook.Printf("Sample  : %3i of %3i\n", s+1, NumSamples);
 						CalcFacePoints(mFaceInfos[i], mLightMaps[i], lightGridSize, UOfs[s], VOfs[s], bExtraSamples);
 
-						if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i], 1 / (float)numSamples, visData))
+						if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i], 1 / (float)numSamples, visData,
+							debugRayStarts, debugRayEnds))
 						{
 							return;
 						}
@@ -1418,6 +1423,27 @@ namespace BSPCore
 
 			ProgressWatcher.Clear();
 
+			Vector3	[]rayStarts	=debugRayStarts.ToArray();
+			Vector3	[]rayEnds	=debugRayEnds.ToArray();
+
+			FileStream		fs	=new FileStream("DebugRays.rays", FileMode.Create, FileAccess.Write);
+			BinaryWriter	bw	=new BinaryWriter(fs);
+
+			bw.Write(rayStarts.Length);
+
+			for(int i=0;i < rayStarts.Length;i++)
+			{
+				bw.Write(rayStarts[i].X);
+				bw.Write(rayStarts[i].Y);
+				bw.Write(rayStarts[i].Z);
+				bw.Write(rayEnds[i].X);
+				bw.Write(rayEnds[i].Y);
+				bw.Write(rayEnds[i].Z);
+			}
+
+			bw.Close();
+			fs.Close();
+
 			return	true;
 		}
 
@@ -1429,7 +1455,8 @@ namespace BSPCore
 		}
 
 
-		bool ApplyLightsToFace(FInfo faceInfo, LInfo lightInfo, float scale, byte []visData)
+		bool ApplyLightsToFace(FInfo faceInfo, LInfo lightInfo, float scale, byte []visData,
+			ConcurrentBag<Vector3>	debugRayStarts, ConcurrentBag<Vector3>	debugRayEnds)
 		{
 			Vector3	norm	=faceInfo.GetPlaneNormal();
 
@@ -1460,10 +1487,10 @@ namespace BSPCore
 
 				for(int c=0;c < mGFXClusters.Length;c++)
 				{
-					if((visData[mGFXClusters[clust].mVisOfs + (c >> 3)] & (1 << (c & 7))) == 0)
-					{
-						continue;
-					}
+//					if((visData[mGFXClusters[clust].mVisOfs + (c >> 3)] & (1 << (c & 7))) == 0)
+//					{
+//						continue;
+//					}
 
 					if(!DirectClusterLights.ContainsKey(c))
 					{
@@ -1528,12 +1555,16 @@ namespace BSPCore
 							goto	Skip;
 						}
 
+						debugRayStarts.Add(facePoints[v]);
+
 						// This is the slowest test, so make it last
 						Vector3	colResult	=Vector3.Zero;
 						if(RayCollide(facePoints[v], dLight.mOrigin, ref colResult))
 						{
+							debugRayEnds.Add(colResult);
 							goto	Skip;	//Ray is in shadow
 						}
+						debugRayEnds.Add(dLight.mOrigin);
 
 						Int32	lightType	=dLight.mLType;
 

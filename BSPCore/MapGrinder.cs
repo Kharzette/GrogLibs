@@ -580,6 +580,12 @@ namespace BSPCore
 						continue;
 					}
 
+					//make sure actually animating
+					if(!(f.mLTypes[1] != 255 || f.mLTypes[2] != 255 || f.mLTypes[3] != 255))
+					{
+						continue;
+					}
+
 					numFaces++;
 
 					//grab lightmap0
@@ -633,35 +639,28 @@ namespace BSPCore
 					{
 						mLMAnimNormals.Add(pln.mNormal);
 					}
-//					ComputeNormals(fverts, mLMAnimNormals);
 
-					List<Vector2>	coords	=new List<Vector2>();
-					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coords);
-
-					float	crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
-					float	crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
-
+					List<double>	coordsU	=new List<double>();
+					List<double>	coordsV	=new List<double>();
+					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
 					for(k=0;k < nverts;k++)
 					{
-						Vector2	tc	=coords[k];
-
-						//stretch coords to +1 size
-						tc.X	*=crunchX;
-						tc.Y	*=crunchY;
+						double	tcU	=coordsU[k];
+						double	tcV	=coordsV[k];
 
 						//scale to atlas space
-						tc.X	/=mLMAtlas.Width;
-						tc.Y	/=mLMAtlas.Height;
+						tcU	/=mLMAtlas.Width;
+						tcV	/=mLMAtlas.Height;
 
 						//step half a pixel in atlas space
-						tc.X	+=1.0f / (mLMAtlas.Width * 2.0f);
-						tc.Y	+=1.0f / (mLMAtlas.Height * 2.0f);
+						tcU	+=1.0 / (mLMAtlas.Width * 2.0);
+						tcV	+=1.0 / (mLMAtlas.Height * 2.0);
 
 						//move to atlas position
-						tc.X	+=(float)offsetU;
-						tc.Y	+=(float)offsetV;
+						tcU	+=offsetU;
+						tcV	+=offsetV;
 
-						mLMAnimFaceTex1.Add(tc);
+						mLMAnimFaceTex1.Add(new Vector2((float)tcU, (float)tcV));
 					}
 
 					firstVert.Add(mLMAnimVerts.Count - f.mNumVerts);
@@ -716,43 +715,38 @@ namespace BSPCore
 						}
 
 						//grab texcoords to animated map location
-						coords	=new List<Vector2>();
-						GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coords);
-
-						crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
-						crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
-
+						//this is wasteful, really only the atlas offset changes
+						coordsU	=new List<double>();
+						coordsV	=new List<double>();
+						GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
 						for(k=0;k < nverts;k++)
 						{
-							Vector2	tc	=coords[k];
-
-							//stretch coords to +1 size
-							tc.X	*=crunchX;
-							tc.Y	*=crunchY;
+							double	tcU	=coordsU[k];
+							double	tcV	=coordsV[k];
 
 							//scale to atlas space
-							tc.X	/=mLMAtlas.Width;
-							tc.Y	/=mLMAtlas.Height;
+							tcU	/=mLMAtlas.Width;
+							tcV	/=mLMAtlas.Height;
 
 							//step half a pixel in atlas space
-							tc.X	+=1.0f / (mLMAtlas.Width * 2.0f);
-							tc.Y	+=1.0f / (mLMAtlas.Height * 2.0f);
+							tcU	+=1.0 / (mLMAtlas.Width * 2.0);
+							tcV	+=1.0 / (mLMAtlas.Height * 2.0);
 
 							//move to atlas position
-							tc.X	+=(float)offsetU;
-							tc.Y	+=(float)offsetV;
+							tcU	+=offsetU;
+							tcV	+=offsetV;
 
 							if(s == 1)
 							{
-								mLMAnimFaceTex2.Add(tc);
+								mLMAnimFaceTex2.Add(new Vector2((float)tcU, (float)tcV));
 							}
 							else if(s == 2)
 							{
-								mLMAnimFaceTex3.Add(tc);
+								mLMAnimFaceTex3.Add(new Vector2((float)tcU, (float)tcV));
 							}
 							else if(s == 3)
 							{
-								mLMAnimFaceTex4.Add(tc);
+								mLMAnimFaceTex4.Add(new Vector2((float)tcU, (float)tcV));
 							}
 						}
 					}
@@ -761,9 +755,11 @@ namespace BSPCore
 					for(k=0;k < nverts;k++)
 					{
 						Vector4	styleIndex	=Vector4.Zero;
-						styleIndex.X	=f.mLTypes[0];
-						styleIndex.Y	=f.mLTypes[1];
-						styleIndex.Z	=f.mLTypes[2];
+
+						//index zero is always 0
+						styleIndex.X	=f.mLTypes[1];
+						styleIndex.Y	=f.mLTypes[2];
+						styleIndex.Z	=f.mLTypes[3];
 						mLMAnimStyle.Add(styleIndex);
 					}
 				}
@@ -826,6 +822,12 @@ namespace BSPCore
 						continue;
 					}
 
+					//make sure actually animating
+					if(!(f.mLTypes[1] != 255 || f.mLTypes[2] != 255 || f.mLTypes[3] != 255))
+					{
+						continue;
+					}
+
 					numFaces++;
 
 					//grab lightmap0
@@ -879,34 +881,27 @@ namespace BSPCore
 					{
 						mLMAAnimNormals.Add(pln.mNormal);
 					}
-
-					List<Vector2>	coords	=new List<Vector2>();
-					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coords);
-
-					float	crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
-					float	crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
-
+					List<double>	coordsU	=new List<double>();
+					List<double>	coordsV	=new List<double>();
+					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
 					for(k=0;k < nverts;k++)
 					{
-						Vector2	tc	=coords[k];
-
-						//stretch coords to +1 size
-						tc.X	*=crunchX;
-						tc.Y	*=crunchY;
+						double	tcU	=coordsU[k];
+						double	tcV	=coordsV[k];
 
 						//scale to atlas space
-						tc.X	/=mLMAtlas.Width;
-						tc.Y	/=mLMAtlas.Height;
+						tcU	/=mLMAtlas.Width;
+						tcV	/=mLMAtlas.Height;
 
 						//step half a pixel in atlas space
-						tc.X	+=1.0f / (mLMAtlas.Width * 2.0f);
-						tc.Y	+=1.0f / (mLMAtlas.Height * 2.0f);
+						tcU	+=1.0 / (mLMAtlas.Width * 2.0);
+						tcV	+=1.0 / (mLMAtlas.Height * 2.0);
 
 						//move to atlas position
-						tc.X	+=(float)offsetU;
-						tc.Y	+=(float)offsetV;
+						tcU	+=offsetU;
+						tcV	+=offsetV;
 
-						mLMAAnimFaceTex1.Add(tc);
+						mLMAAnimFaceTex1.Add(new Vector2((float)tcU, (float)tcV));
 					}
 
 					firstVert.Add(mLMAAnimVerts.Count - f.mNumVerts);
@@ -961,43 +956,37 @@ namespace BSPCore
 						}
 
 						//grab texcoords to animated map location
-						coords	=new List<Vector2>();
-						GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coords);
-
-						crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
-						crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
-
+						coordsU	=new List<double>();
+						coordsV	=new List<double>();
+						GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
 						for(k=0;k < nverts;k++)
 						{
-							Vector2	tc	=coords[k];
-
-							//stretch coords to +1 size
-							tc.X	*=crunchX;
-							tc.Y	*=crunchY;
+							double	tcU	=coordsU[k];
+							double	tcV	=coordsV[k];
 
 							//scale to atlas space
-							tc.X	/=mLMAtlas.Width;
-							tc.Y	/=mLMAtlas.Height;
+							tcU	/=mLMAtlas.Width;
+							tcV	/=mLMAtlas.Height;
 
 							//step half a pixel in atlas space
-							tc.X	+=1.0f / (mLMAtlas.Width * 2.0f);
-							tc.Y	+=1.0f / (mLMAtlas.Height * 2.0f);
+							tcU	+=1.0 / (mLMAtlas.Width * 2.0);
+							tcV	+=1.0 / (mLMAtlas.Height * 2.0);
 
 							//move to atlas position
-							tc.X	+=(float)offsetU;
-							tc.Y	+=(float)offsetV;
+							tcU	+=offsetU;
+							tcV	+=offsetV;
 
 							if(s == 1)
 							{
-								mLMAAnimFaceTex2.Add(tc);
+								mLMAAnimFaceTex2.Add(new Vector2((float)tcU, (float)tcV));
 							}
 							else if(s == 2)
 							{
-								mLMAAnimFaceTex3.Add(tc);
+								mLMAAnimFaceTex3.Add(new Vector2((float)tcU, (float)tcV));
 							}
 							else if(s == 3)
 							{
-								mLMAAnimFaceTex4.Add(tc);
+								mLMAAnimFaceTex4.Add(new Vector2((float)tcU, (float)tcV));
 							}
 						}
 					}
@@ -1006,9 +995,11 @@ namespace BSPCore
 					for(k=0;k < nverts;k++)
 					{
 						Vector4	styleIndex	=Vector4.Zero;
-						styleIndex.X	=f.mLTypes[0];
-						styleIndex.Y	=f.mLTypes[1];
-						styleIndex.Z	=f.mLTypes[2];
+
+						//index zero is always zero
+						styleIndex.X	=f.mLTypes[1];
+						styleIndex.Y	=f.mLTypes[2];
+						styleIndex.Z	=f.mLTypes[3];
 						styleIndex.W	=AlphaValue;
 						mLMAAnimStyle.Add(styleIndex);
 					}
@@ -1072,9 +1063,10 @@ namespace BSPCore
 						continue;	//only interested in lightmapped
 					}
 
-					if(f.mLTypes[1] != 255)
+					//make sure not animating
+					if(f.mLTypes[1] != 255 || f.mLTypes[2] != 255 || f.mLTypes[3] != 255)
 					{
-						continue;	//only interested in non animated
+						continue;
 					}
 
 					if(f.mLTypes[0] != 0)
@@ -1116,6 +1108,8 @@ namespace BSPCore
 					int		nverts	=f.mNumVerts;
 					int		fvert	=f.mFirstVert;
 					int		k		=0;
+
+					Vector3	centerPoint	=Vector3.Zero;
 					for(k=0;k < nverts;k++)
 					{
 						int		idx	=indexes[fvert + k];
@@ -1124,10 +1118,21 @@ namespace BSPCore
 						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
 						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
 
+						centerPoint	+=pnt;
+
 						mLMFaceTex0.Add(crd);
 						fverts.Add(pnt);
 
 						mLMVerts.Add(pnt);
+					}
+
+					centerPoint	/=nverts;
+
+					if(UtilityLib.Mathery.CompareVectorEpsilon(centerPoint,
+						new Vector3(-865f, -25.7f, -175.5f), 15.0f))
+					{
+						int	gackerus	=0;
+						gackerus++;
 					}
 
 					//flat shaded normals for lightmapped surfaces
@@ -1144,33 +1149,28 @@ namespace BSPCore
 						mLMNormals.Add(pln.mNormal);
 					}
 
-					List<Vector2>	coords	=new List<Vector2>();
-					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coords);
-
-					float	crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
-					float	crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
-
+					List<double>	coordsU	=new List<double>();
+					List<double>	coordsV	=new List<double>();
+					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
+//					GetTexCoords2(fverts, tex, out coordsU, out coordsV);
 					for(k=0;k < nverts;k++)
 					{
-						Vector2	tc	=coords[k];
-
-						//stretch coords to +1 size
-						tc.X	*=crunchX;
-						tc.Y	*=crunchY;
+						double	tcU	=coordsU[k];
+						double	tcV	=coordsV[k];
 
 						//scale to atlas space
-						tc.X	/=mLMAtlas.Width;
-						tc.Y	/=mLMAtlas.Height;
+						tcU	/=mLMAtlas.Width;
+						tcV	/=mLMAtlas.Height;
 
 						//step half a pixel in atlas space
-						tc.X	+=1.0f / (mLMAtlas.Width * 2.0f);
-						tc.Y	+=1.0f / (mLMAtlas.Height * 2.0f);
+						tcU	+=1.0 / (mLMAtlas.Width * 2.0);
+						tcV	+=1.0 / (mLMAtlas.Height * 2.0);
 
 						//move to atlas position
-						tc.X	+=(float)offsetU;
-						tc.Y	+=(float)offsetV;
+						tcU	+=offsetU;
+						tcV	+=offsetV;
 
-						mLMFaceTex1.Add(tc);
+						mLMFaceTex1.Add(new Vector2((float)tcU, (float)tcV));
 					}
 
 					firstVert.Add(mLMVerts.Count - f.mNumVerts);
@@ -1288,33 +1288,27 @@ namespace BSPCore
 						mLMANormals.Add(pln.mNormal);
 					}
 
-					List<Vector2>	coords	=new List<Vector2>();
-					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coords);
-
-					float	crunchX	=f.mLWidth / (float)(f.mLWidth + 1);
-					float	crunchY	=f.mLHeight / (float)(f.mLHeight + 1);
-
+					List<double>	coordsU	=new List<double>();
+					List<double>	coordsV	=new List<double>();
+					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
 					for(k=0;k < nverts;k++)
 					{
-						Vector2	tc	=coords[k];
-
-						//stretch coords to +1 size
-						tc.X	*=crunchX;
-						tc.Y	*=crunchY;
+						double	tcU	=coordsU[k];
+						double	tcV	=coordsV[k];
 
 						//scale to atlas space
-						tc.X	/=mLMAtlas.Width;
-						tc.Y	/=mLMAtlas.Height;
+						tcU	/=mLMAtlas.Width;
+						tcV	/=mLMAtlas.Height;
 
 						//step half a pixel in atlas space
-						tc.X	+=1.0f / (mLMAtlas.Width * 2.0f);
-						tc.Y	+=1.0f / (mLMAtlas.Height * 2.0f);
+						tcU	+=1.0 / (mLMAtlas.Width * 2.0);
+						tcV	+=1.0 / (mLMAtlas.Height * 2.0);
 
 						//move to atlas position
-						tc.X	+=(float)offsetU;
-						tc.Y	+=(float)offsetV;
+						tcU	+=offsetU;
+						tcV	+=offsetV;
 
-						mLMAFaceTex1.Add(tc);
+						mLMAFaceTex1.Add(new Vector2((float)tcU, (float)tcV));
 					}
 
 					firstVert.Add(mLMAVerts.Count - f.mNumVerts);
@@ -1907,52 +1901,159 @@ namespace BSPCore
 
 		void GetTexCoords1(List<Vector3> verts, GBSPPlane pln,
 			int	lwidth, int lheight, GFXTexInfo tex,
-			out List<Vector2> coords)
+			out List<double> sCoords, out List<double> tCoords)
 		{
-			coords	=new List<Vector2>();
-
-			float	minS, minT;
-
-			minS	=Bounds.MIN_MAX_BOUNDS;
-			minT	=Bounds.MIN_MAX_BOUNDS;
+			sCoords	=new List<double>();
+			tCoords	=new List<double>();
 
 			//get a proper set of texvecs for lighting
 			Vector3	xv, yv;
 			GBSPPoly.TextureAxisFromPlane(pln, out xv, out yv);
 
-			//scale down to light space
-			xv	/=mLightGridSize;
-			yv	/=mLightGridSize;
+			double	sX	=xv.X;
+			double	sY	=xv.Y;
+			double	sZ	=xv.Z;
+			double	tX	=yv.X;
+			double	tY	=yv.Y;
+			double	tZ	=yv.Z;
 
-			//calculate the min values for s and t
+			double	minS, minT;
+			double	maxS, maxT;
+
+			minS	=Bounds.MIN_MAX_BOUNDS;
+			minT	=Bounds.MIN_MAX_BOUNDS;
+			maxS	=-Bounds.MIN_MAX_BOUNDS;
+			maxT	=-Bounds.MIN_MAX_BOUNDS;
+
+			//calculate texture space extents
 			foreach(Vector3 pnt in verts)
 			{
-				float	d	=Vector3.Dot(xv, pnt);
+				double	d	=(pnt.X * sX) + (pnt.Y * sY) + (pnt.Z * sZ);
 				if(d < minS)
 				{
 					minS	=d;
 				}
+				if(d > maxS)
+				{
+					maxS	=d;
+				}
 
-				d	=Vector3.Dot(yv, pnt);
+				d	=(pnt.X * tX) + (pnt.Y * tY) + (pnt.Z * tZ);
 				if(d < minT)
 				{
 					minT	=d;
 				}
+				if(d > maxT)
+				{
+					maxT	=d;
+				}
 			}
 
-			float	shiftU	=-minS;
-			float	shiftV	=-minT;
+			//extent is the size of the surface in texels
+			//note that these are texture texels not light
+			double	extentS	=maxS - minS;
+			double	extentT	=maxT - minT;
+
+			//offset to the start of the texture
+			double	shiftU	=-minS;
+			double	shiftV	=-minT;
 
 			foreach(Vector3 pnt in verts)
 			{
-				Vector2	crd;
-				crd.X	=Vector3.Dot(xv, pnt);
-				crd.Y	=Vector3.Dot(yv, pnt);
+				double	crdX, crdY;
 
-				crd.X	+=shiftU;
-				crd.Y	+=shiftV;
+				//dot product
+				crdX	=(pnt.X * sX) + (pnt.Y * sY) + (pnt.Z * sZ);
+				crdY	=(pnt.X * tX) + (pnt.Y * tY) + (pnt.Z * tZ);
 
-				coords.Add(crd);
+				//shift relative to start position
+				crdX	+=shiftU;
+				crdY	+=shiftV;
+
+				//now the coordinates are set for textures
+				//scale by light grid size
+				crdX	/=mLightGridSize;
+				crdY	/=mLightGridSize;
+
+				sCoords.Add(crdX);
+				tCoords.Add(crdY);
+			}
+		}
+
+
+		void GetTexCoords2(List<Vector3> verts, GFXTexInfo tex,
+			out List<double> sCoords, out List<double> tCoords)
+		{
+			sCoords	=new List<double>();
+			tCoords	=new List<double>();
+
+			double	sX	=tex.mVecs[0].X;
+			double	sY	=tex.mVecs[0].Y;
+			double	sZ	=tex.mVecs[0].Z;
+			double	tX	=tex.mVecs[1].X;
+			double	tY	=tex.mVecs[1].Y;
+			double	tZ	=tex.mVecs[1].Z;
+
+			double	minS, minT;
+			double	maxS, maxT;
+
+			minS	=Bounds.MIN_MAX_BOUNDS;
+			minT	=Bounds.MIN_MAX_BOUNDS;
+			maxS	=-Bounds.MIN_MAX_BOUNDS;
+			maxT	=-Bounds.MIN_MAX_BOUNDS;
+
+			//calculate texture space extents
+			foreach(Vector3 pnt in verts)
+			{
+				double	d	=(pnt.X * sX) + (pnt.Y * sY) + (pnt.Z * sZ);
+				if(d < minS)
+				{
+					minS	=d;
+				}
+				if(d > maxS)
+				{
+					maxS	=d;
+				}
+
+				d	=(pnt.X * tX) + (pnt.Y * tY) + (pnt.Z * tZ);
+				if(d < minT)
+				{
+					minT	=d;
+				}
+				if(d > maxT)
+				{
+					maxT	=d;
+				}
+			}
+
+			//extent is the size of the surface in texels
+			//note that these are texture texels not light
+			double	extentS	=maxS - minS;
+			double	extentT	=maxT - minT;
+
+			//offset to the start of the texture
+			double	shiftU	=-minS;
+			double	shiftV	=-minT;
+
+			foreach(Vector3 pnt in verts)
+			{
+				double	crdX, crdY;
+
+				//dot product
+				crdX	=(pnt.X * sX) + (pnt.Y * sY) + (pnt.Z * sZ);
+				crdY	=(pnt.X * tX) + (pnt.Y * tY) + (pnt.Z * tZ);
+
+				//shift relative to start position
+				crdX	+=shiftU;
+				crdY	+=shiftV;
+
+				//now the coordinates are set for textures
+				//scale by light grid size
+				crdX	/=mLightGridSize;
+				crdY	/=mLightGridSize;
+
+				sCoords.Add(crdX);
+				tCoords.Add(crdY);
 			}
 		}
 
