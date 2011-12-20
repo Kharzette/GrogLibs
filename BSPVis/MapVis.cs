@@ -117,7 +117,7 @@ namespace BSPVis
 			PFile		+=".gpf";
 			
 			//Load the portal file
-			if(!LoadPortalFile(PFile))
+			if(!LoadPortalFile(PFile, true))
 			{
 				goto	ExitWithError;
 			}
@@ -249,6 +249,21 @@ namespace BSPVis
 
 			br.Close();
 			fs.Close();
+		}
+
+
+		public int GetDebugClusterGeometry(int clust, List<Vector3> verts, List<UInt32> inds)
+		{
+			if(clust >= mVisLeafs.Length || clust < 0)
+			{
+				return	0;
+			}
+			foreach(VISPortal vp in mVisLeafs[clust].mPortals)
+			{
+				vp.mPoly.GetTriangles(verts, inds, false);
+			}
+
+			return	mVisLeafs[clust].mPortals.Count;
 		}
 
 
@@ -1764,7 +1779,7 @@ namespace BSPVis
 		}
 
 
-		bool LoadPortalFile(string portFile)
+		public bool LoadPortalFile(string portFile, bool bCheckLeafs)
 		{
 			FileStream	fs	=new FileStream(portFile,
 				FileMode.Open, FileAccess.Read);
@@ -1817,11 +1832,14 @@ namespace BSPVis
 			//	Get the number of leafs
 			//
 			int	NumVisLeafs	=br.ReadInt32();
-			if(NumVisLeafs > mGFXLeafs.Length)
+
+			if(bCheckLeafs)
 			{
-				goto	ExitWithError;
-			}
-			
+				if(NumVisLeafs > mGFXLeafs.Length)
+				{
+					goto	ExitWithError;
+				}
+			}			
 			mVisLeafs	=new VISLeaf[NumVisLeafs];
 			if(mVisLeafs == null)
 			{

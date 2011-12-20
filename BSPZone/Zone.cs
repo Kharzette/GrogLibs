@@ -21,6 +21,8 @@ namespace BSPZone
 		ZoneLeafSide	[]mZoneLeafSides;
 		ZonePlane		[]mZonePlanes;
 		ZoneEntity		[]mZoneEntities;
+
+		//debug vis stuff
 		Int32			[]mDebugLeafFaces;
 		DebugFace		[]mDebugFaces;
 		Vector3			[]mDebugVerts;
@@ -29,6 +31,7 @@ namespace BSPZone
 		VisCluster		[]mVisClusters;
 		VisArea			[]mVisAreas;
 		VisAreaPortal	[]mVisAreaPortals;
+
 
 		byte	[]mVisData;
 		byte	[]mMaterialVisData;
@@ -545,7 +548,7 @@ namespace BSPZone
 
 
 		//only used for debugging vis
-		public void GetVisibleGeometry(Vector3 pos, List<Vector3> verts, List<Int32> inds)
+		public void GetVisibleGeometry(Vector3 pos, List<Vector3> verts, List<UInt32> inds)
 		{
 			Int32	posNode	=FindNodeLandedIn(0, pos);
 			if(posNode > 0)
@@ -588,9 +591,9 @@ namespace BSPZone
 					for(int k=1;k < nverts-1;k++)
 					{
 						//initial vertex
-						inds.Add(vofs);
-						inds.Add((vofs + k));
-						inds.Add((vofs + ((k + 1) % nverts)));
+						inds.Add((UInt32)vofs);
+						inds.Add((UInt32)(vofs + k));
+						inds.Add((UInt32)(vofs + ((k + 1) % nverts)));
 					}
 				}
 			}
