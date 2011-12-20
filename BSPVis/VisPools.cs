@@ -15,7 +15,6 @@ namespace BSPVis
 		public Pool<VISPStack>	mStacks;
 		public ClipPools		mClipPools;
 		public VISLeaf			[]mVisLeafs;
-		public Q2VisLeaf		[]mQ2VisLeafs;
 		public int				mIterations, mCanSee;
 
 
@@ -24,14 +23,6 @@ namespace BSPVis
 			mPolys		=new Pool<GBSPPoly>(() => new GBSPPoly(0));
 			mStacks		=new Pool<VISPStack>(() => new VISPStack());
 			mVisLeafs	=leafs;
-			mClipPools	=cp;
-		}
-
-		internal VisPools(Q2VisLeaf []leafs, ClipPools cp)
-		{
-			mPolys		=new Pool<GBSPPoly>(() => new GBSPPoly(0));
-			mStacks		=new Pool<VISPStack>(() => new VISPStack());
-			mQ2VisLeafs	=leafs;
 			mClipPools	=cp;
 		}
 	}

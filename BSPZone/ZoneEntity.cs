@@ -7,13 +7,13 @@ using Microsoft.Xna.Framework;
 
 namespace BSPZone
 {
-	internal class ZoneEntity : UtilityLib.IReadWriteable
+	public class ZoneEntity : UtilityLib.IReadWriteable
 	{
-		internal Dictionary<string, string>	mData		=new Dictionary<string, string>();
+		public Dictionary<string, string>	mData		=new Dictionary<string, string>();
 //		internal Int32						mModelNum;
 
 
-		internal bool GetOrigin(out Vector3 org)
+		public bool GetOrigin(out Vector3 org)
 		{
 			org	=Vector3.Zero;
 			if(!mData.ContainsKey("origin"))
@@ -80,7 +80,7 @@ namespace BSPZone
 		}
 
 
-		internal bool GetVector(string key, out Vector3 org)
+		public bool GetVector(string key, out Vector3 org)
 		{
 			if(GetVectorNoConversion(key, out org))
 			{
@@ -101,7 +101,7 @@ namespace BSPZone
 		}
 
 
-		internal bool GetVectorNoConversion(string key, out Vector3 org)
+		public bool GetVectorNoConversion(string key, out Vector3 org)
 		{
 			org	=Vector3.Zero;
 			if(!mData.ContainsKey(key))

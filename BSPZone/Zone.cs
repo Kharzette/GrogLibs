@@ -200,6 +200,33 @@ namespace BSPZone
 		}
 
 
+		public BoundingBox GetModelBounds(int modelNum)
+		{
+			if(modelNum > 0 && modelNum < mZoneModels.Length)
+			{
+				return	mZoneModels[modelNum].mBounds;
+			}
+			return	new BoundingBox();
+		}
+
+
+		public List<ZoneEntity> GetEntities(string className)
+		{
+			List<ZoneEntity>	ret	=new List<ZoneEntity>();
+			foreach(ZoneEntity ze in mZoneEntities)
+			{
+				if(ze.mData.ContainsKey("classname"))
+				{
+					if(ze.mData["classname"] == className)
+					{
+						ret.Add(ze);
+					}
+				}
+			}
+			return	ret;
+		}
+
+
 		//for assigning character lights
 		public List<Vector3> GetNearestThreeLightsInLOS(Vector3 pos)
 		{

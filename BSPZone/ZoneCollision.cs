@@ -30,6 +30,7 @@ namespace BSPZone
 
 	public partial class Zone
 	{
+		//this was written by me back in the genesis days, not well tested
 		bool CapsuleIntersect(RayTrace trace, Vector3 start, Vector3 end, float radius, Int32 node)
 		{
 			if(node < 0)

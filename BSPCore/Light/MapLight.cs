@@ -1423,27 +1423,6 @@ namespace BSPCore
 
 			ProgressWatcher.Clear();
 
-			Vector3	[]rayStarts	=debugRayStarts.ToArray();
-			Vector3	[]rayEnds	=debugRayEnds.ToArray();
-
-			FileStream		fs	=new FileStream("DebugRays.rays", FileMode.Create, FileAccess.Write);
-			BinaryWriter	bw	=new BinaryWriter(fs);
-
-			bw.Write(rayStarts.Length);
-
-			for(int i=0;i < rayStarts.Length;i++)
-			{
-				bw.Write(rayStarts[i].X);
-				bw.Write(rayStarts[i].Y);
-				bw.Write(rayStarts[i].Z);
-				bw.Write(rayEnds[i].X);
-				bw.Write(rayEnds[i].Y);
-				bw.Write(rayEnds[i].Z);
-			}
-
-			bw.Close();
-			fs.Close();
-
 			return	true;
 		}
 
@@ -1487,6 +1466,7 @@ namespace BSPCore
 
 				for(int c=0;c < mGFXClusters.Length;c++)
 				{
+					//vis is broken right now
 //					if((visData[mGFXClusters[clust].mVisOfs + (c >> 3)] & (1 << (c & 7))) == 0)
 //					{
 //						continue;

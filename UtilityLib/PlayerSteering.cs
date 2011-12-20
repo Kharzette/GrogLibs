@@ -260,21 +260,22 @@ namespace UtilityLib
 			vin.Y   =view.M23;
 			vin.Z   =view.M33;
 
+			Vector3	moveVec	=Vector3.Zero;
 			if(ks.IsKeyDown(Keys.Left) || ks.IsKeyDown(Keys.A))
 			{
-				mPosition	+=vleft * mSpeed;
+				moveVec	-=vleft;
 			}
 			if(ks.IsKeyDown(Keys.Right) || ks.IsKeyDown(Keys.D))
 			{
-				mPosition	-=vleft * mSpeed;
+				moveVec	+=vleft;
 			}
 			if(ks.IsKeyDown(Keys.Up) || ks.IsKeyDown(Keys.W))
 			{
-				mPosition	+=vin * mSpeed;
+				moveVec	-=vin;
 			}
 			if(ks.IsKeyDown(Keys.Down) || ks.IsKeyDown(Keys.S))
 			{
-				mPosition	-=vin * mSpeed;
+				moveVec	+=vin;
 			}
 
 			if(ms.RightButton == ButtonState.Pressed)
@@ -294,8 +295,17 @@ namespace UtilityLib
 				mPitch	+=gs.ThumbSticks.Right.Y * msDelta * 0.25f;
 				mYaw	+=gs.ThumbSticks.Right.X * msDelta * 0.25f;
 
-				mPosition	-=vleft * (gs.ThumbSticks.Left.X * msDelta * 0.25f);
-				mPosition	+=vin * (gs.ThumbSticks.Left.Y * msDelta * 0.25f);
+				moveVec	=vleft * gs.ThumbSticks.Left.X;
+				moveVec	-=vin * gs.ThumbSticks.Left.Y;
+			}
+
+			//zero out up/down
+			moveVec.Y	=0.0f;
+
+			if(moveVec.LengthSquared() > 0.001f)
+			{
+				moveVec.Normalize();
+				mPosition	+=moveVec * msDelta * mSpeed;
 			}
 
 			if(mPitch > PitchClamp)
