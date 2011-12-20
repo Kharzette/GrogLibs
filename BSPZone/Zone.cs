@@ -21,6 +21,10 @@ namespace BSPZone
 		ZoneLeafSide	[]mZoneLeafSides;
 		ZonePlane		[]mZonePlanes;
 		ZoneEntity		[]mZoneEntities;
+		Int32			[]mDebugLeafFaces;
+		DebugFace		[]mDebugFaces;
+		Vector3			[]mDebugVerts;
+		Int32			[]mDebugIndexes;
 
 		VisCluster		[]mVisClusters;
 		VisArea			[]mVisAreas;
@@ -65,7 +69,7 @@ namespace BSPZone
 		}
 
 
-		public void Write(string fileName)
+		public void Write(string fileName, bool bDebug)
 		{
 			FileStream	file	=new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.Write);
 
@@ -79,6 +83,15 @@ namespace BSPZone
 			WritePlaneArray(bw);
 			UtilityLib.FileUtil.WriteArray(mZoneEntities, bw);
 			UtilityLib.FileUtil.WriteArray(mZoneLeafSides, bw);
+
+			bw.Write(bDebug);
+			if(bDebug)
+			{
+				UtilityLib.FileUtil.WriteArray(bw, mDebugLeafFaces);
+				UtilityLib.FileUtil.WriteArray(mDebugFaces, bw);
+				UtilityLib.FileUtil.WriteArray(bw, mDebugVerts);
+				UtilityLib.FileUtil.WriteArray(bw, mDebugIndexes);
+			}
 
 			if(mVisData != null && mVisData.Length > 0)
 			{
@@ -142,6 +155,16 @@ namespace BSPZone
 							{ return UtilityLib.FileUtil.InitArray<ZoneEntity>(count); }) as ZoneEntity[];
 			mZoneLeafSides	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return UtilityLib.FileUtil.InitArray<ZoneLeafSide>(count); }) as ZoneLeafSide[];
+
+			bool	bDebug	=br.ReadBoolean();
+			if(bDebug)
+			{
+				mDebugLeafFaces	=UtilityLib.FileUtil.ReadIntArray(br);
+				mDebugFaces		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<DebugFace>(count); }) as DebugFace[];
+				mDebugVerts		=UtilityLib.FileUtil.ReadVecArray(br);
+				mDebugIndexes	=UtilityLib.FileUtil.ReadIntArray(br);
+			}
 
 			mVisData			=UtilityLib.FileUtil.ReadByteArray(br);
 			mMaterialVisData	=UtilityLib.FileUtil.ReadByteArray(br);
@@ -518,6 +541,59 @@ namespace BSPZone
 
 			Int32	leaf	=-(node + 1);
 			return	IsMaterialVisible(leaf, matIndex);
+		}
+
+
+		//only used for debugging vis
+		public void GetVisibleGeometry(Vector3 pos, List<Vector3> verts, List<Int32> inds)
+		{
+			Int32	posNode	=FindNodeLandedIn(0, pos);
+			if(posNode > 0)
+			{
+				return;	//solid
+			}
+
+			Int32	leaf	=-(posNode + 1);
+			Int32	clust	=mZoneLeafs[leaf].mCluster;
+
+			if(clust == -1 || mVisClusters[clust].mVisOfs == -1)
+			{
+				return;	//no info for position
+			}
+
+			Int32	ofs	=mVisClusters[clust].mVisOfs;
+
+			foreach(ZoneLeaf zl in mZoneLeafs)
+			{
+				Int32	c	=zl.mCluster;
+
+				if((mVisData[ofs + (c >> 3)] & (1 << (clust & 7))) == 0)
+				{
+					continue;
+				}
+
+				for(int i=0;i < zl.mNumFaces;i++)
+				{
+					int		vofs	=verts.Count;
+					int		face	=mDebugLeafFaces[zl.mFirstFace + i];
+					int		nverts	=mDebugFaces[face].mNumVerts;
+					int		fvert	=mDebugFaces[face].mFirstVert;
+
+					for(int j=fvert;j < (fvert + nverts);j++)
+					{
+						int	idx	=mDebugIndexes[j];
+						verts.Add(mDebugVerts[idx]);
+					}
+
+					for(int k=1;k < nverts-1;k++)
+					{
+						//initial vertex
+						inds.Add(vofs);
+						inds.Add((vofs + k));
+						inds.Add((vofs + ((k + 1) % nverts)));
+					}
+				}
+			}
 		}
 
 

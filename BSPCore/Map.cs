@@ -355,7 +355,8 @@ namespace BSPCore
 
 		#region IO
 		//this writes out something to be loaded by bspzone
-		public void Write(string fileName, int matCount, CoreDelegates.SaveVisZoneData saveVis)
+		public void Write(string fileName, bool bDebug, int matCount,
+			CoreDelegates.SaveVisZoneData saveVis)
 		{
 			FileStream	file	=new FileStream(fileName,
 									FileMode.OpenOrCreate, FileAccess.Write);
@@ -370,6 +371,15 @@ namespace BSPCore
 			UtilityLib.FileUtil.WriteArray(mGFXPlanes, bw);
 			UtilityLib.FileUtil.WriteArray(mGFXEntities, bw);
 			UtilityLib.FileUtil.WriteArray(mGFXLeafSides, bw);
+
+			bw.Write(bDebug);
+			if(bDebug)
+			{
+				UtilityLib.FileUtil.WriteArray(bw, mGFXLeafFaces);	//for debuggery, not used normally
+				UtilityLib.FileUtil.WriteArray(mGFXFaces, bw);		//for debuggery
+				UtilityLib.FileUtil.WriteArray(bw, mGFXVerts);
+				UtilityLib.FileUtil.WriteArray(bw, mGFXVertIndexes);
+			}
 
 			saveVis(bw);
 			
@@ -407,6 +417,16 @@ namespace BSPCore
 							{ return UtilityLib.FileUtil.InitArray<MapEntity>(count); }) as MapEntity[];
 			mGFXLeafSides	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return UtilityLib.FileUtil.InitArray<GFXLeafSide>(count); }) as GFXLeafSide[];
+
+			bool	bDebug	=br.ReadBoolean();
+			if(bDebug)
+			{
+				mGFXLeafFaces	=UtilityLib.FileUtil.ReadIntArray(br);
+				mGFXFaces		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+								{ return UtilityLib.FileUtil.InitArray<GFXFace>(count); }) as GFXFace[];
+				mGFXVerts		=UtilityLib.FileUtil.ReadVecArray(br);
+				mGFXVertIndexes	=UtilityLib.FileUtil.ReadIntArray(br);
+			}
 
 			mLightMapGridSize		=br.ReadInt32();
 

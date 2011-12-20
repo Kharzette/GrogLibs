@@ -205,19 +205,19 @@ namespace UtilityLib
 			
 			if(ks.IsKeyDown(Keys.Left) || ks.IsKeyDown(Keys.A))
 			{
-				mPosition	+=vleft * speed;
+				mPosition	-=vleft * speed;
 			}
 			if(ks.IsKeyDown(Keys.Right) || ks.IsKeyDown(Keys.D))
 			{
-				mPosition	-=vleft * speed;
+				mPosition	+=vleft * speed;
 			}
 			if(ks.IsKeyDown(Keys.Up) || ks.IsKeyDown(Keys.W))
 			{
-				mPosition	+=vin * speed;
+				mPosition	-=vin * speed;
 			}
 			if(ks.IsKeyDown(Keys.Down) || ks.IsKeyDown(Keys.S))
 			{
-				mPosition	-=vin * speed;
+				mPosition	+=vin * speed;
 			}
 
 			if(ms.RightButton == ButtonState.Pressed)
