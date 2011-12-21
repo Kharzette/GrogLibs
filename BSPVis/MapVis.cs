@@ -252,15 +252,22 @@ namespace BSPVis
 		}
 
 
-		public int GetDebugClusterGeometry(int clust, List<Vector3> verts, List<UInt32> inds)
+		public int GetDebugClusterGeometry(int clust, List<Vector3> verts,
+			List<UInt32> inds, List<Vector3> norms,	List<Int32> portNums)
 		{
 			if(clust >= mVisLeafs.Length || clust < 0)
 			{
 				return	0;
 			}
+
 			foreach(VISPortal vp in mVisLeafs[clust].mPortals)
 			{
 				vp.mPoly.GetTriangles(verts, inds, false);
+
+				norms.Add(vp.mCenter);
+				norms.Add(vp.mCenter + (vp.mPlane.mNormal * 25.0f));
+
+				portNums.Add(vp.mPortNum);
 			}
 
 			return	mVisLeafs[clust].mPortals.Count;
@@ -1161,7 +1168,7 @@ namespace BSPVis
 					//mark the portal as visible
 					vis[pnum >> 3]	|=(byte)(1 << (pnum & 7));
 
-					RecursiveLeafFlowGenesis(destPort, p.mLeaf, stack);
+					RecursiveLeafFlowGenesis(destPort, p.mClusterTo, stack);
 					continue;
 				}
 
@@ -1188,7 +1195,7 @@ namespace BSPVis
 				vis[pnum >> 3]	|=(byte)(1 << (pnum & 7));
 
 				//flow through it for real
-				RecursiveLeafFlowGenesis(destPort, p.mLeaf, stack);
+				RecursiveLeafFlowGenesis(destPort, p.mClusterTo, stack);
 			}	
 		}
 
@@ -1205,7 +1212,7 @@ namespace BSPVis
 			vps.mSource		=p.mPoly;
 			p.mPortalFlood.CopyTo(vps.mVisBits, 0);
 
-			RecursiveLeafFlowGenesis(p, p.mLeaf, vps);
+			RecursiveLeafFlowGenesis(p, p.mClusterTo, vps);
 
 			p.mbDone	=true;
 
@@ -1243,24 +1250,23 @@ namespace BSPVis
 
 			object	prog	=ProgressWatcher.RegisterProgress(0, mVisPortals.Length, 0);
 
-#if false
-			for(int i=0;i < mQ2Portals.Length;i++)
-			{
-				BasePortalVis(i);
-				ProgressWatcher.UpdateProgress(prog, i);
-			}
-			ProgressWatcher.Clear();
-#else
 			//Flood all the leafs with the fast method first...
 			for(int i=0;i < mVisPortals.Length; i++)
 			{
-				BasePortalVisGenesis(i);
+				BasePortalVisGenesis2(i);
 				ProgressWatcher.UpdateProgress(prog, i);
 			}
 			ProgressWatcher.Clear();
-#endif
+
 			//Sort the portals with MightSee
-			SortPortals();
+			if(vp.mVisParams.mbSortPortals)
+			{
+				SortPortals();
+			}
+			else
+			{
+				mVisSortedPortals	=mVisPortals;
+			}
 
 			if(vp.mVisParams.mbFullVis)
 			{
@@ -1299,7 +1305,6 @@ namespace BSPVis
 			for(int i=0;i < mVisLeafs.Length;i++)
 			{
 				int	leafSee	=0;
-
 				
 				if(!CollectLeafVisBits(i, ref leafSee))
 				{
@@ -1332,8 +1337,8 @@ namespace BSPVis
 			}
 
 			int	count	=startPort;
-//			for(int k=startPort;k < endPort;k++)
-			Parallel.For(startPort, endPort, (k) =>
+			for(int k=startPort;k < endPort;k++)
+//			Parallel.For(startPort, endPort, (k) =>
 			{
 				VISPortal	port	=mVisSortedPortals[k];
 				
@@ -1363,7 +1368,7 @@ namespace BSPVis
 //						+ vPools.mCanSee + ", iterations: "
 //						+ vPools.mIterations + "\n");
 				}
-			});
+			}//);
 			return	true;
 		}
 
@@ -1531,12 +1536,15 @@ namespace BSPVis
 				if((portalBits[k >> 3] & (1 << (k & 7))) != 0)
 				{
 					sport	=mVisPortals[k];
-					SLeaf	=sport.mLeaf;
+					SLeaf	=sport.mClusterTo;
+					Debug.Assert((1 << (SLeaf & 7)) < 256);
+					mGFXVisData[LeafBitsOfs + (SLeaf >> 3)]	|=(byte)(1 << (SLeaf & 7));
+					SLeaf	=sport.mClusterFrom;
 					Debug.Assert((1 << (SLeaf & 7)) < 256);
 					mGFXVisData[LeafBitsOfs + (SLeaf >> 3)]	|=(byte)(1 << (SLeaf & 7));
 				}
 			}
-					
+
 			Bit	=1 << (leafNum & 7);
 
 			Debug.Assert(Bit < 256);
@@ -1610,6 +1618,7 @@ namespace BSPVis
 				{
 					float	d	=Vector3.Dot(tp.mPoly.mVerts[k], p.mPlane.mNormal)
 									- p.mPlane.mDist;
+
 					if(d > UtilityLib.Mathery.ON_EPSILON)
 					{
 						break;
@@ -1619,11 +1628,13 @@ namespace BSPVis
 				{
 					continue;
 				}
-
+				
+				/*
 				for(k=0;k < p.mPoly.mVerts.Length;k++)
 				{
 					float	d	=Vector3.Dot(p.mPoly.mVerts[k], tp.mPlane.mNormal)
 									- tp.mPlane.mDist;
+
 					if(d < -UtilityLib.Mathery.ON_EPSILON)
 					{
 						break;
@@ -1632,12 +1643,53 @@ namespace BSPVis
 				if(k == p.mPoly.mVerts.Length)
 				{
 					continue;
-				}
+				}*/
 
 				p.mPortalFront[i >> 3]	|=(byte)(1 << (i & 7));
 			}
 
-			SimpleFloodGenesis(p, p.mLeaf);
+			SimpleFloodGenesis(p, p.mClusterTo);
+
+			p.mMightSee	=CountBits(p.mPortalFlood, mVisPortals.Length);
+		}
+
+
+		void FacingFlood(VISPortal p, VISLeaf flooding)
+		{
+			foreach(VISPortal port in flooding.mPortals)
+			{
+				if(p.mClusterFrom == port.mClusterFrom)
+				{
+					continue;
+				}
+
+				if((p.mPortalFlood[port.mPortNum >> 3] & (1 << (port.mPortNum & 7))) != 0)
+				{
+					continue;
+				}
+
+				p.mPortalFlood[port.mPortNum >> 3]	|=(byte)(1 << (port.mPortNum & 7));
+
+				if(port.mPoly.AnyPartInFront(p.mPlane))
+				{
+					FacingFlood(p, mVisLeafs[port.mClusterTo]);
+				}
+			}
+		}
+		
+		
+		void BasePortalVisGenesis2(int portNum)
+		{
+			VISPortal	p	=mVisPortals[portNum];
+
+			p.mPortalFront	=new byte[mNumVisPortalBytes];
+			p.mPortalFlood	=new byte[mNumVisPortalBytes];
+			p.mPortalVis	=new byte[mNumVisPortalBytes];
+
+			VISLeaf	myLeaf	=mVisLeafs[p.mClusterFrom];
+			VISLeaf	leafTo	=mVisLeafs[p.mClusterTo];
+
+			FacingFlood(p, leafTo);
 
 			p.mMightSee	=CountBits(p.mPortalFlood, mVisPortals.Length);
 		}
@@ -1681,7 +1733,7 @@ namespace BSPVis
 
 				src.mPortalFlood[pNum >> 3]	|=(byte)(1 << (pNum & 7));
 
-				SimpleFloodGenesis(src, port.mLeaf);
+				SimpleFloodGenesis(src, port.mClusterTo);
 			}
 		}
 
@@ -1882,22 +1934,26 @@ namespace BSPVis
 
 				GBSPPlane	pln	=new GBSPPlane(poly);
 
+//				VISLeaf		fleaf	=mVisLeafs[leafTo];
+//				VISLeaf		bleaf	=mVisLeafs[leafFrom];
 				VISLeaf		fleaf	=mVisLeafs[leafFrom];
 				VISLeaf		bleaf	=mVisLeafs[leafTo];
 				VISPortal	fport	=mVisPortals[i];
 				VISPortal	bport	=mVisPortals[i + 1];
 
-				fport.mPortNum	=i;
-				fport.mPoly		=poly;
-				fport.mLeaf		=leafTo;
-				fport.mPlane	=pln;
-				fleaf.mPortals.Add(fport);
+				fport.mPortNum		=i;
+				fport.mPoly			=poly;
+				fport.mClusterTo	=leafTo;
+				fport.mClusterFrom	=leafFrom;
+				fport.mPlane		=pln;
+				fleaf.mPortals.Add(fport);	//lives in back leaf, looks into front leaf
 				fport.CalcPortalInfo();
 
-				bport.mPortNum	=i + 1;
-				bport.mPoly		=new GBSPPoly(poly);
-				bport.mLeaf		=leafFrom;
-				bport.mPlane	=pln;
+				bport.mPortNum		=i + 1;
+				bport.mPoly			=new GBSPPoly(poly);
+				bport.mClusterTo	=leafFrom;
+				bport.mClusterFrom	=leafTo;
+				bport.mPlane		=pln;
 				bleaf.mPortals.Add(bport);
 
 				bport.mPoly.Reverse();

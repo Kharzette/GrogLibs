@@ -67,7 +67,8 @@ namespace BSPVis
 		internal byte	[]mPortalVis;
 
 		internal Int32	mPortNum;		//index into portal array or portal num for vis
-		internal Int32	mLeaf;
+		internal Int32	mClusterTo;		//cluster portal aims into
+		internal Int32	mClusterFrom;	//cluster portal lives in
 		internal Int32	mMightSee;
 		internal Int32	mCanSee;
 		internal bool	mbDone;
@@ -87,11 +88,12 @@ namespace BSPVis
 			mPortalFlood	=UtilityLib.FileUtil.ReadByteArray(br);
 			mPortalVis		=UtilityLib.FileUtil.ReadByteArray(br);
 
-			mPortNum	=br.ReadInt32();
-			mLeaf		=br.ReadInt32();
-			mMightSee	=br.ReadInt32();
-			mCanSee		=br.ReadInt32();
-			mbDone		=br.ReadBoolean();
+			mPortNum		=br.ReadInt32();
+			mClusterTo		=br.ReadInt32();
+			mClusterFrom	=br.ReadInt32();
+			mMightSee		=br.ReadInt32();
+			mCanSee			=br.ReadInt32();
+			mbDone			=br.ReadBoolean();
 		}
 
 
@@ -109,7 +111,8 @@ namespace BSPVis
 			UtilityLib.FileUtil.WriteArray(mPortalVis, bw);
 
 			bw.Write(mPortNum);
-			bw.Write(mLeaf);
+			bw.Write(mClusterTo);
+			bw.Write(mClusterFrom);
 			bw.Write(mMightSee);
 			bw.Write(mCanSee);
 			bw.Write(mbDone);
@@ -146,6 +149,13 @@ namespace BSPVis
 					for(int k=0;k < portBits.Length;k++)
 					{
 						portBits[k]	|=p.mPortalVis[k];
+					}
+				}
+				else if(p.mPortalFlood != null)
+				{
+					for(int k=0;k < portBits.Length;k++)
+					{
+						portBits[k]	|=p.mPortalFlood[k];
 					}
 				}
 				else if(p.mPortalFront != null)

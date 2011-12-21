@@ -550,6 +550,11 @@ namespace BSPZone
 		//only used for debugging vis
 		public void GetVisibleGeometry(Vector3 pos, List<Vector3> verts, List<UInt32> inds)
 		{
+			if(mDebugFaces == null)
+			{
+				return;	//no debug info saved
+			}
+
 			Int32	posNode	=FindNodeLandedIn(0, pos);
 			if(posNode > 0)
 			{
@@ -570,7 +575,12 @@ namespace BSPZone
 			{
 				Int32	c	=zl.mCluster;
 
-				if((mVisData[ofs + (c >> 3)] & (1 << (clust & 7))) == 0)
+				if(c < 0)
+				{
+					continue;
+				}
+
+				if((mVisData[ofs + (c >> 3)] & (1 << (c & 7))) == 0)
 				{
 					continue;
 				}
@@ -597,6 +607,22 @@ namespace BSPZone
 					}
 				}
 			}
+		}
+
+
+		public Vector3 GetClusterCenter(int clust)
+		{
+			Vector3	ret	=Vector3.Zero;
+			foreach(ZoneLeaf zl in mZoneLeafs)
+			{
+				if(zl.mCluster != clust)
+				{
+					continue;
+				}
+
+				ret	+=((zl.mMaxs + zl.mMins) / 2.0f);
+			}
+			return	ret;
 		}
 
 
