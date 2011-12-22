@@ -1467,10 +1467,10 @@ namespace BSPCore
 				for(int c=0;c < mGFXClusters.Length;c++)
 				{
 					//vis is broken right now
-//					if((visData[mGFXClusters[clust].mVisOfs + (c >> 3)] & (1 << (c & 7))) == 0)
-//					{
-//						continue;
-//					}
+					if((visData[mGFXClusters[clust].mVisOfs + (c >> 3)] & (1 << (c & 7))) == 0)
+					{
+						continue;
+					}
 
 					if(!DirectClusterLights.ContainsKey(c))
 					{

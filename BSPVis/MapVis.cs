@@ -1539,6 +1539,8 @@ namespace BSPVis
 					SLeaf	=sport.mClusterTo;
 					Debug.Assert((1 << (SLeaf & 7)) < 256);
 					mGFXVisData[LeafBitsOfs + (SLeaf >> 3)]	|=(byte)(1 << (SLeaf & 7));
+
+					//also mark the leaf the portal lives in
 					SLeaf	=sport.mClusterFrom;
 					Debug.Assert((1 << (SLeaf & 7)) < 256);
 					mGFXVisData[LeafBitsOfs + (SLeaf >> 3)]	|=(byte)(1 << (SLeaf & 7));
@@ -1554,7 +1556,20 @@ namespace BSPVis
 			{
 				CoreEvents.Print("*WARNING* CollectLeafVisBits:  Leaf:" + leafNum + " can see himself!\n");
 			}
+
+			//mark own leaf as visible
 			mGFXVisData[LeafBitsOfs + (leafNum >> 3)]	|=(byte)Bit;
+
+			//mark immediate neighbors as visible
+			//(usually already are)
+			foreach(VISPortal p in Leaf.mPortals)
+			{
+				Debug.Assert(p.mClusterFrom == leafNum);
+
+				int	looksInto	=p.mClusterTo;
+
+				mGFXVisData[LeafBitsOfs + (looksInto >> 3)]	|=(byte)(1 << (looksInto & 7));
+			}
 
 			for(k=0;k < mVisLeafs.Length;k++)
 			{
@@ -1658,21 +1673,18 @@ namespace BSPVis
 		{
 			foreach(VISPortal port in flooding.mPortals)
 			{
-				if(p.mClusterFrom == port.mClusterFrom)
-				{
-					continue;
-				}
-
 				if((p.mPortalFlood[port.mPortNum >> 3] & (1 << (port.mPortNum & 7))) != 0)
 				{
 					continue;
 				}
 
-				p.mPortalFlood[port.mPortNum >> 3]	|=(byte)(1 << (port.mPortNum & 7));
-
 				if(port.mPoly.AnyPartInFront(p.mPlane))
 				{
-					FacingFlood(p, mVisLeafs[port.mClusterTo]);
+					if(p.mPoly.AnyPartBehind(port.mPlane))
+					{
+						p.mPortalFlood[port.mPortNum >> 3]	|=(byte)(1 << (port.mPortNum & 7));
+						FacingFlood(p, mVisLeafs[port.mClusterTo]);
+					}
 				}
 			}
 		}
@@ -1688,6 +1700,12 @@ namespace BSPVis
 
 			VISLeaf	myLeaf	=mVisLeafs[p.mClusterFrom];
 			VISLeaf	leafTo	=mVisLeafs[p.mClusterTo];
+
+			if(p.mClusterFrom == 826)
+			{
+				int	gack	=0;
+				gack++;
+			}
 
 			FacingFlood(p, leafTo);
 

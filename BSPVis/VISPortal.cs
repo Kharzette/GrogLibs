@@ -61,6 +61,7 @@ namespace BSPVis
 		internal Vector3	mCenter;
 		internal float		mRadius;
 		internal GBSPPoly	mPoly;
+		internal VISPortal	mPair;		//opposite pair
 
 		internal byte	[]mPortalFront;
 		internal byte	[]mPortalFlood;
