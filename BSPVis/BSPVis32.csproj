@@ -96,6 +96,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MapVis.cs" />
+    <Compile Include="MapVisServerStuff.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VisClient.cs" />
     <Compile Include="VisPools.cs" />

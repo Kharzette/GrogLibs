@@ -238,11 +238,22 @@ namespace BSPVis
 
 				for(int i=0;i < len / 8;i++)
 				{
-					UInt64	anded=*((UInt64 *)pS1) & *((UInt64 *)pS2);
+					UInt64	anded	=*((UInt64 *)pS1) & *((UInt64 *)pS2);
+					UInt64	val3	=*((UInt64 *)pS3);
 
 					*((UInt64 *)pD)	=anded;
 
-					ret	|=anded &~ *((UInt64 *)pS3);
+//					ret	|=anded &~ *((UInt64 *)pS3);
+
+					//and the bytes one at a time
+					ret	|=((anded & 0xFF) &~ (val3 & 0xFF));
+					ret	|=(((anded >> 8) & 0xFF) &~ ((val3 >> 8) & 0xFF));
+					ret	|=(((anded >> 16) & 0xFF) &~ ((val3 >> 16) & 0xFF));
+					ret	|=(((anded >> 24) & 0xFF) &~ ((val3 >> 24) & 0xFF));
+					ret	|=(((anded >> 32) & 0xFF) &~ ((val3 >> 32) & 0xFF));
+					ret	|=(((anded >> 40) & 0xFF) &~ ((val3 >> 40) & 0xFF));
+					ret	|=(((anded >> 48) & 0xFF) &~ ((val3 >> 48) & 0xFF));
+					ret	|=(((anded >> 56) & 0xFF) &~ ((val3 >> 56) & 0xFF));
 
 					pS1	+=8;
 					pS2	+=8;
@@ -266,6 +277,121 @@ namespace BSPVis
 				}
 			}
 			return	ret;
+		}
+
+
+		internal static void RecursiveLeafFlowGenesis(FlowParams fp)
+		{
+			VISLeaf	leaf	=fp.mVisLeafs[fp.mLeafNum];
+			
+			VISPStack	stack	=new VISPStack();
+
+			fp.mPrevStack.mNext	=stack;
+			
+			stack.mNext		=null;
+			stack.mLeaf		=leaf;
+			stack.mPortal	=null;
+			
+			byte	[]might	=stack.mVisBits;
+			byte	[]vis	=fp.mDestPort.mPortalVis;
+			
+			//check all portals for flowing into other leafs
+			for(int i=0;i < leaf.mPortals.Count;i++)
+			{
+				VISPortal	p	=leaf.mPortals[i];
+
+				int	pnum	=p.mPortNum;
+
+				if((fp.mPrevStack.mVisBits[pnum >> 3] & (1 << (pnum & 7))) == 0)
+				{
+					continue;	// can't possibly see it
+				}
+				
+				//if the portal can't see anything we haven't allready seen, skip it
+				byte	[]test	=null;
+				if(p.mbDone)
+				{
+					test	=p.mPortalVis;
+				}
+				else
+				{
+					test	=p.mPortalFlood;
+				}
+
+				UInt64	more	=AndTogetherQWords(fp.mPrevStack.mVisBits, test, vis, might);
+				if((more == 0) && (vis[pnum >> 3] & (1 << (pnum & 7))) != 0)
+				{	//can't see anything new
+					continue;
+				}
+
+				//get plane of portal, point normal into the neighbor leaf
+				stack.mPortalPlane	=p.mPlane;
+				stack.mPortal		=p;
+				stack.mNext			=null;
+
+				stack.mPass	=new GBSPPoly(p.mPoly);
+				if(!stack.mPass.ClipPoly(fp.mDestPort.mPlane, false))
+				{
+					continue;
+				}
+				if(stack.mPass.mVerts == null)
+				{
+					stack.mPass	=null;
+					continue;
+				}
+
+				stack.mSource	=new GBSPPoly(fp.mPrevStack.mSource);
+				if(!stack.mSource.ClipPoly(p.mPlane, true))
+				{
+					continue;
+				}
+				if(stack.mSource.mVerts == null)
+				{
+					stack.mSource	=null;
+					continue;
+				}
+
+				if(fp.mPrevStack.mPass == null)
+				{	//the second leaf can only be blocked if coplanar
+
+					//mark the portal as visible
+					vis[pnum >> 3]	|=(byte)(1 << (pnum & 7));
+
+					FlowParams	fp2	=fp;
+					fp2.mLeafNum	=p.mClusterTo;
+					fp2.mPrevStack	=stack;
+					RecursiveLeafFlowGenesis(fp2);
+					continue;
+				}
+
+				if(!stack.mPass.SeperatorClip(stack.mSource, fp.mPrevStack.mPass, false))
+				{
+					continue;
+				}
+				if(stack.mPass.mVerts == null)
+				{
+					stack.mPass	=null;
+					continue;
+				}
+				if(!stack.mPass.SeperatorClip(fp.mPrevStack.mPass, stack.mSource, true))
+				{
+					continue;
+				}
+				if(stack.mPass.mVerts == null)
+				{
+					stack.mPass	=null;
+					continue;
+				}
+
+				//mark the portal as visible
+				vis[pnum >> 3]	|=(byte)(1 << (pnum & 7));
+
+				//flow through it for real
+				FlowParams	fp3	=fp;
+				fp3.mLeafNum	=p.mClusterTo;
+				fp3.mPrevStack	=stack;
+				RecursiveLeafFlowGenesis(fp3);
+			}	
 		}
 	}
 
