@@ -61,8 +61,6 @@
     <Compile Include="GBSP\GBSPSide.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="GBSP\GBSPVisLeaf.cs" />
-    <Compile Include="GBSP\GBSPVisPortal.cs" />
     <Compile Include="GFX\GFXArea.cs" />
     <Compile Include="GFX\GFXAreaPortal.cs" />
     <Compile Include="GFX\GFXCluster.cs" />

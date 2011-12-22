@@ -109,8 +109,6 @@
     <Compile Include="GBSP\GBSPPoly.cs" />
     <Compile Include="GBSP\GBSPPortal.cs" />
     <Compile Include="GBSP\GBSPSide.cs" />
-    <Compile Include="GBSP\GBSPVisLeaf.cs" />
-    <Compile Include="GBSP\GBSPVisPortal.cs" />
     <Compile Include="GFX\GFXArea.cs" />
     <Compile Include="GFX\GFXAreaPortal.cs" />
     <Compile Include="GFX\GFXCluster.cs" />

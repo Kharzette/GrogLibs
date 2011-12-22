@@ -639,7 +639,13 @@ namespace BSPCore
 		{
 			string	sansExt	=UtilityLib.FileUtil.StripExtension(fileName);
 
+			//no longer sans I guess
 			sansExt	+=".VisData";
+
+			if(!File.Exists(sansExt))
+			{
+				return	null;
+			}
 
 			FileStream		fs	=new FileStream(sansExt, FileMode.Open, FileAccess.Read);
 			BinaryReader	br	=new BinaryReader(fs);

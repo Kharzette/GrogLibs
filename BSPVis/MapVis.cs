@@ -12,6 +12,15 @@ using BSPCore;
 
 namespace BSPVis
 {
+	struct FlowParams
+	{
+		internal VISPortal	mDestPort;
+		internal int		mLeafNum;
+		internal VISPStack	mPrevStack;
+		internal VISLeaf	[]mVisLeafs;
+		internal int		mNumVisPortalBytes;
+	}
+
 	public class VisParameters
 	{
 		public BSPBuildParams	mBSPParams;
@@ -1200,6 +1209,127 @@ namespace BSPVis
 		}
 
 
+		static void RecursiveLeafFlowGenesis(FlowParams fp)
+		{
+			VISLeaf	leaf	=fp.mVisLeafs[fp.mLeafNum];
+			
+			VISPStack	stack	=new VISPStack();
+
+			fp.mPrevStack.mNext	=stack;
+			
+			stack.mNext		=null;
+			stack.mLeaf		=leaf;
+			stack.mPortal	=null;
+			
+			byte	[]might	=stack.mVisBits;
+			byte	[]vis	=fp.mDestPort.mPortalVis;
+			
+			//check all portals for flowing into other leafs
+			for(int i=0;i < leaf.mPortals.Count;i++)
+			{
+				VISPortal	p	=leaf.mPortals[i];
+
+				int	pnum	=p.mPortNum;
+
+				if((fp.mPrevStack.mVisBits[pnum >> 3] & (1 << (pnum & 7))) == 0)
+				{
+					continue;	// can't possibly see it
+				}
+				
+				//if the portal can't see anything we haven't allready seen, skip it
+				byte	[]test	=null;
+				if(p.mbDone)
+				{
+					test	=p.mPortalVis;
+				}
+				else
+				{
+					test	=p.mPortalFlood;
+				}
+
+				Int32	more	=0;
+				for(int j=0;j < fp.mNumVisPortalBytes;j++)
+				{
+					might[j]	=(byte)(fp.mPrevStack.mVisBits[j] & test[j]);
+					more		|=(might[j] & ~vis[j]);
+				}
+		
+				if((more == 0) && (vis[pnum >> 3] & (1 << (pnum & 7))) != 0)
+				{	//can't see anything new
+					continue;
+				}
+
+				//get plane of portal, point normal into the neighbor leaf
+				stack.mPortalPlane	=p.mPlane;
+				stack.mPortal		=p;
+				stack.mNext			=null;
+
+				stack.mPass	=new GBSPPoly(p.mPoly);
+				if(!stack.mPass.ClipPoly(fp.mDestPort.mPlane, false))
+				{
+					continue;
+				}
+				if(stack.mPass.mVerts == null)
+				{
+					stack.mPass	=null;
+					continue;
+				}
+
+				stack.mSource	=new GBSPPoly(fp.mPrevStack.mSource);
+				if(!stack.mSource.ClipPoly(p.mPlane, true))
+				{
+					continue;
+				}
+				if(stack.mSource.mVerts == null)
+				{
+					stack.mSource	=null;
+					continue;
+				}
+
+				if(fp.mPrevStack.mPass == null)
+				{	//the second leaf can only be blocked if coplanar
+
+					//mark the portal as visible
+					vis[pnum >> 3]	|=(byte)(1 << (pnum & 7));
+
+					FlowParams	fp2	=fp;
+					fp.mLeafNum		=p.mClusterTo;
+					fp.mPrevStack	=stack;
+					RecursiveLeafFlowGenesis(fp2);
+					continue;
+				}
+
+				if(!stack.mPass.SeperatorClip(stack.mSource, fp.mPrevStack.mPass, false))
+				{
+					continue;
+				}
+				if(stack.mPass.mVerts == null)
+				{
+					stack.mPass	=null;
+					continue;
+				}
+				if(!stack.mPass.SeperatorClip(fp.mPrevStack.mPass, stack.mSource, true))
+				{
+					continue;
+				}
+				if(stack.mPass.mVerts == null)
+				{
+					stack.mPass	=null;
+					continue;
+				}
+
+				//mark the portal as visible
+				vis[pnum >> 3]	|=(byte)(1 << (pnum & 7));
+
+				//flow through it for real
+				FlowParams	fp3	=fp;
+				fp.mLeafNum		=p.mClusterTo;
+				fp.mPrevStack	=stack;
+				RecursiveLeafFlowGenesis(fp3);
+			}	
+		}
+
+
 		void	PortalFlowGenesis(int portalnum)
 		{
 			VISPortal	p	=mVisSortedPortals[portalnum];
@@ -1222,7 +1352,7 @@ namespace BSPVis
 		}
 
 
-		static void	PortalFlowGenesis(int portalnum, VISPortal []visPortals, VISLeaf []visLeafs)
+		static void	PortalFlowGenesis(int portalnum, VISPortal []visPortals, VISLeaf []visLeafs, int numVisPortalBytes)
 		{
 			VISPortal	p	=visPortals[portalnum];
 
@@ -1234,7 +1364,13 @@ namespace BSPVis
 			vps.mSource		=p.mPoly;
 			p.mPortalFlood.CopyTo(vps.mVisBits, 0);
 
-//			RecursiveLeafFlowGenesis(p, p.mLeaf, vps);
+			FlowParams	fp;
+			fp.mDestPort			=p;
+			fp.mLeafNum				=p.mClusterTo;
+			fp.mPrevStack			=vps;
+			fp.mVisLeafs			=visLeafs;
+			fp.mNumVisPortalBytes	=numVisPortalBytes;
+			RecursiveLeafFlowGenesis(fp);
 
 			p.mbDone	=true;
 
@@ -1253,7 +1389,7 @@ namespace BSPVis
 			//Flood all the leafs with the fast method first...
 			for(int i=0;i < mVisPortals.Length; i++)
 			{
-				BasePortalVisGenesis2(i);
+				BasePortalVisGenesis(i);
 				ProgressWatcher.UpdateProgress(prog, i);
 			}
 			ProgressWatcher.Clear();
@@ -1337,8 +1473,7 @@ namespace BSPVis
 			}
 
 			int	count	=startPort;
-			for(int k=startPort;k < endPort;k++)
-//			Parallel.For(startPort, endPort, (k) =>
+			Parallel.For(startPort, endPort, (k) =>
 			{
 				VISPortal	port	=mVisSortedPortals[k];
 				
@@ -1359,131 +1494,17 @@ namespace BSPVis
 
 				if(bVerbose)
 				{
-//					CoreEvents.Print("Portal: " + (k + 1) + " - Fast Vis: "
-//						+ port.mMightSee + ", Full Vis: "
-//						+ port.mCanSee + ", remaining: "
-//						+ (endPort - count) + "\n");
+					CoreEvents.Print("Portal: " + (k + 1) + " - Rough Vis: "
+						+ port.mMightSee + ", Full Vis: "
+						+ port.mCanSee + ", remaining: "
+						+ (endPort - count) + "\n");
 //					CoreEvents.Print("Portal: " + (k + 1) + " - Fast Vis: "
 //						+ port.mNumMightSee + ", Full Vis: "
 //						+ vPools.mCanSee + ", iterations: "
 //						+ vPools.mIterations + "\n");
 				}
-			}//);
+			});
 			return	true;
-		}
-
-
-		//used by the external distributed vis
-		public static byte []FloodPortalsSlow(byte []visData, int startPort, int endPort)
-		{
-			/*
-			DateTime	visTime	=DateTime.Now;
-
-			//convert the bytes to something usable
-			MemoryStream	ms	=new MemoryStream();
-			BinaryWriter	bw	=new BinaryWriter(ms);
-
-			bw.Write(visData, 0, visData.Length);
-
-			BinaryReader	br	=new BinaryReader(ms);
-			br.BaseStream.Seek(0, SeekOrigin.Begin);
-
-			int	portCount	=br.ReadInt32();
-
-			List<Int32>	indexes			=new List<Int32>();
-			VISPortal	[]visPortals	=new VISPortal[portCount];
-			for(int i=0;i < portCount;i++)
-			{
-				visPortals[i]	=new VISPortal();
-				visPortals[i].Read(br, indexes);
-			}
-
-			//rebuild indexes
-			for(int i=0;i < portCount;i++)
-			{
-				if(indexes[i] >= 0)
-				{
-					visPortals[i].mNext	=visPortals[indexes[i]];
-				}
-			}
-
-			//read visleafs
-			int	leafCount	=br.ReadInt32();
-			VISLeaf	[]visLeafs	=new VISLeaf[leafCount];
-			for(int i=0;i < leafCount;i++)
-			{
-				visLeafs[i]	=new VISLeaf();
-				visLeafs[i].Read(br, visPortals);
-			}
-
-			//read numbytes
-			int	numVisPortalBytes	=br.ReadInt32();
-
-			for(int k=startPort;k < endPort;k++)
-			{
-				visPortals[k].mbDone	=false;
-			}
-
-			bw.Close();
-			br.Close();
-			ms.Close();
-
-			int	count	=startPort;
-
-//			for(int i=0;i < startPort;i++)
-//			{
-//				VisLoop(visPortals, visLeafs, numVisPortalBytes, i, endPort, ref count);
-//			}
-
-			Parallel.For(startPort, endPort, (k) =>
-				{
-					VisLoop(visPortals, visLeafs, numVisPortalBytes, k, endPort, ref count);
-				});*/
-
-/*
-			List<Task>	tasks	=new List<Task>();
-
-			for(int i=startPort;i < endPort;i++)
-			{
-				int	temp	=i;
-
-				Task	task	=new Task(() => VisLoop(visPortals, visLeafs, numVisPortalBytes, temp, endPort, ref count));
-
-				tasks.Add(task);
-				task.Start();
-			}
-
-			Task.WaitAll(tasks.ToArray());*/
-			/*
-			//put vis bits in return data
-			ms	=new MemoryStream();
-			bw	=new BinaryWriter(ms);
-
-			for(int i=startPort;i < endPort;i++)
-			{
-				visPortals[i].WriteVisBits(bw);
-			}
-
-			//read into memory
-			br	=new BinaryReader(ms);
-			br.BaseStream.Seek(0, SeekOrigin.Begin);
-
-			byte	[]returnBytes	=br.ReadBytes((int)ms.Length);
-
-			bw.Close();
-			br.Close();
-			ms.Close();
-
-			VisState	vs	=new VisState();
-			vs.mStartPort	=startPort;
-			vs.mEndPort		=endPort;
-			vs.mTotalPorts	=0;
-			vs.mVisData		=returnBytes;
-
-			UtilityLib.Misc.SafeInvoke(eSlowFloodPartDone, vs);
-
-			return	returnBytes;*/
-			return	null;
 		}
 
 
@@ -1497,7 +1518,7 @@ namespace BSPVis
 			{
 				port.mPortalVis[i]	=0;
 			}
-			PortalFlowGenesis(k, visPortals, visLeafs);
+			PortalFlowGenesis(k, visPortals, visLeafs, numVisPortalBytes);
 
 			port.mbDone			=true;
 
@@ -1611,64 +1632,7 @@ namespace BSPVis
 		}
 
 
-		void BasePortalVisGenesis(int portNum)
-		{
-			VISPortal	p	=mVisPortals[portNum];
-
-			p.mPortalFront	=new byte[mNumVisPortalBytes];
-			p.mPortalFlood	=new byte[mNumVisPortalBytes];
-			p.mPortalVis	=new byte[mNumVisPortalBytes];
-
-			for(int i=0;i < mVisPortals.Length;i++)
-			{
-				if(i == portNum)
-				{
-					continue;
-				}
-
-				VISPortal	tp	=mVisPortals[i];
-
-				int	k=0;
-				for(k=0;k < tp.mPoly.mVerts.Length;k++)
-				{
-					float	d	=Vector3.Dot(tp.mPoly.mVerts[k], p.mPlane.mNormal)
-									- p.mPlane.mDist;
-
-					if(d > UtilityLib.Mathery.ON_EPSILON)
-					{
-						break;
-					}
-				}
-				if(k == tp.mPoly.mVerts.Length)
-				{
-					continue;
-				}
-				
-				/*
-				for(k=0;k < p.mPoly.mVerts.Length;k++)
-				{
-					float	d	=Vector3.Dot(p.mPoly.mVerts[k], tp.mPlane.mNormal)
-									- tp.mPlane.mDist;
-
-					if(d < -UtilityLib.Mathery.ON_EPSILON)
-					{
-						break;
-					}
-				}
-				if(k == p.mPoly.mVerts.Length)
-				{
-					continue;
-				}*/
-
-				p.mPortalFront[i >> 3]	|=(byte)(1 << (i & 7));
-			}
-
-			SimpleFloodGenesis(p, p.mClusterTo);
-
-			p.mMightSee	=CountBits(p.mPortalFlood, mVisPortals.Length);
-		}
-
-
+		//wrote this one myself
 		void FacingFlood(VISPortal p, VISLeaf flooding)
 		{
 			foreach(VISPortal port in flooding.mPortals)
@@ -1690,7 +1654,7 @@ namespace BSPVis
 		}
 		
 		
-		void BasePortalVisGenesis2(int portNum)
+		void BasePortalVisGenesis(int portNum)
 		{
 			VISPortal	p	=mVisPortals[portNum];
 
@@ -1727,67 +1691,6 @@ namespace BSPVis
 			}
 			return	c;
 		}
-
-
-		void SimpleFloodGenesis(VISPortal src, int leafNum)
-		{
-			VISLeaf	leaf	=mVisLeafs[leafNum];
-
-			for(int i=0;i < leaf.mPortals.Count;i++)
-			{
-				VISPortal	port	=leaf.mPortals[i];
-
-				int	pNum	=port.mPortNum;
-
-				if((src.mPortalFront[pNum >> 3] & (1 << (pNum & 7))) == 0)
-				{
-					continue;
-				}
-
-				if((src.mPortalFlood[pNum >> 3] & (1 << (pNum & 7))) != 0)
-				{
-					continue;
-				}
-
-				src.mPortalFlood[pNum >> 3]	|=(byte)(1 << (pNum & 7));
-
-				SimpleFloodGenesis(src, port.mClusterTo);
-			}
-		}
-
-
-		/*
-		void FloodLeafPortalsFast(int leafNum, bool []portSeen)
-		{
-			VISLeaf	leaf	=mVisLeafs[leafNum];
-
-			if(leaf.mPortals == null)
-			{
-				CoreEvents.Print("*WARNING* FloodLeafPortalsFast:  Leaf with no portals.\n");
-				return;
-			}
-			
-			int	srcLeaf	=leafNum;
-
-			for(VISPortal port=leaf.mPortals;port != null;port=port.mNext)
-			{
-				port.mVisBits	=new byte[mNumVisPortalBytes];
-
-				//This portal can't see anyone yet...
-				for(int i=0;i < mNumVisPortalBytes;i++)
-				{
-					port.mVisBits[i]	=0;
-				}
-				for(int i=0;i < mVisPortals.Length;i++)
-				{
-					portSeen[i]	=false;
-				}
-
-				int	mightSee	=0;
-				
-				port.FloodPortalsFast_r(port, portSeen, mVisLeafs, srcLeaf, ref mightSee);
-			}
-		}*/
 
 
 		void SaveGFXVisData(BinaryWriter bw)
@@ -1952,8 +1855,6 @@ namespace BSPVis
 
 				GBSPPlane	pln	=new GBSPPlane(poly);
 
-//				VISLeaf		fleaf	=mVisLeafs[leafTo];
-//				VISLeaf		bleaf	=mVisLeafs[leafFrom];
 				VISLeaf		fleaf	=mVisLeafs[leafFrom];
 				VISLeaf		bleaf	=mVisLeafs[leafTo];
 				VISPortal	fport	=mVisPortals[i];
@@ -1964,7 +1865,7 @@ namespace BSPVis
 				fport.mClusterTo	=leafTo;
 				fport.mClusterFrom	=leafFrom;
 				fport.mPlane		=pln;
-				fleaf.mPortals.Add(fport);	//lives in back leaf, looks into front leaf
+				fleaf.mPortals.Add(fport);
 				fport.CalcPortalInfo();
 
 				bport.mPortNum		=i + 1;
@@ -1980,8 +1881,8 @@ namespace BSPVis
 				bport.CalcPortalInfo();
 			}
 			
-			mNumVisLeafBytes	=((NumVisLeafs+63)&~63) >> 3;
-			mNumVisPortalBytes	=(((NumVisPortals * 2)+63)&~63) >> 3;
+			mNumVisLeafBytes	=((NumVisLeafs + 63) & ~63) >> 3;
+			mNumVisPortalBytes	=(((NumVisPortals * 2) + 63) &~ 63) >> 3;
 
 			br.Close();
 			fs.Close();
