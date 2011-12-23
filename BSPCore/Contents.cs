@@ -221,5 +221,22 @@ namespace BSPCore
 
 			return	ret;			
 		}
+
+
+		static public bool VisSeeThru(UInt32 contents)
+		{
+			if((contents & BSP_CONTENTS_DETAIL2) != 0)
+			{
+				//detail is see thru for vis
+				return	false;
+			}
+
+			if((contents & BSP_CONTENTS_SOLID2) != 0)
+			{
+				//solid and not detail
+				return	false;
+			}
+			return	true;	//everything else is seethru
+		}
 	}
 }

@@ -1026,6 +1026,12 @@ namespace BSPCore
 			GBSPBrush.GetOriginalSidesByContents(front.mBrushList, majorContents, ogSides);
 			GBSPBrush.GetOriginalSidesByContents(back.mBrushList, majorContents, ogSides);
 
+			if(ogSides.Count == 0)
+			{
+				//likely created by the cube partitioning
+				return	null;
+			}
+
 			foreach(GBSPSide side in ogSides)
 			{
 				if((side.mFlags & GBSPSide.SIDE_NODE) != 0)
@@ -1048,10 +1054,12 @@ namespace BSPCore
 					bestSide	=side;
 				}
 			}
+
 			if(bestSide == null)
 			{
 				CoreEvents.Print("WARNING: Could not map portal to original brush...\n");
 			}
+
 			return	bestSide;
 		}
 

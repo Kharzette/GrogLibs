@@ -630,8 +630,7 @@ namespace BSPVis
 			p.mbDone	=true;
 
 			int	c_can	=CountBits(p.mPortalVis, visPortals.Length);
-			CoreEvents.Print("portal:" + p.mPortNum + " mightsee:" + c_might +
-				" cansee:" + c_can + "\n");
+			Console.WriteLine("Portal: " + p.mPortNum + "\tRoughVis: " + c_might + "\tFullVis: " + c_can);
 		}
 
 
@@ -761,32 +760,6 @@ namespace BSPVis
 				}
 			});
 			return	true;
-		}
-
-
-		static void VisLoop(VISPortal []visPortals, VISLeaf []visLeafs,
-			int numVisPortalBytes, int k, int endPort, ref int count)
-		{
-			VISPortal	port	=visPortals[k];
-
-			//This portal can't see anyone yet...
-			for(int i=0;i < numVisPortalBytes;i++)
-			{
-				port.mPortalVis[i]	=0;
-			}
-			PortalFlowGenesis(k, visPortals, visLeafs, numVisPortalBytes);
-
-			port.mbDone			=true;
-
-			Interlocked.Increment(ref count);
-
-			Console.WriteLine("Portal: " + (k + 1) + " - Fast Vis: "
-				+ port.mMightSee + ", Full Vis: "
-				+ port.mCanSee + ", iterations: ");
-//				+ vPools.mIterations);
-//			Console.WriteLine("Portal: " + (k + 1) + " - Fast Vis: "
-//				+ port.mMightSee + ", Full Vis: "
-//				+ port.mCanSee + ", remaining: " + (endPort - count));
 		}
 
 
@@ -1109,15 +1082,15 @@ namespace BSPVis
 
 				GBSPPlane	pln	=new GBSPPlane(poly);
 
-				VISLeaf		fleaf	=mVisLeafs[leafFrom];
-				VISLeaf		bleaf	=mVisLeafs[leafTo];
+				VISLeaf		fleaf	=mVisLeafs[leafFrom];	//leaves on either side of
+				VISLeaf		bleaf	=mVisLeafs[leafTo];		//the portal
 				VISPortal	fport	=mVisPortals[i];
 				VISPortal	bport	=mVisPortals[i + 1];
 
-				fport.mPortNum		=i;
-				fport.mPoly			=poly;
-				fport.mClusterTo	=leafTo;
-				fport.mClusterFrom	=leafFrom;
+				fport.mPortNum		=i;			//port index, needed post sort
+				fport.mPoly			=poly;		//actual portal geometry
+				fport.mClusterTo	=leafTo;	//leaf the portal leads into
+				fport.mClusterFrom	=leafFrom;	//leaf the portal lives in
 				fport.mPlane		=pln;
 				fleaf.mPortals.Add(fport);
 				fport.CalcPortalInfo();
@@ -1129,8 +1102,8 @@ namespace BSPVis
 				bport.mPlane		=pln;
 				bleaf.mPortals.Add(bport);
 
-				bport.mPoly.Reverse();
-				bport.mPlane.Inverse();
+				bport.mPoly.Reverse();	//backside portal is flipped
+				bport.mPlane.Inverse();	//to point toward leafFrom
 
 				bport.CalcPortalInfo();
 			}

@@ -71,6 +71,103 @@ namespace BSPVis
 		}
 
 
+		//used by the external distributed vis
+		public static byte []PortalFrustFlood(byte []visData, int startPort, int endPort)
+		{
+			DateTime	visTime	=DateTime.Now;
+
+			//convert the bytes to something usable
+			MemoryStream	ms	=new MemoryStream();
+			BinaryWriter	bw	=new BinaryWriter(ms);
+
+			bw.Write(visData, 0, visData.Length);
+
+			BinaryReader	br	=new BinaryReader(ms);
+			br.BaseStream.Seek(0, SeekOrigin.Begin);
+
+			int	portCount	=br.ReadInt32();
+
+			VISPortal	[]visPortals	=new VISPortal[portCount];
+			for(int i=0;i < portCount;i++)
+			{
+				visPortals[i]	=new VISPortal();
+				visPortals[i].Read(br);
+			}
+
+			//read visleafs
+			int	leafCount	=br.ReadInt32();
+			VISLeaf	[]visLeafs	=new VISLeaf[leafCount];
+			for(int i=0;i < leafCount;i++)
+			{
+				visLeafs[i]	=new VISLeaf();
+				visLeafs[i].Read(br, visPortals);
+			}
+
+			//read numbytes
+			int	numVisPortalBytes	=br.ReadInt32();
+
+			for(int k=startPort;k < endPort;k++)
+			{
+				visPortals[k].mbDone	=false;
+			}
+
+			bw.Close();
+			br.Close();
+			ms.Close();
+
+			int	count	=startPort;
+			Parallel.For(startPort, endPort, (k) =>
+				{
+					VisLoop(visPortals, visLeafs, numVisPortalBytes, k, endPort, ref count);
+				});
+
+			//put vis bits in return data
+			ms	=new MemoryStream();
+			bw	=new BinaryWriter(ms);
+
+			for(int i=startPort;i < endPort;i++)
+			{
+				visPortals[i].WriteVisBits(bw);
+			}
+
+			//read into memory
+			br	=new BinaryReader(ms);
+			br.BaseStream.Seek(0, SeekOrigin.Begin);
+
+			byte	[]returnBytes	=br.ReadBytes((int)ms.Length);
+
+			bw.Close();
+			br.Close();
+			ms.Close();
+
+			VisState	vs	=new VisState();
+			vs.mStartPort	=startPort;
+			vs.mEndPort		=endPort;
+			vs.mTotalPorts	=0;
+			vs.mVisData		=returnBytes;
+
+			UtilityLib.Misc.SafeInvoke(eSlowFloodPartDone, vs);
+
+			return	returnBytes;
+		}
+
+
+		static void VisLoop(VISPortal []visPortals, VISLeaf []visLeafs,
+			int numVisPortalBytes, int k, int endPort, ref int count)
+		{
+			VISPortal	port	=visPortals[k];
+
+			//This portal can't see anyone yet...
+			for(int i=0;i < numVisPortalBytes;i++)
+			{
+				port.mPortalVis[i]	=0;
+			}
+			PortalFlowGenesis(k, visPortals, visLeafs, numVisPortalBytes);
+
+			port.mbDone			=true;
+		}
+
+
 		bool FeedPortalsToRemote(MapVisClient amvc, out bool bRealFailure)
 		{
 			MemoryStream	ms	=new MemoryStream();

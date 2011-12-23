@@ -62,7 +62,6 @@ namespace BSPVis
 		internal float		mRadius;
 		internal GBSPPoly	mPoly;
 
-		internal byte	[]mPortalFront;
 		internal byte	[]mPortalFlood;
 		internal byte	[]mPortalVis;
 
@@ -74,7 +73,7 @@ namespace BSPVis
 		internal bool	mbDone;
 
 
-		internal void Read(BinaryReader br, List<int> indexes)
+		internal void Read(BinaryReader br)
 		{
 			mPlane.Read(br);
 			mCenter.X	=br.ReadSingle();
@@ -84,7 +83,6 @@ namespace BSPVis
 			mPoly		=new GBSPPoly(0);
 			mPoly.Read(br);
 
-			mPortalFront	=UtilityLib.FileUtil.ReadByteArray(br);
 			mPortalFlood	=UtilityLib.FileUtil.ReadByteArray(br);
 			mPortalVis		=UtilityLib.FileUtil.ReadByteArray(br);
 
@@ -106,7 +104,6 @@ namespace BSPVis
 			bw.Write(mRadius);
 			mPoly.Write(bw);
 
-			UtilityLib.FileUtil.WriteArray(mPortalFront, bw);
 			UtilityLib.FileUtil.WriteArray(mPortalFlood, bw);
 			UtilityLib.FileUtil.WriteArray(mPortalVis, bw);
 
@@ -158,13 +155,6 @@ namespace BSPVis
 						portBits[k]	|=p.mPortalFlood[k];
 					}
 				}
-				else if(p.mPortalFront != null)
-				{
-					for(int k=0;k < portBits.Length;k++)
-					{
-						portBits[k]	|=p.mPortalFront[k];
-					}
-				}
 				else
 				{
 					CoreEvents.Print("No VisInfo for portal.\n");
@@ -172,7 +162,6 @@ namespace BSPVis
 				}
 
 				p.mPortalFlood	=null;
-				p.mPortalFront	=null;
 				p.mPortalVis	=null;
 			}
 			return	true;
@@ -194,10 +183,15 @@ namespace BSPVis
 				for(int i=0;i < len / 4;i++)
 				{
 					UInt32	anded=*((UInt32 *)pS1) & *((UInt32 *)pS2);
+					UInt32	val3	=*((UInt32 *)pS3);
 
 					*((UInt32 *)pD)	=anded;
 
-					ret	|=anded &~ *((UInt32 *)pS3);
+					//and the bytes one at a time
+					ret	|=((anded & 0xFF) &~ (val3 & 0xFF));
+					ret	|=(((anded >> 8) & 0xFF) &~ ((val3 >> 8) & 0xFF));
+					ret	|=(((anded >> 16) & 0xFF) &~ ((val3 >> 16) & 0xFF));
+					ret	|=(((anded >> 24) & 0xFF) &~ ((val3 >> 24) & 0xFF));
 
 					pS1	+=4;
 					pS2	+=4;
@@ -242,8 +236,6 @@ namespace BSPVis
 					UInt64	val3	=*((UInt64 *)pS3);
 
 					*((UInt64 *)pD)	=anded;
-
-//					ret	|=anded &~ *((UInt64 *)pS3);
 
 					//and the bytes one at a time
 					ret	|=((anded & 0xFF) &~ (val3 & 0xFF));
