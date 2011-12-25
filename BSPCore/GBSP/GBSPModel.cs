@@ -144,7 +144,7 @@ namespace BSPCore
 		}
 
 
-		static int dumps	=0;
+//		static int dumps	=0;
 		internal GBSPNode ProcessBlock(List<GBSPBrush> brushes, PlanePool pp, int xblock, int zblock)
 		{
 			CoreEvents.Print("############### block " + xblock + "," + zblock + " ###############\n");

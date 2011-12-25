@@ -1359,9 +1359,6 @@ namespace BSPCore
 
 			object	prog	=ProgressWatcher.RegisterProgress(0, mGFXFaces.Length, 0);
 
-			ConcurrentBag<Vector3>	debugRayStarts	=new ConcurrentBag<Vector3>();
-			ConcurrentBag<Vector3>	debugRayEnds	=new ConcurrentBag<Vector3>();
-
 			Parallel.For(0, mGFXFaces.Length, i =>
 			{
 				ProgressWatcher.UpdateProgressIncremental(prog);
@@ -1411,8 +1408,7 @@ namespace BSPCore
 						//Hook.Printf("Sample  : %3i of %3i\n", s+1, NumSamples);
 						CalcFacePoints(mFaceInfos[i], mLightMaps[i], lightGridSize, UOfs[s], VOfs[s], bExtraSamples);
 
-						if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i], 1 / (float)numSamples, visData,
-							debugRayStarts, debugRayEnds))
+						if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i], 1 / (float)numSamples, visData))
 						{
 							return;
 						}
@@ -1423,8 +1419,7 @@ namespace BSPCore
 						// Update patches for this face
 						ApplyLightmapToPatches(i, lightGridSize);
 					}
-				}
-								
+				}								
 			});
 
 			ProgressWatcher.Clear();
@@ -1440,8 +1435,7 @@ namespace BSPCore
 		}
 
 
-		bool ApplyLightsToFace(FInfo faceInfo, LInfo lightInfo, float scale, byte []visData,
-			ConcurrentBag<Vector3>	debugRayStarts, ConcurrentBag<Vector3>	debugRayEnds)
+		bool ApplyLightsToFace(FInfo faceInfo, LInfo lightInfo, float scale, byte []visData)
 		{
 			Vector3	norm	=faceInfo.GetPlaneNormal();
 
@@ -1541,16 +1535,12 @@ namespace BSPCore
 							goto	Skip;
 						}
 
-						debugRayStarts.Add(facePoints[v]);
-
 						// This is the slowest test, so make it last
 						Vector3	colResult	=Vector3.Zero;
 						if(RayCollide(facePoints[v], dLight.mOrigin, ref colResult))
 						{
-							debugRayEnds.Add(colResult);
 							goto	Skip;	//Ray is in shadow
 						}
-						debugRayEnds.Add(dLight.mOrigin);
 
 						Int32	lightType	=dLight.mLType;
 

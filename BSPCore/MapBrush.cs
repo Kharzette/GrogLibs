@@ -56,8 +56,8 @@ namespace BSPCore
 				GBSPSide	side2	=new GBSPSide();
 				side2.mPlaneNum		=pp.FindPlane(p, out side2.mPlaneSide);
 
-				side.FixFlags();
-				side2.FixFlags();
+//				side.FixFlags();
+//				side2.FixFlags();
 
 				mOriginalSides.Add(side);
 				mOriginalSides.Add(side2);
@@ -115,8 +115,6 @@ namespace BSPCore
 						ret	=false;
 					}
 
-					side.FixFlags();
-
 					mOriginalSides.Add(side);
 					mEntityNum	=entityNum;
 				}
@@ -150,8 +148,6 @@ namespace BSPCore
 					{
 						ret	=false;
 					}
-
-					side.FixFlags();
 
 					mOriginalSides.Add(side);
 					mEntityNum	=entityNum;
@@ -312,15 +308,6 @@ namespace BSPCore
 				mContents	|=Contents.BSP_CONTENTS_DETAIL2;			// Clips are allways detail
 			}
 			
-			//if empty hide sides?
-			if((mContents & Contents.BSP_CONTENTS_EMPTY2) != 0)
-			{
-				for(int k=0;k < mOriginalSides.Count;k++)
-				{
-					mOriginalSides[k].mFlags	&=~GBSPSide.SIDE_VISIBLE;
-				}
-			}
-			
 			if((mContents & Contents.BSP_CONTENTS_SHEET) != 0)
 			{
 				//Only the first side is visible for sheets
@@ -329,10 +316,6 @@ namespace BSPCore
 				//Sheets are allways detail!!!
 				mContents	|=Contents.BSP_CONTENTS_DETAIL2;
 			}
-			
-			//Force non-solid/non-hint to detail
-			//if (!(Brush->Contents & BSP_CONTENTS_SOLID2))
-			//	Brush->Contents |= BSP_CONTENTS_DETAIL2;
 			
 			//Convert all sides to hint if need so...
 			if((mContents & Contents.BSP_CONTENTS_HINT2) != 0)
@@ -347,7 +330,26 @@ namespace BSPCore
 				{
 					mContents	&=~Contents.BSP_CONTENTS_DETAIL2;
 				}
-			}			
+			}
+
+			//check for detail with no non solid flags
+			if((mContents & Contents.BSP_CONTENTS_DETAIL2) != 0)
+			{
+				if((mContents & Contents.BSP_CONTENTS_SOLID2) == 0)
+				{
+					if((mContents &
+						(Contents.BSP_CONTENTS_EMPTY2
+						& Contents.BSP_CONTENTS_WINDOW2
+						& Contents.BSP_CONTENTS_TRANSLUCENT2
+						& Contents.BSP_CONTENTS_CLIP2
+						& Contents.BSP_CONTENTS_HINT2
+						& Contents.BSP_CONTENTS_AREA2))
+						== 0)
+					{
+						mContents	|=Contents.BSP_CONTENTS_SOLID2;
+					}
+				}
+			}
 		}
 
 

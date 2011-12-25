@@ -353,6 +353,8 @@ namespace BSPCore
 					ti.mUVec	/=ti.mDrawScaleU;
 					ti.mVVec	/=ti.mDrawScaleV;
 
+					FixFlags(ref ti);
+
 					mTexInfo	=tiPool.Add(ti);
 
 					return	ret;	//side done
@@ -586,13 +588,15 @@ namespace BSPCore
 				new Vector3(-numbers[6], numbers[8], numbers[7]));
 
 			//see if there are any quake 3 style flags
-/*			if(flags.Count > 0)
+			//if there are, ignore all the texture name stuff
+			if(flags.Count == 3)
 			{
-				if((flags[0] & Brush.) != 0)
-				{
-					mFlags	|=DETAIL;
-				}
-			}*/
+				ret		=flags[0];
+				mFlags	=flags[1];
+
+				FixFlags(ref ti);
+				CoreEvents.Print("Quake 3 style flags found " + flags[0] + ", " + flags[1] + "\n");
+			}
 
 			GBSPPlane	plane	=new GBSPPlane(mPoly);
 
@@ -626,7 +630,7 @@ namespace BSPCore
 
 
 		//convert from hammer flags to genesis flags
-		internal void FixFlags()
+		internal void FixFlags(ref TexInfo ti)
 		{
 			UInt32	hammerFlags	=mFlags;
 
@@ -655,6 +659,10 @@ namespace BSPCore
 			}
 			if((hammerFlags & SURF_LIGHT) != 0)
 			{
+				ti.mFlags		|=TexInfo.LIGHT;
+				ti.mFlags		|=TexInfo.FULLBRIGHT;
+				ti.mFlags		|=TexInfo.NO_LIGHTMAP;
+				ti.mFaceLight	=TexInfo.FaceLightIntensity;
 			}
 			if((hammerFlags & SURF_LIGHTFILTER) != 0)
 			{
@@ -677,6 +685,7 @@ namespace BSPCore
 			}
 			if((hammerFlags & SURF_NOLIGHTMAP) != 0)
 			{
+				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 			}
 			if((hammerFlags & SURF_NOMARKS) != 0)
 			{
@@ -695,15 +704,22 @@ namespace BSPCore
 			}
 			if((hammerFlags & SURF_SKY) != 0)
 			{
+				mFlags		|=SURF_SKY;
+				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+				ti.mFlags	|=TexInfo.SKY;
 			}
 			if((hammerFlags & SURF_SLICK) != 0)
 			{
 			}
 			if((hammerFlags & SURF_TRANS33) != 0)
 			{
+				ti.mFlags	|=TexInfo.TRANS;
+				ti.mAlpha	=0.333f;
 			}
 			if((hammerFlags & SURF_TRANS66) != 0)
 			{
+				ti.mFlags	|=TexInfo.TRANS;
+				ti.mAlpha	=0.666f;
 			}
 			if((hammerFlags & SURF_WARP) != 0)
 			{

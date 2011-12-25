@@ -153,13 +153,13 @@ namespace BSPCore
 			{
 				matName	+="*VertLit";
 			}
-			else if(tex.IsFullBright() || tex.IsLight())
-			{
-				matName	+="*FullBright";
-			}
 			else if(tex.IsSky())
 			{
 				matName	+="*Sky";
+			}
+			else if(tex.IsFullBright() || tex.IsLight())
+			{
+				matName	+="*FullBright";
 			}
 
 			int	numStyles	=0;

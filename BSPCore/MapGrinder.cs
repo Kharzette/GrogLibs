@@ -1681,6 +1681,11 @@ namespace BSPCore
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
+					if(!tex.IsSky())
+					{
+						continue;
+					}
+
 					if(!mat.Name.StartsWith(tex.mMaterial))
 					{
 						continue;

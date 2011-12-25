@@ -406,7 +406,7 @@ namespace BSPVis
 			FileStream	fs	=new FileStream(saveChunk, FileMode.Create, FileAccess.Write);
 			bw	=new BinaryWriter(fs);
 
-			bw.Write(ports, 0, ports.Length);
+			UtilityLib.FileUtil.WriteArray(ports, bw);
 
 			bw.Close();
 			fs.Close();

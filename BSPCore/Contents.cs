@@ -219,6 +219,97 @@ namespace BSPCore
 				ret	|=BSP_CONTENTS_SOLID2;
 			}
 
+			if((quakeContents & CONTENTS_DETAIL) != 0)
+			{
+				ret	|=BSP_CONTENTS_DETAIL2;
+			}
+
+			if((quakeContents & CONTENTS_WINDOW) != 0)
+			{
+				ret	|=BSP_CONTENTS_TRANSLUCENT2;
+			}
+
+			if((quakeContents & CONTENTS_LAVA) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_EMPTY2;
+				ret	|=Contents.BSP_CONTENTS_USER1;
+				ret	|=Contents.BSP_CONTENTS_WAVY2;
+			}
+
+			if((quakeContents & CONTENTS_SLIME) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_TRANSLUCENT2;
+				ret	|=Contents.BSP_CONTENTS_EMPTY2;
+				ret	|=Contents.BSP_CONTENTS_WAVY2;
+				ret	|=Contents.BSP_CONTENTS_USER2;
+			}
+
+			if((quakeContents & CONTENTS_WATER) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_TRANSLUCENT2;
+				ret	|=Contents.BSP_CONTENTS_EMPTY2;
+				ret	|=Contents.BSP_CONTENTS_WAVY2;
+				ret	|=Contents.BSP_CONTENTS_USER3;
+			}
+
+			if((quakeContents & CONTENTS_MIST) != 0)	//totally untested
+			{
+				ret	|=Contents.BSP_CONTENTS_TRANSLUCENT2;
+				ret	|=Contents.BSP_CONTENTS_USER4;
+			}
+
+			if((quakeContents & CONTENTS_AREAPORTAL) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_AREA2;
+			}
+
+			if((quakeContents & CONTENTS_PLAYERCLIP) != 0
+				|| (quakeContents & CONTENTS_MONSTERCLIP) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_CLIP2;
+			}
+
+			if((quakeContents & CONTENTS_CURRENT_0) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_USER5;
+			}
+			if((quakeContents & CONTENTS_CURRENT_90) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_USER6;
+			}
+			if((quakeContents & CONTENTS_CURRENT_180) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_USER7;
+			}
+			if((quakeContents & CONTENTS_CURRENT_270) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_USER8;
+			}
+			if((quakeContents & CONTENTS_CURRENT_UP) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_USER9;
+			}
+			if((quakeContents & CONTENTS_CURRENT_DOWN) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_USER10;
+			}
+			if((quakeContents & CONTENTS_TRANSLUCENT) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_TRANSLUCENT2;
+			}
+			if((quakeContents & CONTENTS_LADDER) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_USER11;
+			}
+			if((quakeContents & CONTENTS_TRIGGER) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_USER12;
+			}
+			if((quakeContents & CONTENTS_NODROP) != 0)
+			{
+				ret	|=Contents.BSP_CONTENTS_USER13;
+			}
+
 			return	ret;			
 		}
 
@@ -228,7 +319,7 @@ namespace BSPCore
 			if((contents & BSP_CONTENTS_DETAIL2) != 0)
 			{
 				//detail is see thru for vis
-				return	false;
+				return	true;
 			}
 
 			if((contents & BSP_CONTENTS_SOLID2) != 0)
