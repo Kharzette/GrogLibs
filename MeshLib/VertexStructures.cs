@@ -1086,4 +1086,29 @@ namespace MeshLib
 		public Vector2	TexCoord3;
 		public Vector2	TexCoord4;
 	}
+
+	public struct VPosNormTex04
+	{
+		public Vector3	Position;
+		public Vector3	Normal;
+		public Vector4	TexCoord0;
+	}
+
+	public struct VPosNormTex04Col0
+	{
+		public Vector3	Position;
+		public Vector3	Normal;
+		public Vector4	TexCoord0;
+		public Vector4	Color0;
+	}
+
+	public struct VPosNormBlendTex04Tex14Tex24
+	{
+		public Vector3	Position;
+		public Vector3	Normal;
+		public Vector4	BoneIndex;
+		public Vector4	TexCoord0;
+		public Vector4	TexCoord1;
+		public Vector4	TexCoord2;
+	}
 }

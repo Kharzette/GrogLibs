@@ -4,11 +4,13 @@ using System.Text;
 using System.IO;
 using System.Reflection;
 using System.Linq;
+using System.Diagnostics;
 #if !XBOX
 using System.Reflection.Emit;
 #endif
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 using Microsoft.Xna.Framework.Storage;
 
 namespace MeshLib
@@ -122,6 +124,9 @@ namespace MeshLib
 			VertexTypes.AddType(typeof(VPosNormBlendTex0Tex1Tex2Tex3Tex4));
 			VertexTypes.AddType(typeof(VPosNormTanTex0));
 			VertexTypes.AddType(typeof(VPosNormTanBiTanTex0));
+			VertexTypes.AddType(typeof(VPosNormTex04));
+			VertexTypes.AddType(typeof(VPosNormTex04Col0));
+			VertexTypes.AddType(typeof(VPosNormBlendTex04Tex14Tex24));
 		}
 
 		public static void AddType(Type t)
@@ -150,69 +155,154 @@ namespace MeshLib
 		}
 
 
+		static Type VEFType(VertexElementFormat vef)
+		{
+			switch(vef)
+			{
+				case VertexElementFormat.Byte4:
+					return	typeof(Byte4);
+				case VertexElementFormat.Color:
+					return	typeof(Color);
+				case VertexElementFormat.HalfVector2:
+					return	typeof(HalfVector2);
+				case VertexElementFormat.HalfVector4:
+					return	typeof(HalfVector4);
+				case VertexElementFormat.NormalizedShort2:
+					return	typeof(NormalizedShort2);
+				case VertexElementFormat.NormalizedShort4:
+					return	typeof(NormalizedShort4);
+				case VertexElementFormat.Short2:
+					return	typeof(Short2);
+				case VertexElementFormat.Short4:
+					return	typeof(Short4);
+				case VertexElementFormat.Single:
+					return	typeof(Single);
+				case VertexElementFormat.Vector2:
+					return	typeof(Vector2);
+				case VertexElementFormat.Vector3:
+					return	typeof(Vector3);
+				case VertexElementFormat.Vector4:
+					return	typeof(Vector4);
+			}
+			return	typeof(object);
+		}
+
+
+		static bool HasFormatAndUsage(Type t, VertexElement el, int numColor, int numTex)
+		{
+			VertexElementFormat	fmt	=el.VertexElementFormat;
+
+			if(el.VertexElementUsage == VertexElementUsage.Binormal)
+			{
+				return	HasElement(t, VEFType(fmt), "BiTangent");
+			}
+			else if(el.VertexElementUsage == VertexElementUsage.BlendIndices)
+			{
+				return	HasElement(t, VEFType(fmt), "BoneIndex");
+			}
+			else if(el.VertexElementUsage == VertexElementUsage.BlendWeight)
+			{
+				return	HasElement(t, VEFType(fmt), "BoneWeights");
+			}
+			else if(el.VertexElementUsage == VertexElementUsage.Color)
+			{
+				return	HasElement(t, VEFType(fmt), "Color" + numColor);
+			}
+			else if(el.VertexElementUsage == VertexElementUsage.Depth)
+			{
+				return	HasElement(t, VEFType(fmt), "Depth");
+			}
+			else if(el.VertexElementUsage == VertexElementUsage.Fog)
+			{
+				return	HasElement(t, VEFType(fmt), "Fog");
+			}
+			else if(el.VertexElementUsage == VertexElementUsage.Normal)
+			{
+				return	HasElement(t, VEFType(fmt), "Normal");
+			}
+			else if(el.VertexElementUsage == VertexElementUsage.PointSize)
+			{
+				return	HasElement(t, VEFType(fmt), "PointSize");
+			}
+			else if(el.VertexElementUsage == VertexElementUsage.Position)
+			{
+				return	HasElement(t, VEFType(fmt), "Position");
+			}
+			else if(el.VertexElementUsage == VertexElementUsage.Sample)
+			{
+				return	HasElement(t, VEFType(fmt), "Sample");
+			}
+			else if(el.VertexElementUsage == VertexElementUsage.Tangent)
+			{
+				return	HasElement(t, VEFType(fmt), "Tangent");
+			}
+			else if(el.VertexElementUsage == VertexElementUsage.TessellateFactor)
+			{
+				return	HasElement(t, VEFType(fmt), "TessFactor");
+			}
+			else if(el.VertexElementUsage == VertexElementUsage.TextureCoordinate)
+			{
+				return	HasElement(t, VEFType(fmt), "TexCoord" + numTex);
+			}
+			return	false;
+		}
+
+
 		public static Type GetTypeForVertexDeclaration(VertexDeclaration vd)
 		{
 			VertexElement	[]elems	=vd.GetVertexElements();
 
-			bool	bPos, bNorm, bBoneIdx, bBoneWeight, bTan, bBiTan;
 			int		numTex, numColor;
-
-			bPos	=bNorm	=bBoneIdx	=bTan	=bBoneWeight	=bBiTan	=false;
-			numTex	=numColor	=0;
-
-			foreach(VertexElement el in elems)
+			foreach(Type t in mTypes)
 			{
-				if(el.VertexElementFormat == VertexElementFormat.Vector3)
+				numTex	=numColor	=0;
+				if(t == typeof(VPosNormTex0Col0))
 				{
-					if(el.VertexElementUsage == VertexElementUsage.Position)
+					int	gack	=0;
+					gack++;
+				}
+				bool	bFound	=true;
+				foreach(VertexElement el in elems)
+				{
+					if(!HasFormatAndUsage(t, el, numColor, numTex))
 					{
-						bPos	=true;
+						bFound	=false;
+						break;
 					}
-					else if(el.VertexElementUsage == VertexElementUsage.Normal)
+					else
 					{
-						bNorm	=true;
-					}
-					else if(el.VertexElementUsage == VertexElementUsage.Binormal)
-					{
-						bBiTan	=true;
+						//found
+						if(el.VertexElementUsage == VertexElementUsage.TextureCoordinate)
+						{
+							numTex++;
+						}
+						else if(el.VertexElementUsage == VertexElementUsage.Color)
+						{
+							numColor++;
+						}
 					}
 				}
-				else if(el.VertexElementFormat == VertexElementFormat.Vector4)
+
+				if(bFound)
 				{
-					if(el.VertexElementUsage == VertexElementUsage.BlendIndices)
-					{
-						bBoneIdx	=true;
-					}
-					else if(el.VertexElementUsage == VertexElementUsage.BlendWeight)
-					{
-						bBoneWeight	=true;
-					}
-					else if(el.VertexElementUsage == VertexElementUsage.Color)
-					{
-						numColor++;
-					}
-					else if(el.VertexElementUsage == VertexElementUsage.Tangent)
-					{
-						bTan	=true;
-					}
-				}
-				else if(el.VertexElementFormat == VertexElementFormat.Vector2)
-				{
-					if(el.VertexElementUsage == VertexElementUsage.TextureCoordinate)
-					{
-						numTex++;
-					}
-				}
+					return	t;
+				}			
 			}
 
-			return	GetMatch(bPos, bNorm, bBoneIdx, bBoneWeight, bTan, bBiTan, numTex, numColor);
+			Debug.WriteLine("Warning!  Type not found for vertex declaration!");
+
+			return	typeof(object);
 		}
 
 
-		public static bool HasElement(Type t, string eleName)
+		public static bool HasElement(Type t, Type subType, string eleName)
 		{
 			FieldInfo	fi	=t.GetField(eleName);
-			return	(fi != null);
+			if(fi == null)
+			{
+				return	false;
+			}
+			return	(fi.FieldType == subType);
 		}
 
 
@@ -356,13 +446,42 @@ namespace MeshLib
 				{
 					break;
 				}
-				VertexElement ve	=new VertexElement(
-					sizeSoFar, VertexElementFormat.Vector2,
-					VertexElementUsage.TextureCoordinate,
-					(byte)i);
+
+				VertexElement	ve	=new VertexElement();
+				if(fi.FieldType == typeof(Vector4))
+				{
+					ve	=new VertexElement(
+						sizeSoFar, VertexElementFormat.Vector4,
+						VertexElementUsage.TextureCoordinate,
+						(byte)i);
+					sizeSoFar	+=16;
+				}
+				else if(fi.FieldType == typeof(Vector3))
+				{
+					ve	=new VertexElement(
+						sizeSoFar, VertexElementFormat.Vector3,
+						VertexElementUsage.TextureCoordinate,
+						(byte)i);
+					sizeSoFar	+=12;
+				}
+				else if(fi.FieldType == typeof(Vector2))
+				{
+					ve	=new VertexElement(
+						sizeSoFar, VertexElementFormat.Vector2,
+						VertexElementUsage.TextureCoordinate,
+						(byte)i);
+					sizeSoFar	+=8;
+				}
+				else if(fi.FieldType == typeof(float))
+				{
+					ve	=new VertexElement(
+						sizeSoFar, VertexElementFormat.Single,
+						VertexElementUsage.TextureCoordinate,
+						(byte)i);
+					sizeSoFar	+=4;
+				}
 				ves.Add(ve);
 				i++;
-				sizeSoFar	+=8;
 			}
 			i	=0;
 			while(true)
@@ -615,6 +734,9 @@ namespace MeshLib
 		//create a new vertexbuffer with tangents added
 		public static VertexBuffer AddTangents(GraphicsDevice gd, VertexBuffer vb, int numVerts, int typeIdx, Vector4 []tans, out int typeIndex)
 		{
+			typeIndex	=69;
+			return	null;	//todo: fix later
+			/*
 			Type	vtype	=mTypes[typeIdx];
 			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
 
@@ -695,7 +817,7 @@ namespace MeshLib
 
 			typedMethod.Invoke(vb2, new object[] {newVerts});
 
-			return	vb2;
+			return	vb2;*/
 		}
 
 
@@ -703,6 +825,9 @@ namespace MeshLib
 		public static VertexBuffer AddTangents(GraphicsDevice gd, VertexBuffer vb, int numVerts,
 			int typeIdx, Vector3 []tans, Vector3 []bitans, out int typeIndex)
 		{
+			typeIndex	=69;
+			return	null;
+			/*
 			Type	vtype	=mTypes[typeIdx];
 			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
 
@@ -786,7 +911,7 @@ namespace MeshLib
 
 			typedMethod.Invoke(vb2, new object[] {newVerts});
 
-			return	vb2;
+			return	vb2;*/
 		}
 
 
@@ -858,6 +983,11 @@ namespace MeshLib
 			{
 				foreach(FieldInfo fi in finfo)
 				{
+					if(fi.FieldType.Name == "Single")
+					{
+						Single	vec	=(Single)GetArrayField(verts, i, fi.Name);
+						bw.Write(vec);
+					}
 					if(fi.FieldType.Name == "Vector2")
 					{
 						Vector2	vec	=(Vector2)GetArrayField(verts, i, fi.Name);

@@ -183,10 +183,10 @@ namespace BSPCore
 
 			//make vertex declarations
 			//lightmapped
-			mLMVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Tex1));
+			mLMVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex04));
 
 			//lightmapped alpha
-			mLMAVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Tex1Col0));
+			mLMAVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex04Col0));
 
 			//vertex lit, alpha, and mirror
 			mVLitVD		=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Col0));
@@ -195,8 +195,8 @@ namespace BSPCore
 
 			//animated lightmapped, and alpha as well
 			//alpha is stored in the style vector4
-			mLMAnimVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormBlendTex0Tex1Tex2Tex3Tex4));
-			mLMAAnimVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormBlendTex0Tex1Tex2Tex3Tex4));
+			mLMAnimVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormBlendTex04Tex14Tex24));
+			mLMAAnimVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormBlendTex04Tex14Tex24));
 
 			//FullBright and sky
 			mFBVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosTex0));
@@ -306,17 +306,19 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormTex0Tex1	[]varray	=new VPosNormTex0Tex1[mLMVerts.Count];
+			VPosNormTex04	[]varray	=new VPosNormTex04[mLMVerts.Count];
 			for(int i=0;i < mLMVerts.Count;i++)
 			{
-				varray[i].Position	=mLMVerts[i];
-				varray[i].TexCoord0	=mLMFaceTex0[i];
-				varray[i].TexCoord1	=mLMFaceTex1[i];
-				varray[i].Normal	=mLMNormals[i];
+				varray[i].Position		=mLMVerts[i];
+				varray[i].TexCoord0.X	=mLMFaceTex0[i].X;
+				varray[i].TexCoord0.Y	=mLMFaceTex0[i].Y;
+				varray[i].TexCoord0.Z	=mLMFaceTex1[i].X;
+				varray[i].TexCoord0.W	=mLMFaceTex1[i].Y;
+				varray[i].Normal		=mLMNormals[i];
 			}
 
 			vb	=new VertexBuffer(mGD, mLMVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosNormTex0Tex1>(varray);
+			vb.SetData<VPosNormTex04>(varray);
 
 			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mLMIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mLMIndexes.ToArray());
@@ -332,19 +334,21 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormTex0Tex1Col0	[]varray	=new VPosNormTex0Tex1Col0[mLMAVerts.Count];
+			VPosNormTex04Col0	[]varray	=new VPosNormTex04Col0[mLMAVerts.Count];
 			for(int i=0;i < mLMAVerts.Count;i++)
 			{
-				varray[i].Position	=mLMAVerts[i];
-				varray[i].TexCoord0	=mLMAFaceTex0[i];
-				varray[i].TexCoord1	=mLMAFaceTex1[i];
-				varray[i].Normal	=mLMANormals[i];
-				varray[i].Color0	=Vector4.One;
-				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
+				varray[i].Position		=mLMAVerts[i];
+				varray[i].TexCoord0.X	=mLMAFaceTex0[i].X;
+				varray[i].TexCoord0.Y	=mLMAFaceTex0[i].Y;
+				varray[i].TexCoord0.Z	=mLMAFaceTex1[i].X;
+				varray[i].TexCoord0.W	=mLMAFaceTex1[i].Y;
+				varray[i].Normal		=mLMANormals[i];
+				varray[i].Color0		=Vector4.One;
+				varray[i].Color0.W		=AlphaValue;	//TODO: donut hardcode
 			}
 
 			vb	=new VertexBuffer(mGD, mLMAVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosNormTex0Tex1Col0>(varray);
+			vb.SetData<VPosNormTex04Col0>(varray);
 
 			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mLMAIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mLMAIndexes.ToArray());
@@ -488,22 +492,27 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormBlendTex0Tex1Tex2Tex3Tex4	[]varray
-				=new VPosNormBlendTex0Tex1Tex2Tex3Tex4[mLMAnimVerts.Count];
+			VPosNormBlendTex04Tex14Tex24	[]varray
+				=new VPosNormBlendTex04Tex14Tex24[mLMAnimVerts.Count];
 			for(int i=0;i < mLMAnimVerts.Count;i++)
 			{
-				varray[i].Position	=mLMAnimVerts[i];
-				varray[i].Normal	=mLMAnimNormals[i];
-				varray[i].TexCoord0	=mLMAnimFaceTex0[i];
-				varray[i].TexCoord1	=mLMAnimFaceTex1[i];
-				varray[i].TexCoord2	=mLMAnimFaceTex2[i];
-				varray[i].TexCoord3	=mLMAnimFaceTex3[i];
-				varray[i].TexCoord4	=mLMAnimFaceTex4[i];
-				varray[i].BoneIndex	=mLMAnimStyle[i];
+				varray[i].Position		=mLMAnimVerts[i];
+				varray[i].Normal		=mLMAnimNormals[i];
+				varray[i].TexCoord0.X	=mLMAnimFaceTex0[i].X;
+				varray[i].TexCoord0.Y	=mLMAnimFaceTex0[i].Y;
+				varray[i].TexCoord0.Z	=mLMAnimFaceTex1[i].X;
+				varray[i].TexCoord0.W	=mLMAnimFaceTex1[i].Y;
+				varray[i].TexCoord1.X	=mLMAnimFaceTex2[i].X;
+				varray[i].TexCoord1.Y	=mLMAnimFaceTex2[i].Y;
+				varray[i].TexCoord1.Z	=mLMAnimFaceTex3[i].X;
+				varray[i].TexCoord1.W	=mLMAnimFaceTex3[i].Y;
+				varray[i].TexCoord2.X	=mLMAnimFaceTex4[i].X;
+				varray[i].TexCoord2.Y	=mLMAnimFaceTex4[i].Y;
+				varray[i].BoneIndex		=mLMAnimStyle[i];
 			}
 
 			vb	=new VertexBuffer(mGD, mLMAnimVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosNormBlendTex0Tex1Tex2Tex3Tex4>(varray);
+			vb.SetData<VPosNormBlendTex04Tex14Tex24>(varray);
 
 			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mLMAnimIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mLMAnimIndexes.ToArray());
@@ -519,22 +528,28 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormBlendTex0Tex1Tex2Tex3Tex4	[]varray
-				=new VPosNormBlendTex0Tex1Tex2Tex3Tex4[mLMAAnimVerts.Count];
+			VPosNormBlendTex04Tex14Tex24	[]varray
+				=new VPosNormBlendTex04Tex14Tex24[mLMAAnimVerts.Count];
 			for(int i=0;i < mLMAAnimVerts.Count;i++)
 			{
-				varray[i].Position	=mLMAAnimVerts[i];
-				varray[i].Normal	=mLMAAnimNormals[i];
-				varray[i].TexCoord0	=mLMAAnimFaceTex0[i];
-				varray[i].TexCoord1	=mLMAAnimFaceTex1[i];
-				varray[i].TexCoord2	=mLMAAnimFaceTex2[i];
-				varray[i].TexCoord3	=mLMAAnimFaceTex3[i];
-				varray[i].TexCoord4	=mLMAAnimFaceTex4[i];
-				varray[i].BoneIndex	=mLMAAnimStyle[i];
+				varray[i].Position		=mLMAnimVerts[i];
+				varray[i].Normal		=mLMAnimNormals[i];
+				varray[i].TexCoord0.X	=mLMAnimFaceTex0[i].X;
+				varray[i].TexCoord0.Y	=mLMAnimFaceTex0[i].Y;
+				varray[i].TexCoord0.Z	=mLMAnimFaceTex1[i].X;
+				varray[i].TexCoord0.W	=mLMAnimFaceTex1[i].Y;
+				varray[i].TexCoord1.X	=mLMAnimFaceTex2[i].X;
+				varray[i].TexCoord1.Y	=mLMAnimFaceTex2[i].Y;
+				varray[i].TexCoord1.Z	=mLMAnimFaceTex3[i].X;
+				varray[i].TexCoord1.W	=mLMAnimFaceTex3[i].Y;
+				varray[i].TexCoord2.X	=mLMAnimFaceTex4[i].X;
+				varray[i].TexCoord2.Y	=mLMAnimFaceTex4[i].Y;
+				varray[i].TexCoord2.Z	=AlphaValue;		//TODO: Donut hardcode
+				varray[i].BoneIndex		=mLMAnimStyle[i];
 			}
 
 			vb	=new VertexBuffer(mGD, mLMAAnimVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosNormBlendTex0Tex1Tex2Tex3Tex4>(varray);
+			vb.SetData<VPosNormBlendTex04Tex14Tex24>(varray);
 
 			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mLMAAnimIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mLMAAnimIndexes.ToArray());
@@ -575,6 +590,11 @@ namespace BSPCore
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
+					if(tex.mAlpha < 1.0f)
+					{
+						continue;
+					}
+
 					if(!mat.Name.StartsWith(tex.mMaterial))
 					{
 						continue;
@@ -598,21 +618,6 @@ namespace BSPCore
 
 					double	scaleU, scaleV, offsetU, offsetV;
 					scaleU	=scaleV	=offsetU	=offsetV	=0.0;
-//					Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
-
-//					for(int i=0;i < lmap.Length;i++)
-//					{
-//						lmap[i].R	=lightData[f.mLightOfs + (i * 3)];
-//						lmap[i].G	=lightData[f.mLightOfs + (i * 3) + 1];
-//						lmap[i].B	=lightData[f.mLightOfs + (i * 3) + 2];
-//						lmap[i].A	=0xFF;
-//					}
-//					if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-//						out scaleU, out scaleV, out offsetU, out offsetV))
-//					{
-//						CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
-//						return	false;
-//					}
 
 					List<Vector3>	fverts	=new List<Vector3>();
 
@@ -645,10 +650,6 @@ namespace BSPCore
 						mLMAnimNormals.Add(pln.mNormal);
 					}
 
-//					List<double>	coordsU	=new List<double>();
-//					List<double>	coordsV	=new List<double>();
-//					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
-//					AddTexCoordsToList(mLMAnimFaceTex1, coordsU, coordsV, offsetU, offsetV);
 					firstVert.Add(mLMAnimVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
 
@@ -793,6 +794,10 @@ namespace BSPCore
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
+					if(tex.mAlpha >= 1.0f)
+					{
+						continue;
+					}
 					if(!mat.Name.StartsWith(tex.mMaterial))
 					{
 						continue;
@@ -1039,6 +1044,10 @@ namespace BSPCore
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
+					if(tex.mAlpha < 1.0f)
+					{
+						continue;
+					}
 					if(tex.mMaterial != mat.Name)
 					{
 						continue;
@@ -1170,6 +1179,10 @@ namespace BSPCore
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
+					if(tex.mAlpha >= 1.0f)
+					{
+						continue;
+					}
 					if(!mat.Name.StartsWith(tex.mMaterial))
 					{
 						continue;
@@ -1288,6 +1301,17 @@ namespace BSPCore
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
+					if(tex.mAlpha < 1.0f)
+					{
+						continue;
+					}
+
+					if((tex.mFlags & 
+						(TexInfo.FULLBRIGHT | TexInfo.MIRROR | TexInfo.SKY)) != 0)
+					{
+						continue;
+					}
+
 					if(!mat.Name.StartsWith(tex.mMaterial))
 					{
 						continue;
@@ -1392,7 +1416,16 @@ namespace BSPCore
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
+					if((tex.mFlags & TexInfo.MIRROR) == 0)
+					{
+						continue;
+					}
+
 					if(!mat.Name.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+					if(!mat.Name.EndsWith("*Mirror"))
 					{
 						continue;
 					}
@@ -1499,7 +1532,16 @@ namespace BSPCore
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
+					if(tex.mAlpha >= 1.0f)
+					{
+						continue;
+					}
+
 					if(!mat.Name.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+					if(!mat.Name.EndsWith("*Alpha"))
 					{
 						continue;
 					}
@@ -1601,7 +1643,15 @@ namespace BSPCore
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
+					if(tex.mAlpha < 1.0f)
+					{
+						continue;
+					}
 					if(!mat.Name.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+					if(!mat.Name.EndsWith("*FullBright"))
 					{
 						continue;
 					}
@@ -1685,8 +1735,16 @@ namespace BSPCore
 					{
 						continue;
 					}
+					if(tex.mAlpha < 1.0f)
+					{
+						continue;
+					}
 
 					if(!mat.Name.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+					if(!mat.Name.EndsWith("*Sky"))
 					{
 						continue;
 					}

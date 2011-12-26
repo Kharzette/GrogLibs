@@ -597,6 +597,10 @@ namespace BSPCore
 				FixFlags(ref ti);
 				CoreEvents.Print("Quake 3 style flags found " + flags[0] + ", " + flags[1] + "\n");
 			}
+			else
+			{
+				ti.mAlpha	=1.0f;	//default
+			}
 
 			GBSPPlane	plane	=new GBSPPlane(mPoly);
 
@@ -634,7 +638,9 @@ namespace BSPCore
 		{
 			UInt32	hammerFlags	=mFlags;
 
-			mFlags	=SIDE_VISIBLE;
+			//defaults
+			mFlags		=SIDE_VISIBLE;
+			ti.mAlpha	=1.0f;
 
 			//eventually need to convert these
 			//into genesis texinfo stuff
