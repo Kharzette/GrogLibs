@@ -211,11 +211,10 @@ namespace BSPCore
 		//convert quake contents to genesis style contents
 		static public UInt32 FixQuakeContents(UInt32 quakeContents)
 		{
-			UInt32	ret	=quakeContents;
+			UInt32	ret	=0;
 
-			if(quakeContents == 0)
+			if((quakeContents & CONTENTS_SOLID) != 0)
 			{
-				//set to solid by default?
 				ret	|=BSP_CONTENTS_SOLID2;
 			}
 

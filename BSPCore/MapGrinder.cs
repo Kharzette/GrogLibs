@@ -34,6 +34,7 @@ namespace BSPCore
 		List<Vector2>	mLMAFaceTex0	=new List<Vector2>();
 		List<Vector2>	mLMAFaceTex1	=new List<Vector2>();
 		List<Int32>		mLMAIndexes		=new List<Int32>();
+		List<Vector4>	mLMAColors		=new List<Vector4>();
 
 		//computed vertex lit geometry
 		List<Vector3>	mVLitVerts		=new List<Vector3>();
@@ -88,6 +89,7 @@ namespace BSPCore
 		List<Vector2>	mLMAAnimFaceTex4	=new List<Vector2>();
 		List<Int32>		mLMAAnimIndexes		=new List<Int32>();
 		List<Vector4>	mLMAAnimStyle		=new List<Vector4>();
+		List<Vector4>	mLMAAnimColors		=new List<Vector4>();
 
 		//computed material stuff
 		List<string>	mMaterialNames		=new List<string>();
@@ -149,9 +151,6 @@ namespace BSPCore
 		int			mLightGridSize;
 		GFXTexInfo	[]mTexInfos;
 		GFXFace		[]mFaces;
-
-		//constants
-		const float	AlphaValue	=0.8f;	//vertex alpha hardcode (TODO Fix)
 
 
 		public MapGrinder(GraphicsDevice gd, GFXTexInfo []texs,
@@ -343,8 +342,7 @@ namespace BSPCore
 				varray[i].TexCoord0.Z	=mLMAFaceTex1[i].X;
 				varray[i].TexCoord0.W	=mLMAFaceTex1[i].Y;
 				varray[i].Normal		=mLMANormals[i];
-				varray[i].Color0		=Vector4.One;
-				varray[i].Color0.W		=AlphaValue;	//TODO: donut hardcode
+				varray[i].Color0		=mLMAColors[i];
 			}
 
 			vb	=new VertexBuffer(mGD, mLMAVD, varray.Length, BufferUsage.None);
@@ -397,7 +395,6 @@ namespace BSPCore
 				varray[i].TexCoord0	=mAlphaTex0[i];
 				varray[i].Normal	=mAlphaNormals[i];
 				varray[i].Color0	=mAlphaColors[i];
-				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
 			}
 
 			vb	=new VertexBuffer(mGD, mAlphaVD, varray.Length, BufferUsage.None);
@@ -448,7 +445,6 @@ namespace BSPCore
 				varray[i].TexCoord0	=mMirrorTex0[i];
 				varray[i].Normal	=mMirrorNormals[i];
 				varray[i].Color0	=mMirrorColors[i];
-				varray[i].Color0.W	=AlphaValue;	//TODO: donut hardcode
 			}
 
 			vb	=new VertexBuffer(mGD, mMirrorVD, varray.Length, BufferUsage.None);
@@ -508,6 +504,7 @@ namespace BSPCore
 				varray[i].TexCoord1.W	=mLMAnimFaceTex3[i].Y;
 				varray[i].TexCoord2.X	=mLMAnimFaceTex4[i].X;
 				varray[i].TexCoord2.Y	=mLMAnimFaceTex4[i].Y;
+				varray[i].TexCoord2.Z	=1.0f;	//alpha
 				varray[i].BoneIndex		=mLMAnimStyle[i];
 			}
 
@@ -532,20 +529,20 @@ namespace BSPCore
 				=new VPosNormBlendTex04Tex14Tex24[mLMAAnimVerts.Count];
 			for(int i=0;i < mLMAAnimVerts.Count;i++)
 			{
-				varray[i].Position		=mLMAnimVerts[i];
-				varray[i].Normal		=mLMAnimNormals[i];
-				varray[i].TexCoord0.X	=mLMAnimFaceTex0[i].X;
-				varray[i].TexCoord0.Y	=mLMAnimFaceTex0[i].Y;
-				varray[i].TexCoord0.Z	=mLMAnimFaceTex1[i].X;
-				varray[i].TexCoord0.W	=mLMAnimFaceTex1[i].Y;
-				varray[i].TexCoord1.X	=mLMAnimFaceTex2[i].X;
-				varray[i].TexCoord1.Y	=mLMAnimFaceTex2[i].Y;
-				varray[i].TexCoord1.Z	=mLMAnimFaceTex3[i].X;
-				varray[i].TexCoord1.W	=mLMAnimFaceTex3[i].Y;
-				varray[i].TexCoord2.X	=mLMAnimFaceTex4[i].X;
-				varray[i].TexCoord2.Y	=mLMAnimFaceTex4[i].Y;
-				varray[i].TexCoord2.Z	=AlphaValue;		//TODO: Donut hardcode
-				varray[i].BoneIndex		=mLMAnimStyle[i];
+				varray[i].Position		=mLMAAnimVerts[i];
+				varray[i].Normal		=mLMAAnimNormals[i];
+				varray[i].TexCoord0.X	=mLMAAnimFaceTex0[i].X;
+				varray[i].TexCoord0.Y	=mLMAAnimFaceTex0[i].Y;
+				varray[i].TexCoord0.Z	=mLMAAnimFaceTex1[i].X;
+				varray[i].TexCoord0.W	=mLMAAnimFaceTex1[i].Y;
+				varray[i].TexCoord1.X	=mLMAAnimFaceTex2[i].X;
+				varray[i].TexCoord1.Y	=mLMAAnimFaceTex2[i].Y;
+				varray[i].TexCoord1.Z	=mLMAAnimFaceTex3[i].X;
+				varray[i].TexCoord1.W	=mLMAAnimFaceTex3[i].Y;
+				varray[i].TexCoord2.X	=mLMAAnimFaceTex4[i].X;
+				varray[i].TexCoord2.Y	=mLMAAnimFaceTex4[i].Y;
+				varray[i].TexCoord2.Z	=mLMAAnimColors[i].W;
+				varray[i].BoneIndex		=mLMAAnimStyle[i];
 			}
 
 			vb	=new VertexBuffer(mGD, mLMAAnimVD, varray.Length, BufferUsage.None);
@@ -855,6 +852,7 @@ namespace BSPCore
 						fverts.Add(pnt);
 
 						mLMAAnimVerts.Add(pnt);
+						mLMAAnimColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
 					}
 
 					GFXPlane	pl	=pp[f.mPlaneNum];
@@ -964,12 +962,10 @@ namespace BSPCore
 					for(k=0;k < nverts;k++)
 					{
 						Vector4	styleIndex	=Vector4.Zero;
-
-						//index zero is always zero
-						styleIndex.X	=f.mLTypes[1];
-						styleIndex.Y	=f.mLTypes[2];
-						styleIndex.Z	=f.mLTypes[3];
-						styleIndex.W	=AlphaValue;
+						styleIndex.X	=f.mLTypes[0];
+						styleIndex.Y	=f.mLTypes[1];
+						styleIndex.Z	=f.mLTypes[2];
+						styleIndex.W	=f.mLTypes[3];
 						mLMAAnimStyle.Add(styleIndex);
 					}
 				}
@@ -1226,6 +1222,7 @@ namespace BSPCore
 						fverts.Add(pnt);
 
 						mLMAVerts.Add(pnt);
+						mLMAColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
 					}
 
 					GFXPlane	pl	=pp[f.mPlaneNum];
@@ -1541,10 +1538,6 @@ namespace BSPCore
 					{
 						continue;
 					}
-					if(!mat.Name.EndsWith("*Alpha"))
-					{
-						continue;
-					}
 
 					numFaces++;
 
@@ -1570,10 +1563,19 @@ namespace BSPCore
 						{
 							mAlphaNormals.Add(vnorms[idx]);
 						}
+
 						Vector4	col	=Vector4.One;
-						col.X	=rgbVerts[fvert + k].X / 255.0f;
-						col.Y	=rgbVerts[fvert + k].Y / 255.0f;
-						col.Z	=rgbVerts[fvert + k].Z / 255.0f;
+						if((tex.mFlags & TexInfo.FULLBRIGHT) == 0)
+						{
+							col.X	=rgbVerts[fvert + k].X / 255.0f;
+							col.Y	=rgbVerts[fvert + k].Y / 255.0f;
+							col.Z	=rgbVerts[fvert + k].Z / 255.0f;
+						}
+
+						if((tex.mFlags & TexInfo.TRANS) != 0)
+						{
+							col.W	=tex.mAlpha;
+						}
 						mAlphaColors.Add(col);
 					}
 

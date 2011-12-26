@@ -257,11 +257,25 @@ namespace MaterialLib
 						string	front	=tex.Substring(0, plusPos);
 						string	back	=tex.Substring(plusPos + 1, tex.Length - plusPos - 1);
 
-						t	=mContent.Load<Texture2D>(front + back);
+						if(File.Exists("Content/" + (front + back) + ".xnb"))
+						{
+							t	=mContent.Load<Texture2D>(front + back);
+						}
+						else if(File.Exists("SharedContent/" + (front + back) + ".xnb"))
+						{
+							t	=mSharedContent.Load<Texture2D>(front + back);
+						}
 					}
 					else
 					{
-						t	=mContent.Load<Texture2D>(tex);
+						if(File.Exists("Content/" + tex + ".xnb"))
+						{
+							t	=mContent.Load<Texture2D>(tex);
+						}
+						else if(File.Exists("SharedContent/" + tex + ".xnb"))
+						{
+							t	=mSharedContent.Load<Texture2D>(tex);
+						}
 					}
 
 					if(t != null)

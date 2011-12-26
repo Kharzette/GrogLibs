@@ -25,11 +25,11 @@ namespace BSPCore
 		internal const UInt32	SURF_TRANS33			=0x10;
 		internal const UInt32	SURF_TRANS66			=0x20;
 		internal const UInt32	SURF_FLOWING			=0x40;		//scroll towards angle
-		internal const UInt32	SURF_NODAMAGE			=0x1;		//never give falling damage
-		internal const UInt32	SURF_LADDER				=0x8;
-		internal const UInt32	SURF_NOIMPACT			=0x10;		//don't make missile explosions
-		internal const UInt32	SURF_NOMARKS			=0x20;		//don't leave missile marks
-		internal const UInt32	SURF_FLESH				=0x40;		//make flesh sounds and effects
+//		internal const UInt32	SURF_NODAMAGE			=0x1;		//never give falling damage
+//		internal const UInt32	SURF_LADDER				=0x8;
+//		internal const UInt32	SURF_NOIMPACT			=0x10;		//don't make missile explosions
+//		internal const UInt32	SURF_NOMARKS			=0x20;		//don't leave missile marks
+//		internal const UInt32	SURF_FLESH				=0x40;		//make flesh sounds and effects
 		internal const UInt32	SURF_NODRAW				=0x80;		//don't generate a drawsurface at all
 		internal const UInt32	SURF_HINT				=0x100;		//make a primary bsp splitter
 		internal const UInt32	SURF_SKIP				=0x200;		//completely ignore, allowing non-closed brushes
@@ -170,7 +170,6 @@ namespace BSPCore
 						}
 						if(tex == "TOOLS/TOOLSINVISIBLELADDER")
 						{
-							mFlags	|=SURF_LADDER;
 							mFlags	|=SURF_NODRAW;
 							ret		|=Contents.CONTENTS_LADDER;
 						}
@@ -449,7 +448,8 @@ namespace BSPCore
 				{
 					mFlags	|=SURF_NODRAW;
 					texName	=tok;
-					ret	|=Contents.BSP_CONTENTS_CLIP2;
+					ret	|=Contents.CONTENTS_PLAYERCLIP;
+					ret	|=Contents.CONTENTS_MONSTERCLIP;
 				}
 				if(tok[0] == '*' || tok[0] == '#')
 				{
@@ -457,41 +457,32 @@ namespace BSPCore
 					texName	=tok.Substring(1);
 					if(texName.StartsWith("lava") || texName.StartsWith("LAVA"))
 					{
-						ret				|=Contents.BSP_CONTENTS_EMPTY2;
-						ret				|=Contents.BSP_CONTENTS_USER1;
-						ret				|=Contents.BSP_CONTENTS_WAVY2;
-						ti.mFlags		|=TexInfo.TRANS;
-						ti.mFlags		|=TexInfo.FLAT;
-						ti.mFlags		|=TexInfo.LIGHT;				//lava emits light by default?
-						ti.mFaceLight	=TexInfo.FaceLightIntensity;	//TODO: donut hardcode
-						ti.mFlags		|=TexInfo.FULLBRIGHT;
-						ti.mFlags		|=TexInfo.NO_LIGHTMAP;
+						ret		|=Contents.CONTENTS_LAVA;
+						mFlags	|=SURF_TRANS66;
+						mFlags	|=SURF_LIGHT;
 					}
 					else if(texName.StartsWith("water") || texName.StartsWith("WATER") || texName.Contains("WAT"))
 					{
-						ret			|=Contents.BSP_CONTENTS_TRANSLUCENT2;
-						ret			|=Contents.BSP_CONTENTS_EMPTY2;
-						ret			|=Contents.BSP_CONTENTS_WAVY2;
-						ret			|=Contents.BSP_CONTENTS_USER3;
+						ret			|=Contents.CONTENTS_WATER;
 						ti.mFlags	|=TexInfo.TRANS;
+						mFlags		|=SURF_TRANS66;
 					}
 					else if(texName.StartsWith("slime") || texName.StartsWith("SLIME"))
 					{
-						ret			|=Contents.BSP_CONTENTS_TRANSLUCENT2;
-						ret			|=Contents.BSP_CONTENTS_EMPTY2;
-						ret			|=Contents.BSP_CONTENTS_WAVY2;
-						ret			|=Contents.BSP_CONTENTS_USER2;
+						ret			|=Contents.CONTENTS_SLIME;
 						ti.mFlags	|=TexInfo.TRANS;
+						mFlags		|=SURF_TRANS66;
 					}
 					else if(texName.StartsWith("glass") || texName.StartsWith("GLASS"))
 					{
+						ret			|=Contents.CONTENTS_WINDOW;
 						mFlags		|=SURF_TRANS66;
 						ti.mFlags	|=TexInfo.TRANS;
 					}
 					else
 					{
 						//generic transparent I guess
-						ret			|=Contents.BSP_CONTENTS_TRANSLUCENT2;
+						ret			|=Contents.CONTENTS_TRANSLUCENT;
 						ti.mFlags	|=TexInfo.TRANS;
 					}
 					continue;
@@ -514,41 +505,32 @@ namespace BSPCore
 				}
 				else if(tok.StartsWith("lava") || tok.StartsWith("LAVA"))
 				{
-					ret				|=Contents.BSP_CONTENTS_EMPTY2;
-					ret				|=Contents.BSP_CONTENTS_USER1;
-					ret				|=Contents.BSP_CONTENTS_WAVY2;
-					ti.mFlags		|=TexInfo.TRANS;
-					ti.mFlags		|=TexInfo.FLAT;
-					ti.mFlags		|=TexInfo.LIGHT;				//lava emits light by default?
-					ti.mFaceLight	=TexInfo.FaceLightIntensity;	//TODO: donut hardcode
-					ti.mFlags		|=TexInfo.FULLBRIGHT;
-					ti.mFlags		|=TexInfo.NO_LIGHTMAP;
+					ret		|=Contents.CONTENTS_LAVA;
+					mFlags	|=SURF_TRANS66;
+					mFlags	|=SURF_LIGHT;
 				}
 				else if(tok.StartsWith("water") || tok.StartsWith("WATER"))
 				{
-					ret			|=Contents.BSP_CONTENTS_TRANSLUCENT2;
-					ret			|=Contents.BSP_CONTENTS_EMPTY2;
-					ret			|=Contents.BSP_CONTENTS_WAVY2;
-					ret			|=Contents.BSP_CONTENTS_USER3;
+					ret			|=Contents.CONTENTS_WATER;
 					ti.mFlags	|=TexInfo.TRANS;
+					mFlags		|=SURF_TRANS66;
 				}
 				else if(tok.StartsWith("slime") || tok.StartsWith("SLIME"))
 				{
-					ret			|=Contents.BSP_CONTENTS_TRANSLUCENT2;
-					ret			|=Contents.BSP_CONTENTS_EMPTY2;
-					ret			|=Contents.BSP_CONTENTS_WAVY2;
-					ret			|=Contents.BSP_CONTENTS_USER2;
+					ret			|=Contents.CONTENTS_SLIME;
 					ti.mFlags	|=TexInfo.TRANS;
+					mFlags		|=SURF_TRANS66;
 				}
 				else if(tok.StartsWith("trigger") || tok.StartsWith("TRIGGER"))
 				{
-					ret			|=Contents.BSP_CONTENTS_USER12;
+					ret			|=Contents.CONTENTS_TRIGGER;
 					ti.mFlags	|=TexInfo.FULLBRIGHT;
 					mFlags		|=SURF_NODRAW;
 					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 				}
 				else if(tok.StartsWith("window") || tok.StartsWith("WINDOW"))
 				{
+					ret			|=Contents.CONTENTS_WINDOW;
 					mFlags		|=SURF_TRANS66;
 					ti.mFlags	|=TexInfo.TRANS;
 				}
@@ -594,12 +576,7 @@ namespace BSPCore
 				ret		=flags[0];
 				mFlags	=flags[1];
 
-				FixFlags(ref ti);
 				CoreEvents.Print("Quake 3 style flags found " + flags[0] + ", " + flags[1] + "\n");
-			}
-			else
-			{
-				ti.mAlpha	=1.0f;	//default
 			}
 
 			GBSPPlane	plane	=new GBSPPlane(mPoly);
@@ -627,6 +604,8 @@ namespace BSPCore
 				ti.mVVec	=Vector3.TransformNormal(ti.mVVec, texRot);
 			}
 
+			FixFlags(ref ti);
+
 			mTexInfo	=tiPool.Add(ti);
 			return	ret;
 		}
@@ -650,18 +629,12 @@ namespace BSPCore
 			if((hammerFlags & SURF_DUST) != 0)
 			{
 			}
-			if((hammerFlags & SURF_FLESH) != 0)
-			{
-			}
 			if((hammerFlags & SURF_FLOWING) != 0)
 			{
 			}
 			if((hammerFlags & SURF_HINT) != 0)
 			{
 				mFlags	|=SIDE_HINT;
-			}
-			if((hammerFlags & SURF_LADDER) != 0)
-			{
 			}
 			if((hammerFlags & SURF_LIGHT) != 0)
 			{
@@ -676,9 +649,6 @@ namespace BSPCore
 			if((hammerFlags & SURF_METALSTEPS) != 0)
 			{
 			}
-			if((hammerFlags & SURF_NODAMAGE) != 0)
-			{
-			}
 			if((hammerFlags & SURF_NODLIGHT) != 0)
 			{
 			}
@@ -686,15 +656,9 @@ namespace BSPCore
 			{
 				mFlags	&=~SIDE_VISIBLE;
 			}
-			if((hammerFlags & SURF_NOIMPACT) != 0)
-			{
-			}
 			if((hammerFlags & SURF_NOLIGHTMAP) != 0)
 			{
 				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
-			}
-			if((hammerFlags & SURF_NOMARKS) != 0)
-			{
 			}
 			if((hammerFlags & SURF_NONSOLID) != 0)
 			{

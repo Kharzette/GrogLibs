@@ -188,6 +188,64 @@ namespace MeshLib
 		}
 
 
+		static VertexElementFormat GetElementFormat(Type t)
+		{
+			if(t == typeof(Byte4))
+			{
+				return	VertexElementFormat.Byte4;
+			}
+			else if(t == typeof(Color))
+			{
+				return	VertexElementFormat.Color;
+			}
+			else if(t == typeof(HalfVector2))
+			{
+				return	VertexElementFormat.HalfVector2;
+			}
+			else if(t == typeof(HalfVector4))
+			{
+				return	VertexElementFormat.HalfVector4;
+			}
+			else if(t == typeof(NormalizedShort2))
+			{
+				return	VertexElementFormat.NormalizedShort2;
+			}
+			else if(t == typeof(NormalizedShort4))
+			{
+				return	VertexElementFormat.NormalizedShort4;
+			}
+			else if(t == typeof(Short2))
+			{
+				return	VertexElementFormat.Short2;
+			}
+			else if(t == typeof(Short4))
+			{
+				return	VertexElementFormat.Short4;
+			}
+			else if(t == typeof(Single))
+			{
+				return	VertexElementFormat.Single;
+			}
+			else if(t == typeof(Vector2))
+			{
+				return	VertexElementFormat.Vector2;
+			}
+			else if(t == typeof(Vector3))
+			{
+				return	VertexElementFormat.Vector3;
+			}
+			else if(t == typeof(Vector4))
+			{
+				return	VertexElementFormat.Vector4;
+			}
+			else
+			{
+				Debug.Assert(false);
+				return	VertexElementFormat.HalfVector4;
+			}
+		}
+
+
 		static bool HasFormatAndUsage(Type t, VertexElement el, int numColor, int numTex)
 		{
 			VertexElementFormat	fmt	=el.VertexElementFormat;
@@ -291,6 +349,8 @@ namespace MeshLib
 
 			Debug.WriteLine("Warning!  Type not found for vertex declaration!");
 
+			Debug.Assert(false);
+
 			return	typeof(object);
 		}
 
@@ -308,206 +368,129 @@ namespace MeshLib
 
 		public static int GetSizeForType(Type t)
 		{
-			int			i			=0;
-			int			sizeSoFar	=0;
-			FieldInfo	fi;
+			FieldInfo	[]fields	=t.GetFields();
 
-			fi	=t.GetField("Position");
-			if(fi != null)
+			int	size	=0;
+			foreach(FieldInfo fi in fields)
 			{
-				sizeSoFar	+=12;
-			}
-			fi	=t.GetField("Normal");
-			if(fi != null)
-			{
-				sizeSoFar	+=12;
-			}
-			fi	=t.GetField("Tangent");
-			if(fi != null)
-			{
-				sizeSoFar	+=16;
-			}
-			fi	=t.GetField("BiTangent");
-			if(fi != null)
-			{
-				sizeSoFar	+=12;
-			}
-			fi	=t.GetField("BoneIndex");
-			if(fi != null)
-			{
-				sizeSoFar	+=16;
-			}
-			fi	=t.GetField("BoneWeights");
-			if(fi != null)
-			{
-				sizeSoFar	+=16;
-			}
-			while(true)
-			{
-				fi	=t.GetField("TexCoord" + i);
-				if(fi == null)
+				if(fi.FieldType == typeof(Single))
 				{
-					break;
-				}
-				i++;
-				sizeSoFar	+=8;
-			}
-			i	=0;
-			while(true)
-			{
-				fi	=t.GetField("Color" + i);
-				if(fi == null)
-				{
-					break;
-				}
-				i++;
-				sizeSoFar	+=16;
-			}
-
-			return	sizeSoFar;
-		}
-
-
-		//don't think this is in use
-		public static VertexDeclaration GetVertexDeclarationForType(Type t)
-		{
-			List<VertexElement>	ves			=new List<VertexElement>();
-			int					i			=0;
-			short				sizeSoFar	=0;
-			FieldInfo			fi;
-
-			fi	=t.GetField("Position");
-			if(fi != null)
-			{
-				VertexElement ve	=new VertexElement(
-					sizeSoFar, VertexElementFormat.Vector3,
-					VertexElementUsage.Position,
-					(byte)i);
-				ves.Add(ve);
-				sizeSoFar	+=12;
-			}
-			fi	=t.GetField("Normal");
-			if(fi != null)
-			{
-				VertexElement ve	=new VertexElement(
-					sizeSoFar, VertexElementFormat.Vector3,
-					VertexElementUsage.Normal,
-					(byte)i);
-				ves.Add(ve);
-				sizeSoFar	+=12;
-			}
-			fi	=t.GetField("Tangent");
-			if(fi != null)
-			{
-				VertexElement ve	=new VertexElement(
-					sizeSoFar, VertexElementFormat.Vector4,
-					VertexElementUsage.Tangent,
-					(byte)i);
-				ves.Add(ve);
-				sizeSoFar	+=16;
-			}
-			fi	=t.GetField("BiTangent");
-			if(fi != null)
-			{
-				VertexElement ve	=new VertexElement(
-					sizeSoFar, VertexElementFormat.Vector3,
-					VertexElementUsage.Binormal,
-					(byte)i);
-				ves.Add(ve);
-				sizeSoFar	+=12;
-			}
-			fi	=t.GetField("BoneIndex");
-			if(fi != null)
-			{
-				VertexElement ve	=new VertexElement(
-					sizeSoFar, VertexElementFormat.Vector4,
-					VertexElementUsage.BlendIndices,
-					(byte)i);
-				ves.Add(ve);
-				i++;
-				sizeSoFar	+=16;
-			}
-			fi	=t.GetField("BoneWeights");
-			if(fi != null)
-			{
-				VertexElement ve	=new VertexElement(
-					sizeSoFar, VertexElementFormat.Vector4,
-					VertexElementUsage.BlendWeight,
-					(byte)i);
-				ves.Add(ve);
-				i++;
-				sizeSoFar	+=16;
-			}
-			i	=0;
-			while(true)
-			{
-				fi	=t.GetField("TexCoord" + i);
-				if(fi == null)
-				{
-					break;
-				}
-
-				VertexElement	ve	=new VertexElement();
-				if(fi.FieldType == typeof(Vector4))
-				{
-					ve	=new VertexElement(
-						sizeSoFar, VertexElementFormat.Vector4,
-						VertexElementUsage.TextureCoordinate,
-						(byte)i);
-					sizeSoFar	+=16;
-				}
-				else if(fi.FieldType == typeof(Vector3))
-				{
-					ve	=new VertexElement(
-						sizeSoFar, VertexElementFormat.Vector3,
-						VertexElementUsage.TextureCoordinate,
-						(byte)i);
-					sizeSoFar	+=12;
+					size	+=4;
 				}
 				else if(fi.FieldType == typeof(Vector2))
 				{
-					ve	=new VertexElement(
-						sizeSoFar, VertexElementFormat.Vector2,
-						VertexElementUsage.TextureCoordinate,
-						(byte)i);
-					sizeSoFar	+=8;
+					size	+=8;
 				}
-				else if(fi.FieldType == typeof(float))
+				else if(fi.FieldType == typeof(Vector3))
 				{
-					ve	=new VertexElement(
-						sizeSoFar, VertexElementFormat.Single,
-						VertexElementUsage.TextureCoordinate,
-						(byte)i);
-					sizeSoFar	+=4;
+					size	+=12;
 				}
-				ves.Add(ve);
-				i++;
-			}
-			i	=0;
-			while(true)
-			{
-				fi	=t.GetField("Color" + i);
-				if(fi == null)
+				else if(fi.FieldType == typeof(Vector4))
 				{
-					break;
+					size	+=16;
 				}
-				VertexElement ve	=new VertexElement(
-					sizeSoFar, VertexElementFormat.Vector4,
-					VertexElementUsage.Color,
-					(byte)i);
-				ves.Add(ve);
-				i++;
-				sizeSoFar	+=16;
+				else
+				{
+					Debug.Assert(false);	//unknown
+				}
 			}
+			return	size;
+		}
 
-			VertexElement	[]vel	=new VertexElement[ves.Count];
 
-			for(i=0;i < ves.Count;i++)
+		static int CountTypes(List<VertexElement> ves, Type t, VertexElementUsage veu)
+		{
+			int	ret	=0;
+			foreach(VertexElement ve in ves)
 			{
-				vel[i]	=ves[i];
+				if(ve.VertexElementFormat == GetElementFormat(t))
+				{
+					if(ve.VertexElementUsage == veu)
+					{
+						ret++;
+					}
+				}
+			}
+			return	ret;
+		}
+
+
+		public static VertexDeclaration GetVertexDeclarationForType(Type t)
+		{
+			FieldInfo	[]fields	=t.GetFields();
+
+			List<VertexElement>	ves			=new List<VertexElement>();
+
+			int	sizeSoFar	=0;
+			foreach(FieldInfo fi in fields)
+			{
+				VertexElementUsage	veu;
+				if(fi.Name.StartsWith("BiTangent"))
+				{
+					veu	=VertexElementUsage.Binormal;
+				}
+				else if(fi.Name.StartsWith("BoneIndex"))
+				{
+					veu	=VertexElementUsage.BlendIndices;
+				}
+				else if(fi.Name.StartsWith("BoneWeights"))
+				{
+					veu	=VertexElementUsage.BlendWeight;
+				}
+				else if(fi.Name.StartsWith("Color"))
+				{
+					veu	=VertexElementUsage.Color;
+				}
+				else if(fi.Name.StartsWith("Depth"))
+				{
+					veu	=VertexElementUsage.Depth;
+				}
+				else if(fi.Name.StartsWith("Fog"))
+				{
+					veu	=VertexElementUsage.Fog;
+				}
+				else if(fi.Name.StartsWith("Normal"))
+				{
+					veu	=VertexElementUsage.Normal;
+				}
+				else if(fi.Name.StartsWith("PointSize"))
+				{
+					veu	=VertexElementUsage.PointSize;
+				}
+				else if(fi.Name.StartsWith("Position"))
+				{
+					veu	=VertexElementUsage.Position;
+				}
+				else if(fi.Name.StartsWith("Sample"))
+				{
+					veu	=VertexElementUsage.Sample;
+				}
+				else if(fi.Name.StartsWith("Tangent"))
+				{
+					veu	=VertexElementUsage.Tangent;
+				}
+				else if(fi.Name.StartsWith("TessFactor"))
+				{
+					veu	=VertexElementUsage.TessellateFactor;
+				}
+				else if(fi.Name.StartsWith("TexCoord"))
+				{
+					veu	=VertexElementUsage.TextureCoordinate;
+				}
+				else
+				{
+					Debug.Assert(false);
+					veu	=VertexElementUsage.Position;
+				}
+
+				ves.Add(new VertexElement(sizeSoFar,
+					GetElementFormat(fi.FieldType), veu,
+					CountTypes(ves, fi.FieldType, veu)));
+
+				sizeSoFar	+=GetSizeForType(fi.FieldType);
 			}
 			
-			return	new VertexDeclaration(vel);
+			return	new VertexDeclaration(ves.ToArray());
 		}
 
 

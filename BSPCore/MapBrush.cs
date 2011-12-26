@@ -154,6 +154,11 @@ namespace BSPCore
 				}
 				else if(s.StartsWith("}"))
 				{
+					//check for default brushes
+					if(mContents == 0)
+					{
+						mContents	=Contents.CONTENTS_SOLID;
+					}
 					return	ret;	//entity done
 				}
 			}
