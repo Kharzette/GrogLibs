@@ -393,7 +393,7 @@ namespace BSPCore
 		}
 
 
-		internal void MakeFaces(PlanePool pool, TexInfoPool tip, bool bVerbose)
+		internal void MakeFaces(PlanePool pool, bool bVerbose)
 		{
 			if(bVerbose)
 			{
@@ -403,7 +403,7 @@ namespace BSPCore
 			int	numMerged		=0;
 			int	numMakeFaces	=0;
 
-			MakeFaces_r(pool, tip, ref numMerged, ref numMakeFaces);
+			MakeFaces_r(pool, ref numMerged, ref numMakeFaces);
 
 			if(bVerbose)
 			{
@@ -414,13 +414,13 @@ namespace BSPCore
 		}
 
 
-		void MakeFaces_r(PlanePool pool, TexInfoPool tip, ref int numMerged, ref int numMake)
+		void MakeFaces_r(PlanePool pool, ref int numMerged, ref int numMake)
 		{
 			//Recurse down to leafs
 			if(mPlaneNum != PlanePool.PLANENUM_LEAF)
 			{
-				mFront.MakeFaces_r(pool, tip, ref numMerged, ref numMake);
-				mBack.MakeFaces_r(pool, tip, ref numMerged, ref numMake);
+				mFront.MakeFaces_r(pool, ref numMerged, ref numMake);
+				mBack.MakeFaces_r(pool, ref numMerged, ref numMake);
 				
 				//Marge list (keepin that typo, funny)
 				GBSPFace.MergeFaceList(mFaces, pool, ref numMerged);

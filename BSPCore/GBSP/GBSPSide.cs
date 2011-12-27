@@ -21,7 +21,7 @@ namespace BSPCore
 		internal const UInt32	SURF_LIGHT				=0x1;		//value will hold the light strength
 		internal const UInt32	SURF_SLICK				=0x2;		//effects game physics
 		internal const UInt32	SURF_SKY				=0x4;		//don't draw, but add to skybox
-		internal const UInt32	SURF_WARP				=0x8;		//turbulent water warp
+		internal const UInt32	SURF_WARP				=0x8;		//(Using this as mirror for now, used to be turbulent water warp)
 		internal const UInt32	SURF_TRANS33			=0x10;
 		internal const UInt32	SURF_TRANS66			=0x20;
 		internal const UInt32	SURF_FLOWING			=0x40;		//scroll towards angle
@@ -453,7 +453,6 @@ namespace BSPCore
 				}
 				if(tok[0] == '*' || tok[0] == '#')
 				{
-					mFlags	|=SURF_WARP;
 					texName	=tok.Substring(1);
 					if(texName.StartsWith("lava") || texName.StartsWith("LAVA"))
 					{
@@ -674,7 +673,6 @@ namespace BSPCore
 			}
 			if((hammerFlags & SURF_SKY) != 0)
 			{
-				mFlags		|=SURF_SKY;
 				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 				ti.mFlags	|=TexInfo.SKY;
 			}
@@ -693,6 +691,9 @@ namespace BSPCore
 			}
 			if((hammerFlags & SURF_WARP) != 0)
 			{
+				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+				ti.mFlags	|=TexInfo.FLAT;
+				ti.mFlags	|=TexInfo.MIRROR;
 			}
 		}
 

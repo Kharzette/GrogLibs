@@ -126,7 +126,7 @@ namespace BSPCore
 
 			root.MarkVisibleSides(list, pool, bVerbose);
 
-			root.MakeFaces(pool, tip, bVerbose);
+			root.MakeFaces(pool, bVerbose);
 
 			root.MakeLeafFaces();
 
@@ -213,7 +213,7 @@ namespace BSPCore
 
 			root.MarkVisibleSides(list, pool, bVerbose);
 
-			root.MakeFaces(pool, tip, bVerbose);
+			root.MakeFaces(pool, bVerbose);
 
 			if(!root.FreePortals())
 			{

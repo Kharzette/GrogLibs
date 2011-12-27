@@ -553,6 +553,117 @@ namespace BSPCore
 		}
 
 
+		static List<Vector3> GetFaceVerts(GFXFace f, Vector3 []verts, int []indexes)
+		{
+			List<Vector3>	ret	=new List<Vector3>();
+			for(int k=0;k < f.mNumVerts;k++)
+			{
+				int		idx	=indexes[f.mFirstVert + k];
+				Vector3	pnt	=verts[idx];
+
+				ret.Add(pnt);
+			}
+			return	ret;
+		}
+
+
+		//handles basic verts and texcoord 0
+		static void ComputeFaceData(GFXFace f, Vector3 []verts, int []indexes, GFXTexInfo tex,
+			List<Vector2> tex0, List<Vector3> outVerts)
+		{
+			outVerts.AddRange(GetFaceVerts(f, verts, indexes));
+			foreach(Vector3 v in outVerts)
+			{
+				Vector2	crd;
+				crd.X	=Vector3.Dot(tex.mVecs[0], v) + tex.mShift[0];
+				crd.Y	=Vector3.Dot(tex.mVecs[1], v) + tex.mShift[1];
+
+				tex0.Add(crd);
+			}
+		}
+
+
+		//sided plane should be pre flipped if side != 0
+		static void ComputeFaceNormals(GFXFace f, Vector3 []verts, int []indexes,
+			GFXTexInfo tex, Vector3 []vnorms, GBSPPlane sidedPlane,
+			List<Vector3> norms)
+		{
+			for(int k=0;k < f.mNumVerts;k++)
+			{
+				int		idx	=indexes[f.mFirstVert + k];
+
+				if(tex.IsGouraud())						
+				{
+					norms.Add(vnorms[idx]);
+				}
+				else
+				{
+					norms.Add(sidedPlane.mNormal);
+				}
+			}
+		}
+
+
+		static void ComputeFaceColors(GFXFace f, Vector3 []verts, int []indexes,
+			GFXTexInfo tex, Vector3 []rgbVerts,	List<Vector4> colors)
+		{
+			int	fvert	=f.mFirstVert;
+			for(int k=0;k < f.mNumVerts;k++)
+			{
+				int		idx	=indexes[fvert + k];
+
+				Vector4	col	=Vector4.One;
+				if((tex.mFlags & TexInfo.FULLBRIGHT) == 0)
+				{
+					col.X	=rgbVerts[fvert + k].X / 255.0f;
+					col.Y	=rgbVerts[fvert + k].Y / 255.0f;
+					col.Z	=rgbVerts[fvert + k].Z / 255.0f;
+				}
+
+				if((tex.mFlags & TexInfo.TRANS) != 0)
+				{
+					col.W	=tex.mAlpha;
+				}
+				colors.Add(col);
+			}
+		}
+
+
+		bool AtlasLightMap(GFXFace f, byte []lightData, int styleIndex, List<Vector3> faceVerts,
+			GBSPPlane sidedPlane, GFXTexInfo tex, List<Vector2> texCoords)
+		{
+			double	scaleU, scaleV, offsetU, offsetV;
+			scaleU	=scaleV	=offsetU	=offsetV	=0.0;
+			Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
+
+			int	sizeOffset	=f.mLHeight * f.mLWidth * 3;
+
+			sizeOffset	*=styleIndex;
+
+			for(int i=0;i < lmap.Length;i++)
+			{
+				lmap[i].R	=lightData[sizeOffset + f.mLightOfs + (i * 3)];
+				lmap[i].G	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 1];
+				lmap[i].B	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 2];
+				lmap[i].A	=0xFF;
+			}
+
+			if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
+				out scaleU, out scaleV, out offsetU, out offsetV))
+			{
+				CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
+				return	false;
+			}
+
+			List<double>	coordsU	=new List<double>();
+			List<double>	coordsV	=new List<double>();
+			GetTexCoords1(faceVerts, sidedPlane, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
+			AddTexCoordsToList(texCoords, coordsU, coordsV, offsetU, offsetV);
+
+			return	true;
+		}
+
+
 		internal bool BuildLMAnimFaceData(Vector3 []verts, int[] indexes,
 			int firstFace, int nFaces, byte []lightData, object pobj)
 		{
@@ -613,28 +724,6 @@ namespace BSPCore
 
 					numFaces++;
 
-					double	scaleU, scaleV, offsetU, offsetV;
-					scaleU	=scaleV	=offsetU	=offsetV	=0.0;
-
-					List<Vector3>	fverts	=new List<Vector3>();
-
-					int		nverts	=f.mNumVerts;
-					int		fvert	=f.mFirstVert;
-					int		k		=0;
-					for(k=0;k < nverts;k++)
-					{
-						int		idx	=indexes[fvert + k];
-						Vector3	pnt	=verts[idx];
-						Vector2	crd;
-						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
-						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
-
-						mLMAnimFaceTex0.Add(crd);
-						fverts.Add(pnt);
-
-						mLMAnimVerts.Add(pnt);
-					}
-
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
 					if(f.mPlaneSide > 0)
@@ -642,10 +731,10 @@ namespace BSPCore
 						pln.Inverse();
 					}
 
-					for(int n=0;n < nverts;n++)
-					{
-						mLMAnimNormals.Add(pln.mNormal);
-					}
+					List<Vector3>	fverts	=new List<Vector3>();
+					ComputeFaceData(f, verts, indexes, tex, mLMAnimFaceTex0, fverts);
+					ComputeFaceNormals(f, verts, indexes, tex, null, pln, mLMAnimNormals);
+					mLMAnimVerts.AddRange(fverts);
 
 					firstVert.Add(mLMAnimVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
@@ -656,7 +745,7 @@ namespace BSPCore
 						if(f.mLTypes[s] == 255)
 						{
 							//fill with zeros for empty spots
-							for(k=0;k < nverts;k++)
+							for(int k=0;k < f.mNumVerts;k++)
 							{
 								if(s == 0)
 								{
@@ -678,56 +767,26 @@ namespace BSPCore
 							continue;
 						}
 
-						//grab animated lightmaps
-						scaleU	=scaleV	=offsetU	=offsetV	=0.0;
-						Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
-
-						int	sizeOffset	=f.mLHeight * f.mLWidth * 3;
-
-						sizeOffset	*=s;
-
-						for(int i=0;i < lmap.Length;i++)
-						{
-							lmap[i].R	=lightData[sizeOffset + f.mLightOfs + (i * 3)];
-							lmap[i].G	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 1];
-							lmap[i].B	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 2];
-							lmap[i].A	=0xFF;
-						}
-
-						//insert animated map
-						if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-							out scaleU, out scaleV, out offsetU, out offsetV))
-						{
-							CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
-							return	false;
-						}
-
-						//grab texcoords to animated map location
-						//this is wasteful, really only the atlas offset changes
-						List<double>	coordsU	=new List<double>();
-						List<double>	coordsV	=new List<double>();
-						GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
-
 						if(s == 0)
 						{
-							AddTexCoordsToList(mLMAnimFaceTex1, coordsU, coordsV, offsetU, offsetV);
+							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAnimFaceTex1);
 						}
 						else if(s == 1)
 						{
-							AddTexCoordsToList(mLMAnimFaceTex2, coordsU, coordsV, offsetU, offsetV);
+							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAnimFaceTex2);
 						}
 						else if(s == 2)
 						{
-							AddTexCoordsToList(mLMAnimFaceTex3, coordsU, coordsV, offsetU, offsetV);
+							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAnimFaceTex3);
 						}
 						else if(s == 3)
 						{
-							AddTexCoordsToList(mLMAnimFaceTex4, coordsU, coordsV, offsetU, offsetV);
+							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAnimFaceTex4);
 						}
 					}
 
 					//style index
-					for(k=0;k < nverts;k++)
+					for(int k=0;k < f.mNumVerts;k++)
 					{
 						Vector4	styleIndex	=Vector4.Zero;
 						styleIndex.X	=f.mLTypes[0];
@@ -816,45 +875,6 @@ namespace BSPCore
 
 					numFaces++;
 
-					//grab lightmap0
-					double	scaleU, scaleV, offsetU, offsetV;
-					scaleU	=scaleV	=offsetU	=offsetV	=0.0;
-					Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
-
-					for(int i=0;i < lmap.Length;i++)
-					{
-						lmap[i].R	=lightData[f.mLightOfs + (i * 3)];
-						lmap[i].G	=lightData[f.mLightOfs + (i * 3) + 1];
-						lmap[i].B	=lightData[f.mLightOfs + (i * 3) + 2];
-						lmap[i].A	=0xFF;
-					}
-					if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-						out scaleU, out scaleV, out offsetU, out offsetV))
-					{
-						CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
-						return	false;
-					}
-
-					List<Vector3>	fverts	=new List<Vector3>();
-
-					int		nverts	=f.mNumVerts;
-					int		fvert	=f.mFirstVert;
-					int		k		=0;
-					for(k=0;k < nverts;k++)
-					{
-						int		idx	=indexes[fvert + k];
-						Vector3	pnt	=verts[idx];
-						Vector2	crd;
-						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
-						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
-
-						mLMAAnimFaceTex0.Add(crd);
-						fverts.Add(pnt);
-
-						mLMAAnimVerts.Add(pnt);
-						mLMAAnimColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
-					}
-
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
 					if(f.mPlaneSide > 0)
@@ -862,45 +882,32 @@ namespace BSPCore
 						pln.Inverse();
 					}
 
-					for(int n=0;n < nverts;n++)
+					List<Vector3>	fverts	=new List<Vector3>();
+					ComputeFaceData(f, verts, indexes, tex, mLMAAnimFaceTex0, fverts);
+					ComputeFaceNormals(f, verts, indexes, tex, null, pln, mLMAAnimNormals);
+					mLMAAnimVerts.AddRange(fverts);
+
+					foreach(Vector3 v in fverts)
 					{
-						mLMAAnimNormals.Add(pln.mNormal);
-					}
-					List<double>	coordsU	=new List<double>();
-					List<double>	coordsV	=new List<double>();
-					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
-					for(k=0;k < nverts;k++)
-					{
-						double	tcU	=coordsU[k];
-						double	tcV	=coordsV[k];
-
-						//scale to atlas space
-						tcU	/=mLMAtlas.Width;
-						tcV	/=mLMAtlas.Height;
-
-						//step half a pixel in atlas space
-						tcU	+=1.0 / (mLMAtlas.Width * 2.0);
-						tcV	+=1.0 / (mLMAtlas.Height * 2.0);
-
-						//move to atlas position
-						tcU	+=offsetU;
-						tcV	+=offsetV;
-
-						mLMAAnimFaceTex1.Add(new Vector2((float)tcU, (float)tcV));
+						mLMAAnimColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
 					}
 
 					firstVert.Add(mLMAAnimVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
 
 					//now add the animated lights if need be
-					for(int s=1;s < 4;s++)
+					for(int s=0;s < 4;s++)
 					{
 						if(f.mLTypes[s] == 255)
 						{
 							//fill with zeros for empty spots
-							for(k=0;k < nverts;k++)
+							for(int k=0;k < f.mNumVerts;k++)
 							{
-								if(s == 1)
+								if(s == 0)
+								{
+									mLMAAnimFaceTex1.Add(Vector2.Zero);
+								}
+								else if(s == 1)
 								{
 									mLMAAnimFaceTex2.Add(Vector2.Zero);
 								}
@@ -916,50 +923,26 @@ namespace BSPCore
 							continue;
 						}
 
-						//grab animated lightmaps
-						scaleU	=scaleV	=offsetU	=offsetV	=0.0;
-						lmap	=new Color[f.mLHeight * f.mLWidth];
-
-						int	sizeOffset	=f.mLHeight * f.mLWidth;
-
-						sizeOffset	*=s;
-
-						for(int i=0;i < lmap.Length;i++)
+						if(s == 0)
 						{
-							lmap[i].R	=lightData[sizeOffset + f.mLightOfs + (i * 3)];
-							lmap[i].G	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 1];
-							lmap[i].B	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 2];
-							lmap[i].A	=0xFF;
+							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAAnimFaceTex1);
 						}
-
-						//insert animated map
-						if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-							out scaleU, out scaleV, out offsetU, out offsetV))
+						else if(s == 1)
 						{
-							CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
-							return	false;
-						}
-
-						//grab texcoords to animated map location
-						coordsU	=new List<double>();
-						coordsV	=new List<double>();
-						GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
-						if(s == 1)
-						{
-							AddTexCoordsToList(mLMAAnimFaceTex2, coordsU, coordsV, offsetU, offsetV);
+							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAAnimFaceTex2);
 						}
 						else if(s == 2)
 						{
-							AddTexCoordsToList(mLMAAnimFaceTex3, coordsU, coordsV, offsetU, offsetV);
+							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAAnimFaceTex3);
 						}
 						else if(s == 3)
 						{
-							AddTexCoordsToList(mLMAAnimFaceTex4, coordsU, coordsV, offsetU, offsetV);
+							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAAnimFaceTex4);
 						}
 					}
 
 					//style index
-					for(k=0;k < nverts;k++)
+					for(int k=0;k < f.mNumVerts;k++)
 					{
 						Vector4	styleIndex	=Vector4.Zero;
 						styleIndex.X	=f.mLTypes[0];
@@ -1051,51 +1034,6 @@ namespace BSPCore
 
 					numFaces++;
 
-					//grab lightmap0
-					double	scaleU, scaleV, offsetU, offsetV;
-					scaleU	=scaleV	=offsetU	=offsetV	=0.0;
-					Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
-
-					for(int i=0;i < lmap.Length;i++)
-					{
-						lmap[i].R	=lightData[f.mLightOfs + (i * 3)];
-						lmap[i].G	=lightData[f.mLightOfs + (i * 3) + 1];
-						lmap[i].B	=lightData[f.mLightOfs + (i * 3) + 2];
-						lmap[i].A	=0xFF;
-					}
-
-					if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-						out scaleU, out scaleV, out offsetU, out offsetV))
-					{
-						CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
-						return	false;
-					}
-
-					List<Vector3>	fverts		=new List<Vector3>();
-
-					int		nverts	=f.mNumVerts;
-					int		fvert	=f.mFirstVert;
-					int		k		=0;
-
-					Vector3	centerPoint	=Vector3.Zero;
-					for(k=0;k < nverts;k++)
-					{
-						int		idx	=indexes[fvert + k];
-						Vector3	pnt	=verts[idx];
-						Vector2	crd;
-						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
-						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
-
-						centerPoint	+=pnt;
-
-						mLMFaceTex0.Add(crd);
-						fverts.Add(pnt);
-
-						mLMVerts.Add(pnt);
-					}
-
-					centerPoint	/=nverts;
-
 					//grab plane for dynamic lighting normals
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
@@ -1104,16 +1042,13 @@ namespace BSPCore
 						pln.Inverse();
 					}
 
-					//seems a waste to just copy this, same for all verts
-					for(int n=0;n < nverts;n++)
-					{
-						mLMNormals.Add(pln.mNormal);
-					}
+					List<Vector3>	fverts	=new List<Vector3>();
+					ComputeFaceData(f, verts, indexes, tex, mLMFaceTex0, fverts);
+					ComputeFaceNormals(f, verts, indexes, tex, null, pln, mLMNormals);
+					mLMVerts.AddRange(fverts);
 
-					List<double>	coordsU	=new List<double>();
-					List<double>	coordsV	=new List<double>();
-					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
-					AddTexCoordsToList(mLMFaceTex1, coordsU, coordsV, offsetU, offsetV);
+					AtlasLightMap(f, lightData, 0, fverts, pln, tex, mLMFaceTex1);
+
 					firstVert.Add(mLMVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
 				}
@@ -1186,60 +1121,26 @@ namespace BSPCore
 
 					numFaces++;
 
-					//grab lightmap0
-					double	scaleU, scaleV, offsetU, offsetV;
-					scaleU	=scaleV	=offsetU	=offsetV	=0.0;
-					Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
-
-					for(int i=0;i < lmap.Length;i++)
-					{
-						lmap[i].R	=lightData[f.mLightOfs + (i * 3)];
-						lmap[i].G	=lightData[f.mLightOfs + (i * 3) + 1];
-						lmap[i].B	=lightData[f.mLightOfs + (i * 3) + 2];
-						lmap[i].A	=0xFF;
-					}
-					if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-						out scaleU, out scaleV, out offsetU, out offsetV))
-					{
-						CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
-						return	false;
-					}
-
-					List<Vector3>	fverts	=new List<Vector3>();
-
-					int		nverts	=f.mNumVerts;
-					int		fvert	=f.mFirstVert;
-					int		k		=0;
-					for(k=0;k < nverts;k++)
-					{
-						int		idx	=indexes[fvert + k];
-						Vector3	pnt	=verts[idx];
-						Vector2	crd;
-						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
-						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
-
-						mLMAFaceTex0.Add(crd);
-						fverts.Add(pnt);
-
-						mLMAVerts.Add(pnt);
-						mLMAColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
-					}
-
+					//grab plane for dynamic lighting normals
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
 					if(f.mPlaneSide > 0)
 					{
 						pln.Inverse();
 					}
-					for(int n=0;n < nverts;n++)
+
+					List<Vector3>	fverts	=new List<Vector3>();
+					ComputeFaceData(f, verts, indexes, tex, mLMAFaceTex0, fverts);
+					ComputeFaceNormals(f, verts, indexes, tex, null, pln, mLMANormals);
+					mLMAVerts.AddRange(fverts);
+
+					foreach(Vector3 v in fverts)
 					{
-						mLMANormals.Add(pln.mNormal);
+						mLMAColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
 					}
 
-					List<double>	coordsU	=new List<double>();
-					List<double>	coordsV	=new List<double>();
-					GetTexCoords1(fverts, pln, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
-					AddTexCoordsToList(mLMAFaceTex1, coordsU, coordsV, offsetU, offsetV);
+					AtlasLightMap(f, lightData, 0, fverts, pln, tex, mLMAFaceTex1);
+
 					firstVert.Add(mLMAVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
 				}
@@ -1316,35 +1217,6 @@ namespace BSPCore
 
 					numFaces++;
 
-					List<Vector3>	fverts	=new List<Vector3>();
-
-					int		nverts	=f.mNumVerts;
-					int		fvert	=f.mFirstVert;
-					int		k		=0;
-					for(k=0;k < nverts;k++)
-					{
-						int		idx	=indexes[fvert + k];
-						Vector3	pnt	=verts[idx];
-						Vector2	crd;
-						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
-						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
-
-						mVLitTex0.Add(crd);
-						fverts.Add(pnt);
-
-						mVLitVerts.Add(pnt);
-
-						if(tex.IsGouraud())						
-						{
-							mVLitNormals.Add(vnorms[idx]);
-						}
-						Vector4	col	=Vector4.One;
-						col.X	=rgbVerts[fvert + k].X / 255.0f;
-						col.Y	=rgbVerts[fvert + k].Y / 255.0f;
-						col.Z	=rgbVerts[fvert + k].Z / 255.0f;
-						mVLitColors.Add(col);
-					}
-
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
 					if(f.mPlaneSide > 0)
@@ -1352,12 +1224,9 @@ namespace BSPCore
 						pln.Inverse();
 					}
 
-					//TODO: if gourad really should be using the normals provided
-					//might be a smoothed surface
-					for(int n=0;n < nverts;n++)
-					{
-						mVLitNormals.Add(pln.mNormal);
-					}
+					ComputeFaceData(f, verts, indexes, tex, mVLitTex0, mVLitVerts);
+					ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, mVLitNormals);
+					ComputeFaceColors(f, verts, indexes, tex, rgbVerts, mVLitColors);
 
 					firstVert.Add(mVLitVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
@@ -1429,50 +1298,26 @@ namespace BSPCore
 
 					numFaces++;
 
-					List<Vector3>	fverts	=new List<Vector3>();
-
-					int		nverts	=f.mNumVerts;
-					int		fvert	=f.mFirstVert;
-					int		k		=0;
-					for(k=0;k < nverts;k++)
-					{
-						int		idx	=indexes[fvert + k];
-						Vector3	pnt	=verts[idx];
-						Vector2	crd;
-						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
-						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
-
-						fverts.Add(pnt);
-						mMirrorVerts.Add(pnt);
-
-						if(tex.IsGouraud())						
-						{
-							mMirrorNormals.Add(vnorms[idx]);
-						}
-						Vector4	col	=Vector4.One;
-						col.X	=rgbVerts[fvert + k].X / 255.0f;
-						col.Y	=rgbVerts[fvert + k].Y / 255.0f;
-						col.Z	=rgbVerts[fvert + k].Z / 255.0f;
-						mMirrorColors.Add(col);
-					}
-
-					List<Vector2>	coords	=new List<Vector2>();
-					GetMirrorTexCoords(fverts, 256, 256, tex, out coords);
-					mMirrorTex0.AddRange(coords);
-
-					mMirrorPolys.Add(fverts);
-
-					//flat shaded normals for lightmapped surfaces
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
 					if(f.mPlaneSide > 0)
 					{
 						pln.Inverse();
 					}
-					for(int n=0;n < nverts;n++)
-					{
-						mMirrorNormals.Add(pln.mNormal);
-					}
+
+					List<Vector3>	fverts	=new List<Vector3>();
+					List<Vector2>	blah	=new List<Vector2>();
+					ComputeFaceData(f, verts, indexes, tex, blah, fverts);
+					ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, mMirrorNormals);
+					ComputeFaceColors(f, verts, indexes, tex, rgbVerts, mMirrorColors);
+
+					mMirrorVerts.AddRange(fverts);
+
+					List<Vector2>	coords	=new List<Vector2>();
+					GetMirrorTexCoords(fverts, 256, 256, tex, out coords);
+					mMirrorTex0.AddRange(coords);
+
+					mMirrorPolys.Add(fverts);
 
 					firstVert.Add(mMirrorVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
@@ -1541,54 +1386,16 @@ namespace BSPCore
 
 					numFaces++;
 
-					List<Vector3>	fverts	=new List<Vector3>();
-
-					int		nverts	=f.mNumVerts;
-					int		fvert	=f.mFirstVert;
-					int		k		=0;
-					for(k=0;k < nverts;k++)
-					{
-						int		idx	=indexes[fvert + k];
-						Vector3	pnt	=verts[idx];
-						Vector2	crd;
-						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
-						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
-
-						mAlphaTex0.Add(crd);
-						fverts.Add(pnt);
-
-						mAlphaVerts.Add(pnt);
-
-						if(tex.IsGouraud())						
-						{
-							mAlphaNormals.Add(vnorms[idx]);
-						}
-
-						Vector4	col	=Vector4.One;
-						if((tex.mFlags & TexInfo.FULLBRIGHT) == 0)
-						{
-							col.X	=rgbVerts[fvert + k].X / 255.0f;
-							col.Y	=rgbVerts[fvert + k].Y / 255.0f;
-							col.Z	=rgbVerts[fvert + k].Z / 255.0f;
-						}
-
-						if((tex.mFlags & TexInfo.TRANS) != 0)
-						{
-							col.W	=tex.mAlpha;
-						}
-						mAlphaColors.Add(col);
-					}
-
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
 					if(f.mPlaneSide > 0)
 					{
 						pln.Inverse();
 					}
-					for(int n=0;n < nverts;n++)
-					{
-						mAlphaNormals.Add(pln.mNormal);
-					}
+
+					ComputeFaceData(f, verts, indexes, tex, mAlphaTex0, mAlphaVerts);
+					ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, mAlphaNormals);
+					ComputeFaceColors(f, verts, indexes, tex, rgbVerts, mAlphaColors);
 
 					firstVert.Add(mAlphaVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
@@ -1660,24 +1467,7 @@ namespace BSPCore
 
 					numFaces++;
 
-					List<Vector3>	fverts	=new List<Vector3>();
-
-					int		nverts	=f.mNumVerts;
-					int		fvert	=f.mFirstVert;
-					int		k		=0;
-					for(k=0;k < nverts;k++)
-					{
-						int		idx	=indexes[fvert + k];
-						Vector3	pnt	=verts[idx];
-						Vector2	crd;
-						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
-						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
-
-						mFBTex0.Add(crd);
-						fverts.Add(pnt);
-
-						mFBVerts.Add(pnt);
-					}
+					ComputeFaceData(f, verts, indexes, tex, mFBTex0, mFBVerts);
 
 					firstVert.Add(mFBVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
@@ -1753,24 +1543,7 @@ namespace BSPCore
 
 					numFaces++;
 
-					List<Vector3>	fverts	=new List<Vector3>();
-
-					int		nverts	=f.mNumVerts;
-					int		fvert	=f.mFirstVert;
-					int		k		=0;
-					for(k=0;k < nverts;k++)
-					{
-						int		idx	=indexes[fvert + k];
-						Vector3	pnt	=verts[idx];
-						Vector2	crd;
-						crd.X	=Vector3.Dot(tex.mVecs[0], pnt) + tex.mShift[0];
-						crd.Y	=Vector3.Dot(tex.mVecs[1], pnt) + tex.mShift[1];
-
-						mSkyTex0.Add(crd);
-						fverts.Add(pnt);
-
-						mSkyVerts.Add(pnt);
-					}
+					ComputeFaceData(f, verts, indexes, tex, mSkyTex0, mSkyVerts);
 
 					firstVert.Add(mSkyVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
