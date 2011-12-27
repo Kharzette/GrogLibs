@@ -344,11 +344,11 @@ namespace BSPCore
 				{
 					if((mContents &
 						(Contents.BSP_CONTENTS_EMPTY2
-						& Contents.BSP_CONTENTS_WINDOW2
-						& Contents.BSP_CONTENTS_TRANSLUCENT2
-						& Contents.BSP_CONTENTS_CLIP2
-						& Contents.BSP_CONTENTS_HINT2
-						& Contents.BSP_CONTENTS_AREA2))
+						| Contents.BSP_CONTENTS_WINDOW2
+						| Contents.BSP_CONTENTS_TRANSLUCENT2
+						| Contents.BSP_CONTENTS_CLIP2
+						| Contents.BSP_CONTENTS_HINT2
+						| Contents.BSP_CONTENTS_AREA2))
 						== 0)
 					{
 						mContents	|=Contents.BSP_CONTENTS_SOLID2;

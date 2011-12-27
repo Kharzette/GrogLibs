@@ -338,7 +338,7 @@ namespace BSPCore
 					|| pnum == planes[3] || pnum == planes[5])
 				{
 					ret.mSides[i].mTexInfo	=-1;
-					ret.mSides[i].mFlags	=GBSPSide.SIDE_NODE;
+					ret.mSides[i].mFlags	|=GBSPSide.SIDE_NODE;
 				}
 			}
 
