@@ -1625,7 +1625,8 @@ namespace BSPCore
 		}
 
 
-		void ComputeNormals(List<Vector3> verts, List<Vector3> norms)
+		void SmoothGouraudNormals(List<Vector3> verts, List<int> indexes,
+			List<Vector3> norms)
 		{
 			Vector3	norm	=Vector3.Zero;
 			float	dist;

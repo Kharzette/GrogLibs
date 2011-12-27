@@ -19,7 +19,7 @@ namespace BSPCore
 		//found in the Q3 Radiant open source
 		//Q3 support is kind of non existant though
 		internal const UInt32	SURF_LIGHT				=0x1;		//value will hold the light strength
-		internal const UInt32	SURF_SLICK				=0x2;		//effects game physics
+		internal const UInt32	SURF_SLICK				=0x2;		//(using this as gouraud for now, used to be effects game physics)
 		internal const UInt32	SURF_SKY				=0x4;		//don't draw, but add to skybox
 		internal const UInt32	SURF_WARP				=0x8;		//(Using this as mirror for now, used to be turbulent water warp)
 		internal const UInt32	SURF_TRANS33			=0x10;
@@ -678,6 +678,8 @@ namespace BSPCore
 			}
 			if((hammerFlags & SURF_SLICK) != 0)
 			{
+				ti.mFlags	|=TexInfo.GOURAUD;
+				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 			}
 			if((hammerFlags & SURF_TRANS33) != 0)
 			{
