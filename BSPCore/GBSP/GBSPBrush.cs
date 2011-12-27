@@ -577,7 +577,7 @@ namespace BSPCore
 			{
 				GBSPPoly	[]poly	=new GBSPPoly[2];
 				
-				if(s.mPoly == null)
+				if(s.mPoly == null || s.mPoly.mVerts == null)
 				{
 					continue;
 				}

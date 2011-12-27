@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 
 
@@ -63,7 +64,7 @@ namespace BSPCore
 				mOriginalSides.Add(side2);
 			}
 
-			MakePolys(pp);
+			MakePolys(pp, false);
 			FixContents(false);
 		}
 
@@ -79,7 +80,7 @@ namespace BSPCore
 
 				mOriginalSides.Add(side);
 			}
-			MakePolys(pp);
+			MakePolys(pp, true);
 		}
 		
 
@@ -227,9 +228,41 @@ namespace BSPCore
 		}
 
 
-		internal bool MakePolys(PlanePool pool)
+		void RemoveDuplicatePlaneSides()
+		{
+			//list for removing bad sides
+			List<GBSPSide>	nukeBadSides	=new List<GBSPSide>();
+
+			//check for duplicate planes
+			List<int>	planeNums	=new List<int>();
+			List<sbyte>	planeSides	=new List<sbyte>();
+			foreach(GBSPSide s in mOriginalSides)
+			{
+				if(planeNums.Contains(s.mPlaneNum))
+				{
+					if(planeSides.Contains(s.mPlaneSide))
+					{
+						nukeBadSides.Add(s);
+						continue;
+					}
+				}
+				planeNums.Add(s.mPlaneNum);
+				planeSides.Add(s.mPlaneSide);
+			}
+
+			foreach(GBSPSide nuke in nukeBadSides)
+			{
+				CoreEvents.Print("Blasting duplicate plane side from a map brush...\n");
+				mOriginalSides.Remove(nuke);
+			}
+		}
+
+
+		internal bool MakePolys(PlanePool pool, bool bCheckFaces)
 		{
 			mBounds	=new Bounds();
+
+			RemoveDuplicatePlaneSides();
 
 			for(int i=0;i < mOriginalSides.Count;i++)
 			{
@@ -252,6 +285,13 @@ namespace BSPCore
 				}
 
 				GBSPSide	side	=mOriginalSides[i];
+
+				//this is not a big deal for the bsp volumes
+				if(bCheckFaces)
+				{
+					Debug.Assert(p.mVerts != null);
+				}
+
 				side.mPoly	=p;
 
 				if(p.VertCount() > 2)
@@ -260,6 +300,7 @@ namespace BSPCore
 					p.AddToBounds(mBounds);
 				}
 			}
+
 
 			for(int i=0;i < 3;i++)
 			{

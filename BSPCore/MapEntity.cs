@@ -257,7 +257,7 @@ namespace BSPCore
 
 					if(b.ReadVMFSolidBlock(sr, pool, tiPool, entityNum))
 					{
-						b.MakePolys(pool);
+						b.MakePolys(pool, true);
 						b.FixContents(true);
 
 						if(mData["classname"] == "func_detail")
@@ -324,7 +324,7 @@ namespace BSPCore
 
 					if(b.ReadVMFSolidBlock(sr, pool, tiPool, entityNum))
 					{
-						b.MakePolys(pool);
+						b.MakePolys(pool, true);
 						b.FixContents(true);
 						mBrushes.Add(b);
 					}
@@ -396,7 +396,7 @@ namespace BSPCore
 
 					if(b.ReadFromMap(sr, pool, tiPool, entityNum))
 					{
-						b.MakePolys(pool);
+						b.MakePolys(pool, true);
 						b.FixContents(false);
 						mBrushes.Add(b);
 					}
