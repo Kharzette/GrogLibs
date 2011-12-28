@@ -767,21 +767,27 @@ namespace BSPCore
 							continue;
 						}
 
+						List<Vector2>	coordSet	=null;
 						if(s == 0)
 						{
-							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAnimFaceTex1);
+							coordSet	=mLMAnimFaceTex1;
 						}
 						else if(s == 1)
 						{
-							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAnimFaceTex2);
+							coordSet	=mLMAnimFaceTex2;
 						}
 						else if(s == 2)
 						{
-							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAnimFaceTex3);
+							coordSet	=mLMAnimFaceTex3;
 						}
 						else if(s == 3)
 						{
-							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAnimFaceTex4);
+							coordSet	=mLMAnimFaceTex4;
+						}
+
+						if(!AtlasLightMap(f, lightData, s, fverts, pln, tex, coordSet))
+						{
+							return	false;
 						}
 					}
 
@@ -923,21 +929,27 @@ namespace BSPCore
 							continue;
 						}
 
+						List<Vector2>	coordSet	=null;
 						if(s == 0)
 						{
-							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAAnimFaceTex1);
+							coordSet	=mLMAAnimFaceTex1;
 						}
 						else if(s == 1)
 						{
-							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAAnimFaceTex2);
+							coordSet	=mLMAAnimFaceTex2;
 						}
 						else if(s == 2)
 						{
-							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAAnimFaceTex3);
+							coordSet	=mLMAAnimFaceTex3;
 						}
 						else if(s == 3)
 						{
-							AtlasLightMap(f, lightData, s, fverts, pln, tex, mLMAAnimFaceTex4);
+							coordSet	=mLMAAnimFaceTex4;
+						}
+
+						if(!AtlasLightMap(f, lightData, s, fverts, pln, tex, coordSet))
+						{
+							return	false;
 						}
 					}
 
@@ -1047,7 +1059,10 @@ namespace BSPCore
 					ComputeFaceNormals(f, verts, indexes, tex, null, pln, mLMNormals);
 					mLMVerts.AddRange(fverts);
 
-					AtlasLightMap(f, lightData, 0, fverts, pln, tex, mLMFaceTex1);
+					if(!AtlasLightMap(f, lightData, 0, fverts, pln, tex, mLMFaceTex1))
+					{
+						return	false;
+					}
 
 					firstVert.Add(mLMVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
@@ -1139,7 +1154,10 @@ namespace BSPCore
 						mLMAColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
 					}
 
-					AtlasLightMap(f, lightData, 0, fverts, pln, tex, mLMAFaceTex1);
+					if(!AtlasLightMap(f, lightData, 0, fverts, pln, tex, mLMAFaceTex1))
+					{
+						return	false;
+					}
 
 					firstVert.Add(mLMAVerts.Count - f.mNumVerts);
 					numVert.Add(f.mNumVerts);
@@ -1621,21 +1639,6 @@ namespace BSPCore
 				numTris	/=3;
 
 				matTris.Add(numTris);
-			}
-		}
-
-
-		void SmoothGouraudNormals(List<Vector3> verts, List<int> indexes,
-			List<Vector3> norms)
-		{
-			Vector3	norm	=Vector3.Zero;
-			float	dist;
-
-			UtilityLib.Mathery.PlaneFromVerts(verts, out norm, out dist);
-
-			foreach(Vector3 v in verts)
-			{
-				norms.Add(norm);
 			}
 		}
 

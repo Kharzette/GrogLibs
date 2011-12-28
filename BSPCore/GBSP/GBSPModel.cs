@@ -58,7 +58,6 @@ namespace BSPCore
 			
 			GBSPNode	root	=GBSPNode.BlockTree(mBlockNodes, pool,
 				kMinX, kMinZ,
-//				kMinX - 1, kMinZ - 1, kMaxX + 1, kMaxZ + 1);
 				kMinX, kMinZ, kMaxX, kMaxZ);
 
 			mBounds	=new Bounds();
@@ -108,7 +107,6 @@ namespace BSPCore
 
 			root	=GBSPNode.BlockTree(mBlockNodes, pool,
 				kMinX, kMinZ,
-//				kMinX - 1, kMinZ - 1, kMaxX + 1, kMaxZ + 1);
 				kMinX, kMinZ, kMaxX, kMaxZ);
 
 			CoreEvents.FireNumPlanesChangedEvent(pool.mPlanes.Count, null);

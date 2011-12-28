@@ -21,7 +21,7 @@ namespace MeshLib
 		IndexBuffer			mSkyIB, mFBIB, mMirrorIB, mLMAIB, mLMAAnimIB;
 		RenderTarget2D		mMirrorRenderTarget;
 
-		int	mLMTypeIdx;
+		int	mVLitTypeIdx;
 
 		//material library reference
 		MaterialLib.MaterialLib	mMatLib;
@@ -515,7 +515,7 @@ namespace MeshLib
 
 		public List<Vector3>	GetNormals()
 		{
-			return	VertexTypes.GetNormals(mLMVB, mLMTypeIdx);
+			return	VertexTypes.GetNormals(mVLitVB, mVLitTypeIdx);
 		}
 
 
@@ -594,16 +594,16 @@ namespace MeshLib
 			int	numVerts	=br.ReadInt32();
 			if(numVerts != 0)
 			{
-				mLMTypeIdx		=br.ReadInt32();
-				VertexTypes.ReadVerts(br, g, out mLMVB, numVerts, mLMTypeIdx, bEditor);
+				int	typeIdx	=br.ReadInt32();
+				VertexTypes.ReadVerts(br, g, out mLMVB, numVerts, typeIdx, bEditor);
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMIB, g, bEditor);
 			}
 
 			numVerts	=br.ReadInt32();
 			if(numVerts != 0)
 			{
-				int	typeIdx		=br.ReadInt32();
-				VertexTypes.ReadVerts(br, g, out mVLitVB, numVerts, typeIdx, bEditor);
+				mVLitTypeIdx	=br.ReadInt32();
+				VertexTypes.ReadVerts(br, g, out mVLitVB, numVerts, mVLitTypeIdx, bEditor);
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mVLitIB, g, bEditor);
 			}
 

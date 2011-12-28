@@ -712,7 +712,7 @@ namespace BSPCore
 			//Allocate some RGBLight data now
 			mGFXRGBVerts	=new Vector3[mGFXVertIndexes.Length];
 
-			Vector3	[]vertNormals	=MakeVertNormals();
+			Vector3	[]vertNormals	=MakeSmoothVertNormals();
 			if(vertNormals == null)
 			{
 				CoreEvents.Print("LightGBSPFile:  MakeVertNormals failed...\n");
@@ -849,12 +849,12 @@ namespace BSPCore
 		}
 
 
-		Vector3	[]MakeVertNormals()
+		Vector3	[]MakeSmoothVertNormals()
 		{
 			Vector3	[]ret	=new Vector3[mGFXVerts.Length];
 			if(ret == null)
 			{
-				CoreEvents.Print("MakeVertNormals:  Out of memory for normals.\n");
+				CoreEvents.Print("MakeSmoothVertNormals:  Out of memory for normals.\n");
 				return	null;
 			}
 

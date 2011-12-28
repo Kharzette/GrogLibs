@@ -224,7 +224,7 @@ namespace BSPCore
 
 			if(list.Count == 0)
 			{
-				return	Contents.BSP_CONTENTS_EMPTY2;
+				return	0;	//nothing, empty space but not the same as contents empty
 			}
 
 			UInt32	ret	=0;

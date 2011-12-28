@@ -1459,7 +1459,7 @@ namespace BSPCore
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			Vector3	[]vnorms	=MakeVertNormals();
+			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
 			mg.BuildVLitFaceData(mGFXVerts, mGFXRGBVerts, vnorms, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXVertIndexes, pp);
 
@@ -1475,7 +1475,7 @@ namespace BSPCore
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			Vector3	[]vnorms	=MakeVertNormals();
+			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
 			mg.BuildAlphaFaceData(mGFXVerts, mGFXRGBVerts, vnorms, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXVertIndexes, pp);
 
@@ -1506,7 +1506,7 @@ namespace BSPCore
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			Vector3	[]vnorms	=MakeVertNormals();
+			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
 			mg.BuildMirrorFaceData(mGFXVerts, mGFXRGBVerts, vnorms, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXVertIndexes, pp);
 

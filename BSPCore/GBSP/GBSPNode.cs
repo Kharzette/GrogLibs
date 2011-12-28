@@ -994,6 +994,15 @@ namespace BSPCore
 		}
 
 
+		internal bool IsContentsTransparent()
+		{
+			return	((mContents &
+				(Contents.BSP_CONTENTS_EMPTY2
+				| Contents.BSP_CONTENTS_TRANSLUCENT2
+				| Contents.BSP_CONTENTS_WINDOW2)) != 0);
+		}
+
+
 		internal bool IsLeaf()
 		{
 			return	(mPlaneNum != PlanePool.PLANENUM_LEAF);
