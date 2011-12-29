@@ -314,11 +314,6 @@ namespace MeshLib
 			foreach(Type t in mTypes)
 			{
 				numTex	=numColor	=0;
-				if(t == typeof(VPosNormTex0Col0))
-				{
-					int	gack	=0;
-					gack++;
-				}
 				bool	bFound	=true;
 				foreach(VertexElement el in elems)
 				{

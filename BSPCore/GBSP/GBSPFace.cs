@@ -196,6 +196,42 @@ namespace BSPCore
 		}
 
 
+		internal static void DumpFaceList(List<GBSPFace> faces, PlanePool pp, string fileName)
+		{
+			FileStream		fs	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
+			BinaryWriter	bw	=new BinaryWriter(fs);
+
+			bw.Write(faces.Count);
+
+			foreach(GBSPFace f in faces)
+			{
+				f.mPoly.Write(bw);
+
+				Vector3	center	=f.mPoly.Center();
+
+				GBSPPlane	p	=pp.mPlanes[f.mPlaneNum];
+
+				if(f.mPlaneSide != 0)
+				{
+					p.Inverse();
+				}
+
+				bw.Write(center.X);
+				bw.Write(center.Y);
+				bw.Write(center.Z);
+
+				center	+=(p.mNormal * 5.0f);
+
+				bw.Write(center.X);
+				bw.Write(center.Y);
+				bw.Write(center.Z);
+			}
+
+			bw.Close();
+			fs.Close();
+		}
+
+
 		void Free()
 		{
 			if(mPoly != null)

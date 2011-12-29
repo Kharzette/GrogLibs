@@ -1032,6 +1032,7 @@ namespace BSPCore
 				return	null;
 			}
 
+			bool	bFoundExact	=false;
 			foreach(GBSPSide side in ogSides)
 			{
 				if((side.mFlags & GBSPSide.SIDE_NODE) != 0)
@@ -1042,6 +1043,7 @@ namespace BSPCore
 				//First, Try an exact match
 				if(side.mPlaneNum == mPlaneNum)
 				{
+					bFoundExact	=true;
 					return	side;
 				}
 
@@ -1053,11 +1055,26 @@ namespace BSPCore
 					bestDot		=dot;
 					bestSide	=side;
 				}
+
+				//try opposite
+				p2.Inverse();
+				dot	=Vector3.Dot(p1.mNormal, p2.mNormal);
+				if(dot > bestDot)
+				{
+					bestDot		=dot;
+					bestSide	=side;
+				}
 			}
 
 			if(bestSide == null)
 			{
 				CoreEvents.Print("WARNING: Could not map portal to original brush...\n");
+			}
+
+			if(!bFoundExact)
+			{
+				CoreEvents.Print("WARNING: Could not map portal to original brush exactly!\n");
+				CoreEvents.Print("Error factor is " + bestDot);
 			}
 
 			return	bestSide;

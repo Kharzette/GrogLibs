@@ -613,7 +613,7 @@ namespace BSPCore
 				int		idx	=indexes[fvert + k];
 
 				Vector4	col	=Vector4.One;
-				if((tex.mFlags & TexInfo.FULLBRIGHT) == 0)
+				if((tex.mFlags & TexInfo.FULLBRIGHT) == 0 && rgbVerts != null)
 				{
 					col.X	=rgbVerts[fvert + k].X / 255.0f;
 					col.Y	=rgbVerts[fvert + k].Y / 255.0f;

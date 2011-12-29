@@ -96,6 +96,8 @@ namespace BSPCore
 
 			glist	=GBSPBrush.ConvertMapBrushList(list);
 
+			GBSPNode.bDumpery	=true;
+
 			for(int z=kMinZ;z < kMaxZ;z++)
 			{
 				for(int x=kMinX;x < kMaxX;x++)
@@ -104,6 +106,8 @@ namespace BSPCore
 					mBlockNodes.SetValue(blockNode, x - kMinX, z - kMinZ);
 				}
 			}
+
+			GBSPBrush.DumpBrushListToFile(GBSPNode.leafBrushes, pool, "LeafBrushes.map");
 
 			root	=GBSPNode.BlockTree(mBlockNodes, pool,
 				kMinX, kMinZ,
@@ -125,6 +129,8 @@ namespace BSPCore
 			root.MarkVisibleSides(list, pool, bVerbose);
 
 			root.MakeFaces(pool, bVerbose);
+
+//			GBSPFace.DumpFaceList(GBSPNode.dumpFaces, pool, "DumpFaces.Debug");
 
 			root.MakeLeafFaces();
 

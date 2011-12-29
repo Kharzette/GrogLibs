@@ -393,7 +393,6 @@ namespace BSPCore
 				else if(s == "{")
 				{
 					MapBrush	b	=new MapBrush();
-
 					if(b.ReadFromMap(sr, pool, tiPool, entityNum))
 					{
 						b.MakePolys(pool, true);

@@ -11,7 +11,7 @@ namespace BSPCore
 	{
 		internal List<GBSPPlane>	mPlanes	=new List<GBSPPlane>();
 
-		internal const Int32	MAX_BSP_PLANES		=32000;
+		internal const Int32	MAX_BSP_PLANES		=132000;
 		internal const Int32	PLANENUM_LEAF		=-1;
 		
 
@@ -30,6 +30,26 @@ namespace BSPCore
 					return	i;
 				}
 			}
+			/*
+			if(plane1.mType >= GBSPPlane.PLANE_ANYX)
+			{
+				//try finding a flipped match
+				plane1.Inverse();
+				plane1.Snap();
+				side	=(side == 0)? (sbyte)1 : (sbyte)0;
+				for(int i=0;i < mPlanes.Count;i++)
+				{
+					if(plane1.Compare(mPlanes[i]))
+					{
+						return	i;
+					}
+				}
+
+				//no luck, flip back
+				plane1	=new GBSPPlane(plane);
+				plane1.Snap();
+				plane1.Side(out side);
+			}*/
 
 			if(mPlanes.Count > MAX_BSP_PLANES)
 			{

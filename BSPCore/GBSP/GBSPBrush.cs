@@ -115,8 +115,7 @@ namespace BSPCore
 
 				if(!boxedCopy.CheckBrush())
 				{
-					int	gack	=0;
-					gack++;
+					CoreEvents.Print("Boxed copy failed checkbrush!\n");
 				}
 
 				ret.Add(boxedCopy);
@@ -748,7 +747,7 @@ namespace BSPCore
 			{
 				GBSPBrush	front, back;
 
-				inside.Split(b.mSides[i].mPlaneNum,	b.mSides[i].mPlaneSide, (byte)GBSPSide.SIDE_NODE,
+				inside.Split(b.mSides[i].mPlaneNum,	b.mSides[i].mPlaneSide, 0,
 					false, pool, out front, out back, true);
 
 				//Make sure we don't free a, but free all other fragments

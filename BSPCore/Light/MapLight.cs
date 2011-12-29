@@ -1419,7 +1419,7 @@ namespace BSPCore
 						// Update patches for this face
 						ApplyLightmapToPatches(i, lightGridSize);
 					}
-				}								
+				}
 			});
 
 			ProgressWatcher.Clear();
@@ -1603,7 +1603,7 @@ namespace BSPCore
 			{
 				LInfo	L		=mLightMaps[i];
 				FInfo	fInfo	=mFaceInfos[i];
-				
+
 				// Set face defaults
 				mGFXFaces[i].mLightOfs	=-1;
 				mGFXFaces[i].mLWidth	=L.GetLWidth();

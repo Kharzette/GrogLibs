@@ -136,6 +136,9 @@ namespace BSPCore
 			return	n;
 		}
 
+		internal static List<GBSPBrush>	leafBrushes	=new List<GBSPBrush>();
+		internal static bool			bDumpery	=false;
+
 		void LeafNode(List<GBSPBrush> list)
 		{
 			mPlaneNum	=PlanePool.PLANENUM_LEAF;
@@ -152,6 +155,10 @@ namespace BSPCore
 			if(list != null)
 			{
 				mBrushList	=list;
+				if(bDumpery)
+				{
+					leafBrushes.AddRange(list);
+				}
 			}
 		}
 
@@ -414,6 +421,8 @@ namespace BSPCore
 		}
 
 
+//		internal static List<GBSPFace>	dumpFaces	=new List<GBSPFace>();
+
 		void MakeFaces_r(PlanePool pool, ref int numMerged, ref int numMake)
 		{
 			//Recurse down to leafs
@@ -424,6 +433,8 @@ namespace BSPCore
 				
 				//Marge list (keepin that typo, funny)
 				GBSPFace.MergeFaceList(mFaces, pool, ref numMerged);
+
+//				dumpFaces.AddRange(mFaces);
 
 				//Subdivide them for lightmaps
 				//using big atlas'd lightmaps now, no need to subdiv
