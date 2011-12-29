@@ -1074,7 +1074,7 @@ namespace BSPCore
 			if(!bFoundExact)
 			{
 				CoreEvents.Print("WARNING: Could not map portal to original brush exactly!\n");
-				CoreEvents.Print("Error factor is " + bestDot);
+				CoreEvents.Print("Error factor is " + bestDot + "\n");
 			}
 
 			return	bestSide;

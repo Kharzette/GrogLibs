@@ -30,12 +30,11 @@ namespace BSPCore
 					return	i;
 				}
 			}
-			/*
+			
 			if(plane1.mType >= GBSPPlane.PLANE_ANYX)
 			{
 				//try finding a flipped match
 				plane1.Inverse();
-				plane1.Snap();
 				side	=(side == 0)? (sbyte)1 : (sbyte)0;
 				for(int i=0;i < mPlanes.Count;i++)
 				{
@@ -45,11 +44,21 @@ namespace BSPCore
 					}
 				}
 
-				//no luck, flip back
+				//try finding a flipped match snapped
+				plane1.Snap();
+				for(int i=0;i < mPlanes.Count;i++)
+				{
+					if(plane1.Compare(mPlanes[i]))
+					{
+						return	i;
+					}
+				}
+
+				//no luck, go with original
 				plane1	=new GBSPPlane(plane);
 				plane1.Snap();
 				plane1.Side(out side);
-			}*/
+			}
 
 			if(mPlanes.Count > MAX_BSP_PLANES)
 			{
