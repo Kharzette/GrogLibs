@@ -200,6 +200,7 @@ namespace BSPCore
 
 			if((ret & BSP_CONTENTS_WINDOW2) != 0)
 			{
+				ret	|=BSP_CONTENTS_WINDOW2;
 				ret	|=BSP_CONTENTS_TRANSLUCENT2;
 				ret	|=BSP_CONTENTS_DETAIL2;
 			}
@@ -225,7 +226,9 @@ namespace BSPCore
 
 			if((quakeContents & CONTENTS_WINDOW) != 0)
 			{
+				ret	|=BSP_CONTENTS_WINDOW2;
 				ret	|=BSP_CONTENTS_TRANSLUCENT2;
+				ret	|=BSP_CONTENTS_DETAIL2;
 			}
 
 			if((quakeContents & CONTENTS_LAVA) != 0)
