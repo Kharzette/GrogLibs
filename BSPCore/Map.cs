@@ -1362,10 +1362,7 @@ namespace BSPCore
 			//animated alpha lightmap stuff
 			out VertexBuffer lmaAnimVB,
 			out IndexBuffer lmaAnimIB,
-			out Int32 []amatAnimOffsets,
-			out Int32 []amatAnimNumVerts,
-			out Int32 []amatAnimNumTris,
-			out Vector3 []amatAnimSortPoints,
+			out List<MeshLib.DrawCall> []lmaAnimDCalls,
 
 			int lightAtlasSize,
 			object	pp,
@@ -1381,8 +1378,7 @@ namespace BSPCore
 				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
 				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
 				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
-				amatAnimOffsets	=null;	amatAnimNumVerts	=null;	amatAnimNumTris	=null;
-				amatAnimSortPoints	=null;	lightAtlas	=null;
+				lightAtlas	=null;	lmaAnimDCalls	=null;
 				return	false;
 			}
 			mg.GetLMBuffers(out lmVB, out lmIB);
@@ -1395,8 +1391,7 @@ namespace BSPCore
 				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
 				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
 				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
-				amatAnimOffsets	=null;	amatAnimNumVerts	=null;	amatAnimNumTris	=null;
-				amatAnimSortPoints	=null;	lightAtlas	=null;
+				lightAtlas	=null;	lmaAnimDCalls	=null;
 				return	false;
 			}
 			mg.GetLMAnimBuffers(out lmAnimVB, out lmAnimIB);
@@ -1409,8 +1404,7 @@ namespace BSPCore
 				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
 				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
 				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
-				amatAnimOffsets	=null;	amatAnimNumVerts	=null;	amatAnimNumTris	=null;
-				amatAnimSortPoints	=null;	lightAtlas	=null;
+				lightAtlas	=null;	lmaAnimDCalls	=null;
 				return	false;
 			}
 			mg.GetLMABuffers(out lmaVB, out lmaIB);
@@ -1423,8 +1417,7 @@ namespace BSPCore
 				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
 				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
 				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
-				amatAnimOffsets	=null;	amatAnimNumVerts	=null;	amatAnimNumTris	=null;
-				amatAnimSortPoints	=null;	lightAtlas	=null;
+				lightAtlas	=null;	lmaAnimDCalls	=null;
 				return	false;
 			}
 			mg.GetLMAAnimBuffers(out lmaAnimVB, out lmaAnimIB);
@@ -1434,7 +1427,7 @@ namespace BSPCore
 			mg.GetLMMaterialData(out matOffsets, out matNumVerts, out matNumTris);
 			mg.GetLMAnimMaterialData(out matAnimOffsets, out matAnimNumVerts, out matAnimNumTris);
 			mg.GetLMAMaterialData(out lmaDCalls);
-			mg.GetLMAAnimMaterialData(out amatAnimOffsets, out amatAnimNumVerts, out amatAnimNumTris, out amatAnimSortPoints);
+			mg.GetLMAAnimMaterialData(out lmaAnimDCalls);
 
 			return	true;
 		}
@@ -1486,8 +1479,7 @@ namespace BSPCore
 
 
 		public void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Int32 []matOffsets,	out Int32 []matNumVerts,
-			out Int32 []matNumTris,	out Vector3 []matSortPoints,
+			out IndexBuffer ib, out List<MeshLib.DrawCall> []dcs,
 			out List<List<Vector3>> mirrorPolys, object pp)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
@@ -1498,8 +1490,7 @@ namespace BSPCore
 
 			mg.GetMirrorBuffers(out vb, out ib);
 
-			mg.GetMirrorMaterialData(out matOffsets, out matNumVerts,
-				out matNumTris, out matSortPoints, out mirrorPolys);
+			mg.GetMirrorMaterialData(out dcs, out mirrorPolys);
 		}
 
 
