@@ -111,42 +111,19 @@ namespace BSPCore
 		List<string>	mMaterialNames		=new List<string>();
 		List<Material>	mMaterials			=new List<Material>();
 
-		//lightmap material stuff
-		List<Int32>		mLMMaterialOffsets	=new List<Int32>();
-		List<Int32>		mLMMaterialNumVerts	=new List<Int32>();
-		List<Int32>		mLMMaterialNumTris	=new List<Int32>();
+		//material draw call information
+		//opaques
+		List<DrawCall>	mLMDraws		=new List<DrawCall>();
+		List<DrawCall>	mVLitDraws		=new List<DrawCall>();
+		List<DrawCall>	mFBDraws		=new List<DrawCall>();
+		List<DrawCall>	mSkyDraws		=new List<DrawCall>();
+		List<DrawCall>	mLMAnimDraws	=new List<DrawCall>();
 
-		//lightmap alpha material stuff
-		List<List<DrawCall>>	mLMADraws	=new List<List<DrawCall>>();
-
-		//vert lit material stuff
-		List<Int32>		mVLitMaterialOffsets	=new List<Int32>();
-		List<Int32>		mVLitMaterialNumVerts	=new List<Int32>();
-		List<Int32>		mVLitMaterialNumTris	=new List<Int32>();
-
-		//alpha material stuff
+		//alphas
 		List<List<DrawCall>>	mAlphaDraws		=new List<List<DrawCall>>();
-
-		//fullbright material stuff
-		List<Int32>		mFBMaterialOffsets	=new List<Int32>();
-		List<Int32>		mFBMaterialNumVerts	=new List<Int32>();
-		List<Int32>		mFBMaterialNumTris	=new List<Int32>();
-
-		//mirror material stuff
 		List<List<DrawCall>>	mMirrorDraws	=new List<List<DrawCall>>();
-
-		//sky material stuff
-		List<Int32>		mSkyMaterialOffsets		=new List<Int32>();
-		List<Int32>		mSkyMaterialNumVerts	=new List<Int32>();
-		List<Int32>		mSkyMaterialNumTris		=new List<Int32>();
-
-		//animated lightmap material stuff
-		List<Int32>		mLMAnimMaterialOffsets	=new List<Int32>();
-		List<Int32>		mLMAnimMaterialNumVerts	=new List<Int32>();
-		List<Int32>		mLMAnimMaterialNumTris	=new List<Int32>();
-
-		//animated lightmap alpha material stuff
 		List<List<DrawCall>>	mLMAAnimDraws	=new List<List<DrawCall>>();
+		List<List<DrawCall>>	mLMADraws		=new List<List<DrawCall>>();
 
 		//computed lightmap atlas
 		TexAtlas	mLMAtlas;
@@ -213,12 +190,9 @@ namespace BSPCore
 		}
 
 
-		internal void GetLMMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
-										out Int32 []matNumTris)
+		internal void GetLMMaterialData(out DrawCall []dcs)
 		{
-			matOffsets	=mLMMaterialOffsets.ToArray();
-			matNumVerts	=mLMMaterialNumVerts.ToArray();
-			matNumTris	=mLMMaterialNumTris.ToArray();
+			dcs	=mLMDraws.ToArray();
 		}
 
 
@@ -234,21 +208,15 @@ namespace BSPCore
 		}
 
 
-		internal void GetVLitMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
-											out Int32 []matNumTris)
+		internal void GetVLitMaterialData(out DrawCall []dcs)
 		{
-			matOffsets	=mVLitMaterialOffsets.ToArray();
-			matNumVerts	=mVLitMaterialNumVerts.ToArray();
-			matNumTris	=mVLitMaterialNumTris.ToArray();
+			dcs	=mVLitDraws.ToArray();
 		}
 
 
-		internal void GetFullBrightMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
-												out Int32 []matNumTris)
+		internal void GetFullBrightMaterialData(out DrawCall []dcs)
 		{
-			matOffsets	=mFBMaterialOffsets.ToArray();
-			matNumVerts	=mFBMaterialNumVerts.ToArray();
-			matNumTris	=mFBMaterialNumTris.ToArray();
+			dcs	=mFBDraws.ToArray();
 		}
 
 
@@ -259,21 +227,15 @@ namespace BSPCore
 		}
 
 
-		internal void GetSkyMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
-											out Int32 []matNumTris)
+		internal void GetSkyMaterialData(out DrawCall []dcs)
 		{
-			matOffsets	=mSkyMaterialOffsets.ToArray();
-			matNumVerts	=mSkyMaterialNumVerts.ToArray();
-			matNumTris	=mSkyMaterialNumTris.ToArray();
+			dcs	=mSkyDraws.ToArray();
 		}
 
 
-		internal void GetLMAnimMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
-											out Int32 []matNumTris)
+		internal void GetLMAnimMaterialData(out DrawCall []dcs)
 		{
-			matOffsets	=mLMAnimMaterialOffsets.ToArray();
-			matNumVerts	=mLMAnimMaterialNumVerts.ToArray();
-			matNumTris	=mLMAnimMaterialNumTris.ToArray();
+			dcs	=mLMAnimDraws.ToArray();
 		}
 
 
@@ -651,25 +613,80 @@ namespace BSPCore
 		}
 
 
+		bool AtlasAnimated(PerPlaneDrawData ppdd, GFXFace f, byte []lightData,
+			List<Vector3> faceVerts, GBSPPlane pln, GFXTexInfo tex)
+		{
+			for(int s=0;s < 4;s++)
+			{
+				if(f.mLTypes[s] == 255)
+				{
+					//fill with zeros for empty spots
+					for(int k=0;k < f.mNumVerts;k++)
+					{
+						if(s == 0)
+						{
+							ppdd.mTex1.Add(Vector2.Zero);
+						}
+						else if(s == 1)
+						{
+							ppdd.mTex2.Add(Vector2.Zero);
+						}
+						else if(s == 2)
+						{
+							ppdd.mTex3.Add(Vector2.Zero);
+						}
+						else if(s == 3)
+						{
+							ppdd.mTex4.Add(Vector2.Zero);
+						}
+					}
+					continue;
+				}
+
+				List<Vector2>	coordSet	=null;
+				if(s == 0)
+				{
+					coordSet	=ppdd.mTex1;
+				}
+				else if(s == 1)
+				{
+					coordSet	=ppdd.mTex2;
+				}
+				else if(s == 2)
+				{
+					coordSet	=ppdd.mTex3;
+				}
+				else if(s == 3)
+				{
+					coordSet	=ppdd.mTex4;
+				}
+
+				if(!AtlasLightMap(f, lightData, s, faceVerts, pln, tex, coordSet))
+				{
+					return	false;
+				}
+			}
+			return	true;
+		}
+
+
 		internal bool BuildLMAnimFaceData(Vector3 []verts, int[] indexes,
 			int firstFace, int nFaces, byte []lightData, object pobj)
 		{
 			GFXPlane	[]pp		=pobj as GFXPlane [];
-			List<Int32>	firstVert	=new List<Int32>();
-			List<Int32>	numVert		=new List<Int32>();
-			List<Int32>	numFace		=new List<Int32>();
 
 			CoreEvents.Print("Handling animated lightmaps...\n");
 
+			//store faces per material
+			List<PerPlaneDrawData>	planeFaces	=new List<PerPlaneDrawData>();
+
 			foreach(Material mat in mMaterials)
 			{
-				int	numFaceVerts	=mLMAnimVerts.Count;
-				int	numFaces		=0;
+				PerPlaneDrawData	ppdd	=new PerPlaneDrawData();
+				planeFaces.Add(ppdd);
 
 				if(!mat.Name.EndsWith("*Anim"))
 				{
-					numFace.Add(numFaces);
-					mLMAnimMaterialNumVerts.Add(mLMAnimVerts.Count - numFaceVerts);
 					continue;
 				}
 
@@ -709,7 +726,8 @@ namespace BSPCore
 						continue;
 					}
 
-					numFaces++;
+					ppdd.mNumFaces++;
+					ppdd.mVCounts.Add(f.mNumVerts);
 
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
@@ -718,65 +736,18 @@ namespace BSPCore
 						pln.Inverse();
 					}
 
-					List<Vector3>	fverts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, mLMAnimFaceTex0, fverts);
-					ComputeFaceNormals(f, verts, indexes, tex, null, pln, mLMAnimNormals);
-					mLMAnimVerts.AddRange(fverts);
+					List<Vector3>	faceVerts	=new List<Vector3>();
+					ComputeFaceData(f, verts, indexes, tex, ppdd.mTex0, faceVerts);
+					ComputeFaceNormals(f, verts, indexes, tex, null, pln, ppdd.mNorms);
 
-					firstVert.Add(mLMAnimVerts.Count - f.mNumVerts);
-					numVert.Add(f.mNumVerts);
-
-					//now add the animated lights if need be
-					for(int s=0;s < 4;s++)
+					foreach(Vector3 v in faceVerts)
 					{
-						if(f.mLTypes[s] == 255)
-						{
-							//fill with zeros for empty spots
-							for(int k=0;k < f.mNumVerts;k++)
-							{
-								if(s == 0)
-								{
-									mLMAnimFaceTex1.Add(Vector2.Zero);
-								}
-								else if(s == 1)
-								{
-									mLMAnimFaceTex2.Add(Vector2.Zero);
-								}
-								else if(s == 2)
-								{
-									mLMAnimFaceTex3.Add(Vector2.Zero);
-								}
-								else if(s == 3)
-								{
-									mLMAnimFaceTex4.Add(Vector2.Zero);
-								}
-							}
-							continue;
-						}
-
-						List<Vector2>	coordSet	=null;
-						if(s == 0)
-						{
-							coordSet	=mLMAnimFaceTex1;
-						}
-						else if(s == 1)
-						{
-							coordSet	=mLMAnimFaceTex2;
-						}
-						else if(s == 2)
-						{
-							coordSet	=mLMAnimFaceTex3;
-						}
-						else if(s == 3)
-						{
-							coordSet	=mLMAnimFaceTex4;
-						}
-
-						if(!AtlasLightMap(f, lightData, s, fverts, pln, tex, coordSet))
-						{
-							return	false;
-						}
+						ppdd.mColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
 					}
+
+					AtlasAnimated(ppdd, f, lightData, faceVerts, pln, tex);
+
+					ppdd.mVerts.AddRange(faceVerts);
 
 					//style index
 					for(int k=0;k < f.mNumVerts;k++)
@@ -786,24 +757,18 @@ namespace BSPCore
 						styleIndex.Y	=f.mLTypes[1];
 						styleIndex.Z	=f.mLTypes[2];
 						styleIndex.W	=f.mLTypes[3];
-						mLMAnimStyle.Add(styleIndex);
+						ppdd.mStyles.Add(styleIndex);
 					}
 				}
-
-				numFace.Add(numFaces);
-				mLMAnimMaterialNumVerts.Add(mLMAnimVerts.Count - numFaceVerts);
-			}
-
-			//might not be any
-			if(mLMAnimVerts.Count == 0)
-			{
-				return	true;
 			}
 
 			mLMAtlas.Finish();
 
-			ComputeIndexes(mLMAnimIndexes, mLMAnimMaterialOffsets,
-				mLMAnimMaterialNumTris, numFace, firstVert, numVert);
+			mLMAnimDraws	=ComputeIndexes(mLMAnimIndexes, planeFaces);
+
+			StuffVBArrays(planeFaces, mLMAnimVerts, mLMAnimNormals,
+				mLMAnimFaceTex0, mLMAnimFaceTex1, mLMAnimFaceTex2,
+				mLMAnimFaceTex3, mLMAnimFaceTex4, null, mLMAnimStyle);
 
 			return	true;
 		}
@@ -896,58 +861,7 @@ namespace BSPCore
 						ppdd.mColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
 					}
 
-
-					//now add the animated lights if need be
-					for(int s=0;s < 4;s++)
-					{
-						if(f.mLTypes[s] == 255)
-						{
-							//fill with zeros for empty spots
-							for(int k=0;k < f.mNumVerts;k++)
-							{
-								if(s == 0)
-								{
-									ppdd.mTex1.Add(Vector2.Zero);
-								}
-								else if(s == 1)
-								{
-									ppdd.mTex2.Add(Vector2.Zero);
-								}
-								else if(s == 2)
-								{
-									ppdd.mTex3.Add(Vector2.Zero);
-								}
-								else if(s == 3)
-								{
-									ppdd.mTex4.Add(Vector2.Zero);
-								}
-							}
-							continue;
-						}
-
-						List<Vector2>	coordSet	=null;
-						if(s == 0)
-						{
-							coordSet	=ppdd.mTex1;
-						}
-						else if(s == 1)
-						{
-							coordSet	=ppdd.mTex2;
-						}
-						else if(s == 2)
-						{
-							coordSet	=ppdd.mTex3;
-						}
-						else if(s == 3)
-						{
-							coordSet	=ppdd.mTex4;
-						}
-
-						if(!AtlasLightMap(f, lightData, s, faceVerts, pln, tex, coordSet))
-						{
-							return	false;
-						}
-					}
+					AtlasAnimated(ppdd, f, lightData, faceVerts, pln, tex);
 
 					ppdd.mVerts.AddRange(faceVerts);
 
@@ -991,22 +905,19 @@ namespace BSPCore
 				return	false;
 			}
 
-			List<Int32>	firstVert	=new List<Int32>();
-			List<Int32>	numVert		=new List<Int32>();
-			List<Int32>	numFace		=new List<Int32>();
-
 			CoreEvents.Print("Atlasing " + lightData.Length + " bytes of light data...\n");
+
+			//store faces per material
+			List<PerPlaneDrawData>	planeFaces	=new List<PerPlaneDrawData>();
 
 			foreach(Material mat in mMaterials)
 			{
-				int	numFaceVerts	=mLMVerts.Count;
-				int	numFaces		=0;
+				PerPlaneDrawData	ppdd	=new PerPlaneDrawData();
+				planeFaces.Add(ppdd);
 
 				//skip all special materials
 				if(mat.Name.Contains("*"))
 				{
-					numFace.Add(numFaces);
-					mLMMaterialNumVerts.Add(mLMVerts.Count - numFaceVerts);
 					continue;
 				}
 
@@ -1041,7 +952,8 @@ namespace BSPCore
 						continue;
 					}
 
-					numFaces++;
+					ppdd.mNumFaces++;
+					ppdd.mVCounts.Add(f.mNumVerts);
 
 					//grab plane for dynamic lighting normals
 					GFXPlane	pl	=pp[f.mPlaneNum];
@@ -1051,28 +963,25 @@ namespace BSPCore
 						pln.Inverse();
 					}
 
-					List<Vector3>	fverts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, mLMFaceTex0, fverts);
-					ComputeFaceNormals(f, verts, indexes, tex, null, pln, mLMNormals);
-					mLMVerts.AddRange(fverts);
+					List<Vector3>	faceVerts	=new List<Vector3>();
+					ComputeFaceData(f, verts, indexes, tex, ppdd.mTex0, faceVerts);
+					ComputeFaceNormals(f, verts, indexes, tex, null, pln, ppdd.mNorms);
 
-					if(!AtlasLightMap(f, lightData, 0, fverts, pln, tex, mLMFaceTex1))
+					if(!AtlasLightMap(f, lightData, 0, faceVerts, pln, tex, ppdd.mTex1))
 					{
 						return	false;
 					}
-
-					firstVert.Add(mLMVerts.Count - f.mNumVerts);
-					numVert.Add(f.mNumVerts);
+					ppdd.mVerts.AddRange(faceVerts);
 				}
-
-				numFace.Add(numFaces);
-				mLMMaterialNumVerts.Add(mLMVerts.Count - numFaceVerts);
 			}
 
 			mLMAtlas.Finish();
 
-			ComputeIndexes(mLMIndexes, mLMMaterialOffsets,
-				mLMMaterialNumTris,	numFace, firstVert, numVert);
+			mLMDraws	=ComputeIndexes(mLMIndexes, planeFaces);
+
+			StuffVBArrays(planeFaces, mLMVerts, mLMNormals,
+				mLMFaceTex0, mLMFaceTex1, null, null,
+				null, null, null);
 
 			return	true;
 		}
@@ -1193,21 +1102,18 @@ namespace BSPCore
 		{
 			GFXPlane	[]pp	=pobj as GFXPlane [];
 
-			List<Int32>	firstVert	=new List<Int32>();
-			List<Int32>	numVert		=new List<Int32>();
-			List<Int32>	numFace		=new List<Int32>();
-
 			CoreEvents.Print("Building vertex lit face data...\n");
+
+			//store faces per material
+			List<PerPlaneDrawData>	planeFaces	=new List<PerPlaneDrawData>();
 
 			foreach(Material mat in mMaterials)
 			{
-				int	numFaceVerts	=mVLitVerts.Count;
-				int	numFaces		=0;
+				PerPlaneDrawData	ppdd	=new PerPlaneDrawData();
+				planeFaces.Add(ppdd);
 
 				if(!mat.Name.EndsWith("*VertLit"))
 				{
-					numFace.Add(numFaces);
-					mVLitMaterialNumVerts.Add(mVLitVerts.Count - numFaceVerts);
 					continue;
 				}
 
@@ -1245,7 +1151,8 @@ namespace BSPCore
 						continue;
 					}
 
-					numFaces++;
+					ppdd.mNumFaces++;
+					ppdd.mVCounts.Add(f.mNumVerts);
 
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
@@ -1254,19 +1161,20 @@ namespace BSPCore
 						pln.Inverse();
 					}
 
-					ComputeFaceData(f, verts, indexes, tex, mVLitTex0, mVLitVerts);
-					ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, mVLitNormals);
-					ComputeFaceColors(f, verts, indexes, tex, rgbVerts, mVLitColors);
+					List<Vector3>	faceVerts	=new List<Vector3>();
+					ComputeFaceData(f, verts, indexes, tex, ppdd.mTex0, faceVerts);
+					ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ppdd.mNorms);
+					ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ppdd.mColors);
 
-					firstVert.Add(mVLitVerts.Count - f.mNumVerts);
-					numVert.Add(f.mNumVerts);
+					ppdd.mVerts.AddRange(faceVerts);
 				}
-				numFace.Add(numFaces);
-				mVLitMaterialNumVerts.Add(mVLitVerts.Count - numFaceVerts);
 			}
 
-			ComputeIndexes(mVLitIndexes, mVLitMaterialOffsets,
-				mVLitMaterialNumTris, numFace, firstVert, numVert);
+			mVLitDraws	=ComputeIndexes(mVLitIndexes, planeFaces);
+
+			StuffVBArrays(planeFaces, mVLitVerts, mVLitNormals,
+				mVLitTex0, null, null, null,
+				null, mVLitColors, null);
 
 			return	true;
 		}
@@ -1473,21 +1381,19 @@ namespace BSPCore
 			int firstFace, int nFaces, int[] indexes, object pobj)
 		{
 			GFXPlane	[]pp		=pobj as GFXPlane [];
-			List<Int32>	firstVert	=new List<Int32>();
-			List<Int32>	numVert		=new List<Int32>();
-			List<Int32>	numFace		=new List<Int32>();
 
 			CoreEvents.Print("Building full bright face data...\n");
 
+			//store faces per material
+			List<PerPlaneDrawData>	planeFaces	=new List<PerPlaneDrawData>();
+
 			foreach(Material mat in mMaterials)
 			{
-				int	numFaceVerts	=mFBVerts.Count;
-				int	numFaces		=0;
+				PerPlaneDrawData	ppdd	=new PerPlaneDrawData();
+				planeFaces.Add(ppdd);
 
 				if(!mat.Name.EndsWith("*FullBright"))
 				{
-					numFace.Add(numFaces);
-					mFBMaterialNumVerts.Add(mFBVerts.Count - numFaceVerts);
 					continue;
 				}
 
@@ -1522,19 +1428,21 @@ namespace BSPCore
 						continue;
 					}
 
-					numFaces++;
+					ppdd.mNumFaces++;
+					ppdd.mVCounts.Add(f.mNumVerts);
 
-					ComputeFaceData(f, verts, indexes, tex, mFBTex0, mFBVerts);
+					List<Vector3>	faceVerts	=new List<Vector3>();
+					ComputeFaceData(f, verts, indexes, tex, ppdd.mTex0, faceVerts);
 
-					firstVert.Add(mFBVerts.Count - f.mNumVerts);
-					numVert.Add(f.mNumVerts);
+					ppdd.mVerts.AddRange(faceVerts);
 				}
-				numFace.Add(numFaces);
-				mFBMaterialNumVerts.Add(mFBVerts.Count - numFaceVerts);
 			}
 
-			ComputeIndexes(mFBIndexes, mFBMaterialOffsets,
-				mFBMaterialNumTris, numFace, firstVert, numVert);
+			mFBDraws	=ComputeIndexes(mFBIndexes, planeFaces);
+
+			StuffVBArrays(planeFaces, mFBVerts, null,
+				mVLitTex0, null, null, null,
+				null, mVLitColors, null);
 
 			return	true;
 		}
@@ -1544,21 +1452,19 @@ namespace BSPCore
 			int firstFace, int nFaces, int[] indexes, object pobj)
 		{
 			GFXPlane	[]pp		=pobj as GFXPlane [];
-			List<Int32>	firstVert	=new List<Int32>();
-			List<Int32>	numVert		=new List<Int32>();
-			List<Int32>	numFace		=new List<Int32>();
 
 			CoreEvents.Print("Building sky face data...\n");
 
+			//store faces per material
+			List<PerPlaneDrawData>	planeFaces	=new List<PerPlaneDrawData>();
+
 			foreach(Material mat in mMaterials)
 			{
-				int	numFaceVerts	=mSkyVerts.Count;
-				int	numFaces		=0;
+				PerPlaneDrawData	ppdd	=new PerPlaneDrawData();
+				planeFaces.Add(ppdd);
 
 				if(!mat.Name.EndsWith("*Sky"))
 				{
-					numFace.Add(numFaces);
-					mSkyMaterialNumVerts.Add(mSkyVerts.Count - numFaceVerts);
 					continue;
 				}
 
@@ -1598,58 +1504,65 @@ namespace BSPCore
 						continue;
 					}
 
-					numFaces++;
+					ppdd.mNumFaces++;
+					ppdd.mVCounts.Add(f.mNumVerts);
 
-					ComputeFaceData(f, verts, indexes, tex, mSkyTex0, mSkyVerts);
+					List<Vector3>	faceVerts	=new List<Vector3>();
+					ComputeFaceData(f, verts, indexes, tex, ppdd.mTex0, faceVerts);
 
-					firstVert.Add(mSkyVerts.Count - f.mNumVerts);
-					numVert.Add(f.mNumVerts);
+					ppdd.mVerts.AddRange(faceVerts);
 				}
-				numFace.Add(numFaces);
-				mSkyMaterialNumVerts.Add(mSkyVerts.Count - numFaceVerts);
 			}
 
-			ComputeIndexes(mSkyIndexes, mSkyMaterialOffsets,
-				mSkyMaterialNumTris, numFace, firstVert, numVert);
+			mSkyDraws	=ComputeIndexes(mSkyIndexes, planeFaces);
+
+			StuffVBArrays(planeFaces, mSkyVerts, null,
+				mSkyTex0, null, null, null,
+				null, null, null);
 
 			return	true;
 		}
 
 
-		void ComputeIndexes(List<int> inds, List<int> matOffsets,
-			List<int> matTris, List<int> numFace,
-			List<int> firstVert, List<int> numVert)
+		List<DrawCall> ComputeIndexes(List<int> inds, List<PerPlaneDrawData> dds)
 		{
-			int	faceOfs	=0;
+			List<DrawCall>	draws	=new List<DrawCall>();
+
+			//index as if data is already in a big vbuffer
+			int	vbVertOfs	=0;
 			for(int j=0;j < mMaterialNames.Count;j++)
 			{
 				int	cnt	=inds.Count;
 
-				matOffsets.Add(cnt);
+				DrawCall	dc	=new DrawCall();				
+				dc.mStartIndex	=cnt;
+				dc.mSortPoint	=Vector3.Zero;	//unused for opaques
 
-				for(int i=faceOfs;i < (numFace[j] + faceOfs);i++)
+				for(int i=0;i < dds[j].mNumFaces;i++)
 				{
-					int		nverts	=numVert[i];
-					int		fvert	=firstVert[i];
-					int		k		=0;
+					int	nverts	=dds[j].mVCounts[i];
 
 					//triangulate
-					for(k=1;k < nverts-1;k++)
+					for(int k=1;k < nverts-1;k++)
 					{
-						inds.Add(fvert);
-						inds.Add(fvert + k);
-						inds.Add(fvert + ((k + 1) % nverts));
+						inds.Add(vbVertOfs);
+						inds.Add(vbVertOfs + k);
+						inds.Add(vbVertOfs + ((k + 1) % nverts));
 					}
-				}
 
-				faceOfs	+=numFace[j];
+					vbVertOfs	+=dds[j].mVCounts[i];
+				}
 
 				int	numTris	=(inds.Count - cnt);
 
 				numTris	/=3;
 
-				matTris.Add(numTris);
+				dc.mPrimCount	=numTris;
+				dc.mNumVerts	=dds[j].mVerts.Count;
+
+				draws.Add(dc);
 			}
+			return	draws;
 		}
 
 
@@ -1684,6 +1597,7 @@ namespace BSPCore
 		}
 
 
+		//for alphas
 		static void StuffVBArrays(List<Dictionary<Int32, PerPlaneDrawData>> planeFaces,
 			List<Vector3> verts, List<Vector3> norms, List<Vector2> tex0,
 			List<Vector2> tex1, List<Vector2> tex2, List<Vector2> tex3, 
@@ -1724,6 +1638,52 @@ namespace BSPCore
 					{
 						styles.AddRange(ppdd.Value.mStyles);
 					}
+				}
+			}
+		}
+
+
+		//for opaques
+		static void StuffVBArrays(List<PerPlaneDrawData> planeFaces,
+			List<Vector3> verts, List<Vector3> norms, List<Vector2> tex0,
+			List<Vector2> tex1, List<Vector2> tex2, List<Vector2> tex3, 
+			List<Vector2> tex4, List<Vector4> colors, List<Vector4> styles)
+		{
+			foreach(PerPlaneDrawData ppdd in planeFaces)
+			{
+				verts.AddRange(ppdd.mVerts);
+
+				if(norms != null)
+				{
+					norms.AddRange(ppdd.mNorms);
+				}
+				if(tex0 != null)
+				{
+					tex0.AddRange(ppdd.mTex0);
+				}
+				if(tex1 != null)
+				{
+					tex1.AddRange(ppdd.mTex1);
+				}
+				if(tex2 != null)
+				{
+					tex2.AddRange(ppdd.mTex2);
+				}
+				if(tex3 != null)
+				{
+					tex3.AddRange(ppdd.mTex3);
+				}
+				if(tex4 != null)
+				{
+					tex4.AddRange(ppdd.mTex4);
+				}
+				if(colors != null)
+				{
+					colors.AddRange(ppdd.mColors);
+				}
+				if(styles != null)
+				{
+					styles.AddRange(ppdd.mStyles);
 				}
 			}
 		}

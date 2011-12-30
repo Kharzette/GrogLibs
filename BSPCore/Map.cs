@@ -1343,16 +1343,12 @@ namespace BSPCore
 			//lightmap stuff
 			out VertexBuffer lmVB,
 			out IndexBuffer lmIB,
-			out Int32 []matOffsets,
-			out Int32 []matNumVerts,
-			out Int32 []matNumTris,
+			out MeshLib.DrawCall []lmDCs,
 
 			//animated lightmap stuff
 			out VertexBuffer lmAnimVB,
 			out IndexBuffer lmAnimIB,
-			out Int32 []matAnimOffsets,
-			out Int32 []matAnimNumVerts,
-			out Int32 []matAnimNumTris,
+			out MeshLib.DrawCall []lmAnimDCs,
 
 			//lightmapped alpha stuff
 			out VertexBuffer lmaVB,
@@ -1372,10 +1368,9 @@ namespace BSPCore
 
 			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXLightData, pp))
 			{
-				lmVB	=null;	lmIB	=null;	matOffsets	=null;
-				matNumVerts	=null;	matNumTris	=null;	lmAnimVB	=null;
+				lmVB	=null;	lmIB	=null;	lmDCs	=null;
+				lmAnimVB	=null;	lmAnimDCs	=null;
 				lmAnimIB	=null;	lmAnimVB	=null;
-				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
 				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
 				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
 				lightAtlas	=null;	lmaAnimDCalls	=null;
@@ -1385,10 +1380,9 @@ namespace BSPCore
 
 			if(!mg.BuildLMAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXLightData, pp))
 			{
-				lmVB	=null;	lmIB	=null;	matOffsets	=null;
-				matNumVerts	=null;	matNumTris	=null;	lmAnimVB	=null;
+				lmVB	=null;	lmIB	=null;	lmDCs	=null;
+				lmAnimVB	=null;	lmAnimDCs	=null;
 				lmAnimIB	=null;	lmAnimVB	=null;
-				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
 				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
 				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
 				lightAtlas	=null;	lmaAnimDCalls	=null;
@@ -1398,10 +1392,9 @@ namespace BSPCore
 
 			if(!mg.BuildLMAFaceData(mGFXVerts, mGFXVertIndexes, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXLightData, pp))
 			{
-				lmVB	=null;	lmIB	=null;	matOffsets	=null;
-				matNumVerts	=null;	matNumTris	=null;	lmAnimVB	=null;
+				lmVB	=null;	lmIB	=null;	lmDCs	=null;
+				lmAnimVB	=null;	lmAnimDCs	=null;
 				lmAnimIB	=null;	lmAnimVB	=null;
-				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
 				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
 				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
 				lightAtlas	=null;	lmaAnimDCalls	=null;
@@ -1411,10 +1404,9 @@ namespace BSPCore
 
 			if(!mg.BuildLMAAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXLightData, pp))
 			{
-				lmVB	=null;	lmIB	=null;	matOffsets	=null;
-				matNumVerts	=null;	matNumTris	=null;	lmAnimVB	=null;
+				lmVB	=null;	lmIB	=null;	lmDCs	=null;
+				lmAnimVB	=null;	lmAnimDCs	=null;
 				lmAnimIB	=null;	lmAnimVB	=null;
-				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
 				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
 				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
 				lightAtlas	=null;	lmaAnimDCalls	=null;
@@ -1424,8 +1416,8 @@ namespace BSPCore
 
 			lightAtlas	=mg.GetLightMapAtlas();
 
-			mg.GetLMMaterialData(out matOffsets, out matNumVerts, out matNumTris);
-			mg.GetLMAnimMaterialData(out matAnimOffsets, out matAnimNumVerts, out matAnimNumTris);
+			mg.GetLMMaterialData(out lmDCs);
+			mg.GetLMAnimMaterialData(out lmAnimDCs);
 			mg.GetLMAMaterialData(out lmaDCalls);
 			mg.GetLMAAnimMaterialData(out lmaAnimDCalls);
 
@@ -1434,8 +1426,7 @@ namespace BSPCore
 
 
 		public void BuildVLitRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Int32 []matOffsets,
-			out Int32 []matNumVerts, out Int32 []matNumTris, object pp)
+			out IndexBuffer ib, out MeshLib.DrawCall []dcs, object pp)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
@@ -1445,7 +1436,7 @@ namespace BSPCore
 
 			mg.GetVLitBuffers(out vb, out ib);
 
-			mg.GetVLitMaterialData(out matOffsets, out matNumVerts, out matNumTris);
+			mg.GetVLitMaterialData(out dcs);
 		}
 
 
@@ -1465,8 +1456,7 @@ namespace BSPCore
 
 
 		public void BuildFullBrightRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Int32 []matOffsets, out Int32 []matNumVerts,
-			out Int32 []matNumTris, object pp)
+			out IndexBuffer ib, out MeshLib.DrawCall []dcs, object pp)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
@@ -1474,7 +1464,7 @@ namespace BSPCore
 
 			mg.GetFullBrightBuffers(out vb, out ib);
 
-			mg.GetFullBrightMaterialData(out matOffsets, out matNumVerts, out matNumTris);
+			mg.GetFullBrightMaterialData(out dcs);
 		}
 
 
@@ -1495,8 +1485,7 @@ namespace BSPCore
 
 
 		public void BuildSkyRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Int32 []matOffsets,	out Int32 []matNumVerts,
-			out Int32 []matNumTris, object pp)
+			out IndexBuffer ib, out MeshLib.DrawCall []dcs, object pp)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
@@ -1504,7 +1493,7 @@ namespace BSPCore
 
 			mg.GetSkyBuffers(out vb, out ib);
 
-			mg.GetSkyMaterialData(out matOffsets, out matNumVerts, out matNumTris);
+			mg.GetSkyMaterialData(out dcs);
 		}
 #endif
 	}
