@@ -1328,6 +1328,11 @@ namespace BSPCore
 						continue;
 					}
 
+					if((tex.mFlags & TexInfo.MIRROR) != 0)
+					{
+						continue;
+					}
+
 					if(!mat.Name.StartsWith(tex.mMaterial))
 					{
 						continue;

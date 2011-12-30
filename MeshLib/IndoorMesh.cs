@@ -285,70 +285,6 @@ namespace MeshLib
 		}
 
 
-		void DrawMaterials(GraphicsDevice g, Vector3 eyePos,
-			VertexBuffer vb, IndexBuffer ib,
-			Int32 []offsets, Int32 []numVerts, Int32 []numTris,
-			bool bAlpha, Vector3 []sortPoints, IsMaterialVisible bMatVis)
-		{
-			if(vb == null)
-			{
-				return;
-			}
-
-			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
-
-			g.SetVertexBuffer(vb);
-			g.Indices	=ib;
-
-			int	idx	=0;
-
-			foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
-			{
-				Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
-				if(fx == null)
-				{
-					idx++;
-					continue;
-				}
-				if(numVerts[idx] <= 0)
-				{
-					idx++;
-					continue;
-				}
-				if(!bMatVis(eyePos, idx))
-				{
-					idx++;
-					continue;
-				}
-
-				if(bAlpha)
-				{
-					mAlphaPool.StoreDraw(sortPoints[idx], mat.Value,
-						vb, ib, 0, 0, numVerts[idx],
-						offsets[idx], numTris[idx]);
-					idx++;
-					continue;
-				}
-
-				//this might get slow
-				mMatLib.ApplyParameters(mat.Key);
-
-				//set renderstates from material
-				//this could also get crushingly slow
-				mat.Value.ApplyRenderStates(g);
-
-				fx.CurrentTechnique.Passes[0].Apply();
-
-				g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-					0, 0,
-					numVerts[idx],
-					offsets[idx],
-					numTris[idx]);
-				idx++;
-			}
-		}
-
-
 		//for opaques
 		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos,
 			VertexBuffer vb, IndexBuffer ib, DrawCall []dcs,
@@ -563,10 +499,11 @@ namespace MeshLib
 					reflect.Normalize();
 
 					//get view matrix
-					Vector3	side	=Vector3.Cross(reflect, Vector3.Up);
+					//needs to be upside down
+					Vector3	side	=Vector3.Cross(reflect, Vector3.Down);
 					if(side.LengthSquared() == 0.0f)
 					{
-						side	=Vector3.Cross(reflect, Vector3.Right);
+						side	=Vector3.Cross(reflect, Vector3.Left);
 					}
 					Vector3	up	=Vector3.Cross(reflect, side);
 
@@ -728,40 +665,16 @@ namespace MeshLib
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAAnimIB, g, bEditor);
 			}
 
-//			mLMMatOffsets		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mVLitMatOffsets		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mLMAnimMatOffsets	=UtilityLib.FileUtil.ReadIntArray(br);
-//			mAlphaMatOffsets	=UtilityLib.FileUtil.ReadIntArray(br);
-//			mSkyMatOffsets		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mFBMatOffsets		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mMirrorMatOffsets	=UtilityLib.FileUtil.ReadIntArray(br);
-//			mLMAMatOffsets		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mLMAAnimMatOffsets	=UtilityLib.FileUtil.ReadIntArray(br);
+			mLMDrawCalls		=DrawCall.ReadDrawCallArray(br);
+			mVLitDrawCalls		=DrawCall.ReadDrawCallArray(br);
+			mLMAnimDrawCalls	=DrawCall.ReadDrawCallArray(br);
+			mSkyDrawCalls		=DrawCall.ReadDrawCallArray(br);
+			mFBDrawCalls		=DrawCall.ReadDrawCallArray(br);
 
-//			mLMMatNumVerts		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mVLitMatNumVerts	=UtilityLib.FileUtil.ReadIntArray(br);
-//			mLMAnimMatNumVerts	=UtilityLib.FileUtil.ReadIntArray(br);
-//			mAlphaMatNumVerts	=UtilityLib.FileUtil.ReadIntArray(br);
-//			mSkyMatNumVerts		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mFBMatNumVerts		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mMirrorMatNumVerts	=UtilityLib.FileUtil.ReadIntArray(br);
-//			mLMAMatNumVerts		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mLMAAnimMatNumVerts	=UtilityLib.FileUtil.ReadIntArray(br);
-
-//			mLMMatNumTris		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mVLitMatNumTris		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mLMAnimMatNumTris	=UtilityLib.FileUtil.ReadIntArray(br);
-//			mAlphaMatNumTris	=UtilityLib.FileUtil.ReadIntArray(br);
-//			mSkyMatNumTris		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mFBMatNumTris		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mMirrorMatNumTris	=UtilityLib.FileUtil.ReadIntArray(br);
-//			mLMAMatNumTris		=UtilityLib.FileUtil.ReadIntArray(br);
-//			mLMAAnimMatNumTris	=UtilityLib.FileUtil.ReadIntArray(br);
-
-//			mLMASortPoints		=UtilityLib.FileUtil.ReadVecArray(br);
-//			mAlphaSortPoints	=UtilityLib.FileUtil.ReadVecArray(br);
-//			mMirrorSortPoints	=UtilityLib.FileUtil.ReadVecArray(br);
-//			mLMAAnimSortPoints	=UtilityLib.FileUtil.ReadVecArray(br);
+			mLMADrawCalls		=DrawCall.ReadDrawCallListArray(br);
+			mAlphaDrawCalls		=DrawCall.ReadDrawCallListArray(br);
+			mLMAAnimDrawCalls	=DrawCall.ReadDrawCallListArray(br);
+			mMirrorDrawCalls	=DrawCall.ReadDrawCallListArray(br);
 			
 			int	mirrorCount	=br.ReadInt32();
 			for(int i=0;i < mirrorCount;i++)
@@ -828,44 +741,19 @@ namespace MeshLib
 			WriteMaterial(mLMAVB, mLMAIB, bw);
 			WriteMaterial(mLMAAnimVB, mLMAAnimIB, bw);
 
-			//material offsets
-//			UtilityLib.FileUtil.WriteArray(bw, mLMMatOffsets);
-//			UtilityLib.FileUtil.WriteArray(bw, mVLitMatOffsets);
-//			UtilityLib.FileUtil.WriteArray(bw, mLMAnimMatOffsets);
-//			UtilityLib.FileUtil.WriteArray(bw, mAlphaMatOffsets);
-//			UtilityLib.FileUtil.WriteArray(bw, mSkyMatOffsets);
-//			UtilityLib.FileUtil.WriteArray(bw, mFBMatOffsets);
-//			UtilityLib.FileUtil.WriteArray(bw, mMirrorMatOffsets);
-//			UtilityLib.FileUtil.WriteArray(bw, mLMAMatOffsets);
-//			UtilityLib.FileUtil.WriteArray(bw, mLMAAnimMatOffsets);
+			//drawcall stuff
+			//opaques
+			DrawCall.WriteDrawCallArray(bw, mLMDrawCalls);
+			DrawCall.WriteDrawCallArray(bw, mVLitDrawCalls);
+			DrawCall.WriteDrawCallArray(bw, mLMAnimDrawCalls);
+			DrawCall.WriteDrawCallArray(bw, mSkyDrawCalls);
+			DrawCall.WriteDrawCallArray(bw, mFBDrawCalls);
 
-			//numverts per material
-//			UtilityLib.FileUtil.WriteArray(bw, mLMMatNumVerts);
-//			UtilityLib.FileUtil.WriteArray(bw, mVLitMatNumVerts);
-//			UtilityLib.FileUtil.WriteArray(bw, mLMAnimMatNumVerts);
-//			UtilityLib.FileUtil.WriteArray(bw, mAlphaMatNumVerts);
-//			UtilityLib.FileUtil.WriteArray(bw, mSkyMatNumVerts);
-//			UtilityLib.FileUtil.WriteArray(bw, mFBMatNumVerts);
-//			UtilityLib.FileUtil.WriteArray(bw, mMirrorMatNumVerts);
-//			UtilityLib.FileUtil.WriteArray(bw, mLMAMatNumVerts);
-//			UtilityLib.FileUtil.WriteArray(bw, mLMAAnimMatNumVerts);
-
-			//primcount per material
-//			UtilityLib.FileUtil.WriteArray(bw, mLMMatNumTris);
-//			UtilityLib.FileUtil.WriteArray(bw, mVLitMatNumTris);
-//			UtilityLib.FileUtil.WriteArray(bw, mLMAnimMatNumTris);
-//			UtilityLib.FileUtil.WriteArray(bw, mAlphaMatNumTris);
-//			UtilityLib.FileUtil.WriteArray(bw, mSkyMatNumTris);
-//			UtilityLib.FileUtil.WriteArray(bw, mFBMatNumTris);
-//			UtilityLib.FileUtil.WriteArray(bw, mMirrorMatNumTris);
-//			UtilityLib.FileUtil.WriteArray(bw, mLMAMatNumTris);
-//			UtilityLib.FileUtil.WriteArray(bw, mLMAAnimMatNumTris);
-
-			//sort points
-//			UtilityLib.FileUtil.WriteArray(bw, mLMASortPoints);
-//			UtilityLib.FileUtil.WriteArray(bw, mAlphaSortPoints);
-//			UtilityLib.FileUtil.WriteArray(bw, mMirrorSortPoints);
-//			UtilityLib.FileUtil.WriteArray(bw, mLMAAnimSortPoints);
+			//alphas
+			DrawCall.WriteDrawCallListArray(bw, mLMADrawCalls);
+			DrawCall.WriteDrawCallListArray(bw, mAlphaDrawCalls);
+			DrawCall.WriteDrawCallListArray(bw, mLMAAnimDrawCalls);
+			DrawCall.WriteDrawCallListArray(bw, mMirrorDrawCalls);
 
 			//mirror polys
 			bw.Write(mMirrorPolys.Count);
