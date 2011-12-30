@@ -68,6 +68,7 @@
     <Compile Include="AnimLib.cs" />
     <Compile Include="Bounds.cs" />
     <Compile Include="Character.cs" />
+    <Compile Include="DrawCall.cs" />
     <Compile Include="IndoorMesh.cs" />
     <Compile Include="KeyFrame.cs" />
     <Compile Include="Mesh.cs" />

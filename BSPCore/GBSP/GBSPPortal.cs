@@ -41,14 +41,6 @@ namespace BSPCore
 				return	null;	//Portal does not bridge different visible contents
 			}
 
-/*			if(mBackNode.IsContentsTransparent())
-			{
-				if(!mFrontNode.IsContentsSolid())
-				{
-					return	null;
-				}
-			}*/
-
 			if(planeSide == 0)
 			{
 				if(GBSPNode.WindowCheck(mFrontNode, mBackNode))

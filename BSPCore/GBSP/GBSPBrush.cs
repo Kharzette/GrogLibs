@@ -330,6 +330,8 @@ namespace BSPCore
 				ret	=back;
 			}
 
+			//the reason this works is that the box plane numbers
+			//are not shared with everything else
 			for(int i=0;i < ret.mSides.Count;i++)
 			{
 				int	pnum	=ret.mSides[i].mPlaneNum;

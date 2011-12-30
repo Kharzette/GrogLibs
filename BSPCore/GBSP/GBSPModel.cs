@@ -96,8 +96,6 @@ namespace BSPCore
 
 			glist	=GBSPBrush.ConvertMapBrushList(list);
 
-			GBSPNode.bDumpery	=true;
-
 			for(int z=kMinZ;z < kMaxZ;z++)
 			{
 				for(int x=kMinX;x < kMaxX;x++)
@@ -130,8 +128,6 @@ namespace BSPCore
 
 			root.MakeFaces(pool, bVerbose);
 
-//			GBSPFace.DumpFaceList(GBSPNode.dumpFaces, pool, "DumpFaces.Debug");
-
 			root.MakeLeafFaces();
 
 			if(!root.FreePortals())
@@ -148,7 +144,6 @@ namespace BSPCore
 		}
 
 
-//		static int dumps	=0;
 		internal GBSPNode ProcessBlock(List<GBSPBrush> brushes, PlanePool pp, int xblock, int zblock)
 		{
 			CoreEvents.Print("############### block " + xblock + "," + zblock + " ###############\n");
@@ -179,8 +174,6 @@ namespace BSPCore
 			List<GBSPBrush>	csgList	=GBSPBrush.CSGBrushes(true, blocked, pp);			
 
 			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
-
-//			GBSPBrush.DumpBrushListToFile(csgList, pp, "CSG" + dumps++ + ".map");
 
 			//print out brushes that are still overlapping
 			GBSPBrush.DumpOverlapping(csgList, pp);

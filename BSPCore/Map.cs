@@ -1357,10 +1357,7 @@ namespace BSPCore
 			//lightmapped alpha stuff
 			out VertexBuffer lmaVB,
 			out IndexBuffer lmaIB,
-			out Int32 []amatOffsets,
-			out Int32 []amatNumVerts,
-			out Int32 []amatNumTris,
-			out Vector3 []amatSortPoints,
+			out List<MeshLib.DrawCall> []lmaDCalls,
 
 			//animated alpha lightmap stuff
 			out VertexBuffer lmaAnimVB,
@@ -1382,11 +1379,10 @@ namespace BSPCore
 				matNumVerts	=null;	matNumTris	=null;	lmAnimVB	=null;
 				lmAnimIB	=null;	lmAnimVB	=null;
 				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
-				lmaVB	=null;	lmaIB	=null;	amatOffsets	=null;
-				amatNumVerts	=null;	amatNumTris	=null;	lmaAnimVB	=null;
-				lmaAnimIB	=null;	lmaAnimVB	=null;
+				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
+				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
 				amatAnimOffsets	=null;	amatAnimNumVerts	=null;	amatAnimNumTris	=null;
-				amatSortPoints	=null;	amatAnimSortPoints	=null;	lightAtlas	=null;
+				amatAnimSortPoints	=null;	lightAtlas	=null;
 				return	false;
 			}
 			mg.GetLMBuffers(out lmVB, out lmIB);
@@ -1397,11 +1393,10 @@ namespace BSPCore
 				matNumVerts	=null;	matNumTris	=null;	lmAnimVB	=null;
 				lmAnimIB	=null;	lmAnimVB	=null;
 				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
-				lmaVB	=null;	lmaIB	=null;	amatOffsets	=null;
-				amatNumVerts	=null;	amatNumTris	=null;	lmaAnimVB	=null;
-				lmaAnimIB	=null;	lmaAnimVB	=null;
+				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
+				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
 				amatAnimOffsets	=null;	amatAnimNumVerts	=null;	amatAnimNumTris	=null;
-				amatSortPoints	=null;	amatAnimSortPoints	=null;	lightAtlas	=null;
+				amatAnimSortPoints	=null;	lightAtlas	=null;
 				return	false;
 			}
 			mg.GetLMAnimBuffers(out lmAnimVB, out lmAnimIB);
@@ -1412,11 +1407,10 @@ namespace BSPCore
 				matNumVerts	=null;	matNumTris	=null;	lmAnimVB	=null;
 				lmAnimIB	=null;	lmAnimVB	=null;
 				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
-				lmaVB	=null;	lmaIB	=null;	amatOffsets	=null;
-				amatNumVerts	=null;	amatNumTris	=null;	lmaAnimVB	=null;
-				lmaAnimIB	=null;	lmaAnimVB	=null;
+				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
+				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
 				amatAnimOffsets	=null;	amatAnimNumVerts	=null;	amatAnimNumTris	=null;
-				amatSortPoints	=null;	amatAnimSortPoints	=null;	lightAtlas	=null;
+				amatAnimSortPoints	=null;	lightAtlas	=null;
 				return	false;
 			}
 			mg.GetLMABuffers(out lmaVB, out lmaIB);
@@ -1427,11 +1421,10 @@ namespace BSPCore
 				matNumVerts	=null;	matNumTris	=null;	lmAnimVB	=null;
 				lmAnimIB	=null;	lmAnimVB	=null;
 				matAnimOffsets	=null;	matAnimNumVerts	=null;	matAnimNumTris	=null;
-				lmaVB	=null;	lmaIB	=null;	amatOffsets	=null;
-				amatNumVerts	=null;	amatNumTris	=null;	lmaAnimVB	=null;
-				lmaAnimIB	=null;	lmaAnimVB	=null;
+				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
+				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
 				amatAnimOffsets	=null;	amatAnimNumVerts	=null;	amatAnimNumTris	=null;
-				amatSortPoints	=null;	amatAnimSortPoints	=null;	lightAtlas	=null;
+				amatAnimSortPoints	=null;	lightAtlas	=null;
 				return	false;
 			}
 			mg.GetLMAAnimBuffers(out lmaAnimVB, out lmaAnimIB);
@@ -1440,7 +1433,7 @@ namespace BSPCore
 
 			mg.GetLMMaterialData(out matOffsets, out matNumVerts, out matNumTris);
 			mg.GetLMAnimMaterialData(out matAnimOffsets, out matAnimNumVerts, out matAnimNumTris);
-			mg.GetLMAMaterialData(out amatOffsets, out amatNumVerts, out amatNumTris, out amatSortPoints);
+			mg.GetLMAMaterialData(out lmaDCalls);
 			mg.GetLMAAnimMaterialData(out amatAnimOffsets, out amatAnimNumVerts, out amatAnimNumTris, out amatAnimSortPoints);
 
 			return	true;
@@ -1464,8 +1457,7 @@ namespace BSPCore
 
 
 		public void BuildAlphaRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Int32 []matOffsets,	out Int32 []matNumVerts,
-			out Int32 []matNumTris, out Vector3 []matSortPoints, object pp)
+			out IndexBuffer ib,	out List<MeshLib.DrawCall> []alphaDrawCalls, object pp)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
@@ -1475,7 +1467,7 @@ namespace BSPCore
 
 			mg.GetAlphaBuffers(out vb, out ib);
 
-			mg.GetAlphaMaterialData(out matOffsets, out matNumVerts, out matNumTris, out matSortPoints);
+			mg.GetAlphaMaterialData(out alphaDrawCalls);
 		}
 
 

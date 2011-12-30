@@ -10,6 +10,18 @@ using MeshLib;
 
 namespace BSPCore
 {
+	class PerPlaneDrawData
+	{
+		internal int			mNumFaces;
+		internal List<int>		mVCounts	=new List<int>();
+		internal List<Vector3>	mVerts		=new List<Vector3>();
+		internal List<Vector3>	mNorms		=new List<Vector3>();
+		internal List<Vector2>	mTex0		=new List<Vector2>();
+		internal List<Vector2>	mTex1		=new List<Vector2>();
+		internal List<Vector4>	mColors		=new List<Vector4>();
+	}
+
+
 	//grind up a map into gpu friendly data
 	public class MapGrinder
 	{
@@ -101,10 +113,11 @@ namespace BSPCore
 		List<Int32>		mLMMaterialNumTris	=new List<Int32>();
 
 		//lightmap alpha material stuff
-		List<Int32>		mLMAMaterialOffsets		=new List<Int32>();
-		List<Int32>		mLMAMaterialNumVerts	=new List<Int32>();
-		List<Int32>		mLMAMaterialNumTris		=new List<Int32>();
-		List<Vector3>	mLMAMaterialSortPoints	=new List<Vector3>();
+		List<Int32>				mLMAMaterialOffsets		=new List<Int32>();
+		List<Int32>				mLMAMaterialNumVerts	=new List<Int32>();
+		List<Int32>				mLMAMaterialNumTris		=new List<Int32>();
+		List<Vector3>			mLMAMaterialSortPoints	=new List<Vector3>();
+		List<List<DrawCall>>	mLMADraws				=new List<List<DrawCall>>();
 
 		//vert lit material stuff
 		List<Int32>		mVLitMaterialOffsets	=new List<Int32>();
@@ -112,10 +125,11 @@ namespace BSPCore
 		List<Int32>		mVLitMaterialNumTris	=new List<Int32>();
 
 		//alpha material stuff
-		List<Int32>		mAlphaMaterialOffsets		=new List<Int32>();
-		List<Int32>		mAlphaMaterialNumVerts		=new List<Int32>();
-		List<Int32>		mAlphaMaterialNumTris		=new List<Int32>();
-		List<Vector3>	mAlphaMaterialSortPoints	=new List<Vector3>();
+		List<Int32>				mAlphaMaterialOffsets		=new List<Int32>();
+		List<Int32>				mAlphaMaterialNumVerts		=new List<Int32>();
+		List<Int32>				mAlphaMaterialNumTris		=new List<Int32>();
+		List<Vector3>			mAlphaMaterialSortPoints	=new List<Vector3>();
+		List<List<DrawCall>>	mAlphaDraws					=new List<List<DrawCall>>();
 
 		//fullbright material stuff
 		List<Int32>		mFBMaterialOffsets	=new List<Int32>();
@@ -218,13 +232,15 @@ namespace BSPCore
 		}
 
 
-		internal void GetLMAMaterialData(out Int32 []matOffsets, out Int32 []matNumVerts,
-										 out Int32 []matNumTris, out Vector3 []matSortPoints)
+		internal void GetLMAMaterialData(out List<DrawCall> []draws)
 		{
-			matOffsets		=mLMAMaterialOffsets.ToArray();
-			matNumVerts		=mLMAMaterialNumVerts.ToArray();
-			matNumTris		=mLMAMaterialNumTris.ToArray();
-			matSortPoints	=mLMAMaterialSortPoints.ToArray();
+			draws	=mLMADraws.ToArray();
+		}
+
+
+		internal void GetAlphaMaterialData(out List<DrawCall> []draws)
+		{
+			draws	=mAlphaDraws.ToArray();
 		}
 
 
@@ -243,16 +259,6 @@ namespace BSPCore
 			matOffsets	=mFBMaterialOffsets.ToArray();
 			matNumVerts	=mFBMaterialNumVerts.ToArray();
 			matNumTris	=mFBMaterialNumTris.ToArray();
-		}
-
-
-		internal void GetAlphaMaterialData(out Int32 []matOffsets,	out Int32 []matNumVerts,
-											out Int32 []matNumTris, out Vector3 []matSortPoints)
-		{
-			matOffsets		=mAlphaMaterialOffsets.ToArray();
-			matNumVerts		=mAlphaMaterialNumVerts.ToArray();
-			matNumTris		=mAlphaMaterialNumTris.ToArray();
-			matSortPoints	=mAlphaMaterialSortPoints.ToArray();
 		}
 
 
@@ -816,7 +822,7 @@ namespace BSPCore
 			mLMAtlas.Finish();
 
 			ComputeIndexes(mLMAnimIndexes, mLMAnimMaterialOffsets,
-				mLMAnimMaterialNumTris, numFace, firstVert, numVert, null, null);
+				mLMAnimMaterialNumTris, numFace, firstVert, numVert);
 
 			return	true;
 		}
@@ -978,8 +984,7 @@ namespace BSPCore
 			mLMAtlas.Finish();
 
 			ComputeIndexes(mLMAAnimIndexes, mLMAAnimMaterialOffsets,
-				mLMAAnimMaterialNumTris, numFace, firstVert, numVert,
-				mLMAAnimVerts, mLMAAnimMaterialSortPoints);
+				mLMAAnimMaterialNumTris, numFace, firstVert, numVert);
 
 			return	true;
 		}
@@ -1074,8 +1079,8 @@ namespace BSPCore
 
 			mLMAtlas.Finish();
 
-			ComputeIndexes(mLMIndexes, mLMMaterialOffsets, mLMMaterialNumTris,
-				numFace, firstVert, numVert, null, null);
+			ComputeIndexes(mLMIndexes, mLMMaterialOffsets,
+				mLMMaterialNumTris,	numFace, firstVert, numVert);
 
 			return	true;
 		}
@@ -1085,21 +1090,21 @@ namespace BSPCore
 			int firstFace, int nFaces, byte []lightData, object pobj)
 		{
 			GFXPlane	[]pp		=pobj as GFXPlane [];
-			List<Int32>	firstVert	=new List<Int32>();
-			List<Int32>	numVert		=new List<Int32>();
-			List<Int32>	numFace		=new List<Int32>();
 
 			CoreEvents.Print("Handling lightmapped alpha materials\n");
 
+			//store each plane used, and how many faces per material
+			List<Dictionary<Int32, PerPlaneDrawData>>	planeFaces
+				=new List<Dictionary<Int32, PerPlaneDrawData>>();
+
 			foreach(Material mat in mMaterials)
 			{
-				int	numFaceVerts	=mLMAVerts.Count;
-				int	numFaces		=0;
+				Dictionary<Int32, PerPlaneDrawData>	dcs
+					=new Dictionary<Int32, PerPlaneDrawData>();
+				planeFaces.Add(dcs);
 
 				if(!mat.Name.EndsWith("*LitAlpha"))
 				{
-					numFace.Add(numFaces);
-					mLMAMaterialNumVerts.Add(mLMAVerts.Count - numFaceVerts);
 					continue;
 				}
 
@@ -1134,7 +1139,19 @@ namespace BSPCore
 						continue;
 					}
 
-					numFaces++;
+					PerPlaneDrawData	ppdd	=null;
+
+					if(dcs.ContainsKey(f.mPlaneNum))
+					{
+						ppdd	=dcs[f.mPlaneNum];
+					}
+					else
+					{
+						ppdd	=new PerPlaneDrawData();
+					}
+
+					ppdd.mNumFaces++;
+					ppdd.mVCounts.Add(f.mNumVerts);
 
 					//grab plane for dynamic lighting normals
 					GFXPlane	pl	=pp[f.mPlaneNum];
@@ -1144,33 +1161,34 @@ namespace BSPCore
 						pln.Inverse();
 					}
 
-					List<Vector3>	fverts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, mLMAFaceTex0, fverts);
-					ComputeFaceNormals(f, verts, indexes, tex, null, pln, mLMANormals);
-					mLMAVerts.AddRange(fverts);
+					List<Vector3>	faceVerts	=new List<Vector3>();
+					ComputeFaceData(f, verts, indexes, tex, ppdd.mTex0, faceVerts);
+					ComputeFaceNormals(f, verts, indexes, tex, null, pln, ppdd.mNorms);
 
-					foreach(Vector3 v in fverts)
+					foreach(Vector3 v in faceVerts)
 					{
-						mLMAColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
+						ppdd.mColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
 					}
 
-					if(!AtlasLightMap(f, lightData, 0, fverts, pln, tex, mLMAFaceTex1))
+					if(!AtlasLightMap(f, lightData, 0, faceVerts, pln, tex, ppdd.mTex1))
 					{
 						return	false;
 					}
 
-					firstVert.Add(mLMAVerts.Count - f.mNumVerts);
-					numVert.Add(f.mNumVerts);
-				}
+					ppdd.mVerts.AddRange(faceVerts);
 
-				numFace.Add(numFaces);
-				mLMAMaterialNumVerts.Add(mLMAVerts.Count - numFaceVerts);
+					if(!dcs.ContainsKey(f.mPlaneNum))
+					{
+						dcs.Add(f.mPlaneNum, ppdd);
+					}
+				}
 			}
 
 			mLMAtlas.Finish();
 
-			ComputeIndexes(mLMAIndexes, mLMAMaterialOffsets, mLMAMaterialNumTris,
-				numFace, firstVert, numVert, mLMAVerts, mLMAMaterialSortPoints);
+			mLMADraws	=ComputeAlphaIndexes(mLMAIndexes, planeFaces);
+
+			StuffVBArrays(planeFaces, mLMAVerts, mLMANormals, mLMAFaceTex0, mLMAFaceTex1, mLMAColors);
 
 			return	true;
 		}
@@ -1254,7 +1272,7 @@ namespace BSPCore
 			}
 
 			ComputeIndexes(mVLitIndexes, mVLitMaterialOffsets,
-				mVLitMaterialNumTris, numFace, firstVert, numVert, null, null);
+				mVLitMaterialNumTris, numFace, firstVert, numVert);
 
 			return	true;
 		}
@@ -1344,9 +1362,9 @@ namespace BSPCore
 				mMirrorMaterialNumVerts.Add(mMirrorVerts.Count - numFaceVerts);
 			}
 
-			ComputeIndexes(mMirrorIndexes, mMirrorMaterialOffsets,
-				mMirrorMaterialNumTris, numFace, firstVert,
-				numVert, mMirrorVerts, mMirrorMaterialSortPoints);
+//			ComputeIndexes(mMirrorIndexes, mMirrorMaterialOffsets,
+//				mMirrorMaterialNumTris, numFace, firstVert,
+//				numVert, mMirrorVerts, mMirrorMaterialSortPoints);
 
 			return	true;
 		}
@@ -1356,21 +1374,20 @@ namespace BSPCore
 			int firstFace, int nFaces, int[] indexes, object pobj)
 		{
 			GFXPlane	[]pp		=pobj as GFXPlane [];
-			List<Int32>	firstVert	=new List<Int32>();
-			List<Int32>	numVert		=new List<Int32>();
-			List<Int32>	numFace		=new List<Int32>();
 
 			CoreEvents.Print("Building alpha face data...\n");
 
+			//store each plane used, and how many faces per material
+			List<Dictionary<Int32, PerPlaneDrawData>>	planeFaces
+				=new List<Dictionary<Int32, PerPlaneDrawData>>();
 			foreach(Material mat in mMaterials)
 			{
-				int	numFaceVerts	=mAlphaVerts.Count;
-				int	numFaces		=0;
+				Dictionary<Int32, PerPlaneDrawData>	dcs
+					=new Dictionary<Int32, PerPlaneDrawData>();
+				planeFaces.Add(dcs);
 
 				if(!mat.Name.EndsWith("*Alpha"))
 				{
-					numFace.Add(numFaces);
-					mAlphaMaterialNumVerts.Add(mAlphaVerts.Count - numFaceVerts);
 					continue;
 				}
 
@@ -1402,7 +1419,19 @@ namespace BSPCore
 						continue;
 					}
 
-					numFaces++;
+					PerPlaneDrawData	ppdd	=null;
+
+					if(dcs.ContainsKey(f.mPlaneNum))
+					{
+						ppdd	=dcs[f.mPlaneNum];
+					}
+					else
+					{
+						ppdd	=new PerPlaneDrawData();
+					}
+
+					ppdd.mNumFaces++;
+					ppdd.mVCounts.Add(f.mNumVerts);
 
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
@@ -1411,20 +1440,23 @@ namespace BSPCore
 						pln.Inverse();
 					}
 
-					ComputeFaceData(f, verts, indexes, tex, mAlphaTex0, mAlphaVerts);
-					ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, mAlphaNormals);
-					ComputeFaceColors(f, verts, indexes, tex, rgbVerts, mAlphaColors);
+					List<Vector3>	faceVerts	=new List<Vector3>();
+					ComputeFaceData(f, verts, indexes, tex, ppdd.mTex0, faceVerts);
+					ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ppdd.mNorms);
+					ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ppdd.mColors);
 
-					firstVert.Add(mAlphaVerts.Count - f.mNumVerts);
-					numVert.Add(f.mNumVerts);
+					ppdd.mVerts.AddRange(faceVerts);
+
+					if(!dcs.ContainsKey(f.mPlaneNum))
+					{
+						dcs.Add(f.mPlaneNum, ppdd);
+					}
 				}
-				numFace.Add(numFaces);
-				mAlphaMaterialNumVerts.Add(mAlphaVerts.Count - numFaceVerts);
 			}
 
-			ComputeIndexes(mAlphaIndexes, mAlphaMaterialOffsets,
-				mAlphaMaterialNumTris, numFace, firstVert,
-				numVert, mAlphaVerts, mAlphaMaterialSortPoints);
+			mAlphaDraws	=ComputeAlphaIndexes(mAlphaIndexes, planeFaces);
+
+			StuffVBArrays(planeFaces, mAlphaVerts, mAlphaNormals, mAlphaTex0, null, mAlphaColors);
 
 			return	true;
 		}
@@ -1495,7 +1527,7 @@ namespace BSPCore
 			}
 
 			ComputeIndexes(mFBIndexes, mFBMaterialOffsets,
-				mFBMaterialNumTris, numFace, firstVert, numVert, null, null);
+				mFBMaterialNumTris, numFace, firstVert, numVert);
 
 			return	true;
 		}
@@ -1571,15 +1603,15 @@ namespace BSPCore
 			}
 
 			ComputeIndexes(mSkyIndexes, mSkyMaterialOffsets,
-				mSkyMaterialNumTris, numFace, firstVert, numVert, null, null);
+				mSkyMaterialNumTris, numFace, firstVert, numVert);
 
 			return	true;
 		}
 
 
 		void ComputeIndexes(List<int> inds, List<int> matOffsets,
-			List<int> matTris, List<int> numFace, List<int> firstVert,
-			List<int> numVert, List<Vector3> verts, List<Vector3> sortPoints)
+			List<int> matTris, List<int> numFace,
+			List<int> firstVert, List<int> numVert)
 		{
 			int	faceOfs	=0;
 			for(int j=0;j < mMaterialNames.Count;j++)
@@ -1587,35 +1619,6 @@ namespace BSPCore
 				int	cnt	=inds.Count;
 
 				matOffsets.Add(cnt);
-
-				if(sortPoints != null)
-				{
-					double	X	=0.0;
-					double	Y	=0.0;
-					double	Z	=0.0;
-
-					//compute sort point
-					int	numAvg	=0;
-					for(int i=faceOfs;i < (numFace[j] + faceOfs);i++)
-					{
-						int		nverts	=numVert[i];
-						int		fvert	=firstVert[i];
-						for(int k=fvert;k < (fvert + nverts);k++)
-						{
-							X	+=verts[k].X;
-							Y	+=verts[k].Y;
-							Z	+=verts[k].Z;
-
-							numAvg++;
-						}
-					}
-
-					X	/=numAvg;
-					Y	/=numAvg;
-					Z	/=numAvg;
-
-					sortPoints.Add(new Vector3((float)X, (float)Y, (float)Z));
-				}
 
 				for(int i=faceOfs;i < (numFace[j] + faceOfs);i++)
 				{
@@ -1640,6 +1643,107 @@ namespace BSPCore
 
 				matTris.Add(numTris);
 			}
+		}
+
+
+		Vector3 ComputeSortPoint(PerPlaneDrawData ppdd)
+		{
+			double	X	=0.0;
+			double	Y	=0.0;
+			double	Z	=0.0;
+
+			//compute sort point
+			int	numAvg	=0;
+			foreach(Vector3 v in ppdd.mVerts)
+			{
+				X	+=v.X;
+				Y	+=v.Y;
+				Z	+=v.Z;
+
+				numAvg++;
+			}
+
+			X	/=numAvg;
+			Y	/=numAvg;
+			Z	/=numAvg;
+
+			Vector3	ret	=Vector3.Zero;
+
+			ret.X	=(float)X;
+			ret.Y	=(float)Y;
+			ret.Z	=(float)Z;
+
+			return	ret;
+		}
+
+
+		static void StuffVBArrays(List<Dictionary<Int32, PerPlaneDrawData>> planeFaces,
+			List<Vector3> verts, List<Vector3> norms, List<Vector2> tex0,
+			List<Vector2> tex1, List<Vector4> colors)
+		{
+			foreach(Dictionary<Int32, PerPlaneDrawData> pf in planeFaces)
+			{
+				foreach(KeyValuePair<Int32, PerPlaneDrawData> ppdd in pf)
+				{
+					verts.AddRange(ppdd.Value.mVerts);
+					norms.AddRange(ppdd.Value.mNorms);
+					tex0.AddRange(ppdd.Value.mTex0);
+					colors.AddRange(ppdd.Value.mColors);
+
+					if(tex1 != null)
+					{
+						tex1.AddRange(ppdd.Value.mTex1);
+					}
+				}
+			}
+		}
+
+
+		List<List<DrawCall>> ComputeAlphaIndexes(List<int> inds,
+			List<Dictionary<Int32, PerPlaneDrawData>> planeFaces)
+		{
+			List<List<DrawCall>>	draws	=new List<List<DrawCall>>();
+
+			//index as if data is already in a big vbuffer
+			int	vbVertOfs	=0;
+			for(int j=0;j < mMaterialNames.Count;j++)
+			{
+				List<DrawCall>	dcs	=new List<DrawCall>();
+				foreach(KeyValuePair<Int32, PerPlaneDrawData> pf in planeFaces[j])
+				{
+					int	cnt	=inds.Count;
+
+					DrawCall	dc	=new DrawCall();				
+					dc.mStartIndex	=cnt;
+					dc.mSortPoint	=ComputeSortPoint(pf.Value);
+
+					for(int i=0;i < pf.Value.mNumFaces;i++)
+					{
+						int	nverts	=pf.Value.mVCounts[i];
+
+						//triangulate
+						for(int k=1;k < nverts-1;k++)
+						{
+							inds.Add(vbVertOfs);
+							inds.Add(vbVertOfs + k);
+							inds.Add(vbVertOfs + ((k + 1) % nverts));
+						}
+
+						vbVertOfs	+=pf.Value.mVCounts[i];
+					}
+
+					int	numTris	=(inds.Count - cnt);
+
+					numTris	/=3;
+
+					dc.mPrimCount	=numTris;
+					dc.mNumVerts	=pf.Value.mVerts.Count;
+
+					dcs.Add(dc);
+				}
+				draws.Add(dcs);
+			}
+			return	draws;
 		}
 
 
