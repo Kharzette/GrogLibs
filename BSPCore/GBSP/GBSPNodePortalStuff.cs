@@ -556,7 +556,10 @@ namespace BSPCore
 			List<MapEntity> ents,
 			PlanePool pool, bool bVerbose)
 		{
-			CoreEvents.Print(" --- Remove Hidden Leafs --- \n");
+			if(bVerbose)
+			{
+				CoreEvents.Print(" --- Remove Hidden Leafs --- \n");
+			}
 
 			GBSPNode	outsideNode	=oNode;
 

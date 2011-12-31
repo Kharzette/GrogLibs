@@ -17,6 +17,7 @@ namespace BSPCore
 		int	mTotalIndexes;
 		int	mNumTJunctions;
 		int	mNumFixedFaces;
+		int	mIterationCount;
 
 		public const int	MAX_TEMP_INDEX_VERTS	=1024;
 		public const int	MAX_WELDED_VERTS		=64000;
@@ -34,6 +35,11 @@ namespace BSPCore
 		internal int TotalIndexes
 		{
 			get { return mTotalIndexes; }
+		}
+		internal int IterationCount
+		{
+			get { return mIterationCount; }
+			set { mIterationCount = value; }
 		}
 
 

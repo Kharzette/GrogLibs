@@ -52,11 +52,12 @@ namespace BSPCore
 		internal const UInt32 SMOOTHING_SURFLIGHT	=0x10000;	//turns on radiosity surface lighting
 
 		//flags from Genesis
-		internal const UInt32 SIDE_HINT		=(1<<0);	//Side is a hint side
-		internal const UInt32 SIDE_SHEET	=(1<<1);	//Side is a sheet (only visible face in a sheet contents)
-		internal const UInt32 SIDE_VISIBLE	=(1<<2);	// 
-		internal const UInt32 SIDE_TESTED	=(1<<3);	// 
-		internal const UInt32 SIDE_NODE		=(1<<4);	// 
+		internal const UInt32	SIDE_HINT		=(1<<0);	//Side is a hint side
+		internal const UInt32	SIDE_SHEET		=(1<<1);	//Side is a sheet (only visible face in a sheet contents)
+		internal const UInt32	SIDE_VISIBLE	=(1<<2);	// 
+		internal const UInt32	SIDE_TESTED		=(1<<3);	// 
+		internal const UInt32	SIDE_NODE		=(1<<4);	// 
+		internal const UInt32	SIDE_SLIPPERY	=(1<<5);	//added by me for slippery surfaces
 
 
 		internal GBSPSide() { }
@@ -352,7 +353,7 @@ namespace BSPCore
 					ti.mUVec	/=ti.mDrawScaleU;
 					ti.mVVec	/=ti.mDrawScaleV;
 
-					FixFlags(ref ti);
+					FixFlags(ref ti, false, false);
 
 					mTexInfo	=tiPool.Add(ti);
 
@@ -415,7 +416,8 @@ namespace BSPCore
 		}
 
 
-		internal UInt32 ReadMapLine(string szLine, PlanePool pool, TexInfoPool tiPool)
+		internal UInt32 ReadMapLine(string szLine, PlanePool pool, TexInfoPool tiPool,
+			bool bSlickAsGouraud, bool bWarpAsMirror)
 		{
 			UInt32	ret	=0;
 
@@ -603,7 +605,7 @@ namespace BSPCore
 				ti.mVVec	=Vector3.TransformNormal(ti.mVVec, texRot);
 			}
 
-			FixFlags(ref ti);
+			FixFlags(ref ti, bSlickAsGouraud, bWarpAsMirror);
 
 			mTexInfo	=tiPool.Add(ti);
 			return	ret;
@@ -612,7 +614,7 @@ namespace BSPCore
 
 
 		//convert from hammer flags to genesis flags
-		internal void FixFlags(ref TexInfo ti)
+		internal void FixFlags(ref TexInfo ti, bool bSlickAsGouraud, bool bWarpAsMirror)
 		{
 			UInt32	hammerFlags	=mFlags;
 
@@ -678,8 +680,15 @@ namespace BSPCore
 			}
 			if((hammerFlags & SURF_SLICK) != 0)
 			{
-				ti.mFlags	|=TexInfo.GOURAUD;
-				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+				if(bSlickAsGouraud)
+				{
+					ti.mFlags	|=TexInfo.GOURAUD;
+					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+				}
+				else
+				{
+					mFlags	|=SIDE_SLIPPERY;
+				}
 			}
 			if((hammerFlags & SURF_TRANS33) != 0)
 			{
@@ -693,9 +702,16 @@ namespace BSPCore
 			}
 			if((hammerFlags & SURF_WARP) != 0)
 			{
-				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
-				ti.mFlags	|=TexInfo.FLAT;
-				ti.mFlags	|=TexInfo.MIRROR;
+				if(bWarpAsMirror)
+				{
+					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+					ti.mFlags	|=TexInfo.FLAT;
+					ti.mFlags	|=TexInfo.MIRROR;
+				}
+				else
+				{
+					//don't really have a warping effect yet
+				}
 			}
 		}
 

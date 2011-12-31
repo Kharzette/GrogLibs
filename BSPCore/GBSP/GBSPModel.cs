@@ -47,15 +47,18 @@ namespace BSPCore
 			list.Reverse();
 			List<GBSPBrush>	glist	=GBSPBrush.ConvertMapBrushList(list);
 
+			object	prog	=ProgressWatcher.RegisterProgress(0, 2 * (kMaxZ - kMinZ) * (kMaxX - kMinX), 0);
+
 			for(int z=kMinZ;z < kMaxZ;z++)
 			{
 				for(int x=kMinX;x < kMaxX;x++)
 				{
-					GBSPNode	blockNode	=ProcessBlock(glist, pool, x, z);
+					GBSPNode	blockNode	=ProcessBlock(glist, pool, x, z, bVerbose);
 					mBlockNodes.SetValue(blockNode, x - kMinX, z - kMinZ);
+					ProgressWatcher.UpdateProgressIncremental(prog);
 				}
 			}
-			
+
 			GBSPNode	root	=GBSPNode.BlockTree(mBlockNodes, pool,
 				kMinX, kMinZ,
 				kMinX, kMinZ, kMaxX, kMaxZ);
@@ -100,12 +103,13 @@ namespace BSPCore
 			{
 				for(int x=kMinX;x < kMaxX;x++)
 				{
-					GBSPNode	blockNode	=ProcessBlock(glist, pool, x, z);
+					GBSPNode	blockNode	=ProcessBlock(glist, pool, x, z, bVerbose);
 					mBlockNodes.SetValue(blockNode, x - kMinX, z - kMinZ);
+					ProgressWatcher.UpdateProgressIncremental(prog);
 				}
 			}
 
-			GBSPBrush.DumpBrushListToFile(GBSPNode.leafBrushes, pool, "LeafBrushes.map");
+			ProgressWatcher.Clear();
 
 			root	=GBSPNode.BlockTree(mBlockNodes, pool,
 				kMinX, kMinZ,
@@ -144,9 +148,12 @@ namespace BSPCore
 		}
 
 
-		internal GBSPNode ProcessBlock(List<GBSPBrush> brushes, PlanePool pp, int xblock, int zblock)
+		internal GBSPNode ProcessBlock(List<GBSPBrush> brushes, PlanePool pp, int xblock, int zblock, bool bVerbose)
 		{
-			CoreEvents.Print("############### block " + xblock + "," + zblock + " ###############\n");
+			if(bVerbose)
+			{
+				CoreEvents.Print("############### block " + xblock + "," + zblock + " ###############\n");
+			}
 
 			Bounds	blockBounds	=new Bounds();
 
@@ -157,7 +164,10 @@ namespace BSPCore
 			blockBounds.mMaxs.Z	=(zblock + 1) * 1024;
 			blockBounds.mMaxs.Y	=4096;
 
-			CoreEvents.Print("" + blockBounds.mMins + ", " + blockBounds.mMaxs + "\n");
+			if(bVerbose)
+			{
+				CoreEvents.Print("" + blockBounds.mMins + ", " + blockBounds.mMaxs + "\n");
+			}
 
 			List<GBSPBrush>	blocked	=GBSPBrush.BlockChopBrushes(brushes, blockBounds, pp);
 
@@ -171,7 +181,7 @@ namespace BSPCore
 				GBSPBrush.DumpBrushListToFile(blocked, pp, "Brush_x" + xblock + "_z" + zblock + ".map");
 			}
 
-			List<GBSPBrush>	csgList	=GBSPBrush.CSGBrushes(true, blocked, pp);			
+			List<GBSPBrush>	csgList	=GBSPBrush.CSGBrushes(bVerbose, blocked, pp);			
 
 			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
 
@@ -179,7 +189,7 @@ namespace BSPCore
 			GBSPBrush.DumpOverlapping(csgList, pp);
 
 			GBSPNode	root	=new GBSPNode();
-			root.BuildBSP(csgList, pp, true);
+			root.BuildBSP(csgList, pp, bVerbose);
 			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
 
 			return	root;
@@ -376,9 +386,9 @@ namespace BSPCore
 		}
 
 
-		internal bool FixTJunctions(FaceFixer ff, TexInfoPool tip)
+		internal bool FixTJunctions(FaceFixer ff, TexInfoPool tip, object prog)
 		{
-			return	mRootNode.FixTJunctions_r(ff, tip);
+			return	mRootNode.FixTJunctions_r(ff, tip, prog);
 		}
 
 

@@ -133,7 +133,8 @@ namespace BSPCore
 		}
 
 
-		internal bool ReadFromMap(StreamReader sr, PlanePool pool, TexInfoPool tiPool, int entityNum)
+		internal bool ReadFromMap(StreamReader sr, PlanePool pool, TexInfoPool tiPool,
+			int entityNum, bool bSlickAsGouraud, bool bWarpAsMirror)
 		{
 			string	s	="";
 			bool	ret	=true;
@@ -143,7 +144,7 @@ namespace BSPCore
 				if(s.StartsWith("("))
 				{
 					GBSPSide	side	=new GBSPSide();
-					mContents	=side.ReadMapLine(s, pool, tiPool);
+					mContents	=side.ReadMapLine(s, pool, tiPool, bSlickAsGouraud, bWarpAsMirror);
 
 					if(mContents == Contents.CONTENTS_AUX)
 					{

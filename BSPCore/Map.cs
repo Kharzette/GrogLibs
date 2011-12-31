@@ -436,7 +436,7 @@ namespace BSPCore
 		#endregion
 
 
-		public void LoadBrushFile(string mapFileName)
+		public void LoadBrushFile(string mapFileName, bool bSlickAsGouraud, bool bWarpAsMirror)
 		{
 			mEntities	=new List<MapEntity>();
 
@@ -459,7 +459,8 @@ namespace BSPCore
 							if(s == "{")
 							{
 								MapEntity	e	=new MapEntity();
-								e.ReadFromMap(sr, mPlanePool, mTIPool, mEntities.Count);
+								e.ReadFromMap(sr, mPlanePool, mTIPool,
+									mEntities.Count, bSlickAsGouraud, bWarpAsMirror);
 								mEntities.Add(e);
 
 								CoreEvents.FireNumPlanesChangedEvent(mPlanePool.mPlanes.Count, null);
@@ -930,13 +931,19 @@ namespace BSPCore
 		{
 			CoreEvents.Print(" --- Weld Model Verts --- \n");
 
+			object	prog	=ProgressWatcher.RegisterProgress(0, mModels.Count, 0);
+
 			for(int i=0;i < mModels.Count;i++)
 			{
 				if(!mModels[i].GetFaceVertIndexNumbers(ff))
 				{
 					return	false;
 				}
+				ProgressWatcher.UpdateProgressIncremental(prog);
 			}
+
+			ProgressWatcher.UpdateProgress(prog, 0);
+			ProgressWatcher.DestroyProgress(prog);
 
 			//Skip if asked to do so...
 			if(!bFixTJunctions)
@@ -944,16 +951,23 @@ namespace BSPCore
 				return	true;
 			}
 
-
 			CoreEvents.Print(" --- Fix Model TJunctions --- \n");
 
 			for(int i=0;i < mModels.Count;i++)
 			{
-				if(!mModels[i].FixTJunctions(ff, mTIPool))
+				object	prog2	=null;
+				if(i == 0)
+				{
+					prog2	=ProgressWatcher.RegisterProgress(0, ff.IterationCount, 0);
+				}
+
+				if(!mModels[i].FixTJunctions(ff, mTIPool, prog2))
 				{
 					return false;
 				}
 			}
+
+			ProgressWatcher.DestroyProgress(prog);
 
 			if(bVerbose)
 			{

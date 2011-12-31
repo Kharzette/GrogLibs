@@ -766,6 +766,8 @@ namespace BSPCore
 				return	true;
 			}
 
+			ff.IterationCount++;
+
 			if(!GBSPFace.GetFaceListVertIndexNumbers(mFaces, ff))
 			{
 				return	false;
@@ -814,7 +816,7 @@ namespace BSPCore
 		}
 
 
-		internal bool FixTJunctions_r(FaceFixer ff, TexInfoPool tip)
+		internal bool FixTJunctions_r(FaceFixer ff, TexInfoPool tip, object prog)
 		{
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
@@ -822,12 +824,14 @@ namespace BSPCore
 			}
 
 			GBSPFace.FixFaceListTJunctions(mFaces, ff, tip);
+
+			ProgressWatcher.UpdateProgressIncremental(prog);
 			
-			if(!mFront.FixTJunctions_r(ff, tip))
+			if(!mFront.FixTJunctions_r(ff, tip, prog))
 			{
 				return	false;
 			}
-			if(!mBack.FixTJunctions_r(ff, tip))
+			if(!mBack.FixTJunctions_r(ff, tip, prog))
 			{
 				return	false;
 			}

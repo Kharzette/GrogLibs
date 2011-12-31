@@ -370,7 +370,8 @@ namespace BSPCore
 
 
 		//old school quake maps
-		internal void ReadFromMap(StreamReader sr, PlanePool pool, TexInfoPool tiPool, int entityNum)
+		internal void ReadFromMap(StreamReader sr, PlanePool pool, TexInfoPool tiPool,
+			int entityNum, bool bSlickAsGouraud, bool bWarpAsMirror)
 		{
 			string	s	="";
 			while((s = sr.ReadLine()) != null)
@@ -393,7 +394,7 @@ namespace BSPCore
 				else if(s == "{")
 				{
 					MapBrush	b	=new MapBrush();
-					if(b.ReadFromMap(sr, pool, tiPool, entityNum))
+					if(b.ReadFromMap(sr, pool, tiPool, entityNum, bSlickAsGouraud, bWarpAsMirror))
 					{
 						b.MakePolys(pool, true);
 						b.FixContents(false);

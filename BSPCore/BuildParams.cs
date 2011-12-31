@@ -13,6 +13,8 @@ namespace BSPCore
 		public bool	mbVerbose;
 		public bool	mbEntityVerbose;
 		public bool mbFixTJunctions;
+		public bool	mbSlickAsGouraud;
+		public bool mbWarpAsMirror;
 	}
 
 

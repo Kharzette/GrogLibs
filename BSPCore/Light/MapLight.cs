@@ -695,9 +695,10 @@ namespace BSPCore
 				return;
 			}
 
+			CoreEvents.FireNumPlanesChangedEvent(mGFXPlanes.Length, null);
+			CoreEvents.FireNumVertsChangedEvent(mGFXVertIndexes.Length, null);
+
 			byte	[]visData	=LoadVisData(lp.mFileName);
-
-
 
 			//ensure vis is built
 			if(visData == null)
@@ -706,6 +707,8 @@ namespace BSPCore
 				CoreEvents.FireLightDoneDoneEvent(false, null);
 				return;
 			}
+
+			CoreEvents.FireNumClustersChangedEvent(mGFXClusters.Length, null);
 
 			mLightMapGridSize	=lp.mLightParams.mLightGridSize;
 			

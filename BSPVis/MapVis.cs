@@ -585,7 +585,7 @@ namespace BSPVis
 
 			p.mbDone	=false;
 
-			int	c_might	=CountBits(p.mPortalFlood, mVisSortedPortals.Length);
+			p.mMightSee	=CountBits(p.mPortalFlood, mVisSortedPortals.Length);
 
 			VISPStack	vps	=new VISPStack();
 			vps.mSource		=p.mPoly;
@@ -601,9 +601,7 @@ namespace BSPVis
 
 			p.mbDone	=true;
 
-			int	c_can	=CountBits(p.mPortalVis, mVisSortedPortals.Length);
-			CoreEvents.Print("portal:" + p.mPortNum + " mightsee:" + c_might +
-				" cansee:" + c_can + "\n");
+			p.mCanSee	=CountBits(p.mPortalVis, mVisSortedPortals.Length);
 		}
 
 
@@ -613,7 +611,7 @@ namespace BSPVis
 
 			p.mbDone	=false;
 
-			int	c_might	=CountBits(p.mPortalFlood, visPortals.Length);
+			p.mMightSee	=CountBits(p.mPortalFlood, visPortals.Length);
 
 			VISPStack	vps	=new VISPStack();
 			vps.mSource		=p.mPoly;
@@ -629,8 +627,8 @@ namespace BSPVis
 
 			p.mbDone	=true;
 
-			int	c_can	=CountBits(p.mPortalVis, visPortals.Length);
-			Console.WriteLine("Portal: " + p.mPortNum + "\tRoughVis: " + c_might + "\tFullVis: " + c_can);
+			p.mCanSee	=CountBits(p.mPortalVis, visPortals.Length);
+			Console.WriteLine("Portal: " + p.mPortNum + "\tRoughVis: " + p.mMightSee + "\tFullVis: " + p.mCanSee);
 		}
 
 
@@ -749,9 +747,9 @@ namespace BSPVis
 
 				if(bVerbose)
 				{
-					CoreEvents.Print("Portal: " + (k + 1) + " - Rough Vis: "
-						+ port.mMightSee + ", Full Vis: "
-						+ port.mCanSee + ", remaining: "
+					CoreEvents.Print("Portal: " + (k + 1) + "\tRough Vis: "
+						+ port.mMightSee + "\tFull Vis: "
+						+ port.mCanSee + "\tRemaining: "
 						+ (endPort - count) + "\n");
 //					CoreEvents.Print("Portal: " + (k + 1) + " - Fast Vis: "
 //						+ port.mNumMightSee + ", Full Vis: "
