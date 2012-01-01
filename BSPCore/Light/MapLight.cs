@@ -740,6 +740,9 @@ namespace BSPCore
 			}
 			bw	=new BinaryWriter(file);
 
+			DateTime	startTime	=DateTime.Now;
+
+			CoreEvents.Print("Starting light at " + startTime + "\n");
 			CoreEvents.Print("Num Faces            : " + mGFXFaces.Length + "\n");
 
 			//Build the patches (before direct lights are created)
@@ -814,6 +817,10 @@ namespace BSPCore
 
 			CleanupLight();
 
+			DateTime	done	=DateTime.Now;
+
+			CoreEvents.Print("Finished light at " + done + "\n");
+			CoreEvents.Print(done - startTime + " elapsed\n");
 			CoreEvents.Print("Num Light Maps       : " + numRGBMaps + "\n");
 
 //			MaterialVisGBSPFile(lp.mFileName, lp.mVisParams, lp.mBSPParams);

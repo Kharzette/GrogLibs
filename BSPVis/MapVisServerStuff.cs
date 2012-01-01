@@ -334,6 +334,8 @@ namespace BSPVis
 				FileStream		fs	=fi.OpenRead();
 				BinaryReader	br	=new BinaryReader(fs);
 
+				br.BaseStream.Seek(0, SeekOrigin.Begin);
+
 				for(int i=left;i < right;i++)
 				{
 					mVisPortals[i].ReadVisBits(br);
@@ -406,7 +408,7 @@ namespace BSPVis
 			FileStream	fs	=new FileStream(saveChunk, FileMode.Create, FileAccess.Write);
 			bw	=new BinaryWriter(fs);
 
-			UtilityLib.FileUtil.WriteArray(ports, bw);
+			bw.Write(ports, 0, ports.Length);
 
 			bw.Close();
 			fs.Close();
@@ -663,6 +665,18 @@ namespace BSPVis
 					}
 					catch
 					{
+						CoreEvents.Print("Something wrong with work unit at " +
+							vs.mStartPort + " to " + vs.mEndPort + "...  Restarting.\n");
+						lock(workingOn)
+						{
+							workingOn.Remove(wrk);
+						}
+						work.Enqueue(wrk);
+						lock(working)
+						{
+							working.Remove(wrk.mCruncher);
+						}
+						clients.Enqueue(wrk.mCruncher);
 					}
 
 					if(ports != null)
