@@ -293,6 +293,11 @@ namespace BSPCore
 			{
 				bool	bFlipSide	=(port.mFrontNode != this);
 
+				if(poly.IsTiny())
+				{
+					break;
+				}
+
 				poly.ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, port.mPlane, bFlipSide, cp);
 			}
 

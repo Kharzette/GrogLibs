@@ -49,6 +49,7 @@
     <Compile Include="Misc.cs" />
     <Compile Include="Mover.cs" />
     <Compile Include="Pool.cs" />
+    <Compile Include="TSPool.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XNAMathery\XNAMathery.csproj">

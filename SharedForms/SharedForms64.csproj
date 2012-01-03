@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{ADEB2534-851E-49C2-8EE7-B2EA580B916E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SharedForms</RootNamespace>
+    <AssemblyName>SharedForms</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BSPForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BSPForm.Designer.cs">
+      <DependentUpon>BSPForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormExtensions.cs" />
+    <Compile Include="Output.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Output.Designer.cs">
+      <DependentUpon>Output.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings.Designer.cs" />
+    <Compile Include="TabbyPropertyGrid.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="VisForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="VisForm.Designer.cs">
+      <DependentUpon>VisForm.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BSPCore\BSPCore64.csproj">
+      <Project>{B1FB8732-424A-4598-B850-A7D650CEBF53}</Project>
+      <Name>BSPCore64</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\UtilityLib\UtilityLib64.csproj">
+      <Project>{44142343-F71A-4BA3-9776-5F1E659190C7}</Project>
+      <Name>UtilityLib64</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\XNAMathery\XNAMathery.csproj">
+      <Project>{7AF20683-E58F-4EBF-B33E-FE550841AF31}</Project>
+      <Name>XNAMathery</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="BSPForm.resx">
+      <DependentUpon>BSPForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Output.resx">
+      <DependentUpon>Output.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="VisForm.resx">
+      <DependentUpon>VisForm.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Settings.settings" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
