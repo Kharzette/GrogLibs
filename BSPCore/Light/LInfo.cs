@@ -9,11 +9,12 @@ namespace BSPCore
 	public class LInfo
 	{
 		Vector3	[][]mRGBLData	=new Vector3[MAX_LTYPE_INDEX][];
-		float	[]mMins			=new float[2];
-		float	[]mMaxs			=new float[2];
-		Int32	[]mLMaxs		=new int[2];
-		Int32	[]mLMins		=new int[2];
-		Int32	[]mLSize		=new int[2];
+		float	mMinU, mMinV;
+		float	mMaxU, mMaxV;
+		Int32	mLMinU, mLMinV;
+		Int32	mLMaxU, mLMaxV;
+		Int32	mLSizeU, mLSizeV;
+
 		Int32	mNumLTypes;
 
 		public const int	MAX_LTYPE_INDEX		=13;	//switchable will go higher TODO
@@ -47,25 +48,31 @@ namespace BSPCore
 		}
 
 
-		internal void CalcInfo(float[] mins, float []maxs, int lightGridSize)
+		internal void CalcInfo(float minU, float minV, float maxU, float maxV, int lightGridSize)
 		{
 			//Get the Texture U/V mins/max, and Grid aligned lmap mins/max/size
-			for(int i=0;i < 2;i++)
+			mMinU	=minU;
+			mMinV	=minV;
+			mMaxU	=maxU;
+			mMaxV	=maxV;
+
+			minU	=(float)Math.Floor(minU / lightGridSize);
+			minV	=(float)Math.Floor(minV / lightGridSize);
+
+			maxU	=(float)Math.Ceiling(maxU / lightGridSize);
+			maxV	=(float)Math.Ceiling(maxV / lightGridSize);
+
+			mLMinU	=(Int32)minU;
+			mLMinV	=(Int32)minV;
+			mLMaxU	=(Int32)maxU;
+			mLMaxV	=(Int32)maxV;
+
+			mLSizeU	=(Int32)(maxU - minU);
+			mLSizeV	=(Int32)(maxV - minV);
+
+			if((mLSizeU + 1) > MAX_LMAP_SIZE || (mLSizeV + 1) > MAX_LMAP_SIZE)
 			{
-				mMins[i]	=mins[i];
-				mMaxs[i]	=maxs[i];
-
-				mins[i]	=(float)Math.Floor(mins[i] / lightGridSize);
-				maxs[i]	=(float)Math.Ceiling(maxs[i] / lightGridSize);
-
-				mLMins[i]	=(Int32)mins[i];
-				mLMaxs[i]	=(Int32)maxs[i];
-				mLSize[i]	=(Int32)(maxs[i] - mins[i]);
-
-				if((mLSize[i] + 1) > LInfo.MAX_LMAP_SIZE)
-				{
-					CoreEvents.Print("CalcFaceInfo:  Face was not subdivided correctly.\n");
-				}
+				CoreEvents.Print("CalcFaceInfo:  Face was not subdivided correctly.\n");
 			}
 		}
 
@@ -94,36 +101,36 @@ namespace BSPCore
 
 		internal void CalcMids(out float MidU, out float MidV)
 		{
-			MidU	=(mMaxs[0] + mMins[0]) * 0.5f;
-			MidV	=(mMaxs[1] + mMins[1]) * 0.5f;
+			MidU	=(mMaxU + mMinU) * 0.5f;
+			MidV	=(mMaxV + mMinV) * 0.5f;
 		}
 
 
 		internal void CalcSizeAndStart(float uOffset, float vOffset, int lightGridSize,
 			out int w, out int h, out float startU, out float startV)
 		{
-			w		=(mLSize[0]) + 1;
-			h		=(mLSize[1]) + 1;
-			startU	=((float)mLMins[0] + uOffset) * (float)lightGridSize;
-			startV	=((float)mLMins[1] + vOffset) * (float)lightGridSize;
+			w		=(mLSizeU) + 1;
+			h		=(mLSizeV) + 1;
+			startU	=((float)mLMinU + uOffset) * (float)lightGridSize;
+			startV	=((float)mLMinV + vOffset) * (float)lightGridSize;
 		}
 
 
 		internal Int32 GetLWidth()
 		{
-			return	mLSize[0] + 1;
+			return	mLSizeU + 1;
 		}
 
 
 		internal Int32 GetLHeight()
 		{
-			return	mLSize[1] + 1;
+			return	mLSizeV + 1;
 		}
 
 
 		internal Int32 CalcSize()
 		{
-			return	(mLSize[0] + 1)	* (mLSize[1] + 1);
+			return	(mLSizeU + 1) * (mLSizeV + 1);
 		}
 	}
 }

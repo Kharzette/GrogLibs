@@ -322,7 +322,7 @@ namespace BSPVis
 				stack.mNext			=null;
 
 				stack.mPass	=new GBSPPoly(p.mPoly);
-				if(!stack.mPass.ClipPoly(fp.mDestPort.mPlane, false))
+				if(!stack.mPass.ClipPoly(fp.mDestPort.mPlane, false, fp.mCP))
 				{
 					continue;
 				}
@@ -333,7 +333,7 @@ namespace BSPVis
 				}
 
 				stack.mSource	=new GBSPPoly(fp.mPrevStack.mSource);
-				if(!stack.mSource.ClipPoly(p.mPlane, true))
+				if(!stack.mSource.ClipPoly(p.mPlane, true, fp.mCP))
 				{
 					continue;
 				}
@@ -356,7 +356,7 @@ namespace BSPVis
 					continue;
 				}
 
-				if(!stack.mPass.SeperatorClip(stack.mSource, fp.mPrevStack.mPass, false))
+				if(!stack.mPass.SeperatorClip(stack.mSource, fp.mPrevStack.mPass, false, fp.mCP))
 				{
 					continue;
 				}
@@ -365,7 +365,7 @@ namespace BSPVis
 					stack.mPass	=null;
 					continue;
 				}
-				if(!stack.mPass.SeperatorClip(fp.mPrevStack.mPass, stack.mSource, true))
+				if(!stack.mPass.SeperatorClip(fp.mPrevStack.mPass, stack.mSource, true, fp.mCP))
 				{
 					continue;
 				}

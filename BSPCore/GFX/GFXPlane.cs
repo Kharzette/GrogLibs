@@ -45,6 +45,9 @@ namespace BSPCore
 			mDist	+=Vector3.Dot(move, mNormal);
 		}
 
+
+		//TODO: this looks simple, but there's some strange
+		//voodoo here that bears further investigation
 		internal float DistanceFast(Vector3 pos)
 		{
 			switch(mType)

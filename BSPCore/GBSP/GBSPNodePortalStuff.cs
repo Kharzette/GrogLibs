@@ -11,20 +11,20 @@ namespace BSPCore
 	internal partial class GBSPNode
 	{
 		internal bool CreatePortals(GBSPNode outNode, bool bVis, bool bVerbose,
-			PlanePool pool, Vector3 nodeMins, Vector3 nodeMaxs)
+			PlanePool pool, Vector3 nodeMins, Vector3 nodeMaxs, ClipPools cp)
 		{
 			if(bVerbose)
 			{
 				CoreEvents.Print(" --- Create Portals --- \n");
 			}
 
-			if(!CreateAllOutsidePortals(pool, ref outNode, nodeMins, nodeMaxs))
+			if(!CreateAllOutsidePortals(pool, ref outNode, nodeMins, nodeMaxs, cp))
 			{
 				CoreEvents.Print("CreatePortals:  Could not create bbox portals.\n");
 				return	false;
 			}
 
-			if(!PartitionPortals_r(pool, bVis))
+			if(!PartitionPortals_r(pool, bVis, cp))
 			{
 				CoreEvents.Print("CreatePortals:  Could not partition portals.\n");
 				return	false;
@@ -224,7 +224,7 @@ namespace BSPCore
 		}
 
 
-		bool PartitionPortals_r(PlanePool pool, bool bVisPortals)
+		bool PartitionPortals_r(PlanePool pool, bool bVisPortals, ClipPools cp)
 		{
 			CalcBoundsFromPortals();
 
@@ -242,7 +242,7 @@ namespace BSPCore
 			GBSPPlane	thisPlane	=pool.mPlanes[mPlaneNum];
 
 			//Create a new portal
-			if(!CreatePortalOnNode(pool))
+			if(!CreatePortalOnNode(pool, cp))
 			{
 				CoreEvents.Print("PartitionPortals_r:  CreatePortalOnNode failed.\n");
 				return false;
@@ -259,11 +259,11 @@ namespace BSPCore
 				CoreEvents.Print("*WARNING* PartitionPortals_r:  Portals still on node after distribution...\n");
 			}
 			
-			if(!mFront.PartitionPortals_r(pool, bVisPortals))
+			if(!mFront.PartitionPortals_r(pool, bVisPortals, cp))
 			{
 				return	false;
 			}
-			if(!mBack.PartitionPortals_r(pool, bVisPortals))
+			if(!mBack.PartitionPortals_r(pool, bVisPortals, cp))
 			{
 				return	false;
 			}
@@ -272,7 +272,7 @@ namespace BSPCore
 
 
 		bool CreateAllOutsidePortals(PlanePool pool, ref GBSPNode outsideNode,
-			Vector3 nodeMins, Vector3 nodeMaxs)
+			Vector3 nodeMins, Vector3 nodeMaxs, ClipPools cp)
 		{
 			outsideNode.mPlaneNum	=PlanePool.PLANENUM_LEAF;
 			outsideNode.mContents	=Contents.BSP_CONTENTS_SOLID2;
@@ -335,7 +335,7 @@ namespace BSPCore
 						continue;
 					}
 
-					if(!portA.mPoly.ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, portB.mPlane, false))
+					if(!portA.mPoly.ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, portB.mPlane, false, cp))
 					{
 						CoreEvents.Print("CreateAllOutsidePortals:  There was an error clipping the portal.\n");
 						return	false;
@@ -755,61 +755,6 @@ namespace BSPCore
 		}
 
 
-		internal void NumberLeafs_r(ref int numPortalLeafs, ref int numPortals)
-		{
-			if(mPlaneNum != PlanePool.PLANENUM_LEAF && !mbDetail)
-			{
-				mPortalLeafNum	=-99;
-				mFront.NumberLeafs_r(ref numPortalLeafs, ref numPortals);
-				mBack.NumberLeafs_r(ref numPortalLeafs, ref numPortals);
-				return;
-			}
-
-			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
-			{
-				mPortalLeafNum	=-1;
-				return;
-			}
-
-			FillLeafNumbers_r(ref numPortalLeafs, ref numPortals);
-			numPortalLeafs++;
-			int	side;
-
-			foreach(GBSPPortal port in mPortals)
-			{
-				GBSPNode	[]nodes	=new GBSPNode[2];
-				nodes[0]	=port.mFrontNode;
-				nodes[1]	=port.mBackNode;
-			
-				side	=(nodes[1] == this)? 1 : 0;
-
-				if(side == 1)
-				{
-					continue;
-				}
-
-				if(port.mPoly == null)
-				{
-					CoreEvents.Print("*WARNING*  SavePortalFile_r:  Portal with NULL poly.\n");
-					continue;
-				}
-
-				if(!port.CanSeeThroughPortal())
-				{
-					continue;
-				}
-					
-				if(nodes[0].mCluster == nodes[1].mCluster)	
-				{
-					CoreEvents.Print("PrepPortalFile_r:  Portal seperating the same cluster.\n");
-				}
-					
-				//This portal is good...
-				numPortals++;
-			}
-		}
-
-
 		internal bool PrepPortalFile_r(ref int numPortalLeafs, ref int numPortals)
 		{
 			//Stop at leafs, and detail nodes (stop at beginning of clusters)
@@ -844,16 +789,12 @@ namespace BSPCore
 			}
 
 			//Save out all the portals that belong to this leaf...
-			int	side;
 			foreach(GBSPPortal port in mPortals)
 			{
-				GBSPNode	[]nodes	=new GBSPNode[2];
-				nodes[0]	=port.mFrontNode;
-				nodes[1]	=port.mBackNode;
+				GBSPNode	front	=port.mFrontNode;
+				GBSPNode	back	=port.mBackNode;
 			
-				side	=(nodes[1] == this)? 1 : 0;
-
-				if(side == 1)
+				if(back == this)
 				{
 					continue;
 				}
@@ -869,7 +810,7 @@ namespace BSPCore
 					continue;
 				}
 					
-				if(nodes[0].mCluster == nodes[1].mCluster)	
+				if(front.mCluster == back.mCluster)	
 				{
 					CoreEvents.Print("PrepPortalFile_r:  Portal seperating the same cluster.\n");
 					return	false;
@@ -896,20 +837,16 @@ namespace BSPCore
 				{
 					return	true;
 				}
-				int	side;
+
 				foreach(GBSPPortal port in mPortals)
 				{
-					GBSPNode	[]nodes	=new GBSPNode[2];
-					nodes[0]	=port.mFrontNode;
-					nodes[1]	=port.mBackNode;
+					GBSPNode	front	=port.mFrontNode;
+					GBSPNode	back	=port.mBackNode;
 
-					side	=(nodes[1] == this)? 1 : 0;
-
-					if(side == 1)
+					if(back == this)
 					{
 						continue;	//only write the forward facing
 					}
-
 					if(port.mPoly == null)
 					{
 						continue;
@@ -920,60 +857,47 @@ namespace BSPCore
 						continue;
 					}
 
-					if(nodes[0].mCluster == nodes[1].mCluster)	
+					if(front.mCluster == back.mCluster)	
 					{
 						CoreEvents.Print("PrepPortalFile_r:  Portal seperating the same cluster.\n");
 						return	false;
 					}
 
-					GBSPPoly	poly	=port.mPoly;
-
-					if(poly.VertCount() < 3)
+					if(port.mPoly.VertCount() < 3)
 					{
 						CoreEvents.Print("SavePortalFile_r:  Portal poly verts < 3.\n");
 						return	false;
 					}
 
-					if(side == 0)
+					if(front == this)
 					{
 						//If on front side, reverse so it points to the other leaf
-						poly.WriteReverse(bw);
+						port.mPoly.WriteReverse(bw);
 					}					
 					else
 					{
 						//It's allready pointing to the other leaf
-						poly.Write(bw);
+						port.mPoly.Write(bw);
 					}
 
-					int	side2	=side;
-
-					GBSPPlane	plane	=new GBSPPlane(poly);
-					if(Vector3.Dot(port.mPlane.mNormal, plane.mNormal) < 0.99f)
-					{
-						side2	=(side2 == 0)? 1 : 0;
-					}
-
-					if(nodes[side2].mCluster < 0
-						|| nodes[side2].mCluster > numLeafClusters)
+					if((front.mCluster < 0 || front.mCluster > numLeafClusters)
+						|| (back.mCluster < 0 || back.mCluster > numLeafClusters))
 					{
 						CoreEvents.Print("SavePortalFile_r:  Bad Leaf Cluster Number.\n");
 						return	false;
 					}
 
-					int	clust	=nodes[side2].mCluster;
-					bw.Write(clust);
-
-					int	Side2Opposite	=(side2 == 0)? 1 : 0;
-						
-					if (nodes[Side2Opposite].mCluster < 0
-						|| nodes[Side2Opposite].mCluster > numLeafClusters)
+					GBSPPlane	pln	=new GBSPPlane(port.mPoly);
+					if(Vector3.Dot(port.mPlane.mNormal, pln.mNormal) < 0.99f)
 					{
-						CoreEvents.Print("SavePortalFile_r:  Bad Leaf Cluster Number.\n");
-						return	false;
+						bw.Write(back.mCluster);
+						bw.Write(front.mCluster);
 					}
-
-					clust	=nodes[Side2Opposite].mCluster;
-					bw.Write(clust);
+					else
+					{
+						bw.Write(front.mCluster);
+						bw.Write(back.mCluster);
+					}
 				}
 				return	true;
 			}

@@ -78,9 +78,11 @@ namespace BSPCore
 			bs.NumVisNodes		=0;
 			bs.NumNonVisNodes	=0;
 
-			mVolume	=new GBSPBrush(new MapBrush(bounds, pool));
+			ClipPools	cp	=new ClipPools();
 
-			BuildTree_r(bs, brushList, pool);
+			mVolume	=new GBSPBrush(new MapBrush(bounds, pool, cp));
+
+			BuildTree_r(bs, brushList, pool, cp);
 
 			//Top node is always valid, this way portals can use top node to get box of entire bsp...
 			mBounds	=new Bounds(bounds);
@@ -136,8 +138,6 @@ namespace BSPCore
 			return	n;
 		}
 
-		internal static List<GBSPBrush>	leafBrushes	=new List<GBSPBrush>();
-		internal static bool			bDumpery	=false;
 
 		void LeafNode(List<GBSPBrush> list)
 		{
@@ -155,19 +155,15 @@ namespace BSPCore
 			if(list != null)
 			{
 				mBrushList	=list;
-				if(bDumpery)
-				{
-					leafBrushes.AddRange(list);
-				}
 			}
 		}
 
 
-		internal bool CheckPlaneAgainstVolume(Int32 planeNum, PlanePool pp)
+		internal bool CheckPlaneAgainstVolume(Int32 planeNum, PlanePool pp, ClipPools cp)
 		{
 			GBSPBrush	front, back;
 
-			mVolume.Split(planeNum, 0, 0, true, pp, out front, out back, false);
+			mVolume.Split(planeNum, 0, 0, true, pp, out front, out back, false, cp);
 
 			return	(front != null && back != null);
 		}
@@ -187,7 +183,7 @@ namespace BSPCore
 		}
 
 
-		void BuildTree_r(BuildStats bs, List<GBSPBrush> brushes, PlanePool pool)
+		void BuildTree_r(BuildStats bs, List<GBSPBrush> brushes, PlanePool pool, ClipPools cp)
 		{
 			GBSPSide	BestSide;
 
@@ -197,7 +193,7 @@ namespace BSPCore
 			bs.NumVisNodes++;
 
 			//find the best plane to use as a splitter
-			BestSide	=GBSPBrush.SelectSplitSide(bs, brushes, this, pool);
+			BestSide	=GBSPBrush.SelectSplitSide(bs, brushes, this, pool, cp);
 			
 			if(BestSide == null)
 			{
@@ -212,7 +208,7 @@ namespace BSPCore
 			mSide		=BestSide;
 			mPlaneNum	=BestSide.mPlaneNum;
 
-			GBSPBrush.SplitBrushList(brushes, mPlaneNum, pool, out childrenFront, out childrenBack);
+			GBSPBrush.SplitBrushList(brushes, mPlaneNum, pool, out childrenFront, out childrenBack, cp);
 
 			brushes.Clear();
 
@@ -221,11 +217,11 @@ namespace BSPCore
 			mBack	=new GBSPNode();
 			mFront.mParent	=mBack.mParent	=this;
 
-			mVolume.Split(mPlaneNum, 0, 0, true, pool, out mFront.mVolume, out mBack.mVolume, false);
+			mVolume.Split(mPlaneNum, 0, 0, true, pool, out mFront.mVolume, out mBack.mVolume, false, cp);
 
 			//Recursively process children
-			mFront.BuildTree_r(bs, childrenFront, pool);
-			mBack.BuildTree_r(bs, childrenBack, pool);
+			mFront.BuildTree_r(bs, childrenFront, pool, cp);
+			mBack.BuildTree_r(bs, childrenBack, pool, cp);
 		}
 
 
@@ -264,7 +260,7 @@ namespace BSPCore
 		}
 
 
-		bool CreatePortalOnNode(PlanePool pool)
+		bool CreatePortalOnNode(PlanePool pool, ClipPools cp)
 		{
 			GBSPPoly	poly	=new GBSPPoly(pool.mPlanes[mPlaneNum]);
 			if(poly == null)
@@ -283,7 +279,7 @@ namespace BSPCore
 
 				bSide	=(parent.mFront == node)? false : true;
 
-				if(!poly.ClipPolyEpsilon(0.001f, plane, bSide))
+				if(!poly.ClipPolyEpsilon(0.001f, plane, bSide, cp))
 				{
 					return	false;
 				}
@@ -297,7 +293,7 @@ namespace BSPCore
 			{
 				bool	bFlipSide	=(port.mFrontNode != this);
 
-				poly.ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, port.mPlane, bFlipSide);
+				poly.ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, port.mPlane, bFlipSide, cp);
 			}
 
 			if(poly.IsTiny())
@@ -433,8 +429,6 @@ namespace BSPCore
 				
 				//Marge list (keepin that typo, funny)
 				GBSPFace.MergeFaceList(mFaces, pool, ref numMerged);
-
-//				dumpFaces.AddRange(mFaces);
 
 				//Subdivide them for lightmaps
 				//using big atlas'd lightmaps now, no need to subdiv

@@ -42,6 +42,12 @@ namespace MeshLib
 
 		internal static void WriteDrawCallArray(BinaryWriter bw, DrawCall []dcs)
 		{
+			if(dcs == null)
+			{
+				bw.Write(0);
+				return;
+			}
+
 			bw.Write(dcs.Length);
 			foreach(DrawCall dc in dcs)
 			{
@@ -52,6 +58,12 @@ namespace MeshLib
 
 		internal static void WriteDrawCallListArray(BinaryWriter bw, List<DrawCall> []dcs)
 		{
+			if(dcs == null)
+			{
+				bw.Write(0);
+				return;
+			}
+
 			bw.Write(dcs.Length);
 			foreach(List<DrawCall> dcl in dcs)
 			{

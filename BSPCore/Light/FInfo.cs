@@ -9,11 +9,12 @@ namespace BSPCore
 	public class FInfo
 	{
 		Int32		mFace;
-		GFXPlane	mPlane		=new GFXPlane();
-		Vector3		[]mT2WVecs	=new Vector3[2];
+		GBSPPlane	mPlane;
+		Vector3		mT2WVecU;
+		Vector3		mT2WVecV;
 		Vector3		mTexOrg;
-		Vector3		[]mPoints;
 		Vector3		mCenter;
+		Vector3		[]mPoints;
 
 
 		internal Int32 GetFaceIndex()
@@ -24,14 +25,10 @@ namespace BSPCore
 
 		internal void CalcFaceLightInfo(LInfo lightInfo, List<Vector3> verts, int lightGridSize)
 		{
-			float	[]mins	=new float[2];
-			float	[]maxs	=new float[2];
-
-			for(int i=0;i < 2;i++)
-			{
-				mins[i]	=Bounds.MIN_MAX_BOUNDS;
-				maxs[i]	=-Bounds.MIN_MAX_BOUNDS;
-			}
+			float	minU	=Bounds.MIN_MAX_BOUNDS;
+			float	minV	=Bounds.MIN_MAX_BOUNDS;
+			float	maxU	=-Bounds.MIN_MAX_BOUNDS;
+			float	maxV	=-Bounds.MIN_MAX_BOUNDS;
 
 			mCenter	=Vector3.Zero;
 
@@ -41,33 +38,41 @@ namespace BSPCore
 			pln.mDist	=mPlane.mDist;
 			pln.mType	=mPlane.mType;
 
-			Vector3	[]vecs	=new Vector3[2];
-			GBSPPoly.TextureAxisFromPlane(pln, out vecs[0], out vecs[1]);
+			Vector3	vecU;//	=Vector3.Zero;
+			Vector3	vecV;//	=Vector3.Zero;
+			GBSPPoly.TextureAxisFromPlane(pln, out vecU, out vecV);
 
 			foreach(Vector3 vert in verts)
 			{
-				for(int i=0;i < 2;i++)
+				float	d	=Vector3.Dot(vert, vecU);
+				if(d > maxU)
 				{
-					float	d	=Vector3.Dot(vert, vecs[i]);
-
-					if(d > maxs[i])
-					{
-						maxs[i]	=d;
-					}
-					if(d < mins[i])
-					{
-						mins[i]	=d;
-					}
+					maxU	=d;
 				}
+				if(d < minU)
+				{
+					minU	=d;
+				}
+
+				d	=Vector3.Dot(vert, vecV);
+				if(d > maxV)
+				{
+					maxV	=d;
+				}
+				if(d < minV)
+				{
+					minV	=d;
+				}
+
 				mCenter	+=vert;
 			}
 
 			mCenter	/=verts.Count;
 
-			lightInfo.CalcInfo(mins, maxs, lightGridSize);
+			lightInfo.CalcInfo(minU, minV, maxU, maxV, lightGridSize);
 
 			//Get the texture normal from the texture vecs
-			Vector3	texNormal	=Vector3.Cross(vecs[0], vecs[1]);
+			Vector3	texNormal	=Vector3.Cross(vecU, vecV);
 			texNormal.Normalize();
 			
 			//Flip it towards plane normal
@@ -85,41 +90,75 @@ namespace BSPCore
 			distScale	=1 / distScale;
 
 			//Get the tex to world vectors
-			for(int i=0;i < 2;i++)
-			{
-				float	len		=vecs[i].Length();
-				float	dist	=Vector3.Dot(vecs[i], mPlane.mNormal);
-				dist	*=distScale;
+			//U
+			float	len		=vecU.Length();
+			float	dist	=Vector3.Dot(vecU, mPlane.mNormal);
 
-				mT2WVecs[i]	=vecs[i] + texNormal * -dist;
-				mT2WVecs[i]	*=((1.0f / len) * (1.0f / len));
-			}
+			dist	*=distScale;
 
-			for(int i=0;i < 3;i++)
-			{
-				UtilityLib.Mathery.VecIdxAssign(ref mTexOrg, i,
-					-vecs[0].Z * UtilityLib.Mathery.VecIdx(mT2WVecs[0], i)
-					-vecs[1].Z * UtilityLib.Mathery.VecIdx(mT2WVecs[1], i));
-			}
+			mT2WVecU	=vecU + texNormal * -dist;
+			mT2WVecU	*=((1.0f / len) * (1.0f / len));
+
+			//V
+			len		=vecV.Length();
+			dist	=Vector3.Dot(vecV, mPlane.mNormal);
+
+			dist	*=distScale;
+
+			mT2WVecV	=vecV + texNormal * -dist;
+			mT2WVecV	*=((1.0f / len) * (1.0f / len));
+
+			mTexOrg.X	=-vecU.Z * mT2WVecU.X - vecV.Z * mT2WVecV.X;
+			mTexOrg.Y	=-vecU.Z * mT2WVecU.Y - vecV.Z * mT2WVecV.Y;
+			mTexOrg.Z	=-vecU.Z * mT2WVecU.Z - vecV.Z * mT2WVecV.Z;
 
 			float Dist	=Vector3.Dot(mTexOrg, mPlane.mNormal)
 							- mPlane.mDist - 1;
 			Dist	*=distScale;
+
 			mTexOrg	=mTexOrg + texNormal * -Dist;
+		}
+
+
+		static unsafe void BlastArray(bool []arr)
+		{
+			int	len	=arr.Length;
+			fixed(bool *pArr = arr)
+			{
+				bool	*pA	=pArr;
+
+				for(int i=0;i < len / 8;i++)
+				{
+					*((UInt64 *)pA)	=(UInt64)0;
+
+					pA	+=8;
+				}
+
+				for(int i=0;i < len % 8;i++)
+				{
+					*pA	=false;
+
+					pA++;
+				}
+			}
 		}
 
 
 		internal void CalcFacePoints(LInfo lightInfo, int lightGridSize,
 			float UOfs, float VOfs,
-			bool bExtraLightCorrection, CoreDelegates.IsPointInSolid pointInSolid,
+			bool bExtraLightCorrection,
+			UtilityLib.TSPool<bool []> boolPool,
+			CoreDelegates.IsPointInSolid pointInSolid,
 			CoreDelegates.RayCollision rayCollide)
 		{
-			bool	[]InSolid	=new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE];
+			bool	[]InSolid	=boolPool.GetFreeItem();
+
+			BlastArray(InSolid);
 
 			float	midU, midV;
 			lightInfo.CalcMids(out midU, out midV);
 
-			Vector3	faceMid	=mTexOrg + mT2WVecs[0] * midU + mT2WVecs[1] * midV;
+			Vector3	faceMid	=mTexOrg + mT2WVecU * midU + mT2WVecV * midV;
 
 			float	startU, startV;
 			Int32	width, height;
@@ -133,8 +172,7 @@ namespace BSPCore
 					float	curV	=startV + v * lightGridSize;
 
 					mPoints[(v * width) + u]
-						=mTexOrg + mT2WVecs[0] * curU +
-							mT2WVecs[1] * curV;
+						=mTexOrg + mT2WVecU * curU + mT2WVecV * curV;
 
 					InSolid[(v * width) + u]	=pointInSolid(mPoints[(v * width) + u]);
 
@@ -157,6 +195,7 @@ namespace BSPCore
 
 			if(!bExtraLightCorrection)
 			{
+				boolPool.FlagFreeItem(InSolid);
 				return;
 			}
 
@@ -202,7 +241,7 @@ namespace BSPCore
 			}
 
 			//free cached vis stuff
-			InSolid	=null;
+			boolPool.FlagFreeItem(InSolid);
 		}
 
 
@@ -220,7 +259,7 @@ namespace BSPCore
 
 		internal void SetPlane(GFXPlane pln)
 		{
-			mPlane	=pln;
+			mPlane	=new GBSPPlane(pln);
 		}
 
 

@@ -37,7 +37,7 @@ namespace BSPCore
 
 		//this constructor will create a box
 		//brush to fit the passed in bounds
-		internal MapBrush(Bounds bnd, PlanePool pp)
+		internal MapBrush(Bounds bnd, PlanePool pp, ClipPools cp)
 		{
 			for(int i=0;i < 3;i++)
 			{
@@ -64,12 +64,12 @@ namespace BSPCore
 				mOriginalSides.Add(side2);
 			}
 
-			MakePolys(pp, false);
+			MakePolys(pp, false, cp);
 			FixContents(false);
 		}
 
 
-		internal MapBrush(PlanePool pp, List<int> planeNums, List<sbyte> sides)
+		internal MapBrush(PlanePool pp, List<int> planeNums, List<sbyte> sides, ClipPools cp)
 		{
 			for(int i=0;i < planeNums.Count;i++)
 			{
@@ -80,7 +80,7 @@ namespace BSPCore
 
 				mOriginalSides.Add(side);
 			}
-			MakePolys(pp, true);
+			MakePolys(pp, true, cp);
 		}
 		
 
@@ -259,7 +259,7 @@ namespace BSPCore
 		}
 
 
-		internal bool MakePolys(PlanePool pool, bool bCheckFaces)
+		internal bool MakePolys(PlanePool pool, bool bCheckFaces, ClipPools cp)
 		{
 			mBounds	=new Bounds();
 
@@ -282,7 +282,7 @@ namespace BSPCore
 						continue;
 					}
 					GBSPPlane	plane2	=pool.mPlanes[mOriginalSides[j].mPlaneNum];
-					p.ClipPolyEpsilon(0.0f, plane2, mOriginalSides[j].mPlaneSide == 0);
+					p.ClipPolyEpsilon(0.0f, plane2, mOriginalSides[j].mPlaneSide == 0, cp);
 				}
 
 				GBSPSide	side	=mOriginalSides[i];

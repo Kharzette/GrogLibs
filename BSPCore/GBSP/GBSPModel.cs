@@ -49,11 +49,12 @@ namespace BSPCore
 
 			object	prog	=ProgressWatcher.RegisterProgress(0, 2 * (kMaxZ - kMinZ) * (kMaxX - kMinX), 0);
 
+			ClipPools	cp	=new ClipPools();
 			for(int z=kMinZ;z < kMaxZ;z++)
 			{
 				for(int x=kMinX;x < kMaxX;x++)
 				{
-					GBSPNode	blockNode	=ProcessBlock(glist, pool, x, z, bVerbose);
+					GBSPNode	blockNode	=ProcessBlock(glist, pool, x, z, bVerbose, cp);
 					mBlockNodes.SetValue(blockNode, x - kMinX, z - kMinZ);
 					ProgressWatcher.UpdateProgressIncremental(prog);
 				}
@@ -76,7 +77,7 @@ namespace BSPCore
 
 			glist	=null;
 
-			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs))
+			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs, cp))
 			{
 				CoreEvents.Print("Could not create the portals.\n");
 				return	false;
@@ -103,7 +104,7 @@ namespace BSPCore
 			{
 				for(int x=kMinX;x < kMaxX;x++)
 				{
-					GBSPNode	blockNode	=ProcessBlock(glist, pool, x, z, bVerbose);
+					GBSPNode	blockNode	=ProcessBlock(glist, pool, x, z, bVerbose, cp);
 					mBlockNodes.SetValue(blockNode, x - kMinX, z - kMinZ);
 					ProgressWatcher.UpdateProgressIncremental(prog);
 				}
@@ -117,7 +118,7 @@ namespace BSPCore
 
 			CoreEvents.FireNumPlanesChangedEvent(pool.mPlanes.Count, null);
 
-			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs))
+			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs, cp))
 			{
 				CoreEvents.Print("Could not create the portals.\n");
 				return	false;
@@ -148,7 +149,8 @@ namespace BSPCore
 		}
 
 
-		internal GBSPNode ProcessBlock(List<GBSPBrush> brushes, PlanePool pp, int xblock, int zblock, bool bVerbose)
+		internal GBSPNode ProcessBlock(List<GBSPBrush> brushes, PlanePool pp,
+			int xblock, int zblock, bool bVerbose, ClipPools cp)
 		{
 			if(bVerbose)
 			{
@@ -169,7 +171,7 @@ namespace BSPCore
 				CoreEvents.Print("" + blockBounds.mMins + ", " + blockBounds.mMaxs + "\n");
 			}
 
-			List<GBSPBrush>	blocked	=GBSPBrush.BlockChopBrushes(brushes, blockBounds, pp);
+			List<GBSPBrush>	blocked	=GBSPBrush.BlockChopBrushes(brushes, blockBounds, pp, cp);
 
 			int	brushCount	=blocked.Count;
 
@@ -181,7 +183,7 @@ namespace BSPCore
 				GBSPBrush.DumpBrushListToFile(blocked, pp, "Brush_x" + xblock + "_z" + zblock + ".map");
 			}
 
-			List<GBSPBrush>	csgList	=GBSPBrush.CSGBrushes(bVerbose, blocked, pp);			
+			List<GBSPBrush>	csgList	=GBSPBrush.CSGBrushes(bVerbose, blocked, pp, cp);			
 
 			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
 
@@ -197,13 +199,13 @@ namespace BSPCore
 
 
 		internal bool ProcessSubModel(List<MapBrush> list,
-			PlanePool pool, TexInfoPool tip, bool bVerbose)
+			PlanePool pool, TexInfoPool tip, bool bVerbose, ClipPools cp)
 		{
 			list.Reverse();
 
 			List<GBSPBrush>	glist	=GBSPBrush.ConvertMapBrushList(list);
 
-			List<GBSPBrush>	csgList	=GBSPBrush.CSGBrushes(bVerbose, glist, pool);
+			List<GBSPBrush>	csgList	=GBSPBrush.CSGBrushes(bVerbose, glist, pool, cp);
 
 			GBSPNode	root	=new GBSPNode();
 			root.BuildBSP(csgList, pool, bVerbose);
@@ -212,7 +214,7 @@ namespace BSPCore
 
 			glist	=null;
 
-			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs))
+			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs, cp))
 			{
 				CoreEvents.Print("Could not create the portals.\n");
 				return	false;
@@ -244,11 +246,11 @@ namespace BSPCore
 
 		internal bool PrepGBSPModel(string visFile, bool bSaveVis,
 			bool bVerbose, PlanePool pool, ref int numLeafClusters,
-			List<GFXLeafSide> leafSides)
+			List<GFXLeafSide> leafSides, ClipPools cp)
 		{
 			if(bSaveVis)
 			{
-				if(!mRootNode.CreatePortals(mOutsideNode, true, false, pool, mBounds.mMins, mBounds.mMaxs))
+				if(!mRootNode.CreatePortals(mOutsideNode, true, false, pool, mBounds.mMins, mBounds.mMaxs, cp))
 				{
 					CoreEvents.Print("Could not create VIS portals.\n");
 					return	false;
@@ -281,7 +283,7 @@ namespace BSPCore
 				mNumClusters	=0;
 			}
 
-			if(!mRootNode.CreatePortals(mOutsideNode, false, false, pool, mBounds.mMins, mBounds.mMaxs))
+			if(!mRootNode.CreatePortals(mOutsideNode, false, false, pool, mBounds.mMins, mBounds.mMaxs, cp))
 			{
 				CoreEvents.Print("Could not create REAL portals.\n");
 				return	false;

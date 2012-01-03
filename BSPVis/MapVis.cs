@@ -19,6 +19,7 @@ namespace BSPVis
 		internal VISPStack	mPrevStack;
 		internal VISLeaf	[]mVisLeafs;
 		internal int		mNumVisPortalBytes;
+		internal ClipPools	mCP;
 	}
 
 	public class VisParameters
@@ -579,7 +580,7 @@ namespace BSPVis
 		}
 		
 
-		void	PortalFlowGenesis(int portalnum)
+		void	PortalFlowGenesis(int portalnum, ClipPools cp)
 		{
 			VISPortal	p	=mVisSortedPortals[portalnum];
 
@@ -597,6 +598,7 @@ namespace BSPVis
 			fp.mPrevStack			=vps;
 			fp.mVisLeafs			=mVisLeafs;
 			fp.mNumVisPortalBytes	=mNumVisPortalBytes;
+			fp.mCP					=cp;
 			VISPortal.RecursiveLeafFlowGenesis(fp);
 
 			p.mbDone	=true;
@@ -605,7 +607,8 @@ namespace BSPVis
 		}
 
 
-		static void	PortalFlowGenesis(int portalnum, VISPortal []visPortals, VISLeaf []visLeafs, int numVisPortalBytes)
+		static void	PortalFlowGenesis(int portalnum, VISPortal []visPortals,
+			VISLeaf []visLeafs, int numVisPortalBytes, ClipPools cp)
 		{
 			VISPortal	p	=visPortals[portalnum];
 
@@ -623,6 +626,7 @@ namespace BSPVis
 			fp.mPrevStack			=vps;
 			fp.mVisLeafs			=visLeafs;
 			fp.mNumVisPortalBytes	=numVisPortalBytes;
+			fp.mCP					=cp;
 			VISPortal.RecursiveLeafFlowGenesis(fp);
 
 			p.mbDone	=true;
@@ -729,13 +733,15 @@ namespace BSPVis
 			Parallel.For(startPort, endPort, (k) =>
 			{
 				VISPortal	port	=mVisSortedPortals[k];
+
+				ClipPools	cp	=new ClipPools();
 				
 				//This portal can't see anyone yet...
 				for(int i=0;i < mNumVisPortalBytes;i++)
 				{
 					port.mPortalVis[i]	=0;
 				}
-				PortalFlowGenesis(k);
+				PortalFlowGenesis(k, cp);
 
 				port.mbDone			=true;
 

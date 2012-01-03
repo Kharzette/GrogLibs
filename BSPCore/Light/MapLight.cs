@@ -1369,7 +1369,13 @@ namespace BSPCore
 
 			object	prog	=ProgressWatcher.RegisterProgress(0, mGFXFaces.Length, 0);
 
-			Parallel.For(0, mGFXFaces.Length, i =>
+			UtilityLib.TSPool<bool []>	boolPool	=new UtilityLib.TSPool<bool[]>(() => new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE]);
+
+			//avoid going nutso with threads
+			ParallelOptions	po	=new ParallelOptions();
+			po.MaxDegreeOfParallelism	=4;
+
+			Parallel.For(0, mGFXFaces.Length, po, i =>
 			{
 				ProgressWatcher.UpdateProgressIncremental(prog);
 
@@ -1416,7 +1422,8 @@ namespace BSPCore
 					for(int s=0;s < numSamples;s++)
 					{
 						//Hook.Printf("Sample  : %3i of %3i\n", s+1, NumSamples);
-						CalcFacePoints(mFaceInfos[i], mLightMaps[i], lightGridSize, UOfs[s], VOfs[s], bExtraSamples);
+						CalcFacePoints(mFaceInfos[i], mLightMaps[i], lightGridSize,
+							UOfs[s], VOfs[s], bExtraSamples, boolPool);
 
 						if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i], 1 / (float)numSamples, visData))
 						{
@@ -1571,10 +1578,12 @@ namespace BSPCore
 
 
 		void CalcFacePoints(FInfo faceInfo, LInfo lightInfo, int lightGridSize,
-			float UOfs, float VOfs, bool bExtraLightCorrection)
+			float UOfs, float VOfs, bool bExtraLightCorrection,
+			UtilityLib.TSPool<bool []> boolPool)
 		{
 			faceInfo.CalcFacePoints(lightInfo, lightGridSize,
-				UOfs, VOfs, bExtraLightCorrection, IsPointInSolidSpace, RayCollide);
+				UOfs, VOfs, bExtraLightCorrection, boolPool,
+				IsPointInSolidSpace, RayCollide);
 		}
 
 

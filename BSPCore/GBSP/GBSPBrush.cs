@@ -89,7 +89,8 @@ namespace BSPCore
 		}
 
 
-		static internal List<GBSPBrush> BlockChopBrushes(List<GBSPBrush> list, Bounds block, PlanePool pp)
+		static internal List<GBSPBrush> BlockChopBrushes(List<GBSPBrush> list,
+			Bounds block, PlanePool pp, ClipPools cp)
 		{
 			List<GBSPBrush>	ret	=new List<GBSPBrush>();
 
@@ -105,7 +106,7 @@ namespace BSPCore
 					continue;
 				}
 
-				GBSPBrush	boxedCopy	=b.ChopToBoxAndClone(blockPlanes, pp);
+				GBSPBrush	boxedCopy	=b.ChopToBoxAndClone(blockPlanes, pp, cp);
 				if(boxedCopy == null)
 				{
 					continue;
@@ -309,7 +310,7 @@ namespace BSPCore
 		}
 
 
-		GBSPBrush	ChopToBoxAndClone(int []planes, PlanePool pp)
+		GBSPBrush	ChopToBoxAndClone(int []planes, PlanePool pp, ClipPools cp)
 		{
 			GBSPBrush	ret	=new GBSPBrush(this);
 			for(int i=0;i < 6;i++)
@@ -317,11 +318,11 @@ namespace BSPCore
 				GBSPBrush	front, back;
 				if(i < 3)
 				{
-					ret.Split(planes[i], 0, 0, false, pp, out front, out back, false);
+					ret.Split(planes[i], 0, 0, false, pp, out front, out back, false, cp);
 				}
 				else
 				{
-					ret.Split(planes[i], 1, 0, false, pp, out front, out back, false);
+					ret.Split(planes[i], 1, 0, false, pp, out front, out back, false, cp);
 				}
 				if(back == null)
 				{
@@ -484,7 +485,7 @@ namespace BSPCore
 
 
 		internal void Split(Int32 planeNum, sbyte planeSide, byte splitFaceFlags, bool bVisible,
-					PlanePool pool, out GBSPBrush front, out GBSPBrush back, bool bVerbose)
+					PlanePool pool, out GBSPBrush front, out GBSPBrush back, bool bVerbose, ClipPools cp)
 		{
 			GBSPPlane	poolPlane, sidedPlane;
 			float		frontDist, backDist;
@@ -541,7 +542,7 @@ namespace BSPCore
 				}
 				GBSPPlane	plane2	=pool.mPlanes[s.mPlaneNum];
 				
-				midPoly.ClipPolyEpsilon(0.0f, plane2, s.mPlaneSide == 0);
+				midPoly.ClipPolyEpsilon(0.0f, plane2, s.mPlaneSide == 0, cp);
 			}
 
 			if(midPoly.IsTiny())
@@ -737,7 +738,7 @@ namespace BSPCore
 		}
 
 
-		static List<GBSPBrush> Subtract(GBSPBrush a, GBSPBrush b, PlanePool pool)
+		static List<GBSPBrush> Subtract(GBSPBrush a, GBSPBrush b, PlanePool pool, ClipPools cp)
 		{
 			List<GBSPBrush>	outside	=new List<GBSPBrush>();
 
@@ -750,7 +751,7 @@ namespace BSPCore
 				GBSPBrush	front, back;
 
 				inside.Split(b.mSides[i].mPlaneNum,	b.mSides[i].mPlaneSide, 0,
-					false, pool, out front, out back, true);
+					false, pool, out front, out back, true, cp);
 
 				//Make sure we don't free a, but free all other fragments
 				if(inside != a)
@@ -820,7 +821,8 @@ namespace BSPCore
 		}
 
 
-		internal static List<GBSPBrush> CSGBrushes(bool bVerbose, List<GBSPBrush> list, PlanePool pool)
+		internal static List<GBSPBrush> CSGBrushes(bool bVerbose,
+			List<GBSPBrush> list, PlanePool pool, ClipPools cp)
 		{
 			List<GBSPBrush>	keep		=new List<GBSPBrush>();
 			List<GBSPBrush>	subResult1	=new List<GBSPBrush>();
@@ -856,7 +858,7 @@ namespace BSPCore
 
 					if(b2.BrushCanBite(b1))
 					{
-						subResult1	=Subtract(b1, b2, pool);
+						subResult1	=Subtract(b1, b2, pool, cp);
 
 						if(subResult1.Contains(b1))
 						{
@@ -873,7 +875,7 @@ namespace BSPCore
 
 					if(b1.BrushCanBite(b2))
 					{
-						subResult2	=Subtract(b2, b1, pool);
+						subResult2	=Subtract(b2, b1, pool, cp);
 
 						if(subResult2.Contains(b2))
 						{
@@ -895,7 +897,7 @@ namespace BSPCore
 					{
 						if(GBSPBrush.SameContents(b1, b2))
 						{
-							subResult1	=Subtract(b1, b2, pool);
+							subResult1	=Subtract(b1, b2, pool, cp);
 
 							if(subResult1.Contains(b1))
 							{
@@ -950,7 +952,7 @@ namespace BSPCore
 
 
 		internal static GBSPSide SelectSplitSide(BuildStats bs, List<GBSPBrush> list,
-												 GBSPNode node, PlanePool pool)
+												 GBSPNode node, PlanePool pool, ClipPools cp)
 		{
 			GBSPSide	bestSide	=null;
 			Int32		bestValue	=-999999;
@@ -1000,7 +1002,7 @@ namespace BSPCore
 
 						Debug.Assert(node.CheckPlaneAgainstParents(planeNum) == true);
 
-						if(!node.CheckPlaneAgainstVolume(planeNum, pool))
+						if(!node.CheckPlaneAgainstVolume(planeNum, pool, cp))
 						{
 							continue;	//borrowing a volume check from Q2
 						}
@@ -1197,7 +1199,7 @@ namespace BSPCore
 
 
 		internal static void SplitBrushList(List<GBSPBrush> list, Int32 nodePlaneNum,
-			PlanePool pool,	out List<GBSPBrush> front, out List<GBSPBrush> back)
+			PlanePool pool,	out List<GBSPBrush> front, out List<GBSPBrush> back, ClipPools cp)
 		{
 			front	=new List<GBSPBrush>();
 			back	=new List<GBSPBrush>();
@@ -1208,8 +1210,8 @@ namespace BSPCore
 				if(sideFlag == GBSPPlane.PSIDE_BOTH)
 				{
 					GBSPBrush	newFront, newBack;
-					b.Split(nodePlaneNum, 0, (byte)GBSPSide.SIDE_NODE,
-						false, pool, out newFront, out newBack, true);
+					b.Split(nodePlaneNum, 0, (byte)GBSPSide.SIDE_NODE, false,
+						pool, out newFront, out newBack, true, cp);
 					if(newFront != null)
 					{
 						front.Add(newFront);

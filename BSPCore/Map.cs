@@ -436,13 +436,16 @@ namespace BSPCore
 		#endregion
 
 
-		public void LoadBrushFile(string mapFileName, bool bSlickAsGouraud, bool bWarpAsMirror)
+		public void LoadBrushFile(string mapFileName,
+			bool bSlickAsGouraud, bool bWarpAsMirror)
 		{
 			mEntities	=new List<MapEntity>();
 
 			int	numSolids	=0;
 			int	numDetails	=0;
 			int	numTotal	=0;
+
+			ClipPools	cp	=new ClipPools();
 
 			if(File.Exists(mapFileName))
 			{
@@ -459,8 +462,8 @@ namespace BSPCore
 							if(s == "{")
 							{
 								MapEntity	e	=new MapEntity();
-								e.ReadFromMap(sr, mPlanePool, mTIPool,
-									mEntities.Count, bSlickAsGouraud, bWarpAsMirror);
+								e.ReadFromMap(sr, mPlanePool, mTIPool, mEntities.Count,
+									bSlickAsGouraud, bWarpAsMirror, cp);
 								mEntities.Add(e);
 
 								CoreEvents.FireNumPlanesChangedEvent(mPlanePool.mPlanes.Count, null);
@@ -475,14 +478,14 @@ namespace BSPCore
 							if(s == "entity")
 							{
 								MapEntity	e	=new MapEntity();
-								e.ReadVMFEntBlock(sr, mEntities.Count, mPlanePool, mTIPool);
+								e.ReadVMFEntBlock(sr, mEntities.Count, mPlanePool, mTIPool, cp);
 								mEntities.Add(e);
 								CoreEvents.FireNumPlanesChangedEvent(mPlanePool.mPlanes.Count, null);
 							}
 							else if(s == "world")
 							{
 								MapEntity	e	=new MapEntity();
-								e.ReadVMFWorldBlock(sr, mEntities.Count, mPlanePool, mTIPool);
+								e.ReadVMFWorldBlock(sr, mEntities.Count, mPlanePool, mTIPool, cp);
 								mEntities.Add(e);
 								CoreEvents.FireNumPlanesChangedEvent(mPlanePool.mPlanes.Count, null);
 							}
@@ -519,6 +522,7 @@ namespace BSPCore
 			List<int>	planeNums	=new List<int>();
 			List<sbyte>	sides		=new List<sbyte>();
 
+			ClipPools	cp	=new ClipPools();
 			foreach(GFXPlane p in planes)
 			{
 				int		planeNum	=0;
@@ -541,7 +545,7 @@ namespace BSPCore
 				sides.Add(side);
 			}
 
-			MapBrush	mb	=new MapBrush(mPlanePool, planeNums, sides);
+			MapBrush	mb	=new MapBrush(mPlanePool, planeNums, sides, cp);
 
 			//set to solid
 			mb.mContents	=Contents.BSP_CONTENTS_SOLID2;
@@ -572,7 +576,7 @@ namespace BSPCore
 		}
 
 
-		bool ProcessEntities(bool bVerbose, bool bEntityVerbose)
+		bool ProcessEntities(bool bVerbose, bool bEntityVerbose, ClipPools cp)
 		{
 			int	index	=0;
 
@@ -604,7 +608,7 @@ namespace BSPCore
 				{
 					List<MapBrush>	brushes	=new List<MapBrush>(me.GetBrushes());
 					if(!mod.ProcessSubModel(brushes, mPlanePool,
-						mTIPool, bEntityVerbose))
+						mTIPool, bEntityVerbose, cp))
 					{
 						return	false;
 					}
@@ -663,7 +667,9 @@ namespace BSPCore
 
 			mTIPool.AssignMaterials();
 
-			if(ProcessEntities(bp.mbVerbose, bp.mbEntityVerbose))
+			ClipPools	cp	=new ClipPools();
+
+			if(ProcessEntities(bp.mbVerbose, bp.mbEntityVerbose, cp))
 			{
 				CoreEvents.Print("Build GBSP Complete\n");
 				CoreEvents.FireBuildDoneEvent(true, null);
@@ -978,7 +984,8 @@ namespace BSPCore
 		}
 
 
-		bool PrepAllGBSPModels(string visFile, NodeCounter nc, bool bVerbose, bool bEntityVerbose)
+		bool PrepAllGBSPModels(string visFile, NodeCounter nc,
+			bool bVerbose, bool bEntityVerbose, ClipPools cp)
 		{
 			Int32	i;
 
@@ -989,7 +996,7 @@ namespace BSPCore
 					(i == 0)? bVerbose : bEntityVerbose,
 					mPlanePool,
 					ref nc.mNumLeafClusters,
-					leafSides))
+					leafSides, cp))
 				{
 					CoreEvents.Print("PrepAllGBSPModels:  Could not prep model " + i + "\n");
 					return	false;
@@ -1038,8 +1045,9 @@ namespace BSPCore
 			CoreEvents.FireNumVertsChangedEvent(mGFXVerts.Length, null);
 
 			NodeCounter	nc	=new NodeCounter();
+			ClipPools	cp	=new ClipPools();
 
-			if(!PrepAllGBSPModels(VisFile, nc, sp.mBSPParams.mbVerbose, sp.mBSPParams.mbEntityVerbose))
+			if(!PrepAllGBSPModels(VisFile, nc, sp.mBSPParams.mbVerbose, sp.mBSPParams.mbEntityVerbose, cp))
 			{
 				CoreEvents.Print("ConvertGBSPToFile:  Could not prep models.\n");
 				CoreEvents.FireGBSPSaveDoneEvent(false, null);
@@ -1244,7 +1252,7 @@ namespace BSPCore
 			float		dist;
 			GFXNode		pNode;
 
-			if(node < 0)		// At leaf, no more recursing
+			if(node < 0 || mGFXNodes == null)	// At leaf, no more recursing
 			{
 				return	node;
 			}

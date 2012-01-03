@@ -177,12 +177,6 @@ namespace BSPCore
 		}
 
 
-		public bool ClipPoly(GBSPPlane plane, bool bFlip)
-		{
-			return	ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, plane, bFlip);
-		}
-
-
 		public bool ClipPoly(GBSPPlane plane, bool bFlip, ClipPools cPools)
 		{
 			return	ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, plane, bFlip, cPools);
@@ -300,101 +294,6 @@ namespace BSPCore
 		}
 
 
-		internal bool ClipPolyEpsilon(float epsilon, GBSPPlane plane, bool flipTest)
-		{
-			if(mVerts == null)
-			{
-				return	false;
-			}
-			if(mVerts.Length > 100)
-			{
-				CoreEvents.Print("ClipPoly:  Too many verts.\n");
-				return	false;
-			}
-
-			Vector3	normal	=plane.mNormal;
-			float	dist	=plane.mDist;
-
-			if(flipTest)
-			{
-				normal	=-normal;
-				dist	=-dist;
-			}
-
-			float	[]VDist			=new float[mVerts.Length];
-			Int32	[]VSides		=new int[mVerts.Length];
-			Int32	[]countSides	=new int[3];
-
-			List<Vector3>	frontVerts	=new List<Vector3>();
-
-			for(int i=0;i < mVerts.Length;i++)
-			{
-				VDist[i]	=Vector3.Dot(mVerts[i], normal) - dist;
-				if(VDist[i] > epsilon)
-				{
-					VSides[i]	=0;
-				}
-				else if(VDist[i] < -epsilon)
-				{
-					VSides[i]	=1;
-				}
-				else
-				{
-					VSides[i]	=2;
-				}
-
-				countSides[VSides[i]]++;
-			}
-
-			if(countSides[0] == 0)
-			{
-				mVerts	=null;
-				return	true;
-			}
-			if(countSides[1] == 0)
-			{
-				return	true;
-			}
-
-			for(int i=0;i < mVerts.Length;i++)
-			{
-				Vector3	vert1	=mVerts[i];
-
-				if(VSides[i] == 2)
-				{
-					frontVerts.Add(vert1);
-					continue;
-				}
-
-				if(VSides[i] == 0)
-				{
-					frontVerts.Add(vert1);
-				}
-
-				int	nextVert	=(i + 1) % mVerts.Length;
-
-				if(VSides[nextVert] == 2 || VSides[nextVert] == VSides[i])
-				{
-					continue;
-				}
-
-				Vector3	vert2	=mVerts[nextVert];
-				float	scale	=VDist[i] / (VDist[i] - VDist[nextVert]);
-
-				frontVerts.Add(vert1 + (vert2 - vert1) * scale);
-			}
-
-			if(frontVerts.Count < 3)
-			{
-				mVerts	=null;
-				return	false;
-			}
-			mVerts	=frontVerts.ToArray();
-
-			return	true;
-		}
-
-
 		internal bool IsTiny()
 		{
 			if(mVerts == null || mVerts.Length < 3)
@@ -461,7 +360,8 @@ namespace BSPCore
 
 			float	[]VDist			=new float[mVerts.Length];
 			Int32	[]VSides		=new int[mVerts.Length];
-			Int32	[]countSides	=new int[3];
+			Int32	frontCount		=0;
+			Int32	backCount		=0;
 
 			List<Vector3>	frontVerts	=new List<Vector3>();
 			List<Vector3>	backVerts	=new List<Vector3>();
@@ -472,25 +372,25 @@ namespace BSPCore
 				if(VDist[i] > epsilon)
 				{
 					VSides[i]	=0;
+					frontCount++;
 				}
 				else if(VDist[i] < -epsilon)
 				{
 					VSides[i]	=1;
+					backCount++;
 				}
 				else
 				{
 					VSides[i]	=2;
 				}
-
-				countSides[VSides[i]]++;
 			}
 
-			if(countSides[0] == 0)
+			if(frontCount == 0)
 			{
 				polyBack	=new GBSPPoly(this);
 				return	true;
 			}
-			if(countSides[1] == 0)
+			if(backCount == 0)
 			{
 				polyFront	=new GBSPPoly(this);
 				return	true;
@@ -1130,108 +1030,6 @@ namespace BSPCore
 						continue;
 					}
 					if(!ClipPoly(plane, bFlipClip, cPools))
-					{
-						CoreEvents.Print("ClipToPortals:  Error clipping portal.\n");
-						return	false;
-					}
-
-					if(mVerts == null || mVerts.Length < 3)
-					{
-						return	true;
-					}
-				}
-			}			
-			return	true;
-		}
-
-
-		public bool SeperatorClip(GBSPPoly source, GBSPPoly pass, bool bFlipClip)
-		{
-			for(int i=0;i < source.mVerts.Length;i++)
-			{
-				int	l	=(i + 1) % source.mVerts.Length;
-
-				Vector3	v1	=source.mVerts[l] - source.mVerts[i];
-
-				for(int j=0;j < pass.mVerts.Length;j++)
-				{
-					Vector3	v2	=pass.mVerts[j] - source.mVerts[i];
-
-					GBSPPlane	plane	=new GBSPPlane();
-					plane.mNormal	=Vector3.Cross(v1, v2);
-
-					float	len		=plane.mNormal.Length();
-					plane.mNormal	/=len;
-					
-					if(len < UtilityLib.Mathery.ON_EPSILON)
-					{
-						continue;
-					}
-					
-					plane.mDist	=Vector3.Dot(pass.mVerts[j], plane.mNormal);						
-
-					bool	bFlipTest	=false;
-					int		k;
-					for(k=0;k < source.mVerts.Length;k++)
-					{
-						if(k == i || k == l)
-						{
-							continue;
-						}
-
-						float	d	=Vector3.Dot(source.mVerts[k], plane.mNormal) - plane.mDist;
-						if(d < -UtilityLib.Mathery.ON_EPSILON)
-						{
-							bFlipTest	=false;
-							break;
-						}
-						else if(d > UtilityLib.Mathery.ON_EPSILON)
-						{
-							bFlipTest	=true;
-							break;
-						}
-					}
-					if(k == source.mVerts.Length)
-					{
-						continue;
-					}
-					if(bFlipTest)
-					{
-						plane.Inverse();
-					}
-
-					Int32	count0	=0;
-					Int32	count2	=0;
-					for(k=0;k < pass.mVerts.Length;k++)
-					{
-						if(k==j)
-						{
-							continue;
-						}
-						float	d	=Vector3.Dot(pass.mVerts[k], plane.mNormal) - plane.mDist;
-						if(d < -UtilityLib.Mathery.ON_EPSILON)
-						{
-							break;
-						}
-						else if(d > UtilityLib.Mathery.ON_EPSILON)
-						{
-							count0++;
-						}
-						else
-						{
-							count2++;
-						}
-					}
-					if(k != pass.mVerts.Length)
-					{
-						continue;	
-					}
-						
-					if(count0 == 0)
-					{
-						continue;
-					}
-					if(!ClipPoly(plane, bFlipClip))
 					{
 						CoreEvents.Print("ClipToPortals:  Error clipping portal.\n");
 						return	false;

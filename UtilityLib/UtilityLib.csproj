@@ -141,6 +141,7 @@
     <Compile Include="PlayerSteering.cs" />
     <Compile Include="Pool.cs" />
     <Compile Include="RenderHelper.cs" />
+    <Compile Include="TSPool.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

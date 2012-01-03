@@ -74,6 +74,7 @@
     <Compile Include="PlayerSteering.cs" />
     <Compile Include="Pool.cs" />
     <Compile Include="RenderHelper.cs" />
+    <Compile Include="TSPool.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
