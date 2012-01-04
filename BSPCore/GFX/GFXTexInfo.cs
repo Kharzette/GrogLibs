@@ -10,9 +10,12 @@ namespace BSPCore
 {
 	public class GFXTexInfo : UtilityLib.IReadWriteable
 	{
-		public Vector3	[]mVecs			=new Vector3[2];
-		public float	[]mShift		=new float[2];
-		public float	[]mDrawScale	=new float[2];
+		public Vector3	mVecU;
+		public Vector3	mVecV;
+		public float	mShiftU;
+		public float	mShiftV;
+		public float	mDrawScaleU;
+		public float	mDrawScaleV;
 		public UInt32	mFlags;
 		public float	mFaceLight;
 		public float	mReflectiveScale;
@@ -23,16 +26,16 @@ namespace BSPCore
 
 		public void Write(BinaryWriter bw)
 		{
-			bw.Write(mVecs[0].X);
-			bw.Write(mVecs[0].Y);
-			bw.Write(mVecs[0].Z);
-			bw.Write(mVecs[1].X);
-			bw.Write(mVecs[1].Y);
-			bw.Write(mVecs[1].Z);
-			bw.Write(mShift[0]);
-			bw.Write(mShift[1]);
-			bw.Write(mDrawScale[0]);
-			bw.Write(mDrawScale[1]);
+			bw.Write(mVecU.X);
+			bw.Write(mVecU.Y);
+			bw.Write(mVecU.Z);
+			bw.Write(mVecV.X);
+			bw.Write(mVecV.Y);
+			bw.Write(mVecV.Z);
+			bw.Write(mShiftU);
+			bw.Write(mShiftV);
+			bw.Write(mDrawScaleU);
+			bw.Write(mDrawScaleV);
 			bw.Write(mFlags);
 			bw.Write(mFaceLight);
 			bw.Write(mReflectiveScale);
@@ -44,16 +47,16 @@ namespace BSPCore
 
 		public void Read(BinaryReader br)
 		{
-			mVecs[0].X			=br.ReadSingle();
-			mVecs[0].Y			=br.ReadSingle();
-			mVecs[0].Z			=br.ReadSingle();
-			mVecs[1].X			=br.ReadSingle();
-			mVecs[1].Y			=br.ReadSingle();
-			mVecs[1].Z			=br.ReadSingle();
-			mShift[0]			=br.ReadSingle();
-			mShift[1]			=br.ReadSingle();
-			mDrawScale[0]		=br.ReadSingle();
-			mDrawScale[1]		=br.ReadSingle();
+			mVecU.X				=br.ReadSingle();
+			mVecU.Y				=br.ReadSingle();
+			mVecU.Z				=br.ReadSingle();
+			mVecV.X				=br.ReadSingle();
+			mVecV.Y				=br.ReadSingle();
+			mVecV.Z				=br.ReadSingle();
+			mShiftU				=br.ReadSingle();
+			mShiftV				=br.ReadSingle();
+			mDrawScaleU			=br.ReadSingle();
+			mDrawScaleV			=br.ReadSingle();
 			mFlags				=br.ReadUInt32();
 			mFaceLight			=br.ReadSingle();
 			mReflectiveScale	=br.ReadSingle();
@@ -115,8 +118,8 @@ namespace BSPCore
 		{
 			Vector2	ret	=Vector2.Zero;
 
-			ret.X	=Vector3.Dot(vert, mVecs[0]);
-			ret.Y	=Vector3.Dot(vert, mVecs[1]);
+			ret.X	=Vector3.Dot(vert, mVecU);
+			ret.Y	=Vector3.Dot(vert, mVecV);
 
 			return	ret;
 		}
@@ -163,16 +166,13 @@ namespace BSPCore
 			}
 
 			int	numStyles	=0;
-			for(int i=0;i < 4;i++)
-			{
-				if(f.mLTypes[i] != 255)
-				{
-					numStyles++;
-				}
-			}
+			numStyles	+=(f.mLType0 != 255)? 1 : 0;
+			numStyles	+=(f.mLType1 != 255)? 1 : 0;
+			numStyles	+=(f.mLType2 != 255)? 1 : 0;
+			numStyles	+=(f.mLType3 != 255)? 1 : 0;
 
 			//animated lights ?
-			if(numStyles > 1 || (numStyles == 1 && f.mLTypes[0] != 0))
+			if(numStyles > 1 || (numStyles == 1 && f.mLType0 != 0))
 			{
 				Debug.Assert(tex.IsLightMapped());
 

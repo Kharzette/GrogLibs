@@ -16,7 +16,10 @@ namespace BSPCore
 		public Int32	mLightOfs;
 		public Int32	mLWidth;
 		public Int32	mLHeight;
-		public byte		[]mLTypes	=new byte[4];
+		public byte		mLType0;
+		public byte		mLType1;
+		public byte		mLType2;
+		public byte		mLType3;
 
 		public void Write(BinaryWriter bw)
 		{
@@ -28,10 +31,10 @@ namespace BSPCore
 			bw.Write(mLightOfs);
 			bw.Write(mLWidth);
 			bw.Write(mLHeight);
-			bw.Write(mLTypes[0]);
-			bw.Write(mLTypes[1]);
-			bw.Write(mLTypes[2]);
-			bw.Write(mLTypes[3]);
+			bw.Write(mLType0);
+			bw.Write(mLType1);
+			bw.Write(mLType2);
+			bw.Write(mLType3);
 		}
 
 		public void Read(BinaryReader br)
@@ -44,10 +47,10 @@ namespace BSPCore
 			mLightOfs	=br.ReadInt32();
 			mLWidth		=br.ReadInt32();
 			mLHeight	=br.ReadInt32();
-			mLTypes[0]	=br.ReadByte();
-			mLTypes[1]	=br.ReadByte();
-			mLTypes[2]	=br.ReadByte();
-			mLTypes[3]	=br.ReadByte();
+			mLType0		=br.ReadByte();
+			mLType1		=br.ReadByte();
+			mLType2		=br.ReadByte();
+			mLType3		=br.ReadByte();
 		}
 	}
 }

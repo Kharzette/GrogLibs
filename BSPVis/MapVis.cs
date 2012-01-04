@@ -234,6 +234,8 @@ namespace BSPVis
 
 		//good for testing, compares 2 vis files
 		//returns true if they are exactly the same
+		//note that if you use threading, they won't be, as
+		//the order of portal completion is semi random
 		public int CompareVisData(string fn1, string fn2, bool bMaterial)
 		{
 			FileStream		fs	=new FileStream(fn1, FileMode.Open, FileAccess.Read);
@@ -301,11 +303,16 @@ namespace BSPVis
 		}
 
 
-		public void LoadVisData(string fileName)
+		public bool LoadVisData(string fileName)
 		{
 			string	visExt	=UtilityLib.FileUtil.StripExtension(fileName);
 
 			visExt	+=".VisData";
+
+			if(!File.Exists(visExt))
+			{
+				return	false;
+			}
 
 			FileStream		fs	=new FileStream(visExt, FileMode.Open, FileAccess.Read);
 			BinaryReader	br	=new BinaryReader(fs);
@@ -314,7 +321,7 @@ namespace BSPVis
 
 			if(magic != 0x715da7aa)
 			{
-				return;
+				return	false;
 			}
 
 			mGFXVisData	=UtilityLib.FileUtil.ReadByteArray(br);
@@ -326,6 +333,8 @@ namespace BSPVis
 
 			br.Close();
 			fs.Close();
+
+			return	true;
 		}
 
 
@@ -374,7 +383,11 @@ namespace BSPVis
 			mGFXLeafs		=mMap.GetGFXLeafs();
 			mGFXClusters	=mMap.GetGFXClusters();
 
-			LoadVisData(fileName);
+			if(!LoadVisData(fileName))
+			{
+				CoreEvents.Print("Map needs vis data for material vis to work.\n");
+				return	false;
+			}
 
 			string	visExt	=UtilityLib.FileUtil.StripExtension(fileName);
 
@@ -438,7 +451,7 @@ namespace BSPVis
 		public bool IsMaterialVisibleFromPos(Vector3 pos, int matIndex)
 		{
 			Int32	node	=mMap.FindNodeLandedIn(0, pos);
-			if(node > 0)
+			if(node >= 0)
 			{
 				return	true;	//in solid space
 			}
@@ -580,7 +593,7 @@ namespace BSPVis
 		}
 		
 
-		void	PortalFlowGenesis(int portalnum, ClipPools cp)
+		void	PortalFlowGenesis(int portalnum, VisPools vp)
 		{
 			VISPortal	p	=mVisSortedPortals[portalnum];
 
@@ -588,7 +601,7 @@ namespace BSPVis
 
 			p.mMightSee	=CountBits(p.mPortalFlood, mVisSortedPortals.Length);
 
-			VISPStack	vps	=new VISPStack();
+			VISPStack	vps	=vp.mStacks.GetFreeItem();
 			vps.mSource		=p.mPoly;
 			p.mPortalFlood.CopyTo(vps.mVisBits, 0);
 
@@ -598,12 +611,13 @@ namespace BSPVis
 			fp.mPrevStack			=vps;
 			fp.mVisLeafs			=mVisLeafs;
 			fp.mNumVisPortalBytes	=mNumVisPortalBytes;
-			fp.mCP					=cp;
-			VISPortal.RecursiveLeafFlowGenesis(fp);
+			fp.mCP					=vp.mClipPools;
+			VISPortal.RecursiveLeafFlowGenesis(fp, vp);
 
 			p.mbDone	=true;
-
 			p.mCanSee	=CountBits(p.mPortalVis, mVisSortedPortals.Length);
+
+			vp.mStacks.FlagFreeItem(vps);
 		}
 
 
@@ -627,7 +641,7 @@ namespace BSPVis
 			fp.mVisLeafs			=visLeafs;
 			fp.mNumVisPortalBytes	=numVisPortalBytes;
 			fp.mCP					=cp;
-			VISPortal.RecursiveLeafFlowGenesis(fp);
+			VISPortal.RecursiveLeafFlowGenesis(fp, null);	//todo fix
 
 			p.mbDone	=true;
 
@@ -733,15 +747,15 @@ namespace BSPVis
 			Parallel.For(startPort, endPort, (k) =>
 			{
 				VISPortal	port	=mVisSortedPortals[k];
-
-				ClipPools	cp	=new ClipPools();
+				ClipPools	cp		=new ClipPools();
+				VisPools	vp		=new VisPools(mVisLeafs, cp);
 				
 				//This portal can't see anyone yet...
 				for(int i=0;i < mNumVisPortalBytes;i++)
 				{
 					port.mPortalVis[i]	=0;
 				}
-				PortalFlowGenesis(k, cp);
+				PortalFlowGenesis(k, vp);
 
 				port.mbDone			=true;
 
@@ -866,6 +880,7 @@ namespace BSPVis
 
 
 		//wrote this one myself
+		//couldn't get the gen or q2 vers to work
 		void FacingFlood(VISPortal p, VISLeaf flooding)
 		{
 			foreach(VISPortal port in flooding.mPortals)
@@ -896,12 +911,6 @@ namespace BSPVis
 
 			VISLeaf	myLeaf	=mVisLeafs[p.mClusterFrom];
 			VISLeaf	leafTo	=mVisLeafs[p.mClusterTo];
-
-			if(p.mClusterFrom == 826)
-			{
-				int	gack	=0;
-				gack++;
-			}
 
 			FacingFlood(p, leafTo);
 

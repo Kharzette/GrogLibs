@@ -23,20 +23,20 @@ namespace BSPVis
 		public const int	MAX_TEMP_PORTALS	=25000;
 
 
-		internal void FreeAll(VisPools vp, ClipPools cp)
+		internal void FreeAll(VisPools vp)
 		{
-			Free(vp, cp);
+			Free(vp);
 
 			vp.mStacks.FlagFreeItem(this);
 		}
 
-		internal void Free(VisPools vp, ClipPools cp)
+		internal void Free(VisPools vp)
 		{
 			if(mSource != null)
 			{
 				if(mSource.mVerts != null)
 				{
-					cp.FreeVerts(mSource.mVerts);
+					vp.mClipPools.FreeVerts(mSource.mVerts);
 				}
 				vp.mPolys.FlagFreeItem(mSource);
 				mSource	=null;
@@ -46,7 +46,7 @@ namespace BSPVis
 			{
 				if(mPass.mVerts != null)
 				{
-					cp.FreeVerts(mPass.mVerts);
+					vp.mClipPools.FreeVerts(mPass.mVerts);
 				}
 				vp.mPolys.FlagFreeItem(mPass);
 				mPass	=null;
@@ -272,11 +272,11 @@ namespace BSPVis
 		}
 
 
-		internal static void RecursiveLeafFlowGenesis(FlowParams fp)
+		internal static void RecursiveLeafFlowGenesis(FlowParams fp, VisPools vp)
 		{
 			VISLeaf	leaf	=fp.mVisLeafs[fp.mLeafNum];
 			
-			VISPStack	stack	=new VISPStack();
+			VISPStack	stack	=vp.mStacks.GetFreeItem();
 
 			fp.mPrevStack.mNext	=stack;
 			
@@ -321,25 +321,29 @@ namespace BSPVis
 				stack.mPortal		=p;
 				stack.mNext			=null;
 
-				stack.mPass	=new GBSPPoly(p.mPoly);
+				stack.mPass			=vp.mPolys.GetFreeItem();
+				stack.mPass.mVerts	=vp.mClipPools.DupeVerts(p.mPoly.mVerts);
 				if(!stack.mPass.ClipPoly(fp.mDestPort.mPlane, false, fp.mCP))
 				{
+					stack.Free(vp);
 					continue;
 				}
 				if(stack.mPass.mVerts == null)
 				{
-					stack.mPass	=null;
+					stack.Free(vp);
 					continue;
 				}
 
-				stack.mSource	=new GBSPPoly(fp.mPrevStack.mSource);
+				stack.mSource			=vp.mPolys.GetFreeItem();
+				stack.mSource.mVerts	=vp.mClipPools.DupeVerts(fp.mPrevStack.mSource.mVerts);
 				if(!stack.mSource.ClipPoly(p.mPlane, true, fp.mCP))
 				{
+					stack.Free(vp);
 					continue;
 				}
 				if(stack.mSource.mVerts == null)
 				{
-					stack.mSource	=null;
+					stack.Free(vp);
 					continue;
 				}
 
@@ -352,26 +356,29 @@ namespace BSPVis
 					FlowParams	fp2	=fp;
 					fp2.mLeafNum	=p.mClusterTo;
 					fp2.mPrevStack	=stack;
-					RecursiveLeafFlowGenesis(fp2);
+					RecursiveLeafFlowGenesis(fp2, vp);
+					stack.Free(vp);
 					continue;
 				}
 
 				if(!stack.mPass.SeperatorClip(stack.mSource, fp.mPrevStack.mPass, false, fp.mCP))
 				{
+					stack.Free(vp);
 					continue;
 				}
 				if(stack.mPass.mVerts == null)
 				{
-					stack.mPass	=null;
+					stack.Free(vp);
 					continue;
 				}
 				if(!stack.mPass.SeperatorClip(fp.mPrevStack.mPass, stack.mSource, true, fp.mCP))
 				{
+					stack.Free(vp);
 					continue;
 				}
 				if(stack.mPass.mVerts == null)
 				{
-					stack.mPass	=null;
+					stack.Free(vp);
 					continue;
 				}
 
@@ -382,8 +389,11 @@ namespace BSPVis
 				FlowParams	fp3	=fp;
 				fp3.mLeafNum	=p.mClusterTo;
 				fp3.mPrevStack	=stack;
-				RecursiveLeafFlowGenesis(fp3);
-			}	
+				RecursiveLeafFlowGenesis(fp3, vp);
+
+				stack.Free(vp);
+			}
+			stack.FreeAll(vp);
 		}
 	}
 

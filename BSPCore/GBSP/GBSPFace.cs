@@ -422,10 +422,10 @@ namespace BSPCore
 					GFace.mLWidth		=0;
 					GFace.mLHeight		=0;
 					GFace.mLightOfs		=-1;	//No light info yet
-					GFace.mLTypes[0]	=255;	//Of course, no styles yet either
-					GFace.mLTypes[1]	=255;
-					GFace.mLTypes[2]	=255;
-					GFace.mLTypes[3]	=255;
+					GFace.mLType0		=255;	//Of course, no styles yet either
+					GFace.mLType1		=255;
+					GFace.mLType2		=255;
+					GFace.mLType3		=255;
 
 					GFace.Write(bw);
 				}

@@ -1088,7 +1088,7 @@ namespace BSPCore
 
 				if(clust < 0)
 				{
-					CoreEvents.Print("*WARNING* CreateLights:  Light in solid leaf.\n");
+					CoreEvents.Print("*WARNING* CreateLights:  Light in solid leaf at " + dLight.mOrigin + "\n");
 					continue;
 				}
 				if(DirectClusterLights.ContainsKey(clust))
@@ -1627,10 +1627,10 @@ namespace BSPCore
 				mGFXFaces[i].mLightOfs	=-1;
 				mGFXFaces[i].mLWidth	=L.GetLWidth();
 				mGFXFaces[i].mLHeight	=L.GetLHeight();
-				mGFXFaces[i].mLTypes[0]	=255;
-				mGFXFaces[i].mLTypes[1]	=255;
-				mGFXFaces[i].mLTypes[2]	=255;
-				mGFXFaces[i].mLTypes[3]	=255;
+				mGFXFaces[i].mLType0	=255;
+				mGFXFaces[i].mLType1	=255;
+				mGFXFaces[i].mLType2	=255;
+				mGFXFaces[i].mLType3	=255;
 				
 				//Skip special faces with no lightmaps
 				if((mGFXTexInfos[mGFXFaces[i].mTexInfo].mFlags
@@ -1680,8 +1680,23 @@ namespace BSPCore
 						CoreEvents.Print("SaveLightmaps:  Max LightTypes on face.\n");
 						return	null;
 					}
-						 
-					mGFXFaces[i].mLTypes[numLTypes]	=(byte)k;
+
+					if(numLTypes == 0)
+					{
+						mGFXFaces[i].mLType0	=(byte)k;
+					}
+					else if(numLTypes == 1)
+					{
+						mGFXFaces[i].mLType1	=(byte)k;
+					}
+					else if(numLTypes == 2)
+					{
+						mGFXFaces[i].mLType2	=(byte)k;
+					}
+					else if(numLTypes == 3)
+					{
+						mGFXFaces[i].mLType3	=(byte)k;
+					}
 					numLTypes++;
 
 					LDataOfs	=0;

@@ -524,8 +524,8 @@ namespace BSPCore
 			foreach(Vector3 v in outVerts)
 			{
 				Vector2	crd;
-				crd.X	=Vector3.Dot(tex.mVecs[0], v) + tex.mShift[0];
-				crd.Y	=Vector3.Dot(tex.mVecs[1], v) + tex.mShift[1];
+				crd.X	=Vector3.Dot(tex.mVecU, v) + tex.mShiftU;
+				crd.Y	=Vector3.Dot(tex.mVecV, v) + tex.mShiftV;
 
 				tex0.Add(crd);
 			}
@@ -618,47 +618,49 @@ namespace BSPCore
 		{
 			for(int s=0;s < 4;s++)
 			{
-				if(f.mLTypes[s] == 255)
-				{
-					//fill with zeros for empty spots
-					for(int k=0;k < f.mNumVerts;k++)
-					{
-						if(s == 0)
-						{
-							ddc.mTex1.Add(Vector2.Zero);
-						}
-						else if(s == 1)
-						{
-							ddc.mTex2.Add(Vector2.Zero);
-						}
-						else if(s == 2)
-						{
-							ddc.mTex3.Add(Vector2.Zero);
-						}
-						else if(s == 3)
-						{
-							ddc.mTex4.Add(Vector2.Zero);
-						}
-					}
-					continue;
-				}
-
 				List<Vector2>	coordSet	=null;
+				bool			bTuFittyFi	=false;
+
 				if(s == 0)
 				{
+					if(f.mLType0 == 255)
+					{
+						bTuFittyFi	=true;
+					}
 					coordSet	=ddc.mTex1;
 				}
 				else if(s == 1)
 				{
+					if(f.mLType1 == 255)
+					{
+						bTuFittyFi	=true;
+					}
 					coordSet	=ddc.mTex2;
 				}
 				else if(s == 2)
 				{
+					if(f.mLType2 == 255)
+					{
+						bTuFittyFi	=true;
+					}
 					coordSet	=ddc.mTex3;
 				}
 				else if(s == 3)
 				{
+					if(f.mLType3 == 255)
+					{
+						bTuFittyFi	=true;
+					}
 					coordSet	=ddc.mTex4;
+				}
+
+				if(bTuFittyFi)
+				{
+					for(int i=0;i < faceVerts.Count;i++)
+					{
+						coordSet.Add(Vector2.Zero);
+					}
+					continue;
 				}
 
 				if(!AtlasLightMap(f, lightData, s, faceVerts, pln, tex, coordSet))
@@ -713,17 +715,18 @@ namespace BSPCore
 					}
 
 					//make sure actually animating
-					int	lt	=0;
-					for(lt=0;lt < 4;lt++)
+					if(f.mLType0 ==0 || f.mLType0 == 255)
 					{
-						if(f.mLTypes[lt] != 0 && f.mLTypes[lt] != 255)
+						if(f.mLType1 ==0 || f.mLType1 == 255)
 						{
-							break;
+							if(f.mLType2 ==0 || f.mLType2 == 255)
+							{
+								if(f.mLType3 ==0 || f.mLType3 == 255)
+								{
+									continue;
+								}
+							}
 						}
-					}
-					if(lt == 4)
-					{
-						continue;
 					}
 
 					ddc.mNumFaces++;
@@ -753,10 +756,10 @@ namespace BSPCore
 					for(int k=0;k < f.mNumVerts;k++)
 					{
 						Vector4	styleIndex	=Vector4.Zero;
-						styleIndex.X	=f.mLTypes[0];
-						styleIndex.Y	=f.mLTypes[1];
-						styleIndex.Z	=f.mLTypes[2];
-						styleIndex.W	=f.mLTypes[3];
+						styleIndex.X	=f.mLType0;
+						styleIndex.Y	=f.mLType1;
+						styleIndex.Z	=f.mLType2;
+						styleIndex.W	=f.mLType3;
 						ddc.mStyles.Add(styleIndex);
 					}
 				}
@@ -817,18 +820,18 @@ namespace BSPCore
 						continue;
 					}
 
-					//make sure actually animating
-					int	lt	=0;
-					for(lt=0;lt < 4;lt++)
+					if(f.mLType0 ==0 || f.mLType0 == 255)
 					{
-						if(f.mLTypes[lt] != 0 && f.mLTypes[lt] != 255)
+						if(f.mLType1 ==0 || f.mLType1 == 255)
 						{
-							break;
+							if(f.mLType2 ==0 || f.mLType2 == 255)
+							{
+								if(f.mLType3 ==0 || f.mLType3 == 255)
+								{
+									continue;
+								}
+							}
 						}
-					}
-					if(lt == 4)
-					{
-						continue;
 					}
 
 					DrawDataChunk	ddc	=null;
@@ -869,10 +872,10 @@ namespace BSPCore
 					for(int k=0;k < f.mNumVerts;k++)
 					{
 						Vector4	styleIndex	=Vector4.Zero;
-						styleIndex.X	=f.mLTypes[0];
-						styleIndex.Y	=f.mLTypes[1];
-						styleIndex.Z	=f.mLTypes[2];
-						styleIndex.W	=f.mLTypes[3];
+						styleIndex.X	=f.mLType0;
+						styleIndex.Y	=f.mLType1;
+						styleIndex.Z	=f.mLType2;
+						styleIndex.W	=f.mLType3;
 						ddc.mStyles.Add(styleIndex);
 					}
 
@@ -932,11 +935,11 @@ namespace BSPCore
 					}
 
 					//make sure not animating
-					if(f.mLTypes[1] != 255 || f.mLTypes[2] != 255 || f.mLTypes[3] != 255)
+					if(f.mLType1 != 255 || f.mLType2 != 255 || f.mLType3 != 255)
 					{
 						continue;
 					}
-					if(f.mLTypes[0] != 0)
+					if(f.mLType0 != 0)
 					{
 						continue;
 					}
@@ -1020,11 +1023,11 @@ namespace BSPCore
 					}
 
 					//make sure not animating
-					if(f.mLTypes[1] != 255 || f.mLTypes[2] != 255 || f.mLTypes[3] != 255)
+					if(f.mLType1 != 255 || f.mLType2 != 255 || f.mLType3 != 255)
 					{
 						continue;
 					}
-					if(f.mLTypes[0] != 0)
+					if(f.mLType0 != 0)
 					{
 						continue;
 					}
@@ -1128,10 +1131,10 @@ namespace BSPCore
 					}
 
 					//check anim lights for good measure
-					Debug.Assert(f.mLTypes[0] == 255);
-					Debug.Assert(f.mLTypes[1] == 255);
-					Debug.Assert(f.mLTypes[2] == 255);
-					Debug.Assert(f.mLTypes[3] == 255);
+					Debug.Assert(f.mLType0 == 255);
+					Debug.Assert(f.mLType1 == 255);
+					Debug.Assert(f.mLType2 == 255);
+					Debug.Assert(f.mLType3 == 255);
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
@@ -1212,10 +1215,10 @@ namespace BSPCore
 					}
 
 					//check anim lights for good measure
-					Debug.Assert(f.mLTypes[0] == 255);
-					Debug.Assert(f.mLTypes[1] == 255);
-					Debug.Assert(f.mLTypes[2] == 255);
-					Debug.Assert(f.mLTypes[3] == 255);
+					Debug.Assert(f.mLType0 == 255);
+					Debug.Assert(f.mLType1 == 255);
+					Debug.Assert(f.mLType2 == 255);
+					Debug.Assert(f.mLType3 == 255);
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
@@ -1316,10 +1319,10 @@ namespace BSPCore
 					}
 
 					//check anim lights for good measure
-					Debug.Assert(f.mLTypes[0] == 255);
-					Debug.Assert(f.mLTypes[1] == 255);
-					Debug.Assert(f.mLTypes[2] == 255);
-					Debug.Assert(f.mLTypes[3] == 255);
+					Debug.Assert(f.mLType0 == 255);
+					Debug.Assert(f.mLType1 == 255);
+					Debug.Assert(f.mLType2 == 255);
+					Debug.Assert(f.mLType3 == 255);
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
@@ -1413,10 +1416,10 @@ namespace BSPCore
 					}
 
 					//check anim lights for good measure
-					Debug.Assert(f.mLTypes[0] == 255);
-					Debug.Assert(f.mLTypes[1] == 255);
-					Debug.Assert(f.mLTypes[2] == 255);
-					Debug.Assert(f.mLTypes[3] == 255);
+					Debug.Assert(f.mLType0 == 255);
+					Debug.Assert(f.mLType1 == 255);
+					Debug.Assert(f.mLType2 == 255);
+					Debug.Assert(f.mLType3 == 255);
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
@@ -1484,10 +1487,10 @@ namespace BSPCore
 					}
 
 					//check anim lights for good measure
-					Debug.Assert(f.mLTypes[0] == 255);
-					Debug.Assert(f.mLTypes[1] == 255);
-					Debug.Assert(f.mLTypes[2] == 255);
-					Debug.Assert(f.mLTypes[3] == 255);
+					Debug.Assert(f.mLType0 == 255);
+					Debug.Assert(f.mLType1 == 255);
+					Debug.Assert(f.mLType2 == 255);
+					Debug.Assert(f.mLType3 == 255);
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
@@ -1855,12 +1858,12 @@ namespace BSPCore
 			sCoords	=new List<double>();
 			tCoords	=new List<double>();
 
-			double	sX	=tex.mVecs[0].X;
-			double	sY	=tex.mVecs[0].Y;
-			double	sZ	=tex.mVecs[0].Z;
-			double	tX	=tex.mVecs[1].X;
-			double	tY	=tex.mVecs[1].Y;
-			double	tZ	=tex.mVecs[1].Z;
+			double	sX	=tex.mVecU.X;
+			double	sY	=tex.mVecU.Y;
+			double	sZ	=tex.mVecU.Z;
+			double	tX	=tex.mVecV.X;
+			double	tY	=tex.mVecV.Y;
+			double	tZ	=tex.mVecV.Z;
 
 			double	minS, minT;
 			double	maxS, maxT;
@@ -1941,7 +1944,7 @@ namespace BSPCore
 			maxT	=-Bounds.MIN_MAX_BOUNDS;
 
 			GBSPPlane	pln;
-			pln.mNormal	=Vector3.Cross(tex.mVecs[0], tex.mVecs[1]);
+			pln.mNormal	=Vector3.Cross(tex.mVecU, tex.mVecV);
 
 			pln.mNormal.Normalize();
 			pln.mDist	=0;
