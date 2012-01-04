@@ -157,6 +157,8 @@
 			// SaveDebug
 			// 
 			this.SaveDebug.AutoSize = true;
+			this.SaveDebug.Checked = true;
+			this.SaveDebug.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.SaveDebug.Location = new System.Drawing.Point(207, 38);
 			this.SaveDebug.Name = "SaveDebug";
 			this.SaveDebug.Size = new System.Drawing.Size(107, 17);

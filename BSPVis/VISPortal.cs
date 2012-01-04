@@ -274,9 +274,11 @@ namespace BSPVis
 
 		internal static void RecursiveLeafFlowGenesis(FlowParams fp, VisPools vp)
 		{
-			VISLeaf	leaf	=fp.mVisLeafs[fp.mLeafNum];
+			VISLeaf	leaf	=vp.mVisLeafs[fp.mLeafNum];
 			
 			VISPStack	stack	=vp.mStacks.GetFreeItem();
+
+			vp.mIterations++;
 
 			fp.mPrevStack.mNext	=stack;
 			
@@ -323,7 +325,7 @@ namespace BSPVis
 
 				stack.mPass			=vp.mPolys.GetFreeItem();
 				stack.mPass.mVerts	=vp.mClipPools.DupeVerts(p.mPoly.mVerts);
-				if(!stack.mPass.ClipPoly(fp.mDestPort.mPlane, false, fp.mCP))
+				if(!stack.mPass.ClipPoly(fp.mDestPort.mPlane, false, vp.mClipPools))
 				{
 					stack.Free(vp);
 					continue;
@@ -336,7 +338,7 @@ namespace BSPVis
 
 				stack.mSource			=vp.mPolys.GetFreeItem();
 				stack.mSource.mVerts	=vp.mClipPools.DupeVerts(fp.mPrevStack.mSource.mVerts);
-				if(!stack.mSource.ClipPoly(p.mPlane, true, fp.mCP))
+				if(!stack.mSource.ClipPoly(p.mPlane, true, vp.mClipPools))
 				{
 					stack.Free(vp);
 					continue;
@@ -361,7 +363,7 @@ namespace BSPVis
 					continue;
 				}
 
-				if(!stack.mPass.SeperatorClip(stack.mSource, fp.mPrevStack.mPass, false, fp.mCP))
+				if(!stack.mPass.SeperatorClip(stack.mSource, fp.mPrevStack.mPass, false, vp.mClipPools))
 				{
 					stack.Free(vp);
 					continue;
@@ -371,7 +373,7 @@ namespace BSPVis
 					stack.Free(vp);
 					continue;
 				}
-				if(!stack.mPass.SeperatorClip(fp.mPrevStack.mPass, stack.mSource, true, fp.mCP))
+				if(!stack.mPass.SeperatorClip(fp.mPrevStack.mPass, stack.mSource, true, vp.mClipPools))
 				{
 					stack.Free(vp);
 					continue;

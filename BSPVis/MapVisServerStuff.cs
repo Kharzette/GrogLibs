@@ -118,8 +118,7 @@ namespace BSPVis
 			int	count	=startPort;
 			Parallel.For(startPort, endPort, (k) =>
 				{
-					ClipPools	cp	=new ClipPools();
-					VisLoop(visPortals, visLeafs, numVisPortalBytes, k, endPort, ref count, cp);
+					VisLoop(visPortals, visLeafs, numVisPortalBytes, k, endPort, ref count);
 				});
 
 			//put vis bits in return data
@@ -154,7 +153,7 @@ namespace BSPVis
 
 
 		static void VisLoop(VISPortal []visPortals, VISLeaf []visLeafs,
-			int numVisPortalBytes, int k, int endPort, ref int count, ClipPools cp)
+			int numVisPortalBytes, int k, int endPort, ref int count)
 		{
 			VISPortal	port	=visPortals[k];
 
@@ -163,7 +162,7 @@ namespace BSPVis
 			{
 				port.mPortalVis[i]	=0;
 			}
-			PortalFlowGenesis(k, visPortals, visLeafs, numVisPortalBytes, cp);
+			PortalFlowGenesis(k, visPortals, visLeafs, numVisPortalBytes);
 
 			port.mbDone			=true;
 		}

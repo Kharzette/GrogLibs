@@ -17,9 +17,7 @@ namespace BSPVis
 		internal VISPortal	mDestPort;
 		internal int		mLeafNum;
 		internal VISPStack	mPrevStack;
-		internal VISLeaf	[]mVisLeafs;
 		internal int		mNumVisPortalBytes;
-		internal ClipPools	mCP;
 	}
 
 	public class VisParameters
@@ -609,9 +607,7 @@ namespace BSPVis
 			fp.mDestPort			=p;
 			fp.mLeafNum				=p.mClusterTo;
 			fp.mPrevStack			=vps;
-			fp.mVisLeafs			=mVisLeafs;
 			fp.mNumVisPortalBytes	=mNumVisPortalBytes;
-			fp.mCP					=vp.mClipPools;
 			VISPortal.RecursiveLeafFlowGenesis(fp, vp);
 
 			p.mbDone	=true;
@@ -622,7 +618,7 @@ namespace BSPVis
 
 
 		static void	PortalFlowGenesis(int portalnum, VISPortal []visPortals,
-			VISLeaf []visLeafs, int numVisPortalBytes, ClipPools cp)
+			VISLeaf []visLeafs, int numVisPortalBytes)
 		{
 			VISPortal	p	=visPortals[portalnum];
 
@@ -634,19 +630,22 @@ namespace BSPVis
 			vps.mSource		=p.mPoly;
 			p.mPortalFlood.CopyTo(vps.mVisBits, 0);
 
+			VisPools	vp	=new VisPools(visLeafs, new ClipPools());
+
 			FlowParams	fp;
 			fp.mDestPort			=p;
 			fp.mLeafNum				=p.mClusterTo;
 			fp.mPrevStack			=vps;
-			fp.mVisLeafs			=visLeafs;
 			fp.mNumVisPortalBytes	=numVisPortalBytes;
-			fp.mCP					=cp;
-			VISPortal.RecursiveLeafFlowGenesis(fp, null);	//todo fix
+			VISPortal.RecursiveLeafFlowGenesis(fp, vp);	//todo fix
 
 			p.mbDone	=true;
 
 			p.mCanSee	=CountBits(p.mPortalVis, visPortals.Length);
-			Console.WriteLine("Portal: " + p.mPortNum + "\tRoughVis: " + p.mMightSee + "\tFullVis: " + p.mCanSee);
+			Console.WriteLine("Portal: " + p.mPortNum +
+				"\tRoughVis: " + p.mMightSee
+				+ "\tFullVis: " + p.mCanSee
+				+ "\tIterations: " + vp.mIterations);
 		}
 
 
@@ -770,11 +769,8 @@ namespace BSPVis
 					CoreEvents.Print("Portal: " + (k + 1) + "\tRough Vis: "
 						+ port.mMightSee + "\tFull Vis: "
 						+ port.mCanSee + "\tRemaining: "
-						+ (endPort - count) + "\n");
-//					CoreEvents.Print("Portal: " + (k + 1) + " - Fast Vis: "
-//						+ port.mNumMightSee + ", Full Vis: "
-//						+ vPools.mCanSee + ", iterations: "
-//						+ vPools.mIterations + "\n");
+						+ (endPort - count)
+						+ "\tIterations: " + vp.mIterations + "\n");
 				}
 			});
 			return	true;

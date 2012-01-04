@@ -15,7 +15,7 @@ namespace BSPVis
 		public Pool<VISPStack>	mStacks;
 		public ClipPools		mClipPools;
 		public VISLeaf			[]mVisLeafs;
-		public int				mIterations, mCanSee;
+		public int				mIterations;
 
 
 		internal VisPools(VISLeaf []leafs, ClipPools cp)
