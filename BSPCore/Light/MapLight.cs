@@ -21,6 +21,7 @@ namespace BSPCore
 		RADPatch						[]mFacePatches;
 		RADPatch						[]mPatchList;
 		Int32							NumPatches, NumReceivers;
+		Vector2							[]mSampleOffsets;
 
 
 		void CalcPatchReflectivity(Int32 Face, RADPatch Patch, float surfaceReflect,
@@ -601,16 +602,9 @@ namespace BSPCore
 
 			float	[]recAmount	=new float[mPatchList.Length];
 
-			int	percentage	=(mPatchList.Length / 20);
+			object	prog	=ProgressWatcher.RegisterProgress(0, mPatchList.Length, 0);
 			for(int i=0;i < mPatchList.Length;i++)
 			{
-				if(percentage != 0)
-				{
-					if(((i % percentage) == 0) && (i / percentage) <= 20)
-					{
-						CoreEvents.Print("." + (i / percentage));
-					}
-				}				
 				RADPatch	patch	=mPatchList[i];
 
 				if(!FindPatchReceivers(patch, recAmount, visData))
@@ -618,10 +612,11 @@ namespace BSPCore
 					CoreEvents.Print("CalcReceivers:  There was an error calculating receivers.\n");
 					return	false;
 				}
+				ProgressWatcher.UpdateProgress(prog, i);
 			}
-			CoreEvents.Print("\n");
-
 			recAmount	=null;
+
+			ProgressWatcher.DestroyProgress(prog);
 
 			CoreEvents.Print("Num Receivers        : " + NumReceivers + "\n");
 
@@ -763,8 +758,7 @@ namespace BSPCore
 			}
 
 			//Light faces, and apply to patches
-			if(!LightFaces(5, lp.mLightParams.mbSeamCorrection, vertNormals,
-				lp.mLightParams.mLightGridSize, lp.mLightParams.mbRadiosity, visData))	//Light all the faces lightmaps, and apply to patches
+			if(!LightFaces(lp, vertNormals, visData))	//Light all the faces lightmaps, and apply to patches
 			{
 				goto	ExitWithError;
 			}
@@ -822,8 +816,6 @@ namespace BSPCore
 			CoreEvents.Print("Finished light at " + done + "\n");
 			CoreEvents.Print(done - startTime + " elapsed\n");
 			CoreEvents.Print("Num Light Maps       : " + numRGBMaps + "\n");
-
-//			MaterialVisGBSPFile(lp.mFileName, lp.mVisParams, lp.mBSPParams);
 
 			CoreEvents.FireLightDoneDoneEvent(true, null);
 			return;
@@ -944,6 +936,21 @@ namespace BSPCore
 		{
 			mLightMaps	=null;
 			mFaceInfos	=null;
+		}
+
+
+		void MakeSampleOffsets()
+		{
+			mSampleOffsets		=new Vector2[9];
+			mSampleOffsets[0]	=Vector2.Zero;
+			mSampleOffsets[1]	=Vector2.One * -0.5f;
+			mSampleOffsets[2]	=Vector2.UnitX * 0.5f + Vector2.UnitY * -0.5f;
+			mSampleOffsets[3]	=Vector2.One * 0.5f;
+			mSampleOffsets[4]	=Vector2.UnitX * -0.25f + Vector2.UnitY * 0.25f;
+			mSampleOffsets[5]	=Vector2.One * -0.25f;
+			mSampleOffsets[6]	=Vector2.UnitX * 0.25f + Vector2.UnitY * -0.25f;
+			mSampleOffsets[7]	=Vector2.One * 0.25f;
+			mSampleOffsets[8]	=Vector2.UnitX * -0.25f + Vector2.UnitY * 0.25f;
 		}
 
 
@@ -1328,23 +1335,8 @@ namespace BSPCore
 		}
 
 
-		bool LightFaces(int numSamples, bool bExtraSamples, Vector3 []vertNormals,
-						int lightGridSize, bool bRadiosity, byte []visData)
+		bool LightFaces(LightParameters lp, Vector3 []vertNormals, byte []visData)
 		{
-			float	[]UOfs	=new float[5];
-			float	[]VOfs	=new float[5];
-
-			UOfs[0]	=0.0f;
-			UOfs[1]	=-0.5f;
-			UOfs[2]	=0.5f;
-			UOfs[3]	=0.5f;
-			UOfs[4]	=-0.5f;
-			VOfs[0]	=0.0f;
-			VOfs[1]	=-0.5f;
-			VOfs[2]	=-0.5f;
-			VOfs[3]	=0.5f;
-			VOfs[4]	=0.5f;
-
 			mLightMaps	=new LInfo[mGFXFaces.Length];
 
 			if(mLightMaps == null)
@@ -1372,8 +1364,8 @@ namespace BSPCore
 			UtilityLib.TSPool<bool []>	boolPool	=new UtilityLib.TSPool<bool[]>(() => new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE]);
 
 			//avoid going nutso with threads
-			ParallelOptions	po	=new ParallelOptions();
-			po.MaxDegreeOfParallelism	=4;
+			ParallelOptions	po			=new ParallelOptions();
+			po.MaxDegreeOfParallelism	=lp.mBSPParams.mMaxThreads;
 
 			Parallel.For(0, mGFXFaces.Length, po, i =>
 			{
@@ -1403,14 +1395,14 @@ namespace BSPCore
 						return;
 					}
 					
-					if(bRadiosity)
+					if(lp.mLightParams.mbRadiosity)
 					{
-						TransferLightToPatches(i, lightGridSize);
+						TransferLightToPatches(i, lp.mLightParams.mLightGridSize);
 					}
 				}
 				else if(tex.IsLightMapped())
 				{
-					if(!CalcFaceInfo(mFaceInfos[i], mLightMaps[i], lightGridSize))
+					if(!CalcFaceInfo(mFaceInfos[i], mLightMaps[i], lp.mLightParams.mLightGridSize))
 					{
 						return;
 					}
@@ -1419,22 +1411,22 @@ namespace BSPCore
 
 					mFaceInfos[i].AllocPoints(size);
 
-					for(int s=0;s < numSamples;s++)
+					for(int s=0;s < lp.mLightParams.mNumSamples;s++)
 					{
-						//Hook.Printf("Sample  : %3i of %3i\n", s+1, NumSamples);
-						CalcFacePoints(mFaceInfos[i], mLightMaps[i], lightGridSize,
-							UOfs[s], VOfs[s], bExtraSamples, boolPool);
+						CalcFacePoints(mFaceInfos[i], mLightMaps[i], lp.mLightParams.mLightGridSize,
+							mSampleOffsets[s], lp.mLightParams.mbSeamCorrection, boolPool);
 
-						if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i], 1 / (float)numSamples, visData))
+						if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i],
+							1 / (float)lp.mLightParams.mNumSamples, visData))
 						{
 							return;
 						}
 					}
 				
-					if(bRadiosity)
+					if(lp.mLightParams.mbRadiosity)
 					{
 						// Update patches for this face
-						ApplyLightmapToPatches(i, lightGridSize);
+						ApplyLightmapToPatches(i, lp.mLightParams.mLightGridSize);
 					}
 				}
 			});
@@ -1578,11 +1570,11 @@ namespace BSPCore
 
 
 		void CalcFacePoints(FInfo faceInfo, LInfo lightInfo, int lightGridSize,
-			float UOfs, float VOfs, bool bExtraLightCorrection,
+			Vector2 UVOfs, bool bExtraLightCorrection,
 			UtilityLib.TSPool<bool []> boolPool)
 		{
 			faceInfo.CalcFacePoints(lightInfo, lightGridSize,
-				UOfs, VOfs, bExtraLightCorrection, boolPool,
+				UVOfs, bExtraLightCorrection, boolPool,
 				IsPointInSolidSpace, RayCollide);
 		}
 

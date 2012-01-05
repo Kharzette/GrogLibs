@@ -51,7 +51,10 @@ namespace BSPCore
 		int				mLightMapGridSize;
 
 
-		public Map() { }
+		public Map()
+		{
+			MakeSampleOffsets();
+		}
 
 
 		bool IsPointInSolidSpace(Vector3 pos)

@@ -145,7 +145,7 @@ namespace BSPCore
 
 
 		internal void CalcFacePoints(LInfo lightInfo, int lightGridSize,
-			float UOfs, float VOfs,
+			Vector2 UVOfs,
 			bool bExtraLightCorrection,
 			UtilityLib.TSPool<bool []> boolPool,
 			CoreDelegates.IsPointInSolid pointInSolid,
@@ -162,7 +162,7 @@ namespace BSPCore
 
 			float	startU, startV;
 			Int32	width, height;
-			lightInfo.CalcSizeAndStart(UOfs, VOfs, lightGridSize, out width, out height, out startU, out startV);
+			lightInfo.CalcSizeAndStart(UVOfs, lightGridSize, out width, out height, out startU, out startV);
 
 			for(int v=0;v < height;v++)
 			{

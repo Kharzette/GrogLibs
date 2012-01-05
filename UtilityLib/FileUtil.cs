@@ -254,6 +254,49 @@ namespace UtilityLib
 		}
 
 
+		//loads up emissive colors from materials (for bouncing light or whatever)
+		public static Dictionary<string, Color> LoadEmissives(string fileName)
+		{
+			string	emmName	=StripExtension(fileName);
+
+			emmName	+=".Emissives";
+
+			if(!File.Exists(emmName))
+			{
+				//not a big deal, just use white
+				return	null;
+			}
+
+			FileStream		fs	=new FileStream(emmName, FileMode.Open, FileAccess.Read);
+			BinaryReader	br	=new BinaryReader(fs);
+
+			UInt32	magic	=br.ReadUInt32();
+			if(magic != 0xED1551BE)
+			{
+				return	null;
+			}
+
+			Dictionary<string, Color>	ret	=new Dictionary<string,Color>();
+
+			Microsoft.Xna.Framework.Color	tempColor	=new Microsoft.Xna.Framework.Color();
+
+			int	count	=br.ReadInt32();
+			for(int i=0;i < count;i++)
+			{
+				string	matName	=br.ReadString();
+
+				tempColor.PackedValue	=br.ReadUInt32();
+
+				ret.Add(matName, tempColor);
+			}
+
+			br.Close();
+			fs.Close();
+
+			return	ret;
+		}
+
+
 		//saves out enough info to recreate
 		//the object from reflection
 		public static void SaveProps(BinaryWriter bw, object obj)

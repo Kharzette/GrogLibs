@@ -626,22 +626,24 @@ namespace BSPVis
 
 			p.mMightSee	=CountBits(p.mPortalFlood, visPortals.Length);
 
-			VISPStack	vps	=new VISPStack();
+			VisPools	vp	=new VisPools(visLeafs, new ClipPools());
+			VISPStack	vps	=vp.mStacks.GetFreeItem();
 			vps.mSource		=p.mPoly;
 			p.mPortalFlood.CopyTo(vps.mVisBits, 0);
 
-			VisPools	vp	=new VisPools(visLeafs, new ClipPools());
 
 			FlowParams	fp;
 			fp.mDestPort			=p;
 			fp.mLeafNum				=p.mClusterTo;
 			fp.mPrevStack			=vps;
 			fp.mNumVisPortalBytes	=numVisPortalBytes;
-			VISPortal.RecursiveLeafFlowGenesis(fp, vp);	//todo fix
+			VISPortal.RecursiveLeafFlowGenesis(fp, vp);
 
 			p.mbDone	=true;
-
 			p.mCanSee	=CountBits(p.mPortalVis, visPortals.Length);
+
+			vp.mStacks.FlagFreeItem(vps);
+
 			Console.WriteLine("Portal: " + p.mPortNum +
 				"\tRoughVis: " + p.mMightSee
 				+ "\tFullVis: " + p.mCanSee
@@ -682,7 +684,7 @@ namespace BSPVis
 				else
 				{
 					prog	=ProgressWatcher.RegisterProgress(0, mVisPortals.Length, 0);
-					if(!FloodPortalsSlowGenesis(0, mVisPortals.Length, vp.mBSPParams.mbVerbose, prog))
+					if(!FloodPortalsSlowGenesis(0, mVisPortals.Length, vp.mBSPParams, prog))
 					{
 						return	false;
 					}
@@ -705,12 +707,11 @@ namespace BSPVis
 					vsp.mPortalVis	=null;
 				}
 			}
-			int	TotalVisibleLeafs	=0;
 
+			int	TotalVisibleLeafs	=0;
 			for(int i=0;i < mVisLeafs.Length;i++)
 			{
 				int	leafSee	=0;
-				
 				if(!CollectLeafVisBits(i, ref leafSee))
 				{
 					goto	ExitWithError;
@@ -734,7 +735,7 @@ namespace BSPVis
 		}
 
 
-		bool FloodPortalsSlowGenesis(int startPort, int endPort, bool bVerbose, object prog)
+		bool FloodPortalsSlowGenesis(int startPort, int endPort, BSPBuildParams bp, object prog)
 		{
 			for(int k=startPort;k < endPort;k++)
 			{
@@ -743,7 +744,11 @@ namespace BSPVis
 
 			int	count	=startPort;
 //			for(int k=startPort;k < endPort;k++)
-			Parallel.For(startPort, endPort, (k) =>
+
+			ParallelOptions	po			=new ParallelOptions();
+			po.MaxDegreeOfParallelism	=bp.mMaxThreads;
+
+			Parallel.For(startPort, endPort, po, (k) =>
 			{
 				VISPortal	port	=mVisSortedPortals[k];
 				ClipPools	cp		=new ClipPools();
@@ -764,7 +769,7 @@ namespace BSPVis
 					ProgressWatcher.UpdateProgress(prog, count);
 				}
 
-				if(bVerbose)
+				if(bp.mbVerbose)
 				{
 					CoreEvents.Print("Portal: " + (k + 1) + "\tRough Vis: "
 						+ port.mMightSee + "\tFull Vis: "
@@ -825,7 +830,9 @@ namespace BSPVis
 			mGFXVisData[LeafBitsOfs + (leafNum >> 3)]	|=(byte)Bit;
 
 			//mark immediate neighbors as visible
-			//(usually already are)
+			//this is needed in clusters bordering a cluster
+			//with a single portal.  I think it is a flaw only
+			//my own vis stuff has
 			foreach(VISPortal p in Leaf.mPortals)
 			{
 				Debug.Assert(p.mClusterFrom == leafNum);
@@ -859,19 +866,11 @@ namespace BSPVis
 
 		void SortPortals()
 		{
-#if true
 			List<VISPortal>	sortMe	=new List<VISPortal>(mVisPortals);
 
 			sortMe.Sort(new VisPortalComparer());
 
 			mVisSortedPortals	=sortMe.ToArray();
-#else
-			List<Q2Portal>	sortMe	=new List<Q2Portal>(mQ2Portals);
-
-			sortMe.Sort(new Q2PortalComparer());
-
-			mQ2SortedPortals	=sortMe.ToArray();
-#endif
 		}
 
 

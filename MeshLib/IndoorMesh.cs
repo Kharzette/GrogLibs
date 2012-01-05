@@ -241,16 +241,16 @@ namespace MeshLib
 //				g.Clear(Color.CornflowerBlue);
 
 				//render world
-				DrawMaterialsDC(gd, -position, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, -position, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, -position, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, -position, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, -position, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 				
 				//alphas
-				DrawMaterialsDC(gd, -position, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, -position, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
-				DrawMaterialsDC(gd, -position, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
 				mAlphaPool.DrawAll(gd, mMatLib, position);
 			}
 
@@ -265,20 +265,20 @@ namespace MeshLib
 
 			gd.Clear(Color.CornflowerBlue);
 
-			DrawMaterialsDC(gd, -position, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, -position, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, -position, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, -position, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, -position, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 
 			//alphas
-			DrawMaterialsDC(gd, -position, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, -position, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
-			DrawMaterialsDC(gd, -position, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
 			if(scissors.Count > 0)
 			{
 				//draw mirror surface itself
-				DrawMaterialsDC(gd, -position, mMirrorVB, mMirrorIB, mMirrorDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, mMirrorVB, mMirrorIB, mMirrorDrawCalls, bMatVis);
 			}
 
 			mAlphaPool.DrawAll(gd, mMatLib, position);

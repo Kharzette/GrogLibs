@@ -77,6 +77,7 @@ namespace SharedForms
 				mBSPParams.mbFixTJunctions	=FixTJunctions.Checked;
 				mBSPParams.mbSlickAsGouraud	=SlickAsGouraud.Checked;
 				mBSPParams.mbWarpAsMirror	=WarpAsMirror.Checked;
+				mBSPParams.mMaxThreads		=(int)MaxThreads.Value;
 
 				return	mBSPParams;
 			}
@@ -100,6 +101,7 @@ namespace SharedForms
 				mLightParams.mMaxIntensity		=(int)MaxIntensity.Value;
 				mLightParams.mLightGridSize		=(int)LightGridSize.Value;
 				mLightParams.mAtlasSize			=(int)4;	//doesn't matter
+				mLightParams.mNumSamples		=(int)NumSamples.Value;
 
 				return	mLightParams;
 			}
@@ -199,6 +201,15 @@ namespace SharedForms
 			FastPatch.Enabled		=Radiosity.Checked;
 			PatchSize.Enabled		=Radiosity.Checked;
 			ReflectiveScale.Enabled	=Radiosity.Checked;
+		}
+
+
+		void OnVerbose(object sender, EventArgs e)
+		{
+			if(VerboseBSP.Checked)
+			{
+				CoreEvents.Print("Note that verbosity can adversely affect performance, especially in vis.\n");
+			}
 		}
 	}
 }

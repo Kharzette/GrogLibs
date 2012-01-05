@@ -548,17 +548,17 @@ namespace BSPZone
 
 
 		//only used for debugging vis
-		public void GetVisibleGeometry(Vector3 pos, List<Vector3> verts, List<UInt32> inds)
+		public int GetVisibleGeometry(Vector3 pos, List<Vector3> verts, List<UInt32> inds)
 		{
 			if(mDebugFaces == null)
 			{
-				return;	//no debug info saved
+				return	-1;	//no debug info saved
 			}
 
 			Int32	posNode	=FindNodeLandedIn(0, pos);
 			if(posNode > 0)
 			{
-				return;	//solid
+				return	0;	//solid
 			}
 
 			Int32	leaf	=-(posNode + 1);
@@ -566,11 +566,12 @@ namespace BSPZone
 
 			if(clust == -1 || mVisClusters[clust].mVisOfs == -1)
 			{
-				return;	//no info for position
+				return	-69;	//no info for position
 			}
 
 			Int32	ofs	=mVisClusters[clust].mVisOfs;
 
+			int	leafsVisible	=0;
 			foreach(ZoneLeaf zl in mZoneLeafs)
 			{
 				Int32	c	=zl.mCluster;
@@ -584,6 +585,8 @@ namespace BSPZone
 				{
 					continue;
 				}
+
+				leafsVisible++;
 
 				for(int i=0;i < zl.mNumFaces;i++)
 				{
@@ -607,6 +610,7 @@ namespace BSPZone
 					}
 				}
 			}
+			return	leafsVisible;
 		}
 
 

@@ -9,7 +9,7 @@ namespace BSPCore
 {
 	public class BSPBuildParams
 	{
-		public int	mMaxCores;
+		public int	mMaxThreads;
 		public bool	mbVerbose;
 		public bool	mbEntityVerbose;
 		public bool mbFixTJunctions;
@@ -25,6 +25,7 @@ namespace BSPCore
 		public bool		mbFastPatch;
 		public int		mPatchSize;
 		public int		mNumBounces;
+		public int		mNumSamples;	//1 to 5
 		public float	mLightScale;
 		public Vector3	mMinLight;
 		public float	mSurfaceReflect;

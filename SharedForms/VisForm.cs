@@ -120,5 +120,27 @@ namespace SharedForms
 		{
 			UtilityLib.Misc.SafeInvoke(eReloadVisFarm, null);
 		}
+
+
+		void OnDistChecked(object sender, EventArgs e)
+		{
+			//some of these donut work with each other
+			if(Distributed.Checked)
+			{
+				RoughVis.Checked	=false;
+				SortPortals.Checked	=false;
+				RoughVis.Enabled	=false;
+				SortPortals.Enabled	=false;
+				VisGBSP.Enabled		=false;
+				ResumeVis.Enabled	=true;
+			}
+			else
+			{
+				RoughVis.Enabled	=true;
+				SortPortals.Enabled	=true;
+				VisGBSP.Enabled		=true;
+				ResumeVis.Enabled	=false;
+			}
+		}
 	}
 }

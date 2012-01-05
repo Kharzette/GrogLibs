@@ -308,7 +308,7 @@ namespace BSPVis
 			baseName	=baseName.Substring(dirPos + 1);
 
 			DirectoryInfo	di	=new DirectoryInfo(dirName);
-			FileInfo[]		fis	=di.GetFiles(baseName + "bits*", SearchOption.TopDirectoryOnly);
+			FileInfo[]		fis	=di.GetFiles(baseName + "bits*.VisBits", SearchOption.TopDirectoryOnly);
 
 			foreach(FileInfo fi in fis)
 			{
@@ -317,9 +317,10 @@ namespace BSPVis
 				string	justNums	=fi.Name.Substring(postBits);
 
 				int	underPos	=justNums.IndexOf('_');
+				int	dotPos		=justNums.LastIndexOf('.');
 
 				string	leftNum		=justNums.Substring(0, underPos);
-				string	rightNum	=justNums.Substring(underPos + 1);
+				string	rightNum	=justNums.Substring(underPos + 1, dotPos - underPos - 1);
 
 				int	left, right;
 				if(!int.TryParse(leftNum, out left))
@@ -381,6 +382,25 @@ namespace BSPVis
 		}
 
 
+		void NukeVisBits(string fileName)
+		{
+			int		dirPos		=fileName.LastIndexOf('\\');
+			string	baseName	=UtilityLib.FileUtil.StripExtension(fileName);
+			string	dirName		=baseName.Substring(0, dirPos);
+
+			baseName	=baseName.Substring(dirPos + 1);
+
+			DirectoryInfo	di	=new DirectoryInfo(dirName);
+			FileInfo[]		fis	=di.GetFiles(baseName + "bits*.VisBits", SearchOption.TopDirectoryOnly);
+
+			foreach(FileInfo fi in fis)
+			{
+				CoreEvents.Print("Blasting " + fi.Name + "...\n");
+				fi.Delete();
+			}
+		}
+
+
 		void BytesToVisBits(byte []ports, int startPort, int endPort, string fileName)
 		{
 			string	saveChunk	=UtilityLib.FileUtil.StripExtension(fileName);
@@ -405,7 +425,7 @@ namespace BSPVis
 			ms.Close();
 
 			//save to file too
-			FileStream	fs	=new FileStream(saveChunk, FileMode.Create, FileAccess.Write);
+			FileStream	fs	=new FileStream(saveChunk + ".VisBits", FileMode.Create, FileAccess.Write);
 			bw	=new BinaryWriter(fs);
 
 			bw.Write(ports, 0, ports.Length);
@@ -708,6 +728,10 @@ namespace BSPVis
 
 				CoreEvents.Print(mvc.Endpoint.Address.ToString() + " with " + mvc.mNumFailures + " failures.\n");
 			}
+
+			CoreEvents.Print("Deleting vis bits...\n");
+			NukeVisBits(fileName);
+			CoreEvents.Print("Complete.\n");
 		}
 	}
 }

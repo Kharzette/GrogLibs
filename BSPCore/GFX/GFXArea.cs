@@ -5,6 +5,7 @@ using System.Text;
 
 namespace BSPCore
 {
+	//area stuff doesn't really work yet
 	public class GFXArea : UtilityLib.IReadWriteable
 	{
 		public Int32	NumAreaPortals;

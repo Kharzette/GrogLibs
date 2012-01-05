@@ -154,6 +154,7 @@ namespace BSPCore
 		{
 			if(bVerbose)
 			{
+				//Q2 style
 				CoreEvents.Print("############### block " + xblock + "," + zblock + " ###############\n");
 			}
 
@@ -183,7 +184,7 @@ namespace BSPCore
 				GBSPBrush.DumpBrushListToFile(blocked, pp, "Brush_x" + xblock + "_z" + zblock + ".map");
 			}
 
-			List<GBSPBrush>	csgList	=GBSPBrush.CSGBrushes(bVerbose, blocked, pp, cp);			
+			List<GBSPBrush>	csgList	=GBSPBrush.GankBrushOverlap(bVerbose, blocked, pp, cp);			
 
 			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
 
@@ -205,7 +206,7 @@ namespace BSPCore
 
 			List<GBSPBrush>	glist	=GBSPBrush.ConvertMapBrushList(list);
 
-			List<GBSPBrush>	csgList	=GBSPBrush.CSGBrushes(bVerbose, glist, pool, cp);
+			List<GBSPBrush>	csgList	=GBSPBrush.GankBrushOverlap(bVerbose, glist, pool, cp);
 
 			GBSPNode	root	=new GBSPNode();
 			root.BuildBSP(csgList, pool, bVerbose);
@@ -334,10 +335,6 @@ namespace BSPCore
 
 			int	numPortals		=0;	//Number of portals
 			int	numPortalLeafs	=0;	//Current leaf number
-
-//			bool	bMergey	=mRootNode[0].MergePortals_r(pool);
-
-//			mRootNode[0].NumberLeafs_r(ref numPortalLeafs, ref numPortals);
 
 			if(!mRootNode.PrepPortalFile_r(ref numPortalLeafs, ref numPortals))
 			{

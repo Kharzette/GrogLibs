@@ -402,7 +402,6 @@ namespace BSPCore
 			}
 
 			mCurrentFill	=curFill;
-			mOccupied		=dist;
 
 			if(bFill)
 			{

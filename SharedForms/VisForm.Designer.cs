@@ -34,7 +34,7 @@
 			this.Stop = new System.Windows.Forms.Button();
 			this.ReloadBuildFarm = new System.Windows.Forms.Button();
 			this.QueryVisFarm = new System.Windows.Forms.Button();
-			this.FullVis = new System.Windows.Forms.Button();
+			this.VisGBSP = new System.Windows.Forms.Button();
 			this.SortPortals = new System.Windows.Forms.CheckBox();
 			this.GroupFileIO = new System.Windows.Forms.GroupBox();
 			this.Pause = new System.Windows.Forms.Button();
@@ -60,9 +60,11 @@
 			this.Distributed.TabIndex = 44;
 			this.Distributed.Text = "Distributed";
 			this.Distributed.UseVisualStyleBackColor = true;
+			this.Distributed.CheckedChanged += new System.EventHandler(this.OnDistChecked);
 			// 
 			// ResumeVis
 			// 
+			this.ResumeVis.Enabled = false;
 			this.ResumeVis.Location = new System.Drawing.Point(102, 19);
 			this.ResumeVis.Name = "ResumeVis";
 			this.ResumeVis.Size = new System.Drawing.Size(81, 23);
@@ -101,19 +103,21 @@
 			this.QueryVisFarm.UseVisualStyleBackColor = true;
 			this.QueryVisFarm.Click += new System.EventHandler(this.OnQueryVisFarm);
 			// 
-			// FullVis
+			// VisGBSP
 			// 
-			this.FullVis.Location = new System.Drawing.Point(6, 19);
-			this.FullVis.Name = "FullVis";
-			this.FullVis.Size = new System.Drawing.Size(90, 23);
-			this.FullVis.TabIndex = 38;
-			this.FullVis.Text = "Vis GBSP File";
-			this.FullVis.UseVisualStyleBackColor = true;
-			this.FullVis.Click += new System.EventHandler(this.OnVisGBSP);
+			this.VisGBSP.Location = new System.Drawing.Point(6, 19);
+			this.VisGBSP.Name = "VisGBSP";
+			this.VisGBSP.Size = new System.Drawing.Size(90, 23);
+			this.VisGBSP.TabIndex = 38;
+			this.VisGBSP.Text = "Vis GBSP File";
+			this.VisGBSP.UseVisualStyleBackColor = true;
+			this.VisGBSP.Click += new System.EventHandler(this.OnVisGBSP);
 			// 
 			// SortPortals
 			// 
 			this.SortPortals.AutoSize = true;
+			this.SortPortals.Checked = true;
+			this.SortPortals.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.SortPortals.Location = new System.Drawing.Point(158, 69);
 			this.SortPortals.Name = "SortPortals";
 			this.SortPortals.Size = new System.Drawing.Size(80, 17);
@@ -123,7 +127,7 @@
 			// 
 			// GroupFileIO
 			// 
-			this.GroupFileIO.Controls.Add(this.FullVis);
+			this.GroupFileIO.Controls.Add(this.VisGBSP);
 			this.GroupFileIO.Controls.Add(this.ResumeVis);
 			this.GroupFileIO.Location = new System.Drawing.Point(12, 12);
 			this.GroupFileIO.Name = "GroupFileIO";
@@ -171,7 +175,7 @@
 		private System.Windows.Forms.Button Stop;
 		private System.Windows.Forms.Button ReloadBuildFarm;
 		private System.Windows.Forms.Button QueryVisFarm;
-		private System.Windows.Forms.Button FullVis;
+		private System.Windows.Forms.Button VisGBSP;
 		private System.Windows.Forms.CheckBox SortPortals;
 		private System.Windows.Forms.GroupBox GroupFileIO;
 		private System.Windows.Forms.Button Pause;

@@ -31,11 +31,9 @@ namespace BSPCore
 
 		//Info for this node as a leaf
 		List<GBSPPortal>	mPortals	=new List<GBSPPortal>();//Portals on this leaf
-		Int32				mNumLeafFaces;						//Number of faces touching this leaf
-		List<GBSPFace>		mLeafFaces	=new List<GBSPFace>();	//Pointer to Faces touching this leaf
+		List<GBSPFace>		mLeafFaces	=new List<GBSPFace>();	//Faces touching this leaf
 		Int32				mCurrentFill;						//For the outside filling stage
 		Int32				mEntity;							//1 if entity touching leaf
-		Int32				mOccupied;							//FIXME:  Can use Entity!!!
 		Int32				mPortalLeafNum;						//For portal saving
 
 		bool	mbDetail;
@@ -506,44 +504,10 @@ namespace BSPCore
 				return;
 			}
 
-			//Reset counter
-			mNumLeafFaces	=0;
-
-			//See which portals are valid
-			Int32	side;
-			foreach(GBSPPortal p in mPortals)
-			{
-				side	=(p.mBackNode == this)? 1 : 0;
-
-				if(side == 0)
-				{
-					if(p.mFrontFace == null)
-					{
-						continue;
-					}
-
-					CountLeafFaces_r(p.mFrontFace);
-				}
-				else
-				{
-					if(p.mBackFace == null)
-					{
-						continue;
-					}
-
-					CountLeafFaces_r(p.mBackFace);
-				}
-			}
-
-			//Reset counter
-			mNumLeafFaces	=0;
-			
 			//See which portals are valid
 			foreach(GBSPPortal p in mPortals)
 			{
-				side	=(p.mBackNode == this)? 1 : 0;
-
-				if(side == 0)
+				if(p.mFrontNode == this)
 				{
 					if(p.mFrontFace == null)
 					{
@@ -579,25 +543,6 @@ namespace BSPCore
 				return;
 			}
 			mLeafFaces.Add(f);
-			mNumLeafFaces++;
-		}
-
-
-		void CountLeafFaces_r(GBSPFace f)
-		{
-			while(f.mMerged != null)
-			{
-				f	=f.mMerged;
-			}
-
-			if(f.mSplit0 != null)
-			{
-				CountLeafFaces_r(f.mSplit0);
-				CountLeafFaces_r(f.mSplit1);
-				return;
-			}
-
-			mNumLeafFaces++;
 		}
 
 
@@ -858,7 +803,7 @@ namespace BSPCore
 
 				//Count num gfx leaf faces here, so we know how big to make the array
 				//later, when they are saved out...
-				nc.mNumGFXLeafFaces	+=mNumLeafFaces;
+				nc.mNumGFXLeafFaces	+=mLeafFaces.Count;
 
 				//Increase the number of leafs
 				nc.mNumGFXLeafs++;
@@ -911,7 +856,7 @@ namespace BSPCore
 
 				GLeaf.mNumFaces	=0;
 
-				for(i=0;i < mNumLeafFaces;i++)
+				for(i=0;i < mLeafFaces.Count;i++)
 				{
 					if(!mLeafFaces[i].IsVisible())
 					{

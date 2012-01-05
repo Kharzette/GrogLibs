@@ -43,12 +43,16 @@
 			this.LabelNumRawFaces = new System.Windows.Forms.Label();
 			this.NumPlanes = new System.Windows.Forms.TextBox();
 			this.GroupBuildSettings = new System.Windows.Forms.GroupBox();
+			this.label11 = new System.Windows.Forms.Label();
 			this.WarpAsMirror = new System.Windows.Forms.CheckBox();
+			this.MaxThreads = new System.Windows.Forms.NumericUpDown();
 			this.SlickAsGouraud = new System.Windows.Forms.CheckBox();
 			this.FixTJunctions = new System.Windows.Forms.CheckBox();
 			this.VerboseEntity = new System.Windows.Forms.CheckBox();
 			this.VerboseBSP = new System.Windows.Forms.CheckBox();
 			this.LightSettingsGroupBox = new System.Windows.Forms.GroupBox();
+			this.label10 = new System.Windows.Forms.Label();
+			this.NumSamples = new System.Windows.Forms.NumericUpDown();
 			this.label9 = new System.Windows.Forms.Label();
 			this.LightGridSize = new System.Windows.Forms.NumericUpDown();
 			this.label8 = new System.Windows.Forms.Label();
@@ -73,7 +77,9 @@
 			this.GroupFileIO.SuspendLayout();
 			this.StatsGroupBox.SuspendLayout();
 			this.GroupBuildSettings.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.MaxThreads)).BeginInit();
 			this.LightSettingsGroupBox.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.NumSamples)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.LightGridSize)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaxIntensity)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.ReflectiveScale)).BeginInit();
@@ -232,17 +238,28 @@
 			// 
 			// GroupBuildSettings
 			// 
+			this.GroupBuildSettings.Controls.Add(this.label11);
 			this.GroupBuildSettings.Controls.Add(this.WarpAsMirror);
+			this.GroupBuildSettings.Controls.Add(this.MaxThreads);
 			this.GroupBuildSettings.Controls.Add(this.SlickAsGouraud);
 			this.GroupBuildSettings.Controls.Add(this.FixTJunctions);
 			this.GroupBuildSettings.Controls.Add(this.VerboseEntity);
 			this.GroupBuildSettings.Controls.Add(this.VerboseBSP);
 			this.GroupBuildSettings.Location = new System.Drawing.Point(246, 12);
 			this.GroupBuildSettings.Name = "GroupBuildSettings";
-			this.GroupBuildSettings.Size = new System.Drawing.Size(115, 137);
+			this.GroupBuildSettings.Size = new System.Drawing.Size(137, 163);
 			this.GroupBuildSettings.TabIndex = 31;
 			this.GroupBuildSettings.TabStop = false;
 			this.GroupBuildSettings.Text = "Build Settings";
+			// 
+			// label11
+			// 
+			this.label11.AutoSize = true;
+			this.label11.Location = new System.Drawing.Point(57, 136);
+			this.label11.Name = "label11";
+			this.label11.Size = new System.Drawing.Size(69, 13);
+			this.label11.TabIndex = 34;
+			this.label11.Text = "Max Threads";
 			// 
 			// WarpAsMirror
 			// 
@@ -255,6 +272,28 @@
 			this.WarpAsMirror.TabIndex = 24;
 			this.WarpAsMirror.Text = "Warp = Mirror";
 			this.WarpAsMirror.UseVisualStyleBackColor = true;
+			// 
+			// MaxThreads
+			// 
+			this.MaxThreads.Location = new System.Drawing.Point(6, 134);
+			this.MaxThreads.Maximum = new decimal(new int[] {
+            64,
+            0,
+            0,
+            0});
+			this.MaxThreads.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+			this.MaxThreads.Name = "MaxThreads";
+			this.MaxThreads.Size = new System.Drawing.Size(45, 20);
+			this.MaxThreads.TabIndex = 33;
+			this.MaxThreads.Value = new decimal(new int[] {
+            4,
+            0,
+            0,
+            0});
 			// 
 			// SlickAsGouraud
 			// 
@@ -299,9 +338,12 @@
 			this.VerboseBSP.TabIndex = 20;
 			this.VerboseBSP.Text = "Verbose";
 			this.VerboseBSP.UseVisualStyleBackColor = true;
+			this.VerboseBSP.CheckedChanged += new System.EventHandler(this.OnVerbose);
 			// 
 			// LightSettingsGroupBox
 			// 
+			this.LightSettingsGroupBox.Controls.Add(this.label10);
+			this.LightSettingsGroupBox.Controls.Add(this.NumSamples);
 			this.LightSettingsGroupBox.Controls.Add(this.label9);
 			this.LightSettingsGroupBox.Controls.Add(this.LightGridSize);
 			this.LightSettingsGroupBox.Controls.Add(this.label8);
@@ -323,12 +365,43 @@
 			this.LightSettingsGroupBox.Controls.Add(this.Radiosity);
 			this.LightSettingsGroupBox.Controls.Add(this.SeamCorrection);
 			this.LightSettingsGroupBox.Controls.Add(this.FastPatch);
-			this.LightSettingsGroupBox.Location = new System.Drawing.Point(12, 155);
+			this.LightSettingsGroupBox.Location = new System.Drawing.Point(12, 181);
 			this.LightSettingsGroupBox.Name = "LightSettingsGroupBox";
 			this.LightSettingsGroupBox.Size = new System.Drawing.Size(381, 154);
 			this.LightSettingsGroupBox.TabIndex = 32;
 			this.LightSettingsGroupBox.TabStop = false;
 			this.LightSettingsGroupBox.Text = "Light Settings";
+			// 
+			// label10
+			// 
+			this.label10.AutoSize = true;
+			this.label10.Location = new System.Drawing.Point(308, 124);
+			this.label10.Name = "label10";
+			this.label10.Size = new System.Drawing.Size(47, 13);
+			this.label10.TabIndex = 39;
+			this.label10.Text = "Samples";
+			// 
+			// NumSamples
+			// 
+			this.NumSamples.Location = new System.Drawing.Point(257, 122);
+			this.NumSamples.Maximum = new decimal(new int[] {
+            9,
+            0,
+            0,
+            0});
+			this.NumSamples.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+			this.NumSamples.Name = "NumSamples";
+			this.NumSamples.Size = new System.Drawing.Size(45, 20);
+			this.NumSamples.TabIndex = 38;
+			this.NumSamples.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
 			// 
 			// label9
 			// 
@@ -615,7 +688,7 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(405, 321);
+			this.ClientSize = new System.Drawing.Size(404, 345);
 			this.ControlBox = false;
 			this.Controls.Add(this.LightSettingsGroupBox);
 			this.Controls.Add(this.GroupBuildSettings);
@@ -628,8 +701,10 @@
 			this.StatsGroupBox.PerformLayout();
 			this.GroupBuildSettings.ResumeLayout(false);
 			this.GroupBuildSettings.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this.MaxThreads)).EndInit();
 			this.LightSettingsGroupBox.ResumeLayout(false);
 			this.LightSettingsGroupBox.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this.NumSamples)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.LightGridSize)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaxIntensity)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.ReflectiveScale)).EndInit();
@@ -687,5 +762,9 @@
 		private System.Windows.Forms.CheckBox Radiosity;
 		private System.Windows.Forms.CheckBox SeamCorrection;
 		private System.Windows.Forms.CheckBox FastPatch;
+		private System.Windows.Forms.Label label10;
+		private System.Windows.Forms.NumericUpDown NumSamples;
+		private System.Windows.Forms.NumericUpDown MaxThreads;
+		private System.Windows.Forms.Label label11;
 	}
 }

@@ -89,6 +89,9 @@ namespace BSPCore
 		}
 
 
+		//takes a list of brushes and returns the brushes inside
+		//the passed in bounds.  If some are on the border they
+		//are lopped off at the boundary
 		static internal List<GBSPBrush> BlockChopBrushes(List<GBSPBrush> list,
 			Bounds block, PlanePool pp, ClipPools cp)
 		{
@@ -694,6 +697,7 @@ namespace BSPCore
 			back	=resultBrushes[1];
 		}
 
+
 		internal float Volume(PlanePool pool)
 		{
 			GBSPPoly	cornerPoly	=null;
@@ -781,6 +785,8 @@ namespace BSPCore
 		}
 
 
+		//debug function to dump a brush file of stuff that is poking
+		//into each other, good for tracking down problems
 		static int oCount;
 		internal static void DumpOverlapping(List<GBSPBrush> list, PlanePool pp)
 		{
@@ -821,7 +827,7 @@ namespace BSPCore
 		}
 
 
-		internal static List<GBSPBrush> CSGBrushes(bool bVerbose,
+		internal static List<GBSPBrush> GankBrushOverlap(bool bVerbose,
 			List<GBSPBrush> list, PlanePool pool, ClipPools cp)
 		{
 			List<GBSPBrush>	keep		=new List<GBSPBrush>();
@@ -830,8 +836,8 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				CoreEvents.Print("---- CSGBrushes ----\n");
-				CoreEvents.Print("Num brushes before CSG : " + list.Count + "\n");
+				CoreEvents.Print("---- GankBrushOverlap ----\n");
+				CoreEvents.Print("Num brushes before gankery : " + list.Count + "\n");
 			}
 
 		startOver:
@@ -944,13 +950,14 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				CoreEvents.Print("Num brushes after CSG  : " + keep.Count + "\n");
+				CoreEvents.Print("Num brushes after gankery  : " + keep.Count + "\n");
 			}
 
 			return	keep;
 		}
 
 
+		//this is a mix of the Q2 algo and the Genesis algo
 		internal static GBSPSide SelectSplitSide(BuildStats bs, List<GBSPBrush> list,
 												 GBSPNode node, PlanePool pool, ClipPools cp)
 		{

@@ -106,13 +106,13 @@ namespace BSPCore
 		}
 
 
-		internal void CalcSizeAndStart(float uOffset, float vOffset, int lightGridSize,
+		internal void CalcSizeAndStart(Vector2 uvOffset, int lightGridSize,
 			out int w, out int h, out float startU, out float startV)
 		{
 			w		=(mLSizeU) + 1;
 			h		=(mLSizeV) + 1;
-			startU	=((float)mLMinU + uOffset) * (float)lightGridSize;
-			startV	=((float)mLMinV + vOffset) * (float)lightGridSize;
+			startU	=((float)mLMinU + uvOffset.X) * (float)lightGridSize;
+			startV	=((float)mLMinV + uvOffset.Y) * (float)lightGridSize;
 		}
 
 
