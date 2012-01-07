@@ -112,37 +112,37 @@ namespace BSPCore
 			planes	=new int[6];
 
 			GBSPPlane	p	=new GBSPPlane();
-			sbyte		side;
+			bool		bFlip;
 
 			//max x
 			p.mNormal	=Vector3.UnitX;
 			p.mDist		=mMaxs.X;
-			planes[0]	=pp.FindPlane(p, out side);
+			planes[0]	=pp.FindPlane(p, out bFlip);
 
 			//max y
 			p.mNormal	=Vector3.UnitY;
 			p.mDist		=mMaxs.Y;
-			planes[1]	=pp.FindPlane(p, out side);
+			planes[1]	=pp.FindPlane(p, out bFlip);
 
 			//max z
 			p.mNormal	=Vector3.UnitZ;
 			p.mDist		=mMaxs.Z;
-			planes[2]	=pp.FindPlane(p, out side);
+			planes[2]	=pp.FindPlane(p, out bFlip);
 
 			//min x
 			p.mNormal	=-Vector3.UnitX;
 			p.mDist		=-mMins.X;
-			planes[3]	=pp.FindPlane(p, out side);
+			planes[3]	=pp.FindPlane(p, out bFlip);
 
 			//min y
 			p.mNormal	=-Vector3.UnitY;
 			p.mDist		=-mMins.Y;
-			planes[4]	=pp.FindPlane(p, out side);
+			planes[4]	=pp.FindPlane(p, out bFlip);
 
 			//min z
 			p.mNormal	=-Vector3.UnitZ;
 			p.mDist		=-mMins.Z;
-			planes[5]	=pp.FindPlane(p, out side);
+			planes[5]	=pp.FindPlane(p, out bFlip);
 		}
 
 

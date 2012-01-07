@@ -34,6 +34,7 @@ namespace SharedForms
 		public event EventHandler	eMaterialNuked;
 		public event EventHandler	eLibraryCleared;
 		public event EventHandler	eNukedMeshPart;
+		public event EventHandler	eLibrarySaved;
 
 		//column indexes for special behavior
 		int	mShaderColumn;
@@ -548,6 +549,8 @@ namespace SharedForms
 			}
 
 			mMatLib.SaveToFile(mSFD.FileName);
+
+			UtilityLib.Misc.SafeInvoke(eLibrarySaved, mSFD.FileName);
 		}
 
 

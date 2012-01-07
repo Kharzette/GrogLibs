@@ -16,7 +16,7 @@ namespace BSPCore
 		
 
 
-		internal Int32 FindPlane(GBSPPlane plane, out sbyte side)
+		internal Int32 FindPlane(GBSPPlane plane, out bool side)
 		{
 			GBSPPlane	plane1	=new GBSPPlane(plane);
 
@@ -35,7 +35,7 @@ namespace BSPCore
 			{
 				//try finding a flipped match
 				plane1.Inverse();
-				side	=(side == 0)? (sbyte)1 : (sbyte)0;
+				side	=!side;
 				for(int i=0;i < mPlanes.Count;i++)
 				{
 					if(plane1.Compare(mPlanes[i]))
@@ -71,7 +71,7 @@ namespace BSPCore
 		}
 
 
-		internal Int32 FindPlane(GFXPlane plane, out sbyte side)
+		internal Int32 FindPlane(GFXPlane plane, out bool side)
 		{
 			GBSPPlane	plane1	=new GBSPPlane(plane);
 

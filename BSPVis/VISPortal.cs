@@ -20,7 +20,7 @@ namespace BSPVis
 		internal VISPStack	mNext;
 		internal GBSPPlane	mPortalPlane;
 
-		public const int	MAX_TEMP_PORTALS	=25000;
+		public const int	MAX_TEMP_PORTALS	=64000;
 
 
 		internal void FreeAll(VisPools vp)
@@ -272,7 +272,7 @@ namespace BSPVis
 		}
 
 
-		internal static void RecursiveLeafFlowGenesis(FlowParams fp, VisPools vp)
+		internal static void RecursiveLeafFlow(FlowParams fp, VisPools vp)
 		{
 			VISLeaf	leaf	=vp.mVisLeafs[fp.mLeafNum];
 			
@@ -358,7 +358,7 @@ namespace BSPVis
 					FlowParams	fp2	=fp;
 					fp2.mLeafNum	=p.mClusterTo;
 					fp2.mPrevStack	=stack;
-					RecursiveLeafFlowGenesis(fp2, vp);
+					RecursiveLeafFlow(fp2, vp);
 					stack.Free(vp);
 					continue;
 				}
@@ -391,7 +391,7 @@ namespace BSPVis
 				FlowParams	fp3	=fp;
 				fp3.mLeafNum	=p.mClusterTo;
 				fp3.mPrevStack	=stack;
-				RecursiveLeafFlowGenesis(fp3, vp);
+				RecursiveLeafFlow(fp3, vp);
 
 				stack.Free(vp);
 			}

@@ -67,7 +67,9 @@ namespace BSPVis
 		VISPortal	[]mVisSortedPortals;
 		VISLeaf		[]mVisLeafs;
 		Int32		mNumVisLeafBytes, mNumVisPortalBytes;
+#if !X64
 		Int32		mNumVisMaterialBytes;
+#endif
 
 		//compiled vis data
 		byte	[]mGFXVisData;
@@ -591,7 +593,7 @@ namespace BSPVis
 		}
 		
 
-		void	PortalFlowGenesis(int portalnum, VisPools vp)
+		void PortalFlow(int portalnum, VisPools vp)
 		{
 			VISPortal	p	=mVisSortedPortals[portalnum];
 
@@ -608,7 +610,7 @@ namespace BSPVis
 			fp.mLeafNum				=p.mClusterTo;
 			fp.mPrevStack			=vps;
 			fp.mNumVisPortalBytes	=mNumVisPortalBytes;
-			VISPortal.RecursiveLeafFlowGenesis(fp, vp);
+			VISPortal.RecursiveLeafFlow(fp, vp);
 
 			p.mbDone	=true;
 			p.mCanSee	=CountBits(p.mPortalVis, mVisSortedPortals.Length);
@@ -617,7 +619,7 @@ namespace BSPVis
 		}
 
 
-		static void	PortalFlowGenesis(int portalnum, VISPortal []visPortals,
+		static void	PortalFlow(int portalnum, VISPortal []visPortals,
 			VISLeaf []visLeafs, int numVisPortalBytes)
 		{
 			VISPortal	p	=visPortals[portalnum];
@@ -637,7 +639,7 @@ namespace BSPVis
 			fp.mLeafNum				=p.mClusterTo;
 			fp.mPrevStack			=vps;
 			fp.mNumVisPortalBytes	=numVisPortalBytes;
-			VISPortal.RecursiveLeafFlowGenesis(fp, vp);
+			VISPortal.RecursiveLeafFlow(fp, vp);
 
 			p.mbDone	=true;
 			p.mCanSee	=CountBits(p.mPortalVis, visPortals.Length);
@@ -653,14 +655,13 @@ namespace BSPVis
 
 		bool VisAllLeafs(ConcurrentQueue<MapVisClient> clients, string fileName, VisParameters vp)
 		{
-			CoreEvents.Print("Quick vis for " + mVisPortals.Length + " portals...\n");
+			CoreEvents.Print("Rough vis for " + mVisPortals.Length + " portals...\n");
 
 			object	prog	=ProgressWatcher.RegisterProgress(0, mVisPortals.Length, 0);
 
-			//Flood all the leafs with the fast method first...
 			for(int i=0;i < mVisPortals.Length; i++)
 			{
-				BasePortalVisGenesis(i);
+				PortalFacingVis(i);
 				ProgressWatcher.UpdateProgress(prog, i);
 			}
 			ProgressWatcher.Clear();
@@ -684,7 +685,7 @@ namespace BSPVis
 				else
 				{
 					prog	=ProgressWatcher.RegisterProgress(0, mVisPortals.Length, 0);
-					if(!FloodPortalsSlowGenesis(0, mVisPortals.Length, vp.mBSPParams, prog))
+					if(!PortalFlow(0, mVisPortals.Length, vp.mBSPParams, prog))
 					{
 						return	false;
 					}
@@ -735,7 +736,7 @@ namespace BSPVis
 		}
 
 
-		bool FloodPortalsSlowGenesis(int startPort, int endPort, BSPBuildParams bp, object prog)
+		bool PortalFlow(int startPort, int endPort, BSPBuildParams bp, object prog)
 		{
 			for(int k=startPort;k < endPort;k++)
 			{
@@ -743,7 +744,6 @@ namespace BSPVis
 			}
 
 			int	count	=startPort;
-//			for(int k=startPort;k < endPort;k++)
 
 			ParallelOptions	po			=new ParallelOptions();
 			po.MaxDegreeOfParallelism	=bp.mMaxThreads;
@@ -759,7 +759,7 @@ namespace BSPVis
 				{
 					port.mPortalVis[i]	=0;
 				}
-				PortalFlowGenesis(k, vp);
+				PortalFlow(k, vp);
 
 				port.mbDone			=true;
 
@@ -876,6 +876,7 @@ namespace BSPVis
 
 		//wrote this one myself
 		//couldn't get the gen or q2 vers to work
+		//it is not very fast, but it works and is easy to read
 		void FacingFlood(VISPortal p, VISLeaf flooding)
 		{
 			foreach(VISPortal port in flooding.mPortals)
@@ -897,7 +898,7 @@ namespace BSPVis
 		}
 		
 		
-		void BasePortalVisGenesis(int portNum)
+		void PortalFacingVis(int portNum)
 		{
 			VISPortal	p	=mVisPortals[portNum];
 

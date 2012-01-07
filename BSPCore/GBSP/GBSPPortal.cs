@@ -16,7 +16,7 @@ namespace BSPCore
 		internal GBSPNode	mOnNode;
 		internal GBSPFace	mFrontFace, mBackFace;
 		internal GBSPSide	mSide;
-		internal byte		mSideFound;
+		internal bool		mSideFound;
 
 
 		internal GBSPPortal() { }
@@ -34,14 +34,14 @@ namespace BSPCore
 		}
 
 
-		internal GBSPFace FaceFromPortal(Int32 planeSide)
+		internal GBSPFace FaceFromPortal(bool bFlip)
 		{
 			if(mSide == null)
 			{
 				return	null;	//Portal does not bridge different visible contents
 			}
 
-			if(planeSide == 0)
+			if(!bFlip)
 			{
 				if(GBSPNode.WindowCheck(mFrontNode, mBackNode))
 				{
@@ -55,7 +55,7 @@ namespace BSPCore
 					return	null;
 				}
 			}
-			return	new GBSPFace(this, planeSide);
+			return	new GBSPFace(this, bFlip);
 		}
 
 
@@ -67,7 +67,7 @@ namespace BSPCore
 				return;
 			}
 
-			mSideFound	=1;
+			mSideFound	=true;
 			mSide		=bestSide;
 		}
 

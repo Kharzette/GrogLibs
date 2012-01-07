@@ -8,18 +8,18 @@ namespace BSPZone
 	public class ZoneLeafSide : UtilityLib.IReadWriteable
 	{
 		public Int32	mPlaneNum;
-		public Int32	mPlaneSide;
+		public bool		mbFlipSide;
 
 		public void Write(BinaryWriter bw)
 		{
 			bw.Write(mPlaneNum);
-			bw.Write(mPlaneSide);
+			bw.Write(mbFlipSide);
 		}
 
 		public void Read(BinaryReader br)
 		{
 			mPlaneNum	=br.ReadInt32();
-			mPlaneSide	=br.ReadInt32();
+			mbFlipSide	=br.ReadBoolean();
 		}
 	}
 }

@@ -13,347 +13,16 @@ namespace BSPCore
 {
 	public partial class Map
 	{
-		//light related stuff
-		Dictionary<Int32, DirectLight>	DirectClusterLights	=new Dictionary<Int32, DirectLight>();
-		List<DirectLight>				DirectLights		=new List<DirectLight>();
-		LInfo							[]mLightMaps;
-		FInfo							[]mFaceInfos;
-		RADPatch						[]mFacePatches;
-		RADPatch						[]mPatchList;
-		Int32							NumPatches, NumReceivers;
-		Vector2							[]mSampleOffsets;
+		//lights per cluster
+		Dictionary<Int32, List<DirectLight>>	mDirectClusterLights
+			=new Dictionary<Int32,List<DirectLight>>();
 
+		//list of all lights
+		List<DirectLight>	mDirectLights		=new List<DirectLight>();
 
-		void CalcPatchReflectivity(Int32 Face, RADPatch Patch, float surfaceReflect,
-					CoreDelegates.GetEmissiveForMaterial c4m)
-		{
-			string	trueName	=GFXTexInfo.ScryTrueName(mGFXFaces[Face], mGFXTexInfos[mGFXFaces[Face].mTexInfo]);
-
-			Patch.mReflectivity	=c4m(trueName) * 255.0f;
-			Patch.mReflectivity	*=surfaceReflect;
-		}
-
-
-		bool PatchNeedsSplit(RADPatch patch, out GBSPPlane plane, bool bFastPatch, float patchSize)
-		{
-			Int32	i;
-
-			if(bFastPatch)
-			{
-				for(i=0;i < 3;i++)
-				{
-					float	dist	=UtilityLib.Mathery.VecIdx(patch.mBounds.mMaxs, i)
-								- UtilityLib.Mathery.VecIdx(patch.mBounds.mMins, i);
-					
-					if(dist > patchSize)
-					{
-						//Cut it right through the center...
-						plane.mNormal	=Vector3.Zero;
-						UtilityLib.Mathery.VecIdxAssign(ref plane.mNormal, i, 1.0f);
-						plane.mDist	=(UtilityLib.Mathery.VecIdx(patch.mBounds.mMaxs, i)
-							+ UtilityLib.Mathery.VecIdx(patch.mBounds.mMins, i))
-								/ 2.0f;
-						plane.mType	=GBSPPlane.PLANE_ANY;
-						return	true;
-					}
-				}
-			}
-			else
-			{
-				for(i=0;i < 3;i++)
-				{
-					float	min	=UtilityLib.Mathery.VecIdx(patch.mBounds.mMins, i) + 1.0f;
-					float	max	=UtilityLib.Mathery.VecIdx(patch.mBounds.mMaxs, i) - 1.0f;
-
-					if(Math.Floor(min / patchSize)
-						< Math.Floor(max / patchSize))
-					{
-						plane.mNormal	=Vector3.Zero;
-						UtilityLib.Mathery.VecIdxAssign(ref plane.mNormal, i, 1.0f);
-						plane.mDist	=patchSize * (1.0f + (float)Math.Floor(min / patchSize));
-						plane.mType	=GBSPPlane.PLANE_ANY;
-						return	true;
-					}
-				}
-			}
-			plane	=new GBSPPlane();
-			return	false;
-		}
-
-
-		bool BuildPatch(Int32 f, float surfReflect, int patchSize, bool bFastPatch,
-			CoreDelegates.GetEmissiveForMaterial c4m)
-		{
-			mFacePatches[f]	=new RADPatch();
-			if(mFacePatches[f] == null)
-			{
-				CoreEvents.Print("BuildPatch:  Could not allocate patch.\n");
-				return	false;
-			}
-
-			CalcPatchReflectivity(f, mFacePatches[f], surfReflect, c4m);
-			
-			mFacePatches[f].AllocPoly(mGFXFaces[f], mGFXVertIndexes, mGFXVerts);
-
-			if(!mFacePatches[f].CalcInfo())
-			{
-				CoreEvents.Print("BuildPatch:  Could not calculate patch info.\n");
-				return	false;
-			}
-
-			mFacePatches[f]	=RADPatch.SubdivideFacePatches(mFacePatches[f],
-				bFastPatch, patchSize, ref NumPatches);
-
-			if(mFacePatches[f] == null)
-			{
-				CoreEvents.Print("BuildPatch:  Could not subdivide patch.\n");
-				return	false;
-			}
-			return	true;
-		}
-
-
-		bool FinalizePatchInfo(Int32 face, RADPatch patch)
-		{
-			GFXFace	f	=mGFXFaces[face];
-			return	patch.Finalize(mGFXPlanes[f.mPlaneNum], f.mPlaneSide, FindNodeLandedIn);
-		}
-
-
-		bool BuildPatches(float surfReflect, int patchSize, bool bFastPatch, bool bVerbose,
-			CoreDelegates.GetEmissiveForMaterial c4m)
-		{
-			Int32	i;
-
-			CoreEvents.Print("--- Build Patches --- \n");
-
-			mFacePatches	=new RADPatch[mGFXFaces.Length];
-			if(mFacePatches == null)
-			{
-				CoreEvents.Print("BuildPatches:  Not enough memory for patches.\n");
-				return	false;
-			}
-
-			for(i=0;i < mFacePatches.Length;i++)
-			{
-				if(!BuildPatch(i, surfReflect, patchSize, bFastPatch, c4m))
-				{
-					return	false;
-				}
-			}
-
-			if(!FinalizePatches())
-			{
-				CoreEvents.Print("BuildPatches:  Could not finalize face patches.\n");
-				return	false;
-			}
-
-			if(bVerbose)
-			{
-				CoreEvents.Print("Num Patches          : " + mFacePatches.Length + "\n");
-			}
-			return	true;
-		}
-
-
-		bool FinalizePatches()
-		{
-			RADPatch	patch;
-
-			NumPatches	=0;
-			for(int i=0;i < mGFXFaces.Length;i++)
-			{
-				for(patch=mFacePatches[i];patch!=null;patch=patch.mNext)
-				{
-					FinalizePatchInfo(i, patch);
-					NumPatches++;
-				}
-			}
-			mPatchList	=new RADPatch[NumPatches];
-			if(mPatchList == null)
-			{
-				CoreEvents.Print("FinalizePatches:  Out of memory for patch list.\n");
-				return	false;
-			}
-			
-			//Build the patch list, so we can use indexing, instead of pointers (for receivers)...
-			int	k	=0;
-			for(int i=0;i < mGFXFaces.Length;i++)
-			{
-				for(patch=mFacePatches[i];patch != null;patch=patch.mNext)
-				{
-					mPatchList[k]	=patch;
-					k++;
-				}
-			}
-			return	true;
-		}
-
-
-		bool LoadReceiverFile(string fileName)
-		{
-			if(!File.Exists(fileName))
-			{
-				return	false;
-			}
-			FileStream	fs	=new FileStream(fileName,
-								FileMode.Open, FileAccess.Read);
-
-			if(fs == null)
-			{
-				return	false;
-			}
-
-			BinaryReader	br	=new BinaryReader(fs);
-
-			DateTime	dt			=DateTime.FromBinary(br.ReadInt64());
-			Int32		numPatches	=br.ReadInt32();
-
-			//Make sure the number of patches in the receiver file
-			//matches the number loaded for this BSP
-			if(numPatches != NumPatches)
-			{
-				CoreEvents.Print("*WARNING*  LoadReceiverFile:  NumPatches do not match, skipping...\n");
-				br.Close();
-				fs.Close();
-				return	false;
-			}
-
-			//Load Patch receivers
-			for(int i=0; i< NumPatches; i++)
-			{
-				Int32 numReceivers	=br.ReadInt32();
-
-				mPatchList[i].mReceivers	=new RADReceiver[numReceivers];
-
-				for(int j=0;j < numReceivers;j++)
-				{
-					mPatchList[i].mReceivers[j]	=new RADReceiver();
-					mPatchList[i].mReceivers[j].Read(br);
-				}
-			}
-
-			br.Close();
-			fs.Close();
-
-			return	true;
-		}
-
-
-		bool SaveReceiverFile(string fileName)
-		{
-			CoreEvents.Print("--- Save Receiver File --- \n");
-
-			FileStream	fs	=new FileStream(fileName,
-								FileMode.Create, FileAccess.Write);
-
-			if(fs == null)
-			{
-				CoreEvents.Print("SaveReceiverFile:  Could not open receiver file for writing...\n");
-				return	false;
-			}
-
-			BinaryWriter	bw	=new BinaryWriter(fs);
-
-			bw.Write(DateTime.Now.ToBinary());
-			bw.Write(NumPatches);
-
-			//Patches
-			for(int i=0;i < NumPatches;i++)
-			{
-				Int32 numReceivers	=mPatchList[i].mNumReceivers;
-
-				bw.Write(numReceivers);
-
-				for(int j=0;j < numReceivers;j++)
-				{
-					mPatchList[i].mReceivers[j].Write(bw);
-				}			
-			}
-
-			bw.Close();
-			fs.Close();
-
-			return	true;
-		}
-
-
-		float CollectPatchLight()
-		{
-			float	total	=0.0f;
-			
-			for(int i=0;i < NumPatches;i++)
-			{
-				RADPatch	patch	=mPatchList[i];
-				
-				//Add receive amount to Final amount
-				patch.Collect(ref total);
-			}
-			return	total;
-		}
-
-
-		bool BouncePatches(int numBounces, bool bVerbose)
-		{
-			CoreEvents.Print("--- Bounce Patches --- \n");
-			
-			for(int i=0;i < NumPatches;i++)
-			{
-				//Set each patches first pass send amount with what was obtained
-				//from their lightmaps...
-				mPatchList[i].SetFirstPassSendAmount();
-			}
-
-			for(int i=0;i < numBounces;i++)
-			{
-				if(bVerbose)
-				{
-					CoreEvents.Print("Bounce: " + (i + 1) + ",");
-				}
-				
-				//For each patch, send it's energy to each pre-computed receiver
-				for(int j=0;j < NumPatches;j++)
-				{
-					RADPatch	patch	=mPatchList[j];
-					patch.Send(mPatchList);
-				}
-
-				//For each patch, collect any light it might have received
-				//and throw into patch RadFinal
-				float	total	=CollectPatchLight();
-
-				if(bVerbose)
-				{
-					CoreEvents.Print("Energy: " + total + "\n");
-				}
-			}
-			
-			for(int j=0;j < NumPatches;j++)
-			{
-				RADPatch	patch	=mPatchList[j];
-				if(!patch.Check())
-				{
-					return	false;
-				}
-			}
-			return	true;
-		}
-
-
-		PlaneFace	[]LinkPlaneFaces()
-		{
-			PlaneFace	[]ret	=new PlaneFace[mGFXPlanes.Length];
-
-			for(int i=0;i < mGFXFaces.Length;i++)
-			{
-				PlaneFace	p	=new PlaneFace();
-				int	PlaneNum	=mGFXFaces[i].mPlaneNum;
-				p.mGFXFace		=i;
-				p.mNext			=ret[PlaneNum];
-				ret[PlaneNum]	=p;
-			}
-			return	ret;
-		}
+		LInfo	[]mLightMaps;
+		FInfo	[]mFaceInfos;
+		Vector2	[]mSampleOffsets;
 
 
 		void GetFaceMinsMaxs(Int32 face, out Bounds bnd)
@@ -364,269 +33,6 @@ namespace BSPCore
 				int	Index	=mGFXVertIndexes[mGFXFaces[face].mFirstVert + i];
 				bnd.AddPointToBounds(mGFXVerts[Index]);
 			}			
-		}
-
-
-		bool AbsorbPatches(int patchSize)
-		{
-			//We need all the faces that belong to each Plane
-			PlaneFace	[]planeFaces	=LinkPlaneFaces();
-
-			for(int i=0;i < mGFXFaces.Length;i++)
-			{
-				UInt32	Flags;
-				GFXFace	pGFXFace;
-
-				pGFXFace	=mGFXFaces[i];
-
-				Flags	=mGFXTexInfos[mGFXFaces[i].mTexInfo].mFlags;
-
-				if (((Flags & TexInfo.NO_LIGHTMAP) != 0)
-					&& ((Flags & TexInfo.GOURAUD)) == 0)
-				{
-					continue;
-				}
-
-				GBSPPlane	plane;
-				plane.mNormal	=mGFXPlanes[mGFXFaces[i].mPlaneNum].mNormal;
-				plane.mDist		=mGFXPlanes[mGFXFaces[i].mPlaneNum].mDist;
-				plane.mType		=GBSPPlane.PLANE_ANY;
-
-				TriPatch	tri	=new TriPatch(plane);
-				if(tri == null)
-				{
-					CoreEvents.Print("AbsorbPatches:  Tri_PatchCreate failed.\n");
-					return	false;
-				}
-				
-				int	planeNum	=mGFXFaces[i].mPlaneNum;
-				int	planeSide	=mGFXFaces[i].mPlaneSide;
-				
-				RADPatch	opatch	=mFacePatches[i];
-
-				Bounds	bounds;
-				GetFaceMinsMaxs(i, out bounds);
-				
-				for(PlaneFace planeFace=planeFaces[planeNum];planeFace != null;planeFace=planeFace.mNext)
-				{
-					int	faceNum	=planeFace.mGFXFace;
-
-					if(mGFXFaces[faceNum].mPlaneSide != planeSide)
-					{
-						continue;
-					}
-
-					RADPatch.BuildTriPatchFromList(mFacePatches[faceNum], bounds, tri,
-													patchSize);
-				}
-				if(!tri.TriangulatePoints())
-				{
-					CoreEvents.Print("AbsorbPatches:  Could not triangulate patches.\n");
-					return	false;
-				}
-				
-				if((Flags & TexInfo.GOURAUD) != 0)
-				{
-					for(int k=0;k < pGFXFace.mNumVerts;k++)
-					{
-						Int32	vn;
-
-						vn	=pGFXFace.mFirstVert + k;
-
-						Vector3	point	=mGFXVerts[mGFXVertIndexes[vn]];
-
-						Vector3	add;
-						tri.SampleTriangulation(point, out add);
-
-						mGFXRGBVerts[vn]	+=add;
-					}
-				}
-				else
-				{
-					Vector3	[]rgb	=mLightMaps[i].GetRGBLightData(0);
-					bool	Created	=(rgb != null);
-
-					Vector3	[]facePoints	=mFaceInfos[i].GetPoints();
-
-					int	rgbOfs	=0;				
-					for(int k=0;k < facePoints.Length;k++, rgbOfs++)
-					{
-						Vector3	point	=facePoints[k];
-						Vector3	add;
-						if(!tri.SampleTriangulation(point, out add))
-						{
-							CoreEvents.Print("AbsorbPatches:  Could not sample from patch triangles.\n");
-							continue;
-						}
-
-						if(!Created)
-						{
-							if(add.X > 0 || add.Y > 0 || add.Z > 0)
-							{
-								mLightMaps[i].AllocLightType(0, facePoints.Length);
-								Created	=true;
-							}
-						}
-						if(Created)
-						{
-							rgb	=mLightMaps[i].GetRGBLightData(0);
-							rgb[k]	+=add;
-						}
-					}
-				}
-				tri			=null;
-			}
-
-			planeFaces	=null;
-
-			return	true;
-		}
-
-
-		bool FindPatchReceivers(RADPatch patch, float []recAmount, byte []visData)
-		{
-			GFXLeaf	leaf	=mGFXLeafs[patch.mLeaf];
-			Int32	clust	=leaf.mCluster;
-			Int32	area	=leaf.mArea;
-
-			bool	bVisInfo;
-			Int32	visOfs	=0;
-			if(clust >= 0 && mGFXClusters[clust].mVisOfs >= 0)
-			{
-				visOfs	=mGFXClusters[clust].mVisOfs;
-				bVisInfo	=true;
-			}
-			else
-			{
-				bVisInfo	=false;
-			}
-
-			float	total	=0.0f;
-			Vector3	norm	=patch.GetPlaneNormal();
-
-			//For each face, go through all it's patches
-			for(int i=0;i < NumPatches;i++)
-			{
-				RADPatch	patch2	=mPatchList[i];
-				
-				recAmount[i]	=0.0f;
-
-				if(patch2 == patch)
-				{
-					continue;
-				}
-
-				leaf	=mGFXLeafs[patch2.mLeaf];
-
-				//Radiosity only bounces in it's original area
-				if(leaf.mArea != area)
-				{
-					continue;
-				}
-
-				if(bVisInfo)
-				{
-					clust	=leaf.mCluster;
-					if(clust >= 0 && ((visData[visOfs + clust>>3]
-						& (1 << (clust & 7))) == 0))
-					{
-						continue;
-					}
-				}
-
-				Vector3	vect;
-				float	dist	=patch.DistVecBetween(patch2, out vect);
-
-				//if (Dist > PatchSize)
-				if(dist == 0.0f)
-				{
-					continue;	// Error
-				}
-				
-				float	scale	=Vector3.Dot(vect, norm);
-				scale			*=-Vector3.Dot(vect, patch2.GetPlaneNormal());
-
-				if(scale <= 0)
-				{
-					continue;
-				}
-
-				if(patch.RayCastBetween(patch2, RayCollide))
-				{
-					//blocked by something in the world
-					continue;
-				}
-
-				float	amount	=scale * patch2.GetArea() / (dist * dist);
-				if(amount <= 0.0f)
-				{
-					continue;
-				}
-				recAmount[i]	=amount;
-
-				//Add the receiver
-				total	+=amount;
-				NumReceivers++;
-				patch.mNumReceivers++;
-			}
-
-			patch.mReceivers	=new RADReceiver[patch.mNumReceivers];
-			int	roffs	=0;
-			for(int i=0;i < NumPatches;i++)
-			{
-				if(recAmount[i] == 0.0f)
-				{
-					continue;
-				}
-				patch.mReceivers[roffs]			=new RADReceiver();
-				patch.mReceivers[roffs].mPatch	=(UInt16)i;
-				patch.mReceivers[roffs].mAmount	=(UInt16)(recAmount[i] * 0x10000 / total);
-				roffs++;
-			}
-			return	true;
-		}
-
-
-		bool CalcReceivers(string fileName, byte []visData)
-		{
-			NumReceivers	=0;
-
-			//Try to load the receiver file first!!!
-			if(LoadReceiverFile(fileName))
-			{
-				CoreEvents.Print("--- Found receiver file ---\n");
-				return	true;
-			}
-
-			CoreEvents.Print(" --- Calculating receivers from scratch ---\n");
-
-			float	[]recAmount	=new float[mPatchList.Length];
-
-			object	prog	=ProgressWatcher.RegisterProgress(0, mPatchList.Length, 0);
-			for(int i=0;i < mPatchList.Length;i++)
-			{
-				RADPatch	patch	=mPatchList[i];
-
-				if(!FindPatchReceivers(patch, recAmount, visData))
-				{
-					CoreEvents.Print("CalcReceivers:  There was an error calculating receivers.\n");
-					return	false;
-				}
-				ProgressWatcher.UpdateProgress(prog, i);
-			}
-			recAmount	=null;
-
-			ProgressWatcher.DestroyProgress(prog);
-
-			CoreEvents.Print("Num Receivers        : " + NumReceivers + "\n");
-
-			// Save receiver file for later retreival
-			if(!SaveReceiverFile(fileName))
-			{
-				CoreEvents.Print("CalcReceivers:  Failed to save receiver file...\n");
-				return	false;
-			}
-			return	true;
 		}
 
 
@@ -675,9 +81,7 @@ namespace BSPCore
 		{
 			LightParameters	lp	=threadContext as LightParameters;
 
-			string	recFile;
-
-			CoreEvents.Print(" --- Radiosity GBSP File --- \n");
+			CoreEvents.Print(" --- Light GBSP File --- \n");
 
 			BinaryWriter	bw		=null;
 			FileStream		file	=null;
@@ -720,14 +124,8 @@ namespace BSPCore
 			//Make sure no existing light exist...
 			mGFXLightData	=null;
 
-			//Get the receiver file name
-			int	extPos	=lp.mFileName.LastIndexOf(".");
-			recFile		=lp.mFileName.Substring(0, extPos);
-			recFile		+=".rec";
-
 			file	=new FileStream(lp.mFileName,
-									FileMode.OpenOrCreate, FileAccess.Write);
-
+				FileMode.OpenOrCreate, FileAccess.Write);
 			if(file == null)
 			{
 				CoreEvents.Print("LightGBSPFile:  Could not open GBSP file for writing: " + lp.mFileName + "\n");
@@ -740,18 +138,7 @@ namespace BSPCore
 			CoreEvents.Print("Starting light at " + startTime + "\n");
 			CoreEvents.Print("Num Faces            : " + mGFXFaces.Length + "\n");
 
-			//Build the patches (before direct lights are created)
-			if(lp.mLightParams.mbRadiosity)
-			{
-				if(!BuildPatches(lp.mLightParams.mSurfaceReflect,
-					lp.mLightParams.mPatchSize, lp.mLightParams.mbFastPatch,
-					lp.mBSPParams.mbVerbose, lp.mC4M))
-				{
-					goto	ExitWithError;
-				}
-			}
-
-			if(!CreateDirectLights(lp.mLightParams.mbRadiosity))
+			if(!CreateDirectLights(lp))
 			{
 				CoreEvents.Print("LightGBSPFile:  Could not create main lights.\n");
 				goto	ExitWithError;
@@ -765,38 +152,13 @@ namespace BSPCore
 
 			FreeDirectLights();
 
-			if(lp.mLightParams.mbRadiosity)
-			{
-				//Pre-calc how much light is distributed to each patch from every patch
-				if(!CalcReceivers(recFile, visData))	
-				{
-					goto	ExitWithError;
-				}
-
-				//Bounce patches around to their receivers
-				if(!BouncePatches(lp.mLightParams.mNumBounces, lp.mBSPParams.mbVerbose))	//Bounce them around
-				{
-					goto	ExitWithError;
-				}
-			
-				FreeReceivers();		//Don't need these anymore
-
-				//Apply the patches back into the light maps
-				if(!AbsorbPatches(lp.mLightParams.mPatchSize))	//Apply the patches to the lightmaps
-				{
-					goto	ExitWithError;
-				}			
-				FreePatches();	//Don't need these anymore...
-			}
-
 			FinalizeRGBVerts(lp.mLightParams.mMinLight, lp.mLightParams.mMaxIntensity);
 
 			int	numRGBMaps	=0;
 
 			//grab combined lightmap data
 			List<byte>	lightData	=BuildLightMaps(ref numRGBMaps,
-				lp.mLightParams.mMinLight, lp.mLightParams.mLightScale,
-				lp.mLightParams.mMaxIntensity);
+				lp.mLightParams.mMinLight, lp.mLightParams.mMaxIntensity);
 
 			if(lightData == null)
 			{
@@ -868,7 +230,7 @@ namespace BSPCore
 				//grab face normal
 				Vector3	Normal	=mGFXPlanes[f.mPlaneNum].mNormal;
 
-				if(f.mPlaneSide != 0)
+				if(f.mbFlipSide)
 				{
 					Normal	=-Normal;
 				}
@@ -894,41 +256,11 @@ namespace BSPCore
 		}
 
 
-		void FreeReceivers()
-		{
-			NumReceivers	=0;
-
-			for(int i=0;i < NumPatches;i++)
-			{
-				if(mPatchList[i].mNumReceivers > 0)
-				{
-					mPatchList[i].mReceivers	=null;
-				}
-			}
-		}
-
-
 		void CleanupLight()
 		{
 			FreeDirectLights();
-			FreePatches();
 			FreeLightMaps();
-			FreeReceivers();
-
 			FreeGBSPFile();
-		}
-
-
-		void FreePatches()
-		{
-			for(int i=0;i < NumPatches;i++)
-			{
-				mPatchList[i]	=null;
-			}
-			NumPatches	=0;
-
-			mPatchList		=null;
-			mFacePatches	=null;
 		}
 
 
@@ -954,22 +286,31 @@ namespace BSPCore
 		}
 
 
-		bool CreateDirectLights(bool bRadiosity)
+		bool CreateDirectLights(LightParameters lp)
 		{
 			Int32	numDirectLights	=0;
 			Int32	numSurfLights	=0;
 
-			DirectClusterLights.Clear();
+			mDirectClusterLights.Clear();
+
+			int	switchable	=32;	//switchable lights
+
+			//store a switchable style per target name
+			//this allows one switch to hit multiple lights
+			Dictionary<string, Int32>	targetNameStyles	=new Dictionary<string, Int32>();
 
 			// Create the entity lights first
 			for(int i=0;i < mGFXEntities.Length;i++)
 			{
 				MapEntity	ent	=mGFXEntities[i];
 
-				if(!(ent.mData.ContainsKey("light")
-					|| ent.mData.ContainsKey("_light")
-					|| ent.mData.ContainsKey("light_torch_small_walltorch")
-					))
+				if(!ent.mData.ContainsKey("classname"))
+				{
+					continue;
+				}
+
+				string	className	=ent.mData["classname"];
+				if(!className.StartsWith("light") && !className.StartsWith("_light"))
 				{
 					continue;
 				}
@@ -979,8 +320,7 @@ namespace BSPCore
 				Vector4	colorVec	=Vector4.Zero;
 				if(!ent.GetLightValue(out colorVec))
 				{
-					CoreEvents.Print("Warning:  Light entity, couldn't get color\n");
-					colorVec.W	=200.0f;	//default
+					colorVec	=Vector4.One * 300.0f;	//default
 				}
 
 				Vector3	color;
@@ -995,7 +335,7 @@ namespace BSPCore
 				}
 				else
 				{
-					color.Normalize();
+					color	=UtilityLib.Misc.ColorNormalize(color);
 				}
 
 				if(!ent.GetOrigin(out dLight.mOrigin))
@@ -1004,11 +344,28 @@ namespace BSPCore
 				}
 
 				dLight.mColor		=color;
-				dLight.mIntensity	=colorVec.W;// * mGlobals.EntityScale;
+				dLight.mIntensity	=colorVec.W;
 				dLight.mType		=DirectLight.DLight_Point;	//default
 				
 				//animated light styles
 				ent.GetInt("style", out dLight.mLType);
+
+				//check for switchable
+				if(ent.mData.ContainsKey("targetname"))
+				{
+					string	targName	=ent.mData["targetname"];
+
+					if(targetNameStyles.ContainsKey(targName))
+					{
+						dLight.mLType	=targetNameStyles[targName];
+					}
+					else
+					{
+						targetNameStyles.Add(targName, switchable);
+						dLight.mLType	=switchable++;
+					}
+					ent.mData.Add("LightSwitchNum", "" + dLight.mLType);
+				}
 
 				Vector3	Angles;
 				if(ent.GetVectorNoConversion("angles", out Angles))
@@ -1098,33 +455,33 @@ namespace BSPCore
 					CoreEvents.Print("*WARNING* CreateLights:  Light in solid leaf at " + dLight.mOrigin + "\n");
 					continue;
 				}
-				if(DirectClusterLights.ContainsKey(clust))
+				if(mDirectClusterLights.ContainsKey(clust))
 				{
-					dLight.mNext	=DirectClusterLights[clust];
-					DirectClusterLights[clust]	=dLight;
+					mDirectClusterLights[clust].Add(dLight);
 				}
 				else
 				{
-					dLight.mNext	=null;
-					DirectClusterLights.Add(clust, dLight);
+					mDirectClusterLights.Add(clust, new List<DirectLight>());
+					mDirectClusterLights[clust].Add(dLight);
 				}
 
-				DirectLights.Add(dLight);
+				mDirectLights.Add(dLight);
 				numDirectLights++;
 			}
 
 			CoreEvents.Print("Num Normal Lights   : " + numDirectLights + "\n");
 
-			//Stop here if no radisosity is going to be done
-			if(!bRadiosity)
+			//surface lights below
+			if(!lp.mLightParams.mbSurfaceLighting)
 			{
 				return	true;
 			}
 			
-			//Now create the radiosity direct lights (surface emitters)
-			for(int i=0;i < mGFXFaces.Length;i++)
+			//Now create the surface emitters
+			List<Vector3>	verts	=new List<Vector3>();
+			foreach(GFXFace f in mGFXFaces)
 			{
-				GFXTexInfo	tex	=mGFXTexInfos[mGFXFaces[i].mTexInfo];
+				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
 
 				//Only look at surfaces that want to emit light
 				if((tex.mFlags & TexInfo.LIGHT) == 0)
@@ -1132,33 +489,58 @@ namespace BSPCore
 					continue;
 				}
 
-				for(RADPatch p=mFacePatches[i];p != null;p=p.mNext)
+				//grab face verts
+				verts.Clear();
+				for(int i=f.mFirstVert;i < f.mNumVerts + f.mFirstVert;i++)
 				{
-					Int32	leaf	=p.mLeaf;
-					Int32	clust	=mGFXLeafs[leaf].mCluster;
+					int	idx	=mGFXVertIndexes[i];
+					verts.Add(mGFXVerts[idx]);
+				}
 
+				GBSPPlane	fplane	=new GBSPPlane(mGFXPlanes[f.mPlaneNum]);
+				if(f.mbFlipSide)
+				{
+					fplane.Inverse();
+				}
+
+				//grab material name
+				string	trueName	=GFXTexInfo.ScryTrueName(f, tex);
+
+				//get material color
+				Vector3	surfColor	=lp.mC4M(trueName);
+
+				List<DirectLight>	sLights	=DirectLight.MakeSurfaceLights(
+					verts, tex, surfColor, fplane.mNormal,
+					lp.mLightParams.mSurfLightFrequency,
+					lp.mLightParams.mSurfLightStrength);
+
+				//Insert this surface direct light into the list of lights
+				foreach(DirectLight dl in sLights)
+				{
+					//find cluster
+					Int32	nodeLandedIn	=FindNodeLandedIn(0, dl.mOrigin);
+					Int32	leaf	=-(nodeLandedIn + 1);
+
+					Debug.Assert(leaf >= 0);
+					Debug.Assert(leaf < mGFXLeafs.Length);
+					
+					Int32	clust	=mGFXLeafs[leaf].mCluster;
 					if(clust < 0)
 					{
-						continue;	//Skip, solid
+						continue;	//light in solid
 					}
 
-					DirectLight	dLight	=new DirectLight();
-
-					p.InitDLight(dLight, tex.mFaceLight);
-
-					//Insert this surface direct light into the list of lights
-					if(DirectClusterLights.ContainsKey(clust))
+					if(mDirectClusterLights.ContainsKey(clust))
 					{
-						dLight.mNext	=DirectClusterLights[clust];
-						DirectClusterLights[clust]	=dLight;
+						mDirectClusterLights[clust].Add(dl);
 					}
 					else
 					{
-						dLight.mNext	=null;
-						DirectClusterLights.Add(clust, dLight);
+						mDirectClusterLights.Add(clust, new List<DirectLight>());
+						mDirectClusterLights[clust].Add(dl);
 					}
 
-					DirectLights.Add(dLight);
+					mDirectLights.Add(dl);
 					numSurfLights++;
 				}
 			}
@@ -1220,9 +602,9 @@ namespace BSPCore
 					norm	=vertNormals[index];
 				}
 				
-				for(int i=0;i < DirectLights.Count;i++)
+				for(int i=0;i < mDirectLights.Count;i++)
 				{
-					DirectLight	dLight	=DirectLights[i];
+					DirectLight	dLight	=mDirectLights[i];
 
 					float	intensity	=dLight.mIntensity;
 
@@ -1293,48 +675,6 @@ namespace BSPCore
 		}
 
 
-		void TransferLightToPatches(Int32 face, int lightGridSize)
-		{
-			GFXFace	gfxFace	=mGFXFaces[face];
-
-			for(RADPatch patch=mFacePatches[face];patch != null;patch=patch.mNext)
-			{
-				Vector3	rgb, vert;
-				Int32	rgbOfs	=gfxFace.mFirstVert;
-
-				patch.ResetSamples();
-				for(int i=0;i < gfxFace.mNumVerts;i++)
-				{
-					Int32	k;
-
-					vert	=mGFXVerts[mGFXVertIndexes[i+gfxFace.mFirstVert]];
-					rgb		=mGFXRGBVerts[rgbOfs];	//bug in original genesis
-					for(k=0;k < 3;k++)
-					{
-						if(UtilityLib.Mathery.VecIdx(patch.mBounds.mMins, k)
-							> UtilityLib.Mathery.VecIdx(vert, k) + lightGridSize)
-						{
-							break;
-						}				
-						if(UtilityLib.Mathery.VecIdx(patch.mBounds.mMaxs, k)
-							< UtilityLib.Mathery.VecIdx(vert, k) - lightGridSize)
-						{
-							break;
-						}				
-					}
-
-					if(k == 3)
-					{
-						//Add the Color to the patch
-						patch.AddSample(rgb);
-					}
-					rgbOfs++;
-				}
-				patch.AverageRadStart();
-			}
-		}
-
-
 		bool LightFaces(LightParameters lp, Vector3 []vertNormals, byte []visData)
 		{
 			mLightMaps	=new LInfo[mGFXFaces.Length];
@@ -1371,13 +711,13 @@ namespace BSPCore
 			{
 				ProgressWatcher.UpdateProgressIncremental(prog);
 
-				int	pnum	=mGFXFaces[i].mPlaneNum;
-				int	pside	=mGFXFaces[i].mPlaneSide;
+				int		pnum	=mGFXFaces[i].mPlaneNum;
+				bool	bFlip	=mGFXFaces[i].mbFlipSide;
 				GFXPlane	pln	=new GFXPlane();
 				pln.mNormal	=mGFXPlanes[pnum].mNormal;
 				pln.mDist	=mGFXPlanes[pnum].mDist;
 				pln.mType	=mGFXPlanes[pnum].mType;
-				if(pside != 0)
+				if(bFlip)
 				{
 					pln.Inverse();
 				}
@@ -1393,12 +733,7 @@ namespace BSPCore
 					{
 						CoreEvents.Print("LightFaces:  VertexShadeFace failed...\n");
 						return;
-					}
-					
-					if(lp.mLightParams.mbRadiosity)
-					{
-						TransferLightToPatches(i, lp.mLightParams.mLightGridSize);
-					}
+					}					
 				}
 				else if(tex.IsLightMapped())
 				{
@@ -1421,26 +756,13 @@ namespace BSPCore
 						{
 							return;
 						}
-					}
-				
-					if(lp.mLightParams.mbRadiosity)
-					{
-						// Update patches for this face
-						ApplyLightmapToPatches(i, lp.mLightParams.mLightGridSize);
-					}
+					}				
 				}
 			});
 
 			ProgressWatcher.Clear();
 
 			return	true;
-		}
-
-
-		void ApplyLightmapToPatches(Int32 face, int lightGridSize)
-		{
-			mLightMaps[face].ApplyLightToPatchList(mFacePatches[face],
-				lightGridSize, mFaceInfos[face].GetPoints());
 		}
 
 
@@ -1475,30 +797,33 @@ namespace BSPCore
 
 				for(int c=0;c < mGFXClusters.Length;c++)
 				{
-					//vis is broken right now
 					if((visData[mGFXClusters[clust].mVisOfs + (c >> 3)] & (1 << (c & 7))) == 0)
 					{
 						continue;
 					}
 
-					if(!DirectClusterLights.ContainsKey(c))
+					if(!mDirectClusterLights.ContainsKey(c))
 					{
 						continue;
 					}
 
-					for(DirectLight dLight=DirectClusterLights[c];dLight != null;dLight=dLight.mNext)
+					foreach(DirectLight dLight in mDirectClusterLights[c])
 					{
 						float	intensity	=dLight.mIntensity;
 					
 						//Find the angle between the light, and the face normal
 						Vector3	vect	=dLight.mOrigin - facePoints[v];
 						float	dist	=vect.Length();
+						if(dist == 0.0f)
+						{
+							continue;
+						}
 						vect.Normalize();
 
 						float	angle	=Vector3.Dot(vect, norm);
 						if(angle <= 0.001f)
 						{
-							goto	Skip;
+							continue;
 						}
 						
 						float	val;
@@ -1515,7 +840,7 @@ namespace BSPCore
 
 								if(Angle2 < dLight.mAngle)
 								{
-									goto	Skip;
+									continue;
 								}
 
 								val	=(intensity - dist) * angle;
@@ -1526,10 +851,14 @@ namespace BSPCore
 								float	Angle2	=-Vector3.Dot(vect, dLight.mNormal);
 								if(Angle2 <= 0.001f)
 								{
-									goto	Skip;	// Behind light surface
+									continue;	// Behind light surface
 								}
 
-								val	=(intensity / (dist * dist)) * angle * Angle2;
+								//these 2 lines are confusing
+								//the bottom one gives better results I think
+								//but quite a bit brighter
+//								val	=(intensity / (dist * dist)) * angle * Angle2;
+								val	=(intensity / dist) * angle * Angle2;
 								break;
 							}
 							default:
@@ -1541,14 +870,14 @@ namespace BSPCore
 
 						if(val <= 0.0f)
 						{
-							goto	Skip;
+							continue;
 						}
 
 						// This is the slowest test, so make it last
 						Vector3	colResult	=Vector3.Zero;
 						if(RayCollide(facePoints[v], dLight.mOrigin, ref colResult))
 						{
-							goto	Skip;	//Ray is in shadow
+							continue;	//Ray is in shadow
 						}
 
 						Int32	lightType	=dLight.mLType;
@@ -1557,10 +886,16 @@ namespace BSPCore
 						lightInfo.AllocLightType(lightType, facePoints.Length);
 
 						Vector3	[]rgb	=lightInfo.GetRGBLightData(lightType);
+						if(rgb == null)
+						{
+							continue;	//max light styles on face?
+						}
 
 						rgb[v]	+=dLight.mColor * (val * scale);
 
-						Skip:;
+						Debug.Assert(!float.IsNaN(rgb[v].X));
+						Debug.Assert(!float.IsNaN(rgb[v].Y));
+						Debug.Assert(!float.IsNaN(rgb[v].Z));
 					}
 				}
 			}
@@ -1593,12 +928,12 @@ namespace BSPCore
 
 		void FreeDirectLights()
 		{
-			DirectLights.Clear();
-			DirectClusterLights.Clear();
+			mDirectLights.Clear();
+			mDirectClusterLights.Clear();
 		}
 
 
-		List<byte> BuildLightMaps(ref int numRGBMaps, Vector3 minLight, float lightScale, float maxIntensity)
+		List<byte> BuildLightMaps(ref int numRGBMaps, Vector3 minLight, float maxIntensity)
 		{
 			Int32	LDataOfs	=0;
 			byte	[]LData		=new byte[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE * 3 * 4];
@@ -1695,7 +1030,7 @@ namespace BSPCore
 
 					for(int j=0;j < size;j++)
 					{
-						Vector3	WorkRGB	=rgb[j] * lightScale;
+						Vector3	WorkRGB	=rgb[j];
 
 						if(k == 0)
 						{

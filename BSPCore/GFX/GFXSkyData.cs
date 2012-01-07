@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPCore
 {
+	//not in use yet
 	public class GFXSkyData : UtilityLib.IReadWriteable
 	{
 		public Vector3	mAxis;						// Axis of rotation

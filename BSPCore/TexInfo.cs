@@ -12,7 +12,6 @@ namespace BSPCore
 		public float		mShiftU, mShiftV;
 		public float		mDrawScaleU, mDrawScaleV;
 		public UInt32		mFlags;
-		public float		mFaceLight, mReflectiveScale;
 		public float		mLightMapScale;
 		public float		mAlpha;
 		public string		mTexture;
@@ -27,9 +26,6 @@ namespace BSPCore
 		public const UInt32	GOURAUD		=(1<<5);
 		public const UInt32	FLAT		=(1<<6);
 		public const UInt32	NO_LIGHTMAP	=(1<<15);
-
-		//constants
-		public const float	FaceLightIntensity	=20.0f;
 
 
 		internal bool Compare(TexInfo other)
@@ -59,14 +55,6 @@ namespace BSPCore
 				return	false;
 			}
 			if(mFlags != other.mFlags)
-			{
-				return	false;
-			}
-			if(mFaceLight != other.mFaceLight)
-			{
-				return	false;
-			}
-			if(mReflectiveScale != other.mReflectiveScale)
 			{
 				return	false;
 			}

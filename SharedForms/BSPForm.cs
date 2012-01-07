@@ -88,20 +88,16 @@ namespace SharedForms
 		{
 			get
 			{
-				mLightParams.mbSeamCorrection	=SeamCorrection.Checked;
-				mLightParams.mbRadiosity		=Radiosity.Checked;
-				mLightParams.mbFastPatch		=FastPatch.Checked;
-				mLightParams.mPatchSize			=(int)PatchSize.Value;
-				mLightParams.mNumBounces		=(int)NumBounce.Value;
-				mLightParams.mLightScale		=(float)LightScale.Value;
-				mLightParams.mMinLight.X		=(float)MinLightX.Value;
-				mLightParams.mMinLight.Y		=(float)MinLightY.Value;
-				mLightParams.mMinLight.Z		=(float)MinLightZ.Value;
-				mLightParams.mSurfaceReflect	=(float)ReflectiveScale.Value;
-				mLightParams.mMaxIntensity		=(int)MaxIntensity.Value;
-				mLightParams.mLightGridSize		=(int)LightGridSize.Value;
-				mLightParams.mAtlasSize			=(int)4;	//doesn't matter
-				mLightParams.mNumSamples		=(int)NumSamples.Value;
+				mLightParams.mbSeamCorrection		=SeamCorrection.Checked;
+				mLightParams.mbSurfaceLighting		=SurfaceLighting.Checked;
+				mLightParams.mSurfLightFrequency	=(int)SurfaceLightFrequency.Value;
+				mLightParams.mSurfLightStrength		=(int)SurfaceLightStrength.Value;
+				mLightParams.mMinLight.X			=(float)MinLightX.Value;
+				mLightParams.mMinLight.Y			=(float)MinLightY.Value;
+				mLightParams.mMinLight.Z			=(float)MinLightZ.Value;
+				mLightParams.mMaxIntensity			=(int)MaxIntensity.Value;
+				mLightParams.mLightGridSize			=(int)LightGridSize.Value;
+				mLightParams.mNumSamples			=(int)NumSamples.Value;
 
 				return	mLightParams;
 			}
@@ -196,20 +192,18 @@ namespace SharedForms
 		}
 
 
-		void OnRadiosityChanged(object sender, EventArgs e)
-		{
-			FastPatch.Enabled		=Radiosity.Checked;
-			PatchSize.Enabled		=Radiosity.Checked;
-			ReflectiveScale.Enabled	=Radiosity.Checked;
-		}
-
-
 		void OnVerbose(object sender, EventArgs e)
 		{
 			if(VerboseBSP.Checked)
 			{
 				CoreEvents.Print("Note that verbosity can adversely affect performance, especially in vis.\n");
 			}
+		}
+
+
+		void OnSurfaceLighting(object sender, EventArgs e)
+		{
+			SurfaceLightFrequency.Enabled	=SurfaceLighting.Checked;
 		}
 	}
 }

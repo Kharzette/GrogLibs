@@ -9,12 +9,14 @@ namespace BSPCore
 {
 	internal class GBSPFace
 	{
+		//TODO: lots of extra baggage in here for splitting merging
+		//need to rewrite that stuff using some simple lists
 		GBSPFace	mOriginal;
 		GBSPPoly	mPoly;
 		UInt32		mFrontContents, mBackContents;
 		Int32		mTexInfo;
 		Int32		mPlaneNum;
-		Int32		mPlaneSide;
+		bool		mbFlipSide;
 
 		Int32		mEntity;	//Originating entity
 
@@ -42,7 +44,7 @@ namespace BSPCore
 			mBackContents	=copyMe.mBackContents;
 			mTexInfo		=copyMe.mTexInfo;
 			mPlaneNum		=copyMe.mPlaneNum;
-			mPlaneSide		=copyMe.mPlaneSide;
+			mbFlipSide		=copyMe.mbFlipSide;
 			mEntity			=copyMe.mEntity;
 			mbVisible		=copyMe.mbVisible;
 			mOutputNum		=copyMe.mOutputNum;
@@ -55,15 +57,15 @@ namespace BSPCore
 		}
 
 
-		internal GBSPFace(GBSPPortal port, Int32 pside)
+		internal GBSPFace(GBSPPortal port, bool bFlip)
 		{
 			mTexInfo	=port.mSide.mTexInfo;
 			mPlaneNum	=port.mSide.mPlaneNum;
-			mPlaneSide	=pside;
+			mbFlipSide	=bFlip;
 			mPortal		=port;
 			mbVisible	=true;
 
-			if(pside != 0)
+			if(bFlip)
 			{
 				mPoly	=new GBSPPoly(port.mPoly);
 				mPoly.Reverse();
@@ -84,7 +86,7 @@ namespace BSPCore
 			{
 				return	null;
 			}
-			if (face1.mPlaneSide != face2.mPlaneSide)
+			if (face1.mbFlipSide != face2.mbFlipSide)
 			{
 				return null;
 			}
@@ -109,7 +111,7 @@ namespace BSPCore
 			GBSPPoly	poly2	=face2.mPoly;
 
 			Vector3	norm	=pool.mPlanes[face1.mPlaneNum].mNormal;	// Get the normal
-			if(face1.mPlaneSide != 0)
+			if(face1.mbFlipSide)
 			{
 				norm	=Vector3.Zero - norm;
 			}
@@ -211,7 +213,7 @@ namespace BSPCore
 
 				GBSPPlane	p	=pp.mPlanes[f.mPlaneNum];
 
-				if(f.mPlaneSide != 0)
+				if(f.mbFlipSide)
 				{
 					p.Inverse();
 				}
@@ -254,7 +256,7 @@ namespace BSPCore
 			
 			Vector3	norm	=pool.mPlanes[mPlaneNum].mNormal;
 			float	dist	=pool.mPlanes[mPlaneNum].mDist;
-			if(mPlaneSide != 0)
+			if(mbFlipSide)
 			{
 				norm	=-norm;
 				dist	=-dist;
@@ -417,7 +419,7 @@ namespace BSPCore
 					GFace.mFirstVert	=f.mFirstIndexVert;
 					GFace.mNumVerts		=f.mIndexVerts.Length;
 					GFace.mPlaneNum		=f.mPlaneNum;
-					GFace.mPlaneSide	=f.mPlaneSide;
+					GFace.mbFlipSide	=f.mbFlipSide;
 					GFace.mTexInfo		=f.mTexInfo;
 					GFace.mLWidth		=0;
 					GFace.mLHeight		=0;

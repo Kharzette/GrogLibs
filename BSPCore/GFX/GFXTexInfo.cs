@@ -17,10 +17,7 @@ namespace BSPCore
 		public float	mDrawScaleU;
 		public float	mDrawScaleV;
 		public UInt32	mFlags;
-		public float	mFaceLight;
-		public float	mReflectiveScale;
 		public float	mAlpha;
-		public float	mMipMapBias;
 		public string	mMaterial;	//index into MaterialLib
 
 
@@ -37,10 +34,7 @@ namespace BSPCore
 			bw.Write(mDrawScaleU);
 			bw.Write(mDrawScaleV);
 			bw.Write(mFlags);
-			bw.Write(mFaceLight);
-			bw.Write(mReflectiveScale);
 			bw.Write(mAlpha);
-			bw.Write(mMipMapBias);
 			bw.Write(mMaterial);
 		}
 
@@ -58,10 +52,7 @@ namespace BSPCore
 			mDrawScaleU			=br.ReadSingle();
 			mDrawScaleV			=br.ReadSingle();
 			mFlags				=br.ReadUInt32();
-			mFaceLight			=br.ReadSingle();
-			mReflectiveScale	=br.ReadSingle();
 			mAlpha				=br.ReadSingle();
-			mMipMapBias			=br.ReadSingle();
 			mMaterial			=br.ReadString();
 		}
 

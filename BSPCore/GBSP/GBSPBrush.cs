@@ -8,15 +8,17 @@ using Microsoft.Xna.Framework;
 
 namespace BSPCore
 {
-	internal class GBSPBrush
+	internal partial class GBSPBrush
 	{
 		Bounds		mBounds	=new Bounds();
-		UInt32		mSide, mTestSide;
-		MapBrush	mOriginal;
+		UInt32		mSide;		//marked during the bsp split heuristic, and used in list split
+		UInt32		mTestSide;	//used as a temp during the bsp split heuristic
+		MapBrush	mOriginal;	//original brush from the map file
 
 		List<GBSPSide>	mSides	=new List<GBSPSide>();
 
 
+		#region Construction
 		internal GBSPBrush() { }
 		internal GBSPBrush(GBSPBrush copyMe)
 		{
@@ -72,285 +74,10 @@ namespace BSPCore
 				return;
 			}
 		}
+		#endregion
 
 
-		bool CheckBrush()
-		{
-			if(mSides.Count < 3)
-			{
-				return	false;
-			}
-
-			if(mBounds.IsMaxExtents())
-			{
-				return	false;
-			}
-			return	true;
-		}
-
-
-		//takes a list of brushes and returns the brushes inside
-		//the passed in bounds.  If some are on the border they
-		//are lopped off at the boundary
-		static internal List<GBSPBrush> BlockChopBrushes(List<GBSPBrush> list,
-			Bounds block, PlanePool pp, ClipPools cp)
-		{
-			List<GBSPBrush>	ret	=new List<GBSPBrush>();
-
-			int		[]blockPlanes;
-			block.GetPlanes(pp, out blockPlanes);
-
-			foreach(GBSPBrush b in list)
-			{
-				b.BoundBrush();
-
-				if(!b.mBounds.Overlaps(block))
-				{
-					continue;
-				}
-
-				GBSPBrush	boxedCopy	=b.ChopToBoxAndClone(blockPlanes, pp, cp);
-				if(boxedCopy == null)
-				{
-					continue;
-				}
-
-				boxedCopy.BoundBrush();
-
-				if(!boxedCopy.CheckBrush())
-				{
-					CoreEvents.Print("Boxed copy failed checkbrush!\n");
-				}
-
-				ret.Add(boxedCopy);
-			}
-			return	ret;
-		}
-
-
-		internal static void TestBrushListValid(List<GBSPBrush> list)
-		{
-			foreach(GBSPBrush b in list)
-			{
-				if(!b.CheckBrush())
-				{
-					CoreEvents.Print("Bad brush in list!\n");
-				}
-			}
-		}
-
-
-		internal static bool TestListInBounds(List<GBSPBrush> list, Bounds bound)
-		{
-			foreach(GBSPBrush b in list)
-			{
-				foreach(GBSPSide s in b.mSides)
-				{
-					if(s.mPoly.mVerts == null)
-					{
-						continue;
-					}
-					foreach(Vector3 v in s.mPoly.mVerts)
-					{
-						if(!bound.IsPointInbounds(v, UtilityLib.Mathery.ON_EPSILON))
-						{
-							return	false;
-						}
-					}
-				}
-			}
-			return	true;
-		}
-
-
-		internal static int GetOriginalEntityNum(List<GBSPBrush> list)
-		{
-			foreach(GBSPBrush b in list)
-			{
-				if(b.mOriginal.mEntityNum != 0)
-				{
-					return	b.mOriginal.mEntityNum;
-				}
-			}
-			return	-1;
-		}
-
-
-		static internal void GetOriginalSidesByContents(List<GBSPBrush> list, UInt32 contents, List<GBSPSide> sides)
-		{
-			foreach(GBSPBrush b in list)
-			{
-				MapBrush	mb	=b.mOriginal;
-
-				//filter by contents
-				if((mb.mContents & contents) == 0)
-				{
-					continue;
-				}
-
-				foreach(GBSPSide side in mb.mOriginalSides)
-				{
-					sides.Add(side);
-				}
-			}
-		}
-
-
-		static internal void FreeSidePolys(List<GBSPBrush> list)
-		{
-			if(list == null)
-			{
-				return;
-			}
-
-			foreach(GBSPBrush b in list)
-			{
-				foreach(GBSPSide side in b.mSides)
-				{
-					if(side.mPoly != null)
-					{
-						side.mPoly.Free();
-						side.mPoly	=null;
-					}
-				}
-			}
-		}
-
-
-		//Get the contents of this leaf, by examining all the brushes that made this leaf
-		static internal UInt32 GetLeafContents(List<GBSPBrush> list)
-		{
-			if(list == null)
-			{
-				return	Contents.BSP_CONTENTS_SOLID2;
-			}
-
-			if(list.Count == 0)
-			{
-				return	0;	//nothing, empty space but not the same as contents empty
-			}
-
-			UInt32	ret	=0;
-
-			foreach(GBSPBrush b in list)
-			{
-				if((b.mOriginal.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
-				{
-					int	i=0;
-					for(i=0;i < b.mSides.Count;i++)
-					{
-						if((b.mSides[i].mFlags & GBSPSide.SIDE_NODE) == 0)
-						{
-							break;
-						}
-					}
-				
-					//If all the planes in this leaf where caused by splits, then
-					//we can force this leaf to be solid...
-					if(i == b.mSides.Count)
-					{
-						ret	|=Contents.BSP_CONTENTS_SOLID2;
-					}					
-				}
-				
-				ret	|=b.mOriginal.mContents;
-			}
-			return	ret;
-		}
-
-
-		static internal void BrushListStats(List<GBSPBrush> list, BuildStats bs, Bounds bounds, PlanePool pool)
-		{
-			foreach(GBSPBrush b in list)
-			{
-				bs.NumVisBrushes++;
-				
-				if(b.Volume(pool) < 0.1f)
-				{
-					CoreEvents.Print("**WARNING** BuildBSP: Brush with NULL volume\n");
-				}
-				
-				for(int i=0;i < b.mSides.Count;i++)
-				{
-					if(b.mSides[i].mPoly.VertCount() < 3)
-					{
-						continue;
-					}
-					if((b.mSides[i].mFlags & GBSPSide.SIDE_NODE) != 0)
-					{
-						continue;
-					}
-					if((b.mSides[i].mFlags & GBSPSide.SIDE_VISIBLE) != 0)
-					{
-						bs.NumVisFaces++;
-					}
-					else
-					{
-						bs.NumNonVisFaces++;
-					}
-				}
-				bounds.Merge(b.mBounds, null);
-			}
-		}
-
-
-		static internal List<GBSPBrush> ConvertMapBrushList(List<MapBrush> list)
-		{
-			List<GBSPBrush>	ret	=new List<GBSPBrush>();
-			foreach(MapBrush b in list)
-			{
-				GBSPBrush	gb	=new GBSPBrush(b);
-
-				//if brush is being dropped, the mOriginal
-				//reference will be null
-				if(gb.mOriginal == null)
-				{
-					continue;
-				}
-				ret.Add(gb);
-			}
-			return	ret;
-		}
-
-
-		GBSPBrush	ChopToBoxAndClone(int []planes, PlanePool pp, ClipPools cp)
-		{
-			GBSPBrush	ret	=new GBSPBrush(this);
-			for(int i=0;i < 6;i++)
-			{
-				GBSPBrush	front, back;
-				if(i < 3)
-				{
-					ret.Split(planes[i], 0, 0, false, pp, out front, out back, false, cp);
-				}
-				else
-				{
-					ret.Split(planes[i], 1, 0, false, pp, out front, out back, false, cp);
-				}
-				if(back == null)
-				{
-					return	null;
-				}
-				ret	=back;
-			}
-
-			//the reason this works is that the box plane numbers
-			//are not shared with everything else
-			for(int i=0;i < ret.mSides.Count;i++)
-			{
-				int	pnum	=ret.mSides[i].mPlaneNum;
-				if(pnum == planes[0] || pnum == planes[2]
-					|| pnum == planes[3] || pnum == planes[5])
-				{
-					ret.mSides[i].mTexInfo	=-1;
-					ret.mSides[i].mFlags	|=GBSPSide.SIDE_NODE;
-				}
-			}
-
-			return	ret;
-		}
-
-
+		#region Checks & Gets & Tests
 		void BoundBrush()
 		{
 			mBounds.Clear();
@@ -375,7 +102,7 @@ namespace BSPCore
 				for(int j=0;j < otherBrush.mSides.Count;j++)
 				{
 					if(mSides[i].mPlaneNum == otherBrush.mSides[j].mPlaneNum &&
-						mSides[i].mPlaneSide != otherBrush.mSides[j].mPlaneSide)
+						mSides[i].mbFlipSide != otherBrush.mSides[j].mbFlipSide)
 					{
 						return	false;
 					}
@@ -391,12 +118,12 @@ namespace BSPCore
 			{
 				GBSPPlane	p	=pp.mPlanes[s.mPlaneNum];
 
-				if(s.mPlaneSide != 0)
+				if(s.mbFlipSide)
 				{
 					p.Inverse();
 				}
 
-				float	dist	=p.DistanceFast(point);
+				float	dist	=p.Distance(point);
 				if(dist > epsilon)
 				{
 					return	false;
@@ -442,6 +169,8 @@ namespace BSPCore
 		}
 
 
+		//determines via contents if it is ok for otherbrush to carve
+		//into thisbrush (water can't chop stone etc)
 		bool BrushCanBite(GBSPBrush otherBrush)
 		{
 			UInt32	c1, c2;
@@ -487,7 +216,197 @@ namespace BSPCore
 		}
 
 
-		internal void Split(Int32 planeNum, sbyte planeSide, byte splitFaceFlags, bool bVisible,
+		bool CheckBrush()
+		{
+			if(mSides.Count < 3)
+			{
+				return	false;
+			}
+
+			if(mBounds.IsMaxExtents())
+			{
+				return	false;
+			}
+			return	true;
+		}
+
+
+		internal float Volume(PlanePool pool)
+		{
+			GBSPPoly	cornerPoly	=null;
+
+			foreach(GBSPSide s in mSides)
+			{
+				if(s.mPoly.VertCount() > 2)
+				{
+					cornerPoly	=s.mPoly;
+					break;
+				}
+			}
+			if(cornerPoly == null)
+			{
+				return	0.0f;
+			}
+
+			float	volume	=0.0f;
+			foreach(GBSPSide s in mSides)
+			{
+				GBSPPoly	p	=s.mPoly;
+				if(p == null)
+				{
+					continue;
+				}
+
+				GBSPPlane	plane	=pool.mPlanes[s.mPlaneNum];
+
+				if(s.mbFlipSide)
+				{
+					plane.Inverse();
+				}
+
+				float	d		=-cornerPoly.GetCornerDistance(plane);
+				float	area	=p.Area();
+
+				volume	+=d * area;
+			}
+
+			volume	/=3.0f;
+			return	volume;
+		}
+
+
+		//used in the bsp split plane choosing algorithm
+		UInt32 TestBrushToPlane(int planeNum, bool planeSide, PlanePool pool,
+			out int numSplits, out bool bHintSplit, ref int EpsilonBrush)
+		{
+			GBSPPlane	plane;
+			UInt32		sideFlag;
+			float		frontDist, backDist;
+			Int32		frontCount, backCount;
+
+			numSplits	=0;
+			bHintSplit	=false;
+
+			foreach(GBSPSide s in mSides)
+			{
+				int	Num	=s.mPlaneNum;
+				
+				if(Num == planeNum && !s.mbFlipSide)
+				{
+					return	GBSPPlane.PSIDE_BACK | GBSPPlane.PSIDE_FACING;
+				}
+
+				if(Num == planeNum && s.mbFlipSide)
+				{
+					return	GBSPPlane.PSIDE_FRONT | GBSPPlane.PSIDE_FACING;
+				}
+			}
+			
+			//See if it's totally on one side or the other
+			plane	=pool.mPlanes[planeNum];
+
+			sideFlag	=mBounds.BoxOnPlaneSide(plane);
+
+			if(sideFlag != GBSPPlane.PSIDE_BOTH)
+			{
+				return	sideFlag;
+			}
+			
+			//The brush is split, count the number of splits 
+			frontDist	=backDist	=0.0f;
+
+			foreach(GBSPSide s in mSides)
+			{
+				if((s.mFlags & GBSPSide.SIDE_NODE) != 0)
+				{
+					continue;
+				}
+				if((s.mFlags & GBSPSide.SIDE_VISIBLE) == 0)
+				{
+					continue;
+				}
+				if(s.mPoly.VertCount() < 3)
+				{
+					continue;
+				}
+
+				frontCount	=backCount	=0;
+				s.mPoly.SplitSideTest(plane, out frontCount, out backCount, ref frontDist, ref backDist);
+
+				if(frontCount != 0 && backCount != 0)
+				{
+					numSplits++;
+					if((s.mFlags & GBSPSide.SIDE_HINT) != 0)
+					{
+						bHintSplit	=true;
+					}
+				}
+			}
+
+			//Check to see if this split would produce a tiny brush (would result in tiny leafs, bad for vising)
+			if((frontDist > 0.0f && frontDist < 1.0f) || (backDist < 0.0f && backDist > -1.0f))
+			{
+				EpsilonBrush++;
+			}
+
+			return	sideFlag;
+		}
+
+
+		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool bCheckFlags)
+		{
+			foreach(GBSPSide s in mSides)
+			{
+				s.GetTriangles(verts, indexes, bCheckFlags);
+			}
+		}
+		#endregion
+
+
+		#region Carving Operations
+		//cut a clone of this brush down to the box planes passed in
+		GBSPBrush	ChopToBoxAndClone(int []planes, PlanePool pp, ClipPools cp)
+		{
+			GBSPBrush	ret	=new GBSPBrush(this);
+			for(int i=0;i < 6;i++)
+			{
+				GBSPBrush	front, back;
+				if(i < 3)
+				{
+					ret.Split(planes[i], false, 0, false, pp, out front, out back, false, cp);
+				}
+				else
+				{
+					ret.Split(planes[i], true, 0, false, pp, out front, out back, false, cp);
+				}
+				if(back == null)
+				{
+					return	null;
+				}
+				ret	=back;
+			}
+
+			//the reason this works is that the box plane numbers
+			//are not shared with everything else
+			for(int i=0;i < ret.mSides.Count;i++)
+			{
+				int	pnum	=ret.mSides[i].mPlaneNum;
+				if(pnum == planes[0] || pnum == planes[2]
+					|| pnum == planes[3] || pnum == planes[5])
+				{
+					ret.mSides[i].mTexInfo	=-1;
+					ret.mSides[i].mFlags	|=GBSPSide.SIDE_NODE;
+				}
+			}
+
+			return	ret;
+		}
+
+
+		//split this brush by the plane passed in, assigning the newly
+		//created split face the flags (splitFaceFlags and bVisible),
+		//returning the results in front & back
+		internal void Split(Int32 planeNum, bool bFlipSide, byte splitFaceFlags, bool bVisible,
 					PlanePool pool, out GBSPBrush front, out GBSPBrush back, bool bVerbose, ClipPools cp)
 		{
 			GBSPPlane	poolPlane, sidedPlane;
@@ -498,7 +417,7 @@ namespace BSPCore
 			poolPlane.mType	=GBSPPlane.PLANE_ANY;
 
 			sidedPlane	=poolPlane;
-			if(planeSide != 0)
+			if(bFlipSide)
 			{
 				sidedPlane.Inverse();
 			}
@@ -514,7 +433,7 @@ namespace BSPCore
 				{
 					continue;
 				}
-				s.mPoly.GetSplitMaxDist(poolPlane, planeSide, ref frontDist, ref backDist);
+				s.mPoly.GetSplitMaxDist(poolPlane, bFlipSide, ref frontDist, ref backDist);
 			}
 			
 			if(frontDist < 0.1f)
@@ -545,7 +464,7 @@ namespace BSPCore
 				}
 				GBSPPlane	plane2	=pool.mPlanes[s.mPlaneNum];
 				
-				midPoly.ClipPolyEpsilon(0.0f, plane2, s.mPlaneSide == 0, cp);
+				midPoly.ClipPolyEpsilon(0.0f, plane2, !s.mbFlipSide, cp);
 			}
 
 			if(midPoly.IsTiny())
@@ -653,7 +572,7 @@ namespace BSPCore
 				resultBrushes[i].mSides.Add(newSide);
 
 				newSide.mPlaneNum	=planeNum;
-				newSide.mPlaneSide	=(sbyte)planeSide;
+				newSide.mbFlipSide	=bFlipSide;
 
 				if(bVisible)
 				{
@@ -665,7 +584,7 @@ namespace BSPCore
 			
 				if(i == 0)
 				{
-					newSide.mPlaneSide	=(newSide.mPlaneSide == 0)? (sbyte)1 : (sbyte)0;
+					newSide.mbFlipSide	=!newSide.mbFlipSide;
 					newSide.mPoly		=new GBSPPoly(midPoly);
 					newSide.mPoly.Reverse();
 				}
@@ -683,7 +602,6 @@ namespace BSPCore
 					if(v1 < 1.0f)
 					{
 						resultBrushes[z]	=null;
-						//GHook.Printf("Tiny volume after clip\n");
 					}
 				}
 			}
@@ -698,50 +616,7 @@ namespace BSPCore
 		}
 
 
-		internal float Volume(PlanePool pool)
-		{
-			GBSPPoly	cornerPoly	=null;
-
-			foreach(GBSPSide s in mSides)
-			{
-				if(s.mPoly.VertCount() > 2)
-				{
-					cornerPoly	=s.mPoly;
-					break;
-				}
-			}
-			if(cornerPoly == null)
-			{
-				return	0.0f;
-			}
-
-			float	volume	=0.0f;
-			foreach(GBSPSide s in mSides)
-			{
-				GBSPPoly	p	=s.mPoly;
-				if(p == null)
-				{
-					continue;
-				}
-
-				GBSPPlane	plane	=pool.mPlanes[s.mPlaneNum];
-
-				if(s.mPlaneSide != 0)
-				{
-					plane.Inverse();
-				}
-
-				float	d		=-cornerPoly.GetCornerDistance(plane);
-				float	area	=p.Area();
-
-				volume	+=d * area;
-			}
-
-			volume	/=3.0f;
-			return	volume;
-		}
-
-
+		//result list == a - b
 		static List<GBSPBrush> Subtract(GBSPBrush a, GBSPBrush b, PlanePool pool, ClipPools cp)
 		{
 			List<GBSPBrush>	outside	=new List<GBSPBrush>();
@@ -754,7 +629,7 @@ namespace BSPCore
 			{
 				GBSPBrush	front, back;
 
-				inside.Split(b.mSides[i].mPlaneNum,	b.mSides[i].mPlaneSide, 0,
+				inside.Split(b.mSides[i].mPlaneNum,	b.mSides[i].mbFlipSide, 0,
 					false, pool, out front, out back, true, cp);
 
 				//Make sure we don't free a, but free all other fragments
@@ -783,521 +658,6 @@ namespace BSPCore
 
 			return	outside;	//Return what was on the outside
 		}
-
-
-		//debug function to dump a brush file of stuff that is poking
-		//into each other, good for tracking down problems
-		static int oCount;
-		internal static void DumpOverlapping(List<GBSPBrush> list, PlanePool pp)
-		{
-			List<GBSPBrush>	overlapping	=new List<GBSPBrush>();
-
-			foreach(GBSPBrush b1 in list)
-			{
-				foreach(GBSPBrush b2 in list)
-				{
-					if(b1 == b2)
-					{
-						continue;
-					}
-					if(!b1.Overlaps(b2))
-					{
-						continue;
-					}
-
-					if(!b1.ReallyOverlaps(b2, pp))
-					{
-						continue;
-					}
-
-					if(!overlapping.Contains(b1))
-					{
-						overlapping.Add(b1);
-					}
-					if(!overlapping.Contains(b2))
-					{
-						overlapping.Add(b2);
-					}
-				}
-			}
-			if(overlapping.Count > 0)
-			{				
-				DumpBrushListToFile(overlapping, pp, "Overlapped" + oCount++ + ".map");
-			}
-		}
-
-
-		internal static List<GBSPBrush> GankBrushOverlap(bool bVerbose,
-			List<GBSPBrush> list, PlanePool pool, ClipPools cp)
-		{
-			List<GBSPBrush>	keep		=new List<GBSPBrush>();
-			List<GBSPBrush>	subResult1	=new List<GBSPBrush>();
-			List<GBSPBrush>	subResult2	=new List<GBSPBrush>();
-
-			if(bVerbose)
-			{
-				CoreEvents.Print("---- GankBrushOverlap ----\n");
-				CoreEvents.Print("Num brushes before gankery : " + list.Count + "\n");
-			}
-
-		startOver:
-			keep.Clear();
-
-			foreach(GBSPBrush b1 in list)
-			{
-				foreach(GBSPBrush b2 in list)
-				{
-					if(b1 == b2)
-					{
-						continue;
-					}
-
-					if(!b1.Overlaps(b2))
-					{
-						continue;
-					}
-
-					subResult1.Clear();
-					subResult2.Clear();
-					Int32	c1	=999999;
-					Int32	c2	=999999;
-
-					if(b2.BrushCanBite(b1))
-					{
-						subResult1	=Subtract(b1, b2, pool, cp);
-
-						if(subResult1.Contains(b1))
-						{
-							continue;
-						}
-
-						if(subResult1.Count == 0)
-						{
-							list.Remove(b1);
-							goto	startOver;
-						}
-						c1	=subResult1.Count;
-					}
-
-					if(b1.BrushCanBite(b2))
-					{
-						subResult2	=Subtract(b2, b1, pool, cp);
-
-						if(subResult2.Contains(b2))
-						{
-							continue;
-						}
-
-						if(subResult2.Count == 0)
-						{	
-							subResult1.Clear();
-							list.Remove(b2);
-							goto	startOver;
-						}
-						c2	=subResult2.Count;
-					}
-
-					//check for non solid stuff poking into each other
-					//like water or something
-					if(!b1.BrushCanBite(b2) && !b2.BrushCanBite(b1))
-					{
-						if(GBSPBrush.SameContents(b1, b2))
-						{
-							subResult1	=Subtract(b1, b2, pool, cp);
-
-							if(subResult1.Contains(b1))
-							{
-								continue;
-							}
-
-							if(subResult1.Count == 0)
-							{
-								list.Remove(b1);
-								goto	startOver;
-							}
-							c1	=subResult1.Count;
-						}
-					}
-
-					if(subResult1.Count == 0 && subResult2.Count == 0)
-					{
-						continue;
-					}
-
-					if(c1 < c2)
-					{
-						if(subResult2.Count > 0)
-						{
-							subResult2.Clear();
-						}
-						list.AddRange(subResult1);
-						list.Remove(b1);
-						goto	startOver;
-					}
-					else
-					{
-						if(subResult1.Count == 0)
-						{
-							subResult1.Clear();
-						}
-						list.AddRange(subResult2);
-						list.Remove(b2);
-						goto	startOver;
-					}
-				}
-				keep.Add(b1);
-			}
-
-			if(bVerbose)
-			{
-				CoreEvents.Print("Num brushes after gankery  : " + keep.Count + "\n");
-			}
-
-			return	keep;
-		}
-
-
-		//this is a mix of the Q2 algo and the Genesis algo
-		internal static GBSPSide SelectSplitSide(BuildStats bs, List<GBSPBrush> list,
-												 GBSPNode node, PlanePool pool, ClipPools cp)
-		{
-			GBSPSide	bestSide	=null;
-			Int32		bestValue	=-999999;
-			Int32		bestSplits	=0;
-			Int32		numPasses	=4;
-			for(Int32 pass = 0;pass < numPasses;pass++)
-			{
-				foreach(GBSPBrush b in list)
-				{
-					if(((pass & 1) != 0)
-						&& ((b.mOriginal.mContents & Contents.BSP_CONTENTS_DETAIL2) == 0))
-					{
-						continue;
-					}
-					if(((pass & 1) == 0)
-						&& ((b.mOriginal.mContents & Contents.BSP_CONTENTS_DETAIL2) != 0))
-					{
-						continue;
-					}
-					
-					bool	bHintSplit	=false;
-					foreach(GBSPSide side in b.mSides)
-					{
-						if(side.mPoly == null)
-						{
-							continue;
-						}
-						if((side.mFlags & (GBSPSide.SIDE_TESTED)) != 0)
-						{
-							continue;
-						}
-						if((side.mFlags & (GBSPSide.SIDE_NODE)) != 0)
-						{
-							continue;
-						}
- 						if(((side.mFlags & GBSPSide.SIDE_VISIBLE) == 0) && pass < 2)
-						{
-							continue;
-						}
- 						if(((side.mFlags & GBSPSide.SIDE_VISIBLE) != 0) && pass >= 2)
-						{
-							continue;
-						}
-
-						Int32	planeNum	=side.mPlaneNum;
-						Int32	planeSide	=side.mPlaneSide;
-
-						Debug.Assert(node.CheckPlaneAgainstParents(planeNum) == true);
-
-						if(!node.CheckPlaneAgainstVolume(planeNum, pool, cp))
-						{
-							continue;	//borrowing a volume check from Q2
-						}
-												
-						Int32	frontCount		=0;
-						Int32	backCount		=0;
-						Int32	bothCount		=0;
-						Int32	facing			=0;
-						Int32	splits			=0;
-						Int32	EpsilonBrush	=0;
-
-						foreach(GBSPBrush test in list)
-						{
-							Int32	brushSplits;
-							UInt32	sideFlag	=test.TestBrushToPlane(planeNum, planeSide, pool,
-								out brushSplits, out bHintSplit, ref EpsilonBrush);
-
-							splits		+=brushSplits;
-
-							if(brushSplits != 0 && ((sideFlag & GBSPPlane.PSIDE_FACING) != 0))
-							{
-								CoreEvents.Print("PSIDE_FACING with splits\n");
-							}
-
-							test.mTestSide	=sideFlag;
-
-							if((sideFlag & GBSPPlane.PSIDE_FACING) != 0)
-							{
-								facing++;
-								foreach(GBSPSide testSide in test.mSides)
-								{
-									if(testSide.mPlaneNum == planeNum)
-									{
-										testSide.mFlags	|=GBSPSide.SIDE_TESTED;
-									}
-								}
-							}
-							if((sideFlag & GBSPPlane.PSIDE_FRONT) != 0)
-							{
-								frontCount++;
-							}
-							if((sideFlag & GBSPPlane.PSIDE_BACK) != 0)
-							{
-								backCount++;
-							}
-							if (sideFlag == GBSPPlane.PSIDE_BOTH)
-							{
-								bothCount++;
-							}
-						}
-
-						Int32	value	=5 * facing - 5 * splits - Math.Abs(frontCount - backCount);
-
-						if(pool.mPlanes[planeNum].mType < 3)
-						{
-							value	+=5;
-						}
-						
-						value	-=EpsilonBrush * 1000;
-
-						if(bHintSplit && ((side.mFlags & GBSPSide.SIDE_HINT) == 0))
-						{
-							value	=-999999;
-						}
-
-						if(value > bestValue)
-						{
-							bestValue	=value;
-							bestSide	=side;
-							bestSplits	=splits;
-							foreach(GBSPBrush t in list)
-							{
-								t.mSide	=t.mTestSide;
-							}
-						}
-					}
-				}
-
-				if(bestSide != null)
-				{
-					if(pass > 1)
-					{
-						bs.NumNonVisNodes++;
-					}
-					
-					if(pass > 0)
-					{
-						node.SetDetail(true);	//Not needed for vis
-						if((bestSide.mFlags & GBSPSide.SIDE_HINT) != 0)
-						{
-							CoreEvents.Print("*** Hint as Detail!!! ***\n");
-						}
-					}
-					break;
-				}
-			}
-
-			foreach(GBSPBrush b in list)
-			{
-				foreach(GBSPSide s in b.mSides)
-				{
-					s.mFlags	&=~GBSPSide.SIDE_TESTED;
-				}
-			}
-
-			return	bestSide;
-		}
-
-
-		UInt32 TestBrushToPlane(int planeNum, int planeSide, PlanePool pool,
-			out int numSplits, out bool bHintSplit, ref int EpsilonBrush)
-		{
-			GBSPPlane	plane;
-			UInt32		sideFlag;
-			float		frontDist, backDist;
-			Int32		frontCount, backCount;
-
-			numSplits	=0;
-			bHintSplit	=false;
-
-			foreach(GBSPSide s in mSides)
-			{
-				int	Num	=s.mPlaneNum;
-				
-				if(Num == planeNum && s.mPlaneSide == 0)
-				{
-					return	GBSPPlane.PSIDE_BACK | GBSPPlane.PSIDE_FACING;
-				}
-
-				if(Num == planeNum && s.mPlaneSide != 0)
-				{
-					return	GBSPPlane.PSIDE_FRONT | GBSPPlane.PSIDE_FACING;
-				}
-			}
-			
-			//See if it's totally on one side or the other
-			plane	=pool.mPlanes[planeNum];
-
-			sideFlag	=mBounds.BoxOnPlaneSide(plane);
-
-			if(sideFlag != GBSPPlane.PSIDE_BOTH)
-			{
-				return	sideFlag;
-			}
-			
-			//The brush is split, count the number of splits 
-			frontDist	=backDist	=0.0f;
-
-			foreach(GBSPSide s in mSides)
-			{
-				if((s.mFlags & GBSPSide.SIDE_NODE) != 0)
-				{
-					continue;
-				}
-				if((s.mFlags & GBSPSide.SIDE_VISIBLE) == 0)
-				{
-					continue;
-				}
-				if(s.mPoly.VertCount() < 3)
-				{
-					continue;
-				}
-
-				frontCount	=backCount	=0;
-				s.mPoly.SplitSideTest(plane, out frontCount, out backCount, ref frontDist, ref backDist);
-
-				if(frontCount != 0 && backCount != 0)
-				{
-					numSplits++;
-					if((s.mFlags & GBSPSide.SIDE_HINT) != 0)
-					{
-						bHintSplit	=true;
-					}
-				}
-			}
-
-			//Check to see if this split would produce a tiny brush (would result in tiny leafs, bad for vising)
-			if((frontDist > 0.0f && frontDist < 1.0f) || (backDist < 0.0f && backDist > -1.0f))
-			{
-				EpsilonBrush++;
-			}
-
-			return	sideFlag;
-		}
-
-
-		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool bCheckFlags)
-		{
-			foreach(GBSPSide s in mSides)
-			{
-				s.GetTriangles(verts, indexes, bCheckFlags);
-			}
-		}
-
-
-		internal static void SplitBrushList(List<GBSPBrush> list, Int32 nodePlaneNum,
-			PlanePool pool,	out List<GBSPBrush> front, out List<GBSPBrush> back, ClipPools cp)
-		{
-			front	=new List<GBSPBrush>();
-			back	=new List<GBSPBrush>();
-
-			foreach(GBSPBrush b in list)
-			{
-				UInt32	sideFlag	=b.mSide;
-				if(sideFlag == GBSPPlane.PSIDE_BOTH)
-				{
-					GBSPBrush	newFront, newBack;
-					b.Split(nodePlaneNum, 0, (byte)GBSPSide.SIDE_NODE, false,
-						pool, out newFront, out newBack, true, cp);
-					if(newFront != null)
-					{
-						front.Add(newFront);
-					}
-					if(newBack != null)
-					{
-						back.Add(newBack);
-					}
-					continue;
-				}
-
-				GBSPBrush	newBrush	=new GBSPBrush(b);
-
-				if((sideFlag & GBSPPlane.PSIDE_FACING) != 0)
-				{
-					foreach(GBSPSide newSide in newBrush.mSides)
-					{
-						if(newSide.mPlaneNum == nodePlaneNum)
-						{
-							newSide.mFlags	|=GBSPSide.SIDE_NODE;
-						}
-					}
-				}
-
-				if((sideFlag & GBSPPlane.PSIDE_FRONT) != 0)
-				{
-					front.Add(newBrush);
-					continue;
-				}
-				if((sideFlag & GBSPPlane.PSIDE_BACK) != 0)
-				{
-					back.Add(newBrush);
-					continue;
-				}
-			}
-		}
-
-
-		//handy for debuggerizing
-		static internal void DumpBrushListToFile(List<GBSPBrush> brushList, PlanePool pool, string fileName)
-		{
-			FileStream		fs	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
-			StreamWriter	sw	=new StreamWriter(fs);
-
-			sw.WriteLine("{");
-			sw.WriteLine("\"sounds\"	\"10\"");
-			sw.WriteLine("\"wad\"	\"gfx/metal.wad\"");
-			sw.WriteLine("\"classname\"	\"worldspawn\"");
-			sw.WriteLine("\"message\"	\"the Wind Tunnels\"");
-			sw.WriteLine("\"worldtype\"	\"1\"");
-			foreach(GBSPBrush b in brushList)
-			{
-				sw.WriteLine("{");
-
-				for(int i=0;i < b.mSides.Count;i++)
-				{
-					GBSPPlane	sidePlane	=pool.mPlanes[b.mSides[i].mPlaneNum];
-					if(b.mSides[i].mPlaneSide != 0)
-					{
-						sidePlane.Inverse();
-					}
-					GBSPPoly	planePoly	=new GBSPPoly(sidePlane);
-
-					sw.WriteLine("( " +
-						-planePoly.mVerts[0].X + " " +
-						planePoly.mVerts[0].Z + " " +
-						planePoly.mVerts[0].Y + " ) ( " +
-						-planePoly.mVerts[1].X + " " +
-						planePoly.mVerts[1].Z + " " +
-						planePoly.mVerts[1].Y + " ) ( " +
-						-planePoly.mVerts[2].X + " " +
-						planePoly.mVerts[2].Z + " " +
-						planePoly.mVerts[2].Y + " ) BOGUS 0 0 0 1.0 1.0");
-				}
-				sw.WriteLine("}");
-			}
-			sw.WriteLine("}");
-			sw.Close();
-			fs.Close();
-		}
+		#endregion
 	}
 }

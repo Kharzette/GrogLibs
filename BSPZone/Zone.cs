@@ -7,6 +7,15 @@ using Microsoft.Xna.Framework;
 
 namespace BSPZone
 {
+	internal class ZoneTrigger
+	{
+		internal ZoneEntity		mEntity;
+		internal BoundingBox	mBox;
+		internal Int32			mModelNum;
+		internal bool			mbTriggered;
+		internal bool			mbTriggerOnce;
+	}
+
 	public partial class Zone
 	{
 		class WorldLeaf
@@ -15,6 +24,7 @@ namespace BSPZone
 			public Int32	mParent;
 		}
 
+		//structural
 		ZoneModel		[]mZoneModels;
 		ZoneNode		[]mZoneNodes;
 		ZoneLeaf		[]mZoneLeafs;
@@ -27,24 +37,26 @@ namespace BSPZone
 		DebugFace		[]mDebugFaces;
 		Vector3			[]mDebugVerts;
 		Int32			[]mDebugIndexes;
-
 		VisCluster		[]mVisClusters;
 		VisArea			[]mVisAreas;
 		VisAreaPortal	[]mVisAreaPortals;
-
-
-		byte	[]mVisData;
-		byte	[]mMaterialVisData;
 
 		//vis stuff
 		Int32		[]mClusterVisFrame;
 		WorldLeaf	[]mLeafData;
 		Int32		[]mNodeParents;
 		Int32		[]mNodeVisFrame;
+		byte		[]mVisData;
+		byte		[]mMaterialVisData;
+
+		//gameplay stuff
+		List<ZoneTrigger>	mTriggers	=new List<ZoneTrigger>();
 
 		int	mLightMapGridSize;
 		int	mNumVisLeafBytes;
 		int	mNumVisMaterialBytes;
+
+		public event EventHandler	eTriggerHit;
 
 		const float	GroundAngle	=0.8f;	//how sloped can you be to be considered ground
 		const float StepHeight	=18.0f;	//stair step height for bipeds
@@ -179,6 +191,9 @@ namespace BSPZone
 			mNumVisLeafBytes		=br.ReadInt32();
 			mNumVisMaterialBytes	=br.ReadInt32();
 
+			br.Close();
+			file.Close();
+
 			//make clustervisframe
 			mClusterVisFrame	=new int[mVisClusters.Length];
 			mNodeParents		=new int[mZoneNodes.Length];
@@ -193,13 +208,55 @@ namespace BSPZone
 
 			FindParents_r(mZoneModels[0].mRootNode, -1);
 
-			br.Close();
-			file.Close();
+			//grab out triggers
+			List<ZoneEntity>	trigs	=GetEntitiesStartsWith("trigger");
+			foreach(ZoneEntity ze in trigs)
+			{
+				if(ze.mData.ContainsKey("Model"))
+				{
+					ZoneTrigger	zt		=new ZoneTrigger();
+					string	modelNum	=ze.mData["Model"];
+					zt.mModelNum		=Convert.ToInt32(modelNum);
+					zt.mBox				=GetModelBounds(zt.mModelNum);
+					zt.mEntity			=ze;
+					zt.mbTriggered		=false;
+					zt.mbTriggerOnce	=(ze.mData["classname"] == "trigger_once");
+
+					mTriggers.Add(zt);
+				}
+			}
 		}
 		#endregion
 
 
 		#region Entity Related
+		public List<ZoneEntity> GetSwitchedOnLights()
+		{
+			List<ZoneEntity>	ret	=new List<ZoneEntity>();
+			foreach(ZoneEntity e in mZoneEntities)
+			{
+				int	switchNum;
+				if(!e.GetInt("LightSwitchNum", out switchNum))
+				{
+					continue;
+				}
+
+				int	spawnFlags;
+				if(e.GetInt("spawnflags", out spawnFlags))
+				{
+					if(UtilityLib.Misc.bFlagSet(spawnFlags, 1))
+					{
+						continue;
+					}
+				}
+
+				//no flags at all means start on
+				ret.Add(e);
+			}
+			return	ret;
+		}
+
+
 		public Vector3 GetPlayerStartPos()
 		{
 			foreach(ZoneEntity e in mZoneEntities)
@@ -236,6 +293,23 @@ namespace BSPZone
 		}
 
 
+		public List<ZoneEntity> GetEntitiesByTargetName(string targName)
+		{
+			List<ZoneEntity>	ret	=new List<ZoneEntity>();
+			foreach(ZoneEntity ze in mZoneEntities)
+			{
+				if(ze.mData.ContainsKey("targetname"))
+				{
+					if(ze.mData["targetname"] == targName)
+					{
+						ret.Add(ze);
+					}
+				}
+			}
+			return	ret;
+		}
+
+
 		public List<ZoneEntity> GetEntities(string className)
 		{
 			List<ZoneEntity>	ret	=new List<ZoneEntity>();
@@ -244,6 +318,23 @@ namespace BSPZone
 				if(ze.mData.ContainsKey("classname"))
 				{
 					if(ze.mData["classname"] == className)
+					{
+						ret.Add(ze);
+					}
+				}
+			}
+			return	ret;
+		}
+
+
+		public List<ZoneEntity> GetEntitiesStartsWith(string startText)
+		{
+			List<ZoneEntity>	ret	=new List<ZoneEntity>();
+			foreach(ZoneEntity ze in mZoneEntities)
+			{
+				if(ze.mData.ContainsKey("classname"))
+				{
+					if(ze.mData["classname"].StartsWith(startText))
 					{
 						ret.Add(ze);
 					}
@@ -386,10 +477,6 @@ namespace BSPZone
 				return	true;
 			}
 
-			//skipping stair code
-//			finalPos	=firstPos;
-//			return	true;
-
 			//try a step height up with the regular
 			//box raycast (no sliding)
 			Vector3		secondPos	=Vector3.Zero;
@@ -498,6 +585,45 @@ namespace BSPZone
 				return	true;
 			}
 			return	false;
+		}
+
+
+		public void BoxTriggerCheck(BoundingBox box, Vector3 start, Vector3 end)
+		{
+			//TODO: full traced solution, just check contains for now
+			List<Vector3>	bothCorners	=new List<Vector3>();
+
+			Vector3	[]corners	=box.GetCorners();
+			for(int i=0;i < corners.Length;i++)
+			{
+				Vector3	sCorn	=corners[i] + start;
+				Vector3	eCorn	=corners[i] + end;
+
+				bothCorners.Add(sCorn);
+				bothCorners.Add(eCorn);
+			}
+
+			corners	=null;
+
+			foreach(ZoneTrigger zt in mTriggers)
+			{
+				if(zt.mbTriggerOnce && zt.mbTriggered)
+				{
+					continue;
+				}
+
+				foreach(Vector3 pos in bothCorners)
+				{
+					ContainmentType	ct	=zt.mBox.Contains(pos);
+					if(ct == ContainmentType.Disjoint)
+					{
+						continue;
+					}
+
+					zt.mbTriggered	=true;
+					UtilityLib.Misc.SafeInvoke(eTriggerHit, zt.mEntity);
+				}
+			}
 		}
 
 

@@ -36,6 +36,26 @@ namespace UtilityLib
 		}
 
 
+		public static Vector3 ColorNormalize(Vector3 inVec)
+		{
+			float	mag	=-696969;
+
+			if(inVec.X > mag)
+			{
+				mag	=inVec.X;
+			}
+			if(inVec.Y > mag)
+			{
+				mag	=inVec.Y;
+			}
+			if(inVec.Z > mag)
+			{
+				mag	=inVec.Z;
+			}
+			return	inVec / mag;
+		}
+
+
 		public static string AssignValue(string val)
 		{
 			if(val == null)
@@ -67,6 +87,12 @@ namespace UtilityLib
 
 
 		public static bool bFlagSet(UInt32 val, UInt32 flag)
+		{
+			return	((val & flag) != 0);
+		}
+
+
+		public static bool bFlagSet(Int32 val, Int32 flag)
 		{
 			return	((val & flag) != 0);
 		}

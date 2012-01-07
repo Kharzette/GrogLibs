@@ -337,7 +337,7 @@ namespace BSPCore
 				foreach(GBSPSide gs in me.GetBrushes()[brushIndex].mOriginalSides)
 				{
 					GBSPPlane	p	=mPlanePool.mPlanes[gs.mPlaneNum];
-					if(gs.mPlaneSide != 0)
+					if(gs.mbFlipSide)
 					{
 						p.Inverse();
 					}
@@ -523,13 +523,13 @@ namespace BSPCore
 		public void AddSingleBrush(List<GFXPlane> planes)
 		{
 			List<int>	planeNums	=new List<int>();
-			List<sbyte>	sides		=new List<sbyte>();
+			List<bool>	sides		=new List<bool>();
 
 			ClipPools	cp	=new ClipPools();
 			foreach(GFXPlane p in planes)
 			{
 				int		planeNum	=0;
-				sbyte	side		=0;
+				bool	side;
 				planeNum	=mPlanePool.FindPlane(p, out side);
 
 				//make sure unique
@@ -1344,7 +1344,7 @@ namespace BSPCore
 
 				GFXPlane	p	=mGFXPlanes[f.mPlaneNum];
 
-				if(f.mPlaneSide > 0)
+				if(f.mbFlipSide)
 				{
 					ret.Add(center + (-p.mNormal * 5));
 				}

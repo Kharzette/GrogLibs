@@ -38,9 +38,9 @@ namespace BSPCore
 			pln.mDist	=mPlane.mDist;
 			pln.mType	=mPlane.mType;
 
-			Vector3	vecU;//	=Vector3.Zero;
-			Vector3	vecV;//	=Vector3.Zero;
-			GBSPPoly.TextureAxisFromPlane(pln, out vecU, out vecV);
+			Vector3	vecU;
+			Vector3	vecV;
+			GBSPPlane.TextureAxisFromPlane(pln, out vecU, out vecV);
 
 			foreach(Vector3 vert in verts)
 			{
@@ -144,6 +144,8 @@ namespace BSPCore
 		}
 
 
+		//TODO: fix the error seen in lightmaps sometimes
+		//I think it is in here
 		internal void CalcFacePoints(LInfo lightInfo, int lightGridSize,
 			Vector2 UVOfs,
 			bool bExtraLightCorrection,

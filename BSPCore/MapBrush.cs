@@ -49,13 +49,13 @@ namespace BSPCore
 				p.mDist	=UtilityLib.Mathery.VecIdx(bnd.mMaxs, i);
 
 				GBSPSide	side	=new GBSPSide();
-				side.mPlaneNum		=pp.FindPlane(p, out side.mPlaneSide);
+				side.mPlaneNum		=pp.FindPlane(p, out side.mbFlipSide);
 
 				UtilityLib.Mathery.VecIdxAssign(ref p.mNormal, i, -1.0f);
 				p.mDist	=-(UtilityLib.Mathery.VecIdx(bnd.mMins, i));
 
 				GBSPSide	side2	=new GBSPSide();
-				side2.mPlaneNum		=pp.FindPlane(p, out side2.mPlaneSide);
+				side2.mPlaneNum		=pp.FindPlane(p, out side2.mbFlipSide);
 
 //				side.FixFlags();
 //				side2.FixFlags();
@@ -69,14 +69,14 @@ namespace BSPCore
 		}
 
 
-		internal MapBrush(PlanePool pp, List<int> planeNums, List<sbyte> sides, ClipPools cp)
+		internal MapBrush(PlanePool pp, List<int> planeNums, List<bool> sides, ClipPools cp)
 		{
 			for(int i=0;i < planeNums.Count;i++)
 			{
 				GBSPSide	side	=new GBSPSide();
 
 				side.mPlaneNum	=planeNums[i];
-				side.mPlaneSide	=sides[i];
+				side.mbFlipSide	=sides[i];
 
 				mOriginalSides.Add(side);
 			}
@@ -236,19 +236,19 @@ namespace BSPCore
 
 			//check for duplicate planes
 			List<int>	planeNums	=new List<int>();
-			List<sbyte>	planeSides	=new List<sbyte>();
+			List<bool>	planeSides	=new List<bool>();
 			foreach(GBSPSide s in mOriginalSides)
 			{
 				if(planeNums.Contains(s.mPlaneNum))
 				{
-					if(planeSides.Contains(s.mPlaneSide))
+					if(planeSides.Contains(s.mbFlipSide))
 					{
 						nukeBadSides.Add(s);
 						continue;
 					}
 				}
 				planeNums.Add(s.mPlaneNum);
-				planeSides.Add(s.mPlaneSide);
+				planeSides.Add(s.mbFlipSide);
 			}
 
 			foreach(GBSPSide nuke in nukeBadSides)
@@ -269,7 +269,7 @@ namespace BSPCore
 			{
 				GBSPPlane	plane	=pool.mPlanes[mOriginalSides[i].mPlaneNum];
 
-				if(mOriginalSides[i].mPlaneSide != 0)
+				if(mOriginalSides[i].mbFlipSide)
 				{
 					plane.Inverse();
 				}
@@ -282,7 +282,7 @@ namespace BSPCore
 						continue;
 					}
 					GBSPPlane	plane2	=pool.mPlanes[mOriginalSides[j].mPlaneNum];
-					p.ClipPolyEpsilon(0.0f, plane2, mOriginalSides[j].mPlaneSide == 0, cp);
+					p.ClipPolyEpsilon(0.0f, plane2, !mOriginalSides[j].mbFlipSide, cp);
 				}
 
 				GBSPSide	side	=mOriginalSides[i];

@@ -21,10 +21,7 @@ namespace BSPCore
 				gtex.mAlpha				=tex.mAlpha;
 				gtex.mDrawScaleU		=tex.mDrawScaleU;
 				gtex.mDrawScaleV		=tex.mDrawScaleV;
-				gtex.mFaceLight			=tex.mFaceLight;
 				gtex.mFlags				=tex.mFlags;
-				gtex.mMipMapBias		=1.0f;	//is this right?
-				gtex.mReflectiveScale	=tex.mReflectiveScale;
 				gtex.mShiftU			=tex.mShiftU;
 				gtex.mShiftV			=tex.mShiftV;
 				gtex.mMaterial			=tex.mMaterial;
@@ -50,9 +47,7 @@ namespace BSPCore
 				tex.mAlpha				=gtex.mAlpha;
 				tex.mDrawScaleU			=gtex.mDrawScaleU;
 				tex.mDrawScaleV			=gtex.mDrawScaleV;
-				tex.mFaceLight			=gtex.mFaceLight;
 				tex.mFlags				=gtex.mFlags;
-				tex.mReflectiveScale	=gtex.mReflectiveScale;
 				tex.mShiftU				=gtex.mShiftU;
 				tex.mShiftV				=gtex.mShiftV;
 				tex.mMaterial			=gtex.mMaterial;

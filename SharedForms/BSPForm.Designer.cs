@@ -57,8 +57,6 @@
 			this.LightGridSize = new System.Windows.Forms.NumericUpDown();
 			this.label8 = new System.Windows.Forms.Label();
 			this.MaxIntensity = new System.Windows.Forms.NumericUpDown();
-			this.label7 = new System.Windows.Forms.Label();
-			this.ReflectiveScale = new System.Windows.Forms.NumericUpDown();
 			this.label6 = new System.Windows.Forms.Label();
 			this.label5 = new System.Windows.Forms.Label();
 			this.label4 = new System.Windows.Forms.Label();
@@ -66,14 +64,11 @@
 			this.MinLightX = new System.Windows.Forms.NumericUpDown();
 			this.MinLightY = new System.Windows.Forms.NumericUpDown();
 			this.label3 = new System.Windows.Forms.Label();
-			this.PatchSize = new System.Windows.Forms.NumericUpDown();
-			this.label2 = new System.Windows.Forms.Label();
-			this.LightScale = new System.Windows.Forms.NumericUpDown();
-			this.label1 = new System.Windows.Forms.Label();
-			this.NumBounce = new System.Windows.Forms.NumericUpDown();
-			this.Radiosity = new System.Windows.Forms.CheckBox();
+			this.SurfaceLightFrequency = new System.Windows.Forms.NumericUpDown();
 			this.SeamCorrection = new System.Windows.Forms.CheckBox();
-			this.FastPatch = new System.Windows.Forms.CheckBox();
+			this.SurfaceLighting = new System.Windows.Forms.CheckBox();
+			this.SurfaceLightStrength = new System.Windows.Forms.NumericUpDown();
+			this.label1 = new System.Windows.Forms.Label();
 			this.GroupFileIO.SuspendLayout();
 			this.StatsGroupBox.SuspendLayout();
 			this.GroupBuildSettings.SuspendLayout();
@@ -82,13 +77,11 @@
 			((System.ComponentModel.ISupportInitialize)(this.NumSamples)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.LightGridSize)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaxIntensity)).BeginInit();
-			((System.ComponentModel.ISupportInitialize)(this.ReflectiveScale)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightZ)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightX)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightY)).BeginInit();
-			((System.ComponentModel.ISupportInitialize)(this.PatchSize)).BeginInit();
-			((System.ComponentModel.ISupportInitialize)(this.LightScale)).BeginInit();
-			((System.ComponentModel.ISupportInitialize)(this.NumBounce)).BeginInit();
+			((System.ComponentModel.ISupportInitialize)(this.SurfaceLightFrequency)).BeginInit();
+			((System.ComponentModel.ISupportInitialize)(this.SurfaceLightStrength)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// GroupFileIO
@@ -342,14 +335,15 @@
 			// 
 			// LightSettingsGroupBox
 			// 
+			this.LightSettingsGroupBox.Controls.Add(this.label1);
+			this.LightSettingsGroupBox.Controls.Add(this.SurfaceLightStrength);
+			this.LightSettingsGroupBox.Controls.Add(this.SurfaceLighting);
 			this.LightSettingsGroupBox.Controls.Add(this.label10);
 			this.LightSettingsGroupBox.Controls.Add(this.NumSamples);
 			this.LightSettingsGroupBox.Controls.Add(this.label9);
 			this.LightSettingsGroupBox.Controls.Add(this.LightGridSize);
 			this.LightSettingsGroupBox.Controls.Add(this.label8);
 			this.LightSettingsGroupBox.Controls.Add(this.MaxIntensity);
-			this.LightSettingsGroupBox.Controls.Add(this.label7);
-			this.LightSettingsGroupBox.Controls.Add(this.ReflectiveScale);
 			this.LightSettingsGroupBox.Controls.Add(this.label6);
 			this.LightSettingsGroupBox.Controls.Add(this.label5);
 			this.LightSettingsGroupBox.Controls.Add(this.label4);
@@ -357,17 +351,11 @@
 			this.LightSettingsGroupBox.Controls.Add(this.MinLightX);
 			this.LightSettingsGroupBox.Controls.Add(this.MinLightY);
 			this.LightSettingsGroupBox.Controls.Add(this.label3);
-			this.LightSettingsGroupBox.Controls.Add(this.PatchSize);
-			this.LightSettingsGroupBox.Controls.Add(this.label2);
-			this.LightSettingsGroupBox.Controls.Add(this.LightScale);
-			this.LightSettingsGroupBox.Controls.Add(this.label1);
-			this.LightSettingsGroupBox.Controls.Add(this.NumBounce);
-			this.LightSettingsGroupBox.Controls.Add(this.Radiosity);
+			this.LightSettingsGroupBox.Controls.Add(this.SurfaceLightFrequency);
 			this.LightSettingsGroupBox.Controls.Add(this.SeamCorrection);
-			this.LightSettingsGroupBox.Controls.Add(this.FastPatch);
 			this.LightSettingsGroupBox.Location = new System.Drawing.Point(12, 181);
 			this.LightSettingsGroupBox.Name = "LightSettingsGroupBox";
-			this.LightSettingsGroupBox.Size = new System.Drawing.Size(381, 154);
+			this.LightSettingsGroupBox.Size = new System.Drawing.Size(371, 132);
 			this.LightSettingsGroupBox.TabIndex = 32;
 			this.LightSettingsGroupBox.TabStop = false;
 			this.LightSettingsGroupBox.Text = "Light Settings";
@@ -375,7 +363,7 @@
 			// label10
 			// 
 			this.label10.AutoSize = true;
-			this.label10.Location = new System.Drawing.Point(308, 124);
+			this.label10.Location = new System.Drawing.Point(167, 73);
 			this.label10.Name = "label10";
 			this.label10.Size = new System.Drawing.Size(47, 13);
 			this.label10.TabIndex = 39;
@@ -383,7 +371,7 @@
 			// 
 			// NumSamples
 			// 
-			this.NumSamples.Location = new System.Drawing.Point(257, 122);
+			this.NumSamples.Location = new System.Drawing.Point(116, 71);
 			this.NumSamples.Maximum = new decimal(new int[] {
             9,
             0,
@@ -406,7 +394,7 @@
 			// label9
 			// 
 			this.label9.AutoSize = true;
-			this.label9.Location = new System.Drawing.Point(308, 20);
+			this.label9.Location = new System.Drawing.Point(293, 21);
 			this.label9.Name = "label9";
 			this.label9.Size = new System.Drawing.Size(68, 13);
 			this.label9.TabIndex = 37;
@@ -414,7 +402,7 @@
 			// 
 			// LightGridSize
 			// 
-			this.LightGridSize.Location = new System.Drawing.Point(257, 18);
+			this.LightGridSize.Location = new System.Drawing.Point(242, 19);
 			this.LightGridSize.Maximum = new decimal(new int[] {
             256,
             0,
@@ -437,7 +425,7 @@
 			// label8
 			// 
 			this.label8.AutoSize = true;
-			this.label8.Location = new System.Drawing.Point(180, 125);
+			this.label8.Location = new System.Drawing.Point(167, 99);
 			this.label8.Name = "label8";
 			this.label8.Size = new System.Drawing.Size(69, 13);
 			this.label8.TabIndex = 35;
@@ -445,7 +433,7 @@
 			// 
 			// MaxIntensity
 			// 
-			this.MaxIntensity.Location = new System.Drawing.Point(129, 123);
+			this.MaxIntensity.Location = new System.Drawing.Point(116, 97);
 			this.MaxIntensity.Maximum = new decimal(new int[] {
             255,
             0,
@@ -465,47 +453,10 @@
             0,
             0});
 			// 
-			// label7
-			// 
-			this.label7.AutoSize = true;
-			this.label7.Location = new System.Drawing.Point(180, 99);
-			this.label7.Name = "label7";
-			this.label7.Size = new System.Drawing.Size(63, 13);
-			this.label7.TabIndex = 28;
-			this.label7.Text = "Surf Reflect";
-			// 
-			// ReflectiveScale
-			// 
-			this.ReflectiveScale.DecimalPlaces = 2;
-			this.ReflectiveScale.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            131072});
-			this.ReflectiveScale.Location = new System.Drawing.Point(129, 97);
-			this.ReflectiveScale.Maximum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-			this.ReflectiveScale.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            131072});
-			this.ReflectiveScale.Name = "ReflectiveScale";
-			this.ReflectiveScale.Size = new System.Drawing.Size(45, 20);
-			this.ReflectiveScale.TabIndex = 28;
-			this.ReflectiveScale.Value = new decimal(new int[] {
-            25,
-            0,
-            0,
-            131072});
-			// 
 			// label6
 			// 
 			this.label6.AutoSize = true;
-			this.label6.Location = new System.Drawing.Point(308, 98);
+			this.label6.Location = new System.Drawing.Point(293, 99);
 			this.label6.Name = "label6";
 			this.label6.Size = new System.Drawing.Size(60, 13);
 			this.label6.TabIndex = 33;
@@ -514,7 +465,7 @@
 			// label5
 			// 
 			this.label5.AutoSize = true;
-			this.label5.Location = new System.Drawing.Point(308, 72);
+			this.label5.Location = new System.Drawing.Point(293, 73);
 			this.label5.Name = "label5";
 			this.label5.Size = new System.Drawing.Size(61, 13);
 			this.label5.TabIndex = 32;
@@ -523,7 +474,7 @@
 			// label4
 			// 
 			this.label4.AutoSize = true;
-			this.label4.Location = new System.Drawing.Point(308, 46);
+			this.label4.Location = new System.Drawing.Point(293, 47);
 			this.label4.Name = "label4";
 			this.label4.Size = new System.Drawing.Size(61, 13);
 			this.label4.TabIndex = 31;
@@ -531,7 +482,7 @@
 			// 
 			// MinLightZ
 			// 
-			this.MinLightZ.Location = new System.Drawing.Point(257, 96);
+			this.MinLightZ.Location = new System.Drawing.Point(242, 97);
 			this.MinLightZ.Maximum = new decimal(new int[] {
             255,
             0,
@@ -543,7 +494,7 @@
 			// 
 			// MinLightX
 			// 
-			this.MinLightX.Location = new System.Drawing.Point(257, 44);
+			this.MinLightX.Location = new System.Drawing.Point(242, 45);
 			this.MinLightX.Maximum = new decimal(new int[] {
             255,
             0,
@@ -555,7 +506,7 @@
 			// 
 			// MinLightY
 			// 
-			this.MinLightY.Location = new System.Drawing.Point(257, 70);
+			this.MinLightY.Location = new System.Drawing.Point(242, 71);
 			this.MinLightY.Maximum = new decimal(new int[] {
             255,
             0,
@@ -568,62 +519,82 @@
 			// label3
 			// 
 			this.label3.AutoSize = true;
-			this.label3.Location = new System.Drawing.Point(180, 23);
+			this.label3.Location = new System.Drawing.Point(167, 21);
 			this.label3.Name = "label3";
-			this.label3.Size = new System.Drawing.Size(58, 13);
+			this.label3.Size = new System.Drawing.Size(50, 13);
 			this.label3.TabIndex = 9;
-			this.label3.Text = "Patch Size";
+			this.label3.Text = "Surf Freq";
 			// 
-			// PatchSize
+			// SurfaceLightFrequency
 			// 
-			this.PatchSize.Location = new System.Drawing.Point(129, 19);
-			this.PatchSize.Maximum = new decimal(new int[] {
+			this.SurfaceLightFrequency.Increment = new decimal(new int[] {
+            4,
+            0,
+            0,
+            0});
+			this.SurfaceLightFrequency.Location = new System.Drawing.Point(116, 19);
+			this.SurfaceLightFrequency.Maximum = new decimal(new int[] {
             256,
             0,
             0,
             0});
-			this.PatchSize.Minimum = new decimal(new int[] {
-            1,
+			this.SurfaceLightFrequency.Minimum = new decimal(new int[] {
+            4,
             0,
             0,
             0});
-			this.PatchSize.Name = "PatchSize";
-			this.PatchSize.Size = new System.Drawing.Size(45, 20);
-			this.PatchSize.TabIndex = 8;
-			this.PatchSize.Value = new decimal(new int[] {
-            64,
+			this.SurfaceLightFrequency.Name = "SurfaceLightFrequency";
+			this.SurfaceLightFrequency.Size = new System.Drawing.Size(45, 20);
+			this.SurfaceLightFrequency.TabIndex = 8;
+			this.SurfaceLightFrequency.Value = new decimal(new int[] {
+            20,
             0,
             0,
             0});
 			// 
-			// label2
+			// SeamCorrection
 			// 
-			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(180, 73);
-			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(60, 13);
-			this.label2.TabIndex = 7;
-			this.label2.Text = "Light Scale";
+			this.SeamCorrection.AutoSize = true;
+			this.SeamCorrection.Checked = true;
+			this.SeamCorrection.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.SeamCorrection.Location = new System.Drawing.Point(6, 20);
+			this.SeamCorrection.Name = "SeamCorrection";
+			this.SeamCorrection.Size = new System.Drawing.Size(104, 17);
+			this.SeamCorrection.TabIndex = 1;
+			this.SeamCorrection.Text = "Seam Correction";
+			this.SeamCorrection.UseVisualStyleBackColor = true;
 			// 
-			// LightScale
+			// SurfaceLighting
 			// 
-			this.LightScale.DecimalPlaces = 2;
-			this.LightScale.Increment = new decimal(new int[] {
-            1,
+			this.SurfaceLighting.AutoSize = true;
+			this.SurfaceLighting.Checked = true;
+			this.SurfaceLighting.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.SurfaceLighting.Location = new System.Drawing.Point(6, 43);
+			this.SurfaceLighting.Name = "SurfaceLighting";
+			this.SurfaceLighting.Size = new System.Drawing.Size(103, 17);
+			this.SurfaceLighting.TabIndex = 40;
+			this.SurfaceLighting.Text = "Surface Lighting";
+			this.SurfaceLighting.UseVisualStyleBackColor = true;
+			this.SurfaceLighting.CheckedChanged += new System.EventHandler(this.OnSurfaceLighting);
+			// 
+			// SurfaceLightStrength
+			// 
+			this.SurfaceLightStrength.Location = new System.Drawing.Point(116, 45);
+			this.SurfaceLightStrength.Maximum = new decimal(new int[] {
+            2048,
             0,
             0,
-            131072});
-			this.LightScale.Location = new System.Drawing.Point(129, 71);
-			this.LightScale.Minimum = new decimal(new int[] {
-            1,
+            0});
+			this.SurfaceLightStrength.Minimum = new decimal(new int[] {
+            4,
             0,
             0,
-            131072});
-			this.LightScale.Name = "LightScale";
-			this.LightScale.Size = new System.Drawing.Size(45, 20);
-			this.LightScale.TabIndex = 6;
-			this.LightScale.Value = new decimal(new int[] {
-            1,
+            0});
+			this.SurfaceLightStrength.Name = "SurfaceLightStrength";
+			this.SurfaceLightStrength.Size = new System.Drawing.Size(45, 20);
+			this.SurfaceLightStrength.TabIndex = 41;
+			this.SurfaceLightStrength.Value = new decimal(new int[] {
+            20,
             0,
             0,
             0});
@@ -631,64 +602,17 @@
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(180, 48);
+			this.label1.Location = new System.Drawing.Point(167, 47);
 			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(49, 13);
-			this.label1.TabIndex = 5;
-			this.label1.Text = "Bounces";
-			// 
-			// NumBounce
-			// 
-			this.NumBounce.Location = new System.Drawing.Point(129, 45);
-			this.NumBounce.Maximum = new decimal(new int[] {
-            20,
-            0,
-            0,
-            0});
-			this.NumBounce.Name = "NumBounce";
-			this.NumBounce.Size = new System.Drawing.Size(45, 20);
-			this.NumBounce.TabIndex = 4;
-			// 
-			// Radiosity
-			// 
-			this.Radiosity.AutoSize = true;
-			this.Radiosity.Checked = true;
-			this.Radiosity.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.Radiosity.Location = new System.Drawing.Point(6, 42);
-			this.Radiosity.Name = "Radiosity";
-			this.Radiosity.Size = new System.Drawing.Size(69, 17);
-			this.Radiosity.TabIndex = 2;
-			this.Radiosity.Text = "Radiosity";
-			this.Radiosity.UseVisualStyleBackColor = true;
-			this.Radiosity.CheckedChanged += new System.EventHandler(this.OnRadiosityChanged);
-			// 
-			// SeamCorrection
-			// 
-			this.SeamCorrection.AutoSize = true;
-			this.SeamCorrection.Checked = true;
-			this.SeamCorrection.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.SeamCorrection.Location = new System.Drawing.Point(6, 19);
-			this.SeamCorrection.Name = "SeamCorrection";
-			this.SeamCorrection.Size = new System.Drawing.Size(104, 17);
-			this.SeamCorrection.TabIndex = 1;
-			this.SeamCorrection.Text = "Seam Correction";
-			this.SeamCorrection.UseVisualStyleBackColor = true;
-			// 
-			// FastPatch
-			// 
-			this.FastPatch.AutoSize = true;
-			this.FastPatch.Location = new System.Drawing.Point(6, 65);
-			this.FastPatch.Name = "FastPatch";
-			this.FastPatch.Size = new System.Drawing.Size(77, 17);
-			this.FastPatch.TabIndex = 0;
-			this.FastPatch.Text = "Fast Patch";
-			this.FastPatch.UseVisualStyleBackColor = true;
+			this.label1.Size = new System.Drawing.Size(69, 13);
+			this.label1.TabIndex = 42;
+			this.label1.Text = "Surf Strength";
 			// 
 			// BSPForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(404, 345);
+			this.ClientSize = new System.Drawing.Size(394, 323);
 			this.ControlBox = false;
 			this.Controls.Add(this.LightSettingsGroupBox);
 			this.Controls.Add(this.GroupBuildSettings);
@@ -707,13 +631,11 @@
 			((System.ComponentModel.ISupportInitialize)(this.NumSamples)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.LightGridSize)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaxIntensity)).EndInit();
-			((System.ComponentModel.ISupportInitialize)(this.ReflectiveScale)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightZ)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightX)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightY)).EndInit();
-			((System.ComponentModel.ISupportInitialize)(this.PatchSize)).EndInit();
-			((System.ComponentModel.ISupportInitialize)(this.LightScale)).EndInit();
-			((System.ComponentModel.ISupportInitialize)(this.NumBounce)).EndInit();
+			((System.ComponentModel.ISupportInitialize)(this.SurfaceLightFrequency)).EndInit();
+			((System.ComponentModel.ISupportInitialize)(this.SurfaceLightStrength)).EndInit();
 			this.ResumeLayout(false);
 
 		}
@@ -745,8 +667,6 @@
 		private System.Windows.Forms.NumericUpDown LightGridSize;
 		private System.Windows.Forms.Label label8;
 		private System.Windows.Forms.NumericUpDown MaxIntensity;
-		private System.Windows.Forms.Label label7;
-		private System.Windows.Forms.NumericUpDown ReflectiveScale;
 		private System.Windows.Forms.Label label6;
 		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.Label label4;
@@ -754,17 +674,14 @@
 		private System.Windows.Forms.NumericUpDown MinLightX;
 		private System.Windows.Forms.NumericUpDown MinLightY;
 		private System.Windows.Forms.Label label3;
-		private System.Windows.Forms.NumericUpDown PatchSize;
-		private System.Windows.Forms.Label label2;
-		private System.Windows.Forms.NumericUpDown LightScale;
-		private System.Windows.Forms.Label label1;
-		private System.Windows.Forms.NumericUpDown NumBounce;
-		private System.Windows.Forms.CheckBox Radiosity;
+		private System.Windows.Forms.NumericUpDown SurfaceLightFrequency;
 		private System.Windows.Forms.CheckBox SeamCorrection;
-		private System.Windows.Forms.CheckBox FastPatch;
 		private System.Windows.Forms.Label label10;
 		private System.Windows.Forms.NumericUpDown NumSamples;
 		private System.Windows.Forms.NumericUpDown MaxThreads;
 		private System.Windows.Forms.Label label11;
+		private System.Windows.Forms.CheckBox SurfaceLighting;
+		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.NumericUpDown SurfaceLightStrength;
 	}
 }

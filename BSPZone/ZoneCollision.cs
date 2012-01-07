@@ -361,7 +361,7 @@ namespace BSPZone
 
 			p.mType	=ZonePlane.PLANE_ANY;
 			
-			if(mZoneLeafSides[RSide].mPlaneSide != 0)
+			if(mZoneLeafSides[RSide].mbFlipSide)
 			{
 				p.Inverse();
 			}
@@ -445,7 +445,7 @@ namespace BSPZone
 				ZonePlane	p	=mZonePlanes[mZoneLeafSides[i + f].mPlaneNum];
 				p.mType			=ZonePlane.PLANE_ANY;
 			
-				if(mZoneLeafSides[i + f].mPlaneSide != 0)
+				if(mZoneLeafSides[i + f].mbFlipSide)
 				{
 					p.Inverse();
 				}

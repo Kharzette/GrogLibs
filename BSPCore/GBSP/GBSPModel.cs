@@ -149,6 +149,8 @@ namespace BSPCore
 		}
 
 
+		//carves a set of brushes into a cube
+		//and then makes a tree node from them
 		internal GBSPNode ProcessBlock(List<GBSPBrush> brushes, PlanePool pp,
 			int xblock, int zblock, bool bVerbose, ClipPools cp)
 		{

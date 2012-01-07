@@ -50,7 +50,27 @@ namespace BSPZone
 		}
 
 
-		internal bool GetInt(string key, out int val)
+		public string GetTarget()
+		{
+			if(!mData.ContainsKey("target"))
+			{
+				return	"";
+			}
+			return	mData["target"];
+		}
+
+
+		public string GetTargetName()
+		{
+			if(!mData.ContainsKey("targetname"))
+			{
+				return	"";
+			}
+			return	mData["targetname"];
+		}
+
+
+		public bool GetInt(string key, out int val)
 		{
 			val	=0;
 			if(!mData.ContainsKey(key))

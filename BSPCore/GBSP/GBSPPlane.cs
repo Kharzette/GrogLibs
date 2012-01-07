@@ -67,8 +67,6 @@ namespace BSPCore
 			}
 			if(i >= verts.Length)
 			{
-				//need a talky flag
-				//in some cases this isn't worthy of a warning
 				CoreEvents.Print("Face with no normal!");
 				mNormal	=Vector3.UnitX;
 				mDist	=0.0f;
@@ -137,18 +135,18 @@ namespace BSPCore
 		}
 
 
-		internal void Side(out sbyte side)
+		internal void Side(out bool side)
 		{
 			mType	=GetPlaneType(mNormal);
 
-			side	=0;
+			side	=false;
 
 			UInt32	type	=mType % PLANE_ANYX;
 
 			if(UtilityLib.Mathery.VecIdx(mNormal, type) < 0)
 			{
 				Inverse();
-				side	=1;
+				side	=true;
 			}
 		}
 
@@ -176,10 +174,76 @@ namespace BSPCore
 		}
 
 
-		//negative planes were messing up
-		internal float DistanceFast(Vector3 pos)
+		internal float Distance(Vector3 pos)
 		{
 			return	Vector3.Dot(pos, mNormal) - mDist;
+		}
+
+
+		public static bool TextureAxisFromPlane(GBSPPlane pln, out Vector3 xv, out Vector3 yv)
+		{
+			Int32	bestAxis;
+			float	dot, best;
+			
+			best		=0.0f;
+			bestAxis	=-1;
+
+			xv	=Vector3.Zero;
+			yv	=Vector3.Zero;
+			
+			for(int i=0;i < 3;i++)
+			{
+				dot	=Math.Abs(UtilityLib.Mathery.VecIdx(pln.mNormal, i));
+				if(dot > best)
+				{
+					best		=dot;
+					bestAxis	=i;
+				}
+			}
+
+			//note that this is set up for quake 1 texcoords
+			//hammer is different TODO: make switchable
+			switch(bestAxis)
+			{
+				case 0:						// X
+					xv.X	=0.0f;
+					xv.Y	=0.0f;
+					xv.Z	=1.0f;
+
+					yv.X	=0.0f;
+					yv.Y	=-1.0f;
+					yv.Z	=0.0f;
+					break;
+				case 1:						// Y
+					xv.X	=-1.0f;
+					xv.Y	=0.0f;
+					xv.Z	=0.0f;
+
+					yv.X	=0.0f;
+					yv.Y	=0.0f;
+					yv.Z	=-1.0f;
+					break;
+				case 2:						// Z
+					xv.X	=-1.0f;
+					xv.Y	=0.0f;
+					xv.Z	=0.0f;
+
+					yv.X	=0.0f;
+					yv.Y	=-1.0f;
+					yv.Z	=0.0f;
+					break;
+				default:
+					xv.X	=0.0f;
+					xv.Y	=0.0f;
+					xv.Z	=1.0f;
+
+					yv.X	=0.0f;
+					yv.Y	=-1.0f;
+					yv.Z	=0.0f;
+					CoreEvents.Print("GetTextureAxis: No Axis found.");
+					return false;
+			}
+			return	true;
 		}
 
 

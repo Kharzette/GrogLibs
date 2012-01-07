@@ -7,7 +7,7 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BSPCore32</RootNamespace>
+    <RootNamespace>BSPCore</RootNamespace>
     <AssemblyName>BSPCore32</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
@@ -96,12 +96,12 @@
     <Compile Include="Bounds.cs" />
     <Compile Include="BuildParams.cs" />
     <Compile Include="ClipPools.cs" />
-    <Compile Include="Constants.cs" />
     <Compile Include="Contents.cs" />
     <Compile Include="CoreDelegates.cs" />
     <Compile Include="CoreEvents.cs" />
     <Compile Include="FaceFixer.cs" />
     <Compile Include="GBSP\GBSPBrush.cs" />
+    <Compile Include="GBSP\GBSPBrushList.cs" />
     <Compile Include="GBSP\GBSPFace.cs" />
     <Compile Include="GBSP\GBSPModel.cs" />
     <Compile Include="GBSP\GBSPNode.cs" />
@@ -126,10 +126,6 @@
     <Compile Include="Light\FInfo.cs" />
     <Compile Include="Light\LInfo.cs" />
     <Compile Include="Light\MapLight.cs" />
-    <Compile Include="Light\PlaneFace.cs" />
-    <Compile Include="Light\RADPatch.cs" />
-    <Compile Include="Light\RADReceiver.cs" />
-    <Compile Include="Light\TriPatch.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MapBrush.cs" />
     <Compile Include="MapEntity.cs" />

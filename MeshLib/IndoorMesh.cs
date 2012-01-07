@@ -32,6 +32,7 @@ namespace MeshLib
 		//lightmap animation stuff
 		Dictionary<int, string>	mStyles			=new Dictionary<int, string>();
 		Dictionary<int, float>	mCurStylePos	=new Dictionary<int, float>();
+		bool					[]mSwitches		=new bool[32];	//switchable on / off
 
 		//material draw stuff
 		//drawcalls for sorted alphas
@@ -434,15 +435,16 @@ namespace MeshLib
 
 				ratio	/=ThirtyFPS;
 
-				if(i == 11)
-				{
-					intensities	+="" + MathHelper.Lerp(val, nextVal, ratio);
-				}
-				else
-				{
-					intensities	+="" + MathHelper.Lerp(val, nextVal, ratio) + " ";
-				}
+				intensities	+="" + MathHelper.Lerp(val, nextVal, ratio) + " ";
 			}
+
+			//switchable lights
+			for(int i=0;i < 32;i++)
+			{
+				intensities	+="" + ((mSwitches[i])? 1.0f : 0.0f) + " ";
+			}
+
+			intensities	=intensities.TrimEnd(' ');
 
 			foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
 			{
@@ -557,6 +559,13 @@ namespace MeshLib
 		}
 
 
+		public void SwitchLight(int lightIndex, bool bOn)
+		{
+			mSwitches[lightIndex - 32]	=bOn;
+		}
+
+
+		#region IO
 		public void Read(GraphicsDevice g, string fileName, bool bEditor)
 		{
 			Stream			file	=null;
@@ -765,5 +774,6 @@ namespace MeshLib
 			bw.Close();
 			file.Close();
 		}
+		#endregion
 	}
 }

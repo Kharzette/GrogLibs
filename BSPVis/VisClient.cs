@@ -20,7 +20,7 @@ namespace BSPVis
 	public interface IMapVis
 	{
 		[OperationContract]
-		bool	BeginFloodPortalsSlow(object visState);
+		bool	PortalFlow(object visState);
 
 		[OperationContract]
 		byte	[]IsFinished(object visState);
@@ -78,9 +78,9 @@ namespace BSPVis
 			mEndPointURI	=remoteAddress.ToString();
 		}
 
-		public bool BeginFloodPortalsSlow(object visState)
+		public bool PortalFlow(object visState)
 		{
-			return	base.Channel.BeginFloodPortalsSlow(visState);
+			return	base.Channel.PortalFlow(visState);
 		}
 
 		public bool HasPortals(object visState)

@@ -12,7 +12,7 @@ namespace BSPZone
 		public Int32	mFirstVert;
 		public Int32	mNumVerts;
 		public Int32	mPlaneNum;
-		public Int32	mPlaneSide;
+		public bool		mbFlipSide;
 		public Int32	mTexInfo;
 		public Int32	mLightOfs;
 		public Int32	mLWidth;
@@ -24,7 +24,7 @@ namespace BSPZone
 			bw.Write(mFirstVert);
 			bw.Write(mNumVerts);
 			bw.Write(mPlaneNum);
-			bw.Write(mPlaneSide);
+			bw.Write(mbFlipSide);
 			bw.Write(mTexInfo);
 			bw.Write(mLightOfs);
 			bw.Write(mLWidth);
@@ -40,7 +40,7 @@ namespace BSPZone
 			mFirstVert	=br.ReadInt32();
 			mNumVerts	=br.ReadInt32();
 			mPlaneNum	=br.ReadInt32();
-			mPlaneSide	=br.ReadInt32();
+			mbFlipSide	=br.ReadBoolean();
 			mTexInfo	=br.ReadInt32();
 			mLightOfs	=br.ReadInt32();
 			mLWidth		=br.ReadInt32();

@@ -27,7 +27,7 @@ namespace BSPCore
 		GBSPNode		mFront, mBack;					//Front and back child
 		GBSPNode		mParent;						//Parent of this node
 		Bounds			mBounds	=new Bounds();			//Current BBox of node
-		GBSPBrush		mVolume;
+		GBSPBrush		mVolume;						//chopped up cube used during the bsp build
 
 		//Info for this node as a leaf
 		List<GBSPPortal>	mPortals	=new List<GBSPPortal>();//Portals on this leaf
@@ -36,8 +36,8 @@ namespace BSPCore
 		Int32				mEntity;							//1 if entity touching leaf
 		Int32				mPortalLeafNum;						//For portal saving
 
-		bool	mbDetail;
-		Int32	mCluster;
+		bool	mbDetail;	//from a detail brush
+		Int32	mCluster;	//vis cluster
 		Int32	mArea;		//Area number, 0 == invalid area
 
 		GBSPSide		mSide;
@@ -93,7 +93,11 @@ namespace BSPCore
 			}
 		}
 
-		static internal GBSPNode BlockTree(Array blockNodes, PlanePool pp, int xMin, int zMin, int xl, int zl, int xh, int zh)
+
+		//this is pretty much straight out of Q2, just 
+		//modified for coordinate system changes
+		static internal GBSPNode BlockTree(Array blockNodes, PlanePool pp,
+			int xMin, int zMin, int xl, int zl, int xh, int zh)
 		{
 			if(xl == xh && zl == zh)
 			{
@@ -117,8 +121,8 @@ namespace BSPCore
 				p.mNormal	=Vector3.UnitX;
 				p.mDist		=mid * 1024;
 
-				sbyte	side;
-				n.mPlaneNum		=pp.FindPlane(p, out side);
+				bool	side;
+				n.mPlaneNum	=pp.FindPlane(p, out side);
 				n.mFront	=BlockTree(blockNodes, pp, xMin, zMin, mid, zl, xh, zh);
 				n.mBack		=BlockTree(blockNodes, pp, xMin, zMin, xl, zl, mid - 1, zh);
 			}
@@ -128,8 +132,8 @@ namespace BSPCore
 				p.mNormal	=Vector3.UnitZ;
 				p.mDist		=mid * 1024;
 
-				sbyte	side;
-				n.mPlaneNum		=pp.FindPlane(p, out side);
+				bool	side;
+				n.mPlaneNum	=pp.FindPlane(p, out side);
 				n.mFront	=BlockTree(blockNodes, pp, xMin, zMin, xl, mid, xh, zh);
 				n.mBack		=BlockTree(blockNodes, pp, xMin, zMin, xl, zl, xh, mid - 1);
 			}
@@ -161,7 +165,7 @@ namespace BSPCore
 		{
 			GBSPBrush	front, back;
 
-			mVolume.Split(planeNum, 0, 0, true, pp, out front, out back, false, cp);
+			mVolume.Split(planeNum, false, 0, true, pp, out front, out back, false, cp);
 
 			return	(front != null && back != null);
 		}
@@ -215,7 +219,7 @@ namespace BSPCore
 			mBack	=new GBSPNode();
 			mFront.mParent	=mBack.mParent	=this;
 
-			mVolume.Split(mPlaneNum, 0, 0, true, pool, out mFront.mVolume, out mBack.mVolume, false, cp);
+			mVolume.Split(mPlaneNum, false, 0, true, pool, out mFront.mVolume, out mBack.mVolume, false, cp);
 
 			//Recursively process children
 			mFront.BuildTree_r(bs, childrenFront, pool, cp);
@@ -255,66 +259,6 @@ namespace BSPCore
 
 			mFront.GetLeafTriangles(verts, indexes, bCheckFlags);
 			mBack.GetLeafTriangles(verts, indexes, bCheckFlags);
-		}
-
-
-		bool CreatePortalOnNode(PlanePool pool, ClipPools cp)
-		{
-			GBSPPoly	poly	=new GBSPPoly(pool.mPlanes[mPlaneNum]);
-			if(poly == null)
-			{
-				CoreEvents.Print("CreatePolyOnNode:  Could not create poly.\n");
-				return	false;
-			}
-
-			//clip by parents
-			GBSPNode	node	=this;
-			for(GBSPNode parent = mParent;parent != null && !poly.IsTiny();)
-			{
-				bool	bSide;
-
-				GBSPPlane	plane	=pool.mPlanes[parent.mPlaneNum];
-
-				bSide	=(parent.mFront == node)? false : true;
-
-				if(!poly.ClipPolyEpsilon(0.001f, plane, bSide, cp))
-				{
-					return	false;
-				}
-
-				node	=parent;
-				parent	=parent.mParent;
-			}
-
-			//clip by portals on the node
-			foreach(GBSPPortal port in mPortals)
-			{
-				bool	bFlipSide	=(port.mFrontNode != this);
-
-				if(poly.IsTiny())
-				{
-					break;
-				}
-
-				poly.ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, port.mPlane, bFlipSide, cp);
-			}
-
-			if(poly.IsTiny())
-			{
-				return	false;
-			}
-
-			GBSPPortal	newPortal	=new GBSPPortal();
-			newPortal.mPlane		=pool.mPlanes[mPlaneNum];
-			newPortal.mOnNode		=this;
-			newPortal.mPoly			=poly;
-
-			newPortal.mFrontNode	=mFront;
-			newPortal.mBackNode		=mBack;
-			mFront.mPortals.Add(newPortal);
-			mBack.mPortals.Add(newPortal);
-
-			return	true;
 		}
 
 
@@ -420,8 +364,6 @@ namespace BSPCore
 		}
 
 
-//		internal static List<GBSPFace>	dumpFaces	=new List<GBSPFace>();
-
 		void MakeFaces_r(PlanePool pool, ref int numMerged, ref int numMake)
 		{
 			//Recurse down to leafs
@@ -433,9 +375,7 @@ namespace BSPCore
 				//Marge list (keepin that typo, funny)
 				GBSPFace.MergeFaceList(mFaces, pool, ref numMerged);
 
-				//Subdivide them for lightmaps
-				//using big atlas'd lightmaps now, no need to subdiv
-				//SubdivideNodeFaces(tip, ref NumSubdivided);
+				//genesis subdivides here, but I atlas and use large lightmaps
 				return;
 			}
 
@@ -446,13 +386,13 @@ namespace BSPCore
 			}
 
 			//See which portals are valid
-			Int32	side;
+			bool	side;
 			foreach(GBSPPortal p in mPortals)
 			{
-				side	=(p.mBackNode == this)? 1 : 0;
+				side	=(p.mBackNode == this);
 
 				GBSPFace	newFace;
-				if(side == 0)
+				if(!side)
 				{
 					p.mFrontFace	=p.FaceFromPortal(side);
 					newFace			=p.mFrontFace;
@@ -469,7 +409,7 @@ namespace BSPCore
 					newFace.SetContents(0, mContents);
 
 					//Back side contents is the leaf on the other side of this portal
-					if(side == 0)
+					if(!side)
 					{
 						newFace.SetContents(1, p.mBackNode.mContents);
 					}
@@ -575,7 +515,6 @@ namespace BSPCore
 							CoreEvents.Print("!Node.mFaces with children\n");
 						}
 
-						// FIXME: free stuff
 						mPlaneNum	=PlanePool.PLANENUM_LEAF;
 						mContents	=mFront.mContents;
 						mContents	|=mBack.mContents;
@@ -983,6 +922,208 @@ namespace BSPCore
 		internal int GetOriginalEntityNum()
 		{
 			return	GBSPBrush.GetOriginalEntityNum(mBrushList);
+		}
+
+
+		internal bool CreateLeafSides(PlanePool pool, List<GFXLeafSide> leafSides,
+			GBSPNode outsideNode, bool bVerbose)
+		{
+			if(bVerbose)
+			{
+				CoreEvents.Print(" --- Create Leaf Sides --- \n");
+			}
+
+			int	numLeafBevels	=0;
+			
+			if(!CreateLeafSides_r(pool, ref numLeafBevels, leafSides, outsideNode))
+			{
+				return	false;
+			}
+
+			if(bVerbose)
+			{
+				CoreEvents.Print("Num Leaf Sides       : " + leafSides.Count + "\n");
+				CoreEvents.Print("Num Leaf Bevels      : " + numLeafBevels + "\n");
+			}
+			return	true;
+		}
+
+
+		bool CreateLeafSides_r(PlanePool pool, ref int numLeafBevels,
+			List<GFXLeafSide> leafSides, GBSPNode outsideNode)
+		{
+			mFirstSide	=-1;
+			mNumSides	=0;
+
+			//At a leaf, convert portals to leaf sides...
+			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
+			{
+				//Don't convert empty leafs
+				if((mContents & Contents.BSP_CONTENTS_SOLID_CLIP) == 0)
+				{
+					return	true;
+				}
+
+				if(mPortals == null)
+				{
+					CoreEvents.Print("*WARNING* CreateLeafSides:  Contents leaf with no portals!\n");
+					return	true;
+				}
+
+				//Reset number of sides for this solid leaf (should we save out other contents?)
+				//	(this is just for a collision hull for now...)
+				int	CNumLeafSides	=0;
+
+				List<Int32>	LPlaneNumbers	=new List<int>();
+				List<bool>	LPlaneSides		=new List<bool>();
+
+				foreach(GBSPPortal port in mPortals)
+				{
+					GBSPPlane	portPlane	=port.mPlane;
+
+					int	numPlanes	=pool.mPlanes.Count;
+
+					bool	portSide;
+					int		portPlaneNum	=pool.FindPlane(portPlane, out portSide);
+
+					bool	actualSide	=(port.mFrontNode == this);
+
+					if(portSide)
+					{
+						actualSide	=!actualSide;
+					}
+
+					//make sure we aren't adding new planes at this late stage
+					//unless the outside node is involved
+					if(port.mBackNode != outsideNode)
+					{
+						Debug.Assert(numPlanes == pool.mPlanes.Count);
+					}
+
+					int	i;
+					for(i=0;i < CNumLeafSides;i++)
+					{
+						if(LPlaneNumbers[i] == portPlaneNum
+							&& LPlaneSides[i] == actualSide)
+						{
+							break;
+						}
+					}
+
+					if(i >= CNumLeafSides)
+					{
+						LPlaneNumbers.Add(portPlaneNum);
+						LPlaneSides.Add(actualSide);
+						CNumLeafSides++;
+					}
+				}
+				
+				if(!FinishLeafSides(pool, ref CNumLeafSides,
+					LPlaneSides, LPlaneNumbers,
+					ref numLeafBevels, leafSides))
+				{
+					return	false;
+				}
+
+				return	true;
+			}
+
+			if(!mFront.CreateLeafSides_r(pool, ref numLeafBevels, leafSides, outsideNode))
+			{
+				return	false;
+			}
+			if(!mBack.CreateLeafSides_r(pool, ref numLeafBevels, leafSides, outsideNode))
+			{
+				return	false;
+			}
+
+			return	true;
+		}
+
+
+		bool FinishLeafSides(PlanePool pool, ref int cNumLeafSides,
+			List<bool> LPlaneSides, List<int> LPlaneNumbers,
+			ref int numLeafBevels, List<GFXLeafSide> leafSides)
+		{
+			Bounds		bnd;
+
+			if(!GetLeafBBoxFromPortals(out bnd))
+			{
+				CoreEvents.Print("FinishLeafSides:  Could not get leaf portal BBox.\n");
+				return	false;
+			}
+			
+			if(cNumLeafSides < 4)
+			{
+				CoreEvents.Print("*WARNING*  FinishLeafSides:  Incomplete leaf volume.\n");
+			}
+			else
+			{
+				//Add any bevel planes to the sides so we can expand them for axial box collisions
+				for(int Axis=0;Axis < 3;Axis++)
+				{
+					for(int Dir=-1;Dir <= 1;Dir += 2)
+					{
+						//See if the plane is allready in the sides
+						int	i;
+						GBSPPlane	plane	=new GBSPPlane();
+						for(i=0;i < cNumLeafSides;i++)
+						{
+							plane	=pool.mPlanes[LPlaneNumbers[i]];
+								
+							if(LPlaneSides[i])
+							{
+								plane.Inverse();
+							}
+							if(UtilityLib.Mathery.VecIdx(plane.mNormal, Axis) == Dir)
+							{
+								break;
+							}
+						}
+						if(i >= cNumLeafSides)
+						{
+							//Add a new axial aligned side
+							plane.mNormal	=Vector3.Zero;
+
+							UtilityLib.Mathery.VecIdxAssign(ref plane.mNormal, Axis, Dir);
+
+							//get the mins/maxs from the gbsp brush
+							if(Dir == 1)
+							{
+								plane.mDist	=UtilityLib.Mathery.VecIdx(bnd.mMaxs, Axis);
+							}
+							else
+							{
+								plane.mDist	=-UtilityLib.Mathery.VecIdx(bnd.mMins, Axis);
+							}
+
+							bool	side;
+							LPlaneNumbers.Add(pool.FindPlane(plane, out side));
+							LPlaneSides.Add(side);
+							
+							if(LPlaneNumbers[i] == -1)
+							{
+								CoreEvents.Print("FinishLeafSides:  Could not create the plane.\n");
+								return	false;
+							}
+
+							cNumLeafSides++;							
+							numLeafBevels++;
+						}
+					}
+				}
+			}
+			mFirstSide	=leafSides.Count;
+			mNumSides	=cNumLeafSides;
+			
+			for(int i=0;i < cNumLeafSides;i++)
+			{
+				GFXLeafSide	ls	=new GFXLeafSide();
+				ls.mPlaneNum	=LPlaneNumbers[i];
+				ls.mbFlipSide	=LPlaneSides[i];
+				leafSides.Add(ls);
+			}
+			return	true;
 		}
 	}
 }

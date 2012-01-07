@@ -15,6 +15,7 @@ namespace BSPCore
 		internal const float	COLINEAR_EPSILON	=0.0001f;
 
 
+		#region Construction
 		public GBSPPoly(int numVerts)
 		{
 			if(numVerts > 0)
@@ -65,8 +66,9 @@ namespace BSPCore
 
 			mVerts	=new Vector3[4];
 
-			if(!TextureAxisFromPlane(p, out rightVec, out upVec))
+			if(!GBSPPlane.TextureAxisFromPlane(p, out rightVec, out upVec))
 			{
+				CoreEvents.Print("Bad plane passed into poly constructor!\n");
 			}
 
 			Vector3.Cross(ref p.mNormal, ref upVec, out rightVec);
@@ -99,8 +101,10 @@ namespace BSPCore
 
 			mVerts[3]	=vert;
 		}
+		#endregion
 
 
+		#region Queries
 		public int VertCount()
 		{
 			if(mVerts == null)
@@ -111,78 +115,291 @@ namespace BSPCore
 		}
 
 
-		public static bool TextureAxisFromPlane(GBSPPlane pln, out Vector3 xv, out Vector3 yv)
+		internal bool IsMaxExtents()
 		{
-			Int32	bestAxis;
-			float	dot, best;
-			
-			best		=0.0f;
-			bestAxis	=-1;
-
-			xv	=Vector3.Zero;
-			yv	=Vector3.Zero;
-			
-			for(int i=0;i < 3;i++)
+			for(int i=0;i < mVerts.Length;i++)
 			{
-				dot	=Math.Abs(UtilityLib.Mathery.VecIdx(pln.mNormal, i));
-				if(dot > best)
+				for(int k=0;k < 3;k++)
 				{
-					best		=dot;
-					bestAxis	=i;
+					float	val	=UtilityLib.Mathery.VecIdx(mVerts[i], k);
+
+					if(val == Bounds.MIN_MAX_BOUNDS)
+					{
+						return	true;
+					}
+					if(val == -Bounds.MIN_MAX_BOUNDS)
+					{
+						return	true;
+					}
 				}
 			}
+			return	false;
+		}
 
-			//note that this is set up for quake 1 texcoords
-			switch(bestAxis)
+
+		internal bool Check(bool bVerb, Vector3 norm, float dist)
+		{
+			int	i;
+			for(i=0;i < mVerts.Length;i++)
 			{
-				case 0:						// X
-					xv.X	=0.0f;
-					xv.Y	=0.0f;
-					xv.Z	=1.0f;
+				Vector3	v1	=mVerts[i];
+				Vector3	v2	=mVerts[(i + 1) % mVerts.Length];
 
-					yv.X	=0.0f;
-					yv.Y	=-1.0f;
-					yv.Z	=0.0f;
-					break;
-				case 1:						// Y
-					xv.X	=-1.0f;
-					xv.Y	=0.0f;
-					xv.Z	=0.0f;
+				//Check for degenreate edge
+				Vector3	vect1	=v2 - v1;
+				float	d		=vect1.Length();
+				if(Math.Abs(d) < DEGENERATE_EPSILON)
+				{
+					if(bVerb)
+					{
+						CoreEvents.Print("WARNING CheckFace:  Degenerate Edge.\n");
+					}
+					return	false;
+				}
 
-					yv.X	=0.0f;
-					yv.Y	=0.0f;
-					yv.Z	=-1.0f;
-					break;
-				case 2:						// Z
-					xv.X	=-1.0f;
-					xv.Y	=0.0f;
-					xv.Z	=0.0f;
+				//Check for planar
+				d	=Vector3.Dot(v1, norm) - dist;
+				if(d > UtilityLib.Mathery.ON_EPSILON
+					|| d < -UtilityLib.Mathery.ON_EPSILON)
+				{
+					if(bVerb)
+					{
+						CoreEvents.Print("WARNING CheckFace:  Non planar: " + d + "\n");
+					}
+					return	false;
+				}
 
-					yv.X	=0.0f;
-					yv.Y	=-1.0f;
-					yv.Z	=0.0f;
-					break;
-				default:
-					xv.X	=0.0f;
-					xv.Y	=0.0f;
-					xv.Z	=1.0f;
-
-					yv.X	=0.0f;
-					yv.Y	=-1.0f;
-					yv.Z	=0.0f;
-					CoreEvents.Print("GetTextureAxis: No Axis found.");
-					return false;
+				Vector3	edgeNorm	=Vector3.Cross(norm, vect1);
+				edgeNorm.Normalize();
+				float	edgeDist	=Vector3.Dot(v1, edgeNorm);
+				
+				//Check for convexity
+				for(int j=0;j < mVerts.Length;j++)
+				{
+					d	=Vector3.Dot(mVerts[j], edgeNorm) - edgeDist;
+					if(d > UtilityLib.Mathery.ON_EPSILON)
+					{
+						if(bVerb)
+						{
+							CoreEvents.Print("CheckFace:  Face not convex.\n");
+						}
+						return	false;
+					}
+				}
 			}
 			return	true;
 		}
 
 
+		internal UInt32 GetMaxDistance(GBSPPlane plane, ref float max)
+		{
+			UInt32	side	=GBSPPlane.PSIDE_FRONT;
+			foreach(Vector3 vert in mVerts)
+			{
+				float	d	=Vector3.Dot(vert, plane.mNormal) - plane.mDist;
+				if(d > max)
+				{
+					max		=d;
+					side	=GBSPPlane.PSIDE_FRONT;
+				}
+				if(-d > max)
+				{
+					max		=-d;
+					side	=GBSPPlane.PSIDE_BACK;
+				}
+			}
+			return	side;
+		}
+
+
+		//returns dist from plane to vert zero for volume
+		internal float GetCornerDistance(GBSPPlane plane)
+		{
+			return	Vector3.Dot(plane.mNormal, mVerts[0]) - plane.mDist;
+		}
+
+
+		public float Radius()
+		{
+			Vector3	center	=Center();
+
+			float	bestDist	=0.0f;
+			foreach(Vector3	vert in mVerts)
+			{
+				Vector3	toCent	=vert - center;
+				float	dist	=toCent.Length();
+				if(dist > bestDist)
+				{
+					bestDist	=dist;
+				}
+			}
+			return	bestDist;
+		}
+
+
+		internal GBSPPlane GenPlane()
+		{
+			GBSPPlane	ret	=new GBSPPlane(mVerts);
+
+			return	ret;
+		}
+
+
+		public bool AnyPartBehind(GBSPPlane p)
+		{
+			foreach(Vector3 vert in mVerts)
+			{
+				float	d	=Vector3.Dot(p.mNormal, vert) - p.mDist;
+				if(d < -UtilityLib.Mathery.ON_EPSILON)
+				{
+					return	true;
+				}
+			}
+			return	false;
+		}
+
+
+		public Vector3 Center()
+		{
+			Vector3	ret	=Vector3.Zero;
+
+			foreach(Vector3 vert in mVerts)
+			{
+				ret	+=vert;
+			}
+			ret	/=mVerts.Length;
+
+			return	ret;
+		}
+
+
+		public bool AnyPartInFront(GBSPPlane p)
+		{
+			foreach(Vector3 vert in mVerts)
+			{
+				float	d	=Vector3.Dot(p.mNormal, vert) - p.mDist;
+				if(d > UtilityLib.Mathery.ON_EPSILON)
+				{
+					return	true;
+				}
+			}
+			return	false;
+		}
+
+
+		internal void AddToBounds(Bounds bnd)
+		{
+			if(mVerts == null)
+			{
+				return;
+			}
+			foreach(Vector3 pnt in mVerts)
+			{
+				bnd.AddPointToBounds(pnt);
+			}
+		}
+
+
+		internal bool IsTiny()
+		{
+			if(mVerts == null || mVerts.Length < 3)
+			{
+				return	true;
+			}
+
+			int	edges	=0;
+
+			for(int i=0;i < mVerts.Length;i++)
+			{
+				int	j	=(i == mVerts.Length - 1) ? 0 : i + 1;
+
+				Vector3	delta	=mVerts[j] - mVerts[i];
+
+				float	len	=delta.Length();
+
+				if(len > EDGE_LENGTH)
+				{
+					if(++edges == 3)
+					{
+						return	false;
+					}
+				}
+			}
+
+			return	true;
+		}
+
+
+		internal float Area()
+		{
+			float	total	=0.0f;
+			for(int i=2;i < VertCount();i++)
+			{
+				Vector3	vect1	=mVerts[i - 1] - mVerts[0];
+				Vector3	vect2	=mVerts[i] - mVerts[0];
+
+				Vector3	cross	=Vector3.Cross(vect1, vect2);
+
+				total	+=0.5f * cross.Length();
+			}
+			return	total;
+		}
+
+
+		public void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
+		{
+			int	ofs		=verts.Count;
+
+			UInt32	offset	=(UInt32)ofs;
+
+			//triangulate the brush face points
+			foreach(Vector3 pos in mVerts)
+			{
+				verts.Add(pos);
+			}
+
+			int i	=0;
+			for(i=1;i < mVerts.Length-1;i++)
+			{
+				//initial vertex
+				indexes.Add(offset);
+				indexes.Add((UInt32)(offset + i));
+				indexes.Add((UInt32)(offset + ((i + 1) % mVerts.Length)));
+			}
+		}
+
+
+		internal void GetLines(List<Vector3> verts, List<uint> indexes, bool bCheckFlags)
+		{
+			int	ofs		=verts.Count;
+
+			UInt32	offset	=(UInt32)ofs;
+
+			//triangulate the brush face points
+			foreach(Vector3 pos in mVerts)
+			{
+				verts.Add(pos);
+			}
+
+			for(int i=0;i < mVerts.Length;i++)
+			{
+				//initial vertex
+				indexes.Add((UInt32)(offset + i));
+				indexes.Add((UInt32)(offset + ((i + 1) % mVerts.Length)));
+			}
+		}
+		#endregion
+
+
+		#region Carving Operations
 		public bool ClipPoly(GBSPPlane plane, bool bFlip, ClipPools cPools)
 		{
 			return	ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, plane, bFlip, cPools);
 		}
 
 
+		//this is the optimized version that prevents the garbage
+		//collection from being overwhelmed during heavy clipping
 		public bool ClipPolyEpsilon(float epsilon, GBSPPlane plane, bool flipTest, ClipPools cPools)
 		{
 			if(mVerts.Length > ClipPools.ClipArraySize)
@@ -288,36 +505,6 @@ namespace BSPCore
 			if(idx < 3)
 			{
 				return	false;
-			}
-
-			return	true;
-		}
-
-
-		internal bool IsTiny()
-		{
-			if(mVerts == null || mVerts.Length < 3)
-			{
-				return	true;
-			}
-
-			int	edges	=0;
-
-			for(int i=0;i < mVerts.Length;i++)
-			{
-				int	j	=(i == mVerts.Length - 1) ? 0 : i + 1;
-
-				Vector3	delta	=mVerts[j] - mVerts[i];
-
-				float	len	=delta.Length();
-
-				if(len > EDGE_LENGTH)
-				{
-					if(++edges == 3)
-					{
-						return	false;
-					}
-				}
 			}
 
 			return	true;
@@ -456,6 +643,168 @@ namespace BSPCore
 		}
 
 
+		internal void SplitSideTest(GBSPPlane plane,
+									out int front, out int back,
+									ref float frontDist, ref float backDist)
+		{
+			front	=back	=0;
+			foreach(Vector3 vert in mVerts)
+			{
+				float d	=plane.Distance(vert);
+
+				if(d > frontDist)
+				{
+					frontDist	=d;
+				}
+				else if(d < backDist)
+				{
+					backDist	=d;
+				}
+
+				if(d > 0.1f)
+				{
+					front	=1;
+				}
+				else if(d < -0.1)
+				{
+					back	=1;
+				}
+			}
+		}
+
+
+		internal void GetSplitMaxDist(GBSPPlane plane, bool side, ref float frontDist, ref float backDist)
+		{
+			if(mVerts == null)
+			{
+				return;
+			}
+			foreach(Vector3 vert in mVerts)
+			{
+				float	d	=plane.Distance(vert);
+
+				if(side)
+				{
+					d	=-d;
+				}
+
+				if(d > frontDist)
+				{
+					frontDist	=d;
+				}
+				else if(d < backDist)
+				{
+					backDist	=d;
+				}
+			}
+		}
+
+
+		//used from the vis library
+		public bool SeperatorClip(GBSPPoly source, GBSPPoly pass, bool bFlipClip, ClipPools cPools)
+		{
+			for(int i=0;i < source.mVerts.Length;i++)
+			{
+				int	l	=(i + 1) % source.mVerts.Length;
+
+				Vector3	v1	=source.mVerts[l] - source.mVerts[i];
+
+				for(int j=0;j < pass.mVerts.Length;j++)
+				{
+					Vector3	v2	=pass.mVerts[j] - source.mVerts[i];
+
+					GBSPPlane	plane	=new GBSPPlane();
+					plane.mNormal	=Vector3.Cross(v1, v2);
+
+					float	len		=plane.mNormal.Length();
+					plane.mNormal	/=len;
+					
+					if(len < UtilityLib.Mathery.ON_EPSILON)
+					{
+						continue;
+					}
+					
+					plane.mDist	=Vector3.Dot(pass.mVerts[j], plane.mNormal);						
+
+					bool	bFlipTest	=false;
+					int		k;
+					for(k=0;k < source.mVerts.Length;k++)
+					{
+						if(k == i || k == l)
+						{
+							continue;
+						}
+
+						float	d	=Vector3.Dot(source.mVerts[k], plane.mNormal) - plane.mDist;
+						if(d < -UtilityLib.Mathery.ON_EPSILON)
+						{
+							bFlipTest	=false;
+							break;
+						}
+						else if(d > UtilityLib.Mathery.ON_EPSILON)
+						{
+							bFlipTest	=true;
+							break;
+						}
+					}
+					if(k == source.mVerts.Length)
+					{
+						continue;
+					}
+					if(bFlipTest)
+					{
+						plane.Inverse();
+					}
+
+					Int32	count0	=0;
+					Int32	count2	=0;
+					for(k=0;k < pass.mVerts.Length;k++)
+					{
+						if(k==j)
+						{
+							continue;
+						}
+						float	d	=Vector3.Dot(pass.mVerts[k], plane.mNormal) - plane.mDist;
+						if(d < -UtilityLib.Mathery.ON_EPSILON)
+						{
+							break;
+						}
+						else if(d > UtilityLib.Mathery.ON_EPSILON)
+						{
+							count0++;
+						}
+						else
+						{
+							count2++;
+						}
+					}
+					if(k != pass.mVerts.Length)
+					{
+						continue;	
+					}
+						
+					if(count0 == 0)
+					{
+						continue;
+					}
+					if(!ClipPoly(plane, bFlipClip, cPools))
+					{
+						CoreEvents.Print("ClipToPortals:  Error clipping portal.\n");
+						return	false;
+					}
+
+					if(mVerts == null || mVerts.Length < 3)
+					{
+						return	true;
+					}
+				}
+			}			
+			return	true;
+		}
+		#endregion
+
+
+		#region Edge & Merge Stuff
 		internal void RemoveDegenerateEdges()
 		{
 			bool	Bad	=false;
@@ -515,77 +864,8 @@ namespace BSPCore
 		}
 
 
-		internal float Area()
-		{
-			float	total	=0.0f;
-			for(int i=2;i < VertCount();i++)
-			{
-				Vector3	vect1	=mVerts[i - 1] - mVerts[0];
-				Vector3	vect2	=mVerts[i] - mVerts[0];
-
-				Vector3	cross	=Vector3.Cross(vect1, vect2);
-
-				total	+=0.5f * cross.Length();
-			}
-			return	total;
-		}
-
-
-		public void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
-		{
-			int	ofs		=verts.Count;
-
-			UInt32	offset	=(UInt32)ofs;
-
-			//triangulate the brush face points
-			foreach(Vector3 pos in mVerts)
-			{
-				verts.Add(pos);
-			}
-
-			int i	=0;
-			for(i=1;i < mVerts.Length-1;i++)
-			{
-				//initial vertex
-				indexes.Add(offset);
-				indexes.Add((UInt32)(offset + i));
-				indexes.Add((UInt32)(offset + ((i + 1) % mVerts.Length)));
-			}
-		}
-
-
-		internal void GetLines(List<Vector3> verts, List<uint> indexes, bool bCheckFlags)
-		{
-			int	ofs		=verts.Count;
-
-			UInt32	offset	=(UInt32)ofs;
-
-			//triangulate the brush face points
-			foreach(Vector3 pos in mVerts)
-			{
-				verts.Add(pos);
-			}
-
-			for(int i=0;i < mVerts.Length;i++)
-			{
-				//initial vertex
-				indexes.Add((UInt32)(offset + i));
-				indexes.Add((UInt32)(offset + ((i + 1) % mVerts.Length)));
-			}
-		}
-
-
-		//lazy
-		public void Reverse()
-		{
-			List<Vector3>	flip	=new List<Vector3>(mVerts);
-
-			flip.Reverse();
-
-			mVerts	=flip.ToArray();
-		}
-
-
+		//ported from genesis and I don't really understand
+		//how this works at all, but it does!
 		static internal GBSPPoly Merge(GBSPPoly p1, GBSPPoly p2, Vector3 normal, PlanePool pool)
 		{
 			bool		keep1	=true, keep2	=true;
@@ -715,86 +995,17 @@ namespace BSPCore
 			}
 			return	ret;
 		}
+		#endregion
 
 
-		public float Radius()
+		//lazy
+		public void Reverse()
 		{
-			Vector3	center	=Center();
+			List<Vector3>	flip	=new List<Vector3>(mVerts);
 
-			float	bestDist	=0.0f;
-			foreach(Vector3	vert in mVerts)
-			{
-				Vector3	toCent	=vert - center;
-				float	dist	=toCent.Length();
-				if(dist > bestDist)
-				{
-					bestDist	=dist;
-				}
-			}
-			return	bestDist;
-		}
+			flip.Reverse();
 
-
-		internal GBSPPlane GenPlane()
-		{
-			GBSPPlane	ret	=new GBSPPlane(mVerts);
-
-			return	ret;
-		}
-
-
-		public bool AnyPartBehind(GBSPPlane p)
-		{
-			foreach(Vector3 vert in mVerts)
-			{
-				float	d	=Vector3.Dot(p.mNormal, vert) - p.mDist;
-				if(d < -UtilityLib.Mathery.ON_EPSILON)
-				{
-					return	true;
-				}
-			}
-			return	false;
-		}
-
-
-		public Vector3 Center()
-		{
-			Vector3	ret	=Vector3.Zero;
-
-			foreach(Vector3 vert in mVerts)
-			{
-				ret	+=vert;
-			}
-			ret	/=mVerts.Length;
-
-			return	ret;
-		}
-
-
-		public bool AnyPartInFront(GBSPPlane p)
-		{
-			foreach(Vector3 vert in mVerts)
-			{
-				float	d	=Vector3.Dot(p.mNormal, vert) - p.mDist;
-				if(d > UtilityLib.Mathery.ON_EPSILON)
-				{
-					return	true;
-				}
-			}
-			return	false;
-		}
-
-
-		internal void AddToBounds(Bounds bnd)
-		{
-			if(mVerts == null)
-			{
-				return;
-			}
-			foreach(Vector3 pnt in mVerts)
-			{
-				bnd.AddPointToBounds(pnt);
-			}
+			mVerts	=flip.ToArray();
 		}
 
 
@@ -804,275 +1015,13 @@ namespace BSPCore
 		}
 
 
-		internal bool Check(bool bVerb, Vector3 norm, float dist)
-		{
-			int	i;
-			for(i=0;i < mVerts.Length;i++)
-			{
-				Vector3	v1	=mVerts[i];
-				Vector3	v2	=mVerts[(i + 1) % mVerts.Length];
-
-				//Check for degenreate edge
-				Vector3	vect1	=v2 - v1;
-				float	d		=vect1.Length();
-				if(Math.Abs(d) < DEGENERATE_EPSILON)
-				{
-					if(bVerb)
-					{
-						CoreEvents.Print("WARNING CheckFace:  Degenerate Edge.\n");
-					}
-					return	false;
-				}
-
-				//Check for planar
-				d	=Vector3.Dot(v1, norm) - dist;
-				if(d > UtilityLib.Mathery.ON_EPSILON
-					|| d < -UtilityLib.Mathery.ON_EPSILON)
-				{
-					if(bVerb)
-					{
-						CoreEvents.Print("WARNING CheckFace:  Non planar: " + d + "\n");
-					}
-					return	false;
-				}
-
-				Vector3	edgeNorm	=Vector3.Cross(norm, vect1);
-				edgeNorm.Normalize();
-				float	edgeDist	=Vector3.Dot(v1, edgeNorm);
-				
-				//Check for convexity
-				for(int j=0;j < mVerts.Length;j++)
-				{
-					d	=Vector3.Dot(mVerts[j], edgeNorm) - edgeDist;
-					if(d > UtilityLib.Mathery.ON_EPSILON)
-					{
-						if(bVerb)
-						{
-							CoreEvents.Print("CheckFace:  Face not convex.\n");
-						}
-						return	false;
-					}
-				}
-			}
-			return	true;
-		}
-
-
-		internal UInt32 GetMaxDistance(GBSPPlane plane, ref float max)
-		{
-			UInt32	side	=GBSPPlane.PSIDE_FRONT;
-			foreach(Vector3 vert in mVerts)
-			{
-				float	d	=Vector3.Dot(vert, plane.mNormal) - plane.mDist;
-				if(d > max)
-				{
-					max		=d;
-					side	=GBSPPlane.PSIDE_FRONT;
-				}
-				if(-d > max)
-				{
-					max		=-d;
-					side	=GBSPPlane.PSIDE_BACK;
-				}
-			}
-			return	side;
-		}
-
-
-		//returns dist from plane to vert zero for volume
-		internal float GetCornerDistance(GBSPPlane plane)
-		{
-			return	Vector3.Dot(plane.mNormal, mVerts[0]) - plane.mDist;
-		}
-
-
-		internal void SplitSideTest(GBSPPlane plane,
-									out int front, out int back,
-									ref float frontDist, ref float backDist)
-		{
-			front	=back	=0;
-			foreach(Vector3 vert in mVerts)
-			{
-				float d	=plane.DistanceFast(vert);
-
-				if(d > frontDist)
-				{
-					frontDist	=d;
-				}
-				else if(d < backDist)
-				{
-					backDist	=d;
-				}
-
-				if(d > 0.1f)
-				{
-					front	=1;
-				}
-				else if(d < -0.1)
-				{
-					back	=1;
-				}
-			}
-		}
-
-
-		internal void GetSplitMaxDist(GBSPPlane plane, sbyte side, ref float frontDist, ref float backDist)
-		{
-			if(mVerts == null)
-			{
-				return;
-			}
-			foreach(Vector3 vert in mVerts)
-			{
-				float	d	=plane.DistanceFast(vert);
-
-				if(side != 0)
-				{
-					d	=-d;
-				}
-
-				if(d > frontDist)
-				{
-					frontDist	=d;
-				}
-				else if(d < backDist)
-				{
-					backDist	=d;
-				}
-			}
-		}
-
-
-		public bool SeperatorClip(GBSPPoly source, GBSPPoly pass, bool bFlipClip, ClipPools cPools)
-		{
-			for(int i=0;i < source.mVerts.Length;i++)
-			{
-				int	l	=(i + 1) % source.mVerts.Length;
-
-				Vector3	v1	=source.mVerts[l] - source.mVerts[i];
-
-				for(int j=0;j < pass.mVerts.Length;j++)
-				{
-					Vector3	v2	=pass.mVerts[j] - source.mVerts[i];
-
-					GBSPPlane	plane	=new GBSPPlane();
-					plane.mNormal	=Vector3.Cross(v1, v2);
-
-					float	len		=plane.mNormal.Length();
-					plane.mNormal	/=len;
-					
-					if(len < UtilityLib.Mathery.ON_EPSILON)
-					{
-						continue;
-					}
-					
-					plane.mDist	=Vector3.Dot(pass.mVerts[j], plane.mNormal);						
-
-					bool	bFlipTest	=false;
-					int		k;
-					for(k=0;k < source.mVerts.Length;k++)
-					{
-						if(k == i || k == l)
-						{
-							continue;
-						}
-
-						float	d	=Vector3.Dot(source.mVerts[k], plane.mNormal) - plane.mDist;
-						if(d < -UtilityLib.Mathery.ON_EPSILON)
-						{
-							bFlipTest	=false;
-							break;
-						}
-						else if(d > UtilityLib.Mathery.ON_EPSILON)
-						{
-							bFlipTest	=true;
-							break;
-						}
-					}
-					if(k == source.mVerts.Length)
-					{
-						continue;
-					}
-					if(bFlipTest)
-					{
-						plane.Inverse();
-					}
-
-					Int32	count0	=0;
-					Int32	count2	=0;
-					for(k=0;k < pass.mVerts.Length;k++)
-					{
-						if(k==j)
-						{
-							continue;
-						}
-						float	d	=Vector3.Dot(pass.mVerts[k], plane.mNormal) - plane.mDist;
-						if(d < -UtilityLib.Mathery.ON_EPSILON)
-						{
-							break;
-						}
-						else if(d > UtilityLib.Mathery.ON_EPSILON)
-						{
-							count0++;
-						}
-						else
-						{
-							count2++;
-						}
-					}
-					if(k != pass.mVerts.Length)
-					{
-						continue;	
-					}
-						
-					if(count0 == 0)
-					{
-						continue;
-					}
-					if(!ClipPoly(plane, bFlipClip, cPools))
-					{
-						CoreEvents.Print("ClipToPortals:  Error clipping portal.\n");
-						return	false;
-					}
-
-					if(mVerts == null || mVerts.Length < 3)
-					{
-						return	true;
-					}
-				}
-			}			
-			return	true;
-		}
-
-
-		internal bool IsMaxExtents()
-		{
-			for(int i=0;i < mVerts.Length;i++)
-			{
-				for(int k=0;k < 3;k++)
-				{
-					float	val	=UtilityLib.Mathery.VecIdx(mVerts[i], k);
-
-					if(val == Bounds.MIN_MAX_BOUNDS)
-					{
-						return	true;
-					}
-					if(val == -Bounds.MIN_MAX_BOUNDS)
-					{
-						return	true;
-					}
-				}
-			}
-			return	false;
-		}
-
-
 		internal Int32[] IndexVerts(FaceFixer ff)
 		{
 			return	ff.IndexFaceVerts(mVerts);
 		}
 
 
+		#region IO
 		internal void WriteReverse(System.IO.BinaryWriter bw)
 		{
 			bw.Write(mVerts.Length);
@@ -1109,5 +1058,6 @@ namespace BSPCore
 				mVerts[i].Z	=br.ReadSingle();
 			}
 		}
+		#endregion
 	}
 }

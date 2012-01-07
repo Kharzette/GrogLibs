@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace BSPCore
 {
+	//TODO: Should probably gank this and just use GBSPPlane
 	public class GFXPlane : UtilityLib.IReadWriteable
 	{
 		public Vector3	mNormal;

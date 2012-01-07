@@ -8,7 +8,8 @@ namespace BSPCore
 {
 	public class LInfo
 	{
-		Vector3	[][]mRGBLData	=new Vector3[MAX_LTYPE_INDEX][];
+		Dictionary<Int32, Vector3 []>	mRGBLData	=new Dictionary<Int32, Vector3[]>();
+
 		float	mMinU, mMinV;
 		float	mMaxU, mMaxV;
 		Int32	mLMinU, mLMinV;
@@ -17,7 +18,7 @@ namespace BSPCore
 
 		Int32	mNumLTypes;
 
-		public const int	MAX_LTYPE_INDEX		=13;	//switchable will go higher TODO
+		public const int	MAX_LTYPE_INDEX		=256;
 		public const int	MAX_LMAP_SIZE		=1024;
 		public const int	MAX_LTYPES			=4;
 
@@ -30,21 +31,11 @@ namespace BSPCore
 
 		internal Vector3 []GetRGBLightData(Int32 lightIndex)
 		{
-			if(lightIndex > MAX_LTYPE_INDEX)
+			if(mRGBLData.ContainsKey(lightIndex))
 			{
-				return	null;
+				return	mRGBLData[lightIndex];
 			}
-			return	mRGBLData[lightIndex];
-		}
-
-
-		internal void ApplyLightToPatchList(RADPatch rp, int lightGridSize, Vector3 []facePoints)
-		{
-			if(mRGBLData[0] == null)
-			{
-				return;
-			}
-			RADPatch.ApplyLightList(rp, lightGridSize, mRGBLData[0], facePoints);
+			return	null;
 		}
 
 
@@ -72,22 +63,21 @@ namespace BSPCore
 
 			if((mLSizeU + 1) > MAX_LMAP_SIZE || (mLSizeV + 1) > MAX_LMAP_SIZE)
 			{
-				CoreEvents.Print("CalcFaceInfo:  Face was not subdivided correctly.\n");
+				CoreEvents.Print("CalcFaceInfo:  Mega huge face will break the atlas!\n");
 			}
 		}
 
 
 		internal void AllocLightType(int lightIndex, Int32 size)
 		{
-			if(mRGBLData[lightIndex] == null)
+			if(!mRGBLData.ContainsKey(lightIndex))
 			{
 				if(mNumLTypes >= LInfo.MAX_LTYPES)
 				{
 					CoreEvents.Print("Max Light Types on face.\n");
 					return;
 				}
-			
-				mRGBLData[lightIndex]	=new Vector3[size];
+				mRGBLData.Add(lightIndex, new Vector3[size]);
 				mNumLTypes++;
 			}
 		}
@@ -95,7 +85,7 @@ namespace BSPCore
 
 		internal void FreeLightType(int lightIndex)
 		{
-			mRGBLData[lightIndex]	=null;
+			mRGBLData.Remove(lightIndex);
 		}
 
 

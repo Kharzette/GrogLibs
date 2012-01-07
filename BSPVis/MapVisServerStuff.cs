@@ -15,7 +15,7 @@ namespace BSPVis
 	public partial class VisMap
 	{
 		//done event for slow flood
-		public static event EventHandler	eSlowFloodPartDone;
+		public static event EventHandler	eFlowChunkComplete;
 
 
 		bool ClientHasPortals(MapVisClient amvc, int numPorts, out bool bRealFailure)
@@ -72,7 +72,7 @@ namespace BSPVis
 
 
 		//used by the external distributed vis
-		public static byte []PortalFrustFlood(byte []visData, int startPort, int endPort)
+		public static byte []PortalFlow(byte []visData, int startPort, int endPort)
 		{
 			DateTime	visTime	=DateTime.Now;
 
@@ -146,7 +146,7 @@ namespace BSPVis
 			vs.mTotalPorts	=0;
 			vs.mVisData		=returnBytes;
 
-			UtilityLib.Misc.SafeInvoke(eSlowFloodPartDone, vs);
+			UtilityLib.Misc.SafeInvoke(eFlowChunkComplete, vs);
 
 			return	returnBytes;
 		}
@@ -162,7 +162,7 @@ namespace BSPVis
 			{
 				port.mPortalVis[i]	=0;
 			}
-			PortalFlowGenesis(k, visPortals, visLeafs, numVisPortalBytes);
+			PortalFlow(k, visPortals, visLeafs, numVisPortalBytes);
 
 			port.mbDone			=true;
 		}
@@ -260,7 +260,7 @@ namespace BSPVis
 
 			try
 			{
-				bool	bStarted	=amvc.BeginFloodPortalsSlow(vs);
+				bool	bStarted	=amvc.PortalFlow(vs);
 			}
 			catch(Exception e)
 			{

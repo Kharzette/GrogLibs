@@ -21,17 +21,13 @@ namespace BSPCore
 	public class LightParams
 	{
 		public bool		mbSeamCorrection;
-		public bool		mbRadiosity;
-		public bool		mbFastPatch;
-		public int		mPatchSize;
-		public int		mNumBounces;
-		public int		mNumSamples;	//1 to 5
-		public float	mLightScale;
+		public bool		mbSurfaceLighting;
+		public int		mSurfLightFrequency;
+		public int		mSurfLightStrength;
+		public int		mNumSamples;	//1 to 9
 		public Vector3	mMinLight;
-		public float	mSurfaceReflect;
 		public int		mMaxIntensity;
 		public int		mLightGridSize;
-		public int		mAtlasSize;
 	}
 
 

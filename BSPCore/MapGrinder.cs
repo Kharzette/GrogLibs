@@ -734,7 +734,7 @@ namespace BSPCore
 
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
-					if(f.mPlaneSide > 0)
+					if(f.mbFlipSide)
 					{
 						pln.Inverse();
 					}
@@ -748,18 +748,18 @@ namespace BSPCore
 						ddc.mColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
 					}
 
-					AtlasAnimated(ddc, f, lightData, faceVerts, pln, tex);
+					if(!AtlasAnimated(ddc, f, lightData, faceVerts, pln, tex))
+					{
+						CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
+						return	false;
+					}
 
 					ddc.mVerts.AddRange(faceVerts);
 
 					//style index
 					for(int k=0;k < f.mNumVerts;k++)
 					{
-						Vector4	styleIndex	=Vector4.Zero;
-						styleIndex.X	=f.mLType0;
-						styleIndex.Y	=f.mLType1;
-						styleIndex.Z	=f.mLType2;
-						styleIndex.W	=f.mLType3;
+						Vector4	styleIndex	=AssignLightStyleIndex(f);
 						ddc.mStyles.Add(styleIndex);
 					}
 				}
@@ -850,7 +850,7 @@ namespace BSPCore
 
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
-					if(f.mPlaneSide > 0)
+					if(f.mbFlipSide)
 					{
 						pln.Inverse();
 					}
@@ -864,18 +864,17 @@ namespace BSPCore
 						ddc.mColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
 					}
 
-					AtlasAnimated(ddc, f, lightData, faceVerts, pln, tex);
-
+					if(!AtlasAnimated(ddc, f, lightData, faceVerts, pln, tex))
+					{
+						CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
+						return	false;
+					}
 					ddc.mVerts.AddRange(faceVerts);
 
 					//style index
 					for(int k=0;k < f.mNumVerts;k++)
 					{
-						Vector4	styleIndex	=Vector4.Zero;
-						styleIndex.X	=f.mLType0;
-						styleIndex.Y	=f.mLType1;
-						styleIndex.Z	=f.mLType2;
-						styleIndex.W	=f.mLType3;
+						Vector4	styleIndex	=AssignLightStyleIndex(f);
 						ddc.mStyles.Add(styleIndex);
 					}
 
@@ -961,7 +960,7 @@ namespace BSPCore
 					//grab plane for dynamic lighting normals
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
-					if(f.mPlaneSide > 0)
+					if(f.mbFlipSide)
 					{
 						pln.Inverse();
 					}
@@ -1060,7 +1059,7 @@ namespace BSPCore
 					//grab plane for dynamic lighting normals
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
-					if(f.mPlaneSide > 0)
+					if(f.mbFlipSide)
 					{
 						pln.Inverse();
 					}
@@ -1159,7 +1158,7 @@ namespace BSPCore
 
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
-					if(f.mPlaneSide > 0)
+					if(f.mbFlipSide)
 					{
 						pln.Inverse();
 					}
@@ -1252,7 +1251,7 @@ namespace BSPCore
 
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
-					if(f.mPlaneSide > 0)
+					if(f.mbFlipSide)
 					{
 						pln.Inverse();
 					}
@@ -1357,7 +1356,7 @@ namespace BSPCore
 
 					GFXPlane	pl	=pp[f.mPlaneNum];
 					GBSPPlane	pln	=new GBSPPlane(pl);
-					if(f.mPlaneSide > 0)
+					if(f.mbFlipSide)
 					{
 						pln.Inverse();
 					}
@@ -1754,7 +1753,7 @@ namespace BSPCore
 
 			//get a proper set of texvecs for lighting
 			Vector3	xv, yv;
-			GBSPPoly.TextureAxisFromPlane(pln, out xv, out yv);
+			GBSPPlane.TextureAxisFromPlane(pln, out xv, out yv);
 
 			double	sX	=xv.X;
 			double	sY	=xv.Y;
@@ -1952,7 +1951,7 @@ namespace BSPCore
 
 			//get a proper set of texvecs for lighting
 			Vector3	xv, yv;
-			GBSPPoly.TextureAxisFromPlane(pln, out xv, out yv);
+			GBSPPlane.TextureAxisFromPlane(pln, out xv, out yv);
 
 			//calculate the min values for s and t
 			foreach(Vector3 pnt in verts)
@@ -2126,6 +2125,42 @@ namespace BSPCore
 		internal TexAtlas GetLightMapAtlas()
 		{
 			return	mLMAtlas;
+		}
+
+
+		float ClampLightIndex(int idx)
+		{
+			if(idx == 255)
+			{
+				return	255;	//not in use
+			}
+			else if(idx >= 32)	//switchable
+			{
+				return	idx - 20;
+			}
+			else if(idx < 12)
+			{
+				return	idx;
+			}
+
+			Debug.Assert(false);	//light style in a strange place
+
+			return	0;
+		}
+
+
+		Vector4 AssignLightStyleIndex(GFXFace f)
+		{
+			//switchable styles reference the same shader
+			//array as animated, so need a - 20
+			Vector4	ret	=Vector4.Zero;
+
+			ret.X	=ClampLightIndex(f.mLType0);
+			ret.Y	=ClampLightIndex(f.mLType1);
+			ret.Z	=ClampLightIndex(f.mLType2);
+			ret.W	=ClampLightIndex(f.mLType3);
+
+			return	ret;
 		}
 	}
 }

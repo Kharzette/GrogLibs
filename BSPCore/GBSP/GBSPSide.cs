@@ -11,7 +11,7 @@ namespace BSPCore
 	{
 		internal GBSPPoly	mPoly;
 		internal Int32		mPlaneNum;
-		internal sbyte		mPlaneSide;
+		internal bool		mbFlipSide;
 		internal Int32		mTexInfo;
 		internal UInt32		mFlags;
 
@@ -65,7 +65,7 @@ namespace BSPCore
 		{
 			this.mFlags		=copyMe.mFlags;
 			this.mPlaneNum	=copyMe.mPlaneNum;
-			this.mPlaneSide	=copyMe.mPlaneSide;
+			this.mbFlipSide	=copyMe.mbFlipSide;
 			this.mPoly		=new GBSPPoly(copyMe.mPoly);
 			this.mTexInfo	=copyMe.mTexInfo;
 		}
@@ -233,7 +233,6 @@ namespace BSPCore
 							ti.mFlags		|=TexInfo.TRANS;
 							ti.mFlags		|=TexInfo.FLAT;
 							ti.mFlags		|=TexInfo.LIGHT;				//lava emits light by default?
-							ti.mFaceLight	=TexInfo.FaceLightIntensity;	//TODO: donut hardcode
 							ti.mFlags		|=TexInfo.FULLBRIGHT;
 							ti.mFlags		|=TexInfo.NO_LIGHTMAP;
 						}
@@ -305,7 +304,6 @@ namespace BSPCore
 						if((smoove & SMOOTHING_SURFLIGHT) != 0)
 						{
 							ti.mFlags		|=TexInfo.LIGHT;
-							ti.mFaceLight	=TexInfo.FaceLightIntensity;	//TODO: donut hardcode
 							ti.mFlags		|=TexInfo.FULLBRIGHT;			//emit light so ...?
 							ti.mFlags		|=TexInfo.NO_LIGHTMAP;
 						}
@@ -334,7 +332,7 @@ namespace BSPCore
 					plane.mType	=GBSPPlane.PLANE_ANY;
 					plane.Snap();
 
-					mPlaneNum	=pool.FindPlane(plane, out mPlaneSide);
+					mPlaneNum	=pool.FindPlane(plane, out mbFlipSide);
 
 //					GBSPPoly.TextureAxisFromPlane(plane, out ti.mUVec, out ti.mVVec);
 
@@ -397,7 +395,7 @@ namespace BSPCore
 			mPoly.Write(bw);
 
 			bw.Write(mPlaneNum);
-			bw.Write(mPlaneSide);
+			bw.Write(mbFlipSide);
 			bw.Write(mTexInfo);
 			bw.Write(mFlags);
 		}
@@ -410,7 +408,7 @@ namespace BSPCore
 			mPoly.Read(br);
 
 			mPlaneNum	=br.ReadInt32();
-			mPlaneSide	=br.ReadSByte();
+			mbFlipSide	=br.ReadBoolean();
 			mTexInfo	=br.ReadInt32();
 			mFlags		=br.ReadUInt32();
 		}
@@ -585,7 +583,7 @@ namespace BSPCore
 			plane.mType	=GBSPPlane.PLANE_ANY;
 			plane.Snap();
 
-			mPlaneNum	=pool.FindPlane(plane, out mPlaneSide);
+			mPlaneNum	=pool.FindPlane(plane, out mbFlipSide);
 
 			ti.mShiftU		=numbers[9];
 			ti.mShiftV		=numbers[10];
@@ -593,7 +591,7 @@ namespace BSPCore
 			ti.mDrawScaleV	=numbers[13];
 			ti.mTexture		=texName;
 
-			GBSPPoly.TextureAxisFromPlane(plane, out ti.mUVec, out ti.mVVec);
+			GBSPPlane.TextureAxisFromPlane(plane, out ti.mUVec, out ti.mVVec);
 
 			if(numbers[11] != 0.0f)
 			{
@@ -642,7 +640,6 @@ namespace BSPCore
 				ti.mFlags		|=TexInfo.LIGHT;
 				ti.mFlags		|=TexInfo.FULLBRIGHT;
 				ti.mFlags		|=TexInfo.NO_LIGHTMAP;
-				ti.mFaceLight	=TexInfo.FaceLightIntensity;
 			}
 			if((hammerFlags & SURF_LIGHTFILTER) != 0)
 			{
