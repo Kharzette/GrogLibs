@@ -677,11 +677,12 @@ namespace BSPVis
 					vs.mStartPort	=wrk.mStartPort;
 					vs.mEndPort		=wrk.mEndPort;
 
-					byte	[]ports	=null;
+					byte	[]ports		=null;
+					bool	bWorkinOnit	=true;
 
 					try
 					{
-						ports	=wrk.mCruncher.IsFinished(vs);
+						ports	=wrk.mCruncher.IsFinished(vs, out bWorkinOnit);
 					}
 					catch
 					{
@@ -708,6 +709,22 @@ namespace BSPVis
 						ProgressWatcher.UpdateProgressIncremental(prog);
 						lock(workingOn) { workingOn.Remove(wrk); }
 						lock(working) { working.Remove(wrk.mCruncher); }
+						clients.Enqueue(wrk.mCruncher);
+					}
+					else if(!bWorkinOnit)
+					{
+						//cruncher is not even working on this unit
+						CoreEvents.Print("Thought that " + vs.mEndPort + " was working on " +
+							vs.mStartPort + " to " + vs.mEndPort + " but it says it doesn't know about it.  Requeueing...\n");
+						lock(workingOn)
+						{
+							workingOn.Remove(wrk);
+						}
+						work.Enqueue(wrk);
+						lock(working)
+						{
+							working.Remove(wrk.mCruncher);
+						}
 						clients.Enqueue(wrk.mCruncher);
 					}
 

@@ -28,6 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
 			this.NewMaterial = new System.Windows.Forms.Button();
 			this.MaterialGrid = new System.Windows.Forms.DataGridView();
 			this.MaterialProperties = new System.Windows.Forms.DataGridView();
@@ -43,9 +44,10 @@
 			this.MeshPartGrid = new System.Windows.Forms.DataGridView();
 			this.ApplyMaterial = new System.Windows.Forms.Button();
 			this.MeshPartGroup = new System.Windows.Forms.GroupBox();
-			this.GenBiNormalTangent = new System.Windows.Forms.Button();
-			this.TexCoordSet = new System.Windows.Forms.NumericUpDown();
 			this.label1 = new System.Windows.Forms.Label();
+			this.TexCoordSet = new System.Windows.Forms.NumericUpDown();
+			this.GenBiNormalTangent = new System.Windows.Forms.Button();
+			this.mTips = new System.Windows.Forms.ToolTip(this.components);
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialProperties)).BeginInit();
 			this.FileGroup.SuspendLayout();
@@ -62,6 +64,7 @@
 			this.NewMaterial.Size = new System.Drawing.Size(94, 29);
 			this.NewMaterial.TabIndex = 3;
 			this.NewMaterial.Text = "New Material";
+			this.mTips.SetToolTip(this.NewMaterial, "Create a new material");
 			this.NewMaterial.UseVisualStyleBackColor = true;
 			this.NewMaterial.Click += new System.EventHandler(this.OnNewMaterial);
 			// 
@@ -106,6 +109,7 @@
 			this.SaveButton.Size = new System.Drawing.Size(46, 29);
 			this.SaveButton.TabIndex = 8;
 			this.SaveButton.Text = "Save";
+			this.mTips.SetToolTip(this.SaveButton, "Save a material library");
 			this.SaveButton.UseVisualStyleBackColor = true;
 			this.SaveButton.Click += new System.EventHandler(this.OnSave);
 			// 
@@ -116,6 +120,7 @@
 			this.LoadButton.Size = new System.Drawing.Size(48, 29);
 			this.LoadButton.TabIndex = 9;
 			this.LoadButton.Text = "Load";
+			this.mTips.SetToolTip(this.LoadButton, "Load a material library");
 			this.LoadButton.UseVisualStyleBackColor = true;
 			this.LoadButton.Click += new System.EventHandler(this.OnLoad);
 			// 
@@ -126,6 +131,7 @@
 			this.RefreshShaders.Size = new System.Drawing.Size(60, 29);
 			this.RefreshShaders.TabIndex = 12;
 			this.RefreshShaders.Text = "Refresh";
+			this.mTips.SetToolTip(this.RefreshShaders, "Refresh shader values");
 			this.RefreshShaders.UseVisualStyleBackColor = true;
 			this.RefreshShaders.Click += new System.EventHandler(this.OnRefreshShaders);
 			// 
@@ -136,6 +142,7 @@
 			this.GuessTextures.Size = new System.Drawing.Size(94, 29);
 			this.GuessTextures.TabIndex = 13;
 			this.GuessTextures.Text = "Guess Textures";
+			this.mTips.SetToolTip(this.GuessTextures, "Attempts to match materials up to textures loaded in the content pipeline");
 			this.GuessTextures.UseVisualStyleBackColor = true;
 			this.GuessTextures.Click += new System.EventHandler(this.OnGuessTextures);
 			// 
@@ -146,6 +153,7 @@
 			this.TexSizeUp.Size = new System.Drawing.Size(75, 29);
 			this.TexSizeUp.TabIndex = 14;
 			this.TexSizeUp.Text = "TexSize Up";
+			this.mTips.SetToolTip(this.TexSizeUp, "Increase material tex size, hold shift for all materials");
 			this.TexSizeUp.UseVisualStyleBackColor = true;
 			this.TexSizeUp.Click += new System.EventHandler(this.OnTexSizeUp);
 			// 
@@ -156,6 +164,7 @@
 			this.TexSizeDown.Size = new System.Drawing.Size(89, 29);
 			this.TexSizeDown.TabIndex = 15;
 			this.TexSizeDown.Text = "TexSize Down";
+			this.mTips.SetToolTip(this.TexSizeDown, "Decrease material tex size, hold shift for all materials");
 			this.TexSizeDown.UseVisualStyleBackColor = true;
 			this.TexSizeDown.Click += new System.EventHandler(this.OnTexSizeDown);
 			// 
@@ -166,6 +175,8 @@
 			this.GetEmissive.Size = new System.Drawing.Size(89, 29);
 			this.GetEmissive.TabIndex = 16;
 			this.GetEmissive.Text = "Get Emissive";
+			this.mTips.SetToolTip(this.GetEmissive, "Average textures down to a single color for light emission (if the material does)" +
+        "");
 			this.GetEmissive.UseVisualStyleBackColor = true;
 			this.GetEmissive.Click += new System.EventHandler(this.OnGetEmissive);
 			// 
@@ -217,6 +228,7 @@
 			this.ApplyMaterial.Size = new System.Drawing.Size(95, 29);
 			this.ApplyMaterial.TabIndex = 20;
 			this.ApplyMaterial.Text = "Apply Material";
+			this.mTips.SetToolTip(this.ApplyMaterial, "Apply selected material to the selected mesh part");
 			this.ApplyMaterial.UseVisualStyleBackColor = true;
 			this.ApplyMaterial.Click += new System.EventHandler(this.OnApplyMaterial);
 			// 
@@ -234,15 +246,14 @@
 			this.MeshPartGroup.TabStop = false;
 			this.MeshPartGroup.Text = "Mesh Part";
 			// 
-			// GenBiNormalTangent
+			// label1
 			// 
-			this.GenBiNormalTangent.Location = new System.Drawing.Point(107, 19);
-			this.GenBiNormalTangent.Name = "GenBiNormalTangent";
-			this.GenBiNormalTangent.Size = new System.Drawing.Size(110, 29);
-			this.GenBiNormalTangent.TabIndex = 21;
-			this.GenBiNormalTangent.Text = "Gen Tangents";
-			this.GenBiNormalTangent.UseVisualStyleBackColor = true;
-			this.GenBiNormalTangent.Click += new System.EventHandler(this.OnGenBiNormalTangent);
+			this.label1.AutoSize = true;
+			this.label1.Location = new System.Drawing.Point(232, 12);
+			this.label1.Name = "label1";
+			this.label1.Size = new System.Drawing.Size(23, 13);
+			this.label1.TabIndex = 22;
+			this.label1.Text = "Set";
 			// 
 			// TexCoordSet
 			// 
@@ -255,15 +266,18 @@
 			this.TexCoordSet.Name = "TexCoordSet";
 			this.TexCoordSet.Size = new System.Drawing.Size(42, 20);
 			this.TexCoordSet.TabIndex = 22;
+			this.mTips.SetToolTip(this.TexCoordSet, "Texture coordinate set to use when generating bitangents");
 			// 
-			// label1
+			// GenBiNormalTangent
 			// 
-			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(232, 12);
-			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(23, 13);
-			this.label1.TabIndex = 22;
-			this.label1.Text = "Set";
+			this.GenBiNormalTangent.Location = new System.Drawing.Point(107, 19);
+			this.GenBiNormalTangent.Name = "GenBiNormalTangent";
+			this.GenBiNormalTangent.Size = new System.Drawing.Size(110, 29);
+			this.GenBiNormalTangent.TabIndex = 21;
+			this.GenBiNormalTangent.Text = "Gen Tangents";
+			this.mTips.SetToolTip(this.GenBiNormalTangent, "Generate bitangents for normal mapping for the selected mesh part");
+			this.GenBiNormalTangent.UseVisualStyleBackColor = true;
+			this.GenBiNormalTangent.Click += new System.EventHandler(this.OnGenBiNormalTangent);
 			// 
 			// MaterialForm
 			// 
@@ -280,7 +294,6 @@
 			this.MaximizeBox = false;
 			this.Name = "MaterialForm";
 			this.ShowIcon = false;
-			this.ShowInTaskbar = false;
 			this.Text = "MaterialForm";
 			this.SizeChanged += new System.EventHandler(this.OnSizeChanged);
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).EndInit();
@@ -315,5 +328,6 @@
 		private System.Windows.Forms.Button GenBiNormalTangent;
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.NumericUpDown TexCoordSet;
+		private System.Windows.Forms.ToolTip mTips;
 	}
 }

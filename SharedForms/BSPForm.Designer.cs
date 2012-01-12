@@ -28,6 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
 			this.GroupFileIO = new System.Windows.Forms.GroupBox();
 			this.LightGBSP = new System.Windows.Forms.Button();
 			this.BuildGBSP = new System.Windows.Forms.Button();
@@ -51,6 +52,9 @@
 			this.VerboseEntity = new System.Windows.Forms.CheckBox();
 			this.VerboseBSP = new System.Windows.Forms.CheckBox();
 			this.LightSettingsGroupBox = new System.Windows.Forms.GroupBox();
+			this.label1 = new System.Windows.Forms.Label();
+			this.SurfaceLightStrength = new System.Windows.Forms.NumericUpDown();
+			this.SurfaceLighting = new System.Windows.Forms.CheckBox();
 			this.label10 = new System.Windows.Forms.Label();
 			this.NumSamples = new System.Windows.Forms.NumericUpDown();
 			this.label9 = new System.Windows.Forms.Label();
@@ -66,14 +70,13 @@
 			this.label3 = new System.Windows.Forms.Label();
 			this.SurfaceLightFrequency = new System.Windows.Forms.NumericUpDown();
 			this.SeamCorrection = new System.Windows.Forms.CheckBox();
-			this.SurfaceLighting = new System.Windows.Forms.CheckBox();
-			this.SurfaceLightStrength = new System.Windows.Forms.NumericUpDown();
-			this.label1 = new System.Windows.Forms.Label();
+			this.mTips = new System.Windows.Forms.ToolTip(this.components);
 			this.GroupFileIO.SuspendLayout();
 			this.StatsGroupBox.SuspendLayout();
 			this.GroupBuildSettings.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxThreads)).BeginInit();
 			this.LightSettingsGroupBox.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.SurfaceLightStrength)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.NumSamples)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.LightGridSize)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaxIntensity)).BeginInit();
@@ -81,7 +84,6 @@
 			((System.ComponentModel.ISupportInitialize)(this.MinLightX)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightY)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.SurfaceLightFrequency)).BeginInit();
-			((System.ComponentModel.ISupportInitialize)(this.SurfaceLightStrength)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// GroupFileIO
@@ -104,6 +106,7 @@
 			this.LightGBSP.Size = new System.Drawing.Size(75, 23);
 			this.LightGBSP.TabIndex = 18;
 			this.LightGBSP.Text = "Light GBSP";
+			this.mTips.SetToolTip(this.LightGBSP, "Generate lightmaps for the level.  Needs vis data first.");
 			this.LightGBSP.UseVisualStyleBackColor = true;
 			this.LightGBSP.Click += new System.EventHandler(this.OnLightGBSP);
 			// 
@@ -115,6 +118,7 @@
 			this.BuildGBSP.Size = new System.Drawing.Size(75, 23);
 			this.BuildGBSP.TabIndex = 17;
 			this.BuildGBSP.Text = "Build GBSP";
+			this.mTips.SetToolTip(this.BuildGBSP, "Build loaded data into saveable bsp and portal data");
 			this.BuildGBSP.UseVisualStyleBackColor = true;
 			this.BuildGBSP.Click += new System.EventHandler(this.OnBuildGBSP);
 			// 
@@ -125,6 +129,7 @@
 			this.OpenBrushFile.Size = new System.Drawing.Size(75, 23);
 			this.OpenBrushFile.TabIndex = 0;
 			this.OpenBrushFile.Text = "Open Map";
+			this.mTips.SetToolTip(this.OpenBrushFile, "Load convex volumes from .map or .vmf source files");
 			this.OpenBrushFile.UseVisualStyleBackColor = true;
 			this.OpenBrushFile.Click += new System.EventHandler(this.OnOpenMap);
 			// 
@@ -136,6 +141,7 @@
 			this.SaveGBSP.Size = new System.Drawing.Size(75, 23);
 			this.SaveGBSP.TabIndex = 15;
 			this.SaveGBSP.Text = "Save GBSP";
+			this.mTips.SetToolTip(this.SaveGBSP, "Save built data to a .gbsp file");
 			this.SaveGBSP.UseVisualStyleBackColor = true;
 			this.SaveGBSP.Click += new System.EventHandler(this.OnSaveGBSP);
 			// 
@@ -200,6 +206,7 @@
 			this.NumClusters.Size = new System.Drawing.Size(76, 20);
 			this.NumClusters.TabIndex = 15;
 			this.NumClusters.TabStop = false;
+			this.mTips.SetToolTip(this.NumClusters, "Visibility clusters (leafs glommed together by contents)");
 			// 
 			// NumVerts
 			// 
@@ -209,6 +216,7 @@
 			this.NumVerts.Size = new System.Drawing.Size(76, 20);
 			this.NumVerts.TabIndex = 14;
 			this.NumVerts.TabStop = false;
+			this.mTips.SetToolTip(this.NumVerts, "Vert count");
 			// 
 			// LabelNumRawFaces
 			// 
@@ -228,6 +236,7 @@
 			this.NumPlanes.Size = new System.Drawing.Size(76, 20);
 			this.NumPlanes.TabIndex = 13;
 			this.NumPlanes.TabStop = false;
+			this.mTips.SetToolTip(this.NumPlanes, "Shared plane count");
 			// 
 			// GroupBuildSettings
 			// 
@@ -264,6 +273,7 @@
 			this.WarpAsMirror.Size = new System.Drawing.Size(90, 17);
 			this.WarpAsMirror.TabIndex = 24;
 			this.WarpAsMirror.Text = "Warp = Mirror";
+			this.mTips.SetToolTip(this.WarpAsMirror, "Convert Q2 warp surface flags into mirror surfaces");
 			this.WarpAsMirror.UseVisualStyleBackColor = true;
 			// 
 			// MaxThreads
@@ -282,6 +292,7 @@
 			this.MaxThreads.Name = "MaxThreads";
 			this.MaxThreads.Size = new System.Drawing.Size(45, 20);
 			this.MaxThreads.TabIndex = 33;
+			this.mTips.SetToolTip(this.MaxThreads, "Limit the active threads so builds don\'t cripple the machine");
 			this.MaxThreads.Value = new decimal(new int[] {
             4,
             0,
@@ -298,6 +309,7 @@
 			this.SlickAsGouraud.Size = new System.Drawing.Size(102, 17);
 			this.SlickAsGouraud.TabIndex = 23;
 			this.SlickAsGouraud.Text = "Slick = Gouraud";
+			this.mTips.SetToolTip(this.SlickAsGouraud, "Convert the Q2 slick flag into gouraud shading");
 			this.SlickAsGouraud.UseVisualStyleBackColor = true;
 			// 
 			// FixTJunctions
@@ -310,6 +322,7 @@
 			this.FixTJunctions.Size = new System.Drawing.Size(94, 17);
 			this.FixTJunctions.TabIndex = 22;
 			this.FixTJunctions.Text = "Fix TJunctions";
+			this.mTips.SetToolTip(this.FixTJunctions, "Split faces with edges that form a T causing visible cracks in the world");
 			this.FixTJunctions.UseVisualStyleBackColor = true;
 			// 
 			// VerboseEntity
@@ -320,6 +333,7 @@
 			this.VerboseEntity.Size = new System.Drawing.Size(94, 17);
 			this.VerboseEntity.TabIndex = 21;
 			this.VerboseEntity.Text = "Entity Verbose";
+			this.mTips.SetToolTip(this.VerboseEntity, "Spam for the moving brush models (doors / elevators etc)");
 			this.VerboseEntity.UseVisualStyleBackColor = true;
 			// 
 			// VerboseBSP
@@ -330,6 +344,7 @@
 			this.VerboseBSP.Size = new System.Drawing.Size(65, 17);
 			this.VerboseBSP.TabIndex = 20;
 			this.VerboseBSP.Text = "Verbose";
+			this.mTips.SetToolTip(this.VerboseBSP, "Turns on a lot of spam, which can slow down the build");
 			this.VerboseBSP.UseVisualStyleBackColor = true;
 			this.VerboseBSP.CheckedChanged += new System.EventHandler(this.OnVerbose);
 			// 
@@ -360,6 +375,52 @@
 			this.LightSettingsGroupBox.TabStop = false;
 			this.LightSettingsGroupBox.Text = "Light Settings";
 			// 
+			// label1
+			// 
+			this.label1.AutoSize = true;
+			this.label1.Location = new System.Drawing.Point(167, 47);
+			this.label1.Name = "label1";
+			this.label1.Size = new System.Drawing.Size(69, 13);
+			this.label1.TabIndex = 42;
+			this.label1.Text = "Surf Strength";
+			// 
+			// SurfaceLightStrength
+			// 
+			this.SurfaceLightStrength.Location = new System.Drawing.Point(116, 45);
+			this.SurfaceLightStrength.Maximum = new decimal(new int[] {
+            2048,
+            0,
+            0,
+            0});
+			this.SurfaceLightStrength.Minimum = new decimal(new int[] {
+            4,
+            0,
+            0,
+            0});
+			this.SurfaceLightStrength.Name = "SurfaceLightStrength";
+			this.SurfaceLightStrength.Size = new System.Drawing.Size(45, 20);
+			this.SurfaceLightStrength.TabIndex = 41;
+			this.mTips.SetToolTip(this.SurfaceLightStrength, "Strength of emitted tiny surface lights");
+			this.SurfaceLightStrength.Value = new decimal(new int[] {
+            16,
+            0,
+            0,
+            0});
+			// 
+			// SurfaceLighting
+			// 
+			this.SurfaceLighting.AutoSize = true;
+			this.SurfaceLighting.Checked = true;
+			this.SurfaceLighting.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.SurfaceLighting.Location = new System.Drawing.Point(6, 43);
+			this.SurfaceLighting.Name = "SurfaceLighting";
+			this.SurfaceLighting.Size = new System.Drawing.Size(103, 17);
+			this.SurfaceLighting.TabIndex = 40;
+			this.SurfaceLighting.Text = "Surface Lighting";
+			this.mTips.SetToolTip(this.SurfaceLighting, "Surfaces marked light emit light.  This can get very slow");
+			this.SurfaceLighting.UseVisualStyleBackColor = true;
+			this.SurfaceLighting.CheckedChanged += new System.EventHandler(this.OnSurfaceLighting);
+			// 
 			// label10
 			// 
 			this.label10.AutoSize = true;
@@ -385,6 +446,7 @@
 			this.NumSamples.Name = "NumSamples";
 			this.NumSamples.Size = new System.Drawing.Size(45, 20);
 			this.NumSamples.TabIndex = 38;
+			this.mTips.SetToolTip(this.NumSamples, "Extra ray samples to soften the results");
 			this.NumSamples.Value = new decimal(new int[] {
             5,
             0,
@@ -416,6 +478,7 @@
 			this.LightGridSize.Name = "LightGridSize";
 			this.LightGridSize.Size = new System.Drawing.Size(45, 20);
 			this.LightGridSize.TabIndex = 36;
+			this.mTips.SetToolTip(this.LightGridSize, "World units per light map texel");
 			this.LightGridSize.Value = new decimal(new int[] {
             4,
             0,
@@ -447,6 +510,7 @@
 			this.MaxIntensity.Name = "MaxIntensity";
 			this.MaxIntensity.Size = new System.Drawing.Size(45, 20);
 			this.MaxIntensity.TabIndex = 34;
+			this.mTips.SetToolTip(this.MaxIntensity, "Maximum light intensity");
 			this.MaxIntensity.Value = new decimal(new int[] {
             255,
             0,
@@ -491,6 +555,7 @@
 			this.MinLightZ.Name = "MinLightZ";
 			this.MinLightZ.Size = new System.Drawing.Size(45, 20);
 			this.MinLightZ.TabIndex = 29;
+			this.mTips.SetToolTip(this.MinLightZ, "Level wide ambient blue");
 			// 
 			// MinLightX
 			// 
@@ -503,6 +568,7 @@
 			this.MinLightX.Name = "MinLightX";
 			this.MinLightX.Size = new System.Drawing.Size(45, 20);
 			this.MinLightX.TabIndex = 30;
+			this.mTips.SetToolTip(this.MinLightX, "Level wide ambient red");
 			// 
 			// MinLightY
 			// 
@@ -515,6 +581,7 @@
 			this.MinLightY.Name = "MinLightY";
 			this.MinLightY.Size = new System.Drawing.Size(45, 20);
 			this.MinLightY.TabIndex = 28;
+			this.mTips.SetToolTip(this.MinLightY, "Level wide ambient green");
 			// 
 			// label3
 			// 
@@ -546,8 +613,9 @@
 			this.SurfaceLightFrequency.Name = "SurfaceLightFrequency";
 			this.SurfaceLightFrequency.Size = new System.Drawing.Size(45, 20);
 			this.SurfaceLightFrequency.TabIndex = 8;
+			this.mTips.SetToolTip(this.SurfaceLightFrequency, "Emit a light every x world units for surface lighting");
 			this.SurfaceLightFrequency.Value = new decimal(new int[] {
-            20,
+            48,
             0,
             0,
             0});
@@ -562,51 +630,8 @@
 			this.SeamCorrection.Size = new System.Drawing.Size(104, 17);
 			this.SeamCorrection.TabIndex = 1;
 			this.SeamCorrection.Text = "Seam Correction";
+			this.mTips.SetToolTip(this.SeamCorrection, "Shifts light points around a bit to help points just inside solid");
 			this.SeamCorrection.UseVisualStyleBackColor = true;
-			// 
-			// SurfaceLighting
-			// 
-			this.SurfaceLighting.AutoSize = true;
-			this.SurfaceLighting.Checked = true;
-			this.SurfaceLighting.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.SurfaceLighting.Location = new System.Drawing.Point(6, 43);
-			this.SurfaceLighting.Name = "SurfaceLighting";
-			this.SurfaceLighting.Size = new System.Drawing.Size(103, 17);
-			this.SurfaceLighting.TabIndex = 40;
-			this.SurfaceLighting.Text = "Surface Lighting";
-			this.SurfaceLighting.UseVisualStyleBackColor = true;
-			this.SurfaceLighting.CheckedChanged += new System.EventHandler(this.OnSurfaceLighting);
-			// 
-			// SurfaceLightStrength
-			// 
-			this.SurfaceLightStrength.Location = new System.Drawing.Point(116, 45);
-			this.SurfaceLightStrength.Maximum = new decimal(new int[] {
-            2048,
-            0,
-            0,
-            0});
-			this.SurfaceLightStrength.Minimum = new decimal(new int[] {
-            4,
-            0,
-            0,
-            0});
-			this.SurfaceLightStrength.Name = "SurfaceLightStrength";
-			this.SurfaceLightStrength.Size = new System.Drawing.Size(45, 20);
-			this.SurfaceLightStrength.TabIndex = 41;
-			this.SurfaceLightStrength.Value = new decimal(new int[] {
-            20,
-            0,
-            0,
-            0});
-			// 
-			// label1
-			// 
-			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(167, 47);
-			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(69, 13);
-			this.label1.TabIndex = 42;
-			this.label1.Text = "Surf Strength";
 			// 
 			// BSPForm
 			// 
@@ -628,6 +653,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.MaxThreads)).EndInit();
 			this.LightSettingsGroupBox.ResumeLayout(false);
 			this.LightSettingsGroupBox.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this.SurfaceLightStrength)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.NumSamples)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.LightGridSize)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaxIntensity)).EndInit();
@@ -635,7 +661,6 @@
 			((System.ComponentModel.ISupportInitialize)(this.MinLightX)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightY)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.SurfaceLightFrequency)).EndInit();
-			((System.ComponentModel.ISupportInitialize)(this.SurfaceLightStrength)).EndInit();
 			this.ResumeLayout(false);
 
 		}
@@ -683,5 +708,6 @@
 		private System.Windows.Forms.CheckBox SurfaceLighting;
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.NumericUpDown SurfaceLightStrength;
+		private System.Windows.Forms.ToolTip mTips;
 	}
 }

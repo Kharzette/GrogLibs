@@ -136,7 +136,7 @@ namespace BSPCore
 			DateTime	startTime	=DateTime.Now;
 
 			CoreEvents.Print("Starting light at " + startTime + "\n");
-			CoreEvents.Print("Num Faces            : " + mGFXFaces.Length + "\n");
+			CoreEvents.Print("Num Faces\t\t: " + mGFXFaces.Length + "\n");
 
 			if(!CreateDirectLights(lp))
 			{
@@ -177,7 +177,7 @@ namespace BSPCore
 
 			CoreEvents.Print("Finished light at " + done + "\n");
 			CoreEvents.Print(done - startTime + " elapsed\n");
-			CoreEvents.Print("Num Light Maps       : " + numRGBMaps + "\n");
+			CoreEvents.Print("Num Light Maps\t\t: " + numRGBMaps + "\n");
 
 			CoreEvents.FireLightDoneDoneEvent(true, null);
 			return;
@@ -469,7 +469,7 @@ namespace BSPCore
 				numDirectLights++;
 			}
 
-			CoreEvents.Print("Num Normal Lights   : " + numDirectLights + "\n");
+			CoreEvents.Print("Num Normal Lights\t: " + numDirectLights + "\n");
 
 			//surface lights below
 			if(!lp.mLightParams.mbSurfaceLighting)
@@ -544,7 +544,7 @@ namespace BSPCore
 					numSurfLights++;
 				}
 			}
-			CoreEvents.Print("Num Surf Lights     : " + numSurfLights + "\n");
+			CoreEvents.Print("Num Surf Lights\t\t: " + numSurfLights + "\n");
 			return	true;
 		}
 
@@ -1081,7 +1081,7 @@ namespace BSPCore
 				}
 			}
 
-			CoreEvents.Print("Light Data Size      : " + LightOffset + "\n");
+			CoreEvents.Print("Light Data Size\t\t: " + LightOffset + "\n");
 
 			return	lightData;
 		}

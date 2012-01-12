@@ -243,7 +243,6 @@ namespace BSPCore
 							ret			|=Contents.BSP_CONTENTS_WAVY2;
 							ret			|=Contents.BSP_CONTENTS_USER3;
 							ti.mFlags	|=TexInfo.TRANS;
-//							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 						}
 						if(tex == "DEV/DEV_SLIME")
 						{
@@ -252,7 +251,6 @@ namespace BSPCore
 							ret			|=Contents.BSP_CONTENTS_WAVY2;
 							ret			|=Contents.BSP_CONTENTS_USER2;
 							ti.mFlags	|=TexInfo.TRANS;
-//							ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 						}
 						ti.mTexture	=tex;
 					}
@@ -333,8 +331,6 @@ namespace BSPCore
 					plane.Snap();
 
 					mPlaneNum	=pool.FindPlane(plane, out mbFlipSide);
-
-//					GBSPPoly.TextureAxisFromPlane(plane, out ti.mUVec, out ti.mVVec);
 
 					//hammer prerotates texvecs!
 					if(false && rot != 0.0f)

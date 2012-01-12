@@ -132,6 +132,11 @@ namespace MeshLib
 			List<Vector2>	texs	=VertexTypes.GetTexCoord(mVerts, mNumVerts, mTypeIndex, texCoordSet);
 			List<Vector3>	norms	=VertexTypes.GetNormals(mVerts, mNumVerts, mTypeIndex);
 
+			if(texs.Count == 0)
+			{
+				return;
+			}
+
 			Vector3	[]stan	=new Vector3[mNumVerts];
 			Vector3	[]ttan	=new Vector3[mNumVerts];
 			Vector4	[]tang	=new Vector4[mNumVerts];

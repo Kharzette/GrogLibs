@@ -21,6 +21,33 @@ namespace UtilityLib
 			public SignedInGamer		mGamer;
 			public AvatarDescription	mAvatarDesc;
 			public AvatarRenderer		mAvatarRenderer;
+
+
+			//looks for a press and release
+			public bool WasKeyPressed(Keys key)
+			{
+				if(mKBS.IsKeyUp(key))
+				{
+					if(mLastKBS.IsKeyDown(key))
+					{
+						return	true;	//press and release
+					}
+				}
+				return	false;
+			}
+
+			//look for a press and release
+			public bool WasButtonPressed(Buttons but)
+			{
+				if(mGPS.IsButtonUp(but))
+				{
+					if(mLastGPS.IsButtonDown(but))
+					{
+						return	true;
+					}
+				}
+				return	false;
+			}
 		}
 
 		PlayerInput	mPlayer1	=new PlayerInput();

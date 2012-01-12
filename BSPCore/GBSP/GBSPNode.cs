@@ -69,9 +69,9 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				CoreEvents.Print("Total Brushes          : " + bs.NumVisBrushes + "\n");
-				CoreEvents.Print("Total Faces            : " + bs.NumVisFaces + "\n");
-				CoreEvents.Print("Faces Removed          : " + bs.NumNonVisFaces + "\n");
+				CoreEvents.Print("Total Brushes\t: " + bs.NumVisBrushes + "\n");
+				CoreEvents.Print("Total Faces\t: " + bs.NumVisFaces + "\n");
+				CoreEvents.Print("Faces Removed\t: " + bs.NumNonVisFaces + "\n");
 			}
 			bs.NumVisNodes		=0;
 			bs.NumNonVisNodes	=0;
@@ -87,9 +87,9 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				CoreEvents.Print("Total Nodes            : " + (bs.NumVisNodes/2 - bs.NumNonVisNodes) + "\n");
-				CoreEvents.Print("Nodes Removed          : " + bs.NumNonVisNodes + "\n");
-				CoreEvents.Print("Total Leafs            : " + (bs.NumVisNodes+1)/2 + "\n");
+				CoreEvents.Print("Total Nodes\t: " + (bs.NumVisNodes/2 - bs.NumNonVisNodes) + "\n");
+				CoreEvents.Print("Nodes Removed\t: " + bs.NumNonVisNodes + "\n");
+				CoreEvents.Print("Total Leafs\t: " + (bs.NumVisNodes+1)/2 + "\n");
 			}
 		}
 
@@ -357,9 +357,9 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				CoreEvents.Print("TotalFaces             : " + numMakeFaces + "\n");
-				CoreEvents.Print("Merged Faces           : " + numMerged + "\n");
-				CoreEvents.Print("FinalFaces             : " + ((numMakeFaces - numMerged)) + "\n");
+				CoreEvents.Print("TotalFaces\t\t: " + numMakeFaces + "\n");
+				CoreEvents.Print("Merged Faces\t\t: " + numMerged + "\n");
+				CoreEvents.Print("FinalFaces\t\t: " + ((numMakeFaces - numMerged)) + "\n");
 			}
 		}
 
@@ -549,7 +549,7 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				CoreEvents.Print("Num Merged             : " + mergedNodes + "\n");
+				CoreEvents.Print("Num Merged\t\t: " + mergedNodes + "\n");
 			}
 		}
 
@@ -566,7 +566,7 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				CoreEvents.Print("Num Clusters       : " + numLeafClusters + "\n");
+				CoreEvents.Print("Num Clusters\t\t: " + numLeafClusters + "\n");
 			}
 			return	true;
 		}
@@ -942,8 +942,8 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				CoreEvents.Print("Num Leaf Sides       : " + leafSides.Count + "\n");
-				CoreEvents.Print("Num Leaf Bevels      : " + numLeafBevels + "\n");
+				CoreEvents.Print("Num Leaf Sides\t\t: " + leafSides.Count + "\n");
+				CoreEvents.Print("Num Leaf Bevels\t\t: " + numLeafBevels + "\n");
 			}
 			return	true;
 		}

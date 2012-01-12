@@ -21,13 +21,15 @@ namespace MaterialLib
 		StateBlockPool	mStateBlockPool	=new StateBlockPool();
 
 		//references to the content managers
-		ContentManager	mContent, mSharedContent;
+		ContentManager	mGameContent;	//may contain game specific shaders
+		ContentManager	mShaderLib;		//shared shaders used by every game
 
 
 		//tool side constructor, loads up everything
-		public MaterialLib(GraphicsDevice gd, ContentManager cm)
+		public MaterialLib(GraphicsDevice gd, ContentManager cm, ContentManager sl)
 		{
-			mContent	=cm;
+			mGameContent	=cm;
+			mShaderLib		=sl;
 
 			LoadShaders();
 			LoadTextures(gd);
@@ -37,7 +39,7 @@ namespace MaterialLib
 		//file loader, game or tool
 		public MaterialLib(GraphicsDevice gd, ContentManager cm, string fn, bool bTool)
 		{
-			mContent	=cm;
+			mGameContent	=cm;
 
 			ReadFromFile(fn, bTool);
 			if(bTool)
@@ -50,8 +52,8 @@ namespace MaterialLib
 		//two content managers
 		public MaterialLib(GraphicsDevice gd, ContentManager cm, ContentManager scm, bool bTool)
 		{
-			mContent		=cm;
-			mSharedContent	=scm;
+			mGameContent	=cm;
+			mShaderLib		=scm;
 
 			if(bTool)
 			{
@@ -226,13 +228,15 @@ namespace MaterialLib
 					if(shd != null && shd != "")
 					{
 						Effect	fx	=null;
-						if(File.Exists("Content/" + shd + ".xnb"))
+						if(File.Exists(mGameContent.RootDirectory +
+							"/" + shd + ".xnb"))
 						{
-							fx	=mContent.Load<Effect>(shd);
+							fx	=mGameContent.Load<Effect>(shd);
 						}
-						else if(File.Exists("SharedContent/" + shd + ".xnb"))
+						else if(File.Exists(mShaderLib.RootDirectory +
+							"/" + shd + ".xnb"))
 						{
-							fx	=mSharedContent.Load<Effect>(shd);
+							fx	=mShaderLib.Load<Effect>(shd);
 						}
 
 						if(fx != null)
@@ -243,6 +247,8 @@ namespace MaterialLib
 				}
 
 				//load textures
+				//shouldn't really be any textures in the shader lib
+				//but I check for it anyway if not found
 				foreach(string tex in texs)
 				{
 					if(tex == "")
@@ -257,24 +263,28 @@ namespace MaterialLib
 						string	front	=tex.Substring(0, plusPos);
 						string	back	=tex.Substring(plusPos + 1, tex.Length - plusPos - 1);
 
-						if(File.Exists("Content/" + (front + back) + ".xnb"))
+						if(File.Exists(mGameContent.RootDirectory
+							+ "/" + (front + back) + ".xnb"))
 						{
-							t	=mContent.Load<Texture2D>(front + back);
+							t	=mGameContent.Load<Texture2D>(front + back);
 						}
-						else if(File.Exists("SharedContent/" + (front + back) + ".xnb"))
+						else if(File.Exists(mShaderLib.RootDirectory
+							+ "/" +(front + back) + ".xnb"))
 						{
-							t	=mSharedContent.Load<Texture2D>(front + back);
+							t	=mShaderLib.Load<Texture2D>(front + back);
 						}
 					}
 					else
 					{
-						if(File.Exists("Content/" + tex + ".xnb"))
+						if(File.Exists(mGameContent.RootDirectory
+							+ "/" + tex + ".xnb"))
 						{
-							t	=mContent.Load<Texture2D>(tex);
+							t	=mGameContent.Load<Texture2D>(tex);
 						}
-						else if(File.Exists("SharedContent/" + tex + ".xnb"))
+						else if(File.Exists(mShaderLib.RootDirectory
+							+ "/" + tex + ".xnb"))
 						{
-							t	=mSharedContent.Load<Texture2D>(tex);
+							t	=mShaderLib.Load<Texture2D>(tex);
 						}
 					}
 
@@ -776,28 +786,28 @@ namespace MaterialLib
 			return;
 #else
 			//see if Shader folder exists in Content
-			if(Directory.Exists("Content/Shaders"))
+			if(Directory.Exists(mShaderLib.RootDirectory + "/Shaders"))
 			{
 				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
-					+ "Content/Shaders/");
+					+ mShaderLib.RootDirectory + "/Shaders/");
 
 				FileInfo[]		fi	=di.GetFiles("*.xnb", SearchOption.AllDirectories);
 				foreach(FileInfo f in fi)
 				{
-					LoadShader(f.DirectoryName, f.Name);
+					LoadShader(f.DirectoryName, f.Name, mShaderLib);
 				}
 			}
 
-			//try shared as well
-			if(Directory.Exists("SharedContent/Shaders"))
+			//try game as well
+			if(Directory.Exists(mGameContent.RootDirectory + "/Shaders"))
 			{
 				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
-					+ "SharedContent/Shaders/");
+					+ mGameContent.RootDirectory + "/Shaders/");
 
 				FileInfo[]		fi	=di.GetFiles("*.xnb", SearchOption.AllDirectories);
 				foreach(FileInfo f in fi)
 				{
-					LoadSharedShader(f.DirectoryName, f.Name);
+					LoadShader(f.DirectoryName, f.Name, mGameContent);
 				}
 			}
 #endif
@@ -827,34 +837,24 @@ namespace MaterialLib
 
 			string	sansExt	=UtilityLib.FileUtil.StripExtension(path);
 
-			Texture2D	tex	=mSharedContent.Load<Texture2D>(sansExt);
+			Texture2D	tex	=mShaderLib.Load<Texture2D>(sansExt);
 			mMaps.Add(sansExt, tex);
 		}
 
 
-		void LoadShader(string dirName, string fileName)
+		void LoadShader(string dirName, string fileName, ContentManager cm)
 		{
 			string	path	=dirName + "\\" + fileName;
 
+			//strip off extension
 			path	=UtilityLib.FileUtil.StripExtension(path);
-			path	=path.Substring(path.LastIndexOf("Content") + 8);
+
+			//strip back the content dir
+			path	=path.Substring(path.LastIndexOf(cm.RootDirectory)
+				+ cm.RootDirectory.Length + 1);
 
 			//load shader
-			Effect	fx	=mContent.Load<Effect>(path);
-
-			mFX.Add(path, fx);
-		}
-
-
-		void LoadSharedShader(string dirName, string fileName)
-		{
-			string	path	=dirName + "\\" + fileName;
-
-			path	=UtilityLib.FileUtil.StripExtension(path);
-			path	=path.Substring(path.LastIndexOf("SharedContent") + 14);
-
-			//load shader
-			Effect	fx	=mSharedContent.Load<Effect>(path);
+			Effect	fx	=cm.Load<Effect>(path);
 
 			mFX.Add(path, fx);
 		}

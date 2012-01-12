@@ -1,0 +1,157 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{72265697-D88D-4D0D-981B-E0FF01568CA1}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SharedForms</RootNamespace>
+    <AssemblyName>SharedForms</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;NoMesh</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="BSPForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BSPForm.Designer.cs">
+      <DependentUpon>BSPForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataGridViewColorColumn.cs" />
+    <Compile Include="FormExtensions.cs" />
+    <Compile Include="GridModel.cs" />
+    <Compile Include="MaterialForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MaterialForm.designer.cs">
+      <DependentUpon>MaterialForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MaterialFormSkinnedStuff.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Output.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Output.Designer.cs">
+      <DependentUpon>Output.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ShaderList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ShaderList.designer.cs">
+      <DependentUpon>ShaderList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TabbyPropertyGrid.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="TechniqueList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TechniqueList.designer.cs">
+      <DependentUpon>TechniqueList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TextureForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TextureForm.designer.cs">
+      <DependentUpon>TextureForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="VisForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="VisForm.Designer.cs">
+      <DependentUpon>VisForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ZoneForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ZoneForm.Designer.cs">
+      <DependentUpon>ZoneForm.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="BSPForm.resx">
+      <DependentUpon>BSPForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MaterialForm.resx">
+      <DependentUpon>MaterialForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Output.resx">
+      <DependentUpon>Output.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ShaderList.resx">
+      <DependentUpon>ShaderList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TechniqueList.resx">
+      <DependentUpon>TechniqueList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TextureForm.resx">
+      <DependentUpon>TextureForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="VisForm.resx">
+      <DependentUpon>VisForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ZoneForm.resx">
+      <DependentUpon>ZoneForm.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86" />
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BSPCore\BSPCore32.csproj">
+      <Project>{62BDDCD2-0FDD-4FD4-B2B8-B9ED59B4D98C}</Project>
+      <Name>BSPCore32</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MaterialLib\MaterialLib.csproj">
+      <Project>{E6EAA6B0-1140-4BE3-AEFD-0DF83A7A705B}</Project>
+      <Name>MaterialLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MeshLib\MeshLibLudum.csproj">
+      <Project>{D322A6E0-D05E-404C-907F-AA77A64E1873}</Project>
+      <Name>MeshLibLudum</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\UtilityLib\UtilityLib.csproj">
+      <Project>{BB91910C-2595-4EB6-B48C-30BCC41457F6}</Project>
+      <Name>UtilityLib</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

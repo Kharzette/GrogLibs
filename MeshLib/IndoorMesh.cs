@@ -559,6 +559,16 @@ namespace MeshLib
 		}
 
 
+		public Texture2D GetLightMapAtlas()
+		{
+			if(mLightMapAtlas == null)
+			{
+				return	null;
+			}
+			return	mLightMapAtlas.GetAtlasTexture();
+		}
+
+
 		public void SwitchLight(int lightIndex, bool bOn)
 		{
 			mSwitches[lightIndex - 32]	=bOn;

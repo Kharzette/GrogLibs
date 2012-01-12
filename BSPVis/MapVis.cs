@@ -132,7 +132,7 @@ namespace BSPVis
 
 			CoreEvents.FireNumPortalsChangedEvent(mVisPortals.Length, null);
 
-			CoreEvents.Print("NumPortals           : " + mVisPortals.Length + "\n");
+			CoreEvents.Print("NumPortals\t: " + mVisPortals.Length + "\n");
 
 			DateTime	startTime	=DateTime.Now;
 
@@ -324,7 +324,7 @@ namespace BSPVis
 				return	false;
 			}
 
-			mGFXVisData	=UtilityLib.FileUtil.ReadByteArray(br);
+			mGFXVisData			=UtilityLib.FileUtil.ReadByteArray(br);
 			mGFXMaterialVisData	=UtilityLib.FileUtil.ReadByteArray(br);
 
 			//load clusters
@@ -361,6 +361,12 @@ namespace BSPVis
 
 
 #if !X64
+		public void SetMaterialVisBytes(Int32 matCount)
+		{
+			mNumVisMaterialBytes	=((matCount + 63) & ~63) >> 3;
+		}
+
+
 		public bool MaterialVisGBSPFile(string fileName)
 		{
 			CoreEvents.Print(" --- Material Vis GBSP File --- \n");
@@ -720,8 +726,8 @@ namespace BSPVis
 				TotalVisibleLeafs	+=leafSee;
 			}
 
-			CoreEvents.Print("Total visible areas           : " + TotalVisibleLeafs + "\n");
-			CoreEvents.Print("Average visible from each area: " + TotalVisibleLeafs / mVisLeafs.Length + "\n");
+			CoreEvents.Print("Total visible areas\t\t: " + TotalVisibleLeafs + "\n");
+			CoreEvents.Print("Average visible from each area\t: " + TotalVisibleLeafs / mVisLeafs.Length + "\n");
 
 			return	true;
 
@@ -823,7 +829,7 @@ namespace BSPVis
 			//He should not have seen himself (yet...)
 			if((mGFXVisData[LeafBitsOfs + (leafNum >> 3)] & Bit) != 0)
 			{
-				CoreEvents.Print("*WARNING* CollectLeafVisBits:  Leaf:" + leafNum + " can see himself!\n");
+				CoreEvents.Print("*WARNING* CollectLeafVisBits:  Leaf:" + leafNum + " can see itself!\n");
 			}
 
 			//mark own leaf as visible

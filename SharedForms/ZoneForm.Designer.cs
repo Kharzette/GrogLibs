@@ -28,6 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
 			this.GroupFileIO = new System.Windows.Forms.GroupBox();
 			this.LoadDebug = new System.Windows.Forms.Button();
 			this.SaveEmissives = new System.Windows.Forms.Button();
@@ -38,6 +39,7 @@
 			this.label10 = new System.Windows.Forms.Label();
 			this.AtlasSize = new System.Windows.Forms.NumericUpDown();
 			this.SaveDebug = new System.Windows.Forms.CheckBox();
+			this.mTips = new System.Windows.Forms.ToolTip(this.components);
 			this.GroupFileIO.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.AtlasSize)).BeginInit();
 			this.SuspendLayout();
@@ -64,6 +66,7 @@
 			this.LoadDebug.Size = new System.Drawing.Size(75, 23);
 			this.LoadDebug.TabIndex = 27;
 			this.LoadDebug.Text = "Load Debug";
+			this.mTips.SetToolTip(this.LoadDebug, "Load debug files for drawing portals or other misc data");
 			this.LoadDebug.UseVisualStyleBackColor = true;
 			this.LoadDebug.Click += new System.EventHandler(this.OnLoadDebug);
 			// 
@@ -74,6 +77,7 @@
 			this.SaveEmissives.Size = new System.Drawing.Size(96, 23);
 			this.SaveEmissives.TabIndex = 26;
 			this.SaveEmissives.Text = "Save Emissives";
+			this.mTips.SetToolTip(this.SaveEmissives, "Saves the emissives set up on the material form");
 			this.SaveEmissives.UseVisualStyleBackColor = true;
 			this.SaveEmissives.Click += new System.EventHandler(this.OnSaveEmissives);
 			// 
@@ -84,6 +88,7 @@
 			this.VisGBSP.Size = new System.Drawing.Size(75, 23);
 			this.VisGBSP.TabIndex = 25;
 			this.VisGBSP.Text = "Material Vis";
+			this.mTips.SetToolTip(this.VisGBSP, "Compute which materials are visible from any given cluster");
 			this.VisGBSP.UseVisualStyleBackColor = true;
 			this.VisGBSP.Click += new System.EventHandler(this.OnMaterialVis);
 			// 
@@ -95,6 +100,7 @@
 			this.SaveZone.Size = new System.Drawing.Size(75, 23);
 			this.SaveZone.TabIndex = 21;
 			this.SaveZone.Text = "Save Zone";
+			this.mTips.SetToolTip(this.SaveZone, "Save the zone, also creates a ZoneDraw file");
 			this.SaveZone.UseVisualStyleBackColor = true;
 			this.SaveZone.Click += new System.EventHandler(this.OnSaveZone);
 			// 
@@ -105,6 +111,7 @@
 			this.GenerateMaterials.Size = new System.Drawing.Size(75, 23);
 			this.GenerateMaterials.TabIndex = 24;
 			this.GenerateMaterials.Text = "Gen Mats";
+			this.mTips.SetToolTip(this.GenerateMaterials, "Generate materials, useful for making emissives for lighting");
 			this.GenerateMaterials.UseVisualStyleBackColor = true;
 			this.GenerateMaterials.Click += new System.EventHandler(this.OnGenerateMaterials);
 			// 
@@ -115,6 +122,7 @@
 			this.LoadGBSP.Size = new System.Drawing.Size(75, 23);
 			this.LoadGBSP.TabIndex = 19;
 			this.LoadGBSP.Text = "Zone GBSP";
+			this.mTips.SetToolTip(this.LoadGBSP, "Grind a gbsp file into Zone and ZoneDraw information");
 			this.LoadGBSP.UseVisualStyleBackColor = true;
 			this.LoadGBSP.Click += new System.EventHandler(this.OnZone);
 			// 
@@ -148,6 +156,8 @@
 			this.AtlasSize.Name = "AtlasSize";
 			this.AtlasSize.Size = new System.Drawing.Size(53, 20);
 			this.AtlasSize.TabIndex = 42;
+			this.mTips.SetToolTip(this.AtlasSize, "Size of the atlas that contains the lightmaps.  Smaller the better, but you may r" +
+        "un out of space.");
 			this.AtlasSize.Value = new decimal(new int[] {
             1024,
             0,
@@ -164,6 +174,7 @@
 			this.SaveDebug.Size = new System.Drawing.Size(107, 17);
 			this.SaveDebug.TabIndex = 43;
 			this.SaveDebug.Text = "Save Debug Info";
+			this.mTips.SetToolTip(this.SaveDebug, "Save the Zone with leaf face and other data a final game has no need of");
 			this.SaveDebug.UseVisualStyleBackColor = true;
 			// 
 			// ZoneForm
@@ -197,5 +208,6 @@
 		private System.Windows.Forms.Label label10;
 		private System.Windows.Forms.NumericUpDown AtlasSize;
 		private System.Windows.Forms.CheckBox SaveDebug;
+		private System.Windows.Forms.ToolTip mTips;
 	}
 }

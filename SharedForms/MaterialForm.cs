@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Diagnostics;
@@ -170,6 +169,12 @@ namespace SharedForms
 		}
 
 
+		public void SetReadOnly(bool bReadOnly)
+		{
+			MaterialGrid.ReadOnly	=bReadOnly;
+		}
+
+
 		void OnTextureListOk(object sender, EventArgs ea)
 		{
 			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
@@ -234,36 +239,6 @@ namespace SharedForms
 		}
 
 
-		void OnMeshPartListUpdated(object sender, EventArgs ea)
-		{
-			List<SkinnedMesh>	skm	=sender as List<SkinnedMesh>;
-			List<StaticMesh>	stm	=sender as List<StaticMesh>;
-
-			if(skm != null && skm.Count != 0)
-			{
-				BindingList<Mesh>	blm	=new BindingList<Mesh>();
-
-				foreach(SkinnedMesh m in skm)
-				{
-					blm.Add(m);
-				}
-
-				MeshPartGrid.DataSource	=blm;
-			}
-			else if(stm != null && stm.Count != 0)
-			{
-				BindingList<Mesh>	blm	=new BindingList<Mesh>();
-
-				foreach(StaticMesh m in stm)
-				{
-					blm.Add(m);
-				}
-
-				MeshPartGrid.DataSource	=blm;
-			}
-		}
-
-
 		void OnTechniqueListCancel(object sender, EventArgs ea)
 		{
 			mTL.eOk		-=OnTechniqueListOk;
@@ -304,31 +279,6 @@ namespace SharedForms
 			mSL.eCancel	-=OnShaderListCancel;
 
 			MaterialGrid.Enabled	=true;
-		}
-
-
-		public void UpdateMeshPartList(List<SkinnedMesh> skm, List<StaticMesh> stm)
-		{
-			BindingList<Mesh>	blm	=new BindingList<Mesh>();
-
-			if(skm != null && skm.Count != 0)
-			{
-				foreach(SkinnedMesh m in skm)
-				{
-					blm.Add(m);
-				}
-			}
-
-			if(stm != null && stm.Count != 0)
-			{
-				foreach(StaticMesh m in stm)
-				{
-					blm.Add(m);
-				}
-			}
-			MeshPartGrid.DataSource	=blm;
-
-//			BoundsChanged();
 		}
 
 
@@ -541,6 +491,9 @@ namespace SharedForms
 
 		void OnSave(object sender, EventArgs e)
 		{
+			mSFD.DefaultExt	="*.MatLib";
+			mSFD.Filter		="Material lib files (*.MatLib)|*.MatLib|All files (*.*)|*.*";
+
 			DialogResult	dr	=mSFD.ShowDialog();
 
 			if(dr == DialogResult.Cancel)
@@ -556,6 +509,9 @@ namespace SharedForms
 
 		void OnLoad(object sender, EventArgs e)
 		{
+			mOFD.DefaultExt	="*.MatLib";
+			mOFD.Filter		="Material lib files (*.MatLib)|*.MatLib|All files (*.*)|*.*";
+
 			DialogResult	dr	=mOFD.ShowDialog();
 
 			if(dr == DialogResult.Cancel)
@@ -580,18 +536,13 @@ namespace SharedForms
 		}
 
 
-		void OnMeshPartNuking(object sender, DataGridViewRowCancelEventArgs e)
-		{
-			if(e.Row.DataBoundItem.GetType().BaseType == typeof(Mesh))
-			{
-				Mesh	nukeMe	=(Mesh)e.Row.DataBoundItem;
-				eNukedMeshPart(nukeMe, null);
-			}
-		}
-
-
 		void OnNukeMaterial(object sender, DataGridViewRowCancelEventArgs e)
 		{
+			if(MaterialGrid.ReadOnly)
+			{
+				e.Cancel	=true;
+				return;
+			}
 			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)e.Row.DataBoundItem;
 			MaterialLib.Material	mat	=gs.GetParentMaterial();
 
@@ -654,27 +605,6 @@ namespace SharedForms
 			mMatLib.AssignEmissives();
 
 			MaterialGrid.Refresh();
-		}
-
-
-		void OnGenBiNormalTangent(object sender, EventArgs e)
-		{
-			DataGridViewSelectedRowCollection	mpSel	=MeshPartGrid.SelectedRows;
-
-			if(mpSel == null)
-			{
-				return;
-			}
-
-			foreach(DataGridViewRow row in mpSel)
-			{
-				Mesh	msh	=row.DataBoundItem as Mesh;
-				if(msh == null)
-				{
-					continue;
-				}
-				msh.GenTangents(mGD, (int)TexCoordSet.Value);
-			}
 		}
 	}
 }

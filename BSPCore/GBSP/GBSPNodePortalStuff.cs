@@ -612,7 +612,7 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				CoreEvents.Print("Removed Leafs          : " + numRemovedLeafs + "\n");
+				CoreEvents.Print("Removed Leafs\t: " + numRemovedLeafs + "\n");
 			}
 
 			return	numRemovedLeafs;

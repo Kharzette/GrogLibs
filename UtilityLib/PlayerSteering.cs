@@ -237,8 +237,8 @@ namespace UtilityLib
 				mPitch	+=gs.ThumbSticks.Right.Y * msDelta * 0.25f;
 				mYaw	+=gs.ThumbSticks.Right.X * msDelta * 0.25f;
 
-				mPosition	-=vleft * (gs.ThumbSticks.Left.X * msDelta * 0.25f);
-				mPosition	+=vin * (gs.ThumbSticks.Left.Y * msDelta * 0.25f);
+				mPosition	+=vleft * (gs.ThumbSticks.Left.X * msDelta * 0.25f);
+				mPosition	-=vin * (gs.ThumbSticks.Left.Y * msDelta * 0.25f);
 			}
 		}
 

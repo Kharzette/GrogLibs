@@ -70,6 +70,16 @@ namespace BSPZone
 		}
 
 
+		public string GetValue(string key)
+		{
+			if(!mData.ContainsKey(key))
+			{
+				return	"";
+			}
+			return	mData[key];
+		}
+
+
 		public bool GetInt(string key, out int val)
 		{
 			val	=0;

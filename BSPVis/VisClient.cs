@@ -23,7 +23,7 @@ namespace BSPVis
 		bool	PortalFlow(object visState);
 
 		[OperationContract]
-		byte	[]IsFinished(object visState);
+		byte	[]IsFinished(object visState, out bool bWorkingOnIt);
 
 		[OperationContract]
 		bool	HasPortals(object visState);
@@ -98,9 +98,9 @@ namespace BSPVis
 			return	base.Channel.FreePortals();
 		}
 
-		public byte []IsFinished(object visState)
+		public byte []IsFinished(object visState, out bool bWorkingOnIt)
 		{
-			return	base.Channel.IsFinished(visState);
+			return	base.Channel.IsFinished(visState, out bWorkingOnIt);
 		}
 
 		public BuildFarmCaps QueryCapabilities()

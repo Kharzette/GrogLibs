@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -204,6 +203,7 @@ namespace SharedForms
 		void OnSurfaceLighting(object sender, EventArgs e)
 		{
 			SurfaceLightFrequency.Enabled	=SurfaceLighting.Checked;
+			SurfaceLightStrength.Enabled	=SurfaceLighting.Checked;
 		}
 	}
 }

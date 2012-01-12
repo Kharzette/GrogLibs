@@ -980,8 +980,8 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				CoreEvents.Print(" Num TJunctions        : " + ff.NumTJunctions + "\n");
-				CoreEvents.Print(" Num Fixed Faces       : " + ff.NumFixedFaces + "\n");
+				CoreEvents.Print(" Num TJunctions\t\t: " + ff.NumTJunctions + "\n");
+				CoreEvents.Print(" Num Fixed Faces\t: " + ff.NumFixedFaces + "\n");
 			}
 			return true;
 		}
@@ -1098,20 +1098,20 @@ namespace BSPCore
 
 			CoreEvents.Print(" --- Save GBSP File --- \n");
 		 	
-			CoreEvents.Print("Num Models           : " + mModels.Count + "\n");
-			CoreEvents.Print("Num Nodes            : " + nc.mNumGFXNodes + "\n");
-			CoreEvents.Print("Num Solid Leafs      : " + nc.mNumSolidLeafs + "\n");
-			CoreEvents.Print("Num Total Leafs      : " + nc.mNumGFXLeafs + "\n");
-			CoreEvents.Print("Num Clusters         : " + nc.mNumLeafClusters + "\n");
-			CoreEvents.Print("Num Areas            : " + (mGFXAreas.Length - 1) + "\n");
-			CoreEvents.Print("Num Area Portals     : " + mGFXAreaPortals.Length + "\n");
-			CoreEvents.Print("Num Leafs Sides      : " + mGFXLeafSides.Length + "\n");
-			CoreEvents.Print("Num Planes           : " + mPlanePool.mPlanes.Count + "\n");
-			CoreEvents.Print("Num Faces            : " + nc.mNumGFXFaces + "\n");
-			CoreEvents.Print("Num Leaf Faces       : " + nc.mNumGFXLeafFaces + "\n");
-			CoreEvents.Print("Num Vert Index       : " + nc.VertIndexListCount + "\n");
-			CoreEvents.Print("Num Verts            : " + mGFXVerts.Length + "\n");
-			CoreEvents.Print("Num FaceInfo         : " + mTIPool.mTexInfos.Count + "\n");
+			CoreEvents.Print("Num Models\t\t: " + mModels.Count + "\n");
+			CoreEvents.Print("Num Nodes\t\t: " + nc.mNumGFXNodes + "\n");
+			CoreEvents.Print("Num Solid Leafs\t\t: " + nc.mNumSolidLeafs + "\n");
+			CoreEvents.Print("Num Total Leafs\t\t: " + nc.mNumGFXLeafs + "\n");
+			CoreEvents.Print("Num Clusters\t\t: " + nc.mNumLeafClusters + "\n");
+			CoreEvents.Print("Num Areas\t\t: " + (mGFXAreas.Length - 1) + "\n");
+			CoreEvents.Print("Num Area Portals\t: " + mGFXAreaPortals.Length + "\n");
+			CoreEvents.Print("Num Leafs Sides\t\t: " + mGFXLeafSides.Length + "\n");
+			CoreEvents.Print("Num Planes\t\t: " + mPlanePool.mPlanes.Count + "\n");
+			CoreEvents.Print("Num Faces\t\t: " + nc.mNumGFXFaces + "\n");
+			CoreEvents.Print("Num Leaf Faces\t\t: " + nc.mNumGFXLeafFaces + "\n");
+			CoreEvents.Print("Num Vert Index\t\t: " + nc.VertIndexListCount + "\n");
+			CoreEvents.Print("Num Verts\t\t: " + mGFXVerts.Length + "\n");
+			CoreEvents.Print("Num FaceInfo\t\t: " + mTIPool.mTexInfos.Count + "\n");
 
 			FreeGBSPFile();
 

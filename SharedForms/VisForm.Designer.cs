@@ -28,6 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
 			this.RoughVis = new System.Windows.Forms.CheckBox();
 			this.Distributed = new System.Windows.Forms.CheckBox();
 			this.ResumeVis = new System.Windows.Forms.Button();
@@ -38,6 +39,7 @@
 			this.SortPortals = new System.Windows.Forms.CheckBox();
 			this.GroupFileIO = new System.Windows.Forms.GroupBox();
 			this.Pause = new System.Windows.Forms.Button();
+			this.mTips = new System.Windows.Forms.ToolTip(this.components);
 			this.GroupFileIO.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -49,6 +51,7 @@
 			this.RoughVis.Size = new System.Drawing.Size(58, 17);
 			this.RoughVis.TabIndex = 45;
 			this.RoughVis.Text = "Rough";
+			this.mTips.SetToolTip(this.RoughVis, "Do only a facing portal stage, not very effective");
 			this.RoughVis.UseVisualStyleBackColor = true;
 			// 
 			// Distributed
@@ -59,6 +62,7 @@
 			this.Distributed.Size = new System.Drawing.Size(76, 17);
 			this.Distributed.TabIndex = 44;
 			this.Distributed.Text = "Distributed";
+			this.mTips.SetToolTip(this.Distributed, "Connects to remove machines to split up the work");
 			this.Distributed.UseVisualStyleBackColor = true;
 			this.Distributed.CheckedChanged += new System.EventHandler(this.OnDistChecked);
 			// 
@@ -70,6 +74,7 @@
 			this.ResumeVis.Size = new System.Drawing.Size(81, 23);
 			this.ResumeVis.TabIndex = 42;
 			this.ResumeVis.Text = "Resume Vis";
+			this.mTips.SetToolTip(this.ResumeVis, "Resume a partially completed distributed vis");
 			this.ResumeVis.UseVisualStyleBackColor = true;
 			this.ResumeVis.Click += new System.EventHandler(this.OnResumeVis);
 			// 
@@ -80,6 +85,7 @@
 			this.Stop.Size = new System.Drawing.Size(44, 23);
 			this.Stop.TabIndex = 41;
 			this.Stop.Text = "Stop";
+			this.mTips.SetToolTip(this.Stop, "Kill the vis in progress (doesn\'t work yet)");
 			this.Stop.UseVisualStyleBackColor = true;
 			this.Stop.Click += new System.EventHandler(this.OnStopVis);
 			// 
@@ -90,6 +96,8 @@
 			this.ReloadBuildFarm.Size = new System.Drawing.Size(87, 23);
 			this.ReloadBuildFarm.TabIndex = 40;
 			this.ReloadBuildFarm.Text = "ReLoad Farm";
+			this.mTips.SetToolTip(this.ReloadBuildFarm, "Reload the farm file, useful for adding new nodes while a map is vising.  New fil" +
+        "e should contain only new nodes!");
 			this.ReloadBuildFarm.UseVisualStyleBackColor = true;
 			this.ReloadBuildFarm.Click += new System.EventHandler(this.OnReLoadVisFarm);
 			// 
@@ -100,6 +108,7 @@
 			this.QueryVisFarm.Size = new System.Drawing.Size(95, 23);
 			this.QueryVisFarm.TabIndex = 39;
 			this.QueryVisFarm.Text = "Query VisFarm";
+			this.mTips.SetToolTip(this.QueryVisFarm, "Ask each vis farm node about it\'s capabilities");
 			this.QueryVisFarm.UseVisualStyleBackColor = true;
 			this.QueryVisFarm.Click += new System.EventHandler(this.OnQueryVisFarm);
 			// 
@@ -110,6 +119,7 @@
 			this.VisGBSP.Size = new System.Drawing.Size(90, 23);
 			this.VisGBSP.TabIndex = 38;
 			this.VisGBSP.Text = "Vis GBSP File";
+			this.mTips.SetToolTip(this.VisGBSP, "Run a visibility computation process on a gbsp file");
 			this.VisGBSP.UseVisualStyleBackColor = true;
 			this.VisGBSP.Click += new System.EventHandler(this.OnVisGBSP);
 			// 
@@ -123,6 +133,7 @@
 			this.SortPortals.Size = new System.Drawing.Size(80, 17);
 			this.SortPortals.TabIndex = 46;
 			this.SortPortals.Text = "Sort Portals";
+			this.mTips.SetToolTip(this.SortPortals, "Helps with speeding up the vis by finishing tight areas first");
 			this.SortPortals.UseVisualStyleBackColor = true;
 			// 
 			// GroupFileIO
@@ -143,6 +154,7 @@
 			this.Pause.Size = new System.Drawing.Size(75, 23);
 			this.Pause.TabIndex = 48;
 			this.Pause.Text = "Pause";
+			this.mTips.SetToolTip(this.Pause, "Pause the vis in progress to give the cpu a breather (doesn\'t work yet)");
 			this.Pause.UseVisualStyleBackColor = true;
 			// 
 			// VisForm
@@ -179,5 +191,6 @@
 		private System.Windows.Forms.CheckBox SortPortals;
 		private System.Windows.Forms.GroupBox GroupFileIO;
 		private System.Windows.Forms.Button Pause;
+		private System.Windows.Forms.ToolTip mTips;
 	}
 }

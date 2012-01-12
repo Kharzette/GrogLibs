@@ -368,8 +368,8 @@ namespace BSPCore
 			bw.Close();
 			fs.Close();
 
-			CoreEvents.Print("Num Portals          : " + numPortals + "\n");
-			CoreEvents.Print("Num Portal Leafs     : " + numPortalLeafs + "\n");
+			CoreEvents.Print("Num Portals\t\t: " + numPortals + "\n");
+			CoreEvents.Print("Num Portal Leafs\t: " + numPortalLeafs + "\n");
 
 			return	true;
 		}

@@ -464,7 +464,7 @@ namespace BSPCore
 			if(bVerbose)
 			{
 				CoreEvents.Print("---- GankBrushOverlap ----\n");
-				CoreEvents.Print("Num brushes before gankery : " + list.Count + "\n");
+				CoreEvents.Print("Num brushes before gankery\t: " + list.Count + "\n");
 			}
 
 		startOver:
@@ -577,7 +577,7 @@ namespace BSPCore
 
 			if(bVerbose)
 			{
-				CoreEvents.Print("Num brushes after gankery  : " + keep.Count + "\n");
+				CoreEvents.Print("Num brushes after gankery\t: " + keep.Count + "\n");
 			}
 
 			return	keep;

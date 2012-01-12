@@ -590,20 +590,14 @@ namespace BSPZone
 
 		public void BoxTriggerCheck(BoundingBox box, Vector3 start, Vector3 end)
 		{
-			//TODO: full traced solution, just check contains for now
-			List<Vector3>	bothCorners	=new List<Vector3>();
+			//TODO: full traced solution, just check intersects for now
+			BoundingBox	boxStart	=box;
+			BoundingBox	boxEnd		=box;
 
-			Vector3	[]corners	=box.GetCorners();
-			for(int i=0;i < corners.Length;i++)
-			{
-				Vector3	sCorn	=corners[i] + start;
-				Vector3	eCorn	=corners[i] + end;
-
-				bothCorners.Add(sCorn);
-				bothCorners.Add(eCorn);
-			}
-
-			corners	=null;
+			boxStart.Min	+=start;
+			boxStart.Max	+=start;
+			boxEnd.Min		+=end;
+			boxEnd.Max		+=end;
 
 			foreach(ZoneTrigger zt in mTriggers)
 			{
@@ -612,14 +606,9 @@ namespace BSPZone
 					continue;
 				}
 
-				foreach(Vector3 pos in bothCorners)
+				if(zt.mBox.Intersects(boxStart) ||
+					zt.mBox.Intersects(boxEnd))
 				{
-					ContainmentType	ct	=zt.mBox.Contains(pos);
-					if(ct == ContainmentType.Disjoint)
-					{
-						continue;
-					}
-
 					zt.mbTriggered	=true;
 					UtilityLib.Misc.SafeInvoke(eTriggerHit, zt.mEntity);
 				}
@@ -836,6 +825,60 @@ namespace BSPZone
 			FindParents_r(mZoneNodes[Node].mBack, Node);
 		}
 		#endregion
+
+
+		//for debugging
+		public void GetTriggerGeometry(List<Vector3> verts, List<Int32> inds)
+		{
+			Int32	curIndex	=0;
+			foreach(ZoneTrigger zt in mTriggers)
+			{
+				if(zt.mbTriggerOnce && zt.mbTriggered)
+				{
+					continue;
+				}
+
+				Vector3	[]corners	=zt.mBox.GetCorners();
+
+				foreach(Vector3 v in corners)
+				{
+					verts.Add(v);
+				}
+
+				//wireframe lines
+				//front face
+				inds.Add(curIndex);
+				inds.Add(curIndex + 1);
+				inds.Add(curIndex + 1);
+				inds.Add(curIndex + 2);
+				inds.Add(curIndex + 2);
+				inds.Add(curIndex + 3);
+				inds.Add(curIndex + 3);
+				inds.Add(curIndex);
+
+				//back face
+				inds.Add(curIndex + 4);
+				inds.Add(curIndex + 5);
+				inds.Add(curIndex + 5);
+				inds.Add(curIndex + 6);
+				inds.Add(curIndex + 6);
+				inds.Add(curIndex + 7);
+				inds.Add(curIndex + 7);
+				inds.Add(curIndex + 4);
+
+				//connections for sides
+				inds.Add(curIndex);
+				inds.Add(curIndex + 4);
+				inds.Add(curIndex + 1);
+				inds.Add(curIndex + 5);
+				inds.Add(curIndex + 2);
+				inds.Add(curIndex + 6);
+				inds.Add(curIndex + 3);
+				inds.Add(curIndex + 7);
+
+				curIndex	+=8;
+			}
+		}
 
 
 		public void GetBounds(out Vector3 mins, out Vector3 maxs)
