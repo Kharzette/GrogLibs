@@ -104,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Contents.cs" />
+    <Compile Include="DebugFace.cs" />
     <Compile Include="ZoneLeafSide.cs" />
     <Compile Include="VisArea.cs" />
     <Compile Include="VisAreaPortal.cs" />

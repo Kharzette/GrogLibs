@@ -18,6 +18,7 @@ namespace SharedForms
 		public event EventHandler	eSaveEmissives;
 		public event EventHandler	eMaterialVis;
 		public event EventHandler	eLoadDebug;
+		public event EventHandler	eDumpTextures;
 
 
 		public ZoneForm()
@@ -148,6 +149,12 @@ namespace SharedForms
 			BSPCore.CoreEvents.Print("Loading debug file " + mSFD.FileName + "\n");
 
 			UtilityLib.Misc.SafeInvoke(eLoadDebug, mOFD.FileName);
+		}
+
+
+		void OnDumpTextures(object sender, EventArgs e)
+		{
+			UtilityLib.Misc.SafeInvoke(eDumpTextures, null);
 		}
 	}
 }

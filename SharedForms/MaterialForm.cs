@@ -187,17 +187,34 @@ namespace SharedForms
 
 			//hack to autoset width / height
 			Texture2D	tex	=mMatLib.GetTexture(sender as string);
+			if(tex != null)
+			{
+				//add / update the tex size parameter
+				//but only if it is already there
+				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
+				MaterialLib.Material	mat	=gs.GetParentMaterial();
+				mat.SetParameter("mTexSize",
+					"" + (tex.Width * 2) + " " + (tex.Height * 2));
 
-			//add / update the tex size parameter
-			//but only if it is already there
-			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
-			MaterialLib.Material	mat	=gs.GetParentMaterial();
-			mat.SetParameter("mTexSize",
-				"" + (tex.Width * 2) + " " + (tex.Height * 2));
+				//set texture enabled
+				mat.SetParameter("mbTextureEnabled", "true");
+			}
+			else
+			{
+				//check for cube
+				TextureCube	texCube	=mMatLib.GetTextureCube(sender as string);
+				if(texCube != null)
+				{
+					//change texture param to texcube
+					MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
+					MaterialLib.Material	mat	=gs.GetParentMaterial();
 
-			//set texture enabled
-			mat.SetParameter("mbTextureEnabled", "true");
+					mat.SetTextureParameterToCube("mTexture");
 
+					//set texture enabled
+					mat.SetParameter("mbTextureEnabled", "true");
+				}
+			}
 			MaterialGrid.Enabled		=true;
 			MaterialProperties.Enabled	=true;
 		}
@@ -440,7 +457,11 @@ namespace SharedForms
 				EffectParameterType	ept	=(EffectParameterType)
 					MaterialProperties.Rows[e.RowIndex].Cells[2].Value;
 
-				if(ept == EffectParameterType.Texture)
+				if(ept == EffectParameterType.Texture
+					|| ept == EffectParameterType.Texture1D
+					|| ept == EffectParameterType.Texture2D
+					|| ept == EffectParameterType.Texture3D
+					|| ept == EffectParameterType.TextureCube)
 				{
 					//keep a reference to this cell while
 					//the tex gump comes up

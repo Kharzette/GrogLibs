@@ -40,6 +40,7 @@
 			this.AtlasSize = new System.Windows.Forms.NumericUpDown();
 			this.SaveDebug = new System.Windows.Forms.CheckBox();
 			this.mTips = new System.Windows.Forms.ToolTip(this.components);
+			this.DumpTextures = new System.Windows.Forms.Button();
 			this.GroupFileIO.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.AtlasSize)).BeginInit();
 			this.SuspendLayout();
@@ -177,12 +178,23 @@
 			this.mTips.SetToolTip(this.SaveDebug, "Save the Zone with leaf face and other data a final game has no need of");
 			this.SaveDebug.UseVisualStyleBackColor = true;
 			// 
+			// DumpTextures
+			// 
+			this.DumpTextures.Location = new System.Drawing.Point(207, 61);
+			this.DumpTextures.Name = "DumpTextures";
+			this.DumpTextures.Size = new System.Drawing.Size(87, 34);
+			this.DumpTextures.TabIndex = 44;
+			this.DumpTextures.Text = "Dump Textures Used";
+			this.DumpTextures.UseVisualStyleBackColor = true;
+			this.DumpTextures.Click += new System.EventHandler(this.OnDumpTextures);
+			// 
 			// ZoneForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(389, 129);
 			this.ControlBox = false;
+			this.Controls.Add(this.DumpTextures);
 			this.Controls.Add(this.SaveDebug);
 			this.Controls.Add(this.AtlasSize);
 			this.Controls.Add(this.label10);
@@ -209,5 +221,6 @@
 		private System.Windows.Forms.NumericUpDown AtlasSize;
 		private System.Windows.Forms.CheckBox SaveDebug;
 		private System.Windows.Forms.ToolTip mTips;
+		private System.Windows.Forms.Button DumpTextures;
 	}
 }

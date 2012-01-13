@@ -31,6 +31,13 @@ namespace UtilityLib
 			return	fileName;
 		}
 
+
+		//converts \\ to /
+		public static string ConvertPathSlashes(string path)
+		{
+			return	path.Replace('\\', '/');
+		}
+
 		
 		public static bool FileExists(string fileName)
 		{

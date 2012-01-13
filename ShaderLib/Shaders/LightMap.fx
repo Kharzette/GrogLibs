@@ -114,14 +114,8 @@ VPosCubeTex0 SkyVertexShader(VPosTex0 input)
 
 	float4	worldPosition	=mul(input.Position, mWorld);
 
+	output.TexCoord0	=worldPosition.xyz;
 	output.Position		=mul(mul(worldPosition, mView), mProjection);
-	
-	//calculate vector from eye to pos
-	float3	eyeVec	=worldPosition - mEyePos;
-	
-	eyeVec	=normalize(eyeVec);
-	
-	output.TexCoord0	=eyeVec;
 
 	return	output;
 }
@@ -192,9 +186,9 @@ sampler SkySampler = sampler_state
 	MagFilter	=Linear;
 	MipFilter	=Linear;
 
-	AddressU	=Wrap;
-	AddressV	=Wrap;
-	AddressW	=Wrap;
+	AddressU	=Clamp;
+	AddressV	=Clamp;
+	AddressW	=Clamp;
 };
 
 
@@ -376,7 +370,14 @@ float4 SkyPixelShader(VCubeTex0 input) : COLOR0
 {
 	if(mbTextureEnabled)
 	{
-		return	texCUBE(SkySampler, input.TexCoord0);		
+		float3	worldPosition	=input.TexCoord0;
+
+		//calculate vector from eye to pos
+		float3	eyeVec	=worldPosition - mEyePos;
+	
+		eyeVec	=normalize(eyeVec);
+	
+		return	texCUBE(SkySampler, eyeVec);		
 	}
 
 	return	float4(1, 1, 1, 1);

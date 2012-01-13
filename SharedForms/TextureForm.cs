@@ -28,8 +28,16 @@ namespace SharedForms
 
 			Dictionary<string, Texture2D>	textures
 				=mMatLib.GetTextures();
+			Dictionary<string, TextureCube>	texCubes
+				=mMatLib.GetTextureCubes();
 
 			foreach(KeyValuePair<string, Texture2D> tex in textures)
+			{
+				TextureGridModel	tgm	=new TextureGridModel();
+				tgm.Name	=tex.Key;
+				mTextures.Add(tgm);
+			}
+			foreach(KeyValuePair<string, TextureCube> tex in texCubes)
 			{
 				TextureGridModel	tgm	=new TextureGridModel();
 				tgm.Name	=tex.Key;

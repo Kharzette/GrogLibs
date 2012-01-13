@@ -16,6 +16,7 @@ namespace MaterialLib
 		Dictionary<string, Material>	mMats	=new Dictionary<string, Material>();
 		Dictionary<string, Effect>		mFX		=new Dictionary<string, Effect>();
 		Dictionary<string, Texture2D>	mMaps	=new Dictionary<string, Texture2D>();
+		Dictionary<string, TextureCube>	mCubes	=new Dictionary<string, TextureCube>();
 
 		//state block pool
 		StateBlockPool	mStateBlockPool	=new StateBlockPool();
@@ -25,31 +26,7 @@ namespace MaterialLib
 		ContentManager	mShaderLib;		//shared shaders used by every game
 
 
-		//tool side constructor, loads up everything
-		public MaterialLib(GraphicsDevice gd, ContentManager cm, ContentManager sl)
-		{
-			mGameContent	=cm;
-			mShaderLib		=sl;
-
-			LoadShaders();
-			LoadTextures(gd);
-		}
-
-
-		//file loader, game or tool
-		public MaterialLib(GraphicsDevice gd, ContentManager cm, string fn, bool bTool)
-		{
-			mGameContent	=cm;
-
-			ReadFromFile(fn, bTool);
-			if(bTool)
-			{
-				LoadToolTextures(gd);
-			}
-		}
-
-
-		//two content managers
+		//two content managers, tool or game
 		public MaterialLib(GraphicsDevice gd, ContentManager cm, ContentManager scm, bool bTool)
 		{
 			mGameContent	=cm;
@@ -58,7 +35,8 @@ namespace MaterialLib
 			if(bTool)
 			{
 				LoadShaders();
-				LoadTextures(gd);
+				LoadTextures();
+				LoadCubes(gd);
 			}
 		}
 
@@ -66,16 +44,6 @@ namespace MaterialLib
 		//for just material creation, nothing else will work
 		public MaterialLib()
 		{
-		}
-
-
-		//this merges in all the content directory
-		//textures for the tool chain after loading
-		//a material lib from a file
-		public void LoadToolTextures(GraphicsDevice gd)
-		{
-			LoadTextures(gd);
-			LoadShaders();
 		}
 
 
@@ -122,6 +90,12 @@ namespace MaterialLib
 		public Dictionary<string, Texture2D> GetTextures()
 		{
 			return	mMaps;
+		}
+
+
+		public Dictionary<string, TextureCube> GetTextureCubes()
+		{
+			return	mCubes;
 		}
 
 
@@ -257,34 +231,28 @@ namespace MaterialLib
 					}
 
 					Texture2D	t	=null;
-					if(tex.Contains("+"))
-					{
-						int		plusPos	=tex.LastIndexOf('+');
-						string	front	=tex.Substring(0, plusPos);
-						string	back	=tex.Substring(plusPos + 1, tex.Length - plusPos - 1);
 
-						if(File.Exists(mGameContent.RootDirectory
-							+ "/" + (front + back) + ".xnb"))
+					//I used to have special code here to strip + out of
+					//the key to load a texture, because the xbox can't have
+					//any + characters in a filename, but the tex file has
+					//to be renamed anyway, so it's not that hard to change it
+					//in the material lib.  So yea don't do filenames with +
+					//some older formats used to key with the textures path on front
+					int		tdPos	=tex.LastIndexOf("Textures");
+					if(tdPos != -1)
+					{
+						string	key		=tex.Substring(tdPos + 9, tex.Length - 9);
+						if(!LoadTexture(mGameContent, tex, key))
 						{
-							t	=mGameContent.Load<Texture2D>(front + back);
-						}
-						else if(File.Exists(mShaderLib.RootDirectory
-							+ "/" +(front + back) + ".xnb"))
-						{
-							t	=mShaderLib.Load<Texture2D>(front + back);
+							LoadTexture(mShaderLib, tex, tex);
 						}
 					}
 					else
 					{
-						if(File.Exists(mGameContent.RootDirectory
-							+ "/" + tex + ".xnb"))
+						string	path	="Textures/" + tex;
+						if(!LoadTexture(mGameContent, path, tex))
 						{
-							t	=mGameContent.Load<Texture2D>(tex);
-						}
-						else if(File.Exists(mShaderLib.RootDirectory
-							+ "/" + tex + ".xnb"))
-						{
-							t	=mShaderLib.Load<Texture2D>(tex);
+							LoadTexture(mShaderLib, path, tex);
 						}
 					}
 
@@ -497,6 +465,16 @@ namespace MaterialLib
 		}
 
 
+		public TextureCube GetTextureCube(string name)
+		{
+			if(mCubes.ContainsKey(name))
+			{
+				return	mCubes[name];
+			}
+			return	null;
+		}
+
+
 		public Effect GetMaterialShader(string name)
 		{
 			if(mMats.ContainsKey(name))
@@ -565,6 +543,13 @@ namespace MaterialLib
 							if(mMaps.ContainsKey(sp.Value))
 							{
 								fx.Parameters[sp.Name].SetValue(mMaps[sp.Value]);
+							}
+						}
+						else if(sp.Type == EffectParameterType.TextureCube)
+						{
+							if(mCubes.ContainsKey(sp.Value))
+							{
+								fx.Parameters[sp.Name].SetValue(mCubes[sp.Value]);
 							}
 						}
 						else
@@ -814,31 +799,32 @@ namespace MaterialLib
 		}
 
 
-		void LoadTexture(GraphicsDevice gd, string dirName, string fileName)
+		Texture2D LoadTex(ContentManager cm, string fileName)
 		{
-			string	path	=dirName + "\\" + fileName;
-
-			FileStream	fs	=new FileStream(path, FileMode.Open, FileAccess.Read);
-
-			Texture2D	tex	=Texture2D.FromStream(gd, fs);
-
-			path	=path.Substring(path.LastIndexOf("Content") + 8);
-			path	=UtilityLib.FileUtil.StripExtension(path);
-
-			mMaps.Add(path, tex);
+			if(!File.Exists(cm.RootDirectory + "/" + fileName + ".xnb"))
+			{
+				return	null;
+			}
+			return	cm.Load<Texture2D>(fileName);
 		}
 
 
-		void LoadSharedTexture(GraphicsDevice gd, string dirName, string fileName)
+		bool LoadTexture(ContentManager cm, string fileName, string key)
 		{
-			string	path	=dirName + "\\" + fileName;
+			if(mMaps.ContainsKey(key))
+			{
+				return	false;
+			}
 
-			path	=path.Substring(path.LastIndexOf("SharedContent") + 14);
+			Texture2D	tex	=LoadTex(cm, fileName);
+			if(tex == null)
+			{
+				return	false;
+			}
 
-			string	sansExt	=UtilityLib.FileUtil.StripExtension(path);
+			mMaps.Add(key, tex);
 
-			Texture2D	tex	=mShaderLib.Load<Texture2D>(sansExt);
-			mMaps.Add(sansExt, tex);
+			return	true;
 		}
 
 
@@ -860,42 +846,221 @@ namespace MaterialLib
 		}
 
 
-		void LoadTextures(GraphicsDevice gd)
+		string StripCubeDesignator(string fn)
+		{
+			if(fn.EndsWith("Up"))
+			{
+				return	fn.Substring(0, fn.Length - 2);
+			}
+			else if(fn.EndsWith("Down"))
+			{
+				return	fn.Substring(0, fn.Length - 4);
+			}
+			else if(fn.EndsWith("Left"))
+			{
+				return	fn.Substring(0, fn.Length - 4);
+			}
+			else if(fn.EndsWith("Right"))
+			{
+				return	fn.Substring(0, fn.Length - 5);
+			}
+			else if(fn.EndsWith("Front"))
+			{
+				return	fn.Substring(0, fn.Length - 5);
+			}
+			else if(fn.EndsWith("Back"))
+			{
+				return	fn.Substring(0, fn.Length - 4);
+			}
+			return	"";
+		}
+
+
+		void SetCubeFace(TextureCube cube, Texture2D face, CubeMapFace cmf)
+		{
+			Debug.Assert(face.Format == SurfaceFormat.Color);
+
+			Color	[]faceTexels	=new Color[face.Width * face.Height];
+
+			face.GetData<Color>(faceTexels);
+
+			if(cmf == CubeMapFace.PositiveY || cmf == CubeMapFace.NegativeY)
+			{
+				/*
+				//Y faces are upside down for some reason
+				List<Color>	revTex	=new List<Color>();
+
+				for(int y=face.Height - 1;y >= 0;y--)
+				{
+					for(int x=0;x < face.Width;x++)
+					{
+						revTex.Add(faceTexels[(y * face.Width) + x]);
+					}
+				}
+
+				faceTexels	=revTex.ToArray();*/
+
+				List<Color>	revTex	=new List<Color>();
+				for(int y=0;y < face.Height;y++)
+				{
+					for(int x=face.Width - 1;x >= 0;x--)
+					{
+						revTex.Add(faceTexels[(x * face.Width) + y]);
+					}
+				}
+
+				if(cmf == CubeMapFace.NegativeY)
+				{
+					revTex.Reverse();
+				}
+
+				faceTexels	=revTex.ToArray();
+			}
+
+			cube.SetData<Color>(cmf, faceTexels);
+		}
+
+
+		void LoadTextureCube(GraphicsDevice gd, ContentManager cm, string fn, string key)
+		{
+			Texture2D	up		=LoadTex(mGameContent, fn + "Up");
+			Texture2D	down	=LoadTex(mGameContent, fn + "Down");
+			Texture2D	left	=LoadTex(mGameContent, fn + "Left");
+			Texture2D	right	=LoadTex(mGameContent, fn + "Right");
+			Texture2D	front	=LoadTex(mGameContent, fn + "Front");
+			Texture2D	back	=LoadTex(mGameContent, fn + "Back");
+
+			Debug.Assert((up.Width & down.Width & left.Width & right.Width & front.Width & back.Width) == up.Width);
+			Debug.Assert((up.Height & down.Height & left.Height & right.Height & front.Height & back.Height) == up.Height);
+			Debug.Assert(up.Width == up.Height);
+
+			TextureCube	tc	=new TextureCube(gd, up.Width, false, SurfaceFormat.Color);
+			SetCubeFace(tc, up, CubeMapFace.PositiveY);
+			SetCubeFace(tc, down, CubeMapFace.NegativeY);
+			SetCubeFace(tc, left, CubeMapFace.PositiveX);
+			SetCubeFace(tc, right, CubeMapFace.NegativeX);
+			SetCubeFace(tc, front, CubeMapFace.PositiveZ);
+			SetCubeFace(tc, back, CubeMapFace.NegativeZ);
+
+			mCubes.Add(key, tc);
+		}
+
+
+		void LoadCubes(GraphicsDevice gd)
 		{
 #if XBOX
 			//this is a toolside method, stubbed out on xbox
 			return;
 #else
-			if(Directory.Exists("../../../Content/Textures"))
+			if(Directory.Exists(mGameContent.RootDirectory + "/TextureCubes"))
 			{
 				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
-					+ "../../../Content/Textures/");
+					+ mGameContent.RootDirectory + "/TextureCubes/");
 
-				//stupid getfiles won't take multiple wildcards
-				FileInfo[]		fi	=di.GetFiles("*.png", SearchOption.AllDirectories);
+				//make a list to keep track of duplicates (6 tex files per cube)
+				Dictionary<string, int>		baseNamesUsed	=new Dictionary<string, int>();
+				Dictionary<string, string>	dirs			=new Dictionary<string, string>();
+
+				FileInfo[]		fi	=di.GetFiles("*.xnb", SearchOption.AllDirectories);
 				foreach(FileInfo f in fi)
 				{
-					LoadTexture(gd, f.DirectoryName, f.Name);
+					string	fn	=UtilityLib.FileUtil.StripExtension(f.Name);
+					string	dir	=f.DirectoryName;
+
+					//strip off the end to get the texture's base name
+					fn	=StripCubeDesignator(fn);
+
+					Debug.Assert(fn != "");
+
+					if(fn == "")
+					{
+						continue;
+					}
+
+					if(baseNamesUsed.ContainsKey(fn))
+					{
+						baseNamesUsed[fn]++;
+						continue;
+					}
+
+					baseNamesUsed.Add(fn, 1);
+					dirs.Add(fn, dir);
 				}
 
-				fi	=di.GetFiles("*.jpg", SearchOption.AllDirectories);
-				foreach(FileInfo f in fi)
+				Debug.Assert(dirs.Count == baseNamesUsed.Count);
+
+				foreach(KeyValuePair<string, int> bases in baseNamesUsed)
 				{
-					LoadTexture(gd, f.DirectoryName, f.Name);
+					Debug.Assert(bases.Value == 6);
+					if(bases.Value != 6)
+					{
+						continue;
+					}
+
+					string	dir	=dirs[bases.Key];
+					string	fn	=bases.Key;
+
+					//strip back the content dir
+					string	path	=dir.Substring(dir.LastIndexOf(mGameContent.RootDirectory)
+						+ mGameContent.RootDirectory.Length + 1);
+
+					//strip texturecubes
+					int	texPos	=path.LastIndexOf("TextureCubes");
+					if(texPos < 0 || path.Length <= 12)
+					{
+						LoadTextureCube(gd, mGameContent, path + "/" + fn, fn);
+					}
+					else
+					{
+						string	key	=path.Substring(texPos + 13,
+							path.Length - 13);
+
+						LoadTextureCube(gd, mGameContent, path + "/" + fn, key + "/" + fn);
+					}
 				}
 			}
+#endif
+		}
 
-			//shared textures will always use the content manager
-			if(Directory.Exists("SharedContent/Textures"))
+
+		void LoadTextures()
+		{
+#if XBOX
+			//this is a toolside method, stubbed out on xbox
+			return;
+#else
+			if(Directory.Exists(mGameContent.RootDirectory + "/Textures"))
 			{
 				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
-					+ "SharedContent/Textures/");
+					+ mGameContent.RootDirectory + "/Textures/");
 
 				//stupid getfiles won't take multiple wildcards
 				FileInfo[]		fi	=di.GetFiles("*.xnb", SearchOption.AllDirectories);
 				foreach(FileInfo f in fi)
 				{
-					LoadSharedTexture(gd, f.DirectoryName, f.Name);
+					string	fn	=UtilityLib.FileUtil.StripExtension(f.Name);
+
+					string	dir	=f.DirectoryName;
+
+					//strip back the content dir
+					string	path	=dir.Substring(dir.LastIndexOf(mGameContent.RootDirectory)
+						+ mGameContent.RootDirectory.Length + 1);
+
+					//strip textures
+					int	texPos	=path.LastIndexOf("Textures");
+					if(texPos < 0 || path.Length <= 8)
+					{
+						//probably won't work, but try it
+						LoadTexture(mGameContent, path + "/" + fn, fn);
+					}
+					else
+					{
+						string	key	=path.Substring(texPos + 9,
+							path.Length - 9);
+
+						LoadTexture(mGameContent, path + "/" + fn,
+							UtilityLib.FileUtil.ConvertPathSlashes(key) + "/" + fn);
+					}
 				}
 			}
 #endif
