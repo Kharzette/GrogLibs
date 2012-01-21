@@ -180,8 +180,38 @@ namespace BSPCore
 		}
 
 
+		//quake style, the genesis style axis was off
+		//on 45 degree sloped faces (e3m3 is a good test)
+		//z and y swapped and x negated does the trick
+		//will need to dig in svn for the hammer compatible ver
 		public static bool TextureAxisFromPlane(GBSPPlane pln, out Vector3 xv, out Vector3 yv)
 		{
+			List<Vector3>	baseAxis	=new List<Vector3>();
+
+			baseAxis.Add(Vector3.UnitY);
+			baseAxis.Add(-Vector3.UnitX);
+			baseAxis.Add(-Vector3.UnitZ);
+
+			baseAxis.Add(-Vector3.UnitY);
+			baseAxis.Add(-Vector3.UnitX);
+			baseAxis.Add(-Vector3.UnitZ);
+
+			baseAxis.Add(-Vector3.UnitX);
+			baseAxis.Add(Vector3.UnitZ);
+			baseAxis.Add(-Vector3.UnitY);
+
+			baseAxis.Add(Vector3.UnitX);
+			baseAxis.Add(Vector3.UnitZ);
+			baseAxis.Add(-Vector3.UnitY);
+
+			baseAxis.Add(Vector3.UnitZ);
+			baseAxis.Add(-Vector3.UnitX);
+			baseAxis.Add(-Vector3.UnitY);
+
+			baseAxis.Add(-Vector3.UnitZ);
+			baseAxis.Add(-Vector3.UnitX);
+			baseAxis.Add(-Vector3.UnitY);
+
 			Int32	bestAxis;
 			float	dot, best;
 			
@@ -190,10 +220,10 @@ namespace BSPCore
 
 			xv	=Vector3.Zero;
 			yv	=Vector3.Zero;
-			
-			for(int i=0;i < 3;i++)
+
+			for(int i=0;i < 6;i++)
 			{
-				dot	=Math.Abs(UtilityLib.Mathery.VecIdx(pln.mNormal, i));
+				dot	=Vector3.Dot(pln.mNormal, baseAxis[i * 3]);
 				if(dot > best)
 				{
 					best		=dot;
@@ -201,48 +231,9 @@ namespace BSPCore
 				}
 			}
 
-			//note that this is set up for quake 1 texcoords
-			//hammer is different TODO: make switchable
-			switch(bestAxis)
-			{
-				case 0:						// X
-					xv.X	=0.0f;
-					xv.Y	=0.0f;
-					xv.Z	=1.0f;
+			xv	=baseAxis[bestAxis * 3 + 1];
+			yv	=baseAxis[bestAxis * 3 + 2];
 
-					yv.X	=0.0f;
-					yv.Y	=-1.0f;
-					yv.Z	=0.0f;
-					break;
-				case 1:						// Y
-					xv.X	=-1.0f;
-					xv.Y	=0.0f;
-					xv.Z	=0.0f;
-
-					yv.X	=0.0f;
-					yv.Y	=0.0f;
-					yv.Z	=-1.0f;
-					break;
-				case 2:						// Z
-					xv.X	=-1.0f;
-					xv.Y	=0.0f;
-					xv.Z	=0.0f;
-
-					yv.X	=0.0f;
-					yv.Y	=-1.0f;
-					yv.Z	=0.0f;
-					break;
-				default:
-					xv.X	=0.0f;
-					xv.Y	=0.0f;
-					xv.Z	=1.0f;
-
-					yv.X	=0.0f;
-					yv.Y	=-1.0f;
-					yv.Z	=0.0f;
-					CoreEvents.Print("GetTextureAxis: No Axis found.");
-					return false;
-			}
 			return	true;
 		}
 

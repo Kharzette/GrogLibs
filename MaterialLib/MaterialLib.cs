@@ -740,6 +740,16 @@ namespace MaterialLib
 		}
 
 
+		public void SetParameterOnAll(string paramName, bool bVal)
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				string	sval	="" + bVal;
+				mat.Value.SetParameter(paramName, sval);
+			}
+		}
+
+
 		public void RefreshShaderParameters()
 		{
 			foreach(KeyValuePair<string, Material> mat in mMats)

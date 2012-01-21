@@ -517,49 +517,23 @@ namespace BSPCore
 
 
 		//handles basic verts and texcoord 0
-		static void ComputeFaceData(GFXFace f, Vector3 []verts, int []indexes, GFXTexInfo tex,
-			List<Vector2> tex0, List<Vector3> outVerts, ref Vector2 materialMin)
+		static void ComputeFaceData(GFXFace f, Vector3 []verts, int []indexes,
+			GFXTexInfo tex,	List<Vector2> tex0, List<Vector3> outVerts)
 		{
 			outVerts.AddRange(GetFaceVerts(f, verts, indexes));
 
-			Vector2	max	=-Vector2.One * Bounds.MIN_MAX_BOUNDS;
 			foreach(Vector3 v in outVerts)
 			{
 				Vector2	crd;
-				crd.X	=Vector3.Dot(tex.mVecU, v) + tex.mShiftU;
-				crd.Y	=Vector3.Dot(tex.mVecV, v) + tex.mShiftV;
-
-				crd.X	/=tex.mDrawScaleU;
-				crd.Y	/=tex.mDrawScaleV;
-				
-				if(crd.X < materialMin.X)
-				{
-					materialMin.X	=crd.X;
-				}
-				if(crd.Y < materialMin.Y)
-				{
-					materialMin.Y	=crd.Y;
-				}
-				if(crd.X > max.X)
-				{
-					max.X	=crd.X;
-				}
-				if(crd.Y > max.Y)
-				{
-					max.Y	=crd.Y;
-				}
-			}
-			
-			foreach(Vector3 v in outVerts)
-			{
-				Vector2	crd;
-				crd.X	=Vector3.Dot(tex.mVecU, v) + tex.mShiftU;
-				crd.Y	=Vector3.Dot(tex.mVecV, v) + tex.mShiftV;
+				crd.X	=Vector3.Dot(tex.mVecU, v);
+				crd.Y	=Vector3.Dot(tex.mVecV, v);
 
 				crd.X	/=tex.mDrawScaleU;
 				crd.Y	/=tex.mDrawScaleV;
 
-//				tex0.Add(crd + min);
+				crd.X	+=tex.mShiftU;
+				crd.Y	+=tex.mShiftV;
+
 				tex0.Add(crd);
 			}
 		}
@@ -715,10 +689,6 @@ namespace BSPCore
 			//store faces per material
 			List<DrawDataChunk>	matChunks	=new List<DrawDataChunk>();
 
-			//compute a minimum coordinate in texture space
-			//used to bias the texcoords into the positive
-			Vector2	matMin	=Vector2.One * Bounds.MIN_MAX_BOUNDS;
-
 			foreach(Material mat in mMaterials)
 			{
 				DrawDataChunk	ddc	=new DrawDataChunk();
@@ -777,7 +747,7 @@ namespace BSPCore
 					}
 
 					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts, ref matMin);
+					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 					ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
 
 					foreach(Vector3 v in faceVerts)
@@ -806,8 +776,6 @@ namespace BSPCore
 
 			mLMAnimDraws	=ComputeIndexes(mLMAnimIndexes, matChunks);
 
-			BiasMaterialTexCoord0(matChunks, matMin);
-
 			StuffVBArrays(matChunks, mLMAnimVerts, mLMAnimNormals,
 				mLMAnimFaceTex0, mLMAnimFaceTex1, mLMAnimFaceTex2,
 				mLMAnimFaceTex3, mLMAnimFaceTex4, null, mLMAnimStyle);
@@ -826,10 +794,6 @@ namespace BSPCore
 			//store each plane used, and how many faces per material
 			List<Dictionary<Int32, DrawDataChunk>>	perPlaneChunks
 				=new List<Dictionary<Int32, DrawDataChunk>>();
-
-			//compute a minimum coordinate in texture space
-			//used to bias the texcoords into the positive
-			Vector2	matMin	=Vector2.One * Bounds.MIN_MAX_BOUNDS;
 
 			foreach(Material mat in mMaterials)
 			{
@@ -899,7 +863,7 @@ namespace BSPCore
 					}
 
 					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts, ref matMin);
+					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 					ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
 
 					foreach(Vector3 v in faceVerts)
@@ -941,8 +905,6 @@ namespace BSPCore
 				}
 			}
 
-			BiasMaterialTexCoord0(ddcList, matMin);
-
 			StuffVBArrays(perPlaneChunks, mLMAAnimVerts, mLMAAnimNormals,
 				mLMAAnimFaceTex0, mLMAAnimFaceTex1, mLMAAnimFaceTex2, 
 				mLMAAnimFaceTex3, mLMAAnimFaceTex4, mLMAAnimColors,
@@ -976,10 +938,6 @@ namespace BSPCore
 				{
 					continue;
 				}
-
-				//compute a minimum coordinate in texture space
-				//used to bias the texcoords into the positive
-				Vector2	matMin	=Vector2.One * Bounds.MIN_MAX_BOUNDS;
 
 				CoreEvents.Print("Light for material: " + mat.Name + ".\n");
 
@@ -1024,7 +982,7 @@ namespace BSPCore
 					}
 
 					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts, ref matMin);
+					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 					ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
 
 					if(!AtlasLightMap(f, lightData, 0, faceVerts, pln, tex, ddc.mTex1))
@@ -1033,8 +991,6 @@ namespace BSPCore
 					}
 					ddc.mVerts.AddRange(faceVerts);
 				}
-
-				BiasMaterialTexCoord0(ddc, matMin);
 			}
 
 			mLMAtlas.Finish();
@@ -1059,10 +1015,6 @@ namespace BSPCore
 			//store each plane used, and how many faces per material
 			List<Dictionary<Int32, DrawDataChunk>>	perPlaneChunks
 				=new List<Dictionary<Int32, DrawDataChunk>>();
-
-			//compute a minimum coordinate in texture space
-			//used to bias the texcoords into the positive
-			Vector2	matMin	=Vector2.One * Bounds.MIN_MAX_BOUNDS;
 
 			foreach(Material mat in mMaterials)
 			{
@@ -1129,7 +1081,7 @@ namespace BSPCore
 					}
 
 					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts, ref matMin);
+					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 					ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
 
 					foreach(Vector3 v in faceVerts)
@@ -1155,17 +1107,6 @@ namespace BSPCore
 
 			mLMADraws	=ComputeAlphaIndexes(mLMAIndexes, perPlaneChunks);
 
-			List<DrawDataChunk>	ddcList	=new List<DrawDataChunk>();
-			foreach(Dictionary<Int32, DrawDataChunk> dcd in perPlaneChunks)
-			{
-				foreach(KeyValuePair<Int32, DrawDataChunk> ddc in dcd)
-				{
-					ddcList.Add(ddc.Value);
-				}
-			}
-
-			BiasMaterialTexCoord0(ddcList, matMin);
-
 			StuffVBArrays(perPlaneChunks, mLMAVerts, mLMANormals,
 				mLMAFaceTex0, mLMAFaceTex1, null, null, null,
 				mLMAColors, null);
@@ -1183,10 +1124,6 @@ namespace BSPCore
 
 			//store faces per material
 			List<DrawDataChunk>	matChunks	=new List<DrawDataChunk>();
-
-			//compute a minimum coordinate in texture space
-			//used to bias the texcoords into the positive
-			Vector2	matMin	=Vector2.One * Bounds.MIN_MAX_BOUNDS;
 
 			foreach(Material mat in mMaterials)
 			{
@@ -1243,7 +1180,7 @@ namespace BSPCore
 					}
 
 					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts, ref matMin);
+					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 					ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
 					ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
 
@@ -1252,8 +1189,6 @@ namespace BSPCore
 			}
 
 			mVLitDraws	=ComputeIndexes(mVLitIndexes, matChunks);
-
-			BiasMaterialTexCoord0(matChunks, matMin);
 
 			StuffVBArrays(matChunks, mVLitVerts, mVLitNormals,
 				mVLitTex0, null, null, null,
@@ -1269,10 +1204,6 @@ namespace BSPCore
 			GFXPlane	[]pp		=pobj as GFXPlane [];
 
 			CoreEvents.Print("Building mirror face data...\n");
-
-			//compute a minimum coordinate in texture space
-			//used to bias the texcoords into the positive
-			Vector2	matMin	=Vector2.One * Bounds.MIN_MAX_BOUNDS;
 
 			//store each plane used, and how many faces per material
 			List<Dictionary<Int32, DrawDataChunk>>	perPlaneChunks
@@ -1343,7 +1274,7 @@ namespace BSPCore
 
 					List<Vector3>	fverts	=new List<Vector3>();
 					List<Vector2>	blah	=new List<Vector2>();
-					ComputeFaceData(f, verts, indexes, tex, blah, fverts, ref matMin);
+					ComputeFaceData(f, verts, indexes, tex, blah, fverts);
 					ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
 					ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
 
@@ -1377,10 +1308,6 @@ namespace BSPCore
 			GFXPlane	[]pp		=pobj as GFXPlane [];
 
 			CoreEvents.Print("Building alpha face data...\n");
-
-			//compute a minimum coordinate in texture space
-			//used to bias the texcoords into the positive
-			Vector2	matMin	=Vector2.One * Bounds.MIN_MAX_BOUNDS;
 
 			//store each plane used, and how many faces per material
 			List<Dictionary<Int32, DrawDataChunk>>	perPlaneChunks
@@ -1451,7 +1378,7 @@ namespace BSPCore
 					}
 
 					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts, ref matMin);
+					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 					ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
 					ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
 
@@ -1465,17 +1392,6 @@ namespace BSPCore
 			}
 
 			mAlphaDraws	=ComputeAlphaIndexes(mAlphaIndexes, perPlaneChunks);
-
-			List<DrawDataChunk>	ddcList	=new List<DrawDataChunk>();
-			foreach(Dictionary<Int32, DrawDataChunk> dcd in perPlaneChunks)
-			{
-				foreach(KeyValuePair<Int32, DrawDataChunk> ddc in dcd)
-				{
-					ddcList.Add(ddc.Value);
-				}
-			}
-
-			BiasMaterialTexCoord0(ddcList, matMin);
 
 			StuffVBArrays(perPlaneChunks, mAlphaVerts, mAlphaNormals,
 				mAlphaTex0, null, null, null, null,	mAlphaColors, null);
@@ -1493,10 +1409,6 @@ namespace BSPCore
 
 			//store faces per material
 			List<DrawDataChunk>	matChunks	=new List<DrawDataChunk>();
-
-			//compute a minimum coordinate in texture space
-			//used to bias the texcoords into the positive
-			Vector2	matMin	=Vector2.One * Bounds.MIN_MAX_BOUNDS;
 
 			foreach(Material mat in mMaterials)
 			{
@@ -1543,7 +1455,7 @@ namespace BSPCore
 					ddc.mVCounts.Add(f.mNumVerts);
 
 					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts, ref matMin);
+					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 
 					ddc.mVerts.AddRange(faceVerts);
 				}
@@ -1568,10 +1480,6 @@ namespace BSPCore
 
 			//store faces per material
 			List<DrawDataChunk>	matChunks	=new List<DrawDataChunk>();
-
-			//compute a minimum coordinate in texture space
-			//used to bias the texcoords into the positive
-			Vector2	matMin	=Vector2.One * Bounds.MIN_MAX_BOUNDS;
 
 			foreach(Material mat in mMaterials)
 			{
@@ -1623,7 +1531,7 @@ namespace BSPCore
 					ddc.mVCounts.Add(f.mNumVerts);
 
 					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts, ref matMin);
+					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 
 					ddc.mVerts.AddRange(faceVerts);
 				}
@@ -2226,24 +2134,6 @@ namespace BSPCore
 				{
 					mMaterialNames.Add(matName);
 				}
-			}
-		}
-
-
-		void BiasMaterialTexCoord0(List<DrawDataChunk> matChunks, Vector2 matMin)
-		{
-			foreach(DrawDataChunk ddc in matChunks)
-			{
-				BiasMaterialTexCoord0(ddc, matMin);
-			}
-		}
-
-
-		void BiasMaterialTexCoord0(DrawDataChunk ddc, Vector2 matMin)
-		{
-			for(int i=0;i < ddc.mTex0.Count;i++)
-			{
-				ddc.mTex0[i]	+=matMin;
 			}
 		}
 
