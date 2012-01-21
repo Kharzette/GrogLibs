@@ -236,6 +236,24 @@ namespace MaterialLib
 		}
 
 
+		public List<string>	GetReferencedCubeTextures()
+		{
+			List<string>	ret	=new List<string>();
+
+			foreach(ShaderParameters sp in mParameters)
+			{
+				if(sp.Type == EffectParameterType.TextureCube)
+				{
+					if(sp.Value != null && sp.Value != "")
+					{
+						ret.Add(sp.Value);
+					}
+				}
+			}
+			return	ret;
+		}
+
+
 		public void SetParameter(string paramName, string value)
 		{
 			foreach(ShaderParameters sp in mParameters)

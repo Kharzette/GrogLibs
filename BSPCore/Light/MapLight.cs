@@ -364,7 +364,11 @@ namespace BSPCore
 						targetNameStyles.Add(targName, switchable);
 						dLight.mLType	=switchable++;
 					}
-					ent.mData.Add("LightSwitchNum", "" + dLight.mLType);
+
+					if(!ent.mData.ContainsKey("LightSwitchNum"))
+					{
+						ent.mData.Add("LightSwitchNum", "" + dLight.mLType);
+					}
 				}
 
 				Vector3	Angles;

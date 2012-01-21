@@ -125,7 +125,7 @@ namespace MaterialLib
 		}
 
 
-		public bool ReadFromFile(string fileName, bool bTool)
+		public bool ReadFromFile(string fileName, bool bTool, GraphicsDevice gd)
 		{
 			Stream	file	=null;
 			if(bTool)
@@ -161,6 +161,7 @@ namespace MaterialLib
 			//list the referenced textures and shaders
 			List<string>	texNeeded	=new List<string>();
 			List<string>	shdNeeded	=new List<string>();
+			List<string>	cubeNeeded	=new List<string>();
 
 			for(int i=0;i < numMaterials;i++)
 			{
@@ -173,6 +174,7 @@ namespace MaterialLib
 				m.StripTextureExtensions();
 
 				texNeeded.AddRange(m.GetReferencedTextures());
+				cubeNeeded.AddRange(m.GetReferencedCubeTextures());
 
 				if(!shdNeeded.Contains(m.ShaderName))
 				{
@@ -193,6 +195,19 @@ namespace MaterialLib
 					if(!texs.Contains(tex))
 					{
 						texs.Add(tex);
+					}
+				}
+
+				List<string>	cubeTexs	=new List<string>();
+				foreach(string tex in cubeNeeded)
+				{
+					if(tex == "LightMapAtlas")
+					{
+						continue;
+					}
+					if(!cubeTexs.Contains(tex))
+					{
+						cubeTexs.Add(tex);
 					}
 				}
 
@@ -259,6 +274,33 @@ namespace MaterialLib
 					if(t != null)
 					{
 						mMaps.Add(tex, t);
+					}
+				}
+
+				//load cubetex
+				foreach(string tex in cubeTexs)
+				{
+					if(tex == "")
+					{
+						continue;
+					}
+
+					int		tdPos	=tex.LastIndexOf("TextureCubes");
+					if(tdPos != -1)
+					{
+						string	key		=tex.Substring(tdPos + 12, tex.Length - 12);
+						if(!LoadTextureCube(gd, mGameContent, tex, key))
+						{
+							LoadTextureCube(gd, mShaderLib, tex, tex);
+						}
+					}
+					else
+					{
+						string	path	="TextureCubes/" + tex;
+						if(!LoadTextureCube(gd, mGameContent, path, tex))
+						{
+							LoadTextureCube(gd, mShaderLib, path, tex);
+						}
 					}
 				}
 			}
@@ -595,11 +637,14 @@ namespace MaterialLib
 							Vector2	vec	=Vector2.Zero;
 							string	[]tokens;
 							tokens	=sp.Value.Split(' ');
-							if(UtilityLib.Mathery.TryParse(tokens[0], out vec.X))
+							if(tokens.Length == 2)
 							{
-								if(UtilityLib.Mathery.TryParse(tokens[1], out vec.Y))
+								if(UtilityLib.Mathery.TryParse(tokens[0], out vec.X))
 								{
-									ep2.SetValue(vec);
+									if(UtilityLib.Mathery.TryParse(tokens[1], out vec.Y))
+									{
+										ep2.SetValue(vec);
+									}
 								}
 							}
 						}
@@ -608,13 +653,16 @@ namespace MaterialLib
 							Vector3	vec	=Vector3.Zero;
 							string	[]tokens;
 							tokens	=sp.Value.Split(' ');
-							if(UtilityLib.Mathery.TryParse(tokens[0], out vec.X))
+							if(tokens.Length == 3)
 							{
-								if(UtilityLib.Mathery.TryParse(tokens[1], out vec.Y))
+								if(UtilityLib.Mathery.TryParse(tokens[0], out vec.X))
 								{
-									if(UtilityLib.Mathery.TryParse(tokens[2], out vec.Z))
+									if(UtilityLib.Mathery.TryParse(tokens[1], out vec.Y))
 									{
-										ep2.SetValue(vec);
+										if(UtilityLib.Mathery.TryParse(tokens[2], out vec.Z))
+										{
+											ep2.SetValue(vec);
+										}
 									}
 								}
 							}
@@ -921,7 +969,7 @@ namespace MaterialLib
 		}
 
 
-		void LoadTextureCube(GraphicsDevice gd, ContentManager cm, string fn, string key)
+		bool LoadTextureCube(GraphicsDevice gd, ContentManager cm, string fn, string key)
 		{
 			Texture2D	up		=LoadTex(mGameContent, fn + "Up");
 			Texture2D	down	=LoadTex(mGameContent, fn + "Down");
@@ -943,6 +991,8 @@ namespace MaterialLib
 			SetCubeFace(tc, back, CubeMapFace.NegativeZ);
 
 			mCubes.Add(key, tc);
+
+			return	true;
 		}
 
 

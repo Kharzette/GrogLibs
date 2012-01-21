@@ -393,7 +393,7 @@
             0,
             0});
 			this.SurfaceLightStrength.Minimum = new decimal(new int[] {
-            4,
+            1,
             0,
             0,
             0});

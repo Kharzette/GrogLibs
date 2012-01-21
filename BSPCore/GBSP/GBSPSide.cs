@@ -497,6 +497,7 @@ namespace BSPCore
 					mFlags		|=SURF_SKY;
 					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 					ti.mFlags	|=TexInfo.SKY;
+					mFlags		|=SURF_LIGHT;
 				}
 				else if(tok.StartsWith("lava") || tok.StartsWith("LAVA"))
 				{

@@ -540,7 +540,7 @@ namespace SharedForms
 				return;
 			}
 
-			mMatLib.ReadFromFile(mOFD.FileName, true);
+			mMatLib.ReadFromFile(mOFD.FileName, true, mGD);
 
 			//notify anyone interested
 			if(eLibraryCleared != null)
