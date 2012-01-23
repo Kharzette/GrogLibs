@@ -272,6 +272,7 @@ namespace BSPVis
 		}
 
 
+		//taken from quake 2's vis compiler
 		internal static void RecursiveLeafFlow(FlowParams fp, VisPools vp)
 		{
 			VISLeaf	leaf	=vp.mVisLeafs[fp.mLeafNum];

@@ -167,7 +167,7 @@ VPosTex04Tex14Tex24Tex34Tex44Tex54 LMAnimVertexShader(VPosNormBlendTex04Tex14Tex
 
 sampler TextureSampler = sampler_state
 {
-	Texture	=(mTexture);
+	Texture		=(mTexture);
 
 	MinFilter	=Linear;
 	MagFilter	=Linear;
@@ -180,7 +180,7 @@ sampler TextureSampler = sampler_state
 
 sampler SkySampler = sampler_state
 {
-	Texture	=(mTexture);
+	Texture		=(mTexture);
 
 	MinFilter	=Linear;
 	MagFilter	=Linear;
@@ -211,7 +211,7 @@ float4 LMPixelShader(VTex04Tex14Tex24 input) : COLOR0
 	
 	if(mbTextureEnabled)
 	{
-		color	=tex2D(TextureSampler, input.TexCoord0.xy);
+		color	=pow(tex2D(TextureSampler, input.TexCoord0.xy), 2.2);
 	}
 	else
 	{
@@ -236,6 +236,9 @@ float4 LMPixelShader(VTex04Tex14Tex24 input) : COLOR0
 	//Apply lighting.
 	color	*=lm;
 
+	//back to srgb
+	color	=pow(color, 1 / 2.2);
+
 	return	float4(color, input.TexCoord1.w);
 }
 
@@ -250,7 +253,7 @@ float4 LMToonPixelShader(VTex0Tex1Col0 input) : COLOR0
 	
 	if(mbTextureEnabled)
 	{
-		color	=tex2D(TextureSampler, tex0);
+		color	=pow(tex2D(TextureSampler, tex0), 2.2);
 	}
 	else
 	{
@@ -281,6 +284,9 @@ float4 LMToonPixelShader(VTex0Tex1Col0 input) : COLOR0
 	}
 	
 	color.rgb	*=light;
+
+	//back to srgb
+	color	=pow(color, 1 / 2.2);
 	
 	return	float4(color, 1);
 }
@@ -296,7 +302,7 @@ float4 VLitPixelShader(VTex04Tex14Tex24 input) : COLOR0
 	
 	if(mbTextureEnabled)
 	{
-		color	=tex2D(TextureSampler, tex0);
+		color	=pow(tex2D(TextureSampler, tex0), 2.2);
 	}
 	else
 	{
@@ -330,6 +336,9 @@ float4 VLitPixelShader(VTex04Tex14Tex24 input) : COLOR0
 
 	color	*=inColor;
 	color	=saturate(color);
+
+	//back to srgb
+	color	=pow(color, 1 / 2.2);
 
 	return	float4(color, input.TexCoord2.w);
 }
@@ -404,7 +413,7 @@ float4 LMAnimPixelShader(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	float3	color;
 	if(mbTextureEnabled)
 	{
-		color	=tex2D(TextureSampler, input.TexCoord0.xy);
+		color	=pow(tex2D(TextureSampler, input.TexCoord0.xy), 2.2);
 	}
 	else
 	{
@@ -449,6 +458,10 @@ float4 LMAnimPixelShader(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	
 	//Apply lighting.
 	color	*=lm;
+
+	//back to srgb
+	color	=pow(color, 1 / 2.2);
+
 	return	float4(color, input.TexCoord2.z);
 }
 
@@ -457,8 +470,8 @@ technique LightMap
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 LMVertexShader();
-		PixelShader = compile ps_2_0 LMPixelShader();
+		VertexShader	=compile vs_2_0 LMVertexShader();
+		PixelShader		=compile ps_2_0 LMPixelShader();
 	}
 }
 
@@ -466,8 +479,8 @@ technique LightMapToon
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 LMVertexShader();
-		PixelShader = compile ps_2_0 LMToonPixelShader();
+		VertexShader	=compile vs_2_0 LMVertexShader();
+		PixelShader		=compile ps_2_0 LMToonPixelShader();
 	}
 }
 
@@ -475,8 +488,8 @@ technique LightMapAlpha
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 LMAlphaVertexShader();
-		PixelShader = compile ps_2_0 LMPixelShader();
+		VertexShader	=compile vs_2_0 LMAlphaVertexShader();
+		PixelShader		=compile ps_2_0 LMPixelShader();
 	}
 }
 
@@ -484,8 +497,8 @@ technique Alpha
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 VLitVertexShader();
-		PixelShader = compile ps_2_0 VLitPixelShader();
+		VertexShader	=compile vs_2_0 VLitVertexShader();
+		PixelShader		=compile ps_2_0 VLitPixelShader();
 	}
 }
 
@@ -493,8 +506,8 @@ technique VertexLighting
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 VLitVertexShader();
-		PixelShader = compile ps_2_0 VLitPixelShader();
+		VertexShader	=compile vs_2_0 VLitVertexShader();
+		PixelShader		=compile ps_2_0 VLitPixelShader();
 	}
 }
 
@@ -502,8 +515,8 @@ technique FullBright
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 FullBrightVertexShader();
-		PixelShader = compile ps_2_0 FullBrightPixelShader();
+		VertexShader	=compile vs_2_0 FullBrightVertexShader();
+		PixelShader		=compile ps_2_0 FullBrightPixelShader();
 	}
 }
 
@@ -511,8 +524,8 @@ technique FullDark
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 FullBrightVertexShader();
-		PixelShader = compile ps_2_0 FullDarkPixelShader();
+		VertexShader	=compile vs_2_0 FullBrightVertexShader();
+		PixelShader		=compile ps_2_0 FullDarkPixelShader();
 	}
 }
 
@@ -520,8 +533,8 @@ technique Mirror
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 VLitVertexShader();
-		PixelShader = compile ps_2_0 VLitPixelShader();
+		VertexShader	=compile vs_2_0 VLitVertexShader();
+		PixelShader		=compile ps_2_0 VLitPixelShader();
 	}
 }
 
@@ -529,8 +542,8 @@ technique Sky
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 SkyVertexShader();
-		PixelShader = compile ps_2_0 SkyPixelShader();
+		VertexShader	=compile vs_2_0 SkyVertexShader();
+		PixelShader		=compile ps_2_0 SkyPixelShader();
 	}
 }
 
@@ -538,8 +551,8 @@ technique LightMapAnim
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 LMAnimVertexShader();
-		PixelShader = compile ps_2_0 LMAnimPixelShader();
+		VertexShader	=compile vs_2_0 LMAnimVertexShader();
+		PixelShader		=compile ps_2_0 LMAnimPixelShader();
 	}
 }
 
@@ -547,8 +560,8 @@ technique LightMapAnimAlpha
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 LMAnimVertexShader();
-		PixelShader = compile ps_2_0 LMAnimPixelShader();
+		VertexShader	=compile vs_2_0 LMAnimVertexShader();
+		PixelShader		=compile ps_2_0 LMAnimPixelShader();
 	}
 }
 
@@ -556,7 +569,7 @@ technique VerticalRange
 {
 	pass Pass1
 	{
-		VertexShader = compile vs_2_0 YRangeVertexShader();
-		PixelShader = compile ps_2_0 YRangePixelShader();
+		VertexShader	=compile vs_2_0 YRangeVertexShader();
+		PixelShader		=compile ps_2_0 YRangePixelShader();
 	}
 }

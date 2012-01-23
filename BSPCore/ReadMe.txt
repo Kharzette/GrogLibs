@@ -7,7 +7,7 @@ It's old and crusty and most people have moved on from BSP stuff but I love this
 Parts of my code are also grabbed from Quake 2, which I believe is GPL.
 
 Genesis had taken a lot of ideas from Quake 2 anyway (and you can see the similarity if you look at
-the code bases side by side), so some of this probably belongs to id software / Carmack.
+the code bases side by side), so some of this probably belongs to id software / John Carmack.
 
 I've also added quite a bit of stuff, and likely broken quite a lot as well.  I'm fairly certain there
 are some nasty bugs in the vis code, but hopefully it will hold up for Ludum Dare.

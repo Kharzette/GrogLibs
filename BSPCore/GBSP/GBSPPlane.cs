@@ -12,6 +12,9 @@ namespace BSPCore
 		public float	mDist;
 		public UInt32	mType;
 
+		//for texture axis
+		static List<Vector3>	BaseAxis	=new List<Vector3>();
+
 		public const UInt32	PLANE_X		=0;
 		public const UInt32	PLANE_Y		=1;
 		public const UInt32	PLANE_Z		=2;
@@ -26,6 +29,34 @@ namespace BSPCore
 		public const UInt32	PSIDE_FACING	=4;
 
 		public const float PLANESIDE_EPSILON	=0.001f;
+
+
+		static GBSPPlane()
+		{
+			BaseAxis.Add(Vector3.UnitY);
+			BaseAxis.Add(-Vector3.UnitX);
+			BaseAxis.Add(-Vector3.UnitZ);
+
+			BaseAxis.Add(-Vector3.UnitY);
+			BaseAxis.Add(-Vector3.UnitX);
+			BaseAxis.Add(-Vector3.UnitZ);
+
+			BaseAxis.Add(-Vector3.UnitX);
+			BaseAxis.Add(Vector3.UnitZ);
+			BaseAxis.Add(-Vector3.UnitY);
+
+			BaseAxis.Add(Vector3.UnitX);
+			BaseAxis.Add(Vector3.UnitZ);
+			BaseAxis.Add(-Vector3.UnitY);
+
+			BaseAxis.Add(Vector3.UnitZ);
+			BaseAxis.Add(-Vector3.UnitX);
+			BaseAxis.Add(-Vector3.UnitY);
+
+			BaseAxis.Add(-Vector3.UnitZ);
+			BaseAxis.Add(-Vector3.UnitX);
+			BaseAxis.Add(-Vector3.UnitY);
+		}
 
 
 		internal GBSPPlane(GBSPPlane copyMe)
@@ -184,34 +215,9 @@ namespace BSPCore
 		//on 45 degree sloped faces (e3m3 is a good test)
 		//z and y swapped and x negated does the trick
 		//will need to dig in svn for the hammer compatible ver
+		//todo:  Make quake / valve / genesis texture alignment switchable
 		public static bool TextureAxisFromPlane(GBSPPlane pln, out Vector3 xv, out Vector3 yv)
 		{
-			List<Vector3>	baseAxis	=new List<Vector3>();
-
-			baseAxis.Add(Vector3.UnitY);
-			baseAxis.Add(-Vector3.UnitX);
-			baseAxis.Add(-Vector3.UnitZ);
-
-			baseAxis.Add(-Vector3.UnitY);
-			baseAxis.Add(-Vector3.UnitX);
-			baseAxis.Add(-Vector3.UnitZ);
-
-			baseAxis.Add(-Vector3.UnitX);
-			baseAxis.Add(Vector3.UnitZ);
-			baseAxis.Add(-Vector3.UnitY);
-
-			baseAxis.Add(Vector3.UnitX);
-			baseAxis.Add(Vector3.UnitZ);
-			baseAxis.Add(-Vector3.UnitY);
-
-			baseAxis.Add(Vector3.UnitZ);
-			baseAxis.Add(-Vector3.UnitX);
-			baseAxis.Add(-Vector3.UnitY);
-
-			baseAxis.Add(-Vector3.UnitZ);
-			baseAxis.Add(-Vector3.UnitX);
-			baseAxis.Add(-Vector3.UnitY);
-
 			Int32	bestAxis;
 			float	dot, best;
 			
@@ -223,7 +229,7 @@ namespace BSPCore
 
 			for(int i=0;i < 6;i++)
 			{
-				dot	=Vector3.Dot(pln.mNormal, baseAxis[i * 3]);
+				dot	=Vector3.Dot(pln.mNormal, BaseAxis[i * 3]);
 				if(dot > best)
 				{
 					best		=dot;
@@ -231,8 +237,8 @@ namespace BSPCore
 				}
 			}
 
-			xv	=baseAxis[bestAxis * 3 + 1];
-			yv	=baseAxis[bestAxis * 3 + 2];
+			xv	=BaseAxis[bestAxis * 3 + 1];
+			yv	=BaseAxis[bestAxis * 3 + 2];
 
 			return	true;
 		}

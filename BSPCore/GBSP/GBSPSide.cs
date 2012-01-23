@@ -592,8 +592,27 @@ namespace BSPCore
 
 			if(numbers[11] != 0.0f)
 			{
+				float	rot	=numbers[11];
+
+				//planes pointing in -x, -z, and +y need rotation flipped
+				if(Vector3.Dot(plane.mNormal, Vector3.UnitX) > 0.8f)
+				{
+					rot	=-rot;
+				}
+				else if(Vector3.Dot(plane.mNormal, Vector3.UnitZ) > 0.8f)
+				{
+					rot	=-rot;
+				}
+				else if(Vector3.Dot(plane.mNormal, -Vector3.UnitY) > 0.8f)
+				{
+					rot	=-rot;
+				}
+
+				//wrap into 0 to 360
+				UtilityLib.Mathery.WrapAngleDegrees(ref rot);
+
 				Matrix	texRot	=Matrix.CreateFromAxisAngle(plane.mNormal,
-					MathHelper.ToRadians(numbers[11]));
+					MathHelper.ToRadians(rot));
 
 				//rotate tex vecs
 				ti.mUVec	=Vector3.TransformNormal(ti.mUVec, texRot);
