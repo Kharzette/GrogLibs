@@ -146,11 +146,6 @@ namespace BSPCore
 					GBSPSide	side	=new GBSPSide();
 					mContents	=side.ReadMapLine(s, pool, tiPool, bSlickAsGouraud, bWarpAsMirror);
 
-					if(mContents == Contents.CONTENTS_AUX)
-					{
-						ret	=false;
-					}
-
 					mOriginalSides.Add(side);
 					mEntityNum	=entityNum;
 				}
@@ -396,6 +391,13 @@ namespace BSPCore
 						mContents	|=Contents.BSP_CONTENTS_SOLID2;
 					}
 				}
+			}
+
+			//make transparent stuff detail, so it isn't
+			//chosen for splitting planes
+			if(UtilityLib.Misc.bFlagSet(Contents.BSP_CONTENTS_TRANSLUCENT2, mContents))
+			{
+				mContents	|=Contents.BSP_CONTENTS_DETAIL2;
 			}
 		}
 

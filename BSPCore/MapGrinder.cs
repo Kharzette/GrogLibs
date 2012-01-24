@@ -1464,8 +1464,8 @@ namespace BSPCore
 			mFBDraws	=ComputeIndexes(mFBIndexes, matChunks);
 
 			StuffVBArrays(matChunks, mFBVerts, null,
-				mVLitTex0, null, null, null,
-				null, mVLitColors, null);
+				mFBTex0, null, null, null,
+				null, null, null);
 
 			return	true;
 		}
@@ -1557,9 +1557,10 @@ namespace BSPCore
 			{
 				int	cnt	=inds.Count;
 
-				DrawCall	dc	=new DrawCall();				
-				dc.mStartIndex	=cnt;
-				dc.mSortPoint	=Vector3.Zero;	//unused for opaques
+				DrawCall	dc		=new DrawCall();				
+				dc.mStartIndex		=cnt;
+				dc.mSortPoint		=Vector3.Zero;	//unused for opaques
+				dc.mMinVertIndex	=696969;
 
 				for(int i=0;i < ddcs[j].mNumFaces;i++)
 				{
@@ -1571,6 +1572,11 @@ namespace BSPCore
 						inds.Add(vbVertOfs);
 						inds.Add(vbVertOfs + k);
 						inds.Add(vbVertOfs + ((k + 1) % nverts));
+					}
+
+					if(vbVertOfs < dc.mMinVertIndex)
+					{
+						dc.mMinVertIndex	=vbVertOfs;
 					}
 
 					vbVertOfs	+=ddcs[j].mVCounts[i];
@@ -2111,6 +2117,7 @@ namespace BSPCore
 //				mat.IgnoreParameter("mLightRange");
 //				mat.IgnoreParameter("mLightFalloffRange");
 				mat.IgnoreParameter("mAniIntensities");
+				mat.IgnoreParameter("mWarpFactor");
 
 				mMaterials.Add(mat);
 			}

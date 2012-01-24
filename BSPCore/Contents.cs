@@ -81,7 +81,7 @@ namespace BSPCore
 		public const UInt32 BSP_CONTENTS_USER11			=(1<<26);	//ladder
 		public const UInt32 BSP_CONTENTS_USER12			=(1<<27);	//trigger
 		public const UInt32 BSP_CONTENTS_USER13			=(1<<28);	//nodrop
-		public const UInt32 BSP_CONTENTS_USER14			=(1<<29);
+		public const UInt32 BSP_CONTENTS_USER14			=(1<<29);	//teleport
 		public const UInt32 BSP_CONTENTS_USER15			=(1<<30);
 		public const UInt32 BSP_CONTENTS_USER16			=(0x80000000);
 		
@@ -224,40 +224,49 @@ namespace BSPCore
 				ret	|=BSP_CONTENTS_DETAIL2;
 			}
 
-			if((quakeContents & CONTENTS_WINDOW) != 0)
+			if((quakeContents & CONTENTS_AUX) != 0)
+			{
+				ret	|=BSP_CONTENTS_SOLID2;
+				ret	|=BSP_CONTENTS_USER14;	//teleport
+				ret	|=BSP_CONTENTS_WAVY2;
+				ret	|=BSP_CONTENTS_DETAIL2;
+			}
+			else if((quakeContents & CONTENTS_WINDOW) != 0)
 			{
 				ret	|=BSP_CONTENTS_WINDOW2;
 				ret	|=BSP_CONTENTS_TRANSLUCENT2;
 				ret	|=BSP_CONTENTS_DETAIL2;
 			}
-
-			if((quakeContents & CONTENTS_LAVA) != 0)
+			else if((quakeContents & CONTENTS_LAVA) != 0)
 			{
+				ret	|=Contents.BSP_CONTENTS_TRANSLUCENT2;
 				ret	|=Contents.BSP_CONTENTS_EMPTY2;
 				ret	|=Contents.BSP_CONTENTS_USER1;
 				ret	|=Contents.BSP_CONTENTS_WAVY2;
 			}
-
-			if((quakeContents & CONTENTS_SLIME) != 0)
+			else if((quakeContents & CONTENTS_SLIME) != 0)
 			{
 				ret	|=Contents.BSP_CONTENTS_TRANSLUCENT2;
 				ret	|=Contents.BSP_CONTENTS_EMPTY2;
 				ret	|=Contents.BSP_CONTENTS_WAVY2;
 				ret	|=Contents.BSP_CONTENTS_USER2;
 			}
-
-			if((quakeContents & CONTENTS_WATER) != 0)
+			else if((quakeContents & CONTENTS_WATER) != 0)
 			{
 				ret	|=Contents.BSP_CONTENTS_TRANSLUCENT2;
 				ret	|=Contents.BSP_CONTENTS_EMPTY2;
 				ret	|=Contents.BSP_CONTENTS_WAVY2;
 				ret	|=Contents.BSP_CONTENTS_USER3;
 			}
-
-			if((quakeContents & CONTENTS_MIST) != 0)	//totally untested
+			else if((quakeContents & CONTENTS_MIST) != 0)
 			{
 				ret	|=Contents.BSP_CONTENTS_TRANSLUCENT2;
+				ret	|=Contents.BSP_CONTENTS_EMPTY2;
 				ret	|=Contents.BSP_CONTENTS_USER4;
+			}
+			else if((quakeContents & CONTENTS_TRANSLUCENT) != 0)
+			{
+				CoreEvents.Print("Some sort of nonstandard translucent on a face\n");
 			}
 
 			if((quakeContents & CONTENTS_AREAPORTAL) != 0)
@@ -294,10 +303,6 @@ namespace BSPCore
 			if((quakeContents & CONTENTS_CURRENT_DOWN) != 0)
 			{
 				ret	|=Contents.BSP_CONTENTS_USER10;
-			}
-			if((quakeContents & CONTENTS_TRANSLUCENT) != 0)
-			{
-				ret	|=Contents.BSP_CONTENTS_TRANSLUCENT2;
 			}
 			if((quakeContents & CONTENTS_LADDER) != 0)
 			{

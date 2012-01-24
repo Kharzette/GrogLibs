@@ -474,11 +474,16 @@ namespace BSPCore
 						mFlags		|=SURF_TRANS66;
 						ti.mFlags	|=TexInfo.TRANS;
 					}
+					else if(texName.StartsWith("teleport") || texName.StartsWith("TELEPORT"))
+					{
+						ret			|=Contents.CONTENTS_AUX;	//using aux for teleport
+						ti.mFlags	|=TexInfo.FULLBRIGHT;
+						ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+					}
 					else
 					{
-						//generic transparent I guess
-						ret			|=Contents.CONTENTS_TRANSLUCENT;
-						ti.mFlags	|=TexInfo.TRANS;
+						//guessing this is a mist content?
+						ret			|=Contents.CONTENTS_MIST;
 					}
 					continue;
 				}

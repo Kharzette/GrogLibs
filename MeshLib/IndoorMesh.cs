@@ -332,7 +332,7 @@ namespace MeshLib
 				fx.CurrentTechnique.Passes[0].Apply();
 
 				g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-					0, 0, call.mNumVerts, call.mStartIndex, call.mPrimCount);
+					0, call.mMinVertIndex, call.mNumVerts, call.mStartIndex, call.mPrimCount);
 				idx++;
 			}
 		}

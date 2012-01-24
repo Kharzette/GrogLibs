@@ -13,6 +13,7 @@ namespace MeshLib
 		public int		mNumVerts;
 		public int		mStartIndex;	//offsets
 		public int		mPrimCount;		//num prims per call
+		public int		mMinVertIndex;	//minimum vertex used in this call
 		public Vector3	mSortPoint;
 
 
@@ -21,6 +22,7 @@ namespace MeshLib
 			bw.Write(mNumVerts);
 			bw.Write(mStartIndex);
 			bw.Write(mPrimCount);
+			bw.Write(mMinVertIndex);
 
 			bw.Write(mSortPoint.X);
 			bw.Write(mSortPoint.Y);
@@ -30,9 +32,10 @@ namespace MeshLib
 
 		void Read(BinaryReader br)
 		{
-			mNumVerts	=br.ReadInt32();
-			mStartIndex	=br.ReadInt32();
-			mPrimCount	=br.ReadInt32();
+			mNumVerts		=br.ReadInt32();
+			mStartIndex		=br.ReadInt32();
+			mPrimCount		=br.ReadInt32();
+			mMinVertIndex	=br.ReadInt32();
 
 			mSortPoint.X	=br.ReadSingle();
 			mSortPoint.Y	=br.ReadSingle();

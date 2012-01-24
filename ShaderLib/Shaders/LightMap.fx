@@ -9,6 +9,9 @@ float2	mTexSize;
 //intensity levels for the animated / switchable light styles
 half	mAniIntensities[44];
 
+//warp factor for warping faces
+float	mWarpFactor;
+
 //vertical range for 2D collision hull drawing
 float	mYRangeMax;
 float	mYRangeMin;
@@ -226,15 +229,19 @@ float4 LMPixelShader(VTex04Tex14Tex24 input) : COLOR0
 		float3	lightDir	=normalize(mLight0Position - input.TexCoord1.xyz);
 		float	ndl			=dot(input.TexCoord2, lightDir);
 
-		if(dist > mLightFalloffRange)
+		if(ndl > 0)
 		{
-			ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
+			if(dist > mLightFalloffRange)
+			{
+				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
+			}
+			lm	+=(ndl * mLight0Color);
 		}
-		lm	+=saturate(ndl);
 	}
 
 	//Apply lighting.
 	color	*=lm;
+	color	=saturate(color);
 
 	//back to srgb
 	color	=pow(color, 1 / 2.2);
@@ -327,11 +334,14 @@ float4 VLitPixelShader(VTex04Tex14Tex24 input) : COLOR0
 		float3	lightDir	=normalize(mLight0Position - worldPos);
 		float	ndl			=dot(norm, lightDir);
 
-		if(dist > mLightFalloffRange)
+		if(ndl > 0)
 		{
-			ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
+			if(dist > mLightFalloffRange)
+			{
+				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
+			}
+			inColor	+=(ndl * mLight0Color);
 		}
-		inColor	+=ndl;
 	}
 
 	color	*=inColor;
@@ -370,6 +380,22 @@ float4 FullBrightPixelShader(VTex0 input) : COLOR0
 	if(mbTextureEnabled)
 	{
 		return	tex2D(TextureSampler, input.TexCoord0);
+	}
+	return	float4(1, 1, 1, 1);
+}
+
+
+float4 WarpyPixelShader(VTex0 input) : COLOR0
+{
+	float2	warpy;
+
+	warpy.x	=sin(mWarpFactor);
+	warpy.y	=cos(mWarpFactor);
+
+	float2	texCoord	=input.TexCoord0 * warpy;
+	if(mbTextureEnabled)
+	{
+		return	tex2D(TextureSampler, texCoord);
 	}
 	return	float4(1, 1, 1, 1);
 }
@@ -449,15 +475,19 @@ float4 LMAnimPixelShader(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 		float3	lightDir	=normalize(mLight0Position - worldPos);
 		float	ndl			=dot(norm, lightDir);
 
-		if(dist > mLightFalloffRange)
+		if(ndl > 0)
 		{
-			ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
+			if(dist > mLightFalloffRange)
+			{
+				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
+			}
+			lm	+=(ndl * mLight0Color);
 		}
-		lm	+=saturate(ndl);
 	}
 	
 	//Apply lighting.
 	color	*=lm;
+	color	=saturate(color);
 
 	//back to srgb
 	color	=pow(color, 1 / 2.2);
@@ -562,6 +592,15 @@ technique LightMapAnimAlpha
 	{
 		VertexShader	=compile vs_2_0 LMAnimVertexShader();
 		PixelShader		=compile ps_2_0 LMAnimPixelShader();
+	}
+}
+
+technique Warpy
+{
+	pass Pass1
+	{
+		VertexShader	=compile vs_2_0 FullBrightVertexShader();
+		PixelShader		=compile ps_2_0 WarpyPixelShader();
 	}
 }
 
