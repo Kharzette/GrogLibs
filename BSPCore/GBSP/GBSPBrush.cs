@@ -70,7 +70,7 @@ namespace BSPCore
 
 			if(!CheckBrush())
 			{
-				CoreEvents.Print("MakeBSPBrushes:  Bad brush.\n");
+				CoreEvents.Print("GBSPBrush CTOR:  Bad brush.\n");
 				return;
 			}
 		}
@@ -452,7 +452,7 @@ namespace BSPCore
 			GBSPPoly	midPoly	=new GBSPPoly(sidedPlane);
 			if(midPoly == null && bVerbose)
 			{
-				CoreEvents.Print("Could not create poly.\n");
+				CoreEvents.Print("SplitBrush:  Could not create poly.\n");
 			}
 			
 			//Clip the poly by all the planes of the brush being split
@@ -509,7 +509,7 @@ namespace BSPCore
 				GBSPPoly	sidePoly	=new GBSPPoly(s.mPoly);
 				if(!sidePoly.SplitEpsilon(0.0f, sidedPlane, out poly[0], out poly[1], false) && bVerbose)
 				{
-					CoreEvents.Print("Error splitting poly...\n");
+					CoreEvents.Print("SplitBrush:  Error splitting poly...\n");
 				}
 
 				for(int j=0;j < 2;j++)
@@ -546,11 +546,11 @@ namespace BSPCore
 				{
 					if(resultBrushes[0] == null && resultBrushes[1] == null)
 					{
-						CoreEvents.Print("Split removed brush\n");
+						CoreEvents.Print("SplitBrush:  Split removed brush\n");
 					}
 					else
 					{
-						CoreEvents.Print("Split not on both sides\n");
+						CoreEvents.Print("SplitBrush:  Split not on both sides\n");
 					}
 				}
 				
@@ -621,10 +621,10 @@ namespace BSPCore
 		{
 			List<GBSPBrush>	outside	=new List<GBSPBrush>();
 
-			GBSPBrush	inside	=a;	// Default a being inside b
+			GBSPBrush	inside	=a;	//Default a being inside b
 
-			//Splitting the inside list against each plane of brush b, only keeping peices that fall on the
-			//outside
+			//Splitting the inside list against each plane of brush b,
+			//only keeping pieces that fall on the outside
 			for(int i=0;i < b.mSides.Count && inside != null;i++)
 			{
 				GBSPBrush	front, back;

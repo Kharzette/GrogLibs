@@ -266,8 +266,6 @@
 			// WarpAsMirror
 			// 
 			this.WarpAsMirror.AutoSize = true;
-			this.WarpAsMirror.Checked = true;
-			this.WarpAsMirror.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.WarpAsMirror.Location = new System.Drawing.Point(6, 111);
 			this.WarpAsMirror.Name = "WarpAsMirror";
 			this.WarpAsMirror.Size = new System.Drawing.Size(90, 17);
@@ -302,8 +300,6 @@
 			// SlickAsGouraud
 			// 
 			this.SlickAsGouraud.AutoSize = true;
-			this.SlickAsGouraud.Checked = true;
-			this.SlickAsGouraud.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.SlickAsGouraud.Location = new System.Drawing.Point(6, 88);
 			this.SlickAsGouraud.Name = "SlickAsGouraud";
 			this.SlickAsGouraud.Size = new System.Drawing.Size(102, 17);
@@ -330,9 +326,9 @@
 			this.VerboseEntity.AutoSize = true;
 			this.VerboseEntity.Location = new System.Drawing.Point(6, 42);
 			this.VerboseEntity.Name = "VerboseEntity";
-			this.VerboseEntity.Size = new System.Drawing.Size(94, 17);
+			this.VerboseEntity.Size = new System.Drawing.Size(104, 17);
 			this.VerboseEntity.TabIndex = 21;
-			this.VerboseEntity.Text = "Entity Verbose";
+			this.VerboseEntity.Text = "BModel Verbose";
 			this.mTips.SetToolTip(this.VerboseEntity, "Spam for the moving brush models (doors / elevators etc)");
 			this.VerboseEntity.UseVisualStyleBackColor = true;
 			// 

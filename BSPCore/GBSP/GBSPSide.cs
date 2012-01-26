@@ -456,7 +456,8 @@ namespace BSPCore
 						mFlags	|=SURF_TRANS66;
 						mFlags	|=SURF_LIGHT;
 					}
-					else if(texName.StartsWith("water") || texName.StartsWith("WATER") || texName.Contains("WAT"))
+					else if(texName.Contains("water") || texName.Contains("WATER")
+						|| texName.Contains("MWAT") || texName.Contains("mwat"))
 					{
 						ret			|=Contents.CONTENTS_WATER;
 						ti.mFlags	|=TexInfo.TRANS;
@@ -496,6 +497,7 @@ namespace BSPCore
 					//a sort of emissive material flag, where
 					//the bright parts of the texture emit light and glow
 				}
+				//can probably do without these cases (TODO: test)
 				else if(tok.StartsWith("sky") || tok.StartsWith("SKY"))
 				{
 					texName		=tok;
@@ -510,7 +512,7 @@ namespace BSPCore
 					mFlags	|=SURF_TRANS66;
 					mFlags	|=SURF_LIGHT;
 				}
-				else if(tok.StartsWith("water") || tok.StartsWith("WATER"))
+				else if(tok.Contains("water") || tok.Contains("WATER"))
 				{
 					ret			|=Contents.CONTENTS_WATER;
 					ti.mFlags	|=TexInfo.TRANS;
@@ -529,12 +531,14 @@ namespace BSPCore
 					mFlags		|=SURF_NODRAW;
 					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 				}
+				/* dangerous for Q1 to treat windows as transparent
+					can cause leaks to the outer void
 				else if(tok.StartsWith("window") || tok.StartsWith("WINDOW"))
 				{
 					ret			|=Contents.CONTENTS_WINDOW;
 					mFlags		|=SURF_TRANS66;
 					ti.mFlags	|=TexInfo.TRANS;
-				}
+				}*/
 				else if(char.IsLetter(tok, 0))
 				{
 					texName	=tok;
@@ -600,6 +604,7 @@ namespace BSPCore
 				float	rot	=numbers[11];
 
 				//planes pointing in -x, -z, and +y need rotation flipped
+				//TODO: fix the .8, should be .7 something
 				if(Vector3.Dot(plane.mNormal, Vector3.UnitX) > 0.8f)
 				{
 					rot	=-rot;

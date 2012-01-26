@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace MaterialLib
 {
-	internal class AlphaNodeComparer : IComparer<AlphaNode>
+	internal class AlphaNodeComparer : Comparer<AlphaNode>
 	{
 		Vector3	mEye;
 
@@ -19,8 +19,16 @@ namespace MaterialLib
 		}
 
 
-		public int Compare(AlphaNode x, AlphaNode y)
+		public override int Compare(AlphaNode x, AlphaNode y)
 		{
+			//if you don't have this here (even though it is covered below),
+			//you get a nice many hours to find release only crash that will
+			//only happen outside the debugger.  Thanks for that.
+			if(x == y)
+			{
+				return	0;
+			}
+
 			if(x.DistSquared(mEye) == y.DistSquared(mEye))
 			{
 				return	0;

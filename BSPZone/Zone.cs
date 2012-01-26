@@ -448,6 +448,7 @@ namespace BSPZone
 
 		//returns true if on ground
 		//this one assumes 2 legs, so navigates stairs
+		//TODO: This gets a bit strange on gentle slopes
 		public bool BipedMoveBox(BoundingBox box, Vector3 start,
 								Vector3 end, ref Vector3 finalPos)
 		{
