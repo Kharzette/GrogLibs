@@ -12,9 +12,14 @@ namespace BSPCore
 		public int	mMaxThreads;
 		public bool	mbVerbose;
 		public bool	mbEntityVerbose;
-		public bool mbFixTJunctions;
+		public bool	mbFixTJunctions;
 		public bool	mbSlickAsGouraud;
-		public bool mbWarpAsMirror;
+		public bool	mbWarpAsMirror;
+		public bool	mbSkyEmitLight;
+		public bool	mbLavaEmitLight;
+		public bool	mbWindowEmitLight;
+		public bool	mbWindowTransparent;
+		public bool	mbTransparentDetail;
 	}
 
 

@@ -71,6 +71,12 @@
 			this.SurfaceLightFrequency = new System.Windows.Forms.NumericUpDown();
 			this.SeamCorrection = new System.Windows.Forms.CheckBox();
 			this.mTips = new System.Windows.Forms.ToolTip(this.components);
+			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.LavaEmitLight = new System.Windows.Forms.CheckBox();
+			this.SkyEmitLight = new System.Windows.Forms.CheckBox();
+			this.WindowTransparent = new System.Windows.Forms.CheckBox();
+			this.TransDetail = new System.Windows.Forms.CheckBox();
+			this.WindowEmitLight = new System.Windows.Forms.CheckBox();
 			this.GroupFileIO.SuspendLayout();
 			this.StatsGroupBox.SuspendLayout();
 			this.GroupBuildSettings.SuspendLayout();
@@ -84,6 +90,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.MinLightX)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightY)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.SurfaceLightFrequency)).BeginInit();
+			this.groupBox1.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// GroupFileIO
@@ -241,15 +248,13 @@
 			// GroupBuildSettings
 			// 
 			this.GroupBuildSettings.Controls.Add(this.label11);
-			this.GroupBuildSettings.Controls.Add(this.WarpAsMirror);
 			this.GroupBuildSettings.Controls.Add(this.MaxThreads);
-			this.GroupBuildSettings.Controls.Add(this.SlickAsGouraud);
 			this.GroupBuildSettings.Controls.Add(this.FixTJunctions);
 			this.GroupBuildSettings.Controls.Add(this.VerboseEntity);
 			this.GroupBuildSettings.Controls.Add(this.VerboseBSP);
 			this.GroupBuildSettings.Location = new System.Drawing.Point(246, 12);
 			this.GroupBuildSettings.Name = "GroupBuildSettings";
-			this.GroupBuildSettings.Size = new System.Drawing.Size(137, 163);
+			this.GroupBuildSettings.Size = new System.Drawing.Size(137, 127);
 			this.GroupBuildSettings.TabIndex = 31;
 			this.GroupBuildSettings.TabStop = false;
 			this.GroupBuildSettings.Text = "Build Settings";
@@ -257,7 +262,7 @@
 			// label11
 			// 
 			this.label11.AutoSize = true;
-			this.label11.Location = new System.Drawing.Point(57, 136);
+			this.label11.Location = new System.Drawing.Point(57, 90);
 			this.label11.Name = "label11";
 			this.label11.Size = new System.Drawing.Size(69, 13);
 			this.label11.TabIndex = 34;
@@ -266,7 +271,7 @@
 			// WarpAsMirror
 			// 
 			this.WarpAsMirror.AutoSize = true;
-			this.WarpAsMirror.Location = new System.Drawing.Point(6, 111);
+			this.WarpAsMirror.Location = new System.Drawing.Point(6, 134);
 			this.WarpAsMirror.Name = "WarpAsMirror";
 			this.WarpAsMirror.Size = new System.Drawing.Size(90, 17);
 			this.WarpAsMirror.TabIndex = 24;
@@ -276,7 +281,7 @@
 			// 
 			// MaxThreads
 			// 
-			this.MaxThreads.Location = new System.Drawing.Point(6, 134);
+			this.MaxThreads.Location = new System.Drawing.Point(6, 88);
 			this.MaxThreads.Maximum = new decimal(new int[] {
             64,
             0,
@@ -300,7 +305,7 @@
 			// SlickAsGouraud
 			// 
 			this.SlickAsGouraud.AutoSize = true;
-			this.SlickAsGouraud.Location = new System.Drawing.Point(6, 88);
+			this.SlickAsGouraud.Location = new System.Drawing.Point(6, 157);
 			this.SlickAsGouraud.Name = "SlickAsGouraud";
 			this.SlickAsGouraud.Size = new System.Drawing.Size(102, 17);
 			this.SlickAsGouraud.TabIndex = 23;
@@ -364,9 +369,9 @@
 			this.LightSettingsGroupBox.Controls.Add(this.label3);
 			this.LightSettingsGroupBox.Controls.Add(this.SurfaceLightFrequency);
 			this.LightSettingsGroupBox.Controls.Add(this.SeamCorrection);
-			this.LightSettingsGroupBox.Location = new System.Drawing.Point(12, 181);
+			this.LightSettingsGroupBox.Location = new System.Drawing.Point(12, 155);
 			this.LightSettingsGroupBox.Name = "LightSettingsGroupBox";
-			this.LightSettingsGroupBox.Size = new System.Drawing.Size(371, 132);
+			this.LightSettingsGroupBox.Size = new System.Drawing.Size(371, 128);
 			this.LightSettingsGroupBox.TabIndex = 32;
 			this.LightSettingsGroupBox.TabStop = false;
 			this.LightSettingsGroupBox.Text = "Light Settings";
@@ -382,6 +387,11 @@
 			// 
 			// SurfaceLightStrength
 			// 
+			this.SurfaceLightStrength.Increment = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
 			this.SurfaceLightStrength.Location = new System.Drawing.Point(116, 45);
 			this.SurfaceLightStrength.Maximum = new decimal(new int[] {
             2048,
@@ -398,7 +408,7 @@
 			this.SurfaceLightStrength.TabIndex = 41;
 			this.mTips.SetToolTip(this.SurfaceLightStrength, "Strength of emitted tiny surface lights");
 			this.SurfaceLightStrength.Value = new decimal(new int[] {
-            16,
+            4,
             0,
             0,
             0});
@@ -406,8 +416,6 @@
 			// SurfaceLighting
 			// 
 			this.SurfaceLighting.AutoSize = true;
-			this.SurfaceLighting.Checked = true;
-			this.SurfaceLighting.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.SurfaceLighting.Location = new System.Drawing.Point(6, 43);
 			this.SurfaceLighting.Name = "SurfaceLighting";
 			this.SurfaceLighting.Size = new System.Drawing.Size(103, 17);
@@ -611,7 +619,7 @@
 			this.SurfaceLightFrequency.TabIndex = 8;
 			this.mTips.SetToolTip(this.SurfaceLightFrequency, "Emit a light every x world units for surface lighting");
 			this.SurfaceLightFrequency.Value = new decimal(new int[] {
-            48,
+            32,
             0,
             0,
             0});
@@ -629,12 +637,93 @@
 			this.mTips.SetToolTip(this.SeamCorrection, "Shifts light points around a bit to help points just inside solid");
 			this.SeamCorrection.UseVisualStyleBackColor = true;
 			// 
+			// groupBox1
+			// 
+			this.groupBox1.Controls.Add(this.WindowEmitLight);
+			this.groupBox1.Controls.Add(this.TransDetail);
+			this.groupBox1.Controls.Add(this.WindowTransparent);
+			this.groupBox1.Controls.Add(this.SkyEmitLight);
+			this.groupBox1.Controls.Add(this.LavaEmitLight);
+			this.groupBox1.Controls.Add(this.SlickAsGouraud);
+			this.groupBox1.Controls.Add(this.WarpAsMirror);
+			this.groupBox1.Location = new System.Drawing.Point(389, 12);
+			this.groupBox1.Name = "groupBox1";
+			this.groupBox1.Size = new System.Drawing.Size(136, 182);
+			this.groupBox1.TabIndex = 33;
+			this.groupBox1.TabStop = false;
+			this.groupBox1.Text = "Surface Flags";
+			// 
+			// LavaEmitLight
+			// 
+			this.LavaEmitLight.AutoSize = true;
+			this.LavaEmitLight.Checked = true;
+			this.LavaEmitLight.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.LavaEmitLight.Location = new System.Drawing.Point(6, 42);
+			this.LavaEmitLight.Name = "LavaEmitLight";
+			this.LavaEmitLight.Size = new System.Drawing.Size(99, 17);
+			this.LavaEmitLight.TabIndex = 25;
+			this.LavaEmitLight.Text = "Lava Emit Light";
+			this.mTips.SetToolTip(this.LavaEmitLight, "Lava textures will emit light");
+			this.LavaEmitLight.UseVisualStyleBackColor = true;
+			// 
+			// SkyEmitLight
+			// 
+			this.SkyEmitLight.AutoSize = true;
+			this.SkyEmitLight.Checked = true;
+			this.SkyEmitLight.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.SkyEmitLight.Location = new System.Drawing.Point(6, 19);
+			this.SkyEmitLight.Name = "SkyEmitLight";
+			this.SkyEmitLight.Size = new System.Drawing.Size(93, 17);
+			this.SkyEmitLight.TabIndex = 26;
+			this.SkyEmitLight.Text = "Sky Emit Light";
+			this.mTips.SetToolTip(this.SkyEmitLight, "Sky surfaces will emit light");
+			this.SkyEmitLight.UseVisualStyleBackColor = true;
+			// 
+			// WindowTransparent
+			// 
+			this.WindowTransparent.AutoSize = true;
+			this.WindowTransparent.Location = new System.Drawing.Point(6, 88);
+			this.WindowTransparent.Name = "WindowTransparent";
+			this.WindowTransparent.Size = new System.Drawing.Size(125, 17);
+			this.WindowTransparent.TabIndex = 27;
+			this.WindowTransparent.Text = "Window Transparent";
+			this.mTips.SetToolTip(this.WindowTransparent, "Set Window textures to transparent, this can be dangerous if the window is on the" +
+        " outer hull as it is in many quake 1 levels!");
+			this.WindowTransparent.UseVisualStyleBackColor = true;
+			// 
+			// TransDetail
+			// 
+			this.TransDetail.AutoSize = true;
+			this.TransDetail.Checked = true;
+			this.TransDetail.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.TransDetail.Location = new System.Drawing.Point(6, 111);
+			this.TransDetail.Name = "TransDetail";
+			this.TransDetail.Size = new System.Drawing.Size(83, 17);
+			this.TransDetail.TabIndex = 28;
+			this.TransDetail.Text = "Trans Detail";
+			this.mTips.SetToolTip(this.TransDetail, "Auto set all transparent leafs to detail");
+			this.TransDetail.UseVisualStyleBackColor = true;
+			// 
+			// WindowEmitLight
+			// 
+			this.WindowEmitLight.AutoSize = true;
+			this.WindowEmitLight.Checked = true;
+			this.WindowEmitLight.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.WindowEmitLight.Location = new System.Drawing.Point(6, 65);
+			this.WindowEmitLight.Name = "WindowEmitLight";
+			this.WindowEmitLight.Size = new System.Drawing.Size(114, 17);
+			this.WindowEmitLight.TabIndex = 29;
+			this.WindowEmitLight.Text = "Window Emit Light";
+			this.mTips.SetToolTip(this.WindowEmitLight, "Window textures will emit light");
+			this.WindowEmitLight.UseVisualStyleBackColor = true;
+			// 
 			// BSPForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(394, 323);
+			this.ClientSize = new System.Drawing.Size(536, 295);
 			this.ControlBox = false;
+			this.Controls.Add(this.groupBox1);
 			this.Controls.Add(this.LightSettingsGroupBox);
 			this.Controls.Add(this.GroupBuildSettings);
 			this.Controls.Add(this.StatsGroupBox);
@@ -657,6 +746,8 @@
 			((System.ComponentModel.ISupportInitialize)(this.MinLightX)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MinLightY)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.SurfaceLightFrequency)).EndInit();
+			this.groupBox1.ResumeLayout(false);
+			this.groupBox1.PerformLayout();
 			this.ResumeLayout(false);
 
 		}
@@ -705,5 +796,11 @@
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.NumericUpDown SurfaceLightStrength;
 		private System.Windows.Forms.ToolTip mTips;
+		private System.Windows.Forms.GroupBox groupBox1;
+		private System.Windows.Forms.CheckBox SkyEmitLight;
+		private System.Windows.Forms.CheckBox LavaEmitLight;
+		private System.Windows.Forms.CheckBox WindowTransparent;
+		private System.Windows.Forms.CheckBox TransDetail;
+		private System.Windows.Forms.CheckBox WindowEmitLight;
 	}
 }

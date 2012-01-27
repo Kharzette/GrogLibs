@@ -410,8 +410,8 @@ namespace BSPCore
 		}
 
 
-		internal UInt32 ReadMapLine(string szLine, PlanePool pool, TexInfoPool tiPool,
-			bool bSlickAsGouraud, bool bWarpAsMirror)
+		internal UInt32 ReadMapLine(string szLine, PlanePool pool,
+			TexInfoPool tiPool,	BSPBuildParams prms)
 		{
 			UInt32	ret	=0;
 
@@ -454,7 +454,10 @@ namespace BSPCore
 					{
 						ret		|=Contents.CONTENTS_LAVA;
 						mFlags	|=SURF_TRANS66;
-						mFlags	|=SURF_LIGHT;
+						if(prms.mbLavaEmitLight)
+						{
+							mFlags	|=SURF_LIGHT;
+						}
 					}
 					else if(texName.Contains("water") || texName.Contains("WATER")
 						|| texName.Contains("MWAT") || texName.Contains("mwat"))
@@ -471,9 +474,16 @@ namespace BSPCore
 					}
 					else if(texName.StartsWith("glass") || texName.StartsWith("GLASS"))
 					{
-						ret			|=Contents.CONTENTS_WINDOW;
-						mFlags		|=SURF_TRANS66;
-						ti.mFlags	|=TexInfo.TRANS;
+						if(prms.mbWindowTransparent)
+						{
+							ret			|=Contents.CONTENTS_WINDOW;
+							mFlags		|=SURF_TRANS66;
+							ti.mFlags	|=TexInfo.TRANS;
+						}
+						if(prms.mbWindowEmitLight)
+						{
+							mFlags	|=SURF_LIGHT;
+						}
 					}
 					else if(texName.StartsWith("teleport") || texName.StartsWith("TELEPORT"))
 					{
@@ -504,13 +514,19 @@ namespace BSPCore
 					mFlags		|=SURF_SKY;
 					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 					ti.mFlags	|=TexInfo.SKY;
-					mFlags		|=SURF_LIGHT;
+					if(prms.mbSkyEmitLight)
+					{
+						mFlags		|=SURF_LIGHT;
+					}
 				}
 				else if(tok.StartsWith("lava") || tok.StartsWith("LAVA"))
 				{
 					ret		|=Contents.CONTENTS_LAVA;
 					mFlags	|=SURF_TRANS66;
-					mFlags	|=SURF_LIGHT;
+					if(prms.mbLavaEmitLight)
+					{
+						mFlags	|=SURF_LIGHT;
+					}
 				}
 				else if(tok.Contains("water") || tok.Contains("WATER"))
 				{
@@ -531,14 +547,19 @@ namespace BSPCore
 					mFlags		|=SURF_NODRAW;
 					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 				}
-				/* dangerous for Q1 to treat windows as transparent
-					can cause leaks to the outer void
 				else if(tok.StartsWith("window") || tok.StartsWith("WINDOW"))
 				{
-					ret			|=Contents.CONTENTS_WINDOW;
-					mFlags		|=SURF_TRANS66;
-					ti.mFlags	|=TexInfo.TRANS;
-				}*/
+					if(prms.mbWindowTransparent)
+					{
+						ret			|=Contents.CONTENTS_WINDOW;
+						mFlags		|=SURF_TRANS66;
+						ti.mFlags	|=TexInfo.TRANS;
+					}
+					if(prms.mbWindowEmitLight)
+					{
+						mFlags	|=SURF_LIGHT;
+					}
+				}
 				else if(char.IsLetter(tok, 0))
 				{
 					texName	=tok;
@@ -629,7 +650,7 @@ namespace BSPCore
 				ti.mVVec	=Vector3.TransformNormal(ti.mVVec, texRot);
 			}
 
-			FixFlags(ref ti, bSlickAsGouraud, bWarpAsMirror);
+			FixFlags(ref ti, prms.mbSlickAsGouraud, prms.mbWarpAsMirror);
 
 			mTexInfo	=tiPool.Add(ti);
 			return	ret;

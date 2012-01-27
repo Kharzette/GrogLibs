@@ -228,7 +228,7 @@ namespace BSPCore
 
 		//read a single entity block
 		internal void ReadVMFEntBlock(StreamReader sr, int entityNum,
-			PlanePool pool, TexInfoPool tiPool, ClipPools cp)
+			PlanePool pool, TexInfoPool tiPool, ClipPools cp, BSPBuildParams prms)
 		{
 			string	s	="";
 			while((s = sr.ReadLine()) != null)
@@ -259,7 +259,7 @@ namespace BSPCore
 					if(b.ReadVMFSolidBlock(sr, pool, tiPool, entityNum))
 					{
 						b.MakePolys(pool, true, cp);
-						b.FixContents(true);
+						b.FixContents(true, prms.mbTransparentDetail);
 
 						if(mData["classname"] == "func_detail")
 						{
@@ -314,7 +314,7 @@ namespace BSPCore
 
 		//read a single entity block
 		internal void ReadVMFWorldBlock(StreamReader sr, int entityNum,
-			PlanePool pool, TexInfoPool tiPool, ClipPools cp)
+			PlanePool pool, TexInfoPool tiPool, ClipPools cp, BSPBuildParams prms)
 		{
 			string	s	="";
 			while((s = sr.ReadLine()) != null)
@@ -327,7 +327,7 @@ namespace BSPCore
 					if(b.ReadVMFSolidBlock(sr, pool, tiPool, entityNum))
 					{
 						b.MakePolys(pool, true, cp);
-						b.FixContents(true);
+						b.FixContents(true, prms.mbTransparentDetail);
 						mBrushes.Add(b);
 					}
 				}
@@ -352,7 +352,7 @@ namespace BSPCore
 
 		//read's hammer files
 		internal void ReadFromVMF(StreamReader sr, int entityNum,
-			PlanePool pool, TexInfoPool tiPool, ClipPools cp)
+			PlanePool pool, TexInfoPool tiPool, ClipPools cp, BSPBuildParams prms)
 		{
 			string	s	="";
 			while((s = sr.ReadLine()) != null)
@@ -360,12 +360,12 @@ namespace BSPCore
 				s	=s.Trim();
 				if(s == "entity")
 				{
-					ReadVMFEntBlock(sr, entityNum, pool, tiPool, cp);
+					ReadVMFEntBlock(sr, entityNum, pool, tiPool, cp, prms);
 					return;
 				}
 				else if(s == "world")
 				{
-					ReadVMFWorldBlock(sr, entityNum, pool, tiPool, cp);
+					ReadVMFWorldBlock(sr, entityNum, pool, tiPool, cp, prms);
 					return;
 				}
 			}
@@ -374,7 +374,7 @@ namespace BSPCore
 
 		//old school quake maps
 		internal void ReadFromMap(StreamReader sr, PlanePool pool, TexInfoPool tiPool,
-			int entityNum, bool bSlickAsGouraud, bool bWarpAsMirror, ClipPools cp)
+			int entityNum, BSPBuildParams prms, ClipPools cp)
 		{
 			string	s	="";
 			while((s = sr.ReadLine()) != null)
@@ -397,10 +397,10 @@ namespace BSPCore
 				else if(s == "{")
 				{
 					MapBrush	b	=new MapBrush();
-					if(b.ReadFromMap(sr, pool, tiPool, entityNum, bSlickAsGouraud, bWarpAsMirror))
+					if(b.ReadFromMap(sr, pool, tiPool, entityNum, prms))
 					{
 						b.MakePolys(pool, true, cp);
-						b.FixContents(false);
+						b.FixContents(false, prms.mbTransparentDetail);
 						mBrushes.Add(b);
 					}
 				}

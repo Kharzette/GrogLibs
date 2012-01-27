@@ -169,12 +169,6 @@ namespace SharedForms
 		}
 
 
-		public void SetReadOnly(bool bReadOnly)
-		{
-			MaterialGrid.ReadOnly	=bReadOnly;
-		}
-
-
 		void OnTextureListOk(object sender, EventArgs ea)
 		{
 			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
@@ -559,8 +553,10 @@ namespace SharedForms
 
 		void OnNukeMaterial(object sender, DataGridViewRowCancelEventArgs e)
 		{
-			if(MaterialGrid.ReadOnly)
+			if(!MeshPartGrid.Visible)
 			{
+				//if working with indoor meshes, delete can screw up
+				//material vis indexing
 				e.Cancel	=true;
 				return;
 			}

@@ -439,8 +439,7 @@ namespace BSPCore
 		#endregion
 
 
-		public void LoadBrushFile(string mapFileName,
-			bool bSlickAsGouraud, bool bWarpAsMirror)
+		public void LoadBrushFile(string mapFileName, BSPBuildParams prms)
 		{
 			mEntities	=new List<MapEntity>();
 
@@ -465,8 +464,7 @@ namespace BSPCore
 							if(s == "{")
 							{
 								MapEntity	e	=new MapEntity();
-								e.ReadFromMap(sr, mPlanePool, mTIPool, mEntities.Count,
-									bSlickAsGouraud, bWarpAsMirror, cp);
+								e.ReadFromMap(sr, mPlanePool, mTIPool, mEntities.Count,	prms, cp);
 								mEntities.Add(e);
 
 								CoreEvents.FireNumPlanesChangedEvent(mPlanePool.mPlanes.Count, null);
@@ -481,14 +479,14 @@ namespace BSPCore
 							if(s == "entity")
 							{
 								MapEntity	e	=new MapEntity();
-								e.ReadVMFEntBlock(sr, mEntities.Count, mPlanePool, mTIPool, cp);
+								e.ReadVMFEntBlock(sr, mEntities.Count, mPlanePool, mTIPool, cp, prms);
 								mEntities.Add(e);
 								CoreEvents.FireNumPlanesChangedEvent(mPlanePool.mPlanes.Count, null);
 							}
 							else if(s == "world")
 							{
 								MapEntity	e	=new MapEntity();
-								e.ReadVMFWorldBlock(sr, mEntities.Count, mPlanePool, mTIPool, cp);
+								e.ReadVMFWorldBlock(sr, mEntities.Count, mPlanePool, mTIPool, cp, prms);
 								mEntities.Add(e);
 								CoreEvents.FireNumPlanesChangedEvent(mPlanePool.mPlanes.Count, null);
 							}

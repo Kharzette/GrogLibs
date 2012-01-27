@@ -65,7 +65,7 @@ namespace BSPCore
 			}
 
 			MakePolys(pp, false, cp);
-			FixContents(false);
+			FixContents(false, true);
 		}
 
 
@@ -133,8 +133,8 @@ namespace BSPCore
 		}
 
 
-		internal bool ReadFromMap(StreamReader sr, PlanePool pool, TexInfoPool tiPool,
-			int entityNum, bool bSlickAsGouraud, bool bWarpAsMirror)
+		internal bool ReadFromMap(StreamReader sr, PlanePool pool,
+			TexInfoPool tiPool,	int entityNum, BSPBuildParams prms)
 		{
 			string	s	="";
 			bool	ret	=true;
@@ -144,7 +144,7 @@ namespace BSPCore
 				if(s.StartsWith("("))
 				{
 					GBSPSide	side	=new GBSPSide();
-					mContents	=side.ReadMapLine(s, pool, tiPool, bSlickAsGouraud, bWarpAsMirror);
+					mContents	=side.ReadMapLine(s, pool, tiPool, prms);
 
 					mOriginalSides.Add(side);
 					mEntityNum	=entityNum;
@@ -328,7 +328,7 @@ namespace BSPCore
 		}
 
 
-		internal void FixContents(bool bHammer)
+		internal void FixContents(bool bHammer, bool bTransDetail)
 		{
 			if(bHammer)
 			{
@@ -395,7 +395,8 @@ namespace BSPCore
 
 			//make transparent stuff detail, so it isn't
 			//chosen for splitting planes
-			if(UtilityLib.Misc.bFlagSet(Contents.BSP_CONTENTS_TRANSLUCENT2, mContents))
+			if(bTransDetail &&
+				UtilityLib.Misc.bFlagSet(Contents.BSP_CONTENTS_TRANSLUCENT2, mContents))
 			{
 				mContents	|=Contents.BSP_CONTENTS_DETAIL2;
 			}
