@@ -45,12 +45,12 @@
 			this.NumPlanes = new System.Windows.Forms.TextBox();
 			this.GroupBuildSettings = new System.Windows.Forms.GroupBox();
 			this.label11 = new System.Windows.Forms.Label();
-			this.WarpAsMirror = new System.Windows.Forms.CheckBox();
 			this.MaxThreads = new System.Windows.Forms.NumericUpDown();
-			this.SlickAsGouraud = new System.Windows.Forms.CheckBox();
 			this.FixTJunctions = new System.Windows.Forms.CheckBox();
 			this.VerboseEntity = new System.Windows.Forms.CheckBox();
 			this.VerboseBSP = new System.Windows.Forms.CheckBox();
+			this.WarpAsMirror = new System.Windows.Forms.CheckBox();
+			this.SlickAsGouraud = new System.Windows.Forms.CheckBox();
 			this.LightSettingsGroupBox = new System.Windows.Forms.GroupBox();
 			this.label1 = new System.Windows.Forms.Label();
 			this.SurfaceLightStrength = new System.Windows.Forms.NumericUpDown();
@@ -71,12 +71,12 @@
 			this.SurfaceLightFrequency = new System.Windows.Forms.NumericUpDown();
 			this.SeamCorrection = new System.Windows.Forms.CheckBox();
 			this.mTips = new System.Windows.Forms.ToolTip(this.components);
-			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.LavaEmitLight = new System.Windows.Forms.CheckBox();
 			this.SkyEmitLight = new System.Windows.Forms.CheckBox();
 			this.WindowTransparent = new System.Windows.Forms.CheckBox();
 			this.TransDetail = new System.Windows.Forms.CheckBox();
 			this.WindowEmitLight = new System.Windows.Forms.CheckBox();
+			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.GroupFileIO.SuspendLayout();
 			this.StatsGroupBox.SuspendLayout();
 			this.GroupBuildSettings.SuspendLayout();
@@ -268,17 +268,6 @@
 			this.label11.TabIndex = 34;
 			this.label11.Text = "Max Threads";
 			// 
-			// WarpAsMirror
-			// 
-			this.WarpAsMirror.AutoSize = true;
-			this.WarpAsMirror.Location = new System.Drawing.Point(6, 134);
-			this.WarpAsMirror.Name = "WarpAsMirror";
-			this.WarpAsMirror.Size = new System.Drawing.Size(90, 17);
-			this.WarpAsMirror.TabIndex = 24;
-			this.WarpAsMirror.Text = "Warp = Mirror";
-			this.mTips.SetToolTip(this.WarpAsMirror, "Convert Q2 warp surface flags into mirror surfaces");
-			this.WarpAsMirror.UseVisualStyleBackColor = true;
-			// 
 			// MaxThreads
 			// 
 			this.MaxThreads.Location = new System.Drawing.Point(6, 88);
@@ -301,17 +290,6 @@
             0,
             0,
             0});
-			// 
-			// SlickAsGouraud
-			// 
-			this.SlickAsGouraud.AutoSize = true;
-			this.SlickAsGouraud.Location = new System.Drawing.Point(6, 157);
-			this.SlickAsGouraud.Name = "SlickAsGouraud";
-			this.SlickAsGouraud.Size = new System.Drawing.Size(102, 17);
-			this.SlickAsGouraud.TabIndex = 23;
-			this.SlickAsGouraud.Text = "Slick = Gouraud";
-			this.mTips.SetToolTip(this.SlickAsGouraud, "Convert the Q2 slick flag into gouraud shading");
-			this.SlickAsGouraud.UseVisualStyleBackColor = true;
 			// 
 			// FixTJunctions
 			// 
@@ -348,6 +326,28 @@
 			this.mTips.SetToolTip(this.VerboseBSP, "Turns on a lot of spam, which can slow down the build");
 			this.VerboseBSP.UseVisualStyleBackColor = true;
 			this.VerboseBSP.CheckedChanged += new System.EventHandler(this.OnVerbose);
+			// 
+			// WarpAsMirror
+			// 
+			this.WarpAsMirror.AutoSize = true;
+			this.WarpAsMirror.Location = new System.Drawing.Point(6, 134);
+			this.WarpAsMirror.Name = "WarpAsMirror";
+			this.WarpAsMirror.Size = new System.Drawing.Size(90, 17);
+			this.WarpAsMirror.TabIndex = 24;
+			this.WarpAsMirror.Text = "Warp = Mirror";
+			this.mTips.SetToolTip(this.WarpAsMirror, "Convert Q2 warp surface flags into mirror surfaces");
+			this.WarpAsMirror.UseVisualStyleBackColor = true;
+			// 
+			// SlickAsGouraud
+			// 
+			this.SlickAsGouraud.AutoSize = true;
+			this.SlickAsGouraud.Location = new System.Drawing.Point(6, 157);
+			this.SlickAsGouraud.Name = "SlickAsGouraud";
+			this.SlickAsGouraud.Size = new System.Drawing.Size(102, 17);
+			this.SlickAsGouraud.TabIndex = 23;
+			this.SlickAsGouraud.Text = "Slick = Gouraud";
+			this.mTips.SetToolTip(this.SlickAsGouraud, "Convert the Q2 slick flag into gouraud shading");
+			this.SlickAsGouraud.UseVisualStyleBackColor = true;
 			// 
 			// LightSettingsGroupBox
 			// 
@@ -387,6 +387,7 @@
 			// 
 			// SurfaceLightStrength
 			// 
+			this.SurfaceLightStrength.DecimalPlaces = 2;
 			this.SurfaceLightStrength.Increment = new decimal(new int[] {
             25,
             0,
@@ -637,22 +638,6 @@
 			this.mTips.SetToolTip(this.SeamCorrection, "Shifts light points around a bit to help points just inside solid");
 			this.SeamCorrection.UseVisualStyleBackColor = true;
 			// 
-			// groupBox1
-			// 
-			this.groupBox1.Controls.Add(this.WindowEmitLight);
-			this.groupBox1.Controls.Add(this.TransDetail);
-			this.groupBox1.Controls.Add(this.WindowTransparent);
-			this.groupBox1.Controls.Add(this.SkyEmitLight);
-			this.groupBox1.Controls.Add(this.LavaEmitLight);
-			this.groupBox1.Controls.Add(this.SlickAsGouraud);
-			this.groupBox1.Controls.Add(this.WarpAsMirror);
-			this.groupBox1.Location = new System.Drawing.Point(389, 12);
-			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(136, 182);
-			this.groupBox1.TabIndex = 33;
-			this.groupBox1.TabStop = false;
-			this.groupBox1.Text = "Surface Flags";
-			// 
 			// LavaEmitLight
 			// 
 			this.LavaEmitLight.AutoSize = true;
@@ -716,6 +701,22 @@
 			this.WindowEmitLight.Text = "Window Emit Light";
 			this.mTips.SetToolTip(this.WindowEmitLight, "Window textures will emit light");
 			this.WindowEmitLight.UseVisualStyleBackColor = true;
+			// 
+			// groupBox1
+			// 
+			this.groupBox1.Controls.Add(this.WindowEmitLight);
+			this.groupBox1.Controls.Add(this.TransDetail);
+			this.groupBox1.Controls.Add(this.WindowTransparent);
+			this.groupBox1.Controls.Add(this.SkyEmitLight);
+			this.groupBox1.Controls.Add(this.LavaEmitLight);
+			this.groupBox1.Controls.Add(this.SlickAsGouraud);
+			this.groupBox1.Controls.Add(this.WarpAsMirror);
+			this.groupBox1.Location = new System.Drawing.Point(389, 12);
+			this.groupBox1.Name = "groupBox1";
+			this.groupBox1.Size = new System.Drawing.Size(136, 182);
+			this.groupBox1.TabIndex = 33;
+			this.groupBox1.TabStop = false;
+			this.groupBox1.Text = "Surface Flags";
 			// 
 			// BSPForm
 			// 

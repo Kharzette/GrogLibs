@@ -435,7 +435,7 @@ namespace BSPCore
 			bool	bCPP	=true;
 			long	pos		=br.BaseStream.Position;
 			string	test	=br.ReadString();
-			if(test != "" && char.IsLetter(test[0]))
+			if(test != "" && (char.IsLetter(test[0]) || test[0] == '_'))
 			{
 				bCPP	=false;
 			}

@@ -20,7 +20,6 @@ namespace BSPCore
 		int	mIterationCount;
 
 		public const int	MAX_TEMP_INDEX_VERTS	=1024;
-		public const int	MAX_WELDED_VERTS		=64000;
 		public const float	OFF_EPSILON				=0.05f;
 
 
@@ -197,12 +196,6 @@ namespace BSPCore
 				{
 					return	i;
 				}
-			}
-
-			if(i >= MAX_WELDED_VERTS)
-			{
-				CoreEvents.Print("WeldVert:  Max welded verts.\n");
-				return	-1;
 			}
 
 			mWelded.Add(vert);

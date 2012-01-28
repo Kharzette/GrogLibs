@@ -250,29 +250,42 @@ float4 LMPixelShader(VTex04Tex14Tex24 input) : COLOR0
 }
 
 
-float4 LMToonPixelShader(VTex0Tex1Col0 input) : COLOR0
+float4 LMToonPixelShader(VTex04Tex14Tex24 input) : COLOR0
 {
 	float3	color;
-	float2	tex0	=input.TexCoord0;
-	
-	tex0.x	/=mTexSize.x;
-	tex0.y	/=mTexSize.y;
 	
 	if(mbTextureEnabled)
 	{
-		color	=pow(tex2D(TextureSampler, tex0), 2.2);
+		color	=pow(tex2D(TextureSampler, input.TexCoord0.xy), 2.2);
 	}
 	else
 	{
 		color	=float3(1.0, 1.0, 1.0);
 	}
 	
-	float3	lm	=tex2D(LightMapSampler, input.TexCoord1);
+	float3	lm	=tex2D(LightMapSampler, input.TexCoord0.zw);
+
+	float	dist	=distance(input.TexCoord1.xyz, mLight0Position);
+	if(dist < mLightRange)
+	{
+		float3	lightDir	=normalize(mLight0Position - input.TexCoord1.xyz);
+		float	ndl			=dot(input.TexCoord2, lightDir);
+
+		if(ndl > 0)
+		{
+			if(dist > mLightFalloffRange)
+			{
+				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
+			}
+			lm	+=(ndl * mLight0Color);
+		}
+	}
+
+	//Apply lighting.
+	color	*=lm;
+	color	=saturate(color);
 	
-	lm	+=input.Color;
-	lm	=saturate(lm);
-	
-	float	d	=lm.x + lm.y + lm.z;
+	float	d	=color.x + color.y + color.z;
 
 	d	*=0.33;
 	

@@ -684,6 +684,7 @@ namespace BSPVis
 
 			if(vp.mVisParams.mbFullVis)
 			{
+				CoreEvents.Print("Full vis for " + mVisPortals.Length + " portals...\n");
 				if(vp.mVisParams.mbDistribute)
 				{
 					DistributedVis(clients, fileName, vp.mVisParams.mbResume, vp.mBSPParams.mbVerbose);
