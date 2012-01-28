@@ -144,6 +144,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MaterialLib\MaterialLib360.csproj">
+      <Project>{C4439A8A-A568-4FEC-9C65-4587E7701A54}</Project>
+      <Name>MaterialLib360</Name>
+    </ProjectReference>
     <ProjectReference Include="..\UtilityLib\UtilityLib360.csproj">
       <Project>{FA72E344-794D-483E-8373-B2ABD7CD9478}</Project>
       <Name>UtilityLib360</Name>

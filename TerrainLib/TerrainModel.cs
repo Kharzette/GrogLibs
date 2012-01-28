@@ -166,78 +166,42 @@ namespace TerrainLib
 		}
 
 
-		public float GetGoodCloudHeight()
+		public float GetGoodCloudHeight(float islandDist)
 		{
 			float	max	=float.MinValue;
 			float	min	=float.MaxValue;
 
-			//trace the outer edge of the map
+			int	w	=mHeightGrid.GetLength(1);
+			int	h	=mHeightGrid.GetLength(0);
 
-			//top horiz
-			for(int x=0;x < mGridSize;x++)
-			{
-				float	height	=mHeightGrid[0, x];
+			Vector3	center	=Vector3.UnitX * (w / 2);
+			center			+=Vector3.UnitZ * (h / 2);
+			center			+=Vector3.UnitY * mHeightGrid[(h/2), (w/2)];
 
-				if(height < min)
-				{
-					min	=height;
-				}
-
-				if(height > max)
-				{
-					max	=height;
-				}
-			}
-
-			//bottom horiz
-			for(int x=0;x < mGridSize;x++)
-			{
-				float	height	=mHeightGrid[mGridSize - 1, x];
-
-				if(height < min)
-				{
-					min	=height;
-				}
-
-				if(height > max)
-				{
-					max	=height;
-				}
-			}
-
-			//left vert
 			for(int y=0;y < mGridSize;y++)
 			{
-				float	height	=mHeightGrid[y, 0];
-
-				if(height < min)
+				for(int x=0;x < mGridSize;x++)
 				{
-					min	=height;
-				}
+					Vector3	pos	=Vector3.UnitX * x;
+					pos		+=Vector3.UnitZ * y;
+					pos.Y	=mHeightGrid[y, x];
 
-				if(height > max)
-				{
-					max	=height;
-				}
-			}
+					if(Vector3.Distance(center, pos) < islandDist)
+					{
+						if(pos.Y < min)
+						{
+							min	=pos.Y;
+						}
 
-			//right vert
-			for(int y=0;y < mGridSize;y++)
-			{
-				float	height	=mHeightGrid[y, mGridSize - 1];
-
-				if(height < min)
-				{
-					min	=height;
-				}
-
-				if(height > max)
-				{
-					max	=height;
+						if(pos.Y > max)
+						{
+							max	=pos.Y;
+						}
+					}
 				}
 			}
 
-			return	max;
+			return	min;
 		}
 
 

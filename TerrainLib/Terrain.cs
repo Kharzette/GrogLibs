@@ -65,7 +65,8 @@ namespace TerrainLib
 		public void Build(float				[,]data,
 						  GraphicsDevice	gd,
 						  float				polySize,
-						  bool				bSmooth)
+						  bool				bSmooth,
+						  float				islandSize)
 		{
 			//alloc/clear map list
 			mMaps	=new List<HeightMap>();
@@ -75,7 +76,7 @@ namespace TerrainLib
 				SmoothPass(data);
 			}
 
-			MiddleBias(data);
+			CircleBias(data, islandSize);
 
 			int	w	=data.GetLength(1);
 			int	h	=data.GetLength(0);
@@ -283,8 +284,11 @@ namespace TerrainLib
 		}
 
 
-		//bias the middle of the map towards height
-		void MiddleBias(float [,]data)
+		//This helps to create island shaped terrains.
+		//Stuff inside the island range will be unaffected,
+		//while distances greater will gradually fall off
+		//into the sea / clouds / void
+		void CircleBias(float [,]data, float islandRange)
 		{
 			int	w	=data.GetLength(1);
 			int	h	=data.GetLength(0);
@@ -303,12 +307,11 @@ namespace TerrainLib
 
 					heightBias	=Vector2.Distance(center, xyVec);
 
-					if(heightBias > 0.0f)
+					if(heightBias > islandRange)
 					{
-						heightBias	/=2.5f;
+						heightBias	-=islandRange;
+						data[y, x]	-=heightBias;
 					}
-
-					data[y, x]	-=heightBias;
 				}
 			}
 		}
