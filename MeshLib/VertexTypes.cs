@@ -712,30 +712,27 @@ namespace MeshLib
 		//create a new vertexbuffer with tangents added
 		public static VertexBuffer AddTangents(GraphicsDevice gd, VertexBuffer vb, int numVerts, int typeIdx, Vector4 []tans, out int typeIndex)
 		{
-			typeIndex	=69;
-			return	null;	//todo: fix later
-			/*
 			Type	vtype	=mTypes[typeIdx];
 			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
 
 			//count texcoords
 			int	texCnt	=0;
-			while(HasElement(vtype, "TexCoord" + texCnt))
+			while(HasElement(vtype, typeof(Vector2), "TexCoord" + texCnt))
 			{
 				texCnt++;
 			}
 
 			//count colors
 			int	colCnt	=0;
-			while(HasElement(vtype, "Color" + colCnt))
+			while(HasElement(vtype, typeof(Vector4), "Color" + colCnt))
 			{
 				colCnt++;
 			}
 
-			bool	bPos		=HasElement(vtype, "Position");
-			bool	bNorm		=HasElement(vtype, "Normal");
-			bool	bBoneIdx	=HasElement(vtype, "BoneIndex");
-			bool	bBoneWeight	=HasElement(vtype, "BoneWeights");
+			bool	bPos		=HasElement(vtype, typeof(Vector3), "Position");
+			bool	bNorm		=HasElement(vtype, typeof(Vector3), "Normal");
+			bool	bBoneIdx	=HasElement(vtype, typeof(Vector4), "BoneIndex");
+			bool	bBoneWeight	=HasElement(vtype, typeof(Vector4), "BoneWeights");
 
 			//build the new type
 			Type	vtypeNew	=GetMatch(
@@ -795,7 +792,7 @@ namespace MeshLib
 
 			typedMethod.Invoke(vb2, new object[] {newVerts});
 
-			return	vb2;*/
+			return	vb2;
 		}
 
 

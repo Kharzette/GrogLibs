@@ -58,8 +58,11 @@ namespace BSPZone
 
 		public event EventHandler	eTriggerHit;
 
-		const float	GroundAngle	=0.8f;	//how sloped can you be to be considered ground
-		const float StepHeight	=18.0f;	//stair step height for bipeds
+		const float	GroundAngle				=0.8f;	//how sloped can you be to be considered ground
+		const float	RampAngle				=0.7f;	//how steep can we climb?
+		const float StepHeight				=18.0f;	//stair step height for bipeds
+		const float	StuckLength				=10.0f;
+		const int	MaxMoveBoxIterations	=64;
 
 
 		#region IO
@@ -450,7 +453,7 @@ namespace BSPZone
 		//this one assumes 2 legs, so navigates stairs
 		//TODO: This gets a bit strange on gentle slopes
 		public bool BipedMoveBox(BoundingBox box, Vector3 start,
-								Vector3 end, ref Vector3 finalPos)
+								 Vector3 end, ref Vector3 finalPos)
 		{
 			//try the original movement with no sliding
 			Vector3		firstPos		=Vector3.Zero;
@@ -475,7 +478,7 @@ namespace BSPZone
 			{
 				//close enough to original
 				finalPos	=start;
-				return	true;
+				return	true;	//on ground from above movebox
 			}
 
 			//try a step height up with the regular
@@ -533,59 +536,301 @@ namespace BSPZone
 		}
 
 
-		//positions should be in the middle base of the box
-		//returns true if on the ground
-		public bool MoveBox(BoundingBox box, Vector3 start,
-							Vector3 end, ref Vector3 finalPos)
+		bool FootCheck(BoundingBox box, Vector3 footPos, float dist)
 		{
-			Vector3		impacto		=Vector3.Zero;
-			ZonePlane	firstPHit	=new ZonePlane();
-			ZonePlane	secondPHit	=new ZonePlane();
-			ZonePlane	thirdPHit	=new ZonePlane();
-
-			if(Trace_WorldCollisionBBox(box, start, end, ref impacto, ref firstPHit))
+			//see if the feet are still on the ground
+			Vector3		footCheck	=footPos - Vector3.UnitY * dist;
+			ZonePlane	footPlane	=ZonePlane.BlankX;
+			Vector3		impVec		=Vector3.Zero;
+			if(Trace_WorldCollisionBBox(box, footPos, footCheck, ref impVec, ref footPlane))
 			{
-				//collisions from inside out will leave
-				//an empty plane and impact
-				if(!(impacto == Vector3.Zero && firstPHit.mNormal == Vector3.Zero))
+				return	IsGround(footPlane);
+			}
+			return	false;
+		}
+
+
+		bool StairMove(BoundingBox box, Vector3 start, Vector3 end, Vector3 stairAxis,
+			bool bSlopeOk, float stepHeight, float originalLenSquared, ref Vector3 stepPos)
+		{
+			Vector3		impVec		=Vector3.Zero;
+			ZonePlane	impPlane	=ZonePlane.BlankX;
+
+			//first trace up from the start point
+			//to make sure there's head room
+			if(Trace_WorldCollisionBBox(box, start, start + stairAxis * stepHeight, ref impVec, ref impPlane))
+			{
+				//hit noggin, just use previous point
+				return	false;
+			}
+
+			//movebox from start step height to end step height
+			stepPos	=Vector3.Zero;
+			bool	bGroundStep	=MoveBox(box, start + stairAxis * stepHeight,
+				end + stairAxis * stepHeight, ref stepPos);
+
+			if(!bGroundStep)
+			{
+				//trace down by step height and make sure
+				//we land on a ground surface
+				if(Trace_WorldCollisionBBox(box, stepPos, stepPos - Vector3.UnitY * stepHeight,
+					ref impVec, ref impPlane))
 				{
-					//reflect the ray's energy
-					float	dist	=firstPHit.DistanceFast(end);
-
-					//push out of the plane
-					end	-=(firstPHit.mNormal * dist);
-
-					//ray cast again
-					if(Trace_WorldCollisionBBox(box, start, end, ref impacto, ref secondPHit))
+					if(IsGround(impPlane))
 					{
-						if(!(impacto == Vector3.Zero && secondPHit.mNormal == Vector3.Zero))
+						//landed on the ground
+						stepPos		=impVec;
+						bGroundStep	=true;
+					}
+					else
+					{
+						if(bSlopeOk)
 						{
-							//push out of second plane
-							dist	=secondPHit.DistanceFast(end);
-							end		-=(secondPHit.mNormal * dist);
-
-							//ray cast again
-							if(Trace_WorldCollisionBBox(box, start, end, ref impacto, ref thirdPHit))
+							//see if the plane has any footing at all
+							if(Vector3.Dot(Vector3.UnitY, impPlane.mNormal) > RampAngle)
 							{
-								if(!(impacto == Vector3.Zero && thirdPHit.mNormal == Vector3.Zero))
-								{
-									//just use impact point
-									end	=impacto;
-								}
+								stepPos		=impVec;
+								bGroundStep	=true;
 							}
 						}
 					}
 				}
 			}
 
-			finalPos	=end;
+			Vector3	moveVec	=stepPos - start;
+			if(!bGroundStep || moveVec.LengthSquared() <= originalLenSquared)
+			{
+				//earlier move was better
+				return	false;
+			}
 
-			//check for a floorish plane
-			if(IsGround(firstPHit) || IsGround(secondPHit) || IsGround(thirdPHit))
+			return	true;
+		}
+
+
+		//returns true if on ground
+		//this one assumes 2 legs, so navigates stairs
+		//TODO: This gets a bit strange on gentle slopes
+		public bool BipedMoveBox(BoundingBox box, Vector3 start, Vector3 end,
+			bool bPrevOnGround, ref Vector3 finalPos, ref bool bUsedStairs)
+		{
+			bUsedStairs	=false;
+
+			//first check if we are moving at all
+			Vector3	moveVec	=end - start;
+			float	delt	=moveVec.LengthSquared();
+			if(delt < UtilityLib.Mathery.ANGLE_EPSILON)
+			{
+				//didn't move enough to bother
+				finalPos	=start;
+				return		bPrevOnGround;
+			}
+
+			//try the standard box move
+			bool	bGround	=MoveBox(box, start, end, ref finalPos);
+
+			//see how far it went
+			moveVec	=finalPos - start;
+
+			float	deltMove	=moveVec.LengthSquared();
+			if(delt / deltMove < 1.333f)
+			{
+				//3/4 the movement energy at least was expended
+				//good enough
+				return	bGround;
+			}
+
+			//see if original movement is mostly non vertical
+			moveVec	=end - start;
+			moveVec.Normalize();
+			float	vert	=Vector3.Dot(Vector3.UnitY, moveVec);
+
+			if(vert > RampAngle || vert < -RampAngle)
+			{
+				//no need to try stairs if just falling or climbing
+				return	bGround;
+			}
+
+			//only attempt stair stepping if biped was previously on ground
+			if(!bPrevOnGround)
+			{
+				return	bGround;
+			}
+
+			//try a step at a quarter stair height
+			//this can get us over cracks where the
+			//returned plane is one of the extra axials
+			Vector3	stairPos	=Vector3.Zero;
+			if(StairMove(box, start, end, Vector3.UnitY, true, StepHeight * 0.25f, deltMove, ref stairPos))
+			{
+				finalPos	=stairPos;
+				bUsedStairs	=true;
+				return		true;
+			}
+
+			//try a full step height
+			if(StairMove(box, start, end, Vector3.UnitY, false, StepHeight, deltMove, ref stairPos))
+			{
+				finalPos	=stairPos;
+				bUsedStairs	=true;
+				return		true;
+			}
+
+			if(bGround)
 			{
 				return	true;
 			}
-			return	false;
+
+			//earlier move was better
+			return	bGround;
+
+
+			/*
+			//do an initial trace on the movement
+			ZonePlane	impPlane	=ZonePlane.BlankX;
+			Vector3		impVec		=Vector3.Zero;
+			bool		bHit		=Trace_WorldCollisionBBox(box, start,
+										end, ref impVec, ref impPlane);
+			if(!bHit)
+			{
+				//probably flying through the air
+				finalPos	=end;
+				return		false;
+			}
+
+			//check the plane hit for groundiness
+			if(IsGround(impPlane))
+			{
+				//for a groundlike plane, push the motion along the normal
+				float	dist	=impPlane.DistanceFast(end);
+
+				end	-=(impPlane.mNormal * dist);
+				end	+=(impPlane.mNormal * UtilityLib.Mathery.DIST_EPSILON);
+
+				//trace again
+				if(Trace_WorldCollisionBBox(box, start, end, ref impVec, ref impPlane))
+				{
+					if(IsGround(impPlane))
+					{
+						//push out again
+						dist	=impPlane.DistanceFast(end);
+						end		-=(impPlane.mNormal * dist);
+						end		+=(impPlane.mNormal * UtilityLib.Mathery.DIST_EPSILON);
+
+						//trace again, this is needed because
+						//often gentle slopes will have interactions
+						//with the extra axial planes in the leafsides
+						if(Trace_WorldCollisionBBox(box, start, end, ref impVec, ref impPlane))
+						{
+							if(IsGround(impPlane))
+							{
+								//hit another groundish plane, good enough for now
+								finalPos	=impVec;
+								return		true;
+							}
+						}
+						else
+						{
+							//no impacts
+							finalPos	=end;
+							return		FootCheck(box, end);
+						}
+					}
+
+					//hit a non ground
+					finalPos	=impVec;
+					return		false;
+				}
+
+				//no impacts, so likely we skated across a semiflat surface
+				finalPos	=end;
+				return		FootCheck(box, end);
+			}			
+
+			//hit some sort of wall or something
+			finalPos	=impVec;
+			return		false;*/
+		}
+
+
+		bool TestNormalsFacing(List<ZonePlane> planes)
+		{
+			foreach(ZonePlane p1 in planes)
+			{
+				foreach(ZonePlane p2 in planes)
+				{
+					if(p1 == p2)
+					{
+						continue;
+					}
+
+					if(Vector3.Dot(p1.mNormal, p2.mNormal) < 0.0f)
+					{
+						return	false;
+					}
+				}
+			}
+			return	true;
+		}
+
+
+		Vector3	AverageReflect(List<ZonePlane> planes)
+		{
+			Vector3	norm	=Vector3.Zero;
+			foreach(ZonePlane zp in planes)
+			{
+				norm	+=zp.mNormal;
+			}
+			norm.Normalize();
+
+			return	norm;
+		}
+
+
+		//positions should be in the middle base of the box
+		//returns true if on the ground
+		public bool MoveBox(BoundingBox box, Vector3 start,
+							Vector3 end, ref Vector3 finalPos)
+		{
+			Vector3		impacto		=Vector3.Zero;
+			int			i			=0;
+
+			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
+
+			for(i=0;i < MaxMoveBoxIterations;i++)
+			{
+				ZonePlane	zp	=ZonePlane.Blank;
+				if(!Trace_WorldCollisionBBox(box, start, end, ref impacto, ref zp))
+				{
+					break;
+				}
+
+				if(zp.mNormal == Vector3.Zero)
+				{
+					break;	//in solid
+				}
+
+				float	dist	=zp.DistanceFast(end);
+				end				-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
+				
+				if(!hitPlanes.Contains(zp))
+				{
+					hitPlanes.Add(zp);
+				}
+			}
+
+			finalPos	=end;
+			if(i == MaxMoveBoxIterations)
+			{
+				//can't solve!
+				finalPos	=start;
+
+				//player is probably stuck
+				//give them footing to help break free
+				return	true;
+			}
+
+			return	FootCheck(box, end, 1.0f);
 		}
 
 

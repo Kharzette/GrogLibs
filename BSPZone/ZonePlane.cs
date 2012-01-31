@@ -25,6 +25,41 @@ namespace BSPZone
 		internal const UInt32	PSIDE_BOTH		=(PSIDE_FRONT | PSIDE_BACK);
 		internal const UInt32	PSIDE_FACING	=4;
 
+		//default blank planes
+		static ZonePlane	mBlank	=new ZonePlane(Vector3.Zero, 0.0f, PLANE_ANY);
+		static ZonePlane	mBlankX	=new ZonePlane(Vector3.UnitX, 0.0f, PLANE_ANY);
+
+
+		public ZonePlane(Vector3 norm, float dist, UInt32 type)
+		{
+			mNormal	=norm;
+			mDist	=dist;
+			mType	=type;
+		}
+
+
+		public static ZonePlane Blank
+		{
+			get { return mBlank; }
+		}
+
+		public static ZonePlane BlankX
+		{
+			get { return mBlankX; }
+		}
+
+		public static bool operator ==(ZonePlane p1, ZonePlane p2)
+		{
+			return p1.mNormal.X == p2.mNormal.X
+				&& p1.mNormal.Y == p2.mNormal.Y
+				&& p1.mNormal.Z == p2.mNormal.Z
+				&& p1.mDist == p2.mDist;
+		}
+
+		public static bool operator !=(ZonePlane p1, ZonePlane p2)
+		{
+			return !(p1 == p2);
+		}
 
 		public void Write(BinaryWriter bw)
 		{
