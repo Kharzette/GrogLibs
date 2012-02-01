@@ -9,6 +9,7 @@
 shared float4x4	mWorld;
 shared float4x4 mView;
 shared float4x4 mProjection;
+shared float3	mEyePos;
 
 //nearby dynamic lights?
 shared float3		mLight0Position;
@@ -17,6 +18,30 @@ shared float		mLightRange;
 shared float		mLightFalloffRange;	//under this light at full strength
 
 #include "Types.fxh"
+
+
+//does the math to get a normal from a sampled
+//normal map to a proper normal useful for lighting
+float3 ComputeNormalFromMap(float4 sampleNorm, float3 tan, float3 biTan, float3 surfNorm)
+{
+	//convert normal from 0 to 1 to -1 to 1
+	sampleNorm	=2.0 * sampleNorm - float4(1.0, 1.0, 1.0, 1.0);
+
+	float3x3	tbn	=float3x3(
+					normalize(tan),
+					normalize(biTan),
+					normalize(surfNorm));
+	
+	//I borrowed a bunch of my math from GL samples thus
+	//this is needed to get things back into XNA Land
+	tbn	=transpose(tbn);
+
+	//rotate normal into worldspace
+	sampleNorm.xyz	=mul(tbn, sampleNorm.xyz);
+	sampleNorm.xyz	=normalize(sampleNorm.xyz);
+
+	return	sampleNorm.xyz;
+}
 
 
 float3 ComputeLight(float3 worldPos, float3 lightPos, float3 normal)

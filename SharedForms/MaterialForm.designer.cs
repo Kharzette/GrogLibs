@@ -40,6 +40,7 @@
 			this.TexSizeDown = new System.Windows.Forms.Button();
 			this.GetEmissive = new System.Windows.Forms.Button();
 			this.FileGroup = new System.Windows.Forms.GroupBox();
+			this.MergeMaterialLib = new System.Windows.Forms.Button();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.MeshPartGrid = new System.Windows.Forms.DataGridView();
 			this.ApplyMaterial = new System.Windows.Forms.Button();
@@ -183,15 +184,27 @@
 			// FileGroup
 			// 
 			this.FileGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.FileGroup.Controls.Add(this.MergeMaterialLib);
 			this.FileGroup.Controls.Add(this.NewMaterial);
 			this.FileGroup.Controls.Add(this.LoadButton);
 			this.FileGroup.Controls.Add(this.SaveButton);
 			this.FileGroup.Location = new System.Drawing.Point(12, 492);
 			this.FileGroup.Name = "FileGroup";
-			this.FileGroup.Size = new System.Drawing.Size(211, 54);
+			this.FileGroup.Size = new System.Drawing.Size(277, 54);
 			this.FileGroup.TabIndex = 17;
 			this.FileGroup.TabStop = false;
 			this.FileGroup.Text = "File IO";
+			// 
+			// MergeMaterialLib
+			// 
+			this.MergeMaterialLib.Location = new System.Drawing.Point(212, 19);
+			this.MergeMaterialLib.Name = "MergeMaterialLib";
+			this.MergeMaterialLib.Size = new System.Drawing.Size(57, 29);
+			this.MergeMaterialLib.TabIndex = 10;
+			this.MergeMaterialLib.Text = "Merge";
+			this.mTips.SetToolTip(this.MergeMaterialLib, "Merge another material lib into the existing material data");
+			this.MergeMaterialLib.UseVisualStyleBackColor = true;
+			this.MergeMaterialLib.Click += new System.EventHandler(this.OnMergeMaterialLib);
 			// 
 			// groupBox1
 			// 
@@ -201,7 +214,7 @@
 			this.groupBox1.Controls.Add(this.GetEmissive);
 			this.groupBox1.Controls.Add(this.TexSizeUp);
 			this.groupBox1.Controls.Add(this.TexSizeDown);
-			this.groupBox1.Location = new System.Drawing.Point(229, 492);
+			this.groupBox1.Location = new System.Drawing.Point(295, 492);
 			this.groupBox1.Name = "groupBox1";
 			this.groupBox1.Size = new System.Drawing.Size(445, 54);
 			this.groupBox1.TabIndex = 18;
@@ -239,7 +252,7 @@
 			this.MeshPartGroup.Controls.Add(this.TexCoordSet);
 			this.MeshPartGroup.Controls.Add(this.GenBiNormalTangent);
 			this.MeshPartGroup.Controls.Add(this.ApplyMaterial);
-			this.MeshPartGroup.Location = new System.Drawing.Point(680, 492);
+			this.MeshPartGroup.Location = new System.Drawing.Point(746, 492);
 			this.MeshPartGroup.Name = "MeshPartGroup";
 			this.MeshPartGroup.Size = new System.Drawing.Size(299, 54);
 			this.MeshPartGroup.TabIndex = 21;
@@ -329,5 +342,6 @@
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.NumericUpDown TexCoordSet;
 		private System.Windows.Forms.ToolTip mTips;
+		private System.Windows.Forms.Button MergeMaterialLib;
 	}
 }

@@ -1732,9 +1732,10 @@ namespace BSPCore
 				{
 					int	cnt	=inds.Count;
 
-					DrawCall	dc	=new DrawCall();				
-					dc.mStartIndex	=cnt;
-					dc.mSortPoint	=ComputeSortPoint(pf.Value);
+					DrawCall	dc		=new DrawCall();				
+					dc.mStartIndex		=cnt;
+					dc.mSortPoint		=ComputeSortPoint(pf.Value);
+					dc.mMinVertIndex	=696969;
 
 					for(int i=0;i < pf.Value.mNumFaces;i++)
 					{
@@ -1746,6 +1747,11 @@ namespace BSPCore
 							inds.Add(vbVertOfs);
 							inds.Add(vbVertOfs + k);
 							inds.Add(vbVertOfs + ((k + 1) % nverts));
+						}
+
+						if(vbVertOfs < dc.mMinVertIndex)
+						{
+							dc.mMinVertIndex	=vbVertOfs;
 						}
 
 						vbVertOfs	+=pf.Value.mVCounts[i];

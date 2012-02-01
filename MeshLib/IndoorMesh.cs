@@ -383,7 +383,7 @@ namespace MeshLib
 						continue;
 					}
 					mAlphaPool.StoreDraw(dc.mSortPoint, mat.Value,
-						vb, ib, 0, 0, dc.mNumVerts,
+						vb, ib, 0, dc.mMinVertIndex, dc.mNumVerts,
 						dc.mStartIndex, dc.mPrimCount);
 				}
 				idx++;

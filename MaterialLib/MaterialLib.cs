@@ -312,6 +312,52 @@ namespace MaterialLib
 		}
 
 
+		//tool side only
+		public bool MergeFromFile(string fileName)
+		{
+			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+
+			if(file == null)
+			{
+				return	false;
+			}
+			BinaryReader	br	=new BinaryReader(file);
+
+			//read magic number
+			UInt32	magic	=br.ReadUInt32();
+
+			if(magic != 0xFA77DA77)
+			{
+				br.Close();
+				file.Close();
+				return	false;
+			}
+
+			int	numMaterials	=br.ReadInt32();
+
+			for(int i=0;i < numMaterials;i++)
+			{
+				Material	m	=new Material(mStateBlockPool);
+
+				m.Read(br);
+
+				while(mMats.ContainsKey(m.Name))
+				{
+					m.Name	+="2";
+				}
+
+				mMats.Add(m.Name, m);
+
+				m.StripTextureExtensions();
+			}
+
+			br.Close();
+			file.Close();
+
+			return	true;
+		}
+
+
 		public void AddMaterial(Material mat)
 		{
 			mMats.Add(mat.Name, mat);

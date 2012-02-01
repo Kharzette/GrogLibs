@@ -1,5 +1,3 @@
-float3		mEyePos;
-
 //texture stuff
 texture mTexture;
 texture mLightMap;

@@ -623,5 +623,28 @@ namespace SharedForms
 
 			MaterialGrid.Refresh();
 		}
+
+
+		void OnMergeMaterialLib(object sender, EventArgs e)
+		{
+			mOFD.DefaultExt	="*.MatLib";
+			mOFD.Filter		="Material lib files (*.MatLib)|*.MatLib|All files (*.*)|*.*";
+
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			mMatLib.MergeFromFile(mOFD.FileName);
+
+			UpdateMaterials();
+
+			MaterialProperties.DataSource			=mMatModel[0].Parameters;
+			MaterialProperties.Columns[0].ReadOnly	=true;
+			MaterialProperties.Columns[1].ReadOnly	=true;
+			MaterialProperties.Columns[2].ReadOnly	=true;
+		}
 	}
 }
