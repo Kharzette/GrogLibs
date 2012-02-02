@@ -79,6 +79,20 @@ struct VPosTex0Tex1
 	float2	TexCoord1	: TEXCOORD1;
 };
 
+struct VPosTex03Tex13
+{
+	float4	Position	: POSITION;
+	float3	TexCoord0	: TEXCOORD0;
+	float3	TexCoord1	: TEXCOORD1;
+};
+
+struct VPosTex04Tex14
+{
+	float4	Position	: POSITION;
+	float4	TexCoord0	: TEXCOORD0;
+	float4	TexCoord1	: TEXCOORD1;
+};
+
 struct VPosTex04Tex14Tex24
 {
 	float4	Position	: POSITION;
@@ -361,6 +375,12 @@ struct VTex0Tex1
 	float2	TexCoord1	: TEXCOORD1;
 };
 
+struct VTex03Tex13
+{
+	float3	TexCoord0	: TEXCOORD0;
+	float3	TexCoord1	: TEXCOORD1;
+};
+
 struct VNormTex0Tex1
 {
 	float3	Normal		: Normal;
@@ -418,6 +438,12 @@ struct VTex0Tex1Tex2Tex3Tex4Col0Intensity
 	float2	TexCoord4	: TEXCOORD4;
 	float4	Color		: COLOR0;
 	float4	Intensity	: TEXCOORD5;
+};
+
+struct VTex04Tex14
+{
+	float4	TexCoord0	: TEXCOORD0;
+	float4	TexCoord1	: TEXCOORD1;
 };
 
 struct VTex04Tex14Tex24

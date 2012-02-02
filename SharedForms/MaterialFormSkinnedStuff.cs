@@ -64,6 +64,9 @@ namespace SharedForms
 				}
 				msh.GenTangents(mGD, (int)TexCoordSet.Value);
 			}
+
+			//vertex type is longer now, make columns fit
+			MeshPartGrid.AutoResizeColumns();
 		}
 
 
