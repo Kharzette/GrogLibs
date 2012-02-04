@@ -36,6 +36,60 @@ namespace UtilityLib
 		}
 
 
+		public static BoundingSphere SphereFromPoints(List<Vector3> points)
+		{
+			BoundingSphere	ret;
+
+			ret.Center	=Vector3.Zero;
+			ret.Radius	=0.0f;
+
+			//find min and max
+			Vector3	min	=Vector3.One * float.MaxValue;
+			Vector3	max	=Vector3.One * float.MinValue;
+			foreach(Vector3 pnt in points)
+			{
+				if(pnt.X < min.X)
+				{
+					min.X	=pnt.X;
+				}
+				if(pnt.Y < min.Y)
+				{
+					min.Y	=pnt.Y;
+				}
+				if(pnt.Z < min.Z)
+				{
+					min.Z	=pnt.Z;
+				}
+
+				if(pnt.X > max.X)
+				{
+					max.X	=pnt.X;
+				}
+				if(pnt.Y > max.Y)
+				{
+					max.Y	=pnt.Y;
+				}
+				if(pnt.Z > max.Z)
+				{
+					max.Z	=pnt.Z;
+				}
+			}
+
+			ret.Center	=min + (max - min) / 2.0f;
+
+			foreach(Vector3 pnt in points)
+			{
+				float	dist	=Vector3.Distance(pnt, ret.Center);
+				if(dist > ret.Radius)
+				{
+					ret.Radius	=dist;
+				}
+			}
+
+			return	ret;
+		}
+
+
 		public static void AddPointToBoundingBox(ref BoundingBox bb, Vector3 pnt)
 		{
 			if(pnt.X < bb.Min.X)

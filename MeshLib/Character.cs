@@ -258,7 +258,7 @@ namespace MeshLib
 				points.Add(pnt);
 			}
 			mBoxBound		=BoundingBox.CreateFromPoints(points);
-			mSphereBound	=BoundingSphere.CreateFromPoints(points);
+			mSphereBound	=UtilityLib.Mathery.SphereFromPoints(points);
 		}
 
 

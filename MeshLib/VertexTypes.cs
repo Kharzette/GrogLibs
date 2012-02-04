@@ -896,7 +896,7 @@ namespace MeshLib
 			List<Vector3>	points	=GetPositions(vb, numVerts, typeIdx);
 
 			box		=BoundingBox.CreateFromPoints(points);
-			sphere	=BoundingSphere.CreateFromPoints(points);
+			sphere	=UtilityLib.Mathery.SphereFromPoints(points);
 		}
 
 
