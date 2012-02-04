@@ -3,6 +3,11 @@
 #define _TYPESFXH
 
 
+struct VPos
+{
+	float4	Position	: POSITION;
+};
+
 struct VPosNorm
 {
 	float4	Position	: POSITION;

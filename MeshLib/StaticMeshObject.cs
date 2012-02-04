@@ -18,9 +18,6 @@ namespace MeshLib
 		//transform
 		Matrix	mTransform;
 
-		//events
-		public event EventHandler	eRayCollision;
-
 
 		public StaticMeshObject(MaterialLib.MaterialLib ml)
 		{
@@ -148,7 +145,7 @@ namespace MeshLib
 		}
 
 
-		public void RayIntersect(Vector3 start, Vector3 end)
+		public void Draw(GraphicsDevice gd, string altMatName)
 		{
 			foreach(StaticMesh m in mMeshParts)
 			{
@@ -156,15 +153,82 @@ namespace MeshLib
 				{
 					continue;
 				}
-				Nullable<float>	dist	=m.RayIntersect(start, end);
+
+				string	temp	=m.MaterialName;
+
+				m.MaterialName	=altMatName;
+				m.Draw(gd, mMatLib, mTransform);
+				m.MaterialName	=temp;
+			}
+		}
+
+
+		public void UpdateBounds()
+		{
+			foreach(StaticMesh m in mMeshParts)
+			{
+				m.Bound();
+			}
+		}
+
+
+		public BoundingBox GetBoxBound()
+		{
+			List<Vector3>	pnts	=new List<Vector3>();
+			foreach(StaticMesh m in mMeshParts)
+			{
+				BoundingBox	b	=m.GetBoxBounds();
+				pnts.Add(b.Min);
+				pnts.Add(b.Max);
+			}
+
+			return	BoundingBox.CreateFromPoints(pnts);
+		}
+
+
+		public BoundingSphere GetSphereBound()
+		{
+			BoundingSphere	merged;
+			merged.Center	=Vector3.Zero;
+			merged.Radius	=0.0f;
+			foreach(StaticMesh m in mMeshParts)
+			{
+				BoundingSphere	s	=m.GetSphereBounds();
+
+				merged	=BoundingSphere.CreateMerged(merged, s);
+			}
+			return	merged;
+		}
+
+
+		public float? RayIntersect(Vector3 start, Vector3 end, bool bBox, out StaticMesh partHit)
+		{
+			//find which piece was hit
+			float		minDist	=float.MaxValue;
+			partHit				=null;
+
+			foreach(StaticMesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+				Nullable<float>	dist	=m.RayIntersect(start, end, bBox);
 				if(dist != null)
 				{
-					if(eRayCollision != null)
+					if(dist.Value < minDist)
 					{
-						eRayCollision(m, new CollisionEventArgs(dist.Value));
+						partHit	=m;
+						minDist	=dist.Value;
 					}
 				}
 			}
+
+			if(partHit == null)
+			{
+				return	null;
+			}
+			return	minDist;
 		}
 	}
 }

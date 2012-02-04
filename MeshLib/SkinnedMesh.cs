@@ -25,13 +25,11 @@ namespace MeshLib
 
 		public SkinnedMesh() : base()
 		{
-			mBounds	=new SphereBounds() as IRayCastable;
 		}
 
 
 		public SkinnedMesh(string name) : base(name)
 		{
-			mBounds	=new SphereBounds() as IRayCastable;
 		}
 
 
@@ -65,7 +63,13 @@ namespace MeshLib
 			bw.Write((UInt32)mSlot);
 			bw.Write(mbVisible);
 
-			mBounds.Write(bw);
+			//box bound
+			UtilityLib.FileUtil.WriteVector3(bw, mBoxBound.Min);
+			UtilityLib.FileUtil.WriteVector3(bw, mBoxBound.Max);
+
+			//sphere bound
+			UtilityLib.FileUtil.WriteVector3(bw, mSphereBound.Center);
+			bw.Write(mSphereBound.Radius);
 
 			VertexTypes.WriteVerts(bw, mVerts, mTypeIndex);
 
@@ -96,7 +100,10 @@ namespace MeshLib
 			mSlot			=(WearLocations)br.ReadUInt32();
 			mbVisible		=br.ReadBoolean();
 
-			mBounds.Read(br);
+			mBoxBound.Min		=UtilityLib.FileUtil.ReadVector3(br);
+			mBoxBound.Max		=UtilityLib.FileUtil.ReadVector3(br);
+			mSphereBound.Center	=UtilityLib.FileUtil.ReadVector3(br);
+			mSphereBound.Radius	=br.ReadSingle();
 
 			VertexTypes.ReadVerts(br, gd, out mVerts, mNumVerts, mTypeIndex, bEditor);
 

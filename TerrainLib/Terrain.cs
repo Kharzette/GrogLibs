@@ -384,9 +384,14 @@ namespace TerrainLib
 		}
 
 
-		public void Draw(GraphicsDevice gd, bool bDepthPass, RenderTarget2D shad)
+		public void Draw(GraphicsDevice gd, bool bDepthPass,
+			Matrix lightViewProj, RenderTarget2D depthShad)
 		{
-			mFXTerrain.Parameters["mShadowTex"].SetValue(shad);
+			if(depthShad != null)
+			{
+				mFXTerrain.Parameters["mDepthShadowTex"].SetValue(depthShad);
+			}
+			mFXTerrain.Parameters["mLightViewProj"].SetValue(lightViewProj);
 
 			foreach(HeightMap m in mMaps)
 			{

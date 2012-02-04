@@ -15,11 +15,16 @@ namespace TerrainLib
 		float	mPolySize;
 		int		mGridSize;
 
+		BoundingBox	mBox;
+
 		public TerrainModel(float [,]grid, float polySize, int gridSize)
 		{
 			mHeightGrid	=grid;
 			mPolySize	=polySize;
 			mGridSize	=gridSize;
+
+			//calc box
+			CalcBounds();
 		}
 
 
@@ -166,6 +171,46 @@ namespace TerrainLib
 		}
 
 
+		//this doesn't really work, was something I was fooling around with
+		bool RayCast(Vector3 startPos, Vector3 endPos, float dist, out Vector3 impacto)
+		{
+			Vector3	testPoint	=endPos - startPos;
+
+			testPoint.Normalize();
+
+			testPoint	*=dist;
+			testPoint	+=startPos;
+
+			float	height	=GetHeight(testPoint);
+
+			if(height == -1.0f)
+			{
+				impacto	=endPos;
+				return	false;
+			}
+			else if(height >= (testPoint.Y - 1.0f) && height <= (testPoint.Y + 1.0f))
+			{
+				impacto	=testPoint;
+				return	true;
+			}
+			else if(height < testPoint.Y)
+			{
+				return	RayCast(startPos, endPos, dist + 10.0f, out impacto);
+			}
+			else
+			{
+				impacto	=testPoint;
+				return	true;
+			}
+		}
+
+
+		public bool RayCast(Vector3 startPos, Vector3 endPos, out Vector3 impacto)
+		{
+			return	RayCast(startPos, endPos, 2.0f, out impacto);
+		}
+
+
 		public float GetGoodCloudHeight(float islandDist)
 		{
 			float	max	=float.MinValue;
@@ -205,6 +250,62 @@ namespace TerrainLib
 		}
 
 
+		//this doesn't work
+		public BoundingBox GetFrustumIntersection(BoundingFrustum frust)
+		{
+			Vector3	[]corners	=frust.GetCorners();
+
+			//clip against box planes
+			Vector3	ray0	=corners[4] - corners[0];
+			Vector3	ray1	=corners[5] - corners[1];
+			Vector3	ray2	=corners[6] - corners[2];
+			Vector3	ray3	=corners[7] - corners[3];
+
+//			ray0	=ClipToBox(mBox, ray0);
+//			ray1	=ClipToBox(mBox, ray1);
+//			ray2	=ClipToBox(mBox, ray2);
+//			ray3	=ClipToBox(mBox, ray3);
+
+			//stuff clipped back into corners
+			corners[4]	=ray0;
+			corners[5]	=ray1;
+			corners[6]	=ray2;
+			corners[7]	=ray3;
+
+			//find the bounds of the clipped corners
+			Vector3	max	=Vector3.One * float.MinValue;
+			Vector3	min	=Vector3.One * float.MaxValue;
+			foreach(Vector3 pos in corners)
+			{
+				if(pos.X < min.X)
+				{
+					min.X	=pos.X;
+				}
+				if(pos.X > max.X)
+				{
+					max.X	=pos.X;
+				}
+				if(pos.Y < min.Y)
+				{
+					min.Y	=pos.Y;
+				}
+				if(pos.Y > max.Y)
+				{
+					max.Y	=pos.Y;
+				}
+				if(pos.Z < min.Z)
+				{
+					min.Z	=pos.Z;
+				}
+				if(pos.Z > max.Z)
+				{
+					max.Z	=pos.Z;
+				}
+			}
+			return	new BoundingBox(min, max);
+		}
+
+
 		public Vector3 GetPeak()
 		{
 			float	max		=float.MinValue;
@@ -233,6 +334,54 @@ namespace TerrainLib
 			}
 
 			return	peak;
+		}
+
+
+		void CalcBounds()
+		{
+			Vector3	max	=Vector3.One * float.MinValue;
+			Vector3	min	=Vector3.One * float.MaxValue;
+
+			for(int y=0;y < mGridSize;y++)
+			{
+				for(int x=0;x < mGridSize;x++)
+				{
+					Vector3	pos	=Vector3.Zero;
+
+					float	height	=mHeightGrid[y, x];
+
+					pos.Y	=height;
+					pos.X	=x * mPolySize;
+					pos.Z	=y * mPolySize;
+
+					if(pos.X < min.X)
+					{
+						min.X	=pos.X;
+					}
+					if(pos.X > max.X)
+					{
+						max.X	=pos.X;
+					}
+					if(pos.Y < min.Y)
+					{
+						min.Y	=pos.Y;
+					}
+					if(pos.Y > max.Y)
+					{
+						max.Y	=pos.Y;
+					}
+					if(pos.Z < min.Z)
+					{
+						min.Z	=pos.Z;
+					}
+					if(pos.Z > max.Z)
+					{
+						max.Z	=pos.Z;
+					}
+				}
+			}
+
+			mBox	=new BoundingBox(min, max);
 		}
 	}
 }

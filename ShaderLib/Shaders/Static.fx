@@ -3,7 +3,8 @@
 texture	mTexture;
 texture	mNMap;
 
-shared float3 mLightDirection;
+shared float3	mLightDirection;
+shared float4x4	mLightViewProj;	//for shadowing
 
 float	mGlow;			//glow fakery
 float4	mSolidColour;	//for non textured
@@ -101,6 +102,16 @@ VPosTex0Col0 FullBrightVS(VPosNormTex0 input)
 	return	output;
 }
 
+VPosTex0Single ShadowVS(VPos input)
+{
+	VPosTex0Single	output;
+
+	output.Position		=mul(input.Position, mul(mWorld, mLightViewProj));
+	output.TexCoord0	=output.Position.z / output.Position.w;
+
+	return	output;
+}
+
 VPosCol0 NormalDepthVS(VPosNormTex0 input)
 {
 	VPosCol0	output;
@@ -137,6 +148,11 @@ float4 TexPS(VTex0Col0 input) : COLOR
 	float4	texel0	=tex2D(TexSampler0, input.TexCoord0);
 	
 	return	texel0;	
+}
+
+float4 ShadowPS(VTex0Single input) : COLOR
+{
+	return	float4(input.TexCoord0, 0, 0, 1);
 }
 
 float4 TexPSGlow(VTex0Col0 input) : COLOR
@@ -305,5 +321,14 @@ technique NormalDepth
 	{
 		VertexShader	=compile vs_2_0 NormalDepthVS();
 		PixelShader		=compile ps_2_0 NormalDepthPS();
+	}
+}
+
+technique Shadow
+{
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 ShadowVS();
+		PixelShader		=compile ps_2_0 ShadowPS();
 	}
 }

@@ -66,7 +66,6 @@
   <ItemGroup>
     <Compile Include="Anim.cs" />
     <Compile Include="AnimLib.cs" />
-    <Compile Include="Bounds.cs" />
     <Compile Include="Character.cs" />
     <Compile Include="DrawCall.cs" />
     <Compile Include="IndoorMesh.cs" />

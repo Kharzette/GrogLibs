@@ -242,6 +242,60 @@ namespace UtilityLib
 		}
 
 
+		public static float? RayIntersectBox(Vector3 start, Vector3 end, BoundingBox box)
+		{
+			Ray	ray;
+
+			ray.Position	=start;
+			ray.Direction	=(end - start);
+
+			//keep the length
+			float	len	=ray.Direction.Length();
+
+			//normalize
+			ray.Direction	/=len;
+
+			Nullable<float>	dist	=box.Intersects(ray);
+
+			if(dist == null)
+			{
+				return	null;
+			}
+			if(dist <= len)
+			{
+				return	dist;
+			}
+			return	null;
+		}
+
+
+		public static float? RayIntersectSphere(Vector3 start, Vector3 end, BoundingSphere sphere)
+		{
+			Ray	ray;
+
+			ray.Position	=start;
+			ray.Direction	=(end - start);
+
+			//keep the length
+			float	len	=ray.Direction.Length();
+
+			//normalize
+			ray.Direction	/=len;
+
+			Nullable<float>	dist	=sphere.Intersects(ray);
+
+			if(dist == null)
+			{
+				return	null;
+			}
+			if(dist <= len)
+			{
+				return	dist;
+			}
+			return	null;
+		}
+
+
 		public static bool TryParse(string str, out float val)
 		{
 #if XBOX

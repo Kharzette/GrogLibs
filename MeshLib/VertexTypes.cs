@@ -890,13 +890,13 @@ namespace MeshLib
 		}
 
 
-		public static void GetVertBounds(VertexBuffer vb, int numVerts, int typeIdx, IRayCastable bound)
+		public static void GetVertBounds(VertexBuffer vb, int numVerts,
+			int typeIdx, out BoundingBox box, out BoundingSphere sphere)
 		{
-			AxialBounds	bnd	=new AxialBounds();
-
 			List<Vector3>	points	=GetPositions(vb, numVerts, typeIdx);
 
-			bound.AddPointListToBounds(points);
+			box		=BoundingBox.CreateFromPoints(points);
+			sphere	=BoundingSphere.CreateFromPoints(points);
 		}
 
 

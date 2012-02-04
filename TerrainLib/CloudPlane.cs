@@ -86,7 +86,7 @@ namespace TerrainLib
 			mCloudFX.Parameters["mProjection"].SetValue(proj);
 			mCloudFX.Parameters["mCamRange"].SetValue(8000.0f);
 			mCloudFX.Parameters["mInvViewPort"].SetValue(
-				Vector2.One / (Vector2.UnitX * 1280.0f + Vector2.UnitY * 1100.0f));
+				Vector2.One / (Vector2.UnitX * 1280.0f + Vector2.UnitY * 720.0f));
 
 			Vector4	cloudColour	=Color.White.ToVector4();
 			cloudColour.W		=0.9f;

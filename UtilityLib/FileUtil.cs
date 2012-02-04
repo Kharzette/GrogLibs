@@ -119,6 +119,66 @@ namespace UtilityLib
 		}
 
 
+		public static void WriteVector2(BinaryWriter bw, Vector2 vec)
+		{
+			bw.Write(vec.X);
+			bw.Write(vec.Y);
+		}
+
+
+		public static Vector2 ReadVector2(BinaryReader br)
+		{
+			Vector2	ret	=Vector2.Zero;
+
+			ret.X	=br.ReadSingle();
+			ret.Y	=br.ReadSingle();
+
+			return	ret;
+		}
+
+
+		public static void WriteVector3(BinaryWriter bw, Vector3 vec)
+		{
+			bw.Write(vec.X);
+			bw.Write(vec.Y);
+			bw.Write(vec.Z);
+		}
+
+
+		public static Vector3 ReadVector3(BinaryReader br)
+		{
+			Vector3	ret	=Vector3.Zero;
+
+			ret.X	=br.ReadSingle();
+			ret.Y	=br.ReadSingle();
+			ret.Z	=br.ReadSingle();
+
+			return	ret;
+		}
+
+
+		public static void WriteVector4(BinaryWriter bw, Vector4 vec)
+		{
+			bw.Write(vec.X);
+			bw.Write(vec.Y);
+			bw.Write(vec.Z);
+			bw.Write(vec.W);
+		}
+
+
+		public static Vector4 ReadVector4(BinaryReader br)
+		{
+			Vector4	ret	=Vector4.Zero;
+
+			ret.X	=br.ReadSingle();
+			ret.Y	=br.ReadSingle();
+			ret.Z	=br.ReadSingle();
+			ret.W	=br.ReadSingle();
+
+			return	ret;
+		}
+
+
 		public static Vector3 []ReadVecArray(BinaryReader br)
 		{
 			bool	bNull	=!br.ReadBoolean();

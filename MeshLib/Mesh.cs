@@ -47,7 +47,8 @@ namespace MeshLib
 		protected string			mMaterialName;
 		protected int				mTypeIndex;
 		protected bool				mbVisible;
-		protected IRayCastable		mBounds;
+		protected BoundingBox		mBoxBound;
+		protected BoundingSphere	mSphereBound;
 
 		public string Name
 		{
@@ -218,21 +219,34 @@ namespace MeshLib
 		public virtual void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib, Matrix world) { }
 
 
-		public float? RayIntersect(Vector3 start, Vector3 end)
+		public float? RayIntersect(Vector3 start, Vector3 end, bool bBox)
 		{
-			return	mBounds.RayIntersect(start, end);
+			if(bBox)
+			{
+				return	UtilityLib.Mathery.RayIntersectBox(start, end, mBoxBound);
+			}
+			else
+			{
+				return	UtilityLib.Mathery.RayIntersectSphere(start, end, mSphereBound);
+			}
 		}
 
 
 		public virtual void Bound()
 		{
-			VertexTypes.GetVertBounds(mVerts, mNumVerts, mTypeIndex, mBounds);
+			VertexTypes.GetVertBounds(mVerts, mNumVerts, mTypeIndex, out mBoxBound, out mSphereBound);
 		}
 
 
-		public IRayCastable GetBounds()
+		public BoundingBox GetBoxBounds()
 		{
-			return	mBounds;
+			return	mBoxBound;
+		}
+
+
+		public BoundingSphere GetSphereBounds()
+		{
+			return	mSphereBound;
 		}
 	}
 }

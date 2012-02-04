@@ -140,6 +140,7 @@
     <Compile Include="Mover.cs" />
     <Compile Include="PlayerSteering.cs" />
     <Compile Include="Pool.cs" />
+    <Compile Include="PrimFactory.cs" />
     <Compile Include="RenderHelper.cs" />
     <Compile Include="TSPool.cs" />
   </ItemGroup>

@@ -13,13 +13,11 @@ namespace MeshLib
 	{
 		public StaticMesh() : base()
 		{
-			mBounds	=new AxialBounds() as IRayCastable;
 		}
 
 
 		public StaticMesh(string name) : base(name)
 		{
-			mBounds	=new AxialBounds() as IRayCastable;
 		}
 
 
@@ -33,7 +31,13 @@ namespace MeshLib
 			bw.Write(mTypeIndex);
 			bw.Write(mbVisible);
 
-			mBounds.Write(bw);
+			//box bound
+			UtilityLib.FileUtil.WriteVector3(bw, mBoxBound.Min);
+			UtilityLib.FileUtil.WriteVector3(bw, mBoxBound.Max);
+
+			//sphere bound
+			UtilityLib.FileUtil.WriteVector3(bw, mSphereBound.Center);
+			bw.Write(mSphereBound.Radius);
 
 			VertexTypes.WriteVerts(bw, mVerts, mTypeIndex);
 
@@ -62,7 +66,10 @@ namespace MeshLib
 			mTypeIndex		=br.ReadInt32();
 			mbVisible		=br.ReadBoolean();
 
-			mBounds.Read(br);
+			mBoxBound.Min		=UtilityLib.FileUtil.ReadVector3(br);
+			mBoxBound.Max		=UtilityLib.FileUtil.ReadVector3(br);
+			mSphereBound.Center	=UtilityLib.FileUtil.ReadVector3(br);
+			mSphereBound.Radius	=br.ReadSingle();
 
 			VertexTypes.ReadVerts(br, gd, out mVerts, mNumVerts, mTypeIndex, bEditor);
 

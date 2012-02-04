@@ -19,26 +19,18 @@ namespace MeshLib
 		MaterialLib.MaterialLib	mMatLib;
 		AnimLib					mAnimLib;
 
+		//bounds
+		BoundingBox		mBoxBound;
+		BoundingSphere	mSphereBound;
+
 		//transform
 		Matrix	mTransform;
-
-		//collision sphere
-		IRayCastable	mBounds	=new SphereBounds();
-
-		//events
-		public event EventHandler	eRayCollision;
 
 
 		public Character(MaterialLib.MaterialLib ml, AnimLib al)
 		{
 			mMatLib		=ml;
 			mAnimLib	=al;
-		}
-
-
-		public IRayCastable GetBounds()
-		{
-			return	mBounds;
 		}
 
 
@@ -222,20 +214,20 @@ namespace MeshLib
 		}
 
 
-		public void RayIntersect(Vector3 start, Vector3 end)
+		public float? RayIntersect(Vector3 start, Vector3 end, bool bBox)
 		{
-			Nullable<float>	dist	=mBounds.RayIntersect(start, end);
-			if(dist != null)
+			if(bBox)
 			{
-				if(eRayCollision != null)
-				{
-					eRayCollision(mBounds, new CollisionEventArgs(dist.Value));
-				}
+				return	UtilityLib.Mathery.RayIntersectBox(start, end, mBoxBound);
+			}
+			else
+			{
+				return	UtilityLib.Mathery.RayIntersectSphere(start, end, mSphereBound);
 			}
 		}
 
 
-		public void Bound()
+		public void UpdateBounds()
 		{
 			if(mSkins == null || mSkins.Count == 0)
 			{
@@ -265,45 +257,20 @@ namespace MeshLib
 
 				points.Add(pnt);
 			}
-			mBounds.AddPointListToBounds(points);
+			mBoxBound		=BoundingBox.CreateFromPoints(points);
+			mSphereBound	=BoundingSphere.CreateFromPoints(points);
 		}
 
 
-		public List<IRayCastable> GetBoneBounds()
+		public BoundingBox GetBoxBound()
 		{
-			List<IRayCastable>	ret	=new List<IRayCastable>();
-			if(mSkins == null || mSkins.Count == 0)
-			{
-				return	ret;
-			}
+			return	mBoxBound;
+		}
 
-			Skeleton		skel		=mAnimLib.GetSkeleton();
-			List<string>	boneNames	=mSkins[0].GetBoneNames();
 
-			if(skel == null)
-			{
-				return	ret;
-			}
-
-			foreach(string bone in boneNames)
-			{
-				Matrix	mat	=Matrix.Identity;
-				skel.GetMatrixForBone(bone, out mat);
-
-				mat	*=Matrix.CreateRotationX((float)Math.PI / -2.0f);
-				mat	*=Matrix.CreateRotationY((float)Math.PI);
-
-				Vector3	pnt	=Vector3.Zero;
-
-				pnt	=Vector3.Transform(pnt, mat);
-
-				SphereBounds	bnd	=new SphereBounds();
-				bnd.mSphere.Center	=pnt;
-				bnd.mSphere.Radius	=1.0f;
-
-				ret.Add(bnd);
-			}
-			return	ret;
+		public BoundingSphere GetSphereBound()
+		{
+			return	mSphereBound;
 		}
 
 
