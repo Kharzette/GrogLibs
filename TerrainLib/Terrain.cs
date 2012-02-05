@@ -385,13 +385,19 @@ namespace TerrainLib
 
 
 		public void Draw(GraphicsDevice gd, bool bDepthPass,
-			Matrix lightViewProj, RenderTarget2D depthShad)
+			Matrix pupLightViewProj, Matrix avaLightViewProj,
+			RenderTarget2D pupShad, RenderTarget2D avaShad)
 		{
-			if(depthShad != null)
+			if(pupShad != null)
 			{
-				mFXTerrain.Parameters["mDepthShadowTex"].SetValue(depthShad);
+				mFXTerrain.Parameters["mPUPShadowTex"].SetValue(pupShad);
 			}
-			mFXTerrain.Parameters["mLightViewProj"].SetValue(lightViewProj);
+			if(avaShad != null)
+			{
+				mFXTerrain.Parameters["mAvaShadowTex"].SetValue(avaShad);
+			}
+			mFXTerrain.Parameters["mPUPLightViewProj"].SetValue(pupLightViewProj);
+			mFXTerrain.Parameters["mAvaLightViewProj"].SetValue(avaLightViewProj);
 
 			foreach(HeightMap m in mMaps)
 			{
