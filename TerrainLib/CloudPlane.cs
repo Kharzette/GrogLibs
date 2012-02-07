@@ -28,7 +28,7 @@ namespace TerrainLib
 		float	mTexOffset3;
 
 
-		public CloudPlane(GraphicsDevice gd, Effect cloudFX,
+		public CloudPlane(GraphicsDevice gd, Effect cloudFX, int resX, int resY,
 			Texture2D c1, Texture2D c2, Texture2D c3, Texture2D c4,
 			int thickness, float thickDist, Matrix proj)
 		{
@@ -86,7 +86,7 @@ namespace TerrainLib
 			mCloudFX.Parameters["mProjection"].SetValue(proj);
 			mCloudFX.Parameters["mCamRange"].SetValue(8000.0f);
 			mCloudFX.Parameters["mInvViewPort"].SetValue(
-				Vector2.One / (Vector2.UnitX * 1280.0f + Vector2.UnitY * 720.0f));
+				Vector2.One / (Vector2.UnitX * resX + Vector2.UnitY * resY));
 
 			Vector4	cloudColour	=Color.White.ToVector4();
 			cloudColour.W		=0.9f;

@@ -553,19 +553,10 @@ namespace TerrainLib
 		}
 
 
-		public void Draw(GraphicsDevice gd, Effect fx, bool bDepthPass)
+		public void Draw(GraphicsDevice gd, Effect fx)
 		{
 			gd.SetVertexBuffer(mVBTerrain);
 			gd.Indices				=mIBTerrain;
-
-			if(bDepthPass)
-			{
-				fx.CurrentTechnique	=fx.Techniques["Depth"];
-			}
-			else
-			{
-				fx.CurrentTechnique	=fx.Techniques["VertexLighting"];
-			}
 
 			//set local matrix
 			fx.Parameters["mLocal"].SetValue(mMat);

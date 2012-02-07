@@ -384,30 +384,54 @@ namespace TerrainLib
 		}
 
 
-		public void Draw(GraphicsDevice gd, bool bDepthPass,
-			Matrix pupLightViewProj, Matrix avaLightViewProj,
-			RenderTarget2D pupShad, RenderTarget2D avaShad)
+		public void Draw(GraphicsDevice gd,
+			Matrix pupNearViewProj, Matrix pupFarViewProj, Matrix avaLightViewProj,
+			RenderTarget2D pupNearShad, RenderTarget2D pupFarShad, RenderTarget2D avaShad)
 		{
-			if(pupShad != null)
+			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLighting"];
+
+			if(pupNearShad != null)
 			{
-				mFXTerrain.Parameters["mPUPShadowTex"].SetValue(pupShad);
+				mFXTerrain.Parameters["mPUPNearShadowTex"].SetValue(pupNearShad);
+			}
+			if(pupFarShad != null)
+			{
+				mFXTerrain.Parameters["mPUPFarShadowTex"].SetValue(pupFarShad);
 			}
 			if(avaShad != null)
 			{
 				mFXTerrain.Parameters["mAvaShadowTex"].SetValue(avaShad);
 			}
-			mFXTerrain.Parameters["mPUPLightViewProj"].SetValue(pupLightViewProj);
+			mFXTerrain.Parameters["mPUPNearLightViewProj"].SetValue(pupNearViewProj);
+			mFXTerrain.Parameters["mPUPFarLightViewProj"].SetValue(pupFarViewProj);
 			mFXTerrain.Parameters["mAvaLightViewProj"].SetValue(avaLightViewProj);
 
 			foreach(HeightMap m in mMaps)
 			{
-				Vector3	dist	=m.GetPos();
-				dist	+=mLevelPos;
-				dist	+=mEyePos;
-//				if(dist.Length() < 6000.0f)
-				{
-					m.Draw(gd, mFXTerrain, bDepthPass);
-				}
+				m.Draw(gd, mFXTerrain);
+			}			
+		}
+
+
+		public void DrawDepth(GraphicsDevice gd)
+		{
+			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["Depth"];
+
+			foreach(HeightMap m in mMaps)
+			{
+				m.Draw(gd, mFXTerrain);
+			}			
+		}
+
+
+		//this one only affects depth/stencil area
+		public void DrawLightDepth(GraphicsDevice gd)
+		{
+			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["LightDepth"];
+
+			foreach(HeightMap m in mMaps)
+			{
+				m.Draw(gd, mFXTerrain);
 			}			
 		}
 

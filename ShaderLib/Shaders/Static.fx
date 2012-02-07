@@ -8,6 +8,8 @@ shared float4x4	mLightViewProj;	//for shadowing
 
 float	mGlow;			//glow fakery
 float4	mSolidColour;	//for non textured
+float4	mSkyGradient0;	//horizon colour
+float4	mSkyGradient1;	//peak colour
 
 
 #include "Types.fxh"
@@ -37,6 +39,23 @@ sampler TexSamplerNorm = sampler_state
 	AddressU	=Wrap;
 	AddressV	=Wrap;
 };
+
+
+//worldpos + regular
+VPosTex04 BasicVS(VPosNormTex0 input)
+{
+	VPosTex04	output;
+
+	float4x4	viewProj	=mul(mView, mProjection);
+
+	//view relative pos
+	output.TexCoord0	=mul(input.Position, mWorld);
+
+	//transformed
+	output.Position		=mul(output.TexCoord0, viewProj);
+
+	return	output;
+}
 
 
 //regular N dot L lighting
@@ -152,7 +171,7 @@ float4 TexPS(VTex0Col0 input) : COLOR
 
 float4 ShadowPS(VTex0Single input) : COLOR
 {
-	return	float4(input.TexCoord0, 0, 0, 1);
+	return	float4(input.TexCoord0, 0, 0, 0);
 }
 
 float4 TexPSGlow(VTex0Col0 input) : COLOR
@@ -251,6 +270,19 @@ float4 NormalDepthPS(float4 color : COLOR0) : COLOR0
 	return	color;
 }
 
+//gradient sky
+float4 SkyGradientPS(VTex04 input) : COLOR
+{
+	float3	upVec	=float3(0.0f, 1.0f, 0.0f);
+
+	//texcoord has world pos
+	float3	skyVec	=normalize(input.TexCoord0 - mEyePos);
+
+	float	skyDot	=abs(dot(skyVec, upVec));
+
+	return	lerp(mSkyGradient0, mSkyGradient1, skyDot);
+}
+
 
 technique FullBright
 {     
@@ -330,5 +362,14 @@ technique Shadow
 	{
 		VertexShader	=compile vs_2_0 ShadowVS();
 		PixelShader		=compile ps_2_0 ShadowPS();
+	}
+}
+
+technique SkyGradient
+{
+	pass P0
+	{
+		VertexShader	=compile vs_3_0 BasicVS();
+		PixelShader		=compile ps_3_0 SkyGradientPS();
 	}
 }

@@ -29,7 +29,25 @@ namespace UtilityLib
 
 		public Matrix World
 		{
+			get { return mWorld; }
 			set { mWorld = value; }
+		}
+
+
+		//custom shader
+		public void Draw(GraphicsDevice gd, Effect fx, Matrix camMat, Matrix projMat)
+		{
+			gd.SetVertexBuffer(mVB);
+			gd.Indices	=mIB;
+
+			fx.Parameters["mWorld"].SetValue(mWorld);
+			fx.Parameters["mView"].SetValue(camMat);
+			fx.Parameters["mProjection"].SetValue(projMat);
+
+			fx.CurrentTechnique.Passes[0].Apply();
+
+			gd.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+				0, 0, mVB.VertexCount, 0, mIB.IndexCount / 3);
 		}
 
 

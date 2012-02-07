@@ -34,6 +34,19 @@ namespace TerrainLib
 		}
 
 
+		public Vector3 GetCenter()
+		{
+			int	halfGrid	=mGridSize / 2;
+
+			Vector3	ret	=Vector3.UnitX * (halfGrid * mPolySize);
+			ret			+=Vector3.UnitZ * (halfGrid * mPolySize);
+
+			ret.Y	=GetHeight(ret);
+
+			return	ret;
+		}
+
+
 		public float GetHeight(Vector3 coord)
 		{
 			float	ret	=0.0f;
