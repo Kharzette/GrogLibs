@@ -79,13 +79,13 @@ float4x4 GetSkinXForm(float4 bnIdxs, float4 bnWeights, float4x4 bones[MAX_BONES]
 
 
 //compute the 3 light effects on the vert
-float4 ComputeTrilight(float3 normal, float3 lightDir, float4 c0, float4 c1, float4 c2)
+float3 ComputeTrilight(float3 normal, float3 lightDir, float3 c0, float3 c1, float3 c2)
 {
-    float4	totalLight	=float4(0,0,0,1);
-	float	LdotN		=dot(normal, lightDir);
+    float3	totalLight;
+	float	LdotN	=dot(normal, lightDir);
 	
 	//trilight
-	totalLight	+=(c0 * max(0, LdotN))
+	totalLight	=(c0 * max(0, LdotN))
 		+ (c1 * (1 - abs(LdotN)))
 		+ (c2 * max(0, -LdotN));
 		
@@ -129,8 +129,9 @@ VPosCol0 ComputeSkinTrilight(VPosNormBone input, float4x4 bones[MAX_BONES],
 	VPosCol0	output;
 	VPosNorm	skinny	=ComputeSkin(input, bones, bindPose);
 
-	output.Position	=skinny.Position;	
-	output.Color	=ComputeTrilight(skinny.Normal, lightDir, c0, c1, c2);
+	output.Position		=skinny.Position;	
+	output.Color.xyz	=ComputeTrilight(skinny.Normal, lightDir, c0, c1, c2);
+	output.Color.w		=1.0;
 	
 	return	output;
 }

@@ -236,7 +236,7 @@ namespace MeshLib
 
 			for(int i=0;i < scissors.Count;i++)
 			{
-				mMatLib.UpdateWVP(gameCam.World, mirrorMats[i], gameCam.Projection, mirrorCenters[i]);
+				mMatLib.UpdateWVP(Matrix.Identity, mirrorMats[i], gameCam.Projection, mirrorCenters[i]);
 
 				gd.SetRenderTarget(mMirrorRenderTarget);
 //				g.Clear(Color.CornflowerBlue);
@@ -261,7 +261,7 @@ namespace MeshLib
 				mMatLib.AddMap("MirrorTexture", mMirrorRenderTarget);
 
 				//reset matrices
-				mMatLib.UpdateWVP(gameCam.World, gameCam.View, gameCam.Projection, -position);
+				mMatLib.UpdateWVP(Matrix.Identity, gameCam.View, gameCam.Projection, -position);
 			}
 
 			gd.Clear(Color.CornflowerBlue);

@@ -10,8 +10,7 @@ namespace UtilityLib
 	public class GameCamera
 	{
 		//mats
-		protected Matrix	mMATWorld;
-		protected Matrix	mMATView;
+		protected Matrix	mMATView, mMatViewInverse;
 		protected Matrix	mMATProjection;
 
 		BoundingFrustum	mFrust	=new BoundingFrustum(Matrix.Identity);
@@ -33,16 +32,10 @@ namespace UtilityLib
 		}
 
 
-		public Matrix World
-		{
-			get { return mMATWorld; }
-			set { mMATWorld = value; }
-		}
-
 		public Matrix View
 		{
 			get { return mMATView; }
-			set { mMATView = value; }
+			set { mMATView = value; mMatViewInverse = Matrix.Invert(mMATView); }
 		}
 
 		public Matrix Projection
@@ -51,8 +44,53 @@ namespace UtilityLib
 			set { mMATProjection = value; }
 		}
 
+		//returns transposed, useful for worldspace stuff
+		public Vector3 Forward
+		{
+			get
+			{
+				Vector3	ret	=Vector3.Zero;
+				ret.X		=View.M13;
+				ret.Y		=View.M23;
+				ret.Z		=View.M33;
+				return		ret;
+			}
+		}
 
-		public void Update(float msDelta, Vector3 camPos, float pitch, float yaw, float roll)
+		public Vector3 Up
+		{
+			get
+			{
+				Vector3	ret	=Vector3.Zero;
+				ret.X		=View.M12;
+				ret.Y		=View.M22;
+				ret.Z		=View.M32;
+				return		ret;
+			}
+		}
+
+		public Vector3 Left
+		{
+			get
+			{
+				Vector3	ret	=Vector3.Zero;
+				ret.X		=View.M11;
+				ret.Y		=View.M21;
+				ret.Z		=View.M31;
+				return		ret;
+			}
+		}
+
+		public Vector3 Position
+		{
+			get
+			{
+				return	mMatViewInverse.Translation;
+			}
+		}
+
+
+		public void Update(Vector3 camPos, float pitch, float yaw, float roll)
 		{
 			UpdateMatrices(camPos, pitch, yaw, roll);
 		}
@@ -120,15 +158,17 @@ namespace UtilityLib
 				Matrix.CreateRotationY(MathHelper.ToRadians(yaw)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(pitch)) *
 				Matrix.CreateRotationZ(MathHelper.ToRadians(roll));
+
+			mMatViewInverse	=Matrix.Invert(mMATView);
 			
-			mFrust.Matrix	=mMATWorld * mMATView * mMATProjection;
+			mFrust.Matrix	=mMATView * mMATProjection;
 		}
 
 
 		void InitializeMats()
 		{
-			mMATWorld	=Matrix.CreateTranslation(Vector3.Zero);
-			mMATView	=Matrix.CreateTranslation(Vector3.Zero);
+			mMATView		=Matrix.CreateTranslation(Vector3.Zero);
+			mMatViewInverse	=Matrix.Invert(mMATView);
 
 			mMATProjection	=Matrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(45),

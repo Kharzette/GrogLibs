@@ -564,7 +564,7 @@ namespace UtilityLib
 			//shift to center
 			for(int i=0;i < 16;i++)
 			{
-				vpnt[i].Position	+=Vector3.UnitY * (len / 2.0f);
+				vpnt[i].Position	+=Vector3.UnitY * (len);
 			}
 
 			VertexBuffer	vb	=new VertexBuffer(gd,

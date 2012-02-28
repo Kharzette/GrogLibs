@@ -14,25 +14,27 @@ namespace TerrainLib
 		IndexBuffer		mIB;
 		Effect			mCloudFX;
 
-		Matrix	mWorld;
+		Matrix	mWorld, mProj;
+		float	mYOffset;
 
-		const float PlaneSize	=132000.0f;
-		const float	TexSpeed0	=0.03f;
-		const float	TexSpeed1	=0.06f;
-		const float	TexSpeed2	=0.13f;
-		const float	TexSpeed3	=0.15f;
+		const float		PlaneSize	=132000.0f;
+		const double	TexSpeed0	=0.03;
+		const double	TexSpeed1	=0.06;
+		const double	TexSpeed2	=0.13;
+		const double	TexSpeed3	=0.15;
 
-		float	mTexOffset0;
-		float	mTexOffset1;
-		float	mTexOffset2;
-		float	mTexOffset3;
+		double	mTexOffset0;
+		double	mTexOffset1;
+		double	mTexOffset2;
+		double	mTexOffset3;
 
 
-		public CloudPlane(GraphicsDevice gd, Effect cloudFX, int resX, int resY,
+		public CloudPlane(GraphicsDevice gd, Effect cloudFX, int resX, int resY, 
 			Texture2D c1, Texture2D c2, Texture2D c3, Texture2D c4,
-			int thickness, float thickDist, Matrix proj)
+			int thickness, float thickDist, float yOffset)
 		{
 			mCloudFX	=cloudFX;
+			mYOffset	=yOffset;
 
 			//create cloud planes
 			VertexPositionColor	[]vpc	=new VertexPositionColor[4 * thickness];
@@ -65,6 +67,9 @@ namespace TerrainLib
 			}
 
 			mWorld	=Matrix.CreateTranslation(Vector3.UnitY * -thickDist * (thickness / 2));
+			mWorld	*=Matrix.CreateTranslation(Vector3.UnitY * yOffset);
+			mProj	=Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45),
+				resX / resY, 1.0f, 16000.0f);
 
 			mIB	=new IndexBuffer(gd, IndexElementSize.SixteenBits, 6 * thickness, BufferUsage.WriteOnly);
 
@@ -83,8 +88,7 @@ namespace TerrainLib
 			mCloudFX.Parameters["mDistThreshold"].SetValue(0.5f);
 			mCloudFX.Parameters["mFallOff"].SetValue(5.5f);
 
-			mCloudFX.Parameters["mProjection"].SetValue(proj);
-			mCloudFX.Parameters["mCamRange"].SetValue(8000.0f);
+			mCloudFX.Parameters["mProjection"].SetValue(mProj);
 			mCloudFX.Parameters["mInvViewPort"].SetValue(
 				Vector2.One / (Vector2.UnitX * resX + Vector2.UnitY * resY));
 
@@ -95,24 +99,26 @@ namespace TerrainLib
 		}
 
 
-		public void Update(float msDelta, float height, float distThresh, float fallOff)
+		public void Update(double msDelta, float height, float distThresh, float fallOff)
 		{
-			float	secDelta	=msDelta / 1000.0f;
+			double	secDelta	=msDelta / 1000.0;
 
 			mTexOffset0	+=secDelta * TexSpeed0;
 			mTexOffset1	+=secDelta * TexSpeed1;
 			mTexOffset2	+=secDelta * TexSpeed2;
 			mTexOffset3	+=secDelta * TexSpeed3;
 
-			mWorld	=Matrix.CreateTranslation(Vector3.UnitY * height);
+			mWorld	=Matrix.CreateTranslation((Vector3.UnitY * mYOffset) +
+				(Vector3.UnitY * height));
 
-			mCloudFX.Parameters["mTexOffset0"].SetValue(mTexOffset0);
-			mCloudFX.Parameters["mTexOffset1"].SetValue(mTexOffset1);
-			mCloudFX.Parameters["mTexOffset2"].SetValue(mTexOffset2);
-			mCloudFX.Parameters["mTexOffset3"].SetValue(mTexOffset3);
+			mCloudFX.Parameters["mTexOffset0"].SetValue((float)mTexOffset0);
+			mCloudFX.Parameters["mTexOffset1"].SetValue((float)mTexOffset1);
+			mCloudFX.Parameters["mTexOffset2"].SetValue((float)mTexOffset2);
+			mCloudFX.Parameters["mTexOffset3"].SetValue((float)mTexOffset3);
 
 			mCloudFX.Parameters["mDistThreshold"].SetValue(distThresh);
 			mCloudFX.Parameters["mFallOff"].SetValue(fallOff);
+			mCloudFX.Parameters["mYOffset"].SetValue(mYOffset);
 		}
 
 

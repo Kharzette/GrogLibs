@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Threading;
 using System.Diagnostics;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
@@ -9,6 +10,16 @@ using Microsoft.Xna.Framework.Content;
 
 namespace TerrainLib
 {
+	class ChunkState
+	{
+		internal float	[,]mData;
+		internal int	mChunkX, mChunkY;
+		internal float	mPolySize;
+
+		internal GraphicsDevice	mGD;
+	}
+
+
 	//constructs and stores multiple heightmaps
 	//handles the tiling and other such
 	public class Terrain
@@ -18,11 +29,10 @@ namespace TerrainLib
 		//height maps
 		List<HeightMap>	mMaps;
 
-		//tex & shading
+		//tex & shading, there is no 3
 		Texture2D			mTEXTerrain0;
 		Texture2D			mTEXTerrain1;
 		Texture2D			mTEXTerrain2;
-		Texture2D			mTEXTerrain3;
 		Texture2D			mTEXTerrain4;
 		Texture2D			mTEXTerrain5;
 		Texture2D			mTEXTerrain6;
@@ -34,12 +44,14 @@ namespace TerrainLib
 		Vector3	mLevelPos;
 		Vector3	mEyePos;
 
+		//thread counter
+		int	mThreadCounter;
+
 
 		//set up textures and such
 		public Terrain(string			tex0FileName,
 					   string			tex1FileName,
 					   string			tex2FileName,
-					   string			tex3FileName,
 					   string			tex4FileName,
 					   string			tex5FileName,
 					   string			tex6FileName,
@@ -50,7 +62,6 @@ namespace TerrainLib
 			mTEXTerrain0	=cm.Load<Texture2D>(tex0FileName);
 			mTEXTerrain1	=cm.Load<Texture2D>(tex1FileName);
 			mTEXTerrain2	=cm.Load<Texture2D>(tex2FileName);
-			mTEXTerrain3	=cm.Load<Texture2D>(tex3FileName);
 			mTEXTerrain4	=cm.Load<Texture2D>(tex4FileName);
 			mTEXTerrain5	=cm.Load<Texture2D>(tex5FileName);
 			mTEXTerrain6	=cm.Load<Texture2D>(tex6FileName);
@@ -98,60 +109,123 @@ namespace TerrainLib
 			}
 			h	=1 << (pow - 1);
 
-			//chunk o ram for the chunk o rama
-			//allocate enough extra to have an extra
-			//height on each side of the chunk
-			float	[,]chunk	=new float[CHUNKDIM + 3, CHUNKDIM + 3];
+			//this seems to be the best for quick loadery
+			ThreadPool.SetMaxThreads(4, 4);
+
+			mThreadCounter	=256;
 
 			for(int chunkY=0;chunkY < (h / CHUNKDIM);chunkY++)
 			{
 				for(int chunkX=0;chunkX < (w / CHUNKDIM);chunkX++)
 				{
-					int	startY	=(CHUNKDIM * chunkY);
-					int	startX	=(CHUNKDIM * chunkX);
-					if(startY > 0)
-					{
-						startY--;	//back up one if possible
-					}
-					if(startX > 0)
-					{
-						startX--;
-					}
+					ChunkState	cs	=new ChunkState();
+					cs.mData		=data;
+					cs.mChunkX		=chunkX;
+					cs.mChunkY		=chunkY;
+					cs.mGD			=gd;
+					cs.mPolySize	=polySize;
 
-					int	endY	=(CHUNKDIM * (chunkY + 1)) + 1;
-					int	endX	=(CHUNKDIM * (chunkX + 1)) + 1;
-					if(endY < h)
-					{
-						endY++;	//increase by one if possible
-					}
-					if(endX < w)
-					{
-						endX++;
-					}
-
-					for(int y=startY, t=0;y < endY;y++,t++)
-					{
-						for(int x=startX, s=0;x < endX;x++,s++)
-						{
-							chunk[t, s]	=data[y, x];
-						}
-					}
-
-					HeightMap	map	=new HeightMap(chunk,
-						endX - startX, endY - startY,
-						CHUNKDIM + 1, CHUNKDIM + 1,
-						(CHUNKDIM * chunkX) - startX,
-						(CHUNKDIM * chunkY) - startY, gd, mVDTerrain);
-
-					Vector3	pos	=Vector3.Zero;
-					pos.X	=chunkX * (CHUNKDIM) * polySize;
-					pos.Z	=chunkY * (CHUNKDIM) * polySize;
-					pos.Y	=0.0f;
-
-					map.SetPos(pos);
-
-					mMaps.Add(map);
+					ThreadPool.QueueUserWorkItem(DoChunk, cs);
 				}
+			}
+
+			while(!Interlocked.Equals(mThreadCounter, 0))
+			{
+				Thread.Sleep(2);
+			}
+		}
+
+
+		void DoChunk(object state)
+		{
+			ChunkState	cs	=state as ChunkState;
+			if(cs == null)
+			{
+				return;
+			}
+
+			float	[,]chunk	=new float[CHUNKDIM + 3, CHUNKDIM + 3];
+
+			int	w	=cs.mData.GetLength(1);
+			int	h	=cs.mData.GetLength(0);
+
+			int	startY	=(CHUNKDIM * cs.mChunkY);
+			int	startX	=(CHUNKDIM * cs.mChunkX);
+			if(startY > 0)
+			{
+				startY--;	//back up one if possible
+			}
+			if(startX > 0)
+			{
+				startX--;
+			}
+
+			int	endY	=(CHUNKDIM * (cs.mChunkY + 1)) + 1;
+			int	endX	=(CHUNKDIM * (cs.mChunkX + 1)) + 1;
+			if(endY < h)
+			{
+				endY++;	//increase by one if possible
+			}
+			if(endX < w)
+			{
+				endX++;
+			}
+
+			for(int y=startY, t=0;y < endY;y++,t++)
+			{
+				for(int x=startX, s=0;x < endX;x++,s++)
+				{
+					chunk[t, s]	=cs.mData[y, x];
+				}
+			}
+
+			HeightMap	map	=new HeightMap(chunk,
+				endX - startX, endY - startY,
+				CHUNKDIM + 1, CHUNKDIM + 1,
+				(CHUNKDIM * cs.mChunkX) - startX,
+				(CHUNKDIM * cs.mChunkY) - startY, cs.mGD, mVDTerrain);
+
+			Vector3	pos	=Vector3.Zero;
+			pos.X	=cs.mChunkX * (CHUNKDIM) * cs.mPolySize;
+			pos.Z	=cs.mChunkY * (CHUNKDIM) * cs.mPolySize;
+			pos.Y	=0.0f;
+
+			map.SetPos(pos);
+
+			lock(mMaps)
+			{
+				mMaps.Add(map);
+			}
+
+			Interlocked.Decrement(ref mThreadCounter);
+		}
+
+
+		public Vector3 GetGoodColorForHeight(float height)
+		{
+			return	mMaps[0].GetGoodColorForHeight(height);
+		}
+
+
+		public void GetTimings(out long pos, out long norm, out long copy,
+			out long texFact, out long index, out long buffer)
+		{
+			long	posAccum, normAccum, copyAccum;
+			long	tfAccum, indAccum, bufAccum;
+
+			pos	=norm	=copy	=texFact	=index	=buffer	=0;
+
+			foreach(HeightMap hm in mMaps)
+			{
+				hm.GetTimings(out posAccum, out normAccum, out copyAccum,
+					out tfAccum, out indAccum, out bufAccum);
+
+				pos		+=posAccum;
+				norm	+=normAccum;
+				copy	+=copyAccum;
+				texFact	+=tfAccum;
+				index	+=indAccum;
+				buffer	+=bufAccum;
 			}
 		}
 
@@ -277,7 +351,6 @@ namespace TerrainLib
 
 					sum	/=8.0f;
 
-//					data[y, x]	=(sum + data[y, x]) / 2.0f;
 					data[y, x]	=sum;
 				}
 			}
@@ -310,6 +383,7 @@ namespace TerrainLib
 					if(heightBias > islandRange)
 					{
 						heightBias	-=islandRange;
+						heightBias	*=MathHelper.Log2E;
 						data[y, x]	-=heightBias;
 					}
 				}
@@ -346,7 +420,6 @@ namespace TerrainLib
 			mFXTerrain.Parameters["mTerTexture0"].SetValue(mTEXTerrain0);
 			mFXTerrain.Parameters["mTerTexture1"].SetValue(mTEXTerrain1);
 			mFXTerrain.Parameters["mTerTexture2"].SetValue(mTEXTerrain2);
-			mFXTerrain.Parameters["mTerTexture3"].SetValue(mTEXTerrain3);
 			mFXTerrain.Parameters["mTerTexture4"].SetValue(mTEXTerrain4);
 			mFXTerrain.Parameters["mTerTexture5"].SetValue(mTEXTerrain5);
 			mFXTerrain.Parameters["mTerTexture6"].SetValue(mTEXTerrain6);
@@ -362,7 +435,6 @@ namespace TerrainLib
 			mFXTerrain.Parameters["mFogEnd"].SetValue(6500.0f);
 			mFXTerrain.Parameters["mFogColor"].SetValue(fogColor);
 			mFXTerrain.Parameters["mEyePosition"].SetValue(Vector3.Zero);
-			mFXTerrain.Parameters["mCamRange"].SetValue(8000.0f);
 		}
 
 
@@ -384,11 +456,11 @@ namespace TerrainLib
 		}
 
 
-		public void Draw(GraphicsDevice gd,
+		public void Draw(GraphicsDevice gd, BoundingFrustum frust,
 			Matrix pupNearViewProj, Matrix pupFarViewProj, Matrix avaLightViewProj,
 			RenderTarget2D pupNearShad, RenderTarget2D pupFarShad, RenderTarget2D avaShad)
 		{
-			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLighting"];
+			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLightingXSamp"];
 
 			if(pupNearShad != null)
 			{
@@ -408,30 +480,24 @@ namespace TerrainLib
 
 			foreach(HeightMap m in mMaps)
 			{
-				m.Draw(gd, mFXTerrain);
+				if(m.InFrustum(frust))
+				{
+					m.Draw(gd, mFXTerrain);
+				}
 			}			
 		}
 
 
-		public void DrawDepth(GraphicsDevice gd)
+		public void DrawWorldY(GraphicsDevice gd, BoundingFrustum frust)
 		{
-			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["Depth"];
+			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["WorldY"];
 
 			foreach(HeightMap m in mMaps)
 			{
-				m.Draw(gd, mFXTerrain);
-			}			
-		}
-
-
-		//this one only affects depth/stencil area
-		public void DrawLightDepth(GraphicsDevice gd)
-		{
-			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["LightDepth"];
-
-			foreach(HeightMap m in mMaps)
-			{
-				m.Draw(gd, mFXTerrain);
+				if(m.InFrustum(frust))
+				{
+					m.Draw(gd, mFXTerrain);
+				}
 			}			
 		}
 

@@ -116,7 +116,7 @@ namespace UtilityLib
 		}
 
 
-		public void Update(float msDelta)
+		public void Update()
 		{
 			GamePadState	gps	=GamePad.GetState(PlayerIndex.One);
 			if(gps.IsConnected)

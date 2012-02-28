@@ -102,6 +102,20 @@ namespace TerrainLib
 		}
 
 
+		//get the max height in a sampled radius
+		public float GetMaxHeightRadius(Vector3 coord, float rad)
+		{
+			float	ret	=GetHeight(coord);
+
+			ret	=MathHelper.Max(ret, GetHeight(coord + Vector3.UnitX * rad));
+			ret	=MathHelper.Max(ret, GetHeight(coord + Vector3.UnitX * -rad));
+			ret	=MathHelper.Max(ret, GetHeight(coord + Vector3.UnitZ * rad));
+			ret	=MathHelper.Max(ret, GetHeight(coord + Vector3.UnitZ * -rad));
+
+			return	ret;
+		}
+
+
 		public Plane GetGroundPlane(Vector3 coord)
 		{
 			Plane	ret	=new Plane();

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Diagnostics;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -36,8 +37,6 @@ namespace TerrainLib
 
 		VertexBuffer		mVBTerrain;
 		IndexBuffer			mIBTerrain;
-		VertexBuffer		mVBWater;
-		IndexBuffer			mIBWater;
 
 		int		mNumIndex, mNumVerts, mNumTris;
 
@@ -46,6 +45,13 @@ namespace TerrainLib
 		Matrix	mMat;
 		float	mPeak;		//max height
 		float	mValley;	//min height
+
+		//bounds for frust rejection
+		BoundingBox	mBounds;
+
+		//timings
+		long	mPosTime, mNormTime, mCopyTime;
+		long	mTexFactTime, mIndexTime, mBufferTime;
 
 
 		//2D float array
@@ -59,38 +65,58 @@ namespace TerrainLib
 						 GraphicsDevice		gd,
 						 VertexDeclaration	vd)
 		{
-			//convert height map to verts
-//			int	w	=data.GetLength(1);
-//			int	h	=data.GetLength(0);
-
 			mNumVerts	=actualWidth * actualHeight;
 			mNumTris	=((actualWidth - 1) * (actualHeight - 1)) * 2;
 			mNumIndex	=mNumTris * 3;
-
-			mPeak	=-10000.0f;	//decent assumption?
-			mValley	=10000.0f;
 
 			//alloc some space for verts and indexs
 			VPNTT	[]verts		=new VPNTT[w * h];
 			ushort	[]indexs	=new ushort[mNumIndex];
 
+			Stopwatch	sw	=new Stopwatch();
+
+			sw.Start();
+			
 			//load the height map
+			Vector3	min	=Vector3.One * float.MaxValue;
+			Vector3	max	=Vector3.One * float.MinValue;
 			for(int y=0;y < h;y++)
 			{
 				for(int x=0;x < w;x++)
 				{
-					int	dex	=x + (y * w);
-					verts[dex].Position.X	=(float)(x - offsetX);
-					verts[dex].Position.Z	=(float)(y - offsetY);
-					verts[dex].Position.Y	=data[y, x] * HEIGHT_SCALAR;
+					Vector3	pos	=Vector3.Zero;
+					int		dex	=x + (y * w);
 
-					if(verts[dex].Position.Y > mPeak)
+					pos.X	=(float)(x - offsetX);
+					pos.Z	=(float)(y - offsetY);
+					pos.Y	=data[y, x] * HEIGHT_SCALAR;
+
+					verts[dex].Position	=pos;
+
+					//find bounds
+					if(pos.X < min.X)
 					{
-						mPeak	=verts[dex].Position.Y;
+						min.X	=pos.X;
 					}
-					if(verts[dex].Position.Y < mValley)
+					if(pos.X > max.X)
 					{
-						mValley	=verts[dex].Position.Y;
+						max.X	=pos.X;
+					}
+					if(pos.Y < min.Y)
+					{
+						min.Y	=pos.Y;
+					}
+					if(pos.Y > max.Y)
+					{
+						max.Y	=pos.Y;
+					}
+					if(pos.Z < min.Z)
+					{
+						min.Z	=pos.Z;
+					}
+					if(pos.Z > max.Z)
+					{
+						max.Z	=pos.Z;
 					}
 
 					//texfactors
@@ -98,10 +124,25 @@ namespace TerrainLib
 					verts[dex].TexFactor1	=Vector4.Zero;
 				}
 			}
+			sw.Stop();
 
+			mPosTime	=sw.ElapsedTicks;
+
+			mPeak	=max.Y;
+			mValley	=min.Y;
+
+			mBounds.Max	=max;
+			mBounds.Min	=min;
+
+			sw.Reset();
+			sw.Start();
 			//build normals with the full set
 			BuildNormals(verts, w, h);
+			sw.Stop();
+			mNormTime	=sw.ElapsedTicks;
 
+			sw.Reset();
+			sw.Start();
 			//reduce down to the active set
 			VPNTT	[]actualVerts	=new VPNTT[mNumVerts];
 			int	cnt	=0;
@@ -112,18 +153,45 @@ namespace TerrainLib
 					actualVerts[cnt++]	=verts[(y * w) + x];
 				}
 			}
+			sw.Stop();
+			mCopyTime	=sw.ElapsedTicks;
 
+			sw.Reset();
+			sw.Start();
 			SetTextureFactors(actualVerts);
-			IndexTris(actualWidth, actualHeight, gd);
+			sw.Stop();
+			mTexFactTime	=sw.ElapsedTicks;
 
+			sw.Reset();
+			sw.Start();
+			IndexTris(actualWidth, actualHeight, gd);
+			sw.Stop();
+			mIndexTime	=sw.ElapsedTicks;
+
+			sw.Reset();
+			sw.Start();
 			mVBTerrain	=new VertexBuffer(gd, vd, mNumVerts, BufferUsage.WriteOnly);
 			mVBTerrain.SetData<VPNTT>(actualVerts);
+			sw.Stop();
+			mBufferTime	=sw.ElapsedTicks;
 
 			//see if a water plane is needed
 			if(mValley < WaterHeight)
 			{
 //				VPNTT
 			}
+		}
+
+
+		internal void GetTimings(out long pos, out long norm, out long copy,
+			out long texFact, out long index, out long buffer)
+		{
+			pos		=mPosTime;
+			norm	=mNormTime;
+			copy	=mCopyTime;
+			texFact	=mTexFactTime;
+			index	=mIndexTime;
+			buffer	=mBufferTime;
 		}
 
 
@@ -148,6 +216,75 @@ namespace TerrainLib
 			}
 			mIBTerrain	=new IndexBuffer(gd, IndexElementSize.SixteenBits, mNumIndex, BufferUsage.WriteOnly);
 			mIBTerrain.SetData<ushort>(indexs);
+		}
+
+
+		internal Vector3 GetGoodColorForHeight(float height)
+		{
+			Vector3	snow	=Color.Snow.ToVector3();
+			Vector3	forest	=Color.Brown.ToVector3();	//forest is dirtish
+			Vector3	grass	=Color.LawnGreen.ToVector3();
+			Vector3	sand	=Color.DarkKhaki.ToVector3();
+
+			if(height >= SnowHeight)
+			{
+				//in the snowy area
+				//See if within transition
+				if(height < (SnowHeight + TransitionHeight))
+				{
+					//transition from snow to forest
+					float	transFactor	=
+						((SnowHeight + TransitionHeight) - height)
+						/ TransitionHeight;
+
+					return	Vector3.Lerp(snow, forest, transFactor);
+				}
+				else
+				{
+					//just snow
+					return	snow;
+				}
+			}
+			else if(height >= ForestHeight)
+			{
+				//in the forest zone
+				if(height < (ForestHeight + TransitionHeight))
+				{
+					//transition from forest to grassland
+					float	transFactor	=
+						((ForestHeight + TransitionHeight) - height)
+						/ TransitionHeight;
+
+					return	Vector3.Lerp(forest, grass, transFactor);
+				}
+				else
+				{
+					//just forest
+					return	forest;
+				}
+			}
+			else if(height >= GrassHeight)
+			{
+				//in the grass zone
+				if(height < (GrassHeight + TransitionHeight))
+				{
+					//transition from grass to sand
+					float	transFactor	=
+						((GrassHeight + TransitionHeight) - height)
+						/ TransitionHeight;
+
+					return	Vector3.Lerp(grass, sand, transFactor);
+				}
+				else
+				{
+					//just grass
+					return	grass;
+				}
+			}
+			else
+			{
+				return	sand;
+			}
 		}
 
 
@@ -206,7 +343,7 @@ namespace TerrainLib
 				}
 				else if(height >= GrassHeight)
 				{
-					//in the forest zone
+					//in the grass zone
 					if(height < (GrassHeight + TransitionHeight))
 					{
 						//transition from grass to sand
@@ -408,8 +545,6 @@ namespace TerrainLib
 			{
 				for(int x=0;x < w;x++)
 				{
-					Vector3	test	=-CalcVertNormal(v, x, y, w, h);
-//					v[x + (y * w)].Normal	=-CalcVertNormal(v, x, y, w, h);
 					//get the positions of the 8
 					//adjacent verts, numbered clockwise
 					//from upper right on a grid
@@ -541,12 +676,6 @@ namespace TerrainLib
 					//average
 					norm.Normalize();
 
-					if(norm != test)
-					{
-						int	j69	=0;
-						j69++;
-					}
-
 					v[x + (y * w)].Normal	=norm;
 				}
 			}
@@ -575,6 +704,10 @@ namespace TerrainLib
 
 			//update matrix
 			mMat	=Matrix.CreateTranslation(mPosition);
+
+			//update bounds
+			mBounds.Min	+=pos;
+			mBounds.Max	+=pos;
 		}
 
 
@@ -587,6 +720,14 @@ namespace TerrainLib
 		public float GetPeak()
 		{
 			return	mPeak;
+		}
+
+
+		public bool InFrustum(BoundingFrustum frust)
+		{
+			ContainmentType	ct	=frust.Contains(mBounds);
+
+			return	(ct != ContainmentType.Disjoint);
 		}
 	}
 }

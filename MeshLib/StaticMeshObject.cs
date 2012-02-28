@@ -145,6 +145,20 @@ namespace MeshLib
 		}
 
 
+		//instanced
+		public void Draw(GraphicsDevice gd, DynamicVertexBuffer instBuf, int offset, int numInstances)
+		{
+			foreach(StaticMesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+				m.Draw(gd, mMatLib, instBuf, offset, numInstances);
+			}
+		}
+
+
 		public void Draw(GraphicsDevice gd, string altMatName)
 		{
 			foreach(StaticMesh m in mMeshParts)
@@ -158,6 +172,26 @@ namespace MeshLib
 
 				m.MaterialName	=altMatName;
 				m.Draw(gd, mMatLib, mTransform);
+				m.MaterialName	=temp;
+			}
+		}
+
+
+		//draw instanced
+		public void Draw(GraphicsDevice gd, DynamicVertexBuffer instBuf,
+			int offset, int numInstances, string altMatName)
+		{
+			foreach(StaticMesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+
+				string	temp	=m.MaterialName;
+
+				m.MaterialName	=altMatName;
+				m.Draw(gd, mMatLib, instBuf, offset, numInstances);
 				m.MaterialName	=temp;
 			}
 		}

@@ -1,6 +1,8 @@
 //shaders using TomF's trilights for light
 //constants
-#define	MAX_BONES	50
+#define	MAX_BONES		50
+#define	PI_OVER_FOUR	0.7853981634f
+#define	PI_OVER_TWO		1.5707963268f
 
 //matrii for skinning
 shared float4x4	mBindPose;
@@ -21,8 +23,6 @@ float4	mSolidColour;	//for non textured
 //specular stuff
 float4	mSpecColor;
 float	mSpecPower;
-float	PI_OVER_FOUR	=0.7853981634f;
-float	PI_OVER_TWO		=1.5707963268f;
 
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
@@ -65,8 +65,9 @@ VPosTex0Col0 TriTex0VS(VPosNormTex0 input)
 	
 	float3 worldNormal	=mul(input.Normal, mWorld);
 
-	output.Color	=ComputeTrilight(worldNormal, mLightDirection,
-						mLightColor0, mLightColor1, mLightColor2);
+	output.Color.xyz	=ComputeTrilight(worldNormal, mLightDirection,
+							mLightColor0, mLightColor1, mLightColor2);
+	output.Color.w		=1.0f;
 	
 	//direct copy of texcoords
 	output.TexCoord0	=input.TexCoord0;
@@ -153,6 +154,31 @@ VPosTex04Tex14Tex24Tex34 TriTanWorldVS(VPosNormTanTex0 input)
 	return	output;
 }
 
+//packed tangents with worldspace pos and instancing
+VPosTex04Tex14Tex24Tex34 TriTanWorldInstancedVS(VPosNormTanTex0 input, float4x4 instWorld : BLENDWEIGHT)
+{
+	VPosTex04Tex14Tex24Tex34	output;
+
+	float4x4	world	=transpose(instWorld);
+	
+	//generate the world-view-proj matrix
+	float4x4	wvp	=mul(mul(world, mView), mProjection);
+	
+	output.Position			=mul(input.Position, wvp);
+	output.TexCoord0.xyz	=mul(input.Normal, world);
+	output.TexCoord0.w		=input.TexCoord0.x;
+	output.TexCoord1.xyz	=mul(input.Tangent.xyz, world);
+	output.TexCoord1.w		=input.TexCoord0.y;
+
+	float3	biTan	=cross(input.Normal, input.Tangent) * input.Tangent.w;
+
+	output.TexCoord2		=float4(normalize(biTan), 0);
+	output.TexCoord3		=mul(input.Position, world);
+
+	//return the output structure
+	return	output;
+}
+
 VPosTex0Col0 TriSkinTex0VS(VPosNormBoneTex0 input)
 {
 	VPosNormBone	skVert;
@@ -201,10 +227,10 @@ float4 NormalMapTriTex0PS(VNormTanBiTanTex0 input) : COLOR
 	float3	goodNorm	=ComputeNormalFromMap(
 		norm, input.Tangent, input.BiTangent, input.Normal);
 	
-	float4	texLitColor	=ComputeTrilight(goodNorm, mLightDirection,
+	float3	texLitColor	=ComputeTrilight(goodNorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 	
-	return	texLitColor;
+	return	float4(texLitColor, 1.0f);
 }
 
 //normal mapped from tex1, with tex0 texturing
@@ -216,10 +242,12 @@ float4 NormalMapTriTex0Tex1PS(VNormTanBiTanTex0Tex1 input) : COLOR
 	float3	goodNorm	=ComputeNormalFromMap(
 		norm, input.Tangent, input.BiTangent, input.Normal);
 	
-	float4	texLitColor	=ComputeTrilight(goodNorm, mLightDirection,
+	float3	texLitColor	=ComputeTrilight(goodNorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
+
+	texLitColor	*=texel0.xyz;
 	
-	return	texLitColor * texel0;
+	return	float4(texLitColor, texel0.w);
 }
 
 //normal mapped from tex0, with solid color
@@ -230,10 +258,12 @@ float4 NormalMapTriTex0SolidPS(VNormTanBiTanTex0Tex1 input) : COLOR
 	float3	goodNorm	=ComputeNormalFromMap(
 		norm, input.Tangent, input.BiTangent, input.Normal);
 	
-	float4	texLitColor	=ComputeTrilight(goodNorm, mLightDirection,
+	float3	texLitColor	=ComputeTrilight(goodNorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
+
+	texLitColor	*=mSolidColour.xyz;
 	
-	return	texLitColor * mSolidColour;
+	return	float4(texLitColor, mSolidColour.w);
 }
 
 //normal mapped from tex0, with solid color and specular
@@ -259,15 +289,16 @@ float4 NormalMapTriTex0SolidSpecPS(VTex04Tex14Tex24Tex34 input) : COLOR
 
 	float	specDot	=dot(r, eyeVec);
 
-	float4	texLitColor	=ComputeTrilight(goodNorm, mLightDirection,
+	float3	texLitColor	=ComputeTrilight(goodNorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
-//	float4	spec	=mSpecIntensity * mSpecColor *
-//		max(pow(specDot, mShiny), 0) * length(texLitColor.xyz);
+	float4	spec	=mSpecPower * mSpecColor *
+		max(pow(specDot, mSpecPower), 0) * length(texLitColor);
 
-	texLitColor	*=mSolidColour;
+	texLitColor	*=mSolidColour.xyz;
+	texLitColor	*=spec.xyz;
 	
-	return	saturate(texLitColor);// + spec);
+	return	float4(saturate(texLitColor), mSolidColour.w);
 }
 
 //normal mapped from tex0, with solid color and expensive specular
@@ -287,7 +318,7 @@ float4 NormalMapTriTex0SolidSpecPhysPS(VTex04Tex14Tex24Tex34 input) : COLOR
 
 	float3	goodNorm	=ComputeNormalFromMap(norm, tan, bitan, pnorm);
 	float3	lightDir	=-mLightDirection;
-	float4	triLight	=ComputeTrilight(goodNorm, mLightDirection,
+	float3	triLight	=ComputeTrilight(goodNorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
 	float3	eyeVec	=normalize(mEyePos - wpos);
@@ -312,7 +343,7 @@ float4 NormalMapTriTex0SolidSpecPhysPS(VTex04Tex14Tex24Tex34 input) : COLOR
 	visTerm	=1.0f / visTerm;
 
 	float3	specular	=specTerm * triLight * fresTerm * visTerm * mLightColor2;
-	float4	litSolid	=mSolidColour * triLight;
+	float3	litSolid	=mSolidColour.xyz * triLight;
 
 	specular	=saturate(specular + litSolid.xyz);
 
@@ -332,8 +363,10 @@ float4 TriTex0SpecPhysPS(VTex04Tex14 input) : COLOR
 	float3	pnorm	=input.TexCoord0.xyz;
 	float3	wpos	=input.TexCoord1.xyz;
 
+	pnorm	=normalize(pnorm);
+
 	float3	lightDir	=-mLightDirection;
-	float4	triLight	=ComputeTrilight(pnorm, mLightDirection,
+	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
 	float3	eyeVec	=normalize(mEyePos - wpos);
@@ -358,11 +391,11 @@ float4 TriTex0SpecPhysPS(VTex04Tex14 input) : COLOR
 	visTerm	=1.0f / visTerm;
 
 	float3	specular	=specTerm * triLight * fresTerm * visTerm * mLightColor2;
-	float4	litColor	=texColor * triLight;
+	float3	litColor	=texColor.xyz * triLight;
 
 	specular	=saturate(specular + litColor.xyz);
 
-	return	float4(specular, litColor.w);
+	return	float4(specular, texColor.w);
 }
 
 //Solid color and expensive specular
@@ -371,8 +404,10 @@ float4 TriSolidSpecPhysPS(VTex03Tex13 input) : COLOR
 	float3	pnorm	=input.TexCoord0;
 	float3	wpos	=input.TexCoord1;
 
+	pnorm	=normalize(pnorm);
+
 	float3	lightDir	=-mLightDirection;
-	float4	triLight	=ComputeTrilight(pnorm, mLightDirection,
+	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
 	float3	eyeVec	=normalize(mEyePos - wpos);
@@ -397,9 +432,9 @@ float4 TriSolidSpecPhysPS(VTex03Tex13 input) : COLOR
 	visTerm	=1.0f / visTerm;
 
 	float3	specular	=specTerm * triLight * fresTerm * visTerm * mLightColor2;
-	float4	litSolid	=mSolidColour * triLight;
+	float3	litSolid	=mSolidColour.xyz * triLight;
 
-	specular	=saturate(specular + litSolid.xyz);
+	specular	=saturate(specular + litSolid);
 
 	return	float4(specular, mSolidColour.w);
 }
@@ -513,6 +548,15 @@ technique TriTex0NormalMapSolidSpecPhys
 	pass P0
 	{
 		VertexShader	=compile vs_2_0 TriTanWorldVS();
+		PixelShader		=compile ps_2_0 NormalMapTriTex0SolidSpecPhysPS();
+	}
+}
+
+technique TriTex0NormalMapSolidSpecPhysInstanced
+{     
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 TriTanWorldInstancedVS();
 		PixelShader		=compile ps_2_0 NormalMapTriTex0SolidSpecPhysPS();
 	}
 }

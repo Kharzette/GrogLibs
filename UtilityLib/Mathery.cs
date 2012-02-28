@@ -119,6 +119,23 @@ namespace UtilityLib
 		}
 
 
+		public static void TinyToZero(ref Vector3 val)
+		{
+			if(val.X < ANGLE_EPSILON && val.X > -ANGLE_EPSILON)
+			{
+				val.X	=0.0f;
+			}
+			if(val.Y < ANGLE_EPSILON && val.Y > -ANGLE_EPSILON)
+			{
+				val.Y	=0.0f;
+			}
+			if(val.Z < ANGLE_EPSILON && val.Z > -ANGLE_EPSILON)
+			{
+				val.Z	=0.0f;
+			}
+		}
+
+
 		public static Color RandomColor(Random rnd)
 		{
 			Microsoft.Xna.Framework.Color	randColor
@@ -127,6 +144,29 @@ namespace UtilityLib
 						Convert.ToByte(rnd.Next(255)),
 						Convert.ToByte(rnd.Next(255)));
 			return	randColor;
+		}
+
+
+		public static Vector3 RandomDirection(Random rnd)
+		{
+			Vector3	ret	=Vector3.Zero;
+
+			for(;;)
+			{
+				ret.X	=(float)rnd.NextDouble();
+				ret.Y	=(float)rnd.NextDouble();
+				ret.Z	=(float)rnd.NextDouble();
+
+				ret	-=(Vector3.One * 0.5f);
+
+				ret.Normalize();
+
+				if(!float.IsNaN(ret.X))
+				{
+					break;
+				}
+			}
+			return	ret;
 		}
 
 

@@ -58,6 +58,23 @@ VPosTex04 BasicVS(VPosNormTex0 input)
 }
 
 
+//instanced
+VPosTex04 BasicInstancedVS(VPosNormTex0 input, float4x4 instWorld : BLENDWEIGHT)
+{
+	VPosTex04	output;
+
+	float4x4	viewProj	=mul(mView, mProjection);
+
+	//view relative pos
+	output.TexCoord0	=mul(input.Position, transpose(instWorld));
+
+	//transformed
+	output.Position		=mul(output.TexCoord0, viewProj);
+
+	return	output;
+}
+
+
 //regular N dot L lighting
 VPosTex0Col0 GouradVS(VPosNormTex0 input)
 {
@@ -121,11 +138,34 @@ VPosTex0Col0 FullBrightVS(VPosNormTex0 input)
 	return	output;
 }
 
+VPosTex0Single ShadowInstancedVS(VPos input, float4x4 instWorld : BLENDWEIGHT)
+{
+	VPosTex0Single	output;
+
+	output.Position		=mul(input.Position, mul(transpose(instWorld), mLightViewProj));
+	output.TexCoord0	=output.Position.z / output.Position.w;
+
+	return	output;
+}
+
 VPosTex0Single ShadowVS(VPos input)
 {
 	VPosTex0Single	output;
 
 	output.Position		=mul(input.Position, mul(mWorld, mLightViewProj));
+	output.TexCoord0	=output.Position.z / output.Position.w;
+
+	return	output;
+}
+
+VPosTex0Single AvatarShadowVS(VPos input)
+{
+	VPosTex0Single	output;
+
+	//generate the world-view-proj matrix
+	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
+
+	output.Position		=mul(input.Position, wvp);
 	output.TexCoord0	=output.Position.z / output.Position.w;
 
 	return	output;
@@ -270,13 +310,24 @@ float4 NormalDepthPS(float4 color : COLOR0) : COLOR0
 	return	color;
 }
 
+//write world coord Y to single rendertarget
+float4 WorldYPS(VTex04 input) : COLOR
+{
+	return	float4(input.TexCoord0.y, input.TexCoord0.y, input.TexCoord0.y, input.TexCoord0.y);
+}
+
 //gradient sky
 float4 SkyGradientPS(VTex04 input) : COLOR
 {
 	float3	upVec	=float3(0.0f, 1.0f, 0.0f);
 
+	float3	boxWorld	=input.TexCoord0;
+	float3	eyeBall		=mEyePos;
+
 	//texcoord has world pos
-	float3	skyVec	=normalize(input.TexCoord0 - mEyePos);
+	float3	skyVec	=(boxWorld - eyeBall);
+
+	skyVec	=normalize(skyVec);
 
 	float	skyDot	=abs(dot(skyVec, upVec));
 
@@ -365,11 +416,47 @@ technique Shadow
 	}
 }
 
+technique ShadowInstanced
+{
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 ShadowInstancedVS();
+		PixelShader		=compile ps_2_0 ShadowPS();
+	}
+}
+
 technique SkyGradient
 {
 	pass P0
 	{
 		VertexShader	=compile vs_3_0 BasicVS();
 		PixelShader		=compile ps_3_0 SkyGradientPS();
+	}
+}
+
+technique AvatarShadow
+{
+	pass P0
+	{
+		VertexShader	=compile vs_3_0 AvatarShadowVS();
+		PixelShader		=compile ps_3_0 ShadowPS();
+	}
+}
+
+technique WorldY
+{
+	pass P0
+	{
+		VertexShader	=compile vs_3_0 BasicVS();
+		PixelShader		=compile ps_3_0 WorldYPS();
+	}
+}
+
+technique WorldYInstanced
+{
+	pass P0
+	{
+		VertexShader	=compile vs_3_0 BasicInstancedVS();
+		PixelShader		=compile ps_3_0 WorldYPS();
 	}
 }

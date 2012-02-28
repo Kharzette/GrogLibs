@@ -130,5 +130,42 @@ namespace MeshLib
 				0,
 				mNumTriangles);
 		}
+
+
+		public override void Draw(GraphicsDevice g,
+			MaterialLib.MaterialLib matLib,
+			DynamicVertexBuffer instBuf,
+			int offset, int numInstances)
+		{
+			if(!mbVisible)
+			{
+				return;
+			}
+
+			MaterialLib.Material	mat	=matLib.GetMaterial(mMaterialName);
+			if(mat == null)
+			{
+				return;
+			}
+
+			Effect		fx	=matLib.GetShader(mat.ShaderName);
+			if(fx == null)
+			{
+				return;
+			}
+
+			g.SetVertexBuffers(new VertexBufferBinding(mVerts, 0, 0),
+				new	VertexBufferBinding(instBuf, offset, 1));
+
+			g.Indices	=mIndexs;
+
+			matLib.ApplyParameters(mMaterialName);
+			mat.ApplyRenderStates(g);
+
+			fx.CurrentTechnique.Passes[0].Apply();
+
+			g.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, 0,
+				mNumVerts, 0, mNumTriangles, numInstances);
+		}
 	}
 }

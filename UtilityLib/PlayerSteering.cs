@@ -84,7 +84,7 @@ namespace UtilityLib
 		}
 
 
-		public void Update(float msDelta, Matrix view, KeyboardState ks, MouseState ms, GamePadState gs)
+		public void Update(float msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
 		{
 			if(mMethod == SteeringMethod.None)
 			{
@@ -93,39 +93,28 @@ namespace UtilityLib
 
 			if(mMethod == SteeringMethod.FirstPerson)
 			{
-				UpdateGroundMovement(msDelta, view, ks, ms, gs);
+				UpdateGroundMovement(msDelta, gc, ks, ms, gs);
 			}
 			else if(mMethod == SteeringMethod.Fly)
 			{
-				UpdateFly(msDelta, view, ks, ms, gs);
+				UpdateFly(msDelta, gc, ks, ms, gs);
 			}
 			else if(mMethod == SteeringMethod.ThirdPerson)
 			{
-				UpdateGroundMovement(msDelta, view, ks, ms, gs);
+				UpdateGroundMovement(msDelta, gc, ks, ms, gs);
 			}
 			else if(mMethod == SteeringMethod.TwinStick)
 			{
-				UpdateTwinStick(msDelta, view, ks, ms, gs);
+				UpdateTwinStick(msDelta, gc, ks, ms, gs);
 			}
 		}
 
 
-		void UpdateTwinStick(float msDelta, Matrix view, KeyboardState ks, MouseState ms, GamePadState gs)
+		void UpdateTwinStick(float msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
 		{
-			Vector3 vup		=Vector3.Zero;
-			Vector3 vleft	=Vector3.Zero;
-			Vector3 vin		=Vector3.Zero;
-
-			//grab view matrix in vector transpose
-			vup.X   =view.M12;
-			vup.Y   =view.M22;
-			vup.Z   =view.M32;
-			vleft.X =view.M11;
-			vleft.Y =view.M21;
-			vleft.Z =view.M31;
-			vin.X   =view.M13;
-			vin.Y   =view.M23;
-			vin.Z   =view.M33;
+			Vector3 vup		=gc.Up;
+			Vector3 vleft	=gc.Left;
+			Vector3 vin		=gc.Forward;
 
 			mPitch	=45.0f;
 			mRoll	=0.0f;
@@ -176,22 +165,11 @@ namespace UtilityLib
 		}
 
 
-		void UpdateFly(float msDelta, Matrix view, KeyboardState ks, MouseState ms, GamePadState gs)
+		void UpdateFly(float msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
 		{
-			Vector3 vup		=Vector3.Zero;
-			Vector3 vleft	=Vector3.Zero;
-			Vector3 vin		=Vector3.Zero;
-
-			//grab view matrix in vector transpose
-			vup.X   =view.M12;
-			vup.Y   =view.M22;
-			vup.Z   =view.M32;
-			vleft.X =view.M11;
-			vleft.Y =view.M21;
-			vleft.Z =view.M31;
-			vin.X   =view.M13;
-			vin.Y   =view.M23;
-			vin.Z   =view.M33;
+			Vector3 vup		=gc.Up;
+			Vector3 vleft	=gc.Left;
+			Vector3 vin		=gc.Forward;
 
 			float	speed	=0.0f;
 			if(ks.IsKeyDown(Keys.RightShift) || ks.IsKeyDown(Keys.LeftShift))
@@ -243,22 +221,11 @@ namespace UtilityLib
 		}
 
 
-		void UpdateGroundMovement(float msDelta, Matrix view, KeyboardState ks, MouseState ms, GamePadState gs)
+		void UpdateGroundMovement(float msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
 		{
-			Vector3 vup		=Vector3.Zero;
-			Vector3 vleft	=Vector3.Zero;
-			Vector3 vin		=Vector3.Zero;
-
-			//grab view matrix in vector transpose
-			vup.X   =view.M12;
-			vup.Y   =view.M22;
-			vup.Z   =view.M32;
-			vleft.X =view.M11;
-			vleft.Y =view.M21;
-			vleft.Z =view.M31;
-			vin.X   =view.M13;
-			vin.Y   =view.M23;
-			vin.Z   =view.M33;
+			Vector3 vup		=gc.Up;
+			Vector3 vleft	=gc.Left;
+			Vector3 vin		=gc.Forward;
 
 			Vector3	moveVec	=Vector3.Zero;
 			if(ks.IsKeyDown(Keys.Left) || ks.IsKeyDown(Keys.A))
