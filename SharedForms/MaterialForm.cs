@@ -275,6 +275,7 @@ namespace SharedForms
 			MaterialLib.Material	mat	=gs.GetParentMaterial();
 
 			Effect	fx	=mMatLib.GetMaterialShader(mat.Name);
+			mat.Technique	="";	//reset this
 			mat.UpdateShaderParameters(fx);
 
 			MaterialProperties.DataSource			=mat.Parameters;
@@ -307,6 +308,22 @@ namespace SharedForms
 			m.Name			="default";
 			m.ShaderName	="";
 			m.Technique		="";
+
+			bool	bFirst	=true;
+			int		cnt		=1;
+			while(mMatLib.GetMaterial(m.Name) != null)
+			{
+				if(bFirst)
+				{
+					m.Name	+="000";
+					bFirst	=false;
+				}
+				else
+				{
+					m.Name	="default" + String.Format("{0:000}", cnt);
+					cnt++;
+				}
+			}
 
 			//set some defaults
 			m.BlendState	=BlendState.Opaque;

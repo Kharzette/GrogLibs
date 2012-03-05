@@ -51,6 +51,25 @@ namespace UtilityLib
 		}
 
 
+		//instanced
+		public void Draw(GraphicsDevice gd, Effect fx,
+			DynamicVertexBuffer instBuf, int instCount,
+			Matrix camMat, Matrix projMat)
+		{
+			gd.SetVertexBuffers(new VertexBufferBinding(mVB, 0, 0),
+				new	VertexBufferBinding(instBuf, 0, 1));
+			gd.Indices	=mIB;
+
+			fx.Parameters["mView"].SetValue(camMat);
+			fx.Parameters["mProjection"].SetValue(projMat);
+
+			fx.CurrentTechnique.Passes[0].Apply();
+
+			gd.DrawInstancedPrimitives(PrimitiveType.TriangleList,
+				0, 0, mVB.VertexCount, 0, mIB.IndexCount / 3, instCount);
+		}
+
+
 		public void Draw(GraphicsDevice gd, BasicEffect bfx, Matrix camMat, Matrix projMat)
 		{
 			gd.SetVertexBuffer(mVB);

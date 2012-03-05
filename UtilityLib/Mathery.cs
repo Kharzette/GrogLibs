@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 
 
 namespace UtilityLib
@@ -33,6 +34,24 @@ namespace UtilityLib
 		{
 			bb.Min	=Vector3.One * MIN_MAX_BOUNDS;
 			bb.Max	=-bb.Min;
+		}
+
+
+		public static bool InFrustumLightAdjust(BoundingFrustum frust, Vector3 lightDir, BoundingSphere bs)
+		{
+			//extend down light ray 5 units
+			bs.Center	+=(lightDir * 5.0f);
+
+			//expand radius by 10
+			bs.Radius	+=10;			
+
+			ContainmentType	ct	=frust.Contains(bs);
+
+			if(ct == ContainmentType.Disjoint)
+			{
+				return	false;
+			}
+			return	true;
 		}
 
 
@@ -181,6 +200,21 @@ namespace UtilityLib
 			{
 				angle	-=360.0f;
 			}
+		}
+
+
+		public static void WrapAngleDegrees(ref HalfSingle angle)
+		{
+			float	ang	=angle.ToSingle();
+			while(ang < 0.0f)
+			{
+				ang	+=360.0f;
+			}
+			while(ang > 360.0f)
+			{
+				ang	-=360.0f;
+			}
+			angle	=new HalfSingle(ang);
 		}
 
 

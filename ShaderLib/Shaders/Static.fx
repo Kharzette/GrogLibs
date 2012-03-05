@@ -334,6 +334,11 @@ float4 SkyGradientPS(VTex04 input) : COLOR
 	return	lerp(mSkyGradient0, mSkyGradient1, skyDot);
 }
 
+float4 HalfTransPS(VTex04 input) : COLOR
+{
+	return	float4(1, 1, 1, 0.5);
+}
+
 
 technique FullBright
 {     
@@ -458,5 +463,14 @@ technique WorldYInstanced
 	{
 		VertexShader	=compile vs_3_0 BasicInstancedVS();
 		PixelShader		=compile ps_3_0 WorldYPS();
+	}
+}
+
+technique TransparentInstanced
+{
+	pass P0
+	{
+		VertexShader	=compile vs_3_0 BasicInstancedVS();
+		PixelShader		=compile ps_3_0 HalfTransPS();
 	}
 }

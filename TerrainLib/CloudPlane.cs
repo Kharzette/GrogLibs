@@ -99,7 +99,7 @@ namespace TerrainLib
 		}
 
 
-		public void Update(double msDelta, float height, float distThresh, float fallOff)
+		public void Update(int msDelta, float height, float distThresh, float fallOff)
 		{
 			double	secDelta	=msDelta / 1000.0;
 

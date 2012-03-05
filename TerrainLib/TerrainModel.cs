@@ -47,6 +47,35 @@ namespace TerrainLib
 		}
 
 
+		public Vector3 GetRandomPositionOnGround(Random rand, float islandSize, float minDistance)
+		{
+			int	mapSize	=GetMapSize();
+
+			Vector3	center	=Vector3.One * (mapSize / 2.0f);
+
+			center.Y	=0.0f;
+
+			Vector3	pos	=Vector3.Zero;
+
+			while(true)
+			{
+				pos.X	=rand.Next(2, mapSize - 2);
+				pos.Z	=rand.Next(2, mapSize - 2);
+
+				float	dist	=Vector3.Distance(pos, center);
+
+				if(dist < islandSize && dist > minDistance)
+				{
+					break;
+				}
+			}
+
+			pos.Y	=GetHeight(pos);
+
+			return	pos;
+		}
+
+
 		public float GetHeight(Vector3 coord)
 		{
 			float	ret	=0.0f;

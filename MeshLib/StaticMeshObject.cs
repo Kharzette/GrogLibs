@@ -128,6 +128,9 @@ namespace MeshLib
 
 			br.Close();
 			file.Close();
+
+			mTransform	=Matrix.Identity;
+
 			return	true;
 		}
 

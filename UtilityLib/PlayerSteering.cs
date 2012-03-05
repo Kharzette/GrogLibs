@@ -84,7 +84,7 @@ namespace UtilityLib
 		}
 
 
-		public void Update(float msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
+		public void Update(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
 		{
 			if(mMethod == SteeringMethod.None)
 			{
@@ -110,7 +110,7 @@ namespace UtilityLib
 		}
 
 
-		void UpdateTwinStick(float msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
+		void UpdateTwinStick(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
 		{
 			Vector3 vup		=gc.Up;
 			Vector3 vleft	=gc.Left;
@@ -165,7 +165,7 @@ namespace UtilityLib
 		}
 
 
-		void UpdateFly(float msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
+		void UpdateFly(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
 		{
 			Vector3 vup		=gc.Up;
 			Vector3 vleft	=gc.Left;
@@ -221,7 +221,7 @@ namespace UtilityLib
 		}
 
 
-		void UpdateGroundMovement(float msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
+		void UpdateGroundMovement(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
 		{
 			Vector3 vup		=gc.Up;
 			Vector3 vleft	=gc.Left;
