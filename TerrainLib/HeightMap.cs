@@ -197,25 +197,25 @@ namespace TerrainLib
 
 		void IndexTris(int w, int h, GraphicsDevice gd)
 		{
-			ushort	[]indexs	=new ushort[mNumIndex];
+			int	[]indexs	=new int[mNumIndex];
 
 			//index the tris
-			ushort	idx	=0;
+			int	idx	=0;
 			for(int j=0;j < (h - 1);j++)
 			{
 				for(int i=(j * w);i < ((j * w) + (w - 1));i++)
 				{
-					indexs[idx++]	=(ushort)i;
-					indexs[idx++]	=(ushort)(i + 1);
-					indexs[idx++]	=(ushort)(i + w);
+					indexs[idx++]	=i;
+					indexs[idx++]	=(i + 1);
+					indexs[idx++]	=(i + w);
 
-					indexs[idx++]	=(ushort)(i + 1);
-					indexs[idx++]	=(ushort)((i + 1) + w);
-					indexs[idx++]	=(ushort)(i + w);
+					indexs[idx++]	=(i + 1);
+					indexs[idx++]	=((i + 1) + w);
+					indexs[idx++]	=(i + w);
 				}
 			}
-			mIBTerrain	=new IndexBuffer(gd, IndexElementSize.SixteenBits, mNumIndex, BufferUsage.WriteOnly);
-			mIBTerrain.SetData<ushort>(indexs);
+			mIBTerrain	=new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, mNumIndex, BufferUsage.WriteOnly);
+			mIBTerrain.SetData<int>(indexs);
 		}
 
 

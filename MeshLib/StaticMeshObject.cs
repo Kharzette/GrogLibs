@@ -148,8 +148,7 @@ namespace MeshLib
 		}
 
 
-		//instanced
-		public void Draw(GraphicsDevice gd, DynamicVertexBuffer instBuf, int offset, int numInstances)
+		public void SetSecondVertexBufferBinding(VertexBufferBinding v2)
 		{
 			foreach(StaticMesh m in mMeshParts)
 			{
@@ -157,7 +156,21 @@ namespace MeshLib
 				{
 					continue;
 				}
-				m.Draw(gd, mMatLib, instBuf, offset, numInstances);
+				m.SetSecondVertexBufferBinding(v2);
+			}
+		}
+
+
+		//instanced
+		public void Draw(GraphicsDevice gd, int numInstances)
+		{
+			foreach(StaticMesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+				m.Draw(gd, mMatLib, numInstances);
 			}
 		}
 
@@ -181,8 +194,7 @@ namespace MeshLib
 
 
 		//draw instanced
-		public void Draw(GraphicsDevice gd, DynamicVertexBuffer instBuf,
-			int offset, int numInstances, string altMatName)
+		public void Draw(GraphicsDevice gd, int numInstances, string altMatName)
 		{
 			foreach(StaticMesh m in mMeshParts)
 			{
@@ -194,7 +206,7 @@ namespace MeshLib
 				string	temp	=m.MaterialName;
 
 				m.MaterialName	=altMatName;
-				m.Draw(gd, mMatLib, instBuf, offset, numInstances);
+				m.Draw(gd, mMatLib, numInstances);
 				m.MaterialName	=temp;
 			}
 		}

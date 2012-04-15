@@ -60,6 +60,11 @@
     <None Include="Shaders\CommonFunctions.fxh">
       <Name>CommonFunctions</Name>
     </None>
+    <Compile Include="Shaders\Post.fx">
+      <Name>Post</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+    </Compile>
     <None Include="Shaders\Types.fxh">
       <Name>Types</Name>
     </None>

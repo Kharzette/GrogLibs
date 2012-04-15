@@ -119,6 +119,52 @@ namespace UtilityLib
 		}
 
 
+		public static void WriteMatrix(BinaryWriter bw, Matrix mat)
+		{
+			bw.Write(mat.M11);
+			bw.Write(mat.M12);
+			bw.Write(mat.M13);
+			bw.Write(mat.M14);
+			bw.Write(mat.M21);
+			bw.Write(mat.M22);
+			bw.Write(mat.M23);
+			bw.Write(mat.M24);
+			bw.Write(mat.M31);
+			bw.Write(mat.M32);
+			bw.Write(mat.M33);
+			bw.Write(mat.M34);
+			bw.Write(mat.M41);
+			bw.Write(mat.M42);
+			bw.Write(mat.M43);
+			bw.Write(mat.M44);
+		}
+
+
+		public static Matrix ReadMatrix(BinaryReader br)
+		{
+			Matrix	ret	=Matrix.Identity;
+
+			ret.M11	=br.ReadSingle();
+			ret.M12	=br.ReadSingle();
+			ret.M13	=br.ReadSingle();
+			ret.M14	=br.ReadSingle();
+			ret.M21	=br.ReadSingle();
+			ret.M22	=br.ReadSingle();
+			ret.M23	=br.ReadSingle();
+			ret.M24	=br.ReadSingle();
+			ret.M31	=br.ReadSingle();
+			ret.M32	=br.ReadSingle();
+			ret.M33	=br.ReadSingle();
+			ret.M34	=br.ReadSingle();
+			ret.M41	=br.ReadSingle();
+			ret.M42	=br.ReadSingle();
+			ret.M43	=br.ReadSingle();
+			ret.M44	=br.ReadSingle();
+
+			return	ret;
+		}
+
+
 		public static void WriteVector2(BinaryWriter bw, Vector2 vec)
 		{
 			bw.Write(vec.X);

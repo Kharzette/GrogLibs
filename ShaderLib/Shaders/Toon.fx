@@ -135,9 +135,9 @@ VPosTex0Tex1Single ToonSkinTex0VS(VPosNormBoneTex0 input)
 }
 
 
-VPosTex0Tex1Cube ToonSkinTex0NMapVS(VPosNormBoneTex0 input)
+VPosTex0Tex13 ToonSkinTex0NMapVS(VPosNormBoneTex0 input)
 {
-	VPosTex0Tex1Cube	output;
+	VPosTex0Tex13	output;
 
 	float4	vertPos	=mul(input.Position, mBindPose);
 
@@ -202,7 +202,7 @@ float4 ToonPS(VTex0Tex1Single input) : COLOR0
 	return	color;
 }
 
-float4 ToonNormalMapPS(VTex0Tex1Cube input) : COLOR0
+float4 ToonNormalMapPS(VTex0Tex13 input) : COLOR0
 {
 	float4	color	
 		=mbTextureEnabled ? tex2D(TexSampler0, input.TexCoord0) : mMatColor;

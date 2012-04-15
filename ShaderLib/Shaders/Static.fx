@@ -10,6 +10,7 @@ float	mGlow;			//glow fakery
 float4	mSolidColour;	//for non textured
 float4	mSkyGradient0;	//horizon colour
 float4	mSkyGradient1;	//peak colour
+float	mFarClip;
 
 
 #include "Types.fxh"
@@ -171,21 +172,17 @@ VPosTex0Single AvatarShadowVS(VPos input)
 	return	output;
 }
 
-VPosCol0 NormalDepthVS(VPosNormTex0 input)
+VPosTex04 NormalDepthVS(VPosNormTex0 input)
 {
-	VPosCol0	output;
+	VPosTex04	output;
 	
-	//generate the world-view-proj matrix
-	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
-	
-	//transform the input position to the output
-	output.Position	=mul(input.Position, wvp);
-	
-	//lighting calculation
-	float3 worldNormal	=mul(input.Normal, mWorld);
-	
-	output.Color.rgb	=(worldNormal + 1) / 2;	
-	output.Color.a		=output.Position.z / output.Position.w;
+	float4x4	worldView	=mul(mWorld, mView);
+	float4x4	wvp			=mul(worldView, mProjection);
+
+	//surface normals in view space
+	output.Position			=mul(input.Position, wvp);
+	output.TexCoord0.xyz	=mul(input.Normal, worldView);
+	output.TexCoord0.w		=output.Position.z / mFarClip;
 	
 	return	output;
 }
@@ -304,16 +301,28 @@ float4 NormalMapSolidPS(VNormTanBiTanTex0 input) : COLOR
 	return	texLitColor;
 }
 
-//just return the color
-float4 NormalDepthPS(float4 color : COLOR0) : COLOR0
+//return entire component (xyz == world normal, w == depth)
+float4 NormalDepthPS(float4 normDepth : TEXCOORD0) : COLOR0
 {
-	return	color;
+	return	normDepth;
+}
+
+//return the normal component
+float4 NormalPS(float4 normDepth : TEXCOORD0) : COLOR0
+{
+	return	float4(normDepth.xyz, 0);
+}
+
+//return the depth component
+float4 DepthPS(float4 normDepth : TEXCOORD0) : COLOR0
+{
+	return	float4(normDepth.w, 0, 0, 0);
 }
 
 //write world coord Y to single rendertarget
 float4 WorldYPS(VTex04 input) : COLOR
 {
-	return	float4(input.TexCoord0.y, input.TexCoord0.y, input.TexCoord0.y, input.TexCoord0.y);
+	return	float4(input.TexCoord0.y, 0, 0, 0);
 }
 
 //gradient sky
@@ -409,6 +418,24 @@ technique NormalDepth
 	{
 		VertexShader	=compile vs_2_0 NormalDepthVS();
 		PixelShader		=compile ps_2_0 NormalDepthPS();
+	}
+}
+
+technique DepthOnly
+{
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 NormalDepthVS();
+		PixelShader		=compile ps_2_0 DepthPS();
+	}
+}
+
+technique NormalOnly
+{
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 NormalDepthVS();
+		PixelShader		=compile ps_2_0 NormalPS();
 	}
 }
 

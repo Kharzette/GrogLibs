@@ -49,6 +49,9 @@ namespace MeshLib
 		protected bool				mbVisible;
 		protected BoundingBox		mBoxBound;
 		protected BoundingSphere	mSphereBound;
+		protected Matrix			mTransform;
+
+		protected VertexBufferBinding	[]mVBinding	=new VertexBufferBinding[2];
 
 		public string Name
 		{
@@ -119,6 +122,12 @@ namespace MeshLib
 		public void SetTypeIndex(int idx)
 		{
 			mTypeIndex	=idx;
+		}
+
+
+		public void SetTransform(Matrix mat)
+		{
+			mTransform	=mat;
 		}
 
 
@@ -217,7 +226,8 @@ namespace MeshLib
 		public virtual void Write(BinaryWriter bw) { }
 		public virtual void Read(BinaryReader br, GraphicsDevice gd, bool bEditor) { }
 		public virtual void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib, Matrix world) { }
-		public virtual void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib, DynamicVertexBuffer instBuf, int offset, int numInstances) { }
+		public virtual void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib, int numInstances) { }
+		public virtual void SetSecondVertexBufferBinding(VertexBufferBinding v2) { }
 
 
 		public float? RayIntersect(Vector3 start, Vector3 end, bool bBox)

@@ -24,7 +24,7 @@ namespace TerrainLib
 	//handles the tiling and other such
 	public class Terrain
 	{
-		const int	CHUNKDIM			=64;		//modify this to affect heightmap data size
+		const int	CHUNKDIM			=128;		//modify this to affect heightmap data size
 
 		//height maps
 		List<HeightMap>	mMaps;
@@ -110,9 +110,9 @@ namespace TerrainLib
 			h	=1 << (pow - 1);
 
 			//this seems to be the best for quick loadery
-			ThreadPool.SetMaxThreads(4, 4);
+//			ThreadPool.SetMaxThreads(4, 4);
 
-			mThreadCounter	=256;
+			mThreadCounter	=(h / CHUNKDIM) * (w / CHUNKDIM);
 
 			for(int chunkY=0;chunkY < (h / CHUNKDIM);chunkY++)
 			{
@@ -133,6 +133,8 @@ namespace TerrainLib
 			{
 				Thread.Sleep(2);
 			}
+
+//			ThreadPool.SetMaxThreads(8, 8);
 		}
 
 
@@ -460,7 +462,8 @@ namespace TerrainLib
 			Matrix pupNearViewProj, Matrix pupFarViewProj, Matrix avaLightViewProj,
 			RenderTarget2D pupNearShad, RenderTarget2D pupFarShad, RenderTarget2D avaShad)
 		{
-			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLightingXSamp"];
+//			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLightingXSamp"];
+			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLighting"];
 
 			if(pupNearShad != null)
 			{

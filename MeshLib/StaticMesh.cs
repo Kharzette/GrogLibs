@@ -30,6 +30,9 @@ namespace MeshLib
 			bw.Write(mMaterialName);
 			bw.Write(mTypeIndex);
 			bw.Write(mbVisible);
+			
+			//transform
+			UtilityLib.FileUtil.WriteMatrix(bw, mTransform);
 
 			//box bound
 			UtilityLib.FileUtil.WriteVector3(bw, mBoxBound.Min);
@@ -66,6 +69,8 @@ namespace MeshLib
 			mTypeIndex		=br.ReadInt32();
 			mbVisible		=br.ReadBoolean();
 
+			mTransform	=UtilityLib.FileUtil.ReadMatrix(br);
+
 			mBoxBound.Min		=UtilityLib.FileUtil.ReadVector3(br);
 			mBoxBound.Max		=UtilityLib.FileUtil.ReadVector3(br);
 			mSphereBound.Center	=UtilityLib.FileUtil.ReadVector3(br);
@@ -92,6 +97,8 @@ namespace MeshLib
 			mIndexs.SetData<ushort>(idxs);
 
 			UtilityLib.FileUtil.ReadVertexDeclaration(br, out mVD);
+
+			mVBinding[0]	=new VertexBufferBinding(mVerts);
 		}
 
 
@@ -120,7 +127,7 @@ namespace MeshLib
 			matLib.ApplyParameters(mMaterialName);
 			mat.ApplyRenderStates(g);
 
-			fx.Parameters["mWorld"].SetValue(world);
+			fx.Parameters["mWorld"].SetValue(mTransform * world);
 
 			fx.CurrentTechnique.Passes[0].Apply();
 
@@ -132,10 +139,14 @@ namespace MeshLib
 		}
 
 
+		public override void SetSecondVertexBufferBinding(VertexBufferBinding v2)
+		{
+			mVBinding[1]	=v2;
+		}
+
+
 		public override void Draw(GraphicsDevice g,
-			MaterialLib.MaterialLib matLib,
-			DynamicVertexBuffer instBuf,
-			int offset, int numInstances)
+			MaterialLib.MaterialLib matLib, int numInstances)
 		{
 			if(!mbVisible)
 			{
@@ -154,8 +165,7 @@ namespace MeshLib
 				return;
 			}
 
-			g.SetVertexBuffers(new VertexBufferBinding(mVerts, 0, 0),
-				new	VertexBufferBinding(instBuf, offset, 1));
+			g.SetVertexBuffers(mVBinding);
 
 			g.Indices	=mIndexs;
 

@@ -92,7 +92,7 @@ namespace SharedForms
 			{
 				TextureElement	te	=new TextureElement();
 				te.Read(br);
-				te.LoadAsset(mCM, null, mCM.RootDirectory);
+				te.LoadAsset(mCM, null);
 
 				mTextures.Add(te);
 			}

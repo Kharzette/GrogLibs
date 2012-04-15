@@ -89,6 +89,29 @@ namespace UtilityLib
 			}
 		}
 
+		public Vector2 InvViewPort
+		{
+			get
+			{
+				return	Vector2.One / (Vector2.UnitX * mWidth + Vector2.UnitY * mHeight);
+			}
+		}
+
+		public float NearClip
+		{
+			get
+			{
+				return	mNearClip;
+			}
+		}
+
+		public float FarClip
+		{
+			get
+			{
+				return	mFarClip;
+			}
+		}
 
 		public void Update(Vector3 camPos, float pitch, float yaw, float roll)
 		{

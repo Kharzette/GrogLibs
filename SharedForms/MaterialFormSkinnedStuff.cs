@@ -67,6 +67,8 @@ namespace SharedForms
 
 			//vertex type is longer now, make columns fit
 			MeshPartGrid.AutoResizeColumns();
+
+			MeshPartGrid.Refresh();
 		}
 
 

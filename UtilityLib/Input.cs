@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using System.Diagnostics;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Input;
@@ -21,6 +21,7 @@ namespace UtilityLib
 			public SignedInGamer		mGamer;
 			public AvatarDescription	mAvatarDesc;
 			public AvatarRenderer		mAvatarRenderer;
+			public PlayerIndex			mIndex;
 
 
 			//looks for a press and release
@@ -48,18 +49,70 @@ namespace UtilityLib
 				}
 				return	false;
 			}
+
+			public bool AnyButtonHit(List<Buttons> buttons)
+			{
+				foreach(Buttons b in buttons)
+				{
+					if(WasButtonPressed(b))
+					{
+						return	true;
+					}
+				}
+				return	false;
+			}
+
+			//buttons have been responded to
+			//so set the new / old equal so no
+			//more of the same event goes off
+			public void ClearInputs()
+			{
+				mLastGPS	=mGPS;
+			}
 		}
+
+		bool	mbGamerServicesAdded;
 
 		PlayerInput	mPlayer1	=new PlayerInput();
 		PlayerInput	mPlayer2	=new PlayerInput();
 		PlayerInput	mPlayer3	=new PlayerInput();
 		PlayerInput	mPlayer4	=new PlayerInput();
 
+		//enum.getvalues not supported on xbox
+		List<Buttons>	mButtons	=new List<Buttons>();
+
 
 		public Input()
 		{
 			SignedInGamer.SignedIn	+=OnSignedIn;
 			SignedInGamer.SignedOut	+=OnSignedOut;
+
+			//no enum.getvalues on xbox
+			mButtons.Add(Buttons.A);
+			mButtons.Add(Buttons.B);
+			mButtons.Add(Buttons.Back);
+			mButtons.Add(Buttons.BigButton);
+			mButtons.Add(Buttons.DPadDown);
+			mButtons.Add(Buttons.DPadLeft);
+			mButtons.Add(Buttons.DPadRight);
+			mButtons.Add(Buttons.DPadUp);
+			mButtons.Add(Buttons.LeftShoulder);
+			mButtons.Add(Buttons.LeftStick);
+			mButtons.Add(Buttons.LeftThumbstickDown);
+			mButtons.Add(Buttons.LeftThumbstickLeft);
+			mButtons.Add(Buttons.LeftThumbstickRight);
+			mButtons.Add(Buttons.LeftThumbstickUp);
+			mButtons.Add(Buttons.LeftTrigger);
+			mButtons.Add(Buttons.RightShoulder);
+			mButtons.Add(Buttons.RightStick);
+			mButtons.Add(Buttons.RightThumbstickDown);
+			mButtons.Add(Buttons.RightThumbstickLeft);
+			mButtons.Add(Buttons.RightThumbstickRight);
+			mButtons.Add(Buttons.RightThumbstickUp);
+			mButtons.Add(Buttons.RightTrigger);
+			mButtons.Add(Buttons.Start);
+			mButtons.Add(Buttons.X);
+			mButtons.Add(Buttons.Y);
 		}
 
 
@@ -113,6 +166,67 @@ namespace UtilityLib
 				}
 				return	null;
 			}
+		}
+
+
+		public void SetGamerServicesAdded(bool bAdded)
+		{
+			mbGamerServicesAdded	=bAdded;
+		}
+
+
+		public void ClearInputs()
+		{
+			if(mPlayer1 != null)
+			{
+				mPlayer1.ClearInputs();
+			}
+			if(mPlayer2 != null)
+			{
+				mPlayer2.ClearInputs();
+			}
+			if(mPlayer3 != null)
+			{
+				mPlayer3.ClearInputs();
+			}
+			if(mPlayer4 != null)
+			{
+				mPlayer4.ClearInputs();
+			}
+		}
+
+
+		public bool AnyButtonHit()
+		{
+			if(mPlayer1 != null)
+			{
+				if(mPlayer1.AnyButtonHit(mButtons))
+				{
+					return	true;
+				}
+			}
+			if(mPlayer2 != null)
+			{
+				if(mPlayer2.AnyButtonHit(mButtons))
+				{
+					return	true;
+				}
+			}
+			if(mPlayer3 != null)
+			{
+				if(mPlayer3.AnyButtonHit(mButtons))
+				{
+					return	true;
+				}
+			}
+			if(mPlayer4 != null)
+			{
+				if(mPlayer4.AnyButtonHit(mButtons))
+				{
+					return	true;
+				}
+			}
+			return	false;
 		}
 
 
@@ -190,6 +304,12 @@ namespace UtilityLib
 
 			if(ad.IsValid)
 			{
+				//uncomment for an avatar description dump
+				//for use with AvatarDescMaker tool
+//				for(int i=0;i < ad.Description.Length;i++)
+//				{
+//					Debug.WriteLine("" + ad.Description[i]);
+//				}
 				ar	=new AvatarRenderer(ad);
 			}
 			else
@@ -268,6 +388,7 @@ namespace UtilityLib
 				{
 					mPlayer1.mbSigningIn	=true;
 					mPlayer1.mGamer			=siea.Gamer;
+					mPlayer1.mIndex			=PlayerIndex.One;
 				}
 				AvatarDescription.BeginGetFromGamer(siea.Gamer, LoadAvatar,
 					new Nullable<PlayerIndex>(siea.Gamer.PlayerIndex));
@@ -278,6 +399,7 @@ namespace UtilityLib
 				{
 					mPlayer2.mbSigningIn	=true;
 					mPlayer2.mGamer			=siea.Gamer;
+					mPlayer2.mIndex			=PlayerIndex.Two;
 				}
 				AvatarDescription.BeginGetFromGamer(siea.Gamer, LoadAvatar,
 					new Nullable<PlayerIndex>(siea.Gamer.PlayerIndex));
@@ -288,6 +410,7 @@ namespace UtilityLib
 				{
 					mPlayer3.mbSigningIn	=true;
 					mPlayer3.mGamer			=siea.Gamer;
+					mPlayer3.mIndex			=PlayerIndex.Three;
 				}
 				AvatarDescription.BeginGetFromGamer(siea.Gamer, LoadAvatar,
 					new Nullable<PlayerIndex>(siea.Gamer.PlayerIndex));
@@ -298,6 +421,7 @@ namespace UtilityLib
 				{
 					mPlayer4.mbSigningIn	=true;
 					mPlayer4.mGamer			=siea.Gamer;
+					mPlayer4.mIndex			=PlayerIndex.Four;
 				}
 				AvatarDescription.BeginGetFromGamer(siea.Gamer, LoadAvatar,
 					new Nullable<PlayerIndex>(siea.Gamer.PlayerIndex));
@@ -309,7 +433,7 @@ namespace UtilityLib
 		{
 			lock(pi)
 			{
-				if(!pi.mbActive)
+				if(!pi.mbActive && mbGamerServicesAdded)
 				{
 					pi.mbActive	=true;
 
@@ -351,6 +475,7 @@ namespace UtilityLib
 			pi.mAvatarDesc		=null;
 			pi.mAvatarRenderer	=null;
 			pi.mbSigningIn		=false;
+			pi.mGamer			=null;
 		}
 
 

@@ -131,6 +131,8 @@ namespace TerrainLib
 			mCloudFX.Parameters["mView"].SetValue(cam);
 			mCloudFX.Parameters["mDepthTex"].SetValue(depthPass);
 
+			mCloudFX.CurrentTechnique	=mCloudFX.Techniques["Cloud"];
+
 			mCloudFX.CurrentTechnique.Passes[0].Apply();
 
 			gd.DrawIndexedPrimitives(PrimitiveType.TriangleList,

@@ -766,6 +766,16 @@ namespace MaterialLib
 		}
 
 
+		public void SetParameterOnAll(string paramName, Vector4 vec)
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				string	val	="" + vec.X + " " + vec.Y + " " + vec.Z + " " + vec.W;
+				mat.Value.SetParameter(paramName, val);
+			}
+		}
+
+
 		public void SetParameterOnAll(string paramName, Vector3 vec)
 		{
 			foreach(KeyValuePair<string, Material> mat in mMats)

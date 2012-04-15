@@ -169,6 +169,12 @@ namespace SharedForms
 		}
 
 
+		public void ApplyMat()
+		{
+			OnApplyMaterial(null, null);
+		}
+
+
 		void OnTextureListOk(object sender, EventArgs ea)
 		{
 			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
