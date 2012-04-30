@@ -73,6 +73,14 @@ namespace UtilityLib
 
 		bool	mbGamerServicesAdded;
 
+		//This bool detects when a local account has been loaded.
+		//It is set once and remains true while the app is live.
+		//This is to detect and attempt to work around the problem
+		//where the framework hands bogus avatar data back after
+		//local accounts try to sign in after one has already been
+		//signed in.  For now going to use random if this happens.
+		bool	mbLocalAvatarLoaded;
+
 		PlayerInput	mPlayer1	=new PlayerInput();
 		PlayerInput	mPlayer2	=new PlayerInput();
 		PlayerInput	mPlayer3	=new PlayerInput();
@@ -230,6 +238,13 @@ namespace UtilityLib
 		}
 
 
+		public void RefreshAvatar(PlayerInput pi)
+		{
+			AvatarDescription.BeginGetFromGamer(pi.mGamer, LoadAvatar,
+				new Nullable<PlayerIndex>(pi.mGamer.PlayerIndex));
+		}
+
+
 		public void Update()
 		{
 			GamePadState	gps	=GamePad.GetState(PlayerIndex.One);
@@ -302,14 +317,29 @@ namespace UtilityLib
 				return;
 			}
 
-			if(ad.IsValid)
+			PlayerInput	pinp	=null;
+			if(pi.Value == PlayerIndex.One)
+			{
+				pinp	=mPlayer1;
+			}
+			else if(pi.Value == PlayerIndex.Two)
+			{
+				pinp	=mPlayer2;
+			}
+			else if(pi.Value == PlayerIndex.Three)
+			{
+				pinp	=mPlayer3;
+			}
+			else if(pi.Value == PlayerIndex.Four)
+			{
+				pinp	=mPlayer4;
+			}
+
+			if(ad.IsValid && !mbLocalAvatarLoaded)
 			{
 				//uncomment for an avatar description dump
 				//for use with AvatarDescMaker tool
-//				for(int i=0;i < ad.Description.Length;i++)
-//				{
-//					Debug.WriteLine("" + ad.Description[i]);
-//				}
+				//DumpAvatarToDebug(pinp, ad);
 				ar	=new AvatarRenderer(ad);
 			}
 			else
@@ -318,29 +348,29 @@ namespace UtilityLib
 				ar	=new AvatarRenderer(ad);
 			}
 
+			if(!pinp.mGamer.IsSignedInToLive)
+			{
+				mbLocalAvatarLoaded	=true;
+			}
+
+			pinp.mAvatarDesc		=ad;
+			pinp.mAvatarRenderer	=ar;
+			
 			if(pi.Value == PlayerIndex.One)
 			{
-				mPlayer1.mAvatarDesc		=ad;
-				mPlayer1.mAvatarRenderer	=ar;
-				ad.Changed					+=OnPlayer1AvatarChanged;
+				ad.Changed	+=OnPlayer1AvatarChanged;
 			}
 			else if(pi.Value == PlayerIndex.Two)
 			{
-				mPlayer2.mAvatarDesc		=ad;
-				mPlayer2.mAvatarRenderer	=ar;
-				ad.Changed					+=OnPlayer2AvatarChanged;
+				ad.Changed	+=OnPlayer2AvatarChanged;
 			}
 			else if(pi.Value == PlayerIndex.Three)
 			{
-				mPlayer3.mAvatarDesc		=ad;
-				mPlayer3.mAvatarRenderer	=ar;
-				ad.Changed					+=OnPlayer3AvatarChanged;
+				ad.Changed	+=OnPlayer3AvatarChanged;
 			}
 			else if(pi.Value == PlayerIndex.Four)
 			{
-				mPlayer4.mAvatarDesc		=ad;
-				mPlayer4.mAvatarRenderer	=ar;
-				ad.Changed					+=OnPlayer4AvatarChanged;
+				ad.Changed	+=OnPlayer4AvatarChanged;
 			}
 		}
 
@@ -370,12 +400,22 @@ namespace UtilityLib
 			{
 				FreePlayerInput(mPlayer4);
 			}
+
+			GC.Collect();
 		}
 
 
 		void OnSignedIn(object sender, EventArgs ea)
 		{
 			SignedInEventArgs	siea	=ea as SignedInEventArgs;
+
+			Debug.WriteLine(siea.Gamer.DisplayName);
+			Debug.WriteLine(siea.Gamer.Gamertag);
+			Debug.WriteLine(siea.Gamer.IsDisposed);
+			Debug.WriteLine(siea.Gamer.IsGuest);
+			Debug.WriteLine(siea.Gamer.IsSignedInToLive);
+			Debug.WriteLine(siea.Gamer.PlayerIndex);
+			Debug.WriteLine(siea.Gamer.Tag);
 
 			if(siea == null)
 			{
@@ -425,6 +465,16 @@ namespace UtilityLib
 				}
 				AvatarDescription.BeginGetFromGamer(siea.Gamer, LoadAvatar,
 					new Nullable<PlayerIndex>(siea.Gamer.PlayerIndex));
+			}
+		}
+
+
+		void DumpAvatarToDebug(PlayerInput pi, AvatarDescription ad)
+		{
+			Debug.WriteLine("Avatar description for " + pi.mGamer.Gamertag);
+			for(int i=0;i < ad.Description.Length;i++)
+			{
+				Debug.WriteLine("" + ad.Description[i]);
 			}
 		}
 
