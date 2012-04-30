@@ -107,19 +107,7 @@
     <Compile Include="CollisionForm.designer.cs">
       <DependentUpon>CollisionForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="CurrentEntity.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CurrentEntity.Designer.cs">
-      <DependentUpon>CurrentEntity.cs</DependentUpon>
-    </Compile>
     <Compile Include="DataGridViewColorColumn.cs" />
-    <Compile Include="EntityList.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="EntityList.Designer.cs">
-      <DependentUpon>EntityList.cs</DependentUpon>
-    </Compile>
     <Compile Include="FormExtensions.cs" />
     <Compile Include="GridModel.cs" />
     <Compile Include="MaterialForm.cs">
@@ -190,12 +178,6 @@
     <EmbeddedResource Include="CollisionForm.resx">
       <DependentUpon>CollisionForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="CurrentEntity.resx">
-      <DependentUpon>CurrentEntity.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="EntityList.resx">
-      <DependentUpon>EntityList.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="MaterialForm.resx">
       <DependentUpon>MaterialForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -225,10 +207,6 @@
     <ProjectReference Include="..\BSPCore\BSPCore32.csproj">
       <Project>{62BDDCD2-0FDD-4FD4-B2B8-B9ED59B4D98C}</Project>
       <Name>BSPCore32</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\EntityLib\EntityLib.csproj">
-      <Project>{35F3FD2E-0DFE-49D9-B143-1DD8B5F3383D}</Project>
-      <Name>EntityLib</Name>
     </ProjectReference>
     <ProjectReference Include="..\MaterialLib\MaterialLib.csproj">
       <Project>{E6EAA6B0-1140-4BE3-AEFD-0DF83A7A705B}</Project>

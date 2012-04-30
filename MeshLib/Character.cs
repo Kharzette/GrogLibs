@@ -31,6 +31,7 @@ namespace MeshLib
 		{
 			mMatLib		=ml;
 			mAnimLib	=al;
+			mTransform	=Matrix.Identity;
 		}
 
 

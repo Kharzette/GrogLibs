@@ -508,7 +508,7 @@ namespace BSPCore
 					//the bright parts of the texture emit light and glow
 				}
 				//can probably do without these cases (TODO: test)
-				else if(tok.StartsWith("sky") || tok.StartsWith("SKY"))
+				else if(tok.StartsWith("sky") || tok.StartsWith("SKY") || tok.StartsWith("e1u1/sky"))
 				{
 					texName		=tok;
 					mFlags		|=SURF_SKY;

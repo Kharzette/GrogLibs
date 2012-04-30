@@ -394,6 +394,52 @@ namespace BSPZone
 			}
 			return	positions;
 		}
+
+
+		public ZoneEntity GetNearestLightInLOS(Vector3 pos)
+		{
+			List<ZoneEntity>	lightsInVis	=new List<ZoneEntity>();
+
+			foreach(ZoneEntity ent in mZoneEntities)
+			{
+				if(ent.IsLight())
+				{
+					Vector3	lightPos;
+					if(ent.GetOrigin(out lightPos))
+					{
+						if(IsVisibleFrom(pos, lightPos))
+						{
+							Vector3	intersection	=Vector3.Zero;
+							bool	bHitLeaf		=false;
+							Int32	leafHit			=0;
+							Int32	nodeHit			=0;
+							if(!RayIntersect(pos, lightPos, 0, ref intersection,
+								ref bHitLeaf, ref leafHit, ref nodeHit))
+							{
+								lightsInVis.Add(ent);
+							}
+						}
+					}
+				}
+			}
+
+			float		minDist	=float.MaxValue;
+			ZoneEntity	ret		=null;
+			foreach(ZoneEntity ent in lightsInVis)
+			{
+				Vector3	lightPos;
+				if(ent.GetOrigin(out lightPos))
+				{
+					float	dist	=Vector3.DistanceSquared(lightPos, pos);
+					if(dist < minDist)
+					{
+						minDist	=dist;
+						ret		=ent;
+					}
+				}
+			}
+			return	ret;
+		}
 		#endregion
 
 

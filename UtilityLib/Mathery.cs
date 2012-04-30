@@ -438,7 +438,10 @@ namespace UtilityLib
 				return	false;
 			}
 #else
-			return	float.TryParse(str, out val);
+//			return	float.TryParse(str, out val);
+			return	float.TryParse(str,
+				System.Globalization.NumberStyles.Float,
+				System.Globalization.CultureInfo.InvariantCulture, out val);
 #endif
 		}
 

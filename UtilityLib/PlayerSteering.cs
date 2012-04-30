@@ -12,7 +12,7 @@ namespace UtilityLib
 	{
 		public enum SteeringMethod
 		{
-			None, TwinStick, Fly, ThirdPerson, FirstPerson
+			None, TwinStick, Fly, ThirdPerson, FirstPerson, FirstPersonMMO
 		}
 
 		SteeringMethod	mMethod;
@@ -91,7 +91,8 @@ namespace UtilityLib
 				return;
 			}
 
-			if(mMethod == SteeringMethod.FirstPerson)
+			if(mMethod == SteeringMethod.FirstPerson
+				|| mMethod == SteeringMethod.FirstPersonMMO)
 			{
 				UpdateGroundMovement(msDelta, gc, ks, ms, gs);
 			}
@@ -245,7 +246,8 @@ namespace UtilityLib
 				moveVec	+=vin;
 			}
 
-			if(ms.RightButton == ButtonState.Pressed)
+			if((ms.RightButton == ButtonState.Pressed && Method == SteeringMethod.FirstPersonMMO)
+				|| Method != SteeringMethod.FirstPersonMMO)
 			{
 				Vector2	delta	=Vector2.Zero;
 				delta.X	=mOriginalMS.X - ms.X;

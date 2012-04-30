@@ -630,6 +630,15 @@ technique TriSkinTex0
 	}
 }
 
+technique TriSkinSolidSpecPhys
+{     
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 TriSkinTex0VS();
+		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();
+	}
+}
+
 technique TriSkinDecalTex0
 {     
 	pass P0

@@ -491,7 +491,9 @@ namespace MaterialLib
 				{
 					size	*=0.5f;
 				}
-				mMats[matName].SetParameter("mTexSize", "" + size.X + " " + size.Y);
+				mMats[matName].SetParameter("mTexSize", "" +
+					size.X.ToString(System.Globalization.CultureInfo.InvariantCulture) + " "
+					+ size.Y.ToString(System.Globalization.CultureInfo.InvariantCulture));
 			}
 		}
 
@@ -770,7 +772,14 @@ namespace MaterialLib
 		{
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
-				string	val	="" + vec.X + " " + vec.Y + " " + vec.Z + " " + vec.W;
+				string	val	="" +
+					vec.X.ToString(System.Globalization.CultureInfo.InvariantCulture)
+					+ " " +
+					vec.Y.ToString(System.Globalization.CultureInfo.InvariantCulture)
+					+ " " +
+					vec.Z.ToString(System.Globalization.CultureInfo.InvariantCulture)
+					+ " " +
+					vec.W.ToString(System.Globalization.CultureInfo.InvariantCulture);
 				mat.Value.SetParameter(paramName, val);
 			}
 		}
@@ -780,7 +789,12 @@ namespace MaterialLib
 		{
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
-				string	val	="" + vec.X + " " + vec.Y + " " + vec.Z;
+				string	val	="" +
+					vec.X.ToString(System.Globalization.CultureInfo.InvariantCulture)
+					+ " " +
+					vec.Y.ToString(System.Globalization.CultureInfo.InvariantCulture)
+					+ " " +
+					vec.Z.ToString(System.Globalization.CultureInfo.InvariantCulture);
 				mat.Value.SetParameter(paramName, val);
 			}
 		}
@@ -790,7 +804,7 @@ namespace MaterialLib
 		{
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
-				string	sval	="" + val;
+				string	sval	="" + val.ToString(System.Globalization.CultureInfo.InvariantCulture);
 				mat.Value.SetParameter(paramName, sval);
 			}
 		}
