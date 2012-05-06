@@ -14,7 +14,7 @@ namespace UtilityLib
 		public class PlayerInput
 		{
 			public bool					mbActive;
-			public bool					mbSigningIn;
+			public bool					mbSignedIn;
 			public GamePadState			mGPS, mLastGPS;
 			public KeyboardState		mKBS, mLastKBS;
 			public MouseState			mMS, mLastMS;
@@ -72,14 +72,6 @@ namespace UtilityLib
 		}
 
 		bool	mbGamerServicesAdded;
-
-		//This bool detects when a local account has been loaded.
-		//It is set once and remains true while the app is live.
-		//This is to detect and attempt to work around the problem
-		//where the framework hands bogus avatar data back after
-		//local accounts try to sign in after one has already been
-		//signed in.  For now going to use random if this happens.
-		bool	mbLocalAvatarLoaded;
 
 		PlayerInput	mPlayer1	=new PlayerInput();
 		PlayerInput	mPlayer2	=new PlayerInput();
@@ -335,7 +327,7 @@ namespace UtilityLib
 				pinp	=mPlayer4;
 			}
 
-			if(ad.IsValid && !mbLocalAvatarLoaded)
+			if(ad.IsValid)
 			{
 				//uncomment for an avatar description dump
 				//for use with AvatarDescMaker tool
@@ -346,11 +338,6 @@ namespace UtilityLib
 			{
 				ad	=AvatarDescription.CreateRandom();
 				ar	=new AvatarRenderer(ad);
-			}
-
-			if(!pinp.mGamer.IsSignedInToLive)
-			{
-				mbLocalAvatarLoaded	=true;
 			}
 
 			pinp.mAvatarDesc		=ad;
@@ -426,9 +413,9 @@ namespace UtilityLib
 			{
 				lock(mPlayer1)
 				{
-					mPlayer1.mbSigningIn	=true;
-					mPlayer1.mGamer			=siea.Gamer;
-					mPlayer1.mIndex			=PlayerIndex.One;
+					mPlayer1.mbSignedIn	=true;
+					mPlayer1.mGamer		=siea.Gamer;
+					mPlayer1.mIndex		=PlayerIndex.One;
 				}
 				AvatarDescription.BeginGetFromGamer(siea.Gamer, LoadAvatar,
 					new Nullable<PlayerIndex>(siea.Gamer.PlayerIndex));
@@ -437,9 +424,9 @@ namespace UtilityLib
 			{
 				lock(mPlayer2)
 				{
-					mPlayer2.mbSigningIn	=true;
-					mPlayer2.mGamer			=siea.Gamer;
-					mPlayer2.mIndex			=PlayerIndex.Two;
+					mPlayer2.mbSignedIn	=true;
+					mPlayer2.mGamer		=siea.Gamer;
+					mPlayer2.mIndex		=PlayerIndex.Two;
 				}
 				AvatarDescription.BeginGetFromGamer(siea.Gamer, LoadAvatar,
 					new Nullable<PlayerIndex>(siea.Gamer.PlayerIndex));
@@ -448,9 +435,9 @@ namespace UtilityLib
 			{
 				lock(mPlayer3)
 				{
-					mPlayer3.mbSigningIn	=true;
-					mPlayer3.mGamer			=siea.Gamer;
-					mPlayer3.mIndex			=PlayerIndex.Three;
+					mPlayer3.mbSignedIn	=true;
+					mPlayer3.mGamer		=siea.Gamer;
+					mPlayer3.mIndex		=PlayerIndex.Three;
 				}
 				AvatarDescription.BeginGetFromGamer(siea.Gamer, LoadAvatar,
 					new Nullable<PlayerIndex>(siea.Gamer.PlayerIndex));
@@ -459,9 +446,9 @@ namespace UtilityLib
 			{
 				lock(mPlayer4)
 				{
-					mPlayer4.mbSigningIn	=true;
-					mPlayer4.mGamer			=siea.Gamer;
-					mPlayer4.mIndex			=PlayerIndex.Four;
+					mPlayer4.mbSignedIn	=true;
+					mPlayer4.mGamer		=siea.Gamer;
+					mPlayer4.mIndex		=PlayerIndex.Four;
 				}
 				AvatarDescription.BeginGetFromGamer(siea.Gamer, LoadAvatar,
 					new Nullable<PlayerIndex>(siea.Gamer.PlayerIndex));
@@ -489,7 +476,7 @@ namespace UtilityLib
 
 					//if the player is not signed in, they might
 					//not have an avatar description
-					if(!pi.mbSigningIn)
+					if(!pi.mbSignedIn)
 					{
 						pi.mAvatarDesc		=AvatarDescription.CreateRandom();
 						pi.mAvatarRenderer	=new AvatarRenderer(pi.mAvatarDesc);
@@ -524,7 +511,7 @@ namespace UtilityLib
 
 			pi.mAvatarDesc		=null;
 			pi.mAvatarRenderer	=null;
-			pi.mbSigningIn		=false;
+			pi.mbSignedIn		=false;
 			pi.mGamer			=null;
 		}
 

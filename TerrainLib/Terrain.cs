@@ -30,13 +30,7 @@ namespace TerrainLib
 		List<HeightMap>	mMaps;
 
 		//tex & shading, there is no 3
-		Texture2D			mTEXTerrain0;
-		Texture2D			mTEXTerrain1;
-		Texture2D			mTEXTerrain2;
-		Texture2D			mTEXTerrain4;
-		Texture2D			mTEXTerrain5;
-		Texture2D			mTEXTerrain6;
-		Texture2D			mTEXTerrain7;
+		Texture2D			mTEXAtlas;
 		Effect				mFXTerrain;
 		VertexDeclaration	mVDTerrain;
 
@@ -49,23 +43,9 @@ namespace TerrainLib
 
 
 		//set up textures and such
-		public Terrain(string			tex0FileName,
-					   string			tex1FileName,
-					   string			tex2FileName,
-					   string			tex4FileName,
-					   string			tex5FileName,
-					   string			tex6FileName,
-					   string			tex7FileName,
-					   GraphicsDevice	gd,
-					   ContentManager	cm)
+		public Terrain(Texture2D texAtlas, ContentManager cm)
 		{
-			mTEXTerrain0	=cm.Load<Texture2D>(tex0FileName);
-			mTEXTerrain1	=cm.Load<Texture2D>(tex1FileName);
-			mTEXTerrain2	=cm.Load<Texture2D>(tex2FileName);
-			mTEXTerrain4	=cm.Load<Texture2D>(tex4FileName);
-			mTEXTerrain5	=cm.Load<Texture2D>(tex5FileName);
-			mTEXTerrain6	=cm.Load<Texture2D>(tex6FileName);
-			mTEXTerrain7	=cm.Load<Texture2D>(tex7FileName);
+			mTEXAtlas	=texAtlas;
 
 			InitVertexDeclaration();
 			InitEffect(cm);
@@ -419,13 +399,7 @@ namespace TerrainLib
 
 			mFXTerrain.Parameters["mLightDirection"].SetValue(dir);
 
-			mFXTerrain.Parameters["mTerTexture0"].SetValue(mTEXTerrain0);
-			mFXTerrain.Parameters["mTerTexture1"].SetValue(mTEXTerrain1);
-			mFXTerrain.Parameters["mTerTexture2"].SetValue(mTEXTerrain2);
-			mFXTerrain.Parameters["mTerTexture4"].SetValue(mTEXTerrain4);
-			mFXTerrain.Parameters["mTerTexture5"].SetValue(mTEXTerrain5);
-			mFXTerrain.Parameters["mTerTexture6"].SetValue(mTEXTerrain6);
-			mFXTerrain.Parameters["mTerTexture7"].SetValue(mTEXTerrain7);
+			mFXTerrain.Parameters["mTexAtlas"].SetValue(mTEXAtlas);
 
 			//fog stuff
 			Vector3	fogColor	=Vector3.Zero;
@@ -463,7 +437,15 @@ namespace TerrainLib
 			RenderTarget2D pupNearShad, RenderTarget2D pupFarShad, RenderTarget2D avaShad)
 		{
 //			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLightingXSamp"];
-			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLighting"];
+
+			if(pupNearShad == null)
+			{
+				mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLightingAvaShadOnly"];
+			}
+			else
+			{
+				mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLighting"];
+			}
 
 			if(pupNearShad != null)
 			{
@@ -480,6 +462,21 @@ namespace TerrainLib
 			mFXTerrain.Parameters["mPUPNearLightViewProj"].SetValue(pupNearViewProj);
 			mFXTerrain.Parameters["mPUPFarLightViewProj"].SetValue(pupFarViewProj);
 			mFXTerrain.Parameters["mAvaLightViewProj"].SetValue(avaLightViewProj);
+
+			foreach(HeightMap m in mMaps)
+			{
+				if(m.InFrustum(frust))
+				{
+					m.Draw(gd, mFXTerrain);
+				}
+			}			
+		}
+
+
+		public void Draw(GraphicsDevice gd, BoundingFrustum frust)
+		{
+//			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLightingXSamp"];
+			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLighting"];
 
 			foreach(HeightMap m in mMaps)
 			{

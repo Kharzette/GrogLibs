@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Diagnostics;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.GamerServices;
 
@@ -44,7 +45,6 @@ namespace UtilityLib
 
 			mException	=e;
 
-			Components.Add(new GamerServicesComponent(this));
 			Content.RootDirectory	="GameContent";
 		}
 
@@ -89,7 +89,7 @@ namespace UtilityLib
 		protected override void LoadContent()
 		{
 			mSB		=new SpriteBatch(GraphicsDevice);
-			mFont	=Content.Load<SpriteFont>("Fonts/Pericles32");
+			mFont	=Content.Load<SpriteFont>("Fonts/Pescadero12");
 
 			base.LoadContent();
 		}
@@ -125,6 +125,21 @@ namespace UtilityLib
 				{
 				}
 			}
+			else
+			{
+				GamePadState	p1	=GamePad.GetState(PlayerIndex.One);
+				GamePadState	p2	=GamePad.GetState(PlayerIndex.Two);
+				GamePadState	p3	=GamePad.GetState(PlayerIndex.Three);
+				GamePadState	p4	=GamePad.GetState(PlayerIndex.Four);
+
+				if(p1.IsButtonDown(Buttons.Back)
+					|| p2.IsButtonDown(Buttons.Back)
+					|| p3.IsButtonDown(Buttons.Back)
+					|| p4.IsButtonDown(Buttons.Back))
+				{
+					Exit();
+				}
+			}
 
 			base.Update(gameTime);
 		}
@@ -140,6 +155,10 @@ namespace UtilityLib
 				mSB.DrawString(mFont, mException.ToString(),
 					Vector2.UnitX * GraphicsDevice.Viewport.TitleSafeArea.X +
 					Vector2.UnitY * GraphicsDevice.Viewport.TitleSafeArea.Y,
+					Color.White);
+				mSB.DrawString(mFont, "Press Back to Exit",
+					Vector2.UnitX * GraphicsDevice.Viewport.TitleSafeArea.X +
+					Vector2.UnitY * GraphicsDevice.Viewport.TitleSafeArea.Height,
 					Color.White);
 				mSB.End();
 			}
@@ -160,10 +179,14 @@ namespace UtilityLib
 			}
 			else
 			{
+				Type	gameClassType	=typeof(object);
+				object	gameObject		=null;
 				try
 				{
 					using(var g	=new T())
 					{
+						gameObject		=g;
+						gameClassType	=g.GetType();
 						g.Run();
 					}
 				}
@@ -171,7 +194,7 @@ namespace UtilityLib
 				{
 					using(var g	=new ExceptionGame(e))
 					{
-						g.SetCaller(g);
+						g.SetCaller(gameObject);
 						g.Run();
 					}
 				}

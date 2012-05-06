@@ -15,13 +15,16 @@ namespace UtilityLib
 
 		Texture2D	mTex;
 		Matrix		mWorld;
+		bool		mbHasNormals;
 
 
-		public PrimObject(GraphicsDevice gd, VertexBuffer vb, IndexBuffer ib, Texture2D tex)
+		public PrimObject(GraphicsDevice gd, VertexBuffer vb,
+			IndexBuffer ib, Texture2D tex, bool bHasNormals)
 		{
-			mVB		=vb;
-			mIB		=ib;
-			mTex	=tex;
+			mVB				=vb;
+			mIB				=ib;
+			mTex			=tex;
+			mbHasNormals	=bHasNormals;
 
 			mWorld	=Matrix.Identity;
 		}
@@ -84,6 +87,14 @@ namespace UtilityLib
 			{
 				bfx.Texture			=null;
 				bfx.TextureEnabled	=false;
+			}
+
+			bfx.LightingEnabled		=mbHasNormals;
+			bfx.VertexColorEnabled	=!mbHasNormals;
+
+			if(!mbHasNormals)
+			{
+				bfx.Alpha	=1.0f;
 			}
 
 			bfx.View		=camMat;
@@ -256,7 +267,7 @@ namespace UtilityLib
 
 			ib.SetData<UInt16>(indexes);
 
-			PrimObject	po	=new PrimObject(gd, vb, ib, tex);
+			PrimObject	po	=new PrimObject(gd, vb, ib, tex, true);
 
 			return	po;
 		}
@@ -415,7 +426,7 @@ namespace UtilityLib
 
 			ib.SetData<UInt16>(indexes);
 
-			PrimObject	po	=new PrimObject(gd, vb, ib, tex);
+			PrimObject	po	=new PrimObject(gd, vb, ib, tex, true);
 
 			return	po;
 		}
@@ -542,7 +553,132 @@ namespace UtilityLib
 
 			ib.SetData<UInt16>(inds.ToArray());
 
-			PrimObject	po	=new PrimObject(gd, vb, ib, tex);
+			PrimObject	po	=new PrimObject(gd, vb, ib, tex, true);
+
+			return	po;
+		}
+
+
+		public static PrimObject CreateShadowCircle(GraphicsDevice gd, float radius)
+		{
+			VertexPositionColor	[]vpc	=new VertexPositionColor[16];
+
+			//can't remember how to generate a circle
+			//I know it's something with sin or something? Pi?
+			//just going to use a matrix
+			Matrix	rotMat	=Matrix.CreateRotationY(MathHelper.TwoPi / 8.0f);
+			Vector3	rotPos	=Vector3.UnitX * radius * 0.25f;
+
+			Color	halfDarken	=new Color(new Vector4(0.0f, 0.0f, 0.0f, 0.35f));
+			Color	fadeOut		=new Color(new Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+
+			//inner ring
+			for(int i=0;i < 8;i++)
+			{
+				vpc[i].Position	=rotPos;
+				rotPos			=Vector3.Transform(rotPos, rotMat);
+				vpc[i].Color	=halfDarken;
+			}
+
+			//outer ring
+			rotPos	=Vector3.UnitX * radius;
+			for(int i=8;i < 16;i++)
+			{
+				vpc[i].Position	=rotPos;
+				rotPos			=Vector3.Transform(rotPos, rotMat);
+				vpc[i].Color	=fadeOut;
+			}
+
+			VertexBuffer	vb	=new VertexBuffer(gd,
+				typeof(VertexPositionColor), 16, BufferUsage.WriteOnly);
+
+			vb.SetData<VertexPositionColor>(vpc);
+
+			UInt16	[]indexes	=new UInt16[66];
+
+			//inner ring
+			indexes[0]	=0;
+			indexes[1]	=2;
+			indexes[2]	=1;
+			indexes[3]	=0;
+			indexes[4]	=3;
+			indexes[5]	=2;
+			indexes[6]	=0;
+			indexes[7]	=4;
+			indexes[8]	=3;
+			indexes[9]	=0;
+			indexes[10]	=5;
+			indexes[11]	=4;
+			indexes[12]	=0;
+			indexes[13]	=6;
+			indexes[14]	=5;
+			indexes[15]	=0;
+			indexes[16]	=7;
+			indexes[17]	=6;
+
+			indexes[18]	=0;
+			indexes[19]	=9;
+			indexes[20]	=8;
+			indexes[21]	=0;
+			indexes[22]	=1;
+			indexes[23]	=9;
+
+			indexes[24]	=2;
+			indexes[25]	=9;
+			indexes[26]	=1;
+			indexes[27]	=2;
+			indexes[28]	=10;
+			indexes[29]	=9;
+
+			indexes[30]	=3;
+			indexes[31]	=10;
+			indexes[32]	=2;
+			indexes[33]	=3;
+			indexes[34]	=11;
+			indexes[35]	=10;
+
+			indexes[36]	=4;
+			indexes[37]	=11;
+			indexes[38]	=3;
+			indexes[39]	=4;
+			indexes[40]	=12;
+			indexes[41]	=11;
+
+			indexes[42]	=5;
+			indexes[43]	=12;
+			indexes[44]	=4;
+			indexes[45]	=5;
+			indexes[46]	=13;
+			indexes[47]	=12;
+
+			indexes[48]	=6;
+			indexes[49]	=13;
+			indexes[50]	=5;
+			indexes[51]	=6;
+			indexes[52]	=14;
+			indexes[53]	=13;
+
+			indexes[54]	=7;
+			indexes[55]	=14;
+			indexes[56]	=6;
+			indexes[57]	=7;
+			indexes[58]	=15;
+			indexes[59]	=14;
+
+			indexes[60]	=0;
+			indexes[61]	=8;
+			indexes[62]	=15;
+			indexes[63]	=0;
+			indexes[64]	=15;
+			indexes[65]	=7;
+
+			IndexBuffer	ib	=new IndexBuffer(gd,
+				IndexElementSize.SixteenBits,
+				66, BufferUsage.WriteOnly);
+
+			ib.SetData<UInt16>(indexes);
+
+			PrimObject	po	=new PrimObject(gd, vb, ib, null, false);
 
 			return	po;
 		}
@@ -659,7 +795,7 @@ namespace UtilityLib
 
 			ib.SetData<UInt16>(indexes);
 
-			PrimObject	po	=new PrimObject(gd, vb, ib, tex);
+			PrimObject	po	=new PrimObject(gd, vb, ib, tex, true);
 
 			return	po;
 		}

@@ -82,7 +82,7 @@ namespace UtilityLib
 			mStage1EndPos		=mStartPos + distScaled;
 								
 			float	timeAtMaxVelocity	=(travelTime * (1.0f - (easeInPercent + easeOutPercent)));
-			distScaled		=distVec * (mMaxVelocity * timeAtMaxVelocity);
+			distScaled		=(mMaxVelocity * timeAtMaxVelocity);
 			mStage2EndPos	=mStage1EndPos + distScaled;
 
 			mbDone	=false;
