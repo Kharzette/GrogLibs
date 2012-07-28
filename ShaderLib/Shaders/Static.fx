@@ -77,6 +77,21 @@ VPosTex04 BasicInstancedVS(VPosNormTex0 input, float4x4 instWorld : BLENDWEIGHT)
 
 
 //regular N dot L lighting
+VPosTex03 PhongSolidVS(VPosNormTex0 input)
+{
+	VPosTex03	output;
+
+	//generate the world-view-proj matrix
+	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
+
+	output.Position		=mul(input.Position, wvp);
+	output.TexCoord0	=mul(input.Normal, mWorld);
+
+	return	output;
+}
+
+
+//regular N dot L lighting
 VPosTex0Col0 GouradVS(VPosNormTex0 input)
 {
 	VPosTex0Col0	output;
@@ -204,6 +219,15 @@ float4 TexPS(VTex0Col0 input) : COLOR
 	float4	texel0	=tex2D(TexSampler0, input.TexCoord0);
 	
 	return	texel0;	
+}
+
+float4	PhongSolidPS(VTex03 input) : COLOR
+{
+	float lightIntensity	=saturate(dot(-mLightDirection, normalize(input.TexCoord0)));
+	
+	float4	texLitColor	=mSolidColour * lightIntensity;
+
+	return	texLitColor;
 }
 
 float4 ShadowPS(VTex0Single input) : COLOR
@@ -463,6 +487,15 @@ technique SkyGradient
 	{
 		VertexShader	=compile vs_3_0 BasicVS();
 		PixelShader		=compile ps_3_0 SkyGradientPS();
+	}
+}
+
+technique PhongSolid
+{
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 PhongSolidVS();
+		PixelShader		=compile ps_2_0 PhongSolidPS();
 	}
 }
 

@@ -47,6 +47,11 @@ namespace UtilityLib
 			fx.Parameters["mView"].SetValue(camMat);
 			fx.Parameters["mProjection"].SetValue(projMat);
 
+			if(mTex != null)
+			{
+				fx.Parameters["mTexture"].SetValue(mTex);
+			}
+
 			fx.CurrentTechnique.Passes[0].Apply();
 
 			gd.DrawIndexedPrimitives(PrimitiveType.TriangleList,
@@ -115,6 +120,77 @@ namespace UtilityLib
 
 	public class PrimFactory
 	{
+		public static PrimObject CreatePlane(GraphicsDevice gd, Texture2D tex, float size)
+		{
+			Vector3	top			=Vector3.UnitY * (size * 0.5f);
+			Vector3	bottom		=-Vector3.UnitY * (size * 0.5f);
+			Vector3	left		=-Vector3.UnitX * (size * 0.5f);
+			Vector3	right		=Vector3.UnitX * (size * 0.5f);
+
+			Vector2	topTex		=Vector2.UnitY;
+			Vector2	bottomTex	=Vector2.Zero;
+			Vector2	leftTex		=Vector2.Zero;
+			Vector2	rightTex	=Vector2.UnitX;
+
+			VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[6];
+
+			vpnt[0].Normal		=Vector3.UnitZ;
+			vpnt[1].Normal		=Vector3.UnitZ;
+			vpnt[2].Normal		=Vector3.UnitZ;
+
+			vpnt[3].Normal		=Vector3.UnitZ;
+			vpnt[4].Normal		=Vector3.UnitZ;
+			vpnt[5].Normal		=Vector3.UnitZ;
+
+			//need to have a lot of duplicates since each
+			//vertex will contain a copy of the face normal
+			//as we want this to be flat shaded
+
+			//top upper left face
+			vpnt[0].Position	=top + left;
+			vpnt[1].Position	=top + right;
+			vpnt[2].Position	=bottom + left;
+
+			//top upper right face
+			vpnt[3].Position	=top + right;
+			vpnt[4].Position	=bottom + right;
+			vpnt[5].Position	=bottom + left;
+
+			//texture coordinates
+			vpnt[0].TextureCoordinate	=topTex + leftTex;
+			vpnt[1].TextureCoordinate	=topTex + rightTex;
+			vpnt[2].TextureCoordinate	=bottomTex + leftTex;
+			vpnt[3].TextureCoordinate	=topTex + rightTex;
+			vpnt[4].TextureCoordinate	=bottomTex + rightTex;
+			vpnt[5].TextureCoordinate	=bottomTex + leftTex;
+			
+			VertexBuffer	vb	=new VertexBuffer(gd,
+				typeof(VertexPositionNormalTexture),
+				6, BufferUsage.WriteOnly);
+
+			vb.SetData<VertexPositionNormalTexture>(vpnt);
+
+			//indexes
+			UInt16	[]indexes	=new UInt16[6];
+
+			//just reference in order
+			for(int i=0;i < 6;i++)
+			{
+				indexes[i]	=(UInt16)i;
+			}
+
+			IndexBuffer	ib	=new IndexBuffer(gd,
+				IndexElementSize.SixteenBits,
+				6, BufferUsage.WriteOnly);
+
+			ib.SetData<UInt16>(indexes);
+
+			PrimObject	po	=new PrimObject(gd, vb, ib, tex, true);
+
+			return	po;
+		}
+
+
 		public static PrimObject CreatePrism(GraphicsDevice gd, Texture2D tex, float size)
 		{
 			Vector3	topPoint	=Vector3.UnitY * size * 2.0f;

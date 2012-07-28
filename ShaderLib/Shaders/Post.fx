@@ -13,7 +13,6 @@ float		mRandTexSize	=64;
 
 //textures
 Texture	mNormalTex;
-Texture	mDepthTex;
 Texture	mRandTex;
 Texture	mColorTex;
 
@@ -48,16 +47,6 @@ float	mBlurRadius	=7;
 sampler	NormalSampler	=sampler_state
 {
 	Texture		=(mNormalTex);
-	MinFilter	=Point;
-	MagFilter	=Point;
-	MipFilter	=Point;
-	AddressU	=Clamp;
-	AddressV	=Clamp;
-};
-
-sampler	DepthSampler	=sampler_state
-{
-	Texture		=(mDepthTex);
 	MinFilter	=Point;
 	MagFilter	=Point;
 	MipFilter	=Point;
@@ -111,7 +100,7 @@ float3 DecodeNormal(float4 enc)
 
 float3 PositionFromDepth(float2 texCoord, float3 ray)
 {
-	float	depth	=tex2D(DepthSampler, texCoord);
+	float	depth	=tex2D(NormalSampler, texCoord).w;
 	float3	pos		=ray * depth;
 	
 	return	pos;
@@ -126,7 +115,7 @@ float3 GetFrustumRay(in float2 texCoord)
 
 float fetch_eye_z(float2 uv)
 {
-	float	z	=tex2D(DepthSampler, uv);
+	float	z	=tex2D(NormalSampler, uv).w;
 	return	z;
 }
 
@@ -166,9 +155,10 @@ float4	AOPS(VTex0Tex13VPos input) : COLOR0
 {
 	float2	ssc	=input.TexCoord0;
 
-	float	depth	=tex2D(DepthSampler, ssc).r;
+	float4	ndepth	=tex2D(NormalSampler, ssc);
+	float	depth	=ndepth.w;
 	float3	cPos	=input.TexCoord1 * depth;
-	float3	cNormal	=normalize(DecodeNormal(tex2D(NormalSampler, ssc)));
+	float3	cNormal	=normalize(DecodeNormal(ndepth));
 	float	cBias	=mBias;
 
 	float	invNumSamples	=1.0f / SamplesPerPass;
@@ -183,7 +173,7 @@ float4	AOPS(VTex0Tex13VPos input) : COLOR0
 		float2	unitOffset	=reflect(mSamples[i], randomSpin);
 		float2	offset		=float2(unitOffset * ssr);
 		float2	ssp			=offset + ssc;
-		float	sDepth		=tex2D(DepthSampler, ssp).r;
+		float	sDepth		=tex2D(NormalSampler, ssp).w;
 
 		ssp		=(ssp - 0.5f) * 2;
 		ssp.y	*=-1.0f;

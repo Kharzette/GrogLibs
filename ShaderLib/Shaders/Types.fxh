@@ -20,6 +20,12 @@ struct VPosTex0
 	float2	TexCoord0	: TEXCOORD0;
 };
 
+struct VPosTex03
+{
+	float4	Position	: POSITION;
+	float3	TexCoord0	: TEXCOORD0;
+};
+
 struct VPosTex04
 {
 	float4	Position	: POSITION;
@@ -328,6 +334,11 @@ struct VPosTex04Tex14Tex24Tex34Tex44Tex54
 struct VTex0
 {
 	float2	TexCoord0	: TEXCOORD0;
+};
+
+struct VTex03
+{
+	float3	TexCoord0	: TEXCOORD0;
 };
 
 struct VTex04

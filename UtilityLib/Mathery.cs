@@ -55,7 +55,7 @@ namespace UtilityLib
 		}
 
 
-		public static BoundingSphere SphereFromPoints(List<Vector3> points)
+		public static BoundingSphere SphereFromPoints(IEnumerable<Vector3> points)
 		{
 			BoundingSphere	ret;
 
@@ -140,15 +140,15 @@ namespace UtilityLib
 
 		public static void TinyToZero(ref Vector3 val)
 		{
-			if(val.X < ANGLE_EPSILON && val.X > -ANGLE_EPSILON)
+			if(val.X < VCompareEpsilon && val.X > -VCompareEpsilon)
 			{
 				val.X	=0.0f;
 			}
-			if(val.Y < ANGLE_EPSILON && val.Y > -ANGLE_EPSILON)
+			if(val.Y < VCompareEpsilon && val.Y > -VCompareEpsilon)
 			{
 				val.Y	=0.0f;
 			}
-			if(val.Z < ANGLE_EPSILON && val.Z > -ANGLE_EPSILON)
+			if(val.Z < VCompareEpsilon && val.Z > -VCompareEpsilon)
 			{
 				val.Z	=0.0f;
 			}
@@ -185,6 +185,18 @@ namespace UtilityLib
 					break;
 				}
 			}
+			return	ret;
+		}
+
+
+		public static Vector3 RandomColorVector(Random rnd)
+		{
+			Vector3	ret	=Vector3.Zero;
+
+			ret.X	=(float)rnd.NextDouble();
+			ret.Y	=(float)rnd.NextDouble();
+			ret.Z	=(float)rnd.NextDouble();
+
 			return	ret;
 		}
 

@@ -362,8 +362,51 @@ namespace TerrainLib
 					}
 				}
 			}
-
 			return	min;
+		}
+
+
+		public float[,] GetCloudyFactor(float islandDist, int gran, float cloudHeight)
+		{
+			float	[,]cloudyFactor	=new float[mGridSize / gran, mGridSize / gran];
+
+			int	w	=mHeightGrid.GetLength(1);
+			int	h	=mHeightGrid.GetLength(0);
+
+			Vector3	center	=Vector3.UnitX * (w / 2);
+			center			+=Vector3.UnitZ * (h / 2);
+			center			+=Vector3.UnitY * mHeightGrid[(h/2), (w/2)];
+
+			for(int y=0;y < mGridSize - 1;y++)
+			{
+				for(int x=0;x < mGridSize - 1;x++)
+				{
+					Vector3	pos	=Vector3.UnitX * x;
+					pos			+=Vector3.UnitZ * y;
+					pos.Y		=mHeightGrid[y, x];
+
+					int	granx	=x / gran;
+					int	grany	=y / gran;
+
+					if(Vector3.Distance(center, pos) < islandDist)
+					{
+						if(pos.Y < cloudHeight)
+						{
+							cloudyFactor[grany, granx]	-=0.001f;
+						}
+						else
+						{
+							cloudyFactor[grany, granx]	+=0.01f;
+						}
+					}
+					else
+					{
+						cloudyFactor[grany, granx]	-=0.01f;
+					}
+				}
+			}
+
+			return	cloudyFactor;
 		}
 
 

@@ -31,6 +31,25 @@ namespace MeshLib
 		}
 
 
+		public Matrix GetTransform()
+		{
+			return	mTransform;
+		}
+
+
+		public Mesh GetMeshPart(string name)
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				if(m.Name == name)
+				{
+					return	m;
+				}
+			}
+			return	null;
+		}
+
+
 		public void AddMeshPart(Mesh m)
 		{
 			StaticMesh	sm	=m as StaticMesh;

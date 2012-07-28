@@ -69,6 +69,19 @@ namespace UtilityLib
 			{
 				mLastGPS	=mGPS;
 			}
+
+			internal bool StartOrAHit(List<Buttons> mButtons)
+			{
+				if(WasButtonPressed(Buttons.Start))
+				{
+					return	true;
+				}
+				if(WasButtonPressed(Buttons.A))
+				{
+					return	true;
+				}
+				return	false;
+			}
 		}
 
 		bool	mbGamerServicesAdded;
@@ -193,6 +206,40 @@ namespace UtilityLib
 			{
 				mPlayer4.ClearInputs();
 			}
+		}
+
+
+		public bool StartOrAHit()
+		{
+			if(mPlayer1 != null)
+			{
+				if(mPlayer1.StartOrAHit(mButtons))
+				{
+					return	true;
+				}
+			}
+			if(mPlayer2 != null)
+			{
+				if(mPlayer2.StartOrAHit(mButtons))
+				{
+					return	true;
+				}
+			}
+			if(mPlayer3 != null)
+			{
+				if(mPlayer3.StartOrAHit(mButtons))
+				{
+					return	true;
+				}
+			}
+			if(mPlayer4 != null)
+			{
+				if(mPlayer4.StartOrAHit(mButtons))
+				{
+					return	true;
+				}
+			}
+			return	false;
 		}
 
 

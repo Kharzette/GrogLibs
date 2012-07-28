@@ -24,7 +24,7 @@ namespace TerrainLib
 	//handles the tiling and other such
 	public class Terrain
 	{
-		const int	CHUNKDIM			=128;		//modify this to affect heightmap data size
+		const int	CHUNKDIM	=128;		//modify this to affect heightmap data size
 
 		//height maps
 		List<HeightMap>	mMaps;

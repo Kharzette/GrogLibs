@@ -74,6 +74,8 @@ namespace SharedForms
 
 		private void OnLoad(object sender, EventArgs e)
 		{
+			mOFD.DefaultExt		="*.TexLib";
+			mOFD.Filter			="Texture library files (*.TexLib)|*.TexLib|All files (*.*)|*.*";
 			mOFD.Multiselect	=false;
 			DialogResult	dr	=mOFD.ShowDialog();
 
