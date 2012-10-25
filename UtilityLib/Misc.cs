@@ -56,6 +56,30 @@ namespace UtilityLib
 		}
 
 
+		public static string VectorToString(Vector3 vec)
+		{
+			return	vec.X.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + vec.Y.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + vec.Z.ToString(System.Globalization.CultureInfo.InvariantCulture);
+		}
+
+
+		public static string VectorToString(Vector2 vec)
+		{
+			return	vec.X.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + vec.Y.ToString(System.Globalization.CultureInfo.InvariantCulture);
+		}
+
+
+		public static string VectorToString(Vector4 vec)
+		{
+			return	vec.X.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + vec.Y.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + vec.Z.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + vec.W.ToString(System.Globalization.CultureInfo.InvariantCulture);
+		}
+
+
 		public static string AssignValue(string val)
 		{
 			if(val == null)

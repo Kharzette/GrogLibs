@@ -395,23 +395,18 @@ namespace MaterialLib
 						if(ep.ColumnCount == 2)
 						{
 							Vector2	vec	=ep.GetValueVector2();
-							sp.Value	=Convert.ToString(vec.X)
-								+ " " + Convert.ToString(vec.Y);
+
+							sp.Value	=UtilityLib.Misc.VectorToString(vec);
 						}
 						else if(ep.ColumnCount == 3)
 						{
 							Vector3	vec	=ep.GetValueVector3();
-							sp.Value	=Convert.ToString(vec.X)
-								+ " " + Convert.ToString(vec.Y)
-								+ " " + Convert.ToString(vec.Z);
+							sp.Value	=UtilityLib.Misc.VectorToString(vec);
 						}
 						else
 						{
 							Vector4	vec	=ep.GetValueVector4();
-							sp.Value	=Convert.ToString(vec.X)
-								+ " " + Convert.ToString(vec.Y)
-								+ " " + Convert.ToString(vec.Z)
-								+ " " + Convert.ToString(vec.W);
+							sp.Value	=UtilityLib.Misc.VectorToString(vec);
 						}
 						break;
 				}

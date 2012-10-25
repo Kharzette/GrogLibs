@@ -770,16 +770,9 @@ namespace MaterialLib
 
 		public void SetParameterOnAll(string paramName, Vector4 vec)
 		{
+			string	val	=UtilityLib.Misc.VectorToString(vec);
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
-				string	val	="" +
-					vec.X.ToString(System.Globalization.CultureInfo.InvariantCulture)
-					+ " " +
-					vec.Y.ToString(System.Globalization.CultureInfo.InvariantCulture)
-					+ " " +
-					vec.Z.ToString(System.Globalization.CultureInfo.InvariantCulture)
-					+ " " +
-					vec.W.ToString(System.Globalization.CultureInfo.InvariantCulture);
 				mat.Value.SetParameter(paramName, val);
 			}
 		}
@@ -787,14 +780,9 @@ namespace MaterialLib
 
 		public void SetParameterOnAll(string paramName, Vector3 vec)
 		{
+			string	val	=UtilityLib.Misc.VectorToString(vec);
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
-				string	val	="" +
-					vec.X.ToString(System.Globalization.CultureInfo.InvariantCulture)
-					+ " " +
-					vec.Y.ToString(System.Globalization.CultureInfo.InvariantCulture)
-					+ " " +
-					vec.Z.ToString(System.Globalization.CultureInfo.InvariantCulture);
 				mat.Value.SetParameter(paramName, val);
 			}
 		}

@@ -154,6 +154,17 @@ namespace BSPCore
 		{
 			val	=Vector4.Zero;
 
+			if(mData.ContainsKey("_color"))
+			{
+				string	[]elements	=mData["_color"].Split(' ');
+
+				UtilityLib.Mathery.TryParse(elements[0], out val.X);
+				UtilityLib.Mathery.TryParse(elements[1], out val.Y);
+				UtilityLib.Mathery.TryParse(elements[2], out val.Z);
+
+				val	*=255.0f;
+			}
+
 			if(mData.ContainsKey("_light"))
 			{
 				string	[]elements	=mData["_light"].Split(' ');
@@ -166,7 +177,10 @@ namespace BSPCore
 			}
 			else if(mData.ContainsKey("light"))
 			{
-				val		=Vector4.One * 255.0f;
+				if(val.X + val.Y + val.Z == 0.0f)
+				{
+					val		=Vector4.One * 255.0f;
+				}
 				UtilityLib.Mathery.TryParse(mData["light"], out val.W);
 				return	true;
 			}

@@ -349,6 +349,89 @@ namespace UtilityLib
 		}
 
 
+		public static PrimObject CreateHalfPrism(GraphicsDevice gd, Texture2D tex, float size)
+		{
+			Vector3	topPoint	=Vector3.Zero;
+			Vector3	top			=(Vector3.UnitY * size * 5.0f) + size * Vector3.UnitZ;
+			Vector3	bottom		=(Vector3.UnitY * size * 5.0f) + size * -Vector3.UnitZ;
+			Vector3	left		=(Vector3.UnitY * size * 5.0f) + size * Vector3.UnitX;
+			Vector3	right		=(Vector3.UnitY * size * 5.0f) + size * -Vector3.UnitX;
+
+			VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[12];
+
+			//hacky guessy normals for the 8 directions
+			Vector3	topUpperLeft	=Vector3.UnitY + Vector3.UnitX + Vector3.UnitZ;
+			Vector3	topUpperRight	=Vector3.UnitY - Vector3.UnitX + Vector3.UnitZ;
+			Vector3	topLowerLeft	=Vector3.UnitY + Vector3.UnitX - Vector3.UnitZ;
+			Vector3	topLowerRight	=Vector3.UnitY - Vector3.UnitX - Vector3.UnitZ;
+
+			vpnt[0].Normal		=topUpperLeft;
+			vpnt[1].Normal		=topUpperLeft;
+			vpnt[2].Normal		=topUpperLeft;
+
+			vpnt[3].Normal		=topUpperRight;
+			vpnt[4].Normal		=topUpperRight;
+			vpnt[5].Normal		=topUpperRight;
+
+			vpnt[6].Normal		=topLowerLeft;
+			vpnt[7].Normal		=topLowerLeft;
+			vpnt[8].Normal		=topLowerLeft;
+
+			vpnt[9].Normal		=topLowerRight;
+			vpnt[10].Normal		=topLowerRight;
+			vpnt[11].Normal		=topLowerRight;
+
+			//need to have a lot of duplicates since each
+			//vertex will contain a copy of the face normal
+			//as we want this to be flat shaded
+
+			//top upper left face
+			vpnt[2].Position	=topPoint;
+			vpnt[1].Position	=left;
+			vpnt[0].Position	=top;
+
+			//top upper right face
+			vpnt[5].Position	=topPoint;
+			vpnt[4].Position	=top;
+			vpnt[3].Position	=right;
+
+			//top lower left face
+			vpnt[8].Position	=topPoint;
+			vpnt[7].Position	=bottom;
+			vpnt[6].Position	=left;
+
+			//top lower right face
+			vpnt[11].Position	=topPoint;
+			vpnt[10].Position	=right;
+			vpnt[9].Position	=bottom;
+
+			VertexBuffer	vb	=new VertexBuffer(gd,
+				typeof(VertexPositionNormalTexture),
+				12, BufferUsage.WriteOnly);
+
+			vb.SetData<VertexPositionNormalTexture>(vpnt);
+
+			//indexes
+			UInt16	[]indexes	=new UInt16[12];
+
+			//just reference in order
+			for(int i=0;i < 12;i++)
+			{
+				indexes[i]	=(UInt16)i;
+			}
+
+			IndexBuffer	ib	=new IndexBuffer(gd,
+				IndexElementSize.SixteenBits,
+				12, BufferUsage.WriteOnly);
+
+			ib.SetData<UInt16>(indexes);
+
+			PrimObject	po	=new PrimObject(gd, vb, ib, tex, true);
+
+			return	po;
+		}
+
+
 		public static PrimObject CreateCube(GraphicsDevice gd, float size, Texture2D tex)
 		{
 			List<Vector3>	corners	=new List<Vector3>();

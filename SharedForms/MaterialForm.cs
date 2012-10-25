@@ -300,6 +300,27 @@ namespace SharedForms
 		}
 
 
+		void GuessMaterials()
+		{
+			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
+
+			for(int i=0;i < MeshPartGrid.Rows.Count;i++)
+			{
+				string	meshName	=MeshPartGrid.Rows[i].Cells[0].Value as string;
+
+				if(meshName.EndsWith("Mesh"))
+				{
+					meshName	=meshName.Substring(0, meshName.Length - 4);
+
+					if(mats.ContainsKey(meshName))
+					{
+						MeshPartGrid.Rows[i].Cells[1].Value	=meshName;
+					}
+				}
+			}
+		}
+
+
 		public void UpdateMaterials()
 		{
 			mMatModel	=new MaterialGridModel(mMatLib.GetMaterials());
@@ -668,6 +689,22 @@ namespace SharedForms
 			MaterialProperties.Columns[0].ReadOnly	=true;
 			MaterialProperties.Columns[1].ReadOnly	=true;
 			MaterialProperties.Columns[2].ReadOnly	=true;
+		}
+
+
+		void OnKeyUp(object sender, KeyEventArgs e)
+		{
+			if(e.Control)
+			{
+				if(e.KeyCode == Keys.G)
+				{
+					OnGenBiNormalTangent(null, null);
+				}
+				else if(e.KeyCode == Keys.D)
+				{
+					GuessMaterials();
+				}
+			}
 		}
 	}
 }

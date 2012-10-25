@@ -30,7 +30,10 @@ namespace SharedForms
 					blm.Add(m);
 				}
 			}
+
 			MeshPartGrid.DataSource	=blm;
+
+			MeshPartGrid.Columns[4].ReadOnly	=true;
 
 //			BoundsChanged();
 		}
@@ -76,6 +79,8 @@ namespace SharedForms
 		{
 			List<SkinnedMesh>	skm	=sender as List<SkinnedMesh>;
 			List<StaticMesh>	stm	=sender as List<StaticMesh>;
+
+			MeshPartGrid.Columns[5].ReadOnly	=true;
 
 			if(skm != null && skm.Count != 0)
 			{

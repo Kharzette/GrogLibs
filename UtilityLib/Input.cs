@@ -62,6 +62,28 @@ namespace UtilityLib
 				return	false;
 			}
 
+			public void SetPresence(int pv)
+			{
+				if(mGamer != null)
+				{
+					if(mGamer.Presence != null)
+					{
+						mGamer.Presence.PresenceValue	=pv;
+					}
+				}
+			}
+
+			public void SetPresenceMode(GamerPresenceMode gpm)
+			{
+				if(mGamer != null)
+				{
+					if(mGamer.Presence != null)
+					{
+						mGamer.Presence.PresenceMode	=gpm;
+					}
+				}
+			}
+
 			//buttons have been responded to
 			//so set the new / old equal so no
 			//more of the same event goes off
@@ -517,16 +539,19 @@ namespace UtilityLib
 		{
 			lock(pi)
 			{
-				if(!pi.mbActive && mbGamerServicesAdded)
+				if(!pi.mbActive)
 				{
 					pi.mbActive	=true;
 
-					//if the player is not signed in, they might
-					//not have an avatar description
-					if(!pi.mbSignedIn)
+					if(mbGamerServicesAdded)
 					{
-						pi.mAvatarDesc		=AvatarDescription.CreateRandom();
-						pi.mAvatarRenderer	=new AvatarRenderer(pi.mAvatarDesc);
+						//if the player is not signed in, they might
+						//not have an avatar description
+						if(!pi.mbSignedIn)
+						{
+							pi.mAvatarDesc		=AvatarDescription.CreateRandom();
+							pi.mAvatarRenderer	=new AvatarRenderer(pi.mAvatarDesc);
+						}
 					}
 				}
 				pi.mLastGPS	=pi.mGPS;

@@ -76,6 +76,7 @@
     <Compile Include="Pool.cs" />
     <Compile Include="PrimFactory.cs" />
     <Compile Include="RenderHelper.cs" />
+    <Compile Include="Rumble.cs" />
     <Compile Include="TSPool.cs" />
   </ItemGroup>
   <ItemGroup>

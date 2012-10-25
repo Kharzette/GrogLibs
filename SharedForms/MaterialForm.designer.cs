@@ -304,11 +304,13 @@
 			this.Controls.Add(this.FileGroup);
 			this.Controls.Add(this.MaterialProperties);
 			this.Controls.Add(this.MaterialGrid);
+			this.KeyPreview = true;
 			this.MaximizeBox = false;
 			this.Name = "MaterialForm";
 			this.ShowIcon = false;
 			this.Text = "MaterialForm";
 			this.SizeChanged += new System.EventHandler(this.OnSizeChanged);
+			this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.OnKeyUp);
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialProperties)).EndInit();
 			this.FileGroup.ResumeLayout(false);

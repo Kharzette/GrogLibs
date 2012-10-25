@@ -215,6 +215,19 @@ namespace UtilityLib
 		}
 
 
+		public static void WrapAngleDegrees(ref Int16 angle)
+		{
+			while(angle < 0)
+			{
+				angle	+=360;
+			}
+			while(angle > 360)
+			{
+				angle	-=360;
+			}
+		}
+
+
 		public static void WrapAngleDegrees(ref HalfSingle angle)
 		{
 			float	ang	=angle.ToSingle();
