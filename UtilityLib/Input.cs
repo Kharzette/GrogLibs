@@ -539,19 +539,16 @@ namespace UtilityLib
 		{
 			lock(pi)
 			{
-				if(!pi.mbActive)
+				if(!pi.mbActive && mbGamerServicesAdded)
 				{
 					pi.mbActive	=true;
 
-					if(mbGamerServicesAdded)
+					//if the player is not signed in, they might
+					//not have an avatar description
+					if(!pi.mbSignedIn)
 					{
-						//if the player is not signed in, they might
-						//not have an avatar description
-						if(!pi.mbSignedIn)
-						{
-							pi.mAvatarDesc		=AvatarDescription.CreateRandom();
-							pi.mAvatarRenderer	=new AvatarRenderer(pi.mAvatarDesc);
-						}
+						pi.mAvatarDesc		=AvatarDescription.CreateRandom();
+						pi.mAvatarRenderer	=new AvatarRenderer(pi.mAvatarDesc);
 					}
 				}
 				pi.mLastGPS	=pi.mGPS;

@@ -14,6 +14,9 @@ namespace BSPZone
 		internal Int32			mModelNum;
 		internal bool			mbTriggered;
 		internal bool			mbTriggerOnce;
+		internal bool			mbTriggerStandIn;
+		internal int			mTimeSinceTriggered;
+		internal int			mWait;
 	}
 
 	public partial class Zone
@@ -57,6 +60,7 @@ namespace BSPZone
 		int	mNumVisMaterialBytes;
 
 		public event EventHandler	eTriggerHit;
+		public event EventHandler	eTriggerOutOfRange;
 
 		const float	GroundAngle				=0.8f;	//how sloped can you be to be considered ground
 		const float	RampAngle				=0.7f;	//how steep can we climb?
@@ -224,6 +228,16 @@ namespace BSPZone
 					zt.mEntity			=ze;
 					zt.mbTriggered		=false;
 					zt.mbTriggerOnce	=(ze.mData["classname"] == "trigger_once");
+					zt.mbTriggerStandIn	=(ze.mData["classname"] == "trigger_gravity");	//hax
+
+					if(ze.mData.ContainsKey("wait"))
+					{
+						if(UtilityLib.Mathery.TryParse(ze.mData["wait"], out zt.mWait))
+						{
+							//bump to milliseconds
+							zt.mWait	*=1000;
+						}
+					}
 
 					mTriggers.Add(zt);
 				}
@@ -692,7 +706,7 @@ namespace BSPZone
 		}
 
 
-		public void BoxTriggerCheck(BoundingBox box, Vector3 start, Vector3 end)
+		public void BoxTriggerCheck(BoundingBox box, Vector3 start, Vector3 end, int msDelta)
 		{
 			//TODO: full traced solution, just check intersects for now
 			BoundingBox	boxStart	=box;
@@ -703,9 +717,12 @@ namespace BSPZone
 			boxEnd.Min		+=end;
 			boxEnd.Max		+=end;
 
+			//check for new entries
 			foreach(ZoneTrigger zt in mTriggers)
 			{
-				if(zt.mbTriggerOnce && zt.mbTriggered)
+				zt.mTimeSinceTriggered	+=msDelta;
+
+				if((zt.mbTriggerOnce || zt.mbTriggerStandIn) && zt.mbTriggered)
 				{
 					continue;
 				}
@@ -713,9 +730,37 @@ namespace BSPZone
 				if(zt.mBox.Intersects(boxStart) ||
 					zt.mBox.Intersects(boxEnd))
 				{
-					zt.mbTriggered	=true;
-					UtilityLib.Misc.SafeInvoke(eTriggerHit, zt.mEntity);
+					if(zt.mTimeSinceTriggered > zt.mWait)
+					{
+						zt.mbTriggered			=true;
+						zt.mTimeSinceTriggered	=0;
+						UtilityLib.Misc.SafeInvoke(eTriggerHit, zt.mEntity);
+					}
 				}
+			}
+
+			//check for expiring standins
+			foreach(ZoneTrigger zt in mTriggers)
+			{
+				if(!zt.mbTriggerStandIn)
+				{
+					continue;
+				}
+
+				if(!zt.mbTriggered)
+				{
+					continue;
+				}
+
+				if(zt.mBox.Intersects(boxStart) ||
+					zt.mBox.Intersects(boxEnd))
+				{
+					continue;
+				}
+
+				zt.mbTriggered			=false;
+				zt.mTimeSinceTriggered	=0;
+				UtilityLib.Misc.SafeInvoke(eTriggerOutOfRange, zt.mEntity);
 			}
 		}
 

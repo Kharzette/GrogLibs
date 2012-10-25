@@ -110,6 +110,25 @@ namespace UtilityLib
 #endif
 
 
+		public static BoundingBox MakeBox(float width, float height)
+		{
+			BoundingBox	ret;
+
+			float	halfWidth	=width / 2.0f;
+
+			//bottom
+			ret.Min	=-Vector3.UnitX * halfWidth;
+			ret.Min	+=-Vector3.UnitZ * halfWidth;
+
+			//top
+			ret.Max	=Vector3.UnitX * halfWidth;
+			ret.Max	+=Vector3.UnitZ * halfWidth;
+			ret.Max	+=Vector3.UnitY * height;
+
+			return	ret;
+		}
+
+
 		public static bool bFlagSet(UInt32 val, UInt32 flag)
 		{
 			return	((val & flag) != 0);

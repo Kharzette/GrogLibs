@@ -246,7 +246,15 @@ namespace UtilityLib
 				moveVec	+=vin;
 			}
 
-			if((ms.RightButton == ButtonState.Pressed && Method == SteeringMethod.FirstPersonMMO)
+			if(gs.IsConnected)
+			{
+				mPitch	+=gs.ThumbSticks.Right.Y * msDelta * 0.25f;
+				mYaw	+=gs.ThumbSticks.Right.X * msDelta * 0.25f;
+
+				moveVec	=vleft * gs.ThumbSticks.Left.X;
+				moveVec	-=vin * gs.ThumbSticks.Left.Y;
+			}
+			else if((ms.RightButton == ButtonState.Pressed && Method == SteeringMethod.FirstPersonMMO)
 				|| Method != SteeringMethod.FirstPersonMMO)
 			{
 				Vector2	delta	=Vector2.Zero;
@@ -259,14 +267,6 @@ namespace UtilityLib
 				mYaw	-=(delta.X) * msDelta * mMouseSensitivity;
 			}
 
-			if(gs.IsConnected)
-			{
-				mPitch	+=gs.ThumbSticks.Right.Y * msDelta * 0.25f;
-				mYaw	+=gs.ThumbSticks.Right.X * msDelta * 0.25f;
-
-				moveVec	=vleft * gs.ThumbSticks.Left.X;
-				moveVec	-=vin * gs.ThumbSticks.Left.Y;
-			}
 
 			//zero out up/down
 			moveVec.Y	=0.0f;
