@@ -890,18 +890,13 @@ namespace MeshLib
 		}
 
 
-		public static void GetVertBounds(VertexBuffer vb,
-			int numVerts, int typeIdx, Matrix transform,
+		public static void GetVertBounds(VertexBuffer vb, int numVerts,	int typeIdx,
 			out BoundingBox box, out BoundingSphere sphere)
 		{
 			List<Vector3>	points	=GetPositions(vb, numVerts, typeIdx);
 
-			Vector3	[]transed	=new Vector3[points.Count];
-
-			Vector3.Transform(points.ToArray(), 0, ref transform, transed, 0, points.Count);
-
-			box		=BoundingBox.CreateFromPoints(transed);
-			sphere	=UtilityLib.Mathery.SphereFromPoints(transed);
+			box		=BoundingBox.CreateFromPoints(points);
+			sphere	=UtilityLib.Mathery.SphereFromPoints(points);
 		}
 
 

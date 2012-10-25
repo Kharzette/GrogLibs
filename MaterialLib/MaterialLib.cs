@@ -498,6 +498,68 @@ namespace MaterialLib
 		}
 
 
+		//hack to map q2 textures to solid colors
+		public void GuessQ2Textures()
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				if(mat.Value.GetParameterValue("mTexture") != "")
+				{
+					continue;
+				}
+
+				string	rawMatName	=mat.Key;
+				if(rawMatName.Contains("*"))
+				{
+					rawMatName	=rawMatName.Substring(0, rawMatName.IndexOf('*'));
+				}
+
+				if(rawMatName == "e3u3/color1_2")	//red
+				{
+					mat.Value.SetParameter("mTexture", "SolidColors/Red");
+					mat.Value.SetParameter("mbTextureEnabled", "true");
+					mat.Value.SetParameter("mTexSize", "4 4");
+				}
+				else if(rawMatName == "e3u3/color1_4")	//blue
+				{
+					mat.Value.SetParameter("mTexture", "SolidColors/Blue");
+					mat.Value.SetParameter("mbTextureEnabled", "true");
+					mat.Value.SetParameter("mTexSize", "4 4");
+				}
+				else if(rawMatName == "e3u3/color1_5")	//pinkish
+				{
+					mat.Value.SetParameter("mTexture", "SolidColors/Pink");
+					mat.Value.SetParameter("mbTextureEnabled", "true");
+					mat.Value.SetParameter("mTexSize", "4 4");
+				}
+				else if(rawMatName == "e3u3/color1_7")	//purple
+				{
+					mat.Value.SetParameter("mTexture", "SolidColors/Purple");
+					mat.Value.SetParameter("mbTextureEnabled", "true");
+					mat.Value.SetParameter("mTexSize", "4 4");
+				}
+				else if(rawMatName == "e3u3/color1_8")	//yellowish
+				{
+					mat.Value.SetParameter("mTexture", "SolidColors/Yellow");
+					mat.Value.SetParameter("mbTextureEnabled", "true");
+					mat.Value.SetParameter("mTexSize", "4 4");
+				}
+				else if(rawMatName == "e2u1/w_white")	//white
+				{
+					mat.Value.SetParameter("mTexture", "SolidColors/White");
+					mat.Value.SetParameter("mbTextureEnabled", "true");
+					mat.Value.SetParameter("mTexSize", "4 4");
+				}
+				else if(rawMatName == "e1u3/metal4_1")	//green
+				{
+					mat.Value.SetParameter("mTexture", "SolidColors/Green");
+					mat.Value.SetParameter("mbTextureEnabled", "true");
+					mat.Value.SetParameter("mTexSize", "4 4");
+				}
+			}
+		}
+
+
 		public void GuessTextures()
 		{
 			foreach(KeyValuePair<string, Material> mat in mMats)

@@ -73,18 +73,19 @@ namespace MeshLib
 			get { return mbVisible; }
 			set { mbVisible = value; }
 		}
-		public Matrix Transform
-		{
-			get { return mTransform; }
-			set { mTransform = value; }
-		}
-
+		
 
 		public Mesh() { }
 		public Mesh(string name)
 		{
 			Name			=name;
 			mMaterialName	="";
+		}
+
+
+		public Matrix GetTransform()
+		{
+			return	mTransform;
 		}
 
 
@@ -250,7 +251,7 @@ namespace MeshLib
 
 		public virtual void Bound()
 		{
-			VertexTypes.GetVertBounds(mVerts, mNumVerts, mTypeIndex, mTransform, out mBoxBound, out mSphereBound);
+			VertexTypes.GetVertBounds(mVerts, mNumVerts, mTypeIndex, out mBoxBound, out mSphereBound);
 		}
 
 

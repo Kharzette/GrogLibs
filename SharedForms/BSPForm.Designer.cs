@@ -417,6 +417,8 @@
 			// SurfaceLighting
 			// 
 			this.SurfaceLighting.AutoSize = true;
+			this.SurfaceLighting.Checked = true;
+			this.SurfaceLighting.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.SurfaceLighting.Location = new System.Drawing.Point(6, 43);
 			this.SurfaceLighting.Name = "SurfaceLighting";
 			this.SurfaceLighting.Size = new System.Drawing.Size(103, 17);
@@ -620,7 +622,7 @@
 			this.SurfaceLightFrequency.TabIndex = 8;
 			this.mTips.SetToolTip(this.SurfaceLightFrequency, "Emit a light every x world units for surface lighting");
 			this.SurfaceLightFrequency.Value = new decimal(new int[] {
-            32,
+            48,
             0,
             0,
             0});

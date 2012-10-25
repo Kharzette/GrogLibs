@@ -435,8 +435,10 @@ namespace MeshLib
 
 				ratio	/=ThirtyFPS;
 
-				intensities	+="" +
-					MathHelper.Lerp(val, nextVal, ratio).ToString(System.Globalization.CultureInfo.InvariantCulture) + " ";
+				float	lerped	=MathHelper.Lerp(val, nextVal, ratio);
+
+				//prevent scientific notation
+				intensities	+="" + Convert.ToDecimal(lerped).ToString(System.Globalization.CultureInfo.InvariantCulture) + " ";
 			}
 
 			//switchable lights

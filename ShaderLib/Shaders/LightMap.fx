@@ -15,8 +15,8 @@ float	mYRangeMax;
 float	mYRangeMin;
 
 //outline / toon related
-float	mToonThresholds[2] = { 0.8, 0.4 };
-float	mToonBrightnessLevels[3] = { 1.3, 0.9, 0.5 };
+float	mToonThresholds[4] = { 0.6, 0.4, 0.25, 0.1 };
+float	mToonBrightnessLevels[5] = { 1.0f, 0.7f, 0.5f, 0.2f, 0.05f };
 
 
 #include "Types.fxh"
@@ -248,6 +248,39 @@ float4 LMPixelShader(VTex04Tex14Tex24 input) : COLOR0
 }
 
 
+float CalcToonLight(float3 lightVal)
+{
+	float	light;
+
+	float	d	=lightVal.x + lightVal.y + lightVal.z;
+
+	d	*=0.33;
+
+	if(d > mToonThresholds[0])
+	{
+		light	=mToonBrightnessLevels[0];
+	}
+	else if(d > mToonThresholds[1])
+	{
+		light	=mToonBrightnessLevels[1];
+	}
+	else if(d > mToonThresholds[2])
+	{
+		light	=mToonBrightnessLevels[2];
+	}
+	else if(d > mToonThresholds[3])
+	{
+		light	=mToonBrightnessLevels[3];
+	}
+	else
+	{
+		light	=mToonBrightnessLevels[4];
+	}
+
+	return	light;
+}
+
+
 float4 LMToonPixelShader(VTex04Tex14Tex24 input) : COLOR0
 {
 	float3	color;
@@ -279,29 +312,10 @@ float4 LMToonPixelShader(VTex04Tex14Tex24 input) : COLOR0
 		}
 	}
 
-	//Apply lighting.
-	color	*=lm;
-	color	=saturate(color);
+	//do the toon thing
+	float	light	=CalcToonLight(lm);
 	
-	float	d	=color.x + color.y + color.z;
-
-	d	*=0.33;
-	
-	float	light;
-	if(d > mToonThresholds[0])
-	{
-		light	=mToonBrightnessLevels[0];
-	}
-	else if(d > mToonThresholds[1])
-	{
-		light	=mToonBrightnessLevels[1];
-	}
-	else
-	{
-		light	=mToonBrightnessLevels[2];
-	}
-	
-	color.rgb	*=light;
+	color.rgb	*=(light * lm);
 
 	//back to srgb
 	color	=pow(color, 1 / 2.2);
@@ -357,6 +371,63 @@ float4 VLitPixelShader(VTex04Tex14Tex24 input) : COLOR0
 
 	color	*=inColor;
 	color	=saturate(color);
+
+	//back to srgb
+	color	=pow(color, 1 / 2.2);
+
+	return	float4(color, input.TexCoord2.w);
+}
+
+
+float4 VLitToonPS(VTex04Tex14Tex24 input) : COLOR0
+{
+	float3	color;	
+	float2	tex0;
+
+	tex0.x	=input.TexCoord0.x;
+	tex0.y	=input.TexCoord0.y;
+	
+	if(mbTextureEnabled)
+	{
+		color	=pow(tex2D(TextureSampler, tex0), 2.2);
+	}
+	else
+	{
+		color	=float3(1.0, 1.0, 1.0);
+	}
+
+	float3	worldPos;
+	worldPos.x	=input.TexCoord0.z;
+	worldPos.y	=input.TexCoord0.w;
+	worldPos.z	=input.TexCoord1.x;
+
+	float3	norm;
+	norm.x		=input.TexCoord1.y;
+	norm.y		=input.TexCoord1.z;
+	norm.z		=input.TexCoord1.w;
+
+	float3	inColor	=input.TexCoord2;
+	
+	float	dist	=distance(worldPos, mLight0Position);
+	if(dist < mLightRange)
+	{
+		float3	lightDir	=normalize(mLight0Position - worldPos);
+		float	ndl			=dot(norm, lightDir);
+
+		if(ndl > 0)
+		{
+			if(dist > mLightFalloffRange)
+			{
+				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
+			}
+			inColor	+=(ndl * mLight0Color);
+		}
+	}
+
+	//do the toon thing	
+	float	light	=CalcToonLight(inColor);
+	
+	color.rgb	*=(light * inColor);
 
 	//back to srgb
 	color	=pow(color, 1 / 2.2);
@@ -507,6 +578,69 @@ float4 LMAnimPixelShader(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 }
 
 
+float4 LMAnimToonPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
+{
+	float3	color;
+	if(mbTextureEnabled)
+	{
+		color	=pow(tex2D(TextureSampler, input.TexCoord0.xy), 2.2);
+	}
+	else
+	{
+		color	=float3(1.0, 1.0, 1.0);
+	}
+
+	float3	lm		=float3(0, 0, 0);
+	float3	norm	=input.TexCoord3.xyz;
+
+	float3	worldPos	=input.TexCoord4.xyz;
+
+	//grab style intensity
+	if(input.TexCoord5.x > 0)
+	{
+		lm	+=(input.TexCoord5.x * tex2D(LightMapSampler, input.TexCoord0.zw));
+	}
+	if(input.TexCoord5.y > 0)
+	{
+		lm	+=(input.TexCoord5.y * tex2D(LightMapSampler, input.TexCoord1.xy));
+	}
+	if(input.TexCoord5.z > 0)
+	{
+		lm	+=(input.TexCoord5.z * tex2D(LightMapSampler, input.TexCoord1.zw));
+	}
+	if(input.TexCoord5.w > 0)
+	{
+		lm	+=(input.TexCoord5.w * tex2D(LightMapSampler, input.TexCoord2.xy));
+	}
+
+	float	dist	=distance(worldPos, mLight0Position);
+	if(dist < mLightRange)
+	{
+		float3	lightDir	=normalize(mLight0Position - worldPos);
+		float	ndl			=dot(norm, lightDir);
+
+		if(ndl > 0)
+		{
+			if(dist > mLightFalloffRange)
+			{
+				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
+			}
+			lm	+=(ndl * mLight0Color);
+		}
+	}
+
+	//do the toon thing	
+	float	light	=CalcToonLight(lm);
+	
+	color.rgb	*=light * lm;
+
+	//back to srgb
+	color	=pow(color, 1 / 2.2);
+
+	return	float4(color, input.TexCoord2.z);
+}
+
+
 technique LightMap
 {
 	pass Pass1
@@ -549,6 +683,15 @@ technique VertexLighting
 	{
 		VertexShader	=compile vs_2_0 VLitVertexShader();
 		PixelShader		=compile ps_2_0 VLitPixelShader();
+	}
+}
+
+technique VLitToon
+{
+	pass Pass1
+	{
+		VertexShader	=compile vs_2_0 VLitVertexShader();
+		PixelShader		=compile ps_2_0 VLitToonPS();
 	}
 }
 
@@ -603,6 +746,15 @@ technique LightMapAnimAlpha
 	{
 		VertexShader	=compile vs_2_0 LMAnimVertexShader();
 		PixelShader		=compile ps_2_0 LMAnimPixelShader();
+	}
+}
+
+technique LightMapAnimToon
+{
+	pass Pass1
+	{
+		VertexShader	=compile vs_2_0 LMAnimVertexShader();
+		PixelShader		=compile ps_2_0 LMAnimToonPS();
 	}
 }
 

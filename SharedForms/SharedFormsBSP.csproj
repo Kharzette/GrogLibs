@@ -137,9 +137,9 @@
       <Project>{E6EAA6B0-1140-4BE3-AEFD-0DF83A7A705B}</Project>
       <Name>MaterialLib</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MeshLib\MeshLibLudum.csproj">
-      <Project>{D322A6E0-D05E-404C-907F-AA77A64E1873}</Project>
-      <Name>MeshLibLudum</Name>
+    <ProjectReference Include="..\MeshLib\MeshLib.csproj">
+      <Project>{EEC34A30-ACD3-4240-A4FE-5A3F8D5D7B13}</Project>
+      <Name>MeshLib</Name>
     </ProjectReference>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj">
       <Project>{BB91910C-2595-4EB6-B48C-30BCC41457F6}</Project>

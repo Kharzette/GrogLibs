@@ -20,9 +20,9 @@ float3	mHeadDelta;
 float4	mMatColor;
 
 //outline / toon related
+float	mToonThresholds[4] = { 0.6, 0.4, 0.25, 0.1 };
+float	mToonBrightnessLevels[5] = { 1.0f, 0.7f, 0.5f, 0.2f, 0.05f };
 bool	mbTextureEnabled;
-float	mToonThresholds[2] = { 0.8, 0.4 };
-float	mToonBrightnessLevels[3] = { 1.3, 0.9, 0.5 };
 
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
@@ -51,6 +51,47 @@ sampler TexSampler1 = sampler_state
 	AddressU	=Wrap;
 	AddressV	=Wrap;
 };
+
+
+float CalcToonLight(float lightVal)
+{
+	float	light;
+
+	float	d	=lightVal * 0.33;
+
+	if(d > mToonThresholds[0])
+	{
+		light	=mToonBrightnessLevels[0];
+	}
+	else if(d > mToonThresholds[1])
+	{
+		light	=mToonBrightnessLevels[1];
+	}
+	else if(d > mToonThresholds[2])
+	{
+		light	=mToonBrightnessLevels[2];
+	}
+	else if(d > mToonThresholds[3])
+	{
+		light	=mToonBrightnessLevels[3];
+	}
+	else
+	{
+		light	=mToonBrightnessLevels[4];
+	}
+
+	return	light;
+}
+
+
+float CalcToonLight3(float3 lightVal)
+{
+	float	light;
+
+	float	d	=lightVal.x + lightVal.y + lightVal.z;
+
+	return	CalcToonLight(d);
+}
 
 
 VPosTex0Tex1Single DanglyToonVS(VPosNormTex0Col0 input)
@@ -89,9 +130,9 @@ VPosTex0Tex1Single ToonTex0VS(VPosNormTex0 input)
 	
 	//direct copy of texcoord0
 	output.TexCoord0	=input.TexCoord0;
-	
+
 	//lighting calculation
-	float3 worldNormal	=mul(input.Normal, mWorld);
+	float3 worldNormal	=normalize(mul(input.Normal, mWorld));
 	output.TexCoord1	=dot(worldNormal, mLightDirection);
 	
 	return	output;
@@ -181,21 +222,8 @@ float4 ToonPS(VTex0Tex1Single input) : COLOR0
 {
 	float4	color	
 		=mbTextureEnabled ? tex2D(TexSampler0, input.TexCoord0) : mMatColor;
-		
-	float	light;
-	
-	if(input.TexCoord1 > mToonThresholds[0])
-	{
-		light	=mToonBrightnessLevels[0];
-	}
-	else if(input.TexCoord1 > mToonThresholds[1])
-	{
-		light	=mToonBrightnessLevels[1];
-	}
-	else
-	{
-		light	=mToonBrightnessLevels[2];
-	}
+
+	float	light	=CalcToonLight(input.TexCoord1);
 	
 	color.rgb	*=light;
 	
@@ -211,20 +239,7 @@ float4 ToonNormalMapPS(VTex0Tex13 input) : COLOR0
 
 	float	d	=dot(norm, input.TexCoord1);
 		
-	float	light;
-	
-	if(d > mToonThresholds[0])
-	{
-		light	=mToonBrightnessLevels[0];
-	}
-	else if(d > mToonThresholds[1])
-	{
-		light	=mToonBrightnessLevels[1];
-	}
-	else
-	{
-		light	=mToonBrightnessLevels[2];
-	}
+	float	light	=CalcToonLight(d);
 	
 	color.rgb	*=light;
 	

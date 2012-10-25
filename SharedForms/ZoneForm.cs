@@ -50,6 +50,7 @@ namespace SharedForms
 		void OnGenerateMaterials(object sender, EventArgs e)
 		{
 			mOFD.DefaultExt	="*.gbsp";
+			mOFD.Filter		="Genesis bsp files (*.gbsp)|*.gbsp|All files (*.*)|*.*";
 			DialogResult	dr	=mOFD.ShowDialog();
 
 			if(dr == DialogResult.Cancel)
@@ -64,6 +65,7 @@ namespace SharedForms
 		void OnMaterialVis(object sender, EventArgs e)
 		{
 			mOFD.DefaultExt	="*.gbsp";
+			mOFD.Filter		="Genesis bsp files (*.gbsp)|*.gbsp|All files (*.*)|*.*";
 			DialogResult	dr	=mOFD.ShowDialog();
 
 			if(dr == DialogResult.Cancel)
@@ -80,6 +82,7 @@ namespace SharedForms
 		void OnZone(object sender, EventArgs e)
 		{
 			mOFD.DefaultExt	="*.gbsp";
+			mOFD.Filter		="Genesis bsp files (*.gbsp)|*.gbsp|All files (*.*)|*.*";
 			DialogResult	dr	=mOFD.ShowDialog();
 
 			if(dr == DialogResult.Cancel)

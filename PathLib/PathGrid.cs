@@ -51,6 +51,8 @@ namespace PathLib
 		int					[]mConIndexs;
 		int					[]mPathIndexs;
 
+		List<PathNode>	mNodery	=new List<PathNode>();
+
 
 		protected PathGrid() { }
 
@@ -63,7 +65,22 @@ namespace PathLib
 			}
 			else
 			{
-				return	null;
+				return	new PathGrid();
+			}
+		}
+
+
+		public void GenerateFromPoints(List<Vector3> points, float radius)
+		{
+			mNodeRadius	=radius;
+
+			mNodery.Clear();
+			foreach(Vector3 point in points)
+			{
+				PathNode	pn	=new PathNode();
+				pn.mPosition	=point;
+
+				mNodery.Add(pn);
 			}
 		}
 

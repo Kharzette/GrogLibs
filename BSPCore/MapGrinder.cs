@@ -2078,6 +2078,10 @@ namespace BSPCore
 				{
 					mat.Technique	="VertexLighting";
 				}
+				else if(mat.Name.EndsWith("*VertLitToon"))
+				{
+					mat.Technique	="VLitToon";
+				}
 				else if(mat.Name.EndsWith("*FullBright"))
 				{
 					mat.Technique	="FullBright";
@@ -2101,6 +2105,22 @@ namespace BSPCore
 				else if(mat.Name.EndsWith("*Anim"))
 				{
 					mat.Technique	="LightMapAnim";
+					mat.AddParameter("mLightMap",
+						EffectParameterClass.Object,
+						EffectParameterType.Texture,
+						"LightMapAtlas");
+				}
+				else if(mat.Name.EndsWith("*AnimToon"))
+				{
+					mat.Technique	="LightMapAnimToon";
+					mat.AddParameter("mLightMap",
+						EffectParameterClass.Object,
+						EffectParameterType.Texture,
+						"LightMapAtlas");
+				}
+				else if(mat.Name.EndsWith("*Toon"))
+				{
+					mat.Technique	="LightMapToon";
 					mat.AddParameter("mLightMap",
 						EffectParameterClass.Object,
 						EffectParameterType.Texture,

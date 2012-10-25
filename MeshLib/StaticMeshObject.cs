@@ -25,15 +25,26 @@ namespace MeshLib
 		}
 
 
+		public Matrix GetTransform()
+		{
+			return	mTransform;
+		}
+
+
 		public void SetTransform(Matrix mat)
 		{
 			mTransform	=mat;
 		}
 
 
-		public Matrix GetTransform()
+		public void AddMeshPart(Mesh m)
 		{
-			return	mTransform;
+			StaticMesh	sm	=m as StaticMesh;
+
+			if(sm != null)
+			{
+				mMeshParts.Add(sm);
+			}
 		}
 
 
@@ -47,17 +58,6 @@ namespace MeshLib
 				}
 			}
 			return	null;
-		}
-
-
-		public void AddMeshPart(Mesh m)
-		{
-			StaticMesh	sm	=m as StaticMesh;
-
-			if(sm != null)
-			{
-				mMeshParts.Add(sm);
-			}
 		}
 
 
@@ -246,8 +246,13 @@ namespace MeshLib
 			foreach(StaticMesh m in mMeshParts)
 			{
 				BoundingBox	b	=m.GetBoxBounds();
-				pnts.Add(b.Min);
-				pnts.Add(b.Max);
+
+				//internal part transforms
+				Vector3	transMin	=Vector3.Transform(b.Min, m.GetTransform());
+				Vector3	transMax	=Vector3.Transform(b.Max, m.GetTransform());
+
+				pnts.Add(transMin);
+				pnts.Add(transMax);
 			}
 
 			return	BoundingBox.CreateFromPoints(pnts);
@@ -262,6 +267,8 @@ namespace MeshLib
 			foreach(StaticMesh m in mMeshParts)
 			{
 				BoundingSphere	s	=m.GetSphereBounds();
+
+				s	=s.Transform(m.GetTransform());
 
 				merged	=BoundingSphere.CreateMerged(merged, s);
 			}
