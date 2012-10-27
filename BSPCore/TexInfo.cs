@@ -21,10 +21,11 @@ namespace BSPCore
 		public const UInt32	MIRROR		=(1<<0);
 		public const UInt32	FULLBRIGHT	=(1<<1);
 		public const UInt32	SKY			=(1<<2);
-		public const UInt32	LIGHT		=(1<<3);
-		public const UInt32	TRANS		=(1<<4);
+		public const UInt32	EMITLIGHT	=(1<<3);
+		public const UInt32	TRANSPARENT	=(1<<4);
 		public const UInt32	GOURAUD		=(1<<5);
 		public const UInt32	FLAT		=(1<<6);
+		public const UInt32	CELLSHADE	=(1<<7);
 		public const UInt32	NO_LIGHTMAP	=(1<<15);
 
 

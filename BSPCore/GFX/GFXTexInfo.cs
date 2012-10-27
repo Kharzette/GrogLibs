@@ -65,7 +65,7 @@ namespace BSPCore
 
 		public bool IsAlpha()
 		{
-			return	((mFlags & TexInfo.TRANS) != 0);
+			return	((mFlags & TexInfo.TRANSPARENT) != 0);
 		}
 
 
@@ -101,7 +101,7 @@ namespace BSPCore
 
 		public bool IsLight()
 		{
-			return	((mFlags & TexInfo.LIGHT) != 0);
+			return	((mFlags & TexInfo.EMITLIGHT) != 0);
 		}
 
 

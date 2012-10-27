@@ -139,5 +139,17 @@ namespace UtilityLib
 		{
 			return	((val & flag) != 0);
 		}
+
+
+		public static void ClearFlag(ref Int32 val, Int32 flag)
+		{
+			val	&=(~flag);
+		}
+
+
+		public static void ClearFlag(ref UInt32 val, UInt32 flag)
+		{
+			val	&=(~flag);
+		}
 	}
 }

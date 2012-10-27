@@ -81,7 +81,7 @@ namespace BSPCore
 		public const UInt32 BSP_CONTENTS_USER11			=(1<<26);	//ladder
 		public const UInt32 BSP_CONTENTS_USER12			=(1<<27);	//trigger
 		public const UInt32 BSP_CONTENTS_USER13			=(1<<28);	//nodrop
-		public const UInt32 BSP_CONTENTS_USER14			=(1<<29);	//teleport
+		public const UInt32 BSP_CONTENTS_USER14			=(1<<29);
 		public const UInt32 BSP_CONTENTS_USER15			=(1<<30);
 		public const UInt32 BSP_CONTENTS_USER16			=(0x80000000);
 		
@@ -313,6 +313,21 @@ namespace BSPCore
 			if((quakeContents & CONTENTS_NODROP) != 0)
 			{
 				ret	|=Contents.BSP_CONTENTS_USER13;
+			}
+
+			return	ret;			
+		}
+
+
+		//make sure contents are valid
+		static public UInt32 FixContents(UInt32 mapContents)
+		{
+			UInt32	ret	=mapContents;
+
+			//completely empty flags should be solid
+			if(ret == 0)
+			{
+				ret	|=BSP_CONTENTS_SOLID2;
 			}
 
 			return	ret;			

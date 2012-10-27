@@ -4,6 +4,7 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
+using UtilityLib;
 
 
 namespace BSPCore
@@ -45,14 +46,14 @@ namespace BSPCore
 
 				p.mNormal	=Vector3.Zero;
 
-				UtilityLib.Mathery.VecIdxAssign(ref p.mNormal, i, 1.0f);
-				p.mDist	=UtilityLib.Mathery.VecIdx(bnd.mMaxs, i);
+				Mathery.VecIdxAssign(ref p.mNormal, i, 1.0f);
+				p.mDist	=Mathery.VecIdx(bnd.mMaxs, i);
 
 				GBSPSide	side	=new GBSPSide();
 				side.mPlaneNum		=pp.FindPlane(p, out side.mbFlipSide);
 
-				UtilityLib.Mathery.VecIdxAssign(ref p.mNormal, i, -1.0f);
-				p.mDist	=-(UtilityLib.Mathery.VecIdx(bnd.mMins, i));
+				Mathery.VecIdxAssign(ref p.mNormal, i, -1.0f);
+				p.mDist	=-(Mathery.VecIdx(bnd.mMins, i));
 
 				GBSPSide	side2	=new GBSPSide();
 				side2.mPlaneNum		=pp.FindPlane(p, out side2.mbFlipSide);
@@ -300,8 +301,8 @@ namespace BSPCore
 
 			for(int i=0;i < 3;i++)
 			{
-				if(UtilityLib.Mathery.VecIdx(mBounds.mMins, i) <= -Bounds.MIN_MAX_BOUNDS
-					|| UtilityLib.Mathery.VecIdx(mBounds.mMaxs, i) >= Bounds.MIN_MAX_BOUNDS)
+				if(Mathery.VecIdx(mBounds.mMins, i) <= -Bounds.MIN_MAX_BOUNDS
+					|| Mathery.VecIdx(mBounds.mMaxs, i) >= Bounds.MIN_MAX_BOUNDS)
 				{
 					CoreEvents.Print("Entity " + mEntityNum + ", Brush bounds out of range\n");
 				}
@@ -330,14 +331,15 @@ namespace BSPCore
 
 		internal void FixContents(bool bHammer, bool bTransDetail)
 		{
-			if(bHammer)
-			{
-				mContents	=Contents.FixHammerContents(mContents);
-			}
-			else
-			{
-				mContents	=Contents.FixQuakeContents(mContents);
-			}
+//			if(bHammer)
+//			{
+//				mContents	=Contents.FixHammerContents(mContents);
+//			}
+//			else
+//			{
+//				mContents	=Contents.FixQuakeContents(mContents);
+//			}
+			mContents	=Contents.FixContents(mContents);
 
 			//fix faces as well
 			//Force clip to solid/detail, and mark faces as not visible (they will get put last in the tree)
@@ -396,9 +398,20 @@ namespace BSPCore
 			//make transparent stuff detail, so it isn't
 			//chosen for splitting planes
 			if(bTransDetail &&
-				UtilityLib.Misc.bFlagSet(Contents.BSP_CONTENTS_TRANSLUCENT2, mContents))
+				Misc.bFlagSet(Contents.BSP_CONTENTS_TRANSLUCENT2, mContents))
 			{
 				mContents	|=Contents.BSP_CONTENTS_DETAIL2;
+			}
+
+			//translucent should be either window or empty
+			if(Misc.bFlagSet(Contents.BSP_CONTENTS_TRANSLUCENT2, mContents))
+			{
+				if(!(Misc.bFlagSet(Contents.BSP_CONTENTS_WINDOW2, mContents) ||
+					Misc.bFlagSet(Contents.BSP_CONTENTS_EMPTY2, mContents)))
+				{
+					//I'm guessing they would want empty here
+					mContents	|=Contents.BSP_CONTENTS_EMPTY2;
+				}
 			}
 		}
 

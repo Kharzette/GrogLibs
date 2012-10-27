@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MaterialLib;
 using MeshLib;
+using UtilityLib;
 
 
 namespace BSPCore
@@ -576,7 +577,7 @@ namespace BSPCore
 					col.Z	=rgbVerts[fvert + k].Z / 255.0f;
 				}
 
-				if((tex.mFlags & TexInfo.TRANS) != 0)
+				if((tex.mFlags & TexInfo.TRANSPARENT) != 0)
 				{
 					col.W	=tex.mAlpha;
 				}
@@ -1438,6 +1439,22 @@ namespace BSPCore
 
 					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
+					if(Misc.bFlagSet(tex.mFlags, TexInfo.MIRROR))
+					{
+						continue;
+					}
+					if(Misc.bFlagSet(tex.mFlags, TexInfo.GOURAUD))
+					{
+						continue;
+					}
+					if(Misc.bFlagSet(tex.mFlags, TexInfo.FLAT))
+					{
+						continue;
+					}
+					if(!Misc.bFlagSet(tex.mFlags, TexInfo.FULLBRIGHT))
+					{
+						continue;
+					}
 					if(tex.mAlpha < 1.0f)
 					{
 						continue;

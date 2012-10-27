@@ -488,7 +488,7 @@ namespace BSPCore
 				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
 
 				//Only look at surfaces that want to emit light
-				if((tex.mFlags & TexInfo.LIGHT) == 0)
+				if((tex.mFlags & TexInfo.EMITLIGHT) == 0)
 				{
 					continue;
 				}

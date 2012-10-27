@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using Microsoft.Xna.Framework;
+using UtilityLib;
 
 
 namespace BSPCore
@@ -19,7 +20,7 @@ namespace BSPCore
 		//found in the Q3 Radiant open source
 		//Q3 support is kind of non existant though
 		internal const UInt32	SURF_LIGHT				=0x1;		//value will hold the light strength
-		internal const UInt32	SURF_SLICK				=0x2;		//(using this as gouraud for now, used to be effects game physics)
+		internal const UInt32	SURF_SLICK				=0x2;		//(using this as gouraud for now, used to affects game physics)
 		internal const UInt32	SURF_SKY				=0x4;		//don't draw, but add to skybox
 		internal const UInt32	SURF_WARP				=0x8;		//(Using this as mirror for now, used to be turbulent water warp)
 		internal const UInt32	SURF_TRANS33			=0x10;
@@ -72,6 +73,7 @@ namespace BSPCore
 
 
 		#region IO
+		//don't really support vmf anymore
 		internal UInt32 ReadVMFSideBlock(StreamReader sr, PlanePool pool, TexInfoPool tiPool)
 		{
 			string	s	="";
@@ -104,7 +106,7 @@ namespace BSPCore
 							|| tex.StartsWith("GLASS/"))
 						{
 							mFlags		|=SURF_TRANS66;
-							ti.mFlags	|=TexInfo.TRANS;
+							ti.mFlags	|=TexInfo.TRANSPARENT;
 						}
 						if(tex.StartsWith("DEV/REFLECTIVITY"))
 						{
@@ -157,7 +159,7 @@ namespace BSPCore
 							mFlags		|=SURF_NOLIGHTMAP;
 							mFlags		|=SURF_NONSOLID;
 							ret			|=Contents.CONTENTS_MIST;
-							ti.mFlags	|=TexInfo.TRANS;
+							ti.mFlags	|=TexInfo.TRANSPARENT;
 						}
 						if(tex == "TOOLS/TOOLSHINT")
 						{
@@ -230,9 +232,9 @@ namespace BSPCore
 							ret				|=Contents.BSP_CONTENTS_EMPTY2;
 							ret				|=Contents.BSP_CONTENTS_USER1;
 							ret				|=Contents.BSP_CONTENTS_WAVY2;
-							ti.mFlags		|=TexInfo.TRANS;
+							ti.mFlags		|=TexInfo.TRANSPARENT;
 							ti.mFlags		|=TexInfo.FLAT;
-							ti.mFlags		|=TexInfo.LIGHT;				//lava emits light by default?
+							ti.mFlags		|=TexInfo.EMITLIGHT;				//lava emits light by default?
 							ti.mFlags		|=TexInfo.FULLBRIGHT;
 							ti.mFlags		|=TexInfo.NO_LIGHTMAP;
 						}
@@ -242,7 +244,7 @@ namespace BSPCore
 							ret			|=Contents.BSP_CONTENTS_EMPTY2;
 							ret			|=Contents.BSP_CONTENTS_WAVY2;
 							ret			|=Contents.BSP_CONTENTS_USER3;
-							ti.mFlags	|=TexInfo.TRANS;
+							ti.mFlags	|=TexInfo.TRANSPARENT;
 						}
 						if(tex == "DEV/DEV_SLIME")
 						{
@@ -250,7 +252,7 @@ namespace BSPCore
 							ret			|=Contents.BSP_CONTENTS_EMPTY2;
 							ret			|=Contents.BSP_CONTENTS_WAVY2;
 							ret			|=Contents.BSP_CONTENTS_USER2;
-							ti.mFlags	|=TexInfo.TRANS;
+							ti.mFlags	|=TexInfo.TRANSPARENT;
 						}
 						ti.mTexture	=tex;
 					}
@@ -301,7 +303,7 @@ namespace BSPCore
 						UtilityLib.Mathery.TryParse(tokens[3], out smoove);
 						if((smoove & SMOOTHING_SURFLIGHT) != 0)
 						{
-							ti.mFlags		|=TexInfo.LIGHT;
+							ti.mFlags		|=TexInfo.EMITLIGHT;
 							ti.mFlags		|=TexInfo.FULLBRIGHT;			//emit light so ...?
 							ti.mFlags		|=TexInfo.NO_LIGHTMAP;
 						}
@@ -410,7 +412,8 @@ namespace BSPCore
 		}
 
 
-		internal UInt32 ReadMapLine(string szLine, PlanePool pool,
+		//for working with old flags
+		internal UInt32 ReadMapLineOld(string szLine, PlanePool pool,
 			TexInfoPool tiPool,	BSPBuildParams prms)
 		{
 			UInt32	ret	=0;
@@ -463,13 +466,13 @@ namespace BSPCore
 						|| texName.Contains("MWAT") || texName.Contains("mwat"))
 					{
 						ret			|=Contents.CONTENTS_WATER;
-						ti.mFlags	|=TexInfo.TRANS;
+						ti.mFlags	|=TexInfo.TRANSPARENT;
 						mFlags		|=SURF_TRANS66;
 					}
 					else if(texName.StartsWith("slime") || texName.StartsWith("SLIME"))
 					{
 						ret			|=Contents.CONTENTS_SLIME;
-						ti.mFlags	|=TexInfo.TRANS;
+						ti.mFlags	|=TexInfo.TRANSPARENT;
 						mFlags		|=SURF_TRANS66;
 					}
 					else if(texName.StartsWith("glass") || texName.StartsWith("GLASS"))
@@ -478,7 +481,7 @@ namespace BSPCore
 						{
 							ret			|=Contents.CONTENTS_WINDOW;
 							mFlags		|=SURF_TRANS66;
-							ti.mFlags	|=TexInfo.TRANS;
+							ti.mFlags	|=TexInfo.TRANSPARENT;
 						}
 						if(prms.mbWindowEmitLight)
 						{
@@ -531,13 +534,13 @@ namespace BSPCore
 				else if(tok.Contains("water") || tok.Contains("WATER"))
 				{
 					ret			|=Contents.CONTENTS_WATER;
-					ti.mFlags	|=TexInfo.TRANS;
+					ti.mFlags	|=TexInfo.TRANSPARENT;
 					mFlags		|=SURF_TRANS66;
 				}
 				else if(tok.StartsWith("slime") || tok.StartsWith("SLIME"))
 				{
 					ret			|=Contents.CONTENTS_SLIME;
-					ti.mFlags	|=TexInfo.TRANS;
+					ti.mFlags	|=TexInfo.TRANSPARENT;
 					mFlags		|=SURF_TRANS66;
 				}
 				else if(tok.StartsWith("trigger") || tok.StartsWith("TRIGGER"))
@@ -553,7 +556,7 @@ namespace BSPCore
 					{
 						ret			|=Contents.CONTENTS_WINDOW;
 						mFlags		|=SURF_TRANS66;
-						ti.mFlags	|=TexInfo.TRANS;
+						ti.mFlags	|=TexInfo.TRANSPARENT;
 					}
 					if(prms.mbWindowEmitLight)
 					{
@@ -655,10 +658,198 @@ namespace BSPCore
 			mTexInfo	=tiPool.Add(ti);
 			return	ret;
 		}
+
+
+		internal UInt32 ReadMapLine(string szLine, PlanePool pool,
+			TexInfoPool tiPool,	BSPBuildParams prms)
+		{
+			UInt32	ret	=0;
+
+			//gank (
+			szLine.TrimStart('(');
+
+			szLine.Trim();
+
+			string	[]tokens    =szLine.Split(' ');
+
+			List<float>		numbers =new List<float>();
+			List<UInt32>	flags	=new List<UInt32>();
+
+			int cnt	=0;
+
+			TexInfo	ti		=new TexInfo();
+
+			//grab all the numbers out
+			string	texName	="";
+			foreach(string tok in tokens)
+			{
+				//skip ()
+				if(tok[0] == '(' || tok[0] == ')')
+				{
+					continue;
+				}
+
+				//grab tex name if avail
+				if(char.IsLetter(tok, 0))
+				{
+					texName	=tok;
+					continue;
+				}
+
+				float	num;
+				UInt32	inum;
+
+				if(cnt > 13)
+				{
+					if(UtilityLib.Mathery.TryParse(tok, out inum))
+					{
+						flags.Add(inum);
+						cnt++;
+					}
+				}
+				else
+				{
+					if(UtilityLib.Mathery.TryParse(tok, out num))
+					{
+						//rest are numbers
+						numbers.Add(num);
+						cnt++;
+					}
+				}
+			}
+
+			//deal with the numbers
+			//invert x and swap y and z
+			//to convert to left handed
+			mPoly	=new GBSPPoly(new Vector3(-numbers[0], numbers[2], numbers[1]),
+				new Vector3(-numbers[3], numbers[5], numbers[4]),
+				new Vector3(-numbers[6], numbers[8], numbers[7]));
+
+			//see if there are any quake 3 style flags
+			//if there are, ignore all the texture name stuff
+			if(flags.Count == 3)
+			{
+				ret			=flags[0];
+				ti.mFlags	=flags[1];
+
+				CoreEvents.Print("Quake 3 style flags found " + flags[0] + ", " + flags[1] + "\n");
+			}
+
+			GBSPPlane	plane	=new GBSPPlane(mPoly);
+
+			plane.mType	=GBSPPlane.PLANE_ANY;
+			plane.Snap();
+
+			mPlaneNum	=pool.FindPlane(plane, out mbFlipSide);
+
+			ti.mShiftU		=numbers[9];
+			ti.mShiftV		=numbers[10];
+			ti.mDrawScaleU	=numbers[12];
+			ti.mDrawScaleV	=numbers[13];
+			ti.mTexture		=texName;
+
+			GBSPPlane.TextureAxisFromPlane(plane, out ti.mUVec, out ti.mVVec);
+
+			if(numbers[11] != 0.0f)
+			{
+				float	rot	=numbers[11];
+
+				//planes pointing in -x, -z, and +y need rotation flipped
+				//TODO: fix the .8, should be .7 something
+				if(Vector3.Dot(plane.mNormal, Vector3.UnitX) > 0.8f)
+				{
+					rot	=-rot;
+				}
+				else if(Vector3.Dot(plane.mNormal, Vector3.UnitZ) > 0.8f)
+				{
+					rot	=-rot;
+				}
+				else if(Vector3.Dot(plane.mNormal, -Vector3.UnitY) > 0.8f)
+				{
+					rot	=-rot;
+				}
+
+				//wrap into 0 to 360
+				UtilityLib.Mathery.WrapAngleDegrees(ref rot);
+
+				Matrix	texRot	=Matrix.CreateFromAxisAngle(plane.mNormal,
+					MathHelper.ToRadians(rot));
+
+				//rotate tex vecs
+				ti.mUVec	=Vector3.TransformNormal(ti.mUVec, texRot);
+				ti.mVVec	=Vector3.TransformNormal(ti.mVVec, texRot);
+			}
+
+			FixFlags(ref ti);
+
+			mTexInfo	=tiPool.Add(ti);
+			return	ret;
+		}
 		#endregion
 
 
-		//convert from hammer flags to genesis flags
+		internal void FixFlags(ref TexInfo ti)
+		{
+			//defaults
+			mFlags		=SIDE_VISIBLE;
+			ti.mAlpha	=1.0f;
+
+			//if mirror, set no lightmap and flat
+			if(Misc.bFlagSet(ti.mFlags, TexInfo.MIRROR))
+			{
+				ti.mFlags	|=TexInfo.FLAT;
+				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+			}
+
+			//if both flat and gouraud set, choose flat
+			{
+				if(Misc.bFlagSet(ti.mFlags, TexInfo.FLAT)
+					&& Misc.bFlagSet(ti.mFlags, TexInfo.GOURAUD))
+				{
+					Misc.ClearFlag(ref ti.mFlags, TexInfo.GOURAUD);
+				}
+			}
+
+			//if emit light chosen, resulting face should be fullbright
+			{
+				if(Misc.bFlagSet(ti.mFlags, TexInfo.EMITLIGHT))
+				{
+					ti.mFlags	|=TexInfo.FULLBRIGHT;
+				}
+			}
+
+			//if flat or gouraud or fullbright or sky, set the NO_LIGHTMAP flag
+			{
+				if(Misc.bFlagSet(ti.mFlags, TexInfo.FLAT))
+				{
+					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+				}
+
+				if(Misc.bFlagSet(ti.mFlags, TexInfo.GOURAUD))
+				{
+					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+				}
+
+				if(Misc.bFlagSet(ti.mFlags, TexInfo.FULLBRIGHT))
+				{
+					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+				}
+
+				if(Misc.bFlagSet(ti.mFlags, TexInfo.SKY))
+				{
+					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+				}
+			}
+
+			//if transparent, set to half alpha
+			if(Misc.bFlagSet(ti.mFlags, TexInfo.TRANSPARENT))
+			{
+				ti.mAlpha	=0.5f;
+			}
+		}
+
+
+		//old convert from hammer flags to genesis flags
 		internal void FixFlags(ref TexInfo ti, bool bSlickAsGouraud, bool bWarpAsMirror)
 		{
 			UInt32	hammerFlags	=mFlags;
@@ -684,7 +875,7 @@ namespace BSPCore
 			}
 			if((hammerFlags & SURF_LIGHT) != 0)
 			{
-				ti.mFlags		|=TexInfo.LIGHT;
+				ti.mFlags		|=TexInfo.EMITLIGHT;
 				ti.mFlags		|=TexInfo.FULLBRIGHT;
 				ti.mFlags		|=TexInfo.NO_LIGHTMAP;
 			}
@@ -736,12 +927,12 @@ namespace BSPCore
 			}
 			if((hammerFlags & SURF_TRANS33) != 0)
 			{
-				ti.mFlags	|=TexInfo.TRANS;
+				ti.mFlags	|=TexInfo.TRANSPARENT;
 				ti.mAlpha	=0.333f;
 			}
 			if((hammerFlags & SURF_TRANS66) != 0)
 			{
-				ti.mFlags	|=TexInfo.TRANS;
+				ti.mFlags	|=TexInfo.TRANSPARENT;
 				ti.mAlpha	=0.666f;
 			}
 			if((hammerFlags & SURF_WARP) != 0)
