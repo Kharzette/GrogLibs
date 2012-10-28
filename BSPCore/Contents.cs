@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UtilityLib;
+
 
 namespace BSPCore
 {
@@ -61,26 +63,26 @@ namespace BSPCore
 
 		public const UInt32 BSP_CONTENTS_FLOCKING		=(1<<9);	//flocking flag.  Not really a contents type
 		public const UInt32 BSP_CONTENTS_SHEET			=(1<<10);
-		public const UInt32 RESERVED3					=(1<<11);
+		public const UInt32 BSP_CONTENTS_TRIGGER		=(1<<11);
 		public const UInt32 RESERVED4					=(1<<12);
 		public const UInt32 RESERVED5					=(1<<13);
 		public const UInt32 RESERVED6					=(1<<14);
 		public const UInt32 RESERVED7					=(1<<15);
 
 		//16-31 reserved for user contents
-		public const UInt32 BSP_CONTENTS_USER1			=(1<<16);	//I'm using this for lava
-		public const UInt32 BSP_CONTENTS_USER2			=(1<<17);	//slime
-		public const UInt32 BSP_CONTENTS_USER3			=(1<<18);	//water
-		public const UInt32 BSP_CONTENTS_USER4			=(1<<19);	//mist
-		public const UInt32 BSP_CONTENTS_USER5			=(1<<20);	//current_0
-		public const UInt32 BSP_CONTENTS_USER6			=(1<<21);	//current_90
-		public const UInt32 BSP_CONTENTS_USER7			=(1<<22);	//current_180
-		public const UInt32 BSP_CONTENTS_USER8			=(1<<23);	//current_270
-		public const UInt32 BSP_CONTENTS_USER9			=(1<<24);	//current_UP
-		public const UInt32 BSP_CONTENTS_USER10			=(1<<25);	//current_DOWN
-		public const UInt32 BSP_CONTENTS_USER11			=(1<<26);	//ladder
-		public const UInt32 BSP_CONTENTS_USER12			=(1<<27);	//trigger
-		public const UInt32 BSP_CONTENTS_USER13			=(1<<28);	//nodrop
+		public const UInt32 BSP_CONTENTS_USER1			=(1<<16);
+		public const UInt32 BSP_CONTENTS_USER2			=(1<<17);
+		public const UInt32 BSP_CONTENTS_USER3			=(1<<18);
+		public const UInt32 BSP_CONTENTS_USER4			=(1<<19);
+		public const UInt32 BSP_CONTENTS_USER5			=(1<<20);
+		public const UInt32 BSP_CONTENTS_USER6			=(1<<21);
+		public const UInt32 BSP_CONTENTS_USER7			=(1<<22);
+		public const UInt32 BSP_CONTENTS_USER8			=(1<<23);
+		public const UInt32 BSP_CONTENTS_USER9			=(1<<24);
+		public const UInt32 BSP_CONTENTS_USER10			=(1<<25);
+		public const UInt32 BSP_CONTENTS_USER11			=(1<<26);
+		public const UInt32 BSP_CONTENTS_USER12			=(1<<27);
+		public const UInt32 BSP_CONTENTS_USER13			=(1<<28);
 		public const UInt32 BSP_CONTENTS_USER14			=(1<<29);
 		public const UInt32 BSP_CONTENTS_USER15			=(1<<30);
 		public const UInt32 BSP_CONTENTS_USER16			=(0x80000000);
@@ -182,7 +184,7 @@ namespace BSPCore
 			}
 			if((hammerContents & CONTENTS_TRIGGER) != 0)
 			{
-				ret	|=BSP_CONTENTS_USER12;
+				ret	|=BSP_CONTENTS_TRIGGER;
 				ret	|=BSP_CONTENTS_EMPTY2;
 			}
 			if((hammerContents & CONTENTS_NODROP) != 0)
@@ -308,7 +310,7 @@ namespace BSPCore
 			}
 			if((quakeContents & CONTENTS_TRIGGER) != 0)
 			{
-				ret	|=Contents.BSP_CONTENTS_USER12;
+				ret	|=Contents.BSP_CONTENTS_TRIGGER;
 			}
 			if((quakeContents & CONTENTS_NODROP) != 0)
 			{
@@ -328,6 +330,11 @@ namespace BSPCore
 			if(ret == 0)
 			{
 				ret	|=BSP_CONTENTS_SOLID2;
+			}
+
+			//triggers should be invisible
+			if(Misc.bFlagSet(ret, BSP_CONTENTS_TRIGGER))
+			{
 			}
 
 			return	ret;			

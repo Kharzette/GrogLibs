@@ -221,7 +221,7 @@ namespace BSPCore
 						}
 						if(tex == "TOOLS/TOOLSTRIGGER")
 						{
-							ret			|=Contents.BSP_CONTENTS_USER12;
+							ret			|=Contents.BSP_CONTENTS_TRIGGER;
 							ti.mFlags	|=TexInfo.FULLBRIGHT;
 							mFlags		|=SURF_NODRAW;
 							ti.mFlags	|=TexInfo.NO_LIGHTMAP;

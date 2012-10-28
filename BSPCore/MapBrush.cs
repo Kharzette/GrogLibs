@@ -331,25 +331,16 @@ namespace BSPCore
 
 		internal void FixContents(bool bHammer, bool bTransDetail)
 		{
-//			if(bHammer)
-//			{
-//				mContents	=Contents.FixHammerContents(mContents);
-//			}
-//			else
-//			{
-//				mContents	=Contents.FixQuakeContents(mContents);
-//			}
 			mContents	=Contents.FixContents(mContents);
 
-			//fix faces as well
 			//Force clip to solid/detail, and mark faces as not visible (they will get put last in the tree)
 			if((mContents & Contents.BSP_CONTENTS_CLIP2) != 0)
 			{
 				for(int k=0;k < mOriginalSides.Count;k++)
 				{
-					mOriginalSides[k].mFlags	&=~GBSPSide.SIDE_VISIBLE;	// Clips won't have faces
+					mOriginalSides[k].mFlags	&=~GBSPSide.SIDE_VISIBLE;	//Clips won't have faces
 				}
-				mContents	|=Contents.BSP_CONTENTS_DETAIL2;			// Clips are allways detail
+				mContents	|=Contents.BSP_CONTENTS_DETAIL2;	//Clips are allways detail
 			}
 			
 			if((mContents & Contents.BSP_CONTENTS_SHEET) != 0)
@@ -395,7 +386,7 @@ namespace BSPCore
 				}
 			}
 
-			//make transparent stuff detail, so it isn't
+			//make translucent stuff detail, so it isn't
 			//chosen for splitting planes
 			if(bTransDetail &&
 				Misc.bFlagSet(Contents.BSP_CONTENTS_TRANSLUCENT2, mContents))
@@ -411,6 +402,32 @@ namespace BSPCore
 				{
 					//I'm guessing they would want empty here
 					mContents	|=Contents.BSP_CONTENTS_EMPTY2;
+				}
+			}
+
+			//make triggers invisible
+			if(Misc.bFlagSet(mContents, Contents.BSP_CONTENTS_TRIGGER))
+			{
+				//remove any flags other than trigger
+				mContents	&=Contents.BSP_CONTENTS_TRIGGER;
+
+				//hide faces
+				for(int k=0;k < mOriginalSides.Count;k++)
+				{
+					mOriginalSides[k].mFlags	&=~GBSPSide.SIDE_VISIBLE;
+				}
+			}
+
+			//make areaportals invisible
+			if(Misc.bFlagSet(mContents, Contents.BSP_CONTENTS_AREA2))
+			{
+				//remove any flags other than area
+				mContents	&=Contents.BSP_CONTENTS_AREA2;
+
+				//hide faces
+				for(int k=0;k < mOriginalSides.Count;k++)
+				{
+					mOriginalSides[k].mFlags	&=~GBSPSide.SIDE_VISIBLE;
 				}
 			}
 		}

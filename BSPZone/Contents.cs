@@ -7,46 +7,6 @@ namespace BSPZone
 {
 	public class Contents
 	{
-		//
-		//	Quake and I think Hammer content flags
-		//
-		public const UInt32	CONTENTS_EMPTY			=0;
-		public const UInt32	CONTENTS_SOLID			=1;		//an eye is never valid in a solid
-		public const UInt32	CONTENTS_WINDOW			=2;		//translucent, but not watery
-		public const UInt32	CONTENTS_AUX			=4;
-		public const UInt32	CONTENTS_LAVA			=8;
-		public const UInt32	CONTENTS_SLIME			=16;
-		public const UInt32	CONTENTS_WATER			=32;
-		public const UInt32	CONTENTS_MIST			=64;
-		public const UInt32	LAST_VISIBLE_CONTENTS	=64;
-
-		//remaining contents are non-visible, and don't eat brushes
-		public const UInt32	CONTENTS_AREAPORTAL		=0x8000;
-		public const UInt32	CONTENTS_PLAYERCLIP		=0x10000;
-		public const UInt32	CONTENTS_MONSTERCLIP	=0x20000;
-
-		//currents can be added to any other contents, and may be mixed
-		public const UInt32	CONTENTS_CURRENT_0		=0x40000;
-		public const UInt32	CONTENTS_CURRENT_90		=0x80000;
-		public const UInt32	CONTENTS_CURRENT_180	=0x100000;
-		public const UInt32	CONTENTS_CURRENT_270	=0x200000;
-		public const UInt32	CONTENTS_CURRENT_UP		=0x400000;
-		public const UInt32	CONTENTS_CURRENT_DOWN	=0x800000;
-
-		public const UInt32	CONTENTS_ORIGIN			=0x1000000;		//removed before bsping an entity
-
-		public const UInt32	CONTENTS_MONSTER		=0x2000000;		//should never be on a brush, only in game
-		public const UInt32	CONTENTS_DEADMONSTER	=0x4000000;
-		public const UInt32	CONTENTS_DETAIL			=0x8000000;		//brushes to be added after vis leafs
-		public const UInt32	CONTENTS_TRANSLUCENT	=0x10000000;	//auto set if any surface has trans
-		public const UInt32	CONTENTS_LADDER			=0x20000000;
-		public const UInt32	CONTENTS_STRUCTURAL		=0x10000000;	//brushes used for the bsp
-		public const UInt32	CONTENTS_TRIGGER		=0x40000000;
-		public const UInt32	CONTENTS_NODROP			=0x80000000;	//don't leave bodies or items (death fog, lava)
-
-		//
-		//	Genesis contents, the above stuff is converted to these below
-		//
 		public const UInt32 BSP_CONTENTS_SOLID2			=(1<<0);	//Solid (Visible)
 		public const UInt32 BSP_CONTENTS_WINDOW2		=(1<<1);	//Window (Visible)
 		public const UInt32 BSP_CONTENTS_EMPTY2			=(1<<2);	//Empty but Visible (water, lava, etc...)
@@ -61,37 +21,15 @@ namespace BSPZone
 
 		public const UInt32 BSP_CONTENTS_FLOCKING		=(1<<9);	//flocking flag.  Not really a contents type
 		public const UInt32 BSP_CONTENTS_SHEET			=(1<<10);
-		public const UInt32 RESERVED3					=(1<<11);
+		public const UInt32 BSP_CONTENTS_TRIGGER		=(1<<11);
 		public const UInt32 RESERVED4					=(1<<12);
 		public const UInt32 RESERVED5					=(1<<13);
 		public const UInt32 RESERVED6					=(1<<14);
 		public const UInt32 RESERVED7					=(1<<15);
 
 		//16-31 reserved for user contents
-		public const UInt32 BSP_CONTENTS_USER1			=(1<<16);	//I'm using this for lava
-		public const UInt32 BSP_CONTENTS_USER2			=(1<<17);	//slime
-		public const UInt32 BSP_CONTENTS_USER3			=(1<<18);	//water
-		public const UInt32 BSP_CONTENTS_USER4			=(1<<19);	//mist
-		public const UInt32 BSP_CONTENTS_USER5			=(1<<20);	//current_0
-		public const UInt32 BSP_CONTENTS_USER6			=(1<<21);	//current_90
-		public const UInt32 BSP_CONTENTS_USER7			=(1<<22);	//current_180
-		public const UInt32 BSP_CONTENTS_USER8			=(1<<23);	//current_270
-		public const UInt32 BSP_CONTENTS_USER9			=(1<<24);	//current_UP
-		public const UInt32 BSP_CONTENTS_USER10			=(1<<25);	//current_DOWN
-		public const UInt32 BSP_CONTENTS_USER11			=(1<<26);	//ladder
-		public const UInt32 BSP_CONTENTS_USER12			=(1<<27);	//trigger
-		public const UInt32 BSP_CONTENTS_USER13			=(1<<28);	//nodrop
-		public const UInt32 BSP_CONTENTS_USER14			=(1<<29);
-		public const UInt32 BSP_CONTENTS_USER15			=(1<<30);
-		public const UInt32 BSP_CONTENTS_USER16			=(0x80000000);
 		
 		//These contents are all solid types
 		public const UInt32 BSP_CONTENTS_SOLID_CLIP		=(BSP_CONTENTS_SOLID2 | BSP_CONTENTS_WINDOW2 | BSP_CONTENTS_CLIP2);
-		
-		//These contents are all visible types
-		public const UInt32 BSP_VISIBLE_CONTENTS		=(BSP_CONTENTS_SOLID2 | BSP_CONTENTS_EMPTY2 | BSP_CONTENTS_WINDOW2 | BSP_CONTENTS_SHEET | BSP_CONTENTS_WAVY2);
-		
-		//These contents define where faces are NOT allowed to merge across
-		public const UInt32 BSP_MERGE_SEP_CONTENTS		=(BSP_CONTENTS_WAVY2 | BSP_CONTENTS_HINT2 | BSP_CONTENTS_AREA2);
 	}
 }
