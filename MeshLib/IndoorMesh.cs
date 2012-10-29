@@ -42,7 +42,7 @@ namespace MeshLib
 		List<DrawCall>	[]mMirrorDrawCalls;
 
 		//drawcalls for non alphas (single per material)
-		DrawCall	[]mLMDrawCalls;
+		Dictionary<int, List<DrawCall>>	mLMDrawCalls;
 		DrawCall	[]mLMAnimDrawCalls;
 		DrawCall	[]mVLitDrawCalls;
 		DrawCall	[]mSkyDrawCalls;
@@ -67,7 +67,7 @@ namespace MeshLib
 			//lightmap stuff
 			out VertexBuffer lmVB,
 			out IndexBuffer lmIB,
-			out DrawCall []lmDC,
+			out Dictionary<int, List<DrawCall>> lmDC,
 
 			//animated lightmap stuff
 			out VertexBuffer lmAnimVB,
@@ -245,7 +245,7 @@ namespace MeshLib
 				DrawMaterialsDC(gd, position, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
 				DrawMaterialsDC(gd, position, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
 				DrawMaterialsDC(gd, position, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
+//				DrawMaterialsDC(gd, position, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
 				DrawMaterialsDC(gd, position, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 				
 				//alphas
@@ -334,6 +334,65 @@ namespace MeshLib
 				g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
 					0, call.mMinVertIndex, call.mNumVerts, call.mStartIndex, call.mPrimCount);
 				idx++;
+			}
+		}
+
+
+		//for opaques with models
+		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos,
+			VertexBuffer vb, IndexBuffer ib, Dictionary<int, List<DrawCall>> dcs,
+			IsMaterialVisible bMatVis)
+		{
+			if(vb == null)
+			{
+				return;
+			}
+
+			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
+
+			g.SetVertexBuffer(vb);
+			g.Indices	=ib;
+
+			//cycle through models
+			foreach(KeyValuePair<int, List<DrawCall>> modCall in dcs)
+			{
+				int	idx	=0;
+
+				foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
+				{
+					Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
+					if(fx == null)
+					{
+						idx++;
+						continue;
+					}
+					if(modCall.Key == 0)
+					{
+						if(!bMatVis(eyePos, idx))
+						{
+							idx++;
+							continue;
+						}
+					}
+
+					DrawCall	call	=modCall.Value[idx];
+					if(call.mPrimCount == 0)
+					{
+						idx++;
+						continue;
+					}
+
+					mMatLib.ApplyParameters(mat.Key);
+
+					//set renderstates from material
+					mat.Value.ApplyRenderStates(g);
+
+					fx.CurrentTechnique.Passes[0].Apply();
+
+					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+						0, call.mMinVertIndex, call.mNumVerts, call.mStartIndex, call.mPrimCount);
+					idx++;
+				}
 			}
 		}
 
@@ -687,7 +746,7 @@ namespace MeshLib
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAAnimIB, g, bEditor);
 			}
 
-			mLMDrawCalls		=DrawCall.ReadDrawCallArray(br);
+//			mLMDrawCalls		=DrawCall.ReadDrawCallArray(br);
 			mVLitDrawCalls		=DrawCall.ReadDrawCallArray(br);
 			mLMAnimDrawCalls	=DrawCall.ReadDrawCallArray(br);
 			mSkyDrawCalls		=DrawCall.ReadDrawCallArray(br);
@@ -765,7 +824,7 @@ namespace MeshLib
 
 			//drawcall stuff
 			//opaques
-			DrawCall.WriteDrawCallArray(bw, mLMDrawCalls);
+//			DrawCall.WriteDrawCallArray(bw, mLMDrawCalls);
 			DrawCall.WriteDrawCallArray(bw, mVLitDrawCalls);
 			DrawCall.WriteDrawCallArray(bw, mLMAnimDrawCalls);
 			DrawCall.WriteDrawCallArray(bw, mSkyDrawCalls);

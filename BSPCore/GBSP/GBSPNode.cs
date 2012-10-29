@@ -56,16 +56,12 @@ namespace BSPCore
 		internal const int	MAX_AREA_PORTALS	=1024;
 
 
-		internal void BuildBSP(List<GBSPBrush> brushList, PlanePool pool, bool bVerbose)
+		internal void BuildBSP(List<GBSPBrush> brushList, PlanePool pool, BuildStats bs, Bounds bounds, bool bVerbose)
 		{
 			if(bVerbose)
 			{
 				CoreEvents.Print("--- Build BSP Tree ---\n");
 			}
-
-			BuildStats	bs		=new BuildStats();
-			Bounds		bounds	=new Bounds();
-			GBSPBrush.BrushListStats(brushList, bs, bounds, pool);
 
 			if(bVerbose)
 			{

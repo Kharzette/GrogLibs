@@ -194,7 +194,12 @@ namespace BSPCore
 			GBSPBrush.DumpOverlapping(csgList, pp);
 
 			GBSPNode	root	=new GBSPNode();
-			root.BuildBSP(csgList, pp, bVerbose);
+
+			BuildStats	bs		=new BuildStats();
+			Bounds		bounds	=new Bounds();
+			GBSPBrush.BrushListStats(csgList, bs, bounds, pp);
+
+			root.BuildBSP(csgList, pp, bs, bounds, bVerbose);
 			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
 
 			return	root;
@@ -211,7 +216,16 @@ namespace BSPCore
 			List<GBSPBrush>	csgList	=GBSPBrush.GankBrushOverlap(bVerbose, glist, pool, cp);
 
 			GBSPNode	root	=new GBSPNode();
-			root.BuildBSP(csgList, pool, bVerbose);
+
+			BuildStats	bs		=new BuildStats();
+			Bounds		bounds	=new Bounds();
+			GBSPBrush.BrushListStats(csgList, bs, bounds, pool);
+
+			//for submodels set the bounds way out
+			bounds.mMins	=Vector3.One * -4096f;
+			bounds.mMaxs	=Vector3.One * 4096f;
+
+			root.BuildBSP(csgList, pool, bs, bounds, bVerbose);
 
 			mBounds			=new Bounds(root.GetBounds());
 

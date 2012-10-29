@@ -1513,7 +1513,7 @@ namespace BSPCore
 			//lightmap stuff
 			out VertexBuffer lmVB,
 			out IndexBuffer lmIB,
-			out MeshLib.DrawCall []lmDCs,
+			out Dictionary<int, List<MeshLib.DrawCall>> lmDCs,
 
 			//animated lightmap stuff
 			out VertexBuffer lmAnimVB,
@@ -1536,7 +1536,7 @@ namespace BSPCore
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lightAtlasSize);
 
-			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXLightData, pp))
+			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXModels, mGFXLightData, pp))
 			{
 				lmVB	=null;	lmIB	=null;	lmDCs	=null;
 				lmAnimVB	=null;	lmAnimDCs	=null;

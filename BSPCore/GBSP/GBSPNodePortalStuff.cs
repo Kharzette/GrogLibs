@@ -639,7 +639,7 @@ namespace BSPCore
 			{
 				if(p.mOnNode == null)
 				{
-					continue;		// Outside node (assert for it here!!!)
+					continue;	//outside node
 				}
 
 				if(!p.mSideFound)
