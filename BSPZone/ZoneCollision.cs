@@ -205,7 +205,54 @@ namespace BSPZone
 		}
 
 
-		public bool Trace_WorldCollisionBBox(BoundingBox boxBounds,
+		//returns the closest impact, checks all models
+		public bool Trace_All(BoundingBox boxBounds, Vector3 start, Vector3 end,
+			 ref int modelHit, ref Vector3 I, ref ZonePlane P)
+		{
+			List<int>		modelsHit	=new List<int>();
+			List<Vector3>	impacts		=new List<Vector3>();
+			List<ZonePlane>	planes		=new List<ZonePlane>();
+
+			for(int i=0;i < mZoneModels.Length;i++)
+			{
+				Vector3		impacto	=Vector3.Zero;
+				ZonePlane	hp		=ZonePlane.Blank;
+
+				if(Trace_WorldCollisionBBox(boxBounds, i,
+					start, end, ref impacto, ref hp))
+				{
+					modelsHit.Add(i);
+					impacts.Add(impacto);
+					planes.Add(hp);
+				}
+			}
+
+			if(modelsHit.Count == 0)
+			{
+				return	false;
+			}
+
+			int		bestIdx		=0;
+			float	bestDist	=float.MaxValue;
+			for(int i=0;i < modelsHit.Count;i++)
+			{
+				float	dist	=Vector3.DistanceSquared(impacts[i], start);
+				if(dist < bestDist)
+				{
+					bestDist	=dist;
+					bestIdx		=i;
+				}
+			}
+
+			modelHit	=modelsHit[bestIdx];
+			I			=impacts[bestIdx];
+			P			=planes[bestIdx];
+
+			return	true;
+		}
+
+
+		public bool Trace_WorldCollisionBBox(BoundingBox boxBounds, int modelIndex,
 			Vector3 start, Vector3 end, ref Vector3 I, ref ZonePlane P)
 		{
 			RayTrace	trace		=new RayTrace();
@@ -214,7 +261,7 @@ namespace BSPZone
 			trace.mRayBox	=boxBounds;
 			trace.mMoveBox	=Trace_GetMoveBox(boxBounds, start, end);
 
-			ZoneModel	worldModel	=mZoneModels[0];
+			ZoneModel	worldModel	=mZoneModels[modelIndex];
 
 			if(!trace.mMoveBox.Intersects(worldModel.mBounds))
 			{

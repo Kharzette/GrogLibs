@@ -551,7 +551,9 @@ namespace BSPZone
 			Vector3		footCheck	=footPos - Vector3.UnitY * dist;
 			ZonePlane	footPlane	=ZonePlane.BlankX;
 			Vector3		impVec		=Vector3.Zero;
-			if(Trace_WorldCollisionBBox(box, footPos, footCheck, ref impVec, ref footPlane))
+			int			modelIndex	=0;
+//			if(Trace_WorldCollisionBBox(box, footPos, footCheck, ref impVec, ref footPlane))
+			if(Trace_All(box, footPos, footCheck, ref modelIndex, ref impVec, ref footPlane))
 			{
 				return	IsGround(footPlane);
 			}
@@ -564,10 +566,12 @@ namespace BSPZone
 		{
 			Vector3		impVec		=Vector3.Zero;
 			ZonePlane	impPlane	=ZonePlane.BlankX;
+			int			modelHit	=0;
 
 			//first trace up from the start point
 			//to make sure there's head room
-			if(Trace_WorldCollisionBBox(box, start, start + stairAxis * stepHeight, ref impVec, ref impPlane))
+//			if(Trace_WorldCollisionBBox(box, start, start + stairAxis * stepHeight, ref impVec, ref impPlane))
+			if(Trace_All(box, start, start + stairAxis * stepHeight, ref modelHit, ref impVec, ref impPlane))
 			{
 				//hit noggin, just use previous point
 				return	false;
@@ -582,8 +586,10 @@ namespace BSPZone
 			{
 				//trace down by step height and make sure
 				//we land on a ground surface
-				if(Trace_WorldCollisionBBox(box, stepPos, stepPos - Vector3.UnitY * stepHeight,
-					ref impVec, ref impPlane))
+//				if(Trace_WorldCollisionBBox(box, stepPos, stepPos - Vector3.UnitY * stepHeight,
+//					ref impVec, ref impPlane))
+				if(Trace_All(box, stepPos, stepPos - Vector3.UnitY * stepHeight,
+					ref modelHit, ref impVec, ref impPlane))
 				{
 					if(IsGround(impPlane))
 					{
@@ -702,13 +708,15 @@ namespace BSPZone
 		{
 			Vector3		impacto		=Vector3.Zero;
 			int			i			=0;
+			int			modelHit	=0;
 
 			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
 
 			for(i=0;i < MaxMoveBoxIterations;i++)
 			{
 				ZonePlane	zp	=ZonePlane.Blank;
-				if(!Trace_WorldCollisionBBox(box, start, end, ref impacto, ref zp))
+//				if(!Trace_WorldCollisionBBox(box, start, end, ref impacto, ref zp))
+				if(!Trace_All(box, start, end, ref modelHit, ref impacto, ref zp))
 				{
 					break;
 				}

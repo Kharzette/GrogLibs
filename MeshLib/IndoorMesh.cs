@@ -310,6 +310,13 @@ namespace MeshLib
 
 				foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
 				{
+					DrawCall	call	=modCall.Value[idx];
+					if(call.mPrimCount == 0)
+					{
+						idx++;
+						continue;
+					}
+
 					Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
 					if(fx == null)
 					{
@@ -323,13 +330,6 @@ namespace MeshLib
 							idx++;
 							continue;
 						}
-					}
-
-					DrawCall	call	=modCall.Value[idx];
-					if(call.mPrimCount == 0)
-					{
-						idx++;
-						continue;
 					}
 
 					mMatLib.ApplyParameters(mat.Key);
@@ -375,6 +375,12 @@ namespace MeshLib
 
 				foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
 				{
+					if(modCall.Value.Count == 0)
+					{
+						idx++;
+						continue;
+					}
+
 					Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
 					if(fx == null)
 					{
@@ -388,12 +394,6 @@ namespace MeshLib
 							idx++;
 							continue;
 						}
-					}
-
-					if(modCall.Value.Count == 0)
-					{
-						idx++;
-						continue;
 					}
 
 					foreach(DrawCall dc in modCall.Value[idx])
