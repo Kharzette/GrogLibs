@@ -660,7 +660,7 @@ namespace BSPCore
 		}
 
 
-		internal UInt32 ReadMapLine(string szLine, PlanePool pool,
+		internal UInt32 ReadMapLine(string szLine,
 			TexInfoPool tiPool,	BSPBuildParams prms)
 		{
 			UInt32	ret	=0;
@@ -735,12 +735,13 @@ namespace BSPCore
 				CoreEvents.Print("Quake 3 style flags found " + flags[0] + ", " + flags[1] + "\n");
 			}
 
+			//temp plane, not pooling yet
 			GBSPPlane	plane	=new GBSPPlane(mPoly);
 
 			plane.mType	=GBSPPlane.PLANE_ANY;
 			plane.Snap();
 
-			mPlaneNum	=pool.FindPlane(plane, out mbFlipSide);
+//			mPlaneNum	=pool.FindPlane(plane, out mbFlipSide);
 
 			ti.mShiftU		=numbers[9];
 			ti.mShiftV		=numbers[10];
@@ -997,6 +998,23 @@ namespace BSPCore
 			{
 				mPoly.GetLines(verts, indexes, bCheckFlags);
 			}
+		}
+
+
+		internal void MovePoly(Vector3 delta)
+		{
+			mPoly.Move(delta);
+		}
+
+
+		internal void PoolPlane(PlanePool pool)
+		{
+			GBSPPlane	p	=new GBSPPlane(mPoly);
+
+			p.mType	=GBSPPlane.PLANE_ANY;
+			p.Snap();
+
+			mPlaneNum	=pool.FindPlane(p, out mbFlipSide);
 		}
 
 

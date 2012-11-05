@@ -66,7 +66,7 @@ namespace BSPCore
 			}
 
 			MakePolys(pp, false, cp);
-			FixContents(false, true);
+			FixContents();
 		}
 
 
@@ -134,7 +134,7 @@ namespace BSPCore
 		}
 
 
-		internal bool ReadFromMap(StreamReader sr, PlanePool pool,
+		internal bool ReadFromMap(StreamReader sr,
 			TexInfoPool tiPool,	int entityNum, BSPBuildParams prms)
 		{
 			string	s	="";
@@ -145,19 +145,21 @@ namespace BSPCore
 				if(s.StartsWith("("))
 				{
 					GBSPSide	side	=new GBSPSide();
-					mContents	=side.ReadMapLine(s, pool, tiPool, prms);
+					mContents	=side.ReadMapLine(s, tiPool, prms);
 
 					mOriginalSides.Add(side);
 					mEntityNum	=entityNum;
 				}
 				else if(s.StartsWith("}"))
 				{
+					PolyBound();
+
 					//check for default brushes
 					if(mContents == 0)
 					{
 						mContents	=Contents.CONTENTS_SOLID;
 					}
-					return	ret;	//entity done
+					return	ret;	//brush done
 				}
 			}
 			return	ret;
@@ -255,6 +257,37 @@ namespace BSPCore
 		}
 
 
+		//move the original side polys before planes have been pooled
+		internal void MovePolys(Vector3 delta)
+		{
+			foreach(GBSPSide s in mOriginalSides)
+			{
+				s.MovePoly(delta);
+			}
+		}
+
+
+		//compute bound from polys
+		internal void PolyBound()
+		{
+			mBounds	=new Bounds();
+
+			foreach(GBSPSide s in mOriginalSides)
+			{
+				s.mPoly.AddToBounds(mBounds);
+			}
+		}
+
+
+		internal void PoolPlanes(PlanePool pool)
+		{
+			foreach(GBSPSide s in mOriginalSides)
+			{
+				s.PoolPlane(pool);
+			}
+		}
+
+
 		internal bool MakePolys(PlanePool pool, bool bCheckFaces, ClipPools cp)
 		{
 			mBounds	=new Bounds();
@@ -329,7 +362,7 @@ namespace BSPCore
 		}
 
 
-		internal void FixContents(bool bHammer, bool bTransDetail)
+		internal void FixContents()
 		{
 			mContents	=Contents.FixContents(mContents);
 
@@ -388,8 +421,7 @@ namespace BSPCore
 
 			//make translucent stuff detail, so it isn't
 			//chosen for splitting planes
-			if(bTransDetail &&
-				Misc.bFlagSet(Contents.BSP_CONTENTS_TRANSLUCENT2, mContents))
+			if(Misc.bFlagSet(Contents.BSP_CONTENTS_TRANSLUCENT2, mContents))
 			{
 				mContents	|=Contents.BSP_CONTENTS_DETAIL2;
 			}

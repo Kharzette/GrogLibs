@@ -1015,6 +1015,15 @@ namespace BSPCore
 		}
 
 
+		internal void Move(Vector3 delta)
+		{
+			for(int i=0;i < mVerts.Length;i++)
+			{
+				mVerts[i]	+=delta;
+			}
+		}
+
+
 		internal Int32[] IndexVerts(FaceFixer ff)
 		{
 			return	ff.IndexFaceVerts(mVerts);

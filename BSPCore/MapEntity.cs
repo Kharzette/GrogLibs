@@ -127,36 +127,44 @@ namespace BSPCore
 				mData.Remove("ModelOrigin");	//blast it
 			}
 
-			//check for an origin brush
-			foreach(MapBrush mb in mBrushes)
+			//world org is 0 0 0
+			if(mData["Model"] == "0")
 			{
-				if(Misc.bFlagSet(mb.mContents, Contents.BSP_CONTENTS_ORIGIN))
-				{
-					//grab the origin
-					Vector3	org	=mb.mBounds.GetCenter();
-					mData.Add("ModelOrigin", Misc.VectorToString(org));
-					return;
-				}
+				mData.Add("ModelOrigin", Misc.VectorToString(Vector3.Zero));
 			}
-
-			//none found?  Just use the center of the entire model
-			Bounds	bnd		=new Bounds();
-			bool	bFirst	=true;
-			foreach(MapBrush mb in mBrushes)
+			else
 			{
-				if(bFirst)
+				//check for an origin brush
+				foreach(MapBrush mb in mBrushes)
 				{
-					bnd		=mb.mBounds;
-					bFirst	=false;
+					if(Misc.bFlagSet(mb.mContents, Contents.BSP_CONTENTS_ORIGIN))
+					{
+						//grab the origin
+						Vector3	org	=mb.mBounds.GetCenter();
+						mData.Add("ModelOrigin", Misc.VectorToString(org));
+						return;
+					}
 				}
-				else
-				{
-					bnd.Merge(bnd, mb.mBounds);
-				}
-			}
 
-			Vector3	org2	=bnd.GetCenter();
-			mData.Add("ModelOrigin", Misc.VectorToString(org2));
+				//none found?  Just use the center of the entire model
+				Bounds	bnd		=new Bounds();
+				bool	bFirst	=true;
+				foreach(MapBrush mb in mBrushes)
+				{
+					if(bFirst)
+					{
+						bnd		=mb.mBounds;
+						bFirst	=false;
+					}
+					else
+					{
+						bnd.Merge(bnd, mb.mBounds);
+					}
+				}
+
+				Vector3	org2	=bnd.GetCenter();
+				mData.Add("ModelOrigin", Misc.VectorToString(org2));
+			}
 		}
 
 
@@ -296,155 +304,9 @@ namespace BSPCore
 		}
 
 
-		//read a single entity block
-		internal void ReadVMFEntBlock(StreamReader sr, int entityNum,
-			PlanePool pool, TexInfoPool tiPool, ClipPools cp, BSPBuildParams prms)
-		{
-			string	s	="";
-			while((s = sr.ReadLine()) != null)
-			{
-				s	=s.Trim();
-				if(s.StartsWith("\""))
-				{
-					string	[]tokens;
-					tokens	=s.Split('\"');
-
-					if(mData.ContainsKey(tokens[1]))
-					{
-						mData[tokens[1]]	=tokens[3];
-					}
-					else
-					{
-						mData.Add(tokens[1], tokens[3]);
-					}
-				}
-				else if(s == "editor")
-				{
-					SkipVMFEditorBlock(sr);
-				}
-				else if(s == "solid")
-				{
-					MapBrush	b	=new MapBrush();
-
-					if(b.ReadVMFSolidBlock(sr, pool, tiPool, entityNum))
-					{
-						b.MakePolys(pool, true, cp);
-						b.FixContents(true, prms.mbTransparentDetail);
-
-						if(mData["classname"] == "func_detail")
-						{
-							b.mContents	|=Contents.BSP_CONTENTS_DETAIL2;
-						}
-						mBrushes.Add(b);
-					}
-				}
-				else if(s == "connections")
-				{
-					SkipVMFEditorBlock(sr);
-				}
-				else if(s.StartsWith("}"))
-				{
-					return;	//entity done
-				}
-			}
-		}
-
-
-		static internal void SkipVMFEditorBlock(StreamReader sr)
-		{
-			string	s	="";
-			while((s = sr.ReadLine()) != null)
-			{
-				s	=s.Trim();
-				if(s.StartsWith("}"))
-				{
-					return;	//editor done
-				}
-			}
-		}
-
-
-		void SkipVMFGroupBlock(StreamReader sr)
-		{
-			string	s	="";
-			while((s = sr.ReadLine()) != null)
-			{
-				s	=s.Trim();
-				if(s.StartsWith("}"))
-				{
-					return;	//skip done
-				}
-				else if(s == "editor")
-				{
-					MapEntity.SkipVMFEditorBlock(sr);
-				}
-			}
-		}
-
-
-		//read a single entity block
-		internal void ReadVMFWorldBlock(StreamReader sr, int entityNum,
-			PlanePool pool, TexInfoPool tiPool, ClipPools cp, BSPBuildParams prms)
-		{
-			string	s	="";
-			while((s = sr.ReadLine()) != null)
-			{
-				s	=s.Trim();
-				if(s == "solid")
-				{
-					MapBrush	b	=new MapBrush();
-
-					if(b.ReadVMFSolidBlock(sr, pool, tiPool, entityNum))
-					{
-						b.MakePolys(pool, true, cp);
-						b.FixContents(true, prms.mbTransparentDetail);
-						mBrushes.Add(b);
-					}
-				}
-				else if(s == "group")
-				{
-					SkipVMFGroupBlock(sr);
-				}
-				else if(s.StartsWith("\""))
-				{
-					string	[]tokens;
-					tokens	=s.Split('\"');
-
-					mData.Add(tokens[1], tokens[3]);
-				}
-				else if(s.StartsWith("}"))
-				{
-					return;	//entity done
-				}
-			}
-		}
-
-
-		//read's hammer files
-		internal void ReadFromVMF(StreamReader sr, int entityNum,
-			PlanePool pool, TexInfoPool tiPool, ClipPools cp, BSPBuildParams prms)
-		{
-			string	s	="";
-			while((s = sr.ReadLine()) != null)
-			{
-				s	=s.Trim();
-				if(s == "entity")
-				{
-					ReadVMFEntBlock(sr, entityNum, pool, tiPool, cp, prms);
-					return;
-				}
-				else if(s == "world")
-				{
-					ReadVMFWorldBlock(sr, entityNum, pool, tiPool, cp, prms);
-					return;
-				}
-			}
-		}
-
-
 		//old school quake maps
-		internal void ReadFromMap(StreamReader sr, PlanePool pool, TexInfoPool tiPool,
-			int entityNum, BSPBuildParams prms, ClipPools cp)
+		internal void ReadFromMap(StreamReader sr, TexInfoPool tiPool,
+			int entityNum, BSPBuildParams prms)
 		{
 			string	s	="";
 			while((s = sr.ReadLine()) != null)
@@ -467,10 +329,9 @@ namespace BSPCore
 				else if(s == "{")
 				{
 					MapBrush	b	=new MapBrush();
-					if(b.ReadFromMap(sr, pool, tiPool, entityNum, prms))
+					if(b.ReadFromMap(sr, tiPool, entityNum, prms))
 					{
-						b.MakePolys(pool, true, cp);
-						b.FixContents(false, prms.mbTransparentDetail);
+						b.FixContents();
 						mBrushes.Add(b);
 					}
 				}
@@ -598,6 +459,40 @@ namespace BSPCore
 			}
 		}
 
+
+		internal void MoveBrushesToOrigin()
+		{
+			Vector3	org	=Vector3.Zero;
+
+			if(!GetVectorNoConversion("ModelOrigin", out org))
+			{
+				CoreEvents.Print("Unable to grab origin in model " + mModelNum + "\n");
+				return;
+			}
+
+			//move brushes to origin
+			foreach(MapBrush mb in mBrushes)
+			{
+				mb.MovePolys(-org);
+			}
+		}
+
+
+		internal void MakeBrushPolys(PlanePool pool, ClipPools cp)
+		{
+			//pool planes
+			foreach(MapBrush mb in mBrushes)
+			{
+				mb.PoolPlanes(pool);
+			}
+
+			foreach(MapBrush mb in mBrushes)
+			{
+				mb.MakePolys(pool, true, cp);
+			}
+		}
+
+
 		internal void CountBrushes(ref int numDetails, ref int numSolids, ref int numTotal)
 		{
 			foreach(MapBrush mb in mBrushes)
@@ -613,6 +508,7 @@ namespace BSPCore
 				numTotal++;
 			}
 		}
+
 
 		public BindingList<MapBrush> GetBrushes()
 		{

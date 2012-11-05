@@ -613,8 +613,6 @@ namespace BSPCore
 			int	numDetails	=0;
 			int	numTotal	=0;
 
-			ClipPools	cp	=new ClipPools();
-
 			if(File.Exists(mapFileName))
 			{
 				using(StreamReader sr = File.OpenText(mapFileName))
@@ -630,51 +628,41 @@ namespace BSPCore
 							if(s == "{")
 							{
 								MapEntity	e	=new MapEntity();
-								e.ReadFromMap(sr, mPlanePool, mTIPool, mEntities.Count,	prms, cp);
+								e.ReadFromMap(sr, mTIPool, mEntities.Count,	prms);
 								mEntities.Add(e);
 
 								CoreEvents.FireNumPlanesChangedEvent(mPlanePool.mPlanes.Count, null);
-							}
-						}
-					}
-					else
-					{
-						while((s = sr.ReadLine()) != null)
-						{
-							s	=s.Trim();
-							if(s == "entity")
-							{
-								MapEntity	e	=new MapEntity();
-								e.ReadVMFEntBlock(sr, mEntities.Count, mPlanePool, mTIPool, cp, prms);
-								mEntities.Add(e);
-								CoreEvents.FireNumPlanesChangedEvent(mPlanePool.mPlanes.Count, null);
-							}
-							else if(s == "world")
-							{
-								MapEntity	e	=new MapEntity();
-								e.ReadVMFWorldBlock(sr, mEntities.Count, mPlanePool, mTIPool, cp, prms);
-								mEntities.Add(e);
-								CoreEvents.FireNumPlanesChangedEvent(mPlanePool.mPlanes.Count, null);
-							}
-							else if(s == "cameras")
-							{
-								MapEntity.SkipVMFEditorBlock(sr);
-							}
-							else if(s == "cordon")
-							{
-								MapEntity.SkipVMFEditorBlock(sr);
 							}
 						}
 					}
 				}
 			}
 
+			InsertModelNumbers();
+
+			//set origins
+			foreach(MapEntity e in mEntities)
+			{
+				e.SetModelOrigin();
+			}
+
+			//move entity brushes to origins
+			foreach(MapEntity e in mEntities)
+			{
+				e.MoveBrushesToOrigin();
+			}
+
+			//make brush faces and pool stuff
+			ClipPools	cp	=new ClipPools();
+			foreach(MapEntity e in mEntities)
+			{
+				e.MakeBrushPolys(mPlanePool, cp);
+			}
+
 			foreach(MapEntity e in mEntities)
 			{
 				e.CountBrushes(ref numDetails, ref numSolids, ref numTotal);
 			}
-
-			InsertModelNumbers();
 
 			CoreEvents.Print("Brush file load complete\n");
 			CoreEvents.Print("" + numSolids + " solid brushes\n");
@@ -820,13 +808,8 @@ namespace BSPCore
 				
 				mEntities[i].mModelNum	=NumModels;
 
-				if(i != 0)
-				{
-					mEntities[i].mData.Add("Model", "" + NumModels);
+				mEntities[i].mData.Add("Model", "" + NumModels);
 
-					//assign origin
-					mEntities[i].SetModelOrigin();
-				}
 				NumModels++;
 			}
 			return	true;
