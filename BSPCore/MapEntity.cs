@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using Microsoft.Xna.Framework;
 using System.ComponentModel;
+using UtilityLib;
 
 
 namespace BSPCore
@@ -13,7 +14,7 @@ namespace BSPCore
 		BindingList<MapBrush>	mBrushes	=new BindingList<MapBrush>();
 
 		internal Dictionary<string, string>	mData		=new Dictionary<string, string>();
-		internal Int32						mModelNum;
+		internal Int32						mModelNum;	//donut use this, use the key/value
 
 
 		public bool GetOrigin(out Vector3 org)
@@ -101,6 +102,61 @@ namespace BSPCore
 			{
 				return	false;
 			}
+		}
+
+
+		//this will either use the origin brush or
+		//the center of the model
+		public void SetModelOrigin()
+		{
+			//is this even a bmodel?
+			if(mBrushes.Count == 0)
+			{
+				return;
+			}
+
+			//model number set?
+			if(!mData.ContainsKey("Model"))
+			{
+				return;
+			}
+
+			//see if an origin already exists
+			if(mData.ContainsKey("ModelOrigin"))
+			{
+				mData.Remove("ModelOrigin");	//blast it
+			}
+
+			//check for an origin brush
+			foreach(MapBrush mb in mBrushes)
+			{
+				if(Misc.bFlagSet(mb.mContents, Contents.BSP_CONTENTS_ORIGIN))
+				{
+					//grab the origin
+					Vector3	org	=mb.mBounds.GetCenter();
+					mData.Add("ModelOrigin", Misc.VectorToString(org));
+					return;
+				}
+			}
+
+			//none found?  Just use the center of the entire model
+			Bounds	bnd		=new Bounds();
+			bool	bFirst	=true;
+			foreach(MapBrush mb in mBrushes)
+			{
+				if(bFirst)
+				{
+					bnd		=mb.mBounds;
+					bFirst	=false;
+				}
+				else
+				{
+					bnd.Merge(bnd, mb.mBounds);
+				}
+			}
+
+			Vector3	org2	=bnd.GetCenter();
+			mData.Add("ModelOrigin", Misc.VectorToString(org2));
 		}
 
 

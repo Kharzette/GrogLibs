@@ -50,6 +50,7 @@ namespace MaterialLib
 		//drawprim setup stuff
 		VertexBuffer		mVB;
 		IndexBuffer			mIB;
+		Matrix				mWorldMat;
 
 		//drawprim call numbers
 		Int32	mBaseVertex;
@@ -60,7 +61,7 @@ namespace MaterialLib
 
 
 		internal AlphaNode(Vector3 sortPoint, Material matRef,
-			VertexBuffer vb, IndexBuffer ib,
+			VertexBuffer vb, IndexBuffer ib, Matrix worldMat,
 			Int32 baseVert, Int32 minVertIndex,
 			Int32 numVerts, Int32 startIndex, Int32 primCount)
 		{
@@ -68,6 +69,7 @@ namespace MaterialLib
 			mMaterial		=matRef;
 			mVB				=vb;
 			mIB				=ib;
+			mWorldMat		=worldMat;
 			mBaseVertex		=baseVert;
 			mMinVertexIndex	=minVertIndex;
 			mNumVerts		=numVerts;
@@ -79,7 +81,6 @@ namespace MaterialLib
 		internal void Draw(GraphicsDevice g, MaterialLib mlib)
 		{
             g.SetVertexBuffer(mVB, 0);
-//			g.Vertices[0].SetSource(mVB, 0, mVD.GetVertexStrideSize(0));
 			g.Indices	=mIB;
 
 			if(mNumVerts == 0 || mPrimCount == 0)
@@ -97,6 +98,8 @@ namespace MaterialLib
 
 			mMaterial.ApplyRenderStates(g);
 
+			fx.Parameters["mWorld"].SetValue(mWorldMat);
+
 			fx.CurrentTechnique.Passes[0].Apply();
 
 			g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
@@ -107,7 +110,9 @@ namespace MaterialLib
 
 		internal float DistSquared(Vector3 mEye)
 		{
-			return	Vector3.DistanceSquared(mSortPoint, mEye);
+			Vector3	transformedSort	=Vector3.Transform(mSortPoint, mWorldMat);
+
+			return	Vector3.DistanceSquared(transformedSort, mEye);
 		}
 	}
 }

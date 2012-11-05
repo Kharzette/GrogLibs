@@ -22,10 +22,10 @@ namespace BSPZone
 		public const UInt32 BSP_CONTENTS_FLOCKING		=(1<<9);	//flocking flag.  Not really a contents type
 		public const UInt32 BSP_CONTENTS_SHEET			=(1<<10);
 		public const UInt32 BSP_CONTENTS_TRIGGER		=(1<<11);
-		public const UInt32 RESERVED4					=(1<<12);
-		public const UInt32 RESERVED5					=(1<<13);
-		public const UInt32 RESERVED6					=(1<<14);
-		public const UInt32 RESERVED7					=(1<<15);
+		public const UInt32 BSP_CONTENTS_ORIGIN			=(1<<12);	//for setting origin on bmodels
+		public const UInt32 RESERVED1					=(1<<13);
+		public const UInt32 RESERVED2					=(1<<14);
+		public const UInt32 RESERVED3					=(1<<15);
 
 		//16-31 reserved for user contents
 		

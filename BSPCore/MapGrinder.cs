@@ -28,7 +28,7 @@ namespace BSPCore
 
 
 	//grind up a map into gpu friendly data
-	public class MapGrinder
+	public partial class MapGrinder
 	{
 		GraphicsDevice			mGD;
 		MaterialLib.MaterialLib	mMatLib;
@@ -116,16 +116,16 @@ namespace BSPCore
 		//opaques
 		//indexed by material and model number
 		Dictionary<int, List<DrawCall>>	mLMDraws		=new Dictionary<int, List<DrawCall>>();
-		List<DrawCall>	mVLitDraws		=new List<DrawCall>();
-		List<DrawCall>	mFBDraws		=new List<DrawCall>();
-		List<DrawCall>	mSkyDraws		=new List<DrawCall>();
-		List<DrawCall>	mLMAnimDraws	=new List<DrawCall>();
+		Dictionary<int, List<DrawCall>>	mVLitDraws		=new Dictionary<int, List<DrawCall>>();
+		Dictionary<int, List<DrawCall>>	mLMAnimDraws	=new Dictionary<int, List<DrawCall>>();
+		Dictionary<int, List<DrawCall>>	mFBDraws		=new Dictionary<int, List<DrawCall>>();
+		Dictionary<int, List<DrawCall>>	mSkyDraws		=new Dictionary<int, List<DrawCall>>();
 
 		//alphas
-		List<List<DrawCall>>	mAlphaDraws		=new List<List<DrawCall>>();
-		List<List<DrawCall>>	mMirrorDraws	=new List<List<DrawCall>>();
-		List<List<DrawCall>>	mLMAAnimDraws	=new List<List<DrawCall>>();
-		List<List<DrawCall>>	mLMADraws		=new List<List<DrawCall>>();
+		Dictionary<int, List<List<DrawCall>>>	mLMADraws		=new Dictionary<int, List<List<DrawCall>>>();
+		Dictionary<int, List<List<DrawCall>>>	mAlphaDraws		=new Dictionary<int, List<List<DrawCall>>>();
+		Dictionary<int, List<List<DrawCall>>>	mMirrorDraws	=new Dictionary<int, List<List<DrawCall>>>();
+		Dictionary<int, List<List<DrawCall>>>	mLMAAnimDraws	=new Dictionary<int, List<List<DrawCall>>>();
 
 		//computed lightmap atlas
 		TexAtlas	mLMAtlas;
@@ -135,6 +135,15 @@ namespace BSPCore
 		GFXTexInfo	[]mTexInfos;
 		GFXFace		[]mFaces;
 
+		//delegates
+		internal delegate bool IsCorrectMaterial(GFXFace f, GFXTexInfo tex, string matName);
+		internal delegate bool FillDrawChunk(DrawDataChunk ddc, GFXPlane []pp, Vector3 modelOrg,
+											Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
+											GFXFace f, GFXTexInfo tex, int lightGridSize,
+											byte []lightData, TexAtlas atlas,
+											List<List<Vector3>> mirrorPolys);
+		internal delegate void FinishUp(int modelIndex, List<DrawDataChunk> matChunks, ref int vertOfs);
+		internal delegate void FinishUpAlpha(int modelIndex, List<Dictionary<Int32, DrawDataChunk>> perPlaneChunk, ref int vertOfs);
 
 		public MapGrinder(GraphicsDevice gd, GFXTexInfo []texs,
 			GFXFace []faces, int lightGridSize, int atlasSize)
@@ -192,58 +201,58 @@ namespace BSPCore
 		}
 
 
-		internal void GetLMMaterialData(out Dictionary<int, List<DrawCall>> dcs)
+		internal void GetLMMaterialData(out Dictionary<int, List<DrawCall>> draws)
 		{
-			dcs	=mLMDraws;
+			draws	=mLMDraws;
 		}
 
 
-		internal void GetLMAMaterialData(out List<DrawCall> []draws)
+		internal void GetLMAnimMaterialData(out Dictionary<int, List<DrawCall>> draws)
 		{
-			draws	=mLMADraws.ToArray();
+			draws	=mLMAnimDraws;
 		}
 
 
-		internal void GetAlphaMaterialData(out List<DrawCall> []draws)
+		internal void GetLMAMaterialData(out Dictionary<int, List<List<DrawCall>>> draws)
 		{
-			draws	=mAlphaDraws.ToArray();
+			draws	=mLMADraws;
 		}
 
 
-		internal void GetVLitMaterialData(out DrawCall []dcs)
+		internal void GetAlphaMaterialData(out Dictionary<int, List<List<DrawCall>>> draws)
 		{
-			dcs	=mVLitDraws.ToArray();
+			draws	=mAlphaDraws;
 		}
 
 
-		internal void GetFullBrightMaterialData(out DrawCall []dcs)
+		internal void GetVLitMaterialData(out Dictionary<int, List<DrawCall>> draws)
 		{
-			dcs	=mFBDraws.ToArray();
+			draws	=mVLitDraws;
 		}
 
 
-		internal void GetMirrorMaterialData(out List<DrawCall> []draws, out List<List<Vector3>> polys)
+		internal void GetFullBrightMaterialData(out Dictionary<int, List<DrawCall>> draws)
 		{
-			draws	=mMirrorDraws.ToArray();
+			draws	=mFBDraws;
+		}
+
+
+		internal void GetSkyMaterialData(out Dictionary<int, List<DrawCall>> draws)
+		{
+			draws	=mSkyDraws;
+		}
+
+
+		internal void GetMirrorMaterialData(out Dictionary<int, List<List<DrawCall>>> draws, out List<List<Vector3>> polys)
+		{
+			draws	=mMirrorDraws;
 			polys	=mMirrorPolys;
 		}
 
 
-		internal void GetSkyMaterialData(out DrawCall []dcs)
+		internal void GetLMAAnimMaterialData(out Dictionary<int, List<List<DrawCall>>> draws)
 		{
-			dcs	=mSkyDraws.ToArray();
-		}
-
-
-		internal void GetLMAnimMaterialData(out DrawCall []dcs)
-		{
-			dcs	=mLMAnimDraws.ToArray();
-		}
-
-
-		internal void GetLMAAnimMaterialData(out List<DrawCall> []draws)
-		{
-			draws	=mLMAAnimDraws.ToArray();
+			draws	=mLMAAnimDraws;
 		}
 
 
@@ -504,428 +513,13 @@ namespace BSPCore
 		}
 
 
-		static List<Vector3> GetFaceVerts(GFXFace f, Vector3 []verts, int []indexes)
-		{
-			List<Vector3>	ret	=new List<Vector3>();
-			for(int k=0;k < f.mNumVerts;k++)
-			{
-				int		idx	=indexes[f.mFirstVert + k];
-				Vector3	pnt	=verts[idx];
-
-				ret.Add(pnt);
-			}
-			return	ret;
-		}
-
-
-		//handles basic verts and texcoord 0
-		static void ComputeFaceData(GFXFace f, Vector3 []verts, int []indexes,
-			GFXTexInfo tex,	List<Vector2> tex0, List<Vector3> outVerts)
-		{
-			outVerts.AddRange(GetFaceVerts(f, verts, indexes));
-
-			foreach(Vector3 v in outVerts)
-			{
-				Vector2	crd;
-				crd.X	=Vector3.Dot(tex.mVecU, v);
-				crd.Y	=Vector3.Dot(tex.mVecV, v);
-
-				crd.X	/=tex.mDrawScaleU;
-				crd.Y	/=tex.mDrawScaleV;
-
-				crd.X	+=tex.mShiftU;
-				crd.Y	+=tex.mShiftV;
-
-				tex0.Add(crd);
-			}
-		}
-
-
-		//sided plane should be pre flipped if side != 0
-		static void ComputeFaceNormals(GFXFace f, Vector3 []verts, int []indexes,
-			GFXTexInfo tex, Vector3 []vnorms, GBSPPlane sidedPlane,
-			List<Vector3> norms)
-		{
-			for(int k=0;k < f.mNumVerts;k++)
-			{
-				int		idx	=indexes[f.mFirstVert + k];
-
-				if(tex.IsGouraud())						
-				{
-					norms.Add(vnorms[idx]);
-				}
-				else
-				{
-					norms.Add(sidedPlane.mNormal);
-				}
-			}
-		}
-
-
-		static void ComputeFaceColors(GFXFace f, Vector3 []verts, int []indexes,
-			GFXTexInfo tex, Vector3 []rgbVerts,	List<Vector4> colors)
-		{
-			int	fvert	=f.mFirstVert;
-			for(int k=0;k < f.mNumVerts;k++)
-			{
-				int		idx	=indexes[fvert + k];
-
-				Vector4	col	=Vector4.One;
-				if((tex.mFlags & TexInfo.FULLBRIGHT) == 0 && rgbVerts != null)
-				{
-					col.X	=rgbVerts[fvert + k].X / 255.0f;
-					col.Y	=rgbVerts[fvert + k].Y / 255.0f;
-					col.Z	=rgbVerts[fvert + k].Z / 255.0f;
-				}
-
-				if((tex.mFlags & TexInfo.TRANSPARENT) != 0)
-				{
-					col.W	=tex.mAlpha;
-				}
-				colors.Add(col);
-			}
-		}
-
-
-		bool AtlasLightMap(GFXFace f, byte []lightData, int styleIndex, List<Vector3> faceVerts,
-			GBSPPlane sidedPlane, GFXTexInfo tex, List<Vector2> texCoords)
-		{
-			double	scaleU, scaleV, offsetU, offsetV;
-			scaleU	=scaleV	=offsetU	=offsetV	=0.0;
-			Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
-
-			int	sizeOffset	=f.mLHeight * f.mLWidth * 3;
-
-			sizeOffset	*=styleIndex;
-
-			for(int i=0;i < lmap.Length;i++)
-			{
-				lmap[i].R	=lightData[sizeOffset + f.mLightOfs + (i * 3)];
-				lmap[i].G	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 1];
-				lmap[i].B	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 2];
-				lmap[i].A	=0xFF;
-			}
-
-			if(!mLMAtlas.Insert(lmap, f.mLWidth, f.mLHeight,
-				out scaleU, out scaleV, out offsetU, out offsetV))
-			{
-				CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
-				return	false;
-			}
-
-			List<double>	coordsU	=new List<double>();
-			List<double>	coordsV	=new List<double>();
-			GetTexCoords1(faceVerts, sidedPlane, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
-			AddTexCoordsToList(texCoords, coordsU, coordsV, offsetU, offsetV);
-
-			return	true;
-		}
-
-
-		bool AtlasAnimated(DrawDataChunk ddc, GFXFace f, byte []lightData,
-			List<Vector3> faceVerts, GBSPPlane pln, GFXTexInfo tex)
-		{
-			for(int s=0;s < 4;s++)
-			{
-				List<Vector2>	coordSet	=null;
-				bool			bTuFittyFi	=false;
-
-				if(s == 0)
-				{
-					if(f.mLType0 == 255)
-					{
-						bTuFittyFi	=true;
-					}
-					coordSet	=ddc.mTex1;
-				}
-				else if(s == 1)
-				{
-					if(f.mLType1 == 255)
-					{
-						bTuFittyFi	=true;
-					}
-					coordSet	=ddc.mTex2;
-				}
-				else if(s == 2)
-				{
-					if(f.mLType2 == 255)
-					{
-						bTuFittyFi	=true;
-					}
-					coordSet	=ddc.mTex3;
-				}
-				else if(s == 3)
-				{
-					if(f.mLType3 == 255)
-					{
-						bTuFittyFi	=true;
-					}
-					coordSet	=ddc.mTex4;
-				}
-
-				if(bTuFittyFi)
-				{
-					for(int i=0;i < faceVerts.Count;i++)
-					{
-						coordSet.Add(Vector2.Zero);
-					}
-					continue;
-				}
-
-				if(!AtlasLightMap(f, lightData, s, faceVerts, pln, tex, coordSet))
-				{
-					return	false;
-				}
-			}
-			return	true;
-		}
-
-
-		internal bool BuildLMAnimFaceData(Vector3 []verts, int[] indexes,
-			int firstFace, int nFaces, byte []lightData, object pobj)
-		{
-			GFXPlane	[]pp		=pobj as GFXPlane [];
-
-			CoreEvents.Print("Handling animated lightmaps...\n");
-
-			//store faces per material
-			List<DrawDataChunk>	matChunks	=new List<DrawDataChunk>();
-
-			foreach(Material mat in mMaterials)
-			{
-				DrawDataChunk	ddc	=new DrawDataChunk();
-				matChunks.Add(ddc);
-
-				if(!mat.Name.EndsWith("*Anim"))
-				{
-					continue;
-				}
-
-				CoreEvents.Print("Animated light for material: " + mat.Name + ".\n");
-
-				for(int face=firstFace;face < (firstFace + nFaces);face++)
-				{
-					GFXFace	f	=mFaces[face];
-					if(f.mLightOfs == -1)
-					{
-						continue;	//only interested in lightmapped
-					}
-
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
-
-					if(tex.mAlpha < 1.0f)
-					{
-						continue;
-					}
-
-					if(!mat.Name.StartsWith(tex.mMaterial))
-					{
-						continue;
-					}
-
-					//make sure actually animating
-					if(f.mLType0 ==0 || f.mLType0 == 255)
-					{
-						if(f.mLType1 ==0 || f.mLType1 == 255)
-						{
-							if(f.mLType2 ==0 || f.mLType2 == 255)
-							{
-								if(f.mLType3 ==0 || f.mLType3 == 255)
-								{
-									continue;
-								}
-							}
-						}
-					}
-
-					ddc.mNumFaces++;
-					ddc.mVCounts.Add(f.mNumVerts);
-
-					GFXPlane	pl	=pp[f.mPlaneNum];
-					GBSPPlane	pln	=new GBSPPlane(pl);
-					if(f.mbFlipSide)
-					{
-						pln.Inverse();
-					}
-
-					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-					ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
-
-					foreach(Vector3 v in faceVerts)
-					{
-						ddc.mColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
-					}
-
-					if(!AtlasAnimated(ddc, f, lightData, faceVerts, pln, tex))
-					{
-						CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
-						return	false;
-					}
-
-					ddc.mVerts.AddRange(faceVerts);
-
-					//style index
-					for(int k=0;k < f.mNumVerts;k++)
-					{
-						Vector4	styleIndex	=AssignLightStyleIndex(f);
-						ddc.mStyles.Add(styleIndex);
-					}
-				}
-			}
-
-			mLMAtlas.Finish();
-
-			mLMAnimDraws	=ComputeIndexes(mLMAnimIndexes, matChunks);
-
-			StuffVBArrays(matChunks, mLMAnimVerts, mLMAnimNormals,
-				mLMAnimFaceTex0, mLMAnimFaceTex1, mLMAnimFaceTex2,
-				mLMAnimFaceTex3, mLMAnimFaceTex4, null, mLMAnimStyle);
-
-			return	true;
-		}
-
-
-		internal bool BuildLMAAnimFaceData(Vector3 []verts, int[] indexes,
-			int firstFace, int nFaces, byte []lightData, object pobj)
-		{
-			GFXPlane	[]pp		=pobj as GFXPlane [];
-
-			CoreEvents.Print("Handling alpha animated lightmaps...\n");
-
-			//store each plane used, and how many faces per material
-			List<Dictionary<Int32, DrawDataChunk>>	perPlaneChunks
-				=new List<Dictionary<Int32, DrawDataChunk>>();
-
-			foreach(Material mat in mMaterials)
-			{
-				Dictionary<Int32, DrawDataChunk>	ddcs
-					=new Dictionary<Int32, DrawDataChunk>();
-				perPlaneChunks.Add(ddcs);
-
-				if(!mat.Name.EndsWith("*LitAlphaAnim"))
-				{
-					continue;
-				}
-
-				CoreEvents.Print("Animated light for material: " + mat.Name + ".\n");
-
-				for(int face=firstFace;face < (firstFace + nFaces);face++)
-				{
-					GFXFace	f	=mFaces[face];
-					if(f.mLightOfs == -1)
-					{
-						continue;	//only interested in lightmapped
-					}
-
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
-
-					if(tex.mAlpha >= 1.0f)
-					{
-						continue;
-					}
-					if(!mat.Name.StartsWith(tex.mMaterial))
-					{
-						continue;
-					}
-
-					if(f.mLType0 ==0 || f.mLType0 == 255)
-					{
-						if(f.mLType1 ==0 || f.mLType1 == 255)
-						{
-							if(f.mLType2 ==0 || f.mLType2 == 255)
-							{
-								if(f.mLType3 ==0 || f.mLType3 == 255)
-								{
-									continue;
-								}
-							}
-						}
-					}
-
-					DrawDataChunk	ddc	=null;
-
-					if(ddcs.ContainsKey(f.mPlaneNum))
-					{
-						ddc	=ddcs[f.mPlaneNum];
-					}
-					else
-					{
-						ddc	=new DrawDataChunk();
-					}
-
-					ddc.mNumFaces++;
-					ddc.mVCounts.Add(f.mNumVerts);
-
-					GFXPlane	pl	=pp[f.mPlaneNum];
-					GBSPPlane	pln	=new GBSPPlane(pl);
-					if(f.mbFlipSide)
-					{
-						pln.Inverse();
-					}
-
-					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-					ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
-
-					foreach(Vector3 v in faceVerts)
-					{
-						ddc.mColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
-					}
-
-					if(!AtlasAnimated(ddc, f, lightData, faceVerts, pln, tex))
-					{
-						CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
-						return	false;
-					}
-					ddc.mVerts.AddRange(faceVerts);
-
-					//style index
-					for(int k=0;k < f.mNumVerts;k++)
-					{
-						Vector4	styleIndex	=AssignLightStyleIndex(f);
-						ddc.mStyles.Add(styleIndex);
-					}
-
-					if(!ddcs.ContainsKey(f.mPlaneNum))
-					{
-						ddcs.Add(f.mPlaneNum, ddc);
-					}
-				}
-			}
-
-			mLMAtlas.Finish();
-
-			mLMAAnimDraws	=ComputeAlphaIndexes(mLMAAnimIndexes, perPlaneChunks);
-
-			List<DrawDataChunk>	ddcList	=new List<DrawDataChunk>();
-			foreach(Dictionary<Int32, DrawDataChunk> dcd in perPlaneChunks)
-			{
-				foreach(KeyValuePair<Int32, DrawDataChunk> ddc in dcd)
-				{
-					ddcList.Add(ddc.Value);
-				}
-			}
-
-			StuffVBArrays(perPlaneChunks, mLMAAnimVerts, mLMAAnimNormals,
-				mLMAAnimFaceTex0, mLMAAnimFaceTex1, mLMAAnimFaceTex2, 
-				mLMAAnimFaceTex3, mLMAAnimFaceTex4, mLMAAnimColors,
-				mLMAAnimStyle);
-
-			return	true;
-		}
-
-
-		internal bool BuildLMFaceData(Vector3 []verts, int[] indexes,
-			GFXModel []models, byte []lightData, object pobj)
+		//experimental drawcall builder that uses lots of callbacks
+		internal bool BuildFaceData(Vector3 []verts, int[] indexes,
+			Vector3 []rgbVerts, Vector3 []vnorms,
+			object pobj, GFXModel []models, List<Vector3> modelOrgs, byte []lightData,
+			IsCorrectMaterial correct, FillDrawChunk fill, FinishUp fin)
 		{
 			GFXPlane	[]pp	=pobj as GFXPlane [];
-			if(lightData == null)
-			{
-				return	false;
-			}
-
-			CoreEvents.Print("Atlasing " + lightData.Length + " bytes of light data...\n");
 
 			int	vertOfs	=0;	//model offsets
 			for(int i=0;i < models.Length;i++)
@@ -938,687 +532,195 @@ namespace BSPCore
 					DrawDataChunk	ddc	=new DrawDataChunk();
 					matChunks.Add(ddc);
 
-					//skip all special materials
-					if(mat.Name.Contains("*"))
+					//skip on material name
+					if(!correct(null, null, mat.Name))
 					{
 						continue;
 					}
 
-					CoreEvents.Print("Light for material: " + mat.Name + ".\n");
+					Vector3	modelOrg	=modelOrgs[i];
 
 					int	firstFace	=models[i].mFirstFace;
 					int	nFaces		=models[i].mNumFaces;
 
 					for(int face=firstFace;face < (firstFace + nFaces);face++)
 					{
-						GFXFace	f	=mFaces[face];
-						if(f.mLightOfs == -1)
-						{
-							continue;	//only interested in lightmapped
-						}
-
-						//make sure not animating
-						if(f.mLType1 != 255 || f.mLType2 != 255 || f.mLType3 != 255)
-						{
-							continue;
-						}
-						if(f.mLType0 != 0)
-						{
-							continue;
-						}
-
+						GFXFace		f	=mFaces[face];
 						GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
-						if(tex.mAlpha < 1.0f)
+						if(!correct(f, tex, mat.Name))
 						{
 							continue;
 						}
-						if(tex.mMaterial != mat.Name)
-						{
-							continue;
-						}
-
-						ddc.mNumFaces++;
-						ddc.mVCounts.Add(f.mNumVerts);
-
-						//grab plane for dynamic lighting normals
-						GFXPlane	pl	=pp[f.mPlaneNum];
-						GBSPPlane	pln	=new GBSPPlane(pl);
-						if(f.mbFlipSide)
-						{
-							pln.Inverse();
-						}
-
-						List<Vector3>	faceVerts	=new List<Vector3>();
-						ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-						ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
-
-						if(!AtlasLightMap(f, lightData, 0, faceVerts, pln, tex, ddc.mTex1))
+						
+						if(!fill(ddc, pp, modelOrg, verts, indexes, rgbVerts, vnorms, f, tex, mLightGridSize, lightData, mLMAtlas, mMirrorPolys))
 						{
 							return	false;
 						}
-						ddc.mVerts.AddRange(faceVerts);
 					}
 				}
-
-				mLMAtlas.Finish();
-
-				List<DrawCall>	modCall	=ComputeIndexes(mLMIndexes, matChunks, ref vertOfs);
-
-				StuffVBArrays(matChunks, mLMVerts, mLMNormals,
-					mLMFaceTex0, mLMFaceTex1, null, null,
-					null, null, null);
-
-				mLMDraws.Add(i, modCall);
+				fin(i, matChunks, ref vertOfs);
 			}
 
 			return	true;
+		}
+
+
+		internal bool BuildAlphaFaceData(Vector3 []verts, int[] indexes,
+			Vector3 []rgbVerts, Vector3 []vnorms,
+			object pobj, GFXModel []models, List<Vector3> modelOrgs, byte []lightData,
+			IsCorrectMaterial correct, FillDrawChunk fill, FinishUpAlpha fin)
+		{
+			GFXPlane	[]pp	=pobj as GFXPlane [];
+
+			int	vertOfs	=0;	//model offsets
+			for(int i=0;i < models.Length;i++)
+			{
+				//store each plane used, and how many faces per material
+				List<Dictionary<Int32, DrawDataChunk>>	perPlaneChunks
+					=new List<Dictionary<Int32, DrawDataChunk>>();
+
+				foreach(Material mat in mMaterials)
+				{
+					Dictionary<Int32, DrawDataChunk>	ddcs
+						=new Dictionary<Int32, DrawDataChunk>();
+					perPlaneChunks.Add(ddcs);
+
+					if(!correct(null, null, mat.Name))
+					{
+						continue;
+					}
+
+					Vector3	modelOrg	=modelOrgs[i];
+
+					int	firstFace	=models[i].mFirstFace;
+					int	nFaces		=models[i].mNumFaces;
+
+					for(int face=firstFace;face < (firstFace + nFaces);face++)
+					{
+						GFXFace		f	=mFaces[face];
+						GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+						if(!correct(f, tex, mat.Name))
+						{
+							continue;
+						}
+
+						DrawDataChunk	ddc	=null;
+
+						if(ddcs.ContainsKey(f.mPlaneNum))
+						{
+							ddc	=ddcs[f.mPlaneNum];
+						}
+						else
+						{
+							ddc	=new DrawDataChunk();
+						}
+
+						if(!fill(ddc, pp, modelOrg, verts, indexes, rgbVerts, vnorms, f, tex, mLightGridSize, lightData, mLMAtlas, mMirrorPolys))
+						{
+							return	false;
+						}
+
+						if(!ddcs.ContainsKey(f.mPlaneNum))
+						{
+							ddcs.Add(f.mPlaneNum, ddc);
+						}
+					}
+				}
+				fin(i, perPlaneChunks, ref vertOfs);
+			}
+			return	true;
+		}
+
+
+		internal bool BuildLMAnimFaceData(Vector3 []verts, int[] indexes,
+			byte []lightData, object pobj, GFXModel []models, List<Vector3> modelOrgs)
+		{
+			return	BuildFaceData(verts, indexes, null, null, pobj, models, modelOrgs, lightData,
+				MaterialCorrect.IsLightMapAnimated,
+				MaterialFill.FillLightMapAnimated,
+				FinishLightMapAnimated);
+		}
+
+
+		internal bool BuildLMAAnimFaceData(Vector3 []verts, int[] indexes,
+			byte []lightData, object pobj, GFXModel []models, List<Vector3> modelOrgs)
+		{
+			return	BuildAlphaFaceData(verts, indexes, null, null, pobj, models, modelOrgs, lightData,
+				MaterialCorrect.IsLightMappedAlphaAnimated,
+				MaterialFill.FillLightMappedAlphaAnimated,
+				FinishLightMappedAlphaAnimated);
+		}
+
+
+		internal bool BuildLMFaceData(Vector3 []verts, int[] indexes,
+			byte []lightData, object pobj, GFXModel []models, List<Vector3> modelOrgs)
+		{
+			return	BuildFaceData(verts, indexes, null, null, pobj, models, modelOrgs, lightData,
+				MaterialCorrect.IsLightMapped,
+				MaterialFill.FillLightMapped,
+				FinishLightMapped);
 		}
 
 
 		internal bool BuildLMAFaceData(Vector3 []verts, int[] indexes,
-			int firstFace, int nFaces, byte []lightData, object pobj)
+			byte []lightData, object pobj, GFXModel []models, List<Vector3> modelOrgs)
 		{
-			GFXPlane	[]pp		=pobj as GFXPlane [];
-
-			CoreEvents.Print("Handling lightmapped alpha materials\n");
-
-			//store each plane used, and how many faces per material
-			List<Dictionary<Int32, DrawDataChunk>>	perPlaneChunks
-				=new List<Dictionary<Int32, DrawDataChunk>>();
-
-			foreach(Material mat in mMaterials)
-			{
-				Dictionary<Int32, DrawDataChunk>	ddcs
-					=new Dictionary<Int32, DrawDataChunk>();
-				perPlaneChunks.Add(ddcs);
-
-				if(!mat.Name.EndsWith("*LitAlpha"))
-				{
-					continue;
-				}
-
-				CoreEvents.Print("Light for material: " + mat.Name + ".\n");
-
-				for(int face=firstFace;face < (firstFace + nFaces);face++)
-				{
-					GFXFace	f	=mFaces[face];
-					if(f.mLightOfs == -1)
-					{
-						continue;	//only interested in lightmapped
-					}
-
-					//make sure not animating
-					if(f.mLType1 != 255 || f.mLType2 != 255 || f.mLType3 != 255)
-					{
-						continue;
-					}
-					if(f.mLType0 != 0)
-					{
-						continue;
-					}
-
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
-
-					if(tex.mAlpha >= 1.0f)
-					{
-						continue;
-					}
-					if(!mat.Name.StartsWith(tex.mMaterial))
-					{
-						continue;
-					}
-
-					DrawDataChunk	ddc	=null;
-
-					if(ddcs.ContainsKey(f.mPlaneNum))
-					{
-						ddc	=ddcs[f.mPlaneNum];
-					}
-					else
-					{
-						ddc	=new DrawDataChunk();
-					}
-
-					ddc.mNumFaces++;
-					ddc.mVCounts.Add(f.mNumVerts);
-
-					//grab plane for dynamic lighting normals
-					GFXPlane	pl	=pp[f.mPlaneNum];
-					GBSPPlane	pln	=new GBSPPlane(pl);
-					if(f.mbFlipSide)
-					{
-						pln.Inverse();
-					}
-
-					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-					ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
-
-					foreach(Vector3 v in faceVerts)
-					{
-						ddc.mColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
-					}
-
-					if(!AtlasLightMap(f, lightData, 0, faceVerts, pln, tex, ddc.mTex1))
-					{
-						return	false;
-					}
-
-					ddc.mVerts.AddRange(faceVerts);
-
-					if(!ddcs.ContainsKey(f.mPlaneNum))
-					{
-						ddcs.Add(f.mPlaneNum, ddc);
-					}
-				}
-			}
-
-			mLMAtlas.Finish();
-
-			mLMADraws	=ComputeAlphaIndexes(mLMAIndexes, perPlaneChunks);
-
-			StuffVBArrays(perPlaneChunks, mLMAVerts, mLMANormals,
-				mLMAFaceTex0, mLMAFaceTex1, null, null, null,
-				mLMAColors, null);
-
-			return	true;
+			return	BuildAlphaFaceData(verts, indexes, null, null, pobj, models, modelOrgs, lightData,
+				MaterialCorrect.IsLightMappedAlpha,
+				MaterialFill.FillLightMappedAlpha,
+				FinishLightMappedAlpha);
 		}
 
 
-		internal bool BuildVLitFaceData(Vector3 []verts, Vector3 []rgbVerts, Vector3 []vnorms,
-			int firstFace, int nFaces, int[] indexes, object pobj)
+		internal bool BuildVLitFaceData(Vector3 []verts, int[] indexes,	Vector3 []rgbVerts,
+			Vector3 []vnorms, object pobj, GFXModel []models, List<Vector3> modelOrgs)
 		{
-			GFXPlane	[]pp	=pobj as GFXPlane [];
-
-			CoreEvents.Print("Building vertex lit face data...\n");
-
-			//store faces per material
-			List<DrawDataChunk>	matChunks	=new List<DrawDataChunk>();
-
-			foreach(Material mat in mMaterials)
-			{
-				DrawDataChunk	ddc	=new DrawDataChunk();
-				matChunks.Add(ddc);
-
-				if(!mat.Name.EndsWith("*VertLit"))
-				{
-					continue;
-				}
-
-				CoreEvents.Print("Material: " + mat.Name + ".\n");
-
-				for(int face=firstFace;face < (firstFace + nFaces);face++)
-				{
-					GFXFace	f	=mFaces[face];
-					if(f.mLightOfs != -1)
-					{
-						continue;	//only interested in non lightmapped
-					}
-
-					//check anim lights for good measure
-					Debug.Assert(f.mLType0 == 255);
-					Debug.Assert(f.mLType1 == 255);
-					Debug.Assert(f.mLType2 == 255);
-					Debug.Assert(f.mLType3 == 255);
-
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
-
-					if(tex.mAlpha < 1.0f)
-					{
-						continue;
-					}
-
-					if((tex.mFlags & 
-						(TexInfo.FULLBRIGHT | TexInfo.MIRROR | TexInfo.SKY)) != 0)
-					{
-						continue;
-					}
-
-					if(!mat.Name.StartsWith(tex.mMaterial))
-					{
-						continue;
-					}
-
-					ddc.mNumFaces++;
-					ddc.mVCounts.Add(f.mNumVerts);
-
-					GFXPlane	pl	=pp[f.mPlaneNum];
-					GBSPPlane	pln	=new GBSPPlane(pl);
-					if(f.mbFlipSide)
-					{
-						pln.Inverse();
-					}
-
-					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-					ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
-					ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
-
-					ddc.mVerts.AddRange(faceVerts);
-				}
-			}
-
-			mVLitDraws	=ComputeIndexes(mVLitIndexes, matChunks);
-
-			StuffVBArrays(matChunks, mVLitVerts, mVLitNormals,
-				mVLitTex0, null, null, null,
-				null, mVLitColors, null);
-
-			return	true;
+			return	BuildFaceData(verts, indexes, rgbVerts, vnorms, pobj, models, modelOrgs, null,
+				MaterialCorrect.IsVLit,
+				MaterialFill.FillVLit,
+				FinishVLit);
 		}
 
 
-		internal bool BuildMirrorFaceData(Vector3 []verts, Vector3 []rgbVerts, Vector3 []vnorms,
-			int firstFace, int nFaces, int[] indexes, object pobj)
+		internal bool BuildMirrorFaceData(Vector3 []verts, int[] indexes,	Vector3 []rgbVerts,
+			Vector3 []vnorms, object pobj, GFXModel []models, List<Vector3> modelOrgs)
 		{
-			GFXPlane	[]pp		=pobj as GFXPlane [];
-
-			CoreEvents.Print("Building mirror face data...\n");
-
-			//store each plane used, and how many faces per material
-			List<Dictionary<Int32, DrawDataChunk>>	perPlaneChunks
-				=new List<Dictionary<Int32, DrawDataChunk>>();
-			foreach(Material mat in mMaterials)
-			{
-				Dictionary<Int32, DrawDataChunk>	ddcs
-					=new Dictionary<Int32, DrawDataChunk>();
-				perPlaneChunks.Add(ddcs);
-
-				if(!mat.Name.EndsWith("*Mirror"))
-				{
-					continue;
-				}
-
-				CoreEvents.Print("Material: " + mat.Name + ".\n");
-
-				for(int face=firstFace;face < (firstFace + nFaces);face++)
-				{
-					GFXFace	f	=mFaces[face];
-					if(f.mLightOfs != -1)
-					{
-						continue;	//only interested in non lightmapped
-					}
-
-					//check anim lights for good measure
-					Debug.Assert(f.mLType0 == 255);
-					Debug.Assert(f.mLType1 == 255);
-					Debug.Assert(f.mLType2 == 255);
-					Debug.Assert(f.mLType3 == 255);
-
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
-
-					if((tex.mFlags & TexInfo.MIRROR) == 0)
-					{
-						continue;
-					}
-
-					if(!mat.Name.StartsWith(tex.mMaterial))
-					{
-						continue;
-					}
-					if(!mat.Name.EndsWith("*Mirror"))
-					{
-						continue;
-					}
-
-					DrawDataChunk	ddc	=null;
-
-					if(ddcs.ContainsKey(f.mPlaneNum))
-					{
-						ddc	=ddcs[f.mPlaneNum];
-					}
-					else
-					{
-						ddc	=new DrawDataChunk();
-					}
-
-					ddc.mNumFaces++;
-					ddc.mVCounts.Add(f.mNumVerts);
-
-					GFXPlane	pl	=pp[f.mPlaneNum];
-					GBSPPlane	pln	=new GBSPPlane(pl);
-					if(f.mbFlipSide)
-					{
-						pln.Inverse();
-					}
-
-					List<Vector3>	fverts	=new List<Vector3>();
-					List<Vector2>	blah	=new List<Vector2>();
-					ComputeFaceData(f, verts, indexes, tex, blah, fverts);
-					ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
-					ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
-
-					ddc.mVerts.AddRange(fverts);
-
-					List<Vector2>	coords	=new List<Vector2>();
-					GetMirrorTexCoords(fverts, 256, 256, tex, out coords);
-					ddc.mTex0.AddRange(coords);
-
-					mMirrorPolys.Add(fverts);
-
-					if(!ddcs.ContainsKey(f.mPlaneNum))
-					{
-						ddcs.Add(f.mPlaneNum, ddc);
-					}
-				}
-			}
-
-			mMirrorDraws	=ComputeAlphaIndexes(mMirrorIndexes, perPlaneChunks);
-
-			StuffVBArrays(perPlaneChunks, mMirrorVerts, mMirrorNormals,
-				mMirrorTex0, null, null, null, null, mMirrorColors, null);
-
-			return	true;
+			return	BuildAlphaFaceData(verts, indexes, rgbVerts, vnorms, pobj, models, modelOrgs, null,
+				MaterialCorrect.IsMirror,
+				MaterialFill.FillMirror,
+				FinishMirror);
 		}
 
 
-		internal bool BuildAlphaFaceData(Vector3 []verts, Vector3 []rgbVerts, Vector3 []vnorms,
-			int firstFace, int nFaces, int[] indexes, object pobj)
+		internal bool BuildAlphaFaceData(Vector3 []verts, int[] indexes, Vector3 []rgbVerts,
+			Vector3 []vnorms, object pobj, GFXModel []models, List<Vector3> modelOrgs)
 		{
-			GFXPlane	[]pp		=pobj as GFXPlane [];
-
-			CoreEvents.Print("Building alpha face data...\n");
-
-			//store each plane used, and how many faces per material
-			List<Dictionary<Int32, DrawDataChunk>>	perPlaneChunks
-				=new List<Dictionary<Int32, DrawDataChunk>>();
-			foreach(Material mat in mMaterials)
-			{
-				Dictionary<Int32, DrawDataChunk>	ddcs
-					=new Dictionary<Int32, DrawDataChunk>();
-				perPlaneChunks.Add(ddcs);
-
-				if(!mat.Name.EndsWith("*Alpha"))
-				{
-					continue;
-				}
-
-				CoreEvents.Print("Material: " + mat.Name + ".\n");
-
-				for(int face=firstFace;face < (firstFace + nFaces);face++)
-				{
-					GFXFace	f	=mFaces[face];
-					if(f.mLightOfs != -1)
-					{
-						continue;	//only interested in non lightmapped
-					}
-
-					//check anim lights for good measure
-					Debug.Assert(f.mLType0 == 255);
-					Debug.Assert(f.mLType1 == 255);
-					Debug.Assert(f.mLType2 == 255);
-					Debug.Assert(f.mLType3 == 255);
-
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
-
-					if(tex.mAlpha >= 1.0f)
-					{
-						continue;
-					}
-
-					if((tex.mFlags & TexInfo.MIRROR) != 0)
-					{
-						continue;
-					}
-
-					if(!mat.Name.StartsWith(tex.mMaterial))
-					{
-						continue;
-					}
-
-					DrawDataChunk	ddc	=null;
-
-					if(ddcs.ContainsKey(f.mPlaneNum))
-					{
-						ddc	=ddcs[f.mPlaneNum];
-					}
-					else
-					{
-						ddc	=new DrawDataChunk();
-					}
-
-					ddc.mNumFaces++;
-					ddc.mVCounts.Add(f.mNumVerts);
-
-					GFXPlane	pl	=pp[f.mPlaneNum];
-					GBSPPlane	pln	=new GBSPPlane(pl);
-					if(f.mbFlipSide)
-					{
-						pln.Inverse();
-					}
-
-					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-					ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
-					ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
-
-					ddc.mVerts.AddRange(faceVerts);
-
-					if(!ddcs.ContainsKey(f.mPlaneNum))
-					{
-						ddcs.Add(f.mPlaneNum, ddc);
-					}
-				}
-			}
-
-			mAlphaDraws	=ComputeAlphaIndexes(mAlphaIndexes, perPlaneChunks);
-
-			StuffVBArrays(perPlaneChunks, mAlphaVerts, mAlphaNormals,
-				mAlphaTex0, null, null, null, null,	mAlphaColors, null);
-
-			return	true;
+			return	BuildAlphaFaceData(verts, indexes, rgbVerts, vnorms, pobj, models, modelOrgs, null,
+				MaterialCorrect.IsAlpha,
+				MaterialFill.FillAlpha,
+				FinishAlpha);
 		}
 
 
-		internal bool BuildFullBrightFaceData(Vector3 []verts,
-			int firstFace, int nFaces, int[] indexes, object pobj)
+		internal bool BuildFullBrightFaceData(Vector3 []verts, int[] indexes,
+			object pobj, GFXModel []models, List<Vector3> modelOrgs)
 		{
-			GFXPlane	[]pp		=pobj as GFXPlane [];
-
-			CoreEvents.Print("Building full bright face data...\n");
-
-			//store faces per material
-			List<DrawDataChunk>	matChunks	=new List<DrawDataChunk>();
-
-			foreach(Material mat in mMaterials)
-			{
-				DrawDataChunk	ddc	=new DrawDataChunk();
-				matChunks.Add(ddc);
-
-				if(!mat.Name.EndsWith("*FullBright"))
-				{
-					continue;
-				}
-
-				CoreEvents.Print("Material: " + mat.Name + ".\n");
-
-				for(int face=firstFace;face < (firstFace + nFaces);face++)
-				{
-					GFXFace	f	=mFaces[face];
-					if(f.mLightOfs != -1)
-					{
-						continue;	//only interested in non lightmapped
-					}
-
-					//check anim lights for good measure
-					Debug.Assert(f.mLType0 == 255);
-					Debug.Assert(f.mLType1 == 255);
-					Debug.Assert(f.mLType2 == 255);
-					Debug.Assert(f.mLType3 == 255);
-
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
-
-					if(Misc.bFlagSet(tex.mFlags, TexInfo.MIRROR))
-					{
-						continue;
-					}
-					if(Misc.bFlagSet(tex.mFlags, TexInfo.GOURAUD))
-					{
-						continue;
-					}
-					if(Misc.bFlagSet(tex.mFlags, TexInfo.FLAT))
-					{
-						continue;
-					}
-					if(!Misc.bFlagSet(tex.mFlags, TexInfo.FULLBRIGHT))
-					{
-						continue;
-					}
-					if(tex.mAlpha < 1.0f)
-					{
-						continue;
-					}
-					if(!mat.Name.StartsWith(tex.mMaterial))
-					{
-						continue;
-					}
-					if(!mat.Name.EndsWith("*FullBright"))
-					{
-						continue;
-					}
-
-					ddc.mNumFaces++;
-					ddc.mVCounts.Add(f.mNumVerts);
-
-					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-
-					ddc.mVerts.AddRange(faceVerts);
-				}
-			}
-
-			mFBDraws	=ComputeIndexes(mFBIndexes, matChunks);
-
-			StuffVBArrays(matChunks, mFBVerts, null,
-				mFBTex0, null, null, null,
-				null, null, null);
-
-			return	true;
+			return	BuildFaceData(verts, indexes, null, null, pobj, models, modelOrgs, null,
+				MaterialCorrect.IsFullBright,
+				MaterialFill.FillFullBright,
+				FinishFullBright);
 		}
 
 
-		internal bool BuildSkyFaceData(Vector3 []verts,
-			int firstFace, int nFaces, int[] indexes, object pobj)
+		internal bool BuildSkyFaceData(Vector3 []verts, int[] indexes,
+			object pobj, GFXModel []models, List<Vector3> modelOrgs)
 		{
-			GFXPlane	[]pp		=pobj as GFXPlane [];
-
-			CoreEvents.Print("Building sky face data...\n");
-
-			//store faces per material
-			List<DrawDataChunk>	matChunks	=new List<DrawDataChunk>();
-
-			foreach(Material mat in mMaterials)
-			{
-				DrawDataChunk	ddc	=new DrawDataChunk();
-				matChunks.Add(ddc);
-
-				if(!mat.Name.EndsWith("*Sky"))
-				{
-					continue;
-				}
-
-				CoreEvents.Print("Material: " + mat.Name + ".\n");
-
-				for(int face=firstFace;face < (firstFace + nFaces);face++)
-				{
-					GFXFace	f	=mFaces[face];
-					if(f.mLightOfs != -1)
-					{
-						continue;	//only interested in non lightmapped
-					}
-
-					//check anim lights for good measure
-					Debug.Assert(f.mLType0 == 255);
-					Debug.Assert(f.mLType1 == 255);
-					Debug.Assert(f.mLType2 == 255);
-					Debug.Assert(f.mLType3 == 255);
-
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
-
-					if(!tex.IsSky())
-					{
-						continue;
-					}
-					if(tex.mAlpha < 1.0f)
-					{
-						continue;
-					}
-
-					if(!mat.Name.StartsWith(tex.mMaterial))
-					{
-						continue;
-					}
-					if(!mat.Name.EndsWith("*Sky"))
-					{
-						continue;
-					}
-
-					ddc.mNumFaces++;
-					ddc.mVCounts.Add(f.mNumVerts);
-
-					List<Vector3>	faceVerts	=new List<Vector3>();
-					ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-
-					ddc.mVerts.AddRange(faceVerts);
-				}
-			}
-
-			mSkyDraws	=ComputeIndexes(mSkyIndexes, matChunks);
-
-			StuffVBArrays(matChunks, mSkyVerts, null,
-				mSkyTex0, null, null, null,
-				null, null, null);
-
-			return	true;
-		}
-
-
-		List<DrawCall> ComputeIndexes(List<int> inds, List<DrawDataChunk> ddcs)
-		{
-			List<DrawCall>	draws	=new List<DrawCall>();
-
-			//index as if data is already in a big vbuffer
-			int	vbVertOfs	=0;
-			for(int j=0;j < mMaterialNames.Count;j++)
-			{
-				int	cnt	=inds.Count;
-
-				DrawCall	dc		=new DrawCall();				
-				dc.mStartIndex		=cnt;
-				dc.mSortPoint		=Vector3.Zero;	//unused for opaques
-				dc.mMinVertIndex	=696969;
-
-				for(int i=0;i < ddcs[j].mNumFaces;i++)
-				{
-					int	nverts	=ddcs[j].mVCounts[i];
-
-					//triangulate
-					for(int k=1;k < nverts-1;k++)
-					{
-						inds.Add(vbVertOfs);
-						inds.Add(vbVertOfs + k);
-						inds.Add(vbVertOfs + ((k + 1) % nverts));
-					}
-
-					if(vbVertOfs < dc.mMinVertIndex)
-					{
-						dc.mMinVertIndex	=vbVertOfs;
-					}
-
-					vbVertOfs	+=ddcs[j].mVCounts[i];
-				}
-
-				int	numTris	=(inds.Count - cnt);
-
-				numTris	/=3;
-
-				dc.mPrimCount	=numTris;
-				dc.mNumVerts	=ddcs[j].mVerts.Count;
-
-				draws.Add(dc);
-			}
-			return	draws;
+			return	BuildFaceData(verts, indexes, null, null, pobj, models, modelOrgs, null,
+				MaterialCorrect.IsSky,
+				MaterialFill.FillSky,
+				FinishSky);
 		}
 
 
@@ -1793,12 +895,11 @@ namespace BSPCore
 
 
 		List<List<DrawCall>> ComputeAlphaIndexes(List<int> inds,
-			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks)
+			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref int vertOfs)
 		{
 			List<List<DrawCall>>	draws	=new List<List<DrawCall>>();
 
 			//index as if data is already in a big vbuffer
-			int	vbVertOfs	=0;
 			for(int j=0;j < mMaterialNames.Count;j++)
 			{
 				List<DrawCall>	dcs	=new List<DrawCall>();
@@ -1818,17 +919,17 @@ namespace BSPCore
 						//triangulate
 						for(int k=1;k < nverts-1;k++)
 						{
-							inds.Add(vbVertOfs);
-							inds.Add(vbVertOfs + k);
-							inds.Add(vbVertOfs + ((k + 1) % nverts));
+							inds.Add(vertOfs);
+							inds.Add(vertOfs + k);
+							inds.Add(vertOfs + ((k + 1) % nverts));
 						}
 
-						if(vbVertOfs < dc.mMinVertIndex)
+						if(vertOfs < dc.mMinVertIndex)
 						{
-							dc.mMinVertIndex	=vbVertOfs;
+							dc.mMinVertIndex	=vertOfs;
 						}
 
-						vbVertOfs	+=pf.Value.mVCounts[i];
+						vertOfs	+=pf.Value.mVCounts[i];
 					}
 
 					int	numTris	=(inds.Count - cnt);
@@ -1843,262 +944,6 @@ namespace BSPCore
 				draws.Add(dcs);
 			}
 			return	draws;
-		}
-
-
-		void GetTexCoords1(List<Vector3> verts, GBSPPlane pln,
-			int	lwidth, int lheight, GFXTexInfo tex,
-			out List<double> sCoords, out List<double> tCoords)
-		{
-			sCoords	=new List<double>();
-			tCoords	=new List<double>();
-
-			//get a proper set of texvecs for lighting
-			Vector3	xv, yv;
-			GBSPPlane.TextureAxisFromPlane(pln, out xv, out yv);
-
-			double	sX	=xv.X;
-			double	sY	=xv.Y;
-			double	sZ	=xv.Z;
-			double	tX	=yv.X;
-			double	tY	=yv.Y;
-			double	tZ	=yv.Z;
-
-			double	minS, minT;
-			double	maxS, maxT;
-
-			minS	=Bounds.MIN_MAX_BOUNDS;
-			minT	=Bounds.MIN_MAX_BOUNDS;
-			maxS	=-Bounds.MIN_MAX_BOUNDS;
-			maxT	=-Bounds.MIN_MAX_BOUNDS;
-
-			//calculate texture space extents
-			foreach(Vector3 pnt in verts)
-			{
-				double	d	=(pnt.X * sX) + (pnt.Y * sY) + (pnt.Z * sZ);
-				if(d < minS)
-				{
-					minS	=d;
-				}
-				if(d > maxS)
-				{
-					maxS	=d;
-				}
-
-				d	=(pnt.X * tX) + (pnt.Y * tY) + (pnt.Z * tZ);
-				if(d < minT)
-				{
-					minT	=d;
-				}
-				if(d > maxT)
-				{
-					maxT	=d;
-				}
-			}
-
-			//extent is the size of the surface in texels
-			//note that these are texture texels not light
-			double	extentS	=maxS - minS;
-			double	extentT	=maxT - minT;
-
-			//offset to the start of the texture
-			double	shiftU	=-minS;
-			double	shiftV	=-minT;
-
-			foreach(Vector3 pnt in verts)
-			{
-				double	crdX, crdY;
-
-				//dot product
-				crdX	=(pnt.X * sX) + (pnt.Y * sY) + (pnt.Z * sZ);
-				crdY	=(pnt.X * tX) + (pnt.Y * tY) + (pnt.Z * tZ);
-
-				//shift relative to start position
-				crdX	+=shiftU;
-				crdY	+=shiftV;
-
-				//now the coordinates are set for textures
-				//scale by light grid size
-				crdX	/=mLightGridSize;
-				crdY	/=mLightGridSize;
-
-				sCoords.Add(crdX);
-				tCoords.Add(crdY);
-			}
-		}
-
-
-		void AddTexCoordsToList(List<Vector2> tc, List<double> uList, List<double> vList, double offsetU, double offsetV)
-		{
-			for(int k=0;k < uList.Count;k++)
-			{
-				double	tcU	=uList[k];
-				double	tcV	=vList[k];
-
-				//scale to atlas space
-				tcU	/=mLMAtlas.Width;
-				tcV	/=mLMAtlas.Height;
-
-				//step half a pixel in atlas space
-				tcU	+=1.0 / (mLMAtlas.Width * 2.0);
-				tcV	+=1.0 / (mLMAtlas.Height * 2.0);
-
-				//move to atlas position
-				tcU	+=offsetU;
-				tcV	+=offsetV;
-
-				tc.Add(new Vector2((float)tcU, (float)tcV));
-			}
-		}
-
-
-		//unused attempt at using the texture vectors
-		void GetTexCoords2(List<Vector3> verts, GFXTexInfo tex,
-			out List<double> sCoords, out List<double> tCoords)
-		{
-			sCoords	=new List<double>();
-			tCoords	=new List<double>();
-
-			double	sX	=tex.mVecU.X;
-			double	sY	=tex.mVecU.Y;
-			double	sZ	=tex.mVecU.Z;
-			double	tX	=tex.mVecV.X;
-			double	tY	=tex.mVecV.Y;
-			double	tZ	=tex.mVecV.Z;
-
-			double	minS, minT;
-			double	maxS, maxT;
-
-			minS	=Bounds.MIN_MAX_BOUNDS;
-			minT	=Bounds.MIN_MAX_BOUNDS;
-			maxS	=-Bounds.MIN_MAX_BOUNDS;
-			maxT	=-Bounds.MIN_MAX_BOUNDS;
-
-			//calculate texture space extents
-			foreach(Vector3 pnt in verts)
-			{
-				double	d	=(pnt.X * sX) + (pnt.Y * sY) + (pnt.Z * sZ);
-				if(d < minS)
-				{
-					minS	=d;
-				}
-				if(d > maxS)
-				{
-					maxS	=d;
-				}
-
-				d	=(pnt.X * tX) + (pnt.Y * tY) + (pnt.Z * tZ);
-				if(d < minT)
-				{
-					minT	=d;
-				}
-				if(d > maxT)
-				{
-					maxT	=d;
-				}
-			}
-
-			//extent is the size of the surface in texels
-			//note that these are texture texels not light
-			double	extentS	=maxS - minS;
-			double	extentT	=maxT - minT;
-
-			//offset to the start of the texture
-			double	shiftU	=-minS;
-			double	shiftV	=-minT;
-
-			foreach(Vector3 pnt in verts)
-			{
-				double	crdX, crdY;
-
-				//dot product
-				crdX	=(pnt.X * sX) + (pnt.Y * sY) + (pnt.Z * sZ);
-				crdY	=(pnt.X * tX) + (pnt.Y * tY) + (pnt.Z * tZ);
-
-				//shift relative to start position
-				crdX	+=shiftU;
-				crdY	+=shiftV;
-
-				//now the coordinates are set for textures
-				//scale by light grid size
-				crdX	/=mLightGridSize;
-				crdY	/=mLightGridSize;
-
-				sCoords.Add(crdX);
-				tCoords.Add(crdY);
-			}
-		}
-
-
-		void GetMirrorTexCoords(List<Vector3> verts,
-			int	lwidth, int lheight, GFXTexInfo tex,
-			out List<Vector2> coords)
-		{
-			coords	=new List<Vector2>();
-
-			float	minS, minT;
-			float	maxS, maxT;
-
-			minS	=Bounds.MIN_MAX_BOUNDS;
-			minT	=Bounds.MIN_MAX_BOUNDS;
-			maxS	=-Bounds.MIN_MAX_BOUNDS;
-			maxT	=-Bounds.MIN_MAX_BOUNDS;
-
-			GBSPPlane	pln;
-			pln.mNormal	=Vector3.Cross(tex.mVecU, tex.mVecV);
-
-			pln.mNormal.Normalize();
-			pln.mDist	=0;
-			pln.mType	=GBSPPlane.PLANE_ANY;
-
-			//get a proper set of texvecs for lighting
-			Vector3	xv, yv;
-			GBSPPlane.TextureAxisFromPlane(pln, out xv, out yv);
-
-			//calculate the min values for s and t
-			foreach(Vector3 pnt in verts)
-			{
-				float	d	=Vector3.Dot(xv, pnt);
-				if(d < minS)
-				{
-					minS	=d;
-				}
-				if(d > maxS)
-				{
-					maxS	=d;
-				}
-
-				d	=Vector3.Dot(yv, pnt);
-				if(d < minT)
-				{
-					minT	=d;
-				}
-				if(d > maxT)
-				{
-					maxT	=d;
-				}
-			}
-
-			float	shiftU	=-minS;
-			float	shiftV	=-minT;
-
-			Vector2	scale	=Vector2.Zero;
-			scale.X	=maxS - minS;
-			scale.Y	=maxT - minT;
-
-			foreach(Vector3 pnt in verts)
-			{
-				Vector2	crd;
-				crd.X	=Vector3.Dot(xv, pnt);
-				crd.Y	=Vector3.Dot(yv, pnt);
-
-				crd.X	+=shiftU;
-				crd.Y	+=shiftV;
-
-				crd	/=scale;
-
-				coords.Add(crd);
-			}
 		}
 
 
@@ -2248,42 +1093,6 @@ namespace BSPCore
 		internal TexAtlas GetLightMapAtlas()
 		{
 			return	mLMAtlas;
-		}
-
-
-		float ClampLightIndex(int idx)
-		{
-			if(idx == 255)
-			{
-				return	255;	//not in use
-			}
-			else if(idx >= 32)	//switchable
-			{
-				return	idx - 20;
-			}
-			else if(idx < 12)
-			{
-				return	idx;
-			}
-
-			Debug.Assert(false);	//light style in a strange place
-
-			return	0;
-		}
-
-
-		Vector4 AssignLightStyleIndex(GFXFace f)
-		{
-			//switchable styles reference the same shader
-			//array as animated, so need a - 20
-			Vector4	ret	=Vector4.Zero;
-
-			ret.X	=ClampLightIndex(f.mLType0);
-			ret.Y	=ClampLightIndex(f.mLType1);
-			ret.Z	=ClampLightIndex(f.mLType2);
-			ret.W	=ClampLightIndex(f.mLType3);
-
-			return	ret;
 		}
 	}
 }

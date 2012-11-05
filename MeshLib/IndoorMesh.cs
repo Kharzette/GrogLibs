@@ -35,18 +35,19 @@ namespace MeshLib
 		bool					[]mSwitches		=new bool[32];	//switchable on / off
 
 		//material draw stuff
+		//indexed by model in the dictionary
 		//drawcalls for sorted alphas
-		List<DrawCall>	[]mLMADrawCalls;
-		List<DrawCall>	[]mAlphaDrawCalls;
-		List<DrawCall>	[]mLMAAnimDrawCalls;
-		List<DrawCall>	[]mMirrorDrawCalls;
+		Dictionary<int, List<List<DrawCall>>>	mLMADrawCalls;
+		Dictionary<int, List<List<DrawCall>>>	mLMAAnimDrawCalls;
+		Dictionary<int, List<List<DrawCall>>>	mAlphaDrawCalls;
+		Dictionary<int, List<List<DrawCall>>>	mMirrorDrawCalls;
 
 		//drawcalls for non alphas (single per material)
 		Dictionary<int, List<DrawCall>>	mLMDrawCalls;
-		DrawCall	[]mLMAnimDrawCalls;
-		DrawCall	[]mVLitDrawCalls;
-		DrawCall	[]mSkyDrawCalls;
-		DrawCall	[]mFBDrawCalls;
+		Dictionary<int, List<DrawCall>>	mVLitDrawCalls;
+		Dictionary<int, List<DrawCall>>	mLMAnimDrawCalls;
+		Dictionary<int, List<DrawCall>>	mSkyDrawCalls;
+		Dictionary<int, List<DrawCall>>	mFBDrawCalls;
 
 		//mirror polys for rendering through
 		List<List<Vector3>>	mMirrorPolys	=new List<List<Vector3>>();
@@ -72,37 +73,37 @@ namespace MeshLib
 			//animated lightmap stuff
 			out VertexBuffer lmAnimVB,
 			out IndexBuffer lmAnimIB,
-			out DrawCall []lmAnimDC,
+			out Dictionary<int, List<DrawCall>> lmAnimDC,
 
 			//lightmapped alpha stuff
 			out VertexBuffer lmaVB,
 			out IndexBuffer lmaIB,
-			out List<DrawCall> []lmaDCalls,
+			out Dictionary<int, List<List<DrawCall>>> lmaDCalls,
 
 			//animated alpha lightmap stuff
 			out VertexBuffer lmaAnimVB,
 			out IndexBuffer lmaAnimIB,
-			out List<DrawCall> []lmaAnimDCalls,
+			out Dictionary<int, List<List<MeshLib.DrawCall>>> lmaAnimDCalls,
 
 			int lightAtlasSize,
 			object pp,
 			out MaterialLib.TexAtlas lightAtlas);
 
 		public delegate void BuildVLitRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out DrawCall []dcs, object pp);
+			out IndexBuffer ib, out Dictionary<int, List<DrawCall>> dcs, object pp);
 
 		public delegate void BuildAlphaRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out List<DrawCall> []adcs, object pp);
+			out IndexBuffer ib, out Dictionary<int, List<List<MeshLib.DrawCall>>> adcs, object pp);
 
 		public delegate void BuildFullBrightRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out DrawCall []dcs, object pp);
+			out IndexBuffer ib, out Dictionary<int, List<DrawCall>> dcs, object pp);
 
 		public delegate void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out List<DrawCall> []mdcalls,
+			out IndexBuffer ib, out Dictionary<int, List<List<MeshLib.DrawCall>>> mdcalls,
 			out List<List<Vector3>> mirrorPolys, object pp);
 
 		public delegate void BuildSkyRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out DrawCall []dcs, object pp);
+			out IndexBuffer ib, out Dictionary<int, List<DrawCall>> dcs, object pp);
 		#endregion
 
 
@@ -227,7 +228,8 @@ namespace MeshLib
 		public void Draw(GraphicsDevice gd,
 			UtilityLib.GameCamera gameCam,
 			Vector3 position,
-			IsMaterialVisible bMatVis)
+			IsMaterialVisible bMatVis,
+			Dictionary<int, Matrix> modelMats)
 		{
 			//draw mirrored world if need be
 			List<Matrix>	mirrorMats;
@@ -239,20 +241,20 @@ namespace MeshLib
 				mMatLib.UpdateWVP(Matrix.Identity, mirrorMats[i], gameCam.Projection, mirrorCenters[i]);
 
 				gd.SetRenderTarget(mMirrorRenderTarget);
-//				g.Clear(Color.CornflowerBlue);
+				gd.Clear(Color.CornflowerBlue);
 
 				//render world
-				DrawMaterialsDC(gd, position, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
-//				DrawMaterialsDC(gd, position, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, modelMats, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, modelMats, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, modelMats, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, modelMats, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, modelMats, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 				
 				//alphas
-				DrawMaterialsDC(gd, position, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
-				mAlphaPool.DrawAll(gd, mMatLib, position);
+				DrawMaterialsDC(gd, position, modelMats, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, modelMats, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, modelMats, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+				mAlphaPool.DrawAll(gd, mMatLib, mirrorCenters[i]);
 			}
 
 			if(scissors.Count > 0)
@@ -266,80 +268,28 @@ namespace MeshLib
 
 			gd.Clear(Color.CornflowerBlue);
 
-			DrawMaterialsDC(gd, position, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, modelMats, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, modelMats, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, modelMats, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, modelMats, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, modelMats, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 
 			//alphas
-			DrawMaterialsDC(gd, position, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, modelMats, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, modelMats, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, modelMats, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
 			if(scissors.Count > 0)
 			{
 				//draw mirror surface itself
-				DrawMaterialsDC(gd, position, mMirrorVB, mMirrorIB, mMirrorDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, modelMats, mMirrorVB, mMirrorIB, mMirrorDrawCalls, bMatVis);
 			}
 
 			mAlphaPool.DrawAll(gd, mMatLib, position);
 		}
 
 
-		//for opaques
-		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos,
-			VertexBuffer vb, IndexBuffer ib, DrawCall []dcs,
-			IsMaterialVisible bMatVis)
-		{
-			if(vb == null)
-			{
-				return;
-			}
-
-			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
-
-			g.SetVertexBuffer(vb);
-			g.Indices	=ib;
-
-			int	idx	=0;
-
-			foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
-			{
-				Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
-				if(fx == null)
-				{
-					idx++;
-					continue;
-				}
-				if(!bMatVis(eyePos, idx))
-				{
-					idx++;
-					continue;
-				}
-
-				DrawCall	call	=dcs[idx];
-				if(call.mPrimCount == 0)
-				{
-					idx++;
-					continue;
-				}
-
-				mMatLib.ApplyParameters(mat.Key);
-
-				//set renderstates from material
-				mat.Value.ApplyRenderStates(g);
-
-				fx.CurrentTechnique.Passes[0].Apply();
-
-				g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-					0, call.mMinVertIndex, call.mNumVerts, call.mStartIndex, call.mPrimCount);
-				idx++;
-			}
-		}
-
-
 		//for opaques with models
-		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos,
+		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos, Dictionary<int, Matrix> modelMats,
 			VertexBuffer vb, IndexBuffer ib, Dictionary<int, List<DrawCall>> dcs,
 			IsMaterialVisible bMatVis)
 		{
@@ -387,6 +337,12 @@ namespace MeshLib
 					//set renderstates from material
 					mat.Value.ApplyRenderStates(g);
 
+					//set world mat from model transforms
+					if(modelMats != null && modelMats.ContainsKey(modCall.Key))
+					{
+						fx.Parameters["mWorld"].SetValue(modelMats[modCall.Key]);
+					}
+
 					fx.CurrentTechnique.Passes[0].Apply();
 
 					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
@@ -397,9 +353,9 @@ namespace MeshLib
 		}
 
 
-		//this one is for alphas
-		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos,
-			VertexBuffer vb, IndexBuffer ib, List<DrawCall> []dcs,
+		//this one is for alphas with models
+		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos, Dictionary<int, Matrix> modelMats,
+			VertexBuffer vb, IndexBuffer ib, Dictionary<int, List<List<DrawCall>>> dcs,
 			IsMaterialVisible bMatVis)
 		{
 			if(vb == null)
@@ -412,40 +368,46 @@ namespace MeshLib
 			g.SetVertexBuffer(vb);
 			g.Indices	=ib;
 
-			int	idx	=0;
-
-			foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
+			//cycle through models
+			foreach(KeyValuePair<int, List<List<DrawCall>>> modCall in dcs)
 			{
-				Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
-				if(fx == null)
-				{
-					idx++;
-					continue;
-				}
-				if(!bMatVis(eyePos, idx))
-				{
-					idx++;
-					continue;
-				}
+				int	idx	=0;
 
-				List<DrawCall>	calls	=dcs[idx];
-				if(calls.Count == 0)
+				foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
 				{
-					idx++;
-					continue;
-				}
-
-				foreach(DrawCall dc in calls)
-				{
-					if(dc.mPrimCount <= 0)
+					Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
+					if(fx == null)
 					{
+						idx++;
 						continue;
 					}
-					mAlphaPool.StoreDraw(dc.mSortPoint, mat.Value,
-						vb, ib, 0, dc.mMinVertIndex, dc.mNumVerts,
-						dc.mStartIndex, dc.mPrimCount);
+					if(modCall.Key == 0)
+					{
+						if(!bMatVis(eyePos, idx))
+						{
+							idx++;
+							continue;
+						}
+					}
+
+					if(modCall.Value.Count == 0)
+					{
+						idx++;
+						continue;
+					}
+
+					foreach(DrawCall dc in modCall.Value[idx])
+					{
+						if(dc.mPrimCount <= 0)
+						{
+							continue;
+						}
+						mAlphaPool.StoreDraw(dc.mSortPoint, mat.Value,
+							vb, ib, modelMats[modCall.Key], 0, dc.mMinVertIndex, dc.mNumVerts,
+							dc.mStartIndex, dc.mPrimCount);
+					}
+					idx++;
 				}
-				idx++;
 			}
 		}
 
@@ -746,16 +708,16 @@ namespace MeshLib
 				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAAnimIB, g, bEditor);
 			}
 
-//			mLMDrawCalls		=DrawCall.ReadDrawCallArray(br);
-			mVLitDrawCalls		=DrawCall.ReadDrawCallArray(br);
-			mLMAnimDrawCalls	=DrawCall.ReadDrawCallArray(br);
-			mSkyDrawCalls		=DrawCall.ReadDrawCallArray(br);
-			mFBDrawCalls		=DrawCall.ReadDrawCallArray(br);
+			mLMDrawCalls		=DrawCall.ReadDrawCallDict(br);
+			mVLitDrawCalls		=DrawCall.ReadDrawCallDict(br);
+			mLMAnimDrawCalls	=DrawCall.ReadDrawCallDict(br);
+			mSkyDrawCalls		=DrawCall.ReadDrawCallDict(br);
+			mFBDrawCalls		=DrawCall.ReadDrawCallDict(br);
 
-			mLMADrawCalls		=DrawCall.ReadDrawCallListArray(br);
-			mAlphaDrawCalls		=DrawCall.ReadDrawCallListArray(br);
-			mLMAAnimDrawCalls	=DrawCall.ReadDrawCallListArray(br);
-			mMirrorDrawCalls	=DrawCall.ReadDrawCallListArray(br);
+			mLMADrawCalls		=DrawCall.ReadDrawCallAlphaDict(br);
+			mAlphaDrawCalls		=DrawCall.ReadDrawCallAlphaDict(br);
+			mLMAAnimDrawCalls	=DrawCall.ReadDrawCallAlphaDict(br);
+			mMirrorDrawCalls	=DrawCall.ReadDrawCallAlphaDict(br);
 			
 			int	mirrorCount	=br.ReadInt32();
 			for(int i=0;i < mirrorCount;i++)
@@ -824,17 +786,17 @@ namespace MeshLib
 
 			//drawcall stuff
 			//opaques
-//			DrawCall.WriteDrawCallArray(bw, mLMDrawCalls);
-			DrawCall.WriteDrawCallArray(bw, mVLitDrawCalls);
-			DrawCall.WriteDrawCallArray(bw, mLMAnimDrawCalls);
-			DrawCall.WriteDrawCallArray(bw, mSkyDrawCalls);
-			DrawCall.WriteDrawCallArray(bw, mFBDrawCalls);
+			DrawCall.WriteDrawCallDict(bw, mLMDrawCalls);
+			DrawCall.WriteDrawCallDict(bw, mVLitDrawCalls);
+			DrawCall.WriteDrawCallDict(bw, mLMAnimDrawCalls);
+			DrawCall.WriteDrawCallDict(bw, mSkyDrawCalls);
+			DrawCall.WriteDrawCallDict(bw, mFBDrawCalls);
 
 			//alphas
-			DrawCall.WriteDrawCallListArray(bw, mLMADrawCalls);
-			DrawCall.WriteDrawCallListArray(bw, mAlphaDrawCalls);
-			DrawCall.WriteDrawCallListArray(bw, mLMAAnimDrawCalls);
-			DrawCall.WriteDrawCallListArray(bw, mMirrorDrawCalls);
+			DrawCall.WriteDrawCallAlphaDict(bw, mLMADrawCalls);
+			DrawCall.WriteDrawCallAlphaDict(bw, mAlphaDrawCalls);
+			DrawCall.WriteDrawCallAlphaDict(bw, mLMAAnimDrawCalls);
+			DrawCall.WriteDrawCallAlphaDict(bw, mMirrorDrawCalls);
 
 			//mirror polys
 			bw.Write(mMirrorPolys.Count);

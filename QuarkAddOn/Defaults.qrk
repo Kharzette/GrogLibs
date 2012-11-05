@@ -1,0 +1,39 @@
+      GrogLibs:config =
+      {
+        CheckAddonInstalled = "1"
+        Game = "GrogLibs"
+        Code = "F" // Hardcoded value in Setup.PAS
+
+        Program = "GrogLibs.exe"
+        Directory = ""
+        CheckDirectory = ""
+
+        MapCommentsPrefix = ";"
+        OutputMapFormat = "Quark etp"
+        ForceFaceFlags = ""
+
+        TexturesPath = ""
+        Q2TexFlags = "0"
+
+        DefaultTexture = "White"
+        DefaultTextureTrigger = "Trigger"
+        DefaultTextureOrigin = "Origin"
+        DefaultTextureClip = "Clip"
+        LightingInnerConeKeyword = "_cone"    // <-- ex: "" if game does not use or ex: "_cone" is the specifics name that gives the spotlight inter size.
+        LightingOuterConeKeyword = ""    // <-- ex: "" if game does not use or ex: "_cone2" is the specifics name that gives the spotlight outer size.
+
+        TextureFormat = ".png"                  // primary texture fileextension, to save model textures properly.
+        TextureFileExtensions = ".png"     // possible texture fileextensions
+        TextureWriteFormat = ".png"
+
+        BaseDir = ""
+        tmpQuArK = "tmpQuArK"
+
+        AddOns = "DataGrogLibs.qrk"$0D"GrogLibsEntities.qrk"$0D"GrogLibsTextures.qrk"
+        AlwaysPak = ""
+        Console = "1"
+        Form = "GameQuake2"
+        LightFactor = '0.9'
+        3DLight = '512'
+        DecimalPlaces = '5'
+      }

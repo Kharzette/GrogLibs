@@ -100,6 +100,7 @@
     <Compile Include="Contents.cs" />
     <Compile Include="CoreDelegates.cs" />
     <Compile Include="CoreEvents.cs" />
+    <Compile Include="MaterialCorrect.cs" />
     <Compile Include="FaceFixer.cs" />
     <Compile Include="GBSP\GBSPBrush.cs" />
     <Compile Include="GBSP\GBSPBrushList.cs" />
@@ -132,6 +133,8 @@
     <Compile Include="MapEntity.cs" />
     <Compile Include="MapFile.cs" />
     <Compile Include="MapGrinder.cs" />
+    <Compile Include="MaterialFill.cs" />
+    <Compile Include="MaterialFinish.cs" />
     <Compile Include="NodeCounter.cs" />
     <Compile Include="PlanePool.cs" />
     <Compile Include="Progress.cs" />

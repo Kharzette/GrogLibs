@@ -144,6 +144,25 @@ namespace BSPCore
 
 
 		#region Queries
+		public Dictionary<int, Matrix> GetModelTransforms()
+		{
+			if(mGFXModels == null)
+			{
+				return	null;
+			}
+
+			Dictionary<int, Matrix>	ret	=new Dictionary<int,Matrix>();
+
+			for(int i=0;i < mGFXModels.Length;i++)
+			{
+				Matrix	mat	=Matrix.CreateTranslation(mGFXModels[i].mOrigin);
+
+				ret.Add(i, mat);
+			}
+			return	ret;
+		}
+
+
 		//pathing on a single flat face
 		void AddPathPoints(List<Vector3> verts,
 			List<Vector3> pathPoints, GFXPlane p, GFXTexInfo tex)
@@ -741,6 +760,8 @@ namespace BSPCore
 				Vector3	org;
 				me.GetOrigin(out org);
 
+				me.GetVectorNoConversion("ModelOrigin", out org);
+
 				mod.SetOrigin(org);
 
 				if(index == 0)
@@ -802,6 +823,9 @@ namespace BSPCore
 				if(i != 0)
 				{
 					mEntities[i].mData.Add("Model", "" + NumModels);
+
+					//assign origin
+					mEntities[i].SetModelOrigin();
 				}
 				NumModels++;
 			}
@@ -1502,6 +1526,51 @@ namespace BSPCore
 		}
 
 
+		List<Vector3> ComputeModelOrigins()
+		{
+			List<Vector3>	modelOrgs	=new List<Vector3>();
+
+			//world model is at the origin
+			modelOrgs.Add(Vector3.Zero);
+
+			//grab model origins
+			int	modelIndex	=1;
+			foreach(MapEntity me in mGFXEntities)
+			{
+				if(!me.mData.ContainsKey("Model"))
+				{
+					continue;
+				}
+				if(me.mData["Model"] == "0")
+				{
+					continue;
+				}
+
+				int	modIdx	=0;
+				
+				if(!Int32.TryParse(me.mData["Model"], out modIdx))
+				{
+					CoreEvents.Print("Some manner of goblinry with model indexes");
+					continue;
+				}
+
+				Debug.Assert(modIdx == modelIndex);
+
+				modelIndex++;
+
+				Vector3	org	=Vector3.Zero;
+
+				if(!me.GetVectorNoConversion("ModelOrigin", out org))
+				{
+					continue;
+				}
+
+				modelOrgs.Add(org);
+			}
+			return	modelOrgs;
+		}
+
+
 		//todo: remove when done testing
 		public GFXPlane []GetPlanes()
 		{
@@ -1518,17 +1587,17 @@ namespace BSPCore
 			//animated lightmap stuff
 			out VertexBuffer lmAnimVB,
 			out IndexBuffer lmAnimIB,
-			out MeshLib.DrawCall []lmAnimDCs,
+			out Dictionary<int, List<MeshLib.DrawCall>> lmAnimDCs,
 
 			//lightmapped alpha stuff
 			out VertexBuffer lmaVB,
 			out IndexBuffer lmaIB,
-			out List<MeshLib.DrawCall> []lmaDCalls,
+			out Dictionary<int, List<List<MeshLib.DrawCall>>> lmaDCalls,
 
 			//animated alpha lightmap stuff
 			out VertexBuffer lmaAnimVB,
 			out IndexBuffer lmaAnimIB,
-			out List<MeshLib.DrawCall> []lmaAnimDCalls,
+			out Dictionary<int, List<List<MeshLib.DrawCall>>> lmaAnimDCalls,
 
 			int lightAtlasSize,
 			object	pp,
@@ -1536,7 +1605,9 @@ namespace BSPCore
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lightAtlasSize);
 
-			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXModels, mGFXLightData, pp))
+			List<Vector3>	modelOrgs	=ComputeModelOrigins();
+
+			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels, modelOrgs))
 			{
 				lmVB	=null;	lmIB	=null;	lmDCs	=null;
 				lmAnimVB	=null;	lmAnimDCs	=null;
@@ -1548,7 +1619,7 @@ namespace BSPCore
 			}
 			mg.GetLMBuffers(out lmVB, out lmIB);
 
-			if(!mg.BuildLMAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXLightData, pp))
+			if(!mg.BuildLMAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels, modelOrgs))
 			{
 				lmVB	=null;	lmIB	=null;	lmDCs	=null;
 				lmAnimVB	=null;	lmAnimDCs	=null;
@@ -1560,7 +1631,7 @@ namespace BSPCore
 			}
 			mg.GetLMAnimBuffers(out lmAnimVB, out lmAnimIB);
 
-			if(!mg.BuildLMAFaceData(mGFXVerts, mGFXVertIndexes, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXLightData, pp))
+			if(!mg.BuildLMAFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels, modelOrgs))
 			{
 				lmVB	=null;	lmIB	=null;	lmDCs	=null;
 				lmAnimVB	=null;	lmAnimDCs	=null;
@@ -1572,7 +1643,7 @@ namespace BSPCore
 			}
 			mg.GetLMABuffers(out lmaVB, out lmaIB);
 
-			if(!mg.BuildLMAAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXLightData, pp))
+			if(!mg.BuildLMAAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels, modelOrgs))
 			{
 				lmVB	=null;	lmIB	=null;	lmDCs	=null;
 				lmAnimVB	=null;	lmAnimDCs	=null;
@@ -1596,13 +1667,15 @@ namespace BSPCore
 
 
 		public void BuildVLitRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out MeshLib.DrawCall []dcs, object pp)
+			out IndexBuffer ib,
+			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			Vector3	[]vnorms	=MakeSmoothVertNormals();
+			List<Vector3>	modelOrgs	=ComputeModelOrigins();
+			Vector3			[]vnorms	=MakeSmoothVertNormals();
 
-			mg.BuildVLitFaceData(mGFXVerts, mGFXRGBVerts, vnorms, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXVertIndexes, pp);
+			mg.BuildVLitFaceData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, pp, mGFXModels, modelOrgs);
 
 			mg.GetVLitBuffers(out vb, out ib);
 
@@ -1611,13 +1684,14 @@ namespace BSPCore
 
 
 		public void BuildAlphaRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib,	out List<MeshLib.DrawCall> []alphaDrawCalls, object pp)
+			out IndexBuffer ib,	out Dictionary<int, List<List<MeshLib.DrawCall>>> alphaDrawCalls, object pp)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			Vector3	[]vnorms	=MakeSmoothVertNormals();
+			List<Vector3>	modelOrgs	=ComputeModelOrigins();
+			Vector3			[]vnorms	=MakeSmoothVertNormals();
 
-			mg.BuildAlphaFaceData(mGFXVerts, mGFXRGBVerts, vnorms, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXVertIndexes, pp);
+			mg.BuildAlphaFaceData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, pp, mGFXModels, modelOrgs);
 
 			mg.GetAlphaBuffers(out vb, out ib);
 
@@ -1626,11 +1700,15 @@ namespace BSPCore
 
 
 		public void BuildFullBrightRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out MeshLib.DrawCall []dcs, object pp)
+			out IndexBuffer ib,
+			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			mg.BuildFullBrightFaceData(mGFXVerts, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXVertIndexes, pp);
+			List<Vector3>	modelOrgs	=ComputeModelOrigins();
+			Vector3			[]vnorms	=MakeSmoothVertNormals();
+
+			mg.BuildFullBrightFaceData(mGFXVerts, mGFXVertIndexes, pp, mGFXModels, modelOrgs);
 
 			mg.GetFullBrightBuffers(out vb, out ib);
 
@@ -1639,14 +1717,15 @@ namespace BSPCore
 
 
 		public void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out List<MeshLib.DrawCall> []dcs,
+			out IndexBuffer ib, out Dictionary<int, List<List<MeshLib.DrawCall>>> dcs,
 			out List<List<Vector3>> mirrorPolys, object pp)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			Vector3	[]vnorms	=MakeSmoothVertNormals();
+			Vector3			[]vnorms	=MakeSmoothVertNormals();
+			List<Vector3>	modelOrgs	=ComputeModelOrigins();
 
-			mg.BuildMirrorFaceData(mGFXVerts, mGFXRGBVerts, vnorms, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXVertIndexes, pp);
+			mg.BuildMirrorFaceData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, pp, mGFXModels, modelOrgs);
 
 			mg.GetMirrorBuffers(out vb, out ib);
 
@@ -1655,11 +1734,14 @@ namespace BSPCore
 
 
 		public void BuildSkyRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out MeshLib.DrawCall []dcs, object pp)
+			out IndexBuffer ib,
+			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			mg.BuildSkyFaceData(mGFXVerts, mGFXModels[0].mFirstFace, mGFXModels[0].mNumFaces, mGFXVertIndexes, pp);
+			List<Vector3>	modelOrgs	=ComputeModelOrigins();
+
+			mg.BuildSkyFaceData(mGFXVerts, mGFXVertIndexes, pp, mGFXModels, modelOrgs);
 
 			mg.GetSkyBuffers(out vb, out ib);
 

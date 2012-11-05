@@ -1,0 +1,179 @@
+QQRKSRC1
+// XNA GrogLibs definition file for Quark
+{
+  QuArKProtected = "1"
+  Description = "GrogLibs data"
+
+  GrogLibs.qctx =
+  {
+    Game = "GrogLibs"
+    HTML = "index.html"
+
+    SFSkills = '256 512 1024 2048'   // must be 4 or 6 values : easy/medium/hard/deathm.[/coop/single]
+    TexFlagsTransparent = '16 0.6667 32 0.3333 268435456 0.5'   // bit of value 16 (resp 32) means "66% transparent" (resp 33%)
+
+    TextureFlags:form =     // a form for setting flags on polyhedron faces
+    {
+      Style = "5"
+      Reset: =
+      {
+        Cap = "Reset to default"
+        Typ = "B"
+        Hint = "Reset all flags to the texture's default"
+        Delete: =
+        {
+          Flags = ""      // this button deletes these Specifics
+          Contents = ""
+          Value = ""
+        }
+      }
+
+      Sep:     ={Txt="" Typ="S"}  // separator
+
+      Contents:={Txt="Brush" Cap="Window"         Typ="X2"         Hint="transparent (the opposite face of windows are not drawn)"}
+      Contents:={Txt=""      Cap="Empty"          Typ="X4"         Hint="Empty but visible (water, lava, etc...)"}
+      Contents:={Txt=""      Cap="Translucent"    Typ="X8"         Hint="Vis can see through"}
+      Contents:={Txt=""      Cap="Wavy"           Typ="X16"        Hint="Underwater turbulence type thing"}
+      Contents:={Txt=""	     Cap="Detail"         Typ="X32"        Hint="Won't be included in vis occlusion"}
+      Contents:={Txt=""      Cap="Clip"           Typ="X64"        Hint="Structural but not visible"}
+      Contents:={Txt=""      Cap="Hint"           Typ="X128"       Hint="Primary splitter (Non-Visible)"}
+      Contents:={Txt=""      Cap="AreaPortal"     Typ="X256"       Hint="Area seperator leaf (Non-Visible, currently not working)"}
+      Contents:={Txt=""      Cap="Flocking"       Typ="X512"       Hint="I have no idea what this is for, decals maybe?"}
+      Contents:={Txt=""      Cap="Sheet"          Typ="X1024"      Hint="Super thin brush I guess?  Don't think this works"}
+      Contents:={Txt=""      Cap="Trigger"        Typ="X2048"      Hint="Trigger brush"}
+      Contents:={Txt=""      Cap="Origin"         Typ="X4096"      Hint="Center of these is the origin for a bmodel"}
+
+      Sep:     ={Txt="" Typ="S"}  // separator
+
+	  //user flags below, change these to game specific stuff as needed
+      Contents:={Txt="User"    Cap="User1"   Typ="X65536"      Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User2"   Typ="X131072"     Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User3"   Typ="X1048576"    Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User4"   Typ="X262144"     Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User5"   Typ="X524288"     Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User6"   Typ="X1048576"    Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User7"   Typ="X2097152"    Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User8"   Typ="X4194304"    Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User9"   Typ="X8388608"    Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User10"  Typ="X16777216"   Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User11"  Typ="X33554432"   Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User12"  Typ="X67108864"   Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User13"  Typ="X134217728"  Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User14"  Typ="X268435456"  Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User15"  Typ="X536870912"  Hint="Game specific contents"}
+      Contents:={Txt=""        Cap="User16"  Typ="X1073741824" Hint="Game specific contents"}
+
+      Sep:     ={Txt="" Typ="S"}  // separator
+
+      Flags:   ={Txt="Face" Cap="Mirror"         Typ="X1"       Hint="Mirrored"}
+      Flags:   ={Txt=""     Cap="FullBright"     Typ="X2"       Hint="No lightmap but fully lit up"}
+      Flags:   ={Txt=""     Cap="Sky"            Typ="X4"       Hint="Portal into Skybox"}
+      Flags:   ={Txt=""     Cap="EmitLight"      Typ="X8"       Hint="Surface emits light in the average texture color"}
+      Flags:   ={Txt=""     Cap="Transparent"    Typ="X16"      Hint="Partially transparent"}
+      Flags:   ={Txt=""     Cap="Gouraud"        Typ="X32"      Hint="Uses vertex lighting with smoothed normals"}
+      Flags:   ={Txt=""     Cap="Flat"           Typ="X64"      Hint="Vertex lighting with face normals"}
+      Flags:   ={Txt=""     Cap="CellShade"      Typ="X128"     Hint="Use a cartoony shader"}
+
+      Sep:     ={Txt="" Typ="S"}  // separator
+
+      Value:   ={Txt="Value" Typ="E" Hint="The meaning of this depends on the other flags"}
+    }
+  }
+  NewFiles.qtx =
+  {
+    ToolBox = "New files..."
+    Root = "GrogLibs file types.qtxfolder"
+    GrogLibs file types.qtxfolder =
+    {
+//      Pk3.pk3 = { }	//no idea if this is correct
+    }
+  }
+  walltex:incl =
+  {
+    tex = "White"
+  }
+  floortex:incl =
+  {
+    tex = "Green"
+  }
+  ceiltex:incl =
+  {
+    tex = "GreySky"
+  }
+  NewMap:incl =
+  {
+    Game = "GrogLibs"
+    Root = "worldspawn:b"
+    worldspawn:b =
+    {
+      Border walls:g =
+      {
+        East wall:p =
+        {
+          west:f =  { v = '256 0 272 256 -128 272 256 0 400'       walltex = ! }
+          east:f =  { v = '272 0 272 272 128 272 272 0 400'        walltex = ! }
+          south:f = { v = '432 -192 272 560 -192 272 432 -192 400' walltex = ! }
+          north:f = { v = '432 192 272 304 192 272 432 192 400'    walltex = ! }
+          down:f =  { v = '432 0 -96 560 0 -96 432 -128 -96'       walltex = ! }
+          up:f =    { v = '432 0 96 560 0 96 432 128 96'           walltex = ! }
+        }
+        West wall:p =
+        {
+          west:f =  { v = '-272 0 272 -272 -128 272 -272 0 400'    walltex = ! }
+          east:f =  { v = '-256 0 272 -256 128 272 -256 0 400'     walltex = ! }
+          south:f = { v = '432 -192 272 560 -192 272 432 -192 400' walltex = ! }
+          north:f = { v = '432 192 272 304 192 272 432 192 400'    walltex = ! }
+          down:f =  { v = '432 0 -96 560 0 -96 432 -128 -96'       walltex = ! }
+          up:f =    { v = '432 0 96 560 0 96 432 128 96'           walltex = ! }
+        }
+        North wall:p =
+        {
+          west:f =  { v = '-256 0 272 -256 -128 272 -256 0 400'    walltex = ! }
+          east:f =  { v = '256 0 272 256 128 272 256 0 400'        walltex = ! }
+          south:f = { v = '432 192 272 560 192 272 432 192 400'    walltex = ! }
+          north:f = { v = '432 208 272 304 208 272 432 208 400'    walltex = ! }
+          down:f =  { v = '432 0 -96 560 0 -96 432 -128 -96'       walltex = ! }
+          up:f =    { v = '432 0 96 560 0 96 432 128 96'           walltex = ! }
+        }
+        South wall:p =
+        {
+          west:f =  { v = '-256 0 272 -256 -128 272 -256 0 400'    walltex = ! }
+          east:f =  { v = '256 0 272 256 128 272 256 0 400'        walltex = ! }
+          south:f = { v = '432 -208 272 560 -208 272 432 -208 400' walltex = ! }
+          north:f = { v = '432 -192 272 304 -192 272 432 -192 400' walltex = ! }
+          down:f =  { v = '432 0 -96 560 0 -96 432 -128 -96'       walltex = ! }
+          up:f =    { v = '432 0 96 560 0 96 432 128 96'           walltex = ! }
+        }
+        Sky:p =
+        {
+          west:f =  { v = '-256 0 272 -256 -128 272 -256 0 400'    ceiltex = ! }
+          east:f =  { v = '256 0 272 256 128 272 256 0 400'        ceiltex = ! }
+          south:f = { v = '432 -192 272 560 -192 272 432 -192 400' ceiltex = ! }
+          north:f = { v = '432 192 272 304 192 272 432 192 400'    ceiltex = ! }
+          down:f =  { v = '432 0 96 560 0 96 432 -128 96'          ceiltex = ! }
+          up:f =    { v = '432 0 112 560 0 112 432 128 112'        ceiltex = ! }
+        }
+        Floor:p =
+        {
+          west:f =  { v = '-256 0 272 -256 -128 272 -256 0 400'    floortex = ! }
+          east:f =  { v = '256 0 272 256 128 272 256 0 400'        floortex = ! }
+          south:f = { v = '432 -192 272 560 -192 272 432 -192 400' floortex = ! }
+          north:f = { v = '432 192 272 304 192 272 432 192 400'    floortex = ! }
+          down:f =  { v = '432 0 -112 560 0 -112 432 -128 -112'    floortex = ! }
+          up:f =    { v = '432 0 -96 560 0 -96 432 128 -96'        floortex = ! }
+        }
+      }
+      info_player_start:e =
+      {
+        origin = "-144 0 -72"
+        angle = "360"
+      }
+      light:e =
+      {
+        light = "300"
+        _color = "1 1 1"
+        origin = "0 0 0"
+      }
+    }
+  }
+}

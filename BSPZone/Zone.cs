@@ -53,7 +53,8 @@ namespace BSPZone
 		byte		[]mMaterialVisData;
 
 		//gameplay stuff
-		List<ZoneTrigger>	mTriggers	=new List<ZoneTrigger>();
+		List<ZoneTrigger>		mTriggers			=new List<ZoneTrigger>();
+		Dictionary<int, Matrix>	mModelTransforms	=new Dictionary<int, Matrix>();
 
 		int	mLightMapGridSize;
 		int	mNumVisLeafBytes;
@@ -242,6 +243,16 @@ namespace BSPZone
 					mTriggers.Add(zt);
 				}
 			}
+
+			//grab model transforms
+			for(int i=0;i < mZoneModels.Length;i++)
+			{
+				ZoneModel	zm	=mZoneModels[i];
+
+				Matrix	mat	=Matrix.CreateTranslation(zm.mOrigin);
+
+				mModelTransforms.Add(i, mat);
+			}
 		}
 		#endregion
 
@@ -271,6 +282,31 @@ namespace BSPZone
 				ret.Add(e);
 			}
 			return	ret;
+		}
+
+
+		public Dictionary<int, Matrix> GetModelTransforms()
+		{
+			return	mModelTransforms;
+		}
+
+
+		public Matrix GetModelTransform(int modelIndex)
+		{
+			if(mModelTransforms.ContainsKey(modelIndex))
+			{
+				return	mModelTransforms[modelIndex];
+			}
+			return	Matrix.Identity;
+		}
+
+
+		public void SetModelTransform(int modelIndex, Matrix trans)
+		{
+			if(mModelTransforms.ContainsKey(modelIndex))
+			{
+				mModelTransforms[modelIndex]	=trans;
+			}
 		}
 
 

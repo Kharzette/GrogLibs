@@ -1,0 +1,43 @@
+QQRKSRC1
+{
+  QuArKProtected = "1"
+  Description = "GrogLibs Textures"
+
+  Textures.qtx =
+  {
+    ToolBox = "Texture Browser..."
+    Root = "GrogLibs Textures.qtxfolder"
+    HTML = "intro.texturebrowser.html"
+
+    GrogLibs Textures.qtxfolder =
+    {
+		Solids.txlist	=
+		{
+			Black.wl			={ a = "." }
+			Blue.wl				={ a = "." }
+			BlueishPurple.wl	={ a = "." }
+			Brown.wl			={ a = "." }
+			Clip.wl				={ a = "." }
+			Cyan.wl				={ a = "." }
+			DarkGrey.wl			={ a = "." }
+			Gold.wl				={ a = "." }
+			GoldenBrown.wl		={ a = "." }
+			Green.wl			={ a = "." }
+			GreySky.wl			={ a = "." }
+			LightBlue.wl		={ a = "." }
+			LightGrey.wl		={ a = "." }
+			LimeGreen.wl		={ a = "." }
+			Orange.wl			={ a = "." }
+			Origin.wl			={ a = "." }
+			Pink.wl				={ a = "." }
+			PukeGreen.wl		={ a = "." }
+			Purple.wl			={ a = "." }
+			PurplyBlue.wl		={ a = "." }
+			Red.wl				={ a = "." }
+			Skin.wl				={ a = "." }
+			Trigger.wl			={ a = "." }
+			White.wl			={ a = "." }
+		}
+	}
+  }
+}
