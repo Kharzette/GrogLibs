@@ -137,7 +137,7 @@ namespace BSPCore
 
 		//delegates
 		internal delegate bool IsCorrectMaterial(GFXFace f, GFXTexInfo tex, string matName);
-		internal delegate bool FillDrawChunk(DrawDataChunk ddc, GFXPlane []pp, Vector3 modelOrg,
+		internal delegate bool FillDrawChunk(DrawDataChunk ddc, GFXPlane []pp,
 											Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
 											GFXFace f, GFXTexInfo tex, int lightGridSize,
 											byte []lightData, TexAtlas atlas,
@@ -516,7 +516,7 @@ namespace BSPCore
 		//experimental drawcall builder that uses lots of callbacks
 		internal bool BuildFaceData(Vector3 []verts, int[] indexes,
 			Vector3 []rgbVerts, Vector3 []vnorms,
-			object pobj, GFXModel []models, List<Vector3> modelOrgs, byte []lightData,
+			object pobj, GFXModel []models, byte []lightData,
 			IsCorrectMaterial correct, FillDrawChunk fill, FinishUp fin)
 		{
 			GFXPlane	[]pp	=pobj as GFXPlane [];
@@ -538,8 +538,6 @@ namespace BSPCore
 						continue;
 					}
 
-					Vector3	modelOrg	=modelOrgs[i];
-
 					int	firstFace	=models[i].mFirstFace;
 					int	nFaces		=models[i].mNumFaces;
 
@@ -553,7 +551,7 @@ namespace BSPCore
 							continue;
 						}
 						
-						if(!fill(ddc, pp, modelOrg, verts, indexes, rgbVerts, vnorms, f, tex, mLightGridSize, lightData, mLMAtlas, mMirrorPolys))
+						if(!fill(ddc, pp, verts, indexes, rgbVerts, vnorms, f, tex, mLightGridSize, lightData, mLMAtlas, mMirrorPolys))
 						{
 							return	false;
 						}
@@ -568,7 +566,7 @@ namespace BSPCore
 
 		internal bool BuildAlphaFaceData(Vector3 []verts, int[] indexes,
 			Vector3 []rgbVerts, Vector3 []vnorms,
-			object pobj, GFXModel []models, List<Vector3> modelOrgs, byte []lightData,
+			object pobj, GFXModel []models, byte []lightData,
 			IsCorrectMaterial correct, FillDrawChunk fill, FinishUpAlpha fin)
 		{
 			GFXPlane	[]pp	=pobj as GFXPlane [];
@@ -590,8 +588,6 @@ namespace BSPCore
 					{
 						continue;
 					}
-
-					Vector3	modelOrg	=modelOrgs[i];
 
 					int	firstFace	=models[i].mFirstFace;
 					int	nFaces		=models[i].mNumFaces;
@@ -617,7 +613,7 @@ namespace BSPCore
 							ddc	=new DrawDataChunk();
 						}
 
-						if(!fill(ddc, pp, modelOrg, verts, indexes, rgbVerts, vnorms, f, tex, mLightGridSize, lightData, mLMAtlas, mMirrorPolys))
+						if(!fill(ddc, pp, verts, indexes, rgbVerts, vnorms, f, tex, mLightGridSize, lightData, mLMAtlas, mMirrorPolys))
 						{
 							return	false;
 						}
@@ -635,9 +631,9 @@ namespace BSPCore
 
 
 		internal bool BuildLMAnimFaceData(Vector3 []verts, int[] indexes,
-			byte []lightData, object pobj, GFXModel []models, List<Vector3> modelOrgs)
+			byte []lightData, object pobj, GFXModel []models)
 		{
-			return	BuildFaceData(verts, indexes, null, null, pobj, models, modelOrgs, lightData,
+			return	BuildFaceData(verts, indexes, null, null, pobj, models, lightData,
 				MaterialCorrect.IsLightMapAnimated,
 				MaterialFill.FillLightMapAnimated,
 				FinishLightMapAnimated);
@@ -645,9 +641,9 @@ namespace BSPCore
 
 
 		internal bool BuildLMAAnimFaceData(Vector3 []verts, int[] indexes,
-			byte []lightData, object pobj, GFXModel []models, List<Vector3> modelOrgs)
+			byte []lightData, object pobj, GFXModel []models)
 		{
-			return	BuildAlphaFaceData(verts, indexes, null, null, pobj, models, modelOrgs, lightData,
+			return	BuildAlphaFaceData(verts, indexes, null, null, pobj, models, lightData,
 				MaterialCorrect.IsLightMappedAlphaAnimated,
 				MaterialFill.FillLightMappedAlphaAnimated,
 				FinishLightMappedAlphaAnimated);
@@ -655,9 +651,9 @@ namespace BSPCore
 
 
 		internal bool BuildLMFaceData(Vector3 []verts, int[] indexes,
-			byte []lightData, object pobj, GFXModel []models, List<Vector3> modelOrgs)
+			byte []lightData, object pobj, GFXModel []models)
 		{
-			return	BuildFaceData(verts, indexes, null, null, pobj, models, modelOrgs, lightData,
+			return	BuildFaceData(verts, indexes, null, null, pobj, models, lightData,
 				MaterialCorrect.IsLightMapped,
 				MaterialFill.FillLightMapped,
 				FinishLightMapped);
@@ -665,9 +661,9 @@ namespace BSPCore
 
 
 		internal bool BuildLMAFaceData(Vector3 []verts, int[] indexes,
-			byte []lightData, object pobj, GFXModel []models, List<Vector3> modelOrgs)
+			byte []lightData, object pobj, GFXModel []models)
 		{
-			return	BuildAlphaFaceData(verts, indexes, null, null, pobj, models, modelOrgs, lightData,
+			return	BuildAlphaFaceData(verts, indexes, null, null, pobj, models, lightData,
 				MaterialCorrect.IsLightMappedAlpha,
 				MaterialFill.FillLightMappedAlpha,
 				FinishLightMappedAlpha);
@@ -675,9 +671,9 @@ namespace BSPCore
 
 
 		internal bool BuildVLitFaceData(Vector3 []verts, int[] indexes,	Vector3 []rgbVerts,
-			Vector3 []vnorms, object pobj, GFXModel []models, List<Vector3> modelOrgs)
+			Vector3 []vnorms, object pobj, GFXModel []models)
 		{
-			return	BuildFaceData(verts, indexes, rgbVerts, vnorms, pobj, models, modelOrgs, null,
+			return	BuildFaceData(verts, indexes, rgbVerts, vnorms, pobj, models, null,
 				MaterialCorrect.IsVLit,
 				MaterialFill.FillVLit,
 				FinishVLit);
@@ -685,9 +681,9 @@ namespace BSPCore
 
 
 		internal bool BuildMirrorFaceData(Vector3 []verts, int[] indexes,	Vector3 []rgbVerts,
-			Vector3 []vnorms, object pobj, GFXModel []models, List<Vector3> modelOrgs)
+			Vector3 []vnorms, object pobj, GFXModel []models)
 		{
-			return	BuildAlphaFaceData(verts, indexes, rgbVerts, vnorms, pobj, models, modelOrgs, null,
+			return	BuildAlphaFaceData(verts, indexes, rgbVerts, vnorms, pobj, models, null,
 				MaterialCorrect.IsMirror,
 				MaterialFill.FillMirror,
 				FinishMirror);
@@ -695,9 +691,9 @@ namespace BSPCore
 
 
 		internal bool BuildAlphaFaceData(Vector3 []verts, int[] indexes, Vector3 []rgbVerts,
-			Vector3 []vnorms, object pobj, GFXModel []models, List<Vector3> modelOrgs)
+			Vector3 []vnorms, object pobj, GFXModel []models)
 		{
-			return	BuildAlphaFaceData(verts, indexes, rgbVerts, vnorms, pobj, models, modelOrgs, null,
+			return	BuildAlphaFaceData(verts, indexes, rgbVerts, vnorms, pobj, models, null,
 				MaterialCorrect.IsAlpha,
 				MaterialFill.FillAlpha,
 				FinishAlpha);
@@ -705,9 +701,9 @@ namespace BSPCore
 
 
 		internal bool BuildFullBrightFaceData(Vector3 []verts, int[] indexes,
-			object pobj, GFXModel []models, List<Vector3> modelOrgs)
+			object pobj, GFXModel []models)
 		{
-			return	BuildFaceData(verts, indexes, null, null, pobj, models, modelOrgs, null,
+			return	BuildFaceData(verts, indexes, null, null, pobj, models, null,
 				MaterialCorrect.IsFullBright,
 				MaterialFill.FillFullBright,
 				FinishFullBright);
@@ -715,9 +711,9 @@ namespace BSPCore
 
 
 		internal bool BuildSkyFaceData(Vector3 []verts, int[] indexes,
-			object pobj, GFXModel []models, List<Vector3> modelOrgs)
+			object pobj, GFXModel []models)
 		{
-			return	BuildFaceData(verts, indexes, null, null, pobj, models, modelOrgs, null,
+			return	BuildFaceData(verts, indexes, null, null, pobj, models, null,
 				MaterialCorrect.IsSky,
 				MaterialFill.FillSky,
 				FinishSky);

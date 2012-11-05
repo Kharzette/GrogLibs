@@ -1588,9 +1588,7 @@ namespace BSPCore
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lightAtlasSize);
 
-			List<Vector3>	modelOrgs	=ComputeModelOrigins();
-
-			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels, modelOrgs))
+			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels))
 			{
 				lmVB	=null;	lmIB	=null;	lmDCs	=null;
 				lmAnimVB	=null;	lmAnimDCs	=null;
@@ -1602,7 +1600,7 @@ namespace BSPCore
 			}
 			mg.GetLMBuffers(out lmVB, out lmIB);
 
-			if(!mg.BuildLMAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels, modelOrgs))
+			if(!mg.BuildLMAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels))
 			{
 				lmVB	=null;	lmIB	=null;	lmDCs	=null;
 				lmAnimVB	=null;	lmAnimDCs	=null;
@@ -1614,7 +1612,7 @@ namespace BSPCore
 			}
 			mg.GetLMAnimBuffers(out lmAnimVB, out lmAnimIB);
 
-			if(!mg.BuildLMAFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels, modelOrgs))
+			if(!mg.BuildLMAFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels))
 			{
 				lmVB	=null;	lmIB	=null;	lmDCs	=null;
 				lmAnimVB	=null;	lmAnimDCs	=null;
@@ -1626,7 +1624,7 @@ namespace BSPCore
 			}
 			mg.GetLMABuffers(out lmaVB, out lmaIB);
 
-			if(!mg.BuildLMAAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels, modelOrgs))
+			if(!mg.BuildLMAAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels))
 			{
 				lmVB	=null;	lmIB	=null;	lmDCs	=null;
 				lmAnimVB	=null;	lmAnimDCs	=null;
@@ -1655,10 +1653,9 @@ namespace BSPCore
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			List<Vector3>	modelOrgs	=ComputeModelOrigins();
-			Vector3			[]vnorms	=MakeSmoothVertNormals();
+			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
-			mg.BuildVLitFaceData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, pp, mGFXModels, modelOrgs);
+			mg.BuildVLitFaceData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, pp, mGFXModels);
 
 			mg.GetVLitBuffers(out vb, out ib);
 
@@ -1671,10 +1668,9 @@ namespace BSPCore
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			List<Vector3>	modelOrgs	=ComputeModelOrigins();
-			Vector3			[]vnorms	=MakeSmoothVertNormals();
+			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
-			mg.BuildAlphaFaceData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, pp, mGFXModels, modelOrgs);
+			mg.BuildAlphaFaceData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, pp, mGFXModels);
 
 			mg.GetAlphaBuffers(out vb, out ib);
 
@@ -1688,10 +1684,9 @@ namespace BSPCore
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			List<Vector3>	modelOrgs	=ComputeModelOrigins();
-			Vector3			[]vnorms	=MakeSmoothVertNormals();
+			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
-			mg.BuildFullBrightFaceData(mGFXVerts, mGFXVertIndexes, pp, mGFXModels, modelOrgs);
+			mg.BuildFullBrightFaceData(mGFXVerts, mGFXVertIndexes, pp, mGFXModels);
 
 			mg.GetFullBrightBuffers(out vb, out ib);
 
@@ -1705,10 +1700,9 @@ namespace BSPCore
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			Vector3			[]vnorms	=MakeSmoothVertNormals();
-			List<Vector3>	modelOrgs	=ComputeModelOrigins();
+			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
-			mg.BuildMirrorFaceData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, pp, mGFXModels, modelOrgs);
+			mg.BuildMirrorFaceData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, pp, mGFXModels);
 
 			mg.GetMirrorBuffers(out vb, out ib);
 
@@ -1722,9 +1716,7 @@ namespace BSPCore
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			List<Vector3>	modelOrgs	=ComputeModelOrigins();
-
-			mg.BuildSkyFaceData(mGFXVerts, mGFXVertIndexes, pp, mGFXModels, modelOrgs);
+			mg.BuildSkyFaceData(mGFXVerts, mGFXVertIndexes, pp, mGFXModels);
 
 			mg.GetSkyBuffers(out vb, out ib);
 

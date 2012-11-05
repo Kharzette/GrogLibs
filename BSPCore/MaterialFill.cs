@@ -358,7 +358,7 @@ namespace BSPCore
 
 		//handles basic verts and texcoord 0 with model matrix
 		static void ComputeFaceData(GFXFace f, Vector3 []verts, int []indexes,
-			GFXTexInfo tex,	List<Vector2> tex0, Vector3 modelOrg, List<Vector3> outVerts)
+			GFXTexInfo tex,	List<Vector2> tex0, List<Vector3> outVerts)
 		{
 			List<Vector3>	worldVerts	=GetFaceVerts(f, verts, indexes);
 
@@ -376,8 +376,7 @@ namespace BSPCore
 
 				tex0.Add(crd);
 
-				//offset to origin
-				outVerts.Add(v - modelOrg);
+				outVerts.Add(v);
 			}
 		}
 
@@ -407,7 +406,7 @@ namespace BSPCore
 		}
 
 
-		internal static bool FillLightMapped(DrawDataChunk ddc, GFXPlane []pp, Vector3 modelOrg,
+		internal static bool FillLightMapped(DrawDataChunk ddc, GFXPlane []pp,
 					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
 					GFXFace f, GFXTexInfo tex, int lightGridSize,
 					byte []lightData, MaterialLib.TexAtlas atlas,
@@ -425,7 +424,7 @@ namespace BSPCore
 			}
 
 			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, modelOrg, faceVerts);
+			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 			ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
 
 			if(!AtlasLightMap(atlas, lightGridSize, f, lightData, 0, faceVerts, pln, tex, ddc.mTex1))
@@ -438,7 +437,7 @@ namespace BSPCore
 		}
 
 
-		internal static bool FillLightMapAnimated(DrawDataChunk ddc, GFXPlane []pp, Vector3 modelOrg,
+		internal static bool FillLightMapAnimated(DrawDataChunk ddc, GFXPlane []pp,
 					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
 					GFXFace f, GFXTexInfo tex, int lightGridSize,
 					byte []lightData, MaterialLib.TexAtlas atlas,
@@ -455,7 +454,7 @@ namespace BSPCore
 			}
 
 			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, modelOrg, faceVerts);
+			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 			ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
 
 			foreach(Vector3 v in faceVerts)
@@ -482,7 +481,7 @@ namespace BSPCore
 		}
 
 
-		internal static bool FillVLit(DrawDataChunk ddc, GFXPlane []pp, Vector3 modelOrg,
+		internal static bool FillVLit(DrawDataChunk ddc, GFXPlane []pp,
 					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
 					GFXFace f, GFXTexInfo tex, int lightGridSize,
 					byte []lightData, MaterialLib.TexAtlas atlas,
@@ -500,7 +499,7 @@ namespace BSPCore
 			}
 
 			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, modelOrg, faceVerts);
+			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 			ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
 			ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
 
@@ -510,7 +509,7 @@ namespace BSPCore
 		}
 
 
-		internal static bool FillFullBright(DrawDataChunk ddc, GFXPlane []pp, Vector3 modelOrg,
+		internal static bool FillFullBright(DrawDataChunk ddc, GFXPlane []pp,
 					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
 					GFXFace f, GFXTexInfo tex, int lightGridSize,
 					byte []lightData, MaterialLib.TexAtlas atlas,
@@ -520,7 +519,7 @@ namespace BSPCore
 			ddc.mVCounts.Add(f.mNumVerts);
 
 			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, modelOrg, faceVerts);
+			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 
 			ddc.mVerts.AddRange(faceVerts);
 
@@ -528,7 +527,7 @@ namespace BSPCore
 		}
 
 
-		internal static bool FillSky(DrawDataChunk ddc, GFXPlane []pp, Vector3 modelOrg,
+		internal static bool FillSky(DrawDataChunk ddc, GFXPlane []pp,
 					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
 					GFXFace f, GFXTexInfo tex, int lightGridSize,
 					byte []lightData, MaterialLib.TexAtlas atlas,
@@ -538,7 +537,7 @@ namespace BSPCore
 			ddc.mVCounts.Add(f.mNumVerts);
 
 			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, modelOrg, faceVerts);
+			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 
 			ddc.mVerts.AddRange(faceVerts);
 
@@ -546,7 +545,7 @@ namespace BSPCore
 		}
 
 
-		internal static bool FillMirror(DrawDataChunk ddc, GFXPlane []pp, Vector3 modelOrg,
+		internal static bool FillMirror(DrawDataChunk ddc, GFXPlane []pp,
 					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
 					GFXFace f, GFXTexInfo tex, int lightGridSize,
 					byte []lightData, MaterialLib.TexAtlas atlas,
@@ -564,7 +563,7 @@ namespace BSPCore
 
 			List<Vector3>	fverts	=new List<Vector3>();
 			List<Vector2>	blah	=new List<Vector2>();
-			ComputeFaceData(f, verts, indexes, tex, blah, modelOrg, fverts);
+			ComputeFaceData(f, verts, indexes, tex, blah, fverts);
 			ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
 			ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
 
@@ -580,7 +579,7 @@ namespace BSPCore
 		}
 
 
-		internal static bool FillAlpha(DrawDataChunk ddc, GFXPlane []pp, Vector3 modelOrg,
+		internal static bool FillAlpha(DrawDataChunk ddc, GFXPlane []pp,
 					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
 					GFXFace f, GFXTexInfo tex, int lightGridSize,
 					byte []lightData, MaterialLib.TexAtlas atlas,
@@ -597,7 +596,7 @@ namespace BSPCore
 			}
 
 			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, modelOrg, faceVerts);
+			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 			ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
 			ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
 
@@ -607,7 +606,7 @@ namespace BSPCore
 		}
 
 
-		internal static bool FillLightMappedAlpha(DrawDataChunk ddc, GFXPlane []pp, Vector3 modelOrg,
+		internal static bool FillLightMappedAlpha(DrawDataChunk ddc, GFXPlane []pp,
 					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
 					GFXFace f, GFXTexInfo tex, int lightGridSize,
 					byte []lightData, MaterialLib.TexAtlas atlas,
@@ -625,7 +624,7 @@ namespace BSPCore
 			}
 
 			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, modelOrg, faceVerts);
+			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 			ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
 
 			foreach(Vector3 v in faceVerts)
@@ -644,7 +643,7 @@ namespace BSPCore
 		}
 
 
-		internal static bool FillLightMappedAlphaAnimated(DrawDataChunk ddc, GFXPlane []pp, Vector3 modelOrg,
+		internal static bool FillLightMappedAlphaAnimated(DrawDataChunk ddc, GFXPlane []pp,
 					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
 					GFXFace f, GFXTexInfo tex, int lightGridSize,
 					byte []lightData, MaterialLib.TexAtlas atlas,
@@ -661,7 +660,7 @@ namespace BSPCore
 			}
 
 			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, modelOrg, faceVerts);
+			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 			ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
 
 			foreach(Vector3 v in faceVerts)
