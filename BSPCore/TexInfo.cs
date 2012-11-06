@@ -13,7 +13,7 @@ namespace BSPCore
 		public float		mDrawScaleU, mDrawScaleV;
 		public UInt32		mFlags;
 		public float		mLightMapScale;
-		public float		mAlpha;
+		public float		mAlpha	=1.0f;	//default
 		public string		mTexture;
 		public string		mMaterial;
 

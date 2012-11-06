@@ -99,7 +99,7 @@ namespace BSPCore
 				float	num;
 				UInt32	inum;
 
-				if(cnt > 13)
+				if(cnt > 13 && cnt < 16)
 				{
 					if(UtilityLib.Mathery.TryParse(tok, out inum))
 					{
@@ -129,10 +129,22 @@ namespace BSPCore
 			//There used to be a ton of legacy stuff for determining properties from
 			//texture name and other such goblinry, but all of that has been ganked
 			//in favour of the QuArK addon flags
-			if(flags.Count == 3)
+			if(flags.Count == 2)
 			{
 				ret			=flags[0];
 				ti.mFlags	=flags[1];
+
+				if(Misc.bFlagSet(ti.mFlags, TexInfo.TRANSPARENT | TexInfo.MIRROR))
+				{
+					ti.mAlpha	=MathHelper.Clamp(numbers[14], 0.0f, 1.0f);
+
+					//probably would never want a value of zero, but that is
+					//the default.  If zero, set to half
+					if(ti.mAlpha == 0.0f)
+					{
+						ti.mAlpha	=0.5f;
+					}
+				}
 			}
 
 			//temp plane, not pooling yet
@@ -192,7 +204,6 @@ namespace BSPCore
 		{
 			//defaults
 			mFlags		=SIDE_VISIBLE;
-			ti.mAlpha	=1.0f;
 
 			//if mirror, set no lightmap and flat
 			if(Misc.bFlagSet(ti.mFlags, TexInfo.MIRROR))
@@ -239,12 +250,6 @@ namespace BSPCore
 				{
 					ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 				}
-			}
-
-			//if transparent, set to half alpha
-			if(Misc.bFlagSet(ti.mFlags, TexInfo.TRANSPARENT))
-			{
-				ti.mAlpha	=0.5f;
 			}
 		}
 
