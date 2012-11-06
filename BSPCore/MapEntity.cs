@@ -304,7 +304,7 @@ namespace BSPCore
 		}
 
 
-		//old school quake maps
+		//quark maps
 		internal void ReadFromMap(StreamReader sr, TexInfoPool tiPool,
 			int entityNum, BSPBuildParams prms)
 		{

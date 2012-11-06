@@ -223,7 +223,7 @@ namespace BSPCore
 
 			//copy real bounds to model bounds
 			//these will be origined
-			mBounds	=bounds;
+			mBounds	=new Bounds(bounds);
 
 			//for submodels set the bsp building bounds way out
 			bounds.mMins	=Vector3.One * -4096f;

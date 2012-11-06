@@ -10,7 +10,7 @@ namespace BSPZone
 	internal class ZoneTrigger
 	{
 		internal ZoneEntity		mEntity;
-		internal BoundingBox	mBox;
+		internal BoundingBox	mBox, mTransformedBox;
 		internal Int32			mModelNum;
 		internal bool			mbTriggered;
 		internal bool			mbTriggerOnce;
@@ -750,6 +750,21 @@ namespace BSPZone
 		}
 
 
+		//should be called either once a frame or whenever a trigger model moves
+		//normally they don't move so could call this once on load if so
+		public void UpdateTriggerPositions()
+		{
+			foreach(ZoneTrigger zt in mTriggers)
+			{
+				zt.mTransformedBox.Min	=Vector3.Transform(
+					zt.mBox.Min, mModelTransforms[zt.mModelNum]);
+
+				zt.mTransformedBox.Max	=Vector3.Transform(
+					zt.mBox.Max, mModelTransforms[zt.mModelNum]);
+			}
+		}
+
+
 		public void BoxTriggerCheck(BoundingBox box, Vector3 start, Vector3 end, int msDelta)
 		{
 			//TODO: full traced solution, just check intersects for now
@@ -771,8 +786,8 @@ namespace BSPZone
 					continue;
 				}
 
-				if(zt.mBox.Intersects(boxStart) ||
-					zt.mBox.Intersects(boxEnd))
+				if(zt.mTransformedBox.Intersects(boxStart) ||
+					zt.mTransformedBox.Intersects(boxEnd))
 				{
 					if(zt.mTimeSinceTriggered > zt.mWait)
 					{
@@ -796,8 +811,8 @@ namespace BSPZone
 					continue;
 				}
 
-				if(zt.mBox.Intersects(boxStart) ||
-					zt.mBox.Intersects(boxEnd))
+				if(zt.mTransformedBox.Intersects(boxStart) ||
+					zt.mTransformedBox.Intersects(boxEnd))
 				{
 					continue;
 				}
