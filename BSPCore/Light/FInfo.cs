@@ -146,7 +146,8 @@ namespace BSPCore
 
 		//TODO: fix the error seen in lightmaps sometimes
 		//I think it is in here
-		internal void CalcFacePoints(LInfo lightInfo, int lightGridSize,
+		internal void CalcFacePoints(Matrix modelMat,
+			LInfo lightInfo, int lightGridSize,
 			Vector2 UVOfs,
 			bool bExtraLightCorrection,
 			UtilityLib.TSPool<bool []> boolPool,
@@ -173,8 +174,9 @@ namespace BSPCore
 					float	curU	=startU + u * lightGridSize;
 					float	curV	=startV + v * lightGridSize;
 
-					mPoints[(v * width) + u]
-						=mTexOrg + mT2WVecU * curU + mT2WVecV * curV;
+					Vector3	point	=mTexOrg + mT2WVecU * curU + mT2WVecV * curV;
+
+					mPoints[(v * width) + u]	=Vector3.Transform(point, modelMat);
 
 					InSolid[(v * width) + u]	=pointInSolid(mPoints[(v * width) + u]);
 

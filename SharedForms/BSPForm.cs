@@ -75,13 +75,6 @@ namespace SharedForms
 				mBSPParams.mbVerbose			=VerboseBSP.Checked;
 				mBSPParams.mbEntityVerbose		=VerboseEntity.Checked;
 				mBSPParams.mbFixTJunctions		=FixTJunctions.Checked;
-				mBSPParams.mbSlickAsGouraud		=SlickAsGouraud.Checked;
-				mBSPParams.mbWarpAsMirror		=WarpAsMirror.Checked;
-				mBSPParams.mbSkyEmitLight		=SkyEmitLight.Checked;
-				mBSPParams.mbLavaEmitLight		=LavaEmitLight.Checked;
-				mBSPParams.mbWindowEmitLight	=WindowEmitLight.Checked;
-				mBSPParams.mbWindowTransparent	=WindowTransparent.Checked;
-				mBSPParams.mbTransparentDetail	=TransDetail.Checked;
 
 				return	mBSPParams;
 			}
@@ -118,7 +111,7 @@ namespace SharedForms
 		void OnOpenMap(object sender, EventArgs e)
 		{
 			mOFD.DefaultExt	="*.map";
-			mOFD.Filter		="Quake map files (*.map)|*.map|Valve map files (*.vmf)|*.vmf|All files (*.*)|*.*";
+			mOFD.Filter		="QuArK map files (*.map)|*.map|All files (*.*)|*.*";
 
 			DialogResult	dr	=mOFD.ShowDialog();
 

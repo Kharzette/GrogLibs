@@ -86,54 +86,6 @@ namespace BSPCore
 		
 
 		#region IO
-		internal static void SkipVMFEditorBlock(StreamReader sr)
-		{
-			string	s	="";
-			while((s = sr.ReadLine()) != null)
-			{
-				s	=s.Trim();
-				if(s.StartsWith("}"))
-				{
-					return;	//editor done
-				}
-			}
-		}
-
-
-		internal bool ReadVMFSolidBlock(StreamReader sr, PlanePool pool, TexInfoPool tiPool, int entityNum)
-		{
-			string	s	="";
-			bool	ret	=true;
-			while((s = sr.ReadLine()) != null)
-			{
-				s	=s.Trim();
-				if(s == "side")
-				{
-					GBSPSide	side	=new GBSPSide();
-					mContents	=side.ReadVMFSideBlock(sr, pool, tiPool);
-
-					if(mContents == Contents.CONTENTS_AUX)
-					{
-						ret	=false;
-					}
-
-					mOriginalSides.Add(side);
-					mEntityNum	=entityNum;
-				}
-				else if(s.StartsWith("}"))
-				{
-					return	ret;	//entity done
-				}
-				else if(s == "editor")
-				{
-					//skip editor block
-					SkipVMFEditorBlock(sr);
-				}
-			}
-			return	ret;
-		}
-
-
 		internal bool ReadFromMap(StreamReader sr,
 			TexInfoPool tiPool,	int entityNum, BSPBuildParams prms)
 		{

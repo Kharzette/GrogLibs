@@ -564,6 +564,7 @@ namespace BSPCore
 			for(int i=0;i < mGFXFaces[fidx].mNumVerts;i++, indOffset++)
 			{
 				int	vIndex	=mGFXVertIndexes[indOffset];
+
 				verts.Add(mGFXVerts[vIndex]);
 			}
 
@@ -703,6 +704,25 @@ namespace BSPCore
 				mFaceInfos[i]	=new FInfo();
 			}
 
+
+			//need to build a data structure that has a model index per face
+			Dictionary<int, int>	modelForFace	=new Dictionary<int, int>();
+			for(int i=0;i < mGFXModels.Length;i++)
+			{
+				GFXModel	mod	=mGFXModels[i];
+
+				int	ff	=mod.mFirstFace;
+				int	nf	=mod.mNumFaces;
+
+				for(int j=ff;j < (ff + nf);j++)
+				{
+					modelForFace.Add(j, i);
+				}
+			}
+
+			//need a bunch of model transforms, just translation for now
+			Dictionary<int, Matrix>	modelTransforms	=GetModelTransforms();
+
 			object	prog	=ProgressWatcher.RegisterProgress(0, mGFXFaces.Length, 0);
 
 			UtilityLib.TSPool<bool []>	boolPool	=new UtilityLib.TSPool<bool[]>(() => new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE]);
@@ -741,6 +761,7 @@ namespace BSPCore
 				}
 				else if(tex.IsLightMapped())
 				{
+					Matrix	modelMat	=modelTransforms[modelForFace[i]];
 					if(!CalcFaceInfo(mFaceInfos[i], mLightMaps[i], lp.mLightParams.mLightGridSize))
 					{
 						return;
@@ -752,7 +773,8 @@ namespace BSPCore
 
 					for(int s=0;s < lp.mLightParams.mNumSamples;s++)
 					{
-						CalcFacePoints(mFaceInfos[i], mLightMaps[i], lp.mLightParams.mLightGridSize,
+						CalcFacePoints(modelMat, mFaceInfos[i], mLightMaps[i],
+							lp.mLightParams.mLightGridSize,
 							mSampleOffsets[s], lp.mLightParams.mbSeamCorrection, boolPool);
 
 						if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i],
@@ -908,11 +930,12 @@ namespace BSPCore
 		}
 
 
-		void CalcFacePoints(FInfo faceInfo, LInfo lightInfo, int lightGridSize,
+		void CalcFacePoints(Matrix modelMat,
+			FInfo faceInfo, LInfo lightInfo, int lightGridSize,
 			Vector2 UVOfs, bool bExtraLightCorrection,
 			UtilityLib.TSPool<bool []> boolPool)
 		{
-			faceInfo.CalcFacePoints(lightInfo, lightGridSize,
+			faceInfo.CalcFacePoints(modelMat, lightInfo, lightGridSize,
 				UVOfs, bExtraLightCorrection, boolPool,
 				IsPointInSolidSpace, RayCollide);
 		}
