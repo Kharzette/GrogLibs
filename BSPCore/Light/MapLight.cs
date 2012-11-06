@@ -574,7 +574,7 @@ namespace BSPCore
 		}
 
 
-		bool VertexShadeFace(Int32 faceNum, Vector3 []vertNormals)
+		bool VertexShadeFace(Int32 faceNum, Vector3 []vertNormals, Matrix modelMat)
 		{
 			if(mGFXRGBVerts == null || mGFXRGBVerts.Length == 0)
 			{
@@ -590,6 +590,8 @@ namespace BSPCore
 				Int32	vn		=gfxFace.mFirstVert + v;
 				Int32	index	=mGFXVertIndexes[vn];
 				Vector3	vert	=mGFXVerts[index];
+
+				vert	=Vector3.Transform(vert, modelMat);
 
 				if(tex.IsLight())
 				{
@@ -750,10 +752,11 @@ namespace BSPCore
 
 				GFXTexInfo	tex		=mGFXTexInfos[mGFXFaces[i].mTexInfo];
 				GFXFace		face	=mGFXFaces[i];
+				Matrix	modelMat	=modelTransforms[modelForFace[i]];
 
 				if(tex.IsGouraud() || tex.IsFlat())
 				{
-					if(!VertexShadeFace(i, vertNormals))
+					if(!VertexShadeFace(i, vertNormals, modelMat))
 					{
 						CoreEvents.Print("LightFaces:  VertexShadeFace failed...\n");
 						return;
@@ -761,7 +764,6 @@ namespace BSPCore
 				}
 				else if(tex.IsLightMapped())
 				{
-					Matrix	modelMat	=modelTransforms[modelForFace[i]];
 					if(!CalcFaceInfo(mFaceInfos[i], mLightMaps[i], lp.mLightParams.mLightGridSize))
 					{
 						return;

@@ -513,7 +513,8 @@ namespace BSPCore
 		}
 
 
-		//experimental drawcall builder that uses lots of callbacks
+		//drawcall builder that uses material specific callbacks
+		//to do the internal grinding
 		internal bool BuildFaceData(Vector3 []verts, int[] indexes,
 			Vector3 []rgbVerts, Vector3 []vnorms,
 			object pobj, GFXModel []models, byte []lightData,
@@ -564,6 +565,7 @@ namespace BSPCore
 		}
 
 
+		//alphas come in per plane chunks with a sort point
 		internal bool BuildAlphaFaceData(Vector3 []verts, int[] indexes,
 			Vector3 []rgbVerts, Vector3 []vnorms,
 			object pobj, GFXModel []models, byte []lightData,

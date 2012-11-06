@@ -21,6 +21,17 @@ namespace UtilityLib
 #endif
 
 
+		public static string GetExtension(string fileName)
+		{
+			int	dotPos	=fileName.LastIndexOf('.');
+			if(dotPos != -1)
+			{
+				return	fileName.Substring(dotPos + 1);
+			}
+			return	"";
+		}
+
+
 		public static string StripExtension(string fileName)
 		{
 			int	dotPos	=fileName.LastIndexOf('.');

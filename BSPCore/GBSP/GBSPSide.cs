@@ -125,14 +125,14 @@ namespace BSPCore
 				new Vector3(-numbers[3], numbers[5], numbers[4]),
 				new Vector3(-numbers[6], numbers[8], numbers[7]));
 
-			//see if there are any quake 3 style flags
-			//if there are, ignore all the texture name stuff
+			//all special brush properties are now driven by these quake 3 style flags
+			//There used to be a ton of legacy stuff for determining properties from
+			//texture name and other such goblinry, but all of that has been ganked
+			//in favour of the QuArK addon flags
 			if(flags.Count == 3)
 			{
 				ret			=flags[0];
 				ti.mFlags	=flags[1];
-
-				CoreEvents.Print("Quake 3 style flags found " + flags[0] + ", " + flags[1] + "\n");
 			}
 
 			//temp plane, not pooling yet
@@ -187,6 +187,7 @@ namespace BSPCore
 		#endregion
 
 
+		//make sure flags have legal values
 		internal void FixFlags(ref TexInfo ti)
 		{
 			//defaults

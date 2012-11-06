@@ -619,20 +619,27 @@ namespace BSPCore
 				{
 					string	s	="";
 
-					//see if this is a .map or a .vmf
-					if(mapFileName.EndsWith(".map") || mapFileName.EndsWith(".MAP"))
-					{
-						while((s = sr.ReadLine()) != null)
-						{
-							s	=s.Trim();
-							if(s == "{")
-							{
-								MapEntity	e	=new MapEntity();
-								e.ReadFromMap(sr, mTIPool, mEntities.Count,	prms);
-								mEntities.Add(e);
+					string	ext	=UtilityLib.FileUtil.GetExtension(mapFileName);
 
-								CoreEvents.FireNumPlanesChangedEvent(mPlanePool.mPlanes.Count, null);
-							}
+					ext	=ext.ToUpper();
+
+					//see if this is a .map
+					if(ext != "MAP")
+					{
+						CoreEvents.Print("Extension " + ext + " not a map file?\n");
+						return;
+					}
+
+					while((s = sr.ReadLine()) != null)
+					{
+						s	=s.Trim();
+						if(s == "{")
+						{
+							MapEntity	e	=new MapEntity();
+							e.ReadFromMap(sr, mTIPool, mEntities.Count,	prms);
+							mEntities.Add(e);
+
+							CoreEvents.FireNumPlanesChangedEvent(mPlanePool.mPlanes.Count, null);
 						}
 					}
 				}
