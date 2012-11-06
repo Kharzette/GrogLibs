@@ -233,12 +233,13 @@ namespace MeshLib
 		{
 			//draw mirrored world if need be
 			List<Matrix>	mirrorMats;
+			List<Matrix>	mirrorProjs;
 			List<Vector3>	mirrorCenters;
-			List<Rectangle>	scissors	=GetMirrorRects(out mirrorMats, out mirrorCenters, -position, gameCam);
+			List<Rectangle>	scissors	=GetMirrorRects(out mirrorMats, out mirrorProjs, out mirrorCenters, -position, gameCam);
 
 			for(int i=0;i < scissors.Count;i++)
 			{
-				mMatLib.UpdateWVP(Matrix.Identity, mirrorMats[i], gameCam.Projection, mirrorCenters[i]);
+				mMatLib.UpdateWVP(Matrix.Identity, mirrorMats[i], mirrorProjs[i], mirrorCenters[i]);
 
 				gd.SetRenderTarget(mMirrorRenderTarget);
 				gd.Clear(Color.CornflowerBlue);
@@ -484,6 +485,7 @@ namespace MeshLib
 
 
 		List<Rectangle> GetMirrorRects(out List<Matrix>			mirrorMats,
+									   out List<Matrix>			mirrorProjs,
 									   out List<Vector3>		mirrorCenters,
 									   Vector3					position,
 									   UtilityLib.GameCamera	gameCam)
@@ -491,6 +493,7 @@ namespace MeshLib
 			List<Rectangle>	scissorRects	=new List<Rectangle>();
 
 			mirrorMats		=new List<Matrix>();
+			mirrorProjs		=new List<Matrix>();
 			mirrorCenters	=new List<Vector3>();
 
 			foreach(List<Vector3> poly in mMirrorPolys)
@@ -531,10 +534,41 @@ namespace MeshLib
 					{
 						side	=Vector3.Cross(reflect, Vector3.Left);
 					}
+
+					side.Normalize();
+
 					Vector3	up	=Vector3.Cross(reflect, side);
+
+					up.Normalize();
 
 					Matrix	mirrorView	=Matrix.CreateLookAt(center, center + reflect, up);
 					mirrorMats.Add(mirrorView);
+
+					//make a projection matrix
+					Vector3	mirSide		=Vector3.Cross(norm, Vector3.Up);
+					if(mirSide.LengthSquared() == 0.0f)
+					{
+						mirSide	=Vector3.Cross(norm, Vector3.Forward);
+					}
+					mirSide.Normalize();
+
+					Vector3	mirUp	=Vector3.Cross(mirSide, norm);
+					mirUp.Normalize();
+
+					BoundingBox	extents		=BoundingBox.CreateFromPoints(poly);
+					Vector3		cornerDiff	=extents.Max - center;
+
+					float	width	=Vector3.Dot(cornerDiff, mirSide);
+					float	height	=Vector3.Dot(cornerDiff, mirUp);
+
+					width	=Math.Abs(width);
+					height	=Math.Abs(height);
+
+					Matrix	mirrorProj	=Matrix.CreatePerspectiveFieldOfView(
+						MathHelper.ToRadians(45),
+						width / height, 1.0f, 4000.0f);
+
+					mirrorProjs.Add(mirrorProj);
 				}
 			}
 			return	scissorRects;
