@@ -221,13 +221,15 @@ namespace BSPCore
 			Bounds		bounds	=new Bounds();
 			GBSPBrush.BrushListStats(csgList, bs, bounds, pool);
 
-			//for submodels set the bounds way out
+			//copy real bounds to model bounds
+			//these will be origined
+			mBounds	=bounds;
+
+			//for submodels set the bsp building bounds way out
 			bounds.mMins	=Vector3.One * -4096f;
 			bounds.mMaxs	=Vector3.One * 4096f;
 
 			root.BuildBSP(csgList, pool, bs, bounds, bVerbose);
-
-			mBounds			=new Bounds(root.GetBounds());
 
 			glist	=null;
 

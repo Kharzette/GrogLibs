@@ -146,9 +146,8 @@ namespace BSPCore
 
 		//TODO: fix the error seen in lightmaps sometimes
 		//I think it is in here
-		internal void CalcFacePoints(Matrix modelMat,
-			LInfo lightInfo, int lightGridSize,
-			Vector2 UVOfs,
+		internal void CalcFacePoints(Matrix modelMat, Matrix modelInv, int modelIndex,
+			LInfo lightInfo, int lightGridSize, Vector2 UVOfs,
 			bool bExtraLightCorrection,
 			UtilityLib.TSPool<bool []> boolPool,
 			CoreDelegates.IsPointInSolid pointInSolid,
@@ -185,8 +184,7 @@ namespace BSPCore
 						if(InSolid[(v * width) + u])
 						{
 							Vector3	colResult	=Vector3.Zero;
-							if(rayCollide(faceMid,
-								mPoints[(v * width) + u], ref colResult))
+							if(rayCollide(faceMid, mPoints[(v * width) + u], modelIndex, modelInv))
 							{
 								Vector3	vect	=faceMid - mPoints[(v * width) + u];
 								vect.Normalize();

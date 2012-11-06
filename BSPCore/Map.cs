@@ -132,12 +132,29 @@ namespace BSPCore
 		}
 
 
-		bool RayCollide(Vector3 Front, Vector3 Back, ref Vector3 I)
+		//tests vs world (model 0) as well as modelIndex if not zero
+		//modelInv should be an inverted model matrix
+		bool RayCollide(Vector3 Front, Vector3 Back, int modelIndex, Matrix modelInv)
 		{
-			bool	hitLeaf	=false;
-			if(RayIntersect(Front, Back, mGFXModels[0].mRootNode, ref I, ref hitLeaf))
+			bool	hitLeaf			=false;
+			Vector3	worldImpacto	=Vector3.Zero;
+
+			if(RayIntersect(Front, Back, mGFXModels[0].mRootNode, ref worldImpacto, ref hitLeaf))
 			{
 				return	true;
+			}
+
+			if(modelIndex > 0)
+			{
+				Vector3	modelImpacto	=Vector3.Zero;
+
+				Vector3	frontInv	=Vector3.Transform(Front, modelInv);
+				Vector3	backInv		=Vector3.Transform(Back, modelInv);
+
+				if(RayIntersect(frontInv, backInv, mGFXModels[modelIndex].mRootNode, ref modelImpacto, ref hitLeaf))
+				{
+					return	true;
+				}
 			}
 			return	false;
 		}

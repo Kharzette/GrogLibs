@@ -574,7 +574,8 @@ namespace BSPCore
 		}
 
 
-		bool VertexShadeFace(Int32 faceNum, Vector3 []vertNormals, Matrix modelMat)
+		bool VertexShadeFace(Int32 faceNum, Vector3 []vertNormals,
+			Matrix modelMat, Matrix modelInv, int modelIndex)
 		{
 			if(mGFXRGBVerts == null || mGFXRGBVerts.Length == 0)
 			{
@@ -669,7 +670,7 @@ namespace BSPCore
 
 					//This is the slowest test, so make it last
 					Vector3	colResult	=Vector3.Zero;
-					if(RayCollide(vert, dLight.mOrigin, ref colResult))
+					if(RayCollide(vert, dLight.mOrigin, modelIndex, modelInv))
 					{
 						goto	Skip;	//Ray is in shadow
 					}
@@ -725,6 +726,13 @@ namespace BSPCore
 			//need a bunch of model transforms, just translation for now
 			Dictionary<int, Matrix>	modelTransforms	=GetModelTransforms();
 
+			//inverted transforms for raycasts
+			Dictionary<int, Matrix>	modelInvs		=new Dictionary<int, Matrix>();
+			foreach(KeyValuePair<int, Matrix> modelX in modelTransforms)
+			{
+				modelInvs.Add(modelX.Key, Matrix.Invert(modelX.Value));
+			}
+
 			object	prog	=ProgressWatcher.RegisterProgress(0, mGFXFaces.Length, 0);
 
 			UtilityLib.TSPool<bool []>	boolPool	=new UtilityLib.TSPool<bool[]>(() => new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE]);
@@ -750,13 +758,15 @@ namespace BSPCore
 				mFaceInfos[i].SetPlane(pln);
 				mFaceInfos[i].SetFaceIndex(i);
 
-				GFXTexInfo	tex		=mGFXTexInfos[mGFXFaces[i].mTexInfo];
-				GFXFace		face	=mGFXFaces[i];
-				Matrix	modelMat	=modelTransforms[modelForFace[i]];
+				GFXTexInfo	tex			=mGFXTexInfos[mGFXFaces[i].mTexInfo];
+				GFXFace		face		=mGFXFaces[i];
+				int			modelIndex	=modelForFace[i];
+				Matrix		modelMat	=modelTransforms[modelIndex];
+				Matrix		modelInv	=modelInvs[modelIndex];
 
 				if(tex.IsGouraud() || tex.IsFlat())
 				{
-					if(!VertexShadeFace(i, vertNormals, modelMat))
+					if(!VertexShadeFace(i, vertNormals, modelMat, modelInv, modelIndex))
 					{
 						CoreEvents.Print("LightFaces:  VertexShadeFace failed...\n");
 						return;
@@ -775,11 +785,12 @@ namespace BSPCore
 
 					for(int s=0;s < lp.mLightParams.mNumSamples;s++)
 					{
-						CalcFacePoints(modelMat, mFaceInfos[i], mLightMaps[i],
+						CalcFacePoints(modelMat, modelInv, modelIndex, mFaceInfos[i], mLightMaps[i],
 							lp.mLightParams.mLightGridSize,
 							mSampleOffsets[s], lp.mLightParams.mbSeamCorrection, boolPool);
 
 						if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i],
+							modelInv, modelIndex,
 							1 / (float)lp.mLightParams.mNumSamples, visData))
 						{
 							return;
@@ -794,7 +805,9 @@ namespace BSPCore
 		}
 
 
-		bool ApplyLightsToFace(FInfo faceInfo, LInfo lightInfo, float scale, byte []visData)
+		bool ApplyLightsToFace(FInfo faceInfo, LInfo lightInfo,
+			Matrix modelInv, int modelIndex,
+			float scale, byte []visData)
 		{
 			Vector3	norm	=faceInfo.GetPlaneNormal();
 
@@ -903,7 +916,7 @@ namespace BSPCore
 
 						// This is the slowest test, so make it last
 						Vector3	colResult	=Vector3.Zero;
-						if(RayCollide(facePoints[v], dLight.mOrigin, ref colResult))
+						if(RayCollide(facePoints[v], dLight.mOrigin, modelIndex, modelInv))
 						{
 							continue;	//Ray is in shadow
 						}
@@ -932,12 +945,12 @@ namespace BSPCore
 		}
 
 
-		void CalcFacePoints(Matrix modelMat,
+		void CalcFacePoints(Matrix modelMat, Matrix modelInv, int modelIndex,
 			FInfo faceInfo, LInfo lightInfo, int lightGridSize,
 			Vector2 UVOfs, bool bExtraLightCorrection,
 			UtilityLib.TSPool<bool []> boolPool)
 		{
-			faceInfo.CalcFacePoints(modelMat, lightInfo, lightGridSize,
+			faceInfo.CalcFacePoints(modelMat, modelInv, modelIndex, lightInfo, lightGridSize,
 				UVOfs, bExtraLightCorrection, boolPool,
 				IsPointInSolidSpace, RayCollide);
 		}
