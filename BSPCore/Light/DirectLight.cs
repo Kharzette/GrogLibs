@@ -12,7 +12,7 @@ namespace BSPCore
 		internal Int32		mLType;
 		internal Vector3	mOrigin;
 		internal Vector3	mNormal;
-		internal float		mAngle;
+		internal float		mCone;	//used if a spotlight
 		internal Vector3	mColor;
 		internal float		mIntensity;
 		internal UInt32		mType;

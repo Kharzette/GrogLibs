@@ -371,84 +371,51 @@ namespace BSPCore
 					}
 				}
 
-				Vector3	Angles;
-				if(ent.GetVectorNoConversion("angles", out Angles))
+				//Find out what type of light it is by it's classname...
+				ent.GetLightType(out dLight.mType);
+
+				if(dLight.mType == DirectLight.DLight_Spot)
 				{
-					//hammer style
-					Vector3	Angles2	=Vector3.Zero;
-					Angles2.X	=MathHelper.ToRadians(Angles.X);
-					Angles2.Y	=MathHelper.ToRadians(Angles.Y);
-					Angles2.Z	=MathHelper.ToRadians(Angles.Z);
-
-					//coord system conversion needs this
-					Angles2.Y	+=(float)(Math.PI / 2.0f);
-
-					Matrix	mat	=Matrix.Identity;
-
-					//check for pitch
-					float	pitch	=0.0f;
-					if(ent.GetFloat("pitch", out pitch))
-					{
-						pitch	=MathHelper.ToRadians(pitch);
-
-						//todo test and make sure this order is correct
-						mat		=Matrix.CreateRotationX(Angles2.Y)
-							* Matrix.CreateRotationY(pitch)
-							* Matrix.CreateRotationZ(Angles2.Z);
-//							CreateFromYawPitchRoll(Angles2.Y, pitch, Angles2.Z); 
-					}
-					else
-					{
-						//todo test the order
-						mat	=Matrix.CreateRotationX(Angles2.X)
-							* Matrix.CreateRotationY(Angles2.Y)
-							* Matrix.CreateRotationZ(Angles2.Z);
-//						mat	=Matrix.CreateFromYawPitchRoll(Angles2.Y, Angles2.X, Angles2.Z); 
-					}
-
-					dLight.mNormal	=mat.Forward;
-
-					dLight.mAngle	=(float)Math.Cos(dLight.mAngle / 180.0f * Math.PI);					
-
 					//check for cone
 					float	cone	=0.0f;
 					if(ent.GetFloat("_cone", out cone))
 					{
-						dLight.mAngle	=MathHelper.ToRadians(cone);
+						dLight.mCone	=MathHelper.ToRadians(cone);
 					}
-
-					//check for inner cone
-					float	inner	=0.0f;
-					if(ent.GetFloat("_inner_cone", out inner))					
+					else
 					{
-						//no use for this yet
-//						dLight.mAngle	+=MathHelper.ToRadians(inner);
+						//default of 10 degrees
+						dLight.mCone	=MathHelper.ToRadians(10f);
+					}
+
+					//should be a target
+					if(ent.mData.ContainsKey("target"))
+					{
+						bool	bFound	=false;
+						Vector3	targPos	=Vector3.Zero;
+						string	targ	=ent.mData["target"];
+						for(int j=0;j < mGFXEntities.Length;j++)
+						{
+							if(mGFXEntities[j].mData.ContainsKey("targetname"))
+							{
+								if(mGFXEntities[j].mData["targetname"] == targ)
+								{
+									if(mGFXEntities[j].GetOrigin(out targPos))
+									{
+										bFound	=true;
+										break;
+									}
+								}
+							}
+						}
+
+						if(bFound)
+						{
+							dLight.mNormal	=targPos - dLight.mOrigin;
+							dLight.mNormal.Normalize();
+						}
 					}
 				}
-				else if(ent.GetVector("mangle", out Angles))
-				{
-					//quake 1 style
-					Vector3	Angles2	=Vector3.Zero;
-					Angles2.X	=(Angles.X / 180) * (float)Math.PI;
-					Angles2.Y	=(Angles.Y / 180) * (float)Math.PI;
-					Angles2.Z	=(Angles.Z / 180) * (float)Math.PI;
-
-//					Matrix	mat	=Matrix.CreateFromYawPitchRoll(Angles2.X, Angles2.Y, Angles2.Z); 
-
-					Matrix	mat	=Matrix.CreateRotationX(Angles2.X) *
-						Matrix.CreateRotationY(Angles2.Y) *
-						Matrix.CreateRotationZ(Angles2.Z);
-
-					Angles2	=mat.Left;
-					dLight.mNormal.X	=-Angles2.X;
-					dLight.mNormal.Y	=-Angles2.Y;
-					dLight.mNormal.Z	=-Angles2.Z;
-
-					dLight.mAngle	=(float)Math.Cos(dLight.mAngle / 180.0f * Math.PI);					
-				}
-
-				//Find out what type of light it is by it's classname...
-				ent.GetLightType(out dLight.mType);
 
 				Int32	nodeLandedIn	=FindNodeLandedIn(mGFXModels[0].mRootNode, dLight.mOrigin);
 				Int32	leaf	=-(nodeLandedIn + 1);
@@ -639,7 +606,7 @@ namespace BSPCore
 						case DirectLight.DLight_Spot:
 						{
 							float Angle2	=-Vector3.Dot(vect, dLight.mNormal);
-							if(Angle2 < dLight.mAngle)
+							if(Angle2 < dLight.mCone)
 							{
 								goto Skip;
 							}
@@ -879,7 +846,7 @@ namespace BSPCore
 							{
 								float	Angle2	=-Vector3.Dot(vect, dLight.mNormal);
 
-								if(Angle2 < dLight.mAngle)
+								if(Angle2 < (1.0f - dLight.mCone))
 								{
 									continue;
 								}

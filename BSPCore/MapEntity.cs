@@ -435,6 +435,14 @@ namespace BSPCore
 			{
 				type	=DirectLight.DLight_Point;
 			}
+
+			if(className.StartsWith("light"))
+			{
+				if(mData.ContainsKey("target"))
+				{
+					type	=DirectLight.DLight_Spot;
+				}
+			}
 		}
 
 
@@ -462,6 +470,11 @@ namespace BSPCore
 
 		internal void MoveBrushesToOrigin()
 		{
+			if(mBrushes.Count == 0)
+			{
+				return;
+			}
+
 			Vector3	org	=Vector3.Zero;
 
 			if(!GetVectorNoConversion("ModelOrigin", out org))
