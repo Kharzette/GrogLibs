@@ -34,15 +34,6 @@
 			this.BuildGBSP = new System.Windows.Forms.Button();
 			this.OpenBrushFile = new System.Windows.Forms.Button();
 			this.SaveGBSP = new System.Windows.Forms.Button();
-			this.StatsGroupBox = new System.Windows.Forms.GroupBox();
-			this.LabelNumPortals = new System.Windows.Forms.Label();
-			this.NumPortals = new System.Windows.Forms.TextBox();
-			this.LabelNumCollisionFaces = new System.Windows.Forms.Label();
-			this.LabelNumDrawFaces = new System.Windows.Forms.Label();
-			this.NumClusters = new System.Windows.Forms.TextBox();
-			this.NumVerts = new System.Windows.Forms.TextBox();
-			this.LabelNumRawFaces = new System.Windows.Forms.Label();
-			this.NumPlanes = new System.Windows.Forms.TextBox();
 			this.GroupBuildSettings = new System.Windows.Forms.GroupBox();
 			this.label11 = new System.Windows.Forms.Label();
 			this.MaxThreads = new System.Windows.Forms.NumericUpDown();
@@ -69,8 +60,9 @@
 			this.SurfaceLightFrequency = new System.Windows.Forms.NumericUpDown();
 			this.SeamCorrection = new System.Windows.Forms.CheckBox();
 			this.mTips = new System.Windows.Forms.ToolTip(this.components);
+			this.UpdateEntities = new System.Windows.Forms.Button();
+			this.FullBuild = new System.Windows.Forms.Button();
 			this.GroupFileIO.SuspendLayout();
-			this.StatsGroupBox.SuspendLayout();
 			this.GroupBuildSettings.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxThreads)).BeginInit();
 			this.LightSettingsGroupBox.SuspendLayout();
@@ -86,20 +78,22 @@
 			// 
 			// GroupFileIO
 			// 
+			this.GroupFileIO.Controls.Add(this.FullBuild);
+			this.GroupFileIO.Controls.Add(this.UpdateEntities);
 			this.GroupFileIO.Controls.Add(this.LightGBSP);
 			this.GroupFileIO.Controls.Add(this.BuildGBSP);
 			this.GroupFileIO.Controls.Add(this.OpenBrushFile);
 			this.GroupFileIO.Controls.Add(this.SaveGBSP);
 			this.GroupFileIO.Location = new System.Drawing.Point(12, 12);
 			this.GroupFileIO.Name = "GroupFileIO";
-			this.GroupFileIO.Size = new System.Drawing.Size(88, 137);
+			this.GroupFileIO.Size = new System.Drawing.Size(226, 112);
 			this.GroupFileIO.TabIndex = 22;
 			this.GroupFileIO.TabStop = false;
 			this.GroupFileIO.Text = "File IO";
 			// 
 			// LightGBSP
 			// 
-			this.LightGBSP.Location = new System.Drawing.Point(6, 106);
+			this.LightGBSP.Location = new System.Drawing.Point(87, 63);
 			this.LightGBSP.Name = "LightGBSP";
 			this.LightGBSP.Size = new System.Drawing.Size(75, 23);
 			this.LightGBSP.TabIndex = 18;
@@ -143,99 +137,6 @@
 			this.SaveGBSP.UseVisualStyleBackColor = true;
 			this.SaveGBSP.Click += new System.EventHandler(this.OnSaveGBSP);
 			// 
-			// StatsGroupBox
-			// 
-			this.StatsGroupBox.Controls.Add(this.LabelNumPortals);
-			this.StatsGroupBox.Controls.Add(this.NumPortals);
-			this.StatsGroupBox.Controls.Add(this.LabelNumCollisionFaces);
-			this.StatsGroupBox.Controls.Add(this.LabelNumDrawFaces);
-			this.StatsGroupBox.Controls.Add(this.NumClusters);
-			this.StatsGroupBox.Controls.Add(this.NumVerts);
-			this.StatsGroupBox.Controls.Add(this.LabelNumRawFaces);
-			this.StatsGroupBox.Controls.Add(this.NumPlanes);
-			this.StatsGroupBox.Location = new System.Drawing.Point(106, 12);
-			this.StatsGroupBox.Name = "StatsGroupBox";
-			this.StatsGroupBox.Size = new System.Drawing.Size(134, 127);
-			this.StatsGroupBox.TabIndex = 30;
-			this.StatsGroupBox.TabStop = false;
-			this.StatsGroupBox.Text = "Statistics";
-			// 
-			// LabelNumPortals
-			// 
-			this.LabelNumPortals.AutoSize = true;
-			this.LabelNumPortals.Location = new System.Drawing.Point(6, 100);
-			this.LabelNumPortals.Name = "LabelNumPortals";
-			this.LabelNumPortals.Size = new System.Drawing.Size(39, 13);
-			this.LabelNumPortals.TabIndex = 20;
-			this.LabelNumPortals.Text = "Portals";
-			// 
-			// NumPortals
-			// 
-			this.NumPortals.Location = new System.Drawing.Point(51, 97);
-			this.NumPortals.Name = "NumPortals";
-			this.NumPortals.ReadOnly = true;
-			this.NumPortals.Size = new System.Drawing.Size(76, 20);
-			this.NumPortals.TabIndex = 19;
-			this.NumPortals.TabStop = false;
-			// 
-			// LabelNumCollisionFaces
-			// 
-			this.LabelNumCollisionFaces.AutoSize = true;
-			this.LabelNumCollisionFaces.Location = new System.Drawing.Point(6, 74);
-			this.LabelNumCollisionFaces.Name = "LabelNumCollisionFaces";
-			this.LabelNumCollisionFaces.Size = new System.Drawing.Size(44, 13);
-			this.LabelNumCollisionFaces.TabIndex = 18;
-			this.LabelNumCollisionFaces.Text = "Clusters";
-			// 
-			// LabelNumDrawFaces
-			// 
-			this.LabelNumDrawFaces.AutoSize = true;
-			this.LabelNumDrawFaces.Location = new System.Drawing.Point(6, 48);
-			this.LabelNumDrawFaces.Name = "LabelNumDrawFaces";
-			this.LabelNumDrawFaces.Size = new System.Drawing.Size(31, 13);
-			this.LabelNumDrawFaces.TabIndex = 17;
-			this.LabelNumDrawFaces.Text = "Verts";
-			// 
-			// NumClusters
-			// 
-			this.NumClusters.Location = new System.Drawing.Point(51, 71);
-			this.NumClusters.Name = "NumClusters";
-			this.NumClusters.ReadOnly = true;
-			this.NumClusters.Size = new System.Drawing.Size(76, 20);
-			this.NumClusters.TabIndex = 15;
-			this.NumClusters.TabStop = false;
-			this.mTips.SetToolTip(this.NumClusters, "Visibility clusters (leafs glommed together by contents)");
-			// 
-			// NumVerts
-			// 
-			this.NumVerts.Location = new System.Drawing.Point(51, 45);
-			this.NumVerts.Name = "NumVerts";
-			this.NumVerts.ReadOnly = true;
-			this.NumVerts.Size = new System.Drawing.Size(76, 20);
-			this.NumVerts.TabIndex = 14;
-			this.NumVerts.TabStop = false;
-			this.mTips.SetToolTip(this.NumVerts, "Vert count");
-			// 
-			// LabelNumRawFaces
-			// 
-			this.LabelNumRawFaces.AutoSize = true;
-			this.LabelNumRawFaces.Location = new System.Drawing.Point(6, 22);
-			this.LabelNumRawFaces.Name = "LabelNumRawFaces";
-			this.LabelNumRawFaces.Size = new System.Drawing.Size(39, 13);
-			this.LabelNumRawFaces.TabIndex = 12;
-			this.LabelNumRawFaces.Text = "Planes";
-			// 
-			// NumPlanes
-			// 
-			this.NumPlanes.Cursor = System.Windows.Forms.Cursors.Default;
-			this.NumPlanes.Location = new System.Drawing.Point(51, 19);
-			this.NumPlanes.Name = "NumPlanes";
-			this.NumPlanes.ReadOnly = true;
-			this.NumPlanes.Size = new System.Drawing.Size(76, 20);
-			this.NumPlanes.TabIndex = 13;
-			this.NumPlanes.TabStop = false;
-			this.mTips.SetToolTip(this.NumPlanes, "Shared plane count");
-			// 
 			// GroupBuildSettings
 			// 
 			this.GroupBuildSettings.Controls.Add(this.label11);
@@ -243,7 +144,7 @@
 			this.GroupBuildSettings.Controls.Add(this.FixTJunctions);
 			this.GroupBuildSettings.Controls.Add(this.VerboseEntity);
 			this.GroupBuildSettings.Controls.Add(this.VerboseBSP);
-			this.GroupBuildSettings.Location = new System.Drawing.Point(246, 12);
+			this.GroupBuildSettings.Location = new System.Drawing.Point(244, 12);
 			this.GroupBuildSettings.Name = "GroupBuildSettings";
 			this.GroupBuildSettings.Size = new System.Drawing.Size(137, 127);
 			this.GroupBuildSettings.TabIndex = 31;
@@ -338,9 +239,9 @@
 			this.LightSettingsGroupBox.Controls.Add(this.label3);
 			this.LightSettingsGroupBox.Controls.Add(this.SurfaceLightFrequency);
 			this.LightSettingsGroupBox.Controls.Add(this.SeamCorrection);
-			this.LightSettingsGroupBox.Location = new System.Drawing.Point(12, 155);
+			this.LightSettingsGroupBox.Location = new System.Drawing.Point(12, 145);
 			this.LightSettingsGroupBox.Name = "LightSettingsGroupBox";
-			this.LightSettingsGroupBox.Size = new System.Drawing.Size(371, 128);
+			this.LightSettingsGroupBox.Size = new System.Drawing.Size(369, 128);
 			this.LightSettingsGroupBox.TabIndex = 32;
 			this.LightSettingsGroupBox.TabStop = false;
 			this.LightSettingsGroupBox.Text = "Light Settings";
@@ -609,21 +510,40 @@
 			this.mTips.SetToolTip(this.SeamCorrection, "Shifts light points around a bit to help points just inside solid");
 			this.SeamCorrection.UseVisualStyleBackColor = true;
 			// 
+			// UpdateEntities
+			// 
+			this.UpdateEntities.Location = new System.Drawing.Point(87, 19);
+			this.UpdateEntities.Name = "UpdateEntities";
+			this.UpdateEntities.Size = new System.Drawing.Size(75, 38);
+			this.UpdateEntities.TabIndex = 19;
+			this.UpdateEntities.Text = "Update Entities";
+			this.mTips.SetToolTip(this.UpdateEntities, "Generate lightmaps for the level.  Needs vis data first.");
+			this.UpdateEntities.UseVisualStyleBackColor = true;
+			this.UpdateEntities.Click += new System.EventHandler(this.OnUpdateEntities);
+			// 
+			// FullBuild
+			// 
+			this.FullBuild.Location = new System.Drawing.Point(168, 19);
+			this.FullBuild.Name = "FullBuild";
+			this.FullBuild.Size = new System.Drawing.Size(52, 38);
+			this.FullBuild.TabIndex = 20;
+			this.FullBuild.Text = "Full Build";
+			this.mTips.SetToolTip(this.FullBuild, "Generate lightmaps for the level.  Needs vis data first.");
+			this.FullBuild.UseVisualStyleBackColor = true;
+			this.FullBuild.Click += new System.EventHandler(this.OnFullBuild);
+			// 
 			// BSPForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(393, 295);
+			this.ClientSize = new System.Drawing.Size(393, 284);
 			this.ControlBox = false;
 			this.Controls.Add(this.LightSettingsGroupBox);
 			this.Controls.Add(this.GroupBuildSettings);
-			this.Controls.Add(this.StatsGroupBox);
 			this.Controls.Add(this.GroupFileIO);
 			this.Name = "BSPForm";
 			this.Text = "BSPForm";
 			this.GroupFileIO.ResumeLayout(false);
-			this.StatsGroupBox.ResumeLayout(false);
-			this.StatsGroupBox.PerformLayout();
 			this.GroupBuildSettings.ResumeLayout(false);
 			this.GroupBuildSettings.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxThreads)).EndInit();
@@ -648,15 +568,6 @@
 		private System.Windows.Forms.Button BuildGBSP;
 		private System.Windows.Forms.Button OpenBrushFile;
 		private System.Windows.Forms.Button SaveGBSP;
-		private System.Windows.Forms.GroupBox StatsGroupBox;
-		private System.Windows.Forms.Label LabelNumPortals;
-		private System.Windows.Forms.TextBox NumPortals;
-		private System.Windows.Forms.Label LabelNumCollisionFaces;
-		private System.Windows.Forms.Label LabelNumDrawFaces;
-		private System.Windows.Forms.TextBox NumClusters;
-		private System.Windows.Forms.TextBox NumVerts;
-		private System.Windows.Forms.Label LabelNumRawFaces;
-		private System.Windows.Forms.TextBox NumPlanes;
 		private System.Windows.Forms.GroupBox GroupBuildSettings;
 		private System.Windows.Forms.CheckBox FixTJunctions;
 		private System.Windows.Forms.CheckBox VerboseEntity;
@@ -683,5 +594,7 @@
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.NumericUpDown SurfaceLightStrength;
 		private System.Windows.Forms.ToolTip mTips;
+		private System.Windows.Forms.Button FullBuild;
+		private System.Windows.Forms.Button UpdateEntities;
 	}
 }

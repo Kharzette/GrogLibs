@@ -7,6 +7,7 @@ using System.Text;
 using System.IO;
 using System.Windows.Forms;
 using BSPCore;
+using UtilityLib;
 using Microsoft.Xna.Framework;	//xnamathery
 
 
@@ -25,47 +26,9 @@ namespace SharedForms
 		public event EventHandler	eBuild;
 		public event EventHandler	eSave;
 		public event EventHandler	eLight;
+		public event EventHandler	eFullBuild;
+		public event EventHandler	eUpdateEntities;
 
-
-		public string NumberOfPlanes
-		{
-			get { return NumPlanes.Text; }
-			set
-			{
-				Action<TextBox>	ta	=tb => tb.Text = value;
-				SharedForms.FormExtensions.Invoke(NumPlanes, ta);
-			}
-		}
-
-		public string NumberOfPortals
-		{
-			get { return NumPortals.Text; }
-			set
-			{
-				Action<TextBox>	ta	=tb => tb.Text = value;
-				SharedForms.FormExtensions.Invoke(NumPortals, ta);
-			}
-		}
-
-		public string NumberOfVerts
-		{
-			get { return NumVerts.Text; }
-			set
-			{
-				Action<TextBox>	ta	=tb => tb.Text = value;
-				SharedForms.FormExtensions.Invoke(NumVerts, ta);
-			}
-		}
-
-		public string NumberOfClusters
-		{
-			get { return NumClusters.Text; }
-			set
-			{
-				Action<TextBox>	ta	=tb => tb.Text = value;
-				SharedForms.FormExtensions.Invoke(NumClusters, ta);
-			}
-		}
 
 		public BSPBuildParams BSPParameters
 		{
@@ -122,7 +85,7 @@ namespace SharedForms
 
 			CoreEvents.Print("Opening map " + mOFD.FileName + "\n");
 
-			UtilityLib.Misc.SafeInvoke(eOpenMap, mOFD.FileName);
+			Misc.SafeInvoke(eOpenMap, mOFD.FileName);
 		}
 
 
@@ -161,13 +124,13 @@ namespace SharedForms
 
 			CoreEvents.Print("Lighting gbsp " + mOFD.FileName + "\n");
 
-			UtilityLib.Misc.SafeInvoke(eLight, mOFD.FileName);
+			Misc.SafeInvoke(eLight, mOFD.FileName);
 		}
 
 
 		void OnBuildGBSP(object sender, EventArgs e)
 		{
-			UtilityLib.Misc.SafeInvoke(eBuild, null);
+			Misc.SafeInvoke(eBuild, null);
 		}
 
 
@@ -185,7 +148,7 @@ namespace SharedForms
 
 			CoreEvents.Print("Saving gbsp " + mSFD.FileName + "\n");
 
-			UtilityLib.Misc.SafeInvoke(eSave, mSFD.FileName);
+			Misc.SafeInvoke(eSave, mSFD.FileName);
 		}
 
 
@@ -202,6 +165,38 @@ namespace SharedForms
 		{
 			SurfaceLightFrequency.Enabled	=SurfaceLighting.Checked;
 			SurfaceLightStrength.Enabled	=SurfaceLighting.Checked;
+		}
+
+
+		void OnUpdateEntities(object sender, EventArgs e)
+		{
+			mOFD.DefaultExt	="*.map";
+			mOFD.Filter		="QuArK map files (*.map)|*.map|All files (*.*)|*.*";
+
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			Misc.SafeInvoke(eUpdateEntities, mOFD.FileName);
+		}
+
+
+		void OnFullBuild(object sender, EventArgs e)
+		{
+			mOFD.DefaultExt	="*.map";
+			mOFD.Filter		="QuArK map files (*.map)|*.map|All files (*.*)|*.*";
+
+			DialogResult	dr	=mOFD.ShowDialog();
+
+			if(dr == DialogResult.Cancel)
+			{
+				return;
+			}
+
+			Misc.SafeInvoke(eFullBuild, mOFD.FileName);
 		}
 	}
 }

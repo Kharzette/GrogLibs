@@ -324,7 +324,10 @@ namespace SharedForms
 		public void UpdateMaterials()
 		{
 			mMatModel	=new MaterialGridModel(mMatLib.GetMaterials());
-			MaterialGrid.DataSource	=mMatModel;
+
+			Action<DataGridView>	setSrc	=src => src.DataSource = mMatModel;
+
+			SharedForms.FormExtensions.Invoke(MaterialGrid, setSrc);
 		}
 
 
