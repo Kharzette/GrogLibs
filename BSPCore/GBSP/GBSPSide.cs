@@ -165,17 +165,11 @@ namespace BSPCore
 			{
 				float	rot	=numbers[11];
 
-				//planes pointing in -x, -z, and +y need rotation flipped
-				//TODO: fix the .8, should be .7 something
-				if(Vector3.Dot(plane.mNormal, Vector3.UnitX) > 0.8f)
-				{
-					rot	=-rot;
-				}
-				else if(Vector3.Dot(plane.mNormal, Vector3.UnitZ) > 0.8f)
-				{
-					rot	=-rot;
-				}
-				else if(Vector3.Dot(plane.mNormal, -Vector3.UnitY) > 0.8f)
+				int	axis	=GBSPPlane.GetBestAxisFromPlane(plane);
+
+				//planes pointing in x, z, and -y need rotation flipped
+				//due to the coordinate system change
+				if(axis == 3 || axis == 4 || axis == 1)
 				{
 					rot	=-rot;
 				}

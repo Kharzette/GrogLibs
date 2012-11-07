@@ -476,6 +476,12 @@ namespace BSPVis
 
 			int	clust	=mGFXLeafs[leaf].mCluster;
 
+			//this can happen if old vis data is left around
+			if(clust >= mGFXClusters.Length)
+			{
+				return	true;	//generally just want everything to draw if testing without vis
+			}
+
 			if(clust == -1 || mGFXClusters[clust].mVisOfs == -1
 				|| mGFXMaterialVisData == null)
 			{

@@ -244,6 +244,27 @@ namespace BSPCore
 		}
 
 
+		internal static int GetBestAxisFromPlane(GBSPPlane pln)
+		{
+			Int32	bestAxis;
+			float	dot, best;
+			
+			best		=0.0f;
+			bestAxis	=-1;
+
+			for(int i=0;i < 6;i++)
+			{
+				dot	=Vector3.Dot(pln.mNormal, BaseAxis[i * 3]);
+				if(dot > best)
+				{
+					best		=dot;
+					bestAxis	=i;
+				}
+			}
+			return	bestAxis;
+		}
+
+
 		public void Write(System.IO.BinaryWriter bw)
 		{
 			bw.Write(mNormal.X);
