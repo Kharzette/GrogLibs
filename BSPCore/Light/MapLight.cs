@@ -606,7 +606,7 @@ namespace BSPCore
 						case DirectLight.DLight_Spot:
 						{
 							float Angle2	=-Vector3.Dot(vect, dLight.mNormal);
-							if(Angle2 < dLight.mCone)
+							if(Angle2 < (1.0f - dLight.mCone))
 							{
 								goto Skip;
 							}
