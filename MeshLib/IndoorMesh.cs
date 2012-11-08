@@ -381,6 +381,11 @@ namespace MeshLib
 						idx++;
 						continue;
 					}
+					if(modCall.Value[idx].Count == 0)
+					{
+						idx++;
+						continue;
+					}
 
 					Effect		fx	=mMatLib.GetShader(mat.Value.ShaderName);
 					if(fx == null)
@@ -795,7 +800,7 @@ namespace MeshLib
 
 		public void Write(string fileName)
 		{
-			FileStream	file	=new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.Write);
+			FileStream	file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 

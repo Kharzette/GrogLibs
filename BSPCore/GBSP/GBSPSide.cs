@@ -138,6 +138,11 @@ namespace BSPCore
 				{
 					ti.mAlpha	=MathHelper.Clamp(numbers[14], 0.0f, 1.0f);
 
+					if(ti.mAlpha == 1.0f)
+					{
+						CoreEvents.Print("Warning!  Alpha or Mirror with an alpha of 1.0!\n");
+					}
+
 					//probably would never want a value of zero, but that is
 					//the default.  If zero, set to half
 					if(ti.mAlpha == 0.0f)

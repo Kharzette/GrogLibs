@@ -10,7 +10,6 @@ namespace BSPZone
 	public class ZoneEntity : UtilityLib.IReadWriteable
 	{
 		public Dictionary<string, string>	mData		=new Dictionary<string, string>();
-//		internal Int32						mModelNum;
 
 
 		public bool GetOrigin(out Vector3 org)
@@ -38,6 +37,7 @@ namespace BSPZone
 			{
 				return	false;
 			}
+
 			//flip x
 			org.X	=-org.X;
 

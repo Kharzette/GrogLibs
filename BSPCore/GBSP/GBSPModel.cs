@@ -341,7 +341,7 @@ namespace BSPCore
 			portalFile	+=".gpf";
 
 			FileStream	fs	=new FileStream(portalFile,
-				FileMode.OpenOrCreate, FileAccess.Write);
+				FileMode.Create, FileAccess.Write);
 
 			if(fs == null)
 			{

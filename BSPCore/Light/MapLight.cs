@@ -124,8 +124,7 @@ namespace BSPCore
 			//Make sure no existing light exist...
 			mGFXLightData	=null;
 
-			file	=new FileStream(lp.mFileName,
-				FileMode.OpenOrCreate, FileAccess.Write);
+			file	=new FileStream(lp.mFileName, FileMode.Open, FileAccess.Write);
 			if(file == null)
 			{
 				CoreEvents.Print("LightGBSPFile:  Could not open GBSP file for writing: " + lp.mFileName + "\n");

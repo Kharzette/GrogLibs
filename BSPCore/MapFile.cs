@@ -59,14 +59,24 @@ namespace BSPCore
 
 			mGFXTexInfos	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return UtilityLib.FileUtil.InitArray<GFXTexInfo>(count); }) as GFXTexInfo[];
-			mGFXEntities	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<MapEntity>(count); }) as MapEntity[];
 
 			if(header.mbHasLight)
 			{
 				LoadGFXRGBVerts(br);
 				LoadGFXLightData(br);
 			}
+
+			br.Close();
+			file.Close();
+
+			string	entName	=UtilityLib.FileUtil.StripExtension(fileName);
+			entName			+=".EntData";
+
+			file	=new FileStream(entName, FileMode.Open, FileAccess.Read);
+			br		=new BinaryReader(file);
+
+			mGFXEntities	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return UtilityLib.FileUtil.InitArray<MapEntity>(count); }) as MapEntity[];
 
 			br.Close();
 			file.Close();
@@ -119,7 +129,6 @@ namespace BSPCore
 			SaveGFXVerts(bw);
 			SaveGFXVertIndexes(bw);
 			SaveGFXTexInfos(bw);
-			SaveGFXEntData(bw);
 
 			//light stuff
 			SaveGFXRGBVerts(bw);

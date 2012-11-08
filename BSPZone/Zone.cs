@@ -94,7 +94,7 @@ namespace BSPZone
 
 		public void Write(string fileName, bool bDebug)
 		{
-			FileStream	file	=new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.Write);
+			FileStream	file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 

@@ -107,8 +107,7 @@ namespace BSPVis
 			visExt	+=".VisData";
 
 			//Open the vis file for writing
-			FileStream	fs	=new FileStream(visExt,
-				FileMode.OpenOrCreate, FileAccess.Write);
+			FileStream	fs	=new FileStream(visExt, FileMode.Create, FileAccess.Write);
 
 			BinaryWriter	bw	=null;
 
@@ -400,8 +399,7 @@ namespace BSPVis
 			visExt	+=".VisData";
 
 			//Open the bsp file for writing
-			FileStream	fs	=new FileStream(visExt,
-				FileMode.OpenOrCreate, FileAccess.Write);
+			FileStream	fs	=new FileStream(visExt, FileMode.Open, FileAccess.Write);
 
 			BinaryWriter	bw	=null;
 

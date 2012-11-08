@@ -544,8 +544,7 @@ namespace BSPCore
 		public void Write(string fileName, bool bDebug, int matCount,
 			CoreDelegates.SaveVisZoneData saveVis)
 		{
-			FileStream	file	=new FileStream(fileName,
-									FileMode.OpenOrCreate, FileAccess.Write);
+			FileStream	file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
@@ -1079,6 +1078,21 @@ namespace BSPCore
 		}
 
 
+		public void SaveUpdatedEntities(string fileName)
+		{
+			//save entities
+			string	entName	=UtilityLib.FileUtil.StripExtension(fileName);
+			entName			+=".EntData";
+
+			FileStream		file	=new FileStream(entName, FileMode.Create, FileAccess.Write);
+			BinaryWriter	bw		=new BinaryWriter(file);
+			SaveGFXEntDataList(bw);
+
+			bw.Close();
+			file.Close();
+		}
+
+
 		public void LoadBuggeryBrushes(string path)
 		{
 			FileStream		fs	=new FileStream(path, FileMode.Open, FileAccess.Read);
@@ -1199,7 +1213,7 @@ namespace BSPCore
 			GBSPSaveParameters sp	=threadContext as GBSPSaveParameters;
 
 			FileStream	file	=new FileStream(sp.mFileName,
-									FileMode.OpenOrCreate, FileAccess.Write);
+									FileMode.Create, FileAccess.Write);
 
 			if(file == null)
 			{
@@ -1267,8 +1281,17 @@ namespace BSPCore
 			SaveGFXVertIndexes(bw);
 			mTIPool.Write(bw);
 
+			bw.Close();
+			file.Close();
+
+			//save entities
+			string	entName	=UtilityLib.FileUtil.StripExtension(sp.mFileName);
+			entName			+=".EntData";
+
+			file	=new FileStream(entName, FileMode.Create, FileAccess.Write);
+			bw		=new BinaryWriter(file);
 			SaveGFXEntDataList(bw);
-			
+
 			bw.Close();
 			file.Close();
 
