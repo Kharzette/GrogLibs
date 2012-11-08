@@ -82,6 +82,24 @@ VPosTex04Tex14Tex24 VLitVertexShader(VPosNormTex0Col0 input)
 }
 
 
+VPosTex04Tex14Tex24Tex34 MirrorVertexShader(VPosNormTex0Tex1Col0 input)
+{
+	VPosTex04Tex14Tex24Tex34	output;
+
+	float4	worldPosition	=mul(input.Position, mWorld);
+
+	output.Position			=mul(mul(worldPosition, mView), mProjection);
+	output.TexCoord0.xy		=input.TexCoord0.xy / mTexSize;
+	output.TexCoord0.zw		=input.TexCoord1.xy;
+	output.TexCoord1		=worldPosition;
+	output.TexCoord2.xyz	=input.Normal;
+	output.TexCoord2.w		=0;
+	output.TexCoord3		=input.Color;
+	
+	return	output;
+}
+
+
 VPosTex0Tex1Single YRangeVertexShader(VPosNormTex0Col0 input)
 {
 	VPosTex0Tex1Single	output;
@@ -376,6 +394,56 @@ float4 VLitPixelShader(VTex04Tex14Tex24 input) : COLOR0
 	color	=pow(color, 1 / 2.2);
 
 	return	float4(color, input.TexCoord2.w);
+}
+
+
+float4 MirrorPixelShader(VTex04Tex14Tex24Tex34 input) : COLOR0
+{
+	float3	mirrorColor;
+	float4	texColor;	
+	
+	if(mbTextureEnabled)
+	{
+		//no need to gamma correct rendertarget
+		mirrorColor	=tex2D(LightMapSampler, input.TexCoord0.zw);
+		texColor	=pow(tex2D(TextureSampler, input.TexCoord0.xy), 2.2);
+	}
+	else
+	{
+		mirrorColor	=float3(1.0, 1.0, 1.0);
+		texColor	=(1.0, 1.0, 1.0, 1.0);
+	}
+
+	float3	worldPos	=input.TexCoord1.xyz;
+	float3	norm		=input.TexCoord2.xyz;
+	float4	vertColor	=input.TexCoord3;
+	
+	float	dist	=distance(worldPos, mLight0Position);
+	if(dist < mLightRange)
+	{
+		float3	lightDir	=normalize(mLight0Position - worldPos);
+		float	ndl			=dot(norm, lightDir);
+
+		if(ndl > 0)
+		{
+			if(dist > mLightFalloffRange)
+			{
+				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
+			}
+			vertColor.xyz	+=(ndl * mLight0Color);
+		}
+	}
+
+	texColor	*=vertColor;
+
+	//alpha mix with mirror
+	texColor.xyz	+=mirrorColor / vertColor.w;
+	texColor		=saturate(texColor);
+
+	//back to srgb
+	texColor	=pow(texColor, 1 / 2.2);
+
+	return	float4(texColor.xyz, 1.0);
 }
 
 
@@ -717,8 +785,8 @@ technique Mirror
 {
 	pass Pass1
 	{
-		VertexShader	=compile vs_2_0 VLitVertexShader();
-		PixelShader		=compile ps_2_0 VLitPixelShader();
+		VertexShader	=compile vs_2_0 MirrorVertexShader();
+		PixelShader		=compile ps_2_0 MirrorPixelShader();
 	}
 }
 

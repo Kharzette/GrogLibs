@@ -76,6 +76,7 @@ namespace BSPCore
 		List<Vector3>		mMirrorVerts	=new List<Vector3>();
 		List<Vector3>		mMirrorNormals	=new List<Vector3>();
 		List<Vector2>		mMirrorTex0		=new List<Vector2>();
+		List<Vector2>		mMirrorTex1		=new List<Vector2>();
 		List<Vector4>		mMirrorColors	=new List<Vector4>();
 		List<Int32>			mMirrorIndexes	=new List<Int32>();
 		List<List<Vector3>>	mMirrorPolys	=new List<List<Vector3>>();
@@ -182,7 +183,7 @@ namespace BSPCore
 			//vertex lit, alpha, and mirror
 			mVLitVD		=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Col0));
 			mAlphaVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Col0));
-			mMirrorVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Col0));
+			mMirrorVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Tex1Col0));
 
 			//animated lightmapped, and alpha as well
 			//alpha is stored in the style vector4
@@ -398,17 +399,18 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormTex0Col0	[]varray	=new VPosNormTex0Col0[mMirrorVerts.Count];
+			VPosNormTex0Tex1Col0	[]varray	=new VPosNormTex0Tex1Col0[mMirrorVerts.Count];
 			for(int i=0;i < mMirrorVerts.Count;i++)
 			{
 				varray[i].Position	=mMirrorVerts[i];
 				varray[i].TexCoord0	=mMirrorTex0[i];
+				varray[i].TexCoord1	=mMirrorTex1[i];
 				varray[i].Normal	=mMirrorNormals[i];
 				varray[i].Color0	=mMirrorColors[i];
 			}
 
 			vb	=new VertexBuffer(mGD, mMirrorVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosNormTex0Col0>(varray);
+			vb.SetData<VPosNormTex0Tex1Col0>(varray);
 
 			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mMirrorIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mMirrorIndexes.ToArray());
@@ -1006,14 +1008,10 @@ namespace BSPCore
 				else if(mat.Name.EndsWith("*Mirror"))
 				{
 					mat.Technique	="Mirror";
-					mat.AddParameter("mTexture",
+					mat.AddParameter("mLightMap",
 						EffectParameterClass.Object,
 						EffectParameterType.Texture,
 						"MirrorTexture");
-					mat.AddParameter("mTexSize",
-						EffectParameterClass.Vector,
-						EffectParameterType.Single,
-						"1 1");
 				}
 				else if(mat.Name.EndsWith("*Sky"))
 				{

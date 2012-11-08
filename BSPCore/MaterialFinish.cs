@@ -94,7 +94,7 @@ namespace BSPCore
 			List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mMirrorIndexes, perPlaneChunks, ref vertOfs);
 
 			StuffVBArrays(perPlaneChunks, mMirrorVerts, mMirrorNormals,
-				mMirrorTex0, null, null, null, null,
+				mMirrorTex0, mMirrorTex1, null, null, null,
 				mMirrorColors, null);
 
 			mMirrorDraws.Add(modelIndex, modCalls);

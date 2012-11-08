@@ -11,8 +11,7 @@ namespace BSPCore
 	internal class MaterialFill
 	{
 		static void GetMirrorTexCoords(List<Vector3> verts,
-			int	lwidth, int lheight, GFXTexInfo tex,
-			out List<Vector2> coords)
+			GFXTexInfo tex,	out List<Vector2> coords)
 		{
 			coords	=new List<Vector2>();
 
@@ -397,7 +396,7 @@ namespace BSPCore
 					col.Z	=rgbVerts[fvert + k].Z / 255.0f;
 				}
 
-				if((tex.mFlags & TexInfo.TRANSPARENT) != 0)
+				if(UtilityLib.Misc.bFlagSet(tex.mFlags, TexInfo.MIRROR | TexInfo.TRANSPARENT))
 				{
 					col.W	=tex.mAlpha;
 				}
@@ -562,16 +561,15 @@ namespace BSPCore
 			}
 
 			List<Vector3>	fverts	=new List<Vector3>();
-			List<Vector2>	blah	=new List<Vector2>();
-			ComputeFaceData(f, verts, indexes, tex, blah, fverts);
+			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, fverts);
 			ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
 			ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
 
 			ddc.mVerts.AddRange(fverts);
 
 			List<Vector2>	coords	=new List<Vector2>();
-			GetMirrorTexCoords(fverts, 256, 256, tex, out coords);
-			ddc.mTex0.AddRange(coords);
+			GetMirrorTexCoords(fverts, tex, out coords);
+			ddc.mTex1.AddRange(coords);
 
 			mirrorPolys.Add(fverts);
 
