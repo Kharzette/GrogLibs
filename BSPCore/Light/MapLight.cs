@@ -1045,31 +1045,11 @@ namespace BSPCore
 							WorkRGB	+=minLight;
 						}
 						
-						float	max	=0.0f;
-
 						for(int l=0;l < 3;l++)
 						{
-							float	Val	=UtilityLib.Mathery.VecIdx(WorkRGB, l);
+							float	val	=UtilityLib.Mathery.VecIdx(WorkRGB, l);
 
-							if(Val < 1.0f)
-							{
-								Val	=1.0f;
-								UtilityLib.Mathery.VecIdxAssign(ref WorkRGB, l, Val);
-							}
-
-							if(Val > max)
-							{
-								max	=Val;
-							}
-						}
-
-						Debug.Assert(max > 0.0f);
-						
-						float	max2	=Math.Min(max, maxIntensity);
-
-						for(int l=0;l < 3;l++)
-						{
-							LData[LDataOfs]	=(byte)(UtilityLib.Mathery.VecIdx(WorkRGB, l) * (max2 / max));
+							LData[LDataOfs]	=(byte)(Math.Min(val, maxIntensity));
 							LDataOfs++;
 							LightOffset++;
 						}
