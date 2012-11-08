@@ -107,5 +107,24 @@ namespace BSPZone
 			mNormal	=-mNormal;
 			mDist	=-mDist;
 		}
+
+
+		//the xna transform expects an inverted matrix
+		//which is quite odd
+		internal static ZonePlane XNATransform(ZonePlane zonePlane, Matrix matrix)
+		{
+			Plane	XNAPlane;
+			XNAPlane.D		=zonePlane.mDist;
+			XNAPlane.Normal	=zonePlane.mNormal;
+
+			XNAPlane	=Plane.Transform(XNAPlane, matrix);
+
+			ZonePlane	ret	=ZonePlane.Blank;
+
+			ret.mNormal	=XNAPlane.Normal;
+			ret.mDist	=XNAPlane.D;
+
+			return	ret;
+		}
 	}
 }

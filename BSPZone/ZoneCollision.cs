@@ -180,7 +180,7 @@ namespace BSPZone
 			I	=start + dist * (end - start);
 
 			//Work our way to the front, from the back side.  As soon as there
-			//is no more collisions, we can assume that we have the front portion of the
+			//are no more collisions, we can assume that we have the front portion of the
 			//ray that is in empty space.  Once we find this, and see that the back half is in
 			//solid space, then we found the front intersection point...
 			if(RayIntersect(start, I,
@@ -218,8 +218,16 @@ namespace BSPZone
 				Vector3		impacto	=Vector3.Zero;
 				ZonePlane	hp		=ZonePlane.Blank;
 
+				Vector3	modelStart	=start;
+				Vector3	modelEnd	=end;
+				if(i != 0)
+				{
+					modelStart	=Vector3.Transform(start, mModelTransInverted[i]);
+					modelEnd	=Vector3.Transform(end, mModelTransInverted[i]);
+				}
+
 				if(Trace_WorldCollisionBBox(boxBounds, i,
-					start, end, ref impacto, ref hp))
+					modelStart, modelEnd, ref impacto, ref hp))
 				{
 					modelsHit.Add(i);
 					impacts.Add(impacto);
@@ -245,8 +253,17 @@ namespace BSPZone
 			}
 
 			modelHit	=modelsHit[bestIdx];
-			I			=impacts[bestIdx];
-			P			=planes[bestIdx];
+			if(modelHit != 0)
+			{
+				//adjust these back to worldspace
+				I	=Vector3.Transform(impacts[bestIdx], mModelTransforms[modelHit]);
+				P	=ZonePlane.XNATransform(planes[bestIdx], mModelTransInverted[modelHit]);
+			}
+			else
+			{
+				I	=impacts[bestIdx];
+				P	=planes[bestIdx];
+			}
 
 			return	true;
 		}

@@ -55,6 +55,7 @@ namespace BSPZone
 		//gameplay stuff
 		List<ZoneTrigger>		mTriggers			=new List<ZoneTrigger>();
 		Dictionary<int, Matrix>	mModelTransforms	=new Dictionary<int, Matrix>();
+		Dictionary<int, Matrix>	mModelTransInverted	=new Dictionary<int, Matrix>();
 
 		int	mLightMapGridSize;
 		int	mNumVisLeafBytes;
@@ -66,7 +67,6 @@ namespace BSPZone
 		const float	GroundAngle				=0.8f;	//how sloped can you be to be considered ground
 		const float	RampAngle				=0.7f;	//how steep can we climb?
 		const float StepHeight				=18.0f;	//stair step height for bipeds
-		const float	StuckLength				=10.0f;
 		const int	MaxMoveBoxIterations	=64;
 
 
@@ -252,6 +252,7 @@ namespace BSPZone
 				Matrix	mat	=Matrix.CreateTranslation(zm.mOrigin);
 
 				mModelTransforms.Add(i, mat);
+				mModelTransInverted.Add(i, Matrix.Invert(mat));
 			}
 		}
 		#endregion
@@ -285,6 +286,7 @@ namespace BSPZone
 		}
 
 
+		//don't modify these!
 		public Dictionary<int, Matrix> GetModelTransforms()
 		{
 			return	mModelTransforms;
@@ -306,6 +308,7 @@ namespace BSPZone
 			if(mModelTransforms.ContainsKey(modelIndex))
 			{
 				mModelTransforms[modelIndex]	=trans;
+				mModelTransInverted[modelIndex]	=Matrix.Invert(trans);
 			}
 		}
 
