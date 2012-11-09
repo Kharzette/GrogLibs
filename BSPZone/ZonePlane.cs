@@ -107,10 +107,35 @@ namespace BSPZone
 			mNormal	=-mNormal;
 			mDist	=-mDist;
 		}
+	
+
+		internal static ZonePlane Transform(ZonePlane plane, Matrix mat)
+		{
+			Vector3	p0, p1, p2;
+
+			if(plane == ZonePlane.Blank)
+			{
+				return	plane;
+			}
+
+			UtilityLib.Mathery.PointsFromPlane(plane.mNormal, plane.mDist, out p0, out p1, out p2);
+
+			p0	=Vector3.Transform(p0, mat);
+			p1	=Vector3.Transform(p1, mat);
+			p2	=Vector3.Transform(p2, mat);
+
+			ZonePlane	ret	=ZonePlane.Blank;
+
+			UtilityLib.Mathery.PlaneFromVerts(p0, p1, p2, out ret.mNormal, out ret.mDist);
+
+			return	ret;
+		}
 
 
 		//the xna transform expects an inverted matrix
 		//which is quite odd
+		//note this method doesn't work very well at all
+		//getting very off the wall results with rotations
 		internal static ZonePlane XNATransform(ZonePlane zonePlane, Matrix matrix)
 		{
 			Plane	XNAPlane;

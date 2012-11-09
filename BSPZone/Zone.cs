@@ -729,8 +729,31 @@ namespace BSPZone
 					break;	//in solid
 				}
 
-				float	dist	=zp.DistanceFast(end);
-				end				-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
+				float	startDist	=zp.DistanceFast(start);
+				float	dist		=zp.DistanceFast(end);
+
+				if(startDist > 0f)
+				{
+					if(dist > 0f)
+					{
+						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
+					}
+					else
+					{
+						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
+					}
+				}
+				else
+				{
+					if(dist > 0f)
+					{
+						end	-=(zp.mNormal * (dist + UtilityLib.Mathery.VCompareEpsilon));
+					}
+					else
+					{
+						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
+					}
+				}
 				
 				if(!hitPlanes.Contains(zp))
 				{
@@ -936,7 +959,50 @@ namespace BSPZone
 					}
 				}
 			}
+
+			GetModelGeometry(verts, inds);
+
 			return	leafsVisible;
+		}
+
+
+		public void GetModelGeometry(List<Vector3> verts, List<UInt32> inds)
+		{
+			if(mDebugFaces == null || mZoneModels.Length < 2)
+			{
+				return;	//no debug info saved
+			}
+
+			for(int i=1;i < mZoneModels.Length;i++)
+			{
+				int	firstFace	=mZoneModels[i].mFirstFace;
+				int	numFaces	=mZoneModels[i].mNumFaces;
+
+				for(int j=firstFace;j < (firstFace + numFaces);j++)
+				{
+					int		vofs	=verts.Count;
+					int		face	=j;
+					int		nverts	=mDebugFaces[face].mNumVerts;
+					int		fvert	=mDebugFaces[face].mFirstVert;
+
+					for(int k=fvert;k < (fvert + nverts);k++)
+					{
+						int	idx	=mDebugIndexes[k];
+
+						Vector3	transd	=Vector3.Transform(mDebugVerts[idx], mModelTransforms[i]);
+
+						verts.Add(transd);
+					}
+
+					for(int z=1;z < nverts-1;z++)
+					{
+						//initial vertex
+						inds.Add((UInt32)vofs);
+						inds.Add((UInt32)(vofs + z));
+						inds.Add((UInt32)(vofs + ((z + 1) % nverts)));
+					}
+				}
+			}
 		}
 
 

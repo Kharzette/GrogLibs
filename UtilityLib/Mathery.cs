@@ -363,6 +363,49 @@ namespace UtilityLib
 		}
 
 
+		public static void PointsFromPlane(Vector3 norm, float dist, out Vector3 p0, out Vector3 p1, out Vector3 p2)
+		{
+			//generate some axis vecs
+			Vector3	sAxis	=Vector3.Cross(norm, Vector3.UnitY);
+			if(sAxis.LengthSquared() <= 0.0f)
+			{
+				sAxis	=-Vector3.Cross(norm, Vector3.UnitZ);
+			}
+
+			Vector3	tAxis	=Vector3.Cross(norm, sAxis);
+
+			p0	=p1	=p2	=norm * dist;
+
+			p2	+=tAxis * 30f;
+			p1	-=tAxis * 15f;
+			p1	-=sAxis * 15f;
+			p0	-=tAxis * 15f;
+			p0	+=sAxis * 15f;
+		}
+
+
+		public static void PlaneFromVerts(Vector3 v0, Vector3 v1, Vector3 v2, out Vector3 norm, out float dist)
+		{
+			norm	=Vector3.Zero;
+
+			//gen a plane normal from the cross of edge vectors
+			Vector3	e1  =v0 - v1;
+			Vector3	e2  =v2 - v1;
+
+			norm   =Vector3.Cross(e1, e2);
+
+			if(norm.LengthSquared() <= 0f)
+			{
+				norm	=Vector3.UnitX;
+				dist	=0.0f;
+				return;
+			}
+
+			norm.Normalize();
+			dist	=Vector3.Dot(v1, norm);
+		}
+
+
 		public static void PlaneFromVerts(List<Vector3> verts, out Vector3 norm, out float dist)
 		{
 			int	i;

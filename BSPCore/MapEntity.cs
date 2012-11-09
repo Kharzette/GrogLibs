@@ -151,6 +151,11 @@ namespace BSPCore
 				bool	bFirst	=true;
 				foreach(MapBrush mb in mBrushes)
 				{
+					if(mb.mBounds == null)
+					{
+						mb.EarlyBounds();
+					}
+
 					if(bFirst)
 					{
 						bnd		=mb.mBounds;

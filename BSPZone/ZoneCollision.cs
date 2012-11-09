@@ -257,7 +257,7 @@ namespace BSPZone
 			{
 				//adjust these back to worldspace
 				I	=Vector3.Transform(impacts[bestIdx], mModelTransforms[modelHit]);
-				P	=ZonePlane.XNATransform(planes[bestIdx], mModelTransInverted[modelHit]);
+				P	=ZonePlane.Transform(planes[bestIdx], mModelTransforms[modelHit]);
 			}
 			else
 			{

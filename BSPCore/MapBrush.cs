@@ -83,6 +83,22 @@ namespace BSPCore
 			}
 			MakePolys(pp, true, cp);
 		}
+
+
+		public MapBrush(MapBrush mapBrush)
+		{
+			this.mBounds		=mapBrush.mBounds;
+			this.mContents		=mapBrush.mContents;
+			this.mEntityNum		=mapBrush.mEntityNum;
+			this.mOriginalSides	=new List<GBSPSide>();
+
+			foreach(GBSPSide side in mapBrush.mOriginalSides)
+			{
+				GBSPSide	dupeSide	=new GBSPSide(side);
+
+				this.mOriginalSides.Add(dupeSide);
+			}
+		}
 		
 
 		#region IO
@@ -104,7 +120,11 @@ namespace BSPCore
 				}
 				else if(s.StartsWith("}"))
 				{
-					PolyBound();
+					//origin brushes need their bounds early
+					if(Misc.bFlagSet(mContents, Contents.BSP_CONTENTS_ORIGIN))
+					{
+						EarlyBounds();
+					}
 
 					//check for default brushes
 					if(mContents == 0)
@@ -115,6 +135,24 @@ namespace BSPCore
 				}
 			}
 			return	ret;
+		}
+
+
+		//lazy way to get bounds for origin brushes
+		internal void EarlyBounds()
+		{
+			//duplicate
+			MapBrush	mb	=new MapBrush(this);
+
+			PlanePool	pp	=new PlanePool();
+
+			mb.PoolPlanes(pp);
+
+			//make temp polys
+			mb.MakePolys(pp, true, new ClipPools());
+
+			//dupe bounds
+			mBounds	=mb.mBounds;
 		}
 
 
@@ -215,18 +253,6 @@ namespace BSPCore
 			foreach(GBSPSide s in mOriginalSides)
 			{
 				s.MovePoly(delta);
-			}
-		}
-
-
-		//compute bound from polys
-		internal void PolyBound()
-		{
-			mBounds	=new Bounds();
-
-			foreach(GBSPSide s in mOriginalSides)
-			{
-				s.mPoly.AddToBounds(mBounds);
 			}
 		}
 
