@@ -110,20 +110,22 @@ namespace UtilityLib
 #endif
 
 
+		//returns a centered box
 		public static BoundingBox MakeBox(float width, float height)
 		{
 			BoundingBox	ret;
 
-			float	halfWidth	=width / 2.0f;
+			float	halfWidth	=width * 0.5f;
+			float	halfHeight	=height * 0.5f;
 
-			//bottom
-			ret.Min	=-Vector3.UnitX * halfWidth;
-			ret.Min	+=-Vector3.UnitZ * halfWidth;
+			ret.Min.X	=-halfWidth;
+			ret.Max.X	=halfWidth;
+			
+			ret.Min.Y	=-halfHeight;
+			ret.Max.Y	=halfHeight;
 
-			//top
-			ret.Max	=Vector3.UnitX * halfWidth;
-			ret.Max	+=Vector3.UnitZ * halfWidth;
-			ret.Max	+=Vector3.UnitY * height;
+			ret.Min.Z	=-halfWidth;
+			ret.Max.Z	=halfWidth;
 
 			return	ret;
 		}

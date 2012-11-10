@@ -30,6 +30,10 @@ namespace BSPZone
 
 	public partial class Zone
 	{
+		Vector3	[]mTestBoxCorners		=new Vector3[8];
+		Vector3	[]mTestTransBoxCorners	=new Vector3[8];
+
+
 		//this was written by me back in the genesis days, not well tested
 		bool CapsuleIntersect(RayTrace trace, Vector3 start, Vector3 end, float radius, Int32 node)
 		{
@@ -218,20 +222,25 @@ namespace BSPZone
 				Vector3		impacto	=Vector3.Zero;
 				ZonePlane	hp		=ZonePlane.Blank;
 
-				Vector3	modelStart	=start;
-				Vector3	modelEnd	=end;
 				if(i != 0)
 				{
-					modelStart	=Vector3.Transform(start, mModelTransInverted[i]);
-					modelEnd	=Vector3.Transform(end, mModelTransInverted[i]);
+					if(Trace_WorldCollisionFakeOBBox(boxBounds, i,
+						start, end, ref impacto, ref hp))
+					{
+						modelsHit.Add(i);
+						impacts.Add(impacto);
+						planes.Add(hp);
+					}
 				}
-
-				if(Trace_WorldCollisionBBox(boxBounds, i,
-					modelStart, modelEnd, ref impacto, ref hp))
+				else
 				{
-					modelsHit.Add(i);
-					impacts.Add(impacto);
-					planes.Add(hp);
+					if(Trace_WorldCollisionBBox(boxBounds, i,
+						start, end, ref impacto, ref hp))
+					{
+						modelsHit.Add(i);
+						impacts.Add(impacto);
+						planes.Add(hp);
+					}
 				}
 			}
 
@@ -256,8 +265,8 @@ namespace BSPZone
 			if(modelHit != 0)
 			{
 				//adjust these back to worldspace
-				I	=Vector3.Transform(impacts[bestIdx], mModelTransforms[modelHit]);
-				P	=ZonePlane.Transform(planes[bestIdx], mModelTransforms[modelHit]);
+				I	=Vector3.Transform(impacts[bestIdx], mZoneModels[modelHit].mTransform);
+				P	=ZonePlane.Transform(planes[bestIdx], mZoneModels[modelHit].mTransform);
 			}
 			else
 			{
@@ -287,6 +296,53 @@ namespace BSPZone
 
 			trace.mOriginalStart	=start;
 			trace.mOriginalEnd		=end;
+			FindClosestLeafIntersection_r(trace, worldModel.mRootNode);
+
+			if(trace.mbLeafHit)
+			{
+				I	=trace.mIntersection;
+				P	=trace.mBestPlane;
+				return	true;
+			}
+			return	false;
+		}
+
+
+		//warning, this only works with centered bounding boxes!
+		public bool Trace_WorldCollisionFakeOBBox(BoundingBox boxBounds, int modelIndex,
+			Vector3 start, Vector3 end, ref Vector3 I, ref ZonePlane P)
+		{
+			RayTrace	trace		=new RayTrace();
+			ZoneModel	worldModel	=mZoneModels[modelIndex];
+
+#if DEBUG
+			System.Diagnostics.Debug.Assert(Mathery.IsBoundingBoxCentered(boxBounds));
+#endif
+
+			//get box bound corners
+			boxBounds.GetCorners(mTestBoxCorners);
+
+			//transform into model space
+			Vector3.Transform(mTestBoxCorners, ref worldModel.mInvertedTransform, mTestTransBoxCorners);
+
+			//transform ray
+			Vector3	modelStart	=Vector3.Transform(start, worldModel.mInvertedTransform);
+			Vector3	modelEnd	=Vector3.Transform(end, worldModel.mInvertedTransform);
+
+			//bound the modelSpace corners
+			trace.mRayBox	=BoundingBox.CreateFromPoints(mTestTransBoxCorners);
+
+			Mathery.CenterBoundingBoxAtOrigin(ref trace.mRayBox);
+
+			trace.mMoveBox			=Trace_GetMoveBox(trace.mRayBox, modelStart, modelEnd);
+			trace.mOriginalStart	=modelStart;
+			trace.mOriginalEnd		=modelEnd;
+
+			//test for basic box overlap
+			if(!trace.mMoveBox.Intersects(worldModel.mBounds))
+			{
+				return	false;
+			}
 			FindClosestLeafIntersection_r(trace, worldModel.mRootNode);
 
 			if(trace.mbLeafHit)

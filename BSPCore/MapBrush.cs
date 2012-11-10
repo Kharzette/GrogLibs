@@ -129,7 +129,7 @@ namespace BSPCore
 					//check for default brushes
 					if(mContents == 0)
 					{
-						mContents	=Contents.CONTENTS_SOLID;
+						mContents	=Contents.BSP_CONTENTS_SOLID2;
 					}
 					return	ret;	//brush done
 				}

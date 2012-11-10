@@ -569,5 +569,93 @@ namespace UtilityLib
 			return	bool.TryParse(str, out val);
 #endif
 		}
+
+
+		public static bool IsBoundingBoxCentered(BoundingBox box)
+		{
+			Vector3	delta	=CenterBoundingBoxAtOrigin(ref box);
+
+			return	(delta == Vector3.Zero);
+		}
+
+
+		public static Vector3 CenterBoundingBoxAtOrigin(ref BoundingBox box)
+		{
+			BoundingBox	start	=box;
+
+			float	xsize	=box.Max.X - box.Min.X;
+			float	zsize	=box.Max.Z - box.Min.Z;
+			float	height	=box.Max.Y - box.Min.Y;
+
+			xsize	*=0.5f;
+			zsize	*=0.5f;
+			height	*=0.5f;
+
+			box.Min.X	=-xsize;
+			box.Max.X	=xsize;
+			box.Min.Z	=-zsize;
+			box.Max.Z	=zsize;
+			box.Min.Y	=-height;
+			box.Max.Y	=height;
+
+			return	start.Min - box.Min;
+		}
+
+
+		public static void ClipRayToBox(BoundingBox box,
+			ref Vector3 rayStart, ref Vector3 rayEnd)
+		{
+			if(rayStart.X < box.Min.X)
+			{
+				rayStart.X	=box.Min.X;
+			}
+			if(rayStart.Y < box.Min.Y)
+			{
+				rayStart.Y	=box.Min.Y;
+			}
+			if(rayStart.Z < box.Min.Z)
+			{
+				rayStart.Z	=box.Min.Z;
+			}
+
+			if(rayStart.X > box.Max.X)
+			{
+				rayStart.X	=box.Max.X;
+			}
+			if(rayStart.Y > box.Max.Y)
+			{
+				rayStart.Y	=box.Max.Y;
+			}
+			if(rayStart.Z > box.Max.Z)
+			{
+				rayStart.Z	=box.Max.Z;
+			}
+
+			if(rayEnd.X < box.Min.X)
+			{
+				rayEnd.X	=box.Min.X;
+			}
+			if(rayEnd.Y < box.Min.Y)
+			{
+				rayEnd.Y	=box.Min.Y;
+			}
+			if(rayEnd.Z < box.Min.Z)
+			{
+				rayEnd.Z	=box.Min.Z;
+			}
+
+			if(rayEnd.X > box.Max.X)
+			{
+				rayEnd.X	=box.Max.X;
+			}
+			if(rayEnd.Y > box.Max.Y)
+			{
+				rayEnd.Y	=box.Max.Y;
+			}
+			if(rayEnd.Z > box.Max.Z)
+			{
+				rayEnd.Z	=box.Max.Z;
+			}
+		}
 	}
 }

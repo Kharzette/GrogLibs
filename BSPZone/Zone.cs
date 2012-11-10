@@ -54,8 +54,7 @@ namespace BSPZone
 
 		//gameplay stuff
 		List<ZoneTrigger>		mTriggers			=new List<ZoneTrigger>();
-		Dictionary<int, Matrix>	mModelTransforms	=new Dictionary<int, Matrix>();
-		Dictionary<int, Matrix>	mModelTransInverted	=new Dictionary<int, Matrix>();
+
 
 		int	mLightMapGridSize;
 		int	mNumVisLeafBytes;
@@ -244,16 +243,8 @@ namespace BSPZone
 				}
 			}
 
-			//grab model transforms
-			for(int i=0;i < mZoneModels.Length;i++)
-			{
-				ZoneModel	zm	=mZoneModels[i];
-
-				Matrix	mat	=Matrix.CreateTranslation(zm.mOrigin);
-
-				mModelTransforms.Add(i, mat);
-				mModelTransInverted.Add(i, Matrix.Invert(mat));
-			}
+//			mZoneModels[1].RotateX(45f);
+//			mZoneModels[1].Move(Vector3.UnitY * 10f);
 		}
 		#endregion
 
@@ -286,30 +277,41 @@ namespace BSPZone
 		}
 
 
-		//don't modify these!
-		public Dictionary<int, Matrix> GetModelTransforms()
+		public void RotateModelX(int modelIndex, float degrees)
 		{
-			return	mModelTransforms;
+			if(mZoneModels.Length > modelIndex)
+			{
+				mZoneModels[modelIndex].RotateX(degrees);
+			}
+		}
+
+
+		public void RotateModelY(int modelIndex, float degrees)
+		{
+			if(mZoneModels.Length > modelIndex)
+			{
+				mZoneModels[modelIndex].RotateY(degrees);
+			}
+		}
+
+
+		public void RotateModelZ(int modelIndex, float degrees)
+		{
+			if(mZoneModels.Length > modelIndex)
+			{
+				mZoneModels[modelIndex].RotateZ(degrees);
+			}
 		}
 
 
 		public Matrix GetModelTransform(int modelIndex)
 		{
-			if(mModelTransforms.ContainsKey(modelIndex))
+			if(modelIndex >= mZoneModels.Length)
 			{
-				return	mModelTransforms[modelIndex];
+				return	Matrix.Identity;
 			}
-			return	Matrix.Identity;
-		}
 
-
-		public void SetModelTransform(int modelIndex, Matrix trans)
-		{
-			if(mModelTransforms.ContainsKey(modelIndex))
-			{
-				mModelTransforms[modelIndex]	=trans;
-				mModelTransInverted[modelIndex]	=Matrix.Invert(trans);
-			}
+			return	mZoneModels[modelIndex].mTransform;
 		}
 
 
@@ -718,7 +720,6 @@ namespace BSPZone
 			for(i=0;i < MaxMoveBoxIterations;i++)
 			{
 				ZonePlane	zp	=ZonePlane.Blank;
-//				if(!Trace_WorldCollisionBBox(box, start, end, ref impacto, ref zp))
 				if(!Trace_All(box, start, end, ref modelHit, ref impacto, ref zp))
 				{
 					break;
@@ -751,7 +752,7 @@ namespace BSPZone
 					}
 					else
 					{
-						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
+						 end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
 					}
 				}
 				
@@ -783,10 +784,10 @@ namespace BSPZone
 			foreach(ZoneTrigger zt in mTriggers)
 			{
 				zt.mTransformedBox.Min	=Vector3.Transform(
-					zt.mBox.Min, mModelTransforms[zt.mModelNum]);
+					zt.mBox.Min, mZoneModels[zt.mModelNum].mTransform);
 
 				zt.mTransformedBox.Max	=Vector3.Transform(
-					zt.mBox.Max, mModelTransforms[zt.mModelNum]);
+					zt.mBox.Max, mZoneModels[zt.mModelNum].mTransform);
 			}
 		}
 
@@ -962,6 +963,114 @@ namespace BSPZone
 
 			GetModelGeometry(verts, inds);
 
+			//hax for collision
+			int	testModel	=5;
+			
+			//draw testModel in model space
+			int	firstFace	=mZoneModels[testModel].mFirstFace;
+			int	numFaces	=mZoneModels[testModel].mNumFaces;
+
+			for(int j=firstFace;j < (firstFace + numFaces);j++)
+			{
+				int		vofs	=verts.Count;
+				int		face	=j;
+				int		nverts	=mDebugFaces[face].mNumVerts;
+				int		fvert	=mDebugFaces[face].mFirstVert;
+
+				for(int k=fvert;k < (fvert + nverts);k++)
+				{
+					int	idx	=mDebugIndexes[k];
+
+					verts.Add(mDebugVerts[idx]);
+				}
+
+				for(int z=1;z < nverts-1;z++)
+				{
+					//initial vertex
+					inds.Add((UInt32)vofs);
+					inds.Add((UInt32)(vofs + z));
+					inds.Add((UInt32)(vofs + ((z + 1) % nverts)));
+				}
+			}
+
+			ZoneModel	worldModel	=mZoneModels[testModel];
+
+			//draw player collision box in model space
+			BoundingBox	charBox	=UtilityLib.Misc.MakeBox(24.0f, 56.0f);
+//			BoundingBox	charBox	=UtilityLib.Misc.MakeBox(2.0f, 2.0f);
+
+			pos.Y	-=50.0f;	//pos is at eye height, lower to box base
+
+			charBox.Min	+=pos;
+			charBox.Max	+=pos;
+
+			charBox.GetCorners(mTestBoxCorners);
+
+			//transform into model space
+			Vector3.Transform(mTestBoxCorners, ref worldModel.mInvertedTransform, mTestTransBoxCorners);
+
+			//cube corners
+			Vector3	upperTopLeft	=mTestTransBoxCorners[0];
+			Vector3	upperTopRight	=mTestTransBoxCorners[1];
+			Vector3	upperBotLeft	=mTestTransBoxCorners[2];
+			Vector3	upperBotRight	=mTestTransBoxCorners[3];
+			Vector3	lowerTopLeft	=mTestTransBoxCorners[4];
+			Vector3	lowerTopRight	=mTestTransBoxCorners[5];
+			Vector3	lowerBotLeft	=mTestTransBoxCorners[6];
+			Vector3	lowerBotRight	=mTestTransBoxCorners[7];
+
+			//add to verts
+			//cube sides
+			//top
+			verts.Add(upperTopLeft);
+			verts.Add(upperTopRight);
+			verts.Add(upperBotRight);
+			verts.Add(upperBotLeft);
+
+			//bottom (note reversal)
+			verts.Add(lowerBotLeft);
+			verts.Add(lowerBotRight);
+			verts.Add(lowerTopRight);
+			verts.Add(lowerTopLeft);
+
+			//top z side
+			verts.Add(lowerTopLeft);
+			verts.Add(lowerTopRight);
+			verts.Add(upperTopRight);
+			verts.Add(upperTopLeft);
+
+			//bottom z side
+			verts.Add(upperBotLeft);
+			verts.Add(upperBotRight);
+			verts.Add(lowerBotRight);
+			verts.Add(lowerBotLeft);
+
+			//x side
+			verts.Add(upperTopLeft);
+			verts.Add(upperBotLeft);
+			verts.Add(lowerBotLeft);
+			verts.Add(lowerTopLeft);
+
+			//-x side
+			verts.Add(lowerTopRight);
+			verts.Add(lowerBotRight);
+			verts.Add(upperBotRight);
+			verts.Add(upperTopRight);
+
+			UInt32	idx2	=(UInt32)verts.Count - 24;
+			int		ofs2	=inds.Count;
+			for(int i=ofs2;i < 36 + ofs2;i+=6)
+			{
+				inds.Add(idx2 + 3);
+				inds.Add(idx2 + 2);
+				inds.Add(idx2 + 1);
+				inds.Add(idx2 + 3);
+				inds.Add(idx2 + 1);
+				inds.Add(idx2 + 0);
+
+				idx2	+=4;
+			}
+
 			return	leafsVisible;
 		}
 
@@ -989,7 +1098,7 @@ namespace BSPZone
 					{
 						int	idx	=mDebugIndexes[k];
 
-						Vector3	transd	=Vector3.Transform(mDebugVerts[idx], mModelTransforms[i]);
+						Vector3	transd	=Vector3.Transform(mDebugVerts[idx], mZoneModels[i].mTransform);
 
 						verts.Add(transd);
 					}

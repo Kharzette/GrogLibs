@@ -20,6 +20,13 @@ namespace BSPZone
 		internal Int32			mNumClusters;
 		internal Int32			mAreaFront, mAreaBack;	// Area on each side of the model
 
+		//transform data, game changes these
+		internal float		mPitch, mYaw, mRoll;
+		internal Vector3	mPosition;
+
+		//these are updated whenever the above changes
+		internal Matrix	mTransform, mInvertedTransform;
+
 
 		public void Write(BinaryWriter bw)
 		{
@@ -63,6 +70,58 @@ namespace BSPZone
 			mNumClusters	=br.ReadInt32();
 			mAreaFront		=br.ReadInt32();
 			mAreaBack		=br.ReadInt32();
+
+			mPosition	=mOrigin;
+			UpdateTransforms();
+		}
+
+
+		internal void RotateX(float deltaDegrees)
+		{
+			mPitch	+=deltaDegrees;
+
+			UtilityLib.Mathery.WrapAngleDegrees(ref mPitch);
+
+			UpdateTransforms();
+		}
+
+
+		internal void RotateY(float deltaDegrees)
+		{
+			mYaw	+=deltaDegrees;
+
+			UtilityLib.Mathery.WrapAngleDegrees(ref mYaw);
+
+			UpdateTransforms();
+		}
+
+
+		internal void RotateZ(float deltaDegrees)
+		{
+			mRoll	+=deltaDegrees;
+
+			UtilityLib.Mathery.WrapAngleDegrees(ref mRoll);
+
+			UpdateTransforms();
+		}
+
+
+		internal void Move(Vector3 delta)
+		{
+			mPosition	+=delta;
+
+			UpdateTransforms();
+		}
+
+
+		internal void UpdateTransforms()
+		{
+			mTransform	=Matrix.CreateRotationZ(MathHelper.ToRadians(mRoll)) *
+				Matrix.CreateRotationX(MathHelper.ToRadians(mPitch)) *
+				Matrix.CreateRotationY(MathHelper.ToRadians(mYaw)) *
+				Matrix.CreateTranslation(mPosition);
+
+			mInvertedTransform	=Matrix.Invert(mTransform);
 		}
 	}
 }

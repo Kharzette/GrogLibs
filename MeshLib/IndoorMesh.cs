@@ -61,6 +61,7 @@ namespace MeshLib
 		//delegates
 		#region Delegates
 		public delegate bool IsMaterialVisible(Vector3 eyePos, int matIdx);
+		public delegate Matrix GetModelMatrix(int modelIndex);
 
 		//tool side delegates for building the indoor mesh
 		//from raw parts
@@ -229,7 +230,7 @@ namespace MeshLib
 			UtilityLib.GameCamera gameCam,
 			Vector3 position,
 			IsMaterialVisible bMatVis,
-			Dictionary<int, Matrix> modelMats)
+			GetModelMatrix getModMatrix)
 		{
 			//draw mirrored world if need be
 			List<Matrix>	mirrorMats;
@@ -245,16 +246,16 @@ namespace MeshLib
 				gd.Clear(Color.CornflowerBlue);
 
 				//render world
-				DrawMaterialsDC(gd, position, modelMats, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, modelMats, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, modelMats, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, modelMats, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, modelMats, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 				
 				//alphas
-				DrawMaterialsDC(gd, position, modelMats, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, modelMats, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, modelMats, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
 				mAlphaPool.DrawAll(gd, mMatLib, mirrorCenters[i]);
 			}
 
@@ -269,20 +270,20 @@ namespace MeshLib
 
 			gd.Clear(Color.CornflowerBlue);
 
-			DrawMaterialsDC(gd, position, modelMats, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, modelMats, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, modelMats, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, modelMats, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, modelMats, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 
 			//alphas
-			DrawMaterialsDC(gd, position, modelMats, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, modelMats, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, modelMats, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
+			DrawMaterialsDC(gd, position, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
 			if(scissors.Count > 0)
 			{
 				//draw mirror surface itself
-				DrawMaterialsDC(gd, position, modelMats, mMirrorVB, mMirrorIB, mMirrorDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, position, getModMatrix, mMirrorVB, mMirrorIB, mMirrorDrawCalls, bMatVis);
 			}
 
 			mAlphaPool.DrawAll(gd, mMatLib, position);
@@ -290,7 +291,7 @@ namespace MeshLib
 
 
 		//for opaques with models
-		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos, Dictionary<int, Matrix> modelMats,
+		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos, GetModelMatrix getModMatrix,
 			VertexBuffer vb, IndexBuffer ib, Dictionary<int, List<DrawCall>> dcs,
 			IsMaterialVisible bMatVis)
 		{
@@ -339,9 +340,9 @@ namespace MeshLib
 					mat.Value.ApplyRenderStates(g);
 
 					//set world mat from model transforms
-					if(modelMats != null && modelMats.ContainsKey(modCall.Key))
+					if(getModMatrix != null)
 					{
-						fx.Parameters["mWorld"].SetValue(modelMats[modCall.Key]);
+						fx.Parameters["mWorld"].SetValue(getModMatrix(modCall.Key));
 					}
 
 					fx.CurrentTechnique.Passes[0].Apply();
@@ -355,7 +356,7 @@ namespace MeshLib
 
 
 		//this one is for alphas with models
-		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos, Dictionary<int, Matrix> modelMats,
+		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos, GetModelMatrix getModMatrix,
 			VertexBuffer vb, IndexBuffer ib, Dictionary<int, List<List<DrawCall>>> dcs,
 			IsMaterialVisible bMatVis)
 		{
@@ -402,6 +403,8 @@ namespace MeshLib
 						}
 					}
 
+					Matrix	modMat	=getModMatrix(modCall.Key);
+
 					foreach(DrawCall dc in modCall.Value[idx])
 					{
 						if(dc.mPrimCount <= 0)
@@ -409,7 +412,7 @@ namespace MeshLib
 							continue;
 						}
 						mAlphaPool.StoreDraw(dc.mSortPoint, mat.Value,
-							vb, ib, modelMats[modCall.Key], 0, dc.mMinVertIndex, dc.mNumVerts,
+							vb, ib, modMat, 0, dc.mMinVertIndex, dc.mNumVerts,
 							dc.mStartIndex, dc.mPrimCount);
 					}
 					idx++;
