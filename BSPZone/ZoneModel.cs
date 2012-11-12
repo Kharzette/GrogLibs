@@ -76,6 +76,14 @@ namespace BSPZone
 		}
 
 
+		internal void Move(Vector3 delta)
+		{
+			mPosition	+=delta;
+
+			UpdateTransforms(out mTransform, out mInvertedTransform);
+		}
+
+
 		internal void RotateX(float deltaDegrees)
 		{
 			mPitch	+=deltaDegrees;
@@ -96,18 +104,13 @@ namespace BSPZone
 		}
 
 
-		internal void GetYRotatedMats(float deltaDegrees, out Matrix rot, out Matrix rotInv)
+		internal void RotateZ(float deltaDegrees)
 		{
-			float	yaw	=mYaw + deltaDegrees;
+			mRoll	+=deltaDegrees;
 
-			UtilityLib.Mathery.WrapAngleDegrees(ref yaw);
+			UtilityLib.Mathery.WrapAngleDegrees(ref mRoll);
 
-			rot	=Matrix.CreateRotationZ(MathHelper.ToRadians(mRoll)) *
-				Matrix.CreateRotationX(MathHelper.ToRadians(mPitch)) *
-				Matrix.CreateRotationY(MathHelper.ToRadians(yaw)) *
-				Matrix.CreateTranslation(mPosition);
-
-			rotInv	=Matrix.Invert(rot);
+			UpdateTransforms(out mTransform, out mInvertedTransform);
 		}
 
 
@@ -125,21 +128,31 @@ namespace BSPZone
 		}
 
 
-		internal void RotateZ(float deltaDegrees)
+		internal void GetYRotatedMats(float deltaDegrees, out Matrix rot, out Matrix rotInv)
 		{
-			mRoll	+=deltaDegrees;
+			float	oldYaw	=mYaw;
 
-			UtilityLib.Mathery.WrapAngleDegrees(ref mRoll);
+			float	yaw	=mYaw + deltaDegrees;
 
-			UpdateTransforms(out mTransform, out mInvertedTransform);
+			UtilityLib.Mathery.WrapAngleDegrees(ref yaw);
+
+			mYaw	=yaw;
+			UpdateTransforms(out rot, out rotInv);
+			mYaw	=oldYaw;
 		}
 
 
-		internal void Move(Vector3 delta)
+		internal void GetZRotatedMats(float deltaDegrees, out Matrix rot, out Matrix rotInv)
 		{
-			mPosition	+=delta;
+			float	oldRoll	=mRoll;
 
-			UpdateTransforms(out mTransform, out mInvertedTransform);
+			float	roll	=mRoll + deltaDegrees;
+
+			UtilityLib.Mathery.WrapAngleDegrees(ref roll);
+
+			mRoll	=roll;
+			UpdateTransforms(out rot, out rotInv);
+			mRoll	=oldRoll;
 		}
 
 
@@ -150,7 +163,7 @@ namespace BSPZone
 				Matrix.CreateRotationY(MathHelper.ToRadians(mYaw)) *
 				Matrix.CreateTranslation(mPosition);
 
-			inv	=Matrix.Invert(mTransform);
+			inv	=Matrix.Invert(trans);
 		}
 	}
 }

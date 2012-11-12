@@ -294,6 +294,11 @@ namespace BSPZone
 			//push the starting point back a bit along the frame of rev vector
 			Vector3	dirVec	=newCenter - mPushableWorldCenter;
 
+			if(dirVec.LengthSquared() < 0.1f)
+			{
+				return;
+			}
+
 			dirVec.Normalize();
 			dirVec	*=(mPushable.Max.X * 0.5f);	//to adjust for corner expansion / contraction
 
@@ -311,9 +316,9 @@ namespace BSPZone
 
 		public void RotateModelX(int modelIndex, float degrees)
 		{
-			if(mZoneModels.Length > modelIndex)
+			if(mZoneModels.Length <= modelIndex)
 			{
-				mZoneModels[modelIndex].RotateX(degrees);
+				return;
 			}
 
 			ZoneModel	zm	=mZoneModels[modelIndex];
@@ -340,61 +345,38 @@ namespace BSPZone
 
 			ZoneModel	zm	=mZoneModels[modelIndex];
 
-			Matrix	oldMatInv	=zm.mInvertedTransform;
-			Matrix	oldMat		=zm.mTransform;
+			Matrix	oldMat	=mZoneModels[modelIndex].mTransform;
 			Matrix	newMat, newMatInv;
 
 			//note the negative
-			mZoneModels[modelIndex].GetYRotatedMats(-degrees, out newMat, out newMatInv);
-
-			BoundingBox	newBox	=mPushable;
-
-			newBox.Min	+=mPushableWorldCenter;
-			newBox.Max	+=mPushableWorldCenter;
-
-			//new box uses the new transform
-			newBox.GetCorners(mTestBoxCorners);
-
-			//transform into new rotated model space
-			Vector3.Transform(mTestBoxCorners, ref newMatInv, mTestTransBoxCorners);
-
-			//transform back to world space vs old matrix
-			Vector3.Transform(mTestTransBoxCorners, ref oldMat, mTestBoxCorners);
-
-			//bound
-			newBox	=BoundingBox.CreateFromPoints(mTestBoxCorners);
-
-			Vector3	newCenter	=newBox.Min + (newBox.Max - newBox.Min) * 0.5f;
-
-			Vector3	pushedPos		=Vector3.Zero;
-
-			//push the starting point back a bit along the frame of rev vector
-			Vector3	dirVec	=newCenter - mPushableWorldCenter;
-
-			dirVec.Normalize();
-			dirVec	*=10.0f;
-
-			Vector3	targPos	=newCenter + dirVec;
+			zm.GetYRotatedMats(-degrees, out newMat, out newMatInv);
 
 			//do the actual rotation
 			zm.RotateY(degrees);
 
-			//collide vs the rotated model with new -> old ray
-			BipedModelPush(mPushable, targPos, mPushableWorldCenter, modelIndex, ref pushedPos);
-
-			if(pushedPos != mPushableWorldCenter)
-			{
-				UtilityLib.Misc.SafeInvoke(ePushObject, new Nullable<Vector3>(pushedPos - mPushableWorldCenter));
-			}
+			TransformAndCollideModel(modelIndex, oldMat, newMatInv);
 		}
 
 
 		public void RotateModelZ(int modelIndex, float degrees)
 		{
-			if(mZoneModels.Length > modelIndex)
+			if(mZoneModels.Length <= modelIndex)
 			{
-				mZoneModels[modelIndex].RotateZ(degrees);
+				return;
 			}
+
+			ZoneModel	zm	=mZoneModels[modelIndex];
+
+			Matrix	oldMat	=mZoneModels[modelIndex].mTransform;
+			Matrix	newMat, newMatInv;
+
+			//note the negative
+			zm.GetZRotatedMats(-degrees, out newMat, out newMatInv);
+
+			//do the actual rotation
+			zm.RotateZ(degrees);
+
+			TransformAndCollideModel(modelIndex, oldMat, newMatInv);
 		}
 
 
