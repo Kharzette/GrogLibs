@@ -53,7 +53,9 @@ namespace BSPZone
 		byte		[]mMaterialVisData;
 
 		//gameplay stuff
-		List<ZoneTrigger>		mTriggers			=new List<ZoneTrigger>();
+		List<ZoneTrigger>	mTriggers	=new List<ZoneTrigger>();
+		BoundingBox			mPushable;
+		Vector3				mPushableWorldCenter;
 
 
 		int	mLightMapGridSize;
@@ -62,6 +64,7 @@ namespace BSPZone
 
 		public event EventHandler	eTriggerHit;
 		public event EventHandler	eTriggerOutOfRange;
+		public event EventHandler	ePushObject;
 
 		const float	GroundAngle				=0.8f;	//how sloped can you be to be considered ground
 		const float	RampAngle				=0.7f;	//how steep can we climb?
@@ -277,20 +280,111 @@ namespace BSPZone
 		}
 
 
+		void TransformAndCollideModel(int modelIndex,
+			Matrix oldTrans, Matrix newInv)
+		{
+			//transform into new rotated model space
+			Vector3	newCenter	=Vector3.Transform(mPushableWorldCenter, newInv);
+
+			//transform back to world space vs old matrix
+			newCenter	=Vector3.Transform(newCenter, oldTrans);
+
+			Vector3	pushedPos		=Vector3.Zero;
+
+			//push the starting point back a bit along the frame of rev vector
+			Vector3	dirVec	=newCenter - mPushableWorldCenter;
+
+			dirVec.Normalize();
+			dirVec	*=(mPushable.Max.X * 0.5f);	//to adjust for corner expansion / contraction
+
+			Vector3	targPos	=newCenter + dirVec;
+
+			//collide vs the rotated model with new -> old ray
+			BipedModelPush(mPushable, targPos, mPushableWorldCenter, modelIndex, ref pushedPos);
+
+			if(pushedPos != mPushableWorldCenter)
+			{
+				UtilityLib.Misc.SafeInvoke(ePushObject, new Nullable<Vector3>(pushedPos - mPushableWorldCenter));
+			}
+		}
+
+
 		public void RotateModelX(int modelIndex, float degrees)
 		{
 			if(mZoneModels.Length > modelIndex)
 			{
 				mZoneModels[modelIndex].RotateX(degrees);
 			}
+
+			ZoneModel	zm	=mZoneModels[modelIndex];
+
+			Matrix	oldMat	=mZoneModels[modelIndex].mTransform;
+			Matrix	newMat, newMatInv;
+
+			//note the negative
+			zm.GetXRotatedMats(-degrees, out newMat, out newMatInv);
+
+			//do the actual rotation
+			zm.RotateX(degrees);
+
+			TransformAndCollideModel(modelIndex, oldMat, newMatInv);
 		}
 
 
 		public void RotateModelY(int modelIndex, float degrees)
 		{
-			if(mZoneModels.Length > modelIndex)
+			if(mZoneModels.Length <= modelIndex)
 			{
-				mZoneModels[modelIndex].RotateY(degrees);
+				return;
+			}
+
+			ZoneModel	zm	=mZoneModels[modelIndex];
+
+			Matrix	oldMatInv	=zm.mInvertedTransform;
+			Matrix	oldMat		=zm.mTransform;
+			Matrix	newMat, newMatInv;
+
+			//note the negative
+			mZoneModels[modelIndex].GetYRotatedMats(-degrees, out newMat, out newMatInv);
+
+			BoundingBox	newBox	=mPushable;
+
+			newBox.Min	+=mPushableWorldCenter;
+			newBox.Max	+=mPushableWorldCenter;
+
+			//new box uses the new transform
+			newBox.GetCorners(mTestBoxCorners);
+
+			//transform into new rotated model space
+			Vector3.Transform(mTestBoxCorners, ref newMatInv, mTestTransBoxCorners);
+
+			//transform back to world space vs old matrix
+			Vector3.Transform(mTestTransBoxCorners, ref oldMat, mTestBoxCorners);
+
+			//bound
+			newBox	=BoundingBox.CreateFromPoints(mTestBoxCorners);
+
+			Vector3	newCenter	=newBox.Min + (newBox.Max - newBox.Min) * 0.5f;
+
+			Vector3	pushedPos		=Vector3.Zero;
+
+			//push the starting point back a bit along the frame of rev vector
+			Vector3	dirVec	=newCenter - mPushableWorldCenter;
+
+			dirVec.Normalize();
+			dirVec	*=10.0f;
+
+			Vector3	targPos	=newCenter + dirVec;
+
+			//do the actual rotation
+			zm.RotateY(degrees);
+
+			//collide vs the rotated model with new -> old ray
+			BipedModelPush(mPushable, targPos, mPushableWorldCenter, modelIndex, ref pushedPos);
+
+			if(pushedPos != mPushableWorldCenter)
+			{
+				UtilityLib.Misc.SafeInvoke(ePushObject, new Nullable<Vector3>(pushedPos - mPushableWorldCenter));
 			}
 		}
 
@@ -499,6 +593,13 @@ namespace BSPZone
 
 
 		#region Ray Casts and Movement
+		public void SetPushable(BoundingBox box, Vector3 center)
+		{
+			mPushable				=box;
+			mPushableWorldCenter	=center;
+		}
+
+
 		public bool IsSphereInSolid(Vector3 pnt, float dist)
 		{
 			bool	bHitLeaf	=false;
@@ -706,6 +807,94 @@ namespace BSPZone
 		}
 
 
+		//returns true if on ground
+		//this one assumes 2 legs, so navigates stairs
+		//Collides only against modelIndex
+		//TODO: This gets a bit strange on gentle slopes
+		public void BipedModelPush(BoundingBox box, Vector3 start,
+			Vector3 end, int modelIndex, ref Vector3 finalPos)
+		{
+			//first check if we are moving at all
+			Vector3	moveVec	=end - start;
+			float	delt	=moveVec.LengthSquared();
+			if(delt < UtilityLib.Mathery.ANGLE_EPSILON)
+			{
+				//didn't move enough to bother
+				finalPos	=start;
+			}
+
+			//try the standard box move
+			MoveBoxModelPush(box, start, end, modelIndex, ref finalPos);
+		}
+
+
+		//positions should be in the middle base of the box
+		//returns true if on the ground
+		public void MoveBoxModelPush(BoundingBox box,
+			Vector3 start, Vector3 end, int modelIndex, ref Vector3 finalPos)
+		{
+			Vector3		impacto		=Vector3.Zero;
+			int			i			=0;
+
+			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
+
+			for(i=0;i < MaxMoveBoxIterations;i++)
+			{
+				ZonePlane	zp	=ZonePlane.Blank;
+				if(!Trace_WorldCollisionFakeOBBox(box, modelIndex, start, end, ref impacto, ref zp))
+				{
+					break;
+				}
+
+				if(zp.mNormal == Vector3.Zero)
+				{
+					break;	//in solid
+				}
+
+				//adjust plane to worldspace
+				zp	=ZonePlane.Transform(zp, mZoneModels[modelIndex].mTransform);
+
+				float	startDist	=zp.DistanceFast(start);
+				float	dist		=zp.DistanceFast(end);
+
+				if(startDist > 0f)
+				{
+					if(dist > 0f)
+					{
+						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
+					}
+					else
+					{
+						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
+					}
+				}
+				else
+				{
+					if(dist > 0f)
+					{
+						end	-=(zp.mNormal * (dist + UtilityLib.Mathery.VCompareEpsilon));
+					}
+					else
+					{
+						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
+					}
+				}
+				
+				if(!hitPlanes.Contains(zp))
+				{
+					hitPlanes.Add(zp);
+				}
+			}
+
+			finalPos	=end;
+			if(i == MaxMoveBoxIterations)
+			{
+				//can't solve!
+				finalPos	=start;
+			}
+		}
+
+
 		//positions should be in the middle base of the box
 		//returns true if on the ground
 		public bool MoveBox(BoundingBox box, Vector3 start,
@@ -752,7 +941,7 @@ namespace BSPZone
 					}
 					else
 					{
-						 end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
+						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
 					}
 				}
 				
@@ -999,15 +1188,41 @@ namespace BSPZone
 			BoundingBox	charBox	=UtilityLib.Misc.MakeBox(24.0f, 56.0f);
 //			BoundingBox	charBox	=UtilityLib.Misc.MakeBox(2.0f, 2.0f);
 
-			pos.Y	-=50.0f;	//pos is at eye height, lower to box base
+			pos.Y	-=22.0f;	//pos is at eye height, lower to box center
 
 			charBox.Min	+=pos;
 			charBox.Max	+=pos;
 
 			charBox.GetCorners(mTestBoxCorners);
 
+			BoundingBox	newBox	=charBox;
+
+			//haxery for visualizing rotational collision
+			//note the negative on the rotation
+			Matrix	fiveMat		=worldModel.mTransform;
+			Matrix	fiveRotMat	=fiveMat * Matrix.CreateRotationY(MathHelper.ToRadians(-10f));
+			Matrix	fiveInv		=worldModel.mInvertedTransform;
+			Matrix	fiveRotInv	=Matrix.Invert(fiveRotMat);
+
 			//transform into model space
-			Vector3.Transform(mTestBoxCorners, ref worldModel.mInvertedTransform, mTestTransBoxCorners);
+			Vector3.Transform(mTestBoxCorners, ref fiveInv, mTestTransBoxCorners);
+
+			//bound
+			BoundingBox	oldBox	=BoundingBox.CreateFromPoints(mTestTransBoxCorners);
+
+			//new box uses the new transform
+			newBox.GetCorners(mTestBoxCorners);
+
+			//transform into new rotated model space
+			Vector3.Transform(mTestBoxCorners, ref fiveRotInv, mTestTransBoxCorners);
+
+			//transform back to world space vs old matrix
+//			Vector3.Transform(mTestTransBoxCorners, ref fiveMat, mTestBoxCorners);
+
+			//bound
+			newBox	=BoundingBox.CreateFromPoints(mTestTransBoxCorners);
+
+			oldBox.GetCorners(mTestTransBoxCorners);
 
 			//cube corners
 			Vector3	upperTopLeft	=mTestTransBoxCorners[0];
@@ -1059,6 +1274,70 @@ namespace BSPZone
 
 			UInt32	idx2	=(UInt32)verts.Count - 24;
 			int		ofs2	=inds.Count;
+			for(int i=ofs2;i < 36 + ofs2;i+=6)
+			{
+				inds.Add(idx2 + 3);
+				inds.Add(idx2 + 2);
+				inds.Add(idx2 + 1);
+				inds.Add(idx2 + 3);
+				inds.Add(idx2 + 1);
+				inds.Add(idx2 + 0);
+
+				idx2	+=4;
+			}
+
+			newBox.GetCorners(mTestTransBoxCorners);
+
+			//cube corners
+			upperTopLeft	=mTestTransBoxCorners[0];
+			upperTopRight	=mTestTransBoxCorners[1];
+			upperBotLeft	=mTestTransBoxCorners[2];
+			upperBotRight	=mTestTransBoxCorners[3];
+			lowerTopLeft	=mTestTransBoxCorners[4];
+			lowerTopRight	=mTestTransBoxCorners[5];
+			lowerBotLeft	=mTestTransBoxCorners[6];
+			lowerBotRight	=mTestTransBoxCorners[7];
+
+			//add to verts
+			//cube sides
+			//top
+			verts.Add(upperTopLeft);
+			verts.Add(upperTopRight);
+			verts.Add(upperBotRight);
+			verts.Add(upperBotLeft);
+
+			//bottom (note reversal)
+			verts.Add(lowerBotLeft);
+			verts.Add(lowerBotRight);
+			verts.Add(lowerTopRight);
+			verts.Add(lowerTopLeft);
+
+			//top z side
+			verts.Add(lowerTopLeft);
+			verts.Add(lowerTopRight);
+			verts.Add(upperTopRight);
+			verts.Add(upperTopLeft);
+
+			//bottom z side
+			verts.Add(upperBotLeft);
+			verts.Add(upperBotRight);
+			verts.Add(lowerBotRight);
+			verts.Add(lowerBotLeft);
+
+			//x side
+			verts.Add(upperTopLeft);
+			verts.Add(upperBotLeft);
+			verts.Add(lowerBotLeft);
+			verts.Add(lowerTopLeft);
+
+			//-x side
+			verts.Add(lowerTopRight);
+			verts.Add(lowerBotRight);
+			verts.Add(upperBotRight);
+			verts.Add(upperTopRight);
+
+			idx2	=(UInt32)verts.Count - 24;
+			ofs2	=inds.Count;
 			for(int i=ofs2;i < 36 + ofs2;i+=6)
 			{
 				inds.Add(idx2 + 3);

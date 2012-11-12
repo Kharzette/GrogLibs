@@ -72,7 +72,7 @@ namespace BSPZone
 			mAreaBack		=br.ReadInt32();
 
 			mPosition	=mOrigin;
-			UpdateTransforms();
+			UpdateTransforms(out mTransform, out mInvertedTransform);
 		}
 
 
@@ -82,7 +82,7 @@ namespace BSPZone
 
 			UtilityLib.Mathery.WrapAngleDegrees(ref mPitch);
 
-			UpdateTransforms();
+			UpdateTransforms(out mTransform, out mInvertedTransform);
 		}
 
 
@@ -92,7 +92,36 @@ namespace BSPZone
 
 			UtilityLib.Mathery.WrapAngleDegrees(ref mYaw);
 
-			UpdateTransforms();
+			UpdateTransforms(out mTransform, out mInvertedTransform);
+		}
+
+
+		internal void GetYRotatedMats(float deltaDegrees, out Matrix rot, out Matrix rotInv)
+		{
+			float	yaw	=mYaw + deltaDegrees;
+
+			UtilityLib.Mathery.WrapAngleDegrees(ref yaw);
+
+			rot	=Matrix.CreateRotationZ(MathHelper.ToRadians(mRoll)) *
+				Matrix.CreateRotationX(MathHelper.ToRadians(mPitch)) *
+				Matrix.CreateRotationY(MathHelper.ToRadians(yaw)) *
+				Matrix.CreateTranslation(mPosition);
+
+			rotInv	=Matrix.Invert(rot);
+		}
+
+
+		internal void GetXRotatedMats(float deltaDegrees, out Matrix rot, out Matrix rotInv)
+		{
+			float	oldPitch	=mPitch;
+
+			float	pitch	=mPitch + deltaDegrees;
+
+			UtilityLib.Mathery.WrapAngleDegrees(ref pitch);
+
+			mPitch	=pitch;
+			UpdateTransforms(out rot, out rotInv);
+			mPitch	=oldPitch;
 		}
 
 
@@ -102,7 +131,7 @@ namespace BSPZone
 
 			UtilityLib.Mathery.WrapAngleDegrees(ref mRoll);
 
-			UpdateTransforms();
+			UpdateTransforms(out mTransform, out mInvertedTransform);
 		}
 
 
@@ -110,18 +139,18 @@ namespace BSPZone
 		{
 			mPosition	+=delta;
 
-			UpdateTransforms();
+			UpdateTransforms(out mTransform, out mInvertedTransform);
 		}
 
 
-		internal void UpdateTransforms()
+		internal void UpdateTransforms(out Matrix trans, out Matrix inv)
 		{
-			mTransform	=Matrix.CreateRotationZ(MathHelper.ToRadians(mRoll)) *
+			trans	=Matrix.CreateRotationZ(MathHelper.ToRadians(mRoll)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(mPitch)) *
 				Matrix.CreateRotationY(MathHelper.ToRadians(mYaw)) *
 				Matrix.CreateTranslation(mPosition);
 
-			mInvertedTransform	=Matrix.Invert(mTransform);
+			inv	=Matrix.Invert(mTransform);
 		}
 	}
 }
