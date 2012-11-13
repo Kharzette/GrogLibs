@@ -72,7 +72,7 @@ namespace BSPZone
 			mAreaBack		=br.ReadInt32();
 
 			mPosition	=mOrigin;
-			UpdateTransforms(out mTransform, out mInvertedTransform);
+			UpdateTransforms();
 		}
 
 
@@ -80,7 +80,7 @@ namespace BSPZone
 		{
 			mPosition	=newPos;
 
-			UpdateTransforms(out mTransform, out mInvertedTransform);
+			UpdateTransforms();
 		}
 
 
@@ -90,7 +90,7 @@ namespace BSPZone
 
 			UtilityLib.Mathery.WrapAngleDegrees(ref mPitch);
 
-			UpdateTransforms(out mTransform, out mInvertedTransform);
+			UpdateTransforms();
 		}
 
 
@@ -100,7 +100,7 @@ namespace BSPZone
 
 			UtilityLib.Mathery.WrapAngleDegrees(ref mYaw);
 
-			UpdateTransforms(out mTransform, out mInvertedTransform);
+			UpdateTransforms();
 		}
 
 
@@ -110,70 +110,18 @@ namespace BSPZone
 
 			UtilityLib.Mathery.WrapAngleDegrees(ref mRoll);
 
-			UpdateTransforms(out mTransform, out mInvertedTransform);
+			UpdateTransforms();
 		}
 
 
-		internal void GetMovedMats(Vector3 pos, out Matrix rot, out Matrix rotInv)
+		internal void UpdateTransforms()
 		{
-			Vector3	oldPos	=mPosition;
-
-			mPosition	=pos;
-			UpdateTransforms(out rot, out rotInv);
-			mPosition	=oldPos;
-		}
-
-
-		internal void GetXRotatedMats(float deltaDegrees, out Matrix rot, out Matrix rotInv)
-		{
-			float	oldPitch	=mPitch;
-
-			float	pitch	=mPitch + deltaDegrees;
-
-			UtilityLib.Mathery.WrapAngleDegrees(ref pitch);
-
-			mPitch	=pitch;
-			UpdateTransforms(out rot, out rotInv);
-			mPitch	=oldPitch;
-		}
-
-
-		internal void GetYRotatedMats(float deltaDegrees, out Matrix rot, out Matrix rotInv)
-		{
-			float	oldYaw	=mYaw;
-
-			float	yaw	=mYaw + deltaDegrees;
-
-			UtilityLib.Mathery.WrapAngleDegrees(ref yaw);
-
-			mYaw	=yaw;
-			UpdateTransforms(out rot, out rotInv);
-			mYaw	=oldYaw;
-		}
-
-
-		internal void GetZRotatedMats(float deltaDegrees, out Matrix rot, out Matrix rotInv)
-		{
-			float	oldRoll	=mRoll;
-
-			float	roll	=mRoll + deltaDegrees;
-
-			UtilityLib.Mathery.WrapAngleDegrees(ref roll);
-
-			mRoll	=roll;
-			UpdateTransforms(out rot, out rotInv);
-			mRoll	=oldRoll;
-		}
-
-
-		internal void UpdateTransforms(out Matrix trans, out Matrix inv)
-		{
-			trans	=Matrix.CreateRotationZ(MathHelper.ToRadians(mRoll)) *
+			mTransform	=Matrix.CreateRotationZ(MathHelper.ToRadians(mRoll)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(mPitch)) *
 				Matrix.CreateRotationY(MathHelper.ToRadians(mYaw)) *
 				Matrix.CreateTranslation(mPosition);
 
-			inv	=Matrix.Invert(trans);
+			mInvertedTransform	=Matrix.Invert(mTransform);
 		}
 	}
 }
