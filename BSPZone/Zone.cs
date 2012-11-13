@@ -280,8 +280,7 @@ namespace BSPZone
 		}
 
 
-		void TransformAndCollideModel(int modelIndex,
-			Matrix newTrans, Matrix oldInv)
+		void CollideModel(int modelIndex, Matrix newTrans, Matrix oldInv)
 		{
 			//transform into new rotated model space
 			Vector3	newCenter	=Vector3.Transform(mPushableWorldCenter, oldInv);
@@ -294,7 +293,7 @@ namespace BSPZone
 			//push the starting point back a bit along the frame of rev vector
 			Vector3	dirVec	=newCenter - mPushableWorldCenter;
 
-			if(dirVec.LengthSquared() < 0.1f)
+			if(dirVec.LengthSquared() == 0f)
 			{
 				return;
 			}
@@ -331,7 +330,7 @@ namespace BSPZone
 
 			Matrix	newMat		=mZoneModels[modelIndex].mTransform;
 
-			TransformAndCollideModel(modelIndex, newMat, oldMatInv);
+			CollideModel(modelIndex, newMat, oldMatInv);
 		}
 
 
@@ -351,7 +350,7 @@ namespace BSPZone
 
 			Matrix	newMat		=mZoneModels[modelIndex].mTransform;
 
-			TransformAndCollideModel(modelIndex, newMat, oldMatInv);
+			CollideModel(modelIndex, newMat, oldMatInv);
 		}
 
 
@@ -371,7 +370,7 @@ namespace BSPZone
 
 			Matrix	newMat		=mZoneModels[modelIndex].mTransform;
 
-			TransformAndCollideModel(modelIndex, newMat, oldMatInv);
+			CollideModel(modelIndex, newMat, oldMatInv);
 		}
 
 
@@ -391,7 +390,7 @@ namespace BSPZone
 
 			Matrix	newMat		=mZoneModels[modelIndex].mTransform;
 
-			TransformAndCollideModel(modelIndex, newMat, oldMatInv);
+			CollideModel(modelIndex, newMat, oldMatInv);
 		}
 
 
