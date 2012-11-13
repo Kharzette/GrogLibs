@@ -76,9 +76,9 @@ namespace BSPZone
 		}
 
 
-		internal void Move(Vector3 delta)
+		internal void SetPosition(Vector3 newPos)
 		{
-			mPosition	+=delta;
+			mPosition	=newPos;
 
 			UpdateTransforms(out mTransform, out mInvertedTransform);
 		}
@@ -111,6 +111,16 @@ namespace BSPZone
 			UtilityLib.Mathery.WrapAngleDegrees(ref mRoll);
 
 			UpdateTransforms(out mTransform, out mInvertedTransform);
+		}
+
+
+		internal void GetMovedMats(Vector3 pos, out Matrix rot, out Matrix rotInv)
+		{
+			Vector3	oldPos	=mPosition;
+
+			mPosition	=pos;
+			UpdateTransforms(out rot, out rotInv);
+			mPosition	=oldPos;
 		}
 
 

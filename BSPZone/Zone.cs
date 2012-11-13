@@ -281,13 +281,13 @@ namespace BSPZone
 
 
 		void TransformAndCollideModel(int modelIndex,
-			Matrix oldTrans, Matrix newInv)
+			Matrix newTrans, Matrix oldInv)
 		{
 			//transform into new rotated model space
-			Vector3	newCenter	=Vector3.Transform(mPushableWorldCenter, newInv);
+			Vector3	newCenter	=Vector3.Transform(mPushableWorldCenter, oldInv);
 
 			//transform back to world space vs old matrix
-			newCenter	=Vector3.Transform(newCenter, oldTrans);
+			newCenter	=Vector3.Transform(newCenter, newTrans);
 
 			Vector3	pushedPos		=Vector3.Zero;
 
@@ -314,6 +314,31 @@ namespace BSPZone
 		}
 
 
+		//this is an actual move, not a delta
+		public void MoveModelTo(int modelIndex, Vector3 pos)
+		{
+			if(mZoneModels.Length <= modelIndex)
+			{
+				return;
+			}
+
+			ZoneModel	zm	=mZoneModels[modelIndex];
+
+			Vector3	delta	=zm.mPosition - pos;
+
+			Matrix	oldMat		=mZoneModels[modelIndex].mTransform;
+			Matrix	oldMatInv	=mZoneModels[modelIndex].mInvertedTransform;
+			Matrix	newMat, newMatInv;
+
+			zm.GetMovedMats(pos - delta, out newMat, out newMatInv);
+
+			//do the actual move
+			zm.SetPosition(pos);
+
+			TransformAndCollideModel(modelIndex, newMat, oldMatInv);
+		}
+
+
 		public void RotateModelX(int modelIndex, float degrees)
 		{
 			if(mZoneModels.Length <= modelIndex)
@@ -323,7 +348,8 @@ namespace BSPZone
 
 			ZoneModel	zm	=mZoneModels[modelIndex];
 
-			Matrix	oldMat	=mZoneModels[modelIndex].mTransform;
+			Matrix	oldMat		=mZoneModels[modelIndex].mTransform;
+			Matrix	oldMatInv	=mZoneModels[modelIndex].mInvertedTransform;
 			Matrix	newMat, newMatInv;
 
 			//note the negative
@@ -332,7 +358,7 @@ namespace BSPZone
 			//do the actual rotation
 			zm.RotateX(degrees);
 
-			TransformAndCollideModel(modelIndex, oldMat, newMatInv);
+			TransformAndCollideModel(modelIndex, newMat, oldMatInv);
 		}
 
 
@@ -345,16 +371,17 @@ namespace BSPZone
 
 			ZoneModel	zm	=mZoneModels[modelIndex];
 
-			Matrix	oldMat	=mZoneModels[modelIndex].mTransform;
+			Matrix	oldMat		=mZoneModels[modelIndex].mTransform;
+			Matrix	oldMatInv	=mZoneModels[modelIndex].mInvertedTransform;
 			Matrix	newMat, newMatInv;
 
 			//note the negative
-			zm.GetYRotatedMats(-degrees, out newMat, out newMatInv);
+			zm.GetYRotatedMats(degrees, out newMat, out newMatInv);
 
 			//do the actual rotation
 			zm.RotateY(degrees);
 
-			TransformAndCollideModel(modelIndex, oldMat, newMatInv);
+			TransformAndCollideModel(modelIndex, newMat, oldMatInv);
 		}
 
 
@@ -367,7 +394,8 @@ namespace BSPZone
 
 			ZoneModel	zm	=mZoneModels[modelIndex];
 
-			Matrix	oldMat	=mZoneModels[modelIndex].mTransform;
+			Matrix	oldMat		=mZoneModels[modelIndex].mTransform;
+			Matrix	oldMatInv	=mZoneModels[modelIndex].mInvertedTransform;
 			Matrix	newMat, newMatInv;
 
 			//note the negative
@@ -376,7 +404,7 @@ namespace BSPZone
 			//do the actual rotation
 			zm.RotateZ(degrees);
 
-			TransformAndCollideModel(modelIndex, oldMat, newMatInv);
+			TransformAndCollideModel(modelIndex, newMat, oldMatInv);
 		}
 
 
