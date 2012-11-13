@@ -56,7 +56,7 @@ namespace BSPZone
 		List<ZoneTrigger>	mTriggers	=new List<ZoneTrigger>();
 		BoundingBox			mPushable;
 		Vector3				mPushableWorldCenter;
-
+		int					mPushableModelOn;
 
 		int	mLightMapGridSize;
 		int	mNumVisLeafBytes;
@@ -308,7 +308,7 @@ namespace BSPZone
 
 			if(pushedPos != mPushableWorldCenter)
 			{
-				UtilityLib.Misc.SafeInvoke(ePushObject, new Nullable<Vector3>(pushedPos - mPushableWorldCenter));
+				UtilityLib.Misc.SafeInvoke(ePushObject, new Nullable<Vector3>(pushedPos - mPushableWorldCenter));				
 			}
 		}
 
@@ -323,12 +323,19 @@ namespace BSPZone
 
 			ZoneModel	zm	=mZoneModels[modelIndex];
 
-			Matrix	oldMatInv	=mZoneModels[modelIndex].mInvertedTransform;
+			Matrix	oldMatInv	=zm.mInvertedTransform;
+			Vector3	oldPos		=zm.mPosition;
 
 			//do the actual move
 			zm.SetPosition(pos);
 
-			Matrix	newMat		=mZoneModels[modelIndex].mTransform;
+			//if player is riding on this model, move them too
+			if(mPushableModelOn == modelIndex)
+			{
+				UtilityLib.Misc.SafeInvoke(ePushObject, new Nullable<Vector3>(pos - oldPos));
+			}
+
+			Matrix	newMat		=zm.mTransform;
 
 			CollideModel(modelIndex, newMat, oldMatInv);
 		}
@@ -343,12 +350,12 @@ namespace BSPZone
 
 			ZoneModel	zm	=mZoneModels[modelIndex];
 
-			Matrix	oldMatInv	=mZoneModels[modelIndex].mInvertedTransform;
+			Matrix	oldMatInv	=zm.mInvertedTransform;
 
 			//do the actual rotation
 			zm.RotateX(degrees);
 
-			Matrix	newMat		=mZoneModels[modelIndex].mTransform;
+			Matrix	newMat		=zm.mTransform;
 
 			CollideModel(modelIndex, newMat, oldMatInv);
 		}
@@ -363,12 +370,12 @@ namespace BSPZone
 
 			ZoneModel	zm	=mZoneModels[modelIndex];
 
-			Matrix	oldMatInv	=mZoneModels[modelIndex].mInvertedTransform;
+			Matrix	oldMatInv	=zm.mInvertedTransform;
 
 			//do the actual rotation
 			zm.RotateY(degrees);
 
-			Matrix	newMat		=mZoneModels[modelIndex].mTransform;
+			Matrix	newMat		=zm.mTransform;
 
 			CollideModel(modelIndex, newMat, oldMatInv);
 		}
@@ -383,12 +390,12 @@ namespace BSPZone
 
 			ZoneModel	zm	=mZoneModels[modelIndex];
 
-			Matrix	oldMatInv	=mZoneModels[modelIndex].mInvertedTransform;
+			Matrix	oldMatInv	=zm.mInvertedTransform;
 
 			//do the actual rotation
 			zm.RotateZ(degrees);
 
-			Matrix	newMat		=mZoneModels[modelIndex].mTransform;
+			Matrix	newMat		=zm.mTransform;
 
 			CollideModel(modelIndex, newMat, oldMatInv);
 		}
@@ -589,10 +596,11 @@ namespace BSPZone
 
 
 		#region Ray Casts and Movement
-		public void SetPushable(BoundingBox box, Vector3 center)
+		public void SetPushable(BoundingBox box, Vector3 center, int modelOn)
 		{
 			mPushable				=box;
 			mPushableWorldCenter	=center;
+			mPushableModelOn		=modelOn;
 		}
 
 
@@ -647,24 +655,32 @@ namespace BSPZone
 		}
 
 
-		bool FootCheck(BoundingBox box, Vector3 footPos, float dist)
+		bool FootCheck(BoundingBox box, Vector3 footPos, float dist, out int modelOn)
 		{
 			//see if the feet are still on the ground
 			Vector3		footCheck	=footPos - Vector3.UnitY * dist;
 			ZonePlane	footPlane	=ZonePlane.BlankX;
 			Vector3		impVec		=Vector3.Zero;
-			int			modelIndex	=0;
-//			if(Trace_WorldCollisionBBox(box, footPos, footCheck, ref impVec, ref footPlane))
-			if(Trace_All(box, footPos, footCheck, ref modelIndex, ref impVec, ref footPlane))
+
+			modelOn	=-1;
+
+			if(Trace_All(box, footPos, footCheck, ref modelOn, ref impVec, ref footPlane))
 			{
-				return	IsGround(footPlane);
+				if(IsGround(footPlane))
+				{
+					return	true;
+				}
+				else
+				{
+					modelOn	=-1;
+				}
 			}
 			return	false;
 		}
 
 
 		bool StairMove(BoundingBox box, Vector3 start, Vector3 end, Vector3 stairAxis,
-			bool bSlopeOk, float stepHeight, float originalLenSquared, ref Vector3 stepPos)
+			bool bSlopeOk, float stepHeight, float originalLenSquared, ref Vector3 stepPos, out int modelOn)
 		{
 			Vector3		impVec		=Vector3.Zero;
 			ZonePlane	impPlane	=ZonePlane.BlankX;
@@ -676,13 +692,14 @@ namespace BSPZone
 			if(Trace_All(box, start, start + stairAxis * stepHeight, ref modelHit, ref impVec, ref impPlane))
 			{
 				//hit noggin, just use previous point
+				modelOn	=-1;
 				return	false;
 			}
 
 			//movebox from start step height to end step height
 			stepPos	=Vector3.Zero;
 			bool	bGroundStep	=MoveBox(box, start + stairAxis * stepHeight,
-				end + stairAxis * stepHeight, ref stepPos);
+				end + stairAxis * stepHeight, out stepPos, out modelOn);
 
 			if(!bGroundStep)
 			{
@@ -729,7 +746,7 @@ namespace BSPZone
 		//this one assumes 2 legs, so navigates stairs
 		//TODO: This gets a bit strange on gentle slopes
 		public bool BipedMoveBox(BoundingBox box, Vector3 start, Vector3 end,
-			bool bPrevOnGround, ref Vector3 finalPos, ref bool bUsedStairs)
+			bool bPrevOnGround, out Vector3 finalPos, out bool bUsedStairs, ref int modelOn)
 		{
 			bUsedStairs	=false;
 
@@ -744,7 +761,7 @@ namespace BSPZone
 			}
 
 			//try the standard box move
-			bool	bGround	=MoveBox(box, start, end, ref finalPos);
+			bool	bGround	=MoveBox(box, start, end, out finalPos, out modelOn);
 
 			//see how far it went
 			moveVec	=finalPos - start;
@@ -778,7 +795,7 @@ namespace BSPZone
 			//this can get us over cracks where the
 			//returned plane is one of the extra axials
 			Vector3	stairPos	=Vector3.Zero;
-			if(StairMove(box, start, end, Vector3.UnitY, true, StepHeight * 0.25f, deltMove, ref stairPos))
+			if(StairMove(box, start, end, Vector3.UnitY, true, StepHeight * 0.25f, deltMove, ref stairPos, out modelOn))
 			{
 				finalPos	=stairPos;
 				bUsedStairs	=true;
@@ -786,7 +803,7 @@ namespace BSPZone
 			}
 
 			//try a full step height
-			if(StairMove(box, start, end, Vector3.UnitY, false, StepHeight, deltMove, ref stairPos))
+			if(StairMove(box, start, end, Vector3.UnitY, false, StepHeight, deltMove, ref stairPos, out modelOn))
 			{
 				finalPos	=stairPos;
 				bUsedStairs	=true;
@@ -894,7 +911,7 @@ namespace BSPZone
 		//positions should be in the middle base of the box
 		//returns true if on the ground
 		public bool MoveBox(BoundingBox box, Vector3 start,
-							Vector3 end, ref Vector3 finalPos)
+							Vector3 end, out Vector3 finalPos, out int modelOn)
 		{
 			Vector3		impacto		=Vector3.Zero;
 			int			i			=0;
@@ -952,13 +969,14 @@ namespace BSPZone
 			{
 				//can't solve!
 				finalPos	=start;
+				modelOn		=-1;
 
 				//player is probably stuck
 				//give them footing to help break free
 				return	true;
 			}
 
-			return	FootCheck(box, end, 1.0f);
+			return	FootCheck(box, end, 1.0f, out modelOn);
 		}
 
 
