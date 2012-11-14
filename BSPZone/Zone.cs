@@ -964,15 +964,6 @@ namespace BSPZone
 
 		public void BoxTriggerCheck(BoundingBox box, Vector3 start, Vector3 end, int msDelta)
 		{
-			//TODO: full traced solution, just check intersects for now
-			BoundingBox	boxStart	=box;
-			BoundingBox	boxEnd		=box;
-
-			boxStart.Min	+=start;
-			boxStart.Max	+=start;
-			boxEnd.Min		+=end;
-			boxEnd.Max		+=end;
-
 			//check for new entries
 			foreach(ZoneTrigger zt in mTriggers)
 			{
@@ -983,8 +974,7 @@ namespace BSPZone
 					continue;
 				}
 
-				if(zt.mTransformedBox.Intersects(boxStart) ||
-					zt.mTransformedBox.Intersects(boxEnd))
+				if(Trace_TriggerFakeOBBox(box, zt.mModelNum, start, end))
 				{
 					if(zt.mTimeSinceTriggered > zt.mWait)
 					{
@@ -1008,8 +998,7 @@ namespace BSPZone
 					continue;
 				}
 
-				if(zt.mTransformedBox.Intersects(boxStart) ||
-					zt.mTransformedBox.Intersects(boxEnd))
+				if(Trace_TriggerFakeOBBox(box, zt.mModelNum, start, end))
 				{
 					continue;
 				}

@@ -170,6 +170,17 @@ namespace BSPCore
 			bw.Close();
 			file.Close();
 
+			//save entities, lightswitch stuff can modify
+			string	entName	=UtilityLib.FileUtil.StripExtension(lp.mFileName);
+			entName			+=".EntData";
+
+			file	=new FileStream(entName, FileMode.Create, FileAccess.Write);
+			bw		=new BinaryWriter(file);
+			SaveGFXEntData(bw);
+
+			bw.Close();
+			file.Close();
+
 			CleanupLight();
 
 			DateTime	done	=DateTime.Now;

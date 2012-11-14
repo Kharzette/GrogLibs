@@ -313,7 +313,7 @@ namespace BSPZone
 			Vector3 start, Vector3 end, ref Vector3 I, ref ZonePlane P)
 		{
 			RayTrace	trace		=new RayTrace();
-			ZoneModel	worldModel	=mZoneModels[modelIndex];
+			ZoneModel	testModel	=mZoneModels[modelIndex];
 
 #if DEBUG
 			System.Diagnostics.Debug.Assert(Mathery.IsBoundingBoxCentered(boxBounds));
@@ -323,11 +323,11 @@ namespace BSPZone
 			boxBounds.GetCorners(mTestBoxCorners);
 
 			//transform into model space
-			Vector3.Transform(mTestBoxCorners, ref worldModel.mInvertedTransform, mTestTransBoxCorners);
+			Vector3.Transform(mTestBoxCorners, ref testModel.mInvertedTransform, mTestTransBoxCorners);
 
 			//transform ray
-			Vector3	modelStart	=Vector3.Transform(start, worldModel.mInvertedTransform);
-			Vector3	modelEnd	=Vector3.Transform(end, worldModel.mInvertedTransform);
+			Vector3	modelStart	=Vector3.Transform(start, testModel.mInvertedTransform);
+			Vector3	modelEnd	=Vector3.Transform(end, testModel.mInvertedTransform);
 
 			//bound the modelSpace corners
 			trace.mRayBox	=BoundingBox.CreateFromPoints(mTestTransBoxCorners);
@@ -339,16 +339,61 @@ namespace BSPZone
 			trace.mOriginalEnd		=modelEnd;
 
 			//test for basic box overlap
-			if(!trace.mMoveBox.Intersects(worldModel.mBounds))
+			if(!trace.mMoveBox.Intersects(testModel.mBounds))
 			{
 				return	false;
 			}
-			FindClosestLeafIntersection_r(trace, worldModel.mRootNode);
+			FindClosestLeafIntersection_r(trace, testModel.mRootNode);
 
 			if(trace.mbLeafHit)
 			{
 				I	=trace.mIntersection;
 				P	=trace.mBestPlane;
+				return	true;
+			}
+			return	false;
+		}
+
+
+		//warning, this only works with centered bounding boxes!
+		public bool Trace_TriggerFakeOBBox(BoundingBox boxBounds,
+			int modelIndex, Vector3 start, Vector3 end)
+		{
+			RayTrace	trace		=new RayTrace();
+			ZoneModel	testModel	=mZoneModels[modelIndex];
+
+#if DEBUG
+			System.Diagnostics.Debug.Assert(Mathery.IsBoundingBoxCentered(boxBounds));
+#endif
+
+			//get box bound corners
+			boxBounds.GetCorners(mTestBoxCorners);
+
+			//transform into model space
+			Vector3.Transform(mTestBoxCorners, ref testModel.mInvertedTransform, mTestTransBoxCorners);
+
+			//transform ray
+			Vector3	modelStart	=Vector3.Transform(start, testModel.mInvertedTransform);
+			Vector3	modelEnd	=Vector3.Transform(end, testModel.mInvertedTransform);
+
+			//bound the modelSpace corners
+			trace.mRayBox	=BoundingBox.CreateFromPoints(mTestTransBoxCorners);
+
+			Mathery.CenterBoundingBoxAtOrigin(ref trace.mRayBox);
+
+			trace.mMoveBox			=Trace_GetMoveBox(trace.mRayBox, modelStart, modelEnd);
+			trace.mOriginalStart	=modelStart;
+			trace.mOriginalEnd		=modelEnd;
+
+			//test for basic box overlap
+			if(!trace.mMoveBox.Intersects(testModel.mBounds))
+			{
+				return	false;
+			}
+			TestTriggerIntersection_r(trace, testModel.mRootNode);
+
+			if(trace.mbLeafHit)
+			{
 				return	true;
 			}
 			return	false;
@@ -388,6 +433,37 @@ namespace BSPZone
 				return	true;
 			}
 			return	false;
+		}
+
+
+		void TestTriggerIntersection_r(RayTrace trace, Int32 node)
+		{
+			if(node < 0)
+			{
+				Int32	leaf		=-(node + 1);
+				UInt32	contents	=mZoneLeafs[leaf].mContents;
+
+				if((contents & BSPZone.Contents.BSP_CONTENTS_TRIGGER) == 0)
+				{
+					return;
+				}
+
+				trace.mbLeafHit	=true;
+				return;
+			}
+
+			UInt32	side	=Trace_BoxOnPlaneSide(trace.mMoveBox, mZonePlanes[mZoneNodes[node].mPlaneNum]);
+
+			//Go down the sides that the box lands in
+			if((side & ZonePlane.PSIDE_FRONT) != 0)
+			{
+				TestTriggerIntersection_r(trace, mZoneNodes[node].mFront);
+			}
+
+			if((side & ZonePlane.PSIDE_BACK) != 0)
+			{
+				TestTriggerIntersection_r(trace, mZoneNodes[node].mBack);
+			}
 		}
 
 
