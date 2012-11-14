@@ -761,7 +761,8 @@ namespace BSPZone
 			}
 
 			//try the standard box move
-			bool	bGround	=MoveBox(box, start, end, out finalPos, out modelOn);
+			int		firstModelOn;
+			bool	bGround	=MoveBox(box, start, end, out finalPos, out firstModelOn);
 
 			//see how far it went
 			moveVec	=finalPos - start;
@@ -771,6 +772,7 @@ namespace BSPZone
 			{
 				//3/4 the movement energy at least was expended
 				//good enough
+				modelOn	=firstModelOn;
 				return	bGround;
 			}
 
@@ -782,12 +784,14 @@ namespace BSPZone
 			if(vert > RampAngle || vert < -RampAngle)
 			{
 				//no need to try stairs if just falling or climbing
+				modelOn	=firstModelOn;
 				return	bGround;
 			}
 
 			//only attempt stair stepping if biped was previously on ground
 			if(!bPrevOnGround)
 			{
+				modelOn	=firstModelOn;
 				return	bGround;
 			}
 
@@ -809,6 +813,8 @@ namespace BSPZone
 				bUsedStairs	=true;
 				return		true;
 			}
+
+			modelOn	=firstModelOn;
 
 			if(bGround)
 			{
@@ -976,7 +982,7 @@ namespace BSPZone
 				return	true;
 			}
 
-			return	FootCheck(box, end, 1.0f, out modelOn);
+			return	FootCheck(box, end, 4.0f, out modelOn);
 		}
 
 
