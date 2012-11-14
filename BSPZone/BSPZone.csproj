@@ -89,6 +89,7 @@
   <ItemGroup>
     <Compile Include="Contents.cs" />
     <Compile Include="DebugFace.cs" />
+    <Compile Include="Mobile.cs" />
     <Compile Include="TriggerHelper.cs" />
     <Compile Include="ZoneLeafSide.cs" />
     <Compile Include="VisArea.cs" />

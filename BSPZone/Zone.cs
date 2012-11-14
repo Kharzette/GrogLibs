@@ -12,7 +12,7 @@ namespace BSPZone
 	internal class ZoneTrigger
 	{
 		internal ZoneEntity		mEntity;
-		internal BoundingBox	mBox, mTransformedBox;
+		internal BoundingBox	mBox;
 		internal Int32			mModelNum;
 		internal bool			mbTriggered;
 		internal bool			mbTriggerOnce;
@@ -941,21 +941,6 @@ namespace BSPZone
 			}
 
 			return	FootCheck(box, end, 4.0f, out modelOn);
-		}
-
-
-		//should be called either once a frame or whenever a trigger model moves
-		//normally they don't move so could call this once on load if so
-		public void UpdateTriggerPositions()
-		{
-			foreach(ZoneTrigger zt in mTriggers)
-			{
-				zt.mTransformedBox.Min	=Vector3.Transform(
-					zt.mBox.Min, mZoneModels[zt.mModelNum].mTransform);
-
-				zt.mTransformedBox.Max	=Vector3.Transform(
-					zt.mBox.Max, mZoneModels[zt.mModelNum].mTransform);
-			}
 		}
 
 
