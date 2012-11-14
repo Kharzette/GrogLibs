@@ -1742,7 +1742,7 @@ namespace BSPCore
 
 
 		public void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Dictionary<int, List<List<MeshLib.DrawCall>>> dcs,
+			out IndexBuffer ib, out Dictionary<int, List<MeshLib.DrawCall>> dcs,
 			out List<List<Vector3>> mirrorPolys, object pp)
 		{
 			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);

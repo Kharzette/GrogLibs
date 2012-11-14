@@ -40,7 +40,6 @@ namespace MeshLib
 		Dictionary<int, List<List<DrawCall>>>	mLMADrawCalls;
 		Dictionary<int, List<List<DrawCall>>>	mLMAAnimDrawCalls;
 		Dictionary<int, List<List<DrawCall>>>	mAlphaDrawCalls;
-		Dictionary<int, List<List<DrawCall>>>	mMirrorDrawCalls;
 
 		//drawcalls for non alphas (single per material)
 		Dictionary<int, List<DrawCall>>	mLMDrawCalls;
@@ -48,6 +47,7 @@ namespace MeshLib
 		Dictionary<int, List<DrawCall>>	mLMAnimDrawCalls;
 		Dictionary<int, List<DrawCall>>	mSkyDrawCalls;
 		Dictionary<int, List<DrawCall>>	mFBDrawCalls;
+		Dictionary<int, List<DrawCall>>	mMirrorDrawCalls;
 
 		//mirror polys for rendering through
 		List<List<Vector3>>	mMirrorPolys	=new List<List<Vector3>>();
@@ -100,7 +100,7 @@ namespace MeshLib
 			out IndexBuffer ib, out Dictionary<int, List<DrawCall>> dcs, object pp);
 
 		public delegate void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Dictionary<int, List<List<MeshLib.DrawCall>>> mdcalls,
+			out IndexBuffer ib, out Dictionary<int, List<MeshLib.DrawCall>> mdcalls,
 			out List<List<Vector3>> mirrorPolys, object pp);
 
 		public delegate void BuildSkyRenderData(GraphicsDevice g, out VertexBuffer vb,
@@ -755,11 +755,11 @@ namespace MeshLib
 			mLMAnimDrawCalls	=DrawCall.ReadDrawCallDict(br);
 			mSkyDrawCalls		=DrawCall.ReadDrawCallDict(br);
 			mFBDrawCalls		=DrawCall.ReadDrawCallDict(br);
+			mMirrorDrawCalls	=DrawCall.ReadDrawCallDict(br);
 
 			mLMADrawCalls		=DrawCall.ReadDrawCallAlphaDict(br);
 			mAlphaDrawCalls		=DrawCall.ReadDrawCallAlphaDict(br);
 			mLMAAnimDrawCalls	=DrawCall.ReadDrawCallAlphaDict(br);
-			mMirrorDrawCalls	=DrawCall.ReadDrawCallAlphaDict(br);
 			
 			int	mirrorCount	=br.ReadInt32();
 			for(int i=0;i < mirrorCount;i++)
@@ -833,12 +833,12 @@ namespace MeshLib
 			DrawCall.WriteDrawCallDict(bw, mLMAnimDrawCalls);
 			DrawCall.WriteDrawCallDict(bw, mSkyDrawCalls);
 			DrawCall.WriteDrawCallDict(bw, mFBDrawCalls);
+			DrawCall.WriteDrawCallDict(bw, mMirrorDrawCalls);
 
 			//alphas
 			DrawCall.WriteDrawCallAlphaDict(bw, mLMADrawCalls);
 			DrawCall.WriteDrawCallAlphaDict(bw, mAlphaDrawCalls);
 			DrawCall.WriteDrawCallAlphaDict(bw, mLMAAnimDrawCalls);
-			DrawCall.WriteDrawCallAlphaDict(bw, mMirrorDrawCalls);
 
 			//mirror polys
 			bw.Write(mMirrorPolys.Count);

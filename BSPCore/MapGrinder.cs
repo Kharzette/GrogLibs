@@ -121,11 +121,11 @@ namespace BSPCore
 		Dictionary<int, List<DrawCall>>	mLMAnimDraws	=new Dictionary<int, List<DrawCall>>();
 		Dictionary<int, List<DrawCall>>	mFBDraws		=new Dictionary<int, List<DrawCall>>();
 		Dictionary<int, List<DrawCall>>	mSkyDraws		=new Dictionary<int, List<DrawCall>>();
+		Dictionary<int, List<DrawCall>>	mMirrorDraws	=new Dictionary<int, List<DrawCall>>();
 
 		//alphas
 		Dictionary<int, List<List<DrawCall>>>	mLMADraws		=new Dictionary<int, List<List<DrawCall>>>();
 		Dictionary<int, List<List<DrawCall>>>	mAlphaDraws		=new Dictionary<int, List<List<DrawCall>>>();
-		Dictionary<int, List<List<DrawCall>>>	mMirrorDraws	=new Dictionary<int, List<List<DrawCall>>>();
 		Dictionary<int, List<List<DrawCall>>>	mLMAAnimDraws	=new Dictionary<int, List<List<DrawCall>>>();
 
 		//computed lightmap atlas
@@ -244,7 +244,7 @@ namespace BSPCore
 		}
 
 
-		internal void GetMirrorMaterialData(out Dictionary<int, List<List<DrawCall>>> draws, out List<List<Vector3>> polys)
+		internal void GetMirrorMaterialData(out Dictionary<int, List<DrawCall>> draws, out List<List<Vector3>> polys)
 		{
 			draws	=mMirrorDraws;
 			polys	=mMirrorPolys;
@@ -687,7 +687,7 @@ namespace BSPCore
 		internal bool BuildMirrorFaceData(Vector3 []verts, int[] indexes,	Vector3 []rgbVerts,
 			Vector3 []vnorms, object pobj, GFXModel []models)
 		{
-			return	BuildAlphaFaceData(verts, indexes, rgbVerts, vnorms, pobj, models, null,
+			return	BuildFaceData(verts, indexes, rgbVerts, vnorms, pobj, models, null,
 				MaterialCorrect.IsMirror,
 				MaterialFill.FillMirror,
 				FinishMirror);

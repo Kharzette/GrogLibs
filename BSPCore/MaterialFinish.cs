@@ -88,12 +88,11 @@ namespace BSPCore
 		}
 
 
-		void FinishMirror(int modelIndex,
-			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref int vertOfs)
+		void FinishMirror(int modelIndex, List<DrawDataChunk> matChunks, ref int vertOfs)
 		{
-			List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mMirrorIndexes, perPlaneChunks, ref vertOfs);
+			List<DrawCall>	modCalls	=ComputeIndexes(mMirrorIndexes, matChunks, ref vertOfs);
 
-			StuffVBArrays(perPlaneChunks, mMirrorVerts, mMirrorNormals,
+			StuffVBArrays(matChunks, mMirrorVerts, mMirrorNormals,
 				mMirrorTex0, mMirrorTex1, null, null, null,
 				mMirrorColors, null);
 
