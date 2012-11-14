@@ -688,7 +688,6 @@ namespace BSPZone
 
 			//first trace up from the start point
 			//to make sure there's head room
-//			if(Trace_WorldCollisionBBox(box, start, start + stairAxis * stepHeight, ref impVec, ref impPlane))
 			if(Trace_All(box, start, start + stairAxis * stepHeight, ref modelHit, ref impVec, ref impPlane))
 			{
 				//hit noggin, just use previous point
@@ -705,8 +704,6 @@ namespace BSPZone
 			{
 				//trace down by step height and make sure
 				//we land on a ground surface
-//				if(Trace_WorldCollisionBBox(box, stepPos, stepPos - Vector3.UnitY * stepHeight,
-//					ref impVec, ref impPlane))
 				if(Trace_All(box, stepPos, stepPos - Vector3.UnitY * stepHeight,
 					ref modelHit, ref impVec, ref impPlane))
 				{
