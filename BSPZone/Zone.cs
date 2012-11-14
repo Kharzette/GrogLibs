@@ -1,8 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Diagnostics;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using UtilityLib;
 
 
 namespace BSPZone
@@ -100,28 +102,28 @@ namespace BSPZone
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
-			UtilityLib.FileUtil.WriteArray(mZoneModels, bw);
-			UtilityLib.FileUtil.WriteArray(mZoneNodes, bw);
-			UtilityLib.FileUtil.WriteArray(mZoneLeafs, bw);
-			UtilityLib.FileUtil.WriteArray(mVisAreas, bw);
-			UtilityLib.FileUtil.WriteArray(mVisAreaPortals, bw);
+			FileUtil.WriteArray(mZoneModels, bw);
+			FileUtil.WriteArray(mZoneNodes, bw);
+			FileUtil.WriteArray(mZoneLeafs, bw);
+			FileUtil.WriteArray(mVisAreas, bw);
+			FileUtil.WriteArray(mVisAreaPortals, bw);
 			WritePlaneArray(bw);
-			UtilityLib.FileUtil.WriteArray(mZoneEntities, bw);
-			UtilityLib.FileUtil.WriteArray(mZoneLeafSides, bw);
+			FileUtil.WriteArray(mZoneEntities, bw);
+			FileUtil.WriteArray(mZoneLeafSides, bw);
 
 			bw.Write(bDebug);
 			if(bDebug)
 			{
-				UtilityLib.FileUtil.WriteArray(bw, mDebugLeafFaces);
-				UtilityLib.FileUtil.WriteArray(mDebugFaces, bw);
-				UtilityLib.FileUtil.WriteArray(bw, mDebugVerts);
-				UtilityLib.FileUtil.WriteArray(bw, mDebugIndexes);
+				FileUtil.WriteArray(bw, mDebugLeafFaces);
+				FileUtil.WriteArray(mDebugFaces, bw);
+				FileUtil.WriteArray(bw, mDebugVerts);
+				FileUtil.WriteArray(bw, mDebugIndexes);
 			}
 
 			if(mVisData != null && mVisData.Length > 0)
 			{
 				bw.Write(true);
-				UtilityLib.FileUtil.WriteArray(mVisData, bw);
+				FileUtil.WriteArray(mVisData, bw);
 			}
 			else
 			{
@@ -131,13 +133,13 @@ namespace BSPZone
 			if(mMaterialVisData != null && mMaterialVisData.Length > 0)
 			{
 				bw.Write(true);
-				UtilityLib.FileUtil.WriteArray(mMaterialVisData, bw);
+				FileUtil.WriteArray(mMaterialVisData, bw);
 			}
 			else
 			{
 				bw.Write(false);
 			}
-			UtilityLib.FileUtil.WriteArray(mVisClusters, bw);
+			FileUtil.WriteArray(mVisClusters, bw);
 			bw.Write(mLightMapGridSize);
 			bw.Write(mNumVisLeafBytes);
 			bw.Write(mNumVisMaterialBytes);
@@ -156,7 +158,7 @@ namespace BSPZone
 			}
 			else
 			{
-				file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
+				file	=FileUtil.OpenTitleFile(fileName);
 			}
 
 			if(file == null)
@@ -165,37 +167,37 @@ namespace BSPZone
 			}
 			BinaryReader	br	=new BinaryReader(file);
 
-			mZoneModels		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<ZoneModel>(count); }) as ZoneModel[];
-			mZoneNodes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<ZoneNode>(count); }) as ZoneNode[];
-			mZoneLeafs		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<ZoneLeaf>(count); }) as ZoneLeaf[];
-			mVisAreas		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<VisArea>(count); }) as VisArea[];
-			mVisAreaPortals	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<VisAreaPortal>(count); }) as VisAreaPortal[];
+			mZoneModels		=FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return FileUtil.InitArray<ZoneModel>(count); }) as ZoneModel[];
+			mZoneNodes		=FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return FileUtil.InitArray<ZoneNode>(count); }) as ZoneNode[];
+			mZoneLeafs		=FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return FileUtil.InitArray<ZoneLeaf>(count); }) as ZoneLeaf[];
+			mVisAreas		=FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return FileUtil.InitArray<VisArea>(count); }) as VisArea[];
+			mVisAreaPortals	=FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return FileUtil.InitArray<VisAreaPortal>(count); }) as VisAreaPortal[];
 			ReadPlaneArray(br);
-			mZoneEntities	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<ZoneEntity>(count); }) as ZoneEntity[];
-			mZoneLeafSides	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<ZoneLeafSide>(count); }) as ZoneLeafSide[];
+			mZoneEntities	=FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return FileUtil.InitArray<ZoneEntity>(count); }) as ZoneEntity[];
+			mZoneLeafSides	=FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return FileUtil.InitArray<ZoneLeafSide>(count); }) as ZoneLeafSide[];
 
 			bool	bDebug	=br.ReadBoolean();
 			if(bDebug)
 			{
-				mDebugLeafFaces	=UtilityLib.FileUtil.ReadIntArray(br);
-				mDebugFaces		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<DebugFace>(count); }) as DebugFace[];
-				mDebugVerts		=UtilityLib.FileUtil.ReadVecArray(br);
-				mDebugIndexes	=UtilityLib.FileUtil.ReadIntArray(br);
+				mDebugLeafFaces	=FileUtil.ReadIntArray(br);
+				mDebugFaces		=FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return FileUtil.InitArray<DebugFace>(count); }) as DebugFace[];
+				mDebugVerts		=FileUtil.ReadVecArray(br);
+				mDebugIndexes	=FileUtil.ReadIntArray(br);
 			}
 
-			mVisData			=UtilityLib.FileUtil.ReadByteArray(br);
-			mMaterialVisData	=UtilityLib.FileUtil.ReadByteArray(br);
+			mVisData			=FileUtil.ReadByteArray(br);
+			mMaterialVisData	=FileUtil.ReadByteArray(br);
 
-			mVisClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<VisCluster>(count); }) as VisCluster[];
+			mVisClusters	=FileUtil.ReadArray(br, delegate(Int32 count)
+							{ return FileUtil.InitArray<VisCluster>(count); }) as VisCluster[];
 
 			mLightMapGridSize		=br.ReadInt32();
 			mNumVisLeafBytes		=br.ReadInt32();
@@ -235,7 +237,7 @@ namespace BSPZone
 
 					if(ze.mData.ContainsKey("wait"))
 					{
-						if(UtilityLib.Mathery.TryParse(ze.mData["wait"], out zt.mWait))
+						if(Mathery.TryParse(ze.mData["wait"], out zt.mWait))
 						{
 							//bump to milliseconds
 							zt.mWait	*=1000;
@@ -267,7 +269,7 @@ namespace BSPZone
 				int	spawnFlags;
 				if(e.GetInt("spawnflags", out spawnFlags))
 				{
-					if(UtilityLib.Misc.bFlagSet(spawnFlags, 1))
+					if(Misc.bFlagSet(spawnFlags, 1))
 					{
 						continue;
 					}
@@ -308,7 +310,7 @@ namespace BSPZone
 
 			if(pushedPos != mPushableWorldCenter)
 			{
-				UtilityLib.Misc.SafeInvoke(ePushObject, new Nullable<Vector3>(pushedPos - mPushableWorldCenter));				
+				Misc.SafeInvoke(ePushObject, new Nullable<Vector3>(pushedPos - mPushableWorldCenter));				
 			}
 		}
 
@@ -332,7 +334,7 @@ namespace BSPZone
 			//if player is riding on this model, move them too
 			if(mPushableModelOn == modelIndex)
 			{
-				UtilityLib.Misc.SafeInvoke(ePushObject, new Nullable<Vector3>(pos - oldPos));
+				Misc.SafeInvoke(ePushObject, new Nullable<Vector3>(pos - oldPos));
 			}
 
 			Matrix	newMat		=zm.mTransform;
@@ -750,7 +752,7 @@ namespace BSPZone
 			//first check if we are moving at all
 			Vector3	moveVec	=end - start;
 			float	delt	=moveVec.LengthSquared();
-			if(delt < UtilityLib.Mathery.ANGLE_EPSILON)
+			if(delt < Mathery.ANGLE_EPSILON)
 			{
 				//didn't move enough to bother
 				finalPos	=start;
@@ -833,7 +835,7 @@ namespace BSPZone
 			//first check if we are moving at all
 			Vector3	moveVec	=end - start;
 			float	delt	=moveVec.LengthSquared();
-			if(delt < UtilityLib.Mathery.ANGLE_EPSILON)
+			if(delt < Mathery.ANGLE_EPSILON)
 			{
 				//didn't move enough to bother
 				finalPos	=start;
@@ -873,28 +875,9 @@ namespace BSPZone
 				float	startDist	=zp.DistanceFast(start);
 				float	dist		=zp.DistanceFast(end);
 
-				if(startDist > 0f)
-				{
-					if(dist > 0f)
-					{
-						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
-					}
-					else
-					{
-						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
-					}
-				}
-				else
-				{
-					if(dist > 0f)
-					{
-						end	-=(zp.mNormal * (dist + UtilityLib.Mathery.VCompareEpsilon));
-					}
-					else
-					{
-						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
-					}
-				}
+				Debug.Assert(startDist > 0f && dist < 0f);
+
+				end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
 				
 				if(!hitPlanes.Contains(zp))
 				{
@@ -938,28 +921,9 @@ namespace BSPZone
 				float	startDist	=zp.DistanceFast(start);
 				float	dist		=zp.DistanceFast(end);
 
-				if(startDist > 0f)
-				{
-					if(dist > 0f)
-					{
-						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
-					}
-					else
-					{
-						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
-					}
-				}
-				else
-				{
-					if(dist > 0f)
-					{
-						end	-=(zp.mNormal * (dist + UtilityLib.Mathery.VCompareEpsilon));
-					}
-					else
-					{
-						end	-=(zp.mNormal * (dist - UtilityLib.Mathery.VCompareEpsilon));
-					}
-				}
+				Debug.Assert(startDist > 0f && dist < 0f);
+
+				end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
 				
 				if(!hitPlanes.Contains(zp))
 				{
@@ -1026,7 +990,7 @@ namespace BSPZone
 					{
 						zt.mbTriggered			=true;
 						zt.mTimeSinceTriggered	=0;
-						UtilityLib.Misc.SafeInvoke(eTriggerHit, zt.mEntity);
+						Misc.SafeInvoke(eTriggerHit, zt.mEntity);
 					}
 				}
 			}
@@ -1052,7 +1016,7 @@ namespace BSPZone
 
 				zt.mbTriggered			=false;
 				zt.mTimeSinceTriggered	=0;
-				UtilityLib.Misc.SafeInvoke(eTriggerOutOfRange, zt.mEntity);
+				Misc.SafeInvoke(eTriggerOutOfRange, zt.mEntity);
 			}
 		}
 
@@ -1202,8 +1166,7 @@ namespace BSPZone
 			ZoneModel	worldModel	=mZoneModels[testModel];
 
 			//draw player collision box in model space
-			BoundingBox	charBox	=UtilityLib.Misc.MakeBox(24.0f, 56.0f);
-//			BoundingBox	charBox	=UtilityLib.Misc.MakeBox(2.0f, 2.0f);
+			BoundingBox	charBox	=Misc.MakeBox(24.0f, 56.0f);
 
 			pos.Y	-=22.0f;	//pos is at eye height, lower to box center
 
