@@ -23,7 +23,7 @@ namespace BSPCore
 		internal const Int32		DLight_Surface	=4;
 
 
-		//this does radiosity style lights by putting lots of little
+		//this does radiosity style surface lights by putting lots of little
 		//teeny lights along the surface in the surfaces color
 		static internal List<DirectLight> MakeSurfaceLights(List<Vector3> verts,
 			GFXTexInfo tex, Vector3 surfColor, Vector3 surfNormal, int surfFreq, int surfStrength)

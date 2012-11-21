@@ -99,6 +99,12 @@ namespace BSPCore
 		}
 
 
+		public bool IsCellShaded()
+		{
+			return	((mFlags & TexInfo.CELLSHADE) != 0);
+		}
+
+
 		public bool IsLight()
 		{
 			return	((mFlags & TexInfo.EMITLIGHT) != 0);
@@ -119,6 +125,11 @@ namespace BSPCore
 		internal static string ScryTrueName(GFXFace f, GFXTexInfo tex)
 		{
 			string	matName	=tex.mMaterial;
+
+			if(tex.IsCellShaded())
+			{
+				matName	+="*Cell";
+			}
 
 			if(tex.IsLightMapped())
 			{

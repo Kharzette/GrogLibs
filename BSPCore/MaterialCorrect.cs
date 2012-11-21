@@ -15,10 +15,14 @@ namespace BSPCore
 		{
 			if(matName != null)
 			{
-				//skip all special materials
-				if(matName.Contains("*"))
+				if(matName.Contains('*'))
 				{
-					return	false;
+					//only allow cell, all other special
+					//materials will have their own category
+					if(!matName.EndsWith("*Cell"))
+					{
+						return	false;
+					}
 				}
 			}
 
@@ -46,7 +50,11 @@ namespace BSPCore
 				{
 					return	false;
 				}
-				if(tex.mMaterial != matName)
+				if(!matName.StartsWith(tex.mMaterial))
+				{
+					return	false;
+				}
+				if(!tex.IsLightMapped())
 				{
 					return	false;
 				}

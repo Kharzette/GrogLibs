@@ -959,53 +959,85 @@ namespace BSPCore
 			foreach(string matName in mMaterialNames)
 			{				
 				MaterialLib.Material	mat	=mMatLib.CreateMaterial();
-				mat.Name				=matName;
 				mat.ShaderName			="Shaders\\LightMap";
 				mat.Technique			="";
 				mat.BlendState			=BlendState.Opaque;
 				mat.DepthState			=DepthStencilState.Default;
 				mat.RasterState			=RasterizerState.CullCounterClockwise;
 
+				bool	bCell	=false;
+				string	mn		=matName;
+				if(mn.Contains("*Cell"))
+				{
+					bCell	=true;
+				}
+
+				mat.Name	=mn;
+
 				//set some parameter defaults
-				if(mat.Name.EndsWith("*Alpha"))
+				if(mn.EndsWith("*Alpha"))
 				{
 					mat.BlendState	=BlendState.AlphaBlend;
 					mat.DepthState	=DepthStencilState.DepthRead;
-					mat.Technique	="Alpha";
+					if(bCell)
+					{
+						mat.Technique	="VLitCell";
+					}
+					else
+					{
+						mat.Technique	="Alpha";
+					}
 				}
-				else if(mat.Name.EndsWith("*LitAlpha"))
+				else if(mn.EndsWith("*LitAlpha"))
 				{
 					mat.BlendState	=BlendState.AlphaBlend;
 					mat.DepthState	=DepthStencilState.DepthRead;
-					mat.Technique	="LightMapAlpha";
 					mat.AddParameter("mLightMap",
 						EffectParameterClass.Object,
 						EffectParameterType.Texture,
 						"LightMapAtlas");
+					if(bCell)
+					{
+						mat.Technique	="LightMapAlphaCell";
+					}
+					else
+					{
+						mat.Technique	="LightMapAlpha";
+					}
 				}
-				else if(mat.Name.EndsWith("*LitAlphaAnim"))
+				else if(mn.EndsWith("*LitAlphaAnim"))
 				{
 					mat.BlendState	=BlendState.AlphaBlend;
 					mat.DepthState	=DepthStencilState.DepthRead;
-					mat.Technique	="LightMapAnimAlpha";
 					mat.AddParameter("mLightMap",
 						EffectParameterClass.Object,
 						EffectParameterType.Texture,
 						"LightMapAtlas");
+					if(bCell)
+					{
+						mat.Technique	="LightMapAnimAlphaCell";
+					}
+					else
+					{
+						mat.Technique	="LightMapAnimAlpha";
+					}
 				}
-				else if(mat.Name.EndsWith("*VertLit"))
+				else if(mn.EndsWith("*VertLit"))
 				{
-					mat.Technique	="VertexLighting";
+					if(bCell)
+					{
+						mat.Technique	="VLitCell";
+					}
+					else
+					{
+						mat.Technique	="VertexLighting";
+					}
 				}
-				else if(mat.Name.EndsWith("*VertLitToon"))
-				{
-					mat.Technique	="VLitToon";
-				}
-				else if(mat.Name.EndsWith("*FullBright"))
+				else if(mn.EndsWith("*FullBright"))
 				{
 					mat.Technique	="FullBright";
 				}
-				else if(mat.Name.EndsWith("*Mirror"))
+				else if(mn.EndsWith("*Mirror"))
 				{
 					mat.Technique	="Mirror";
 					mat.AddParameter("mLightMap",
@@ -1013,29 +1045,20 @@ namespace BSPCore
 						EffectParameterType.Texture,
 						"MirrorTexture");
 				}
-				else if(mat.Name.EndsWith("*Sky"))
+				else if(mn.EndsWith("*Sky"))
 				{
 					mat.Technique	="Sky";
 				}
-				else if(mat.Name.EndsWith("*Anim"))
+				else if(mn.EndsWith("*Anim"))
 				{
-					mat.Technique	="LightMapAnim";
-					mat.AddParameter("mLightMap",
-						EffectParameterClass.Object,
-						EffectParameterType.Texture,
-						"LightMapAtlas");
-				}
-				else if(mat.Name.EndsWith("*AnimToon"))
-				{
-					mat.Technique	="LightMapAnimToon";
-					mat.AddParameter("mLightMap",
-						EffectParameterClass.Object,
-						EffectParameterType.Texture,
-						"LightMapAtlas");
-				}
-				else if(mat.Name.EndsWith("*Toon"))
-				{
-					mat.Technique	="LightMapToon";
+					if(bCell)
+					{
+						mat.Technique	="LightMapAnimCell";
+					}
+					else
+					{
+						mat.Technique	="LightMapAnim";
+					}
 					mat.AddParameter("mLightMap",
 						EffectParameterClass.Object,
 						EffectParameterType.Texture,
@@ -1043,7 +1066,14 @@ namespace BSPCore
 				}
 				else
 				{
-					mat.Technique	="LightMap";
+					if(bCell)
+					{
+						mat.Technique	="LightMapCell";
+					}
+					else
+					{
+						mat.Technique	="LightMap";
+					}
 					mat.AddParameter("mLightMap",
 						EffectParameterClass.Object,
 						EffectParameterType.Texture,

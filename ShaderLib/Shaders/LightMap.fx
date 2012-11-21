@@ -14,9 +14,9 @@ float	mWarpFactor;
 float	mYRangeMax;
 float	mYRangeMin;
 
-//outline / toon related
-float	mToonThresholds[4] = { 0.6, 0.4, 0.25, 0.1 };
-float	mToonBrightnessLevels[5] = { 1.0f, 0.7f, 0.5f, 0.2f, 0.05f };
+//outline / cell related
+float	mCellThresholds[4] = { 0.6, 0.4, 0.25, 0.1 };
+float	mCellBrightnessLevels[5] = { 1.0f, 0.7f, 0.5f, 0.2f, 0.05f };
 
 
 #include "Types.fxh"
@@ -266,7 +266,7 @@ float4 LMPixelShader(VTex04Tex14Tex24 input) : COLOR0
 }
 
 
-float CalcToonLight(float3 lightVal)
+float CalcCellLight(float3 lightVal)
 {
 	float	light;
 
@@ -274,32 +274,32 @@ float CalcToonLight(float3 lightVal)
 
 	d	*=0.33;
 
-	if(d > mToonThresholds[0])
+	if(d > mCellThresholds[0])
 	{
-		light	=mToonBrightnessLevels[0];
+		light	=mCellBrightnessLevels[0];
 	}
-	else if(d > mToonThresholds[1])
+	else if(d > mCellThresholds[1])
 	{
-		light	=mToonBrightnessLevels[1];
+		light	=mCellBrightnessLevels[1];
 	}
-	else if(d > mToonThresholds[2])
+	else if(d > mCellThresholds[2])
 	{
-		light	=mToonBrightnessLevels[2];
+		light	=mCellBrightnessLevels[2];
 	}
-	else if(d > mToonThresholds[3])
+	else if(d > mCellThresholds[3])
 	{
-		light	=mToonBrightnessLevels[3];
+		light	=mCellBrightnessLevels[3];
 	}
 	else
 	{
-		light	=mToonBrightnessLevels[4];
+		light	=mCellBrightnessLevels[4];
 	}
 
 	return	light;
 }
 
 
-float4 LMToonPixelShader(VTex04Tex14Tex24 input) : COLOR0
+float4 LMCellPixelShader(VTex04Tex14Tex24 input) : COLOR0
 {
 	float3	color;
 	
@@ -330,15 +330,15 @@ float4 LMToonPixelShader(VTex04Tex14Tex24 input) : COLOR0
 		}
 	}
 
-	//do the toon thing
-	float	light	=CalcToonLight(lm);
+	//do the Cell thing
+	float	light	=CalcCellLight(lm);
 	
 	color.rgb	*=(light * lm);
 
 	//back to srgb
 	color	=pow(color, 1 / 2.2);
 	
-	return	float4(color, 1);
+	return	float4(color, input.TexCoord1.w);
 }
 
 
@@ -447,7 +447,7 @@ float4 MirrorPixelShader(VTex04Tex14Tex24Tex34 input) : COLOR0
 }
 
 
-float4 VLitToonPS(VTex04Tex14Tex24 input) : COLOR0
+float4 VLitCellPS(VTex04Tex14Tex24 input) : COLOR0
 {
 	float3	color;	
 	float2	tex0;
@@ -492,8 +492,8 @@ float4 VLitToonPS(VTex04Tex14Tex24 input) : COLOR0
 		}
 	}
 
-	//do the toon thing	
-	float	light	=CalcToonLight(inColor);
+	//do the Cell thing	
+	float	light	=CalcCellLight(inColor);
 	
 	color.rgb	*=(light * inColor);
 
@@ -646,7 +646,7 @@ float4 LMAnimPixelShader(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 }
 
 
-float4 LMAnimToonPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
+float4 LMAnimCellPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 {
 	float3	color;
 	if(mbTextureEnabled)
@@ -697,8 +697,8 @@ float4 LMAnimToonPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 		}
 	}
 
-	//do the toon thing	
-	float	light	=CalcToonLight(lm);
+	//do the Cell thing	
+	float	light	=CalcCellLight(lm);
 	
 	color.rgb	*=light * lm;
 
@@ -718,12 +718,12 @@ technique LightMap
 	}
 }
 
-technique LightMapToon
+technique LightMapCell
 {
 	pass Pass1
 	{
 		VertexShader	=compile vs_2_0 LMVertexShader();
-		PixelShader		=compile ps_2_0 LMToonPixelShader();
+		PixelShader		=compile ps_2_0 LMCellPixelShader();
 	}
 }
 
@@ -733,6 +733,15 @@ technique LightMapAlpha
 	{
 		VertexShader	=compile vs_2_0 LMAlphaVertexShader();
 		PixelShader		=compile ps_2_0 LMPixelShader();
+	}
+}
+
+technique LightMapAlphaCell
+{
+	pass Pass1
+	{
+		VertexShader	=compile vs_2_0 LMAlphaVertexShader();
+		PixelShader		=compile ps_2_0 LMCellPixelShader();
 	}
 }
 
@@ -754,12 +763,12 @@ technique VertexLighting
 	}
 }
 
-technique VLitToon
+technique VLitCell
 {
 	pass Pass1
 	{
 		VertexShader	=compile vs_2_0 VLitVertexShader();
-		PixelShader		=compile ps_2_0 VLitToonPS();
+		PixelShader		=compile ps_2_0 VLitCellPS();
 	}
 }
 
@@ -817,12 +826,21 @@ technique LightMapAnimAlpha
 	}
 }
 
-technique LightMapAnimToon
+technique LightMapAnimAlphaCell
 {
 	pass Pass1
 	{
 		VertexShader	=compile vs_2_0 LMAnimVertexShader();
-		PixelShader		=compile ps_2_0 LMAnimToonPS();
+		PixelShader		=compile ps_2_0 LMAnimCellPS();
+	}
+}
+
+technique LightMapAnimCell
+{
+	pass Pass1
+	{
+		VertexShader	=compile vs_2_0 LMAnimVertexShader();
+		PixelShader		=compile ps_2_0 LMAnimCellPS();
 	}
 }
 

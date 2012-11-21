@@ -631,7 +631,7 @@ namespace BSPCore
 							{
 								goto Skip;	//Behind light surface
 							}
-							val	=(intensity / (dist * dist)) * angle * Angle2;
+							val	=(intensity / dist) * angle * Angle2;
 							break;
 						}
 						default:
@@ -872,10 +872,6 @@ namespace BSPCore
 									continue;	// Behind light surface
 								}
 
-								//these 2 lines are confusing
-								//the bottom one gives better results I think
-								//but quite a bit brighter
-//								val	=(intensity / (dist * dist)) * angle * Angle2;
 								val	=(intensity / dist) * angle * Angle2;
 								break;
 							}

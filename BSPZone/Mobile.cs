@@ -55,6 +55,12 @@ namespace BSPZone
 		}
 
 
+		public Vector3 GetPosition()
+		{
+			return	mPosition;
+		}
+
+
 		//for initial start pos and teleports
 		public void SetPosition(Vector3 pos)
 		{
