@@ -55,10 +55,8 @@ namespace BSPZone
 		byte		[]mMaterialVisData;
 
 		//gameplay stuff
-		List<ZoneTrigger>	mTriggers	=new List<ZoneTrigger>();
-		BoundingBox			mPushable;
-		Vector3				mPushableWorldCenter;
-		int					mPushableModelOn;
+		List<ZoneTrigger>				mTriggers	=new List<ZoneTrigger>();
+		Dictionary<object, Pushable>	mPushables	=new Dictionary<object, Pushable>();
 
 		int	mLightMapGridSize;
 		int	mNumVisLeafBytes;
@@ -281,33 +279,38 @@ namespace BSPZone
 
 		void CollideModel(int modelIndex, Matrix newTrans, Matrix oldInv)
 		{
-			//transform into new rotated model space
-			Vector3	newCenter	=Vector3.Transform(mPushableWorldCenter, oldInv);
-
-			//transform back to world space vs old matrix
-			newCenter	=Vector3.Transform(newCenter, newTrans);
-
-			Vector3	pushedPos		=Vector3.Zero;
-
-			//push the starting point back a bit along the frame of rev vector
-			Vector3	dirVec	=newCenter - mPushableWorldCenter;
-
-			if(dirVec.LengthSquared() == 0f)
+			foreach(KeyValuePair<object, Pushable> pa in mPushables)
 			{
-				return;
-			}
+				Vector3	worldPos	=pa.Value.mWorldCenter;
 
-			dirVec.Normalize();
-			dirVec	*=(mPushable.Max.X * 0.5f);	//to adjust for corner expansion / contraction
+				//transform into new rotated model space
+				Vector3	newCenter	=Vector3.Transform(worldPos, oldInv);
 
-			Vector3	targPos	=newCenter + dirVec;
+				//transform back to world space vs old matrix
+				newCenter	=Vector3.Transform(newCenter, newTrans);
 
-			//collide vs the rotated model with new -> old ray
-			BipedModelPush(mPushable, targPos, mPushableWorldCenter, modelIndex, ref pushedPos);
+				Vector3	pushedPos		=Vector3.Zero;
 
-			if(pushedPos != mPushableWorldCenter)
-			{
-				Misc.SafeInvoke(ePushObject, new Nullable<Vector3>(pushedPos - mPushableWorldCenter));				
+				//push the starting point back a bit along the frame of rev vector
+				Vector3	dirVec	=newCenter - worldPos;
+
+				if(dirVec.LengthSquared() == 0f)
+				{
+					return;
+				}
+
+				dirVec.Normalize();
+				dirVec	*=(pa.Value.mBox.Max.X * 0.5f);	//to adjust for corner expansion / contraction
+
+				Vector3	targPos	=newCenter + dirVec;
+
+				//collide vs the rotated model with new -> old ray
+				BipedModelPush(pa.Value.mBox, targPos, worldPos, modelIndex, ref pushedPos);
+
+				if(pushedPos != worldPos)
+				{
+					Misc.SafeInvoke(ePushObject, pa.Value.mContext, new Vector3EventArgs(pushedPos - worldPos));
+				}
 			}
 		}
 
@@ -328,10 +331,13 @@ namespace BSPZone
 			//do the actual move
 			zm.SetPosition(pos);
 
-			//if player is riding on this model, move them too
-			if(mPushableModelOn == modelIndex)
+			foreach(KeyValuePair<object, Pushable> pa in mPushables)
 			{
-				Misc.SafeInvoke(ePushObject, new Nullable<Vector3>(pos - oldPos));
+				//if any are riding on this model, move them too
+				if(pa.Value.mModelOn == modelIndex)
+				{
+					Misc.SafeInvoke(ePushObject, pa.Value.mContext, new Vector3EventArgs(pos - oldPos));
+				}
 			}
 
 			Matrix	newMat		=zm.mTransform;
@@ -595,11 +601,41 @@ namespace BSPZone
 
 
 		#region Ray Casts and Movement
-		public void SetPushable(BoundingBox box, Vector3 center, int modelOn)
+		public void RegisterPushable(object context, BoundingBox box, Vector3 center, int modelOn)
 		{
-			mPushable				=box;
-			mPushableWorldCenter	=center;
-			mPushableModelOn		=modelOn;
+			if(mPushables.ContainsKey(context))
+			{
+				//if already in the list just update the data
+				mPushables[context].mBox			=box;
+				mPushables[context].mContext		=context;
+				mPushables[context].mModelOn		=modelOn;
+				mPushables[context].mWorldCenter	=center;
+			}
+			else
+			{
+				mPushables.Add(context, new Pushable(context, box, center, modelOn));
+			}
+		}
+
+
+		public void UnRegisterPushable(object context)
+		{
+			if(mPushables.ContainsKey(context))
+			{
+				mPushables.Remove(context);
+			}
+		}
+
+
+		public void UpdatePushable(object context, Vector3 center, int modelOn)
+		{
+			if(!mPushables.ContainsKey(context))
+			{
+				return;
+			}
+
+			mPushables[context].mWorldCenter	=center;
+			mPushables[context].mModelOn		=modelOn;
 		}
 
 

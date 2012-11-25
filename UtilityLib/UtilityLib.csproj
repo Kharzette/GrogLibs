@@ -138,6 +138,7 @@
     <Compile Include="RenderHelper.cs" />
     <Compile Include="Rumble.cs" />
     <Compile Include="TSPool.cs" />
+    <Compile Include="VectorEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

@@ -30,20 +30,21 @@ namespace BSPZone
 		Vector3	mVelocity;
 
 		//collision box, sized for this mobile
-		BoundingBox	mCharBox;
+		BoundingBox	mBox;
 
 		//offset from the boundingbox center to the eye position
 		Vector3		mEyeHeight;
 
 		//constants
 		const float MidAirMoveScale	=0.01f;
-		const float	JumpVelocity	=4.0f;
+		const float	JumpVelocity	=5.0f;
+		const float	Friction		=0.6f;
 
 
 		public Mobile(float boxWidth, float boxHeight, float eyeHeight, bool bPushable, TriggerHelper th)
 		{
-			mCharBox	=Misc.MakeBox(boxWidth, boxHeight);
-			mEyeHeight	=Vector3.UnitY * (eyeHeight + mCharBox.Min.Y);
+			mBox		=Misc.MakeBox(boxWidth, boxHeight);
+			mEyeHeight	=Vector3.UnitY * (eyeHeight + mBox.Min.Y);
 			mbPushable	=bPushable;
 			mTHelper	=th;
 		}
@@ -52,12 +53,7 @@ namespace BSPZone
 		public void SetZone(Zone z)
 		{
 			mZone	=z;
-		}
-
-
-		public Vector3 GetPosition()
-		{
-			return	mPosition;
+			mZone.RegisterPushable(this, mBox, mPosition, mModelOn);
 		}
 
 
@@ -97,7 +93,7 @@ namespace BSPZone
 				camPos	=-mPosition;
 				if(mbPushable)
 				{
-					mZone.SetPushable(mCharBox, mPosition, mModelOn);
+					mZone.UpdatePushable(this, mPosition, mModelOn);
 				}
 				return;
 			}
@@ -122,7 +118,7 @@ namespace BSPZone
 
 			//move it through the bsp
 			bool	bUsedStairs	=false;
-			if(mZone.BipedMoveBox(mCharBox, mPosition, endPos, mbOnGround, out endPos, out bUsedStairs, ref mModelOn))
+			if(mZone.BipedMoveBox(mBox, mPosition, endPos, mbOnGround, out endPos, out bUsedStairs, ref mModelOn))
 			{
 				mbOnGround	=true;
 
@@ -130,22 +126,12 @@ namespace BSPZone
 				if(bAffectVelocity)
 				{
 					mVelocity	=endPos - mPosition;
-					mVelocity	*=0.6f;
+					mVelocity	*=Friction;
 
 					//clamp really small velocities
-					if(mVelocity.X < 0.001f && mVelocity.X > -0.001f)
-					{
-						mVelocity.X	=0.0f;
-					}
-					if(mVelocity.Y < 0.001f && mVelocity.Y > -0.001f)
-					{
-						mVelocity.Y	=0.0f;
-					}
-					if(mVelocity.Z < 0.001f && mVelocity.Z > -0.001f)
-					{
-						mVelocity.Z	=0.0f;
-					}
+					Mathery.TinyToZero(ref mVelocity);
 
+					//prevent stairsteps from launching the velocity
 					if(bUsedStairs)
 					{
 						mVelocity.Y	=0.0f;
@@ -169,13 +155,13 @@ namespace BSPZone
 			//do a trigger check if requested
 			if(bTriggerCheck)
 			{
-				mTHelper.CheckPlayer(mCharBox, mPosition, endPos, msDelta);
+				mTHelper.CheckPlayer(mBox, mPosition, endPos, msDelta);
 			}
 
 			mPosition	=endPos;
 			if(mbPushable)
 			{
-				mZone.SetPushable(mCharBox, mPosition, mModelOn);
+				mZone.UpdatePushable(this, mPosition, mModelOn);
 			}
 		}
 	}
