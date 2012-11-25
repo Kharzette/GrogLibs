@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
+using UtilityLib;
 
 
 namespace BSPZone
@@ -21,10 +22,8 @@ namespace BSPZone
 		public event EventHandler	ePickUp;
 		public event EventHandler	eChangeMap;
 		public event EventHandler	eMessage;
-		public event EventHandler	eRecipe;
-		public event EventHandler	eStatChange;
-		public event EventHandler	eInRangeOf;
-		public event EventHandler	eOutOfRangeOf;
+		public event EventHandler	eMisc;
+		public event EventHandler	eFunc;
 
 
 		public void Initialize(Zone zone, SwitchLight sl)
@@ -84,7 +83,12 @@ namespace BSPZone
 			List<ZoneEntity>	targs	=mZone.GetEntitiesByTargetName(targ);
 			foreach(ZoneEntity zet in targs)
 			{
-				UtilityLib.Misc.SafeInvoke(eOutOfRangeOf, zet);
+				string	className	=zet.GetValue("classname");
+
+				if(className.StartsWith("light") || className.StartsWith("_light"))
+				{
+					TriggerLight(zet);
+				}
 			}
 		}
 
@@ -108,21 +112,9 @@ namespace BSPZone
 			{
 				string	className	=zet.GetValue("classname");
 
-				if(ze.GetValue("classname") == "trigger_gravity")
-				{
-					UtilityLib.Misc.SafeInvoke(eInRangeOf, zet);
-				}
-				else if(className.StartsWith("light") || className.StartsWith("_light"))
+				if(className.StartsWith("light") || className.StartsWith("_light"))
 				{
 					TriggerLight(zet);
-				}
-				else if(className == "info_null")
-				{
-					string	statChange	=zet.GetValue("Stat");
-
-					statChange	+=" " + zet.GetValue("StatDelta");
-
-					UtilityLib.Misc.SafeInvoke(eStatChange, statChange);
 				}
 				else if(className.Contains("teleport_destination")
 					|| className.Contains("misc_teleporter_dest"))
@@ -133,25 +125,29 @@ namespace BSPZone
 				{
 					string	level	=zet.GetValue("map");
 
-					UtilityLib.Misc.SafeInvoke(eChangeMap, level);
+					Misc.SafeInvoke(eChangeMap, level);
 				}
 				else if(className.StartsWith("ammo_") ||
 					className.StartsWith("weapon_") ||
 					className.StartsWith("item_") ||
 					className.StartsWith("key_"))
 				{
-					UtilityLib.Misc.SafeInvoke(ePickUp, zet);
+					Misc.SafeInvoke(ePickUp, zet);
 				}
 				else if(className.StartsWith("misc_"))
 				{
-					UtilityLib.Misc.SafeInvoke(eRecipe, zet);
+					Misc.SafeInvoke(eMisc, zet);
+				}
+				else if(className.StartsWith("func_"))
+				{
+					Misc.SafeInvoke(eFunc, zet);
 				}
 			}
 
 			//invoke a message as well if need be
 			if(ze.mData.ContainsKey("message"))
 			{
-				UtilityLib.Misc.SafeInvoke(eMessage, ze.mData["message"]);
+				Misc.SafeInvoke(eMessage, ze.mData["message"]);
 			}
 		}
 
@@ -170,10 +166,23 @@ namespace BSPZone
 			int	spawnFlags;
 			if(zet.GetInt("spawnflags", out spawnFlags))
 			{
-				if(UtilityLib.Misc.bFlagSet(spawnFlags, 1))
+				if(Misc.bFlagSet(spawnFlags, 1))
 				{
 					bOn	=false;
+
+					//flip bit in entity data
+					Misc.ClearFlag(ref spawnFlags, 1);
+					zet.SetInt("spawnflags", spawnFlags);					
 				}
+				else
+				{
+					spawnFlags	|=1;
+					zet.SetInt("spawnflags", spawnFlags);
+				}
+			}
+			else
+			{
+				zet.SetInt("spawnflags", 1);
 			}
 
 			//switch!
@@ -192,7 +201,7 @@ namespace BSPZone
 
 			Nullable<Vector3>	dest	=new Nullable<Vector3>(dst);
 
-			UtilityLib.Misc.SafeInvoke(eTeleport, dest);
+			Misc.SafeInvoke(eTeleport, dest);
 		}
 	}
 }

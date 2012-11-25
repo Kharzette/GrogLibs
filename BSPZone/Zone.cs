@@ -233,7 +233,7 @@ namespace BSPZone
 					zt.mEntity			=ze;
 					zt.mbTriggered		=false;
 					zt.mbTriggerOnce	=(ze.mData["classname"] == "trigger_once");
-					zt.mbTriggerStandIn	=(ze.mData["classname"] == "trigger_gravity");	//hax
+					zt.mbTriggerStandIn	=(ze.mData["classname"] == "trigger_stand_in");	//hax
 
 					if(ze.mData.ContainsKey("wait"))
 					{
@@ -454,7 +454,7 @@ namespace BSPZone
 			{
 				if(ze.mData.ContainsKey("targetname"))
 				{
-					if(ze.mData["targetname"] == targName)
+					if(targName.Contains(ze.mData["targetname"]))
 					{
 						ret.Add(ze);
 					}
@@ -845,7 +845,7 @@ namespace BSPZone
 
 		//positions should be in the middle base of the box
 		//returns true if on the ground
-		public void MoveBoxModelPush(BoundingBox box,
+		void MoveBoxModelPush(BoundingBox box,
 			Vector3 start, Vector3 end, int modelIndex, ref Vector3 finalPos)
 		{
 			Vector3		impacto		=Vector3.Zero;

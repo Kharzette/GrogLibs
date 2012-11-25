@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.Xna.Framework;
+using UtilityLib;
 
 
 namespace BSPZone
 {
-	public class ZoneEntity : UtilityLib.IReadWriteable
+	public class ZoneEntity : IReadWriteable
 	{
 		public Dictionary<string, string>	mData		=new Dictionary<string, string>();
 
@@ -25,15 +26,15 @@ namespace BSPZone
 				return	false;
 			}
 
-			if(!UtilityLib.Mathery.TryParse(szVec[0], out org.X))
+			if(!Mathery.TryParse(szVec[0], out org.X))
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(szVec[1], out org.Y))
+			if(!Mathery.TryParse(szVec[1], out org.Y))
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(szVec[2], out org.Z))
+			if(!Mathery.TryParse(szVec[2], out org.Z))
 			{
 				return	false;
 			}
@@ -87,7 +88,7 @@ namespace BSPZone
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(mData[key], out val))
+			if(!Mathery.TryParse(mData[key], out val))
 			{
 				return	false;
 			}
@@ -102,7 +103,7 @@ namespace BSPZone
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(mData[key], out val))
+			if(!Mathery.TryParse(mData[key], out val))
 			{
 				return	false;
 			}
@@ -144,15 +145,15 @@ namespace BSPZone
 				return	false;
 			}
 
-			if(!UtilityLib.Mathery.TryParse(szVec[0], out org.X))
+			if(!Mathery.TryParse(szVec[0], out org.X))
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(szVec[1], out org.Y))
+			if(!Mathery.TryParse(szVec[1], out org.Y))
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(szVec[2], out org.Z))
+			if(!Mathery.TryParse(szVec[2], out org.Z))
 			{
 				return	false;
 			}
@@ -167,7 +168,7 @@ namespace BSPZone
 
 			if(mData.ContainsKey("light"))
 			{
-				if(!UtilityLib.Mathery.TryParse(mData["light"], out dist))
+				if(!Mathery.TryParse(mData["light"], out dist))
 				{
 					return	false;
 				}
@@ -185,16 +186,16 @@ namespace BSPZone
 			{
 				string	[]elements	=mData["_light"].Split(' ');
 
-				UtilityLib.Mathery.TryParse(elements[0], out val.X);
-				UtilityLib.Mathery.TryParse(elements[1], out val.Y);
-				UtilityLib.Mathery.TryParse(elements[2], out val.Z);
-				UtilityLib.Mathery.TryParse(elements[3], out val.W);
+				Mathery.TryParse(elements[0], out val.X);
+				Mathery.TryParse(elements[1], out val.Y);
+				Mathery.TryParse(elements[2], out val.Z);
+				Mathery.TryParse(elements[3], out val.W);
 				return	true;
 			}
 			else if(mData.ContainsKey("light"))
 			{
 				val		=Vector4.One * 255.0f;
-				UtilityLib.Mathery.TryParse(mData["light"], out val.W);
+				Mathery.TryParse(mData["light"], out val.W);
 				return	true;
 			}
 			return	false;
@@ -237,19 +238,29 @@ namespace BSPZone
 				return	false;
 			}
 
-			if(!UtilityLib.Mathery.TryParse(szVec[0], out color.X))
+			if(!Mathery.TryParse(szVec[0], out color.X))
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(szVec[1], out color.Y))
+			if(!Mathery.TryParse(szVec[1], out color.Y))
 			{
 				return	false;
 			}
-			if(!UtilityLib.Mathery.TryParse(szVec[2], out color.Z))
+			if(!Mathery.TryParse(szVec[2], out color.Z))
 			{
 				return	false;
 			}
 			return	true;
+		}
+
+
+		public void SetInt(string key, int val)
+		{
+			if(!mData.ContainsKey(key))
+			{
+				mData.Add(key, "" + val);
+			}
+			mData[key]	="" + val;	//should be ok
 		}
 
 
