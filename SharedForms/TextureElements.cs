@@ -13,6 +13,7 @@ using SpriteMapLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using UtilityLib;
 
 
 namespace SharedForms
@@ -121,7 +122,7 @@ namespace SharedForms
 			if(row.Count == 1)
 			{
 				mCurTex	=row[0].Index;
-				eTexChanged(mTextures[mCurTex], null);
+				Misc.SafeInvoke(eTexChanged, mTextures[mCurTex]);
 			}
 		}
 
@@ -136,7 +137,7 @@ namespace SharedForms
 
 			if(eTexDictChanged != null)
 			{
-				eTexDictChanged(mTexDict, null);
+				Misc.SafeInvoke(eTexDictChanged, mTexDict);
 			}
 		}
 	}

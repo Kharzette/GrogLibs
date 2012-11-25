@@ -364,6 +364,12 @@ struct VTex0Tex13
 	float3	TexCoord1	: TEXCOORD1;
 };
 
+struct VTex0Tex14
+{
+	float2	TexCoord0	: TEXCOORD0;
+	float4	TexCoord1	: TEXCOORD1;
+};
+
 struct VTex0Tex13VPos
 {
 	float2	TexCoord0	: TEXCOORD0;

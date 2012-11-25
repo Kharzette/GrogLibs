@@ -202,6 +202,60 @@ VPosTex04 NormalDepthVS(VPosNormTex0 input)
 	return	output;
 }
 
+VPosTex0Tex13 ParticleVS(VPosTex04 input)
+{
+	VPosTex0Tex13	output;
+
+	float4x4	viewProj	=mul(mView, mProjection);
+
+	//get view vector
+	float3	viewDir	=mView._m02_m12_m22;
+
+	//all verts at 000, add instance pos
+	float4	pos	=input.Position;
+	
+	//cross with up to get right
+	float3	rightVec	=normalize(cross(viewDir, float3(0, 1, 0)));
+
+	//cross right with view to get good up
+	float3	upVec	=normalize(cross(rightVec, viewDir));
+
+	//quad offset
+	pos.xyz	+=rightVec * (input.Position.w - 0.5f) * input.TexCoord0.x;
+	pos.xyz	+=upVec * (input.TexCoord0.w - 0.5f) * input.TexCoord0.x;
+
+	output.TexCoord0.x	=input.Position.w;
+	output.TexCoord0.y	=input.TexCoord0.w;
+
+	//worldpos
+	output.TexCoord1	=pos.xyz;
+
+	pos.w	=1.0f;
+
+	//screen transformed
+	output.Position		=mul(pos, viewProj);
+
+	return	output;
+}
+
+
+float4 ParticlePS(VTex0Tex14 input) : COLOR
+{
+	//texture
+	float4	texel	=tex2D(TexSampler0, input.TexCoord0);
+
+	//gamma
+	texel	=pow(texel, 2.2);
+
+	//clip(texel.w - 0.1f);
+
+	float4	texLitColor	=texel * mSolidColour;
+
+	texLitColor	=pow(texLitColor, 1 / 2.2);
+
+	return	texLitColor;
+}
+
 
 float4 TexColorPS(VTex0Col0 input) : COLOR
 {
@@ -532,5 +586,14 @@ technique TransparentInstanced
 	{
 		VertexShader	=compile vs_3_0 BasicInstancedVS();
 		PixelShader		=compile ps_3_0 HalfTransPS();
+	}
+}
+
+technique Particle
+{     
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 ParticleVS();
+		PixelShader		=compile ps_2_0 ParticlePS();
 	}
 }
