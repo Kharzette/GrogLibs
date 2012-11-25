@@ -34,7 +34,7 @@ namespace ParticleLib
 
 		public void CreateEmitter(string texName, int maxParticles,
 			Vector3 pos, float startSize,
-			int durationMS, int emitPerSecond,
+			int durationMS, float emitMS,
 			int rotVelMin, int rotVelMax, int velMin,
 			int velMax, int sizeVelMin, int sizeVelMax,
 			int alphaVelMin, int alphaVelMax,
@@ -46,8 +46,10 @@ namespace ParticleLib
 			}
 
 			Emitter	newEmitter	=new Emitter(maxParticles, pos, startSize, durationMS,
-				emitPerSecond, rotVelMin, rotVelMax, velMin, velMax,
+				emitMS, rotVelMin, rotVelMax, velMin, velMax,
 				sizeVelMin, sizeVelMax, alphaVelMin, alphaVelMax, lifeMin, lifeMax);
+
+			newEmitter.Activate(true);
 
 			ParticleViewDynVB	pvd	=new ParticleViewDynVB(mGD, mFX, mTextures[texName], maxParticles);
 
@@ -60,17 +62,28 @@ namespace ParticleLib
 		{
 			Debug.Assert(mEmitters.Count == mViews.Count);
 
+			List<Emitter>	nuke	=new List<Emitter>();
+
 			for(int i=0;i < mEmitters.Count;i++)
 			{
-				Particle	[]parts	=mEmitters[i].Update(msDelta);
+				int	numParticles	=0;
+				Particle	[]parts	=mEmitters[i].Update(msDelta, out numParticles);
 
-				if(parts != null)
+				if(parts == null || parts.Length <= 0)
 				{
-					if(parts.Length > 0)
-					{
-						mViews[i].Update(parts, parts.Length);
-					}
+					nuke.Add(mEmitters[i]);
+					continue;
 				}
+
+				mViews[i].Update(parts, parts.Length);
+			}
+
+			foreach(Emitter em in nuke)
+			{
+				int	idx	=mEmitters.IndexOf(em);
+
+				mEmitters.RemoveAt(idx);
+				mViews.RemoveAt(idx);
 			}
 		}
 

@@ -37,8 +37,8 @@ namespace ParticleLib
 
 			VertexElement	[]els	=new VertexElement[2];
 
-			els[0]	=new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0);
-			els[1]	=new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0);
+			els[0]	=new VertexElement(0, VertexElementFormat.Vector4, VertexElementUsage.Position, 0);
+			els[1]	=new VertexElement(16, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 0);
 
 			mVD	=new VertexDeclaration(els);
 
@@ -48,7 +48,7 @@ namespace ParticleLib
 
 		internal void Update(Particle []parts, int count)
 		{
-			Debug.Assert(count < mMaxParticles);
+			Debug.Assert(count <= mMaxParticles);
 
 			ParticleVert	[]pverts	=new ParticleVert[count * 6];
 
@@ -107,6 +107,11 @@ namespace ParticleLib
 
 		internal void Draw(Vector4 color, Matrix view, Matrix proj)
 		{
+			if(mNumParticles <= 0)
+			{
+				return;
+			}
+
 			mGD.SetVertexBuffer(mVB);
 
 			mGD.DepthStencilState	=DepthStencilState.DepthRead;
@@ -123,6 +128,8 @@ namespace ParticleLib
 			mFX.CurrentTechnique.Passes[0].Apply();
 
 			mGD.DrawPrimitives(PrimitiveType.TriangleList, 0, mNumParticles * 2);
+
+			mGD.SetVertexBuffer(null);
 		}
 	}
 }

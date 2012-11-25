@@ -135,10 +135,7 @@ namespace SharedForms
 				mTexDict.Add(te.Asset_Path, te);
 			}
 
-			if(eTexDictChanged != null)
-			{
-				Misc.SafeInvoke(eTexDictChanged, mTexDict);
-			}
+			Misc.SafeInvoke(eTexDictChanged, mTexDict);
 		}
 	}
 }

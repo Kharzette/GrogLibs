@@ -16,9 +16,10 @@ namespace ParticleLib
 		//basic info
 		Vector3	mPosition;
 		float	mStartSize;
-		int		mEmitPerSecond;
+		float	mEmitMS;
 		int		mDurationMS;	//negative for forever
 		int		mMaxParticles;
+		int		mCurNumParticles;
 
 		//particle behaviour
 		//velocities in units per second
@@ -43,7 +44,7 @@ namespace ParticleLib
 
 		internal Emitter(int maxParticles,
 			Vector3 pos, float startSize,
-			int durationMS, int emitPerSecond,
+			int durationMS, float emitMS,
 			int rotVelMin, int rotVelMax, int velMin,
 			int velMax, int sizeVelMin, int sizeVelMax,
 			int alphaVelMin, int alphaVelMax,
@@ -51,7 +52,7 @@ namespace ParticleLib
 		{
 			mPosition				=pos;
 			mStartSize				=startSize;
-			mEmitPerSecond			=emitPerSecond;
+			mEmitMS					=emitMS;
 			mDurationMS				=durationMS;
 			mRotationalVelocityMin	=rotVelMin;
 			mRotationalVelocityMax	=rotVelMax;
@@ -78,8 +79,10 @@ namespace ParticleLib
 		}
 
 
-		internal Particle []Update(int msDelta)
+		internal Particle []Update(int msDelta, out int numParticles)
 		{
+			numParticles	=0;
+
 			if(!mbOn)
 			{
 				return	null;
@@ -88,9 +91,10 @@ namespace ParticleLib
 			if(mDurationMS > 0)
 			{
 				mCurDuration	-=msDelta;
-				if(mCurDuration < 0)
+				if(mCurDuration <= 0)
 				{
 					Misc.SafeInvoke(eFinished, this);
+					return	null;
 				}
 			}
 
@@ -101,7 +105,7 @@ namespace ParticleLib
 			mbBuffer	=!mbBuffer;
 
 			int	idx	=0;
-			for(int i=0;i < buf.Length;i++)
+			for(int i=0;i < mCurNumParticles;i++)
 			{
 				if(!buf[i].Update(msDelta))
 				{
@@ -109,7 +113,7 @@ namespace ParticleLib
 				}
 			}
 
-			int	newParticles	=(int)(msDelta * (mEmitPerSecond / 1000f));
+			int	newParticles	=(int)(msDelta * mEmitMS);
 
 			if((newParticles + idx) >= mMaxParticles)
 			{
@@ -120,6 +124,9 @@ namespace ParticleLib
 			{
 				buf2[idx++]	=Emit();
 			}
+
+			numParticles		=idx;
+			mCurNumParticles	=idx;
 
 			return	buf2;
 		}
