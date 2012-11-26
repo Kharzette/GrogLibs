@@ -35,9 +35,9 @@ namespace ParticleLib
 		public void CreateEmitter(string texName, int maxParticles,
 			Vector3 pos, float startSize,
 			int durationMS, float emitMS,
-			int rotVelMin, int rotVelMax, int velMin,
-			int velMax, int sizeVelMin, int sizeVelMax,
-			int alphaVelMin, int alphaVelMax,
+			float rotVelMin, float rotVelMax, float velMin,
+			float velMax, float sizeVelMin, float sizeVelMax,
+			float alphaVelMin, float alphaVelMax,
 			int lifeMin, int lifeMax)
 		{
 			if(!mTextures.ContainsKey(texName))
@@ -69,13 +69,13 @@ namespace ParticleLib
 				int	numParticles	=0;
 				Particle	[]parts	=mEmitters[i].Update(msDelta, out numParticles);
 
-				if(parts == null || parts.Length <= 0)
+				if(parts == null)
 				{
 					nuke.Add(mEmitters[i]);
 					continue;
 				}
 
-				mViews[i].Update(parts, parts.Length);
+				mViews[i].Update(parts, numParticles);
 			}
 
 			foreach(Emitter em in nuke)

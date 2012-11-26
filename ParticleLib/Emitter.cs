@@ -23,16 +23,18 @@ namespace ParticleLib
 
 		//particle behaviour
 		//velocities in units per second
-		int	mRotationalVelocityMin, mRotationalVelocityMax;
-		int	mVelocityMin, mVelocityMax;
-		int	mSizeVelocityMin, mSizeVelocityMax;
-		int	mAlphaVelocityMin, mAlphaVelocityMax;
-		int	mLifeMin, mLifeMax;
+		float	mRotationalVelocityMin, mRotationalVelocityMax;
+		float	mVelocityMin, mVelocityMax;
+		float	mSizeVelocityMin, mSizeVelocityMax;
+		float	mAlphaVelocityMin, mAlphaVelocityMax;
+		int		mLifeMin, mLifeMax;
 
 		//state data
 		bool	mbOn;
 		int		mCurDuration;
 		bool	mbBuffer;
+		float	mEmitProgress;
+		int		mEmitted;
 
 		//particle work buffers
 		Particle	[]mParticles1;
@@ -45,9 +47,9 @@ namespace ParticleLib
 		internal Emitter(int maxParticles,
 			Vector3 pos, float startSize,
 			int durationMS, float emitMS,
-			int rotVelMin, int rotVelMax, int velMin,
-			int velMax, int sizeVelMin, int sizeVelMax,
-			int alphaVelMin, int alphaVelMax,
+			float rotVelMin, float rotVelMax, float velMin,
+			float velMax, float sizeVelMin, float sizeVelMax,
+			float alphaVelMin, float alphaVelMax,
 			int lifeMin, int lifeMax)
 		{
 			mPosition				=pos;
@@ -56,8 +58,8 @@ namespace ParticleLib
 			mDurationMS				=durationMS;
 			mRotationalVelocityMin	=rotVelMin;
 			mRotationalVelocityMax	=rotVelMax;
-			mVelocityMin			=rotVelMin;
-			mVelocityMax			=rotVelMax;
+			mVelocityMin			=velMin;
+			mVelocityMax			=velMax;
 			mSizeVelocityMin		=sizeVelMin;
 			mSizeVelocityMax		=sizeVelMax;
 			mAlphaVelocityMin		=alphaVelMin;
@@ -75,7 +77,8 @@ namespace ParticleLib
 
 		internal void Activate(bool bOn)
 		{
-			mbOn	=bOn;
+			mbOn			=bOn;
+			mEmitProgress	=0f;
 		}
 
 
@@ -91,11 +94,6 @@ namespace ParticleLib
 			if(mDurationMS > 0)
 			{
 				mCurDuration	-=msDelta;
-				if(mCurDuration <= 0)
-				{
-					Misc.SafeInvoke(eFinished, this);
-					return	null;
-				}
 			}
 
 			//update existing
@@ -113,21 +111,44 @@ namespace ParticleLib
 				}
 			}
 
-			int	newParticles	=(int)(msDelta * mEmitMS);
-
-			if((newParticles + idx) >= mMaxParticles)
+			if(mCurDuration > 0)
 			{
-				newParticles	=mMaxParticles - idx;
+				float	emitCount	=msDelta * mEmitMS;
+
+				mEmitProgress	+=emitCount;
+
+				int	newParticles	=(int)(mEmitProgress - mEmitted);
+
+				if((newParticles + idx) >= mMaxParticles)
+				{
+					newParticles	=mMaxParticles - idx;
+				}
+
+				mEmitted	+=newParticles;
+
+				for(int i=0;i < newParticles;i++)
+				{
+					buf2[idx++]	=Emit();
+				}
 			}
 
-			for(int i=0;i < newParticles;i++)
+			if(mCurDuration <= 0)
 			{
-				buf2[idx++]	=Emit();
+				int	k=0;
+				k++;
 			}
 
 			numParticles		=idx;
 			mCurNumParticles	=idx;
 
+			if(mCurNumParticles <= 0)
+			{
+				if(mCurDuration <= 0)
+				{
+					Misc.SafeInvoke(eFinished, this);
+					return	null;
+				}
+			}
 			return	buf2;
 		}
 
@@ -142,13 +163,13 @@ namespace ParticleLib
 			ret.mLifeRemaining	=mRand.Next(mLifeMin, mLifeMax);
 
 			ret.mVelocity	=Mathery.RandomDirection(mRand)
-				* (mRand.Next(mVelocityMin, mVelocityMax) / 1000f);
+				* Mathery.RandomFloatNext(mRand, mVelocityMin, mVelocityMax);
 
-			ret.mRotationalVelocity	=(mRand.Next(mRotationalVelocityMin, mRotationalVelocityMax) / 1000f);
+			ret.mRotationalVelocity	=Mathery.RandomFloatNext(mRand, mRotationalVelocityMin, mRotationalVelocityMax);
 
-			ret.mSizeVelocity	=(mRand.Next(mSizeVelocityMin, mSizeVelocityMax) / 1000f);
+			ret.mSizeVelocity	=Mathery.RandomFloatNext(mRand, mSizeVelocityMin, mSizeVelocityMax);
 
-			ret.mAlphaVelocity	=(mRand.Next(mAlphaVelocityMin, mAlphaVelocityMax) / 1000f);
+			ret.mAlphaVelocity	=Mathery.RandomFloatNext(mRand, mAlphaVelocityMin, mAlphaVelocityMax);
 
 			return	ret;
 		}

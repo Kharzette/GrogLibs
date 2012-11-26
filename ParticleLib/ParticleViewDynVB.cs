@@ -22,6 +22,7 @@ namespace ParticleLib
 		Texture2D			mTex;
 		VertexDeclaration	mVD;
 		DynamicVertexBuffer	mVB;
+		ParticleVert		[]mPartBuf;
 
 		int	mNumParticles;
 		int	mMaxParticles;
@@ -40,17 +41,22 @@ namespace ParticleLib
 			els[0]	=new VertexElement(0, VertexElementFormat.Vector4, VertexElementUsage.Position, 0);
 			els[1]	=new VertexElement(16, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 0);
 
-			mVD	=new VertexDeclaration(els);
-
-			mVB	=new DynamicVertexBuffer(gd, mVD, maxParticles * 6, BufferUsage.WriteOnly);
+			mVD			=new VertexDeclaration(els);
+			mVB			=new DynamicVertexBuffer(gd, mVD, maxParticles * 6, BufferUsage.WriteOnly);
+			mPartBuf	=new ParticleVert[maxParticles * 6];
 		}
 
 
 		internal void Update(Particle []parts, int count)
 		{
-			Debug.Assert(count <= mMaxParticles);
+			mNumParticles	=count;
 
-			ParticleVert	[]pverts	=new ParticleVert[count * 6];
+			if(count == 0)
+			{
+				return;
+			}
+
+			Debug.Assert(count <= mMaxParticles);
 
 			for(int i=0;i < count;i++)
 			{
@@ -60,48 +66,46 @@ namespace ParticleLib
 				pos.Y	=parts[i].mPosition.Y;
 				pos.Z	=parts[i].mPosition.Z;
 
-				pverts[i * 6].mPosition		=pos;
-				pverts[i * 6 + 1].mPosition	=pos;
-				pverts[i * 6 + 2].mPosition	=pos;
-				pverts[i * 6 + 3].mPosition	=pos;
-				pverts[i * 6 + 4].mPosition	=pos;
-				pverts[i * 6 + 5].mPosition	=pos;
+				mPartBuf[i * 6].mPosition		=pos;
+				mPartBuf[i * 6 + 1].mPosition	=pos;
+				mPartBuf[i * 6 + 2].mPosition	=pos;
+				mPartBuf[i * 6 + 3].mPosition	=pos;
+				mPartBuf[i * 6 + 4].mPosition	=pos;
+				mPartBuf[i * 6 + 5].mPosition	=pos;
 
 				//texcoordx
-				pverts[i * 6 + 1].mPosition.W	=1;
-				pverts[i * 6 + 2].mPosition.W	=1;
-				pverts[i * 6 + 4].mPosition.W	=1;
+				mPartBuf[i * 6 + 1].mPosition.W	=1;
+				mPartBuf[i * 6 + 2].mPosition.W	=1;
+				mPartBuf[i * 6 + 4].mPosition.W	=1;
 
 				//texcoordy
-				pverts[i * 6 + 2].mSizeRotAlpha.W	=1;
-				pverts[i * 6 + 4].mSizeRotAlpha.W	=1;
-				pverts[i * 6 + 5].mSizeRotAlpha.W	=1;
+				mPartBuf[i * 6 + 2].mSizeRotAlpha.W	=1;
+				mPartBuf[i * 6 + 4].mSizeRotAlpha.W	=1;
+				mPartBuf[i * 6 + 5].mSizeRotAlpha.W	=1;
 
-				pverts[i * 6].mSizeRotAlpha.X		=parts[i].mSize;
-				pverts[i * 6 + 1].mSizeRotAlpha.X	=parts[i].mSize;
-				pverts[i * 6 + 2].mSizeRotAlpha.X	=parts[i].mSize;
-				pverts[i * 6 + 3].mSizeRotAlpha.X	=parts[i].mSize;
-				pverts[i * 6 + 4].mSizeRotAlpha.X	=parts[i].mSize;
-				pverts[i * 6 + 5].mSizeRotAlpha.X	=parts[i].mSize;
+				mPartBuf[i * 6].mSizeRotAlpha.X		=parts[i].mSize;
+				mPartBuf[i * 6 + 1].mSizeRotAlpha.X	=parts[i].mSize;
+				mPartBuf[i * 6 + 2].mSizeRotAlpha.X	=parts[i].mSize;
+				mPartBuf[i * 6 + 3].mSizeRotAlpha.X	=parts[i].mSize;
+				mPartBuf[i * 6 + 4].mSizeRotAlpha.X	=parts[i].mSize;
+				mPartBuf[i * 6 + 5].mSizeRotAlpha.X	=parts[i].mSize;
 
-				pverts[i * 6].mSizeRotAlpha.Y		=parts[i].mRotation;
-				pverts[i * 6 + 1].mSizeRotAlpha.Y	=parts[i].mRotation;
-				pverts[i * 6 + 2].mSizeRotAlpha.Y	=parts[i].mRotation;
-				pverts[i * 6 + 3].mSizeRotAlpha.Y	=parts[i].mRotation;
-				pverts[i * 6 + 4].mSizeRotAlpha.Y	=parts[i].mRotation;
-				pverts[i * 6 + 5].mSizeRotAlpha.Y	=parts[i].mRotation;
+				mPartBuf[i * 6].mSizeRotAlpha.Y		=parts[i].mRotation;
+				mPartBuf[i * 6 + 1].mSizeRotAlpha.Y	=parts[i].mRotation;
+				mPartBuf[i * 6 + 2].mSizeRotAlpha.Y	=parts[i].mRotation;
+				mPartBuf[i * 6 + 3].mSizeRotAlpha.Y	=parts[i].mRotation;
+				mPartBuf[i * 6 + 4].mSizeRotAlpha.Y	=parts[i].mRotation;
+				mPartBuf[i * 6 + 5].mSizeRotAlpha.Y	=parts[i].mRotation;
 
-				pverts[i * 6].mSizeRotAlpha.Z		=parts[i].mAlpha;
-				pverts[i * 6 + 1].mSizeRotAlpha.Z	=parts[i].mAlpha;
-				pverts[i * 6 + 2].mSizeRotAlpha.Z	=parts[i].mAlpha;
-				pverts[i * 6 + 3].mSizeRotAlpha.Z	=parts[i].mAlpha;
-				pverts[i * 6 + 4].mSizeRotAlpha.Z	=parts[i].mAlpha;
-				pverts[i * 6 + 5].mSizeRotAlpha.Z	=parts[i].mAlpha;
+				mPartBuf[i * 6].mSizeRotAlpha.Z		=parts[i].mAlpha;
+				mPartBuf[i * 6 + 1].mSizeRotAlpha.Z	=parts[i].mAlpha;
+				mPartBuf[i * 6 + 2].mSizeRotAlpha.Z	=parts[i].mAlpha;
+				mPartBuf[i * 6 + 3].mSizeRotAlpha.Z	=parts[i].mAlpha;
+				mPartBuf[i * 6 + 4].mSizeRotAlpha.Z	=parts[i].mAlpha;
+				mPartBuf[i * 6 + 5].mSizeRotAlpha.Z	=parts[i].mAlpha;
 			}
 
-			mNumParticles	=count;
-
-			mVB.SetData<ParticleVert>(pverts);
+			mVB.SetData<ParticleVert>(mPartBuf, 0, count * 6);
 		}
 
 

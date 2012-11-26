@@ -155,6 +155,17 @@ namespace UtilityLib
 		}
 
 
+		public static float RandomFloatNext(Random rnd, float min, float max)
+		{
+			double	d	=rnd.NextDouble();
+
+			d	*=(max - min);
+			d	+=min;
+
+			return	(float)d;
+		}
+
+
 		public static Color RandomColor(Random rnd)
 		{
 			Microsoft.Xna.Framework.Color	randColor
