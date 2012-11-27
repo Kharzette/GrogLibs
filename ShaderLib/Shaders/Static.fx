@@ -220,20 +220,39 @@ VPosTex0Tex13 ParticleVS(VPosTex04 input)
 	//cross right with view to get good up
 	float3	upVec	=normalize(cross(rightVec, viewDir));
 
-	//quad offset
-	pos.xyz	+=rightVec * (input.Position.w - 0.5f) * input.TexCoord0.x;
-	pos.xyz	+=upVec * (input.TexCoord0.w - 0.5f) * input.TexCoord0.x;
+	//quad offset mul by size stored in tex0.x
+	float3	ofs	=rightVec * (input.Position.w - 0.5f) * input.TexCoord0.x;
+	ofs			+=upVec * (input.TexCoord0.w - 0.5f) * input.TexCoord0.x;
 
+	//add in centerpoint
+	ofs	+=pos.xyz;
+
+	//copy texcoords
 	output.TexCoord0.x	=input.Position.w;
 	output.TexCoord0.y	=input.TexCoord0.w;
 
 	//worldpos
-	output.TexCoord1	=pos.xyz;
+	output.TexCoord1	=ofs;
 
-	pos.w	=1.0f;
+	//screen transformed centerpoint
+	float3	screenPos	=mul(pos, viewProj);
 
-	//screen transformed
-	output.Position		=mul(pos, viewProj);
+	//screen transformed quad position
+	float3	screenOfs	=mul(ofs, viewProj);
+
+	//subtract the centerpoint to just rotate the offset
+	screenOfs	-=screenPos;
+
+	//rotate ofs by rotation stored in tex0.y
+	float	rot		=input.TexCoord0.y;
+	float	cosRot	=cos(rot);
+	float	sinRot	=sin(rot);
+
+	float2x2	rotMat	=float2x2(cosRot, -sinRot, sinRot, cosRot);
+
+	screenOfs.xy	=mul(screenOfs.xy, rotMat);
+
+	output.Position	=float4(screenPos + screenOfs, 1.0);
 
 	return	output;
 }
