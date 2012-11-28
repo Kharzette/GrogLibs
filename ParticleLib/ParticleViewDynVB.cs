@@ -120,7 +120,7 @@ namespace ParticleLib
 
 			mGD.DepthStencilState	=DepthStencilState.DepthRead;
 			mGD.BlendState			=BlendState.Additive;
-			mGD.RasterizerState		=RasterizerState.CullNone;
+			mGD.RasterizerState		=RasterizerState.CullCounterClockwise;
 
 			mFX.CurrentTechnique	=mFX.Techniques["Particle"];
 

@@ -202,9 +202,9 @@ VPosTex04 NormalDepthVS(VPosNormTex0 input)
 	return	output;
 }
 
-VPosTex0Tex13 ParticleVS(VPosTex04 input)
+VPosTex03 ParticleVS(VPosTex04 input)
 {
-	VPosTex0Tex13	output;
+	VPosTex03	output;
 
 	float4x4	viewProj	=mul(mView, mProjection);
 
@@ -214,31 +214,36 @@ VPosTex0Tex13 ParticleVS(VPosTex04 input)
 	//all verts at 000, add instance pos
 	float4	pos	=input.Position;
 	
+	//reset texcoord val
+	pos.w	=1.0f;
+
 	//cross with up to get right
 	float3	rightVec	=normalize(cross(viewDir, float3(0, 1, 0)));
 
 	//cross right with view to get good up
 	float3	upVec	=normalize(cross(rightVec, viewDir));
 
+	float4	ofs	=pos;
+
 	//quad offset mul by size stored in tex0.x
-	float3	ofs	=rightVec * (input.Position.w - 0.5f) * input.TexCoord0.x;
-	ofs			+=upVec * (input.TexCoord0.w - 0.5f) * input.TexCoord0.x;
+	ofs.xyz	=rightVec * (input.Position.w - 0.5f) * input.TexCoord0.x;
+	ofs.xyz	+=upVec * (input.TexCoord0.w - 0.5f) * input.TexCoord0.x;
 
 	//add in centerpoint
-	ofs	+=pos.xyz;
+	ofs	+=pos;
 
 	//copy texcoords
 	output.TexCoord0.x	=input.Position.w;
 	output.TexCoord0.y	=input.TexCoord0.w;
 
-	//worldpos
-	output.TexCoord1	=ofs;
+	//copy alpha
+	output.TexCoord0.z	=input.TexCoord0.z;
 
 	//screen transformed centerpoint
-	float3	screenPos	=mul(pos, viewProj);
+	float4	screenPos	=mul(pos, viewProj);
 
 	//screen transformed quad position
-	float3	screenOfs	=mul(ofs, viewProj);
+	float4	screenOfs	=mul(ofs, viewProj);
 
 	//subtract the centerpoint to just rotate the offset
 	screenOfs	-=screenPos;
@@ -252,16 +257,18 @@ VPosTex0Tex13 ParticleVS(VPosTex04 input)
 
 	screenOfs.xy	=mul(screenOfs.xy, rotMat);
 
-	output.Position	=float4(screenPos + screenOfs, 1.0);
+	output.Position	=screenPos + screenOfs;
+//	output.Position	=float4(screenPos + screenOfs, 1.0);
+//	output.Position	=float4(screenOfs, 1.0);
 
 	return	output;
 }
 
 
-float4 ParticlePS(VTex0Tex14 input) : COLOR
+float4 ParticlePS(VTex03 input) : COLOR
 {
 	//texture
-	float4	texel	=tex2D(TexSampler0, input.TexCoord0);
+	float4	texel	=tex2D(TexSampler0, input.TexCoord0.xy);
 
 	//gamma
 	texel	=pow(texel, 2.2);
@@ -269,6 +276,9 @@ float4 ParticlePS(VTex0Tex14 input) : COLOR
 	//clip(texel.w - 0.1f);
 
 	float4	texLitColor	=texel * mSolidColour;
+
+	//store alpha in z
+	texLitColor.w	*=input.TexCoord0.z;
 
 	texLitColor	=pow(texLitColor, 1 / 2.2);
 

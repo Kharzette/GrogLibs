@@ -21,7 +21,7 @@ namespace ParticleLib
 
 
 		//return true if expired
-		internal bool Update(int msDelta)
+		internal bool Update(int msDelta, Vector3 gravity)
 		{
 			mLifeRemaining	-=msDelta;
 			if(mLifeRemaining < 0)
@@ -33,6 +33,11 @@ namespace ParticleLib
 			mSize		+=(mSizeVelocity * msDelta);
 			mRotation	+=(mRotationalVelocity * msDelta);
 			mAlpha		+=(mAlphaVelocity * msDelta);
+
+			mVelocity	+=(gravity * msDelta);
+
+			mAlpha	=MathHelper.Clamp(mAlpha, 0f, 1f);
+			mSize	=MathHelper.Clamp(mSize, 0f, 10000f);
 
 			return	false;
 		}

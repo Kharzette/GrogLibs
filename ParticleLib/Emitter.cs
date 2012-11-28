@@ -15,11 +15,12 @@ namespace ParticleLib
 
 		//basic info
 		Vector3	mPosition;
-		float	mStartSize;
+		float	mStartSize, mStartAlpha;
 		float	mEmitMS;
 		int		mDurationMS;	//negative for forever
 		int		mMaxParticles;
 		int		mCurNumParticles;
+		Vector3	mGravity;
 
 		//particle behaviour
 		//velocities in units per second
@@ -45,7 +46,8 @@ namespace ParticleLib
 
 
 		internal Emitter(int maxParticles,
-			Vector3 pos, float startSize,
+			Vector3 pos, Vector3 gravity,
+			float startSize, float startAlpha,
 			int durationMS, float emitMS,
 			float rotVelMin, float rotVelMax, float velMin,
 			float velMax, float sizeVelMin, float sizeVelMax,
@@ -53,7 +55,9 @@ namespace ParticleLib
 			int lifeMin, int lifeMax)
 		{
 			mPosition				=pos;
+			mGravity				=gravity;
 			mStartSize				=startSize;
+			mStartAlpha				=startAlpha;
 			mEmitMS					=emitMS;
 			mDurationMS				=durationMS;
 			mRotationalVelocityMin	=rotVelMin;
@@ -105,7 +109,7 @@ namespace ParticleLib
 			int	idx	=0;
 			for(int i=0;i < mCurNumParticles;i++)
 			{
-				if(!buf[i].Update(msDelta))
+				if(!buf[i].Update(msDelta, mGravity))
 				{
 					buf2[idx++]	=buf[i];
 				}
@@ -160,6 +164,7 @@ namespace ParticleLib
 			ret.mPosition		=mPosition;
 			ret.mSize			=mStartSize;
 			ret.mRotation		=0;
+			ret.mAlpha			=mStartAlpha;
 			ret.mLifeRemaining	=mRand.Next(mLifeMin, mLifeMax);
 
 			ret.mVelocity	=Mathery.RandomDirection(mRand)

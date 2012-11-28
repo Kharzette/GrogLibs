@@ -33,7 +33,8 @@ namespace ParticleLib
 
 
 		public void CreateEmitter(string texName, int maxParticles,
-			Vector3 pos, float startSize,
+			Vector3 pos, Vector3 gravity,
+			float startSize, float startAlpha,
 			int durationMS, float emitMS,
 			float rotVelMin, float rotVelMax, float velMin,
 			float velMax, float sizeVelMin, float sizeVelMax,
@@ -45,7 +46,9 @@ namespace ParticleLib
 				return;
 			}
 
-			Emitter	newEmitter	=new Emitter(maxParticles, pos, startSize, durationMS,
+			Emitter	newEmitter	=new Emitter(maxParticles,
+				pos, gravity,
+				startSize, startAlpha,	durationMS,
 				emitMS, rotVelMin, rotVelMax, velMin, velMax,
 				sizeVelMin, sizeVelMax, alphaVelMin, alphaVelMax, lifeMin, lifeMax);
 
