@@ -41,7 +41,7 @@ namespace SharedForms
 		public event EventHandler	eTexDictChanged;
 
 
-		public TextureElements(ContentManager cm)
+		public TextureElements(ContentManager cm) : base()
 		{
 			InitializeComponent();
 

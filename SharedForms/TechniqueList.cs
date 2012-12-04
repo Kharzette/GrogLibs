@@ -20,7 +20,7 @@ namespace SharedForms
 		public event EventHandler	eCancel;
 
 
-		public TechniqueList(MaterialLib.MaterialLib matLib, string matName)
+		public TechniqueList(MaterialLib.MaterialLib matLib, string matName) : base()
 		{
 			InitializeComponent();
 

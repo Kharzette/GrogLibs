@@ -17,6 +17,10 @@ shared float3		mLight0Color;
 shared float		mLightRange;
 shared float		mLightFalloffRange;	//under this light at full strength
 
+//outline / cell related
+float	mCellThresholds[4] = { 0.6, 0.4, 0.25, 0.1 };
+float	mCellBrightnessLevels[5] = { 1.0f, 0.7f, 0.5f, 0.2f, 0.05f };
+
 #include "Types.fxh"
 
 
@@ -134,5 +138,39 @@ VPosCol0 ComputeSkinTrilight(VPosNormBone input, float4x4 bones[MAX_BONES],
 	output.Color.w		=1.0;
 	
 	return	output;
+}
+
+
+//snaps a color to a cellish range
+float CalcCellLight(float3 lightVal)
+{
+	float	light;
+
+	float	d	=lightVal.x + lightVal.y + lightVal.z;
+
+	d	*=0.33;
+
+	if(d > mCellThresholds[0])
+	{
+		light	=mCellBrightnessLevels[0];
+	}
+	else if(d > mCellThresholds[1])
+	{
+		light	=mCellBrightnessLevels[1];
+	}
+	else if(d > mCellThresholds[2])
+	{
+		light	=mCellBrightnessLevels[2];
+	}
+	else if(d > mCellThresholds[3])
+	{
+		light	=mCellBrightnessLevels[3];
+	}
+	else
+	{
+		light	=mCellBrightnessLevels[4];
+	}
+
+	return	light;
 }
 #endif	//_COMMONFUNCTIONSFXH

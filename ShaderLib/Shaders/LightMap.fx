@@ -14,10 +14,6 @@ float	mWarpFactor;
 float	mYRangeMax;
 float	mYRangeMin;
 
-//outline / cell related
-float	mCellThresholds[4] = { 0.6, 0.4, 0.25, 0.1 };
-float	mCellBrightnessLevels[5] = { 1.0f, 0.7f, 0.5f, 0.2f, 0.05f };
-
 
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
@@ -263,39 +259,6 @@ float4 LMPixelShader(VTex04Tex14Tex24 input) : COLOR0
 	color	=pow(color, 1 / 2.2);
 
 	return	float4(color, input.TexCoord1.w);
-}
-
-
-float CalcCellLight(float3 lightVal)
-{
-	float	light;
-
-	float	d	=lightVal.x + lightVal.y + lightVal.z;
-
-	d	*=0.33;
-
-	if(d > mCellThresholds[0])
-	{
-		light	=mCellBrightnessLevels[0];
-	}
-	else if(d > mCellThresholds[1])
-	{
-		light	=mCellBrightnessLevels[1];
-	}
-	else if(d > mCellThresholds[2])
-	{
-		light	=mCellBrightnessLevels[2];
-	}
-	else if(d > mCellThresholds[3])
-	{
-		light	=mCellBrightnessLevels[3];
-	}
-	else
-	{
-		light	=mCellBrightnessLevels[4];
-	}
-
-	return	light;
 }
 
 

@@ -36,6 +36,30 @@ namespace UtilityLib
 		}
 
 
+		public static Vector4 ARGBToVector4(int argb)
+		{
+			Vector4	ret	=Vector4.Zero;
+
+			ret.X	=((float)((argb & 0x00ff0000) >> 16) / 255f);
+			ret.Y	=((float)((argb & 0x0000ff00) >> 8) / 255f);
+			ret.Z	=((float)(argb & 0x000000ff) / 255f);
+			ret.W	=((float)((argb & 0xff000000) >> 24) / 255f);
+
+			return	ret;
+		}
+
+
+		public static int Vector4ToARGB(Vector4 vecColor)
+		{
+			int	argb	=(int)(vecColor.W * 255f) << 24;
+			argb		|=(int)(vecColor.X * 255f) << 16;
+			argb		|=(int)(vecColor.Y * 255f) << 8;
+			argb		|=(int)(vecColor.Z * 255f);
+
+			return	argb;
+		}
+
+
 		public static Vector3 ColorNormalize(Vector3 inVec)
 		{
 			float	mag	=-696969;

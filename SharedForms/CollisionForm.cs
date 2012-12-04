@@ -17,7 +17,7 @@ namespace SharedForms
 		public event EventHandler	eRepeatRay;
 
 
-		public CollisionForm()
+		public CollisionForm() : base()
 		{
 			InitializeComponent();
 		}

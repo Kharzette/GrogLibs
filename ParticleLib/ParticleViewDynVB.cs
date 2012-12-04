@@ -24,8 +24,9 @@ namespace ParticleLib
 		DynamicVertexBuffer	mVB;
 		ParticleVert		[]mPartBuf;
 
-		int	mNumParticles;
-		int	mMaxParticles;
+		int		mNumParticles;
+		int		mMaxParticles;
+		bool	mbCell;
 
 
 		internal ParticleViewDynVB(GraphicsDevice gd, Effect fx, Texture2D tex, int maxParticles)
@@ -122,7 +123,14 @@ namespace ParticleLib
 			mGD.BlendState			=BlendState.Additive;
 			mGD.RasterizerState		=RasterizerState.CullCounterClockwise;
 
-			mFX.CurrentTechnique	=mFX.Techniques["Particle"];
+			if(mbCell)
+			{
+				mFX.CurrentTechnique	=mFX.Techniques["ParticleCell"];
+			}
+			else
+			{
+				mFX.CurrentTechnique	=mFX.Techniques["Particle"];
+			}
 
 			mFX.Parameters["mSolidColour"].SetValue(color);
 			mFX.Parameters["mTexture"].SetValue(mTex);
@@ -134,6 +142,30 @@ namespace ParticleLib
 			mGD.DrawPrimitives(PrimitiveType.TriangleList, 0, mNumParticles * 2);
 
 			mGD.SetVertexBuffer(null);
+		}
+
+
+		internal bool GetCell()
+		{
+			return	mbCell;
+		}
+
+
+		internal void SetCell(bool bOn)
+		{
+			mbCell	=bOn;
+		}
+
+
+		internal void SetTexture(Texture2D tex)
+		{
+			mTex	=tex;
+		}
+
+
+		internal string GetTexturePath()
+		{
+			return	mTex.Name;
 		}
 	}
 }

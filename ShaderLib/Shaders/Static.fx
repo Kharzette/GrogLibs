@@ -206,6 +206,13 @@ VPosTex03 ParticleVS(VPosTex04 input)
 {
 	VPosTex03	output;
 
+	//copy texcoords
+	output.TexCoord0.x	=input.Position.w;
+	output.TexCoord0.y	=input.TexCoord0.w;
+
+	//copy alpha
+	output.TexCoord0.z	=input.TexCoord0.z;
+
 	float4x4	viewProj	=mul(mView, mProjection);
 
 	//get view vector
@@ -214,9 +221,6 @@ VPosTex03 ParticleVS(VPosTex04 input)
 	//all verts at 000, add instance pos
 	float4	pos	=input.Position;
 	
-	//reset texcoord val
-	pos.w	=1.0f;
-
 	//cross with up to get right
 	float3	rightVec	=normalize(cross(viewDir, float3(0, 1, 0)));
 
@@ -232,12 +236,9 @@ VPosTex03 ParticleVS(VPosTex04 input)
 	//add in centerpoint
 	ofs	+=pos;
 
-	//copy texcoords
-	output.TexCoord0.x	=input.Position.w;
-	output.TexCoord0.y	=input.TexCoord0.w;
-
-	//copy alpha
-	output.TexCoord0.z	=input.TexCoord0.z;
+	//reset w's
+	pos.w	=1.0f;
+	ofs.w	=1.0f;
 
 	//screen transformed centerpoint
 	float4	screenPos	=mul(pos, viewProj);
@@ -253,13 +254,13 @@ VPosTex03 ParticleVS(VPosTex04 input)
 	float	cosRot	=cos(rot);
 	float	sinRot	=sin(rot);
 
+	//build a 2D rotation matrix
 	float2x2	rotMat	=float2x2(cosRot, -sinRot, sinRot, cosRot);
 
+	//rotation mul
 	screenOfs.xy	=mul(screenOfs.xy, rotMat);
 
 	output.Position	=screenPos + screenOfs;
-//	output.Position	=float4(screenPos + screenOfs, 1.0);
-//	output.Position	=float4(screenOfs, 1.0);
 
 	return	output;
 }
@@ -279,6 +280,29 @@ float4 ParticlePS(VTex03 input) : COLOR
 
 	//store alpha in z
 	texLitColor.w	*=input.TexCoord0.z;
+
+	texLitColor	=pow(texLitColor, 1 / 2.2);
+
+	return	texLitColor;
+}
+
+
+float4 ParticleCellPS(VTex03 input) : COLOR
+{
+	//texture
+	float4	texel	=tex2D(TexSampler0, input.TexCoord0.xy);
+
+	//gamma
+	texel	=pow(texel, 2.2);
+
+	//clip(texel.w - 0.1f);
+
+	float4	texLitColor	=texel * mSolidColour;
+
+	//store alpha in z
+	texLitColor.w	*=input.TexCoord0.z;
+
+	texLitColor.xyz	=CalcCellLight(texLitColor.xyz);
 
 	texLitColor	=pow(texLitColor, 1 / 2.2);
 
@@ -624,5 +648,14 @@ technique Particle
 	{
 		VertexShader	=compile vs_2_0 ParticleVS();
 		PixelShader		=compile ps_2_0 ParticlePS();
+	}
+}
+
+technique ParticleCell
+{     
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 ParticleVS();
+		PixelShader		=compile ps_2_0 ParticleCellPS();
 	}
 }

@@ -34,7 +34,7 @@ namespace ParticleLib
 			mRotation	+=(mRotationalVelocity * msDelta);
 			mAlpha		+=(mAlphaVelocity * msDelta);
 
-			mVelocity	+=(gravity * msDelta);
+			mVelocity	+=(gravity * msDelta) / 1000f;
 
 			mAlpha	=MathHelper.Clamp(mAlpha, 0f, 1f);
 			mSize	=MathHelper.Clamp(mSize, 0f, 10000f);

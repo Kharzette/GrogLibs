@@ -91,7 +91,9 @@ namespace SharedForms
 		}
 
 
-		public MaterialForm(GraphicsDevice gd, MaterialLib.MaterialLib matlib, bool bMeshPartsVisible)
+		public MaterialForm(GraphicsDevice gd,
+			MaterialLib.MaterialLib matlib,
+			bool bMeshPartsVisible) : base()
 		{
 			InitializeComponent();
 

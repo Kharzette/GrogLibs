@@ -20,7 +20,7 @@ namespace SharedForms
 		public event EventHandler	eCancel;
 
 
-		public ShaderList(MaterialLib.MaterialLib matlib)
+		public ShaderList(MaterialLib.MaterialLib matlib) : base()
 		{
 			InitializeComponent();
 

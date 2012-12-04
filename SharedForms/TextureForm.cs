@@ -20,7 +20,7 @@ namespace SharedForms
 		public event EventHandler	eCancel;
 
 
-		public TextureForm(MaterialLib.MaterialLib matlib)
+		public TextureForm(MaterialLib.MaterialLib matlib) : base()
 		{
 			InitializeComponent();
 

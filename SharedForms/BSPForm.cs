@@ -65,7 +65,7 @@ namespace SharedForms
 		}
 
 
-		public BSPForm()
+		public BSPForm() : base()
 		{
 			InitializeComponent();
 		}

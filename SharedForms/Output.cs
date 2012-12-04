@@ -14,7 +14,7 @@ namespace SharedForms
 {
 	public partial class Output : Form
 	{
-		public Output()
+		public Output() : base()
 		{
 			InitializeComponent();
 

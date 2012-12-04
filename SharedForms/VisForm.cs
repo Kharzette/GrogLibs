@@ -24,7 +24,7 @@ namespace SharedForms
 		public event EventHandler	eReloadVisFarm;
 
 
-		public VisForm()
+		public VisForm() : base()
 		{
 			InitializeComponent();
 		}

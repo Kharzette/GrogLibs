@@ -81,6 +81,7 @@
     <Compile Include="Contents.cs" />
     <Compile Include="DebugFace.cs" />
     <Compile Include="Mobile.cs" />
+    <Compile Include="ParticleHelper.cs" />
     <Compile Include="Pushable.cs" />
     <Compile Include="TriggerHelper.cs" />
     <Compile Include="ZoneLeafSide.cs" />
@@ -139,6 +140,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ParticleLib\ParticleLib.csproj">
+      <Project>{5CDE77ED-568B-4412-BBC9-12247BF5F214}</Project>
+      <Name>ParticleLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj">
       <Project>{BB91910C-2595-4EB6-B48C-30BCC41457F6}</Project>
       <Name>UtilityLib</Name>

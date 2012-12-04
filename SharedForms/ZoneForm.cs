@@ -21,7 +21,7 @@ namespace SharedForms
 		public event EventHandler	eDumpTextures;
 
 
-		public ZoneForm()
+		public ZoneForm() : base()
 		{
 			InitializeComponent();
 		}
