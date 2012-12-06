@@ -44,7 +44,7 @@ namespace BSPZone
 				ze.GetOrigin(out pos);
 
 				AudioEmitter	em	=new AudioEmitter();
-				em.Position	=pos;
+				em.Position	=pos * Audio.InchWorldScale;
 				mEmitters.Add(em);
 
 				string	fxName;

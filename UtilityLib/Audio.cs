@@ -23,6 +23,9 @@ namespace UtilityLib
 
 		const int	MaxInstances	=300;	//xbox limitation
 
+		public const float	MeterWorldScale	=0.5f;			//use this for game unit == meter
+		public const float	InchWorldScale	=1.0f / 72f;	//for inches
+
 
 		public void AddSound(string name, SoundEffect fx)
 		{
