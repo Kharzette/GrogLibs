@@ -124,6 +124,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Audio.cs" />
     <Compile Include="ExceptionGame.cs" />
     <Compile Include="FileUtil.cs" />
     <Compile Include="GameCamera.cs" />

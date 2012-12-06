@@ -78,6 +78,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AudioHelper.cs" />
     <Compile Include="Contents.cs" />
     <Compile Include="DebugFace.cs" />
     <Compile Include="Mobile.cs" />
