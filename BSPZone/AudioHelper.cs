@@ -19,15 +19,20 @@ namespace BSPZone
 		List<SoundEffectInstance>	mInstances		=new List<SoundEffectInstance>();
 
 
-		public void Initialize(Zone zone, Audio aud, AudioListener playerListener)
+		public void Initialize(Zone zone, TriggerHelper th, Audio aud, AudioListener playerListener)
 		{
 			mZone			=zone;
 			mAudio			=aud;
 			mPlayerListener	=playerListener;
 
+			th.eMisc	+=OnTriggerMisc;
+
 			mAudioEntities.Clear();
 			mEmitters.Clear();
 			mInstances.Clear();
+
+			//track index
+			int	index	=0;
 
 			//grab out audio emitters
 			List<ZoneEntity>	sounds	=mZone.GetEntitiesStartsWith("misc_sound");
@@ -57,11 +62,14 @@ namespace BSPZone
 
 				mInstances.Add(sei);
 
-				string	sOn	=ze.GetValue("turned_on");
+				string	sOn	=ze.GetValue("activated");
 				if(sOn != "0")
 				{
 					sei.Play();
 				}
+
+				ze.SetInt("InstanceIndex", index);
+				index++;
 			}
 		}
 
@@ -76,6 +84,41 @@ namespace BSPZone
 					sei.Apply3D(mPlayerListener, mEmitters[i]);
 				}
 			}
+		}
+
+
+		void OnTriggerMisc(object sender, EventArgs ea)
+		{
+			ZoneEntity	ze	=sender as ZoneEntity;
+			if(ze == null)
+			{
+				return;
+			}
+
+			string	className	=ze.GetValue("classname");
+			if(!className.StartsWith("misc_sound"))
+			{
+				return;
+			}
+
+			int	index	=0;
+			if(!ze.GetInt("InstanceIndex", out index))
+			{
+				return;
+			}
+
+			SoundEffectInstance	sei	=mInstances[index];
+
+			if(sei.State == SoundState.Playing)
+			{
+				sei.Stop();
+			}
+			else
+			{
+				sei.Play();
+			}
+
+			ze.ToggleEntityActivated();
 		}
 	}
 }

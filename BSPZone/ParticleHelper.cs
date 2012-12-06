@@ -15,12 +15,17 @@ namespace BSPZone
 		ParticleBoss	mPB;
 
 
-		public void Initialize(Zone zone, ParticleBoss pb, string texPrefix)
+		public void Initialize(Zone zone, TriggerHelper th, ParticleBoss pb, string texPrefix)
 		{
 			mZone	=zone;
 			mPB		=pb;
 
+			th.eMisc	+=OnTriggerMisc;
+
 			Array	shapeVals	=Enum.GetValues(typeof(Emitter.Shapes));
+
+			//track index
+			int	index	=0;
 
 			//grab out all particle emitters
 			List<ZoneEntity>	parts	=mZone.GetEntitiesStartsWith("misc_particle");
@@ -76,7 +81,7 @@ namespace BSPZone
 
 
 				int	bVal;
-				Mathery.TryParse(ze.GetValue("turned_on"), out bVal);
+				Mathery.TryParse(ze.GetValue("activated"), out bVal);
 				bOn	=(bVal != 0);
 
 				Mathery.TryParse(ze.GetValue("cell_shade"), out bVal);
@@ -115,7 +120,36 @@ namespace BSPZone
 					velMin, velMax, sizeVelMin, sizeVelMax,
 					alphaVelMin, alphaVelMax, (int)lifeMin, (int)lifeMax);
 
+				ze.SetInt("EmitterIndex", index);
+
+				mPB.GetEmitterByIndex(index).mbOn	=bOn;
+
+				index++;
 			}
+		}
+
+
+		void OnTriggerMisc(object sender, EventArgs ea)
+		{
+			ZoneEntity	ze	=sender as ZoneEntity;
+			if(ze == null)
+			{
+				return;
+			}
+
+			string	className	=ze.GetValue("classname");
+			if(!className.StartsWith("misc_particle"))
+			{
+				return;
+			}
+
+			int	index	=0;
+			if(!ze.GetInt("EmitterIndex", out index))
+			{
+				return;
+			}
+
+			mPB.GetEmitterByIndex(index).mbOn	=ze.ToggleEntityActivated();
 		}
 	}
 }

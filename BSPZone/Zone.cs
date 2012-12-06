@@ -261,17 +261,15 @@ namespace BSPZone
 					continue;
 				}
 
-				int	spawnFlags;
-				if(e.GetInt("spawnflags", out spawnFlags))
+				int	activated;
+				if(e.GetInt("activated", out activated))
 				{
-					if(Misc.bFlagSet(spawnFlags, 1))
+					if(activated != 0)
 					{
-						continue;
+						ret.Add(e);
 					}
 				}
 
-				//no flags at all means start on
-				ret.Add(e);
 			}
 			return	ret;
 		}

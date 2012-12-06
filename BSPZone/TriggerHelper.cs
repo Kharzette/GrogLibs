@@ -88,6 +88,14 @@ namespace BSPZone
 				{
 					TriggerLight(zet);
 				}
+				else if(className.StartsWith("misc_"))
+				{
+					Misc.SafeInvoke(eMisc, zet);
+				}
+				else if(className.StartsWith("func_"))
+				{
+					Misc.SafeInvoke(eFunc, zet);
+				}
 			}
 		}
 
@@ -159,34 +167,8 @@ namespace BSPZone
 				return;
 			}
 
-			//see if already on
-			bool	bOn	=true;
-
-			int	spawnFlags;
-			if(zet.GetInt("spawnflags", out spawnFlags))
-			{
-				if(Misc.bFlagSet(spawnFlags, 1))
-				{
-					bOn	=false;
-
-					//flip bit in entity data
-					Misc.ClearFlag(ref spawnFlags, 1);
-					zet.SetInt("spawnflags", spawnFlags);					
-				}
-				else
-				{
-					spawnFlags	|=1;
-					zet.SetInt("spawnflags", spawnFlags);
-				}
-			}
-			else
-			{
-				zet.SetInt("spawnflags", 1);
-			}
-
 			//switch!
-			bOn	=!bOn;
-			mSwitchLight(switchNum, bOn);
+			mSwitchLight(switchNum, zet.ToggleEntityActivated());
 		}
 
 

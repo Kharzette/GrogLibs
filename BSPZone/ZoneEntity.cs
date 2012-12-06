@@ -264,6 +264,34 @@ namespace BSPZone
 		}
 
 
+		//flips and returns new state
+		public bool ToggleEntityActivated()
+		{
+			//see if already on
+			int	activated;
+			if(GetInt("activated", out activated))
+			{
+				if(activated != 0)
+				{
+					//flip bit in entity data
+					activated	=0;
+					SetInt("activated", activated);
+				}
+				else
+				{
+					activated	=1;
+					SetInt("activated", activated);
+				}
+			}
+			else
+			{
+				SetInt("activated", 1);
+			}
+
+			return	(activated != 0);
+		}
+
+
 		public void Read(BinaryReader br)
 		{
 			int	dataCount	=br.ReadInt32();
