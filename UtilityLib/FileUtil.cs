@@ -4,6 +4,7 @@ using System.Text;
 using System.IO;
 using System.Reflection;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 #if !X64
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Storage;
@@ -511,6 +512,33 @@ namespace UtilityLib
 					bw.Write(gack.M44);
 				}
 			}
+		}
+
+
+		public static Dictionary<string, SpriteFont> LoadAllFonts(ContentManager cm)
+		{
+			Dictionary<string, SpriteFont>	ret	=new Dictionary<string, SpriteFont>();
+
+			if(Directory.Exists(cm.RootDirectory + "/Fonts"))
+			{
+				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
+					+ cm.RootDirectory + "/Fonts/");
+
+				FileInfo[]		fi	=di.GetFiles("*.xnb", SearchOption.AllDirectories);
+				foreach(FileInfo f in fi)
+				{
+					string	fileName	=FileUtil.StripExtension(f.Name);
+
+					//strip back the content dir
+					string	path	=f.DirectoryName.Substring(
+						f.DirectoryName.LastIndexOf(cm.RootDirectory)
+						+ cm.RootDirectory.Length + 1);
+
+					ret.Add(fileName, cm.Load<SpriteFont>(path + "/" + fileName));
+				}
+			}
+
+			return	ret;
 		}
 
 
