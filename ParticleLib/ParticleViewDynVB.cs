@@ -167,5 +167,22 @@ namespace ParticleLib
 		{
 			return	mTex.Name;
 		}
+
+
+		//adds on to the end
+		internal string GetEntityFields(string ent)
+		{
+			string	texName	=mTex.Name;
+
+			if(mTex.Name.Contains("\\"))
+			{
+				texName	=texName.Substring(texName.LastIndexOf('\\') + 1);
+			}
+
+			ParticleBoss.AddField(ref ent, "cell_shade", (mbCell)? "1" : "0");
+			ParticleBoss.AddField(ref ent, "tex_name", texName);
+
+			return	ent;
+		}
 	}
 }

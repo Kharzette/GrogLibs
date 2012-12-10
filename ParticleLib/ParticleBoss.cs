@@ -112,7 +112,7 @@ namespace ParticleLib
 
 		public Vector4 GetColorByIndex(int index)
 		{
-			if(mColors.Count <= index)
+			if(mColors.Count <= index || index < 0)
 			{
 				return	Vector4.One;
 			}
@@ -122,7 +122,7 @@ namespace ParticleLib
 
 		public void SetColorByIndex(int index, Vector4 col)
 		{
-			if(mColors.Count <= index)
+			if(mColors.Count <= index || index < 0)
 			{
 				return;
 			}
@@ -132,7 +132,7 @@ namespace ParticleLib
 
 		public void SetTextureByIndex(int index, Texture2D tex)
 		{
-			if(mViews.Count <= index)
+			if(mViews.Count <= index || index < 0)
 			{
 				return;
 			}
@@ -142,7 +142,7 @@ namespace ParticleLib
 
 		public void SetCellByIndex(int index, bool bOn)
 		{
-			if(mViews.Count <= index)
+			if(mViews.Count <= index || index < 0)
 			{
 				return;
 			}
@@ -152,7 +152,7 @@ namespace ParticleLib
 
 		public bool GetCellByIndex(int index)
 		{
-			if(mViews.Count <= index)
+			if(mViews.Count <= index || index < 0)
 			{
 				return	false;
 			}
@@ -162,7 +162,7 @@ namespace ParticleLib
 
 		public string GetTexturePathByIndex(int index)
 		{
-			if(mViews.Count <= index)
+			if(mViews.Count <= index || index < 0)
 			{
 				return	"";
 			}
@@ -175,6 +175,42 @@ namespace ParticleLib
 			mEmitters.RemoveAt(idx);
 			mViews.RemoveAt(idx);
 			mColors.RemoveAt(idx);
+		}
+
+
+		internal static void AddField(ref string ent, string fieldName, string value)
+		{
+			ent	+="    " + fieldName + " = \"" + value + "\"\n";
+		}
+
+
+
+		//convert to a quark entity
+		public string GetEmitterEntityString(int index)
+		{
+			if(mEmitters.Count <= index || index < 0)
+			{
+				return	"";
+			}
+
+			string	entity	="QQRKSRC1\n{\n  misc_particle_emitter:e =\n  {\n";
+
+			entity	=mEmitters[index].GetEntityFields(entity);
+			entity	=mViews[index].GetEntityFields(entity);
+
+			Vector4	col	=mColors[index];
+
+			AddField(ref entity, "color", Misc.FloatToString(col.X, 4)
+				+ " " + Misc.FloatToString(col.Y, 4)
+				+ " " + Misc.FloatToString(col.Z, 4));
+
+			//color's w component goes in alpha
+			//quark doesn't like 4 component stuff
+			AddField(ref entity, "alpha", "" + Misc.FloatToString(col.W, 4));
+
+			entity	+="  }\n}";
+
+			return	entity;
 		}
 	}
 }

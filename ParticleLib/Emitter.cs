@@ -231,5 +231,36 @@ namespace ParticleLib
 			mGravity	=Vector3.TransformNormal(Vector3.UnitX, gravMat);
 			mGravity	*=str;
 		}
+
+
+		internal string GetEntityFields(string entity)
+		{
+			ParticleBoss.AddField(ref entity, "origin", Misc.VectorToString(mPosition));
+			ParticleBoss.AddField(ref entity, "max_particles", "" + mMaxParticles);
+			ParticleBoss.AddField(ref entity, "shape", "" + (int)mShape);
+			ParticleBoss.AddField(ref entity, "shape_size", "" + Misc.FloatToString(mShapeSize, 1));
+			ParticleBoss.AddField(ref entity, "grav_yaw", "" + mGravityYaw);
+			ParticleBoss.AddField(ref entity, "grav_pitch", "" + mGravityPitch);
+			ParticleBoss.AddField(ref entity, "grav_roll", "" + mGravityRoll);
+			ParticleBoss.AddField(ref entity, "grav_strength", "" + Misc.FloatToString(mGravityStrength, 5));
+			ParticleBoss.AddField(ref entity, "start_size", "" + Misc.FloatToString(mStartSize, 1));
+			ParticleBoss.AddField(ref entity, "start_alpha", "" + Misc.FloatToString(mStartAlpha, 2));
+			ParticleBoss.AddField(ref entity, "emit_ms", "" + Misc.FloatToString(mEmitMS, 3));
+			ParticleBoss.AddField(ref entity, "rot_velocity_min", "" + Misc.FloatToString(mRotationalVelocityMin * 1000f, 2));
+			ParticleBoss.AddField(ref entity, "rot_velocity_max", "" + Misc.FloatToString(mRotationalVelocityMax * 1000f, 2));
+			ParticleBoss.AddField(ref entity, "velocity_min", "" + Misc.FloatToString(mVelocityMin * 1000f, 2));
+			ParticleBoss.AddField(ref entity, "velocity_max", "" + Misc.FloatToString(mVelocityMax * 1000f, 2));
+			ParticleBoss.AddField(ref entity, "size_velocity_min", "" + Misc.FloatToString(mSizeVelocityMin * 1000f, 2));
+			ParticleBoss.AddField(ref entity, "size_velocity_max", "" + Misc.FloatToString(mSizeVelocityMax * 1000f, 2));
+			ParticleBoss.AddField(ref entity, "spin_velocity_min", "" + Misc.FloatToString(mRotationalVelocityMin * 1000f, 2));
+			ParticleBoss.AddField(ref entity, "spin_velocity_max", "" + Misc.FloatToString(mRotationalVelocityMax * 1000f, 2));
+			ParticleBoss.AddField(ref entity, "alpha_velocity_min", "" + Misc.FloatToString(mAlphaVelocityMin * 1000f, 2));
+			ParticleBoss.AddField(ref entity, "alpha_velocity_max", "" + Misc.FloatToString(mAlphaVelocityMax * 1000f, 2));
+			ParticleBoss.AddField(ref entity, "lifetime_min", "" + Misc.FloatToString(mLifeMin / 1000f, 2));
+			ParticleBoss.AddField(ref entity, "lifetime_max", "" + Misc.FloatToString(mLifeMax / 1000f, 2));
+			ParticleBoss.AddField(ref entity, "activated", (mbOn)? "1" : "0");
+
+			return	entity;
+		}
 	}
 }

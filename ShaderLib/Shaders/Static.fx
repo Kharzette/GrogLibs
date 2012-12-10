@@ -274,8 +274,6 @@ float4 ParticlePS(VTex03 input) : COLOR
 	//gamma
 	texel	=pow(texel, 2.2);
 
-	//clip(texel.w - 0.1f);
-
 	float4	texLitColor	=texel * mSolidColour;
 
 	//store alpha in z
@@ -294,8 +292,6 @@ float4 ParticleCellPS(VTex03 input) : COLOR
 
 	//gamma
 	texel	=pow(texel, 2.2);
-
-	//clip(texel.w - 0.1f);
 
 	float4	texLitColor	=texel * mSolidColour;
 

@@ -80,6 +80,28 @@ namespace UtilityLib
 		}
 
 
+		static string AddCountStuffToString(int num, string stuff)
+		{
+			string	ret	="";
+
+			for(int i=0;i < num;i++)
+			{
+				ret	+=stuff;
+			}
+			return	ret;
+		}
+
+
+		public static string FloatToString(float f, int numDecimalPlaces)
+		{
+			//this I think prevents scientific notation on small numbers
+			decimal	d	=Convert.ToDecimal(f);
+
+			return	string.Format("{0:0." + AddCountStuffToString(numDecimalPlaces, "#") + "}",
+				d.ToString(System.Globalization.CultureInfo.InvariantCulture));
+		}
+
+
 		public static string VectorToString(Vector3 vec)
 		{
 			return	vec.X.ToString(System.Globalization.CultureInfo.InvariantCulture)
