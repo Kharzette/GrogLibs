@@ -43,6 +43,7 @@ QQRKSRC1
           origin = "0 0 0"
           _color = "1 1 1"
           light = "300"
+		  activated = "1"
           ;desc = "Invisible Light Source."
         }
       }
@@ -74,16 +75,10 @@ QQRKSRC1
       }
       Path & Combat entities.qtxfolder =
       {
-        path_corner:e =
-        {
-          origin = "0 0 0"
-          ;desc = "Use this to get the monsters to walk around the map."
-        }
         point_combat:e =
         {
           origin = "0 0 0"
-          ;desc = "Used for making a monster push a button or whatever when it"
-           " sees the player."
+          ;desc = "Generic AI goal"
         }
       }
       Misc_* entities.qtxfolder =
@@ -94,6 +89,47 @@ QQRKSRC1
           angle = "360"
           ;desc = "Change this, and make more for whatever is needed"
         }
+        misc_sound:e =
+        {
+          origin = "0 0 0"
+		  effect_name = "boing"
+		  looping = "1"
+		  volume = "1"
+		  activated = "1"
+          ;desc = "Emit a sound here"
+        }
+		misc_particle_emitter:e =
+		{
+          origin = "0 0 0"
+		  tex_name = "GlowParticle"
+		  color = "1 1 1"
+		  alpha = "1"
+		  max_particles = "256"
+		  cell_shade = "1"
+		  shape = "0"
+		  shape_size = "16"
+		  grav_yaw = "0"
+		  grav_pitch = "0"
+		  grav_roll = "0"
+		  grav_strength = "0"
+		  start_size = "1"
+		  start_alpha = "1"
+		  emit_ms = "0.04"
+		  rot_velocity_min = "0"
+		  rot_velocity_max = "0"
+		  velocity_min = "-5"
+		  velocity_max = "5"
+		  size_velocity_min = "-0.5"
+		  size_velocity_max = "0.5"
+		  spin_velocity_min = "0"
+		  spin_velocity_max = "0"
+		  alpha_velocity_min = "0"
+		  alpha_velocity_max = "0"
+		  lifetime_min = "3"
+		  lifetime_max = "4"
+		  activated = "1"
+          ;desc = "Emit particles from this entity"
+		}
       }
       Key_* entities.qtxfolder =
       {
@@ -173,11 +209,8 @@ QQRKSRC1
         }
         func_button:b =
         {
-          angle = "360"
-          lip = "4"
-          sounds = "0"
-          speed = "40"
-          wait = "3"
+		  health = "0"
+          delay = "3"
           ;desc = "Just an every day Button."
           poly:p =
           {
@@ -221,12 +254,6 @@ QQRKSRC1
         }
         func_door:b =
         {
-          angle = "360"
-          dmg = "2"
-          lip = "8"
-          sounds = "0"
-          speed = "100"
-          wait = "3"
           ;desc = "The standard entity for doors."
           poly:p =
           {
@@ -271,11 +298,6 @@ QQRKSRC1
         }
         func_plat:b =
         {
-          accel = "500"
-          dmg = "2"
-          lip = "8"
-          sounds = "1"
-          speed = "150"
           ;desc = "This is used for platforms or elevators."
           poly:p =
           {
@@ -374,6 +396,7 @@ QQRKSRC1
         trigger_stand_in:b =
         {
           gravity = "1.0"
+		  activated = "0"
           ;desc = "Fires events on entry and exit"
           poly:p =
           {
@@ -432,6 +455,7 @@ QQRKSRC1
         }
         trigger_once:b =
         {
+		  activated = "0"
           ;desc = "Use this to trigger something only once."
           poly:p =
           {
@@ -525,333 +549,50 @@ QQRKSRC1
         Values = "key_whatever"
       }
     }
-    t_noise_form:form =
-    {
-      Caption = "Sounds"
-      noise: =
-      {
-        Typ = "C"
-        Txt = "Sounds"
-        Hint = "Number of sounds = 1"
-        Items = "whatever.wav"
-        Values = "whatever.wav"
-      }
-    }
   }
   Entity forms.fctx =
   {
-    t_noise:incl =
-    {
-      noise: =
-      {
-        Txt = ""
-        Typ = "B"
-        Form = "t_noise_form:form"
-        Hint = "Available .WAV files"
-        Cap = "sounds..."
-      }
-    }
     ammo_whatever:form =
     {
       Help = "Generic ammo, needs changing to game specific"
       bbox = '-16 -16 -16 16 16 16'
-      mdl = "models/items/ammo/bullets/medium/tris.md2"
       angle: =
       {
         Txt = "&"
-        Hint = "Specifies a facing direction on the XY plane. (Default=0)."
-      }
-      angles: =
-      {
-        Txt = "&"
-        Hint = "Specifies a facing direction in 3 dimensions, defined by pitch"
-         ", yaw, and roll. (Default=0 0 0)."
-      }
-      delay: =
-      {
-        Txt = "&"
-        Hint = "Specifies the delay in seconds before target, killtarget and m"
-         "essage will fire after the ammo is touched by the player. (Default=0"
-         ")."
-      }
-      killtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be removed from the map when the a"
-         "mmo is touched by the player."
-      }
-      message: =
-      {
-        Txt = "&"
-        Hint = "Specifies the character string to print to the screen when the"
-         " ammo is touched by the player."
-      }
-      target: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be triggered when the ammo is touc"
-         "hed by the player."
-      }
-      targetname: =
-      {
-        Txt = "&"
-        Hint = "Use this to make it disappear by making it triggered by killta"
-         "rget."
-      }
-      team: =
-      {
-        Txt = "&"
-        Hint = "Use for changing Weapons Ammo & Powerups spawning."
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The ammo_* entity will be inhibited and not appear when skill="
-         "0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The ammo_* entity will be inhibited and not appear when skill="
-         "1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The ammo_* entity will be inhibited and not appear when skill="
-         "2 or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "The ammo_* entity will be inhibited and not appear when deathm"
-         "atch=1."
-        Cap = "Not in Deathmatch"
+        Hint = "Rotation about Y in degrees"
       }
     }
     func_areaportal:form =
     {
-      Help = "This is a non-visible object that divides the world into areas t"
-       "hat are seperated when this portal is not activated. Usually enclosed "
-       "in the middle of a door."
-      style: =
-      {
-        Txt = "&"
-        Hint = "set 1 next AP 2 etc. Note don't need to set this, when a full "
-         "compile is done this is set ."
-      }
-      targetname: =
-      {
-        Txt = "&"
-        Hint = "Targeted buy a func_door or func_door_rotating or func_door_se"
-         "cret."
-      }
+      Help = "These don't work right now"
     }
     func_button:form =
     {
-      Help = "When a button is touched, it moves some distance in the directio"
-       "n of it's angle, and then triggers all of it's targets."
-      angle: =
-      {
-        Txt = "&"
-        Hint = "Direction the func_button will move on the XY plane. (Default="
-         "0). (-1 is up, -2 is down)."
-      }
-      angles: =
-      {
-        Txt = "&"
-        Hint = "Direction the func_button will move in 3 dimensions, specified"
-         " by pitch and yaw. Roll is ignored. Syntax is pitch yaw 0. (Default="
-         "0 0 0)."
-      }
+      Help = "Touch to trigger something"
       delay: =
       {
         Txt = "&"
-        Hint = "Specifies the delay in seconds before the func_button fires. ("
-         "Default=0)."
+        Hint = "Specifies the delay in seconds before the func_button fires"
       }
       health: =
       {
         Txt = "&"
-        Hint = "When non-zero, makes the func_button shootable, and specifies "
-         "hit points required before activating."$0D"A shootable func_button i"
-         "s not pushable. (Default=0)."
-      }
-      killtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be removed from the map when the f"
-         "unc_button fires."
-      }
-      lip: =
-      {
-        Txt = "&"
-        Hint = "When activated, the func_button will move [brush thickness]+[-"
-         "2]-[lip value] units. (Default=4)."
-      }
-      message: =
-      {
-        Txt = "&"
-        Hint = "Character string to print to the screen when the func_button f"
-         "ires."
-      }
-      pathtarget: =
-      {
-        Txt = "&"
-        Hint = "If target is a trigger_elevator, specifies the path_corner the"
-         " targeted func_train is to move to."
-      }
-      sounds: =
-      {
-        Typ = "C"
-        Txt = "&"
-        Hint = "Specifies sounds to be played when activated. (Default=0)."
-        Items = "0) Audible"$0D"1) Silent"$0D"2) Steam Metal"$0D"3) Wooden Clu"
-         "nk"$0D"4) Metallic Click"$0D"5) In-Out"
-        Values = "0"$0D"1"$0D"2"$0D"3"$0D"4"$0D"5"
-      }
-      speed: =
-      {
-        Txt = "&"
-        Hint = "Speed in units/second that the func_button moves. (Default=40)"
-         "."
+        Hint = "When non-zero, makes the func_button shootable"
       }
       target: =
       {
         Txt = "&"
-        Hint = "Targetname of the entity to be triggered when the func_button "
-         "fires."
-      }
-      targetname: =
-      {
-        Txt = "&"
-        Hint = "Name of the specific func_button."$0D" A func_button with a ta"
-         "rgetname cannot be pressed,"$0D"but it can be shot (if health>0) and"
-         " it can be triggered with another triggering entity."
-      }
-      wait: =
-      {
-        Txt = "&"
-        Hint = "Time in seconds for the func_button to wait before it returns "
-         "to its ready position."$0D"If wait=-1, the button will never return."
-         " (Default=3)."
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The func_button will be inhibited and not appear when skill=0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The func_button will be inhibited and not appear when skill=1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The func_button will be inhibited and not appear when skill=2 "
-         "or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "The func_button will be inhibited and not appear when deathmat"
-         "ch=1."
-        Cap = "Not in Deathmatch"
+        Hint = "Targetname of the entity to be triggered"
       }
     }
     func_door:form =
     {
       Help = "The standard entity for doors.."
-      angle: =
-      {
-        Txt = "&"
-        Hint = "Direction the func_door will move on the XY plane. (Default=0)"
-         ". (-1 is up, -2 is down)."
-      }
-      angles: =
-      {
-        Txt = "&"
-        Hint = "Direction the func_door will move in 3 dimensions, specified b"
-         "y pitch and yaw. Roll is ignored. Syntax is pitch yaw 0. (Default=0 "
-         "0 0)."
-      }
-      accel: =
-      {
-        Txt = "&"
-        Hint = "Acceleration speed when activated, goes from stopped to speed "
-         "(default=?)."
-      }
-      decel: =
-      {
-        Txt = "&"
-        Hint = "Deceleration speed when deactivated, goes from speed to 0 (def"
-         "ault=?)."
-      }
-      delay: =
-      {
-        Txt = "&"
-        Hint = "Time before trigger in seconds."
-      }
-      dmg: =
-      {
-        Txt = "&"
-        Hint = "Damage in hit points the func_door will do to an entity that b"
-         "locks its movement. (Default=2)."
-      }
       health: =
       {
         Txt = "&"
         Hint = "When greater than zero, makes the func_door shootable, and spe"
          "cifies hit points required before activating.(Default=0)."
-      }
-      lip: =
-      {
-        Txt = "&"
-        Hint = "When activated, the func_door will move [brush thickness]+[-2]"
-         "-[lip value] units. (Default=8)."
-      }
-      message: =
-      {
-        Txt = "&"
-        Hint = "Character string to print to the screen when the player approa"
-         "ches the func_door if its trigger is inactive."
-      }
-      sounds: =
-      {
-        Typ = "C"
-        Txt = "&"
-        Hint = "Specifies sounds to be played when activated. (Default=0)."
-        Items = "0) Audible"$0D"1) Silent"$0D"2) Light"$0D"3) Medium"$0D"4) He"
-         "avy"
-        Values = "0"$0D"1"$0D"2"$0D"3"$0D"4"
-      }
-      speed: =
-      {
-        Txt = "&"
-        Hint = "Speed in units/second that the func_door moves. (Default=100)."
-        Items = ""
-      }
-      target: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be triggered when the func_door op"
-         "ens."$0D"If the target is a func_areaportal, the areaportal will be "
-         "triggered again when the func_door closes."
       }
       targetname: =
       {
@@ -860,109 +601,6 @@ QQRKSRC1
          "ame cannot be opened without another"$0D"triggering entity which tar"
          "gets it, but it can be shot (if health>0)."
       }
-      team: =
-      {
-        Txt = "&"
-        Hint = "Team name of the specific func_door."$0D"Func_door's with a id"
-         "entical team names will move together, and will all stop if one is b"
-         "locked."$0D"With some care concerning timing elements, a func_door m"
-         "ay be teamed with a func_door_rotating."
-      }
-      wait: =
-      {
-        Txt = "&"
-        Hint = "Time in seconds for the func_door to wait before it returns to"
-         " its closed position."$0D"If wait=-1, the door will never return. (D"
-         "efault=3)."
-      }
-      spawnflags: =
-      {
-        Typ = "X1"
-        Txt = "&"
-        Hint = "The func_door will appear in its open position rather than its"
-         " closed position."
-        Cap = "Start Open"
-      }
-      spawnflags: =
-      {
-        Typ = "X2"
-        Txt = "&"
-        Hint = "If you check this the door won't open if you get crushed in it"
-         ". It will just keep pressing until you die."$0D0D"X7: nothing in the"
-         " code for this spawnflag."
-        Cap = "x"
-      }
-      spawnflags: =
-      {
-        Typ = "X4"
-        Txt = "&"
-        Hint = "The func_door will not bounce back open when blocked, and inst"
-         "ead will continue to apply its dmg value every 0.1 seconds."
-        Cap = "Crusher"
-      }
-      spawnflags: =
-      {
-        Typ = "X8"
-        Txt = "&"
-        Hint = "The func_door will not be triggered by monsters."
-        Cap = "No Monsters"
-      }
-      spawnflags: =
-      {
-        Typ = "X16"
-        Txt = "&"
-        Hint = "The func_door will display a sequence of animated textures at "
-         "the rate of 4 animations/second if an animated texture is applied to"
-         " it."
-        Cap = "Animated"
-      }
-      spawnflags: =
-      {
-        Typ = "X32"
-        Txt = "&"
-        Hint = "The func_door must be triggered to close as well as being trig"
-         "gered to open."
-        Cap = "Toggle"
-      }
-      spawnflags: =
-      {
-        Typ = "X64"
-        Txt = "&"
-        Hint = "The func_door will display a sequence of animated textures at "
-         "the rate of 10 animations/second if an animated texture is applied t"
-         "o it."
-        Cap = "Animated Fast"
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The func_door will be inhibited and not appear when skill=0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The func_door will be inhibited and not appear when skill=1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The func_door will be inhibited and not appear when skill=2 or"
-         " greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "The func_door will be inhibited and not appear when deathmatch"
-         "=1."
-        Cap = "Not in Deathmatch"
-      }
     }
     func_group:form =
     {
@@ -970,108 +608,11 @@ QQRKSRC1
     }
     func_plat:form =
     {
-      Help = "Plats are always drawn in the extended position, so they will li"
-       "ght correctly.If the plat is the target of another trigger or button, "
-       "it will start out disabled in the extended position until it is trigge"
-       "r, when it will lower and become a normal plat."
-      angle: =
-      {
-        Txt = "&"
-        Hint = "Direction the func_plat will move on the XY plane. (-1 is up, "
-         "-2 is down)."
-      }
-      angles: =
-      {
-        Txt = "&"
-        Hint = "Direction the func_plat will move in 3 dimensions, specified b"
-         "y pitch and yaw. Roll is ignored. Syntax is pitch yaw 0."
-      }
-      accel: =
-      {
-        Txt = "&"
-        Hint = "Acceleration speed when activated, goes from stopped to speed "
-         "(Default=500)."
-      }
-      decel: =
-      {
-        Txt = "&"
-        Hint = "Deceleration speed when deactivated, goes from speed to 0 (def"
-         "ault=?)."
-      }
-      dmg: =
-      {
-        Txt = "&"
-        Hint = "Damage in hit points the func_plat will do to an entity that b"
-         "locks its movement. (Default=2)."
-      }
-      lip: =
-      {
-        Txt = "&"
-        Hint = "Lip remaining at end of func_plat move (Default=8)."
-      }
-      height: =
-      {
-        Txt = "&"
-        Hint = "If the height key is set, that will determine the amount the f"
-         "unc_plat moves,"$0D"instead of being implicitly determoveinfoned by "
-         "the model's height."
-      }
-      sounds: =
-      {
-        Typ = "C"
-        Txt = "&"
-        Hint = "Sound it makes while moving."
-        Items = "1) Base Fast"$0D"2) Chain Slow"
-        Values = "1"$0D"2"
-      }
-      speed: =
-      {
-        Txt = "&"
-        Hint = "Speed in units/second that the func_plat moves. (Default=150)."
-      }
+      Help = "Platform"
       targetname: =
       {
         Txt = "&"
-        Hint = "If set, no touch field will be spawned and a remote button or "
-         "trigger field activates the func_plat."
-      }
-      spawnflags: =
-      {
-        Typ = "X1"
-        Txt = "&"
-        Hint = "If you check this, the func_plat will trigger a the bottom and"
-         " move up & down."
-        Cap = "Platform low trigger"
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The func_plat will be inhibited and not appear when skill=0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The func_plat will be inhibited and not appear when skill=1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The func_plat will be inhibited and not appear when skill=2 or"
-         " greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "The func_plat will be inhibited and not appear when deathmatch"
-         "=1."
-        Cap = "Not in Deathmatch"
+        Hint = "target name of the platform"
       }
     }
     func_wall:form =
@@ -1080,198 +621,17 @@ QQRKSRC1
       targetname: =
       {
         Txt = "&"
-        Hint = "Name of the specific func_wall."$0D"When triggered, it will to"
-         "ggle on/off."
-      }
-      spawnflags: =
-      {
-        Typ = "X1"
-        Txt = "&"
-        Hint = "The func_wall must be called by another entity before it appea"
-         "rs in the map."
-        Cap = "Trigger Spawn"
-      }
-      spawnflags: =
-      {
-        Typ = "X2"
-        Txt = "&"
-        Hint = "The func_wall can be toggled on and off."
-        Cap = "Toggle"
-      }
-      spawnflags: =
-      {
-        Typ = "X4"
-        Txt = "&"
-        Hint = "Sets func_wall to be active when the map loads. TOGGLE must be"
-         " set also."
-        Cap = "Start On"
-      }
-      spawnflags: =
-      {
-        Typ = "X8"
-        Txt = "&"
-        Hint = "The func_wall will display a sequence of animated textures at "
-         "the rate of 4 animations/second if an animated texture is applied to"
-         " it."
-        Cap = "Animated"
-      }
-      spawnflags: =
-      {
-        Typ = "X16"
-        Txt = "&"
-        Hint = "The func_wall will display a sequence of animated textures at "
-         "the rate of 10 animations/second if an animated texture is applied t"
-         "o it."
-        Cap = "Animated Fast"
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The func_wall will be inhibited and not appear when skill=0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The func_wall will be inhibited and not appear when skill=1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The func_wall will be inhibited and not appear when skill=2 or"
-         " greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "The func_wall will be inhibited and not appear when deathmatch"
-         "=1."
-        Cap = "Not in Deathmatch"
-      }
-    }
-    func_water:form =
-    {
-      Help = "FUNC_WATER is a moveable water brush.  It must be targeted to op"
-       "erate."
-      angle: =
-      {
-        Txt = "&"
-        Hint = "Direction the func_water will move on the XY plane. (-1 is up,"
-         " -2 is down). (Default=0)."
-      }
-      angles: =
-      {
-        Txt = "&"
-        Hint = "Direction the func_water will move in 3 dimensions, specified "
-         "by pitch and yaw. Roll is ignored. Syntax is pitch yaw 0. (Default=0"
-         " 0 0)."
-      }
-      lip: =
-      {
-        Txt = "&"
-        Hint = "When activated, the func_water will move [brush thickness]+[-2"
-         "]-[lip value] units. (Default=0)."
-      }
-      sounds: =
-      {
-        Typ = "C"
-        Txt = "&"
-        Hint = "Specifies sounds to be played while the func_water is moving."
-        Items = "1) No Sound"$0D"2) Water"$0D"3) Lava"
-        Values = "1"$0D"2"$0D"3"
-      }
-      speed: =
-      {
-        Txt = "&"
-        Hint = "Speed in units/second that the func_water moves. (Default=25)."
-      }
-      target: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be triggered when the func_water m"
-         "oves."
-      }
-      targetname: =
-      {
-        Txt = "&"
-        Hint = "Name of the specific func_water."
-      }
-      team: =
-      {
-        Txt = "&"
-        Hint = "Team name of the specific func_water."$0D"Func_water's with a "
-         "identical team names will move together, and if solid, will all stop"
-         " if one is blocked."
-      }
-      wait: =
-      {
-        Txt = "&"
-        Hint = "Time in seconds for the func_water to wait before it returns t"
-         "o its "$22"closed"$22" position."$0D"If wait=-1, the func_water must"
-         " be retriggered in order for it to close. (Default=-1)."
-      }
-      spawnflags: =
-      {
-        Typ = "X1"
-        Txt = "&"
-        Hint = "The func_water will appear in its "$22"open"$22" position rath"
-         "er than its "$22"closed"$22" position."
-        Cap = "Start Open"
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The func_water will be inhibited and not appear when skill=0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The func_water will be inhibited and not appear when skill=1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The func_water will be inhibited and not appear when skill=2 o"
-         "r greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "The func_water will be inhibited and not appear when deathmatc"
-         "h=1."
-        Cap = "Not in Deathmatch"
+        Hint = "Name of the specific func_wall"
       }
     }
     item_whatever:form =
     {
       Help = "Change this to something game specific."
       bbox = '-16 -16 -16 16 16 16'
-      mdl = "models/items/adrenal/tris.md2"
       delay: =
       {
         Txt = "&"
-        Hint = "Specifies the delay in seconds before target, killtarget and m"
-         "essage will fire after the item is touched by the player. (Default=0"
-         ")."
-      }
-      killtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be removed from the map when the i"
-         "tem is touched by the player."
+        Hint = "Specifies the delay in seconds"
       }
       message: =
       {
@@ -1288,119 +648,7 @@ QQRKSRC1
       targetname: =
       {
         Txt = "&"
-        Hint = "Name of the specific item entity. Use this to make it disappea"
-         "r by making it triggered by killtarget."
-      }
-      team: =
-      {
-        Txt = "&"
-        Hint = "Use for changing Weapons Ammo & Powerups spawning."
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The item_* entity will be inhibited and not appear when skill="
-         "0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The item_* entity will be inhibited and not appear when skill="
-         "1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Txt = "&"
-        Typ = "X1024"
-        Hint = "The item_* entity will be inhibited and not appear when skill="
-         "2 or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Txt = "&"
-        Typ = "X2048"
-        Hint = "The item_* entity will be inhibited and not appear when deathm"
-         "atch=1."
-        Cap = "Not in Deathmatch"
-      }
-    }
-    item_ancient_head:form =
-    {
-      Help = "Special item that gives +2 to maximum health."
-      bbox = '-16 -16 -16 16 16 16'
-      mdl = "models/items/c_head/tris.md2"
-      delay: =
-      {
-        Txt = "&"
-        Hint = "Specifies the delay in seconds before target, killtarget and m"
-         "essage will fire after the item is touched by the player. (Default=0"
-         ")."
-      }
-      killtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be removed from the map when the i"
-         "tem is touched by the player."
-      }
-      message: =
-      {
-        Txt = "&"
-        Hint = "Specifies the character string to print to the screen when the"
-         " item is touched by the player."
-      }
-      target: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be triggered when the item is touc"
-         "hed by the player."
-      }
-      targetname: =
-      {
-        Txt = "&"
-        Hint = "Name of the specific item entity. Use this to make it disappea"
-         "r by making it triggered by killtarget."
-      }
-      team: =
-      {
-        Txt = "&"
-        Hint = "Use for changing Weapons Ammo & Powerups spawning."
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The item_* entity will be inhibited and not appear when skill="
-         "0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The item_* entity will be inhibited and not appear when skill="
-         "1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Txt = "&"
-        Typ = "X1024"
-        Hint = "The item_* entity will be inhibited and not appear when skill="
-         "2 or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Txt = "&"
-        Typ = "X2048"
-        Hint = "The item_* entity will be inhibited and not appear when deathm"
-         "atch=1."
-        Cap = "Not in Deathmatch"
+        Hint = "Name of the specific item entity."
       }
     }
     info_player_coop:form =
@@ -1414,48 +662,10 @@ QQRKSRC1
         Txt = "&"
         Hint = "Specifies a facing direction on the XY plane. (Default=0)."
       }
-      angles: =
-      {
-        Txt = "&"
-        Hint = "Specifies a facing direction in 3 dimensions, defined by pitch"
-         ", yaw, and roll. (Default=0 0 0)."
-      }
       targetname: =
       {
         Txt = "&"
         Hint = "Name used for changing from other maps."
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "This info_player_coop will be inhibited and not appear when sk"
-         "ill=0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "This info_player_coop will be inhibited and not appear when sk"
-         "ill=1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "This info_player_coop will be inhibited and not appear when sk"
-         "ill=2 or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "This info_player_coop will be inhibited and not appear when de"
-         "athmatch=1."
-        Cap = "Not in Deathmatch"
       }
     }
     info_player_deathmatch:form =
@@ -1468,48 +678,10 @@ QQRKSRC1
         Txt = "&"
         Hint = "Specifies a facing direction on the XY plane. (Default=0)."
       }
-      angles: =
-      {
-        Txt = "&"
-        Hint = "Specifies a facing direction in 3 dimensions, defined by pitch"
-         ", yaw, and roll. (Default=0 0 0)."
-      }
       targetname: =
       {
         Txt = "&"
         Hint = "Name of the specific info_player_deathmatch."
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "This info_player_deathmatch will be inhibited and not appear w"
-         "hen skill=0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "This info_player_deathmatch will be inhibited and not appear w"
-         "hen skill=1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "This info_player_deathmatch will be inhibited and not appear w"
-         "hen skill=2 or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "This info_player_deathmatch will be inhibited and not appear w"
-         "hen deathmatch=1."
-        Cap = "Not in Deathmatch"
       }
     }
     info_player_intermission:form =
@@ -1533,38 +705,6 @@ QQRKSRC1
       {
         Txt = "&"
         Hint = "Name of the specific info_player_intermission."
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "This info_player_intermission will be inhibited and not appear"
-         " when skill=0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "This info_player_intermission will be inhibited and not appear"
-         " when skill=1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "This info_player_intermission will be inhibited and not appear"
-         " when skill=2 or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "This info_player_intermission will be inhibited and not appear"
-         " when deathmatch=1."
-        Cap = "Not in Deathmatch"
       }
     }
     info_player_start:form =
@@ -1593,38 +733,6 @@ QQRKSRC1
          " the map file."$0D"If all starts are named, it will be the first sta"
          "rt found."
       }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "This info_player_start will be inhibited and not appear when s"
-         "kill=0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "This info_player_start will be inhibited and not appear when s"
-         "kill=1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "This info_player_start will be inhibited and not appear when s"
-         "kill=2 or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "This info_player_start will be inhibited and not appear when d"
-         "eathmatch=1."
-        Cap = "Not in Deathmatch"
-      }
     }
     key_whatever:form =
     {
@@ -1637,12 +745,6 @@ QQRKSRC1
         Hint = "Specifies the delay in seconds before target, killtarget and m"
          "essage will fire after the key is touched by the player. (Default=0)"
          "."
-      }
-      killtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be removed from the map when the k"
-         "ey is touched by the player."
       }
       message: =
       {
@@ -1660,38 +762,6 @@ QQRKSRC1
       {
         Txt = "&"
         Hint = "Name of the specific key entity."
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The key_* entity will be inhibited and not appear when skill=0"
-         "."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The key_* entity will be inhibited and not appear when skill=1"
-         "."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The key_* entity will be inhibited and not appear when skill=2"
-         " or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "The key_* entity will be inhibited and not appear when deathma"
-         "tch=1."
-        Cap = "Not in Deathmatch"
       }
     }
     light:form =
@@ -1752,200 +822,222 @@ QQRKSRC1
          "ally, each uniquely named light is considered as a unique lightstyle"
          " during the radiosity compile process."
       }
-      spawnflags: =
-      {
-        Typ = "X1"
-        Txt = "&"
-        Hint = "Sets the light to be inactive when the map loads."
-        Cap = "Start Off"
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "Light will be inhibited and not appear when skill=0. Only rele"
-         "vant for lights with a targetname."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "Light will be inhibited and not appear when skill=1. Only rele"
-         "vant for lights with a targetname."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "Light will be inhibited and not appear when skill=2 or greater"
-         ". Only relevant for lights with a targetname."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Cap = "Not in Deathmatch"
-      }
+	  activated: =
+	  {
+	    Txt = "&"
+		Hint = "Start on? (1 yes, 0 no)"
+	  }
     }
     misc_whatever:form =
     {
       Help = "Change this to something game specific."
       bbox = '-16 -16 -24 16 16 32'
-      mdl = "players/cyborg/tris.md2"
-      mdlskin = "players/cyborg/ps9000.pcx"
       angle: =
       {
         Txt = "&"
         Hint = "Specifies the facing angle of the actor on the XY plane. (Defa"
          "ult=0)."
       }
-      angles: =
-      {
-        Txt = "&"
-        Hint = "Specifies the facing angle of the actor in 3 dimensions as def"
-         "ined by pitch, yaw, and roll. (Default=0 0 0)."
-      }
-      combattarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the point_combat the actor will move to when ang"
-         "ered."
-      }
-      deathtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be triggered upon the actor's deat"
-         "h."
-      }
-      health: =
-      {
-        txt = "&"
-        Hint = "Specifies the number of hit points required to kill the actor."
-         "(Default=100)."
-      }
-      item: =
-      {
-        Txt = "&"
-        Hint = "Classname of the entity to be spawned by the actor upon his de"
-         "ath."
-      }
-      item: =
-      {
-        Typ = "B"
-        Txt = ""
-        Hint = "Available Classname Spawn"
-        Form = "t_item_form:form"
-        Cap = "classname spawn...."
-      }
-      killtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be removed from the map upon the a"
-         "ctor's death."
-      }
-      pathtarget: =
-      {
-        Txt = "&"
-        Hint = "Target and entity to be triggered."
-      }
       target: =
       {
         Txt = "&"
-        Hint = "Targetname of the path_corner the actor will move to."
+        Hint = "Targetname of the whatever."
       }
       targetname: =
       {
         Txt = "&"
-        Hint = "Name of the specific actor."
-      }
-      spawnflags: =
-      {
-        Typ = "X2"
-        Txt = "&"
-        Hint = "The misc_actor won't appear in the map until his targetname is"
-         " called."
-        Cap = "Trigger Spawn"
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The misc_actor will be inhibited and not appear when skill=0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The misc_actor will be inhibited and not appear when skill=1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The misc_actor will be inhibited and not appear when skill=2 o"
-         "r greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Cap = "Not in Deathmatch"
+        Hint = "Name of the specific whatever."
       }
     }
+	misc_particle_emitter:form =
+	{
+	  Help = "Emit particles from this entity"
+      bbox = '-16 -16 -24 16 16 32'
+	  tex_name: =
+	  {
+        Txt = "&"
+        Hint = "Particle texture name including extension"
+	  }
+	  color: =
+	  {
+        Typ = "LN"
+        Hint = "Click here to pick the particle color."
+	  }
+	  alpha: =
+	  {
+        Txt = "&"
+        Hint = "Alpha component of the color"
+	  }
+	  max_particles: =
+	  {
+        Txt = "&"
+        Hint = "Size of the particle buffers"
+	  }
+	  cell_shade: =
+	  {
+        Txt = "&"
+        Hint = "0 for no, 1 for yes"
+	  }
+	  shape: =
+	  {
+        Txt = "&"
+        Hint = "0 - Point, 1 - Sphere, 2 - Box, 3 - Line, 4 - Plane"
+	  }	  
+	  shape_size: =
+	  {
+        Txt = "&"
+        Hint = "Size of emitter shape (radius)"
+	  }	  
+	  grav_yaw: =
+	  {
+        Txt = "&"
+        Hint = "Angle of yaw on the gravity in degrees"
+	  }	  
+	  grav_pitch: =
+	  {
+        Txt = "&"
+        Hint = "Angle of pitch on the gravity in degrees"
+	  }	  
+	  grav_roll: =
+	  {
+        Txt = "&"
+        Hint = "Angle of roll on the gravity in degrees"
+	  }
+	  grav_strength: =
+	  {
+        Txt = "&"
+        Hint = "Power of the gravitational force"
+	  }
+	  start_size: =
+	  {
+        Txt = "&"
+        Hint = "Starting size of the particle quad"
+	  }
+	  start_alpha: =
+	  {
+        Txt = "&"
+        Hint = "0 to 1 alpha value to start at"
+	  }
+	  emit_ms: =
+	  {
+        Txt = "&"
+        Hint = "Number of particles to emit per millisecond"
+	  }
+	  rot_velocity_min: =
+	  {
+        Txt = "&"
+        Hint = "Rotational velocity minimum"
+	  }
+	  rot_velocity_max: =
+	  {
+        Txt = "&"
+        Hint = "Rotational velocity maximum"
+	  }
+	  velocity_min: =
+	  {
+        Txt = "&"
+        Hint = "Velocity minimum"
+	  }
+	  velocity_max: =
+	  {
+        Txt = "&"
+        Hint = "Velocity maximum"
+	  }
+	  size_velocity_min: =
+	  {
+        Txt = "&"
+        Hint = "Shrink or grow minimum"
+	  }
+	  size_velocity_max: =
+	  {
+        Txt = "&"
+        Hint = "Shrink or grow maximum"
+	  }
+	  spin_velocity_min: =
+	  {
+        Txt = "&"
+        Hint = "Spin velocity minimum"
+	  }
+	  spin_velocity_max: =
+	  {
+        Txt = "&"
+        Hint = "Spin velocity maximum"
+	  }
+	  alpha_velocity_min: =
+	  {
+        Txt = "&"
+        Hint = "Fade in or out velocity minimum"
+	  }
+	  alpha_velocity_max: =
+	  {
+        Txt = "&"
+        Hint = "Fade in or out velocity maximum"
+	  }
+	  lifetime_min: =
+	  {
+        Txt = "&"
+        Hint = "Particle life minimum time in seconds"
+	  }
+	  lifetime_max: =
+	  {
+        Txt = "&"
+        Hint = "Particle life minimum time in seconds"
+	  }
+	  activated: =
+	  {
+        Txt = "&"
+        Hint = "Start on? (1 or 0)"
+	  }
+      target: =
+      {
+        Txt = "&"
+        Hint = "Target of the whatever."
+      }
+      targetname: =
+      {
+        Txt = "&"
+        Hint = "Name of the specific whatever."
+      }
+	}
+	misc_sound:form =
+	{
+	  Help = "Emit audio from this entity"
+      bbox = '-16 -16 -24 16 16 32'
+	  effect_name: =
+	  {
+        Txt = "&"
+        Hint = "Sound effect name, no path or extension"
+	  }
+	  looping: =
+	  {
+        Txt = "&"
+        Hint = "0 for no, 1 for yes"
+	  }
+	  volume: =
+	  {
+        Txt = "&"
+        Hint = "0 to 1 volume level"
+	  }
+	  activated: =
+	  {
+        Txt = "&"
+        Hint = "Start on? (1 or 0)"
+	  }
+      targetname: =
+      {
+        Txt = "&"
+        Hint = "Name of the specific audio entity."
+      }
+	}
     monster_whatever:form =
     {
       Help = "Change this to something game specific."
       bbox = '-16 -16 -24 16 16 32'
-      mdl = "models/monsters/berserk/tris.md2"
       angle: =
       {
         Txt = "&"
         Hint = "Specifies the facing angle of the monster on the XY plane. (De"
          "fault=0)."
-      }
-      angles: =
-      {
-        Txt = "&"
-        Hint = "Specifies the facing angle of the monster in 3 dimensions as d"
-         "efined by pitch, yaw, and roll. (Default=0 0 0)."
-      }
-      combattarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the point_combat the monster will move to when a"
-         "ngered."
-      }
-      deathtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be triggered upon the monster's de"
-         "ath."
-      }
-      item: =
-      {
-        Txt = "&"
-        Hint = "Classname of the entity to be spawned by the monster upon his "
-         "death."
-      }
-      item: =
-      {
-        Typ = "B"
-        Txt = ""
-        Hint = "Available Classname Spawn"
-        Form = "t_item_form:form"
-        Cap = "classname spawn...."
-      }
-      killtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be removed from the map upon the m"
-         "onster's death."
       }
       target: =
       {
@@ -1957,177 +1049,11 @@ QQRKSRC1
         Txt = "&"
         Hint = "Name of the specific monster."
       }
-      spawnflags: =
-      {
-        Typ = "X1"
-        Txt = "&"
-        Hint = "Identical to SIGHT, except that the code will not call any idl"
-         "e sounds."
-        Cap = "Ambush"
-      }
-      spawnflags: =
-      {
-        Typ = "X2"
-        Txt = "&"
-        Hint = "The monster won't appear in the map until his targetname is ca"
-         "lled."
-        Cap = "Trigger Spawn"
-      }
-      spawnflags: =
-      {
-        Typ = "X4"
-        Txt = "&"
-        Hint = "The monster won't attack until angered or he has line-of-sight"
-         " to his enemy."
-        Cap = "Sight"
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The monster will be inhibited and not appear when skill=0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The monster will be inhibited and not appear when skill=1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The monster will be inhibited and not appear when skill=2 or g"
-         "reater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "The monster will be inhibited and not appear when deathmatch=1"
-         "."
-        Cap = "Not in Deathmatch"
-      }
-    }
-    path_corner:form =
-    {
-      Help = "Path_corner is a point something travels to."
-      bbox = '-8 -8 -8 8 8 8'
-      angle: =
-      {
-        Txt = "&"
-        Hint = "Specifies a facing direction on the XY plane. (Default=0)."$0D
-         "Only relevant if the path_corner is used as a teleporter destination"
-         "."
-      }
-      angles: =
-      {
-        Txt = "&"
-        Hint = "Specifies a facing direction in 3 dimensions, defined by pitch"
-         ", yaw, and roll. (Default=0 0 0)."$0D"Only relevant if the path_corn"
-         "er is used as a teleporter destination."
-      }
-      killtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be removed from the map when the p"
-         "ath_corner is used."
-      }
-      pathtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be triggered when the path_corner "
-         "is used."
-      }
-      target: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the next path_corner in the path."
-      }
-      targetname: =
-      {
-        Txt = "&"
-        Hint = "Name of the specific path_corner."
-      }
-      wait: =
-      {
-        Txt = "&"
-        Hint = "Specifies the amount of time in seconds that an entity which u"
-         "ses the path_corner"$0D"will pause before proceeding to the next pat"
-         "h_corner in the sequence."$0D"If wait=(-1), the entity will not proc"
-         "eed unless it is triggered to move again. (Default=0)."
-      }
-      spawnflags: =
-      {
-        Typ = "X1"
-        Txt = "&"
-        Hint = "An entity set to move to this path_corner will appear there im"
-         "mediately rather than moving there in its normal manner."
-        Cap = "Teleport"
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The path_corner will be inhibited and not appear when skill=0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The path_corner will be inhibited and not appear when skill=1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The path_corner will be inhibited and not appear when skill=2 "
-         "or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "The path_corner will be inhibited and not appear when deathmat"
-         "ch=1."
-        Cap = "Not in Deathmatch"
-      }
     }
     point_combat:form =
     {
-      Help = "Makes this the target of a monster and it will head here when fi"
-       "rst activated before going after the activator.  If hold is selected, "
-       "it will stay here."
+      Help = "Generic goal position for AI"
       bbox = '-8 -8 -8 8 8 8'
-      angle: =
-      {
-        Txt = "&"
-        Hint = "Specifies a facing direction on the XY plane. (Default=0)."
-      }
-      angles: =
-      {
-        Txt = "&"
-        Hint = "Specifies a facing direction in 3 dimensions, defined by pitch"
-         ", yaw, and roll. (Default=0 0 0)."
-      }
-      killtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be removed from the map when the p"
-         "oint_combat is used."
-      }
-      pathtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be triggered when the point_combat"
-         " is used."
-      }
       target: =
       {
         Txt = "&"
@@ -2138,86 +1064,11 @@ QQRKSRC1
         Txt = "&"
         Hint = "Name of the specific point_combat."
       }
-      spawnflags: =
-      {
-        Typ = "X1"
-        Txt = "&"
-        Hint = "The monster or actor which uses the point_combat will stand in"
-         " place and not run around."
-        Cap = "Hold"
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The point_combat will be inhibited and not appear when skill=0"
-         "."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The point_combat will be inhibited and not appear when skill=1"
-         "."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The point_combat will be inhibited and not appear when skill=2"
-         " or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "The point_combat will be inhibited and not appear when deathma"
-         "tch=1."
-        Cap = "Not in Deathmatch"
-      }
     }
     target_whatever:form =
     {
       Help = "Change this to something game specific"
       bbox = '-8 -8 -8 8 8 8'
-      angle: =
-      {
-        Txt = "&"
-        Hint = "Specifies a facing direction on the XY plane. (Default=0)."
-      }
-      angles: =
-      {
-        Txt = "&"
-        Hint = "Specifies a facing direction in 3 dimensions, defined by pitch"
-         ", yaw, and roll. (Default=0 0 0)."
-      }
-      height: =
-      {
-        Txt = "&"
-        Hint = "Specifies the vertical velocity in units/second given to the m"
-         "isc_actor which uses the target_actor. (Default=200)."
-      }
-      message: =
-      {
-        Txt = "&"
-        Hint = "Message to be printed to the screen when the target_actor is u"
-         "sed."
-      }
-      pathtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity the misc_actor will act upon when the"
-         " target_actor is used."
-      }
-      speed: =
-      {
-        Txt = "&"
-        Hint = "Specifies the horizontal velocity in units/second given to the"
-         " misc_actor which uses the target_actor. (Default=200)."
-      }
       target: =
       {
         Txt = "&"
@@ -2227,78 +1078,6 @@ QQRKSRC1
       {
         Txt = "&"
         Hint = "Name of the specific target_actor."
-      }
-      wait: =
-      {
-        Txt = "&"
-        Hint = "Specifies the amount of time in seconds that the misc_actor wh"
-         "ich uses the target_actor"$0D"will pause before proceeding to the ne"
-         "xt target_actor/path_corner in the sequence."$0D"If wait=(-1), the m"
-         "isc_actor will not proceed unless it is triggered to move again. (De"
-         "fault=0)."
-      }
-      spawnflags: =
-      {
-        Typ = "X1"
-        Txt = "&"
-        Hint = "The target_actor will cause the misc_actor to jump."
-        Cap = "Jump"
-      }
-      spawnflags: =
-      {
-        Typ = "X2"
-        Txt = "&"
-        Hint = "The target_actor will cause the misc_actor to shoot once at it"
-         "s pathtarget."
-        Cap = "Shoot"
-      }
-      spawnflags: =
-      {
-        Typ = "X4"
-        Txt = "&"
-        Hint = "The target_actor will cause the misc_actor to shoot and attemp"
-         "t to kill its pathtarget."
-        Cap = "Attack"
-      }
-      spawnflags: =
-      {
-        Typ = "X16"
-        Txt = "&"
-        Hint = "The target_actor will cause the misc_actor to stand in place a"
-         "nd not run around."
-        Cap = "Hold"
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The target_actor will be inhibited and not appear when skill=0"
-         "."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The target_actor will be inhibited and not appear when skill=1"
-         "."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The target_actor will be inhibited and not appear when skill=2"
-         " or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "The target_actor will be inhibited and not appear when deathma"
-         "tch=1."
-        Cap = "Not in Deathmatch"
       }
     }
     target_spotlight:form =
@@ -2310,80 +1089,23 @@ QQRKSRC1
         Txt = "&"
         Hint = "Name of the specific target_spotlight."
       }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "target_spotlight will be inhibited and not appear when skill=0."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "target_spotlight will be inhibited and not appear when skill=1."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "target_spotlight will be inhibited and not appear when skill=2 or gre"
-         "ater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "target_spotlight will be inhibited and not appear when deathmatch=1."
-        Cap = "Not in Deathmatch"
-      }
     }
     trigger_once:form =
     {
       Help = "Triggers once, then removes itself.  You must set the key - targ"
        "et - to the name of another object in the level that has a matching - "
        "targetname - ."
-      angle: =
-      {
-        Txt = "&"
-        Hint = "Specifies the facing angle on the XY plane of the trigger. If "
-         "non-zero, the trigger will only fire if the activator's facing angle"
-         " is within 90 degrees of the trigger's facing angle."
-      }
       delay: =
       {
         Txt = "&"
         Hint = "Specifies the delay in seconds before the trigger will fire af"
          "ter being triggered. (Default=0)."
       }
-      killtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be removed from the map when the t"
-         "rigger_once fires."
-      }
       message: =
       {
         Txt = "&"
         Hint = "Specifies the character string to print to the screen when the"
          " trigger fires. Use \n for line breaks."
-      }
-      pathtarget: =
-      {
-        Txt = "&"
-        Hint = "If target is a trigger_elevator, specifies the path_corner the"
-         " targeted func_train is to move to."
-      }
-      sounds: =
-      {
-        Typ = "C"
-        Txt = "&"
-        Hint = "Set - sounds - to one of the following, only hear when there i"
-         "s a massage."
-        Items = "0) Beep Beep"$0D"1) Secret"$0D"2) Large Switch"$0D"3) Silent"
-        Values = "0"$0D"1"$0D"2"$0D"3"
       }
       target: =
       {
@@ -2397,99 +1119,28 @@ QQRKSRC1
         Hint = "Name of the specific trigger_once. If the trigger's targetname"
          " is called and the trigger is already active, the trigger will fire."
       }
-      spawnflags: =
-      {
-        Typ = "X2"
+	  activated: =
+	  {
         Txt = "&"
-        Hint = "The trigger_once will not fire if a player is present within i"
-         "ts field."
-        Cap = "Not Player"
-      }
-      spawnflags: =
-      {
-        Typ = "X4"
-        Txt = "&"
-        Hint = "The trigger_once is inactive when the map loads and must be ta"
-         "rgeted to activate it."
-        Cap = "Triggered"
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The trigger_once will be inhibited and not appear when skill=0"
-         "."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The trigger_once will be inhibited and not appear when skill=1"
-         "."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The trigger_once will be inhibited and not appear when skill=2"
-         " or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "The trigger_once will be inhibited and not appear when deathma"
-         "tch=1."
-        Cap = "Not in Deathmatch"
-      }
+        Hint = "Start triggered? (1 or 0)"
+	  }
     }
     trigger_stand_in:form =
     {
       Help = "Fires events on entry and exit.  You must set the key - targ"
        "et - to the name of another object in the level that has a matching - "
        "targetname - ."
-      angle: =
-      {
-        Txt = "&"
-        Hint = "Specifies the facing angle on the XY plane of the trigger. If "
-         "non-zero, the trigger will only fire if the activator's facing angle"
-         " is within 90 degrees of the trigger's facing angle."
-      }
       delay: =
       {
         Txt = "&"
         Hint = "Specifies the delay in seconds before the trigger will fire af"
          "ter being triggered. (Default=0)."
       }
-      killtarget: =
-      {
-        Txt = "&"
-        Hint = "Targetname of the entity to be removed from the map when the t"
-         "rigger_once fires."
-      }
       message: =
       {
         Txt = "&"
         Hint = "Specifies the character string to print to the screen when the"
          " trigger fires. Use \n for line breaks."
-      }
-      pathtarget: =
-      {
-        Txt = "&"
-        Hint = "If target is a trigger_elevator, specifies the path_corner the"
-         " targeted func_train is to move to."
-      }
-      sounds: =
-      {
-        Typ = "C"
-        Txt = "&"
-        Hint = "Set - sounds - to one of the following, only hear when there i"
-         "s a massage."
-        Items = "0) Beep Beep"$0D"1) Secret"$0D"2) Large Switch"$0D"3) Silent"
-        Values = "0"$0D"1"$0D"2"$0D"3"
       }
       target: =
       {
@@ -2503,54 +1154,11 @@ QQRKSRC1
         Hint = "Name of the specific trigger_once. If the trigger's targetname"
          " is called and the trigger is already active, the trigger will fire."
       }
-      spawnflags: =
-      {
-        Typ = "X2"
+	  activated: =
+	  {
         Txt = "&"
-        Hint = "The trigger_once will not fire if a player is present within i"
-         "ts field."
-        Cap = "Not Player"
-      }
-      spawnflags: =
-      {
-        Typ = "X4"
-        Txt = "&"
-        Hint = "The trigger_once is inactive when the map loads and must be ta"
-         "rgeted to activate it."
-        Cap = "Triggered"
-      }
-      spawnflags: =
-      {
-        Typ = "X256"
-        Txt = "&"
-        Hint = "The trigger_once will be inhibited and not appear when skill=0"
-         "."
-        Cap = "Not in Easy"
-      }
-      spawnflags: =
-      {
-        Typ = "X512"
-        Txt = "&"
-        Hint = "The trigger_once will be inhibited and not appear when skill=1"
-         "."
-        Cap = "Not in Normal"
-      }
-      spawnflags: =
-      {
-        Typ = "X1024"
-        Txt = "&"
-        Hint = "The trigger_once will be inhibited and not appear when skill=2"
-         " or greater."
-        Cap = "Not in Hard"
-      }
-      spawnflags: =
-      {
-        Typ = "X2048"
-        Txt = "&"
-        Hint = "The trigger_once will be inhibited and not appear when deathma"
-         "tch=1."
-        Cap = "Not in Deathmatch"
-      }
+        Hint = "Start triggered? (1 or 0)"
+	  }
     }
     worldspawn:form =
     {

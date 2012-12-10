@@ -242,7 +242,7 @@ namespace ParticleLib
 			ParticleBoss.AddField(ref entity, "grav_yaw", "" + mGravityYaw);
 			ParticleBoss.AddField(ref entity, "grav_pitch", "" + mGravityPitch);
 			ParticleBoss.AddField(ref entity, "grav_roll", "" + mGravityRoll);
-			ParticleBoss.AddField(ref entity, "grav_strength", "" + Misc.FloatToString(mGravityStrength, 5));
+			ParticleBoss.AddField(ref entity, "grav_strength", "" + Misc.FloatToString(mGravityStrength, 3));
 			ParticleBoss.AddField(ref entity, "start_size", "" + Misc.FloatToString(mStartSize, 1));
 			ParticleBoss.AddField(ref entity, "start_alpha", "" + Misc.FloatToString(mStartAlpha, 2));
 			ParticleBoss.AddField(ref entity, "emit_ms", "" + Misc.FloatToString(mEmitMS, 3));
