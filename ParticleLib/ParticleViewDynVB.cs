@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MaterialLib;
+using UtilityLib;
 
 
 namespace ParticleLib
@@ -23,6 +25,9 @@ namespace ParticleLib
 		VertexDeclaration	mVD;
 		DynamicVertexBuffer	mVB;
 		ParticleVert		[]mPartBuf;
+
+		//matlib for sorted alphas
+		MaterialLib.MaterialLib	mMatLib;
 
 		int		mNumParticles;
 		int		mMaxParticles;
@@ -106,7 +111,16 @@ namespace ParticleLib
 				mPartBuf[i * 6 + 5].mSizeRotAlpha.Z	=parts[i].mAlpha;
 			}
 
+			//really annoying that I have to do this 3 times
+			mGD.SetVertexBuffer(null);
+
 			mVB.SetData<ParticleVert>(mPartBuf, 0, count * 6);
+		}
+
+
+		internal void Draw(AlphaPool ap, Vector3 pos, Vector4 color, Matrix view, Matrix proj)
+		{
+			ap.StoreParticleDraw(pos, mVB, mNumParticles * 2, mbCell, color, mFX, mTex, view, proj);
 		}
 
 

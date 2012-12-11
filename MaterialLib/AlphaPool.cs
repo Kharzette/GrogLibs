@@ -26,6 +26,19 @@ namespace MaterialLib
 		}
 
 
+		public void StoreParticleDraw(Vector3 sortPoint,
+			VertexBuffer vb, Int32 primCount,
+			bool bCell, Vector4 color,
+			Effect fx, Texture2D tex,
+			Matrix view, Matrix proj)
+		{
+			AlphaNode	an	=new AlphaNode(sortPoint, vb,
+				primCount, bCell, color, fx, tex, view, proj);
+
+			mAlphas.Add(an);
+		}
+
+
 		public void DrawAll(GraphicsDevice g, MaterialLib mlib, Vector3 eyePos)
 		{
 			Sort(eyePos);

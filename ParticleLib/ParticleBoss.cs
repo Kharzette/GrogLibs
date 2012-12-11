@@ -94,6 +94,15 @@ namespace ParticleLib
 		}
 
 
+		public void Draw(MaterialLib.AlphaPool ap, Matrix view, Matrix proj)
+		{
+			for(int i=0;i < mViews.Count;i++)
+			{
+				mViews[i].Draw(ap, mEmitters[i].mPosition, mColors[i], view, proj);
+			}
+		}
+
+
 		public int GetEmitterCount()
 		{
 			return	mEmitters.Count;

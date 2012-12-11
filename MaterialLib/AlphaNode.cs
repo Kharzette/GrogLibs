@@ -59,6 +59,14 @@ namespace MaterialLib
 		Int32	mStartIndex;
 		Int32	mPrimCount;
 
+		bool		mbParticle;	//particle draw?
+		bool		mbCell;
+		Vector4		mColor;
+		Effect		mFX;
+		Texture2D	mTex;
+		Matrix		mView;
+		Matrix		mProj;
+
 
 		internal AlphaNode(Vector3 sortPoint, Material matRef,
 			VertexBuffer vb, IndexBuffer ib, Matrix worldMat,
@@ -78,7 +86,75 @@ namespace MaterialLib
 		}
 
 
+		internal AlphaNode(Vector3 sortPoint,
+			VertexBuffer vb, Int32 primCount,
+			bool bCell, Vector4 color,
+			Effect fx, Texture2D tex,
+			Matrix view, Matrix proj)
+		{
+			mSortPoint	=sortPoint;
+			mVB			=vb;
+			mPrimCount	=primCount;
+			mbCell		=bCell;
+			mColor		=color;
+			mFX			=fx;
+			mTex		=tex;
+			mView		=view;
+			mProj		=proj;
+
+			mbParticle	=true;
+		}
+
+
 		internal void Draw(GraphicsDevice g, MaterialLib mlib)
+		{
+			if(mbParticle)
+			{
+				DrawParticle(g);
+			}
+			else
+			{
+				DrawRegular(g, mlib);
+			}
+		}
+
+
+		void DrawParticle(GraphicsDevice g)
+		{
+            g.SetVertexBuffer(mVB, 0);
+
+			if(mPrimCount == 0)
+			{
+				return;
+			}
+
+			g.DepthStencilState	=DepthStencilState.DepthRead;
+			g.BlendState		=BlendState.Additive;
+			g.RasterizerState	=RasterizerState.CullCounterClockwise;
+
+			if(mbCell)
+			{
+				mFX.CurrentTechnique	=mFX.Techniques["ParticleCell"];
+			}
+			else
+			{
+				mFX.CurrentTechnique	=mFX.Techniques["Particle"];
+			}
+
+			mFX.Parameters["mSolidColour"].SetValue(mColor);
+			mFX.Parameters["mTexture"].SetValue(mTex);
+			mFX.Parameters["mView"].SetValue(mView);
+			mFX.Parameters["mProjection"].SetValue(mProj);
+
+			mFX.CurrentTechnique.Passes[0].Apply();
+
+			g.DrawPrimitives(PrimitiveType.TriangleList, 0, mPrimCount);
+
+			g.SetVertexBuffer(null);
+		}
+
+
+		void DrawRegular(GraphicsDevice g, MaterialLib mlib)
 		{
             g.SetVertexBuffer(mVB, 0);
 			g.Indices	=mIB;

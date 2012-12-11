@@ -63,6 +63,9 @@ namespace MeshLib
 		public delegate bool IsMaterialVisible(Vector3 eyePos, int matIdx);
 		public delegate Matrix GetModelMatrix(int modelIndex);
 
+		//render external stuff
+		public delegate void RenderExternal(MaterialLib.AlphaPool ap, Matrix view, Matrix proj);
+
 		//tool side delegates for building the indoor mesh
 		//from raw parts
 		public delegate bool BuildLMRenderData(GraphicsDevice g,
@@ -230,7 +233,8 @@ namespace MeshLib
 			UtilityLib.GameCamera gameCam,
 			Vector3 position,
 			IsMaterialVisible bMatVis,
-			GetModelMatrix getModMatrix)
+			GetModelMatrix getModMatrix,
+			RenderExternal rendExternal)
 		{
 			//draw mirrored world if need be
 			List<Matrix>	mirrorMats;
@@ -256,6 +260,10 @@ namespace MeshLib
 				DrawMaterialsDC(gd, position, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
 				DrawMaterialsDC(gd, position, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
 				DrawMaterialsDC(gd, position, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+
+				//draw outside stuff to mirror
+				rendExternal(mAlphaPool, mirrorMats[i], mirrorProjs[i]);
+
 				mAlphaPool.DrawAll(gd, mMatLib, mirrorCenters[i]);
 			}
 
@@ -285,6 +293,9 @@ namespace MeshLib
 				//draw mirror surface itself
 				DrawMaterialsDC(gd, position, getModMatrix, mMirrorVB, mMirrorIB, mMirrorDrawCalls, bMatVis);
 			}
+
+			//draw outside stuff
+			rendExternal(mAlphaPool, gameCam.View, gameCam.Projection);
 
 			mAlphaPool.DrawAll(gd, mMatLib, position);
 		}
