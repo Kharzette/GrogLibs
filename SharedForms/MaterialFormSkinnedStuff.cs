@@ -33,7 +33,10 @@ namespace SharedForms
 
 			MeshPartGrid.DataSource	=blm;
 
-			MeshPartGrid.Columns[4].ReadOnly	=true;
+			if(MeshPartGrid.Columns.Count > 4)
+			{
+				MeshPartGrid.Columns[4].ReadOnly	=true;
+			}
 
 //			BoundsChanged();
 		}

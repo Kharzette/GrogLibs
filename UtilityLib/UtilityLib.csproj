@@ -128,6 +128,7 @@
     <Compile Include="ExceptionGame.cs" />
     <Compile Include="FileUtil.cs" />
     <Compile Include="GameCamera.cs" />
+    <Compile Include="GameState.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="IReadWriteable.cs" />
     <Compile Include="Mathery.cs" />

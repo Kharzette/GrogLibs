@@ -4,6 +4,7 @@ using System.Text;
 using System.IO;
 using System.Reflection;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 #if !X64
 using Microsoft.Xna.Framework.Graphics;
@@ -535,6 +536,33 @@ namespace UtilityLib
 						+ cm.RootDirectory.Length + 1);
 
 					ret.Add(fileName, cm.Load<SpriteFont>(path + "/" + fileName));
+				}
+			}
+
+			return	ret;
+		}
+
+
+		public static Dictionary<string, SoundEffect> LoadAllAudio(ContentManager cm)
+		{
+			Dictionary<string, SoundEffect>	ret	=new Dictionary<string, SoundEffect>();
+
+			if(Directory.Exists(cm.RootDirectory + "/Audio"))
+			{
+				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
+					+ cm.RootDirectory + "/Audio/");
+
+				FileInfo[]		fi	=di.GetFiles("*.xnb", SearchOption.AllDirectories);
+				foreach(FileInfo f in fi)
+				{
+					string	fileName	=FileUtil.StripExtension(f.Name);
+
+					//strip back the content dir
+					string	path	=f.DirectoryName.Substring(
+						f.DirectoryName.LastIndexOf(cm.RootDirectory)
+						+ cm.RootDirectory.Length + 1);
+
+					ret.Add(fileName, cm.Load<SoundEffect>(path + "/" + fileName));
 				}
 			}
 

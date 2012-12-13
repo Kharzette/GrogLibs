@@ -8,3 +8,46 @@ SkyBoxes
 	Back	0	180	0
 	Down	90	-90	0
 	Up		-90	-90	0
+
+MenuBuilder
+	Quick lib for making quick menus
+	Some sample code:
+		mMenuBuilder.AddScreen("MainMenu", UILib.MenuBuilder.ScreenTypes.VerticalMenu, 40,
+			textRect, mScreenCenter, "Textures\\UI\\hilite.png");
+		mMenuBuilder.AddMenuStop("MainMenu", "NewGame", "Start New Game", "Koot20");
+		mMenuBuilder.AddMenuStop("MainMenu", "ResumeGame", "Resume Old Game", "Koot20");
+		mMenuBuilder.AddMenuStop("MainMenu", "Options", "Help & Options", "Koot20");
+		mMenuBuilder.AddMenuStop("MainMenu", "Exit", "Exit", "Koot20");
+		mMenuBuilder.SetUpNav("MainMenu", "NewGame");
+		mMenuBuilder.ActivateScreen("MainMenu");
+
+		mMenuBuilder.AddScreen("OptionsMenu", UILib.MenuBuilder.ScreenTypes.VerticalMenu, 40,
+			textRect, mScreenCenter, "Textures\\UI\\hilite.png");
+		mMenuBuilder.AddMenuStop("OptionsMenu", "HowToPlay", "How to Play", "Koot20");
+		mMenuBuilder.AddMenuStop("OptionsMenu", "UseGamePad", "Use GamePad", "Koot20");
+		mMenuBuilder.AddMenuStop("OptionsMenu", "Sensitivity", "Adjust Sensitivity", "Koot20");
+		mMenuBuilder.AddMenuStop("OptionsMenu", "FlipY", "Flip Y Axis", "Koot20");
+		mMenuBuilder.AddMenuStop("OptionsMenu", "Back", "Back to Main Menu", "Koot20");
+		mMenuBuilder.SetUpNav("GoblinMenu", "HowToPlay");
+
+		mMenuBuilder.Link("MainMenu", "Options", "OptionsMenu");
+		mMenuBuilder.Link("OptionsMenu", "Back", "MainMenu");
+
+		mMenuBuilder.AddScreen("HowToPlayScreen", UILib.MenuBuilder.ScreenTypes.InfoScreen,
+			20, textRect, Vector2.Zero, "HowToPlayScreen.png");
+		mMenuBuilder.Link("OptionsMenu", "HowToPlay", "HowToPlayScreen");
+		mMenuBuilder.Link("HowToPlayScreen", "OptionsMenu");
+
+		mMenuBuilder.SetBackGroundTexture("HowToPlayScreen", "HowSkin", "Textures\\UI\\HowToPlay.png");
+		mMenuBuilder.SetTimeOut("HowToPlayScreen", 3000);
+
+		mMenuBuilder.eMenuStopInvoke	+=OnMenuStopInvoke;
+		mMenuBuilder.eNavigating		+=OnNavigating;
+
+
+Known Issues:
+	Vertex lit stuff won't use animated light changes
+	Vertex lit stuff sees any switchable lights as on
+	Interpenetrating alpha surfaces donut sort properly
+	Mirrors probably won't work on moving models
+	If geometry is moved in quark, texture alignment will be off
