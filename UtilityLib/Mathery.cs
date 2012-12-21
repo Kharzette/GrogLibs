@@ -212,6 +212,19 @@ namespace UtilityLib
 		}
 
 
+		public static Vector4 RandomColorVector4(Random rnd)
+		{
+			Vector4	ret	=Vector4.Zero;
+
+			ret.X	=(float)rnd.NextDouble();
+			ret.Y	=(float)rnd.NextDouble();
+			ret.Z	=(float)rnd.NextDouble();
+			ret.W	=(float)rnd.NextDouble();
+
+			return	ret;
+		}
+
+
 		//for radians use mathhelper
 		public static void WrapAngleDegrees(ref float angle)
 		{

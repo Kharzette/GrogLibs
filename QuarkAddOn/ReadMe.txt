@@ -16,6 +16,8 @@ GrogLibsEntities is very game specific.  The default file contains a chopped dow
 quake2 entities with a few fixes to flag values.  It is mostly empty.
 
 GrogLibsTextures is a game specific list of textures.  To get this to work, you'll need to aim quark's
-game directory at your Content/Textures folder.
+game directory at your Content/Textures folder.  The tricksy bit with this is that quark tries to be
+smart and look for an exe in the folder.  So just make a quake2.exe out of an empty text file or
+something and put it in the textures folder to make quark happy.
 
 UserData GrogLibs contains the default cube and light.  No need to mess with it really.

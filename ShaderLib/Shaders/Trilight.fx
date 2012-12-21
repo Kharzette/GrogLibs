@@ -589,8 +589,8 @@ technique TriSolidSpecPhys
 {     
 	pass P0
 	{
-		VertexShader	=compile vs_3_0 TriVS();
-		PixelShader		=compile ps_3_0 TriSolidSpecPhysPS();
+		VertexShader	=compile vs_2_0 TriVS();
+		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();
 	}
 }
 

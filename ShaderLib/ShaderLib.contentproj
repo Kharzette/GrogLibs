@@ -65,6 +65,11 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
     </Compile>
+    <Compile Include="Shaders\Terrain.fx">
+      <Name>Terrain</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+    </Compile>
     <None Include="Shaders\Types.fxh">
       <Name>Types</Name>
     </None>

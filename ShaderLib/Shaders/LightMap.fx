@@ -532,6 +532,28 @@ float4 SkyPixelShader(VCubeTex0 input) : COLOR0
 }
 
 
+float4 SkyCellPixelShader(VCubeTex0 input) : COLOR0
+{
+	if(mbTextureEnabled)
+	{
+		float3	worldPosition	=input.TexCoord0;
+
+		//calculate vector from eye to pos
+		float3	eyeVec	=worldPosition - mEyePos;
+	
+		eyeVec	=normalize(eyeVec);
+
+		float4	texel	=texCUBE(SkySampler, eyeVec);
+
+		texel.xyz	=CalcCellColor(texel.xyz);
+	
+		return	texel;
+	}
+
+	return	float4(1, 1, 1, 1);
+}
+
+
 float4 FullDarkPixelShader(VTex0 input) : COLOR0
 {
 	float4	color;
@@ -767,7 +789,7 @@ technique Sky
 	pass Pass1
 	{
 		VertexShader	=compile vs_2_0 SkyVertexShader();
-		PixelShader		=compile ps_2_0 SkyPixelShader();
+		PixelShader		=compile ps_2_0 SkyCellPixelShader();
 	}
 }
 

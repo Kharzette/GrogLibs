@@ -11,7 +11,7 @@ namespace BSPZone
 	//handles placement and interaction of static items in a zone
 	public class StaticHelper
 	{
-		public delegate void DrawStatic(Matrix local, ZoneEntity ze);
+		public delegate void DrawStatic(Matrix local, ZoneEntity ze, Vector3 pos);
 
 		class PickUp
 		{
@@ -19,6 +19,7 @@ namespace BSPZone
 			internal ZoneEntity	mEntity;
 			internal Matrix		mTransform;
 			internal float		mYaw;
+			internal bool		mbPickUp;
 
 			internal void UpdateTransform()
 			{
@@ -46,11 +47,15 @@ namespace BSPZone
 		{
 			mZone	=zone;
 
+			mStaticEntities.Clear();
+			mPickUps.Clear();
+
 			//grab out typical static entities
 			List<ZoneEntity>	ents	=mZone.GetEntitiesStartsWith("weapon_");
 			ents.AddRange(mZone.GetEntitiesStartsWith("ammo_"));
 			ents.AddRange(mZone.GetEntitiesStartsWith("key_"));
 			ents.AddRange(mZone.GetEntitiesStartsWith("item_"));
+			ents.AddRange(mZone.GetEntitiesStartsWith("misc_skeleton"));	//LD Hack!
 
 			foreach(ZoneEntity ze in ents)
 			{
@@ -62,6 +67,10 @@ namespace BSPZone
 				PickUp	pu		=new PickUp();
 				pu.mEntity		=ze;
 				pu.mPosition	=pos;
+				if(ze.GetValue("classname") != "misc_skeleton")
+				{
+					pu.mbPickUp	=true;
+				}
 
 				mPickUps.Add(pu);
 			}
@@ -72,6 +81,10 @@ namespace BSPZone
 		{
 			foreach(PickUp pu in mPickUps)
 			{
+				if(!pu.mbPickUp)
+				{
+					continue;
+				}
 				float	dist	=Vector3.Distance(pu.mPosition, playerPos);
 
 				//close enough to grab?
@@ -91,8 +104,11 @@ namespace BSPZone
 			//update transforms
 			foreach(PickUp pu in mPickUps)
 			{
-				pu.mYaw	+=(YawPerMS * msDelta);
-				Mathery.WrapAngleDegrees(ref pu.mYaw);
+				if(pu.mbPickUp)
+				{
+					pu.mYaw	+=(YawPerMS * msDelta);
+					Mathery.WrapAngleDegrees(ref pu.mYaw);
+				}
 
 				pu.UpdateTransform();
 			}
@@ -103,7 +119,7 @@ namespace BSPZone
 		{
 			foreach(PickUp pu in mPickUps)
 			{
-				ds(pu.mTransform, pu.mEntity);
+				ds(pu.mTransform, pu.mEntity, pu.mPosition);
 			}
 		}
 	}

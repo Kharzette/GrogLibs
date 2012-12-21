@@ -588,8 +588,8 @@ technique SkyGradient
 {
 	pass P0
 	{
-		VertexShader	=compile vs_3_0 BasicVS();
-		PixelShader		=compile ps_3_0 SkyGradientPS();
+		VertexShader	=compile vs_2_0 BasicVS();
+		PixelShader		=compile ps_2_0 SkyGradientPS();
 	}
 }
 
@@ -606,8 +606,8 @@ technique AvatarShadow
 {
 	pass P0
 	{
-		VertexShader	=compile vs_3_0 AvatarShadowVS();
-		PixelShader		=compile ps_3_0 ShadowPS();
+		VertexShader	=compile vs_2_0 AvatarShadowVS();
+		PixelShader		=compile ps_2_0 ShadowPS();
 	}
 }
 
@@ -615,8 +615,8 @@ technique WorldY
 {
 	pass P0
 	{
-		VertexShader	=compile vs_3_0 BasicVS();
-		PixelShader		=compile ps_3_0 WorldYPS();
+		VertexShader	=compile vs_2_0 BasicVS();
+		PixelShader		=compile ps_2_0 WorldYPS();
 	}
 }
 
@@ -624,8 +624,8 @@ technique WorldYInstanced
 {
 	pass P0
 	{
-		VertexShader	=compile vs_3_0 BasicInstancedVS();
-		PixelShader		=compile ps_3_0 WorldYPS();
+		VertexShader	=compile vs_2_0 BasicInstancedVS();
+		PixelShader		=compile ps_2_0 WorldYPS();
 	}
 }
 
@@ -633,8 +633,8 @@ technique TransparentInstanced
 {
 	pass P0
 	{
-		VertexShader	=compile vs_3_0 BasicInstancedVS();
-		PixelShader		=compile ps_3_0 HalfTransPS();
+		VertexShader	=compile vs_2_0 BasicInstancedVS();
+		PixelShader		=compile ps_2_0 HalfTransPS();
 	}
 }
 

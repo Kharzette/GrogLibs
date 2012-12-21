@@ -29,6 +29,17 @@ namespace UtilityLib
 		public event EventHandler	eTransitionedTo;
 
 
+		public string CurState
+		{
+			get { return mCurState; }
+		}
+
+		public string PrevState
+		{
+			get { return mPrevState; }
+		}
+
+
 		public GameState()
 		{
 		}

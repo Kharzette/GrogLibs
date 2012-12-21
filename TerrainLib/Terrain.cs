@@ -55,19 +55,10 @@ namespace TerrainLib
 		//load from a 2D float array
 		public void Build(float				[,]data,
 						  GraphicsDevice	gd,
-						  float				polySize,
-						  bool				bSmooth,
-						  float				islandSize)
+						  float				polySize)
 		{
 			//alloc/clear map list
 			mMaps	=new List<HeightMap>();
-
-			if(bSmooth)
-			{
-				SmoothPass(data);
-			}
-
-			CircleBias(data, islandSize);
 
 			int	w	=data.GetLength(1);
 			int	h	=data.GetLength(0);
@@ -212,167 +203,6 @@ namespace TerrainLib
 		}
 
 
-		void SmoothPass(float [,]data)
-		{
-			int	w	=data.GetLength(1);
-			int	h	=data.GetLength(0);
-			for(int y=0;y < h;y++)
-			{
-				for(int x=0;x < w;x++)
-				{
-					float	upLeft, up, upRight;
-					float	left, right;
-					float	downLeft, down, downRight;
-
-					if(y > 0)
-					{
-						if(x > 0)
-						{
-							upLeft	=data[y - 1, x - 1];
-						}
-						else
-						{
-							upLeft	=data[y - 1, x];
-						}
-						if(x < (w - 1))
-						{
-							upRight	=data[y - 1, x + 1];
-						}
-						else
-						{
-							upRight	=data[y - 1, x];
-						}
-						up	=data[y - 1, x];
-					}
-					else
-					{
-						if(x > 0)
-						{
-							upLeft	=data[y, x - 1];
-						}
-						else
-						{
-							upLeft	=data[y, x];
-						}
-						if(x < (w - 1))
-						{
-							upRight	=data[y, x + 1];
-						}
-						else
-						{
-							upRight	=data[y, x];
-						}
-						up	=data[y, x];
-					}
-
-					if(x > 0)
-					{
-						left	=data[y, x - 1];
-					}
-					else
-					{
-						left	=data[y, x];
-					}
-
-					if(x < (w - 1))
-					{
-						right	=data[y, x + 1];
-					}
-					else
-					{
-						right	=data[y, x];
-					}
-
-					if(y < (h - 1))
-					{
-						if(x > 0)
-						{
-							downLeft	=data[y + 1, x - 1];
-						}
-						else
-						{
-							downLeft	=data[y + 1, x];
-						}
-
-						if(x < (w - 1))
-						{
-							downRight	=data[y + 1, x + 1];
-						}
-						else
-						{
-							downRight	=data[y + 1, x];
-						}
-
-						down	=data[y + 1, x];
-					}
-					else
-					{
-						if(x > 0)
-						{
-							downLeft	=data[y, x - 1];
-						}
-						else
-						{
-							downLeft	=data[y, x];
-						}
-
-						if(x < (w - 1))
-						{
-							downRight	=data[y, x + 1];
-						}
-						else
-						{
-							downRight	=data[y, x];
-						}
-
-						down	=data[y, x];
-					}
-
-					float	sum	=upLeft + up + upRight + left
-						+ right + downLeft + down + downRight;
-
-					sum	/=8.0f;
-
-					data[y, x]	=sum;
-				}
-			}
-		}
-
-
-		//This helps to create island shaped terrains.
-		//Stuff inside the island range will be unaffected,
-		//while distances greater will gradually fall off
-		//into the sea / clouds / void
-		void CircleBias(float [,]data, float islandRange)
-		{
-			int	w	=data.GetLength(1);
-			int	h	=data.GetLength(0);
-
-			Vector2	center	=Vector2.UnitX * (w / 2);
-			center			+=Vector2.UnitY * (h / 2);
-
-			for(int y=0;y < h;y++)
-			{
-				for(int x=0;x < w;x++)
-				{
-					float	heightBias	=0.0f;
-
-					Vector2	xyVec	=Vector2.UnitX * x;
-					xyVec			+=Vector2.UnitY * y;
-
-					heightBias	=Vector2.Distance(center, xyVec);
-
-					if(heightBias > islandRange)
-					{
-						heightBias	-=islandRange;
-						heightBias	*=MathHelper.Log2E;
-						data[y, x]	-=heightBias;
-					}
-				}
-			}
-		}
-
-
 		void InitEffect(ContentManager cm)
 		{
 			mFXTerrain	=cm.Load<Effect>("Shaders/Terrain");
@@ -399,7 +229,10 @@ namespace TerrainLib
 
 			mFXTerrain.Parameters["mLightDirection"].SetValue(dir);
 
-			mFXTerrain.Parameters["mTexAtlas"].SetValue(mTEXAtlas);
+			if(mTEXAtlas != null)
+			{
+				mFXTerrain.Parameters["mTexAtlas"].SetValue(mTEXAtlas);
+			}
 
 			//fog stuff
 			Vector3	fogColor	=Vector3.Zero;
@@ -407,8 +240,8 @@ namespace TerrainLib
 			fogColor.Y	=0.9f;
 			fogColor.Z	=1.0f;
 			mFXTerrain.Parameters["mFogEnabled"].SetValue(1.0f);
-			mFXTerrain.Parameters["mFogStart"].SetValue(3300.0f);
-			mFXTerrain.Parameters["mFogEnd"].SetValue(6500.0f);
+			mFXTerrain.Parameters["mFogStart"].SetValue(500.0f);
+			mFXTerrain.Parameters["mFogEnd"].SetValue(1000.0f);
 			mFXTerrain.Parameters["mFogColor"].SetValue(fogColor);
 			mFXTerrain.Parameters["mEyePosition"].SetValue(Vector3.Zero);
 		}
@@ -475,8 +308,9 @@ namespace TerrainLib
 
 		public void Draw(GraphicsDevice gd, BoundingFrustum frust)
 		{
-//			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLightingXSamp"];
-			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLighting"];
+			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["Simple"];
+
+			gd.DepthStencilState	=DepthStencilState.Default;
 
 			foreach(HeightMap m in mMaps)
 			{

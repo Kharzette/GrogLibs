@@ -676,7 +676,7 @@ namespace BSPZone
 			if(RayIntersect(Front, Back, mZoneModels[0].mRootNode,
 				ref I, ref hitLeaf, ref leafHit, ref nodeHit))
 			{
-				return	true;
+				return	hitLeaf;
 			}
 			return	false;
 		}

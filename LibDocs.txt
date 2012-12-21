@@ -12,37 +12,37 @@ SkyBoxes
 MenuBuilder
 	Quick lib for making quick menus
 	Some sample code:
-		mMenuBuilder.AddScreen("MainMenu", UILib.MenuBuilder.ScreenTypes.VerticalMenu, 40,
+		AddScreen("MainMenu", UILib.MenuBuilder.ScreenTypes.VerticalMenu, 40,
 			textRect, mScreenCenter, "Textures\\UI\\hilite.png");
-		mMenuBuilder.AddMenuStop("MainMenu", "NewGame", "Start New Game", "Koot20");
-		mMenuBuilder.AddMenuStop("MainMenu", "ResumeGame", "Resume Old Game", "Koot20");
-		mMenuBuilder.AddMenuStop("MainMenu", "Options", "Help & Options", "Koot20");
-		mMenuBuilder.AddMenuStop("MainMenu", "Exit", "Exit", "Koot20");
-		mMenuBuilder.SetUpNav("MainMenu", "NewGame");
-		mMenuBuilder.ActivateScreen("MainMenu");
+		AddMenuStop("MainMenu", "NewGame", "Start New Game", "Koot20");
+		AddMenuStop("MainMenu", "ResumeGame", "Resume Old Game", "Koot20");
+		AddMenuStop("MainMenu", "Options", "Help & Options", "Koot20");
+		AddMenuStop("MainMenu", "Exit", "Exit", "Koot20");
+		SetUpNav("MainMenu", "NewGame");
+		ActivateScreen("MainMenu");
 
-		mMenuBuilder.AddScreen("OptionsMenu", UILib.MenuBuilder.ScreenTypes.VerticalMenu, 40,
+		AddScreen("OptionsMenu", UILib.MenuBuilder.ScreenTypes.VerticalMenu, 40,
 			textRect, mScreenCenter, "Textures\\UI\\hilite.png");
-		mMenuBuilder.AddMenuStop("OptionsMenu", "HowToPlay", "How to Play", "Koot20");
-		mMenuBuilder.AddMenuStop("OptionsMenu", "UseGamePad", "Use GamePad", "Koot20");
-		mMenuBuilder.AddMenuStop("OptionsMenu", "Sensitivity", "Adjust Sensitivity", "Koot20");
-		mMenuBuilder.AddMenuStop("OptionsMenu", "FlipY", "Flip Y Axis", "Koot20");
-		mMenuBuilder.AddMenuStop("OptionsMenu", "Back", "Back to Main Menu", "Koot20");
-		mMenuBuilder.SetUpNav("GoblinMenu", "HowToPlay");
+		AddMenuStop("OptionsMenu", "HowToPlay", "How to Play", "Koot20");
+		AddMenuStop("OptionsMenu", "UseGamePad", "Use GamePad", "Koot20");
+		AddMenuStop("OptionsMenu", "Sensitivity", "Adjust Sensitivity", "Koot20");
+		AddMenuStop("OptionsMenu", "FlipY", "Flip Y Axis", "Koot20");
+		AddMenuStop("OptionsMenu", "Back", "Back to Main Menu", "Koot20");
+		SetUpNav("GoblinMenu", "HowToPlay");
 
-		mMenuBuilder.Link("MainMenu", "Options", "OptionsMenu");
-		mMenuBuilder.Link("OptionsMenu", "Back", "MainMenu");
+		Link("MainMenu", "Options", "OptionsMenu");
+		Link("OptionsMenu", "Back", "MainMenu");
 
-		mMenuBuilder.AddScreen("HowToPlayScreen", UILib.MenuBuilder.ScreenTypes.InfoScreen,
+		AddScreen("HowToPlayScreen", UILib.MenuBuilder.ScreenTypes.InfoScreen,
 			20, textRect, Vector2.Zero, "HowToPlayScreen.png");
-		mMenuBuilder.Link("OptionsMenu", "HowToPlay", "HowToPlayScreen");
-		mMenuBuilder.Link("HowToPlayScreen", "OptionsMenu");
+		Link("OptionsMenu", "HowToPlay", "HowToPlayScreen");
+		Link("HowToPlayScreen", "OptionsMenu");
 
-		mMenuBuilder.SetBackGroundTexture("HowToPlayScreen", "HowSkin", "Textures\\UI\\HowToPlay.png");
-		mMenuBuilder.SetTimeOut("HowToPlayScreen", 3000);
+		SetBackGroundTexture("HowToPlayScreen", "HowSkin", "Textures\\UI\\HowToPlay.png");
+		SetTimeOut("HowToPlayScreen", 3000);
 
-		mMenuBuilder.eMenuStopInvoke	+=OnMenuStopInvoke;
-		mMenuBuilder.eNavigating		+=OnNavigating;
+		eMenuStopInvoke	+=OnMenuStopInvoke;
+		eNavigating		+=OnNavigating;
 
 
 Known Issues:

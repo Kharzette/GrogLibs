@@ -36,7 +36,7 @@ namespace BSPZone
 		Vector3		mEyeHeight;
 
 		//constants
-		const float MidAirMoveScale	=0.01f;
+		const float MidAirMoveScale	=0.03f;
 		const float	JumpVelocity	=5.0f;
 		const float	Friction		=0.6f;
 

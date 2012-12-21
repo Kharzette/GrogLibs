@@ -173,4 +173,76 @@ float CalcCellLight(float3 lightVal)
 
 	return	light;
 }
+
+
+//snaps a color to a cellish range
+float3 CalcCellColor(float3 colVal)
+{
+	float3	col;
+
+	if(colVal.x > mCellThresholds[0])
+	{
+		col.x	=mCellBrightnessLevels[0];
+	}
+	else if(colVal.x > mCellThresholds[1])
+	{
+		col.x	=mCellBrightnessLevels[1];
+	}
+	else if(colVal.x > mCellThresholds[2])
+	{
+		col.x	=mCellBrightnessLevels[2];
+	}
+	else if(colVal.x > mCellThresholds[3])
+	{
+		col.x	=mCellBrightnessLevels[3];
+	}
+	else
+	{
+		col.x	=mCellBrightnessLevels[4];
+	}
+
+	if(colVal.y > mCellThresholds[0])
+	{
+		col.y	=mCellBrightnessLevels[0];
+	}
+	else if(colVal.y > mCellThresholds[1])
+	{
+		col.y	=mCellBrightnessLevels[1];
+	}
+	else if(colVal.y > mCellThresholds[2])
+	{
+		col.y	=mCellBrightnessLevels[2];
+	}
+	else if(colVal.y > mCellThresholds[3])
+	{
+		col.y	=mCellBrightnessLevels[3];
+	}
+	else
+	{
+		col.y	=mCellBrightnessLevels[4];
+	}
+
+	if(colVal.z > mCellThresholds[0])
+	{
+		col.z	=mCellBrightnessLevels[0];
+	}
+	else if(colVal.z > mCellThresholds[1])
+	{
+		col.z	=mCellBrightnessLevels[1];
+	}
+	else if(colVal.z > mCellThresholds[2])
+	{
+		col.z	=mCellBrightnessLevels[2];
+	}
+	else if(colVal.z > mCellThresholds[3])
+	{
+		col.z	=mCellBrightnessLevels[3];
+	}
+	else
+	{
+		col.z	=mCellBrightnessLevels[4];
+	}
+
+	return	col;
+}
 #endif	//_COMMONFUNCTIONSFXH

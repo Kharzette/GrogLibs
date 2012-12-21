@@ -128,9 +128,9 @@ namespace BSPZone
 				{
 					TriggerTeleport(zet);
 				}
-				else if(className == "target_changelevel")
+				else if(className == "misc_change_level")
 				{
-					string	level	=zet.GetValue("map");
+					string	level	=zet.GetValue("nextlevel");
 
 					Misc.SafeInvoke(eChangeMap, level);
 				}

@@ -14,18 +14,19 @@ namespace BSPZone
 		Zone			mZone;
 		ParticleBoss	mPB;
 
+		List<int>	mIndexes	=new List<int>();
+
 
 		public void Initialize(Zone zone, TriggerHelper th, ParticleBoss pb, string texPrefix)
 		{
 			mZone	=zone;
 			mPB		=pb;
 
+			mIndexes.Clear();
+
 			th.eMisc	+=OnTriggerMisc;
 
 			Array	shapeVals	=Enum.GetValues(typeof(Emitter.Shapes));
-
-			//track index
-			int	index	=0;
 
 			//grab out all particle emitters
 			List<ZoneEntity>	parts	=mZone.GetEntitiesStartsWith("misc_particle");
@@ -37,7 +38,7 @@ namespace BSPZone
 				int		shapeIdx, maxParticles;
 				float	gravYaw, gravPitch, gravRoll, shapeSize;
 				float	gravStr, startSize, startAlpha, emitMS;
-				float	rotVelMin, rotVelMax, velMin, velMax;
+				float	velMin, velMax;
 				float	sizeVelMin, sizeVelMax, spinVelMin, spinVelMax;
 				float	alphaVelMin, alphaVelMax, lifeMin, lifeMax;
 
@@ -66,8 +67,6 @@ namespace BSPZone
 				Mathery.TryParse(ze.GetValue("start_size"), out startSize);
 				Mathery.TryParse(ze.GetValue("start_alpha"), out startAlpha);
 				Mathery.TryParse(ze.GetValue("emit_ms"), out emitMS);
-				Mathery.TryParse(ze.GetValue("rot_velocity_min"), out rotVelMin);
-				Mathery.TryParse(ze.GetValue("rot_velocity_max"), out rotVelMax);
 				Mathery.TryParse(ze.GetValue("velocity_min"), out velMin);
 				Mathery.TryParse(ze.GetValue("velocity_max"), out velMax);
 				Mathery.TryParse(ze.GetValue("size_velocity_min"), out sizeVelMin);
@@ -78,7 +77,6 @@ namespace BSPZone
 				Mathery.TryParse(ze.GetValue("alpha_velocity_max"), out alphaVelMax);
 				Mathery.TryParse(ze.GetValue("lifetime_min"), out lifeMin);
 				Mathery.TryParse(ze.GetValue("lifetime_max"), out lifeMax);
-
 
 				int	bVal;
 				Mathery.TryParse(ze.GetValue("activated"), out bVal);
@@ -112,20 +110,31 @@ namespace BSPZone
 				lifeMin		*=1000;
 				lifeMax		*=1000;
 
-				mPB.CreateEmitter(
+				int	idx	=mPB.CreateEmitter(
 					texPrefix + ze.GetValue("tex_name"),
 					color, bCell, shape, shapeSize, maxParticles,
 					pos, (int)gravYaw, (int)gravPitch, (int)gravRoll, gravStr,
-					startSize, startAlpha, emitMS, rotVelMin, rotVelMax,
+					startSize, startAlpha, emitMS, spinVelMin, spinVelMax,
 					velMin, velMax, sizeVelMin, sizeVelMax,
 					alphaVelMin, alphaVelMax, (int)lifeMin, (int)lifeMax);
 
-				ze.SetInt("EmitterIndex", index);
+				ze.SetInt("EmitterIndex", idx);
 
-				mPB.GetEmitterByIndex(index).mbOn	=bOn;
+				mPB.GetEmitterByIndex(idx).mbOn	=bOn;
 
-				index++;
+				mIndexes.Add(idx);
 			}
+		}
+
+
+		public void ActivateEmitter(int index, bool bOn)
+		{
+			if(index < 0 || mIndexes.Count <= index)
+			{
+				return;
+			}
+			
+			mPB.GetEmitterByIndex(mIndexes[index]).mbOn	=bOn;
 		}
 
 

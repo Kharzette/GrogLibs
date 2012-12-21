@@ -20,8 +20,10 @@ namespace UtilityLib
 		//movement settings
 		float	mSpeed				=0.1f;
 		float	mMouseSensitivity	=0.01f;
-		float	mGamePadSensitivity	=0.05f;
+		float	mGamePadSensitivity	=0.25f;
 		float	mTurnSpeed			=3.0f;
+		bool	mbInvertYAxis		=false;
+		bool	mbUsePadIfPossible	=true;
 
 		//position info
 		Vector3	mPosition, mDelta;
@@ -81,6 +83,30 @@ namespace UtilityLib
 		{
 			get { return mRoll; }
 			set { mRoll = value; }
+		}
+
+		public float MouseSensitivity
+		{
+			get { return mMouseSensitivity; }
+			set { mMouseSensitivity = value; }
+		}
+
+		public float GamePadSensitivity
+		{
+			get { return mGamePadSensitivity; }
+			set { mGamePadSensitivity = value; }
+		}
+
+		public bool InvertYAxis
+		{
+			get { return mbInvertYAxis; }
+			set { mbInvertYAxis = value; }
+		}
+
+		public bool UseGamePadIfPossible
+		{
+			get { return mbUsePadIfPossible; }
+			set { mbUsePadIfPossible = value; }
 		}
 
 
@@ -246,10 +272,20 @@ namespace UtilityLib
 				moveVec	+=vin;
 			}
 
-			if(gs.IsConnected)
+			if(gs.IsConnected && mbUsePadIfPossible)
 			{
-				mPitch	+=gs.ThumbSticks.Right.Y * msDelta * 0.25f;
-				mYaw	+=gs.ThumbSticks.Right.X * msDelta * 0.25f;
+				float	pitchAmount	=gs.ThumbSticks.Right.Y * msDelta * mGamePadSensitivity;
+
+				if(mbInvertYAxis)
+				{
+					mPitch	+=pitchAmount;
+				}
+				else
+				{
+					mPitch	-=pitchAmount;
+				}
+
+				mYaw	+=gs.ThumbSticks.Right.X * msDelta * mGamePadSensitivity;
 
 				moveVec	=vleft * gs.ThumbSticks.Left.X;
 				moveVec	-=vin * gs.ThumbSticks.Left.Y;
