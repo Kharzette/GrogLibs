@@ -12,9 +12,7 @@ namespace TerrainLib
 {
 	class ChunkState
 	{
-		internal float	[,]mData;
 		internal int	mChunkX, mChunkY;
-		internal float	mPolySize;
 
 		internal GraphicsDevice	mGD;
 	}
@@ -24,10 +22,15 @@ namespace TerrainLib
 	//handles the tiling and other such
 	public class Terrain
 	{
-		const int	CHUNKDIM	=128;		//modify this to affect heightmap data size
+		//dimensions of the vertexbuffer chunks that are frust rejected
+		int		mChunkDim, mPolySize;
 
-		//height maps
-		List<HeightMap>	mMaps;
+		//the raw data, might be very large
+		float	[,]mHeightData;
+
+		//grid of heights
+		//only the nearby cells are kept in memory
+		HeightMap[,]	mStreamMaps;
 
 		//tex & shading, there is no 3
 		Texture2D			mTEXAtlas;
@@ -35,33 +38,106 @@ namespace TerrainLib
 		VertexDeclaration	mVDTerrain;
 
 		//locations
+		Point	mCellCoord;
 		Vector3	mLevelPos;
 		Vector3	mEyePos;
 
 		//thread counter
 		int	mThreadCounter;
+		int	mThreadsActive;
 
 
 		//set up textures and such
-		public Terrain(Texture2D texAtlas, ContentManager cm)
+		public Terrain(Texture2D texAtlas, ContentManager cm,
+			float [,]data, int polySize,
+			int chunkDim, int cellGridMax)
 		{
 			mTEXAtlas	=texAtlas;
+			mChunkDim	=chunkDim;
+			mHeightData	=data;
+			mPolySize	=polySize;
+
+			mStreamMaps	=new HeightMap[cellGridMax, cellGridMax];
 
 			InitVertexDeclaration();
 			InitEffect(cm);
 		}
 
 
-		//load from a 2D float array
-		public void Build(float				[,]data,
-						  GraphicsDevice	gd,
-						  float				polySize)
+		public void SetCellCoord(Point cellCoord)
 		{
-			//alloc/clear map list
-			mMaps	=new List<HeightMap>();
+			mCellCoord	=cellCoord;
 
-			int	w	=data.GetLength(1);
-			int	h	=data.GetLength(0);
+			int	cw	=mStreamMaps.GetLength(1);
+			int	ch	=mStreamMaps.GetLength(0);
+
+			foreach(HeightMap hm in mStreamMaps)
+			{
+				if(hm == null)
+				{
+					continue;
+				}
+
+				hm.SetRelativePos(cellCoord, cw, ch, mChunkDim, mPolySize);
+			}
+		}
+
+
+		//streams in nearby stuff, and nukes stuff at
+		//destroyAt and beyond, should be called at a
+		//boundary crossing
+		public void BuildGrid(GraphicsDevice gd, int destroyAt)
+		{
+			int	cw	=mStreamMaps.GetLength(1);
+			int	ch	=mStreamMaps.GetLength(0);
+
+			//blast cells outside range
+			for(int y=0;y < ch;y++)
+			{
+				for(int x=0;x < cw;x++)
+				{
+					int	xWrapNeg	=x - cw;
+					int	yWrapNeg	=y - ch;
+					int	xWrapPos	=x + cw;
+					int	yWrapPos	=y + ch;
+
+					int	xDist	=Math.Abs(mCellCoord.X - x);
+					int	yDist	=Math.Abs(mCellCoord.Y - y);
+
+					int	xDistWN	=Math.Abs(mCellCoord.X - xWrapNeg);
+					int	yDistWN	=Math.Abs(mCellCoord.Y - yWrapNeg);
+
+					int	xDistWP	=Math.Abs(mCellCoord.X - xWrapPos);
+					int	yDistWP	=Math.Abs(mCellCoord.Y - yWrapPos);
+
+					if(xDist > xDistWN)
+					{
+						xDist	=xDistWN;
+					}
+					if(yDist > yDistWN)
+					{
+						yDist	=yDistWN;
+					}
+					if(xDist > xDistWP)
+					{
+						xDist	=xDistWP;
+					}
+					if(yDist > yDistWP)
+					{
+						yDist	=yDistWP;
+					}
+
+					if(xDist >= destroyAt || yDist >= destroyAt)
+					{
+						mStreamMaps[y, x]	=null;
+					}
+				}
+			}
+
+			GC.Collect(1);
+
+			int	w	=mHeightData.GetLength(1);
+			int	h	=mHeightData.GetLength(0);
 
 			//set to nearest power of two
 			int	pow	=0;
@@ -80,30 +156,66 @@ namespace TerrainLib
 			}
 			h	=1 << (pow - 1);
 
-			//this seems to be the best for quick loadery
-//			ThreadPool.SetMaxThreads(4, 4);
+			int	inRange	=destroyAt - 1;
 
-			mThreadCounter	=(h / CHUNKDIM) * (w / CHUNKDIM);
+			mThreadCounter	=1 + 2 * inRange;
+			mThreadsActive	=0;
 
-			for(int chunkY=0;chunkY < (h / CHUNKDIM);chunkY++)
+			mThreadCounter	*=mThreadCounter;
+
+			for(int cellY = mCellCoord.Y - inRange;cellY <= mCellCoord.Y + inRange;cellY++)
 			{
-				for(int chunkX=0;chunkX < (w / CHUNKDIM);chunkX++)
+				for(int cellX = mCellCoord.X - inRange;cellX <= mCellCoord.X + inRange;cellX++)
 				{
-					ChunkState	cs	=new ChunkState();
-					cs.mData		=data;
-					cs.mChunkX		=chunkX;
-					cs.mChunkY		=chunkY;
-					cs.mGD			=gd;
-					cs.mPolySize	=polySize;
+					int	wCellX	=cellX;
+					int	wCellY	=cellY;
 
+					//wrap
+					if(wCellX >= cw)
+					{
+						wCellX	-=cw;
+					}
+					else if(wCellX < 0)
+					{
+						wCellX	+=cw;
+					}
+
+					if(wCellY >= ch)
+					{
+						wCellY	-=ch;
+					}
+					else if(wCellY < 0)
+					{
+						wCellY	+=ch;
+					}
+
+					if(mStreamMaps[wCellY, wCellX] != null)
+					{
+						Interlocked.Decrement(ref mThreadCounter);
+						continue;
+					}
+
+					ChunkState	cs	=new ChunkState();
+					cs.mChunkX		=wCellX;
+					cs.mChunkY		=wCellY;
+					cs.mGD			=gd;
+
+//					while(mThreadsActive > 2)
+//					{
+//						Thread.Sleep(2);
+//						GC.Collect();
+//					}
+
+					Interlocked.Increment(ref mThreadsActive);
 					ThreadPool.QueueUserWorkItem(DoChunk, cs);
 				}
 			}
 
-			while(!Interlocked.Equals(mThreadCounter, 0))
-			{
-				Thread.Sleep(2);
-			}
+
+//			while(!Interlocked.Equals(mThreadCounter, 0))
+//			{
+//				Thread.Sleep(2);
+//			}
 
 //			ThreadPool.SetMaxThreads(8, 8);
 		}
@@ -117,13 +229,13 @@ namespace TerrainLib
 				return;
 			}
 
-			float	[,]chunk	=new float[CHUNKDIM + 3, CHUNKDIM + 3];
+			float	[,]chunk	=new float[mChunkDim + 3, mChunkDim + 3];
 
-			int	w	=cs.mData.GetLength(1);
-			int	h	=cs.mData.GetLength(0);
+			int	w	=mHeightData.GetLength(1);
+			int	h	=mHeightData.GetLength(0);
 
-			int	startY	=(CHUNKDIM * cs.mChunkY);
-			int	startX	=(CHUNKDIM * cs.mChunkX);
+			int	startY	=(mChunkDim * cs.mChunkY);
+			int	startX	=(mChunkDim * cs.mChunkX);
 			if(startY > 0)
 			{
 				startY--;	//back up one if possible
@@ -133,8 +245,8 @@ namespace TerrainLib
 				startX--;
 			}
 
-			int	endY	=(CHUNKDIM * (cs.mChunkY + 1)) + 1;
-			int	endX	=(CHUNKDIM * (cs.mChunkX + 1)) + 1;
+			int	endY	=(mChunkDim * (cs.mChunkY + 1)) + 1;
+			int	endX	=(mChunkDim * (cs.mChunkX + 1)) + 1;
 			if(endY < h)
 			{
 				endY++;	//increase by one if possible
@@ -148,35 +260,42 @@ namespace TerrainLib
 			{
 				for(int x=startX, s=0;x < endX;x++,s++)
 				{
-					chunk[t, s]	=cs.mData[y, x];
+					chunk[t, s]	=mHeightData[y, x];
 				}
 			}
 
-			HeightMap	map	=new HeightMap(chunk,
+			Point	coord	=new Point(cs.mChunkX, cs.mChunkY);
+
+			HeightMap	map	=new HeightMap(chunk, coord,
 				endX - startX, endY - startY,
-				CHUNKDIM + 1, CHUNKDIM + 1,
-				(CHUNKDIM * cs.mChunkX) - startX,
-				(CHUNKDIM * cs.mChunkY) - startY, cs.mGD, mVDTerrain);
+				mChunkDim + 1, mChunkDim + 1,
+				(mChunkDim * cs.mChunkX) - startX,
+				(mChunkDim * cs.mChunkY) - startY,
+				mPolySize,
+				cs.mGD, mVDTerrain);
 
-			Vector3	pos	=Vector3.Zero;
-			pos.X	=cs.mChunkX * (CHUNKDIM) * cs.mPolySize;
-			pos.Z	=cs.mChunkY * (CHUNKDIM) * cs.mPolySize;
-			pos.Y	=0.0f;
+			chunk	=null;
 
-			map.SetPos(pos);
+//			Vector3	pos	=Vector3.Zero;
+//			pos.X	=cs.mChunkX * (mChunkDim) * mPolySize;
+//			pos.Z	=cs.mChunkY * (mChunkDim) * mPolySize;
+//			pos.Y	=0.0f;
 
-			lock(mMaps)
+//			map.SetPos(pos);
+
+			lock(mStreamMaps)
 			{
-				mMaps.Add(map);
+				mStreamMaps[cs.mChunkY, cs.mChunkX]	=map;
 			}
 
+			Interlocked.Decrement(ref mThreadsActive);
 			Interlocked.Decrement(ref mThreadCounter);
 		}
 
 
 		public Vector3 GetGoodColorForHeight(float height)
 		{
-			return	mMaps[0].GetGoodColorForHeight(height);
+			return	mStreamMaps[0, 0].GetGoodColorForHeight(height);
 		}
 
 
@@ -188,8 +307,12 @@ namespace TerrainLib
 
 			pos	=norm	=copy	=texFact	=index	=buffer	=0;
 
-			foreach(HeightMap hm in mMaps)
+			foreach(HeightMap hm in mStreamMaps)
 			{
+				if(hm == null)
+				{
+					continue;
+				}
 				hm.GetTimings(out posAccum, out normAccum, out copyAccum,
 					out tfAccum, out indAccum, out bufAccum);
 
@@ -243,7 +366,7 @@ namespace TerrainLib
 			mFXTerrain.Parameters["mFogStart"].SetValue(500.0f);
 			mFXTerrain.Parameters["mFogEnd"].SetValue(1000.0f);
 			mFXTerrain.Parameters["mFogColor"].SetValue(fogColor);
-			mFXTerrain.Parameters["mEyePosition"].SetValue(Vector3.Zero);
+			mFXTerrain.Parameters["mEyePos"].SetValue(Vector3.Zero);
 		}
 
 
@@ -296,8 +419,12 @@ namespace TerrainLib
 			mFXTerrain.Parameters["mPUPFarLightViewProj"].SetValue(pupFarViewProj);
 			mFXTerrain.Parameters["mAvaLightViewProj"].SetValue(avaLightViewProj);
 
-			foreach(HeightMap m in mMaps)
+			foreach(HeightMap m in mStreamMaps)
 			{
+				if(m == null)
+				{
+					continue;
+				}
 				if(m.InFrustum(frust))
 				{
 					m.Draw(gd, mFXTerrain);
@@ -312,12 +439,24 @@ namespace TerrainLib
 
 			gd.DepthStencilState	=DepthStencilState.Default;
 
-			foreach(HeightMap m in mMaps)
+			foreach(HeightMap m in mStreamMaps)
 			{
+				if(m == null)
+				{
+					continue;
+				}
 				if(m.InFrustum(frust))
 				{
 					m.Draw(gd, mFXTerrain);
 				}
+				//for testing bad boundboxes
+				/*
+				else
+				{
+					SetFogEnabled(false);
+					m.Draw(gd, mFXTerrain);
+					SetFogEnabled(true);
+				}*/
 			}			
 		}
 
@@ -326,8 +465,12 @@ namespace TerrainLib
 		{
 			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["WorldY"];
 
-			foreach(HeightMap m in mMaps)
+			foreach(HeightMap m in mStreamMaps)
 			{
+				if(m == null)
+				{
+					continue;
+				}
 				if(m.InFrustum(frust))
 				{
 					m.Draw(gd, mFXTerrain);
@@ -341,8 +484,12 @@ namespace TerrainLib
 		{
 			HeightMap	closeMap	=null;
 			float		closest		=696969.0f;
-			foreach(HeightMap m in mMaps)
+			foreach(HeightMap m in mStreamMaps)
 			{
+				if(m == null)
+				{
+					continue;
+				}
 				Vector3	dist	=m.GetPos();
 				dist	+=mLevelPos;
 				dist	+=mEyePos;
@@ -406,7 +553,24 @@ namespace TerrainLib
 		public void UpdateEyePos(Vector3 pos)
 		{
 			mEyePos	=pos;
-			mFXTerrain.Parameters["mEyePosition"].SetValue(pos);
+			mFXTerrain.Parameters["mEyePos"].SetValue(pos);
+		}
+
+
+		public void SetFogDetails(float fogStart, float fogEnd, Vector3 col)
+		{
+			mFXTerrain.Parameters["mFogStart"].SetValue(fogStart);
+			mFXTerrain.Parameters["mFogEnd"].SetValue(fogEnd);
+			mFXTerrain.Parameters["mFogColor"].SetValue(col);
+		}
+
+
+		public void SetSkyFogDetails(float fogStart, float fogEnd, Vector3 col0, Vector3 col1)
+		{
+			mFXTerrain.Parameters["mFogStart"].SetValue(fogStart);
+			mFXTerrain.Parameters["mFogEnd"].SetValue(fogEnd);
+			mFXTerrain.Parameters["mSkyGradient0"].SetValue(col0);
+			mFXTerrain.Parameters["mSkyGradient1"].SetValue(col1);
 		}
 
 

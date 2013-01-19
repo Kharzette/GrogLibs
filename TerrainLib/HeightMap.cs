@@ -21,9 +21,6 @@ namespace TerrainLib
 
 	public class HeightMap
 	{
-		const float	UNITS_PER_HEIGHT	=0.1f;		//res of the output in units
-		const float	HEIGHT_SCALAR		=1.0f;		//a good mountain setting
-
 		//height settings
 		const float	SnowHeight			=150.0f;
 		const float	StoneHighHeight		=150.0f;
@@ -42,12 +39,13 @@ namespace TerrainLib
 
 		//location stuff
 		Vector3	mPosition;
-		Matrix	mMat;
+		Matrix	mMat	=Matrix.Identity;
 		float	mPeak;		//max height
 		float	mValley;	//min height
+		Point	mCellCoordinate;
 
 		//bounds for frust rejection
-		BoundingBox	mBounds;
+		BoundingBox	mBounds, mCellBounds;
 
 		//timings
 		long	mPosTime, mNormTime, mCopyTime;
@@ -56,15 +54,19 @@ namespace TerrainLib
 
 		//2D float array
 		public HeightMap(float				[,]data,
+						 Point				coord,
 						 int				w,
 						 int				h,
 						 int				actualWidth,
 						 int				actualHeight,
 						 int				offsetX,
 						 int				offsetY,
+						 float				polySize,
 						 GraphicsDevice		gd,
 						 VertexDeclaration	vd)
 		{
+			mCellCoordinate	=coord;
+
 			mNumVerts	=actualWidth * actualHeight;
 			mNumTris	=((actualWidth - 1) * (actualHeight - 1)) * 2;
 			mNumIndex	=mNumTris * 3;
@@ -89,7 +91,10 @@ namespace TerrainLib
 
 					pos.X	=(float)(x - offsetX);
 					pos.Z	=(float)(y - offsetY);
-					pos.Y	=data[y, x] * HEIGHT_SCALAR;
+					pos.Y	=data[y, x];
+
+					pos.X	*=polySize;
+					pos.Z	*=polySize;
 
 					verts[dex].Position	=pos;
 
@@ -685,20 +690,70 @@ namespace TerrainLib
 		public void Draw(GraphicsDevice gd, Effect fx)
 		{
 			gd.SetVertexBuffer(mVBTerrain);
-			gd.Indices				=mIBTerrain;
+			gd.Indices	=mIBTerrain;
 
 			//set local matrix
 			fx.Parameters["mLocal"].SetValue(mMat);
 
 			fx.CurrentTechnique.Passes[0].Apply();
 
-			//draw shizzle here
 			gd.DrawIndexedPrimitives(PrimitiveType.TriangleList,
 				0, 0, mNumVerts, 0, mNumTris);
 		}
 
 
-		public void SetPos(Vector3 pos)
+		public void SetRelativePos(Point p, int cw, int ch, int chunkDim, int polySize)
+		{
+			Point	relative, relativeWrapNeg, relativeWrapPos;
+
+			Point	cellWrapNeg	=mCellCoordinate;
+			Point	cellWrapPos	=mCellCoordinate;
+
+			cellWrapNeg.X	-=cw;
+			cellWrapNeg.Y	-=ch;
+			cellWrapPos.X	+=cw;
+			cellWrapPos.Y	+=ch;
+
+			relative.X	=mCellCoordinate.X - p.X;
+			relative.Y	=mCellCoordinate.Y - p.Y;
+
+			relativeWrapNeg.X	=cellWrapNeg.X - p.X;
+			relativeWrapNeg.Y	=cellWrapNeg.Y - p.Y;
+
+			relativeWrapPos.X	=cellWrapPos.X - p.X;
+			relativeWrapPos.Y	=cellWrapPos.Y - p.Y;
+
+			//take the nearest
+			if(Math.Abs(relative.X) > Math.Abs(relativeWrapNeg.X))
+			{
+				relative.X	=relativeWrapNeg.X;
+			}
+			if(Math.Abs(relative.Y) > Math.Abs(relativeWrapNeg.Y))
+			{
+				relative.Y	=relativeWrapNeg.Y;
+			}
+			if(Math.Abs(relative.X) > Math.Abs(relativeWrapPos.X))
+			{
+				relative.X	=relativeWrapPos.X;
+			}
+			if(Math.Abs(relative.Y) > Math.Abs(relativeWrapPos.Y))
+			{
+				relative.Y	=relativeWrapPos.Y;
+			}
+
+			Vector3	pos	=Vector3.Zero;
+
+			pos.X	=relative.X * chunkDim * polySize;
+			pos.Z	=relative.Y * chunkDim * polySize;
+
+			//TODO: remove DEBUG
+//			pos.Y	=relative.Y;	//for testing, to check edges
+
+			SetPos(pos);
+		}
+
+
+		void SetPos(Vector3 pos)
 		{
 			mPosition	=pos;
 
@@ -706,8 +761,8 @@ namespace TerrainLib
 			mMat	=Matrix.CreateTranslation(mPosition);
 
 			//update bounds
-			mBounds.Min	+=pos;
-			mBounds.Max	+=pos;
+			mCellBounds.Min	=mBounds.Min + pos;
+			mCellBounds.Max	=mBounds.Max + pos;
 		}
 
 
@@ -725,7 +780,7 @@ namespace TerrainLib
 
 		public bool InFrustum(BoundingFrustum frust)
 		{
-			ContainmentType	ct	=frust.Contains(mBounds);
+			ContainmentType	ct	=frust.Contains(mCellBounds);
 
 			return	(ct != ContainmentType.Disjoint);
 		}

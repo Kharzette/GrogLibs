@@ -8,8 +8,6 @@ shared float4x4	mLightViewProj;	//for shadowing
 
 float	mGlow;			//glow fakery
 float4	mSolidColour;	//for non textured
-float4	mSkyGradient0;	//horizon colour
-float4	mSkyGradient1;	//peak colour
 float	mFarClip;
 
 
@@ -455,19 +453,7 @@ float4 WorldYPS(VTex04 input) : COLOR
 //gradient sky
 float4 SkyGradientPS(VTex04 input) : COLOR
 {
-	float3	upVec	=float3(0.0f, 1.0f, 0.0f);
-
-	float3	boxWorld	=input.TexCoord0;
-	float3	eyeBall		=mEyePos;
-
-	//texcoord has world pos
-	float3	skyVec	=(boxWorld - eyeBall);
-
-	skyVec	=normalize(skyVec);
-
-	float	skyDot	=abs(dot(skyVec, upVec));
-
-	return	lerp(mSkyGradient0, mSkyGradient1, skyDot);
+	return	float4(CalcSkyColorGradient(input.TexCoord0), 1);
 }
 
 float4 HalfTransPS(VTex04 input) : COLOR

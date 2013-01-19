@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
 
@@ -303,6 +304,37 @@ namespace MeshLib
 				return	null;
 			}
 			return	minDist;
+		}
+
+
+		public static Dictionary<string, StaticMeshObject> LoadAllMeshes(string dir,
+			GraphicsDevice gd, ContentManager cm, MaterialLib.MaterialLib mats)
+		{
+			Dictionary<string, StaticMeshObject>	ret	=new Dictionary<string, StaticMeshObject>();
+
+			if(Directory.Exists(cm.RootDirectory + "/" + dir))
+			{
+				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
+					+ cm.RootDirectory + "/" + dir + "/");
+
+				FileInfo[]		fi	=di.GetFiles("*.Static", SearchOption.AllDirectories);
+				foreach(FileInfo f in fi)
+				{
+					//strip back
+					string	path	=f.DirectoryName.Substring(
+						f.DirectoryName.LastIndexOf(cm.RootDirectory));
+
+					StaticMeshObject	smo	=new StaticMeshObject(mats);
+					bool	bWorked	=smo.ReadFromFile(path + "\\" + f.Name, gd, false);
+
+					if(bWorked)
+					{
+						ret.Add(f.Name, smo);
+					}
+				}
+			}
+
+			return	ret;
 		}
 	}
 }

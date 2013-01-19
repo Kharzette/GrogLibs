@@ -231,11 +231,15 @@ namespace MeshLib
 
 		public void Draw(GraphicsDevice gd,
 			UtilityLib.GameCamera gameCam,
-			Vector3 position,
 			IsMaterialVisible bMatVis,
 			GetModelMatrix getModMatrix,
 			RenderExternal rendExternal)
 		{
+			//update materiallib wvp
+			mMatLib.UpdateWVP(Matrix.Identity, gameCam.View, gameCam.Projection, gameCam.Position);
+
+			Vector3	position	=gameCam.Position;
+
 			//draw mirrored world if need be
 			List<Matrix>	mirrorMats;
 			List<Matrix>	mirrorProjs;
@@ -276,7 +280,7 @@ namespace MeshLib
 				mMatLib.UpdateWVP(Matrix.Identity, gameCam.View, gameCam.Projection, -position);
 			}
 
-			gd.Clear(Color.CornflowerBlue);
+//			gd.Clear(Color.CornflowerBlue);
 
 			DrawMaterialsDC(gd, position, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
 			DrawMaterialsDC(gd, position, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);

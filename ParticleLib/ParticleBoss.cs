@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using SpriteMapLib;
 using UtilityLib;
 
 
@@ -38,6 +39,24 @@ namespace ParticleLib
 			mGD			=gd;
 			mFX			=fx;
 			mTextures	=texs;
+		}
+
+
+		public ParticleBoss(GraphicsDevice gd, ContentManager texCM, ContentManager sCM, string texLibPath)
+		{
+			mGD	=gd;
+
+			//load particle texture lib
+			Dictionary<string, TextureElement>	pTex	=new Dictionary<string, TextureElement>();
+			TextureElement.LoadTexLib(texCM.RootDirectory + "/TexLibs/Particles.TexLib", texCM, pTex);
+
+			mTextures	=new Dictionary<string, Texture2D>();
+			foreach(KeyValuePair<string, TextureElement> te in pTex)
+			{
+				mTextures.Add(te.Key, te.Value.GetTexture(0));
+			}
+
+			mFX	=sCM.Load<Effect>("Shaders/Static");
 		}
 
 

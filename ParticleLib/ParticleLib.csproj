@@ -72,6 +72,10 @@
       <Project>{E6EAA6B0-1140-4BE3-AEFD-0DF83A7A705B}</Project>
       <Name>MaterialLib</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SpriteMapLib\SpriteMapLib.csproj">
+      <Project>{9FFB87A8-2180-4386-872F-BD5563F75BA6}</Project>
+      <Name>SpriteMapLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj">
       <Project>{BB91910C-2595-4EB6-B48C-30BCC41457F6}</Project>
       <Name>UtilityLib</Name>

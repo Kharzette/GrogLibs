@@ -12,7 +12,7 @@ namespace UtilityLib
 	{
 		public enum SteeringMethod
 		{
-			None, TwinStick, Fly, ThirdPerson, FirstPerson, FirstPersonMMO
+			None, TwinStick, Fly, ThirdPerson, FirstPerson, FirstPersonMMO, Platformer
 		}
 
 		SteeringMethod	mMethod;
@@ -133,6 +133,10 @@ namespace UtilityLib
 			else if(mMethod == SteeringMethod.TwinStick)
 			{
 				UpdateTwinStick(msDelta, gc, ks, ms, gs);
+			}
+			else if(mMethod == SteeringMethod.Platformer)
+			{
+				UpdatePlatformer(msDelta, gc, ks, ms, gs);
 			}
 		}
 
@@ -320,6 +324,38 @@ namespace UtilityLib
 			else if(mPitch < -PitchClamp)
 			{
 				mPitch	=-PitchClamp;
+			}
+		}
+
+
+		void UpdatePlatformer(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
+		{
+			Vector3 vup		=Vector3.Up;
+			Vector3 vleft	=Vector3.Left;
+			Vector3 vin		=Vector3.Forward;
+
+			Vector3	moveVec	=Vector3.Zero;
+			if(ks.IsKeyDown(Keys.Left) || ks.IsKeyDown(Keys.A))
+			{
+				moveVec	-=vleft;
+			}
+			if(ks.IsKeyDown(Keys.Right) || ks.IsKeyDown(Keys.D))
+			{
+				moveVec	+=vleft;
+			}
+
+			if(gs.IsConnected && mbUsePadIfPossible)
+			{
+				moveVec	=vleft * gs.ThumbSticks.Left.X;
+			}
+
+			//zero out up/down
+			moveVec.Y	=0.0f;
+
+			if(moveVec.LengthSquared() > 0.001f)
+			{
+				moveVec.Normalize();
+				mPosition	+=moveVec * msDelta * mSpeed;
 			}
 		}
 	}

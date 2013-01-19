@@ -18,8 +18,12 @@ shared float		mLightRange;
 shared float		mLightFalloffRange;	//under this light at full strength
 
 //outline / cell related
-float	mCellThresholds[4] = { 0.6, 0.4, 0.25, 0.1 };
-float	mCellBrightnessLevels[5] = { 1.0f, 0.7f, 0.5f, 0.2f, 0.05f };
+shared float	mCellThresholds[4] = { 0.6, 0.4, 0.25, 0.1 };
+shared float	mCellBrightnessLevels[5] = { 1.0f, 0.7f, 0.5f, 0.2f, 0.05f };
+
+//sky gradient
+shared float3	mSkyGradient0;	//horizon colour
+shared float3	mSkyGradient1;	//peak colour
 
 #include "Types.fxh"
 
@@ -244,5 +248,20 @@ float3 CalcCellColor(float3 colVal)
 	}
 
 	return	col;
+}
+
+
+float3 CalcSkyColorGradient(float3 worldPos)
+{
+	float3	upVec	=float3(0.0f, 1.0f, 0.0f);
+
+	//texcoord has world pos
+	float3	skyVec	=(worldPos - mEyePos);
+
+	skyVec	=normalize(skyVec);
+
+	float	skyDot	=abs(dot(skyVec, upVec));
+
+	return	lerp(mSkyGradient0, mSkyGradient1, skyDot);
 }
 #endif	//_COMMONFUNCTIONSFXH

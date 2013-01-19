@@ -11,9 +11,6 @@
 #define	MossLayerDensity	50.0f;
 
 //matrii
-shared float4x4	mWorld;
-shared float4x4 mView;
-shared float4x4 mProjection;
 shared float4x4	mLocal;
 shared float4x4	mLevel;
 
@@ -32,7 +29,6 @@ float	mFogEnabled;
 float	mFogStart;
 float	mFogEnd;
 float3	mFogColor;
-float3	mEyePosition;	//in world space
 
 //texture layers used on the surface
 //there is no three
@@ -48,6 +44,9 @@ texture	mTerTexture7;
 texture	mPUPNearShadowTex;
 texture	mPUPFarShadowTex;
 texture	mAvaShadowTex;
+
+#include "Types.fxh"
+#include "CommonFunctions.fxh"
 
 //this plugs into the pixel shader
 struct PSInput
@@ -180,17 +179,17 @@ VSOutput DiffuseGourad(float3	position	: POSITION,
 					   float4	tfac1		: COLOR1)
 {
 	VSOutput	output;
-	
-	float4x4	localLevelWorld	=mul(mul(mLocal, mLevel), mWorld);
 
-	//generate the world-view-proj matrix
-	float4x4	wvp	=mul(mul(localLevelWorld, mView), mProjection);
-	
+	//transform mats	
+	float4x4	localLevelWorld	=mul(mul(mLocal, mLevel), mWorld);
+	float4x4	viewProj		=mul(mView, mProjection);
+
+	//generate a default world position
 	float4	worldPos	=mul(float4(position, 1.0f), localLevelWorld);
 
-	//transform the input position to the output
-	output.Position	=mul(float4(position, 1.0f), wvp);
-	
+	//transform to screen
+	output.Position	=mul(worldPos, viewProj);
+
 	//store for texturing
 	output.WorldPos	=worldPos;
 	
@@ -209,7 +208,7 @@ VSOutput DiffuseGourad(float3	position	: POSITION,
 	output.TexFactor1	=tfac1;
 	
 	//store fog factor in color 4
-	output.Color.w	=ComputeFogFactor(length(worldPos + mEyePosition));
+	output.Color.w	=ComputeFogFactor(length(worldPos - mEyePos));
 
 	//return the output structure
 	return	output;
@@ -445,12 +444,43 @@ float4 SimplePS(PSInput input) : COLOR
 	//set solid
 	texLitColor.w	=1.0f;
 							
+//	texLitColor.rgb	=lerp(texLitColor, mFogColor, fogFactor);
+
+	texLitColor.rgb	=CalcCellColor(texLitColor.rgb);
+
 	texLitColor.rgb	=lerp(texLitColor, mFogColor, fogFactor);
 
 	//back to srgb
-	texLitColor.xyz	=pow(texLitColor.xyz, 1 / 2.2);
+//	texLitColor.xyz	=pow(texLitColor.xyz, 1 / 2.2);
 
 	return	texLitColor;
+}
+
+float4 SimpleSkyGradientFogPS(PSInput input) : COLOR
+{
+	float3	texLitColor;
+	float2	worldXZ;
+
+	worldXZ.x	=input.WorldPos.x;
+	worldXZ.y	=input.WorldPos.z;
+
+	texLitColor.xyz	=float3(1, 1, 1);
+
+	//grab fog factor
+	float	fogFactor	=input.Color.w;
+	
+	texLitColor	*=input.Color;
+
+	texLitColor	=CalcCellColor(texLitColor);
+
+	float3	skyColor	=CalcSkyColorGradient(input.WorldPos.xyz);
+
+	texLitColor.rgb	=lerp(texLitColor, skyColor, fogFactor);
+
+	//back to srgb
+//	texLitColor.xyz	=pow(texLitColor.xyz, 1 / 2.2);
+
+	return	float4(texLitColor, 1);
 }
 
 
@@ -486,6 +516,6 @@ technique Simple
 	pass P0
 	{
 		VertexShader	=compile vs_2_0 DiffuseGourad();
-		PixelShader		=compile ps_2_0 SimplePS();
+		PixelShader		=compile ps_2_0 SimpleSkyGradientFogPS();
 	}
 }

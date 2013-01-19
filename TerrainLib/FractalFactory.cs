@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Xna.Framework;
+using UtilityLib;
 
 
 namespace TerrainLib
@@ -44,6 +45,247 @@ namespace TerrainLib
 			Subdivide(ret, 0, 0, mWidth, mHeight, mVariance);
 
 			return	ret;
+		}
+
+
+		public static int Erode(float [,]data, Random rnd, int iterations,
+			float rain, float solubility, float evaporation)
+		{
+			int	w	=data.GetLength(1);
+			int	h	=data.GetLength(0);
+
+			//make a water map
+			float	[,]water	=new float[h, w];
+			float	halfRain	=rain / 2f;
+
+			bool	bDry	=false;
+			int		i		=0;
+			for(i=0;i < iterations || !bDry;i++)
+			{
+				//movement
+				bDry	=true;
+				for(int y=0;y < h;y++)
+				{
+					for(int x=0;x < w;x++)
+					{
+						if(i < iterations)
+						{
+							float	rainFall	=Mathery.RandomFloatNext(rnd, halfRain, rain);
+
+							water[y, x]	+=rainFall;
+						}
+
+						float	waterHeight	=water[y, x];
+
+						if(waterHeight <= 0)
+						{
+							continue;
+						}
+
+						bDry	=false;
+
+						float	land		=data[y, x];
+
+						int		lowestX, lowestY;
+						float	lowLand, lowWater;
+
+						FindLowestNeighbor(data, water, x, y, out lowestX, out lowestY, out lowLand, out lowWater);
+
+						float	lowHeight	=lowLand + lowWater;
+
+						if(i < iterations && (land - lowLand) < -0.0001f && (land - lowLand) > 0.0001f)
+						{
+							data[y, x]	-=solubility * Math.Abs(land - lowLand);
+						}
+
+						if(land > lowHeight)
+						{
+							//move all water downhill
+							water[lowestY, lowestX]	+=waterHeight;
+							water[y, x]				=0f;
+						}
+						else if((waterHeight + land) < lowHeight)
+						{
+							//no transfer
+						}
+						else
+						{
+							//even out the water
+							float	diff	=(land + waterHeight) - lowHeight;
+
+							diff	/=2f;
+
+							water[y, x]				-=diff;
+							water[lowestY, lowestX]	+=diff;
+						}
+					}
+				}
+
+				//evaporation
+				bDry	=true;
+				for(int y=0;y < h;y++)
+				{
+					for(int x=0;x < w;x++)
+					{
+						float	wat			=water[y, x];
+
+						wat	-=evaporation * i;
+						if(wat < 0f)
+						{
+							wat	=0f;
+						}
+						else
+						{
+							bDry		=false;
+							data[y, x]	+=evaporation * solubility;
+						}
+
+						water[y, x]	=wat;
+					}
+				}
+			}
+
+			return	i;
+		}
+
+
+		static void FindLowestNeighbor(float [,]data, float [,]water, int x, int y,
+			out int lx, out int ly, out float lLand, out float lWater)
+		{
+			float	lowestWaterLand	=lLand	=lWater	=float.MaxValue;
+
+			float	lowLand, lowWater;
+
+			lx	=x;
+			ly	=y;
+
+			//upper left
+			GetWrappedWaterAndLandHeight(data, water, x - 1, y - 1, out lowLand, out lowWater);
+			float	waterAndLand	=lowLand + lowWater;
+			if(waterAndLand < lowestWaterLand)
+			{
+				lowestWaterLand	=waterAndLand;
+				lLand			=lowLand;
+				lWater			=lowWater;
+				GetWrappedCoords(data, x - 1, y - 1, out lx, out ly);
+			}
+
+			//upper center
+			GetWrappedWaterAndLandHeight(data, water, x, y - 1, out lowLand, out lowWater);
+			waterAndLand	=lowLand + lowWater;
+			if(waterAndLand < lowestWaterLand)
+			{
+				lowestWaterLand	=waterAndLand;
+				lLand			=lowLand;
+				lWater			=lowWater;
+				GetWrappedCoords(data, x, y - 1, out lx, out ly);
+			}
+
+			//upper right
+			GetWrappedWaterAndLandHeight(data, water, x + 1, y - 1, out lowLand, out lowWater);
+			waterAndLand	=lowLand + lowWater;
+			if(waterAndLand < lowestWaterLand)
+			{
+				lowestWaterLand	=waterAndLand;
+				lLand			=lowLand;
+				lWater			=lowWater;
+				GetWrappedCoords(data, x + 1, y - 1, out lx, out ly);
+			}
+
+			//left
+			GetWrappedWaterAndLandHeight(data, water, x - 1, y, out lowLand, out lowWater);
+			waterAndLand	=lowLand + lowWater;
+			if(waterAndLand < lowestWaterLand)
+			{
+				lowestWaterLand	=waterAndLand;
+				lLand			=lowLand;
+				lWater			=lowWater;
+				GetWrappedCoords(data, x - 1, y, out lx, out ly);
+			}
+
+			//right
+			GetWrappedWaterAndLandHeight(data, water, x + 1, y, out lowLand, out lowWater);
+			waterAndLand	=lowLand + lowWater;
+			if(waterAndLand < lowestWaterLand)
+			{
+				lowestWaterLand	=waterAndLand;
+				lLand			=lowLand;
+				lWater			=lowWater;
+				GetWrappedCoords(data, x + 1, y, out lx, out ly);
+			}
+
+			//lower left
+			GetWrappedWaterAndLandHeight(data, water, x - 1, y + 1, out lowLand, out lowWater);
+			waterAndLand	=lowLand + lowWater;
+			if(waterAndLand < lowestWaterLand)
+			{
+				lowestWaterLand	=waterAndLand;
+				lLand			=lowLand;
+				lWater			=lowWater;
+				GetWrappedCoords(data, x - 1, y + 1, out lx, out ly);
+			}
+
+			//lower center
+			GetWrappedWaterAndLandHeight(data, water, x, y + 1, out lowLand, out lowWater);
+			waterAndLand	=lowLand + lowWater;
+			if(waterAndLand < lowestWaterLand)
+			{
+				lowestWaterLand	=waterAndLand;
+				lLand			=lowLand;
+				lWater			=lowWater;
+				GetWrappedCoords(data, x, y + 1, out lx, out ly);
+			}
+
+			//lower right
+			GetWrappedWaterAndLandHeight(data, water, x + 1, y + 1, out lowLand, out lowWater);
+			waterAndLand	=lowLand + lowWater;
+			if(waterAndLand < lowestWaterLand)
+			{
+				lowestWaterLand	=waterAndLand;
+				lLand			=lowLand;
+				lWater			=lowWater;
+				GetWrappedCoords(data, x + 1, y + 1, out lx, out ly);
+			}
+		}
+
+
+		static void GetWrappedWaterAndLandHeight(float [,]data, float [,]water, int x, int y,
+			out float lowLand, out float lowWater)
+		{
+			int	wx, wy;
+
+			GetWrappedCoords(data, x, y, out wx, out wy);
+
+			lowWater	=water[wy, wx];
+			lowLand		=data[wy, wx];
+		}
+
+
+		static void GetWrappedCoords(float [,]data, int x, int y, out int wrappedX, out int wrappedY)
+		{
+			wrappedX	=x;
+			wrappedY	=y;
+
+			int	w	=data.GetLength(1);
+			int	h	=data.GetLength(0);
+
+			while(wrappedX < 0)
+			{
+				wrappedX	+=w;
+			}
+			while(wrappedX >= w)
+			{
+				wrappedX	-=w;
+			}
+
+			while(wrappedY < 0)
+			{
+				wrappedY	+=h;
+			}
+			while(wrappedY >= h)
+			{
+				wrappedY	-=h;
+			}
 		}
 
 
