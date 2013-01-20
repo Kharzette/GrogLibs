@@ -293,7 +293,7 @@ float4 NormalMapTriTex0SolidSpecPS(VTex04Tex14Tex24Tex34 input) : COLOR
 							mLightColor0, mLightColor1, mLightColor2);
 
 	float4	spec	=mSpecPower * mSpecColor *
-		max(pow(specDot, mSpecPower), 0) * length(texLitColor);
+		max(pow(abs(specDot), mSpecPower), 0) * length(texLitColor);
 
 	texLitColor	*=mSolidColour.xyz;
 	texLitColor	*=spec.xyz;

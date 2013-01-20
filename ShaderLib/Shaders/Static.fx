@@ -270,14 +270,14 @@ float4 ParticlePS(VTex03 input) : COLOR
 	float4	texel	=tex2D(TexSampler0, input.TexCoord0.xy);
 
 	//gamma
-	texel	=pow(texel, 2.2);
+	texel	=pow(abs(texel), 2.2);
 
 	float4	texLitColor	=texel * mSolidColour;
 
 	//store alpha in z
 	texLitColor.w	*=input.TexCoord0.z;
 
-	texLitColor	=pow(texLitColor, 1 / 2.2);
+	texLitColor	=pow(abs(texLitColor), 1 / 2.2);
 
 	return	texLitColor;
 }
@@ -289,7 +289,7 @@ float4 ParticleCellPS(VTex03 input) : COLOR
 	float4	texel	=tex2D(TexSampler0, input.TexCoord0.xy);
 
 	//gamma
-	float4	texLitColor	=pow(texel, 2.2);
+	float4	texLitColor	=pow(abs(texel), 2.2);
 
 	//store alpha in z
 	texLitColor.w	*=input.TexCoord0.z;
@@ -298,7 +298,7 @@ float4 ParticleCellPS(VTex03 input) : COLOR
 
 	texLitColor	*=mSolidColour;
 
-	texLitColor	=pow(texLitColor, 1 / 2.2);
+	texLitColor	=pow(abs(texLitColor), 1 / 2.2);
 
 	return	texLitColor;
 }

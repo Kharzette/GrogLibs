@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.IO;
+using System.Text;
 using System.Reflection;
+using System.Diagnostics;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
@@ -297,9 +298,9 @@ namespace UtilityLib
 		{
 			int	numIdx	=ib.IndexCount;
 
-			Int32	[]idxArray	=new Int32[numIdx];
+			UInt32	[]idxArray	=new UInt32[numIdx];
 
-			ib.GetData<Int32>(idxArray);
+			ib.GetData<UInt32>(idxArray);
 
 			bw.Write(numIdx);
 			for(int i=0;i < numIdx;i++)
@@ -309,19 +310,42 @@ namespace UtilityLib
 		}
 
 
-		public static void ReadIndexBuffer(BinaryReader br, out IndexBuffer ib, GraphicsDevice g, bool bEditor)
+		public static void ReadIndexBuffer(BinaryReader br, out IndexBuffer ib, GraphicsDevice g, bool bEditor, bool bReach)
 		{
 			int	numIdx	=br.ReadInt32();
 
-			Int32	[]idxArray	=new Int32[numIdx];
-
-			for(int i=0;i < numIdx;i++)
+			if(bReach)
 			{
-				idxArray[i]	=br.ReadInt32();
+				if(numIdx >= UInt16.MaxValue)
+				{
+					Debug.WriteLine("Index buffer too big for reach!");
+					numIdx	=UInt16.MaxValue;
+				}
+
+				UInt16	[]idxArray	=new UInt16[numIdx];
+
+				for(int i=0;i < numIdx;i++)
+				{
+					idxArray[i]	=(UInt16)br.ReadInt32();
+				}
+
+				ib	=new IndexBuffer(g, IndexElementSize.SixteenBits, numIdx,
+								(bEditor)? BufferUsage.None : BufferUsage.WriteOnly);
+				ib.SetData<UInt16>(idxArray);
 			}
-			ib	=new IndexBuffer(g, IndexElementSize.ThirtyTwoBits, numIdx,
-							(bEditor)? BufferUsage.None : BufferUsage.WriteOnly);
-			ib.SetData<Int32>(idxArray);
+			else
+			{
+				UInt32	[]idxArray	=new UInt32[numIdx];
+
+				for(int i=0;i < numIdx;i++)
+				{
+					idxArray[i]	=br.ReadUInt32();
+				}
+
+				ib	=new IndexBuffer(g, IndexElementSize.ThirtyTwoBits, numIdx,
+								(bEditor)? BufferUsage.None : BufferUsage.WriteOnly);
+				ib.SetData<UInt32>(idxArray);
+			}
 		}
 #endif
 

@@ -26,9 +26,6 @@ namespace ParticleLib
 		DynamicVertexBuffer	mVB;
 		ParticleVert		[]mPartBuf;
 
-		//matlib for sorted alphas
-		MaterialLib.MaterialLib	mMatLib;
-
 		int		mNumParticles;
 		int		mMaxParticles;
 		bool	mbCell;

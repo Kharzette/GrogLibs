@@ -321,31 +321,31 @@ float3 Compute8TexModulate(float2 worldXZ, float4 texFact0, float4 texFact1)
 	
 	if(texFact0.x > 0.0)
 	{
-		texColor	+=pow(tex2D(TexSampler0, texCoord0), 2.2) * texFact0.x;
+		texColor	+=pow(abs(tex2D(TexSampler0, texCoord0)), 2.2) * texFact0.x;
 	}
 	if(texFact0.y > 0.0)
 	{
-		texColor	+=pow(tex2D(TexSampler1, texCoord1), 2.2) * texFact0.y;
+		texColor	+=pow(abs(tex2D(TexSampler1, texCoord1)), 2.2) * texFact0.y;
 	}
 	if(texFact0.z > 0.0)
 	{
-		texColor	+=pow(tex2D(TexSampler2, texCoord2), 2.2) * texFact0.z;
+		texColor	+=pow(abs(tex2D(TexSampler2, texCoord2)), 2.2) * texFact0.z;
 	}
 	if(texFact1.x > 0.0)
 	{
-		texColor	+=pow(tex2D(TexSampler4, texCoord4), 2.2) * texFact1.x;
+		texColor	+=pow(abs(tex2D(TexSampler4, texCoord4)), 2.2) * texFact1.x;
 	}
 	if(texFact1.y > 0.0)
 	{
-		texColor	+=pow(tex2D(TexSampler5, texCoord5), 2.2) * texFact1.y;
+		texColor	+=pow(abs(tex2D(TexSampler5, texCoord5)), 2.2) * texFact1.y;
 	}
 	if(texFact1.z > 0.0)
 	{
-		texColor	+=pow(tex2D(TexSampler6, texCoord6), 2.2) * texFact1.z;
+		texColor	+=pow(abs(tex2D(TexSampler6, texCoord6)), 2.2) * texFact1.z;
 	}
 	if(texFact1.w > 0.0)
 	{
-		texColor	+=pow(tex2D(TexSampler7, texCoord7), 2.2) * texFact1.w;
+		texColor	+=pow(abs(tex2D(TexSampler7, texCoord7)), 2.2) * texFact1.w;
 	}	
 	return	texColor;
 }
@@ -383,7 +383,7 @@ float4 Gourad8TexModulate(PSInput input) : COLOR
 	texLitColor.xyz	=ApplyShadow(AvaShadowSampler, shadCoord, texLitColor.xyz);
 
 	//back to srgb
-	texLitColor.xyz	=pow(texLitColor.xyz, 1 / 2.2);
+	texLitColor.xyz	=pow(abs(texLitColor.xyz), 1 / 2.2);
 	
 	return	texLitColor;
 }
@@ -421,7 +421,7 @@ float4 Gourad8TexModulateXSamp(PSInput input) : COLOR
 	texLitColor.xyz	=ApplyShadowExtraSamples(AvaShadowSampler, shadCoord, texLitColor.xyz);
 	
 	//back to srgb
-	texLitColor.xyz	=pow(texLitColor.xyz, 1 / 2.2);
+	texLitColor.xyz	=pow(abs(texLitColor.xyz), 1 / 2.2);
 
 	return	texLitColor;
 }

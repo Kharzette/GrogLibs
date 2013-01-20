@@ -48,6 +48,16 @@ namespace BSPZone
 			get { return mBlankX; }
 		}
 
+		public override int GetHashCode()
+		{
+			return base.GetHashCode();
+		}
+
+		public override bool Equals(object obj)
+		{
+			return	base.Equals(obj);
+		}
+
 		public static bool operator ==(ZonePlane p1, ZonePlane p2)
 		{
 			return p1.mNormal.X == p2.mNormal.X

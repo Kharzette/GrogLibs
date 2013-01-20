@@ -657,7 +657,7 @@ namespace MeshLib
 
 
 		#region IO
-		public void Read(GraphicsDevice g, string fileName, bool bEditor)
+		public void Read(GraphicsDevice g, string fileName, bool bEditor, bool bReach)
 		{
 			Stream			file	=null;
 			if(bEditor)
@@ -698,7 +698,7 @@ namespace MeshLib
 			{
 				int	typeIdx	=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mLMVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMIB, g, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -706,7 +706,7 @@ namespace MeshLib
 			{
 				mVLitTypeIdx	=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mVLitVB, numVerts, mVLitTypeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mVLitIB, g, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mVLitIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -714,7 +714,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mLMAnimVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAnimIB, g, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAnimIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -722,7 +722,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mAlphaVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mAlphaIB, g, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mAlphaIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -730,7 +730,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mSkyVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mSkyIB, g, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mSkyIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -738,7 +738,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mFBVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mFBIB, g, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mFBIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -746,7 +746,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mMirrorVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mMirrorIB, g, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mMirrorIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -754,7 +754,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mLMAVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAIB, g, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -762,7 +762,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mLMAAnimVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAAnimIB, g, bEditor);
+				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAAnimIB, g, bEditor, bReach);
 			}
 
 			mLMDrawCalls		=DrawCall.ReadDrawCallDict(br);
