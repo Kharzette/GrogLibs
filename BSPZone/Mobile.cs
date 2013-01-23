@@ -37,7 +37,7 @@ namespace BSPZone
 
 		//constants
 		const float MidAirMoveScale	=0.03f;
-		const float	JumpVelocity	=5.0f;
+		const float	JumpVelocity	=1.5f;
 		const float	Friction		=0.6f;
 
 

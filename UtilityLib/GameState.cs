@@ -7,17 +7,14 @@ namespace UtilityLib
 {
 	public class GameState
 	{
-		//list of all possible states
-		List<string>	mStates	=new List<string>();
-
 		//to make sure no more than one at a time
 		bool	mbTransitioning;
 
 		//push here if already transitioning
-		Queue<string>	mTransQueue	=new Queue<string>();
+		Queue<Enum>	mTransQueue	=new Queue<Enum>();
 
 		//active state
-		string		mCurState, mPrevState;
+		Enum		mCurState, mPrevState;
 
 		//pause vars
 		public bool	mbPlayerPaused;				//pause menu
@@ -29,33 +26,18 @@ namespace UtilityLib
 		public event EventHandler	eTransitionedTo;
 
 
-		public string CurState
+		public bool CurStateIs(Enum stateVal)
 		{
-			get { return mCurState; }
+			return	(mCurState.CompareTo(stateVal) == 0);
 		}
 
-		public string PrevState
+		public bool PrevStateIs(Enum stateVal)
 		{
-			get { return mPrevState; }
-		}
-
-
-		public GameState()
-		{
+			return	(mPrevState.CompareTo(stateVal) == 0);
 		}
 
 
-		public void AddState(string state)
-		{
-			if(mStates.Contains(state))
-			{
-				return;
-			}
-			mStates.Add(state);
-		}
-
-
-		public void Transition(string newState)
+		public void Transition(Enum newState)
 		{
 			if(mCurState == newState)
 			{
@@ -70,8 +52,8 @@ namespace UtilityLib
 
 			mbTransitioning	=true;
 
-			string	from	=mCurState;
-			string	to		=newState;
+			Enum	from	=mCurState;
+			Enum	to		=newState;
 
 			Misc.SafeInvoke(eTransitioningFrom, from);
 
@@ -129,7 +111,7 @@ namespace UtilityLib
 				return;
 			}
 
-			string	nextTrans	=mTransQueue.Dequeue();
+			Enum	nextTrans	=mTransQueue.Dequeue();
 			Transition(nextTrans);
 		}
 	}

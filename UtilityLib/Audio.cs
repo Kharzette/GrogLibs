@@ -36,6 +36,12 @@ namespace UtilityLib
 		}
 
 
+		public void LoadAllSounds(ContentManager cm)
+		{
+			mFX	=FileUtil.LoadAllAudio(cm);
+		}
+
+
 		public SoundEffectInstance GetInstance(string name, bool bLooping)
 		{
 			if(!mFX.ContainsKey(name) || mActive.Count >= MaxInstances)

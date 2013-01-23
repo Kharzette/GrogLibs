@@ -33,6 +33,11 @@ namespace BSPZone
 			pitch	=0;
 			roll	=0;
 
+			if(mIMEntities.Count <= 0)
+			{
+				return;
+			}
+
 			int	choice	=mRand.Next(0, mIMEntities.Count);
 
 			ZoneEntity	ze	=mIMEntities[choice];

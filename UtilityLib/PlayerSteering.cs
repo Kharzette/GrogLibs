@@ -303,7 +303,15 @@ namespace UtilityLib
 
 				Mouse.SetPosition(mOriginalMS.X, mOriginalMS.Y);
 
-				mPitch	-=(delta.Y) * msDelta * mMouseSensitivity;
+				if(mbInvertYAxis)
+				{
+					mPitch	+=(delta.Y) * msDelta * mMouseSensitivity;
+				}
+				else
+				{
+					mPitch	-=(delta.Y) * msDelta * mMouseSensitivity;
+				}
+
 				mYaw	-=(delta.X) * msDelta * mMouseSensitivity;
 			}
 
