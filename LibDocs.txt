@@ -9,6 +9,8 @@ SkyBoxes
 	Down	90	-90	0
 	Up		-90	-90	0
 
+	Resulting textures should go in GameContent/TextureCubes
+
 MenuBuilder
 	Quick lib for making quick menus
 	Some sample code:

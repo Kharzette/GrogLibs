@@ -30,6 +30,8 @@
 		{
 			this.components = new System.ComponentModel.Container();
 			this.GroupFileIO = new System.Windows.Forms.GroupBox();
+			this.FullBuild = new System.Windows.Forms.Button();
+			this.UpdateEntities = new System.Windows.Forms.Button();
 			this.LightGBSP = new System.Windows.Forms.Button();
 			this.BuildGBSP = new System.Windows.Forms.Button();
 			this.OpenBrushFile = new System.Windows.Forms.Button();
@@ -60,8 +62,6 @@
 			this.SurfaceLightFrequency = new System.Windows.Forms.NumericUpDown();
 			this.SeamCorrection = new System.Windows.Forms.CheckBox();
 			this.mTips = new System.Windows.Forms.ToolTip(this.components);
-			this.UpdateEntities = new System.Windows.Forms.Button();
-			this.FullBuild = new System.Windows.Forms.Button();
 			this.GroupFileIO.SuspendLayout();
 			this.GroupBuildSettings.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxThreads)).BeginInit();
@@ -90,6 +90,28 @@
 			this.GroupFileIO.TabIndex = 22;
 			this.GroupFileIO.TabStop = false;
 			this.GroupFileIO.Text = "File IO";
+			// 
+			// FullBuild
+			// 
+			this.FullBuild.Location = new System.Drawing.Point(168, 19);
+			this.FullBuild.Name = "FullBuild";
+			this.FullBuild.Size = new System.Drawing.Size(52, 38);
+			this.FullBuild.TabIndex = 20;
+			this.FullBuild.Text = "Full Build";
+			this.mTips.SetToolTip(this.FullBuild, "Generate lightmaps for the level.  Needs vis data first.");
+			this.FullBuild.UseVisualStyleBackColor = true;
+			this.FullBuild.Click += new System.EventHandler(this.OnFullBuild);
+			// 
+			// UpdateEntities
+			// 
+			this.UpdateEntities.Location = new System.Drawing.Point(87, 19);
+			this.UpdateEntities.Name = "UpdateEntities";
+			this.UpdateEntities.Size = new System.Drawing.Size(75, 38);
+			this.UpdateEntities.TabIndex = 19;
+			this.UpdateEntities.Text = "Update Entities";
+			this.mTips.SetToolTip(this.UpdateEntities, "Generate lightmaps for the level.  Needs vis data first.");
+			this.UpdateEntities.UseVisualStyleBackColor = true;
+			this.UpdateEntities.Click += new System.EventHandler(this.OnUpdateEntities);
 			// 
 			// LightGBSP
 			// 
@@ -357,7 +379,7 @@
 			this.LightGridSize.TabIndex = 36;
 			this.mTips.SetToolTip(this.LightGridSize, "World units per light map texel");
 			this.LightGridSize.Value = new decimal(new int[] {
-            4,
+            8,
             0,
             0,
             0});
@@ -509,28 +531,6 @@
 			this.SeamCorrection.Text = "Seam Correction";
 			this.mTips.SetToolTip(this.SeamCorrection, "Shifts light points around a bit to help points just inside solid");
 			this.SeamCorrection.UseVisualStyleBackColor = true;
-			// 
-			// UpdateEntities
-			// 
-			this.UpdateEntities.Location = new System.Drawing.Point(87, 19);
-			this.UpdateEntities.Name = "UpdateEntities";
-			this.UpdateEntities.Size = new System.Drawing.Size(75, 38);
-			this.UpdateEntities.TabIndex = 19;
-			this.UpdateEntities.Text = "Update Entities";
-			this.mTips.SetToolTip(this.UpdateEntities, "Generate lightmaps for the level.  Needs vis data first.");
-			this.UpdateEntities.UseVisualStyleBackColor = true;
-			this.UpdateEntities.Click += new System.EventHandler(this.OnUpdateEntities);
-			// 
-			// FullBuild
-			// 
-			this.FullBuild.Location = new System.Drawing.Point(168, 19);
-			this.FullBuild.Name = "FullBuild";
-			this.FullBuild.Size = new System.Drawing.Size(52, 38);
-			this.FullBuild.TabIndex = 20;
-			this.FullBuild.Text = "Full Build";
-			this.mTips.SetToolTip(this.FullBuild, "Generate lightmaps for the level.  Needs vis data first.");
-			this.FullBuild.UseVisualStyleBackColor = true;
-			this.FullBuild.Click += new System.EventHandler(this.OnFullBuild);
 			// 
 			// BSPForm
 			// 
