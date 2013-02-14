@@ -133,6 +133,7 @@
     <Compile Include="IReadWriteable.cs" />
     <Compile Include="Mathery.cs" />
     <Compile Include="Misc.cs" />
+    <Compile Include="MiscNoXNA.cs" />
     <Compile Include="Mover.cs" />
     <Compile Include="PlayerSteering.cs" />
     <Compile Include="Pool.cs" />
