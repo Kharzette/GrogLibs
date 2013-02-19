@@ -55,7 +55,7 @@ namespace BSPZone
 			ents.AddRange(mZone.GetEntitiesStartsWith("ammo_"));
 			ents.AddRange(mZone.GetEntitiesStartsWith("key_"));
 			ents.AddRange(mZone.GetEntitiesStartsWith("item_"));
-			ents.AddRange(mZone.GetEntitiesStartsWith("misc_skeleton"));	//LD Hack!
+			ents.AddRange(mZone.GetEntitiesStartsWith("misc_"));
 
 			foreach(ZoneEntity ze in ents)
 			{
@@ -67,7 +67,7 @@ namespace BSPZone
 				PickUp	pu		=new PickUp();
 				pu.mEntity		=ze;
 				pu.mPosition	=pos;
-				if(ze.GetValue("classname") != "misc_skeleton")
+				if(ze.GetValue("pickup") != "")
 				{
 					pu.mbPickUp	=true;
 				}
