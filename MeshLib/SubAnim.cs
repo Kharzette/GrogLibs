@@ -14,7 +14,7 @@ namespace MeshLib
 		float		[]mTimes;
 		float		mTotalTime;
 
-		KeyFrame	mBone;	//reference to corresponding bone val
+		KeyFrame	mBone;		//reference to corresponding bone val
 		string		mBoneName;
 
 

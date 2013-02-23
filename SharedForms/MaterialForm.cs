@@ -645,6 +645,10 @@ namespace SharedForms
 			}
 			else
 			{
+				if(MaterialGrid.SelectedRows.Count <= 0)
+				{
+					return;
+				}
 				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)MaterialGrid.SelectedRows[0].DataBoundItem;
 				mMatLib.BoostTexSize(gs.Name, true);
 			}
