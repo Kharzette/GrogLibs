@@ -242,6 +242,15 @@ struct VPosNormBoneTex0Tex1
 	float2	TexCoord1	: TEXCOORD1;
 };
 
+struct VPosNormBoneCol0
+{
+	float4	Position	: POSITION;
+	float3	Normal		: NORMAL;
+	float4	Blend0		: BLENDINDICES0;
+	float4	Weight0		: BLENDWEIGHT0;
+	float4	Color		: COLOR0;	
+};
+
 struct VPosNormBoneTex0Col0
 {
 	float4	Position	: POSITION;

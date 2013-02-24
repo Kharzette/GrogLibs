@@ -294,9 +294,9 @@ float4 ParticleCellPS(VTex03 input) : COLOR
 	//store alpha in z
 	texLitColor.w	*=input.TexCoord0.z;
 
-	texLitColor.xyz	=CalcCellLight(texLitColor.xyz);
-
 	texLitColor	*=mSolidColour;
+
+	texLitColor.xyz	=CalcCellColor(texLitColor.xyz);
 
 	texLitColor	=pow(abs(texLitColor), 1 / 2.2);
 

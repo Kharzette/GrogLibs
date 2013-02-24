@@ -3,7 +3,9 @@
 #define _COMMONFUNCTIONSFXH
 
 //constants
-#define	MAX_BONES	50
+#define	MAX_BONES		50
+#define	PI_OVER_FOUR	0.7853981634f
+#define	PI_OVER_TWO		1.5707963268f
 
 //matrii
 shared float4x4	mWorld;
@@ -18,14 +20,30 @@ shared float		mLightRange;
 shared float		mLightFalloffRange;	//under this light at full strength
 
 //outline / cell related
-shared float	mCellThresholds[4] = { 0.6, 0.4, 0.25, 0.1 };
-shared float	mCellBrightnessLevels[5] = { 1.0f, 0.7f, 0.5f, 0.2f, 0.05f };
+shared Texture	mCellTable;
 
 //sky gradient
 shared float3	mSkyGradient0;	//horizon colour
 shared float3	mSkyGradient1;	//peak colour
 
+//specular stuff
+float4	mSpecColor;
+float	mSpecPower;
+
 #include "Types.fxh"
+
+
+sampler CellSampler = sampler_state
+{
+	Texture	=(mCellTable);
+
+	MinFilter	=Point;
+	MagFilter	=Point;
+	MipFilter	=Point;
+
+	AddressU	=Clamp;
+	AddressV	=Clamp;
+};
 
 
 //does the math to get a normal from a sampled
@@ -129,6 +147,38 @@ VPosNorm ComputeSkin(VPosNormBone input, float4x4 bones[MAX_BONES], float4x4 bin
 }
 
 
+VPosTex03Tex13 ComputeSkinWorld(VPosNormBone input, float4x4 bones[MAX_BONES], float4x4 bindPose)
+{
+	VPosTex03Tex13	output;
+	
+	float4	vertPos	=mul(input.Position, bindPose);
+	
+	//generate view-proj matrix
+	float4x4	vp	=mul(mView, mProjection);
+	
+	//do the bone influences
+	float4x4 skinTransform	=GetSkinXForm(input.Blend0, input.Weight0, bones);
+	
+	//xform the vert to the character's boney pos
+	vertPos	=mul(vertPos, skinTransform);
+	
+	//transform to world
+	float4	worldPos	=mul(vertPos, mWorld);
+	output.TexCoord1	=worldPos.xyz;
+
+	//viewproj
+	output.Position	=mul(worldPos, vp);
+
+	//skin transform the normal
+	float3	worldNormal	=mul(input.Normal, skinTransform);
+	
+	//world transform the normal
+	output.TexCoord0	=mul(worldNormal, mWorld);
+
+	return	output;
+}
+
+
 //compute the position and color of a skinned vert
 VPosCol0 ComputeSkinTrilight(VPosNormBone input, float4x4 bones[MAX_BONES],
 							 float4x4 bindPose, float3 lightDir,
@@ -145,109 +195,38 @@ VPosCol0 ComputeSkinTrilight(VPosNormBone input, float4x4 bones[MAX_BONES],
 }
 
 
-//snaps a color to a cellish range
-float CalcCellLight(float3 lightVal)
+float3 ComputeGoodSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 lightVal, float4 fillLight)
 {
-	float	light;
+	float3	eyeVec	=normalize(mEyePos - wpos);
+	float3	halfVec	=normalize(eyeVec + lightDir);
+	float	ndotv	=saturate(dot(eyeVec, pnorm));
+	float	ndoth	=saturate(dot(halfVec, pnorm));
 
-	float	d	=lightVal.x + lightVal.y + lightVal.z;
+	float	normalizationTerm	=(mSpecPower + 2.0f) / 8.0f;
+	float	blinnPhong			=pow(ndoth, mSpecPower);
+	float	specTerm			=normalizationTerm * blinnPhong;
+	
+	//fresnel stuff
+	float	base		=1.0f - dot(halfVec, lightDir);
+	float	exponential	=pow(base, 5.0f);
+	float	fresTerm	=mSpecColor + (1.0f - mSpecColor) * exponential;
 
-	d	*=0.33;
+	//vis stuff
+	float	alpha	=1.0f / (sqrt(PI_OVER_FOUR * mSpecPower + PI_OVER_TWO));
+	float	visTerm	=(lightVal * (1.0f - alpha) + alpha) *
+				(ndotv * (1.0f - alpha) + alpha);
 
-	if(d > mCellThresholds[0])
-	{
-		light	=mCellBrightnessLevels[0];
-	}
-	else if(d > mCellThresholds[1])
-	{
-		light	=mCellBrightnessLevels[1];
-	}
-	else if(d > mCellThresholds[2])
-	{
-		light	=mCellBrightnessLevels[2];
-	}
-	else if(d > mCellThresholds[3])
-	{
-		light	=mCellBrightnessLevels[3];
-	}
-	else
-	{
-		light	=mCellBrightnessLevels[4];
-	}
+	visTerm	=1.0f / visTerm;
 
-	return	light;
+	float3	specular	=specTerm * lightVal * fresTerm * visTerm * fillLight;
+
+	return	specular;
 }
-
 
 //snaps a color to a cellish range
 float3 CalcCellColor(float3 colVal)
 {
-	float3	col;
-
-	if(colVal.x > mCellThresholds[0])
-	{
-		col.x	=mCellBrightnessLevels[0];
-	}
-	else if(colVal.x > mCellThresholds[1])
-	{
-		col.x	=mCellBrightnessLevels[1];
-	}
-	else if(colVal.x > mCellThresholds[2])
-	{
-		col.x	=mCellBrightnessLevels[2];
-	}
-	else if(colVal.x > mCellThresholds[3])
-	{
-		col.x	=mCellBrightnessLevels[3];
-	}
-	else
-	{
-		col.x	=mCellBrightnessLevels[4];
-	}
-
-	if(colVal.y > mCellThresholds[0])
-	{
-		col.y	=mCellBrightnessLevels[0];
-	}
-	else if(colVal.y > mCellThresholds[1])
-	{
-		col.y	=mCellBrightnessLevels[1];
-	}
-	else if(colVal.y > mCellThresholds[2])
-	{
-		col.y	=mCellBrightnessLevels[2];
-	}
-	else if(colVal.y > mCellThresholds[3])
-	{
-		col.y	=mCellBrightnessLevels[3];
-	}
-	else
-	{
-		col.y	=mCellBrightnessLevels[4];
-	}
-
-	if(colVal.z > mCellThresholds[0])
-	{
-		col.z	=mCellBrightnessLevels[0];
-	}
-	else if(colVal.z > mCellThresholds[1])
-	{
-		col.z	=mCellBrightnessLevels[1];
-	}
-	else if(colVal.z > mCellThresholds[2])
-	{
-		col.z	=mCellBrightnessLevels[2];
-	}
-	else if(colVal.z > mCellThresholds[3])
-	{
-		col.z	=mCellBrightnessLevels[3];
-	}
-	else
-	{
-		col.z	=mCellBrightnessLevels[4];
-	}
-
-	return	col;
+	return	tex3D(CellSampler, colVal);
 }
 
 

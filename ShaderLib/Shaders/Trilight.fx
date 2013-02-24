@@ -1,12 +1,4 @@
 //shaders using TomF's trilights for light
-//constants
-#define	MAX_BONES		50
-#define	PI_OVER_FOUR	0.7853981634f
-#define	PI_OVER_TWO		1.5707963268f
-
-//matrii for skinning
-shared float4x4	mBindPose;
-shared float4x4	mBones[MAX_BONES];
 
 //texture layers used on the surface
 texture	mTexture0;
@@ -20,12 +12,12 @@ float3	mLightDirection;
 
 float4	mSolidColour;	//for non textured
 
-//specular stuff
-float4	mSpecColor;
-float	mSpecPower;
-
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
+
+//matrii for skinning
+shared float4x4	mBindPose;
+shared float4x4	mBones[MAX_BONES];
 
 
 sampler TexSampler0 = sampler_state
@@ -179,6 +171,35 @@ VPosTex04Tex14Tex24Tex34 TriTanWorldInstancedVS(VPosNormTanTex0 input, float4x4 
 	return	output;
 }
 
+VPosTex03Tex13 TriSolidSkinVS(VPosNormBone input)
+{
+	return	ComputeSkinWorld(input, mBones, mBindPose);
+}
+
+VPosTex04Tex14Tex24 TriColorSkinVS(VPosNormBoneCol0 input)
+{
+	VPosNormBone	inSkin;
+
+	inSkin.Position	=input.Position;
+	inSkin.Normal	=input.Normal;
+	inSkin.Blend0	=input.Blend0;
+	inSkin.Weight0	=input.Weight0;
+
+	VPosTex03Tex13	skin	=ComputeSkinWorld(inSkin, mBones, mBindPose);
+
+	VPosTex04Tex14Tex24	ret;
+
+	ret.Position		=skin.Position;
+	ret.TexCoord0.xyz	=skin.TexCoord0;
+	ret.TexCoord1.xyz	=skin.TexCoord1;
+	ret.TexCoord2		=input.Color;
+
+	ret.TexCoord0.w	=0;
+	ret.TexCoord1.w	=0;
+
+	return	ret;
+}
+
 VPosTex0Col0 TriSkinTex0VS(VPosNormBoneTex0 input)
 {
 	VPosNormBone	skVert;
@@ -321,28 +342,7 @@ float4 NormalMapTriTex0SolidSpecPhysPS(VTex04Tex14Tex24Tex34 input) : COLOR
 	float3	triLight	=ComputeTrilight(goodNorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
-	float3	eyeVec	=normalize(mEyePos - wpos);
-	float3	halfVec	=normalize(eyeVec + lightDir);
-	float	ndotv	=saturate(dot(eyeVec, goodNorm));
-	float	ndoth	=saturate(dot(halfVec, goodNorm));
-
-	float	normalizationTerm	=(mSpecPower + 2.0f) / 8.0f;
-	float	blinnPhong			=pow(ndoth, mSpecPower);
-	float	specTerm			=normalizationTerm * blinnPhong;
-	
-	//fresnel stuff
-	float	base		=1.0f - dot(halfVec, lightDir);
-	float	exponential	=pow(base, 5.0f);
-	float	fresTerm	=mSpecColor + (1.0f - mSpecColor) * exponential;
-
-	//vis stuff
-	float	alpha	=1.0f / (sqrt(PI_OVER_FOUR * mSpecPower + PI_OVER_TWO));
-	float	visTerm	=(triLight * (1.0f - alpha) + alpha) *
-				(ndotv * (1.0f - alpha) + alpha);
-
-	visTerm	=1.0f / visTerm;
-
-	float3	specular	=specTerm * triLight * fresTerm * visTerm * mLightColor2;
+	float3	specular	=ComputeGoodSpecular(wpos, lightDir, goodNorm, triLight, mLightColor2);
 	float3	litSolid	=mSolidColour.xyz * triLight;
 
 	specular	=saturate(specular + litSolid.xyz);
@@ -372,28 +372,7 @@ float4 NormalMapTriTex0SpecPhysPS(VTex04Tex14Tex24Tex34 input) : COLOR
 	float3	triLight	=ComputeTrilight(goodNorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
-	float3	eyeVec	=normalize(mEyePos - wpos);
-	float3	halfVec	=normalize(eyeVec + lightDir);
-	float	ndotv	=saturate(dot(eyeVec, goodNorm));
-	float	ndoth	=saturate(dot(halfVec, goodNorm));
-
-	float	normalizationTerm	=(mSpecPower + 2.0f) / 8.0f;
-	float	blinnPhong			=pow(ndoth, mSpecPower);
-	float	specTerm			=normalizationTerm * blinnPhong;
-	
-	//fresnel stuff
-	float	base		=1.0f - dot(halfVec, lightDir);
-	float	exponential	=pow(base, 5.0f);
-	float	fresTerm	=mSpecColor + (1.0f - mSpecColor) * exponential;
-
-	//vis stuff
-	float	alpha	=1.0f / (sqrt(PI_OVER_FOUR * mSpecPower + PI_OVER_TWO));
-	float	visTerm	=(triLight * (1.0f - alpha) + alpha) *
-				(ndotv * (1.0f - alpha) + alpha);
-
-	visTerm	=1.0f / visTerm;
-
-	float3	specular	=specTerm * triLight * fresTerm * visTerm * mLightColor2;
+	float3	specular	=ComputeGoodSpecular(wpos, lightDir, goodNorm, triLight, mLightColor2);
 	float3	litSolid	=texCol.xyz * triLight;
 
 	specular	=saturate(specular + litSolid.xyz);
@@ -420,28 +399,7 @@ float4 TriTex0SpecPhysPS(VTex04Tex14 input) : COLOR
 	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
-	float3	eyeVec	=normalize(mEyePos - wpos);
-	float3	halfVec	=normalize(eyeVec + lightDir);
-	float	ndotv	=saturate(dot(eyeVec, pnorm));
-	float	ndoth	=saturate(dot(halfVec, pnorm));
-
-	float	normalizationTerm	=(mSpecPower + 2.0f) / 8.0f;
-	float	blinnPhong			=pow(ndoth, mSpecPower);
-	float	specTerm			=normalizationTerm * blinnPhong;
-	
-	//fresnel stuff
-	float	base		=1.0f - dot(halfVec, lightDir);
-	float	exponential	=pow(base, 5.0f);
-	float	fresTerm	=mSpecColor + (1.0f - mSpecColor) * exponential;
-
-	//vis stuff
-	float	alpha	=1.0f / (sqrt(PI_OVER_FOUR * mSpecPower + PI_OVER_TWO));
-	float	visTerm	=(triLight * (1.0f - alpha) + alpha) *
-				(ndotv * (1.0f - alpha) + alpha);
-
-	visTerm	=1.0f / visTerm;
-
-	float3	specular	=specTerm * triLight * fresTerm * visTerm * mLightColor2;
+	float3	specular	=ComputeGoodSpecular(wpos, lightDir, pnorm, triLight, mLightColor2);
 	float3	litColor	=texColor.xyz * triLight;
 
 	specular	=saturate((specular + litColor.xyz) * mSolidColour.xyz);
@@ -461,33 +419,54 @@ float4 TriSolidSpecPhysPS(VTex03Tex13 input) : COLOR
 	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
-	float3	eyeVec	=normalize(mEyePos - wpos);
-	float3	halfVec	=normalize(eyeVec + lightDir);
-	float	ndotv	=saturate(dot(eyeVec, pnorm));
-	float	ndoth	=saturate(dot(halfVec, pnorm));
-
-	float	normalizationTerm	=(mSpecPower + 2.0f) / 8.0f;
-	float	blinnPhong			=pow(ndoth, mSpecPower);
-	float	specTerm			=normalizationTerm * blinnPhong;
-	
-	//fresnel stuff
-	float	base		=1.0f - dot(halfVec, lightDir);
-	float	exponential	=pow(base, 5.0f);
-	float	fresTerm	=mSpecColor + (1.0f - mSpecColor) * exponential;
-
-	//vis stuff
-	float	alpha	=1.0f / (sqrt(PI_OVER_FOUR * mSpecPower + PI_OVER_TWO));
-	float	visTerm	=(triLight * (1.0f - alpha) + alpha) *
-				(ndotv * (1.0f - alpha) + alpha);
-
-	visTerm	=1.0f / visTerm;
-
-	float3	specular	=specTerm * triLight * fresTerm * visTerm * mLightColor2;
+	float3	specular	=ComputeGoodSpecular(wpos, lightDir, pnorm, triLight, mLightColor2);
 	float3	litSolid	=mSolidColour.xyz * triLight;
 
 	specular	=saturate(specular + litSolid);
 
 	return	float4(specular, mSolidColour.w);
+}
+
+//Solid color and expensive specular
+float4 TriCellSolidSpecPhysPS(VTex03Tex13 input) : COLOR
+{
+	float3	pnorm	=input.TexCoord0;
+	float3	wpos	=input.TexCoord1;
+
+	pnorm	=normalize(pnorm);
+
+	float3	lightDir	=-mLightDirection;
+	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
+							mLightColor0, mLightColor1, mLightColor2);
+
+	float3	specular	=ComputeGoodSpecular(wpos, lightDir, pnorm, triLight, mLightColor2);
+	float3	litSolid	=mSolidColour.xyz * triLight;
+
+	specular	=saturate(specular + litSolid);
+	specular	=CalcCellColor(specular);
+
+	return	float4(specular, mSolidColour.w);
+}
+
+//passed in color and expensive specular
+float4 TriCellColorSpecPhysPS(VTex04Tex14Tex24 input) : COLOR
+{
+	float3	pnorm	=input.TexCoord0;
+	float3	wpos	=input.TexCoord1;
+
+	pnorm	=normalize(pnorm);
+
+	float3	lightDir	=-mLightDirection;
+	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
+							mLightColor0, mLightColor1, mLightColor2);
+
+	float3	specular	=ComputeGoodSpecular(wpos, lightDir, pnorm, triLight, mLightColor2);
+	float3	litSolid	=input.TexCoord2.xyz * triLight;
+
+	specular	=saturate(specular + litSolid);
+	specular	=CalcCellColor(specular);
+
+	return	float4(specular, input.TexCoord2.w);
 }
 
 //single texture, single color modulated
@@ -634,8 +613,26 @@ technique TriSkinSolidSpecPhys
 {     
 	pass P0
 	{
-		VertexShader	=compile vs_2_0 TriSkinTex0VS();
+		VertexShader	=compile vs_2_0 TriSolidSkinVS();
 		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();
+	}
+}
+
+technique TriSkinCellSolidSpecPhys
+{     
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 TriSolidSkinVS();
+		PixelShader		=compile ps_2_0 TriCellSolidSpecPhysPS();
+	}
+}
+
+technique TriSkinCellColorSpecPhys
+{     
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 TriColorSkinVS();
+		PixelShader		=compile ps_2_0 TriCellColorSpecPhysPS();
 	}
 }
 

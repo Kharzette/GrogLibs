@@ -293,10 +293,10 @@ float4 LMCellPixelShader(VTex04Tex14Tex24 input) : COLOR0
 		}
 	}
 
+	color.rgb	*=lm;
+
 	//do the Cell thing
-	float	light	=CalcCellLight(lm);
-	
-	color.rgb	*=(light * lm);
+	color.rgb	=CalcCellColor(color.rgb);
 
 	//back to srgb
 	color	=pow(abs(color), 1 / 2.2);
@@ -455,10 +455,10 @@ float4 VLitCellPS(VTex04Tex14Tex24 input) : COLOR0
 		}
 	}
 
-	//do the Cell thing	
-	float	light	=CalcCellLight(inColor);
-	
-	color.rgb	*=(light * inColor);
+	color.rgb	*=inColor;
+
+	//do the Cell thing
+	color.rgb	=CalcCellColor(color.rgb);
 
 	//back to srgb
 	color	=pow(abs(color), 1 / 2.2);
@@ -682,10 +682,10 @@ float4 LMAnimCellPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 		}
 	}
 
-	//do the Cell thing	
-	float	light	=CalcCellLight(lm);
-	
-	color.rgb	*=light * lm;
+	color.rgb	*=lm;
+
+	//do the Cell thing
+	color.rgb	=CalcCellColor(color.rgb);
 
 	//back to srgb
 	color	=pow(abs(color), 1 / 2.2);
