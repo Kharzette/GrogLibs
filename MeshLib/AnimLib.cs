@@ -5,6 +5,7 @@ using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Kinect;
 
 
 namespace MeshLib
@@ -15,18 +16,9 @@ namespace MeshLib
 
 		Skeleton	mSkeleton;
 
-		//map of kinect bone names to indexes
-		Dictionary<string, int>	mKinectJoints	=new Dictionary<string, int>();
-		Dictionary<int, string>	mKinectIndexes	=new Dictionary<int, string>();
-
-		//list of influences from kinect bones to biped bones
-		//this will be loaded externally (it's a text file)
-		Dictionary<string, List<string>>	mBoneMerger	=new Dictionary<string,List<string>>();
-
 
 		public AnimLib()
 		{
-			InitKinectDictionary();
 		}
 
 
@@ -238,135 +230,119 @@ namespace MeshLib
 		}
 
 
-		public void LoadKinectMotionDat(string fn)
+		public void CreateKinectAnimation(IEnumerable<KinectMap> mapping,
+			Skin skin, CaptureData data, string animName)
 		{
-			FileStream		fs	=new FileStream(fn, FileMode.Open, FileAccess.Read);
-			StreamReader	sr	=new StreamReader(fs);
+			Debug.Assert(data.mFrames.Count == data.mTimes.Count);
 
-			Dictionary<int, List<Vector3>>	boneMovement	=new Dictionary<int,List<Vector3>>();
-
-			foreach(KeyValuePair<int, string> kinectJoint in mKinectIndexes)
+			if(mSkeleton == null)
 			{
-				boneMovement.Add(kinectJoint.Key, new List<Vector3>());
+				return;
 			}
 
-			while(!sr.EndOfStream)
+			//create a mapping dictionary
+			Dictionary<JointType, KinectMap>	betterMapping	=new Dictionary<JointType, KinectMap>();
+			foreach(KinectMap km in mapping)
 			{
-				string	frame	=sr.ReadLine();
-				string	[]toks	=frame.Split(' ');
-				
-				for(int i=0;i < boneMovement.Count;i++)
-				{
-					Vector3	pos	=Vector3.Zero;
-					UtilityLib.Mathery.TryParse(toks[(i * 3)], out pos.X);
-					UtilityLib.Mathery.TryParse(toks[(i * 3) + 1], out pos.Y);
-					UtilityLib.Mathery.TryParse(toks[(i * 3) + 2], out pos.Z);
-
-					boneMovement[i + 1].Add(pos);
-				}
+				betterMapping.Add(km.Joint, km);
 			}
 
-			//watch out for huge negative values
-		}
+			//subanim data to yank out of the kinect data
+			Dictionary<string, List<KeyFrame>>	keys	=new Dictionary<string, List<KeyFrame>>();
+			Dictionary<string, List<float>>		ktimes	=new Dictionary<string, List<float>>();
 
+			//bindpose stuff
+			Matrix	bindRoot	=skin.GetBindShapeMatrix();
+			Matrix	invBindRoot	=Matrix.Invert(bindRoot);
 
-		void InitKinectDictionary()
-		{
-			mKinectJoints.Clear();
-			mKinectJoints.Add("XN_SKEL_HEAD", 1);
-			mKinectJoints.Add("XN_SKEL_NECK", 2);
-			mKinectJoints.Add("XN_SKEL_TORSO", 3);
-			mKinectJoints.Add("XN_SKEL_WAIST", 4);
-			mKinectJoints.Add("XN_SKEL_LEFT_COLLAR", 5);
-			mKinectJoints.Add("XN_SKEL_LEFT_SHOULDER", 6);
-			mKinectJoints.Add("XN_SKEL_LEFT_ELBOW", 7);
-			mKinectJoints.Add("XN_SKEL_LEFT_WRIST", 8);
-			mKinectJoints.Add("XN_SKEL_LEFT_HAND", 9);
-			mKinectJoints.Add("XN_SKEL_LEFT_FINGERTIP", 10);
-			mKinectJoints.Add("XN_SKEL_RIGHT_COLLAR", 11);
-			mKinectJoints.Add("XN_SKEL_RIGHT_SHOULDER", 12);
-			mKinectJoints.Add("XN_SKEL_RIGHT_ELBOW", 13);
-			mKinectJoints.Add("XN_SKEL_RIGHT_WRIST", 14);
-			mKinectJoints.Add("XN_SKEL_RIGHT_HAND", 15);
-			mKinectJoints.Add("XN_SKEL_RIGHT_FINGERTIP", 16);
-			mKinectJoints.Add("XN_SKEL_LEFT_HIP", 17);
-			mKinectJoints.Add("XN_SKEL_LEFT_KNEE", 18);
-			mKinectJoints.Add("XN_SKEL_LEFT_ANKLE", 19);
-			mKinectJoints.Add("XN_SKEL_LEFT_FOOT", 20);
-			mKinectJoints.Add("XN_SKEL_RIGHT_HIP", 21);
-			mKinectJoints.Add("XN_SKEL_RIGHT_KNEE", 22);
-			mKinectJoints.Add("XN_SKEL_RIGHT_ANKLE", 23);
-			mKinectJoints.Add("XN_SKEL_RIGHT_FOOT", 24);
-
-			mKinectIndexes.Clear();
-			mKinectIndexes.Add(1, "XN_SKEL_HEAD");
-			mKinectIndexes.Add(2, "XN_SKEL_NECK");
-			mKinectIndexes.Add(3, "XN_SKEL_TORSO");
-			mKinectIndexes.Add(4, "XN_SKEL_WAIST");
-			mKinectIndexes.Add(5, "XN_SKEL_LEFT_COLLAR");
-			mKinectIndexes.Add(6, "XN_SKEL_LEFT_SHOULDER");
-			mKinectIndexes.Add(7, "XN_SKEL_LEFT_ELBOW");
-			mKinectIndexes.Add(8, "XN_SKEL_LEFT_WRIST");
-			mKinectIndexes.Add(9, "XN_SKEL_LEFT_HAND");
-			mKinectIndexes.Add(10, "XN_SKEL_LEFT_FINGERTIP");
-			mKinectIndexes.Add(11, "XN_SKEL_RIGHT_COLLAR");
-			mKinectIndexes.Add(12, "XN_SKEL_RIGHT_SHOULDER");
-			mKinectIndexes.Add(13, "XN_SKEL_RIGHT_ELBOW");
-			mKinectIndexes.Add(14, "XN_SKEL_RIGHT_WRIST");
-			mKinectIndexes.Add(15, "XN_SKEL_RIGHT_HAND");
-			mKinectIndexes.Add(16, "XN_SKEL_RIGHT_FINGERTIP");
-			mKinectIndexes.Add(17, "XN_SKEL_LEFT_HIP");
-			mKinectIndexes.Add(18, "XN_SKEL_LEFT_KNEE");
-			mKinectIndexes.Add(19, "XN_SKEL_LEFT_ANKLE");
-			mKinectIndexes.Add(20, "XN_SKEL_LEFT_FOOT");
-			mKinectIndexes.Add(21, "XN_SKEL_RIGHT_HIP");
-			mKinectIndexes.Add(22, "XN_SKEL_RIGHT_KNEE");
-			mKinectIndexes.Add(23, "XN_SKEL_RIGHT_ANKLE");
-			mKinectIndexes.Add(24, "XN_SKEL_RIGHT_FOOT");
-		}
-
-
-		public bool LoadBoneMap(string fileName)
-		{
-			Stream	file	=null;
-			file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
-			if(file == null)
+			for(int i=0;i < data.mFrames.Count;i++)
 			{
-				return	false;
-			}
-			StreamReader	sr	=new StreamReader(file);
+				List<Quaternion>	frame		=data.mFrames[i];
+				List<JointType>		joints		=data.mJoints[i];
+				float				curTime		=data.mTimes[i];
 
-			while(!sr.EndOfStream)
-			{
-				string	line	=sr.ReadLine();
+				Debug.Assert(frame.Count == joints.Count);
 
-				string	[]toks	=line.Split(' ', '\t');
-
-				//first one will be the game bone
-				string	bone	=toks[0];
-
-				bone	=bone.Trim();
-
-				if(bone == "")
+				for(int j=0;j < frame.Count;j++)
 				{
-					continue;
-				}
-
-				//rest go in the map list
-				List<string>	influences	=new List<string>();
-				for(int i=1;i < toks.Length;i++)
-				{
-					string	trimmed	=toks[i].Trim();
-
-					if(trimmed != "")
+					if(!betterMapping.ContainsKey(joints[j]))
 					{
-						influences.Add(trimmed);
+						continue;
 					}
-				}
 
-				mBoneMerger.Add(bone, influences);
+					KinectMap	km	=betterMapping[joints[j]];
+
+					string	name	=km.CharBone;
+					if(name == null || name == "")
+					{
+						continue;
+					}
+
+					if(!keys.ContainsKey(name))
+					{
+						keys.Add(name, new List<KeyFrame>());
+					}
+
+					KeyFrame	kf	=new KeyFrame();
+
+					Matrix	invBind		=skin.GetInvBindPoseByName(km.CharBone);
+					Matrix	skinPose	=skin.GetBoneBindByName(km.CharBone, mSkeleton);
+					Matrix	bindPose	=Matrix.Invert(invBind);
+
+//					skinPose	=bindPose * skinPose;
+
+					skinPose.Decompose(out kf.mScale, out kf.mRotation, out kf.mPosition);
+
+//					kf.mScale		=Vector3.One;
+//					kf.mRotation	=Quaternion.Identity;
+
+					Quaternion	kinectRot	=Quaternion.Identity;
+
+					kinectRot.X	=frame[j].X;
+					kinectRot.Y	=frame[j].Y;
+					kinectRot.Z	=frame[j].Z;
+					kinectRot.W	=frame[j].W;
+
+//					kf.mRotation	=Quaternion.Concatenate(kf.mRotation, kinectRot);
+					kf.mRotation	=kinectRot;
+
+					//do the adjustments
+					Quaternion	rotX	=Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(km.RotX));
+					Quaternion	rotY	=Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.ToRadians(km.RotY));
+					Quaternion	rotZ	=Quaternion.CreateFromAxisAngle(Vector3.UnitZ, MathHelper.ToRadians(km.RotZ));
+
+					Quaternion	rot	=Quaternion.Concatenate(rotX, rotY);
+					rot				=Quaternion.Concatenate(rot, rotZ);
+					kf.mRotation	=Quaternion.Concatenate(kf.mRotation, rot);
+
+					keys[name].Add(kf);
+
+					//do the times
+					if(!ktimes.ContainsKey(name))
+					{
+						ktimes.Add(name, new List<float>());
+					}
+
+					ktimes[name].Add(curTime);
+				}
 			}
-			return	true;
+
+			List<SubAnim>	subAnims	=new List<SubAnim>();
+
+			foreach(KeyValuePair<string, List<KeyFrame>> sub in keys)
+			{
+				SubAnim	sa	=new SubAnim(sub.Key, ktimes[sub.Key], sub.Value);
+
+				subAnims.Add(sa);
+			}
+
+			Anim	kinAnim	=new Anim(subAnims);
+
+			kinAnim.Name	=animName;
+
+			mAnims.Add(animName, kinAnim);
+
+			kinAnim.SetBoneRefs(mSkeleton);
 		}
 	}
 }

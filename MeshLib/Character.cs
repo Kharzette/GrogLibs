@@ -98,6 +98,12 @@ namespace MeshLib
 		}
 
 
+		public Skin GetSkinByIndex(int idx)
+		{
+			return	mSkins[idx];
+		}
+
+
 		public void SaveToFile(string fileName)
 		{
 			FileStream	file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);

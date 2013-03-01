@@ -22,24 +22,17 @@ namespace MeshLib
 		}
 
 
-		public void SetBoneNames(List<string> bnames)
-		{
-			mBoneNames	=bnames;
-		}
-
-
 		internal List<string> GetBoneNames()
 		{
 			return	mBoneNames;
 		}
 
 
-		public void SetBoneNames(string []bnames)
+		public void SetBoneNames(List<string> bnames)
 		{
-			foreach(string n in bnames)
-			{
-				mBoneNames.Add(n);
-			}
+			mBoneNames.Clear();
+
+			mBoneNames.AddRange(bnames);
 		}
 
 
@@ -77,6 +70,29 @@ namespace MeshLib
 			ret	=mInverseBindPoses[idx] * ret * mMaxAdjust;
 
 			return	ret;
+		}
+
+
+		public Matrix GetBoneBindByName(string boneName, Skeleton sk)
+		{
+			int	idx	=mBoneNames.IndexOf(boneName);
+
+			Matrix	ret	=Matrix.Identity;
+
+			sk.GetBindMatrixForBone(boneName, out ret);
+
+			//multiply by inverse bind pose
+//			ret	=mInverseBindPoses[idx] * ret * mMaxAdjust;
+
+			return	ret;
+		}
+
+
+		public Matrix GetInvBindPoseByName(string boneName)
+		{
+			int	idx	=mBoneNames.IndexOf(boneName);
+
+			return	mInverseBindPoses[idx];
 		}
 
 
