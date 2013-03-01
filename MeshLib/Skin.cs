@@ -73,29 +73,6 @@ namespace MeshLib
 		}
 
 
-		public Matrix GetBoneBindByName(string boneName, Skeleton sk)
-		{
-			int	idx	=mBoneNames.IndexOf(boneName);
-
-			Matrix	ret	=Matrix.Identity;
-
-			sk.GetBindMatrixForBone(boneName, out ret);
-
-			//multiply by inverse bind pose
-//			ret	=mInverseBindPoses[idx] * ret * mMaxAdjust;
-
-			return	ret;
-		}
-
-
-		public Matrix GetInvBindPoseByName(string boneName)
-		{
-			int	idx	=mBoneNames.IndexOf(boneName);
-
-			return	mInverseBindPoses[idx];
-		}
-
-
 		public void Read(BinaryReader br)
 		{
 			mBoneNames.Clear();

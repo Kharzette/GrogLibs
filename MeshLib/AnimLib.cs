@@ -231,7 +231,7 @@ namespace MeshLib
 
 
 		public void CreateKinectAnimation(IEnumerable<KinectMap> mapping,
-			Skin skin, CaptureData data, string animName)
+			CaptureData data, string animName)
 		{
 			Debug.Assert(data.mFrames.Count == data.mTimes.Count);
 
@@ -250,10 +250,6 @@ namespace MeshLib
 			//subanim data to yank out of the kinect data
 			Dictionary<string, List<KeyFrame>>	keys	=new Dictionary<string, List<KeyFrame>>();
 			Dictionary<string, List<float>>		ktimes	=new Dictionary<string, List<float>>();
-
-			//bindpose stuff
-			Matrix	bindRoot	=skin.GetBindShapeMatrix();
-			Matrix	invBindRoot	=Matrix.Invert(bindRoot);
 
 			for(int i=0;i < data.mFrames.Count;i++)
 			{
@@ -283,28 +279,9 @@ namespace MeshLib
 						keys.Add(name, new List<KeyFrame>());
 					}
 
-					KeyFrame	kf	=new KeyFrame();
+					KeyFrame	kf			=new KeyFrame();
 
-					Matrix	invBind		=skin.GetInvBindPoseByName(km.CharBone);
-					Matrix	skinPose	=skin.GetBoneBindByName(km.CharBone, mSkeleton);
-					Matrix	bindPose	=Matrix.Invert(invBind);
-
-//					skinPose	=bindPose * skinPose;
-
-					skinPose.Decompose(out kf.mScale, out kf.mRotation, out kf.mPosition);
-
-//					kf.mScale		=Vector3.One;
-//					kf.mRotation	=Quaternion.Identity;
-
-					Quaternion	kinectRot	=Quaternion.Identity;
-
-					kinectRot.X	=frame[j].X;
-					kinectRot.Y	=frame[j].Y;
-					kinectRot.Z	=frame[j].Z;
-					kinectRot.W	=frame[j].W;
-
-//					kf.mRotation	=Quaternion.Concatenate(kf.mRotation, kinectRot);
-					kf.mRotation	=kinectRot;
+					kf.mRotation	=frame[j];
 
 					//do the adjustments
 					Quaternion	rotX	=Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(km.RotX));

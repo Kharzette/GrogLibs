@@ -14,8 +14,6 @@ namespace MeshLib
 
 		//current pos / rot / scale
 		KeyFrame	mKeyValue	=new KeyFrame();
-		KeyFrame	mBindKey	=new KeyFrame();
-
 
 
 		public GSNode()
@@ -45,16 +43,6 @@ namespace MeshLib
 		}
 
 
-		public Matrix GetBindMatrix()
-		{
-			Matrix	mat	=Matrix.CreateScale(mBindKey.mScale) *
-				Matrix.CreateFromQuaternion(mBindKey.mRotation) *
-				Matrix.CreateTranslation(mBindKey.mPosition);
-
-			return	mat;
-		}
-
-
 		public bool GetMatrixForBone(string boneName, out Matrix ret)
 		{
 			if(boneName == mName)
@@ -76,33 +64,11 @@ namespace MeshLib
 		}
 
 
-		public bool GetBindMatrixForBone(string boneName, out Matrix ret)
-		{
-			if(boneName == mName)
-			{
-				ret	=GetBindMatrix();
-				return	true;
-			}
-
-			foreach(GSNode n in mChildren)
-			{
-				if(n.GetBindMatrixForBone(boneName, out ret))
-				{
-//					ret	*=GetBindMatrix();
-					return	true;
-				}
-			}
-			ret	=Matrix.Identity;
-			return	false;
-		}
-
-
 		public void Read(BinaryReader br)
 		{
 			mName	=br.ReadString();
 
 			mKeyValue.Read(br);
-			mBindKey.Read(br);
 
 			int	numChildren	=br.ReadInt32();
 			for(int i=0;i < numChildren;i++)
@@ -120,7 +86,6 @@ namespace MeshLib
 			bw.Write(mName);
 
 			mKeyValue.Write(bw);
-			mBindKey.Write(bw);
 
 			bw.Write(mChildren.Count);
 			foreach(GSNode n in mChildren)
@@ -157,14 +122,6 @@ namespace MeshLib
 			}
 			ret	=null;
 			return	false;
-		}
-
-
-		public void SetBindKey(KeyFrame keyFrame)
-		{
-			mBindKey.mPosition	=keyFrame.mPosition;
-			mBindKey.mRotation	=keyFrame.mRotation;
-			mBindKey.mScale		=keyFrame.mScale;
 		}
 
 
@@ -207,20 +164,6 @@ namespace MeshLib
 			foreach(GSNode n in mRoots)
 			{
 				if(n.GetMatrixForBone(boneName, out ret))
-				{
-					return	true;
-				}
-			}
-			ret	=Matrix.Identity;
-			return	false;
-		}
-
-
-		public bool GetBindMatrixForBone(string boneName, out Matrix ret)
-		{
-			foreach(GSNode n in mRoots)
-			{
-				if(n.GetBindMatrixForBone(boneName, out ret))
 				{
 					return	true;
 				}
