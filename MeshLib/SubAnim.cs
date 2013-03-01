@@ -37,6 +37,24 @@ namespace MeshLib
 		}
 
 
+		public string GetBoneName()
+		{
+			return	mBoneName;
+		}
+
+
+		public KeyFrame[] GetKeys()
+		{
+			return	mKeys;
+		}
+
+
+		internal float []GetTimes()
+		{
+			return	mTimes;
+		}
+
+
 		internal void SetBoneRef(KeyFrame boneKey)
 		{
 			mBone	=boneKey;
@@ -102,12 +120,6 @@ namespace MeshLib
 			}
 
 			mTotalTime	=br.ReadSingle();
-		}
-
-
-		internal string GetBoneName()
-		{
-			return	mBoneName;
 		}
 
 

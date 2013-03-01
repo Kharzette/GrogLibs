@@ -105,6 +105,30 @@ namespace MeshLib
 		}
 
 
+		internal bool GetBoneParentName(string boneName, out string parent)
+		{
+			if(boneName == mName)
+			{
+				parent	="";
+				return	true;
+			}
+
+			foreach(GSNode n in mChildren)
+			{
+				if(n.GetBoneParentName(boneName, out parent))
+				{
+					if(parent == "")
+					{
+						parent	=mName;
+					}
+					return	true;
+				}
+			}
+			parent	=null;
+			return	false;
+		}
+
+
 		internal bool GetBoneKey(string bone, out KeyFrame ret)
 		{
 			if(mName == bone)
@@ -196,6 +220,20 @@ namespace MeshLib
 			{
 				n.Write(bw);
 			}
+		}
+
+
+		internal bool GetBoneParentName(string boneName, out string parent)
+		{
+			foreach(GSNode n in mRoots)
+			{
+				if(n.GetBoneParentName(boneName, out parent))
+				{
+					return	true;
+				}
+			}
+			parent	=null;
+			return	false;
 		}
 
 

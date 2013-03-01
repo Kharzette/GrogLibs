@@ -109,21 +109,6 @@ namespace MeshLib
 		}
 
 
-		public void LoadKinectMotionDat(string fn, Dictionary<string, int> kinectJoints)
-		{
-			FileStream		fs	=new FileStream(fn, FileMode.Open, FileAccess.Read);
-			StreamReader	sr	=new StreamReader(fs);
-
-			while(!sr.EndOfStream)
-			{
-				string	frame	=sr.ReadLine();
-				string	[]toks	=frame.Split(' ');
-
-				
-			}
-		}
-
-
 		public void SetBoneRefs(Skeleton skel)
 		{
 			for(int i=0;i < mSubAnims.Length;i++)
@@ -142,6 +127,65 @@ namespace MeshLib
 			for(int i=0;i < mSubAnims.Length;i++)
 			{
 				mSubAnims[i].Animate(time);
+			}
+		}
+
+
+		public void FixDetatchedSkeleton(Skeleton skel, string brokenNode)
+		{
+			//make sure we have keys
+			KeyFrame	[]brokenKeys	=null;
+			float		[]times			=null;
+			foreach(SubAnim sa in mSubAnims)
+			{
+				if(sa.GetBoneName() == brokenNode)
+				{
+					brokenKeys	=sa.GetKeys();
+					times		=sa.GetTimes();
+				}
+			}
+
+			if(brokenKeys == null)
+			{
+				return;	//nothing to fix
+			}
+
+			//see if the node is parented
+			string	parent;
+			if(!skel.GetBoneParentName(brokenNode, out parent))
+			{
+				//nothing to do
+				return;
+			}
+
+			//animate and figure out where the parent bone is
+			int	keyIndex	=0;
+			foreach(float time in times)
+			{
+				Animate(time);
+
+				Matrix	parentMat;
+				skel.GetMatrixForBone(parent, out parentMat);
+
+				parentMat	=Matrix.Invert(parentMat);
+
+				Matrix	brokenMat	=Matrix.CreateScale(brokenKeys[keyIndex].mScale) *
+					Matrix.CreateFromQuaternion(brokenKeys[keyIndex].mRotation) *
+					Matrix.CreateTranslation(brokenKeys[keyIndex].mPosition);
+
+				skel.GetMatrixForBone(brokenNode, out brokenMat);
+
+//				brokenMat	=Matrix.Invert(brokenMat);
+
+				brokenMat	*=parentMat;
+
+//				brokenMat	=Matrix.Invert(brokenMat);
+
+				brokenMat.Decompose(out brokenKeys[keyIndex].mScale,
+					out brokenKeys[keyIndex].mRotation,
+					out brokenKeys[keyIndex].mPosition);
+
+				keyIndex++;
 			}
 		}
 	}
