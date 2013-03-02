@@ -49,6 +49,7 @@
 			this.TexCoordSet = new System.Windows.Forms.NumericUpDown();
 			this.GenBiNormalTangent = new System.Windows.Forms.Button();
 			this.mTips = new System.Windows.Forms.ToolTip(this.components);
+			this.Match = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialProperties)).BeginInit();
 			this.FileGroup.SuspendLayout();
@@ -248,13 +249,14 @@
 			// MeshPartGroup
 			// 
 			this.MeshPartGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.MeshPartGroup.Controls.Add(this.Match);
 			this.MeshPartGroup.Controls.Add(this.label1);
 			this.MeshPartGroup.Controls.Add(this.TexCoordSet);
 			this.MeshPartGroup.Controls.Add(this.GenBiNormalTangent);
 			this.MeshPartGroup.Controls.Add(this.ApplyMaterial);
 			this.MeshPartGroup.Location = new System.Drawing.Point(746, 492);
 			this.MeshPartGroup.Name = "MeshPartGroup";
-			this.MeshPartGroup.Size = new System.Drawing.Size(299, 54);
+			this.MeshPartGroup.Size = new System.Drawing.Size(511, 54);
 			this.MeshPartGroup.TabIndex = 21;
 			this.MeshPartGroup.TabStop = false;
 			this.MeshPartGroup.Text = "Mesh Part";
@@ -291,6 +293,16 @@
 			this.mTips.SetToolTip(this.GenBiNormalTangent, "Generate bitangents for normal mapping for the selected mesh part");
 			this.GenBiNormalTangent.UseVisualStyleBackColor = true;
 			this.GenBiNormalTangent.Click += new System.EventHandler(this.OnGenBiNormalTangent);
+			// 
+			// Match
+			// 
+			this.Match.Location = new System.Drawing.Point(281, 19);
+			this.Match.Name = "Match";
+			this.Match.Size = new System.Drawing.Size(106, 29);
+			this.Match.TabIndex = 23;
+			this.Match.Text = "Match And Visible";
+			this.Match.UseVisualStyleBackColor = true;
+			this.Match.Click += new System.EventHandler(this.OnMatch);
 			// 
 			// MaterialForm
 			// 
@@ -345,5 +357,6 @@
 		private System.Windows.Forms.NumericUpDown TexCoordSet;
 		private System.Windows.Forms.ToolTip mTips;
 		private System.Windows.Forms.Button MergeMaterialLib;
+		private System.Windows.Forms.Button Match;
 	}
 }

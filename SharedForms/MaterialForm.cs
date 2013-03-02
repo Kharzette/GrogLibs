@@ -715,5 +715,25 @@ namespace SharedForms
 				}
 			}
 		}
+
+
+		void OnMatch(object sender, EventArgs e)
+		{
+			foreach(DataGridViewRow dgvr in MaterialGrid.Rows)
+			{
+				string	matName	=(string)dgvr.Cells[0].Value;
+
+				foreach(DataGridViewRow meshdgvr in MeshPartGrid.Rows)
+				{
+					string	meshName	=(string)meshdgvr.Cells[0].Value;
+
+					if(meshName.Contains(matName))
+					{
+						meshdgvr.Cells[1].Value							=matName;
+						meshdgvr.Cells[meshdgvr.Cells.Count - 1].Value	=true;
+					}
+				}
+			}
+		}
 	}
 }

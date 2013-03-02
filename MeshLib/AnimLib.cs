@@ -32,6 +32,16 @@ namespace MeshLib
 		}
 
 
+		public float GetAnimStartTime(string key)
+		{
+			if(mAnims.ContainsKey(key))
+			{
+				return	mAnims[key].StartTime;
+			}
+			return	-1;
+		}
+
+
 		public void AddAnim(Anim an)
 		{
 			mAnims.Add(an.Name, an);
@@ -279,9 +289,12 @@ namespace MeshLib
 						keys.Add(name, new List<KeyFrame>());
 					}
 
-					KeyFrame	kf			=new KeyFrame();
+					KeyFrame	kf		=new KeyFrame();
+					KeyFrame	boneKey	=mSkeleton.GetBoneKey(name);
 
 					kf.mRotation	=frame[j];
+					kf.mPosition	=boneKey.mPosition;
+					kf.mScale		=boneKey.mScale;
 
 					//do the adjustments
 					Quaternion	rotX	=Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.ToRadians(km.RotX));

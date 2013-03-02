@@ -13,6 +13,8 @@ namespace MeshLib
 		KeyFrame	[]mKeys;
 		float		[]mTimes;
 		float		mTotalTime;
+		int			mLastTimeIndex;	//cache the last time used to
+									//quicken key finding
 
 		KeyFrame	mBone;		//reference to corresponding bone val
 		string		mBoneName;
@@ -64,6 +66,12 @@ namespace MeshLib
 		internal float GetTotalTime()
 		{
 			return	mTotalTime;
+		}
+
+
+		internal float GetStartTime()
+		{
+			return	mTimes[0];
 		}
 
 
@@ -146,15 +154,45 @@ namespace MeshLib
 
 			//locate the key index to start with
 			int	startIndex;
-			for(startIndex = 0;startIndex < mTimes.Length;startIndex++)
+			for(startIndex = mLastTimeIndex;startIndex < mTimes.Length;startIndex++)
 			{
-				if(animTime < mTimes[startIndex])
+				if(startIndex > 0)
 				{
-					//back up one
-					startIndex--;
-					break;	//found
+					if(animTime < mTimes[startIndex] && animTime >= mTimes[startIndex - 1])
+					{
+						//back up one
+						startIndex--;
+						mLastTimeIndex	=startIndex;
+						break;	//found
+					}
+				}
+				else
+				{
+					if(animTime < mTimes[startIndex])
+					{
+						//back up one
+						startIndex--;
+						mLastTimeIndex	=startIndex;
+						break;	//found
+					}
 				}
 			}
+
+			if(startIndex >= mTimes.Length)
+			{
+				//wasn't found, search all
+				for(startIndex = 0;startIndex < mTimes.Length;startIndex++)
+				{
+					if(animTime < mTimes[startIndex])
+					{
+						//back up one
+						startIndex--;
+						break;	//found
+					}
+				}
+			}
+
+			Debug.Assert(startIndex < mTimes.Length);
 
 			//figure out the percentage between pos1 and pos2
 			//get the deltatime

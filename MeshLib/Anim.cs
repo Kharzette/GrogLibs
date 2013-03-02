@@ -37,6 +37,21 @@ namespace MeshLib
 			}
 		}
 
+		public float StartTime
+		{
+			get {
+				float	startTime	=0.0f;
+				foreach(SubAnim sa in mSubAnims)
+				{
+					if(startTime < sa.GetStartTime())
+					{
+						startTime	=sa.GetStartTime();
+					}
+				}
+				return	startTime;
+			}
+		}
+
 		public bool Looping
 		{
 			get { return mbLooping; }
