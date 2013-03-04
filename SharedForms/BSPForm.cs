@@ -36,7 +36,7 @@ namespace SharedForms
 			{
 				mBSPParams.mMaxThreads			=(int)MaxThreads.Value;
 				mBSPParams.mbVerbose			=VerboseBSP.Checked;
-				mBSPParams.mbEntityVerbose		=VerboseEntity.Checked;
+				mBSPParams.mbBuildAsBModel		=BuildAsBModel.Checked;
 				mBSPParams.mbFixTJunctions		=FixTJunctions.Checked;
 
 				return	mBSPParams;

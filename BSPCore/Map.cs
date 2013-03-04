@@ -753,7 +753,7 @@ namespace BSPCore
 		}
 
 
-		bool ProcessEntities(bool bVerbose, bool bEntityVerbose, ClipPools cp)
+		bool ProcessEntities(BSPBuildParams prms, ClipPools cp)
 		{
 			int	index	=0;
 
@@ -774,11 +774,11 @@ namespace BSPCore
 
 				mod.SetOrigin(org);
 
-				if(index == 0)
+				if(index == 0 && !prms.mbBuildAsBModel)
 				{
 					List<MapBrush>	brushes	=new List<MapBrush>(me.GetBrushes());
 					if(!mod.ProcessWorldModel(brushes, mEntities,
-						mPlanePool, mTIPool, bVerbose))
+						mPlanePool, mTIPool, prms.mbVerbose))
 					{
 						return	false;
 					}
@@ -786,8 +786,7 @@ namespace BSPCore
 				else
 				{
 					List<MapBrush>	brushes	=new List<MapBrush>(me.GetBrushes());
-					if(!mod.ProcessSubModel(brushes, mPlanePool,
-						mTIPool, bEntityVerbose, cp))
+					if(!mod.ProcessSubModel(brushes, mPlanePool, mTIPool, cp))
 					{
 						return	false;
 					}
@@ -846,7 +845,7 @@ namespace BSPCore
 
 			ClipPools	cp	=new ClipPools();
 
-			if(ProcessEntities(bp.mbVerbose, bp.mbEntityVerbose, cp))
+			if(ProcessEntities(bp, cp))
 			{
 				CoreEvents.Print("Build GBSP Complete\n");
 				CoreEvents.FireBuildDoneEvent(true, null);
@@ -1177,7 +1176,7 @@ namespace BSPCore
 
 
 		bool PrepAllGBSPModels(string visFile, NodeCounter nc,
-			bool bVerbose, bool bEntityVerbose, ClipPools cp)
+			bool bVerbose, ClipPools cp)
 		{
 			Int32	i;
 
@@ -1185,7 +1184,7 @@ namespace BSPCore
 			for(i=0;i < mModels.Count;i++)
 			{
 				if(!mModels[i].PrepGBSPModel(visFile, i == 0,
-					(i == 0)? bVerbose : bEntityVerbose,
+					false,
 					mPlanePool,
 					ref nc.mNumLeafClusters,
 					leafSides, cp))
@@ -1239,7 +1238,7 @@ namespace BSPCore
 			NodeCounter	nc	=new NodeCounter();
 			ClipPools	cp	=new ClipPools();
 
-			if(!PrepAllGBSPModels(VisFile, nc, sp.mBSPParams.mbVerbose, sp.mBSPParams.mbEntityVerbose, cp))
+			if(!PrepAllGBSPModels(VisFile, nc, sp.mBSPParams.mbVerbose, cp))
 			{
 				CoreEvents.Print("ConvertGBSPToFile:  Could not prep models.\n");
 				CoreEvents.FireGBSPSaveDoneEvent(false, null);

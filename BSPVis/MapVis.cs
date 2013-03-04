@@ -377,6 +377,12 @@ namespace BSPVis
 				return	false;
 			}
 
+			if(!header.mbHasVis)
+			{
+				CoreEvents.Print("PvsGBSPFile:  No vis data for: " + fileName + "\n");
+				return	false;
+			}
+
 			//make sure it is lit
 			if(!mMap.HasLightData())
 			{
@@ -732,7 +738,11 @@ namespace BSPVis
 			}
 
 			CoreEvents.Print("Total visible areas\t\t: " + TotalVisibleLeafs + "\n");
-			CoreEvents.Print("Average visible from each area\t: " + TotalVisibleLeafs / mVisLeafs.Length + "\n");
+
+			if(mVisLeafs.Length > 0)
+			{
+				CoreEvents.Print("Average visible from each area\t: " + TotalVisibleLeafs / mVisLeafs.Length + "\n");
+			}
 
 			return	true;
 

@@ -52,7 +52,14 @@ namespace UtilityLib
 			return	path.Replace('\\', '/');
 		}
 
-		
+
+		//converts / to \\
+		public static string ConvertPathBackSlashes(string path)
+		{
+			return	path.Replace('/', '\\');
+		}
+
+
 		public static bool FileExists(string fileName)
 		{
 #if !XBOX

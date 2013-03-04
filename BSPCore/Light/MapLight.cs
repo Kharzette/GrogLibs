@@ -100,7 +100,7 @@ namespace BSPCore
 			byte	[]visData	=LoadVisData(lp.mFileName);
 
 			//ensure vis is built
-			if(visData == null)
+			if(visData == null && !lp.mBSPParams.mbBuildAsBModel)
 			{
 				CoreEvents.Print("No vis data for lighting.  Please run a vis on the map before attempting light.\n");
 				CoreEvents.FireLightDoneDoneEvent(false, null);
@@ -165,7 +165,7 @@ namespace BSPCore
 			}
 			mGFXLightData	=lightData.ToArray();
 
-			WriteLight(bw, header.mbHasMaterialVis);
+			WriteLight(bw, header.mbHasMaterialVis, !lp.mBSPParams.mbBuildAsBModel);
 
 			bw.Close();
 			file.Close();
@@ -766,11 +766,23 @@ namespace BSPCore
 							lp.mLightParams.mLightGridSize,
 							mSampleOffsets[s], lp.mLightParams.mbSeamCorrection, boolPool);
 
-						if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i],
-							modelInv, modelIndex,
-							1 / (float)lp.mLightParams.mNumSamples, visData))
+						if(visData != null && visData.Length != 0 && !lp.mBSPParams.mbBuildAsBModel)
 						{
-							return;
+							if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i],
+								modelInv, modelIndex,
+								1 / (float)lp.mLightParams.mNumSamples, visData))
+							{
+								return;
+							}
+						}
+						else
+						{
+							if(!ApplyLightsToFaceNoVis(mFaceInfos[i], mLightMaps[i],
+								modelInv, modelIndex,
+								1 / (float)lp.mLightParams.mNumSamples, visData))
+							{
+								return;
+							}
 						}
 					}				
 				}
@@ -914,6 +926,117 @@ namespace BSPCore
 				}
 			}
 
+			return	true;
+		}
+
+
+		//use this when there is no vis information
+		bool ApplyLightsToFaceNoVis(FInfo faceInfo, LInfo lightInfo,
+			Matrix modelInv, int modelIndex,
+			float scale, byte []visData)
+		{
+			Vector3	norm	=faceInfo.GetPlaneNormal();
+
+			Vector3	[]facePoints	=faceInfo.GetPoints();
+
+			for(int v=0;v < facePoints.Length;v++)
+			{
+				Int32	nodeLandedIn	=FindNodeLandedIn(0, facePoints[v]);
+				Int32	leaf			=-(nodeLandedIn + 1);
+
+				if(leaf < 0 || leaf >= mGFXLeafs.Length)
+				{
+					CoreEvents.Print("ApplyLightsToFace:  Invalid leaf num.\n");
+					return	false;
+				}
+
+				foreach(DirectLight dLight in mDirectLights)
+				{
+					float	intensity	=dLight.mIntensity;
+					
+					//Find the angle between the light, and the face normal
+					Vector3	vect	=dLight.mOrigin - facePoints[v];
+					float	dist	=vect.Length();
+					if(dist == 0.0f)
+					{
+						continue;
+					}
+					vect.Normalize();
+
+					float	angle	=Vector3.Dot(vect, norm);
+					if(angle <= 0.001f)
+					{
+						continue;
+					}
+						
+					float	val;
+					switch(dLight.mType)
+					{
+						case DirectLight.DLight_Point:
+						{
+							val	=(intensity - dist) * angle;
+							break;
+						}
+						case DirectLight.DLight_Spot:
+						{
+							float	Angle2	=-Vector3.Dot(vect, dLight.mNormal);
+
+							if(Angle2 < (1.0f - dLight.mCone))
+							{
+								continue;
+							}
+
+							val	=(intensity - dist) * angle;
+							break;
+						}
+						case DirectLight.DLight_Surface:
+						{
+							float	Angle2	=-Vector3.Dot(vect, dLight.mNormal);
+							if(Angle2 <= 0.001f)
+							{
+								continue;	// Behind light surface
+							}
+
+							val	=(intensity / dist) * angle * Angle2;
+							break;
+						}
+						default:
+						{
+							CoreEvents.Print("ApplyLightsToFace:  Invalid light.\n");
+							return	false;
+						}
+					}
+
+					if(val <= 0.0f)
+					{
+						continue;
+					}
+
+					// This is the slowest test, so make it last
+					Vector3	colResult	=Vector3.Zero;
+					if(RayCollide(facePoints[v], dLight.mOrigin, modelIndex, modelInv))
+					{
+						continue;	//Ray is in shadow
+					}
+
+					Int32	lightType	=dLight.mLType;
+
+					//If the data for this LType has not been allocated, allocate it now...
+					lightInfo.AllocLightType(lightType, facePoints.Length);
+
+					Vector3	[]rgb	=lightInfo.GetRGBLightData(lightType);
+					if(rgb == null)
+					{
+						continue;	//max light styles on face?
+					}
+
+					rgb[v]	+=dLight.mColor * (val * scale);
+
+					Debug.Assert(!float.IsNaN(rgb[v].X));
+					Debug.Assert(!float.IsNaN(rgb[v].Y));
+					Debug.Assert(!float.IsNaN(rgb[v].Z));
+				}
+			}
 			return	true;
 		}
 

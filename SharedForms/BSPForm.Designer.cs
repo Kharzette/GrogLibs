@@ -40,7 +40,7 @@
 			this.label11 = new System.Windows.Forms.Label();
 			this.MaxThreads = new System.Windows.Forms.NumericUpDown();
 			this.FixTJunctions = new System.Windows.Forms.CheckBox();
-			this.VerboseEntity = new System.Windows.Forms.CheckBox();
+			this.BuildAsBModel = new System.Windows.Forms.CheckBox();
 			this.VerboseBSP = new System.Windows.Forms.CheckBox();
 			this.LightSettingsGroupBox = new System.Windows.Forms.GroupBox();
 			this.label1 = new System.Windows.Forms.Label();
@@ -164,7 +164,7 @@
 			this.GroupBuildSettings.Controls.Add(this.label11);
 			this.GroupBuildSettings.Controls.Add(this.MaxThreads);
 			this.GroupBuildSettings.Controls.Add(this.FixTJunctions);
-			this.GroupBuildSettings.Controls.Add(this.VerboseEntity);
+			this.GroupBuildSettings.Controls.Add(this.BuildAsBModel);
 			this.GroupBuildSettings.Controls.Add(this.VerboseBSP);
 			this.GroupBuildSettings.Location = new System.Drawing.Point(244, 12);
 			this.GroupBuildSettings.Name = "GroupBuildSettings";
@@ -218,16 +218,16 @@
 			this.mTips.SetToolTip(this.FixTJunctions, "Split faces with edges that form a T causing visible cracks in the world");
 			this.FixTJunctions.UseVisualStyleBackColor = true;
 			// 
-			// VerboseEntity
+			// BuildAsBModel
 			// 
-			this.VerboseEntity.AutoSize = true;
-			this.VerboseEntity.Location = new System.Drawing.Point(6, 42);
-			this.VerboseEntity.Name = "VerboseEntity";
-			this.VerboseEntity.Size = new System.Drawing.Size(104, 17);
-			this.VerboseEntity.TabIndex = 21;
-			this.VerboseEntity.Text = "BModel Verbose";
-			this.mTips.SetToolTip(this.VerboseEntity, "Spam for the moving brush models (doors / elevators etc)");
-			this.VerboseEntity.UseVisualStyleBackColor = true;
+			this.BuildAsBModel.AutoSize = true;
+			this.BuildAsBModel.Location = new System.Drawing.Point(6, 42);
+			this.BuildAsBModel.Name = "BuildAsBModel";
+			this.BuildAsBModel.Size = new System.Drawing.Size(102, 17);
+			this.BuildAsBModel.TabIndex = 21;
+			this.BuildAsBModel.Text = "Build as BModel";
+			this.mTips.SetToolTip(this.BuildAsBModel, "Build the entire map as if it were a brush model");
+			this.BuildAsBModel.UseVisualStyleBackColor = true;
 			// 
 			// VerboseBSP
 			// 
@@ -570,7 +570,7 @@
 		private System.Windows.Forms.Button SaveGBSP;
 		private System.Windows.Forms.GroupBox GroupBuildSettings;
 		private System.Windows.Forms.CheckBox FixTJunctions;
-		private System.Windows.Forms.CheckBox VerboseEntity;
+		private System.Windows.Forms.CheckBox BuildAsBModel;
 		private System.Windows.Forms.CheckBox VerboseBSP;
 		private System.Windows.Forms.GroupBox LightSettingsGroupBox;
 		private System.Windows.Forms.Label label9;

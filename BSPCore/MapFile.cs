@@ -107,13 +107,13 @@ namespace BSPCore
 		}
 
 
-		void WriteLight(BinaryWriter bw, bool bMaterialVis)
+		void WriteLight(BinaryWriter bw, bool bMaterialVis, bool bVis)
 		{
 			GFXHeader	header	=new GFXHeader();
 
 			header.mTag				=0x47425350;	//"GBSP"
 			header.mbHasLight		=true;
-			header.mbHasVis			=true;
+			header.mbHasVis			=bVis;
 			header.mbHasMaterialVis	=bMaterialVis;
 			header.Write(bw);
 

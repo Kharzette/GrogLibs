@@ -11,7 +11,7 @@ namespace BSPCore
 	{
 		public int	mMaxThreads;
 		public bool	mbVerbose;
-		public bool	mbEntityVerbose;
+		public bool	mbBuildAsBModel;
 		public bool	mbFixTJunctions;
 	}
 

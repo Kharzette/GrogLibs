@@ -207,13 +207,13 @@ namespace BSPCore
 
 
 		internal bool ProcessSubModel(List<MapBrush> list,
-			PlanePool pool, TexInfoPool tip, bool bVerbose, ClipPools cp)
+			PlanePool pool, TexInfoPool tip, ClipPools cp)
 		{
 			list.Reverse();
 
 			List<GBSPBrush>	glist	=GBSPBrush.ConvertMapBrushList(list);
 
-			List<GBSPBrush>	csgList	=GBSPBrush.GankBrushOverlap(bVerbose, glist, pool, cp);
+			List<GBSPBrush>	csgList	=GBSPBrush.GankBrushOverlap(false, glist, pool, cp);
 
 			GBSPNode	root	=new GBSPNode();
 
@@ -229,19 +229,19 @@ namespace BSPCore
 			bounds.mMins	=Vector3.One * -4096f;
 			bounds.mMaxs	=Vector3.One * 4096f;
 
-			root.BuildBSP(csgList, pool, bs, bounds, bVerbose);
+			root.BuildBSP(csgList, pool, bs, bounds, false);
 
 			glist	=null;
 
-			if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs, cp))
+			if(!root.CreatePortals(mOutsideNode, false, false, pool, mBounds.mMins, mBounds.mMaxs, cp))
 			{
 				CoreEvents.Print("Could not create the portals.\n");
 				return	false;
 			}
 
-			root.MarkVisibleSides(list, pool, bVerbose);
+			root.MarkVisibleSides(list, pool, false);
 
-			root.MakeFaces(pool, bVerbose);
+			root.MakeFaces(pool, false);
 
 			if(!root.FreePortals())
 			{
@@ -249,7 +249,7 @@ namespace BSPCore
 				return	false;
 			}
 
-			root.MergeNodes(bVerbose);
+			root.MergeNodes(false);
 
 			mRootNode	=root;
 
