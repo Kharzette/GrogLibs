@@ -338,11 +338,10 @@ float4 NormalMapTriTex0SolidSpecPhysPS(VTex04Tex14Tex24Tex34 input) : COLOR
 	float3	wpos	=input.TexCoord3.xyz;
 
 	float3	goodNorm	=ComputeNormalFromMap(norm, tan, bitan, pnorm);
-	float3	lightDir	=-mLightDirection;
 	float3	triLight	=ComputeTrilight(goodNorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
-	float3	specular	=ComputeGoodSpecular(wpos, lightDir, goodNorm, triLight, mLightColor2);
+	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, goodNorm, triLight, mLightColor2);
 	float3	litSolid	=mSolidColour.xyz * triLight;
 
 	specular	=saturate(specular + litSolid.xyz);
@@ -368,11 +367,10 @@ float4 NormalMapTriTex0SpecPhysPS(VTex04Tex14Tex24Tex34 input) : COLOR
 	float3	wpos	=input.TexCoord3.xyz;
 
 	float3	goodNorm	=ComputeNormalFromMap(norm, tan, bitan, pnorm);
-	float3	lightDir	=-mLightDirection;
 	float3	triLight	=ComputeTrilight(goodNorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
-	float3	specular	=ComputeGoodSpecular(wpos, lightDir, goodNorm, triLight, mLightColor2);
+	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, goodNorm, triLight, mLightColor2);
 	float3	litSolid	=texCol.xyz * triLight;
 
 	specular	=saturate(specular + litSolid.xyz);
@@ -395,11 +393,10 @@ float4 TriTex0SpecPhysPS(VTex04Tex14 input) : COLOR
 
 	pnorm	=normalize(pnorm);
 
-	float3	lightDir	=-mLightDirection;
 	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
-	float3	specular	=ComputeGoodSpecular(wpos, lightDir, pnorm, triLight, mLightColor2);
+	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, pnorm, triLight, mLightColor2);
 	float3	litColor	=texColor.xyz * triLight;
 
 	specular	=saturate((specular + litColor.xyz) * mSolidColour.xyz);
@@ -415,11 +412,10 @@ float4 TriSolidSpecPhysPS(VTex03Tex13 input) : COLOR
 
 	pnorm	=normalize(pnorm);
 
-	float3	lightDir	=-mLightDirection;
 	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
-	float3	specular	=ComputeGoodSpecular(wpos, lightDir, pnorm, triLight, mLightColor2);
+	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, pnorm, triLight, mLightColor2);
 	float3	litSolid	=mSolidColour.xyz * triLight;
 
 	specular	=saturate(specular + litSolid);
@@ -435,11 +431,10 @@ float4 TriCellSolidSpecPhysPS(VTex03Tex13 input) : COLOR
 
 	pnorm	=normalize(pnorm);
 
-	float3	lightDir	=-mLightDirection;
 	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
-	float3	specular	=ComputeGoodSpecular(wpos, lightDir, pnorm, triLight, mLightColor2);
+	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, pnorm, triLight, mLightColor2);
 	float3	litSolid	=mSolidColour.xyz * triLight;
 
 	specular	=saturate(specular + litSolid);
@@ -456,11 +451,10 @@ float4 TriCellColorSpecPhysPS(VTex04Tex14Tex24 input) : COLOR
 
 	pnorm	=normalize(pnorm);
 
-	float3	lightDir	=-mLightDirection;
 	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
-	float3	specular	=ComputeGoodSpecular(wpos, lightDir, pnorm, triLight, mLightColor2);
+	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, pnorm, triLight, mLightColor2);
 	float3	litSolid	=input.TexCoord2.xyz * triLight;
 
 	specular	=saturate(specular + litSolid);

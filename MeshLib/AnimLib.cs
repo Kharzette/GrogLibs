@@ -292,6 +292,11 @@ namespace MeshLib
 					KeyFrame	kf		=new KeyFrame();
 					KeyFrame	boneKey	=mSkeleton.GetBoneKey(name);
 
+					if(boneKey == null)
+					{
+						continue;
+					}
+
 					kf.mRotation	=frame[j];
 					kf.mPosition	=boneKey.mPosition;
 					kf.mScale		=boneKey.mScale;
@@ -321,7 +326,13 @@ namespace MeshLib
 
 			foreach(KeyValuePair<string, List<KeyFrame>> sub in keys)
 			{
-				SubAnim	sa	=new SubAnim(sub.Key, ktimes[sub.Key], sub.Value);
+				if(!ktimes.ContainsKey(sub.Key))
+				{
+					continue;
+				}
+
+				List<float>	times	=ktimes[sub.Key];
+				SubAnim		sa		=new SubAnim(sub.Key, times, sub.Value);
 
 				subAnims.Add(sa);
 			}
