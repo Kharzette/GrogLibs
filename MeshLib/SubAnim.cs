@@ -33,7 +33,7 @@ namespace MeshLib
 			for(int i=0;i < times.Count;i++)
 			{
 				mTimes[i]	=times[i];
-				mKeys[i]	=keys[i];
+				mKeys[i]	=new KeyFrame(keys[i]);
 			}
 			mTotalTime	=times[times.Count - 1] - times[0];
 		}
@@ -187,6 +187,7 @@ namespace MeshLib
 					{
 						//back up one
 						startIndex--;
+						mLastTimeIndex	=startIndex;
 						break;	//found
 					}
 				}

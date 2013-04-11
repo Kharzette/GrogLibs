@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework.Content;
 
 namespace MaterialLib
 {
-	public class MaterialLib
+	public partial class MaterialLib
 	{
 		Dictionary<string, Material>	mMats	=new Dictionary<string, Material>();
 		Dictionary<string, Effect>		mFX		=new Dictionary<string, Effect>();
@@ -23,21 +23,6 @@ namespace MaterialLib
 		//references to the content managers
 		ContentManager	mGameContent;	//may contain game specific shaders
 		ContentManager	mShaderLib;		//shared shaders used by every game
-
-		//cell shading lookup texture
-		Texture3D	mCellTex;
-
-		//constants
-		const int	CellLookupSize	=20;
-		const float	CellThreshold0	=0.6f;
-		const float	CellThreshold1	=0.4f;
-		const float	CellThreshold2	=0.25f;
-		const float	CellThreshold3	=0.1f;
-		const float	CellLevel0		=1.0f;
-		const float	CellLevel1		=0.7f;
-		const float	CellLevel2		=0.5f;
-		const float	CellLevel3		=0.2f;
-		const float	CellLevel4		=0.05f;
 
 
 		//two content managers, tool or game
@@ -52,8 +37,6 @@ namespace MaterialLib
 				LoadTextures();
 				LoadCubes(gd);
 			}
-
-			GenerateCellTexture(gd);
 		}
 
 
@@ -841,18 +824,6 @@ namespace MaterialLib
 		}
 
 
-		public void SetCellTexture()
-		{
-			foreach(KeyValuePair<string, Effect> fx in mFX)
-			{
-				if(fx.Value.Parameters["mCellTable"] != null)
-				{
-					fx.Value.Parameters["mCellTable"].SetValue(mCellTex);
-				}
-			}
-		}
-
-
 		public void UpdateWVP(Matrix world, Matrix view, Matrix proj, Vector3 eyePos)
 		{
 			foreach(KeyValuePair<string, Effect> fx in mFX)
@@ -904,71 +875,6 @@ namespace MaterialLib
 			sb.Begin();
 			sb.Draw(mMaps[map], Vector2.One * 10.0f, Color.White);
 			sb.End();
-		}
-
-
-		float	CellMe(float val)
-		{
-			float	ret;
-
-			if(val > CellThreshold0)
-			{
-				ret	=CellLevel0;
-			}
-			else if(val > CellThreshold1)
-			{
-				ret	=CellLevel1;
-			}
-			else if(val > CellThreshold2)
-			{
-				ret	=CellLevel2;
-			}
-			else if(val > CellThreshold3)
-			{
-				ret	=CellLevel3;
-			}
-			else
-			{
-				ret	=CellLevel4;
-			}
-			return	ret;
-		}
-
-
-		//generate a lookup texture for cell shading
-		void GenerateCellTexture(GraphicsDevice gd)
-		{
-			mCellTex	=new Texture3D(gd, CellLookupSize,
-				CellLookupSize, CellLookupSize, false, SurfaceFormat.Color);
-
-			Color	[]data	=new Color[CellLookupSize * CellLookupSize * CellLookupSize];
-
-			float	csize	=CellLookupSize;
-
-			for(int z=0;z < CellLookupSize;z++)
-			{
-				for(int y=0;y < CellLookupSize;y++)
-				{
-					for(int x=0;x < CellLookupSize;x++)
-					{
-						float	xPercent	=(float)x / csize;
-						float	yPercent	=(float)y / csize;
-						float	zPercent	=(float)z / csize;
-
-						Vector3	color	=Vector3.Zero;
-
-						color.X	=CellMe(xPercent);
-						color.Y	=CellMe(yPercent);
-						color.Z	=CellMe(zPercent);
-
-						data[x + (y * CellLookupSize)
-							+ (z * CellLookupSize * CellLookupSize)]
-							=new Color(color);
-					}
-				}
-			}
-
-			mCellTex.SetData<Color>(data);
 		}
 
 

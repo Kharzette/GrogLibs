@@ -19,6 +19,14 @@ namespace MeshLib
 		}
 
 
+		public KeyFrame(KeyFrame copyMe)
+		{
+			mRotation	=copyMe.mRotation;
+			mPosition	=copyMe.mPosition;
+			mScale		=copyMe.mScale;
+		}
+
+
 		internal void Write(BinaryWriter bw)
 		{
 			bw.Write(mRotation.X);
