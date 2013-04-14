@@ -305,6 +305,37 @@ namespace MeshLib
 		}
 
 
+		public float GetStyleStrength(int styleIndex)
+		{
+			if(styleIndex <= 0)
+			{
+				return	1f;	//0 is always fully on
+			}
+
+			if(styleIndex > 12)
+			{
+				return	1f;	//only 12 animated, switchable handled elsewhere
+			}
+
+			return	ComputeStyleStrength(mCurStylePos[styleIndex], mStyles[styleIndex]);
+		}
+
+
+		float ComputeStyleStrength(float stylePos, string styleString)
+		{
+			int	curPos	=(int)Math.Floor(stylePos / ThirtyFPS);
+
+			float	val		=StyleVal(styleString.Substring(curPos, 1));
+			float	nextVal	=StyleVal(styleString.Substring((curPos + 1) % styleString.Length, 1));
+
+			float	ratio	=stylePos - (curPos * ThirtyFPS);
+
+			ratio	/=ThirtyFPS;
+
+			return	MathHelper.Lerp(val, nextVal, ratio);
+		}
+
+
 		//for opaques with models
 		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos, GetModelMatrix getModMatrix,
 			VertexBuffer vb, IndexBuffer ib, Dictionary<int, List<DrawCall>> dcs,
@@ -471,16 +502,7 @@ namespace MeshLib
 					mCurStylePos[i]	-=endTime;
 				}
 
-				int	curPos	=(int)Math.Floor(mCurStylePos[i] / ThirtyFPS);
-
-				float	val		=StyleVal(mStyles[i].Substring(curPos, 1));
-				float	nextVal	=StyleVal(mStyles[i].Substring((curPos + 1) % mStyles[i].Length, 1));
-
-				float	ratio	=mCurStylePos[i] - (curPos * ThirtyFPS);
-
-				ratio	/=ThirtyFPS;
-
-				float	lerped	=MathHelper.Lerp(val, nextVal, ratio);
+				float	lerped	=ComputeStyleStrength(mCurStylePos[i], mStyles[i]);
 
 				//prevent scientific notation
 				intensities	+="" + Convert.ToDecimal(lerped).ToString(System.Globalization.CultureInfo.InvariantCulture) + " ";

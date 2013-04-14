@@ -13,31 +13,26 @@ namespace BSPZone
 			public float	mStrength;
 			public Vector3	mPosition;
 			public Vector3	mColor;
+			public int		mStyle;
+			public bool		mbOn;			//on by default
+			public bool		mbSwitchable;	//switchable lights
 		}
 
 		Dictionary<ZoneEntity, ZoneLight>	mLightCache	=new Dictionary<ZoneEntity, ZoneLight>();
+
+		public delegate float GetStyleStrength(int styleIndex);
 
 
 		public List<ZoneEntity> GetSwitchedOnLights()
 		{
 			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity e in mZoneEntities)
+
+			foreach(KeyValuePair<ZoneEntity, ZoneLight> zl in mLightCache)
 			{
-				int	switchNum;
-				if(!e.GetInt("LightSwitchNum", out switchNum))
+				if(zl.Value.mbSwitchable && zl.Value.mbOn)
 				{
-					continue;
+					ret.Add(zl.Key);
 				}
-
-				int	activated;
-				if(e.GetInt("activated", out activated))
-				{
-					if(activated != 0)
-					{
-						ret.Add(e);
-					}
-				}
-
 			}
 			return	ret;
 		}
@@ -145,7 +140,7 @@ namespace BSPZone
 
 
 		//for assigning character lights
-		public ZoneLight GetStrongestLightInLOS(Vector3 pos)
+		public ZoneLight GetStrongestLightInLOS(Vector3 pos, GetStyleStrength gss)
 		{
 			List<ZoneLight>	visLights	=GetLightsInLOS(pos);
 
@@ -156,7 +151,14 @@ namespace BSPZone
 			{
 				float	dist	=Vector3.Distance(pos, zl.mPosition);
 
-				dist	-=zl.mStrength;
+				if(zl.mStyle != 0)
+				{
+					dist	-=(zl.mStrength * gss(zl.mStyle));
+				}
+				else
+				{
+					dist	-=zl.mStrength;
+				}
 
 				if(dist < bestDist)
 				{
@@ -180,6 +182,29 @@ namespace BSPZone
 					ze.GetOrigin(out zl.mPosition);
 					ze.GetLightValue(out zl.mStrength);
 					ze.GetColor(out zl.mColor);
+
+					//check for switchable lights
+					zl.mbOn	=true;
+					int	switchNum;
+					if(ze.GetInt("LightSwitchNum", out switchNum))
+					{
+						zl.mbSwitchable	=true;
+						int	activated;
+						if(ze.GetInt("activated", out activated))
+						{
+							if(activated == 0)
+							{
+								zl.mbOn	=false;
+							}
+						}
+						else
+						{
+							zl.mbOn	=false;
+						}
+					}
+
+					//check for styled lights
+					ze.GetInt("style", out zl.mStyle);
 
 					mLightCache.Add(ze, zl);
 				}
