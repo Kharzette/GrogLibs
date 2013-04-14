@@ -87,6 +87,7 @@
     <Compile Include="Pushable.cs" />
     <Compile Include="StaticHelper.cs" />
     <Compile Include="TriggerHelper.cs" />
+    <Compile Include="ZoneEntityStuff.cs" />
     <Compile Include="ZoneLeafSide.cs" />
     <Compile Include="VisArea.cs" />
     <Compile Include="VisAreaPortal.cs" />

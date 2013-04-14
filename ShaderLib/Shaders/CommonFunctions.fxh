@@ -43,6 +43,7 @@ sampler CellSampler = sampler_state
 
 	AddressU	=Clamp;
 	AddressV	=Clamp;
+	AddressW	=Clamp;
 };
 
 

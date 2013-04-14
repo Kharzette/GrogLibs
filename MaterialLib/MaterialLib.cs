@@ -633,6 +633,15 @@ namespace MaterialLib
 							{
 								fx.Parameters[sp.Name].SetValue(mMaps[sp.Value]);
 							}
+							else if(sp.Value.StartsWith("::"))
+							{
+								//celltable hax
+								int	index;
+								if(int.TryParse(sp.Value.Substring(2), out index))
+								{
+									fx.Parameters[sp.Name].SetValue(mCellTex[index]);
+								}
+							}
 						}
 						else if(sp.Type == EffectParameterType.TextureCube)
 						{

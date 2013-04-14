@@ -330,6 +330,8 @@ namespace SharedForms
 			Action<DataGridView>	setSrc	=src => src.DataSource = mMatModel;
 
 			SharedForms.FormExtensions.Invoke(MaterialGrid, setSrc);
+
+			mMatLib.SetCellTexture(0);
 		}
 
 

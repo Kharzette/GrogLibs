@@ -44,11 +44,14 @@ namespace MaterialLib
 
 		public void SetCellTexture(int index)
 		{
-			foreach(KeyValuePair<string, Effect> fx in mFX)
+			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
-				if(fx.Value.Parameters["mCellTable"] != null)
+				foreach(ShaderParameters sp in mat.Value.Parameters)
 				{
-					fx.Value.Parameters["mCellTable"].SetValue(mCellTex[index]);
+					if(sp.Name == "mCellTable")
+					{
+						sp.Value	="::" + index;	//hax
+					}
 				}
 			}
 		}

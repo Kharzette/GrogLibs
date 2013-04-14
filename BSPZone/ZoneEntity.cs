@@ -162,7 +162,7 @@ namespace BSPZone
 		}
 
 
-		internal bool GetLightValue(out float dist)
+		public bool GetLightValue(out float dist)
 		{
 			dist	=250;
 

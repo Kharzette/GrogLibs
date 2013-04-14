@@ -160,7 +160,7 @@
 			this.mTips.SetToolTip(this.AtlasSize, "Size of the atlas that contains the lightmaps.  Smaller the better, but you may r" +
         "un out of space.");
 			this.AtlasSize.Value = new decimal(new int[] {
-            2048,
+            512,
             0,
             0,
             0});

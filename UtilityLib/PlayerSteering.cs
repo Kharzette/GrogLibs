@@ -33,7 +33,7 @@ namespace UtilityLib
 		MouseState	mOriginalMS;
 
 		//constants
-		const float	PitchClamp	=85.0f;
+		const float	PitchClamp	=80.0f;
 
 
 		public PlayerSteering(float width, float height)

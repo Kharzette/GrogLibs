@@ -28,6 +28,8 @@ namespace UtilityLib
 		float		mCurTime;
 		bool		mbDone;
 
+		const float	MinimumDistance		=0.001f;
+
 
 		public Mover()
 		{
@@ -66,6 +68,11 @@ namespace UtilityLib
 			float	distVec	=endPos - startPos;
 
 			mTotalDistance	=distVec;
+			if(mTotalDistance < MinimumDistance)
+			{
+				mbDone	=true;
+				return;
+			}
 
 			float	timeSlice	=0.5f * easeInPercent * travelTime * travelTime * (2 - easeInPercent - easeOutPercent);
 
@@ -170,6 +177,8 @@ namespace UtilityLib
 		float		mCurTime;
 		bool		mbDone;
 
+		const float	MinimumDistance		=0.001f;
+
 
 		public Mover2()
 		{
@@ -208,6 +217,11 @@ namespace UtilityLib
 			Vector2	distVec	=endPos - startPos;
 
 			mTotalDistance	=distVec.Length();
+			if(mTotalDistance < MinimumDistance)
+			{
+				mbDone	=true;
+				return;
+			}
 
 			distVec.Normalize();
 
@@ -317,6 +331,8 @@ namespace UtilityLib
 		float		mCurTime;
 		bool		mbDone;
 
+		const float	MinimumDistance		=0.001f;
+
 
 		public Mover3()
 		{
@@ -355,6 +371,11 @@ namespace UtilityLib
 			Vector3	distVec	=endPos - startPos;
 
 			mTotalDistance	=distVec.Length();
+			if(mTotalDistance < MinimumDistance)
+			{
+				mbDone	=true;
+				return;
+			}
 
 			distVec.Normalize();
 
@@ -464,6 +485,8 @@ namespace UtilityLib
 		float		mCurTime;
 		bool		mbDone;
 
+		const float	MinimumDistance		=0.001f;
+
 
 		public Mover4()
 		{
@@ -502,6 +525,11 @@ namespace UtilityLib
 			Vector4	distVec	=endPos - startPos;
 
 			mTotalDistance	=distVec.Length();
+			if(mTotalDistance < MinimumDistance)
+			{
+				mbDone	=true;
+				return;
+			}
 
 			distVec.Normalize();
 

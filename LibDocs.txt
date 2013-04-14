@@ -51,5 +51,5 @@ Known Issues:
 	Vertex lit stuff won't use animated light changes
 	Vertex lit stuff sees any switchable lights as on
 	Interpenetrating alpha surfaces donut sort properly
-	Mirrors probably won't work on moving models
+	Mirrors probably won't work on moving models (TODO: test!)
 	If geometry is moved in quark, texture alignment will be off

@@ -245,36 +245,13 @@ namespace BSPZone
 					mTriggers.Add(zt);
 				}
 			}
+
+			BuildLightCache();
 		}
 		#endregion
 
 
-		#region Entity Related
-		public List<ZoneEntity> GetSwitchedOnLights()
-		{
-			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity e in mZoneEntities)
-			{
-				int	switchNum;
-				if(!e.GetInt("LightSwitchNum", out switchNum))
-				{
-					continue;
-				}
-
-				int	activated;
-				if(e.GetInt("activated", out activated))
-				{
-					if(activated != 0)
-					{
-						ret.Add(e);
-					}
-				}
-
-			}
-			return	ret;
-		}
-
-
+		#region Model Related
 		void CollideModel(int modelIndex, Matrix newTrans, Matrix oldInv)
 		{
 			foreach(KeyValuePair<object, Pushable> pa in mPushables)
@@ -415,32 +392,6 @@ namespace BSPZone
 		}
 
 
-		public Vector3 GetPlayerStartPos()
-		{
-			foreach(ZoneEntity e in mZoneEntities)
-			{
-				if(e.mData.ContainsKey("classname"))
-				{
-					if(e.mData["classname"] != "info_player_start")
-					{
-						continue;
-					}
-				}
-				else
-				{
-					continue;
-				}
-
-				Vector3	ret	=Vector3.Zero;
-				if(e.GetOrigin(out ret))
-				{
-					return	ret;
-				}
-			}
-			return	Vector3.Zero;
-		}
-
-
 		public BoundingBox GetModelBounds(int modelNum)
 		{
 			if(modelNum > 0 && modelNum < mZoneModels.Length)
@@ -448,152 +399,6 @@ namespace BSPZone
 				return	mZoneModels[modelNum].mBounds;
 			}
 			return	new BoundingBox();
-		}
-
-
-		public List<ZoneEntity> GetEntitiesByTargetName(string targName)
-		{
-			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity ze in mZoneEntities)
-			{
-				if(ze.mData.ContainsKey("targetname"))
-				{
-					if(targName.Contains(ze.mData["targetname"]))
-					{
-						ret.Add(ze);
-					}
-				}
-			}
-			return	ret;
-		}
-
-
-		public List<ZoneEntity> GetEntities(string className)
-		{
-			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity ze in mZoneEntities)
-			{
-				if(ze.mData.ContainsKey("classname"))
-				{
-					if(ze.mData["classname"] == className)
-					{
-						ret.Add(ze);
-					}
-				}
-			}
-			return	ret;
-		}
-
-
-		public List<ZoneEntity> GetEntitiesStartsWith(string startText)
-		{
-			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity ze in mZoneEntities)
-			{
-				if(ze.mData.ContainsKey("classname"))
-				{
-					if(ze.mData["classname"].StartsWith(startText))
-					{
-						ret.Add(ze);
-					}
-				}
-			}
-			return	ret;
-		}
-
-
-		//for assigning character lights
-		public List<Vector3> GetNearestThreeLightsInLOS(Vector3 pos)
-		{
-			List<ZoneEntity>	lightsInVis	=new List<ZoneEntity>();
-
-			foreach(ZoneEntity ent in mZoneEntities)
-			{
-				if(ent.IsLight())
-				{
-					Vector3	lightPos;
-					if(ent.GetOrigin(out lightPos))
-					{
-						if(IsVisibleFrom(pos, lightPos))
-						{
-							Vector3	intersection	=Vector3.Zero;
-							bool	bHitLeaf		=false;
-							Int32	leafHit			=0;
-							Int32	nodeHit			=0;
-							if(!RayIntersect(pos, lightPos, 0, ref intersection,
-								ref bHitLeaf, ref leafHit, ref nodeHit))
-							{
-								lightsInVis.Add(ent);
-							}
-						}
-					}
-				}
-			}
-
-			List<Vector3>	positions	=new List<Vector3>();
-
-			foreach(ZoneEntity ent in mZoneEntities)
-			{
-				Vector3	lightPos;
-				if(ent.GetOrigin(out lightPos))
-				{
-					positions.Add(lightPos);
-				}
-			}
-
-			positions.Sort();
-
-			if(positions.Count > 3)
-			{
-				positions.RemoveRange(3, positions.Count - 3);
-			}
-			return	positions;
-		}
-
-
-		public ZoneEntity GetNearestLightInLOS(Vector3 pos)
-		{
-			List<ZoneEntity>	lightsInVis	=new List<ZoneEntity>();
-
-			foreach(ZoneEntity ent in mZoneEntities)
-			{
-				if(ent.IsLight())
-				{
-					Vector3	lightPos;
-					if(ent.GetOrigin(out lightPos))
-					{
-						if(IsVisibleFrom(pos, lightPos))
-						{
-							Vector3	intersection	=Vector3.Zero;
-							bool	bHitLeaf		=false;
-							Int32	leafHit			=0;
-							Int32	nodeHit			=0;
-							if(!RayIntersect(pos, lightPos, 0, ref intersection,
-								ref bHitLeaf, ref leafHit, ref nodeHit))
-							{
-								lightsInVis.Add(ent);
-							}
-						}
-					}
-				}
-			}
-
-			float		minDist	=float.MaxValue;
-			ZoneEntity	ret		=null;
-			foreach(ZoneEntity ent in lightsInVis)
-			{
-				Vector3	lightPos;
-				if(ent.GetOrigin(out lightPos))
-				{
-					float	dist	=Vector3.DistanceSquared(lightPos, pos);
-					if(dist < minDist)
-					{
-						minDist	=dist;
-						ret		=ent;
-					}
-				}
-			}
-			return	ret;
 		}
 		#endregion
 
