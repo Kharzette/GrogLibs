@@ -138,19 +138,17 @@ namespace MeshLib
 				return;
 			}
 
-			//make sure the time is not before our start
+			//make sure the time is in range
+			float	animTime	=time;
 			if(time < mTimes[0])
 			{
-				Debug.WriteLine("Key time out of range in Animate!");
-				return;		//not ready to animate yet
+				//bring into range
+				animTime	=mTimes[0];
 			}
-
-			//bring the passed in time value into
-			//the space of our animation
-			float	animTime	=time % mTotalTime;
-
-			//Bring to start
-			animTime	+=mTimes[0];
+			else if(time > mTimes[mTimes.Length - 1])
+			{
+				animTime	=mTimes[mTimes.Length - 1];
+			}
 
 			//locate the key index to start with
 			int	startIndex;
