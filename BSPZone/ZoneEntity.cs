@@ -285,6 +285,7 @@ namespace BSPZone
 			}
 			else
 			{
+				activated	=1;
 				SetInt("activated", 1);
 			}
 

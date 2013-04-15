@@ -131,13 +131,8 @@ namespace MeshLib
 		}
 
 
-		internal void Animate(float time)
+		internal void Animate(float time, ref KeyFrame key)
 		{
-			if(mBone == null)
-			{
-				return;
-			}
-
 			//make sure the time is in range
 			float	animTime	=time;
 			if(time < mTimes[0])
@@ -205,7 +200,18 @@ namespace MeshLib
 
 			Debug.Assert(percentage >= 0.0f && percentage <= 1.0f);
 
-			KeyFrame.Lerp(mKeys[startIndex], mKeys[startIndex + 1], percentage, mBone);
+			KeyFrame.Lerp(mKeys[startIndex], mKeys[startIndex + 1], percentage, key);
+		}
+
+
+		internal void Animate(float time)
+		{
+			if(mBone == null)
+			{
+				return;
+			}
+
+			Animate(time, ref mBone);
 		}
 	}
 }

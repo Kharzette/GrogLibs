@@ -15,6 +15,8 @@ namespace MeshLib
 		bool	mbLooping;
 		bool	mbPingPong;
 
+		Dictionary<string, SubAnim>	mSubAnimsByBone	=new Dictionary<string, SubAnim>();
+
 
 		public string Name
 		{
@@ -120,6 +122,8 @@ namespace MeshLib
 				sa.Read(br);
 
 				mSubAnims[i]	=sa;
+
+				mSubAnimsByBone.Add(sa.GetBoneName(), sa);
 			}
 		}
 
@@ -133,6 +137,15 @@ namespace MeshLib
 				KeyFrame	kf	=skel.GetBoneKey(boneName);
 
 				mSubAnims[i].SetBoneRef(kf);
+			}
+		}
+
+
+		public void AnimateBone(string boneName, float time, ref KeyFrame key)
+		{
+			if(mSubAnimsByBone.ContainsKey(boneName))
+			{
+				mSubAnimsByBone[boneName].Animate(time, ref key);
 			}
 		}
 

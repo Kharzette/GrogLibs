@@ -231,6 +231,35 @@ namespace MeshLib
 		}
 
 
+		public void Blend(string anim1, float anim1Time,
+			string anim2, float anim2Time, float percentage)
+		{
+			if(!mAnims.ContainsKey(anim1)
+				|| !mAnims.ContainsKey(anim2))
+			{
+				return;
+			}
+
+			Anim	an1	=mAnims[anim1];
+			Anim	an2	=mAnims[anim2];
+
+			List<string>	boneNames	=new List<string>();
+
+			mSkeleton.GetBoneNames(boneNames);
+
+			KeyFrame	workKey1	=new KeyFrame();
+			KeyFrame	workKey2	=new KeyFrame();
+
+			foreach(string boneName in boneNames)
+			{
+				an1.AnimateBone(boneName, anim1Time, ref workKey1);
+				an2.AnimateBone(boneName, anim2Time, ref workKey2);
+
+				KeyFrame.Lerp(workKey1, workKey2, percentage, mSkeleton.GetBoneKey(boneName));
+			}
+		}
+
+
 		public void Animate(string anim, float time)
 		{
 			if(mAnims.ContainsKey(anim))

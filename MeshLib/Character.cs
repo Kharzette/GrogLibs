@@ -197,6 +197,27 @@ namespace MeshLib
 		}
 
 
+		public void Blend(string anim1, float anim1Time,
+			string anim2, float anim2Time, float percentage)
+		{
+			mAnimLib.Blend(anim1, anim1Time, anim2, anim2Time, percentage);
+
+			foreach(SkinnedMesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+
+				if(m.MaterialName == null || m.MaterialName == "Blank" || m.MaterialName == "")
+				{
+					continue;	//don't bother unless it can be seen
+				}
+				m.UpdateBones(mAnimLib.GetSkeleton());
+			}
+		}
+
+
 		public void Animate(string anim, float time)
 		{
 			mAnimLib.Animate(anim, time);

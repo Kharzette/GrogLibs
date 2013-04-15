@@ -149,6 +149,11 @@ namespace BSPZone
 			ZoneLight	bestLight	=null;
 			foreach(ZoneLight zl in visLights)
 			{
+				if(!zl.mbOn)
+				{
+					continue;
+				}
+
 				float	dist	=Vector3.Distance(pos, zl.mPosition);
 
 				if(zl.mStyle != 0)
@@ -168,6 +173,16 @@ namespace BSPZone
 			}
 
 			return	bestLight;
+		}
+
+
+		internal void SwitchCachedLight(ZoneEntity ze)
+		{
+			if(!mLightCache.ContainsKey(ze))
+			{
+				return;
+			}
+			mLightCache[ze].mbOn	=!mLightCache[ze].mbOn;
 		}
 
 

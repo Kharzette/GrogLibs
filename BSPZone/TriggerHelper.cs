@@ -167,6 +167,8 @@ namespace BSPZone
 				return;
 			}
 
+			mZone.SwitchCachedLight(zet);
+
 			//switch!
 			mSwitchLight(switchNum, zet.ToggleEntityActivated());
 		}
