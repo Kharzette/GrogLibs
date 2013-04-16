@@ -455,6 +455,8 @@ namespace BSPCore
 
 					Matrix	rotMat	=Matrix.CreateFromYawPitchRoll(yaw, pitch, roll);
 					dLight.mNormal	=rotMat.Backward;
+
+					ent.GetFloat("strength", out dLight.mIntensity);
 				}
 
 				Int32	nodeLandedIn	=FindNodeLandedIn(mGFXModels[0].mRootNode, dLight.mOrigin);
@@ -688,7 +690,7 @@ namespace BSPCore
 								{
 									if(mGFXTexInfos[faceHit.mTexInfo].IsSky())
 									{
-										val	=(angle2 * 255f);
+										val	=(angle2 * dLight.mIntensity);
 									}
 								}
 							}
@@ -750,6 +752,8 @@ namespace BSPCore
 				mFaceInfos[i]	=new FInfo();
 			}
 
+			//sky clusters for sunlight lighting
+			List<int>	skyClusters	=FindSkyClusters(visData);
 
 			//need to build a data structure that has a model index per face
 			Dictionary<int, int>	modelForFace	=new Dictionary<int, int>();
@@ -784,8 +788,8 @@ namespace BSPCore
 			ParallelOptions	po			=new ParallelOptions();
 			po.MaxDegreeOfParallelism	=lp.mBSPParams.mMaxThreads;
 
-//			Parallel.For(0, mGFXFaces.Length, po, i =>
-			for(int i=0;i < mGFXFaces.Length;i++)
+			Parallel.For(0, mGFXFaces.Length, po, i =>
+//			for(int i=0;i < mGFXFaces.Length;i++)
 			{
 				ProgressWatcher.UpdateProgressIncremental(prog);
 
@@ -813,16 +817,14 @@ namespace BSPCore
 					if(!VertexShadeFace(i, vertNormals, modelMat, modelInv, modelIndex))
 					{
 						CoreEvents.Print("LightFaces:  VertexShadeFace failed...\n");
-//						return;
-						continue;
+						return;
 					}					
 				}
 				else if(tex.IsLightMapped())
 				{
 					if(!CalcFaceInfo(mFaceInfos[i], mLightMaps[i], lp.mLightParams.mLightGridSize))
 					{
-//						return;
-						continue;
+						return;
 					}
 			
 					Int32	size	=mLightMaps[i].CalcSize();
@@ -838,11 +840,10 @@ namespace BSPCore
 						if(visData != null && visData.Length != 0 && !lp.mBSPParams.mbBuildAsBModel)
 						{
 							if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i],
-								modelInv, modelIndex,
+								modelInv, modelIndex, skyClusters,
 								1 / (float)lp.mLightParams.mNumSamples, visData))
 							{
-//								return;
-								continue;
+								return;
 							}
 						}
 						else
@@ -851,13 +852,12 @@ namespace BSPCore
 								modelInv, modelIndex,
 								1 / (float)lp.mLightParams.mNumSamples, visData))
 							{
-//								return;
-								continue;
+								return;
 							}
 						}
 					}				
 				}
-			}//);
+			});
 
 			ProgressWatcher.Clear();
 
@@ -866,7 +866,7 @@ namespace BSPCore
 
 
 		bool ApplyLightsToFace(FInfo faceInfo, LInfo lightInfo,
-			Matrix modelInv, int modelIndex,
+			Matrix modelInv, int modelIndex, List<int> skyClusters,
 			float scale, byte []visData)
 		{
 			Vector3	norm	=faceInfo.GetPlaneNormal();
@@ -887,7 +887,7 @@ namespace BSPCore
 			for(int v=0;v < facePoints.Length;v++)
 			{
 				Int32	nodeLandedIn	=FindNodeLandedIn(0, facePoints[v]);
-				Int32	leaf	=-(nodeLandedIn + 1);
+				Int32	leaf			=-(nodeLandedIn + 1);
 
 				if(leaf < 0 || leaf >= mGFXLeafs.Length)
 				{
@@ -895,8 +895,20 @@ namespace BSPCore
 					return	false;
 				}
 
+				Int32	clust	=mGFXLeafs[leaf].mCluster;
+				if(clust < 0)
+				{
+					continue;
+				}
+
+				if(clust >= mGFXClusters.Length)
+				{
+					CoreEvents.Print("*WARNING* ApplyLightsToFace:  Invalid cluster num.\n");
+					continue;
+				}
+
 				//do sunlight first if needed
-				if(sunLight != null)
+				if(sunLight != null && skyClusters.Contains(clust))
 				{
 					//Find the angle between the light, and the face normal
 					Vector3	sunRay		=facePoints[v] + sunLight.mNormal * -SunRayDist;
@@ -928,23 +940,12 @@ namespace BSPCore
 									continue;	//max light styles on face?
 								}
 
-								rgb[v]	+=sunLight.mColor * (angle * scale * 255f);
+								rgb[v]	+=sunLight.mColor * (angle * scale * sunLight.mIntensity);
 							}
 						}
 					}
 				}
 
-				Int32	clust	=mGFXLeafs[leaf].mCluster;
-				if(clust < 0)
-				{
-					continue;
-				}
-
-				if(clust >= mGFXClusters.Length)
-				{
-					CoreEvents.Print("*WARNING* ApplyLightsToFace:  Invalid cluster num.\n");
-					continue;
-				}
 
 				for(int c=0;c < mGFXClusters.Length;c++)
 				{
@@ -1189,6 +1190,67 @@ namespace BSPCore
 		{
 			mDirectLights.Clear();
 			mDirectClusterLights.Clear();
+		}
+
+
+		//returns a list of the clusters that can possibly see sky
+		List<int>	FindSkyClusters(byte []visData)
+		{
+			//need to mark clusters that contain sky portals
+			List<int>	clustersHaveSky	=new List<int>();
+			for(int i=0;i < mGFXLeafs.Length;i++)
+			{
+				GFXLeaf	leaf	=mGFXLeafs[i];
+
+				bool	bSkyLeaf	=false;
+				for(int j=0;j < leaf.mNumFaces;j++)
+				{
+					GFXFace	f	=mGFXFaces[mGFXLeafFaces[j + leaf.mFirstFace]];
+
+					GFXTexInfo	ti	=mGFXTexInfos[f.mTexInfo];
+
+					if(ti.IsSky())
+					{
+						bSkyLeaf	=true;
+						break;
+					}
+				}
+
+				if(!bSkyLeaf)
+				{
+					continue;
+				}
+
+				Int32	clust	=leaf.mCluster;
+				if(clust < 0)
+				{
+					continue;
+				}
+
+				if(!clustersHaveSky.Contains(clust))
+				{
+					clustersHaveSky.Add(clust);
+				}
+			}
+
+			List<int>	clustersCanSeeSky	=new List<int>();
+			for(int clust=0;clust < mGFXClusters.Length;clust++)
+			{
+				for(int chs=0;chs < clustersHaveSky.Count;chs++)
+				{
+					int	c	=clustersHaveSky[chs];
+					if((visData[mGFXClusters[clust].mVisOfs + (c >> 3)] & (1 << (c & 7))) == 0)
+					{
+						continue;
+					}
+
+					//can see!
+					clustersCanSeeSky.Add(clust);
+					break;
+				}
+			}
+
+			return	clustersCanSeeSky;
 		}
 
 

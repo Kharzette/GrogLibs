@@ -43,8 +43,16 @@ QQRKSRC1
           origin = "0 0 0"
           _color = "1 1 1"
           light = "300"
-		  activated = "1"
+          activated = "1"
           ;desc = "Invisible Light Source."
+        }
+        light_sun:e =
+        {
+          origin = "0 0 0"
+          ;desc = "Distant light that casts through sky portals"
+          _color = "1 1 1"
+          strength = "255"
+          angles = "50 -100 0"
         }
       }
       Weapon_* entities.qtxfolder =
@@ -92,44 +100,44 @@ QQRKSRC1
         misc_sound:e =
         {
           origin = "0 0 0"
-		  effect_name = "boing"
-		  looping = "1"
-		  volume = "1"
-		  activated = "1"
+          effect_name = "boing"
+          looping = "1"
+          volume = "1"
+          activated = "1"
           ;desc = "Emit a sound here"
         }
-		misc_particle_emitter:e =
-		{
+        misc_particle_emitter:e =
+        {
           origin = "0 0 0"
-		  tex_name = "GlowParticle"
-		  color = "1 1 1"
-		  alpha = "1"
-		  max_particles = "256"
-		  cell_shade = "1"
-		  shape = "0"
-		  shape_size = "16"
-		  grav_yaw = "0"
-		  grav_pitch = "0"
-		  grav_roll = "0"
-		  grav_strength = "0"
-		  start_size = "1"
-		  start_alpha = "1"
-		  emit_ms = "0.04"
-		  rot_velocity_min = "0"
-		  rot_velocity_max = "0"
-		  velocity_min = "-5"
-		  velocity_max = "5"
-		  size_velocity_min = "-0.5"
-		  size_velocity_max = "0.5"
-		  spin_velocity_min = "0"
-		  spin_velocity_max = "0"
-		  alpha_velocity_min = "0"
-		  alpha_velocity_max = "0"
-		  lifetime_min = "3"
-		  lifetime_max = "4"
-		  activated = "1"
+          tex_name = "GlowParticle"
+          color = "1 1 1"
+          alpha = "1"
+          max_particles = "256"
+          cell_shade = "1"
+          shape = "0"
+          shape_size = "16"
+          grav_yaw = "0"
+          grav_pitch = "0"
+          grav_roll = "0"
+          grav_strength = "0"
+          start_size = "1"
+          start_alpha = "1"
+          emit_ms = "0.04"
+          rot_velocity_min = "0"
+          rot_velocity_max = "0"
+          velocity_min = "-5"
+          velocity_max = "5"
+          size_velocity_min = "-0.5"
+          size_velocity_max = "0.5"
+          spin_velocity_min = "0"
+          spin_velocity_max = "0"
+          alpha_velocity_min = "0"
+          alpha_velocity_max = "0"
+          lifetime_min = "3"
+          lifetime_max = "4"
+          activated = "1"
           ;desc = "Emit particles from this entity"
-		}
+        }
       }
       Key_* entities.qtxfolder =
       {
@@ -209,7 +217,7 @@ QQRKSRC1
         }
         func_button:b =
         {
-		  health = "0"
+          health = "0"
           delay = "3"
           ;desc = "Just an every day Button."
           poly:p =
@@ -396,7 +404,7 @@ QQRKSRC1
         trigger_stand_in:b =
         {
           gravity = "1.0"
-		  activated = "0"
+          activated = "0"
           ;desc = "Fires events on entry and exit"
           poly:p =
           {
@@ -455,7 +463,7 @@ QQRKSRC1
         }
         trigger_once:b =
         {
-		  activated = "0"
+          activated = "0"
           ;desc = "Use this to trigger something only once."
           poly:p =
           {
@@ -538,7 +546,7 @@ QQRKSRC1
       {
         Typ = "C"
         Txt = "Item Classes"
-        Items = "item_whatever"	//seperate additional stuff with $0D
+        Items = "item_whatever"	//seperate additional stuff with $0"
         Values = "item_whatever"
       }
       item: =
@@ -743,8 +751,7 @@ QQRKSRC1
       {
         Txt = "&"
         Hint = "Specifies the delay in seconds before target, killtarget and m"
-         "essage will fire after the key is touched by the player. (Default=0)"
-         "."
+         "essage will fire after the key is touched by the player. (Default=0)."
       }
       message: =
       {
@@ -802,11 +809,11 @@ QQRKSRC1
          "chable lights."$0D"63 is for testing."
         Items = "0) Normal"$0D"1) Flicker (first variety)"$0D"2) Slow Strong S"
          "trobe"$0D"3) Candle (first variety)"$0D"4) Fast Strobe"$0D"5) Gentle"
-         " Pulse"$0D"6) Flicker (second variety)"$0D"7) Candle (second variety"
-         ")"$0D"8) Candle (third variety)"$0D"9) Slow Strobe (fourth variety)"$0D
-         "10) Flourescent Flicker"$0D"11) Slow Pulse (never to full)"
-        Values = "0"$0D"1"$0D"2"$0D"3"$0D"4"$0D"5"$0D"6"$0D"7"$0D"8"$0D"9"$0D"1"
-         "0"$0D"11"
+         " Pulse"$0D"6) Flicker (second variety)"$0D"7) Candle (second variety)"
+         ""$0D"8) Candle (third variety)"$0D"9) Slow Strobe (fourth variety)"
+         ""$0D"10) Flourescent Flicker"$0D"11) Slow Pulse (never to full)"
+        Values = "0"$0D"1"$0D"2"$0D"3"$0D"4"$0D"5"$0D"6"$0D"7"$0D"8"$0D"9"$0D""
+         "10"$0D"11"
       }
       target: =
       {
@@ -822,11 +829,11 @@ QQRKSRC1
          "ally, each uniquely named light is considered as a unique lightstyle"
          " during the radiosity compile process."
       }
-	  activated: =
-	  {
-	    Txt = "&"
-		Hint = "Start on? (1 yes, 0 no)"
-	  }
+      activated: =
+      {
+        Txt = "&"
+        Hint = "Start on? (1 yes, 0 no)"
+      }
     }
     misc_whatever:form =
     {
@@ -849,145 +856,145 @@ QQRKSRC1
         Hint = "Name of the specific whatever."
       }
     }
-	misc_particle_emitter:form =
-	{
-	  Help = "Emit particles from this entity"
+    misc_particle_emitter:form =
+    {
+      Help = "Emit particles from this entity"
       bbox = '-16 -16 -24 16 16 32'
-	  tex_name: =
-	  {
+      tex_name: =
+      {
         Txt = "&"
         Hint = "Particle texture name including extension"
-	  }
-	  color: =
-	  {
+      }
+      color: =
+      {
         Typ = "LN"
         Hint = "Click here to pick the particle color."
-	  }
-	  alpha: =
-	  {
+      }
+      alpha: =
+      {
         Txt = "&"
         Hint = "Alpha component of the color"
-	  }
-	  max_particles: =
-	  {
+      }
+      max_particles: =
+      {
         Txt = "&"
         Hint = "Size of the particle buffers"
-	  }
-	  cell_shade: =
-	  {
+      }
+      cell_shade: =
+      {
         Txt = "&"
         Hint = "0 for no, 1 for yes"
-	  }
-	  shape: =
-	  {
+      }
+      shape: =
+      {
         Txt = "&"
         Hint = "0 - Point, 1 - Sphere, 2 - Box, 3 - Line, 4 - Plane"
-	  }	  
-	  shape_size: =
-	  {
+      }
+      shape_size: =
+      {
         Txt = "&"
         Hint = "Size of emitter shape (radius)"
-	  }	  
-	  grav_yaw: =
-	  {
+      }
+      grav_yaw: =
+      {
         Txt = "&"
         Hint = "Angle of yaw on the gravity in degrees"
-	  }	  
-	  grav_pitch: =
-	  {
+      }
+      grav_pitch: =
+      {
         Txt = "&"
         Hint = "Angle of pitch on the gravity in degrees"
-	  }	  
-	  grav_roll: =
-	  {
+      }
+      grav_roll: =
+      {
         Txt = "&"
         Hint = "Angle of roll on the gravity in degrees"
-	  }
-	  grav_strength: =
-	  {
+      }
+      grav_strength: =
+      {
         Txt = "&"
         Hint = "Power of the gravitational force"
-	  }
-	  start_size: =
-	  {
+      }
+      start_size: =
+      {
         Txt = "&"
         Hint = "Starting size of the particle quad"
-	  }
-	  start_alpha: =
-	  {
+      }
+      start_alpha: =
+      {
         Txt = "&"
         Hint = "0 to 1 alpha value to start at"
-	  }
-	  emit_ms: =
-	  {
+      }
+      emit_ms: =
+      {
         Txt = "&"
         Hint = "Number of particles to emit per millisecond"
-	  }
-	  rot_velocity_min: =
-	  {
+      }
+      rot_velocity_min: =
+      {
         Txt = "&"
         Hint = "Rotational velocity minimum"
-	  }
-	  rot_velocity_max: =
-	  {
+      }
+      rot_velocity_max: =
+      {
         Txt = "&"
         Hint = "Rotational velocity maximum"
-	  }
-	  velocity_min: =
-	  {
+      }
+      velocity_min: =
+      {
         Txt = "&"
         Hint = "Velocity minimum"
-	  }
-	  velocity_max: =
-	  {
+      }
+      velocity_max: =
+      {
         Txt = "&"
         Hint = "Velocity maximum"
-	  }
-	  size_velocity_min: =
-	  {
+      }
+      size_velocity_min: =
+      {
         Txt = "&"
         Hint = "Shrink or grow minimum"
-	  }
-	  size_velocity_max: =
-	  {
+      }
+      size_velocity_max: =
+      {
         Txt = "&"
         Hint = "Shrink or grow maximum"
-	  }
-	  spin_velocity_min: =
-	  {
+      }
+      spin_velocity_min: =
+      {
         Txt = "&"
         Hint = "Spin velocity minimum"
-	  }
-	  spin_velocity_max: =
-	  {
+      }
+      spin_velocity_max: =
+      {
         Txt = "&"
         Hint = "Spin velocity maximum"
-	  }
-	  alpha_velocity_min: =
-	  {
+      }
+      alpha_velocity_min: =
+      {
         Txt = "&"
         Hint = "Fade in or out velocity minimum"
-	  }
-	  alpha_velocity_max: =
-	  {
+      }
+      alpha_velocity_max: =
+      {
         Txt = "&"
         Hint = "Fade in or out velocity maximum"
-	  }
-	  lifetime_min: =
-	  {
+      }
+      lifetime_min: =
+      {
         Txt = "&"
         Hint = "Particle life minimum time in seconds"
-	  }
-	  lifetime_max: =
-	  {
+      }
+      lifetime_max: =
+      {
         Txt = "&"
         Hint = "Particle life minimum time in seconds"
-	  }
-	  activated: =
-	  {
+      }
+      activated: =
+      {
         Txt = "&"
         Hint = "Start on? (1 or 0)"
-	  }
+      }
       target: =
       {
         Txt = "&"
@@ -998,37 +1005,37 @@ QQRKSRC1
         Txt = "&"
         Hint = "Name of the specific whatever."
       }
-	}
-	misc_sound:form =
-	{
-	  Help = "Emit audio from this entity"
+    }
+    misc_sound:form =
+    {
+      Help = "Emit audio from this entity"
       bbox = '-16 -16 -24 16 16 32'
-	  effect_name: =
-	  {
+      effect_name: =
+      {
         Txt = "&"
         Hint = "Sound effect name, no path or extension"
-	  }
-	  looping: =
-	  {
+      }
+      looping: =
+      {
         Txt = "&"
         Hint = "0 for no, 1 for yes"
-	  }
-	  volume: =
-	  {
+      }
+      volume: =
+      {
         Txt = "&"
         Hint = "0 to 1 volume level"
-	  }
-	  activated: =
-	  {
+      }
+      activated: =
+      {
         Txt = "&"
         Hint = "Start on? (1 or 0)"
-	  }
+      }
       targetname: =
       {
         Txt = "&"
         Hint = "Name of the specific audio entity."
       }
-	}
+    }
     monster_whatever:form =
     {
       Help = "Change this to something game specific."
@@ -1119,17 +1126,17 @@ QQRKSRC1
         Hint = "Name of the specific trigger_once. If the trigger's targetname"
          " is called and the trigger is already active, the trigger will fire."
       }
-	  activated: =
-	  {
+      activated: =
+      {
         Txt = "&"
         Hint = "Start triggered? (1 or 0)"
-	  }
+      }
     }
     trigger_stand_in:form =
     {
-      Help = "Fires events on entry and exit.  You must set the key - targ"
-       "et - to the name of another object in the level that has a matching - "
-       "targetname - ."
+      Help = "Fires events on entry and exit.  You must set the key - target -"
+       " to the name of another object in the level that has a matching - targ"
+       "etname - ."
       delay: =
       {
         Txt = "&"
@@ -1154,11 +1161,11 @@ QQRKSRC1
         Hint = "Name of the specific trigger_once. If the trigger's targetname"
          " is called and the trigger is already active, the trigger will fire."
       }
-	  activated: =
-	  {
+      activated: =
+      {
         Txt = "&"
         Hint = "Start triggered? (1 or 0)"
-	  }
+      }
     }
     worldspawn:form =
     {
@@ -1172,6 +1179,38 @@ QQRKSRC1
       {
         Txt = "&"
         Hint = "Specifies the title of the map."
+      }
+    }
+    light_sun:form =
+    {
+      Help = "A newly created Entity type."
+      bbox = '-16 -16 -16 16 16 16'
+      ;desc: =
+      {
+        Txt = "&"
+        Hint = "Distant light that casts through sky portals"
+      }
+      _color: =
+      {
+        Txt = "&"
+        Hint = "Light color RGB, default (1 1 1)"
+      }
+      _color: =
+      {
+        Typ = "LN"
+        Txt = "&"
+        Hint = "Light color RGB, default (1 1 1)"
+      }
+      strength: =
+      {
+        Txt = "&"
+        Hint = "An unknown field of some sort"
+      }
+      angles: =
+      {
+        Txt = "&"
+        Hint = "Specifies a facing direction in 3 dimensions, defined by pitch"
+         ", yaw, and roll. (Default=0 0 0)."
       }
     }
   }
