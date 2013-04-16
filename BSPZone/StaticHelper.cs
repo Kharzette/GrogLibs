@@ -18,12 +18,14 @@ namespace BSPZone
 			internal Vector3	mPosition;
 			internal ZoneEntity	mEntity;
 			internal Matrix		mTransform;
-			internal float		mYaw;
+			internal float		mYaw, mPitch, mRoll;
 			internal bool		mbPickUp;
 
 			internal void UpdateTransform()
 			{
-				mTransform	=Matrix.CreateRotationY(MathHelper.ToRadians(mYaw));
+				//need a 90 degree bump to get the pitch started properly
+				mTransform	=Matrix.CreateRotationY(MathHelper.PiOver2);
+				mTransform	*=Matrix.CreateFromYawPitchRoll(mYaw, mPitch, mRoll);
 				mTransform	*=Matrix.CreateTranslation(mPosition);
 			}
 		}
@@ -67,9 +69,14 @@ namespace BSPZone
 				PickUp	pu		=new PickUp();
 				pu.mEntity		=ze;
 				pu.mPosition	=pos;
-				if(ze.GetValue("pickup") != "")
+				ze.GetBool("pickup", out pu.mbPickUp);
+
+				Vector3	angles;
+				if(ze.GetVectorNoConversion("angles", out angles))
 				{
-					pu.mbPickUp	=true;
+					pu.mYaw		=MathHelper.ToRadians(angles.Y + 90);
+					pu.mPitch	=MathHelper.ToRadians(-angles.X);
+					pu.mRoll	=MathHelper.ToRadians(angles.Z);
 				}
 
 				mPickUps.Add(pu);

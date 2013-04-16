@@ -423,7 +423,7 @@ float4 TriSolidSpecPhysPS(VTex03Tex13 input) : COLOR
 	return	float4(specular, mSolidColour.w);
 }
 
-//Solid color and expensive specular
+//cell shading, solid color and expensive specular
 float4 TriCellSolidSpecPhysPS(VTex03Tex13 input) : COLOR
 {
 	float3	pnorm	=input.TexCoord0;
@@ -443,7 +443,7 @@ float4 TriCellSolidSpecPhysPS(VTex03Tex13 input) : COLOR
 	return	float4(specular, mSolidColour.w);
 }
 
-//passed in color and expensive specular
+//cell, passed in color and expensive specular
 float4 TriCellColorSpecPhysPS(VTex04Tex14Tex24 input) : COLOR
 {
 	float3	pnorm	=input.TexCoord0;
@@ -564,6 +564,15 @@ technique TriSolidSpecPhys
 	{
 		VertexShader	=compile vs_2_0 TriVS();
 		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();
+	}
+}
+
+technique TriCellSolidSpecPhys
+{     
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 TriVS();
+		PixelShader		=compile ps_2_0 TriCellSolidSpecPhysPS();
 	}
 }
 

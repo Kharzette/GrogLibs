@@ -81,6 +81,21 @@ namespace BSPZone
 		}
 
 
+		public bool GetBool(string key, out bool val)
+		{
+			val	=false;
+			if(!mData.ContainsKey(key))
+			{
+				return	false;
+			}
+			if(!Mathery.TryParse(mData[key], out val))
+			{
+				return	false;
+			}
+			return	true;
+		}
+
+
 		public bool GetInt(string key, out int val)
 		{
 			val	=0;
