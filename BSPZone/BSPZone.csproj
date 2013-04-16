@@ -82,6 +82,7 @@
     <Compile Include="Contents.cs" />
     <Compile Include="DebugFace.cs" />
     <Compile Include="IntermissionHelper.cs" />
+    <Compile Include="LightHelper.cs" />
     <Compile Include="Mobile.cs" />
     <Compile Include="ParticleHelper.cs" />
     <Compile Include="Pushable.cs" />

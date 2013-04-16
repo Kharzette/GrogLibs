@@ -126,6 +126,9 @@ namespace SharedForms
 
 		void OnSaveEmissives(object sender, EventArgs e)
 		{
+			mSFD.DefaultExt	="*.Emissives";
+			mSFD.Filter		="Emissives files (*.Emissives)|*.Emissives|All files (*.*)|*.*";
+
 			DialogResult	dr	=mSFD.ShowDialog();
 
 			if(dr == DialogResult.Cancel)
@@ -142,6 +145,8 @@ namespace SharedForms
 		void OnLoadDebug(object sender, EventArgs e)
 		{
 			mOFD.DefaultExt	="*.Portals";
+			mOFD.Filter		="Portals files (*.Portals)|*.Portals|All files (*.*)|*.*";
+
 			DialogResult	dr	=mOFD.ShowDialog();
 
 			if(dr == DialogResult.Cancel)
