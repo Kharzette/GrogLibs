@@ -131,6 +131,95 @@ namespace BSPCore
 		}
 
 
+		bool RayIntersectFace(Vector3 Front, Vector3 Back, Int32 Node,
+			ref Vector3 intersectionPoint, ref bool hitLeaf, ref GFXFace hit)
+		{
+			float	Fd, Bd, Dist;
+			Int32	Side;
+			Vector3	I;
+
+			if(Node < 0)						
+			{
+				Int32	Leaf	=-(Node+1);
+				GFXLeaf	theLeaf	=mGFXLeafs[Leaf];
+
+				if((theLeaf.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+				{
+					return	true;	//Ray collided with solid space
+				}
+				else 
+				{
+					return	false;	//Ray collided with empty space
+				}
+			}
+			GFXNode		n	=mGFXNodes[Node];
+			GFXPlane	p	=mGFXPlanes[n.mPlaneNum];
+
+			Fd	=p.DistanceFast(Front);
+			Bd	=p.DistanceFast(Back);
+
+			Side	=(Fd < 0)? 1 : 0;
+			Dist	=Fd / (Fd - Bd);
+
+			I	=Front + Dist * (Back - Front);
+
+			if(Fd >= -1 && Bd >= -1)
+			{
+				return	RayIntersectFace(Front, Back, n.mFront,
+							ref intersectionPoint, ref hitLeaf, ref hit);
+			}
+			if(Fd < 1 && Bd < 1)
+			{
+				return	RayIntersectFace(Front, Back, n.mBack,
+							ref intersectionPoint, ref hitLeaf, ref hit);
+			}
+
+			//Work our way to the front, from the back side.  As soon as there
+			//is no more collisions, we can assume that we have the front portion of the
+			//ray that is in empty space.  Once we find this, and see that the back half is in
+			//solid space, then we found the front intersection point...
+			if(RayIntersectFace(Front, I,
+				(Fd < 0)? n.mBack : n.mFront,
+				ref intersectionPoint, ref hitLeaf, ref hit))
+			{
+				return	true;
+			}
+			else
+			{
+				bool	bSolid	=RayIntersectFace(I, Back,
+					(Fd < 0)? n.mFront : n.mBack,
+					ref intersectionPoint, ref hitLeaf, ref hit);
+
+				if(bSolid)
+				{
+					if(!hitLeaf)
+					{
+						intersectionPoint	=I;
+						hitLeaf				=true;
+						if(hit == null)
+						{
+							//figure out which face was hit
+							for(int i=0;i < n.mNumFaces;i++)
+							{
+								GFXFace		f	=mGFXFaces[i + n.mFirstFace];
+								GFXPlane	pl	=mGFXPlanes[f.mPlaneNum];
+
+								float	dist	=pl.DistanceFast(intersectionPoint);
+								if(dist > -0.001f && dist < 0.001f)
+								{
+									hit	=f;
+									break;
+								}
+							}
+						}
+					}
+					return	true;
+				}
+			}
+			return	false;
+		}
+
+
 		//tests vs world (model 0) as well as modelIndex if not zero
 		//modelInv should be an inverted model matrix
 		bool RayCollide(Vector3 Front, Vector3 Back, int modelIndex, Matrix modelInv)
@@ -151,6 +240,36 @@ namespace BSPCore
 				Vector3	backInv		=Vector3.Transform(Back, modelInv);
 
 				if(RayIntersect(frontInv, backInv, mGFXModels[modelIndex].mRootNode, ref modelImpacto, ref hitLeaf))
+				{
+					return	true;
+				}
+			}
+			return	false;
+		}
+
+
+		//tests vs world (model 0) as well as modelIndex if not zero
+		//modelInv should be an inverted model matrix
+		bool RayCollideToFace(Vector3 Front, Vector3 Back, int modelIndex, Matrix modelInv, ref GFXFace hit)
+		{
+			bool	hitLeaf			=false;
+			Vector3	worldImpacto	=Vector3.Zero;
+
+			if(RayIntersectFace(Front, Back, mGFXModels[0].mRootNode,
+				ref worldImpacto, ref hitLeaf, ref hit))
+			{
+				return	true;
+			}
+
+			if(modelIndex > 0)
+			{
+				Vector3	modelImpacto	=Vector3.Zero;
+
+				Vector3	frontInv	=Vector3.Transform(Front, modelInv);
+				Vector3	backInv		=Vector3.Transform(Back, modelInv);
+
+				if(RayIntersectFace(frontInv, backInv, mGFXModels[modelIndex].mRootNode,
+					ref modelImpacto, ref hitLeaf, ref hit))
 				{
 					return	true;
 				}

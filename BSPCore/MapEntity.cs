@@ -436,6 +436,10 @@ namespace BSPCore
 			{
 				type	=DirectLight.DLight_Spot;
 			}
+			else if(className == "light_sun")
+			{
+				type	=DirectLight.DLight_Sun;
+			}
 			else
 			{
 				type	=DirectLight.DLight_Point;

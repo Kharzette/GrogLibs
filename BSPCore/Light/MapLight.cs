@@ -24,6 +24,8 @@ namespace BSPCore
 		FInfo	[]mFaceInfos;
 		Vector2	[]mSampleOffsets;
 
+		const float	SunRayDist	=10000f;
+
 
 		void GetFaceMinsMaxs(Int32 face, out Bounds bnd)
 		{
@@ -327,13 +329,20 @@ namespace BSPCore
 
 				DirectLight	dLight	=new DirectLight();
 
+				Vector3	color;
 				Vector4	colorVec	=Vector4.Zero;
 				if(!ent.GetLightValue(out colorVec))
 				{
-					colorVec	=Vector4.One * 300.0f;	//default
+					//might be a sunlight which doesn't have a strength value
+					if(ent.GetVectorNoConversion("_color", out color))
+					{
+						colorVec.X	=color.X;
+						colorVec.Y	=color.Y;
+						colorVec.Z	=color.Z;
+						colorVec	*=300.0f;	//default
+					}
 				}
 
-				Vector3	color;
 				color.X	=colorVec.X;
 				color.Y	=colorVec.Y;
 				color.Z	=colorVec.Z;
@@ -426,6 +435,27 @@ namespace BSPCore
 						}
 					}
 				}
+				else if(dLight.mType == DirectLight.DLight_Sun)
+				{
+					Vector3	orient;
+					float	yaw		=0f;
+					float	pitch	=0f;
+					float	roll	=0f;
+					if(ent.GetVectorNoConversion("angles", out orient))
+					{
+						//coordinate system goblinry
+						yaw		=(int)orient.Y - 90;
+						pitch	=(int)orient.X;
+						roll	=(int)orient.Z;
+					}
+
+					yaw		=MathHelper.ToRadians(yaw);
+					pitch	=MathHelper.ToRadians(pitch);
+					roll	=MathHelper.ToRadians(roll);
+
+					Matrix	rotMat	=Matrix.CreateFromYawPitchRoll(yaw, pitch, roll);
+					dLight.mNormal	=rotMat.Backward;
+				}
 
 				Int32	nodeLandedIn	=FindNodeLandedIn(mGFXModels[0].mRootNode, dLight.mOrigin);
 				Int32	leaf	=-(nodeLandedIn + 1);
@@ -436,16 +466,19 @@ namespace BSPCore
 					CoreEvents.Print("*WARNING* CreateLights:  Light in solid leaf at " + dLight.mOrigin + "\n");
 					continue;
 				}
-				if(mDirectClusterLights.ContainsKey(clust))
-				{
-					mDirectClusterLights[clust].Add(dLight);
-				}
-				else
-				{
-					mDirectClusterLights.Add(clust, new List<DirectLight>());
-					mDirectClusterLights[clust].Add(dLight);
-				}
 
+				if(dLight.mType != DirectLight.DLight_Sun)
+				{
+					if(mDirectClusterLights.ContainsKey(clust))
+					{
+						mDirectClusterLights[clust].Add(dLight);
+					}
+					else
+					{
+						mDirectClusterLights.Add(clust, new List<DirectLight>());
+						mDirectClusterLights[clust].Add(dLight);
+					}
+				}
 				mDirectLights.Add(dLight);
 				numDirectLights++;
 			}
@@ -605,7 +638,7 @@ namespace BSPCore
 						goto Skip;
 					}
 
-					float	val;
+					float	val	=0f;
 					switch(dLight.mType)
 					{
 						case DirectLight.DLight_Point:
@@ -634,6 +667,33 @@ namespace BSPCore
 							val	=(intensity / dist) * angle * Angle2;
 							break;
 						}
+						case DirectLight.DLight_Sun:
+						{
+							//Find the angle between the light, and the vert
+							Vector3	sunRay		=vert + dLight.mNormal * -SunRayDist;
+							Vector3	normRay		=sunRay;
+							normRay.Normalize();
+
+							float	angle2	=Vector3.Dot(normRay, norm);
+							if(angle2 <= 0.001f)
+							{
+								goto	Skip;
+							}
+
+							Vector3	colResult	=Vector3.Zero;
+							GFXFace	faceHit		=null;
+							if(RayCollideToFace(vert, sunRay, modelIndex, modelInv, ref faceHit))
+							{
+								if(faceHit != null)
+								{
+									if(mGFXTexInfos[faceHit.mTexInfo].IsSky())
+									{
+										val	=(angle2 * 255f);
+									}
+								}
+							}
+							break;
+						}
 						default:
 						{
 							CoreEvents.Print("ApplyLightsToFace:  Invalid light.\n");
@@ -646,13 +706,19 @@ namespace BSPCore
 					}
 
 					//This is the slowest test, so make it last
-					Vector3	colResult	=Vector3.Zero;
-					if(RayCollide(vert, dLight.mOrigin, modelIndex, modelInv))
+					if(dLight.mType == DirectLight.DLight_Sun)
 					{
-						goto	Skip;	//Ray is in shadow
+						mGFXRGBVerts[vn]	+=(dLight.mColor * val);
 					}
-					mGFXRGBVerts[vn]	+=(dLight.mColor * val);
-
+					else
+					{
+						Vector3	colResult	=Vector3.Zero;
+						if(RayCollide(vert, dLight.mOrigin, modelIndex, modelInv))
+						{
+							goto	Skip;	//Ray is in shadow
+						}
+						mGFXRGBVerts[vn]	+=(dLight.mColor * val);
+					}
 					Skip:;				
 				}
 			}
@@ -718,7 +784,8 @@ namespace BSPCore
 			ParallelOptions	po			=new ParallelOptions();
 			po.MaxDegreeOfParallelism	=lp.mBSPParams.mMaxThreads;
 
-			Parallel.For(0, mGFXFaces.Length, po, i =>
+//			Parallel.For(0, mGFXFaces.Length, po, i =>
+			for(int i=0;i < mGFXFaces.Length;i++)
 			{
 				ProgressWatcher.UpdateProgressIncremental(prog);
 
@@ -746,14 +813,16 @@ namespace BSPCore
 					if(!VertexShadeFace(i, vertNormals, modelMat, modelInv, modelIndex))
 					{
 						CoreEvents.Print("LightFaces:  VertexShadeFace failed...\n");
-						return;
+//						return;
+						continue;
 					}					
 				}
 				else if(tex.IsLightMapped())
 				{
 					if(!CalcFaceInfo(mFaceInfos[i], mLightMaps[i], lp.mLightParams.mLightGridSize))
 					{
-						return;
+//						return;
+						continue;
 					}
 			
 					Int32	size	=mLightMaps[i].CalcSize();
@@ -772,7 +841,8 @@ namespace BSPCore
 								modelInv, modelIndex,
 								1 / (float)lp.mLightParams.mNumSamples, visData))
 							{
-								return;
+//								return;
+								continue;
 							}
 						}
 						else
@@ -781,12 +851,13 @@ namespace BSPCore
 								modelInv, modelIndex,
 								1 / (float)lp.mLightParams.mNumSamples, visData))
 							{
-								return;
+//								return;
+								continue;
 							}
 						}
 					}				
 				}
-			});
+			}//);
 
 			ProgressWatcher.Clear();
 
@@ -802,6 +873,17 @@ namespace BSPCore
 
 			Vector3	[]facePoints	=faceInfo.GetPoints();
 
+			//grab out the sun entity if there is one
+			DirectLight	sunLight	=null;
+			foreach(DirectLight dl in mDirectLights)
+			{
+				if(dl.mType == DirectLight.DLight_Sun)
+				{
+					sunLight	=dl;
+					break;
+				}
+			}
+
 			for(int v=0;v < facePoints.Length;v++)
 			{
 				Int32	nodeLandedIn	=FindNodeLandedIn(0, facePoints[v]);
@@ -811,6 +893,45 @@ namespace BSPCore
 				{
 					CoreEvents.Print("ApplyLightsToFace:  Invalid leaf num.\n");
 					return	false;
+				}
+
+				//do sunlight first if needed
+				if(sunLight != null)
+				{
+					//Find the angle between the light, and the face normal
+					Vector3	sunRay		=facePoints[v] + sunLight.mNormal * -SunRayDist;
+					Vector3	normRay		=sunRay;
+					normRay.Normalize();
+
+					float	angle	=Vector3.Dot(normRay, norm);
+					if(angle <= 0.001f)
+					{
+						continue;
+					}
+
+					Vector3	colResult	=Vector3.Zero;
+					GFXFace	faceHit		=null;
+					if(RayCollideToFace(facePoints[v], sunRay, modelIndex, modelInv, ref faceHit))
+					{
+						if(faceHit != null)
+						{
+							if(mGFXTexInfos[faceHit.mTexInfo].IsSky())
+							{
+								Int32	lightType	=sunLight.mLType;
+
+								//If the data for this LType has not been allocated, allocate it now...
+								lightInfo.AllocLightType(lightType, facePoints.Length);
+
+								Vector3	[]rgb	=lightInfo.GetRGBLightData(lightType);
+								if(rgb == null)
+								{
+									continue;	//max light styles on face?
+								}
+
+								rgb[v]	+=sunLight.mColor * (angle * scale * 255f);
+							}
+						}
+					}
 				}
 
 				Int32	clust	=mGFXLeafs[leaf].mCluster;
