@@ -753,7 +753,11 @@ namespace BSPCore
 			}
 
 			//sky clusters for sunlight lighting
-			List<int>	skyClusters	=FindSkyClusters(visData);
+			List<int>	skyClusters	=null;
+			if(visData != null)
+			{
+				skyClusters	=FindSkyClusters(visData);
+			}
 
 			//need to build a data structure that has a model index per face
 			Dictionary<int, int>	modelForFace	=new Dictionary<int, int>();
@@ -946,7 +950,6 @@ namespace BSPCore
 					}
 				}
 
-
 				for(int c=0;c < mGFXClusters.Length;c++)
 				{
 					if((visData[mGFXClusters[clust].mVisOfs + (c >> 3)] & (1 << (c & 7))) == 0)
@@ -961,6 +964,11 @@ namespace BSPCore
 
 					foreach(DirectLight dLight in mDirectClusterLights[c])
 					{
+						if(dLight.mType == DirectLight.DLight_Sun)
+						{
+							continue;	//done above
+						}
+
 						float	intensity	=dLight.mIntensity;
 					
 						//Find the angle between the light, and the face normal
@@ -1061,6 +1069,17 @@ namespace BSPCore
 
 			Vector3	[]facePoints	=faceInfo.GetPoints();
 
+			//grab out the sun entity if there is one
+			DirectLight	sunLight	=null;
+			foreach(DirectLight dl in mDirectLights)
+			{
+				if(dl.mType == DirectLight.DLight_Sun)
+				{
+					sunLight	=dl;
+					break;
+				}
+			}
+
 			for(int v=0;v < facePoints.Length;v++)
 			{
 				Int32	nodeLandedIn	=FindNodeLandedIn(0, facePoints[v]);
@@ -1072,8 +1091,52 @@ namespace BSPCore
 					return	false;
 				}
 
+				//do sunlight first if needed
+				if(sunLight != null)
+				{
+					//Find the angle between the light, and the face normal
+					Vector3	sunRay	=facePoints[v] + sunLight.mNormal * -SunRayDist;
+					Vector3	normRay	=sunRay;
+					normRay.Normalize();
+
+					float	angle	=Vector3.Dot(normRay, norm);
+					if(angle <= 0.001f)
+					{
+						continue;
+					}
+
+					Vector3	colResult	=Vector3.Zero;
+					GFXFace	faceHit		=null;
+					if(RayCollideToFace(facePoints[v], sunRay, modelIndex, modelInv, ref faceHit))
+					{
+						if(faceHit != null)
+						{
+							if(mGFXTexInfos[faceHit.mTexInfo].IsSky())
+							{
+								Int32	lightType	=sunLight.mLType;
+
+								//If the data for this LType has not been allocated, allocate it now...
+								lightInfo.AllocLightType(lightType, facePoints.Length);
+
+								Vector3	[]rgb	=lightInfo.GetRGBLightData(lightType);
+								if(rgb == null)
+								{
+									continue;	//max light styles on face?
+								}
+
+								rgb[v]	+=sunLight.mColor * (angle * scale * sunLight.mIntensity);
+							}
+						}
+					}
+				}
+
 				foreach(DirectLight dLight in mDirectLights)
 				{
+					if(dLight.mType == DirectLight.DLight_Sun)
+					{
+						continue;	//done above
+					}
+
 					float	intensity	=dLight.mIntensity;
 					
 					//Find the angle between the light, and the face normal
