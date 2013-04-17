@@ -24,6 +24,10 @@ namespace MaterialLib
 		ContentManager	mGameContent;	//may contain game specific shaders
 		ContentManager	mShaderLib;		//shared shaders used by every game
 
+		//list of original trilight values for materials that use them
+		Dictionary<string, Material.TriLight>	mOGTriLights
+			=new Dictionary<string, Material.TriLight>();
+
 
 		//two content managers, tool or game
 		public MaterialLib(GraphicsDevice gd, ContentManager cm, ContentManager scm, bool bTool)
@@ -180,6 +184,8 @@ namespace MaterialLib
 					shdNeeded.Add(m.ShaderName);
 				}
 			}
+
+			InitOriginalTriLights();
 
 			if(!bTool)
 			{
@@ -816,10 +822,9 @@ namespace MaterialLib
 		}
 
 
-		public void SetTriLightValues(Dictionary<string, Material.TriLight> originalValues,
-			Vector4 lightColor, Vector3 lightDir)
+		public void SetTriLightValues(Vector4 lightColor, Vector3 lightDir)
 		{
-			foreach(KeyValuePair<string, Material.TriLight> matTri in originalValues)
+			foreach(KeyValuePair<string, Material.TriLight> matTri in mOGTriLights)
 			{
 				Material	mat	=mMats[matTri.Key];
 
@@ -838,9 +843,9 @@ namespace MaterialLib
 		}
 		
 
-		public Dictionary<string, Material.TriLight> GetOriginalTriLights()
+		void InitOriginalTriLights()
 		{
-			Dictionary<string, Material.TriLight>	ret	=new Dictionary<string, Material.TriLight>();
+			mOGTriLights.Clear();
 
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
@@ -848,10 +853,9 @@ namespace MaterialLib
 
 				if(mat.Value.GetTriLight(out tri))
 				{
-					ret.Add(mat.Key, tri);
+					mOGTriLights.Add(mat.Key, tri);
 				}
 			}
-			return	ret;
 		}
 
 
