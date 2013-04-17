@@ -41,7 +41,6 @@ namespace MeshLib
 		protected string			mName;
 		protected VertexBuffer		mVerts;
 		protected IndexBuffer		mIndexs;
-		protected VertexDeclaration	mVD;
 		protected int				mNumVerts, mNumTriangles, mVertSize;
 		protected string			mMaterialName;
 		protected int				mTypeIndex;
@@ -85,12 +84,6 @@ namespace MeshLib
 		public Matrix GetTransform()
 		{
 			return	mTransform;
-		}
-
-
-		public void SetVertexDeclaration(VertexDeclaration vd)
-		{
-			mVD	=vd;
 		}
 
 
@@ -225,6 +218,12 @@ namespace MeshLib
 			}
 
 			mVerts	=VertexTypes.AddTangents(gd, mVerts, mNumVerts, mTypeIndex, tang, out mTypeIndex);
+		}
+
+
+		public void NukeVertexElement(List<int> indexes, GraphicsDevice gd)
+		{
+			mVerts	=VertexTypes.NukeElements(gd, mVerts, mNumVerts, mTypeIndex, indexes, out mTypeIndex);
 		}
 
 

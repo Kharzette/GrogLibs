@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using MeshLib;
+using UtilityLib;
+
 
 namespace SharedForms
 {
@@ -47,7 +49,7 @@ namespace SharedForms
 			if(e.Row.DataBoundItem.GetType().BaseType == typeof(Mesh))
 			{
 				Mesh	nukeMe	=(Mesh)e.Row.DataBoundItem;
-				eNukedMeshPart(nukeMe, null);
+				Misc.SafeInvoke(eNukedMeshPart, nukeMe);
 			}
 		}
 

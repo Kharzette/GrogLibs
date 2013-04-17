@@ -12,18 +12,22 @@ namespace BSPZone
 	{
 		Zone	mZone;
 
+		//sunlight entity
+		ZoneEntity	mSunEnt;
+
 		//lighting stuff on the move
 		Mover3					mBestLightMover	=new Mover3();
 		Mover4					mBestColorMover	=new Mover4();
 		Zone.ZoneLight			mBestLight;
 		Zone.GetStyleStrength	mStyleStrength;
+		bool					mbLerpingToDark;
 
 		//current light values post update
-		Vector4	mCurColor0;
+		Vector4	mLightColor;
 		Vector3	mCurLightDir;
 
 		//constants
-		const float	LightLerpTime	=0.5f;	//in seconds
+		const float	LightLerpTime	=0.25f;	//in seconds
 		const float	LightEaseIn		=0.2f;
 		const float	LightEaseOut	=0.2f;
 
@@ -34,12 +38,14 @@ namespace BSPZone
 
 			mZone			=z;
 			mStyleStrength	=styleStrength;
+
+			GrabSun();
 		}
 
 
 		public void GetCurrentValues(out Vector4 color0, out Vector3 lightDir)
 		{
-			color0		=mCurColor0;
+			color0		=mLightColor;
 			lightDir	=mCurLightDir;
 		}
 
@@ -48,15 +54,36 @@ namespace BSPZone
 		//opposite axiseesseseseeseses, use quat slerp?
 		public void Update(int msDelta, Vector3 pos)
 		{
-			Zone.ZoneLight	zl	=mZone.GetStrongestLightInLOS(pos, mStyleStrength);
+			Zone.ZoneLight	zl	=mZone.GetStrongestLightInLOS(pos, mSunEnt, mStyleStrength);
 			if(zl == null)
 			{
-				//superdark!
-				mCurColor0		=Vector4.Zero;
-				mCurLightDir	=Vector3.UnitX;
+				//no lights in LOS, lerp to dark
+				if(mbLerpingToDark)
+				{
+					if(mBestColorMover.Done())
+					{
+						mLightColor	=Vector4.Zero;
+					}
+					else
+					{
+						mBestColorMover.Update(msDelta);
+						mLightColor	=mBestColorMover.GetPos();
+					}
+				}
+				else
+				{
+					mBestColorMover.SetUpMove(mLightColor, Vector4.Zero,
+						LightLerpTime, LightEaseIn, LightEaseOut);
+
+					mBestColorMover.Update(msDelta);
+					mLightColor		=mBestColorMover.GetPos();
+					mbLerpingToDark	=true;
+				}
 				mBestLight		=null;
 				return;
 			}
+
+			mbLerpingToDark	=false;
 
 			Vector3	curPos		=Vector3.Zero;
 			Vector4 curColor	=Vector4.One;
@@ -67,13 +94,26 @@ namespace BSPZone
 			{
 				if(mBestLight == null)
 				{
+					//lerp color from dark
+					//lerp strength in the color w
+					Vector4	start	=Vector4.Zero;
+					Vector4	end		=Vector4.Zero;
+
+					end.X	=zl.mColor.X;
+					end.Y	=zl.mColor.Y;
+					end.Z	=zl.mColor.Z;
+					end.W	=zl.mStrength;
+
+					//see if still lerping
+					if(!mBestColorMover.Done())
+					{
+						start	=mBestColorMover.GetPos();
+					}
+
+					mBestColorMover.SetUpMove(start, end,
+						LightLerpTime, LightEaseIn, LightEaseOut);
+
 					curPos		=zl.mPosition;
-					curColor.X	=zl.mColor.X;
-					curColor.Y	=zl.mColor.Y;
-					curColor.Z	=zl.mColor.Z;
-					curColor.W	=1f;
-					curStrength	=zl.mStrength;
-					bReady		=true;
 				}
 				else
 				{
@@ -146,30 +186,67 @@ namespace BSPZone
 				}
 			}
 
-			mCurLightDir	=curPos - pos;
-
-			float	dist	=mCurLightDir.Length();
-
-			mCurColor0	=Vector4.One;
-
-			mCurColor0.X	=curColor.X;
-			mCurColor0.Y	=curColor.Y;
-			mCurColor0.Z	=curColor.Z;
-
-			if(dist > curStrength)
+			if(zl.mbSun)
 			{
-				mCurColor0	*=(curStrength / dist);
+				mCurLightDir	=-zl.mPosition;	//direction stored in pos
+				mLightColor.X	=curColor.X;
+				mLightColor.Y	=curColor.Y;
+				mLightColor.Z	=curColor.Z;
+				mLightColor.W	=1f;
+			}
+			else
+			{
+				Vector3	curLightDir	=curPos - pos;
+
+				float	dist	=curLightDir.Length();
+
+				curLightDir	/=dist;
+
+				float	atten	=curStrength - dist;
+				if(atten <= 0f)
+				{
+					//too far to affect us
+					mLightColor		=Vector4.Zero;
+					mLightColor.W	=1.0f;
+					return;
+				}
+
+				mLightColor.X	=curColor.X;
+				mLightColor.Y	=curColor.Y;
+				mLightColor.Z	=curColor.Z;
+
+				atten	/=curStrength;
+
+				mLightColor	*=atten;
+
+				//check the light style if applicable
+				if(mBestLight.mStyle != 0)
+				{
+					mLightColor	*=mStyleStrength(mBestLight.mStyle);
+				}
+
+				mLightColor.W	=1.0f;
+				mCurLightDir	=curLightDir;
+			}
+		}
+
+
+		void GrabSun()
+		{
+			List<ZoneEntity>	suns	=mZone.GetEntities("light_sun");
+			if(suns.Count == 0)
+			{
+				mSunEnt	=null;
+				return;
 			}
 
-			//check the light style if applicable
-			if(mBestLight.mStyle != 0)
+			Vector3	angles;
+			if(!suns[0].GetVectorNoConversion("angles", out angles))
 			{
-				mCurColor0	*=mStyleStrength(mBestLight.mStyle);
+				mSunEnt	=null;
+				return;
 			}
-
-			mCurColor0.W	=1.0f;
-
-			mCurLightDir.Normalize();
+			mSunEnt	=suns[0];
 		}
 	}
 }

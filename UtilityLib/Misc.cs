@@ -53,6 +53,48 @@ namespace UtilityLib
 		}
 
 
+		public static Vector2 StringToVector2(string vstring)
+		{
+			Vector2	ret	=Vector2.Zero;
+
+			string	[]elements	=vstring.Split(' ');
+			
+			Mathery.TryParse(elements[0], out ret.X);
+			Mathery.TryParse(elements[1], out ret.Y);
+
+			return	ret;
+		}
+
+
+		public static Vector3 StringToVector3(string vstring)
+		{
+			Vector3	ret	=Vector3.Zero;
+
+			string	[]elements	=vstring.Split(' ');
+			
+			Mathery.TryParse(elements[0], out ret.X);
+			Mathery.TryParse(elements[1], out ret.Y);
+			Mathery.TryParse(elements[2], out ret.Z);
+
+			return	ret;
+		}
+
+
+		public static Vector4 StringToVector4(string vstring)
+		{
+			Vector4	ret	=Vector4.Zero;
+
+			string	[]elements	=vstring.Split(' ');
+			
+			Mathery.TryParse(elements[0], out ret.X);
+			Mathery.TryParse(elements[1], out ret.Y);
+			Mathery.TryParse(elements[2], out ret.Z);
+			Mathery.TryParse(elements[3], out ret.W);
+
+			return	ret;
+		}
+
+
 		public static string VectorToString(Vector3 vec)
 		{
 			return	vec.X.ToString(System.Globalization.CultureInfo.InvariantCulture)

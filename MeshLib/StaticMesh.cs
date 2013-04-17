@@ -53,8 +53,6 @@ namespace MeshLib
 			{
 				bw.Write(idxs[i]);
 			}
-
-			UtilityLib.FileUtil.WriteVertexDeclaration(bw, mVD);
 		}
 
 
@@ -94,8 +92,6 @@ namespace MeshLib
 				mIndexs	=new IndexBuffer(gd, IndexElementSize.SixteenBits, numIdx, BufferUsage.WriteOnly);
 			}
 			mIndexs.SetData<ushort>(idxs);
-
-			UtilityLib.FileUtil.ReadVertexDeclaration(br, out mVD);
 
 			mVBinding[0]	=new VertexBufferBinding(mVerts);
 		}

@@ -37,6 +37,16 @@ namespace BSPCore
 			bw.Write(mLType3);
 		}
 
+		public void WriteDebug(BinaryWriter bw, GFXTexInfo tex)
+		{
+			bw.Write(mFirstVert);
+			bw.Write(mNumVerts);
+			bw.Write(mPlaneNum);
+			bw.Write(mbFlipSide);
+			bw.Write(tex.mFlags);
+			bw.Write(tex.mMaterial);
+		}
+
 		public void Read(BinaryReader br)
 		{
 			mFirstVert	=br.ReadInt32();

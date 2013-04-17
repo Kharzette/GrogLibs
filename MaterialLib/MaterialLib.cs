@@ -816,6 +816,58 @@ namespace MaterialLib
 		}
 
 
+		public void SetTriLightValues(Dictionary<string, Material.TriLight> originalValues,
+			Vector4 lightColor, Vector3 lightDir)
+		{
+			foreach(KeyValuePair<string, Material.TriLight> matTri in originalValues)
+			{
+				Material	mat	=mMats[matTri.Key];
+
+				Material.TriLight	tri	=matTri.Value;
+
+				tri.mColor0	*=lightColor;
+				tri.mColor1	*=lightColor;
+				tri.mColor2	*=lightColor;
+
+				tri.mColor0.W	=1f;
+				tri.mColor1.W	=1f;
+				tri.mColor2.W	=1f;
+
+				mat.SetTriLightValues(tri, lightDir);
+			}
+		}
+		
+
+		public Dictionary<string, Material.TriLight> GetOriginalTriLights()
+		{
+			Dictionary<string, Material.TriLight>	ret	=new Dictionary<string, Material.TriLight>();
+
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				Material.TriLight	tri;
+
+				if(mat.Value.GetTriLight(out tri))
+				{
+					ret.Add(mat.Key, tri);
+				}
+			}
+			return	ret;
+		}
+
+
+		public void DrawMap(string map, SpriteBatch sb)
+		{
+			if(!mMaps.ContainsKey(map))
+			{
+				return;
+			}
+
+			sb.Begin();
+			sb.Draw(mMaps[map], Vector2.One * 10.0f, Color.White);
+			sb.End();
+		}
+
+
 		public void RefreshShaderParameters()
 		{
 			foreach(KeyValuePair<string, Material> mat in mMats)
@@ -871,19 +923,6 @@ namespace MaterialLib
 			mStateBlockPool.PurgeBlendStates(bss);
 			mStateBlockPool.PurgeDepthStates(dss);
 			mStateBlockPool.PurgeRasterStates(rss);
-		}
-
-
-		public void DrawMap(string map, SpriteBatch sb)
-		{
-			if(!mMaps.ContainsKey(map))
-			{
-				return;
-			}
-
-			sb.Begin();
-			sb.Draw(mMaps[map], Vector2.One * 10.0f, Color.White);
-			sb.End();
 		}
 
 

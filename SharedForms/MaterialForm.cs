@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MeshLib;
+using UtilityLib;
 
 
 namespace SharedForms
@@ -34,6 +35,7 @@ namespace SharedForms
 		public event EventHandler	eLibraryCleared;
 		public event EventHandler	eNukedMeshPart;
 		public event EventHandler	eLibrarySaved;
+		public event EventHandler	eStripElements;
 
 		//column indexes for special behavior
 		int	mShaderColumn;
@@ -323,6 +325,12 @@ namespace SharedForms
 		}
 
 
+		public void EnableMeshPartGrid()
+		{
+			MeshPartGrid.Enabled	=true;
+		}
+
+
 		public void UpdateMaterials()
 		{
 			mMatModel	=new MaterialGridModel(mMatLib.GetMaterials());
@@ -569,7 +577,7 @@ namespace SharedForms
 
 			mMatLib.SaveToFile(mSFD.FileName);
 
-			UtilityLib.Misc.SafeInvoke(eLibrarySaved, mSFD.FileName);
+			Misc.SafeInvoke(eLibrarySaved, mSFD.FileName);
 		}
 
 
@@ -588,10 +596,7 @@ namespace SharedForms
 			mMatLib.ReadFromFile(mOFD.FileName, true, mGD);
 
 			//notify anyone interested
-			if(eLibraryCleared != null)
-			{
-				eLibraryCleared(null, null);
-			}
+			Misc.SafeInvoke(eLibraryCleared, null);
 
 			UpdateMaterials();
 
@@ -618,10 +623,7 @@ namespace SharedForms
 
 			mMatLib.NukeMaterial(mat.Name);
 
-			if(eMaterialNuked != null)
-			{
-				eMaterialNuked(mat.Name, null);
-			}
+			Misc.SafeInvoke(eMaterialNuked, mat.Name);
 		}
 
 
@@ -736,6 +738,26 @@ namespace SharedForms
 					}
 				}
 			}
+		}
+
+
+		void OnStripElements(object sender, EventArgs e)
+		{
+			if(MeshPartGrid.SelectedRows.Count == 0)
+			{
+				return;
+			}
+
+			MeshPartGrid.Enabled	=false;
+
+			List<Mesh>	parts	=new List<Mesh>();
+
+			foreach(DataGridViewRow dgvr in MeshPartGrid.SelectedRows)
+			{
+				parts.Add(dgvr.DataBoundItem as Mesh);
+			}
+
+			Misc.SafeInvoke(eStripElements, parts);
 		}
 	}
 }

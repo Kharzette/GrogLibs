@@ -6,12 +6,18 @@ using System.ComponentModel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using UtilityLib;
 
 
 namespace MaterialLib
 {
 	public class Material
 	{
+		public struct TriLight
+		{
+			internal Vector4	mColor0, mColor1, mColor2;
+		}
+
 		string	mShaderName;	//name of the shader
 		string	mName;			//name of the overall material
 		string	mTechnique;		//technique to use with this material
@@ -46,17 +52,17 @@ namespace MaterialLib
 		public string Name
 		{
 			get { return mName; }
-			set { mName = UtilityLib.Misc.AssignValue(value); }
+			set { mName = Misc.AssignValue(value); }
 		}
 		public string ShaderName
 		{
 			get { return mShaderName; }
-			set { mShaderName = UtilityLib.Misc.AssignValue(value); }
+			set { mShaderName = Misc.AssignValue(value); }
 		}
 		public string Technique
 		{
 			get { return mTechnique; }
-			set { mTechnique = UtilityLib.Misc.AssignValue(value); }
+			set { mTechnique = Misc.AssignValue(value); }
 		}
 #if !XBOX
 		public BindingList<ShaderParameters> Parameters
@@ -202,6 +208,72 @@ namespace MaterialLib
 		}
 
 
+		internal bool GetTriLight(out TriLight tri)
+		{
+			bool	bZero	=false;
+			bool	bOne	=false;
+			bool	bTwo	=false;
+
+			tri.mColor0	=Vector4.Zero;
+			tri.mColor1	=Vector4.Zero;
+			tri.mColor2	=Vector4.Zero;
+
+			foreach(ShaderParameters sp in mParameters)
+			{
+				if(sp.Class != EffectParameterClass.Vector)
+				{
+					continue;
+				}
+
+				if(sp.Name == "mLightColor0")
+				{
+					tri.mColor0	=Misc.StringToVector4(sp.Value);
+					bZero		=true;
+				}
+				else if(sp.Name == "mLightColor1")
+				{
+					tri.mColor1	=Misc.StringToVector4(sp.Value);
+					bOne		=true;
+				}
+				else if(sp.Name == "mLightColor2")
+				{
+					tri.mColor2	=Misc.StringToVector4(sp.Value);
+					bTwo		=true;
+				}
+			}
+			return	(bZero && bOne && bTwo);
+		}
+
+
+		internal void SetTriLightValues(TriLight tri, Vector3 lightDir)
+		{
+			foreach(ShaderParameters sp in mParameters)
+			{
+				if(sp.Class != EffectParameterClass.Vector)
+				{
+					continue;
+				}
+
+				if(sp.Name == "mLightColor0")
+				{
+					sp.Value	=Misc.VectorToString(tri.mColor0);
+				}
+				else if(sp.Name == "mLightColor1")
+				{
+					sp.Value	=Misc.VectorToString(tri.mColor1);
+				}
+				else if(sp.Name == "mLightColor2")
+				{
+					sp.Value	=Misc.VectorToString(tri.mColor2);
+				}
+				else if(sp.Name == "mLightDirection")
+				{
+					sp.Value	=Misc.VectorToString(lightDir);
+				}
+			}
+		}
+
+
 		internal void StripTextureExtensions()
 		{
 			foreach(ShaderParameters sp in mParameters)
@@ -210,7 +282,7 @@ namespace MaterialLib
 				{
 					if(sp.Value != null && sp.Value != "")
 					{
-						sp.Value	=UtilityLib.FileUtil.StripExtension(sp.Value);
+						sp.Value	=FileUtil.StripExtension(sp.Value);
 					}
 				}
 			}
@@ -395,17 +467,17 @@ namespace MaterialLib
 						{
 							Vector2	vec	=ep.GetValueVector2();
 
-							sp.Value	=UtilityLib.Misc.VectorToString(vec);
+							sp.Value	=Misc.VectorToString(vec);
 						}
 						else if(ep.ColumnCount == 3)
 						{
 							Vector3	vec	=ep.GetValueVector3();
-							sp.Value	=UtilityLib.Misc.VectorToString(vec);
+							sp.Value	=Misc.VectorToString(vec);
 						}
 						else
 						{
 							Vector4	vec	=ep.GetValueVector4();
-							sp.Value	=UtilityLib.Misc.VectorToString(vec);
+							sp.Value	=Misc.VectorToString(vec);
 						}
 						break;
 				}

@@ -45,11 +45,12 @@
 			this.MeshPartGrid = new System.Windows.Forms.DataGridView();
 			this.ApplyMaterial = new System.Windows.Forms.Button();
 			this.MeshPartGroup = new System.Windows.Forms.GroupBox();
+			this.Match = new System.Windows.Forms.Button();
 			this.label1 = new System.Windows.Forms.Label();
 			this.TexCoordSet = new System.Windows.Forms.NumericUpDown();
 			this.GenBiNormalTangent = new System.Windows.Forms.Button();
 			this.mTips = new System.Windows.Forms.ToolTip(this.components);
-			this.Match = new System.Windows.Forms.Button();
+			this.StripElements = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialProperties)).BeginInit();
 			this.FileGroup.SuspendLayout();
@@ -249,6 +250,7 @@
 			// MeshPartGroup
 			// 
 			this.MeshPartGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.MeshPartGroup.Controls.Add(this.StripElements);
 			this.MeshPartGroup.Controls.Add(this.Match);
 			this.MeshPartGroup.Controls.Add(this.label1);
 			this.MeshPartGroup.Controls.Add(this.TexCoordSet);
@@ -260,6 +262,16 @@
 			this.MeshPartGroup.TabIndex = 21;
 			this.MeshPartGroup.TabStop = false;
 			this.MeshPartGroup.Text = "Mesh Part";
+			// 
+			// Match
+			// 
+			this.Match.Location = new System.Drawing.Point(281, 19);
+			this.Match.Name = "Match";
+			this.Match.Size = new System.Drawing.Size(106, 29);
+			this.Match.TabIndex = 23;
+			this.Match.Text = "Match And Visible";
+			this.Match.UseVisualStyleBackColor = true;
+			this.Match.Click += new System.EventHandler(this.OnMatch);
 			// 
 			// label1
 			// 
@@ -294,15 +306,15 @@
 			this.GenBiNormalTangent.UseVisualStyleBackColor = true;
 			this.GenBiNormalTangent.Click += new System.EventHandler(this.OnGenBiNormalTangent);
 			// 
-			// Match
+			// StripElements
 			// 
-			this.Match.Location = new System.Drawing.Point(281, 19);
-			this.Match.Name = "Match";
-			this.Match.Size = new System.Drawing.Size(106, 29);
-			this.Match.TabIndex = 23;
-			this.Match.Text = "Match And Visible";
-			this.Match.UseVisualStyleBackColor = true;
-			this.Match.Click += new System.EventHandler(this.OnMatch);
+			this.StripElements.Location = new System.Drawing.Point(394, 19);
+			this.StripElements.Name = "StripElements";
+			this.StripElements.Size = new System.Drawing.Size(111, 29);
+			this.StripElements.TabIndex = 24;
+			this.StripElements.Text = "Strip Elements";
+			this.StripElements.UseVisualStyleBackColor = true;
+			this.StripElements.Click += new System.EventHandler(this.OnStripElements);
 			// 
 			// MaterialForm
 			// 
@@ -358,5 +370,6 @@
 		private System.Windows.Forms.ToolTip mTips;
 		private System.Windows.Forms.Button MergeMaterialLib;
 		private System.Windows.Forms.Button Match;
+		private System.Windows.Forms.Button StripElements;
 	}
 }

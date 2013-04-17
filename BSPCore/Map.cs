@@ -679,7 +679,16 @@ namespace BSPCore
 			if(bDebug)
 			{
 				UtilityLib.FileUtil.WriteArray(bw, mGFXLeafFaces);	//for debuggery, not used normally
-				UtilityLib.FileUtil.WriteArray(mGFXFaces, bw);		//for debuggery
+
+				//write debugfaces
+				bw.Write(mGFXFaces.Length);
+				foreach(GFXFace f in mGFXFaces)
+				{
+					GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
+
+					f.WriteDebug(bw, tex);
+				}
+
 				UtilityLib.FileUtil.WriteArray(bw, mGFXVerts);
 				UtilityLib.FileUtil.WriteArray(bw, mGFXVertIndexes);
 			}
