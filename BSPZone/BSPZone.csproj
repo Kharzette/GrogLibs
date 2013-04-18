@@ -81,13 +81,13 @@
     <Compile Include="AudioHelper.cs" />
     <Compile Include="Contents.cs" />
     <Compile Include="DebugFace.cs" />
-    <Compile Include="IntermissionHelper.cs" />
-    <Compile Include="LightHelper.cs" />
+    <Compile Include="Helpers\IntermissionHelper.cs" />
+    <Compile Include="Helpers\LightHelper.cs" />
+    <Compile Include="Helpers\ParticleHelper.cs" />
+    <Compile Include="Helpers\StaticHelper.cs" />
+    <Compile Include="Helpers\TriggerHelper.cs" />
     <Compile Include="Mobile.cs" />
-    <Compile Include="ParticleHelper.cs" />
     <Compile Include="Pushable.cs" />
-    <Compile Include="StaticHelper.cs" />
-    <Compile Include="TriggerHelper.cs" />
     <Compile Include="ZoneEntityStuff.cs" />
     <Compile Include="ZoneLeafSide.cs" />
     <Compile Include="VisArea.cs" />
@@ -154,6 +154,7 @@
       <Name>UtilityLib</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\Microsoft.Xna.GameStudio.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
