@@ -97,7 +97,8 @@ namespace MeshLib
 		}
 
 
-		public override void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib, Matrix world)
+		public override void Draw(GraphicsDevice g,
+			MaterialLib.MaterialLib matLib, Matrix world, string altMaterial)
 		{
 			if(!mbVisible)
 			{
@@ -119,7 +120,15 @@ namespace MeshLib
 			g.SetVertexBuffer(mVerts);
 			g.Indices			=mIndexs;
 
-			matLib.ApplyParameters(mMaterialName);
+			if(altMaterial == "")
+			{
+				matLib.ApplyParameters(mMaterialName);
+			}
+			else
+			{
+				matLib.ApplyParameters(altMaterial);
+			}
+
 			mat.ApplyRenderStates(g);
 
 			fx.Parameters["mWorld"].SetValue(mTransform * world);

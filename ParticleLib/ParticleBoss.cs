@@ -63,7 +63,7 @@ namespace ParticleLib
 		public int CreateEmitter(string texName, Vector4 color, bool bCell,
 			Emitter.Shapes shape, float shapeSize,
 			int maxParticles, Vector3 pos,
-			int gravYaw, int gravPitch, int gravRoll, float gravStr,
+			int gravYaw, int gravPitch, float gravStr,
 			float startSize, float startAlpha, float emitMS,
 			float rotVelMin, float rotVelMax, float velMin,
 			float velMax, float sizeVelMin, float sizeVelMax,
@@ -77,7 +77,7 @@ namespace ParticleLib
 
 			Emitter	newEmitter	=new Emitter(
 				maxParticles, shape, shapeSize, pos,
-				gravYaw, gravPitch, gravRoll, gravStr,
+				gravYaw, gravPitch, gravStr,
 				startSize, startAlpha, emitMS,
 				rotVelMin, rotVelMax, velMin, velMax,
 				sizeVelMin, sizeVelMax, alphaVelMin, alphaVelMax,

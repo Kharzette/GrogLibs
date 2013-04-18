@@ -35,7 +35,7 @@ namespace ParticleLib
 		public float	mSizeVelocityMin, mSizeVelocityMax;
 		public float	mAlphaVelocityMin, mAlphaVelocityMax;
 		public int		mLifeMin, mLifeMax;
-		public int		mGravityYaw, mGravityPitch, mGravityRoll;
+		public int		mGravityYaw, mGravityPitch;
 		public float	mGravityStrength;
 		Vector3			mGravity;
 
@@ -51,7 +51,7 @@ namespace ParticleLib
 
 
 		public Emitter(int maxParticles, Shapes shape, float shapeSize,
-			Vector3 pos, int gy, int gp, int gr, float gs,
+			Vector3 pos, int gy, int gp, float gs,
 			float startSize, float startAlpha, float emitMS,
 			float rotVelMin, float rotVelMax, float velMin,
 			float velMax, float sizeVelMin, float sizeVelMax,
@@ -63,7 +63,6 @@ namespace ParticleLib
 			mPosition				=pos;
 			mGravityYaw				=gy;
 			mGravityPitch			=gp;
-			mGravityRoll			=gr;
 			mGravityStrength		=gs;
 			mStartSize				=startSize;
 			mStartAlpha				=startAlpha;
@@ -215,20 +214,19 @@ namespace ParticleLib
 		{
 			float	yaw		=mGravityYaw;
 			float	pitch	=mGravityPitch;
-			float	roll	=mGravityRoll;
 			float	str		=mGravityStrength;
 
 			Mathery.WrapAngleDegrees(ref yaw);
 			Mathery.WrapAngleDegrees(ref pitch);
-			Mathery.WrapAngleDegrees(ref roll);
 
 			yaw		=MathHelper.ToRadians(yaw);
 			pitch	=MathHelper.ToRadians(pitch);
-			roll	=MathHelper.ToRadians(roll);
 
-			Matrix	gravMat	=Matrix.CreateFromYawPitchRoll(yaw, pitch, roll);
 
-			mGravity	=Vector3.TransformNormal(Vector3.UnitX, gravMat);
+			Matrix	gravMat	=Matrix.CreateRotationX(pitch);
+			gravMat			*=Matrix.CreateRotationY(yaw);
+
+			mGravity	=Vector3.TransformNormal(Vector3.UnitZ, gravMat);
 			mGravity	*=str;
 		}
 
@@ -241,7 +239,6 @@ namespace ParticleLib
 			ParticleBoss.AddField(ref entity, "shape_size", "" + Misc.FloatToString(mShapeSize, 1));
 			ParticleBoss.AddField(ref entity, "grav_yaw", "" + mGravityYaw);
 			ParticleBoss.AddField(ref entity, "grav_pitch", "" + mGravityPitch);
-			ParticleBoss.AddField(ref entity, "grav_roll", "" + mGravityRoll);
 			ParticleBoss.AddField(ref entity, "grav_strength", "" + Misc.FloatToString(mGravityStrength, 3));
 			ParticleBoss.AddField(ref entity, "start_size", "" + Misc.FloatToString(mStartSize, 1));
 			ParticleBoss.AddField(ref entity, "start_alpha", "" + Misc.FloatToString(mStartAlpha, 2));

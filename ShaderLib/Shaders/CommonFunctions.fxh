@@ -11,6 +11,7 @@
 shared float4x4	mWorld;
 shared float4x4 mView;
 shared float4x4 mProjection;
+shared float4x4	mLightViewProj;	//for shadowing
 shared float3	mEyePos;
 
 //nearby dynamic lights?
@@ -21,6 +22,9 @@ shared float		mLightFalloffRange;	//under this light at full strength
 
 //outline / cell related
 shared Texture	mCellTable;
+
+//for shadowmaps
+shared Texture	mShadowTexture;
 
 //sky gradient
 shared float3	mSkyGradient0;	//horizon colour
@@ -46,6 +50,15 @@ sampler CellSampler = sampler_state
 	AddressW	=Clamp;
 };
 
+sampler	ShadowSampler	=sampler_state
+{
+	Texture	=(mShadowTexture);
+	MinFilter	=Point;
+	MagFilter	=Point;
+	MipFilter	=Point;
+	AddressU	=Clamp;
+	AddressV	=Clamp;
+};
 
 //does the math to get a normal from a sampled
 //normal map to a proper normal useful for lighting
@@ -230,7 +243,6 @@ float3 CalcCellColor(float3 colVal)
 	return	tex3D(CellSampler, colVal);
 }
 
-
 float3 CalcSkyColorGradient(float3 worldPos)
 {
 	float3	upVec	=float3(0.0f, 1.0f, 0.0f);
@@ -243,5 +255,33 @@ float3 CalcSkyColorGradient(float3 worldPos)
 	float	skyDot	=abs(dot(skyVec, upVec));
 
 	return	lerp(mSkyGradient0, mSkyGradient1, skyDot);
+}
+
+float3 ComputeShadowCoord(float4 worldPos)
+{
+	float3	shadCoord;
+
+	//powerup near shadow calculation
+	float4	lightPos	=mul(worldPos, mLightViewProj);
+
+	//texCoord xy, world depth in z
+	shadCoord.xy	=0.5f * lightPos.xy / lightPos.w + float2(0.5f, 0.5f);
+	shadCoord.z		=saturate((lightPos.z / lightPos.w) - 0.00001f);
+
+	//flip y
+	shadCoord.y	=1.0f - shadCoord.y;
+
+	return	shadCoord;
+}
+
+float3 ApplyShadow(float3 shadCoord, float3 texLitColor)
+{
+	float	depth0	=tex2D(ShadowSampler, shadCoord).r;
+
+	if(depth0 < shadCoord.z)
+	{
+		texLitColor	*=0.2f;
+	}
+	return	texLitColor;
 }
 #endif	//_COMMONFUNCTIONSFXH

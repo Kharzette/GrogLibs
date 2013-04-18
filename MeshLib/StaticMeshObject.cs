@@ -162,7 +162,7 @@ namespace MeshLib
 				{
 					continue;
 				}
-				m.Draw(gd, mMatLib, mTransform);
+				m.Draw(gd, mMatLib, mTransform, "");
 			}
 		}
 
@@ -203,11 +203,7 @@ namespace MeshLib
 					continue;
 				}
 
-				string	temp	=m.MaterialName;
-
-				m.MaterialName	=altMatName;
-				m.Draw(gd, mMatLib, mTransform);
-				m.MaterialName	=temp;
+				m.Draw(gd, mMatLib, mTransform, altMatName);
 			}
 		}
 

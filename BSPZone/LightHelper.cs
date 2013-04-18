@@ -50,6 +50,12 @@ namespace BSPZone
 		}
 
 
+		public bool NeedsShadow()
+		{
+			return	!(mBestLight == null && mBestLightMover.Done());
+		}
+
+
 		//TODO: mover3 might cause nans if lerping between
 		//opposite axiseesseseseeseses, use quat slerp?
 		public void Update(int msDelta, Vector3 pos)

@@ -28,7 +28,6 @@ VPosTex04Tex14Tex24 LMVertexShader(VPosNormTex04 input)
 	output.TexCoord0.xy	=input.TexCoord0.xy / mTexSize;
 	output.TexCoord0.zw	=input.TexCoord0.zw;
 	output.TexCoord1	=worldPosition;
-	output.TexCoord1.w	=1.0f;	//no alpha
 	output.TexCoord2	=float4(input.Normal, 0);
 	output.Position		=mul(mul(worldPosition, mView), mProjection);
 	
@@ -251,6 +250,10 @@ float4 LMPixelShader(VTex04Tex14Tex24 input) : COLOR0
 		}
 	}
 
+	//shadow map
+	float3	shadCoord	=ComputeShadowCoord(input.TexCoord1);
+	color.xyz			=ApplyShadow(shadCoord, color.xyz);
+
 	//Apply lighting.
 	color	*=lm;
 	color	=saturate(color);
@@ -292,6 +295,10 @@ float4 LMCellPixelShader(VTex04Tex14Tex24 input) : COLOR0
 			lm	+=(ndl * mLight0Color);
 		}
 	}
+
+	//shadow map
+	float3	shadCoord	=ComputeShadowCoord(input.TexCoord1);
+	color.xyz			=ApplyShadow(shadCoord, color.xyz);
 
 	color.rgb	*=lm;
 
@@ -349,6 +356,10 @@ float4 VLitPixelShader(VTex04Tex14Tex24 input) : COLOR0
 			inColor	+=(ndl * mLight0Color);
 		}
 	}
+
+	//shadow map
+//	float3	shadCoord	=ComputeShadowCoord(worldPos);
+//	color.xyz			=ApplyShadow(shadCoord, color.xyz);
 
 	color	*=inColor;
 	color	=saturate(color);
@@ -455,6 +466,10 @@ float4 VLitCellPS(VTex04Tex14Tex24 input) : COLOR0
 		}
 	}
 
+	//shadow map
+//	float3	shadCoord	=ComputeShadowCoord(worldPos);
+//	color.xyz			=ApplyShadow(shadCoord, color.xyz);
+
 	color.rgb	*=inColor;
 
 	//do the Cell thing
@@ -490,11 +505,22 @@ float4 YRangePixelShader(VTex0Tex1Single input) : COLOR0
 
 float4 FullBrightPixelShader(VTex0 input) : COLOR0
 {
+	float4	color;
+
 	if(mbTextureEnabled)
 	{
-		return	tex2D(TextureSampler, input.TexCoord0);
+		color	=tex2D(TextureSampler, input.TexCoord0);
 	}
-	return	float4(1, 1, 1, 1);
+	else
+	{
+		color	=float4(1, 1, 1, 1);
+	}
+
+	//shadow map
+//	float3	shadCoord	=ComputeShadowCoord(input.TexCoord1.xyz);
+//	color.xyz			=ApplyShadow(shadCoord, color.xyz);
+
+	return	color;
 }
 
 
@@ -620,6 +646,10 @@ float4 LMAnimPixelShader(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 		}
 	}
 	
+	//shadow map
+	float3	shadCoord	=ComputeShadowCoord(input.TexCoord4);
+	color.xyz			=ApplyShadow(shadCoord, color.xyz);
+
 	//Apply lighting.
 	color	*=lm;
 	color	=saturate(color);
@@ -681,6 +711,10 @@ float4 LMAnimCellPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 			lm	+=(ndl * mLight0Color);
 		}
 	}
+
+	//shadow map
+	float3	shadCoord	=ComputeShadowCoord(input.TexCoord4);
+	color.xyz			=ApplyShadow(shadCoord, color.xyz);
 
 	color.rgb	*=lm;
 

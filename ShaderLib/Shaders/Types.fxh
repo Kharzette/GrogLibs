@@ -38,6 +38,13 @@ struct VPosCol0
 	float4	Color		: COLOR0;	
 };
 
+struct VPosBone
+{
+	float4	Position	: POSITION;
+	float4	Blend0		: BLENDINDICES0;
+	float4	Weight0		: BLENDWEIGHT0;
+};
+
 struct VPosTex0Col0
 {
 	float4	Position	: POSITION;

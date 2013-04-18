@@ -176,6 +176,22 @@ VPosTex03Tex13 TriSolidSkinVS(VPosNormBone input)
 	return	ComputeSkinWorld(input, mBones, mBindPose);
 }
 
+VPosTex0Single ShadowSkinVS(VPosBone input)
+{
+	float4	vertPos	=mul(input.Position, mBindPose);
+
+	float4x4	skinTransform	=GetSkinXForm(input.Blend0, input.Weight0, mBones);
+
+	vertPos	=mul(vertPos, skinTransform);
+
+	VPosTex0Single	output;
+
+	output.Position		=mul(vertPos, mul(mWorld, mLightViewProj));
+	output.TexCoord0	=output.Position.z / output.Position.w;
+
+	return	output;
+}
+
 VPosTex04Tex14Tex24 TriColorSkinVS(VPosNormBoneCol0 input)
 {
 	VPosNormBone	inSkin;
@@ -512,6 +528,11 @@ float4 Tex0Tex1Col0DecalPS(VTex0Tex1Col0 input) : COLOR
 	return	texLitColor;
 }
 
+float4 ShadowPS(VTex0Single input) : COLOR
+{
+	return	float4(input.TexCoord0, 0, 0, 0);
+}
+
 
 technique TriTex0
 {     
@@ -654,5 +675,14 @@ technique TriSkinDecalTex0Tex1
 	{
 		VertexShader	=compile vs_2_0 TriSkinTex0Tex1VS();
 		PixelShader		=compile ps_2_0 Tex0Tex1Col0DecalPS();
+	}
+}
+
+technique ShadowSkin
+{
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 ShadowSkinVS();
+		PixelShader		=compile ps_2_0 ShadowPS();
 	}
 }

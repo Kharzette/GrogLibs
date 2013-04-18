@@ -64,6 +64,17 @@ namespace BSPZone
 		}
 
 
+		public BoundingBox GetTransformedBound()
+		{
+			BoundingBox	ret	=mBox;
+
+			ret.Min	+=mPosition;
+			ret.Max	+=mPosition;
+
+			return	ret;
+		}
+
+
 		public void Jump()
 		{
 			if(mbOnGround)

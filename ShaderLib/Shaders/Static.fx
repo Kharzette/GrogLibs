@@ -4,7 +4,6 @@ texture	mTexture;
 texture	mNMap;
 
 shared float3	mLightDirection;
-shared float4x4	mLightViewProj;	//for shadowing
 
 float	mGlow;			//glow fakery
 float4	mSolidColour;	//for non textured

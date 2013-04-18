@@ -36,7 +36,7 @@ namespace BSPZone
 				Vector3	col, pos;
 				bool	bCell, bOn;
 				int		shapeIdx, maxParticles;
-				float	gravYaw, gravPitch, gravRoll, shapeSize;
+				float	gravYaw, gravPitch, shapeSize;
 				float	gravStr, startSize, startAlpha, emitMS;
 				float	velMin, velMax;
 				float	sizeVelMin, sizeVelMax, spinVelMin, spinVelMax;
@@ -62,7 +62,6 @@ namespace BSPZone
 				Mathery.TryParse(ze.GetValue("shape_size"), out shapeSize);
 				Mathery.TryParse(ze.GetValue("grav_yaw"), out gravYaw);
 				Mathery.TryParse(ze.GetValue("grav_pitch"), out gravPitch);
-				Mathery.TryParse(ze.GetValue("grav_roll"), out gravRoll);
 				Mathery.TryParse(ze.GetValue("grav_strength"), out gravStr);
 				Mathery.TryParse(ze.GetValue("start_size"), out startSize);
 				Mathery.TryParse(ze.GetValue("start_alpha"), out startAlpha);
@@ -87,7 +86,6 @@ namespace BSPZone
 
 				Mathery.WrapAngleDegrees(ref gravYaw);
 				Mathery.WrapAngleDegrees(ref gravPitch);
-				Mathery.WrapAngleDegrees(ref gravRoll);
 
 				if(shapeIdx >= 0 && shapeIdx < shapeVals.Length)
 				{
@@ -113,7 +111,7 @@ namespace BSPZone
 				int	idx	=mPB.CreateEmitter(
 					texPrefix + ze.GetValue("tex_name"),
 					color, bCell, shape, shapeSize, maxParticles,
-					pos, (int)gravYaw, (int)gravPitch, (int)gravRoll, gravStr,
+					pos, (int)gravYaw, (int)gravPitch, gravStr,
 					startSize, startAlpha, emitMS, spinVelMin, spinVelMax,
 					velMin, velMax, sizeVelMin, sizeVelMax,
 					alphaVelMin, alphaVelMax, (int)lifeMin, (int)lifeMax);

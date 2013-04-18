@@ -306,7 +306,20 @@ namespace MeshLib
 				{
 					continue;
 				}
-				m.Draw(gd, mMatLib, mTransform);
+				m.Draw(gd, mMatLib, mTransform, "");
+			}
+		}
+
+
+		public void Draw(GraphicsDevice gd, string altMaterial)
+		{
+			foreach(SkinnedMesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+				m.Draw(gd, mMatLib, mTransform, altMaterial);
 			}
 		}
 	}
