@@ -81,7 +81,9 @@
     <Compile Include="Contents.cs" />
     <Compile Include="DebugFace.cs" />
     <Compile Include="Helpers\AudioHelper.cs" />
+    <Compile Include="Helpers\DoorHelper.cs" />
     <Compile Include="Helpers\IntermissionHelper.cs" />
+    <Compile Include="Helpers\LiftHelper.cs" />
     <Compile Include="Helpers\LightHelper.cs" />
     <Compile Include="Helpers\ParticleHelper.cs" />
     <Compile Include="Helpers\StaticHelper.cs" />
