@@ -888,6 +888,7 @@ namespace BSPCore
 				}
 			}
 
+			//sunlight pass
 			for(int v=0;v < facePoints.Length;v++)
 			{
 				Int32	nodeLandedIn	=FindNodeLandedIn(0, facePoints[v]);
@@ -948,6 +949,31 @@ namespace BSPCore
 							}
 						}
 					}
+				}
+			}
+
+			//normal light pass
+			for(int v=0;v < facePoints.Length;v++)
+			{
+				Int32	nodeLandedIn	=FindNodeLandedIn(0, facePoints[v]);
+				Int32	leaf			=-(nodeLandedIn + 1);
+
+				if(leaf < 0 || leaf >= mGFXLeafs.Length)
+				{
+					CoreEvents.Print("ApplyLightsToFace:  Invalid leaf num.\n");
+					return	false;
+				}
+
+				Int32	clust	=mGFXLeafs[leaf].mCluster;
+				if(clust < 0)
+				{
+					continue;
+				}
+
+				if(clust >= mGFXClusters.Length)
+				{
+					CoreEvents.Print("*WARNING* ApplyLightsToFace:  Invalid cluster num.\n");
+					continue;
 				}
 
 				for(int c=0;c < mGFXClusters.Length;c++)
@@ -1080,6 +1106,7 @@ namespace BSPCore
 				}
 			}
 
+			//sunlight pass
 			for(int v=0;v < facePoints.Length;v++)
 			{
 				Int32	nodeLandedIn	=FindNodeLandedIn(0, facePoints[v]);
@@ -1129,7 +1156,11 @@ namespace BSPCore
 						}
 					}
 				}
+			}
 
+			//normal light pass
+			for(int v=0;v < facePoints.Length;v++)
+			{
 				foreach(DirectLight dLight in mDirectLights)
 				{
 					if(dLight.mType == DirectLight.DLight_Sun)
