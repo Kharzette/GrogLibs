@@ -505,6 +505,7 @@ namespace MaterialLib
 
 		public void GuessTextures()
 		{
+			//match by name
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
 				if(mat.Value.GetParameterValue("mTexture") != "")
@@ -529,6 +530,30 @@ namespace MaterialLib
 						break;
 					}
 				}
+			}
+
+			if(mCubes.Count <= 0)
+			{
+				return;
+			}
+
+			string	firstCube	="";
+			foreach(KeyValuePair<string, TextureCube> cube in mCubes)
+			{
+				firstCube	=cube.Key;
+				break;
+			}
+
+			//look for sky materials
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				if(!mat.Key.EndsWith("*Sky"))
+				{
+					continue;
+				}
+
+				mat.Value.SetParameter("mTexture", firstCube);
+				mat.Value.SetTextureParameterToCube("mTexture");
 			}
 		}
 

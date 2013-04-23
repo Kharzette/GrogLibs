@@ -23,7 +23,7 @@ namespace BSPZone
 			internal float		mMoveInterval;
 			internal float		mEaseIn, mEaseOut;
 
-			internal SoundEffectInstance	mSoundInstance;
+			internal SoundEffectInstance	mSoundOpen, mSoundClose;
 
 			internal AudioEmitter	mEmitter;
 
@@ -33,13 +33,12 @@ namespace BSPZone
 			{
 				mbOpening	=!mbOpening;
 
-				if(mSoundInstance != null)
-				{
-					mSoundInstance.Play();
-				}
-
 				if(mbOpening)
 				{
+					if(mSoundOpen != null)
+					{
+						mSoundOpen.Play();
+					}
 					if(mMover.Done())
 					{
 						mMover.SetUpMove(mOrigin, mOrigin + mMoveAxis * mMoveAmount,
@@ -53,6 +52,10 @@ namespace BSPZone
 				}
 				else
 				{
+					if(mSoundClose != null)
+					{
+						mSoundClose.Play();
+					}
 					if(mMover.Done())
 					{
 						mMover.SetUpMove(mOrigin + mMoveAxis * mMoveAmount,
@@ -80,10 +83,8 @@ namespace BSPZone
 
 				mEmitter.Position	=mMover.GetPos() * Audio.InchWorldScale;
 
-				if(mSoundInstance != null)
-				{
-					mSoundInstance.Apply3D(lis, mEmitter);
-				}
+				Apply3DToSound(mSoundOpen, lis, mEmitter);
+				Apply3DToSound(mSoundClose, lis, mEmitter);
 			}
 		}
 		
@@ -98,7 +99,8 @@ namespace BSPZone
 			internal float		mEaseIn1, mEaseOut1;
 			internal float		mEaseIn2, mEaseOut2;
 
-			internal SoundEffectInstance	mSoundInstance;
+			internal SoundEffectInstance	mOpen1Sound, mOpen2Sound;
+			internal SoundEffectInstance	mClose1Sound, mClose2Sound;
 
 			internal AudioEmitter	mEmitter;
 
@@ -108,15 +110,11 @@ namespace BSPZone
 			{
 				mbOpening	=!mbOpening;
 
-				if(mSoundInstance != null)
-				{
-					mSoundInstance.Play();
-				}
-
 				if(mbOpening)
 				{
 					if(mbStageTwo)
 					{
+						PlaySound(mOpen2Sound);
 						Vector3	stageOneEnd	=mOrigin + mMoveAxis1 * mMoveAmount1;
 						if(mMover.Done())
 						{
@@ -133,6 +131,7 @@ namespace BSPZone
 					}
 					else
 					{
+						PlaySound(mOpen1Sound);
 						if(mMover.Done())
 						{
 							mMover.SetUpMove(mOrigin, mOrigin + mMoveAxis1 * mMoveAmount1,
@@ -149,6 +148,7 @@ namespace BSPZone
 				{
 					if(mbStageTwo)
 					{
+						PlaySound(mClose2Sound);
 						Vector3	stageOneEnd	=mOrigin + mMoveAxis1 * mMoveAmount1;
 						if(mMover.Done())
 						{
@@ -163,6 +163,7 @@ namespace BSPZone
 					}
 					else
 					{
+						PlaySound(mClose1Sound);
 						if(mMover.Done())
 						{
 							mMover.SetUpMove(mOrigin + mMoveAxis1 * mMoveAmount1,
@@ -178,6 +179,15 @@ namespace BSPZone
 			}
 
 
+			void PlaySound(SoundEffectInstance sei)
+			{
+				if(sei != null)
+				{
+					sei.Play();
+				}
+			}
+
+
 			internal void Update(int msDelta, Zone z, AudioListener lis)
 			{
 				if(mMover.Done())
@@ -186,6 +196,7 @@ namespace BSPZone
 					{
 						if(!mbStageTwo)
 						{
+							PlaySound(mOpen2Sound);
 							mbStageTwo			=true;
 							Vector3	stageOneEnd	=mOrigin + mMoveAxis1 * mMoveAmount1;
 							mMover.SetUpMove(stageOneEnd,
@@ -197,6 +208,7 @@ namespace BSPZone
 					{
 						if(mbStageTwo)
 						{
+							PlaySound(mClose1Sound);
 							mbStageTwo			=false;
 							Vector3	stageOneEnd	=mOrigin + mMoveAxis1 * mMoveAmount1;
 							mMover.SetUpMove(stageOneEnd, mOrigin,
@@ -212,10 +224,10 @@ namespace BSPZone
 
 				mEmitter.Position	=mMover.GetPos() * Audio.InchWorldScale;
 
-				if(mSoundInstance != null)
-				{
-					mSoundInstance.Apply3D(lis, mEmitter);
-				}
+				Apply3DToSound(mOpen1Sound, lis, mEmitter);
+				Apply3DToSound(mOpen2Sound, lis, mEmitter);
+				Apply3DToSound(mClose1Sound, lis, mEmitter);
+				Apply3DToSound(mClose2Sound, lis, mEmitter);
 			}
 		}
 
@@ -245,18 +257,38 @@ namespace BSPZone
 				ze.GetInt("Model", out model);
 				ze.GetVectorNoConversion("ModelOrigin", out org);
 
-				SingleStageModel	d			=new SingleStageModel();
-				d.mModelIndex		=model;
-				d.mOrigin			=org;
-				d.mEmitter			=new AudioEmitter();
-				d.mSoundInstance	=aud.GetInstance("DoorMove", false);
+				SingleStageModel	d	=new SingleStageModel();
+				d.mModelIndex			=model;
+				d.mOrigin				=org;
+				d.mEmitter				=new AudioEmitter();
+
+				string	dopen	=ze.GetValue("open_sound");
+				string	dclose	=ze.GetValue("close_sound");
+				string	praise	=ze.GetValue("raise_sound");
+				string	plower	=ze.GetValue("lower_sound");
+
+				if(dopen != "")
+				{
+					d.mSoundOpen	=aud.GetInstance(dopen, false);
+				}
+				else
+				{
+					d.mSoundOpen	=aud.GetInstance(praise, false);
+				}
+
+				if(dclose != "")
+				{
+					d.mSoundClose	=aud.GetInstance(dclose, false);
+				}
+				else
+				{
+					d.mSoundClose	=aud.GetInstance(plower, false);
+				}
 
 				d.mEmitter.Position	=org;
 
-				if(d.mSoundInstance != null)
-				{
-					d.mSoundInstance.Apply3D(lis, d.mEmitter);
-				}
+				Apply3DToSound(d.mSoundOpen, lis, d.mEmitter);
+				Apply3DToSound(d.mSoundClose, lis, d.mEmitter);
 
 				ze.GetFloat("move_amount", out d.mMoveAmount);
 				ze.GetFloat("move_interval", out d.mMoveInterval);
@@ -277,18 +309,26 @@ namespace BSPZone
 				ze.GetInt("Model", out model);
 				ze.GetVectorNoConversion("ModelOrigin", out org);
 
-				DoubleStageModel	d			=new DoubleStageModel();
-				d.mModelIndex		=model;
-				d.mOrigin			=org;
-				d.mEmitter			=new AudioEmitter();
-				d.mSoundInstance	=aud.GetInstance("DoorMove", false);
+				DoubleStageModel	d	=new DoubleStageModel();
+				d.mModelIndex			=model;
+				d.mOrigin				=org;
+				d.mEmitter				=new AudioEmitter();
+				d.mEmitter.Position		=org;
 
-				d.mEmitter.Position	=org;
+				string	fopen	=ze.GetValue("first_open_sound");
+				string	fclose	=ze.GetValue("first_close_sound");
+				string	sopen	=ze.GetValue("second_open_sound");
+				string	sclose	=ze.GetValue("second_close_sound");
 
-				if(d.mSoundInstance != null)
-				{
-					d.mSoundInstance.Apply3D(lis, d.mEmitter);
-				}
+				d.mOpen1Sound	=aud.GetInstance(fopen, false);
+				d.mClose1Sound	=aud.GetInstance(fclose, false);
+				d.mOpen2Sound	=aud.GetInstance(sopen, false);
+				d.mClose2Sound	=aud.GetInstance(sclose, false);
+
+				Apply3DToSound(d.mOpen1Sound, lis, d.mEmitter);
+				Apply3DToSound(d.mClose1Sound, lis, d.mEmitter);
+				Apply3DToSound(d.mOpen2Sound, lis, d.mEmitter);
+				Apply3DToSound(d.mClose2Sound, lis, d.mEmitter);
 
 				ze.GetFloat("move_amount_1", out d.mMoveAmount1);
 				ze.GetFloat("move_interval_1", out d.mMoveInterval1);
@@ -333,6 +373,16 @@ namespace BSPZone
 			}
 
 			mSSMs[modelIndex].Fire();
+		}
+
+
+		internal static void Apply3DToSound(SoundEffectInstance sei,
+			AudioListener al, AudioEmitter em)
+		{
+			if(sei != null)
+			{
+				sei.Apply3D(al, em);
+			}
 		}
 	}
 }

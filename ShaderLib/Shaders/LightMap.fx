@@ -53,9 +53,9 @@ VPosTex04Tex14Tex24 LMAlphaVertexShader(VPosNormTex04Col0 input)
 }
 
 
-VPosTex04Tex14Tex24 VLitVertexShader(VPosNormTex0Col0 input)
+VPosTex04Tex14Tex24Tex31 VLitVertexShader(VPosNormTex0Col0 input)
 {
-	VPosTex04Tex14Tex24	output;
+	VPosTex04Tex14Tex24Tex31	output;
 
 	float4	worldPosition	=mul(input.Position, mWorld);
 
@@ -65,13 +65,14 @@ VPosTex04Tex14Tex24 VLitVertexShader(VPosNormTex0Col0 input)
 	output.TexCoord0.z	=worldPosition.x;
 	output.TexCoord0.w	=worldPosition.y;
 	output.TexCoord1.x	=worldPosition.z;
-	output.TexCoord1.y	=input.Normal.x;
-	output.TexCoord1.z	=input.Normal.y;
-	output.TexCoord1.w	=input.Normal.z;
-	output.TexCoord2.x	=input.Color.x;
-	output.TexCoord2.y	=input.Color.y;
-	output.TexCoord2.z	=input.Color.z;
-	output.TexCoord2.w	=input.Color.w;
+	output.TexCoord1.y	=worldPosition.w;
+	output.TexCoord1.z	=input.Normal.x;
+	output.TexCoord1.w	=input.Normal.y;
+	output.TexCoord2.x	=input.Normal.z;
+	output.TexCoord2.y	=input.Color.x;
+	output.TexCoord2.z	=input.Color.y;
+	output.TexCoord2.w	=input.Color.z;
+	output.TexCoord3.x	=input.Color.w;
 	
 	return	output;
 }
@@ -109,14 +110,15 @@ VPosTex0Tex1Single YRangeVertexShader(VPosNormTex0Col0 input)
 }
 
 
-VPosTex0 FullBrightVertexShader(VPosTex0 input)
+VPosTex0Tex14 FullBrightVertexShader(VPosTex0 input)
 {
-	VPosTex0	output;
+	VPosTex0Tex14	output;
 
 	float4	worldPosition	=mul(input.Position, mWorld);
 
 	output.Position		=mul(mul(worldPosition, mView), mProjection);
 	output.TexCoord0	=input.TexCoord0 / mTexSize;
+	output.TexCoord1	=worldPosition;
 
 	return	output;
 }
@@ -250,11 +252,8 @@ float4 LMPixelShader(VTex04Tex14Tex24 input) : COLOR0
 		}
 	}
 
-	//shadow map
-	float3	shadCoord	=ComputeShadowCoord(input.TexCoord1);
-	color.xyz			=ApplyShadow(shadCoord, color.xyz);
+	color.xyz	=ShadowColor(mbDirectional, input.TexCoord1, color.xyz);
 
-	//Apply lighting.
 	color	*=lm;
 	color	=saturate(color);
 
@@ -280,25 +279,7 @@ float4 LMCellPixelShader(VTex04Tex14Tex24 input) : COLOR0
 	
 	float3	lm	=tex2D(LightMapSampler, input.TexCoord0.zw);
 
-	float	dist	=distance(input.TexCoord1.xyz, mLight0Position);
-	if(dist < mLightRange)
-	{
-		float3	lightDir	=normalize(mLight0Position - input.TexCoord1.xyz);
-		float	ndl			=dot(input.TexCoord2, lightDir);
-
-		if(ndl > 0)
-		{
-			if(dist > mLightFalloffRange)
-			{
-				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
-			}
-			lm	+=(ndl * mLight0Color);
-		}
-	}
-
-	//shadow map
-	float3	shadCoord	=ComputeShadowCoord(input.TexCoord1);
-	color.xyz			=ApplyShadow(shadCoord, color.xyz);
+	lm	=ShadowColor(mbDirectional, input.TexCoord1, lm);
 
 	color.rgb	*=lm;
 
@@ -312,7 +293,7 @@ float4 LMCellPixelShader(VTex04Tex14Tex24 input) : COLOR0
 }
 
 
-float4 VLitPixelShader(VTex04Tex14Tex24 input) : COLOR0
+float4 VLitPixelShader(VTex04Tex14Tex24Tex31 input) : COLOR0
 {
 	float3	color;	
 	float2	tex0;
@@ -329,37 +310,24 @@ float4 VLitPixelShader(VTex04Tex14Tex24 input) : COLOR0
 		color	=float3(1.0, 1.0, 1.0);
 	}
 
-	float3	worldPos;
+	float4	worldPos;
 	worldPos.x	=input.TexCoord0.z;
 	worldPos.y	=input.TexCoord0.w;
 	worldPos.z	=input.TexCoord1.x;
+	worldPos.w	=input.TexCoord1.y;
 
 	float3	norm;
-	norm.x		=input.TexCoord1.y;
-	norm.y		=input.TexCoord1.z;
-	norm.z		=input.TexCoord1.w;
+	norm.x		=input.TexCoord1.z;
+	norm.y		=input.TexCoord1.w;
+	norm.z		=input.TexCoord2.x;
 
-	float3	inColor	=input.TexCoord2;
+	float3	inColor;
+	inColor.x	=input.TexCoord2.y;
+	inColor.y	=input.TexCoord2.z;
+	inColor.z	=input.TexCoord2.w;
 	
-	float	dist	=distance(worldPos, mLight0Position);
-	if(dist < mLightRange)
-	{
-		float3	lightDir	=normalize(mLight0Position - worldPos);
-		float	ndl			=dot(norm, lightDir);
-
-		if(ndl > 0)
-		{
-			if(dist > mLightFalloffRange)
-			{
-				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
-			}
-			inColor	+=(ndl * mLight0Color);
-		}
-	}
-
 	//shadow map
-//	float3	shadCoord	=ComputeShadowCoord(worldPos);
-//	color.xyz			=ApplyShadow(shadCoord, color.xyz);
+	inColor.xyz	=ShadowColor(mbDirectional, worldPos, inColor.xyz);
 
 	color	*=inColor;
 	color	=saturate(color);
@@ -367,7 +335,7 @@ float4 VLitPixelShader(VTex04Tex14Tex24 input) : COLOR0
 	//back to srgb
 	color	=pow(color, 1 / 2.2);
 
-	return	float4(color, input.TexCoord2.w);
+	return	float4(color, input.TexCoord3.x);
 }
 
 
@@ -392,22 +360,6 @@ float4 MirrorPixelShader(VTex04Tex14Tex24Tex34 input) : COLOR0
 	float3	norm		=input.TexCoord2.xyz;
 	float4	vertColor	=input.TexCoord3;
 	
-	float	dist	=distance(worldPos, mLight0Position);
-	if(dist < mLightRange)
-	{
-		float3	lightDir	=normalize(mLight0Position - worldPos);
-		float	ndl			=dot(norm, lightDir);
-
-		if(ndl > 0)
-		{
-			if(dist > mLightFalloffRange)
-			{
-				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
-			}
-			vertColor.xyz	+=(ndl * mLight0Color);
-		}
-	}
-
 	texColor	*=vertColor;
 
 	//alpha mix with mirror
@@ -421,9 +373,9 @@ float4 MirrorPixelShader(VTex04Tex14Tex24Tex34 input) : COLOR0
 }
 
 
-float4 VLitCellPS(VTex04Tex14Tex24 input) : COLOR0
+float4 VLitCellPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 {
-	float3	color;	
+	float3	color;
 	float2	tex0;
 
 	tex0.x	=input.TexCoord0.x;
@@ -438,37 +390,24 @@ float4 VLitCellPS(VTex04Tex14Tex24 input) : COLOR0
 		color	=float3(1.0, 1.0, 1.0);
 	}
 
-	float3	worldPos;
+	float4	worldPos;
 	worldPos.x	=input.TexCoord0.z;
 	worldPos.y	=input.TexCoord0.w;
 	worldPos.z	=input.TexCoord1.x;
+	worldPos.w	=input.TexCoord1.y;
 
 	float3	norm;
-	norm.x		=input.TexCoord1.y;
-	norm.y		=input.TexCoord1.z;
-	norm.z		=input.TexCoord1.w;
+	norm.x		=input.TexCoord1.z;
+	norm.y		=input.TexCoord1.w;
+	norm.z		=input.TexCoord2.x;
 
-	float3	inColor	=input.TexCoord2;
+	float3	inColor;
+	inColor.x	=input.TexCoord2.y;
+	inColor.y	=input.TexCoord2.z;
+	inColor.z	=input.TexCoord2.w;
 	
-	float	dist	=distance(worldPos, mLight0Position);
-	if(dist < mLightRange)
-	{
-		float3	lightDir	=normalize(mLight0Position - worldPos);
-		float	ndl			=dot(norm, lightDir);
-
-		if(ndl > 0)
-		{
-			if(dist > mLightFalloffRange)
-			{
-				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
-			}
-			inColor	+=(ndl * mLight0Color);
-		}
-	}
-
 	//shadow map
-//	float3	shadCoord	=ComputeShadowCoord(worldPos);
-//	color.xyz			=ApplyShadow(shadCoord, color.xyz);
+	inColor.xyz	=ShadowColor(mbDirectional, worldPos, inColor.xyz);
 
 	color.rgb	*=inColor;
 
@@ -478,7 +417,7 @@ float4 VLitCellPS(VTex04Tex14Tex24 input) : COLOR0
 	//back to srgb
 	color	=pow(abs(color), 1 / 2.2);
 
-	return	float4(color, input.TexCoord2.w);
+	return	float4(color, input.TexCoord3.x);
 }
 
 
@@ -503,7 +442,7 @@ float4 YRangePixelShader(VTex0Tex1Single input) : COLOR0
 }
 
 
-float4 FullBrightPixelShader(VTex0 input) : COLOR0
+float4 FullBrightPixelShader(VTex0Tex14 input) : COLOR0
 {
 	float4	color;
 
@@ -517,8 +456,7 @@ float4 FullBrightPixelShader(VTex0 input) : COLOR0
 	}
 
 	//shadow map
-//	float3	shadCoord	=ComputeShadowCoord(input.TexCoord1.xyz);
-//	color.xyz			=ApplyShadow(shadCoord, color.xyz);
+	color.xyz	=ShadowColor(mbDirectional, input.TexCoord1, color.xyz);
 
 	return	color;
 }
@@ -630,25 +568,8 @@ float4 LMAnimPixelShader(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 		lm	+=(input.TexCoord5.w * tex2D(LightMapSampler, input.TexCoord2.xy));
 	}
 
-	float	dist	=distance(worldPos, mLight0Position);
-	if(dist < mLightRange)
-	{
-		float3	lightDir	=normalize(mLight0Position - worldPos);
-		float	ndl			=dot(norm, lightDir);
-
-		if(ndl > 0)
-		{
-			if(dist > mLightFalloffRange)
-			{
-				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
-			}
-			lm	+=(ndl * mLight0Color);
-		}
-	}
-	
 	//shadow map
-	float3	shadCoord	=ComputeShadowCoord(input.TexCoord4);
-	color.xyz			=ApplyShadow(shadCoord, color.xyz);
+	color.xyz	=ShadowColor(mbDirectional, input.TexCoord4, color.xyz);
 
 	//Apply lighting.
 	color	*=lm;
@@ -698,25 +619,8 @@ float4 LMAnimCellPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 		lm	+=(input.TexCoord5.w * tex2D(LightMapSampler, input.TexCoord2.xy));
 	}
 
-	float	dist	=distance(worldPos, mLight0Position);
-	if(dist < mLightRange)
-	{
-		float3	lightDir	=normalize(mLight0Position - worldPos);
-		float	ndl			=dot(norm, lightDir);
-
-		if(ndl > 0)
-		{
-			if(dist > mLightFalloffRange)
-			{
-				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
-			}
-			lm	+=(ndl * mLight0Color);
-		}
-	}
-
 	//shadow map
-	float3	shadCoord	=ComputeShadowCoord(input.TexCoord4);
-	color.xyz			=ApplyShadow(shadCoord, color.xyz);
+	color.xyz	=ShadowColor(mbDirectional, input.TexCoord4, color.xyz);
 
 	color.rgb	*=lm;
 

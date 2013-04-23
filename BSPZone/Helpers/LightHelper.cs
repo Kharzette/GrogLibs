@@ -43,10 +43,24 @@ namespace BSPZone
 		}
 
 
-		public void GetCurrentValues(out Vector4 color0, out Vector3 lightDir)
+		public void GetCurrentValues(out Vector4 color0,
+			out Vector3 lightPos,
+			out Vector3 lightDir,
+			out bool bDirectional)
 		{
-			color0		=mLightColor;
-			lightDir	=mCurLightDir;
+			color0			=mLightColor;
+			lightDir		=mCurLightDir;
+
+			if(mBestLight != null)
+			{
+				bDirectional	=mBestLight.mbSun;
+				lightPos		=mBestLight.mPosition;
+			}
+			else
+			{
+				bDirectional	=true;
+				lightPos		=Vector3.Zero;
+			}
 		}
 
 

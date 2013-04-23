@@ -6,7 +6,6 @@
 #define	MAX_BONES		50
 #define	PI_OVER_FOUR	0.7853981634f
 #define	PI_OVER_TWO		1.5707963268f
-#define SHADBIAS		0.0001f
 
 //matrii
 shared float4x4	mWorld;
@@ -26,6 +25,8 @@ shared Texture	mCellTable;
 
 //for shadowmaps
 shared Texture	mShadowTexture;
+shared float3	mShadowLightPos;
+shared bool		mbDirectional;
 
 //sky gradient
 shared float3	mSkyGradient0;	//horizon colour
@@ -49,7 +50,7 @@ sampler CellSampler = sampler_state
 	AddressU	=Clamp;
 };
 
-sampler	ShadowSampler	=sampler_state
+sampler	ShadowSampler2D	=sampler_state
 {
 	Texture	=(mShadowTexture);
 	MinFilter	=Point;
@@ -57,6 +58,17 @@ sampler	ShadowSampler	=sampler_state
 	MipFilter	=Point;
 	AddressU	=Clamp;
 	AddressV	=Clamp;
+};
+
+sampler	ShadowSampler3D	=sampler_state
+{
+	Texture	=(mShadowTexture);
+	MinFilter	=Point;
+	MagFilter	=Point;
+	MipFilter	=Point;
+	AddressU	=Clamp;
+	AddressV	=Clamp;
+	AddressW	=Clamp;
 };
 
 //does the math to get a normal from a sampled
@@ -279,14 +291,40 @@ float3 ComputeShadowCoord(float4 worldPos)
 	return	shadCoord;
 }
 
-float3 ApplyShadow(float3 shadCoord, float3 texLitColor)
+float3 ApplyShadow2D(float3 shadCoord, float3 texLitColor)
 {
-	float	depth0	=tex2D(ShadowSampler, shadCoord).r;
+	float	depth0	=tex2D(ShadowSampler2D, shadCoord).r;
 
 	if(depth0 < shadCoord.z)
 	{
 		texLitColor	*=0.2f;
 	}
 	return	texLitColor;
+}
+
+float3 ApplyShadow3D(float3 shadDir, float depth, float3 texLitColor)
+{
+	float	depth0	=texCUBE(ShadowSampler3D, shadDir).r;
+
+	if(depth0 < (depth - 0.00001f))
+	{
+		texLitColor	*=0.2f;
+	}
+	return	texLitColor;
+}
+
+float3	ShadowColor(bool bDirectional, float4 worldPos, float3 color)
+{
+	if(bDirectional)
+	{
+		float3	shadCoord	=ComputeShadowCoord(worldPos);
+		color				=ApplyShadow2D(shadCoord, color.xyz);
+	}
+	else
+	{
+		float3	shadDir	=normalize(worldPos.xyz - mShadowLightPos);
+		color			=ApplyShadow3D(shadDir, worldPos.w, color.xyz);
+	}
+	return	color;
 }
 #endif	//_COMMONFUNCTIONSFXH
