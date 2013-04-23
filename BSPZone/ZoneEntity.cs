@@ -126,6 +126,48 @@ namespace BSPZone
 		}
 
 
+		public bool GetDirectionFromAngles(string key, out Vector3 dir)
+		{
+			Matrix	orient;
+			if(GetMatrixFromAngles(key, out orient))
+			{
+				dir		=orient.Forward;
+				return	true;
+			}
+			dir		=Vector3.Zero;
+			return	false;
+		}
+
+
+		public bool GetMatrixFromAngles(string key, out Matrix orientation)
+		{
+			Vector3	orient;
+			float	yaw		=0f;
+			float	pitch	=0f;
+			float	roll	=0f;
+			if(GetVectorNoConversion(key, out orient))
+			{
+				//coordinate system goblinry
+				yaw		=(int)orient.Y + 90;
+				pitch	=(int)-orient.X;
+				roll	=(int)orient.Z;
+			}
+			else
+			{
+				orientation	=Matrix.Identity;
+				return		false;
+			}
+
+			yaw		=MathHelper.ToRadians(yaw);
+			pitch	=MathHelper.ToRadians(pitch);
+			roll	=MathHelper.ToRadians(roll);
+
+			orientation	=Matrix.CreateFromYawPitchRoll(yaw, pitch, roll);
+
+			return	true;
+		}
+
+
 		public bool GetVector(string key, out Vector3 org)
 		{
 			if(GetVectorNoConversion(key, out org))

@@ -322,5 +322,11 @@ namespace MeshLib
 				m.Draw(gd, mMatLib, mTransform, altMaterial);
 			}
 		}
+
+
+		public Vector3 GetForwardVector()
+		{
+			return	mTransform.Forward;
+		}
 	}
 }

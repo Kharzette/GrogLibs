@@ -263,6 +263,14 @@ QQRKSRC1
         func_door:b =
         {
           ;desc = "The standard entity for doors."
+          move_angles = "-90 0 0"
+          move_amount = "128"
+          move_interval = "1"
+          ease_in = ".1"
+          ease_out = ".1"
+          open_sound = ""
+          close_sound = ""
+          targetname = ""
           poly:p =
           {
             east:f =
@@ -307,6 +315,13 @@ QQRKSRC1
         func_plat:b =
         {
           ;desc = "This is used for platforms or elevators."
+          move_angles = "90 0 0"
+          move_amount = "128"
+          move_interval = "3"
+          ease_in = ".3"
+          ease_out = ".3"
+          raise_sound = ""
+          lower_sound = ""
           poly:p =
           {
             east:f =
@@ -348,6 +363,21 @@ QQRKSRC1
         {
           ;desc = "Make a wall appear or dissappear by connecting a func_butto"
            "n to this."
+          move_angles_1 = "-90 0 0"
+          move_angles_2 = "0 0 0"
+          move_amount_1 = "128"
+          move_amount_2 = "128"
+          move_interval_1 = "2"
+          move_interval_2 = "3"
+          ease_in_1 = ".1"
+          ease_out_1 = ".4"
+          ease_in_2 = ".3"
+          ease_out_2 = ".3"
+          first_open_sound = ""
+          second_open_sound = ""
+          first_close_sound = ""
+          second_close_sound = ""
+          targetname = ""
           poly:p =
           {
             east:f =
@@ -595,19 +625,52 @@ QQRKSRC1
     }
     func_door:form =
     {
-      Help = "The standard entity for doors.."
-      health: =
+      Help = "A newly created Entity type."
+      bbox = '-16 -16 -16 16 16 16'
+      ;desc: =
       {
         Txt = "&"
-        Hint = "When greater than zero, makes the func_door shootable, and spe"
-         "cifies hit points required before activating.(Default=0)."
+        Hint = "The standard entity for doors."
+      }
+      move_angles: =
+      {
+        Txt = "&"
+        Hint = "The axis of movement for the door"
+      }
+      move_amount: =
+      {
+        Txt = "&"
+        Hint = "Amount to travel along move_angles direction"
+      }
+      move_interval: =
+      {
+        Txt = "&"
+        Hint = "Amount of time in seconds to move"
+      }
+      ease_in: =
+      {
+        Txt = "&"
+        Hint = "Amount of ease for beginning movement"
+      }
+      ease_out: =
+      {
+        Txt = "&"
+        Hint = "Amount of ease for ending movement"
+      }
+      open_sound: =
+      {
+        Txt = "&"
+        Hint = "Sound to play when opening"
+      }
+      close_sound: =
+      {
+        Txt = "&"
+        Hint = "Sound to play when closing"
       }
       targetname: =
       {
         Txt = "&"
-        Hint = "Name of the specific func_door."$0D"A func_door with a targetn"
-         "ame cannot be opened without another"$0D"triggering entity which tar"
-         "gets it, but it can be shot (if health>0)."
+        Hint = "Name of this entity for targeting by others"
       }
     }
     func_group:form =
@@ -616,20 +679,133 @@ QQRKSRC1
     }
     func_plat:form =
     {
-      Help = "Platform"
-      targetname: =
+      Help = "A newly created Entity type."
+      bbox = '-16 -16 -16 16 16 16'
+      ;desc: =
       {
         Txt = "&"
-        Hint = "target name of the platform"
+        Hint = "This is used for platforms or elevators."
+      }
+      move_angles: =
+      {
+        Txt = "&"
+        Hint = "The axis of movement for the platform"
+      }
+      move_amount: =
+      {
+        Txt = "&"
+        Hint = "Amount to travel along move_angles direction"
+      }
+      move_interval: =
+      {
+        Txt = "&"
+        Hint = "Amount of time in seconds to move"
+      }
+      ease_in: =
+      {
+        Txt = "&"
+        Hint = "Amount of ease for beginning movement"
+      }
+      ease_out: =
+      {
+        Txt = "&"
+        Hint = "Amount of ease for ending movement"
+      }
+      raise_sound: =
+      {
+        Txt = "&"
+        Hint = "Sound to play when raising"
+      }
+      lower_sound: =
+      {
+        Txt = "&"
+        Hint = "Sound to play when lowering"
       }
     }
     func_wall:form =
     {
-      Help = "This is func_wall brush model."
+      Help = "A newly created Entity type."
+      bbox = '-16 -16 -16 16 16 16'
+      ;desc: =
+      {
+        Txt = "&"
+        Hint = "Make a wall appear or dissappear by connecting a func_button t"
+         "o this."
+      }
+      move_angles_1: =
+      {
+        Txt = "&"
+        Hint = "The axis of movement for the wall's first stage"
+      }
+      move_angles_2: =
+      {
+        Txt = "&"
+        Hint = "The axis of movement for the wall's second stage"
+      }
+      move_amount_1: =
+      {
+        Txt = "&"
+        Hint = "Amount to travel along move_angles direction"
+      }
+      move_amount_2: =
+      {
+        Txt = "&"
+        Hint = "Amount to travel along move_angles direction"
+      }
+      move_interval_1: =
+      {
+        Txt = "&"
+        Hint = "Amount of time in seconds to move"
+      }
+      move_interval_2: =
+      {
+        Txt = "&"
+        Hint = "Amount of time in seconds to move"
+      }
+      ease_in_1: =
+      {
+        Txt = "&"
+        Hint = "Amount of ease for beginning movement"
+      }
+      ease_out_1: =
+      {
+        Txt = "&"
+        Hint = "Amount of ease for beginning movement"
+      }
+      ease_in_2: =
+      {
+        Txt = "&"
+        Hint = "Amount of ease for ending movement"
+      }
+      ease_out_2: =
+      {
+        Txt = "&"
+        Hint = "Amount of ease for ending movement"
+      }
       targetname: =
       {
         Txt = "&"
-        Hint = "Name of the specific func_wall"
+        Hint = "Name of this entity for targeting by others"
+      }
+      first_open_sound: =
+      {
+        Txt = "&"
+        Hint = "Sound to play when first opening"
+      }
+      first_close_sound: =
+      {
+        Txt = "&"
+        Hint = "First Sound to play when closing"
+      }
+      second_open_sound: =
+      {
+        Txt = "&"
+        Hint = "Second sound to play when opening"
+      }
+      second_close_sound: =
+      {
+        Txt = "&"
+        Hint = "Second sound to play when closing"
       }
     }
     item_whatever:form =

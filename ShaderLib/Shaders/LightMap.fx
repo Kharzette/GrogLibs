@@ -666,7 +666,9 @@ float4 LMAnimCellPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	float3	color;
 	if(mbTextureEnabled)
 	{
-		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
+		//don't have enough instructions for the abs
+//		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
+		color	=pow(tex2D(TextureSampler, input.TexCoord0.xy), 2.2);
 	}
 	else
 	{
@@ -722,7 +724,8 @@ float4 LMAnimCellPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	color.rgb	=CalcCellColor(color.rgb);
 
 	//back to srgb
-	color	=pow(abs(color), 1 / 2.2);
+//	color	=pow(abs(color), 1 / 2.2);
+	color	=pow(color, 1 / 2.2);
 
 	return	float4(color, input.TexCoord2.z);
 }

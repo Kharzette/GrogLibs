@@ -51,13 +51,6 @@ namespace BSPZone
 				pitch	=(int)orient.X;
 				roll	=(int)orient.Z;
 			}
-			else if(ze.GetVectorNoConversion("mangles", out orient))
-			{
-				//coordinate system goblinry
-				yaw		=(int)-orient.Y - 90;
-				pitch	=(int)orient.X;
-				roll	=(int)orient.Z;
-			}
 		}
 	}
 }

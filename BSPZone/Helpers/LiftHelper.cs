@@ -18,6 +18,10 @@ namespace BSPZone
 			internal int		mModelIndex;
 			internal Vector3	mOrigin;
 			internal bool		mbOpening;
+			internal Vector3	mMoveAxis;
+			internal float		mMoveAmount;
+			internal float		mMoveInterval;
+			internal float		mEaseIn, mEaseOut;
 
 			internal SoundEffectInstance	mSoundInstance;
 
@@ -41,22 +45,26 @@ namespace BSPZone
 				{
 					if(mMover.Done())
 					{
-						mMover.SetUpMove(mOrigin, mOrigin - Vector3.UnitY * 272f, TravelTime, 0.2f, 0.2f);
+						mMover.SetUpMove(mOrigin, mOrigin + mMoveAxis * mMoveAmount,
+							mMoveInterval, mEaseIn, mEaseOut);
 					}
 					else
 					{
-						mMover.SetUpMove(mMover.GetPos(), mOrigin - Vector3.UnitY * 272f, TravelTime, 0.2f, 0.2f);
+						mMover.SetUpMove(mMover.GetPos(), mOrigin + mMoveAxis * mMoveAmount,
+							mMoveInterval, mEaseIn, mEaseOut);
 					}
 				}
 				else
 				{
 					if(mMover.Done())
 					{
-						mMover.SetUpMove(mOrigin - Vector3.UnitY * 272f, mOrigin, TravelTime, 0.2f, 0.2f);
+						mMover.SetUpMove(mOrigin + mMoveAxis * mMoveAmount,
+							mOrigin, mMoveInterval, mEaseIn, mEaseOut);
 					}
 					else
 					{
-						mMover.SetUpMove(mMover.GetPos(), mOrigin, TravelTime, 0.2f, 0.2f);
+						mMover.SetUpMove(mMover.GetPos(), mOrigin,
+							mMoveInterval, mEaseIn, mEaseOut);
 					}
 				}
 			}
@@ -112,6 +120,12 @@ namespace BSPZone
 				{
 					d.mSoundInstance.Apply3D(lis, d.mEmitter);
 				}
+
+				ze.GetFloat("move_amount", out d.mMoveAmount);
+				ze.GetFloat("move_interval", out d.mMoveInterval);
+				ze.GetFloat("ease_in", out d.mEaseIn);
+				ze.GetFloat("ease_out", out d.mEaseOut);
+				ze.GetDirectionFromAngles("move_angles", out d.mMoveAxis);
 
 				mLifts.Add(model, d);
 			}

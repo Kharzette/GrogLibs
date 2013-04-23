@@ -53,3 +53,5 @@ Known Issues:
 	Interpenetrating alpha surfaces donut sort properly
 	Mirrors probably won't work on moving models (TODO: test!)
 	If geometry is moved in quark, texture alignment will be off
+	Sunlight doesn't work with "Build as Model"
+	Switchable lights don't work after an update entities

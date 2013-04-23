@@ -11,11 +11,11 @@ namespace MaterialLib
 	{
 		//cell shading lookup textures
 		//allows for four different types of shading
-		Texture3D	[]mCellTex;
+		Texture2D	[]mCellTex;
 
 		//constants for a world preset
 		//looks good with bsp lightmapped levels
-		const int	WorldLookupSize	=20;
+		const int	WorldLookupSize	=16;
 		const float	WorldThreshold0	=0.6f;
 		const float	WorldThreshold1	=0.4f;
 		const float	WorldThreshold2	=0.25f;
@@ -28,7 +28,7 @@ namespace MaterialLib
 
 		//constants for a character preset
 		//looks good for anime style characters
-		const int	CharacterLookupSize	=20;
+		const int	CharacterLookupSize	=16;
 		const float	CharacterThreshold0	=0.6f;
 		const float	CharacterThreshold1	=0.4f;
 		const float	CharacterLevel0		=1.0f;
@@ -38,7 +38,7 @@ namespace MaterialLib
 
 		public void InitCellShading(int numShadingVariations)
 		{
-			mCellTex	=new Texture3D[numShadingVariations];
+			mCellTex	=new Texture2D[numShadingVariations];
 		}
 
 
@@ -61,7 +61,7 @@ namespace MaterialLib
 		{
 			float	[]thresholds;
 			float	[]levels;
-			int		size	=20;
+			int		size;
 
 			if(bCharacter)
 			{
@@ -73,6 +73,7 @@ namespace MaterialLib
 				levels[0]		=CharacterLevel0;
 				levels[1]		=CharacterLevel1;
 				levels[2]		=CharacterLevel2;
+				size			=CharacterLookupSize;
 			}
 			else
 			{
@@ -89,6 +90,7 @@ namespace MaterialLib
 				levels[2]		=WorldLevel2;
 				levels[3]		=WorldLevel3;
 				levels[4]		=WorldLevel4;
+				size			=WorldLookupSize;
 			}
 
 			GenerateCellTexture(gd, index, size, thresholds, levels);
@@ -105,33 +107,24 @@ namespace MaterialLib
 				return;	//need to init with a size first
 			}
 
-			mCellTex[index]	=new Texture3D(gd, size,
+			mCellTex[index]	=new Texture2D(gd,
 				size, size, false, SurfaceFormat.Color);
 
-			Color	[]data	=new Color[size * size * size];
+			Color	[]data	=new Color[size * size];
 
-			float	csize	=size;
+			float	csize	=size * size;
 
-			for(int z=0;z < size;z++)
+			for(int x=0;x < (size * size);x++)
 			{
-				for(int y=0;y < size;y++)
-				{
-					for(int x=0;x < size;x++)
-					{
-						float	xPercent	=(float)x / csize;
-						float	yPercent	=(float)y / csize;
-						float	zPercent	=(float)z / csize;
+				float	xPercent	=(float)x / csize;
 
-						Vector3	color	=Vector3.Zero;
+				Vector3	color	=Vector3.Zero;
 
-						color.X	=CellMe(xPercent, thresholds, levels);
-						color.Y	=CellMe(yPercent, thresholds, levels);
-						color.Z	=CellMe(zPercent, thresholds, levels);
+				color.X	=CellMe(xPercent, thresholds, levels);
+				color.Y	=color.X;
+				color.Z	=color.X;
 
-						data[x + (y * size) + (z * size * size)]
-							=new Color(color);
-					}
-				}
+				data[x]	=new Color(color);
 			}
 
 			mCellTex[index].SetData<Color>(data);

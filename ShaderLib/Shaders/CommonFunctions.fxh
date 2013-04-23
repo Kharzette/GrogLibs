@@ -6,6 +6,7 @@
 #define	MAX_BONES		50
 #define	PI_OVER_FOUR	0.7853981634f
 #define	PI_OVER_TWO		1.5707963268f
+#define SHADBIAS		0.0001f
 
 //matrii
 shared float4x4	mWorld;
@@ -46,8 +47,6 @@ sampler CellSampler = sampler_state
 	MipFilter	=Point;
 
 	AddressU	=Clamp;
-	AddressV	=Clamp;
-	AddressW	=Clamp;
 };
 
 sampler	ShadowSampler	=sampler_state
@@ -240,7 +239,13 @@ float3 ComputeGoodSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 li
 //snaps a color to a cellish range
 float3 CalcCellColor(float3 colVal)
 {
-	return	tex3D(CellSampler, colVal);
+	float3	ret;
+
+	ret.x	=tex1D(CellSampler, colVal.x);
+	ret.y	=tex1D(CellSampler, colVal.y);
+	ret.z	=tex1D(CellSampler, colVal.z);
+
+	return	ret;
 }
 
 float3 CalcSkyColorGradient(float3 worldPos)
