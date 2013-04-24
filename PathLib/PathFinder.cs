@@ -15,7 +15,7 @@ namespace PathLib
 
 		bool	mbDone;
 
-		public List<ConvexPoly.Edge>	mResultPathEdges	=new List<ConvexPoly.Edge>();
+		public List<Edge>	mResultPathEdges	=new List<Edge>();
 
 		internal List<Vector3>	mResultPath	=new List<Vector3>();
 
@@ -102,7 +102,7 @@ namespace PathLib
 			{
 				Debug.WriteLine("Walking path " + walk.mNode.mPoly.GetCenter());
 
-				ConvexPoly.Edge	edgeBetween	=walk.mNode.FindEdgeBetween(walk.mParent.mNode);
+				Edge	edgeBetween	=walk.mNode.FindEdgeBetween(walk.mParent.mNode);
 				if(edgeBetween == null)
 				{
 					Debug.WriteLine("Null edge between path nodes!");
@@ -118,7 +118,7 @@ namespace PathLib
 			mResultPathEdges.Reverse();
 
 			//convert the path to Vectors
-			foreach(ConvexPoly.Edge e in mResultPathEdges)
+			foreach(Edge e in mResultPathEdges)
 			{
 				mResultPath.Add(e.GetCenter());
 			}

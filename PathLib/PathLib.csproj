@@ -63,6 +63,7 @@
   <ItemGroup>
     <Compile Include="AStarNode.cs" />
     <Compile Include="ConvexPoly.cs" />
+    <Compile Include="Edge.cs" />
     <Compile Include="PathConnection.cs" />
     <Compile Include="PathFinder.cs" />
     <Compile Include="PathGraph.cs" />

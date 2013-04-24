@@ -5,10 +5,10 @@ using System.Text;
 
 namespace PathLib
 {
-	public class PathConnection
+	internal class PathConnection
 	{
-		public PathNode			mConnectedTo;
-		public float			mDistanceToCenter;
-		public ConvexPoly.Edge	mEdgeBetween;
+		internal PathNode		mConnectedTo;
+		internal float		mDistanceToCenter;
+		internal Edge		mEdgeBetween;
 	}
 }

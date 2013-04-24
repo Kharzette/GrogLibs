@@ -14,7 +14,7 @@ namespace PathLib
 	public class PathGraph
 	{
 		//collision hull the pathing lives in
-		protected Zone	mBSP;
+		Zone	mBSP;
 
 		//bsp node lookup for path nodes
 		Dictionary<int, List<PathNode>>	mBSPLeafPathNodes	=new Dictionary<int, List<PathNode>>();
@@ -24,21 +24,19 @@ namespace PathLib
 		List<PathCB>		mCallBacks		=new List<PathCB>();	
 
 		//drawing stuff
-		VertexBuffer		mNodeVB, mConVB, mPathVB;
-		IndexBuffer			mNodeIB, mConIB, mPathIB;
+		VertexBuffer		mNodeVB, mConVB;
+		IndexBuffer			mNodeIB, mConIB;
 
 		VertexPositionColor	[]mNodeVerts;
 		VertexPositionColor	[]mConVerts;
-		VertexPositionColor	[]mPathVerts;
 		UInt16				[]mNodeIndexs;
 		UInt16				[]mConIndexs;
-		int					[]mPathIndexs;
 
 		List<PathNode>	mNodery	=new List<PathNode>();
 
 		public delegate void PathCB(List<Vector3> resultPath);
 
-		protected PathGraph() { }
+		PathGraph() { }
 
 
 		public static PathGraph CreatePathGrid()
@@ -86,12 +84,12 @@ namespace PathLib
 		}
 
 
-		public virtual void Read(BinaryReader br)
+		public void Read(BinaryReader br)
 		{
 		}
 
 
-		public virtual void Write(BinaryWriter bw)
+		public void Write(BinaryWriter bw)
 		{
 		}
 
@@ -115,7 +113,7 @@ namespace PathLib
 		}
 
 
-		public virtual void FindPathRangeLOS(Vector3 start, Vector3 target, float minRange, float maxRange, PathCB notify)
+		public void FindPathRangeLOS(Vector3 start, Vector3 target, float minRange, float maxRange, PathCB notify)
 		{
 		}
 
@@ -206,7 +204,7 @@ namespace PathLib
 		}
 
 
-		public virtual void Render(GraphicsDevice gd, BasicEffect bfx)
+		public void Render(GraphicsDevice gd, BasicEffect bfx)
 		{
 			//draw connection lines first
 			gd.SetVertexBuffer(mConVB);
@@ -223,24 +221,10 @@ namespace PathLib
 			bfx.CurrentTechnique.Passes[0].Apply();
 			gd.DrawIndexedPrimitives(PrimitiveType.TriangleList,
 				0, 0, mNodeVerts.Length, 0, mNodeVerts.Length);
-
-
-			//draw pathfinding
-			if(mPathVB == null || mPathVerts.Length <= 0)
-			{
-				return;
-			}
-
-			gd.SetVertexBuffer(mPathVB);
-			gd.Indices	=mPathIB;
-
-			bfx.CurrentTechnique.Passes[0].Apply();
-			gd.DrawIndexedPrimitives(PrimitiveType.LineList,
-				0, 0, mPathVerts.Length, 0, mPathIndexs.Length / 2);
 		}
 
 
-		public virtual void BuildDrawInfo(GraphicsDevice gd)
+		public void BuildDrawInfo(GraphicsDevice gd)
 		{
 			List<int>		vertCounts	=new List<int>();
 			List<Vector3>	nodePoints	=new List<Vector3>();
@@ -286,12 +270,12 @@ namespace PathLib
 			mNodeIB.SetData<UInt16>(mNodeIndexs);
 			
 			//node connections
-			List<ConvexPoly.Edge>	conLines	=new List<ConvexPoly.Edge>();
+			List<Edge>	conLines	=new List<Edge>();
 			foreach(PathNode pn in mNodery)
 			{
 				foreach(PathConnection pc in pn.mConnections)
 				{
-					ConvexPoly.Edge	ln	=new ConvexPoly.Edge();
+					Edge	ln	=new Edge();
 
 					ln.mA	=pn.mPoly.GetCenter() + Vector3.UnitY;
 					ln.mB	=pc.mConnectedTo.mPoly.GetCenter() + Vector3.UnitY;
@@ -307,7 +291,7 @@ namespace PathLib
 			mConIndexs	=new UInt16[conLines.Count * 2];
 
 			idx	=0;
-			foreach(ConvexPoly.Edge ln in conLines)
+			foreach(Edge ln in conLines)
 			{
 				//coords y and z swapped
 				mConIndexs[idx]			=idx;
@@ -321,47 +305,6 @@ namespace PathLib
 
 			mConVB.SetData<VertexPositionColor>(mConVerts);
 			mConIB.SetData<UInt16>(mConIndexs);
-		}
-
-
-		public virtual void BuildDrawInfoForPath(GraphicsDevice gd, List<Vector3> path)
-		{
-			if(path.Count < 2)
-			{
-				return;
-			}
-
-			//a solved path
-			mPathVB	=new VertexBuffer(gd, typeof(VertexPositionColor), path.Count * 16, BufferUsage.WriteOnly);
-			mPathIB	=new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, (path.Count - 1) * 2 * 4, BufferUsage.WriteOnly);
-
-			mPathVerts	=new VertexPositionColor[path.Count];
-			mPathIndexs	=new int[(path.Count - 1) * 2];
-
-			int	idx	=0;
-			foreach(Vector3 pn in path)
-			{
-				mPathVerts[idx].Position.X	=pn.X;
-				mPathVerts[idx].Position.Y	=pn.Y;
-				mPathVerts[idx].Position.Z	=pn.Z;
-				mPathVerts[idx++].Color		=Color.Yellow;
-			}
-
-			idx	=0;
-			bool	bToggle	=false;
-			for(int i=0;i < (path.Count - 1) * 2;i++)
-			{
-				mPathIndexs[i]	=idx++;
-
-				if(bToggle)
-				{
-					idx--;
-				}
-				bToggle	=!bToggle;
-			}
-
-			mPathVB.SetData<VertexPositionColor>(mPathVerts);
-			mPathIB.SetData<int>(mPathIndexs);
 		}
 
 
@@ -408,7 +351,7 @@ namespace PathLib
 						continue;
 					}
 
-					ConvexPoly.Edge	edge	=pn.mPoly.GetSharedEdge(pn2.mPoly);
+					Edge	edge	=pn.mPoly.GetSharedEdge(pn2.mPoly);
 					if(edge == null)
 					{
 						continue;

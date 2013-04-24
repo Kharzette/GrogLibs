@@ -7,12 +7,12 @@ using Microsoft.Xna.Framework;
 
 namespace PathLib
 {
-	public class PathNode
+	internal class PathNode
 	{
 		//raw stuff for the grid
-		public ConvexPoly	mPoly;
+		internal ConvexPoly	mPoly;
 
-		public List<PathConnection>	mConnections	=new List<PathConnection>();
+		internal List<PathConnection>	mConnections	=new List<PathConnection>();
 
 
 		internal PathNode(ConvexPoly cp)
@@ -30,7 +30,7 @@ namespace PathLib
 		}
 
 
-		internal ConvexPoly.Edge FindEdgeBetween(PathNode pathNode)
+		internal Edge FindEdgeBetween(PathNode pathNode)
 		{
 			foreach(PathConnection pc in mConnections)
 			{
