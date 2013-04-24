@@ -28,5 +28,18 @@ namespace PathLib
 
 			return	Vector3.Distance(myPos, otherPos);
 		}
+
+
+		internal ConvexPoly.Edge FindEdgeBetween(PathNode pathNode)
+		{
+			foreach(PathConnection pc in mConnections)
+			{
+				if(pc.mConnectedTo == pathNode)
+				{
+					return	pc.mEdgeBetween;
+				}
+			}
+			return	null;
+		}
 	}
 }

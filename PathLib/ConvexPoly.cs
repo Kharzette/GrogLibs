@@ -10,7 +10,7 @@ namespace PathLib
 {
 	public class ConvexPoly
 	{
-		internal class Edge
+		public class Edge
 		{
 			internal Vector3	mA, mB;
 
@@ -38,6 +38,11 @@ namespace PathLib
 					return	true;
 				}
 				return	false;
+			}
+
+			internal Vector3 GetCenter()
+			{
+				return	((mA + mB) * 0.5f);
 			}
 		}
 
@@ -79,7 +84,7 @@ namespace PathLib
 			return	ret;
 		}
 
-		internal bool IsAdjacent(ConvexPoly other)
+		internal Edge GetSharedEdge(ConvexPoly other)
 		{
 			List<Edge>	myEdges		=GetEdges();
 			List<Edge>	otherEdges	=other.GetEdges();
@@ -94,11 +99,11 @@ namespace PathLib
 					}
 					if(me.AlmostEqual(oe))
 					{
-						return	true;
+						return	me;
 					}
 				}
 			}
-			return	false;
+			return	null;
 		}
 
 		internal Vector3 GetCenter()

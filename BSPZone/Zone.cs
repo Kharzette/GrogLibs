@@ -858,60 +858,72 @@ namespace BSPZone
 		}
 
 
-		void GetWalkableFaces(int node, ref List<List<Vector3>> polys, ref List<ZonePlane> planes)
+		void GetWalkableFaces(int node,
+			ref List<List<Vector3>> polys,
+			ref List<ZonePlane> planes,
+			ref List<int> leaves)
 		{
 			if(node < 0)
 			{
+				Int32	leaf	=-(node + 1);
+
+				ZoneLeaf	zLeaf	=mZoneLeafs[leaf];
+
+				for(int f=0;f < zLeaf.mNumFaces;f++)
+				{
+					int	leafFace	=mDebugLeafFaces[f + zLeaf.mFirstFace];
+
+					DebugFace	df	=mDebugFaces[leafFace];
+
+					//check flags
+					if(Misc.bFlagSet(df.mFlags, Zone.SKY))
+					{
+						continue;
+					}
+
+					//get plane
+					ZonePlane	zp	=mZonePlanes[df.mPlaneNum];
+					if(df.mbFlipSide)
+					{
+						zp.Inverse();
+					}
+
+					if(!IsGround(zp))
+					{
+						continue;
+					}
+					
+					List<Vector3>	poly	=new List<Vector3>();
+					for(int v=0;v < df.mNumVerts;v++)
+					{
+						int	idx	=mDebugIndexes[v + df.mFirstVert];
+
+						poly.Add(mDebugVerts[idx]);
+					}
+
+					polys.Add(poly);
+					planes.Add(zp);
+					leaves.Add(node);
+				}
 				return;
 			}
 
 			ZoneNode	n	=mZoneNodes[node];
 
-			for(int f=0;f < n.mNumFaces;f++)
-			{
-				DebugFace	df	=mDebugFaces[f + n.mFirstFace];
-
-				//check flags
-				if(Misc.bFlagSet(df.mFlags, Zone.SKY))
-				{
-					continue;
-				}
-
-				//get plane
-				ZonePlane	zp	=mZonePlanes[df.mPlaneNum];
-				if(df.mbFlipSide)
-				{
-					zp.Inverse();
-				}
-
-				if(!IsGround(zp))
-				{
-					continue;
-				}
-					
-				List<Vector3>	poly	=new List<Vector3>();
-				for(int v=0;v < df.mNumVerts;v++)
-				{
-					int	idx	=mDebugIndexes[v + df.mFirstVert];
-
-					poly.Add(mDebugVerts[idx]);
-				}
-
-				polys.Add(poly);
-				planes.Add(zp);
-			}
-
-			GetWalkableFaces(n.mFront, ref polys, ref planes);
-			GetWalkableFaces(n.mBack, ref polys, ref planes);
+			GetWalkableFaces(n.mFront, ref polys, ref planes, ref leaves);
+			GetWalkableFaces(n.mBack, ref polys, ref planes, ref leaves);
 		}
 
 
-		public void GetWalkableFaces(out List<List<Vector3>> polys, out List<ZonePlane> planes)
+		public void GetWalkableFaces(out List<List<Vector3>> polys,
+			out List<ZonePlane> planes,
+			out List<int> leaves)
 		{
 			polys	=new List<List<Vector3>>();
 			planes	=new List<ZonePlane>();
+			leaves	=new List<int>();
 
-			GetWalkableFaces(mZoneModels[0].mRootNode, ref polys, ref planes);
+			GetWalkableFaces(mZoneModels[0].mRootNode, ref polys, ref planes, ref leaves);
 		}
 		#endregion
 

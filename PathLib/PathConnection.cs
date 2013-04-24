@@ -7,7 +7,8 @@ namespace PathLib
 {
 	public class PathConnection
 	{
-		public PathNode	mConnectedTo;
-		public float	mDistanceToCenter;
+		public PathNode			mConnectedTo;
+		public float			mDistanceToCenter;
+		public ConvexPoly.Edge	mEdgeBetween;
 	}
 }

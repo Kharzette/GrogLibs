@@ -11,22 +11,13 @@ using UtilityLib;
 
 namespace PathLib
 {
-	public delegate void PathCB(List<ConvexPoly> resultPath);
-
-
-	public struct Line
-	{
-		public Vector2	mP1;
-		public Vector2	mP2;
-
-		public static Line Zero;
-	}
-
-
 	public class PathGraph
 	{
 		//collision hull the pathing lives in
 		protected Zone	mBSP;
+
+		//bsp node lookup for path nodes
+		Dictionary<int, List<PathNode>>	mBSPLeafPathNodes	=new Dictionary<int, List<PathNode>>();
 
 		//pathing on threads
 		List<PathFinder>	mActivePathing	=new List<PathFinder>();
@@ -45,6 +36,7 @@ namespace PathLib
 
 		List<PathNode>	mNodery	=new List<PathNode>();
 
+		public delegate void PathCB(List<Vector3> resultPath);
 
 		protected PathGraph() { }
 
@@ -63,9 +55,10 @@ namespace PathLib
 
 			List<List<Vector3>>	polys;
 			List<ZonePlane>		planes;
+			List<int>			leaves;
 
 			//grab the walkable faces from the map
-			mBSP.GetWalkableFaces(out polys, out planes);
+			mBSP.GetWalkableFaces(out polys, out planes, out leaves);
 
 			Debug.Assert(polys.Count == planes.Count);
 
@@ -76,6 +69,17 @@ namespace PathLib
 				PathNode	pn	=new PathNode(cp);
 
 				mNodery.Add(pn);
+
+				int	leaf	=leaves[i];
+				if(mBSPLeafPathNodes.ContainsKey(leaf))
+				{
+					mBSPLeafPathNodes[leaf].Add(pn);
+				}
+				else
+				{
+					mBSPLeafPathNodes.Add(leaf, new List<PathNode>());
+					mBSPLeafPathNodes[leaf].Add(pn);
+				}
 			}
 
 			BuildConnectivity();
@@ -92,7 +96,7 @@ namespace PathLib
 		}
 
 
-		public virtual void Update(float msDelta)
+		public void Update()
 		{
 			for(int i=0;i < mActivePathing.Count;i++)
 			{
@@ -116,7 +120,7 @@ namespace PathLib
 		}
 
 
-		protected virtual void FindPath(PathNode start, PathNode end, PathCB notify)
+		void FindPath(PathNode start, PathNode end, PathCB notify)
 		{
 			PathFinder	pf	=new PathFinder();
 
@@ -129,8 +133,76 @@ namespace PathLib
 		}
 
 
-		public virtual void FindPath(Vector3 start, Vector3 end, PathCB notify)
+		public bool FindPath(Vector3 start, Vector3 end, PathCB notify)
 		{
+			int	startNode	=mBSP.FindNodeLandedIn(0, start);
+			int	endNode		=mBSP.FindNodeLandedIn(0, end);
+
+			if(startNode >= 0 || endNode >= 0)
+			{
+				return	false;
+			}
+
+			if(!mBSPLeafPathNodes.ContainsKey(startNode))
+			{
+				return	false;
+			}
+
+			if(!mBSPLeafPathNodes.ContainsKey(endNode))
+			{
+				return	false;
+			}
+
+			PathNode	stNode, eNode;
+
+			if(mBSPLeafPathNodes[startNode].Count == 1)
+			{
+				stNode	=mBSPLeafPathNodes[startNode][0];
+			}
+			else
+			{
+				stNode	=FindBestLeafNode(start, mBSPLeafPathNodes[startNode]);
+				if(stNode == null)
+				{
+					return	false;
+				}
+			}
+
+			if(mBSPLeafPathNodes[endNode].Count == 1)
+			{
+				eNode	=mBSPLeafPathNodes[endNode][0];
+			}
+			else
+			{
+				eNode	=FindBestLeafNode(end, mBSPLeafPathNodes[endNode]);
+				if(eNode == null)
+				{
+					return	false;
+				}
+			}
+
+			//take the first for now
+			FindPath(stNode, eNode, notify);
+
+			return	true;
+		}
+
+
+		PathNode FindBestLeafNode(Vector3 pos, List<PathNode> leafNodes)
+		{
+			float		bestDist	=float.MaxValue;
+			PathNode	bestNode	=null;
+			foreach(PathNode pn in leafNodes)
+			{
+				Vector3	middle	=pn.mPoly.GetCenter();
+				float	dist	=Vector3.Distance(middle, pos);
+				if(dist < bestDist)
+				{
+					bestNode	=pn;
+					bestDist	=dist;
+				}
+			}
+			return	bestNode;
 		}
 
 
@@ -314,6 +386,21 @@ namespace PathLib
 						continue;
 					}
 
+					//make sure we are not already connected
+					bool	bFound	=false;
+					foreach(PathConnection con in pn.mConnections)
+					{
+						if(con.mConnectedTo == pn2)
+						{
+							bFound	=true;
+							break;
+						}
+					}
+					if(bFound)
+					{
+						continue;
+					}
+
 					BoundingBox	bound2	=pn2.mPoly.GetBounds();
 
 					if(bound.Contains(bound2) == ContainmentType.Disjoint)
@@ -321,7 +408,8 @@ namespace PathLib
 						continue;
 					}
 
-					if(!pn.mPoly.IsAdjacent(pn2.mPoly))
+					ConvexPoly.Edge	edge	=pn.mPoly.GetSharedEdge(pn2.mPoly);
+					if(edge == null)
 					{
 						continue;
 					}
@@ -329,6 +417,7 @@ namespace PathLib
 					PathConnection	pc		=new PathConnection();
 					pc.mConnectedTo			=pn2;
 					pc.mDistanceToCenter	=pn.CenterToCenterDistance(pn2);
+					pc.mEdgeBetween			=edge;
 
 					pn.mConnections.Add(pc);
 				}
