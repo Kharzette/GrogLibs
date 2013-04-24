@@ -15,7 +15,7 @@ namespace PathLib
 
 		bool	mbDone;
 
-		public List<Vector3>	mResultPath	=new List<Vector3>();
+		public List<ConvexPoly>	mResultPath	=new List<ConvexPoly>();
 
 		List<AStarNode>	mOpen	=new List<AStarNode>();
 		List<AStarNode>	mClosed	=new List<AStarNode>();
@@ -53,7 +53,7 @@ namespace PathLib
 		{
 			if(mStartNode.mNode == mEndNode.mNode)
 			{
-				mResultPath.Add(mStartNode.mNode.GetPosition());
+				mResultPath.Add(mStartNode.mNode.mPoly);
 				mbDone	=true;
 				return;
 			}
@@ -98,9 +98,9 @@ namespace PathLib
 			AStarNode	walk	=mEndNode;
 			while(walk != mStartNode)
 			{
-				Debug.WriteLine("Walking path " + walk.mNode.mPosition);
+				Debug.WriteLine("Walking path " + walk.mNode.mPoly.GetCenter());
 
-				mResultPath.Add(walk.mNode.GetPosition());
+				mResultPath.Add(walk.mNode.mPoly);
 
 				walk	=walk.mParent;
 			}
@@ -130,7 +130,7 @@ namespace PathLib
 				if(found != null)
 				{
 					//check the G score
-					float	newGScore	=asn.mGScore + con.mDistance;
+					float	newGScore	=asn.mGScore + con.mDistanceToCenter;
 
 					//switch parents if this is faster
 					if(newGScore < found.mGScore)
@@ -151,7 +151,7 @@ namespace PathLib
 					AStarNode	kid	=new AStarNode();
 					kid.mNode		=con.mConnectedTo;
 					kid.mParent		=asn;
-					kid.mGScore		=kid.mParent.mGScore + con.mDistance;
+					kid.mGScore		=kid.mParent.mGScore + con.mDistanceToCenter;
 					CalculateHScore(kid);
 
 					mOpen.Add(kid);
@@ -162,12 +162,10 @@ namespace PathLib
 
 		public void CalculateHScore(AStarNode asn)
 		{
-			Vector3	distVec	=mEndNode.mNode.mPosition - asn.mNode.mPosition;
-
 			//typically this is multiplied by 10, but I am using
 			//real world position instead of number of nodes over
 			//so this is about the same
-			asn.mHScore	=distVec.Length();
+			asn.mHScore	=mEndNode.mNode.CenterToCenterDistance(asn.mNode);
 		}
 
 

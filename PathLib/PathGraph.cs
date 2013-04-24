@@ -1,16 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.IO;
 using System.Threading;
+using System.Diagnostics;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using BSPZone;
+using UtilityLib;
 
 
 namespace PathLib
 {
-	public delegate void PathCB(List<Vector3> resultPath);
+	public delegate void PathCB(List<ConvexPoly> resultPath);
 
 
 	public struct Line
@@ -22,7 +23,7 @@ namespace PathLib
 	}
 
 
-	public class PathGrid
+	public class PathGraph
 	{
 		//collision hull the pathing lives in
 		protected Zone	mBSP;
@@ -31,15 +32,6 @@ namespace PathLib
 		List<PathFinder>	mActivePathing	=new List<PathFinder>();
 		List<PathCB>		mCallBacks		=new List<PathCB>();	
 
-		//a radius that determines how close a node
-		//can get to floors / walls / ceilings
-		//important because bigger mobiles will need
-		//a bigger radius
-		protected float	mNodeRadius;
-
-		//how many path nodes per area (lower is more dense)
-		protected int	mGridDensity;
-
 		//drawing stuff
 		VertexBuffer		mNodeVB, mConVB, mPathVB;
 		IndexBuffer			mNodeIB, mConIB, mPathIB;
@@ -47,49 +39,46 @@ namespace PathLib
 		VertexPositionColor	[]mNodeVerts;
 		VertexPositionColor	[]mConVerts;
 		VertexPositionColor	[]mPathVerts;
-		int					[]mNodeIndexs;
-		int					[]mConIndexs;
+		UInt16				[]mNodeIndexs;
+		UInt16				[]mConIndexs;
 		int					[]mPathIndexs;
 
 		List<PathNode>	mNodery	=new List<PathNode>();
 
 
-		protected PathGrid() { }
+		protected PathGraph() { }
 
 
-		public static PathGrid CreatePathGrid(bool b2D)
+		public static PathGraph CreatePathGrid()
 		{
-			if(b2D)
-			{
-				return new PathGrid2D();
-			}
-			else
-			{
-				return	new PathGrid();
-			}
+			return	new PathGraph();
 		}
 
 
-		public void GenerateFromPoints(List<Vector3> points, float radius)
+		public virtual void GenerateGraph(Zone zone)
 		{
-			mNodeRadius	=radius;
+			mBSP	=zone;
 
 			mNodery.Clear();
-			foreach(Vector3 point in points)
+
+			List<List<Vector3>>	polys;
+			List<ZonePlane>		planes;
+
+			//grab the walkable faces from the map
+			mBSP.GetWalkableFaces(out polys, out planes);
+
+			Debug.Assert(polys.Count == planes.Count);
+
+			for(int i=0;i < planes.Count;i++)
 			{
-				PathNode	pn	=new PathNode();
-				pn.mPosition	=point;
+				ConvexPoly	cp	=new ConvexPoly(polys[i], planes[i]);
+
+				PathNode	pn	=new PathNode(cp);
 
 				mNodery.Add(pn);
 			}
-		}
 
-
-		public virtual void GenerateGrid(Zone zone, int gridDensity, float nodeRadius)
-		{
-			mBSP			=zone;
-			mGridDensity	=gridDensity;
-			mNodeRadius		=nodeRadius;
+			BuildConnectivity();
 		}
 
 
@@ -155,15 +144,13 @@ namespace PathLib
 			gd.DrawIndexedPrimitives(PrimitiveType.LineList,
 				0, 0, mConVerts.Length, 0, mConIndexs.Length / 2);
 
-			//draw node dots
+			//draw node polys
 			gd.SetVertexBuffer(mNodeVB);
 			gd.Indices	=mNodeIB;
 
-			//drawing dots seems to no longer be supported?
-//			gd.RenderState.PointSize	=5;
-//			bfx.CurrentTechnique.Passes[0].Apply();
-//			gd.DrawIndexedPrimitives(PrimitiveType.LineList,
-//				0, 0, mNodeVerts.Length, 0, mNodeVerts.Length);
+			bfx.CurrentTechnique.Passes[0].Apply();
+			gd.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+				0, 0, mNodeVerts.Length, 0, mNodeVerts.Length);
 
 
 			//draw pathfinding
@@ -183,56 +170,85 @@ namespace PathLib
 
 		public virtual void BuildDrawInfo(GraphicsDevice gd)
 		{
-			//node positions drawn as square dots
-			List<Vector3>	nodePoints	=GetNodePositions();
+			List<int>		vertCounts	=new List<int>();
+			List<Vector3>	nodePoints	=new List<Vector3>();
+			List<UInt16>	indexes		=new List<UInt16>();
+			foreach(PathNode pn in mNodery)
+			{
+				int	count	=nodePoints.Count;
+				pn.mPoly.GetTriangles(nodePoints, indexes);
+				vertCounts.Add(nodePoints.Count - count);
+			}
 
-			mNodeVB	=new VertexBuffer(gd, VertexPositionColor.VertexDeclaration, nodePoints.Count * 16, BufferUsage.WriteOnly);
-			mNodeIB	=new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, nodePoints.Count * 4, BufferUsage.WriteOnly);
+			mNodeVB	=new VertexBuffer(gd, VertexPositionColor.VertexDeclaration,
+				nodePoints.Count * 16, BufferUsage.WriteOnly);
+			mNodeIB	=new IndexBuffer(gd, IndexElementSize.SixteenBits,
+				indexes.Count * 2, BufferUsage.WriteOnly);
 
 			mNodeVerts	=new VertexPositionColor[nodePoints.Count];
-			mNodeIndexs	=new int[nodePoints.Count];
+			mNodeIndexs	=indexes.ToArray();
 
-			int	idx	=0;
+			Random	rnd	=new Random();
+
+			Color	randColor	=Mathery.RandomColor(rnd);
+
+			UInt16	idx		=0;
+			int		pcnt	=0;
+			int		poly	=0;
 			foreach(Vector3 pos in nodePoints)
 			{
-				mNodeIndexs[idx]			=idx;
 				mNodeVerts[idx].Position.X	=pos.X;
 				mNodeVerts[idx].Position.Y	=pos.Y;
 				mNodeVerts[idx].Position.Z	=pos.Z;
-				mNodeVerts[idx++].Color		=Color.Blue;
+				mNodeVerts[idx++].Color		=randColor;
+				pcnt++;
+				if(pcnt >= vertCounts[poly])
+				{
+					pcnt	=0;
+					poly++;
+					randColor	=Mathery.RandomColor(rnd);
+				}
 			}
 
 			mNodeVB.SetData<VertexPositionColor>(mNodeVerts);
-			mNodeIB.SetData<int>(mNodeIndexs);
+			mNodeIB.SetData<UInt16>(mNodeIndexs);
 			
 			//node connections
-			List<Line>	conLines	=GetConnectionLines();
+			List<ConvexPoly.Edge>	conLines	=new List<ConvexPoly.Edge>();
+			foreach(PathNode pn in mNodery)
+			{
+				foreach(PathConnection pc in pn.mConnections)
+				{
+					ConvexPoly.Edge	ln	=new ConvexPoly.Edge();
+
+					ln.mA	=pn.mPoly.GetCenter() + Vector3.UnitY;
+					ln.mB	=pc.mConnectedTo.mPoly.GetCenter() + Vector3.UnitY;
+
+					conLines.Add(ln);
+				}
+			}
 
 			mConVB	=new VertexBuffer(gd, VertexPositionColor.VertexDeclaration, conLines.Count * 2 * 16, BufferUsage.WriteOnly);
-			mConIB	=new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, conLines.Count * 2 * 4, BufferUsage.WriteOnly);
+			mConIB	=new IndexBuffer(gd, IndexElementSize.SixteenBits, conLines.Count * 2 * 2, BufferUsage.WriteOnly);
 
 			mConVerts	=new VertexPositionColor[conLines.Count * 2];
-			mConIndexs	=new int[conLines.Count * 2];
+			mConIndexs	=new UInt16[conLines.Count * 2];
 
 			idx	=0;
-			foreach(Line ln in conLines)
+			foreach(ConvexPoly.Edge ln in conLines)
 			{
 				//coords y and z swapped
-				mConIndexs[idx]				=idx;
-				mConVerts[idx].Position.X	=ln.mP1.X;
-				mConVerts[idx].Position.Z	=ln.mP1.Y;
-				mConVerts[idx].Position.Y	=0.0f;
-				mConVerts[idx++].Color		=Color.BlueViolet;
+				mConIndexs[idx]			=idx;
+				mConVerts[idx].Position	=ln.mA;
+				mConVerts[idx++].Color	=Color.BlueViolet;
 
-				mConIndexs[idx]				=idx;
-				mConVerts[idx].Position.X	=ln.mP2.X;
-				mConVerts[idx].Position.Z	=ln.mP2.Y;
-				mConVerts[idx].Position.Y	=0.0f;
-				mConVerts[idx++].Color		=Color.Red;
+				mConIndexs[idx]			=idx;
+				mConVerts[idx].Position	=ln.mB;
+				mConVerts[idx++].Color	=Color.Red;
 			}
 
 			mConVB.SetData<VertexPositionColor>(mConVerts);
-			mConIB.SetData<int>(mConIndexs);
+			mConIB.SetData<UInt16>(mConIndexs);
 		}
 
 
@@ -285,15 +301,38 @@ namespace PathLib
 		}
 
 
-		protected virtual List<Line> GetConnectionLines()
+		void BuildConnectivity()
 		{
-			return	null;
-		}
+			foreach(PathNode pn in mNodery)
+			{
+				BoundingBox	bound	=pn.mPoly.GetBounds();
 
+				foreach(PathNode pn2 in mNodery)
+				{
+					if(pn == pn2)
+					{
+						continue;
+					}
 
-		protected virtual List<Vector3> GetNodePositions()
-		{
-			return	null;
+					BoundingBox	bound2	=pn2.mPoly.GetBounds();
+
+					if(bound.Contains(bound2) == ContainmentType.Disjoint)
+					{
+						continue;
+					}
+
+					if(!pn.mPoly.IsAdjacent(pn2.mPoly))
+					{
+						continue;
+					}
+
+					PathConnection	pc		=new PathConnection();
+					pc.mConnectedTo			=pn2;
+					pc.mDistanceToCenter	=pn.CenterToCenterDistance(pn2);
+
+					pn.mConnections.Add(pc);
+				}
+			}
 		}
 	}
 }

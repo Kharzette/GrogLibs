@@ -8,6 +8,6 @@ namespace PathLib
 	public class PathConnection
 	{
 		public PathNode	mConnectedTo;
-		public float	mDistance;
+		public float	mDistanceToCenter;
 	}
 }

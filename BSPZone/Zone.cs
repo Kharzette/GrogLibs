@@ -856,6 +856,63 @@ namespace BSPZone
 			ret	=FindNodeLandedIn((dist < 0)? pNode.mFront : pNode.mBack, pos);
 			return	ret;
 		}
+
+
+		void GetWalkableFaces(int node, ref List<List<Vector3>> polys, ref List<ZonePlane> planes)
+		{
+			if(node < 0)
+			{
+				return;
+			}
+
+			ZoneNode	n	=mZoneNodes[node];
+
+			for(int f=0;f < n.mNumFaces;f++)
+			{
+				DebugFace	df	=mDebugFaces[f + n.mFirstFace];
+
+				//check flags
+				if(Misc.bFlagSet(df.mFlags, Zone.SKY))
+				{
+					continue;
+				}
+
+				//get plane
+				ZonePlane	zp	=mZonePlanes[df.mPlaneNum];
+				if(df.mbFlipSide)
+				{
+					zp.Inverse();
+				}
+
+				if(!IsGround(zp))
+				{
+					continue;
+				}
+					
+				List<Vector3>	poly	=new List<Vector3>();
+				for(int v=0;v < df.mNumVerts;v++)
+				{
+					int	idx	=mDebugIndexes[v + df.mFirstVert];
+
+					poly.Add(mDebugVerts[idx]);
+				}
+
+				polys.Add(poly);
+				planes.Add(zp);
+			}
+
+			GetWalkableFaces(n.mFront, ref polys, ref planes);
+			GetWalkableFaces(n.mBack, ref polys, ref planes);
+		}
+
+
+		public void GetWalkableFaces(out List<List<Vector3>> polys, out List<ZonePlane> planes)
+		{
+			polys	=new List<List<Vector3>>();
+			planes	=new List<ZonePlane>();
+
+			GetWalkableFaces(mZoneModels[0].mRootNode, ref polys, ref planes);
+		}
 		#endregion
 
 
