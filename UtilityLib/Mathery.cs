@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
 
 
@@ -35,6 +36,102 @@ namespace UtilityLib
 			bb.Min	=Vector3.One * MIN_MAX_BOUNDS;
 			bb.Max	=-bb.Min;
 		}
+
+
+		static Vector3 VectorForCubeFace(CubeMapFace face)
+		{
+			switch(face)
+			{
+				case	CubeMapFace.NegativeX:
+					return	-Vector3.UnitX;
+				case	CubeMapFace.NegativeY:
+					return	-Vector3.UnitY;
+				case	CubeMapFace.NegativeZ:
+					return	-Vector3.UnitZ;
+				case	CubeMapFace.PositiveX:
+					return	Vector3.UnitX;
+				case	CubeMapFace.PositiveY:
+					return	Vector3.UnitY;
+				case	CubeMapFace.PositiveZ:
+					return	Vector3.UnitZ;
+			}
+			return	Vector3.UnitX;
+		}
+
+
+		//direction points at a cube face
+		public static void CreateCubeMapViewProjMatrix(CubeMapFace face,
+			Vector3 cubeCenter, float farPlane,
+			out Matrix cubeView, out Matrix cubeProj)
+		{
+			//find a good up vector
+			Vector3	upVec	=Vector3.UnitY;
+			if(face == CubeMapFace.NegativeY)
+			{
+				upVec	=Vector3.UnitZ;
+			}
+			else if(face == CubeMapFace.PositiveY)
+			{
+				upVec	=-Vector3.UnitZ;
+			}
+
+			//Create the view matrix aimed at the cube face
+			cubeView	=Matrix.CreateLookAt(cubeCenter,
+				cubeCenter + VectorForCubeFace(face), upVec);
+
+			//Values are to project on the cube face
+			cubeProj	=Matrix.CreatePerspectiveFieldOfView(
+				MathHelper.PiOver2, -1f, 1f, farPlane);
+        }
+
+
+		//useful for directional shadow mapping, making item icons
+		//from a rendertarget, or even mini maps
+		public static void CreateBoundedDirectionalOrthoViewProj(BoundingBox bounds,
+			Vector3 direction, float fudgeFactor,
+			out Matrix lightView, out Matrix lightProj)
+		{
+			//bounds is a struct, so modifying here won't mess it up
+			//add a little bit to account for a bit of sloppiness
+			bounds.Max	+=Vector3.One * fudgeFactor;
+			bounds.Min	-=Vector3.One * fudgeFactor;
+
+			//create a matrix aimed in the direction
+			Matrix	dirAim	=Matrix.CreateLookAt(Vector3.Zero, direction, Vector3.Up);
+
+			//Get the corners
+			Vector3[]	boxCorners	=bounds.GetCorners();
+
+			//Transform the positions of the corners into the direction
+			for(int i=0;i < boxCorners.Length;i++)
+			{
+				boxCorners[i]	=Vector3.Transform(boxCorners[i], dirAim);
+			}
+			
+			//Find the smallest box around the points
+			//in the directional frame of reference
+			BoundingBox	dirSpaceBox	=BoundingBox.CreateFromPoints(boxCorners);
+
+			Vector3	boxSize		=dirSpaceBox.Max - dirSpaceBox.Min;
+			Vector3	halfBoxSize	=boxSize * 0.5f;
+			
+			//The viewpoint should be in the center of the back
+			//panel of the box.
+			Vector3	viewPos	=dirSpaceBox.Min + halfBoxSize;
+			
+			viewPos.Z	=dirSpaceBox.Min.Z;
+			
+			//transform the view position back into worldspace
+			viewPos	=Vector3.Transform(viewPos, Matrix.Invert(dirAim));
+			
+			//Create the view matrix
+			lightView	=Matrix.CreateLookAt(viewPos,
+				viewPos - -direction, Vector3.Up);
+
+			//Create the ortho projection matrix
+			lightProj	=Matrix.CreateOrthographic(
+					boxSize.X, boxSize.Y, -boxSize.Z, boxSize.Z);
+        }
 
 
 		public static bool InFrustumLightAdjust(BoundingFrustum frust, Vector3 lightDir, BoundingSphere bs)
