@@ -22,15 +22,18 @@ namespace UtilityLib
 		float	mMouseSensitivity	=0.01f;
 		float	mGamePadSensitivity	=0.25f;
 		float	mTurnSpeed			=3.0f;
+		float	mWheelScrollSpeed	=0.04f;
 		bool	mbInvertYAxis		=false;
 		bool	mbUsePadIfPossible	=true;
 
 		//position info
 		Vector3	mPosition, mDelta;
 		float	mPitch, mYaw, mRoll;
+		float	mZoom	=80f;	//default
 
 		//for mouselook
 		MouseState	mOriginalMS;
+		int			mLastWheel;
 
 		//constants
 		const float	PitchClamp	=80.0f;
@@ -85,6 +88,12 @@ namespace UtilityLib
 			set { mRoll = value; }
 		}
 
+		public float Zoom
+		{
+			get { return mZoom; }
+			set { mZoom = value; }
+		}
+
 		public float MouseSensitivity
 		{
 			get { return mMouseSensitivity; }
@@ -137,6 +146,20 @@ namespace UtilityLib
 			else if(mMethod == SteeringMethod.Platformer)
 			{
 				UpdatePlatformer(msDelta, gc, ks, ms, gs);
+			}
+
+
+			if(!UseGamePadIfPossible || !gs.IsConnected)
+			{
+				if(ms.ScrollWheelValue != mLastWheel)
+				{
+					int	swChange	=ms.ScrollWheelValue - mLastWheel;
+
+					mLastWheel	=ms.ScrollWheelValue;
+
+					mZoom	-=(swChange * 0.04f);
+					mZoom	=MathHelper.Clamp(mZoom, 0f, 100f);
+				}
 			}
 		}
 
@@ -314,7 +337,6 @@ namespace UtilityLib
 
 				mYaw	-=(delta.X) * msDelta * mMouseSensitivity;
 			}
-
 
 			//zero out up/down
 			moveVec.Y	=0.0f;

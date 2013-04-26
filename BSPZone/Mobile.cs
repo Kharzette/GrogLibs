@@ -10,6 +10,11 @@ namespace BSPZone
 {
 	public class Mobile
 	{
+		public enum LocomotionState
+		{
+			Idle, Walk, WalkBack, WalkLeft, WalkRight
+		}
+
 		//zone to collide against
 		Zone	mZone;
 
@@ -35,18 +40,25 @@ namespace BSPZone
 		//offset from the boundingbox center to the eye position
 		Vector3		mEyeHeight;
 
+		//camera stuff if needed
+		BoundingBox	mCamBox;
+
 		//constants
 		const float MidAirMoveScale	=0.03f;
 		const float	JumpVelocity	=1.5f;
 		const float	Friction		=0.6f;
+		const float	MinCamDist		=10f;
 
 
 		public Mobile(float boxWidth, float boxHeight, float eyeHeight, bool bPushable, TriggerHelper th)
 		{
-			mBox		=Misc.MakeBox(boxWidth, boxHeight);
-			mEyeHeight	=Vector3.UnitY * (eyeHeight + mBox.Min.Y);
-			mbPushable	=bPushable;
-			mTHelper	=th;
+			mBox			=Misc.MakeBox(boxWidth, boxHeight);
+			mEyeHeight		=Vector3.UnitY * (eyeHeight + mBox.Min.Y);
+			mbPushable		=bPushable;
+			mTHelper		=th;
+
+			//small box for camera collision
+			mCamBox	=Misc.MakeBox(4f, 4f);
 		}
 
 
@@ -81,6 +93,113 @@ namespace BSPZone
 			{
 				mVelocity	+=Vector3.UnitY * JumpVelocity;
 			}
+		}
+
+
+		public LocomotionState DetermineLocoState(Vector3 moveDelta, Vector3 camForward)
+		{
+			LocomotionState	ls	=LocomotionState.Idle;
+
+			if(moveDelta.LengthSquared() > 0.001f)
+			{
+				//need a leveled out forward direction
+				Vector3	dir		=camForward;
+				Vector3	side	=Vector3.Cross(dir, Vector3.Up);
+				dir				=Vector3.Cross(side, Vector3.Up);
+
+				//check the direction moving vs axis
+				moveDelta.Normalize();
+				float	forwardDot	=Vector3.Dot(dir, moveDelta);
+				float	leftDot		=Vector3.Dot(side, moveDelta);
+
+				if(Math.Abs(forwardDot) > Math.Abs(leftDot))
+				{
+					if(forwardDot < 0f)
+					{
+						ls	=LocomotionState.Walk;
+					}
+					else
+					{
+						ls	=LocomotionState.WalkBack;
+					}
+				}
+				else
+				{
+					if(leftDot < 0f)
+					{
+						ls	=LocomotionState.WalkLeft;
+					}
+					else
+					{
+						ls	=LocomotionState.WalkRight;
+					}
+				}
+			}
+
+			return	ls;
+		}
+
+
+		//returns true if any actual movement
+		public bool Orient(PlayerSteering ps, Vector3 pos, Vector3 camPos, Vector3 camForward,
+			out Vector3 mobForward, out Vector3 mobCamPos, out bool bFirstPerson)
+		{
+			Matrix	orientation	=
+				Matrix.CreateRotationY(MathHelper.ToRadians(ps.Yaw)) *
+				Matrix.CreateRotationX(MathHelper.ToRadians(ps.Pitch)) *
+				Matrix.CreateRotationZ(MathHelper.ToRadians(ps.Roll));
+
+			//grab transpose forward
+			Vector3	forward;
+
+			forward.X	=orientation.M13;
+			forward.Y	=orientation.M23;
+			forward.Z	=orientation.M33;
+
+			//camera positions are always negated
+			camPos	=-camPos;
+
+			//for the third person camera, back the position out
+			//along the updated forward vector
+			mobCamPos	=camPos + (forward * ps.Zoom);
+
+			Vector3		impacto		=Vector3.Zero;
+			ZonePlane	planeHit	=ZonePlane.Blank;
+			if(mZone.Trace_WorldCollisionBBox(mCamBox, 0, camPos, mobCamPos, ref impacto, ref planeHit))
+			{
+				mobCamPos	=impacto;
+			}
+
+			Vector3	camRay	=mobCamPos - camPos;
+			float	len		=camRay.Length();
+				
+			//if really short, just use first person
+			if(len < MinCamDist)
+			{
+				mobCamPos		=camPos;
+				bFirstPerson	=true;
+			}
+			else
+			{
+				bFirstPerson	=false;
+			}
+
+			Vector3	delt	=ps.Position - pos;
+			if(delt.LengthSquared() > 0.001f)
+			{
+				//need a leveled out forward direction
+				Vector3	dir		=camForward;
+				Vector3	side	=Vector3.Cross(dir, Vector3.Up);
+				dir				=Vector3.Cross(side, Vector3.Up);
+
+				mobForward	=dir;
+
+				return	true;
+			}
+
+			mobForward	=Vector3.Zero;	//don't use
+
+			return	false;
 		}
 
 
