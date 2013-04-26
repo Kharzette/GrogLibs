@@ -450,11 +450,20 @@ float4 TriCellSolidSpecPhysPS(VTex03Tex13 input) : COLOR
 	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
+	//cell here for a cool cartoony but shiny look
+	triLight	=CalcCellColor(triLight);
+
 	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, pnorm, triLight, mLightColor2);
+
+	//use with the above cell for a "correct" look
+//	specular	=CalcCellColor(specular);
+
 	float3	litSolid	=mSolidColour.xyz * triLight;
 
 	specular	=saturate(specular + litSolid);
-	specular	=CalcCellColor(specular);
+
+	//for super retro goofy color action
+//	specular	=CalcCellColor(specular);
 
 	return	float4(specular, mSolidColour.w);
 }
@@ -470,11 +479,20 @@ float4 TriCellColorSpecPhysPS(VTex04Tex14Tex24 input) : COLOR
 	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
+	//cell here for a cool cartoony but shiny look
+	triLight	=CalcCellColor(triLight);
+
 	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, pnorm, triLight, mLightColor2);
+
+	//use with the above cell for a "correct" look
+//	specular	=CalcCellColor(specular);
+
 	float3	litSolid	=input.TexCoord2.xyz * triLight;
 
 	specular	=saturate(specular + litSolid);
-	specular	=CalcCellColor(specular);
+
+	//for super retro goofy color action
+//	specular	=CalcCellColor(specular);
 
 	return	float4(specular, input.TexCoord2.w);
 }

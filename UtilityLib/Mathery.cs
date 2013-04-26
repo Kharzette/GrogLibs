@@ -38,6 +38,32 @@ namespace UtilityLib
 		}
 
 
+		public static int NextPowerOfTwo(int val)
+		{
+			int	count	=0;
+			while(val > 0)
+			{
+				val	=val >> 1;
+				count++;
+			}
+
+			return	(1 << count);
+		}
+
+
+		public static int PreviousPowerOfTwo(int val)
+		{
+			int	count	=0;
+			while(val > 1)
+			{
+				val	=val >> 1;
+				count++;
+			}
+
+			return	(1 << count);
+		}
+
+
 		static Vector3 VectorForCubeFace(CubeMapFace face)
 		{
 			switch(face)

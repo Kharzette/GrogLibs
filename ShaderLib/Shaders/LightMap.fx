@@ -280,11 +280,9 @@ float4 LMCellPixelShader(VTex04Tex14Tex24 input) : COLOR0
 	float3	lm	=tex2D(LightMapSampler, input.TexCoord0.zw);
 
 	lm	=ShadowColor(mbDirectional, input.TexCoord1, lm);
+	lm	=CalcCellColor(lm);
 
 	color.rgb	*=lm;
-
-	//do the Cell thing
-	color.rgb	=CalcCellColor(color.rgb);
 
 	//back to srgb
 	color	=pow(abs(color), 1 / 2.2);
@@ -409,10 +407,10 @@ float4 VLitCellPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 	//shadow map
 	inColor.xyz	=ShadowColor(mbDirectional, worldPos, inColor.xyz);
 
-	color.rgb	*=inColor;
+	//cellshade the vertex light + shadow
+	inColor.xyz	=CalcCellColor(inColor.xyz);
 
-	//do the Cell thing
-	color.rgb	=CalcCellColor(color.rgb);
+	color.rgb	*=inColor;
 
 	//back to srgb
 	color	=pow(abs(color), 1 / 2.2);
@@ -569,7 +567,7 @@ float4 LMAnimPixelShader(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	}
 
 	//shadow map
-	color.xyz	=ShadowColor(mbDirectional, input.TexCoord4, color.xyz);
+	lm	=ShadowColor(mbDirectional, input.TexCoord4, lm);
 
 	//Apply lighting.
 	color	*=lm;
@@ -620,12 +618,10 @@ float4 LMAnimCellPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	}
 
 	//shadow map
-	color.xyz	=ShadowColor(mbDirectional, input.TexCoord4, color.xyz);
+	lm	=ShadowColor(mbDirectional, input.TexCoord4, lm);
+	lm	=CalcCellColor(lm);
 
 	color.rgb	*=lm;
-
-	//do the Cell thing
-	color.rgb	=CalcCellColor(color.rgb);
 
 	//back to srgb
 //	color	=pow(abs(color), 1 / 2.2);
