@@ -95,6 +95,7 @@
     <Compile Include="StaticMeshObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SubAnim.cs" />
+    <Compile Include="TransitionHelper.cs" />
     <Compile Include="VertexStructures.cs" />
     <Compile Include="VertexTypes.cs">
       <SubType>Code</SubType>
