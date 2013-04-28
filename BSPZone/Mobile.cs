@@ -294,5 +294,29 @@ namespace BSPZone
 				mZone.UpdatePushable(this, mPosition, mModelOn);
 			}
 		}
+
+
+		public bool IsOnGround()
+		{
+			return	mbOnGround;
+		}
+
+
+		public bool TryMoveTo(Vector3 tryPos)
+		{
+			if(!mbOnGround)
+			{
+				return	false;
+			}
+
+			int			modelHit	=0;
+			Vector3		impacto		=Vector3.Zero;
+			ZonePlane	planeHit	=ZonePlane.Blank;
+
+			bool	bHit	=mZone.Trace_All(mBox, mPosition,
+				tryPos, ref modelHit, ref impacto, ref planeHit);
+
+			return	!bHit;
+		}
 	}
 }

@@ -15,8 +15,6 @@ namespace PathLib
 
 		bool	mbDone;
 
-		public List<Edge>	mResultPathEdges	=new List<Edge>();
-
 		internal List<Vector3>	mResultPath	=new List<Vector3>();
 
 		List<AStarNode>	mOpen	=new List<AStarNode>();
@@ -28,7 +26,6 @@ namespace PathLib
 			mbDone		=false;
 
 			//clear lists
-			mResultPathEdges.Clear();
 			mResultPath.Clear();
 			mOpen.Clear();
 			mClosed.Clear();
@@ -109,19 +106,14 @@ namespace PathLib
 					return;
 				}
 
-				mResultPathEdges.Add(edgeBetween);
+				mResultPath.Add(walk.mNode.mPoly.GetCenter());
+				mResultPath.Add(edgeBetween.GetCenter());
 
 				walk	=walk.mParent;
 			}
 
 			//path is in reverse order, flip it
-			mResultPathEdges.Reverse();
-
-			//convert the path to Vectors
-			foreach(Edge e in mResultPathEdges)
-			{
-				mResultPath.Add(e.GetCenter());
-			}
+			mResultPath.Reverse();
 		}
 
 

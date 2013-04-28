@@ -105,6 +105,9 @@ namespace PathLib
 					//call the callback
 					mCallBacks[i](pf.mResultPath);
 
+					//remove ref to callback
+					mCallBacks.RemoveAt(i);
+
 					//nuke the path finder
 					mActivePathing.RemoveAt(i);
 					i--;
