@@ -51,8 +51,10 @@ namespace BSPZone
 		}
 
 
-		public Vector3 GetPlayerStartPos()
+		public Vector3 GetPlayerStartPos(out float angle)
 		{
+			angle	=0f;
+
 			foreach(ZoneEntity e in mZoneEntities)
 			{
 				if(e.mData.ContainsKey("classname"))
@@ -70,6 +72,7 @@ namespace BSPZone
 				Vector3	ret	=Vector3.Zero;
 				if(e.GetOrigin(out ret))
 				{
+					e.GetFloat("angle", out angle);
 					return	ret;
 				}
 			}

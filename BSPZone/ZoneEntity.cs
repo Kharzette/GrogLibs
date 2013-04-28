@@ -111,7 +111,7 @@ namespace BSPZone
 		}
 
 
-		internal bool GetFloat(string key, out float val)
+		public bool GetFloat(string key, out float val)
 		{
 			val	=0.0f;
 			if(!mData.ContainsKey(key))
