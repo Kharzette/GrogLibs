@@ -154,17 +154,17 @@ namespace MeshLib
 					if(animTime < mTimes[startIndex] && animTime >= mTimes[startIndex - 1])
 					{
 						//back up one
-						startIndex--;
+						startIndex		=Math.Max(startIndex - 1, 0);
 						mLastTimeIndex	=startIndex;
 						break;	//found
 					}
 				}
 				else
 				{
-					if(animTime < mTimes[startIndex])
+					if(animTime <= mTimes[startIndex])
 					{
 						//back up one
-						startIndex--;
+						startIndex		=Math.Max(startIndex - 1, 0);
 						mLastTimeIndex	=startIndex;
 						break;	//found
 					}
@@ -176,10 +176,10 @@ namespace MeshLib
 				//wasn't found, search all
 				for(startIndex = 0;startIndex < mTimes.Length;startIndex++)
 				{
-					if(animTime < mTimes[startIndex])
+					if(animTime <= mTimes[startIndex])
 					{
 						//back up one
-						startIndex--;
+						startIndex		=Math.Max(startIndex - 1, 0);
 						mLastTimeIndex	=startIndex;
 						break;	//found
 					}

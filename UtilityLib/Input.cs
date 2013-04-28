@@ -299,6 +299,24 @@ namespace UtilityLib
 		}
 
 
+		public bool AnyKeyHit()
+		{
+			if(mPlayer1 == null)
+			{
+				return	false;
+			}
+
+			Keys	[]keys		=mPlayer1.mKBS.GetPressedKeys();
+			Keys	[]lastKeys	=mPlayer1.mLastKBS.GetPressedKeys();
+
+			if(keys.Length != lastKeys.Length)
+			{
+				return	true;
+			}
+			return	false;
+		}
+
+
 		public void RefreshAvatar(PlayerInput pi)
 		{
 			AvatarDescription.BeginGetFromGamer(pi.mGamer, LoadAvatar,

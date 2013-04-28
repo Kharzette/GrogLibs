@@ -64,7 +64,7 @@ namespace MeshLib
 		public delegate Matrix GetModelMatrix(int modelIndex);
 
 		//render external stuff
-		public delegate void RenderExternal(MaterialLib.AlphaPool ap, Matrix view, Matrix proj);
+		public delegate void RenderExternal(MaterialLib.AlphaPool ap, Vector3 camPos, Matrix view, Matrix proj);
 
 		//tool side delegates for building the indoor mesh
 		//from raw parts
@@ -266,7 +266,7 @@ namespace MeshLib
 				DrawMaterialsDC(gd, position, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
 
 				//draw outside stuff to mirror
-				rendExternal(mAlphaPool, mirrorMats[i], mirrorProjs[i]);
+				rendExternal(mAlphaPool, mirrorCenters[i], mirrorMats[i], mirrorProjs[i]);
 
 				mAlphaPool.DrawAll(gd, mMatLib, mirrorCenters[i]);
 			}
@@ -299,7 +299,7 @@ namespace MeshLib
 			}
 
 			//draw outside stuff
-			rendExternal(mAlphaPool, gameCam.View, gameCam.Projection);
+			rendExternal(mAlphaPool, gameCam.Position, gameCam.View, gameCam.Projection);
 
 			mAlphaPool.DrawAll(gd, mMatLib, position);
 		}
