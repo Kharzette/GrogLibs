@@ -913,7 +913,10 @@ namespace BSPCore
 				}
 
 				//do sunlight first if needed
-				if(sunLight != null && skyClusters.Contains(clust))
+				//this vis check doesn't actually work
+				//sometimes you might have no vis to a sky face
+				//but still need to cast rays if fully darkened
+				if(sunLight != null)// && skyClusters.Contains(clust))
 				{
 					//Find the angle between the light, and the face normal
 					Vector3	sunRay		=facePoints[v] + sunLight.mNormal * -SunRayDist;

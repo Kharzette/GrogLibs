@@ -726,6 +726,15 @@ technique Sky
 	pass Pass1
 	{
 		VertexShader	=compile vs_2_0 SkyVertexShader();
+		PixelShader		=compile ps_2_0 SkyPixelShader();
+	}
+}
+
+technique SkyCell
+{
+	pass Pass1
+	{
+		VertexShader	=compile vs_2_0 SkyVertexShader();
 		PixelShader		=compile ps_2_0 SkyCellPixelShader();
 	}
 }

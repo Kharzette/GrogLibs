@@ -757,7 +757,7 @@ namespace BSPZone
 				float	startDist	=zp.DistanceFast(start);
 				float	dist		=zp.DistanceFast(end);
 
-				Debug.Assert(startDist > 0f && dist < 0f);
+				Debug.Assert(startDist >= 0f && dist < 0f);
 
 				end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
 				

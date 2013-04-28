@@ -14,35 +14,33 @@ SkyBoxes
 MenuBuilder
 	Quick lib for making quick menus
 	Some sample code:
-		AddScreen("MainMenu", UILib.MenuBuilder.ScreenTypes.VerticalMenu, 40,
-			textRect, mScreenCenter, "Textures\\UI\\hilite.png");
-		AddMenuStop("MainMenu", "NewGame", "Start New Game", "Koot20");
-		AddMenuStop("MainMenu", "ResumeGame", "Resume Old Game", "Koot20");
-		AddMenuStop("MainMenu", "Options", "Help & Options", "Koot20");
-		AddMenuStop("MainMenu", "Exit", "Exit", "Koot20");
-		SetUpNav("MainMenu", "NewGame");
-		ActivateScreen("MainMenu");
 
-		AddScreen("OptionsMenu", UILib.MenuBuilder.ScreenTypes.VerticalMenu, 40,
-			textRect, mScreenCenter, "Textures\\UI\\hilite.png");
-		AddMenuStop("OptionsMenu", "HowToPlay", "How to Play", "Koot20");
-		AddMenuStop("OptionsMenu", "UseGamePad", "Use GamePad", "Koot20");
-		AddMenuStop("OptionsMenu", "Sensitivity", "Adjust Sensitivity", "Koot20");
-		AddMenuStop("OptionsMenu", "FlipY", "Flip Y Axis", "Koot20");
-		AddMenuStop("OptionsMenu", "Back", "Back to Main Menu", "Koot20");
-		SetUpNav("GoblinMenu", "HowToPlay");
+		//basic menu with some quickoptions
+		mMenuBuilder	=new MenuBuilder(mFonts, mUITex);	//uitex made with texlibmaker
+		mQOptions		=new QuickOptions(mMenuBuilder, mPlayerSteering,
+			mScreenCenter, "SomeFont", "Textures\\UI\\hilite.png");
 
-		Link("MainMenu", "Options", "OptionsMenu");
-		Link("OptionsMenu", "Back", "MainMenu");
+		//add a main menu screen
+		mMenuBuilder.AddScreen("MainMenu", VerticalMenu,
+			mScreenCenter, "Textures\\UI\\hilite.png");
 
-		AddScreen("HowToPlayScreen", UILib.MenuBuilder.ScreenTypes.InfoScreen,
-			20, textRect, Vector2.Zero, "HowToPlayScreen.png");
-		Link("OptionsMenu", "HowToPlay", "HowToPlayScreen");
-		Link("HowToPlayScreen", "OptionsMenu");
+		//some menu stops for the main menu
+		mMenuBuilder.AddMenuStop("MainMenu", "Controls", "Controls", "Kawoszeh40");
+		mMenuBuilder.AddMenuStop("MainMenu", "HowToPlay", "How to Play", "Kawoszeh40");
+		mMenuBuilder.AddMenuStop("MainMenu", "Exit", "Exit", "Kawoszeh40");
 
-		SetBackGroundTexture("HowToPlayScreen", "HowSkin", "Textures\\UI\\HowToPlay.png");
-		SetTimeOut("HowToPlayScreen", 3000);
+		//a how to play screen
+		mMenuBuilder.AddScreen("HowToPlay", MenuBuilder.ScreenTypes.InfoScreen, mScreenCenter, "");
+		mMenuBuilder.SetBackGroundTexture("HowToPlay", "Textures\\UI\\FakeHowToPlay.png");
+		mMenuBuilder.SetTimeOut("HowToPlay", 3000);
 
+		//link stuff up
+		mMenuBuilder.SetUpNav("MainMenu", "Controls");
+		mMenuBuilder.Link("MainMenu", "Controls", "ControlsMenu");
+		mMenuBuilder.Link("MainMenu", "HowToPlay", "HowToPlay");
+		mMenuBuilder.Link("HowToPlay", "MainMenu");
+
+		//watch for events in code
 		eMenuStopInvoke	+=OnMenuStopInvoke;
 		eNavigating		+=OnNavigating;
 
@@ -55,3 +53,4 @@ Known Issues:
 	If geometry is moved in quark, texture alignment will be off
 	Sunlight doesn't work with "Build as Model"
 	Switchable lights don't work after an update entities
+	Detail brushes break PathGraph
