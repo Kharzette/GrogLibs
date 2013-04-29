@@ -112,6 +112,9 @@ namespace PathLib
 				walk	=walk.mParent;
 			}
 
+			//add in the center of the start node for good measure
+			mResultPath.Add(mStartNode.mNode.mPoly.GetCenter());
+
 			//path is in reverse order, flip it
 			mResultPath.Reverse();
 		}

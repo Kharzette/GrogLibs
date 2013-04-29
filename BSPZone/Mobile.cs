@@ -76,6 +76,12 @@ namespace BSPZone
 		}
 
 
+		public BoundingBox GetBounds()
+		{
+			return	mBox;
+		}
+
+
 		public BoundingBox GetTransformedBound()
 		{
 			BoundingBox	ret	=mBox;

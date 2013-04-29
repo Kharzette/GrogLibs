@@ -39,7 +39,7 @@ namespace MeshLib
 		}
 
 
-		public void Update(int msDelta, string curAnim, Character chr)
+		public void Update(int msDelta, string curAnim, bool bCurLooped, Character chr)
 		{
 			if(mbTransitioning)
 			{
@@ -66,7 +66,14 @@ namespace MeshLib
 
 				if(mToTime > (startTimeTo + totTimeTo))
 				{
-					mToTime	-=totTimeTo;
+					if(bCurLooped)
+					{
+						mToTime	-=totTimeTo;
+					}
+					else
+					{
+						mToTime	=totTimeTo;
+					}
 				}
 			}
 			else if(mTransTo != "")
@@ -93,7 +100,14 @@ namespace MeshLib
 				mToTime	+=msDelta;
 				if(mToTime > (startTimeTo + totTimeTo))
 				{
-					mToTime	-=totTimeTo;
+					if(bCurLooped)
+					{
+						mToTime	-=totTimeTo;
+					}
+					else
+					{
+						mToTime	=totTimeTo;
+					}
 				}
 
 				mFromTime	+=msDelta;
