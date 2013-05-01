@@ -205,7 +205,7 @@ VPosTex03 ParticleVS(VPosTex04 input)
 
 	//copy texcoords
 	output.TexCoord0.x	=input.Position.w;
-	output.TexCoord0.y	=input.TexCoord0.w;
+	output.TexCoord0.y	=-input.TexCoord0.w;
 
 	//copy alpha
 	output.TexCoord0.z	=input.TexCoord0.z;

@@ -194,6 +194,13 @@ namespace PathLib
 				}
 			}
 
+			if(least == null)
+			{
+				//something has gone wrong
+				mbDone	=true;
+				return;
+			}
+
 			//step to this node
 			SelectNode(least);
 		}

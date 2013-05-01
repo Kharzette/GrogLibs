@@ -40,6 +40,12 @@ namespace MeshLib
 		}
 
 
+		public Matrix GetTransform()
+		{
+			return	mTransform;
+		}
+
+
 		public void AddMeshPart(Mesh m)
 		{
 			SkinnedMesh	sm	=m as SkinnedMesh;

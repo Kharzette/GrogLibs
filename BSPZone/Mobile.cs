@@ -324,5 +324,23 @@ namespace BSPZone
 
 			return	!bHit;
 		}
+
+
+		public bool TryStandingSpot(Vector3 tryPos)
+		{
+			if(!mbOnGround)
+			{
+				return	false;
+			}
+
+			int			modelHit	=0;
+			Vector3		impacto		=Vector3.Zero;
+			ZonePlane	planeHit	=ZonePlane.Blank;
+
+			bool	bHit	=mZone.Trace_All(mBox, tryPos,
+				tryPos + Vector3.UnitY, ref modelHit, ref impacto, ref planeHit);
+
+			return	!bHit;
+		}
 	}
 }
