@@ -10,6 +10,18 @@ namespace BSPZone
 	//handles switchable lights, pickups, level changes etc
 	public class TriggerHelper
 	{
+		public class FuncEventArgs : EventArgs
+		{
+			public TriggerContextEventArgs	mTCEA;
+			public bool						mbTriggerState;
+
+			public FuncEventArgs(TriggerContextEventArgs tcea, bool bTrigState) : base()
+			{
+				mTCEA			=tcea;
+				mbTriggerState	=bTrigState;
+			}
+		}
+
 		//delegate used by indoormesh
 		public delegate void SwitchLight(int light, bool bOn);
 
@@ -27,6 +39,13 @@ namespace BSPZone
 
 		public void Initialize(Zone zone, SwitchLight sl)
 		{
+			//unwire from old
+			if(mZone != null)
+			{
+				mZone.eTriggerHit			-=OnTriggerHit;
+				mZone.eTriggerOutOfRange	-=OnTriggerLeaving;
+			}
+
 			mZone			=zone;
 			mSwitchLight	=sl;
 
@@ -45,23 +64,14 @@ namespace BSPZone
 		}
 
 
-		public void Clear()
-		{
-			mZone.eTriggerHit	-=OnTriggerHit;
-
-			mZone			=null;
-			mSwitchLight	=null;
-		}
-
-
-		public void CheckPlayer(BoundingBox playerBox, Vector3 startPos, Vector3 endPos, int msDelta)
+		public void CheckMobile(object triggerer, BoundingBox playerBox, Vector3 startPos, Vector3 endPos, int msDelta)
 		{
 			if(mZone == null)
 			{
 				return;
 			}
 
-			mZone.BoxTriggerCheck(playerBox, startPos, endPos, msDelta);
+			mZone.BoxTriggerCheck(triggerer, playerBox, startPos, endPos, msDelta);
 		}
 
 
@@ -73,9 +83,23 @@ namespace BSPZone
 				return;
 			}
 
+			TriggerContextEventArgs	tcea	=ea as TriggerContextEventArgs;
+			if(tcea == null)
+			{
+				return;
+			}
+
 			string	targ	=ze.GetTarget();
 			if(targ == "")
 			{
+				return;
+			}
+
+			//leaving doesn't necessarily mean the trigger
+			//is turned off, might be someone else still in
+			if(ze.mData["triggered"] == "true")
+			{
+				//only really interested if the trigger is off
 				return;
 			}
 
@@ -90,11 +114,12 @@ namespace BSPZone
 				}
 				else if(className.StartsWith("misc_"))
 				{
-					Misc.SafeInvoke(eMisc, zet);
+					Misc.SafeInvoke(eMisc, zet, tcea);
 				}
 				else if(className.StartsWith("func_"))
 				{
-					Misc.SafeInvoke(eFunc, zet);
+					FuncEventArgs	fea	=new FuncEventArgs(tcea, ze.GetValue("triggered") == "true");
+					Misc.SafeInvoke(eFunc, zet, fea);
 				}
 			}
 		}
@@ -104,6 +129,12 @@ namespace BSPZone
 		{
 			ZoneEntity	ze	=sender as ZoneEntity;
 			if(ze == null)
+			{
+				return;
+			}
+
+			TriggerContextEventArgs	tcea	=ea as TriggerContextEventArgs;
+			if(tcea == null)
 			{
 				return;
 			}
@@ -126,7 +157,7 @@ namespace BSPZone
 				else if(className.Contains("teleport_destination")
 					|| className.Contains("misc_teleporter_dest"))
 				{
-					TriggerTeleport(zet);
+					TriggerTeleport(zet, tcea);
 				}
 				else if(className == "misc_change_level")
 				{
@@ -139,22 +170,23 @@ namespace BSPZone
 					className.StartsWith("item_") ||
 					className.StartsWith("key_"))
 				{
-					Misc.SafeInvoke(ePickUp, zet);
+					Misc.SafeInvoke(ePickUp, zet, tcea);
 				}
 				else if(className.StartsWith("misc_"))
 				{
-					Misc.SafeInvoke(eMisc, zet);
+					Misc.SafeInvoke(eMisc, zet, tcea);
 				}
 				else if(className.StartsWith("func_"))
 				{
-					Misc.SafeInvoke(eFunc, zet);
+					FuncEventArgs	fea	=new FuncEventArgs(tcea, ze.GetValue("triggered") == "true");
+					Misc.SafeInvoke(eFunc, zet, fea);
 				}
 			}
 
 			//invoke a message as well if need be
 			if(ze.mData.ContainsKey("message"))
 			{
-				Misc.SafeInvoke(eMessage, ze.mData["message"]);
+				Misc.SafeInvoke(eMessage, ze.mData["message"], tcea);
 			}
 		}
 
@@ -174,7 +206,7 @@ namespace BSPZone
 		}
 
 
-		void TriggerTeleport(ZoneEntity ent)
+		void TriggerTeleport(ZoneEntity ent, TriggerContextEventArgs tcea)
 		{
 			Vector3	dst;
 			if(!ent.GetOrigin(out dst))
@@ -184,7 +216,7 @@ namespace BSPZone
 
 			Nullable<Vector3>	dest	=new Nullable<Vector3>(dst);
 
-			Misc.SafeInvoke(eTeleport, dest);
+			Misc.SafeInvoke(eTeleport, dest, tcea);
 		}
 	}
 }

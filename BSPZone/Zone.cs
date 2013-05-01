@@ -9,6 +9,16 @@ using UtilityLib;
 
 namespace BSPZone
 {
+	public class TriggerContextEventArgs : EventArgs
+	{
+		public object	mContext;
+
+		public TriggerContextEventArgs(object context) : base()
+		{
+			mContext	=context;
+		}
+	}
+
 	internal class ZoneTrigger
 	{
 		internal ZoneEntity		mEntity;
@@ -19,6 +29,8 @@ namespace BSPZone
 		internal bool			mbTriggerStandIn;
 		internal int			mTimeSinceTriggered;
 		internal int			mWait;
+
+		internal List<object>	mTriggeringObjects	=new List<object>();
 	}
 
 	public partial class Zone
@@ -232,6 +244,16 @@ namespace BSPZone
 					zt.mbTriggered		=false;
 					zt.mbTriggerOnce	=(ze.mData["classname"] == "trigger_once");
 					zt.mbTriggerStandIn	=(ze.mData["classname"] == "trigger_stand_in");	//hax
+
+					//make a triggered field in the entity
+					if(ze.mData.ContainsKey("triggered"))
+					{
+						ze.mData["triggered"]	="false";
+					}
+					else
+					{
+						ze.mData.Add("triggered", "false");
+					}
 
 					if(ze.mData.ContainsKey("wait"))
 					{
@@ -783,14 +805,23 @@ namespace BSPZone
 		}
 
 
-		public void BoxTriggerCheck(BoundingBox box, Vector3 start, Vector3 end, int msDelta)
+		//triggererereererereererrerererererrerererr
+		public void BoxTriggerCheck(object triggerer, BoundingBox box, Vector3 start, Vector3 end, int msDelta)
 		{
 			//check for new entries
 			foreach(ZoneTrigger zt in mTriggers)
 			{
 				zt.mTimeSinceTriggered	+=msDelta;
 
-				if((zt.mbTriggerOnce || zt.mbTriggerStandIn) && zt.mbTriggered)
+				//if a one shot and already tripped, skip
+				if(zt.mbTriggerOnce && zt.mbTriggered)
+				{
+					continue;
+				}
+
+				//if a stand in and the triggerer already in the list, skip
+				if(zt.mbTriggerStandIn &&
+					(zt.mbTriggered && zt.mTriggeringObjects.Contains(triggerer)))
 				{
 					continue;
 				}
@@ -799,9 +830,17 @@ namespace BSPZone
 				{
 					if(zt.mTimeSinceTriggered > zt.mWait)
 					{
-						zt.mbTriggered			=true;
-						zt.mTimeSinceTriggered	=0;
-						Misc.SafeInvoke(eTriggerHit, zt.mEntity);
+						zt.mEntity.mData["triggered"]	="true";
+						zt.mbTriggered					=true;
+						zt.mTimeSinceTriggered			=0;
+
+						//track who or what triggered if a stand in
+						if(zt.mbTriggerStandIn)
+						{
+							zt.mTriggeringObjects.Add(triggerer);
+						}
+
+						Misc.SafeInvoke(eTriggerHit, zt.mEntity, new TriggerContextEventArgs(triggerer));
 					}
 				}
 			}
@@ -819,14 +858,26 @@ namespace BSPZone
 					continue;
 				}
 
+				if(!zt.mTriggeringObjects.Contains(triggerer))
+				{
+					continue;
+				}
+
 				if(Trace_TriggerFakeOBBox(box, zt.mModelNum, start, end))
 				{
 					continue;
 				}
 
-				zt.mbTriggered			=false;
-				zt.mTimeSinceTriggered	=0;
-				Misc.SafeInvoke(eTriggerOutOfRange, zt.mEntity);
+				zt.mTriggeringObjects.Remove(triggerer);
+
+				//set to non triggered only if no mobiles inside
+				if(zt.mTriggeringObjects.Count <= 0)
+				{
+					zt.mEntity.mData["triggered"]	="false";
+					zt.mbTriggered					=false;
+					zt.mTimeSinceTriggered			=0;
+				}
+				Misc.SafeInvoke(eTriggerOutOfRange, zt.mEntity, new TriggerContextEventArgs(triggerer));
 			}
 		}
 

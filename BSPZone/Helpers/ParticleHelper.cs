@@ -16,6 +16,8 @@ namespace BSPZone
 
 		List<int>	mIndexes	=new List<int>();
 
+		bool	mbMiscListening;
+
 
 		public void Initialize(Zone zone, TriggerHelper th, ParticleBoss pb, string texPrefix)
 		{
@@ -24,7 +26,12 @@ namespace BSPZone
 
 			mIndexes.Clear();
 
-			th.eMisc	+=OnTriggerMisc;
+			//make sure to wire event once only
+			if(!mbMiscListening)
+			{
+				th.eMisc		+=OnTriggerMisc;
+				mbMiscListening	=true;
+			}
 
 			Array	shapeVals	=Enum.GetValues(typeof(Emitter.Shapes));
 
@@ -156,7 +163,15 @@ namespace BSPZone
 				return;
 			}
 
-			mPB.GetEmitterByIndex(index).mbOn	=ze.ToggleEntityActivated();
+			Emitter	em	=mPB.GetEmitterByIndex(index);
+			if(em == null)
+			{
+				return;
+			}
+
+			bool	bOn	=ze.ToggleEntityActivated();
+
+			em.mbOn	=bOn;
 		}
 	}
 }

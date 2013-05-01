@@ -42,7 +42,7 @@ namespace BSPZone
 		public event EventHandler	ePickUp;
 
 		const float	PickUpDistance	=32.0f;
-		const float	YawPerMS		=0.01f;
+		const float	YawPerMS		=0.007f;
 
 
 		public void Initialize(Zone zone)

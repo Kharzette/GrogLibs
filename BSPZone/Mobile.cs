@@ -291,7 +291,7 @@ namespace BSPZone
 			//do a trigger check if requested
 			if(bTriggerCheck)
 			{
-				mTHelper.CheckPlayer(mBox, mPosition, endPos, msDelta);
+				mTHelper.CheckMobile(this, mBox, mPosition, endPos, msDelta);
 			}
 
 			mPosition	=endPos;

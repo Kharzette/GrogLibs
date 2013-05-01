@@ -18,6 +18,8 @@ namespace BSPZone
 		List<AudioEmitter>			mEmitters		=new List<AudioEmitter>();
 		List<SoundEffectInstance>	mInstances		=new List<SoundEffectInstance>();
 
+		bool	mbMiscListening;
+
 
 		public void Initialize(Zone zone, TriggerHelper th, Audio aud, AudioListener playerListener)
 		{
@@ -25,7 +27,13 @@ namespace BSPZone
 			mAudio			=aud;
 			mPlayerListener	=playerListener;
 
-			th.eMisc	+=OnTriggerMisc;
+			//be sure to only wire this up once!
+			//can cause double toggling
+			if(!mbMiscListening)
+			{
+				th.eMisc		+=OnTriggerMisc;
+				mbMiscListening	=true;
+			}
 
 			mAudioEntities.Clear();
 			mEmitters.Clear();

@@ -29,9 +29,13 @@ namespace BSPZone
 
 			internal Mover3	mMover	=new Mover3();
 
-			internal void Fire()
+			internal void Fire(bool bOpen)
 			{
-				mbOpening	=!mbOpening;
+				if(mbOpening == bOpen)
+				{
+					return;
+				}
+				mbOpening	=bOpen;
 
 				if(mbOpening)
 				{
@@ -106,9 +110,13 @@ namespace BSPZone
 
 			internal Mover3	mMover	=new Mover3();
 
-			internal void Fire()
+			internal void Fire(bool bOpen)
 			{
-				mbOpening	=!mbOpening;
+				if(mbOpening == bOpen)
+				{
+					return;
+				}
+				mbOpening	=bOpen;
 
 				if(mbOpening)
 				{
@@ -360,7 +368,7 @@ namespace BSPZone
 		}
 
 
-		public void ToggleMovement(int modelIndex)
+		public void SetState(int modelIndex, bool bOpen)
 		{
 			if(!mSSMs.ContainsKey(modelIndex))
 			{
@@ -368,11 +376,11 @@ namespace BSPZone
 				{
 					return;
 				}
-				mDSMs[modelIndex].Fire();
+				mDSMs[modelIndex].Fire(bOpen);
 				return;
 			}
 
-			mSSMs[modelIndex].Fire();
+			mSSMs[modelIndex].Fire(bOpen);
 		}
 
 
