@@ -123,6 +123,11 @@ namespace BSPZone
 					velMin, velMax, sizeVelMin, sizeVelMax,
 					alphaVelMin, alphaVelMax, (int)lifeMin, (int)lifeMax);
 
+				if(idx == -1)
+				{
+					continue;	//creation failed, probably missing texture
+				}
+
 				ze.SetInt("EmitterIndex", idx);
 
 				mPB.GetEmitterByIndex(idx).mbOn	=bOn;

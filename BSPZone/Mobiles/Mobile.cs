@@ -15,6 +15,9 @@ namespace BSPZone
 			Idle, Walk, WalkBack, WalkLeft, WalkRight
 		}
 
+		//owner of this mobile
+		public readonly object	mParent;
+
 		//zone to collide against
 		Zone	mZone;
 
@@ -50,8 +53,10 @@ namespace BSPZone
 		const float	MinCamDist		=10f;
 
 
-		public Mobile(float boxWidth, float boxHeight, float eyeHeight, bool bPushable, TriggerHelper th)
+		public Mobile(object owner, float boxWidth, float boxHeight,
+			float eyeHeight, bool bPushable, TriggerHelper th)
 		{
+			mParent			=owner;
 			mBox			=Misc.MakeBox(boxWidth, boxHeight);
 			mEyeHeight		=Vector3.UnitY * (eyeHeight + mBox.Min.Y);
 			mbPushable		=bPushable;
@@ -90,6 +95,26 @@ namespace BSPZone
 			ret.Max	+=mPosition;
 
 			return	ret;
+		}
+
+
+		//returns a vector that adjusts a ground position
+		//to the bounding box middle
+		public Vector3 GetBoxAdjust()
+		{
+			return	Vector3.UnitY * ((mBox.Max.Y - mBox.Min.Y) * 0.5f);
+		}
+
+
+		public Vector3 GetPosition()
+		{
+			return	mPosition;
+		}
+
+
+		public Vector3 GetEyePos()
+		{
+			return	(mPosition + mEyeHeight);
 		}
 
 
@@ -308,21 +333,35 @@ namespace BSPZone
 		}
 
 
-		public bool TryMoveTo(Vector3 tryPos)
+		//try a simplified move to see if a position
+		//can be reached without pathfinding
+		//miss C++ const methods for something like this
+		public bool TryMoveTo(Vector3 tryPos, out Vector3 retPos, float error)
 		{
-			if(!mbOnGround)
+			retPos	=Vector3.Zero;
+
+			if(mZone == null || !mbOnGround)
 			{
 				return	false;
 			}
 
-			int			modelHit	=0;
-			Vector3		impacto		=Vector3.Zero;
-			ZonePlane	planeHit	=ZonePlane.Blank;
+			Vector3	moveDelta	=tryPos - mPosition;
+			Vector3	endPos		=mPosition + moveDelta;
 
-			bool	bHit	=mZone.Trace_All(mBox, mPosition,
-				tryPos, ref modelHit, ref impacto, ref planeHit);
+			//move it through the bsp
+			bool	bUsedStairs	=false;
+			int		modelOn		=-1;
+			bool	bOnGround	=mZone.BipedMoveBox(mBox, mPosition, endPos, mbOnGround,
+									out endPos, out bUsedStairs, ref modelOn);
 
-			return	!bHit;
+			retPos	=endPos;
+
+			//test distance without the Y
+			tryPos.Y	=0f;
+			endPos.Y	=0f;
+
+			float	dist	=Vector3.Distance(tryPos, endPos);
+			return	(dist < error);
 		}
 
 

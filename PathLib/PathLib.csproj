@@ -71,10 +71,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BSPZone\BSPZone.csproj">
-      <Project>{AC062C9A-21A8-4B6B-83D9-3BF6DFE5337C}</Project>
-      <Name>BSPZone</Name>
-    </ProjectReference>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj">
       <Project>{BB91910C-2595-4EB6-B48C-30BCC41457F6}</Project>
       <Name>UtilityLib</Name>

@@ -37,6 +37,34 @@ namespace PathLib
 			return	false;
 		}
 
+		internal bool AlmostEqualXZ(Edge other)
+		{
+			Vector2	ourAXZ, ourBXZ;
+			Vector2	otherAXZ, otherBXZ;
+
+			ourAXZ.X	=mA.X;
+			ourAXZ.Y	=mA.Z;
+			ourBXZ.X	=mB.X;
+			ourBXZ.Y	=mB.Z;
+
+			otherAXZ.X	=other.mA.X;
+			otherAXZ.Y	=other.mA.Z;
+			otherBXZ.X	=other.mB.X;
+			otherBXZ.Y	=other.mB.Z;
+
+			if(Mathery.CompareVector(ourAXZ, otherAXZ)
+				&& Mathery.CompareVector(ourBXZ, otherBXZ))
+			{
+				return	true;
+			}
+			if(Mathery.CompareVector(ourBXZ, otherAXZ)
+				&& Mathery.CompareVector(ourAXZ, otherBXZ))
+			{
+				return	true;
+			}
+			return	false;
+		}
+
 		internal Vector3 GetCenter()
 		{
 			return	((mA + mB) * 0.5f);

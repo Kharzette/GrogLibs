@@ -188,6 +188,7 @@ namespace BSPCore
 		}
 
 
+		//note that the front and back checks are 0 instead of 1!
 		bool RayIntersectFace(Vector3 Front, Vector3 Back, Int32 Node,
 			ref Vector3 intersectionPoint, ref bool hitLeaf, ref GFXFace hit)
 		{
@@ -325,16 +326,9 @@ namespace BSPCore
 		}
 
 
-		//temp hax
-		public bool IsTexInfoSky(int tex)
-		{
-			return	mGFXTexInfos[tex].IsSky();
-		}
-
-
 		//tests vs world (model 0) as well as modelIndex if not zero
 		//modelInv should be an inverted model matrix
-		public bool RayCollideToFace(Vector3 Front, Vector3 Back, int modelIndex, Matrix modelInv, ref GFXFace hit)
+		bool RayCollideToFace(Vector3 Front, Vector3 Back, int modelIndex, Matrix modelInv, ref GFXFace hit)
 		{
 			bool	hitLeaf			=false;
 			Vector3	worldImpacto	=Vector3.Zero;

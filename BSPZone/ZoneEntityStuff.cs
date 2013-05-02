@@ -221,12 +221,30 @@ namespace BSPZone
 					ref impacto, ref leafHit, ref nodeHit))
 				{
 					ZoneNode	zn	=mZoneNodes[nodeHit];
-					for(int i=0;i < zn.mNumFaces;i++)
+
+					if(zn.mNumFaces == 1)
 					{
-						DebugFace	df	=mDebugFaces[i + zn.mFirstFace];
-						if(Misc.bFlagSet(SKY, df.mFlags))
+						if(Misc.bFlagSet(SKY, mDebugFaces[zn.mFirstFace].mFlags))
 						{
 							return	mLightCache[sunEnt];
+						}
+					}
+					else
+					{
+						for(int i=0;i < zn.mNumFaces;i++)
+						{
+							DebugFace	df	=mDebugFaces[i + zn.mFirstFace];
+
+							float	sum	=ComputeAngleSum(df, impacto);
+							if(sum < (MathHelper.TwoPi - 0.0001f))
+							{
+								continue;
+							}
+
+							if(Misc.bFlagSet(SKY, df.mFlags))
+							{
+								return	mLightCache[sunEnt];
+							}
 						}
 					}
 				}

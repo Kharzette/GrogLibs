@@ -34,6 +34,39 @@ namespace BSPZone
 		Vector3	[]mTestTransBoxCorners	=new Vector3[8];
 
 
+		//uses the add up the angles trick to determine point in poly
+		float ComputeAngleSum(DebugFace df, Vector3 point)
+		{
+			float	dotSum	=0f;
+			for(int i=0;i < df.mNumVerts;i++)
+			{
+				int	vIdx0	=i + df.mFirstVert;
+				int	vIdx1	=((i + 1) % df.mNumVerts) + df.mFirstVert;
+
+				vIdx0	=mDebugIndexes[vIdx0];
+				vIdx1	=mDebugIndexes[vIdx1];
+
+				Vector3	v1	=mDebugVerts[vIdx0] - point;
+				Vector3	v2	=mDebugVerts[vIdx1] - point;
+
+				float	len1	=v1.Length();
+				float	len2	=v2.Length();
+
+				if((len1 * len2) < 0.0001f)
+				{
+					return	MathHelper.TwoPi;
+				}
+
+				v1	/=len1;
+				v2	/=len2;
+
+				float	dot	=Vector3.Dot(v1, v2);
+
+				dotSum	+=(float)Math.Acos(dot);
+			}
+			return	dotSum;
+		}
+
 		//this was written by me back in the genesis days, not well tested
 		bool CapsuleIntersect(RayTrace trace, Vector3 start, Vector3 end, float radius, Int32 node)
 		{
@@ -168,12 +201,12 @@ namespace BSPZone
 			Fd	=p.DistanceFast(start);
 			Bd	=p.DistanceFast(end);
 
-			if(Fd >= -1 && Bd >= -1)
+			if(Fd >= 0 && Bd >= 0)
 			{
 				return(RayIntersect(start, end, n.mFront,
 					ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit));
 			}
-			if(Fd < 1 && Bd < 1)
+			if(Fd < 0 && Bd < 0)
 			{
 				return(RayIntersect(start, end, n.mBack,
 					ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit));

@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using BSPZone;
 using UtilityLib;
 
 
@@ -13,9 +12,6 @@ namespace PathLib
 {
 	public class PathGraph
 	{
-		//collision hull the pathing lives in
-		Zone	mBSP;
-
 		//bsp node lookup for path nodes
 		Dictionary<int, List<PathNode>>	mBSPLeafPathNodes	=new Dictionary<int, List<PathNode>>();
 
@@ -34,7 +30,11 @@ namespace PathLib
 
 		List<PathNode>	mNodery	=new List<PathNode>();
 
-		public delegate void PathCB(List<Vector3> resultPath);
+		//delegates used by whatever holds the world data
+		//be it bsp or terrain or whatever
+		public delegate void	PathCB(List<Vector3> resultPath);
+		public delegate void	GetWalkableFaces(out List<List<Vector3>> faces, out List<int> leaves);
+		public delegate Int32	FindLeaf(Vector3 pos);
 
 		PathGraph() { }
 
@@ -45,25 +45,19 @@ namespace PathLib
 		}
 
 
-		public virtual void GenerateGraph(Zone zone)
+		public void GenerateGraph(GetWalkableFaces getWalkable, float stepHeight)
 		{
-			mBSP	=zone;
-
 			mNodery.Clear();
 
 			List<List<Vector3>>	polys;
-			List<ZonePlane>		planes;
 			List<int>			leaves;
 
 			//grab the walkable faces from the map
-			mBSP.GetWalkableFaces(out polys, out planes, out leaves);
+			getWalkable(out polys, out leaves);
 
-			Debug.Assert(polys.Count == planes.Count);
-
-			for(int i=0;i < planes.Count;i++)
+			for(int i=0;i < polys.Count;i++)
 			{
-				ConvexPoly	cp	=new ConvexPoly(polys[i], planes[i]);
-
+				ConvexPoly	cp	=new ConvexPoly(polys[i]);
 				PathNode	pn	=new PathNode(cp);
 
 				mNodery.Add(pn);
@@ -80,7 +74,7 @@ namespace PathLib
 				}
 			}
 
-			BuildConnectivity();
+			BuildConnectivity(stepHeight);
 		}
 
 
@@ -134,10 +128,10 @@ namespace PathLib
 		}
 
 
-		public bool FindPath(Vector3 start, Vector3 end, PathCB notify)
+		public bool FindPath(Vector3 start, Vector3 end, PathCB notify, FindLeaf findLeaf)
 		{
-			int	startNode	=mBSP.FindNodeLandedIn(0, start);
-			int	endNode		=mBSP.FindNodeLandedIn(0, end);
+			int	startNode	=findLeaf(start);
+			int	endNode		=findLeaf(end);
 
 			if(startNode >= 0 || endNode >= 0)
 			{
@@ -319,7 +313,7 @@ namespace PathLib
 		}
 
 
-		void BuildConnectivity()
+		void BuildConnectivity(float stepHeight)
 		{
 			foreach(PathNode pn in mNodery)
 			{
@@ -355,6 +349,59 @@ namespace PathLib
 					}
 
 					Edge	edge	=pn.mPoly.GetSharedEdge(pn2.mPoly);
+					if(edge == null)
+					{
+						continue;
+					}
+
+					PathConnection	pc		=new PathConnection();
+					pc.mConnectedTo			=pn2;
+					pc.mDistanceToCenter	=pn.CenterToCenterDistance(pn2);
+					pc.mEdgeBetween			=edge;
+
+					pn.mConnections.Add(pc);
+				}
+			}
+
+			//look for connections made by stair steps
+			foreach(PathNode pn in mNodery)
+			{
+				BoundingBox	bound	=pn.mPoly.GetBounds();
+
+				//expand box by stair height
+				bound.Min.Y	-=stepHeight;
+				bound.Max.Y	+=stepHeight;
+
+				foreach(PathNode pn2 in mNodery)
+				{
+					if(pn == pn2)
+					{
+						continue;
+					}
+
+					//make sure we are not already connected
+					bool	bFound	=false;
+					foreach(PathConnection con in pn.mConnections)
+					{
+						if(con.mConnectedTo == pn2)
+						{
+							bFound	=true;
+							break;
+						}
+					}
+					if(bFound)
+					{
+						continue;
+					}
+
+					BoundingBox	bound2	=pn2.mPoly.GetBounds();
+
+					if(bound.Contains(bound2) == ContainmentType.Disjoint)
+					{
+						continue;
+					}
+
+					Edge	edge	=pn.mPoly.GetSharedEdgeXZ(pn2.mPoly);
 					if(edge == null)
 					{
 						continue;

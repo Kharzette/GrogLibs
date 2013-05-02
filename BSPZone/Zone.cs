@@ -78,9 +78,11 @@ namespace BSPZone
 		public event EventHandler	eTriggerOutOfRange;
 		public event EventHandler	ePushObject;
 
-		const float	GroundAngle				=0.8f;	//how sloped can you be to be considered ground
-		const float	RampAngle				=0.7f;	//how steep can we climb?
-		const float StepHeight				=18.0f;	//stair step height for bipeds
+		//pathing uses these to make the graph connections too
+		public const float	GroundAngle	=0.8f;	//how sloped can you be to be considered ground
+		public const float	RampAngle	=0.7f;	//how steep can we climb?
+		public const float	StepHeight	=18.0f;	//stair step height for bipeds
+
 		const int	MaxMoveBoxIterations	=64;
 
 
@@ -882,6 +884,12 @@ namespace BSPZone
 		}
 
 
+		public Int32 FindWorldNodeLandedIn(Vector3 pos)
+		{
+			return	FindNodeLandedIn(mZoneModels[0].mRootNode, pos);
+		}
+
+
 		public Int32 FindNodeLandedIn(Int32 node, Vector3 pos)
 		{
 			float		dist;
@@ -909,16 +917,18 @@ namespace BSPZone
 		}
 
 
-		void GetWalkableFaces(int node,
-			ref List<List<Vector3>> polys,
-			ref List<ZonePlane> planes,
-			ref List<int> leaves)
+		void GetWalkableFaces(int node, ref List<List<Vector3>> polys, ref List<int> leaves)
 		{
 			if(node < 0)
 			{
 				Int32	leaf	=-(node + 1);
 
 				ZoneLeaf	zLeaf	=mZoneLeafs[leaf];
+
+				if(Misc.bFlagSet(zLeaf.mContents, Contents.BSP_CONTENTS_DETAIL2))
+				{
+					return;
+				}
 
 				for(int f=0;f < zLeaf.mNumFaces;f++)
 				{
@@ -943,7 +953,7 @@ namespace BSPZone
 					{
 						continue;
 					}
-					
+
 					List<Vector3>	poly	=new List<Vector3>();
 					for(int v=0;v < df.mNumVerts;v++)
 					{
@@ -953,7 +963,6 @@ namespace BSPZone
 					}
 
 					polys.Add(poly);
-					planes.Add(zp);
 					leaves.Add(node);
 				}
 				return;
@@ -961,20 +970,17 @@ namespace BSPZone
 
 			ZoneNode	n	=mZoneNodes[node];
 
-			GetWalkableFaces(n.mFront, ref polys, ref planes, ref leaves);
-			GetWalkableFaces(n.mBack, ref polys, ref planes, ref leaves);
+			GetWalkableFaces(n.mFront, ref polys, ref leaves);
+			GetWalkableFaces(n.mBack, ref polys, ref leaves);
 		}
 
 
-		public void GetWalkableFaces(out List<List<Vector3>> polys,
-			out List<ZonePlane> planes,
-			out List<int> leaves)
+		public void GetWalkableFaces(out List<List<Vector3>> polys, out List<int> leaves)
 		{
 			polys	=new List<List<Vector3>>();
-			planes	=new List<ZonePlane>();
 			leaves	=new List<int>();
 
-			GetWalkableFaces(mZoneModels[0].mRootNode, ref polys, ref planes, ref leaves);
+			GetWalkableFaces(mZoneModels[0].mRootNode, ref polys, ref leaves);
 		}
 		#endregion
 

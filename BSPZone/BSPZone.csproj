@@ -87,7 +87,9 @@
     <Compile Include="Helpers\ParticleHelper.cs" />
     <Compile Include="Helpers\StaticHelper.cs" />
     <Compile Include="Helpers\TriggerHelper.cs" />
-    <Compile Include="Mobile.cs" />
+    <Compile Include="Mobiles\Mobile.cs" />
+    <Compile Include="Mobiles\MobileAI.cs" />
+    <Compile Include="Mobiles\ZoneMobs.cs" />
     <Compile Include="Pushable.cs" />
     <Compile Include="ZoneEntityStuff.cs" />
     <Compile Include="ZoneLeafSide.cs" />
@@ -150,11 +152,16 @@
       <Project>{5CDE77ED-568B-4412-BBC9-12247BF5F214}</Project>
       <Name>ParticleLib</Name>
     </ProjectReference>
+    <ProjectReference Include="..\PathLib\PathLib.csproj">
+      <Project>{77EEBCF7-224D-45F7-BA5F-C7124253DE7F}</Project>
+      <Name>PathLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj">
       <Project>{BB91910C-2595-4EB6-B48C-30BCC41457F6}</Project>
       <Name>UtilityLib</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\Microsoft.Xna.GameStudio.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

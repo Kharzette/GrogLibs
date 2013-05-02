@@ -2,7 +2,6 @@
 using System.Text;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
-using BSPZone;
 using UtilityLib;
 
 
@@ -11,13 +10,11 @@ namespace PathLib
 	internal class ConvexPoly
 	{
 		internal List<Vector3>	mVerts	=new List<Vector3>();
-		internal ZonePlane		mPlane;
 
 
-		public ConvexPoly(List<Vector3> verts, ZonePlane plane)
+		public ConvexPoly(List<Vector3> verts)
 		{
 			mVerts.AddRange(verts);
-			mPlane	=plane;
 		}
 
 		internal BoundingBox GetBounds()
@@ -62,6 +59,30 @@ namespace PathLib
 						continue;
 					}
 					if(me.AlmostEqual(oe))
+					{
+						return	me;
+					}
+				}
+			}
+			return	null;
+		}
+
+		//only checks the x and z
+		//used for pathing over stair steps
+		internal Edge GetSharedEdgeXZ(ConvexPoly other)
+		{
+			List<Edge>	myEdges		=GetEdges();
+			List<Edge>	otherEdges	=other.GetEdges();
+
+			foreach(Edge me in myEdges)
+			{
+				foreach(Edge oe in otherEdges)
+				{
+					if(!me.IsColinear(oe))
+					{
+						continue;
+					}
+					if(me.AlmostEqualXZ(oe))
 					{
 						return	me;
 					}
