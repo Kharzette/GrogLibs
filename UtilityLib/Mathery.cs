@@ -323,6 +323,30 @@ namespace UtilityLib
 		}
 
 
+		//flat, good for mobiles
+		public static Vector3 RandomDirectionXZ(Random rnd)
+		{
+			Vector3	ret	=Vector3.Zero;
+
+			for(;;)
+			{
+				ret.X	=(float)rnd.NextDouble();
+				ret.Y	=0f;
+				ret.Z	=(float)rnd.NextDouble();
+
+				ret	-=(Vector3.One * 0.5f);
+
+				ret.Normalize();
+
+				if(!float.IsNaN(ret.X))
+				{
+					break;
+				}
+			}
+			return	ret;
+		}
+
+
 		public static Vector3 RandomColorVector(Random rnd)
 		{
 			Vector3	ret	=Vector3.Zero;
@@ -431,6 +455,20 @@ namespace UtilityLib
 		}
 
 
+		public static bool CompareVectorEpsilon(Vector2 v1, Vector2 v2, float epsilon)
+		{
+			if((v1.X - v2.X) < -epsilon || (v1.X - v2.X) > epsilon)
+			{
+				return	false;
+			}
+			if((v1.Y - v2.Y) < -epsilon || (v1.Y - v2.Y) > epsilon)
+			{
+				return	false;
+			}
+			return	true;
+		}
+
+
 		public static bool CompareVectorEpsilon(Vector3 v1, Vector3 v2, float epsilon)
 		{
 			if((v1.X - v2.X) < -epsilon || (v1.X - v2.X) > epsilon)
@@ -450,6 +488,12 @@ namespace UtilityLib
 
 
 		public static bool CompareVector(Vector3 v1, Vector3 v2)
+		{
+			return	CompareVectorEpsilon(v1, v2, VCompareEpsilon);
+		}
+
+
+		public static bool CompareVector(Vector2 v1, Vector2 v2)
 		{
 			return	CompareVectorEpsilon(v1, v2, VCompareEpsilon);
 		}

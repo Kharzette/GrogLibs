@@ -47,6 +47,9 @@ namespace BSPCore
 			{
 				GBSPPlane	edgePlane	=new GBSPPlane();
 				edgePlane.mNormal		=Vector3.Cross(surfNormal, edges[i]);
+
+				edgePlane.mNormal.Normalize();
+
 				edgePlane.mDist			=Vector3.Dot(verts[i], edgePlane.mNormal);
 
 				edgePlanes.Add(edgePlane);

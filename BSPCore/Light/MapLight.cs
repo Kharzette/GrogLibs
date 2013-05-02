@@ -693,6 +693,17 @@ namespace BSPCore
 										val	=(angle2 * dLight.mIntensity);
 									}
 								}
+								else
+								{
+									//this is normal for verts as they aren't popped out into
+									//empty space the way facepoints are for lightmaps, so often
+									//the vert is considered in solid space
+									//CoreEvents.Print("Light ray hit with no face returned!\n");
+								}
+							}
+							else
+							{
+								CoreEvents.Print("Sunlight ray miss!\n");
 							}
 							break;
 						}
@@ -821,6 +832,7 @@ namespace BSPCore
 					if(!VertexShadeFace(i, vertNormals, modelMat, modelInv, modelIndex))
 					{
 						CoreEvents.Print("LightFaces:  VertexShadeFace failed...\n");
+//						continue;
 						return;
 					}					
 				}
@@ -828,6 +840,7 @@ namespace BSPCore
 				{
 					if(!CalcFaceInfo(mFaceInfos[i], mLightMaps[i], lp.mLightParams.mLightGridSize))
 					{
+//						continue;
 						return;
 					}
 			
@@ -847,6 +860,7 @@ namespace BSPCore
 								modelInv, modelIndex, skyClusters,
 								1 / (float)lp.mLightParams.mNumSamples, visData))
 							{
+//								continue;
 								return;
 							}
 						}
@@ -856,6 +870,7 @@ namespace BSPCore
 								modelInv, modelIndex,
 								1 / (float)lp.mLightParams.mNumSamples, visData))
 							{
+//								continue;
 								return;
 							}
 						}
@@ -916,7 +931,7 @@ namespace BSPCore
 				//this vis check doesn't actually work
 				//sometimes you might have no vis to a sky face
 				//but still need to cast rays if fully darkened
-				if(sunLight != null)// && skyClusters.Contains(clust))
+				if(sunLight != null && skyClusters.Contains(clust))
 				{
 					//Find the angle between the light, and the face normal
 					Vector3	sunRay		=facePoints[v] + sunLight.mNormal * -SunRayDist;
@@ -951,6 +966,14 @@ namespace BSPCore
 								rgb[v]	+=sunLight.mColor * (angle * scale * sunLight.mIntensity);
 							}
 						}
+						else
+						{
+							CoreEvents.Print("Light ray hit with no face returned!\n");
+						}
+					}
+					else
+					{
+						CoreEvents.Print("Sunlight ray miss!\n");
 					}
 				}
 			}
@@ -1157,6 +1180,14 @@ namespace BSPCore
 								rgb[v]	+=sunLight.mColor * (angle * scale * sunLight.mIntensity);
 							}
 						}
+						else
+						{
+							CoreEvents.Print("Light ray hit with no face returned!\n");
+						}
+					}
+					else
+					{
+						CoreEvents.Print("Sunlight ray miss!\n");
 					}
 				}
 			}

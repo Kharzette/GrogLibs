@@ -131,6 +131,63 @@ namespace BSPCore
 		}
 
 
+		//scores based on the distances inside the edge vectors
+		bool FaceContainsPointScore(GFXFace f, Vector3 point, out float offBy)
+		{
+			//make some edges
+			List<Vector3>	edges	=new List<Vector3>();
+			for(int i=0;i < f.mNumVerts;i++)
+			{
+				int	idx0	=mGFXVertIndexes[i + f.mFirstVert];
+				int	idx1	=mGFXVertIndexes[((i + 1) % f.mNumVerts) + f.mFirstVert];
+
+				Vector3	vert		=mGFXVerts[idx0];
+				Vector3	vertPlusOne	=mGFXVerts[idx1];
+
+				Vector3	edge	=vertPlusOne - vert;
+				edge.Normalize();
+
+				edges.Add(edge);
+			}
+
+			GFXPlane	p	=mGFXPlanes[f.mPlaneNum];
+
+			//make edge planes
+			List<GBSPPlane>	edgePlanes	=new List<GBSPPlane>();
+			for(int i=0;i < f.mNumVerts;i++)
+			{
+				int		idx0	=mGFXVertIndexes[i + f.mFirstVert];
+				Vector3	vert	=mGFXVerts[idx0];
+
+				GBSPPlane	edgePlane	=new GBSPPlane();
+				edgePlane.mNormal		=Vector3.Cross(p.mNormal, edges[i]);
+
+				edgePlane.mNormal.Normalize();
+
+				edgePlane.mDist			=Vector3.Dot(vert, edgePlane.mNormal);
+
+				edgePlanes.Add(edgePlane);
+			}
+
+			offBy	=0f;
+			foreach(GBSPPlane pl in edgePlanes)
+			{
+				float	dist	=pl.Distance(point);
+				if(f.mbFlipSide)
+				{
+					dist	=-dist;
+				}
+
+				if(dist > 0f)
+				{
+					offBy	=dist;
+					return	false;
+				}
+			}
+			return	true;
+		}
+
+
 		bool RayIntersectFace(Vector3 Front, Vector3 Back, Int32 Node,
 			ref Vector3 intersectionPoint, ref bool hitLeaf, ref GFXFace hit)
 		{
@@ -163,12 +220,12 @@ namespace BSPCore
 
 			I	=Front + Dist * (Back - Front);
 
-			if(Fd >= -1 && Bd >= -1)
+			if(Fd >= 0 && Bd >= 0)
 			{
 				return	RayIntersectFace(Front, Back, n.mFront,
 							ref intersectionPoint, ref hitLeaf, ref hit);
 			}
-			if(Fd < 1 && Bd < 1)
+			if(Fd < 0 && Bd < 0)
 			{
 				return	RayIntersectFace(Front, Back, n.mBack,
 							ref intersectionPoint, ref hitLeaf, ref hit);
@@ -198,17 +255,37 @@ namespace BSPCore
 						hitLeaf				=true;
 						if(hit == null)
 						{
-							//figure out which face was hit
-							for(int i=0;i < n.mNumFaces;i++)
+							if(n.mNumFaces == 1)
 							{
-								GFXFace		f	=mGFXFaces[i + n.mFirstFace];
-								GFXPlane	pl	=mGFXPlanes[f.mPlaneNum];
-
-								float	dist	=pl.DistanceFast(intersectionPoint);
-								if(dist > -0.001f && dist < 0.001f)
+								hit	=mGFXFaces[n.mFirstFace];
+							}
+							else
+							{
+								//find the best face
+								float	bestScore	=float.MaxValue;
+								for(int i=0;i < n.mNumFaces;i++)
 								{
-									hit	=f;
-									break;
+									GFXFace		f	=mGFXFaces[i + n.mFirstFace];
+									GFXPlane	pl	=mGFXPlanes[f.mPlaneNum];
+
+									float	dist	=pl.DistanceFast(intersectionPoint);
+									if(dist < -0.001f || dist > 0.001f)
+									{
+										CoreEvents.Print("Face way off its plane!\n");
+									}
+
+									float	score;
+									if(FaceContainsPointScore(f, intersectionPoint, out score))
+									{
+										hit	=f;
+										break;
+									}
+
+									if(score < bestScore)
+									{
+										bestScore	=score;
+										hit			=f;
+									}
 								}
 							}
 						}
@@ -248,9 +325,16 @@ namespace BSPCore
 		}
 
 
+		//temp hax
+		public bool IsTexInfoSky(int tex)
+		{
+			return	mGFXTexInfos[tex].IsSky();
+		}
+
+
 		//tests vs world (model 0) as well as modelIndex if not zero
 		//modelInv should be an inverted model matrix
-		bool RayCollideToFace(Vector3 Front, Vector3 Back, int modelIndex, Matrix modelInv, ref GFXFace hit)
+		public bool RayCollideToFace(Vector3 Front, Vector3 Back, int modelIndex, Matrix modelInv, ref GFXFace hit)
 		{
 			bool	hitLeaf			=false;
 			Vector3	worldImpacto	=Vector3.Zero;
