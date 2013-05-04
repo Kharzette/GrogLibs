@@ -79,11 +79,17 @@ namespace BSPZone
 		public event EventHandler	ePushObject;
 
 		//pathing uses these to make the graph connections too
-		public const float	GroundAngle	=0.8f;	//how sloped can you be to be considered ground
 		public const float	RampAngle	=0.7f;	//how steep can we climb?
 		public const float	StepHeight	=18.0f;	//stair step height for bipeds
 
 		const int	MaxMoveBoxIterations	=64;
+
+
+		public Zone()
+		{
+			//for casting down to floor
+			mTinyBox	=Misc.MakeBox(1f, 1f);
+		}
 
 
 		#region IO
@@ -511,12 +517,6 @@ namespace BSPZone
 		}
 
 
-		bool IsGround(ZonePlane p)
-		{
-			return	(Vector3.Dot(p.mNormal, Vector3.UnitY) > GroundAngle);
-		}
-
-
 		bool FootCheck(BoundingBox box, Vector3 footPos, float dist, out int modelOn)
 		{
 			//see if the feet are still on the ground
@@ -528,7 +528,7 @@ namespace BSPZone
 
 			if(Trace_All(box, footPos, footCheck, ref modelOn, ref impVec, ref footPlane))
 			{
-				if(IsGround(footPlane))
+				if(footPlane.IsGround())
 				{
 					return	true;
 				}
@@ -569,7 +569,7 @@ namespace BSPZone
 				if(Trace_All(box, stepPos, stepPos - Vector3.UnitY * stepHeight,
 					ref modelHit, ref impVec, ref impPlane))
 				{
-					if(IsGround(impPlane))
+					if(impPlane.IsGround())
 					{
 						//landed on the ground
 						stepPos		=impVec;
@@ -949,7 +949,7 @@ namespace BSPZone
 						zp.Inverse();
 					}
 
-					if(!IsGround(zp))
+					if(!zp.IsGround())
 					{
 						continue;
 					}

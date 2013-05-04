@@ -97,6 +97,21 @@ namespace BSPZone
 		}
 
 
+		public List<ZoneEntity> GetEntitiesTargetNameStartsWith(string targName)
+		{
+			List<ZoneEntity>	ret	=new List<ZoneEntity>();
+			foreach(ZoneEntity ze in mZoneEntities)
+			{
+				string	tName	=ze.GetTargetName();
+				if(tName.StartsWith(targName))
+				{
+					ret.Add(ze);
+				}
+			}
+			return	ret;
+		}
+
+
 		public List<ZoneEntity> GetEntities(string className)
 		{
 			List<ZoneEntity>	ret	=new List<ZoneEntity>();

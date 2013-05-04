@@ -33,6 +33,7 @@ namespace BSPZone
 		Vector3	[]mTestBoxCorners		=new Vector3[8];
 		Vector3	[]mTestTransBoxCorners	=new Vector3[8];
 
+		BoundingBox	mTinyBox;	//for doing raycasts
 
 		//uses the add up the angles trick to determine point in poly
 		float ComputeAngleSum(DebugFace df, Vector3 point)
@@ -466,6 +467,23 @@ namespace BSPZone
 				return	true;
 			}
 			return	false;
+		}
+
+
+		public Vector3 DropToGround(Vector3 pos)
+		{
+			int			modelHit	=0;
+			Vector3		impacto		=Vector3.Zero;
+			ZonePlane	planeHit	=ZonePlane.Blank;
+
+			bool	bHit	=Trace_All(mTinyBox, pos, pos + (Vector3.UnitY * -300f),
+										ref modelHit, ref impacto, ref planeHit);
+
+			if(bHit && planeHit != ZonePlane.Blank && planeHit.IsGround())
+			{
+				return	impacto;
+			}
+			return	pos;
 		}
 
 
