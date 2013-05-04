@@ -39,6 +39,7 @@ namespace BSPZone
 
 		//collision box, sized for this mobile
 		BoundingBox	mBox;
+		Vector3		mBoxMiddleOffset;
 
 		//offset from the boundingbox center to the eye position
 		Vector3		mEyeHeight;
@@ -56,14 +57,15 @@ namespace BSPZone
 		public Mobile(object owner, float boxWidth, float boxHeight,
 			float eyeHeight, bool bPushable, TriggerHelper th)
 		{
-			mParent			=owner;
-			mBox			=Misc.MakeBox(boxWidth, boxHeight);
-			mEyeHeight		=Vector3.UnitY * (eyeHeight + mBox.Min.Y);
-			mbPushable		=bPushable;
-			mTHelper		=th;
+			mParent				=owner;
+			mBox				=Misc.MakeBox(boxWidth, boxHeight);
+			mEyeHeight			=Vector3.UnitY * eyeHeight;
+			mBoxMiddleOffset	=Vector3.UnitY * ((mBox.Max.Y - mBox.Min.Y) * 0.5f);
+			mbPushable			=bPushable;
+			mTHelper			=th;
 
 			//small box for camera collision
-			mCamBox	=Misc.MakeBox(4f, 4f);
+			mCamBox	=Misc.MakeBox(28f, 28f);
 		}
 
 
@@ -71,13 +73,16 @@ namespace BSPZone
 		{
 			mZone	=z;
 			mZone.RegisterPushable(this, mBox, mPosition, mModelOn);
+
+			//clear state
+			mbOnGround	=false;
 		}
 
 
 		//for initial start pos and teleports
-		public void SetPosition(Vector3 pos)
+		public void SetGroundPosition(Vector3 pos)
 		{
-			mPosition	=pos;
+			mPosition	=pos + mBoxMiddleOffset;
 		}
 
 
@@ -98,15 +103,20 @@ namespace BSPZone
 		}
 
 
-		//returns a vector that adjusts a ground position
-		//to the bounding box middle
-		public Vector3 GetBoxAdjust()
+		//helps AI come to a stop without sliding
+		public void KillVelocity()
 		{
-			return	Vector3.UnitY * ((mBox.Max.Y - mBox.Min.Y) * 0.5f);
+			mVelocity	=Vector3.Zero;
 		}
 
 
-		public Vector3 GetPosition()
+		public Vector3 GetGroundPosition()
+		{
+			return	mPosition - mBoxMiddleOffset;
+		}
+
+
+		public Vector3 GetMiddlePosition()
 		{
 			return	mPosition;
 		}
@@ -114,7 +124,7 @@ namespace BSPZone
 
 		public Vector3 GetEyePos()
 		{
-			return	(mPosition + mEyeHeight);
+			return	(mPosition - mBoxMiddleOffset + mEyeHeight);
 		}
 
 
@@ -234,12 +244,16 @@ namespace BSPZone
 		}
 
 
+		//ins and outs are ground based
 		public void Move(Vector3 endPos, int msDelta,
 			bool bAffectVelocity, bool bFly, bool bTriggerCheck,
 			out Vector3 retPos, out Vector3 camPos)
 		{
 			retPos	=Vector3.Zero;
 			camPos	=Vector3.Zero;
+
+			//adjust to box middle
+			endPos	+=mBoxMiddleOffset;
 
 			if(mZone == null)
 			{
@@ -308,15 +322,16 @@ namespace BSPZone
 				mbOnGround	=false;
 			}
 
-			retPos	=endPos;
+			retPos	=endPos - mBoxMiddleOffset;
 
 			//pop up to eye height, and negate
-			camPos	=-(endPos + mEyeHeight);
+			camPos	=-(endPos - mBoxMiddleOffset + mEyeHeight);
 
 			//do a trigger check if requested
 			if(bTriggerCheck)
 			{
-				mTHelper.CheckMobile(this, mBox, mPosition, endPos, msDelta);
+				mTHelper.CheckMobile(this, mBox,
+					mPosition, endPos, msDelta);
 			}
 
 			mPosition	=endPos;
@@ -336,16 +351,14 @@ namespace BSPZone
 		//try a simplified move to see if a position
 		//can be reached without pathfinding
 		//miss C++ const methods for something like this
-		public bool TryMoveTo(Vector3 tryPos, out Vector3 retPos, float error)
+		public bool TryMoveTo(Vector3 tryPos, float error)
 		{
-			retPos	=Vector3.Zero;
-
 			if(mZone == null || !mbOnGround)
 			{
 				return	false;
 			}
 
-			Vector3	moveDelta	=tryPos - mPosition;
+			Vector3	moveDelta	=(tryPos + mBoxMiddleOffset) - mPosition;
 			Vector3	endPos		=mPosition + moveDelta;
 
 			//move it through the bsp
@@ -353,8 +366,6 @@ namespace BSPZone
 			int		modelOn		=-1;
 			bool	bOnGround	=mZone.BipedMoveBox(mBox, mPosition, endPos, mbOnGround,
 									out endPos, out bUsedStairs, ref modelOn);
-
-			retPos	=endPos;
 
 			//test distance without the Y
 			tryPos.Y	=0f;
@@ -371,6 +382,8 @@ namespace BSPZone
 			{
 				return	false;
 			}
+
+			tryPos	+=mBoxMiddleOffset;
 
 			int			modelHit	=0;
 			Vector3		impacto		=Vector3.Zero;

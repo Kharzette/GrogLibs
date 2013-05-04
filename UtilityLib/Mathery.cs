@@ -331,7 +331,7 @@ namespace UtilityLib
 			for(;;)
 			{
 				ret.X	=(float)rnd.NextDouble();
-				ret.Y	=0f;
+				ret.Y	=0.5f;	//will go to zero
 				ret.Z	=(float)rnd.NextDouble();
 
 				ret	-=(Vector3.One * 0.5f);

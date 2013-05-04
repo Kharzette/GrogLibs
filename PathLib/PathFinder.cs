@@ -194,9 +194,12 @@ namespace PathLib
 				}
 			}
 
+			Debug.Assert(least != null);
 			if(least == null)
 			{
 				//something has gone wrong
+				//this usually means there just isn't
+				//any path to where requested
 				mbDone	=true;
 				return;
 			}

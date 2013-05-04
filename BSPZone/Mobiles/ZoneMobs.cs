@@ -96,7 +96,7 @@ namespace BSPZone
 			float	bestDist	=float.MaxValue;
 			foreach(MobileAI mob in targs)
 			{
-				Vector3	mobPos	=mob.GetPosition();
+				Vector3	mobPos	=mob.GetGroundPosition();
 				float	dist	=Vector3.Distance(mobPos, pos);
 				if(dist < bestDist)
 				{
@@ -108,14 +108,14 @@ namespace BSPZone
 		}
 
 
-		//finds the middle of a bunch of mobiles
+		//finds the middle ground of a bunch of mobiles
 		public static Vector3 FindCenter(List<MobileAI> targs)
 		{
 			Vector3	ret	=Vector3.Zero;
 
 			foreach(MobileAI mob in targs)
 			{
-				ret	+=mob.GetPosition();
+				ret	+=mob.GetGroundPosition();
 			}
 			ret	/=targs.Count;
 
@@ -151,7 +151,7 @@ namespace BSPZone
 
 			foreach(MobileAI mob in zoneWide)
 			{
-				Vector3	mobPos	=mob.GetPosition();
+				Vector3	mobPos	=mob.GetMiddlePosition();
 
 				float	dist	=Vector3.Distance(pov, mobPos);
 				if(dist > maxDist)
@@ -173,7 +173,7 @@ namespace BSPZone
 
 			foreach(MobileAI mob in zoneWideOnFact)
 			{
-				Vector3	mobPos	=mob.GetPosition();
+				Vector3	mobPos	=mob.GetMiddlePosition();
 
 				if(!IsVisibleFrom(pov, mobPos))
 				{
@@ -193,7 +193,7 @@ namespace BSPZone
 
 			foreach(MobileAI mob in inPVS)
 			{
-				Vector3	mobPos	=mob.GetPosition();
+				Vector3	mobPos	=mob.GetMiddlePosition();
 
 				float	dist	=Vector3.Distance(pov, mobPos);
 				if(dist > maxDist)
@@ -215,7 +215,7 @@ namespace BSPZone
 
 			foreach(MobileAI mob in inPVS)
 			{
-				Vector3	mobPos	=mob.GetPosition();
+				Vector3	mobPos	=mob.GetMiddlePosition();
 
 				Vector3		impacto		=Vector3.Zero;
 				int			hitModel	=0;
@@ -239,7 +239,7 @@ namespace BSPZone
 
 			foreach(MobileAI mob in inPVS)
 			{
-				Vector3	mobPos	=mob.GetPosition();
+				Vector3	mobPos	=mob.GetMiddlePosition();
 
 				float	dist	=Vector3.Distance(pov, mobPos);
 				if(dist > maxDistance)
