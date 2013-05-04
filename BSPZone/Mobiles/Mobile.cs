@@ -65,7 +65,7 @@ namespace BSPZone
 			mTHelper			=th;
 
 			//small box for camera collision
-			mCamBox	=Misc.MakeBox(28f, 28f);
+			mCamBox	=Misc.MakeBox(2f, 2f);
 		}
 
 
@@ -181,38 +181,67 @@ namespace BSPZone
 		}
 
 
-		//returns true if any actual movement
-		public bool Orient(PlayerSteering ps, Vector3 pos, Vector3 camPos, Vector3 camForward,
-			out Vector3 mobForward, out Vector3 mobCamPos, out bool bFirstPerson)
+		//takes a campos from a Move output and adjusts it to work
+		//for a typical third person camera with reticle aiming
+		public void ThirdPersonOrient(PlayerSteering ps, Vector3 camPos,
+			Vector3 shoulderOffset,	//adjustment to move the reticle slightly to the side
+			out Vector3 mobForward,	//returns a valid direction for a character mesh
+			out Vector3 mobCamPos,	//the new adjusted camera position
+			out bool bFirstPerson)	//if something is blocking, pop to first person
 		{
+			//grab the orientation from the just updated player steering
+			//the camera would be a frame behind here as it ordinarily
+			//hasn't been updated yet
 			Matrix	orientation	=
 				Matrix.CreateRotationY(MathHelper.ToRadians(ps.Yaw)) *
 				Matrix.CreateRotationX(MathHelper.ToRadians(ps.Pitch)) *
 				Matrix.CreateRotationZ(MathHelper.ToRadians(ps.Roll));
 
-			//grab transpose forward
-			Vector3	forward;
+			//transpose to get it out of wacky camera land
+			orientation		=Matrix.Transpose(orientation);
 
-			forward.X	=orientation.M13;
-			forward.Y	=orientation.M23;
-			forward.Z	=orientation.M33;
+			//grab transpose forward
+			Vector3	forward	=orientation.Forward;
+
+			//level out for mobforward
+			mobForward		=forward;
+			mobForward.Y	=0f;
+
+			//make sure valid
+			float	len	=mobForward.Length();
+
+			//should be valid so long as the pitchclamp
+			//values are reasonable in playersteering
+			Debug.Assert(len > 0f);
+			if(len > 0f)
+			{
+				mobForward	/=len;
+			}
+			else
+			{
+				mobForward	=Vector3.UnitX;
+			}
 
 			//camera positions are always negated
 			camPos	=-camPos;
 
+			//transform the shoulder offset to get it into player space
+			shoulderOffset	=Vector3.Transform(shoulderOffset, orientation);
+
 			//for the third person camera, back the position out
 			//along the updated forward vector
-			mobCamPos	=camPos + (forward * ps.Zoom);
+			mobCamPos	=camPos + (-forward * ps.Zoom) + shoulderOffset;
 
 			Vector3		impacto		=Vector3.Zero;
 			ZonePlane	planeHit	=ZonePlane.Blank;
-			if(mZone.Trace_WorldCollisionBBox(mCamBox, 0, camPos, mobCamPos, ref impacto, ref planeHit))
+			int			modelHit	=0;
+			if(mZone.Trace_All(mCamBox, camPos, mobCamPos, ref modelHit, ref impacto, ref planeHit))
 			{
 				mobCamPos	=impacto;
 			}
 
 			Vector3	camRay	=mobCamPos - camPos;
-			float	len		=camRay.Length();
+			len				=camRay.Length();
 				
 			//if really short, just use first person
 			if(len < MinCamDist)
@@ -224,23 +253,6 @@ namespace BSPZone
 			{
 				bFirstPerson	=false;
 			}
-
-			Vector3	delt	=ps.Position - pos;
-			if(delt.LengthSquared() > 0.001f)
-			{
-				//need a leveled out forward direction
-				Vector3	dir		=camForward;
-				Vector3	side	=Vector3.Cross(dir, Vector3.Up);
-				dir				=Vector3.Cross(side, Vector3.Up);
-
-				mobForward	=dir;
-
-				return	true;
-			}
-
-			mobForward	=Vector3.Zero;	//don't use
-
-			return	false;
 		}
 
 

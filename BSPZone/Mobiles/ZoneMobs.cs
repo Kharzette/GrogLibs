@@ -24,7 +24,7 @@ namespace BSPZone
 		public bool RayCollideMobiles(Vector3 start, Vector3 end,
 			UInt32 state, UInt32 faction, out MobileAI hit)
 		{
-			List<MobileAI>	inView	=GetAITargetsInLOS(start, state, faction);
+			List<MobileAI>	inView	=GetAITargetsInPVS(start, state, faction);
 
 			//first ray cast against the world
 			Vector3		impacto		=Vector3.Zero;
