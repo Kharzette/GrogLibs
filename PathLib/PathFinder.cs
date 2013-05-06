@@ -15,10 +15,16 @@ namespace PathLib
 
 		bool	mbDone;
 
-		internal List<Vector3>	mResultPath	=new List<Vector3>();
+		List<Vector3>	mResultPath	=new List<Vector3>();
 
 		List<AStarNode>	mOpen	=new List<AStarNode>();
 		List<AStarNode>	mClosed	=new List<AStarNode>();
+
+
+		internal List<Vector3> GetResultPath()
+		{
+			return	mResultPath;
+		}
 
 
 		public void StartPath(PathNode start, PathNode end)
@@ -135,6 +141,11 @@ namespace PathLib
 			
 			foreach(PathConnection con in asn.mNode.mConnections)
 			{
+				if(!con.mbPassable)
+				{
+					continue;	//something in the way
+				}
+
 				AStarNode	found	=IsNodeInOpen(con.mConnectedTo);
 
 				if(found != null)
@@ -194,7 +205,6 @@ namespace PathLib
 				}
 			}
 
-			Debug.Assert(least != null);
 			if(least == null)
 			{
 				//something has gone wrong

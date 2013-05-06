@@ -97,7 +97,7 @@ namespace PathLib
 				if(pf.IsDone())
 				{
 					//call the callback
-					mCallBacks[i](pf.mResultPath);
+					mCallBacks[i](pf.GetResultPath());
 
 					//remove ref to callback
 					mCallBacks.RemoveAt(i);
@@ -110,6 +110,55 @@ namespace PathLib
 		}
 
 
+		//this is useful for obstacles like locked doors
+		public bool SetPathConnectionPassable(Vector3 pos, FindLeaf findLeaf, bool bPassable)
+		{
+			//figure out which node this is on / near
+			int	leafNode	=findLeaf(pos);
+
+			if(leafNode >= 0)
+			{
+				return	false;
+			}
+
+			if(!mBSPLeafPathNodes.ContainsKey(leafNode))
+			{
+				return	false;
+			}
+
+			PathNode	conNode;
+
+			if(mBSPLeafPathNodes[leafNode].Count == 1)
+			{
+				conNode	=mBSPLeafPathNodes[leafNode][0];
+			}
+			else
+			{
+				conNode	=FindBestLeafNode(pos, mBSPLeafPathNodes[leafNode]);
+				if(conNode == null)
+				{
+					return	false;
+				}
+			}
+
+			foreach(PathConnection pc in conNode.mConnections)
+			{
+				pc.mbPassable	=bPassable;
+
+				foreach(PathConnection opc in pc.mConnectedTo.mConnections)
+				{
+					if(opc.mConnectedTo == conNode)
+					{
+						opc.mbPassable	=bPassable;
+						break;	//should only be one per
+					}
+				}
+			}
+			return	true;
+		}
+
+
+		//TODO: this should find a spot within line of sight of the target
 		public void FindPathRangeLOS(Vector3 start, Vector3 target, float minRange, float maxRange, PathCB notify)
 		{
 		}
@@ -176,7 +225,6 @@ namespace PathLib
 				}
 			}
 
-			//take the first for now
 			FindPath(stNode, eNode, notify);
 
 			return	true;
@@ -358,6 +406,7 @@ namespace PathLib
 					pc.mConnectedTo			=pn2;
 					pc.mDistanceToCenter	=pn.CenterToCenterDistance(pn2);
 					pc.mEdgeBetween			=edge;
+					pc.mbPassable			=true;
 
 					pn.mConnections.Add(pc);
 				}
@@ -411,6 +460,7 @@ namespace PathLib
 					pc.mConnectedTo			=pn2;
 					pc.mDistanceToCenter	=pn.CenterToCenterDistance(pn2);
 					pc.mEdgeBetween			=edge;
+					pc.mbPassable			=true;
 
 					pn.mConnections.Add(pc);
 				}

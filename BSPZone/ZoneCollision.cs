@@ -470,14 +470,23 @@ namespace BSPZone
 		}
 
 
-		public Vector3 DropToGround(Vector3 pos)
+		public Vector3 DropToGround(Vector3 pos, bool bUseModels)
 		{
 			int			modelHit	=0;
 			Vector3		impacto		=Vector3.Zero;
 			ZonePlane	planeHit	=ZonePlane.Blank;
 
-			bool	bHit	=Trace_All(mTinyBox, pos, pos + (Vector3.UnitY * -300f),
-										ref modelHit, ref impacto, ref planeHit);
+			bool	bHit	=false;
+			if(bUseModels)
+			{
+				bHit	=Trace_All(mTinyBox, pos, pos + (Vector3.UnitY * -300f),
+							ref modelHit, ref impacto, ref planeHit);
+			}
+			else
+			{
+				bHit	=Trace_WorldCollisionBBox(mTinyBox, 0, pos, pos + (Vector3.UnitY * - 300f),
+							ref impacto, ref planeHit);
+			}
 
 			if(bHit && planeHit != ZonePlane.Blank && planeHit.IsGround())
 			{

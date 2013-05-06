@@ -217,6 +217,12 @@ namespace ParticleLib
 		}
 
 
+		public void NukeAll()
+		{
+			mEmitters.Clear();
+		}
+
+
 		internal static void AddField(ref string ent, string fieldName, string value)
 		{
 			ent	+="    " + fieldName + " = \"" + value + "\"\n";

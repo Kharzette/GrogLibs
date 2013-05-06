@@ -250,6 +250,9 @@ namespace BSPZone
 		{
 			mZone	=zone;
 
+			mSSMs.Clear();
+			mDSMs.Clear();
+
 			//grab doors and lifts
 			List<ZoneEntity>	doors	=zone.GetEntitiesStartsWith("func_door");
 			List<ZoneEntity>	Lifts	=zone.GetEntitiesStartsWith("func_plat");

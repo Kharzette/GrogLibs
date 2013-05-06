@@ -130,6 +130,7 @@ float4x4 GetSkinXForm(float4 bnIdxs, float4 bnWeights, float4x4 bones[MAX_BONES]
 
 
 //compute the 3 light effects on the vert
+//see http://home.comcast.net/~tom_forsyth/blog.wiki.html
 float3 ComputeTrilight(float3 normal, float3 lightDir, float3 c0, float3 c1, float3 c2)
 {
     float3	totalLight;

@@ -7,11 +7,10 @@ using UtilityLib;
 
 namespace PathLib
 {
-	public class Edge
+	internal class Edge
 	{
 		internal Vector3	mA, mB;
 
-		const float	OverlapEpsilon	=16f;	//need to overlap by this much
 
 		internal bool IsColinear(Edge other)
 		{

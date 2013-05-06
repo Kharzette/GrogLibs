@@ -103,13 +103,6 @@ namespace BSPZone
 		}
 
 
-		//helps AI come to a stop without sliding
-		public void KillVelocity()
-		{
-			mVelocity	=Vector3.Zero;
-		}
-
-
 		public Vector3 GetGroundPosition()
 		{
 			return	mPosition - mBoxMiddleOffset;
@@ -128,12 +121,25 @@ namespace BSPZone
 		}
 
 
+		public void ApplyForce(Vector3 force)
+		{
+			mVelocity	+=force;
+		}
+
+
 		public void Jump()
 		{
 			if(mbOnGround)
 			{
 				mVelocity	+=Vector3.UnitY * JumpVelocity;
 			}
+		}
+
+
+		//helps AI come to a stop without sliding beyond a goal
+		public void KillVelocity()
+		{
+			mVelocity	=Vector3.Zero;
 		}
 
 

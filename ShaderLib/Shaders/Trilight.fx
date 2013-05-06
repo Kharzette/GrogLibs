@@ -171,6 +171,11 @@ VPosTex04Tex14Tex24Tex34 TriTanWorldInstancedVS(VPosNormTanTex0 input, float4x4 
 	return	output;
 }
 
+VPosTex03 SkinVS(VPosNormBone input)
+{
+	return	ComputeSkin(input, mBones, mBindPose);
+}
+
 VPosTex03Tex13 TriSolidSkinVS(VPosNormBone input)
 {
 	return	ComputeSkinWorld(input, mBones, mBindPose);
@@ -551,6 +556,11 @@ float4 ShadowPS(VTex0Single input) : COLOR
 	return	float4(input.TexCoord0, 0, 0, 0);
 }
 
+float4 FullBrightSkinPS(VTex03 input) : COLOR
+{
+	return	mSolidColour;
+}
+
 
 technique TriTex0
 {     
@@ -693,6 +703,15 @@ technique TriSkinDecalTex0Tex1
 	{
 		VertexShader	=compile vs_2_0 TriSkinTex0Tex1VS();
 		PixelShader		=compile ps_2_0 Tex0Tex1Col0DecalPS();
+	}
+}
+
+technique FullBrightSkin
+{
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 SkinVS();
+		PixelShader		=compile ps_2_0	FullBrightSkinPS();
 	}
 }
 

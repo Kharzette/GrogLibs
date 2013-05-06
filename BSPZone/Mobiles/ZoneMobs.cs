@@ -22,22 +22,23 @@ namespace BSPZone
 
 		//returns true if hit a mobileAI
 		public bool RayCollideMobiles(Vector3 start, Vector3 end,
-			UInt32 state, UInt32 faction, out MobileAI hit)
+			UInt32 state, UInt32 faction, out MobileAI hit, out Vector3 worldHit)
 		{
 			List<MobileAI>	inView	=GetAITargetsInPVS(start, state, faction);
 
 			//first ray cast against the world
-			Vector3		impacto		=Vector3.Zero;
 			int			hitModel	=0;
 			ZonePlane	planeHit	=ZonePlane.Blank;
+			worldHit				=Vector3.Zero;
 
-			bool	bHit	=Trace_All(mMiniBox, start, end, ref hitModel, ref impacto, ref planeHit);
+			bool	bHit	=Trace_All(mMiniBox, start, end,
+				ref hitModel, ref worldHit, ref planeHit);
 
 			float	bestDist;
 
 			if(bHit)
 			{
-				bestDist	=Vector3.Distance(start, impacto);
+				bestDist	=Vector3.Distance(start, worldHit);
 			}
 			else
 			{

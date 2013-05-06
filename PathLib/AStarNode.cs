@@ -7,8 +7,8 @@ namespace PathLib
 {
 	class AStarNode
 	{
-		public PathNode		mNode;
-		public AStarNode	mParent;
-		public float		mGScore, mHScore;
+		internal PathNode	mNode;
+		internal AStarNode	mParent;
+		internal float		mGScore, mHScore;
 	}
 }

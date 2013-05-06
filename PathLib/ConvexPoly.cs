@@ -9,10 +9,10 @@ namespace PathLib
 {
 	internal class ConvexPoly
 	{
-		internal List<Vector3>	mVerts	=new List<Vector3>();
+		List<Vector3>	mVerts	=new List<Vector3>();
 
 
-		public ConvexPoly(List<Vector3> verts)
+		internal ConvexPoly(List<Vector3> verts)
 		{
 			mVerts.AddRange(verts);
 		}
