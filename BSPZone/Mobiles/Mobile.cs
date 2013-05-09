@@ -278,7 +278,7 @@ namespace BSPZone
 
 
 		//ins and outs are ground based
-		public void Move(Vector3 endPos, int msDelta,
+		public void Move(Vector3 endPos, int msDelta, bool bWorldOnly,
 			bool bAffectVelocity, bool bFly, bool bTriggerCheck,
 			out Vector3 retPos, out Vector3 camPos)
 		{
@@ -326,7 +326,8 @@ namespace BSPZone
 
 			//move it through the bsp
 			bool	bUsedStairs	=false;
-			if(mZone.BipedMoveBox(mBox, mPosition, endPos, mbOnGround, out endPos, out bUsedStairs, ref mModelOn))
+			if(mZone.BipedMoveBox(mBox, mPosition, endPos, mbOnGround, bWorldOnly,
+				out endPos, out bUsedStairs, ref mModelOn))
 			{
 				mbOnGround	=true;
 
@@ -397,7 +398,7 @@ namespace BSPZone
 			//move it through the bsp
 			bool	bUsedStairs	=false;
 			int		modelOn		=-1;
-			bool	bOnGround	=mZone.BipedMoveBox(mBox, mPosition, endPos, mbOnGround,
+			bool	bOnGround	=mZone.BipedMoveBox(mBox, mPosition, endPos, mbOnGround, false,
 									out endPos, out bUsedStairs, ref modelOn);
 
 			//test distance without the Y

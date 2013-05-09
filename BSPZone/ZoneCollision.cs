@@ -355,6 +355,8 @@ namespace BSPZone
 					ZoneModel	zm	=mZoneModels[i];
 					Vector3	modelStart	=Vector3.Transform(start, zm.mInvertedTransform);
 					Vector3	modelEnd	=Vector3.Transform(end, zm.mInvertedTransform);
+					rt.mOriginalStart	=modelStart;
+					rt.mOriginalEnd		=modelEnd;
 					if(TraceSphereWorld(rt, modelStart, modelEnd, mZoneModels[i].mRootNode))
 					{
 						modelsHit.Add(i);
@@ -373,6 +375,12 @@ namespace BSPZone
 			float	bestDist	=float.MaxValue;
 			for(int i=0;i < modelsHit.Count;i++)
 			{
+				if(i != 0)
+				{
+					impacts[i]	=Vector3.Transform(impacts[i], mZoneModels[modelsHit[i]].mTransform);
+					planes[i]	=ZonePlane.Transform(planes[i], mZoneModels[modelsHit[i]].mTransform);
+				}
+
 				float	dist	=Vector3.DistanceSquared(impacts[i], start);
 				if(dist < bestDist)
 				{
@@ -382,17 +390,8 @@ namespace BSPZone
 			}
 
 			modelHit	=modelsHit[bestIdx];
-			if(modelHit != 0)
-			{
-				//adjust these back to worldspace
-				I	=Vector3.Transform(impacts[bestIdx], mZoneModels[modelHit].mTransform);
-				P	=ZonePlane.Transform(planes[bestIdx], mZoneModels[modelHit].mTransform);
-			}
-			else
-			{
-				I	=impacts[bestIdx];
-				P	=planes[bestIdx];
-			}
+			I			=impacts[bestIdx];
+			P			=planes[bestIdx];
 
 			return	true;
 		}
@@ -1066,9 +1065,12 @@ namespace BSPZone
 
 				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID_CLIP))
 				{
-					trace.mbHitSet		=true;
-					trace.mIntersection	=start;
-					return	true;
+					if(ClipSphereToLeaf(trace, zl))
+					{
+						return	true;
+					}
+//					trace.mbHitSet		=true;
+//					trace.mIntersection	=start;
 				}
 				return	false;
 			}
@@ -1084,7 +1086,7 @@ namespace BSPZone
 				bHit	=TraceSphereWorld(trace, clipStart, clipEnd, zn.mBack);
 				if(bHit)
 				{
-					if(trace.mbHitSet)
+/*					if(trace.mbHitSet)
 					{
 						trace.mBestPlane	=p;
 
@@ -1092,7 +1094,7 @@ namespace BSPZone
 						//sense with the returned point
 						trace.mBestPlane.mDist	+=trace.mRadius;
 						trace.mbHitSet			=false;
-					}
+					}*/
 					end	=trace.mIntersection;
 				}
 			}
@@ -1101,7 +1103,7 @@ namespace BSPZone
 				bHit	|=TraceSphereWorld(trace, clipStart, clipEnd, zn.mFront);
 				if(bHit)
 				{
-					if(trace.mbHitSet)
+/*					if(trace.mbHitSet)
 					{
 						trace.mBestPlane	=p;
 
@@ -1109,7 +1111,7 @@ namespace BSPZone
 						//sense with the returned point
 						trace.mBestPlane.mDist	+=trace.mRadius;
 						trace.mbHitSet			=false;
-					}
+					}*/
 				}
 				return	bHit;
 			}
@@ -1172,6 +1174,69 @@ namespace BSPZone
 				return	bHit;
 			}
 			return	bHit;
+		}
+
+
+		bool ClipSphereToLeaf(RayTrace trace, ZoneLeaf zl)
+		{
+			if(zl.mNumSides <= 0)
+			{
+				return	false;
+			}
+
+			Vector3	start	=trace.mOriginalStart;
+			Vector3	end		=trace.mOriginalEnd;
+
+			bool		bClipped	=false;
+			ZonePlane	clipPlane	=ZonePlane.Blank;
+
+			//clip the ray inside the leaf
+			for(int i=0;i < zl.mNumSides;i++)
+			{
+				ZoneLeafSide	side	=mZoneLeafSides[i + zl.mFirstSide];
+				ZonePlane		p		=mZonePlanes[side.mPlaneNum];
+
+				if(side.mbFlipSide)
+				{
+					p.Inverse();
+				}
+
+				p.mDist	+=trace.mRadius;
+
+				float	frontDist	=p.DistanceFast(start);
+				float	backDist	=p.DistanceFast(end);
+				if(frontDist > 0 && backDist >= 0)
+				{
+					return	false;	//not intersecting
+				}
+
+				if(frontDist < 0 && backDist < 0)
+				{
+					continue;
+				}
+
+				//split
+				float	ratio			=frontDist / (frontDist - backDist);
+				Vector3	intersection	=start + ratio * (end - start);
+
+				if(frontDist > 0)
+				{
+					start		=intersection;
+					clipPlane	=p;
+					bClipped	=true;
+				}
+				else
+				{
+					end		=intersection;
+				}
+			}
+
+			if(bClipped)
+			{
+				trace.mIntersection	=start;
+				trace.mBestPlane	=clipPlane;
+			}
+			return	bClipped;
 		}
 
 

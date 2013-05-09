@@ -564,7 +564,7 @@ namespace BSPZone
 			//movebox from start step height to end step height
 			stepPos	=Vector3.Zero;
 			bool	bGroundStep	=MoveBox(box, start + stairAxis * stepHeight,
-				end + stairAxis * stepHeight, out stepPos, out modelOn);
+				end + stairAxis * stepHeight, false, out stepPos, out modelOn);
 
 			if(!bGroundStep)
 			{
@@ -615,7 +615,8 @@ namespace BSPZone
 		//this one assumes 2 legs, so navigates stairs
 		//TODO: This gets a bit strange on gentle slopes
 		public bool BipedMoveBox(BoundingBox box, Vector3 start, Vector3 end,
-			bool bPrevOnGround, out Vector3 finalPos, out bool bUsedStairs, ref int modelOn)
+			bool bPrevOnGround, bool bWorldOnly,
+			out Vector3 finalPos, out bool bUsedStairs, ref int modelOn)
 		{
 			bUsedStairs	=false;
 
@@ -631,7 +632,7 @@ namespace BSPZone
 
 			//try the standard box move
 			int		firstModelOn;
-			bool	bGround	=MoveBox(box, start, end, out finalPos, out firstModelOn);
+			bool	bGround	=MoveBox(box, start, end, bWorldOnly, out finalPos, out firstModelOn);
 
 			mPrevStart	=start;
 			mPrevEnd	=end;
@@ -813,8 +814,8 @@ namespace BSPZone
 
 		//positions should be in the middle base of the box
 		//returns true if on the ground
-		public bool MoveBox(BoundingBox box, Vector3 start,
-							Vector3 end, out Vector3 finalPos, out int modelOn)
+		public bool MoveBox(BoundingBox box, Vector3 start, Vector3 end, bool bWorldOnly,
+			out Vector3 finalPos, out int modelOn)
 		{
 			Vector3		impacto		=Vector3.Zero;
 			int			i			=0;
@@ -824,8 +825,21 @@ namespace BSPZone
 
 			for(i=0;i < MaxMoveBoxIterations;i++)
 			{
-				ZonePlane	zp	=ZonePlane.Blank;
-				if(!Trace_All(box, start, end, ref modelHit, ref impacto, ref zp))
+				ZonePlane	zp				=ZonePlane.Blank;
+				bool		bHitSomething	=false;
+
+				if(bWorldOnly)
+				{
+					bHitSomething	=Trace_WorldCollisionBBox(box,
+						0, start, end, ref impacto, ref zp);
+				}
+				else
+				{
+//					Trace_SphereAll(box.Max.Y, start, end, ref modelHit, ref impacto, ref zp))
+					bHitSomething	=Trace_All(box, start, end, ref modelHit, ref impacto, ref zp);
+				}
+
+				if(!bHitSomething)
 				{
 					break;
 				}
