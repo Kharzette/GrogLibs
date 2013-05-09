@@ -603,6 +603,7 @@ namespace BSPCore
 
 				if(!resultBrushes[i].CheckBrush(null))
 				{
+					CoreEvents.Print("SplitBrush:  Result brush failed CheckBrush()\n");
 					resultBrushes[i]	=null;
 				}			
 			}
@@ -663,7 +664,8 @@ namespace BSPCore
 				resultBrushes[i].mSides.Add(newSide);
 				if(!resultBrushes[i].CheckBrush(pool))
 				{
-//					resultBrushes[i]	=null;
+					CoreEvents.Print("SplitBrush:  Result brush failed CheckBrush() after inserting new side\n");
+					resultBrushes[i]	=null;
 				}
 			}
 

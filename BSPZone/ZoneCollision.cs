@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using UtilityLib;
 
@@ -17,6 +18,7 @@ namespace BSPZone
 		internal float			mRatio;
 		internal bool			mbHitSet, mbLeafHit;
 		internal BoundingBox	mRayBox, mMoveBox;
+		internal float			mRadius;
 
 		internal RayTrace()
 		{
@@ -67,7 +69,7 @@ namespace BSPZone
 			}
 			return	dotSum;
 		}
-
+/*
 		//this was written by me back in the genesis days, not well tested
 		bool CapsuleIntersect(RayTrace trace, Vector3 start, Vector3 end, float radius, Int32 node)
 		{
@@ -170,7 +172,7 @@ namespace BSPZone
 					ref hitLeaf, ref leafHit, ref nodeHit));
 			}
 			return	false;
-		}
+		}*/
 
 
 		bool RayIntersect(Vector3 start, Vector3 end, Int32 node,
@@ -251,6 +253,13 @@ namespace BSPZone
 			List<Vector3>	impacts		=new List<Vector3>();
 			List<ZonePlane>	planes		=new List<ZonePlane>();
 
+			RayTrace	rt	=new RayTrace();
+
+			rt.mOriginalStart	=start;
+			rt.mOriginalEnd		=end;
+			rt.mMoveBox			=boxBounds;
+			rt.mRatio			=float.MaxValue;
+
 			for(int i=0;i < mZoneModels.Length;i++)
 			{
 				Vector3		impacto	=Vector3.Zero;
@@ -274,6 +283,83 @@ namespace BSPZone
 						modelsHit.Add(i);
 						impacts.Add(impacto);
 						planes.Add(hp);
+					}
+				}
+			}
+
+			if(modelsHit.Count == 0)
+			{
+				return	false;
+			}
+
+			int		bestIdx		=0;
+			float	bestDist	=float.MaxValue;
+			for(int i=0;i < modelsHit.Count;i++)
+			{
+				float	dist	=Vector3.DistanceSquared(impacts[i], start);
+				if(dist < bestDist)
+				{
+					bestDist	=dist;
+					bestIdx		=i;
+				}
+			}
+
+			modelHit	=modelsHit[bestIdx];
+			if(modelHit != 0)
+			{
+				//adjust these back to worldspace
+				I	=Vector3.Transform(impacts[bestIdx], mZoneModels[modelHit].mTransform);
+				P	=ZonePlane.Transform(planes[bestIdx], mZoneModels[modelHit].mTransform);
+			}
+			else
+			{
+				I	=impacts[bestIdx];
+				P	=planes[bestIdx];
+			}
+
+			return	true;
+		}
+
+
+		//returns the closest impact, checks all models
+		public bool Trace_SphereAll(float radius, Vector3 start, Vector3 end,
+			 ref int modelHit, ref Vector3 I, ref ZonePlane P)
+		{
+			List<int>		modelsHit	=new List<int>();
+			List<Vector3>	impacts		=new List<Vector3>();
+			List<ZonePlane>	planes		=new List<ZonePlane>();
+
+			RayTrace	rt	=new RayTrace();
+
+			rt.mOriginalStart	=start;
+			rt.mOriginalEnd		=end;
+			rt.mRadius			=radius;
+			rt.mRatio			=float.MaxValue;
+
+			for(int i=0;i < mZoneModels.Length;i++)
+			{
+				Vector3		impacto	=Vector3.Zero;
+				ZonePlane	hp		=ZonePlane.Blank;
+
+				if(i == 0)
+				{
+					if(TraceSphereWorld(rt, start, end, mZoneModels[i].mRootNode))
+					{
+						modelsHit.Add(i);
+						impacts.Add(rt.mIntersection);
+						planes.Add(rt.mBestPlane);
+					}
+				}
+				else
+				{
+					ZoneModel	zm	=mZoneModels[i];
+					Vector3	modelStart	=Vector3.Transform(start, zm.mInvertedTransform);
+					Vector3	modelEnd	=Vector3.Transform(end, zm.mInvertedTransform);
+					if(TraceSphereWorld(rt, modelStart, modelEnd, mZoneModels[i].mRootNode))
+					{
+						modelsHit.Add(i);
+						impacts.Add(rt.mIntersection);
+						planes.Add(rt.mBestPlane);
 					}
 				}
 			}
@@ -433,7 +519,7 @@ namespace BSPZone
 			return	false;
 		}
 
-
+		/*
 		public bool Trace_WorldCollisionCapsule(Vector3 start, Vector3 end,
 			float radius, ref Vector3 impacto, ref ZonePlane hitPlane)
 		{
@@ -467,7 +553,7 @@ namespace BSPZone
 				return	true;
 			}
 			return	false;
-		}
+		}*/
 
 
 		public Vector3 DropToGround(Vector3 pos, bool bUseModels)
@@ -546,7 +632,11 @@ namespace BSPZone
 					return;
 				}
 
+//				trace.mbLeafHit	=true;
+//				ClipRayToLeaf(trace, mZoneLeafs[leaf]);
+
 				IntersectLeafSides_r(trace, trace.mOriginalStart, trace.mOriginalEnd, leaf, 0, 1);
+//				ClipBoxToBrush(trace, trace.mOriginalStart, trace.mOriginalEnd, leaf);
 				return;
 			}
 
@@ -594,6 +684,116 @@ namespace BSPZone
 			else
 			{
 				p.mDist	-=norm.Z * box.Max.Z;
+			}
+		}
+
+
+		void IntersectLeafSides(RayTrace trace, Vector3 start, Vector3 end, ZoneLeaf zl)
+		{
+			if(zl.mNumSides <= 0)
+			{
+				return;
+			}
+
+			for(int i=0;i < zl.mNumSides;i++)
+			{
+				ZoneLeafSide	side	=mZoneLeafSides[i + zl.mFirstSide];
+
+				ZonePlane	p	=mZonePlanes[side.mPlaneNum];
+
+				if(side.mbFlipSide)
+				{
+					p.Inverse();
+				}
+
+				float	frontDist	=p.DistanceFast(start);
+				float	backDist	=p.DistanceFast(end);
+
+				if(frontDist > 0 && backDist >= 0)
+				{
+					return;	//not intersecting
+				}
+			}
+
+			for(int i=0;i < zl.mNumSides;i++)
+			{
+				ZoneLeafSide	side	=mZoneLeafSides[i + zl.mFirstSide];
+
+				ZonePlane	p	=mZonePlanes[side.mPlaneNum];
+
+				if(side.mbFlipSide)
+				{
+					p.Inverse();
+				}
+
+				float	frontDist	=p.DistanceFast(start);
+				float	backDist	=p.DistanceFast(end);
+
+				if(frontDist > 0 && backDist >= 0)
+				{
+					return;	//not intersecting
+				}
+
+				if(frontDist <= 0 && backDist < 0)
+				{
+					continue;
+				}
+
+				//split
+				//ratio for splitting the piece passed in
+				float	ratio	=frontDist / (frontDist - backDist);
+
+				//ratio for the entire trace
+				float	bigFrontDist	=p.DistanceFast(trace.mOriginalStart);
+				float	bigBackDist		=p.DistanceFast(trace.mOriginalEnd);
+				float	bigRatio		=bigFrontDist / (bigFrontDist - bigBackDist);
+
+				Vector3	intersection	=start + ratio * (end - start);
+
+				if(bigRatio < trace.mRatio)
+				{
+					trace.mRatio		=bigRatio;
+					trace.mIntersection	=intersection;
+				}
+			}
+		}
+
+
+		public void CheckAllLeafs()
+		{
+			foreach(ZoneLeaf zl in mZoneLeafs)
+			{
+				if(!Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID_CLIP))
+				{
+					continue;
+				}
+
+				List<List<Vector3>>	sideVerts	=new List<List<Vector3>>();
+				for(int i=0;i < zl.mNumSides;i++)
+				{
+					ZoneLeafSide	zls	=mZoneLeafSides[i + zl.mFirstSide];
+
+					ZonePlane	zp	=mZonePlanes[zls.mPlaneNum];
+					if(zls.mbFlipSide)
+					{
+						zp.Inverse();
+					}
+
+					Vector3	p0, p1, p2, p3;					
+					Mathery.PointsFromPlane(zp.mNormal, zp.mDist, out p0, out p1, out p2, out p3);
+
+					List<Vector3>	verts	=new List<Vector3>();
+					verts.Add(p0);
+					verts.Add(p1);
+					verts.Add(p2);
+					verts.Add(p3);
+
+					sideVerts.Add(verts);
+				}
+
+				Vector3	center	=(zl.mMins + zl.mMaxs) * 0.5f;
+
+				Debug.Assert(PointInLeafSides(center, zl, mTinyBox));
 			}
 		}
 
@@ -692,6 +892,421 @@ namespace BSPZone
 		}
 
 
+		public bool Trace_SphereWorld(Vector3 start, Vector3 end, float radius,
+										out Vector3 impacto, out ZonePlane zp)
+		{
+			RayTrace	rt	=new RayTrace();
+
+			rt.mOriginalStart	=start;
+			rt.mOriginalEnd		=end;
+			rt.mRatio			=float.MaxValue;
+
+			TraceSphereWorld(rt, start, end, mZoneModels[0].mRootNode);
+
+			impacto	=rt.mIntersection;
+			zp		=rt.mBestPlane;
+
+			return	rt.mbLeafHit;
+		}
+
+
+		UInt32 GetContents(int node)
+		{
+			if(node < 0)
+			{
+				Int32		leafIdx		=-(node + 1);
+				ZoneLeaf	zl			=mZoneLeafs[leafIdx];
+
+				return	zl.mContents;
+			}
+			return	Contents.BSP_CONTENTS_EMPTY2;
+		}
+		
+		
+		bool TraceRayWorld(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
+		{
+			if(node < 0)
+			{
+				Int32		leafIdx		=-(node + 1);
+				ZoneLeaf	zl			=mZoneLeafs[leafIdx];
+
+				trace.mLeaf	=leafIdx;
+
+				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID_CLIP))
+				{
+					return	true;
+				}
+				return	false;
+			}
+
+			ZoneNode	zn	=mZoneNodes[node];
+			ZonePlane	p	=mZonePlanes[zn.mPlaneNum];
+
+			float	frontDist	=p.DistanceFast(start);
+			float	backDist	=p.DistanceFast(end);
+
+			if(frontDist > 0 && backDist > 0)
+			{
+				return	TraceRayWorld(trace, start, end, zn.mFront);
+			}
+			else if(frontDist <= 0 && backDist <= 0)
+			{
+				return	TraceRayWorld(trace, start, end, zn.mBack);
+			}
+
+			float	ratio	=frontDist / (frontDist - backDist);
+
+			Vector3	splitPoint	=start + ratio * (end - start);
+
+			int	frontNode;
+			int	backNode;
+			if(frontDist < 0)
+			{
+				frontNode	=zn.mBack;
+				backNode	=zn.mFront;
+			}
+			else
+			{
+				frontNode	=zn.mFront;
+				backNode	=zn.mBack;
+			}
+
+			if(TraceRayWorld(trace, start, splitPoint, frontNode))
+			{
+				return	true;
+			}
+			else if(TraceRayWorld(trace, splitPoint, end, backNode))
+			{
+				if(!trace.mbLeafHit)
+				{
+					trace.mIntersection	=splitPoint;
+					trace.mbLeafHit		=true;
+				}
+				return	true;
+			}
+			return	false;
+		}
+
+
+		bool PartFront(ZonePlane p, float distAdjust, Vector3 start, Vector3 end,
+			out Vector3 clipStart, out Vector3 clipEnd)
+		{
+			clipStart	=start;
+			clipEnd		=end;
+
+			float	startDist	=p.DistanceFast(start) - distAdjust;
+			float	endDist		=p.DistanceFast(end) - distAdjust;
+
+			if(startDist > 0 && endDist > 0)
+			{
+				return	true;
+			}
+
+			if(startDist <= 0 && endDist <= 0)
+			{
+				return	false;
+			}
+
+			if(startDist > 0)
+			{
+				float	ratio	=startDist / (startDist - endDist);
+				clipEnd			=start + ratio * (end - start);
+			}
+			else
+			{
+				float	ratio	=startDist / (startDist - endDist);
+				clipStart		=start + ratio * (end - start);
+			}
+			return	true;
+		}
+
+
+		bool PartBehind(ZonePlane p, float distAdjust, Vector3 start, Vector3 end,
+			out Vector3 clipStart, out Vector3 clipEnd)
+		{
+			clipStart	=start;
+			clipEnd		=end;
+
+			float	startDist	=p.DistanceFast(start) + distAdjust;
+			float	endDist		=p.DistanceFast(end) + distAdjust;
+
+			if(startDist <= 0 && endDist <= 0)
+			{
+				return	true;
+			}
+
+			if(startDist > 0 && endDist > 0)
+			{
+				return	false;
+			}
+
+			if(startDist <= 0)
+			{
+				float	ratio	=startDist / (startDist - endDist);
+				clipEnd			=start + ratio * (end - start);
+			}
+			else
+			{
+				float	ratio	=startDist / (startDist - endDist);
+				clipStart		=start + ratio * (end - start);
+			}
+			return	true;
+		}
+
+
+		//this works for raycasts, but is no good for movement
+		bool TraceSphereWorld(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
+		{
+			bool	bHit	=false;
+
+			if(node < 0)
+			{
+				Int32		leafIdx		=-(node + 1);
+				ZoneLeaf	zl			=mZoneLeafs[leafIdx];
+
+				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID_CLIP))
+				{
+					trace.mbHitSet		=true;
+					trace.mIntersection	=start;
+					return	true;
+				}
+				return	false;
+			}
+
+			ZoneNode	zn	=mZoneNodes[node];
+			ZonePlane	p	=mZonePlanes[zn.mPlaneNum];
+
+			Vector3	ray	=end - start;
+
+			Vector3	clipStart, clipEnd;
+			if(PartBehind(p, -trace.mRadius, start, end, out clipStart, out clipEnd))
+			{
+				bHit	=TraceSphereWorld(trace, clipStart, clipEnd, zn.mBack);
+				if(bHit)
+				{
+					if(trace.mbHitSet)
+					{
+						trace.mBestPlane	=p;
+
+						//expand the result plane so it makes
+						//sense with the returned point
+						trace.mBestPlane.mDist	+=trace.mRadius;
+						trace.mbHitSet			=false;
+					}
+					end	=trace.mIntersection;
+				}
+			}
+			if(PartFront(p, -trace.mRadius, start, end, out clipStart, out clipEnd))
+			{
+				bHit	|=TraceSphereWorld(trace, clipStart, clipEnd, zn.mFront);
+				if(bHit)
+				{
+					if(trace.mbHitSet)
+					{
+						trace.mBestPlane	=p;
+
+						//expand the result plane so it makes
+						//sense with the returned point
+						trace.mBestPlane.mDist	+=trace.mRadius;
+						trace.mbHitSet			=false;
+					}
+				}
+				return	bHit;
+			}
+			return	bHit;
+		}
+
+
+		//this almost works but needs more fiddling
+		bool TraceBoxWorld(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
+		{
+			bool	bHit	=false;
+
+			if(node < 0)
+			{
+				Int32		leafIdx		=-(node + 1);
+				ZoneLeaf	zl			=mZoneLeafs[leafIdx];
+
+				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID_CLIP))
+				{
+//					trace.mRatio		=float.MaxValue;
+					trace.mIntersection	=start;
+					trace.mLeaf			=leafIdx;
+//					ClipRayToLeaf(trace, zl);
+					return	true;
+				}
+				return	false;
+			}
+
+			ZoneNode	zn	=mZoneNodes[node];
+			ZonePlane	p	=mZonePlanes[zn.mPlaneNum];
+
+			if(zn.mPlaneNum == 91)
+			{
+				int	j=0;
+				j++;
+			}
+
+			Trace_ExpandPlaneForBox(ref p, trace.mMoveBox);
+
+			Vector3	clipStart, clipEnd;
+			if(PartBehind(p, 0, start, end, out clipStart, out clipEnd))
+			{
+				bHit	=TraceBoxWorld(trace, clipStart, clipEnd, zn.mBack);
+				if(bHit)
+				{
+					end	=trace.mIntersection;
+				}
+			}
+			if(PartFront(p, 0, start, end, out clipStart, out clipEnd))
+			{
+				bHit	|=TraceBoxWorld(trace, clipStart, clipEnd, zn.mFront);
+				if(bHit)
+				{
+					float	dist	=p.DistanceFast(trace.mIntersection);
+					if(dist < 0.00001f && dist > -0.00001f)
+					{
+						trace.mBestPlane	=p;
+					}
+				}
+				return	bHit;
+			}
+			return	bHit;
+		}
+
+
+		bool ClipRayToLeaf(RayTrace trace, ZoneLeaf zl)
+		{
+			if(zl.mNumSides <= 0)
+			{
+				return	false;
+			}
+
+			Vector3	start	=trace.mOriginalStart;
+			Vector3	end		=trace.mOriginalEnd;
+
+			//first check if the ray missed entirely
+			for(int i=0;i < zl.mNumSides;i++)
+			{
+				ZoneLeafSide	side	=mZoneLeafSides[i + zl.mFirstSide];
+				ZonePlane		p		=mZonePlanes[side.mPlaneNum];
+
+				if(side.mbFlipSide)
+				{
+					p.Inverse();
+				}
+
+//				float	boxDist	=Vector3.Dot(trace.mMoveBox.Max, p.mNormal);
+//				p.mDist	+=boxDist;
+
+				Trace_ExpandPlaneForBox(ref p, trace.mMoveBox);
+
+				float	frontDist	=p.DistanceFast(start);
+				float	backDist	=p.DistanceFast(end);
+				if(frontDist > 0 && backDist >= 0)
+				{
+					return	false;	//not intersecting
+				}
+			}
+
+			//clip the ray inside the leaf
+			for(int i=0;i < zl.mNumSides;i++)
+			{
+				ZoneLeafSide	side	=mZoneLeafSides[i + zl.mFirstSide];
+				ZonePlane		p		=mZonePlanes[side.mPlaneNum];
+
+				if(side.mbFlipSide)
+				{
+					p.Inverse();
+				}
+
+				Trace_ExpandPlaneForBox(ref p, trace.mMoveBox);
+
+//				float	boxDist	=Vector3.Dot(trace.mMoveBox.Max, p.mNormal);
+//				p.mDist	+=boxDist;
+
+				float	frontDist	=p.DistanceFast(start);
+				float	backDist	=p.DistanceFast(end);
+				if(frontDist > 0 && backDist >= 0)
+				{
+					return	false;	//not intersecting, and should have happened above!?
+				}
+
+				if(frontDist <= 0 && backDist < 0)
+				{
+					continue;
+				}
+
+				//split
+				float	ratio			=frontDist / (frontDist - backDist);
+				Vector3	intersection	=start + ratio * (end - start);
+
+				if(frontDist > 0)
+				{
+					start				=intersection;
+					trace.mBestPlane	=p;
+				}
+				else
+				{
+					end		=intersection;
+				}
+			}
+
+			trace.mIntersection	=start;
+
+			return	true;
+		}
+
+
+		void ClipBoxToBrush(RayTrace trace, Vector3 start, Vector3 end, Int32 leaf)
+		{
+			ZoneLeaf	zl	=mZoneLeafs[leaf];
+			if(zl.mNumSides <= 0)
+			{
+				return;
+			}
+
+			for(int i=0;i < zl.mNumSides;i++)
+			{
+				ZoneLeafSide	side	=mZoneLeafSides[i + zl.mFirstSide];
+
+				ZonePlane	p	=mZonePlanes[side.mPlaneNum];
+
+				//Simulate the point having a box, by pushing the plane out by the box size
+				Trace_ExpandPlaneForBox(ref p, trace.mRayBox);
+
+				float	frontDist	=p.DistanceFast(start);
+				float	backDist	=p.DistanceFast(end);
+
+				if(frontDist > 0 && backDist >= 0)
+				{
+					return;	//not intersecting
+				}
+
+				if(frontDist < 0 && backDist < 0)
+				{
+					continue;
+				}
+
+				//split
+				if(frontDist < 0 && backDist > 0)
+				{
+					//splitting out the far side
+					continue;
+				}
+
+				float	ratio	=frontDist / (frontDist - backDist);
+
+				if(ratio < trace.mRatio)
+				{
+					trace.mbLeafHit		=true;
+					trace.mRatio		=ratio;
+					trace.mIntersection	=start + ratio * (end - start);
+				}
+			}
+		}
+
+
 		bool PointInLeafSides(Vector3 pnt, ZoneLeaf leaf, BoundingBox box)
 		{
 			Int32	f	=leaf.mFirstSide;
@@ -709,7 +1324,9 @@ namespace BSPZone
 				//Simulate the point having a box, by pushing the plane out by the box size
 				Trace_ExpandPlaneForBox(ref p, box);
 
-				if(p.DistanceFast(pnt) >= 0.0f)
+				float	dist	=p.DistanceFast(pnt);
+
+				if(dist >= 0.0f)
 				{
 					return false;	//Since leafs are convex, it must be outside...
 				}

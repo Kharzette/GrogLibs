@@ -484,10 +484,12 @@ namespace BSPCore
 
 			if(bad.Count > 0)
 			{
-				DumpBrushListToFile(bad, pool, "badStuff.map");
+				CoreEvents.Print("" + bad.Count + " bad brushes encountered in SplitBrushList()\n");
+				//uncomment the stuff below to narrow down the problem
+//				DumpBrushListToFile(bad, pool, "badStuff.map");
 
-				GBSPBrush	testFront, testBack;
-				bad[0].Split(nodePlaneNum, false, (byte)GBSPSide.SIDE_NODE, false, pool, out testFront, out testBack, false, cp);
+//				GBSPBrush	testFront, testBack;
+//				bad[0].Split(nodePlaneNum, false, (byte)GBSPSide.SIDE_NODE, false, pool, out testFront, out testBack, false, cp);
 			}
 		}
 

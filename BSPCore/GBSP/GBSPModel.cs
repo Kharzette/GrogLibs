@@ -465,12 +465,6 @@ namespace BSPCore
 		}
 
 
-		internal void FixGFXLeafs_r(GFXLeafSide []lSides, GFXPlane []planes)
-		{
-			mRootNode.FixGFXLeafs_r(lSides, planes);
-		}
-
-
 		internal bool SaveGFXLeafs_r(BinaryWriter bw, List<int> gfxLeafFaces, ref int TotalLeafSize)
 		{
 			return	mRootNode.SaveGFXLeafs_r(bw, gfxLeafFaces, ref TotalLeafSize);

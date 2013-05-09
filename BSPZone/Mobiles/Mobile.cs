@@ -262,6 +262,21 @@ namespace BSPZone
 		}
 
 
+		//for debugging move problems
+		public void MoveDebug(int msDelta, Vector3 start, Vector3 end, List<Vector3> segments)
+		{
+			start	+=mBoxMiddleOffset;
+			end		+=mBoxMiddleOffset;
+
+			//a little gravity
+			end.Y	-=((9.8f / 1000.0f) * msDelta);
+
+			Vector3	moveDelta	=end - start;
+
+			mZone.BipedMoveBoxDebug(mBox, start, end, segments);
+		}
+
+
 		//ins and outs are ground based
 		public void Move(Vector3 endPos, int msDelta,
 			bool bAffectVelocity, bool bFly, bool bTriggerCheck,

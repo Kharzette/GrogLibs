@@ -11,7 +11,7 @@ namespace BSPZone
 	{
 		List<MobileAI>	mMobs	=new List<MobileAI>();
 
-		BoundingBox	mMiniBox	=BoundingBox.CreateFromSphere(new BoundingSphere(Vector3.Zero, 4f));
+		BoundingBox	mMiniBox	=BoundingBox.CreateFromSphere(new BoundingSphere(Vector3.Zero, 1f));
 
 
 		public void AddMob(MobileAI mob)
@@ -31,7 +31,7 @@ namespace BSPZone
 			ZonePlane	planeHit	=ZonePlane.Blank;
 			worldHit				=Vector3.Zero;
 
-			bool	bHit	=Trace_All(mMiniBox, start, end,
+			bool	bHit	=Trace_SphereAll(1f, start, end,
 				ref hitModel, ref worldHit, ref planeHit);
 
 			float	bestDist;

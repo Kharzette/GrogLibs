@@ -1467,7 +1467,6 @@ namespace BSPCore
 
 			SaveGFXModelDataFromList(bw);
 			SaveGFXNodes(bw, nc);
-			FixGFXLeafs(mGFXLeafSides, mGFXPlanes);
 			SaveGFXLeafs(bw, nc);
 			SaveEmptyGFXClusters(bw, nc);
 

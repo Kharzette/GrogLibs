@@ -272,16 +272,6 @@ namespace BSPCore
 		}
 
 
-		//some of the leafs are nonconvex 
-		void FixGFXLeafs(GFXLeafSide []lSides, GFXPlane []planes)
-		{
-			foreach(GBSPModel mod in mModels)
-			{
-				mod.FixGFXLeafs_r(lSides, planes);
-			}
-		}
-
-
 		void SaveGFXLeafs(BinaryWriter bw, NodeCounter nc)
 		{
 			bw.Write(nc.mNumGFXLeafs);

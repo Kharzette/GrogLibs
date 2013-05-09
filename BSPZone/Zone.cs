@@ -70,6 +70,10 @@ namespace BSPZone
 		List<ZoneTrigger>				mTriggers	=new List<ZoneTrigger>();
 		Dictionary<object, Pushable>	mPushables	=new Dictionary<object, Pushable>();
 
+		//debug
+		Vector3	mPrevStart;
+		Vector3	mPrevEnd;
+
 		int	mLightMapGridSize;
 		int	mNumVisLeafBytes;
 		int	mNumVisMaterialBytes;
@@ -472,22 +476,22 @@ namespace BSPZone
 		}
 
 
-		public bool IsSphereInSolid(Vector3 pnt, float dist)
-		{
-			bool	bHitLeaf	=false;
-			int		leafHit		=0;
-			int		nodeHit		=0;
-			return	SphereIntersect(pnt, dist, 0, ref bHitLeaf, ref leafHit, ref nodeHit);
-		}
+//		public bool IsSphereInSolid(Vector3 pnt, float dist)
+//		{
+//			bool	bHitLeaf	=false;
+//			int		leafHit		=0;
+//			int		nodeHit		=0;
+//			return	SphereIntersect(pnt, dist, 0, ref bHitLeaf, ref leafHit, ref nodeHit);
+//		}
 
 
 		//this is faked with a box for now
 		//real capsule cast is broken
-		public bool CapsuleCollide(Vector3 start, Vector3 end, float radius,
-			ref Vector3 intersect, ref ZonePlane hitPlane)
-		{
-			return	Trace_WorldCollisionCapsule(start, end, radius, ref intersect, ref hitPlane);
-		}
+//		public bool CapsuleCollide(Vector3 start, Vector3 end, float radius,
+//			ref Vector3 intersect, ref ZonePlane hitPlane)
+//		{
+//			return	Trace_WorldCollisionCapsule(start, end, radius, ref intersect, ref hitPlane);
+//		}
 
 
 		public bool IsPointInSolid(Vector3 pnt)
@@ -601,6 +605,12 @@ namespace BSPZone
 		}
 
 
+		public void BipedMoveBoxDebug(BoundingBox box, Vector3 start, Vector3 end, List<Vector3> segments)
+		{
+			MoveBoxDebug(box, start, end, segments);
+		}
+
+
 		//returns true if on ground
 		//this one assumes 2 legs, so navigates stairs
 		//TODO: This gets a bit strange on gentle slopes
@@ -622,6 +632,9 @@ namespace BSPZone
 			//try the standard box move
 			int		firstModelOn;
 			bool	bGround	=MoveBox(box, start, end, out finalPos, out firstModelOn);
+
+			mPrevStart	=start;
+			mPrevEnd	=end;
 
 			//see how far it went
 			moveVec	=finalPos - start;
@@ -754,6 +767,50 @@ namespace BSPZone
 		}
 
 
+		//simulate movement and record the positions involved
+		public void MoveBoxDebug(BoundingBox box, Vector3 start, Vector3 end, List<Vector3> segments)
+		{
+			Vector3		impacto		=Vector3.Zero;
+			int			i			=0;
+			int			modelHit	=0;
+
+			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
+
+			segments.Add(start);
+			segments.Add(end);
+
+			for(i=0;i < MaxMoveBoxIterations;i++)
+			{
+				ZonePlane	zp	=ZonePlane.Blank;
+				if(!Trace_All(box, start, end, ref modelHit, ref impacto, ref zp))
+				{
+					break;
+				}
+
+				if(zp.mNormal == Vector3.Zero)
+				{
+					break;	//in solid
+				}
+
+				float	startDist	=zp.DistanceFast(start);
+				float	dist		=zp.DistanceFast(end);
+
+				Debug.Assert(startDist >= 0f && dist < 0f);
+
+				segments.Add(end);
+
+				end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
+
+				segments.Add(end);
+				
+				if(!hitPlanes.Contains(zp))
+				{
+					hitPlanes.Add(zp);
+				}
+			}
+		}
+
+
 		//positions should be in the middle base of the box
 		//returns true if on the ground
 		public bool MoveBox(BoundingBox box, Vector3 start,
@@ -775,7 +832,13 @@ namespace BSPZone
 
 				if(zp.mNormal == Vector3.Zero)
 				{
-					break;	//in solid
+					//can't solve!
+					finalPos	=start;
+					modelOn		=-1;
+
+					//player is probably stuck
+					//give them footing to help break free
+					return	true;
 				}
 
 				float	startDist	=zp.DistanceFast(start);
