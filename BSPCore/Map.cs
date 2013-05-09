@@ -272,7 +272,7 @@ namespace BSPCore
 									float	dist	=pl.DistanceFast(intersectionPoint);
 									if(dist < -0.001f || dist > 0.001f)
 									{
-										CoreEvents.Print("Face way off its plane!\n");
+										CoreEvents.Print("Face " + dist + " units off its plane!\n");
 									}
 
 									float	score;
@@ -1467,6 +1467,7 @@ namespace BSPCore
 
 			SaveGFXModelDataFromList(bw);
 			SaveGFXNodes(bw, nc);
+			FixGFXLeafs(mGFXLeafSides, mGFXPlanes);
 			SaveGFXLeafs(bw, nc);
 			SaveEmptyGFXClusters(bw, nc);
 

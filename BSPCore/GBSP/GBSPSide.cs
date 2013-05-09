@@ -323,5 +323,11 @@ namespace BSPCore
 		{
 			mPoly.AddToBounds(bnd);
 		}
+
+
+		internal Vector3 GetCenter()
+		{
+			return	mPoly.Center();
+		}
 	}
 }

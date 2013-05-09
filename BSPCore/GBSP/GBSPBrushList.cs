@@ -12,11 +12,11 @@ namespace BSPCore
 	internal partial class GBSPBrush
 	{
 		#region Stats & Gets & Tests
-		internal static void TestBrushListValid(List<GBSPBrush> list)
+		internal static void TestBrushListValid(List<GBSPBrush> list, PlanePool pp)
 		{
 			foreach(GBSPBrush b in list)
 			{
-				if(!b.CheckBrush())
+				if(!b.CheckBrush(pp))
 				{
 					CoreEvents.Print("Bad brush in list!\n");
 				}
@@ -178,12 +178,12 @@ namespace BSPCore
 		}
 
 
-		static internal List<GBSPBrush> ConvertMapBrushList(List<MapBrush> list)
+		static internal List<GBSPBrush> ConvertMapBrushList(List<MapBrush> list, PlanePool pp)
 		{
 			List<GBSPBrush>	ret	=new List<GBSPBrush>();
 			foreach(MapBrush b in list)
 			{
-				GBSPBrush	gb	=new GBSPBrush(b);
+				GBSPBrush	gb	=new GBSPBrush(b, pp);
 
 				//if brush is being dropped, the mOriginal
 				//reference will be null
@@ -390,7 +390,7 @@ namespace BSPCore
 
 				boxedCopy.BoundBrush();
 
-				if(!boxedCopy.CheckBrush())
+				if(!boxedCopy.CheckBrush(pp))
 				{
 					CoreEvents.Print("Boxed copy failed checkbrush!\n");
 				}
@@ -407,6 +407,8 @@ namespace BSPCore
 			front	=new List<GBSPBrush>();
 			back	=new List<GBSPBrush>();
 
+			List<GBSPBrush>	bad	=new List<GBSPBrush>();
+
 			foreach(GBSPBrush b in list)
 			{
 				UInt32	sideFlag	=b.mSide;
@@ -417,16 +419,45 @@ namespace BSPCore
 						pool, out newFront, out newBack, true, cp);
 					if(newFront != null)
 					{
-						front.Add(newFront);
+						if(!newFront.CheckBrush(pool))
+						{
+							if(!bad.Contains(b))
+							{
+								bad.Add(b);
+							}
+						}
+						else
+						{
+							front.Add(newFront);
+						}
 					}
 					if(newBack != null)
 					{
-						back.Add(newBack);
+						if(!newBack.CheckBrush(pool))
+						{
+							if(!bad.Contains(b))
+							{
+								bad.Add(b);
+							}
+						}
+						else
+						{
+							back.Add(newBack);
+						}
 					}
 					continue;
 				}
 
 				GBSPBrush	newBrush	=new GBSPBrush(b);
+
+				if(!newBrush.CheckBrush(pool))
+				{
+					if(!bad.Contains(b))
+					{
+						bad.Add(b);
+					}
+					continue;
+				}
 
 				if((sideFlag & GBSPPlane.PSIDE_FACING) != 0)
 				{
@@ -449,6 +480,14 @@ namespace BSPCore
 					back.Add(newBrush);
 					continue;
 				}
+			}
+
+			if(bad.Count > 0)
+			{
+				DumpBrushListToFile(bad, pool, "badStuff.map");
+
+				GBSPBrush	testFront, testBack;
+				bad[0].Split(nodePlaneNum, false, (byte)GBSPSide.SIDE_NODE, false, pool, out testFront, out testBack, false, cp);
 			}
 		}
 

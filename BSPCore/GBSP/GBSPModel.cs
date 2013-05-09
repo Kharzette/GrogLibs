@@ -45,7 +45,7 @@ namespace BSPCore
 				(kMaxZ - kMinZ) + 1);
 
 			list.Reverse();
-			List<GBSPBrush>	glist	=GBSPBrush.ConvertMapBrushList(list);
+			List<GBSPBrush>	glist	=GBSPBrush.ConvertMapBrushList(list, pool);
 
 			object	prog	=ProgressWatcher.RegisterProgress(0, 2 * (kMaxZ - kMinZ) * (kMaxX - kMinX), 0);
 
@@ -63,6 +63,15 @@ namespace BSPCore
 			GBSPNode	root	=GBSPNode.BlockTree(mBlockNodes, pool,
 				kMinX, kMinZ,
 				kMinX, kMinZ, kMaxX, kMaxZ);
+
+			List<GBSPBrush>	badLeafs	=new List<GBSPBrush>();
+
+			bool	bBad	=root.CheckLeafConvexity(pool, badLeafs);
+			if(!bBad)
+			{
+				CoreEvents.Print("Tree has " + badLeafs.Count + " nonconvex leafs!\n");
+				return	false;
+			}
 
 			mBounds	=new Bounds();
 
@@ -98,7 +107,7 @@ namespace BSPCore
 
 			root.FreeBSP_r();
 
-			glist	=GBSPBrush.ConvertMapBrushList(list);
+			glist	=GBSPBrush.ConvertMapBrushList(list, pool);
 
 			for(int z=kMinZ;z < kMaxZ;z++)
 			{
@@ -178,7 +187,7 @@ namespace BSPCore
 
 			int	brushCount	=blocked.Count;
 
-			GBSPBrush.TestBrushListValid(blocked);
+			GBSPBrush.TestBrushListValid(blocked, pp);
 
 			if(!GBSPBrush.TestListInBounds(blocked, blockBounds))
 			{
@@ -186,7 +195,9 @@ namespace BSPCore
 				GBSPBrush.DumpBrushListToFile(blocked, pp, "Brush_x" + xblock + "_z" + zblock + ".map");
 			}
 
-			List<GBSPBrush>	csgList	=GBSPBrush.GankBrushOverlap(bVerbose, blocked, pp, cp);			
+			List<GBSPBrush>	csgList	=GBSPBrush.GankBrushOverlap(bVerbose, blocked, pp, cp);		
+	
+			GBSPBrush.TestBrushListValid(csgList, pp);
 
 			CoreEvents.FireNumPlanesChangedEvent(pp.mPlanes.Count, null);
 
@@ -211,7 +222,7 @@ namespace BSPCore
 		{
 			list.Reverse();
 
-			List<GBSPBrush>	glist	=GBSPBrush.ConvertMapBrushList(list);
+			List<GBSPBrush>	glist	=GBSPBrush.ConvertMapBrushList(list, pool);
 
 			List<GBSPBrush>	csgList	=GBSPBrush.GankBrushOverlap(false, glist, pool, cp);
 
@@ -451,6 +462,12 @@ namespace BSPCore
 		internal bool SaveGFXFaces_r(BinaryWriter bw)
 		{
 			return	mRootNode.SaveGFXFaces_r(bw);
+		}
+
+
+		internal void FixGFXLeafs_r(GFXLeafSide []lSides, GFXPlane []planes)
+		{
+			mRootNode.FixGFXLeafs_r(lSides, planes);
 		}
 
 

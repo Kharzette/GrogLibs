@@ -74,7 +74,7 @@ namespace BSPCore
 
 			ClipPools	cp	=new ClipPools();
 
-			mVolume	=new GBSPBrush(new MapBrush(bounds, pool, cp));
+			mVolume	=new GBSPBrush(new MapBrush(bounds, pool, cp), pool);
 
 			BuildTree_r(bs, brushList, pool, cp);
 
@@ -207,6 +207,9 @@ namespace BSPCore
 			mPlaneNum	=BestSide.mPlaneNum;
 
 			GBSPBrush.SplitBrushList(brushes, mPlaneNum, pool, out childrenFront, out childrenBack, cp);
+
+			GBSPBrush.TestBrushListValid(childrenBack, pool);
+			GBSPBrush.TestBrushListValid(childrenFront, pool);
 
 			brushes.Clear();
 
@@ -421,6 +424,28 @@ namespace BSPCore
 					numMake++;
 				}
 			}
+		}
+
+
+		internal bool CheckLeafConvexity(PlanePool pp, List<GBSPBrush> badLeafs)
+		{
+			if(mPlaneNum == -1)
+			{
+				foreach(GBSPBrush b in mBrushList)
+				{
+					if(!b.CheckBrush(pp))
+					{
+						badLeafs.Add(b);
+						return	false;
+					}
+				}
+				return	true;
+			}
+
+			bool	bBad	=mBack.CheckLeafConvexity(pp, badLeafs);
+			bBad			|=mFront.CheckLeafConvexity(pp, badLeafs);
+
+			return	bBad;
 		}
 
 
@@ -764,6 +789,70 @@ namespace BSPCore
 			mFirstFace	=nc.mNumGFXFaces;
 
 			mNumFaces	=GBSPFace.PrepFaceList(mFaces, nc);
+		}
+
+
+		internal void FixGFXLeafs_r(GFXLeafSide []lSides, GFXPlane []planes)
+		{
+			return;
+			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
+			{
+				//some of the leafs have one or more planes
+				//pointing in the wrong direction
+				//push a point behind every plane
+				Vector3	center	=Vector3.Zero;				
+				for(int i=0;i < mNumSides;i++)
+				{
+					GFXLeafSide	gls	=lSides[i + mFirstSide];
+
+					GFXPlane	p	=planes[gls.mPlaneNum];
+
+					//careful, p is a class
+					GFXPlane	pln	=new GFXPlane();
+					pln.mNormal	=p.mNormal;
+					pln.mDist	=p.mDist;
+					pln.mType	=p.mType;
+					if(gls.mbFlipSide)
+					{
+						pln.Inverse();
+					}
+
+					float	dist	=Vector3.Dot(center, pln.mNormal) - pln.mDist;
+					if(dist > 0)
+					{
+						//move behind the plane
+						center	+=pln.mNormal * (dist + 0.01f);
+					}
+				}
+
+				//see if any planes are pointing the wrong way
+				for(int i=0;i < mNumSides;i++)
+				{
+					GFXLeafSide	gls	=lSides[i + mFirstSide];
+
+					GFXPlane	p	=planes[gls.mPlaneNum];
+
+					//careful, p is a class
+					GFXPlane	pln	=new GFXPlane();
+					pln.mNormal	=p.mNormal;
+					pln.mDist	=p.mDist;
+					pln.mType	=p.mType;
+					if(gls.mbFlipSide)
+					{
+						pln.Inverse();
+					}
+
+					float	dist	=Vector3.Dot(center, pln.mNormal) - pln.mDist;
+					if(dist > 0)
+					{
+						//move behind the plane
+						center	+=pln.mNormal * (dist + 0.01f);
+					}
+				}
+			}
+
+			mFront.FixGFXLeafs_r(lSides, planes);
+			mBack.FixGFXLeafs_r(lSides, planes);
 		}
 
 

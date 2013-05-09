@@ -36,7 +36,7 @@ namespace BSPCore
 		}
 
 
-		internal GBSPBrush(MapBrush mb)
+		internal GBSPBrush(MapBrush mb, PlanePool pp)
 		{
 			Int32	Vis	=0;
 
@@ -68,7 +68,7 @@ namespace BSPCore
 
 			BoundBrush();
 
-			if(!CheckBrush())
+			if(!CheckBrush(pp))
 			{
 				CoreEvents.Print("GBSPBrush CTOR:  Bad brush.\n");
 				return;
@@ -86,6 +86,20 @@ namespace BSPCore
 			{
 				mSides[i].AddToBounds(mBounds);
 			}
+		}
+
+
+		internal Vector3 GetCenter()
+		{
+			Vector3	ret	=Vector3.Zero;
+
+			for(int i=0;i < mSides.Count;i++)
+			{
+				ret	+=mSides[i].GetCenter();			
+			}
+			ret	/=mSides.Count;
+
+			return	ret;
 		}
 
 
@@ -216,11 +230,54 @@ namespace BSPCore
 		}
 
 
-		bool CheckBrush()
+		internal bool CheckBrush(PlanePool pool)
 		{
 			if(mSides.Count < 3)
 			{
 				return	false;
+			}
+
+			if(pool != null)
+			{
+				ClipPools	cp	=new ClipPools();
+
+				//check side planes
+				for(int i=0;i < mSides.Count;i++)
+				{
+					GBSPSide	iSide	=mSides[i];
+					GBSPPlane	iPlane	=pool.mPlanes[iSide.mPlaneNum];
+
+					if(mSides[i].mbFlipSide)
+					{
+						iPlane.Inverse();
+					}
+
+					GBSPPoly	iPoly	=new GBSPPoly(iPlane);
+
+					for(int j=0;j < mSides.Count;j++)
+					{
+						if(i == j)
+						{
+							continue;
+						}
+
+						GBSPPlane	jPlane	=pool.mPlanes[mSides[j].mPlaneNum];
+
+						if(mSides[j].mbFlipSide)
+						{
+							jPlane.Inverse();
+						}
+
+						if(!iPoly.ClipPoly(jPlane, true, cp))
+						{
+							return	false;	//something nonconvex in here
+						}
+						if(iPoly.mVerts == null)
+						{
+							return	false;	//something nonconvex
+						}
+					}
+				}
 			}
 
 			if(mBounds.IsMaxExtents())
@@ -521,6 +578,16 @@ namespace BSPCore
 						continue;
 					}
 
+					if(poly[j].IsTiny())
+					{
+						continue;
+					}
+
+					if(poly[j].IsMaxExtents())
+					{
+						continue;
+					}
+
 					destSide	=new GBSPSide(s);
 
 					resultBrushes[j].mSides.Add(destSide);
@@ -534,7 +601,7 @@ namespace BSPCore
 			{
 				resultBrushes[i].BoundBrush();
 
-				if(!resultBrushes[i].CheckBrush())
+				if(!resultBrushes[i].CheckBrush(null))
 				{
 					resultBrushes[i]	=null;
 				}			
@@ -569,7 +636,7 @@ namespace BSPCore
 			{
 				GBSPSide	newSide	=new GBSPSide();
 
-				resultBrushes[i].mSides.Add(newSide);
+				GBSPBrush	dupe	=new GBSPBrush(resultBrushes[i]);
 
 				newSide.mPlaneNum	=planeNum;
 				newSide.mbFlipSide	=bFlipSide;
@@ -592,12 +659,23 @@ namespace BSPCore
 				{
 					newSide.mPoly		=new GBSPPoly(midPoly);
 				}
+
+				resultBrushes[i].mSides.Add(newSide);
+				if(!resultBrushes[i].CheckBrush(pool))
+				{
+//					resultBrushes[i]	=null;
+				}
 			}
 
 			{
 				float	v1;
 				for(int z=0;z < 2;z++)
 				{
+					if(resultBrushes[z] == null)
+					{
+						continue;
+					}
+
 					v1	=resultBrushes[z].Volume(pool);
 					if(v1 < 1.0f)
 					{

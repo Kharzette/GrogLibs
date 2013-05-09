@@ -554,7 +554,39 @@ namespace UtilityLib
 		}
 
 
-		public static void PointsFromPlane(Vector3 norm, float dist, out Vector3 p0, out Vector3 p1, out Vector3 p2)
+		public static void PointsFromPlane(Vector3 norm, float dist,
+			out Vector3 p0, out Vector3 p1, out Vector3 p2, out Vector3 p3)
+		{
+			//generate some axis vecs
+			Vector3	sAxis	=Vector3.Cross(norm, Vector3.UnitY);
+			if(sAxis.LengthSquared() <= 0.0f)
+			{
+				sAxis	=-Vector3.Cross(norm, Vector3.UnitZ);
+			}
+
+			Vector3	tAxis	=Vector3.Cross(norm, sAxis);
+
+			sAxis.Normalize();
+			tAxis.Normalize();
+
+			p0	=p1	=p2	=p3 =norm * dist;
+
+			p0	-=sAxis * MIN_MAX_BOUNDS;
+			p0	-=tAxis * MIN_MAX_BOUNDS;
+
+			p1	+=sAxis * MIN_MAX_BOUNDS;
+			p1	-=tAxis * MIN_MAX_BOUNDS;
+
+			p2	+=sAxis * MIN_MAX_BOUNDS;
+			p2	+=tAxis * MIN_MAX_BOUNDS;
+
+			p3	-=sAxis * MIN_MAX_BOUNDS;
+			p3	+=tAxis * MIN_MAX_BOUNDS;
+		}
+
+
+		public static void PointsFromPlane(Vector3 norm, float dist,
+			out Vector3 p0, out Vector3 p1, out Vector3 p2)
 		{
 			//generate some axis vecs
 			Vector3	sAxis	=Vector3.Cross(norm, Vector3.UnitY);
