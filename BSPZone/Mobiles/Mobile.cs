@@ -241,7 +241,7 @@ namespace BSPZone
 			Vector3		impacto		=Vector3.Zero;
 			ZonePlane	planeHit	=ZonePlane.Blank;
 			int			modelHit	=0;
-			if(mZone.Trace_All(mCamBox, camPos, mobCamPos, ref modelHit, ref impacto, ref planeHit))
+			if(mZone.TraceAllBox(mCamBox, camPos, mobCamPos, ref modelHit, ref impacto, ref planeHit))
 			{
 				mobCamPos	=impacto;
 			}
@@ -423,7 +423,7 @@ namespace BSPZone
 			Vector3		impacto		=Vector3.Zero;
 			ZonePlane	planeHit	=ZonePlane.Blank;
 
-			bool	bHit	=mZone.Trace_All(mBox, tryPos,
+			bool	bHit	=mZone.TraceAllBox(mBox, tryPos,
 				tryPos + Vector3.UnitY, ref modelHit, ref impacto, ref planeHit);
 
 			return	!bHit;

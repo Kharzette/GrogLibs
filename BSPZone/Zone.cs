@@ -530,7 +530,7 @@ namespace BSPZone
 
 			modelOn	=-1;
 
-			if(Trace_All(box, footPos, footCheck, ref modelOn, ref impVec, ref footPlane))
+			if(TraceAllBox(box, footPos, footCheck, ref modelOn, ref impVec, ref footPlane))
 			{
 				if(footPlane.IsGround())
 				{
@@ -554,7 +554,7 @@ namespace BSPZone
 
 			//first trace up from the start point
 			//to make sure there's head room
-			if(Trace_All(box, start, start + stairAxis * stepHeight, ref modelHit, ref impVec, ref impPlane))
+			if(TraceAllBox(box, start, start + stairAxis * stepHeight, ref modelHit, ref impVec, ref impPlane))
 			{
 				//hit noggin, just use previous point
 				modelOn	=-1;
@@ -570,7 +570,7 @@ namespace BSPZone
 			{
 				//trace down by step height and make sure
 				//we land on a ground surface
-				if(Trace_All(box, stepPos, stepPos - Vector3.UnitY * stepHeight,
+				if(TraceAllBox(box, stepPos, stepPos - Vector3.UnitY * stepHeight,
 					ref modelHit, ref impVec, ref impPlane))
 				{
 					if(impPlane.IsGround())
@@ -733,7 +733,7 @@ namespace BSPZone
 			for(i=0;i < MaxMoveBoxIterations;i++)
 			{
 				ZonePlane	zp	=ZonePlane.Blank;
-				if(!Trace_WorldCollisionFakeOBBox(box, modelIndex, start, end, ref impacto, ref zp))
+				if(!Trace_FakeOBBoxModel(box, modelIndex, start, end, ref impacto, ref zp))
 				{
 					break;
 				}
@@ -783,7 +783,7 @@ namespace BSPZone
 			for(i=0;i < MaxMoveBoxIterations;i++)
 			{
 				ZonePlane	zp	=ZonePlane.Blank;
-				if(!Trace_All(box, start, end, ref modelHit, ref impacto, ref zp))
+				if(!TraceAllBox(box, start, end, ref modelHit, ref impacto, ref zp))
 				{
 					break;
 				}
@@ -830,13 +830,12 @@ namespace BSPZone
 
 				if(bWorldOnly)
 				{
-					bHitSomething	=Trace_WorldCollisionBBox(box,
+					bHitSomething	=Trace_BoxModel(box,
 						0, start, end, ref impacto, ref zp);
 				}
 				else
 				{
-//					Trace_SphereAll(box.Max.Y, start, end, ref modelHit, ref impacto, ref zp))
-					bHitSomething	=Trace_All(box, start, end, ref modelHit, ref impacto, ref zp);
+					bHitSomething	=TraceAllBox(box, start, end, ref modelHit, ref impacto, ref zp);
 				}
 
 				if(!bHitSomething)
@@ -905,7 +904,7 @@ namespace BSPZone
 					continue;
 				}
 
-				if(Trace_TriggerFakeOBBox(box, zt.mModelNum, start, end))
+				if(Trace_FakeOBBoxTrigger(box, zt.mModelNum, start, end))
 				{
 					if(zt.mTimeSinceTriggered > zt.mWait)
 					{
@@ -942,7 +941,7 @@ namespace BSPZone
 					continue;
 				}
 
-				if(Trace_TriggerFakeOBBox(box, zt.mModelNum, start, end))
+				if(Trace_FakeOBBoxTrigger(box, zt.mModelNum, start, end))
 				{
 					continue;
 				}

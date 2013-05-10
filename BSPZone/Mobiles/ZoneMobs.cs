@@ -31,7 +31,7 @@ namespace BSPZone
 			ZonePlane	planeHit	=ZonePlane.Blank;
 			worldHit				=Vector3.Zero;
 
-			bool	bHit	=Trace_SphereAll(1f, start, end,
+			bool	bHit	=TraceAllSphere(1f, start, end,
 				ref hitModel, ref worldHit, ref planeHit);
 
 			float	bestDist;
@@ -221,7 +221,7 @@ namespace BSPZone
 				Vector3		impacto		=Vector3.Zero;
 				int			hitModel	=0;
 				ZonePlane	planeHit	=ZonePlane.Blank;
-				if(Trace_All(mMiniBox, pov, mobPos, ref hitModel, ref impacto, ref planeHit))
+				if(TraceAllRay(pov, mobPos, ref hitModel, ref impacto, ref planeHit))
 				{
 					continue;
 				}
@@ -251,7 +251,7 @@ namespace BSPZone
 				Vector3		impacto		=Vector3.Zero;
 				int			hitModel	=0;
 				ZonePlane	planeHit	=ZonePlane.Blank;
-				if(Trace_All(mMiniBox, pov, mobPos, ref hitModel, ref impacto, ref planeHit))
+				if(TraceAllRay(pov, mobPos, ref hitModel, ref impacto, ref planeHit))
 				{
 					continue;
 				}

@@ -488,7 +488,7 @@ namespace BSPZone
 				int			modelHit	=0;
 				Vector3		impacto		=Vector3.Zero;
 				ZonePlane	planeHit	=ZonePlane.Blank;
-				if(mZone.Trace_All(mTinyBox, approachPos, pos,
+				if(mZone.TraceAllRay(approachPos, pos,
 					ref modelHit, ref impacto, ref planeHit))
 				{
 					//hit something on the way
@@ -501,7 +501,7 @@ namespace BSPZone
 				modelHit	=0;
 				impacto		=Vector3.Zero;
 				planeHit	=ZonePlane.Blank;
-				if(!mZone.Trace_All(mTinyBox, approachPos,
+				if(!mZone.TraceAllRay(approachPos,
 					approachPos - (Vector3.UnitY * EyeToFloorTestHeight),
 					ref modelHit, ref impacto, ref planeHit))
 				{
