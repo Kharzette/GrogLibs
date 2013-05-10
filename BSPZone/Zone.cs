@@ -568,9 +568,9 @@ namespace BSPZone
 
 			if(!bGroundStep)
 			{
-				//trace down by step height and make sure
+				//trace down by step height x2 and make sure
 				//we land on a ground surface
-				if(TraceAllBox(box, stepPos, stepPos - Vector3.UnitY * stepHeight,
+				if(TraceAllBox(box, stepPos, stepPos - Vector3.UnitY * stepHeight * 2,
 					ref modelHit, ref impVec, ref impPlane))
 				{
 					if(impPlane.IsGround())

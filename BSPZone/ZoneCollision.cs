@@ -505,17 +505,24 @@ namespace BSPZone
 			bool	bHit	=false;
 			if(bUseModels)
 			{
-				bHit	=TraceAllBox(mTinyBox, pos, pos + (Vector3.UnitY * -300f),
+				bHit	=TraceAllRay(pos, pos + (Vector3.UnitY * -300f),
 							ref modelHit, ref impacto, ref planeHit);
 			}
 			else
 			{
-				bHit	=Trace_BoxModel(mTinyBox, 0, pos, pos + (Vector3.UnitY * - 300f),
-							ref impacto, ref planeHit);
+				RayTrace	trace	=new RayTrace();
+				bHit	=TraceRayNode(trace, pos, pos + (Vector3.UnitY * - 300f),
+							mZoneModels[0].mRootNode);
+				if(bHit)
+				{
+					impacto		=trace.mIntersection;
+					planeHit	=trace.mBestPlane;
+				}
 			}
 
 			if(bHit && planeHit != ZonePlane.Blank && planeHit.IsGround())
 			{
+				impacto	+=(planeHit.mNormal * Mathery.ON_EPSILON);
 				return	impacto;
 			}
 			return	pos;
