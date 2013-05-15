@@ -140,6 +140,21 @@ namespace UtilityLib
 		}
 
 
+		public static void WriteMatrixArray(BinaryWriter bw, Matrix []matArray)
+		{
+			if(matArray == null)
+			{
+				return;
+			}
+
+			bw.Write(matArray.Length);
+			for(int i=0;i < matArray.Length;i++)
+			{
+				WriteMatrix(bw, matArray[i]);
+			}
+		}
+
+
 		public static void WriteMatrix(BinaryWriter bw, Matrix mat)
 		{
 			bw.Write(mat.M11);
@@ -158,6 +173,22 @@ namespace UtilityLib
 			bw.Write(mat.M42);
 			bw.Write(mat.M43);
 			bw.Write(mat.M44);
+		}
+
+
+		public static Matrix []ReadMatrixArray(BinaryReader br)
+		{
+			int	count	=br.ReadInt32();
+
+			Debug.Assert(count > 0);
+
+			Matrix	[]ret	=new Matrix[count];
+
+			for(int i=0;i < count;i++)
+			{
+				ret[i]	=ReadMatrix(br);
+			}
+			return	ret;
 		}
 
 

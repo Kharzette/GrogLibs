@@ -48,6 +48,29 @@ namespace SharedForms
 			mGD		=gd;
 			mMats	=mats;
 
+			float	[]thresh;
+			float	[]level;
+
+			mMats.GetDefaultValues(out thresh, out level, out mLastTexSize);
+
+			CellThreshLevel	ct	=new CellThreshLevel();
+			ct.Level			=level[0];
+			ct.Threshold		=thresh[0];
+
+			mCellValues.Add(ct);
+
+			ct				=new CellThreshLevel();
+			ct.Level		=level[1];
+			ct.Threshold	=thresh[1];
+			mCellValues.Add(ct);
+
+			ct				=new CellThreshLevel();
+			ct.Level		=level[2];
+			ct.Threshold	=thresh[1];
+			mCellValues.Add(ct);
+
+			TextureSize.Value	=mLastTexSize;
+
 			CellTweakGrid.DataSource	=mCellValues;
 		}
 

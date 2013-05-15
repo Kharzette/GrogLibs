@@ -126,12 +126,12 @@ namespace MeshLib
 
 
 		//copies bones into the shader
-		public void UpdateShaderBones(Effect fx)
+		public void UpdateShaderBones(MaterialLib.Material mat)
 		{
 			//some chunks are never really drawn
 			if(mBones != null)
 			{
-				fx.Parameters["mBones"].SetValue(mBones);
+				mat.SetParameter("mBones", mBones);
 			}
 		}
 
@@ -169,14 +169,18 @@ namespace MeshLib
 				return;
 			}
 
-			MaterialLib.Material	mat	=matLib.GetMaterial(mMaterialName);
-			if(mat == null)
+			MaterialLib.Material	mat	=null;
+
+			if(altMaterial != "")
 			{
-				return;
+				mat	=matLib.GetMaterial(altMaterial);
+			}
+			else
+			{
+				mat	=matLib.GetMaterial(mMaterialName);
 			}
 
-			Effect		fx	=matLib.GetShader(mat.ShaderName);
-			if(fx == null)
+			if(mat == null)
 			{
 				return;
 			}
@@ -184,27 +188,18 @@ namespace MeshLib
 			g.SetVertexBuffer(mVerts);
 			g.Indices	=mIndexs;
 
-			UpdateShaderBones(fx);
+			UpdateShaderBones(mat);
 
-			if(altMaterial == "")
+			mat.SetParameter("mWorld", world);
+
+			if(mSkin != null)
 			{
-				matLib.ApplyParameters(mMaterialName);
-			}
-			else
-			{
-				matLib.ApplyParameters(altMaterial);
+				mat.SetParameter("mBindPose", mSkin.GetBindShapeMatrix());
 			}
 
-			fx.Parameters["mWorld"].SetValue(world);
+			Effect	fx	=matLib.GetMaterialShader(mat.Name);
 
-			if(fx.Parameters["mBindPose"] != null)
-			{
-				if(mSkin != null)
-				{
-					fx.Parameters["mBindPose"].SetValue(mSkin.GetBindShapeMatrix());
-				}
-			}
-
+			mat.ApplyShaderParameters(fx);
 			mat.ApplyRenderStates(g);
 
 			fx.CurrentTechnique.Passes[0].Apply();

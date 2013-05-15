@@ -95,6 +95,53 @@ namespace UtilityLib
 		}
 
 
+		public static Matrix StringToMatrix(string vstring)
+		{
+			Matrix	ret	=Matrix.Identity;
+
+			string	[]elements	=vstring.Split(' ');
+			
+			Mathery.TryParse(elements[0], out ret.M11);
+			Mathery.TryParse(elements[1], out ret.M12);
+			Mathery.TryParse(elements[2], out ret.M13);
+			Mathery.TryParse(elements[3], out ret.M14);
+			Mathery.TryParse(elements[4], out ret.M21);
+			Mathery.TryParse(elements[5], out ret.M22);
+			Mathery.TryParse(elements[6], out ret.M23);
+			Mathery.TryParse(elements[7], out ret.M24);
+			Mathery.TryParse(elements[8], out ret.M31);
+			Mathery.TryParse(elements[9], out ret.M32);
+			Mathery.TryParse(elements[10], out ret.M33);
+			Mathery.TryParse(elements[11], out ret.M34);
+			Mathery.TryParse(elements[12], out ret.M41);
+			Mathery.TryParse(elements[13], out ret.M42);
+			Mathery.TryParse(elements[14], out ret.M43);
+			Mathery.TryParse(elements[15], out ret.M44);
+
+			return	ret;
+		}
+
+
+		public static string FloatToString(float val)
+		{
+			return	val.ToString(System.Globalization.CultureInfo.InvariantCulture);
+		}
+
+
+		public static string FloatArrayToString(float []val)
+		{
+			string	ret	="";
+			for(int i=0;i < val.Length;i++)
+			{
+				ret	+=val[i].ToString(System.Globalization.CultureInfo.InvariantCulture) + " ";
+			}
+
+			ret	=ret.TrimEnd(' ');
+
+			return	ret;
+		}
+
+
 		public static string VectorToString(Vector3 vec)
 		{
 			return	vec.X.ToString(System.Globalization.CultureInfo.InvariantCulture)
@@ -116,6 +163,27 @@ namespace UtilityLib
 				+ " " + vec.Y.ToString(System.Globalization.CultureInfo.InvariantCulture)
 				+ " " + vec.Z.ToString(System.Globalization.CultureInfo.InvariantCulture)
 				+ " " + vec.W.ToString(System.Globalization.CultureInfo.InvariantCulture);
+		}
+
+
+		public static string MatrixToString(Matrix mat)
+		{
+			return	mat.M11.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M12.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M13.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M14.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M21.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M22.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M23.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M24.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M31.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M32.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M33.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M34.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M41.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M42.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M43.ToString(System.Globalization.CultureInfo.InvariantCulture)
+				+ " " + mat.M44.ToString(System.Globalization.CultureInfo.InvariantCulture);
 		}
 
 

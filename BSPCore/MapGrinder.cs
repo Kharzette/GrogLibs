@@ -994,7 +994,7 @@ namespace BSPCore
 					mat.DepthState	=DepthStencilState.DepthRead;
 					mat.AddParameter("mLightMap",
 						EffectParameterClass.Object,
-						EffectParameterType.Texture,
+						EffectParameterType.Texture, 1,
 						"LightMapAtlas");
 					if(bCell)
 					{
@@ -1011,7 +1011,7 @@ namespace BSPCore
 					mat.DepthState	=DepthStencilState.DepthRead;
 					mat.AddParameter("mLightMap",
 						EffectParameterClass.Object,
-						EffectParameterType.Texture,
+						EffectParameterType.Texture, 1,
 						"LightMapAtlas");
 					if(bCell)
 					{
@@ -1042,7 +1042,7 @@ namespace BSPCore
 					mat.Technique	="Mirror";
 					mat.AddParameter("mLightMap",
 						EffectParameterClass.Object,
-						EffectParameterType.Texture,
+						EffectParameterType.Texture, 1,
 						"MirrorTexture");
 				}
 				else if(mn.EndsWith("*Sky"))
@@ -1061,7 +1061,7 @@ namespace BSPCore
 					}
 					mat.AddParameter("mLightMap",
 						EffectParameterClass.Object,
-						EffectParameterType.Texture,
+						EffectParameterType.Texture, 1,
 						"LightMapAtlas");
 				}
 				else
@@ -1076,19 +1076,9 @@ namespace BSPCore
 					}
 					mat.AddParameter("mLightMap",
 						EffectParameterClass.Object,
-						EffectParameterType.Texture,
+						EffectParameterType.Texture, 1,
 						"LightMapAtlas");
 				}
-
-				//add stuff to ignore
-				//this hides it in the gui
-				mat.IgnoreParameter("mEyePos");
-				mat.IgnoreParameter("mLight0Position");
-//				mat.IgnoreParameter("mLight0Color");
-//				mat.IgnoreParameter("mLightRange");
-//				mat.IgnoreParameter("mLightFalloffRange");
-				mat.IgnoreParameter("mAniIntensities");
-				mat.IgnoreParameter("mWarpFactor");
 
 				mMaterials.Add(mat);
 			}

@@ -14,12 +14,6 @@ shared float4x4 mProjection;
 shared float4x4	mLightViewProj;	//for shadowing
 shared float3	mEyePos;
 
-//nearby dynamic lights?
-shared float3		mLight0Position;
-shared float3		mLight0Color;
-shared float		mLightRange;
-shared float		mLightFalloffRange;	//under this light at full strength
-
 //outline / cell related
 shared Texture	mCellTable;
 
@@ -92,27 +86,6 @@ float3 ComputeNormalFromMap(float4 sampleNorm, float3 tan, float3 biTan, float3 
 	sampleNorm.xyz	=normalize(sampleNorm.xyz);
 
 	return	sampleNorm.xyz;
-}
-
-
-float3 ComputeLight(float3 worldPos, float3 lightPos, float3 normal)
-{
-	float3	col		=float3(0, 0, 0);
-	float	dist	=distance(worldPos, lightPos);
-	if(dist < mLightRange)
-	{
-		float3	lightDirection	=normalize(lightPos - worldPos);
-		float3	worldNormal		=mul(normal, mWorld);
-		float	ndl				=dot(worldNormal, lightDirection);
-		
-		//distance falloff
-		if(dist > mLightFalloffRange)
-		{
-			ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));
-		}		
-		col	=mLight0Color * ndl;
-	}
-	return	col;
 }
 
 

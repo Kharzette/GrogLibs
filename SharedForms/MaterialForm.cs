@@ -198,10 +198,11 @@ namespace SharedForms
 				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
 				MaterialLib.Material	mat	=gs.GetParentMaterial();
 				mat.SetParameter("mTexSize",
-					"" + (tex.Width * 2) + " " + (tex.Height * 2));
+					Vector2.UnitX * (tex.Width * 2) +
+					Vector2.UnitY * (tex.Height * 2));
 
 				//set texture enabled
-				mat.SetParameter("mbTextureEnabled", "true");
+				mat.SetParameter("mbTextureEnabled", true);
 			}
 			else
 			{
@@ -216,7 +217,7 @@ namespace SharedForms
 					mat.SetTextureParameterToCube("mTexture");
 
 					//set texture enabled
-					mat.SetParameter("mbTextureEnabled", "true");
+					mat.SetParameter("mbTextureEnabled", true);
 				}
 			}
 			MaterialGrid.Enabled		=true;
@@ -252,7 +253,7 @@ namespace SharedForms
 			Effect	fx	=mMatLib.GetMaterialShader(mat.Name);
 			mat.UpdateShaderParameters(fx);
 
-			MaterialProperties.DataSource			=mat.Parameters;
+			MaterialProperties.DataSource			=mat.ShaderParameters;
 			MaterialProperties.Columns[0].ReadOnly	=true;
 			MaterialProperties.Columns[1].ReadOnly	=true;
 			MaterialProperties.Columns[2].ReadOnly	=true;
@@ -288,7 +289,7 @@ namespace SharedForms
 			mat.Technique	="";	//reset this
 			mat.UpdateShaderParameters(fx);
 
-			MaterialProperties.DataSource			=mat.Parameters;
+			MaterialProperties.DataSource			=mat.ShaderParameters;
 			MaterialProperties.Columns[0].ReadOnly	=true;
 			MaterialProperties.Columns[1].ReadOnly	=true;
 			MaterialProperties.Columns[2].ReadOnly	=true;
@@ -375,7 +376,7 @@ namespace SharedForms
 			mMatLib.AddMaterial(m);
 			mMatModel.Add(m.GetGUIStates());
 
-			MaterialProperties.DataSource			=m.Parameters;
+			MaterialProperties.DataSource			=m.ShaderParameters;
 			MaterialProperties.Columns[0].ReadOnly	=true;
 			MaterialProperties.Columns[1].ReadOnly	=true;
 			MaterialProperties.Columns[2].ReadOnly	=true;
@@ -401,7 +402,8 @@ namespace SharedForms
 			if(matSel.Count > 0)
 			{
 				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
-				MaterialProperties.DataSource			=gs.Parameters;
+
+				MaterialProperties.DataSource			=gs.ShaderParameters;
 				MaterialProperties.Columns[0].ReadOnly	=true;
 				MaterialProperties.Columns[1].ReadOnly	=true;
 				MaterialProperties.Columns[2].ReadOnly	=true;
@@ -600,7 +602,7 @@ namespace SharedForms
 
 			UpdateMaterials();
 
-			MaterialProperties.DataSource			=mMatModel[0].Parameters;
+			MaterialProperties.DataSource			=mMatModel[0].ShaderParameters;
 			MaterialProperties.Columns[0].ReadOnly	=true;
 			MaterialProperties.Columns[1].ReadOnly	=true;
 			MaterialProperties.Columns[2].ReadOnly	=true;
@@ -698,7 +700,7 @@ namespace SharedForms
 
 			UpdateMaterials();
 
-			MaterialProperties.DataSource			=mMatModel[0].Parameters;
+			MaterialProperties.DataSource			=mMatModel[0].ShaderParameters;
 			MaterialProperties.Columns[0].ReadOnly	=true;
 			MaterialProperties.Columns[1].ReadOnly	=true;
 			MaterialProperties.Columns[2].ReadOnly	=true;
@@ -758,6 +760,26 @@ namespace SharedForms
 			}
 
 			Misc.SafeInvoke(eStripElements, parts);
+		}
+
+
+		void OnHideSelected(object sender, EventArgs e)
+		{
+			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
+			if(matSel.Count != 1)
+			{
+				return;
+			}
+			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
+			MaterialLib.Material	mat	=gs.GetParentMaterial();
+
+			List<MaterialLib.ShaderParameters>	selected	=new List<MaterialLib.ShaderParameters>();
+			foreach(DataGridViewRow dgvr in MaterialProperties.SelectedRows)
+			{
+				selected.Add(dgvr.DataBoundItem as MaterialLib.ShaderParameters);
+			}
+
+			mat.HideShaderParameters(selected);
 		}
 	}
 }

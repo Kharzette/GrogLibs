@@ -6,6 +6,7 @@ using System.ComponentModel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
+using UtilityLib;
 
 
 namespace MaterialLib
@@ -23,10 +24,6 @@ namespace MaterialLib
 		//references to the content managers
 		ContentManager	mGameContent;	//may contain game specific shaders
 		ContentManager	mShaderLib;		//shared shaders used by every game
-
-		//list of original trilight values for materials that use them
-		Dictionary<string, Material.TriLight>	mOGTriLights
-			=new Dictionary<string, Material.TriLight>();
 
 
 		//two content managers, tool or game
@@ -52,7 +49,7 @@ namespace MaterialLib
 
 		public Material CreateMaterial()
 		{
-			Material	mat	=new Material(mStateBlockPool);
+			Material	mat	=new Material(mStateBlockPool, mMaps, mCubes);
 
 			return	mat;
 		}
@@ -115,9 +112,42 @@ namespace MaterialLib
 
 			bw.Write(magic);
 
-			//write number of materials
-			bw.Write(mMats.Count);
+			//write which textures and shaders used
+			List<string>	texInUse	=new List<string>();
+			List<string>	shdInUse	=new List<string>();
+			List<string>	cubeInUse	=new List<string>();
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				mat.Value.GetTexturesInUse(texInUse);
+				mat.Value.GetTextureCubesInUse(cubeInUse);
 
+				string	shd	=mat.Value.ShaderName;
+				if(!shdInUse.Contains(shd))
+				{
+					shdInUse.Add(shd);
+				}
+			}
+
+			bw.Write(shdInUse.Count);
+			foreach(string shd in shdInUse)
+			{
+				bw.Write(shd);
+			}
+
+			bw.Write(texInUse.Count);
+			foreach(string tex in texInUse)
+			{
+				bw.Write(tex);
+			}
+
+			bw.Write(cubeInUse.Count);
+			foreach(string cube in cubeInUse)
+			{
+				bw.Write(cube);
+			}
+
+			//write materials
+			bw.Write(mMats.Count);
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
 				mat.Value.Write(bw);
@@ -159,155 +189,46 @@ namespace MaterialLib
 				return	false;
 			}
 
-			int	numMaterials	=br.ReadInt32();
-
-			//list the referenced textures and shaders
+			//load the referenced textures and shaders
 			List<string>	texNeeded	=new List<string>();
 			List<string>	shdNeeded	=new List<string>();
 			List<string>	cubeNeeded	=new List<string>();
 
-			for(int i=0;i < numMaterials;i++)
+			//read shaders in use
+			int	numShd	=br.ReadInt32();
+			for(int i=0;i < numShd;i++)
 			{
-				Material	m	=new Material(mStateBlockPool);
-
-				m.Read(br);
-
-				mMats.Add(m.Name, m);
-
-				m.StripTextureExtensions();
-
-				texNeeded.AddRange(m.GetReferencedTextures());
-				cubeNeeded.AddRange(m.GetReferencedCubeTextures());
-
-				if(!shdNeeded.Contains(m.ShaderName))
-				{
-					shdNeeded.Add(m.ShaderName);
-				}
+				shdNeeded.Add(br.ReadString());
 			}
 
-			InitOriginalTriLights();
+			//read textures in use
+			int	numTex	=br.ReadInt32();
+			for(int i=0;i < numTex;i++)
+			{
+				texNeeded.Add(br.ReadString());
+			}
 
+			//read cubes in use
+			int	numCube	=br.ReadInt32();
+			for(int i=0;i < numCube;i++)
+			{
+				cubeNeeded.Add(br.ReadString());
+			}
+
+			StripTextureExtensions(texNeeded);
 			if(!bTool)
 			{
-				//eliminate duplicates
-				List<string>	texs	=new List<string>();
-				foreach(string tex in texNeeded)
-				{
-					if(tex == "LightMapAtlas")
-					{
-						continue;
-					}
-					if(!texs.Contains(tex))
-					{
-						texs.Add(tex);
-					}
-				}
+				LoadNewContent(gd, shdNeeded, texNeeded, cubeNeeded);
+			}
 
-				List<string>	cubeTexs	=new List<string>();
-				foreach(string tex in cubeNeeded)
-				{
-					if(tex == "LightMapAtlas")
-					{
-						continue;
-					}
-					if(!cubeTexs.Contains(tex))
-					{
-						cubeTexs.Add(tex);
-					}
-				}
+			//load the actual material values
+			int	numMaterials	=br.ReadInt32();
+			for(int i=0;i < numMaterials;i++)
+			{
+				Material	m	=new Material(mStateBlockPool, mMaps, mCubes);
 
-				//load shaders
-				foreach(string shd in shdNeeded)
-				{
-					if(shd != null && shd != "")
-					{
-						Effect	fx	=null;
-						if(File.Exists(mGameContent.RootDirectory +
-							"/" + shd + ".xnb"))
-						{
-							fx	=mGameContent.Load<Effect>(shd);
-						}
-						else if(File.Exists(mShaderLib.RootDirectory +
-							"/" + shd + ".xnb"))
-						{
-							fx	=mShaderLib.Load<Effect>(shd);
-						}
-
-						if(fx != null)
-						{
-							mFX.Add(shd, fx);
-						}
-					}
-				}
-
-				//load textures
-				//shouldn't really be any textures in the shader lib
-				//but I check for it anyway if not found
-				foreach(string tex in texs)
-				{
-					if(tex == "")
-					{
-						continue;
-					}
-
-					Texture2D	t	=null;
-
-					//I used to have special code here to strip + out of
-					//the key to load a texture, because the xbox can't have
-					//any + characters in a filename, but the tex file has
-					//to be renamed anyway, so it's not that hard to change it
-					//in the material lib.  So yea don't do filenames with +
-					//some older formats used to key with the textures path on front
-					int		tdPos	=tex.LastIndexOf("Textures");
-					if(tdPos != -1)
-					{
-						string	key		=tex.Substring(tdPos + 9, tex.Length - 9);
-						if(!LoadTexture(mGameContent, tex, key))
-						{
-							LoadTexture(mShaderLib, tex, tex);
-						}
-					}
-					else
-					{
-						string	path	="Textures/" + tex;
-						if(!LoadTexture(mGameContent, path, tex))
-						{
-							LoadTexture(mShaderLib, path, tex);
-						}
-					}
-
-					if(t != null)
-					{
-						mMaps.Add(tex, t);
-					}
-				}
-
-				//load cubetex
-				foreach(string tex in cubeTexs)
-				{
-					if(tex == "")
-					{
-						continue;
-					}
-
-					int		tdPos	=tex.LastIndexOf("TextureCubes");
-					if(tdPos != -1)
-					{
-						string	key		=tex.Substring(tdPos + 12, tex.Length - 12);
-						if(!LoadTextureCube(gd, mGameContent, tex, key))
-						{
-							LoadTextureCube(gd, mShaderLib, tex, tex);
-						}
-					}
-					else
-					{
-						string	path	="TextureCubes/" + tex;
-						if(!LoadTextureCube(gd, mGameContent, path, tex))
-						{
-							LoadTextureCube(gd, mShaderLib, path, tex);
-						}
-					}
-				}
+				m.Read(br);
+				mMats.Add(m.Name, m);
 			}
 
 			br.Close();
@@ -338,11 +259,38 @@ namespace MaterialLib
 				return	false;
 			}
 
+			//load the referenced textures and shaders
+			//though these aren't used for anything tool side
+			List<string>	texNeeded	=new List<string>();
+			List<string>	shdNeeded	=new List<string>();
+			List<string>	cubeNeeded	=new List<string>();
+
+			//read shaders in use
+			int	numShd	=br.ReadInt32();
+			for(int i=0;i < numShd;i++)
+			{
+				shdNeeded.Add(br.ReadString());
+			}
+
+			//read textures in use
+			int	numTex	=br.ReadInt32();
+			for(int i=0;i < numTex;i++)
+			{
+				texNeeded.Add(br.ReadString());
+			}
+
+			//read cubes in use
+			int	numCube	=br.ReadInt32();
+			for(int i=0;i < numCube;i++)
+			{
+				cubeNeeded.Add(br.ReadString());
+			}
+
 			int	numMaterials	=br.ReadInt32();
 
 			for(int i=0;i < numMaterials;i++)
 			{
-				Material	m	=new Material(mStateBlockPool);
+				Material	m	=new Material(mStateBlockPool, mMaps, mCubes);
 
 				m.Read(br);
 
@@ -352,8 +300,6 @@ namespace MaterialLib
 				}
 
 				mMats.Add(m.Name, m);
-
-				m.StripTextureExtensions();
 			}
 
 			br.Close();
@@ -366,6 +312,8 @@ namespace MaterialLib
 		public void AddMaterial(Material mat)
 		{
 			mMats.Add(mat.Name, mat);
+
+			mat.UpdateTexPointers(mMaps, mCubes);
 		}
 
 
@@ -416,6 +364,15 @@ namespace MaterialLib
 		}
 
 
+		internal void StripTextureExtensions(List<string> texNames)
+		{
+			for(int i=0;i < texNames.Count;i++)
+			{
+				texNames[i]	=FileUtil.StripExtension(texNames[i]);
+			}
+		}
+
+
 		void AssignEmissive(string matName)
 		{
 			if(!mMats.ContainsKey(matName))
@@ -424,19 +381,19 @@ namespace MaterialLib
 			}
 
 			Material	mat	=mMats[matName];
-			string		val	=mat.GetParameterValue("mTexture");
-			if(val == "")
+			object		val	=mat.GetParameterValue("mTexture");
+			if(val == null)
 			{
 				return;
 			}
 
-			if(!mMaps.ContainsKey(val))
+			Texture2D	map		=val as Texture2D;
+			if(map == null)
 			{
 				return;
 			}
 
-			Texture2D	map		=mMaps[val];
-			int			size	=map.Width * map.Height;
+			int	size	=map.Width * map.Height;
 
 			Color	[]colors	=new Color[size];
 			map.GetData<Color>(colors);
@@ -476,29 +433,18 @@ namespace MaterialLib
 		{
 			if(mMats.ContainsKey(matName))
 			{
-				string	val	=mMats[matName].GetParameterValue("mTexSize");
-				if(val == "")
-				{
-					return;
-				}
-
+				Vector2	val		=(Vector2)mMats[matName].GetParameterValue("mTexSize");
 				Vector2	size	=Vector2.Zero;
-
-				string	[]toks	=val.Split(' ');
-				UtilityLib.Mathery.TryParse(toks[0], out size.X);
-				UtilityLib.Mathery.TryParse(toks[1], out size.Y);
 
 				if(bUp)
 				{
-					size	*=2;
+					val	*=2;
 				}
 				else
 				{
-					size	*=0.5f;
+					val	*=0.5f;
 				}
-				mMats[matName].SetParameter("mTexSize", "" +
-					size.X.ToString(System.Globalization.CultureInfo.InvariantCulture) + " "
-					+ size.Y.ToString(System.Globalization.CultureInfo.InvariantCulture));
+				mMats[matName].SetParameter("mTexSize", val);
 			}
 		}
 
@@ -508,7 +454,8 @@ namespace MaterialLib
 			//match by name
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
-				if(mat.Value.GetParameterValue("mTexture") != "")
+				object	curVal	=mat.Value.GetParameterValue("mTexture");
+				if(curVal is Texture)
 				{
 					continue;
 				}
@@ -524,9 +471,11 @@ namespace MaterialLib
 					if(tex.Key.Contains(rawMatName)
 						|| tex.Key.Contains(rawMatName.ToLower()))
 					{
-						mat.Value.SetParameter("mTexture", tex.Key);
-						mat.Value.SetParameter("mbTextureEnabled", "true");
-						mat.Value.SetParameter("mTexSize", "" + tex.Value.Width + " " + tex.Value.Height);
+						mat.Value.SetParameter("mTexture", tex.Value);
+						mat.Value.SetParameter("mbTextureEnabled", true);
+						mat.Value.SetParameter("mTexSize",
+							(Vector2.UnitX * tex.Value.Width)
+							+ (Vector2.UnitY * tex.Value.Height));
 						break;
 					}
 				}
@@ -537,10 +486,10 @@ namespace MaterialLib
 				return;
 			}
 
-			string	firstCube	="";
+			TextureCube	firstCube	=null;
 			foreach(KeyValuePair<string, TextureCube> cube in mCubes)
 			{
-				firstCube	=cube.Key;
+				firstCube	=cube.Value;
 				break;
 			}
 
@@ -561,6 +510,15 @@ namespace MaterialLib
 		public void NukeAllMaterials()
 		{
 			mMats.Clear();
+		}
+
+
+		public void SetTriLightValues(Vector4 colorVal, Vector3 lightDir)
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				mat.Value.SetTriLightValues(colorVal, lightDir);
+			}
 		}
 
 
@@ -629,257 +587,39 @@ namespace MaterialLib
 		//updates a shader with a material's props
 		public void ApplyParameters(string matName)
 		{
-			Effect	fx	=GetMaterialShader(matName);
-			if(fx == null)
+			if(!mMats.ContainsKey(matName))
 			{
 				return;
 			}
 
 			Material	mat	=mMats[matName];
 
-			//set technique
-			if(mat.Technique != "")
+			Effect	fx	=GetMaterialShader(matName);
+			if(fx == null)
 			{
-				if(fx.Techniques[mat.Technique] == null)
-				{
-					return;
-				}
-				fx.CurrentTechnique	=fx.Techniques[mat.Technique];
+				return;
 			}
 
-			List<ShaderParameters>	matParms	=mat.GetRealShaderParameters();
-
-			foreach(ShaderParameters sp in matParms)
-			{
-				if(sp.Value == null || sp.Value == "" || fx.Parameters[sp.Name] == null)
-				{
-					continue;	//skip anything blank
-				}
-				switch(sp.Class)
-				{
-					case EffectParameterClass.Object:
-						if(sp.Type == EffectParameterType.Texture)
-						{
-							if(mMaps.ContainsKey(sp.Value))
-							{
-								fx.Parameters[sp.Name].SetValue(mMaps[sp.Value]);
-							}
-							else if(sp.Value.StartsWith("::"))
-							{
-								//celltable hax
-								int	index;
-								if(int.TryParse(sp.Value.Substring(2), out index))
-								{
-									fx.Parameters[sp.Name].SetValue(mCellTex[index]);
-								}
-							}
-						}
-						else if(sp.Type == EffectParameterType.TextureCube)
-						{
-							if(mCubes.ContainsKey(sp.Value))
-							{
-								fx.Parameters[sp.Name].SetValue(mCubes[sp.Value]);
-							}
-						}
-						else
-						{
-							fx.Parameters[sp.Name].SetValue(sp.Value);
-						}
-						break;
-
-					case EffectParameterClass.Scalar:
-						if(sp.Type == EffectParameterType.Single)
-						{
-							EffectParameter	ep	=fx.Parameters[sp.Name];
-							if(ep.Elements.Count > 1)
-							{
-								float	[]vals	=ParseFloatArray(sp.Value);
-								ep.SetValue(vals);
-							}
-							else
-							{
-								float	val;
-								if(UtilityLib.Mathery.TryParse(sp.Value, out val))
-								{
-									ep.SetValue(val);
-								}
-							}
-						}
-						else if(sp.Type == EffectParameterType.Bool)
-						{
-							bool	val;
-							if(UtilityLib.Mathery.TryParse(sp.Value, out val))
-							{
-								fx.Parameters[sp.Name].SetValue(val);
-							}
-						}
-						break;
-
-					case EffectParameterClass.Vector:
-						//get the number of columns
-						EffectParameter	ep2	=fx.Parameters[sp.Name];
-
-						if(ep2.ColumnCount == 2)
-						{
-							Vector2	vec	=Vector2.Zero;
-							string	[]tokens;
-							tokens	=sp.Value.Split(' ');
-							if(tokens.Length == 2)
-							{
-								if(UtilityLib.Mathery.TryParse(tokens[0], out vec.X))
-								{
-									if(UtilityLib.Mathery.TryParse(tokens[1], out vec.Y))
-									{
-										ep2.SetValue(vec);
-									}
-								}
-							}
-						}
-						else if(ep2.ColumnCount == 3)
-						{
-							Vector3	vec	=Vector3.Zero;
-							string	[]tokens;
-							tokens	=sp.Value.Split(' ');
-							if(tokens.Length == 3)
-							{
-								if(UtilityLib.Mathery.TryParse(tokens[0], out vec.X))
-								{
-									if(UtilityLib.Mathery.TryParse(tokens[1], out vec.Y))
-									{
-										if(UtilityLib.Mathery.TryParse(tokens[2], out vec.Z))
-										{
-											ep2.SetValue(vec);
-										}
-									}
-								}
-							}
-						}
-						else if(ep2.ColumnCount == 4)
-						{
-							Vector4	vec	=Vector4.Zero;
-							string	[]tokens;
-							tokens	=sp.Value.Split(' ');
-
-							if(tokens.Length < 4)
-							{
-								break;
-							}
-
-							if(UtilityLib.Mathery.TryParse(tokens[0], out vec.X))
-							{
-								if(UtilityLib.Mathery.TryParse(tokens[1], out vec.Y))
-								{
-									if(UtilityLib.Mathery.TryParse(tokens[2], out vec.Z))
-									{
-										if(UtilityLib.Mathery.TryParse(tokens[3], out vec.W))
-										{
-											ep2.SetValue(vec);
-										}
-									}
-								}
-							}
-						}
-						else
-						{
-							Debug.Assert(false);
-						}
-						break;
-				}
-			}
+			mat.ApplyShaderParameters(fx);
 		}
 
 
-		float[] ParseFloatArray(string floats)
+		public void SetMaterialParameter(string matName, string name, object val)
 		{
-			string	[]toks	=floats.Split(' ');
-
-			List<float>	ret	=new List<float>();
-
-			foreach(string tok in toks)
+			if(!mMats.ContainsKey(matName))
 			{
-				float	f;
-				if(UtilityLib.Mathery.TryParse(tok, out f))
-				{
-					ret.Add(f);
-				}
+				return;
 			}
-			return	ret.ToArray();
+
+			mMats[matName].SetParameter(name, val);
 		}
 
 
-		public void SetParameterOnAll(string paramName, Vector4 vec)
+		public void SetParameterOnAll(string paramName, object val)
 		{
-			string	val	=UtilityLib.Misc.VectorToString(vec);
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
 				mat.Value.SetParameter(paramName, val);
-			}
-		}
-
-
-		public void SetParameterOnAll(string paramName, Vector3 vec)
-		{
-			string	val	=UtilityLib.Misc.VectorToString(vec);
-			foreach(KeyValuePair<string, Material> mat in mMats)
-			{
-				mat.Value.SetParameter(paramName, val);
-			}
-		}
-
-
-		public void SetParameterOnAll(string paramName, float val)
-		{
-			foreach(KeyValuePair<string, Material> mat in mMats)
-			{
-				string	sval	="" + val.ToString(System.Globalization.CultureInfo.InvariantCulture);
-				mat.Value.SetParameter(paramName, sval);
-			}
-		}
-
-
-		public void SetParameterOnAll(string paramName, bool bVal)
-		{
-			foreach(KeyValuePair<string, Material> mat in mMats)
-			{
-				string	sval	="" + bVal;
-				mat.Value.SetParameter(paramName, sval);
-			}
-		}
-
-
-		public void SetTriLightValues(Vector4 lightColor, Vector3 lightDir)
-		{
-			foreach(KeyValuePair<string, Material.TriLight> matTri in mOGTriLights)
-			{
-				Material	mat	=mMats[matTri.Key];
-
-				Material.TriLight	tri	=matTri.Value;
-
-				tri.mColor0	*=lightColor;
-				tri.mColor1	*=lightColor;
-				tri.mColor2	*=lightColor;
-
-				tri.mColor0.W	=1f;
-				tri.mColor1.W	=1f;
-				tri.mColor2.W	=1f;
-
-				mat.SetTriLightValues(tri, lightDir);
-			}
-		}
-		
-
-		void InitOriginalTriLights()
-		{
-			mOGTriLights.Clear();
-
-			foreach(KeyValuePair<string, Material> mat in mMats)
-			{
-				Material.TriLight	tri;
-
-				if(mat.Value.GetTriLight(out tri))
-				{
-					mOGTriLights.Add(mat.Key, tri);
-				}
 			}
 		}
 
@@ -916,23 +656,9 @@ namespace MaterialLib
 
 		public void UpdateWVP(Matrix world, Matrix view, Matrix proj, Vector3 eyePos)
 		{
-			foreach(KeyValuePair<string, Effect> fx in mFX)
-			{
-				if(fx.Value.Parameters["mWorld"] != null)
-				{
-					fx.Value.Parameters["mWorld"].SetValue(world);
-				}
-				if(fx.Value.Parameters["mView"] != null)
-				{
-					fx.Value.Parameters["mView"].SetValue(view);
-				}
-				if(fx.Value.Parameters["mProjection"] != null)
-				{
-					fx.Value.Parameters["mProjection"].SetValue(proj);
-				}
-			}
-
-			//update eyepos in material parameters
+			SetParameterOnAll("mWorld", world);
+			SetParameterOnAll("mView", view);
+			SetParameterOnAll("mProjection", proj);
 			SetParameterOnAll("mEyePos", eyePos);
 		}
 
@@ -952,6 +678,132 @@ namespace MaterialLib
 			mStateBlockPool.PurgeBlendStates(bss);
 			mStateBlockPool.PurgeDepthStates(dss);
 			mStateBlockPool.PurgeRasterStates(rss);
+		}
+
+
+		//load up content requested by materials
+		void LoadNewContent(GraphicsDevice gd, List<string> shdNeeded,
+			List<string> texNeeded, List<string> cubeNeeded)
+		{
+			//eliminate duplicates
+			List<string>	texs	=new List<string>();
+			foreach(string tex in texNeeded)
+			{
+				if(tex == "LightMapAtlas")
+				{
+					continue;
+				}
+				if(!texs.Contains(tex))
+				{
+					texs.Add(tex);
+				}
+			}
+
+			List<string>	cubeTexs	=new List<string>();
+			foreach(string tex in cubeNeeded)
+			{
+				if(tex == "LightMapAtlas")
+				{
+					continue;
+				}
+				if(!cubeTexs.Contains(tex))
+				{
+					cubeTexs.Add(tex);
+				}
+			}
+
+			//load shaders
+			foreach(string shd in shdNeeded)
+			{
+				if(shd != null && shd != "" && !mFX.ContainsKey(shd))
+				{
+					Effect	fx	=null;
+					if(File.Exists(mGameContent.RootDirectory +
+						"/" + shd + ".xnb"))
+					{
+						fx	=mGameContent.Load<Effect>(shd);
+					}
+					else if(File.Exists(mShaderLib.RootDirectory +
+						"/" + shd + ".xnb"))
+					{
+						fx	=mShaderLib.Load<Effect>(shd);
+					}
+
+					if(fx != null)
+					{
+						mFX.Add(shd, fx);
+					}
+				}
+			}
+
+			//load textures
+			//shouldn't really be any textures in the shader lib
+			//but I check for it anyway if not found
+			foreach(string tex in texs)
+			{
+				if(tex == "")
+				{
+					continue;
+				}
+
+				Texture2D	t	=null;
+
+				//I used to have special code here to strip + out of
+				//the key to load a texture, because the xbox can't have
+				//any + characters in a filename, but the tex file has
+				//to be renamed anyway, so it's not that hard to change it
+				//in the material lib.  So yea don't do filenames with +
+				//some older formats used to key with the textures path on front
+				int		tdPos	=tex.LastIndexOf("Textures");
+				if(tdPos != -1)
+				{
+					string	key		=tex.Substring(tdPos + 9, tex.Length - 9);
+					if(!LoadTexture(mGameContent, tex, key))
+					{
+						LoadTexture(mShaderLib, tex, tex);
+					}
+				}
+				else
+				{
+					string	path	="Textures/" + tex;
+					if(!LoadTexture(mGameContent, path, tex))
+					{
+						LoadTexture(mShaderLib, path, tex);
+					}
+				}
+
+				if(t != null)
+				{
+					mMaps.Add(tex, t);
+				}
+			}
+
+			//load cubetex
+			foreach(string tex in cubeTexs)
+			{
+				if(tex == "")
+				{
+					continue;
+				}
+
+				int		tdPos	=tex.LastIndexOf("TextureCubes");
+				if(tdPos != -1)
+				{
+					string	key		=tex.Substring(tdPos + 12, tex.Length - 12);
+					if(!LoadTextureCube(gd, mGameContent, tex, key))
+					{
+						LoadTextureCube(gd, mShaderLib, tex, tex);
+					}
+				}
+				else
+				{
+					string	path	="TextureCubes/" + tex;
+					if(!LoadTextureCube(gd, mGameContent, path, tex))
+					{
+						LoadTextureCube(gd, mShaderLib, path, tex);
+					}
+				}
+			}
 		}
 
 
@@ -1013,6 +865,8 @@ namespace MaterialLib
 			{
 				return	false;
 			}
+
+			tex.Name	=key;
 
 			mMaps.Add(key, tex);
 
@@ -1078,20 +932,6 @@ namespace MaterialLib
 
 			if(cmf == CubeMapFace.PositiveY || cmf == CubeMapFace.NegativeY)
 			{
-				/*
-				//Y faces are upside down for some reason
-				List<Color>	revTex	=new List<Color>();
-
-				for(int y=face.Height - 1;y >= 0;y--)
-				{
-					for(int x=0;x < face.Width;x++)
-					{
-						revTex.Add(faceTexels[(y * face.Width) + x]);
-					}
-				}
-
-				faceTexels	=revTex.ToArray();*/
-
 				List<Color>	revTex	=new List<Color>();
 				for(int y=0;y < face.Height;y++)
 				{
@@ -1133,6 +973,8 @@ namespace MaterialLib
 			SetCubeFace(tc, right, CubeMapFace.NegativeX);
 			SetCubeFace(tc, front, CubeMapFace.PositiveZ);
 			SetCubeFace(tc, back, CubeMapFace.NegativeZ);
+
+			tc.Name	=key;
 
 			mCubes.Add(key, tc);
 

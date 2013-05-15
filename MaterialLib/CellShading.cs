@@ -40,17 +40,26 @@ namespace MaterialLib
 		}
 
 
-		public void SetCellTexture(int index)
+		public void GetDefaultValues(out float []thresh, out float []level, out int size)
 		{
+			thresh	=new float[2];
+			level	=new float[3];
+
+			thresh[0]	=WorldThreshold0;
+			thresh[1]	=WorldThreshold1;
+			level[0]	=WorldLevel0;
+			level[1]	=WorldLevel1;
+			level[2]	=WorldLevel2;
+
+			size	=WorldLookupSize;
+	}
+
+
+		public void SetCellTexture(int index)
+		{			
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
-				foreach(ShaderParameters sp in mat.Value.Parameters)
-				{
-					if(sp.Name == "mCellTable")
-					{
-						sp.Value	="::" + index;	//hax
-					}
-				}
+				mat.Value.SetParameter("mCellTable", mCellTex[index]);
 			}
 		}
 

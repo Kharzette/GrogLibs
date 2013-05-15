@@ -854,19 +854,6 @@ namespace BSPZone
 		}
 
 
-		public bool TraceRayNode(Vector3 start, Vector3 end)
-		{
-			RayTrace	rt	=new RayTrace();
-			rt.mRadius	=5;
-
-			BoundingBox	testBox	=Misc.MakeBox(16, 50);
-
-			Vector3		impacto		=Vector3.Zero;
-			ZonePlane	planeHit	=ZonePlane.Blank;
-			return	Trace_BoxModel(testBox, 0, start, end, ref impacto, ref planeHit);
-		}
-
-
 		//might still be a bit dodgy for movement, needs more testing
 		bool TraceRayNode(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
 		{

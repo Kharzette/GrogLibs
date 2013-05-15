@@ -13,13 +13,8 @@ namespace MaterialLib
 {
 	public class Material
 	{
-		public struct TriLight
-		{
-			internal Vector4	mColor0, mColor1, mColor2;
-		}
-
-		string	mShaderName;	//name of the shader
 		string	mName;			//name of the overall material
+		string	mShaderName;	//name of the shader
 		string	mTechnique;		//technique to use with this material
 
 		//emmisive color for radiosity
@@ -30,22 +25,21 @@ namespace MaterialLib
 		DepthStencilState	mDepthStencilState	=DepthStencilState.Default;
 		RasterizerState		mRasterizeState		=RasterizerState.CullCounterClockwise;
 
-		//parameters for the chosen shader
-		List<ShaderParameters>			mParameters		=new List<ShaderParameters>();
+		//shader parameters
+		ParameterKeeper	mPKeeper;
 
 		//for datagrid and editing, but also
 		//access to the state pool
 		GUIStates	mGUIStates;
 
-		//list of parameters to ignore
-		//these will be updated by code at runtime
-		List<string>	mIgnoreParameters	=new List<string>();
-
-
 		//tool side constructor for editing
-		internal Material(StateBlockPool sbp)
+		internal Material(StateBlockPool sbp,
+			Dictionary<string, Texture2D> texs,
+			Dictionary<string, TextureCube> cubes)
 		{
 			mGUIStates	=new GUIStates(this, sbp);
+
+			mPKeeper	=new ParameterKeeper(texs, cubes);
 		}
 
 
@@ -64,13 +58,6 @@ namespace MaterialLib
 			get { return mTechnique; }
 			set { mTechnique = Misc.AssignValue(value); }
 		}
-#if !XBOX
-		public BindingList<ShaderParameters> Parameters
-		{
-			get { return mGUIStates.Parameters; }
-			set { mGUIStates.Parameters = value; }
-		}
-#endif
 		public Color Emissive
 		{
 			get { return mEmissiveColor; }
@@ -97,9 +84,14 @@ namespace MaterialLib
 			set { mGUIStates.SetRasterState(value); }
 #endif
 		}
+		public BindingList<ShaderParameters> ShaderParameters
+		{
+			get { return mPKeeper.GetParametersForGUI(); }
+		}
 
 
-		public void Write(BinaryWriter bw)
+		#region IO
+		internal void Write(BinaryWriter bw)
 		{
 			bw.Write(mName);
 			bw.Write(mShaderName);
@@ -128,21 +120,11 @@ namespace MaterialLib
 			//cullmode
 			bw.Write((UInt32)mRasterizeState.CullMode);
 
-			bw.Write(mParameters.Count);
-			foreach(ShaderParameters sp in mParameters)
-			{
-				sp.Write(bw);
-			}
-
-			bw.Write(mIgnoreParameters.Count);
-			foreach(string ig in mIgnoreParameters)
-			{
-				bw.Write(ig);
-			}
+			mPKeeper.Write(bw);
 		}
 
 
-		public void Read(BinaryReader br)
+		internal void Read(BinaryReader br)
 		{
 			mName			=br.ReadString();
 			mShaderName		=br.ReadString();
@@ -187,239 +169,33 @@ namespace MaterialLib
 			rs.CullMode	=(CullMode)br.ReadUInt32();
 			mGUIStates.SetRasterState(rs);
 
-			mParameters.Clear();
-			int	numParameters	=br.ReadInt32();
-			for(int i=0;i < numParameters;i++)
-			{
-				ShaderParameters	sp	=new ShaderParameters();
-				sp.Read(br);
-
-				mParameters.Add(sp);
-			}
-
-			mIgnoreParameters.Clear();
-			int	numIgnores	=br.ReadInt32();
-			for(int i=0;i < numIgnores;i++)
-			{
-				string	ig	=br.ReadString();
-				mIgnoreParameters.Add(ig);
-			}
-			UpdateGUIParams();
+			mPKeeper.Read(br);
 		}
-
-
-		internal bool GetTriLight(out TriLight tri)
-		{
-			bool	bZero	=false;
-			bool	bOne	=false;
-			bool	bTwo	=false;
-
-			tri.mColor0	=Vector4.Zero;
-			tri.mColor1	=Vector4.Zero;
-			tri.mColor2	=Vector4.Zero;
-
-			foreach(ShaderParameters sp in mParameters)
-			{
-				if(sp.Class != EffectParameterClass.Vector)
-				{
-					continue;
-				}
-
-				if(sp.Name == "mLightColor0")
-				{
-					tri.mColor0	=Misc.StringToVector4(sp.Value);
-					bZero		=true;
-				}
-				else if(sp.Name == "mLightColor1")
-				{
-					tri.mColor1	=Misc.StringToVector4(sp.Value);
-					bOne		=true;
-				}
-				else if(sp.Name == "mLightColor2")
-				{
-					tri.mColor2	=Misc.StringToVector4(sp.Value);
-					bTwo		=true;
-				}
-			}
-			return	(bZero && bOne && bTwo);
-		}
-
-
-		internal void SetTriLightValues(TriLight tri, Vector3 lightDir)
-		{
-			foreach(ShaderParameters sp in mParameters)
-			{
-				if(sp.Class != EffectParameterClass.Vector)
-				{
-					continue;
-				}
-
-				if(sp.Name == "mLightColor0")
-				{
-					sp.Value	=Misc.VectorToString(tri.mColor0);
-				}
-				else if(sp.Name == "mLightColor1")
-				{
-					sp.Value	=Misc.VectorToString(tri.mColor1);
-				}
-				else if(sp.Name == "mLightColor2")
-				{
-					sp.Value	=Misc.VectorToString(tri.mColor2);
-				}
-				else if(sp.Name == "mLightDirection")
-				{
-					sp.Value	=Misc.VectorToString(lightDir);
-				}
-			}
-		}
-
-
-		internal void StripTextureExtensions()
-		{
-			foreach(ShaderParameters sp in mParameters)
-			{
-				if(sp.Type == EffectParameterType.Texture)
-				{
-					if(sp.Value != null && sp.Value != "")
-					{
-						sp.Value	=FileUtil.StripExtension(sp.Value);
-					}
-				}
-			}
-		}
-
-
-		public List<string>	GetReferencedTextures()
-		{
-			List<string>	ret	=new List<string>();
-
-			foreach(ShaderParameters sp in mParameters)
-			{
-				if(sp.Type == EffectParameterType.Texture)
-				{
-					if(sp.Value != null && sp.Value != "")
-					{
-						ret.Add(sp.Value);
-					}
-				}
-			}
-			return	ret;
-		}
-
-
-		public List<string>	GetReferencedCubeTextures()
-		{
-			List<string>	ret	=new List<string>();
-
-			foreach(ShaderParameters sp in mParameters)
-			{
-				if(sp.Type == EffectParameterType.TextureCube)
-				{
-					if(sp.Value != null && sp.Value != "")
-					{
-						ret.Add(sp.Value);
-					}
-				}
-			}
-			return	ret;
-		}
-
-
-		public void SetParameter(string paramName, string value)
-		{
-			foreach(ShaderParameters sp in mParameters)
-			{
-				if(sp.Name == paramName)
-				{
-					sp.Value	=value;
-				}
-			}
-		}
-
-
-		public void SetTextureParameterToCube(string name)
-		{
-			foreach(ShaderParameters sp in mParameters)
-			{
-				if(sp.Name == name)
-				{
-					if(sp.Type == EffectParameterType.Texture)
-					{
-						sp.Type	=EffectParameterType.TextureCube;
-					}
-					return;
-				}
-			}
-		}
-
-
-		public string GetParameterValue(string name)
-		{
-			foreach(ShaderParameters sp in mParameters)
-			{
-				if(sp.Name == name)
-				{
-					return	sp.Value;
-				}
-			}
-			return	"";
-		}
+		#endregion
 
 
 		public void AddParameter(string name, EffectParameterClass epc,
-								EffectParameterType ept, string value)
+			EffectParameterType ept, int count, object val)
 		{
-			ShaderParameters	parm	=null;
-
-			//see if the parameter already exists
-			foreach(ShaderParameters sp in mParameters)
-			{
-				if(sp.Name == name)
-				{
-					parm	=sp;
-					break;
-				}
-			}
-
-			bool	bNew	=false;
-
-			if(parm == null)
-			{
-				bNew	=true;
-				parm	=new ShaderParameters();
-			}
-
-			parm.Name	=name;
-			parm.Class	=epc;
-			parm.Type	=ept;
-			parm.Value	=value;
-
-			if(bNew)
-			{
-				mParameters.Add(parm);
-				UpdateGUIParams();
-			}
+			mPKeeper.AddParameter(name, epc, ept, count, val);
 		}
 
 
-		public void IgnoreParameter(string paramName)
+		public void SetParameter(string name, object value)
 		{
-			if(!mIgnoreParameters.Contains(paramName))
-			{
-				mIgnoreParameters.Add(paramName);
-			}
-			UpdateGUIParams();
+			mPKeeper.SetParameter(name, value);
 		}
 
 
-		public void StopIgnoringParameter(string paramName)
+		public void HideShaderParameters(List<ShaderParameters> toHide)
 		{
-			if(mIgnoreParameters.Contains(paramName))
-			{
-				mIgnoreParameters.Remove(paramName);
+			mPKeeper.Hide(toHide);
+		}
 
-				UpdateGUIParams();
-			}
+
+		public void UpdateShaderParameters(Effect fx)
+		{
+			mPKeeper.UpdateShaderParameters(fx);
 		}
 
 
@@ -431,131 +207,43 @@ namespace MaterialLib
 		}
 
 
-		public void UpdateShaderParameters(Effect fx)
+		public void SetTextureParameterToCube(string name)
 		{
-			List<ShaderParameters>	parms	=new List<ShaderParameters>();
-
-			foreach(EffectParameter ep in fx.Parameters)
-			{
-				//skip matrices
-				if(ep.ParameterClass == EffectParameterClass.Matrix)
-				{
-					continue;
-				}
-
-				//skip stuff with lots of elements
-				//such as lists of bones
-				if(ep.Elements.Count > 0)
-				{
-					continue;
-				}
-
-				ShaderParameters	sp	=new ShaderParameters();
-
-				sp.Name		=ep.Name;
-				sp.Class	=ep.ParameterClass;
-				sp.Type		=ep.ParameterType;
-
-				switch(sp.Class)
-				{
-					case EffectParameterClass.Matrix:
-						sp.Value	=Convert.ToString(ep.GetValueMatrix());
-						break;
-
-					case EffectParameterClass.Vector:
-						if(ep.ColumnCount == 2)
-						{
-							Vector2	vec	=ep.GetValueVector2();
-
-							sp.Value	=Misc.VectorToString(vec);
-						}
-						else if(ep.ColumnCount == 3)
-						{
-							Vector3	vec	=ep.GetValueVector3();
-							sp.Value	=Misc.VectorToString(vec);
-						}
-						else
-						{
-							Vector4	vec	=ep.GetValueVector4();
-							sp.Value	=Misc.VectorToString(vec);
-						}
-						break;
-				}
-				parms.Add(sp);
-			}
-
-			//merge results
-			//add any new parameters
-			foreach(ShaderParameters newSp in parms)
-			{
-				bool	bFound	=false;
-				foreach(ShaderParameters sp in mParameters)
-				{
-					if(sp.Name == newSp.Name)
-					{
-						bFound	=true;
-					}
-				}
-
-				if(!bFound)
-				{
-					mParameters.Add(newSp);
-					UpdateGUIParams();
-				}
-			}
-
-			//gank any parameters that no longer exist
-			//within the shader
-			List<ShaderParameters>	gank	=new List<ShaderParameters>();
-			foreach(ShaderParameters sp in mParameters)
-			{
-				bool	bFound	=false;
-				{
-					foreach(ShaderParameters newSp in parms)
-					if(sp.Name == newSp.Name)
-					{
-						bFound	=true;
-						break;
-					}
-				}
-
-				if(!bFound)
-				{
-					gank.Add(sp);
-				}
-			}
-
-			//gankery
-			foreach(ShaderParameters sp in gank)
-			{
-				mParameters.Remove(sp);
-			}
-			if(gank.Count > 0)
-			{
-				UpdateGUIParams();
-			}
+			mPKeeper.SetTextureParameterToCube(name);
 		}
 
 
-		void UpdateGUIParams()
+		internal void GetTexturesInUse(List<string> tex)
 		{
-#if !XBOX
-			mGUIStates.Parameters.Clear();
-
-			foreach(ShaderParameters sp in mParameters)
-			{
-				if(!mIgnoreParameters.Contains(sp.Name))
-				{
-					mGUIStates.Parameters.Add(sp);
-				}
-			}
-#endif
+			mPKeeper.GetTexturesInUse(tex);
 		}
 
 
-		internal List<ShaderParameters> GetRealShaderParameters()
+		internal void GetTextureCubesInUse(List<string> tex)
 		{
-			return	mParameters;
+			mPKeeper.GetTextureCubesInUse(tex);
+		}
+
+
+		public void ApplyShaderParameters(Effect fx)
+		{
+			//set technique
+			if(mTechnique != "")
+			{
+				if(fx.Techniques[mTechnique] == null)
+				{
+					return;
+				}
+				fx.CurrentTechnique	=fx.Techniques[mTechnique];
+			}
+
+			mPKeeper.ApplyShaderParameters(fx);
+		}
+
+
+		internal object GetParameterValue(string name)
+		{
+			return	mPKeeper.GetParameterValue(name);
 		}
 
 
@@ -593,5 +281,18 @@ namespace MaterialLib
 			return	mGUIStates;
 		}
 #endif
+
+
+		internal void UpdateTexPointers(Dictionary<string, Texture2D> maps,
+			Dictionary<string, TextureCube> cubes)
+		{
+			mPKeeper.UpdateTexPointers(maps, cubes);
+		}
+
+
+		internal void SetTriLightValues(Vector4 colorVal, Vector3 lightDir)
+		{
+			mPKeeper.SetTriLightValues(colorVal, lightDir);
+		}
 	}
 }

@@ -176,10 +176,10 @@ namespace BSPZone
 		}
 
 
-		public bool TravelToLocation(Vector3 location)
+		public bool TravelToLocation(Vector3 location, bool bOverride)
 		{
 			//make sure we haven't already set this up
-			if(mbFollowingPath || mbAwaitingPath)
+			if(mbFollowingPath || mbAwaitingPath && !bOverride)
 			{
 				return	true;	//already handled
 			}
@@ -280,12 +280,12 @@ namespace BSPZone
 		}
 
 
-		public bool UpdateAI(int msDelta, out Vector3 endPos, out Vector3 camPos)
+		public bool UpdateAI(int msDelta)
 		{
 			Vector3	startPos	=mMob.GetGroundPosition();
 
-			endPos	=startPos;
-			camPos	=startPos;
+			Vector3	endPos	=startPos;
+			Vector3	camPos	=startPos;
 
 			//not much to do while falling
 			if(!mMob.IsOnGround())

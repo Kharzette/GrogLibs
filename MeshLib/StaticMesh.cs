@@ -105,14 +105,18 @@ namespace MeshLib
 				return;
 			}
 
-			MaterialLib.Material	mat	=matLib.GetMaterial(mMaterialName);
-			if(mat == null)
+			MaterialLib.Material	mat	=null;
+
+			if(altMaterial != "")
 			{
-				return;
+				mat	=matLib.GetMaterial(altMaterial);
+			}
+			else
+			{
+				mat	=matLib.GetMaterial(mMaterialName);
 			}
 
-			Effect		fx	=matLib.GetShader(mat.ShaderName);
-			if(fx == null)
+			if(mat == null)
 			{
 				return;
 			}
@@ -120,18 +124,12 @@ namespace MeshLib
 			g.SetVertexBuffer(mVerts);
 			g.Indices			=mIndexs;
 
-			if(altMaterial == "")
-			{
-				matLib.ApplyParameters(mMaterialName);
-			}
-			else
-			{
-				matLib.ApplyParameters(altMaterial);
-			}
+			mat.SetParameter("mWorld", world);
 
+			Effect		fx	=matLib.GetShader(mat.ShaderName);
+
+			mat.ApplyShaderParameters(fx);
 			mat.ApplyRenderStates(g);
-
-			fx.Parameters["mWorld"].SetValue(mTransform * world);
 
 			fx.CurrentTechnique.Passes[0].Apply();
 
@@ -173,7 +171,7 @@ namespace MeshLib
 
 			g.Indices	=mIndexs;
 
-			matLib.ApplyParameters(mMaterialName);
+			mat.ApplyShaderParameters(fx);
 			mat.ApplyRenderStates(g);
 
 			fx.CurrentTechnique.Passes[0].Apply();

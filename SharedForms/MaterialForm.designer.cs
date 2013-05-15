@@ -45,12 +45,13 @@
 			this.MeshPartGrid = new System.Windows.Forms.DataGridView();
 			this.ApplyMaterial = new System.Windows.Forms.Button();
 			this.MeshPartGroup = new System.Windows.Forms.GroupBox();
+			this.StripElements = new System.Windows.Forms.Button();
 			this.Match = new System.Windows.Forms.Button();
 			this.label1 = new System.Windows.Forms.Label();
 			this.TexCoordSet = new System.Windows.Forms.NumericUpDown();
 			this.GenBiNormalTangent = new System.Windows.Forms.Button();
 			this.mTips = new System.Windows.Forms.ToolTip(this.components);
-			this.StripElements = new System.Windows.Forms.Button();
+			this.HideSelected = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialProperties)).BeginInit();
 			this.FileGroup.SuspendLayout();
@@ -211,6 +212,7 @@
 			// groupBox1
 			// 
 			this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.groupBox1.Controls.Add(this.HideSelected);
 			this.groupBox1.Controls.Add(this.RefreshShaders);
 			this.groupBox1.Controls.Add(this.GuessTextures);
 			this.groupBox1.Controls.Add(this.GetEmissive);
@@ -218,7 +220,7 @@
 			this.groupBox1.Controls.Add(this.TexSizeDown);
 			this.groupBox1.Location = new System.Drawing.Point(295, 492);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(445, 54);
+			this.groupBox1.Size = new System.Drawing.Size(536, 54);
 			this.groupBox1.TabIndex = 18;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Shader Shtuff";
@@ -256,12 +258,22 @@
 			this.MeshPartGroup.Controls.Add(this.TexCoordSet);
 			this.MeshPartGroup.Controls.Add(this.GenBiNormalTangent);
 			this.MeshPartGroup.Controls.Add(this.ApplyMaterial);
-			this.MeshPartGroup.Location = new System.Drawing.Point(746, 492);
+			this.MeshPartGroup.Location = new System.Drawing.Point(837, 492);
 			this.MeshPartGroup.Name = "MeshPartGroup";
 			this.MeshPartGroup.Size = new System.Drawing.Size(511, 54);
 			this.MeshPartGroup.TabIndex = 21;
 			this.MeshPartGroup.TabStop = false;
 			this.MeshPartGroup.Text = "Mesh Part";
+			// 
+			// StripElements
+			// 
+			this.StripElements.Location = new System.Drawing.Point(394, 19);
+			this.StripElements.Name = "StripElements";
+			this.StripElements.Size = new System.Drawing.Size(111, 29);
+			this.StripElements.TabIndex = 24;
+			this.StripElements.Text = "Strip Elements";
+			this.StripElements.UseVisualStyleBackColor = true;
+			this.StripElements.Click += new System.EventHandler(this.OnStripElements);
 			// 
 			// Match
 			// 
@@ -306,15 +318,15 @@
 			this.GenBiNormalTangent.UseVisualStyleBackColor = true;
 			this.GenBiNormalTangent.Click += new System.EventHandler(this.OnGenBiNormalTangent);
 			// 
-			// StripElements
+			// HideSelected
 			// 
-			this.StripElements.Location = new System.Drawing.Point(394, 19);
-			this.StripElements.Name = "StripElements";
-			this.StripElements.Size = new System.Drawing.Size(111, 29);
-			this.StripElements.TabIndex = 24;
-			this.StripElements.Text = "Strip Elements";
-			this.StripElements.UseVisualStyleBackColor = true;
-			this.StripElements.Click += new System.EventHandler(this.OnStripElements);
+			this.HideSelected.Location = new System.Drawing.Point(444, 19);
+			this.HideSelected.Name = "HideSelected";
+			this.HideSelected.Size = new System.Drawing.Size(86, 29);
+			this.HideSelected.TabIndex = 17;
+			this.HideSelected.Text = "Hide Selected";
+			this.HideSelected.UseVisualStyleBackColor = true;
+			this.HideSelected.Click += new System.EventHandler(this.OnHideSelected);
 			// 
 			// MaterialForm
 			// 
@@ -371,5 +383,6 @@
 		private System.Windows.Forms.Button MergeMaterialLib;
 		private System.Windows.Forms.Button Match;
 		private System.Windows.Forms.Button StripElements;
+		private System.Windows.Forms.Button HideSelected;
 	}
 }

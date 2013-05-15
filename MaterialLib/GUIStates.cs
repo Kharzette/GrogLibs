@@ -18,10 +18,6 @@ namespace MaterialLib
 		//reference to the state block pool
 		StateBlockPool	mSBPool;
 
-#if !XBOX
-		//tool side shader parameters
-		BindingList<ShaderParameters>	mGUIParameters	=new BindingList<ShaderParameters>();
-#endif
 		//blend state data
 		BlendFunction	mAlphaBlendFunc;
 		Blend			mAlphaDestBlend;
@@ -67,17 +63,14 @@ namespace MaterialLib
 			get { return mMat.Technique; }
 			set { mMat.Technique = value; }
 		}
-#if !XBOX
-		public BindingList<ShaderParameters> Parameters
-		{
-			get { return mGUIParameters; }
-			set { mGUIParameters = value; }
-		}
-#endif
 		public Color Emissive
 		{
 			get { return mMat.Emissive; }
 			set { mMat.Emissive = value; }
+		}
+		public BindingList<ShaderParameters> ShaderParameters
+		{
+			get { return mMat.ShaderParameters; }
 		}
 
 		//blend state crap

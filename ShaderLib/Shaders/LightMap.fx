@@ -236,22 +236,6 @@ float4 LMPixelShader(VTex04Tex14Tex24 input) : COLOR0
 	
 	float3	lm	=tex2D(LightMapSampler, input.TexCoord0.zw);
 
-	float	dist	=distance(input.TexCoord1.xyz, mLight0Position);
-	if(dist < mLightRange)
-	{
-		float3	lightDir	=normalize(mLight0Position - input.TexCoord1.xyz);
-		float	ndl			=dot(input.TexCoord2, lightDir);
-
-		if(ndl > 0)
-		{
-			if(dist > mLightFalloffRange)
-			{
-				ndl	*=(1 - ((dist - mLightFalloffRange) / (mLightRange - mLightFalloffRange)));			
-			}
-			lm	+=(ndl * mLight0Color);
-		}
-	}
-
 	color.xyz	=ShadowColor(mbDirectional, input.TexCoord1, color.xyz);
 
 	color	*=lm;

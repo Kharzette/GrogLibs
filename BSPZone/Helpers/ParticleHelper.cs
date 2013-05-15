@@ -24,6 +24,12 @@ namespace BSPZone
 			mZone	=zone;
 			mPB		=pb;
 
+			//clear old particles
+			foreach(int idx in mIndexes)
+			{
+				mPB.NukeEmitter(idx);
+			}
+
 			mIndexes.Clear();
 
 			//make sure to wire event once only
@@ -126,6 +132,13 @@ namespace BSPZone
 				if(idx == -1)
 				{
 					continue;	//creation failed, probably missing texture
+				}
+
+				Matrix	orient;
+				if(ze.GetMatrixFromAngles("angles", out orient))
+				{
+					mPB.GetEmitterByIndex(idx).mLineAxis	=
+						Vector3.TransformNormal(Vector3.UnitZ, orient);
 				}
 
 				ze.SetInt("EmitterIndex", idx);

@@ -15,6 +15,7 @@ namespace UtilityLib
 		bool	mbRising;
 
 		float	mDuration;
+		bool	mbOn;
 
 
 		public Rumble(Input.PlayerInput inp)
@@ -23,8 +24,10 @@ namespace UtilityLib
 		}
 
 
-		public void Update(int msDelta)
+		public void Update(int msDelta, bool bOn)
 		{
+			mbOn	=bOn;
+
 			if(mRumbleMover.Done())
 			{
 				return;
@@ -54,7 +57,7 @@ namespace UtilityLib
 				return;
 			}
 
-			if(!mPI.mGPS.IsConnected)
+			if(!mPI.mGPS.IsConnected || !mbOn)
 			{
 				return;
 			}
@@ -65,6 +68,11 @@ namespace UtilityLib
 
 		public void ActivateRumble(float leftAmount, float rightAmount, float duration)
 		{
+			if(!mbOn)
+			{
+				return;
+			}
+
 			lock(mRumbleMover)
 			{
 				mDuration	=duration * 0.5f;

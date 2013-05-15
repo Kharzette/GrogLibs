@@ -24,6 +24,7 @@ namespace ParticleLib
 		public float	mEmitMS;
 		public Shapes	mShape;
 		public float	mShapeSize;
+		public Vector3	mLineAxis;	//axis for the "Line" emit shape
 
 		int	mMaxParticles;
 		int	mCurNumParticles;
@@ -77,6 +78,8 @@ namespace ParticleLib
 			mAlphaVelocityMax		=alphaVelMax;
 			mLifeMin				=lifeMin;
 			mLifeMax				=lifeMax;
+
+			mLineAxis	=Vector3.UnitX;	//default
 
 			mMaxParticles	=maxParticles;
 
@@ -168,7 +171,7 @@ namespace ParticleLib
 			}
 			else if(mShape == Shapes.Line)
 			{
-				ret.X	=Mathery.RandomFloatNext(mRand, -sizeOverTwo, sizeOverTwo);
+				ret	=mLineAxis * Mathery.RandomFloatNext(mRand, -sizeOverTwo, sizeOverTwo);
 			}
 			else if(mShape == Shapes.Plane)
 			{

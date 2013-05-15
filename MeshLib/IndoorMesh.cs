@@ -30,9 +30,10 @@ namespace MeshLib
 		MaterialLib.TexAtlas	mLightMapAtlas;
 
 		//lightmap animation stuff
-		Dictionary<int, string>	mStyles			=new Dictionary<int, string>();
-		Dictionary<int, float>	mCurStylePos	=new Dictionary<int, float>();
-		bool					[]mSwitches		=new bool[32];	//switchable on / off
+		Dictionary<int, string>	mStyles				=new Dictionary<int, string>();
+		Dictionary<int, float>	mCurStylePos		=new Dictionary<int, float>();
+		bool					[]mSwitches			=new bool[32];	//switchable on / off
+		float					[]mAniIntensities	=new float[44];
 
 		//material draw stuff
 		//indexed by model in the dictionary
@@ -185,9 +186,11 @@ namespace MeshLib
 				out mLMAAnimVB, out mLMAAnimIB,	out mLMAAnimDrawCalls,
 				atlasSize, pp, out mLightMapAtlas);
 
-			if(mLightMapAtlas != null)
+			Texture2D	lma	=mLightMapAtlas.GetAtlasTexture();
+			if(lma != null)
 			{
-				mMatLib.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasTexture());
+				lma.Name	="LightMapAtlas";
+				mMatLib.AddMap("LightMapAtlas", lma);
 				mMatLib.RefreshShaderParameters();
 			}
 		}
@@ -380,7 +383,7 @@ namespace MeshLib
 						}
 					}
 
-					mMatLib.ApplyParameters(mat.Key);
+					mat.Value.ApplyShaderParameters(fx);
 
 					//set renderstates from material
 					mat.Value.ApplyRenderStates(g);
@@ -489,8 +492,6 @@ namespace MeshLib
 		{
 			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
 
-			string	intensities	="";
-
 			for(int i=0;i < 12;i++)
 			{
 				mCurStylePos[i]	+=msDelta;
@@ -504,17 +505,14 @@ namespace MeshLib
 
 				float	lerped	=ComputeStyleStrength(mCurStylePos[i], mStyles[i]);
 
-				//prevent scientific notation
-				intensities	+="" + Convert.ToDecimal(lerped).ToString(System.Globalization.CultureInfo.InvariantCulture) + " ";
+				mAniIntensities[i]	=lerped;
 			}
 
 			//switchable lights
 			for(int i=0;i < 32;i++)
 			{
-				intensities	+="" + ((mSwitches[i])? "1.0" : "0.0") + " ";
+				mAniIntensities[12 + i]	=((mSwitches[i])? 1.0f : 0.0f);
 			}
-
-			intensities	=intensities.TrimEnd(' ');
 
 			foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
 			{
@@ -522,8 +520,8 @@ namespace MeshLib
 				{
 					mat.Value.AddParameter("mAniIntensities",
 						EffectParameterClass.Scalar,
-						EffectParameterType.Single,
-						intensities);
+						EffectParameterType.Single, 44,
+						mAniIntensities);
 				}
 			}
 		}
@@ -711,7 +709,11 @@ namespace MeshLib
 			if(bLightMapNeeded)
 			{
 				mLightMapAtlas.Read(g, br);
-				mMatLib.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasTexture());
+
+				Texture2D	lma	=mLightMapAtlas.GetAtlasTexture();
+
+				lma.Name	="LightMapAtlas";
+				mMatLib.AddMap("LightMapAtlas", lma);
 			}
 
 

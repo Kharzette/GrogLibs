@@ -14,12 +14,19 @@ namespace UtilityLib
 	{
 		Dictionary<string, SoundEffect>	mFX	=new Dictionary<string, SoundEffect>();
 
+		//list of emitters for 3d sounds
+		Dictionary<SoundEffectInstance, AudioEmitter>	mEmitters
+			=new Dictionary<SoundEffectInstance, AudioEmitter>();
+
 		//list of stuff out in the wild, might be playing, might not
 		List<SoundEffectInstance>	mActive	=new List<SoundEffectInstance>();
 
 		//list of stuff this class is managing
 		Dictionary<string, List<SoundEffectInstance>>	mPlayingHere
 			=new Dictionary<string, List<SoundEffectInstance>>();
+
+		//the listener everyclass will use
+		public AudioListener	mListener	=new AudioListener();
 
 		const int	MaxInstances	=300;	//xbox limitation
 
@@ -102,7 +109,8 @@ namespace UtilityLib
 			{
 				for(int i=0;i < seis.Value.Count;i++)
 				{
-					if(seis.Value[i].State == SoundState.Stopped)
+					SoundEffectInstance	sei	=seis.Value[i];
+					if(sei.State == SoundState.Stopped)
 					{
 						ReleaseInstance(seis.Value[i]);
 						seis.Value.RemoveAt(i);
@@ -123,6 +131,39 @@ namespace UtilityLib
 			foreach(SoundEffectInstance sei in mPlayingHere[name])
 			{
 				sei.Stop();
+			}
+		}
+
+
+		//fire and forget play at a location, no looping
+		//tracked in this class
+		public void PlayAtLocation(string name, float volume, Vector3 pos)
+		{
+			SoundEffectInstance	sei	=GetInstance(name, false);
+
+			AudioEmitter	em	=new AudioEmitter();
+			em.Position			=pos * InchWorldScale;
+			em.Forward			=Vector3.UnitZ;
+
+			sei.Volume	=volume;
+			sei.Apply3D(mListener, em);
+			sei.Play();
+
+			lock(mActive)
+			{
+				mActive.Add(sei);
+			}
+			lock(mPlayingHere)
+			{
+				if(mPlayingHere.ContainsKey(name))
+				{
+					mPlayingHere[name].Add(sei);
+				}
+				else
+				{
+					mPlayingHere.Add(name, new List<SoundEffectInstance>());
+					mPlayingHere[name].Add(sei);
+				}
 			}
 		}
 

@@ -10,9 +10,8 @@ namespace BSPZone
 {
 	public class AudioHelper
 	{
-		Zone			mZone;
-		Audio			mAudio;
-		AudioListener	mPlayerListener;
+		Zone	mZone;
+		Audio	mAudio;
 
 		List<ZoneEntity>			mAudioEntities	=new List<ZoneEntity>();
 		List<AudioEmitter>			mEmitters		=new List<AudioEmitter>();
@@ -21,11 +20,10 @@ namespace BSPZone
 		bool	mbMiscListening;
 
 
-		public void Initialize(Zone zone, TriggerHelper th, Audio aud, AudioListener playerListener)
+		public void Initialize(Zone zone, TriggerHelper th, Audio aud)
 		{
-			mZone			=zone;
-			mAudio			=aud;
-			mPlayerListener	=playerListener;
+			mZone	=zone;
+			mAudio	=aud;
 
 			//be sure to only wire this up once!
 			//can cause double toggling
@@ -66,7 +64,7 @@ namespace BSPZone
 				
 				SoundEffectInstance	sei	=mAudio.GetInstance(fxName, (looping != 0));
 				sei.Volume	=volume;
-				sei.Apply3D(playerListener, em);
+				sei.Apply3D(mAudio.mListener, em);
 
 				mInstances.Add(sei);
 
@@ -89,7 +87,7 @@ namespace BSPZone
 				SoundEffectInstance	sei	=mInstances[i];
 				if(sei.State == SoundState.Playing)
 				{
-					sei.Apply3D(mPlayerListener, mEmitters[i]);
+					sei.Apply3D(mAudio.mListener, mEmitters[i]);
 				}
 			}
 		}
