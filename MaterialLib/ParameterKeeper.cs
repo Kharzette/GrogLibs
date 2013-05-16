@@ -31,6 +31,9 @@ namespace MaterialLib
 		//stuff the gui doesn't want to see
 		List<ShaderParameters>	mHidden	=new List<ShaderParameters>();
 
+		//skip these when assigning parameters to the shader
+		List<ShaderParameters>	mIgnored	=new List<ShaderParameters>();
+
 		//original trilight value
 		TriLight	mOGTriLight;
 
@@ -60,6 +63,12 @@ namespace MaterialLib
 
 			bw.Write(mHidden.Count);
 			foreach(ShaderParameters sp in mHidden)
+			{
+				bw.Write(mParameters.IndexOf(sp));
+			}
+
+			bw.Write(mIgnored.Count);
+			foreach(ShaderParameters sp in mIgnored)
 			{
 				bw.Write(mParameters.IndexOf(sp));
 			}
@@ -101,10 +110,81 @@ namespace MaterialLib
 				}
 			}
 
+			//read the ignored list
+			List<int>	ignored	=new List<int>();
+
+			int	ignoredCount	=br.ReadInt32();
+
+			for(int i=0;i < ignoredCount;i++)
+			{
+				ignored.Add(br.ReadInt32());
+			}
+
+			for(int i=0;i < count;i++)
+			{
+				if(ignored.Contains(i))
+				{
+					mIgnored.Add(mParameters[i]);
+				}
+			}
+
 			UpdateGUI();
 
 			//init OG trilight
 			GetTriLight(out mOGTriLight);
+		}
+
+
+		internal void Ignore(List<ShaderParameters> toIgnore)
+		{
+			foreach(ShaderParameters sp in toIgnore)
+			{
+				if(mIgnored.Contains(sp))
+				{
+					continue;
+				}
+				mIgnored.Add(sp);
+			}
+
+			UpdateGUI();
+		}
+
+
+		internal void Ignore(string pname)
+		{
+			foreach(ShaderParameters sp in mParameters)
+			{
+				if(pname != sp.Name)
+				{
+					continue;
+				}
+				if(mIgnored.Contains(sp))
+				{
+					continue;
+				}
+				mIgnored.Add(sp);
+			}
+
+			UpdateGUI();
+		}
+
+
+		internal void Hide(string pname)
+		{
+			foreach(ShaderParameters sp in mParameters)
+			{
+				if(pname != sp.Name)
+				{
+					continue;
+				}
+				if(mHidden.Contains(sp))
+				{
+					continue;
+				}
+				mHidden.Add(sp);
+			}
+
+			UpdateGUI();
 		}
 
 
@@ -118,6 +198,15 @@ namespace MaterialLib
 				}
 				mHidden.Add(sp);
 			}
+
+			UpdateGUI();
+		}
+
+
+		internal void UnHideAll()
+		{
+			mHidden.Clear();
+			mIgnored.Clear();
 
 			UpdateGUI();
 		}
@@ -218,22 +307,6 @@ namespace MaterialLib
 		}
 
 
-		internal void SetTextureParameterToCube(string name)
-		{
-			foreach(ShaderParameters sp in mParameters)
-			{
-				if(sp.Name == name)
-				{
-					if(sp.Type == EffectParameterType.Texture)
-					{
-						sp.Type	=EffectParameterType.TextureCube;
-					}
-					return;
-				}
-			}
-		}
-
-
 		internal void GetTexturesInUse(List<string> tex)
 		{
 			foreach(ShaderParameters sp in mParameters)
@@ -300,8 +373,18 @@ namespace MaterialLib
 			bool	bFixUpNeeded	=false;
 			foreach(ShaderParameters sp in mParameters)
 			{
+				if(mIgnored.Contains(sp))
+				{
+					continue;
+				}
+
 				object			val	=sp.GetRealValue();
-				EffectParameter	ep	=fx.Parameters[sp.Name];
+				EffectParameter	ep	=sp.mParam;
+
+				if(ep == null)
+				{
+					ep	=sp.mParam	=fx.Parameters[sp.Name];
+				}
 
 				if(val == null)
 				{

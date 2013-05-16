@@ -61,6 +61,10 @@ namespace BSPZone
 
 			foreach(ZoneEntity ze in ents)
 			{
+				if(ze.GetValue("meshname") == "")
+				{
+					continue;
+				}
 				mStaticEntities.Add(ze);
 
 				Vector3	pos;

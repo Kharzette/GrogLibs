@@ -210,11 +210,8 @@ namespace SharedForms
 				TextureCube	texCube	=mMatLib.GetTextureCube(sender as string);
 				if(texCube != null)
 				{
-					//change texture param to texcube
 					MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
 					MaterialLib.Material	mat	=gs.GetParentMaterial();
-
-					mat.SetTextureParameterToCube("mTexture");
 
 					//set texture enabled
 					mat.SetParameter("mbTextureEnabled", true);
@@ -780,6 +777,40 @@ namespace SharedForms
 			}
 
 			mat.HideShaderParameters(selected);
+		}
+
+
+		void OnUnHideAll(object sender, EventArgs e)
+		{
+			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
+			if(matSel.Count != 1)
+			{
+				return;
+			}
+			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
+			MaterialLib.Material	mat	=gs.GetParentMaterial();
+
+			mat.UnHideAll();
+		}
+
+
+		void OnIgnoreSP(object sender, EventArgs e)
+		{
+			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
+			if(matSel.Count != 1)
+			{
+				return;
+			}
+			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
+			MaterialLib.Material	mat	=gs.GetParentMaterial();
+
+			List<MaterialLib.ShaderParameters>	selected	=new List<MaterialLib.ShaderParameters>();
+			foreach(DataGridViewRow dgvr in MaterialProperties.SelectedRows)
+			{
+				selected.Add(dgvr.DataBoundItem as MaterialLib.ShaderParameters);
+			}
+
+			mat.IgnoreShaderParameters(selected);
 		}
 	}
 }

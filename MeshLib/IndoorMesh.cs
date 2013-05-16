@@ -19,7 +19,6 @@ namespace MeshLib
 		VertexBuffer		mFBVB, mMirrorVB, mLMAVB, mLMAAnimVB;
 		IndexBuffer			mLMIB, mVLitIB, mLMAnimIB, mAlphaIB;
 		IndexBuffer			mSkyIB, mFBIB, mMirrorIB, mLMAIB, mLMAAnimIB;
-		RenderTarget2D		mMirrorRenderTarget;
 
 		int	mVLitTypeIdx;
 
@@ -115,11 +114,6 @@ namespace MeshLib
 		public IndoorMesh(GraphicsDevice gd, MaterialLib.MaterialLib matLib)
 		{
 			mMatLib	=matLib;
-
-			mMirrorRenderTarget	=new RenderTarget2D(gd, 256, 256, false,
-				gd.PresentationParameters.BackBufferFormat,
-				gd.PresentationParameters.DepthStencilFormat,
-				0, RenderTargetUsage.DiscardContents);
 
 			//Quake1 styled lights 'a' is total darkness, 'z' is maxbright.
 			//0 normal
@@ -243,46 +237,6 @@ namespace MeshLib
 
 			Vector3	position	=gameCam.Position;
 
-			//draw mirrored world if need be
-			List<Matrix>	mirrorMats;
-			List<Matrix>	mirrorProjs;
-			List<Vector3>	mirrorCenters;
-			List<Rectangle>	scissors	=GetMirrorRects(out mirrorMats, out mirrorProjs, out mirrorCenters, -position, gameCam);
-
-			for(int i=0;i < scissors.Count;i++)
-			{
-				mMatLib.UpdateWVP(Matrix.Identity, mirrorMats[i], mirrorProjs[i], mirrorCenters[i]);
-
-				gd.SetRenderTarget(mMirrorRenderTarget);
-				gd.Clear(Color.CornflowerBlue);
-
-				//render world
-				DrawMaterialsDC(gd, position, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
-				
-				//alphas
-				DrawMaterialsDC(gd, position, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
-				DrawMaterialsDC(gd, position, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
-
-				//draw outside stuff to mirror
-				rendExternal(mAlphaPool, mirrorCenters[i], mirrorMats[i], mirrorProjs[i]);
-
-				mAlphaPool.DrawAll(gd, mMatLib, mirrorCenters[i]);
-			}
-
-			if(scissors.Count > 0)
-			{
-				gd.SetRenderTarget(null);
-				mMatLib.AddMap("MirrorTexture", mMirrorRenderTarget);
-
-				//reset matrices
-				mMatLib.UpdateWVP(Matrix.Identity, gameCam.View, gameCam.Projection, -position);
-			}
-
 //			gd.Clear(Color.CornflowerBlue);
 
 			DrawMaterialsDC(gd, position, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
@@ -295,11 +249,6 @@ namespace MeshLib
 			DrawMaterialsDC(gd, position, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
 			DrawMaterialsDC(gd, position, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
 			DrawMaterialsDC(gd, position, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
-			if(scissors.Count > 0)
-			{
-				//draw mirror surface itself
-				DrawMaterialsDC(gd, position, getModMatrix, mMirrorVB, mMirrorIB, mMirrorDrawCalls, bMatVis);
-			}
 
 			//draw outside stuff
 			rendExternal(mAlphaPool, gameCam.Position, gameCam.View, gameCam.Projection);
@@ -524,139 +473,6 @@ namespace MeshLib
 						mAniIntensities);
 				}
 			}
-		}
-
-
-		List<Rectangle> GetMirrorRects(out List<Matrix>			mirrorMats,
-									   out List<Matrix>			mirrorProjs,
-									   out List<Vector3>		mirrorCenters,
-									   Vector3					position,
-									   UtilityLib.GameCamera	gameCam)
-		{
-			List<Rectangle>	scissorRects	=new List<Rectangle>();
-
-			mirrorMats		=new List<Matrix>();
-			mirrorProjs		=new List<Matrix>();
-			mirrorCenters	=new List<Vector3>();
-
-			foreach(List<Vector3> poly in mMirrorPolys)
-			{
-				//see if we are behind the mirror
-				Vector3	norm;
-				float	dist;
-				UtilityLib.Mathery.PlaneFromVerts(poly, out norm, out dist);
-				if(Vector3.Dot(-position, norm) - dist < 0)
-				{
-					continue;
-				}
-
-				BoundingBox	box	=GetExtents(poly);
-				if(gameCam.IsBoxOnScreen(box))
-				{
-					scissorRects.Add(gameCam.GetScreenCoverage(poly));
-
-					//calculate centerpoint
-					Vector3	center	=Vector3.Zero;
-					foreach(Vector3 vert in poly)
-					{
-						center	+=vert;
-					}
-					center	/=poly.Count;
-					mirrorCenters.Add(center);
-
-					Vector3	eyeVec	=center - -position;
-
-					Vector3	reflect	=Vector3.Reflect(eyeVec, norm);
-
-					reflect.Normalize();
-
-					//get view matrix
-					//needs to be upside down
-					Vector3	side	=Vector3.Cross(reflect, Vector3.Down);
-					if(side.LengthSquared() == 0.0f)
-					{
-						side	=Vector3.Cross(reflect, Vector3.Left);
-					}
-
-					side.Normalize();
-
-					Vector3	up	=Vector3.Cross(reflect, side);
-
-					up.Normalize();
-
-					Matrix	mirrorView	=Matrix.CreateLookAt(center, center + reflect, up);
-					mirrorMats.Add(mirrorView);
-
-					//make a projection matrix
-					Vector3	mirSide		=Vector3.Cross(norm, Vector3.Up);
-					if(mirSide.LengthSquared() == 0.0f)
-					{
-						mirSide	=Vector3.Cross(norm, Vector3.Forward);
-					}
-					mirSide.Normalize();
-
-					Vector3	mirUp	=Vector3.Cross(mirSide, norm);
-					mirUp.Normalize();
-
-					BoundingBox	extents		=BoundingBox.CreateFromPoints(poly);
-					Vector3		cornerDiff	=extents.Max - center;
-
-					float	width	=Vector3.Dot(cornerDiff, mirSide);
-					float	height	=Vector3.Dot(cornerDiff, mirUp);
-
-					width	=Math.Abs(width);
-					height	=Math.Abs(height);
-
-					Matrix	mirrorProj	=Matrix.CreatePerspectiveFieldOfView(
-						MathHelper.ToRadians(45),
-						width / height, 1.0f, 4000.0f);
-
-					mirrorProjs.Add(mirrorProj);
-				}
-			}
-			return	scissorRects;
-		}
-
-
-		public List<Vector3>	GetNormals()
-		{
-			return	VertexTypes.GetNormals(mVLitVB, mVLitTypeIdx);
-		}
-
-
-		BoundingBox GetExtents(List<Vector3> poly)
-		{
-			Vector3	mins	=Vector3.One * 696969.0f;
-			Vector3	maxs	=Vector3.One * -696969.0f;
-
-			foreach(Vector3 pnt in poly)
-			{
-				if(pnt.X < mins.X)
-				{
-					mins.X	=pnt.X;
-				}
-				if(pnt.X > maxs.X)
-				{
-					maxs.X	=pnt.X;
-				}
-				if(pnt.Y < mins.Y)
-				{
-					mins.Y	=pnt.Y;
-				}
-				if(pnt.Y > maxs.Y)
-				{
-					maxs.Y	=pnt.Y;
-				}
-				if(pnt.Z < mins.Z)
-				{
-					mins.Z	=pnt.Z;
-				}
-				if(pnt.Z > maxs.Z)
-				{
-					maxs.Z	=pnt.Z;
-				}
-			}
-			return	new BoundingBox(mins, maxs);
 		}
 
 

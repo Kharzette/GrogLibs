@@ -42,6 +42,7 @@
 			this.FileGroup = new System.Windows.Forms.GroupBox();
 			this.MergeMaterialLib = new System.Windows.Forms.Button();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.HideSelected = new System.Windows.Forms.Button();
 			this.MeshPartGrid = new System.Windows.Forms.DataGridView();
 			this.ApplyMaterial = new System.Windows.Forms.Button();
 			this.MeshPartGroup = new System.Windows.Forms.GroupBox();
@@ -51,7 +52,8 @@
 			this.TexCoordSet = new System.Windows.Forms.NumericUpDown();
 			this.GenBiNormalTangent = new System.Windows.Forms.Button();
 			this.mTips = new System.Windows.Forms.ToolTip(this.components);
-			this.HideSelected = new System.Windows.Forms.Button();
+			this.IgnoreParameter = new System.Windows.Forms.Button();
+			this.UnHideAll = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialProperties)).BeginInit();
 			this.FileGroup.SuspendLayout();
@@ -154,27 +156,27 @@
 			// 
 			this.TexSizeUp.Location = new System.Drawing.Point(172, 19);
 			this.TexSizeUp.Name = "TexSizeUp";
-			this.TexSizeUp.Size = new System.Drawing.Size(75, 29);
+			this.TexSizeUp.Size = new System.Drawing.Size(55, 29);
 			this.TexSizeUp.TabIndex = 14;
-			this.TexSizeUp.Text = "TexSize Up";
+			this.TexSizeUp.Text = "TexUp";
 			this.mTips.SetToolTip(this.TexSizeUp, "Increase material tex size, hold shift for all materials");
 			this.TexSizeUp.UseVisualStyleBackColor = true;
 			this.TexSizeUp.Click += new System.EventHandler(this.OnTexSizeUp);
 			// 
 			// TexSizeDown
 			// 
-			this.TexSizeDown.Location = new System.Drawing.Point(253, 19);
+			this.TexSizeDown.Location = new System.Drawing.Point(233, 19);
 			this.TexSizeDown.Name = "TexSizeDown";
-			this.TexSizeDown.Size = new System.Drawing.Size(89, 29);
+			this.TexSizeDown.Size = new System.Drawing.Size(65, 29);
 			this.TexSizeDown.TabIndex = 15;
-			this.TexSizeDown.Text = "TexSize Down";
+			this.TexSizeDown.Text = "TexDown";
 			this.mTips.SetToolTip(this.TexSizeDown, "Decrease material tex size, hold shift for all materials");
 			this.TexSizeDown.UseVisualStyleBackColor = true;
 			this.TexSizeDown.Click += new System.EventHandler(this.OnTexSizeDown);
 			// 
 			// GetEmissive
 			// 
-			this.GetEmissive.Location = new System.Drawing.Point(348, 19);
+			this.GetEmissive.Location = new System.Drawing.Point(304, 19);
 			this.GetEmissive.Name = "GetEmissive";
 			this.GetEmissive.Size = new System.Drawing.Size(89, 29);
 			this.GetEmissive.TabIndex = 16;
@@ -212,6 +214,8 @@
 			// groupBox1
 			// 
 			this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.groupBox1.Controls.Add(this.UnHideAll);
+			this.groupBox1.Controls.Add(this.IgnoreParameter);
 			this.groupBox1.Controls.Add(this.HideSelected);
 			this.groupBox1.Controls.Add(this.RefreshShaders);
 			this.groupBox1.Controls.Add(this.GuessTextures);
@@ -220,10 +224,20 @@
 			this.groupBox1.Controls.Add(this.TexSizeDown);
 			this.groupBox1.Location = new System.Drawing.Point(295, 492);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(536, 54);
+			this.groupBox1.Size = new System.Drawing.Size(634, 54);
 			this.groupBox1.TabIndex = 18;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Shader Shtuff";
+			// 
+			// HideSelected
+			// 
+			this.HideSelected.Location = new System.Drawing.Point(399, 19);
+			this.HideSelected.Name = "HideSelected";
+			this.HideSelected.Size = new System.Drawing.Size(61, 29);
+			this.HideSelected.TabIndex = 17;
+			this.HideSelected.Text = "Hide SP";
+			this.HideSelected.UseVisualStyleBackColor = true;
+			this.HideSelected.Click += new System.EventHandler(this.OnHideSelected);
 			// 
 			// MeshPartGrid
 			// 
@@ -258,7 +272,7 @@
 			this.MeshPartGroup.Controls.Add(this.TexCoordSet);
 			this.MeshPartGroup.Controls.Add(this.GenBiNormalTangent);
 			this.MeshPartGroup.Controls.Add(this.ApplyMaterial);
-			this.MeshPartGroup.Location = new System.Drawing.Point(837, 492);
+			this.MeshPartGroup.Location = new System.Drawing.Point(935, 492);
 			this.MeshPartGroup.Name = "MeshPartGroup";
 			this.MeshPartGroup.Size = new System.Drawing.Size(511, 54);
 			this.MeshPartGroup.TabIndex = 21;
@@ -318,15 +332,25 @@
 			this.GenBiNormalTangent.UseVisualStyleBackColor = true;
 			this.GenBiNormalTangent.Click += new System.EventHandler(this.OnGenBiNormalTangent);
 			// 
-			// HideSelected
+			// IgnoreParameter
 			// 
-			this.HideSelected.Location = new System.Drawing.Point(444, 19);
-			this.HideSelected.Name = "HideSelected";
-			this.HideSelected.Size = new System.Drawing.Size(86, 29);
-			this.HideSelected.TabIndex = 17;
-			this.HideSelected.Text = "Hide Selected";
-			this.HideSelected.UseVisualStyleBackColor = true;
-			this.HideSelected.Click += new System.EventHandler(this.OnHideSelected);
+			this.IgnoreParameter.Location = new System.Drawing.Point(467, 19);
+			this.IgnoreParameter.Name = "IgnoreParameter";
+			this.IgnoreParameter.Size = new System.Drawing.Size(75, 29);
+			this.IgnoreParameter.TabIndex = 18;
+			this.IgnoreParameter.Text = "Ignore SP";
+			this.IgnoreParameter.UseVisualStyleBackColor = true;
+			this.IgnoreParameter.Click += new System.EventHandler(this.OnIgnoreSP);
+			// 
+			// UnHideAll
+			// 
+			this.UnHideAll.Location = new System.Drawing.Point(549, 19);
+			this.UnHideAll.Name = "UnHideAll";
+			this.UnHideAll.Size = new System.Drawing.Size(78, 29);
+			this.UnHideAll.TabIndex = 19;
+			this.UnHideAll.Text = "UnHide All";
+			this.UnHideAll.UseVisualStyleBackColor = true;
+			this.UnHideAll.Click += new System.EventHandler(this.OnUnHideAll);
 			// 
 			// MaterialForm
 			// 
@@ -384,5 +408,7 @@
 		private System.Windows.Forms.Button Match;
 		private System.Windows.Forms.Button StripElements;
 		private System.Windows.Forms.Button HideSelected;
+		private System.Windows.Forms.Button UnHideAll;
+		private System.Windows.Forms.Button IgnoreParameter;
 	}
 }

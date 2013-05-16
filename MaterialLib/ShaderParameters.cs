@@ -19,6 +19,9 @@ namespace MaterialLib
 		int						mCount;
 		object					mValue;
 
+		//pointer to the real parameter
+		internal EffectParameter	mParam;
+
 
 		public ShaderParameters()
 		{
@@ -135,6 +138,17 @@ namespace MaterialLib
 						Debug.Assert(false);
 					}
 				}
+				else if(mClass == EffectParameterClass.Scalar)
+				{
+					if(mCount == 1)
+					{
+						bw.Write((float)mValue);
+					}
+					else
+					{
+						FileUtil.WriteArray(bw, (float [])mValue);
+					}
+				}
 			}
 			else if(mType == EffectParameterType.String)
 			{
@@ -221,6 +235,17 @@ namespace MaterialLib
 					else
 					{
 						Debug.Assert(false);
+					}
+				}
+				else if(mClass == EffectParameterClass.Scalar)
+				{
+					if(mCount == 1)
+					{
+						mValue	=br.ReadSingle();
+					}
+					else
+					{
+						mValue	=FileUtil.ReadFloatArray(br);
 					}
 				}
 			}

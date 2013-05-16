@@ -393,6 +393,10 @@ namespace BSPZone
 			}
 
 			Vector3	moveDelta	=(tryPos + mBoxMiddleOffset) - mPosition;
+
+			//clear movedelta y so the move is flat
+			moveDelta.Y	=0f;
+
 			Vector3	endPos		=mPosition + moveDelta;
 
 			//move it through the bsp

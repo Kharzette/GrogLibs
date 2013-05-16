@@ -89,6 +89,16 @@ namespace UtilityLib
 		}
 
 
+		public static void WriteArray(BinaryWriter bw, float []fArray)
+		{
+			bw.Write(fArray.Length);
+			for(int i=0;i < fArray.Length;i++)
+			{
+				bw.Write(fArray[i]);
+			}
+		}
+
+
 		public static byte []ReadByteArray(BinaryReader br)
 		{
 			bool	bNull	=!br.ReadBoolean();
@@ -187,6 +197,22 @@ namespace UtilityLib
 			for(int i=0;i < count;i++)
 			{
 				ret[i]	=ReadMatrix(br);
+			}
+			return	ret;
+		}
+
+
+		public static float []ReadFloatArray(BinaryReader br)
+		{
+			int	count	=br.ReadInt32();
+
+			Debug.Assert(count > 0);
+
+			float	[]ret	=new float[count];
+
+			for(int i=0;i < count;i++)
+			{
+				ret[i]	=br.ReadSingle();
 			}
 			return	ret;
 		}

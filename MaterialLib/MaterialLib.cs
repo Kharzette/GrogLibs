@@ -502,7 +502,6 @@ namespace MaterialLib
 				}
 
 				mat.Value.SetParameter("mTexture", firstCube);
-				mat.Value.SetTextureParameterToCube("mTexture");
 			}
 		}
 

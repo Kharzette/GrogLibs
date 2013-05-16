@@ -187,6 +187,12 @@ namespace MaterialLib
 		}
 
 
+		public void HideShaderParameter(string pname)
+		{
+			mPKeeper.Hide(pname);
+		}
+
+
 		public void HideShaderParameters(List<ShaderParameters> toHide)
 		{
 			mPKeeper.Hide(toHide);
@@ -204,12 +210,6 @@ namespace MaterialLib
 			g.BlendState		=mBlendState;
 			g.DepthStencilState	=mDepthStencilState;
 			g.RasterizerState	=mRasterizeState;
-		}
-
-
-		public void SetTextureParameterToCube(string name)
-		{
-			mPKeeper.SetTextureParameterToCube(name);
 		}
 
 
@@ -293,6 +293,24 @@ namespace MaterialLib
 		internal void SetTriLightValues(Vector4 colorVal, Vector3 lightDir)
 		{
 			mPKeeper.SetTriLightValues(colorVal, lightDir);
+		}
+
+
+		public void UnHideAll()
+		{
+			mPKeeper.UnHideAll();
+		}
+
+
+		public void IgnoreShaderParameter(string parm)
+		{
+			mPKeeper.Ignore(parm);
+		}
+
+
+		public void IgnoreShaderParameters(List<ShaderParameters> selected)
+		{
+			mPKeeper.Ignore(selected);
 		}
 	}
 }
