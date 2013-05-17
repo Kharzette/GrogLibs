@@ -1,5 +1,4 @@
 ﻿//#define PIXGOBLINRY	//use this to remove alpha sorting, which somehow makes pix crash
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,6 +6,7 @@ using System.IO;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using UtilityLib;
 
 
 namespace MeshLib
@@ -226,34 +226,43 @@ namespace MeshLib
 		}
 
 
-		public void Draw(GraphicsDevice gd,
-			UtilityLib.GameCamera gameCam,
+		//helpful overload for doing vis testing
+		public void Draw(GraphicsDevice gd, Vector3 viewPos,
+			GameCamera gameCam,
 			IsMaterialVisible bMatVis,
 			GetModelMatrix getModMatrix,
 			RenderExternal rendExternal)
 		{
 			//update materiallib wvp
-			mMatLib.UpdateWVP(Matrix.Identity, gameCam.View, gameCam.Projection, gameCam.Position);
-
-			Vector3	position	=gameCam.Position;
+			mMatLib.UpdateWVP(Matrix.Identity, gameCam.View, gameCam.Projection, viewPos);
 
 //			gd.Clear(Color.CornflowerBlue);
 
-			DrawMaterialsDC(gd, position, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 
 			//alphas
-			DrawMaterialsDC(gd, position, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
-			DrawMaterialsDC(gd, position, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
 
 			//draw outside stuff
-			rendExternal(mAlphaPool, gameCam.Position, gameCam.View, gameCam.Projection);
+			rendExternal(mAlphaPool, viewPos, gameCam.View, gameCam.Projection);
 
-			mAlphaPool.DrawAll(gd, mMatLib, position);
+			mAlphaPool.DrawAll(gd, mMatLib, viewPos);
+		}
+
+
+		public void Draw(GraphicsDevice gd,
+			GameCamera gameCam,
+			IsMaterialVisible bMatVis,
+			GetModelMatrix getModMatrix,
+			RenderExternal rendExternal)
+		{
+			Draw(gd, gameCam.Position, gameCam, bMatVis, getModMatrix, rendExternal);
 		}
 
 
@@ -502,7 +511,7 @@ namespace MeshLib
 			}
 			else
 			{
-				file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
+				file	=FileUtil.OpenTitleFile(fileName);
 			}
 
 			if(file == null)
@@ -538,7 +547,7 @@ namespace MeshLib
 			{
 				int	typeIdx	=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mLMVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMIB, g, bEditor, bReach);
+				FileUtil.ReadIndexBuffer(br, out mLMIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -546,7 +555,7 @@ namespace MeshLib
 			{
 				mVLitTypeIdx	=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mVLitVB, numVerts, mVLitTypeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mVLitIB, g, bEditor, bReach);
+				FileUtil.ReadIndexBuffer(br, out mVLitIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -554,7 +563,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mLMAnimVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAnimIB, g, bEditor, bReach);
+				FileUtil.ReadIndexBuffer(br, out mLMAnimIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -562,7 +571,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mAlphaVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mAlphaIB, g, bEditor, bReach);
+				FileUtil.ReadIndexBuffer(br, out mAlphaIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -570,7 +579,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mSkyVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mSkyIB, g, bEditor, bReach);
+				FileUtil.ReadIndexBuffer(br, out mSkyIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -578,7 +587,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mFBVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mFBIB, g, bEditor, bReach);
+				FileUtil.ReadIndexBuffer(br, out mFBIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -586,7 +595,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mMirrorVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mMirrorIB, g, bEditor, bReach);
+				FileUtil.ReadIndexBuffer(br, out mMirrorIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -594,7 +603,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mLMAVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAIB, g, bEditor, bReach);
+				FileUtil.ReadIndexBuffer(br, out mLMAIB, g, bEditor, bReach);
 			}
 
 			numVerts	=br.ReadInt32();
@@ -602,7 +611,7 @@ namespace MeshLib
 			{
 				int	typeIdx		=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g, out mLMAAnimVB, numVerts, typeIdx, bEditor);
-				UtilityLib.FileUtil.ReadIndexBuffer(br, out mLMAAnimIB, g, bEditor, bReach);
+				FileUtil.ReadIndexBuffer(br, out mLMAAnimIB, g, bEditor, bReach);
 			}
 
 			mLMDrawCalls		=DrawCall.ReadDrawCallDict(br);
@@ -619,7 +628,7 @@ namespace MeshLib
 			int	mirrorCount	=br.ReadInt32();
 			for(int i=0;i < mirrorCount;i++)
 			{
-				Vector3	[]verts	=UtilityLib.FileUtil.ReadVecArray(br);
+				Vector3	[]verts	=FileUtil.ReadVecArray(br);
 
 				List<Vector3>	vlist	=new List<Vector3>(verts);
 
@@ -651,7 +660,7 @@ namespace MeshLib
 				bw.Write(vb.VertexCount);
 				bw.Write(typeIdx);
 				MeshLib.VertexTypes.WriteVerts(bw, vb, typeIdx);
-				UtilityLib.FileUtil.WriteIndexBuffer(bw, ib);
+				FileUtil.WriteIndexBuffer(bw, ib);
 			}
 		}
 
@@ -699,7 +708,7 @@ namespace MeshLib
 			bw.Write(mMirrorPolys.Count);
 			for(int i=0;i < mMirrorPolys.Count;i++)
 			{
-				UtilityLib.FileUtil.WriteArray(bw, mMirrorPolys[i].ToArray());
+				FileUtil.WriteArray(bw, mMirrorPolys[i].ToArray());
 			}
 
 			bw.Close();

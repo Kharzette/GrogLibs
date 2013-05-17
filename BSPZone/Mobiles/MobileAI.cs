@@ -64,7 +64,7 @@ namespace BSPZone
 		//constants
 		const int	PathTimeOut			=5000;
 		const int	MoveToGoalTimeOut	=10000;
-		const int	ApproachIterations	=5;
+		const int	ApproachIterations	=10;
 
 		public const float	CloseEnough				=5f;
 		const float			EyeToFloorTestHeight	=100f;	//should cover quite tall folk
@@ -246,10 +246,7 @@ namespace BSPZone
 			//make sure we haven't already set this up
 			if(mbApproaching || mbFollowingPath)
 			{
-				if(mApproachTarget == target)
-				{
-					return;	//already handled
-				}
+				return;	//already handled
 			}
 
 			//avoid trying the same thing repeatedly
