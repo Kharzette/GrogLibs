@@ -221,122 +221,25 @@ namespace UtilityLib
 
 		void UpdateFly(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
 		{
-			Vector3 vup		=gc.Up;
-			Vector3 vleft	=gc.Left;
-			Vector3 vin		=gc.Forward;
+			GetTurn(msDelta, gs, ms);
 
-			float	speed	=0.0f;
-			if(ks.IsKeyDown(Keys.RightShift) || ks.IsKeyDown(Keys.LeftShift))
-			{
-				speed	=mSpeed * msDelta * 2.0f;
-			}
-			else
-			{
-				speed	=mSpeed * msDelta;
-			}
-			
-			if(ks.IsKeyDown(Keys.Left) || ks.IsKeyDown(Keys.A))
-			{
-				mPosition	-=vleft * speed;
-			}
-			if(ks.IsKeyDown(Keys.Right) || ks.IsKeyDown(Keys.D))
-			{
-				mPosition	+=vleft * speed;
-			}
-			if(ks.IsKeyDown(Keys.Up) || ks.IsKeyDown(Keys.W))
-			{
-				mPosition	-=vin * speed;
-			}
-			if(ks.IsKeyDown(Keys.Down) || ks.IsKeyDown(Keys.S))
-			{
-				mPosition	+=vin * speed;
-			}
+			Vector3	moveVec;
+			GetMove(msDelta, gc, gs, ms, ks, out moveVec);
 
-			if(ms.RightButton == ButtonState.Pressed)
+			if(moveVec.LengthSquared() > 0.001f)
 			{
-				Vector2	delta	=Vector2.Zero;
-				delta.X	=mOriginalMS.X - ms.X;
-				delta.Y	=mOriginalMS.Y - ms.Y;
-
-				Mouse.SetPosition(mOriginalMS.X, mOriginalMS.Y);
-
-				mPitch	-=(delta.Y) * msDelta * mMouseSensitivity;
-				mYaw	-=(delta.X) * msDelta * mMouseSensitivity;
-			}
-
-			if(gs.IsConnected)
-			{
-				mPitch	+=gs.ThumbSticks.Right.Y * msDelta * 0.25f;
-				mYaw	+=gs.ThumbSticks.Right.X * msDelta * 0.25f;
-
-				mPosition	+=vleft * (gs.ThumbSticks.Left.X * speed);
-				mPosition	-=vin * (gs.ThumbSticks.Left.Y * speed);
+				moveVec.Normalize();
+				mPosition	+=moveVec * msDelta * mSpeed;
 			}
 		}
 
 
 		void UpdateGroundMovement(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
 		{
-			Vector3 vup		=gc.Up;
-			Vector3 vleft	=gc.Left;
-			Vector3 vin		=gc.Forward;
+			GetTurn(msDelta, gs, ms);
 
-			Vector3	moveVec	=Vector3.Zero;
-			if(ks.IsKeyDown(Keys.Left) || ks.IsKeyDown(Keys.A))
-			{
-				moveVec	-=vleft;
-			}
-			if(ks.IsKeyDown(Keys.Right) || ks.IsKeyDown(Keys.D))
-			{
-				moveVec	+=vleft;
-			}
-			if(ks.IsKeyDown(Keys.Up) || ks.IsKeyDown(Keys.W))
-			{
-				moveVec	-=vin;
-			}
-			if(ks.IsKeyDown(Keys.Down) || ks.IsKeyDown(Keys.S))
-			{
-				moveVec	+=vin;
-			}
-
-			if(gs.IsConnected && mbUsePadIfPossible)
-			{
-				float	pitchAmount	=gs.ThumbSticks.Right.Y * msDelta * mGamePadSensitivity;
-
-				if(mbInvertYAxis)
-				{
-					mPitch	+=pitchAmount;
-				}
-				else
-				{
-					mPitch	-=pitchAmount;
-				}
-
-				mYaw	+=gs.ThumbSticks.Right.X * msDelta * mGamePadSensitivity;
-
-				moveVec	=vleft * gs.ThumbSticks.Left.X;
-				moveVec	-=vin * gs.ThumbSticks.Left.Y;
-			}
-			else if((ms.RightButton == ButtonState.Pressed && Method == SteeringMethod.FirstPersonMMO)
-				|| Method != SteeringMethod.FirstPersonMMO)
-			{
-				Vector2	delta	=Vector2.Zero;
-				delta.X	=mOriginalMS.X - ms.X;
-				delta.Y	=mOriginalMS.Y - ms.Y;
-
-				Mouse.SetPosition(mOriginalMS.X, mOriginalMS.Y);
-
-				if(mbInvertYAxis)
-				{
-					mPitch	+=(delta.Y) * msDelta * mMouseSensitivity;
-				}
-				else
-				{
-					mPitch	-=(delta.Y) * msDelta * mMouseSensitivity;
-				}
-
-				mYaw	-=(delta.X) * msDelta * mMouseSensitivity;
-			}
+			Vector3	moveVec;
+			GetMove(msDelta, gc, gs, ms, ks, out moveVec);
 
 			//zero out up/down
 			moveVec.Y	=0.0f;
@@ -345,15 +248,6 @@ namespace UtilityLib
 			{
 				moveVec.Normalize();
 				mPosition	+=moveVec * msDelta * mSpeed;
-			}
-
-			if(mPitch > PitchClamp)
-			{
-				mPitch	=PitchClamp;
-			}
-			else if(mPitch < -PitchClamp)
-			{
-				mPitch	=-PitchClamp;
 			}
 		}
 
@@ -386,6 +280,89 @@ namespace UtilityLib
 			{
 				moveVec.Normalize();
 				mPosition	+=moveVec * msDelta * mSpeed;
+			}
+		}
+
+
+		void GetMove(int msDelta, GameCamera gc,
+			GamePadState gs, MouseState ms, KeyboardState ks,
+			out Vector3 moveVec)
+		{
+			Vector3 vup		=gc.Up;
+			Vector3 vleft	=gc.Left;
+			Vector3 vin		=gc.Forward;
+
+			moveVec	=Vector3.Zero;
+			if(ks.IsKeyDown(Keys.Left) || ks.IsKeyDown(Keys.A))
+			{
+				moveVec	-=vleft;
+			}
+			if(ks.IsKeyDown(Keys.Right) || ks.IsKeyDown(Keys.D))
+			{
+				moveVec	+=vleft;
+			}
+			if(ks.IsKeyDown(Keys.Up) || ks.IsKeyDown(Keys.W))
+			{
+				moveVec	-=vin;
+			}
+			if(ks.IsKeyDown(Keys.Down) || ks.IsKeyDown(Keys.S))
+			{
+				moveVec	+=vin;
+			}
+
+			if(gs.IsConnected && mbUsePadIfPossible)
+			{
+				moveVec	=vleft * gs.ThumbSticks.Left.X;
+				moveVec	-=vin * gs.ThumbSticks.Left.Y;
+			}
+		}
+
+
+		void GetTurn(int msDelta, GamePadState gs, MouseState ms)
+		{
+			if(gs.IsConnected && mbUsePadIfPossible)
+			{
+				float	pitchAmount	=gs.ThumbSticks.Right.Y * msDelta * mGamePadSensitivity;
+
+				if(mbInvertYAxis)
+				{
+					mPitch	+=pitchAmount;
+				}
+				else
+				{
+					mPitch	-=pitchAmount;
+				}
+
+				mYaw	+=gs.ThumbSticks.Right.X * msDelta * mGamePadSensitivity;
+			}
+			else if((ms.RightButton == ButtonState.Pressed && Method == SteeringMethod.FirstPersonMMO)
+				|| Method != SteeringMethod.FirstPersonMMO)
+			{
+				Vector2	delta	=Vector2.Zero;
+				delta.X	=mOriginalMS.X - ms.X;
+				delta.Y	=mOriginalMS.Y - ms.Y;
+
+				Mouse.SetPosition(mOriginalMS.X, mOriginalMS.Y);
+
+				if(mbInvertYAxis)
+				{
+					mPitch	+=(delta.Y) * msDelta * mMouseSensitivity;
+				}
+				else
+				{
+					mPitch	-=(delta.Y) * msDelta * mMouseSensitivity;
+				}
+
+				mYaw	-=(delta.X) * msDelta * mMouseSensitivity;
+			}
+
+			if(mPitch > PitchClamp)
+			{
+				mPitch	=PitchClamp;
+			}
+			else if(mPitch < -PitchClamp)
+			{
+				mPitch	=-PitchClamp;
 			}
 		}
 	}

@@ -297,7 +297,7 @@ namespace BSPZone
 
 			if(bFly)
 			{
-				retPos	=mPosition	=endPos;
+				retPos	=mPosition	=(endPos - mBoxMiddleOffset);
 				camPos	=-mPosition;
 				if(mbPushable)
 				{
