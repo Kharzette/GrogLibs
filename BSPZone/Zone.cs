@@ -993,7 +993,8 @@ namespace BSPZone
 		}
 
 
-		void GetWalkableFaces(int node, ref List<List<Vector3>> polys, ref List<int> leaves)
+		void GetWalkableFaces(int node, ref List<List<Vector3>> polys,
+			ref List<int> leaves, List<int> debugFacesUsed)
 		{
 			if(node < 0)
 			{
@@ -1009,6 +1010,11 @@ namespace BSPZone
 				for(int f=0;f < zLeaf.mNumFaces;f++)
 				{
 					int	leafFace	=mDebugLeafFaces[f + zLeaf.mFirstFace];
+
+					if(debugFacesUsed.Contains(leafFace))
+					{
+						continue;
+					}
 
 					DebugFace	df	=mDebugFaces[leafFace];
 
@@ -1040,14 +1046,15 @@ namespace BSPZone
 
 					polys.Add(poly);
 					leaves.Add(node);
+					debugFacesUsed.Add(leafFace);
 				}
 				return;
 			}
 
 			ZoneNode	n	=mZoneNodes[node];
 
-			GetWalkableFaces(n.mFront, ref polys, ref leaves);
-			GetWalkableFaces(n.mBack, ref polys, ref leaves);
+			GetWalkableFaces(n.mFront, ref polys, ref leaves, debugFacesUsed);
+			GetWalkableFaces(n.mBack, ref polys, ref leaves, debugFacesUsed);
 		}
 
 
@@ -1056,7 +1063,9 @@ namespace BSPZone
 			polys	=new List<List<Vector3>>();
 			leaves	=new List<int>();
 
-			GetWalkableFaces(mZoneModels[0].mRootNode, ref polys, ref leaves);
+			List<int>	debugFacesUsed	=new List<int>();
+
+			GetWalkableFaces(mZoneModels[0].mRootNode, ref polys, ref leaves, debugFacesUsed);
 		}
 		#endregion
 

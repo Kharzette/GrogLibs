@@ -231,18 +231,52 @@ namespace PathLib
 		}
 
 
+		public bool GetInfoAboutLocation(Vector3 groundPos, FindLeaf findLeaf,
+			out int numConnections, out int myIndex, List<int> indexesConnectedTo)
+		{
+			numConnections	=0;
+			myIndex			=0;
+			int	startNode	=findLeaf(groundPos);
+
+			if(startNode >= 0)
+			{
+				return	false;
+			}
+
+			if(!mBSPLeafPathNodes.ContainsKey(startNode))
+			{
+				return	false;
+			}
+
+			List<PathNode>	pNodes	=mBSPLeafPathNodes[startNode];
+
+			PathNode	best	=FindBestLeafNode(groundPos, pNodes);
+
+			Debug.Assert(best != null);
+
+			myIndex	=mNodery.IndexOf(best);
+
+			numConnections	=best.mConnections.Count;
+
+			foreach(PathConnection con in best.mConnections)
+			{
+				indexesConnectedTo.Add(mNodery.IndexOf(con.mConnectedTo));
+			}
+			return	true;
+		}
+
+
 		PathNode FindBestLeafNode(Vector3 pos, List<PathNode> leafNodes)
 		{
-			float		bestDist	=float.MaxValue;
+			float		bestSum		=float.MinValue;
 			PathNode	bestNode	=null;
 			foreach(PathNode pn in leafNodes)
 			{
-				Vector3	middle	=pn.mPoly.GetCenter();
-				float	dist	=Vector3.Distance(middle, pos);
-				if(dist < bestDist)
+				float	sum	=pn.mPoly.ComputeAngleSum(pos);
+				if(sum > bestSum)
 				{
 					bestNode	=pn;
-					bestDist	=dist;
+					bestSum		=sum;
 				}
 			}
 			return	bestNode;
@@ -322,7 +356,12 @@ namespace PathLib
 				{
 					Edge	ln	=new Edge();
 
+					Edge	between	=pn.FindEdgeBetween(pc.mConnectedTo);
+
 					ln.mA	=pn.mPoly.GetCenter() + Vector3.UnitY;
+					ln.mB	=between.GetCenter() + Vector3.UnitY;
+
+					ln.mA	=between.GetCenter() + Vector3.UnitY;
 					ln.mB	=pc.mConnectedTo.mPoly.GetCenter() + Vector3.UnitY;
 
 					conLines.Add(ln);

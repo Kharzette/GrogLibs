@@ -173,6 +173,26 @@ namespace SharedForms
 		}
 
 
+		public void ReWireParameters(bool bWire)
+		{
+			if(bWire)
+			{
+				OnSelectionChanged(null, null);
+			}
+			else
+			{
+				Action<DataGridView>	unWire	=src => src.DataSource = null;
+				FormExtensions.Invoke(MaterialProperties, unWire);
+			}
+		}
+
+
+		void UnWire()
+		{
+			MaterialProperties.DataSource	=null;
+		}
+
+
 		public void ApplyMat()
 		{
 			OnApplyMaterial(null, null);
@@ -400,10 +420,17 @@ namespace SharedForms
 			{
 				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
 
-				MaterialProperties.DataSource			=gs.ShaderParameters;
-				MaterialProperties.Columns[0].ReadOnly	=true;
-				MaterialProperties.Columns[1].ReadOnly	=true;
-				MaterialProperties.Columns[2].ReadOnly	=true;
+				Action<DataGridView>	wire	=src => src.DataSource = gs.ShaderParameters;
+				FormExtensions.Invoke(MaterialProperties, wire);
+
+				//probably a better way to do this
+				Action<DataGridView>	readOnly0	=src => src.Columns[0].ReadOnly = true;
+				Action<DataGridView>	readOnly1	=src => src.Columns[1].ReadOnly = true;
+				Action<DataGridView>	readOnly2	=src => src.Columns[2].ReadOnly = true;
+
+				FormExtensions.Invoke(MaterialProperties, readOnly0);
+				FormExtensions.Invoke(MaterialProperties, readOnly1);
+				FormExtensions.Invoke(MaterialProperties, readOnly2);
 			}
 		}
 

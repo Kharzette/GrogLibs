@@ -46,8 +46,6 @@
 			// RoughVis
 			// 
 			this.RoughVis.AutoSize = true;
-			this.RoughVis.Checked = true;
-			this.RoughVis.CheckState = System.Windows.Forms.CheckState.Checked;
 			this.RoughVis.Location = new System.Drawing.Point(94, 69);
 			this.RoughVis.Name = "RoughVis";
 			this.RoughVis.Size = new System.Drawing.Size(58, 17);
