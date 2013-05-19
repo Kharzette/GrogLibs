@@ -36,6 +36,8 @@ namespace PathLib
 		public delegate void	GetWalkableFaces(out List<List<Vector3>> faces, out List<int> leaves);
 		public delegate Int32	FindLeaf(Vector3 pos);
 
+		const float	MinimumArea	=200f;
+
 		PathGraph() { }
 
 
@@ -58,6 +60,11 @@ namespace PathLib
 			for(int i=0;i < polys.Count;i++)
 			{
 				ConvexPoly	cp	=new ConvexPoly(polys[i]);
+				if(cp.Area() < MinimumArea)
+				{
+					continue;
+				}
+
 				PathNode	pn	=new PathNode(cp);
 
 				mNodery.Add(pn);
@@ -406,11 +413,25 @@ namespace PathLib
 			{
 				BoundingBox	bound	=pn.mPoly.GetBounds();
 
+				int	pnIndex	=mNodery.IndexOf(pn);
+				if(pnIndex == 106)
+				{
+					int	j=0;
+					j++;
+				}
+
 				foreach(PathNode pn2 in mNodery)
 				{
 					if(pn == pn2)
 					{
 						continue;
+					}
+
+					int	pn2Index	=mNodery.IndexOf(pn2);
+					if(pn2Index == 110)
+					{
+						int	k=0;
+						k++;
 					}
 
 					//make sure we are not already connected

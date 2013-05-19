@@ -993,8 +993,10 @@ namespace BSPZone
 		}
 
 
-		void GetWalkableFaces(int node, ref List<List<Vector3>> polys,
-			ref List<int> leaves, List<int> debugFacesUsed)
+		void GetWalkableFaces(int node,
+			List<List<Vector3>> polys,	//will be clipped to the leaf
+			List<int> leaves,
+			List<int> debugFacesUsed)
 		{
 			if(node < 0)
 			{
@@ -1011,10 +1013,9 @@ namespace BSPZone
 				{
 					int	leafFace	=mDebugLeafFaces[f + zLeaf.mFirstFace];
 
-					if(debugFacesUsed.Contains(leafFace))
-					{
-						continue;
-					}
+					//faces shouldn't be in multiple nodes anymore
+					//since we stopped merging faces
+					Debug.Assert(!debugFacesUsed.Contains(leafFace));
 
 					DebugFace	df	=mDebugFaces[leafFace];
 
@@ -1053,8 +1054,8 @@ namespace BSPZone
 
 			ZoneNode	n	=mZoneNodes[node];
 
-			GetWalkableFaces(n.mFront, ref polys, ref leaves, debugFacesUsed);
-			GetWalkableFaces(n.mBack, ref polys, ref leaves, debugFacesUsed);
+			GetWalkableFaces(n.mFront, polys, leaves, debugFacesUsed);
+			GetWalkableFaces(n.mBack, polys, leaves, debugFacesUsed);
 		}
 
 
@@ -1065,7 +1066,7 @@ namespace BSPZone
 
 			List<int>	debugFacesUsed	=new List<int>();
 
-			GetWalkableFaces(mZoneModels[0].mRootNode, ref polys, ref leaves, debugFacesUsed);
+			GetWalkableFaces(mZoneModels[0].mRootNode, polys, leaves, debugFacesUsed);
 		}
 		#endregion
 
@@ -1158,6 +1159,47 @@ namespace BSPZone
 		}
 
 
+		public void GetNodeGeometry(int node, List<Vector3> verts, List<UInt32> inds)
+		{
+			if(node > 0)
+			{
+				return;
+			}
+			node	=-(node + 1);
+
+			ZoneLeaf	zl	=mZoneLeafs[node];
+
+			int	firstFace	=zl.mFirstFace;
+			int	numFaces	=zl.mNumFaces;
+
+			for(int j=firstFace;j < (firstFace + numFaces);j++)
+			{
+				int		vofs	=verts.Count;
+				int		face	=mDebugLeafFaces[j];
+				int		nverts	=mDebugFaces[face].mNumVerts;
+				int		fvert	=mDebugFaces[face].mFirstVert;
+
+				for(int k=fvert;k < (fvert + nverts);k++)
+				{
+					int	idx	=mDebugIndexes[k];
+
+					Vector3	transd	=mDebugVerts[idx];
+
+					verts.Add(transd);
+				}
+
+				for(int z=1;z < nverts-1;z++)
+				{
+					//initial vertex
+					inds.Add((UInt32)vofs);
+					inds.Add((UInt32)(vofs + z));
+					inds.Add((UInt32)(vofs + ((z + 1) % nverts)));
+				}
+			}
+		}
+
+
+		//this doesn't look right at all
 		public void GetModelGeometry(List<Vector3> verts, List<UInt32> inds)
 		{
 			if(mDebugFaces == null || mZoneModels.Length < 2)

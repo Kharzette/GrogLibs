@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
+using UtilityLib;
 
 
 namespace BSPCore
@@ -220,7 +221,7 @@ namespace BSPCore
 					{
 						continue;
 					}
-					
+
 					bool	bHintSplit	=false;
 					foreach(GBSPSide side in b.mSides)
 					{
@@ -491,6 +492,27 @@ namespace BSPCore
 //				GBSPBrush	testFront, testBack;
 //				bad[0].Split(nodePlaneNum, false, (byte)GBSPSide.SIDE_NODE, false, pool, out testFront, out testBack, false, cp);
 			}
+		}
+
+
+		//returns a list with no parts overlapping
+		internal static List<GBSPBrush> GrabDetails(List<GBSPBrush> list)
+		{
+			List<GBSPBrush>	ret	=new List<GBSPBrush>();
+
+			foreach(GBSPBrush b in list)
+			{
+				if(Misc.bFlagSet(b.mOriginal.mContents, Contents.BSP_CONTENTS_DETAIL2))
+				{
+					ret.Add(b);
+				}
+			}
+
+			foreach(GBSPBrush b in ret)
+			{
+				list.Remove(b);
+			}
+			return	ret;
 		}
 
 

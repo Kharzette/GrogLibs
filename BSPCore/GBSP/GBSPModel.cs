@@ -195,6 +195,9 @@ namespace BSPCore
 				GBSPBrush.DumpBrushListToFile(blocked, pp, "Brush_x" + xblock + "_z" + zblock + ".map");
 			}
 
+			//seperate out detail brushes
+//			List<GBSPBrush>	detailList	=GBSPBrush.GrabDetails(blocked);
+
 			List<GBSPBrush>	csgList	=GBSPBrush.GankBrushOverlap(bVerbose, blocked, pp, cp);		
 	
 			GBSPBrush.TestBrushListValid(csgList, pp);

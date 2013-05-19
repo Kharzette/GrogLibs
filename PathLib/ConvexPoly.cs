@@ -15,6 +15,60 @@ namespace PathLib
 		internal ConvexPoly(List<Vector3> verts)
 		{
 			mVerts.AddRange(verts);
+
+			SnapVerts();
+		}
+
+		void SnapVerts()
+		{
+			List<Vector3>	snapped	=new List<Vector3>();
+			foreach(Vector3 v in mVerts)
+			{
+				Vector3	snap	=Vector3.Zero;
+
+				snap.X	=(float)Math.Round(v.X);
+				snap.Y	=(float)Math.Round(v.Y);
+				snap.Z	=(float)Math.Round(v.Z);
+
+				snapped.Add(snap);
+			}
+
+			//elminate dupes
+			for(int i=0;i < snapped.Count;i++)
+			{
+				for(int j=0;j < snapped.Count;j++)
+				{
+					if(i == j)
+					{
+						continue;
+					}
+
+					if(snapped[i] == snapped[j])
+					{
+						snapped.RemoveAt(j);
+						j--;
+						i	=0;
+					}
+				}
+			}
+
+			mVerts.Clear();
+			mVerts.AddRange(snapped);
+		}
+
+		internal float Area()
+		{
+			float	total	=0.0f;
+			for(int i=2;i < mVerts.Count;i++)
+			{
+				Vector3	vect1	=mVerts[i - 1] - mVerts[0];
+				Vector3	vect2	=mVerts[i] - mVerts[0];
+
+				Vector3	cross	=Vector3.Cross(vect1, vect2);
+
+				total	+=0.5f * cross.Length();
+			}
+			return	total;
 		}
 
 		internal BoundingBox GetBounds()
@@ -149,6 +203,11 @@ namespace PathLib
 				v2	/=len2;
 
 				float	dot	=Vector3.Dot(v1, v2);
+
+				if(dot > 1f)
+				{
+					dot	=1f;
+				}
 
 				dotSum	+=(float)Math.Acos(dot);
 			}

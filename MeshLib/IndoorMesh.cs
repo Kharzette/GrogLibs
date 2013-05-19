@@ -180,6 +180,11 @@ namespace MeshLib
 				out mLMAAnimVB, out mLMAAnimIB,	out mLMAAnimDrawCalls,
 				atlasSize, pp, out mLightMapAtlas);
 
+			if(mLightMapAtlas == null)
+			{
+				return;
+			}
+
 			Texture2D	lma	=mLightMapAtlas.GetAtlasTexture();
 			if(lma != null)
 			{

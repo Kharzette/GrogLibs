@@ -9,9 +9,6 @@ namespace BSPCore
 {
 	internal class GBSPFace
 	{
-		//TODO: lots of extra baggage in here for splitting merging
-		//need to rewrite that stuff using some simple lists
-		GBSPFace	mOriginal;
 		GBSPPoly	mPoly;
 		UInt32		mFrontContents, mBackContents;
 		Int32		mTexInfo;
@@ -29,8 +26,6 @@ namespace BSPCore
 		internal Int32	mFirstIndexVert;
 
 		internal GBSPPortal	mPortal;
-		internal GBSPFace	mSplit0, mSplit1;
-		internal GBSPFace	mMerged;
 
 		internal const float	COLINEAR_EPSILON	=0.0001f;
 
@@ -39,7 +34,6 @@ namespace BSPCore
 		internal GBSPFace(GBSPFace copyMe)
 		{
 			mPoly			=new GBSPPoly(copyMe.mPoly);
-			mOriginal		=copyMe.mOriginal;
 			mFrontContents	=copyMe.mFrontContents;
 			mBackContents	=copyMe.mBackContents;
 			mTexInfo		=copyMe.mTexInfo;
@@ -51,9 +45,6 @@ namespace BSPCore
 			mIndexVerts		=copyMe.mIndexVerts;
 			mFirstIndexVert	=copyMe.mFirstIndexVert;
 			mPortal			=copyMe.mPortal;
-			mSplit0			=copyMe.mSplit0;
-			mSplit1			=copyMe.mSplit1;
-			mMerged			=copyMe.mMerged;
 		}
 
 
@@ -74,127 +65,6 @@ namespace BSPCore
 			{
 				mPoly	=new GBSPPoly(port.mPoly);
 			}
-		}
-
-
-		static GBSPFace MergeFace(GBSPFace face1, GBSPFace face2, PlanePool pool)
-		{
-			//
-			// Planes and Sides MUST match before even trying to merge
-			//
-			if(face1.mPlaneNum != face2.mPlaneNum)
-			{
-				return	null;
-			}
-			if (face1.mbFlipSide != face2.mbFlipSide)
-			{
-				return null;
-			}
-
-			if((face1.mFrontContents & Contents.BSP_MERGE_SEP_CONTENTS)
-				!= (face2.mFrontContents & Contents.BSP_MERGE_SEP_CONTENTS))
-			{
-				return	null;
-			}
-			if((face1.mBackContents & Contents.BSP_MERGE_SEP_CONTENTS)
-				!= (face2.mBackContents & Contents.BSP_MERGE_SEP_CONTENTS))
-			{
-				return	null;
-			}
-
-			if(face1.mTexInfo != face2.mTexInfo)
-			{
-				return	null;
-			}
-			
-			GBSPPoly	poly1	=face1.mPoly;
-			GBSPPoly	poly2	=face2.mPoly;
-
-			Vector3	norm	=pool.mPlanes[face1.mPlaneNum].mNormal;	// Get the normal
-			if(face1.mbFlipSide)
-			{
-				norm	=Vector3.Zero - norm;
-			}
-
-			GBSPPoly	newPoly	=GBSPPoly.Merge(poly1, poly2, norm, pool);
-			if(newPoly == null)
-			{
-				return	null;
-			}			
-			GBSPFace	newFace		=new GBSPFace(face2);
-			newFace.mPoly	=newPoly;
-			if(newFace == null)
-			{
-				CoreEvents.Print("*WARNING* MergeFace:  Out of memory for new face!\n");
-				return	null;
-			}
-
-			face1.mMerged	=newFace;
-			face2.mMerged	=newFace;
-
-			return	newFace;
-		}
-
-
-		internal static bool MergeFaceList(List<GBSPFace> faces, PlanePool pool, ref int numMerged)
-		{
-			restartMerge:
-			for(int i=0;i < faces.Count;i++)
-			{
-				GBSPFace	face1	=faces[i];
-				if(face1.mPoly.VertCount() == -1)
-				{
-					continue;
-				}
-
-				if(face1.mMerged != null || face1.mSplit0 != null || face1.mSplit1 != null)
-				{
-					continue;
-				}
-
-				for(int j=0;j < faces.Count;j++)
-				{
-					GBSPFace	face2	=faces[j];
-					if(face2 == face1)
-					{
-						break;
-					}
-					if(face2.mPoly.VertCount() == -1)
-					{
-						continue;
-					}
-
-					if(face2.mMerged != null || face2.mSplit0 != null || face2.mSplit1 != null)
-					{
-						continue;
-					}
-					
-					GBSPFace	merged	=MergeFace(face1, face2, pool);
-
-					if(merged == null)
-					{
-						continue;
-					}
-
-					merged.mPoly.RemoveDegenerateEdges();
-					
-					if(!merged.Check(false, pool))
-					{
-						merged.Free();
-						face1.mMerged	=null;
-						face2.mMerged	=null;
-						continue;
-					}
-
-					numMerged++;
-
-					//Add the Merged to the end of the face list 
-					//so it will be checked against all the faces again
-					faces.Add(merged);
-					goto	restartMerge;
-				}
-			}
-			return	true;
 		}
 
 
@@ -311,13 +181,6 @@ namespace BSPCore
 		{
 			foreach(GBSPFace f in list)
 			{
-				if(f.mMerged != null
-					|| f.mSplit0 != null
-					|| f.mSplit1 != null)
-				{
-					continue;
-				}
-
 				if(!f.GetFaceVertIndexNumbers(ff))
 				{
 					return	false;
@@ -331,13 +194,6 @@ namespace BSPCore
 		{
 			foreach(GBSPFace f in list)
 			{
-				if(f.mMerged != null
-					|| f.mSplit0 != null
-					|| f.mSplit1 != null)
-				{
-					continue;
-				}
-
 				f.FixTJunctions(ff, tip);
 			}
 			return	true;
@@ -368,13 +224,6 @@ namespace BSPCore
 					continue;
 				}
 
-				if(f.mMerged != null ||
-					f.mSplit0 != null ||
-					f.mSplit1 != null)
-				{
-					continue;
-				}
-
 				//Skip output of face, if IndexVerts not > 0
 				//NOTE - The leaf faces output stage will also skip these same faces...
 				if(f.mIndexVerts.Length <= 0)
@@ -401,13 +250,6 @@ namespace BSPCore
 			foreach(GBSPFace f in list)
 			{
 				if(!f.mbVisible)
-				{
-					continue;
-				}
-
-				if(f.mMerged != null
-					|| f.mSplit0 != null
-					|| f.mSplit1 != null)
 				{
 					continue;
 				}

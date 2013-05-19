@@ -181,6 +181,29 @@ namespace BSPCore
 		}
 
 
+		void FilterBrushIntoTree(GBSPBrush b, PlanePool pool, ClipPools cp)
+		{
+			if(b == null)
+			{
+				return;
+			}
+
+			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
+			{
+				mBrushList.Add(b);
+				return;
+			}
+
+			GBSPBrush	front, back;
+			b.Split(mPlaneNum, false, 0, false, pool, out front, out back, false, cp);
+
+			b	=null;
+
+			mFront.FilterBrushIntoTree(front, pool, cp);
+			mBack.FilterBrushIntoTree(back, pool, cp);
+		}
+
+
 		void BuildTree_r(BuildStats bs, List<GBSPBrush> brushes, PlanePool pool, ClipPools cp)
 		{
 			GBSPSide	BestSide;
@@ -349,32 +372,28 @@ namespace BSPCore
 				CoreEvents.Print("--- Finalize Faces ---\n");
 			}
 			
-			int	numMerged		=0;
 			int	numMakeFaces	=0;
 
-			MakeFaces_r(pool, ref numMerged, ref numMakeFaces);
+			MakeFaces_r(pool, ref numMakeFaces);
 
 			if(bVerbose)
 			{
 				CoreEvents.Print("TotalFaces\t\t: " + numMakeFaces + "\n");
-				CoreEvents.Print("Merged Faces\t\t: " + numMerged + "\n");
-				CoreEvents.Print("FinalFaces\t\t: " + ((numMakeFaces - numMerged)) + "\n");
 			}
 		}
 
 
-		void MakeFaces_r(PlanePool pool, ref int numMerged, ref int numMake)
+		void MakeFaces_r(PlanePool pool, ref int numMake)
 		{
 			//Recurse down to leafs
 			if(mPlaneNum != PlanePool.PLANENUM_LEAF)
 			{
-				mFront.MakeFaces_r(pool, ref numMerged, ref numMake);
-				mBack.MakeFaces_r(pool, ref numMerged, ref numMake);
+				mFront.MakeFaces_r(pool, ref numMake);
+				mBack.MakeFaces_r(pool, ref numMake);
 				
-				//Marge list (keepin that typo, funny)
-				GBSPFace.MergeFaceList(mFaces, pool, ref numMerged);
-
 				//genesis subdivides here, but I atlas and use large lightmaps
+				//might come back here some day and subdivide to help make
+				//better pathing
 				return;
 			}
 
@@ -492,17 +511,6 @@ namespace BSPCore
 
 		void GetLeafFaces_r(GBSPFace f)
 		{
-			while(f.mMerged != null)
-			{
-				f	=f.mMerged;
-			}
-
-			if(f.mSplit0 != null)
-			{
-				GetLeafFaces_r(f.mSplit0);
-				GetLeafFaces_r(f.mSplit1);
-				return;
-			}
 			mLeafFaces.Add(f);
 		}
 
