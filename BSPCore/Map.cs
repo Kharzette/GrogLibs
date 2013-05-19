@@ -376,147 +376,6 @@ namespace BSPCore
 		}
 
 
-		//pathing on a single flat face
-		void AddPathPoints(List<Vector3> verts,
-			List<Vector3> pathPoints, GFXPlane p, GFXTexInfo tex)
-		{
-			//make some edges
-			List<Vector3>	edges	=new List<Vector3>();
-			for(int i=0;i < verts.Count;i++)
-			{
-				Vector3	edge	=verts[(i + 1) % verts.Count] - verts[i];
-				edge.Normalize();
-
-				edges.Add(edge);
-			}
-
-			//make edge planes
-			List<GBSPPlane>	edgePlanes	=new List<GBSPPlane>();
-			for(int i=0;i < verts.Count;i++)
-			{
-				GBSPPlane	edgePlane	=new GBSPPlane();
-				edgePlane.mNormal		=Vector3.Cross(p.mNormal, edges[i]);
-				edgePlane.mDist			=Vector3.Dot(verts[i], edgePlane.mNormal);
-
-				edgePlanes.Add(edgePlane);
-			}
-
-			//get bounds
-			Bounds	bnd	=new Bounds();
-			foreach(Vector3 vert in verts)
-			{
-				bnd.AddPointToBounds(vert);
-			}
-
-			Vector3	uvec	=tex.mVecU;
-			Vector3	vvec	=tex.mVecV;
-
-			uvec.Normalize();
-			vvec.Normalize();
-
-			float	gridSizeU	=Vector3.Dot(uvec, bnd.mMaxs);
-			float	gridSizeV	=Vector3.Dot(vvec, bnd.mMaxs);
-
-			gridSizeU	-=Vector3.Dot(uvec, bnd.mMins);
-			gridSizeV	-=Vector3.Dot(vvec, bnd.mMins);
-
-			int	nodeDensity	=12;
-
-			gridSizeU	/=nodeDensity;
-			gridSizeV	/=nodeDensity;
-
-			uvec	*=nodeDensity;
-			vvec	*=nodeDensity;
-
-			if(gridSizeU < 0.0f)
-			{
-				gridSizeU	=-gridSizeU;
-				uvec		=-uvec;
-			}
-			if(gridSizeV < 0.0f)
-			{
-				gridSizeV	=-gridSizeV;
-				vvec		=-vvec;
-			}
-
-			Debug.Assert(gridSizeU > 0.0f && gridSizeV > 0.0f);
-
-			//make a grid of lights through the bounds
-			for(int v=0;v < gridSizeV;v++)
-			{
-				for(int u=0;u < gridSizeU;u++)
-				{
-					Vector3	org	=bnd.mMins + (uvec * u) + (vvec * v);
-
-					//bump out a tad
-					org	+=p.mNormal;
-
-					bool	bOutside	=false;
-					foreach(GBSPPlane ep in edgePlanes)
-					{
-						if(ep.Distance(org) > -5.0f)
-						{
-							bOutside	=true;
-							break;	//outside the poly
-						}
-					}
-					if(bOutside)
-					{
-						continue;
-					}
-
-					pathPoints.Add(org);
-				}
-			}
-		}
-
-
-		//pathing nodes
-		public List<Vector3> GetGoodPathPoints()
-		{
-			List<Vector3>	ret	=new List<Vector3>();
-			if(mGFXFaces == null)
-			{
-				return	ret;	//no debug info saved
-			}
-
-			List<Vector3>	verts	=new List<Vector3>();
-
-			foreach(GFXLeaf gl in mGFXLeafs)
-			{
-				for(int i=0;i < gl.mNumFaces;i++)
-				{
-					int		face	=mGFXLeafFaces[gl.mFirstFace + i];
-
-					GFXFace	f	=mGFXFaces[face];
-
-					int		nverts	=f.mNumVerts;
-					int		fvert	=f.mFirstVert;
-
-					//grab the face plane
-					int	pNum	=f.mPlaneNum;
-
-					GFXPlane	p	=mGFXPlanes[pNum];
-
-					if(!IsGround(p))
-					{
-						continue;
-					}
-
-					verts.Clear();
-					for(int j=fvert;j < (fvert + nverts);j++)
-					{
-						int	idx	=mGFXVertIndexes[j];
-						verts.Add(mGFXVerts[idx]);
-					}
-					
-					AddPathPoints(verts, ret, p, mGFXTexInfos[f.mTexInfo]);
-				}
-			}
-			return	ret;
-		}
-
-
 		bool IsGround(GFXPlane p)
 		{
 			return	(Vector3.Dot(p.mNormal, Vector3.UnitY) > 0.8f);
@@ -557,6 +416,27 @@ namespace BSPCore
 				else
 				{
 					CoreEvents.Print("This is intended for use pre build.\n");
+				}
+			}
+			else if(drawChoice == "GFX Faces")
+			{
+				foreach(GFXFace face in mGFXFaces)
+				{
+					UInt32	vofs	=(UInt32)verts.Count;
+
+					for(int i=0;i < face.mNumVerts;i++)
+					{
+						int	idx	=mGFXVertIndexes[i + face.mFirstVert];
+
+						verts.Add(mGFXVerts[idx]);
+					}
+
+					for(UInt32 i=1;i < (face.mNumVerts - 1);i++)
+					{
+						indexes.Add(vofs);
+						indexes.Add(vofs + i);
+						indexes.Add(vofs + ((i + 1) % (UInt32)face.mNumVerts));
+					}
 				}
 			}
 				/*

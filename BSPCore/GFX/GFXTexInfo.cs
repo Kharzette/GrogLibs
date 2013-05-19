@@ -111,17 +111,6 @@ namespace BSPCore
 		}
 
 
-		public Vector2 GetTexCoord(Vector3 vert)
-		{
-			Vector2	ret	=Vector2.Zero;
-
-			ret.X	=Vector3.Dot(vert, mVecU);
-			ret.Y	=Vector3.Dot(vert, mVecV);
-
-			return	ret;
-		}
-
-
 		internal static string ScryTrueName(GFXFace f, GFXTexInfo tex)
 		{
 			string	matName	=tex.mMaterial;

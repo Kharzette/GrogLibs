@@ -414,11 +414,6 @@ namespace PathLib
 				BoundingBox	bound	=pn.mPoly.GetBounds();
 
 				int	pnIndex	=mNodery.IndexOf(pn);
-				if(pnIndex == 106)
-				{
-					int	j=0;
-					j++;
-				}
 
 				foreach(PathNode pn2 in mNodery)
 				{
@@ -428,11 +423,6 @@ namespace PathLib
 					}
 
 					int	pn2Index	=mNodery.IndexOf(pn2);
-					if(pn2Index == 110)
-					{
-						int	k=0;
-						k++;
-					}
 
 					//make sure we are not already connected
 					bool	bFound	=false;
