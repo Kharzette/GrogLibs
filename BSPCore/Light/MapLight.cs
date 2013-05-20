@@ -799,6 +799,28 @@ namespace BSPCore
 
 			UtilityLib.TSPool<bool []>	boolPool	=new UtilityLib.TSPool<bool[]>(() => new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE]);
 
+			if(lp.mLightParams.mbRecording)
+			{
+				for(int i=0;i < mGFXFaces.Length;i++)
+				{
+					int		pnum	=mGFXFaces[i].mPlaneNum;
+					bool	bFlip	=mGFXFaces[i].mbFlipSide;
+
+					GFXPlane	pln	=new GFXPlane();
+
+					pln.mNormal	=mGFXPlanes[pnum].mNormal;
+					pln.mDist	=mGFXPlanes[pnum].mDist;
+					pln.mType	=mGFXPlanes[pnum].mType;
+
+					if(bFlip)
+					{
+						pln.Inverse();
+					}
+					lp.mLightParams.mFacePoints.Add(i, new List<Vector3>());
+					lp.mLightParams.mFacePlanes.Add(i, pln);
+				}
+			}
+
 			//avoid going nutso with threads
 			ParallelOptions	po			=new ParallelOptions();
 			po.MaxDegreeOfParallelism	=lp.mBSPParams.mMaxThreads;
@@ -810,14 +832,18 @@ namespace BSPCore
 
 				int		pnum	=mGFXFaces[i].mPlaneNum;
 				bool	bFlip	=mGFXFaces[i].mbFlipSide;
+
 				GFXPlane	pln	=new GFXPlane();
+
 				pln.mNormal	=mGFXPlanes[pnum].mNormal;
 				pln.mDist	=mGFXPlanes[pnum].mDist;
 				pln.mType	=mGFXPlanes[pnum].mType;
+
 				if(bFlip)
 				{
 					pln.Inverse();
 				}
+
 				mFaceInfos[i].SetPlane(pln);
 				mFaceInfos[i].SetFaceIndex(i);
 
@@ -853,6 +879,16 @@ namespace BSPCore
 						CalcFacePoints(modelMat, modelInv, modelIndex, mFaceInfos[i], mLightMaps[i],
 							lp.mLightParams.mLightGridSize,
 							mSampleOffsets[s], lp.mLightParams.mbSeamCorrection, boolPool);
+
+						if(lp.mLightParams.mbRecording)
+						{
+							Vector3	[]fp	=mFaceInfos[i].GetPoints();
+
+							foreach(Vector3 pos in fp)
+							{
+								lp.mLightParams.mFacePoints[i].Add(pos);
+							}
+						}
 
 						if(visData != null && visData.Length != 0 && !lp.mBSPParams.mbBuildAsBModel)
 						{

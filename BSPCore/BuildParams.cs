@@ -26,6 +26,14 @@ namespace BSPCore
 		public Vector3	mMinLight;
 		public int		mMaxIntensity;
 		public int		mLightGridSize;
+
+		//recording
+		public bool	mbRecording;
+
+		//recorded face points light traces to
+		public Dictionary<int, List<Vector3>>	mFacePoints	=new Dictionary<int, List<Vector3>>();
+
+		public Dictionary<int, GFXPlane>	mFacePlanes	=new Dictionary<int, GFXPlane>();
 	}
 
 
