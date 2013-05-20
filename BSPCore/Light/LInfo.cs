@@ -58,8 +58,8 @@ namespace BSPCore
 			mLMaxU	=(Int32)maxU;
 			mLMaxV	=(Int32)maxV;
 
-			mLSizeU	=(Int32)(maxU - minU);
-			mLSizeV	=(Int32)(maxV - minV);
+			mLSizeU	=(mLMaxU - mLMinU);
+			mLSizeV	=(mLMaxV - mLMinV);
 
 			if((mLSizeU + 1) > MAX_LMAP_SIZE || (mLSizeV + 1) > MAX_LMAP_SIZE)
 			{

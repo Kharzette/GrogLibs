@@ -197,9 +197,21 @@ namespace BSPCore
 			double	extentS	=maxS - minS;
 			double	extentT	=maxT - minT;
 
+			//adjust for lightmaps that extend out beyond the borders a bit
+			double	floorU	=Math.Floor(minS / lightGridSize);
+			double	floorV	=Math.Floor(minT / lightGridSize);
+
+			floorU	*=lightGridSize;
+			floorV	*=lightGridSize;
+
 			//offset to the start of the texture
 			double	shiftU	=-minS;
 			double	shiftV	=-minT;
+
+			//offset by the difference in the snapped coord
+			//and the actual polygon world coord
+			shiftU	-=(floorU - minS);
+			shiftV	-=(floorV - minT);
 
 			foreach(Vector3 pnt in verts)
 			{

@@ -1685,10 +1685,40 @@ namespace BSPCore
 		}
 
 
-		//todo: remove when done testing
-		public GFXPlane []GetPlanes()
+		public GFXPlane[] GetPlanes()
 		{
 			return	mGFXPlanes;
+		}
+
+
+		//todo: remove when done testing
+		public Color[] GetLightMapForFace(int fIdx, out int width, out int height)
+		{
+			GFXFace	face	=mGFXFaces[fIdx];
+
+			if(face.mLightOfs == -1)
+			{
+				width	=-1;
+				height	=-1;
+				return	null;
+			}
+
+			Color	[]lmap	=new Color[face.mLHeight * face.mLWidth];
+
+			int	sizeOffset	=face.mLHeight * face.mLWidth * 3;
+
+			for(int i=0;i < lmap.Length;i++)
+			{
+				lmap[i].R	=mGFXLightData[face.mLightOfs + (i * 3)];
+				lmap[i].G	=mGFXLightData[face.mLightOfs + (i * 3) + 1];
+				lmap[i].B	=mGFXLightData[face.mLightOfs + (i * 3) + 2];
+				lmap[i].A	=0xFF;
+			}
+
+			width	=face.mLWidth;
+			height	=face.mLHeight;
+
+			return	lmap;
 		}
 
 
