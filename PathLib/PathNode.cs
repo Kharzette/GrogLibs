@@ -11,6 +11,7 @@ namespace PathLib
 	{
 		//raw stuff for the grid
 		internal ConvexPoly	mPoly;
+		internal float		mHScorePenalty;	//use to discourage use
 
 		internal List<PathConnection>	mConnections	=new List<PathConnection>();
 

@@ -10,6 +10,7 @@ namespace PathLib
 	internal class ConvexPoly
 	{
 		List<Vector3>	mVerts	=new List<Vector3>();
+		List<Edge>		mEdges	=new List<Edge>();
 
 
 		internal ConvexPoly(List<Vector3> verts)
@@ -17,6 +18,8 @@ namespace PathLib
 			mVerts.AddRange(verts);
 
 			SnapVerts();
+
+			mEdges	=CalcEdges();
 		}
 
 		void SnapVerts()
@@ -71,12 +74,30 @@ namespace PathLib
 			return	total;
 		}
 
+		internal int GetEdgeCount()
+		{
+			return	mVerts.Count;
+		}
+
+		//fill missing with any edges not in found
+		internal void GetMissingEdges(List<Edge> found, List<Edge> missing)
+		{
+			foreach(Edge e in mEdges)
+			{
+				if(found.Contains(e))
+				{
+					continue;
+				}
+				missing.Add(e);
+			}
+		}
+
 		internal BoundingBox GetBounds()
 		{
 			return	BoundingBox.CreateFromPoints(mVerts);
 		}
 
-		List<Edge> GetEdges()
+		List<Edge> CalcEdges()
 		{
 			List<Edge>	ret	=new List<Edge>();
 
@@ -101,12 +122,9 @@ namespace PathLib
 
 		internal Edge GetSharedEdge(ConvexPoly other)
 		{
-			List<Edge>	myEdges		=GetEdges();
-			List<Edge>	otherEdges	=other.GetEdges();
-
-			foreach(Edge me in myEdges)
+			foreach(Edge me in mEdges)
 			{
-				foreach(Edge oe in otherEdges)
+				foreach(Edge oe in other.mEdges)
 				{
 					if(!me.IsColinear(oe))
 					{
@@ -125,12 +143,9 @@ namespace PathLib
 		//used for pathing over stair steps
 		internal Edge GetSharedEdgeXZ(ConvexPoly other)
 		{
-			List<Edge>	myEdges		=GetEdges();
-			List<Edge>	otherEdges	=other.GetEdges();
-
-			foreach(Edge me in myEdges)
+			foreach(Edge me in mEdges)
 			{
-				foreach(Edge oe in otherEdges)
+				foreach(Edge oe in other.mEdges)
 				{
 					if(!me.IsColinear(oe))
 					{

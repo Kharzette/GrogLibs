@@ -187,6 +187,7 @@ namespace PathLib
 			//real world position instead of number of nodes over
 			//so this is about the same
 			asn.mHScore	=mEndNode.mNode.CenterToCenterDistance(asn.mNode);
+			asn.mHScore	+=mEndNode.mNode.mHScorePenalty;
 		}
 
 

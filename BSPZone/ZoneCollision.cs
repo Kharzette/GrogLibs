@@ -19,6 +19,7 @@ namespace BSPZone
 		internal bool			mbHitSet, mbLeafHit;
 		internal BoundingBox	mRayBox, mMoveBox;
 		internal float			mRadius;
+		internal bool			mbStartInside;
 
 		internal RayTrace()
 		{
@@ -812,7 +813,7 @@ namespace BSPZone
 
 
 		//might still be a bit dodgy for movement, needs more testing
-		bool TraceSphereNode(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
+		internal bool TraceSphereNode(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
 		{
 			bool	bHit	=false;
 
@@ -962,6 +963,7 @@ namespace BSPZone
 			Vector3	end		=trace.mOriginalEnd;
 
 			bool		bClipped	=false;
+			bool		bAnyInFront	=false;
 			ZonePlane	clipPlane	=ZonePlane.Blank;
 
 			//clip the ray inside the leaf
@@ -989,6 +991,8 @@ namespace BSPZone
 					continue;
 				}
 
+				bAnyInFront	=true;
+
 				//split
 				float	ratio			=frontDist / (frontDist - backDist);
 				Vector3	intersection	=start + ratio * (end - start);
@@ -1010,6 +1014,13 @@ namespace BSPZone
 				trace.mIntersection	=start;
 				trace.mBestPlane	=clipPlane;
 			}
+			else if(!bAnyInFront)
+			{
+				//started inside!
+				trace.mbStartInside	=true;
+				return	true;
+			}
+
 			return	bClipped;
 		}
 

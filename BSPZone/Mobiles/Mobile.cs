@@ -387,7 +387,7 @@ namespace BSPZone
 		//miss C++ const methods for something like this
 		public bool TryMoveTo(Vector3 tryPos, float error)
 		{
-			if(mZone == null || !mbOnGround)
+			if(mZone == null)
 			{
 				return	false;
 			}
@@ -414,21 +414,31 @@ namespace BSPZone
 		}
 
 
-		public bool TryStandingSpot(Vector3 tryPos)
+		public bool TrySphere(Vector3 tryPos, float radius, bool bModelsToo)
 		{
-			if(!mbOnGround)
-			{
-				return	false;
-			}
-
-			tryPos	+=mBoxMiddleOffset;
+			tryPos.Y	+=radius;
 
 			int			modelHit	=0;
 			Vector3		impacto		=Vector3.Zero;
 			ZonePlane	planeHit	=ZonePlane.Blank;
 
-			bool	bHit	=mZone.TraceAllBox(mBox, tryPos,
-				tryPos + Vector3.UnitY, ref modelHit, ref impacto, ref planeHit);
+			bool	bHit	=false;
+
+			if(bModelsToo)
+			{
+				mZone.TraceAllSphere(radius, tryPos, tryPos + Vector3.UnitY,
+					ref modelHit, ref impacto, ref planeHit);
+			}
+			else
+			{
+				RayTrace	rt	=new RayTrace();
+
+				rt.mOriginalStart	=tryPos;
+				rt.mOriginalEnd		=tryPos + Vector3.UnitY;
+				rt.mRadius			=radius;
+				rt.mRatio			=float.MaxValue;
+				bHit	=mZone.TraceSphereNode(rt, tryPos, tryPos + Vector3.UnitY, 0);
+			}
 
 			return	!bHit;
 		}

@@ -518,7 +518,16 @@ namespace BSPZone
 				//use the impact point
 				approachPos	=impacto;
 
-				if(mMob.TryStandingSpot(approachPos))
+				//grab bounds
+				BoundingBox	bounds	=mMob.GetBounds();
+
+				Vector3	middleOfs	=mMob.GetMiddlePosition() - mMob.GetGroundPosition();
+
+				Debug.Assert(Mathery.IsBoundingBoxCentered(bounds));
+
+				//get a radius from the bounds
+				float	radius	=Vector3.Distance(Vector3.Zero, bounds.Max);
+				if(mMob.TrySphere(approachPos + middleOfs, radius, true))
 				{
 					goodPos		=approachPos;
 					bSuccess	=true;

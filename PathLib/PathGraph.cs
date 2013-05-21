@@ -12,8 +12,8 @@ namespace PathLib
 {
 	public class PathGraph
 	{
-		//bsp node lookup for path nodes
-		Dictionary<int, List<PathNode>>	mBSPLeafPathNodes	=new Dictionary<int, List<PathNode>>();
+		//game lookup for path nodes
+		Dictionary<int, List<PathNode>>	mGameLeafPathNodes	=new Dictionary<int, List<PathNode>>();
 
 		//pathing on threads
 		List<PathFinder>	mActivePathing	=new List<PathFinder>();
@@ -35,8 +35,7 @@ namespace PathLib
 		public delegate void	PathCB(List<Vector3> resultPath);
 		public delegate void	GetWalkableFaces(out List<List<Vector3>> faces, out List<int> leaves);
 		public delegate Int32	FindLeaf(Vector3 pos);
-
-		const float	MinimumArea	=200f;
+		public delegate bool	IsPositionValid(Vector3 pos);
 
 		PathGraph() { }
 
@@ -47,7 +46,7 @@ namespace PathLib
 		}
 
 
-		public void GenerateGraph(GetWalkableFaces getWalkable, float stepHeight)
+		public void GenerateGraph(GetWalkableFaces getWalkable, float stepHeight, IsPositionValid isPosOK)
 		{
 			mNodery.Clear();
 
@@ -60,28 +59,24 @@ namespace PathLib
 			for(int i=0;i < polys.Count;i++)
 			{
 				ConvexPoly	cp	=new ConvexPoly(polys[i]);
-				if(cp.Area() < MinimumArea)
-				{
-					continue;
-				}
-
 				PathNode	pn	=new PathNode(cp);
 
 				mNodery.Add(pn);
 
 				int	leaf	=leaves[i];
-				if(mBSPLeafPathNodes.ContainsKey(leaf))
+				if(mGameLeafPathNodes.ContainsKey(leaf))
 				{
-					mBSPLeafPathNodes[leaf].Add(pn);
+					mGameLeafPathNodes[leaf].Add(pn);
 				}
 				else
 				{
-					mBSPLeafPathNodes.Add(leaf, new List<PathNode>());
-					mBSPLeafPathNodes[leaf].Add(pn);
+					mGameLeafPathNodes.Add(leaf, new List<PathNode>());
+					mGameLeafPathNodes[leaf].Add(pn);
 				}
 			}
 
 			BuildConnectivity(stepHeight);
+			PruneSkinny(isPosOK);
 		}
 
 
@@ -128,20 +123,20 @@ namespace PathLib
 				return	false;
 			}
 
-			if(!mBSPLeafPathNodes.ContainsKey(leafNode))
+			if(!mGameLeafPathNodes.ContainsKey(leafNode))
 			{
 				return	false;
 			}
 
 			PathNode	conNode;
 
-			if(mBSPLeafPathNodes[leafNode].Count == 1)
+			if(mGameLeafPathNodes[leafNode].Count == 1)
 			{
-				conNode	=mBSPLeafPathNodes[leafNode][0];
+				conNode	=mGameLeafPathNodes[leafNode][0];
 			}
 			else
 			{
-				conNode	=FindBestLeafNode(pos, mBSPLeafPathNodes[leafNode]);
+				conNode	=FindBestLeafNode(pos, mGameLeafPathNodes[leafNode]);
 				if(conNode == null)
 				{
 					return	false;
@@ -194,38 +189,38 @@ namespace PathLib
 				return	false;
 			}
 
-			if(!mBSPLeafPathNodes.ContainsKey(startNode))
+			if(!mGameLeafPathNodes.ContainsKey(startNode))
 			{
 				return	false;
 			}
 
-			if(!mBSPLeafPathNodes.ContainsKey(endNode))
+			if(!mGameLeafPathNodes.ContainsKey(endNode))
 			{
 				return	false;
 			}
 
 			PathNode	stNode, eNode;
 
-			if(mBSPLeafPathNodes[startNode].Count == 1)
+			if(mGameLeafPathNodes[startNode].Count == 1)
 			{
-				stNode	=mBSPLeafPathNodes[startNode][0];
+				stNode	=mGameLeafPathNodes[startNode][0];
 			}
 			else
 			{
-				stNode	=FindBestLeafNode(start, mBSPLeafPathNodes[startNode]);
+				stNode	=FindBestLeafNode(start, mGameLeafPathNodes[startNode]);
 				if(stNode == null)
 				{
 					return	false;
 				}
 			}
 
-			if(mBSPLeafPathNodes[endNode].Count == 1)
+			if(mGameLeafPathNodes[endNode].Count == 1)
 			{
-				eNode	=mBSPLeafPathNodes[endNode][0];
+				eNode	=mGameLeafPathNodes[endNode][0];
 			}
 			else
 			{
-				eNode	=FindBestLeafNode(end, mBSPLeafPathNodes[endNode]);
+				eNode	=FindBestLeafNode(end, mGameLeafPathNodes[endNode]);
 				if(eNode == null)
 				{
 					return	false;
@@ -241,8 +236,8 @@ namespace PathLib
 		public bool GetInfoAboutLocation(Vector3 groundPos, FindLeaf findLeaf,
 			out int numConnections, out int myIndex, List<int> indexesConnectedTo)
 		{
-			numConnections	=0;
-			myIndex			=0;
+			numConnections	=-1;
+			myIndex			=-1;
 			int	startNode	=findLeaf(groundPos);
 
 			if(startNode >= 0)
@@ -250,16 +245,18 @@ namespace PathLib
 				return	false;
 			}
 
-			if(!mBSPLeafPathNodes.ContainsKey(startNode))
+			if(!mGameLeafPathNodes.ContainsKey(startNode))
 			{
 				return	false;
 			}
 
-			List<PathNode>	pNodes	=mBSPLeafPathNodes[startNode];
+			List<PathNode>	pNodes	=mGameLeafPathNodes[startNode];
 
 			PathNode	best	=FindBestLeafNode(groundPos, pNodes);
-
-			Debug.Assert(best != null);
+			if(best == null)
+			{
+				return	false;
+			}
 
 			myIndex	=mNodery.IndexOf(best);
 
@@ -404,6 +401,81 @@ namespace PathLib
 			PathFinder pf	=(PathFinder)threadContext;
 
 			pf.Go();
+		}
+
+
+		//look for nodes next to an obstacle that might prevent
+		//a mobile from reaching the center due to collision
+		void PruneSkinny(IsPositionValid isPosOK)
+		{
+			//discourage use of these nodes
+			List<PathNode>	badNodes	=new List<PathNode>();
+			foreach(PathNode pn in mNodery)
+			{
+				//check center
+				Vector3	center	=pn.mPoly.GetCenter();
+
+				if(!isPosOK(center))
+				{
+					badNodes.Add(pn);
+					continue;
+				}
+			}
+			PenalizeNodes(badNodes);
+
+			badNodes.Clear();
+
+			//now check shared edges
+			checkShared:
+			foreach(PathNode pn in mNodery)
+			{
+				foreach(PathConnection pc in pn.mConnections)
+				{
+					Vector3	edgeCenter	=pc.mEdgeBetween.GetCenter();
+
+					if(!isPosOK(edgeCenter))
+					{
+						//break this connection
+						Disconnect(pn, pc.mConnectedTo);
+						goto	checkShared;
+					}
+				}
+			}
+		}
+
+
+		void Disconnect(PathNode pn, PathNode pn2)
+		{
+			//remove connections to pn
+			List<PathConnection>	nukeCons	=new List<PathConnection>();
+			foreach(PathConnection pc in pn.mConnections)
+			{
+				if(pc.mConnectedTo != pn2)
+				{
+					continue;
+				}
+
+				foreach(PathConnection pc2 in pn2.mConnections)
+				{
+					if(pc2.mConnectedTo == pn)
+					{
+						pc.mConnectedTo.mConnections.Remove(pc2);
+						break;
+					}
+				}
+
+				pn.mConnections.Remove(pc);
+				break;
+			}
+		}
+
+
+		void PenalizeNodes(List<PathNode> prunes)
+		{
+			foreach(PathNode pn in prunes)
+			{
+				pn.mHScorePenalty	=100;
+			}
 		}
 
 
