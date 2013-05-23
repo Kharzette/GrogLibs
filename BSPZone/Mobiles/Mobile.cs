@@ -241,7 +241,7 @@ namespace BSPZone
 			Vector3		impacto		=Vector3.Zero;
 			ZonePlane	planeHit	=ZonePlane.Blank;
 			int			modelHit	=0;
-			if(mZone.TraceAllBox(mCamBox, camPos, mobCamPos, ref modelHit, ref impacto, ref planeHit))
+//			if(mZone.TraceAllBox(mCamBox, camPos, mobCamPos, ref modelHit, ref impacto, ref planeHit))
 			{
 				mobCamPos	=impacto;
 			}
@@ -436,7 +436,6 @@ namespace BSPZone
 				rt.mOriginalStart	=tryPos;
 				rt.mOriginalEnd		=tryPos + Vector3.UnitY;
 				rt.mRadius			=radius;
-				rt.mRatio			=float.MaxValue;
 				bHit	=mZone.TraceSphereNode(rt, tryPos, tryPos + Vector3.UnitY, 0);
 			}
 

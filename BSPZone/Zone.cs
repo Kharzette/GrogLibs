@@ -86,7 +86,7 @@ namespace BSPZone
 		public const float	RampAngle	=0.7f;	//how steep can we climb?
 		public const float	StepHeight	=18.0f;	//stair step height for bipeds
 
-		const int	MaxMoveBoxIterations	=64;
+		const int	MaxMoveBoxIterations	=16;
 
 
 		public Zone()
@@ -530,15 +530,39 @@ namespace BSPZone
 
 			modelOn	=-1;
 
-			if(TraceAllBox(box, footPos, footCheck, ref modelOn, ref impVec, ref footPlane))
+			RayTrace	rt	=new RayTrace();
+
+			rt.mOriginalStart	=footPos;
+			rt.mOriginalEnd		=footCheck;
+			rt.mMoveBox			=box;
+			if(TraceBoxNode(rt, rt.mOriginalStart, rt.mOriginalEnd, 0))
+//			if(TraceAllBox(box, footPos, footCheck, ref modelOn, ref impVec, ref footPlane))
 			{
-				if(footPlane.IsGround())
+				if(rt.mbStartInside)
+				{
+					return	false;
+				}
+
+				if(rt.mBestPlane.IsGround())
 				{
 					return	true;
 				}
-				else
+			}
+
+			//try models
+			int		modelHit		=0;
+			bool	bStartInSolid	=false;
+			if(TraceModelsBox(box, rt.mOriginalStart, rt.mOriginalEnd,
+				ref modelHit, ref impVec, ref footPlane, ref bStartInSolid))
+			{
+				if(bStartInSolid)
 				{
-					modelOn	=-1;
+					return	false;
+				}
+
+				if(footPlane.IsGround())
+				{
+					return	true;
 				}
 			}
 			return	false;
@@ -546,15 +570,31 @@ namespace BSPZone
 
 
 		bool StairMove(BoundingBox box, Vector3 start, Vector3 end, Vector3 stairAxis,
-			bool bSlopeOk, float stepHeight, float originalLenSquared, ref Vector3 stepPos, out int modelOn)
+			bool bSlopeOk, float stepHeight, float originalLenSquared,
+			ref Vector3 stepPos, out int modelOn)
 		{
 			Vector3		impVec		=Vector3.Zero;
 			ZonePlane	impPlane	=ZonePlane.BlankX;
 			int			modelHit	=0;
 
-			//first trace up from the start point
+			RayTrace	rt	=new RayTrace();
+
+			//first trace up from the start point to world
 			//to make sure there's head room
-			if(TraceAllBox(box, start, start + stairAxis * stepHeight, ref modelHit, ref impVec, ref impPlane))
+			rt.mOriginalStart	=start;
+			rt.mOriginalEnd		=start + stairAxis * stepHeight;
+			rt.mMoveBox			=box;
+			if(TraceBoxNode(rt, rt.mOriginalStart, rt.mOriginalEnd, 0))
+			{
+				//hit noggin, just use previous point
+				modelOn	=-1;
+				return	false;
+			}
+
+			//do nogginry check for models too
+			bool	bStartInSolid	=false;
+			if(TraceModelsBox(box, rt.mOriginalStart, rt.mOriginalEnd,
+				ref modelHit, ref impVec, ref impPlane, ref bStartInSolid))
 			{
 				//hit noggin, just use previous point
 				modelOn	=-1;
@@ -568,10 +608,37 @@ namespace BSPZone
 
 			if(!bGroundStep)
 			{
-				//trace down by step height x2 and make sure
+				//trace down to world by step height x2 and make sure
 				//we land on a ground surface
-				if(TraceAllBox(box, stepPos, stepPos - Vector3.UnitY * stepHeight * 2,
-					ref modelHit, ref impVec, ref impPlane))
+				rt.mOriginalStart	=stepPos;
+				rt.mOriginalEnd		=stepPos - Vector3.UnitY * (stepHeight * 2f);
+				if(TraceBoxNode(rt, rt.mOriginalStart, rt.mOriginalEnd, 0))
+				{
+					if(rt.mBestPlane.IsGround())
+					{
+						//landed on the ground
+						stepPos		=rt.mIntersection;
+						bGroundStep	=true;
+					}
+					else
+					{
+						if(bSlopeOk)
+						{
+							//see if the plane has any footing at all
+							if(Vector3.Dot(Vector3.UnitY, rt.mBestPlane.mNormal) > RampAngle)
+							{
+								stepPos		=rt.mIntersection;
+								bGroundStep	=true;
+							}
+						}
+					}
+				}
+
+				float	stepDist	=Vector3.Distance(stepPos, rt.mIntersection);
+
+				//try models
+				if(TraceModelsBox(box, rt.mOriginalStart, rt.mOriginalEnd,
+					ref modelHit, ref impVec, ref impPlane, ref bStartInSolid))
 				{
 					if(impPlane.IsGround())
 					{
@@ -700,16 +767,13 @@ namespace BSPZone
 
 
 		//returns true if on ground
-		//this one assumes 2 legs, so navigates stairs
-		//Collides only against modelIndex
-		//TODO: This gets a bit strange on gentle slopes
 		public void BipedModelPush(BoundingBox box, Vector3 start,
 			Vector3 end, int modelIndex, ref Vector3 finalPos)
 		{
 			//first check if we are moving at all
 			Vector3	moveVec	=end - start;
 			float	delt	=moveVec.LengthSquared();
-			if(delt < Mathery.ANGLE_EPSILON)
+			if(delt <= 0f)
 			{
 				//didn't move enough to bother
 				finalPos	=start;
@@ -732,30 +796,32 @@ namespace BSPZone
 
 			for(i=0;i < MaxMoveBoxIterations;i++)
 			{
-				ZonePlane	zp	=ZonePlane.Blank;
-				if(!Trace_FakeOBBoxModel(box, modelIndex, start, end, ref impacto, ref zp))
+				RayTrace	rt	=new RayTrace();
+				ZoneModel	zm	=mZoneModels[modelIndex];
+
+				//first trace up from the start point to world
+				//to make sure there's head room
+				rt.mMoveBox			=box;
+				if(!TraceFakeOrientedBoxModel(rt, start, end, zm))
 				{
 					break;
 				}
 
-				if(zp.mNormal == Vector3.Zero)
+				if(rt.mbStartInside)
 				{
 					break;	//in solid
 				}
 
-				//adjust plane to worldspace
-				zp	=ZonePlane.Transform(zp, mZoneModels[modelIndex].mTransform);
-
-				float	startDist	=zp.DistanceFast(start);
-				float	dist		=zp.DistanceFast(end);
+				float	startDist	=rt.mBestPlane.DistanceFast(start);
+				float	dist		=rt.mBestPlane.DistanceFast(end);
 
 				Debug.Assert(startDist > 0f && dist < 0f);
 
-				end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
+				end	-=(rt.mBestPlane.mNormal * (dist - Mathery.VCompareEpsilon));
 				
-				if(!hitPlanes.Contains(zp))
+				if(!hitPlanes.Contains(rt.mBestPlane))
 				{
-					hitPlanes.Add(zp);
+					hitPlanes.Add(rt.mBestPlane);
 				}
 			}
 
@@ -771,44 +837,158 @@ namespace BSPZone
 		//simulate movement and record the positions involved
 		public void MoveBoxDebug(BoundingBox box, Vector3 start, Vector3 end, List<Vector3> segments)
 		{
+			MoveBoxWorldDebug(box, start, end, segments);
+		}
+
+
+		//returns true if move was a success and endpoint is safe
+		void MoveBoxWorldDebug(BoundingBox box, Vector3 start, Vector3 end, List<Vector3> segments)
+		{
+			int	i	=0;
+
+			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
+			for(i=0;i < MaxMoveBoxIterations;i++)
+			{
+				RayTrace	rt	=new RayTrace();
+
+				rt.mOriginalStart	=start;
+				rt.mOriginalEnd		=end;
+				rt.mMoveBox			=box;
+
+				segments.Add(start);
+				segments.Add(end);
+
+				bool	bHitSomething	=TraceBoxNode(rt, start, end, 0);
+				if(!bHitSomething)
+				{
+					break;
+				}
+
+				if(rt.mbStartInside)
+				{
+					return;
+				}
+
+				float	startDist	=rt.mBestPlane.DistanceFast(start);
+				float	dist		=rt.mBestPlane.DistanceFast(end);
+
+				if(!hitPlanes.Contains(rt.mBestPlane))
+				{
+					hitPlanes.Add(rt.mBestPlane);
+				}
+				end	-=(rt.mBestPlane.mNormal * (dist - Mathery.VCompareEpsilon));
+			}
+		}
+
+
+		//returns true if move was a success and endpoint is safe
+		bool MoveBoxWorld(BoundingBox box, Vector3 start, Vector3 end,
+			out Vector3 finalPos)
+		{
+			int	i	=0;
+
+			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
+			for(i=0;i < MaxMoveBoxIterations;i++)
+			{
+				RayTrace	rt	=new RayTrace();
+
+				rt.mOriginalStart	=start;
+				rt.mOriginalEnd		=end;
+				rt.mMoveBox			=box;
+
+				bool	bHitSomething	=TraceBoxNode(rt, start, end, 0);
+				if(!bHitSomething)
+				{
+					break;
+				}
+
+				if(rt.mbStartInside)
+				{
+					//TODO: report and solve via intersection
+					//can't solve!
+					finalPos	=start;
+					return	false;
+				}
+
+				float	startDist	=rt.mBestPlane.DistanceFast(start);
+				float	dist		=rt.mBestPlane.DistanceFast(end);
+
+//				Debug.Assert(startDist >= 0f && dist <= 0f);
+
+				if(!hitPlanes.Contains(rt.mBestPlane))
+				{
+					hitPlanes.Add(rt.mBestPlane);
+				}
+
+				end	-=(rt.mBestPlane.mNormal * (dist - Mathery.VCompareEpsilon));
+			}
+
+			finalPos	=end;
+			if(i == MaxMoveBoxIterations)
+			{
+				//can't solve!
+				finalPos	=end;
+				return	false;
+			}
+			return	true;
+		}
+
+
+		//returns true if move was a success and endpoint is safe
+		bool MoveBoxModels(BoundingBox box, Vector3 start, Vector3 end,
+			out Vector3 finalPos)
+		{
 			Vector3		impacto		=Vector3.Zero;
 			int			i			=0;
 			int			modelHit	=0;
 
 			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
 
-			segments.Add(start);
-			segments.Add(end);
-
+			//do model collisions
 			for(i=0;i < MaxMoveBoxIterations;i++)
 			{
-				ZonePlane	zp	=ZonePlane.Blank;
-				if(!TraceAllBox(box, start, end, ref modelHit, ref impacto, ref zp))
+				ZonePlane	zp				=ZonePlane.Blank;
+				bool		bHitSomething	=false;
+
+				bool	bStartInSolid	=false;
+
+				bHitSomething	=TraceModelsBox(box, start, end,
+					ref modelHit, ref impacto, ref zp, ref bStartInSolid);
+
+				if(!bHitSomething)
 				{
 					break;
 				}
 
-				if(zp.mNormal == Vector3.Zero)
+				if(bStartInSolid)
 				{
-					break;	//in solid
+					//TODO: report and solve via intersection
+					//can't solve!  Use end of world collision
+					finalPos	=end;
+					return	false;
 				}
 
 				float	startDist	=zp.DistanceFast(start);
 				float	dist		=zp.DistanceFast(end);
 
-				Debug.Assert(startDist >= 0f && dist < 0f);
+//				Debug.Assert(startDist >= 0f && dist <= 0f);
 
-				segments.Add(end);
-
-				end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
-
-				segments.Add(end);
-				
 				if(!hitPlanes.Contains(zp))
 				{
 					hitPlanes.Add(zp);
 				}
+
+				end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
 			}
+
+			finalPos	=end;
+			if(i == MaxMoveBoxIterations)
+			{
+				//can't solve!
+				finalPos	=end;
+				return	false;
+			}
+			return	true;
 		}
 
 
@@ -817,59 +997,10 @@ namespace BSPZone
 		public bool MoveBox(BoundingBox box, Vector3 start, Vector3 end, bool bWorldOnly,
 			out Vector3 finalPos, out int modelOn)
 		{
-			Vector3		impacto		=Vector3.Zero;
-			int			i			=0;
-			int			modelHit	=0;
-
-			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
-
-			for(i=0;i < MaxMoveBoxIterations;i++)
+			bool	bWorldOk	=MoveBoxWorld(box, start, end, out finalPos);
+			if(!bWorldOk)
 			{
-				ZonePlane	zp				=ZonePlane.Blank;
-				bool		bHitSomething	=false;
-
-				if(bWorldOnly)
-				{
-					bHitSomething	=Trace_BoxModel(box,
-						0, start, end, ref impacto, ref zp);
-				}
-				else
-				{
-					bHitSomething	=TraceAllBox(box, start, end, ref modelHit, ref impacto, ref zp);
-				}
-
-				if(!bHitSomething)
-				{
-					break;
-				}
-
-				if(zp.mNormal == Vector3.Zero)
-				{
-					//can't solve!
-					finalPos	=start;
-					modelOn		=-1;
-
-					//player is probably stuck
-					//give them footing to help break free
-					return	true;
-				}
-
-				float	startDist	=zp.DistanceFast(start);
-				float	dist		=zp.DistanceFast(end);
-
-				Debug.Assert(startDist >= 0f && dist < 0f);
-
-				end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
-				
-				if(!hitPlanes.Contains(zp))
-				{
-					hitPlanes.Add(zp);
-				}
-			}
-
-			finalPos	=end;
-			if(i == MaxMoveBoxIterations)
-			{
+				//TODO: report and solve via intersection
 				//can't solve!
 				finalPos	=start;
 				modelOn		=-1;
@@ -879,7 +1010,19 @@ namespace BSPZone
 				return	true;
 			}
 
-			return	FootCheck(box, end, 4.0f, out modelOn);
+			if(!bWorldOnly)
+			{
+				Vector3	modelPos;
+				if(!MoveBoxModels(box, start, finalPos, out modelPos))
+				{
+					//if models are messed up, just use the world position
+					//and report on ground so player can move
+					modelOn	=0;
+					return	true;
+				}
+				finalPos	=modelPos;
+			}
+			return	FootCheck(box, finalPos, 4.0f, out modelOn);
 		}
 
 
@@ -904,7 +1047,9 @@ namespace BSPZone
 					continue;
 				}
 
-				if(Trace_FakeOBBoxTrigger(box, zt.mModelNum, start, end))
+				RayTrace	rt	=new RayTrace();
+				rt.mMoveBox		=box;
+				if(TraceFakeOrientedBoxTrigger(rt, start, end, mZoneModels[zt.mModelNum]))
 				{
 					if(zt.mTimeSinceTriggered > zt.mWait)
 					{
@@ -941,7 +1086,9 @@ namespace BSPZone
 					continue;
 				}
 
-				if(Trace_FakeOBBoxTrigger(box, zt.mModelNum, start, end))
+				RayTrace	rt	=new RayTrace();
+				rt.mMoveBox		=box;
+				if(TraceFakeOrientedBoxTrigger(rt, start, end, mZoneModels[zt.mModelNum]))
 				{
 					continue;
 				}

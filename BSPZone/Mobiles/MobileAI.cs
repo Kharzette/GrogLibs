@@ -515,6 +515,12 @@ namespace BSPZone
 					continue;
 				}
 
+				//standing on solid ground?
+				if(planeHit.IsGround())
+				{
+					continue;
+				}
+
 				//use the impact point
 				approachPos	=impacto;
 

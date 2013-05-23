@@ -81,14 +81,24 @@ namespace BSPZone
 					return;
 				}
 
-				mMover.Update(msDelta);
+				Vector3	start	=mMover.GetPos();
+				Vector3	end		=mMover.GetPos();
+				while(Mathery.CompareVectorEpsilon(start, end, 0.1f) && !mMover.Done())
+				{
+					//don't allow tiny movements
+					mMover.Update(msDelta);
+					end		=mMover.GetPos();
+				}
 
-				z.MoveModelTo(mModelIndex, mMover.GetPos());
+				if(!mMover.Done())
+				{
+					z.MoveModelTo(mModelIndex, mMover.GetPos());
 
-				mEmitter.Position	=mMover.GetPos() * Audio.InchWorldScale;
+					mEmitter.Position	=mMover.GetPos() * Audio.InchWorldScale;
 
-				Apply3DToSound(mSoundOpen, lis, mEmitter);
-				Apply3DToSound(mSoundClose, lis, mEmitter);
+					Apply3DToSound(mSoundOpen, lis, mEmitter);
+					Apply3DToSound(mSoundClose, lis, mEmitter);
+				}
 			}
 		}
 		
@@ -226,16 +236,26 @@ namespace BSPZone
 					return;
 				}
 
-				mMover.Update(msDelta);
+				Vector3	start	=mMover.GetPos();
+				Vector3	end		=mMover.GetPos();
+				while(Mathery.CompareVectorEpsilon(start, end, 0.1f) && !mMover.Done())
+				{
+					//don't allow tiny movements
+					mMover.Update(msDelta);
+					end		=mMover.GetPos();
+				}
 
-				z.MoveModelTo(mModelIndex, mMover.GetPos());
+				if(!mMover.Done())
+				{
+					z.MoveModelTo(mModelIndex, mMover.GetPos());
 
-				mEmitter.Position	=mMover.GetPos() * Audio.InchWorldScale;
+					mEmitter.Position	=mMover.GetPos() * Audio.InchWorldScale;
 
-				Apply3DToSound(mOpen1Sound, lis, mEmitter);
-				Apply3DToSound(mOpen2Sound, lis, mEmitter);
-				Apply3DToSound(mClose1Sound, lis, mEmitter);
-				Apply3DToSound(mClose2Sound, lis, mEmitter);
+					Apply3DToSound(mOpen1Sound, lis, mEmitter);
+					Apply3DToSound(mOpen2Sound, lis, mEmitter);
+					Apply3DToSound(mClose1Sound, lis, mEmitter);
+					Apply3DToSound(mClose2Sound, lis, mEmitter);
+				}
 			}
 		}
 

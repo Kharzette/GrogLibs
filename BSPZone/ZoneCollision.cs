@@ -12,21 +12,16 @@ namespace BSPZone
 	{
 		internal Vector3		mOriginalStart, mOriginalEnd;
 		internal Vector3		mIntersection;
-		internal Int32			mLeaf;
-		internal float			mBestDist;
 		internal ZonePlane		mBestPlane;
-		internal float			mRatio;
-		internal bool			mbHitSet, mbLeafHit;
-		internal BoundingBox	mRayBox, mMoveBox;
+		internal bool			mbHitSet;
+		internal BoundingBox	mMoveBox;
 		internal float			mRadius;
-		internal bool			mbStartInside;
+		internal bool			mbStartInside, mbEndInside;
 
 		internal RayTrace()
 		{
 			mIntersection	=Vector3.Zero;
-			mBestPlane		=new ZonePlane();
-			mBestDist		=99999.0f;
-			mbHitSet		=false;
+			mBestPlane		=ZonePlane.Blank;
 		}
 	}
 
@@ -145,82 +140,6 @@ namespace BSPZone
 
 
 		//returns the closest impact, checks all models
-		public bool TraceAllBox(BoundingBox boxBounds, Vector3 start, Vector3 end,
-			 ref int modelHit, ref Vector3 I, ref ZonePlane P)
-		{
-			List<int>		modelsHit	=new List<int>();
-			List<Vector3>	impacts		=new List<Vector3>();
-			List<ZonePlane>	planes		=new List<ZonePlane>();
-
-			RayTrace	rt	=new RayTrace();
-
-			rt.mOriginalStart	=start;
-			rt.mOriginalEnd		=end;
-			rt.mMoveBox			=boxBounds;
-			rt.mRatio			=float.MaxValue;
-
-			for(int i=0;i < mZoneModels.Length;i++)
-			{
-				Vector3		impacto	=Vector3.Zero;
-				ZonePlane	hp		=ZonePlane.Blank;
-
-				if(i != 0)
-				{
-					if(Trace_FakeOBBoxModel(boxBounds, i,
-						start, end, ref impacto, ref hp))
-					{
-						modelsHit.Add(i);
-						impacts.Add(impacto);
-						planes.Add(hp);
-					}
-				}
-				else
-				{
-					if(Trace_BoxModel(boxBounds, i,
-						start, end, ref impacto, ref hp))
-					{
-						modelsHit.Add(i);
-						impacts.Add(impacto);
-						planes.Add(hp);
-					}
-				}
-			}
-
-			if(modelsHit.Count == 0)
-			{
-				return	false;
-			}
-
-			int		bestIdx		=0;
-			float	bestDist	=float.MaxValue;
-			for(int i=0;i < modelsHit.Count;i++)
-			{
-				float	dist	=Vector3.DistanceSquared(impacts[i], start);
-				if(dist < bestDist)
-				{
-					bestDist	=dist;
-					bestIdx		=i;
-				}
-			}
-
-			modelHit	=modelsHit[bestIdx];
-			if(modelHit != 0)
-			{
-				//adjust these back to worldspace
-				I	=Vector3.Transform(impacts[bestIdx], mZoneModels[modelHit].mTransform);
-				P	=ZonePlane.Transform(planes[bestIdx], mZoneModels[modelHit].mTransform);
-			}
-			else
-			{
-				I	=impacts[bestIdx];
-				P	=planes[bestIdx];
-			}
-
-			return	true;
-		}
-
-
-		//returns the closest impact, checks all models
 		public bool TraceAllSphere(float radius, Vector3 start, Vector3 end,
 			 ref int modelHit, ref Vector3 I, ref ZonePlane P)
 		{
@@ -233,7 +152,6 @@ namespace BSPZone
 			rt.mOriginalStart	=start;
 			rt.mOriginalEnd		=end;
 			rt.mRadius			=radius;
-			rt.mRatio			=float.MaxValue;
 
 			for(int i=0;i < mZoneModels.Length;i++)
 			{
@@ -274,11 +192,73 @@ namespace BSPZone
 			float	bestDist	=float.MaxValue;
 			for(int i=0;i < modelsHit.Count;i++)
 			{
-				if(i != 0)
+				if(modelsHit[i] == -1)
 				{
-					impacts[i]	=Vector3.Transform(impacts[i], mZoneModels[modelsHit[i]].mTransform);
-					planes[i]	=ZonePlane.Transform(planes[i], mZoneModels[modelsHit[i]].mTransform);
+					continue;
 				}
+				impacts[i]	=Vector3.Transform(impacts[i], mZoneModels[modelsHit[i]].mTransform);
+				planes[i]	=ZonePlane.Transform(planes[i], mZoneModels[modelsHit[i]].mTransform);
+
+				float	dist	=Vector3.DistanceSquared(impacts[i], start);
+				if(dist < bestDist)
+				{
+					bestDist	=dist;
+					bestIdx		=i;
+				}
+			}
+
+			modelHit	=modelsHit[bestIdx];
+			I			=impacts[bestIdx];
+			P			=planes[bestIdx];
+
+			return	true;
+		}
+
+
+		//returns the closest impact, checks all models
+		public bool TraceModelsBox(BoundingBox boxBounds, Vector3 start, Vector3 end,
+			 ref int modelHit, ref Vector3 I, ref ZonePlane P, ref bool bStartInSolid)
+		{
+			List<int>		modelsHit	=new List<int>();
+			List<Vector3>	impacts		=new List<Vector3>();
+			List<ZonePlane>	planes		=new List<ZonePlane>();
+
+			RayTrace	rt	=new RayTrace();
+
+			rt.mOriginalStart	=start;
+			rt.mOriginalEnd		=end;
+			rt.mMoveBox			=boxBounds;
+
+			for(int i=1;i < mZoneModels.Length;i++)
+			{
+				Vector3		impacto	=Vector3.Zero;
+				ZonePlane	hp		=ZonePlane.Blank;
+				ZoneModel	zm		=mZoneModels[i];
+				if(TraceFakeOrientedBoxModel(rt, start, end, zm))
+				{
+					if(rt.mbStartInside)
+					{
+						bStartInSolid	=true;
+						return	true;
+					}
+					modelsHit.Add(i);
+					impacts.Add(rt.mIntersection);
+					planes.Add(rt.mBestPlane);
+				}
+			}
+
+			if(modelsHit.Count == 0)
+			{
+				return	false;
+			}
+
+			int		bestIdx		=0;
+			float	bestDist	=float.MaxValue;
+			for(int i=0;i < modelsHit.Count;i++)
+			{
+				//backtransform to worldspace to check dists
+//				impacts[i]	=Vector3.Transform(impacts[i], mZoneModels[modelsHit[i]].mTransform);
+//				planes[i]	=ZonePlane.Transform(planes[i], mZoneModels[modelsHit[i]].mTransform);
 
 				float	dist	=Vector3.DistanceSquared(impacts[i], start);
 				if(dist < bestDist)
@@ -308,7 +288,6 @@ namespace BSPZone
 
 			rt.mOriginalStart	=start;
 			rt.mOriginalEnd		=end;
-			rt.mRatio			=float.MaxValue;
 
 			for(int i=0;i < mZoneModels.Length;i++)
 			{
@@ -349,11 +328,12 @@ namespace BSPZone
 			float	bestDist	=float.MaxValue;
 			for(int i=0;i < modelsHit.Count;i++)
 			{
-				if(i != 0)
+				if(modelsHit[i] == -1)
 				{
-					impacts[i]	=Vector3.Transform(impacts[i], mZoneModels[modelsHit[i]].mTransform);
-					planes[i]	=ZonePlane.Transform(planes[i], mZoneModels[modelsHit[i]].mTransform);
+					continue;
 				}
+				impacts[i]	=Vector3.Transform(impacts[i], mZoneModels[modelsHit[i]].mTransform);
+				planes[i]	=ZonePlane.Transform(planes[i], mZoneModels[modelsHit[i]].mTransform);
 
 				float	dist	=Vector3.DistanceSquared(impacts[i], start);
 				if(dist < bestDist)
@@ -371,128 +351,29 @@ namespace BSPZone
 		}
 
 
-		//ported from genesis, don't really fully understand how it works
-		bool Trace_BoxModel(BoundingBox boxBounds, int modelIndex,
-			Vector3 start, Vector3 end, ref Vector3 I, ref ZonePlane P)
-		{
-			RayTrace	trace		=new RayTrace();
-
-			//set boxes
-			trace.mRayBox	=boxBounds;
-			trace.mMoveBox	=Trace_GetMoveBox(boxBounds, start, end);
-
-			ZoneModel	worldModel	=mZoneModels[modelIndex];
-
-			if(!trace.mMoveBox.Intersects(worldModel.mBounds))
-			{
-				return	false;
-			}
-
-			trace.mOriginalStart	=start;
-			trace.mOriginalEnd		=end;
-			FindClosestLeafIntersection_r(trace, worldModel.mRootNode);
-
-			if(trace.mbLeafHit)
-			{
-				I	=trace.mIntersection;
-				P	=trace.mBestPlane;
-				return	true;
-			}
-			return	false;
-		}
-
-
 		//warning, this only works with centered bounding boxes!
-		//simulate an oriented collision box and collide vs a model
-		bool Trace_FakeOBBoxModel(BoundingBox boxBounds, int modelIndex,
-			Vector3 start, Vector3 end, ref Vector3 I, ref ZonePlane P)
+		//build a good box for collision vs a model
+		void FakeOrientBoxCollisionToModel(ZoneModel mod,
+			ref BoundingBox box, ref Vector3 start, ref Vector3 end)
 		{
-			RayTrace	trace		=new RayTrace();
-			ZoneModel	testModel	=mZoneModels[modelIndex];
-
 #if DEBUG
-			System.Diagnostics.Debug.Assert(Mathery.IsBoundingBoxCentered(boxBounds));
+			Debug.Assert(Mathery.IsBoundingBoxCentered(box));
 #endif
 
 			//get box bound corners
-			boxBounds.GetCorners(mTestBoxCorners);
+			box.GetCorners(mTestBoxCorners);
 
 			//transform into model space
-			Vector3.Transform(mTestBoxCorners, ref testModel.mInvertedTransform, mTestTransBoxCorners);
+			Vector3.Transform(mTestBoxCorners, ref mod.mInvertedTransform, mTestTransBoxCorners);
 
 			//transform ray
-			Vector3	modelStart	=Vector3.Transform(start, testModel.mInvertedTransform);
-			Vector3	modelEnd	=Vector3.Transform(end, testModel.mInvertedTransform);
+			start	=Vector3.Transform(start, mod.mInvertedTransform);
+			end		=Vector3.Transform(end, mod.mInvertedTransform);
 
 			//bound the modelSpace corners
-			trace.mRayBox	=BoundingBox.CreateFromPoints(mTestTransBoxCorners);
+			box	=BoundingBox.CreateFromPoints(mTestTransBoxCorners);
 
-			Mathery.CenterBoundingBoxAtOrigin(ref trace.mRayBox);
-
-			trace.mMoveBox			=Trace_GetMoveBox(trace.mRayBox, modelStart, modelEnd);
-			trace.mOriginalStart	=modelStart;
-			trace.mOriginalEnd		=modelEnd;
-
-			//test for basic box overlap
-			if(!trace.mMoveBox.Intersects(testModel.mBounds))
-			{
-				return	false;
-			}
-			FindClosestLeafIntersection_r(trace, testModel.mRootNode);
-
-			if(trace.mbLeafHit)
-			{
-				I	=trace.mIntersection;
-				P	=trace.mBestPlane;
-				return	true;
-			}
-			return	false;
-		}
-
-
-		//warning, this only works with centered bounding boxes!
-		//intersect against trigger models
-		bool Trace_FakeOBBoxTrigger(BoundingBox boxBounds,
-			int modelIndex, Vector3 start, Vector3 end)
-		{
-			RayTrace	trace		=new RayTrace();
-			ZoneModel	testModel	=mZoneModels[modelIndex];
-
-#if DEBUG
-			System.Diagnostics.Debug.Assert(Mathery.IsBoundingBoxCentered(boxBounds));
-#endif
-
-			//get box bound corners
-			boxBounds.GetCorners(mTestBoxCorners);
-
-			//transform into model space
-			Vector3.Transform(mTestBoxCorners, ref testModel.mInvertedTransform, mTestTransBoxCorners);
-
-			//transform ray
-			Vector3	modelStart	=Vector3.Transform(start, testModel.mInvertedTransform);
-			Vector3	modelEnd	=Vector3.Transform(end, testModel.mInvertedTransform);
-
-			//bound the modelSpace corners
-			trace.mRayBox	=BoundingBox.CreateFromPoints(mTestTransBoxCorners);
-
-			Mathery.CenterBoundingBoxAtOrigin(ref trace.mRayBox);
-
-			trace.mMoveBox			=Trace_GetMoveBox(trace.mRayBox, modelStart, modelEnd);
-			trace.mOriginalStart	=modelStart;
-			trace.mOriginalEnd		=modelEnd;
-
-			//test for basic box overlap
-			if(!trace.mMoveBox.Intersects(testModel.mBounds))
-			{
-				return	false;
-			}
-			TestTriggerIntersection_r(trace, testModel.mRootNode);
-
-			if(trace.mbLeafHit)
-			{
-				return	true;
-			}
-			return	false;
+			Mathery.CenterBoundingBoxAtOrigin(ref box);
 		}
 
 
@@ -530,222 +411,6 @@ namespace BSPZone
 		}
 
 
-		void TestTriggerIntersection_r(RayTrace trace, Int32 node)
-		{
-			if(node < 0)
-			{
-				Int32	leaf		=-(node + 1);
-				UInt32	contents	=mZoneLeafs[leaf].mContents;
-
-				if((contents & BSPZone.Contents.BSP_CONTENTS_TRIGGER) == 0)
-				{
-					return;
-				}
-
-				trace.mbLeafHit	=true;
-				return;
-			}
-
-			UInt32	side	=Trace_BoxOnPlaneSide(trace.mMoveBox, mZonePlanes[mZoneNodes[node].mPlaneNum]);
-
-			//Go down the sides that the box lands in
-			if((side & ZonePlane.PSIDE_FRONT) != 0)
-			{
-				TestTriggerIntersection_r(trace, mZoneNodes[node].mFront);
-			}
-
-			if((side & ZonePlane.PSIDE_BACK) != 0)
-			{
-				TestTriggerIntersection_r(trace, mZoneNodes[node].mBack);
-			}
-		}
-
-
-		void FindClosestLeafIntersection_r(RayTrace trace, Int32 node)
-		{
-			if(node < 0)
-			{
-				Int32	leaf		=-(node + 1);
-				UInt32	contents	=mZoneLeafs[leaf].mContents;
-
-				if((contents & BSPZone.Contents.BSP_CONTENTS_SOLID_CLIP) == 0)
-				{
-					return;		// Only solid leafs contain side info...
-				}
-
-				trace.mbHitSet	=false;
-				
-				if(mZoneLeafs[leaf].mNumSides == 0)
-				{
-					return;
-				}
-
-				IntersectLeafSides_r(trace, trace.mOriginalStart, trace.mOriginalEnd, leaf, 0, 1);
-				return;
-			}
-
-			UInt32	side	=Trace_BoxOnPlaneSide(trace.mMoveBox, mZonePlanes[mZoneNodes[node].mPlaneNum]);
-
-			//Go down the sides that the box lands in
-			if((side & ZonePlane.PSIDE_FRONT) != 0)
-			{
-				FindClosestLeafIntersection_r(trace, mZoneNodes[node].mFront);
-			}
-
-			if((side & ZonePlane.PSIDE_BACK) != 0)
-			{
-				FindClosestLeafIntersection_r(trace, mZoneNodes[node].mBack);
-			}
-		}
-
-
-		void Trace_ExpandPlaneForBox(ref ZonePlane p, BoundingBox box)
-		{
-			Vector3	norm	=p.mNormal;
-			
-			if(norm.X > 0)
-			{
-				p.mDist	-=norm.X * box.Min.X;
-			}
-			else
-			{
-				p.mDist	-=norm.X * box.Max.X;
-			}
-			
-			if(norm.Y > 0)
-			{
-				p.mDist	-=norm.Y * box.Min.Y;
-			}
-			else
-			{
-				p.mDist	-=norm.Y * box.Max.Y;
-			}
-
-			if(norm.Z > 0)
-			{
-				p.mDist	-=norm.Z * box.Min.Z;
-			}
-			else
-			{
-				p.mDist	-=norm.Z * box.Max.Z;
-			}
-		}
-
-
-		//This is a port from Genesis, and I really cannot follow the code.
-		//It appears to have been written to work with non convex leafs, as
-		//there doesn't seem to be any preference for finding the front side
-		//intersections as opposed to the back side.  I think this can cause
-		//false collisions with node split planes that aren't actually solid.
-		//At any rate, this is happening, but the collisions never leave you
-		//in an invalid location so I'm still using it for now.
-		bool IntersectLeafSides_r(RayTrace trace, Vector3 start, Vector3 end,
-			Int32 leaf, Int32 side, Int32 pSide)
-		{
-			if(pSide == 0)
-			{
-				return	false;
-			}
-
-			if(side >= mZoneLeafs[leaf].mNumSides)
-			{
-				return	true;	//if it lands behind all planes, it is inside
-			}
-
-			int	RSide	=mZoneLeafs[leaf].mFirstSide + side;
-
-			ZonePlane	p	=mZonePlanes[mZoneLeafSides[RSide].mPlaneNum];
-
-			p.mType	=ZonePlane.PLANE_ANY;
-			
-			if(mZoneLeafSides[RSide].mbFlipSide)
-			{
-				p.Inverse();
-			}
-			
-			//Simulate the point having a box, by pushing the plane out by the box size
-			Trace_ExpandPlaneForBox(ref p, trace.mRayBox);
-
-			float	frontDist	=p.DistanceFast(start);
-			float	backDist	=p.DistanceFast(end);
-
-			if(frontDist >= 0 && backDist >= 0)
-			{
-				//Leaf sides are convex hulls, so front side is totally outside
-				return	IntersectLeafSides_r(trace, start, end, leaf, side + 1, 0);
-			}
-
-			if(frontDist < 0 && backDist < 0)
-			{
-				return	IntersectLeafSides_r(trace, start, end, leaf, side + 1, 1);
-			}
-
-			Int32	splitSide	=(frontDist < 0)? 1 : 0;
-			float	splitDist	=0.0f;
-			
-			if(frontDist < 0)
-			{
-				splitDist	=(frontDist + UtilityLib.Mathery.ON_EPSILON)
-								/ (frontDist - backDist);
-			}
-			else
-			{
-				splitDist	=(frontDist - UtilityLib.Mathery.ON_EPSILON)
-								/ (frontDist - backDist);
-			}
-
-			if(splitDist < 0.0f)
-			{
-				splitDist	=0.0f;
-			}
-			
-			if(splitDist > 1.0f)
-			{
-				splitDist	=1.0f;
-			}
-
-			Vector3	intersect	=start + splitDist * (end - start);
-
-			//Only go down the back side, since the front side is empty in a convex tree
-			if(IntersectLeafSides_r(trace, start, intersect, leaf, side + 1, splitSide))
-			{
-				trace.mbLeafHit	=true;
-				return	true;
-			}
-			else if(IntersectLeafSides_r(trace, intersect, end, leaf, side + 1, (splitSide == 0)? 1 : 0))
-			{
-				splitDist	=(intersect - trace.mOriginalStart).Length();
-
-				//Record the intersection closest to the start of ray
-				if(splitDist < trace.mBestDist && !trace.mbHitSet)
-				{
-					trace.mIntersection	=intersect;
-					trace.mLeaf			=leaf;
-					trace.mBestDist		=splitDist;
-					trace.mBestPlane	=p;
-					trace.mRatio		=splitDist;
-					trace.mbHitSet		=true;
-				}
-				trace.mbLeafHit	=true;
-				return	true;
-			}			
-			return	false;	
-		}
-
-
-		UInt32 GetContents(int node)
-		{
-			if(node < 0)
-			{
-				Int32		leafIdx		=-(node + 1);
-				ZoneLeaf	zl			=mZoneLeafs[leafIdx];
-
-				return	zl.mContents;
-			}
-			return	Contents.BSP_CONTENTS_EMPTY2;
-		}
-		
-		
 		bool PartFront(ZonePlane p, float distAdjust, Vector3 start, Vector3 end,
 			out Vector3 clipStart, out Vector3 clipEnd)
 		{
@@ -812,7 +477,7 @@ namespace BSPZone
 		}
 
 
-		//might still be a bit dodgy for movement, needs more testing
+		//should be quite solid now
 		internal bool TraceSphereNode(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
 		{
 			bool	bHit	=false;
@@ -855,7 +520,6 @@ namespace BSPZone
 		}
 
 
-		//might still be a bit dodgy for movement, needs more testing
 		bool TraceRayNode(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
 		{
 			bool	bHit	=false;
@@ -903,8 +567,87 @@ namespace BSPZone
 		}
 
 
-		//this almost works but needs more fiddling
-		bool TraceBoxWorld(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
+		bool TraceFakeOrientedBoxModel(RayTrace rt, Vector3 start, Vector3 end, ZoneModel mod)
+		{
+			FakeOrientBoxCollisionToModel(mod, ref rt.mMoveBox, ref start, ref end);
+
+			rt.mOriginalStart	=start;
+			rt.mOriginalEnd		=end;
+
+			bool	bHit	=TraceBoxNode(rt, start, end, mod.mRootNode);
+
+			if(bHit && !rt.mbStartInside)
+			{
+				rt.mIntersection	=Vector3.Transform(rt.mIntersection, mod.mTransform);
+				rt.mBestPlane		=ZonePlane.Transform(rt.mBestPlane, mod.mTransform);
+			}
+			return	bHit;
+		}
+
+
+		bool TraceFakeOrientedBoxTrigger(RayTrace rt, Vector3 start, Vector3 end, ZoneModel mod)
+		{
+			FakeOrientBoxCollisionToModel(mod, ref rt.mMoveBox, ref start, ref end);
+
+			rt.mOriginalStart	=start;
+			rt.mOriginalEnd		=end;
+
+			return	TraceBoxNodeTrigger(rt, start, end, mod.mRootNode);
+		}
+
+
+		bool TraceBoxNodeTrigger(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
+		{
+			bool	bHit	=false;
+
+			if(node < 0)
+			{
+				Int32		leafIdx		=-(node + 1);
+				ZoneLeaf	zl			=mZoneLeafs[leafIdx];
+
+				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_TRIGGER))
+				{
+					if(IsPointInLeaf(trace, end, zl))
+					{
+						trace.mbEndInside	=true;
+					}
+					return	true;
+				}
+				return	false;
+			}
+
+			ZoneNode	zn	=mZoneNodes[node];
+			ZonePlane	p	=mZonePlanes[zn.mPlaneNum];
+
+			float	dist	=Math.Abs(Vector3.Dot(trace.mMoveBox.Max, p.mNormal));
+
+			Vector3	clipStart, clipEnd;
+			if(PartBehind(p, -dist, start, end, out clipStart, out clipEnd))
+			{
+				bHit	=TraceBoxNodeTrigger(trace, clipStart, clipEnd, zn.mBack);
+				if(bHit)
+				{
+					end	=trace.mIntersection;
+				}
+			}
+			if(PartFront(p, -dist, start, end, out clipStart, out clipEnd))
+			{
+				bHit	|=TraceBoxNodeTrigger(trace, clipStart, clipEnd, zn.mFront);
+				if(bHit)
+				{
+					if(trace.mbHitSet)
+					{
+						trace.mBestPlane	=p;
+						trace.mbHitSet		=false;
+					}
+				}
+				return	bHit;
+			}
+			return	bHit;
+		}
+
+
+		bool TraceBoxNode(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
 		{
 			bool	bHit	=false;
 
@@ -926,20 +669,28 @@ namespace BSPZone
 			ZoneNode	zn	=mZoneNodes[node];
 			ZonePlane	p	=mZonePlanes[zn.mPlaneNum];
 
-			Trace_ExpandPlaneForBox(ref p, trace.mMoveBox);
+			float	dist	=Math.Abs(Vector3.Dot(trace.mMoveBox.Max, p.mNormal));
 
 			Vector3	clipStart, clipEnd;
-			if(PartBehind(p, 0, start, end, out clipStart, out clipEnd))
+			if(PartBehind(p, -dist, start, end, out clipStart, out clipEnd))
 			{
-				bHit	=TraceBoxWorld(trace, clipStart, clipEnd, zn.mBack);
+				bHit	=TraceBoxNode(trace, clipStart, clipEnd, zn.mBack);
 				if(bHit)
 				{
 					end	=trace.mIntersection;
 				}
 			}
-			if(PartFront(p, 0, start, end, out clipStart, out clipEnd))
+			if(PartFront(p, -dist, start, end, out clipStart, out clipEnd))
 			{
-				bHit	|=TraceBoxWorld(trace, clipStart, clipEnd, zn.mFront);
+				bHit	|=TraceBoxNode(trace, clipStart, clipEnd, zn.mFront);
+				if(bHit)
+				{
+					if(trace.mbHitSet)
+					{
+						trace.mBestPlane	=p;
+						trace.mbHitSet		=false;
+					}
+				}
 				return	bHit;
 			}
 			return	bHit;
@@ -1036,6 +787,7 @@ namespace BSPZone
 			Vector3	end		=trace.mOriginalEnd;
 
 			bool		bClipped	=false;
+			bool		bAnyInFront	=false;
 			ZonePlane	clipPlane	=ZonePlane.Blank;
 
 			//clip the ray inside the leaf
@@ -1049,7 +801,7 @@ namespace BSPZone
 					p.Inverse();
 				}
 
-				Trace_ExpandPlaneForBox(ref p, trace.mMoveBox);
+				p.mDist	+=Math.Abs(Vector3.Dot(trace.mMoveBox.Max, p.mNormal));
 
 				float	frontDist	=p.DistanceFast(start);
 				float	backDist	=p.DistanceFast(end);
@@ -1061,6 +813,15 @@ namespace BSPZone
 				if(frontDist < 0 && backDist < 0)
 				{
 					continue;
+				}
+
+				bAnyInFront	=true;
+
+				if(frontDist == 0 && backDist == 0)
+				{
+					clipPlane	=p;
+					bClipped	=true;
+					break;
 				}
 
 				//split
@@ -1084,119 +845,43 @@ namespace BSPZone
 				trace.mIntersection	=start;
 				trace.mBestPlane	=clipPlane;
 			}
+			else if(!bAnyInFront)
+			{
+				//started inside!
+				trace.mIntersection	=start;
+				trace.mbStartInside	=true;
+				return	true;
+			}
 			return	bClipped;
 		}
 
 
-		bool PointInLeafSides(Vector3 pnt, ZoneLeaf leaf, BoundingBox box)
+		bool IsPointInLeaf(RayTrace trace, Vector3 point, ZoneLeaf zl)
 		{
-			Int32	f	=leaf.mFirstSide;
-
-			for(int i=0;i < leaf.mNumSides;i++)
+			if(zl.mNumSides <= 0)
 			{
-				ZonePlane	p	=mZonePlanes[mZoneLeafSides[i + f].mPlaneNum];
-				p.mType			=ZonePlane.PLANE_ANY;
-			
-				if(mZoneLeafSides[i + f].mbFlipSide)
+				return	false;
+			}
+
+			for(int i=0;i < zl.mNumSides;i++)
+			{
+				ZoneLeafSide	side	=mZoneLeafSides[i + zl.mFirstSide];
+				ZonePlane		p		=mZonePlanes[side.mPlaneNum];
+
+				if(side.mbFlipSide)
 				{
 					p.Inverse();
 				}
 
-				//Simulate the point having a box, by pushing the plane out by the box size
-				Trace_ExpandPlaneForBox(ref p, box);
+				p.mDist	+=Math.Abs(Vector3.Dot(trace.mMoveBox.Max, p.mNormal));
 
-				float	dist	=p.DistanceFast(pnt);
-
-				if(dist >= 0.0f)
+				float	dist	=p.DistanceFast(point);
+				if(dist > 0)
 				{
-					return false;	//Since leafs are convex, it must be outside...
+					return	false;	//not intersecting
 				}
 			}
 			return	true;
-		}
-
-
-		BoundingBox Trace_GetMoveBox(BoundingBox box, Vector3 start, Vector3 end)
-		{
-			BoundingBox	ret	=new BoundingBox();
-
-			Mathery.ClearBoundingBox(ref ret);
-			Mathery.AddPointToBoundingBox(ref ret, start);
-			Mathery.AddPointToBoundingBox(ref ret, end);
-
-			ret.Min	+=box.Min - Vector3.One;
-			ret.Max	+=box.Max + Vector3.One;
-
-			return	ret;
-		}
-
-
-		//about 3 times faster than original genesis on xbox
-		UInt32 Trace_BoxOnPlaneSide(BoundingBox box, ZonePlane p)
-		{
-			UInt32	side	=0;
-			Vector3	corner0	=Vector3.Zero;
-			Vector3	corner1	=Vector3.Zero;
-			float	dist1, dist2;
-
-			//Axial planes are easy
-			if(p.mType < ZonePlane.PLANE_ANYX)
-			{
-				if(UtilityLib.Mathery.VecIdx(box.Max, p.mType) >= p.mDist)
-				{
-					side	|=ZonePlane.PSIDE_FRONT;
-				}
-				if(UtilityLib.Mathery.VecIdx(box.Min, p.mType) < p.mDist)
-				{
-					side	|=ZonePlane.PSIDE_BACK;
-				}
-				return	side;
-			}
-
-			//Create the proper leading and trailing verts for the box
-			if(p.mNormal.X < 0)
-			{
-				corner0.X	=box.Min.X;
-				corner1.X	=box.Max.X;
-			}
-			else
-			{
-				corner1.X	=box.Min.X;
-				corner0.X	=box.Max.X;
-			}
-			if(p.mNormal.Y < 0)
-			{
-				corner0.Y	=box.Min.Y;
-				corner1.Y	=box.Max.Y;
-			}
-			else
-			{
-				corner1.Y	=box.Min.Y;
-				corner0.Y	=box.Max.Y;
-			}
-			if(p.mNormal.Z < 0)
-			{
-				corner0.Z	=box.Min.Z;
-				corner1.Z	=box.Max.Z;
-			}
-			else
-			{
-				corner1.Z	=box.Min.Z;
-				corner0.Z	=box.Max.Z;
-			}
-
-			dist1	=Vector3.Dot(p.mNormal, corner0) - p.mDist;
-			dist2	=Vector3.Dot(p.mNormal, corner1) - p.mDist;
-			
-			if(dist1 >= 0)
-			{
-				side	=ZonePlane.PSIDE_FRONT;
-			}
-			if(dist2 < 0)
-			{
-				side	|=ZonePlane.PSIDE_BACK;
-			}
-			return	side;
 		}
 	}
 }
