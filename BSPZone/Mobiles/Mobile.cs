@@ -44,14 +44,12 @@ namespace BSPZone
 		//offset from the boundingbox center to the eye position
 		Vector3		mEyeHeight;
 
-		//camera stuff if needed
-		BoundingBox	mCamBox;
-
 		//constants
-		const float MidAirMoveScale	=0.03f;
-		const float	JumpVelocity	=1.5f;
-		const float	Friction		=0.6f;
-		const float	MinCamDist		=10f;
+		const float MidAirMoveScale		=0.03f;
+		const float	JumpVelocity		=1.5f;
+		const float	Friction			=0.6f;
+		const float	MinCamDist			=10f;
+		const float	CamCollisionRadius	=4f;
 
 
 		public Mobile(object owner, float boxWidth, float boxHeight,
@@ -63,16 +61,17 @@ namespace BSPZone
 			mBoxMiddleOffset	=Vector3.UnitY * ((mBox.Max.Y - mBox.Min.Y) * 0.5f);
 			mbPushable			=bPushable;
 			mTHelper			=th;
-
-			//small box for camera collision
-			mCamBox	=Misc.MakeBox(2f, 2f);
 		}
 
 
 		public void SetZone(Zone z)
 		{
 			mZone	=z;
-			mZone.RegisterPushable(this, mBox, mPosition, mModelOn);
+
+			if(mbPushable)
+			{
+				mZone.RegisterPushable(this, mBox, mPosition, mModelOn);
+			}
 
 			//clear state
 			mbOnGround	=false;
@@ -241,7 +240,7 @@ namespace BSPZone
 			Vector3		impacto		=Vector3.Zero;
 			ZonePlane	planeHit	=ZonePlane.Blank;
 			int			modelHit	=0;
-//			if(mZone.TraceAllBox(mCamBox, camPos, mobCamPos, ref modelHit, ref impacto, ref planeHit))
+			if(mZone.TraceAllSphere(CamCollisionRadius, camPos, mobCamPos, ref modelHit, ref impacto, ref planeHit))
 			{
 				mobCamPos	=impacto;
 			}

@@ -534,7 +534,7 @@ namespace BSPZone
 
 			rt.mOriginalStart	=footPos;
 			rt.mOriginalEnd		=footCheck;
-			rt.mMoveBox			=box;
+			rt.mBounds			=box;
 			if(TraceBoxNode(rt, rt.mOriginalStart, rt.mOriginalEnd, 0))
 //			if(TraceAllBox(box, footPos, footCheck, ref modelOn, ref impVec, ref footPlane))
 			{
@@ -583,7 +583,7 @@ namespace BSPZone
 			//to make sure there's head room
 			rt.mOriginalStart	=start;
 			rt.mOriginalEnd		=start + stairAxis * stepHeight;
-			rt.mMoveBox			=box;
+			rt.mBounds			=box;
 			if(TraceBoxNode(rt, rt.mOriginalStart, rt.mOriginalEnd, 0))
 			{
 				//hit noggin, just use previous point
@@ -801,7 +801,7 @@ namespace BSPZone
 
 				//first trace up from the start point to world
 				//to make sure there's head room
-				rt.mMoveBox			=box;
+				rt.mBounds			=box;
 				if(!TraceFakeOrientedBoxModel(rt, start, end, zm))
 				{
 					break;
@@ -817,7 +817,8 @@ namespace BSPZone
 
 				Debug.Assert(startDist > 0f && dist < 0f);
 
-				end	-=(rt.mBestPlane.mNormal * (dist - Mathery.VCompareEpsilon));
+				//use a little bit bigger epsilon here
+				end	-=(rt.mBestPlane.mNormal * (dist - Mathery.ON_EPSILON));
 				
 				if(!hitPlanes.Contains(rt.mBestPlane))
 				{
@@ -853,7 +854,7 @@ namespace BSPZone
 
 				rt.mOriginalStart	=start;
 				rt.mOriginalEnd		=end;
-				rt.mMoveBox			=box;
+				rt.mBounds			=box;
 
 				segments.Add(start);
 				segments.Add(end);
@@ -894,7 +895,7 @@ namespace BSPZone
 
 				rt.mOriginalStart	=start;
 				rt.mOriginalEnd		=end;
-				rt.mMoveBox			=box;
+				rt.mBounds			=box;
 
 				bool	bHitSomething	=TraceBoxNode(rt, start, end, 0);
 				if(!bHitSomething)
@@ -1048,7 +1049,7 @@ namespace BSPZone
 				}
 
 				RayTrace	rt	=new RayTrace();
-				rt.mMoveBox		=box;
+				rt.mBounds		=box;
 				if(TraceFakeOrientedBoxTrigger(rt, start, end, mZoneModels[zt.mModelNum]))
 				{
 					if(zt.mTimeSinceTriggered > zt.mWait)
@@ -1087,7 +1088,7 @@ namespace BSPZone
 				}
 
 				RayTrace	rt	=new RayTrace();
-				rt.mMoveBox		=box;
+				rt.mBounds		=box;
 				if(TraceFakeOrientedBoxTrigger(rt, start, end, mZoneModels[zt.mModelNum]))
 				{
 					continue;

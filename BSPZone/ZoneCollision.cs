@@ -14,9 +14,9 @@ namespace BSPZone
 		internal Vector3		mIntersection;
 		internal ZonePlane		mBestPlane;
 		internal bool			mbHitSet;
-		internal BoundingBox	mMoveBox;
+		internal BoundingBox	mBounds;
 		internal float			mRadius;
-		internal bool			mbStartInside, mbEndInside;
+		internal bool			mbStartInside;
 
 		internal RayTrace()
 		{
@@ -227,7 +227,7 @@ namespace BSPZone
 
 			rt.mOriginalStart	=start;
 			rt.mOriginalEnd		=end;
-			rt.mMoveBox			=boxBounds;
+			rt.mBounds			=boxBounds;
 
 			for(int i=1;i < mZoneModels.Length;i++)
 			{
@@ -569,7 +569,7 @@ namespace BSPZone
 
 		bool TraceFakeOrientedBoxModel(RayTrace rt, Vector3 start, Vector3 end, ZoneModel mod)
 		{
-			FakeOrientBoxCollisionToModel(mod, ref rt.mMoveBox, ref start, ref end);
+			FakeOrientBoxCollisionToModel(mod, ref rt.mBounds, ref start, ref end);
 
 			rt.mOriginalStart	=start;
 			rt.mOriginalEnd		=end;
@@ -587,7 +587,7 @@ namespace BSPZone
 
 		bool TraceFakeOrientedBoxTrigger(RayTrace rt, Vector3 start, Vector3 end, ZoneModel mod)
 		{
-			FakeOrientBoxCollisionToModel(mod, ref rt.mMoveBox, ref start, ref end);
+			FakeOrientBoxCollisionToModel(mod, ref rt.mBounds, ref start, ref end);
 
 			rt.mOriginalStart	=start;
 			rt.mOriginalEnd		=end;
@@ -607,10 +607,6 @@ namespace BSPZone
 
 				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_TRIGGER))
 				{
-					if(IsPointInLeaf(trace, end, zl))
-					{
-						trace.mbEndInside	=true;
-					}
 					return	true;
 				}
 				return	false;
@@ -619,7 +615,7 @@ namespace BSPZone
 			ZoneNode	zn	=mZoneNodes[node];
 			ZonePlane	p	=mZonePlanes[zn.mPlaneNum];
 
-			float	dist	=Math.Abs(Vector3.Dot(trace.mMoveBox.Max, p.mNormal));
+			float	dist	=Math.Abs(Vector3.Dot(trace.mBounds.Max, p.mNormal));
 
 			Vector3	clipStart, clipEnd;
 			if(PartBehind(p, -dist, start, end, out clipStart, out clipEnd))
@@ -633,14 +629,6 @@ namespace BSPZone
 			if(PartFront(p, -dist, start, end, out clipStart, out clipEnd))
 			{
 				bHit	|=TraceBoxNodeTrigger(trace, clipStart, clipEnd, zn.mFront);
-				if(bHit)
-				{
-					if(trace.mbHitSet)
-					{
-						trace.mBestPlane	=p;
-						trace.mbHitSet		=false;
-					}
-				}
 				return	bHit;
 			}
 			return	bHit;
@@ -669,7 +657,7 @@ namespace BSPZone
 			ZoneNode	zn	=mZoneNodes[node];
 			ZonePlane	p	=mZonePlanes[zn.mPlaneNum];
 
-			float	dist	=Math.Abs(Vector3.Dot(trace.mMoveBox.Max, p.mNormal));
+			float	dist	=Math.Abs(Vector3.Dot(trace.mBounds.Max, p.mNormal));
 
 			Vector3	clipStart, clipEnd;
 			if(PartBehind(p, -dist, start, end, out clipStart, out clipEnd))
@@ -683,14 +671,6 @@ namespace BSPZone
 			if(PartFront(p, -dist, start, end, out clipStart, out clipEnd))
 			{
 				bHit	|=TraceBoxNode(trace, clipStart, clipEnd, zn.mFront);
-				if(bHit)
-				{
-					if(trace.mbHitSet)
-					{
-						trace.mBestPlane	=p;
-						trace.mbHitSet		=false;
-					}
-				}
 				return	bHit;
 			}
 			return	bHit;
@@ -801,7 +781,7 @@ namespace BSPZone
 					p.Inverse();
 				}
 
-				p.mDist	+=Math.Abs(Vector3.Dot(trace.mMoveBox.Max, p.mNormal));
+				p.mDist	+=Math.Abs(Vector3.Dot(trace.mBounds.Max, p.mNormal));
 
 				float	frontDist	=p.DistanceFast(start);
 				float	backDist	=p.DistanceFast(end);
@@ -873,7 +853,7 @@ namespace BSPZone
 					p.Inverse();
 				}
 
-				p.mDist	+=Math.Abs(Vector3.Dot(trace.mMoveBox.Max, p.mNormal));
+				p.mDist	+=Math.Abs(Vector3.Dot(trace.mBounds.Max, p.mNormal));
 
 				float	dist	=p.DistanceFast(point);
 				if(dist > 0)
