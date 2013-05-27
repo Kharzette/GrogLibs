@@ -119,13 +119,23 @@ namespace BSPZone
 			{
 				if(mMover.Done())
 				{
-					return	true;
+					if(mbRotateToTarget)
+					{
+						return	true;
+					}
+					if(mRotationRate == Vector3.Zero)
+					{
+						return	true;
+					}
 				}
 
-				mMover.Update(msDelta);
+				if(!mMover.Done())
+				{
+					mMover.Update(msDelta);
 
-				//do the move
-				z.MoveModelTo(mModelIndex, mMover.GetPos());
+					//do the move
+					z.MoveModelTo(mModelIndex, mMover.GetPos());
+				}
 
 				//update rotation if any
 				if(mbRotateToTarget)
@@ -160,7 +170,7 @@ namespace BSPZone
 				Apply3DToSound(mSoundForward, lis, mEmitter);
 				Apply3DToSound(mSoundBackward, lis, mEmitter);
 
-				return	mMover.Done();
+				return	false;
 			}
 		}
 

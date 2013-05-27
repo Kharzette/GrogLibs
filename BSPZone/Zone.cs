@@ -401,6 +401,27 @@ namespace BSPZone
 
 			Matrix	newMat		=zm.mTransform;
 
+			//stuff rotating in y, bipeds should be able to stand on it
+			//as it moves, might look odd at high speeds
+			foreach(KeyValuePair<object, Pushable> pa in mPushables)
+			{
+				//if any are riding on this model, move them too
+				if(pa.Value.mModelOn == modelIndex)
+				{
+					//get riding on position relative to model's previous frame position
+					Vector3	start	=Vector3.Transform(pa.Value.mWorldCenter, oldMatInv);
+
+					//transform by this frame's mat
+					Vector3	end	=Vector3.Transform(start, newMat);
+
+					//get delta
+					end	-=pa.Value.mWorldCenter;
+
+					Misc.SafeInvoke(ePushObject, pa.Value.mContext, new Vector3EventArgs(end));
+				}
+			}
+
+
 			CollideModel(modelIndex, newMat, oldMatInv);
 		}
 
@@ -577,6 +598,7 @@ namespace BSPZone
 
 				if(footPlane.IsGround())
 				{
+					modelOn	=modelHit;
 					return	true;
 				}
 			}

@@ -85,6 +85,12 @@ namespace BSPZone
 		}
 
 
+		public int GetModelOn()
+		{
+			return	mModelOn;
+		}
+
+
 		public BoundingBox GetBounds()
 		{
 			return	mBox;
