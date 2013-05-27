@@ -119,11 +119,11 @@ namespace BSPZone
 			{
 				if(mMover.Done())
 				{
-					if(mbRotateToTarget)
+					if(mbRotateToTarget && mRotator.Done())
 					{
 						return	true;
 					}
-					if(mRotationRate == Vector3.Zero)
+					if(!mbRotateToTarget && mRotationRate == Vector3.Zero)
 					{
 						return	true;
 					}

@@ -875,7 +875,54 @@ namespace BSPZone
 		//simulate movement and record the positions involved
 		public void MoveBoxDebug(BoundingBox box, Vector3 start, Vector3 end, List<Vector3> segments)
 		{
-			MoveBoxWorldDebug(box, start, end, segments);
+//			MoveBoxWorldDebug(box, start, end, segments);
+			MoveBoxModelsDebug(box, start, end, segments);
+		}
+
+
+		//returns true if move was a success and endpoint is safe
+		void MoveBoxModelsDebug(BoundingBox box, Vector3 start, Vector3 end, List<Vector3> segments)
+		{
+			Vector3		impacto		=Vector3.Zero;
+			int			i			=0;
+			int			modelHit	=0;
+
+			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
+
+			//do model collisions
+			for(i=0;i < MaxMoveBoxIterations;i++)
+			{
+				ZonePlane	zp				=ZonePlane.Blank;
+				bool		bHitSomething	=false;
+
+				bool	bStartInSolid	=false;
+
+				segments.Add(start);
+				segments.Add(end);
+
+				bHitSomething	=TraceModelsBox(box, start, end,
+					ref modelHit, ref impacto, ref zp, ref bStartInSolid);
+
+				if(!bHitSomething)
+				{
+					break;
+				}
+
+				if(bStartInSolid)
+				{
+					return;
+				}
+
+				float	startDist	=zp.DistanceFast(start);
+				float	dist		=zp.DistanceFast(end);
+
+				if(!hitPlanes.Contains(zp))
+				{
+					hitPlanes.Add(zp);
+				}
+
+				end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
+			}
 		}
 
 
