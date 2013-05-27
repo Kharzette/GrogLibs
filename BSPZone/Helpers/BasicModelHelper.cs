@@ -13,236 +13,160 @@ namespace BSPZone
 	{
 		Zone	mZone;
 
-		class SingleStageModel
+		class ModelStages
+		{
+			internal int	mCurStage;
+			internal bool	mbForward;
+			internal bool	mbActive;
+
+			internal List<ModelMoveStage>	mStages	=new List<ModelMoveStage>();
+		}
+
+		class ModelMoveStage
 		{
 			internal int		mModelIndex;
 			internal Vector3	mOrigin;
-			internal bool		mbOpening;
+			internal bool		mbForward;
 			internal Vector3	mMoveAxis;
 			internal float		mMoveAmount;
-			internal float		mMoveInterval;
+			internal Vector3	mRotationTarget, mRotationRate;	//xyz
+			internal bool		mbRotateToTarget;
+			internal float		mStageInterval;
 			internal float		mEaseIn, mEaseOut;
 
-			internal SoundEffectInstance	mSoundOpen, mSoundClose;
+			internal SoundEffectInstance	mSoundForward, mSoundBackward;
 
 			internal AudioEmitter	mEmitter;
 
-			internal Mover3	mMover	=new Mover3();
+			internal Mover3	mMover		=new Mover3();
+			internal Mover3	mRotator	=new Mover3();
 
-			internal void Fire(bool bOpen)
+			internal void Fire(bool bForward)
 			{
-				if(mbOpening == bOpen)
+				if(mbForward == bForward)
 				{
 					return;
 				}
-				mbOpening	=bOpen;
+				mbForward	=bForward;
 
-				if(mbOpening)
+				if(mbForward)
 				{
-					if(mSoundOpen != null)
+					if(mSoundForward != null)
 					{
-						mSoundOpen.Play();
+						mSoundForward.Play();
 					}
+
 					if(mMover.Done())
 					{
 						mMover.SetUpMove(mOrigin, mOrigin + mMoveAxis * mMoveAmount,
-							mMoveInterval, mEaseIn, mEaseOut);
+							mStageInterval, mEaseIn, mEaseOut);
 					}
 					else
 					{
 						mMover.SetUpMove(mMover.GetPos(), mOrigin + mMoveAxis * mMoveAmount,
-							mMoveInterval, mEaseIn, mEaseOut);
+							mStageInterval, mEaseIn, mEaseOut);
+					}
+
+					if(mbRotateToTarget)
+					{
+						if(mRotator.Done())
+						{
+							mRotator.SetUpMove(Vector3.Zero, mRotationTarget,
+								mStageInterval, mEaseIn, mEaseOut);
+						}
+						else
+						{
+							mRotator.SetUpMove(mRotator.GetPos(), mRotationTarget,
+								mStageInterval, mEaseIn, mEaseOut);
+						}
 					}
 				}
 				else
 				{
-					if(mSoundClose != null)
+					if(mSoundBackward != null)
 					{
-						mSoundClose.Play();
+						mSoundBackward.Play();
 					}
 					if(mMover.Done())
 					{
 						mMover.SetUpMove(mOrigin + mMoveAxis * mMoveAmount,
-							mOrigin, mMoveInterval, mEaseIn, mEaseOut);
+							mOrigin, mStageInterval, mEaseIn, mEaseOut);
 					}
 					else
 					{
 						mMover.SetUpMove(mMover.GetPos(), mOrigin,
-							mMoveInterval, mEaseIn, mEaseOut);
+							mStageInterval, mEaseIn, mEaseOut);
+					}
+
+					if(mbRotateToTarget)
+					{
+						if(mRotator.Done())
+						{
+							mRotator.SetUpMove(mRotationTarget, Vector3.Zero,
+								mStageInterval, mEaseIn, mEaseOut);
+						}
+						else
+						{
+							mRotator.SetUpMove(mRotationTarget, mRotator.GetPos(),
+								mStageInterval, mEaseIn, mEaseOut);
+						}
 					}
 				}
 			}
 
 
-			internal void Update(int msDelta, Zone z, AudioListener lis)
+			internal bool Update(int msDelta, Zone z, AudioListener lis)
 			{
 				if(mMover.Done())
 				{
-					return;
+					return	true;
 				}
 
 				mMover.Update(msDelta);
 
+				//do the move
 				z.MoveModelTo(mModelIndex, mMover.GetPos());
 
-				mEmitter.Position	=mMover.GetPos() * Audio.InchWorldScale;
-
-				Apply3DToSound(mSoundOpen, lis, mEmitter);
-				Apply3DToSound(mSoundClose, lis, mEmitter);
-			}
-		}
-		
-		class DoubleStageModel
-		{
-			internal int		mModelIndex;
-			internal Vector3	mOrigin;
-			internal bool		mbOpening, mbStageTwo;
-			internal Vector3	mMoveAxis1, mMoveAxis2;
-			internal float		mMoveAmount1, mMoveAmount2;
-			internal float		mMoveInterval1, mMoveInterval2;
-			internal float		mEaseIn1, mEaseOut1;
-			internal float		mEaseIn2, mEaseOut2;
-
-			internal SoundEffectInstance	mOpen1Sound, mOpen2Sound;
-			internal SoundEffectInstance	mClose1Sound, mClose2Sound;
-
-			internal AudioEmitter	mEmitter;
-
-			internal Mover3	mMover	=new Mover3();
-
-			internal void Fire(bool bOpen)
-			{
-				if(mbOpening == bOpen)
+				//update rotation if any
+				if(mbRotateToTarget)
 				{
-					return;
-				}
-				mbOpening	=bOpen;
+					if(!mRotator.Done())
+					{
+						Vector3	rotPreUpdate	=mRotator.GetPos();
 
-				if(mbOpening)
-				{
-					if(mbStageTwo)
-					{
-						PlaySound(mOpen2Sound);
-						Vector3	stageOneEnd	=mOrigin + mMoveAxis1 * mMoveAmount1;
-						if(mMover.Done())
-						{
-							mMover.SetUpMove(stageOneEnd,
-								stageOneEnd + mMoveAxis2 * mMoveAmount2,
-								mMoveInterval2, mEaseIn2, mEaseOut2);
-						}
-						else
-						{
-							mMover.SetUpMove(mMover.GetPos(),
-								stageOneEnd + mMoveAxis2 * mMoveAmount2,
-								mMoveInterval2, mEaseIn2, mEaseOut2);
-						}
-					}
-					else
-					{
-						PlaySound(mOpen1Sound);
-						if(mMover.Done())
-						{
-							mMover.SetUpMove(mOrigin, mOrigin + mMoveAxis1 * mMoveAmount1,
-								mMoveInterval1, mEaseIn1, mEaseOut1);
-						}
-						else
-						{
-							mMover.SetUpMove(mMover.GetPos(), mOrigin + mMoveAxis1 * mMoveAmount1,
-								mMoveInterval1, mEaseIn1, mEaseOut1);
-						}
+						mRotator.Update(msDelta);
+
+						Vector3	rotPostUpdate	=mRotator.GetPos();
+
+						z.RotateModelX(mModelIndex, rotPostUpdate.X - rotPreUpdate.X);
+						z.RotateModelY(mModelIndex, rotPostUpdate.Y - rotPreUpdate.Y);
+						z.RotateModelZ(mModelIndex, rotPostUpdate.Z - rotPreUpdate.Z);
 					}
 				}
 				else
 				{
-					if(mbStageTwo)
+					Vector3	rotAmount	=mRotationRate * msDelta;
+
+					if(rotAmount != Vector3.Zero)
 					{
-						PlaySound(mClose2Sound);
-						Vector3	stageOneEnd	=mOrigin + mMoveAxis1 * mMoveAmount1;
-						if(mMover.Done())
-						{
-							mMover.SetUpMove(stageOneEnd + mMoveAxis2 * mMoveAmount2,
-								stageOneEnd, mMoveInterval2, mEaseIn2, mEaseOut2);
-						}
-						else
-						{
-							mMover.SetUpMove(mMover.GetPos(), stageOneEnd,
-								mMoveInterval2, mEaseIn2, mEaseOut2);
-						}
-					}
-					else
-					{
-						PlaySound(mClose1Sound);
-						if(mMover.Done())
-						{
-							mMover.SetUpMove(mOrigin + mMoveAxis1 * mMoveAmount1,
-								mOrigin, mMoveInterval1, mEaseIn1, mEaseOut1);
-						}
-						else
-						{
-							mMover.SetUpMove(mMover.GetPos(), mOrigin,
-								mMoveInterval1, mEaseIn1, mEaseOut1);
-						}
+						z.RotateModelX(mModelIndex, rotAmount.X);
+						z.RotateModelY(mModelIndex, rotAmount.Y);
+						z.RotateModelZ(mModelIndex, rotAmount.Z);
 					}
 				}
-			}
-
-
-			void PlaySound(SoundEffectInstance sei)
-			{
-				if(sei != null)
-				{
-					sei.Play();
-				}
-			}
-
-
-			internal void Update(int msDelta, Zone z, AudioListener lis)
-			{
-				if(mMover.Done())
-				{
-					if(mbOpening)
-					{
-						if(!mbStageTwo)
-						{
-							PlaySound(mOpen2Sound);
-							mbStageTwo			=true;
-							Vector3	stageOneEnd	=mOrigin + mMoveAxis1 * mMoveAmount1;
-							mMover.SetUpMove(stageOneEnd,
-								stageOneEnd + mMoveAxis2 * mMoveAmount2,
-								mMoveInterval2, mEaseIn2, mEaseOut2);
-						}
-					}
-					else
-					{
-						if(mbStageTwo)
-						{
-							PlaySound(mClose1Sound);
-							mbStageTwo			=false;
-							Vector3	stageOneEnd	=mOrigin + mMoveAxis1 * mMoveAmount1;
-							mMover.SetUpMove(stageOneEnd, mOrigin,
-								mMoveInterval2, mEaseIn2, mEaseOut2);
-						}
-					}
-					return;
-				}
-
-				mMover.Update(msDelta);
-
-				z.MoveModelTo(mModelIndex, mMover.GetPos());
 
 				mEmitter.Position	=mMover.GetPos() * Audio.InchWorldScale;
 
-				Apply3DToSound(mOpen1Sound, lis, mEmitter);
-				Apply3DToSound(mOpen2Sound, lis, mEmitter);
-				Apply3DToSound(mClose1Sound, lis, mEmitter);
-				Apply3DToSound(mClose2Sound, lis, mEmitter);
+				Apply3DToSound(mSoundForward, lis, mEmitter);
+				Apply3DToSound(mSoundBackward, lis, mEmitter);
+
+				return	mMover.Done();
 			}
 		}
 
-		Dictionary<int, SingleStageModel>	mSSMs	=new Dictionary<int, SingleStageModel>();
-		Dictionary<int, DoubleStageModel>	mDSMs	=new Dictionary<int, DoubleStageModel>();
+		Dictionary<int, ModelStages>	mModelStages	=new Dictionary<int, ModelStages>();
 
-
+		
 		public BasicModelHelper(){}
 
 
@@ -250,140 +174,88 @@ namespace BSPZone
 		{
 			mZone	=zone;
 
-			mSSMs.Clear();
-			mDSMs.Clear();
+			mModelStages.Clear();
 
-			//grab doors and lifts
-			List<ZoneEntity>	doors	=zone.GetEntitiesStartsWith("func_door");
-			List<ZoneEntity>	Lifts	=zone.GetEntitiesStartsWith("func_plat");
+			//grab doors and lifts and such
+			List<ZoneEntity>	funcs	=zone.GetEntitiesStartsWith("func_");
 
-			//dump them together
-			doors.AddRange(Lifts);
-
-			foreach(ZoneEntity ze in doors)
+			foreach(ZoneEntity ze in funcs)
 			{
 				int		model;
 				Vector3	org;
 
-				ze.GetInt("Model", out model);
-				ze.GetVectorNoConversion("ModelOrigin", out org);
-
-				SingleStageModel	d	=new SingleStageModel();
-				d.mModelIndex			=model;
-				d.mOrigin				=org;
-				d.mEmitter				=new AudioEmitter();
-
-				string	dopen	=ze.GetValue("open_sound");
-				string	dclose	=ze.GetValue("close_sound");
-				string	praise	=ze.GetValue("raise_sound");
-				string	plower	=ze.GetValue("lower_sound");
-
-				if(dopen != "")
+				if(!ze.GetInt("Model", out model))
 				{
-					d.mSoundOpen	=aud.GetInstance(dopen, false);
+					continue;
 				}
-				else
+				if(!ze.GetVectorNoConversion("ModelOrigin", out org))
 				{
-					d.mSoundOpen	=aud.GetInstance(praise, false);
+					continue;
 				}
 
-				if(dclose != "")
-				{
-					d.mSoundClose	=aud.GetInstance(dclose, false);
-				}
-				else
-				{
-					d.mSoundClose	=aud.GetInstance(plower, false);
-				}
-
-				d.mEmitter.Position	=org;
-
-				Apply3DToSound(d.mSoundOpen, lis, d.mEmitter);
-				Apply3DToSound(d.mSoundClose, lis, d.mEmitter);
-
-				ze.GetFloat("move_amount", out d.mMoveAmount);
-				ze.GetFloat("move_interval", out d.mMoveInterval);
-				ze.GetFloat("ease_in", out d.mEaseIn);
-				ze.GetFloat("ease_out", out d.mEaseOut);
-				ze.GetDirectionFromAngles("move_angles", out d.mMoveAxis);
-
-				mSSMs.Add(model, d);
-			}
-
-			//grab secret doors for the 2 stage stuff
-			List<ZoneEntity>	walls	=zone.GetEntitiesStartsWith("func_wall");
-			foreach(ZoneEntity ze in walls)
-			{
-				int		model;
-				Vector3	org;
-
-				ze.GetInt("Model", out model);
-				ze.GetVectorNoConversion("ModelOrigin", out org);
-
-				DoubleStageModel	d	=new DoubleStageModel();
-				d.mModelIndex			=model;
-				d.mOrigin				=org;
-				d.mEmitter				=new AudioEmitter();
-				d.mEmitter.Position		=org;
-
-				string	fopen	=ze.GetValue("first_open_sound");
-				string	fclose	=ze.GetValue("first_close_sound");
-				string	sopen	=ze.GetValue("second_open_sound");
-				string	sclose	=ze.GetValue("second_close_sound");
-
-				d.mOpen1Sound	=aud.GetInstance(fopen, false);
-				d.mClose1Sound	=aud.GetInstance(fclose, false);
-				d.mOpen2Sound	=aud.GetInstance(sopen, false);
-				d.mClose2Sound	=aud.GetInstance(sclose, false);
-
-				Apply3DToSound(d.mOpen1Sound, lis, d.mEmitter);
-				Apply3DToSound(d.mClose1Sound, lis, d.mEmitter);
-				Apply3DToSound(d.mOpen2Sound, lis, d.mEmitter);
-				Apply3DToSound(d.mClose2Sound, lis, d.mEmitter);
-
-				ze.GetFloat("move_amount_1", out d.mMoveAmount1);
-				ze.GetFloat("move_interval_1", out d.mMoveInterval1);
-				ze.GetFloat("ease_in_1", out d.mEaseIn1);
-				ze.GetFloat("ease_out_1", out d.mEaseOut1);
-				ze.GetFloat("move_amount_2", out d.mMoveAmount2);
-				ze.GetFloat("move_interval_2", out d.mMoveInterval2);
-				ze.GetFloat("ease_in_2", out d.mEaseIn2);
-				ze.GetFloat("ease_out_2", out d.mEaseOut2);
-				ze.GetDirectionFromAngles("move_angles_1", out d.mMoveAxis1);
-				ze.GetDirectionFromAngles("move_angles_2", out d.mMoveAxis2);
-
-				mDSMs.Add(model, d);
+				GetMoveStages(ze, model, org, aud, lis);
 			}
 		}
 
 
 		public void Update(int msDelta, AudioListener lis)
 		{
-			foreach(KeyValuePair<int, SingleStageModel> ssm in mSSMs)
+			foreach(KeyValuePair<int, ModelStages> mss in mModelStages)
 			{
-				ssm.Value.Update(msDelta, mZone, lis);
-			}
+				ModelStages	ms	=mss.Value;
+				if(!ms.mbActive)
+				{
+					continue;
+				}
 
-			foreach(KeyValuePair<int, DoubleStageModel> dsm in mDSMs)
-			{
-				dsm.Value.Update(msDelta, mZone, lis);
+				ModelMoveStage	mms	=ms.mStages[ms.mCurStage];
+
+				bool	bDone	=mms.Update(msDelta, mZone, lis);
+
+				if(bDone)
+				{
+					if(ms.mbForward)
+					{
+						if(ms.mStages.Count > (ms.mCurStage + 1))
+						{
+							ms.mCurStage++;
+							ms.mStages[ms.mCurStage].Fire(ms.mbForward);
+						}
+						else
+						{
+							ms.mbActive	=false;
+						}
+					}
+					else
+					{
+						if((ms.mCurStage - 1) >= 0)
+						{
+							ms.mCurStage--;
+							ms.mStages[ms.mCurStage].Fire(ms.mbForward);
+						}
+						else
+						{
+							ms.mbActive	=false;
+						}
+					}
+				}
 			}
 		}
 
 
 		public void SetState(int modelIndex, bool bOpen)
 		{
-			if(!mSSMs.ContainsKey(modelIndex))
+			if(!mModelStages.ContainsKey(modelIndex))
 			{
-				if(!mDSMs.ContainsKey(modelIndex))
-				{
-					return;
-				}
-				mDSMs[modelIndex].Fire(bOpen);
 				return;
 			}
 
-			mSSMs[modelIndex].Fire(bOpen);
+			ModelStages	ms	=mModelStages[modelIndex];
+
+			ms.mbActive		=true;
+			ms.mbForward	=bOpen;
+
+			ms.mStages[ms.mCurStage].Fire(bOpen);
 		}
 
 
@@ -394,6 +266,80 @@ namespace BSPZone
 			{
 				sei.Apply3D(al, em);
 			}
+		}
+
+
+		void GetMoveStages(ZoneEntity ze, int modelIdx, Vector3 org, Audio aud, AudioListener lis)
+		{
+			if(ze == null)
+			{
+				return;
+			}
+
+			string	moveTarg	=ze.GetValue("target");
+
+			if(moveTarg == "")
+			{
+				return;
+			}
+
+			if(moveTarg == null || moveTarg == "")
+			{
+				return;
+			}
+
+			List<ZoneEntity>	targs	=mZone.GetEntitiesByTargetName(moveTarg);
+
+			Debug.Assert(targs.Count < 2);
+
+			if(targs.Count != 1)
+			{
+				return;
+			}
+
+			ZoneEntity	targ	=targs[0];
+
+			if(!mModelStages.ContainsKey(modelIdx))
+			{
+				ModelStages	stages	=new ModelStages();
+				mModelStages.Add(modelIdx, stages);
+			}
+
+			ModelMoveStage	mms	=new ModelMoveStage();
+			mms.mModelIndex		=modelIdx;
+			mms.mOrigin			=org;
+			mms.mEmitter		=new AudioEmitter();
+
+			string	forward	=targ.GetValue("sound_forward");
+			string	back	=targ.GetValue("sound_backward");
+
+			mms.mSoundForward	=aud.GetInstance(forward, false);
+			mms.mSoundBackward	=aud.GetInstance(back, false);
+
+			mms.mEmitter.Position	=org;
+
+			Apply3DToSound(mms.mSoundForward, lis, mms.mEmitter);
+			Apply3DToSound(mms.mSoundBackward, lis, mms.mEmitter);
+
+			targ.GetVectorNoConversion("rotation_target", out mms.mRotationTarget);
+			targ.GetVectorNoConversion("rotation_rate", out mms.mRotationRate);
+
+			targ.GetBool("rotate_to_target", out mms.mbRotateToTarget);
+
+			targ.GetFloat("move_amount", out mms.mMoveAmount);
+			targ.GetFloat("stage_interval", out mms.mStageInterval);
+			targ.GetFloat("ease_in", out mms.mEaseIn);
+			targ.GetFloat("ease_out", out mms.mEaseOut);
+			targ.GetDirectionFromAngles("move_axis", out mms.mMoveAxis);
+
+			mModelStages[modelIdx].mStages.Add(mms);
+
+			//movers work in seconds
+			mms.mStageInterval	/=1000f;
+
+			//recurse, offsetting by move amount
+			//TODO: rotation amount too
+			GetMoveStages(targ, modelIdx, org + (mms.mMoveAmount * mms.mMoveAxis), aud, lis);
 		}
 	}
 }

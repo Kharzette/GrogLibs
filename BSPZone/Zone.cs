@@ -362,6 +362,11 @@ namespace BSPZone
 				return;
 			}
 
+			if(degrees == 0f)
+			{
+				return;
+			}
+
 			ZoneModel	zm	=mZoneModels[modelIndex];
 
 			Matrix	oldMatInv	=zm.mInvertedTransform;
@@ -382,6 +387,11 @@ namespace BSPZone
 				return;
 			}
 
+			if(degrees == 0f)
+			{
+				return;
+			}
+
 			ZoneModel	zm	=mZoneModels[modelIndex];
 
 			Matrix	oldMatInv	=zm.mInvertedTransform;
@@ -398,6 +408,11 @@ namespace BSPZone
 		public void RotateModelZ(int modelIndex, float degrees)
 		{
 			if(mZoneModels.Length <= modelIndex)
+			{
+				return;
+			}
+
+			if(degrees == 0f)
 			{
 				return;
 			}

@@ -87,7 +87,7 @@ namespace BSPZone
 			{
 				if(ze.mData.ContainsKey("targetname"))
 				{
-					if(targName.Contains(ze.mData["targetname"]))
+					if(targName == ze.mData["targetname"])
 					{
 						ret.Add(ze);
 					}
