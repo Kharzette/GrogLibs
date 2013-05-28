@@ -581,9 +581,14 @@ namespace BSPZone
 		}
 
 
-		//finds the depth of intersection, this is for when
-		//a start position on the plane shifter is in solid
-		Vector3 IntersectBoxModel(BoundingBox box, Vector3 pos, ZoneModel mod)
+		public bool IntersectBoxModel(BoundingBox box, Vector3 pos, int modelIndex)
+		{
+			return	IntersectBoxModel(box, pos, mZoneModels[modelIndex]);
+		}
+
+
+		//look for a collision
+		bool IntersectBoxModel(BoundingBox box, Vector3 pos, ZoneModel mod)
 		{
 #if DEBUG
 			Debug.Assert(Mathery.IsBoundingBoxCentered(box));
@@ -603,16 +608,8 @@ namespace BSPZone
 
 			Mathery.CenterBoundingBoxAtOrigin(ref box);
 
-			List<ZonePlane>	planes	=new List<ZonePlane>();
-			if(IntersectBoxNode(box, pos, mod.mRootNode, planes))
-			{
-				foreach(ZonePlane zp in planes)
-				{
-					float	dist	=zp.DistanceFast(pos);
-					pos				-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
-				}
-			}
-			return	pos;
+			ZonePlane	zp	=ZonePlane.Blank;
+			return	IntersectBoxNode(box, pos, mod.mRootNode, ref zp);
 		}
 
 
@@ -708,7 +705,7 @@ namespace BSPZone
 		}
 
 
-		bool IntersectBoxNode(BoundingBox box, Vector3 pos, Int32 node, List<ZonePlane> inPlanes)
+		bool IntersectBoxNode(BoundingBox box, Vector3 pos, Int32 node, ref ZonePlane planeHit)
 		{
 			bool	bHit	=false;
 
@@ -719,7 +716,7 @@ namespace BSPZone
 
 				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID_CLIP))
 				{
-					if(IntersectBoxLeaf(box, pos, zl, inPlanes))
+					if(IntersectBoxLeaf(box, pos, zl, ref planeHit))
 					{
 						return	true;
 					}
@@ -735,11 +732,11 @@ namespace BSPZone
 			Vector3	clipPos;
 			if(PartBehind(p, -dist, pos, pos, out clipPos, out clipPos))
 			{
-				bHit	=IntersectBoxNode(box, clipPos, zn.mBack, inPlanes);
+				bHit	=IntersectBoxNode(box, clipPos, zn.mBack, ref planeHit);
 			}
 			if(PartFront(p, -dist, pos, pos, out clipPos, out clipPos))
 			{
-				bHit	|=IntersectBoxNode(box, clipPos, zn.mFront, inPlanes);
+				bHit	|=IntersectBoxNode(box, clipPos, zn.mFront, ref planeHit);
 				return	bHit;
 			}
 			return	bHit;
@@ -905,13 +902,16 @@ namespace BSPZone
 		}
 
 
-		bool IntersectBoxLeaf(BoundingBox box, Vector3 pos, ZoneLeaf zl, List<ZonePlane> inPlanes)
+		bool IntersectBoxLeaf(BoundingBox box, Vector3 pos, ZoneLeaf zl, ref ZonePlane planeHit)
 		{
 			if(zl.mNumSides <= 0)
 			{
 				return	false;
 			}
 
+			bool		bIntersecting	=false;
+			float		bestDist		=float.MinValue;
+			ZonePlane	bestPlane		=ZonePlane.Blank;
 			for(int i=0;i < zl.mNumSides;i++)
 			{
 				ZoneLeafSide	side	=mZoneLeafSides[i + zl.mFirstSide];
@@ -925,17 +925,26 @@ namespace BSPZone
 				p.mDist	+=Math.Abs(Vector3.Dot(box.Max, p.mNormal));
 
 				float	dist	=p.DistanceFast(pos);
-				if(dist > 0)
+				if(dist >= 0)
 				{
 					return	false;	//not intersecting
 				}
 
+				if(dist > bestDist)
+				{
+					bestDist	=dist;
+					bestPlane	=p;
+				}
+
 				if(dist < 0)
 				{
-					inPlanes.Add(p);
+					bIntersecting	=true;
 				}
 			}
-			return	(inPlanes.Count > 0);
+
+			planeHit	=bestPlane;
+
+			return	bIntersecting;
 		}
 
 

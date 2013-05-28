@@ -253,6 +253,19 @@ namespace BSPZone
 		}
 
 
+		public bool GetState(int modelIndex)
+		{
+			if(!mModelStages.ContainsKey(modelIndex))
+			{
+				return	false;
+			}
+
+			ModelStages	ms	=mModelStages[modelIndex];
+
+			return	ms.mbForward;
+		}
+
+
 		public void SetState(int modelIndex, bool bOpen)
 		{
 			if(!mModelStages.ContainsKey(modelIndex))

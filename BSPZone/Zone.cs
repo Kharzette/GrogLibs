@@ -19,6 +19,12 @@ namespace BSPZone
 		}
 	}
 
+	public class ModelPushEventArgs : EventArgs
+	{
+		public int		mModelIndex;
+		public Vector3	mPushDelta;
+	}
+
 	internal class ZoneTrigger
 	{
 		internal ZoneEntity		mEntity;
@@ -303,12 +309,14 @@ namespace BSPZone
 				//push the starting point back a bit along the frame of rev vector
 				Vector3	dirVec	=newCenter - worldPos;
 
-				if(dirVec.LengthSquared() == 0f)
+				float	len	=dirVec.Length();
+
+				if(len == 0f)
 				{
 					return;
 				}
 
-				dirVec.Normalize();
+				dirVec	/=len;
 				dirVec	*=(pa.Value.mBox.Max.X * 0.5f);	//to adjust for corner expansion / contraction
 
 				Vector3	targPos	=newCenter + dirVec;
@@ -318,7 +326,10 @@ namespace BSPZone
 
 				if(pushedPos != worldPos)
 				{
-					Misc.SafeInvoke(ePushObject, pa.Value.mContext, new Vector3EventArgs(pushedPos - worldPos));
+					ModelPushEventArgs	mpea	=new ModelPushEventArgs();
+					mpea.mModelIndex			=modelIndex;
+					mpea.mPushDelta				=pushedPos - worldPos;
+					Misc.SafeInvoke(ePushObject, pa.Value.mContext, mpea);
 				}
 			}
 		}
@@ -345,7 +356,10 @@ namespace BSPZone
 				//if any are riding on this model, move them too
 				if(pa.Value.mModelOn == modelIndex)
 				{
-					Misc.SafeInvoke(ePushObject, pa.Value.mContext, new Vector3EventArgs(pos - oldPos));
+					ModelPushEventArgs	mpea	=new ModelPushEventArgs();
+					mpea.mModelIndex			=modelIndex;
+					mpea.mPushDelta				=pos - oldPos;
+					Misc.SafeInvoke(ePushObject, pa.Value.mContext, mpea);
 				}
 			}
 
@@ -417,7 +431,15 @@ namespace BSPZone
 					//get delta
 					end	-=pa.Value.mWorldCenter;
 
-					Misc.SafeInvoke(ePushObject, pa.Value.mContext, new Vector3EventArgs(end));
+					if(end == Vector3.Zero)
+					{
+						continue;
+					}
+
+					ModelPushEventArgs	mpea	=new ModelPushEventArgs();
+					mpea.mModelIndex			=modelIndex;
+					mpea.mPushDelta				=end;
+					Misc.SafeInvoke(ePushObject, pa.Value.mContext, mpea);
 				}
 			}
 
@@ -699,7 +721,8 @@ namespace BSPZone
 			}
 
 			Vector3	moveVec	=stepPos - start;
-			if(!bGroundStep || moveVec.LengthSquared() <= originalLenSquared)
+			//bias original a little
+			if(!bGroundStep || moveVec.LengthSquared() <= (originalLenSquared * 1.1f))
 			{
 				//earlier move was better
 				return	false;
@@ -719,15 +742,15 @@ namespace BSPZone
 		//this one assumes 2 legs, so navigates stairs
 		//TODO: This gets a bit strange on gentle slopes
 		public bool BipedMoveBox(BoundingBox box, Vector3 start, Vector3 end,
-			bool bPrevOnGround, bool bWorldOnly,
+			bool bPrevOnGround, bool bWorldOnly, bool bDistCheck,
 			out Vector3 finalPos, out bool bUsedStairs, ref int modelOn)
 		{
 			bUsedStairs	=false;
 
 			//first check if we are moving at all
 			Vector3	moveVec	=end - start;
-			float	delt	=moveVec.LengthSquared();
-			if(delt < Mathery.ANGLE_EPSILON)
+			float	delt	=moveVec.Length();
+			if(bDistCheck && delt < Mathery.ANGLE_EPSILON)
 			{
 				//didn't move enough to bother
 				finalPos	=start;
@@ -791,6 +814,7 @@ namespace BSPZone
 				return		true;
 			}
 
+
 			modelOn	=firstModelOn;
 
 			if(bGround)
@@ -852,10 +876,18 @@ namespace BSPZone
 				float	startDist	=rt.mBestPlane.DistanceFast(start);
 				float	dist		=rt.mBestPlane.DistanceFast(end);
 
-				Debug.Assert(startDist > 0f && dist < 0f);
+				if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
+				{
+					//place end directly on the plane
+					end	-=(rt.mBestPlane.mNormal * dist);
 
-				//use a little bit bigger epsilon here
-				end	-=(rt.mBestPlane.mNormal * (dist - Mathery.ON_EPSILON));
+					//adjust it to the front side
+					end	+=(rt.mBestPlane.mNormal * Mathery.VCompareEpsilon);
+				}
+				else
+				{
+					end	-=(rt.mBestPlane.mNormal * (dist - Mathery.VCompareEpsilon));
+				}
 				
 				if(!hitPlanes.Contains(rt.mBestPlane))
 				{
@@ -1085,14 +1117,17 @@ namespace BSPZone
 			bool	bWorldOk	=MoveBoxWorld(box, start, end, out finalPos);
 			if(!bWorldOk)
 			{
-				//TODO: report and solve via intersection
-				//can't solve!
-				finalPos	=start;
-				modelOn		=-1;
+				//solve via intersection
+				ZonePlane	zp	=ZonePlane.Blank;
+				if(IntersectBoxNode(box, start, 0, ref zp))
+				{
+					float	dist	=zp.DistanceFast(start);
 
-				//player is probably stuck
-				//give them footing to help break free
-				return	true;
+					finalPos	=start - (zp.mNormal * (dist - Mathery.VCompareEpsilon));
+
+					modelOn		=-1;
+					return	true;
+				}
 			}
 
 			if(!bWorldOnly)
