@@ -594,7 +594,6 @@ namespace BSPZone
 			rt.mOriginalEnd		=footCheck;
 			rt.mBounds			=box;
 			if(TraceBoxNode(rt, rt.mOriginalStart, rt.mOriginalEnd, 0))
-//			if(TraceAllBox(box, footPos, footCheck, ref modelOn, ref impVec, ref footPlane))
 			{
 				if(rt.mbStartInside)
 				{
@@ -629,7 +628,7 @@ namespace BSPZone
 
 
 		bool StairMove(BoundingBox box, Vector3 start, Vector3 end, Vector3 stairAxis,
-			bool bSlopeOk, float stepHeight, float originalLenSquared,
+			bool bSlopeOk, float stepHeight, float originalLen,
 			ref Vector3 stepPos, out int modelOn)
 		{
 			Vector3		impVec		=Vector3.Zero;
@@ -721,8 +720,9 @@ namespace BSPZone
 			}
 
 			Vector3	moveVec	=stepPos - start;
+
 			//bias original a little
-			if(!bGroundStep || moveVec.LengthSquared() <= (originalLenSquared * 1.1f))
+			if(!bGroundStep || moveVec.Length() <= (originalLen * 1.1f))
 			{
 				//earlier move was better
 				return	false;
@@ -754,7 +754,7 @@ namespace BSPZone
 			{
 				//didn't move enough to bother
 				finalPos	=start;
-				return		bPrevOnGround;
+				return		FootCheck(box, start, 4f, out modelOn);
 			}
 
 			//try the standard box move
@@ -767,7 +767,7 @@ namespace BSPZone
 			//see how far it went
 			moveVec	=finalPos - start;
 
-			float	deltMove	=moveVec.LengthSquared();
+			float	deltMove	=moveVec.Length();
 			if(delt / deltMove < 1.333f)
 			{
 				//3/4 the movement energy at least was expended
@@ -814,7 +814,6 @@ namespace BSPZone
 				return		true;
 			}
 
-
 			modelOn	=firstModelOn;
 
 			if(bGround)
@@ -833,7 +832,7 @@ namespace BSPZone
 		{
 			//first check if we are moving at all
 			Vector3	moveVec	=end - start;
-			float	delt	=moveVec.LengthSquared();
+			float	delt	=moveVec.Length();
 			if(delt <= 0f)
 			{
 				//didn't move enough to bother
@@ -876,6 +875,7 @@ namespace BSPZone
 				float	startDist	=rt.mBestPlane.DistanceFast(start);
 				float	dist		=rt.mBestPlane.DistanceFast(end);
 
+				//is the direction vector valid to find a collision response?
 				if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
 				{
 					//place end directly on the plane
@@ -948,12 +948,24 @@ namespace BSPZone
 				float	startDist	=zp.DistanceFast(start);
 				float	dist		=zp.DistanceFast(end);
 
+				//is the direction vector valid to find a collision response?
+				if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
+				{
+					//place end directly on the plane
+					end	-=(zp.mNormal * dist);
+
+					//adjust it to the front side
+					end	+=(zp.mNormal * Mathery.VCompareEpsilon);
+				}
+				else
+				{
+					end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
+				}
+
 				if(!hitPlanes.Contains(zp))
 				{
 					hitPlanes.Add(zp);
 				}
-
-				end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
 			}
 		}
 
@@ -989,11 +1001,24 @@ namespace BSPZone
 				float	startDist	=rt.mBestPlane.DistanceFast(start);
 				float	dist		=rt.mBestPlane.DistanceFast(end);
 
+				//is the direction vector valid to find a collision response?
+				if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
+				{
+					//place end directly on the plane
+					end	-=(rt.mBestPlane.mNormal * dist);
+
+					//adjust it to the front side
+					end	+=(rt.mBestPlane.mNormal * Mathery.VCompareEpsilon);
+				}
+				else
+				{
+					end	-=(rt.mBestPlane.mNormal * (dist - Mathery.VCompareEpsilon));
+				}
+
 				if(!hitPlanes.Contains(rt.mBestPlane))
 				{
 					hitPlanes.Add(rt.mBestPlane);
 				}
-				end	-=(rt.mBestPlane.mNormal * (dist - Mathery.VCompareEpsilon));
 			}
 		}
 
@@ -1030,14 +1055,24 @@ namespace BSPZone
 				float	startDist	=rt.mBestPlane.DistanceFast(start);
 				float	dist		=rt.mBestPlane.DistanceFast(end);
 
-//				Debug.Assert(startDist >= 0f && dist <= 0f);
+				//is the direction vector valid to find a collision response?
+				if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
+				{
+					//place end directly on the plane
+					end	-=(rt.mBestPlane.mNormal * dist);
+
+					//adjust it to the front side
+					end	+=(rt.mBestPlane.mNormal * Mathery.VCompareEpsilon);
+				}
+				else
+				{
+					end	-=(rt.mBestPlane.mNormal * (dist - Mathery.VCompareEpsilon));
+				}
 
 				if(!hitPlanes.Contains(rt.mBestPlane))
 				{
 					hitPlanes.Add(rt.mBestPlane);
 				}
-
-				end	-=(rt.mBestPlane.mNormal * (dist - Mathery.VCompareEpsilon));
 			}
 
 			finalPos	=end;
@@ -1088,14 +1123,24 @@ namespace BSPZone
 				float	startDist	=zp.DistanceFast(start);
 				float	dist		=zp.DistanceFast(end);
 
-//				Debug.Assert(startDist >= 0f && dist <= 0f);
+				//is the direction vector valid to find a collision response?
+				if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
+				{
+					//place end directly on the plane
+					end	-=(zp.mNormal * dist);
+
+					//adjust it to the front side
+					end	+=(zp.mNormal * Mathery.VCompareEpsilon);
+				}
+				else
+				{
+					end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
+				}
 
 				if(!hitPlanes.Contains(zp))
 				{
 					hitPlanes.Add(zp);
 				}
-
-				end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
 			}
 
 			finalPos	=end;

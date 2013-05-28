@@ -152,7 +152,8 @@ namespace BSPZone
 		{
 			LocomotionState	ls	=LocomotionState.Idle;
 
-			if(moveDelta.LengthSquared() > 0.001f)
+			float	moveLen	=moveDelta.Length();
+			if(moveLen > 0.001f)
 			{
 				//need a leveled out forward direction
 				Vector3	dir		=camForward;
@@ -160,7 +161,8 @@ namespace BSPZone
 				dir				=Vector3.Cross(side, Vector3.Up);
 
 				//check the direction moving vs axis
-				moveDelta.Normalize();
+				moveDelta	/=moveLen;
+
 				float	forwardDot	=Vector3.Dot(dir, moveDelta);
 				float	leftDot		=Vector3.Dot(side, moveDelta);
 

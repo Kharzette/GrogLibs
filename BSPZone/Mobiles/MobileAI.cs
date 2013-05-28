@@ -427,9 +427,11 @@ namespace BSPZone
 				aimVec.Y	=0f;
 
 				//check
-				if(aimVec.LengthSquared() > 0.001f)
+				float	aimLen	=aimVec.Length();
+				if(aimLen > 0.001f)
 				{
-					aimVec.Normalize();
+					aimVec	/=aimLen;
+
 					mApproachDirection	=aimVec;
 				}
 			}
