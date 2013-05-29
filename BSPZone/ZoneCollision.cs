@@ -10,10 +10,8 @@ namespace BSPZone
 {
 	class RayTrace
 	{
-		internal Vector3		mOriginalStart, mOriginalEnd;
 		internal Vector3		mIntersection;
 		internal ZonePlane		mBestPlane;
-		internal bool			mbHitSet;
 		internal BoundingBox	mBounds;
 		internal float			mRadius;
 		internal bool			mbStartInside;
@@ -30,8 +28,6 @@ namespace BSPZone
 	{
 		Vector3	[]mTestBoxCorners		=new Vector3[8];
 		Vector3	[]mTestTransBoxCorners	=new Vector3[8];
-
-		BoundingBox	mTinyBox;	//for doing raycasts
 
 		//uses the add up the angles trick to determine point in poly
 		float ComputeAngleSum(DebugFace df, Vector3 point)
@@ -68,7 +64,7 @@ namespace BSPZone
 
 
 		//No need to use leafs for this, as bevels are only
-		//there for plane expansion
+		//there for plane expansion.  This is a genesis port.
 		bool RayIntersect(Vector3 start, Vector3 end, Int32 node,
 			ref Vector3 intersectionPoint, ref bool hitLeaf,
 			ref Int32 leafHit, ref Int32 nodeHit)
@@ -140,6 +136,7 @@ namespace BSPZone
 
 
 		//returns the closest impact, checks all models
+		//everything returned in worldspace
 		public bool TraceAllSphere(float radius, Vector3 start, Vector3 end,
 			 ref int modelHit, ref Vector3 I, ref ZonePlane P)
 		{
@@ -148,10 +145,7 @@ namespace BSPZone
 			List<ZonePlane>	planes		=new List<ZonePlane>();
 
 			RayTrace	rt	=new RayTrace();
-
-			rt.mOriginalStart	=start;
-			rt.mOriginalEnd		=end;
-			rt.mRadius			=radius;
+			rt.mRadius		=radius;
 
 			for(int i=0;i < mZoneModels.Length;i++)
 			{
@@ -172,8 +166,6 @@ namespace BSPZone
 					ZoneModel	zm			=mZoneModels[i];
 					Vector3		modelStart	=Vector3.Transform(start, zm.mInvertedTransform);
 					Vector3		modelEnd	=Vector3.Transform(end, zm.mInvertedTransform);
-					rt.mOriginalStart		=modelStart;
-					rt.mOriginalEnd			=modelEnd;
 					if(TraceSphereNode(rt, modelStart, modelEnd, mZoneModels[i].mRootNode))
 					{
 						modelsHit.Add(i);
@@ -216,6 +208,7 @@ namespace BSPZone
 
 
 		//returns the closest impact, checks all models
+		//everything returned in worldspace
 		public bool TraceModelsBox(BoundingBox boxBounds, Vector3 start, Vector3 end,
 			 ref int modelHit, ref Vector3 I, ref ZonePlane P, ref bool bStartInSolid)
 		{
@@ -224,10 +217,7 @@ namespace BSPZone
 			List<ZonePlane>	planes		=new List<ZonePlane>();
 
 			RayTrace	rt	=new RayTrace();
-
-			rt.mOriginalStart	=start;
-			rt.mOriginalEnd		=end;
-			rt.mBounds			=boxBounds;
+			rt.mBounds		=boxBounds;
 
 			for(int i=1;i < mZoneModels.Length;i++)
 			{
@@ -273,6 +263,7 @@ namespace BSPZone
 
 
 		//returns the closest impact, checks all models
+		//everything returned in worldspace
 		public bool TraceAllRay(Vector3 start, Vector3 end,
 			 ref int modelHit, ref Vector3 I, ref ZonePlane P)
 		{
@@ -281,9 +272,6 @@ namespace BSPZone
 			List<ZonePlane>	planes		=new List<ZonePlane>();
 
 			RayTrace	rt	=new RayTrace();
-
-			rt.mOriginalStart	=start;
-			rt.mOriginalEnd		=end;
 
 			for(int i=0;i < mZoneModels.Length;i++)
 			{
@@ -304,8 +292,6 @@ namespace BSPZone
 					ZoneModel	zm			=mZoneModels[i];
 					Vector3		modelStart	=Vector3.Transform(start, zm.mInvertedTransform);
 					Vector3		modelEnd	=Vector3.Transform(end, zm.mInvertedTransform);
-					rt.mOriginalStart		=modelStart;
-					rt.mOriginalEnd			=modelEnd;
 					if(TraceRayNode(rt, modelStart, modelEnd, mZoneModels[i].mRootNode))
 					{
 						modelsHit.Add(i);
@@ -373,7 +359,7 @@ namespace BSPZone
 		}
 
 
-		//drop a position to the "floor"
+		//drop a worldspace position to the "floor"
 		public Vector3 DropToGround(Vector3 pos, bool bUseModels)
 		{
 			int			modelHit	=0;
@@ -407,6 +393,7 @@ namespace BSPZone
 		}
 
 
+		//clip a move segment to the front side
 		bool PartFront(ZonePlane p, float distAdjust, Vector3 start, Vector3 end,
 			out Vector3 clipStart, out Vector3 clipEnd)
 		{
@@ -440,6 +427,7 @@ namespace BSPZone
 		}
 
 
+		//clip a move segment to the back side
 		bool PartBehind(ZonePlane p, float distAdjust, Vector3 start, Vector3 end,
 			out Vector3 clipStart, out Vector3 clipEnd)
 		{
@@ -473,7 +461,7 @@ namespace BSPZone
 		}
 
 
-		//should be quite solid now
+		//model relative values
 		internal bool TraceSphereNode(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
 		{
 			bool	bHit	=false;
@@ -485,7 +473,7 @@ namespace BSPZone
 
 				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID_CLIP))
 				{
-					if(ClipSphereToLeaf(trace, zl, trace.mRadius))
+					if(ClipSphereToLeaf(trace, start, end, zl, trace.mRadius))
 					{
 						return	true;
 					}
@@ -516,6 +504,7 @@ namespace BSPZone
 		}
 
 
+		//model relative values
 		bool TraceRayNode(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
 		{
 			bool	bHit	=false;
@@ -527,9 +516,10 @@ namespace BSPZone
 
 				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID_CLIP))
 				{
-					trace.mbHitSet		=true;
-					trace.mIntersection	=start;
-					return	true;
+					if(ClipSphereToLeaf(trace, start, end, zl, 0))
+					{
+						return	true;
+					}
 				}
 				return	false;
 			}
@@ -549,29 +539,19 @@ namespace BSPZone
 			if(PartFront(p, 0, start, end, out clipStart, out clipEnd))
 			{
 				bHit	|=TraceRayNode(trace, clipStart, clipEnd, zn.mFront);
-				if(bHit)
-				{
-					if(trace.mbHitSet)
-					{
-						trace.mBestPlane	=p;
-						trace.mbHitSet		=false;
-					}
-				}
 				return	bHit;
 			}
 			return	bHit;
 		}
 
 
+		//expects and returns worldspace values
 		bool TraceFakeOrientedBoxModel(RayTrace rt, Vector3 start, Vector3 end, ZoneModel mod)
 		{
 			//make a copy of the bounds
 			BoundingBox	box	=rt.mBounds;
 
 			FakeOrientBoxCollisionToModel(mod, ref rt.mBounds, ref start, ref end);
-
-			rt.mOriginalStart	=start;
-			rt.mOriginalEnd		=end;
 
 			bool	bHit	=TraceBoxNode(rt, start, end, mod.mRootNode);
 
@@ -587,13 +567,14 @@ namespace BSPZone
 		}
 
 
+		//expects and returns worldspace values
 		public bool IntersectBoxModel(BoundingBox box, Vector3 pos, int modelIndex, ref ZonePlane zp)
 		{
 			return	IntersectBoxModel(box, pos, mZoneModels[modelIndex], ref zp);
 		}
 
 
-		//look for a collision
+		//expects and returns worldspace values
 		bool IntersectBoxModel(BoundingBox box, Vector3 pos, ZoneModel mod, ref ZonePlane zp)
 		{
 #if DEBUG
@@ -623,17 +604,16 @@ namespace BSPZone
 		}
 
 
+		//expects worldspace values
 		bool TraceFakeOrientedBoxTrigger(RayTrace rt, Vector3 start, Vector3 end, ZoneModel mod)
 		{
 			FakeOrientBoxCollisionToModel(mod, ref rt.mBounds, ref start, ref end);
-
-			rt.mOriginalStart	=start;
-			rt.mOriginalEnd		=end;
 
 			return	TraceBoxNodeTrigger(rt, start, end, mod.mRootNode);
 		}
 
 
+		//expects start and end relative to whatever model owns the nodes
 		bool TraceBoxNodeTrigger(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
 		{
 			bool	bHit	=false;
@@ -673,6 +653,7 @@ namespace BSPZone
 		}
 
 
+		//expects start and end relative to whatever model owns the nodes
 		bool TraceBoxNode(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
 		{
 			bool	bHit	=false;
@@ -684,7 +665,7 @@ namespace BSPZone
 
 				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID_CLIP))
 				{
-					if(ClipBoxToLeaf(trace, zl))
+					if(ClipBoxToLeaf(trace, start, end, zl))
 					{
 						return	true;
 					}
@@ -715,6 +696,8 @@ namespace BSPZone
 		}
 
 
+		//expects pos relative to whatever model owns the nodes
+		//plane returned in model space
 		bool IntersectBoxNode(BoundingBox box, Vector3 pos, Int32 node, ref ZonePlane planeHit)
 		{
 			bool	bHit	=false;
@@ -753,21 +736,12 @@ namespace BSPZone
 		}
 
 
-		bool ClipRayToLeaf(RayTrace trace, ZoneLeaf zl)
-		{
-			return	ClipSphereToLeaf(trace, zl, 0f);
-		}
-
-
-		bool ClipSphereToLeaf(RayTrace trace, ZoneLeaf zl, float radius)
+		bool ClipSphereToLeaf(RayTrace trace, Vector3 start, Vector3 end, ZoneLeaf zl, float radius)
 		{
 			if(zl.mNumSides <= 0)
 			{
 				return	false;
 			}
-
-			Vector3	start	=trace.mOriginalStart;
-			Vector3	end		=trace.mOriginalEnd;
 
 			bool		bClipped	=false;
 			bool		bAnyInFront	=false;
@@ -804,7 +778,7 @@ namespace BSPZone
 				float	ratio			=frontDist / (frontDist - backDist);
 				Vector3	intersection	=start + ratio * (end - start);
 
-				if(frontDist > 0)
+				if(frontDist >= 0)
 				{
 					start		=intersection;
 					clipPlane	=p;
@@ -832,15 +806,13 @@ namespace BSPZone
 		}
 
 
-		bool ClipBoxToLeaf(RayTrace trace, ZoneLeaf zl)
+		//positions and planes are model relative
+		bool ClipBoxToLeaf(RayTrace trace, Vector3 start, Vector3 end, ZoneLeaf zl)
 		{
 			if(zl.mNumSides <= 0)
 			{
 				return	false;
 			}
-
-			Vector3	start	=trace.mOriginalStart;
-			Vector3	end		=trace.mOriginalEnd;
 
 			bool		bClipped	=false;
 			bool		bAnyInFront	=false;
@@ -873,7 +845,7 @@ namespace BSPZone
 
 				bAnyInFront	=true;
 
-				if(frontDist == 0 && backDist == 0)
+				if(frontDist == 0)
 				{
 					clipPlane	=p;
 					bClipped	=true;
@@ -912,6 +884,7 @@ namespace BSPZone
 		}
 
 
+		//all model relative
 		bool IntersectBoxLeaf(BoundingBox box, Vector3 pos, ZoneLeaf zl, ref ZonePlane planeHit)
 		{
 			if(zl.mNumSides <= 0)
@@ -955,35 +928,6 @@ namespace BSPZone
 			planeHit	=bestPlane;
 
 			return	bIntersecting;
-		}
-
-
-		bool IsPointInLeaf(RayTrace trace, Vector3 point, ZoneLeaf zl)
-		{
-			if(zl.mNumSides <= 0)
-			{
-				return	false;
-			}
-
-			for(int i=0;i < zl.mNumSides;i++)
-			{
-				ZoneLeafSide	side	=mZoneLeafSides[i + zl.mFirstSide];
-				ZonePlane		p		=mZonePlanes[side.mPlaneNum];
-
-				if(side.mbFlipSide)
-				{
-					p.Inverse();
-				}
-
-				p.mDist	+=Math.Abs(Vector3.Dot(trace.mBounds.Max, p.mNormal));
-
-				float	dist	=p.DistanceFast(point);
-				if(dist > 0)
-				{
-					return	false;	//not intersecting
-				}
-			}
-			return	true;
 		}
 	}
 }

@@ -439,10 +439,7 @@ namespace BSPZone
 			else
 			{
 				RayTrace	rt	=new RayTrace();
-
-				rt.mOriginalStart	=tryPos;
-				rt.mOriginalEnd		=tryPos + Vector3.UnitY;
-				rt.mRadius			=radius;
+				rt.mRadius		=radius;
 				bHit	=mZone.TraceSphereNode(rt, tryPos, tryPos + Vector3.UnitY, 0);
 			}
 

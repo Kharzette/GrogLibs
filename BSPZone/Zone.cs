@@ -89,13 +89,6 @@ namespace BSPZone
 		const int	MaxMoveBoxIterations	=16;
 
 
-		public Zone()
-		{
-			//for casting down to floor
-			mTinyBox	=Misc.MakeBox(1f, 1f);
-		}
-
-
 		#region IO
 		void WritePlaneArray(BinaryWriter bw)
 		{
@@ -653,10 +646,8 @@ namespace BSPZone
 
 			RayTrace	rt	=new RayTrace();
 
-			rt.mOriginalStart	=footPos;
-			rt.mOriginalEnd		=footCheck;
-			rt.mBounds			=box;
-			if(TraceBoxNode(rt, rt.mOriginalStart, rt.mOriginalEnd, 0))
+			rt.mBounds	=box;
+			if(TraceBoxNode(rt, footPos, footCheck, 0))
 			{
 				if(rt.mbStartInside)
 				{
@@ -672,7 +663,7 @@ namespace BSPZone
 			//try models
 			int		modelHit		=0;
 			bool	bStartInSolid	=false;
-			if(TraceModelsBox(box, rt.mOriginalStart, rt.mOriginalEnd,
+			if(TraceModelsBox(box, footPos, footCheck,
 				ref modelHit, ref impVec, ref footPlane, ref bStartInSolid))
 			{
 				if(bStartInSolid)
@@ -702,10 +693,10 @@ namespace BSPZone
 
 			//first trace up from the start point to world
 			//to make sure there's head room
-			rt.mOriginalStart	=start;
-			rt.mOriginalEnd		=start + stairAxis * stepHeight;
+			Vector3	stairStart	=start;
+			Vector3	stairEnd	=start + stairAxis * stepHeight;
 			rt.mBounds			=box;
-			if(TraceBoxNode(rt, rt.mOriginalStart, rt.mOriginalEnd, 0))
+			if(TraceBoxNode(rt, stairStart, stairEnd, 0))
 			{
 				//hit noggin, just use previous point
 				modelOn	=-1;
@@ -714,7 +705,7 @@ namespace BSPZone
 
 			//do nogginry check for models too
 			bool	bStartInSolid	=false;
-			if(TraceModelsBox(box, rt.mOriginalStart, rt.mOriginalEnd,
+			if(TraceModelsBox(box, stairStart, stairEnd,
 				ref modelHit, ref impVec, ref impPlane, ref bStartInSolid))
 			{
 				//hit noggin, just use previous point
@@ -731,9 +722,9 @@ namespace BSPZone
 			{
 				//trace down to world by step height x2 and make sure
 				//we land on a ground surface
-				rt.mOriginalStart	=stepPos;
-				rt.mOriginalEnd		=stepPos - Vector3.UnitY * (stepHeight * 2f);
-				if(TraceBoxNode(rt, rt.mOriginalStart, rt.mOriginalEnd, 0))
+				Vector3	stepStart	=stepPos;
+				Vector3	stepEnd		=stepPos - Vector3.UnitY * (stepHeight * 2f);
+				if(TraceBoxNode(rt, stepStart, stepEnd, 0))
 				{
 					if(rt.mBestPlane.IsGround())
 					{
@@ -758,7 +749,7 @@ namespace BSPZone
 				float	stepDist	=Vector3.Distance(stepPos, rt.mIntersection);
 
 				//try models
-				if(TraceModelsBox(box, rt.mOriginalStart, rt.mOriginalEnd,
+				if(TraceModelsBox(box, stepStart, stepEnd,
 					ref modelHit, ref impVec, ref impPlane, ref bStartInSolid))
 				{
 					if(impPlane.IsGround())
@@ -970,8 +961,8 @@ namespace BSPZone
 		//simulate movement and record the positions involved
 		public void MoveBoxDebug(BoundingBox box, Vector3 start, Vector3 end, List<Vector3> segments)
 		{
-//			MoveBoxWorldDebug(box, start, end, segments);
-			MoveBoxModelsDebug(box, start, end, segments);
+			MoveBoxWorldDebug(box, start, end, segments);
+//			MoveBoxModelsDebug(box, start, end, segments);
 		}
 
 
@@ -1043,14 +1034,14 @@ namespace BSPZone
 			{
 				RayTrace	rt	=new RayTrace();
 
-				rt.mOriginalStart	=start;
-				rt.mOriginalEnd		=end;
 				rt.mBounds			=box;
+				rt.mRadius			=12f;	//testing
 
 				segments.Add(start);
 				segments.Add(end);
 
-				bool	bHitSomething	=TraceBoxNode(rt, start, end, 0);
+//				bool	bHitSomething	=TraceBoxNode(rt, start, end, 0);
+				bool	bHitSomething	=TraceSphereNode(rt, start, end, 0);
 				if(!bHitSomething)
 				{
 					break;
@@ -1096,10 +1087,7 @@ namespace BSPZone
 			for(i=0;i < MaxMoveBoxIterations;i++)
 			{
 				RayTrace	rt	=new RayTrace();
-
-				rt.mOriginalStart	=start;
-				rt.mOriginalEnd		=end;
-				rt.mBounds			=box;
+				rt.mBounds		=box;
 
 				bool	bHitSomething	=TraceBoxNode(rt, start, end, 0);
 				if(!bHitSomething)
