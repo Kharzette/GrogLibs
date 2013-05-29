@@ -9,7 +9,7 @@ using UtilityLib;
 
 namespace BSPZone
 {
-	public class BasicModelHelper
+	internal class BasicModelHelper
 	{
 		Zone	mZone;
 
@@ -18,6 +18,7 @@ namespace BSPZone
 			internal int	mCurStage;
 			internal bool	mbForward;
 			internal bool	mbActive;
+			internal bool	mbBlocked;	//smashed into a solid object
 
 			internal List<ModelMoveStage>	mStages	=new List<ModelMoveStage>();
 		}
@@ -176,13 +177,22 @@ namespace BSPZone
 
 		Dictionary<int, ModelStages>	mModelStages	=new Dictionary<int, ModelStages>();
 
+		bool	mbWiredToFunc;
+
 		
-		public BasicModelHelper(){}
+		internal BasicModelHelper(){}
 
 
-		public void Initialize(Zone zone, Audio aud, AudioListener lis)
+		internal void Initialize(Zone zone, TriggerHelper thelp, Audio aud, AudioListener lis)
 		{
 			mZone	=zone;
+
+			if(!mbWiredToFunc)
+			{
+				thelp.eFunc	+=OnFunc;
+
+				mbWiredToFunc	=true;
+			}
 
 			mModelStages.Clear();
 
@@ -208,52 +218,65 @@ namespace BSPZone
 		}
 
 
-		public void Update(int msDelta, AudioListener lis)
+		void UpdateSingle(int msDelta, int modelIndex, AudioListener lis)
 		{
-			foreach(KeyValuePair<int, ModelStages> mss in mModelStages)
+			if(!mModelStages.ContainsKey(modelIndex))
 			{
-				ModelStages	ms	=mss.Value;
-				if(!ms.mbActive)
+				return;
+			}
+
+			ModelStages	ms	=mModelStages[modelIndex];
+			if(!ms.mbActive)
+			{
+				return;
+			}
+
+			ModelMoveStage	mms	=ms.mStages[ms.mCurStage];
+
+			bool	bDone	=mms.Update(msDelta, mZone, lis);
+
+			if(bDone)
+			{
+				ms.mbBlocked	=false;	//release blocked state if set
+
+				if(ms.mbForward)
 				{
-					continue;
-				}
-
-				ModelMoveStage	mms	=ms.mStages[ms.mCurStage];
-
-				bool	bDone	=mms.Update(msDelta, mZone, lis);
-
-				if(bDone)
-				{
-					if(ms.mbForward)
+					if(ms.mStages.Count > (ms.mCurStage + 1))
 					{
-						if(ms.mStages.Count > (ms.mCurStage + 1))
-						{
-							ms.mCurStage++;
-							ms.mStages[ms.mCurStage].Fire(ms.mbForward);
-						}
-						else
-						{
-							ms.mbActive	=false;
-						}
+						ms.mCurStage++;
+						ms.mStages[ms.mCurStage].Fire(ms.mbForward);
 					}
 					else
 					{
-						if((ms.mCurStage - 1) >= 0)
-						{
-							ms.mCurStage--;
-							ms.mStages[ms.mCurStage].Fire(ms.mbForward);
-						}
-						else
-						{
-							ms.mbActive	=false;
-						}
+						ms.mbActive	=false;
+					}
+				}
+				else
+				{
+					if((ms.mCurStage - 1) >= 0)
+					{
+						ms.mCurStage--;
+						ms.mStages[ms.mCurStage].Fire(ms.mbForward);
+					}
+					else
+					{
+						ms.mbActive	=false;
 					}
 				}
 			}
 		}
 
 
-		public bool GetState(int modelIndex)
+		internal void Update(int msDelta, AudioListener lis)
+		{
+			foreach(KeyValuePair<int, ModelStages> mss in mModelStages)
+			{
+				UpdateSingle(msDelta, mss.Key, lis);
+			}
+		}
+
+
+		internal bool GetState(int modelIndex)
 		{
 			if(!mModelStages.ContainsKey(modelIndex))
 			{
@@ -266,7 +289,31 @@ namespace BSPZone
 		}
 
 
-		public void SetState(int modelIndex, bool bOpen)
+		internal void SetBlocked(int modelIndex)
+		{
+			if(!mModelStages.ContainsKey(modelIndex))
+			{
+				return;
+			}
+
+			ModelStages	ms	=mModelStages[modelIndex];
+
+			if(ms.mbBlocked)
+			{
+				return;	//already marked
+			}
+
+			ms.mbBlocked	=true;
+
+			//reverse direction
+			ms.mbForward	=!ms.mbForward;
+
+			//call fire
+			ms.mStages[ms.mCurStage].Fire(ms.mbForward);
+		}
+
+
+		internal void SetState(int modelIndex, bool bOpen)
 		{
 			if(!mModelStages.ContainsKey(modelIndex))
 			{
@@ -363,6 +410,39 @@ namespace BSPZone
 			//recurse, offsetting by move amount
 			//TODO: rotation amount too
 			GetMoveStages(targ, modelIdx, org + (mms.mMoveAmount * mms.mMoveAxis), aud, lis);
+		}
+
+
+		void OnFunc(object sender, EventArgs ea)
+		{
+			ZoneEntity	ze	=sender as ZoneEntity;
+			if(ze == null)
+			{
+				return;
+			}
+
+			TriggerHelper.FuncEventArgs	fea	=ea as TriggerHelper.FuncEventArgs;
+			if(fea == null)
+			{
+				return;
+			}
+
+			Mobile	mob	=fea.mTCEA.mContext as Mobile;
+			if(mob == null)
+			{
+				return;
+			}
+
+			int	modIdx;
+			ze.GetInt("Model", out modIdx);
+
+			Vector3	org;
+			if(ze.GetVectorNoConversion("ModelOrigin", out org))
+			{
+				org	=mZone.DropToGround(org, false);
+			}
+
+			SetState(modIdx, fea.mbTriggerState);
 		}
 	}
 }

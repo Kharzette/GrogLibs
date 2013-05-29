@@ -19,12 +19,6 @@ namespace BSPZone
 		}
 	}
 
-	public class ModelPushEventArgs : EventArgs
-	{
-		public int		mModelIndex;
-		public Vector3	mPushDelta;
-	}
-
 	internal class ZoneTrigger
 	{
 		internal ZoneEntity		mEntity;
@@ -75,6 +69,7 @@ namespace BSPZone
 		//gameplay stuff
 		List<ZoneTrigger>				mTriggers	=new List<ZoneTrigger>();
 		Dictionary<object, Pushable>	mPushables	=new Dictionary<object, Pushable>();
+		BasicModelHelper				mBMHelper	=new BasicModelHelper();
 
 		//debug
 		Vector3	mPrevStart;
@@ -86,7 +81,6 @@ namespace BSPZone
 
 		public event EventHandler	eTriggerHit;
 		public event EventHandler	eTriggerOutOfRange;
-		public event EventHandler	ePushObject;
 
 		//pathing uses these to make the graph connections too
 		public const float	RampAngle	=0.7f;	//how steep can we climb?
@@ -292,7 +286,21 @@ namespace BSPZone
 
 
 		#region Model Related
-		void CollideModel(int modelIndex, Matrix newTrans, Matrix oldInv)
+		public void UpdateModels(int msDelta, Microsoft.Xna.Framework.Audio.AudioListener lis)
+		{
+			mBMHelper.Update(msDelta, lis);
+		}
+
+
+		internal void InitBMHelper(TriggerHelper thelp, Audio aud,
+			Microsoft.Xna.Framework.Audio.AudioListener lis)
+		{
+			mBMHelper.Initialize(this, thelp, aud, lis);
+		}
+
+
+		//return false if a push leaves a pushable in solid
+		bool CollideModel(int modelIndex, Matrix newTrans, Matrix oldInv)
 		{
 			foreach(KeyValuePair<object, Pushable> pa in mPushables)
 			{
@@ -304,8 +312,6 @@ namespace BSPZone
 				//transform back to world space vs old matrix
 				newCenter	=Vector3.Transform(newCenter, newTrans);
 
-				Vector3	pushedPos		=Vector3.Zero;
-
 				//push the starting point back a bit along the frame of rev vector
 				Vector3	dirVec	=newCenter - worldPos;
 
@@ -313,25 +319,52 @@ namespace BSPZone
 
 				if(len == 0f)
 				{
-					return;
+					return	true;
+				}
+				Vector3	pos	=worldPos;
+
+				//resolve intersection with this model
+				int	i;
+				for(i=0;i < MaxMoveBoxIterations;i++)
+				{
+					ZonePlane	hitPlane	=ZonePlane.Blank;
+
+					//check for an intersection
+					if(!IntersectBoxModel(pa.Value.mBox, pos, modelIndex, ref hitPlane))
+					{
+						break;
+					}
+					float	dist	=hitPlane.DistanceFast(pos);
+
+					//directly on or off a bit?
+					if(dist >= Mathery.VCompareEpsilon)
+					{
+						//place end directly on the plane
+						pos	-=(hitPlane.mNormal * dist);
+
+						//adjust it to the front side
+						pos	+=(hitPlane.mNormal * Mathery.VCompareEpsilon);
+					}
+					else
+					{
+						pos	-=(hitPlane.mNormal * (dist - Mathery.VCompareEpsilon));
+					}
 				}
 
-				dirVec	/=len;
-				dirVec	*=(pa.Value.mBox.Max.X * 0.5f);	//to adjust for corner expansion / contraction
-
-				Vector3	targPos	=newCenter + dirVec;
-
-				//collide vs the rotated model with new -> old ray
-				BipedModelPush(pa.Value.mBox, targPos, worldPos, modelIndex, ref pushedPos);
-
-				if(pushedPos != worldPos)
+				if(i == MaxMoveBoxIterations)
 				{
-					ModelPushEventArgs	mpea	=new ModelPushEventArgs();
-					mpea.mModelIndex			=modelIndex;
-					mpea.mPushDelta				=pushedPos - worldPos;
-					Misc.SafeInvoke(ePushObject, pa.Value.mContext, mpea);
+					return	false;
+				}
+
+				if(pos != worldPos)
+				{
+					if(!pa.Value.mMobile.Push(pos - worldPos, modelIndex))
+					{
+						return	false;
+					}
 				}
 			}
+			return	true;
 		}
 
 
@@ -356,16 +389,27 @@ namespace BSPZone
 				//if any are riding on this model, move them too
 				if(pa.Value.mModelOn == modelIndex)
 				{
-					ModelPushEventArgs	mpea	=new ModelPushEventArgs();
-					mpea.mModelIndex			=modelIndex;
-					mpea.mPushDelta				=pos - oldPos;
-					Misc.SafeInvoke(ePushObject, pa.Value.mContext, mpea);
+					if(!pa.Value.mMobile.Push(pos - oldPos, modelIndex))
+					{
+						//reset position
+						zm.SetPosition(oldPos);
+						//also need to reverse the model's motion here
+						mBMHelper.SetBlocked(modelIndex);
+						return;
+					}
 				}
 			}
 
 			Matrix	newMat		=zm.mTransform;
 
-			CollideModel(modelIndex, newMat, oldMatInv);
+			if(!CollideModel(modelIndex, newMat, oldMatInv))
+			{
+				//reset position
+				zm.SetPosition(oldPos);
+
+				//also need to reverse the model's motion here
+				mBMHelper.SetBlocked(modelIndex);
+			}
 		}
 
 
@@ -390,7 +434,14 @@ namespace BSPZone
 
 			Matrix	newMat		=zm.mTransform;
 
-			CollideModel(modelIndex, newMat, oldMatInv);
+			if(!CollideModel(modelIndex, newMat, oldMatInv))
+			{
+				//reset rotation
+				zm.RotateX(-degrees);
+
+				//also need to reverse the model's motion here
+				mBMHelper.SetBlocked(modelIndex);
+			}
 		}
 
 
@@ -436,15 +487,26 @@ namespace BSPZone
 						continue;
 					}
 
-					ModelPushEventArgs	mpea	=new ModelPushEventArgs();
-					mpea.mModelIndex			=modelIndex;
-					mpea.mPushDelta				=end;
-					Misc.SafeInvoke(ePushObject, pa.Value.mContext, mpea);
+					if(!pa.Value.mMobile.Push(end, modelIndex))
+					{
+						//reset rotation
+						zm.RotateY(-degrees);
+
+						//also need to reverse the model's motion here
+						mBMHelper.SetBlocked(modelIndex);
+						return;
+					}
 				}
 			}
 
+			if(!CollideModel(modelIndex, newMat, oldMatInv))
+			{
+				//reset rotation
+				zm.RotateY(-degrees);
 
-			CollideModel(modelIndex, newMat, oldMatInv);
+				//also need to reverse the model's motion here
+				mBMHelper.SetBlocked(modelIndex);
+			}
 		}
 
 
@@ -469,7 +531,14 @@ namespace BSPZone
 
 			Matrix	newMat		=zm.mTransform;
 
-			CollideModel(modelIndex, newMat, oldMatInv);
+			if(!CollideModel(modelIndex, newMat, oldMatInv))
+			{
+				//reset rotation
+				zm.RotateZ(-degrees);
+
+				//also need to reverse the model's motion here
+				mBMHelper.SetBlocked(modelIndex);
+			}
 		}
 
 
@@ -496,13 +565,13 @@ namespace BSPZone
 
 
 		#region Ray Casts and Movement
-		public void RegisterPushable(object context, BoundingBox box, Vector3 center, int modelOn)
+		public void RegisterPushable(Mobile context, BoundingBox box, Vector3 center, int modelOn)
 		{
 			if(mPushables.ContainsKey(context))
 			{
 				//if already in the list just update the data
 				mPushables[context].mBox			=box;
-				mPushables[context].mContext		=context;
+				mPushables[context].mMobile		=context;
 				mPushables[context].mModelOn		=modelOn;
 				mPushables[context].mWorldCenter	=center;
 			}
@@ -1154,7 +1223,73 @@ namespace BSPZone
 		}
 
 
-		//positions should be in the middle base of the box
+		//use this whenever a collision returns in solid, it
+		//will try to work free of the solid space
+		public bool ResolvePosition(BoundingBox box, Vector3 pos,
+			out Vector3 finalPos, out int modelOn)
+		{
+			finalPos	=pos;
+
+			int	i;
+			for(i=0;i < MaxMoveBoxIterations;i++)
+			{
+				bool	bWorldIntersect	=false;
+				bool	bModelIntersect	=false;
+
+				//solve world via intersection
+				ZonePlane	zp	=ZonePlane.Blank;
+				if(IntersectBoxNode(box, pos, 0, ref zp))
+				{
+					bWorldIntersect	=true;
+
+					float	dist	=zp.DistanceFast(pos);
+
+					pos	=pos - (zp.mNormal * (dist - Mathery.VCompareEpsilon));
+				}
+
+				for(int j=1;j < mZoneModels.Length;j++)
+				{
+					ZonePlane	zp2	=ZonePlane.Blank;
+					if(IntersectBoxModel(box, pos, j, ref zp))
+					{
+						bModelIntersect	=true;
+
+						float	dist	=zp2.DistanceFast(pos);
+
+						//directly on or off a bit?
+						if(dist >= Mathery.VCompareEpsilon)
+						{
+							//place end directly on the plane
+							pos	-=(zp.mNormal * dist);
+
+							//adjust it to the front side
+							pos	+=(zp.mNormal * Mathery.VCompareEpsilon);
+						}
+						else
+						{
+							pos	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
+						}
+					}
+				}
+
+				if(!bWorldIntersect && !bModelIntersect)
+				{
+					break;
+				}
+			}
+
+			if(i < MaxMoveBoxIterations)
+			{
+				finalPos	=pos;
+
+				return	FootCheck(box, finalPos, 4f, out modelOn);
+			}
+			modelOn	=-1;
+			return	false;
+		}
+
+
+		//positions should be in the middle of the box
 		//returns true if on the ground
 		public bool MoveBox(BoundingBox box, Vector3 start, Vector3 end, bool bWorldOnly,
 			out Vector3 finalPos, out int modelOn)

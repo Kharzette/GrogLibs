@@ -581,14 +581,14 @@ namespace BSPZone
 		}
 
 
-		public bool IntersectBoxModel(BoundingBox box, Vector3 pos, int modelIndex)
+		public bool IntersectBoxModel(BoundingBox box, Vector3 pos, int modelIndex, ref ZonePlane zp)
 		{
-			return	IntersectBoxModel(box, pos, mZoneModels[modelIndex]);
+			return	IntersectBoxModel(box, pos, mZoneModels[modelIndex], ref zp);
 		}
 
 
 		//look for a collision
-		bool IntersectBoxModel(BoundingBox box, Vector3 pos, ZoneModel mod)
+		bool IntersectBoxModel(BoundingBox box, Vector3 pos, ZoneModel mod, ref ZonePlane zp)
 		{
 #if DEBUG
 			Debug.Assert(Mathery.IsBoundingBoxCentered(box));
@@ -608,8 +608,12 @@ namespace BSPZone
 
 			Mathery.CenterBoundingBoxAtOrigin(ref box);
 
-			ZonePlane	zp	=ZonePlane.Blank;
-			return	IntersectBoxNode(box, pos, mod.mRootNode, ref zp);
+			bool	bHit	=IntersectBoxNode(box, pos, mod.mRootNode, ref zp);
+			if(bHit)
+			{
+				zp	=ZonePlane.Transform(zp, mod.mTransform);
+			}
+			return	bHit;
 		}
 
 

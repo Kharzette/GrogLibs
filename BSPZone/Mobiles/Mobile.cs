@@ -448,5 +448,41 @@ namespace BSPZone
 
 			return	!bHit;
 		}
+
+
+		//return false if push leaves mobile in solid
+		internal bool Push(Vector3 delta, int modelIndex)
+		{
+			//grab starting position
+			Vector3	startPos	=mPosition;
+
+			Vector3	pushedTo, camTo;
+			Move(delta + GetGroundPosition(), 1,
+				true, false, false, true, false, out pushedTo, out camTo);
+
+			SetGroundPosition(pushedTo);
+
+//			mPSteering.Position	=pushedTo;
+
+			//see if still intersecting
+			ZonePlane	hitPlane	=ZonePlane.Blank;
+			if(mZone.IntersectBoxModel(mBox, mPosition, modelIndex, ref hitPlane))
+			{
+				//try to resolve
+				Vector3	resolvePos;
+				int		modelOn;
+				if(mZone.ResolvePosition(mBox, mPosition, out resolvePos, out modelOn))
+				{
+					mPosition	=resolvePos;
+//					mPSteering.Position	=resolvePos - midAdjust;
+				}
+				else
+				{
+					return	false;
+//					mBMHelper.SetBlocked(mpea.mModelIndex);
+				}
+			}
+			return	true;
+		}
 	}
 }

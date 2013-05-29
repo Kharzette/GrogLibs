@@ -9,15 +9,15 @@ namespace BSPZone
 {
 	internal class Pushable
 	{
-		internal object			mContext;
+		internal Mobile			mMobile;
 		internal BoundingBox	mBox;
 		internal Vector3		mWorldCenter;
 		internal int			mModelOn;
 
 
-		internal Pushable(object context, BoundingBox box, Vector3 worldCenter, int modelOn)
+		internal Pushable(Mobile mob, BoundingBox box, Vector3 worldCenter, int modelOn)
 		{
-			mContext		=context;
+			mMobile			=mob;
 			mBox			=box;
 			mWorldCenter	=worldCenter;
 			mModelOn		=modelOn;

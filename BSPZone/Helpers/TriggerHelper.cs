@@ -37,7 +37,7 @@ namespace BSPZone
 		public event EventHandler	eFunc;
 
 
-		public void Initialize(Zone zone, SwitchLight sl)
+		public void Initialize(Zone zone, SwitchLight sl, Audio aud, Microsoft.Xna.Framework.Audio.AudioListener lis)
 		{
 			//unwire from old
 			if(mZone != null)
@@ -61,6 +61,9 @@ namespace BSPZone
 					sl(switchNum, true);
 				}
 			}
+
+			//init the zone's basic model helper
+			mZone.InitBMHelper(this, aud, lis);
 		}
 
 
