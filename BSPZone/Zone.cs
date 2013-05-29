@@ -305,23 +305,9 @@ namespace BSPZone
 			foreach(KeyValuePair<object, Pushable> pa in mPushables)
 			{
 				Vector3	worldPos	=pa.Value.mWorldCenter;
+				Vector3	pos			=worldPos;
 
-				//transform into new rotated model space
-				Vector3	newCenter	=Vector3.Transform(worldPos, oldInv);
-
-				//transform back to world space vs old matrix
-				newCenter	=Vector3.Transform(newCenter, newTrans);
-
-				//push the starting point back a bit along the frame of rev vector
-				Vector3	dirVec	=newCenter - worldPos;
-
-				float	len	=dirVec.Length();
-
-				if(len == 0f)
-				{
-					return	true;
-				}
-				Vector3	pos	=worldPos;
+				bool	bAny	=false;
 
 				//resolve intersection with this model
 				int	i;
@@ -334,6 +320,9 @@ namespace BSPZone
 					{
 						break;
 					}
+
+					bAny	=true;
+
 					float	dist	=hitPlane.DistanceFast(pos);
 
 					//directly on or off a bit?
@@ -349,6 +338,11 @@ namespace BSPZone
 					{
 						pos	-=(hitPlane.mNormal * (dist - Mathery.VCompareEpsilon));
 					}
+				}
+
+				if(!bAny)
+				{
+					continue;
 				}
 
 				if(i == MaxMoveBoxIterations)

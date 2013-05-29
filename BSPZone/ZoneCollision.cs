@@ -565,12 +565,18 @@ namespace BSPZone
 
 		bool TraceFakeOrientedBoxModel(RayTrace rt, Vector3 start, Vector3 end, ZoneModel mod)
 		{
+			//make a copy of the bounds
+			BoundingBox	box	=rt.mBounds;
+
 			FakeOrientBoxCollisionToModel(mod, ref rt.mBounds, ref start, ref end);
 
 			rt.mOriginalStart	=start;
 			rt.mOriginalEnd		=end;
 
 			bool	bHit	=TraceBoxNode(rt, start, end, mod.mRootNode);
+
+			//copy bounds back
+			rt.mBounds	=box;
 
 			if(bHit && !rt.mbStartInside)
 			{
