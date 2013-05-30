@@ -33,7 +33,7 @@ namespace BSPZone
 			float		bestDist;
 			Collision	col;
 
-			bool	bHit	=TraceAllSphere(0f, start, end, out col);
+			bool	bHit	=TraceAll(null, null, start, end, out col);
 			if(bHit)
 			{
 				worldHit	=col.mIntersection;
@@ -218,7 +218,7 @@ namespace BSPZone
 				Vector3	mobPos	=mob.GetMiddlePosition();
 
 				Collision	col;
-				if(TraceAllSphere(0f, pov, mobPos, out col))
+				if(TraceAll(null, null, pov, mobPos, out col))
 				{
 					continue;
 				}
@@ -246,7 +246,7 @@ namespace BSPZone
 				}
 				
 				Collision	col;
-				if(TraceAllSphere(0f, pov, mobPos, out col))
+				if(TraceAll(null, null, pov, mobPos, out col))
 				{
 					continue;
 				}

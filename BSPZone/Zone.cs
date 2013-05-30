@@ -632,7 +632,7 @@ namespace BSPZone
 			RayTrace	rt	=new RayTrace(footPos, footCheck);
 
 			rt.mBounds	=box;
-			if(TraceBoxNode(rt, footPos, footCheck, 0))
+			if(TraceNode(rt, footPos, footCheck, 0))
 			{
 				if(rt.mCollision.mbStartInside)
 				{
@@ -675,7 +675,7 @@ namespace BSPZone
 
 			RayTrace	rt	=new RayTrace(stairStart, stairEnd);
 			rt.mBounds		=box;
-			if(TraceBoxNode(rt, stairStart, stairEnd, 0))
+			if(TraceNode(rt, stairStart, stairEnd, 0))
 			{
 				//hit noggin, just use previous point
 				modelOn	=-1;
@@ -704,7 +704,7 @@ namespace BSPZone
 				Vector3	stepEnd		=stepPos - Vector3.UnitY * (stepHeight * 2f);
 				rt.mOriginalStart	=stepStart;
 				rt.mOriginalEnd		=stepEnd;
-				if(TraceBoxNode(rt, stepStart, stepEnd, 0))
+				if(TraceNode(rt, stepStart, stepEnd, 0))
 				{
 					if(rt.mCollision.mPlaneHit.IsGround())
 					{
@@ -935,7 +935,7 @@ namespace BSPZone
 			segments.Add(start);
 			segments.Add(end);
 
-			if(TraceAllSphere(0f, start, end, out col))
+			if(TraceAll(null, null, start, end, out col))
 			{
 				DebugFace	df	=col.mFaceHit;
 				if(df == null)
@@ -999,14 +999,13 @@ namespace BSPZone
 			{
 				RayTrace	rt	=new RayTrace(start, end);
 
-				rt.mBounds			=box;
-				rt.mRadius			=12f;	//testing
+//				rt.mBounds	=box;
+				rt.mRadius	=12f;	//testing
 
 				segments.Add(start);
 				segments.Add(end);
 
-//				bool	bHitSomething	=TraceBoxNode(rt, start, end, 0);
-				bool	bHitSomething	=TraceSphereNode(rt, start, end, 0);
+				bool	bHitSomething	=TraceNode(rt, start, end, 0);
 				if(!bHitSomething)
 				{
 					break;
@@ -1041,7 +1040,7 @@ namespace BSPZone
 				RayTrace	rt	=new RayTrace(start, end);
 				rt.mBounds		=box;
 
-				bool	bHitSomething	=TraceBoxNode(rt, start, end, 0);
+				bool	bHitSomething	=TraceNode(rt, start, end, 0);
 				if(!bHitSomething)
 				{
 					break;

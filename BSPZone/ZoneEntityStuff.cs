@@ -155,7 +155,7 @@ namespace BSPZone
 				if(IsVisibleFrom(pos, zl.Value.mPosition))
 				{
 					Collision	col;
-					if(!TraceAllSphere(0f, pos, zl.Value.mPosition, out col))
+					if(!TraceAll(null, null, pos, zl.Value.mPosition, out col))
 					{
 						ret.Add(zl.Value);
 					}
@@ -225,7 +225,7 @@ namespace BSPZone
 				}
 				
 				Collision	col;
-				if(TraceAllSphere(0f, pos, -sunLight.mPosition * 10000 + pos, out col))	//pos contains ray direction
+				if(TraceAll(null, null, pos, -sunLight.mPosition * 10000 + pos, out col))	//pos contains ray direction
 				{
 					if(Misc.bFlagSet(SKY, col.mFaceHit.mFlags))
 					{

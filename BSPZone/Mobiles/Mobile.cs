@@ -246,7 +246,7 @@ namespace BSPZone
 			mobCamPos	=camPos + (-forward * ps.Zoom) + shoulderOffset;
 
 			Collision	col;
-			if(mZone.TraceAllSphere(CamCollisionRadius, camPos, mobCamPos, out col))
+			if(mZone.TraceAll(CamCollisionRadius, null, camPos, mobCamPos, out col))
 			{
 				mobCamPos	=col.mIntersection;
 			}
@@ -428,13 +428,14 @@ namespace BSPZone
 			Collision	col;
 			if(bModelsToo)
 			{
-				bHit	=mZone.TraceAllSphere(radius, tryPos, tryPos + Vector3.UnitY, out col);
+				bHit	=mZone.TraceAll(radius, null, tryPos, tryPos + Vector3.UnitY, out col);
 			}
 			else
 			{
 				RayTrace	rt	=new RayTrace(tryPos, tryPos + Vector3.UnitY);
 				rt.mRadius		=radius;
-				bHit	=mZone.TraceSphereNode(rt, tryPos, tryPos + Vector3.UnitY, 0);
+
+				bHit	=mZone.TraceNode(rt, tryPos, tryPos + Vector3.UnitY, 0);
 			}
 
 			return	!bHit;

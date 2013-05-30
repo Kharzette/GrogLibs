@@ -485,7 +485,7 @@ namespace BSPZone
 
 				//raycast between to make sure there's no obstacle in between
 				Collision	col;
-				if(mZone.TraceAllSphere(0f, approachPos, pos, out col))
+				if(mZone.TraceAll(null, null, approachPos, pos, out col))
 				{
 					//hit something on the way
 					//try a different approach direction
@@ -494,7 +494,7 @@ namespace BSPZone
 				}
 
 				//raycast down to make sure there's a valid floor beneath
-				if(!mZone.TraceAllSphere(0f, approachPos,
+				if(!mZone.TraceAll(null, null, approachPos,
 					approachPos - (Vector3.UnitY * EyeToFloorTestHeight), out col))
 				{
 					//no floor underneath or eye in solid?
