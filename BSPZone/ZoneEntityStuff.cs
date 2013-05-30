@@ -154,13 +154,8 @@ namespace BSPZone
 			{
 				if(IsVisibleFrom(pos, zl.Value.mPosition))
 				{
-					Vector3	intersection	=Vector3.Zero;
-					bool	bHitLeaf		=false;
-					Int32	leafHit			=0;
-					Int32	nodeHit			=0;
-
-					if(!RayIntersect(pos, zl.Value.mPosition, 0,
-						ref intersection, ref bHitLeaf, ref leafHit, ref nodeHit))
+					Collision	col;
+					if(!TraceAllSphere(0f, pos, zl.Value.mPosition, out col))
 					{
 						ret.Add(zl.Value);
 					}
@@ -228,39 +223,13 @@ namespace BSPZone
 						return	bestLight;
 					}				
 				}
-
-				Vector3	impacto	=Vector3.Zero;
-				int		leafHit	=0;
-				int		nodeHit	=0;
-				if(RayCollide(pos, -sunLight.mPosition * 10000 + pos,	//pos contains ray direction
-					ref impacto, ref leafHit, ref nodeHit))
+				
+				Collision	col;
+				if(TraceAllSphere(0f, pos, -sunLight.mPosition * 10000 + pos, out col))	//pos contains ray direction
 				{
-					ZoneNode	zn	=mZoneNodes[nodeHit];
-
-					if(zn.mNumFaces == 1)
+					if(Misc.bFlagSet(SKY, col.mFaceHit.mFlags))
 					{
-						if(Misc.bFlagSet(SKY, mDebugFaces[zn.mFirstFace].mFlags))
-						{
-							return	mLightCache[sunEnt];
-						}
-					}
-					else
-					{
-						for(int i=0;i < zn.mNumFaces;i++)
-						{
-							DebugFace	df	=mDebugFaces[i + zn.mFirstFace];
-
-							float	sum	=ComputeAngleSum(df, impacto);
-							if(sum < (MathHelper.TwoPi - 0.0001f))
-							{
-								continue;
-							}
-
-							if(Misc.bFlagSet(SKY, df.mFlags))
-							{
-								return	mLightCache[sunEnt];
-							}
-						}
+						return	mLightCache[sunEnt];
 					}
 				}
 			}

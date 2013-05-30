@@ -622,58 +622,41 @@ namespace BSPZone
 		}
 
 
-		public bool RayCollide(Vector3 Front, Vector3 Back,
-			ref Vector3 I, ref Int32 leafHit, ref Int32 nodeHit)
-		{
-			bool	hitLeaf	=false;
-			if(RayIntersect(Front, Back, mZoneModels[0].mRootNode,
-				ref I, ref hitLeaf, ref leafHit, ref nodeHit))
-			{
-				return	hitLeaf;
-			}
-			return	false;
-		}
-
-
 		bool FootCheck(BoundingBox box, Vector3 footPos, float dist, out int modelOn)
 		{
 			//see if the feet are still on the ground
 			Vector3		footCheck	=footPos - Vector3.UnitY * dist;
-			ZonePlane	footPlane	=ZonePlane.BlankX;
-			Vector3		impVec		=Vector3.Zero;
 
 			modelOn	=-1;
 
-			RayTrace	rt	=new RayTrace();
+			RayTrace	rt	=new RayTrace(footPos, footCheck);
 
 			rt.mBounds	=box;
 			if(TraceBoxNode(rt, footPos, footCheck, 0))
 			{
-				if(rt.mbStartInside)
+				if(rt.mCollision.mbStartInside)
 				{
 					return	false;
 				}
 
-				if(rt.mBestPlane.IsGround())
+				if(rt.mCollision.mPlaneHit.IsGround())
 				{
 					return	true;
 				}
 			}
 
 			//try models
-			int		modelHit		=0;
-			bool	bStartInSolid	=false;
-			if(TraceModelsBox(box, footPos, footCheck,
-				ref modelHit, ref impVec, ref footPlane, ref bStartInSolid))
+			Collision	col;
+			if(TraceModelsBox(box, footPos, footCheck, out col))
 			{
-				if(bStartInSolid)
+				if(col.mbStartInside)
 				{
 					return	false;
 				}
 
-				if(footPlane.IsGround())
+				if(col.mPlaneHit.IsGround())
 				{
-					modelOn	=modelHit;
+					modelOn	=col.mModelHit;
 					return	true;
 				}
 			}
@@ -685,17 +668,13 @@ namespace BSPZone
 			bool bSlopeOk, float stepHeight, float originalLen,
 			ref Vector3 stepPos, out int modelOn)
 		{
-			Vector3		impVec		=Vector3.Zero;
-			ZonePlane	impPlane	=ZonePlane.BlankX;
-			int			modelHit	=0;
-
-			RayTrace	rt	=new RayTrace();
-
 			//first trace up from the start point to world
 			//to make sure there's head room
 			Vector3	stairStart	=start;
 			Vector3	stairEnd	=start + stairAxis * stepHeight;
-			rt.mBounds			=box;
+
+			RayTrace	rt	=new RayTrace(stairStart, stairEnd);
+			rt.mBounds		=box;
 			if(TraceBoxNode(rt, stairStart, stairEnd, 0))
 			{
 				//hit noggin, just use previous point
@@ -704,9 +683,8 @@ namespace BSPZone
 			}
 
 			//do nogginry check for models too
-			bool	bStartInSolid	=false;
-			if(TraceModelsBox(box, stairStart, stairEnd,
-				ref modelHit, ref impVec, ref impPlane, ref bStartInSolid))
+			Collision	col;
+			if(TraceModelsBox(box, stairStart, stairEnd, out col))
 			{
 				//hit noggin, just use previous point
 				modelOn	=-1;
@@ -724,12 +702,14 @@ namespace BSPZone
 				//we land on a ground surface
 				Vector3	stepStart	=stepPos;
 				Vector3	stepEnd		=stepPos - Vector3.UnitY * (stepHeight * 2f);
+				rt.mOriginalStart	=stepStart;
+				rt.mOriginalEnd		=stepEnd;
 				if(TraceBoxNode(rt, stepStart, stepEnd, 0))
 				{
-					if(rt.mBestPlane.IsGround())
+					if(rt.mCollision.mPlaneHit.IsGround())
 					{
 						//landed on the ground
-						stepPos		=rt.mIntersection;
+						stepPos		=rt.mCollision.mIntersection;
 						bGroundStep	=true;
 					}
 					else
@@ -737,25 +717,24 @@ namespace BSPZone
 						if(bSlopeOk)
 						{
 							//see if the plane has any footing at all
-							if(Vector3.Dot(Vector3.UnitY, rt.mBestPlane.mNormal) > RampAngle)
+							if(Vector3.Dot(Vector3.UnitY, rt.mCollision.mPlaneHit.mNormal) > RampAngle)
 							{
-								stepPos		=rt.mIntersection;
+								stepPos		=rt.mCollision.mIntersection;
 								bGroundStep	=true;
 							}
 						}
 					}
 				}
 
-				float	stepDist	=Vector3.Distance(stepPos, rt.mIntersection);
+				float	stepDist	=Vector3.Distance(stepPos, rt.mCollision.mIntersection);
 
 				//try models
-				if(TraceModelsBox(box, stepStart, stepEnd,
-					ref modelHit, ref impVec, ref impPlane, ref bStartInSolid))
+				if(TraceModelsBox(box, stepStart, stepEnd, out col))
 				{
-					if(impPlane.IsGround())
+					if(col.mPlaneHit.IsGround())
 					{
 						//landed on the ground
-						stepPos		=impVec;
+						stepPos		=col.mIntersection;
 						bGroundStep	=true;
 					}
 					else
@@ -763,9 +742,9 @@ namespace BSPZone
 						if(bSlopeOk)
 						{
 							//see if the plane has any footing at all
-							if(Vector3.Dot(Vector3.UnitY, impPlane.mNormal) > RampAngle)
+							if(Vector3.Dot(Vector3.UnitY, col.mPlaneHit.mNormal) > RampAngle)
 							{
-								stepPos		=impVec;
+								stepPos		=col.mIntersection;
 								bGroundStep	=true;
 							}
 						}
@@ -910,7 +889,7 @@ namespace BSPZone
 
 			for(i=0;i < MaxMoveBoxIterations;i++)
 			{
-				RayTrace	rt	=new RayTrace();
+				RayTrace	rt	=new RayTrace(start, end);
 				ZoneModel	zm	=mZoneModels[modelIndex];
 
 				//first trace up from the start point to world
@@ -921,31 +900,18 @@ namespace BSPZone
 					break;
 				}
 
-				if(rt.mbStartInside)
+				if(rt.mCollision.mbStartInside)
 				{
 					break;	//in solid
 				}
 
-				float	startDist	=rt.mBestPlane.DistanceFast(start);
-				float	dist		=rt.mBestPlane.DistanceFast(end);
+				ZonePlane	zp	=rt.mCollision.mPlaneHit;
 
-				//is the direction vector valid to find a collision response?
-				if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
-				{
-					//place end directly on the plane
-					end	-=(rt.mBestPlane.mNormal * dist);
+				end	=zp.ReflectPosition(start, end);
 
-					//adjust it to the front side
-					end	+=(rt.mBestPlane.mNormal * Mathery.VCompareEpsilon);
-				}
-				else
+				if(!hitPlanes.Contains(zp))
 				{
-					end	-=(rt.mBestPlane.mNormal * (dist - Mathery.VCompareEpsilon));
-				}
-				
-				if(!hitPlanes.Contains(rt.mBestPlane))
-				{
-					hitPlanes.Add(rt.mBestPlane);
+					hitPlanes.Add(zp);
 				}
 			}
 
@@ -961,64 +927,63 @@ namespace BSPZone
 		//simulate movement and record the positions involved
 		public void MoveBoxDebug(BoundingBox box, Vector3 start, Vector3 end, List<Vector3> segments)
 		{
-			MoveBoxWorldDebug(box, start, end, segments);
+//			MoveBoxWorldDebug(box, start, end, segments);
 //			MoveBoxModelsDebug(box, start, end, segments);
+
+			Collision	col;
+
+			segments.Add(start);
+			segments.Add(end);
+
+			if(TraceAllSphere(0f, start, end, out col))
+			{
+				DebugFace	df	=col.mFaceHit;
+				if(df == null)
+				{
+					return;
+				}
+
+				for(int v=0;v < df.mNumVerts;v++)
+				{
+					int	idx0	=mDebugIndexes[v + df.mFirstVert];
+					int	idx1	=mDebugIndexes[((v + 1) % df.mNumVerts) + df.mFirstVert];
+
+					segments.Add(mDebugVerts[idx0]);
+					segments.Add(mDebugVerts[idx1]);
+				}
+			}
 		}
 
 
 		//returns true if move was a success and endpoint is safe
 		void MoveBoxModelsDebug(BoundingBox box, Vector3 start, Vector3 end, List<Vector3> segments)
 		{
-			Vector3		impacto		=Vector3.Zero;
-			int			i			=0;
-			int			modelHit	=0;
-
 			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
 
 			//do model collisions
-			for(i=0;i < MaxMoveBoxIterations;i++)
+			for(int i=0;i < MaxMoveBoxIterations;i++)
 			{
-				ZonePlane	zp				=ZonePlane.Blank;
-				bool		bHitSomething	=false;
-
-				bool	bStartInSolid	=false;
-
 				segments.Add(start);
 				segments.Add(end);
 
-				bHitSomething	=TraceModelsBox(box, start, end,
-					ref modelHit, ref impacto, ref zp, ref bStartInSolid);
+				Collision	col;
 
+				bool	bHitSomething	=TraceModelsBox(box, start, end, out col);
 				if(!bHitSomething)
 				{
 					break;
 				}
 
-				if(bStartInSolid)
+				if(col.mbStartInside)
 				{
 					return;
 				}
 
-				float	startDist	=zp.DistanceFast(start);
-				float	dist		=zp.DistanceFast(end);
+				end	=col.mPlaneHit.ReflectPosition(start, end);
 
-				//is the direction vector valid to find a collision response?
-				if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
+				if(!hitPlanes.Contains(col.mPlaneHit))
 				{
-					//place end directly on the plane
-					end	-=(zp.mNormal * dist);
-
-					//adjust it to the front side
-					end	+=(zp.mNormal * Mathery.VCompareEpsilon);
-				}
-				else
-				{
-					end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
-				}
-
-				if(!hitPlanes.Contains(zp))
-				{
-					hitPlanes.Add(zp);
+					hitPlanes.Add(col.mPlaneHit);
 				}
 			}
 		}
@@ -1032,7 +997,7 @@ namespace BSPZone
 			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
 			for(i=0;i < MaxMoveBoxIterations;i++)
 			{
-				RayTrace	rt	=new RayTrace();
+				RayTrace	rt	=new RayTrace(start, end);
 
 				rt.mBounds			=box;
 				rt.mRadius			=12f;	//testing
@@ -1047,31 +1012,18 @@ namespace BSPZone
 					break;
 				}
 
-				if(rt.mbStartInside)
+				if(rt.mCollision.mbStartInside)
 				{
 					return;
 				}
 
-				float	startDist	=rt.mBestPlane.DistanceFast(start);
-				float	dist		=rt.mBestPlane.DistanceFast(end);
+				ZonePlane	zp	=rt.mCollision.mPlaneHit;
 
-				//is the direction vector valid to find a collision response?
-				if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
-				{
-					//place end directly on the plane
-					end	-=(rt.mBestPlane.mNormal * dist);
+				end	=zp.ReflectPosition(start, end);
 
-					//adjust it to the front side
-					end	+=(rt.mBestPlane.mNormal * Mathery.VCompareEpsilon);
-				}
-				else
+				if(!hitPlanes.Contains(zp))
 				{
-					end	-=(rt.mBestPlane.mNormal * (dist - Mathery.VCompareEpsilon));
-				}
-
-				if(!hitPlanes.Contains(rt.mBestPlane))
-				{
-					hitPlanes.Add(rt.mBestPlane);
+					hitPlanes.Add(zp);
 				}
 			}
 		}
@@ -1086,7 +1038,7 @@ namespace BSPZone
 			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
 			for(i=0;i < MaxMoveBoxIterations;i++)
 			{
-				RayTrace	rt	=new RayTrace();
+				RayTrace	rt	=new RayTrace(start, end);
 				rt.mBounds		=box;
 
 				bool	bHitSomething	=TraceBoxNode(rt, start, end, 0);
@@ -1095,7 +1047,7 @@ namespace BSPZone
 					break;
 				}
 
-				if(rt.mbStartInside)
+				if(rt.mCollision.mbStartInside)
 				{
 					//TODO: report and solve via intersection
 					//can't solve!
@@ -1103,26 +1055,13 @@ namespace BSPZone
 					return	false;
 				}
 
-				float	startDist	=rt.mBestPlane.DistanceFast(start);
-				float	dist		=rt.mBestPlane.DistanceFast(end);
+				ZonePlane	zp	=rt.mCollision.mPlaneHit;
 
-				//is the direction vector valid to find a collision response?
-				if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
-				{
-					//place end directly on the plane
-					end	-=(rt.mBestPlane.mNormal * dist);
+				end	=zp.ReflectPosition(start, end);
 
-					//adjust it to the front side
-					end	+=(rt.mBestPlane.mNormal * Mathery.VCompareEpsilon);
-				}
-				else
+				if(!hitPlanes.Contains(zp))
 				{
-					end	-=(rt.mBestPlane.mNormal * (dist - Mathery.VCompareEpsilon));
-				}
-
-				if(!hitPlanes.Contains(rt.mBestPlane))
-				{
-					hitPlanes.Add(rt.mBestPlane);
+					hitPlanes.Add(zp);
 				}
 			}
 
@@ -1141,29 +1080,21 @@ namespace BSPZone
 		bool MoveBoxModels(BoundingBox box, Vector3 start, Vector3 end,
 			out Vector3 finalPos)
 		{
-			Vector3		impacto		=Vector3.Zero;
-			int			i			=0;
-			int			modelHit	=0;
-
 			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
 
 			//do model collisions
+			int	i;
 			for(i=0;i < MaxMoveBoxIterations;i++)
 			{
-				ZonePlane	zp				=ZonePlane.Blank;
-				bool		bHitSomething	=false;
+				Collision	col;
 
-				bool	bStartInSolid	=false;
-
-				bHitSomething	=TraceModelsBox(box, start, end,
-					ref modelHit, ref impacto, ref zp, ref bStartInSolid);
-
+				bool	bHitSomething	=TraceModelsBox(box, start, end, out col);
 				if(!bHitSomething)
 				{
 					break;
 				}
 
-				if(bStartInSolid)
+				if(col.mbStartInside)
 				{
 					//TODO: report and solve via intersection
 					//can't solve!  Use end of world collision
@@ -1171,26 +1102,11 @@ namespace BSPZone
 					return	false;
 				}
 
-				float	startDist	=zp.DistanceFast(start);
-				float	dist		=zp.DistanceFast(end);
+				end	=col.mPlaneHit.ReflectPosition(start, end);
 
-				//is the direction vector valid to find a collision response?
-				if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
+				if(!hitPlanes.Contains(col.mPlaneHit))
 				{
-					//place end directly on the plane
-					end	-=(zp.mNormal * dist);
-
-					//adjust it to the front side
-					end	+=(zp.mNormal * Mathery.VCompareEpsilon);
-				}
-				else
-				{
-					end	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
-				}
-
-				if(!hitPlanes.Contains(zp))
-				{
-					hitPlanes.Add(zp);
+					hitPlanes.Add(col.mPlaneHit);
 				}
 			}
 
@@ -1329,7 +1245,7 @@ namespace BSPZone
 					continue;
 				}
 
-				RayTrace	rt	=new RayTrace();
+				RayTrace	rt	=new RayTrace(start, end);
 				rt.mBounds		=box;
 				if(TraceFakeOrientedBoxTrigger(rt, start, end, mZoneModels[zt.mModelNum]))
 				{
@@ -1368,7 +1284,7 @@ namespace BSPZone
 					continue;
 				}
 
-				RayTrace	rt	=new RayTrace();
+				RayTrace	rt	=new RayTrace(start, end);
 				rt.mBounds		=box;
 				if(TraceFakeOrientedBoxTrigger(rt, start, end, mZoneModels[zt.mModelNum]))
 				{

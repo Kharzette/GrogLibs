@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using Microsoft.Xna.Framework;
+using UtilityLib;
+
 
 namespace BSPZone
 {
@@ -118,6 +120,50 @@ namespace BSPZone
 		public bool IsGround()
 		{
 			return	(Vector3.Dot(mNormal, Vector3.UnitY) > GroundAngle);
+		}
+
+
+		//push slightly to the front side
+		internal Vector3 ReflectPosition(Vector3 start, Vector3 end)
+		{
+			float	startDist	=DistanceFast(start);
+			float	dist		=DistanceFast(end);
+
+			//is the direction vector valid to find a collision response?
+			if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
+			{
+				//place end directly on the plane
+				end	-=(mNormal * dist);
+
+				//adjust it to the front side
+				end	+=(mNormal * Mathery.VCompareEpsilon);
+			}
+			else
+			{
+				end	-=(mNormal * (dist - Mathery.VCompareEpsilon));
+			}
+			return	end;
+		}
+
+
+		//adjust a position just off the front side
+		internal void ReflectPosition(ref Vector3 pos)
+		{
+			float	dist	=DistanceFast(pos);
+
+			//directly on or off a bit?
+			if(dist >= Mathery.VCompareEpsilon)
+			{
+				//place end directly on the plane
+				pos	-=(mNormal * dist);
+
+				//adjust it to the front side
+				pos	+=(mNormal * Mathery.VCompareEpsilon);
+			}
+			else
+			{
+				pos	-=(mNormal * (dist - Mathery.VCompareEpsilon));
+			}
 		}
 
 

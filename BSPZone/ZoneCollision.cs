@@ -8,18 +8,28 @@ using UtilityLib;
 
 namespace BSPZone
 {
-	class RayTrace
+	public class Collision
 	{
 		internal Vector3		mIntersection;
-		internal ZonePlane		mBestPlane;
+		internal ZonePlane		mPlaneHit;
+		internal bool			mbStartInside;
+		internal int			mModelHit;
+		internal DebugFace		mFaceHit;
+	}
+
+	class RayTrace
+	{
+		internal Collision	mCollision	=new Collision();
+
+		internal Vector3		mOriginalStart, mOriginalEnd;
 		internal BoundingBox	mBounds;
 		internal float			mRadius;
-		internal bool			mbStartInside;
+		internal ZoneLeaf		mLeafHit;
 
-		internal RayTrace()
+		internal RayTrace(Vector3 start, Vector3 end)
 		{
-			mIntersection	=Vector3.Zero;
-			mBestPlane		=ZonePlane.Blank;
+			mOriginalStart	=start;
+			mOriginalEnd	=end;
 		}
 	}
 
@@ -63,102 +73,55 @@ namespace BSPZone
 		}
 
 
-		//No need to use leafs for this, as bevels are only
-		//there for plane expansion.  This is a genesis port.
-		bool RayIntersect(Vector3 start, Vector3 end, Int32 node,
-			ref Vector3 intersectionPoint, ref bool hitLeaf,
-			ref Int32 leafHit, ref Int32 nodeHit)
+		DebugFace GetFaceForPoint(ZoneLeaf zl, Vector3 pos)
 		{
-			float	Fd, Bd, dist;
-			Vector3	I;
-
-			if(node < 0)						
+			if(zl.mNumFaces == 0)
 			{
-				Int32	leaf	=-(node+1);
+				return	null;
+			}
+			else if(zl.mNumFaces == 1)
+			{
+				return	mDebugFaces[mDebugLeafFaces[zl.mFirstFace]];
+			}
 
-				leafHit	=leaf;
+			float		bestSum		=float.MinValue;
+			DebugFace	bestFace	=null;
+			for(int f=0;f < zl.mNumFaces;f++)
+			{
+				int	leafFace	=mDebugLeafFaces[f + zl.mFirstFace];
 
-				if((mZoneLeafs[leaf].mContents
-					& Contents.BSP_CONTENTS_SOLID2) != 0)
+				DebugFace	df	=mDebugFaces[leafFace];
+
+				float	sum	=ComputeAngleSum(df, pos);
+				if(sum > bestSum)
 				{
-					return	true;	//Ray collided with solid space
-				}
-				else 
-				{
-					return	false;	//Ray collided with empty space
+					bestSum		=sum;
+					bestFace	=df;
 				}
 			}
-			ZoneNode	n	=mZoneNodes[node];
-			ZonePlane	p	=mZonePlanes[n.mPlaneNum];
-
-			Fd	=p.DistanceFast(start);
-			Bd	=p.DistanceFast(end);
-
-			if(Fd >= 0 && Bd >= 0)
-			{
-				return(RayIntersect(start, end, n.mFront,
-					ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit));
-			}
-			if(Fd < 0 && Bd < 0)
-			{
-				return(RayIntersect(start, end, n.mBack,
-					ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit));
-			}
-
-			dist	=Fd / (Fd - Bd);
-
-			I	=start + dist * (end - start);
-
-			//Work our way to the front, from the back side.  As soon as there
-			//are no more collisions, we can assume that we have the front portion of the
-			//ray that is in empty space.  Once we find this, and see that the back half is in
-			//solid space, then we found the front intersection point...
-			if(RayIntersect(start, I,
-				(Fd < 0)? n.mBack : n.mFront,
-				ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit))
-			{
-				return	true;
-			}
-			else if(RayIntersect(I, end,
-				(Fd < 0)? n.mFront : n.mBack,
-				ref intersectionPoint, ref hitLeaf, ref leafHit, ref nodeHit))
-			{
-				if(!hitLeaf)
-				{
-					intersectionPoint	=I;
-					hitLeaf				=true;
-					nodeHit				=node;
-				}
-				return	true;
-			}
-			return	false;
+			return	bestFace;
 		}
 
 
 		//returns the closest impact, checks all models
 		//everything returned in worldspace
 		public bool TraceAllSphere(float radius, Vector3 start, Vector3 end,
-			 ref int modelHit, ref Vector3 I, ref ZonePlane P)
+			out Collision col)
 		{
-			List<int>		modelsHit	=new List<int>();
-			List<Vector3>	impacts		=new List<Vector3>();
-			List<ZonePlane>	planes		=new List<ZonePlane>();
-
-			RayTrace	rt	=new RayTrace();
-			rt.mRadius		=radius;
+			List<Collision>	collisions	=new List<Collision>();
 
 			for(int i=0;i < mZoneModels.Length;i++)
 			{
-				Vector3		impacto	=Vector3.Zero;
-				ZonePlane	hp		=ZonePlane.Blank;
+				RayTrace	rt	=new RayTrace(start, end);
+				rt.mRadius		=radius;
+
+				rt.mCollision.mModelHit	=i;
 
 				if(i == 0)
 				{
 					if(TraceSphereNode(rt, start, end, mZoneModels[i].mRootNode))
 					{
-						modelsHit.Add(i);
-						impacts.Add(rt.mIntersection);
-						planes.Add(rt.mBestPlane);
+						collisions.Add(rt.mCollision);
 					}
 				}
 				else
@@ -166,32 +129,34 @@ namespace BSPZone
 					ZoneModel	zm			=mZoneModels[i];
 					Vector3		modelStart	=Vector3.Transform(start, zm.mInvertedTransform);
 					Vector3		modelEnd	=Vector3.Transform(end, zm.mInvertedTransform);
+					rt.mOriginalStart		=modelStart;
+					rt.mOriginalEnd			=modelEnd;
 					if(TraceSphereNode(rt, modelStart, modelEnd, mZoneModels[i].mRootNode))
 					{
-						modelsHit.Add(i);
-						impacts.Add(rt.mIntersection);
-						planes.Add(rt.mBestPlane);
+						collisions.Add(rt.mCollision);
 					}
 				}
 			}
 
-			if(modelsHit.Count == 0)
+			if(collisions.Count == 0)
 			{
+				col		=null;
 				return	false;
 			}
 
 			int		bestIdx		=0;
 			float	bestDist	=float.MaxValue;
-			for(int i=0;i < modelsHit.Count;i++)
+			for(int i=0;i < collisions.Count;i++)
 			{
-				if(modelsHit[i] == -1)
-				{
-					continue;
-				}
-				impacts[i]	=Vector3.Transform(impacts[i], mZoneModels[modelsHit[i]].mTransform);
-				planes[i]	=ZonePlane.Transform(planes[i], mZoneModels[modelsHit[i]].mTransform);
+				Collision	c	=collisions[i];
 
-				float	dist	=Vector3.DistanceSquared(impacts[i], start);
+				c.mIntersection	=Vector3.Transform(c.mIntersection,
+					mZoneModels[c.mModelHit].mTransform);
+
+				c.mPlaneHit	=ZonePlane.Transform(c.mPlaneHit,
+					mZoneModels[c.mModelHit].mTransform);
+
+				float	dist	=Vector3.DistanceSquared(c.mIntersection, start);
 				if(dist < bestDist)
 				{
 					bestDist	=dist;
@@ -199,9 +164,7 @@ namespace BSPZone
 				}
 			}
 
-			modelHit	=modelsHit[bestIdx];
-			I			=impacts[bestIdx];
-			P			=planes[bestIdx];
+			col	=collisions[bestIdx];
 
 			return	true;
 		}
@@ -209,44 +172,40 @@ namespace BSPZone
 
 		//returns the closest impact, checks all models
 		//everything returned in worldspace
-		public bool TraceModelsBox(BoundingBox boxBounds, Vector3 start, Vector3 end,
-			 ref int modelHit, ref Vector3 I, ref ZonePlane P, ref bool bStartInSolid)
+		public bool TraceModelsBox(BoundingBox boxBounds, Vector3 start, Vector3 end, out Collision col)
 		{
-			List<int>		modelsHit	=new List<int>();
-			List<Vector3>	impacts		=new List<Vector3>();
-			List<ZonePlane>	planes		=new List<ZonePlane>();
-
-			RayTrace	rt	=new RayTrace();
-			rt.mBounds		=boxBounds;
+			List<Collision>	collisions	=new List<Collision>();
 
 			for(int i=1;i < mZoneModels.Length;i++)
 			{
-				Vector3		impacto	=Vector3.Zero;
-				ZonePlane	hp		=ZonePlane.Blank;
-				ZoneModel	zm		=mZoneModels[i];
+				RayTrace	rt	=new RayTrace(start, end);
+				ZoneModel	zm	=mZoneModels[i];
+				rt.mBounds		=boxBounds;
+
+				rt.mCollision.mModelHit	=i;
+
 				if(TraceFakeOrientedBoxModel(rt, start, end, zm))
 				{
-					if(rt.mbStartInside)
+					if(rt.mCollision.mbStartInside)
 					{
-						bStartInSolid	=true;
+						col	=rt.mCollision;
 						return	true;
 					}
-					modelsHit.Add(i);
-					impacts.Add(rt.mIntersection);
-					planes.Add(rt.mBestPlane);
+					collisions.Add(rt.mCollision);
 				}
 			}
 
-			if(modelsHit.Count == 0)
+			if(collisions.Count == 0)
 			{
+				col		=null;
 				return	false;
 			}
 
 			int		bestIdx		=0;
 			float	bestDist	=float.MaxValue;
-			for(int i=0;i < modelsHit.Count;i++)
+			for(int i=0;i < collisions.Count;i++)
 			{
-				float	dist	=Vector3.DistanceSquared(impacts[i], start);
+				float	dist	=Vector3.DistanceSquared(collisions[i].mIntersection, start);
 				if(dist < bestDist)
 				{
 					bestDist	=dist;
@@ -254,80 +213,7 @@ namespace BSPZone
 				}
 			}
 
-			modelHit	=modelsHit[bestIdx];
-			I			=impacts[bestIdx];
-			P			=planes[bestIdx];
-
-			return	true;
-		}
-
-
-		//returns the closest impact, checks all models
-		//everything returned in worldspace
-		public bool TraceAllRay(Vector3 start, Vector3 end,
-			 ref int modelHit, ref Vector3 I, ref ZonePlane P)
-		{
-			List<int>		modelsHit	=new List<int>();
-			List<Vector3>	impacts		=new List<Vector3>();
-			List<ZonePlane>	planes		=new List<ZonePlane>();
-
-			RayTrace	rt	=new RayTrace();
-
-			for(int i=0;i < mZoneModels.Length;i++)
-			{
-				Vector3		impacto	=Vector3.Zero;
-				ZonePlane	hp		=ZonePlane.Blank;
-
-				if(i == 0)
-				{
-					if(TraceRayNode(rt, start, end, mZoneModels[i].mRootNode))
-					{
-						modelsHit.Add(i);
-						impacts.Add(rt.mIntersection);
-						planes.Add(rt.mBestPlane);
-					}
-				}
-				else
-				{
-					ZoneModel	zm			=mZoneModels[i];
-					Vector3		modelStart	=Vector3.Transform(start, zm.mInvertedTransform);
-					Vector3		modelEnd	=Vector3.Transform(end, zm.mInvertedTransform);
-					if(TraceRayNode(rt, modelStart, modelEnd, mZoneModels[i].mRootNode))
-					{
-						modelsHit.Add(i);
-						impacts.Add(rt.mIntersection);
-						planes.Add(rt.mBestPlane);
-					}
-				}
-			}
-
-			if(modelsHit.Count == 0)
-			{
-				return	false;
-			}
-
-			int		bestIdx		=0;
-			float	bestDist	=float.MaxValue;
-			for(int i=0;i < modelsHit.Count;i++)
-			{
-				if(modelsHit[i] == -1)
-				{
-					continue;
-				}
-				impacts[i]	=Vector3.Transform(impacts[i], mZoneModels[modelsHit[i]].mTransform);
-				planes[i]	=ZonePlane.Transform(planes[i], mZoneModels[modelsHit[i]].mTransform);
-
-				float	dist	=Vector3.DistanceSquared(impacts[i], start);
-				if(dist < bestDist)
-				{
-					bestDist	=dist;
-					bestIdx		=i;
-				}
-			}
-
-			modelHit	=modelsHit[bestIdx];
-			I			=impacts[bestIdx];
-			P			=planes[bestIdx];
+			col	=collisions[bestIdx];
 
 			return	true;
 		}
@@ -362,32 +248,27 @@ namespace BSPZone
 		//drop a worldspace position to the "floor"
 		public Vector3 DropToGround(Vector3 pos, bool bUseModels)
 		{
-			int			modelHit	=0;
-			Vector3		impacto		=Vector3.Zero;
-			ZonePlane	planeHit	=ZonePlane.Blank;
+			Collision	col;
+
+			RayTrace	trace	=new RayTrace(pos, pos + (Vector3.UnitY * - 300f));
 
 			bool	bHit	=false;
 			if(bUseModels)
 			{
-				bHit	=TraceAllRay(pos, pos + (Vector3.UnitY * -300f),
-							ref modelHit, ref impacto, ref planeHit);
+				bHit	=TraceAllSphere(0f, trace.mOriginalStart,
+					trace.mOriginalEnd, out col);
 			}
 			else
 			{
-				RayTrace	trace	=new RayTrace();
-				bHit	=TraceRayNode(trace, pos, pos + (Vector3.UnitY * - 300f),
-							mZoneModels[0].mRootNode);
-				if(bHit)
-				{
-					impacto		=trace.mIntersection;
-					planeHit	=trace.mBestPlane;
-				}
+				bHit	=TraceSphereNode(trace, trace.mOriginalStart,
+					trace.mOriginalEnd, mZoneModels[0].mRootNode);
 			}
 
-			if(bHit && planeHit != ZonePlane.Blank && planeHit.IsGround())
+			if(bHit && trace.mCollision.mPlaneHit != ZonePlane.Blank
+				&& trace.mCollision.mPlaneHit.IsGround())
 			{
-				impacto	+=(planeHit.mNormal * Mathery.ON_EPSILON);
-				return	impacto;
+				trace.mCollision.mIntersection	+=(trace.mCollision.mPlaneHit.mNormal * Mathery.ON_EPSILON);
+				return	trace.mCollision.mIntersection;
 			}
 			return	pos;
 		}
@@ -473,7 +354,7 @@ namespace BSPZone
 
 				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID_CLIP))
 				{
-					if(ClipSphereToLeaf(trace, start, end, zl, trace.mRadius))
+					if(ClipSphereToLeaf(trace, zl, trace.mRadius))
 					{
 						return	true;
 					}
@@ -492,53 +373,12 @@ namespace BSPZone
 				bHit	=TraceSphereNode(trace, clipStart, clipEnd, zn.mBack);
 				if(bHit)
 				{
-					end	=trace.mIntersection;
+					end	=trace.mCollision.mIntersection;
 				}
 			}
 			if(PartFront(p, -trace.mRadius, start, end, out clipStart, out clipEnd))
 			{
 				bHit	|=TraceSphereNode(trace, clipStart, clipEnd, zn.mFront);
-				return	bHit;
-			}
-			return	bHit;
-		}
-
-
-		//model relative values
-		bool TraceRayNode(RayTrace trace, Vector3 start, Vector3 end, Int32 node)
-		{
-			bool	bHit	=false;
-
-			if(node < 0)
-			{
-				Int32		leafIdx		=-(node + 1);
-				ZoneLeaf	zl			=mZoneLeafs[leafIdx];
-
-				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID_CLIP))
-				{
-					if(ClipSphereToLeaf(trace, start, end, zl, 0))
-					{
-						return	true;
-					}
-				}
-				return	false;
-			}
-
-			ZoneNode	zn	=mZoneNodes[node];
-			ZonePlane	p	=mZonePlanes[zn.mPlaneNum];
-
-			Vector3	clipStart, clipEnd;
-			if(PartBehind(p, 0, start, end, out clipStart, out clipEnd))
-			{
-				bHit	=TraceRayNode(trace, clipStart, clipEnd, zn.mBack);
-				if(bHit)
-				{
-					end	=trace.mIntersection;
-				}
-			}
-			if(PartFront(p, 0, start, end, out clipStart, out clipEnd))
-			{
-				bHit	|=TraceRayNode(trace, clipStart, clipEnd, zn.mFront);
 				return	bHit;
 			}
 			return	bHit;
@@ -553,15 +393,20 @@ namespace BSPZone
 
 			FakeOrientBoxCollisionToModel(mod, ref rt.mBounds, ref start, ref end);
 
+			rt.mOriginalStart	=start;
+			rt.mOriginalEnd		=end;
+
 			bool	bHit	=TraceBoxNode(rt, start, end, mod.mRootNode);
 
 			//copy bounds back
 			rt.mBounds	=box;
 
-			if(bHit && !rt.mbStartInside)
+			Collision	col	=rt.mCollision;
+
+			if(bHit && !col.mbStartInside)
 			{
-				rt.mIntersection	=Vector3.Transform(rt.mIntersection, mod.mTransform);
-				rt.mBestPlane		=ZonePlane.Transform(rt.mBestPlane, mod.mTransform);
+				col.mIntersection	=Vector3.Transform(col.mIntersection, mod.mTransform);
+				col.mPlaneHit		=ZonePlane.Transform(col.mPlaneHit, mod.mTransform);
 			}
 			return	bHit;
 		}
@@ -609,6 +454,9 @@ namespace BSPZone
 		{
 			FakeOrientBoxCollisionToModel(mod, ref rt.mBounds, ref start, ref end);
 
+			rt.mOriginalStart	=start;
+			rt.mOriginalEnd		=end;
+
 			return	TraceBoxNodeTrigger(rt, start, end, mod.mRootNode);
 		}
 
@@ -641,7 +489,7 @@ namespace BSPZone
 				bHit	=TraceBoxNodeTrigger(trace, clipStart, clipEnd, zn.mBack);
 				if(bHit)
 				{
-					end	=trace.mIntersection;
+					end	=trace.mCollision.mIntersection;
 				}
 			}
 			if(PartFront(p, -dist, start, end, out clipStart, out clipEnd))
@@ -665,7 +513,7 @@ namespace BSPZone
 
 				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID_CLIP))
 				{
-					if(ClipBoxToLeaf(trace, start, end, zl))
+					if(ClipBoxToLeaf(trace, zl))
 					{
 						return	true;
 					}
@@ -684,7 +532,7 @@ namespace BSPZone
 				bHit	=TraceBoxNode(trace, clipStart, clipEnd, zn.mBack);
 				if(bHit)
 				{
-					end	=trace.mIntersection;
+					end	=trace.mCollision.mIntersection;
 				}
 			}
 			if(PartFront(p, -dist, start, end, out clipStart, out clipEnd))
@@ -736,12 +584,15 @@ namespace BSPZone
 		}
 
 
-		bool ClipSphereToLeaf(RayTrace trace, Vector3 start, Vector3 end, ZoneLeaf zl, float radius)
+		bool ClipSphereToLeaf(RayTrace trace, ZoneLeaf zl, float radius)
 		{
 			if(zl.mNumSides <= 0)
 			{
 				return	false;
 			}
+
+			Vector3	start	=trace.mOriginalStart;
+			Vector3	end		=trace.mOriginalEnd;
 
 			bool		bClipped	=false;
 			bool		bAnyInFront	=false;
@@ -790,15 +641,17 @@ namespace BSPZone
 				}
 			}
 
+			trace.mLeafHit	=zl;
+
 			if(bClipped)
 			{
-				trace.mIntersection	=start;
-				trace.mBestPlane	=clipPlane;
+				trace.mCollision.mIntersection	=start;
+				trace.mCollision.mPlaneHit		=clipPlane;
 			}
 			else if(!bAnyInFront)
 			{
 				//started inside!
-				trace.mbStartInside	=true;
+				trace.mCollision.mbStartInside	=true;
 				return	true;
 			}
 
@@ -807,12 +660,15 @@ namespace BSPZone
 
 
 		//positions and planes are model relative
-		bool ClipBoxToLeaf(RayTrace trace, Vector3 start, Vector3 end, ZoneLeaf zl)
+		bool ClipBoxToLeaf(RayTrace trace, ZoneLeaf zl)
 		{
 			if(zl.mNumSides <= 0)
 			{
 				return	false;
 			}
+
+			Vector3	start	=trace.mOriginalStart;
+			Vector3	end		=trace.mOriginalEnd;
 
 			bool		bClipped	=false;
 			bool		bAnyInFront	=false;
@@ -845,7 +701,7 @@ namespace BSPZone
 
 				bAnyInFront	=true;
 
-				if(frontDist == 0)
+				if(frontDist == 0 && backDist == 0)
 				{
 					clipPlane	=p;
 					bClipped	=true;
@@ -856,7 +712,7 @@ namespace BSPZone
 				float	ratio			=frontDist / (frontDist - backDist);
 				Vector3	intersection	=start + ratio * (end - start);
 
-				if(frontDist > 0)
+				if(frontDist >= 0)
 				{
 					start		=intersection;
 					clipPlane	=p;
@@ -868,16 +724,18 @@ namespace BSPZone
 				}
 			}
 
+			trace.mLeafHit	=zl;
+
 			if(bClipped)
 			{
-				trace.mIntersection	=start;
-				trace.mBestPlane	=clipPlane;
+				trace.mCollision.mIntersection	=start;
+				trace.mCollision.mPlaneHit		=clipPlane;
 			}
 			else if(!bAnyInFront)
 			{
 				//started inside!
-				trace.mIntersection	=start;
-				trace.mbStartInside	=true;
+				trace.mCollision.mIntersection	=start;
+				trace.mCollision.mbStartInside	=true;
 				return	true;
 			}
 			return	bClipped;

@@ -27,15 +27,16 @@ namespace BSPZone
 		{
 			List<MobileAI>	inView	=GetAITargetsInPVS(start, state, faction);
 
+			worldHit	=Vector3.Zero;
+
 			//first ray cast against the world
 			float		bestDist;
-			int			hitModel	=0;
-			ZonePlane	planeHit	=ZonePlane.Blank;
-			worldHit				=Vector3.Zero;
+			Collision	col;
 
-			bool	bHit	=TraceAllRay(start, end, ref hitModel, ref worldHit, ref planeHit);
+			bool	bHit	=TraceAllSphere(0f, start, end, out col);
 			if(bHit)
 			{
+				worldHit	=col.mIntersection;
 				bestDist	=Vector3.Distance(start, worldHit);
 			}
 			else
@@ -216,10 +217,8 @@ namespace BSPZone
 			{
 				Vector3	mobPos	=mob.GetMiddlePosition();
 
-				Vector3		impacto		=Vector3.Zero;
-				int			hitModel	=0;
-				ZonePlane	planeHit	=ZonePlane.Blank;
-				if(TraceAllRay(pov, mobPos, ref hitModel, ref impacto, ref planeHit))
+				Collision	col;
+				if(TraceAllSphere(0f, pov, mobPos, out col))
 				{
 					continue;
 				}
@@ -245,11 +244,9 @@ namespace BSPZone
 				{
 					continue;
 				}
-
-				Vector3		impacto		=Vector3.Zero;
-				int			hitModel	=0;
-				ZonePlane	planeHit	=ZonePlane.Blank;
-				if(TraceAllRay(pov, mobPos, ref hitModel, ref impacto, ref planeHit))
+				
+				Collision	col;
+				if(TraceAllSphere(0f, pov, mobPos, out col))
 				{
 					continue;
 				}

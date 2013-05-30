@@ -245,12 +245,10 @@ namespace BSPZone
 			//along the updated forward vector
 			mobCamPos	=camPos + (-forward * ps.Zoom) + shoulderOffset;
 
-			Vector3		impacto		=Vector3.Zero;
-			ZonePlane	planeHit	=ZonePlane.Blank;
-			int			modelHit	=0;
-			if(mZone.TraceAllSphere(CamCollisionRadius, camPos, mobCamPos, ref modelHit, ref impacto, ref planeHit))
+			Collision	col;
+			if(mZone.TraceAllSphere(CamCollisionRadius, camPos, mobCamPos, out col))
 			{
-				mobCamPos	=impacto;
+				mobCamPos	=col.mIntersection;
 			}
 
 			Vector3	camRay	=mobCamPos - camPos;
@@ -425,20 +423,16 @@ namespace BSPZone
 		{
 			tryPos.Y	+=radius;
 
-			int			modelHit	=0;
-			Vector3		impacto		=Vector3.Zero;
-			ZonePlane	planeHit	=ZonePlane.Blank;
-
 			bool	bHit	=false;
 
+			Collision	col;
 			if(bModelsToo)
 			{
-				mZone.TraceAllSphere(radius, tryPos, tryPos + Vector3.UnitY,
-					ref modelHit, ref impacto, ref planeHit);
+				bHit	=mZone.TraceAllSphere(radius, tryPos, tryPos + Vector3.UnitY, out col);
 			}
 			else
 			{
-				RayTrace	rt	=new RayTrace();
+				RayTrace	rt	=new RayTrace(tryPos, tryPos + Vector3.UnitY);
 				rt.mRadius		=radius;
 				bHit	=mZone.TraceSphereNode(rt, tryPos, tryPos + Vector3.UnitY, 0);
 			}

@@ -484,11 +484,8 @@ namespace BSPZone
 				Vector3	approachPos	=pos - (mApproachDirection * distance);
 
 				//raycast between to make sure there's no obstacle in between
-				int			modelHit	=0;
-				Vector3		impacto		=Vector3.Zero;
-				ZonePlane	planeHit	=ZonePlane.Blank;
-				if(mZone.TraceAllRay(approachPos, pos,
-					ref modelHit, ref impacto, ref planeHit))
+				Collision	col;
+				if(mZone.TraceAllSphere(0f, approachPos, pos, out col))
 				{
 					//hit something on the way
 					//try a different approach direction
@@ -497,12 +494,8 @@ namespace BSPZone
 				}
 
 				//raycast down to make sure there's a valid floor beneath
-				modelHit	=0;
-				impacto		=Vector3.Zero;
-				planeHit	=ZonePlane.Blank;
-				if(!mZone.TraceAllRay(approachPos,
-					approachPos - (Vector3.UnitY * EyeToFloorTestHeight),
-					ref modelHit, ref impacto, ref planeHit))
+				if(!mZone.TraceAllSphere(0f, approachPos,
+					approachPos - (Vector3.UnitY * EyeToFloorTestHeight), out col))
 				{
 					//no floor underneath or eye in solid?
 					//try another approach direction
@@ -511,20 +504,20 @@ namespace BSPZone
 				}
 
 				//check for a startpoint in solid
-				if(planeHit == ZonePlane.Blank)
+				if(col.mPlaneHit == ZonePlane.Blank)
 				{
 					mApproachDirection	=Mathery.RandomDirectionXZ(mRand);
 					continue;
 				}
 
 				//standing on solid ground?
-				if(planeHit.IsGround())
+				if(col.mPlaneHit.IsGround())
 				{
 					continue;
 				}
 
 				//use the impact point
-				approachPos	=impacto;
+				approachPos	=col.mIntersection;
 
 				//grab bounds
 				BoundingBox	bounds	=mMob.GetBounds();
