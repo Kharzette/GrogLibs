@@ -52,12 +52,6 @@ namespace UtilityLib
 			set { mMethod = value; }
 		}
 
-		public Vector3 Position
-		{
-			get { return mPosition; }
-			set { mPosition = value; }
-		}
-
 		public float Speed
 		{
 			get { return mSpeed; }
@@ -119,11 +113,13 @@ namespace UtilityLib
 		}
 
 
-		public void Update(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
+		public Vector3 Update(int msDelta, Vector3 pos, GameCamera gc,
+			KeyboardState ks, MouseState ms, GamePadState gs)
 		{
+			mPosition	=pos;
 			if(mMethod == SteeringMethod.None)
 			{
-				return;
+				return	pos;
 			}
 
 			if(mMethod == SteeringMethod.FirstPerson
@@ -161,6 +157,8 @@ namespace UtilityLib
 					mZoom	=MathHelper.Clamp(mZoom, 0f, 100f);
 				}
 			}
+
+			return	mPosition;
 		}
 
 

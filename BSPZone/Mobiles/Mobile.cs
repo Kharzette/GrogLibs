@@ -79,7 +79,7 @@ namespace BSPZone
 
 
 		//for initial start pos and teleports
-		public void SetGroundPosition(Vector3 pos)
+		public void SetGroundPos(Vector3 pos)
 		{
 			mPosition	=pos + mBoxMiddleOffset;
 		}
@@ -108,13 +108,13 @@ namespace BSPZone
 		}
 
 
-		public Vector3 GetGroundPosition()
+		public Vector3 GetGroundPos()
 		{
 			return	mPosition - mBoxMiddleOffset;
 		}
 
 
-		public Vector3 GetMiddlePosition()
+		public Vector3 GetMiddlePos()
 		{
 			return	mPosition;
 		}
@@ -267,21 +267,6 @@ namespace BSPZone
 		}
 
 
-		//for debugging move problems
-		public void MoveDebug(int msDelta, Vector3 start, Vector3 end, List<Vector3> segments)
-		{
-			start	+=mBoxMiddleOffset;
-			end		+=mBoxMiddleOffset;
-
-			//a little gravity
-			end.Y	-=((9.8f / 1000.0f) * msDelta);
-
-			Vector3	moveDelta	=end - start;
-
-			mZone.BipedMoveBoxDebug(mBox, start, end, segments);
-		}
-
-
 		//ins and outs are ground based
 		public void Move(Vector3 endPos, int msDelta, bool bWorldOnly,
 			bool bAffectVelocity, bool bFly, bool bTriggerCheck, bool bDistCheck,
@@ -302,7 +287,7 @@ namespace BSPZone
 
 			if(bFly)
 			{
-				retPos	=mPosition	=(endPos - mBoxMiddleOffset);
+				retPos	=mPosition	=endPos;
 				camPos	=-mPosition;
 				if(mbPushable)
 				{
@@ -449,12 +434,10 @@ namespace BSPZone
 			Vector3	startPos	=mPosition;
 
 			Vector3	pushedTo, camTo;
-			Move(delta + GetGroundPosition(), 1,
+			Move(delta + GetGroundPos(), 1,
 				true, false, false, true, false, out pushedTo, out camTo);
 
-			SetGroundPosition(pushedTo);
-
-//			mPSteering.Position	=pushedTo;
+			SetGroundPos(pushedTo);
 
 			//see if still intersecting
 			ZonePlane	hitPlane	=ZonePlane.Blank;
@@ -466,12 +449,10 @@ namespace BSPZone
 				if(mZone.ResolvePosition(mBox, mPosition, out resolvePos, out modelOn))
 				{
 					mPosition	=resolvePos;
-//					mPSteering.Position	=resolvePos - midAdjust;
 				}
 				else
 				{
 					return	false;
-//					mBMHelper.SetBlocked(mpea.mModelIndex);
 				}
 			}
 			return	true;

@@ -41,116 +41,6 @@ namespace BSPZone
 		Vector3	[]mTestTransBoxCorners	=new Vector3[8];
 
 
-		#region Face Collisions
-		//uses the add up the angles trick to determine point in poly
-		float ComputeAngleSum(DebugFace df, Vector3 point)
-		{
-			float	dotSum	=0f;
-			for(int i=0;i < df.mNumVerts;i++)
-			{
-				int	vIdx0	=i + df.mFirstVert;
-				int	vIdx1	=((i + 1) % df.mNumVerts) + df.mFirstVert;
-
-				vIdx0	=mDebugIndexes[vIdx0];
-				vIdx1	=mDebugIndexes[vIdx1];
-
-				Vector3	v1	=mDebugVerts[vIdx0] - point;
-				Vector3	v2	=mDebugVerts[vIdx1] - point;
-
-				float	len1	=v1.Length();
-				float	len2	=v2.Length();
-
-				if((len1 * len2) < 0.0001f)
-				{
-					return	MathHelper.TwoPi;
-				}
-
-				v1	/=len1;
-				v2	/=len2;
-
-				float	dot	=Vector3.Dot(v1, v2);
-
-				//clamp these values or acos can NaN
-				if(dot > 1f)
-				{
-					dot	=1f;
-				}
-				else if(dot < -1f)
-				{
-					dot	=-1f;
-				}
-				dotSum	+=(float)Math.Acos(dot);
-			}
-			return	dotSum;
-		}
-
-
-		DebugFace GetFaceForPoint(Vector3 pos, int modelIdx)
-		{
-			int		numFaces, firstFace;
-			bool	bLeaf;
-
-			int	node	=FindNodeLandedIn(mZoneModels[modelIdx].mRootNode, pos);
-			if(node < 0)
-			{
-				node	=-(node + 1);
-
-				ZoneLeaf	zl	=mZoneLeafs[node];
-				numFaces		=zl.mNumFaces;
-				firstFace		=zl.mFirstFace;
-				bLeaf			=true;
-			}
-			else
-			{
-				ZoneNode	zn	=mZoneNodes[node];
-				numFaces		=zn.mNumFaces;
-				firstFace		=zn.mFirstFace;
-				bLeaf			=false;
-			}
-
-			if(numFaces == 0)
-			{
-			}
-			else if(numFaces == 1)
-			{
-				if(bLeaf)
-				{
-					return	mDebugFaces[mDebugLeafFaces[firstFace]];
-				}
-				else
-				{
-					return	mDebugFaces[firstFace];
-				}
-			}
-
-			float		bestSum		=float.MinValue;
-			DebugFace	bestFace	=null;
-			for(int f=0;f < numFaces;f++)
-			{
-				int	face;
-				if(bLeaf)
-				{
-					face	=mDebugLeafFaces[f + firstFace];
-				}
-				else
-				{
-					face	=f + firstFace;
-				}
-
-				DebugFace	df	=mDebugFaces[face];
-
-				float	sum	=ComputeAngleSum(df, pos);
-				if(sum > bestSum)
-				{
-					bestSum		=sum;
-					bestFace	=df;
-				}
-			}
-			return	bestFace;
-		}
-		#endregion
-
-
 		#region Public Collision Interface
 		//returns the closest impact, checks all models
 		//everything returned in worldspace
@@ -612,7 +502,7 @@ namespace BSPZone
 
 				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID_CLIP))
 				{
-					if(ClipToLeaf(trace, leafIdx))
+					if(ClipToLeaf(trace, zl))
 					{
 						return	true;
 					}
@@ -695,9 +585,8 @@ namespace BSPZone
 
 
 		#region Leaf Clips
-		bool ClipToLeaf(RayTrace trace, int leafIdx)
+		bool ClipToLeaf(RayTrace trace, ZoneLeaf zl)
 		{
-			ZoneLeaf	zl	=mZoneLeafs[leafIdx];
 			if(zl.mNumSides <= 0)
 			{
 				return	false;
@@ -820,6 +709,117 @@ namespace BSPZone
 			planeHit	=bestPlane;
 
 			return	bIntersecting;
+		}
+		#endregion
+
+
+		#region Face Collisions
+		//uses the add up the angles trick to determine point in poly
+		float ComputeAngleSum(DebugFace df, Vector3 point)
+		{
+			float	dotSum	=0f;
+			for(int i=0;i < df.mNumVerts;i++)
+			{
+				int	vIdx0	=i + df.mFirstVert;
+				int	vIdx1	=((i + 1) % df.mNumVerts) + df.mFirstVert;
+
+				vIdx0	=mDebugIndexes[vIdx0];
+				vIdx1	=mDebugIndexes[vIdx1];
+
+				Vector3	v1	=mDebugVerts[vIdx0] - point;
+				Vector3	v2	=mDebugVerts[vIdx1] - point;
+
+				float	len1	=v1.Length();
+				float	len2	=v2.Length();
+
+				if((len1 * len2) < 0.0001f)
+				{
+					return	MathHelper.TwoPi;
+				}
+
+				v1	/=len1;
+				v2	/=len2;
+
+				float	dot	=Vector3.Dot(v1, v2);
+
+				//clamp these values or acos can NaN
+				if(dot > 1f)
+				{
+					dot	=1f;
+				}
+				else if(dot < -1f)
+				{
+					dot	=-1f;
+				}
+				dotSum	+=(float)Math.Acos(dot);
+			}
+			return	dotSum;
+		}
+
+
+		//should pass in a point just off the front side of a struck plane
+		DebugFace GetFaceForPoint(Vector3 pos, int modelIdx)
+		{
+			int		numFaces, firstFace;
+			bool	bLeaf;
+
+			int	node	=FindNodeLandedIn(mZoneModels[modelIdx].mRootNode, pos);
+			if(node < 0)
+			{
+				node	=-(node + 1);
+
+				ZoneLeaf	zl	=mZoneLeafs[node];
+				numFaces		=zl.mNumFaces;
+				firstFace		=zl.mFirstFace;
+				bLeaf			=true;
+			}
+			else
+			{
+				ZoneNode	zn	=mZoneNodes[node];
+				numFaces		=zn.mNumFaces;
+				firstFace		=zn.mFirstFace;
+				bLeaf			=false;
+			}
+
+			if(numFaces == 0)
+			{
+			}
+			else if(numFaces == 1)
+			{
+				if(bLeaf)
+				{
+					return	mDebugFaces[mDebugLeafFaces[firstFace]];
+				}
+				else
+				{
+					return	mDebugFaces[firstFace];
+				}
+			}
+
+			float		bestSum		=float.MinValue;
+			DebugFace	bestFace	=null;
+			for(int f=0;f < numFaces;f++)
+			{
+				int	face;
+				if(bLeaf)
+				{
+					face	=mDebugLeafFaces[f + firstFace];
+				}
+				else
+				{
+					face	=f + firstFace;
+				}
+
+				DebugFace	df	=mDebugFaces[face];
+
+				float	sum	=ComputeAngleSum(df, pos);
+				if(sum > bestSum)
+				{
+					bestSum		=sum;
+					bestFace	=df;
+				}
+			}
+			return	bestFace;
 		}
 		#endregion
 	}

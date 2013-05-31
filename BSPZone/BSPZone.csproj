@@ -100,6 +100,7 @@
     <Compile Include="ZoneCollision.cs" />
     <Compile Include="ZoneLeaf.cs" />
     <Compile Include="ZoneModel.cs" />
+    <Compile Include="ZoneMovement.cs" />
     <Compile Include="ZoneNode.cs" />
     <Compile Include="ZonePlane.cs" />
     <Compile Include="ZoneEntity.cs" />

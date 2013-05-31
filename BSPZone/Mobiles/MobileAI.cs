@@ -93,13 +93,13 @@ namespace BSPZone
 
 		public Vector3 GetGroundPosition()
 		{
-			return	mMob.GetGroundPosition();
+			return	mMob.GetGroundPos();
 		}
 
 
 		public Vector3 GetMiddlePosition()
 		{
-			return	mMob.GetMiddlePosition();
+			return	mMob.GetMiddlePos();
 		}
 
 
@@ -202,7 +202,7 @@ namespace BSPZone
 
 			mDirectMoveGoal	=location;
 
-			Vector3	myPos	=mMob.GetGroundPosition();
+			Vector3	myPos	=mMob.GetGroundPos();
 
 			//see if that spot is a straight walk over
 			if(mMob.TryMoveTo(location, CloseEnough))
@@ -279,7 +279,7 @@ namespace BSPZone
 
 		public bool UpdateAI(int msDelta)
 		{
-			Vector3	startPos	=mMob.GetGroundPosition();
+			Vector3	startPos	=mMob.GetGroundPos();
 
 			Vector3	endPos	=startPos;
 			Vector3	camPos	=startPos;
@@ -408,7 +408,7 @@ namespace BSPZone
 		{
 			//take the eye position to raycast down
 			Vector3	approachPos	=mApproachTarget.GetEyePosition();
-			Vector3	myPos		=mMob.GetGroundPosition();
+			Vector3	myPos		=mMob.GetGroundPos();
 
 			endPos	=myPos;
 			if(!mbApproaching)
@@ -522,7 +522,7 @@ namespace BSPZone
 				//grab bounds
 				BoundingBox	bounds	=mMob.GetBounds();
 
-				Vector3	middleOfs	=mMob.GetMiddlePosition() - mMob.GetGroundPosition();
+				Vector3	middleOfs	=mMob.GetMiddlePos() - mMob.GetGroundPos();
 
 				Debug.Assert(Mathery.IsBoundingBoxCentered(bounds));
 
@@ -545,7 +545,7 @@ namespace BSPZone
 		//return true if at goal
 		bool ComputeApproach(Vector3 target, int msDelta, out Vector3 endPos)
 		{
-			Vector3	myPos		=mMob.GetGroundPosition();
+			Vector3	myPos		=mMob.GetGroundPos();
 			Vector3	aim			=myPos - target;
 
 			//flatten for the nearness detection
