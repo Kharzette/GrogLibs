@@ -316,21 +316,7 @@ namespace BSPZone
 
 					bAny	=true;
 
-					float	dist	=hitPlane.DistanceFast(pos);
-
-					//directly on or off a bit?
-					if(dist >= Mathery.VCompareEpsilon)
-					{
-						//place end directly on the plane
-						pos	-=(hitPlane.mNormal * dist);
-
-						//adjust it to the front side
-						pos	+=(hitPlane.mNormal * Mathery.VCompareEpsilon);
-					}
-					else
-					{
-						pos	-=(hitPlane.mNormal * (dist - Mathery.VCompareEpsilon));
-					}
+					hitPlane.ReflectPosition(ref pos);
 				}
 
 				if(!bAny)
@@ -937,19 +923,27 @@ namespace BSPZone
 
 			if(TraceAll(null, null, start, end, out col))
 			{
+				//add a little nub for the collision point
+				segments.Add(col.mIntersection);
+				segments.Add(col.mIntersection + col.mPlaneHit.mNormal * 5f);
+
 				DebugFace	df	=col.mFaceHit;
 				if(df == null)
 				{
 					return;
 				}
 
+				//boost off the plane a little
+				Vector3	abovePlane	=col.mPlaneHit.mNormal * Mathery.VCompareEpsilon;
+
 				for(int v=0;v < df.mNumVerts;v++)
 				{
 					int	idx0	=mDebugIndexes[v + df.mFirstVert];
 					int	idx1	=mDebugIndexes[((v + 1) % df.mNumVerts) + df.mFirstVert];
 
-					segments.Add(mDebugVerts[idx0]);
-					segments.Add(mDebugVerts[idx1]);
+					//boost off the plane a unit
+					segments.Add(mDebugVerts[idx0] + abovePlane);
+					segments.Add(mDebugVerts[idx1] + abovePlane);
 				}
 			}
 		}
@@ -1138,10 +1132,7 @@ namespace BSPZone
 				if(IntersectBoxNode(box, pos, 0, ref zp))
 				{
 					bWorldIntersect	=true;
-
-					float	dist	=zp.DistanceFast(pos);
-
-					pos	=pos - (zp.mNormal * (dist - Mathery.VCompareEpsilon));
+					zp.ReflectPosition(ref pos);
 				}
 
 				for(int j=1;j < mZoneModels.Length;j++)
@@ -1150,22 +1141,7 @@ namespace BSPZone
 					if(IntersectBoxModel(box, pos, j, ref zp))
 					{
 						bModelIntersect	=true;
-
-						float	dist	=zp2.DistanceFast(pos);
-
-						//directly on or off a bit?
-						if(dist >= Mathery.VCompareEpsilon)
-						{
-							//place end directly on the plane
-							pos	-=(zp.mNormal * dist);
-
-							//adjust it to the front side
-							pos	+=(zp.mNormal * Mathery.VCompareEpsilon);
-						}
-						else
-						{
-							pos	-=(zp.mNormal * (dist - Mathery.VCompareEpsilon));
-						}
+						zp.ReflectPosition(ref pos);
 					}
 				}
 
@@ -1198,11 +1174,9 @@ namespace BSPZone
 				ZonePlane	zp	=ZonePlane.Blank;
 				if(IntersectBoxNode(box, start, 0, ref zp))
 				{
-					float	dist	=zp.DistanceFast(start);
-
-					finalPos	=start - (zp.mNormal * (dist - Mathery.VCompareEpsilon));
-
 					modelOn		=-1;
+					finalPos	=start;
+					zp.ReflectPosition(ref finalPos);
 					return	true;
 				}
 			}
@@ -1301,39 +1275,6 @@ namespace BSPZone
 				}
 				Misc.SafeInvoke(eTriggerOutOfRange, zt.mEntity, new TriggerContextEventArgs(triggerer));
 			}
-		}
-
-
-		public Int32 FindWorldNodeLandedIn(Vector3 pos)
-		{
-			return	FindNodeLandedIn(mZoneModels[0].mRootNode, pos);
-		}
-
-
-		public Int32 FindNodeLandedIn(Int32 node, Vector3 pos)
-		{
-			float		dist;
-			ZoneNode	pNode;
-
-			if(node < 0)		// At leaf, no more recursing
-			{
-				return	node;
-			}
-
-			pNode	=mZoneNodes[node];
-			
-			//Get the distance that the eye is from this plane
-			dist	=mZonePlanes[pNode.mPlaneNum].DistanceFast(pos);
-
-			//Go down the side we are on first, then the other side
-			Int32	ret	=0;
-			ret	=FindNodeLandedIn((dist < 0)? pNode.mBack : pNode.mFront, pos);
-			if(ret < 0)
-			{
-				return	ret;
-			}
-			ret	=FindNodeLandedIn((dist < 0)? pNode.mFront : pNode.mBack, pos);
-			return	ret;
 		}
 
 
