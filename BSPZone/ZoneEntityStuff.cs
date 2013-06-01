@@ -82,14 +82,22 @@ namespace BSPZone
 
 		public List<ZoneEntity> GetEntitiesByTargetName(string targName)
 		{
+			//targetnames can have multiple entries
+			string	[]targs	=targName.Split(' ');
+
 			List<ZoneEntity>	ret	=new List<ZoneEntity>();
 			foreach(ZoneEntity ze in mZoneEntities)
 			{
 				if(ze.mData.ContainsKey("targetname"))
 				{
-					if(targName == ze.mData["targetname"])
+					string	checkName	=ze.mData["targetname"];
+
+					foreach(string targ in targs)					
 					{
-						ret.Add(ze);
+						if(targ == checkName)
+						{
+							ret.Add(ze);
+						}
 					}
 				}
 			}
@@ -227,9 +235,12 @@ namespace BSPZone
 				Collision	col;
 				if(TraceAll(null, null, pos, -sunLight.mPosition * 10000 + pos, out col))	//pos contains ray direction
 				{
-					if(Misc.bFlagSet(SKY, col.mFaceHit.mFlags))
+					if(col.mFaceHit != null)
 					{
-						return	mLightCache[sunEnt];
+						if(Misc.bFlagSet(SKY, col.mFaceHit.mFlags))
+						{
+							return	mLightCache[sunEnt];
+						}
 					}
 				}
 			}

@@ -504,14 +504,14 @@ namespace BSPZone
 				}
 
 				//check for a startpoint in solid
-				if(col.mPlaneHit == ZonePlane.Blank)
+				if(col.mbStartInside)
 				{
 					mApproachDirection	=Mathery.RandomDirectionXZ(mRand);
 					continue;
 				}
 
 				//standing on solid ground?
-				if(col.mPlaneHit.IsGround())
+				if(!col.mPlaneHit.IsGround())
 				{
 					continue;
 				}

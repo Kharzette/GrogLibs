@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using UtilityLib;
 
 
@@ -14,19 +15,26 @@ namespace BSPZone
 		{
 			public TriggerContextEventArgs	mTCEA;
 			public bool						mbTriggerState;
+			public ZoneEntity				mFuncEnt;
 
-			public FuncEventArgs(TriggerContextEventArgs tcea, bool bTrigState) : base()
+			public FuncEventArgs(TriggerContextEventArgs tcea, bool bTrigState, ZoneEntity ze) : base()
 			{
 				mTCEA			=tcea;
 				mbTriggerState	=bTrigState;
+				mFuncEnt		=ze;
 			}
 		}
 
 		//delegate used by indoormesh
 		public delegate void SwitchLight(int light, bool bOn);
 
-		Zone		mZone;
-		SwitchLight	mSwitchLight;
+		//delegate to ask the game if it is ok to activate a func
+		//game can use this for locks or item dependencies or whatever
+		public delegate bool OkToFireFunc(FuncEventArgs fea);
+
+		Zone			mZone;
+		SwitchLight		mSwitchLight;
+		OkToFireFunc	mOkToFire;
 
 		//public events
 		public event EventHandler	eTeleport;
@@ -37,7 +45,8 @@ namespace BSPZone
 		public event EventHandler	eFunc;
 
 
-		public void Initialize(Zone zone, SwitchLight sl, Audio aud, Microsoft.Xna.Framework.Audio.AudioListener lis)
+		public void Initialize(Zone zone, Audio aud, AudioListener lis,
+			SwitchLight sl, OkToFireFunc okToFire)
 		{
 			//unwire from old
 			if(mZone != null)
@@ -48,6 +57,7 @@ namespace BSPZone
 
 			mZone			=zone;
 			mSwitchLight	=sl;
+			mOkToFire		=okToFire;
 
 			mZone.eTriggerHit			+=OnTriggerHit;
 			mZone.eTriggerOutOfRange	+=OnTriggerLeaving;
@@ -121,8 +131,11 @@ namespace BSPZone
 				}
 				else if(className.StartsWith("func_"))
 				{
-					FuncEventArgs	fea	=new FuncEventArgs(tcea, ze.GetValue("triggered") == "true");
-					Misc.SafeInvoke(eFunc, zet, fea);
+					FuncEventArgs	fea	=new FuncEventArgs(tcea, ze.GetValue("triggered") == "true", zet);
+					if(mOkToFire(fea))
+					{
+						Misc.SafeInvoke(eFunc, zet, fea);
+					}
 				}
 			}
 		}
@@ -181,8 +194,11 @@ namespace BSPZone
 				}
 				else if(className.StartsWith("func_"))
 				{
-					FuncEventArgs	fea	=new FuncEventArgs(tcea, ze.GetValue("triggered") == "true");
-					Misc.SafeInvoke(eFunc, zet, fea);
+					FuncEventArgs	fea	=new FuncEventArgs(tcea, ze.GetValue("triggered") == "true", zet);
+					if(mOkToFire(fea))
+					{
+						Misc.SafeInvoke(eFunc, zet, fea);
+					}
 				}
 			}
 

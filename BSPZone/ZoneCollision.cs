@@ -11,11 +11,11 @@ namespace BSPZone
 	//just the facts on an impact
 	public class Collision
 	{
-		internal Vector3		mIntersection;
-		internal ZonePlane		mPlaneHit;
-		internal bool			mbStartInside;
-		internal int			mModelHit;
-		internal DebugFace		mFaceHit;
+		public Vector3		mIntersection;
+		public ZonePlane	mPlaneHit;
+		public bool			mbStartInside;
+		public int			mModelHit;
+		public DebugFace	mFaceHit;
 	}
 
 	//passed down into the recursive routines
