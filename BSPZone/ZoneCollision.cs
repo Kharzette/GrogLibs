@@ -157,11 +157,13 @@ namespace BSPZone
 					trace.mOriginalEnd, mZoneModels[0].mRootNode);
 			}
 
-			if(bHit && trace.mCollision.mPlaneHit != ZonePlane.Blank
-				&& trace.mCollision.mPlaneHit.IsGround())
+			if(bHit && trace.mCollision.mbStartInside)
 			{
-				trace.mCollision.mIntersection	+=(trace.mCollision.mPlaneHit.mNormal * Mathery.ON_EPSILON);
-				return	trace.mCollision.mIntersection;
+				trace.mCollision.mPlaneHit.ReflectPosition(ref pos);
+			}
+			else if(bHit)
+			{
+				pos	=trace.mCollision.mIntersection + (trace.mCollision.mPlaneHit.mNormal * Mathery.ON_EPSILON);
 			}
 			return	pos;
 		}
@@ -600,6 +602,8 @@ namespace BSPZone
 			ZonePlane	clipPlane	=ZonePlane.Blank;
 
 			//clip the ray inside the leaf
+			float		nearestFront	=float.MaxValue;
+			ZonePlane	closeFront		=ZonePlane.Blank;
 			for(int i=0;i < zl.mNumSides;i++)
 			{
 				ZoneLeafSide	side	=mZoneLeafSides[i + zl.mFirstSide];
@@ -621,6 +625,16 @@ namespace BSPZone
 
 				float	frontDist	=p.DistanceFast(start);
 				float	backDist	=p.DistanceFast(end);
+
+				//track the plane nearest to the front
+				//just in case the startpoint is in solid
+				float	absDist	=Math.Abs(frontDist);
+				if(absDist < nearestFront)
+				{
+					nearestFront	=absDist;
+					closeFront		=p;
+				}
+
 				if(frontDist > 0 && backDist >= 0)
 				{
 					return	false;	//not intersecting
@@ -631,14 +645,13 @@ namespace BSPZone
 					continue;
 				}
 
-				bAnyInFront	=true;
-
 				//split
 				float	ratio			=frontDist / (frontDist - backDist);
 				Vector3	intersection	=start + ratio * (end - start);
 
 				if(frontDist >= 0)
 				{
+					bAnyInFront	=true;
 					start		=intersection;
 					clipPlane	=p;
 					bClipped	=true;
@@ -658,6 +671,11 @@ namespace BSPZone
 			{
 				//started inside!
 				trace.mCollision.mbStartInside	=true;
+
+				//use the plane nearest to the front
+				//might not be completely correct, but should be close
+				trace.mCollision.mPlaneHit	=closeFront;
+
 				return	true;
 			}
 
