@@ -198,7 +198,8 @@ namespace BSPZone
 		//for a typical third person camera with reticle aiming
 		public void ThirdPersonOrient(PlayerSteering ps, Vector3 camPos,
 			Vector3 shoulderOffset,	//adjustment to move the reticle slightly to the side
-			out Vector3 mobForward,	//returns a valid direction for a character mesh
+			bool bMoving,			//is the player moving?  if so pop direction to viewdir
+			ref Vector3 mobForward,	//returns a valid direction for a character mesh
 			out Vector3 mobCamPos,	//the new adjusted camera position
 			out bool bFirstPerson)	//if something is blocking, pop to first person
 		{
@@ -216,23 +217,26 @@ namespace BSPZone
 			//grab transpose forward
 			Vector3	forward	=orientation.Forward;
 
-			//level out for mobforward
-			mobForward		=forward;
-			mobForward.Y	=0f;
-
-			//make sure valid
-			float	len	=mobForward.Length();
-
-			//should be valid so long as the pitchclamp
-			//values are reasonable in playersteering
-			Debug.Assert(len > 0f);
-			if(len > 0f)
+			if(bMoving)
 			{
-				mobForward	/=len;
-			}
-			else
-			{
-				mobForward	=Vector3.UnitX;
+				//level out for mobforward
+				mobForward		=forward;
+				mobForward.Y	=0f;
+
+				//make sure valid
+				float	len	=mobForward.Length();
+
+				//should be valid so long as the pitchclamp
+				//values are reasonable in playersteering
+				Debug.Assert(len > 0f);
+				if(len > 0f)
+				{
+					mobForward	/=len;
+				}
+				else
+				{
+					mobForward	=Vector3.UnitX;
+				}
 			}
 
 			//camera positions are always negated
@@ -252,10 +256,10 @@ namespace BSPZone
 			}
 
 			Vector3	camRay	=mobCamPos - camPos;
-			len				=camRay.Length();
+			float	len2	=camRay.Length();
 				
 			//if really short, just use first person
-			if(len < MinCamDist)
+			if(len2 < MinCamDist)
 			{
 				mobCamPos		=camPos;
 				bFirstPerson	=true;

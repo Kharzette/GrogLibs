@@ -29,7 +29,8 @@ namespace UtilityLib
 		//position info
 		Vector3	mPosition, mDelta;
 		float	mPitch, mYaw, mRoll;
-		float	mZoom	=80f;	//default
+		float	mZoom	=80f;		//default
+		bool	mbMovedThisFrame;	//true if the player gave movement input
 
 		//for mouselook
 		MouseState	mOriginalMS;
@@ -57,6 +58,12 @@ namespace UtilityLib
 		{
 			get { return mbRightClickToTurn; }
 			set { mbRightClickToTurn = value; }
+		}
+
+		public bool MovedThisFrame
+		{
+			get { return mbMovedThisFrame; }
+			set { mbMovedThisFrame = value; }
 		}
 
 		public float Speed
@@ -123,6 +130,8 @@ namespace UtilityLib
 		public Vector3 Update(int msDelta, Vector3 pos, GameCamera gc,
 			KeyboardState ks, MouseState ms, GamePadState gs)
 		{
+			mbMovedThisFrame	=false;
+
 			mPosition	=pos;
 			if(mMethod == SteeringMethod.None)
 			{
@@ -178,10 +187,14 @@ namespace UtilityLib
 
 			if(gs.IsConnected)
 			{
-				mPosition	+=vleft * (gs.ThumbSticks.Left.X * msDelta * mGamePadSensitivity * mSpeed);
-				mPosition	-=vin * (gs.ThumbSticks.Left.Y * msDelta * mGamePadSensitivity * mSpeed);
-				mPosition.Y	=0.0f;	//zero out the Y
+				if(gs.ThumbSticks.Left != Vector2.Zero)
+				{
+					mbMovedThisFrame	=true;
 
+					mPosition	+=vleft * (gs.ThumbSticks.Left.X * msDelta * mGamePadSensitivity * mSpeed);
+					mPosition	-=vin * (gs.ThumbSticks.Left.Y * msDelta * mGamePadSensitivity * mSpeed);
+					mPosition.Y	=0.0f;	//zero out the Y
+				}
 				mYaw	+=gs.ThumbSticks.Right.X * mGamePadSensitivity * msDelta * mTurnSpeed;
 			}
 			else
@@ -189,20 +202,24 @@ namespace UtilityLib
 				Vector3	moveDelta	=Vector3.Zero;
 				if(ks.IsKeyDown(Keys.A))
 				{
-					moveDelta	-=vleft;
+					mbMovedThisFrame	=true;
+					moveDelta			-=vleft;
 				}
 				else if(ks.IsKeyDown(Keys.D))
 				{
-					moveDelta	+=vleft;
+					mbMovedThisFrame	=true;
+					moveDelta			+=vleft;
 				}
 
 				if(ks.IsKeyDown(Keys.W))
 				{
-					moveDelta	-=vin;
+					mbMovedThisFrame	=true;
+					moveDelta			-=vin;
 				}
 				else if(ks.IsKeyDown(Keys.S))
 				{
-					moveDelta	+=vin;
+					mbMovedThisFrame	=true;
+					moveDelta			+=vin;
 				}
 
 				moveDelta.Y	=0.0f;	//zero out the Y
@@ -262,16 +279,22 @@ namespace UtilityLib
 			Vector3	moveVec	=Vector3.Zero;
 			if(ks.IsKeyDown(Keys.Left) || ks.IsKeyDown(Keys.A))
 			{
-				moveVec	-=vleft;
+				mbMovedThisFrame	=true;
+				moveVec				-=vleft;
 			}
 			if(ks.IsKeyDown(Keys.Right) || ks.IsKeyDown(Keys.D))
 			{
-				moveVec	+=vleft;
+				mbMovedThisFrame	=true;
+				moveVec				+=vleft;
 			}
 
 			if(gs.IsConnected && mbUsePadIfPossible)
 			{
-				moveVec	=vleft * gs.ThumbSticks.Left.X;
+				if(gs.ThumbSticks.Left != Vector2.Zero)
+				{
+					mbMovedThisFrame	=true;
+					moveVec				=vleft * gs.ThumbSticks.Left.X;
+				}
 			}
 
 			//zero out up/down
@@ -296,25 +319,34 @@ namespace UtilityLib
 			moveVec	=Vector3.Zero;
 			if(ks.IsKeyDown(Keys.Left) || ks.IsKeyDown(Keys.A))
 			{
-				moveVec	-=vleft;
+				mbMovedThisFrame	=true;
+				moveVec				-=vleft;
 			}
 			if(ks.IsKeyDown(Keys.Right) || ks.IsKeyDown(Keys.D))
 			{
-				moveVec	+=vleft;
+				mbMovedThisFrame	=true;
+				moveVec				+=vleft;
 			}
 			if(ks.IsKeyDown(Keys.Up) || ks.IsKeyDown(Keys.W))
 			{
-				moveVec	-=vin;
+				mbMovedThisFrame	=true;
+				moveVec				-=vin;
 			}
 			if(ks.IsKeyDown(Keys.Down) || ks.IsKeyDown(Keys.S))
 			{
-				moveVec	+=vin;
+				mbMovedThisFrame	=true;
+				moveVec				+=vin;
 			}
 
 			if(gs.IsConnected && mbUsePadIfPossible)
 			{
-				moveVec	=vleft * gs.ThumbSticks.Left.X;
-				moveVec	-=vin * gs.ThumbSticks.Left.Y;
+				if(gs.ThumbSticks.Left != Vector2.Zero)
+				{
+					mbMovedThisFrame	=true;
+
+					moveVec	=vleft * gs.ThumbSticks.Left.X;
+					moveVec	-=vin * gs.ThumbSticks.Left.Y;
+				}
 			}
 		}
 
