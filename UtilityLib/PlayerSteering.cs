@@ -12,7 +12,7 @@ namespace UtilityLib
 	{
 		public enum SteeringMethod
 		{
-			None, TwinStick, Fly, ThirdPerson, FirstPerson, FirstPersonMMO, Platformer
+			None, TwinStick, Fly, ThirdPerson, FirstPerson, Platformer
 		}
 
 		SteeringMethod	mMethod;
@@ -34,6 +34,7 @@ namespace UtilityLib
 		//for mouselook
 		MouseState	mOriginalMS;
 		int			mLastWheel;
+		bool		mbRightClickToTurn;
 
 		//constants
 		const float	PitchClamp	=80.0f;
@@ -50,6 +51,12 @@ namespace UtilityLib
 		{
 			get { return mMethod; }
 			set { mMethod = value; }
+		}
+
+		public bool RightClickToTurn
+		{
+			get { return mbRightClickToTurn; }
+			set { mbRightClickToTurn = value; }
 		}
 
 		public float Speed
@@ -123,17 +130,13 @@ namespace UtilityLib
 			}
 
 			if(mMethod == SteeringMethod.FirstPerson
-				|| mMethod == SteeringMethod.FirstPersonMMO)
+				|| mMethod == SteeringMethod.ThirdPerson)
 			{
 				UpdateGroundMovement(msDelta, gc, ks, ms, gs);
 			}
 			else if(mMethod == SteeringMethod.Fly)
 			{
 				UpdateFly(msDelta, gc, ks, ms, gs);
-			}
-			else if(mMethod == SteeringMethod.ThirdPerson)
-			{
-				UpdateGroundMovement(msDelta, gc, ks, ms, gs);
 			}
 			else if(mMethod == SteeringMethod.TwinStick)
 			{
@@ -333,8 +336,8 @@ namespace UtilityLib
 
 				mYaw	+=gs.ThumbSticks.Right.X * msDelta * mGamePadSensitivity;
 			}
-			else if((ms.RightButton == ButtonState.Pressed && Method == SteeringMethod.FirstPersonMMO)
-				|| Method != SteeringMethod.FirstPersonMMO)
+			else if((ms.RightButton == ButtonState.Pressed && mbRightClickToTurn)
+				|| !mbRightClickToTurn)
 			{
 				Vector2	delta	=Vector2.Zero;
 				delta.X	=mOriginalMS.X - ms.X;

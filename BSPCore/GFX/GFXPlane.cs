@@ -32,6 +32,14 @@ namespace BSPCore
 			bw.Write(mType);
 		}
 
+		public void WriteZone(BinaryWriter bw)
+		{
+			bw.Write(mNormal.X);
+			bw.Write(mNormal.Y);
+			bw.Write(mNormal.Z);
+			bw.Write(mDist);
+		}
+
 		public void Read(BinaryReader br)
 		{
 			mNormal.X	=br.ReadSingle();

@@ -188,7 +188,7 @@ namespace BSPZone
 			pNode	=mZoneNodes[node];
 			
 			//Get the distance that the eye is from this plane
-			dist	=mZonePlanes[pNode.mPlaneNum].DistanceFast(pos);
+			dist	=mZonePlanes[pNode.mPlaneNum].Distance(pos);
 
 			//Go down the side we are on first, then the other side
 			Int32	ret	=0;
@@ -429,8 +429,8 @@ namespace BSPZone
 			clipStart	=start;
 			clipEnd		=end;
 
-			float	startDist	=p.DistanceFast(start) - distAdjust;
-			float	endDist		=p.DistanceFast(end) - distAdjust;
+			float	startDist	=p.Distance(start) - distAdjust;
+			float	endDist		=p.Distance(end) - distAdjust;
 
 			if(startDist > 0 && endDist > 0)
 			{
@@ -463,8 +463,8 @@ namespace BSPZone
 			clipStart	=start;
 			clipEnd		=end;
 
-			float	startDist	=p.DistanceFast(start) + distAdjust;
-			float	endDist		=p.DistanceFast(end) + distAdjust;
+			float	startDist	=p.Distance(start) + distAdjust;
+			float	endDist		=p.Distance(end) + distAdjust;
 
 			if(startDist <= 0 && endDist <= 0)
 			{
@@ -623,8 +623,8 @@ namespace BSPZone
 					p.mDist	+=trace.mRadius.Value;
 				}
 
-				float	frontDist	=p.DistanceFast(start);
-				float	backDist	=p.DistanceFast(end);
+				float	frontDist	=p.Distance(start);
+				float	backDist	=p.Distance(end);
 
 				//track the plane nearest to the front
 				//just in case the startpoint is in solid
@@ -706,7 +706,7 @@ namespace BSPZone
 
 				p.mDist	+=Math.Abs(Vector3.Dot(box.Max, p.mNormal));
 
-				float	dist	=p.DistanceFast(pos);
+				float	dist	=p.Distance(pos);
 				if(dist >= 0)
 				{
 					return	false;	//not intersecting

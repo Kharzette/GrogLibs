@@ -12,34 +12,19 @@ namespace BSPZone
 	{
 		public Vector3	mNormal;
 		public float	mDist;
-		public UInt32	mType;	//PLANE_X, PLANE_Y, etc...
-
-		internal const UInt32	PLANE_X		=0;
-		internal const UInt32	PLANE_Y		=1;
-		internal const UInt32	PLANE_Z		=2;
-		internal const UInt32	PLANE_ANYX	=3;
-		internal const UInt32	PLANE_ANYY	=4;
-		internal const UInt32	PLANE_ANYZ	=5;
-		internal const UInt32	PLANE_ANY	=6;
-
-		internal const UInt32	PSIDE_FRONT		=1;
-		internal const UInt32	PSIDE_BACK		=2;
-		internal const UInt32	PSIDE_BOTH		=(PSIDE_FRONT | PSIDE_BACK);
-		internal const UInt32	PSIDE_FACING	=4;
 
 		//default blank planes
-		static ZonePlane	mBlank	=new ZonePlane(Vector3.Zero, 0.0f, PLANE_ANY);
-		static ZonePlane	mBlankX	=new ZonePlane(Vector3.UnitX, 0.0f, PLANE_ANY);
+		static ZonePlane	mBlank	=new ZonePlane(Vector3.Zero, 0.0f);
+		static ZonePlane	mBlankX	=new ZonePlane(Vector3.UnitX, 0.0f);
 
 		//constants
 		public const float	GroundAngle	=0.8f;	//how sloped can you be to be considered ground
 
 
-		public ZonePlane(Vector3 norm, float dist, UInt32 type)
+		public ZonePlane(Vector3 norm, float dist)
 		{
 			mNormal	=norm;
 			mDist	=dist;
-			mType	=type;
 		}
 
 
@@ -82,7 +67,6 @@ namespace BSPZone
 			bw.Write(mNormal.Y);
 			bw.Write(mNormal.Z);
 			bw.Write(mDist);
-			bw.Write(mType);
 		}
 
 
@@ -92,28 +76,12 @@ namespace BSPZone
 			mNormal.Y	=br.ReadSingle();
 			mNormal.Z	=br.ReadSingle();
 			mDist		=br.ReadSingle();
-			mType		=br.ReadUInt32();
 		}
 
 
-		//there's something badly wrong with this
-		//TODO: fix
-		public float DistanceFast(Vector3 pos)
+		public float Distance(Vector3 pos)
 		{
 			return	Vector3.Dot(pos, mNormal) - mDist;
-			/*
-			switch(mType)
-			{
-				case PLANE_X:
-					return	pos.X - mDist;
-				case PLANE_Y:
-					return	pos.Y - mDist;
-				case PLANE_Z:
-					return	pos.Z - mDist;
-
-				default:
-					return	Vector3.Dot(pos, mNormal) - mDist;
-			}*/
 		}
 
 
@@ -126,8 +94,8 @@ namespace BSPZone
 		//push slightly to the front side
 		internal Vector3 ReflectPosition(Vector3 start, Vector3 end)
 		{
-			float	startDist	=DistanceFast(start);
-			float	dist		=DistanceFast(end);
+			float	startDist	=Distance(start);
+			float	dist		=Distance(end);
 
 			//is the direction vector valid to find a collision response?
 			if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
@@ -149,7 +117,7 @@ namespace BSPZone
 		//adjust a position just off the front side
 		internal void ReflectPosition(ref Vector3 pos)
 		{
-			float	dist	=DistanceFast(pos);
+			float	dist	=Distance(pos);
 
 			//directly on or off a bit?
 			if(dist >= Mathery.VCompareEpsilon)

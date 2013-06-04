@@ -629,7 +629,14 @@ namespace BSPCore
 			UtilityLib.FileUtil.WriteArray(mGFXLeafs, bw);
 			UtilityLib.FileUtil.WriteArray(mGFXAreas, bw);
 			UtilityLib.FileUtil.WriteArray(mGFXAreaPortals, bw);
-			UtilityLib.FileUtil.WriteArray(mGFXPlanes, bw);
+
+			//planes get rid of the type variable
+			bw.Write(mGFXPlanes.Length);
+			for(int i=0;i < mGFXPlanes.Length;i++)
+			{
+				mGFXPlanes[i].WriteZone(bw);
+			}
+
 			UtilityLib.FileUtil.WriteArray(mGFXEntities, bw);
 			UtilityLib.FileUtil.WriteArray(mGFXLeafSides, bw);
 
