@@ -12,7 +12,9 @@ namespace MeshLib
 	{
 		//parts
 		List<SkinnedMesh>	mMeshParts	=new List<SkinnedMesh>();
-		List<Skin>			mSkins		=new List<Skin>();
+
+		//skin info
+		Skin	mSkin;
 
 		//refs to anim and material libs
 		MaterialLib.MaterialLib	mMatLib;
@@ -25,12 +27,53 @@ namespace MeshLib
 		//transform
 		Matrix	mTransform;
 
+		//raw bone transforms for shader
+		Matrix	[]mBones;
+
+		//ref to the effect that has bones
+		Effect	mFX;
+
 
 		public Character(MaterialLib.MaterialLib ml, AnimLib al)
 		{
 			mMatLib		=ml;
 			mAnimLib	=al;
 			mTransform	=Matrix.Identity;
+		}
+
+
+		//copies bones into the shader
+		//materials should be set up to ignore
+		//the mBones parameter
+		public void UpdateShaderBones()
+		{
+			if(mBones != null)
+			{
+				if(mFX == null)
+				{
+					mFX	=mMatLib.GetShader("Shaders\\Trilight");
+				}
+				mFX.Parameters["mBones"].SetValue(mBones);
+			}
+		}
+
+
+		public void UpdateBones(Skeleton sk, Skin skn)
+		{
+			//no need for this if not skinned
+			if(skn == null || sk == null)
+			{
+				return;
+			}
+
+			if(mBones == null)
+			{
+				mBones	=new Matrix[skn.GetNumBones()];
+			}
+			for(int i=0;i < mBones.Length;i++)
+			{
+				mBones[i]	=skn.GetBoneByIndex(i, sk);
+			}
 		}
 
 
@@ -71,9 +114,9 @@ namespace MeshLib
 		}
 
 
-		public void AddSkin(Skin s)
+		public void SetSkin(Skin s)
 		{
-			mSkins.Add(s);
+			mSkin	=s;
 		}
 
 
@@ -122,12 +165,8 @@ namespace MeshLib
 				m.Write(bw);
 			}
 
-			//save skins
-			bw.Write(mSkins.Count);
-			foreach(Skin sk in mSkins)
-			{
-				sk.Write(bw);
-			}
+			//save skin
+			mSkin.Write(bw);
 
 			bw.Close();
 			file.Close();
@@ -156,7 +195,6 @@ namespace MeshLib
 
 			//clear existing data
 			mMeshParts.Clear();
-			mSkins.Clear();
 
 			//read magic number
 			UInt32	magic	=br.ReadUInt32();
@@ -177,22 +215,8 @@ namespace MeshLib
 				mMeshParts.Add(m);
 			}
 
-			int	numSkin	=br.ReadInt32();
-			for(int i=0;i < numSkin;i++)
-			{
-				Skin	sk	=new Skin();
-
-				sk.Read(br);
-				mSkins.Add(sk);
-			}
-
-			//fix skin refs in meshes
-			for(int i=0;i < numMesh;i++)
-			{
-				int	skidx	=mMeshParts[i].GetSkinIndex();
-
-				mMeshParts[i].SetSkin(mSkins[skidx]);
-			}
+			mSkin	=new Skin();
+			mSkin.Read(br);
 
 			br.Close();
 			file.Close();
@@ -208,19 +232,7 @@ namespace MeshLib
 		{
 			mAnimLib.Blend(anim1, anim1Time, anim2, anim2Time, percentage);
 
-			foreach(SkinnedMesh m in mMeshParts)
-			{
-				if(!m.Visible)
-				{
-					continue;
-				}
-
-				if(m.MaterialName == null || m.MaterialName == "Blank" || m.MaterialName == "")
-				{
-					continue;	//don't bother unless it can be seen
-				}
-				m.UpdateBones(mAnimLib.GetSkeleton());
-			}
+			UpdateBones(mAnimLib.GetSkeleton(), mSkin);
 		}
 
 
@@ -228,19 +240,7 @@ namespace MeshLib
 		{
 			mAnimLib.Animate(anim, time);
 
-			foreach(SkinnedMesh m in mMeshParts)
-			{
-				if(!m.Visible)
-				{
-					continue;
-				}
-
-				if(m.MaterialName == null || m.MaterialName == "Blank" || m.MaterialName == "")
-				{
-					continue;	//don't bother unless it can be seen
-				}
-				m.UpdateBones(mAnimLib.GetSkeleton());
-			}
+			UpdateBones(mAnimLib.GetSkeleton(), mSkin);
 		}
 
 
@@ -259,13 +259,13 @@ namespace MeshLib
 
 		public void UpdateBounds()
 		{
-			if(mSkins == null || mSkins.Count == 0)
+			if(mSkin == null)
 			{
 				return;
 			}
 
 			Skeleton		skel		=mAnimLib.GetSkeleton();
-			List<string>	boneNames	=mSkins[0].GetBoneNames();
+			List<string>	boneNames	=mSkin.GetBoneNames();
 			List<Vector3>	points		=new List<Vector3>();
 
 			if(skel == null)
@@ -306,6 +306,8 @@ namespace MeshLib
 
 		public void Draw(GraphicsDevice gd)
 		{
+			UpdateShaderBones();
+
 			foreach(SkinnedMesh m in mMeshParts)
 			{
 				if(!m.Visible)

@@ -1,9 +1,9 @@
+#include "Types.fxh"
+#include "CommonFunctions.fxh"
+
 //cartoon shading stuff
-//constants
-#define	MAX_BONES	50
 
 //matrii for skinning
-shared float4x4	mBindPose;
 shared float4x4	mBones[MAX_BONES];
 
 //texture layers used on the surface
@@ -23,9 +23,6 @@ float4	mMatColor;
 float	mToonThresholds[4] = { 0.6, 0.4, 0.25, 0.1 };
 float	mToonBrightnessLevels[5] = { 1.0f, 0.7f, 0.5f, 0.2f, 0.05f };
 bool	mbTextureEnabled;
-
-#include "Types.fxh"
-#include "CommonFunctions.fxh"
 
 
 sampler TexSampler0 = sampler_state
@@ -165,7 +162,7 @@ VPosTex0Tex1Single ToonSkinTex0VS(VPosNormBoneTex0 input)
 	skVert.Blend0	=input.Blend0;
 	skVert.Weight0	=input.Weight0;
 
-	VPosNorm	skOut	=ComputeSkin(skVert, mBones, mBindPose);
+	VPosNorm	skOut	=ComputeSkin(skVert, mBones);
 	
 	VPosTex0Tex1Single	output;
 	output.Position		=skOut.Position;
@@ -180,7 +177,7 @@ VPosTex0Tex13 ToonSkinTex0NMapVS(VPosNormBoneTex0 input)
 {
 	VPosTex0Tex13	output;
 
-	float4	vertPos	=mul(input.Position, mBindPose);
+	float4	vertPos	=input.Position;
 
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 
@@ -203,7 +200,7 @@ VPosTex0Tex1Single ToonSkinTex0DanglyVS(VPosNormBoneTex0Col0 input)
 	skVert.Blend0	=input.Blend0;
 	skVert.Weight0	=input.Weight0;
 
-	VPosNorm	skOut	=ComputeSkin(skVert, mBones, mBindPose);
+	VPosNorm	skOut	=ComputeSkin(skVert, mBones);
 	
 	VPosTex0Tex1Single	output;
 	output.Position		=skOut.Position;

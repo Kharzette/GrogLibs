@@ -3,7 +3,7 @@
 #define _COMMONFUNCTIONSFXH
 
 //constants
-#define	MAX_BONES		50
+#define	MAX_BONES		55
 #define	PI_OVER_FOUR	0.7853981634f
 #define	PI_OVER_TWO		1.5707963268f
 
@@ -92,8 +92,7 @@ float3 ComputeNormalFromMap(float4 sampleNorm, float3 tan, float3 biTan, float3 
 //look up the skin transform
 float4x4 GetSkinXForm(float4 bnIdxs, float4 bnWeights, float4x4 bones[MAX_BONES])
 {
-	float4x4 skinTransform	=0;
-	skinTransform	+=bones[bnIdxs.x] * bnWeights.x;
+	float4x4 skinTransform	=bones[bnIdxs.x] * bnWeights.x;
 	skinTransform	+=bones[bnIdxs.y] * bnWeights.y;
 	skinTransform	+=bones[bnIdxs.z] * bnWeights.z;
 	skinTransform	+=bones[bnIdxs.w] * bnWeights.w;
@@ -118,11 +117,11 @@ float3 ComputeTrilight(float3 normal, float3 lightDir, float3 c0, float3 c1, flo
 }
 
 
-VPosNorm ComputeSkin(VPosNormBone input, float4x4 bones[MAX_BONES], float4x4 bindPose)
+VPosNorm ComputeSkin(VPosNormBone input, float4x4 bones[MAX_BONES])
 {
 	VPosNorm	output;
 	
-	float4	vertPos	=mul(input.Position, bindPose);
+	float4	vertPos	=input.Position;
 	
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
@@ -146,11 +145,11 @@ VPosNorm ComputeSkin(VPosNormBone input, float4x4 bones[MAX_BONES], float4x4 bin
 }
 
 
-VPosTex03Tex13 ComputeSkinWorld(VPosNormBone input, float4x4 bones[MAX_BONES], float4x4 bindPose)
+VPosTex03Tex13 ComputeSkinWorld(VPosNormBone input, float4x4 bones[MAX_BONES])
 {
 	VPosTex03Tex13	output;
 	
-	float4	vertPos	=mul(input.Position, bindPose);
+	float4	vertPos	=input.Position;
 	
 	//generate view-proj matrix
 	float4x4	vp	=mul(mView, mProjection);
@@ -180,11 +179,10 @@ VPosTex03Tex13 ComputeSkinWorld(VPosNormBone input, float4x4 bones[MAX_BONES], f
 
 //compute the position and color of a skinned vert
 VPosCol0 ComputeSkinTrilight(VPosNormBone input, float4x4 bones[MAX_BONES],
-							 float4x4 bindPose, float3 lightDir,
-							 float4 c0, float4 c1, float4 c2)
+							 float3 lightDir, float4 c0, float4 c1, float4 c2)
 {
 	VPosCol0	output;
-	VPosNorm	skinny	=ComputeSkin(input, bones, bindPose);
+	VPosNorm	skinny	=ComputeSkin(input, bones);
 
 	output.Position		=skinny.Position;	
 	output.Color.xyz	=ComputeTrilight(skinny.Normal, lightDir, c0, c1, c2);

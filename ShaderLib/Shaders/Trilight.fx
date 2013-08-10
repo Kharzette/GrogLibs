@@ -16,7 +16,6 @@ float4	mSolidColour;	//for non textured
 #include "CommonFunctions.fxh"
 
 //matrii for skinning
-shared float4x4	mBindPose;
 shared float4x4	mBones[MAX_BONES];
 
 
@@ -173,17 +172,17 @@ VPosTex04Tex14Tex24Tex34 TriTanWorldInstancedVS(VPosNormTanTex0 input, float4x4 
 
 VPosTex03 SkinVS(VPosNormBone input)
 {
-	return	ComputeSkin(input, mBones, mBindPose);
+	return	ComputeSkin(input, mBones);
 }
 
 VPosTex03Tex13 TriSolidSkinVS(VPosNormBone input)
 {
-	return	ComputeSkinWorld(input, mBones, mBindPose);
+	return	ComputeSkinWorld(input, mBones);
 }
 
 VPosTex0Single ShadowSkinVS(VPosBone input)
 {
-	float4	vertPos	=mul(input.Position, mBindPose);
+	float4	vertPos	=input.Position;
 
 	float4x4	skinTransform	=GetSkinXForm(input.Blend0, input.Weight0, mBones);
 
@@ -206,7 +205,7 @@ VPosTex04Tex14Tex24 TriColorSkinVS(VPosNormBoneCol0 input)
 	inSkin.Blend0	=input.Blend0;
 	inSkin.Weight0	=input.Weight0;
 
-	VPosTex03Tex13	skin	=ComputeSkinWorld(inSkin, mBones, mBindPose);
+	VPosTex03Tex13	skin	=ComputeSkinWorld(inSkin, mBones);
 
 	VPosTex04Tex14Tex24	ret;
 
@@ -229,7 +228,7 @@ VPosTex0Col0 TriSkinTex0VS(VPosNormBoneTex0 input)
 	skVert.Blend0	=input.Blend0;
 	skVert.Weight0	=input.Weight0;
 	
-	VPosCol0	singleOut	=ComputeSkinTrilight(skVert, mBones, mBindPose,
+	VPosCol0	singleOut	=ComputeSkinTrilight(skVert, mBones,
 								mLightDirection, mLightColor0, mLightColor1, mLightColor2);
 	
 	VPosTex0Col0		output;
@@ -249,7 +248,7 @@ VPosTex0Tex1Col0 TriSkinTex0Tex1VS(VPosNormBoneTex0Tex1 input)
 	skVert.Blend0	=input.Blend0;
 	skVert.Weight0	=input.Weight0;
 	
-	VPosCol0	singleOut	=ComputeSkinTrilight(skVert, mBones, mBindPose,
+	VPosCol0	singleOut	=ComputeSkinTrilight(skVert, mBones,
 								mLightDirection, mLightColor0, mLightColor1, mLightColor2);
 	
 	VPosTex0Tex1Col0	output;

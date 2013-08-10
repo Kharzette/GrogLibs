@@ -414,6 +414,37 @@ namespace UtilityLib
 		}
 
 
+		public static bool CompareMatrix(Matrix mat1, Matrix mat2, float epsilon)
+		{
+			if(!CompareVectorEpsilon(mat1.Forward, mat2.Forward, epsilon))
+			{
+				return	false;
+			}
+
+			if(!CompareVectorEpsilon(mat1.Left, mat2.Left, epsilon))
+			{
+				return	false;
+			}
+
+			if(!CompareVectorEpsilon(mat1.Up, mat2.Up, epsilon))
+			{
+				return	false;
+			}
+
+			if(!CompareVectorEpsilon(mat1.Translation, mat2.Translation, epsilon))
+			{
+				return	false;
+			}
+			return	true;
+		}
+
+
+		public static bool IsIdentity(Matrix mat, float epsilon)
+		{
+			return	CompareMatrix(mat, Matrix.Identity, epsilon);
+		}
+
+
 		public static bool IsAxial(Vector3 v)
 		{
 			foreach(Vector3 ax in AxialNormals)

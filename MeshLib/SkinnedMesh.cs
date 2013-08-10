@@ -10,9 +10,6 @@ namespace MeshLib
 {
 	public class SkinnedMesh : Mesh
 	{
-		Matrix			[]mBones;
-		Skin			mSkin;
-		int				mSkinIndex;
 		WearLocations	mSlot;
 
 
@@ -33,24 +30,6 @@ namespace MeshLib
 		}
 
 
-		public void SetSkin(Skin sk)
-		{
-			mSkin	=sk;
-		}
-
-
-		public void SetSkinIndex(int idx)
-		{
-			mSkinIndex	=idx;
-		}
-
-
-		public int GetSkinIndex()
-		{
-			return	mSkinIndex;
-		}
-
-
 		public override void Write(BinaryWriter bw)
 		{
 			bw.Write(mName);
@@ -59,7 +38,6 @@ namespace MeshLib
 			bw.Write(mVertSize);
 			bw.Write(mMaterialName);
 			bw.Write(mTypeIndex);
-			bw.Write(mSkinIndex);
 			bw.Write((UInt32)mSlot);
 			bw.Write(mbVisible);
 
@@ -94,7 +72,6 @@ namespace MeshLib
 			mVertSize		=br.ReadInt32();
 			mMaterialName	=br.ReadString();
 			mTypeIndex		=br.ReadInt32();
-			mSkinIndex		=br.ReadInt32();
 			mSlot			=(WearLocations)br.ReadUInt32();
 			mbVisible		=br.ReadBoolean();
 
@@ -122,36 +99,6 @@ namespace MeshLib
 				mIndexs	=new IndexBuffer(gd, IndexElementSize.SixteenBits, numIdx, BufferUsage.WriteOnly);
 			}
 			mIndexs.SetData<ushort>(idxs);
-		}
-
-
-		//copies bones into the shader
-		public void UpdateShaderBones(MaterialLib.Material mat)
-		{
-			//some chunks are never really drawn
-			if(mBones != null)
-			{
-				mat.SetParameter("mBones", mBones);
-			}
-		}
-
-
-		public void UpdateBones(Skeleton sk)
-		{
-			//no need for this if not skinned
-			if(mSkin == null || sk == null)
-			{
-				return;
-			}
-
-			if(mBones == null)
-			{
-				mBones	=new Matrix[mSkin.GetNumBones()];
-			}
-			for(int i=0;i < mBones.Length;i++)
-			{
-				mBones[i]	=mSkin.GetBoneByIndex(i, sk);
-			}
 		}
 
 
@@ -188,14 +135,7 @@ namespace MeshLib
 			g.SetVertexBuffer(mVerts);
 			g.Indices	=mIndexs;
 
-			UpdateShaderBones(mat);
-
 			mat.SetParameter("mWorld", world);
-
-			if(mSkin != null)
-			{
-				mat.SetParameter("mBindPose", mSkin.GetBindShapeMatrix());
-			}
 
 			Effect	fx	=matLib.GetMaterialShader(mat.Name);
 

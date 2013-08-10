@@ -8,11 +8,14 @@ using UtilityLib;
 
 namespace MeshLib
 {
+	//this is now a master skin, one per character
+	//all mesh parts will index in the same way
+	//The tool will need to make sure the inverse bind poses
+	//are all the same for each bone
 	public class Skin
 	{
 		List<string>	mBoneNames			=new List<string>();
 		List<Matrix>	mInverseBindPoses	=new List<Matrix>();
-		Matrix			mBindShapeMatrix;
 		Matrix			mMaxAdjust;	//coordinate system stuff
 
 
@@ -30,29 +33,20 @@ namespace MeshLib
 		}
 
 
-		public void SetBoneNames(List<string> bnames)
+		public void SetBoneNamesAndPoses(Dictionary<string, Matrix> invBindPoses)
 		{
 			mBoneNames.Clear();
+			mInverseBindPoses.Clear();
 
-			mBoneNames.AddRange(bnames);
-		}
-
-
-		public void SetInverseBindPoses(List<Matrix> mats)
-		{
-			mInverseBindPoses	=mats;
-		}
-
-
-		public void SetBindShapeMatrix(Matrix mat)
-		{
-			mBindShapeMatrix	=mat;
-		}
-
-
-		public Matrix GetBindShapeMatrix()
-		{
-			return	mBindShapeMatrix;
+			foreach(KeyValuePair<string, Matrix> bp in invBindPoses)
+			{
+				if(mBoneNames.Contains(bp.Key))
+				{
+					continue;
+				}
+				mBoneNames.Add(bp.Key);
+				mInverseBindPoses.Add(bp.Value);
+			}
 		}
 
 
@@ -94,8 +88,6 @@ namespace MeshLib
 				Matrix	mat	=FileUtil.ReadMatrix(br);
 				mInverseBindPoses.Add(mat);
 			}
-
-			mBindShapeMatrix	=FileUtil.ReadMatrix(br);
 		}
 
 
@@ -112,8 +104,6 @@ namespace MeshLib
 			{
 				FileUtil.WriteMatrix(bw, m);
 			}
-
-			FileUtil.WriteMatrix(bw, mBindShapeMatrix);
 		}
 	}
 }
