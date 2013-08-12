@@ -42,6 +42,8 @@
 			this.FileGroup = new System.Windows.Forms.GroupBox();
 			this.MergeMaterialLib = new System.Windows.Forms.Button();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.UnHideAll = new System.Windows.Forms.Button();
+			this.IgnoreParameter = new System.Windows.Forms.Button();
 			this.HideSelected = new System.Windows.Forms.Button();
 			this.MeshPartGrid = new System.Windows.Forms.DataGridView();
 			this.ApplyMaterial = new System.Windows.Forms.Button();
@@ -52,8 +54,7 @@
 			this.TexCoordSet = new System.Windows.Forms.NumericUpDown();
 			this.GenBiNormalTangent = new System.Windows.Forms.Button();
 			this.mTips = new System.Windows.Forms.ToolTip(this.components);
-			this.IgnoreParameter = new System.Windows.Forms.Button();
-			this.UnHideAll = new System.Windows.Forms.Button();
+			this.WeldWeight = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialProperties)).BeginInit();
 			this.FileGroup.SuspendLayout();
@@ -229,6 +230,26 @@
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Shader Shtuff";
 			// 
+			// UnHideAll
+			// 
+			this.UnHideAll.Location = new System.Drawing.Point(549, 19);
+			this.UnHideAll.Name = "UnHideAll";
+			this.UnHideAll.Size = new System.Drawing.Size(78, 29);
+			this.UnHideAll.TabIndex = 19;
+			this.UnHideAll.Text = "UnHide All";
+			this.UnHideAll.UseVisualStyleBackColor = true;
+			this.UnHideAll.Click += new System.EventHandler(this.OnUnHideAll);
+			// 
+			// IgnoreParameter
+			// 
+			this.IgnoreParameter.Location = new System.Drawing.Point(467, 19);
+			this.IgnoreParameter.Name = "IgnoreParameter";
+			this.IgnoreParameter.Size = new System.Drawing.Size(75, 29);
+			this.IgnoreParameter.TabIndex = 18;
+			this.IgnoreParameter.Text = "Ignore SP";
+			this.IgnoreParameter.UseVisualStyleBackColor = true;
+			this.IgnoreParameter.Click += new System.EventHandler(this.OnIgnoreSP);
+			// 
 			// HideSelected
 			// 
 			this.HideSelected.Location = new System.Drawing.Point(399, 19);
@@ -266,6 +287,7 @@
 			// MeshPartGroup
 			// 
 			this.MeshPartGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.MeshPartGroup.Controls.Add(this.WeldWeight);
 			this.MeshPartGroup.Controls.Add(this.StripElements);
 			this.MeshPartGroup.Controls.Add(this.Match);
 			this.MeshPartGroup.Controls.Add(this.label1);
@@ -281,9 +303,9 @@
 			// 
 			// StripElements
 			// 
-			this.StripElements.Location = new System.Drawing.Point(394, 19);
+			this.StripElements.Location = new System.Drawing.Point(330, 19);
 			this.StripElements.Name = "StripElements";
-			this.StripElements.Size = new System.Drawing.Size(111, 29);
+			this.StripElements.Size = new System.Drawing.Size(91, 29);
 			this.StripElements.TabIndex = 24;
 			this.StripElements.Text = "Strip Elements";
 			this.StripElements.UseVisualStyleBackColor = true;
@@ -291,7 +313,7 @@
 			// 
 			// Match
 			// 
-			this.Match.Location = new System.Drawing.Point(281, 19);
+			this.Match.Location = new System.Drawing.Point(218, 19);
 			this.Match.Name = "Match";
 			this.Match.Size = new System.Drawing.Size(106, 29);
 			this.Match.TabIndex = 23;
@@ -302,7 +324,7 @@
 			// label1
 			// 
 			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(232, 12);
+			this.label1.Location = new System.Drawing.Point(170, 12);
 			this.label1.Name = "label1";
 			this.label1.Size = new System.Drawing.Size(23, 13);
 			this.label1.TabIndex = 22;
@@ -310,7 +332,7 @@
 			// 
 			// TexCoordSet
 			// 
-			this.TexCoordSet.Location = new System.Drawing.Point(223, 28);
+			this.TexCoordSet.Location = new System.Drawing.Point(170, 28);
 			this.TexCoordSet.Maximum = new decimal(new int[] {
             24,
             0,
@@ -325,32 +347,22 @@
 			// 
 			this.GenBiNormalTangent.Location = new System.Drawing.Point(107, 19);
 			this.GenBiNormalTangent.Name = "GenBiNormalTangent";
-			this.GenBiNormalTangent.Size = new System.Drawing.Size(110, 29);
+			this.GenBiNormalTangent.Size = new System.Drawing.Size(57, 29);
 			this.GenBiNormalTangent.TabIndex = 21;
-			this.GenBiNormalTangent.Text = "Gen Tangents";
+			this.GenBiNormalTangent.Text = "Gen Tan";
 			this.mTips.SetToolTip(this.GenBiNormalTangent, "Generate bitangents for normal mapping for the selected mesh part");
 			this.GenBiNormalTangent.UseVisualStyleBackColor = true;
 			this.GenBiNormalTangent.Click += new System.EventHandler(this.OnGenBiNormalTangent);
 			// 
-			// IgnoreParameter
+			// WeldWeight
 			// 
-			this.IgnoreParameter.Location = new System.Drawing.Point(467, 19);
-			this.IgnoreParameter.Name = "IgnoreParameter";
-			this.IgnoreParameter.Size = new System.Drawing.Size(75, 29);
-			this.IgnoreParameter.TabIndex = 18;
-			this.IgnoreParameter.Text = "Ignore SP";
-			this.IgnoreParameter.UseVisualStyleBackColor = true;
-			this.IgnoreParameter.Click += new System.EventHandler(this.OnIgnoreSP);
-			// 
-			// UnHideAll
-			// 
-			this.UnHideAll.Location = new System.Drawing.Point(549, 19);
-			this.UnHideAll.Name = "UnHideAll";
-			this.UnHideAll.Size = new System.Drawing.Size(78, 29);
-			this.UnHideAll.TabIndex = 19;
-			this.UnHideAll.Text = "UnHide All";
-			this.UnHideAll.UseVisualStyleBackColor = true;
-			this.UnHideAll.Click += new System.EventHandler(this.OnUnHideAll);
+			this.WeldWeight.Location = new System.Drawing.Point(428, 19);
+			this.WeldWeight.Name = "WeldWeight";
+			this.WeldWeight.Size = new System.Drawing.Size(77, 29);
+			this.WeldWeight.TabIndex = 25;
+			this.WeldWeight.Text = "Weld Weight";
+			this.WeldWeight.UseVisualStyleBackColor = true;
+			this.WeldWeight.Click += new System.EventHandler(this.OnWeldWeight);
 			// 
 			// MaterialForm
 			// 
@@ -410,5 +422,6 @@
 		private System.Windows.Forms.Button HideSelected;
 		private System.Windows.Forms.Button UnHideAll;
 		private System.Windows.Forms.Button IgnoreParameter;
+		private System.Windows.Forms.Button WeldWeight;
 	}
 }

@@ -36,6 +36,7 @@ namespace SharedForms
 		public event EventHandler	eNukedMeshPart;
 		public event EventHandler	eLibrarySaved;
 		public event EventHandler	eStripElements;
+		public event EventHandler	eWeldWeights;
 
 		//column indexes for special behavior
 		int	mShaderColumn;
@@ -838,6 +839,25 @@ namespace SharedForms
 			}
 
 			mat.IgnoreShaderParameters(selected);
+		}
+
+		
+		void OnWeldWeight(object sender, EventArgs e)
+		{
+			if(MeshPartGrid.SelectedRows.Count < 2
+				|| MeshPartGrid.SelectedRows.Count > 2)
+			{
+				return;
+			}
+
+			List<Mesh>	parts	=new List<Mesh>();
+
+			foreach(DataGridViewRow dgvr in MeshPartGrid.SelectedRows)
+			{
+				parts.Add(dgvr.DataBoundItem as Mesh);
+			}
+
+			Misc.SafeInvoke(eWeldWeights, parts);
 		}
 	}
 }

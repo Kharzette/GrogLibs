@@ -683,6 +683,31 @@ namespace MeshLib
 		}
 
 
+		public static List<Vector4> GetWeights(VertexBuffer vb, int numVerts, int typeIdx)
+		{
+			List<Vector4>	weights	=new List<Vector4>();
+
+			Type	vtype	=mTypes[typeIdx];
+			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
+
+			FieldInfo	[]finfo	=vtype.GetFields();
+			for(int i=0;i < numVerts;i++)
+			{
+				foreach(FieldInfo fi in finfo)
+				{
+					//this might not be positional data!
+					if(fi.Name == "BoneWeights")
+					{
+						Vector4	vec	=(Vector4)GetArrayField(verts, i, fi.Name);
+						weights.Add(vec);
+					}
+				}
+			}
+
+			return	weights;
+		}
+
+
 		public static List<Vector3> GetNormals(VertexBuffer vb, int numVerts, int typeIdx)
 		{
 			List<Vector3>	norms	=new List<Vector3>();
@@ -730,6 +755,68 @@ namespace MeshLib
 			}
 
 			return	texs;
+		}
+
+
+		public static List<Vector3> GetNormals(VertexBuffer vb, int typeIdx)
+		{
+			List<Vector3>	ret		=new List<Vector3>();
+			Type			vtype	=mTypes[typeIdx];
+			Array			verts	=Array.CreateInstance(vtype, vb.VertexCount);
+
+			MethodInfo genericMethod =
+				typeof (VertexBuffer).GetMethods().Where(
+					x => x.Name == "GetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
+            
+			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
+
+			typedMethod.Invoke(vb, new object[] {verts});
+
+			FieldInfo	[]finfo	=vtype.GetFields();
+			for(int i=0;i < vb.VertexCount;i++)
+			{
+				Vector3	pos	=Vector3.Zero;
+				foreach(FieldInfo fi in finfo)
+				{
+					if(fi.Name == "Position")
+					{
+						pos	=(Vector3)GetArrayField(verts, i, fi.Name);
+						ret.Add(pos);
+					}
+					else if(fi.Name == "Normal")
+					{
+						Vector3	vec	=(Vector3)GetArrayField(verts, i, fi.Name);
+						ret.Add(pos + (vec * 5));
+					}
+				}
+			}
+
+			return	ret;
+		}
+
+
+		public static List<Vector4> GetBoneIndexes(VertexBuffer vb, int numVerts, int typeIdx)
+		{
+			Type	vtype	=mTypes[typeIdx];
+			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
+
+			List<Vector4>	idxs	=new List<Vector4>();
+
+			FieldInfo	[]finfo	=vtype.GetFields();
+			for(int i=0;i < numVerts;i++)
+			{
+				foreach(FieldInfo fi in finfo)
+				{
+					//this might not be positional data!
+					if(fi.Name == "BoneIndex")
+					{
+						Vector4	vec	=(Vector4)GetArrayField(verts, i, fi.Name);
+						idxs.Add(vec);
+					}
+				}
+			}
+
+			return	idxs;
 		}
 
 
@@ -829,6 +916,60 @@ namespace MeshLib
 		}
 
 
+		public static VertexBuffer ReplaceWeights(GraphicsDevice gd, VertexBuffer vb,
+			int numVerts, int typeIdx, Vector4 []newWeights)
+		{
+			Type	vtype	=mTypes[typeIdx];
+			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
+
+			for(int i=0;i < numVerts;i++)
+			{
+				SetArrayField(verts, i, "BoneWeights", newWeights[i]);
+			}
+
+			VertexDeclaration	dec	=GetVertexDeclarationForType(vtype);
+
+			VertexBuffer vb2	=new VertexBuffer(gd, dec, numVerts, BufferUsage.None);
+			
+			MethodInfo genericMethod =
+				typeof (VertexBuffer).GetMethods().Where(
+					x => x.Name == "SetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
+            
+			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
+
+			typedMethod.Invoke(vb2, new object[] {verts});
+
+			return	vb2;
+		}
+
+
+		public static VertexBuffer ReplaceBoneIndexes(GraphicsDevice gd, VertexBuffer vb,
+			int numVerts, int typeIdx, Vector4 []newInds)
+		{
+			Type	vtype	=mTypes[typeIdx];
+			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
+
+			for(int i=0;i < numVerts;i++)
+			{
+				SetArrayField(verts, i, "BoneIndex", newInds[i]);
+			}
+
+			VertexDeclaration	dec	=GetVertexDeclarationForType(vtype);
+
+			VertexBuffer vb2	=new VertexBuffer(gd, dec, numVerts, BufferUsage.None);
+			
+			MethodInfo genericMethod =
+				typeof (VertexBuffer).GetMethods().Where(
+					x => x.Name == "SetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
+            
+			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
+
+			typedMethod.Invoke(vb2, new object[] {verts});
+
+			return	vb2;
+		}
+
+
 		//create a new vertexbuffer with tangents added
 		public static VertexBuffer AddTangents(GraphicsDevice gd, VertexBuffer vb, int numVerts, int typeIdx, Vector4 []tans, out int typeIndex)
 		{
@@ -923,43 +1064,6 @@ namespace MeshLib
 
 			box		=BoundingBox.CreateFromPoints(points);
 			sphere	=UtilityLib.Mathery.SphereFromPoints(points);
-		}
-
-
-		public static List<Vector3> GetNormals(VertexBuffer vb, int typeIdx)
-		{
-			List<Vector3>	ret		=new List<Vector3>();
-			Type			vtype	=mTypes[typeIdx];
-			Array			verts	=Array.CreateInstance(vtype, vb.VertexCount);
-
-			MethodInfo genericMethod =
-				typeof (VertexBuffer).GetMethods().Where(
-					x => x.Name == "GetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
-            
-			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
-
-			typedMethod.Invoke(vb, new object[] {verts});
-
-			FieldInfo	[]finfo	=vtype.GetFields();
-			for(int i=0;i < vb.VertexCount;i++)
-			{
-				Vector3	pos	=Vector3.Zero;
-				foreach(FieldInfo fi in finfo)
-				{
-					if(fi.Name == "Position")
-					{
-						pos	=(Vector3)GetArrayField(verts, i, fi.Name);
-						ret.Add(pos);
-					}
-					else if(fi.Name == "Normal")
-					{
-						Vector3	vec	=(Vector3)GetArrayField(verts, i, fi.Name);
-						ret.Add(pos + (vec * 5));
-					}
-				}
-			}
-
-			return	ret;
 		}
 
 

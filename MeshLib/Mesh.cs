@@ -4,6 +4,7 @@ using System.IO;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using UtilityLib;
 
 
 namespace MeshLib
@@ -54,12 +55,12 @@ namespace MeshLib
 		public string Name
 		{
 			get { return mName; }
-			set { mName = UtilityLib.Misc.AssignValue(value); }
+			set { mName = Misc.AssignValue(value); }
 		}
 		public string MaterialName
 		{
 			get { return mMaterialName; }
-			set { mMaterialName = UtilityLib.Misc.AssignValue(value); }
+			set { mMaterialName = Misc.AssignValue(value); }
 		}
 		public Type VertexType
 		{
@@ -126,6 +127,58 @@ namespace MeshLib
 		public void SetTransform(Matrix mat)
 		{
 			mTransform	=mat;
+		}
+
+
+		//weld mesh 2 to this mesh's weights for verts in the same spot
+		public void WeldWeights(GraphicsDevice gd, Mesh mesh2)
+		{
+			List<Vector3>	myVerts		=VertexTypes.GetPositions(mVerts, mNumVerts, mTypeIndex);
+			List<Vector3>	otherVerts	=VertexTypes.GetPositions(mesh2.mVerts, mesh2.mNumVerts, mesh2.mTypeIndex);
+
+			Dictionary<int, List<int>>	toWeld	=new Dictionary<int, List<int>>();
+
+			//find == verts
+			for(int i=0;i < myVerts.Count;i++)
+			{
+				for(int j=0;j < otherVerts.Count;j++)
+				{
+					if(Mathery.CompareVector(myVerts[i], otherVerts[j]))
+					{
+						if(!toWeld.ContainsKey(i))
+						{
+							toWeld.Add(i, new List<int>());
+						}
+						toWeld[i].Add(j);
+					}
+				}
+			}
+
+			//weld
+			List<Vector4>	myWeights		=VertexTypes.GetWeights(mVerts, mNumVerts, mTypeIndex);
+			List<Vector4>	otherWeights	=VertexTypes.GetWeights(mesh2.mVerts, mesh2.mNumVerts, mesh2.mTypeIndex);
+			List<Vector4>	myInds			=VertexTypes.GetBoneIndexes(mVerts, mNumVerts, mTypeIndex);
+			List<Vector4>	otherInds		=VertexTypes.GetBoneIndexes(mesh2.mVerts, mesh2.mNumVerts, mesh2.mTypeIndex);
+
+			foreach(KeyValuePair<int, List<int>> weldSpot in toWeld)
+			{
+				Vector4	goodWeight	=myWeights[weldSpot.Key];
+				Vector4	goodIdx		=myInds[weldSpot.Key];
+
+				foreach(int ow in weldSpot.Value)
+				{
+					otherWeights[ow]	=goodWeight;
+					otherInds[ow]		=goodIdx;
+				}
+			}
+
+			mesh2.mVerts	=
+				VertexTypes.ReplaceWeights(gd, mesh2.mVerts, mesh2.mNumVerts,
+					mesh2.mTypeIndex, otherWeights.ToArray());
+
+			mesh2.mVerts	=
+				VertexTypes.ReplaceBoneIndexes(gd, mesh2.mVerts, mesh2.mNumVerts,
+					mesh2.mTypeIndex, otherInds.ToArray());
 		}
 
 
@@ -238,11 +291,11 @@ namespace MeshLib
 		{
 			if(bBox)
 			{
-				return	UtilityLib.Mathery.RayIntersectBox(start, end, mBoxBound);
+				return	Mathery.RayIntersectBox(start, end, mBoxBound);
 			}
 			else
 			{
-				return	UtilityLib.Mathery.RayIntersectSphere(start, end, mSphereBound);
+				return	Mathery.RayIntersectSphere(start, end, mSphereBound);
 			}
 		}
 
