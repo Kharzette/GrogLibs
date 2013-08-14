@@ -2,7 +2,12 @@
 //ambient occlusion from flashie, an implementation of
 //http://graphics.cs.williams.edu/papers/AlchemyHPG11/VV11AlchemyAO.pdf
 //
-//blur from some article on the interwebs
+//blur from some article on the interwebs I frogot
+//
+//edge detection from nvidia
+//
+//I think this file is set up to only build if the project is set
+//to HiDef.  Reach profile should ignore it as it has v3 shaders
 
 //post process stuff
 float2		mInvViewPort;
@@ -19,6 +24,11 @@ Texture	mColorTex;
 
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
+
+//outliner params
+float	mTexelSteps;
+float	mThreshold;
+float2	mScreenSize;
 
 //ambient occlusion params
 #define		NUMSAMPLES		12
@@ -42,7 +52,7 @@ texture	mBlurTargetTex;
 float	mBlurFallOff;
 float	mSharpNess;
 float	mBlurRadius	=7;
-
+float	mOpacity;
 
 sampler	NormalSampler	=sampler_state
 {
@@ -134,6 +144,10 @@ float BlurFunction(float2 uv, float r, float center_c,
 	return	(w * c);
 }
 
+float GetGray(float4 c)
+{
+	return	(dot(c.rgb, ((0.33333).xxx)));
+}
 
 VPosTex0Tex13	AOVS(VPosTex0 input)
 {
@@ -146,6 +160,21 @@ VPosTex0Tex13	AOVS(VPosTex0 input)
 
 	output.TexCoord0	=input.TexCoord0;
 	output.TexCoord1	=GetFrustumRay(input.TexCoord0);
+
+	return	output;
+}
+
+
+VPosTex0	OutlineVS(VPosTex0 input)
+{
+	VPosTex0	output;
+
+	output.Position.x	=input.Position.x - mInvViewPort.x * 0.5f;
+	output.Position.y	=input.Position.y + mInvViewPort.y * 0.5f;
+	output.Position.z	=input.Position.z;
+	output.Position.w	=1.0f;
+
+	output.TexCoord0	=input.TexCoord0;
 
 	return	output;
 }
@@ -245,6 +274,119 @@ float4	BiLatBlurYPS(VTex0Tex13VPos input) : COLOR0
 	return	b / w_total * tex2D(ColorSampler, input.TexCoord0);
 }
 
+float4	OutlinePS(VTex0 input) : COLOR0
+{
+	float2	ox	=float2(mTexelSteps / mScreenSize.x, 0.0);
+	float2	oy	=float2(0.0, mTexelSteps / mScreenSize.y);
+	
+	float2	uv	=input.TexCoord0;
+	float2	PP	=uv - oy;
+	
+	float4	CC	=tex2D(ColorSampler, PP - ox);
+	float	g00	=GetGray(CC);
+	
+	CC	=tex2D(ColorSampler, PP);
+	float	g01	=GetGray(CC);
+	
+	CC	=tex2D(ColorSampler, PP + ox);
+	float	g02	=GetGray(CC);
+	
+	PP	=uv;
+	CC	=tex2D(ColorSampler, PP - ox);
+	float	g10	=GetGray(CC);
+
+	CC	=tex2D(ColorSampler, PP);
+	float	g11	=GetGray(CC);
+	
+	CC	=tex2D(ColorSampler, PP + ox);
+	float	g12	=GetGray(CC);
+	
+	PP	=uv + oy;
+	CC	=tex2D(ColorSampler, PP - ox);
+	float	g20	=GetGray(CC);
+	
+	CC	=tex2D(ColorSampler, PP);
+	float	g21	=GetGray(CC);
+
+	CC	=tex2D(ColorSampler, PP + ox);
+	float	g22	=GetGray(CC);
+	
+	float	K00	=-1;
+	float	K01	=-2;
+	float	K02	=-1;
+	float	K10	=0;
+	float	K11	=0;
+	float	K12	=0;
+	float	K20	=1;
+	float	K21	=2;
+	float	K22	=1;
+	float	sx	=0;
+	float	sy	=0;
+
+	sx	+=g00 * K00;
+	sx	+=g01 * K01;
+	sx	+=g02 * K02;
+	sx	+=g10 * K10;
+	sx	+=g11 * K11;
+	sx	+=g12 * K12;
+	sx	+=g20 * K20;
+	sx	+=g21 * K21;
+	sx	+=g22 * K22; 
+	sy	+=g00 * K00;
+	sy	+=g01 * K10;
+	sy	+=g02 * K20;
+	sy	+=g10 * K01;
+	sy	+=g11 * K11;
+	sy	+=g12 * K21;
+	sy	+=g20 * K02;
+	sy	+=g21 * K12;
+	sy	+=g22 * K22;
+	
+	float	dist	=sqrt(sx * sx + sy * sy);
+
+	float	result	=1;
+	
+	if(dist > mThreshold)
+	{
+		result	=0;
+	}
+
+    return	float4(result, result, result, 1);
+}
+
+
+float4	ModulatePS(VTex0 input) : COLOR0
+{
+	float4	color	=tex2D(ColorSampler, input.TexCoord0);
+	float4	color2	=tex2D(BlurTargetSampler, input.TexCoord0);
+
+	color	*=color2;
+
+	return	float4(color.xyz, 1);
+}
+
+
+float4	BleachBypassPS(VTex0 input) : COLOR0
+{
+	float4	base		=tex2D(ColorSampler, input.TexCoord0);
+	float3	lumCoeff	=float3(0.25, 0.65, 0.1);
+	float	lum			=dot(lumCoeff, base.rgb);
+
+	float3	blend		=lum.rrr;
+	float	L			=min(1, max(0, 10 * (lum - 0.45)));
+
+	float3	result1		=2.0f * base.rgb * blend;
+	float3	result2		=1.0f - 2.0f * (1.0f - blend) * (1.0f - base.rgb);
+	float3	newColor	=lerp(result1, result2, L);
+
+	float	A2			=mOpacity * base.a;
+	float3	mixRGB		=A2 * newColor.rgb;
+
+	mixRGB	+=((1.0f - A2) * base.rgb);
+
+	return	float4(mixRGB, base.a);	
+}
+
 
 technique AmbientOcclusion
 {
@@ -276,5 +418,32 @@ technique BilateralBlur
 	{
 		VertexShader	=compile vs_3_0 AOVS();
 		PixelShader		=compile ps_3_0	BiLatBlurYPS();
+	}
+}
+
+technique Outline
+{
+	pass P0
+	{
+		VertexShader	=compile vs_3_0 OutlineVS();
+		PixelShader		=compile ps_3_0 OutlinePS();
+	}
+}
+
+technique Modulate
+{
+	pass P0
+	{
+		VertexShader	=compile vs_3_0 OutlineVS();
+		PixelShader		=compile ps_3_0 ModulatePS();
+	}
+}
+
+technique BleachBypass
+{
+	pass P0
+	{
+		VertexShader	=compile vs_3_0 OutlineVS();
+		PixelShader		=compile ps_3_0 BleachBypassPS();
 	}
 }
