@@ -58,6 +58,7 @@ namespace SharedForms
 				mLightParams.mMaxIntensity			=(int)MaxIntensity.Value;
 				mLightParams.mLightGridSize			=(int)LightGridSize.Value;
 				mLightParams.mNumSamples			=(int)NumSamples.Value;
+				mLightParams.mbDynamicLighting		=DynamicLights.Checked;
 
 				return	mLightParams;
 			}

@@ -463,12 +463,6 @@ namespace BSPCore
 		}
 
 
-		public bool ClassifyPoint(Vector3 pnt)
-		{
-			return	false;
-		}
-
-
 		public Vector3 GetPlayerStartPos()
 		{
 			foreach(MapEntity e in mGFXEntities)
@@ -1570,7 +1564,7 @@ namespace BSPCore
 #if !X64
 		public MapGrinder	MakeMapGrinder()
 		{
-			return	new MapGrinder(null, mGFXTexInfos, mGFXFaces, 4, 1);
+			return	new MapGrinder(null, mGFXTexInfos, mGFXFaces, 4, 1, false);
 		}
 
 
@@ -1588,9 +1582,9 @@ namespace BSPCore
 		}
 
 
-		public List<MaterialLib.Material> GetMaterials()
+		public List<MaterialLib.Material> GetMaterials(bool bDynamic)
 		{
-			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1, bDynamic);
 
 			return	mg.GetMaterials();
 		}
@@ -1602,7 +1596,7 @@ namespace BSPCore
 		{
 			LoadGBSPFile(fileName);
 
-			List<MaterialLib.Material>	ret	=GetMaterials();
+			List<MaterialLib.Material>	ret	=GetMaterials(false);
 
 			FreeGBSPFile();
 
@@ -1752,9 +1746,9 @@ namespace BSPCore
 
 			int lightAtlasSize,
 			object	pp,
-			out MaterialLib.TexAtlas lightAtlas)
+			out MaterialLib.TexAtlas lightAtlas, bool bDyn)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lightAtlasSize);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lightAtlasSize, bDyn);
 
 			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels))
 			{
@@ -1817,9 +1811,9 @@ namespace BSPCore
 
 		public void BuildVLitRenderData(GraphicsDevice g, out VertexBuffer vb,
 			out IndexBuffer ib,
-			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
+			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp, bool bDyn)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1, bDyn);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
@@ -1832,9 +1826,9 @@ namespace BSPCore
 
 
 		public void BuildAlphaRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib,	out Dictionary<int, List<List<MeshLib.DrawCall>>> alphaDrawCalls, object pp)
+			out IndexBuffer ib,	out Dictionary<int, List<List<MeshLib.DrawCall>>> alphaDrawCalls, object pp, bool bDyn)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1, bDyn);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
@@ -1850,7 +1844,7 @@ namespace BSPCore
 			out IndexBuffer ib,
 			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1, false);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
@@ -1864,9 +1858,9 @@ namespace BSPCore
 
 		public void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
 			out IndexBuffer ib, out Dictionary<int, List<MeshLib.DrawCall>> dcs,
-			out List<List<Vector3>> mirrorPolys, object pp)
+			out List<List<Vector3>> mirrorPolys, object pp, bool bDyn)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1, bDyn);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
@@ -1882,7 +1876,7 @@ namespace BSPCore
 			out IndexBuffer ib,
 			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1, false);
 
 			mg.BuildSkyFaceData(mGFXVerts, mGFXVertIndexes, pp, mGFXModels);
 

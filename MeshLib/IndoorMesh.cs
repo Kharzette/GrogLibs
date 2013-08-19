@@ -91,20 +91,20 @@ namespace MeshLib
 
 			int lightAtlasSize,
 			object pp,
-			out MaterialLib.TexAtlas lightAtlas);
+			out MaterialLib.TexAtlas lightAtlas, bool bDynamicLights);
 
 		public delegate void BuildVLitRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Dictionary<int, List<DrawCall>> dcs, object pp);
+			out IndexBuffer ib, out Dictionary<int, List<DrawCall>> dcs, object pp, bool bDynamicLights);
 
 		public delegate void BuildAlphaRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Dictionary<int, List<List<MeshLib.DrawCall>>> adcs, object pp);
+			out IndexBuffer ib, out Dictionary<int, List<List<MeshLib.DrawCall>>> adcs, object pp, bool bDynamicLights);
 
 		public delegate void BuildFullBrightRenderData(GraphicsDevice g, out VertexBuffer vb,
 			out IndexBuffer ib, out Dictionary<int, List<DrawCall>> dcs, object pp);
 
 		public delegate void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
 			out IndexBuffer ib, out Dictionary<int, List<MeshLib.DrawCall>> mdcalls,
-			out List<List<Vector3>> mirrorPolys, object pp);
+			out List<List<Vector3>> mirrorPolys, object pp, bool bDynamicLights);
 
 		public delegate void BuildSkyRenderData(GraphicsDevice g, out VertexBuffer vb,
 			out IndexBuffer ib, out Dictionary<int, List<DrawCall>> dcs, object pp);
@@ -173,12 +173,12 @@ namespace MeshLib
 		}
 
 
-		public void BuildLM(GraphicsDevice g, int atlasSize, BuildLMRenderData brd, object pp)
+		public void BuildLM(GraphicsDevice g, int atlasSize, BuildLMRenderData brd, object pp, bool bDyn)
 		{
 			brd(g, out mLMVB, out mLMIB, out mLMDrawCalls, out mLMAnimVB, out mLMAnimIB,
 				out mLMAnimDrawCalls, out mLMAVB, out mLMAIB, out mLMADrawCalls,
 				out mLMAAnimVB, out mLMAAnimIB,	out mLMAAnimDrawCalls,
-				atlasSize, pp, out mLightMapAtlas);
+				atlasSize, pp, out mLightMapAtlas, bDyn);
 
 			if(mLightMapAtlas == null)
 			{
@@ -195,15 +195,15 @@ namespace MeshLib
 		}
 
 
-		public void BuildVLit(GraphicsDevice g, BuildVLitRenderData brd, object pp)
+		public void BuildVLit(GraphicsDevice g, BuildVLitRenderData brd, object pp, bool bDyn)
 		{
-			brd(g, out mVLitVB, out mVLitIB, out mVLitDrawCalls, pp);
+			brd(g, out mVLitVB, out mVLitIB, out mVLitDrawCalls, pp, bDyn);
 		}
 
 
-		public void BuildAlpha(GraphicsDevice g, BuildAlphaRenderData brd, object pp)
+		public void BuildAlpha(GraphicsDevice g, BuildAlphaRenderData brd, object pp, bool bDyn)
 		{
-			brd(g, out mAlphaVB, out mAlphaIB, out mAlphaDrawCalls, pp);
+			brd(g, out mAlphaVB, out mAlphaIB, out mAlphaDrawCalls, pp, bDyn);
 		}
 
 
@@ -213,9 +213,9 @@ namespace MeshLib
 		}
 
 
-		public void BuildMirror(GraphicsDevice g, BuildMirrorRenderData brd, object pp)
+		public void BuildMirror(GraphicsDevice g, BuildMirrorRenderData brd, object pp, bool bDyn)
 		{
-			brd(g, out mMirrorVB, out mMirrorIB, out mMirrorDrawCalls, out mMirrorPolys, pp);
+			brd(g, out mMirrorVB, out mMirrorIB, out mMirrorDrawCalls, out mMirrorPolys, pp, bDyn);
 		}
 
 

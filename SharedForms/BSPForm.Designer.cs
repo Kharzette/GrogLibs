@@ -62,6 +62,7 @@
 			this.SurfaceLightFrequency = new System.Windows.Forms.NumericUpDown();
 			this.SeamCorrection = new System.Windows.Forms.CheckBox();
 			this.mTips = new System.Windows.Forms.ToolTip(this.components);
+			this.DynamicLights = new System.Windows.Forms.CheckBox();
 			this.GroupFileIO.SuspendLayout();
 			this.GroupBuildSettings.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.MaxThreads)).BeginInit();
@@ -243,6 +244,7 @@
 			// 
 			// LightSettingsGroupBox
 			// 
+			this.LightSettingsGroupBox.Controls.Add(this.DynamicLights);
 			this.LightSettingsGroupBox.Controls.Add(this.label1);
 			this.LightSettingsGroupBox.Controls.Add(this.SurfaceLightStrength);
 			this.LightSettingsGroupBox.Controls.Add(this.SurfaceLighting);
@@ -532,6 +534,18 @@
 			this.mTips.SetToolTip(this.SeamCorrection, "Shifts light points around a bit to help points just inside solid");
 			this.SeamCorrection.UseVisualStyleBackColor = true;
 			// 
+			// DynamicLights
+			// 
+			this.DynamicLights.AutoSize = true;
+			this.DynamicLights.Checked = true;
+			this.DynamicLights.CheckState = System.Windows.Forms.CheckState.Checked;
+			this.DynamicLights.Location = new System.Drawing.Point(7, 67);
+			this.DynamicLights.Name = "DynamicLights";
+			this.DynamicLights.Size = new System.Drawing.Size(98, 17);
+			this.DynamicLights.TabIndex = 43;
+			this.DynamicLights.Text = "Dynamic Lights";
+			this.DynamicLights.UseVisualStyleBackColor = true;
+			// 
 			// BSPForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -596,5 +610,6 @@
 		private System.Windows.Forms.ToolTip mTips;
 		private System.Windows.Forms.Button FullBuild;
 		private System.Windows.Forms.Button UpdateEntities;
+		private System.Windows.Forms.CheckBox DynamicLights;
 	}
 }

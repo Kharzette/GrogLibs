@@ -147,7 +147,7 @@ namespace BSPCore
 		internal delegate void FinishUpAlpha(int modelIndex, List<Dictionary<Int32, DrawDataChunk>> perPlaneChunk, ref int vertOfs);
 
 		public MapGrinder(GraphicsDevice gd, GFXTexInfo []texs,
-			GFXFace []faces, int lightGridSize, int atlasSize)
+			GFXFace []faces, int lightGridSize, int atlasSize, bool bDynamic)
 		{
 			mGD				=gd;
 			mTexInfos		=texs;
@@ -161,7 +161,7 @@ namespace BSPCore
 			}
 
 			CalcMaterialNames();
-			CalcMaterials();
+			CalcMaterials(bDynamic);
 			InitVertexDeclarations(gd);
 		}
 
@@ -953,17 +953,25 @@ namespace BSPCore
 		}
 
 
-		void CalcMaterials()
+		void CalcMaterials(bool bDynamic)
 		{
 			//build material list
 			foreach(string matName in mMaterialNames)
 			{				
 				MaterialLib.Material	mat	=mMatLib.CreateMaterial();
-				mat.ShaderName			="Shaders\\LightMap";
 				mat.Technique			="";
 				mat.BlendState			=BlendState.Opaque;
 				mat.DepthState			=DepthStencilState.Default;
 				mat.RasterState			=RasterizerState.CullCounterClockwise;
+
+				if(bDynamic)
+				{
+					mat.ShaderName	="Shaders\\LightMap3";
+				}
+				else
+				{
+					mat.ShaderName	="Shaders\\LightMap";
+				}
 
 				bool	bCell	=false;
 				string	mn		=matName;
@@ -1036,6 +1044,7 @@ namespace BSPCore
 				else if(mn.EndsWith("*FullBright"))
 				{
 					mat.Technique	="FullBright";
+					mat.ShaderName	="Shaders\\LightMap";	//no fullbright in lm3
 				}
 				else if(mn.EndsWith("*Mirror"))
 				{
@@ -1048,6 +1057,7 @@ namespace BSPCore
 				else if(mn.EndsWith("*Sky"))
 				{
 					mat.Technique	="Sky";
+					mat.ShaderName	="Shaders\\LightMap";	//no sky in lm3
 				}
 				else if(mn.EndsWith("*Anim"))
 				{

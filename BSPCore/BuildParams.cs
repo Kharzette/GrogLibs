@@ -26,6 +26,7 @@ namespace BSPCore
 		public Vector3	mMinLight;
 		public int		mMaxIntensity;
 		public int		mLightGridSize;
+		public bool		mbDynamicLighting;	//sets materials to shader3 (no reach)
 
 		//recording
 		public bool	mbRecording;
