@@ -88,6 +88,22 @@ namespace BSPZone
 		}
 
 
+		public Dictionary<ZoneEntity, LightHelper> MakeLightHelpers(Zone z, Zone.GetStyleStrength gss)
+		{
+			Dictionary<ZoneEntity, LightHelper>	lhs	=new Dictionary<ZoneEntity, LightHelper>();
+
+			foreach(ZoneEntity ze in mStaticEntities)
+			{
+				LightHelper	lh	=new LightHelper();
+
+				lh.Initialize(z, gss);
+
+				lhs.Add(ze, lh);
+			}
+			return	lhs;
+		}
+
+
 		public void Update(Vector3 playerPos, int msDelta)
 		{
 			foreach(PickUp pu in mPickUps)

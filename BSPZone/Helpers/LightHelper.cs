@@ -8,6 +8,8 @@ using Microsoft.Xna.Framework;
 
 namespace BSPZone
 {
+	//an instance of this is created for every object
+	//in the world that needs lighting
 	public class LightHelper
 	{
 		Zone	mZone;
@@ -72,9 +74,9 @@ namespace BSPZone
 
 		//TODO: mover3 might cause nans if lerping between
 		//opposite axiseesseseseeseses, use quat slerp?
-		public void Update(int msDelta, Vector3 pos)
+		public void Update(int msDelta, Vector3 pos, DynamicLights dyn)
 		{
-			Zone.ZoneLight	zl	=mZone.GetStrongestLightInLOS(pos, mSunEnt, mStyleStrength);
+			Zone.ZoneLight	zl	=mZone.GetStrongestLightInLOS(pos, mSunEnt, mStyleStrength, dyn);
 			if(zl == null)
 			{
 				//no lights in LOS, lerp to dark

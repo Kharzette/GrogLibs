@@ -154,7 +154,7 @@ namespace BSPZone
 		}
 
 
-		List<ZoneLight>	GetLightsInLOS(Vector3 pos)
+		List<ZoneLight>	GetLightsInLOS(Vector3 pos, DynamicLights dyn)
 		{
 			List<ZoneLight>	ret	=new List<ZoneLight>();
 
@@ -169,15 +169,34 @@ namespace BSPZone
 					}
 				}
 			}
+
+			if(dyn == null)
+			{
+				return	ret;
+			}
+
+			Dictionary<int, ZoneLight>	dyns	=dyn.GetZoneLights();
+			foreach(KeyValuePair<int, ZoneLight> zl in dyns)
+			{
+				if(IsVisibleFrom(pos, zl.Value.mPosition))
+				{
+					Collision	col;
+					if(!TraceAll(null, null, pos, zl.Value.mPosition, out col))
+					{
+						ret.Add(zl.Value);
+					}
+				}
+			}
+
 			return	ret;
 		}
 
 
 		//for assigning character lights
 		public ZoneLight GetStrongestLightInLOS(Vector3 pos,
-			ZoneEntity sunEnt, GetStyleStrength gss)
+			ZoneEntity sunEnt, GetStyleStrength gss, DynamicLights dyn)
 		{
-			List<ZoneLight>	visLights	=GetLightsInLOS(pos);
+			List<ZoneLight>	visLights	=GetLightsInLOS(pos, dyn);
 
 			//look for distance minus strength
 			float		bestDist	=float.MaxValue;

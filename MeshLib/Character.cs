@@ -321,6 +321,8 @@ namespace MeshLib
 
 		public void Draw(GraphicsDevice gd, string altMaterial)
 		{
+			UpdateShaderBones();
+
 			foreach(SkinnedMesh m in mMeshParts)
 			{
 				if(!m.Visible)
