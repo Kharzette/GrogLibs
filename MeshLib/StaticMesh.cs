@@ -124,7 +124,7 @@ namespace MeshLib
 			g.SetVertexBuffer(mVerts);
 			g.Indices			=mIndexs;
 
-			mat.SetParameter("mWorld", world * mTransform);
+			mat.SetParameter("mWorld", mTransform * world);
 
 			Effect		fx	=matLib.GetShader(mat.ShaderName);
 
