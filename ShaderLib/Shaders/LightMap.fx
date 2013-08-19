@@ -1,8 +1,8 @@
 //texture stuff
-texture mTexture;
-texture mLightMap;
-bool	mbTextureEnabled;
-float2	mTexSize;
+texture2D	mTexture;
+texture2D	mLightMap;
+bool		mbTextureEnabled;
+float2		mTexSize;
 
 //intensity levels for the animated / switchable light styles
 half	mAniIntensities[44];
