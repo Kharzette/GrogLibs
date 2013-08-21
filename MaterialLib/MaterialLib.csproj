@@ -84,6 +84,7 @@
     <Compile Include="CellShading.cs" />
     <Compile Include="GUIStates.cs" />
     <Compile Include="ParameterKeeper.cs" />
+    <Compile Include="PostProcess.cs" />
     <Compile Include="StateBlockPool.cs" />
     <Compile Include="Material.cs" />
     <Compile Include="MaterialLib.cs" />

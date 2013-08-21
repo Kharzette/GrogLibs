@@ -150,6 +150,11 @@ namespace BSPZone
 
 		public void Destroy(int id)
 		{
+			if(id < 0 || id >= MaxLights)
+			{
+				return;
+			}
+
 			mDynArray[id * 2].W	=0f;
 			mInUse[id]			=false;
 
