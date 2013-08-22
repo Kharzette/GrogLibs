@@ -25,6 +25,13 @@ Texture	mColorTex;
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
 
+//bloom params
+float	mBloomThreshold;
+float	mBloomIntensity;
+float	mBaseIntensity;
+float	mBloomSaturation;
+float	mBaseSaturation;
+
 //outliner params
 float	mTexelSteps;
 float	mThreshold;
@@ -44,8 +51,8 @@ float		mProjConst		=50.0;
 //gaussianblur stuff
 #define	RADIUS			30
 #define	KERNEL_SIZE		(RADIUS * 2 + 1)
-float	mWeights[KERNEL_SIZE];
-float2	mOffsets[KERNEL_SIZE];
+float	mWeightsX[KERNEL_SIZE], mWeightsY[KERNEL_SIZE];
+float2	mOffsetsX[KERNEL_SIZE], mOffsetsY[KERNEL_SIZE];
 texture	mBlurTargetTex;
 
 //bilateral blur stuff
@@ -90,8 +97,8 @@ sampler	BlurTargetSampler	=sampler_state
 	MinFilter	=Point;
 	MagFilter	=Point;
 	MipFilter	=Point;
-//	AddressU	=Wrap;
-//	AddressV	=Wrap;
+	AddressU	=Clamp;
+	AddressV	=Clamp;
 };
 
 
@@ -148,6 +155,17 @@ float GetGray(float4 c)
 {
 	return	(dot(c.rgb, ((0.33333).xxx)));
 }
+
+//Helper for modifying the saturation of a color. from bloom sample
+float4 AdjustSaturation(float4 color, float saturation)
+{
+	//The constants 0.3, 0.59, and 0.11 are chosen because the
+	//human eye is more sensitive to green light, and less to blue.
+	float	grey	=dot(color, float3(0.3, 0.59, 0.11));
+	
+	return	lerp(grey, color, saturation);
+}
+
 
 VPosTex0Tex13	AOVS(VPosTex0 input)
 {
@@ -227,13 +245,49 @@ float4	AOPS(VTex0Tex13VPos input) : COLOR0
 	return	float4(amount, 0, 0, 0);
 }
 
-float4	GaussianBlurPS(VTex0Tex13VPos input) : COLOR0
+float4	BloomExtractPS(VTex0Tex13VPos input) : COLOR0
+{
+	float4	ret	=tex2D(BlurTargetSampler, input.TexCoord0);
+
+	return	saturate((ret - mBloomThreshold) / (1 - mBloomThreshold));
+}
+
+float4	BloomCombinePS(VTex0Tex13VPos input) : COLOR0
+{
+	//Look up the bloom and original base image colors.
+	float4	bloom	=tex2D(BlurTargetSampler, input.TexCoord0);
+	float4	base	=tex2D(ColorSampler, input.TexCoord0);
+    
+	//Adjust color saturation and intensity.
+	bloom	=AdjustSaturation(bloom, mBloomSaturation) * mBloomIntensity;
+	base	=AdjustSaturation(base, mBaseSaturation) * mBaseIntensity;
+    
+	//Darken down the base image in areas where there is a lot of bloom,
+	//to prevent things looking excessively burned-out.
+	base	*=(1 - saturate(bloom));
+    
+	//Combine the two images.
+	return	base + bloom;
+}
+
+float4	GaussianBlurXPS(VTex0Tex13VPos input) : COLOR0
 {
 	float4	ret	=float4(0, 0, 0, 0);
 
 	for(int i=0;i < KERNEL_SIZE;++i)
 	{
-		ret	+=tex2D(BlurTargetSampler, input.TexCoord0 + mOffsets[i]) * mWeights[i];
+		ret	+=tex2D(BlurTargetSampler, input.TexCoord0 + mOffsetsX[i]) * mWeightsX[i];
+	}
+	return	ret;
+}
+
+float4	GaussianBlurYPS(VTex0Tex13VPos input) : COLOR0
+{
+	float4	ret	=float4(0, 0, 0, 0);
+
+	for(int i=0;i < KERNEL_SIZE;++i)
+	{
+		ret	+=tex2D(BlurTargetSampler, input.TexCoord0 + mOffsetsY[i]) * mWeightsY[i];
 	}
 	return	ret;
 }
@@ -397,12 +451,21 @@ technique AmbientOcclusion
 	}
 }
 
-technique GaussianBlur
+technique GaussianBlurX
 {
 	pass P0
 	{
 		VertexShader	=compile vs_3_0 AOVS();
-		PixelShader		=compile ps_3_0 GaussianBlurPS();
+		PixelShader		=compile ps_3_0 GaussianBlurXPS();
+	}
+}
+
+technique GaussianBlurY
+{
+	pass P0
+	{
+		VertexShader	=compile vs_3_0 AOVS();
+		PixelShader		=compile ps_3_0 GaussianBlurYPS();
 	}
 }
 
@@ -445,5 +508,23 @@ technique BleachBypass
 	{
 		VertexShader	=compile vs_3_0 OutlineVS();
 		PixelShader		=compile ps_3_0 BleachBypassPS();
+	}
+}
+
+technique BloomExtract
+{
+	pass P0
+	{
+		VertexShader	=compile vs_3_0 OutlineVS();
+		PixelShader		=compile ps_3_0 BloomExtractPS();
+	}
+}
+
+technique BloomCombine
+{
+	pass P0
+	{
+		VertexShader	=compile vs_3_0 OutlineVS();
+		PixelShader		=compile ps_3_0 BloomCombinePS();
 	}
 }
