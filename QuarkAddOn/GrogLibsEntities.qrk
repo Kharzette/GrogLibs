@@ -157,64 +157,6 @@ QQRKSRC1
       }
       Func_* entities.qtxfolder =
       {
-        func_areaportal:b =
-        {
-          ;desc = "Use this combined with doors."
-          poly:p =
-          {
-            east:f =
-            {
-              v = '64 0 0 64 128 0 64 0 128'
-              tex = "[trigger]"
-              Contents = "256"
-              Flags = "32768"
-              Value = "0"
-            }
-            west:f =
-            {
-              v = '-64 0 0 -64 0 128 -64 128 0'
-              tex = "[trigger]"
-              m = "1"
-              Contents = "256"
-              Flags = "32768"
-              Value = "0"
-            }
-            north:f =
-            {
-              v = '0 64 0 0 64 128 128 64 0'
-              tex = "[trigger]"
-              m = "1"
-              Contents = "256"
-              Flags = "32768"
-              Value = "0"
-            }
-            south:f =
-            {
-              v = '0 -64 0 128 -64 0 0 -64 128'
-              tex = "[trigger]"
-              Contents = "256"
-              Flags = "32768"
-              Value = "0"
-            }
-            up:f =
-            {
-              v = '0 0 64 128 0 64 0 128 64'
-              tex = "[trigger]"
-              Contents = "256"
-              Flags = "32768"
-              Value = "0"
-            }
-            down:f =
-            {
-              v = '0 0 -64 0 128 -64 128 0 -64'
-              tex = "[trigger]"
-              m = "1"
-              Contents = "256"
-              Flags = "32768"
-              Value = "0"
-            }
-          }
-        }
         func_button:b =
         {
           health = "0"
@@ -263,14 +205,8 @@ QQRKSRC1
         func_door:b =
         {
           ;desc = "The standard entity for doors."
-          move_angles = "-90 0 0"
-          move_amount = "128"
-          move_interval = "1"
-          ease_in = ".1"
-          ease_out = ".1"
-          open_sound = ""
-          close_sound = ""
           targetname = ""
+          target = ""
           poly:p =
           {
             east:f =
@@ -315,13 +251,8 @@ QQRKSRC1
         func_plat:b =
         {
           ;desc = "This is used for platforms or elevators."
-          move_angles = "90 0 0"
-          move_amount = "128"
-          move_interval = "3"
-          ease_in = ".3"
-          ease_out = ".3"
-          raise_sound = ""
-          lower_sound = ""
+          target = ""
+          targetname = ""
           poly:p =
           {
             east:f =
@@ -363,21 +294,8 @@ QQRKSRC1
         {
           ;desc = "Make a wall appear or dissappear by connecting a func_butto"
            "n to this."
-          move_angles_1 = "-90 0 0"
-          move_angles_2 = "0 0 0"
-          move_amount_1 = "128"
-          move_amount_2 = "128"
-          move_interval_1 = "2"
-          move_interval_2 = "3"
-          ease_in_1 = ".1"
-          ease_out_1 = ".4"
-          ease_in_2 = ".3"
-          ease_out_2 = ".3"
-          first_open_sound = ""
-          second_open_sound = ""
-          first_close_sound = ""
-          second_close_sound = ""
           targetname = ""
+          target = ""
           poly:p =
           {
             east:f =
@@ -427,6 +345,23 @@ QQRKSRC1
         {
           origin = "0 0 0"
           ;desc = "A target for light to create a spotlight."
+        }
+        target_move_stage:e =
+        {
+          origin = "0 0 0"
+          ;desc = "A single stage of movement for a model"
+          move_axis = "-90 0 0"
+          move_amount = "64"
+          rotate_to_target = "false"
+          rotation_target = "0 0 0"
+          rotation_rate = "0 0 0"
+          stage_interval = "1000"
+          ease_in = "0.1"
+          ease_out = "0.1"
+          sound_forward = "forward"
+          sound_backward = "back"
+          target = ""
+          targetname = ""
         }
       }
       Trigger_* entities.qtxfolder =
@@ -600,10 +535,6 @@ QQRKSRC1
         Hint = "Rotation about Y in degrees"
       }
     }
-    func_areaportal:form =
-    {
-      Help = "These don't work right now"
-    }
     func_button:form =
     {
       Help = "Touch to trigger something"
@@ -623,6 +554,66 @@ QQRKSRC1
         Hint = "Targetname of the entity to be triggered"
       }
     }
+    target_move_stage:form =
+    {
+      Help = "A newly created Entity type."
+      bbox = '-16 -16 -16 16 16 16'
+      ;desc: =
+      {
+        Txt = "&"
+        Hint = "A single stage of movement for a model"
+      }
+      move_axis: =
+      {
+        Txt = "&"
+        Hint = "Axis angle to move along"
+      }
+      move_amount: =
+      {
+        Txt = "&"
+        Hint = "Amount to move along axis"
+      }
+      rotate_to_target: =
+      {
+        Txt = "&"
+        Hint = "true if rotating to a fixed target"
+      }
+      rotation_target: =
+      {
+        Txt = "&"
+        Hint = "target xyz rotation"
+      }
+      rotation_rate: =
+      {
+        Txt = "&"
+        Hint = "rotation rate in xyz per millisecond"
+      }
+      stage_interval: =
+      {
+        Txt = "&"
+        Hint = "Duration of motion"
+      }
+      ease_in: =
+      {
+        Txt = "&"
+        Hint = "Movement easing"
+      }
+      ease_out: =
+      {
+        Txt = "&"
+        Hint = "Movement easing"
+      }
+      sound_forward: =
+      {
+        Txt = "&"
+        Hint = "Sound to play on forward"
+      }
+      sound_backward: =
+      {
+        Txt = "&"
+        Hint = "Sound to play on backward"
+      }
+    }
     func_door:form =
     {
       Help = "A newly created Entity type."
@@ -632,50 +623,16 @@ QQRKSRC1
         Txt = "&"
         Hint = "The standard entity for doors."
       }
-      move_angles: =
-      {
-        Txt = "&"
-        Hint = "The axis of movement for the door"
-      }
-      move_amount: =
-      {
-        Txt = "&"
-        Hint = "Amount to travel along move_angles direction"
-      }
-      move_interval: =
-      {
-        Txt = "&"
-        Hint = "Amount of time in seconds to move"
-      }
-      ease_in: =
-      {
-        Txt = "&"
-        Hint = "Amount of ease for beginning movement"
-      }
-      ease_out: =
-      {
-        Txt = "&"
-        Hint = "Amount of ease for ending movement"
-      }
-      open_sound: =
-      {
-        Txt = "&"
-        Hint = "Sound to play when opening"
-      }
-      close_sound: =
-      {
-        Txt = "&"
-        Hint = "Sound to play when closing"
-      }
       targetname: =
       {
         Txt = "&"
         Hint = "Name of this entity for targeting by others"
       }
-    }
-    func_group:form =
-    {
-      Help = "Used to group brushes together just for editor convenience."
+      target: =
+      {
+        Txt = "&"
+        Hint = "Targetname of the entity to be triggered"
+      }
     }
     func_plat:form =
     {
@@ -686,40 +643,15 @@ QQRKSRC1
         Txt = "&"
         Hint = "This is used for platforms or elevators."
       }
-      move_angles: =
+      target: =
       {
         Txt = "&"
-        Hint = "The axis of movement for the platform"
+        Hint = "Targetname of the entity to be triggered"
       }
-      move_amount: =
+      targetname: =
       {
         Txt = "&"
-        Hint = "Amount to travel along move_angles direction"
-      }
-      move_interval: =
-      {
-        Txt = "&"
-        Hint = "Amount of time in seconds to move"
-      }
-      ease_in: =
-      {
-        Txt = "&"
-        Hint = "Amount of ease for beginning movement"
-      }
-      ease_out: =
-      {
-        Txt = "&"
-        Hint = "Amount of ease for ending movement"
-      }
-      raise_sound: =
-      {
-        Txt = "&"
-        Hint = "Sound to play when raising"
-      }
-      lower_sound: =
-      {
-        Txt = "&"
-        Hint = "Sound to play when lowering"
+        Hint = "Name of this entity for targeting by others"
       }
     }
     func_wall:form =
@@ -732,81 +664,20 @@ QQRKSRC1
         Hint = "Make a wall appear or dissappear by connecting a func_button t"
          "o this."
       }
-      move_angles_1: =
-      {
-        Txt = "&"
-        Hint = "The axis of movement for the wall's first stage"
-      }
-      move_angles_2: =
-      {
-        Txt = "&"
-        Hint = "The axis of movement for the wall's second stage"
-      }
-      move_amount_1: =
-      {
-        Txt = "&"
-        Hint = "Amount to travel along move_angles direction"
-      }
-      move_amount_2: =
-      {
-        Txt = "&"
-        Hint = "Amount to travel along move_angles direction"
-      }
-      move_interval_1: =
-      {
-        Txt = "&"
-        Hint = "Amount of time in seconds to move"
-      }
-      move_interval_2: =
-      {
-        Txt = "&"
-        Hint = "Amount of time in seconds to move"
-      }
-      ease_in_1: =
-      {
-        Txt = "&"
-        Hint = "Amount of ease for beginning movement"
-      }
-      ease_out_1: =
-      {
-        Txt = "&"
-        Hint = "Amount of ease for beginning movement"
-      }
-      ease_in_2: =
-      {
-        Txt = "&"
-        Hint = "Amount of ease for ending movement"
-      }
-      ease_out_2: =
-      {
-        Txt = "&"
-        Hint = "Amount of ease for ending movement"
-      }
       targetname: =
       {
         Txt = "&"
         Hint = "Name of this entity for targeting by others"
       }
-      first_open_sound: =
+      target: =
       {
         Txt = "&"
-        Hint = "Sound to play when first opening"
+        Hint = "Targetname of the entity to be triggered"
       }
-      first_close_sound: =
-      {
-        Txt = "&"
-        Hint = "First Sound to play when closing"
-      }
-      second_open_sound: =
-      {
-        Txt = "&"
-        Hint = "Second sound to play when opening"
-      }
-      second_close_sound: =
-      {
-        Txt = "&"
-        Hint = "Second sound to play when closing"
-      }
+    }
+    func_group:form =
+    {
+      Help = "Used to group brushes together just for editor convenience."
     }
     item_whatever:form =
     {

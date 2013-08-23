@@ -103,8 +103,12 @@ namespace UtilityLib
 		}
 
 
-		public void Update()
+		public void Update(GameCamera cam)
 		{
+			//update listener
+			mListener.Position	=cam.Position * Audio.InchWorldScale;
+			mListener.Forward	=-cam.Forward;
+
 			foreach(KeyValuePair<string, List<SoundEffectInstance>> seis in mPlayingHere)
 			{
 				for(int i=0;i < seis.Value.Count;i++)

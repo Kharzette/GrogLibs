@@ -94,9 +94,9 @@ sampler	ColorSampler	=sampler_state
 sampler	BlurTargetSampler	=sampler_state
 {
 	Texture		=(mBlurTargetTex);
-	MinFilter	=Point;
-	MagFilter	=Point;
-	MipFilter	=Point;
+	MinFilter	=Linear;
+	MagFilter	=Linear;
+	MipFilter	=Linear;
 	AddressU	=Clamp;
 	AddressV	=Clamp;
 };

@@ -64,7 +64,8 @@ namespace MeshLib
 		public delegate Matrix GetModelMatrix(int modelIndex);
 
 		//render external stuff
-		public delegate void RenderExternal(MaterialLib.AlphaPool ap, Vector3 camPos, Matrix view, Matrix proj);
+		public delegate void RenderExternal(MaterialLib.AlphaPool ap,
+			Vector3 camPos, Matrix view, Matrix proj);
 
 		//tool side delegates for building the indoor mesh
 		//from raw parts
