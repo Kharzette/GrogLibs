@@ -33,6 +33,9 @@ namespace BSPZone
 		//true if this object can be pushed by models
 		bool	mbPushable;
 
+		//push velocity from riding on or being pushed by models
+		Vector3	mPushVelocity;
+
 		//position and momentum
 		Vector3	mPosition;
 		Vector3	mVelocity;
@@ -136,6 +139,10 @@ namespace BSPZone
 		{
 			if(mbOnGround)
 			{
+				if(mModelOn != 0)
+				{
+					mVelocity	+=(mPushVelocity * 0.5f);
+				}
 				mVelocity	+=Vector3.UnitY * JumpVelocity;
 			}
 		}
@@ -434,6 +441,9 @@ namespace BSPZone
 		//return false if push leaves mobile in solid
 		internal bool Push(Vector3 delta, int modelIndex)
 		{
+			//add to push velocity
+			mPushVelocity	+=delta;
+
 			//grab starting position
 			Vector3	startPos	=mPosition;
 
@@ -460,6 +470,12 @@ namespace BSPZone
 				}
 			}
 			return	true;
+		}
+
+
+		internal void ClearPushVelocity()
+		{
+			mPushVelocity	=Vector3.Zero;
 		}
 	}
 }

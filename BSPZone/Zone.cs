@@ -276,6 +276,11 @@ namespace BSPZone
 		#region Model Related
 		public void UpdateModels(int msDelta, Microsoft.Xna.Framework.Audio.AudioListener lis)
 		{
+			//clear pushable push velocities
+			foreach(KeyValuePair<object, Pushable> push in mPushables)
+			{
+				push.Value.mMobile.ClearPushVelocity();
+			}
 			mBMHelper.Update(msDelta, lis);
 		}
 
