@@ -90,6 +90,7 @@ namespace UtilityLib
 			public void ClearInputs()
 			{
 				mLastGPS	=mGPS;
+				mLastKBS	=mKBS;
 			}
 
 			internal bool StartOrAHit(List<Buttons> mButtons)

@@ -59,11 +59,18 @@ namespace BSPZone
 			float eyeHeight, bool bPushable, TriggerHelper th)
 		{
 			mParent				=owner;
+			mbPushable			=bPushable;
+			mTHelper			=th;
+
+			SetBoxShape(boxWidth, boxHeight, eyeHeight);
+		}
+
+
+		public void SetBoxShape(float boxWidth, float boxHeight, float eyeHeight)
+		{
 			mBox				=Misc.MakeBox(boxWidth, boxHeight);
 			mEyeHeight			=Vector3.UnitY * eyeHeight;
 			mBoxMiddleOffset	=Vector3.UnitY * ((mBox.Max.Y - mBox.Min.Y) * 0.5f);
-			mbPushable			=bPushable;
-			mTHelper			=th;
 		}
 
 
