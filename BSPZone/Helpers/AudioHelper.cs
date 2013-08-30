@@ -22,6 +22,15 @@ namespace BSPZone
 
 		public void Initialize(Zone zone, TriggerHelper th, Audio aud)
 		{
+			if(mZone != null)
+			{
+				//if changing level, release previous instances
+				foreach(SoundEffectInstance sei in mInstances)
+				{
+					sei.Stop();
+					mAudio.ReleaseInstance(sei);
+				}
+			}
 			mZone	=zone;
 			mAudio	=aud;
 

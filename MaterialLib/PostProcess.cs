@@ -49,6 +49,14 @@ namespace MaterialLib
 		}
 
 
+		//hax for ludum dare
+		public void SetIntensity(float val, float val2)
+		{
+			mPostFX.Parameters["mBloomIntensity"].SetValue(val);
+			mPostFX.Parameters["mOpacity"].SetValue(val2);
+		}
+
+
 		//set up parameters with known values
 		void InitPostParams()
 		{

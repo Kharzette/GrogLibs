@@ -88,6 +88,21 @@ namespace BSPZone
 		}
 
 
+		public void EnablePickUp(string className, bool bEnable)
+		{
+			foreach(PickUp pu in mPickUps)
+			{
+				string	cname	=pu.mEntity.GetValue("classname");
+				if(cname != className)
+				{
+					continue;
+				}
+
+				pu.mbPickUp	=bEnable;
+			}
+		}
+
+
 		public Dictionary<ZoneEntity, LightHelper> MakeLightHelpers(Zone z, Zone.GetStyleStrength gss)
 		{
 			Dictionary<ZoneEntity, LightHelper>	lhs	=new Dictionary<ZoneEntity, LightHelper>();

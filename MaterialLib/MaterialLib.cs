@@ -433,8 +433,18 @@ namespace MaterialLib
 		{
 			if(mMats.ContainsKey(matName))
 			{
-				Vector2	val		=(Vector2)mMats[matName].GetParameterValue("mTexSize");
-				Vector2	size	=Vector2.Zero;
+				Vector2	val	=Vector2.Zero;
+
+				object	texSize	=mMats[matName].GetParameterValue("mTexSize");
+
+				if(texSize is string)
+				{
+					val	=Misc.StringToVector2(texSize as string);
+				}
+				else
+				{
+					val	=(Vector2)texSize;
+				}
 
 				if(bUp)
 				{

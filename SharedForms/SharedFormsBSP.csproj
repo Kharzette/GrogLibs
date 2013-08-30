@@ -43,6 +43,12 @@
     <Compile Include="BSPForm.Designer.cs">
       <DependentUpon>BSPForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="CellTweakForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CellTweakForm.Designer.cs">
+      <DependentUpon>CellTweakForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="DataGridViewColorColumn.cs" />
     <Compile Include="FormExtensions.cs" />
     <Compile Include="GridModel.cs" />
@@ -98,6 +104,9 @@
   <ItemGroup>
     <EmbeddedResource Include="BSPForm.resx">
       <DependentUpon>BSPForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CellTweakForm.resx">
+      <DependentUpon>CellTweakForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MaterialForm.resx">
       <DependentUpon>MaterialForm.cs</DependentUpon>
