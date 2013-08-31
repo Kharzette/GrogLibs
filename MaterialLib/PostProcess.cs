@@ -21,20 +21,36 @@ namespace MaterialLib
 		Effect	mPostFX;
 
 		//stuff
-		int	mResX, mResY;
+		int		mResX, mResY;
+		bool	mbReach;
+
+		//gaussian blur stuff
+		float	[]mSampleWeightsX;
+		float	[]mSampleWeightsY;
+		Vector2	[]mSampleOffsetsX;
+		Vector2	[]mSampleOffsetsY;
 
 		//constants
 		const float	BlurAmount	=4f;
 
 
-		public PostProcess(GraphicsDevice gd, ContentManager slib, int resx, int resy)
+		public PostProcess(GraphicsDeviceManager gdm, ContentManager slib, int resx, int resy)
 		{
-			mPostFX	=slib.Load<Effect>("Shaders/Post");
+			mbReach	=(gdm.GraphicsProfile == GraphicsProfile.Reach);
+
+			if(mbReach)
+			{
+				mPostFX	=slib.Load<Effect>("Shaders/PostReach");
+			}
+			else
+			{
+				mPostFX	=slib.Load<Effect>("Shaders/Post");
+			}
 
 			mResX	=resx;
 			mResY	=resy;
 
-			MakeQuad(gd);
+			MakeQuad(gdm.GraphicsDevice);
 
 			InitPostParams();
 		}
@@ -72,51 +88,96 @@ namespace MaterialLib
 			mPostFX.Parameters["mBaseIntensity"].SetValue(1f);
 			mPostFX.Parameters["mBaseSaturation"].SetValue(1f);
 
-			InitBlurParams(1.0f / (mResX / 2), 0, true);
-			InitBlurParams(0, 1.0f / (mResY / 2), false);
+			InitBlurParams(1.0f / (mResX / 2), 0, 0, 1.0f / (mResY / 2));
+
+			//hidef can afford to store these once
+			if(!mbReach)
+			{
+				SetBlurParams(true);
+				SetBlurParams(false);
+			}
+		}
+
+
+		void SetBlurParams(bool bX)
+		{
+			EffectParameter weightsParameterX, offsetsParameterX;
+			EffectParameter weightsParameterY, offsetsParameterY;
+
+			if(mbReach)
+			{
+				weightsParameterX	=weightsParameterY	=mPostFX.Parameters["mWeights"];
+				offsetsParameterX	=offsetsParameterY	=mPostFX.Parameters["mOffsets"];
+			}
+			else
+			{
+				weightsParameterX	=mPostFX.Parameters["mWeightsX"];
+				offsetsParameterX	=mPostFX.Parameters["mOffsetsX"];
+				weightsParameterY	=mPostFX.Parameters["mWeightsY"];
+				offsetsParameterY	=mPostFX.Parameters["mOffsetsY"];
+			}
+
+			if(bX)
+			{
+				weightsParameterX.SetValue(mSampleWeightsX);
+				offsetsParameterX.SetValue(mSampleOffsetsX);
+			}
+			else
+			{
+				weightsParameterY.SetValue(mSampleWeightsY);
+				offsetsParameterY.SetValue(mSampleOffsetsY);
+			}
 		}
 
 
 		//from the xna bloom sample
-		void InitBlurParams(float dx, float dy, bool bX)
+		void InitBlurParams(float dxX, float dyX, float dxY, float dyY)
 		{
-			EffectParameter weightsParameter, offsetsParameter;
-			
-			if(bX)
+			EffectParameter weightsParameterX, offsetsParameterX;
+			EffectParameter weightsParameterY, offsetsParameterY;
+
+			if(mbReach)
 			{
-				weightsParameter	=mPostFX.Parameters["mWeightsX"];
-				offsetsParameter	=mPostFX.Parameters["mOffsetsX"];
+				weightsParameterX	=weightsParameterY	=mPostFX.Parameters["mWeights"];
+				offsetsParameterX	=offsetsParameterY	=mPostFX.Parameters["mOffsets"];
 			}
 			else
 			{
-				weightsParameter	=mPostFX.Parameters["mWeightsY"];
-				offsetsParameter	=mPostFX.Parameters["mOffsetsY"];
+				weightsParameterX	=mPostFX.Parameters["mWeightsX"];
+				offsetsParameterX	=mPostFX.Parameters["mOffsetsX"];
+				weightsParameterY	=mPostFX.Parameters["mWeightsY"];
+				offsetsParameterY	=mPostFX.Parameters["mOffsetsY"];
 			}
 			
 			//Look up how many samples our gaussian blur effect supports.
-			int	sampleCount	=weightsParameter.Elements.Count;
+			int	sampleCountX	=weightsParameterX.Elements.Count;
+			int	sampleCountY	=weightsParameterY.Elements.Count;
 			
 			//Create temporary arrays for computing our filter settings.
-			float	[]sampleWeights	=new float[sampleCount];
-			Vector2	[]sampleOffsets	=new Vector2[sampleCount];
+			mSampleWeightsX	=new float[sampleCountX];
+			mSampleWeightsY	=new float[sampleCountY];
+			mSampleOffsetsX	=new Vector2[sampleCountX];
+			mSampleOffsetsY	=new Vector2[sampleCountY];
 			
 			//The first sample always has a zero offset.
-			sampleWeights[0]	=ComputeGaussian(0);
-			sampleOffsets[0]	=new Vector2(0);
+			mSampleWeightsX[0]	=ComputeGaussian(0);
+			mSampleOffsetsX[0]	=new Vector2(0);
+			mSampleWeightsY[0]	=ComputeGaussian(0);
+			mSampleOffsetsY[0]	=new Vector2(0);
 			
 			//Maintain a sum of all the weighting values.
-			float	totalWeights	=sampleWeights[0];
+			float	totalWeightsX	=mSampleWeightsX[0];
+			float	totalWeightsY	=mSampleWeightsY[0];
 			
 			//Add pairs of additional sample taps, positioned
 			//along a line in both directions from the center.
-			for(int i=0;i < sampleCount / 2; i++)
+			for(int i=0;i < sampleCountX / 2; i++)
 			{
 				//Store weights for the positive and negative taps.
 				float	weight				=ComputeGaussian(i + 1);
-				sampleWeights[i * 2 + 1]	=weight;
-				sampleWeights[i * 2 + 2]	=weight;
-				
-				totalWeights	+=weight * 2;
+				mSampleWeightsX[i * 2 + 1]	=weight;
+				mSampleWeightsX[i * 2 + 2]	=weight;				
+				totalWeightsX				+=weight * 2;
 
 				//To get the maximum amount of blurring from a limited number of
 				//pixel shader samples, we take advantage of the bilinear filtering
@@ -128,22 +189,49 @@ namespace MaterialLib
 				//positioning us nicely in between two texels.
 				float	sampleOffset	=i * 2 + 1.5f;
 				
-				Vector2	delta	=new Vector2(dx, dy) * sampleOffset;
+				Vector2	deltaX	=new Vector2(dxX, dyX) * sampleOffset;
 
 				//Store texture coordinate offsets for the positive and negative taps.
-				sampleOffsets[i * 2 + 1]	=delta;
-				sampleOffsets[i * 2 + 2]	=-delta;
+				mSampleOffsetsX[i * 2 + 1]	=deltaX;
+				mSampleOffsetsX[i * 2 + 2]	=-deltaX;
 			}
-			
-			//Normalize the list of sample weightings, so they will always sum to one.
-			for(int i=0;i < sampleWeights.Length;i++)
+
+			//Add pairs of additional sample taps, positioned
+			//along a line in both directions from the center.
+			for(int i=0;i < sampleCountY / 2; i++)
 			{
-				sampleWeights[i]	/=totalWeights;
+				//Store weights for the positive and negative taps.
+				float	weight				=ComputeGaussian(i + 1);
+				mSampleWeightsY[i * 2 + 1]	=weight;
+				mSampleWeightsY[i * 2 + 2]	=weight;				
+				totalWeightsY				+=weight * 2;
+
+				//To get the maximum amount of blurring from a limited number of
+				//pixel shader samples, we take advantage of the bilinear filtering
+				//hardware inside the texture fetch unit. If we position our texture
+				//coordinates exactly halfway between two texels, the filtering unit
+				//will average them for us, giving two samples for the price of one.
+				//This allows us to step in units of two texels per sample, rather
+				//than just one at a time. The 1.5 offset kicks things off by
+				//positioning us nicely in between two texels.
+				float	sampleOffset	=i * 2 + 1.5f;
+				
+				Vector2	deltaY	=new Vector2(dxY, dyY) * sampleOffset;
+
+				//Store texture coordinate offsets for the positive and negative taps.
+				mSampleOffsetsY[i * 2 + 1]	=deltaY;
+				mSampleOffsetsY[i * 2 + 2]	=-deltaY;
 			}
-			
-			//Tell the effect about our new filter settings.
-			weightsParameter.SetValue(sampleWeights);
-			offsetsParameter.SetValue(sampleOffsets);
+
+			//Normalize the list of sample weightings, so they will always sum to one.
+			for(int i=0;i < mSampleWeightsX.Length;i++)
+			{
+				mSampleWeightsX[i]	/=totalWeightsX;
+			}
+			for(int i=0;i < mSampleWeightsY.Length;i++)
+			{
+				mSampleWeightsY[i]	/=totalWeightsY;
+			}			
 		}
 		
 
@@ -209,6 +297,12 @@ namespace MaterialLib
 		}
 
 
+		public Texture2D GetTargetTexture(string targName)
+		{
+			return	mPostTargets[targName];
+		}
+
+
 		public void SetParameter(string paramName, string targName)
 		{
 			mPostFX.Parameters[paramName].SetValue(mPostTargets[targName]);
@@ -220,7 +314,16 @@ namespace MaterialLib
 			gd.SetVertexBuffer(mQuadVB);
 			gd.Indices	=mQuadIB;
 
-			mPostFX.CurrentTechnique	=mPostFX.Techniques[technique];
+			if(mbReach && technique.StartsWith("GaussianBlur"))
+			{
+				mPostFX.CurrentTechnique	=mPostFX.Techniques["GaussianBlur"];
+
+				SetBlurParams(technique.EndsWith("X"));
+			}
+			else
+			{
+				mPostFX.CurrentTechnique	=mPostFX.Techniques[technique];
+			}
 
 			mPostFX.CurrentTechnique.Passes[0].Apply();
 

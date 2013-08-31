@@ -165,6 +165,10 @@ namespace MaterialLib
 				{
 					bw.Write("");
 				}
+				else if(mValue is string)
+				{
+					bw.Write(mValue as string);
+				}
 				else
 				{
 					bw.Write((string)((Texture)mValue).Name);
