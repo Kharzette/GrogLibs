@@ -1,4 +1,5 @@
 //shaders using TomF's trilights for light
+//see http://home.comcast.net/~tom_forsyth/blog.wiki.html#Trilights
 
 //texture layers used on the surface
 texture	mTexture0;
@@ -206,6 +207,24 @@ VPosTex04Tex14Tex24 TriColorSkinVS(VPosNormBoneCol0 input)
 	inSkin.Weight0	=input.Weight0;
 
 	VPosTex03Tex13	skin	=ComputeSkinWorld(inSkin, mBones);
+
+	VPosTex04Tex14Tex24	ret;
+
+	ret.Position		=skin.Position;
+	ret.TexCoord0.xyz	=skin.TexCoord0;
+	ret.TexCoord1.xyz	=skin.TexCoord1;
+	ret.TexCoord2		=input.Color;
+
+	ret.TexCoord0.w	=0;
+	ret.TexCoord1.w	=0;
+
+	return	ret;
+}
+
+//vert color's red multiplies dangliness
+VPosTex04Tex14Tex24 TriDanglySkinVS(VPosNormBoneCol0 input)
+{
+	VPosTex03Tex13	skin	=ComputeSkinWorldDangly(input, mBones);
 
 	VPosTex04Tex14Tex24	ret;
 
@@ -674,6 +693,24 @@ technique TriSkinCellSolidSpecPhys
 	pass P0
 	{
 		VertexShader	=compile vs_2_0 TriSolidSkinVS();
+		PixelShader		=compile ps_2_0 TriCellSolidSpecPhysPS();
+	}
+}
+
+technique TriSkinDanglySolidSpecPhys
+{     
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 TriDanglySkinVS();
+		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();
+	}
+}
+
+technique TriSkinDanglyCellSolidSpecPhys
+{     
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 TriDanglySkinVS();
 		PixelShader		=compile ps_2_0 TriCellSolidSpecPhysPS();
 	}
 }

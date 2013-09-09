@@ -14,6 +14,9 @@ shared float4x4 mProjection;
 shared float4x4	mLightViewProj;	//for shadowing
 shared float3	mEyePos;
 
+//for dangly shaders
+float3	mDanglyForce;
+
 //outline / cell related
 shared Texture	mCellTable;
 
@@ -162,6 +165,42 @@ VPosTex03Tex13 ComputeSkinWorld(VPosNormBone input, float4x4 bones[MAX_BONES])
 	
 	//transform to world
 	float4	worldPos	=mul(vertPos, mWorld);
+	output.TexCoord1	=worldPos.xyz;
+
+	//viewproj
+	output.Position	=mul(worldPos, vp);
+
+	//skin transform the normal
+	float3	worldNormal	=mul(input.Normal, skinTransform);
+	
+	//world transform the normal
+	output.TexCoord0	=mul(worldNormal, mWorld);
+
+	return	output;
+}
+
+
+VPosTex03Tex13 ComputeSkinWorldDangly(VPosNormBoneCol0 input, float4x4 bones[MAX_BONES])
+{
+	VPosTex03Tex13	output;
+	
+	float4	vertPos	=input.Position;
+	
+	//generate view-proj matrix
+	float4x4	vp	=mul(mView, mProjection);
+	
+	//do the bone influences
+	float4x4 skinTransform	=GetSkinXForm(input.Blend0, input.Weight0, bones);
+	
+	//xform the vert to the character's boney pos
+	vertPos	=mul(vertPos, skinTransform);
+	
+	//transform to world
+	float4	worldPos	=mul(vertPos, mWorld);
+
+	//dangliness
+	worldPos.xyz	-=input.Color.x * mDanglyForce;
+
 	output.TexCoord1	=worldPos.xyz;
 
 	//viewproj
