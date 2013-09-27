@@ -46,11 +46,6 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
     </Compile>
-    <Compile Include="Shaders\Toon.fx">
-      <Name>Toon</Name>
-      <Importer>EffectImporter</Importer>
-      <Processor>EffectProcessor</Processor>
-    </Compile>
     <Compile Include="Shaders\Trilight.fx">
       <Name>Trilight</Name>
       <Importer>EffectImporter</Importer>

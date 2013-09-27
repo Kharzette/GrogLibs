@@ -88,6 +88,20 @@ namespace BSPZone
 		}
 
 
+		//for manual removal (handy if levels are revisited)
+		public void NukeStatic(ZoneEntity ze)
+		{
+			foreach(PickUp pu in mPickUps)
+			{
+				if(pu.mEntity == ze)
+				{
+					mPickUps.Remove(pu);
+					return;
+				}
+			}
+		}
+
+
 		public void EnablePickUp(string className, bool bEnable)
 		{
 			foreach(PickUp pu in mPickUps)

@@ -5,7 +5,7 @@ using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
-using Microsoft.Kinect;
+//using Microsoft.Kinect;
 
 
 namespace MeshLib
@@ -269,6 +269,7 @@ namespace MeshLib
 		}
 
 
+		/*
 		public void CreateKinectAnimation(IEnumerable<KinectMap> mapping,
 			CaptureData data, string animName)
 		{
@@ -373,6 +374,6 @@ namespace MeshLib
 			mAnims.Add(animName, kinAnim);
 
 			kinAnim.SetBoneRefs(mSkeleton);
-		}
+		}*/
 	}
 }
