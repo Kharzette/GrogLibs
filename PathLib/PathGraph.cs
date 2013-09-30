@@ -362,13 +362,27 @@ namespace PathLib
 
 					Edge	between	=pn.FindEdgeBetween(pc.mConnectedTo);
 
-					ln.mA	=pn.mPoly.GetCenter() + Vector3.UnitY;
-					ln.mB	=between.GetCenter() + Vector3.UnitY;
+					if(between != null)
+					{
+						ln.mA	=pn.mPoly.GetCenter() + Vector3.UnitY;
+						ln.mB	=between.GetCenter() + Vector3.UnitY;
 
-					ln.mA	=between.GetCenter() + Vector3.UnitY;
-					ln.mB	=pc.mConnectedTo.mPoly.GetCenter() + Vector3.UnitY;
+						conLines.Add(ln);
 
-					conLines.Add(ln);
+						ln	=new Edge();
+
+						ln.mA	=between.GetCenter() + Vector3.UnitY;
+						ln.mB	=pc.mConnectedTo.mPoly.GetCenter() + Vector3.UnitY;
+
+						conLines.Add(ln);
+					}
+					else
+					{
+						ln.mA	=pn.mPoly.GetCenter() + Vector3.UnitY;
+						ln.mB	=pc.mConnectedTo.mPoly.GetCenter() + Vector3.UnitY;
+
+						conLines.Add(ln);
+					}
 				}
 			}
 
@@ -431,13 +445,31 @@ namespace PathLib
 			{
 				foreach(PathConnection pc in pn.mConnections)
 				{
-					Vector3	edgeCenter	=pc.mEdgeBetween.GetCenter();
-
-					if(!isPosOK(edgeCenter))
+					if(pc.mEdgeBetween != null)
 					{
-						//break this connection
-						Disconnect(pn, pc.mConnectedTo);
-						goto	checkShared;
+						Vector3	edgeCenter	=pc.mEdgeBetween.GetCenter();
+
+						if(!isPosOK(edgeCenter))
+						{
+							//break this connection
+							Disconnect(pn, pc.mConnectedTo);
+							goto	checkShared;
+						}
+					}
+					else
+					{
+						Vector3	centerBetween	=pn.mPoly.GetCenter();
+
+						centerBetween	-=pc.mConnectedTo.mPoly.GetCenter();
+						centerBetween	*=0.5f;
+						centerBetween	=pn.mPoly.GetCenter() - centerBetween;
+
+						if(!isPosOK(centerBetween))
+						{
+							//break this connection
+							Disconnect(pn, pc.mConnectedTo);
+							goto	checkShared;
+						}
 					}
 				}
 			}
@@ -481,6 +513,7 @@ namespace PathLib
 
 		void BuildConnectivity(float stepHeight)
 		{
+			//find connectivity via shared edge
 			foreach(PathNode pn in mNodery)
 			{
 				BoundingBox	bound	=pn.mPoly.GetBounds();
@@ -582,6 +615,55 @@ namespace PathLib
 					pc.mConnectedTo			=pn2;
 					pc.mDistanceToCenter	=pn.CenterToCenterDistance(pn2);
 					pc.mEdgeBetween			=edge;
+					pc.mbPassable			=true;
+
+					pn.mConnections.Add(pc);
+				}
+			}
+
+			//find connectivity via shared vert
+			foreach(PathNode pn in mNodery)
+			{
+				BoundingBox	bound	=pn.mPoly.GetBounds();
+
+				int	pnIndex	=mNodery.IndexOf(pn);
+
+				foreach(PathNode pn2 in mNodery)
+				{
+					if(pn == pn2)
+					{
+						continue;
+					}
+
+					int	pn2Index	=mNodery.IndexOf(pn2);
+
+					//make sure we are not already connected
+					bool	bFound	=false;
+					foreach(PathConnection con in pn.mConnections)
+					{
+						if(con.mConnectedTo == pn2)
+						{
+							bFound	=true;
+							break;
+						}
+					}
+					if(bFound)
+					{
+						continue;
+					}
+
+					BoundingBox	bound2	=pn2.mPoly.GetBounds();
+
+					if(bound.Contains(bound2) == ContainmentType.Disjoint)
+					{
+						continue;
+					}
+
+					//they overlap so might be possible to go directly there
+					PathConnection	pc		=new PathConnection();
+					pc.mConnectedTo			=pn2;
+					pc.mDistanceToCenter	=pn.CenterToCenterDistance(pn2);
+					pc.mEdgeBetween			=null;
 					pc.mbPassable			=true;
 
 					pn.mConnections.Add(pc);

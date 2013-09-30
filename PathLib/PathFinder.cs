@@ -106,15 +106,15 @@ namespace PathLib
 				Debug.WriteLine("Walking path " + walk.mNode.mPoly.GetCenter());
 
 				Edge	edgeBetween	=walk.mNode.FindEdgeBetween(walk.mParent.mNode);
-				if(edgeBetween == null)
+				if(edgeBetween != null)
 				{
-					Debug.WriteLine("Null edge between path nodes!");
-					return;
+					mResultPath.Add(walk.mNode.mPoly.GetCenter());
+					mResultPath.Add(edgeBetween.GetCenter());
 				}
-
-				mResultPath.Add(walk.mNode.mPoly.GetCenter());
-				mResultPath.Add(edgeBetween.GetCenter());
-
+				else
+				{
+					mResultPath.Add(walk.mNode.mPoly.GetCenter());
+				}
 				walk	=walk.mParent;
 			}
 
