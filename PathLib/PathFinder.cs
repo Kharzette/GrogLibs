@@ -109,7 +109,7 @@ namespace PathLib
 				if(edgeBetween != null)
 				{
 					mResultPath.Add(walk.mNode.mPoly.GetCenter());
-					mResultPath.Add(edgeBetween.GetCenter());
+//					mResultPath.Add(edgeBetween.GetCenter());
 				}
 				else
 				{

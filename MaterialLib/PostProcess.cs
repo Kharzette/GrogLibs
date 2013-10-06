@@ -23,6 +23,7 @@ namespace MaterialLib
 		//stuff
 		int		mResX, mResY;
 		bool	mbReach;
+		Color	mClearColor;
 
 		//gaussian blur stuff
 		float	[]mSampleWeightsX;
@@ -47,8 +48,9 @@ namespace MaterialLib
 				mPostFX	=slib.Load<Effect>("Shaders/Post");
 			}
 
-			mResX	=resx;
-			mResY	=resy;
+			mResX		=resx;
+			mResY		=resy;
+			mClearColor	=Color.CornflowerBlue;
 
 			MakeQuad(gdm.GraphicsDevice);
 
@@ -275,6 +277,12 @@ namespace MaterialLib
 		}
 
 
+		public void SetClearColor(Color col)
+		{
+			mClearColor	=col;
+		}
+
+
 		public void SetTarget(GraphicsDevice gd, string targName, bool bClear)
 		{
 			if(targName == "null")
@@ -292,7 +300,7 @@ namespace MaterialLib
 
 			if(bClear)
 			{
-				gd.Clear(Color.CornflowerBlue);
+				gd.Clear(mClearColor);
 			}
 		}
 

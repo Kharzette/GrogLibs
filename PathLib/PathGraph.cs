@@ -160,6 +160,17 @@ namespace PathLib
 		}
 
 
+		public Vector3 GetNodePosition(int index)
+		{
+			if(index < 0 || index >= mNodery.Count)
+			{
+				return	Vector3.Zero;
+			}
+
+			return	mNodery[index].mPoly.GetCenter();
+		}
+
+
 		//TODO: this should find a spot within line of sight of the target
 		public void FindPathRangeLOS(Vector3 start, Vector3 target, float minRange, float maxRange, PathCB notify)
 		{

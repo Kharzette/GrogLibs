@@ -21,7 +21,7 @@ namespace UtilityLib
 		float	mSpeed				=0.1f;
 		float	mMouseSensitivity	=0.01f;
 		float	mGamePadSensitivity	=0.25f;
-		float	mTurnSpeed			=3.0f;
+		float	mTurnSpeed			=1.0f;
 		float	mWheelScrollSpeed	=0.04f;
 		bool	mbInvertYAxis		=false;
 		bool	mbUsePadIfPossible	=true;
@@ -185,17 +185,20 @@ namespace UtilityLib
 
 			Vector3	lastPos	=mPosition;
 
-			if(gs.IsConnected)
+			if(gs.IsConnected && mbUsePadIfPossible)
 			{
 				if(gs.ThumbSticks.Left != Vector2.Zero)
 				{
 					mbMovedThisFrame	=true;
 
-					mPosition	+=vleft * (gs.ThumbSticks.Left.X * msDelta * mGamePadSensitivity * mSpeed);
-					mPosition	-=vin * (gs.ThumbSticks.Left.Y * msDelta * mGamePadSensitivity * mSpeed);
-					mPosition.Y	=0.0f;	//zero out the Y
+					Vector3	motion	=vleft * (gs.ThumbSticks.Left.X * msDelta * mGamePadSensitivity * mSpeed);
+					motion			-=vin * (gs.ThumbSticks.Left.Y * msDelta * mGamePadSensitivity * mSpeed);
+
+					motion.Y	=0;
+
+					mPosition	+=motion;
 				}
-				mYaw	+=gs.ThumbSticks.Right.X * mGamePadSensitivity * msDelta * mTurnSpeed;
+				mYaw	-=gs.ThumbSticks.Right.X * mGamePadSensitivity * msDelta * mTurnSpeed;
 			}
 			else
 			{
@@ -229,7 +232,7 @@ namespace UtilityLib
 					//nix the strafe run
 					moveDelta.Normalize();
 
-					mPosition	+=moveDelta * (msDelta * 0.05f * mSpeed);
+					mPosition	+=moveDelta * (msDelta * mSpeed);
 				}
 			}
 
