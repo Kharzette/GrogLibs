@@ -9,8 +9,9 @@ namespace PathLib
 {
 	internal class PathNode
 	{
-		//raw stuff for the grid
+		//raw stuff for grid or navmesh
 		internal ConvexPoly	mPoly;
+		internal Vector3	mPoint;
 		internal float		mHScorePenalty;	//use to discourage use
 
 		internal List<PathConnection>	mConnections	=new List<PathConnection>();
@@ -21,11 +22,34 @@ namespace PathLib
 			mPoly	=cp;
 		}
 
+		internal PathNode(Vector3 point)
+		{
+			mPoint	=point;
+		}
+
 
 		internal float CenterToCenterDistance(PathNode pn2)
 		{
-			Vector3	myPos		=mPoly.GetCenter();
-			Vector3	otherPos	=pn2.mPoly.GetCenter();
+			Vector3	myPos		=Vector3.Zero;
+			Vector3	otherPos	=Vector3.Zero;
+
+			if(mPoly != null)
+			{
+				myPos		=mPoly.GetCenter();
+			}
+			else
+			{
+				myPos	=mPoint;
+			}
+
+			if(pn2.mPoly != null)
+			{
+				otherPos	=pn2.mPoly.GetCenter();
+			}
+			else
+			{
+				otherPos	=pn2.mPoint;
+			}
 
 			return	Vector3.Distance(myPos, otherPos);
 		}

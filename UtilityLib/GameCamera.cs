@@ -38,6 +38,11 @@ namespace UtilityLib
 			set { mMATView = value; mMatViewInverse = Matrix.Invert(mMATView); }
 		}
 
+		public Matrix ViewInverse
+		{
+			get { return mMatViewInverse; }
+		}
+
 		public Matrix Projection
 		{
 			get { return mMATProjection; }

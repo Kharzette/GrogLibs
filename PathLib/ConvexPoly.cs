@@ -120,6 +120,67 @@ namespace PathLib
 			return	ret;
 		}
 
+		//find centerpoints for imaginary grid snapped polys of gridSize
+		internal List<Vector3> GetGridPoints(int gridSize)
+		{
+			List<Vector3>	ret	=new List<Vector3>();
+
+			BoundingBox	bnd	=GetBounds();
+
+			Vector3	norm;
+			float	dist;
+			Mathery.PlaneFromVerts(mVerts, out norm, out dist);
+
+			if(dist == 0f)
+			{
+				return	ret;
+			}
+
+			int	xSize	=(int)(((bnd.Max.X - bnd.Min.X) + gridSize * 2) / gridSize);
+			int	zSize	=(int)(((bnd.Max.Z - bnd.Min.Z) + gridSize * 2) / gridSize);
+
+			int	halfGrid	=(int)(gridSize * 0.5f);
+
+			if(xSize <= 0 || zSize <= 0)
+			{
+				return	ret;
+			}
+
+			for(int z=0;z < zSize;z++)
+			{
+				int	zLoc	=(int)bnd.Min.Z;
+
+				zLoc	/=gridSize;
+				zLoc	*=gridSize;
+				zLoc	-=halfGrid;
+				zLoc	+=z * gridSize;
+
+				for(int x=0;x < xSize;x++)
+				{
+					int	xLoc	=(int)bnd.Min.X;
+
+					xLoc	/=gridSize;
+					xLoc	*=gridSize;
+					xLoc	-=halfGrid;
+					xLoc	+=x * gridSize;
+
+					Vector3	coord	=Vector3.Zero;
+
+					coord.X	=xLoc;
+					coord.Z	=zLoc;
+					coord.Y	=-(Vector3.Dot(coord, norm) - dist) + 1;
+
+					float	angSum	=ComputeAngleSum(coord);
+
+					if(angSum < MathHelper.TwoPi)
+					{
+						ret.Add(coord);
+					}
+				}
+			}
+			return	ret;
+		}
+
 		internal Edge GetSharedEdge(ConvexPoly other)
 		{
 			foreach(Edge me in mEdges)

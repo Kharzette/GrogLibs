@@ -46,7 +46,8 @@ namespace PathLib
 		}
 
 
-		public void GenerateGraph(GetWalkableFaces getWalkable, float stepHeight, IsPositionValid isPosOK)
+		public void GenerateGraph(GetWalkableFaces getWalkable,
+			float? gridSize, float stepHeight, IsPositionValid isPosOK)
 		{
 			mNodery.Clear();
 
@@ -59,23 +60,56 @@ namespace PathLib
 			for(int i=0;i < polys.Count;i++)
 			{
 				ConvexPoly	cp	=new ConvexPoly(polys[i]);
-				PathNode	pn	=new PathNode(cp);
 
-				mNodery.Add(pn);
-
-				int	leaf	=leaves[i];
-				if(mGameLeafPathNodes.ContainsKey(leaf))
+				if(gridSize == null)
 				{
-					mGameLeafPathNodes[leaf].Add(pn);
+					PathNode	pn	=new PathNode(cp);
+					mNodery.Add(pn);
+
+					int	leaf	=leaves[i];
+					if(mGameLeafPathNodes.ContainsKey(leaf))
+					{
+						mGameLeafPathNodes[leaf].Add(pn);
+					}
+					else
+					{
+						mGameLeafPathNodes.Add(leaf, new List<PathNode>());
+						mGameLeafPathNodes[leaf].Add(pn);
+					}
 				}
 				else
 				{
-					mGameLeafPathNodes.Add(leaf, new List<PathNode>());
-					mGameLeafPathNodes[leaf].Add(pn);
+					//find grid aligned points within cp
+					List<Vector3>	gridPoints	=cp.GetGridPoints((int)gridSize.Value);
+
+					foreach(Vector3 pnt in gridPoints)
+					{
+						PathNode	pn	=new PathNode(pnt);
+						mNodery.Add(pn);
+
+						int	leaf	=leaves[i];
+						if(mGameLeafPathNodes.ContainsKey(leaf))
+						{
+							mGameLeafPathNodes[leaf].Add(pn);
+						}
+						else
+						{
+							mGameLeafPathNodes.Add(leaf, new List<PathNode>());
+							mGameLeafPathNodes[leaf].Add(pn);
+						}
+					}
 				}
 			}
 
-			BuildConnectivity(stepHeight);
+			if(gridSize == null)
+			{
+				BuildConnectivity(stepHeight);
+			}
+			else
+			{
+				BuildGriddyConnectivity(gridSize.Value);
+			}
+
 			PruneSkinny(isPosOK);
 		}
 
@@ -167,7 +201,16 @@ namespace PathLib
 				return	Vector3.Zero;
 			}
 
-			return	mNodery[index].mPoly.GetCenter();
+			PathNode	pn	=mNodery[index];
+
+			if(pn.mPoly != null)
+			{
+				return	pn.mPoly.GetCenter();
+			}
+			else
+			{
+				return	pn.mPoint;
+			}
 		}
 
 
@@ -287,8 +330,35 @@ namespace PathLib
 			PathNode	bestNode	=null;
 			foreach(PathNode pn in leafNodes)
 			{
+				if(pn.mPoly == null)
+				{
+					continue;
+				}
+
 				float	sum	=pn.mPoly.ComputeAngleSum(pos);
 				if(sum > bestSum)
+				{
+					bestNode	=pn;
+					bestSum		=sum;
+				}
+			}
+
+			if(bestNode != null)
+			{
+				return	bestNode;
+			}
+
+			//check griddy
+			bestSum	=float.MaxValue;
+			foreach(PathNode pn in leafNodes)
+			{
+				if(pn.mPoly != null)
+				{
+					continue;
+				}
+
+				float	sum	=Vector3.Distance(pn.mPoint, pos);
+				if(sum < bestSum)
 				{
 					bestNode	=pn;
 					bestSum		=sum;
@@ -300,21 +370,27 @@ namespace PathLib
 
 		public void Render(GraphicsDevice gd, BasicEffect bfx)
 		{
-			//draw connection lines first
-			gd.SetVertexBuffer(mConVB);
-			gd.Indices	=mConIB;
+			if(mConVB != null)
+			{
+				//draw connection lines first
+				gd.SetVertexBuffer(mConVB);
+				gd.Indices	=mConIB;
 
-			bfx.CurrentTechnique.Passes[0].Apply();
-			gd.DrawIndexedPrimitives(PrimitiveType.LineList,
-				0, 0, mConVerts.Length, 0, mConIndexs.Length / 2);
+				bfx.CurrentTechnique.Passes[0].Apply();
+				gd.DrawIndexedPrimitives(PrimitiveType.LineList,
+					0, 0, mConVerts.Length, 0, mConIndexs.Length / 2);
+			}
 
-			//draw node polys
-			gd.SetVertexBuffer(mNodeVB);
-			gd.Indices	=mNodeIB;
+			if(mNodeVB != null)
+			{
+				//draw node polys
+				gd.SetVertexBuffer(mNodeVB);
+				gd.Indices	=mNodeIB;
 
-			bfx.CurrentTechnique.Passes[0].Apply();
-			gd.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-				0, 0, mNodeVerts.Length, 0, mNodeVerts.Length);
+				bfx.CurrentTechnique.Passes[0].Apply();
+				gd.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+					0, 0, mNodeVerts.Length, 0, mNodeVerts.Length);
+			}
 		}
 
 
@@ -325,43 +401,49 @@ namespace PathLib
 			List<UInt16>	indexes		=new List<UInt16>();
 			foreach(PathNode pn in mNodery)
 			{
-				int	count	=nodePoints.Count;
-				pn.mPoly.GetTriangles(nodePoints, indexes);
-				vertCounts.Add(nodePoints.Count - count);
-			}
-
-			mNodeVB	=new VertexBuffer(gd, VertexPositionColor.VertexDeclaration,
-				nodePoints.Count * 16, BufferUsage.WriteOnly);
-			mNodeIB	=new IndexBuffer(gd, IndexElementSize.SixteenBits,
-				indexes.Count * 2, BufferUsage.WriteOnly);
-
-			mNodeVerts	=new VertexPositionColor[nodePoints.Count];
-			mNodeIndexs	=indexes.ToArray();
-
-			Random	rnd	=new Random();
-
-			Color	randColor	=Mathery.RandomColor(rnd);
-
-			UInt16	idx		=0;
-			int		pcnt	=0;
-			int		poly	=0;
-			foreach(Vector3 pos in nodePoints)
-			{
-				mNodeVerts[idx].Position.X	=pos.X;
-				mNodeVerts[idx].Position.Y	=pos.Y;
-				mNodeVerts[idx].Position.Z	=pos.Z;
-				mNodeVerts[idx++].Color		=randColor;
-				pcnt++;
-				if(pcnt >= vertCounts[poly])
+				if(pn.mPoly != null)
 				{
-					pcnt	=0;
-					poly++;
-					randColor	=Mathery.RandomColor(rnd);
+					int	count	=nodePoints.Count;
+					pn.mPoly.GetTriangles(nodePoints, indexes);
+					vertCounts.Add(nodePoints.Count - count);
 				}
 			}
 
-			mNodeVB.SetData<VertexPositionColor>(mNodeVerts);
-			mNodeIB.SetData<UInt16>(mNodeIndexs);
+			UInt16	idx		=0;
+			if(nodePoints.Count > 0)
+			{
+				mNodeVB	=new VertexBuffer(gd, VertexPositionColor.VertexDeclaration,
+					nodePoints.Count * 16, BufferUsage.WriteOnly);
+				mNodeIB	=new IndexBuffer(gd, IndexElementSize.SixteenBits,
+					indexes.Count * 2, BufferUsage.WriteOnly);
+
+				mNodeVerts	=new VertexPositionColor[nodePoints.Count];
+				mNodeIndexs	=indexes.ToArray();
+
+				Random	rnd	=new Random();
+
+				Color	randColor	=Mathery.RandomColor(rnd);
+
+				int		pcnt	=0;
+				int		poly	=0;
+				foreach(Vector3 pos in nodePoints)
+				{
+					mNodeVerts[idx].Position.X	=pos.X;
+					mNodeVerts[idx].Position.Y	=pos.Y;
+					mNodeVerts[idx].Position.Z	=pos.Z;
+					mNodeVerts[idx++].Color		=randColor;
+					pcnt++;
+					if(pcnt >= vertCounts[poly])
+					{
+						pcnt	=0;
+						poly++;
+						randColor	=Mathery.RandomColor(rnd);
+					}
+				}
+
+				mNodeVB.SetData<VertexPositionColor>(mNodeVerts);
+				mNodeIB.SetData<UInt16>(mNodeIndexs);
+			}
 			
 			//node connections
 			List<Edge>	conLines	=new List<Edge>();
@@ -389,14 +471,33 @@ namespace PathLib
 					}
 					else
 					{
-						ln.mA	=pn.mPoly.GetCenter() + Vector3.UnitY;
-						ln.mB	=pc.mConnectedTo.mPoly.GetCenter() + Vector3.UnitY;
+						if(pn.mPoly != null)
+						{
+							ln.mA	=pn.mPoly.GetCenter() + Vector3.UnitY;
+						}
+						else
+						{
+							ln.mA	=pn.mPoint + Vector3.UnitY;
+						}
+
+						if(pc.mConnectedTo.mPoly != null)
+						{
+							ln.mB	=pc.mConnectedTo.mPoly.GetCenter() + Vector3.UnitY;
+						}
+						else
+						{
+							ln.mB	=pc.mConnectedTo.mPoint + Vector3.UnitY;
+						}
 
 						conLines.Add(ln);
 					}
 				}
 			}
 
+			if(conLines.Count <= 0)
+			{
+				return;
+			}
 			mConVB	=new VertexBuffer(gd, VertexPositionColor.VertexDeclaration, conLines.Count * 2 * 16, BufferUsage.WriteOnly);
 			mConIB	=new IndexBuffer(gd, IndexElementSize.SixteenBits, conLines.Count * 2 * 2, BufferUsage.WriteOnly);
 
@@ -438,7 +539,16 @@ namespace PathLib
 			foreach(PathNode pn in mNodery)
 			{
 				//check center
-				Vector3	center	=pn.mPoly.GetCenter();
+				Vector3	center	=Vector3.Zero;
+
+				if(pn.mPoly != null)
+				{
+					pn.mPoly.GetCenter();
+				}
+				else
+				{
+					center	=pn.mPoint;
+				}
 
 				if(!isPosOK(center))
 				{
@@ -469,11 +579,29 @@ namespace PathLib
 					}
 					else
 					{
-						Vector3	centerBetween	=pn.mPoly.GetCenter();
+						Vector3	centerBetween	=Vector3.Zero;
 
-						centerBetween	-=pc.mConnectedTo.mPoly.GetCenter();
-						centerBetween	*=0.5f;
-						centerBetween	=pn.mPoly.GetCenter() - centerBetween;
+						if(pn.mPoly != null)
+						{
+							centerBetween	=pn.mPoly.GetCenter();
+						}
+						else
+						{
+							centerBetween	=pn.mPoint;
+						}
+
+						if(pc.mConnectedTo.mPoly != null)
+						{
+							centerBetween	-=pc.mConnectedTo.mPoly.GetCenter();
+							centerBetween	*=0.5f;
+							centerBetween	=pn.mPoly.GetCenter() - centerBetween;
+						}
+						else
+						{
+							centerBetween	-=pc.mConnectedTo.mPoint;
+							centerBetween	*=0.5f;
+							centerBetween	=pn.mPoint - centerBetween;
+						}
 
 						if(!isPosOK(centerBetween))
 						{
@@ -518,6 +646,63 @@ namespace PathLib
 			foreach(PathNode pn in prunes)
 			{
 				pn.mHScorePenalty	=100;
+			}
+		}
+
+
+		void BuildGriddyConnectivity(float gridSize)
+		{
+			BoundingBox	pnBound;
+			float		halfGS	=gridSize / 2f;
+
+			foreach(PathNode pn in mNodery)
+			{
+				int	pnIndex	=mNodery.IndexOf(pn);
+
+				pnBound.Min	=pnBound.Max	=pn.mPoint;
+
+				pnBound.Min.X	-=gridSize;
+				pnBound.Min.Z	-=gridSize;
+				pnBound.Max.X	+=gridSize;
+				pnBound.Max.Z	+=gridSize;
+
+				foreach(PathNode pn2 in mNodery)
+				{
+					if(pn == pn2)
+					{
+						continue;
+					}
+
+					int	pn2Index	=mNodery.IndexOf(pn2);
+
+					//make sure we are not already connected
+					bool	bFound	=false;
+					foreach(PathConnection con in pn.mConnections)
+					{
+						if(con.mConnectedTo == pn2)
+						{
+							bFound	=true;
+							break;
+						}
+					}
+					if(bFound)
+					{
+						continue;
+					}
+
+					if(pnBound.Contains(pn2.mPoint) == ContainmentType.Disjoint)
+					{
+						continue;
+					}
+
+					PathConnection	pc		=new PathConnection();
+					pc.mConnectedTo			=pn2;
+					pc.mDistanceToCenter	=pn.CenterToCenterDistance(pn2);
+					pc.mEdgeBetween			=null;
+					pc.mbPassable			=true;
+
+					pn.mConnections.Add(pc);
+				}
 			}
 		}
 

@@ -103,23 +103,34 @@ namespace PathLib
 			AStarNode	walk	=mEndNode;
 			while(walk != mStartNode)
 			{
-				Debug.WriteLine("Walking path " + walk.mNode.mPoly.GetCenter());
+				Vector3	pos	=Vector3.Zero;
 
-				Edge	edgeBetween	=walk.mNode.FindEdgeBetween(walk.mParent.mNode);
-				if(edgeBetween != null)
+				if(walk.mNode.mPoly != null)
 				{
-					mResultPath.Add(walk.mNode.mPoly.GetCenter());
-//					mResultPath.Add(edgeBetween.GetCenter());
+					pos	=walk.mNode.mPoly.GetCenter();
 				}
 				else
 				{
-					mResultPath.Add(walk.mNode.mPoly.GetCenter());
+					pos	=walk.mNode.mPoint;
 				}
+
+				Debug.WriteLine("Walking path " + pos);
+
+				mResultPath.Add(pos);
 				walk	=walk.mParent;
 			}
 
 			//add in the center of the start node for good measure
-			mResultPath.Add(mStartNode.mNode.mPoly.GetCenter());
+			Vector3	centerStart	=Vector3.Zero;
+			if(mStartNode.mNode.mPoly != null)
+			{
+				centerStart	=mStartNode.mNode.mPoly.GetCenter();
+			}
+			else
+			{
+				centerStart	=mStartNode.mNode.mPoint;
+			}
+			mResultPath.Add(centerStart);
 
 			//path is in reverse order, flip it
 			mResultPath.Reverse();
