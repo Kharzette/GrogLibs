@@ -169,6 +169,28 @@ namespace BSPZone
 		}
 
 
+		//get the floor normal underneath pos
+		public ZonePlane GetGroundNormal(Vector3 pos, bool bUseModels)
+		{
+			Collision	col;
+
+			RayTrace	trace	=new RayTrace(pos, pos + (Vector3.UnitY * - 300f));
+
+			bool	bHit	=false;
+			if(bUseModels)
+			{
+				bHit	=TraceAll(null, null, trace.mOriginalStart,
+					trace.mOriginalEnd, out col);
+			}
+			else
+			{
+				bHit	=TraceNode(trace, trace.mOriginalStart,
+					trace.mOriginalEnd, mZoneModels[0].mRootNode);
+			}
+			return	trace.mCollision.mPlaneHit;
+		}
+
+
 		public Int32 FindWorldNodeLandedIn(Vector3 pos)
 		{
 			return	FindNodeLandedIn(mZoneModels[0].mRootNode, pos);

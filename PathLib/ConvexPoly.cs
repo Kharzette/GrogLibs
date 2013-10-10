@@ -131,13 +131,27 @@ namespace PathLib
 			float	dist;
 			Mathery.PlaneFromVerts(mVerts, out norm, out dist);
 
-			if(dist == 0f)
+			if(norm.Y < 0.95f)
 			{
-				return	ret;
+				int	gack	=0;
+				gack++;
 			}
 
-			int	xSize	=(int)(((bnd.Max.X - bnd.Min.X) + gridSize * 2) / gridSize);
-			int	zSize	=(int)(((bnd.Max.Z - bnd.Min.Z) + gridSize * 2) / gridSize);
+			//this is a lot easier since we step in xz
+			//snap bounds to grid
+			bnd.Max.X	=(float)Math.Ceiling(bnd.Max.X / gridSize);
+			bnd.Max.Z	=(float)Math.Ceiling(bnd.Max.Z / gridSize);
+
+			bnd.Min.X	=(float)Math.Floor(bnd.Min.X / gridSize);
+			bnd.Min.Z	=(float)Math.Floor(bnd.Min.Z / gridSize);
+
+			int	xSize	=(int)(bnd.Max.X - bnd.Min.X);
+			int	zSize	=(int)(bnd.Max.Z - bnd.Min.Z);
+
+			bnd.Min.X	*=gridSize;
+			bnd.Min.Z	*=gridSize;
+			bnd.Max.X	*=gridSize;
+			bnd.Max.Z	*=gridSize;
 
 			int	halfGrid	=(int)(gridSize * 0.5f);
 
@@ -146,35 +160,46 @@ namespace PathLib
 				return	ret;
 			}
 
+			float	closeToTwoPi	=6.2f;
+
 			for(int z=0;z < zSize;z++)
 			{
 				int	zLoc	=(int)bnd.Min.Z;
 
-				zLoc	/=gridSize;
-				zLoc	*=gridSize;
-				zLoc	-=halfGrid;
+				zLoc	+=halfGrid;
 				zLoc	+=z * gridSize;
 
 				for(int x=0;x < xSize;x++)
 				{
 					int	xLoc	=(int)bnd.Min.X;
 
-					xLoc	/=gridSize;
-					xLoc	*=gridSize;
-					xLoc	-=halfGrid;
+					xLoc	+=halfGrid;
 					xLoc	+=x * gridSize;
 
-					Vector3	coord	=Vector3.Zero;
+					Vector3	coordA	=Vector3.Zero;
+					Vector3	coordB	=Vector3.Zero;
 
-					coord.X	=xLoc;
-					coord.Z	=zLoc;
-					coord.Y	=-(Vector3.Dot(coord, norm) - dist) + 1;
+					coordA.X	=coordB.X	=xLoc;
+					coordA.Z	=coordB.Z	=zLoc;
 
-					float	angSum	=ComputeAngleSum(coord);
+					//hopefully the 8k rule is enforced
+					coordA.Y	=8192f;
+					coordB.Y	=-8192f;
 
-					if(angSum < MathHelper.TwoPi)
+					float	distA	=Vector3.Dot(coordA, norm) - dist;
+					float	distB	=Vector3.Dot(coordB, norm) - dist;
+
+					float	ratio	=distA / (distA - distB);
+
+					coordB	=coordA - coordB;
+
+					Vector3	onPlane	=coordA - coordB * ratio;
+
+					float	angSum	=ComputeAngleSum(onPlane);
+
+					if(angSum >= closeToTwoPi)
 					{
-						ret.Add(coord);
+						ret.Add(onPlane);
 					}
 				}
 			}

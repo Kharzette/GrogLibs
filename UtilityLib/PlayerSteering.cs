@@ -20,6 +20,7 @@ namespace UtilityLib
 		//movement settings
 		float	mSpeed				=0.1f;
 		float	mMouseSensitivity	=0.01f;
+		float	mKeySensitivity		=0.1f;	//for key turning
 		float	mGamePadSensitivity	=0.25f;
 		float	mTurnSpeed			=1.0f;
 		float	mWheelScrollSpeed	=0.04f;
@@ -223,6 +224,15 @@ namespace UtilityLib
 				{
 					mbMovedThisFrame	=true;
 					moveDelta			+=vin;
+				}
+
+				if(ks.IsKeyDown(Keys.Q))
+				{
+					mYaw	+=msDelta * mTurnSpeed * mKeySensitivity;
+				}
+				else if(ks.IsKeyDown(Keys.E))
+				{
+					mYaw	-=msDelta * mTurnSpeed * mKeySensitivity;
 				}
 
 				moveDelta.Y	=0.0f;	//zero out the Y

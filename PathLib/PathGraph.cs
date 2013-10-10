@@ -36,6 +36,7 @@ namespace PathLib
 		public delegate void	GetWalkableFaces(out List<List<Vector3>> faces, out List<int> leaves);
 		public delegate Int32	FindLeaf(Vector3 pos);
 		public delegate bool	IsPositionValid(Vector3 pos);
+		public delegate bool	CanReach(Vector3 start, Vector3 end);
 
 		PathGraph() { }
 
@@ -47,7 +48,8 @@ namespace PathLib
 
 
 		public void GenerateGraph(GetWalkableFaces getWalkable,
-			float? gridSize, float stepHeight, IsPositionValid isPosOK)
+			float? gridSize, float stepHeight,
+			IsPositionValid isPosOK, CanReach canReach)
 		{
 			mNodery.Clear();
 
@@ -84,7 +86,7 @@ namespace PathLib
 
 					foreach(Vector3 pnt in gridPoints)
 					{
-						PathNode	pn	=new PathNode(pnt);
+						PathNode	pn	=new PathNode(pnt + Vector3.UnitY);
 						mNodery.Add(pn);
 
 						int	leaf	=leaves[i];
@@ -107,7 +109,7 @@ namespace PathLib
 			}
 			else
 			{
-				BuildGriddyConnectivity(gridSize.Value);
+				BuildGriddyConnectivity(gridSize.Value, canReach);
 			}
 
 			PruneSkinny(isPosOK);
@@ -650,21 +652,13 @@ namespace PathLib
 		}
 
 
-		void BuildGriddyConnectivity(float gridSize)
+		void BuildGriddyConnectivity(float gridSize, CanReach canReach)
 		{
-			BoundingBox	pnBound;
 			float		halfGS	=gridSize / 2f;
 
 			foreach(PathNode pn in mNodery)
 			{
 				int	pnIndex	=mNodery.IndexOf(pn);
-
-				pnBound.Min	=pnBound.Max	=pn.mPoint;
-
-				pnBound.Min.X	-=gridSize;
-				pnBound.Min.Z	-=gridSize;
-				pnBound.Max.X	+=gridSize;
-				pnBound.Max.Z	+=gridSize;
 
 				foreach(PathNode pn2 in mNodery)
 				{
@@ -690,7 +684,27 @@ namespace PathLib
 						continue;
 					}
 
-					if(pnBound.Contains(pn2.mPoint) == ContainmentType.Disjoint)
+					//test xz distance
+					Vector3	flatPN2	=pn2.mPoint;
+
+					flatPN2.Y	=pn.mPoint.Y;
+
+					float	xzDist	=Vector3.Distance(pn.mPoint, flatPN2);
+
+					if(xzDist > (gridSize + 0.1f))
+					{
+						continue;
+					}
+
+					//test 3D distance
+					float	dist	=Vector3.Distance(pn.mPoint, pn2.mPoint);
+					if(dist > (1.5f * dist))
+					{
+						continue;
+					}
+
+					//cast a ray
+					if(!canReach(pn.mPoint, pn2.mPoint))
 					{
 						continue;
 					}
