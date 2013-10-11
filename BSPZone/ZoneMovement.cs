@@ -11,6 +11,13 @@ namespace BSPZone
 {
 	public partial class Zone
 	{
+		//for a subdivision of a ray
+		public struct TraceSegment
+		{
+			public Vector3	mStart, mEnd;
+			public UInt32	mContents;
+		}
+
 		Dictionary<object, Pushable>	mPushables	=new Dictionary<object, Pushable>();
 
 
@@ -863,6 +870,39 @@ namespace BSPZone
 				{
 					hitPlanes.Add(zp);
 				}
+			}
+		}
+
+
+		//useful for debugging or rays that need to start in solid
+		public void TraceSegWorld(Vector3 start, Vector3 end, Int32 node, List<TraceSegment> segz)
+		{
+			if(node < 0)
+			{
+				Int32		leafIdx		=-(node + 1);
+				ZoneLeaf	zl			=mZoneLeafs[leafIdx];
+
+				TraceSegment	seg;
+
+				seg.mContents	=zl.mContents;
+				seg.mStart		=start;
+				seg.mEnd		=end;
+
+				segz.Add(seg);
+				return;
+			}
+
+			ZoneNode	zn	=mZoneNodes[node];
+			ZonePlane	p	=mZonePlanes[zn.mPlaneNum];
+
+			Vector3	clipStart, clipEnd;
+			if(PartBehind(p, 0f, start, end, out clipStart, out clipEnd))
+			{
+				TraceSegWorld(clipStart, clipEnd, zn.mBack, segz);
+			}
+			if(PartFront(p, 0f, start, end, out clipStart, out clipEnd))
+			{
+				TraceSegWorld(clipStart, clipEnd, zn.mFront, segz);
 			}
 		}
 		#endregion
