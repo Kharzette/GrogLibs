@@ -47,8 +47,23 @@ namespace PathLib
 		}
 
 
+		void AddNodeToLeafIndex(List<int> leaves, int idx, PathNode pn)
+		{
+			int	leaf	=leaves[idx];
+			if(mGameLeafPathNodes.ContainsKey(leaf))
+			{
+				mGameLeafPathNodes[leaf].Add(pn);
+			}
+			else
+			{
+				mGameLeafPathNodes.Add(leaf, new List<PathNode>());
+				mGameLeafPathNodes[leaf].Add(pn);
+			}
+		}
+
+
 		public void GenerateGraph(GetWalkableFaces getWalkable,
-			float? gridSize, float stepHeight,
+			int gridSize, float stepHeight,
 			IsPositionValid isPosOK, CanReach canReach)
 		{
 			mNodery.Clear();
@@ -63,54 +78,19 @@ namespace PathLib
 			{
 				ConvexPoly	cp	=new ConvexPoly(polys[i]);
 
-				if(gridSize == null)
+				List<Vector3>	gridPoints	=cp.GetGridPoints(gridSize);
+
+				foreach(Vector3 gp in gridPoints)
 				{
-					PathNode	pn	=new PathNode(cp);
+					PathNode	pn	=new PathNode(cp, gp);
+
 					mNodery.Add(pn);
 
-					int	leaf	=leaves[i];
-					if(mGameLeafPathNodes.ContainsKey(leaf))
-					{
-						mGameLeafPathNodes[leaf].Add(pn);
-					}
-					else
-					{
-						mGameLeafPathNodes.Add(leaf, new List<PathNode>());
-						mGameLeafPathNodes[leaf].Add(pn);
-					}
-				}
-				else
-				{
-					//find grid aligned points within cp
-					List<Vector3>	gridPoints	=cp.GetGridPoints((int)gridSize.Value);
-
-					foreach(Vector3 pnt in gridPoints)
-					{
-						PathNode	pn	=new PathNode(pnt + Vector3.UnitY);
-						mNodery.Add(pn);
-
-						int	leaf	=leaves[i];
-						if(mGameLeafPathNodes.ContainsKey(leaf))
-						{
-							mGameLeafPathNodes[leaf].Add(pn);
-						}
-						else
-						{
-							mGameLeafPathNodes.Add(leaf, new List<PathNode>());
-							mGameLeafPathNodes[leaf].Add(pn);
-						}
-					}
+					AddNodeToLeafIndex(leaves, i, pn);
 				}
 			}
 
-			if(gridSize == null)
-			{
-				BuildConnectivity(stepHeight);
-			}
-			else
-			{
-				BuildGriddyConnectivity(gridSize.Value, canReach);
-			}
+			BuildGriddyConnectivity(gridSize, canReach);
 
 			PruneSkinny(isPosOK);
 		}
@@ -398,17 +378,21 @@ namespace PathLib
 
 		public void BuildDrawInfo(GraphicsDevice gd)
 		{
+			List<ConvexPoly>	built	=new List<ConvexPoly>();
+
 			List<int>		vertCounts	=new List<int>();
 			List<Vector3>	nodePoints	=new List<Vector3>();
 			List<UInt16>	indexes		=new List<UInt16>();
 			foreach(PathNode pn in mNodery)
 			{
-				if(pn.mPoly != null)
+				if(built.Contains(pn.mPoly))
 				{
-					int	count	=nodePoints.Count;
-					pn.mPoly.GetTriangles(nodePoints, indexes);
-					vertCounts.Add(nodePoints.Count - count);
+					continue;
 				}
+
+				int	count	=nodePoints.Count;
+				pn.mPoly.GetTriangles(nodePoints, indexes);
+				vertCounts.Add(nodePoints.Count - count);
 			}
 
 			UInt16	idx		=0;
@@ -459,7 +443,7 @@ namespace PathLib
 
 					if(between != null)
 					{
-						ln.mA	=pn.mPoly.GetCenter() + Vector3.UnitY;
+						ln.mA	=pn.mPoint + Vector3.UnitY;
 						ln.mB	=between.GetCenter() + Vector3.UnitY;
 
 						conLines.Add(ln);
@@ -467,29 +451,14 @@ namespace PathLib
 						ln	=new Edge();
 
 						ln.mA	=between.GetCenter() + Vector3.UnitY;
-						ln.mB	=pc.mConnectedTo.mPoly.GetCenter() + Vector3.UnitY;
+						ln.mB	=pc.mConnectedTo.mPoint + Vector3.UnitY;
 
 						conLines.Add(ln);
 					}
 					else
 					{
-						if(pn.mPoly != null)
-						{
-							ln.mA	=pn.mPoly.GetCenter() + Vector3.UnitY;
-						}
-						else
-						{
-							ln.mA	=pn.mPoint + Vector3.UnitY;
-						}
-
-						if(pc.mConnectedTo.mPoly != null)
-						{
-							ln.mB	=pc.mConnectedTo.mPoly.GetCenter() + Vector3.UnitY;
-						}
-						else
-						{
-							ln.mB	=pc.mConnectedTo.mPoint + Vector3.UnitY;
-						}
+						ln.mA	=pn.mPoint + Vector3.UnitY;
+						ln.mB	=pc.mConnectedTo.mPoint + Vector3.UnitY;
 
 						conLines.Add(ln);
 					}
@@ -652,9 +621,15 @@ namespace PathLib
 		}
 
 
-		void BuildGriddyConnectivity(float gridSize, CanReach canReach)
+		void BuildGriddyConnectivity(int gridSize, CanReach canReach)
 		{
-			float		halfGS	=gridSize / 2f;
+			float	halfGS	=gridSize / 2f;
+			float	sqTwo	=(float)Math.Sqrt(2.0);
+
+			//fudge a bit
+			sqTwo	+=0.1f;
+
+			float	gridSQ2	=gridSize * sqTwo;
 
 			foreach(PathNode pn in mNodery)
 			{
@@ -691,29 +666,77 @@ namespace PathLib
 
 					float	xzDist	=Vector3.Distance(pn.mPoint, flatPN2);
 
-					if(xzDist > (gridSize + 0.1f))
+					if(xzDist > gridSQ2)
 					{
 						continue;
 					}
 
 					//test 3D distance
 					float	dist	=Vector3.Distance(pn.mPoint, pn2.mPoint);
-					if(dist > (1.5f * dist))
+					if(dist > (1.5f * gridSQ2))
 					{
 						continue;
 					}
 
-					//cast a ray
+					Edge	e1			=null;
+					Edge	e2			=null;
+					Edge	shortEdge	=null;
+
+					if(pn.mPoly != pn2.mPoly)
+					{
+						e1	=pn.mPoly.GetSharedEdge(pn2.mPoly);
+						e2	=pn2.mPoly.GetSharedEdge(pn.mPoly);
+
+						if(e1 != null && e2 != null)
+						{
+							if(e1.Length() > e2.Length())
+							{
+								shortEdge	=e2;
+							}
+							else
+							{
+								shortEdge	=e1;
+							}
+						}
+					}
+
+					//test direct move
 					if(!canReach(pn.mPoint, pn2.mPoint))
 					{
-						continue;
+						bool	bGotThere	=false;
+						if(e1 != null && e2 != null)
+						{
+							Vector3	cent1	=e1.GetCenter();
+							Vector3	cent2	=e2.GetCenter();
+
+							//see which one of those centers is closest to the path
+							float	dist1	=Mathery.DistanceToLine(e1.mA, e1.mB, cent1);
+							float	dist2	=Mathery.DistanceToLine(e2.mA, e2.mB, cent2);
+
+							Vector3	cent	=cent1;
+							if(dist1 > dist2)
+							{
+								cent	=cent2;
+							}
+
+							bGotThere	=canReach(pn.mPoint, cent);
+							if(!bGotThere)
+							{
+								bGotThere	=canReach(cent, pn2.mPoint);
+							}
+
+							if(!bGotThere)
+							{
+								continue;
+							}
+						}
 					}
 
 					PathConnection	pc		=new PathConnection();
 					pc.mConnectedTo			=pn2;
-					pc.mDistanceToCenter	=pn.CenterToCenterDistance(pn2);
-					pc.mEdgeBetween			=null;
+					pc.mDistanceToCenter	=pn.DistanceBetweenNodes(pn2);
 					pc.mbPassable			=true;
+					pc.mEdgeBetween			=shortEdge;
 
 					pn.mConnections.Add(pc);
 				}
@@ -769,7 +792,7 @@ namespace PathLib
 
 					PathConnection	pc		=new PathConnection();
 					pc.mConnectedTo			=pn2;
-					pc.mDistanceToCenter	=pn.CenterToCenterDistance(pn2);
+					pc.mDistanceToCenter	=pn.DistanceBetweenNodes(pn2);
 					pc.mEdgeBetween			=edge;
 					pc.mbPassable			=true;
 
@@ -823,7 +846,7 @@ namespace PathLib
 
 					PathConnection	pc		=new PathConnection();
 					pc.mConnectedTo			=pn2;
-					pc.mDistanceToCenter	=pn.CenterToCenterDistance(pn2);
+					pc.mDistanceToCenter	=pn.DistanceBetweenNodes(pn2);
 					pc.mEdgeBetween			=edge;
 					pc.mbPassable			=true;
 
@@ -872,7 +895,7 @@ namespace PathLib
 					//they overlap so might be possible to go directly there
 					PathConnection	pc		=new PathConnection();
 					pc.mConnectedTo			=pn2;
-					pc.mDistanceToCenter	=pn.CenterToCenterDistance(pn2);
+					pc.mDistanceToCenter	=pn.DistanceBetweenNodes(pn2);
 					pc.mEdgeBetween			=null;
 					pc.mbPassable			=true;
 

@@ -64,6 +64,11 @@ namespace PathLib
 			return	false;
 		}
 
+		internal float Length()
+		{
+			return	(mB - mA).Length();
+		}
+
 		internal Vector3 GetCenter()
 		{
 			return	((mA + mB) * 0.5f);
