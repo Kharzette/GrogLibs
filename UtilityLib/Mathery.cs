@@ -64,18 +64,68 @@ namespace UtilityLib
 		}
 
 
+		//find segment between two lines
+		//from Paul Bourke's site
+		public static bool ShortestLineBetweenTwoLines(Vector3 A, Vector3 B, Vector3 C, Vector3 D,
+			out Vector3 shortA, out Vector3 shortB)
+		{
+			Vector3	p13, p43, p21;
+			float	d1343, d4321, d1321, d4343, d2121;
+			float	numer, denom;
+
+			shortA	=Vector3.Zero;
+			shortB	=Vector3.Zero;
+
+			p13	=A - C;
+			p43	=D - C;
+			
+			if(Math.Abs(p43.X) < 0.001f
+				&& Math.Abs(p43.Y) < 0.001f
+				&& Math.Abs(p43.Z) < 0.001f)
+			{
+				return	false;
+			}
+
+			p21	=B - A;
+			
+			if(Math.Abs(p21.X) < 0.001f
+				&& Math.Abs(p21.Y) < 0.001f
+				&& Math.Abs(p21.Z) < 0.001f)
+			{
+				return	false;
+			}
+			
+			d1343	=Vector3.Dot(p13, p43);
+			d4321	=Vector3.Dot(p43, p21);
+			d1321	=Vector3.Dot(p13, p21);
+			d4343	=Vector3.Dot(p43, p43);
+			d2121	=Vector3.Dot(p21, p21);
+			
+			denom	=d2121 * d4343 - d4321 * d4321;
+
+			if(Math.Abs(denom) < 0.001f)
+			{
+				return	false;
+			}
+			
+			numer	=d1343 * d4321 - d1321 * d4343;
+			
+			float	mua	=numer / denom;
+			float	mub	=(d1343 + d4321 * (mua)) / d4343;
+
+			shortA	=A + (p21 * mua);
+			shortB	=C + (p43 * mub);
+
+			return	true;
+		}
+
+
 		//find distance from point to the AB line (not segment)
 		public static float DistanceToLine(Vector3 A, Vector3 B, Vector3 point)
 		{
-			Vector3	ray		=B - A;
-			Vector3	pToA	=point - A;
-			Vector3	pToB	=point - B;
+			Vector3	shortLine	=Vector3.Zero;//ShortestLineBetweenTwoLines(A, B, point);
 
-			Vector3	top	=Vector3.Cross(pToA, pToB);
-						
-			top	/=ray;
-
-			return	top.Length();
+			return	shortLine.Length();
 		}
 
 

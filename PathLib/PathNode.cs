@@ -28,18 +28,5 @@ namespace PathLib
 		{
 			return	Vector3.Distance(mPoint, pn2.mPoint);
 		}
-
-
-		internal Edge FindEdgeBetween(PathNode pathNode)
-		{
-			foreach(PathConnection pc in mConnections)
-			{
-				if(pc.mConnectedTo == pathNode)
-				{
-					return	pc.mEdgeBetween;
-				}
-			}
-			return	null;
-		}
 	}
 }

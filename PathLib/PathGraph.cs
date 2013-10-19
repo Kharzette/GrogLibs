@@ -92,7 +92,7 @@ namespace PathLib
 
 			BuildGriddyConnectivity(gridSize, canReach);
 
-			PruneSkinny(isPosOK);
+//			PruneSkinny(isPosOK);
 		}
 
 
@@ -185,14 +185,7 @@ namespace PathLib
 
 			PathNode	pn	=mNodery[index];
 
-			if(pn.mPoly != null)
-			{
-				return	pn.mPoly.GetCenter();
-			}
-			else
-			{
-				return	pn.mPoint;
-			}
+			return	pn.mPoint;
 		}
 
 
@@ -308,42 +301,18 @@ namespace PathLib
 
 		PathNode FindBestLeafNode(Vector3 pos, List<PathNode> leafNodes)
 		{
-			float		bestSum		=float.MinValue;
+			float		bestDist		=float.MinValue;
 			PathNode	bestNode	=null;
-			foreach(PathNode pn in leafNodes)
-			{
-				if(pn.mPoly == null)
-				{
-					continue;
-				}
-
-				float	sum	=pn.mPoly.ComputeAngleSum(pos);
-				if(sum > bestSum)
-				{
-					bestNode	=pn;
-					bestSum		=sum;
-				}
-			}
-
-			if(bestNode != null)
-			{
-				return	bestNode;
-			}
 
 			//check griddy
-			bestSum	=float.MaxValue;
+			bestDist	=float.MaxValue;
 			foreach(PathNode pn in leafNodes)
 			{
-				if(pn.mPoly != null)
-				{
-					continue;
-				}
-
-				float	sum	=Vector3.Distance(pn.mPoint, pos);
-				if(sum < bestSum)
+				float	dist	=Vector3.Distance(pn.mPoint, pos);
+				if(dist < bestDist)
 				{
 					bestNode	=pn;
-					bestSum		=sum;
+					bestDist	=dist;
 				}
 			}
 			return	bestNode;
@@ -439,29 +408,10 @@ namespace PathLib
 				{
 					Edge	ln	=new Edge();
 
-					Edge	between	=pn.FindEdgeBetween(pc.mConnectedTo);
+					ln.mA	=pn.mPoint + Vector3.UnitY;
+					ln.mB	=pc.mConnectedTo.mPoint + Vector3.UnitY;
 
-					if(between != null)
-					{
-						ln.mA	=pn.mPoint + Vector3.UnitY;
-						ln.mB	=between.GetCenter() + Vector3.UnitY;
-
-						conLines.Add(ln);
-
-						ln	=new Edge();
-
-						ln.mA	=between.GetCenter() + Vector3.UnitY;
-						ln.mB	=pc.mConnectedTo.mPoint + Vector3.UnitY;
-
-						conLines.Add(ln);
-					}
-					else
-					{
-						ln.mA	=pn.mPoint + Vector3.UnitY;
-						ln.mB	=pc.mConnectedTo.mPoint + Vector3.UnitY;
-
-						conLines.Add(ln);
-					}
+					conLines.Add(ln);
 				}
 			}
 
@@ -510,16 +460,7 @@ namespace PathLib
 			foreach(PathNode pn in mNodery)
 			{
 				//check center
-				Vector3	center	=Vector3.Zero;
-
-				if(pn.mPoly != null)
-				{
-					pn.mPoly.GetCenter();
-				}
-				else
-				{
-					center	=pn.mPoint;
-				}
+				Vector3	center	=pn.mPoint;
 
 				if(!isPosOK(center))
 				{
@@ -537,11 +478,9 @@ namespace PathLib
 			{
 				foreach(PathConnection pc in pn.mConnections)
 				{
-					if(pc.mEdgeBetween != null)
+					if(pc.mbUseEdge)
 					{
-						Vector3	edgeCenter	=pc.mEdgeBetween.GetCenter();
-
-						if(!isPosOK(edgeCenter))
+						if(!isPosOK(pc.mEdgeBetween))
 						{
 							//break this connection
 							Disconnect(pn, pc.mConnectedTo);
@@ -550,29 +489,11 @@ namespace PathLib
 					}
 					else
 					{
-						Vector3	centerBetween	=Vector3.Zero;
+						Vector3	centerBetween	=pn.mPoint;
 
-						if(pn.mPoly != null)
-						{
-							centerBetween	=pn.mPoly.GetCenter();
-						}
-						else
-						{
-							centerBetween	=pn.mPoint;
-						}
-
-						if(pc.mConnectedTo.mPoly != null)
-						{
-							centerBetween	-=pc.mConnectedTo.mPoly.GetCenter();
-							centerBetween	*=0.5f;
-							centerBetween	=pn.mPoly.GetCenter() - centerBetween;
-						}
-						else
-						{
-							centerBetween	-=pc.mConnectedTo.mPoint;
-							centerBetween	*=0.5f;
-							centerBetween	=pn.mPoint - centerBetween;
-						}
+						centerBetween	-=pc.mConnectedTo.mPoint;
+						centerBetween	*=0.5f;
+						centerBetween	=pn.mPoint - centerBetween;
 
 						if(!isPosOK(centerBetween))
 						{
@@ -621,6 +542,20 @@ namespace PathLib
 		}
 
 
+		bool CanReachTwoMoves(Vector3 start, Vector3 end, Vector3 mid, CanReach canReach)
+		{
+			if(!canReach(start, mid))
+			{
+				return	false;
+			}
+			if(!canReach(mid, end))
+			{
+				return	false;
+			}
+			return	true;
+		}
+
+
 		void BuildGriddyConnectivity(int gridSize, CanReach canReach)
 		{
 			float	halfGS	=gridSize / 2f;
@@ -642,7 +577,16 @@ namespace PathLib
 						continue;
 					}
 
-					int	pn2Index	=mNodery.IndexOf(pn2);
+					//debuggery
+					int	pnIdx	=mNodery.IndexOf(pn);
+					int	pn2Idx	=mNodery.IndexOf(pn2);
+
+					//good place to break if you have 2 tricksy nodes
+					if(pnIdx == 83 && pn2Idx == 78)
+					{
+						int	gack	=0;
+						gack++;
+					}
 
 					//make sure we are not already connected
 					bool	bFound	=false;
@@ -678,65 +622,104 @@ namespace PathLib
 						continue;
 					}
 
-					Edge	e1			=null;
-					Edge	e2			=null;
-					Edge	shortEdge	=null;
+					//see if p1 and p2 are planar
+					Vector3	pnNorm, pn2Norm;
+					float	pnDist, pn2Dist;
+					pn.mPoly.GetPlane(out pnNorm, out pnDist);
+					pn2.mPoly.GetPlane(out pn2Norm, out pn2Dist);
 
-					if(pn.mPoly != pn2.mPoly)
+					bool	bUseEdge;
+
+					//planar?
+					float	close	=pn2Dist - pnDist;
+					if(!(Mathery.CompareVectorEpsilon(pnNorm, pn2Norm, 0.001f)
+						&& (close > -0.01f && close < 0.01f)))
 					{
-						e1	=pn.mPoly.GetSharedEdge(pn2.mPoly);
-						e2	=pn2.mPoly.GetSharedEdge(pn.mPoly);
+						//there are three ways to do this:
+						//can use the shortest edge between the two nodes
+						//or use the longest, or try to follow the general
+						//direction of the path only modifying it to hit the edge
+						//we should opt for the latter first, then shortest,
+						//then longest, trying all 3 till one or none is found
+						bUseEdge	=true;
 
-						if(e1 != null && e2 != null)
+						//if these are not coplanar, should be in seperate polys
+						Debug.Assert(pn.mPoly != pn2.mPoly);
+
+						Edge	e1	=pn.mPoly.GetSharedEdge(pn2.mPoly);
+						Edge	e2	=pn2.mPoly.GetSharedEdge(pn.mPoly);
+
+						//happens when connected via one vert
+						if(e1 == null || e2 == null)
 						{
+							continue;
+						}
+
+						//find the shortest line between the path and edge
+						Vector3	shortA, shortB;
+						if(!Mathery.ShortestLineBetweenTwoLines(e1.mA, e1.mB, pn.mPoint, pn2.mPoint,
+							out shortA, out shortB))
+						{
+							continue;
+						}
+
+						//see if the short line goes up or down from the edge
+						Vector3	e1Center	=e1.GetCenter();
+
+						Vector3	upVec	=shortB - shortA;
+						if(upVec.Y < 0f)
+						{
+							upVec	=-upVec;
+							shortB	+=(upVec * 2);
+						}
+
+						//trace pn to edge
+						if(!CanReachTwoMoves(pn.mPoint, pn2.mPoint, shortB, canReach))
+						{
+							//failed so try short/long edge centers
+
+							Edge	shortEdge	=null;
+							Edge	longEdge	=null;
+
+							//try to short edge
 							if(e1.Length() > e2.Length())
 							{
 								shortEdge	=e2;
+								longEdge	=e1;
 							}
 							else
 							{
 								shortEdge	=e1;
+								longEdge	=e2;
+							}
+
+							Vector3	cent	=shortEdge.GetCenter();
+							if(!CanReachTwoMoves(pn.mPoint, pn2.mPoint, cent, canReach))
+							{
+								cent	=longEdge.GetCenter();
+								if(!CanReachTwoMoves(pn.mPoint, pn2.mPoint, cent, canReach))
+								{
+									continue;
+								}
 							}
 						}
 					}
-
-					//test direct move
-					if(!canReach(pn.mPoint, pn2.mPoint))
+					else
 					{
-						bool	bGotThere	=false;
-						if(e1 != null && e2 != null)
+						bUseEdge	=false;
+
+						//test direct move
+						if(!canReach(pn.mPoint, pn2.mPoint))
 						{
-							Vector3	cent1	=e1.GetCenter();
-							Vector3	cent2	=e2.GetCenter();
-
-							//see which one of those centers is closest to the path
-							float	dist1	=Mathery.DistanceToLine(e1.mA, e1.mB, cent1);
-							float	dist2	=Mathery.DistanceToLine(e2.mA, e2.mB, cent2);
-
-							Vector3	cent	=cent1;
-							if(dist1 > dist2)
-							{
-								cent	=cent2;
-							}
-
-							bGotThere	=canReach(pn.mPoint, cent);
-							if(!bGotThere)
-							{
-								bGotThere	=canReach(cent, pn2.mPoint);
-							}
-
-							if(!bGotThere)
-							{
-								continue;
-							}
+							continue;
 						}
 					}
 
-					PathConnection	pc		=new PathConnection();
-					pc.mConnectedTo			=pn2;
-					pc.mDistanceToCenter	=pn.DistanceBetweenNodes(pn2);
-					pc.mbPassable			=true;
-					pc.mEdgeBetween			=shortEdge;
+					PathConnection	pc	=new PathConnection();
+					pc.mConnectedTo		=pn2;
+					pc.mDistanceBetween	=pn.DistanceBetweenNodes(pn2);
+					pc.mbPassable		=true;
+					pc.mbUseEdge		=bUseEdge;
 
 					pn.mConnections.Add(pc);
 				}
@@ -744,64 +727,8 @@ namespace PathLib
 		}
 
 
-		void BuildConnectivity(float stepHeight)
-		{
-			//find connectivity via shared edge
-			foreach(PathNode pn in mNodery)
-			{
-				BoundingBox	bound	=pn.mPoly.GetBounds();
-
-				int	pnIndex	=mNodery.IndexOf(pn);
-
-				foreach(PathNode pn2 in mNodery)
-				{
-					if(pn == pn2)
-					{
-						continue;
-					}
-
-					int	pn2Index	=mNodery.IndexOf(pn2);
-
-					//make sure we are not already connected
-					bool	bFound	=false;
-					foreach(PathConnection con in pn.mConnections)
-					{
-						if(con.mConnectedTo == pn2)
-						{
-							bFound	=true;
-							break;
-						}
-					}
-					if(bFound)
-					{
-						continue;
-					}
-
-					BoundingBox	bound2	=pn2.mPoly.GetBounds();
-
-					if(bound.Contains(bound2) == ContainmentType.Disjoint)
-					{
-						continue;
-					}
-
-					Edge	edge	=pn.mPoly.GetSharedEdge(pn2.mPoly);
-					if(edge == null)
-					{
-						continue;
-					}
-
-					PathConnection	pc		=new PathConnection();
-					pc.mConnectedTo			=pn2;
-					pc.mDistanceToCenter	=pn.DistanceBetweenNodes(pn2);
-					pc.mEdgeBetween			=edge;
-					pc.mbPassable			=true;
-
-					pn.mConnections.Add(pc);
-				}
-			}
-
 			//look for connections made by stair steps
-			foreach(PathNode pn in mNodery)
+/*			foreach(PathNode pn in mNodery)
 			{
 				BoundingBox	bound	=pn.mPoly.GetBounds();
 
@@ -846,62 +773,13 @@ namespace PathLib
 
 					PathConnection	pc		=new PathConnection();
 					pc.mConnectedTo			=pn2;
-					pc.mDistanceToCenter	=pn.DistanceBetweenNodes(pn2);
+					pc.mDistanceBetween	=pn.DistanceBetweenNodes(pn2);
 					pc.mEdgeBetween			=edge;
 					pc.mbPassable			=true;
 
 					pn.mConnections.Add(pc);
 				}
-			}
+			}*/
 
-			//find connectivity via shared vert
-			foreach(PathNode pn in mNodery)
-			{
-				BoundingBox	bound	=pn.mPoly.GetBounds();
-
-				int	pnIndex	=mNodery.IndexOf(pn);
-
-				foreach(PathNode pn2 in mNodery)
-				{
-					if(pn == pn2)
-					{
-						continue;
-					}
-
-					int	pn2Index	=mNodery.IndexOf(pn2);
-
-					//make sure we are not already connected
-					bool	bFound	=false;
-					foreach(PathConnection con in pn.mConnections)
-					{
-						if(con.mConnectedTo == pn2)
-						{
-							bFound	=true;
-							break;
-						}
-					}
-					if(bFound)
-					{
-						continue;
-					}
-
-					BoundingBox	bound2	=pn2.mPoly.GetBounds();
-
-					if(bound.Contains(bound2) == ContainmentType.Disjoint)
-					{
-						continue;
-					}
-
-					//they overlap so might be possible to go directly there
-					PathConnection	pc		=new PathConnection();
-					pc.mConnectedTo			=pn2;
-					pc.mDistanceToCenter	=pn.DistanceBetweenNodes(pn2);
-					pc.mEdgeBetween			=null;
-					pc.mbPassable			=true;
-
-					pn.mConnections.Add(pc);
-				}
-			}
-		}
 	}
 }

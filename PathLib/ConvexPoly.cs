@@ -206,6 +206,11 @@ namespace PathLib
 			return	ret;
 		}
 
+		internal void GetPlane(out Vector3 normal, out float dist)
+		{
+			Mathery.PlaneFromVerts(mVerts, out normal, out dist);
+		}
+
 		internal Edge GetSharedEdge(ConvexPoly other)
 		{
 			foreach(Edge me in mEdges)

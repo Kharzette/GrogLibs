@@ -103,16 +103,7 @@ namespace PathLib
 			AStarNode	walk	=mEndNode;
 			while(walk != mStartNode)
 			{
-				Vector3	pos	=Vector3.Zero;
-
-				if(walk.mNode.mPoly != null)
-				{
-					pos	=walk.mNode.mPoly.GetCenter();
-				}
-				else
-				{
-					pos	=walk.mNode.mPoint;
-				}
+				Vector3	pos	=walk.mNode.mPoint;
 
 				Debug.WriteLine("Walking path " + pos);
 
@@ -121,7 +112,7 @@ namespace PathLib
 			}
 
 			//add in the center of the start node for good measure
-			Vector3	centerStart	=Vector3.Zero;
+/*			Vector3	centerStart	=Vector3.Zero;
 			if(mStartNode.mNode.mPoly != null)
 			{
 				centerStart	=mStartNode.mNode.mPoly.GetCenter();
@@ -130,7 +121,7 @@ namespace PathLib
 			{
 				centerStart	=mStartNode.mNode.mPoint;
 			}
-			mResultPath.Add(centerStart);
+			mResultPath.Add(centerStart);*/
 
 			//path is in reverse order, flip it
 			mResultPath.Reverse();
@@ -162,7 +153,7 @@ namespace PathLib
 				if(found != null)
 				{
 					//check the G score
-					float	newGScore	=asn.mGScore + con.mDistanceToCenter;
+					float	newGScore	=asn.mGScore + con.mDistanceBetween;
 
 					//switch parents if this is faster
 					if(newGScore < found.mGScore)
@@ -183,7 +174,7 @@ namespace PathLib
 					AStarNode	kid	=new AStarNode();
 					kid.mNode		=con.mConnectedTo;
 					kid.mParent		=asn;
-					kid.mGScore		=kid.mParent.mGScore + con.mDistanceToCenter;
+					kid.mGScore		=kid.mParent.mGScore + con.mDistanceBetween;
 					CalculateHScore(kid);
 
 					mOpen.Add(kid);
