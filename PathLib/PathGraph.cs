@@ -90,14 +90,113 @@ namespace PathLib
 				}
 			}
 
-			BuildGriddyConnectivity(gridSize, canReach);
+			BuildGriddyConnectivity(gridSize, stepHeight, canReach);
 
 //			PruneSkinny(isPosOK);
 		}
 
 
-		public void Read(BinaryReader br)
+		public void Load(string fileName)
 		{
+			FileStream	fs	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			if(fs == null)
+			{
+				return;
+			}
+
+			BinaryReader	br	=new BinaryReader(fs);
+			if(br == null)
+			{
+				return;
+			}
+
+			UInt32	magic	=br.ReadUInt32();
+			if(magic != 0xBA711FAD)
+			{
+				return;
+			}
+
+			int	nodeCount	=br.ReadInt32();
+
+			mNodery.Clear();
+
+			for(int i=0;i < nodeCount;i++)
+			{
+				PathNode	pn	=new PathNode(br);
+
+				mNodery.Add(pn);
+			}
+
+			foreach(PathNode pn in mNodery)
+			{
+				pn.ReadConnections(br, mNodery);
+			}
+
+			mGameLeafPathNodes.Clear();
+
+			int	glpnCount	=br.ReadInt32();
+			for(int i=0;i < glpnCount;i++)
+			{
+				int	key		=br.ReadInt32();
+				int	nCount	=br.ReadInt32();
+
+				List<PathNode>	nodes	=new List<PathNode>();
+				for(int j=0;j < nCount;j++)
+				{
+					int	nidx	=br.ReadInt32();
+
+					nodes.Add(mNodery[nidx]);
+				}
+
+				mGameLeafPathNodes.Add(key, nodes);
+			}
+		}
+
+
+		public void Save(string fileName)
+		{
+			FileStream	fs	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
+			if(fs == null)
+			{
+				return;
+			}
+
+			BinaryWriter	bw	=new BinaryWriter(fs);
+			if(bw == null)
+			{
+				return;
+			}
+
+			bw.Write(0xBA711FAD);
+
+			bw.Write(mNodery.Count);
+			foreach(PathNode pn in mNodery)
+			{
+				pn.Write(bw);
+			}
+			foreach(PathNode pn in mNodery)
+			{
+				pn.WriteConnections(bw, mNodery);
+			}
+
+			bw.Write(mGameLeafPathNodes.Count);
+
+			foreach(KeyValuePair<int, List<PathNode>> gameLeaf in mGameLeafPathNodes)
+			{
+				bw.Write(gameLeaf.Key);
+
+				bw.Write(gameLeaf.Value.Count);
+
+				foreach(PathNode pn in gameLeaf.Value)
+				{
+					int	idx	=mNodery.IndexOf(pn);
+
+					bw.Write(idx);
+				}
+			}
+
+			bw.Close();
+			fs.Close();
 		}
 
 
@@ -451,62 +550,6 @@ namespace PathLib
 		}
 
 
-		//look for nodes next to an obstacle that might prevent
-		//a mobile from reaching the center due to collision
-		void PruneSkinny(IsPositionValid isPosOK)
-		{
-			//discourage use of these nodes
-			List<PathNode>	badNodes	=new List<PathNode>();
-			foreach(PathNode pn in mNodery)
-			{
-				//check center
-				Vector3	center	=pn.mPoint;
-
-				if(!isPosOK(center))
-				{
-					badNodes.Add(pn);
-					continue;
-				}
-			}
-			PenalizeNodes(badNodes);
-
-			badNodes.Clear();
-
-			//now check shared edges
-			checkShared:
-			foreach(PathNode pn in mNodery)
-			{
-				foreach(PathConnection pc in pn.mConnections)
-				{
-					if(pc.mbUseEdge)
-					{
-						if(!isPosOK(pc.mEdgeBetween))
-						{
-							//break this connection
-							Disconnect(pn, pc.mConnectedTo);
-							goto	checkShared;
-						}
-					}
-					else
-					{
-						Vector3	centerBetween	=pn.mPoint;
-
-						centerBetween	-=pc.mConnectedTo.mPoint;
-						centerBetween	*=0.5f;
-						centerBetween	=pn.mPoint - centerBetween;
-
-						if(!isPosOK(centerBetween))
-						{
-							//break this connection
-							Disconnect(pn, pc.mConnectedTo);
-							goto	checkShared;
-						}
-					}
-				}
-			}
-		}
-
-
 		void Disconnect(PathNode pn, PathNode pn2)
 		{
 			//remove connections to pn
@@ -533,12 +576,47 @@ namespace PathLib
 		}
 
 
-		void PenalizeNodes(List<PathNode> prunes)
+		//projects up, then forward
+		bool CanReachStairStep(Vector3 start, Vector3 end, Vector3 mid, CanReach canReach)
 		{
-			foreach(PathNode pn in prunes)
+			//stepping up or down?
+			if(start.Y < end.Y)
 			{
-				pn.mHScorePenalty	=100;
+				//get an up target for the start
+				Vector3	startUp	=start + (Vector3.Up * (mid.Y - start.Y));
+
+				if(!canReach(start, startUp))
+				{
+					return	false;
+				}
+				if(!canReach(startUp, mid))
+				{
+					return	false;
+				}
+				if(!canReach(mid, end))
+				{
+					return	false;
+				}
 			}
+			else
+			{
+				//get an up target for the end
+				Vector3	endUp	=end + (Vector3.Up * (mid.Y - end.Y));
+
+				if(!canReach(start, mid))
+				{
+					return	false;
+				}
+				if(!canReach(mid, endUp))
+				{
+					return	false;
+				}
+				if(!canReach(endUp, end))
+				{
+					return	false;
+				}
+			}
+			return	true;
 		}
 
 
@@ -556,7 +634,7 @@ namespace PathLib
 		}
 
 
-		void BuildGriddyConnectivity(int gridSize, CanReach canReach)
+		void BuildGriddyConnectivity(int gridSize, float stepHeight, CanReach canReach)
 		{
 			float	halfGS	=gridSize / 2f;
 			float	sqTwo	=(float)Math.Sqrt(2.0);
@@ -582,11 +660,15 @@ namespace PathLib
 					int	pn2Idx	=mNodery.IndexOf(pn2);
 
 					//good place to break if you have 2 tricksy nodes
-					if(pnIdx == 83 && pn2Idx == 78)
-					{
-						int	gack	=0;
-						gack++;
-					}
+					//(find via bsptest, stand on them)
+//					if(pnIdx == 120 && pn2Idx == 122)
+//					{
+//						int	gack	=0;
+//						gack++;
+//					}
+
+					//for stair check
+					bool	bStairs	=false;
 
 					//make sure we are not already connected
 					bool	bFound	=false;
@@ -635,12 +717,6 @@ namespace PathLib
 					if(!(Mathery.CompareVectorEpsilon(pnNorm, pn2Norm, 0.001f)
 						&& (close > -0.01f && close < 0.01f)))
 					{
-						//there are three ways to do this:
-						//can use the shortest edge between the two nodes
-						//or use the longest, or try to follow the general
-						//direction of the path only modifying it to hit the edge
-						//we should opt for the latter first, then shortest,
-						//then longest, trying all 3 till one or none is found
 						bUseEdge	=true;
 
 						//if these are not coplanar, should be in seperate polys
@@ -652,7 +728,35 @@ namespace PathLib
 						//happens when connected via one vert
 						if(e1 == null || e2 == null)
 						{
-							continue;
+							//stairs?
+							e1	=pn.mPoly.GetSharedEdgeXZ(pn2.mPoly);
+							e2	=pn2.mPoly.GetSharedEdgeXZ(pn.mPoly);
+							if(e1 == null || e2 == null)
+							{
+								continue;
+							}
+
+							bStairs	=true;
+
+							//check endpoint distance to Y plane
+							float	e1Dist	=Vector3.Dot(Vector3.Up, e1.mA);
+							float	e2Dist	=Vector3.Dot(Vector3.Up, e2.mA);
+
+							float	yDist	=e2Dist - e1Dist;
+
+							if(yDist < -stepHeight || yDist > stepHeight)
+							{
+								continue;
+							}
+
+							//want e1 to be the "highest" edge
+							if(e1Dist < e2Dist)
+							{
+								Edge	temp	=e2;
+
+								e2	=e1;
+								e1	=temp;
+							}
 						}
 
 						//find the shortest line between the path and edge
@@ -674,33 +778,18 @@ namespace PathLib
 						}
 
 						//trace pn to edge
-						if(!CanReachTwoMoves(pn.mPoint, pn2.mPoint, shortB, canReach))
+						if(!bStairs)
 						{
-							//failed so try short/long edge centers
-
-							Edge	shortEdge	=null;
-							Edge	longEdge	=null;
-
-							//try to short edge
-							if(e1.Length() > e2.Length())
+							if(!CanReachTwoMoves(pn.mPoint, pn2.mPoint, shortB, canReach))
 							{
-								shortEdge	=e2;
-								longEdge	=e1;
+								continue;
 							}
-							else
+						}
+						else
+						{
+							if(!CanReachStairStep(pn.mPoint, pn2.mPoint, shortB, canReach))
 							{
-								shortEdge	=e1;
-								longEdge	=e2;
-							}
-
-							Vector3	cent	=shortEdge.GetCenter();
-							if(!CanReachTwoMoves(pn.mPoint, pn2.mPoint, cent, canReach))
-							{
-								cent	=longEdge.GetCenter();
-								if(!CanReachTwoMoves(pn.mPoint, pn2.mPoint, cent, canReach))
-								{
-									continue;
-								}
+								continue;
 							}
 						}
 					}
@@ -725,61 +814,5 @@ namespace PathLib
 				}
 			}
 		}
-
-
-			//look for connections made by stair steps
-/*			foreach(PathNode pn in mNodery)
-			{
-				BoundingBox	bound	=pn.mPoly.GetBounds();
-
-				//expand box by stair height
-				bound.Min.Y	-=stepHeight;
-				bound.Max.Y	+=stepHeight;
-
-				foreach(PathNode pn2 in mNodery)
-				{
-					if(pn == pn2)
-					{
-						continue;
-					}
-
-					//make sure we are not already connected
-					bool	bFound	=false;
-					foreach(PathConnection con in pn.mConnections)
-					{
-						if(con.mConnectedTo == pn2)
-						{
-							bFound	=true;
-							break;
-						}
-					}
-					if(bFound)
-					{
-						continue;
-					}
-
-					BoundingBox	bound2	=pn2.mPoly.GetBounds();
-
-					if(bound.Contains(bound2) == ContainmentType.Disjoint)
-					{
-						continue;
-					}
-
-					Edge	edge	=pn.mPoly.GetSharedEdgeXZ(pn2.mPoly);
-					if(edge == null)
-					{
-						continue;
-					}
-
-					PathConnection	pc		=new PathConnection();
-					pc.mConnectedTo			=pn2;
-					pc.mDistanceBetween	=pn.DistanceBetweenNodes(pn2);
-					pc.mEdgeBetween			=edge;
-					pc.mbPassable			=true;
-
-					pn.mConnections.Add(pc);
-				}
-			}*/
-
 	}
 }

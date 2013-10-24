@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
@@ -21,6 +22,29 @@ namespace PathLib
 
 			mEdges	=CalcEdges();
 		}
+
+
+		internal ConvexPoly(BinaryReader br)
+		{
+			int	vCount	=br.ReadInt32();
+			for(int i=0;i < vCount;i++)
+			{
+				Vector3	v	=FileUtil.ReadVector3(br);
+				mVerts.Add(v);
+			}
+
+			int	eCount	=br.ReadInt32();
+			for(int i=0;i < eCount;i++)
+			{
+				Edge	e	=new Edge();
+
+				e.mA	=FileUtil.ReadVector3(br);
+				e.mB	=FileUtil.ReadVector3(br);
+
+				mEdges.Add(e);
+			}
+		}
+
 
 		void SnapVerts()
 		{
@@ -59,6 +83,24 @@ namespace PathLib
 			mVerts.AddRange(snapped);
 		}
 
+
+		internal void Write(BinaryWriter bw)
+		{
+			bw.Write(mVerts.Count);
+			foreach(Vector3 vert in mVerts)
+			{
+				FileUtil.WriteVector3(bw, vert);
+			}
+
+			bw.Write(mEdges.Count);
+			foreach(Edge e in mEdges)
+			{
+				FileUtil.WriteVector3(bw, e.mA);
+				FileUtil.WriteVector3(bw, e.mB);
+			}
+		}
+
+
 		internal float Area()
 		{
 			float	total	=0.0f;
@@ -74,10 +116,12 @@ namespace PathLib
 			return	total;
 		}
 
+
 		internal int GetEdgeCount()
 		{
 			return	mVerts.Count;
 		}
+
 
 		//fill missing with any edges not in found
 		internal void GetMissingEdges(List<Edge> found, List<Edge> missing)
@@ -92,10 +136,12 @@ namespace PathLib
 			}
 		}
 
+
 		internal BoundingBox GetBounds()
 		{
 			return	BoundingBox.CreateFromPoints(mVerts);
 		}
+
 
 		List<Edge> CalcEdges()
 		{
@@ -119,6 +165,7 @@ namespace PathLib
 
 			return	ret;
 		}
+
 
 		//find centerpoints for imaginary grid snapped polys of gridSize
 		internal List<Vector3> GetGridPoints(int gridSize)
@@ -206,10 +253,12 @@ namespace PathLib
 			return	ret;
 		}
 
+
 		internal void GetPlane(out Vector3 normal, out float dist)
 		{
 			Mathery.PlaneFromVerts(mVerts, out normal, out dist);
 		}
+
 
 		internal Edge GetSharedEdge(ConvexPoly other)
 		{
@@ -229,6 +278,7 @@ namespace PathLib
 			}
 			return	null;
 		}
+
 
 		//only checks the x and z
 		//used for pathing over stair steps
@@ -251,6 +301,7 @@ namespace PathLib
 			return	null;
 		}
 
+
 		internal Vector3 GetCenter()
 		{
 			Vector3	ret	=Vector3.Zero;
@@ -262,6 +313,7 @@ namespace PathLib
 
 			return	ret;
 		}
+
 
 		internal void GetTriangles(List<Vector3> verts, List<UInt16> indexes)
 		{
@@ -284,6 +336,7 @@ namespace PathLib
 				indexes.Add((UInt16)(offset + ((i + 1) % mVerts.Count)));
 			}
 		}
+
 
 		//uses the add up the angles trick to determine point in poly
 		internal float ComputeAngleSum(Vector3 point)
