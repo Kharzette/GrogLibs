@@ -16,58 +16,97 @@ namespace PathLib
 		{
 			Vector3	edgeVec1	=mA - mB;
 			Vector3	edgeVec2	=other.mA - other.mB;
+			Vector3	edgeVec3	=other.mA - mA;
+			Vector3	edgeVec4	=other.mB - mA;
 
 			Vector3	testVec	=Vector3.Cross(edgeVec1, edgeVec2);
-			return	testVec.Equals(Vector3.Zero);
+			if(!testVec.Equals(Vector3.Zero))
+			{
+				return	false;
+			}
+
+			testVec	=Vector3.Cross(edgeVec1, edgeVec3);
+			if(!testVec.Equals(Vector3.Zero))
+			{
+				return	false;
+			}
+
+			testVec	=Vector3.Cross(edgeVec1, edgeVec4);
+			if(!testVec.Equals(Vector3.Zero))
+			{
+				return	false;
+			}
+			return	true;
 		}
 
-		internal bool AlmostEqual(Edge other)
+
+		//compute the amount the two edges overlap
+		internal float GetOverlap(Edge other)
 		{
-			if(Mathery.CompareVector(mA, other.mA)
-				&& Mathery.CompareVector(mB, other.mB))
+			if(!IsColinear(other))
 			{
-				return	true;
+				return	0f;
 			}
-			if(Mathery.CompareVector(mB, other.mA)
-				&& Mathery.CompareVector(mA, other.mB))
+
+			Vector3	edgeVec	=mA - mB;
+			Vector3	oVecA	=mA - other.mA;
+			Vector3	oVecB	=mA - other.mB;
+
+			float	len	=edgeVec.Length();
+
+			edgeVec	/=len;
+
+			float	aDot	=Vector3.Dot(edgeVec, oVecA);
+			float	bDot	=Vector3.Dot(edgeVec, oVecB);
+
+			float	ret	=0f;
+
+			if(aDot >= 0f && aDot <= len)
 			{
-				return	true;
+				//a inside the line segment
+				if(bDot >= 0f && bDot <= len)
+				{
+					//b inside the line segment
+					//so overlap is from b to a
+					ret	=Math.Abs(bDot - aDot);
+				}
+				else
+				{
+					if(bDot <= 0f)
+					{
+						//overlap is from start to A
+						ret	=aDot;
+					}
+					else
+					{
+						//overlap is from end to A
+						ret	=len - aDot;
+					}
+				}
 			}
-			return	false;
+			else if(bDot >= 0f && bDot <= len)
+			{
+				//b inside the line segment
+				if(aDot <= 0f)
+				{
+					//overlap from start to b
+					ret	=bDot;
+				}
+				else
+				{
+					//overlap from end to b
+					ret	=len - bDot;
+				}
+			}
+			return	ret;
 		}
 
-		internal bool AlmostEqualXZ(Edge other)
-		{
-			Vector2	ourAXZ, ourBXZ;
-			Vector2	otherAXZ, otherBXZ;
-
-			ourAXZ.X	=mA.X;
-			ourAXZ.Y	=mA.Z;
-			ourBXZ.X	=mB.X;
-			ourBXZ.Y	=mB.Z;
-
-			otherAXZ.X	=other.mA.X;
-			otherAXZ.Y	=other.mA.Z;
-			otherBXZ.X	=other.mB.X;
-			otherBXZ.Y	=other.mB.Z;
-
-			if(Mathery.CompareVector(ourAXZ, otherAXZ)
-				&& Mathery.CompareVector(ourBXZ, otherBXZ))
-			{
-				return	true;
-			}
-			if(Mathery.CompareVector(ourBXZ, otherAXZ)
-				&& Mathery.CompareVector(ourAXZ, otherBXZ))
-			{
-				return	true;
-			}
-			return	false;
-		}
 
 		internal float Length()
 		{
 			return	(mB - mA).Length();
 		}
+
 
 		internal Vector3 GetCenter()
 		{

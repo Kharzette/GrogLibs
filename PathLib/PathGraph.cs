@@ -661,7 +661,7 @@ namespace PathLib
 
 					//good place to break if you have 2 tricksy nodes
 					//(find via bsptest, stand on them)
-//					if(pnIdx == 120 && pn2Idx == 122)
+//					if(pnIdx == 183 && pn2Idx == 161)
 //					{
 //						int	gack	=0;
 //						gack++;
@@ -729,8 +729,8 @@ namespace PathLib
 						if(e1 == null || e2 == null)
 						{
 							//stairs?
-							e1	=pn.mPoly.GetSharedEdgeXZ(pn2.mPoly);
-							e2	=pn2.mPoly.GetSharedEdgeXZ(pn.mPoly);
+							e1	=pn.mPoly.GetSharedEdgeXZ(pn2.mPoly, stepHeight);
+							e2	=pn2.mPoly.GetSharedEdgeXZ(pn.mPoly, stepHeight);
 							if(e1 == null || e2 == null)
 							{
 								continue;

@@ -262,6 +262,8 @@ namespace PathLib
 
 		internal Edge GetSharedEdge(ConvexPoly other)
 		{
+			Edge	ret			=null;
+			float	bestOverlap	=0f;
 			foreach(Edge me in mEdges)
 			{
 				foreach(Edge oe in other.mEdges)
@@ -270,35 +272,57 @@ namespace PathLib
 					{
 						continue;
 					}
-					if(me.AlmostEqual(oe))
+
+					float	over	=me.GetOverlap(oe);
+
+					//todo:  take max overlapped edge
+					if(over > bestOverlap)
 					{
-						return	me;
+						bestOverlap	=over;
+						ret			=oe;
 					}
 				}
 			}
-			return	null;
+			return	ret;
 		}
 
 
 		//only checks the x and z
-		//used for pathing over stair steps
-		internal Edge GetSharedEdgeXZ(ConvexPoly other)
+		//used for pathing over stair steps or short geom
+		internal Edge GetSharedEdgeXZ(ConvexPoly other, float maxDist)
 		{
+			Edge	temp		=new Edge();
+			Edge	ret			=null;
+			float	bestOverlap	=0f;
 			foreach(Edge me in mEdges)
 			{
 				foreach(Edge oe in other.mEdges)
 				{
-					if(!me.IsColinear(oe))
+					//take a vertical distance from one of the points
+					float	dist	=me.mA.Y - oe.mA.Y;
+					if(dist > maxDist)
 					{
 						continue;
 					}
-					if(me.AlmostEqualXZ(oe))
+
+					temp.mA	=oe.mA;
+					temp.mB	=oe.mB;
+
+					temp.mA.Y	+=dist;
+					temp.mB.Y	+=dist;
+
+					if(me.IsColinear(temp))
 					{
-						return	me;
+						float	over	=me.GetOverlap(temp);
+						if(over > bestOverlap)
+						{
+							bestOverlap	=over;
+							ret			=oe;
+						}
 					}
 				}
 			}
-			return	null;
+			return	ret;
 		}
 
 
