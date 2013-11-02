@@ -12,7 +12,13 @@ namespace UtilityLib
 	{
 		public enum SteeringMethod
 		{
-			None, TwinStick, Fly, ThirdPerson, FirstPerson, Platformer
+			None,
+			TwinStick,		//left analog moves, right analog turns the camera
+			Fly,			//left aims, right moves, no leveling out of the movement
+			ThirdPerson,	//same as firstperson?
+			FirstPerson,	//leveled out (no Y) movement like fly
+			Platformer,		//not really finished
+			XCOM			//left moves a "cursor", right moves camera
 		}
 
 		SteeringMethod	mMethod;
@@ -29,6 +35,7 @@ namespace UtilityLib
 
 		//position info
 		Vector3	mPosition, mDelta;
+		Vector3	mCursorPos;
 		float	mPitch, mYaw, mRoll;
 		float	mZoom	=80f;		//default
 		bool	mbMovedThisFrame;	//true if the player gave movement input
@@ -55,6 +62,12 @@ namespace UtilityLib
 			set { mMethod = value; }
 		}
 
+		public Vector3 CursorPos
+		{
+			get { return mCursorPos; }
+			set { mCursorPos = value; }
+		}
+
 		public bool RightClickToTurn
 		{
 			get { return mbRightClickToTurn; }
@@ -71,6 +84,12 @@ namespace UtilityLib
 		{
 			get { return mSpeed; }
 			set { mSpeed = value; }
+		}
+
+		public float TurnSpeed
+		{
+			get { return mTurnSpeed; }
+			set { mTurnSpeed = value; }
 		}
 
 		public Vector3 Delta
@@ -139,6 +158,19 @@ namespace UtilityLib
 				return	pos;
 			}
 
+			if(!UseGamePadIfPossible || !gs.IsConnected)
+			{
+				if(ms.ScrollWheelValue != mLastWheel)
+				{
+					int	swChange	=ms.ScrollWheelValue - mLastWheel;
+
+					mLastWheel	=ms.ScrollWheelValue;
+
+					mZoom	-=(swChange * 0.04f);
+					mZoom	=MathHelper.Clamp(mZoom, 5f, 500f);
+				}
+			}
+
 			if(mMethod == SteeringMethod.FirstPerson
 				|| mMethod == SteeringMethod.ThirdPerson)
 			{
@@ -156,19 +188,9 @@ namespace UtilityLib
 			{
 				UpdatePlatformer(msDelta, gc, ks, ms, gs);
 			}
-
-
-			if(!UseGamePadIfPossible || !gs.IsConnected)
+			else if(mMethod == SteeringMethod.XCOM)
 			{
-				if(ms.ScrollWheelValue != mLastWheel)
-				{
-					int	swChange	=ms.ScrollWheelValue - mLastWheel;
-
-					mLastWheel	=ms.ScrollWheelValue;
-
-					mZoom	-=(swChange * 0.04f);
-					mZoom	=MathHelper.Clamp(mZoom, 0f, 100f);
-				}
+				UpdateXCOM(msDelta, gc, ks, ms, gs);
 			}
 
 			return	mPosition;
@@ -200,6 +222,107 @@ namespace UtilityLib
 					mPosition	+=motion;
 				}
 				mYaw	-=gs.ThumbSticks.Right.X * mGamePadSensitivity * msDelta * mTurnSpeed;
+			}
+			else
+			{
+				Vector3	moveDelta	=Vector3.Zero;
+				if(ks.IsKeyDown(Keys.A))
+				{
+					mbMovedThisFrame	=true;
+					moveDelta			-=vleft;
+				}
+				else if(ks.IsKeyDown(Keys.D))
+				{
+					mbMovedThisFrame	=true;
+					moveDelta			+=vleft;
+				}
+
+				if(ks.IsKeyDown(Keys.W))
+				{
+					mbMovedThisFrame	=true;
+					moveDelta			-=vin;
+				}
+				else if(ks.IsKeyDown(Keys.S))
+				{
+					mbMovedThisFrame	=true;
+					moveDelta			+=vin;
+				}
+
+				if(ks.IsKeyDown(Keys.Q))
+				{
+					mYaw	+=msDelta * mTurnSpeed * mKeySensitivity;
+				}
+				else if(ks.IsKeyDown(Keys.E))
+				{
+					mYaw	-=msDelta * mTurnSpeed * mKeySensitivity;
+				}
+
+				moveDelta.Y	=0.0f;	//zero out the Y
+
+				if(moveDelta.LengthSquared() > 0.0f)
+				{
+					//nix the strafe run
+					moveDelta.Normalize();
+
+					mPosition	+=moveDelta * (msDelta * mSpeed);
+				}
+			}
+
+			mDelta	=mPosition - lastPos;
+		}
+
+
+		void UpdateXCOM(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
+		{
+			Vector3 vup		=gc.Up;
+			Vector3 vleft	=gc.Left;
+			Vector3 vin		=gc.Forward;
+
+			mPitch	=45.0f;
+			mRoll	=0.0f;
+
+			Vector3	lastPos			=mPosition;
+			Vector3	lastCursorPos	=mCursorPos;
+
+			if(gs.IsConnected && mbUsePadIfPossible)
+			{
+				if(gs.ThumbSticks.Left != Vector2.Zero)
+				{
+					mbMovedThisFrame	=true;
+
+					Vector2	stickMove	=Vector2.Zero;
+
+					stickMove.X	=(gs.ThumbSticks.Left.X * msDelta * mGamePadSensitivity * mSpeed);
+					stickMove.Y	=(gs.ThumbSticks.Left.Y * msDelta * mGamePadSensitivity * mSpeed);
+
+					Vector3	motion	=vleft * stickMove.X;
+					motion			-=vin * stickMove.Y;
+
+					motion.Y	=0;
+
+					mPosition	+=motion;
+					mCursorPos	+=motion;
+				}
+				else if(gs.ThumbSticks.Right != Vector2.Zero)
+				{
+					mbMovedThisFrame	=true;
+
+					Vector3	motion	=vleft * (gs.ThumbSticks.Right.X * msDelta * mGamePadSensitivity * mSpeed);
+					motion			-=vin * (gs.ThumbSticks.Right.Y * msDelta * mGamePadSensitivity * mSpeed);
+
+					motion.Y	=0;
+
+					mPosition	+=motion;
+				}
+
+				if(gs.IsButtonDown(Buttons.DPadLeft))
+				{
+					mYaw	-=mGamePadSensitivity * msDelta * mTurnSpeed;
+				}
+				else if(gs.IsButtonDown(Buttons.DPadRight))
+				{
+					mYaw	+=mGamePadSensitivity * msDelta * mTurnSpeed;
+				}
 			}
 			else
 			{
