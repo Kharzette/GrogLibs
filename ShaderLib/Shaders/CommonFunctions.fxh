@@ -24,6 +24,7 @@ shared Texture	mCellTable;
 shared Texture	mShadowTexture;
 shared float3	mShadowLightPos;
 shared bool		mbDirectional;
+shared float	mIntensity;		//intensity of the shadowing light
 
 //sky gradient
 shared float3	mSkyGradient0;	//horizon colour
@@ -315,26 +316,47 @@ float3 ApplyShadow2D(float3 shadCoord, float3 texLitColor)
 
 float3 ApplyShadow3D(float3 shadDir, float depth, float3 texLitColor)
 {
-	float	depth0	=texCUBE(ShadowSampler3D, shadDir).r;
-
-	if(depth0 < (depth - 0.00001f))
+	if(depth > mIntensity)
 	{
-		texLitColor	*=0.2f;
+		return	texLitColor;
+	}
+
+	float	depth0	=texCUBE(ShadowSampler3D, shadDir).r;
+	if(depth0 < 2)
+	{
+		return	texLitColor;
+	}
+
+	if(depth0 < depth)
+	{
+		//match atten, jontology convinced me
+		texLitColor	*=max(0.2, 1.0 - ((mIntensity - depth) / mIntensity));
 	}
 	return	texLitColor;
 }
 
-float3	ShadowColor(bool bDirectional, float4 worldPos, float3 color)
+float3	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float3 color)
 {
 	if(bDirectional)
 	{
 		float3	shadCoord	=ComputeShadowCoord(worldPos);
-		color				=ApplyShadow2D(shadCoord, color.xyz);
+		color				=ApplyShadow2D(shadCoord, color);
 	}
 	else
 	{
-		float3	shadDir	=normalize(worldPos.xyz - mShadowLightPos);
-		color			=ApplyShadow3D(shadDir, worldPos.w, color.xyz);
+		float3	shadDir	=worldPos.xyz - mShadowLightPos.xyz;
+		float	dist	=length(shadDir);
+
+		shadDir	/=dist;
+
+		float	facing	=dot(shadDir, worldNorm);
+		if(facing >= 0)
+		{
+			return	float3(0, 1, 0);
+			return	color;
+		}
+
+		color	=ApplyShadow3D(shadDir, dist, color);
 	}
 	return	color;
 }

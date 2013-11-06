@@ -46,6 +46,7 @@ namespace BSPZone
 
 
 		public void GetCurrentValues(out Vector4 color0,
+			out float intensity,
 			out Vector3 lightPos,
 			out Vector3 lightDir,
 			out bool bDirectional)
@@ -57,11 +58,13 @@ namespace BSPZone
 			{
 				bDirectional	=mBestLight.mbSun;
 				lightPos		=mBestLight.mPosition;
+				intensity		=mBestLight.mStrength;
 			}
 			else
 			{
 				bDirectional	=true;
 				lightPos		=Vector3.Zero;
+				intensity		=1;
 			}
 		}
 

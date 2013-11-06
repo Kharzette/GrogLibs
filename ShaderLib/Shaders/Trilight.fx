@@ -181,6 +181,24 @@ VPosTex03Tex13 TriSolidSkinVS(VPosNormBone input)
 	return	ComputeSkinWorld(input, mBones);
 }
 
+VPosTex03 ShadowSkinCubeVS(VPosBone input)
+{
+	float4	vertPos	=input.Position;
+
+	float4x4	skinTransform	=GetSkinXForm(input.Blend0, input.Weight0, mBones);
+
+	vertPos	=mul(vertPos, skinTransform);
+
+	float4	worldVertPos	=mul(vertPos, mWorld);
+
+	VPosTex03	output;
+
+	output.Position		=mul(worldVertPos, mLightViewProj);
+	output.TexCoord0	=worldVertPos.xyz;
+
+	return	output;
+}
+
 VPosTex0Single ShadowSkinVS(VPosBone input)
 {
 	float4	vertPos	=input.Position;
@@ -189,9 +207,11 @@ VPosTex0Single ShadowSkinVS(VPosBone input)
 
 	vertPos	=mul(vertPos, skinTransform);
 
+	float4	worldVertPos	=mul(vertPos, mWorld);
+
 	VPosTex0Single	output;
 
-	output.Position		=mul(vertPos, mul(mWorld, mLightViewProj));
+	output.Position		=mul(worldVertPos, mLightViewProj);
 	output.TexCoord0	=output.Position.z / output.Position.w;
 
 	return	output;
@@ -569,6 +589,13 @@ float4 Tex0Tex1Col0DecalPS(VTex0Tex1Col0 input) : COLOR
 	return	texLitColor;
 }
 
+float4 ShadowCubePS(VTex03 input) : COLOR
+{
+	float	dist	=distance(mShadowLightPos, input.TexCoord0);
+
+	return	float4(dist, 0, 0, 0);
+}
+
 float4 ShadowPS(VTex0Single input) : COLOR
 {
 	return	float4(input.TexCoord0, 0, 0, 0);
@@ -757,5 +784,14 @@ technique ShadowSkin
 	{
 		VertexShader	=compile vs_2_0 ShadowSkinVS();
 		PixelShader		=compile ps_2_0 ShadowPS();
+	}
+}
+
+technique ShadowSkinCube
+{
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 ShadowSkinCubeVS();
+		PixelShader		=compile ps_2_0 ShadowCubePS();
 	}
 }

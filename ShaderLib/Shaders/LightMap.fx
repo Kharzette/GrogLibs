@@ -236,7 +236,7 @@ float4 LMPixelShader(VTex04Tex14Tex24 input) : COLOR0
 	
 	float3	lm	=tex2D(LightMapSampler, input.TexCoord0.zw);
 
-	color.xyz	=ShadowColor(mbDirectional, input.TexCoord1, color.xyz);
+//	color.xyz	=ShadowColor(mbDirectional, input.TexCoord1, color.xyz);
 
 	color	*=lm;
 	color	=saturate(color);
@@ -263,7 +263,7 @@ float4 LMCellPixelShader(VTex04Tex14Tex24 input) : COLOR0
 	
 	float3	lm	=tex2D(LightMapSampler, input.TexCoord0.zw);
 
-	lm	=ShadowColor(mbDirectional, input.TexCoord1, lm);
+//	lm	=ShadowColor(mbDirectional, input.TexCoord1, lm);
 	lm	=CalcCellColor(lm);
 
 	color.rgb	*=lm;
@@ -309,7 +309,7 @@ float4 VLitPixelShader(VTex04Tex14Tex24Tex31 input) : COLOR0
 	inColor.z	=input.TexCoord2.w;
 	
 	//shadow map
-	inColor.xyz	=ShadowColor(mbDirectional, worldPos, inColor.xyz);
+//	inColor.xyz	=ShadowColor(mbDirectional, worldPos, inColor.xyz);
 
 	color	*=inColor;
 	color	=saturate(color);
@@ -365,7 +365,8 @@ float4 VLitCellPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 	
 	if(mbTextureEnabled)
 	{
-		color	=pow(abs(tex2D(TextureSampler, tex0)), 2.2);
+//		color	=pow(abs(tex2D(TextureSampler, tex0)), 2.2);
+		color	=pow(tex2D(TextureSampler, tex0), 2.2);
 	}
 	else
 	{
@@ -389,7 +390,7 @@ float4 VLitCellPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 	inColor.z	=input.TexCoord2.w;
 	
 	//shadow map
-	inColor.xyz	=ShadowColor(mbDirectional, worldPos, inColor.xyz);
+//	inColor.xyz	=ShadowColor(mbDirectional, worldPos, inColor.xyz);
 
 	//cellshade the vertex light + shadow
 	inColor.xyz	=CalcCellColor(inColor.xyz);
@@ -438,7 +439,7 @@ float4 FullBrightPixelShader(VTex0Tex14 input) : COLOR0
 	}
 
 	//shadow map
-	color.xyz	=ShadowColor(mbDirectional, input.TexCoord1, color.xyz);
+//	color.xyz	=ShadowColor(mbDirectional, input.TexCoord1, color.xyz);
 
 	return	color;
 }
@@ -551,7 +552,7 @@ float4 LMAnimPixelShader(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	}
 
 	//shadow map
-	lm	=ShadowColor(mbDirectional, input.TexCoord4, lm);
+//	lm	=ShadowColor(mbDirectional, input.TexCoord4, lm);
 
 	//Apply lighting.
 	color	*=lm;
@@ -579,14 +580,15 @@ float4 LMAnimCellPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	}
 
 	float3	lm		=float3(0, 0, 0);
-	float3	norm	=input.TexCoord3.xyz;
+//	float3	norm	=input.TexCoord3.xyz;
 
-	float3	worldPos	=input.TexCoord4.xyz;
+//	float3	worldPos	=input.TexCoord4.xyz;
 
 	//grab style intensity
 	if(input.TexCoord5.x > 0)
 	{
-		lm	+=(input.TexCoord5.x * tex2D(LightMapSampler, input.TexCoord0.zw));
+		lm	=mad(input.TexCoord5.x, tex2D(LightMapSampler, input.TexCoord0.zw), lm);
+//		lm	=(input.TexCoord5.x * tex2D(LightMapSampler, input.TexCoord0.zw));
 	}
 	if(input.TexCoord5.y > 0)
 	{
@@ -602,7 +604,7 @@ float4 LMAnimCellPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	}
 
 	//shadow map
-	lm	=ShadowColor(mbDirectional, input.TexCoord4, lm);
+//	lm	=ShadowColor(mbDirectional, input.TexCoord4, lm);
 	lm	=CalcCellColor(lm);
 
 	color.rgb	*=lm;
