@@ -138,19 +138,67 @@ namespace BSPZone
 					mBestColorMover.SetUpMove(start, end,
 						LightLerpTime, LightEaseIn, LightEaseOut);
 
+					//works for suns or points
 					curPos		=zl.mPosition;
 				}
 				else
 				{
-					//if still lerping, use the lerp position
-					if(!mBestLightMover.Done())
+					if(!mBestLight.mbSun && !zl.mbSun		//lerping from point to point?
+						|| mBestLight.mbSun && zl.mbSun)	//or sun to sun?
 					{
-						mBestLightMover.SetUpMove(mBestLightMover.GetPos(), zl.mPosition,
+						//if still lerping, use the lerp position
+						if(!mBestLightMover.Done())
+						{
+							mBestLightMover.SetUpMove(mBestLightMover.GetPos(), zl.mPosition,
+								LightLerpTime, LightEaseIn, LightEaseOut);
+						}
+						else
+						{
+							mBestLightMover.SetUpMove(mBestLight.mPosition, zl.mPosition,
+								LightLerpTime, LightEaseIn, LightEaseOut);
+						}
+					}
+					else if(!mBestLight.mbSun && zl.mbSun)	//from point to sun?
+					{
+						Vector3	lerpPos	=Vector3.Zero;
+
+						//if still lerping, use the lerp position
+						if(!mBestLightMover.Done())
+						{
+							lerpPos	=mBestLightMover.GetPos();
+						}
+						else
+						{
+							lerpPos	=mBestLight.mPosition;
+						}
+
+						//convert position to a direction
+						Vector3	lerpDir	=lerpPos - pos;
+						lerpDir.Normalize();
+
+						//set up lerp
+						mBestLightMover.SetUpMove(lerpDir, zl.mPosition,
 							LightLerpTime, LightEaseIn, LightEaseOut);
 					}
-					else
+					else if(mBestLight.mbSun && !zl.mbSun)	//from sun to point
 					{
-						mBestLightMover.SetUpMove(mBestLight.mPosition, zl.mPosition,
+						Vector3	lerpDir	=Vector3.Zero;
+
+						//if still lerping, use the lerp direction
+						if(!mBestLightMover.Done())
+						{
+							lerpDir	=mBestLightMover.GetPos();
+						}
+						else
+						{
+							lerpDir	=mBestLight.mPosition;
+						}
+
+						//convert direction to a position to lerp from
+						Vector3	lerpPos	=pos + (lerpDir * -1000f);
+
+						//set up lerp
+						mBestLightMover.SetUpMove(lerpPos, zl.mPosition,
 							LightLerpTime, LightEaseIn, LightEaseOut);
 					}
 
@@ -213,7 +261,7 @@ namespace BSPZone
 
 			if(zl.mbSun)
 			{
-				mCurLightDir	=-zl.mPosition;	//direction stored in pos
+				mCurLightDir	=-curPos;	//direction stored in pos
 				mLightColor.X	=curColor.X;
 				mLightColor.Y	=curColor.Y;
 				mLightColor.Z	=curColor.Z;
