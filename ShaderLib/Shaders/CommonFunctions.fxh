@@ -21,10 +21,11 @@ float3	mDanglyForce;
 shared Texture	mCellTable;
 
 //for shadowmaps
-shared Texture	mShadowTexture;
-shared float3	mShadowLightPos;
-shared bool		mbDirectional;
-shared float	mIntensity;		//intensity of the shadowing light
+shared Texture	mShadowTexture;					//2D or cube
+shared float3	mShadowLightPos;				//point light location
+shared bool		mbDirectional;					//sunnish or point
+shared float	mIntensity;						//intensity of the shadowing light
+shared float	mDirectionalShadowAttenuation;	//falloff for sunlight style shadows
 
 //sky gradient
 shared float3	mSkyGradient0;	//horizon colour
@@ -307,7 +308,7 @@ float3 ApplyShadow2D(float3 shadCoord, float3 texLitColor)
 {
 	float	depth0	=tex2D(ShadowSampler2D, shadCoord).r;
 
-	if(depth0 < shadCoord.z)
+	if(depth0 < shadCoord.z && depth0 > (shadCoord.z - mDirectionalShadowAttenuation))
 	{
 		texLitColor	*=0.2f;
 	}
@@ -337,6 +338,26 @@ float3 ApplyShadow3D(float3 shadDir, float depth, float3 texLitColor)
 
 float3	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float3 color)
 {
+	float3	shadDir;
+
+	if(bDirectional)
+	{
+		//pull direction vector from light matrix
+		shadDir.x	=mLightViewProj._m02;
+		shadDir.y	=mLightViewProj._m12;
+		shadDir.z	=mLightViewProj._m22;
+	}
+	else
+	{
+		shadDir	=worldPos.xyz - mShadowLightPos.xyz;
+	}
+
+	float	facing	=dot(shadDir, worldNorm);
+	if(facing >= 0)
+	{
+		return	color;
+	}
+
 	if(bDirectional)
 	{
 		float3	shadCoord	=ComputeShadowCoord(worldPos);
@@ -344,18 +365,9 @@ float3	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float3 
 	}
 	else
 	{
-		float3	shadDir	=worldPos.xyz - mShadowLightPos.xyz;
 		float	dist	=length(shadDir);
 
 		shadDir	/=dist;
-
-		float	facing	=dot(shadDir, worldNorm);
-		if(facing >= 0)
-		{
-			return	float3(0, 1, 0);
-			return	color;
-		}
-
 		color	=ApplyShadow3D(shadDir, dist, color);
 	}
 	return	color;
