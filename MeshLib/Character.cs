@@ -338,5 +338,17 @@ namespace MeshLib
 		{
 			return	mTransform.Forward;
 		}
+
+
+		public Matrix GetBoneMatrix(string boneName)
+		{
+			int	idx	=mSkin.GetBoneIndex(boneName);
+
+			if(idx < 0 || idx >= mBones.Length)
+			{
+				return	Matrix.Identity;
+			}
+			return	mBones[idx];
+		}
 	}
 }

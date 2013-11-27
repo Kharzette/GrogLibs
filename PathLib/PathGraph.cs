@@ -200,11 +200,6 @@ namespace PathLib
 		}
 
 
-		public void Write(BinaryWriter bw)
-		{
-		}
-
-
 		public void Update()
 		{
 			for(int i=0;i < mActivePathing.Count;i++)
@@ -395,6 +390,77 @@ namespace PathLib
 				indexesConnectedTo.Add(mNodery.IndexOf(con.mConnectedTo));
 			}
 			return	true;
+		}
+
+
+		//helper function to move along a path
+		public static bool MoveAlongPath(List<Vector3> nodes,
+			ref int curNode, ref Vector3 pos,
+			int msDelta, float speed,
+			out Vector3 direction)
+		{
+			//this will make it really clear when something is wrong
+			//as it will make a nanny matrix
+			direction	=Vector3.Zero;
+
+			if(nodes.Count < 2)
+			{
+				return	true;
+			}
+			if(curNode < 0 || curNode >= nodes.Count)
+			{
+				return	true;
+			}
+
+			if((curNode + 1) >= nodes.Count)
+			{
+				//at end node
+				pos	=nodes[curNode];
+				curNode++;
+
+				//use last 2 nodes for direction
+				direction	=(nodes[nodes.Count - 2] - nodes[nodes.Count - 1]);
+				direction.Normalize();
+				return	true;
+			}
+
+			float	speedLen	=speed * msDelta;
+			bool	bMoving		=true;
+
+			for(;bMoving;)
+			{
+				Vector3	current	=nodes[curNode];
+				Vector3	next	=nodes[curNode + 1];
+
+				direction	=next - pos;
+
+				float	dirLen	=direction.Length();
+
+				if(speedLen > dirLen)
+				{
+					//have a bit more momentum to push towards another node
+					pos	=next;
+					curNode++;
+
+					if(curNode == (nodes.Count - 1))
+					{
+						//reached the destination
+						direction	/=dirLen;
+						curNode		=0;
+
+						return	true;
+					}
+					continue;
+				}
+				else
+				{
+					direction	/=dirLen;
+					pos			+=direction * speedLen;
+					bMoving		=false;
+				}
+			}			
+
+			return	false;
 		}
 
 

@@ -18,6 +18,9 @@ namespace MeshLib
 		List<Matrix>	mInverseBindPoses	=new List<Matrix>();
 		Matrix			mMaxAdjust;	//coordinate system stuff
 
+		//generated map of bone name to index
+		Dictionary<string, int>	mBoneNameIndexes	=new Dictionary<string, int>();
+
 
 		public Skin()
 		{
@@ -30,6 +33,16 @@ namespace MeshLib
 		internal List<string> GetBoneNames()
 		{
 			return	mBoneNames;
+		}
+
+
+		public int GetBoneIndex(string boneName)
+		{
+			if(!mBoneNameIndexes.ContainsKey(boneName))
+			{
+				return	-1;
+			}
+			return	mBoneNameIndexes[boneName];
 		}
 
 
@@ -47,6 +60,7 @@ namespace MeshLib
 				mBoneNames.Add(bp.Key);
 				mInverseBindPoses.Add(bp.Value);
 			}
+			CalcNameToIndexMap();
 		}
 
 
@@ -88,6 +102,8 @@ namespace MeshLib
 				Matrix	mat	=FileUtil.ReadMatrix(br);
 				mInverseBindPoses.Add(mat);
 			}
+
+			CalcNameToIndexMap();
 		}
 
 
@@ -103,6 +119,15 @@ namespace MeshLib
 			foreach(Matrix m in mInverseBindPoses)
 			{
 				FileUtil.WriteMatrix(bw, m);
+			}
+		}
+
+
+		void CalcNameToIndexMap()
+		{
+			for(int i=0;i < mBoneNames.Count;i++)
+			{
+				mBoneNameIndexes.Add(mBoneNames[i], i);
 			}
 		}
 	}
