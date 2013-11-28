@@ -64,6 +64,31 @@ namespace MeshLib
 		}
 
 
+		public Matrix GetBoneByName(string name, Skeleton sk)
+		{
+			Matrix	ret	=Matrix.Identity;
+
+			sk.GetMatrixForBone(name, out ret);
+
+			int	idx	=mBoneNameIndexes[name];
+
+			//multiply by inverse bind pose
+			ret	=mInverseBindPoses[idx] * ret * mMaxAdjust;
+
+			return	ret;
+		}
+
+
+		public Matrix GetBoneByNameNoBind(string name, Skeleton sk)
+		{
+			Matrix	ret	=Matrix.Identity;
+
+			sk.GetMatrixForBone(name, out ret);
+
+			return	ret * mMaxAdjust;
+		}
+
+
 		public int GetNumBones()
 		{
 			return	mBoneNames.Count;
