@@ -180,7 +180,7 @@ namespace UtilityLib
 		//from a rendertarget, or even mini maps
 		public static void CreateBoundedDirectionalOrthoViewProj(BoundingBox bounds,
 			Vector3 direction, float fudgeFactor,
-			out Matrix lightView, out Matrix lightProj)
+			out Matrix lightView, out Matrix lightProj, out Vector3 fakeOrigin)
 		{
 			//bounds is a struct, so modifying here won't mess it up
 			//add a little bit to account for a bit of sloppiness
@@ -188,7 +188,7 @@ namespace UtilityLib
 			bounds.Min	-=Vector3.One * fudgeFactor;
 
 			//create a matrix aimed in the direction
-			Matrix	dirAim	=Matrix.CreateLookAt(Vector3.Zero, direction, Vector3.Up);
+			Matrix	dirAim	=Matrix.CreateLookAt(Vector3.Zero, -direction, Vector3.Up);
 
 			//Get the corners
 			Vector3[]	boxCorners	=bounds.GetCorners();
@@ -217,11 +217,14 @@ namespace UtilityLib
 			
 			//Create the view matrix
 			lightView	=Matrix.CreateLookAt(viewPos,
-				viewPos - -direction, Vector3.Up);
+				viewPos - direction, Vector3.Up);
 
 			//Create the ortho projection matrix
 			lightProj	=Matrix.CreateOrthographic(
 					boxSize.X, boxSize.Y, -boxSize.Z, boxSize.Z);
+
+			//get a good fake position for use in shader distance calcs
+			fakeOrigin	=viewPos;
         }
 
 

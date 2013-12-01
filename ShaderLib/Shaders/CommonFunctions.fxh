@@ -21,11 +21,10 @@ float3	mDanglyForce;
 shared Texture	mCellTable;
 
 //for shadowmaps
-shared Texture	mShadowTexture;					//2D or cube
-shared float3	mShadowLightPos;				//point light location
-shared bool		mbDirectional;					//sunnish or point
-shared float	mIntensity;						//intensity of the shadowing light
-shared float	mDirectionalShadowAttenuation;	//falloff for sunlight style shadows
+shared Texture	mShadowTexture;		//2D or cube
+shared float3	mShadowLightPos;	//point light location
+shared bool		mbDirectional;		//sunnish or point
+shared float	mShadowAtten;		//shadow attenuation
 
 //sky gradient
 shared float3	mSkyGradient0;	//horizon colour
@@ -296,7 +295,8 @@ float3 ComputeShadowCoord(float4 worldPos)
 
 	//texCoord xy, world depth in z
 	shadCoord.xy	=0.5f * lightPos.xy / lightPos.w + float2(0.5f, 0.5f);
-	shadCoord.z		=saturate((lightPos.z / lightPos.w) - 0.00001f);
+//	shadCoord.z		=saturate((lightPos.z / lightPos.w) - 0.00001f);
+	shadCoord.z		=distance(worldPos.xyz, mShadowLightPos);
 
 	//flip y
 	shadCoord.y	=1.0f - shadCoord.y;
@@ -306,18 +306,28 @@ float3 ComputeShadowCoord(float4 worldPos)
 
 float3 ApplyShadow2D(float3 shadCoord, float3 texLitColor)
 {
-	float	depth0	=tex2D(ShadowSampler2D, shadCoord).r;
-
-	if(depth0 < shadCoord.z && depth0 > (shadCoord.z - mDirectionalShadowAttenuation))
+	if(shadCoord.z > mShadowAtten)
 	{
-		texLitColor	*=0.2f;
+		return	texLitColor;
+	}
+
+	float	depth0	=tex2D(ShadowSampler2D, shadCoord).r;
+	if(depth0 < 2)
+	{
+		return	texLitColor;
+	}
+
+	if(depth0 < shadCoord.z)
+	{
+		//match atten, jontology convinced me
+		texLitColor	*=max(0.2, 1.0 - ((mShadowAtten - shadCoord.z) / mShadowAtten));
 	}
 	return	texLitColor;
 }
 
 float3 ApplyShadow3D(float3 shadDir, float depth, float3 texLitColor)
 {
-	if(depth > mIntensity)
+	if(depth > mShadowAtten)
 	{
 		return	texLitColor;
 	}
@@ -331,7 +341,7 @@ float3 ApplyShadow3D(float3 shadDir, float depth, float3 texLitColor)
 	if(depth0 < depth)
 	{
 		//match atten, jontology convinced me
-		texLitColor	*=max(0.2, 1.0 - ((mIntensity - depth) / mIntensity));
+		texLitColor	*=max(0.2, 1.0 - ((mShadowAtten - depth) / mShadowAtten));
 	}
 	return	texLitColor;
 }
@@ -343,9 +353,9 @@ float3	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float3 
 	if(bDirectional)
 	{
 		//pull direction vector from light matrix
-		shadDir.x	=mLightViewProj._m02;
-		shadDir.y	=mLightViewProj._m12;
-		shadDir.z	=mLightViewProj._m22;
+		shadDir.x	=-mLightViewProj._m02;
+		shadDir.y	=-mLightViewProj._m12;
+		shadDir.z	=-mLightViewProj._m22;
 	}
 	else
 	{

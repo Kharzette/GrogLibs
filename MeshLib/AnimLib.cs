@@ -85,7 +85,7 @@ namespace MeshLib
 
 
 		//ensure the passed in skeleton
-		//doesn't have any new bones
+		//has all the old bones
 		public bool CheckSkeleton(Skeleton sk)
 		{
 			if(mSkeleton == null)
@@ -99,9 +99,9 @@ namespace MeshLib
 			mSkeleton.GetBoneNames(existingBones);
 			sk.GetBoneNames(newBones);
 
-			foreach(string bone in newBones)
+			foreach(string bone in existingBones)
 			{
-				if(!existingBones.Contains(bone))
+				if(!newBones.Contains(bone))
 				{
 					return	false;
 				}
