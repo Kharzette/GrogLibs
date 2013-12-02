@@ -295,7 +295,6 @@ float3 ComputeShadowCoord(float4 worldPos)
 
 	//texCoord xy, world depth in z
 	shadCoord.xy	=0.5f * lightPos.xy / lightPos.w + float2(0.5f, 0.5f);
-//	shadCoord.z		=saturate((lightPos.z / lightPos.w) - 0.00001f);
 	shadCoord.z		=distance(worldPos.xyz, mShadowLightPos);
 
 	//flip y
@@ -304,44 +303,17 @@ float3 ComputeShadowCoord(float4 worldPos)
 	return	shadCoord;
 }
 
-float3 ApplyShadow2D(float3 shadCoord, float3 texLitColor)
+float3 ApplyShadow(float mapDepth, float pixDepth, float3 texLitColor)
 {
-	if(shadCoord.z > mShadowAtten)
+	if(mapDepth < 2)
 	{
 		return	texLitColor;
 	}
 
-	float	depth0	=tex2D(ShadowSampler2D, shadCoord).r;
-	if(depth0 < 2)
-	{
-		return	texLitColor;
-	}
-
-	if(depth0 < shadCoord.z)
+	if(mapDepth < pixDepth)
 	{
 		//match atten, jontology convinced me
-		texLitColor	*=max(0.2, 1.0 - ((mShadowAtten - shadCoord.z) / mShadowAtten));
-	}
-	return	texLitColor;
-}
-
-float3 ApplyShadow3D(float3 shadDir, float depth, float3 texLitColor)
-{
-	if(depth > mShadowAtten)
-	{
-		return	texLitColor;
-	}
-
-	float	depth0	=texCUBE(ShadowSampler3D, shadDir).r;
-	if(depth0 < 2)
-	{
-		return	texLitColor;
-	}
-
-	if(depth0 < depth)
-	{
-		//match atten, jontology convinced me
-		texLitColor	*=max(0.2, 1.0 - ((mShadowAtten - depth) / mShadowAtten));
+		texLitColor	*=max(0.2, 1.0 - ((mShadowAtten - pixDepth) / mShadowAtten));
 	}
 	return	texLitColor;
 }
@@ -368,18 +340,35 @@ float3	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float3 
 		return	color;
 	}
 
+	float	pixDepth;
+	float3	shadCoord;
+
 	if(bDirectional)
 	{
-		float3	shadCoord	=ComputeShadowCoord(worldPos);
-		color				=ApplyShadow2D(shadCoord, color);
+		shadCoord	=ComputeShadowCoord(worldPos);
+		pixDepth	=shadCoord.z;
 	}
 	else
 	{
-		float	dist	=length(shadDir);
-
-		shadDir	/=dist;
-		color	=ApplyShadow3D(shadDir, dist, color);
+		pixDepth	=length(shadDir);
+		shadDir		/=pixDepth;
 	}
-	return	color;
+
+	if(pixDepth > mShadowAtten)
+	{
+		return	color;
+	}
+
+	float	mapDepth;
+	if(bDirectional)
+	{
+		mapDepth	=tex2D(ShadowSampler2D, shadCoord.xy).r;
+	}
+	else
+	{
+		mapDepth	=texCUBE(ShadowSampler3D, shadDir).r;
+	}
+
+	return	ApplyShadow(mapDepth, pixDepth, color);
 }
 #endif	//_COMMONFUNCTIONSFXH
