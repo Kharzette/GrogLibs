@@ -192,6 +192,59 @@ namespace BSPZone
 		}
 
 
+		public List<ZoneLight> GetAffectingLights(Vector3 pos,
+			ZoneEntity sunEnt, GetStyleStrength gss, DynamicLights dyn)
+		{
+			List<Zone.ZoneLight>	inRange	=new List<Zone.ZoneLight>();
+			List<Zone.ZoneLight>	losd	=GetLightsInLOS(pos, dyn);
+
+			//check attenuation
+			foreach(Zone.ZoneLight zl in losd)
+			{
+				if(!zl.mbOn || zl.mbSun)
+				{
+					continue;
+				}
+
+				float	dist	=Vector3.Distance(zl.mPosition, pos);
+				float	atten	=0;
+
+				if(zl.mStyle != 0)
+				{
+					atten	=(zl.mStrength * gss(zl.mStyle));
+				}
+				else
+				{
+					atten	=zl.mStrength;
+				}
+
+				if(dist <= atten)
+				{
+					inRange.Add(zl);
+				}
+			}
+
+			//see if the sun is shining on pos
+			if(sunEnt != null && mLightCache.ContainsKey(sunEnt))
+			{
+				ZoneLight	sunLight	=mLightCache[sunEnt];				
+
+				Collision	col;
+				if(TraceAll(null, null, pos, -sunLight.mPosition * 10000 + pos, out col))
+				{
+					if(col.mFaceHit != null)
+					{
+						if(Misc.bFlagSet(SKY, col.mFaceHit.mFlags))
+						{
+							inRange.Add(mLightCache[sunEnt]);
+						}
+					}
+				}
+			}
+			return	inRange;
+		}
+
+
 		//for assigning character lights
 		public ZoneLight GetStrongestLightInLOS(Vector3 pos,
 			ZoneEntity sunEnt, GetStyleStrength gss, DynamicLights dyn)

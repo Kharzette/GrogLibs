@@ -27,6 +27,10 @@ namespace BSPZone
 		//current light values post update
 		Vector4	mLightColor;
 		Vector3	mCurLightDir;
+		Vector3	mCurLightPos;
+
+		//list of all affecting lights
+		List<Zone.ZoneLight>	mAffecting	=new List<Zone.ZoneLight>();
 
 		//constants
 		const float	LightLerpTime	=0.25f;	//in seconds
@@ -45,7 +49,7 @@ namespace BSPZone
 		}
 
 
-		public void GetCurrentValues(out Vector4 color0,
+		public bool GetCurrentValues(out Vector4 color0,
 			out float intensity,
 			out Vector3 lightPos,
 			out Vector3 lightDir,
@@ -53,19 +57,19 @@ namespace BSPZone
 		{
 			color0			=mLightColor;
 			lightDir		=mCurLightDir;
+			lightPos		=mCurLightPos;
 
-			if(mBestLight != null)
-			{
-				bDirectional	=mBestLight.mbSun;
-				lightPos		=mBestLight.mPosition;
-				intensity		=mBestLight.mStrength;
-			}
-			else
+			if(mBestLight == null)
 			{
 				bDirectional	=true;
-				lightPos		=Vector3.Zero;
 				intensity		=1;
+				return	false;
 			}
+
+			bDirectional	=mBestLight.mbSun;
+			intensity		=mBestLight.mStrength;
+
+			return	true;
 		}
 
 
@@ -79,8 +83,60 @@ namespace BSPZone
 		//opposite axiseesseseseeseses, use quat slerp?
 		public void Update(int msDelta, Vector3 pos, DynamicLights dyn)
 		{
-			Zone.ZoneLight	zl	=mZone.GetStrongestLightInLOS(pos, mSunEnt, mStyleStrength, dyn);
-			if(zl == null)
+			mAffecting	=mZone.GetAffectingLights(pos, mSunEnt, mStyleStrength, dyn);
+
+			//look for the strongest for the trilight lighting
+			float			bestDist	=float.MaxValue;
+			Zone.ZoneLight	bestLight	=null;
+			foreach(Zone.ZoneLight zl in mAffecting)
+			{
+				float	dist	=Vector3.Distance(pos, zl.mPosition);
+
+				if(dist >= zl.mStrength)
+				{
+					continue;
+				}
+
+				if(zl.mStyle != 0)
+				{
+					dist	-=(zl.mStrength * mStyleStrength(zl.mStyle));
+				}
+				else
+				{
+					dist	-=zl.mStrength;
+				}
+
+				if(dist < bestDist)
+				{
+					bestLight	=zl;
+					bestDist	=dist;
+				}
+			}
+
+			//check for a sun
+			foreach(Zone.ZoneLight zl in mAffecting)
+			{
+				if(!zl.mbSun || !zl.mbOn)
+				{
+					continue;
+				}
+
+				if(bestLight != null)
+				{
+					float	bestLightPower	=bestDist;
+					if(bestDist > bestLight.mStrength)
+					{
+						bestLightPower	*=(bestLight.mStrength / bestDist);
+					}
+
+					if(bestLightPower < zl.mStrength)
+					{
+						bestLight	=zl;
+					}				
+				}
+			}
+
+			if(bestLight == null)
 			{
 				//no lights in LOS, lerp to dark
 				if(mbLerpingToDark)
@@ -115,7 +171,7 @@ namespace BSPZone
 			float	curStrength	=0f;
 			bool	bReady		=false;
 
-			if(mBestLight != zl)
+			if(mBestLight != bestLight)
 			{
 				if(mBestLight == null)
 				{
@@ -124,10 +180,10 @@ namespace BSPZone
 					Vector4	start	=Vector4.Zero;
 					Vector4	end		=Vector4.Zero;
 
-					end.X	=zl.mColor.X;
-					end.Y	=zl.mColor.Y;
-					end.Z	=zl.mColor.Z;
-					end.W	=zl.mStrength;
+					end.X	=bestLight.mColor.X;
+					end.Y	=bestLight.mColor.Y;
+					end.Z	=bestLight.mColor.Z;
+					end.W	=bestLight.mStrength;
 
 					//see if still lerping
 					if(!mBestColorMover.Done())
@@ -139,26 +195,26 @@ namespace BSPZone
 						LightLerpTime, LightEaseIn, LightEaseOut);
 
 					//works for suns or points
-					curPos		=zl.mPosition;
+					curPos		=bestLight.mPosition;
 				}
 				else
 				{
-					if(!mBestLight.mbSun && !zl.mbSun		//lerping from point to point?
-						|| mBestLight.mbSun && zl.mbSun)	//or sun to sun?
+					if(!mBestLight.mbSun && !bestLight.mbSun		//lerping from point to point?
+						|| mBestLight.mbSun && bestLight.mbSun)	//or sun to sun?
 					{
 						//if still lerping, use the lerp position
 						if(!mBestLightMover.Done())
 						{
-							mBestLightMover.SetUpMove(mBestLightMover.GetPos(), zl.mPosition,
+							mBestLightMover.SetUpMove(mBestLightMover.GetPos(), bestLight.mPosition,
 								LightLerpTime, LightEaseIn, LightEaseOut);
 						}
 						else
 						{
-							mBestLightMover.SetUpMove(mBestLight.mPosition, zl.mPosition,
+							mBestLightMover.SetUpMove(mBestLight.mPosition, bestLight.mPosition,
 								LightLerpTime, LightEaseIn, LightEaseOut);
 						}
 					}
-					else if(!mBestLight.mbSun && zl.mbSun)	//from point to sun?
+					else if(!mBestLight.mbSun && bestLight.mbSun)	//from point to sun?
 					{
 						Vector3	lerpPos	=Vector3.Zero;
 
@@ -177,10 +233,10 @@ namespace BSPZone
 						lerpDir.Normalize();
 
 						//set up lerp
-						mBestLightMover.SetUpMove(lerpDir, zl.mPosition,
+						mBestLightMover.SetUpMove(lerpDir, bestLight.mPosition,
 							LightLerpTime, LightEaseIn, LightEaseOut);
 					}
-					else if(mBestLight.mbSun && !zl.mbSun)	//from sun to point
+					else if(mBestLight.mbSun && !bestLight.mbSun)	//from sun to point
 					{
 						Vector3	lerpDir	=Vector3.Zero;
 
@@ -198,7 +254,7 @@ namespace BSPZone
 						Vector3	lerpPos	=pos + (lerpDir * -1000f);
 
 						//set up lerp
-						mBestLightMover.SetUpMove(lerpPos, zl.mPosition,
+						mBestLightMover.SetUpMove(lerpPos, bestLight.mPosition,
 							LightLerpTime, LightEaseIn, LightEaseOut);
 					}
 
@@ -206,10 +262,10 @@ namespace BSPZone
 					Vector4	start	=Vector4.Zero;
 					Vector4	end		=Vector4.Zero;
 
-					end.X	=zl.mColor.X;
-					end.Y	=zl.mColor.Y;
-					end.Z	=zl.mColor.Z;
-					end.W	=zl.mStrength;
+					end.X	=bestLight.mColor.X;
+					end.Y	=bestLight.mColor.Y;
+					end.Z	=bestLight.mColor.Z;
+					end.W	=bestLight.mStrength;
 
 					//see if still lerping
 					if(mBestColorMover.Done())
@@ -227,7 +283,7 @@ namespace BSPZone
 					mBestColorMover.SetUpMove(start, end,
 						LightLerpTime, LightEaseIn, LightEaseOut);
 				}
-				mBestLight	=zl;
+				mBestLight	=bestLight;
 			}
 
 			if(!bReady)
@@ -259,7 +315,7 @@ namespace BSPZone
 				}
 			}
 
-			if(zl.mbSun)
+			if(bestLight.mbSun)
 			{
 				mCurLightDir	=-curPos;	//direction stored in pos
 				mLightColor.X	=curColor.X;
@@ -300,6 +356,7 @@ namespace BSPZone
 
 				mLightColor.W	=1.0f;
 				mCurLightDir	=curLightDir;
+				mCurLightPos	=curPos;
 			}
 		}
 
