@@ -358,7 +358,7 @@ namespace SharedForms
 
 			SharedForms.FormExtensions.Invoke(MaterialGrid, setSrc);
 
-			mMatLib.SetCellTexture(0);
+			mMatLib.SetCelTexture(0);
 		}
 
 

@@ -58,10 +58,19 @@ namespace MaterialLib
 		}
 
 
-		public void MakePostTarget(GraphicsDevice gd, string name,
+		public void MakePostTarget(GraphicsDevice gd, string name, bool bPreserve,
 			int resx, int resy, SurfaceFormat surf, DepthFormat depth)
 		{
-			RenderTarget2D	rend	=new RenderTarget2D(gd, resx, resy, false, surf, depth);
+			RenderTarget2D	rend	=null;
+
+			if(bPreserve)
+			{
+				rend	=new RenderTarget2D(gd, resx, resy, false, surf, depth, 0, RenderTargetUsage.PreserveContents);
+			}
+			else
+			{
+				rend	=new RenderTarget2D(gd, resx, resy, false, surf, depth);
+			}
 
 			mPostTargets.Add(name, rend);
 		}

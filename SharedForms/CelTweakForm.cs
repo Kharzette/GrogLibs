@@ -12,9 +12,9 @@ using UtilityLib;
 
 namespace SharedForms
 {
-	public partial class CellTweakForm : Form
+	public partial class CelTweakForm : Form
 	{
-		internal class CellThreshLevel
+		internal class CelThreshLevel
 		{
 			float	mThreshold;
 			float	mLevel;
@@ -32,7 +32,7 @@ namespace SharedForms
 			}
 		}
 
-		BindingList<CellThreshLevel>	mCellValues	=new BindingList<CellThreshLevel>();
+		BindingList<CelThreshLevel>	mCelValues	=new BindingList<CelThreshLevel>();
 
 		MaterialLib.MaterialLib	mMats;
 		GraphicsDevice			mGD;
@@ -40,7 +40,7 @@ namespace SharedForms
 		int	mLastTexSize	=16;
 
 
-		public CellTweakForm(GraphicsDevice gd, MaterialLib.MaterialLib mats)
+		public CelTweakForm(GraphicsDevice gd, MaterialLib.MaterialLib mats)
 		{
 			InitializeComponent();
 
@@ -52,44 +52,44 @@ namespace SharedForms
 
 			mMats.GetDefaultValues(out thresh, out level, out mLastTexSize);
 
-			CellThreshLevel	ct	=new CellThreshLevel();
+			CelThreshLevel	ct	=new CelThreshLevel();
 			ct.Level			=level[0];
 			ct.Threshold		=thresh[0];
 
-			mCellValues.Add(ct);
+			mCelValues.Add(ct);
 
-			ct				=new CellThreshLevel();
+			ct				=new CelThreshLevel();
 			ct.Level		=level[1];
 			ct.Threshold	=thresh[1];
-			mCellValues.Add(ct);
+			mCelValues.Add(ct);
 
-			ct				=new CellThreshLevel();
+			ct				=new CelThreshLevel();
 			ct.Level		=level[2];
 			ct.Threshold	=thresh[1];
-			mCellValues.Add(ct);
+			mCelValues.Add(ct);
 
 			TextureSize.Value	=mLastTexSize;
 
-			CellTweakGrid.DataSource	=mCellValues;
+			CelTweakGrid.DataSource	=mCelValues;
 		}
 
 
 		void OnApplyShading(object sender, EventArgs e)
 		{
-			int	numLevels	=mCellValues.Count;
+			int	numLevels	=mCelValues.Count;
 
 			float	[]thresholds	=new float[numLevels - 1];
 			float	[]levels		=new float[numLevels];
 
 			for(int i=0;i < (numLevels - 1);i++)
 			{
-				thresholds[i]	=mCellValues[i].Threshold;
-				levels[i]		=mCellValues[i].Level;
+				thresholds[i]	=mCelValues[i].Threshold;
+				levels[i]		=mCelValues[i].Level;
 			}
-			levels[numLevels - 1]	=mCellValues[numLevels - 1].Level;
+			levels[numLevels - 1]	=mCelValues[numLevels - 1].Level;
 
-			mMats.GenerateCellTexture(mGD, 0, (int)TextureSize.Value, thresholds, levels);
-			mMats.SetCellTexture(0);
+			mMats.GenerateCelTexture(mGD, 0, (int)TextureSize.Value, thresholds, levels);
+			mMats.SetCelTexture(0);
 		}
 
 

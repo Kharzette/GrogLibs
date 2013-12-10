@@ -295,7 +295,7 @@ float4 ParticleCellPS(VTex03 input) : COLOR
 
 	texLitColor	*=mSolidColour;
 
-	texLitColor.xyz	=CalcCellColor(texLitColor.xyz);
+	texLitColor.xyz	=CalcCelColor(texLitColor.xyz);
 
 	texLitColor	=pow(abs(texLitColor), 1 / 2.2);
 

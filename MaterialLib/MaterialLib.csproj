@@ -82,7 +82,7 @@
   <ItemGroup>
     <Compile Include="AlphaNode.cs" />
     <Compile Include="AlphaPool.cs" />
-    <Compile Include="CellShading.cs" />
+    <Compile Include="CelShading.cs" />
     <Compile Include="GUIStates.cs" />
     <Compile Include="ParameterKeeper.cs" />
     <Compile Include="PostProcess.cs" />

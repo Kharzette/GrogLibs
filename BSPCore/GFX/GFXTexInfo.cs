@@ -99,9 +99,9 @@ namespace BSPCore
 		}
 
 
-		public bool IsCellShaded()
+		public bool IsCelShaded()
 		{
-			return	((mFlags & TexInfo.CELLSHADE) != 0);
+			return	((mFlags & TexInfo.CELSHADE) != 0);
 		}
 
 
@@ -115,9 +115,9 @@ namespace BSPCore
 		{
 			string	matName	=tex.mMaterial;
 
-			if(tex.IsCellShaded())
+			if(tex.IsCelShaded())
 			{
-				matName	+="*Cell";
+				matName	+="*Cel";
 			}
 
 			if(tex.IsLightMapped())

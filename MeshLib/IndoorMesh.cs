@@ -67,6 +67,10 @@ namespace MeshLib
 		public delegate void RenderExternal(MaterialLib.AlphaPool ap,
 			Vector3 camPos, Matrix view, Matrix proj);
 
+		//render shadowing objects
+		public delegate void RenderShadows(int shadIndex,
+			Vector3 camPos, Matrix view, Matrix proj);
+
 		//tool side delegates for building the indoor mesh
 		//from raw parts
 		public delegate bool BuildLMRenderData(GraphicsDevice g,
@@ -234,41 +238,56 @@ namespace MeshLib
 
 		//helpful overload for doing vis testing
 		public void Draw(GraphicsDevice gd, Vector3 viewPos,
-			GameCamera gameCam,
+			GameCamera gameCam, int numShadows,
 			IsMaterialVisible bMatVis,
 			GetModelMatrix getModMatrix,
-			RenderExternal rendExternal)
+			RenderExternal rendExternal,
+			RenderShadows renderShadows)
 		{
 			//update materiallib wvp
 			mMatLib.UpdateWVP(Matrix.Identity, gameCam.View, gameCam.Projection, viewPos);
 
 //			gd.Clear(Color.CornflowerBlue);
 
-			DrawMaterialsDC(gd, viewPos, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, viewPos, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, viewPos, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, viewPos, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, viewPos, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+			//draw solids first
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 
-			//alphas
-			DrawMaterialsDC(gd, viewPos, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, viewPos, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
-			DrawMaterialsDC(gd, viewPos, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+			//draw shadows
+			for(int i=0;i < numShadows;i++)
+			{
+				//draw shad and set up materials for second pass
+				renderShadows(i, viewPos, gameCam.View, gameCam.Projection);
+
+				//draw second pass with shadowing
+				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+			}
+
+			//draw alphas
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
 
 			//draw outside stuff
 			rendExternal(mAlphaPool, viewPos, gameCam.View, gameCam.Projection);
-
 			mAlphaPool.DrawAll(gd, mMatLib, viewPos);
 		}
 
 
 		public void Draw(GraphicsDevice gd,
-			GameCamera gameCam,
+			GameCamera gameCam, int numShadows,
 			IsMaterialVisible bMatVis,
 			GetModelMatrix getModMatrix,
-			RenderExternal rendExternal)
+			RenderExternal rendExternal,
+			RenderShadows rendShads)
 		{
-			Draw(gd, gameCam.Position, gameCam, bMatVis, getModMatrix, rendExternal);
+			Draw(gd, gameCam.Position, gameCam, numShadows, bMatVis, getModMatrix, rendExternal, rendShads);
 		}
 
 
@@ -304,7 +323,8 @@ namespace MeshLib
 
 
 		//for opaques with models
-		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos, GetModelMatrix getModMatrix,
+		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos,
+			int pass, GetModelMatrix getModMatrix,
 			VertexBuffer vb, IndexBuffer ib, Dictionary<int, List<DrawCall>> dcs,
 			IsMaterialVisible bMatVis)
 		{
@@ -349,8 +369,17 @@ namespace MeshLib
 
 					mat.Value.ApplyShaderParameters(fx);
 
+					if(fx.CurrentTechnique.Passes.Count <= pass)
+					{
+						idx++;
+						continue;
+					}
+
 					//set renderstates from material
-					mat.Value.ApplyRenderStates(g);
+					if(pass == 0)
+					{
+						mat.Value.ApplyRenderStates(g);
+					}
 
 					//set world mat from model transforms
 					if(getModMatrix != null)
@@ -358,7 +387,7 @@ namespace MeshLib
 						fx.Parameters["mWorld"].SetValue(getModMatrix(modCall.Key));
 					}
 
-					fx.CurrentTechnique.Passes[0].Apply();
+					fx.CurrentTechnique.Passes[pass].Apply();
 
 					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
 						0, call.mMinVertIndex, call.mNumVerts, call.mStartIndex, call.mPrimCount);
@@ -369,7 +398,8 @@ namespace MeshLib
 
 
 		//this one is for alphas with models
-		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos, GetModelMatrix getModMatrix,
+		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos,
+			int pass, GetModelMatrix getModMatrix,
 			VertexBuffer vb, IndexBuffer ib, Dictionary<int, List<List<DrawCall>>> dcs,
 			IsMaterialVisible bMatVis)
 		{

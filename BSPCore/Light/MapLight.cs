@@ -709,7 +709,7 @@ namespace BSPCore
 						}
 						default:
 						{
-							CoreEvents.Print("ApplyLightsToFace:  Invalid light.\n");
+							CoreEvents.Print("VertexShadeFace:  Invalid light.\n");
 							return	false;
 						}
 					}
@@ -940,76 +940,79 @@ namespace BSPCore
 			}
 
 			//sunlight pass
-			for(int v=0;v < facePoints.Length;v++)
+			if(sunLight != null)
 			{
-				Int32	nodeLandedIn	=FindNodeLandedIn(0, facePoints[v]);
-				Int32	leaf			=-(nodeLandedIn + 1);
-
-				if(leaf < 0 || leaf >= mGFXLeafs.Length)
+				for(int v=0;v < facePoints.Length;v++)
 				{
-					CoreEvents.Print("ApplyLightsToFace:  Invalid leaf num.\n");
-					return	false;
-				}
+					Int32	nodeLandedIn	=FindNodeLandedIn(0, facePoints[v]);
+					Int32	leaf			=-(nodeLandedIn + 1);
 
-				Int32	clust	=mGFXLeafs[leaf].mCluster;
-				if(clust < 0)
-				{
-					continue;
-				}
+					if(leaf < 0 || leaf >= mGFXLeafs.Length)
+					{
+						CoreEvents.Print("ApplyLightsToFace:  Invalid leaf num.\n");
+						return	false;
+					}
 
-				if(clust >= mGFXClusters.Length)
-				{
-					CoreEvents.Print("*WARNING* ApplyLightsToFace:  Invalid cluster num.\n");
-					continue;
-				}
-
-				//do sunlight first if needed
-				//this vis check doesn't actually work
-				//sometimes you might have no vis to a sky face
-				//but still need to cast rays if fully darkened
-				if(sunLight != null && skyClusters.Contains(clust))
-				{
-					//Find the angle between the light, and the face normal
-					Vector3	sunRay		=facePoints[v] + sunLight.mNormal * -SunRayDist;
-					Vector3	normRay		=sunRay;
-					normRay.Normalize();
-
-					float	angle	=Vector3.Dot(normRay, norm);
-					if(angle <= 0.001f)
+					Int32	clust	=mGFXLeafs[leaf].mCluster;
+					if(clust < 0)
 					{
 						continue;
 					}
 
-					Vector3	colResult	=Vector3.Zero;
-					GFXFace	faceHit		=null;
-					if(RayCollideToFace(facePoints[v], sunRay, modelIndex, modelInv, ref faceHit))
+					if(clust >= mGFXClusters.Length)
 					{
-						if(faceHit != null)
+						CoreEvents.Print("*WARNING* ApplyLightsToFace:  Invalid cluster num.\n");
+						continue;
+					}
+
+					//do sunlight first if needed
+					//this vis check doesn't actually work
+					//sometimes you might have no vis to a sky face
+					//but still need to cast rays if fully darkened
+					if(skyClusters.Contains(clust))
+					{
+						//Find the angle between the light, and the face normal
+						Vector3	sunRay		=facePoints[v] + sunLight.mNormal * -SunRayDist;
+						Vector3	normRay		=sunRay;
+						normRay.Normalize();
+
+						float	angle	=Vector3.Dot(normRay, norm);
+						if(angle <= 0.001f)
 						{
-							if(mGFXTexInfos[faceHit.mTexInfo].IsSky())
+							continue;
+						}
+
+						Vector3	colResult	=Vector3.Zero;
+						GFXFace	faceHit		=null;
+						if(RayCollideToFace(facePoints[v], sunRay, modelIndex, modelInv, ref faceHit))
+						{
+							if(faceHit != null)
 							{
-								Int32	lightType	=sunLight.mLType;
-
-								//If the data for this LType has not been allocated, allocate it now...
-								lightInfo.AllocLightType(lightType, facePoints.Length);
-
-								Vector3	[]rgb	=lightInfo.GetRGBLightData(lightType);
-								if(rgb == null)
+								if(mGFXTexInfos[faceHit.mTexInfo].IsSky())
 								{
-									continue;	//max light styles on face?
-								}
+									Int32	lightType	=sunLight.mLType;
 
-								rgb[v]	+=sunLight.mColor * (angle * scale * sunLight.mIntensity);
+									//If the data for this LType has not been allocated, allocate it now...
+									lightInfo.AllocLightType(lightType, facePoints.Length);
+
+									Vector3	[]rgb	=lightInfo.GetRGBLightData(lightType);
+									if(rgb == null)
+									{
+										continue;	//max light styles on face?
+									}
+
+									rgb[v]	+=sunLight.mColor * (angle * scale * sunLight.mIntensity);
+								}
+							}
+							else
+							{
+								CoreEvents.Print("Light ray hit with no face returned!\n");
 							}
 						}
 						else
 						{
-							CoreEvents.Print("Light ray hit with no face returned!\n");
+							CoreEvents.Print("Sunlight ray miss!\n");
 						}
-					}
-					else
-					{
-						CoreEvents.Print("Sunlight ray miss!\n");
 					}
 				}
 			}

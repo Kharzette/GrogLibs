@@ -973,11 +973,11 @@ namespace BSPCore
 					mat.ShaderName	="Shaders\\LightMap";
 				}
 
-				bool	bCell	=false;
+				bool	bCel	=false;
 				string	mn		=matName;
-				if(mn.Contains("*Cell"))
+				if(mn.Contains("*Cel"))
 				{
-					bCell	=true;
+					bCel	=true;
 				}
 
 				mat.Name	=mn;
@@ -987,9 +987,9 @@ namespace BSPCore
 				{
 					mat.BlendState	=BlendState.AlphaBlend;
 					mat.DepthState	=DepthStencilState.DepthRead;
-					if(bCell)
+					if(bCel)
 					{
-						mat.Technique	="VLitCell";
+						mat.Technique	="VertexLightingCel";
 					}
 					else
 					{
@@ -1004,9 +1004,9 @@ namespace BSPCore
 						EffectParameterClass.Object,
 						EffectParameterType.Texture, 1,
 						"LightMapAtlas");
-					if(bCell)
+					if(bCel)
 					{
-						mat.Technique	="LightMapAlphaCell";
+						mat.Technique	="LightMapAlphaCel";
 					}
 					else
 					{
@@ -1021,9 +1021,9 @@ namespace BSPCore
 						EffectParameterClass.Object,
 						EffectParameterType.Texture, 1,
 						"LightMapAtlas");
-					if(bCell)
+					if(bCel)
 					{
-						mat.Technique	="LightMapAnimAlphaCell";
+						mat.Technique	="LightMapAnimAlphaCel";
 					}
 					else
 					{
@@ -1032,9 +1032,9 @@ namespace BSPCore
 				}
 				else if(mn.EndsWith("*VertLit"))
 				{
-					if(bCell)
+					if(bCel)
 					{
-						mat.Technique	="VLitCell";
+						mat.Technique	="VertexLightingCel";
 					}
 					else
 					{
@@ -1061,9 +1061,9 @@ namespace BSPCore
 				}
 				else if(mn.EndsWith("*Anim"))
 				{
-					if(bCell)
+					if(bCel)
 					{
-						mat.Technique	="LightMapAnimCell";
+						mat.Technique	="LightMapAnimCel";
 					}
 					else
 					{
@@ -1076,9 +1076,9 @@ namespace BSPCore
 				}
 				else
 				{
-					if(bCell)
+					if(bCel)
 					{
-						mat.Technique	="LightMapCell";
+						mat.Technique	="LightMapCel";
 					}
 					else
 					{

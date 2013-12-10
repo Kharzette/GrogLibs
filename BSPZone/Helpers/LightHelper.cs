@@ -49,6 +49,12 @@ namespace BSPZone
 		}
 
 
+		public List<Zone.ZoneLight> GetAffecting()
+		{
+			return	mAffecting;
+		}
+
+
 		public bool GetCurrentValues(out Vector4 color0,
 			out float intensity,
 			out Vector3 lightPos,

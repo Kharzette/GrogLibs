@@ -9,9 +9,9 @@ namespace MaterialLib
 {
 	public partial class MaterialLib
 	{
-		//cell shading lookup textures
+		//cel shading lookup textures
 		//allows for many different types of shading
-		Texture2D	[]mCellTex;
+		Texture2D	[]mCelTex;
 
 		//constants for a world preset
 		//looks good with bsp lightmapped levels
@@ -34,9 +34,9 @@ namespace MaterialLib
 		const float	CharacterLevel3		=0.1f;
 
 
-		public void InitCellShading(int numShadingVariations)
+		public void InitCelShading(int numShadingVariations)
 		{
-			mCellTex	=new Texture2D[numShadingVariations];
+			mCelTex	=new Texture2D[numShadingVariations];
 		}
 
 
@@ -55,16 +55,16 @@ namespace MaterialLib
 	}
 
 
-		public void SetCellTexture(int index)
+		public void SetCelTexture(int index)
 		{			
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
-				mat.Value.SetParameter("mCellTable", mCellTex[index]);
+				mat.Value.SetParameter("mCelTable", mCelTex[index]);
 			}
 		}
 
 
-		public void GenerateCellTexturePreset(GraphicsDevice gd, bool bCharacter, int index)
+		public void GenerateCelTexturePreset(GraphicsDevice gd, bool bCharacter, int index)
 		{
 			float	[]thresholds;
 			float	[]levels;
@@ -98,21 +98,21 @@ namespace MaterialLib
 				size			=WorldLookupSize;
 			}
 
-			GenerateCellTexture(gd, index, size, thresholds, levels);
+			GenerateCelTexture(gd, index, size, thresholds, levels);
 		}
 
 
-		//generate a lookup texture for cell shading
+		//generate a lookup texture for cel shading
 		//this allows a game to specify exactly instead of using a preset
-		public void GenerateCellTexture(GraphicsDevice gd,
+		public void GenerateCelTexture(GraphicsDevice gd,
 			int index, int size, float []thresholds, float []levels)
 		{
-			if(mCellTex == null)
+			if(mCelTex == null)
 			{
 				return;	//need to init with a size first
 			}
 
-			mCellTex[index]	=new Texture2D(gd,
+			mCelTex[index]	=new Texture2D(gd,
 				size, size, false, SurfaceFormat.Color);
 
 			Color	[]data	=new Color[size * size];
@@ -125,18 +125,18 @@ namespace MaterialLib
 
 				Vector3	color	=Vector3.Zero;
 
-				color.X	=CellMe(xPercent, thresholds, levels);
+				color.X	=CelMe(xPercent, thresholds, levels);
 				color.Y	=color.X;
 				color.Z	=color.X;
 
 				data[x]	=new Color(color);
 			}
 
-			mCellTex[index].SetData<Color>(data);
+			mCelTex[index].SetData<Color>(data);
 		}
 
 
-		float	CellMe(float val, float []thresholds, float []levels)
+		float	CelMe(float val, float []thresholds, float []levels)
 		{
 			float	ret	=-69f;
 

@@ -446,7 +446,7 @@ float4 SimplePS(PSInput input) : COLOR
 							
 //	texLitColor.rgb	=lerp(texLitColor, mFogColor, fogFactor);
 
-	texLitColor.rgb	=CalcCellColor(texLitColor.rgb);
+	texLitColor.rgb	=CalcCelColor(texLitColor.rgb);
 
 	texLitColor.rgb	=lerp(texLitColor, mFogColor, fogFactor);
 
@@ -471,7 +471,7 @@ float4 SimpleSkyGradientFogPS(PSInput input) : COLOR
 	
 	texLitColor	*=input.Color;
 
-	texLitColor	=CalcCellColor(texLitColor);
+	texLitColor	=CalcCelColor(texLitColor);
 
 	float3	skyColor	=CalcSkyColorGradient(input.WorldPos.xyz);
 

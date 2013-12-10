@@ -60,7 +60,7 @@ namespace MaterialLib
 		Int32	mPrimCount;
 
 		bool		mbParticle;	//particle draw?
-		bool		mbCell;
+		bool		mbCel;
 		Vector4		mColor;
 		Effect		mFX;
 		Texture2D	mTex;
@@ -88,14 +88,14 @@ namespace MaterialLib
 
 		internal AlphaNode(Vector3 sortPoint,
 			VertexBuffer vb, Int32 primCount,
-			bool bCell, Vector4 color,
+			bool bCel, Vector4 color,
 			Effect fx, Texture2D tex,
 			Matrix view, Matrix proj)
 		{
 			mSortPoint	=sortPoint;
 			mVB			=vb;
 			mPrimCount	=primCount;
-			mbCell		=bCell;
+			mbCel		=bCel;
 			mColor		=color;
 			mFX			=fx;
 			mTex		=tex;
@@ -132,9 +132,9 @@ namespace MaterialLib
 			g.BlendState		=BlendState.Additive;
 			g.RasterizerState	=RasterizerState.CullCounterClockwise;
 
-			if(mbCell)
+			if(mbCel)
 			{
-				mFX.CurrentTechnique	=mFX.Techniques["ParticleCell"];
+				mFX.CurrentTechnique	=mFX.Techniques["ParticleCel"];
 			}
 			else
 			{

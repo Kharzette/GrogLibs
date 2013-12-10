@@ -28,7 +28,7 @@ namespace ParticleLib
 
 		int		mNumParticles;
 		int		mMaxParticles;
-		bool	mbCell;
+		bool	mbCel;
 
 
 		internal ParticleViewDynVB(GraphicsDevice gd, Effect fx, Texture2D tex, int maxParticles)
@@ -117,7 +117,7 @@ namespace ParticleLib
 
 		internal void Draw(AlphaPool ap, Vector3 pos, Vector4 color, Matrix view, Matrix proj)
 		{
-			ap.StoreParticleDraw(pos, mVB, mNumParticles * 2, mbCell, color, mFX, mTex, view, proj);
+			ap.StoreParticleDraw(pos, mVB, mNumParticles * 2, mbCel, color, mFX, mTex, view, proj);
 		}
 
 
@@ -134,9 +134,9 @@ namespace ParticleLib
 			mGD.BlendState			=BlendState.Additive;
 			mGD.RasterizerState		=RasterizerState.CullCounterClockwise;
 
-			if(mbCell)
+			if(mbCel)
 			{
-				mFX.CurrentTechnique	=mFX.Techniques["ParticleCell"];
+				mFX.CurrentTechnique	=mFX.Techniques["ParticleCel"];
 			}
 			else
 			{
@@ -156,15 +156,15 @@ namespace ParticleLib
 		}
 
 
-		internal bool GetCell()
+		internal bool GetCel()
 		{
-			return	mbCell;
+			return	mbCel;
 		}
 
 
-		internal void SetCell(bool bOn)
+		internal void SetCel(bool bOn)
 		{
-			mbCell	=bOn;
+			mbCel	=bOn;
 		}
 
 
@@ -190,7 +190,7 @@ namespace ParticleLib
 				texName	=texName.Substring(texName.LastIndexOf('\\') + 1);
 			}
 
-			ParticleBoss.AddField(ref ent, "cell_shade", (mbCell)? "1" : "0");
+			ParticleBoss.AddField(ref ent, "cel_shade", (mbCel)? "1" : "0");
 			ParticleBoss.AddField(ref ent, "tex_name", texName);
 
 			return	ent;

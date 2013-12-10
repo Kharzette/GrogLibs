@@ -60,7 +60,7 @@ namespace ParticleLib
 		}
 
 
-		public int CreateEmitter(string texName, Vector4 color, bool bCell,
+		public int CreateEmitter(string texName, Vector4 color, bool bCel,
 			Emitter.Shapes shape, float shapeSize,
 			int maxParticles, Vector3 pos,
 			int gravYaw, int gravPitch, float gravStr,
@@ -94,7 +94,7 @@ namespace ParticleLib
 
 			mEmitters.Add(mNextIndex++, ed);
 
-			pvd.SetCell(bCell);
+			pvd.SetCel(bCel);
 
 			return	mNextIndex - 1;
 		}
@@ -177,23 +177,23 @@ namespace ParticleLib
 		}
 
 
-		public void SetCellByIndex(int index, bool bOn)
+		public void SetCelByIndex(int index, bool bOn)
 		{
 			if(!mEmitters.ContainsKey(index))
 			{
 				return;
 			}
-			mEmitters[index].mView.SetCell(bOn);
+			mEmitters[index].mView.SetCel(bOn);
 		}
 
 
-		public bool GetCellByIndex(int index)
+		public bool GetCelByIndex(int index)
 		{
 			if(!mEmitters.ContainsKey(index))
 			{
 				return	false;
 			}
-			return	mEmitters[index].mView.GetCell();
+			return	mEmitters[index].mView.GetCel();
 		}
 
 

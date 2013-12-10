@@ -1,6 +1,6 @@
 ﻿namespace SharedForms
 {
-	partial class CellTweakForm
+	partial class CelTweakForm
 	{
 		/// <summary>
 		/// Required designer variable.
@@ -28,23 +28,23 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.CellTweakGrid = new System.Windows.Forms.DataGridView();
+			this.CelTweakGrid = new System.Windows.Forms.DataGridView();
 			this.ApplyShading = new System.Windows.Forms.Button();
 			this.TextureSize = new System.Windows.Forms.NumericUpDown();
-			((System.ComponentModel.ISupportInitialize)(this.CellTweakGrid)).BeginInit();
+			((System.ComponentModel.ISupportInitialize)(this.CelTweakGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.TextureSize)).BeginInit();
 			this.SuspendLayout();
 			// 
-			// CellTweakGrid
+			// CelTweakGrid
 			// 
-			this.CellTweakGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+			this.CelTweakGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.CellTweakGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-			this.CellTweakGrid.Location = new System.Drawing.Point(12, 12);
-			this.CellTweakGrid.Name = "CellTweakGrid";
-			this.CellTweakGrid.Size = new System.Drawing.Size(260, 208);
-			this.CellTweakGrid.TabIndex = 0;
+			this.CelTweakGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+			this.CelTweakGrid.Location = new System.Drawing.Point(12, 12);
+			this.CelTweakGrid.Name = "CelTweakGrid";
+			this.CelTweakGrid.Size = new System.Drawing.Size(260, 208);
+			this.CelTweakGrid.TabIndex = 0;
 			// 
 			// ApplyShading
 			// 
@@ -80,7 +80,7 @@
             0});
 			this.TextureSize.ValueChanged += new System.EventHandler(this.OnTextureSizeChanged);
 			// 
-			// CellTweakForm
+			// CelTweakForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -88,10 +88,10 @@
 			this.ControlBox = false;
 			this.Controls.Add(this.TextureSize);
 			this.Controls.Add(this.ApplyShading);
-			this.Controls.Add(this.CellTweakGrid);
-			this.Name = "CellTweakForm";
-			this.Text = "CellTweakForm";
-			((System.ComponentModel.ISupportInitialize)(this.CellTweakGrid)).EndInit();
+			this.Controls.Add(this.CelTweakGrid);
+			this.Name = "CelTweakForm";
+			this.Text = "Cel Tweak";
+			((System.ComponentModel.ISupportInitialize)(this.CelTweakGrid)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.TextureSize)).EndInit();
 			this.ResumeLayout(false);
 
@@ -99,7 +99,7 @@
 
 		#endregion
 
-		private System.Windows.Forms.DataGridView CellTweakGrid;
+		private System.Windows.Forms.DataGridView CelTweakGrid;
 		private System.Windows.Forms.Button ApplyShading;
 		private System.Windows.Forms.NumericUpDown TextureSize;
 	}

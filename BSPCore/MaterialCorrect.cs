@@ -17,9 +17,9 @@ namespace BSPCore
 			{
 				if(matName.Contains('*'))
 				{
-					//only allow cell, all other special
+					//only allow cel, all other special
 					//materials will have their own category
-					if(!matName.EndsWith("*Cell"))
+					if(!matName.EndsWith("*Cel"))
 					{
 						return	false;
 					}

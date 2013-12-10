@@ -17,8 +17,8 @@ shared float3	mEyePos;
 //for dangly shaders
 float3	mDanglyForce;
 
-//outline / cell related
-shared Texture	mCellTable;
+//outline / cel related
+shared Texture	mCelTable;
 
 //for shadowmaps
 shared Texture	mShadowTexture;		//2D or cube
@@ -37,9 +37,9 @@ float	mSpecPower;
 #include "Types.fxh"
 
 
-sampler CellSampler = sampler_state
+sampler CelSampler = sampler_state
 {
-	Texture	=(mCellTable);
+	Texture	=(mCelTable);
 
 	MinFilter	=Point;
 	MagFilter	=Point;
@@ -260,14 +260,14 @@ float3 ComputeGoodSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 li
 	return	specular;
 }
 
-//snaps a color to a cellish range
-float3 CalcCellColor(float3 colVal)
+//snaps a color to a celish range
+float3 CalcCelColor(float3 colVal)
 {
 	float3	ret;
 
-	ret.x	=tex1D(CellSampler, colVal.x);
-	ret.y	=tex1D(CellSampler, colVal.y);
-	ret.z	=tex1D(CellSampler, colVal.z);
+	ret.x	=tex1D(CelSampler, colVal.x);
+	ret.y	=tex1D(CelSampler, colVal.y);
+	ret.z	=tex1D(CelSampler, colVal.z);
 
 	return	ret;
 }
@@ -313,7 +313,7 @@ float3 ApplyShadow(float mapDepth, float pixDepth, float3 texLitColor)
 	if(mapDepth < pixDepth)
 	{
 		//match atten, jontology convinced me
-		texLitColor	*=max(0.2, 1.0 - ((mShadowAtten - pixDepth) / mShadowAtten));
+		texLitColor	+=min(0.2, ((mShadowAtten - pixDepth) / mShadowAtten));
 	}
 	return	texLitColor;
 }

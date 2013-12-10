@@ -25,7 +25,7 @@ namespace BSPCore
 		public const UInt32	TRANSPARENT	=(1<<4);
 		public const UInt32	GOURAUD		=(1<<5);
 		public const UInt32	FLAT		=(1<<6);
-		public const UInt32	CELLSHADE	=(1<<7);
+		public const UInt32	CELSHADE	=(1<<7);
 		public const UInt32	NO_LIGHTMAP	=(1<<15);
 
 

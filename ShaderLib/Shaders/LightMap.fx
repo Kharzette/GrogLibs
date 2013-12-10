@@ -264,7 +264,7 @@ float4 LMCellPixelShader(VTex04Tex14Tex24 input) : COLOR0
 	float3	lm	=tex2D(LightMapSampler, input.TexCoord0.zw);
 
 //	lm	=ShadowColor(mbDirectional, input.TexCoord1, lm);
-	lm	=CalcCellColor(lm);
+	lm	=CalcCelColor(lm);
 
 	color.rgb	*=lm;
 
@@ -393,7 +393,7 @@ float4 VLitCellPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 //	inColor.xyz	=ShadowColor(mbDirectional, worldPos, inColor.xyz);
 
 	//cellshade the vertex light + shadow
-	inColor.xyz	=CalcCellColor(inColor.xyz);
+	inColor.xyz	=CalcCelColor(inColor.xyz);
 
 	color.rgb	*=inColor;
 
@@ -492,7 +492,7 @@ float4 SkyCellPixelShader(VCubeTex0 input) : COLOR0
 
 		float4	texel	=texCUBE(SkySampler, eyeVec);
 
-		texel.xyz	=CalcCellColor(texel.xyz);
+		texel.xyz	=CalcCelColor(texel.xyz);
 	
 		return	texel;
 	}
@@ -605,7 +605,7 @@ float4 LMAnimCellPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 
 	//shadow map
 //	lm	=ShadowColor(mbDirectional, input.TexCoord4, lm);
-	lm	=CalcCellColor(lm);
+	lm	=CalcCelColor(lm);
 
 	color.rgb	*=lm;
 

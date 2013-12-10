@@ -73,11 +73,11 @@
     <Compile Include="BSPForm.Designer.cs">
       <DependentUpon>BSPForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="CellTweakForm.cs">
+    <Compile Include="CelTweakForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="CellTweakForm.Designer.cs">
-      <DependentUpon>CellTweakForm.cs</DependentUpon>
+    <Compile Include="CelTweakForm.Designer.cs">
+      <DependentUpon>CelTweakForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CollisionForm.cs">
       <SubType>Form</SubType>
@@ -153,8 +153,8 @@
     <EmbeddedResource Include="BSPForm.resx">
       <DependentUpon>BSPForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="CellTweakForm.resx">
-      <DependentUpon>CellTweakForm.cs</DependentUpon>
+    <EmbeddedResource Include="CelTweakForm.resx">
+      <DependentUpon>CelTweakForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="CollisionForm.resx">
       <DependentUpon>CollisionForm.cs</DependentUpon>
