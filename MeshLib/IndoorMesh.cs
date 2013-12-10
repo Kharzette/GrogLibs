@@ -67,10 +67,6 @@ namespace MeshLib
 		public delegate void RenderExternal(MaterialLib.AlphaPool ap,
 			Vector3 camPos, Matrix view, Matrix proj);
 
-		//render shadowing objects
-		public delegate void RenderShadows(int shadIndex,
-			Vector3 camPos, Matrix view, Matrix proj);
-
 		//tool side delegates for building the indoor mesh
 		//from raw parts
 		public delegate bool BuildLMRenderData(GraphicsDevice g,
@@ -242,7 +238,7 @@ namespace MeshLib
 			IsMaterialVisible bMatVis,
 			GetModelMatrix getModMatrix,
 			RenderExternal rendExternal,
-			RenderShadows renderShadows)
+			MaterialLib.AlphaPool.RenderShadows renderShadows)
 		{
 			//update materiallib wvp
 			mMatLib.UpdateWVP(Matrix.Identity, gameCam.View, gameCam.Projection, viewPos);
@@ -260,7 +256,7 @@ namespace MeshLib
 			for(int i=0;i < numShadows;i++)
 			{
 				//draw shad and set up materials for second pass
-				renderShadows(i, viewPos, gameCam.View, gameCam.Projection);
+				renderShadows(i);
 
 				//draw second pass with shadowing
 				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
@@ -276,7 +272,7 @@ namespace MeshLib
 
 			//draw outside stuff
 			rendExternal(mAlphaPool, viewPos, gameCam.View, gameCam.Projection);
-			mAlphaPool.DrawAll(gd, mMatLib, viewPos);
+			mAlphaPool.DrawAll(gd, mMatLib, viewPos, numShadows, renderShadows);
 		}
 
 
@@ -285,7 +281,7 @@ namespace MeshLib
 			IsMaterialVisible bMatVis,
 			GetModelMatrix getModMatrix,
 			RenderExternal rendExternal,
-			RenderShadows rendShads)
+			MaterialLib.AlphaPool.RenderShadows rendShads)
 		{
 			Draw(gd, gameCam.Position, gameCam, numShadows, bMatVis, getModMatrix, rendExternal, rendShads);
 		}

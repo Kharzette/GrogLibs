@@ -106,7 +106,8 @@ namespace MaterialLib
 		}
 
 
-		internal void Draw(GraphicsDevice g, MaterialLib mlib)
+		internal void Draw(GraphicsDevice g, MaterialLib mlib,
+			int numShadows, AlphaPool.RenderShadows renderShadows)
 		{
 			if(mbParticle)
 			{
@@ -114,7 +115,7 @@ namespace MaterialLib
 			}
 			else
 			{
-				DrawRegular(g, mlib);
+				DrawRegular(g, mlib, numShadows, renderShadows);
 			}
 		}
 
@@ -154,7 +155,8 @@ namespace MaterialLib
 		}
 
 
-		void DrawRegular(GraphicsDevice g, MaterialLib mlib)
+		void DrawRegular(GraphicsDevice g, MaterialLib mlib,
+			int numShadows, AlphaPool.RenderShadows renderShadows)
 		{
             g.SetVertexBuffer(mVB, 0);
 			g.Indices	=mIB;
@@ -181,6 +183,25 @@ namespace MaterialLib
 			g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
 				mBaseVertex, mMinVertexIndex, mNumVerts,
 				mStartIndex, mPrimCount);
+
+			//draw shadows
+			for(int i=0;i < numShadows;i++)
+			{
+				renderShadows(i);
+
+				g.SetVertexBuffer(mVB, 0);
+				g.Indices	=mIB;
+
+				mlib.ApplyParameters(mMaterial.Name);
+
+				fx.Parameters["mWorld"].SetValue(mWorldMat);
+
+				fx.CurrentTechnique.Passes[1].Apply();
+
+				g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+					mBaseVertex, mMinVertexIndex, mNumVerts,
+					mStartIndex, mPrimCount);
+			}
 		}
 
 

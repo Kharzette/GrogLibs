@@ -10,6 +10,9 @@ namespace MaterialLib
 {
 	public class AlphaPool
 	{
+		//render shadowing objects
+		public delegate void RenderShadows(int shadIndex);
+
 		List<AlphaNode>	mAlphas	=new List<AlphaNode>();
 
 
@@ -39,13 +42,14 @@ namespace MaterialLib
 		}
 
 
-		public void DrawAll(GraphicsDevice g, MaterialLib mlib, Vector3 eyePos)
+		public void DrawAll(GraphicsDevice g, MaterialLib mlib, Vector3 eyePos,
+			int numShadows, RenderShadows rendShad)
 		{
 			Sort(eyePos);
 
 			foreach(AlphaNode an in mAlphas)
 			{
-				an.Draw(g, mlib);
+				an.Draw(g, mlib, numShadows, rendShad);
 			}
 
 			//clear nodes when done

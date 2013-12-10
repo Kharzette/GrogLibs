@@ -303,22 +303,22 @@ float3 ComputeShadowCoord(float4 worldPos)
 	return	shadCoord;
 }
 
-float3 ApplyShadow(float mapDepth, float pixDepth, float3 texLitColor)
+float4 ApplyShadow(float mapDepth, float pixDepth, float4 color)
 {
 	if(mapDepth < 2)
 	{
-		return	texLitColor;
+		return	color;
 	}
 
 	if(mapDepth < pixDepth)
 	{
 		//match atten, jontology convinced me
-		texLitColor	+=min(0.2, ((mShadowAtten - pixDepth) / mShadowAtten));
+		color.xyz	+=color.w * min(0.2, ((mShadowAtten - pixDepth) / mShadowAtten));
 	}
-	return	texLitColor;
+	return	color;
 }
 
-float3	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float3 color)
+float4	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float4 color)
 {
 	float3	shadDir;
 
@@ -334,10 +334,14 @@ float3	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float3 
 		shadDir	=worldPos.xyz - mShadowLightPos.xyz;
 	}
 
-	float	facing	=dot(shadDir, worldNorm);
-	if(facing >= 0)
+	//alphas shadow on both sides
+	if(color.w > .95)
 	{
-		return	color;
+		float	facing	=dot(shadDir, worldNorm);
+		if(facing >= 0)
+		{
+			return	color;
+		}
 	}
 
 	float	pixDepth;
