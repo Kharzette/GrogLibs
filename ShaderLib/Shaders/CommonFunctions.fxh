@@ -313,7 +313,8 @@ float4 ApplyShadow(float mapDepth, float pixDepth, float4 color)
 	if(mapDepth < pixDepth)
 	{
 		//match atten, jontology convinced me
-		color.xyz	+=color.w * min(0.2, ((mShadowAtten - pixDepth) / mShadowAtten));
+		color.xyz	+=color.w * color.w *
+			min(0.2, ((mShadowAtten - pixDepth) / mShadowAtten));
 	}
 	return	color;
 }
@@ -331,7 +332,7 @@ float4	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float4 
 	}
 	else
 	{
-		shadDir	=worldPos.xyz - mShadowLightPos.xyz;
+		shadDir	=worldPos.xyz - mShadowLightPos;
 	}
 
 	//alphas shadow on both sides
@@ -351,6 +352,14 @@ float4	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float4 
 	{
 		shadCoord	=ComputeShadowCoord(worldPos);
 		pixDepth	=shadCoord.z;
+
+		//check direction of distance
+		float	worldDot	=dot(shadDir, worldPos.xyz);
+		float	posDot		=dot(shadDir, mShadowLightPos);
+		if(worldDot < posDot)
+		{
+			return	color;
+		}
 	}
 	else
 	{
