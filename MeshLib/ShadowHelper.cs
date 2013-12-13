@@ -11,6 +11,17 @@ namespace MeshLib
 {
 	public class ShadowHelper
 	{
+		//need a struct to help game keep track of instances
+		public class Shadower
+		{
+			//will be one of these, other will be null
+			public StaticMeshObject	mStatic;
+			public Character		mChar;
+
+			//game specific info for differentiating instances and such
+			public object	mContext;
+		}
+
 		//for keeping track of shadows
 		class ShadowInfo
 		{
@@ -40,18 +51,19 @@ namespace MeshLib
 
 		//game data
 		MaterialLib.MaterialLib			mZoneMats;
-		List<object>					mShadowers		=new List<object>();
+		List<Shadower>					mShadowers		=new List<Shadower>();
 		List<MaterialLib.MaterialLib>	mShadowerMats	=new List<MaterialLib.MaterialLib>();
 
 		//delegates back to the game
 		GetCurrentShadowInfoFromLights	mGetShadInfo;
 		GetTransformedBound				mGetTransformedBound;
 
-		public delegate bool GetCurrentShadowInfoFromLights(object shadower,
+		public delegate bool GetCurrentShadowInfoFromLights(Shadower shadower,
+			out Matrix shadowerTransform,
 			out float intensity, out Vector3 lightPos,
 			out Vector3 lightDir, out bool bDirectional);
 
-		public delegate BoundingBox GetTransformedBound(object shadower);
+		public delegate BoundingBox GetTransformedBound(Shadower shadower);
 
 
 
@@ -95,7 +107,7 @@ namespace MeshLib
 		}
 
 
-		public void RegisterShadower(object mesh, MaterialLib.MaterialLib meshMats)
+		public void RegisterShadower(Shadower mesh, MaterialLib.MaterialLib meshMats)
 		{
 			mShadowers.Add(mesh);
 			mShadowerMats.Add(meshMats);
@@ -134,14 +146,15 @@ namespace MeshLib
 		ShadowInfo DrawShadow(int idx)
 		{
 			Vector3	lightPos, lightDir;
+			Matrix	shadowerTransform;
 			bool	bDirectional;
 			float	intensity;
 
-			object					shadower	=mShadowers[idx];
+			Shadower				shadower	=mShadowers[idx];
 			MaterialLib.MaterialLib	shadMats	=mShadowerMats[idx];
 
-			bool	bShad	=mGetShadInfo(shadower, out intensity,
-				out lightPos, out lightDir, out bDirectional);
+			bool	bShad	=mGetShadInfo(shadower, out shadowerTransform,
+				out intensity, out lightPos, out lightDir, out bDirectional);
 
 			ShadowInfo	si	=new ShadowInfo();
 
@@ -151,6 +164,16 @@ namespace MeshLib
 			if(!bShad)
 			{
 				return	si;
+			}
+
+			//set instance transform
+			if(shadower.mStatic != null)
+			{
+				shadower.mStatic.SetTransform(shadowerTransform);
+			}
+			else
+			{
+				shadower.mChar.SetTransform(shadowerTransform);
 			}
 
 			if(!bDirectional)
@@ -171,7 +194,7 @@ namespace MeshLib
 			else
 			{
 				mGD.SetRenderTarget(mPShad);
-//				gd.Clear(Color.White);
+				mGD.Clear(Color.White);
 
 				Matrix	lightView, lightProj;
 				Vector3	fakeOrigin;
@@ -183,13 +206,13 @@ namespace MeshLib
 				shadMats.SetMaterialParameter("Shadow", "mLightViewProj", lightView * lightProj);
 				shadMats.SetMaterialParameter("Shadow", "mShadowLightPos", fakeOrigin);
 
-				if(shadower is StaticMeshObject)
+				if(shadower.mChar != null)
 				{
-					(shadower as StaticMeshObject).Draw(mGD, "Shadow");
+					shadower.mChar.Draw(mGD, "Shadow");
 				}
-				else if(shadower is Character)
+				else
 				{
-					(shadower as Character).Draw(mGD, "Shadow");
+					shadower.mStatic.Draw(mGD, "Shadow");
 				}
 
 				si.mLightViewProj	=lightView * lightProj;
@@ -202,7 +225,7 @@ namespace MeshLib
 		}
 
 
-		void RenderShadowCubeFace(object shadower,
+		void RenderShadowCubeFace(Shadower shadower,
 			MaterialLib.MaterialLib shadMats,
 			CubeMapFace face, Vector3 lightPos)
 		{
@@ -216,13 +239,13 @@ namespace MeshLib
 
 			shadMats.SetMaterialParameter("Shadow", "mLightViewProj", lightView * lightProj);
 
-			if(shadower is StaticMeshObject)
+			if(shadower.mChar != null)
 			{
-				(shadower as StaticMeshObject).Draw(mGD, "Shadow");
+				shadower.mChar.Draw(mGD, "Shadow");
 			}
-			else if(shadower is Character)
+			else
 			{
-				(shadower as Character).Draw(mGD, "Shadow");
+				shadower.mStatic.Draw(mGD, "Shadow");
 			}
 		}
 	}

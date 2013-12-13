@@ -362,7 +362,7 @@ float4 VertexLitCelPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 
 float4 VertexLitShadowPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 {
-	float4	color	=float4(1.0, 1.0, 1.0, input.TexCoord3.x);
+	float4	color	=float4(0.0, 0.0, 0.0, input.TexCoord3.x);
 
 	float4	worldPos;
 	worldPos.x	=input.TexCoord0.z;

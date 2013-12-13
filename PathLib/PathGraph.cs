@@ -64,7 +64,7 @@ namespace PathLib
 
 		public void GenerateGraph(GetWalkableFaces getWalkable,
 			int gridSize, float stepHeight,
-			IsPositionValid isPosOK, CanReach canReach)
+			CanReach canReach)
 		{
 			mNodery.Clear();
 
@@ -91,8 +91,6 @@ namespace PathLib
 			}
 
 			BuildGriddyConnectivity(gridSize, stepHeight, canReach);
-
-//			PruneSkinny(isPosOK);
 		}
 
 
