@@ -326,10 +326,13 @@ namespace BSPZone
 
 				ZoneLeaf	zLeaf	=mZoneLeafs[leaf];
 
-				if(Misc.bFlagSet(zLeaf.mContents, Contents.BSP_CONTENTS_DETAIL2))
-				{
-					return;
-				}
+				//I remember having trouble with details in the past
+				//but I can't remember the specifics, and it seems like
+				//they work fine now so removing this
+//				if(Misc.bFlagSet(zLeaf.mContents, Contents.BSP_CONTENTS_DETAIL2))
+//				{
+//					return;
+//				}
 
 				for(int f=0;f < zLeaf.mNumFaces;f++)
 				{

@@ -8,31 +8,31 @@
 #define	PI_OVER_TWO		1.5707963268f
 
 //matrii
-shared float4x4	mWorld;
-shared float4x4 mView;
-shared float4x4 mProjection;
-shared float4x4	mLightViewProj;	//for shadowing
-shared float3	mEyePos;
+shared uniform float4x4	mWorld;
+shared uniform float4x4 mView;
+shared uniform float4x4 mProjection;
+shared uniform float4x4	mLightViewProj;	//for shadowing
+shared uniform float3	mEyePos;
 
 //for dangly shaders
-float3	mDanglyForce;
+shared uniform float3	mDanglyForce;
 
 //outline / cel related
-shared Texture	mCelTable;
+shared uniform Texture	mCelTable;
 
 //for shadowmaps
-shared Texture	mShadowTexture;		//2D or cube
-shared float3	mShadowLightPos;	//point light location
-shared bool		mbDirectional;		//sunnish or point
-shared float	mShadowAtten;		//shadow attenuation
+shared uniform Texture	mShadowTexture;		//2D or cube
+shared uniform float3	mShadowLightPos;	//point light location
+shared uniform bool		mbDirectional;		//sunnish or point
+shared uniform float	mShadowAtten;		//shadow attenuation
 
 //sky gradient
-shared float3	mSkyGradient0;	//horizon colour
-shared float3	mSkyGradient1;	//peak colour
+shared uniform float3	mSkyGradient0;	//horizon colour
+shared uniform float3	mSkyGradient1;	//peak colour
 
 //specular stuff
-float4	mSpecColor;
-float	mSpecPower;
+shared uniform float4	mSpecColor;
+shared uniform float	mSpecPower;
 
 #include "Types.fxh"
 
@@ -46,6 +46,7 @@ sampler CelSampler = sampler_state
 	MipFilter	=Point;
 
 	AddressU	=Clamp;
+	AddressV	=Clamp;
 };
 
 sampler	ShadowSampler2D	=sampler_state
@@ -265,9 +266,40 @@ float3 CalcCelColor(float3 colVal)
 {
 	float3	ret;
 
-	ret.x	=tex1D(CelSampler, colVal.x);
-	ret.y	=tex1D(CelSampler, colVal.y);
-	ret.z	=tex1D(CelSampler, colVal.z);
+//	float3	fracColor	=modf(colVal, colVal);
+
+//	ret.x	=tex1D(CelSampler, fracColor.x) + colVal.x;
+//	ret.y	=tex1D(CelSampler, fracColor.y) + colVal.y;
+//	ret.z	=tex1D(CelSampler, fracColor.z) + colVal.z;
+
+	float3	fracColor	=frac(colVal);
+
+	if(colVal.x > 1)
+	{
+		ret.x	=tex1D(CelSampler, fracColor.x) + (colVal.x - fracColor.x);
+	}
+	else
+	{
+		ret.x	=tex1D(CelSampler, colVal.x);
+	}
+
+	if(colVal.y > 1)
+	{
+		ret.y	=tex1D(CelSampler, fracColor.y) + (colVal.y - fracColor.y);
+	}
+	else
+	{
+		ret.y	=tex1D(CelSampler, colVal.y);
+	}
+
+	if(colVal.z > 1)
+	{
+		ret.z	=tex1D(CelSampler, fracColor.z) + (colVal.z - fracColor.z);
+	}
+	else
+	{
+		ret.z	=tex1D(CelSampler, colVal.z);
+	}
 
 	return	ret;
 }

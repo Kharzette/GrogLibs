@@ -181,6 +181,20 @@ VPosTex03Tex13 TriSolidSkinVS(VPosNormBone input)
 	return	ComputeSkinWorld(input, mBones);
 }
 
+VPosTex03 ShadowVS(VPos input)
+{
+	float4	vertPos	=input.Position;
+
+	float4	worldVertPos	=mul(vertPos, mWorld);
+
+	VPosTex03	output;
+
+	output.Position		=mul(worldVertPos, mLightViewProj);
+	output.TexCoord0	=worldVertPos.xyz;
+
+	return	output;
+}
+
 VPosTex03 ShadowSkinVS(VPosBone input)
 {
 	float4	vertPos	=input.Position;
@@ -760,6 +774,15 @@ technique ShadowSkin
 	pass P0
 	{
 		VertexShader	=compile vs_2_0 ShadowSkinVS();
+		PixelShader		=compile ps_2_0 ShadowPS();
+	}
+}
+
+technique Shadow
+{
+	pass P0
+	{
+		VertexShader	=compile vs_2_0 ShadowVS();
 		PixelShader		=compile ps_2_0 ShadowPS();
 	}
 }
