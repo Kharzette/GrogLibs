@@ -17,7 +17,13 @@ namespace PathLib
 
 		//pathing on threads
 		List<PathFinder>	mActivePathing	=new List<PathFinder>();
-		List<PathCB>		mCallBacks		=new List<PathCB>();	
+		List<PathCB>		mCallBacks		=new List<PathCB>();
+
+		//occupation info for pathfinding
+		List<PathNode>	mOccupation	=new List<PathNode>();
+
+		//game specific info on node occupation
+		List<object>	[]mNodeOccupation;
 
 		//drawing stuff
 		VertexBuffer		mNodeVB, mConVB;
@@ -90,6 +96,13 @@ namespace PathLib
 				}
 			}
 
+			//alloc occupation list
+			mNodeOccupation	=new List<object>[mNodery.Count];
+			for(int i=0;i < mNodery.Count;i++)
+			{
+				mNodeOccupation[i]	=new List<object>();
+			}
+
 			BuildGriddyConnectivity(gridSize, stepHeight, canReach);
 		}
 
@@ -123,6 +136,13 @@ namespace PathLib
 				PathNode	pn	=new PathNode(br);
 
 				mNodery.Add(pn);
+			}
+
+			//alloc occupation list
+			mNodeOccupation	=new List<object>[mNodery.Count];
+			for(int i=0;i < mNodery.Count;i++)
+			{
+				mNodeOccupation[i]	=new List<object>();
 			}
 
 			foreach(PathNode pn in mNodery)
@@ -265,6 +285,30 @@ namespace PathLib
 				}
 			}
 			return	true;
+		}
+
+
+		public List<object> GetNodeOccupants(int index)
+		{
+			return	mNodeOccupation[index];
+		}
+
+
+		public void OccupyNode(int index, object obj)
+		{
+			Debug.Assert(!mNodeOccupation[index].Contains(obj));
+
+			mNodeOccupation[index].Add(obj);
+			mOccupation.Add(mNodery[index]);
+		}
+
+
+		public void LeaveNode(int index, object obj)
+		{
+			Debug.Assert(mNodeOccupation[index].Contains(obj));
+
+			mNodeOccupation[index].Remove(obj);
+			mOccupation.Remove(mNodery[index]);
 		}
 
 
@@ -413,7 +457,7 @@ namespace PathLib
 			if((curNode + 1) >= nodes.Count)
 			{
 				//at end node
-				pos	=nodes[curNode];
+				pos	=nodes[curNode] + Vector3.UnitY;
 				curNode++;
 
 				//use last 2 nodes for direction
@@ -453,7 +497,7 @@ namespace PathLib
 				else
 				{
 					direction	/=dirLen;
-					pos			+=direction * speedLen;
+					pos			+=(direction * speedLen);
 					bMoving		=false;
 				}
 			}			
@@ -610,7 +654,7 @@ namespace PathLib
 		{
 			PathFinder pf	=(PathFinder)threadContext;
 
-			pf.Go();
+			pf.Go(mOccupation);
 		}
 
 

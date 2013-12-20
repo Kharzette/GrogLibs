@@ -55,12 +55,20 @@ namespace PathLib
 		}
 
 
-		public void Go()
+		public void Go(List<PathNode> occupied)
 		{
 			if(mStartNode.mNode == mEndNode.mNode)
 			{
 				mbDone	=true;
 				return;
+			}
+
+			foreach(PathNode pn in occupied)
+			{
+				AStarNode	asOcc	=new AStarNode();
+				asOcc.mNode			=pn;
+				asOcc.mParent		=null;
+				mClosed.Add(asOcc);
 			}
 			mOpen.Add(mStartNode);
 			SelectNode(mStartNode);

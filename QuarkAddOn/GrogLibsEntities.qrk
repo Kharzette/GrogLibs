@@ -528,7 +528,7 @@ QQRKSRC1
     ammo_whatever:form =
     {
       Help = "Generic ammo, needs changing to game specific"
-      bbox = '-16 -16 -16 16 16 16'
+      bbox = '-16 -16 0 16 16 32'
       angle: =
       {
         Txt = "&"
@@ -556,7 +556,7 @@ QQRKSRC1
     }
     target_move_stage:form =
     {
-      Help = "A newly created Entity type."
+      Help = "Invisible controller for model movement"
       bbox = '-16 -16 -16 16 16 16'
       ;desc: =
       {
@@ -682,7 +682,7 @@ QQRKSRC1
     item_whatever:form =
     {
       Help = "Change this to something game specific."
-      bbox = '-16 -16 -16 16 16 16'
+      bbox = '-16 -16 0 16 16 32'
       delay: =
       {
         Txt = "&"
@@ -709,7 +709,7 @@ QQRKSRC1
     info_player_coop:form =
     {
       Help = "Potential spawning position for coop games."
-      bbox = '-16 -16 -24 16 16 32'
+      bbox = '-16 -16 0 16 16 72'
       mdl = "players/female/tris.md2"
       mdlskin = "players/female/brianna.pcx"
       angle: =
@@ -726,7 +726,7 @@ QQRKSRC1
     info_player_deathmatch:form =
     {
       Help = "Potential spawning position for deathmatch games."
-      bbox = '-16 -16 -24 16 16 32'
+      bbox = '-16 -16 0 16 16 72'
       mdl = "models/objects/dmspot/tris.md2"
       angle: =
       {
@@ -765,7 +765,7 @@ QQRKSRC1
     info_player_start:form =
     {
       Help = "The normal starting point for a level."
-      bbox = '-16 -16 -24 16 16 32'
+      bbox = '-16 -16 0 16 16 72'
       mdl = "players/male/tris.md2"
       mdlskin = "players/male/cipher.pcx"
       angle: =
@@ -792,7 +792,7 @@ QQRKSRC1
     key_whatever:form =
     {
       Help = "Change this to something game specific."
-      bbox = '-16 -16 -16 16 16 16'
+      bbox = '-16 -16 0 16 16 32'
       mdl = "models/items/keys/target/tris.md2"
       delay: =
       {
@@ -885,7 +885,7 @@ QQRKSRC1
     misc_whatever:form =
     {
       Help = "Change this to something game specific."
-      bbox = '-16 -16 -24 16 16 32'
+      bbox = '-16 -16 0 16 16 32'
       angle: =
       {
         Txt = "&"
@@ -906,7 +906,7 @@ QQRKSRC1
     misc_particle_emitter:form =
     {
       Help = "Emit particles from this entity"
-      bbox = '-16 -16 -24 16 16 32'
+      bbox = '-16 -16 -16 16 16 16'
       tex_name: =
       {
         Txt = "&"
@@ -1056,7 +1056,7 @@ QQRKSRC1
     misc_sound:form =
     {
       Help = "Emit audio from this entity"
-      bbox = '-16 -16 -24 16 16 32'
+      bbox = '-16 -16 -16 16 16 16'
       effect_name: =
       {
         Txt = "&"
@@ -1086,7 +1086,7 @@ QQRKSRC1
     monster_whatever:form =
     {
       Help = "Change this to something game specific."
-      bbox = '-16 -16 -24 16 16 32'
+      bbox = '-16 -16 0 16 16 72'
       angle: =
       {
         Txt = "&"
