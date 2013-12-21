@@ -672,5 +672,37 @@ namespace MaterialLib
 			mMaps	=maps;
 			mCubes	=cubes;
 		}
+
+
+		internal void GuessParameterVisibility(string technique,
+			Dictionary<string, List<string>> ignores,
+			Dictionary<string, List<string>> hides)
+		{
+			//clear existing hide/ignore stuff
+			mHidden.Clear();
+			mIgnored.Clear();
+
+			if(ignores.ContainsKey(technique))
+			{
+				List<string>	igs	=ignores[technique];
+
+				foreach(string igParm in igs)
+				{
+					Ignore(igParm);
+				}
+			}
+
+			if(hides.ContainsKey(technique))
+			{
+				List<string>	hds	=hides[technique];
+
+				foreach(string hidParm in hds)
+				{
+					Hide(hidParm);
+				}
+			}
+
+			UpdateGUI();
+		}
 	}
 }

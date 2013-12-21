@@ -312,5 +312,13 @@ namespace MaterialLib
 		{
 			mPKeeper.Ignore(selected);
 		}
+
+
+		internal void GuessParameterVisibility(
+			Dictionary<string, List<string>> ignores,
+			Dictionary<string, List<string>> hides)
+		{
+			mPKeeper.GuessParameterVisibility(mTechnique, ignores, hides);
+		}
 	}
 }

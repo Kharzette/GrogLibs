@@ -18,6 +18,10 @@ namespace MaterialLib
 		Dictionary<string, Texture2D>	mMaps	=new Dictionary<string, Texture2D>();
 		Dictionary<string, TextureCube>	mCubes	=new Dictionary<string, TextureCube>();
 
+		//data driven set of ignored and hidden parameters (see text file)
+		Dictionary<string, List<string>>	mIgnoreData	=new Dictionary<string,List<string>>();
+		Dictionary<string, List<string>>	mHiddenData	=new Dictionary<string,List<string>>();
+
 		//state block pool
 		StateBlockPool	mStateBlockPool	=new StateBlockPool();
 
@@ -38,6 +42,8 @@ namespace MaterialLib
 				LoadTextures();
 				LoadCubes(gd);
 			}
+
+			LoadParameterData();
 		}
 
 
@@ -456,6 +462,17 @@ namespace MaterialLib
 				}
 				mMats[matName].SetParameter("mTexSize", val);
 			}
+		}
+
+
+		public void GuessParameterVisibility(Material mat)
+		{
+			if(!mMats.ContainsKey(mat.Name))
+			{
+				return;
+			}
+
+			mat.GuessParameterVisibility(mIgnoreData, mHiddenData);
 		}
 
 
@@ -988,6 +1005,110 @@ namespace MaterialLib
 			mCubes.Add(key, tc);
 
 			return	true;
+		}
+
+
+		void LoadParameterData()
+		{
+			FileStream		fs	=new FileStream(mShaderLib.RootDirectory + "/Shaders/ParameterData.txt", FileMode.Open, FileAccess.Read);
+			StreamReader	sr	=new StreamReader(fs);
+
+			string			curTechnique	="";
+			string			curCategory		="";
+			List<string>	curStuff		=new List<string>();
+			for(;;)
+			{
+				string	line	=sr.ReadLine();
+				if(line.StartsWith("//"))
+				{
+					continue;
+				}
+
+				//python style!
+				if(line.StartsWith("\t\t"))
+				{
+					Debug.Assert(curTechnique != "");
+					Debug.Assert(curCategory != "");
+
+					if(curCategory == "Ignored")
+					{
+						curStuff.Add(line.Trim());
+					}
+					else if(curCategory == "Hidden")
+					{
+						curStuff.Add(line.Trim());
+					}
+					else
+					{
+						Debug.Assert(false);
+					}
+				}
+				else if(line.StartsWith("\t"))
+				{
+					if(curStuff.Count > 0)
+					{
+						if(curCategory == "Ignored")
+						{
+							mIgnoreData.Add(curTechnique, curStuff);
+						}
+						else if(curCategory == "Hidden")
+						{
+							mHiddenData.Add(curTechnique, curStuff);
+						}
+						else
+						{
+							Debug.Assert(false);
+						}
+						curStuff	=new List<string>();
+					}
+					curCategory	=line.Trim();
+				}
+				else
+				{
+					if(curStuff.Count > 0)
+					{
+						if(curCategory == "Ignored")
+						{
+							mIgnoreData.Add(curTechnique, curStuff);
+						}
+						else if(curCategory == "Hidden")
+						{
+							mHiddenData.Add(curTechnique, curStuff);
+						}
+						else
+						{
+							Debug.Assert(false);
+						}
+						curStuff	=new List<string>();
+					}
+					curCategory		="";
+					curTechnique	=line.Trim();
+				}
+
+				if(sr.EndOfStream)
+				{
+					if(curStuff.Count > 0)
+					{
+						if(curCategory == "Ignored")
+						{
+							mIgnoreData.Add(curTechnique, curStuff);
+						}
+						else if(curCategory == "Hidden")
+						{
+							mHiddenData.Add(curTechnique, curStuff);
+						}
+						else
+						{
+							Debug.Assert(false);
+						}
+						curStuff	=new List<string>();
+					}
+					break;
+				}
+			}
+
+			sr.Close();
+			fs.Close();
 		}
 
 

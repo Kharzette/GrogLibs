@@ -859,5 +859,19 @@ namespace SharedForms
 
 			Misc.SafeInvoke(eWeldWeights, parts);
 		}
+
+
+		void OnGuessParameterVisibility(object sender, EventArgs e)
+		{
+			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
+			if(matSel.Count != 1)
+			{
+				return;
+			}
+			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
+			MaterialLib.Material	mat	=gs.GetParentMaterial();
+
+			mMatLib.GuessParameterVisibility(mat);
+		}
 	}
 }
