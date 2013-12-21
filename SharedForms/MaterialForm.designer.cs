@@ -42,6 +42,7 @@
 			this.FileGroup = new System.Windows.Forms.GroupBox();
 			this.MergeMaterialLib = new System.Windows.Forms.Button();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.GuessShaderParameterVisibility = new System.Windows.Forms.Button();
 			this.UnHideAll = new System.Windows.Forms.Button();
 			this.IgnoreParameter = new System.Windows.Forms.Button();
 			this.HideSelected = new System.Windows.Forms.Button();
@@ -55,7 +56,6 @@
 			this.TexCoordSet = new System.Windows.Forms.NumericUpDown();
 			this.GenBiNormalTangent = new System.Windows.Forms.Button();
 			this.mTips = new System.Windows.Forms.ToolTip(this.components);
-			this.GuessShaderParameterVisibility = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialGrid)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.MaterialProperties)).BeginInit();
 			this.FileGroup.SuspendLayout();
@@ -85,7 +85,6 @@
 			this.MaterialGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
 			this.MaterialGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
 			this.MaterialGrid.Location = new System.Drawing.Point(12, 366);
-			this.MaterialGrid.MultiSelect = false;
 			this.MaterialGrid.Name = "MaterialGrid";
 			this.MaterialGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
 			this.MaterialGrid.Size = new System.Drawing.Size(1480, 120);
@@ -232,6 +231,16 @@
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Shader Shtuff";
 			// 
+			// GuessShaderParameterVisibility
+			// 
+			this.GuessShaderParameterVisibility.Location = new System.Drawing.Point(564, 19);
+			this.GuessShaderParameterVisibility.Name = "GuessShaderParameterVisibility";
+			this.GuessShaderParameterVisibility.Size = new System.Drawing.Size(64, 29);
+			this.GuessShaderParameterVisibility.TabIndex = 20;
+			this.GuessShaderParameterVisibility.Text = "GuessSP";
+			this.GuessShaderParameterVisibility.UseVisualStyleBackColor = true;
+			this.GuessShaderParameterVisibility.Click += new System.EventHandler(this.OnGuessParameterVisibility);
+			// 
 			// UnHideAll
 			// 
 			this.UnHideAll.Location = new System.Drawing.Point(497, 19);
@@ -365,16 +374,6 @@
 			this.mTips.SetToolTip(this.GenBiNormalTangent, "Generate bitangents for normal mapping for the selected mesh part");
 			this.GenBiNormalTangent.UseVisualStyleBackColor = true;
 			this.GenBiNormalTangent.Click += new System.EventHandler(this.OnGenBiNormalTangent);
-			// 
-			// GuessShaderParameterVisibility
-			// 
-			this.GuessShaderParameterVisibility.Location = new System.Drawing.Point(564, 19);
-			this.GuessShaderParameterVisibility.Name = "GuessShaderParameterVisibility";
-			this.GuessShaderParameterVisibility.Size = new System.Drawing.Size(64, 29);
-			this.GuessShaderParameterVisibility.TabIndex = 20;
-			this.GuessShaderParameterVisibility.Text = "GuessSP";
-			this.GuessShaderParameterVisibility.UseVisualStyleBackColor = true;
-			this.GuessShaderParameterVisibility.Click += new System.EventHandler(this.OnGuessParameterVisibility);
 			// 
 			// MaterialForm
 			// 

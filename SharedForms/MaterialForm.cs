@@ -676,12 +676,11 @@ namespace SharedForms
 			}
 			else
 			{
-				if(MaterialGrid.SelectedRows.Count <= 0)
+				foreach(DataGridViewRow dgvr in MaterialGrid.SelectedRows)
 				{
-					return;
+					MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)dgvr.DataBoundItem;
+					mMatLib.BoostTexSize(gs.Name, true);
 				}
-				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)MaterialGrid.SelectedRows[0].DataBoundItem;
-				mMatLib.BoostTexSize(gs.Name, true);
 			}
 		}
 
@@ -695,8 +694,11 @@ namespace SharedForms
 			}
 			else
 			{
-				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)MaterialGrid.SelectedRows[0].DataBoundItem;
-				mMatLib.BoostTexSize(gs.Name, false);
+				foreach(DataGridViewRow dgvr in MaterialGrid.SelectedRows)
+				{
+					MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)dgvr.DataBoundItem;
+					mMatLib.BoostTexSize(gs.Name, false);
+				}
 			}
 		}
 
@@ -811,14 +813,14 @@ namespace SharedForms
 		void OnUnHideAll(object sender, EventArgs e)
 		{
 			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-			if(matSel.Count != 1)
-			{
-				return;
-			}
-			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
-			MaterialLib.Material	mat	=gs.GetParentMaterial();
 
-			mat.UnHideAll();
+			foreach(DataGridViewRow dgvr in matSel)
+			{
+				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)dgvr.DataBoundItem;
+				MaterialLib.Material	mat	=gs.GetParentMaterial();
+
+				mat.UnHideAll();
+			}
 		}
 
 
@@ -864,14 +866,14 @@ namespace SharedForms
 		void OnGuessParameterVisibility(object sender, EventArgs e)
 		{
 			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-			if(matSel.Count != 1)
-			{
-				return;
-			}
-			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
-			MaterialLib.Material	mat	=gs.GetParentMaterial();
 
-			mMatLib.GuessParameterVisibility(mat);
+			foreach(DataGridViewRow dgvr in matSel)
+			{
+				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)dgvr.DataBoundItem;
+				MaterialLib.Material	mat	=gs.GetParentMaterial();
+
+				mMatLib.GuessParameterVisibility(mat);
+			}
 		}
 	}
 }
