@@ -228,6 +228,64 @@ namespace BSPZone
 			ret	=FindNodeLandedIn((dist < 0)? pNode.mFront : pNode.mBack, pos);
 			return	ret;
 		}
+
+
+		//trace a ray from the screen point through the camera
+		//to intersect the world at the closest location.
+		//Starting outside the world is fine
+		public Vector3 TraceScreenPointRay(GameCamera cam,
+			Microsoft.Xna.Framework.Graphics.Viewport vp,
+			Vector2 screenPos, float rayDistance)
+		{
+			Vector3	camForward	=cam.Forward;
+			Vector3	start		=new Vector3(screenPos.X, screenPos.Y, 0f);
+			Vector3	end			=new Vector3(screenPos.X, screenPos.Y, 1f);
+
+			start	=vp.Unproject(start, cam.Projection, cam.View, Matrix.Identity);
+			end		=vp.Unproject(end, cam.Projection, cam.View, Matrix.Identity);
+
+			Vector3	ray	=end - start;
+
+			ray.Normalize();
+
+			start	=cam.Position;
+			end		=start + ray * rayDistance;
+
+			List<Zone.TraceSegment>	segz	=new List<Zone.TraceSegment>();
+
+			TraceSegWorld(start, end, 0, segz);
+
+			float	bestDist	=float.MaxValue;
+			Vector3	bestStart	=Vector3.Zero;
+			foreach(Zone.TraceSegment seg in segz)
+			{
+				if(Misc.bFlagSet(seg.mContents, BSPZone.Contents.BSP_CONTENTS_SOLID2))
+				{
+					continue;
+				}
+
+				float	dist	=Vector3.Distance(seg.mStart, start);
+				if(dist < bestDist)
+				{
+					//bump slightly inside
+					bestStart	=seg.mStart + (ray * 0.1f);
+					bestDist	=dist;
+				}
+			}
+
+			Collision	col	=new Collision();
+
+			Vector3	hitPos	=Vector3.Zero;
+			if(TraceAll(null, null, bestStart, end, out col))
+			{
+				hitPos		=col.mIntersection + Vector3.UnitY;
+			}
+			else
+			{
+				hitPos	=end;
+			}
+			return	hitPos;
+		}
 		#endregion
 
 
