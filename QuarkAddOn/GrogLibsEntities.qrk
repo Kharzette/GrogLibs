@@ -290,6 +290,64 @@ QQRKSRC1
             }
           }
         }
+        func_region:b =
+        {
+          ;desc = "Defines a region for whatever"
+          poly:p =
+          {
+            east:f =
+            {
+              v = '64 0 0 64 128 0 64 0 128'
+              tex = "[trigger]"
+              Contents = "2048"
+              Flags = "32768"
+              Value = "0"
+            }
+            west:f =
+            {
+              v = '-64 0 0 -64 0 128 -64 128 0'
+              tex = "[trigger]"
+              m = "1"
+              Contents = "2048"
+              Flags = "32768"
+              Value = "0"
+            }
+            north:f =
+            {
+              v = '0 64 0 0 64 128 128 64 0'
+              tex = "[trigger]"
+              m = "1"
+              Contents = "2048"
+              Flags = "32768"
+              Value = "0"
+            }
+            south:f =
+            {
+              v = '0 -64 0 128 -64 0 0 -64 128'
+              tex = "[trigger]"
+              Contents = "2048"
+              Flags = "32768"
+              Value = "0"
+            }
+            up:f =
+            {
+              v = '0 0 64 128 0 64 0 128 64'
+              tex = "[trigger]"
+              Contents = "2048"
+              Flags = "32768"
+              Value = "0"
+            }
+            down:f =
+            {
+              v = '0 0 -64 0 128 -64 128 0 -64'
+              tex = "[trigger]"
+              m = "1"
+              Contents = "2048"
+              Flags = "32768"
+              Value = "0"
+            }
+          }
+        }
         func_wall:b =
         {
           ;desc = "Make a wall appear or dissappear by connecting a func_butto"

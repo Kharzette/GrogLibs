@@ -484,6 +484,11 @@ namespace BSPZone
 
 				for(int j=1;j < mZoneModels.Length;j++)
 				{
+					if(mNonCollidingModels.Contains(i))
+					{
+						continue;	//don't bother vs triggers etc
+					}
+
 					ZonePlane	zp2	=ZonePlane.Blank;
 					if(IntersectBoxModel(box, pos, j, ref zp))
 					{

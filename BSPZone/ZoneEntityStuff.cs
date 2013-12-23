@@ -20,6 +20,9 @@ namespace BSPZone
 			public bool		mbSun;			//sun light
 		}
 
+		//just a list of which model indexes are triggers
+		List<int>	mNonCollidingModels	=new List<int>();
+
 		Dictionary<ZoneEntity, ZoneLight>	mLightCache	=new Dictionary<ZoneEntity, ZoneLight>();
 
 		public delegate float GetStyleStrength(int styleIndex);
@@ -151,6 +154,51 @@ namespace BSPZone
 				}
 			}
 			return	ret;
+		}
+
+
+		public bool GetRandomPointInsideModelEntity(ZoneEntity ent, Random rand, out Vector3 point)
+		{
+			string	idxStr	=ent.GetValue("Model");
+
+			int	modIdx;
+			if(!Int32.TryParse(idxStr, out modIdx))
+			{
+				point	=Vector3.Zero;
+				return	false;
+			}
+
+			ZoneModel	zm	=mZoneModels[modIdx];
+			BoundingBox	bb	=zm.mBounds;
+
+			Matrix	modXForm	=zm.mTransform;
+
+			bb.Max	=Vector3.Transform(bb.Max, modXForm);
+			bb.Min	=Vector3.Transform(bb.Min, modXForm);
+
+			int	iterations	=0;
+			point			=Vector3.Zero;
+			for(;iterations < 50;iterations++)
+			{
+				int	x	=rand.Next((int)bb.Min.X, (int)bb.Max.X);
+				int	y	=rand.Next((int)bb.Min.Y, (int)bb.Max.Y);
+				int	z	=rand.Next((int)bb.Min.Z, (int)bb.Max.Z);
+
+				point	=new Vector3(x, y, z);
+
+				point	=Vector3.Transform(point, zm.mInvertedTransform);
+
+				RayTrace	rt	=new RayTrace(point, point);
+
+				rt.mCollision.mModelHit	=modIdx;
+
+				if(TraceNodeTrigger(rt, point, point, zm.mRootNode))
+				{
+					point	=Vector3.Transform(point, zm.mTransform);
+					break;
+				}
+			}
+			return	(iterations < 50);
 		}
 
 
@@ -328,6 +376,29 @@ namespace BSPZone
 				return;
 			}
 			mLightCache[ze].mbOn	=!mLightCache[ze].mbOn;
+		}
+
+
+		void BuildNonCollidingModelsList()
+		{
+			List<ZoneEntity>	trigs	=GetEntitiesStartsWith("trigger_");
+			List<ZoneEntity>	regs	=GetEntitiesStartsWith("func_region");
+
+			//combine
+			trigs.AddRange(regs);
+
+			foreach(ZoneEntity ze in trigs)
+			{
+				string	mod	=ze.GetValue("Model");
+				if(mod == null || mod == "")
+				{
+					continue;
+				}
+
+				int	modIdx	=Convert.ToInt32(mod);
+
+				mNonCollidingModels.Add(modIdx);
+			}
 		}
 
 

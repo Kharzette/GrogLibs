@@ -269,6 +269,7 @@ namespace BSPZone
 			}
 
 			BuildLightCache();
+			BuildNonCollidingModelsList();
 		}
 		#endregion
 

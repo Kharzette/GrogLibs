@@ -44,13 +44,19 @@ namespace BSPZone
 		#region Public Collision Interface
 		//returns the closest impact, checks all models
 		//everything returned in worldspace
-		public bool TraceAll(float? radius, BoundingBox? box, Vector3 start, Vector3 end,
+		public bool TraceAll(float? radius, BoundingBox? box,
+			Vector3 start, Vector3 end,
 			out Collision col)
 		{
 			List<Collision>	collisions	=new List<Collision>();
 
 			for(int i=0;i < mZoneModels.Length;i++)
 			{
+				if(mNonCollidingModels.Contains(i))
+				{
+					continue;	//don't bother vs triggers etc
+				}
+
 				RayTrace	rt	=new RayTrace(start, end);
 
 				if(radius != null)
@@ -302,6 +308,11 @@ namespace BSPZone
 
 			for(int i=1;i < mZoneModels.Length;i++)
 			{
+				if(mNonCollidingModels.Contains(i))
+				{
+					continue;	//don't bother vs triggers etc
+				}
+
 				RayTrace	rt	=new RayTrace(start, end);
 				ZoneModel	zm	=mZoneModels[i];
 				rt.mBounds		=boxBounds;
