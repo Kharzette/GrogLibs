@@ -37,6 +37,12 @@ namespace UtilityLib
 		}
 
 
+		public void TransitionBack()
+		{
+			Transition(mPrevState);
+		}
+
+
 		public void Transition(Enum newState)
 		{
 			if(mCurState == newState)

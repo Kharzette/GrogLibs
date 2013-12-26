@@ -1275,6 +1275,11 @@ QQRKSRC1
     worldspawn:form =
     {
       Help = "Only used for the world."
+      SunShadowAtten: =
+      {
+        Txt = "&"
+        Hint = "The dist dynamic sun shadows drop off (Default=200)."
+      }
       gravity: =
       {
         Txt = "&"

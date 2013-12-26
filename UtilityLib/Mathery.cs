@@ -178,15 +178,10 @@ namespace UtilityLib
 
 		//useful for directional shadow mapping, making item icons
 		//from a rendertarget, or even mini maps
-		public static void CreateBoundedDirectionalOrthoViewProj(BoundingBox bounds,
-			Vector3 direction, float fudgeFactor,
+		public static void CreateBoundedDirectionalOrthoViewProj(
+			BoundingBox bounds, Vector3 direction,
 			out Matrix lightView, out Matrix lightProj, out Vector3 fakeOrigin)
 		{
-			//bounds is a struct, so modifying here won't mess it up
-			//add a little bit to account for a bit of sloppiness
-			bounds.Max	+=Vector3.One * fudgeFactor;
-			bounds.Min	-=Vector3.One * fudgeFactor;
-
 			//create a matrix aimed in the direction
 			Matrix	dirAim	=Matrix.CreateLookAt(Vector3.Zero, -direction, Vector3.Up);
 

@@ -53,6 +53,7 @@ namespace MeshLib
 		MaterialLib.MaterialLib			mZoneMats;
 		List<Shadower>					mShadowers		=new List<Shadower>();
 		List<MaterialLib.MaterialLib>	mShadowerMats	=new List<MaterialLib.MaterialLib>();
+		float							mDirectionalAttenuation;
 
 		//delegates back to the game
 		GetCurrentShadowInfoFromLights	mGetShadInfo;
@@ -73,7 +74,7 @@ namespace MeshLib
 
 
 		public void Initialize(GraphicsDevice gd,
-			int bufferSizeXY,
+			int bufferSizeXY, float dirAtten,
 			MaterialLib.MaterialLib zoneMats,
 			MaterialLib.PostProcess post,
 			GetCurrentShadowInfoFromLights gcsifl,
@@ -104,6 +105,7 @@ namespace MeshLib
 			mGetShadInfo			=gcsifl;
 			mGetTransformedBound	=gtb;
 			mGD						=gd;
+			mDirectionalAttenuation	=dirAtten;
 		}
 
 
@@ -176,6 +178,8 @@ namespace MeshLib
 				shadower.mChar.SetTransform(shadowerTransform);
 			}
 
+			shadMats.SetMaterialParameter("Shadow", "mbDirectional", bDirectional);
+
 			if(!bDirectional)
 			{
 				shadMats.SetMaterialParameter("Shadow", "mShadowLightPos", lightPos);
@@ -200,7 +204,7 @@ namespace MeshLib
 				Vector3	fakeOrigin;
 
 				Mathery.CreateBoundedDirectionalOrthoViewProj(
-					mGetTransformedBound(shadower), -lightDir, 7f,
+					mGetTransformedBound(shadower), -lightDir,
 					out lightView, out lightProj, out fakeOrigin);
 
 				shadMats.SetMaterialParameter("Shadow", "mLightViewProj", lightView * lightProj);
@@ -216,7 +220,7 @@ namespace MeshLib
 				}
 
 				si.mLightViewProj	=lightView * lightProj;
-				si.mShadowAtten		=200f;
+				si.mShadowAtten		=mDirectionalAttenuation;
 				si.mShadowTexture	=mPShad;
 				si.mShadowLightPos	=fakeOrigin;
 			}

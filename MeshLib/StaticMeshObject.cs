@@ -313,7 +313,7 @@ namespace MeshLib
 				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
 					+ cm.RootDirectory + "/" + dir + "/");
 
-				FileInfo[]		fi	=di.GetFiles("*.Static", SearchOption.AllDirectories);
+				FileInfo[]		fi	=di.GetFiles("*.Static", SearchOption.TopDirectoryOnly);
 				foreach(FileInfo f in fi)
 				{
 					//strip back

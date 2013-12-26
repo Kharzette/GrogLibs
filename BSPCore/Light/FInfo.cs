@@ -144,8 +144,6 @@ namespace BSPCore
 		}
 
 
-		//TODO: fix the error seen in lightmaps sometimes
-		//I think it is in here
 		internal void CalcFacePoints(Matrix modelMat, Matrix modelInv, int modelIndex,
 			LInfo lightInfo, int lightGridSize, Vector2 UVOfs,
 			bool bExtraLightCorrection,
