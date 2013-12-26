@@ -11,6 +11,18 @@ namespace BSPZone
 	//handles placement and interaction of static items in a zone
 	public class StaticHelper
 	{
+		public class PickUpEventArgs : EventArgs
+		{
+			public object		mContext;
+			public ZoneEntity	mEntity;
+
+			public PickUpEventArgs(object context, ZoneEntity ent) : base()
+			{
+				mContext	=context;
+				mEntity		=ent;
+			}
+		}
+
 		public delegate void DrawStatic(Matrix local, ZoneEntity ze, Vector3 pos);
 
 		class PickUp
@@ -133,30 +145,8 @@ namespace BSPZone
 		}
 
 
-		public void Update(Vector3 playerPos, int msDelta)
+		public void Update(int msDelta)
 		{
-			foreach(PickUp pu in mPickUps)
-			{
-				if(!pu.mbPickUp)
-				{
-					continue;
-				}
-				float	dist	=Vector3.Distance(pu.mPosition, playerPos);
-
-				//close enough to grab?
-				if(dist < PickUpDistance)
-				{
-					mNuking.Add(pu);
-					Misc.SafeInvoke(ePickUp, pu.mEntity);
-				}
-			}
-
-			foreach(PickUp pu in mNuking)
-			{
-				mPickUps.Remove(pu);
-			}
-			mNuking.Clear();
-
 			//update transforms
 			foreach(PickUp pu in mPickUps)
 			{
@@ -168,6 +158,32 @@ namespace BSPZone
 
 				pu.UpdateTransform();
 			}
+		}
+
+
+		public void HitCheck(object context, Vector3 pos)
+		{
+			foreach(PickUp pu in mPickUps)
+			{
+				if(!pu.mbPickUp)
+				{
+					continue;
+				}
+				float	dist	=Vector3.Distance(pu.mPosition, pos);
+
+				//close enough to grab?
+				if(dist < PickUpDistance)
+				{
+					mNuking.Add(pu);
+					Misc.SafeInvoke(ePickUp, context, new PickUpEventArgs(context, pu.mEntity));
+				}
+			}
+
+			foreach(PickUp pu in mNuking)
+			{
+				mPickUps.Remove(pu);
+			}
+			mNuking.Clear();
 		}
 
 
