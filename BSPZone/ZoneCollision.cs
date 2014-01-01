@@ -235,7 +235,7 @@ namespace BSPZone
 		//Starting outside the world is fine
 		public Vector3 TraceScreenPointRay(GameCamera cam,
 			Microsoft.Xna.Framework.Graphics.Viewport vp,
-			Vector2 screenPos, float rayDistance)
+			Vector2 screenPos, float rayDistance, out int modelOn)
 		{
 			Vector3	camForward	=cam.Forward;
 			Vector3	start		=new Vector3(screenPos.X, screenPos.Y, 0f);
@@ -278,11 +278,13 @@ namespace BSPZone
 			Vector3	hitPos	=Vector3.Zero;
 			if(TraceAll(null, null, bestStart, end, out col))
 			{
-				hitPos		=col.mIntersection + Vector3.UnitY;
+				hitPos	=col.mIntersection + Vector3.UnitY;
+				modelOn	=col.mModelHit;
 			}
 			else
 			{
 				hitPos	=end;
+				modelOn	=-1;
 			}
 			return	hitPos;
 		}

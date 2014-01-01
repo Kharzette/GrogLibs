@@ -285,6 +285,37 @@ namespace BSPZone
 		}
 
 
+		public void MoveWithoutCollision(Vector3 endPos, int msDelta,
+			bool bTriggerCheck, bool bDistCheck)
+		{
+			if(mZone == null)
+			{
+				return;
+			}
+
+			Vector3	moveDelta	=endPos - mPosition;
+
+			mPosition	=endPos;
+			if(mbPushable)
+			{
+				mZone.UpdatePushable(this, mPosition, mModelOn);
+			}
+
+			//do a trigger check if requested
+			if(bTriggerCheck)
+			{
+				mTHelper.CheckMobile(this, mBox,
+					mPosition, endPos, msDelta);
+			}
+
+			mPosition	=endPos;
+			if(mbPushable)
+			{
+				mZone.UpdatePushable(this, mPosition, mModelOn);
+			}
+		}
+
+
 		//ins and outs are ground based
 		public void Move(Vector3 endPos, int msDelta, bool bWorldOnly,
 			bool bAffectVelocity, bool bFly, bool bTriggerCheck, bool bDistCheck,
