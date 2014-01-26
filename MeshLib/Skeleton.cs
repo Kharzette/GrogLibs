@@ -9,7 +9,7 @@ namespace MeshLib
 {
 	public class GSNode
 	{
-		string			mName;
+		internal string	mName;
 		List<GSNode>	mChildren	=new List<GSNode>();
 
 		//current pos / rot / scale
@@ -61,6 +61,20 @@ namespace MeshLib
 			}
 			ret	=Matrix.Identity;
 			return	false;
+		}
+
+
+		internal void NukeBone(string boneName)
+		{
+			foreach(GSNode n in mChildren)
+			{
+				if(n.mName == boneName)
+				{
+					mChildren.Remove(n);
+					return;
+				}
+				n.NukeBone(boneName);
+			}
 		}
 
 
@@ -155,12 +169,28 @@ namespace MeshLib
 			mKeyValue.mRotation	=keyFrame.mRotation;
 			mKeyValue.mScale	=keyFrame.mScale;
 		}
+
+
+		internal void IterateStructure(Skeleton.IterateStruct ist)
+		{
+			foreach(GSNode gsn in mChildren)
+			{
+				ist(gsn.mName, mName);
+			}
+
+			foreach(GSNode gsn in mChildren)
+			{
+				gsn.IterateStructure(ist);
+			}
+		}
 	}
 
 
 	public class Skeleton
 	{
 		List<GSNode>	mRoots	=new List<GSNode>();
+
+		public delegate void IterateStruct(string name, string parent);
 
 
 		public Skeleton()
@@ -194,6 +224,20 @@ namespace MeshLib
 			}
 			ret	=Matrix.Identity;
 			return	false;
+		}
+
+
+		public void NukeBone(string name)
+		{
+			foreach(GSNode n in mRoots)
+			{
+				if(n.mName == name)
+				{
+					mRoots.Remove(n);
+					return;
+				}
+				n.NukeBone(name);
+			}
 		}
 
 
@@ -248,6 +292,22 @@ namespace MeshLib
 				}
 			}
 			return	ret;
+		}
+
+
+		public void IterateStructure(IterateStruct ist)
+		{
+			//do the roots
+			foreach(GSNode gsn in mRoots)
+			{
+				ist(gsn.mName, null);
+			}
+
+			//recurse
+			foreach(GSNode gsn in mRoots)
+			{
+				gsn.IterateStructure(ist);
+			}
 		}
 	}
 }

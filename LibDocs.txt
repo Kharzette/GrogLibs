@@ -53,4 +53,3 @@ Known Issues:
 	If geometry is moved in quark, texture alignment will be off
 	Sunlight doesn't work with "Build as Model"
 	Switchable lights don't work after an update entities
-	Detail brushes break PathGraph
