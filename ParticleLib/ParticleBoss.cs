@@ -56,7 +56,7 @@ namespace ParticleLib
 				mTextures.Add(te.Key, te.Value.GetTexture(0));
 			}
 
-			mFX	=sCM.Load<Effect>("Shaders/Static");
+			mFX	=sCM.Load<Effect>("Shaders/2D");
 		}
 
 

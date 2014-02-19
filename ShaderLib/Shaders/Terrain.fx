@@ -57,15 +57,6 @@ struct PSInput
 	float4	TexFactor1	: TEXCOORD2;
 };
 
-//output from vertex shader
-struct VSOutput
-{
-	float4	Position	: POSITION;
-	float4	Color		: COLOR0;
-	float4	WorldPos	: TEXCOORD0;
-	float4	TexFactor0	: TEXCOORD1;
-	float4	TexFactor1	: TEXCOORD2;
-};
 
 struct DepthVSOut
 {
@@ -75,7 +66,7 @@ struct DepthVSOut
 
 sampler	TexSampler0	=sampler_state
 {
-	Texture	=(mTerTexture0);
+	Texture		=mTerTexture0;
 	MinFilter	=Linear;
 	MagFilter	=Linear;
 	MipFilter	=Linear;
@@ -84,7 +75,7 @@ sampler	TexSampler0	=sampler_state
 };
 sampler	TexSampler1	=sampler_state
 {
-	Texture	=(mTerTexture1);
+	Texture		=mTerTexture1;
 	MinFilter	=Linear;
 	MagFilter	=Linear;
 	MipFilter	=Linear;
@@ -93,7 +84,7 @@ sampler	TexSampler1	=sampler_state
 };
 sampler	TexSampler2	=sampler_state
 {
-	Texture	=(mTerTexture2);
+	Texture		=mTerTexture2;
 	MinFilter	=Linear;
 	MagFilter	=Linear;
 	MipFilter	=Linear;
@@ -102,7 +93,7 @@ sampler	TexSampler2	=sampler_state
 };
 sampler	TexSampler4	=sampler_state
 {
-	Texture	=(mTerTexture4);
+	Texture		=mTerTexture4;
 	MinFilter	=Linear;
 	MagFilter	=Linear;
 	MipFilter	=Linear;
@@ -111,7 +102,7 @@ sampler	TexSampler4	=sampler_state
 };
 sampler	TexSampler5	=sampler_state
 {
-	Texture	=(mTerTexture5);
+	Texture		=mTerTexture5;
 	MinFilter	=Linear;
 	MagFilter	=Linear;
 	MipFilter	=Linear;
@@ -120,7 +111,7 @@ sampler	TexSampler5	=sampler_state
 };
 sampler	TexSampler6	=sampler_state
 {
-	Texture	=(mTerTexture6);
+	Texture		=mTerTexture6;
 	MinFilter	=Linear;
 	MagFilter	=Linear;
 	MipFilter	=Linear;
@@ -129,7 +120,7 @@ sampler	TexSampler6	=sampler_state
 };
 sampler	TexSampler7	=sampler_state
 {
-	Texture	=(mTerTexture7);
+	Texture		=mTerTexture7;
 	MinFilter	=Linear;
 	MagFilter	=Linear;
 	MipFilter	=Linear;
@@ -138,7 +129,7 @@ sampler	TexSampler7	=sampler_state
 };
 sampler	PUPNearShadowSampler	=sampler_state
 {
-	Texture	=(mPUPNearShadowTex);
+	Texture		=mPUPNearShadowTex;
 	MinFilter	=Point;
 	MagFilter	=Point;
 	MipFilter	=Point;
@@ -147,7 +138,7 @@ sampler	PUPNearShadowSampler	=sampler_state
 };
 sampler	PUPFarShadowSampler	=sampler_state
 {
-	Texture	=(mPUPFarShadowTex);
+	Texture		=mPUPFarShadowTex;
 	MinFilter	=Point;
 	MagFilter	=Point;
 	MipFilter	=Point;
@@ -156,7 +147,7 @@ sampler	PUPFarShadowSampler	=sampler_state
 };
 sampler	AvaShadowSampler	=sampler_state
 {
-	Texture	=(mAvaShadowTex);
+	Texture		=mAvaShadowTex;
 	MinFilter	=Point;
 	MagFilter	=Point;
 	MipFilter	=Point;
@@ -173,15 +164,16 @@ float ComputeFogFactor(float d)
 
 
 //gourad shading vertex shader
-VSOutput DiffuseGourad(float3	position	: POSITION,
-					   float3	normal		: NORMAL,
-					   float4	tfac0		: COLOR0,
-					   float4	tfac1		: COLOR1)
+VPosCol0Tex04Tex14Tex24 DiffuseGourad(float3	position	: POSITION,
+									  float3	normal		: NORMAL,
+									  float4	tfac0		: COLOR0,
+									  float4	tfac1		: COLOR1)
 {
-	VSOutput	output;
+	VPosCol0Tex04Tex14Tex24	output;
 
-	//transform mats	
-	float4x4	localLevelWorld	=mul(mul(mLocal, mLevel), mWorld);
+	//transform mats
+	float4x4	localLevel		=mul(mLocal, mLevel);
+	float4x4	localLevelWorld	=mul(localLevel, mWorld);
 	float4x4	viewProj		=mul(mView, mProjection);
 
 	//generate a default world position
@@ -191,8 +183,8 @@ VSOutput DiffuseGourad(float3	position	: POSITION,
 	output.Position	=mul(worldPos, viewProj);
 
 	//store for texturing
-	output.WorldPos	=worldPos;
-	
+	output.TexCoord0	=worldPos;
+		
 	float3 worldNormal	=mul(normal, mWorld);
 
 	//normal dotproduct lightdirection
@@ -204,8 +196,8 @@ VSOutput DiffuseGourad(float3	position	: POSITION,
 	output.Color	=diffuseColor + mAmbientColor;
 	
 	//direct copy of texfactors
-	output.TexFactor0	=tfac0;
-	output.TexFactor1	=tfac1;
+	output.TexCoord1	=tfac0;
+	output.TexCoord2	=tfac1;
 	
 	//store fog factor in color 4
 	output.Color.w	=ComputeFogFactor(length(worldPos - mEyePos));

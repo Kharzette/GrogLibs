@@ -6,8 +6,6 @@
 //
 //edge detection from nvidia
 //
-//I think this file is set up to only build if the project is set
-//to HiDef.  Reach profile should ignore it as it has v3 shaders
 
 //post process stuff
 float2		mInvViewPort;
@@ -20,7 +18,6 @@ float		mRandTexSize	=64;
 Texture	mNormalTex;
 Texture	mRandTex;
 Texture	mColorTex;
-
 
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
@@ -63,7 +60,7 @@ float	mOpacity;
 
 sampler	NormalSampler	=sampler_state
 {
-	Texture		=(mNormalTex);
+	Texture		=mNormalTex;
 	MinFilter	=Point;
 	MagFilter	=Point;
 	MipFilter	=Point;
@@ -73,7 +70,7 @@ sampler	NormalSampler	=sampler_state
 
 sampler	RandSampler	=sampler_state
 {
-	Texture		=(mRandTex);
+	Texture		=mRandTex;
 	MinFilter	=Point;
 	MagFilter	=Point;
 	MipFilter	=Point;
@@ -83,7 +80,7 @@ sampler	RandSampler	=sampler_state
 
 sampler	ColorSampler	=sampler_state
 {
-	Texture		=(mColorTex);
+	Texture		=mColorTex;
 	MinFilter	=Point;
 	MagFilter	=Point;
 	MipFilter	=Point;
@@ -93,7 +90,7 @@ sampler	ColorSampler	=sampler_state
 
 sampler	BlurTargetSampler	=sampler_state
 {
-	Texture		=(mBlurTargetTex);
+	Texture		=mBlurTargetTex;
 	MinFilter	=Linear;
 	MagFilter	=Linear;
 	MipFilter	=Linear;
@@ -442,12 +439,19 @@ float4	BleachBypassPS(VTex0 input) : COLOR0
 }
 
 
+//alot of these are too beefy for SM2
+#if !SM2
 technique AmbientOcclusion
 {
 	pass P0
 	{
+#if SM4
+		VertexShader	=compile vs_4_0 AOVS();
+		PixelShader		=compile ps_4_0 AOPS();
+#else
 		VertexShader	=compile vs_3_0 AOVS();
 		PixelShader		=compile ps_3_0 AOPS();
+#endif
 	}
 }
 
@@ -455,8 +459,13 @@ technique GaussianBlurX
 {
 	pass P0
 	{
+#if SM4
+		VertexShader	=compile vs_4_0 AOVS();
+		PixelShader		=compile ps_4_0 GaussianBlurXPS();
+#else
 		VertexShader	=compile vs_3_0 AOVS();
 		PixelShader		=compile ps_3_0 GaussianBlurXPS();
+#endif
 	}
 }
 
@@ -464,8 +473,13 @@ technique GaussianBlurY
 {
 	pass P0
 	{
+#if SM4
+		VertexShader	=compile vs_4_0 AOVS();
+		PixelShader		=compile ps_4_0 GaussianBlurYPS();
+#else
 		VertexShader	=compile vs_3_0 AOVS();
 		PixelShader		=compile ps_3_0 GaussianBlurYPS();
+#endif
 	}
 }
 
@@ -473,14 +487,24 @@ technique BilateralBlur
 {
 	pass pX
 	{
+#if SM4
+		VertexShader	=compile vs_4_0 AOVS();
+		PixelShader		=compile ps_4_0	BiLatBlurXPS();
+#else
 		VertexShader	=compile vs_3_0 AOVS();
 		PixelShader		=compile ps_3_0	BiLatBlurXPS();
+#endif
 	}
 
 	pass pY
 	{
+#if SM4
+		VertexShader	=compile vs_4_0 AOVS();
+		PixelShader		=compile ps_4_0	BiLatBlurYPS();
+#else
 		VertexShader	=compile vs_3_0 AOVS();
 		PixelShader		=compile ps_3_0	BiLatBlurYPS();
+#endif
 	}
 }
 
@@ -488,17 +512,13 @@ technique Outline
 {
 	pass P0
 	{
+#if SM4
+		VertexShader	=compile vs_4_0 OutlineVS();
+		PixelShader		=compile ps_4_0 OutlinePS();
+#else
 		VertexShader	=compile vs_3_0 OutlineVS();
 		PixelShader		=compile ps_3_0 OutlinePS();
-	}
-}
-
-technique Modulate
-{
-	pass P0
-	{
-		VertexShader	=compile vs_3_0 OutlineVS();
-		PixelShader		=compile ps_3_0 ModulatePS();
+#endif
 	}
 }
 
@@ -506,8 +526,13 @@ technique BleachBypass
 {
 	pass P0
 	{
+#if SM4
+		VertexShader	=compile vs_4_0 OutlineVS();
+		PixelShader		=compile ps_4_0 BleachBypassPS();
+#else
 		VertexShader	=compile vs_3_0 OutlineVS();
 		PixelShader		=compile ps_3_0 BleachBypassPS();
+#endif
 	}
 }
 
@@ -515,8 +540,13 @@ technique BloomExtract
 {
 	pass P0
 	{
+#if SM4
+		VertexShader	=compile vs_4_0 OutlineVS();
+		PixelShader		=compile ps_4_0 BloomExtractPS();
+#else
 		VertexShader	=compile vs_3_0 OutlineVS();
 		PixelShader		=compile ps_3_0 BloomExtractPS();
+#endif
 	}
 }
 
@@ -524,7 +554,30 @@ technique BloomCombine
 {
 	pass P0
 	{
+#if SM4
+		VertexShader	=compile vs_4_0 OutlineVS();
+		PixelShader		=compile ps_4_0 BloomCombinePS();
+#else
 		VertexShader	=compile vs_3_0 OutlineVS();
 		PixelShader		=compile ps_3_0 BloomCombinePS();
+#endif
+	}
+}
+#endif
+
+technique Modulate
+{
+	pass P0
+	{
+#if SM4
+		VertexShader	=compile vs_4_0 OutlineVS();
+		PixelShader		=compile ps_4_0 ModulatePS();
+#elif SM3
+		VertexShader	=compile vs_3_0 OutlineVS();
+		PixelShader		=compile ps_3_0 ModulatePS();
+#else
+		VertexShader	=compile vs_2_0 OutlineVS();
+		PixelShader		=compile ps_2_0 ModulatePS();
+#endif
 	}
 }

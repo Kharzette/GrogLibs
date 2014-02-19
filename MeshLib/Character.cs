@@ -51,7 +51,7 @@ namespace MeshLib
 			{
 				if(mFX == null)
 				{
-					mFX	=mMatLib.GetShader("Shaders\\Trilight");
+					mFX	=mMatLib.GetShader("Shaders\\Character");
 				}
 				mFX.Parameters["mBones"].SetValue(mBones);
 			}

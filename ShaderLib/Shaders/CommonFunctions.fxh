@@ -8,38 +8,34 @@
 #define	PI_OVER_TWO		1.5707963268f
 
 //matrii
-shared uniform float4x4	mWorld;
-shared uniform float4x4 mView;
-shared uniform float4x4 mProjection;
-shared uniform float4x4	mLightViewProj;	//for shadowing
-shared uniform float3	mEyePos;
+shared float4x4	mWorld;
+shared float4x4 mView;
+shared float4x4 mProjection;
+shared float4x4	mLightViewProj;	//for shadowing
+shared float3	mEyePos;
 
-//for dangly shaders
-shared uniform float3	mDanglyForce;
+//for tinting or diffuse
+shared float4	mSolidColour;
 
 //outline / cel related
-shared uniform Texture	mCelTable;
+shared Texture	mCelTable;
 
 //for shadowmaps
-shared uniform Texture	mShadowTexture;		//2D or cube
-shared uniform float3	mShadowLightPos;	//point light location
-shared uniform bool		mbDirectional;		//sunnish or point
-shared uniform float	mShadowAtten;		//shadow attenuation
-
-//sky gradient
-shared uniform float3	mSkyGradient0;	//horizon colour
-shared uniform float3	mSkyGradient1;	//peak colour
+shared Texture	mShadowTexture;		//2D or cube
+shared float3	mShadowLightPos;	//point light location
+shared bool		mbDirectional;		//sunnish or point
+shared float	mShadowAtten;		//shadow attenuation
 
 //specular stuff
-shared uniform float4	mSpecColor;
-shared uniform float	mSpecPower;
+shared float4	mSpecColor;
+shared float	mSpecPower;
 
 #include "Types.fxh"
 
 
 sampler CelSampler = sampler_state
 {
-	Texture	=(mCelTable);
+	Texture		=mCelTable;
 
 	MinFilter	=Point;
 	MagFilter	=Point;
@@ -51,7 +47,7 @@ sampler CelSampler = sampler_state
 
 sampler	ShadowSampler2D	=sampler_state
 {
-	Texture	=(mShadowTexture);
+	Texture		=mShadowTexture;
 	MinFilter	=Point;
 	MagFilter	=Point;
 	MipFilter	=Point;
@@ -61,7 +57,7 @@ sampler	ShadowSampler2D	=sampler_state
 
 sampler	ShadowSampler3D	=sampler_state
 {
-	Texture	=(mShadowTexture);
+	Texture		=mShadowTexture;
 	MinFilter	=Point;
 	MagFilter	=Point;
 	MipFilter	=Point;
@@ -122,117 +118,6 @@ float3 ComputeTrilight(float3 normal, float3 lightDir, float3 c0, float3 c1, flo
 }
 
 
-VPosNorm ComputeSkin(VPosNormBone input, float4x4 bones[MAX_BONES])
-{
-	VPosNorm	output;
-	
-	float4	vertPos	=input.Position;
-	
-	//generate the world-view-proj matrix
-	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
-	
-	//do the bone influences
-	float4x4 skinTransform	=GetSkinXForm(input.Blend0, input.Weight0, bones);
-	
-	//xform the vert to the character's boney pos
-	vertPos	=mul(vertPos, skinTransform);
-	
-	//transform the input position to the output
-	output.Position	=mul(vertPos, wvp);
-
-	//skin transform the normal
-	float3	worldNormal	=mul(input.Normal, skinTransform);
-	
-	//world transform the normal
-	output.Normal	=mul(worldNormal, mWorld);
-
-	return	output;
-}
-
-
-VPosTex03Tex13 ComputeSkinWorld(VPosNormBone input, float4x4 bones[MAX_BONES])
-{
-	VPosTex03Tex13	output;
-	
-	float4	vertPos	=input.Position;
-	
-	//generate view-proj matrix
-	float4x4	vp	=mul(mView, mProjection);
-	
-	//do the bone influences
-	float4x4 skinTransform	=GetSkinXForm(input.Blend0, input.Weight0, bones);
-	
-	//xform the vert to the character's boney pos
-	vertPos	=mul(vertPos, skinTransform);
-	
-	//transform to world
-	float4	worldPos	=mul(vertPos, mWorld);
-	output.TexCoord1	=worldPos.xyz;
-
-	//viewproj
-	output.Position	=mul(worldPos, vp);
-
-	//skin transform the normal
-	float3	worldNormal	=mul(input.Normal, skinTransform);
-	
-	//world transform the normal
-	output.TexCoord0	=mul(worldNormal, mWorld);
-
-	return	output;
-}
-
-
-VPosTex03Tex13 ComputeSkinWorldDangly(VPosNormBoneCol0 input, float4x4 bones[MAX_BONES])
-{
-	VPosTex03Tex13	output;
-	
-	float4	vertPos	=input.Position;
-	
-	//generate view-proj matrix
-	float4x4	vp	=mul(mView, mProjection);
-	
-	//do the bone influences
-	float4x4 skinTransform	=GetSkinXForm(input.Blend0, input.Weight0, bones);
-	
-	//xform the vert to the character's boney pos
-	vertPos	=mul(vertPos, skinTransform);
-	
-	//transform to world
-	float4	worldPos	=mul(vertPos, mWorld);
-
-	//dangliness
-	worldPos.xyz	-=input.Color.x * mDanglyForce;
-
-	output.TexCoord1	=worldPos.xyz;
-
-	//viewproj
-	output.Position	=mul(worldPos, vp);
-
-	//skin transform the normal
-	float3	worldNormal	=mul(input.Normal, skinTransform);
-	
-	//world transform the normal
-	output.TexCoord0	=mul(worldNormal, mWorld);
-
-	return	output;
-}
-
-
-//compute the position and color of a skinned vert
-VPosCol0 ComputeSkinTrilight(VPosNormBone input, float4x4 bones[MAX_BONES],
-							 float3 lightDir, float4 c0, float4 c1, float4 c2)
-{
-	VPosCol0	output;
-	VPosNorm	skinny	=ComputeSkin(input, bones);
-
-	output.Position		=skinny.Position;	
-	output.Color.xyz	=ComputeTrilight(skinny.Normal, lightDir, c0, c1, c2);
-	output.Color.w		=1.0;
-	
-	return	output;
-}
-
-
 float3 ComputeGoodSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 lightVal, float4 fillLight)
 {
 	float3	eyeVec	=normalize(mEyePos - wpos);
@@ -262,6 +147,7 @@ float3 ComputeGoodSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 li
 }
 
 //snaps a color to a celish range
+//makes a sort of EGA/CGA style look
 float3 CalcCelColor(float3 colVal)
 {
 	float3	ret;
@@ -304,7 +190,7 @@ float3 CalcCelColor(float3 colVal)
 	return	ret;
 }
 
-float3 CalcSkyColorGradient(float3 worldPos)
+float3 CalcSkyColorGradient(float3 worldPos, float3 skyGrad0, float3 skyGrad1)
 {
 	float3	upVec	=float3(0.0f, 1.0f, 0.0f);
 
@@ -315,7 +201,7 @@ float3 CalcSkyColorGradient(float3 worldPos)
 
 	float	skyDot	=abs(dot(skyVec, upVec));
 
-	return	lerp(mSkyGradient0, mSkyGradient1, skyDot);
+	return	lerp(skyGrad0, skyGrad1, skyDot);
 }
 
 float3 ComputeShadowCoord(float4 worldPos)

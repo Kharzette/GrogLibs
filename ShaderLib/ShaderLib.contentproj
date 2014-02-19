@@ -36,21 +36,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Shaders\LightMap.fx">
-      <Name>LightMap</Name>
-      <Importer>EffectImporter</Importer>
-      <Processor>EffectProcessor</Processor>
-    </Compile>
     <Compile Include="Shaders\Static.fx">
       <Name>Static</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
+      <ProcessorParameters_Defines>SM3</ProcessorParameters_Defines>
     </Compile>
-    <Compile Include="Shaders\Trilight.fx">
+    <None Include="Shaders\Trilight.fxh">
       <Name>Trilight</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
-    </Compile>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\CommonFunctions.fxh">
@@ -61,28 +57,9 @@
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
     </Compile>
-    <Compile Include="Shaders\Terrain.fx" Condition=" '$(XnaProfile)' != 'Reach'">
-      <Name>Terrain</Name>
-      <Importer>EffectImporter</Importer>
-      <Processor>EffectProcessor</Processor>
-    </Compile>
     <None Include="Shaders\Types.fxh">
       <Name>Types</Name>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Shaders\LightMap3.fx" Condition=" '$(XnaProfile)' != 'Reach'">
-      <Name>LightMap3</Name>
-      <Importer>EffectImporter</Importer>
-      <Processor>EffectProcessor</Processor>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Shaders\PostReach.fx" Condition=" '$(XnaProfile)' == 'Reach'">
-      <Name>PostReach</Name>
-      <Importer>EffectImporter</Importer>
-      <Processor>EffectProcessor</Processor>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\ParameterData.txt">
@@ -91,6 +68,26 @@
       <Processor>PassThroughProcessor</Processor>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Shaders\BSP.fx">
+      <Name>BSP</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+      <ProcessorParameters_Defines>SM3</ProcessorParameters_Defines>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Shaders\2D.fx">
+      <Name>2D</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+    </Compile>
+    <Compile Include="Shaders\Character.fx">
+      <Name>Character</Name>
+      <Importer>EffectImporter</Importer>
+      <Processor>EffectProcessor</Processor>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\$(XnaFrameworkVersion)\Microsoft.Xna.GameStudio.ContentPipeline.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

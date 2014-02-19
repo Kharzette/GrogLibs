@@ -35,7 +35,16 @@ struct VPosTex04
 struct VPosCol0
 {
 	float4	Position	: POSITION;
-	float4	Color		: COLOR0;	
+	float4	Color		: COLOR0;
+};
+
+struct VPosCol0Tex04Tex14Tex24
+{
+	float4	Position	: POSITION;
+	float4	Color		: COLOR0;
+	float4	TexCoord0	: TEXCOORD0;
+	float4	TexCoord1	: TEXCOORD1;
+	float4	TexCoord2	: TEXCOORD2;
 };
 
 struct VPosBone
@@ -188,16 +197,7 @@ struct VPosNormTanTex0
 	float2	TexCoord0	: TEXCOORD0;
 };
 
-struct VOutPosNormTanBiTanTex0
-{
-	float4	Position	: POSITION;
-	float3	Normal		: TEXCOORD0;
-	float3	Tangent		: TEXCOORD1;
-	float3	BiTangent	: TEXCOORD2;
-	float2	TexCoord0	: TEXCOORD3;
-};
-
-struct VOutPosNormTanBiTanTex0Col0
+struct VPosNormTanBiTanTex0Col0
 {
 	float4	Position	: POSITION;
 	float3	Normal		: TEXCOORD0;
