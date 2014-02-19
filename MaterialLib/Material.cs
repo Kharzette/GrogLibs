@@ -230,6 +230,8 @@ namespace MaterialLib
 			//set technique
 			if(mTechnique != "")
 			{
+				Debug.Assert(fx.Techniques[mTechnique] != null);
+
 				if(fx.Techniques[mTechnique] == null)
 				{
 					return;

@@ -963,15 +963,7 @@ namespace BSPCore
 				mat.BlendState			=BlendState.Opaque;
 				mat.DepthState			=DepthStencilState.Default;
 				mat.RasterState			=RasterizerState.CullCounterClockwise;
-
-				if(bDynamic)
-				{
-					mat.ShaderName	="Shaders\\LightMap3";
-				}
-				else
-				{
-					mat.ShaderName	="Shaders\\LightMap";
-				}
+				mat.ShaderName			="Shaders\\BSP";
 
 				bool	bCel	=false;
 				string	mn		=matName;
@@ -1044,7 +1036,6 @@ namespace BSPCore
 				else if(mn.EndsWith("*FullBright"))
 				{
 					mat.Technique	="FullBright";
-					mat.ShaderName	="Shaders\\LightMap";	//no fullbright in lm3
 				}
 				else if(mn.EndsWith("*Mirror"))
 				{
@@ -1057,7 +1048,6 @@ namespace BSPCore
 				else if(mn.EndsWith("*Sky"))
 				{
 					mat.Technique	="Sky";
-					mat.ShaderName	="Shaders\\LightMap";	//no sky in lm3
 				}
 				else if(mn.EndsWith("*Anim"))
 				{

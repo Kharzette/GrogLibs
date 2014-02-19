@@ -13,6 +13,10 @@
 //matrii
 shared float4x4	mLocal;
 shared float4x4	mLevel;
+shared float4x4	mWorld;
+shared float4x4 mView;
+shared float4x4 mProjection;
+shared float3	mEyePos;
 
 //sunlight / moonlight
 shared float4	mLightColor;
@@ -45,8 +49,9 @@ texture	mPUPNearShadowTex;
 texture	mPUPFarShadowTex;
 texture	mAvaShadowTex;
 
-#include "Types.fxh"
-#include "CommonFunctions.fxh"
+//sky colors
+float3	mSkyGradient0;
+float	mSkyGradient1;
 
 //this plugs into the pixel shader
 struct PSInput
@@ -162,6 +167,28 @@ float ComputeFogFactor(float d)
     return clamp((d - mFogStart) / (mFogEnd - mFogStart), 0, 1) * mFogEnabled;
 }
 
+float3 CalcSkyColorGradient(float3 worldPos, float3 skyGrad0, float3 skyGrad1)
+{
+	float3	upVec	=float3(0.0f, 1.0f, 0.0f);
+
+	//texcoord has world pos
+	float3	skyVec	=(worldPos - mEyePos);
+
+	skyVec	=normalize(skyVec);
+
+	float	skyDot	=abs(dot(skyVec, upVec));
+
+	return	lerp(skyGrad0, skyGrad1, skyDot);
+}
+
+struct VPosCol0Tex04Tex14Tex24
+{
+	float4	Position	: POSITION;
+	float4	Color		: COLOR0;
+	float4	TexCoord0	: TEXCOORD0;
+	float4	TexCoord1	: TEXCOORD1;
+	float4	TexCoord2	: TEXCOORD2;
+};
 
 //gourad shading vertex shader
 VPosCol0Tex04Tex14Tex24 DiffuseGourad(float3	position	: POSITION,
@@ -436,10 +463,6 @@ float4 SimplePS(PSInput input) : COLOR
 	//set solid
 	texLitColor.w	=1.0f;
 							
-//	texLitColor.rgb	=lerp(texLitColor, mFogColor, fogFactor);
-
-	texLitColor.rgb	=CalcCelColor(texLitColor.rgb);
-
 	texLitColor.rgb	=lerp(texLitColor, mFogColor, fogFactor);
 
 	//back to srgb
@@ -463,9 +486,9 @@ float4 SimpleSkyGradientFogPS(PSInput input) : COLOR
 	
 	texLitColor	*=input.Color;
 
-	texLitColor	=CalcCelColor(texLitColor);
+//	texLitColor	=CalcCelColor(texLitColor);
 
-	float3	skyColor	=CalcSkyColorGradient(input.WorldPos.xyz);
+	float3	skyColor	=CalcSkyColorGradient(input.WorldPos.xyz, mSkyGradient0, mSkyGradient1);
 
 	texLitColor.rgb	=lerp(texLitColor, skyColor, fogFactor);
 

@@ -10,14 +10,11 @@ TriTex0
 		mBones
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 	Hidden
@@ -29,14 +26,11 @@ TriTex0
 		mProjection
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 TriTex0NormalMap
@@ -46,14 +40,11 @@ TriTex0NormalMap
 		mBones
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 	Hidden
@@ -65,14 +56,11 @@ TriTex0NormalMap
 		mProjection
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 TriTex0NormalMapSolid
@@ -81,14 +69,11 @@ TriTex0NormalMapSolid
 		mBones
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 	Hidden
@@ -99,14 +84,11 @@ TriTex0NormalMapSolid
 		mProjection
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 TriTex0NormalMapSolidSpec
@@ -115,14 +97,11 @@ TriTex0NormalMapSolidSpec
 		mBones
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 	Hidden
 		mTexture1
 		mBones
@@ -131,14 +110,11 @@ TriTex0NormalMapSolidSpec
 		mProjection
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 TriTex0SpecPhys
 	Ignored
 		mTexture1
@@ -146,14 +122,11 @@ TriTex0SpecPhys
 		mBones
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 	Hidden
 		mTexture1
 		mSolidColour
@@ -163,14 +136,11 @@ TriTex0SpecPhys
 		mProjection
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 TriSolidSpecPhys
 	Ignored
 		mTexture0
@@ -178,14 +148,11 @@ TriSolidSpecPhys
 		mBones
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 	Hidden
 		mTexture0
 		mTexture1
@@ -195,14 +162,11 @@ TriSolidSpecPhys
 		mProjection
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 TriCelSolidSpecPhys
 	Ignored
 		mTexture0
@@ -210,13 +174,10 @@ TriCelSolidSpecPhys
 		mBones
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 	Hidden
 		mTexture0
 		mTexture1
@@ -226,21 +187,17 @@ TriCelSolidSpecPhys
 		mProjection
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 TriTex0NormalMapSolidSpecPhys
 	Ignored
 		mTexture1
 		mBones
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
@@ -262,22 +219,17 @@ TriTex0NormalMapSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 TriTex0NormalMapSpecPhys
 	Ignored
 		mSolidColour
 		mBones
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 	Hidden
 		mSolidColour
 		mBones
@@ -286,28 +238,22 @@ TriTex0NormalMapSpecPhys
 		mProjection
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 TriTex0NormalMapSolidSpecPhysInstanced
 	Ignored
 		mTexture1
 		mBones
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 	Hidden
 		mTexture1
 		mBones
@@ -316,14 +262,11 @@ TriTex0NormalMapSolidSpecPhysInstanced
 		mProjection
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 TriSkinTex0
 	Ignored
 		mTexture1
@@ -337,8 +280,6 @@ TriSkinTex0
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 	Hidden
@@ -356,8 +297,6 @@ TriSkinTex0
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 TriSkinSolidSpecPhys
@@ -373,8 +312,6 @@ TriSkinSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 	Hidden
 		mTexture0
 		mTexture1
@@ -390,8 +327,6 @@ TriSkinSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 TriSkinCelSolidSpecPhys
 	Ignored
 		mTexture0
@@ -404,8 +339,6 @@ TriSkinCelSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 	Hidden
 		mTexture0
 		mTexture1
@@ -421,8 +354,6 @@ TriSkinCelSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 TriSkinDanglySolidSpecPhys
 	Ignored
 		mTexture0
@@ -435,8 +366,6 @@ TriSkinDanglySolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 	Hidden
 		mTexture0
 		mTexture1
@@ -451,8 +380,6 @@ TriSkinDanglySolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 TriSkinDanglyCelSolidSpecPhys
 	Ignored
 		mTexture0
@@ -464,8 +391,6 @@ TriSkinDanglyCelSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 	Hidden
 		mTexture0
 		mTexture1
@@ -480,8 +405,6 @@ TriSkinDanglyCelSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 TriSkinCelColorSpecPhys
 	Ignored
 		mTexture0
@@ -495,8 +418,6 @@ TriSkinCelColorSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 	Hidden
 		mTexture0
 		mTexture1
@@ -513,8 +434,6 @@ TriSkinCelColorSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 TriSkinDecalTex0
 	Ignored
 		mSolidColour
@@ -527,8 +446,6 @@ TriSkinDecalTex0
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 	Hidden
@@ -545,8 +462,6 @@ TriSkinDecalTex0
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 TriSkinDecalTex0Tex1
@@ -561,8 +476,6 @@ TriSkinDecalTex0Tex1
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 	Hidden
@@ -579,8 +492,6 @@ TriSkinDecalTex0Tex1
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 FullBrightSkin
@@ -600,8 +511,6 @@ FullBrightSkin
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 	Hidden
@@ -624,8 +533,6 @@ FullBrightSkin
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 ShadowSkin
@@ -644,8 +551,6 @@ ShadowSkin
 		mDanglyForce
 		mCelTable
 		mShadowTexture
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 	Hidden
@@ -668,8 +573,6 @@ ShadowSkin
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 Shadow
@@ -685,11 +588,8 @@ Shadow
 		mView
 		mProjection
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower
 	Hidden
@@ -706,13 +606,10 @@ Shadow
 		mProjection
 		mLightViewProj
 		mEyePos
-		mDanglyForce
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
-		mSkyGradient0
-		mSkyGradient1
 		mSpecColor
 		mSpecPower

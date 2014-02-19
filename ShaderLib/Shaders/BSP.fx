@@ -168,6 +168,20 @@ sampler LightMapSampler = sampler_state
 };
 
 
+sampler SkySampler = sampler_state
+{
+	Texture		=(mTexture);
+
+	MinFilter	=Linear;
+	MagFilter	=Linear;
+	MipFilter	=Linear;
+
+	AddressU	=Clamp;
+	AddressV	=Clamp;
+	AddressW	=Clamp;
+};
+
+
 //Sm2 not happy with this
 #if !defined(SM2)
 sampler1D DynLightSampler = sampler_state
@@ -501,6 +515,26 @@ float4 LightMapAnimShadowPassPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 }
 
 
+float4 SkyPS(VCubeTex0 input) : COLOR0
+{
+	if(mbTextureEnabled)
+	{
+		float3	worldPosition	=input.TexCoord0;
+
+		//calculate vector from eye to pos
+		float3	eyeVec	=worldPosition - mEyePos;
+	
+		eyeVec	=normalize(eyeVec);
+
+		float4	texel	=texCUBE(SkySampler, eyeVec);
+
+		return	texel;
+	}
+
+	return	float4(1, 1, 1, 1);
+}
+
+
 technique LightMap
 {
 	pass Base
@@ -750,5 +784,14 @@ technique LightMapAnimCel
 	{
 		VertexShader	=compile vs_2_0 LightMapAnimVS();
 		PixelShader		=compile ps_2_0 LightMapAnimShadowPassPS();
+	}
+}
+
+technique Sky
+{
+	pass Pass1
+	{
+		VertexShader	=compile vs_2_0 SkyVS();
+		PixelShader		=compile ps_2_0 SkyPS();
 	}
 }
