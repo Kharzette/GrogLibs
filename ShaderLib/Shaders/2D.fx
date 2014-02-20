@@ -134,10 +134,10 @@ technique Particle
 {     
 	pass P0
 	{
-#if SM4
+#if defined(SM4)
 		VertexShader	=compile vs_4_0 ParticleVS();
 		PixelShader		=compile ps_4_0 ParticlePS();
-#elif SM3
+#elif defined(SM3)
 		VertexShader	=compile vs_3_0 ParticleVS();
 		PixelShader		=compile ps_3_0 ParticlePS();
 #else

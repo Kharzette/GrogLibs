@@ -227,6 +227,13 @@ namespace MaterialLib
 
 		public void ApplyShaderParameters(Effect fx)
 		{
+			Debug.Assert(fx != null);
+
+			if(fx == null)
+			{
+				return;
+			}
+
 			//set technique
 			if(mTechnique != "")
 			{

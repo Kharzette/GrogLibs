@@ -440,12 +440,12 @@ float4	BleachBypassPS(VTex0 input) : COLOR0
 
 
 //alot of these are too beefy for SM2
-#if !SM2
+#if !defined(SM2)
 technique AmbientOcclusion
 {
 	pass P0
 	{
-#if SM4
+#if defined(SM4)
 		VertexShader	=compile vs_4_0 AOVS();
 		PixelShader		=compile ps_4_0 AOPS();
 #else
@@ -459,7 +459,7 @@ technique GaussianBlurX
 {
 	pass P0
 	{
-#if SM4
+#if defined(SM4)
 		VertexShader	=compile vs_4_0 AOVS();
 		PixelShader		=compile ps_4_0 GaussianBlurXPS();
 #else
@@ -473,7 +473,7 @@ technique GaussianBlurY
 {
 	pass P0
 	{
-#if SM4
+#if defined(SM4)
 		VertexShader	=compile vs_4_0 AOVS();
 		PixelShader		=compile ps_4_0 GaussianBlurYPS();
 #else
@@ -487,7 +487,7 @@ technique BilateralBlur
 {
 	pass pX
 	{
-#if SM4
+#if defined(SM4)
 		VertexShader	=compile vs_4_0 AOVS();
 		PixelShader		=compile ps_4_0	BiLatBlurXPS();
 #else
@@ -498,7 +498,7 @@ technique BilateralBlur
 
 	pass pY
 	{
-#if SM4
+#if defined(SM4)
 		VertexShader	=compile vs_4_0 AOVS();
 		PixelShader		=compile ps_4_0	BiLatBlurYPS();
 #else
@@ -512,7 +512,7 @@ technique Outline
 {
 	pass P0
 	{
-#if SM4
+#if defined(SM4)
 		VertexShader	=compile vs_4_0 OutlineVS();
 		PixelShader		=compile ps_4_0 OutlinePS();
 #else
@@ -526,7 +526,7 @@ technique BleachBypass
 {
 	pass P0
 	{
-#if SM4
+#if defined(SM4)
 		VertexShader	=compile vs_4_0 OutlineVS();
 		PixelShader		=compile ps_4_0 BleachBypassPS();
 #else
@@ -540,7 +540,7 @@ technique BloomExtract
 {
 	pass P0
 	{
-#if SM4
+#if defined(SM4)
 		VertexShader	=compile vs_4_0 OutlineVS();
 		PixelShader		=compile ps_4_0 BloomExtractPS();
 #else
@@ -554,7 +554,7 @@ technique BloomCombine
 {
 	pass P0
 	{
-#if SM4
+#if defined(SM4)
 		VertexShader	=compile vs_4_0 OutlineVS();
 		PixelShader		=compile ps_4_0 BloomCombinePS();
 #else
@@ -569,10 +569,10 @@ technique Modulate
 {
 	pass P0
 	{
-#if SM4
+#if defined(SM4)
 		VertexShader	=compile vs_4_0 OutlineVS();
 		PixelShader		=compile ps_4_0 ModulatePS();
-#elif SM3
+#elif defined(SM3)
 		VertexShader	=compile vs_3_0 OutlineVS();
 		PixelShader		=compile ps_3_0 ModulatePS();
 #else
