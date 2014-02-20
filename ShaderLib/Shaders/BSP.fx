@@ -1,4 +1,4 @@
-//texture stuff
+//This fx is for the auto generated materials from the bsp compiler
 texture2D	mTexture;
 texture2D	mLightMap;
 texture1D	mDynLights;
@@ -264,12 +264,19 @@ float4 LightMapCelPS(VTex04Tex14Tex24 input) : COLOR0
 #if !defined(SM2)
 	lm	+=GetDynLight(input.TexCoord1, input.TexCoord2.xyz);
 #endif
+
+#if defined(CELLIGHT)
 	lm	=CalcCelColor(lm);
+#endif
 
 	color.rgb	*=lm;
 
 	//back to srgb
 	color	=pow(abs(color), 1 / 2.2);
+
+#if defined(CELALL)
+	color	=CalcCelColor(color);
+#endif
 	
 	return	float4(color, input.TexCoord1.w);
 }
@@ -370,12 +377,18 @@ float4 VertexLitCelPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 #endif
 
 	//celshade the vertex light + dyn
+#if defined(CELLIGHT)
 	light.xyz	=CalcCelColor(light.xyz);
+#endif
 
 	color.rgb	*=light;
 
 	//back to srgb
 	color	=pow(abs(color), 1 / 2.2);
+
+#if defined(CELALL)
+	color	=CalcCelColor(color);
+#endif
 
 	return	float4(color, input.TexCoord3.x);
 }
@@ -493,12 +506,18 @@ float4 LightMapAnimCelPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 #endif
 
 	//cel
+#if defined(CELLIGHT)
 	lm	=CalcCelColor(lm);
+#endif
 
 	color.rgb	*=lm;
 
 	//back to srgb
 	color	=pow(abs(color), 1 / 2.2);
+
+#if defined(CELALL)
+	color	=CalcCelColor(color);
+#endif
 
 	return	float4(color, input.TexCoord2.z);
 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 using UtilityLib;
 
 
@@ -155,15 +156,15 @@ namespace MeshLib
 			}
 
 			//weld
-			List<Vector4>	myWeights		=VertexTypes.GetWeights(mVerts, mNumVerts, mTypeIndex);
-			List<Vector4>	otherWeights	=VertexTypes.GetWeights(mesh2.mVerts, mesh2.mNumVerts, mesh2.mTypeIndex);
-			List<Vector4>	myInds			=VertexTypes.GetBoneIndexes(mVerts, mNumVerts, mTypeIndex);
-			List<Vector4>	otherInds		=VertexTypes.GetBoneIndexes(mesh2.mVerts, mesh2.mNumVerts, mesh2.mTypeIndex);
+			List<HalfVector4>	myWeights		=VertexTypes.GetWeights(mVerts, mNumVerts, mTypeIndex);
+			List<HalfVector4>	otherWeights	=VertexTypes.GetWeights(mesh2.mVerts, mesh2.mNumVerts, mesh2.mTypeIndex);
+			List<HalfVector4>	myInds			=VertexTypes.GetBoneIndexes(mVerts, mNumVerts, mTypeIndex);
+			List<HalfVector4>	otherInds		=VertexTypes.GetBoneIndexes(mesh2.mVerts, mesh2.mNumVerts, mesh2.mTypeIndex);
 
 			foreach(KeyValuePair<int, List<int>> weldSpot in toWeld)
 			{
-				Vector4	goodWeight	=myWeights[weldSpot.Key];
-				Vector4	goodIdx		=myInds[weldSpot.Key];
+				HalfVector4	goodWeight	=myWeights[weldSpot.Key];
+				HalfVector4	goodIdx		=myInds[weldSpot.Key];
 
 				foreach(int ow in weldSpot.Value)
 				{

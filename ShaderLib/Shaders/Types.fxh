@@ -50,7 +50,7 @@ struct VPosCol0Tex04Tex14Tex24
 struct VPosBone
 {
 	float4	Position	: POSITION;
-	float4	Blend0		: BLENDINDICES0;
+	int4	Blend0		: BLENDINDICES0;
 	float4	Weight0		: BLENDWEIGHT0;
 };
 
@@ -173,19 +173,19 @@ struct VPosTex0Tex1Single
 	float	TexCoord1	: TEXCOORD1;
 };
 
+struct VPosNormTanBiTanTex0
+{
+	float4	Position	: POSITION;
+	float3	Normal		: TEXCOORD0;
+	float3	Tangent		: TEXCOORD1;
+	float3	BiTangent	: TEXCOORD2;
+	float2	TexCoord0	: TEXCOORD3;
+};
+
 struct VPosNormTex0
 {
 	float4	Position	: POSITION;
 	float3	Normal		: NORMAL;
-	float2	TexCoord0	: TEXCOORD0;
-};
-
-struct VPosNormTanBiTanTex0
-{
-	float4	Position	: POSITION;
-	float3	Normal		: NORMAL;
-	float3	Tangent		: TANGENT0;
-	float3	BiTangent	: BINORMAL0;
 	float2	TexCoord0	: TEXCOORD0;
 };
 
@@ -211,7 +211,7 @@ struct VPosNormBone
 {
 	float4	Position	: POSITION;
 	float3	Normal		: NORMAL;
-	float4	Blend0		: BLENDINDICES0;
+	int4	Blend0		: BLENDINDICES0;
 	float4	Weight0		: BLENDWEIGHT0;
 };
 
@@ -250,7 +250,7 @@ struct VPosNormBoneTex0
 {
 	float4	Position	: POSITION;
 	float3	Normal		: NORMAL;
-	float4	Blend0		: BLENDINDICES0;
+	int4	Blend0		: BLENDINDICES0;
 	float4	Weight0		: BLENDWEIGHT0;
 	float2	TexCoord0	: TEXCOORD0;
 };
@@ -259,7 +259,7 @@ struct VPosNormBoneTex0Tex1
 {
 	float4	Position	: POSITION;
 	float3	Normal		: NORMAL;
-	float4	Blend0		: BLENDINDICES0;
+	int4	Blend0		: BLENDINDICES0;
 	float4	Weight0		: BLENDWEIGHT0;
 	float2	TexCoord0	: TEXCOORD0;
 	float2	TexCoord1	: TEXCOORD1;
@@ -269,7 +269,7 @@ struct VPosNormBoneCol0
 {
 	float4	Position	: POSITION;
 	float3	Normal		: NORMAL;
-	float4	Blend0		: BLENDINDICES0;
+	int4	Blend0		: BLENDINDICES0;
 	float4	Weight0		: BLENDWEIGHT0;
 	float4	Color		: COLOR0;	
 };
@@ -278,7 +278,7 @@ struct VPosNormBoneTex0Col0
 {
 	float4	Position	: POSITION;
 	float3	Normal		: NORMAL;
-	float4	Blend0		: BLENDINDICES0;
+	int4	Blend0		: BLENDINDICES0;
 	float4	Weight0		: BLENDWEIGHT0;
 	float2	TexCoord0	: TEXCOORD0;
 	float4	Color		: COLOR0;	
@@ -297,7 +297,7 @@ struct VPosNormBlendTex0Tex1Tex2Tex3Tex4
 {
 	float4	Position	: POSITION;
 	float3	Normal		: NORMAL;
-	float4	Blend0		: BLENDINDICES0;
+	int4	Blend0		: BLENDINDICES0;
 	float2	TexCoord0	: TEXCOORD0;
 	float2	TexCoord1	: TEXCOORD1;
 	float2	TexCoord2	: TEXCOORD2;
@@ -346,7 +346,7 @@ struct VPosNormBlendTex04Tex14Tex24
 {
 	float4	Position	: POSITION;
 	float3	Normal		: NORMAL;
-	float4	Blend0		: BLENDINDICES0;
+	int4	Blend0		: BLENDINDICES0;
 	float4	TexCoord0	: TEXCOORD0;
 	float4	TexCoord1	: TEXCOORD1;
 	float4	TexCoord2	: TEXCOORD2;

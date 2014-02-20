@@ -30,6 +30,11 @@ shared float	mShadowAtten;		//shadow attenuation
 shared float4	mSpecColor;
 shared float	mSpecPower;
 
+//specular behaviour defines
+//#define	CELALL			//for a goofy retro cga look
+//#define	CELSPECULAR		//for quantized specular
+#define	CELLIGHT		//for quantized light (the default)
+
 #include "Types.fxh"
 
 
@@ -91,7 +96,7 @@ float3 ComputeNormalFromMap(float4 sampleNorm, float3 tan, float3 biTan, float3 
 
 
 //look up the skin transform
-float4x4 GetSkinXForm(float4 bnIdxs, float4 bnWeights, float4x4 bones[MAX_BONES])
+float4x4 GetSkinXForm(int4 bnIdxs, float4 bnWeights, float4x4 bones[MAX_BONES])
 {
 	float4x4 skinTransform	=bones[bnIdxs.x] * bnWeights.x;
 	skinTransform	+=bones[bnIdxs.y] * bnWeights.y;
@@ -142,6 +147,22 @@ float3 ComputeGoodSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 li
 	visTerm	=1.0f / visTerm;
 
 	float3	specular	=specTerm * lightVal * fresTerm * visTerm * fillLight;
+
+	return	specular;
+}
+
+float3 ComputeCheapSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 lightVal, float4 fillLight)
+{
+	float3	eyeVec	=normalize(mEyePos - wpos);
+	float3	halfVec	=normalize(eyeVec + lightDir);
+	float	ndotv	=saturate(dot(eyeVec, pnorm));
+	float	ndoth	=saturate(dot(halfVec, pnorm));
+
+	float	normalizationTerm	=(mSpecPower + 2.0f) / 8.0f;
+	float	blinnPhong			=pow(ndoth, mSpecPower);
+	float	specTerm			=normalizationTerm * blinnPhong;
+	
+	float3	specular	=specTerm * lightVal * fillLight;
 
 	return	specular;
 }

@@ -284,7 +284,7 @@ technique TriSkinCelSolidSpecPhys
 		PixelShader		=compile ps_3_0 TriCelSolidSpecPhysPS();
 #else
 		VertexShader	=compile vs_2_0 SkinWNormWPosVS();
-		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();	//too many instructions fall back
+		PixelShader		=compile ps_2_0 TriCelSolidSpecPhysPS();
 #endif
 	}
 }
@@ -318,7 +318,7 @@ technique TriSkinDanglyCelSolidSpecPhys
 		PixelShader		=compile ps_3_0 TriCelSolidSpecPhysPS();
 #else
 		VertexShader	=compile vs_2_0 SkinDanglyWnormWPos();
-		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();	//too many instructions fall back
+		PixelShader		=compile ps_2_0 TriCelSolidSpecPhysPS();
 #endif
 	}
 }
@@ -335,7 +335,7 @@ technique TriSkinCelColorSpecPhys
 		PixelShader		=compile ps_3_0 TriCelColorSpecPhysPS();
 #else
 		VertexShader	=compile vs_2_0 SkinWNormWPosColorVS();
-		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();	//too many instructions fall back
+		PixelShader		=compile ps_2_0 TriCelColorSpecPhysPS();
 #endif
 	}
 }

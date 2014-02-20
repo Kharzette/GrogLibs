@@ -247,7 +247,7 @@ technique TriCelSolidSpecPhys
 		PixelShader		=compile ps_3_0 TriCelSolidSpecPhysPS();
 #else
 		VertexShader	=compile vs_2_0 WNormWPosVS();
-		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();	//not enough instructions, fallback
+		PixelShader		=compile ps_2_0 TriCelSolidSpecPhysPS();
 #endif
 	}
 }
@@ -264,7 +264,7 @@ technique TriTex0NormalMapSolidSpecPhys
 		PixelShader		=compile ps_3_0 NormalMapTriTex0SolidSpecPhysPS();
 #else
 		VertexShader	=compile vs_2_0 WNormWTanBTanWPosVS();
-		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();	//not enough instructions, fallback
+		PixelShader		=compile ps_2_0 NormalMapTriTex0SolidSpecPhysPS();
 #endif
 	}
 }
@@ -281,7 +281,7 @@ technique TriTex0NormalMapSpecPhys
 		PixelShader		=compile ps_3_0 NormalMapTriTex0SpecPhysPS();
 #else
 		VertexShader	=compile vs_2_0 WNormWTanBTanWPosVS();
-		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();	//not enough instructions, fallback
+		PixelShader		=compile ps_2_0 NormalMapTriTex0SpecPhysPS();
 #endif
 	}
 }
@@ -298,7 +298,7 @@ technique TriTex0NormalMapSolidSpecPhysInstanced
 		PixelShader		=compile ps_3_0 NormalMapTriTex0SolidSpecPhysPS();
 #else
 		VertexShader	=compile vs_2_0 WNormWTanBTanWPosInstancedVS();
-		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();	//not enough instructions, fall back
+		PixelShader		=compile ps_2_0 NormalMapTriTex0SolidSpecPhysPS();
 #endif
 	}
 }

@@ -365,12 +365,34 @@ namespace MeshLib
 		{
 			FieldInfo	[]fields	=t.GetFields();
 
+			//packed vectors sometimes don't return any fields
+			if(fields.Length == 0)
+			{
+				if(t == typeof(Short4))
+				{
+					return	8;
+				}
+				Debug.Assert(false);
+			}
+
 			int	size	=0;
 			foreach(FieldInfo fi in fields)
 			{
 				if(fi.FieldType == typeof(Single))
 				{
 					size	+=4;
+				}
+				else if(fi.FieldType == typeof(Int32))
+				{
+					size	+=4;
+				}
+				else if(fi.FieldType == typeof(Byte4))
+				{
+					size	+=4;
+				}
+				else if(fi.FieldType == typeof(Short4))
+				{
+					size	+=8;
 				}
 				else if(fi.FieldType == typeof(Vector2))
 				{
@@ -383,6 +405,10 @@ namespace MeshLib
 				else if(fi.FieldType == typeof(Vector4))
 				{
 					size	+=16;
+				}
+				else if(fi.FieldType == typeof(HalfVector4))
+				{
+					size	+=8;
 				}
 				else
 				{
@@ -683,9 +709,9 @@ namespace MeshLib
 		}
 
 
-		public static List<Vector4> GetWeights(VertexBuffer vb, int numVerts, int typeIdx)
+		public static List<HalfVector4> GetWeights(VertexBuffer vb, int numVerts, int typeIdx)
 		{
-			List<Vector4>	weights	=new List<Vector4>();
+			List<HalfVector4>	weights	=new List<HalfVector4>();
 
 			Type	vtype	=mTypes[typeIdx];
 			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
@@ -698,7 +724,7 @@ namespace MeshLib
 					//this might not be positional data!
 					if(fi.Name == "BoneWeights")
 					{
-						Vector4	vec	=(Vector4)GetArrayField(verts, i, fi.Name);
+						HalfVector4	vec	=(HalfVector4)GetArrayField(verts, i, fi.Name);
 						weights.Add(vec);
 					}
 				}
@@ -795,12 +821,12 @@ namespace MeshLib
 		}
 
 
-		public static List<Vector4> GetBoneIndexes(VertexBuffer vb, int numVerts, int typeIdx)
+		public static List<HalfVector4> GetBoneIndexes(VertexBuffer vb, int numVerts, int typeIdx)
 		{
 			Type	vtype	=mTypes[typeIdx];
 			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
 
-			List<Vector4>	idxs	=new List<Vector4>();
+			List<HalfVector4>	idxs	=new List<HalfVector4>();
 
 			FieldInfo	[]finfo	=vtype.GetFields();
 			for(int i=0;i < numVerts;i++)
@@ -810,7 +836,7 @@ namespace MeshLib
 					//this might not be positional data!
 					if(fi.Name == "BoneIndex")
 					{
-						Vector4	vec	=(Vector4)GetArrayField(verts, i, fi.Name);
+						HalfVector4	vec	=(HalfVector4)GetArrayField(verts, i, fi.Name);
 						idxs.Add(vec);
 					}
 				}
@@ -868,8 +894,8 @@ namespace MeshLib
 
 			bool	bPos		=HasElement(newType, typeof(Vector3), "Position");
 			bool	bNorm		=HasElement(newType, typeof(Vector3), "Normal");
-			bool	bBoneIdx	=HasElement(newType, typeof(Vector4), "BoneIndex");
-			bool	bBoneWeight	=HasElement(newType, typeof(Vector4), "BoneWeights");
+			bool	bBoneIdx	=HasElement(newType, typeof(HalfVector4), "BoneIndex");
+			bool	bBoneWeight	=HasElement(newType, typeof(HalfVector4), "BoneWeights");
 			bool	bTan		=HasElement(newType, typeof(Vector3), "Tangent");
 			bool	bBiTan		=HasElement(newType, typeof(Vector3), "BiTangent");
 
@@ -917,7 +943,7 @@ namespace MeshLib
 
 
 		public static VertexBuffer ReplaceWeights(GraphicsDevice gd, VertexBuffer vb,
-			int numVerts, int typeIdx, Vector4 []newWeights)
+			int numVerts, int typeIdx, HalfVector4 []newWeights)
 		{
 			Type	vtype	=mTypes[typeIdx];
 			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
@@ -944,7 +970,7 @@ namespace MeshLib
 
 
 		public static VertexBuffer ReplaceBoneIndexes(GraphicsDevice gd, VertexBuffer vb,
-			int numVerts, int typeIdx, Vector4 []newInds)
+			int numVerts, int typeIdx, HalfVector4 []newInds)
 		{
 			Type	vtype	=mTypes[typeIdx];
 			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
@@ -992,8 +1018,8 @@ namespace MeshLib
 
 			bool	bPos		=HasElement(vtype, typeof(Vector3), "Position");
 			bool	bNorm		=HasElement(vtype, typeof(Vector3), "Normal");
-			bool	bBoneIdx	=HasElement(vtype, typeof(Vector4), "BoneIndex");
-			bool	bBoneWeight	=HasElement(vtype, typeof(Vector4), "BoneWeights");
+			bool	bBoneIdx	=HasElement(vtype, typeof(HalfVector4), "BoneIndex");
+			bool	bBoneWeight	=HasElement(vtype, typeof(HalfVector4), "BoneWeights");
 
 			//build the new type
 			Type	vtypeNew	=GetMatch(

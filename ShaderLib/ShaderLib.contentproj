@@ -40,7 +40,8 @@
       <Name>Static</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
-      <ProcessorParameters_Defines>SM3</ProcessorParameters_Defines>
+	  <ProcessorParameters_Defines Condition=" '$(XnaProfile)' != 'Reach'">SM3</ProcessorParameters_Defines>
+	  <ProcessorParameters_Defines Condition=" '$(XnaProfile)' == 'Reach'">SM2</ProcessorParameters_Defines>
     </Compile>
     <None Include="Shaders\Trilight.fxh">
       <Name>Trilight</Name>
@@ -75,7 +76,8 @@
       <Name>BSP</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
-      <ProcessorParameters_Defines>SM3</ProcessorParameters_Defines>
+	  <ProcessorParameters_Defines Condition=" '$(XnaProfile)' != 'Reach'">SM3</ProcessorParameters_Defines>
+	  <ProcessorParameters_Defines Condition=" '$(XnaProfile)' == 'Reach'">SM2</ProcessorParameters_Defines>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -83,13 +85,15 @@
       <Name>2D</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
-      <ProcessorParameters_Defines>SM3</ProcessorParameters_Defines>
+	  <ProcessorParameters_Defines Condition=" '$(XnaProfile)' != 'Reach'">SM3</ProcessorParameters_Defines>
+	  <ProcessorParameters_Defines Condition=" '$(XnaProfile)' == 'Reach'">SM2</ProcessorParameters_Defines>
     </Compile>
     <Compile Include="Shaders\Character.fx">
       <Name>Character</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
-      <ProcessorParameters_Defines>SM3</ProcessorParameters_Defines>
+	  <ProcessorParameters_Defines Condition=" '$(XnaProfile)' != 'Reach'">SM3</ProcessorParameters_Defines>
+	  <ProcessorParameters_Defines Condition=" '$(XnaProfile)' == 'Reach'">SM2</ProcessorParameters_Defines>
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\XNA Game Studio\$(XnaFrameworkVersion)\Microsoft.Xna.GameStudio.ContentPipeline.targets" />
