@@ -213,6 +213,15 @@ namespace MeshLib
 		}
 
 
+		public void UpdateBoneRefs()
+		{
+			foreach(KeyValuePair<string, Anim> ans in mAnims)
+			{
+				ans.Value.SetBoneRefs(mSkeleton);
+			}
+		}
+
+
 		//only used by the tools, this makes sure
 		//the names used as keys in the dictionaries
 		//match the name properties in the objects

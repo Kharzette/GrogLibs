@@ -8,6 +8,8 @@ float2		mTexSize;
 //intensity levels for the animated / switchable light styles
 half	mAniIntensities[44];
 
+#define	POINTTEXTURES	1
+
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
 
@@ -146,9 +148,15 @@ sampler TextureSampler = sampler_state
 {
 	Texture		=mTexture;
 
+#if defined(POINTTEXTURES)
+	MinFilter	=Point;
+	MagFilter	=Point;
+	MipFilter	=Point;
+#else
 	MinFilter	=Linear;
 	MagFilter	=Linear;
 	MipFilter	=Linear;
+#endif
 
 	AddressU	=Wrap;
 	AddressV	=Wrap;

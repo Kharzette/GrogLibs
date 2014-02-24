@@ -256,7 +256,11 @@ namespace MeshLib
 			}
 			else if(el.VertexElementUsage == VertexElementUsage.BlendIndices)
 			{
-				return	HasElement(t, VEFType(fmt), "BoneIndex");
+				if(HasElement(t, VEFType(fmt), "BoneIndex"))
+				{
+					return	true;
+				}
+				return	HasElement(t, VEFType(fmt), "AnimStyle");
 			}
 			else if(el.VertexElementUsage == VertexElementUsage.BlendWeight)
 			{
@@ -372,6 +376,10 @@ namespace MeshLib
 				{
 					return	8;
 				}
+				if(t == typeof(HalfVector4))
+				{
+					return	8;
+				}
 				Debug.Assert(false);
 			}
 
@@ -450,7 +458,8 @@ namespace MeshLib
 				{
 					veu	=VertexElementUsage.Binormal;
 				}
-				else if(fi.Name.StartsWith("BoneIndex"))
+				else if(fi.Name.StartsWith("BoneIndex")
+					|| fi.Name.StartsWith("AnimStyle"))
 				{
 					veu	=VertexElementUsage.BlendIndices;
 				}
@@ -1140,6 +1149,16 @@ namespace MeshLib
 						bw.Write(vec.Z);
 						bw.Write(vec.W);
 					}
+					else if(fi.FieldType.Name == "HalfVector4")
+					{
+						HalfVector4	vec	=(HalfVector4)GetArrayField(verts, i, fi.Name);
+
+						bw.Write(vec.PackedValue);
+					}
+					else
+					{
+						Debug.Assert(false);
+					}
 				}
 			}
 		}
@@ -1224,6 +1243,18 @@ namespace MeshLib
 						vec.W	=br.ReadSingle();
 
 						SetArrayField(verts, i, fi.Name, vec);
+					}
+					else if(fi.FieldType.Name == "HalfVector4")
+					{
+						HalfVector4	vec	=new HalfVector4();
+
+						vec.PackedValue	=br.ReadUInt64();
+
+						SetArrayField(verts, i, fi.Name, vec);
+					}
+					else
+					{
+						Debug.Assert(false);
 					}
 				}
 			}

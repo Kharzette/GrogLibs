@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 using MaterialLib;
 using MeshLib;
 using UtilityLib;
@@ -467,7 +468,7 @@ namespace BSPCore
 				varray[i].TexCoord2.X	=mLMAnimFaceTex4[i].X;
 				varray[i].TexCoord2.Y	=mLMAnimFaceTex4[i].Y;
 				varray[i].TexCoord2.Z	=1.0f;	//alpha
-				varray[i].AnimStyle		=mLMAnimStyle[i];
+				varray[i].AnimStyle		=new HalfVector4(mLMAnimStyle[i]);
 			}
 
 			vb	=new VertexBuffer(mGD, mLMAnimVD, varray.Length, BufferUsage.None);
@@ -504,7 +505,7 @@ namespace BSPCore
 				varray[i].TexCoord2.X	=mLMAAnimFaceTex4[i].X;
 				varray[i].TexCoord2.Y	=mLMAAnimFaceTex4[i].Y;
 				varray[i].TexCoord2.Z	=mLMAAnimColors[i].W;
-				varray[i].AnimStyle		=mLMAAnimStyle[i];
+				varray[i].AnimStyle		=new HalfVector4(mLMAAnimStyle[i]);
 			}
 
 			vb	=new VertexBuffer(mGD, mLMAAnimVD, varray.Length, BufferUsage.None);
