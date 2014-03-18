@@ -238,6 +238,7 @@
 			this.GuessShaderParameterVisibility.Size = new System.Drawing.Size(64, 29);
 			this.GuessShaderParameterVisibility.TabIndex = 20;
 			this.GuessShaderParameterVisibility.Text = "GuessSP";
+			this.mTips.SetToolTip(this.GuessShaderParameterVisibility, "Try to guess which shader parameters need hiding or ignoring based on technique");
 			this.GuessShaderParameterVisibility.UseVisualStyleBackColor = true;
 			this.GuessShaderParameterVisibility.Click += new System.EventHandler(this.OnGuessParameterVisibility);
 			// 
@@ -248,6 +249,7 @@
 			this.UnHideAll.Size = new System.Drawing.Size(61, 29);
 			this.UnHideAll.TabIndex = 19;
 			this.UnHideAll.Text = "ResetSP";
+			this.mTips.SetToolTip(this.UnHideAll, "Reset the ignored/hidden state of all shader parameters");
 			this.UnHideAll.UseVisualStyleBackColor = true;
 			this.UnHideAll.Click += new System.EventHandler(this.OnUnHideAll);
 			// 
@@ -258,6 +260,7 @@
 			this.IgnoreParameter.Size = new System.Drawing.Size(75, 29);
 			this.IgnoreParameter.TabIndex = 18;
 			this.IgnoreParameter.Text = "Ignore SP";
+			this.mTips.SetToolTip(this.IgnoreParameter, "Ignore selected shader parameters");
 			this.IgnoreParameter.UseVisualStyleBackColor = true;
 			this.IgnoreParameter.Click += new System.EventHandler(this.OnIgnoreSP);
 			// 
@@ -268,6 +271,7 @@
 			this.HideSelected.Size = new System.Drawing.Size(61, 29);
 			this.HideSelected.TabIndex = 17;
 			this.HideSelected.Text = "Hide SP";
+			this.mTips.SetToolTip(this.HideSelected, "Hide selected shader parameters");
 			this.HideSelected.UseVisualStyleBackColor = true;
 			this.HideSelected.Click += new System.EventHandler(this.OnHideSelected);
 			// 
@@ -319,6 +323,7 @@
 			this.WeldWeight.Size = new System.Drawing.Size(77, 29);
 			this.WeldWeight.TabIndex = 25;
 			this.WeldWeight.Text = "Weld Weight";
+			this.mTips.SetToolTip(this.WeldWeight, "Welds the weight values between the seam of two selected mesh parts");
 			this.WeldWeight.UseVisualStyleBackColor = true;
 			this.WeldWeight.Click += new System.EventHandler(this.OnWeldWeight);
 			// 
@@ -329,6 +334,7 @@
 			this.StripElements.Size = new System.Drawing.Size(91, 29);
 			this.StripElements.TabIndex = 24;
 			this.StripElements.Text = "Strip Elements";
+			this.mTips.SetToolTip(this.StripElements, "Allows the removal of individual subcomponents of mesh part vertex structures");
 			this.StripElements.UseVisualStyleBackColor = true;
 			this.StripElements.Click += new System.EventHandler(this.OnStripElements);
 			// 
@@ -339,6 +345,7 @@
 			this.Match.Size = new System.Drawing.Size(106, 29);
 			this.Match.TabIndex = 23;
 			this.Match.Text = "Match And Visible";
+			this.mTips.SetToolTip(this.Match, "Attempts to match materials to mesh parts and sets visible to true on successes");
 			this.Match.UseVisualStyleBackColor = true;
 			this.Match.Click += new System.EventHandler(this.OnMatch);
 			// 

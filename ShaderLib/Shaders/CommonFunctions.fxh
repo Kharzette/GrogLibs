@@ -71,6 +71,29 @@ sampler	ShadowSampler3D	=sampler_state
 	AddressW	=Clamp;
 };
 
+
+//chops a half3 down to a half2
+half2 EncodeNormal(half3 norm)
+{
+	return	(norm.xy * 0.5) + 0.5;
+}
+
+
+//half2 to half3
+half3 DecodeNormal(half2 encoded)
+{
+	half3	ret;
+
+	const half	theSign	=(encoded.x < 0)? -1.0f : 1.0f;
+	
+	ret.x	=abs(encoded.x) * 2.0f - 1.0f;
+	ret.y	=encoded.y;
+	ret.z	=sqrt(1.0f - dot(ret.xy, ret.xy)) * theSign;
+	
+	return	ret;
+}
+
+
 //does the math to get a normal from a sampled
 //normal map to a proper normal useful for lighting
 float3 ComputeNormalFromMap(float4 sampleNorm, float3 tan, float3 biTan, float3 surfNorm)

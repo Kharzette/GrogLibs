@@ -5,6 +5,9 @@ texture1D	mDynLights;
 bool		mbTextureEnabled;
 float2		mTexSize;
 
+//mat id
+int	mMaterialID;
+
 //intensity levels for the animated / switchable light styles
 half	mAniIntensities[44];
 
@@ -12,6 +15,19 @@ half	mAniIntensities[44];
 
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
+
+
+VPosTex03 DepthVS(VPos input)
+{
+	VPosTex03	output;
+
+	float4	worldPosition	=mul(input.Position, mWorld);
+
+	output.Position		=mul(mul(worldPosition, mView), mProjection);
+	output.TexCoord0	=worldPosition;
+	
+	return	output;
+}
 
 
 VPosTex04Tex14Tex24 LightMapVS(VPosNormTex04 input)
@@ -226,6 +242,102 @@ float3	GetDynLight(float3 pixelPos, float3 normal)
 #endif
 
 
+half4 DepthPS(VTex03 input) : COLOR0
+{
+	half	dist	=distance(input.TexCoord0, mEyePos);
+
+	return	half4(dist, 0, 0, 0);
+}
+
+float4 MaterialPS() : COLOR0
+{
+	return	float4(mMaterialID, 0, 0, 0);
+}
+
+
+struct TwoTarget
+{
+	half4	Color			: COLOR0;
+	half4	DepthMatIDNorm	: COLOR1;
+};
+
+
+TwoTarget LightMapTTPS(VTex04Tex14Tex24 input)
+{
+	float3		color;
+	TwoTarget	ret;
+	
+	if(mbTextureEnabled)
+	{
+		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
+	}
+	else
+	{
+		color	=float3(1.0, 1.0, 1.0);
+	}
+	
+	float3	lm	=tex2D(LightMapSampler, input.TexCoord0.zw);
+
+#if !defined(SM2)
+	lm	+=GetDynLight(input.TexCoord1, input.TexCoord2.xyz);
+#endif
+
+	color	*=lm;
+	color	=pow(abs(color), 1 / 2.2);
+
+	ret.Color.xyz	=color;
+	ret.Color.w		=input.TexCoord1.w;
+
+	ret.DepthMatIDNorm.x	=distance(input.TexCoord1, mEyePos);
+	ret.DepthMatIDNorm.y	=mMaterialID;
+	ret.DepthMatIDNorm.zw	=EncodeNormal(input.TexCoord2.xyz);
+
+	return	ret;
+}
+
+
+TwoTarget LightMapCelTTPS(VTex04Tex14Tex24 input)
+{
+	float3		color;
+	TwoTarget	ret;
+	
+	if(mbTextureEnabled)
+	{
+		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
+	}
+	else
+	{
+		color	=float3(1.0, 1.0, 1.0);
+	}
+	
+	float3	lm	=tex2D(LightMapSampler, input.TexCoord0.zw);
+
+#if !defined(SM2)
+	lm	+=GetDynLight(input.TexCoord1, input.TexCoord2.xyz);
+#endif
+
+#if defined(CELLIGHT)
+	lm	=CalcCelColor(lm);
+#endif
+
+	color	*=lm;
+	color	=pow(abs(color), 1 / 2.2);
+
+#if defined(CELALL)
+	color	=CalcCelColor(color);
+#endif
+
+	ret.Color.xyz	=color;
+	ret.Color.w		=input.TexCoord1.w;
+
+	ret.DepthMatIDNorm.x	=distance(input.TexCoord1, mEyePos);
+	ret.DepthMatIDNorm.y	=mMaterialID;
+	ret.DepthMatIDNorm.zw	=EncodeNormal(input.TexCoord2.xyz);
+
+	return	ret;
+}
+
+
 float4 LightMapPS(VTex04Tex14Tex24 input) : COLOR0
 {
 	float3	color;
@@ -246,8 +358,6 @@ float4 LightMapPS(VTex04Tex14Tex24 input) : COLOR0
 #endif
 
 	color	*=lm;
-
-	//back to srgb
 	color	=pow(abs(color), 1 / 2.2);
 
 	return	float4(color, input.TexCoord1.w);
@@ -285,7 +395,7 @@ float4 LightMapCelPS(VTex04Tex14Tex24 input) : COLOR0
 #if defined(CELALL)
 	color	=CalcCelColor(color);
 #endif
-	
+
 	return	float4(color, input.TexCoord1.w);
 }
 
@@ -562,6 +672,42 @@ float4 SkyPS(VCubeTex0 input) : COLOR0
 }
 
 
+technique LightMapTT
+{
+	pass Base
+	{
+#if defined(SM4)
+		VertexShader	=compile vs_4_0 LightMapVS();
+		PixelShader		=compile ps_4_0 LightMapTTPS();
+#elif defined(SM3)
+		VertexShader	=compile vs_3_0 LightMapVS();
+		PixelShader		=compile ps_3_0 LightMapTTPS();
+#else
+		VertexShader	=compile vs_2_0 LightMapVS();
+		PixelShader		=compile ps_2_0 LightMapTTPS();
+#endif
+	}
+}
+
+
+technique LightMapCelTT
+{
+	pass Base
+	{
+#if defined(SM4)
+		VertexShader	=compile vs_4_0 LightMapVS();
+		PixelShader		=compile ps_4_0 LightMapCelTTPS();
+#elif defined(SM3)
+		VertexShader	=compile vs_3_0 LightMapVS();
+		PixelShader		=compile ps_3_0 LightMapCelTTPS();
+#else
+		VertexShader	=compile vs_2_0 LightMapVS();
+		PixelShader		=compile ps_2_0 LightMapCelTTPS();
+#endif
+	}
+}
+
+
 technique LightMap
 {
 	pass Base
@@ -820,5 +966,23 @@ technique Sky
 	{
 		VertexShader	=compile vs_2_0 SkyVS();
 		PixelShader		=compile ps_2_0 SkyPS();
+	}
+}
+
+technique Depth
+{
+	pass Pass1
+	{
+		VertexShader	=compile vs_3_0 DepthVS();
+		PixelShader		=compile ps_3_0 DepthPS();
+	}
+}
+
+technique Material
+{
+	pass Pass1
+	{
+		VertexShader	=compile vs_3_0 DepthVS();
+		PixelShader		=compile ps_3_0 MaterialPS();
 	}
 }

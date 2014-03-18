@@ -436,6 +436,10 @@ namespace MaterialLib
 						{
 							ep.SetValue((bool)val);
 						}
+						else if(sp.Type == EffectParameterType.Int32)
+						{
+							ep.SetValue((Int32)val);
+						}
 						break;
 
 					case	EffectParameterClass.Vector:

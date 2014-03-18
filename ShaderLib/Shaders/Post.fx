@@ -331,37 +331,85 @@ float4	OutlinePS(VTex0 input) : COLOR0
 	float2	oy	=float2(0.0, mTexelSteps / mScreenSize.y);
 	
 	float2	uv	=input.TexCoord0;
-	float2	PP	=uv - oy;
-	
-	float4	CC	=tex2D(ColorSampler, PP - ox);
-	float	g00	=GetGray(CC);
-	
-	CC	=tex2D(ColorSampler, PP);
-	float	g01	=GetGray(CC);
-	
-	CC	=tex2D(ColorSampler, PP + ox);
-	float	g02	=GetGray(CC);
-	
-	PP	=uv;
-	CC	=tex2D(ColorSampler, PP - ox);
-	float	g10	=GetGray(CC);
 
-	CC	=tex2D(ColorSampler, PP);
-	float	g11	=GetGray(CC);
-	
-	CC	=tex2D(ColorSampler, PP + ox);
-	float	g12	=GetGray(CC);
-	
-	PP	=uv + oy;
-	CC	=tex2D(ColorSampler, PP - ox);
-	float	g20	=GetGray(CC);
-	
-	CC	=tex2D(ColorSampler, PP);
-	float	g21	=GetGray(CC);
+	//from the ati outlining stuff
+	//do I even use any of this?
+	const float4	normThresh0		=float4(0, 0.8, 0, 0);
+	const float4	normThresh1		=float4(0, 0.5, 1, 2);
+	const float4	depthThresh0	=float4(0, 0, -0.01, 0);
+	const float4	depthThresh1	=float4(0, -0.25, 0.25, 1);
+	const float4	texThresh0		=float4(0, 0.01, 0, 0);
 
-	CC	=tex2D(ColorSampler, PP + ox);
-	float	g22	=GetGray(CC);
-	
+	half4	center;
+	half4	upLeft, up, upRight;
+	half4	left, right;
+	half4	downLeft, down, downRight;
+
+	//read center
+	center	=tex2D(NormalSampler, uv);
+
+	//one texel around center
+	//format is x depth, y matid, zw normal
+	upLeft		=tex2D(NormalSampler, uv - ox + oy);
+	up			=tex2D(NormalSampler, uv + oy);
+	upRight		=tex2D(NormalSampler, uv + ox + oy);
+	left		=tex2D(NormalSampler, uv - ox);
+	right		=tex2D(NormalSampler, uv + ox);
+	downLeft	=tex2D(NormalSampler, uv - ox - oy);
+	down		=tex2D(NormalSampler, uv - oy);
+	downRight	=tex2D(NormalSampler, uv + ox - oy);
+
+	half3	centerNorm		=DecodeNormal(center.zw);
+	half3	upLeftNorm		=DecodeNormal(upLeft.zw);
+	half3	upNorm			=DecodeNormal(up.zw);
+	half3	upRightNorm		=DecodeNormal(upRight.zw);
+	half3	leftNorm		=DecodeNormal(left.zw);
+	half3	rightNorm		=DecodeNormal(right.zw);
+	half3	downLeftNorm	=DecodeNormal(downLeft.zw);
+	half3	downNorm		=DecodeNormal(down.zw);
+	half3	downRightNorm	=DecodeNormal(downRight.zw);
+
+	float4	normDots0, normDots1;
+
+	normDots0.x	=dot(centerNorm, upLeftNorm);
+	normDots0.y	=dot(centerNorm, upNorm);
+	normDots0.z	=dot(centerNorm, upRightNorm);
+	normDots0.w	=dot(centerNorm, leftNorm);
+	normDots1.x	=dot(centerNorm, rightNorm);
+	normDots1.y	=dot(centerNorm, downLeftNorm);
+	normDots1.z	=dot(centerNorm, downNorm);
+	normDots1.w	=dot(centerNorm, downRightNorm);
+
+	normDots0	-=normThresh0.y;
+	normDots1	-=normThresh0.y;
+
+	normDots0	=step(normDots0, 0);
+	normDots1	=step(normDots1, 0);
+
+	float4	normResult0	=dot(normDots0, normThresh1.z);
+	normResult0			+=dot(normDots1, normThresh1.z);
+
+	//can early out with the normal test
+	if(any(normResult0))
+	{
+		return	float4(0, 0, 0, 1);
+	}
+
+	float4	diff0, diff1;
+
+	diff0.x	=center.y - upLeft.y;
+	diff0.y	=center.y - up.y;
+	diff0.z	=center.y - upRight.y;
+	diff0.w	=center.y - left.y;
+
+	diff1.x	=center.y - right.y;
+	diff1.y	=center.y - downLeft.y;
+	diff1.z	=center.y - down.y;
+	diff1.w	=center.y - downRight.y;
+
+	diff0	=abs(diff0);
+	diff0	+=abs(diff1);
+
 	float	K00	=-1;
 	float	K01	=-2;
 	float	K02	=-1;
@@ -374,26 +422,43 @@ float4	OutlinePS(VTex0 input) : COLOR0
 	float	sx	=0;
 	float	sy	=0;
 
-	sx	+=g00 * K00;
-	sx	+=g01 * K01;
-	sx	+=g02 * K02;
-	sx	+=g10 * K10;
-	sx	+=g11 * K11;
-	sx	+=g12 * K12;
-	sx	+=g20 * K20;
-	sx	+=g21 * K21;
-	sx	+=g22 * K22; 
-	sy	+=g00 * K00;
-	sy	+=g01 * K10;
-	sy	+=g02 * K20;
-	sy	+=g10 * K01;
-	sy	+=g11 * K11;
-	sy	+=g12 * K21;
-	sy	+=g20 * K02;
-	sy	+=g21 * K12;
-	sy	+=g22 * K22;
-	
+	sx	+=downLeft.x * K00;
+	sy	+=downLeft.x * K00;
+
+	sx	+=down.x * K01;
+	sy	+=down.x * K10;
+
+	sx	+=downRight.x * K02;
+	sy	+=downRight.x * K20;
+
+	sx	+=left.x * K10;
+	sy	+=left.x * K01;
+
+	sx	+=center.x * K11;
+	sy	+=center.x * K11;
+
+	sx	+=right.x * K12;
+	sy	+=right.x * K21;
+
+	sx	+=upLeft.x * K20;
+	sy	+=upLeft.x * K02;
+
+	sx	+=up.x * K21;
+	sy	+=up.x * K12;
+
+	sx	+=upRight.x * K22; 
+	sy	+=upRight.x * K22;
+
 	float	dist	=sqrt(sx * sx + sy * sy);
+
+	//if there's no material boundary, bias
+	//heavily toward no outline, this helps prevent
+	//steeply oblique to screen polys keep from going
+	//super black from the outliner freaking out
+	if(!any(diff0))
+	{
+		dist	-=50;
+	}
 
 	float	result	=1;
 	

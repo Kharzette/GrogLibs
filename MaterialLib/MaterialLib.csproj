@@ -84,6 +84,7 @@
     <Compile Include="AlphaPool.cs" />
     <Compile Include="CelShading.cs" />
     <Compile Include="GUIStates.cs" />
+    <Compile Include="IDKeeper.cs" />
     <Compile Include="ParameterKeeper.cs" />
     <Compile Include="PostProcess.cs" />
     <Compile Include="StateBlockPool.cs" />

@@ -13,6 +13,9 @@ namespace MaterialLib
 		//targets for doing postery
 		Dictionary<string, RenderTarget2D>	mPostTargets	=new Dictionary<string, RenderTarget2D>();
 
+		//bindings for multitarget
+		Dictionary<string, RenderTargetBinding []>	mBindings	=new Dictionary<string, RenderTargetBinding[]>();
+
 		//for a fullscreen quad
 		VertexBuffer	mQuadVB;
 		IndexBuffer		mQuadIB;
@@ -39,14 +42,7 @@ namespace MaterialLib
 		{
 			mbReach	=(gdm.GraphicsProfile == GraphicsProfile.Reach);
 
-			if(mbReach)
-			{
-				mPostFX	=slib.Load<Effect>("Shaders/PostReach");
-			}
-			else
-			{
-				mPostFX	=slib.Load<Effect>("Shaders/Post");
-			}
+			mPostFX	=slib.Load<Effect>("Shaders/Post");
 
 			mResX		=resx;
 			mResY		=resy;
@@ -76,6 +72,27 @@ namespace MaterialLib
 		}
 
 
+		public void MakePostTargetBindingArray(string name, List<string> targets)
+		{
+			foreach(string targ in targets)
+			{
+				if(!mPostTargets.ContainsKey(targ))
+				{
+					return;
+				}
+			}
+
+			int					idx		=0;
+			RenderTargetBinding	[]binds	=new RenderTargetBinding[targets.Count];
+			foreach(string targ in targets)
+			{
+				binds[idx++]	=new RenderTargetBinding(mPostTargets[targ]);
+			}
+
+			mBindings.Add(name, binds);
+		}
+
+
 		//hax for ludum dare
 		public void SetIntensity(float val, float val2)
 		{
@@ -88,7 +105,7 @@ namespace MaterialLib
 		void InitPostParams()
 		{
 			mPostFX.Parameters["mTexelSteps"].SetValue(1.0f);
-			mPostFX.Parameters["mThreshold"].SetValue(0.2f);
+			mPostFX.Parameters["mThreshold"].SetValue(0.01f);
 			mPostFX.Parameters["mScreenSize"].SetValue(new Vector2(mResX, mResY));
 			mPostFX.Parameters["mOpacity"].SetValue(0.75f);
 
@@ -298,13 +315,18 @@ namespace MaterialLib
 			{
 				gd.SetRenderTarget(null);
 			}
-			else if(!mPostTargets.ContainsKey(targName))
+			else if(mBindings.ContainsKey(targName))
 			{
-				return;
+				gd.SetRenderTargets(mBindings[targName]);
+			}
+			else if(mPostTargets.ContainsKey(targName))
+			{
+				gd.SetRenderTarget(mPostTargets[targName]);
 			}
 			else
 			{
-				gd.SetRenderTarget(mPostTargets[targName]);
+				//need some sort of error here
+				return;
 			}
 
 			if(bClear)
@@ -331,16 +353,7 @@ namespace MaterialLib
 			gd.SetVertexBuffer(mQuadVB);
 			gd.Indices	=mQuadIB;
 
-			if(mbReach && technique.StartsWith("GaussianBlur"))
-			{
-				mPostFX.CurrentTechnique	=mPostFX.Techniques["GaussianBlur"];
-
-				SetBlurParams(technique.EndsWith("X"));
-			}
-			else
-			{
-				mPostFX.CurrentTechnique	=mPostFX.Techniques[technique];
-			}
+			mPostFX.CurrentTechnique	=mPostFX.Techniques[technique];
 
 			mPostFX.CurrentTechnique.Passes[0].Apply();
 

@@ -1,6 +1,9 @@
 //shaders using TomF's trilights for light
 //see http://home.comcast.net/~tom_forsyth/blog.wiki.html#Trilights
 
+//material id for borders etc
+shared int		mMaterialID;
+
 //texture layers used on the surface
 shared texture	mTexture0;
 shared texture	mTexture1;
@@ -10,6 +13,7 @@ shared float4	mLightColor0;		//trilights need 3 colors
 shared float4	mLightColor1;		//trilights need 3 colors
 shared float4	mLightColor2;		//trilights need 3 colors
 shared float3	mLightDirection;
+
 
 shared sampler TexSampler0 = sampler_state
 {
@@ -49,6 +53,18 @@ float4 ShadowPS(VTex03 input) : COLOR
 	float	dist	=distance(mShadowLightPos, input.TexCoord0);
 
 	return	float4(dist, 0, 0, 0);
+}
+
+//writes depth
+float4 DepthPS(VTex01 input) : COLOR0
+{
+	return	float4(input, 0, 0, 0);
+}
+
+//writes material id
+float4 MaterialPS(VTex01 input) : COLOR0
+{
+	return	float4(mMaterialID, 0, 0, 0);
 }
 
 //single texture, single color modulated

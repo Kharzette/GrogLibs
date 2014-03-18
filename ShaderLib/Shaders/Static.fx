@@ -5,6 +5,19 @@
 #include "Trilight.fxh"
 
 
+//depth
+VPosTex01 DepthVS(VPos input)
+{
+	VPosTex01	output;
+
+	float4	worldPosition	=mul(input.Position, mWorld);
+
+	output.Position		=mul(mul(worldPosition, mView), mProjection);
+	output.TexCoord0	=distance(worldPosition, mEyePos);
+	
+	return	output;
+}
+
 //just world position
 VPosTex03 WPosVS(VPos input)
 {
@@ -316,6 +329,40 @@ technique Shadow
 #else
 		VertexShader	=compile vs_2_0 WPosVS();
 		PixelShader		=compile ps_2_0 ShadowPS();
+#endif
+	}
+}
+
+technique Depth
+{
+	pass P0
+	{
+#if defined(SM4)
+		VertexShader	=compile vs_4_0 DepthVS();
+		PixelShader		=compile ps_4_0 DepthPS();
+#elif defined(SM3)
+		VertexShader	=compile vs_3_0 DepthVS();
+		PixelShader		=compile ps_3_0 DepthPS();
+#else
+		VertexShader	=compile vs_2_0 DepthVS();
+		PixelShader		=compile ps_2_0 DepthPS();
+#endif
+	}
+}
+
+technique Material
+{
+	pass P0
+	{
+#if defined(SM4)
+		VertexShader	=compile vs_4_0 DepthVS();
+		PixelShader		=compile ps_4_0 MaterialPS();
+#elif defined(SM3)
+		VertexShader	=compile vs_3_0 DepthVS();
+		PixelShader		=compile ps_3_0 MaterialPS();
+#else
+		VertexShader	=compile vs_2_0 DepthVS();
+		PixelShader		=compile ps_2_0 MaterialPS();
 #endif
 	}
 }

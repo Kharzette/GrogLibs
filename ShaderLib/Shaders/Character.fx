@@ -124,6 +124,32 @@ VPosTex03Tex13 ComputeSkinWorld(VPosNormBone input, float4x4 bones[MAX_BONES])
 
 
 //vertex shaders
+//depth
+VPosTex01 DepthVS(VPosNormBone input)
+{
+	VPosTex01	output;
+
+	VPosTex03Tex13	sw	=ComputeSkinWorld(input, mBones);
+
+	output.Position		=sw.Position;
+	output.TexCoord0	=distance(sw.TexCoord1, mEyePos);
+	
+	return	output;
+}
+
+//dangly depth
+VPosTex01 DepthDanglyVS(VPosNormBoneCol0 input)
+{
+	VPosTex01	output;
+
+	VPosTex03Tex13	sw	=ComputeSkinWorldDangly(input, mBones);
+
+	output.Position		=sw.Position;
+	output.TexCoord0	=distance(sw.TexCoord1, mEyePos);
+	
+	return	output;
+}
+
 //skin to world normal
 VPosTex03 SkinWNormVS(VPosNormBone input)
 {
@@ -404,6 +430,57 @@ technique ShadowSkin
 #else
 		VertexShader	=compile vs_2_0 SkinWPosVS();
 		PixelShader		=compile ps_2_0 ShadowPS();
+#endif
+	}
+}
+
+technique Depth
+{
+	pass P0
+	{
+#if defined(SM4)
+		VertexShader	=compile vs_4_0 DepthVS();
+		PixelShader		=compile ps_4_0 DepthPS();
+#elif defined(SM3)
+		VertexShader	=compile vs_3_0 DepthVS();
+		PixelShader		=compile ps_3_0 DepthPS();
+#else
+		VertexShader	=compile vs_2_0 DepthVS();
+		PixelShader		=compile ps_2_0 DepthPS();
+#endif
+	}
+}
+
+technique Material
+{
+	pass P0
+	{
+#if defined(SM4)
+		VertexShader	=compile vs_4_0 DepthVS();
+		PixelShader		=compile ps_4_0 MaterialPS();
+#elif defined(SM3)
+		VertexShader	=compile vs_3_0 DepthVS();
+		PixelShader		=compile ps_3_0 MaterialPS();
+#else
+		VertexShader	=compile vs_2_0 DepthVS();
+		PixelShader		=compile ps_2_0 MaterialPS();
+#endif
+	}
+}
+
+technique DepthDangly
+{
+	pass P0
+	{
+#if defined(SM4)
+		VertexShader	=compile vs_4_0 DepthDanglyVS();
+		PixelShader		=compile ps_4_0 DepthPS();
+#elif defined(SM3)
+		VertexShader	=compile vs_3_0 DepthDanglyVS();
+		PixelShader		=compile ps_3_0 DepthPS();
+#else
+		VertexShader	=compile vs_2_0 DepthDanglyVS();
+		PixelShader		=compile ps_2_0 DepthPS();
 #endif
 	}
 }

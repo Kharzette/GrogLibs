@@ -66,6 +66,10 @@ namespace MeshLib
 		//render external stuff
 		public delegate void RenderExternal(MaterialLib.AlphaPool ap,
 			Vector3 camPos, Matrix view, Matrix proj);
+		public delegate void RenderExternalDepth(Vector3 camPos,
+			Matrix view, Matrix proj);
+		public delegate void RenderExternalMaterial(Vector3 camPos,
+			Matrix view, Matrix proj);
 
 		//tool side delegates for building the indoor mesh
 		//from raw parts
@@ -246,12 +250,12 @@ namespace MeshLib
 //			gd.Clear(Color.CornflowerBlue);
 
 			//draw solids first
-			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
+//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
 			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
-
+//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+/*
 			//draw shadows
 			for(int i=0;i < numShadows;i++)
 			{
@@ -273,6 +277,7 @@ namespace MeshLib
 			//draw outside stuff
 			rendExternal(mAlphaPool, viewPos, gameCam.View, gameCam.Projection);
 			mAlphaPool.DrawAll(gd, mMatLib, viewPos, numShadows, renderShadows);
+*/
 		}
 
 
@@ -284,6 +289,80 @@ namespace MeshLib
 			MaterialLib.AlphaPool.RenderShadows rendShads)
 		{
 			Draw(gd, gameCam.Position, gameCam, numShadows, bMatVis, getModMatrix, rendExternal, rendShads);
+		}
+
+
+		public void DrawDepth(GraphicsDevice gd,
+			GameCamera gameCam,
+			IsMaterialVisible bMatVis,
+			GetModelMatrix getModMatrix,
+			RenderExternalDepth rendExternal)
+		{
+			//update wvp
+			Effect		fx	=mMatLib.GetShader("Shaders\\BSP");
+			if(fx == null)
+			{
+				return;
+			}
+
+			fx.CurrentTechnique	=fx.Techniques["Depth"];
+
+			fx.Parameters["mWorld"].SetValue(Matrix.Identity);
+			fx.Parameters["mView"].SetValue(gameCam.View);
+			fx.Parameters["mProjection"].SetValue(gameCam.Projection);
+			fx.Parameters["mEyePos"].SetValue(gameCam.Position);
+
+			//draw solids
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+
+			//draw alphas
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+
+			//draw outside stuff
+			rendExternal(gameCam.Position, gameCam.View, gameCam.Projection);
+		}
+
+
+		public void DrawMaterial(GraphicsDevice gd,
+			GameCamera gameCam,
+			IsMaterialVisible bMatVis,
+			GetModelMatrix getModMatrix,
+			RenderExternalMaterial rendExternal)
+		{
+			//update wvp
+			Effect		fx	=mMatLib.GetShader("Shaders\\BSP");
+			if(fx == null)
+			{
+				return;
+			}
+
+			fx.CurrentTechnique	=fx.Techniques["Material"];
+
+			fx.Parameters["mWorld"].SetValue(Matrix.Identity);
+			fx.Parameters["mView"].SetValue(gameCam.View);
+			fx.Parameters["mProjection"].SetValue(gameCam.Projection);
+			fx.Parameters["mEyePos"].SetValue(gameCam.Position);
+
+			//draw solids
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+
+			//draw alphas
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
+			DrawMaterialsDCDepth(gd, fx, gameCam.Position, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+
+			//draw outside stuff
+			rendExternal(gameCam.Position, gameCam.View, gameCam.Projection);
 		}
 
 
@@ -315,6 +394,146 @@ namespace MeshLib
 			ratio	/=ThirtyFPS;
 
 			return	MathHelper.Lerp(val, nextVal, ratio);
+		}
+
+
+		//for opaques with models
+		void DrawMaterialsDCDepth(GraphicsDevice g,
+			Effect depthFX,	Vector3 eyePos,
+			GetModelMatrix getModMatrix,
+			VertexBuffer vb, IndexBuffer ib, Dictionary<int, List<DrawCall>> dcs,
+			IsMaterialVisible bMatVis)
+		{
+			if(vb == null)
+			{
+				return;
+			}
+
+			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
+
+			g.SetVertexBuffer(vb);
+			g.Indices	=ib;
+
+			//cycle through models
+			foreach(KeyValuePair<int, List<DrawCall>> modCall in dcs)
+			{
+				int	idx	=0;
+
+				foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
+				{
+					DrawCall	call	=modCall.Value[idx];
+					if(call.mPrimCount == 0)
+					{
+						idx++;
+						continue;
+					}
+
+					if(modCall.Key == 0)
+					{
+						if(!bMatVis(eyePos, idx))
+						{
+							idx++;
+							continue;
+						}
+					}
+
+					EffectTechnique	old	=depthFX.CurrentTechnique;
+
+					mat.Value.ApplyShaderParameters(depthFX);
+
+					depthFX.CurrentTechnique	=old;
+
+					//set world mat from model transforms
+					if(getModMatrix != null)
+					{
+						depthFX.Parameters["mWorld"].SetValue(getModMatrix(modCall.Key));
+					}
+
+					depthFX.CurrentTechnique.Passes[0].Apply();
+
+					g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+						0, call.mMinVertIndex, call.mNumVerts, call.mStartIndex, call.mPrimCount);
+					idx++;
+				}
+			}
+		}
+
+
+		//this one is for alphas with models
+		void DrawMaterialsDCDepth(GraphicsDevice g,
+			Effect depthFX, Vector3 eyePos,
+			GetModelMatrix getModMatrix,
+			VertexBuffer vb, IndexBuffer ib, Dictionary<int, List<List<DrawCall>>> dcs,
+			IsMaterialVisible bMatVis)
+		{
+			if(vb == null)
+			{
+				return;
+			}
+
+			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
+
+			g.SetVertexBuffer(vb);
+			g.Indices	=ib;
+
+			//cycle through models
+			foreach(KeyValuePair<int, List<List<DrawCall>>> modCall in dcs)
+			{
+				int	idx	=0;
+
+				foreach(KeyValuePair<string, MaterialLib.Material> mat in mats)
+				{
+					if(modCall.Value.Count == 0)
+					{
+						idx++;
+						continue;
+					}
+					if(modCall.Value[idx].Count == 0)
+					{
+						idx++;
+						continue;
+					}
+
+					if(modCall.Key == 0)
+					{
+						if(!bMatVis(eyePos, idx))
+						{
+							idx++;
+							continue;
+						}
+					}
+
+					Matrix	modMat	=getModMatrix(modCall.Key);
+
+					//set world mat from model transforms
+					if(getModMatrix != null)
+					{
+						depthFX.Parameters["mWorld"].SetValue(modMat);
+					}
+
+					//hack, will turn off when mrt code is back
+					{
+						EffectTechnique	old	=depthFX.CurrentTechnique;
+
+						mat.Value.ApplyShaderParameters(depthFX);
+
+						depthFX.CurrentTechnique	=old;
+					}
+
+					depthFX.CurrentTechnique.Passes[0].Apply();
+
+					foreach(DrawCall dc in modCall.Value[idx])
+					{
+						if(dc.mPrimCount <= 0)
+						{
+							continue;
+						}
+						g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+							0, dc.mMinVertIndex, dc.mNumVerts, dc.mStartIndex, dc.mPrimCount);
+					}
+					idx++;
+				}
+			}
 		}
 
 
@@ -405,9 +624,6 @@ namespace MeshLib
 			}
 
 			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
-
-			g.SetVertexBuffer(vb);
-			g.Indices	=ib;
 
 			//cycle through models
 			foreach(KeyValuePair<int, List<List<DrawCall>>> modCall in dcs)
