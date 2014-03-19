@@ -5,16 +5,20 @@
 #include "Trilight.fxh"
 
 
-//depth
-VPosTex01 DepthVS(VPos input)
+//depth material normal
+VPosTex03Tex13 DMNVS(VPosNorm input)
 {
-	VPosTex01	output;
-
-	float4	worldPosition	=mul(input.Position, mWorld);
-
-	output.Position		=mul(mul(worldPosition, mView), mProjection);
-	output.TexCoord0	=distance(worldPosition, mEyePos);
+	VPosTex03Tex13	output;	
 	
+	//generate the world-view-proj matrix
+	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
+	
+	//transform the input position to the output
+	output.Position		=mul(input.Position, wvp);
+	output.TexCoord0	=mul(input.Normal, mWorld);
+	output.TexCoord1	=mul(input.Position, mWorld);
+	
+	//return the output structure
 	return	output;
 }
 
@@ -333,36 +337,19 @@ technique Shadow
 	}
 }
 
-technique Depth
+technique DMN
 {
 	pass P0
 	{
 #if defined(SM4)
-		VertexShader	=compile vs_4_0 DepthVS();
-		PixelShader		=compile ps_4_0 DepthPS();
+		VertexShader	=compile vs_4_0 DMNVS();
+		PixelShader		=compile ps_4_0 DMNPS();
 #elif defined(SM3)
-		VertexShader	=compile vs_3_0 DepthVS();
-		PixelShader		=compile ps_3_0 DepthPS();
+		VertexShader	=compile vs_3_0 DMNVS();
+		PixelShader		=compile ps_3_0 DMNPS();
 #else
-		VertexShader	=compile vs_2_0 DepthVS();
-		PixelShader		=compile ps_2_0 DepthPS();
-#endif
-	}
-}
-
-technique Material
-{
-	pass P0
-	{
-#if defined(SM4)
-		VertexShader	=compile vs_4_0 DepthVS();
-		PixelShader		=compile ps_4_0 MaterialPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 DepthVS();
-		PixelShader		=compile ps_3_0 MaterialPS();
-#else
-		VertexShader	=compile vs_2_0 DepthVS();
-		PixelShader		=compile ps_2_0 MaterialPS();
+		VertexShader	=compile vs_2_0 DMNVS();
+		PixelShader		=compile ps_2_0 DMNPS();
 #endif
 	}
 }

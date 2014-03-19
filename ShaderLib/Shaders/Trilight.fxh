@@ -67,6 +67,17 @@ float4 MaterialPS(VTex01 input) : COLOR0
 	return	float4(mMaterialID, 0, 0, 0);
 }
 
+half4 DMNPS(VTex03Tex13 input) : COLOR0
+{
+	half4	ret;
+
+	ret.x	=distance(input.TexCoord1, mEyePos);
+	ret.y	=mMaterialID;
+	ret.zw	=EncodeNormal(input.TexCoord0);
+
+	return	ret;
+}
+
 //single texture, single color modulated
 float4 Tex0Col0PS(VTex0Col0 input) : COLOR
 {

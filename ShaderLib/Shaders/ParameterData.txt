@@ -17,6 +17,7 @@ TriTex0
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 	Hidden
 		mTexture1
 		mSolidColour
@@ -33,6 +34,7 @@ TriTex0
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 TriTex0NormalMap
 	Ignored
 		mTexture1
@@ -47,6 +49,7 @@ TriTex0NormalMap
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 	Hidden
 		mTexture1
 		mSolidColour
@@ -63,6 +66,7 @@ TriTex0NormalMap
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 TriTex0NormalMapSolid
 	Ignored
 		mTexture1
@@ -76,6 +80,7 @@ TriTex0NormalMapSolid
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 	Hidden
 		mTexture1
 		mBones
@@ -91,6 +96,7 @@ TriTex0NormalMapSolid
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 TriTex0NormalMapSolidSpec
 	Ignored
 		mTexture1
@@ -102,6 +108,7 @@ TriTex0NormalMapSolidSpec
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 	Hidden
 		mTexture1
 		mBones
@@ -115,6 +122,7 @@ TriTex0NormalMapSolidSpec
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 TriTex0SpecPhys
 	Ignored
 		mTexture1
@@ -127,6 +135,7 @@ TriTex0SpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 	Hidden
 		mTexture1
 		mSolidColour
@@ -141,6 +150,7 @@ TriTex0SpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 TriSolidSpecPhys
 	Ignored
 		mTexture0
@@ -153,6 +163,7 @@ TriSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 	Hidden
 		mTexture0
 		mTexture1
@@ -167,6 +178,7 @@ TriSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 TriCelSolidSpecPhys
 	Ignored
 		mTexture0
@@ -178,6 +190,7 @@ TriCelSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 	Hidden
 		mTexture0
 		mTexture1
@@ -192,6 +205,7 @@ TriCelSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 TriTex0NormalMapSolidSpecPhys
 	Ignored
 		mTexture1
@@ -205,6 +219,7 @@ TriTex0NormalMapSolidSpecPhys
 		mShadowAtten
 		mSkyGradient0
 		mSkyGradient1
+		mMaterialID
 	Hidden
 		mTexture1
 		mBones
@@ -219,6 +234,7 @@ TriTex0NormalMapSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 TriTex0NormalMapSpecPhys
 	Ignored
 		mSolidColour
@@ -230,6 +246,7 @@ TriTex0NormalMapSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 	Hidden
 		mSolidColour
 		mBones
@@ -243,6 +260,7 @@ TriTex0NormalMapSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 TriTex0NormalMapSolidSpecPhysInstanced
 	Ignored
 		mTexture1
@@ -254,6 +272,7 @@ TriTex0NormalMapSolidSpecPhysInstanced
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 	Hidden
 		mTexture1
 		mBones
@@ -267,6 +286,7 @@ TriTex0NormalMapSolidSpecPhysInstanced
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 TriSkinTex0
 	Ignored
 		mTexture1
@@ -282,6 +302,7 @@ TriSkinTex0
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 	Hidden
 		mTexture1
 		mSolidColour
@@ -299,6 +320,7 @@ TriSkinTex0
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 TriSkinSolidSpecPhys
 	Ignored
 		mTexture0
@@ -312,6 +334,7 @@ TriSkinSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 	Hidden
 		mTexture0
 		mTexture1
@@ -327,6 +350,7 @@ TriSkinSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 TriSkinCelSolidSpecPhys
 	Ignored
 		mTexture0
@@ -339,6 +363,7 @@ TriSkinCelSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 	Hidden
 		mTexture0
 		mTexture1
@@ -354,6 +379,7 @@ TriSkinCelSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 TriSkinDanglySolidSpecPhys
 	Ignored
 		mTexture0
@@ -366,6 +392,7 @@ TriSkinDanglySolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 	Hidden
 		mTexture0
 		mTexture1
@@ -380,6 +407,7 @@ TriSkinDanglySolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 TriSkinDanglyCelSolidSpecPhys
 	Ignored
 		mTexture0
@@ -391,6 +419,7 @@ TriSkinDanglyCelSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 	Hidden
 		mTexture0
 		mTexture1
@@ -405,6 +434,7 @@ TriSkinDanglyCelSolidSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 TriSkinCelColorSpecPhys
 	Ignored
 		mTexture0
@@ -418,6 +448,7 @@ TriSkinCelColorSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 	Hidden
 		mTexture0
 		mTexture1
@@ -434,6 +465,7 @@ TriSkinCelColorSpecPhys
 		mShadowLightPos
 		mbDirectional
 		mShadowAtten
+		mMaterialID
 TriSkinDecalTex0
 	Ignored
 		mSolidColour
@@ -448,6 +480,7 @@ TriSkinDecalTex0
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 	Hidden
 		mSolidColour
 		mBones
@@ -464,6 +497,7 @@ TriSkinDecalTex0
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 TriSkinDecalTex0Tex1
 	Ignored
 		mSolidColour
@@ -478,6 +512,7 @@ TriSkinDecalTex0Tex1
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 	Hidden
 		mSolidColour
 		mBones
@@ -494,6 +529,7 @@ TriSkinDecalTex0Tex1
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 FullBrightSkin
 	Ignored
 		mTexture0
@@ -513,6 +549,7 @@ FullBrightSkin
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 	Hidden
 		mTexture0
 		mTexture1
@@ -535,6 +572,7 @@ FullBrightSkin
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 ShadowSkin
 	Ignored
 		mTexture0
@@ -553,6 +591,7 @@ ShadowSkin
 		mShadowTexture
 		mSpecColor
 		mSpecPower
+		mMaterialID
 	Hidden
 		mTexture0
 		mTexture1
@@ -575,6 +614,7 @@ ShadowSkin
 		mShadowAtten
 		mSpecColor
 		mSpecPower
+		mMaterialID
 Shadow
 	Ignored
 		mTexture0
@@ -592,6 +632,7 @@ Shadow
 		mShadowTexture
 		mSpecColor
 		mSpecPower
+		mMaterialID
 	Hidden
 		mTexture0
 		mTexture1
@@ -613,7 +654,8 @@ Shadow
 		mShadowAtten
 		mSpecColor
 		mSpecPower
-Depth
+		mMaterialID
+DMN
 	Ignored
 		mTexture0
 		mTexture1
@@ -650,44 +692,7 @@ Depth
 		mShadowAtten
 		mSpecColor
 		mSpecPower
-Material
-	Ignored
-		mTexture0
-		mTexture1
-		mLightColor0
-		mLightColor1
-		mLightColor2
-		mLightDirection
-		mSolidColour
-		mBones
-		mCelTable
-		mDanglyForce
-		mShadowTexture
-		mSpecColor
-		mSpecPower
-	Hidden
-		mTexture0
-		mTexture1
-		mLightColor0
-		mLightColor1
-		mLightColor2
-		mLightDirection
-		mSolidColour
-		mBones
-		mWorld
-		mView
-		mProjection
-		mLightViewProj
-		mEyePos
-		mCelTable
-		mDanglyForce
-		mShadowTexture
-		mShadowLightPos
-		mbDirectional
-		mShadowAtten
-		mSpecColor
-		mSpecPower
-DepthDangly
+DMNDangly
 	Ignored
 		mTexture0
 		mTexture1

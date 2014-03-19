@@ -124,30 +124,16 @@ VPosTex03Tex13 ComputeSkinWorld(VPosNormBone input, float4x4 bones[MAX_BONES])
 
 
 //vertex shaders
-//depth
-VPosTex01 DepthVS(VPosNormBone input)
+//depth material normal
+VPosTex03Tex13 DMNVS(VPosNormBone input)
 {
-	VPosTex01	output;
-
-	VPosTex03Tex13	sw	=ComputeSkinWorld(input, mBones);
-
-	output.Position		=sw.Position;
-	output.TexCoord0	=distance(sw.TexCoord1, mEyePos);
-	
-	return	output;
+	return	ComputeSkinWorld(input, mBones);
 }
 
 //dangly depth
-VPosTex01 DepthDanglyVS(VPosNormBoneCol0 input)
+VPosTex03Tex13 DMNDanglyVS(VPosNormBoneCol0 input)
 {
-	VPosTex01	output;
-
-	VPosTex03Tex13	sw	=ComputeSkinWorldDangly(input, mBones);
-
-	output.Position		=sw.Position;
-	output.TexCoord0	=distance(sw.TexCoord1, mEyePos);
-	
-	return	output;
+	return	ComputeSkinWorldDangly(input, mBones);
 }
 
 //skin to world normal
@@ -434,53 +420,36 @@ technique ShadowSkin
 	}
 }
 
-technique Depth
+technique DMN	//depth material normal
 {
 	pass P0
 	{
 #if defined(SM4)
-		VertexShader	=compile vs_4_0 DepthVS();
-		PixelShader		=compile ps_4_0 DepthPS();
+		VertexShader	=compile vs_4_0 DMNVS();
+		PixelShader		=compile ps_4_0 DMNPS();
 #elif defined(SM3)
-		VertexShader	=compile vs_3_0 DepthVS();
-		PixelShader		=compile ps_3_0 DepthPS();
+		VertexShader	=compile vs_3_0 DMNVS();
+		PixelShader		=compile ps_3_0 DMNPS();
 #else
-		VertexShader	=compile vs_2_0 DepthVS();
-		PixelShader		=compile ps_2_0 DepthPS();
+		VertexShader	=compile vs_2_0 DMNVS();
+		PixelShader		=compile ps_2_0 DMNPS();
 #endif
 	}
 }
 
-technique Material
+technique DMNDangly
 {
 	pass P0
 	{
 #if defined(SM4)
-		VertexShader	=compile vs_4_0 DepthVS();
-		PixelShader		=compile ps_4_0 MaterialPS();
+		VertexShader	=compile vs_4_0 DMNDanglyVS();
+		PixelShader		=compile ps_4_0 DMNPS();
 #elif defined(SM3)
-		VertexShader	=compile vs_3_0 DepthVS();
-		PixelShader		=compile ps_3_0 MaterialPS();
+		VertexShader	=compile vs_3_0 DMNDanglyVS();
+		PixelShader		=compile ps_3_0 DMNPS();
 #else
-		VertexShader	=compile vs_2_0 DepthVS();
-		PixelShader		=compile ps_2_0 MaterialPS();
-#endif
-	}
-}
-
-technique DepthDangly
-{
-	pass P0
-	{
-#if defined(SM4)
-		VertexShader	=compile vs_4_0 DepthDanglyVS();
-		PixelShader		=compile ps_4_0 DepthPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 DepthDanglyVS();
-		PixelShader		=compile ps_3_0 DepthPS();
-#else
-		VertexShader	=compile vs_2_0 DepthDanglyVS();
-		PixelShader		=compile ps_2_0 DepthPS();
+		VertexShader	=compile vs_2_0 DMNDanglyVS();
+		PixelShader		=compile ps_2_0 DMNPS();
 #endif
 	}
 }
