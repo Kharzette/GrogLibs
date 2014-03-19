@@ -399,10 +399,11 @@ namespace MeshLib
 						continue;
 					}
 
+					mat.Value.ApplyShaderParameters(fx);
+
 					//set renderstates from material
 					if(pass == 0)
 					{
-						mat.Value.ApplyShaderParameters(fx);
 						mat.Value.ApplyRenderStates(g);
 					}
 
