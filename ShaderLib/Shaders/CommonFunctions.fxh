@@ -6,6 +6,7 @@
 #define	MAX_BONES		55
 #define	PI_OVER_FOUR	0.7853981634f
 #define	PI_OVER_TWO		1.5707963268f
+#define MAX_HALF		65504
 
 //matrii
 shared float4x4	mWorld;

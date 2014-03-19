@@ -242,19 +242,7 @@ float3	GetDynLight(float3 pixelPos, float3 normal)
 #endif
 
 
-half4 DepthPS(VTex03 input) : COLOR0
-{
-	half	dist	=distance(input.TexCoord0, mEyePos);
-
-	return	half4(dist, 0, 0, 0);
-}
-
-float4 MaterialPS() : COLOR0
-{
-	return	float4(mMaterialID, 0, 0, 0);
-}
-
-
+//output struct for our two half4 rendertargets
 struct TwoTarget
 {
 	half4	Color			: COLOR0;
@@ -262,7 +250,7 @@ struct TwoTarget
 };
 
 
-TwoTarget LightMapTTPS(VTex04Tex14Tex24 input)
+TwoTarget LightMapPS(VTex04Tex14Tex24 input)
 {
 	float3		color;
 	TwoTarget	ret;
@@ -296,7 +284,7 @@ TwoTarget LightMapTTPS(VTex04Tex14Tex24 input)
 }
 
 
-TwoTarget LightMapCelTTPS(VTex04Tex14Tex24 input)
+TwoTarget LightMapCelPS(VTex04Tex14Tex24 input)
 {
 	float3		color;
 	TwoTarget	ret;
@@ -335,68 +323,6 @@ TwoTarget LightMapCelTTPS(VTex04Tex14Tex24 input)
 	ret.DepthMatIDNorm.zw	=EncodeNormal(input.TexCoord2.xyz);
 
 	return	ret;
-}
-
-
-float4 LightMapPS(VTex04Tex14Tex24 input) : COLOR0
-{
-	float3	color;
-	
-	if(mbTextureEnabled)
-	{
-		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
-	}
-	else
-	{
-		color	=float3(1.0, 1.0, 1.0);
-	}
-	
-	float3	lm	=tex2D(LightMapSampler, input.TexCoord0.zw);
-
-#if !defined(SM2)
-	lm	+=GetDynLight(input.TexCoord1, input.TexCoord2.xyz);
-#endif
-
-	color	*=lm;
-	color	=pow(abs(color), 1 / 2.2);
-
-	return	float4(color, input.TexCoord1.w);
-}
-
-
-float4 LightMapCelPS(VTex04Tex14Tex24 input) : COLOR0
-{
-	float3	color;
-	
-	if(mbTextureEnabled)
-	{
-		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
-	}
-	else
-	{
-		color	=float3(1.0, 1.0, 1.0);
-	}
-	
-	float3	lm	=tex2D(LightMapSampler, input.TexCoord0.zw);
-
-#if !defined(SM2)
-	lm	+=GetDynLight(input.TexCoord1, input.TexCoord2.xyz);
-#endif
-
-#if defined(CELLIGHT)
-	lm	=CalcCelColor(lm);
-#endif
-
-	color.rgb	*=lm;
-
-	//back to srgb
-	color	=pow(abs(color), 1 / 2.2);
-
-#if defined(CELALL)
-	color	=CalcCelColor(color);
-#endif
-
-	return	float4(color, input.TexCoord1.w);
 }
 
 
@@ -408,10 +334,11 @@ float4 LightMapShadowPassPS(VTex04Tex14Tex24 input) : COLOR0
 }
 
 
-float4 VertexLitPS(VTex04Tex14Tex24Tex31 input) : COLOR0
+TwoTarget VertexLitPS(VTex04Tex14Tex24Tex31 input)
 {
-	float3	color;	
-	float2	tex0;
+	float3		color;
+	float2		tex0;
+	TwoTarget	ret;
 
 	tex0.x	=input.TexCoord0.x;
 	tex0.y	=input.TexCoord0.y;
@@ -451,14 +378,22 @@ float4 VertexLitPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 	//back to srgb
 	color	=pow(abs(color), 1 / 2.2);
 
-	return	float4(color, input.TexCoord3.x);
+	ret.Color.xyz	=color;
+	ret.Color.w		=input.TexCoord3.x;
+
+	ret.DepthMatIDNorm.x	=distance(worldPos, mEyePos);
+	ret.DepthMatIDNorm.y	=mMaterialID;
+	ret.DepthMatIDNorm.zw	=EncodeNormal(norm);
+
+	return	ret;
 }
 
 
-float4 VertexLitCelPS(VTex04Tex14Tex24Tex31 input) : COLOR0
+TwoTarget VertexLitCelPS(VTex04Tex14Tex24Tex31 input)
 {
-	float3	color;
-	float2	tex0;
+	float3		color;
+	float2		tex0;
+	TwoTarget	ret;
 
 	tex0.x	=input.TexCoord0.x;
 	tex0.y	=input.TexCoord0.y;
@@ -508,7 +443,14 @@ float4 VertexLitCelPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 	color	=CalcCelColor(color);
 #endif
 
-	return	float4(color, input.TexCoord3.x);
+	ret.Color.xyz	=color;
+	ret.Color.w		=input.TexCoord3.x;
+
+	ret.DepthMatIDNorm.x	=distance(worldPos, mEyePos);
+	ret.DepthMatIDNorm.y	=mMaterialID;
+	ret.DepthMatIDNorm.zw	=EncodeNormal(norm);
+
+	return	ret;
 }
 
 
@@ -532,9 +474,11 @@ float4 VertexLitShadowPassPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 }
 
 
-float4 LightMapAnimPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
+TwoTarget LightMapAnimPS(VTex04Tex14Tex24Tex34Tex44Tex54 input)
 {
-	float3	color;
+	float3		color;
+	TwoTarget	ret;
+
 	if(mbTextureEnabled)
 	{
 		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
@@ -544,9 +488,8 @@ float4 LightMapAnimPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 		color	=float3(1.0, 1.0, 1.0);
 	}
 
-	float3	lm		=float3(0, 0, 0);
-	float3	norm	=input.TexCoord3.xyz;
-
+	float3	lm			=float3(0, 0, 0);
+	float3	norm		=input.TexCoord3.xyz;
 	float3	worldPos	=input.TexCoord4.xyz;
 
 	//grab style intensity
@@ -579,13 +522,22 @@ float4 LightMapAnimPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	//back to srgb
 	color	=pow(color, 1 / 2.2);
 
-	return	float4(color, input.TexCoord2.z);
+	ret.Color.xyz	=color;
+	ret.Color.w		=input.TexCoord2.z;
+
+	ret.DepthMatIDNorm.x	=distance(worldPos, mEyePos);
+	ret.DepthMatIDNorm.y	=mMaterialID;
+	ret.DepthMatIDNorm.zw	=EncodeNormal(norm);
+
+	return	ret;
 }
 
 
-float4 LightMapAnimCelPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
+TwoTarget LightMapAnimCelPS(VTex04Tex14Tex24Tex34Tex44Tex54 input)
 {
-	float3	color;
+	float3		color;
+	TwoTarget	ret;
+
 	if(mbTextureEnabled)
 	{
 		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
@@ -595,9 +547,8 @@ float4 LightMapAnimCelPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 		color	=float3(1.0, 1.0, 1.0);
 	}
 
-	float3	lm		=float3(0, 0, 0);
-	float3	norm	=input.TexCoord3.xyz;
-
+	float3	lm			=float3(0, 0, 0);
+	float3	norm		=input.TexCoord3.xyz;
 	float3	worldPos	=input.TexCoord4.xyz;
 
 	//grab style intensity
@@ -637,11 +588,18 @@ float4 LightMapAnimCelPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	color	=CalcCelColor(color);
 #endif
 
-	return	float4(color, input.TexCoord2.z);
+	ret.Color.xyz	=color;
+	ret.Color.w		=input.TexCoord2.z;
+
+	ret.DepthMatIDNorm.x	=distance(worldPos, mEyePos);
+	ret.DepthMatIDNorm.y	=mMaterialID;
+	ret.DepthMatIDNorm.zw	=EncodeNormal(norm);
+
+	return	ret;
 }
 
 
-float4 LightMapAnimShadowPassPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
+float4 LightMapAnimShadowPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 {
 	float4	color	=float4(0.0, 0.0, 0.0, input.TexCoord2.z);
 
@@ -652,8 +610,11 @@ float4 LightMapAnimShadowPassPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 }
 
 
-float4 SkyPS(VCubeTex0 input) : COLOR0
+TwoTarget SkyPS(VCubeTex0 input)
 {
+	TwoTarget	ret;
+	float4		color;
+
 	if(mbTextureEnabled)
 	{
 		float3	worldPosition	=input.TexCoord0;
@@ -663,48 +624,19 @@ float4 SkyPS(VCubeTex0 input) : COLOR0
 	
 		eyeVec	=normalize(eyeVec);
 
-		float4	texel	=texCUBE(SkySampler, eyeVec);
-
-		return	texel;
+		color	=texCUBE(SkySampler, eyeVec);
 	}
-
-	return	float4(1, 1, 1, 1);
-}
-
-
-technique LightMapTT
-{
-	pass Base
+	else
 	{
-#if defined(SM4)
-		VertexShader	=compile vs_4_0 LightMapVS();
-		PixelShader		=compile ps_4_0 LightMapTTPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapVS();
-		PixelShader		=compile ps_3_0 LightMapTTPS();
-#else
-		VertexShader	=compile vs_2_0 LightMapVS();
-		PixelShader		=compile ps_2_0 LightMapTTPS();
-#endif
+		color	=float4(1, 1, 1, 1);
 	}
-}
 
+	ret.Color				=color;
+	ret.DepthMatIDNorm.x	=MAX_HALF;
+	ret.DepthMatIDNorm.y	=mMaterialID;
+	ret.DepthMatIDNorm.zw	=EncodeNormal(float3(0, -1, 0));
 
-technique LightMapCelTT
-{
-	pass Base
-	{
-#if defined(SM4)
-		VertexShader	=compile vs_4_0 LightMapVS();
-		PixelShader		=compile ps_4_0 LightMapCelTTPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapVS();
-		PixelShader		=compile ps_3_0 LightMapCelTTPS();
-#else
-		VertexShader	=compile vs_2_0 LightMapVS();
-		PixelShader		=compile ps_2_0 LightMapCelTTPS();
-#endif
-	}
+	return	ret;
 }
 
 
@@ -953,6 +885,10 @@ technique LightMapAnimCel
 		PixelShader		=compile ps_2_0 LightMapAnimCelPS();
 #endif
 	}
+}
+
+technique LightMapAnimShadow
+{
 	pass Shadow
 	{
 		VertexShader	=compile vs_2_0 LightMapAnimVS();
@@ -966,23 +902,5 @@ technique Sky
 	{
 		VertexShader	=compile vs_2_0 SkyVS();
 		PixelShader		=compile ps_2_0 SkyPS();
-	}
-}
-
-technique Depth
-{
-	pass Pass1
-	{
-		VertexShader	=compile vs_3_0 DepthVS();
-		PixelShader		=compile ps_3_0 DepthPS();
-	}
-}
-
-technique Material
-{
-	pass Pass1
-	{
-		VertexShader	=compile vs_3_0 DepthVS();
-		PixelShader		=compile ps_3_0 MaterialPS();
 	}
 }

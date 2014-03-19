@@ -250,12 +250,12 @@ namespace MeshLib
 //			gd.Clear(Color.CornflowerBlue);
 
 			//draw solids first
-//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
-			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
-/*
+			DrawMaterialsDC(gd, viewPos, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+
 			//draw shadows
 			for(int i=0;i < numShadows;i++)
 			{
@@ -277,7 +277,6 @@ namespace MeshLib
 			//draw outside stuff
 			rendExternal(mAlphaPool, viewPos, gameCam.View, gameCam.Projection);
 			mAlphaPool.DrawAll(gd, mMatLib, viewPos, numShadows, renderShadows);
-*/
 		}
 
 
@@ -539,7 +538,7 @@ namespace MeshLib
 
 		//for opaques with models
 		void DrawMaterialsDC(GraphicsDevice g, Vector3 eyePos,
-			int pass, GetModelMatrix getModMatrix,
+			GetModelMatrix getModMatrix,
 			VertexBuffer vb, IndexBuffer ib, Dictionary<int, List<DrawCall>> dcs,
 			IsMaterialVisible bMatVis)
 		{

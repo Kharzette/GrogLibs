@@ -125,6 +125,7 @@ namespace MeshLib
 
 			ShadowInfo	si	=DrawShadow(shadIndex);
 
+			//set only the color portion for the shadow render
 			mPost.SetTarget(mGD, "SceneColor", false);
 
 			mGD.BlendState	=mShadowBlend;
