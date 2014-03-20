@@ -439,6 +439,8 @@ namespace GameLib
 			GraphicsDevice	gd	=GraphicsDevice;
 
 			mSHelper.Draw(DrawStaticDMN);
+
+			mPB.DrawDMN(view, proj);
 		}
 
 

@@ -20,6 +20,8 @@ namespace MaterialLib
 
 		Dictionary<string, MatID>	mIDs	=new Dictionary<string, MatID>();
 
+		const int	StartIndex	=10;	//0 is for occluders, 10 seems like a nice number!?
+
 
 		public void Clear()
 		{
@@ -38,7 +40,7 @@ namespace MaterialLib
 
 		public void Scan()
 		{
-			int	index	=0;
+			int	index	=StartIndex;
 			foreach(MaterialLib mlib in mLibs)
 			{
 				Dictionary<string, Material>	mats	=mlib.GetMaterials();

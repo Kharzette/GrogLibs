@@ -348,6 +348,15 @@ float4	OutlinePS(VTex0 input) : COLOR0
 	//read center
 	center	=tex2D(NormalSampler, uv);
 
+#if defined(LINE_OCCLUSION_TEST)
+	//check for material ID 0, this is a hack for stuff like
+	//particles that need to occlude a line
+	if(center.y == 0)
+	{
+		return	float4(1, 1, 1, 1);
+	}
+#endif
+
 	//one texel around center
 	//format is x depth, y matid, zw normal
 	upLeft		=tex2D(NormalSampler, uv - ox + oy);
@@ -358,6 +367,30 @@ float4	OutlinePS(VTex0 input) : COLOR0
 	downLeft	=tex2D(NormalSampler, uv - ox - oy);
 	down		=tex2D(NormalSampler, uv - oy);
 	downRight	=tex2D(NormalSampler, uv + ox - oy);
+
+#if defined(LINE_OCCLUSION_TEST)
+	//check for material ID 0, this is a hack for stuff like
+	//particles that need to occlude a line
+	half4	zeroTest1, zeroTest2;
+
+	zeroTest1.x	=upLeft.y;
+	zeroTest1.y	=up.y;
+	zeroTest1.z	=upRight.y;
+	zeroTest1.w	=left.y;
+	zeroTest2.x	=right.y;
+	zeroTest2.y	=downLeft.y;
+	zeroTest2.z	=down.y;
+	zeroTest2.w	=downRight.y;
+
+	if(!all(zeroTest1))
+	{
+		return	float4(1, 1, 1, 1);
+	}
+	if(!all(zeroTest2))
+	{
+		return	float4(1, 1, 1, 1);
+	}
+#endif
 
 	half3	centerNorm		=DecodeNormal(center.zw);
 	half3	upLeftNorm		=DecodeNormal(upLeft.zw);

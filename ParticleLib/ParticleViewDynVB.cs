@@ -156,6 +156,30 @@ namespace ParticleLib
 		}
 
 
+		//write into the depth/normal/material buffer
+		internal void DrawDMN(Vector4 color, Matrix view, Matrix proj)
+		{
+			if(mNumParticles <= 0)
+			{
+				return;
+			}
+
+			mGD.SetVertexBuffer(mVB);
+
+			mFX.CurrentTechnique	=mFX.Techniques["ParticleDMN"];
+
+			mFX.Parameters["mTexture"].SetValue(mTex);
+			mFX.Parameters["mView"].SetValue(view);
+			mFX.Parameters["mProjection"].SetValue(proj);
+
+			mFX.CurrentTechnique.Passes[0].Apply();
+
+			mGD.DrawPrimitives(PrimitiveType.TriangleList, 0, mNumParticles * 2);
+
+			mGD.SetVertexBuffer(null);
+		}
+
+
 		internal bool GetCel()
 		{
 			return	mbCel;
