@@ -248,17 +248,19 @@ namespace MeshLib
 			//draw solids first
 			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
 			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
 			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 
 			//draw alphas
 			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
 			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
 
 			//draw outside stuff
 			rendExternalDMN(viewPos, gameCam.View, gameCam.Projection);
+
+			//sky doesn't have a shadow draw pass
+			DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
 		}
 
 
@@ -278,9 +280,9 @@ namespace MeshLib
 			//draw solids first
 			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
 			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
 			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 
 			//draw shadows
 			for(int i=0;i < numShadows;i++)
@@ -289,16 +291,16 @@ namespace MeshLib
 				renderShadows(i);
 
 				//draw second pass with shadowing
-//				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
 				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
 				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
-//				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 			}
 
 			//draw alphas
 			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
 			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
 
 			//draw outside stuff
 			rendExternal(mAlphaPool, viewPos, gameCam.View, gameCam.Projection);
