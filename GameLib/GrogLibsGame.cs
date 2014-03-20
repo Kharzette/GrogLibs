@@ -428,6 +428,8 @@ namespace GameLib
 			GraphicsDevice	gd	=GraphicsDevice;
 
 			mSHelper.Draw(DrawStatic);
+
+			mPB.Draw(ap, view, proj);
 		}
 
 
@@ -490,7 +492,7 @@ namespace GameLib
 			mZoneMats.SetCelTexture(0);
 
 			mTHelper.Initialize(mZone, mAudio, mAudio.mListener, mZoneDraw.SwitchLight, mOkToFire);
-			mPHelper.Initialize(mZone, mTHelper, mPB, "Textures\\Particle");
+			mPHelper.Initialize(mZone, mTHelper, mPB, "Textures\\Particles\\");
 			mAHelper.Initialize(mZone, mTHelper, mAudio);
 			mSHelper.Initialize(mZone);
 			mIMHelper.Initlialize(mZone);
