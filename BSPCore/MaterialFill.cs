@@ -529,8 +529,17 @@ namespace BSPCore
 			ddc.mNumFaces++;
 			ddc.mVCounts.Add(f.mNumVerts);
 
+			//grab plane for dynamic lighting normals
+			GFXPlane	pl	=pp[f.mPlaneNum];
+			GBSPPlane	pln	=new GBSPPlane(pl);
+			if(f.mbFlipSide)
+			{
+				pln.Inverse();
+			}
+
 			List<Vector3>	faceVerts	=new List<Vector3>();
 			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
+			ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
 
 			ddc.mVerts.AddRange(faceVerts);
 

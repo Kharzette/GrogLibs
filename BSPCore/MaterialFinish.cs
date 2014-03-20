@@ -65,7 +65,7 @@ namespace BSPCore
 		{
 			List<DrawCall>	modCalls	=ComputeIndexes(mFBIndexes, matChunks, ref vertOfs);
 
-			StuffVBArrays(matChunks, mFBVerts, null,
+			StuffVBArrays(matChunks, mFBVerts, mFBNormals,
 				mFBTex0, null, null, null,
 				null, null, null);
 

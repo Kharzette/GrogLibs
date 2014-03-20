@@ -63,6 +63,7 @@ namespace BSPCore
 
 		//computed fullbright geometry
 		List<Vector3>	mFBVerts	=new List<Vector3>();
+		List<Vector3>	mFBNormals	=new List<Vector3>();
 		List<Vector2>	mFBTex0		=new List<Vector2>();
 		List<Int32>		mFBIndexes	=new List<Int32>();
 
@@ -192,7 +193,7 @@ namespace BSPCore
 			mLMAAnimVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormBlendTex04Tex14Tex24));
 
 			//FullBright and sky
-			mFBVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosTex0));
+			mFBVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0));
 			mSkyVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosTex0));
 		}
 
@@ -376,15 +377,16 @@ namespace BSPCore
 				return;
 			}
 
-			VPosTex0	[]varray	=new VPosTex0[mFBVerts.Count];
+			VPosNormTex0	[]varray	=new VPosNormTex0[mFBVerts.Count];
 			for(int i=0;i < mFBVerts.Count;i++)
 			{
 				varray[i].Position	=mFBVerts[i];
+				varray[i].Normal	=mFBNormals[i];
 				varray[i].TexCoord0	=mFBTex0[i];
 			}
 
 			vb	=new VertexBuffer(mGD, mFBVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosTex0>(varray);
+			vb.SetData<VPosNormTex0>(varray);
 
 			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mFBIndexes.Count, BufferUsage.None);
 			ib.SetData<Int32>(mFBIndexes.ToArray());

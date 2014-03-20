@@ -246,15 +246,15 @@ namespace MeshLib
 			mMatLib.UpdateWVP(Matrix.Identity, gameCam.View, gameCam.Projection, viewPos);
 
 			//draw solids first
-//			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
 //			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
 			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
 //			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 
 			//draw alphas
-//			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
 //			DrawMaterialsDC(gd, viewPos, 2, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
 
 			//draw outside stuff
@@ -276,8 +276,8 @@ namespace MeshLib
 //			gd.Clear(Color.CornflowerBlue);
 
 			//draw solids first
-//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
 //			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mSkyVB, mSkyIB, mSkyDrawCalls, bMatVis);
 			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
 //			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
@@ -290,14 +290,14 @@ namespace MeshLib
 
 				//draw second pass with shadowing
 //				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mFBVB, mFBIB, mFBDrawCalls, bMatVis);
-//				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
+				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mVLitVB, mVLitIB, mVLitDrawCalls, bMatVis);
 				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mLMVB, mLMIB, mLMDrawCalls, bMatVis);
 //				DrawMaterialsDC(gd, viewPos, 1, getModMatrix, mLMAnimVB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 			}
 
 			//draw alphas
-//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mAlphaVB, mAlphaIB, mAlphaDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAVB, mLMAIB, mLMADrawCalls, bMatVis);
 //			DrawMaterialsDC(gd, viewPos, 0, getModMatrix, mLMAAnimVB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
 
 			//draw outside stuff
@@ -434,7 +434,7 @@ namespace MeshLib
 				return;
 			}
 
-			if(pass == 3)
+			if(pass == 2)
 			{
 				g.SetVertexBuffer(vb);
 				g.Indices	=ib;
@@ -476,9 +476,10 @@ namespace MeshLib
 					}
 
 					Matrix	modMat	=getModMatrix(modCall.Key);
-					if(pass == 3)
+					if(pass == 2)
 					{
 						fx.Parameters["mWorld"].SetValue(modMat);
+						mat.Value.ApplyShaderParameters(fx);
 					}
 
 					foreach(DrawCall dc in modCall.Value[idx])
@@ -488,7 +489,7 @@ namespace MeshLib
 							continue;
 						}
 
-						if(pass != 3)
+						if(pass != 2)
 						{
 							mAlphaPool.StoreDraw(dc.mSortPoint, mat.Value,
 								vb, ib, modMat, 0, dc.mMinVertIndex, dc.mNumVerts,
@@ -496,6 +497,8 @@ namespace MeshLib
 						}
 						else
 						{
+							fx.CurrentTechnique.Passes[pass].Apply();
+
 							//material depth normal pass draws directly
 							g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
 								0, dc.mMinVertIndex, dc.mNumVerts,
