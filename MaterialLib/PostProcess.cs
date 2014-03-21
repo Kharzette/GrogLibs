@@ -25,7 +25,6 @@ namespace MaterialLib
 
 		//stuff
 		int		mResX, mResY;
-		bool	mbReach;
 		Color	mClearColor;
 
 		//gaussian blur stuff
@@ -40,8 +39,6 @@ namespace MaterialLib
 
 		public PostProcess(GraphicsDeviceManager gdm, ContentManager slib, int resx, int resy)
 		{
-			mbReach	=(gdm.GraphicsProfile == GraphicsProfile.Reach);
-
 			mPostFX	=slib.Load<Effect>("Shaders/Post");
 
 			mResX		=resx;
@@ -119,11 +116,8 @@ namespace MaterialLib
 			InitBlurParams(1.0f / (mResX / 2), 0, 0, 1.0f / (mResY / 2));
 
 			//hidef can afford to store these once
-			if(!mbReach)
-			{
-				SetBlurParams(true);
-				SetBlurParams(false);
-			}
+			SetBlurParams(true);
+			SetBlurParams(false);
 		}
 
 
@@ -132,18 +126,10 @@ namespace MaterialLib
 			EffectParameter weightsParameterX, offsetsParameterX;
 			EffectParameter weightsParameterY, offsetsParameterY;
 
-			if(mbReach)
-			{
-				weightsParameterX	=weightsParameterY	=mPostFX.Parameters["mWeights"];
-				offsetsParameterX	=offsetsParameterY	=mPostFX.Parameters["mOffsets"];
-			}
-			else
-			{
-				weightsParameterX	=mPostFX.Parameters["mWeightsX"];
-				offsetsParameterX	=mPostFX.Parameters["mOffsetsX"];
-				weightsParameterY	=mPostFX.Parameters["mWeightsY"];
-				offsetsParameterY	=mPostFX.Parameters["mOffsetsY"];
-			}
+			weightsParameterX	=mPostFX.Parameters["mWeightsX"];
+			offsetsParameterX	=mPostFX.Parameters["mOffsetsX"];
+			weightsParameterY	=mPostFX.Parameters["mWeightsY"];
+			offsetsParameterY	=mPostFX.Parameters["mOffsetsY"];
 
 			if(bX)
 			{
@@ -164,18 +150,10 @@ namespace MaterialLib
 			EffectParameter weightsParameterX, offsetsParameterX;
 			EffectParameter weightsParameterY, offsetsParameterY;
 
-			if(mbReach)
-			{
-				weightsParameterX	=weightsParameterY	=mPostFX.Parameters["mWeights"];
-				offsetsParameterX	=offsetsParameterY	=mPostFX.Parameters["mOffsets"];
-			}
-			else
-			{
-				weightsParameterX	=mPostFX.Parameters["mWeightsX"];
-				offsetsParameterX	=mPostFX.Parameters["mOffsetsX"];
-				weightsParameterY	=mPostFX.Parameters["mWeightsY"];
-				offsetsParameterY	=mPostFX.Parameters["mOffsetsY"];
-			}
+			weightsParameterX	=mPostFX.Parameters["mWeightsX"];
+			offsetsParameterX	=mPostFX.Parameters["mOffsetsX"];
+			weightsParameterY	=mPostFX.Parameters["mWeightsY"];
+			offsetsParameterY	=mPostFX.Parameters["mOffsetsY"];
 			
 			//Look up how many samples our gaussian blur effect supports.
 			int	sampleCountX	=weightsParameterX.Elements.Count;

@@ -54,11 +54,12 @@
     <None Include="Shaders\CommonFunctions.fxh">
       <Name>CommonFunctions</Name>
     </None>
-    <Compile Include="Shaders\Post.fx" Condition=" '$(XnaProfile)' != 'Reach'">
+    <Compile Include="Shaders\Post.fx">
       <Name>Post</Name>
       <Importer>EffectImporter</Importer>
       <Processor>EffectProcessor</Processor>
-      <ProcessorParameters_Defines>SM3</ProcessorParameters_Defines>
+      <ProcessorParameters_Defines Condition=" '$(XnaProfile)' != 'Reach'">SM3</ProcessorParameters_Defines>
+      <ProcessorParameters_Defines Condition=" '$(XnaProfile)' == 'Reach'">SM2</ProcessorParameters_Defines>
       <ProcessorParameters_DebugMode>Debug</ProcessorParameters_DebugMode>
     </Compile>
     <None Include="Shaders\Types.fxh">

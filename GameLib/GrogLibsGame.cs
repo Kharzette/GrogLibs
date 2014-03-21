@@ -136,7 +136,6 @@ namespace GameLib
 			mSLib		=new ContentManager(Services, "ShaderLib");
 			mPost		=new MaterialLib.PostProcess(mGDM, mSLib, mResX, mResY);
 			mBFX		=new BasicEffect(gd);
-			mDynLights	=new DynamicLights(gd, mSLib.Load<Effect>("Shaders/BSP"));
 
 			mBFX.LightingEnabled	=false;
 			mBFX.VertexColorEnabled	=true;
@@ -146,7 +145,10 @@ namespace GameLib
 
 			post		=mSLib.Load<Effect>("Shaders/Post");
 			Effect	lm3	=mSLib.Load<Effect>("Shaders/BSP");
-			mDynLights	=new DynamicLights(gd, lm3);
+			if(mGDM.GraphicsProfile == GraphicsProfile.HiDef)
+			{
+				mDynLights	=new DynamicLights(gd, lm3);
+			}
 
 			mFonts	=FileUtil.LoadAllFonts(Content);
 
@@ -486,7 +488,7 @@ namespace GameLib
 
 			mZoneMats.ReadFromFile(lev + ".MatLib", false, gd);
 			mZone.Read(lev + ".Zone", false);
-			mZoneDraw.Read(gd, lev + ".ZoneDraw", false, false);
+			mZoneDraw.Read(gd, lev + ".ZoneDraw", false);
 
 			//init cel shading
 			mZoneMats.InitCelShading(1);
