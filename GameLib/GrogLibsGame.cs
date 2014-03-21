@@ -57,6 +57,7 @@ namespace GameLib
 		protected Zone			mZone;
 		protected IndoorMesh	mZoneDraw;
 		MaterialLib.MaterialLib	mZoneMats;
+		Effect					mBSPFX;
 
 		//pathing stuff
 		protected PathGraph	mGraph	=PathGraph.CreatePathGrid();
@@ -141,14 +142,14 @@ namespace GameLib
 			mBFX.VertexColorEnabled	=true;
 
 			Effect	stat	=mSLib.Load<Effect>("Shaders/2D");
-			Effect	post	=null;
-
-			post		=mSLib.Load<Effect>("Shaders/Post");
-			Effect	lm3	=mSLib.Load<Effect>("Shaders/BSP");
+			Effect	post	=mSLib.Load<Effect>("Shaders/Post");
+			Effect	lm		=mSLib.Load<Effect>("Shaders/BSP");
 			if(mGDM.GraphicsProfile == GraphicsProfile.HiDef)
 			{
-				mDynLights	=new DynamicLights(gd, lm3);
+				mDynLights	=new DynamicLights(gd, lm);
 			}
+
+			mBSPFX	=lm;
 
 			mFonts	=FileUtil.LoadAllFonts(Content);
 
@@ -442,7 +443,7 @@ namespace GameLib
 
 			mSHelper.Draw(DrawStaticDMN);
 
-			mPB.DrawDMN(view, proj);
+			mPB.DrawDMN(view, proj, camPos);
 		}
 
 
@@ -526,6 +527,7 @@ namespace GameLib
 			mIDKeeper.AddLib(mZoneMats);
 			mIDKeeper.AddLib(mStaticMats);
 			mIDKeeper.Scan();
+			mIDKeeper.AssignIDsToMaterials(mBSPFX);
 		}
 
 

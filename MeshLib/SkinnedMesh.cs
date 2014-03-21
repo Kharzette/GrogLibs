@@ -108,6 +108,49 @@ namespace MeshLib
 		}
 
 
+		public override void DrawDMN(GraphicsDevice g,
+			MaterialLib.MaterialLib matLib,
+			MaterialLib.IDKeeper idk,
+			Matrix world)
+		{
+			if(!mbVisible)
+			{
+				return;
+			}
+
+			MaterialLib.Material	dmn	=matLib.GetMaterial("DMN");
+			if(dmn == null)
+			{
+				return;
+			}
+
+			int	id	=idk.GetID(mMaterialName);
+			if(id == -1)
+			{
+				return;
+			}
+
+			g.SetVertexBuffer(mVerts);
+			g.Indices	=mIndexs;
+
+			dmn.SetParameter("mWorld", world);
+			dmn.SetParameter("mMaterialID", id);
+
+			Effect	fx	=matLib.GetMaterialShader(dmn.Name);
+
+			dmn.ApplyShaderParameters(fx);
+			dmn.ApplyRenderStates(g);
+
+			fx.CurrentTechnique.Passes[0].Apply();
+
+			g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+				0, 0,
+				mNumVerts,
+				0,
+				mNumTriangles);
+		}
+
+
 		public override void Draw(GraphicsDevice g,
 			MaterialLib.MaterialLib matLib, Matrix world, string altMaterial)
 		{

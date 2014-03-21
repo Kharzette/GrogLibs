@@ -157,7 +157,7 @@ namespace ParticleLib
 
 
 		//write into the depth/normal/material buffer
-		internal void DrawDMN(Vector4 color, Matrix view, Matrix proj)
+		internal void DrawDMN(Vector4 color, Matrix view, Matrix proj, Vector3 eyePos)
 		{
 			if(mNumParticles <= 0)
 			{
@@ -171,6 +171,7 @@ namespace ParticleLib
 			mFX.Parameters["mTexture"].SetValue(mTex);
 			mFX.Parameters["mView"].SetValue(view);
 			mFX.Parameters["mProjection"].SetValue(proj);
+			mFX.Parameters["mEyePos"].SetValue(eyePos);
 
 			mFX.CurrentTechnique.Passes[0].Apply();
 

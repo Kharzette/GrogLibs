@@ -7,7 +7,7 @@
 #define	PI_OVER_FOUR			0.7853981634f
 #define	PI_OVER_TWO				1.5707963268f
 #define MAX_HALF				65504
-#define	OUTLINE_ALPHA_THRESHOLD	0.25
+#define	OUTLINE_ALPHA_THRESHOLD	0.05
 //matrii
 shared float4x4	mWorld;
 shared float4x4 mView;
@@ -90,6 +90,20 @@ half3 DecodeNormal(half2 encoded)
 	ret.x	=abs(encoded.x) * 2.0f - 1.0f;
 	ret.y	=encoded.y;
 	ret.z	=sqrt(1.0f - dot(ret.xy, ret.xy)) * theSign;
+	
+	return	ret;
+}
+
+
+//half2 to half3
+//tries to save some instructions
+half3 DecodeNormalSM2(half2 encoded)
+{
+	half3	ret;
+
+	ret.x	=encoded.x * 2.0f - 1.0f;
+	ret.y	=encoded.y;
+	ret.z	=sqrt(1.0f - dot(ret.xy, ret.xy));
 	
 	return	ret;
 }

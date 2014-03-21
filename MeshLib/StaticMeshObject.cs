@@ -167,6 +167,19 @@ namespace MeshLib
 		}
 
 
+		public void DrawDMN(GraphicsDevice gd, MaterialLib.IDKeeper idk)
+		{
+			foreach(StaticMesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+				m.DrawDMN(gd, mMatLib, idk, mTransform);
+			}
+		}
+
+
 		public void SetSecondVertexBufferBinding(VertexBufferBinding v2)
 		{
 			foreach(StaticMesh m in mMeshParts)

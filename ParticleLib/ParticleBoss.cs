@@ -113,11 +113,11 @@ namespace ParticleLib
 		}
 
 
-		public void DrawDMN(Matrix view, Matrix proj)
+		public void DrawDMN(Matrix view, Matrix proj, Vector3 eyePos)
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
-				em.Value.mView.DrawDMN(em.Value.mColor, view, proj);
+				em.Value.mView.DrawDMN(em.Value.mColor, view, proj, eyePos);
 			}
 		}
 

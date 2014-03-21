@@ -284,6 +284,7 @@ namespace MeshLib
 		public virtual void Write(BinaryWriter bw) { }
 		public virtual void Read(BinaryReader br, GraphicsDevice gd, bool bEditor) { }
 		public virtual void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib, Matrix world, string altMaterial) { }
+		public virtual void DrawDMN(GraphicsDevice g, MaterialLib.MaterialLib matLib, MaterialLib.IDKeeper idk, Matrix world) { }
 		public virtual void Draw(GraphicsDevice g, MaterialLib.MaterialLib matLib, int numInstances) { }
 		public virtual void SetSecondVertexBufferBinding(VertexBufferBinding v2) { }
 

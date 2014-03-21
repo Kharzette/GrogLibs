@@ -33,6 +33,7 @@ float	mBaseSaturation;
 float	mTexelSteps;
 float	mThreshold;
 float2	mScreenSize;
+#define	NORM_LINE_THRESHOLD	0.8
 
 //ambient occlusion params
 #define		NUMSAMPLES		12
@@ -325,6 +326,36 @@ float4	BiLatBlurYPS(VTex0Tex13VPos input) : COLOR0
 	return	b / w_total * tex2D(ColorSampler, input.TexCoord0);
 }
 
+//draws the material id in shades for debuggery
+float4	DebugMatIDDraw(VTex0 input) : COLOR0
+{
+	half4	dmn	=tex2D(NormalSampler, input.TexCoord0);
+
+	float	matShade	=dmn.y * 0.01;
+
+	return	float4(matShade, matShade, matShade, 1);
+}
+
+//draws the depth in shades for debuggery
+float4	DebugDepthDraw(VTex0 input) : COLOR0
+{
+	half4	dmn	=tex2D(NormalSampler, input.TexCoord0);
+
+	dmn.x	/=1000.0;
+
+	return	float4(dmn.x, dmn.x, dmn.x, 1);
+}
+
+//draws the normals for debuggery
+float4	DebugNormalDraw(VTex0 input) : COLOR0
+{
+	half4	dmn	=tex2D(NormalSampler, input.TexCoord0);
+
+	half3	norm	=DecodeNormal(dmn.zw);
+
+	return	float4(norm.x, norm.y, norm.z, 1);
+}
+
 float4	OutlinePS(VTex0 input) : COLOR0
 {
 	float2	ox	=float2(mTexelSteps / mScreenSize.x, 0.0);
@@ -332,18 +363,11 @@ float4	OutlinePS(VTex0 input) : COLOR0
 	
 	float2	uv	=input.TexCoord0;
 
-	//from the ati outlining stuff
-	//do I even use any of this?
-	const float4	normThresh0		=float4(0, 0.8, 0, 0);
-	const float4	normThresh1		=float4(0, 0.5, 1, 2);
-	const float4	depthThresh0	=float4(0, 0, -0.01, 0);
-	const float4	depthThresh1	=float4(0, -0.25, 0.25, 1);
-	const float4	texThresh0		=float4(0, 0.01, 0, 0);
-
-	half4	center;
-	half4	upLeft, up, upRight;
-	half4	left, right;
-	half4	downLeft, down, downRight;
+	//only do 5 samples for sm2
+	half4	center, up, left, right, down;
+#if !defined(SM2)
+	half4	upLeft, upRight, downLeft, downRight;
+#endif
 
 	//read center
 	center	=tex2D(NormalSampler, uv);
@@ -359,14 +383,16 @@ float4	OutlinePS(VTex0 input) : COLOR0
 
 	//one texel around center
 	//format is x depth, y matid, zw normal
-	upLeft		=tex2D(NormalSampler, uv - ox + oy);
 	up			=tex2D(NormalSampler, uv + oy);
-	upRight		=tex2D(NormalSampler, uv + ox + oy);
 	left		=tex2D(NormalSampler, uv - ox);
 	right		=tex2D(NormalSampler, uv + ox);
-	downLeft	=tex2D(NormalSampler, uv - ox - oy);
 	down		=tex2D(NormalSampler, uv - oy);
+#if !defined(SM2)
+	upLeft		=tex2D(NormalSampler, uv - ox + oy);
+	upRight		=tex2D(NormalSampler, uv + ox + oy);
+	downLeft	=tex2D(NormalSampler, uv - ox - oy);
 	downRight	=tex2D(NormalSampler, uv + ox - oy);
+#endif
 
 #if defined(LINE_OCCLUSION_TEST)
 	//check for material ID 0, this is a hack for stuff like
@@ -392,56 +418,60 @@ float4	OutlinePS(VTex0 input) : COLOR0
 	}
 #endif
 
+	//normal stuff is too many instructions for sm2
+#if !defined(SM2)
 	half3	centerNorm		=DecodeNormal(center.zw);
-	half3	upLeftNorm		=DecodeNormal(upLeft.zw);
 	half3	upNorm			=DecodeNormal(up.zw);
-	half3	upRightNorm		=DecodeNormal(upRight.zw);
 	half3	leftNorm		=DecodeNormal(left.zw);
 	half3	rightNorm		=DecodeNormal(right.zw);
-	half3	downLeftNorm	=DecodeNormal(downLeft.zw);
 	half3	downNorm		=DecodeNormal(down.zw);
+	half3	upLeftNorm		=DecodeNormal(upLeft.zw);
+	half3	upRightNorm		=DecodeNormal(upRight.zw);
+	half3	downLeftNorm	=DecodeNormal(downLeft.zw);
 	half3	downRightNorm	=DecodeNormal(downRight.zw);
 
-	float4	normDots0, normDots1;
+	float4	normDots0;
+	float4	normDots1;
 
-	normDots0.x	=dot(centerNorm, upLeftNorm);
-	normDots0.y	=dot(centerNorm, upNorm);
-	normDots0.z	=dot(centerNorm, upRightNorm);
-	normDots0.w	=dot(centerNorm, leftNorm);
-	normDots1.x	=dot(centerNorm, rightNorm);
-	normDots1.y	=dot(centerNorm, downLeftNorm);
-	normDots1.z	=dot(centerNorm, downNorm);
+	normDots0.x	=dot(centerNorm, upNorm);
+	normDots0.y	=dot(centerNorm, rightNorm);
+	normDots0.z	=dot(centerNorm, leftNorm);
+	normDots0.w	=dot(centerNorm, downNorm);
+	normDots1.x	=dot(centerNorm, upLeftNorm);
+	normDots1.y	=dot(centerNorm, upRightNorm);
+	normDots1.z	=dot(centerNorm, downLeftNorm);
 	normDots1.w	=dot(centerNorm, downRightNorm);
 
-	normDots0	-=normThresh0.y;
-	normDots1	-=normThresh0.y;
-
-	normDots0	=step(normDots0, 0);
-	normDots1	=step(normDots1, 0);
-
-	float4	normResult0	=dot(normDots0, normThresh1.z);
-	normResult0			+=dot(normDots1, normThresh1.z);
+	normDots0	=step(normDots0, NORM_LINE_THRESHOLD);
+	normDots0	+=step(normDots1, NORM_LINE_THRESHOLD);
 
 	//can early out with the normal test
-	if(any(normResult0))
+	if(any(normDots0))
 	{
 		return	float4(0, 0, 0, 1);
 	}
+#endif
 
-	float4	diff0, diff1;
 
-	diff0.x	=center.y - upLeft.y;
-	diff0.y	=center.y - up.y;
-	diff0.z	=center.y - upRight.y;
-	diff0.w	=center.y - left.y;
+	float4	matDiff1;
 
-	diff1.x	=center.y - right.y;
-	diff1.y	=center.y - downLeft.y;
-	diff1.z	=center.y - down.y;
-	diff1.w	=center.y - downRight.y;
+	matDiff1.x	=center.y - up.y;
+	matDiff1.y	=center.y - right.y;
+	matDiff1.z	=center.y - left.y;
+	matDiff1.w	=center.y - down.y;
 
-	diff0	=abs(diff0);
-	diff0	+=abs(diff1);
+	matDiff1	=abs(matDiff1);
+
+#if !defined(SM2)
+	float4	matDiff2;
+
+	matDiff2.x	=center.y - upLeft.y;
+	matDiff2.y	=center.y - upRight.y;
+	matDiff2.z	=center.y - downLeft.y;
+	matDiff2.w	=center.y - downRight.y;
+
+	matDiff1	+=abs(matDiff2);
+#endif
 
 	float	K00	=-1;
 	float	K01	=-2;
@@ -452,35 +482,33 @@ float4	OutlinePS(VTex0 input) : COLOR0
 	float	K20	=1;
 	float	K21	=2;
 	float	K22	=1;
+
 	float	sx	=0;
 	float	sy	=0;
 
-	sx	+=downLeft.x * K00;
-	sy	+=downLeft.x * K00;
-
 	sx	+=down.x * K01;
-	sy	+=down.x * K10;
-
-	sx	+=downRight.x * K02;
-	sy	+=downRight.x * K20;
-
-	sx	+=left.x * K10;
+	sx	+=up.x * K21;
 	sy	+=left.x * K01;
-
-	sx	+=center.x * K11;
-	sy	+=center.x * K11;
-
-	sx	+=right.x * K12;
 	sy	+=right.x * K21;
 
+	//these are all optimized out
+//	sy	+=down.x * K10;
+//	sx	+=left.x * K10;
+//	sx	+=center.x * K11;
+//	sy	+=center.x * K11;
+//	sx	+=right.x * K12;
+//	sy	+=up.x * K12;
+
+#if !defined(SM2)
+	sx	+=downLeft.x * K00;
+	sy	+=downLeft.x * K00;
+	sx	+=downRight.x * K02;
+	sy	+=downRight.x * K20;
 	sx	+=upLeft.x * K20;
 	sy	+=upLeft.x * K02;
-
-	sx	+=up.x * K21;
-	sy	+=up.x * K12;
-
 	sx	+=upRight.x * K22; 
 	sy	+=upRight.x * K22;
+#endif
 
 	float	dist	=sqrt(sx * sx + sy * sy);
 
@@ -488,11 +516,10 @@ float4	OutlinePS(VTex0 input) : COLOR0
 	//heavily toward no outline, this helps prevent
 	//steeply oblique to screen polys keep from going
 	//super black from the outliner freaking out
-	if(!any(diff0))
+	if(!any(matDiff1))
 	{
 		dist	-=50;
 	}
-
 	float	result	=1;
 	
 	if(dist > mThreshold)
@@ -606,34 +633,6 @@ technique BilateralBlur
 	}
 }
 
-technique Outline
-{
-	pass P0
-	{
-#if defined(SM4)
-		VertexShader	=compile vs_4_0 OutlineVS();
-		PixelShader		=compile ps_4_0 OutlinePS();
-#else
-		VertexShader	=compile vs_3_0 OutlineVS();
-		PixelShader		=compile ps_3_0 OutlinePS();
-#endif
-	}
-}
-
-technique BleachBypass
-{
-	pass P0
-	{
-#if defined(SM4)
-		VertexShader	=compile vs_4_0 OutlineVS();
-		PixelShader		=compile ps_4_0 BleachBypassPS();
-#else
-		VertexShader	=compile vs_3_0 OutlineVS();
-		PixelShader		=compile ps_3_0 BleachBypassPS();
-#endif
-	}
-}
-
 technique BloomExtract
 {
 	pass P0
@@ -662,6 +661,40 @@ technique BloomCombine
 	}
 }
 #endif
+
+technique Outline
+{
+	pass P0
+	{
+#if defined(SM4)
+		VertexShader	=compile vs_4_0 OutlineVS();
+		PixelShader		=compile ps_4_0 OutlinePS();
+#elif defined(SM3)
+		VertexShader	=compile vs_3_0 OutlineVS();
+		PixelShader		=compile ps_3_0 OutlinePS();
+#else
+		VertexShader	=compile vs_2_0 OutlineVS();
+		PixelShader		=compile ps_2_0 OutlinePS();
+#endif
+	}
+}
+
+technique BleachBypass
+{
+	pass P0
+	{
+#if defined(SM4)
+		VertexShader	=compile vs_4_0 OutlineVS();
+		PixelShader		=compile ps_4_0 BleachBypassPS();
+#elif defined(SM3)
+		VertexShader	=compile vs_3_0 OutlineVS();
+		PixelShader		=compile ps_3_0 BleachBypassPS();
+#else
+		VertexShader	=compile vs_2_0 OutlineVS();
+		PixelShader		=compile ps_2_0 BleachBypassPS();
+#endif
+	}
+}
 
 technique Modulate
 {

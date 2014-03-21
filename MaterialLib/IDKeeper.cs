@@ -19,6 +19,7 @@ namespace MaterialLib
 		List<MaterialLib>	mLibs	=new List<MaterialLib>();
 
 		Dictionary<string, MatID>	mIDs	=new Dictionary<string, MatID>();
+		Dictionary<Material, MatID>	mMatIDs	=new Dictionary<Material, MatID>();
 
 		const int	StartIndex	=10;	//0 is for occluders, 10 seems like a nice number!?
 
@@ -27,6 +28,7 @@ namespace MaterialLib
 		{
 			mLibs.Clear();
 			mIDs.Clear();
+			mMatIDs.Clear();
 		}
 
 
@@ -47,31 +49,75 @@ namespace MaterialLib
 
 				foreach(KeyValuePair<string, Material> mat in mats)
 				{
-					string	matName	=StripName(mat.Key);
-
-					if(mIDs.ContainsKey(matName))
+					if(mat.Key == "DMN")
 					{
-						mat.Value.AddParameter("mMaterialID",
-							EffectParameterClass.Scalar,
-							EffectParameterType.Int32, 1, mIDs[matName].mID);
 						continue;
 					}
 
 					MatID	mid;
+
 					mid.mID		=index++;
 					mid.mMat	=mat.Value;
-					mIDs.Add(matName, mid);
+
+					string	matName	=StripName(mat.Key);
+					if(!mIDs.ContainsKey(matName))
+					{
+						mIDs.Add(matName, mid);
+					}
+					mMatIDs.Add(mat.Value, mid);
 				}
 			}
+		}
 
-			//assign
-			foreach(KeyValuePair<string, MatID> ids in mIDs)
+
+		//this works for BSP materials but not static/char
+		public void AssignIDsToMaterials(Effect forEffect)
+		{
+			foreach(MaterialLib mlib in mLibs)
 			{
-				//if this already exists, parameterkeeper handles it
-				ids.Value.mMat.AddParameter("mMaterialID",
-					EffectParameterClass.Scalar,
-					EffectParameterType.Int32, 1, ids.Value.mID);
+				Dictionary<string, Material>	mats	=mlib.GetMaterials();
+
+				foreach(KeyValuePair<string, Material> mat in mats)
+				{
+					if(mat.Key == "DMN")
+					{
+						continue;
+					}
+
+					if(mlib.GetMaterialShader(mat.Key) != forEffect)
+					{
+						continue;
+					}
+
+					//if this already exists, parameterkeeper handles it
+					mat.Value.AddParameter("mMaterialID",
+						EffectParameterClass.Scalar,
+						EffectParameterType.Int32, 1,
+						mMatIDs[mat.Value].mID);
+				}
 			}
+		}
+
+
+		public int GetID(string matName)
+		{
+			string	stripped	=StripName(matName);
+
+			if(mIDs.ContainsKey(stripped))
+			{
+				return	mIDs[stripped].mID;
+			}
+			return	-1;
+		}
+
+
+		public int GetID(Material mat)
+		{
+			if(mMatIDs.ContainsKey(mat))
+			{
+				return	mMatIDs[mat].mID;
+			}
+			return	-1;
 		}
 
 

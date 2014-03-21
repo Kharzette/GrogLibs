@@ -319,6 +319,21 @@ namespace MeshLib
 		}
 
 
+		public void DrawDMN(GraphicsDevice gd, MaterialLib.IDKeeper idk)
+		{
+			UpdateShaderBones();
+
+			foreach(SkinnedMesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+				m.DrawDMN(gd, mMatLib, idk, mTransform);
+			}
+		}
+
+
 		public void Draw(GraphicsDevice gd, string altMaterial)
 		{
 			UpdateShaderBones();

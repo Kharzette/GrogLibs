@@ -119,7 +119,7 @@ VPosTex03Tex13 ParticleDMNVS(VPosTex04 input)
 	pos.w	=1.0f;
 	ofs.w	=1.0f;
 
-	output.TexCoord1	=ofs.xyz;
+	output.TexCoord1	=pos.xyz;
 
 	//screen transformed centerpoint
 	float4	screenPos	=mul(pos, viewProj);
