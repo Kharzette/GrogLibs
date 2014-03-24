@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
+using SharpDX;
+using InputLib;
 
 
-namespace UtilityLib
+namespace SharpDXStuff
 {
+	//common methods of moving a player around
 	public class PlayerSteering
 	{
 		public enum SteeringMethod
@@ -24,7 +25,7 @@ namespace UtilityLib
 		SteeringMethod	mMethod;
 
 		//movement settings
-		float	mSpeed				=0.1f;
+		float	mGroundSpeed		=0.01f;
 		float	mMouseSensitivity	=0.01f;
 		float	mKeySensitivity		=0.1f;	//for key turning
 		float	mGamePadSensitivity	=0.25f;
@@ -41,19 +42,28 @@ namespace UtilityLib
 		bool	mbMovedThisFrame;	//true if the player gave movement input
 
 		//for mouselook
-		MouseState	mOriginalMS;
-		int			mLastWheel;
-		bool		mbRightClickToTurn;
+		bool	mbRightClickToTurn;
 
 		//constants
 		const float	PitchClamp	=80.0f;
 
+		//mapped actions from the game
+		Enum	mZoomIn, mZoomOut;
+		Enum	mMoveLeft, mMoveRight, mMoveForward, mMoveBack;
+		Enum	mTurnLeft, mTurnRight;
+		Enum	mPitchUp, mPitchDown;
+
 
 		public PlayerSteering(float width, float height)
 		{
-			//set up mouselook on right button
-			Mouse.SetPosition((int)(width / 2), (int)(height / 2));
-			mOriginalMS	=Mouse.GetState();
+		}
+
+		public void SetMoveEnums(Enum moveLeft, Enum moveRight, Enum moveForward, Enum moveBack)
+		{
+			mMoveLeft		=moveLeft;
+			mMoveRight		=moveRight;
+			mMoveForward	=moveForward;
+			mMoveBack		=moveBack;
 		}
 
 		public SteeringMethod Method
@@ -82,8 +92,8 @@ namespace UtilityLib
 
 		public float Speed
 		{
-			get { return mSpeed; }
-			set { mSpeed = value; }
+			get { return mGroundSpeed; }
+			set { mGroundSpeed = value; }
 		}
 
 		public float TurnSpeed
@@ -147,8 +157,9 @@ namespace UtilityLib
 		}
 
 
-		public Vector3 Update(int msDelta, Vector3 pos, GameCamera gc,
-			KeyboardState ks, MouseState ms, GamePadState gs)
+		public Vector3 Update(Vector3 pos,
+			Vector3 camForward, Vector3 camLeft, Vector3 camUp,
+			List<Input.InputAction> actions)
 		{
 			mbMovedThisFrame	=false;
 
@@ -158,371 +169,146 @@ namespace UtilityLib
 				return	pos;
 			}
 
-			if(!UseGamePadIfPossible || !gs.IsConnected)
+			foreach(Input.InputAction act in actions)
 			{
-				if(ms.ScrollWheelValue != mLastWheel)
+				if(act.mAction == mZoomIn)
 				{
-					int	swChange	=ms.ScrollWheelValue - mLastWheel;
-
-					mLastWheel	=ms.ScrollWheelValue;
-
-					mZoom	-=(swChange * 0.04f);
-					mZoom	=MathHelper.Clamp(mZoom, 5f, 500f);
+					mZoom	-=act.mTimeHeld * 0.04f;
+					mZoom	=MathUtil.Clamp(mZoom, 5f, 500f);
+				}
+				else if(act.mAction == mZoomOut)
+				{
+					mZoom	+=act.mTimeHeld * 0.04f;
+					mZoom	=MathUtil.Clamp(mZoom, 5f, 500f);
 				}
 			}
+
+			Vector3	moveVec	=Vector3.Zero;
 
 			if(mMethod == SteeringMethod.FirstPerson
 				|| mMethod == SteeringMethod.ThirdPerson)
 			{
-				UpdateGroundMovement(msDelta, gc, ks, ms, gs);
+				UpdateGroundMovement(camForward, camLeft, camUp, actions, out moveVec);
 			}
 			else if(mMethod == SteeringMethod.Fly)
 			{
-				UpdateFly(msDelta, gc, ks, ms, gs);
+				UpdateFly(camForward, camLeft, camUp, actions);
 			}
 			else if(mMethod == SteeringMethod.TwinStick)
 			{
-				UpdateTwinStick(msDelta, gc, ks, ms, gs);
+				throw(new NotImplementedException());
 			}
 			else if(mMethod == SteeringMethod.Platformer)
 			{
-				UpdatePlatformer(msDelta, gc, ks, ms, gs);
+				throw(new NotImplementedException());
 			}
 			else if(mMethod == SteeringMethod.XCOM)
 			{
-				UpdateXCOM(msDelta, gc, ks, ms, gs);
+				throw(new NotImplementedException());
 			}
 
-			return	mPosition;
+			return	mPosition + moveVec;
 		}
 
 
-		void UpdateTwinStick(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
+		void UpdateFly(Vector3 camForward, Vector3 camLeft, Vector3 camUp,
+			List<Input.InputAction> actions)
 		{
-			Vector3 vup		=gc.Up;
-			Vector3 vleft	=gc.Left;
-			Vector3 vin		=gc.Forward;
-
-			mPitch	=45.0f;
-			mRoll	=0.0f;
-
-			Vector3	lastPos	=mPosition;
-
-			if(gs.IsConnected && mbUsePadIfPossible)
-			{
-				if(gs.ThumbSticks.Left != Vector2.Zero)
-				{
-					mbMovedThisFrame	=true;
-
-					Vector3	motion	=vleft * (gs.ThumbSticks.Left.X * msDelta * mGamePadSensitivity * mSpeed);
-					motion			-=vin * (gs.ThumbSticks.Left.Y * msDelta * mGamePadSensitivity * mSpeed);
-
-					motion.Y	=0;
-
-					mPosition	+=motion;
-				}
-				mYaw	-=gs.ThumbSticks.Right.X * mGamePadSensitivity * msDelta * mTurnSpeed;
-			}
-			else
-			{
-				Vector3	moveDelta	=Vector3.Zero;
-				if(ks.IsKeyDown(Keys.A))
-				{
-					mbMovedThisFrame	=true;
-					moveDelta			-=vleft;
-				}
-				else if(ks.IsKeyDown(Keys.D))
-				{
-					mbMovedThisFrame	=true;
-					moveDelta			+=vleft;
-				}
-
-				if(ks.IsKeyDown(Keys.W))
-				{
-					mbMovedThisFrame	=true;
-					moveDelta			-=vin;
-				}
-				else if(ks.IsKeyDown(Keys.S))
-				{
-					mbMovedThisFrame	=true;
-					moveDelta			+=vin;
-				}
-
-				if(ks.IsKeyDown(Keys.Q))
-				{
-					mYaw	+=msDelta * mTurnSpeed * mKeySensitivity;
-				}
-				else if(ks.IsKeyDown(Keys.E))
-				{
-					mYaw	-=msDelta * mTurnSpeed * mKeySensitivity;
-				}
-
-				moveDelta.Y	=0.0f;	//zero out the Y
-
-				if(moveDelta.LengthSquared() > 0.0f)
-				{
-					//nix the strafe run
-					moveDelta.Normalize();
-
-					mPosition	+=moveDelta * (msDelta * mSpeed);
-				}
-			}
-
-			mDelta	=mPosition - lastPos;
-		}
-
-
-		void UpdateXCOM(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
-		{
-			Vector3 vup		=gc.Up;
-			Vector3 vleft	=gc.Left;
-			Vector3 vin		=gc.Forward;
-
-			mPitch	=45.0f;
-			mRoll	=0.0f;
-
-			Vector3	lastPos			=mPosition;
-			Vector3	lastCursorPos	=mCursorPos;
-
-			if(gs.IsConnected && mbUsePadIfPossible)
-			{
-				if(gs.ThumbSticks.Left != Vector2.Zero)
-				{
-					mbMovedThisFrame	=true;
-
-					Vector2	stickMove	=Vector2.Zero;
-
-					stickMove.X	=(gs.ThumbSticks.Left.X * msDelta * mGamePadSensitivity * mSpeed);
-					stickMove.Y	=(gs.ThumbSticks.Left.Y * msDelta * mGamePadSensitivity * mSpeed);
-
-					Vector3	motion	=vleft * stickMove.X;
-					motion			-=vin * stickMove.Y;
-
-					motion.Y	=0;
-
-					mPosition	+=motion;
-					mCursorPos	+=motion;
-				}
-				else if(gs.ThumbSticks.Right != Vector2.Zero)
-				{
-					mbMovedThisFrame	=true;
-
-					Vector3	motion	=vleft * (gs.ThumbSticks.Right.X * msDelta * mGamePadSensitivity * mSpeed);
-					motion			-=vin * (gs.ThumbSticks.Right.Y * msDelta * mGamePadSensitivity * mSpeed);
-
-					motion.Y	=0;
-
-					mPosition	+=motion;
-				}
-
-				if(gs.IsButtonDown(Buttons.DPadLeft))
-				{
-					mYaw	-=mGamePadSensitivity * msDelta * mTurnSpeed;
-				}
-				else if(gs.IsButtonDown(Buttons.DPadRight))
-				{
-					mYaw	+=mGamePadSensitivity * msDelta * mTurnSpeed;
-				}
-			}
-			else
-			{
-				Vector3	moveDelta	=Vector3.Zero;
-				if(ks.IsKeyDown(Keys.A))
-				{
-					mbMovedThisFrame	=true;
-					moveDelta			-=vleft;
-				}
-				else if(ks.IsKeyDown(Keys.D))
-				{
-					mbMovedThisFrame	=true;
-					moveDelta			+=vleft;
-				}
-
-				if(ks.IsKeyDown(Keys.W))
-				{
-					mbMovedThisFrame	=true;
-					moveDelta			-=vin;
-				}
-				else if(ks.IsKeyDown(Keys.S))
-				{
-					mbMovedThisFrame	=true;
-					moveDelta			+=vin;
-				}
-
-				if(ks.IsKeyDown(Keys.Q))
-				{
-					mYaw	+=msDelta * mTurnSpeed * mKeySensitivity;
-				}
-				else if(ks.IsKeyDown(Keys.E))
-				{
-					mYaw	-=msDelta * mTurnSpeed * mKeySensitivity;
-				}
-
-				moveDelta.Y	=0.0f;	//zero out the Y
-
-				if(moveDelta.LengthSquared() > 0.0f)
-				{
-					//nix the strafe run
-					moveDelta.Normalize();
-
-					mPosition	+=moveDelta * (msDelta * mSpeed);
-				}
-			}
-
-			mDelta	=mPosition - lastPos;
-		}
-
-
-		void UpdateFly(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
-		{
-			GetTurn(msDelta, gs, ms);
+			GetTurn(actions);
 
 			Vector3	moveVec;
-			GetMove(msDelta, gc, gs, ms, ks, out moveVec);
+			GetMove(camForward, camLeft, camUp, actions, out moveVec);
 
 			if(moveVec.LengthSquared() > 0.001f)
 			{
 				moveVec.Normalize();
-				mPosition	+=moveVec * msDelta * mSpeed;
+				mPosition	+=moveVec * mGroundSpeed;
 			}
 		}
 
 
-		void UpdateGroundMovement(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
+		void UpdateGroundMovement(Vector3 camForward, Vector3 camLeft, Vector3 camUp,
+			List<Input.InputAction> actions, out Vector3 moveVec)
 		{
-			GetTurn(msDelta, gs, ms);
+			GetTurn(actions);
 
-			Vector3	moveVec;
-			GetMove(msDelta, gc, gs, ms, ks, out moveVec);
+			GetMove(camForward, camLeft, camUp, actions, out moveVec);
 
 			//zero out up/down
 			moveVec.Y	=0.0f;
-
-			if(moveVec.LengthSquared() > 0.001f)
-			{
-				moveVec.Normalize();
-				mPosition	+=moveVec * msDelta * mSpeed;
-			}
 		}
 
 
-		void UpdatePlatformer(int msDelta, GameCamera gc, KeyboardState ks, MouseState ms, GamePadState gs)
-		{
-			Vector3 vup		=Vector3.Up;
-			Vector3 vleft	=Vector3.Left;
-			Vector3 vin		=Vector3.Forward;
-
-			Vector3	moveVec	=Vector3.Zero;
-			if(ks.IsKeyDown(Keys.Left) || ks.IsKeyDown(Keys.A))
-			{
-				mbMovedThisFrame	=true;
-				moveVec				-=vleft;
-			}
-			if(ks.IsKeyDown(Keys.Right) || ks.IsKeyDown(Keys.D))
-			{
-				mbMovedThisFrame	=true;
-				moveVec				+=vleft;
-			}
-
-			if(gs.IsConnected && mbUsePadIfPossible)
-			{
-				if(gs.ThumbSticks.Left != Vector2.Zero)
-				{
-					mbMovedThisFrame	=true;
-					moveVec				=vleft * gs.ThumbSticks.Left.X;
-				}
-			}
-
-			//zero out up/down
-			moveVec.Y	=0.0f;
-
-			if(moveVec.LengthSquared() > 0.001f)
-			{
-				moveVec.Normalize();
-				mPosition	+=moveVec * msDelta * mSpeed;
-			}
-		}
-
-
-		void GetMove(int msDelta, GameCamera gc,
-			GamePadState gs, MouseState ms, KeyboardState ks,
+		void GetMove(Vector3 camForward, Vector3 camLeft, Vector3 camUp,
+			List<Input.InputAction> actions,
 			out Vector3 moveVec)
 		{
-			Vector3 vup		=gc.Up;
-			Vector3 vleft	=gc.Left;
-			Vector3 vin		=gc.Forward;
-
 			moveVec	=Vector3.Zero;
-			if(ks.IsKeyDown(Keys.Left) || ks.IsKeyDown(Keys.A))
-			{
-				mbMovedThisFrame	=true;
-				moveVec				-=vleft;
-			}
-			if(ks.IsKeyDown(Keys.Right) || ks.IsKeyDown(Keys.D))
-			{
-				mbMovedThisFrame	=true;
-				moveVec				+=vleft;
-			}
-			if(ks.IsKeyDown(Keys.Up) || ks.IsKeyDown(Keys.W))
-			{
-				mbMovedThisFrame	=true;
-				moveVec				-=vin;
-			}
-			if(ks.IsKeyDown(Keys.Down) || ks.IsKeyDown(Keys.S))
-			{
-				mbMovedThisFrame	=true;
-				moveVec				+=vin;
-			}
 
-			if(gs.IsConnected && mbUsePadIfPossible)
+			foreach(Input.InputAction act in actions)
 			{
-				if(gs.ThumbSticks.Left != Vector2.Zero)
+				if(act.mAction.CompareTo(mMoveLeft) == 0)
 				{
 					mbMovedThisFrame	=true;
-
-					moveVec	=vleft * gs.ThumbSticks.Left.X;
-					moveVec	-=vin * gs.ThumbSticks.Left.Y;
+					moveVec				-=camLeft * act.mTimeHeld * mGroundSpeed;
+				}
+				else if(act.mAction.CompareTo(mMoveRight) == 0)
+				{
+					mbMovedThisFrame	=true;
+					moveVec				+=camLeft * act.mTimeHeld * mGroundSpeed;
+				}
+				else if(act.mAction.CompareTo(mMoveForward) == 0)
+				{
+					mbMovedThisFrame	=true;
+					moveVec				+=camForward * act.mTimeHeld * mGroundSpeed;
+				}
+				else if(act.mAction.CompareTo(mMoveBack) == 0)
+				{
+					mbMovedThisFrame	=true;
+					moveVec				-=camForward * act.mTimeHeld * mGroundSpeed;
 				}
 			}
 		}
 
 
-		void GetTurn(int msDelta, GamePadState gs, MouseState ms)
+		void GetTurn(List<Input.InputAction> actions)
 		{
-			if(gs.IsConnected && mbUsePadIfPossible)
+			foreach(Input.InputAction act in actions)
 			{
-				float	pitchAmount	=gs.ThumbSticks.Right.Y * msDelta * mGamePadSensitivity;
-
-				if(mbInvertYAxis)
+				if(act.mAction == mPitchUp)
 				{
-					mPitch	+=pitchAmount;
+					float	pitchAmount	=act.mTimeHeld * 0.04f;
+
+					if(mbInvertYAxis)
+					{
+						mPitch	+=pitchAmount;
+					}
+					else
+					{
+						mPitch	-=pitchAmount;
+					}
 				}
-				else
+				else if(act.mAction == mPitchDown)
 				{
-					mPitch	-=pitchAmount;
+					float	pitchAmount	=act.mTimeHeld * 0.04f;
+
+					if(!mbInvertYAxis)
+					{
+						mPitch	+=pitchAmount;
+					}
+					else
+					{
+						mPitch	-=pitchAmount;
+					}
 				}
-
-				mYaw	+=gs.ThumbSticks.Right.X * msDelta * mGamePadSensitivity;
-			}
-			else if((ms.RightButton == ButtonState.Pressed && mbRightClickToTurn)
-				|| !mbRightClickToTurn)
-			{
-				Vector2	delta	=Vector2.Zero;
-				delta.X	=mOriginalMS.X - ms.X;
-				delta.Y	=mOriginalMS.Y - ms.Y;
-
-				Mouse.SetPosition(mOriginalMS.X, mOriginalMS.Y);
-
-				if(mbInvertYAxis)
+				else if(act.mAction == mTurnLeft)
 				{
-					mPitch	+=(delta.Y) * msDelta * mMouseSensitivity;
+					mYaw	+=act.mTimeHeld * 0.04f;
 				}
-				else
+				else if(act.mAction == mTurnRight)
 				{
-					mPitch	-=(delta.Y) * msDelta * mMouseSensitivity;
+					mYaw	-=act.mTimeHeld * 0.04f;
 				}
-
-				mYaw	-=(delta.X) * msDelta * mMouseSensitivity;
 			}
 
 			if(mPitch > PitchClamp)

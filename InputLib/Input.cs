@@ -11,18 +11,29 @@ namespace InputLib
 	public class Input
 	{
 		//useful for applying force such as game movement
-		public class HeldKeyInfo
+		internal class HeldKeyInfo
 		{
-			public long		mTimeHeld;
-			public Keys		mKey;
-			public int		mCode;
-
+			internal long	mTimeHeld;
+			internal Keys	mKey;
+			internal int	mCode;
 
 			internal HeldKeyInfo(KeyHeldInfo copyMe)
 			{
-				mTimeHeld	=copyMe.mTimeHeld / (Stopwatch.Frequency / 1000);
+				mTimeHeld	=copyMe.mTimeHeld;
 				mKey		=copyMe.mKey;
 				mCode		=copyMe.mCode;
+			}
+		}
+
+		public class InputAction
+		{
+			public float	mTimeHeld;
+			public Enum		mAction;	//user specified thing?
+
+			internal InputAction(long timeHeld, Enum act)
+			{
+				mTimeHeld	=(float)timeHeld / ((float)Stopwatch.Frequency / 1000f);
+				mAction		=act;
 			}
 		}
 
@@ -52,8 +63,8 @@ namespace InputLib
 		Dictionary<int, KeyHeldInfo>	mKeysHeld	=new Dictionary<int, KeyHeldInfo>();
 		Dictionary<int, KeyHeldInfo>	mKeysUp		=new Dictionary<int, KeyHeldInfo>();
 
-		//this is the data computed every update
-		Dictionary<int, HeldKeyInfo>	mKeysHeldSince	=new Dictionary<int, HeldKeyInfo>();
+		//mappings to controllers / keys / mice / whatever
+		Dictionary<int, ActionMapping>	mActionMap	=new Dictionary<int, ActionMapping>();
 
 
 		public Input()
@@ -92,6 +103,9 @@ namespace InputLib
 					{
 						mKeysUp.Add(kiea.MakeCode, new KeyHeldInfo(kh));
 					}
+					mKeysHeld.Remove(kiea.MakeCode);
+//					Debug.WriteLine(ts + "," + kiea.Key + "," + kiea.MakeCode
+//						+ "," + kiea.ScanCodeFlags + "," + kiea.State);
 				}
 			}
 			else
@@ -104,37 +118,87 @@ namespace InputLib
 				kh.mCode				=kiea.MakeCode;
 
 				mKeysHeld.Add(kiea.MakeCode, kh);
+//				Debug.WriteLine(ts + "," + kiea.Key + "," + kiea.MakeCode
+//					+ "," + kiea.ScanCodeFlags + "," + kiea.State);
 			}
-
-			Debug.WriteLine(ts + "," + kiea.Key + "," + kiea.MakeCode
-				+ "," + kiea.ScanCodeFlags + "," + kiea.State);
 		}
 
 
-		public void Update()
+		void Update()
 		{
-			mKeysHeldSince.Clear();
-
 			long	ts	=Stopwatch.GetTimestamp();
 
 			foreach(KeyValuePair<int, KeyHeldInfo> keys in mKeysHeld)
 			{
-				if(!mKeysUp.ContainsKey(keys.Key))
-				{
-					//still held
-					keys.Value.mTimeHeld	=ts - keys.Value.mInitialPressTime;
-				}
-				mKeysHeldSince.Add(keys.Key, new HeldKeyInfo(keys.Value));
+				keys.Value.mTimeHeld	=ts - keys.Value.mInitialPressTime;
+//				Debug.WriteLine("TimeHeld: " + keys.Value.mTimeHeld);
 			}
-
-			mKeysUp.Clear();
-			mKeysHeld.Clear();
 		}
 
 
-		public Dictionary<int, HeldKeyInfo> GetHeldKeyInfo()
+		public List<InputAction> GetAction()
 		{
-			return	mKeysHeldSince;
+			Update();
+			return	ComputeActions();
+		}
+
+
+		public void MapAction(Enum action, int keyCode)
+		{
+			if(mActionMap.ContainsKey(keyCode))
+			{
+				//overwrite existing?
+				mActionMap[keyCode].mAction	=action;
+				mActionMap[keyCode].mActionType	=ActionMapping.ActionTypes.ContinuousHold;
+			}
+			else
+			{
+				ActionMapping	amap	=new ActionMapping();
+
+				amap.mAction		=action;
+				amap.mActionType	=ActionMapping.ActionTypes.ContinuousHold;
+				amap.mKeyCode		=keyCode;
+
+				mActionMap.Add(keyCode, amap);
+			}
+		}
+
+
+		List<InputAction> ComputeActions()
+		{
+			List<InputAction>	acts	=new List<InputAction>();
+
+			Debug.WriteLine("Computeactions()");
+
+			long	ts	=Stopwatch.GetTimestamp();
+
+			foreach(KeyValuePair<int, KeyHeldInfo> heldKey in mKeysHeld)
+			{
+				if(mActionMap.ContainsKey(heldKey.Key))
+				{
+					KeyHeldInfo	khi	=heldKey.Value;
+
+					//make sure at least some time has passed
+					if(khi.mInitialPressTime == ts || khi.mTimeHeld == 0)
+					{
+						continue;
+					}
+
+					ActionMapping	map	=mActionMap[heldKey.Key];
+
+					InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mAction);
+
+					acts.Add(act);
+
+					//reset time
+					heldKey.Value.mInitialPressTime	=ts;
+					heldKey.Value.mTimeHeld			=0;
+				}
+			}
+
+			mKeysUp.Clear();
+
+			return	acts;
 		}
 	}
 }

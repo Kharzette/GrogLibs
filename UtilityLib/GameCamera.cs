@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
+using SharpDX;
 
 
-namespace UtilityLib
+namespace SharpDXStuff
 {
 	public class GameCamera
 	{
@@ -90,7 +89,7 @@ namespace UtilityLib
 		{
 			get
 			{
-				return	mMatViewInverse.Translation;
+				return	mMatViewInverse.TranslationVector;
 			}
 		}
 
@@ -121,7 +120,7 @@ namespace UtilityLib
 
 		public void UpdateTwinStick(Vector3 focusPos, float yaw, float povDist)
 		{
-			Matrix	yawMat	=Matrix.CreateRotationY(MathHelper.ToRadians(yaw));
+			Matrix	yawMat	=Matrix.RotationY(MathUtil.DegreesToRadians(yaw));
 			Vector3	yawVec	=Vector3.TransformNormal(Vector3.UnitX, yawMat);
 			Vector3	aimVec	=yawVec + Vector3.Down;
 
@@ -129,7 +128,7 @@ namespace UtilityLib
 
 			Vector3	camPos	=(focusPos + Vector3.Up * 32f) - aimVec * povDist;
 
-			mMATView		=Matrix.CreateLookAt(camPos, focusPos, Vector3.Up);
+			mMATView		=Matrix.LookAtLH(camPos, focusPos, Vector3.Up);
 			mMatViewInverse	=Matrix.Invert(mMATView);			
 			mFrust.Matrix	=mMATView * mMATProjection;
 		}
@@ -152,7 +151,7 @@ namespace UtilityLib
 
 			foreach(Vector3 pnt in points)
 			{
-				Vector3	transformed	=Vector3.Transform(pnt, mFrust.Matrix);
+				Vector4	transformed	=Vector3.Transform(pnt, mFrust.Matrix);
 
 				if(transformed.X < rect.X)
 				{
@@ -181,7 +180,7 @@ namespace UtilityLib
 
 		public bool IsBoxOnScreen(BoundingBox box)
 		{
-			return	mFrust.Intersects(box);
+			return	mFrust.Intersects(ref box);
 		}
 
 
@@ -199,10 +198,10 @@ namespace UtilityLib
 
 		public void UpdateMatrices(Vector3 camPos, float pitch, float yaw, float roll)
 		{
-			mMATView	=Matrix.CreateTranslation(camPos) *
-				Matrix.CreateRotationY(MathHelper.ToRadians(yaw)) *
-				Matrix.CreateRotationX(MathHelper.ToRadians(pitch)) *
-				Matrix.CreateRotationZ(MathHelper.ToRadians(roll));
+			mMATView	=Matrix.Translation(camPos) *
+				Matrix.RotationY(MathUtil.DegreesToRadians(yaw)) *
+				Matrix.RotationX(MathUtil.DegreesToRadians(pitch)) *
+				Matrix.RotationZ(MathUtil.DegreesToRadians(roll));
 
 			mMatViewInverse	=Matrix.Invert(mMATView);
 			
@@ -212,11 +211,11 @@ namespace UtilityLib
 
 		void InitializeMats()
 		{
-			mMATView		=Matrix.CreateTranslation(Vector3.Zero);
+			mMATView		=Matrix.Translation(Vector3.Zero);
 			mMatViewInverse	=Matrix.Invert(mMATView);
 
-			mMATProjection	=Matrix.CreatePerspectiveFieldOfView(
-				MathHelper.ToRadians(45),
+			mMATProjection	=Matrix.PerspectiveFovLH(
+				MathUtil.DegreesToRadians(45),
 				mWidth / mHeight, mNearClip, mFarClip);
 		}
 	}

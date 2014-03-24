@@ -43,7 +43,7 @@
   <ItemGroup>
     <Compile Include="ActionMapping.cs" />
     <Compile Include="Input.cs" />
-    <Compile Include="InputAction.cs" />
+    <Compile Include="GameAction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

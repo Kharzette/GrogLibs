@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace UtilityLibSharpDX
+namespace InputLib
 {
-	class ActionMapping
+	internal class ActionMapping
 	{
-		enum ActionTypes
+		internal enum ActionTypes
 		{
 			ContinuousHold,
 			PressAndRelease,
 			AnalogAmount
 		}
 
-		ActionTypes	mActionType;
-		InputAction	mAction;
+		internal ActionTypes	mActionType;
+		internal Enum			mAction;	//user specified per game?
+		internal int			mKeyCode;
 	}
 }
