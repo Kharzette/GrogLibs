@@ -3,16 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace UtilityLibSharpDX
+namespace InputLib
 {
-	public class InputAction
+	public class GameAction
 	{
-		enum MoveActions
+		public enum MoveActions
 		{
 			MoveForward, MoveBackward, MoveLeft, MoveRight,
 			TurnLeft, TurnRight,
 			LookUp, LookDown,
 			Crouch, Jump
+		}
+
+		public enum UseActions
+		{
+			UseWorldUnderCursor,
+			UsePotionSlot0, UsePotionSlot1, UsePotionSlot2, UsePotionSlot3, UsePotionSlot4
+		}
+
+		public enum AbilityActions
+		{
+
 		}
 	}
 }
