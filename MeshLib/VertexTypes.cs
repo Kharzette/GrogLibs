@@ -8,9 +8,9 @@ using System.Diagnostics;
 #if !XBOX
 using System.Reflection.Emit;
 #endif
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
+using SharpDX;
+using SharpDX.Direct3D11;
+using Buffer = SharpDX.Direct3D11.Buffer;
 
 
 namespace MeshLib
@@ -147,213 +147,6 @@ namespace MeshLib
 		}
 
 
-		public static int GetIndexForVertexDeclaration(VertexDeclaration vd)
-		{
-			Type	t	=GetTypeForVertexDeclaration(vd);
-
-			return	GetIndex(t);
-		}
-
-
-		static Type VEFType(VertexElementFormat vef)
-		{
-			switch(vef)
-			{
-				case VertexElementFormat.Byte4:
-					return	typeof(Byte4);
-				case VertexElementFormat.Color:
-					return	typeof(Color);
-				case VertexElementFormat.HalfVector2:
-					return	typeof(HalfVector2);
-				case VertexElementFormat.HalfVector4:
-					return	typeof(HalfVector4);
-				case VertexElementFormat.NormalizedShort2:
-					return	typeof(NormalizedShort2);
-				case VertexElementFormat.NormalizedShort4:
-					return	typeof(NormalizedShort4);
-				case VertexElementFormat.Short2:
-					return	typeof(Short2);
-				case VertexElementFormat.Short4:
-					return	typeof(Short4);
-				case VertexElementFormat.Single:
-					return	typeof(Single);
-				case VertexElementFormat.Vector2:
-					return	typeof(Vector2);
-				case VertexElementFormat.Vector3:
-					return	typeof(Vector3);
-				case VertexElementFormat.Vector4:
-					return	typeof(Vector4);
-			}
-			return	typeof(object);
-		}
-
-
-		static VertexElementFormat GetElementFormat(Type t)
-		{
-			if(t == typeof(Byte4))
-			{
-				return	VertexElementFormat.Byte4;
-			}
-			else if(t == typeof(Color))
-			{
-				return	VertexElementFormat.Color;
-			}
-			else if(t == typeof(HalfVector2))
-			{
-				return	VertexElementFormat.HalfVector2;
-			}
-			else if(t == typeof(HalfVector4))
-			{
-				return	VertexElementFormat.HalfVector4;
-			}
-			else if(t == typeof(NormalizedShort2))
-			{
-				return	VertexElementFormat.NormalizedShort2;
-			}
-			else if(t == typeof(NormalizedShort4))
-			{
-				return	VertexElementFormat.NormalizedShort4;
-			}
-			else if(t == typeof(Short2))
-			{
-				return	VertexElementFormat.Short2;
-			}
-			else if(t == typeof(Short4))
-			{
-				return	VertexElementFormat.Short4;
-			}
-			else if(t == typeof(Single))
-			{
-				return	VertexElementFormat.Single;
-			}
-			else if(t == typeof(Vector2))
-			{
-				return	VertexElementFormat.Vector2;
-			}
-			else if(t == typeof(Vector3))
-			{
-				return	VertexElementFormat.Vector3;
-			}
-			else if(t == typeof(Vector4))
-			{
-				return	VertexElementFormat.Vector4;
-			}
-			else
-			{
-				Debug.Assert(false);
-				return	VertexElementFormat.HalfVector4;
-			}
-		}
-
-
-		static bool HasFormatAndUsage(Type t, VertexElement el, int numColor, int numTex)
-		{
-			VertexElementFormat	fmt	=el.VertexElementFormat;
-
-			if(el.VertexElementUsage == VertexElementUsage.Binormal)
-			{
-				return	HasElement(t, VEFType(fmt), "BiTangent");
-			}
-			else if(el.VertexElementUsage == VertexElementUsage.BlendIndices)
-			{
-				if(HasElement(t, VEFType(fmt), "BoneIndex"))
-				{
-					return	true;
-				}
-				return	HasElement(t, VEFType(fmt), "AnimStyle");
-			}
-			else if(el.VertexElementUsage == VertexElementUsage.BlendWeight)
-			{
-				return	HasElement(t, VEFType(fmt), "BoneWeights");
-			}
-			else if(el.VertexElementUsage == VertexElementUsage.Color)
-			{
-				return	HasElement(t, VEFType(fmt), "Color" + numColor);
-			}
-			else if(el.VertexElementUsage == VertexElementUsage.Depth)
-			{
-				return	HasElement(t, VEFType(fmt), "Depth");
-			}
-			else if(el.VertexElementUsage == VertexElementUsage.Fog)
-			{
-				return	HasElement(t, VEFType(fmt), "Fog");
-			}
-			else if(el.VertexElementUsage == VertexElementUsage.Normal)
-			{
-				return	HasElement(t, VEFType(fmt), "Normal");
-			}
-			else if(el.VertexElementUsage == VertexElementUsage.PointSize)
-			{
-				return	HasElement(t, VEFType(fmt), "PointSize");
-			}
-			else if(el.VertexElementUsage == VertexElementUsage.Position)
-			{
-				return	HasElement(t, VEFType(fmt), "Position");
-			}
-			else if(el.VertexElementUsage == VertexElementUsage.Sample)
-			{
-				return	HasElement(t, VEFType(fmt), "Sample");
-			}
-			else if(el.VertexElementUsage == VertexElementUsage.Tangent)
-			{
-				return	HasElement(t, VEFType(fmt), "Tangent");
-			}
-			else if(el.VertexElementUsage == VertexElementUsage.TessellateFactor)
-			{
-				return	HasElement(t, VEFType(fmt), "TessFactor");
-			}
-			else if(el.VertexElementUsage == VertexElementUsage.TextureCoordinate)
-			{
-				return	HasElement(t, VEFType(fmt), "TexCoord" + numTex);
-			}
-			return	false;
-		}
-
-
-		public static Type GetTypeForVertexDeclaration(VertexDeclaration vd)
-		{
-			VertexElement	[]elems	=vd.GetVertexElements();
-
-			int		numTex, numColor;
-			foreach(Type t in mTypes)
-			{
-				numTex	=numColor	=0;
-				bool	bFound	=true;
-				foreach(VertexElement el in elems)
-				{
-					if(!HasFormatAndUsage(t, el, numColor, numTex))
-					{
-						bFound	=false;
-						break;
-					}
-					else
-					{
-						//found
-						if(el.VertexElementUsage == VertexElementUsage.TextureCoordinate)
-						{
-							numTex++;
-						}
-						else if(el.VertexElementUsage == VertexElementUsage.Color)
-						{
-							numColor++;
-						}
-					}
-				}
-
-				if(bFound)
-				{
-					return	t;
-				}			
-			}
-
-			Debug.WriteLine("Warning!  Type not found for vertex declaration!");
-
-			Debug.Assert(false);
-
-			return	typeof(object);
-		}
-
-
 		public static bool HasElement(Type t, Type subType, string eleName)
 		{
 			FieldInfo	fi	=t.GetField(eleName);
@@ -365,6 +158,12 @@ namespace MeshLib
 		}
 
 
+		public static int GetSizeForTypeIndex(int index)
+		{
+			return	GetSizeForType(GetTypeForIndex(index));
+		}
+
+
 		public static int GetSizeForType(Type t)
 		{
 			FieldInfo	[]fields	=t.GetFields();
@@ -372,11 +171,7 @@ namespace MeshLib
 			//packed vectors sometimes don't return any fields
 			if(fields.Length == 0)
 			{
-				if(t == typeof(Short4))
-				{
-					return	8;
-				}
-				if(t == typeof(HalfVector4))
+				if(t == typeof(Half4))
 				{
 					return	8;
 				}
@@ -394,14 +189,6 @@ namespace MeshLib
 				{
 					size	+=4;
 				}
-				else if(fi.FieldType == typeof(Byte4))
-				{
-					size	+=4;
-				}
-				else if(fi.FieldType == typeof(Short4))
-				{
-					size	+=8;
-				}
 				else if(fi.FieldType == typeof(Vector2))
 				{
 					size	+=8;
@@ -414,7 +201,7 @@ namespace MeshLib
 				{
 					size	+=16;
 				}
-				else if(fi.FieldType == typeof(HalfVector4))
+				else if(fi.FieldType == typeof(Half4))
 				{
 					size	+=8;
 				}
@@ -424,103 +211,6 @@ namespace MeshLib
 				}
 			}
 			return	size;
-		}
-
-
-		static int CountTypes(List<VertexElement> ves, Type t, VertexElementUsage veu)
-		{
-			int	ret	=0;
-			foreach(VertexElement ve in ves)
-			{
-				if(ve.VertexElementFormat == GetElementFormat(t))
-				{
-					if(ve.VertexElementUsage == veu)
-					{
-						ret++;
-					}
-				}
-			}
-			return	ret;
-		}
-
-
-		public static VertexDeclaration GetVertexDeclarationForType(Type t)
-		{
-			FieldInfo	[]fields	=t.GetFields();
-
-			List<VertexElement>	ves			=new List<VertexElement>();
-
-			int	sizeSoFar	=0;
-			foreach(FieldInfo fi in fields)
-			{
-				VertexElementUsage	veu;
-				if(fi.Name.StartsWith("BiTangent"))
-				{
-					veu	=VertexElementUsage.Binormal;
-				}
-				else if(fi.Name.StartsWith("BoneIndex")
-					|| fi.Name.StartsWith("AnimStyle"))
-				{
-					veu	=VertexElementUsage.BlendIndices;
-				}
-				else if(fi.Name.StartsWith("BoneWeights"))
-				{
-					veu	=VertexElementUsage.BlendWeight;
-				}
-				else if(fi.Name.StartsWith("Color"))
-				{
-					veu	=VertexElementUsage.Color;
-				}
-				else if(fi.Name.StartsWith("Depth"))
-				{
-					veu	=VertexElementUsage.Depth;
-				}
-				else if(fi.Name.StartsWith("Fog"))
-				{
-					veu	=VertexElementUsage.Fog;
-				}
-				else if(fi.Name.StartsWith("Normal"))
-				{
-					veu	=VertexElementUsage.Normal;
-				}
-				else if(fi.Name.StartsWith("PointSize"))
-				{
-					veu	=VertexElementUsage.PointSize;
-				}
-				else if(fi.Name.StartsWith("Position"))
-				{
-					veu	=VertexElementUsage.Position;
-				}
-				else if(fi.Name.StartsWith("Sample"))
-				{
-					veu	=VertexElementUsage.Sample;
-				}
-				else if(fi.Name.StartsWith("Tangent"))
-				{
-					veu	=VertexElementUsage.Tangent;
-				}
-				else if(fi.Name.StartsWith("TessFactor"))
-				{
-					veu	=VertexElementUsage.TessellateFactor;
-				}
-				else if(fi.Name.StartsWith("TexCoord"))
-				{
-					veu	=VertexElementUsage.TextureCoordinate;
-				}
-				else
-				{
-					Debug.Assert(false);
-					veu	=VertexElementUsage.Position;
-				}
-
-				ves.Add(new VertexElement(sizeSoFar,
-					GetElementFormat(fi.FieldType), veu,
-					CountTypes(ves, fi.FieldType, veu)));
-
-				sizeSoFar	+=GetSizeForType(fi.FieldType);
-			}
-			
-			return	new VertexDeclaration(ves.ToArray());
 		}
 
 
@@ -676,32 +366,42 @@ namespace MeshLib
 		}
 
 
-		static Array GetVertArray(VertexBuffer vb, int numVerts, int typeIdx)
+		public static Buffer BuildABuffer(Device gd, Array verts, int typeIdx)
 		{
-			Type	vtype	=mTypes[typeIdx];
-			Array	verts	=Array.CreateInstance(vtype, numVerts);
-
-			MethodInfo genericMethod =
-				typeof (VertexBuffer).GetMethods().Where(
-					x => x.Name == "GetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
-            
-			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
-
-			typedMethod.Invoke(vb, new object[] {verts});
-
-			return	verts;
+			return	BuildABuffer(gd, verts, GetTypeForIndex(typeIdx));
 		}
 
 
-		public static List<Vector3> GetPositions(VertexBuffer vb, int numVerts, int typeIdx)
+		public static Buffer BuildABuffer(Device gd, Array verts, Type vtype)
+		{
+			int	vertSize	=VertexTypes.GetSizeForType(vtype);
+
+			BufferDescription	bDesc	=new BufferDescription(
+				vertSize * verts.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+//			IEnumerable<MethodInfo>	meths	=typeof(Buffer).GetMethods().Where(x => x.Name == "Create");
+
+			MethodInfo genericMethod =
+				typeof (Buffer).GetMethods().Where(
+					x => x.Name == "Create" && x.IsGenericMethod
+						&& x.GetParameters().Length == 3).Last();
+            
+			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
+
+			return	typedMethod.Invoke(null, new object[] {gd, verts, bDesc}) as Buffer;
+		}
+
+
+		public static List<Vector3> GetPositions(Array verts, int typeIdx)
 		{
 			List<Vector3>	vecs	=new List<Vector3>();
 
 			Type	vtype	=mTypes[typeIdx];
-			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
 
 			FieldInfo	[]finfo	=vtype.GetFields();
-			for(int i=0;i < numVerts;i++)
+			for(int i=0;i < verts.Length;i++)
 			{
 				foreach(FieldInfo fi in finfo)
 				{
@@ -718,22 +418,21 @@ namespace MeshLib
 		}
 
 
-		public static List<HalfVector4> GetWeights(VertexBuffer vb, int numVerts, int typeIdx)
+		public static List<Half4> GetWeights(Array verts, int typeIdx)
 		{
-			List<HalfVector4>	weights	=new List<HalfVector4>();
+			List<Half4>	weights	=new List<Half4>();
 
 			Type	vtype	=mTypes[typeIdx];
-			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
 
 			FieldInfo	[]finfo	=vtype.GetFields();
-			for(int i=0;i < numVerts;i++)
+			for(int i=0;i < verts.Length;i++)
 			{
 				foreach(FieldInfo fi in finfo)
 				{
 					//this might not be positional data!
 					if(fi.Name == "BoneWeights")
 					{
-						HalfVector4	vec	=(HalfVector4)GetArrayField(verts, i, fi.Name);
+						Half4	vec	=(Half4)GetArrayField(verts, i, fi.Name);
 						weights.Add(vec);
 					}
 				}
@@ -743,15 +442,38 @@ namespace MeshLib
 		}
 
 
-		public static List<Vector3> GetNormals(VertexBuffer vb, int numVerts, int typeIdx)
+		public static List<Half4> GetBoneIndexes(Array verts, int typeIdx)
+		{
+			Type	vtype	=mTypes[typeIdx];
+
+			List<Half4>	idxs	=new List<Half4>();
+
+			FieldInfo	[]finfo	=vtype.GetFields();
+			for(int i=0;i < verts.Length;i++)
+			{
+				foreach(FieldInfo fi in finfo)
+				{
+					//this might not be positional data!
+					if(fi.Name == "BoneIndex")
+					{
+						Half4	vec	=(Half4)GetArrayField(verts, i, fi.Name);
+						idxs.Add(vec);
+					}
+				}
+			}
+
+			return	idxs;
+		}
+
+
+		public static List<Vector3> GetNormals(Array verts, int typeIdx)
 		{
 			List<Vector3>	norms	=new List<Vector3>();
 
 			Type	vtype	=mTypes[typeIdx];
-			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
 
 			FieldInfo	[]finfo	=vtype.GetFields();
-			for(int i=0;i < numVerts;i++)
+			for(int i=0;i < verts.Length;i++)
 			{
 				foreach(FieldInfo fi in finfo)
 				{
@@ -768,15 +490,14 @@ namespace MeshLib
 		}
 
 
-		public static List<Vector2> GetTexCoord(VertexBuffer vb, int numVerts, int typeIdx, int set)
+		public static List<Vector2> GetTexCoord(Array verts, int typeIdx, int set)
 		{
 			Type	vtype	=mTypes[typeIdx];
-			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
 
 			List<Vector2>	texs	=new List<Vector2>();
 
 			FieldInfo	[]finfo	=vtype.GetFields();
-			for(int i=0;i < numVerts;i++)
+			for(int i=0;i < verts.Length;i++)
 			{
 				foreach(FieldInfo fi in finfo)
 				{
@@ -793,71 +514,10 @@ namespace MeshLib
 		}
 
 
-		public static List<Vector3> GetNormals(VertexBuffer vb, int typeIdx)
-		{
-			List<Vector3>	ret		=new List<Vector3>();
-			Type			vtype	=mTypes[typeIdx];
-			Array			verts	=Array.CreateInstance(vtype, vb.VertexCount);
-
-			MethodInfo genericMethod =
-				typeof (VertexBuffer).GetMethods().Where(
-					x => x.Name == "GetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
-            
-			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
-
-			typedMethod.Invoke(vb, new object[] {verts});
-
-			FieldInfo	[]finfo	=vtype.GetFields();
-			for(int i=0;i < vb.VertexCount;i++)
-			{
-				Vector3	pos	=Vector3.Zero;
-				foreach(FieldInfo fi in finfo)
-				{
-					if(fi.Name == "Position")
-					{
-						pos	=(Vector3)GetArrayField(verts, i, fi.Name);
-						ret.Add(pos);
-					}
-					else if(fi.Name == "Normal")
-					{
-						Vector3	vec	=(Vector3)GetArrayField(verts, i, fi.Name);
-						ret.Add(pos + (vec * 5));
-					}
-				}
-			}
-
-			return	ret;
-		}
-
-
-		public static List<HalfVector4> GetBoneIndexes(VertexBuffer vb, int numVerts, int typeIdx)
-		{
-			Type	vtype	=mTypes[typeIdx];
-			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
-
-			List<HalfVector4>	idxs	=new List<HalfVector4>();
-
-			FieldInfo	[]finfo	=vtype.GetFields();
-			for(int i=0;i < numVerts;i++)
-			{
-				foreach(FieldInfo fi in finfo)
-				{
-					//this might not be positional data!
-					if(fi.Name == "BoneIndex")
-					{
-						HalfVector4	vec	=(HalfVector4)GetArrayField(verts, i, fi.Name);
-						idxs.Add(vec);
-					}
-				}
-			}
-
-			return	idxs;
-		}
-
-
 		//blasts the vert element at index
-		public static VertexBuffer NukeElements(GraphicsDevice gd, VertexBuffer vb,
-			int numVerts, int typeIdx, List<int> indexes, out int typeIndex)
+		//returning a new array and type index
+		public static Array NukeElements(Array verts, int typeIdx,
+			List<int> indexes, out int typeIndex)
 		{
 			Type	vtype	=mTypes[typeIdx];
 
@@ -903,8 +563,8 @@ namespace MeshLib
 
 			bool	bPos		=HasElement(newType, typeof(Vector3), "Position");
 			bool	bNorm		=HasElement(newType, typeof(Vector3), "Normal");
-			bool	bBoneIdx	=HasElement(newType, typeof(HalfVector4), "BoneIndex");
-			bool	bBoneWeight	=HasElement(newType, typeof(HalfVector4), "BoneWeights");
+			bool	bBoneIdx	=HasElement(newType, typeof(Half4), "BoneIndex");
+			bool	bBoneWeight	=HasElement(newType, typeof(Half4), "BoneWeights");
 			bool	bTan		=HasElement(newType, typeof(Vector3), "Tangent");
 			bool	bBiTan		=HasElement(newType, typeof(Vector3), "BiTangent");
 
@@ -918,10 +578,9 @@ namespace MeshLib
 				texCnt,
 				colCnt);
 
-			Array	oldVerts	=GetVertArray(vb, numVerts, typeIdx);
-			Array	newVerts	=Array.CreateInstance(vtypeNew, numVerts);
+			Array	newVerts	=Array.CreateInstance(vtypeNew, verts.Length);
 
-			for(int i=0;i < numVerts;i++)
+			for(int i=0;i < newVerts.Length;i++)
 			{
 				for(int j=0;j < fis.Length;j++)
 				{
@@ -929,87 +588,44 @@ namespace MeshLib
 					{
 						continue;
 					}
-					SetArrayField(newVerts, i, fis[j].Name, GetArrayField(oldVerts, i, fis[j].Name));
+					SetArrayField(newVerts, i, fis[j].Name, GetArrayField(verts, i, fis[j].Name));
 				}
 			}
 
 			typeIndex	=GetIndex(vtypeNew);
 
-			VertexDeclaration	dec	=GetVertexDeclarationForType(vtypeNew);
-
-			VertexBuffer vb2	=new VertexBuffer(gd, dec, numVerts, BufferUsage.None);
-			
-			MethodInfo genericMethod =
-				typeof (VertexBuffer).GetMethods().Where(
-					x => x.Name == "SetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
-            
-			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtypeNew});
-
-			typedMethod.Invoke(vb2, new object[] {newVerts});
-
-			return	vb2;
+			return	newVerts;
 		}
 
 
-		public static VertexBuffer ReplaceWeights(GraphicsDevice gd, VertexBuffer vb,
-			int numVerts, int typeIdx, HalfVector4 []newWeights)
+		//replace the weights in array verts
+		public static void ReplaceWeights(Array verts, Half4 []newWeights)
 		{
-			Type	vtype	=mTypes[typeIdx];
-			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
+			Debug.Assert(verts.Length == newWeights.Length);
 
-			for(int i=0;i < numVerts;i++)
+			for(int i=0;i < verts.Length;i++)
 			{
 				SetArrayField(verts, i, "BoneWeights", newWeights[i]);
 			}
-
-			VertexDeclaration	dec	=GetVertexDeclarationForType(vtype);
-
-			VertexBuffer vb2	=new VertexBuffer(gd, dec, numVerts, BufferUsage.None);
-			
-			MethodInfo genericMethod =
-				typeof (VertexBuffer).GetMethods().Where(
-					x => x.Name == "SetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
-            
-			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
-
-			typedMethod.Invoke(vb2, new object[] {verts});
-
-			return	vb2;
 		}
 
 
-		public static VertexBuffer ReplaceBoneIndexes(GraphicsDevice gd, VertexBuffer vb,
-			int numVerts, int typeIdx, HalfVector4 []newInds)
+		public static void ReplaceBoneIndexes(Array verts, Half4 []newInds)
 		{
-			Type	vtype	=mTypes[typeIdx];
-			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
+			Debug.Assert(verts.Length == newInds.Length);
 
-			for(int i=0;i < numVerts;i++)
+			for(int i=0;i < verts.Length;i++)
 			{
 				SetArrayField(verts, i, "BoneIndex", newInds[i]);
 			}
-
-			VertexDeclaration	dec	=GetVertexDeclarationForType(vtype);
-
-			VertexBuffer vb2	=new VertexBuffer(gd, dec, numVerts, BufferUsage.None);
-			
-			MethodInfo genericMethod =
-				typeof (VertexBuffer).GetMethods().Where(
-					x => x.Name == "SetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
-            
-			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
-
-			typedMethod.Invoke(vb2, new object[] {verts});
-
-			return	vb2;
 		}
 
 
-		//create a new vertexbuffer with tangents added
-		public static VertexBuffer AddTangents(GraphicsDevice gd, VertexBuffer vb, int numVerts, int typeIdx, Vector4 []tans, out int typeIndex)
+		//create a new vert array with tangents added
+		public static Array AddTangents(Array verts, int typeIdx,
+			Vector4 []tans, out int typeIndex)
 		{
 			Type	vtype	=mTypes[typeIdx];
-			Array	verts	=GetVertArray(vb, numVerts, typeIdx);
 
 			//count texcoords
 			int	texCnt	=0;
@@ -1027,8 +643,8 @@ namespace MeshLib
 
 			bool	bPos		=HasElement(vtype, typeof(Vector3), "Position");
 			bool	bNorm		=HasElement(vtype, typeof(Vector3), "Normal");
-			bool	bBoneIdx	=HasElement(vtype, typeof(HalfVector4), "BoneIndex");
-			bool	bBoneWeight	=HasElement(vtype, typeof(HalfVector4), "BoneWeights");
+			bool	bBoneIdx	=HasElement(vtype, typeof(Half4), "BoneIndex");
+			bool	bBoneWeight	=HasElement(vtype, typeof(Half4), "BoneWeights");
 
 			//build the new type
 			Type	vtypeNew	=GetMatch(
@@ -1041,9 +657,9 @@ namespace MeshLib
 				texCnt,
 				colCnt);
 
-			Array	newVerts	=Array.CreateInstance(vtypeNew, numVerts);
+			Array	newVerts	=Array.CreateInstance(vtypeNew, verts.Length);
 
-			for(int i=0;i < numVerts;i++)
+			for(int i=0;i < verts.Length;i++)
 			{
 				if(bPos)
 				{
@@ -1076,50 +692,29 @@ namespace MeshLib
 
 			typeIndex	=GetIndex(vtypeNew);
 
-			VertexDeclaration	dec	=GetVertexDeclarationForType(vtypeNew);
-
-			VertexBuffer vb2	=new VertexBuffer(gd, dec, numVerts, BufferUsage.None);
-			
-			MethodInfo genericMethod =
-				typeof (VertexBuffer).GetMethods().Where(
-					x => x.Name == "SetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
-            
-			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtypeNew});
-
-			typedMethod.Invoke(vb2, new object[] {newVerts});
-
-			return	vb2;
+			return	newVerts;
 		}
 
 
-		public static void GetVertBounds(VertexBuffer vb, int numVerts,	int typeIdx,
+		public static void GetVertBounds(Array verts, int typeIdx,
 			out BoundingBox box, out BoundingSphere sphere)
 		{
-			List<Vector3>	points	=GetPositions(vb, numVerts, typeIdx);
+			List<Vector3>	points	=GetPositions(verts, typeIdx);
 
-			box		=BoundingBox.CreateFromPoints(points);
+			box		=BoundingBox.FromPoints(points.ToArray());
 			sphere	=UtilityLib.Mathery.SphereFromPoints(points);
 		}
 
 
-		public static void WriteVerts(BinaryWriter bw, VertexBuffer vb, int typeIdx)
+		public static void WriteVerts(BinaryWriter bw, Array verts, int typeIdx)
 		{
 			Type	vtype	=mTypes[typeIdx];
-			Array	verts	=Array.CreateInstance(vtype, vb.VertexCount);
 
-			//save vertex declaration first
-			UtilityLib.FileUtil.WriteVertexDeclaration(bw, vb.VertexDeclaration);
-
-			MethodInfo genericMethod =
-				typeof (VertexBuffer).GetMethods().Where(
-					x => x.Name == "GetData" && x.IsGenericMethod && x.GetParameters().Length == 1).Single();
-            
-			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
-
-			typedMethod.Invoke(vb, new object[] {verts});
+			bw.Write(typeIdx);
+			bw.Write(verts.Length);
 
 			FieldInfo	[]finfo	=vtype.GetFields();
-			for(int i=0;i < vb.VertexCount;i++)
+			for(int i=0;i < verts.Length;i++)
 			{
 				foreach(FieldInfo fi in finfo)
 				{
@@ -1149,11 +744,13 @@ namespace MeshLib
 						bw.Write(vec.Z);
 						bw.Write(vec.W);
 					}
-					else if(fi.FieldType.Name == "HalfVector4")
+					else if(fi.FieldType.Name == "Half4")
 					{
-						HalfVector4	vec	=(HalfVector4)GetArrayField(verts, i, fi.Name);
-
-						bw.Write(vec.PackedValue);
+						Half4	vec	=(Half4)GetArrayField(verts, i, fi.Name);
+						bw.Write(vec.X);
+						bw.Write(vec.Y);
+						bw.Write(vec.Z);
+						bw.Write(vec.W);
 					}
 					else
 					{
@@ -1164,50 +761,16 @@ namespace MeshLib
 		}
 
 
-		public static void ReadVerts(BinaryReader		br,
-									GraphicsDevice		gd,
-									out VertexBuffer	vb,
-									int					numVerts,
-									int					typeIdx,
-									bool				bEditor)
+		public static void ReadVerts(BinaryReader	br,
+									 Device			gd,
+									 out Array		outVerts)
 		{
+			int	typeIdx		=br.ReadInt32();
+			int	numVerts	=br.ReadInt32();
+
 			Type	vtype	=mTypes[typeIdx];
-			Array	verts	=Array.CreateInstance(vtype, numVerts);
 
-			MethodInfo	[]meths	=typeof (VertexBuffer).GetMethods();
-			MethodInfo	genericMethod	=null;
-			
-			//read the vertex declaration
-			VertexDeclaration	vd;
-			UtilityLib.FileUtil.ReadVertexDeclaration(br, out vd);
-
-			foreach(MethodInfo mi in meths)
-			{
-				if(mi.Name == "SetData" && mi.IsGenericMethod)
-				{
-					genericMethod	=mi;
-
-					//get parameters is not supported on generic methods
-					//so make a typed method to test
-					var testMethod	=genericMethod.MakeGenericMethod(new Type[] {vtype});
-					ParameterInfo	[]pi	=testMethod.GetParameters();
-					if(pi.Length == 1)
-					{
-						break;
-					}
-				}
-			}
-            
-			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
-
-			if(bEditor)
-			{
-				vb	=new VertexBuffer(gd, vd, numVerts, BufferUsage.None);
-			}
-			else
-			{
-				vb	=new VertexBuffer(gd, vd, numVerts, BufferUsage.WriteOnly);
-			}
+			outVerts	=Array.CreateInstance(vtype, numVerts);
 
 			FieldInfo	[]finfo	=vtype.GetFields();
 			for(int i=0;i < numVerts;i++)
@@ -1221,7 +784,7 @@ namespace MeshLib
 						vec.X	=br.ReadSingle();
 						vec.Y	=br.ReadSingle();
 
-						SetArrayField(verts, i, fi.Name, vec);
+						SetArrayField(outVerts, i, fi.Name, vec);
 					}
 					else if(fi.FieldType.Name == "Vector3")
 					{
@@ -1231,7 +794,7 @@ namespace MeshLib
 						vec.Y	=br.ReadSingle();
 						vec.Z	=br.ReadSingle();
 
-						SetArrayField(verts, i, fi.Name, vec);
+						SetArrayField(outVerts, i, fi.Name, vec);
 					}
 					else if(fi.FieldType.Name == "Vector4")
 					{
@@ -1242,15 +805,18 @@ namespace MeshLib
 						vec.Z	=br.ReadSingle();
 						vec.W	=br.ReadSingle();
 
-						SetArrayField(verts, i, fi.Name, vec);
+						SetArrayField(outVerts, i, fi.Name, vec);
 					}
-					else if(fi.FieldType.Name == "HalfVector4")
+					else if(fi.FieldType.Name == "Half4")
 					{
-						HalfVector4	vec	=new HalfVector4();
+						Half4	vec	=new Half4();
 
-						vec.PackedValue	=br.ReadUInt64();
+						vec.X	=br.ReadSingle();
+						vec.Y	=br.ReadSingle();
+						vec.Z	=br.ReadSingle();
+						vec.W	=br.ReadSingle();
 
-						SetArrayField(verts, i, fi.Name, vec);
+						SetArrayField(outVerts, i, fi.Name, vec);
 					}
 					else
 					{
@@ -1258,8 +824,6 @@ namespace MeshLib
 					}
 				}
 			}
-
-			typedMethod.Invoke(vb, new object[] {verts});
 		}
 	}
 }

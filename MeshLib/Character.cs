@@ -1,24 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using MaterialLib;
-
+using SharpDX;
+//using MaterialLib;
+using Device	=SharpDX.Direct3D11.Device;
 
 namespace MeshLib
 {
 	public class Character
 	{
 		//parts
-		List<SkinnedMesh>	mMeshParts	=new List<SkinnedMesh>();
+		List<Mesh>	mMeshParts	=new List<Mesh>();
 
 		//skin info
 		Skin	mSkin;
 
-		//refs to anim and material libs
-		MaterialLib.MaterialLib	mMatLib;
-		AnimLib					mAnimLib;
+		//refs to anim lib
+		AnimLib	mAnimLib;
 
 		//bounds
 		BoundingBox		mBoxBound;
@@ -30,13 +28,9 @@ namespace MeshLib
 		//raw bone transforms for shader
 		Matrix	[]mBones;
 
-		//ref to the effect that has bones
-		Effect	mFX;
 
-
-		public Character(MaterialLib.MaterialLib ml, AnimLib al)
+		public Character(AnimLib al)
 		{
-			mMatLib		=ml;
 			mAnimLib	=al;
 			mTransform	=Matrix.Identity;
 		}
@@ -49,11 +43,11 @@ namespace MeshLib
 		{
 			if(mBones != null)
 			{
-				if(mFX == null)
-				{
-					mFX	=mMatLib.GetShader("Shaders\\Character");
-				}
-				mFX.Parameters["mBones"].SetValue(mBones);
+//				if(mFX == null)
+//				{
+//					mFX	=mMatLib.GetShader("Shaders\\Character");
+//				}
+//				mFX.Parameters["mBones"].SetValue(mBones);
 			}
 		}
 
@@ -91,26 +85,13 @@ namespace MeshLib
 
 		public void AddMeshPart(Mesh m)
 		{
-			SkinnedMesh	sm	=m as SkinnedMesh;
-
-			if(sm != null)
-			{
-				mMeshParts.Add(sm);
-			}
+			mMeshParts.Add(m);
 		}
 
 
 		public void NukeMesh(Mesh m)
 		{
-			SkinnedMesh	sm	=m as SkinnedMesh;
-
-			if(sm != null)
-			{
-				if(mMeshParts.Contains(sm))
-				{
-					mMeshParts.Remove(sm);
-				}
-			}
+			mMeshParts.Remove(m);
 		}
 
 
@@ -122,7 +103,7 @@ namespace MeshLib
 
 		public void SetAppearance(List<string> meshParts, List<string> materials)
 		{
-			foreach(SkinnedMesh m in mMeshParts)
+			foreach(Mesh m in mMeshParts)
 			{
 				if(meshParts.Contains(m.Name))
 				{
@@ -141,7 +122,7 @@ namespace MeshLib
 
 
 		//for gui
-		public List<SkinnedMesh> GetMeshPartList()
+		public List<Mesh> GetMeshPartList()
 		{
 			return	mMeshParts;
 		}
@@ -160,7 +141,7 @@ namespace MeshLib
 
 			//save mesh parts
 			bw.Write(mMeshParts.Count);
-			foreach(SkinnedMesh m in mMeshParts)
+			foreach(Mesh m in mMeshParts)
 			{
 				m.Write(bw);
 			}
@@ -175,18 +156,9 @@ namespace MeshLib
 
 		//set bEditor if you want the buffers set to readable
 		//so they can be resaved if need be
-		public bool ReadFromFile(string fileName, GraphicsDevice gd, bool bEditor)
+		public bool ReadFromFile(string fileName, Device gd, bool bEditor)
 		{
-			Stream			file	=null;
-			if(bEditor)
-			{
-				file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
-			}
-			else
-			{
-				file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
-			}
-
+			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
 			if(file == null)
 			{
 				return	false;
@@ -209,7 +181,7 @@ namespace MeshLib
 			int	numMesh	=br.ReadInt32();
 			for(int i=0;i < numMesh;i++)
 			{
-				SkinnedMesh	m	=new SkinnedMesh();
+				Mesh	m	=new Mesh();
 
 				m.Read(br, gd, bEditor);
 				mMeshParts.Add(m);
@@ -278,16 +250,16 @@ namespace MeshLib
 				Matrix	mat	=Matrix.Identity;
 				skel.GetMatrixForBone(bone, out mat);
 
-				mat	*=Matrix.CreateRotationX((float)Math.PI / -2.0f);
-				mat	*=Matrix.CreateRotationY((float)Math.PI);
+				mat	*=Matrix.RotationX((float)Math.PI / -2.0f);
+				mat	*=Matrix.RotationY((float)Math.PI);
 
 				Vector3	pnt	=Vector3.Zero;
 
-				pnt	=Vector3.Transform(pnt, mat);
+				pnt	=Vector3.TransformCoordinate(pnt, mat);
 
 				points.Add(pnt);
 			}
-			mBoxBound		=BoundingBox.CreateFromPoints(points);
+			mBoxBound		=BoundingBox.FromPoints(points.ToArray());
 			mSphereBound	=UtilityLib.Mathery.SphereFromPoints(points);
 		}
 
@@ -303,27 +275,27 @@ namespace MeshLib
 			return	mSphereBound;
 		}
 
-
-		public void Draw(GraphicsDevice gd)
+		/*
+		public void Draw(Device gd)
 		{
 			UpdateShaderBones();
 
-			foreach(SkinnedMesh m in mMeshParts)
+			foreach(Mesh m in mMeshParts)
 			{
 				if(!m.Visible)
 				{
 					continue;
 				}
-				m.Draw(gd, mMatLib, mTransform, "");
+//				m.Draw(gd, mMatLib, mTransform, "");
 			}
 		}
 
 
-		public void DrawDMN(GraphicsDevice gd, MaterialLib.IDKeeper idk)
+		public void DrawDMN(Device gd, MaterialLib.IDKeeper idk)
 		{
 			UpdateShaderBones();
 
-			foreach(SkinnedMesh m in mMeshParts)
+			foreach(Mesh m in mMeshParts)
 			{
 				if(!m.Visible)
 				{
@@ -334,11 +306,11 @@ namespace MeshLib
 		}
 
 
-		public void Draw(GraphicsDevice gd, string altMaterial)
+		public void Draw(Device gd, string altMaterial)
 		{
 			UpdateShaderBones();
 
-			foreach(SkinnedMesh m in mMeshParts)
+			foreach(Mesh m in mMeshParts)
 			{
 				if(!m.Visible)
 				{
@@ -346,7 +318,7 @@ namespace MeshLib
 				}
 				m.Draw(gd, mMatLib, mTransform, altMaterial);
 			}
-		}
+		}*/
 
 
 		public Vector3 GetForwardVector()

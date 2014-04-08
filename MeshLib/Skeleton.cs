@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using SharpDX;
 
 namespace MeshLib
 {
@@ -35,9 +34,9 @@ namespace MeshLib
 
 		public Matrix GetMatrix()
 		{
-			Matrix	mat	=Matrix.CreateScale(mKeyValue.mScale) *
-				Matrix.CreateFromQuaternion(mKeyValue.mRotation) *
-				Matrix.CreateTranslation(mKeyValue.mPosition);
+			Matrix	mat	=Matrix.Scaling(mKeyValue.mScale) *
+				Matrix.RotationQuaternion(mKeyValue.mRotation) *
+				Matrix.Translation(mKeyValue.mPosition);
 
 			return	mat;
 		}

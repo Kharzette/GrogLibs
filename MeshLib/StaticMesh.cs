@@ -1,226 +1,359 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Diagnostics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using SharpDX;
+using SharpDX.DXGI;
+using SharpDX.Direct3D11;
+
+//ambiguous stuff
+using Buffer = SharpDX.Direct3D11.Buffer;
+using Color = SharpDX.Color;
+using Device = SharpDX.Direct3D11.Device;
 
 
 namespace MeshLib
 {
-	public class StaticMesh : Mesh
+	public class StaticMesh
 	{
-		public StaticMesh() : base()
+		List<Mesh>	mMeshParts	=new List<Mesh>();
+
+		//refs to anim and material libs
+//		MaterialLib.MaterialLib	mMatLib;
+
+		//transform
+		Matrix	mTransform;
+
+
+		public StaticMesh()//MaterialLib.MaterialLib ml)
 		{
+//			mMatLib		=ml;
 		}
 
 
-		public StaticMesh(string name) : base(name)
+		public Matrix GetTransform()
 		{
+			return	mTransform;
 		}
 
 
-		public override void Write(BinaryWriter bw)
+		public void SetTransform(Matrix mat)
 		{
-			bw.Write(mName);
-			bw.Write(mNumVerts);
-			bw.Write(mNumTriangles);
-			bw.Write(mVertSize);
-			bw.Write(mMaterialName);
-			bw.Write(mTypeIndex);
-			bw.Write(mbVisible);
-			
-			//transform
-			UtilityLib.FileUtil.WriteMatrix(bw, mTransform);
+			mTransform	=mat;
+		}
 
-			//box bound
-			UtilityLib.FileUtil.WriteVector3(bw, mBoxBound.Min);
-			UtilityLib.FileUtil.WriteVector3(bw, mBoxBound.Max);
 
-			//sphere bound
-			UtilityLib.FileUtil.WriteVector3(bw, mSphereBound.Center);
-			bw.Write(mSphereBound.Radius);
-
-			VertexTypes.WriteVerts(bw, mVerts, mTypeIndex);
-
-			ushort	[]idxs	=new ushort[mNumTriangles * 3];
-
-			mIndexs.GetData<ushort>(idxs);
-
-			bw.Write(idxs.Length);
-
-			for(int i=0;i < idxs.Length;i++)
+		public void AddMeshPart(Mesh m)
+		{
+			if(m != null)
 			{
-				bw.Write(idxs[i]);
+				mMeshParts.Add(m);
 			}
 		}
 
 
-		public override void Read(BinaryReader br, GraphicsDevice gd, bool bEditor)
+		public Mesh GetMeshPart(string name)
 		{
-			mName			=br.ReadString();
-			mNumVerts		=br.ReadInt32();
-			mNumTriangles	=br.ReadInt32();
-			mVertSize		=br.ReadInt32();
-			mMaterialName	=br.ReadString();
-			mTypeIndex		=br.ReadInt32();
-			mbVisible		=br.ReadBoolean();
-
-			mTransform	=UtilityLib.FileUtil.ReadMatrix(br);
-
-			mBoxBound.Min		=UtilityLib.FileUtil.ReadVector3(br);
-			mBoxBound.Max		=UtilityLib.FileUtil.ReadVector3(br);
-			mSphereBound.Center	=UtilityLib.FileUtil.ReadVector3(br);
-			mSphereBound.Radius	=br.ReadSingle();
-
-			VertexTypes.ReadVerts(br, gd, out mVerts, mNumVerts, mTypeIndex, bEditor);
-
-			int		numIdx	=br.ReadInt32();
-			ushort	[]idxs	=new ushort[numIdx];
-
-			for(int i=0;i < numIdx;i++)
+			foreach(Mesh m in mMeshParts)
 			{
-				idxs[i]	=br.ReadUInt16();
+				if(m.Name == name)
+				{
+					return	m;
+				}
 			}
-
-			if(bEditor)
-			{
-				mIndexs	=new IndexBuffer(gd, IndexElementSize.SixteenBits, numIdx, BufferUsage.None);
-			}
-			else
-			{
-				mIndexs	=new IndexBuffer(gd, IndexElementSize.SixteenBits, numIdx, BufferUsage.WriteOnly);
-			}
-			mIndexs.SetData<ushort>(idxs);
-
-			mVBinding[0]	=new VertexBufferBinding(mVerts);
+			return	null;
 		}
 
 
-		public override void DrawDMN(GraphicsDevice g,
-			MaterialLib.MaterialLib matLib,
-			MaterialLib.IDKeeper idk,
-			Matrix world)
+		public void NukeMesh(Mesh m)
 		{
-			if(!mbVisible)
+			if(m != null)
 			{
-				return;
+				if(mMeshParts.Contains(m))
+				{
+					mMeshParts.Remove(m);
+				}
 			}
-
-			MaterialLib.Material	dmn	=matLib.GetMaterial("DMN");
-			if(dmn == null)
-			{
-				return;
-			}
-
-			int	id	=idk.GetID(mMaterialName);
-			if(id == -1)
-			{
-				return;
-			}
-
-			g.SetVertexBuffer(mVerts);
-			g.Indices	=mIndexs;
-
-			dmn.SetParameter("mWorld", mTransform * world);
-			dmn.SetParameter("mMaterialID", id);
-
-			Effect	fx	=matLib.GetMaterialShader(dmn.Name);
-
-			dmn.ApplyShaderParameters(fx);
-			dmn.ApplyRenderStates(g);
-
-			fx.CurrentTechnique.Passes[0].Apply();
-
-			g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-				0, 0,
-				mNumVerts,
-				0,
-				mNumTriangles);
 		}
 
 
-		public override void Draw(GraphicsDevice g,
-			MaterialLib.MaterialLib matLib, Matrix world, string altMaterial)
+		//for gui
+		public List<Mesh> GetMeshPartList()
 		{
-			if(!mbVisible)
-			{
-				return;
-			}
-
-			MaterialLib.Material	mat	=null;
-
-			if(altMaterial != "")
-			{
-				mat	=matLib.GetMaterial(altMaterial);
-			}
-			else
-			{
-				mat	=matLib.GetMaterial(mMaterialName);
-			}
-
-			if(mat == null)
-			{
-				return;
-			}
-
-			g.SetVertexBuffer(mVerts);
-			g.Indices			=mIndexs;
-
-			mat.SetParameter("mWorld", mTransform * world);
-
-			Effect		fx	=matLib.GetShader(mat.ShaderName);
-
-			mat.ApplyShaderParameters(fx);
-			mat.ApplyRenderStates(g);
-
-			fx.CurrentTechnique.Passes[0].Apply();
-
-			g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-				0, 0,
-				mNumVerts,
-				0,
-				mNumTriangles);
+			return	mMeshParts;
 		}
 
 
-		public override void SetSecondVertexBufferBinding(VertexBufferBinding v2)
+		public void SaveToFile(string fileName)
 		{
-			mVBinding[1]	=v2;
+			FileStream	file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
+			BinaryWriter	bw	=new BinaryWriter(file);
+
+			//write a magic number identifying a static
+			UInt32	magic	=0x57A71C35;
+
+			bw.Write(magic);
+
+			//save mesh parts
+			bw.Write(mMeshParts.Count);
+			foreach(Mesh m in mMeshParts)
+			{
+				m.Write(bw);
+			}
+
+			bw.Close();
+			file.Close();
 		}
 
 
-		public override void Draw(GraphicsDevice g,
-			MaterialLib.MaterialLib matLib, int numInstances)
+		//set bEditor if you want the buffers set to readable
+		//so they can be resaved if need be
+		public bool ReadFromFile(string fileName, Device gd, bool bEditor)
 		{
-			if(!mbVisible)
+			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			if(file == null)
 			{
-				return;
+				return	false;
+			}
+			BinaryReader	br	=new BinaryReader(file);
+
+			//clear existing data
+			mMeshParts.Clear();
+
+			//read magic number
+			UInt32	magic	=br.ReadUInt32();
+
+			if(magic != 0x57A71C35)
+			{
+				return	false;
 			}
 
-			MaterialLib.Material	mat	=matLib.GetMaterial(mMaterialName);
-			if(mat == null)
+			int	numMesh	=br.ReadInt32();
+			for(int i=0;i < numMesh;i++)
 			{
-				return;
+				Mesh	m	=new Mesh();
+
+				m.Read(br, gd, bEditor);
+				mMeshParts.Add(m);
 			}
 
-			Effect		fx	=matLib.GetShader(mat.ShaderName);
-			if(fx == null)
+			br.Close();
+			file.Close();
+
+			mTransform	=Matrix.Identity;
+
+			return	true;
+		}
+
+
+		public void TempDraw(DeviceContext dc, EffectPass pass, EffectMatrixVariable fxWorld)
+		{
+			foreach(Mesh m in mMeshParts)
 			{
-				return;
+				if(!m.Visible)
+				{
+					continue;
+				}
+				m.TempDraw(dc, pass, mTransform, fxWorld);
+			}
+		}
+
+
+		public void Draw(Device gd)
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+//				m.Draw(gd, mMatLib, mTransform, "");
+			}
+		}
+
+/*
+		public void DrawDMN(Device gd, MaterialLib.IDKeeper idk)
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+				m.DrawDMN(gd, mMatLib, idk, mTransform);
+			}
+		}*/
+
+
+		public void SetSecondVertexBufferBinding(VertexBufferBinding v2)
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+				m.SetSecondVertexBufferBinding(v2);
+			}
+		}
+
+
+		//instanced
+/*		public void Draw(Device gd, int numInstances)
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+				m.Draw(gd, mMatLib, numInstances);
+			}
+		}
+
+
+		public void Draw(Device gd, string altMatName)
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+
+				m.Draw(gd, mMatLib, mTransform, altMatName);
+			}
+		}
+
+
+		//draw instanced
+		public void Draw(Device gd, int numInstances, string altMatName)
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+
+				string	temp	=m.MaterialName;
+
+				m.MaterialName	=altMatName;
+				m.Draw(gd, mMatLib, numInstances);
+				m.MaterialName	=temp;
+			}
+		}*/
+
+
+		public void UpdateBounds()
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				m.Bound();
+			}
+		}
+
+
+		public BoundingBox GetBoxBound()
+		{
+			List<Vector3>	pnts	=new List<Vector3>();
+			foreach(Mesh m in mMeshParts)
+			{
+				BoundingBox	b	=m.GetBoxBounds();
+
+				//internal part transforms
+				Vector3	transMin	=Vector3.TransformCoordinate(b.Minimum, m.GetTransform());
+				Vector3	transMax	=Vector3.TransformCoordinate(b.Maximum, m.GetTransform());
+
+				pnts.Add(transMin);
+				pnts.Add(transMax);
 			}
 
-			g.SetVertexBuffers(mVBinding);
+			return	BoundingBox.FromPoints(pnts.ToArray());
+		}
 
-			g.Indices	=mIndexs;
 
-			mat.ApplyShaderParameters(fx);
-			mat.ApplyRenderStates(g);
+		public BoundingSphere GetSphereBound()
+		{
+			BoundingSphere	merged;
+			merged.Center	=Vector3.Zero;
+			merged.Radius	=0.0f;
+			foreach(Mesh m in mMeshParts)
+			{
+				BoundingSphere	s			=m.GetSphereBounds();
+				Matrix			meshTrans	=m.GetTransform();
 
-			fx.CurrentTechnique.Passes[0].Apply();
+				Vector3	pos		=s.Center;
 
-			g.DrawInstancedPrimitives(PrimitiveType.TriangleList, 0, 0,
-				mNumVerts, 0, mNumTriangles, numInstances);
+				s.Center	=Vector3.TransformCoordinate(pos, meshTrans);
+				
+				//this should work but needs testing TODO
+				s.Radius	*=meshTrans.ScaleVector.Length();
+
+				merged	=BoundingSphere.Merge(merged, s);
+			}
+			return	merged;
+		}
+
+
+		public float? RayIntersect(Vector3 start, Vector3 end, bool bBox, out Mesh partHit)
+		{
+			//find which piece was hit
+			float		minDist	=float.MaxValue;
+			partHit				=null;
+
+			foreach(Mesh m in mMeshParts)
+			{
+				if(!m.Visible)
+				{
+					continue;
+				}
+				Nullable<float>	dist	=m.RayIntersect(start, end, bBox);
+				if(dist != null)
+				{
+					if(dist.Value < minDist)
+					{
+						partHit	=m;
+						minDist	=dist.Value;
+					}
+				}
+			}
+
+			if(partHit == null)
+			{
+				return	null;
+			}
+			return	minDist;
+		}
+
+
+		//this probably won't work TODO
+		public static Dictionary<string, StaticMesh> LoadAllMeshes(
+			string dir,	Device gd)
+		{
+			Dictionary<string, StaticMesh>	ret	=new Dictionary<string, StaticMesh>();
+
+			if(Directory.Exists(dir))
+			{
+				DirectoryInfo	di	=new DirectoryInfo(dir + "/");
+
+				FileInfo[]		fi	=di.GetFiles("*.Static", SearchOption.TopDirectoryOnly);
+				foreach(FileInfo f in fi)
+				{
+					//strip back
+					string	path	=f.DirectoryName.Substring(
+						f.DirectoryName.LastIndexOf(dir));
+
+					StaticMesh	smo	=new StaticMesh();
+					bool	bWorked	=smo.ReadFromFile(path + "\\" + f.Name, gd, false);
+
+					if(bWorked)
+					{
+						ret.Add(f.Name, smo);
+					}
+				}
+			}
+
+			return	ret;
 		}
 	}
 }

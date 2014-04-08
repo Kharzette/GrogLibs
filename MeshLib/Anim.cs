@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using SharpDX;
 
 namespace MeshLib
 {
@@ -197,9 +196,9 @@ namespace MeshLib
 
 				parentMat	=Matrix.Invert(parentMat);
 
-				Matrix	brokenMat	=Matrix.CreateScale(brokenKeys[keyIndex].mScale) *
-					Matrix.CreateFromQuaternion(brokenKeys[keyIndex].mRotation) *
-					Matrix.CreateTranslation(brokenKeys[keyIndex].mPosition);
+				Matrix	brokenMat	=Matrix.Scaling(brokenKeys[keyIndex].mScale) *
+					Matrix.RotationQuaternion(brokenKeys[keyIndex].mRotation) *
+					Matrix.Translation(brokenKeys[keyIndex].mPosition);
 
 				skel.GetMatrixForBone(brokenNode, out brokenMat);
 

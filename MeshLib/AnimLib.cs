@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Content;
-//using Microsoft.Kinect;
+using SharpDX;
 
 
 namespace MeshLib
@@ -161,16 +158,7 @@ namespace MeshLib
 
 		public bool ReadFromFile(string fileName, bool bTool)
 		{
-			Stream			file	=null;
-			if(bTool)
-			{
-				file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
-			}
-			else
-			{
-				file	=UtilityLib.FileUtil.OpenTitleFile(fileName);
-			}
-
+			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
 			if(file == null)
 			{
 				return	false;

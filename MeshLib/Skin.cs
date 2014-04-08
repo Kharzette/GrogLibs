@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using SharpDX;
 using UtilityLib;
 
 
@@ -24,9 +23,9 @@ namespace MeshLib
 
 		public Skin()
 		{
-			mMaxAdjust	=Matrix.CreateFromYawPitchRoll(0,
-										MathHelper.ToRadians(-90),
-										MathHelper.ToRadians(180));
+			mMaxAdjust	=Matrix.RotationYawPitchRoll(0,
+										MathUtil.DegreesToRadians(-90),
+										MathUtil.DegreesToRadians(180));
 		}
 
 
