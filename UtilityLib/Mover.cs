@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
+using SharpDX;
+using SharpDX.Direct3D11;
+
 
 namespace UtilityLib
 {

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
+using SharpDX;
+using SharpDX.Direct3D11;
 
 
 namespace UtilityLib
@@ -33,8 +32,8 @@ namespace UtilityLib
 		//extension methods don't work on value types :(
 		public static void ClearBoundingBox(ref BoundingBox bb)
 		{
-			bb.Min	=Vector3.One * MIN_MAX_BOUNDS;
-			bb.Max	=-bb.Min;
+			bb.Minimum	=Vector3.One * MIN_MAX_BOUNDS;
+			bb.Maximum	=-bb.Minimum;
 		}
 
 
@@ -129,21 +128,21 @@ namespace UtilityLib
 		}
 
 
-		static Vector3 VectorForCubeFace(CubeMapFace face)
+		static Vector3 VectorForCubeFace(TextureCubeFace face)
 		{
 			switch(face)
 			{
-				case	CubeMapFace.NegativeX:
+				case	TextureCubeFace.NegativeX:
 					return	-Vector3.UnitX;
-				case	CubeMapFace.NegativeY:
+				case	TextureCubeFace.NegativeY:
 					return	-Vector3.UnitY;
-				case	CubeMapFace.NegativeZ:
+				case	TextureCubeFace.NegativeZ:
 					return	-Vector3.UnitZ;
-				case	CubeMapFace.PositiveX:
+				case	TextureCubeFace.PositiveX:
 					return	Vector3.UnitX;
-				case	CubeMapFace.PositiveY:
+				case	TextureCubeFace.PositiveY:
 					return	Vector3.UnitY;
-				case	CubeMapFace.PositiveZ:
+				case	TextureCubeFace.PositiveZ:
 					return	Vector3.UnitZ;
 			}
 			return	Vector3.UnitX;
@@ -151,28 +150,28 @@ namespace UtilityLib
 
 
 		//direction points at a cube face
-		public static void CreateCubeMapViewProjMatrix(CubeMapFace face,
+		public static void CreateCubeMapViewProjMatrix(TextureCubeFace face,
 			Vector3 cubeCenter, float farPlane,
 			out Matrix cubeView, out Matrix cubeProj)
 		{
 			//find a good up vector
 			Vector3	upVec	=Vector3.UnitY;
-			if(face == CubeMapFace.NegativeY)
+			if(face == TextureCubeFace.NegativeY)
 			{
 				upVec	=Vector3.UnitZ;
 			}
-			else if(face == CubeMapFace.PositiveY)
+			else if(face == TextureCubeFace.PositiveY)
 			{
 				upVec	=-Vector3.UnitZ;
 			}
 
 			//Create the view matrix aimed at the cube face
-			cubeView	=Matrix.CreateLookAt(cubeCenter,
+			cubeView	=Matrix.LookAtLH(cubeCenter,
 				cubeCenter + VectorForCubeFace(face), upVec);
 
 			//Values are to project on the cube face
-			cubeProj	=Matrix.CreatePerspectiveFieldOfView(
-				MathHelper.PiOver2, -1f, 1f, farPlane);
+			cubeProj	=Matrix.PerspectiveFovLH(
+				MathUtil.PiOverTwo, -1f, 1f, farPlane);
         }
 
 
@@ -183,7 +182,7 @@ namespace UtilityLib
 			out Matrix lightView, out Matrix lightProj, out Vector3 fakeOrigin)
 		{
 			//create a matrix aimed in the direction
-			Matrix	dirAim	=Matrix.CreateLookAt(Vector3.Zero, -direction, Vector3.Up);
+			Matrix	dirAim	=Matrix.LookAtLH(Vector3.Zero, -direction, Vector3.Up);
 
 			//Get the corners
 			Vector3[]	boxCorners	=bounds.GetCorners();
@@ -191,31 +190,31 @@ namespace UtilityLib
 			//Transform the positions of the corners into the direction
 			for(int i=0;i < boxCorners.Length;i++)
 			{
-				boxCorners[i]	=Vector3.Transform(boxCorners[i], dirAim);
+				boxCorners[i]	=Vector3.TransformCoordinate(boxCorners[i], dirAim);
 			}
 			
 			//Find the smallest box around the points
 			//in the directional frame of reference
-			BoundingBox	dirSpaceBox	=BoundingBox.CreateFromPoints(boxCorners);
+			BoundingBox	dirSpaceBox	=BoundingBox.FromPoints(boxCorners);
 
-			Vector3	boxSize		=dirSpaceBox.Max - dirSpaceBox.Min;
+			Vector3	boxSize		=dirSpaceBox.Maximum - dirSpaceBox.Minimum;
 			Vector3	halfBoxSize	=boxSize * 0.5f;
 			
 			//The viewpoint should be in the center of the back
 			//panel of the box.
-			Vector3	viewPos	=dirSpaceBox.Min + halfBoxSize;
+			Vector3	viewPos	=dirSpaceBox.Minimum + halfBoxSize;
 			
-			viewPos.Z	=dirSpaceBox.Min.Z;
+			viewPos.Z	=dirSpaceBox.Minimum.Z;
 			
 			//transform the view position back into worldspace
-			viewPos	=Vector3.Transform(viewPos, Matrix.Invert(dirAim));
+			viewPos	=Vector3.TransformCoordinate(viewPos, Matrix.Invert(dirAim));
 			
 			//Create the view matrix
-			lightView	=Matrix.CreateLookAt(viewPos,
+			lightView	=Matrix.LookAtLH(viewPos,
 				viewPos - direction, Vector3.Up);
 
 			//Create the ortho projection matrix
-			lightProj	=Matrix.CreateOrthographic(
+			lightProj	=Matrix.OrthoLH(
 					boxSize.X, boxSize.Y, -boxSize.Z, boxSize.Z);
 
 			//get a good fake position for use in shader distance calcs
@@ -297,29 +296,29 @@ namespace UtilityLib
 
 		public static void AddPointToBoundingBox(ref BoundingBox bb, Vector3 pnt)
 		{
-			if(pnt.X < bb.Min.X)
+			if(pnt.X < bb.Minimum.X)
 			{
-				bb.Min.X	=pnt.X;
+				bb.Minimum.X	=pnt.X;
 			}
-			if(pnt.X > bb.Max.X)
+			if(pnt.X > bb.Maximum.X)
 			{
-				bb.Max.X	=pnt.X;
+				bb.Maximum.X	=pnt.X;
 			}
-			if(pnt.Y < bb.Min.Y)
+			if(pnt.Y < bb.Minimum.Y)
 			{
-				bb.Min.Y	=pnt.Y;
+				bb.Minimum.Y	=pnt.Y;
 			}
-			if(pnt.Y > bb.Max.Y)
+			if(pnt.Y > bb.Maximum.Y)
 			{
-				bb.Max.Y	=pnt.Y;
+				bb.Maximum.Y	=pnt.Y;
 			}
-			if(pnt.Z < bb.Min.Z)
+			if(pnt.Z < bb.Minimum.Z)
 			{
-				bb.Min.Z	=pnt.Z;
+				bb.Minimum.Z	=pnt.Z;
 			}
-			if(pnt.Z > bb.Max.Z)
+			if(pnt.Z > bb.Maximum.Z)
 			{
-				bb.Max.Z	=pnt.Z;
+				bb.Maximum.Z	=pnt.Z;
 			}
 		}
 
@@ -354,9 +353,8 @@ namespace UtilityLib
 
 		public static Color RandomColor(Random rnd)
 		{
-			Microsoft.Xna.Framework.Color	randColor
-				=new Microsoft.Xna.Framework.Color(
-						Convert.ToByte(rnd.Next(255)),
+			Color	randColor
+				=new Color(Convert.ToByte(rnd.Next(255)),
 						Convert.ToByte(rnd.Next(255)),
 						Convert.ToByte(rnd.Next(255)));
 			return	randColor;
@@ -462,18 +460,16 @@ namespace UtilityLib
 		}
 
 
-		public static void WrapAngleDegrees(ref HalfSingle angle)
+		public static void WrapAngleDegrees(ref Half angle)
 		{
-			float	ang	=angle.ToSingle();
-			while(ang < 0.0f)
+			while(angle < 0.0f)
 			{
-				ang	+=360.0f;
+				angle	+=360.0f;
 			}
-			while(ang > 360.0f)
+			while(angle > 360.0f)
 			{
-				ang	-=360.0f;
+				angle	-=360.0f;
 			}
-			angle	=new HalfSingle(ang);
 		}
 
 
@@ -494,7 +490,7 @@ namespace UtilityLib
 				return	false;
 			}
 
-			if(!CompareVectorEpsilon(mat1.Translation, mat2.Translation, epsilon))
+			if(!CompareVectorEpsilon(mat1.TranslationVector, mat2.TranslationVector, epsilon))
 			{
 				return	false;
 			}
@@ -518,34 +514,6 @@ namespace UtilityLib
 				}
 			}
 			return	false;
-		}
-
-
-		public static float VecIdx(Vector3 v, int idx)
-		{
-			if(idx == 0)
-			{
-				return	v.X;
-			}
-			else if(idx == 1)
-			{
-				return	v.Y;
-			}
-			return	v.Z;
-		}
-
-
-		public static float VecIdx(Vector3 v, UInt32 idx)
-		{
-			if(idx == 0)
-			{
-				return	v.X;
-			}
-			else if(idx == 1)
-			{
-				return	v.Y;
-			}
-			return	v.Z;
 		}
 
 
@@ -606,42 +574,25 @@ namespace UtilityLib
 		}
 
 
-		public static void VecIdxAssign(ref Vector3 v, int idx, float val)
-		{
-			if(idx == 0)
-			{
-				v.X	=val;
-			}
-			else if(idx == 1)
-			{
-				v.Y	=val;
-			}
-			else
-			{
-				v.Z	=val;
-			}
-		}
-
-
 		public static void SnapVector(ref Vector3 vec)
 		{
 			for(int i=0;i < 3;i++)
 			{
-				float	vecElement	=VecIdx(vec, i);
+				float	vecElement	=vec[i];
 				vecElement	=Math.Abs(vecElement - 1.0f);
 				if(vecElement < ANGLE_EPSILON)
 				{
-					vec	=Vector3.Zero;
-					VecIdxAssign(ref vec, i, 1.0f);
+					vec		=Vector3.Zero;
+					vec[i]	=1f;
 					break;
 				}
 
-				vecElement	=VecIdx(vec, i);
+				vecElement	=vec[i];
 				vecElement	=Math.Abs(vecElement - -1.0f);
 				if(vecElement < ANGLE_EPSILON)
 				{
 					vec	=Vector3.Zero;
-					VecIdxAssign(ref vec, i, -1.0f);
+					vec[i]	=-1.0f;
 					break;
 				}
 			}
@@ -768,12 +719,15 @@ namespace UtilityLib
 			//normalize
 			ray.Direction	/=len;
 
-			Nullable<float>	dist	=box.Intersects(ray);
+			float	dist;
 
-			if(dist == null)
+			bool	bIntersects	=box.Intersects(ref ray, out dist);
+
+			if(!bIntersects)
 			{
 				return	null;
 			}
+
 			if(dist <= len)
 			{
 				return	dist;
@@ -795,12 +749,15 @@ namespace UtilityLib
 			//normalize
 			ray.Direction	/=len;
 
-			Nullable<float>	dist	=sphere.Intersects(ray);
+			float	dist;
 
-			if(dist == null)
+			bool	bIntersects	=sphere.Intersects(ref ray, out dist);
+
+			if(!bIntersects)
 			{
 				return	null;
 			}
+
 			if(dist <= len)
 			{
 				return	dist;
@@ -900,78 +857,78 @@ namespace UtilityLib
 		{
 			BoundingBox	start	=box;
 
-			float	xsize	=box.Max.X - box.Min.X;
-			float	zsize	=box.Max.Z - box.Min.Z;
-			float	height	=box.Max.Y - box.Min.Y;
+			float	xsize	=box.Maximum.X - box.Minimum.X;
+			float	zsize	=box.Maximum.Z - box.Minimum.Z;
+			float	height	=box.Maximum.Y - box.Minimum.Y;
 
 			xsize	*=0.5f;
 			zsize	*=0.5f;
 			height	*=0.5f;
 
-			box.Min.X	=-xsize;
-			box.Max.X	=xsize;
-			box.Min.Z	=-zsize;
-			box.Max.Z	=zsize;
-			box.Min.Y	=-height;
-			box.Max.Y	=height;
+			box.Minimum.X	=-xsize;
+			box.Maximum.X	=xsize;
+			box.Minimum.Z	=-zsize;
+			box.Maximum.Z	=zsize;
+			box.Minimum.Y	=-height;
+			box.Maximum.Y	=height;
 
-			return	start.Min - box.Min;
+			return	start.Minimum - box.Minimum;
 		}
 
 
 		public static void ClipRayToBox(BoundingBox box,
 			ref Vector3 rayStart, ref Vector3 rayEnd)
 		{
-			if(rayStart.X < box.Min.X)
+			if(rayStart.X < box.Minimum.X)
 			{
-				rayStart.X	=box.Min.X;
+				rayStart.X	=box.Minimum.X;
 			}
-			if(rayStart.Y < box.Min.Y)
+			if(rayStart.Y < box.Minimum.Y)
 			{
-				rayStart.Y	=box.Min.Y;
+				rayStart.Y	=box.Minimum.Y;
 			}
-			if(rayStart.Z < box.Min.Z)
+			if(rayStart.Z < box.Minimum.Z)
 			{
-				rayStart.Z	=box.Min.Z;
-			}
-
-			if(rayStart.X > box.Max.X)
-			{
-				rayStart.X	=box.Max.X;
-			}
-			if(rayStart.Y > box.Max.Y)
-			{
-				rayStart.Y	=box.Max.Y;
-			}
-			if(rayStart.Z > box.Max.Z)
-			{
-				rayStart.Z	=box.Max.Z;
+				rayStart.Z	=box.Minimum.Z;
 			}
 
-			if(rayEnd.X < box.Min.X)
+			if(rayStart.X > box.Maximum.X)
 			{
-				rayEnd.X	=box.Min.X;
+				rayStart.X	=box.Maximum.X;
 			}
-			if(rayEnd.Y < box.Min.Y)
+			if(rayStart.Y > box.Maximum.Y)
 			{
-				rayEnd.Y	=box.Min.Y;
+				rayStart.Y	=box.Maximum.Y;
 			}
-			if(rayEnd.Z < box.Min.Z)
+			if(rayStart.Z > box.Maximum.Z)
 			{
-				rayEnd.Z	=box.Min.Z;
+				rayStart.Z	=box.Maximum.Z;
 			}
 
-			if(rayEnd.X > box.Max.X)
+			if(rayEnd.X < box.Minimum.X)
 			{
-				rayEnd.X	=box.Max.X;
+				rayEnd.X	=box.Minimum.X;
 			}
-			if(rayEnd.Y > box.Max.Y)
+			if(rayEnd.Y < box.Minimum.Y)
 			{
-				rayEnd.Y	=box.Max.Y;
+				rayEnd.Y	=box.Minimum.Y;
 			}
-			if(rayEnd.Z > box.Max.Z)
+			if(rayEnd.Z < box.Minimum.Z)
 			{
-				rayEnd.Z	=box.Max.Z;
+				rayEnd.Z	=box.Minimum.Z;
+			}
+
+			if(rayEnd.X > box.Maximum.X)
+			{
+				rayEnd.X	=box.Maximum.X;
+			}
+			if(rayEnd.Y > box.Maximum.Y)
+			{
+				rayEnd.Y	=box.Maximum.Y;
+			}
+			if(rayEnd.Z > box.Maximum.Z)
+			{
+				rayEnd.Z	=box.Maximum.Z;
 			}
 		}
 	}

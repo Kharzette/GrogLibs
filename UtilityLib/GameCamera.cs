@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 using SharpDX;
+using SharpDX.Direct3D11;
 
 
-namespace SharpDXStuff
+namespace UtilityLib
 {
 	public class GameCamera
 	{
@@ -57,7 +58,7 @@ namespace SharpDXStuff
 				ret.X		=View.M13;
 				ret.Y		=View.M23;
 				ret.Z		=View.M33;
-				return		ret;
+				return		-ret;	//changed from xna
 			}
 		}
 
@@ -202,6 +203,8 @@ namespace SharpDXStuff
 				Matrix.RotationY(MathUtil.DegreesToRadians(yaw)) *
 				Matrix.RotationX(MathUtil.DegreesToRadians(pitch)) *
 				Matrix.RotationZ(MathUtil.DegreesToRadians(roll));
+
+//			mMATView	=Matrix.LookAtLH(new Vector3(0, 0, -1), new Vector3(0, 0, 0), Vector3.UnitY);
 
 			mMatViewInverse	=Matrix.Invert(mMATView);
 			

@@ -4,26 +4,14 @@ using System.Text;
 using System.Reflection;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Content;
-#if !X64
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Storage;
-#endif
+using SharpDX;
+using SharpDX.Direct3D11;
+
 
 namespace UtilityLib
 {
 	public class FileUtil
 	{
-#if !X64
-		public static Stream OpenTitleFile(string fileName)
-		{
-			return	TitleContainer.OpenStream(fileName);
-		}
-#endif
-
-
 		public static string GetExtension(string fileName)
 		{
 			int	dotPos	=fileName.LastIndexOf('.');
@@ -323,100 +311,6 @@ namespace UtilityLib
 		}
 
 
-#if !X64
-		public static void WriteVertexDeclaration(BinaryWriter bw, VertexDeclaration vd)
-		{
-			VertexElement	[]elms	=vd.GetVertexElements();
-
-			bw.Write(elms.Length);
-			foreach(VertexElement ve in elms)
-			{
-				bw.Write(ve.Offset);
-				bw.Write((UInt32)ve.VertexElementFormat);
-				bw.Write((UInt32)ve.VertexElementUsage);
-				bw.Write(ve.UsageIndex);
-			}
-		}
-
-
-		public static void ReadVertexDeclaration(BinaryReader br, out VertexDeclaration vd)
-		{
-			int	numElements	=br.ReadInt32();
-			VertexElement	[]vels	=new VertexElement[numElements];
-			for(int i=0;i < numElements;i++)
-			{
-				int	offset		=br.ReadInt32();
-
-				VertexElementFormat	vef	=(VertexElementFormat)br.ReadUInt32();
-				VertexElementUsage	veu	=(VertexElementUsage)br.ReadUInt32();
-
-				int	usageIndex	=br.ReadInt32();
-
-				vels[i]	=new VertexElement(offset, vef, veu, usageIndex);
-			}
-			vd	=new VertexDeclaration(vels);
-		}
-
-
-		public static void WriteIndexBuffer(BinaryWriter bw, IndexBuffer ib)
-		{
-			int	numIdx	=ib.IndexCount;
-
-			UInt32	[]idxArray	=new UInt32[numIdx];
-
-			ib.GetData<UInt32>(idxArray);
-
-			bw.Write(numIdx);
-			for(int i=0;i < numIdx;i++)
-			{
-				bw.Write(idxArray[i]);
-			}
-		}
-
-
-		public static void ReadIndexBuffer(BinaryReader br, out IndexBuffer ib, GraphicsDevice g, bool bEditor, bool bReach)
-		{
-			int	numIdx	=br.ReadInt32();
-
-			if(bReach)
-			{
-				if(numIdx >= UInt16.MaxValue)
-				{
-					Debug.WriteLine("Index buffer too big for reach!");
-					numIdx	=UInt16.MaxValue;
-				}
-
-				UInt16	[]idxArray	=new UInt16[numIdx];
-
-				for(int i=0;i < numIdx;i++)
-				{
-					idxArray[i]	=(UInt16)br.ReadInt32();
-				}
-
-				ib	=new IndexBuffer(g, IndexElementSize.SixteenBits, numIdx,
-								(bEditor)? BufferUsage.None : BufferUsage.WriteOnly);
-				ib.SetData<UInt16>(idxArray);
-			}
-			else
-			{
-				UInt32	[]idxArray	=new UInt32[numIdx];
-
-				for(int i=0;i < numIdx;i++)
-				{
-					idxArray[i]	=br.ReadUInt32();
-				}
-
-				ib	=new IndexBuffer(g, IndexElementSize.ThirtyTwoBits, numIdx,
-								(bEditor)? BufferUsage.None : BufferUsage.WriteOnly);
-				ib.SetData<UInt32>(idxArray);
-			}
-		}
-#endif
-
-
-		public delegate IReadWriteable[] CreateRWArray(Int32 count);
-
-
 		public static ArrayType []InitArray<ArrayType>(int count) where ArrayType : new()
 		{
 			ArrayType	[]ret	=new ArrayType[count];
@@ -425,16 +319,6 @@ namespace UtilityLib
 				ret[i]	=new ArrayType();
 			}
 			return	ret;
-		}
-
-
-		public static void WriteArray(IReadWriteable []arr, BinaryWriter bw)
-		{
-			bw.Write(arr.Length);
-			foreach(IReadWriteable obj in arr)
-			{
-				obj.Write(bw);
-			}
 		}
 
 
@@ -451,20 +335,6 @@ namespace UtilityLib
 			}
 			bw.Write(arr.Length);
 			bw.Write(arr, 0, arr.Length);
-		}
-
-
-		public static object[] ReadArray(BinaryReader br, CreateRWArray crwa)
-		{
-			int	count	=br.ReadInt32();
-
-			IReadWriteable	[]arr	=crwa(count);
-
-			for(int i=0;i < count;i++)
-			{
-				arr[i].Read(br);
-			}
-			return	arr;
 		}
 
 
@@ -492,14 +362,16 @@ namespace UtilityLib
 
 			Dictionary<string, Color>	ret	=new Dictionary<string,Color>();
 
-			Microsoft.Xna.Framework.Color	tempColor	=new Microsoft.Xna.Framework.Color();
+			SharpDX.Color	tempColor;
 
 			int	count	=br.ReadInt32();
 			for(int i=0;i < count;i++)
 			{
 				string	matName	=br.ReadString();
 
-				tempColor.PackedValue	=br.ReadUInt32();
+				UInt32	val	=br.ReadUInt32();
+
+				tempColor	=new Color(val);
 
 				ret.Add(matName, tempColor);
 			}
@@ -601,60 +473,6 @@ namespace UtilityLib
 					bw.Write(gack.M44);
 				}
 			}
-		}
-
-
-		public static Dictionary<string, SpriteFont> LoadAllFonts(ContentManager cm)
-		{
-			Dictionary<string, SpriteFont>	ret	=new Dictionary<string, SpriteFont>();
-
-			if(Directory.Exists(cm.RootDirectory + "/Fonts"))
-			{
-				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
-					+ cm.RootDirectory + "/Fonts/");
-
-				FileInfo[]		fi	=di.GetFiles("*.xnb", SearchOption.AllDirectories);
-				foreach(FileInfo f in fi)
-				{
-					string	fileName	=FileUtil.StripExtension(f.Name);
-
-					//strip back the content dir
-					string	path	=f.DirectoryName.Substring(
-						f.DirectoryName.LastIndexOf(cm.RootDirectory)
-						+ cm.RootDirectory.Length + 1);
-
-					ret.Add(fileName, cm.Load<SpriteFont>(path + "/" + fileName));
-				}
-			}
-
-			return	ret;
-		}
-
-
-		public static Dictionary<string, SoundEffect> LoadAllAudio(ContentManager cm)
-		{
-			Dictionary<string, SoundEffect>	ret	=new Dictionary<string, SoundEffect>();
-
-			if(Directory.Exists(cm.RootDirectory + "/Audio"))
-			{
-				DirectoryInfo	di	=new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory
-					+ cm.RootDirectory + "/Audio/");
-
-				FileInfo[]		fi	=di.GetFiles("*.xnb", SearchOption.AllDirectories);
-				foreach(FileInfo f in fi)
-				{
-					string	fileName	=FileUtil.StripExtension(f.Name);
-
-					//strip back the content dir
-					string	path	=f.DirectoryName.Substring(
-						f.DirectoryName.LastIndexOf(cm.RootDirectory)
-						+ cm.RootDirectory.Length + 1);
-
-					ret.Add(fileName, cm.Load<SoundEffect>(path + "/" + fileName));
-				}
-			}
-
-			return	ret;
 		}
 
 

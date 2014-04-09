@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.Xna.Framework;
+using SharpDX;
+using SharpDX.Direct3D11;
 
 
 namespace UtilityLib
@@ -233,14 +234,14 @@ namespace UtilityLib
 			float	halfHeight	=height * 0.5f;
 			float	halfDepth	=depth * 0.5f;
 
-			ret.Min.X	=-halfWidth;
-			ret.Max.X	=halfWidth;
+			ret.Minimum.X	=-halfWidth;
+			ret.Maximum.X	=halfWidth;
 			
-			ret.Min.Y	=-halfHeight;
-			ret.Max.Y	=halfHeight;
+			ret.Minimum.Y	=-halfHeight;
+			ret.Maximum.Y	=halfHeight;
 
-			ret.Min.Z	=-halfDepth;
-			ret.Max.Z	=halfDepth;
+			ret.Minimum.Z	=-halfDepth;
+			ret.Maximum.Z	=halfDepth;
 
 			return	ret;
 		}
