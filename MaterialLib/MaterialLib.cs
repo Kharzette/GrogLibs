@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
+using System.ComponentModel;
+using System.Collections.Generic;
 using UtilityLib;
 
 using SharpDX;
@@ -20,6 +21,188 @@ using Device = SharpDX.Direct3D11.Device;
 
 namespace MaterialLib
 {
+	public class EffectVariableValue
+	{
+		internal EffectVariable	mVar;
+		internal object			mValue;
+
+		public string Name
+		{
+			get { return mVar.Description.Name; }
+		}
+
+		public object Value
+		{
+			get { return ValueAsString(mValue); }
+			set { mValue = ValueFromString(value); }
+		}
+
+
+		object ValueFromString(object val)
+		{
+			if(!(val is string))
+			{
+				return	val;
+			}
+
+			string	sz	=(string)val;
+
+			if(mVar.TypeInfo.Description.Class == ShaderVariableClass.MatrixColumns)
+			{
+				return	Misc.StringToMatrix(sz);
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Object)
+			{
+				return	sz;
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Scalar)
+			{
+				if(mVar.TypeInfo.Description.Type == ShaderVariableType.Float)
+				{
+					if(mVar.TypeInfo.Description.Elements > 0)
+					{
+						return	ParseFloatArray(sz);
+					}
+					else
+					{
+						float	fval;
+						Mathery.TryParse(sz, out fval);
+						return	fval;
+					}
+				}
+				else if(mVar.TypeInfo.Description.Type == ShaderVariableType.Bool)
+				{
+					bool	bVal;
+					Mathery.TryParse(sz, out bVal);
+					return	bVal;
+				}
+				else
+				{
+					Debug.Assert(false);
+				}
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Struct)
+			{
+				Debug.Assert(false);
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Vector)
+			{
+				if(mVar.TypeInfo.Description.Columns == 2)
+				{
+					return	Misc.StringToVector2(sz);
+				}
+				else if(mVar.TypeInfo.Description.Columns == 3)
+				{
+					return	Misc.StringToVector3(sz);
+				}
+				else if(mVar.TypeInfo.Description.Columns == 4)
+				{
+					return	Misc.StringToVector4(sz);
+				}
+				else
+				{
+					Debug.Assert(false);
+				}
+			}
+			return	null;
+		}
+
+
+		string ValueAsString(object val)
+		{
+			if(val == null)
+			{
+				return	"";
+			}
+
+			if(mVar.TypeInfo.Description.Class == ShaderVariableClass.MatrixColumns)
+			{
+				if(mVar.TypeInfo.Description.Elements > 0)
+				{
+					return	"Big Ass MatArray";
+				}
+				else
+				{
+					return	Misc.MatrixToString((Matrix)val);
+				}
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Object)
+			{
+				if(val is string)	//still in texname form?
+				{
+					return	(string)val;
+				}
+				else
+				{
+					return	((Texture2D)val).DebugName;
+				}
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Scalar)
+			{
+				if(mVar.TypeInfo.Description.Type == ShaderVariableType.Float)
+				{
+					if(mVar.TypeInfo.Description.Elements > 0)
+					{
+						return	Misc.FloatArrayToString((float [])val);
+					}
+					else
+					{
+						return	Misc.FloatToString((float)val);
+					}
+				}
+				else if(mVar.TypeInfo.Description.Type == ShaderVariableType.Bool)
+				{
+					return	((bool)val).ToString(System.Globalization.CultureInfo.InvariantCulture);
+				}
+				else
+				{
+					Debug.Assert(false);
+				}
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Struct)
+			{
+				Debug.Assert(false);
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Vector)
+			{
+				if(mVar.TypeInfo.Description.Columns == 2)
+				{
+					return	Misc.VectorToString((Vector2)val);
+				}
+				else if(mVar.TypeInfo.Description.Columns == 3)
+				{
+					return	Misc.VectorToString((Vector3)val);
+				}
+				else if(mVar.TypeInfo.Description.Columns == 4)
+				{
+					return	Misc.VectorToString((Vector4)val);
+				}
+				else
+				{
+					Debug.Assert(false);
+				}
+			}
+			return	null;
+		}
+
+		float[] ParseFloatArray(string floats)
+		{
+			string	[]toks	=floats.Split(' ');
+
+			List<float>	ret	=new List<float>();
+
+			foreach(string tok in toks)
+			{
+				float	f;
+				if(UtilityLib.Mathery.TryParse(tok, out f))
+				{
+					ret.Add(f);
+				}
+			}
+			return	ret.ToArray();
+		}
+	};
+
 	public class MaterialLib
 	{
 		internal class IncludeFX : CallbackBase, Include
@@ -81,6 +264,17 @@ namespace MaterialLib
 		}
 
 
+		public void NukeMaterial(string matName)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return;
+			}
+			mMats[matName].Clear();
+			mMats.Remove(matName);
+		}
+
+
 		public List<string> GetMaterialTechniques(string matName)
 		{
 			List<string>	ret	=new List<string>();
@@ -130,13 +324,29 @@ namespace MaterialLib
 		}
 
 
+		public BindingList<EffectVariableValue> GetMaterialVariables(string matName)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return	null;
+			}
+			return	mMats[matName].GetVariables();
+		}
+
+
 		public string GetMaterialTechnique(string matName)
 		{
 			if(!mMats.ContainsKey(matName))
 			{
 				return	null;
 			}
-			return	mMats[matName].Technique.Description.Name;
+			Material	mat	=mMats[matName];
+
+			if(mat.Technique == null)
+			{
+				return	 null;
+			}
+			return	mat.Technique.Description.Name;
 		}
 
 

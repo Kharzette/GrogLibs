@@ -18,13 +18,6 @@ namespace MaterialLib
 {
 	internal class Material
 	{
-		internal class EffectVariableValue
-		{
-			internal EffectVariable	mVar;
-			internal object			mValue;
-
-		};
-
 		string			mName;			//name of the overall material
 		Effect			mEffect;		//ref of the shader
 		EffectTechnique	mTechnique;		//technique to use with this material
@@ -53,6 +46,14 @@ namespace MaterialLib
 		{
 			get { return mTechnique; }
 			set { mTechnique = value; }
+		}
+
+
+		internal void Clear()
+		{
+			mEffect		=null;
+			mTechnique	=null;
+			mVars.Clear();
 		}
 
 
@@ -87,6 +88,18 @@ namespace MaterialLib
 				return	null;
 			}
 			return	ep.Description.Signature;
+		}
+
+
+		internal BindingList<EffectVariableValue> GetVariables()
+		{
+			BindingList<EffectVariableValue>	ret	=new BindingList<EffectVariableValue>();
+
+			foreach(KeyValuePair<string, EffectVariableValue> var in mVars)
+			{
+				ret.Add(var.Value);
+			}
+			return	ret;
 		}
 
 
