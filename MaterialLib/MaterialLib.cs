@@ -24,7 +24,7 @@ namespace MaterialLib
 	{
 		internal class IncludeFX : CallbackBase, Include
 		{
-			static string includeDirectory = "";
+			static string includeDirectory = "Shaders\\";
 			public void Close(Stream stream)
 			{
 				stream.Close();
@@ -63,6 +63,16 @@ namespace MaterialLib
 		}
 
 
+		public ShaderBytecode GetMaterialSignature(string matName, int pass)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return	null;
+			}
+			return	mMats[matName].GetPassSignature(pass);
+		}
+
+
 		public void CreateMaterial(string name)
 		{
 			Material	mat	=new Material(name);
@@ -90,6 +100,50 @@ namespace MaterialLib
 		}
 
 
+		public void SetMaterialTechnique(string matName, string techName)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return;
+			}
+			Material	mat	=mMats[matName];
+
+			if(mat.Shader == null)
+			{
+				return;
+			}
+			mat.Technique	=mat.Shader.GetTechniqueByName(techName);
+		}
+
+
+		public void SetMaterialParameter(string matName, string varName, object value)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return;
+			}
+			Material	mat	=mMats[matName];
+
+			if(mat.Shader == null)
+			{
+				return;
+			}
+			mat.SetEffectParameter(varName, value);
+		}
+
+
+		public void ApplyMaterialPass(string matName, DeviceContext dc, int pass)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return;
+			}
+			Material	mat	=mMats[matName];
+
+			mat.ApplyPass(dc, pass);
+		}
+
+
 		//load all shaders in the shaders folder
 		void LoadShaders(Device dev, ShaderModel sm)
 		{
@@ -106,6 +160,13 @@ namespace MaterialLib
 				FileInfo[]		fi	=di.GetFiles("*.fx", SearchOption.AllDirectories);
 				foreach(FileInfo f in fi)
 				{
+					//hacks until all the shaders build properly
+					if(f.Name == "BSP.fx" || f.Name == "Character.fx"
+						|| f.Name == "Post.fx")
+					{
+						continue;
+					}
+
 					LoadShader(dev, f.DirectoryName, f.Name, macs);
 				}
 			}
@@ -117,9 +178,7 @@ namespace MaterialLib
 			string	fullPath	=dir + "\\" + file;
 
 			CompilationResult	shdRes	=ShaderBytecode.CompileFromFile(
-				fullPath, "fx_5_0", ShaderFlags.Debug, EffectFlags.None, macs);
-
-			file	=FileUtil.StripExtension(file);
+				fullPath, "fx_5_0", ShaderFlags.Debug, EffectFlags.None, macs, mIFX);
 
 			Effect	fx	=new Effect(dev, shdRes);
 			if(fx != null)

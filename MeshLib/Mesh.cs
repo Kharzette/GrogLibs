@@ -145,17 +145,14 @@ namespace MeshLib
 //		public virtual void Draw(Device g, MaterialLib.MaterialLib matLib, int numInstances) { }
 		public virtual void SetSecondVertexBufferBinding(VertexBufferBinding v2) { }
 
-		internal void TempDraw(DeviceContext dc, EffectPass pass, Matrix transform, EffectMatrixVariable fxWorld)
+		internal void TempDraw(DeviceContext dc, MaterialLib.MaterialLib matLib, Matrix transform)
 		{
-			fxWorld.SetMatrix(transform * mTransform);
-//			fxWorld.SetMatrix(mTransform * transform);
-//			fxWorld.SetMatrix(transform);
-//			fxWorld.SetMatrix(mTransform);
+			matLib.SetMaterialParameter(mMaterialName, "mWorld", (transform * mTransform));
 
 			dc.InputAssembler.SetVertexBuffers(0, mVBinding);
 			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
 
-			pass.Apply(dc);
+			matLib.ApplyMaterialPass(mMaterialName, dc, 0);
 
 			dc.DrawIndexed(mNumTriangles * 3, 0, 0);
 		}

@@ -75,6 +75,21 @@ namespace MaterialLib
 		}
 
 
+		internal SharpDX.D3DCompiler.ShaderBytecode GetPassSignature(int pass)
+		{
+			if(mTechnique == null)
+			{
+				return	null;
+			}
+			EffectPass	ep	=mTechnique.GetPassByIndex(pass);
+			if(ep == null)
+			{
+				return	null;
+			}
+			return	ep.Description.Signature;
+		}
+
+
 		#region IO
 		internal void Write(BinaryWriter bw)
 		{
@@ -97,125 +112,103 @@ namespace MaterialLib
 				object			val	=varVal.Value.mValue;
 				EffectVariable	var	=varVal.Value.mVar;
 
-				if(var is EffectMatrixVariable)
+				if(val == null)
+				{
+					continue;
+				}
+
+				if(val.GetType().IsArray)
 				{
 					if(val is Matrix [])
 					{
 						var.AsMatrix().SetMatrix((Matrix [])val);
 					}
+					else if(val is bool [])
+					{
+						var.AsScalar().Set((bool [])val);
+					}
+					else if(val is float [])
+					{
+						var.AsScalar().Set((float [])val);
+					}
+					else if(val is int [])
+					{
+						var.AsScalar().Set((int [])val);
+					}
+					else if(val is uint [])
+					{
+						var.AsScalar().Set((uint [])val);
+					}
+					else if(val is Color4 [])
+					{
+						var.AsVector().Set((Color4 [])val);
+					}
+					else if(val is Int4 [])
+					{
+						var.AsVector().Set((Int4 [])val);
+					}
+					else if(val is Vector4 [])
+					{
+						var.AsVector().Set((Vector4 [])val);
+					}
+					else if(val is Bool4 [])
+					{
+						var.AsVector().Set((Bool4 [])val);
+					}
 					else
+					{
+						Debug.Assert(false);
+					}
+				}
+				else
+				{
+					if(val is Matrix)
 					{
 						var.AsMatrix().SetMatrix((Matrix)val);
 					}
-				}
-				else if(var is EffectScalarVariable)
-				{
-					if(val.GetType().IsArray)
+					else if(val is bool)
 					{
-						if(val is bool [])
-						{
-							var.AsScalar().Set((bool [])val);
-						}
-						else if(val is float [])
-						{
-							var.AsScalar().Set((float [])val);
-						}
-						else if(val is int [])
-						{
-							var.AsScalar().Set((int [])val);
-						}
-						else if(val is uint [])
-						{
-							var.AsScalar().Set((uint [])val);
-						}
-						else
-						{
-							Debug.Assert(false);
-						}
+						var.AsScalar().Set((bool)val);
+					}
+					else if(val is float)
+					{
+						var.AsScalar().Set((float)val);
+					}
+					else if(val is int)
+					{
+						var.AsScalar().Set((int)val);
+					}
+					else if(val is uint)
+					{
+						var.AsScalar().Set((uint)val);
+					}
+					else if(val is Bool4)
+					{
+						var.AsVector().Set((Bool4)val);
+					}
+					else if(val is Color4)
+					{
+						var.AsVector().Set((Color4)val);
+					}
+					else if(val is Int4)
+					{
+						var.AsVector().Set((Int4)val);
+					}
+					else if(val is Vector2)
+					{
+						var.AsVector().Set((Vector2)val);
+					}
+					else if(val is Vector3)
+					{
+						var.AsVector().Set((Vector3)val);
+					}
+					else if(val is Vector4)
+					{
+						var.AsVector().Set((Vector4)val);
 					}
 					else
 					{
-						if(val is bool)
-						{
-							var.AsScalar().Set((bool)val);
-						}
-						else if(val is float)
-						{
-							var.AsScalar().Set((float)val);
-						}
-						else if(val is int)
-						{
-							var.AsScalar().Set((int)val);
-						}
-						else if(val is uint)
-						{
-							var.AsScalar().Set((uint)val);
-						}
-						else
-						{
-							Debug.Assert(false);
-						}
-					}
-				}
-				else if(var is EffectVectorVariable)
-				{
-					if(val.GetType().IsArray)
-					{
-						if(val is Color4 [])
-						{
-							var.AsVector().Set((Color4 [])val);
-						}
-						else if(val is Int4 [])
-						{
-							var.AsVector().Set((Int4 [])val);
-						}
-						else if(val is Vector4 [])
-						{
-							var.AsVector().Set((Vector4 [])val);
-						}
-						else if(val is Bool4 [])
-						{
-							var.AsVector().Set((Bool4 [])val);
-						}
-						else if(val is Bool4 [])
-						{
-							var.AsVector().Set((Bool4 [])val);
-						}
-						else if(val is Bool4 [])
-						{
-							var.AsVector().Set((Bool4 [])val);
-						}
-						else if(val is Bool4 [])
-						{
-							var.AsVector().Set((Bool4 [])val);
-						}
-					}
-					else
-					{
-						if(val is Bool4)
-						{
-							var.AsVector().Set((Bool4)val);
-						}
-						else if(val is Color4)
-						{
-							var.AsVector().Set((Color4)val);
-						}
-						else if(val is Int4)
-						{
-							var.AsVector().Set((Int4)val);
-						}
-						else if(val is Vector2)
-						{
-							var.AsVector().Set((Vector2)val);
-						}
-						else if(val is Vector3)
-						{
-							var.AsVector().Set((Vector3)val);
-						}
-						else if(val is Vector4)
-						{
-							var.AsVector().Set((Vector4)val);
-						}
+						Debug.Assert(false);
 					}
 				}
 			}

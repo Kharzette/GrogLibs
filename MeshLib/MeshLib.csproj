@@ -73,6 +73,10 @@
     <Compile Include="VertexTypes.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MaterialLibSharpDX\MaterialLibSharpDX.csproj">
+      <Project>{CABCC4D8-8F21-4728-B317-28D5B500BEFB}</Project>
+      <Name>MaterialLibSharpDX</Name>
+    </ProjectReference>
     <ProjectReference Include="..\UtilityLibSharpDX\UtilityLibSharpDX.csproj">
       <Project>{C2A1DDD2-0237-4CF3-8CBD-C77388FCC54D}</Project>
       <Name>UtilityLibSharpDX</Name>

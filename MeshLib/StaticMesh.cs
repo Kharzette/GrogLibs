@@ -145,7 +145,7 @@ namespace MeshLib
 		}
 
 
-		public void TempDraw(DeviceContext dc, EffectPass pass, EffectMatrixVariable fxWorld)
+		public void TempDraw(DeviceContext dc, MaterialLib.MaterialLib matLib)
 		{
 			foreach(Mesh m in mMeshParts)
 			{
@@ -153,7 +153,7 @@ namespace MeshLib
 				{
 					continue;
 				}
-				m.TempDraw(dc, pass, mTransform, fxWorld);
+				m.TempDraw(dc, matLib, mTransform);
 			}
 		}
 
