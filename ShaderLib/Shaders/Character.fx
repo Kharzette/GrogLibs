@@ -250,7 +250,7 @@ VPosTex0Tex1Col0 SkinTex0Tex1TriColVS(VPosNormBoneTex0Tex1 input)
 }
 
 
-technique TriSkinTex0
+technique10 TriSkinTex0
 {     
 	pass P0
 	{
@@ -261,13 +261,13 @@ technique TriSkinTex0
 		VertexShader	=compile vs_3_0 SkinTexTriColVS();
 		PixelShader		=compile ps_3_0 Tex0Col0PS();
 #else
-		VertexShader	=compile vs_2_0 SkinTexTriColVS();
-		PixelShader		=compile ps_2_0 Tex0Col0PS();
+		VertexShader	=compile vs_4_0_level_9_3 SkinTexTriColVS();
+		PixelShader		=compile ps_4_0_level_9_3 Tex0Col0PS();
 #endif
 	}
 }
 
-technique TriSkinSolidSpecPhys
+technique10 TriSkinSolidSpecPhys
 {     
 	pass P0
 	{
@@ -278,13 +278,13 @@ technique TriSkinSolidSpecPhys
 		VertexShader	=compile vs_3_0 SkinWNormWPosVS();
 		PixelShader		=compile ps_3_0 TriSolidSpecPhysPS();
 #else
-		VertexShader	=compile vs_2_0 SkinWNormWPosVS();
-		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();
+		VertexShader	=compile vs_4_0_level_9_3 SkinWNormWPosVS();
+		PixelShader		=compile ps_4_0_level_9_3 TriSolidSpecPhysPS();
 #endif
 	}
 }
 
-technique TriSkinCelSolidSpecPhys
+technique10 TriSkinCelSolidSpecPhys
 {     
 	pass P0
 	{
@@ -295,13 +295,13 @@ technique TriSkinCelSolidSpecPhys
 		VertexShader	=compile vs_3_0 SkinWNormWPosVS();
 		PixelShader		=compile ps_3_0 TriCelSolidSpecPhysPS();
 #else
-		VertexShader	=compile vs_2_0 SkinWNormWPosVS();
-		PixelShader		=compile ps_2_0 TriCelSolidSpecPhysPS();
+		VertexShader	=compile vs_4_0_level_9_3 SkinWNormWPosVS();
+		PixelShader		=compile ps_4_0_level_9_3 TriCelSolidSpecPhysPS();
 #endif
 	}
 }
 
-technique TriSkinDanglySolidSpecPhys
+technique10 TriSkinDanglySolidSpecPhys
 {     
 	pass P0
 	{
@@ -312,13 +312,13 @@ technique TriSkinDanglySolidSpecPhys
 		VertexShader	=compile vs_3_0 SkinDanglyWnormWPos();
 		PixelShader		=compile ps_3_0 TriSolidSpecPhysPS();
 #else
-		VertexShader	=compile vs_2_0 SkinDanglyWnormWPos();
-		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();
+		VertexShader	=compile vs_4_0_level_9_3 SkinDanglyWnormWPos();
+		PixelShader		=compile ps_4_0_level_9_3 TriSolidSpecPhysPS();
 #endif
 	}
 }
 
-technique TriSkinDanglyCelSolidSpecPhys
+technique10 TriSkinDanglyCelSolidSpecPhys
 {     
 	pass P0
 	{
@@ -329,13 +329,13 @@ technique TriSkinDanglyCelSolidSpecPhys
 		VertexShader	=compile vs_3_0 SkinDanglyWnormWPos();
 		PixelShader		=compile ps_3_0 TriCelSolidSpecPhysPS();
 #else
-		VertexShader	=compile vs_2_0 SkinDanglyWnormWPos();
-		PixelShader		=compile ps_2_0 TriCelSolidSpecPhysPS();
+		VertexShader	=compile vs_4_0_level_9_3 SkinDanglyWnormWPos();
+		PixelShader		=compile ps_4_0_level_9_3 TriCelSolidSpecPhysPS();
 #endif
 	}
 }
 
-technique TriSkinCelColorSpecPhys
+technique10 TriSkinCelColorSpecPhys
 {     
 	pass P0
 	{
@@ -346,13 +346,13 @@ technique TriSkinCelColorSpecPhys
 		VertexShader	=compile vs_3_0 SkinWNormWPosColorVS();
 		PixelShader		=compile ps_3_0 TriCelColorSpecPhysPS();
 #else
-		VertexShader	=compile vs_2_0 SkinWNormWPosColorVS();
-		PixelShader		=compile ps_2_0 TriCelColorSpecPhysPS();
+		VertexShader	=compile vs_4_0_level_9_3 SkinWNormWPosColorVS();
+		PixelShader		=compile ps_4_0_level_9_3 TriCelColorSpecPhysPS();
 #endif
 	}
 }
 
-technique TriSkinDecalTex0
+technique10 TriSkinDecalTex0
 {     
 	pass P0
 	{
@@ -363,13 +363,13 @@ technique TriSkinDecalTex0
 		VertexShader	=compile vs_3_0 SkinTexTriColVS();
 		PixelShader		=compile ps_3_0 Tex0Col0DecalPS();
 #else
-		VertexShader	=compile vs_2_0 SkinTexTriColVS();
-		PixelShader		=compile ps_2_0 Tex0Col0DecalPS();
+		VertexShader	=compile vs_4_0_level_9_3 SkinTexTriColVS();
+		PixelShader		=compile ps_4_0_level_9_3 Tex0Col0DecalPS();
 #endif
 	}
 }
 
-technique TriSkinDecalTex0Tex1
+technique10 TriSkinDecalTex0Tex1
 {     
 	pass P0
 	{
@@ -380,13 +380,13 @@ technique TriSkinDecalTex0Tex1
 		VertexShader	=compile vs_3_0 SkinTex0Tex1TriColVS();
 		PixelShader		=compile ps_3_0 Tex0Tex1Col0DecalPS();
 #else
-		VertexShader	=compile vs_2_0 SkinTex0Tex1TriColVS();
-		PixelShader		=compile ps_2_0 Tex0Tex1Col0DecalPS();
+		VertexShader	=compile vs_4_0_level_9_3 SkinTex0Tex1TriColVS();
+		PixelShader		=compile ps_4_0_level_9_3 Tex0Tex1Col0DecalPS();
 #endif
 	}
 }
 
-technique FullBrightSkin
+technique10 FullBrightSkin
 {
 	pass P0
 	{
@@ -397,13 +397,13 @@ technique FullBrightSkin
 		VertexShader	=compile vs_3_0 SkinWNormVS();
 		PixelShader		=compile ps_3_0	FullBrightSkinPS();
 #else
-		VertexShader	=compile vs_2_0 SkinWNormVS();
-		PixelShader		=compile ps_2_0	FullBrightSkinPS();
+		VertexShader	=compile vs_4_0_level_9_3 SkinWNormVS();
+		PixelShader		=compile ps_4_0_level_9_3	FullBrightSkinPS();
 #endif
 	}
 }
 
-technique ShadowSkin
+technique10 ShadowSkin
 {
 	pass P0
 	{
@@ -414,13 +414,13 @@ technique ShadowSkin
 		VertexShader	=compile vs_3_0 SkinWPosVS();
 		PixelShader		=compile ps_3_0 ShadowPS();
 #else
-		VertexShader	=compile vs_2_0 SkinWPosVS();
-		PixelShader		=compile ps_2_0 ShadowPS();
+		VertexShader	=compile vs_4_0_level_9_3 SkinWPosVS();
+		PixelShader		=compile ps_4_0_level_9_3 ShadowPS();
 #endif
 	}
 }
 
-technique DMN	//depth material normal
+technique10 DMN	//depth material normal
 {
 	pass P0
 	{
@@ -431,13 +431,13 @@ technique DMN	//depth material normal
 		VertexShader	=compile vs_3_0 DMNVS();
 		PixelShader		=compile ps_3_0 DMNPS();
 #else
-		VertexShader	=compile vs_2_0 DMNVS();
-		PixelShader		=compile ps_2_0 DMNPS();
+		VertexShader	=compile vs_4_0_level_9_3 DMNVS();
+		PixelShader		=compile ps_4_0_level_9_3 DMNPS();
 #endif
 	}
 }
 
-technique DMNDangly
+technique10 DMNDangly
 {
 	pass P0
 	{
@@ -448,8 +448,8 @@ technique DMNDangly
 		VertexShader	=compile vs_3_0 DMNDanglyVS();
 		PixelShader		=compile ps_3_0 DMNPS();
 #else
-		VertexShader	=compile vs_2_0 DMNDanglyVS();
-		PixelShader		=compile ps_2_0 DMNPS();
+		VertexShader	=compile vs_4_0_level_9_3 DMNDanglyVS();
+		PixelShader		=compile ps_4_0_level_9_3 DMNPS();
 #endif
 	}
 }

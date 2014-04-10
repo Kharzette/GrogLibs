@@ -1,26 +1,14 @@
 //shader for UI and particles and such
-texture	mTexture;
+Texture2D	mTexture;
 
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
+#include "RenderStates.fxh"
 
 
-sampler TexSampler0 = sampler_state
+VVPosTex03 ParticleVS(VPosTex04 input)
 {
-	Texture	=(mTexture);
-
-	MinFilter	=Linear;
-	MagFilter	=Linear;
-	MipFilter	=Linear;
-
-	AddressU	=Wrap;
-	AddressV	=Wrap;
-};
-
-
-VPosTex03 ParticleVS(VPosTex04 input)
-{
-	VPosTex03	output;
+	VVPosTex03	output;
 
 	//copy texcoords
 	output.TexCoord0.x	=input.Position.w;
@@ -81,9 +69,9 @@ VPosTex03 ParticleVS(VPosTex04 input)
 	return	output;
 }
 
-VPosTex03Tex13 ParticleDMNVS(VPosTex04 input)
+VVPosTex03Tex13 ParticleDMNVS(VPosTex04 input)
 {
-	VPosTex03Tex13	output;
+	VVPosTex03Tex13	output;
 
 	//copy texcoords
 	output.TexCoord0.x	=input.Position.w;
@@ -147,10 +135,10 @@ VPosTex03Tex13 ParticleDMNVS(VPosTex04 input)
 }
 
 
-float4 ParticlePS(VTex03 input) : COLOR
+float4 ParticlePS(VVPosTex03 input) : SV_Target
 {
 	//texture
-	float4	texel	=tex2D(TexSampler0, input.TexCoord0.xy);
+	float4	texel	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
 
 	//gamma
 	texel	=pow(abs(texel), 2.2);
@@ -165,10 +153,10 @@ float4 ParticlePS(VTex03 input) : COLOR
 	return	texLitColor;
 }
 
-float4 ParticleCelPS(VTex03 input) : COLOR
+float4 ParticleCelPS(VVPosTex03 input) : SV_Target
 {
 	//texture
-	float4	texel	=tex2D(TexSampler0, input.TexCoord0.xy);
+	float4	texel	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
 
 	//gamma
 	float4	texLitColor	=pow(abs(texel), 2.2);
@@ -186,10 +174,10 @@ float4 ParticleCelPS(VTex03 input) : COLOR
 }
 
 //write to depth/material/normal if dense enough
-half4 ParticleDMNPS(VTex03Tex13 input) : COLOR
+half4 ParticleDMNPS(VVPosTex03Tex13 input) : SV_Target
 {
 	//texture
-	float4	texel	=tex2D(TexSampler0, input.TexCoord0.xy);
+	float4	texel	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
 
 	//gamma
 	float4	texLitColor	=pow(abs(texel), 2.2);
@@ -210,45 +198,62 @@ half4 ParticleDMNPS(VTex03Tex13 input) : COLOR
 }
 
 
-technique ParticleCel
+technique10 ParticleCel
 {     
 	pass P0
 	{
-		VertexShader	=compile vs_2_0 ParticleVS();
-		PixelShader		=compile ps_2_0 ParticleCelPS();
-	}
-}
-
-technique Particle
-{     
-	pass P0
-	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 ParticleVS();
+		PixelShader		=compile ps_5_0 ParticleCelPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 ParticleVS();
+		PixelShader		=compile ps_4_1 ParticleCelPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 ParticleVS();
-		PixelShader		=compile ps_4_0 ParticlePS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 ParticleVS();
-		PixelShader		=compile ps_3_0 ParticlePS();
+		PixelShader		=compile ps_4_0 ParticleCelPS();
 #else
-		VertexShader	=compile vs_2_0 ParticleVS();
-		PixelShader		=compile ps_2_0 ParticlePS();
+		VertexShader	=compile vs_4_0_level_9_3 ParticleVS();
+		PixelShader		=compile ps_4_0_level_9_3 ParticleCelPS();
 #endif
 	}
 }
 
-technique ParticleDMN
+technique10 Particle
+{     
+	pass P0
+	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 ParticleVS();
+		PixelShader		=compile ps_5_0 ParticlePS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 ParticleVS();
+		PixelShader		=compile ps_4_1 ParticlePS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 ParticleVS();
+		PixelShader		=compile ps_4_0 ParticlePS();
+#else
+		VertexShader	=compile vs_4_0_level_9_3 ParticleVS();
+		PixelShader		=compile ps_4_0_level_9_3 ParticlePS();
+#endif
+	}
+}
+
+technique10 ParticleDMN
 {
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 ParticleDMNVS();
+		PixelShader		=compile ps_5_0 ParticleDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 ParticleDMNVS();
+		PixelShader		=compile ps_4_1 ParticleDMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 ParticleDMNVS();
 		PixelShader		=compile ps_4_0 ParticleDMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 ParticleDMNVS();
-		PixelShader		=compile ps_3_0 ParticleDMNPS();
 #else
-		VertexShader	=compile vs_2_0 ParticleDMNVS();
-		PixelShader		=compile ps_2_0 ParticleDMNPS();
+		VertexShader	=compile vs_4_0_level_9_3 ParticleDMNVS();
+		PixelShader		=compile ps_4_0_level_9_3 ParticleDMNPS();
 #endif
 	}
 }

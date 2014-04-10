@@ -15,6 +15,7 @@ half	mAniIntensities[44];
 
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
+#include "RenderStates.fxh"
 
 
 VPosTex04Tex14Tex24 LightMapVS(VPosNormTex04 input)
@@ -158,52 +159,6 @@ VPosTex04Tex14Tex24Tex34Tex44Tex54 LightMapAnimVS(VPosNormBlendTex04Tex14Tex24 i
 }
 
 
-sampler TextureSampler = sampler_state
-{
-	Texture		=mTexture;
-
-#if defined(POINTTEXTURES)
-	MinFilter	=Point;
-	MagFilter	=Point;
-	MipFilter	=Point;
-#else
-	MinFilter	=Linear;
-	MagFilter	=Linear;
-	MipFilter	=Linear;
-#endif
-
-	AddressU	=Wrap;
-	AddressV	=Wrap;
-};
-
-
-sampler LightMapSampler = sampler_state
-{
-    Texture	=mLightMap;
-
-	MinFilter	=Linear;
-	MagFilter	=Linear;
-	MipFilter	=Linear;
-
-    AddressU	=Clamp;
-    AddressV	=Clamp;
-};
-
-
-sampler SkySampler = sampler_state
-{
-	Texture		=(mTexture);
-
-	MinFilter	=Linear;
-	MagFilter	=Linear;
-	MipFilter	=Linear;
-
-	AddressU	=Clamp;
-	AddressV	=Clamp;
-	AddressW	=Clamp;
-};
-
-
 //Sm2 not happy with this
 #if !defined(SM2)
 sampler1D DynLightSampler = sampler_state
@@ -247,14 +202,15 @@ float4 LightMapPS(VTex04Tex14Tex24 input) : COLOR0
 	
 	if(mbTextureEnabled)
 	{
-		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
+		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
+//		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
 	}
 	else
 	{
 		color	=float3(1.0, 1.0, 1.0);
 	}
-	
-	float3	lm	=tex2D(LightMapSampler, input.TexCoord0.zw);
+
+	float3	lm	=mLightMap.Sample(LinearClamp, input.TexCoord0.zw);
 
 #if !defined(SM2)
 	lm	+=GetDynLight(input.TexCoord1, input.TexCoord2.xyz);
@@ -272,14 +228,15 @@ float4 LightMapCelPS(VTex04Tex14Tex24 input) : COLOR0
 	
 	if(mbTextureEnabled)
 	{
-		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
+		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
+//		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
 	}
 	else
 	{
 		color	=float3(1.0, 1.0, 1.0);
 	}
 	
-	float3	lm	=tex2D(LightMapSampler, input.TexCoord0.zw);
+	float3	lm	=mLightMap.Sample(LinearClamp, input.TexCoord0.zw);
 
 #if !defined(SM2)
 	lm	+=GetDynLight(input.TexCoord1, input.TexCoord2.xyz);
@@ -309,7 +266,8 @@ float4 VertexLitPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 	
 	if(mbTextureEnabled)
 	{
-		color	=pow(abs(tex2D(TextureSampler, tex0)), 2.2);
+		color	=mTexture.Sample(LinearWrap, tex0);
+//		color	=pow(abs(tex2D(TextureSampler, tex0)), 2.2);
 	}
 	else
 	{
@@ -355,7 +313,8 @@ float4 VertexLitCelPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 	
 	if(mbTextureEnabled)
 	{
-		color	=pow(abs(tex2D(TextureSampler, tex0)), 2.2);
+		color	=mTexture.Sample(LinearWrap, tex0);
+//		color	=pow(abs(tex2D(TextureSampler, tex0)), 2.2);
 	}
 	else
 	{
@@ -405,7 +364,8 @@ float4 FullBrightPixelShader(VTex0 input) : COLOR0
 {
 	if(mbTextureEnabled)
 	{
-		return	tex2D(TextureSampler, input.TexCoord0);
+		return	mTexture.Sample(LinearWrap, input.TexCoord0);
+//		return	tex2D(TextureSampler, input.TexCoord0);
 	}
 	return	float4(1, 1, 1, 1);
 }
@@ -416,7 +376,8 @@ float4 LightMapAnimPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 
 	if(mbTextureEnabled)
 	{
-		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
+		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
+//		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
 	}
 	else
 	{
@@ -430,19 +391,19 @@ float4 LightMapAnimPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	//grab style intensity
 	if(input.TexCoord5.x > 0)
 	{
-		lm	+=(input.TexCoord5.x * tex2D(LightMapSampler, input.TexCoord0.zw));
+		lm	+=(input.TexCoord5.x * mLightMap.Sample(LinearClamp, input.TexCoord0.zw));
 	}
 	if(input.TexCoord5.y > 0)
 	{
-		lm	+=(input.TexCoord5.y * tex2D(LightMapSampler, input.TexCoord1.xy));
+		lm	+=(input.TexCoord5.y * mLightMap.Sample(LinearClamp, input.TexCoord1.xy));
 	}
 	if(input.TexCoord5.z > 0)
 	{
-		lm	+=(input.TexCoord5.z * tex2D(LightMapSampler, input.TexCoord1.zw));
+		lm	+=(input.TexCoord5.z * mLightMap.Sample(LinearClamp, input.TexCoord1.zw));
 	}
 	if(input.TexCoord5.w > 0)
 	{
-		lm	+=(input.TexCoord5.w * tex2D(LightMapSampler, input.TexCoord2.xy));
+		lm	+=(input.TexCoord5.w * mLightMap.Sample(LinearClamp, input.TexCoord2.xy));
 	}
 
 	//dyn lights
@@ -466,7 +427,8 @@ float4 LightMapAnimCelPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 
 	if(mbTextureEnabled)
 	{
-		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
+		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
+//		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
 	}
 	else
 	{
@@ -480,19 +442,19 @@ float4 LightMapAnimCelPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	//grab style intensity
 	if(input.TexCoord5.x > 0)
 	{
-		lm	+=(input.TexCoord5.x * tex2D(LightMapSampler, input.TexCoord0.zw));
+		lm	+=(input.TexCoord5.x * mLightMap.Sample(LinearClamp, input.TexCoord0.zw));
 	}
 	if(input.TexCoord5.y > 0)
 	{
-		lm	+=(input.TexCoord5.y * tex2D(LightMapSampler, input.TexCoord1.xy));
+		lm	+=(input.TexCoord5.y * mLightMap.Sample(LinearClamp, input.TexCoord1.xy));
 	}
 	if(input.TexCoord5.z > 0)
 	{
-		lm	+=(input.TexCoord5.z * tex2D(LightMapSampler, input.TexCoord1.zw));
+		lm	+=(input.TexCoord5.z * mLightMap.Sample(LinearClamp, input.TexCoord1.zw));
 	}
 	if(input.TexCoord5.w > 0)
 	{
-		lm	+=(input.TexCoord5.w * tex2D(LightMapSampler, input.TexCoord2.xy));
+		lm	+=(input.TexCoord5.w * mLightMap.Sample(LinearClamp, input.TexCoord2.xy));
 	}
 
 	//dynamic
@@ -530,7 +492,7 @@ float4 SkyPS(VCubeTex0 input) : COLOR0
 	
 		eyeVec	=normalize(eyeVec);
 
-		color	=texCUBE(SkySampler, eyeVec);
+		color	=mTexture.Sample(LinearClampCube, eyeVec);
 	}
 	else
 	{
@@ -640,7 +602,7 @@ float4 LightMapAnimShadowPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 
 
 //techniques
-technique LightMap
+technique10 LightMap
 {
 	pass Base
 	{
@@ -651,8 +613,8 @@ technique LightMap
 		VertexShader	=compile vs_3_0 LightMapVS();
 		PixelShader		=compile ps_3_0 LightMapPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapVS();
-		PixelShader		=compile ps_2_0 LightMapPS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapPS();
 #endif
 	}
 	pass Shadow
@@ -664,8 +626,8 @@ technique LightMap
 		VertexShader	=compile vs_3_0 LightMapVS();
 		PixelShader		=compile ps_3_0 LightMapShadowPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapVS();
-		PixelShader		=compile ps_2_0 LightMapShadowPS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapShadowPS();
 #endif
 	}
 	pass DMN
@@ -677,13 +639,13 @@ technique LightMap
 		VertexShader	=compile vs_3_0 LightMapVS();
 		PixelShader		=compile ps_3_0 LightMapDMNPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapVS();
-		PixelShader		=compile ps_2_0 LightMapDMNPS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapDMNPS();
 #endif
 	}
 }
 
-technique LightMapCel
+technique10 LightMapCel
 {
 	pass Base
 	{
@@ -694,8 +656,8 @@ technique LightMapCel
 		VertexShader	=compile vs_3_0 LightMapVS();
 		PixelShader		=compile ps_3_0 LightMapCelPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapVS();
-		PixelShader		=compile ps_2_0 LightMapCelPS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapCelPS();
 #endif
 	}
 	pass Shadow
@@ -707,8 +669,8 @@ technique LightMapCel
 		VertexShader	=compile vs_3_0 LightMapVS();
 		PixelShader		=compile ps_3_0 LightMapShadowPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapVS();
-		PixelShader		=compile ps_2_0 LightMapShadowPS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapShadowPS();
 #endif
 	}
 	pass DMN
@@ -720,13 +682,13 @@ technique LightMapCel
 		VertexShader	=compile vs_3_0 LightMapVS();
 		PixelShader		=compile ps_3_0 LightMapDMNPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapVS();
-		PixelShader		=compile ps_2_0 LightMapDMNPS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapDMNPS();
 #endif
 	}
 }
 
-technique Alpha
+technique10 Alpha
 {
 	pass Base
 	{
@@ -737,8 +699,8 @@ technique Alpha
 		VertexShader	=compile vs_3_0 VertexLitVS();
 		PixelShader		=compile ps_3_0 VertexLitPS();
 #else
-		VertexShader	=compile vs_2_0 VertexLitVS();
-		PixelShader		=compile ps_2_0 VertexLitPS();
+		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitPS();
 #endif
 	}
 	pass Shadow
@@ -750,8 +712,8 @@ technique Alpha
 		VertexShader	=compile vs_3_0 VertexLitVS();
 		PixelShader		=compile ps_3_0 VertexLitShadowPS();
 #else
-		VertexShader	=compile vs_2_0 VertexLitVS();
-		PixelShader		=compile ps_2_0 VertexLitShadowPS();
+		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitShadowPS();
 #endif
 	}
 	pass DMN
@@ -763,13 +725,13 @@ technique Alpha
 		VertexShader	=compile vs_3_0 VertexLitVS();
 		PixelShader		=compile ps_3_0 VertexLitDMNPS();
 #else
-		VertexShader	=compile vs_2_0 VertexLitVS();
-		PixelShader		=compile ps_2_0 VertexLitDMNPS();
+		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitDMNPS();
 #endif
 	}
 }
 
-technique VertexLighting
+technique10 VertexLighting
 {
 	pass Base
 	{
@@ -780,8 +742,8 @@ technique VertexLighting
 		VertexShader	=compile vs_3_0 VertexLitVS();
 		PixelShader		=compile ps_3_0 VertexLitPS();
 #else
-		VertexShader	=compile vs_2_0 VertexLitVS();
-		PixelShader		=compile ps_2_0 VertexLitPS();
+		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitPS();
 #endif
 	}
 	pass Shadow
@@ -793,8 +755,8 @@ technique VertexLighting
 		VertexShader	=compile vs_3_0 VertexLitVS();
 		PixelShader		=compile ps_3_0 VertexLitShadowPS();
 #else
-		VertexShader	=compile vs_2_0 VertexLitVS();
-		PixelShader		=compile ps_2_0 VertexLitShadowPS();
+		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitShadowPS();
 #endif
 	}
 	pass DMN
@@ -806,13 +768,13 @@ technique VertexLighting
 		VertexShader	=compile vs_3_0 VertexLitVS();
 		PixelShader		=compile ps_3_0 VertexLitDMNPS();
 #else
-		VertexShader	=compile vs_2_0 VertexLitVS();
-		PixelShader		=compile ps_2_0 VertexLitDMNPS();
+		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitDMNPS();
 #endif
 	}
 }
 
-technique VertexLightingCel
+technique10 VertexLightingCel
 {
 	pass Base
 	{
@@ -823,8 +785,8 @@ technique VertexLightingCel
 		VertexShader	=compile vs_3_0 VertexLitVS();
 		PixelShader		=compile ps_3_0 VertexLitCelPS();
 #else
-		VertexShader	=compile vs_2_0 VertexLitVS();
-		PixelShader		=compile ps_2_0 VertexLitCelPS();
+		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitCelPS();
 #endif
 	}
 	pass Shadow
@@ -836,8 +798,8 @@ technique VertexLightingCel
 		VertexShader	=compile vs_3_0 VertexLitVS();
 		PixelShader		=compile ps_3_0 VertexLitShadowPS();
 #else
-		VertexShader	=compile vs_2_0 VertexLitVS();
-		PixelShader		=compile ps_2_0 VertexLitShadowPS();
+		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitShadowPS();
 #endif
 	}
 	pass DMN
@@ -849,13 +811,13 @@ technique VertexLightingCel
 		VertexShader	=compile vs_3_0 VertexLitVS();
 		PixelShader		=compile ps_3_0 VertexLitDMNPS();
 #else
-		VertexShader	=compile vs_2_0 VertexLitVS();
-		PixelShader		=compile ps_2_0 VertexLitDMNPS();
+		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitDMNPS();
 #endif
 	}
 }
 
-technique LightMapAlpha
+technique10 LightMapAlpha
 {
 	pass Base
 	{
@@ -866,14 +828,14 @@ technique LightMapAlpha
 		VertexShader	=compile vs_3_0 LightMapAlphaVS();
 		PixelShader		=compile ps_3_0 LightMapPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAlphaVS();
-		PixelShader		=compile ps_2_0 LightMapPS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAlphaVS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapPS();
 #endif
 	}
 	pass Shadow
 	{
-		VertexShader	=compile vs_2_0 LightMapAlphaVS();
-		PixelShader		=compile ps_2_0 LightMapShadowPS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAlphaVS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapShadowPS();
 	}
 	pass DMN
 	{
@@ -884,13 +846,13 @@ technique LightMapAlpha
 		VertexShader	=compile vs_3_0 LightMapVS();
 		PixelShader		=compile ps_3_0 LightMapDMNPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
 		PixelShader		=compile ps_2_0 LightMapDMNPS();
 #endif
 	}
 }
 
-technique LightMapAlphaCel
+technique10 LightMapAlphaCel
 {
 	pass Base
 	{
@@ -901,13 +863,13 @@ technique LightMapAlphaCel
 		VertexShader	=compile vs_3_0 LightMapAlphaVS();
 		PixelShader		=compile ps_3_0 LightMapCelPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAlphaVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAlphaVS();
 		PixelShader		=compile ps_2_0 LightMapCelPS();
 #endif
 	}
 	pass Shadow
 	{
-		VertexShader	=compile vs_2_0 LightMapAlphaVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAlphaVS();
 		PixelShader		=compile ps_2_0 LightMapShadowPS();
 	}
 	pass DMN
@@ -919,13 +881,13 @@ technique LightMapAlphaCel
 		VertexShader	=compile vs_3_0 LightMapVS();
 		PixelShader		=compile ps_3_0 LightMapDMNPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
 		PixelShader		=compile ps_2_0 LightMapDMNPS();
 #endif
 	}
 }
 
-technique FullBright
+technique10 FullBright
 {
 	pass Base
 	{
@@ -936,7 +898,7 @@ technique FullBright
 		VertexShader	=compile vs_3_0 FullBrightVS();
 		PixelShader		=compile ps_3_0 VertexLitCelPS();
 #else
-		VertexShader	=compile vs_2_0 FullBrightVS();
+		VertexShader	=compile vs_4_0_level_9_3 FullBrightVS();
 		PixelShader		=compile ps_2_0 VertexLitCelPS();
 #endif
 	}
@@ -949,7 +911,7 @@ technique FullBright
 		VertexShader	=compile vs_3_0 FullBrightVS();
 		PixelShader		=compile ps_3_0 VertexLitShadowPS();
 #else
-		VertexShader	=compile vs_2_0 FullBrightVS();
+		VertexShader	=compile vs_4_0_level_9_3 FullBrightVS();
 		PixelShader		=compile ps_2_0 VertexLitShadowPS();
 #endif
 	}
@@ -962,13 +924,13 @@ technique FullBright
 		VertexShader	=compile vs_3_0 FullBrightVS();
 		PixelShader		=compile ps_3_0 VertexLitDMNPS();
 #else
-		VertexShader	=compile vs_2_0 FullBrightVS();
+		VertexShader	=compile vs_4_0_level_9_3 FullBrightVS();
 		PixelShader		=compile ps_2_0 VertexLitDMNPS();
 #endif
 	}
 }
 
-technique LightMapAnim
+technique10 LightMapAnim
 {
 	pass Base
 	{
@@ -979,7 +941,7 @@ technique LightMapAnim
 		VertexShader	=compile vs_3_0 LightMapAnimVS();
 		PixelShader		=compile ps_3_0 LightMapAnimPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAnimVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
 		PixelShader		=compile ps_2_0 LightMapAnimPS();
 #endif
 	}
@@ -992,7 +954,7 @@ technique LightMapAnim
 		VertexShader	=compile vs_3_0 LightMapAnimVS();
 		PixelShader		=compile ps_3_0 LightMapAnimShadowPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAnimVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
 		PixelShader		=compile ps_2_0 LightMapAnimShadowPS();
 #endif
 	}
@@ -1005,13 +967,13 @@ technique LightMapAnim
 		VertexShader	=compile vs_3_0 LightMapAnimVS();
 		PixelShader		=compile ps_3_0 LightMapAnimDMNPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAnimVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
 		PixelShader		=compile ps_2_0 LightMapAnimDMNPS();
 #endif
 	}
 }
 
-technique LightMapAnimAlpha
+technique10 LightMapAnimAlpha
 {
 	pass Base
 	{
@@ -1022,7 +984,7 @@ technique LightMapAnimAlpha
 		VertexShader	=compile vs_3_0 LightMapAnimVS();
 		PixelShader		=compile ps_3_0 LightMapAnimPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAnimVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
 		PixelShader		=compile ps_2_0 LightMapAnimPS();
 #endif
 	}
@@ -1035,7 +997,7 @@ technique LightMapAnimAlpha
 		VertexShader	=compile vs_3_0 LightMapAnimVS();
 		PixelShader		=compile ps_3_0 LightMapAnimShadowPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAnimVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
 		PixelShader		=compile ps_2_0 LightMapAnimShadowPS();
 #endif
 	}
@@ -1048,13 +1010,13 @@ technique LightMapAnimAlpha
 		VertexShader	=compile vs_3_0 LightMapAnimVS();
 		PixelShader		=compile ps_3_0 LightMapAnimDMNPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAnimVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
 		PixelShader		=compile ps_2_0 LightMapAnimDMNPS();
 #endif
 	}
 }
 
-technique LightMapAnimAlphaCel
+technique10 LightMapAnimAlphaCel
 {
 	pass Base
 	{
@@ -1065,7 +1027,7 @@ technique LightMapAnimAlphaCel
 		VertexShader	=compile vs_3_0 LightMapAnimVS();
 		PixelShader		=compile ps_3_0 LightMapAnimCelPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAnimVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
 		PixelShader		=compile ps_2_0 LightMapAnimCelPS();
 #endif
 	}
@@ -1078,7 +1040,7 @@ technique LightMapAnimAlphaCel
 		VertexShader	=compile vs_3_0 LightMapAnimVS();
 		PixelShader		=compile ps_3_0 LightMapAnimShadowPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAnimVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
 		PixelShader		=compile ps_2_0 LightMapAnimShadowPS();
 #endif
 	}
@@ -1091,13 +1053,13 @@ technique LightMapAnimAlphaCel
 		VertexShader	=compile vs_3_0 LightMapAnimVS();
 		PixelShader		=compile ps_3_0 LightMapAnimDMNPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAnimVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
 		PixelShader		=compile ps_2_0 LightMapAnimDMNPS();
 #endif
 	}
 }
 
-technique LightMapAnimCel
+technique10 LightMapAnimCel
 {
 	pass Base
 	{
@@ -1108,7 +1070,7 @@ technique LightMapAnimCel
 		VertexShader	=compile vs_3_0 LightMapAnimVS();
 		PixelShader		=compile ps_3_0 LightMapAnimCelPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAnimVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
 		PixelShader		=compile ps_2_0 LightMapAnimCelPS();
 #endif
 	}
@@ -1121,7 +1083,7 @@ technique LightMapAnimCel
 		VertexShader	=compile vs_3_0 LightMapAnimVS();
 		PixelShader		=compile ps_3_0 LightMapAnimShadowPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAnimVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
 		PixelShader		=compile ps_2_0 LightMapAnimShadowPS();
 #endif
 	}
@@ -1134,22 +1096,22 @@ technique LightMapAnimCel
 		VertexShader	=compile vs_3_0 LightMapAnimVS();
 		PixelShader		=compile ps_3_0 LightMapAnimDMNPS();
 #else
-		VertexShader	=compile vs_2_0 LightMapAnimVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
 		PixelShader		=compile ps_2_0 LightMapAnimDMNPS();
 #endif
 	}
 }
 
-technique Sky
+technique10 Sky
 {
 	pass Base
 	{
-		VertexShader	=compile vs_2_0 SkyVS();
+		VertexShader	=compile vs_4_0_level_9_3 SkyVS();
 		PixelShader		=compile ps_2_0 SkyPS();
 	}
 	pass DMN
 	{
-		VertexShader	=compile vs_2_0 SkyVS();
+		VertexShader	=compile vs_4_0_level_9_3 SkyVS();
 		PixelShader		=compile ps_2_0 SkyDMNPS();
 	}
 }

@@ -6,9 +6,9 @@
 
 
 //depth material normal
-VPosTex03Tex13 DMNVS(VPosNorm input)
+VVPosTex03Tex13 DMNVS(VPosNorm input)
 {
-	VPosTex03Tex13	output;	
+	VVPosTex03Tex13	output;	
 	
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
@@ -23,13 +23,13 @@ VPosTex03Tex13 DMNVS(VPosNorm input)
 }
 
 //just world position
-VPosTex03 WPosVS(VPos input)
+VVPosTex03 WPosVS(VPos input)
 {
 	float4	vertPos	=input.Position;
 
 	float4	worldVertPos	=mul(vertPos, mWorld);
 
-	VPosTex03	output;
+	VVPosTex03	output;
 
 	output.Position		=mul(worldVertPos, mLightViewProj);
 	output.TexCoord0	=worldVertPos.xyz;
@@ -38,9 +38,9 @@ VPosTex03 WPosVS(VPos input)
 }
 
 //worldpos and worldnormal
-VPosTex03Tex13 WNormWPosVS(VPosNormTex0 input)
+VVPosTex03Tex13 WNormWPosVS(VPosNormTex0 input)
 {
-	VPosTex03Tex13	output;	
+	VVPosTex03Tex13	output;	
 	
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
@@ -54,10 +54,10 @@ VPosTex03Tex13 WNormWPosVS(VPosNormTex0 input)
 	return	output;
 }
 
-//texcoord + trilight color
-VPosTex0Col0 TexTriVS(VPosNormTex0 input)
+//texcoord + trilight color interpolated
+VVPosTex0Col0 TexTriVS(VPosNormTex0 input)
 {
-	VPosTex0Col0	output;	
+	VVPosTex0Col0	output;	
 	
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
@@ -79,9 +79,9 @@ VPosTex0Col0 TexTriVS(VPosNormTex0 input)
 }
 
 //tangent stuff
-VPosNormTanBiTanTex0 WNormWTanBTanTexVS(VPosNormTanTex0 input)
+VVPosNormTanBiTanTex0 WNormWTanBTanTexVS(VPosNormTanTex0 input)
 {
-	VPosNormTanBiTanTex0	output;
+	VVPosNormTanBiTanTex0	output;
 	
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
@@ -100,12 +100,17 @@ VPosNormTanBiTanTex0 WNormWTanBTanTexVS(VPosNormTanTex0 input)
 }
 
 //packed tangents with worldspace pos
-VPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosVS(VPosNormTanTex0 input)
+VVPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosVS(VPosNormTanTex0 input)
 {
-	VPosTex04Tex14Tex24Tex34	output;
+	VVPosTex04Tex14Tex24Tex34	output;
 	
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
+
+	//pos4
+	//tex2
+	//wtan3
+	//bitan3
 	
 	output.Position			=mul(input.Position, wvp);
 	output.TexCoord0.xyz	=mul(input.Normal, mWorld);
@@ -123,9 +128,9 @@ VPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosVS(VPosNormTanTex0 input)
 }
 
 //packed tangents with worldspace pos and instancing
-VPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosInstancedVS(VPosNormTanTex0 input, float4x4 instWorld : BLENDWEIGHT)
+VVPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosInstancedVS(VPosNormTanTex0 input, float4x4 instWorld : BLENDWEIGHT)
 {
-	VPosTex04Tex14Tex24Tex34	output;
+	VVPosTex04Tex14Tex24Tex34	output;
 
 	float4x4	world	=transpose(instWorld);
 	
@@ -148,9 +153,9 @@ VPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosInstancedVS(VPosNormTanTex0 input, flo
 }
 
 //worldpos and normal
-VPosTex04Tex14 WNormWPosTexVS(VPosNormTex0 input)
+VVPosTex04Tex14 WNormWPosTexVS(VPosNormTex0 input)
 {
-	VPosTex04Tex14	output;	
+	VVPosTex04Tex14	output;
 	
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
@@ -167,189 +172,202 @@ VPosTex04Tex14 WNormWPosTexVS(VPosNormTex0 input)
 }
 
 
-technique TriTex0
+technique10 TriTex0
 {     
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 TexTriVS();
+		PixelShader		=compile ps_5_0 Tex0Col0PS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 TexTriVS();
+		PixelShader		=compile ps_4_1 Tex0Col0PS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 TexTriVS();
 		PixelShader		=compile ps_4_0 Tex0Col0PS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 TexTriVS();
-		PixelShader		=compile ps_3_0 Tex0Col0PS();
 #else
-		VertexShader	=compile vs_2_0 TexTriVS();
-		PixelShader		=compile ps_2_0 Tex0Col0PS();
+		VertexShader	=compile vs_4_0_level_9_3 TexTriVS();
+		PixelShader		=compile ps_4_0_level_9_3 Tex0Col0PS();
 #endif
 	}
 }
 
-technique TriTex0NormalMapSolid
+technique10 TriTex0NormalMapSolid
 {     
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 WNormWTanBTanWPosVS();
+		PixelShader		=compile ps_5_0 NormalMapTriTex0SolidPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 WNormWTanBTanWPosVS();
+		PixelShader		=compile ps_4_1 NormalMapTriTex0SolidPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 WNormWTanBTanWPosVS();
 		PixelShader		=compile ps_4_0 NormalMapTriTex0SolidPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 WNormWTanBTanWPosVS();
-		PixelShader		=compile ps_3_0 NormalMapTriTex0SolidPS();
 #else
-		VertexShader	=compile vs_2_0 WNormWTanBTanWPosVS();
-		PixelShader		=compile ps_2_0 NormalMapTriTex0SolidPS();
+		VertexShader	=compile vs_4_0_level_9_3 WNormWTanBTanWPosVS();
+		PixelShader		=compile ps_4_0_level_9_3 NormalMapTriTex0SolidPS();
 #endif
 	}
 }
 
-technique TriTex0NormalMapSolidSpec
+technique10 TriTex0Spec
 {     
 	pass P0
 	{
-#if defined(SM4)
-		VertexShader	=compile vs_4_0 WNormWTanBTanTexVS();
-		PixelShader		=compile ps_4_0 NormalMapTriTex0SolidSpecPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 WNormWTanBTanTexVS();
-		PixelShader		=compile ps_3_0 NormalMapTriTex0SolidSpecPS();
-#else
-		VertexShader	=compile vs_2_0 WNormWTanBTanTexVS();
-		PixelShader		=compile ps_2_0 NormalMapTriTex0SolidSpecPS();
-#endif
-	}
-}
-
-technique TriTex0SpecPhys
-{     
-	pass P0
-	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 WNormWPosTexVS();
+		PixelShader		=compile ps_5_0 TriTex0SpecPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 WNormWPosTexVS();
+		PixelShader		=compile ps_4_1 TriTex0SpecPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 WNormWPosTexVS();
-		PixelShader		=compile ps_4_0 TriTex0SpecPhysPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 WNormWPosTexVS();
-		PixelShader		=compile ps_3_0 TriTex0SpecPhysPS();
+		PixelShader		=compile ps_4_0 TriTex0SpecPS();
 #else
-		VertexShader	=compile vs_2_0 WNormWPosTexVS();
-		PixelShader		=compile ps_2_0 TriTex0SpecPhysPS();
+		VertexShader	=compile vs_4_0_level_9_3 WNormWPosTexVS();
+		PixelShader		=compile ps_4_0_level_9_3 TriTex0SpecPS();
 #endif
 	}
 }
 
-technique TriSolidSpecPhys
+technique10 TriSolidSpec
 {     
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 WNormWPosVS();
+		PixelShader		=compile ps_5_0 TriSolidSpecPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 WNormWPosVS();
+		PixelShader		=compile ps_4_1 TriSolidSpecPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 WNormWPosVS();
-		PixelShader		=compile ps_4_0 TriSolidSpecPhysPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 WNormWPosVS();
-		PixelShader		=compile ps_3_0 TriSolidSpecPhysPS();
+		PixelShader		=compile ps_4_0 TriSolidSpecPS();
 #else
-		VertexShader	=compile vs_2_0 WNormWPosVS();
-		PixelShader		=compile ps_2_0 TriSolidSpecPhysPS();
+		VertexShader	=compile vs_4_0_level_9_3 WNormWPosVS();
+		PixelShader		=compile ps_4_0_level_9_3 TriSolidSpecPS();
 #endif
 	}
 }
 
-technique TriCelSolidSpecPhys
+technique10 TriCelSolidSpec
 {     
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 WNormWPosVS();
+		PixelShader		=compile ps_5_0 TriCelSolidSpecPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 WNormWPosVS();
+		PixelShader		=compile ps_4_1 TriCelSolidSpecPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 WNormWPosVS();
-		PixelShader		=compile ps_4_0 TriCelSolidSpecPhysPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 WNormWPosVS();
-		PixelShader		=compile ps_3_0 TriCelSolidSpecPhysPS();
+		PixelShader		=compile ps_4_0 TriCelSolidSpecPS();
 #else
-		VertexShader	=compile vs_2_0 WNormWPosVS();
-		PixelShader		=compile ps_2_0 TriCelSolidSpecPhysPS();
+		VertexShader	=compile vs_4_0_level_9_3 WNormWPosVS();
+		PixelShader		=compile ps_4_0_level_9_3 TriCelSolidSpecPS();
 #endif
 	}
 }
 
-technique TriTex0NormalMapSolidSpecPhys
+technique10 TriTex0NormalMapSolidSpec
 {     
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 WNormWTanBTanWPosVS();
+		PixelShader		=compile ps_5_0 NormalMapTriTex0SolidSpecPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 WNormWTanBTanWPosVS();
+		PixelShader		=compile ps_4_1 NormalMapTriTex0SolidSpecPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 WNormWTanBTanWPosVS();
-		PixelShader		=compile ps_4_0 NormalMapTriTex0SolidSpecPhysPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 WNormWTanBTanWPosVS();
-		PixelShader		=compile ps_3_0 NormalMapTriTex0SolidSpecPhysPS();
+		PixelShader		=compile ps_4_0 NormalMapTriTex0SolidSpecPS();
 #else
-		VertexShader	=compile vs_2_0 WNormWTanBTanWPosVS();
-		PixelShader		=compile ps_2_0 NormalMapTriTex0SolidSpecPhysPS();
+		VertexShader	=compile vs_4_0_level_9_3 WNormWTanBTanWPosVS();
+		PixelShader		=compile ps_4_0_level_9_3 NormalMapTriTex0SolidSpecPS();
 #endif
 	}
 }
 
-technique TriTex0NormalMapSpecPhys
+technique10 TriTex0NormalMapSpec
 {     
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 WNormWTanBTanWPosVS();
+		PixelShader		=compile ps_5_0 NormalMapTriTex0SpecPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 WNormWTanBTanWPosVS();
+		PixelShader		=compile ps_4_1 NormalMapTriTex0SpecPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 WNormWTanBTanWPosVS();
-		PixelShader		=compile ps_4_0 NormalMapTriTex0SpecPhysPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 WNormWTanBTanWPosVS();
-		PixelShader		=compile ps_3_0 NormalMapTriTex0SpecPhysPS();
+		PixelShader		=compile ps_4_0 NormalMapTriTex0SpecPS();
 #else
-		VertexShader	=compile vs_2_0 WNormWTanBTanWPosVS();
-		PixelShader		=compile ps_2_0 NormalMapTriTex0SpecPhysPS();
+		VertexShader	=compile vs_4_0_level_9_3 WNormWTanBTanWPosVS();
+		PixelShader		=compile ps_4_0_level_9_3 NormalMapTriTex0SpecPS();
 #endif
 	}
 }
 
-technique TriTex0NormalMapSolidSpecPhysInstanced
+technique10 TriTex0NormalMapSolidSpecInstanced
 {     
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 WNormWTanBTanWPosInstancedVS();
+		PixelShader		=compile ps_5_0 NormalMapTriTex0SolidSpecPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 WNormWTanBTanWPosInstancedVS();
+		PixelShader		=compile ps_4_1 NormalMapTriTex0SolidSpecPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 WNormWTanBTanWPosInstancedVS();
-		PixelShader		=compile ps_4_0 NormalMapTriTex0SolidSpecPhysPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 WNormWTanBTanWPosInstancedVS();
-		PixelShader		=compile ps_3_0 NormalMapTriTex0SolidSpecPhysPS();
+		PixelShader		=compile ps_4_0 NormalMapTriTex0SolidSpecPS();
 #else
-		VertexShader	=compile vs_2_0 WNormWTanBTanWPosInstancedVS();
-		PixelShader		=compile ps_2_0 NormalMapTriTex0SolidSpecPhysPS();
+		VertexShader	=compile vs_4_0_level_9_3 WNormWTanBTanWPosInstancedVS();
+		PixelShader		=compile ps_4_0_level_9_3 NormalMapTriTex0SolidSpecPS();
 #endif
 	}
 }
 
-technique Shadow
+technique10 Shadow
 {
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 WPosVS();
+		PixelShader		=compile ps_5_0 ShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 WPosVS();
+		PixelShader		=compile ps_4_1 ShadowPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 WPosVS();
 		PixelShader		=compile ps_4_0 ShadowPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 WPosVS();
-		PixelShader		=compile ps_3_0 ShadowPS();
 #else
-		VertexShader	=compile vs_2_0 WPosVS();
-		PixelShader		=compile ps_2_0 ShadowPS();
+		VertexShader	=compile vs_4_0_level_9_3 WPosVS();
+		PixelShader		=compile ps_4_0_level_9_3 ShadowPS();
 #endif
 	}
 }
 
-technique DMN
+technique10 DMN
 {
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 DMNVS();
+		PixelShader		=compile ps_5_0 DMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 DMNVS();
+		PixelShader		=compile ps_4_1 DMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 DMNVS();
 		PixelShader		=compile ps_4_0 DMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 DMNVS();
-		PixelShader		=compile ps_3_0 DMNPS();
 #else
-		VertexShader	=compile vs_2_0 DMNVS();
-		PixelShader		=compile ps_2_0 DMNPS();
+		VertexShader	=compile vs_4_0_level_9_3 DMNVS();
+		PixelShader		=compile ps_4_0_level_9_3 DMNPS();
 #endif
 	}
 }

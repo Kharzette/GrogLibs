@@ -369,125 +369,145 @@ struct VPosTex04Tex14Tex24Tex34Tex44Tex54
 	float4	TexCoord5	: TEXCOORD5;
 };
 
-struct VTex0
+struct VVPosTex0
 {
+	float4	Position	: SV_POSITION;
 	float2	TexCoord0	: TEXCOORD0;
 };
 
-struct VTex01
+struct VVPosTex01
 {
+	float4	Position	: SV_POSITION;
 	float	TexCoord0	: TEXCOORD0;
 };
 
-struct VTex03
+struct VVPosTex03
 {
+	float4	Position	: SV_POSITION;
 	float3	TexCoord0	: TEXCOORD0;
 };
 
-struct VTex04
+struct VVPosTex04
 {
+	float4	Position	: SV_POSITION;
 	float4	TexCoord0	: TEXCOORD0;
 };
 
-struct VTex0TanBiNorm
+struct VVPosTex0TanBiNorm
 {
+	float4	Position	: SV_POSITION;
 	float2	TexCoord0	: TEXCOORD0;
 	float3	Tangent		: TEXCOORD1;
 	float3	BiNormal	: TEXCOORD2;
 };
 
-struct VCubeTex0
+struct VVPosCubeTex0
 {
+	float4	Position	: SV_POSITION;
 	float3	TexCoord0	: TEXCOORD0;
 };
 
-struct VTex0Tex13
+struct VVPosTex0Tex13
 {
+	float4	Position	: SV_POSITION;
 	float2	TexCoord0	: TEXCOORD0;
 	float3	TexCoord1	: TEXCOORD1;
 };
 
-struct VTex0Tex14
+struct VVPosTex0Tex14
 {
+	float4	Position	: SV_POSITION;
 	float2	TexCoord0	: TEXCOORD0;
 	float4	TexCoord1	: TEXCOORD1;
 };
 
-struct VTex0Tex13VPos
+struct VVPosTex0Tex13VPos
 {
+	float4	Position	: SV_POSITION;
 	float2	TexCoord0	: TEXCOORD0;
 	float3	TexCoord1	: TEXCOORD1;
 	float3	VPos		: VPOS0;
 };
 
-struct VTex0Col0
+struct VVPosTex0Col0
 {
+	float4	Position	: SV_POSITION;
 	float2	TexCoord0	: TEXCOORD0;
 	float4	Color		: COLOR0;	
 };
 
-struct VTex0Col0TanBiNorm
+struct VVPosTex0Col0TanBiNorm
 {
+	float4	Position	: SV_POSITION;
 	float2	TexCoord0	: TEXCOORD0;
 	float4	Color		: COLOR0;	
 	float4	Tangent		: TANGENT0;
 	float4	BiNormal	: BINORMAL0;
 };
 
-struct VTex0Tex1SingleCol0
+struct VVPosTex0Tex1SingleCol0
 {
+	float4	Position	: SV_POSITION;
 	float2	TexCoord0	: TEXCOORD0;
 	float	TexCoord1	: TEXCOORD1;
 	float4	Color		: COLOR0;	
 };
 
-struct VTex0Single
+struct VVPosTex0Single
 {
+	float4	Position	: SV_POSITION;
 	float	TexCoord0	: TEXCOORD0;
 };
 
-struct VTex0Tex1Single
+struct VVPosTex0Tex1Single
 {
+	float4	Position	: SV_POSITION;
 	float2	TexCoord0	: TEXCOORD0;
 	float	TexCoord1	: TEXCOORD1;
 };
 
-struct VTex0Tex1
+struct VVPosTex0Tex1
 {
+	float4	Position	: SV_POSITION;
 	float2	TexCoord0	: TEXCOORD0;
 	float2	TexCoord1	: TEXCOORD1;
 };
 
-struct VTex03Tex13
+struct VVPosTex03Tex13
 {
+	float4	Position	: SV_POSITION;
 	float3	TexCoord0	: TEXCOORD0;
 	float3	TexCoord1	: TEXCOORD1;
 };
 
-struct VTex03Tex13VPos
+struct VVPosTex03Tex13VPos
 {
+	float4	Position	: SV_POSITION;
 	float3	TexCoord0	: TEXCOORD0;
 	float3	TexCoord1	: TEXCOORD1;
 	float3	VPos		: VPOS0;
 };
 
-struct VNormTex0Tex1
+struct VVPosNormTex0Tex1
 {
+	float4	Position	: SV_POSITION;
 	float3	Normal		: Normal;
 	float2	TexCoord0	: TEXCOORD0;
 	float2	TexCoord1	: TEXCOORD1;
 };
 
-struct VNormTanBiTanTex0
+struct VVPosNormTanBiTanTex0
 {
+	float4	Position	: SV_POSITION;
 	float3	Normal		: TEXCOORD0;
 	float3	Tangent		: TEXCOORD1;
 	float3	BiTangent	: TEXCOORD2;
 	float2	TexCoord0	: TEXCOORD3;
 };
 
-struct VNormTanBiTanTex0Tex1
+struct VVPosNormTanBiTanTex0Tex1
 {
+	float4	Position	: SV_POSITION;
 	float3	Normal		: TEXCOORD0;
 	float3	Tangent		: TEXCOORD1;
 	float3	BiTangent	: TEXCOORD2;
@@ -495,8 +515,9 @@ struct VNormTanBiTanTex0Tex1
 	float2	TexCoord1	: TEXCOORD4;
 };
 
-struct VNormTanBiTanTex0Col0
+struct VVPosNormTanBiTanTex0Col0
 {
+	float4	Position	: SV_POSITION;
 	float3	Normal		: TEXCOORD0;
 	float3	Tangent		: TEXCOORD1;
 	float3	BiTangent	: TEXCOORD2;
@@ -504,23 +525,26 @@ struct VNormTanBiTanTex0Col0
 	float4	Color		: COLOR0;
 };
 
-struct VTex0Tex1Col0
+struct VVPosTex0Tex1Col0
 {
+	float4	Position	: SV_POSITION;
 	float2	TexCoord0	: TEXCOORD0;
 	float2	TexCoord1	: TEXCOORD1;
 	float4	Color		: COLOR0;	
 };
 
-struct VTex0Tex1Col0Col1
+struct VVPosTex0Tex1Col0Col1
 {
+	float4	Position	: SV_POSITION;
 	float2	TexCoord0	: TEXCOORD0;
 	float2	TexCoord1	: TEXCOORD1;
 	float4	Color0		: COLOR0;
 	float4	Color1		: COLOR0;
 };
 
-struct VTex0Tex1Tex2Tex3Tex4Col0Intensity
+struct VVPosTex0Tex1Tex2Tex3Tex4Col0Intensity
 {
+	float4	Position	: SV_POSITION;
 	float2	TexCoord0	: TEXCOORD0;
 	float2	TexCoord1	: TEXCOORD1;
 	float2	TexCoord2	: TEXCOORD2;
@@ -530,44 +554,50 @@ struct VTex0Tex1Tex2Tex3Tex4Col0Intensity
 	float4	Intensity	: TEXCOORD5;
 };
 
-struct VTex04Tex14
+struct VVPosTex04Tex14
 {
+	float4	Position	: SV_POSITION;
 	float4	TexCoord0	: TEXCOORD0;
 	float4	TexCoord1	: TEXCOORD1;
 };
 
-struct VTex04Tex14VPos
+struct VVPosTex04Tex14VPos
 {
+	float4	Position	: SV_POSITION;
 	float4	TexCoord0	: TEXCOORD0;
 	float4	TexCoord1	: TEXCOORD1;
 	float3	VPos		: VPOS0;
 };
 
-struct VTex04Tex14Tex24
+struct VVPosTex04Tex14Tex24
 {
+	float4	Position	: SV_POSITION;
 	float4	TexCoord0	: TEXCOORD0;
 	float4	TexCoord1	: TEXCOORD1;
 	float4	TexCoord2	: TEXCOORD2;
 };
 
-struct VTex04Tex14Tex24Tex31
+struct VVPosTex04Tex14Tex24Tex31
 {
+	float4	Position	: SV_POSITION;
 	float4	TexCoord0	: TEXCOORD0;
 	float4	TexCoord1	: TEXCOORD1;
 	float4	TexCoord2	: TEXCOORD2;
 	float	TexCoord3	: TEXCOORD3;
 };
 
-struct VTex04Tex14Tex24Tex34
+struct VVPosTex04Tex14Tex24Tex34
 {
+	float4	Position	: SV_POSITION;
 	float4	TexCoord0	: TEXCOORD0;
 	float4	TexCoord1	: TEXCOORD1;
 	float4	TexCoord2	: TEXCOORD2;
 	float4	TexCoord3	: TEXCOORD3;
 };
 
-struct VTex04Tex14Tex24Tex34VPos
+struct VVPosTex04Tex14Tex24Tex34VPos
 {
+	float4	Position	: SV_POSITION;
 	float4	TexCoord0	: TEXCOORD0;
 	float4	TexCoord1	: TEXCOORD1;
 	float4	TexCoord2	: TEXCOORD2;
@@ -575,8 +605,9 @@ struct VTex04Tex14Tex24Tex34VPos
 	float3	VPos		: VPOS0;
 };
 
-struct VTex04Tex14Tex24Tex34Tex44
+struct VVPosTex04Tex14Tex24Tex34Tex44
 {
+	float4	Position	: SV_POSITION;
 	float4	TexCoord0	: TEXCOORD0;
 	float4	TexCoord1	: TEXCOORD1;
 	float4	TexCoord2	: TEXCOORD2;
@@ -584,8 +615,9 @@ struct VTex04Tex14Tex24Tex34Tex44
 	float4	TexCoord4	: TEXCOORD4;
 };
 
-struct VTex04Tex14Tex24Tex34Tex44Tex54
+struct VVPosTex04Tex14Tex24Tex34Tex44Tex54
 {
+	float4	Position	: SV_POSITION;
 	float4	TexCoord0	: TEXCOORD0;
 	float4	TexCoord1	: TEXCOORD1;
 	float4	TexCoord2	: TEXCOORD2;
@@ -593,4 +625,5 @@ struct VTex04Tex14Tex24Tex34Tex44Tex54
 	float4	TexCoord4	: TEXCOORD4;
 	float4	TexCoord5	: TEXCOORD5;
 };
+
 #endif	//_TYPESFXH

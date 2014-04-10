@@ -2,53 +2,29 @@
 //see http://home.comcast.net/~tom_forsyth/blog.wiki.html#Trilights
 
 //material id for borders etc
-shared int		mMaterialID;
+int	mMaterialID;
 
 //texture layers used on the surface
-shared texture	mTexture0;
-shared texture	mTexture1;
+shared Texture2D	mTexture0;
+shared Texture2D	mTexture1;
 
 //These are considered directional (no falloff)
-shared float4	mLightColor0;		//trilights need 3 colors
-shared float4	mLightColor1;		//trilights need 3 colors
-shared float4	mLightColor2;		//trilights need 3 colors
-shared float3	mLightDirection;
+float4	mLightColor0;		//trilights need 3 colors
+float4	mLightColor1;		//trilights need 3 colors
+float4	mLightColor2;		//trilights need 3 colors
+float3	mLightDirection;
 
-
-shared sampler TexSampler0 = sampler_state
-{
-	Texture		=mTexture0;
-
-	MinFilter	=Linear;
-	MagFilter	=Linear;
-	MipFilter	=Linear;
-
-	AddressU	=Wrap;
-	AddressV	=Wrap;
-};
-
-shared sampler TexSampler1 = sampler_state
-{
-	Texture		=mTexture1;
-
-	MinFilter	=Linear;
-	MagFilter	=Linear;
-	MipFilter	=Linear;
-
-	AddressU	=Wrap;
-	AddressV	=Wrap;
-};
-
+#include "RenderStates.fxh"
 
 //shared pixel shaders
 //just shows the shape for debugging
-float4 FullBrightSkinPS(VTex03 input) : COLOR
+float4 FullBrightSkinPS(VVPosTex03 input) : SV_Target
 {
 	return	mSolidColour;
 }
 
 //writes distance into a float rendertarget
-float4 ShadowPS(VTex03 input) : COLOR
+float4 ShadowPS(VVPosTex03 input) : SV_Target
 {
 	float	dist	=distance(mShadowLightPos, input.TexCoord0);
 
@@ -56,18 +32,18 @@ float4 ShadowPS(VTex03 input) : COLOR
 }
 
 //writes depth
-float4 DepthPS(VTex01 input) : COLOR0
+float4 DepthPS(VVPosTex01 input) : SV_Target0
 {
-	return	float4(input, 0, 0, 0);
+	return	float4(input.TexCoord0, 0, 0, 0);
 }
 
 //writes material id
-float4 MaterialPS(VTex01 input) : COLOR0
+float4 MaterialPS(VVPosTex01 input) : SV_Target0
 {
 	return	float4(mMaterialID, 0, 0, 0);
 }
 
-half4 DMNPS(VTex03Tex13 input) : COLOR0
+half4 DMNPS(VVPosTex03Tex13 input) : SV_Target0
 {
 	half4	ret;
 
@@ -79,9 +55,9 @@ half4 DMNPS(VTex03Tex13 input) : COLOR0
 }
 
 //single texture, single color modulated
-float4 Tex0Col0PS(VTex0Col0 input) : COLOR
+float4 Tex0Col0PS(VVPosTex0Col0 input) : SV_Target
 {
-	float4	texel	=tex2D(TexSampler0, input.TexCoord0);
+	float4	texel	=mTexture0.Sample(LinearWrap, input.TexCoord0);
 	
 	//gamma
 	texel	=pow(abs(texel), 2.2);
@@ -89,14 +65,14 @@ float4 Tex0Col0PS(VTex0Col0 input) : COLOR
 	float4	inColor		=input.Color;	
 	float4	texLitColor	=inColor * texel;
 	
-	return	pow(abs(texLitColor), 1 / 2.2);
+	return	texLitColor;
 }
 
 //normal mapped from tex1, with tex0 texturing
-float4 NormalMapTriTex0Tex1PS(VNormTanBiTanTex0Tex1 input) : COLOR
+float4 NormalMapTriTex0Tex1PS(VVPosNormTanBiTanTex0Tex1 input) : SV_Target
 {
-	float4	norm	=tex2D(TexSampler1, input.TexCoord1);
-	float4	texel0	=tex2D(TexSampler0, input.TexCoord0);
+	float4	norm	=mTexture1.Sample(LinearWrap, input.TexCoord1);
+	float4	texel0	=mTexture0.Sample(LinearWrap, input.TexCoord0);
 
 	float3	goodNorm	=ComputeNormalFromMap(
 		norm, input.Tangent, input.BiTangent, input.Normal);
@@ -109,8 +85,8 @@ float4 NormalMapTriTex0Tex1PS(VNormTanBiTanTex0Tex1 input) : COLOR
 	return	float4(texLitColor, texel0.w);
 }
 
-//Solid color, trilight, and expensive specular
-float4 TriSolidSpecPhysPS(VTex03Tex13 input) : COLOR
+//Solid color, trilight, and specular
+float4 TriSolidSpecPS(VVPosTex03Tex13 input) : SV_Target
 {
 	float3	pnorm	=input.TexCoord0;
 	float3	wpos	=input.TexCoord1;
@@ -129,65 +105,37 @@ float4 TriSolidSpecPhysPS(VTex03Tex13 input) : COLOR
 }
 
 //normal mapped from tex0, with solid color & trilight
-float4 NormalMapTriTex0SolidPS(VNormTanBiTanTex0Tex1 input) : COLOR
-{
-	float4	norm	=tex2D(TexSampler0, input.TexCoord0);
-
-	float3	goodNorm	=ComputeNormalFromMap(
-		norm, input.Tangent, input.BiTangent, input.Normal);
-	
-	float3	texLitColor	=ComputeTrilight(goodNorm, mLightDirection,
-							mLightColor0, mLightColor1, mLightColor2);
-
-	texLitColor	*=mSolidColour.xyz;
-	
-	return	float4(texLitColor, mSolidColour.w);
-}
-
-//normal mapped from tex0, with solid color and trilight and specular
-float4 NormalMapTriTex0SolidSpecPS(VTex04Tex14Tex24Tex34 input) : COLOR
+float4 NormalMapTriTex0SolidPS(VVPosTex04Tex14Tex24Tex34 input) : SV_Target
 {
 	float2	tex;
 
 	tex.x	=input.TexCoord0.w;
 	tex.y	=input.TexCoord1.w;
 
-	float4	norm	=tex2D(TexSampler0, tex);
-
+	float4	norm	=mTexture0.Sample(LinearWrap, tex);
 	float3	pnorm	=input.TexCoord0.xyz;
 	float3	tan		=input.TexCoord1.xyz;
 	float3	bitan	=input.TexCoord2.xyz;
 	float3	wpos	=input.TexCoord3.xyz;
 
 	float3	goodNorm	=ComputeNormalFromMap(norm, tan, bitan, pnorm);
-
-	float3	eyeVec	=normalize(mEyePos - wpos);
-
-	float3	r	=normalize(2 * dot(mLightDirection, goodNorm) * goodNorm - mLightDirection);
-
-	float	specDot	=dot(r, eyeVec);
-
-	float3	texLitColor	=ComputeTrilight(goodNorm, mLightDirection,
+	float3	triLight	=ComputeTrilight(goodNorm, mLightDirection,
 							mLightColor0, mLightColor1, mLightColor2);
 
-	float4	spec	=mSpecPower * mSpecColor *
-		max(pow(abs(specDot), mSpecPower), 0) * length(texLitColor);
+	float3	litSolid	=mSolidColour.xyz * triLight;
 
-	texLitColor	*=mSolidColour.xyz;
-	texLitColor	*=spec.xyz;
-	
-	return	float4(saturate(texLitColor), mSolidColour.w);
+	return	float4(litSolid, mSolidColour.w);
 }
 
-//Texture 0, trilight, and expensive specular
-float4 TriTex0SpecPhysPS(VTex04Tex14 input) : COLOR
+//Texture 0, trilight, and specular
+float4 TriTex0SpecPS(VVPosTex04Tex14 input) : SV_Target
 {
 	float2	tex;
 
 	tex.x	=input.TexCoord0.w;
 	tex.y	=input.TexCoord1.w;
 
-	float4	texColor	=tex2D(TexSampler0, tex);
+	float4	texColor	=mTexture0.Sample(LinearWrap, tex);
 
 	//gamma
 	texColor	=pow(abs(texColor), 2.2);
@@ -216,7 +164,7 @@ float4 TriTex0SpecPhysPS(VTex04Tex14 input) : COLOR
 }
 
 //cel shading, solid color, trilight and expensive specular
-float4 TriCelSolidSpecPhysPS(VTex03Tex13 input) : COLOR
+float4 TriCelSolidSpecPS(VVPosTex03Tex13 input) : SV_Target
 {
 	float3	pnorm	=input.TexCoord0;
 	float3	wpos	=input.TexCoord1;
@@ -250,16 +198,15 @@ float4 TriCelSolidSpecPhysPS(VTex03Tex13 input) : COLOR
 	return	float4(specular, mSolidColour.w);
 }
 
-//normal mapped from tex0, with solid color, trilight and expensive specular
-float4 NormalMapTriTex0SolidSpecPhysPS(VTex04Tex14Tex24Tex34 input) : COLOR
+//normal mapped from tex0, with solid color, trilight and specular
+float4 NormalMapTriTex0SolidSpecPS(VVPosTex04Tex14Tex24Tex34 input) : SV_Target
 {
 	float2	tex;
 
 	tex.x	=input.TexCoord0.w;
 	tex.y	=input.TexCoord1.w;
 
-	float4	norm	=tex2D(TexSampler0, tex);
-
+	float4	norm	=mTexture0.Sample(LinearWrap, tex);
 	float3	pnorm	=input.TexCoord0.xyz;
 	float3	tan		=input.TexCoord1.xyz;
 	float3	bitan	=input.TexCoord2.xyz;
@@ -277,16 +224,16 @@ float4 NormalMapTriTex0SolidSpecPhysPS(VTex04Tex14Tex24Tex34 input) : COLOR
 	return	float4(specular, mSolidColour.w);
 }
 
-//normal mapped from tex1, texture from tex0, with color tinting, trilight and expensive specular
-float4 NormalMapTriTex0SpecPhysPS(VTex04Tex14Tex24Tex34 input) : COLOR
+//normal mapped from tex1, texture from tex0, with color tinting, trilight and specular
+float4 NormalMapTriTex0SpecPS(VVPosTex04Tex14Tex24Tex34 input) : SV_Target
 {
 	float2	tex;
 
 	tex.x	=input.TexCoord0.w;
 	tex.y	=input.TexCoord1.w;
 
-	float4	norm	=tex2D(TexSampler1, tex);
-	float4	texCol	=tex2D(TexSampler0, tex);
+	float4	norm	=mTexture1.Sample(LinearWrap, tex);
+	float4	texCol	=mTexture0.Sample(LinearWrap, tex);
 
 	//gamma
 	texCol	=pow(abs(texCol), 2.2);
@@ -314,8 +261,8 @@ float4 NormalMapTriTex0SpecPhysPS(VTex04Tex14Tex24Tex34 input) : COLOR
 	return	float4(specular, mSolidColour.w);
 }
 
-//cel, passed in color and expensive specular
-float4 TriCelColorSpecPhysPS(VTex04Tex14Tex24 input) : COLOR
+//cel, passed in color and specular
+float4 TriCelColorSpecPS(VVPosTex04Tex14Tex24 input) : SV_Target
 {
 	float3	pnorm	=input.TexCoord0;
 	float3	wpos	=input.TexCoord1;
@@ -351,11 +298,11 @@ float4 TriCelColorSpecPhysPS(VTex04Tex14Tex24 input) : COLOR
 
 //two texture lookups, but one set of texcoords
 //alphas tex0 over tex1
-float4 Tex0Col0DecalPS(VTex0Col0 input) : COLOR
+float4 Tex0Col0DecalPS(VVPosTex0Col0 input) : SV_Target
 {
 	float4	texel0, texel1;
-	texel0	=tex2D(TexSampler0, input.TexCoord0);
-	texel1	=tex2D(TexSampler1, input.TexCoord0);
+	texel0	=mTexture0.Sample(LinearWrap, input.TexCoord0);
+	texel1	=mTexture1.Sample(LinearWrap, input.TexCoord0);
 	
 	float4	inColor	=input.Color;
 	
@@ -369,11 +316,11 @@ float4 Tex0Col0DecalPS(VTex0Col0 input) : COLOR
 }
 
 //two texture lookups, 2 texcoord, alpha tex0 over tex1
-float4 Tex0Tex1Col0DecalPS(VTex0Tex1Col0 input) : COLOR
+float4 Tex0Tex1Col0DecalPS(VVPosTex0Tex1Col0 input) : SV_Target
 {
 	float4	texel0, texel1;
-	texel0	=tex2D(TexSampler0, input.TexCoord0);
-	texel1	=tex2D(TexSampler1, input.TexCoord1);
+	texel0	=mTexture0.Sample(LinearWrap, input.TexCoord0);
+	texel1	=mTexture1.Sample(LinearWrap, input.TexCoord1);
 	
 	float4	inColor	=input.Color;
 	

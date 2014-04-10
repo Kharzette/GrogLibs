@@ -8,28 +8,30 @@
 #define	PI_OVER_TWO				1.5707963268f
 #define MAX_HALF				65504
 #define	OUTLINE_ALPHA_THRESHOLD	0.05
+
 //matrii
-shared float4x4	mWorld;
-shared float4x4 mView;
-shared float4x4 mProjection;
-shared float4x4	mLightViewProj;	//for shadowing
-shared float3	mEyePos;
+float4x4	mWorld;
+float4x4	mView;
+float4x4	mProjection;
+float4x4	mLightViewProj;	//for shadowing
+float3		mEyePos;
 
 //for tinting or diffuse
-shared float4	mSolidColour;
+float4	mSolidColour;
 
 //outline / cel related
-shared Texture	mCelTable;
+shared Texture1D	mCelTable;
 
 //for shadowmaps
-shared Texture	mShadowTexture;		//2D or cube
-shared float3	mShadowLightPos;	//point light location
-shared bool		mbDirectional;		//sunnish or point
-shared float	mShadowAtten;		//shadow attenuation
+shared Texture2D	mShadowTexture;		//2D
+shared Texture3D	mShadowCube;		//cube
+float3				mShadowLightPos;	//point light location
+bool				mbDirectional;		//sunnish or point
+float				mShadowAtten;		//shadow attenuation
 
 //specular stuff
-shared float4	mSpecColor;
-shared float	mSpecPower;
+float4	mSpecColor;
+float	mSpecPower;
 
 //specular behaviour defines
 //#define	CELALL			//for a goofy retro cga look
@@ -37,40 +39,7 @@ shared float	mSpecPower;
 #define	CELLIGHT		//for quantized light (the default)
 
 #include "Types.fxh"
-
-
-sampler CelSampler = sampler_state
-{
-	Texture		=mCelTable;
-
-	MinFilter	=Point;
-	MagFilter	=Point;
-	MipFilter	=Point;
-
-	AddressU	=Clamp;
-	AddressV	=Clamp;
-};
-
-sampler	ShadowSampler2D	=sampler_state
-{
-	Texture		=mShadowTexture;
-	MinFilter	=Point;
-	MagFilter	=Point;
-	MipFilter	=Point;
-	AddressU	=Clamp;
-	AddressV	=Clamp;
-};
-
-sampler	ShadowSampler3D	=sampler_state
-{
-	Texture		=mShadowTexture;
-	MinFilter	=Point;
-	MagFilter	=Point;
-	MipFilter	=Point;
-	AddressU	=Clamp;
-	AddressV	=Clamp;
-	AddressW	=Clamp;
-};
+#include "RenderStates.fxh"
 
 
 //chops a half3 down to a half2
@@ -213,37 +182,40 @@ float3 CalcCelColor(float3 colVal)
 
 //	float3	fracColor	=modf(colVal, colVal);
 
-//	ret.x	=tex1D(CelSampler, fracColor.x) + colVal.x;
-//	ret.y	=tex1D(CelSampler, fracColor.y) + colVal.y;
-//	ret.z	=tex1D(CelSampler, fracColor.z) + colVal.z;
+//	ret.x	=mCelTable.Sample(PointClamp1D, fracColor.x) + colVal.x;
+//	ret.y	=mCelTable.Sample(PointClamp1D, fracColor.y) + colVal.y;
+//	ret.z	=mCelTable.Sample(PointClamp1D, fracColor.z) + colVal.z;
 
 	float3	fracColor	=frac(colVal);
 
+//	ret	=mCelTable.Sample(PointClampCube, colVal);
+
 	if(colVal.x > 1)
 	{
-		ret.x	=tex1D(CelSampler, fracColor.x) + (colVal.x - fracColor.x);
+		ret.x	=mCelTable.Sample(PointClamp1D, fracColor.x) + (colVal.x - fracColor.x);
+//		ret.x	=tex1D(CelSampler, fracColor.x) + (colVal.x - fracColor.x);
 	}
 	else
 	{
-		ret.x	=tex1D(CelSampler, colVal.x);
+		ret.x	=mCelTable.Sample(PointClamp1D, colVal.x);
 	}
 
 	if(colVal.y > 1)
 	{
-		ret.y	=tex1D(CelSampler, fracColor.y) + (colVal.y - fracColor.y);
+		ret.y	=mCelTable.Sample(PointClamp1D, fracColor.y) + (colVal.y - fracColor.y);
 	}
 	else
 	{
-		ret.y	=tex1D(CelSampler, colVal.y);
+		ret.y	=mCelTable.Sample(PointClamp1D, colVal.y);
 	}
 
 	if(colVal.z > 1)
 	{
-		ret.z	=tex1D(CelSampler, fracColor.z) + (colVal.z - fracColor.z);
+		ret.z	=mCelTable.Sample(PointClamp1D, fracColor.z) + (colVal.z - fracColor.z);
 	}
 	else
 	{
-		ret.z	=tex1D(CelSampler, colVal.z);
+		ret.z	=mCelTable.Sample(PointClamp1D, colVal.z);
 	}
 
 	return	ret;
@@ -352,11 +324,11 @@ float4	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float4 
 	float	mapDepth;
 	if(bDirectional)
 	{
-		mapDepth	=tex2D(ShadowSampler2D, shadCoord.xy).r;
+		mapDepth	=mShadowTexture.Sample(PointClamp, shadCoord.xy).r;
 	}
 	else
 	{
-		mapDepth	=texCUBE(ShadowSampler3D, shadDir).r;
+		mapDepth	=mShadowTexture.Sample(PointClampCube, shadDir).r;
 	}
 
 	return	ApplyShadow(mapDepth, pixDepth, color);

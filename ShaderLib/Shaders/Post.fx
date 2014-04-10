@@ -21,6 +21,7 @@ Texture	mColorTex;
 
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
+#include "RenderStates.fxh"
 
 //bloom params
 float	mBloomThreshold;
@@ -59,46 +60,6 @@ float	mSharpNess;
 float	mBlurRadius	=7;
 float	mOpacity;
 
-sampler	NormalSampler	=sampler_state
-{
-	Texture		=mNormalTex;
-	MinFilter	=Point;
-	MagFilter	=Point;
-	MipFilter	=Point;
-	AddressU	=Clamp;
-	AddressV	=Clamp;
-};
-
-sampler	RandSampler	=sampler_state
-{
-	Texture		=mRandTex;
-	MinFilter	=Point;
-	MagFilter	=Point;
-	MipFilter	=Point;
-	AddressU	=Wrap;
-	AddressV	=Wrap;
-};
-
-sampler	ColorSampler	=sampler_state
-{
-	Texture		=mColorTex;
-	MinFilter	=Point;
-	MagFilter	=Point;
-	MipFilter	=Point;
-	AddressU	=Clamp;
-	AddressV	=Clamp;
-};
-
-sampler	BlurTargetSampler	=sampler_state
-{
-	Texture		=mBlurTargetTex;
-	MinFilter	=Linear;
-	MagFilter	=Linear;
-	MipFilter	=Linear;
-	AddressU	=Clamp;
-	AddressV	=Clamp;
-};
-
 
 //helper functions
 float3 DecodeNormal(float4 enc)
@@ -115,7 +76,7 @@ float3 DecodeNormal(float4 enc)
 
 float3 PositionFromDepth(float2 texCoord, float3 ray)
 {
-	float	depth	=tex2D(NormalSampler, texCoord).w;
+	float	depth	=mNormalTex.Sample(PointClamp, texCoord).w;
 	float3	pos		=ray * depth;
 	
 	return	pos;
@@ -130,14 +91,13 @@ float3 GetFrustumRay(in float2 texCoord)
 
 float fetch_eye_z(float2 uv)
 {
-	float	z	=tex2D(NormalSampler, uv).w;
-	return	z;
+	return	mNormalTex.Sample(PointClamp, uv).w;
 }
 
 float BlurFunction(float2 uv, float r, float center_c,
 					float center_d, inout float w_total)
 {
-	float	c	=tex2D(BlurTargetSampler, uv);
+	float	c	=mBlurTargetTex.Sample(LinearClamp, uv);
 	float	d	=fetch_eye_z(uv);
 
 	float	ddiff	=d - center_d;
@@ -200,7 +160,7 @@ float4	AOPS(VTex0Tex13VPos input) : COLOR0
 {
 	float2	ssc	=input.TexCoord0;
 
-	float4	ndepth	=tex2D(NormalSampler, ssc);
+	float4	ndepth	=mNormalTex.Sample(PointClamp, ssc);
 	float	depth	=ndepth.w;
 	float3	cPos	=input.TexCoord1 * depth;
 	float3	cNormal	=normalize(DecodeNormal(ndepth));
@@ -210,7 +170,7 @@ float4	AOPS(VTex0Tex13VPos input) : COLOR0
 
 	float	ssr	=mProjConst * mRadius / (depth * mFarClip);
 
-	float2	randomSpin	=tex2D(RandSampler, input.VPos * mInvViewPort * mRandTexSize).rg;
+	float2	randomSpin	=mRandTex.Sample(PointWrap, input.VPos * mInvViewPort * mRandTexSize).rg;
 
 	float	amount	=0;
 	for(int i=0;i < NUMSAMPLES;++i)
@@ -218,7 +178,7 @@ float4	AOPS(VTex0Tex13VPos input) : COLOR0
 		float2	unitOffset	=reflect(mSamples[i], randomSpin);
 		float2	offset		=float2(unitOffset * ssr);
 		float2	ssp			=offset + ssc;
-		float	sDepth		=tex2D(NormalSampler, ssp).w;
+		float	sDepth		=mNormalTex.Sample(PointClamp, ssp).w;
 
 		ssp		=(ssp - 0.5f) * 2;
 		ssp.y	*=-1.0f;
@@ -245,7 +205,7 @@ float4	AOPS(VTex0Tex13VPos input) : COLOR0
 
 float4	BloomExtractPS(VTex0Tex13VPos input) : COLOR0
 {
-	float4	ret	=tex2D(BlurTargetSampler, input.TexCoord0);
+	float4	ret	=mBlurTargetTex.Sample(LinearClamp, input.TexCoord0);
 
 	return	saturate((ret - mBloomThreshold) / (1 - mBloomThreshold));
 }
@@ -253,8 +213,8 @@ float4	BloomExtractPS(VTex0Tex13VPos input) : COLOR0
 float4	BloomCombinePS(VTex0Tex13VPos input) : COLOR0
 {
 	//Look up the bloom and original base image colors.
-	float4	bloom	=tex2D(BlurTargetSampler, input.TexCoord0);
-	float4	base	=tex2D(ColorSampler, input.TexCoord0);
+	float4	bloom	=mBlurTargetTex.Sample(LinearClamp, input.TexCoord0);
+	float4	base	=mColorTex.Sample(PointClamp, input.TexCoord0);
     
 	//Adjust color saturation and intensity.
 	bloom	=AdjustSaturation(bloom, mBloomSaturation) * mBloomIntensity;
@@ -274,7 +234,7 @@ float4	GaussianBlurXPS(VTex0Tex13VPos input) : COLOR0
 
 	for(int i=0;i < KERNEL_SIZE;++i)
 	{
-		ret	+=tex2D(BlurTargetSampler, input.TexCoord0 + mOffsetsX[i]) * mWeightsX[i];
+		ret	+=mBlurTargetTex.Sample(LinearClamp, input.TexCoord0 + mOffsetsX[i]) * mWeightsX[i];
 	}
 	return	ret;
 }
@@ -285,7 +245,7 @@ float4	GaussianBlurYPS(VTex0Tex13VPos input) : COLOR0
 
 	for(int i=0;i < KERNEL_SIZE;++i)
 	{
-		ret	+=tex2D(BlurTargetSampler, input.TexCoord0 + mOffsetsY[i]) * mWeightsY[i];
+		ret	+=mBlurTargetTex.Sample(LinearClamp, input.TexCoord0 + mOffsetsY[i]) * mWeightsY[i];
 	}
 	return	ret;
 }
@@ -296,7 +256,7 @@ float4	BiLatBlurXPS(VTex0Tex13VPos input) : COLOR0
 	float	w_total		=0;
 //	float2	screenCoord	=input.VPos.xy * mInvViewPort;
 	float2	screenCoord	=input.TexCoord0;
-	float	center_c	=tex2D(BlurTargetSampler, screenCoord);
+	float	center_c	=mBlurTargetTex.Sample(LinearClamp, screenCoord);
 	float	center_d	=fetch_eye_z(screenCoord);
 
 	for(float r = -RADIUS;r <= RADIUS;++r)
@@ -314,7 +274,7 @@ float4	BiLatBlurYPS(VTex0Tex13VPos input) : COLOR0
 	float	w_total		=0;
 //	float2	screenCoord	=input.VPos.xy * mInvViewPort;
 	float2	screenCoord	=input.TexCoord0;
-	float	center_c	=tex2D(BlurTargetSampler, screenCoord);
+	float	center_c	=mBlurTargetTex.Sample(LinearClamp, screenCoord);
 	float	center_d	=fetch_eye_z(screenCoord);
 
 	for(float r = -RADIUS;r <= RADIUS;++r)
@@ -323,13 +283,14 @@ float4	BiLatBlurYPS(VTex0Tex13VPos input) : COLOR0
 		b			+=BlurFunction(uv, r, center_c, center_d, w_total);
 	}
 
-	return	b / w_total * tex2D(ColorSampler, input.TexCoord0);
+	return	b / w_total * mColorTex.Sample(PointClamp, input.TexCoord0);
+	return	b / w_total * mColorTex.Sample(PointClamp, input.TexCoord0);
 }
 
 //draws the material id in shades for debuggery
 float4	DebugMatIDDraw(VTex0 input) : COLOR0
 {
-	half4	dmn	=tex2D(NormalSampler, input.TexCoord0);
+	half4	dmn	=mNormalTex.Sample(PointClamp, input.TexCoord0);
 
 	float	matShade	=dmn.y * 0.01;
 
@@ -339,7 +300,7 @@ float4	DebugMatIDDraw(VTex0 input) : COLOR0
 //draws the depth in shades for debuggery
 float4	DebugDepthDraw(VTex0 input) : COLOR0
 {
-	half4	dmn	=tex2D(NormalSampler, input.TexCoord0);
+	half4	dmn	=mNormalTex.Sample(PointClamp, input.TexCoord0);
 
 	dmn.x	/=1000.0;
 
@@ -349,7 +310,7 @@ float4	DebugDepthDraw(VTex0 input) : COLOR0
 //draws the normals for debuggery
 float4	DebugNormalDraw(VTex0 input) : COLOR0
 {
-	half4	dmn	=tex2D(NormalSampler, input.TexCoord0);
+	half4	dmn	=mNormalTex.Sample(PointClamp, input.TexCoord0);
 
 	half3	norm	=DecodeNormal(dmn.zw);
 
@@ -370,7 +331,7 @@ float4	OutlinePS(VTex0 input) : COLOR0
 #endif
 
 	//read center
-	center	=tex2D(NormalSampler, uv);
+	center	=mNormalTex.Sample(PointClamp, uv);
 
 #if defined(LINE_OCCLUSION_TEST)
 	//check for material ID 0, this is a hack for stuff like
@@ -383,15 +344,16 @@ float4	OutlinePS(VTex0 input) : COLOR0
 
 	//one texel around center
 	//format is x depth, y matid, zw normal
-	up			=tex2D(NormalSampler, uv + oy);
-	left		=tex2D(NormalSampler, uv - ox);
-	right		=tex2D(NormalSampler, uv + ox);
-	down		=tex2D(NormalSampler, uv - oy);
+	up			=mNormalTex.Sample(PointClamp, uv + oy);
+	up			=mNormalTex.Sample(PointClamp, uv + oy);
+	left		=mNormalTex.Sample(PointClamp, uv - ox);
+	right		=mNormalTex.Sample(PointClamp, uv + ox);
+	down		=mNormalTex.Sample(PointClamp, uv - oy);
 #if !defined(SM2)
-	upLeft		=tex2D(NormalSampler, uv - ox + oy);
-	upRight		=tex2D(NormalSampler, uv + ox + oy);
-	downLeft	=tex2D(NormalSampler, uv - ox - oy);
-	downRight	=tex2D(NormalSampler, uv + ox - oy);
+	upLeft		=mNormalTex.Sample(PointClamp, uv - ox + oy);
+	upRight		=mNormalTex.Sample(PointClamp, uv + ox + oy);
+	downLeft	=mNormalTex.Sample(PointClamp, uv - ox - oy);
+	downRight	=mNormalTex.Sample(PointClamp, uv + ox - oy);
 #endif
 
 #if defined(LINE_OCCLUSION_TEST)
@@ -533,8 +495,8 @@ float4	OutlinePS(VTex0 input) : COLOR0
 
 float4	ModulatePS(VTex0 input) : COLOR0
 {
-	float4	color	=tex2D(ColorSampler, input.TexCoord0);
-	float4	color2	=tex2D(BlurTargetSampler, input.TexCoord0);
+	float4	color	=mColorTex.Sample(PointClamp, input.TexCoord0);
+	float4	color2	=mBlurTargetTex.Sample(LinearClamp, input.TexCoord0);
 
 	color	*=color2;
 
@@ -544,7 +506,7 @@ float4	ModulatePS(VTex0 input) : COLOR0
 
 float4	BleachBypassPS(VTex0 input) : COLOR0
 {
-	float4	base		=tex2D(ColorSampler, input.TexCoord0);
+	float4	base		=mColorTex.Sample(PointClamp, input.TexCoord0);
 	float3	lumCoeff	=float3(0.25, 0.65, 0.1);
 	float	lum			=dot(lumCoeff, base.rgb);
 
@@ -566,7 +528,7 @@ float4	BleachBypassPS(VTex0 input) : COLOR0
 
 //alot of these are too beefy for SM2
 #if !defined(SM2)
-technique AmbientOcclusion
+technique10 AmbientOcclusion
 {
 	pass P0
 	{
@@ -580,7 +542,7 @@ technique AmbientOcclusion
 	}
 }
 
-technique GaussianBlurX
+technique10 GaussianBlurX
 {
 	pass P0
 	{
@@ -594,7 +556,7 @@ technique GaussianBlurX
 	}
 }
 
-technique GaussianBlurY
+technique10 GaussianBlurY
 {
 	pass P0
 	{
@@ -608,7 +570,7 @@ technique GaussianBlurY
 	}
 }
 
-technique BilateralBlur
+technique10 BilateralBlur
 {
 	pass pX
 	{
@@ -633,7 +595,7 @@ technique BilateralBlur
 	}
 }
 
-technique BloomExtract
+technique10 BloomExtract
 {
 	pass P0
 	{
@@ -647,7 +609,7 @@ technique BloomExtract
 	}
 }
 
-technique BloomCombine
+technique10 BloomCombine
 {
 	pass P0
 	{
@@ -662,7 +624,7 @@ technique BloomCombine
 }
 #endif
 
-technique Outline
+technique10 Outline
 {
 	pass P0
 	{
@@ -674,12 +636,12 @@ technique Outline
 		PixelShader		=compile ps_3_0 OutlinePS();
 #else
 		VertexShader	=compile vs_2_0 OutlineVS();
-		PixelShader		=compile ps_2_0 OutlinePS();
+		PixelShader		=compile ps_4_0_level_9_3 OutlinePS();
 #endif
 	}
 }
 
-technique BleachBypass
+technique10 BleachBypass
 {
 	pass P0
 	{
@@ -691,12 +653,12 @@ technique BleachBypass
 		PixelShader		=compile ps_3_0 BleachBypassPS();
 #else
 		VertexShader	=compile vs_2_0 OutlineVS();
-		PixelShader		=compile ps_2_0 BleachBypassPS();
+		PixelShader		=compile ps_4_0_level_9_3 BleachBypassPS();
 #endif
 	}
 }
 
-technique Modulate
+technique10 Modulate
 {
 	pass P0
 	{
@@ -707,8 +669,8 @@ technique Modulate
 		VertexShader	=compile vs_3_0 OutlineVS();
 		PixelShader		=compile ps_3_0 ModulatePS();
 #else
-		VertexShader	=compile vs_2_0 OutlineVS();
-		PixelShader		=compile ps_2_0 ModulatePS();
+		VertexShader	=compile vs_4_0_level_9_3 OutlineVS();
+		PixelShader		=compile ps_4_0_level_9_3 ModulatePS();
 #endif
 	}
 }

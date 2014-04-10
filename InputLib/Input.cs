@@ -104,8 +104,6 @@ namespace InputLib
 						mKeysUp.Add(kiea.MakeCode, new KeyHeldInfo(kh));
 					}
 					mKeysHeld.Remove(kiea.MakeCode);
-//					Debug.WriteLine(ts + "," + kiea.Key + "," + kiea.MakeCode
-//						+ "," + kiea.ScanCodeFlags + "," + kiea.State);
 				}
 			}
 			else
@@ -118,8 +116,6 @@ namespace InputLib
 				kh.mCode				=kiea.MakeCode;
 
 				mKeysHeld.Add(kiea.MakeCode, kh);
-//				Debug.WriteLine(ts + "," + kiea.Key + "," + kiea.MakeCode
-//					+ "," + kiea.ScanCodeFlags + "," + kiea.State);
 			}
 		}
 
@@ -131,7 +127,6 @@ namespace InputLib
 			foreach(KeyValuePair<int, KeyHeldInfo> keys in mKeysHeld)
 			{
 				keys.Value.mTimeHeld	=ts - keys.Value.mInitialPressTime;
-//				Debug.WriteLine("TimeHeld: " + keys.Value.mTimeHeld);
 			}
 		}
 
@@ -167,8 +162,6 @@ namespace InputLib
 		List<InputAction> ComputeActions()
 		{
 			List<InputAction>	acts	=new List<InputAction>();
-
-			Debug.WriteLine("Computeactions()");
 
 			long	ts	=Stopwatch.GetTimestamp();
 
