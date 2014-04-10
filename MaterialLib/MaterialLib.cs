@@ -81,6 +81,132 @@ namespace MaterialLib
 		}
 
 
+		public List<string> GetMaterialTechniques(string matName)
+		{
+			List<string>	ret	=new List<string>();
+
+			if(!mMats.ContainsKey(matName))
+			{
+				return	ret;
+			}
+
+			Effect	matFX	=mMats[matName].Shader;
+			if(matFX == null)
+			{
+				return	ret;
+			}
+
+			if(!mFX.ContainsValue(matFX))
+			{
+				return	ret;
+			}
+
+			for(int i=0;;i++)
+			{
+				EffectTechnique	et	=matFX.GetTechniqueByIndex(i);
+				if(et == null)
+				{
+					break;
+				}
+				if(!et.IsValid)
+				{
+					break;
+				}
+				ret.Add(et.Description.Name);
+			}
+			return	ret;
+		}
+
+
+		public List<string> GetEffects()
+		{
+			List<string>	ret	=new List<string>();
+
+			foreach(KeyValuePair<string, Effect> fx in mFX)
+			{
+				ret.Add(fx.Key);
+			}
+			return	ret;
+		}
+
+
+		public string GetMaterialTechnique(string matName)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return	null;
+			}
+			return	mMats[matName].Technique.Description.Name;
+		}
+
+
+		public string GetMaterialEffect(string matName)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return	null;
+			}
+
+			Effect	matFX	=mMats[matName].Shader;
+			if(matFX == null)
+			{
+				return	null;
+			}
+
+			if(!mFX.ContainsValue(matFX))
+			{
+				return	null;
+			}
+			foreach(KeyValuePair<string, Effect> fx in mFX)
+			{
+				if(fx.Value == matFX)
+				{
+					return	fx.Key;
+				}
+			}
+			return	null;
+		}
+
+
+		public bool RenameMaterial(string name, string newName)
+		{
+			if(name == null || newName == null)
+			{
+				return	false;
+			}
+			if(!mMats.ContainsKey(name))
+			{
+				return	false;
+			}
+			if(mMats.ContainsKey(newName))
+			{
+				return	false;
+			}
+			
+			Material	mat	=mMats[name];
+
+			mMats.Remove(name);
+
+			mat.Name	=newName;
+
+			mMats.Add(newName, mat);
+
+			return	true;
+		}
+
+
+		public List<string> GetMaterialNames()
+		{
+			List<string>	ret	=new List<string>();
+
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				ret.Add(mat.Key);
+			}
+			return	ret;
+		}
+
+
 		public void SetMaterialEffect(string matName, string fxName)
 		{
 			if(!mMats.ContainsKey(matName))
