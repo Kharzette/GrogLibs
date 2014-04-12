@@ -231,6 +231,10 @@ namespace MaterialLib
 		//list of parameter variables per shader
 		Dictionary<string, List<EffectVariable>>	mVars	=new Dictionary<string, List<EffectVariable>>();
 
+		//data driven set of ignored and hidden parameters (see text file)
+		Dictionary<string, List<string>>	mIgnoreData	=new Dictionary<string,List<string>>();
+		Dictionary<string, List<string>>	mHiddenData	=new Dictionary<string,List<string>>();
+
 		public enum ShaderModel
 		{
 			SM5, SM41, SM4, SM2
@@ -241,6 +245,7 @@ namespace MaterialLib
 		public MaterialLib(Device dev, ShaderModel sm)
 		{
 			LoadShaders(dev, sm);
+			LoadParameterData();
 
 			GrabVariables();
 		}
@@ -272,6 +277,26 @@ namespace MaterialLib
 			}
 			mMats[matName].Clear();
 			mMats.Remove(matName);
+		}
+
+
+		public void GuessParameterVisibility(string matName)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return;
+			}
+			mMats[matName].GuessParameterVisibility(mIgnoreData, mHiddenData);
+		}
+
+
+		public void ResetParameterVisibility(string matName)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return;
+			}
+			mMats[matName].ResetParameterVisibility();
 		}
 
 
@@ -324,13 +349,13 @@ namespace MaterialLib
 		}
 
 
-		public BindingList<EffectVariableValue> GetMaterialVariables(string matName)
+		public BindingList<EffectVariableValue> GetMaterialGUIVariables(string matName)
 		{
 			if(!mMats.ContainsKey(matName))
 			{
 				return	null;
 			}
-			return	mMats[matName].GetVariables();
+			return	mMats[matName].GetGUIVariables();
 		}
 
 
@@ -547,6 +572,134 @@ namespace MaterialLib
 					mVars[fx.Key].Add(ev);
 				}
 			}
+		}
+
+
+		public void HideMaterialVariables(string matName, List<string> toHide)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return;
+			}
+			Material	mat	=mMats[matName];
+
+			mat.Hide(toHide);
+		}
+
+
+		public void IgnoreMaterialVariables(string matName, List<string> toIgnore)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return;
+			}
+			Material	mat	=mMats[matName];
+
+			mat.Ignore(toIgnore);
+		}
+
+
+		void LoadParameterData()
+		{
+			FileStream		fs	=new FileStream("Shaders/ParameterData.txt", FileMode.Open, FileAccess.Read);
+			StreamReader	sr	=new StreamReader(fs);
+
+			string			curTechnique	="";
+			string			curCategory		="";
+			List<string>	curStuff		=new List<string>();
+			for(;;)
+			{
+				string	line	=sr.ReadLine();
+				if(line.StartsWith("//"))
+				{
+					continue;
+				}
+
+				//python style!
+				if(line.StartsWith("\t\t"))
+				{
+					Debug.Assert(curTechnique != "");
+					Debug.Assert(curCategory != "");
+
+					if(curCategory == "Ignored")
+					{
+						curStuff.Add(line.Trim());
+					}
+					else if(curCategory == "Hidden")
+					{
+						curStuff.Add(line.Trim());
+					}
+					else
+					{
+						Debug.Assert(false);
+					}
+				}
+				else if(line.StartsWith("\t"))
+				{
+					if(curStuff.Count > 0)
+					{
+						if(curCategory == "Ignored")
+						{
+							mIgnoreData.Add(curTechnique, curStuff);
+						}
+						else if(curCategory == "Hidden")
+						{
+							mHiddenData.Add(curTechnique, curStuff);
+						}
+						else
+						{
+							Debug.Assert(false);
+						}
+						curStuff	=new List<string>();
+					}
+					curCategory	=line.Trim();
+				}
+				else
+				{
+					if(curStuff.Count > 0)
+					{
+						if(curCategory == "Ignored")
+						{
+							mIgnoreData.Add(curTechnique, curStuff);
+						}
+						else if(curCategory == "Hidden")
+						{
+							mHiddenData.Add(curTechnique, curStuff);
+						}
+						else
+						{
+							Debug.Assert(false);
+						}
+						curStuff	=new List<string>();
+					}
+					curCategory		="";
+					curTechnique	=line.Trim();
+				}
+
+				if(sr.EndOfStream)
+				{
+					if(curStuff.Count > 0)
+					{
+						if(curCategory == "Ignored")
+						{
+							mIgnoreData.Add(curTechnique, curStuff);
+						}
+						else if(curCategory == "Hidden")
+						{
+							mHiddenData.Add(curTechnique, curStuff);
+						}
+						else
+						{
+							Debug.Assert(false);
+						}
+						curStuff	=new List<string>();
+					}
+					break;
+				}
+			}
+
+			sr.Close();
+			fs.Close();
 		}
 	}
 }

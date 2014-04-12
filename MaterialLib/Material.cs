@@ -25,6 +25,12 @@ namespace MaterialLib
 		//all of the shader variables TODO: hide/ignore some
 		Dictionary<string, EffectVariableValue>	mVars	=new Dictionary<string, EffectVariableValue>();
 
+		//stuff the gui doesn't want to see
+		List<EffectVariableValue>	mHidden	=new List<EffectVariableValue>();
+
+		//skip these when assigning parameters to the shader
+		List<EffectVariableValue>	mIgnored	=new List<EffectVariableValue>();
+
 
 		internal Material(string name)
 		{
@@ -91,15 +97,64 @@ namespace MaterialLib
 		}
 
 
-		internal BindingList<EffectVariableValue> GetVariables()
+		internal BindingList<EffectVariableValue> GetGUIVariables()
 		{
 			BindingList<EffectVariableValue>	ret	=new BindingList<EffectVariableValue>();
 
 			foreach(KeyValuePair<string, EffectVariableValue> var in mVars)
 			{
+				if(mIgnored.Contains(var.Value))
+				{
+					continue;
+				}
+				if(mHidden.Contains(var.Value))
+				{
+					continue;
+				}
 				ret.Add(var.Value);
 			}
 			return	ret;
+		}
+
+
+		internal void Ignore(List<string> toIgnore)
+		{
+			foreach(string vname in toIgnore)
+			{
+				if(!mVars.ContainsKey(vname))
+				{
+					continue;
+				}
+				if(mIgnored.Contains(mVars[vname]))
+				{
+					continue;
+				}
+				mIgnored.Add(mVars[vname]);
+			}
+		}
+
+
+		internal void Hide(List<string> toHide)
+		{
+			foreach(string vname in toHide)
+			{
+				if(!mVars.ContainsKey(vname))
+				{
+					continue;
+				}
+				if(mHidden.Contains(mVars[vname]))
+				{
+					continue;
+				}
+				mHidden.Add(mVars[vname]);
+			}
+		}
+
+
+		internal void UnHideAll()
+		{
+			mHidden.Clear();
+			mIgnored.Clear();
 		}
 
 
@@ -122,9 +177,15 @@ namespace MaterialLib
 		{
 			foreach(KeyValuePair<string, EffectVariableValue> varVal in mVars)
 			{
+				if(mIgnored.Contains(varVal.Value))
+				{
+					continue;
+				}
+
 				object			val	=varVal.Value.mValue;
 				EffectVariable	var	=varVal.Value.mVar;
 
+				//todo: need to support setting params to null
 				if(val == null)
 				{
 					continue;
@@ -231,6 +292,8 @@ namespace MaterialLib
 		internal void SetVariables(List<EffectVariable> vars)
 		{
 			mVars.Clear();
+			mHidden.Clear();
+			mIgnored.Clear();
 
 			foreach(EffectVariable var in vars)
 			{
@@ -254,6 +317,35 @@ namespace MaterialLib
 			EffectVariableValue	evv	=mVars[name];
 
 			evv.mValue	=value;
+		}
+
+
+		internal void GuessParameterVisibility(
+			Dictionary<string, List<string>> ignoreData,
+			Dictionary<string, List<string>> hiddenData)
+		{
+			//clear existing hide/ignore stuff
+			mHidden.Clear();
+			mIgnored.Clear();
+
+			string	tech	=mTechnique.Description.Name;
+
+			if(ignoreData.ContainsKey(tech))
+			{
+				Ignore(ignoreData[tech]);
+			}
+
+			if(hiddenData.ContainsKey(tech))
+			{
+				Hide(hiddenData[tech]);
+			}
+		}
+
+
+		internal void ResetParameterVisibility()
+		{
+			mIgnored.Clear();
+			mHidden.Clear();
 		}
 	}
 }

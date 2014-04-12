@@ -18,38 +18,22 @@ TriTex0
 		mSpecColor
 		mSpecPower
 		mMaterialID
-	Hidden
-		mTexture1
-		mSolidColour
-		mBones
-		mWorld
-		mView
-		mProjection
-		mLightViewProj
-		mEyePos
-		mCelTable
-		mShadowTexture
-		mShadowLightPos
-		mbDirectional
-		mShadowAtten
-		mSpecColor
-		mSpecPower
-		mMaterialID
-TriTex0NormalMap
-	Ignored
-		mTexture1
-		mSolidColour
-		mBones
-		mLightViewProj
-		mEyePos
-		mCelTable
-		mShadowTexture
-		mShadowLightPos
-		mbDirectional
-		mShadowAtten
-		mSpecColor
-		mSpecPower
-		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture1
 		mSolidColour
@@ -81,6 +65,22 @@ TriTex0NormalMapSolid
 		mSpecColor
 		mSpecPower
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture1
 		mBones
@@ -97,116 +97,138 @@ TriTex0NormalMapSolid
 		mSpecColor
 		mSpecPower
 		mMaterialID
+TriTex0Spec
+	Ignored
+		mTexture1
+		mSolidColour
+		mBones
+		mLightViewProj
+		mEyePos
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
+	Hidden
+		mTexture1
+		mSolidColour
+		mBones
+		mWorld
+		mView
+		mProjection
+		mLightViewProj
+		mEyePos
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+TriSolidSpec
+	Ignored
+		mTexture0
+		mTexture1
+		mBones
+		mLightViewProj
+		mEyePos
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
+	Hidden
+		mTexture0
+		mTexture1
+		mBones
+		mWorld
+		mView
+		mProjection
+		mLightViewProj
+		mEyePos
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+TriCelSolidSpec
+	Ignored
+		mTexture0
+		mTexture1
+		mBones
+		mLightViewProj
+		mEyePos
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
+	Hidden
+		mTexture0
+		mTexture1
+		mBones
+		mWorld
+		mView
+		mProjection
+		mLightViewProj
+		mEyePos
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
 TriTex0NormalMapSolidSpec
-	Ignored
-		mTexture1
-		mBones
-		mLightViewProj
-		mEyePos
-		mCelTable
-		mShadowTexture
-		mShadowLightPos
-		mbDirectional
-		mShadowAtten
-		mMaterialID
-	Hidden
-		mTexture1
-		mBones
-		mWorld
-		mView
-		mProjection
-		mLightViewProj
-		mEyePos
-		mCelTable
-		mShadowTexture
-		mShadowLightPos
-		mbDirectional
-		mShadowAtten
-		mMaterialID
-TriTex0SpecPhys
-	Ignored
-		mTexture1
-		mSolidColour
-		mBones
-		mLightViewProj
-		mEyePos
-		mCelTable
-		mShadowTexture
-		mShadowLightPos
-		mbDirectional
-		mShadowAtten
-		mMaterialID
-	Hidden
-		mTexture1
-		mSolidColour
-		mBones
-		mWorld
-		mView
-		mProjection
-		mLightViewProj
-		mEyePos
-		mCelTable
-		mShadowTexture
-		mShadowLightPos
-		mbDirectional
-		mShadowAtten
-		mMaterialID
-TriSolidSpecPhys
-	Ignored
-		mTexture0
-		mTexture1
-		mBones
-		mLightViewProj
-		mEyePos
-		mCelTable
-		mShadowTexture
-		mShadowLightPos
-		mbDirectional
-		mShadowAtten
-		mMaterialID
-	Hidden
-		mTexture0
-		mTexture1
-		mBones
-		mWorld
-		mView
-		mProjection
-		mLightViewProj
-		mEyePos
-		mCelTable
-		mShadowTexture
-		mShadowLightPos
-		mbDirectional
-		mShadowAtten
-		mMaterialID
-TriCelSolidSpecPhys
-	Ignored
-		mTexture0
-		mTexture1
-		mBones
-		mLightViewProj
-		mEyePos
-		mShadowTexture
-		mShadowLightPos
-		mbDirectional
-		mShadowAtten
-		mMaterialID
-	Hidden
-		mTexture0
-		mTexture1
-		mBones
-		mWorld
-		mView
-		mProjection
-		mLightViewProj
-		mEyePos
-		mCelTable
-		mShadowTexture
-		mShadowLightPos
-		mbDirectional
-		mShadowAtten
-		mMaterialID
-TriTex0NormalMapSolidSpecPhys
 	Ignored
 		mTexture1
 		mBones
@@ -220,6 +242,22 @@ TriTex0NormalMapSolidSpecPhys
 		mSkyGradient0
 		mSkyGradient1
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture1
 		mBones
@@ -235,7 +273,7 @@ TriTex0NormalMapSolidSpecPhys
 		mbDirectional
 		mShadowAtten
 		mMaterialID
-TriTex0NormalMapSpecPhys
+TriTex0NormalMapSpec
 	Ignored
 		mSolidColour
 		mBones
@@ -247,6 +285,22 @@ TriTex0NormalMapSpecPhys
 		mbDirectional
 		mShadowAtten
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mSolidColour
 		mBones
@@ -261,7 +315,7 @@ TriTex0NormalMapSpecPhys
 		mbDirectional
 		mShadowAtten
 		mMaterialID
-TriTex0NormalMapSolidSpecPhysInstanced
+TriTex0NormalMapSolidSpecInstanced
 	Ignored
 		mTexture1
 		mBones
@@ -273,6 +327,22 @@ TriTex0NormalMapSolidSpecPhysInstanced
 		mbDirectional
 		mShadowAtten
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture1
 		mBones
@@ -303,6 +373,22 @@ TriSkinTex0
 		mSpecColor
 		mSpecPower
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture1
 		mSolidColour
@@ -335,6 +421,22 @@ TriSkinSolidSpecPhys
 		mbDirectional
 		mShadowAtten
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture0
 		mTexture1
@@ -364,6 +466,22 @@ TriSkinCelSolidSpecPhys
 		mbDirectional
 		mShadowAtten
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture0
 		mTexture1
@@ -393,6 +511,22 @@ TriSkinDanglySolidSpecPhys
 		mbDirectional
 		mShadowAtten
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture0
 		mTexture1
@@ -420,6 +554,22 @@ TriSkinDanglyCelSolidSpecPhys
 		mbDirectional
 		mShadowAtten
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture0
 		mTexture1
@@ -449,6 +599,22 @@ TriSkinCelColorSpecPhys
 		mbDirectional
 		mShadowAtten
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture0
 		mTexture1
@@ -481,6 +647,22 @@ TriSkinDecalTex0
 		mSpecColor
 		mSpecPower
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mSolidColour
 		mBones
@@ -513,6 +695,22 @@ TriSkinDecalTex0Tex1
 		mSpecColor
 		mSpecPower
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mSolidColour
 		mBones
@@ -550,6 +748,22 @@ FullBrightSkin
 		mSpecColor
 		mSpecPower
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture0
 		mTexture1
@@ -592,6 +806,22 @@ ShadowSkin
 		mSpecColor
 		mSpecPower
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture0
 		mTexture1
@@ -633,6 +863,22 @@ Shadow
 		mSpecColor
 		mSpecPower
 		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture0
 		mTexture1
@@ -670,6 +916,22 @@ DMN
 		mShadowTexture
 		mSpecColor
 		mSpecPower
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture0
 		mTexture1
@@ -706,6 +968,22 @@ DMNDangly
 		mShadowTexture
 		mSpecColor
 		mSpecPower
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
 	Hidden
 		mTexture0
 		mTexture1
