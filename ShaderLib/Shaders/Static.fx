@@ -12,11 +12,11 @@ VVPosTex03Tex13 DMNVS(VPosNorm input)
 	
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
-	
+
 	//transform the input position to the output
-	output.Position		=mul(input.Position, wvp);
+	output.Position		=mul(float4(input.Position.xyz, 1), wvp);
 	output.TexCoord0	=mul(input.Normal, mWorld);
-	output.TexCoord1	=mul(input.Position, mWorld);
+	output.TexCoord1	=mul(input.Position.xyz, mWorld);
 	
 	//return the output structure
 	return	output;
@@ -25,8 +25,7 @@ VVPosTex03Tex13 DMNVS(VPosNorm input)
 //just world position
 VVPosTex03 WPosVS(VPos input)
 {
-	float4	vertPos	=input.Position;
-
+	float4	vertPos			=float4(input.Position.xyz, 1);
 	float4	worldVertPos	=mul(vertPos, mWorld);
 
 	VVPosTex03	output;
@@ -46,9 +45,9 @@ VVPosTex03Tex13 WNormWPosVS(VPosNormTex0 input)
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 	
 	//transform the input position to the output
-	output.Position		=mul(input.Position, wvp);
+	output.Position		=mul(float4(input.Position.xyz, 1), wvp);
 	output.TexCoord0	=mul(input.Normal, mWorld);
-	output.TexCoord1	=mul(input.Position, mWorld);
+	output.TexCoord1	=mul(input.Position.xyz, mWorld);
 	
 	//return the output structure
 	return	output;
@@ -63,7 +62,7 @@ VVPosTex0Col0 TexTriVS(VPosNormTex0 input)
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 	
 	//transform the input position to the output
-	output.Position	=mul(input.Position, wvp);
+	output.Position	=mul(float4(input.Position.xyz, 1), wvp);
 	
 	float3 worldNormal	=mul(input.Normal, mWorld);
 
@@ -86,7 +85,7 @@ VVPosNormTanBiTanTex0 WNormWTanBTanTexVS(VPosNormTanTex0 input)
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 	
-	output.Position		=mul(input.Position, wvp);
+	output.Position		=mul(float4(input.Position.xyz, 1), wvp);
 	output.Normal		=mul(input.Normal, mWorld);
 	output.Tangent		=mul(input.Tangent.xyz, mWorld);
 	output.TexCoord0	=input.TexCoord0;
@@ -112,7 +111,7 @@ VVPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosVS(VPosNormTanTex0 input)
 	//wtan3
 	//bitan3
 	
-	output.Position			=mul(input.Position, wvp);
+	output.Position			=mul(float4(input.Position.xyz, 1), wvp);
 	output.TexCoord0.xyz	=mul(input.Normal, mWorld);
 	output.TexCoord0.w		=input.TexCoord0.x;
 	output.TexCoord1.xyz	=mul(input.Tangent.xyz, mWorld);
@@ -121,7 +120,7 @@ VVPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosVS(VPosNormTanTex0 input)
 	float3	biTan	=cross(input.Normal, input.Tangent) * input.Tangent.w;
 
 	output.TexCoord2		=float4(normalize(biTan), 0);
-	output.TexCoord3		=mul(input.Position, mWorld);
+	output.TexCoord3		=mul(input.Position.xyz, mWorld);
 
 	//return the output structure
 	return	output;
@@ -137,7 +136,7 @@ VVPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosInstancedVS(VPosNormTanTex0 input, fl
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(world, mView), mProjection);
 	
-	output.Position			=mul(input.Position, wvp);
+	output.Position			=mul(float4(input.Position.xyz, 1), wvp);
 	output.TexCoord0.xyz	=mul(input.Normal, world);
 	output.TexCoord0.w		=input.TexCoord0.x;
 	output.TexCoord1.xyz	=mul(input.Tangent.xyz, world);
@@ -146,7 +145,7 @@ VVPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosInstancedVS(VPosNormTanTex0 input, fl
 	float3	biTan	=cross(input.Normal, input.Tangent) * input.Tangent.w;
 
 	output.TexCoord2		=float4(normalize(biTan), 0);
-	output.TexCoord3		=mul(input.Position, world);
+	output.TexCoord3		=mul(input.Position.xyz, world);
 
 	//return the output structure
 	return	output;
@@ -161,9 +160,9 @@ VVPosTex04Tex14 WNormWPosTexVS(VPosNormTex0 input)
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 	
 	//transform the input position to the output
-	output.Position			=mul(input.Position, wvp);
+	output.Position			=mul(float4(input.Position.xyz, 1), wvp);
 	output.TexCoord0.xyz	=mul(input.Normal, mWorld);
-	output.TexCoord1.xyz	=mul(input.Position, mWorld);
+	output.TexCoord1.xyz	=mul(input.Position.xyz, mWorld);
 	output.TexCoord0.w		=input.TexCoord0.x;
 	output.TexCoord1.w		=input.TexCoord0.y;
 	

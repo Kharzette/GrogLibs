@@ -8,6 +8,7 @@ using UtilityLib;
 using SharpDX;
 using SharpDX.DXGI;
 using SharpDX.Direct3D11;
+using SharpDX.D3DCompiler;
 
 //ambiguous stuff
 using Buffer = SharpDX.Direct3D11.Buffer;
@@ -22,6 +23,9 @@ namespace MaterialLib
 		string			mName;			//name of the material
 		Effect			mEffect;		//ref of the shader
 		EffectTechnique	mTechnique;		//technique to use with this material
+
+		//vert formats expected
+		List<InputLayout>	mLayouts	=new List<InputLayout>();
 
 		//all of the shader variables TODO: hide/ignore some
 		Dictionary<string, EffectVariableValue>	mVars	=new Dictionary<string, EffectVariableValue>();
@@ -57,7 +61,7 @@ namespace MaterialLib
 		public EffectTechnique Technique
 		{
 			get { return mTechnique; }
-			set { mTechnique = value; }
+			set { mTechnique = value;  CalcLayouts(); }
 		}
 
 
@@ -93,6 +97,7 @@ namespace MaterialLib
 		{
 			mEffect		=null;
 			mTechnique	=null;
+			mLayouts.Clear();
 			mVars.Clear();
 		}
 
@@ -112,11 +117,13 @@ namespace MaterialLib
 
 			ApplyVariables();
 
+			dc.InputAssembler.InputLayout	=mLayouts[pass];
+
 			ep.Apply(dc);
 		}
 
 
-		internal SharpDX.D3DCompiler.ShaderBytecode GetPassSignature(int pass)
+		internal ShaderBytecode GetPassSignature(int pass)
 		{
 			if(mTechnique == null)
 			{
@@ -263,6 +270,8 @@ namespace MaterialLib
 					br.ReadString();	//consume
 				}
 			}
+
+			CalcLayouts();
 		}
 		#endregion
 
@@ -432,6 +441,117 @@ namespace MaterialLib
 			if(hiddenData.ContainsKey(tech))
 			{
 				Hide(hiddenData[tech]);
+			}
+		}
+
+
+		Format	GetFormatFromParamDesc(ShaderParameterDescription spd)
+		{
+			if(spd.ComponentType == RegisterComponentType.Float32)
+			{
+				if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentW) != 0))
+				{
+					return	Format.R32G32B32A32_Float;
+				}
+				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentZ) != 0))
+				{
+					return	Format.R32G32B32_Float;
+				}
+				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentY) != 0))
+				{
+					return	Format.R32G32_Float;
+				}
+				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentX) != 0))
+				{
+					return	Format.R32_Float;
+				}
+			}
+			else if(spd.ComponentType == RegisterComponentType.SInt32)
+			{
+				if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentW) != 0))
+				{
+					return	Format.R32G32B32A32_SInt;
+				}
+				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentZ) != 0))
+				{
+					return	Format.R32G32B32_SInt;
+				}
+				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentY) != 0))
+				{
+					return	Format.R32G32_SInt;
+				}
+				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentX) != 0))
+				{
+					return	Format.R32_SInt;
+				}
+			}
+			else if(spd.ComponentType == RegisterComponentType.UInt32)
+			{
+				if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentW) != 0))
+				{
+					return	Format.R32G32B32A32_UInt;
+				}
+				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentZ) != 0))
+				{
+					return	Format.R32G32B32_UInt;
+				}
+				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentY) != 0))
+				{
+					return	Format.R32G32_UInt;
+				}
+				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentX) != 0))
+				{
+					return	Format.R32_UInt;
+				}
+			}
+			Debug.Assert(false);
+			return	Format.Unknown;
+		}
+
+
+		void CalcLayouts()
+		{
+			mLayouts.Clear();
+
+			if(mEffect == null || mTechnique == null)
+			{
+				return;
+			}
+
+			Device	dev	=mEffect.Device;
+
+			for(int i=0;;i++)
+			{
+				EffectPass	ep	=mTechnique.GetPassByIndex(i);
+				if(ep == null)
+				{
+					break;
+				}
+				if(!ep.IsValid)
+				{
+					break;
+				}
+
+				EffectShaderDescription	sd	=ep.VertexShaderDescription.
+					Variable.GetShaderDescription(ep.VertexShaderDescription.Index);
+
+				ShaderReflection	sr	=new ShaderReflection(sd.Bytecode);
+
+				int	numParams	=sr.Description.InputParameters;
+
+				InputElement	[]elements	=new InputElement[numParams];
+
+				for(int j=0;j < numParams;j++)
+				{
+					ShaderParameterDescription	spd	=sr.GetInputParameterDescription(j);
+
+					elements[j]	=new InputElement(spd.SemanticName, spd.SemanticIndex,
+						GetFormatFromParamDesc(spd),
+						InputElement.AppendAligned, 0);
+				}
+				InputLayout	il	=new InputLayout(dev,
+					ep.Description.Signature, elements);
+				mLayouts.Add(il);
 			}
 		}
 

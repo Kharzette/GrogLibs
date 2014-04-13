@@ -23,7 +23,7 @@ VVPosTex03 ParticleVS(VPosTex04 input)
 	float3	viewDir	=mView._m02_m12_m22;
 
 	//all verts at 000, add instance pos
-	float4	pos	=input.Position;
+	float3	pos	=input.Position.xyz;
 	
 	//cross with up to get right
 	float3	rightVec	=normalize(cross(viewDir, float3(0, 1, 0)));
@@ -31,18 +31,14 @@ VVPosTex03 ParticleVS(VPosTex04 input)
 	//cross right with view to get good up
 	float3	upVec	=normalize(cross(rightVec, viewDir));
 
-	float4	ofs	=pos;
+	float3	ofs	=pos;
 
 	//quad offset mul by size stored in tex0.x
-	ofs.xyz	=rightVec * (input.Position.w - 0.5f) * input.TexCoord0.x;
-	ofs.xyz	+=upVec * (input.TexCoord0.w - 0.5f) * input.TexCoord0.x;
+	ofs	=rightVec * (input.Position.w - 0.5f) * input.TexCoord0.x;
+	ofs	+=upVec * (input.TexCoord0.w - 0.5f) * input.TexCoord0.x;
 
 	//add in centerpoint
 	ofs	+=pos;
-
-	//reset w's
-	pos.w	=1.0f;
-	ofs.w	=1.0f;
 
 	//screen transformed centerpoint
 	float4	screenPos	=mul(pos, viewProj);
@@ -86,7 +82,7 @@ VVPosTex03Tex13 ParticleDMNVS(VPosTex04 input)
 	float3	viewDir	=mView._m02_m12_m22;
 
 	//all verts at 000, add instance pos
-	float4	pos	=input.Position;
+	float3	pos	=input.Position.xyz;
 	
 	//cross with up to get right
 	float3	rightVec	=normalize(cross(viewDir, float3(0, 1, 0)));
@@ -94,7 +90,7 @@ VVPosTex03Tex13 ParticleDMNVS(VPosTex04 input)
 	//cross right with view to get good up
 	float3	upVec	=normalize(cross(rightVec, viewDir));
 
-	float4	ofs	=pos;
+	float3	ofs	=pos;
 
 	//quad offset mul by size stored in tex0.x
 	ofs.xyz	=rightVec * (input.Position.w - 0.5f) * input.TexCoord0.x;
@@ -102,10 +98,6 @@ VVPosTex03Tex13 ParticleDMNVS(VPosTex04 input)
 
 	//add in centerpoint
 	ofs	+=pos;
-
-	//reset w's
-	pos.w	=1.0f;
-	ofs.w	=1.0f;
 
 	output.TexCoord1	=pos.xyz;
 
