@@ -263,6 +263,11 @@ namespace MaterialLib
 
 		public void SaveToFile(string fileName)
 		{
+			if(!CheckReadyToSave())
+			{
+				return;	//not ready
+			}
+
 			FileStream		fs	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
 			BinaryWriter	bw	=new BinaryWriter(fs);
 
@@ -379,6 +384,29 @@ namespace MaterialLib
 
 			br.Close();
 			file.Close();
+		}
+
+
+		bool CheckReadyToSave()
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				if(mat.Value.Name == null || mat.Value.Name == "")
+				{
+					return	false;
+				}
+
+				if(mat.Value.Shader == null)
+				{
+					return	false;
+				}
+
+				if(mat.Value.Technique == null)
+				{
+					return	false;
+				}
+			}
+			return	true;
 		}
 
 
