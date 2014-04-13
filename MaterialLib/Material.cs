@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.ComponentModel;
 using UtilityLib;
 using SharpDX;
@@ -18,7 +19,7 @@ namespace MaterialLib
 {
 	internal class Material
 	{
-		string			mName;			//name of the overall material
+		string			mName;			//name of the material
 		Effect			mEffect;		//ref of the shader
 		EffectTechnique	mTechnique;		//technique to use with this material
 
@@ -30,6 +31,11 @@ namespace MaterialLib
 
 		//skip these when assigning parameters to the shader
 		List<EffectVariableValue>	mIgnored	=new List<EffectVariableValue>();
+
+		//delegates for IO
+		internal delegate string				NameForEffect(Effect e);
+		internal delegate Effect				EffectForName(string name);
+		internal delegate List<EffectVariable>	GrabVariables(string fx);
 
 
 		internal Material(string name)
@@ -52,6 +58,34 @@ namespace MaterialLib
 		{
 			get { return mTechnique; }
 			set { mTechnique = value; }
+		}
+
+
+		internal Material Clone(string newName)
+		{
+			Material	ret	=new Material(newName);
+
+			ret.Shader		=Shader;
+			ret.Technique	=Technique;
+
+			foreach(KeyValuePair<string, EffectVariableValue> evv in mVars)
+			{
+				EffectVariableValue	evv2	=new EffectVariableValue();
+
+				//this should be a valuetype?  hope no ref problems
+				evv2.mValue	=evv.Value.mValue;
+				evv2.mVar	=evv.Value.mVar;
+
+				ret.mVars.Add(evv.Key, evv2);
+			}
+
+			IEnumerable<string>	hide	=from evv in mHidden select evv.mVar.Description.Name;
+			IEnumerable<string>	ignore	=from evv in mIgnored select evv.mVar.Description.Name;
+
+			ret.Hide(hide.ToList());
+			ret.Ignore(ignore.ToList());
+
+			return	ret;
 		}
 
 
@@ -159,16 +193,76 @@ namespace MaterialLib
 
 
 		#region IO
-		internal void Write(BinaryWriter bw)
+		internal void Write(BinaryWriter bw, NameForEffect nfe)
 		{
 			bw.Write(mName);
+			bw.Write(nfe(mEffect));
+			bw.Write(mTechnique.Description.Name);
 
+			bw.Write(mHidden.Count);
+			foreach(EffectVariableValue evv in mHidden)
+			{
+				bw.Write(evv.Name);
+			}
+
+			bw.Write(mIgnored.Count);
+			foreach(EffectVariableValue evv in mIgnored)
+			{
+				bw.Write(evv.Name);
+			}
+
+			bw.Write(mVars.Count);
+			foreach(KeyValuePair<string, EffectVariableValue> varVal in mVars)
+			{
+				varVal.Value.Write(bw);
+			}
 		}
 
 
-		internal void Read(BinaryReader br)
+		internal void Read(BinaryReader br, EffectForName efn, GrabVariables gv)
 		{
-			mName			=br.ReadString();
+			mName	=br.ReadString();
+
+			string	fx	=br.ReadString();
+
+			mEffect							=efn(fx);
+			List<EffectVariable>	vars	=gv(fx);
+
+			SetVariables(vars);
+
+			string	tech	=br.ReadString();
+			mTechnique		=mEffect.GetTechniqueByName(tech);
+
+			int	count	=br.ReadInt32();
+
+			List<string>	varNames	=new List<string>();
+			for(int i=0;i < count;i++)
+			{
+				varNames.Add(br.ReadString());
+			}
+			Hide(varNames);
+
+			count	=br.ReadInt32();
+			varNames.Clear();
+			for(int i=0;i < count;i++)
+			{
+				varNames.Add(br.ReadString());
+			}
+			Ignore(varNames);
+
+			count	=br.ReadInt32();
+			for(int i=0;i < count;i++)
+			{
+				string	varName	=br.ReadString();
+				if(mVars.ContainsKey(varName))
+				{
+					mVars[varName].Read(br);
+				}
+				else
+				{
+					br.ReadString();	//consume
+				}
+			}
 		}
 		#endregion
 

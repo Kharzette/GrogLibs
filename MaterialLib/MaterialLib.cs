@@ -201,6 +201,26 @@ namespace MaterialLib
 			}
 			return	ret.ToArray();
 		}
+
+
+		internal void Write(BinaryWriter bw)
+		{
+			bw.Write(Name);
+			bw.Write(ValueAsString(mValue));
+		}
+
+
+		internal void Read(BinaryReader br)
+		{
+			string	val	=br.ReadString();
+			if(val == "")
+			{
+				mValue	=null;
+				return;
+			}
+
+			mValue	=ValueFromString(val);
+		}
 	};
 
 	public class MaterialLib
@@ -241,6 +261,163 @@ namespace MaterialLib
 		};
 
 
+		public void SaveToFile(string fileName)
+		{
+			FileStream		fs	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
+			BinaryWriter	bw	=new BinaryWriter(fs);
+
+			//write a magic number identifying matlibs
+			UInt32	magic	=0xFA77DA77;
+
+			bw.Write(magic);
+
+			//write which textures and shaders used
+			List<string>	texInUse	=new List<string>();
+			List<string>	shdInUse	=new List<string>();
+			List<string>	cubeInUse	=new List<string>();
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+//				mat.Value.GetTexturesInUse(texInUse);
+//				mat.Value.GetTextureCubesInUse(cubeInUse);
+
+				string	shdName	=NameForEffect(mat.Value.Shader);
+				if(shdName != "" && !shdInUse.Contains(shdName))
+				{
+					shdInUse.Add(shdName);
+				}
+			}
+
+			bw.Write(shdInUse.Count);
+			foreach(string shd in shdInUse)
+			{
+				bw.Write(shd);
+			}
+
+			bw.Write(texInUse.Count);
+			foreach(string tex in texInUse)
+			{
+				bw.Write(tex);
+			}
+
+			bw.Write(cubeInUse.Count);
+			foreach(string cube in cubeInUse)
+			{
+				bw.Write(cube);
+			}
+
+			//write materials
+			bw.Write(mMats.Count);
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				mat.Value.Write(bw, NameForEffect);
+			}
+
+			bw.Close();
+			fs.Close();
+		}
+
+
+		public void ReadFromFile(string fileName)
+		{
+			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			if(file == null)
+			{
+				return;
+			}
+			BinaryReader	br	=new BinaryReader(file);
+
+			//clear existing data
+			mMats.Clear();
+
+			//read magic number
+			UInt32	magic	=br.ReadUInt32();
+
+			if(magic != 0xFA77DA77)
+			{
+				br.Close();
+				file.Close();
+				return;
+			}
+
+			//load the referenced textures and shaders
+			List<string>	texNeeded	=new List<string>();
+			List<string>	shdNeeded	=new List<string>();
+			List<string>	cubeNeeded	=new List<string>();
+
+			//read shaders in use
+			int	numShd	=br.ReadInt32();
+			for(int i=0;i < numShd;i++)
+			{
+				shdNeeded.Add(br.ReadString());
+			}
+
+			//read textures in use
+			int	numTex	=br.ReadInt32();
+			for(int i=0;i < numTex;i++)
+			{
+				texNeeded.Add(br.ReadString());
+			}
+
+			//read cubes in use
+			int	numCube	=br.ReadInt32();
+			for(int i=0;i < numCube;i++)
+			{
+				cubeNeeded.Add(br.ReadString());
+			}
+
+//			LoadNewContent(gd, shdNeeded, texNeeded, cubeNeeded);
+
+			//load the actual material values
+			int	numMaterials	=br.ReadInt32();
+			for(int i=0;i < numMaterials;i++)
+			{
+				Material	m	=new Material("temp");
+
+				m.Read(br, EffectForName, GrabVariables);
+				mMats.Add(m.Name, m);
+			}
+
+			br.Close();
+			file.Close();
+		}
+
+
+		string NameForEffect(Effect fx)
+		{
+			if(mFX.ContainsValue(fx))
+			{
+				foreach(KeyValuePair<string, Effect> ef in mFX)
+				{
+					if(ef.Value == fx)
+					{
+						return	ef.Key;
+					}
+				}
+			}
+			return	"";
+		}
+
+
+		Effect EffectForName(string fxName)
+		{
+			if(mFX.ContainsKey(fxName))
+			{
+				return	mFX[fxName];
+			}
+			return	null;
+		}
+
+
+		List<EffectVariable> GrabVariables(string fx)
+		{
+			if(mVars.ContainsKey(fx))
+			{
+				return	mVars[fx];
+			}
+			return	new List<EffectVariable>();
+		}
+
+
 		//editor constructor, loads & compiles all
 		public MaterialLib(Device dev, ShaderModel sm)
 		{
@@ -266,6 +443,20 @@ namespace MaterialLib
 			Material	mat	=new Material(name);
 
 			mMats.Add(name, mat);
+		}
+
+
+		public void CloneMaterial(string existing, string newMat)
+		{
+			if(!mMats.ContainsKey(existing))
+			{
+				return;
+			}
+			Material	mat	=mMats[existing].Clone(newMat);
+			if(mat != null)
+			{
+				mMats.Add(mat.Name, mat);
+			}
 		}
 
 
@@ -474,6 +665,21 @@ namespace MaterialLib
 				return;
 			}
 			mat.Technique	=mat.Shader.GetTechniqueByName(techName);
+		}
+
+
+		public void SetParameterForAll(string varName, object value)
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				mat.Value.SetEffectParameter(varName, value);
+			}
+		}
+
+
+		public bool MaterialExists(string matName)
+		{
+			return	mMats.ContainsKey(matName);
 		}
 
 

@@ -147,6 +147,11 @@ namespace MeshLib
 
 		internal void TempDraw(DeviceContext dc, MaterialLib.MaterialLib matLib, Matrix transform)
 		{
+			if(!matLib.MaterialExists(mMaterialName))
+			{
+				return;
+			}
+
 			matLib.SetMaterialParameter(mMaterialName, "mWorld", (transform * mTransform));
 
 			dc.InputAssembler.SetVertexBuffers(0, mVBinding);
