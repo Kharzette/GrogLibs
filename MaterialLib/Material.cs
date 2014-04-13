@@ -123,21 +123,6 @@ namespace MaterialLib
 		}
 
 
-		internal ShaderBytecode GetPassSignature(int pass)
-		{
-			if(mTechnique == null)
-			{
-				return	null;
-			}
-			EffectPass	ep	=mTechnique.GetPassByIndex(pass);
-			if(ep == null)
-			{
-				return	null;
-			}
-			return	ep.Description.Signature;
-		}
-
-
 		internal BindingList<EffectVariableValue> GetGUIVariables()
 		{
 			BindingList<EffectVariableValue>	ret	=new BindingList<EffectVariableValue>();

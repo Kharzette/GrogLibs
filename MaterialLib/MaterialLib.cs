@@ -456,16 +456,6 @@ namespace MaterialLib
 		}
 
 
-		public ShaderBytecode GetMaterialSignature(string matName, int pass)
-		{
-			if(!mMats.ContainsKey(matName))
-			{
-				return	null;
-			}
-			return	mMats[matName].GetPassSignature(pass);
-		}
-
-
 		public void CreateMaterial(string name)
 		{
 			Material	mat	=new Material(name);
