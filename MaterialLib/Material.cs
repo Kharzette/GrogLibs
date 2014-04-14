@@ -368,6 +368,10 @@ namespace MaterialLib
 					{
 						var.AsVector().Set((Vector4)val);
 					}
+					else if(val is ShaderResourceView)
+					{
+						var.AsShaderResource().SetResource(val as ShaderResourceView);
+					}
 					else
 					{
 						Debug.Assert(false);

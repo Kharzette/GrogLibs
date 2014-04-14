@@ -134,7 +134,7 @@ namespace MaterialLib
 				}
 				else
 				{
-					return	((Texture2D)val).DebugName;
+					return	"SomeObject";
 				}
 			}
 			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Scalar)
@@ -223,7 +223,7 @@ namespace MaterialLib
 		}
 	};
 
-	public class MaterialLib
+	public partial class MaterialLib
 	{
 		internal class IncludeFX : CallbackBase, Include
 		{

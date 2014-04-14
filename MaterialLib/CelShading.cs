@@ -1,8 +1,22 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Diagnostics;
+using System.ComponentModel;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using UtilityLib;
+
+using SharpDX;
+using SharpDX.DXGI;
+using SharpDX.D3DCompiler;
+using SharpDX.Direct3D11;
+using SharpDX.Direct3D;
+
+//ambiguous stuff
+using Buffer = SharpDX.Direct3D11.Buffer;
+using Color = SharpDX.Color;
+using Device = SharpDX.Direct3D11.Device;
 
 
 namespace MaterialLib
@@ -11,7 +25,8 @@ namespace MaterialLib
 	{
 		//cel shading lookup textures
 		//allows for many different types of shading
-		Texture2D	[]mCelTex;
+		Texture1D			[]mCelTex;
+		ShaderResourceView	[]mCelResources;
 
 		//constants for a world preset
 		//looks good with bsp lightmapped levels
@@ -36,7 +51,8 @@ namespace MaterialLib
 
 		public void InitCelShading(int numShadingVariations)
 		{
-			mCelTex	=new Texture2D[numShadingVariations];
+			mCelTex			=new Texture1D[numShadingVariations];
+			mCelResources	=new ShaderResourceView[numShadingVariations];
 		}
 
 
@@ -52,19 +68,19 @@ namespace MaterialLib
 			level[2]	=WorldLevel2;
 
 			size	=WorldLookupSize;
-	}
+		}
 
 
 		public void SetCelTexture(int index)
 		{			
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
-				mat.Value.SetParameter("mCelTable", mCelTex[index]);
+				mat.Value.SetEffectParameter("mCelTable", mCelResources[index]);
 			}
 		}
 
 
-		public void GenerateCelTexturePreset(GraphicsDevice gd, bool bCharacter, int index)
+		public void GenerateCelTexturePreset(Device gd, bool bCharacter, int index)
 		{
 			float	[]thresholds;
 			float	[]levels;
@@ -104,7 +120,7 @@ namespace MaterialLib
 
 		//generate a lookup texture for cel shading
 		//this allows a game to specify exactly instead of using a preset
-		public void GenerateCelTexture(GraphicsDevice gd,
+		public void GenerateCelTexture(Device gd,
 			int index, int size, float []thresholds, float []levels)
 		{
 			if(mCelTex == null)
@@ -112,27 +128,30 @@ namespace MaterialLib
 				return;	//need to init with a size first
 			}
 
-			mCelTex[index]	=new Texture2D(gd,
-				size, size, false, SurfaceFormat.Color);
+			Texture1DDescription	texDesc	=new Texture1DDescription();
+			texDesc.ArraySize		=1;
+			texDesc.BindFlags		=BindFlags.ShaderResource;
+			texDesc.CpuAccessFlags	=CpuAccessFlags.None;
+			texDesc.Format			=Format.R16_Float;
+			texDesc.MipLevels		=1;
+			texDesc.OptionFlags		=ResourceOptionFlags.None;
+			texDesc.Usage			=ResourceUsage.Immutable;
+			texDesc.Width			=size;
 
-			Color	[]data	=new Color[size * size];
+			DataStream	ds	=new DataStream(size * 2, false, true);
 
-			float	csize	=size * size;
-
-			for(int x=0;x < (size * size);x++)
+			float	csize	=size;
+			for(int x=0;x < size;x++)
 			{
 				float	xPercent	=(float)x / csize;
 
-				Vector3	color	=Vector3.Zero;
+				Half	val	=CelMe(xPercent, thresholds, levels);
 
-				color.X	=CelMe(xPercent, thresholds, levels);
-				color.Y	=color.X;
-				color.Z	=color.X;
-
-				data[x]	=new Color(color);
+				ds.Write(val);
 			}
 
-			mCelTex[index].SetData<Color>(data);
+			mCelTex[index]			=new Texture1D(gd, texDesc, ds);
+			mCelResources[index]	=new ShaderResourceView(gd, mCelTex[index]);
 		}
 
 
