@@ -17,6 +17,7 @@ using SharpDX.Direct3D;
 using Buffer = SharpDX.Direct3D11.Buffer;
 using Color = SharpDX.Color;
 using Device = SharpDX.Direct3D11.Device;
+using Resource = SharpDX.Direct3D11.Resource;
 
 
 namespace MaterialLib
@@ -25,8 +26,9 @@ namespace MaterialLib
 	{
 		//cel shading lookup textures
 		//allows for many different types of shading
-		Texture1D			[]mCelTex;
 		ShaderResourceView	[]mCelResources;
+		Texture2D			[]mCelTex2Ds;
+		Texture1D			[]mCelTex1Ds;
 
 		//constants for a world preset
 		//looks good with bsp lightmapped levels
@@ -51,8 +53,9 @@ namespace MaterialLib
 
 		public void InitCelShading(int numShadingVariations)
 		{
-			mCelTex			=new Texture1D[numShadingVariations];
 			mCelResources	=new ShaderResourceView[numShadingVariations];
+			mCelTex1Ds		=new Texture1D[numShadingVariations];
+			mCelTex2Ds		=new Texture2D[numShadingVariations];
 		}
 
 
@@ -80,7 +83,8 @@ namespace MaterialLib
 		}
 
 
-		public void GenerateCelTexturePreset(Device gd, bool bCharacter, int index)
+		//the nine three thing is if the feature level is 9.3
+		public void GenerateCelTexturePreset(Device gd, bool bNineThree, bool bCharacter, int index)
 		{
 			float	[]thresholds;
 			float	[]levels;
@@ -114,44 +118,95 @@ namespace MaterialLib
 				size			=WorldLookupSize;
 			}
 
-			GenerateCelTexture(gd, index, size, thresholds, levels);
+			GenerateCelTexture(gd, bNineThree, index, size, thresholds, levels);
 		}
 
 
 		//generate a lookup texture for cel shading
 		//this allows a game to specify exactly instead of using a preset
-		public void GenerateCelTexture(Device gd,
+		public void GenerateCelTexture(Device gd, bool bNineThree,
 			int index, int size, float []thresholds, float []levels)
 		{
-			if(mCelTex == null)
+			if(mCelResources == null)
 			{
 				return;	//need to init with a size first
 			}
 
-			Texture1DDescription	texDesc	=new Texture1DDescription();
-			texDesc.ArraySize		=1;
-			texDesc.BindFlags		=BindFlags.ShaderResource;
-			texDesc.CpuAccessFlags	=CpuAccessFlags.None;
-			texDesc.Format			=Format.R16_Float;
-			texDesc.MipLevels		=1;
-			texDesc.OptionFlags		=ResourceOptionFlags.None;
-			texDesc.Usage			=ResourceUsage.Immutable;
-			texDesc.Width			=size;
+			SampleDescription	sampDesc	=new SampleDescription();
+			sampDesc.Count		=1;
+			sampDesc.Quality	=0;
 
-			DataStream	ds	=new DataStream(size * 2, false, true);
-
-			float	csize	=size;
-			for(int x=0;x < size;x++)
+			Resource	res	=null;
+			if(bNineThree)
 			{
-				float	xPercent	=(float)x / csize;
+				Texture2DDescription	texDesc	=new Texture2DDescription();
+				texDesc.ArraySize			=1;
+				texDesc.BindFlags			=BindFlags.ShaderResource;
+				texDesc.CpuAccessFlags		=CpuAccessFlags.None;
+				texDesc.MipLevels			=1;
+				texDesc.OptionFlags			=ResourceOptionFlags.None;
+				texDesc.Usage				=ResourceUsage.Default;
+				texDesc.Width				=size;
+				texDesc.Height				=size;
+				texDesc.Format				=Format.R16_UNorm;
+				texDesc.SampleDescription	=sampDesc;
 
-				Half	val	=CelMe(xPercent, thresholds, levels);
+				DataStream	ds	=new DataStream(
+					texDesc.Width * texDesc.Height *
+					(int)FormatHelper.SizeOfInBytes(texDesc.Format),
+					true, true);
 
-				ds.Write(val);
+				float	csize	=size;
+				for(int y=0;y < size;y++)
+				{
+					for(int x=0;x < size;x++)
+					{
+						float	xPercent	=(float)x / csize;
+
+						float	val	=CelMe(xPercent, thresholds, levels);
+
+						UInt16	val2	=(UInt16)(val * 65535f);
+
+						ds.Write(val2);
+					}
+				}
+
+				DataBox	[]dbs	=new DataBox[1];
+
+				dbs[0]	=new DataBox(ds.DataPointer,
+					texDesc.Width *
+					(int)FormatHelper.SizeOfInBytes(texDesc.Format),
+					texDesc.Width * texDesc.Height *
+					(int)FormatHelper.SizeOfInBytes(texDesc.Format));
+
+				res	=mCelTex2Ds[index]	=new Texture2D(gd, texDesc, dbs);
+			}
+			else
+			{
+				DataStream	ds	=new DataStream(size * 2, false, true);
+				float	csize	=size;
+				for(int x=0;x < size;x++)
+				{
+					float	xPercent	=(float)x / csize;
+
+					Half	val	=CelMe(xPercent, thresholds, levels);
+
+					ds.Write(val);
+				}
+				Texture1DDescription	texDesc	=new Texture1DDescription();
+				texDesc.ArraySize		=1;
+				texDesc.BindFlags		=BindFlags.ShaderResource;
+				texDesc.CpuAccessFlags	=CpuAccessFlags.None;
+				texDesc.MipLevels		=1;
+				texDesc.OptionFlags		=ResourceOptionFlags.None;
+				texDesc.Usage			=ResourceUsage.Immutable;
+				texDesc.Width			=size;
+				texDesc.Format			=Format.R16_Float;
+
+				res	=mCelTex1Ds[index]	=new Texture1D(gd, texDesc, ds);
 			}
 
-			mCelTex[index]			=new Texture1D(gd, texDesc, ds);
-			mCelResources[index]	=new ShaderResourceView(gd, mCelTex[index]);
+			mCelResources[index]	=new ShaderResourceView(gd, res);
 		}
 
 

@@ -20,7 +20,12 @@ float3		mEyePos;
 float4	mSolidColour;
 
 //outline / cel related
+//1D textures are not supported in 9_3 feature levels
+#if defined(SM2)
+shared Texture2D	mCelTable;
+#else
 shared Texture1D	mCelTable;
+#endif
 
 //for shadowmaps
 shared Texture2D	mShadowTexture;		//2D
@@ -192,30 +197,53 @@ float3 CalcCelColor(float3 colVal)
 
 	if(colVal.x > 1)
 	{
+#if defined(SM2)
+		ret.x	=mCelTable.Sample(PointClamp, fracColor.x) + (colVal.x - fracColor.x);
+#else
 		ret.x	=mCelTable.Sample(PointClamp1D, fracColor.x) + (colVal.x - fracColor.x);
-//		ret.x	=tex1D(CelSampler, fracColor.x) + (colVal.x - fracColor.x);
+#endif
 	}
 	else
 	{
+#if defined(SM2)
+		ret.x	=mCelTable.Sample(PointClamp, float2(colVal.x, colVal.x));
+#else
 		ret.x	=mCelTable.Sample(PointClamp1D, colVal.x);
+#endif
 	}
 
 	if(colVal.y > 1)
 	{
+#if defined(SM2)
+		ret.y	=mCelTable.Sample(PointClamp, fracColor.y) + (colVal.y - fracColor.y);
+#else
 		ret.y	=mCelTable.Sample(PointClamp1D, fracColor.y) + (colVal.y - fracColor.y);
+#endif
 	}
 	else
 	{
+#if defined(SM2)
+		ret.y	=mCelTable.Sample(PointClamp, float2(colVal.y, colVal.y));
+#else
 		ret.y	=mCelTable.Sample(PointClamp1D, colVal.y);
+#endif
 	}
 
 	if(colVal.z > 1)
 	{
+#if defined(SM2)
+		ret.z	=mCelTable.Sample(PointClamp, fracColor.z) + (colVal.z - fracColor.z);
+#else
 		ret.z	=mCelTable.Sample(PointClamp1D, fracColor.z) + (colVal.z - fracColor.z);
+#endif
 	}
 	else
 	{
+#if defined(SM2)
+		ret.z	=mCelTable.Sample(PointClamp, float2(colVal.z, colVal.z));
+#else
 		ret.z	=mCelTable.Sample(PointClamp1D, colVal.z);
+#endif
 	}
 
 	return	ret;
