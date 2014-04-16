@@ -322,6 +322,72 @@ namespace MaterialLib
 		}
 
 
+		public void MergeFromFile(string fileName)
+		{
+			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			if(file == null)
+			{
+				return;
+			}
+			BinaryReader	br	=new BinaryReader(file);
+			//read magic number
+			UInt32	magic	=br.ReadUInt32();
+
+			if(magic != 0xFA77DA77)
+			{
+				br.Close();
+				file.Close();
+				return;
+			}
+
+			//load the referenced textures and shaders
+			//though these aren't used for anything tool side
+			List<string>	texNeeded	=new List<string>();
+			List<string>	shdNeeded	=new List<string>();
+			List<string>	cubeNeeded	=new List<string>();
+
+			//read shaders in use
+			int	numShd	=br.ReadInt32();
+			for(int i=0;i < numShd;i++)
+			{
+				shdNeeded.Add(br.ReadString());
+			}
+
+			//read textures in use
+			int	numTex	=br.ReadInt32();
+			for(int i=0;i < numTex;i++)
+			{
+				texNeeded.Add(br.ReadString());
+			}
+
+			//read cubes in use
+			int	numCube	=br.ReadInt32();
+			for(int i=0;i < numCube;i++)
+			{
+				cubeNeeded.Add(br.ReadString());
+			}
+
+			int	numMaterials	=br.ReadInt32();
+
+			for(int i=0;i < numMaterials;i++)
+			{
+				Material	m	=new Material("temp");
+
+				m.Read(br, EffectForName, GrabVariables);
+
+				while(mMats.ContainsKey(m.Name))
+				{
+					m.Name	+="2";
+				}
+
+				mMats.Add(m.Name, m);
+			}
+
+			br.Close();
+			file.Close();
+		}
+
+
 		public void ReadFromFile(string fileName)
 		{
 			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
