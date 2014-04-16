@@ -85,6 +85,22 @@ float4 NormalMapTriTex0Tex1PS(VVPosNormTanBiTanTex0Tex1 input) : SV_Target
 	return	float4(texLitColor, texel0.w);
 }
 
+//Solid color, trilight
+float4 TriSolidPS(VVPosTex03Tex13 input) : SV_Target
+{
+	float3	pnorm	=input.TexCoord0;
+	float3	wpos	=input.TexCoord1;
+
+	pnorm	=normalize(pnorm);
+
+	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
+							mLightColor0, mLightColor1, mLightColor2);
+
+	float3	litSolid	=mSolidColour.xyz * triLight;
+
+	return	float4(litSolid, mSolidColour.w);
+}
+
 //Solid color, trilight, and specular
 float4 TriSolidSpecPS(VVPosTex03Tex13 input) : SV_Target
 {

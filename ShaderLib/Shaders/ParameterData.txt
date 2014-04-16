@@ -9,7 +9,6 @@ TriTex0
 		mSolidColour
 		mBones
 		mLightViewProj
-		mEyePos
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
@@ -56,7 +55,6 @@ TriTex0NormalMapSolid
 		mTexture1
 		mBones
 		mLightViewProj
-		mEyePos
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
@@ -103,7 +101,6 @@ TriTex0Spec
 		mSolidColour
 		mBones
 		mLightViewProj
-		mEyePos
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
@@ -147,7 +144,6 @@ TriSolidSpec
 		mTexture1
 		mBones
 		mLightViewProj
-		mEyePos
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
@@ -191,7 +187,6 @@ TriCelSolidSpec
 		mTexture1
 		mBones
 		mLightViewProj
-		mEyePos
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
@@ -233,7 +228,6 @@ TriTex0NormalMapSolidSpec
 		mTexture1
 		mBones
 		mLightViewProj
-		mEyePos
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
@@ -278,7 +272,6 @@ TriTex0NormalMapSpec
 		mSolidColour
 		mBones
 		mLightViewProj
-		mEyePos
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
@@ -320,7 +313,6 @@ TriTex0NormalMapSolidSpecInstanced
 		mTexture1
 		mBones
 		mLightViewProj
-		mEyePos
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
@@ -363,7 +355,6 @@ TriSkinTex0
 		mSolidColour
 		mBones
 		mLightViewProj
-		mEyePos
 		mDanglyForce
 		mCelTable
 		mShadowTexture
@@ -413,7 +404,6 @@ TriSkinSolidSpecPhys
 		mTexture1
 		mBones
 		mLightViewProj
-		mEyePos
 		mDanglyForce
 		mCelTable
 		mShadowTexture
@@ -459,7 +449,6 @@ TriSkinCelSolidSpecPhys
 		mTexture1
 		mBones
 		mLightViewProj
-		mEyePos
 		mDanglyForce
 		mShadowTexture
 		mShadowLightPos
@@ -504,7 +493,6 @@ TriSkinDanglySolidSpecPhys
 		mTexture1
 		mBones
 		mLightViewProj
-		mEyePos
 		mCelTable
 		mShadowTexture
 		mShadowLightPos
@@ -548,7 +536,6 @@ TriSkinDanglyCelSolidSpecPhys
 		mTexture1
 		mBones
 		mLightViewProj
-		mEyePos
 		mShadowTexture
 		mShadowLightPos
 		mbDirectional
@@ -592,7 +579,6 @@ TriSkinCelColorSpecPhys
 		mSolidColour
 		mBones
 		mLightViewProj
-		mEyePos
 		mDanglyForce
 		mShadowTexture
 		mShadowLightPos

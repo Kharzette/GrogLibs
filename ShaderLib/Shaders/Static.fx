@@ -14,9 +14,9 @@ VVPosTex03Tex13 DMNVS(VPosNorm input)
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 
 	//transform the input position to the output
-	output.Position		=mul(float4(input.Position.xyz, 1), wvp);
+	output.Position		=mul(float4(input.Position, 1), wvp);
 	output.TexCoord0	=mul(input.Normal, mWorld);
-	output.TexCoord1	=mul(input.Position.xyz, mWorld);
+	output.TexCoord1	=mul(input.Position, mWorld);
 	
 	//return the output structure
 	return	output;
@@ -25,7 +25,7 @@ VVPosTex03Tex13 DMNVS(VPosNorm input)
 //just world position
 VVPosTex03 WPosVS(VPos input)
 {
-	float4	vertPos			=float4(input.Position.xyz, 1);
+	float4	vertPos			=float4(input.Position, 1);
 	float4	worldVertPos	=mul(vertPos, mWorld);
 
 	VVPosTex03	output;
@@ -45,9 +45,9 @@ VVPosTex03Tex13 WNormWPosVS(VPosNormTex0 input)
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 	
 	//transform the input position to the output
-	output.Position		=mul(float4(input.Position.xyz, 1), wvp);
+	output.Position		=mul(float4(input.Position, 1), wvp);
 	output.TexCoord0	=mul(input.Normal, mWorld);
-	output.TexCoord1	=mul(input.Position.xyz, mWorld);
+	output.TexCoord1	=mul(input.Position, mWorld);
 	
 	//return the output structure
 	return	output;
@@ -62,7 +62,7 @@ VVPosTex0Col0 TexTriVS(VPosNormTex0 input)
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 	
 	//transform the input position to the output
-	output.Position	=mul(float4(input.Position.xyz, 1), wvp);
+	output.Position	=mul(float4(input.Position, 1), wvp);
 	
 	float3 worldNormal	=mul(input.Normal, mWorld);
 
@@ -85,7 +85,7 @@ VVPosNormTanBiTanTex0 WNormWTanBTanTexVS(VPosNormTanTex0 input)
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 	
-	output.Position		=mul(float4(input.Position.xyz, 1), wvp);
+	output.Position		=mul(float4(input.Position, 1), wvp);
 	output.Normal		=mul(input.Normal, mWorld);
 	output.Tangent		=mul(input.Tangent.xyz, mWorld);
 	output.TexCoord0	=input.TexCoord0;
@@ -111,7 +111,7 @@ VVPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosVS(VPosNormTanTex0 input)
 	//wtan3
 	//bitan3
 	
-	output.Position			=mul(float4(input.Position.xyz, 1), wvp);
+	output.Position			=mul(float4(input.Position, 1), wvp);
 	output.TexCoord0.xyz	=mul(input.Normal, mWorld);
 	output.TexCoord0.w		=input.TexCoord0.x;
 	output.TexCoord1.xyz	=mul(input.Tangent.xyz, mWorld);
@@ -120,7 +120,7 @@ VVPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosVS(VPosNormTanTex0 input)
 	float3	biTan	=cross(input.Normal, input.Tangent) * input.Tangent.w;
 
 	output.TexCoord2		=float4(normalize(biTan), 0);
-	output.TexCoord3		=mul(input.Position.xyz, mWorld);
+	output.TexCoord3		=mul(input.Position, mWorld);
 
 	//return the output structure
 	return	output;
@@ -136,7 +136,7 @@ VVPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosInstancedVS(VPosNormTanTex0 input, fl
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(world, mView), mProjection);
 	
-	output.Position			=mul(float4(input.Position.xyz, 1), wvp);
+	output.Position			=mul(float4(input.Position, 1), wvp);
 	output.TexCoord0.xyz	=mul(input.Normal, world);
 	output.TexCoord0.w		=input.TexCoord0.x;
 	output.TexCoord1.xyz	=mul(input.Tangent.xyz, world);
@@ -145,7 +145,7 @@ VVPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosInstancedVS(VPosNormTanTex0 input, fl
 	float3	biTan	=cross(input.Normal, input.Tangent) * input.Tangent.w;
 
 	output.TexCoord2		=float4(normalize(biTan), 0);
-	output.TexCoord3		=mul(input.Position.xyz, world);
+	output.TexCoord3		=mul(input.Position, world);
 
 	//return the output structure
 	return	output;
@@ -160,9 +160,9 @@ VVPosTex04Tex14 WNormWPosTexVS(VPosNormTex0 input)
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
 	
 	//transform the input position to the output
-	output.Position			=mul(float4(input.Position.xyz, 1), wvp);
+	output.Position			=mul(float4(input.Position, 1), wvp);
 	output.TexCoord0.xyz	=mul(input.Normal, mWorld);
-	output.TexCoord1.xyz	=mul(input.Position.xyz, mWorld);
+	output.TexCoord1.xyz	=mul(input.Position, mWorld);
 	output.TexCoord0.w		=input.TexCoord0.x;
 	output.TexCoord1.w		=input.TexCoord0.y;
 	
@@ -227,6 +227,26 @@ technique10 TriTex0Spec
 #else
 		VertexShader	=compile vs_4_0_level_9_3 WNormWPosTexVS();
 		PixelShader		=compile ps_4_0_level_9_3 TriTex0SpecPS();
+#endif
+	}
+}
+
+technique10 TriSolid
+{     
+	pass P0
+	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 WNormWPosVS();
+		PixelShader		=compile ps_5_0 TriSolidPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 WNormWPosVS();
+		PixelShader		=compile ps_4_1 TriSolidPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 WNormWPosVS();
+		PixelShader		=compile ps_4_0 TriSolidPS();
+#else
+		VertexShader	=compile vs_4_0_level_9_3 WNormWPosVS();
+		PixelShader		=compile ps_4_0_level_9_3 TriSolidPS();
 #endif
 	}
 }

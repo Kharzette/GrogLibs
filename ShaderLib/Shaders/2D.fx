@@ -6,7 +6,7 @@ Texture2D	mTexture;
 #include "RenderStates.fxh"
 
 
-VVPosTex03 ParticleVS(VPosTex04 input)
+VVPosTex03 ParticleVS(VPos4Tex04 input)
 {
 	VVPosTex03	output;
 
@@ -65,7 +65,7 @@ VVPosTex03 ParticleVS(VPosTex04 input)
 	return	output;
 }
 
-VVPosTex03Tex13 ParticleDMNVS(VPosTex04 input)
+VVPosTex03Tex13 ParticleDMNVS(VPos4Tex04 input)
 {
 	VVPosTex03Tex13	output;
 

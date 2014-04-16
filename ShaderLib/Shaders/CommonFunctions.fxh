@@ -149,7 +149,7 @@ float3 ComputeGoodSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 li
 	//fresnel stuff
 	float	base		=1.0f - dot(halfVec, lightDir);
 	float	exponential	=pow(base, 5.0f);
-	float	fresTerm	=mSpecColor + (1.0f - mSpecColor) * exponential;
+	float3	fresTerm	=mSpecColor + (1.0f - mSpecColor) * exponential;
 
 	//vis stuff
 	float	alpha	=1.0f / (sqrt(PI_OVER_FOUR * mSpecPower + PI_OVER_TWO));
