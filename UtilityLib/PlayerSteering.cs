@@ -173,12 +173,12 @@ namespace SharpDXStuff
 			{
 				if(act.mAction == mZoomIn)
 				{
-					mZoom	-=act.mTimeHeld * 0.04f;
+					mZoom	-=act.mMultiplier * 0.04f;
 					mZoom	=MathUtil.Clamp(mZoom, 5f, 500f);
 				}
 				else if(act.mAction == mZoomOut)
 				{
-					mZoom	+=act.mTimeHeld * 0.04f;
+					mZoom	+=act.mMultiplier * 0.04f;
 					mZoom	=MathUtil.Clamp(mZoom, 5f, 500f);
 				}
 			}
@@ -250,22 +250,22 @@ namespace SharpDXStuff
 				if(act.mAction.CompareTo(mMoveLeft) == 0)
 				{
 					mbMovedThisFrame	=true;
-					moveVec				-=camLeft * act.mTimeHeld * mGroundSpeed;
+					moveVec				-=camLeft * act.mMultiplier * mGroundSpeed;
 				}
 				else if(act.mAction.CompareTo(mMoveRight) == 0)
 				{
 					mbMovedThisFrame	=true;
-					moveVec				+=camLeft * act.mTimeHeld * mGroundSpeed;
+					moveVec				+=camLeft * act.mMultiplier * mGroundSpeed;
 				}
 				else if(act.mAction.CompareTo(mMoveForward) == 0)
 				{
 					mbMovedThisFrame	=true;
-					moveVec				+=camForward * act.mTimeHeld * mGroundSpeed;
+					moveVec				+=camForward * act.mMultiplier * mGroundSpeed;
 				}
 				else if(act.mAction.CompareTo(mMoveBack) == 0)
 				{
 					mbMovedThisFrame	=true;
-					moveVec				-=camForward * act.mTimeHeld * mGroundSpeed;
+					moveVec				-=camForward * act.mMultiplier * mGroundSpeed;
 				}
 			}
 		}
@@ -277,7 +277,7 @@ namespace SharpDXStuff
 			{
 				if(act.mAction == mPitchUp)
 				{
-					float	pitchAmount	=act.mTimeHeld * 0.04f;
+					float	pitchAmount	=act.mMultiplier * 0.04f;
 
 					if(mbInvertYAxis)
 					{
@@ -290,7 +290,7 @@ namespace SharpDXStuff
 				}
 				else if(act.mAction == mPitchDown)
 				{
-					float	pitchAmount	=act.mTimeHeld * 0.04f;
+					float	pitchAmount	=act.mMultiplier * 0.04f;
 
 					if(!mbInvertYAxis)
 					{
@@ -303,11 +303,11 @@ namespace SharpDXStuff
 				}
 				else if(act.mAction == mTurnLeft)
 				{
-					mYaw	+=act.mTimeHeld * 0.04f;
+					mYaw	+=act.mMultiplier * 0.04f;
 				}
 				else if(act.mAction == mTurnRight)
 				{
-					mYaw	-=act.mTimeHeld * 0.04f;
+					mYaw	-=act.mMultiplier * 0.04f;
 				}
 			}
 

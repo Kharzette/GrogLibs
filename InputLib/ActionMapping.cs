@@ -11,7 +11,8 @@ namespace InputLib
 		{
 			ContinuousHold,
 			PressAndRelease,
-			AnalogAmount
+			AnalogAmount,
+			Toggle
 		}
 
 		internal ActionTypes	mActionType;
