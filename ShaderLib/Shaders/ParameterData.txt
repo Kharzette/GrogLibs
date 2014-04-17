@@ -398,7 +398,7 @@ TriSkinTex0
 		mSpecColor
 		mSpecPower
 		mMaterialID
-TriSkinSolidSpecPhys
+TriSkinSolidSpec
 	Ignored
 		mTexture0
 		mTexture1
@@ -443,7 +443,7 @@ TriSkinSolidSpecPhys
 		mbDirectional
 		mShadowAtten
 		mMaterialID
-TriSkinCelSolidSpecPhys
+TriSkinCelSolidSpec
 	Ignored
 		mTexture0
 		mTexture1
@@ -487,7 +487,7 @@ TriSkinCelSolidSpecPhys
 		mbDirectional
 		mShadowAtten
 		mMaterialID
-TriSkinDanglySolidSpecPhys
+TriSkinDanglySolidSpec
 	Ignored
 		mTexture0
 		mTexture1
@@ -530,7 +530,7 @@ TriSkinDanglySolidSpecPhys
 		mbDirectional
 		mShadowAtten
 		mMaterialID
-TriSkinDanglyCelSolidSpecPhys
+TriSkinDanglyCelSolidSpec
 	Ignored
 		mTexture0
 		mTexture1
@@ -572,7 +572,7 @@ TriSkinDanglyCelSolidSpecPhys
 		mbDirectional
 		mShadowAtten
 		mMaterialID
-TriSkinCelColorSpecPhys
+TriSkinCelColorSpec
 	Ignored
 		mTexture0
 		mTexture1

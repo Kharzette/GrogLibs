@@ -17,16 +17,12 @@ namespace MeshLib
 	{
 		List<Mesh>	mMeshParts	=new List<Mesh>();
 
-		//refs to anim and material libs
-//		MaterialLib.MaterialLib	mMatLib;
-
 		//transform
 		Matrix	mTransform;
 
 
-		public StaticMesh()//MaterialLib.MaterialLib ml)
+		public StaticMesh()
 		{
-//			mMatLib		=ml;
 		}
 
 
@@ -145,7 +141,7 @@ namespace MeshLib
 		}
 
 
-		public void TempDraw(DeviceContext dc, MaterialLib.MaterialLib matLib)
+		public void Draw(DeviceContext dc, MaterialLib.MaterialLib matLib)
 		{
 			foreach(Mesh m in mMeshParts)
 			{
@@ -153,12 +149,14 @@ namespace MeshLib
 				{
 					continue;
 				}
-				m.TempDraw(dc, matLib, mTransform);
+				m.Draw(dc, matLib, mTransform);
 			}
 		}
 
 
-		public void Draw(Device gd)
+		public void DrawDMN(DeviceContext dc,
+			MaterialLib.MaterialLib matLib,
+			MaterialLib.IDKeeper idk)
 		{
 			foreach(Mesh m in mMeshParts)
 			{
@@ -166,39 +164,14 @@ namespace MeshLib
 				{
 					continue;
 				}
-//				m.Draw(gd, mMatLib, mTransform, "");
-			}
-		}
-
-/*
-		public void DrawDMN(Device gd, MaterialLib.IDKeeper idk)
-		{
-			foreach(Mesh m in mMeshParts)
-			{
-				if(!m.Visible)
-				{
-					continue;
-				}
-				m.DrawDMN(gd, mMatLib, idk, mTransform);
-			}
-		}*/
-
-
-		public void SetSecondVertexBufferBinding(VertexBufferBinding v2)
-		{
-			foreach(Mesh m in mMeshParts)
-			{
-				if(!m.Visible)
-				{
-					continue;
-				}
-				m.SetSecondVertexBufferBinding(v2);
+				m.DrawDMN(dc, matLib, idk, mTransform);
 			}
 		}
 
 
-		//instanced
-/*		public void Draw(Device gd, int numInstances)
+		public void Draw(DeviceContext dc,
+			MaterialLib.MaterialLib matLib,
+			string altMatName)
 		{
 			foreach(Mesh m in mMeshParts)
 			{
@@ -206,42 +179,10 @@ namespace MeshLib
 				{
 					continue;
 				}
-				m.Draw(gd, mMatLib, numInstances);
+
+				m.Draw(dc, matLib, mTransform, altMatName);
 			}
 		}
-
-
-		public void Draw(Device gd, string altMatName)
-		{
-			foreach(Mesh m in mMeshParts)
-			{
-				if(!m.Visible)
-				{
-					continue;
-				}
-
-				m.Draw(gd, mMatLib, mTransform, altMatName);
-			}
-		}
-
-
-		//draw instanced
-		public void Draw(Device gd, int numInstances, string altMatName)
-		{
-			foreach(Mesh m in mMeshParts)
-			{
-				if(!m.Visible)
-				{
-					continue;
-				}
-
-				string	temp	=m.MaterialName;
-
-				m.MaterialName	=altMatName;
-				m.Draw(gd, mMatLib, numInstances);
-				m.MaterialName	=temp;
-			}
-		}*/
 
 
 		public void UpdateBounds()

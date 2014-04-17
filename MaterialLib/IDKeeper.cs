@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
-using Microsoft.Xna.Framework.Graphics;
+using SharpDX;
 
 
 namespace MaterialLib
@@ -12,14 +12,13 @@ namespace MaterialLib
 	{
 		internal struct MatID
 		{
-			internal Material	mMat;
-			internal int		mID;
+			internal string	mMat;
+			internal int	mID;
 		};
 
 		List<MaterialLib>	mLibs	=new List<MaterialLib>();
 
 		Dictionary<string, MatID>	mIDs	=new Dictionary<string, MatID>();
-		Dictionary<Material, MatID>	mMatIDs	=new Dictionary<Material, MatID>();
 
 		const int	StartIndex	=10;	//0 is for occluders, 10 seems like a nice number!?
 
@@ -28,7 +27,6 @@ namespace MaterialLib
 		{
 			mLibs.Clear();
 			mIDs.Clear();
-			mMatIDs.Clear();
 		}
 
 
@@ -45,11 +43,11 @@ namespace MaterialLib
 			int	index	=StartIndex;
 			foreach(MaterialLib mlib in mLibs)
 			{
-				Dictionary<string, Material>	mats	=mlib.GetMaterials();
+				List<string>	mats	=mlib.GetMaterialNames();
 
-				foreach(KeyValuePair<string, Material> mat in mats)
+				foreach(string mat in mats)
 				{
-					if(mat.Key == "DMN")
+					if(mat == "DMN")
 					{
 						continue;
 					}
@@ -57,43 +55,38 @@ namespace MaterialLib
 					MatID	mid;
 
 					mid.mID		=index++;
-					mid.mMat	=mat.Value;
+					mid.mMat	=mat;
 
-					string	matName	=StripName(mat.Key);
+					string	matName	=StripName(mat);
 					if(!mIDs.ContainsKey(matName))
 					{
 						mIDs.Add(matName, mid);
 					}
-					mMatIDs.Add(mat.Value, mid);
 				}
 			}
 		}
 
 
 		//this works for BSP materials but not static/char
-		public void AssignIDsToMaterials(Effect forEffect)
+		public void AssignIDsToMaterials(string forEffect)
 		{
 			foreach(MaterialLib mlib in mLibs)
 			{
-				Dictionary<string, Material>	mats	=mlib.GetMaterials();
+				List<string>	mats	=mlib.GetMaterialNames();
 
-				foreach(KeyValuePair<string, Material> mat in mats)
+				foreach(string mat in mats)
 				{
-					if(mat.Key == "DMN")
+					if(mat == "DMN")
 					{
 						continue;
 					}
 
-					if(mlib.GetMaterialShader(mat.Key) != forEffect)
+					if(mlib.GetMaterialEffect(mat) != forEffect)
 					{
 						continue;
 					}
 
-					//if this already exists, parameterkeeper handles it
-					mat.Value.AddParameter("mMaterialID",
-						EffectParameterClass.Scalar,
-						EffectParameterType.Int32, 1,
-						mMatIDs[mat.Value].mID);
+					mlib.SetMaterialParameter(mat, "mMaterialID", mIDs[mat]);
 				}
 			}
 		}
@@ -106,16 +99,6 @@ namespace MaterialLib
 			if(mIDs.ContainsKey(stripped))
 			{
 				return	mIDs[stripped].mID;
-			}
-			return	-1;
-		}
-
-
-		public int GetID(Material mat)
-		{
-			if(mMatIDs.ContainsKey(mat))
-			{
-				return	mMatIDs[mat].mID;
 			}
 			return	-1;
 		}

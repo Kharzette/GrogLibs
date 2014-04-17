@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using SharpDX;
-//using MaterialLib;
-using Device	=SharpDX.Direct3D11.Device;
+using SharpDX.DXGI;
+using SharpDX.Direct3D11;
+
+using Device			=SharpDX.Direct3D11.Device;
+using MaterialLibrary	=MaterialLib.MaterialLib;
 
 namespace MeshLib
 {
@@ -39,15 +42,11 @@ namespace MeshLib
 		//copies bones into the shader
 		//materials should be set up to ignore
 		//the mBones parameter
-		public void UpdateShaderBones()
+		public void UpdateShaderBones(MaterialLibrary matLib)
 		{
 			if(mBones != null)
 			{
-//				if(mFX == null)
-//				{
-//					mFX	=mMatLib.GetShader("Shaders\\Character");
-//				}
-//				mFX.Parameters["mBones"].SetValue(mBones);
+				matLib.SetEffectParameter("Character.fx", "mBones", mBones);
 			}
 		}
 
@@ -91,7 +90,10 @@ namespace MeshLib
 
 		public void NukeMesh(Mesh m)
 		{
-			mMeshParts.Remove(m);
+			if(mMeshParts.Contains(m))
+			{
+				mMeshParts.Remove(m);
+			}
 		}
 
 
@@ -275,10 +277,10 @@ namespace MeshLib
 			return	mSphereBound;
 		}
 
-		/*
-		public void Draw(Device gd)
+		
+		public void Draw(DeviceContext dc, MaterialLib.MaterialLib matLib)
 		{
-			UpdateShaderBones();
+			UpdateShaderBones(matLib);
 
 			foreach(Mesh m in mMeshParts)
 			{
@@ -286,14 +288,16 @@ namespace MeshLib
 				{
 					continue;
 				}
-//				m.Draw(gd, mMatLib, mTransform, "");
+				m.Draw(dc, matLib, mTransform);
 			}
 		}
 
 
-		public void DrawDMN(Device gd, MaterialLib.IDKeeper idk)
+		public void DrawDMN(DeviceContext dc,
+			MaterialLib.MaterialLib matLib,
+			MaterialLib.IDKeeper idk)
 		{
-			UpdateShaderBones();
+			UpdateShaderBones(matLib);
 
 			foreach(Mesh m in mMeshParts)
 			{
@@ -301,14 +305,14 @@ namespace MeshLib
 				{
 					continue;
 				}
-				m.DrawDMN(gd, mMatLib, idk, mTransform);
+				m.DrawDMN(dc, matLib, idk, mTransform);
 			}
 		}
 
 
-		public void Draw(Device gd, string altMaterial)
+		public void Draw(DeviceContext dc, MaterialLib.MaterialLib matLib, string altMaterial)
 		{
-			UpdateShaderBones();
+			UpdateShaderBones(matLib);
 
 			foreach(Mesh m in mMeshParts)
 			{
@@ -316,9 +320,9 @@ namespace MeshLib
 				{
 					continue;
 				}
-				m.Draw(gd, mMatLib, mTransform, altMaterial);
+				m.Draw(dc, matLib, mTransform, altMaterial);
 			}
-		}*/
+		}
 
 
 		public Vector3 GetForwardVector()

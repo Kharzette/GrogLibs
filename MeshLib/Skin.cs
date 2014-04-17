@@ -23,9 +23,10 @@ namespace MeshLib
 
 		public Skin()
 		{
-			mMaxAdjust	=Matrix.RotationYawPitchRoll(0,
-										MathUtil.DegreesToRadians(-90),
-										MathUtil.DegreesToRadians(180));
+//			mMaxAdjust	=Matrix.RotationYawPitchRoll(0,
+//										MathUtil.DegreesToRadians(-90),
+//										MathUtil.DegreesToRadians(180));
+			mMaxAdjust	=Matrix.Identity;
 		}
 
 

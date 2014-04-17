@@ -140,12 +140,42 @@ namespace MeshLib
 
 		public virtual void Write(BinaryWriter bw) { }
 		public virtual void Read(BinaryReader br, Device gd, bool bEditor) { }
-//		public virtual void Draw(Device g, MaterialLib.MaterialLib matLib, Matrix world, string altMaterial) { }
-//		public virtual void DrawDMN(Device g, MaterialLib.MaterialLib matLib, MaterialLib.IDKeeper idk, Matrix world) { }
-//		public virtual void Draw(Device g, MaterialLib.MaterialLib matLib, int numInstances) { }
-		public virtual void SetSecondVertexBufferBinding(VertexBufferBinding v2) { }
 
-		internal void TempDraw(DeviceContext dc, MaterialLib.MaterialLib matLib, Matrix transform)
+
+		internal void DrawDMN(DeviceContext dc,
+			MaterialLib.MaterialLib matLib,
+			MaterialLib.IDKeeper idk,
+			Matrix world)
+		{
+			if(!mbVisible)
+			{
+				return;
+			}
+
+			if(!matLib.MaterialExists("DMN"))
+			{
+				return;
+			}
+
+			int	id	=idk.GetID(mMaterialName);
+			if(id == -1)
+			{
+				return;
+			}
+
+			dc.InputAssembler.SetVertexBuffers(0, mVBinding);
+			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
+
+			matLib.SetMaterialParameter("DMN", "mWorld", world);
+			matLib.SetMaterialParameter("DMN", "mMaterialID", id);
+
+			matLib.ApplyMaterialPass(mMaterialName, dc, 0);
+
+			dc.DrawIndexed(mNumTriangles * 3, 0, 0);
+		}
+
+
+		internal void Draw(DeviceContext dc, MaterialLib.MaterialLib matLib, Matrix transform)
 		{
 			if(!matLib.MaterialExists(mMaterialName))
 			{
@@ -158,6 +188,26 @@ namespace MeshLib
 			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
 
 			matLib.ApplyMaterialPass(mMaterialName, dc, 0);
+
+			dc.DrawIndexed(mNumTriangles * 3, 0, 0);
+		}
+
+
+		internal void Draw(DeviceContext dc,
+			MaterialLib.MaterialLib matLib,
+			Matrix transform, string altMat)
+		{
+			if(!matLib.MaterialExists(altMat))
+			{
+				return;
+			}
+
+			matLib.SetMaterialParameter(altMat, "mWorld", (transform * mTransform));
+
+			dc.InputAssembler.SetVertexBuffers(0, mVBinding);
+			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
+
+			matLib.ApplyMaterialPass(altMat, dc, 0);
 
 			dc.DrawIndexed(mNumTriangles * 3, 0, 0);
 		}

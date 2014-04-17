@@ -650,6 +650,25 @@ namespace MaterialLib
 		}
 
 
+		//for variables that are usually ignored in the materials
+		//but some of the materials end up using it
+		public void SetEffectParameter(string fxName, string varName, Matrix []mats)
+		{
+			if(!mFX.ContainsKey(fxName))
+			{
+				return;
+			}
+
+			EffectVariable	var	=mVars[fxName].FirstOrDefault(v => v.Description.Name == varName);
+			if(var == null)
+			{
+				return;
+			}
+
+			var.AsMatrix().SetMatrix(mats);
+		}
+
+
 		public string GetMaterialEffect(string matName)
 		{
 			if(!mMats.ContainsKey(matName))
@@ -812,8 +831,7 @@ namespace MaterialLib
 				foreach(FileInfo f in fi)
 				{
 					//hacks until all the shaders build properly
-					if(f.Name == "BSP.fx" || f.Name == "Character.fx"
-						|| f.Name == "Post.fx")
+					if(f.Name == "BSP.fx" || f.Name == "Post.fx")
 					{
 						continue;
 					}

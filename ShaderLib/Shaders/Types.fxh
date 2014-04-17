@@ -57,7 +57,7 @@ struct VPosBone
 {
 	float3	Position	: POSITION;
 	int4	Blend0		: BLENDINDICES0;
-	float4	Weight0		: BLENDWEIGHT0;
+	half4	Weight0		: BLENDWEIGHTS0;
 };
 
 struct VPosTex0Col0
@@ -218,7 +218,7 @@ struct VPosNormBone
 	float3	Position	: POSITION;
 	float3	Normal		: NORMAL;
 	int4	Blend0		: BLENDINDICES0;
-	float4	Weight0		: BLENDWEIGHT0;
+	half4	Weight0		: BLENDWEIGHTS0;
 };
 
 struct VPosNormTex0Col0
@@ -257,7 +257,7 @@ struct VPosNormBoneTex0
 	float3	Position	: POSITION;
 	float3	Normal		: NORMAL;
 	int4	Blend0		: BLENDINDICES0;
-	float4	Weight0		: BLENDWEIGHT0;
+	half4	Weight0		: BLENDWEIGHTS0;
 	float2	TexCoord0	: TEXCOORD0;
 };
 
@@ -266,7 +266,7 @@ struct VPosNormBoneTex0Tex1
 	float3	Position	: POSITION;
 	float3	Normal		: NORMAL;
 	int4	Blend0		: BLENDINDICES0;
-	float4	Weight0		: BLENDWEIGHT0;
+	half4	Weight0		: BLENDWEIGHTS0;
 	float2	TexCoord0	: TEXCOORD0;
 	float2	TexCoord1	: TEXCOORD1;
 };
@@ -276,7 +276,7 @@ struct VPosNormBoneCol0
 	float3	Position	: POSITION;
 	float3	Normal		: NORMAL;
 	int4	Blend0		: BLENDINDICES0;
-	float4	Weight0		: BLENDWEIGHT0;
+	half4	Weight0		: BLENDWEIGHTS0;
 	float4	Color		: COLOR0;	
 };
 
@@ -285,7 +285,7 @@ struct VPosNormBoneTex0Col0
 	float3	Position	: POSITION;
 	float3	Normal		: NORMAL;
 	int4	Blend0		: BLENDINDICES0;
-	float4	Weight0		: BLENDWEIGHT0;
+	half4	Weight0		: BLENDWEIGHTS0;
 	float2	TexCoord0	: TEXCOORD0;
 	float4	Color		: COLOR0;	
 };
@@ -367,6 +367,18 @@ struct VPosTex04Tex14Tex24Tex34Tex44Tex54
 	float4	TexCoord3	: TEXCOORD3;
 	float4	TexCoord4	: TEXCOORD4;
 	float4	TexCoord5	: TEXCOORD5;
+};
+
+struct VVPosNorm
+{
+	float4	Position	: SV_POSITION;
+	float3	Normal		: NORMAL;
+};
+
+struct VVPosCol0
+{
+	float4	Position	: SV_POSITION;
+	float4	Color		: COLOR0;
 };
 
 struct VVPosTex0
