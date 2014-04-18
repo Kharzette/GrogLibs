@@ -266,6 +266,28 @@ namespace MeshLib
 		}
 
 
+		public void FixRename()
+		{
+			List<string>	toFix	=new List<string>();
+			foreach(KeyValuePair<string, Anim> anm in mAnims)
+			{
+				if(anm.Key != anm.Value.Name)
+				{
+					toFix.Add(anm.Key);
+				}
+			}
+
+			foreach(string fixMe in toFix)
+			{
+				Anim	anm	=mAnims[fixMe];
+
+				mAnims.Remove(fixMe);
+
+				mAnims.Add(anm.Name, anm);
+			}
+		}
+
+
 		/*
 		public void CreateKinectAnimation(IEnumerable<KinectMap> mapping,
 			CaptureData data, string animName)
