@@ -634,13 +634,13 @@ namespace MaterialLib
 						continue;
 					}
 
-					LoadShader(dev, sm, f.DirectoryName, f.Name, macs);
+					LoadShader(dev, f.DirectoryName, f.Name, macs);
 				}
 			}
 		}
 
 
-		void LoadShader(Device dev, ShaderModel sm, string dir, string file, ShaderMacro []macs)
+		void LoadShader(Device dev, string dir, string file, ShaderMacro []macs)
 		{
 			string	fullPath	=dir + "\\" + file;
 

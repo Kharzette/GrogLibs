@@ -107,21 +107,14 @@ float3 ComputeNormalFromMap(float4 sampleNorm, float3 tan, float3 biTan, float3 
 }
 
 
-//look up the skin transform for uint bone indexes
-//sadly 9_3 can't do this stuff so this probably won't get used
-float4x4 GetSkinXForm(uint bnIdxs, half4 bnWeights, float4x4 bones[MAX_BONES])
+//ints for > sm2
+float4x4 GetSkinXForm(int4 bnIdxs, half4 bnWeights, float4x4 bones[MAX_BONES])
 {
-	int4	indexes;
+	float4x4 skinTransform	=bones[bnIdxs.x] * bnWeights.x;
 
-	indexes.x	=bnIdxs & 0xFF;
-	indexes.y	=(bnIdxs >> 8) & 0xFF;
-	indexes.z	=(bnIdxs >> 8) & 0xFF;
-	indexes.w	=(bnIdxs >> 8) & 0xFF;
-
-	float4x4 skinTransform	=bones[indexes.x] * bnWeights.x;
-	skinTransform	+=bones[indexes.y] * bnWeights.y;
-	skinTransform	+=bones[indexes.z] * bnWeights.z;
-	skinTransform	+=bones[indexes.w] * bnWeights.w;
+	skinTransform	+=bones[bnIdxs.y] * bnWeights.y;
+	skinTransform	+=bones[bnIdxs.z] * bnWeights.z;
+	skinTransform	+=bones[bnIdxs.w] * bnWeights.w;
 	
 	return	skinTransform;
 }

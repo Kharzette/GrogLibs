@@ -436,14 +436,19 @@ namespace MaterialLib
 
 		Format	GetFormatFromParamDesc(ShaderParameterDescription spd)
 		{
+			//special case here
+			//the reflection stuff returns float4 for stuff I want half4
+			if(spd.SemanticName == "BLENDWEIGHTS")
+			{
+				return	Format.R16G16B16A16_Float;
+			}
+			if(spd.SemanticName == "BLENDINDICES")
+			{
+				return	Format.R8G8B8A8_UInt;
+			}
+
 			if(spd.ComponentType == RegisterComponentType.Float32)
 			{
-				//special case here
-				//the reflection stuff returns float4 for stuff I want half4
-				if(spd.SemanticName == "BLENDWEIGHTS" || spd.SemanticName == "BLENDINDICES")
-				{
-					return	Format.R16G16B16A16_Float;
-				}
 				if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentW) != 0))
 				{
 					return	Format.R32G32B32A32_Float;

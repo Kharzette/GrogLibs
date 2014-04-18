@@ -56,7 +56,11 @@ struct VPosCol0Tex04Tex14Tex24
 struct VPosBone
 {
 	float3	Position	: POSITION;
+#if defined(SM2)
 	half4	Blend0		: BLENDINDICES0;
+#else
+	int4	Blend0		: BLENDINDICES0;
+#endif
 	half4	Weight0		: BLENDWEIGHTS0;
 };
 
@@ -217,7 +221,12 @@ struct VPosNormBone
 {
 	float3	Position	: POSITION;
 	float3	Normal		: NORMAL;
+#if defined(SM2)
 	half4	Blend0		: BLENDINDICES0;
+#else
+	int4	Blend0		: BLENDINDICES0;
+#endif
+
 	half4	Weight0		: BLENDWEIGHTS0;
 };
 
@@ -256,7 +265,12 @@ struct VPosNormBoneTex0
 {
 	float3	Position	: POSITION;
 	float3	Normal		: NORMAL;
+#if defined(SM2)
 	half4	Blend0		: BLENDINDICES0;
+#else
+	int4	Blend0		: BLENDINDICES0;
+#endif
+
 	half4	Weight0		: BLENDWEIGHTS0;
 	float2	TexCoord0	: TEXCOORD0;
 };
@@ -265,7 +279,12 @@ struct VPosNormBoneTex0Tex1
 {
 	float3	Position	: POSITION;
 	float3	Normal		: NORMAL;
+#if defined(SM2)
 	half4	Blend0		: BLENDINDICES0;
+#else
+	int4	Blend0		: BLENDINDICES0;
+#endif
+
 	half4	Weight0		: BLENDWEIGHTS0;
 	float2	TexCoord0	: TEXCOORD0;
 	float2	TexCoord1	: TEXCOORD1;
@@ -275,7 +294,12 @@ struct VPosNormBoneCol0
 {
 	float3	Position	: POSITION;
 	float3	Normal		: NORMAL;
+#if defined(SM2)
 	half4	Blend0		: BLENDINDICES0;
+#else
+	int4	Blend0		: BLENDINDICES0;
+#endif
+
 	half4	Weight0		: BLENDWEIGHTS0;
 	float4	Color		: COLOR0;	
 };
@@ -284,7 +308,12 @@ struct VPosNormBoneTex0Col0
 {
 	float3	Position	: POSITION;
 	float3	Normal		: NORMAL;
+#if defined(SM2)
 	half4	Blend0		: BLENDINDICES0;
+#else
+	int4	Blend0		: BLENDINDICES0;
+#endif
+
 	half4	Weight0		: BLENDWEIGHTS0;
 	float2	TexCoord0	: TEXCOORD0;
 	float4	Color		: COLOR0;	
@@ -303,7 +332,12 @@ struct VPosNormBlendTex0Tex1Tex2Tex3Tex4
 {
 	float3	Position	: POSITION;
 	float3	Normal		: NORMAL;
+#if defined(SM2)
 	half4	Blend0		: BLENDINDICES0;
+#else
+	int4	Blend0		: BLENDINDICES0;
+#endif
+
 	float2	TexCoord0	: TEXCOORD0;
 	float2	TexCoord1	: TEXCOORD1;
 	float2	TexCoord2	: TEXCOORD2;
@@ -352,7 +386,12 @@ struct VPosNormBlendTex04Tex14Tex24
 {
 	float3	Position	: POSITION;
 	float3	Normal		: NORMAL;
+#if defined(SM2)
 	half4	Blend0		: BLENDINDICES0;
+#else
+	int4	Blend0		: BLENDINDICES0;
+#endif
+
 	float4	TexCoord0	: TEXCOORD0;
 	float4	TexCoord1	: TEXCOORD1;
 	float4	TexCoord2	: TEXCOORD2;

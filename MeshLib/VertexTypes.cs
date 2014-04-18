@@ -209,6 +209,10 @@ namespace MeshLib
 				{
 					size	+=16;
 				}
+				else if(fi.FieldType == typeof(Color))
+				{
+					size	+=4;
+				}
 				else
 				{
 					Debug.Assert(false);	//unknown
@@ -446,11 +450,11 @@ namespace MeshLib
 		}
 
 
-		public static List<Half4> GetBoneIndexes(Array verts, int typeIdx)
+		public static List<Color> GetBoneIndexes(Array verts, int typeIdx)
 		{
 			Type	vtype	=mTypes[typeIdx];
 
-			List<Half4>	idxs	=new List<Half4>();
+			List<Color>	idxs	=new List<Color>();
 
 			FieldInfo	[]finfo	=vtype.GetFields();
 			for(int i=0;i < verts.Length;i++)
@@ -460,7 +464,7 @@ namespace MeshLib
 					//this might not be positional data!
 					if(fi.Name == "BoneIndex")
 					{
-						Half4	vec	=(Half4)GetArrayField(verts, i, fi.Name);
+						Color	vec	=(Color)GetArrayField(verts, i, fi.Name);
 						idxs.Add(vec);
 					}
 				}
@@ -567,7 +571,7 @@ namespace MeshLib
 
 			bool	bPos		=HasElement(newType, typeof(Vector3), "Position");
 			bool	bNorm		=HasElement(newType, typeof(Vector3), "Normal");
-			bool	bBoneIdx	=HasElement(newType, typeof(Half4), "BoneIndex");
+			bool	bBoneIdx	=HasElement(newType, typeof(Color), "BoneIndex");
 			bool	bBoneWeight	=HasElement(newType, typeof(Half4), "BoneWeights");
 			bool	bTan		=HasElement(newType, typeof(Vector3), "Tangent");
 			bool	bBiTan		=HasElement(newType, typeof(Vector3), "BiTangent");
@@ -614,7 +618,7 @@ namespace MeshLib
 		}
 
 
-		public static void ReplaceBoneIndexes(Array verts, Half4 []newInds)
+		public static void ReplaceBoneIndexes(Array verts, Color []newInds)
 		{
 			Debug.Assert(verts.Length == newInds.Length);
 
@@ -647,7 +651,7 @@ namespace MeshLib
 
 			bool	bPos		=HasElement(vtype, typeof(Vector3), "Position");
 			bool	bNorm		=HasElement(vtype, typeof(Vector3), "Normal");
-			bool	bBoneIdx	=HasElement(vtype, typeof(Half4), "BoneIndex");
+			bool	bBoneIdx	=HasElement(vtype, typeof(Color), "BoneIndex");
 			bool	bBoneWeight	=HasElement(vtype, typeof(Half4), "BoneWeights");
 
 			//build the new type
