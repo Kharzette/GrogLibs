@@ -440,7 +440,7 @@ namespace MaterialLib
 			{
 				//special case here
 				//the reflection stuff returns float4 for stuff I want half4
-				if(spd.SemanticName == "BLENDWEIGHTS")
+				if(spd.SemanticName == "BLENDWEIGHTS" || spd.SemanticName == "BLENDINDICES")
 				{
 					return	Format.R16G16B16A16_Float;
 				}

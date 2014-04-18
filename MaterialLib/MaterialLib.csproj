@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CelShading.cs" />
+    <Compile Include="EffectVariableValue.cs" />
     <Compile Include="IDKeeper.cs" />
     <Compile Include="Material.cs" />
     <Compile Include="MaterialLib.cs" />

@@ -60,13 +60,13 @@ namespace MeshLib
 			//weld
 			List<Half4>	myWeights		=VertexTypes.GetWeights(mVertArray, mTypeIndex);
 			List<Half4>	otherWeights	=VertexTypes.GetWeights(mesh2.mVertArray, mesh2.mTypeIndex);
-			List<Int4>	myInds			=VertexTypes.GetBoneIndexes(mVertArray, mTypeIndex);
-			List<Int4>	otherInds		=VertexTypes.GetBoneIndexes(mesh2.mVertArray, mesh2.mTypeIndex);
+			List<Half4>	myInds			=VertexTypes.GetBoneIndexes(mVertArray, mTypeIndex);
+			List<Half4>	otherInds		=VertexTypes.GetBoneIndexes(mesh2.mVertArray, mesh2.mTypeIndex);
 
 			foreach(KeyValuePair<int, List<int>> weldSpot in toWeld)
 			{
 				Half4	goodWeight	=myWeights[weldSpot.Key];
-				Int4	goodIdx		=myInds[weldSpot.Key];
+				Half4	goodIdx		=myInds[weldSpot.Key];
 
 				foreach(int ow in weldSpot.Value)
 				{
