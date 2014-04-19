@@ -32,15 +32,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SharpDX">
-      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.2.5.0\lib\net40\SharpDX.dll</HintPath>
+      <HintPath>..\..\Games\packages\SharpDX.2.5.0\lib\net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.RawInput">
-      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.RawInput.2.5.0\lib\net40\SharpDX.RawInput.dll</HintPath>
+      <HintPath>..\..\Games\packages\SharpDX.RawInput.2.5.0\lib\net40\SharpDX.RawInput.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.XInput">
-      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.XInput.2.5.0\lib\net40\SharpDX.XInput.dll</HintPath>
+      <HintPath>..\..\Games\packages\SharpDX.XInput.2.5.0\lib\net40\SharpDX.XInput.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>

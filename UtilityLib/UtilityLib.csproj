@@ -8,8 +8,8 @@
     <ProjectGuid>{C2A1DDD2-0237-4CF3-8CBD-C77388FCC54D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>UtilityLibSharpDX</RootNamespace>
-    <AssemblyName>UtilityLibSharpDX</AssemblyName>
+    <RootNamespace>UtilityLib</RootNamespace>
+    <AssemblyName>UtilityLib</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -32,29 +32,20 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SharpDX">
-      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.2.5.0\lib\net40\SharpDX.dll</HintPath>
+      <HintPath>..\..\Games\packages\SharpDX.2.5.0\lib\net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.D3DCompiler">
-      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.D3DCompiler.2.5.0\lib\net40\SharpDX.D3DCompiler.dll</HintPath>
+      <HintPath>..\..\Games\packages\SharpDX.D3DCompiler.2.5.0\lib\net40\SharpDX.D3DCompiler.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D11">
-      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.Direct3D11.2.5.0\lib\net40\SharpDX.Direct3D11.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D11.Effects">
-      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.Direct3D11.Effects.2.5.0\lib\net40\SharpDX.Direct3D11.Effects.dll</HintPath>
+      <HintPath>..\..\Games\packages\SharpDX.Direct3D11.2.5.0\lib\net40\SharpDX.Direct3D11.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.DXGI">
-      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.DXGI.2.5.0\lib\net40\SharpDX.DXGI.dll</HintPath>
+      <HintPath>..\..\Games\packages\SharpDX.DXGI.2.5.0\lib\net40\SharpDX.DXGI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FileUtil.cs" />
@@ -72,10 +63,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="sharpdx_direct3d11_effects_x64.dll" />
-    <Content Include="sharpdx_direct3d11_effects_x86.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

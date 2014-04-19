@@ -8,8 +8,8 @@
     <ProjectGuid>{CABCC4D8-8F21-4728-B317-28D5B500BEFB}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MaterialLibSharpDX</RootNamespace>
-    <AssemblyName>MaterialLibSharpDX</AssemblyName>
+    <RootNamespace>MaterialLib</RootNamespace>
+    <AssemblyName>MaterialLib</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -33,29 +33,23 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SharpDX">
-      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.2.5.0\lib\net40\SharpDX.dll</HintPath>
+      <HintPath>..\..\Games\packages\SharpDX.2.5.0\lib\net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.D3DCompiler">
-      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.D3DCompiler.2.5.0\lib\net40\SharpDX.D3DCompiler.dll</HintPath>
+      <HintPath>..\..\Games\packages\SharpDX.D3DCompiler.2.5.0\lib\net40\SharpDX.D3DCompiler.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D11">
-      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.Direct3D11.2.5.0\lib\net40\SharpDX.Direct3D11.dll</HintPath>
+      <HintPath>..\..\Games\packages\SharpDX.Direct3D11.2.5.0\lib\net40\SharpDX.Direct3D11.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D11.Effects">
-      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.Direct3D11.Effects.2.5.0\lib\net40\SharpDX.Direct3D11.Effects.dll</HintPath>
+      <HintPath>..\..\Games\packages\SharpDX.Direct3D11.Effects.2.5.0\lib\net40\SharpDX.Direct3D11.Effects.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.DXGI">
-      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.DXGI.2.5.0\lib\net40\SharpDX.DXGI.dll</HintPath>
+      <HintPath>..\..\Games\packages\SharpDX.DXGI.2.5.0\lib\net40\SharpDX.DXGI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CelShading.cs" />
@@ -66,13 +60,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <ProjectReference Include="..\UtilityLib\UtilityLib.csproj">
+      <Project>{C2A1DDD2-0237-4CF3-8CBD-C77388FCC54D}</Project>
+      <Name>UtilityLib</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\UtilityLibSharpDX\UtilityLibSharpDX.csproj">
-      <Project>{C2A1DDD2-0237-4CF3-8CBD-C77388FCC54D}</Project>
-      <Name>UtilityLibSharpDX</Name>
-    </ProjectReference>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="sharpdx_direct3d11_effects_x64.dll" />

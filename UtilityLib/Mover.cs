@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using SharpDX;
-using SharpDX.Direct3D11;
 
 
 namespace UtilityLib
