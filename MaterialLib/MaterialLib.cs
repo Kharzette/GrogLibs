@@ -310,10 +310,10 @@ namespace MaterialLib
 		}
 
 
-		//editor constructor, loads & compiles all
-		public MaterialLib(Device dev, ShaderModel sm)
+		//editor constructor, loads or compiles all
+		public MaterialLib(Device dev, ShaderModel sm, bool bUsePreCompiled)
 		{
-			LoadShaders(dev, sm);
+			LoadShaders(dev, sm, bUsePreCompiled);
 			LoadParameterData();
 
 			GrabVariables();
@@ -613,7 +613,7 @@ namespace MaterialLib
 
 
 		//load all shaders in the shaders folder
-		void LoadShaders(Device dev, ShaderModel sm)
+		void LoadShaders(Device dev, ShaderModel sm, bool bUsePreCompiled)
 		{
 			ShaderMacro []macs	=new ShaderMacro[1];
 
@@ -634,18 +634,79 @@ namespace MaterialLib
 						continue;
 					}
 
+					if(bUsePreCompiled)
+					{
+						//see if a precompiled exists
+						DirectoryInfo	preDi	=new DirectoryInfo(
+							AppDomain.CurrentDomain.BaseDirectory +
+							"/CompiledShaders/" + macs[0].Name);
+
+						FileInfo[]	preFi	=preDi.GetFiles(f.Name + ".Compiled", SearchOption.TopDirectoryOnly);
+
+						if(preFi.Length == 1)
+						{
+							if(f.LastWriteTime <= preFi[0].LastWriteTime)
+							{
+								LoadCompiledShader(dev, preFi[0].DirectoryName, preFi[0].Name, macs);
+								continue;
+							}
+						}
+					}
+
 					LoadShader(dev, f.DirectoryName, f.Name, macs);
 				}
 			}
 		}
 
 
+		void LoadCompiledShader(Device dev, string dir, string file, ShaderMacro []macs)
+		{
+			string	fullPath	=dir + "\\" + file;
+
+			FileStream		fs	=new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+			BinaryReader	br	=new BinaryReader(fs);
+
+			int	len	=br.ReadInt32();
+
+			byte	[]code	=br.ReadBytes(len);
+
+			Effect	fx	=new Effect(dev, code);
+			if(fx != null)
+			{
+				mFX.Add(file.Substring(0, file.Length - 9), fx);
+			}
+		}
+
+
 		void LoadShader(Device dev, string dir, string file, ShaderMacro []macs)
 		{
+			if(!Directory.Exists("CompiledShaders"))
+			{
+				Directory.CreateDirectory("CompiledShaders");
+			}
+
+			if(!Directory.Exists("CompiledShaders/" + macs[0].Name))
+			{
+				Directory.CreateDirectory("CompiledShaders/" + macs[0].Name);
+			}
+
 			string	fullPath	=dir + "\\" + file;
 
 			CompilationResult	shdRes	=ShaderBytecode.CompileFromFile(
 				fullPath, "fx_5_0", ShaderFlags.Debug, EffectFlags.None, macs, mIFX);
+
+
+			FileStream	fs	=new FileStream("CompiledShaders/"
+				+ macs[0].Name + "/" + file + ".Compiled",
+				FileMode.Create, FileAccess.Write);
+
+			BinaryWriter	bw	=new BinaryWriter(fs);
+
+			bw.Write(shdRes.Bytecode.Data.Length);
+			bw.Write(shdRes.Bytecode.Data, 0, shdRes.Bytecode.Data.Length);
+
+			bw.Close();
+			fs.Close();
 
 			Effect	fx	=new Effect(dev, shdRes);
 			if(fx != null)
