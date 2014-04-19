@@ -760,6 +760,11 @@ namespace MeshLib
 						bw.Write(vec.Z);
 						bw.Write(vec.W);
 					}
+					else if(fi.FieldType.Name == "Color")
+					{
+						Color	col	=(Color)GetArrayField(verts, i, fi.Name);
+						bw.Write(col.ToRgba());
+					}
 					else
 					{
 						Debug.Assert(false);
@@ -825,6 +830,12 @@ namespace MeshLib
 						vec.W	=br.ReadSingle();
 
 						SetArrayField(outVerts, i, fi.Name, vec);
+					}
+					else if(fi.FieldType.Name == "Color")
+					{
+						int	packedCol	=br.ReadInt32();
+
+						Color	col	=new Color(packedCol);
 					}
 					else
 					{

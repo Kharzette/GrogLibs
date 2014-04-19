@@ -81,8 +81,8 @@ namespace MeshLib
 
 		public void SaveToFile(string fileName)
 		{
-			FileStream	file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
-			BinaryWriter	bw	=new BinaryWriter(file);
+			FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
+			BinaryWriter	bw		=new BinaryWriter(file);
 
 			//write a magic number identifying a static
 			UInt32	magic	=0x57A71C35;
@@ -124,9 +124,19 @@ namespace MeshLib
 			}
 
 			int	numMesh	=br.ReadInt32();
+
 			for(int i=0;i < numMesh;i++)
 			{
-				Mesh	m	=new Mesh();
+				Mesh	m;
+
+				if(bEditor)
+				{
+					m	=new EditorMesh("temp");
+				}
+				else
+				{
+					m	=new Mesh();
+				}
 
 				m.Read(br, gd, bEditor);
 				mMeshParts.Add(m);

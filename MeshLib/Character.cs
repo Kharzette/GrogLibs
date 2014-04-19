@@ -183,7 +183,16 @@ namespace MeshLib
 			int	numMesh	=br.ReadInt32();
 			for(int i=0;i < numMesh;i++)
 			{
-				Mesh	m	=new Mesh();
+				Mesh	m;
+
+				if(bEditor)
+				{
+					m	=new EditorMesh("temp");
+				}
+				else
+				{
+					m	=new Mesh();
+				}
 
 				m.Read(br, gd, bEditor);
 				mMeshParts.Add(m);

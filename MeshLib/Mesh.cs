@@ -138,8 +138,74 @@ namespace MeshLib
 		}
 
 
-		public virtual void Write(BinaryWriter bw) { }
-		public virtual void Read(BinaryReader br, Device gd, bool bEditor) { }
+		public virtual void Write(BinaryWriter bw)
+		{
+			bw.Write(mName);
+			bw.Write(mNumVerts);
+			bw.Write(mNumTriangles);
+			bw.Write(mVertSize);
+			bw.Write(mMaterialName);
+			bw.Write(mTypeIndex);
+			bw.Write(mbVisible);
+
+			//transform
+			FileUtil.WriteMatrix(bw, mTransform);
+
+			//box bound
+			FileUtil.WriteVector3(bw, mBoxBound.Minimum);
+			FileUtil.WriteVector3(bw, mBoxBound.Maximum);
+
+			//sphere bound
+			FileUtil.WriteVector3(bw, mSphereBound.Center);
+			bw.Write(mSphereBound.Radius);
+		}
+
+
+		public virtual void Read(BinaryReader br, Device gd, bool bEditor)
+		{
+			mName			=br.ReadString();
+			mNumVerts		=br.ReadInt32();
+			mNumTriangles	=br.ReadInt32();
+			mVertSize		=br.ReadInt32();
+			mMaterialName	=br.ReadString();
+			mTypeIndex		=br.ReadInt32();
+			mbVisible		=br.ReadBoolean();
+
+			mTransform	=FileUtil.ReadMatrix(br);
+
+			mBoxBound.Minimum	=FileUtil.ReadVector3(br);
+			mBoxBound.Maximum	=FileUtil.ReadVector3(br);
+
+			mSphereBound.Center	=FileUtil.ReadVector3(br);
+			mSphereBound.Radius	=br.ReadSingle();
+
+			if(!bEditor)
+			{
+				Array	vertArray;
+
+				VertexTypes.ReadVerts(br, gd, out vertArray);
+
+				int	indLen	=br.ReadInt32();
+
+				UInt16	[]indArray	=new UInt16[indLen];
+
+				for(int i=0;i < indLen;i++)
+				{
+					indArray[i]	=br.ReadUInt16();
+				}
+
+				VertexTypes.BuildABuffer(gd, vertArray, mTypeIndex);
+
+				BufferDescription	indDesc	=new BufferDescription(indArray.Length * 2,
+					ResourceUsage.Default, BindFlags.IndexBuffer,
+					CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+				mIndexs	=Buffer.Create<UInt16>(gd, indArray, indDesc);
+
+				mVBinding	=new VertexBufferBinding(mVerts,
+					VertexTypes.GetSizeForTypeIndex(mTypeIndex), 0);
+			}
+		}
 
 
 		internal void DrawDMN(DeviceContext dc,

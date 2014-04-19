@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,49 @@ namespace MeshLib
 
 		public EditorMesh(string name) : base(name)
 		{
+		}
+
+
+		public override void Write(BinaryWriter bw)
+		{
+			base.Write(bw);
+
+			VertexTypes.WriteVerts(bw, mVertArray, mTypeIndex);
+
+			bw.Write(mIndArray.Length);
+
+			foreach(UInt16 ind in mIndArray)
+			{
+				bw.Write(ind);
+			}
+		}
+
+
+		public override void Read(BinaryReader br, Device gd, bool bEditor)
+		{
+			base.Read(br, gd, bEditor);
+
+			VertexTypes.ReadVerts(br, gd, out mVertArray);
+
+			int	indLen	=br.ReadInt32();
+
+			mIndArray	=new UInt16[indLen];
+
+			for(int i=0;i < indLen;i++)
+			{
+				mIndArray[i]	=br.ReadUInt16();
+			}
+
+			mVerts	=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
+
+			BufferDescription	indDesc	=new BufferDescription(mIndArray.Length * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			mIndexs	=Buffer.Create<UInt16>(gd, mIndArray, indDesc);
+
+			mVBinding	=new VertexBufferBinding(mVerts,
+				VertexTypes.GetSizeForTypeIndex(mTypeIndex), 0);
 		}
 
 
