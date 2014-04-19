@@ -1,30 +1,41 @@
 ﻿using System;
+using System.IO;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+
+using SharpDX;
+using SharpDX.D3DCompiler;
+using SharpDX.Direct3D;
+using SharpDX.Direct3D11;
+using SharpDX.DXGI;
+using Buffer = SharpDX.Direct3D11.Buffer;
+using Device = SharpDX.Direct3D11.Device;
+using MapFlags = SharpDX.Direct3D11.MapFlags;
 
 
 namespace UtilityLib
 {
 	public class PrimObject
 	{
-		VertexBuffer	mVB;
-		IndexBuffer		mIB;
+		Buffer				mVB;
+		Buffer				mIB;
+		VertexBufferBinding	mVBBinding;
+		int					mNumIndexes;
 
-		Texture2D	mTex;
-		Matrix		mWorld;
-		bool		mbHasNormals;
+		Matrix				mWorld;
+		bool				mbHasNormals;
 
 
-		public PrimObject(GraphicsDevice gd, VertexBuffer vb,
-			IndexBuffer ib, Texture2D tex, bool bHasNormals)
+		public PrimObject(Buffer vb, int vertSize,
+			Buffer ib, int numIndexes, bool bHasNormals)
 		{
 			mVB				=vb;
 			mIB				=ib;
-			mTex			=tex;
+			mNumIndexes		=numIndexes;
 			mbHasNormals	=bHasNormals;
+
+			mVBBinding	=new VertexBufferBinding(mVB, vertSize, 0);
 
 			mWorld	=Matrix.Identity;
 		}
@@ -38,89 +49,37 @@ namespace UtilityLib
 
 
 		//custom shader
-		public void Draw(GraphicsDevice gd, Effect fx, Matrix camMat, Matrix projMat)
+		public void Draw(DeviceContext dc)
 		{
-			gd.SetVertexBuffer(mVB);
-			gd.Indices	=mIB;
-
-			fx.Parameters["mWorld"].SetValue(mWorld);
-			fx.Parameters["mView"].SetValue(camMat);
-			fx.Parameters["mProjection"].SetValue(projMat);
-
-			if(mTex != null)
+			if(dc == null)
 			{
-				fx.Parameters["mTexture"].SetValue(mTex);
+				return;
 			}
+			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
+			dc.InputAssembler.SetIndexBuffer(mIB, Format.R16_UInt, 0);
 
-			fx.CurrentTechnique.Passes[0].Apply();
-
-			gd.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-				0, 0, mVB.VertexCount, 0, mIB.IndexCount / 3);
-		}
-
-
-		//instanced
-		public void Draw(GraphicsDevice gd, Effect fx,
-			DynamicVertexBuffer instBuf, int instCount,
-			Matrix camMat, Matrix projMat)
-		{
-			gd.SetVertexBuffers(new VertexBufferBinding(mVB, 0, 0),
-				new	VertexBufferBinding(instBuf, 0, 1));
-			gd.Indices	=mIB;
-
-			fx.Parameters["mView"].SetValue(camMat);
-			fx.Parameters["mProjection"].SetValue(projMat);
-
-			fx.CurrentTechnique.Passes[0].Apply();
-
-			gd.DrawInstancedPrimitives(PrimitiveType.TriangleList,
-				0, 0, mVB.VertexCount, 0, mIB.IndexCount / 3, instCount);
-		}
-
-
-		public void Draw(GraphicsDevice gd, BasicEffect bfx, Matrix camMat, Matrix projMat)
-		{
-			gd.SetVertexBuffer(mVB);
-			gd.Indices	=mIB;
-
-			if(mTex != null)
-			{
-				bfx.Texture			=mTex;
-				bfx.TextureEnabled	=true;
-			}
-			else
-			{
-				bfx.Texture			=null;
-				bfx.TextureEnabled	=false;
-			}
-
-			bfx.LightingEnabled		=mbHasNormals;
-			bfx.VertexColorEnabled	=!mbHasNormals;
-
-			if(!mbHasNormals)
-			{
-				bfx.Alpha	=1.0f;
-			}
-
-			bfx.View		=camMat;
-			bfx.World		=mWorld;
-			bfx.Projection	=projMat;
-			bfx.CurrentTechnique.Passes[0].Apply();
-
-#if false	//wireframe
-			gd.DrawIndexedPrimitives(PrimitiveType.LineList,
-				0, 0, mVB.VertexCount, 0, mIB.IndexCount / 3);
-#else
-			gd.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-				0, 0, mVB.VertexCount, 0, mIB.IndexCount / 3);
-#endif
+			dc.DrawIndexed(mNumIndexes, 0, 0);
 		}
 	}
 
 
 	public class PrimFactory
 	{
-		public static PrimObject CreatePlane(GraphicsDevice gd, Texture2D tex, float size)
+		internal struct VertexPositionNormalTexture
+		{
+			internal Vector3	Position;
+			internal Vector3	Normal;
+			internal Vector2	TextureCoordinate;
+		}
+
+		internal struct VertexPositionColor
+		{
+			internal Vector3	Position;
+			internal Color		Color;
+		}
+
+
+		public static PrimObject CreatePlane(Device gd, float size)
 		{
 			Vector3	top			=Vector3.UnitY * (size * 0.5f);
 			Vector3	bottom		=-Vector3.UnitY * (size * 0.5f);
@@ -163,13 +122,14 @@ namespace UtilityLib
 			vpnt[3].TextureCoordinate	=topTex + rightTex;
 			vpnt[4].TextureCoordinate	=bottomTex + rightTex;
 			vpnt[5].TextureCoordinate	=bottomTex + leftTex;
+
+			BufferDescription	bd	=new BufferDescription(
+				32 * vpnt.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			Buffer	vb	=Buffer.Create(gd, vpnt, bd);
 			
-			VertexBuffer	vb	=new VertexBuffer(gd,
-				typeof(VertexPositionNormalTexture),
-				6, BufferUsage.WriteOnly);
-
-			vb.SetData<VertexPositionNormalTexture>(vpnt);
-
 			//indexes
 			UInt16	[]indexes	=new UInt16[6];
 
@@ -179,19 +139,19 @@ namespace UtilityLib
 				indexes[i]	=(UInt16)i;
 			}
 
-			IndexBuffer	ib	=new IndexBuffer(gd,
-				IndexElementSize.SixteenBits,
-				6, BufferUsage.WriteOnly);
+			BufferDescription	id	=new BufferDescription(indexes.Length * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib.SetData<UInt16>(indexes);
+			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(gd, vb, ib, tex, true);
+			PrimObject	po	=new PrimObject(vb, 32, ib, indexes.Length, true);
 
 			return	po;
 		}
 
 
-		public static PrimObject CreatePrism(GraphicsDevice gd, Texture2D tex, float size)
+		public static PrimObject CreatePrism(Device gd, float size)
 		{
 			Vector3	topPoint	=Vector3.UnitY * size * 2.0f;
 			Vector3	bottomPoint	=Vector3.Zero;
@@ -322,11 +282,12 @@ namespace UtilityLib
 			vpnt[22].TextureCoordinate	=rightTex;
 			vpnt[23].TextureCoordinate	=bottomTex;
 			
-			VertexBuffer	vb	=new VertexBuffer(gd,
-				typeof(VertexPositionNormalTexture),
-				24, BufferUsage.WriteOnly);
+			BufferDescription	bd	=new BufferDescription(
+				32 * vpnt.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			vb.SetData<VertexPositionNormalTexture>(vpnt);
+			Buffer	vb	=Buffer.Create(gd, vpnt, bd);
 
 			//indexes
 			UInt16	[]indexes	=new UInt16[24];
@@ -337,19 +298,19 @@ namespace UtilityLib
 				indexes[i]	=(UInt16)i;
 			}
 
-			IndexBuffer	ib	=new IndexBuffer(gd,
-				IndexElementSize.SixteenBits,
-				24, BufferUsage.WriteOnly);
+			BufferDescription	id	=new BufferDescription(indexes.Length * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib.SetData<UInt16>(indexes);
+			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(gd, vb, ib, tex, true);
+			PrimObject	po	=new PrimObject(vb, 32, ib, indexes.Length, true);
 
 			return	po;
 		}
 
 
-		public static PrimObject CreateHalfPrism(GraphicsDevice gd, Texture2D tex, float size)
+		public static PrimObject CreateHalfPrism(Device gd, float size)
 		{
 			Vector3	topPoint	=Vector3.Zero;
 			Vector3	top			=(Vector3.UnitY * size * 5.0f) + size * Vector3.UnitZ;
@@ -405,11 +366,12 @@ namespace UtilityLib
 			vpnt[10].Position	=right;
 			vpnt[9].Position	=bottom;
 
-			VertexBuffer	vb	=new VertexBuffer(gd,
-				typeof(VertexPositionNormalTexture),
-				12, BufferUsage.WriteOnly);
+			BufferDescription	bd	=new BufferDescription(
+				32 * vpnt.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			vb.SetData<VertexPositionNormalTexture>(vpnt);
+			Buffer	vb	=Buffer.Create(gd, vpnt, bd);
 
 			//indexes
 			UInt16	[]indexes	=new UInt16[12];
@@ -420,19 +382,19 @@ namespace UtilityLib
 				indexes[i]	=(UInt16)i;
 			}
 
-			IndexBuffer	ib	=new IndexBuffer(gd,
-				IndexElementSize.SixteenBits,
-				12, BufferUsage.WriteOnly);
+			BufferDescription	id	=new BufferDescription(indexes.Length * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib.SetData<UInt16>(indexes);
+			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(gd, vb, ib, tex, true);
+			PrimObject	po	=new PrimObject(vb, 32, ib, indexes.Length, true);
 
 			return	po;
 		}
 
 
-		public static PrimObject CreateCube(GraphicsDevice gd, float size, Texture2D tex)
+		public static PrimObject CreateCube(Device gd, float size)
 		{
 			List<Vector3>	corners	=new List<Vector3>();
 
@@ -446,29 +408,29 @@ namespace UtilityLib
 			corners.Add(Vector3.UnitY * size + Vector3.UnitX * size - Vector3.UnitZ * size);
 			corners.Add(Vector3.UnitY * size - Vector3.UnitX * size - Vector3.UnitZ * size);
 
-			return	CreateCube(gd, corners.ToArray(), tex);
+			return	CreateCube(gd, corners.ToArray());
 		}
 
 
-		public static PrimObject CreateCube(GraphicsDevice gd, BoundingBox box, Texture2D tex)
+		public static PrimObject CreateCube(Device gd, BoundingBox box)
 		{
 			List<Vector3>	corners	=new List<Vector3>();
 
 			//cube corners
-			corners.Add(Vector3.UnitY * box.Min.Y + Vector3.UnitX * box.Max.X + Vector3.UnitZ * box.Max.Z);
-			corners.Add(Vector3.UnitY * box.Min.Y + Vector3.UnitX * box.Min.X + Vector3.UnitZ * box.Max.Z);
-			corners.Add(Vector3.UnitY * box.Min.Y + Vector3.UnitX * box.Max.X + Vector3.UnitZ * box.Min.Z);
-			corners.Add(Vector3.UnitY * box.Min.Y + Vector3.UnitX * box.Min.X + Vector3.UnitZ * box.Min.Z);
-			corners.Add(Vector3.UnitY * box.Max.Y + Vector3.UnitX * box.Max.X + Vector3.UnitZ * box.Max.Z);
-			corners.Add(Vector3.UnitY * box.Max.Y + Vector3.UnitX * box.Min.X + Vector3.UnitZ * box.Max.Z);
-			corners.Add(Vector3.UnitY * box.Max.Y + Vector3.UnitX * box.Max.X + Vector3.UnitZ * box.Min.Z);
-			corners.Add(Vector3.UnitY * box.Max.Y + Vector3.UnitX * box.Min.X + Vector3.UnitZ * box.Min.Z);
+			corners.Add(Vector3.UnitY * box.Minimum.Y + Vector3.UnitX * box.Maximum.X + Vector3.UnitZ * box.Maximum.Z);
+			corners.Add(Vector3.UnitY * box.Minimum.Y + Vector3.UnitX * box.Minimum.X + Vector3.UnitZ * box.Maximum.Z);
+			corners.Add(Vector3.UnitY * box.Minimum.Y + Vector3.UnitX * box.Maximum.X + Vector3.UnitZ * box.Minimum.Z);
+			corners.Add(Vector3.UnitY * box.Minimum.Y + Vector3.UnitX * box.Minimum.X + Vector3.UnitZ * box.Minimum.Z);
+			corners.Add(Vector3.UnitY * box.Maximum.Y + Vector3.UnitX * box.Maximum.X + Vector3.UnitZ * box.Maximum.Z);
+			corners.Add(Vector3.UnitY * box.Maximum.Y + Vector3.UnitX * box.Minimum.X + Vector3.UnitZ * box.Maximum.Z);
+			corners.Add(Vector3.UnitY * box.Maximum.Y + Vector3.UnitX * box.Maximum.X + Vector3.UnitZ * box.Minimum.Z);
+			corners.Add(Vector3.UnitY * box.Maximum.Y + Vector3.UnitX * box.Minimum.X + Vector3.UnitZ * box.Minimum.Z);
 
-			return	CreateCube(gd, corners.ToArray(), tex);
+			return	CreateCube(gd, corners.ToArray());
 		}
 
 
-		public static PrimObject CreateCube(GraphicsDevice gd, Vector3 []corners, Texture2D tex)
+		public static PrimObject CreateCube(Device gd, Vector3 []corners)
 		{
 			VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[24];
 
@@ -559,39 +521,41 @@ namespace UtilityLib
 				vpnt[i + 3].TextureCoordinate	=Vector2.UnitY;
 			}
 			
-			VertexBuffer	vb	=new VertexBuffer(gd,
-				typeof(VertexPositionNormalTexture),
-				24, BufferUsage.WriteOnly);
+			BufferDescription	bd	=new BufferDescription(
+				32 * vpnt.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			vb.SetData<VertexPositionNormalTexture>(vpnt);
+			Buffer	vb	=Buffer.Create(gd, vpnt, bd);
 
 			UInt16	[]indexes	=new UInt16[36];
 
 			int	idx	=0;
 			for(int i=0;i < 36;i+=6)
 			{
-				indexes[i]		=(UInt16)(idx + 3);
+				indexes[i]		=(UInt16)(idx + 1);
 				indexes[i + 1]	=(UInt16)(idx + 2);
-				indexes[i + 2]	=(UInt16)(idx + 1);
-				indexes[i + 3]	=(UInt16)(idx + 3);
+				indexes[i + 2]	=(UInt16)(idx + 3);
+				indexes[i + 3]	=(UInt16)(idx + 0);
 				indexes[i + 4]	=(UInt16)(idx + 1);
-				indexes[i + 5]	=(UInt16)(idx + 0);
+				indexes[i + 5]	=(UInt16)(idx + 3);
 
 				idx	+=4;
 			}
 
-			IndexBuffer	ib	=new IndexBuffer(gd,
-				IndexElementSize.SixteenBits, 36, BufferUsage.WriteOnly);
+			BufferDescription	id	=new BufferDescription(indexes.Length * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib.SetData<UInt16>(indexes);
+			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(gd, vb, ib, tex, true);
+			PrimObject	po	=new PrimObject(vb, 32, ib, indexes.Length, true);
 
 			return	po;
 		}
 
 
-		public static PrimObject CreateSphere(GraphicsDevice gd, Vector3 center, float radius, Texture2D tex)
+		public static PrimObject CreateSphere(Device gd, Vector3 center, float radius)
 		{
 			int	theta, phi;
 
@@ -610,10 +574,10 @@ namespace UtilityLib
 				{
 					Vector3	pos	=Vector3.Zero;
 
-					float	rtheta	=MathHelper.ToRadians(theta);
-					float	rdtheta	=MathHelper.ToRadians(dtheta);
-					float	rphi	=MathHelper.ToRadians(phi);
-					float	rdphi	=MathHelper.ToRadians(dphi);
+					float	rtheta	=MathUtil.DegreesToRadians(theta);
+					float	rdtheta	=MathUtil.DegreesToRadians(dtheta);
+					float	rphi	=MathUtil.DegreesToRadians(phi);
+					float	rdphi	=MathUtil.DegreesToRadians(dphi);
 
 					pos.X	=(float)(Math.Cos(rtheta) * Math.Cos(rphi));
 					pos.Y	=(float)(Math.Cos(rtheta) * Math.Sin(rphi));
@@ -686,15 +650,12 @@ namespace UtilityLib
 				vpnt[i].TextureCoordinate	=Vector2.Zero;	//not tackling this yet
 			}
 
-			VertexBuffer	vb	=new VertexBuffer(gd,
-				typeof(VertexPositionNormalTexture),
-				points.Count * 2, BufferUsage.WriteOnly);
+			BufferDescription	bd	=new BufferDescription(
+				32 * vpnt.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			vb.SetData<VertexPositionNormalTexture>(vpnt);
-
-			IndexBuffer	ib	=new IndexBuffer(gd,
-				IndexElementSize.SixteenBits, inds.Count * 2,
-				BufferUsage.WriteOnly);
+			Buffer	vb	=Buffer.Create(gd, vpnt, bd);
 
 			//index the other half
 			List<UInt16>	otherHalf	=new List<UInt16>();
@@ -710,22 +671,26 @@ namespace UtilityLib
 
 			inds.AddRange(otherHalf);
 
-			ib.SetData<UInt16>(inds.ToArray());
+			BufferDescription	id	=new BufferDescription(inds.Count * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			PrimObject	po	=new PrimObject(gd, vb, ib, tex, true);
+			Buffer	ib	=Buffer.Create<UInt16>(gd, inds.ToArray(), id);
+
+			PrimObject	po	=new PrimObject(vb, 32, ib, inds.Count, true);
 
 			return	po;
 		}
 
 
-		public static PrimObject CreateShadowCircle(GraphicsDevice gd, float radius)
+		public static PrimObject CreateShadowCircle(Device gd, float radius)
 		{
 			VertexPositionColor	[]vpc	=new VertexPositionColor[16];
 
 			//can't remember how to generate a circle
 			//I know it's something with sin or something? Pi?
 			//just going to use a matrix
-			Matrix	rotMat	=Matrix.CreateRotationY(MathHelper.TwoPi / 8.0f);
+			Matrix	rotMat	=Matrix.RotationY(MathUtil.TwoPi / 8.0f);
 			Vector3	rotPos	=Vector3.UnitX * radius * 0.25f;
 
 			Color	halfDarken	=new Color(new Vector4(0.0f, 0.0f, 0.0f, 0.35f));
@@ -735,7 +700,7 @@ namespace UtilityLib
 			for(int i=0;i < 8;i++)
 			{
 				vpc[i].Position	=rotPos;
-				rotPos			=Vector3.Transform(rotPos, rotMat);
+				rotPos			=Vector3.TransformCoordinate(rotPos, rotMat);
 				vpc[i].Color	=halfDarken;
 			}
 
@@ -744,14 +709,16 @@ namespace UtilityLib
 			for(int i=8;i < 16;i++)
 			{
 				vpc[i].Position	=rotPos;
-				rotPos			=Vector3.Transform(rotPos, rotMat);
+				rotPos			=Vector3.TransformCoordinate(rotPos, rotMat);
 				vpc[i].Color	=fadeOut;
 			}
 
-			VertexBuffer	vb	=new VertexBuffer(gd,
-				typeof(VertexPositionColor), 16, BufferUsage.WriteOnly);
+			BufferDescription	bd	=new BufferDescription(
+				16 * vpc.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			vb.SetData<VertexPositionColor>(vpc);
+			Buffer	vb	=Buffer.Create(gd, vpc, bd);
 
 			UInt16	[]indexes	=new UInt16[66];
 
@@ -831,26 +798,26 @@ namespace UtilityLib
 			indexes[64]	=15;
 			indexes[65]	=7;
 
-			IndexBuffer	ib	=new IndexBuffer(gd,
-				IndexElementSize.SixteenBits,
-				66, BufferUsage.WriteOnly);
+			BufferDescription	id	=new BufferDescription(indexes.Length * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib.SetData<UInt16>(indexes);
+			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(gd, vb, ib, null, false);
+			PrimObject	po	=new PrimObject(vb, 16, ib, indexes.Length, true);
 
 			return	po;
 		}
 
 
-		public static PrimObject CreateCylinder(GraphicsDevice gd, float radius, float len, Texture2D tex)
+		public static PrimObject CreateCylinder(Device gd, float radius, float len)
 		{
 			VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[16];
 
 			//can't remember how to generate a circle
 			//I know it's something with sin or something? Pi?
 			//just going to use a matrix
-			Matrix	rotMat	=Matrix.CreateRotationY(MathHelper.TwoPi / 8.0f);
+			Matrix	rotMat	=Matrix.RotationY(MathUtil.TwoPi / 8.0f);
 			Vector3	rotPos	=Vector3.UnitX * radius;
 
 			//make top and bottom surfaces
@@ -862,7 +829,7 @@ namespace UtilityLib
 				vpnt[i].Normal		=-Vector3.UnitY;
 				vpnt[i + 8].Normal	=Vector3.UnitY;
 
-				rotPos	=Vector3.Transform(rotPos, rotMat);
+				rotPos	=Vector3.TransformCoordinate(rotPos, rotMat);
 
 				Vector3	rotDir	=rotPos;
 				rotDir.Normalize();
@@ -881,11 +848,12 @@ namespace UtilityLib
 				vpnt[i].Position	+=Vector3.UnitY * (len);
 			}
 
-			VertexBuffer	vb	=new VertexBuffer(gd,
-				typeof(VertexPositionNormalTexture),
-				16, BufferUsage.WriteOnly);
+			BufferDescription	bd	=new BufferDescription(
+				32 * vpnt.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			vb.SetData<VertexPositionNormalTexture>(vpnt);
+			Buffer	vb	=Buffer.Create(gd, vpnt, bd);
 
 			UInt16	[]indexes	=new UInt16[36 + 48];
 
@@ -948,13 +916,13 @@ namespace UtilityLib
 			indexes[40 + 42]	=(UInt16)(8);
 			indexes[39 + 42]	=(UInt16)(0);
 
-			IndexBuffer	ib	=new IndexBuffer(gd,
-				IndexElementSize.SixteenBits,
-				36 + 48, BufferUsage.WriteOnly);
+			BufferDescription	id	=new BufferDescription(indexes.Length * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib.SetData<UInt16>(indexes);
+			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(gd, vb, ib, tex, true);
+			PrimObject	po	=new PrimObject(vb, 32, ib, indexes.Length, true);
 
 			return	po;
 		}

@@ -40,6 +40,9 @@
     <Reference Include="SharpDX.Direct3D11">
       <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.Direct3D11.2.5.0\lib\net40\SharpDX.Direct3D11.dll</HintPath>
     </Reference>
+    <Reference Include="SharpDX.Direct3D11.Effects">
+      <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.Direct3D11.Effects.2.5.0\lib\net40\SharpDX.Direct3D11.Effects.dll</HintPath>
+    </Reference>
     <Reference Include="SharpDX.DXGI">
       <HintPath>..\..\Games\OneGameAMonth\packages\SharpDX.DXGI.2.5.0\lib\net40\SharpDX.DXGI.dll</HintPath>
     </Reference>
@@ -62,12 +65,17 @@
     <Compile Include="MiscNoXNA.cs" />
     <Compile Include="Mover.cs" />
     <Compile Include="Pool.cs" />
+    <Compile Include="PrimFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TSPool.cs" />
     <Compile Include="VectorEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="sharpdx_direct3d11_effects_x64.dll" />
+    <Content Include="sharpdx_direct3d11_effects_x86.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -56,7 +56,7 @@ namespace MeshLib
 		protected BoundingSphere	mSphereBound;
 		protected Matrix			mTransform;
 
-		protected VertexBufferBinding	mVBinding;
+		protected VertexBufferBinding	mVBBinding;
 
 
 		public string Name
@@ -116,7 +116,7 @@ namespace MeshLib
 		public void SetVertexBuffer(Buffer vb)
 		{
 			mVerts		=vb;
-			mVBinding	=new VertexBufferBinding(mVerts, VertexTypes.GetSizeForTypeIndex(mTypeIndex), 0);
+			mVBBinding	=new VertexBufferBinding(mVerts, VertexTypes.GetSizeForTypeIndex(mTypeIndex), 0);
 		}
 
 
@@ -202,7 +202,7 @@ namespace MeshLib
 
 				mIndexs	=Buffer.Create<UInt16>(gd, indArray, indDesc);
 
-				mVBinding	=new VertexBufferBinding(mVerts,
+				mVBBinding	=new VertexBufferBinding(mVerts,
 					VertexTypes.GetSizeForTypeIndex(mTypeIndex), 0);
 			}
 		}
@@ -229,7 +229,7 @@ namespace MeshLib
 				return;
 			}
 
-			dc.InputAssembler.SetVertexBuffers(0, mVBinding);
+			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
 			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
 
 			matLib.SetMaterialParameter("DMN", "mWorld", world);
@@ -250,7 +250,7 @@ namespace MeshLib
 
 			matLib.SetMaterialParameter(mMaterialName, "mWorld", (transform * mTransform));
 
-			dc.InputAssembler.SetVertexBuffers(0, mVBinding);
+			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
 			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
 
 			matLib.ApplyMaterialPass(mMaterialName, dc, 0);
@@ -270,7 +270,7 @@ namespace MeshLib
 
 			matLib.SetMaterialParameter(altMat, "mWorld", (transform * mTransform));
 
-			dc.InputAssembler.SetVertexBuffers(0, mVBinding);
+			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
 			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
 
 			matLib.ApplyMaterialPass(altMat, dc, 0);

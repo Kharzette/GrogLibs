@@ -65,7 +65,7 @@ namespace MeshLib
 
 			mIndexs	=Buffer.Create<UInt16>(gd, mIndArray, indDesc);
 
-			mVBinding	=new VertexBufferBinding(mVerts,
+			mVBBinding	=new VertexBufferBinding(mVerts,
 				VertexTypes.GetSizeForTypeIndex(mTypeIndex), 0);
 		}
 

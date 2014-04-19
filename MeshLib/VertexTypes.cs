@@ -836,6 +836,8 @@ namespace MeshLib
 						int	packedCol	=br.ReadInt32();
 
 						Color	col	=new Color(packedCol);
+
+						SetArrayField(outVerts, i, fi.Name, col);
 					}
 					else
 					{
