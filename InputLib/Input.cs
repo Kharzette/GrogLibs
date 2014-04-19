@@ -331,18 +331,19 @@ namespace InputLib
 		}
 
 
-		public void MapToggleAction(Enum action, VariousButtons button)
+		public void MapToggleAction(Enum actionOn, Enum actionOff, VariousButtons button)
 		{
-			MapToggleAction(action, (int)button);
+			MapToggleAction(actionOn, actionOff, (int)button);
 		}
 
 
-		public void MapToggleAction(Enum action, int code)
+		public void MapToggleAction(Enum action, Enum actionOff, int code)
 		{
 			if(mActionMap.ContainsKey(code))
 			{
 				//overwrite existing?
 				mActionMap[code].mAction		=action;
+				mActionMap[code].mActionOff		=actionOff;
 				mActionMap[code].mActionType	=ActionMapping.ActionTypes.Toggle;
 			}
 			else
@@ -350,6 +351,7 @@ namespace InputLib
 				ActionMapping	amap	=new ActionMapping();
 
 				amap.mAction		=action;
+				amap.mActionOff		=actionOff;
 				amap.mActionType	=ActionMapping.ActionTypes.Toggle;
 				amap.mKeyCode		=code;
 
@@ -589,7 +591,7 @@ namespace InputLib
 						if(mActiveToggles.Contains(heldKey.Key))
 						{
 							//toggle off
-							InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mAction);
+							InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mActionOff);
 							acts.Add(act);
 
 							mActiveToggles.Remove(heldKey.Key);

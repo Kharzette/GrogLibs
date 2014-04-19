@@ -17,6 +17,7 @@ namespace InputLib
 
 		internal ActionTypes	mActionType;
 		internal Enum			mAction;	//user specified per game?
+		internal Enum			mActionOff;	//for toggle off state
 		internal int			mKeyCode;
 	}
 }
