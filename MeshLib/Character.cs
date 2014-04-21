@@ -42,7 +42,7 @@ namespace MeshLib
 		//copies bones into the shader
 		//materials should be set up to ignore
 		//the mBones parameter
-		public void UpdateShaderBones(MaterialLibrary matLib)
+		void UpdateShaderBones(MaterialLibrary matLib)
 		{
 			if(mBones != null)
 			{
@@ -51,7 +51,7 @@ namespace MeshLib
 		}
 
 
-		public void UpdateBones(Skeleton sk, Skin skn)
+		void UpdateBones(Skeleton sk, Skin skn)
 		{
 			//no need for this if not skinned
 			if(skn == null || sk == null)

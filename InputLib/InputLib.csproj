@@ -48,6 +48,7 @@
     <Compile Include="ActionMapping.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="GameAction.cs" />
+    <Compile Include="PlayerSteering.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -9,7 +9,7 @@ using MeshLib;
 using UtilityLib;
 
 
-namespace ColladaConvert
+namespace SharedForms
 {
 	public partial class MaterialForm : Form
 	{
@@ -43,7 +43,7 @@ namespace ColladaConvert
 		}
 
 
-		internal void RefreshMaterials()
+		void RefreshMaterials()
 		{
 			MaterialList.Items.Clear();
 
@@ -71,7 +71,7 @@ namespace ColladaConvert
 		}
 
 
-		internal void RefreshMeshPartList()
+		public void RefreshMeshPartList()
 		{
 			StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
 			Character	chr	=MeshPartList.Tag as Character;
@@ -505,7 +505,7 @@ namespace ColladaConvert
 		}
 
 
-		internal void SetMesh(object sender)
+		public void SetMesh(object sender)
 		{
 			StaticMesh	sm	=sender as StaticMesh;
 			Character	chr	=sender as Character;

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace ColladaConvert
+namespace SharedForms
 {
 	public partial class ListBoxContainer : Form
 	{

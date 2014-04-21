@@ -5,7 +5,7 @@ using System.Text;
 using System.Windows.Forms;
 
 
-namespace ColladaConvert
+namespace SharedForms
 {
 	//adapted from Wout de Zeeuw on codeproject
 	public class TabbyPropertyGrid : PropertyGrid

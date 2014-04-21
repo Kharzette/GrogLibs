@@ -1,4 +1,4 @@
-﻿namespace ColladaConvert
+﻿namespace SharedForms
 {
 	partial class CelTweakForm
 	{
