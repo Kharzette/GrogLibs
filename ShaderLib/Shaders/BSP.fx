@@ -1,7 +1,7 @@
 //This fx is for the auto generated materials from the bsp compiler
-texture2D	mTexture;
-texture2D	mLightMap;
-texture1D	mDynLights;
+Texture2D	mTexture;
+Texture2D	mLightMap;
+Texture1D	mDynLights;
 bool		mbTextureEnabled;
 float2		mTexSize;
 
@@ -18,11 +18,11 @@ half	mAniIntensities[44];
 #include "RenderStates.fxh"
 
 
-VPosTex04Tex14Tex24 LightMapVS(VPosNormTex04 input)
+VVPosTex04Tex14Tex24 LightMapVS(VPosNormTex04 input)
 {
-	VPosTex04Tex14Tex24	output;
+	VVPosTex04Tex14Tex24	output;
 
-	float4	worldPosition	=mul(input.Position, mWorld);
+	float4	worldPosition	=mul(float4(input.Position, 1), mWorld);
 
 	output.TexCoord0.xy	=input.TexCoord0.xy / mTexSize;
 	output.TexCoord0.zw	=input.TexCoord0.zw;
@@ -34,11 +34,11 @@ VPosTex04Tex14Tex24 LightMapVS(VPosNormTex04 input)
 }
 
 
-VPosTex04Tex14Tex24 LightMapAlphaVS(VPosNormTex04Col0 input)
+VVPosTex04Tex14Tex24 LightMapAlphaVS(VPosNormTex04Col0 input)
 {
-	VPosTex04Tex14Tex24	output;
+	VVPosTex04Tex14Tex24	output;
 
-	float4	worldPosition	=mul(input.Position, mWorld);
+	float4	worldPosition	=mul(float4(input.Position, 1), mWorld);
 
 	output.Position	=mul(mul(worldPosition, mView), mProjection);
 
@@ -52,11 +52,11 @@ VPosTex04Tex14Tex24 LightMapAlphaVS(VPosNormTex04Col0 input)
 }
 
 
-VPosTex04Tex14Tex24Tex31 VertexLitVS(VPosNormTex0Col0 input)
+VVPosTex04Tex14Tex24Tex31 VertexLitVS(VPosNormTex0Col0 input)
 {
-	VPosTex04Tex14Tex24Tex31	output;
+	VVPosTex04Tex14Tex24Tex31	output;
 
-	float4	worldPosition	=mul(input.Position, mWorld);
+	float4	worldPosition	=mul(float4(input.Position, 1), mWorld);
 
 	output.Position		=mul(mul(worldPosition, mView), mProjection);
 	output.TexCoord0.x	=input.TexCoord0.x / mTexSize.x;
@@ -77,11 +77,11 @@ VPosTex04Tex14Tex24Tex31 VertexLitVS(VPosNormTex0Col0 input)
 }
 
 
-VPosTex04Tex14Tex24Tex31 FullBrightVS(VPosNormTex0 input)
+VVPosTex04Tex14Tex24Tex31 FullBrightVS(VPosNormTex0 input)
 {
-	VPosTex04Tex14Tex24Tex31	output;
+	VVPosTex04Tex14Tex24Tex31	output;
 
-	float4	worldPosition	=mul(input.Position, mWorld);
+	float4	worldPosition	=mul(float4(input.Position, 1), mWorld);
 
 	output.Position		=mul(mul(worldPosition, mView), mProjection);
 	output.TexCoord0.x	=input.TexCoord0.x / mTexSize.x;
@@ -102,11 +102,11 @@ VPosTex04Tex14Tex24Tex31 FullBrightVS(VPosNormTex0 input)
 }
 
 
-VPosCubeTex0 SkyVS(VPosTex0 input)
+VVPosCubeTex0 SkyVS(VPosTex0 input)
 {
-	VPosCubeTex0	output;
+	VVPosCubeTex0	output;
 
-	float4	worldPosition	=mul(input.Position, mWorld);
+	float4	worldPosition	=mul(float4(input.Position, 1), mWorld);
 
 	output.TexCoord0	=worldPosition.xyz;
 	output.Position		=mul(mul(worldPosition, mView), mProjection);
@@ -115,11 +115,11 @@ VPosCubeTex0 SkyVS(VPosTex0 input)
 }
 
 
-VPosTex04Tex14Tex24Tex34Tex44Tex54 LightMapAnimVS(VPosNormBlendTex04Tex14Tex24 input)
+VVPosTex04Tex14Tex24Tex34Tex44Tex54 LightMapAnimVS(VPosNormBlendTex04Tex14Tex24 input)
 {
-	VPosTex04Tex14Tex24Tex34Tex44Tex54	output;
+	VVPosTex04Tex14Tex24Tex34Tex44Tex54	output;
 
-	float4	worldPosition	=mul(input.Position, mWorld);
+	float4	worldPosition	=mul(float4(input.Position, 1), mWorld);
 
 	output.Position	=mul(mul(worldPosition, mView), mProjection);
 
@@ -161,25 +161,14 @@ VPosTex04Tex14Tex24Tex34Tex44Tex54 LightMapAnimVS(VPosNormBlendTex04Tex14Tex24 i
 
 //Sm2 not happy with this
 #if !defined(SM2)
-sampler1D DynLightSampler = sampler_state
-{
-	Texture	=mDynLights;
-
-	MinFilter	=Point;
-	MagFilter	=Point;
-	MipFilter	=Point;
-
-	AddressU	=Clamp;
-};
-
 float3	GetDynLight(float3 pixelPos, float3 normal)
 {
 	float3	nl	=0;
 
 	for(int i=0;i < 16;i++)
 	{
-		float4	lPos1	=tex1D(DynLightSampler, float(i * 2) / 32);
-		float4	lCol	=tex1D(DynLightSampler, float((i * 2) + 1) / 32);
+		float4	lPos1	=mDynLights.Sample(PointClamp1D, float(i * 2) / 32);
+		float4	lCol	=mDynLights.Sample(PointClamp1D, float((i * 2) + 1) / 32);
 		float3	lDir	=lPos1.xyz - pixelPos;
 		float	atten	=saturate(1 - dot(lDir / lPos1.w, lDir / lPos1.w));
 
@@ -196,7 +185,7 @@ float3	GetDynLight(float3 pixelPos, float3 normal)
 
 
 //regular color output pixel shaders
-float4 LightMapPS(VTex04Tex14Tex24 input) : COLOR0
+float4 LightMapPS(VVPosTex04Tex14Tex24 input) : SV_Target
 {
 	float3		color;
 	
@@ -222,7 +211,7 @@ float4 LightMapPS(VTex04Tex14Tex24 input) : COLOR0
 	return	float4(color, input.TexCoord1.w);
 }
 
-float4 LightMapCelPS(VTex04Tex14Tex24 input) : COLOR0
+float4 LightMapCelPS(VVPosTex04Tex14Tex24 input) : SV_Target
 {
 	float3		color;
 	
@@ -256,7 +245,7 @@ float4 LightMapCelPS(VTex04Tex14Tex24 input) : COLOR0
 	return	float4(color, input.TexCoord1.w);
 }
 
-float4 VertexLitPS(VTex04Tex14Tex24Tex31 input) : COLOR0
+float4 VertexLitPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 {
 	float3		color;
 	float2		tex0;
@@ -303,7 +292,7 @@ float4 VertexLitPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 	return	float4(color, input.TexCoord3.x);
 }
 
-float4 VertexLitCelPS(VTex04Tex14Tex24Tex31 input) : COLOR0
+float4 VertexLitCelPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 {
 	float3		color;
 	float2		tex0;
@@ -360,7 +349,7 @@ float4 VertexLitCelPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 	return	float4(color, input.TexCoord3.x);
 }
 
-float4 FullBrightPixelShader(VTex0 input) : COLOR0
+float4 FullBrightPixelShader(VVPosTex0 input) : SV_Target
 {
 	if(mbTextureEnabled)
 	{
@@ -370,7 +359,7 @@ float4 FullBrightPixelShader(VTex0 input) : COLOR0
 	return	float4(1, 1, 1, 1);
 }
 
-float4 LightMapAnimPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
+float4 LightMapAnimPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 {
 	float3		color;
 
@@ -421,7 +410,7 @@ float4 LightMapAnimPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	return	float4(color, input.TexCoord2.z);
 }
 
-float4 LightMapAnimCelPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
+float4 LightMapAnimCelPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 {
 	float3		color;
 
@@ -479,7 +468,7 @@ float4 LightMapAnimCelPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	return	float4(color, input.TexCoord2.z);
 }
 
-float4 SkyPS(VCubeTex0 input) : COLOR0
+float4 SkyPS(VVPosCubeTex0 input) : SV_Target
 {
 	float4	color;
 
@@ -506,7 +495,7 @@ float4 SkyPS(VCubeTex0 input) : COLOR0
 //depth normal material pixel shaders
 //these all spit out depth in x, material id in y
 //and encoded normal in zw
-half4 LightMapDMNPS(VTex04Tex14Tex24 input) : COLOR0
+half4 LightMapDMNPS(VVPosTex04Tex14Tex24 input) : SV_Target
 {
 	half4	ret;
 
@@ -517,7 +506,7 @@ half4 LightMapDMNPS(VTex04Tex14Tex24 input) : COLOR0
 	return	ret;
 }
 
-half4 VertexLitDMNPS(VTex04Tex14Tex24Tex31 input) : COLOR0
+half4 VertexLitDMNPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 {
 	half4	ret;
 
@@ -538,7 +527,7 @@ half4 VertexLitDMNPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 	return	ret;
 }
 
-half4 LightMapAnimDMNPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
+half4 LightMapAnimDMNPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 {
 	float3	norm		=input.TexCoord3.xyz;
 	float3	worldPos	=input.TexCoord4.xyz;
@@ -551,7 +540,7 @@ half4 LightMapAnimDMNPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
 	return	ret;
 }
 
-half4 SkyDMNPS(VCubeTex0 input) : COLOR0
+half4 SkyDMNPS(VVPosCubeTex0 input) : SV_Target
 {
 	half4	ret;
 
@@ -564,14 +553,14 @@ half4 SkyDMNPS(VCubeTex0 input) : COLOR0
 
 
 //second pass shadow draws, uses alpha
-float4 LightMapShadowPS(VTex04Tex14Tex24 input) : COLOR0
+float4 LightMapShadowPS(VVPosTex04Tex14Tex24 input) : SV_Target
 {
 	float4	color	=float4(0.0, 0.0, 0.0, input.TexCoord1.w);
 
 	return	ShadowColor(mbDirectional, input.TexCoord1, input.TexCoord2.xyz, color);
 }
 
-float4 VertexLitShadowPS(VTex04Tex14Tex24Tex31 input) : COLOR0
+float4 VertexLitShadowPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 {
 	float4	color	=float4(0.0, 0.0, 0.0, input.TexCoord3.x);
 
@@ -590,7 +579,7 @@ float4 VertexLitShadowPS(VTex04Tex14Tex24Tex31 input) : COLOR0
 	return	ShadowColor(mbDirectional, worldPos, norm, color);
 }
 
-float4 LightMapAnimShadowPS(VTex04Tex14Tex24Tex34Tex44Tex54 input) : COLOR0
+float4 LightMapAnimShadowPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 {
 	float4	color	=float4(0.0, 0.0, 0.0, input.TexCoord2.z);
 
@@ -606,42 +595,57 @@ technique10 LightMap
 {
 	pass Base
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapVS();
+		PixelShader		=compile ps_5_0 LightMapPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapVS();
+		PixelShader		=compile ps_4_1 LightMapPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapVS();
 		PixelShader		=compile ps_4_0 LightMapPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapVS();
-		PixelShader		=compile ps_3_0 LightMapPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
 		PixelShader		=compile ps_4_0_level_9_3 LightMapPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 	pass Shadow
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapVS();
+		PixelShader		=compile ps_5_0 LightMapShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapVS();
+		PixelShader		=compile ps_4_1 LightMapShadowPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapVS();
 		PixelShader		=compile ps_4_0 LightMapShadowPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapVS();
-		PixelShader		=compile ps_3_0 LightMapShadowPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
 		PixelShader		=compile ps_4_0_level_9_3 LightMapShadowPS();
 #endif
+		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass DMN
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapVS();
+		PixelShader		=compile ps_5_0 LightMapDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapVS();
+		PixelShader		=compile ps_4_1 LightMapDMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapVS();
 		PixelShader		=compile ps_4_0 LightMapDMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapVS();
-		PixelShader		=compile ps_3_0 LightMapDMNPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
 		PixelShader		=compile ps_4_0_level_9_3 LightMapDMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -649,42 +653,57 @@ technique10 LightMapCel
 {
 	pass Base
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapVS();
+		PixelShader		=compile ps_5_0 LightMapCelPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapVS();
+		PixelShader		=compile ps_4_1 LightMapCelPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapVS();
 		PixelShader		=compile ps_4_0 LightMapCelPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapVS();
-		PixelShader		=compile ps_3_0 LightMapCelPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
 		PixelShader		=compile ps_4_0_level_9_3 LightMapCelPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 	pass Shadow
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapVS();
+		PixelShader		=compile ps_5_0 LightMapShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapVS();
+		PixelShader		=compile ps_4_1 LightMapShadowPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapVS();
 		PixelShader		=compile ps_4_0 LightMapShadowPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapVS();
-		PixelShader		=compile ps_3_0 LightMapShadowPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
 		PixelShader		=compile ps_4_0_level_9_3 LightMapShadowPS();
 #endif
+		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass DMN
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapVS();
+		PixelShader		=compile ps_5_0 LightMapDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapVS();
+		PixelShader		=compile ps_4_1 LightMapDMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapVS();
 		PixelShader		=compile ps_4_0 LightMapDMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapVS();
-		PixelShader		=compile ps_3_0 LightMapDMNPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
 		PixelShader		=compile ps_4_0_level_9_3 LightMapDMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -692,42 +711,57 @@ technique10 Alpha
 {
 	pass Base
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 VertexLitVS();
+		PixelShader		=compile ps_5_0 VertexLitPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 VertexLitVS();
+		PixelShader		=compile ps_4_1 VertexLitPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 VertexLitVS();
 		PixelShader		=compile ps_4_0 VertexLitPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 VertexLitVS();
-		PixelShader		=compile ps_3_0 VertexLitPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitPS();
 #endif
+		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass Shadow
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 VertexLitVS();
+		PixelShader		=compile ps_5_0 VertexLitShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 VertexLitVS();
+		PixelShader		=compile ps_4_1 VertexLitShadowPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 VertexLitVS();
 		PixelShader		=compile ps_4_0 VertexLitShadowPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 VertexLitVS();
-		PixelShader		=compile ps_3_0 VertexLitShadowPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitShadowPS();
 #endif
+		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass DMN
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 VertexLitVS();
+		PixelShader		=compile ps_5_0 VertexLitDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 VertexLitVS();
+		PixelShader		=compile ps_4_1 VertexLitDMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 VertexLitVS();
 		PixelShader		=compile ps_4_0 VertexLitDMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 VertexLitVS();
-		PixelShader		=compile ps_3_0 VertexLitDMNPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitDMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -735,42 +769,57 @@ technique10 VertexLighting
 {
 	pass Base
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 VertexLitVS();
+		PixelShader		=compile ps_5_0 VertexLitPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 VertexLitVS();
+		PixelShader		=compile ps_4_1 VertexLitPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 VertexLitVS();
 		PixelShader		=compile ps_4_0 VertexLitPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 VertexLitVS();
-		PixelShader		=compile ps_3_0 VertexLitPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 	pass Shadow
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 VertexLitVS();
+		PixelShader		=compile ps_5_0 VertexLitShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 VertexLitVS();
+		PixelShader		=compile ps_4_1 VertexLitShadowPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 VertexLitVS();
 		PixelShader		=compile ps_4_0 VertexLitShadowPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 VertexLitVS();
-		PixelShader		=compile ps_3_0 VertexLitShadowPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitShadowPS();
 #endif
+		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass DMN
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 VertexLitVS();
+		PixelShader		=compile ps_5_0 VertexLitDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 VertexLitVS();
+		PixelShader		=compile ps_4_1 VertexLitDMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 VertexLitVS();
 		PixelShader		=compile ps_4_0 VertexLitDMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 VertexLitVS();
-		PixelShader		=compile ps_3_0 VertexLitDMNPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitDMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -778,42 +827,57 @@ technique10 VertexLightingCel
 {
 	pass Base
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 VertexLitVS();
+		PixelShader		=compile ps_5_0 VertexLitCelPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 VertexLitVS();
+		PixelShader		=compile ps_4_1 VertexLitCelPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 VertexLitVS();
 		PixelShader		=compile ps_4_0 VertexLitCelPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 VertexLitVS();
-		PixelShader		=compile ps_3_0 VertexLitCelPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitCelPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 	pass Shadow
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 VertexLitVS();
+		PixelShader		=compile ps_5_0 VertexLitShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 VertexLitVS();
+		PixelShader		=compile ps_4_1 VertexLitShadowPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 VertexLitVS();
 		PixelShader		=compile ps_4_0 VertexLitShadowPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 VertexLitVS();
-		PixelShader		=compile ps_3_0 VertexLitShadowPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitShadowPS();
 #endif
+		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass DMN
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 VertexLitVS();
+		PixelShader		=compile ps_5_0 VertexLitDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 VertexLitVS();
+		PixelShader		=compile ps_4_1 VertexLitDMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 VertexLitVS();
 		PixelShader		=compile ps_4_0 VertexLitDMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 VertexLitVS();
-		PixelShader		=compile ps_3_0 VertexLitDMNPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitDMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -821,34 +885,57 @@ technique10 LightMapAlpha
 {
 	pass Base
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAlphaVS();
+		PixelShader		=compile ps_5_0 LightMapPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAlphaVS();
+		PixelShader		=compile ps_4_1 LightMapPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAlphaVS();
 		PixelShader		=compile ps_4_0 LightMapPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAlphaVS();
-		PixelShader		=compile ps_3_0 LightMapPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAlphaVS();
 		PixelShader		=compile ps_4_0_level_9_3 LightMapPS();
 #endif
+		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass Shadow
 	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAlphaVS();
+		PixelShader		=compile ps_5_0 LightMapShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAlphaVS();
+		PixelShader		=compile ps_4_1 LightMapShadowPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 LightMapAlphaVS();
+		PixelShader		=compile ps_4_0 LightMapShadowPS();
+#else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAlphaVS();
 		PixelShader		=compile ps_4_0_level_9_3 LightMapShadowPS();
+#endif
+		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass DMN
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapVS();
+		PixelShader		=compile ps_5_0 LightMapDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapVS();
+		PixelShader		=compile ps_4_1 LightMapDMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapVS();
 		PixelShader		=compile ps_4_0 LightMapDMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapVS();
-		PixelShader		=compile ps_3_0 LightMapDMNPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
-		PixelShader		=compile ps_2_0 LightMapDMNPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapDMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -856,34 +943,57 @@ technique10 LightMapAlphaCel
 {
 	pass Base
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAlphaVS();
+		PixelShader		=compile ps_5_0 LightMapCelPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAlphaVS();
+		PixelShader		=compile ps_4_1 LightMapCelPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAlphaVS();
 		PixelShader		=compile ps_4_0 LightMapCelPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAlphaVS();
-		PixelShader		=compile ps_3_0 LightMapCelPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAlphaVS();
-		PixelShader		=compile ps_2_0 LightMapCelPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapCelPS();
 #endif
+		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass Shadow
 	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAlphaVS();
+		PixelShader		=compile ps_5_0 LightMapShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAlphaVS();
+		PixelShader		=compile ps_4_1 LightMapShadowPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 LightMapAlphaVS();
+		PixelShader		=compile ps_4_0 LightMapShadowPS();
+#else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAlphaVS();
-		PixelShader		=compile ps_2_0 LightMapShadowPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapShadowPS();
+#endif
+		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass DMN
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapVS();
+		PixelShader		=compile ps_5_0 LightMapDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapVS();
+		PixelShader		=compile ps_4_1 LightMapDMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapVS();
 		PixelShader		=compile ps_4_0 LightMapDMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapVS();
-		PixelShader		=compile ps_3_0 LightMapDMNPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
-		PixelShader		=compile ps_2_0 LightMapDMNPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapDMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -891,42 +1001,57 @@ technique10 FullBright
 {
 	pass Base
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 FullBrightVS();
+		PixelShader		=compile ps_5_0 VertexLitCelPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 FullBrightVS();
+		PixelShader		=compile ps_4_1 VertexLitCelPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 FullBrightVS();
 		PixelShader		=compile ps_4_0 VertexLitCelPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 FullBrightVS();
-		PixelShader		=compile ps_3_0 VertexLitCelPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 FullBrightVS();
-		PixelShader		=compile ps_2_0 VertexLitCelPS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitCelPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 	pass Shadow
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 FullBrightVS();
+		PixelShader		=compile ps_5_0 VertexLitShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 FullBrightVS();
+		PixelShader		=compile ps_4_1 VertexLitShadowPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 FullBrightVS();
 		PixelShader		=compile ps_4_0 VertexLitShadowPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 FullBrightVS();
-		PixelShader		=compile ps_3_0 VertexLitShadowPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 FullBrightVS();
-		PixelShader		=compile ps_2_0 VertexLitShadowPS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitShadowPS();
 #endif
+		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass DMN
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 FullBrightVS();
+		PixelShader		=compile ps_5_0 VertexLitDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 FullBrightVS();
+		PixelShader		=compile ps_4_1 VertexLitDMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 FullBrightVS();
 		PixelShader		=compile ps_4_0 VertexLitDMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 FullBrightVS();
-		PixelShader		=compile ps_3_0 VertexLitDMNPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 FullBrightVS();
-		PixelShader		=compile ps_2_0 VertexLitDMNPS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitDMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -934,42 +1059,57 @@ technique10 LightMapAnim
 {
 	pass Base
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAnimVS();
+		PixelShader		=compile ps_5_0 LightMapAnimPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAnimVS();
+		PixelShader		=compile ps_4_1 LightMapAnimPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAnimVS();
 		PixelShader		=compile ps_4_0 LightMapAnimPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAnimVS();
-		PixelShader		=compile ps_3_0 LightMapAnimPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
-		PixelShader		=compile ps_2_0 LightMapAnimPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 	pass Shadow
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAnimVS();
+		PixelShader		=compile ps_5_0 LightMapAnimShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAnimVS();
+		PixelShader		=compile ps_4_1 LightMapAnimShadowPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAnimVS();
 		PixelShader		=compile ps_4_0 LightMapAnimShadowPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAnimVS();
-		PixelShader		=compile ps_3_0 LightMapAnimShadowPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
-		PixelShader		=compile ps_2_0 LightMapAnimShadowPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimShadowPS();
 #endif
+		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass DMN
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAnimVS();
+		PixelShader		=compile ps_5_0 LightMapAnimDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAnimVS();
+		PixelShader		=compile ps_4_1 LightMapAnimDMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAnimVS();
 		PixelShader		=compile ps_4_0 LightMapAnimDMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAnimVS();
-		PixelShader		=compile ps_3_0 LightMapAnimDMNPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
-		PixelShader		=compile ps_2_0 LightMapAnimDMNPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimDMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -977,42 +1117,57 @@ technique10 LightMapAnimAlpha
 {
 	pass Base
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAnimVS();
+		PixelShader		=compile ps_5_0 LightMapAnimPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAnimVS();
+		PixelShader		=compile ps_4_1 LightMapAnimPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAnimVS();
 		PixelShader		=compile ps_4_0 LightMapAnimPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAnimVS();
-		PixelShader		=compile ps_3_0 LightMapAnimPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
-		PixelShader		=compile ps_2_0 LightMapAnimPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimPS();
 #endif
+		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass Shadow
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAnimVS();
+		PixelShader		=compile ps_5_0 LightMapAnimShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAnimVS();
+		PixelShader		=compile ps_4_1 LightMapAnimShadowPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAnimVS();
 		PixelShader		=compile ps_4_0 LightMapAnimShadowPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAnimVS();
-		PixelShader		=compile ps_3_0 LightMapAnimShadowPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
-		PixelShader		=compile ps_2_0 LightMapAnimShadowPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimShadowPS();
 #endif
+		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass DMN
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAnimVS();
+		PixelShader		=compile ps_5_0 LightMapAnimDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAnimVS();
+		PixelShader		=compile ps_4_1 LightMapAnimDMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAnimVS();
 		PixelShader		=compile ps_4_0 LightMapAnimDMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAnimVS();
-		PixelShader		=compile ps_3_0 LightMapAnimDMNPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
-		PixelShader		=compile ps_2_0 LightMapAnimDMNPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimDMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -1020,42 +1175,57 @@ technique10 LightMapAnimAlphaCel
 {
 	pass Base
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAnimVS();
+		PixelShader		=compile ps_5_0 LightMapAnimCelPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAnimVS();
+		PixelShader		=compile ps_4_1 LightMapAnimCelPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAnimVS();
 		PixelShader		=compile ps_4_0 LightMapAnimCelPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAnimVS();
-		PixelShader		=compile ps_3_0 LightMapAnimCelPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
-		PixelShader		=compile ps_2_0 LightMapAnimCelPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimCelPS();
 #endif
+		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass Shadow
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAnimVS();
+		PixelShader		=compile ps_5_0 LightMapAnimShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAnimVS();
+		PixelShader		=compile ps_4_1 LightMapAnimShadowPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAnimVS();
 		PixelShader		=compile ps_4_0 LightMapAnimShadowPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAnimVS();
-		PixelShader		=compile ps_3_0 LightMapAnimShadowPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
-		PixelShader		=compile ps_2_0 LightMapAnimShadowPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimShadowPS();
 #endif
+		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass DMN
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAnimVS();
+		PixelShader		=compile ps_5_0 LightMapAnimDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAnimVS();
+		PixelShader		=compile ps_4_1 LightMapAnimDMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAnimVS();
 		PixelShader		=compile ps_4_0 LightMapAnimDMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAnimVS();
-		PixelShader		=compile ps_3_0 LightMapAnimDMNPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
-		PixelShader		=compile ps_2_0 LightMapAnimDMNPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimDMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -1063,42 +1233,57 @@ technique10 LightMapAnimCel
 {
 	pass Base
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAnimVS();
+		PixelShader		=compile ps_5_0 LightMapAnimCelPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAnimVS();
+		PixelShader		=compile ps_4_1 LightMapAnimCelPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAnimVS();
 		PixelShader		=compile ps_4_0 LightMapAnimCelPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAnimVS();
-		PixelShader		=compile ps_3_0 LightMapAnimCelPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
-		PixelShader		=compile ps_2_0 LightMapAnimCelPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimCelPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 	pass Shadow
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAnimVS();
+		PixelShader		=compile ps_5_0 LightMapAnimShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAnimVS();
+		PixelShader		=compile ps_4_1 LightMapAnimShadowPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAnimVS();
 		PixelShader		=compile ps_4_0 LightMapAnimShadowPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAnimVS();
-		PixelShader		=compile ps_3_0 LightMapAnimShadowPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
-		PixelShader		=compile ps_2_0 LightMapAnimShadowPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimShadowPS();
 #endif
+		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 	pass DMN
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 LightMapAnimVS();
+		PixelShader		=compile ps_5_0 LightMapAnimDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 LightMapAnimVS();
+		PixelShader		=compile ps_4_1 LightMapAnimDMNPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 LightMapAnimVS();
 		PixelShader		=compile ps_4_0 LightMapAnimDMNPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 LightMapAnimVS();
-		PixelShader		=compile ps_3_0 LightMapAnimDMNPS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 LightMapAnimVS();
-		PixelShader		=compile ps_2_0 LightMapAnimDMNPS();
+		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimDMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -1106,12 +1291,38 @@ technique10 Sky
 {
 	pass Base
 	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 SkyVS();
+		PixelShader		=compile ps_5_0 SkyPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 SkyVS();
+		PixelShader		=compile ps_4_1 SkyPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 SkyVS();
+		PixelShader		=compile ps_4_0 SkyPS();
+#else
 		VertexShader	=compile vs_4_0_level_9_3 SkyVS();
-		PixelShader		=compile ps_2_0 SkyPS();
+		PixelShader		=compile ps_4_0_level_9_3 SkyPS();
+#endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 	pass DMN
 	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 SkyVS();
+		PixelShader		=compile ps_5_0 SkyDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 SkyVS();
+		PixelShader		=compile ps_4_1 SkyDMNPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 SkyVS();
+		PixelShader		=compile ps_4_0 SkyDMNPS();
+#else
 		VertexShader	=compile vs_4_0_level_9_3 SkyVS();
-		PixelShader		=compile ps_2_0 SkyDMNPS();
+		PixelShader		=compile ps_4_0_level_9_3 SkyDMNPS();
+#endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }

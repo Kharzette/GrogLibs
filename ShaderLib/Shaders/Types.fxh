@@ -136,14 +136,6 @@ struct VPosTex04Tex14
 	float4	TexCoord1	: TEXCOORD1;
 };
 
-struct VPosTex04Tex14Tex24
-{
-	float3	Position	: POSITION;
-	float4	TexCoord0	: TEXCOORD0;
-	float4	TexCoord1	: TEXCOORD1;
-	float4	TexCoord2	: TEXCOORD2;
-};
-
 struct VPosTex04Tex14Tex24Tex31
 {
 	float3	Position	: POSITION;
@@ -414,6 +406,11 @@ struct VVPosNorm
 	float3	Normal		: NORMAL;
 };
 
+struct VVPos
+{
+	float4	Position	: SV_POSITION;
+};
+
 struct VVPosCol0
 {
 	float4	Position	: SV_POSITION;
@@ -472,14 +469,6 @@ struct VVPosTex0Tex14
 	float4	TexCoord1	: TEXCOORD1;
 };
 
-struct VVPosTex0Tex13VPos
-{
-	float4	Position	: SV_POSITION;
-	float2	TexCoord0	: TEXCOORD0;
-	float3	TexCoord1	: TEXCOORD1;
-	float3	VPos		: VPOS0;
-};
-
 struct VVPosTex0Col0
 {
 	float4	Position	: SV_POSITION;
@@ -529,14 +518,6 @@ struct VVPosTex03Tex13
 	float4	Position	: SV_POSITION;
 	float3	TexCoord0	: TEXCOORD0;
 	float3	TexCoord1	: TEXCOORD1;
-};
-
-struct VVPosTex03Tex13VPos
-{
-	float4	Position	: SV_POSITION;
-	float3	TexCoord0	: TEXCOORD0;
-	float3	TexCoord1	: TEXCOORD1;
-	float3	VPos		: VPOS0;
 };
 
 struct VVPosNormTex0Tex1
@@ -612,14 +593,6 @@ struct VVPosTex04Tex14
 	float4	TexCoord1	: TEXCOORD1;
 };
 
-struct VVPosTex04Tex14VPos
-{
-	float4	Position	: SV_POSITION;
-	float4	TexCoord0	: TEXCOORD0;
-	float4	TexCoord1	: TEXCOORD1;
-	float3	VPos		: VPOS0;
-};
-
 struct VVPosTex04Tex14Tex24
 {
 	float4	Position	: SV_POSITION;
@@ -646,16 +619,6 @@ struct VVPosTex04Tex14Tex24Tex34
 	float4	TexCoord3	: TEXCOORD3;
 };
 
-struct VVPosTex04Tex14Tex24Tex34VPos
-{
-	float4	Position	: SV_POSITION;
-	float4	TexCoord0	: TEXCOORD0;
-	float4	TexCoord1	: TEXCOORD1;
-	float4	TexCoord2	: TEXCOORD2;
-	float4	TexCoord3	: TEXCOORD3;
-	float3	VPos		: VPOS0;
-};
-
 struct VVPosTex04Tex14Tex24Tex34Tex44
 {
 	float4	Position	: SV_POSITION;
@@ -676,5 +639,4 @@ struct VVPosTex04Tex14Tex24Tex34Tex44Tex54
 	float4	TexCoord4	: TEXCOORD4;
 	float4	TexCoord5	: TEXCOORD5;
 };
-
 #endif	//_TYPESFXH

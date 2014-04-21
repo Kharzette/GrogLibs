@@ -21,6 +21,19 @@ BlendState NoBlending
 	BlendEnable[0]			=FALSE;
 };
 
+BlendState ShadowBlending
+{
+	AlphaToCoverageEnable		=FALSE;
+	BlendEnable[0]				=TRUE;
+	SrcBlend					=ONE;
+	DestBlend					=ONE;
+	BlendOp						=REV_SUBTRACT;
+	SrcBlendAlpha				=ONE;
+	DestBlendAlpha				=ONE;
+	BlendOpAlpha				=ADD;
+	RenderTargetWriteMask[0]	=0x0F;
+};
+
 DepthStencilState EnableDepth
 {
 	DepthEnable		=TRUE;

@@ -628,12 +628,6 @@ namespace MaterialLib
 				FileInfo[]		fi	=di.GetFiles("*.fx", SearchOption.AllDirectories);
 				foreach(FileInfo f in fi)
 				{
-					//hacks until all the shaders build properly
-					if(f.Name == "BSP.fx" || f.Name == "Post.fx")
-					{
-						continue;
-					}
-
 					if(bUsePreCompiled)
 					{
 						if(Directory.Exists("CompiledShaders"))

@@ -2,595 +2,704 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Text;
-using System.Diagnostics;
 using System.Windows.Forms;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using MeshLib;
 using UtilityLib;
 
 
-namespace SharedForms
+namespace ColladaConvert
 {
 	public partial class MaterialForm : Form
 	{
-		MaterialGridModel		mMatModel;		
-		MaterialLib.MaterialLib	mMatLib;
 		OpenFileDialog			mOFD	=new OpenFileDialog();
 		SaveFileDialog			mSFD	=new SaveFileDialog();
-		ShaderList				mSL;
-		TextureForm				mTF;
-		TechniqueList			mTL;
-		GraphicsDevice			mGD;
 
-		//temporary reference to a cell being modified
-		DataGridViewCell	mEditingCell;
+//		ListBoxContainer	mLBC	=new ListBoxContainer();
 
-		//showing mesh part grid?
-		bool	mbMeshPartGridVisible;
+		MaterialLib.MaterialLib	mMatLib;
 
-		//events
-		public event EventHandler	eMaterialNuked;
-		public event EventHandler	eLibraryCleared;
 		public event EventHandler	eNukedMeshPart;
-		public event EventHandler	eLibrarySaved;
 		public event EventHandler	eStripElements;
-		public event EventHandler	eWeldWeights;
-
-		//column indexes for special behavior
-		int	mShaderColumn;
-		int	mTechniqueColumn;
-		int	mEmissiveColumn;
-		int	mBlendFactorColumn;
 
 
-		void MakeEnumColumn(string colName, Type colType)
-		{
-			MaterialGrid.Columns.Remove(colName);
-
-			DataGridViewComboBoxColumn	slotColumn
-				=new DataGridViewComboBoxColumn();
-
-			foreach(object b in Enum.GetValues(colType))
-			{
-				slotColumn.Items.Add(b);
-			}
-
-			slotColumn.DisplayIndex		=0;
-			slotColumn.HeaderText		=colName;
-			slotColumn.DataPropertyName	=colName;
-
-			MaterialGrid.Columns.Add(slotColumn);
-		}
-
-
-		void MakeBoolColumn(string colName)
-		{
-			MaterialGrid.Columns.Remove(colName);
-
-			DataGridViewComboBoxColumn	slotColumn
-				=new DataGridViewComboBoxColumn();
-
-			slotColumn.Items.Add(false);
-			slotColumn.Items.Add(true);
-			slotColumn.DisplayIndex		=0;
-			slotColumn.HeaderText		=colName;
-			slotColumn.DataPropertyName	=colName;
-
-			MaterialGrid.Columns.Add(slotColumn);
-		}
-
-
-		void MakeColorColumn(string colName)
-		{
-			DataGridViewColorColumn	colorColumn	=new DataGridViewColorColumn();
-			colorColumn.HeaderText			=colName;
-			colorColumn.DataPropertyName	=colName;
-
-			MaterialGrid.Columns.Remove(colName);
-
-			MaterialGrid.Columns.Add(colorColumn);
-		}
-
-
-		public MaterialForm(GraphicsDevice gd,
-			MaterialLib.MaterialLib matlib,
-			bool bMeshPartsVisible) : base()
+		public MaterialForm(MaterialLib.MaterialLib matLib)
 		{
 			InitializeComponent();
 
-			mMatLib					=matlib;
-			mGD						=gd;
-			mbMeshPartGridVisible	=bMeshPartsVisible;
+			mMatLib	=matLib;
 
-			if(!mbMeshPartGridVisible)
+			MaterialList.Columns.Add("Name");
+			MaterialList.Columns.Add("Effect");
+			MaterialList.Columns.Add("Technique");
+
+			RefreshMaterials();
+
+			MeshPartList.Columns.Add("Name");
+			MeshPartList.Columns.Add("Material Name");
+			MeshPartList.Columns.Add("Vertex Format");
+			MeshPartList.Columns.Add("Visible");
+		}
+
+
+		internal void RefreshMaterials()
+		{
+			MaterialList.Items.Clear();
+
+			List<string>	names	=mMatLib.GetMaterialNames();
+
+			foreach(string name in names)
 			{
-				MeshPartGrid.Visible	=false;
+				MaterialList.Items.Add(name);
 			}
 
-			mMatModel	=new MaterialGridModel(mMatLib.GetMaterials());
-
-			NewMaterial.Enabled		=true;
-			MaterialGrid.DataSource	=mMatModel;
-
-			MakeColorColumn("Emissive");
-			MakeEnumColumn("AlphaBlendFunc", typeof(BlendFunction));
-			MakeEnumColumn("AlphaDestBlend", typeof(Blend));
-			MakeEnumColumn("AlphaSrcBlend", typeof(Blend));
-			MakeColorColumn("BlendFactor");
-			MakeEnumColumn("ColorBlendFunc", typeof(BlendFunction));
-			MakeEnumColumn("ColorDestBlend", typeof(Blend));
-			MakeEnumColumn("ColorSrcBlend", typeof(Blend));
-			MakeBoolColumn("DepthEnable");
-			MakeEnumColumn("DepthFunc", typeof(CompareFunction));
-			MakeBoolColumn("DepthWriteEnable");
-			MakeEnumColumn("CullMode", typeof(CullMode));
-
-			foreach(DataGridViewColumn col in MaterialGrid.Columns)
+			for(int i=0;i < MaterialList.Items.Count;i++)
 			{
-				if(col.HeaderText == "ShaderName")
+				MaterialList.Items[i].Tag	="MaterialName";
+
+				MaterialList.Items[i].SubItems.Add(
+					mMatLib.GetMaterialEffect(MaterialList.Items[i].Text));
+				MaterialList.Items[i].SubItems.Add(
+					mMatLib.GetMaterialTechnique(MaterialList.Items[i].Text));
+
+				MaterialList.Items[i].SubItems[1].Tag	="MaterialEffect";
+				MaterialList.Items[i].SubItems[2].Tag	="MaterialTechnique";
+			}
+
+			SizeColumns(MaterialList);
+		}
+
+
+		internal void RefreshMeshPartList()
+		{
+			StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
+			Character	chr	=MeshPartList.Tag as Character;
+			if(sm == null && chr == null)
+			{
+				return;
+			}
+
+			List<Mesh>	partList	=(sm == null)? chr.GetMeshPartList() : sm.GetMeshPartList();
+
+			MeshPartList.Items.Clear();
+
+			foreach(Mesh m in partList)
+			{
+				ListViewItem	lvi	=MeshPartList.Items.Add(m.Name);
+
+				lvi.Tag	=m;
+
+				lvi.SubItems.Add(m.MaterialName);
+				lvi.SubItems.Add(m.VertexType.ToString());
+
+				//set the tag on this one for click detection help
+				ListViewItem.ListViewSubItem	vis	=lvi.SubItems.Add(m.Visible.ToString());
+				vis.Tag	=69;
+			}
+
+			SizeColumns(MeshPartList);
+		}
+
+
+		void SizeColumns(ListView lv)
+		{
+			//set to header size first
+			lv.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+
+			List<int>	sizes	=new List<int>();
+			for(int i=0;i < lv.Columns.Count;i++)
+			{
+				sizes.Add(lv.Columns[i].Width);
+			}
+
+			for(int i=0;i < lv.Columns.Count;i++)
+			{
+				lv.Columns[i].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+
+				if(lv.Columns[i].Width < sizes[i])
 				{
-					mShaderColumn	=MaterialGrid.Columns.IndexOf(col);
-				}
-				else if(col.HeaderText == "Technique")
-				{
-					mTechniqueColumn	=MaterialGrid.Columns.IndexOf(col);
-				}
-				else if(col.HeaderText == "Emissive")
-				{
-					mEmissiveColumn	=MaterialGrid.Columns.IndexOf(col);
-				}
-				else if(col.HeaderText == "BlendFactor")
-				{
-					mBlendFactorColumn	=MaterialGrid.Columns.IndexOf(col);
+					lv.Columns[i].AutoResize(ColumnHeaderAutoResizeStyle.HeaderSize);
 				}
 			}
-			
-
-			//set custom columns to
-			//read only so text can't be entered in cell
-			MaterialGrid.Columns[mShaderColumn].ReadOnly		=true;
-			MaterialGrid.Columns[mTechniqueColumn].ReadOnly		=true;
-			MaterialGrid.Columns[mEmissiveColumn].ReadOnly		=true;
-			MaterialGrid.Columns[mBlendFactorColumn].ReadOnly	=true;
-
-			//adjust size
-			if(!mbMeshPartGridVisible)
+		}
+		
+		
+		//from a stacko question
+		int DropDownWidth(ListBox myBox)
+		{
+			int maxWidth = 0, temp = 0;
+			foreach(var obj in myBox.Items)
 			{
-				MeshPartGroup.Visible	=false;
+				temp	=TextRenderer.MeasureText(obj.ToString(), myBox.Font).Width;
+				if(temp > maxWidth)
+				{
+					maxWidth = temp;
+				}
+			}
+			return maxWidth;
+		}
+		
+		
+		void SpawnEffectComboBox(string matName, ListViewItem.ListViewSubItem sub)
+		{
+			List<string>	effects	=mMatLib.GetEffects();
+			if(effects.Count <= 0)
+			{
+				return;
+			}
 
-				//split the height between prop and mat
-				MaterialProperties.SetBounds(MaterialProperties.Left,
-					MaterialProperties.Top,
-					MaterialGrid.Width,
-					MaterialGrid.Height + (MeshPartGrid.Height));
+			ListBox				lbox	=new ListBox();
+			ListBoxContainer	lbc		=new ListBoxContainer();
 
-				MaterialGrid.SetBounds(MaterialGrid.Left,
-					MaterialGrid.Top - (MeshPartGrid.Height / 2),
-					MaterialGrid.Width,
-					MaterialGrid.Height + (MeshPartGrid.Height / 2));
+			Point	loc	=sub.Bounds.Location;
+
+			lbc.Location	=MaterialList.PointToScreen(loc);
+
+			lbox.Parent		=lbc;
+			lbox.Location	=new Point(0, 0);
+			lbox.Tag		=matName;
+
+			string	current	=mMatLib.GetMaterialEffect(matName);
+
+			foreach(string fx in effects)
+			{
+				lbox.Items.Add(fx);
+			}
+
+			if(current != null)
+			{
+				lbox.SelectedItem	=current;
+			}
+
+			int	width	=DropDownWidth(lbox);
+
+			width	+=SystemInformation.VerticalScrollBarWidth;
+
+			Size	fit	=new System.Drawing.Size(width, lbox.Size.Height);
+
+			lbox.Size	=fit;
+			lbc.Size	=fit;
+
+			lbc.Visible		=true;
+			lbox.Visible	=true;
+
+			lbox.MouseClick	+=OnEffectListBoxClick;
+			lbox.Leave		+=OnEffectListBoxEscaped;
+			lbox.KeyPress	+=OnEffectListBoxKey;
+			lbox.LostFocus	+=OnEffectLostFocus;
+			lbox.Focus();
+		}
+
+
+		void SpawnTechniqueComboBox(string matName, ListViewItem.ListViewSubItem sub)
+		{
+			List<string>	techs	=mMatLib.GetMaterialTechniques(matName);
+			if(techs.Count <= 0)
+			{
+				return;
+			}
+
+			ListBox				lbox	=new ListBox();
+			ListBoxContainer	lbc		=new ListBoxContainer();
+
+			Point	loc	=sub.Bounds.Location;
+
+			lbc.Location	=MaterialList.PointToScreen(loc);
+			lbox.Parent		=lbc;
+			lbox.Location	=new Point(0, 0);
+			lbox.Tag		=matName;
+
+			foreach(string tn in techs)
+			{
+				lbox.Items.Add(tn);
+			}
+
+			string	current	=mMatLib.GetMaterialTechnique(matName);
+			if(current != null)
+			{
+				lbox.SelectedItem	=current;
+			}
+
+			int	width	=DropDownWidth(lbox);
+
+			width	+=SystemInformation.VerticalScrollBarWidth;
+
+			Size	fit	=new System.Drawing.Size(width, lbox.Size.Height);
+
+			lbox.Size	=fit;
+			lbc.Size	=fit;
+
+			lbox.Visible	=true;
+			lbc.Visible	=true;
+
+			lbox.Leave		+=OnTechListBoxEscaped;
+			lbox.KeyPress	+=OnTechListBoxKey;
+			lbox.MouseClick	+=OnTechListBoxClick;
+			lbox.LostFocus	+=OnTechLostFocus;
+			lbox.Focus();
+		}
+
+
+		void SetListEffect(string mat, string fx)
+		{
+			foreach(ListViewItem lvi in MaterialList.Items)
+			{
+				if(lvi.Text == mat)
+				{
+					lvi.SubItems[1].Text	=fx;
+					return;
+				}
 			}
 		}
 
 
-		public void ReWireParameters(bool bWire)
+		void SetListTechnique(string mat, string tech)
 		{
-			if(bWire)
+			foreach(ListViewItem lvi in MaterialList.Items)
 			{
-				OnSelectionChanged(null, null);
+				if(lvi.Text == mat)
+				{
+					lvi.SubItems[2].Text	=tech;
+					return;
+				}
+			}
+		}
+
+
+		void OnTechListBoxKey(object sender, KeyPressEventArgs kpea)
+		{
+			ListBox	lb	=sender as ListBox;
+
+			if(kpea.KeyChar == 27)	//escape
+			{
+				DisposeTechBox(lb);
+			}
+			else if(kpea.KeyChar == '\r')
+			{
+				if(lb.SelectedIndex != -1)
+				{
+					mMatLib.SetMaterialTechnique(lb.Tag as string, lb.SelectedItem as string);
+					SetListTechnique(lb.Tag as string, lb.SelectedItem as string);
+					OnMaterialSelectionChanged(null, null);
+				}
+				DisposeTechBox(lb);
+			}
+		}
+
+
+		void OnEffectLostFocus(object sender, EventArgs ea)
+		{
+			DisposeEffectBox(sender as ListBox);
+		}
+
+
+		void OnTechLostFocus(object sender, EventArgs ea)
+		{
+			DisposeEffectBox(sender as ListBox);
+		}
+
+
+		void OnEffectListBoxKey(object sender, KeyPressEventArgs kpea)
+		{
+			ListBox	lb	=sender as ListBox;
+
+			if(kpea.KeyChar == 27)	//escape
+			{
+				DisposeEffectBox(lb);
+			}
+			else if(kpea.KeyChar == '\r')
+			{
+				if(lb.SelectedIndex != -1)
+				{
+					mMatLib.SetMaterialEffect(lb.Tag as string, lb.SelectedItem as string);
+					SetListEffect(lb.Tag as string, lb.SelectedItem as string);
+					OnMaterialSelectionChanged(null, null);
+				}
+				DisposeEffectBox(lb);
+			}
+		}
+
+
+		void OnTechListBoxClick(object sender, MouseEventArgs mea)
+		{
+			ListBox	lb	=sender as ListBox;
+
+			if(lb.SelectedIndex != -1)
+			{
+				mMatLib.SetMaterialTechnique(lb.Tag as string, lb.SelectedItem as string);
+				SetListTechnique(lb.Tag as string, lb.SelectedItem as string);
+				OnMaterialSelectionChanged(null, null);
+			}
+			DisposeTechBox(lb);
+		}
+
+
+		void OnEffectListBoxClick(object sender, MouseEventArgs mea)
+		{
+			ListBox	lb	=sender as ListBox;
+
+			if(lb.SelectedIndex != -1)
+			{
+				mMatLib.SetMaterialEffect(lb.Tag as string, lb.SelectedItem as string);
+				SetListEffect(lb.Tag as string, lb.SelectedItem as string);
+				OnMaterialSelectionChanged(null, null);
+			}
+			DisposeEffectBox(lb);
+		}
+
+
+		void OnTechListBoxEscaped(object sender, EventArgs ea)
+		{
+			ListBox	lb	=sender as ListBox;
+
+			DisposeTechBox(lb);
+		}
+
+
+		void OnEffectListBoxEscaped(object sender, EventArgs ea)
+		{
+			ListBox	lb	=sender as ListBox;
+
+			DisposeEffectBox(lb);
+		}
+
+
+		void OnMaterialSelectionChanged(object sender, EventArgs e)
+		{
+			if(MaterialList.SelectedIndices.Count < 1
+				|| MaterialList.SelectedIndices.Count > 1)
+			{
+				VariableList.DataSource	=null;
+				NewMaterial.Text		="New Mat";
+				return;
+			}
+			NewMaterial.Text		="Clone Mat";
+
+			string	matName	=MaterialList.Items[MaterialList.SelectedIndices[0]].Text;
+
+			BindingList<MaterialLib.EffectVariableValue>	vars	=
+				mMatLib.GetMaterialGUIVariables(matName);
+
+			if(vars.Count > 0)
+			{
+				VariableList.DataSource	=vars;
 			}
 			else
 			{
-				Action<DataGridView>	unWire	=src => src.DataSource = null;
-				FormExtensions.Invoke(MaterialProperties, unWire);
+				VariableList.DataSource	=null;
 			}
 		}
 
-
-		void UnWire()
+		
+		void OnMaterialRename(object sender, LabelEditEventArgs e)
 		{
-			MaterialProperties.DataSource	=null;
-		}
-
-
-		public void ApplyMat()
-		{
-			OnApplyMaterial(null, null);
-		}
-
-
-		void OnTextureListOk(object sender, EventArgs ea)
-		{
-			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-
-			mEditingCell.Value	=sender;
-			mEditingCell		=null;
-
-			mTF.eOk		-=OnTextureListOk;
-			mTF.eCancel	-=OnTextureListCancel;
-
-			//hack to autoset width / height
-			Texture2D	tex	=mMatLib.GetTexture(sender as string);
-			if(tex != null)
+			if(!mMatLib.RenameMaterial(MaterialList.Items[e.Item].Text, e.Label))
 			{
-				//add / update the tex size parameter
-				//but only if it is already there
-				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
-				MaterialLib.Material	mat	=gs.GetParentMaterial();
-				mat.SetParameter("mTexSize",
-					Vector2.UnitX * (tex.Width * 2) +
-					Vector2.UnitY * (tex.Height * 2));
-
-				//set texture enabled
-				mat.SetParameter("mbTextureEnabled", true);
+				e.CancelEdit	=true;
 			}
 			else
 			{
-				//check for cube
-				TextureCube	texCube	=mMatLib.GetTextureCube(sender as string);
-				if(texCube != null)
-				{
-					MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
-					MaterialLib.Material	mat	=gs.GetParentMaterial();
-
-					//set texture enabled
-					mat.SetParameter("mbTextureEnabled", true);
-				}
+				SizeColumns(MaterialList);	//this doesn't work, still has the old value
 			}
-			MaterialGrid.Enabled		=true;
-			MaterialProperties.Enabled	=true;
 		}
 
 
-		void OnTextureListCancel(object sender, EventArgs ea)
+		void OnMeshPartMouseUp(object sender, MouseEventArgs mea)
 		{
-			mTF.eOk		-=OnTextureListOk;
-			mTF.eCancel	-=OnTextureListCancel;
-
-			MaterialGrid.Enabled		=true;
-			MaterialProperties.Enabled	=true;
-		}
-
-
-		void OnTechniqueListOk(object sender, EventArgs ea)
-		{
-			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-
-			matSel[0].Cells[mTechniqueColumn].Value	=sender;
-
-			mTL.eOk		-=OnTechniqueListOk;
-			mTL.eCancel	-=OnTechniqueListCancel;
-
-			MaterialGrid.Enabled	=true;
-
-			//update shader parameters
-			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
-			MaterialLib.Material	mat	=gs.GetParentMaterial();
-
-			Effect	fx	=mMatLib.GetMaterialShader(mat.Name);
-			mat.UpdateShaderParameters(fx);
-
-			MaterialProperties.DataSource			=mat.ShaderParameters;
-			MaterialProperties.Columns[0].ReadOnly	=true;
-			MaterialProperties.Columns[1].ReadOnly	=true;
-			MaterialProperties.Columns[2].ReadOnly	=true;
-			MaterialProperties.Update();
-		}
-
-
-		void OnTechniqueListCancel(object sender, EventArgs ea)
-		{
-			mTL.eOk		-=OnTechniqueListOk;
-			mTL.eCancel	-=OnTechniqueListCancel;
-
-			MaterialGrid.Enabled	=true;
-		}
-
-
-		void OnShaderListOk(object sender, EventArgs ea)
-		{
-			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-
-			matSel[0].Cells[mShaderColumn].Value	=sender;
-
-			mSL.eOk		-=OnShaderListOk;
-			mSL.eCancel	-=OnShaderListCancel;
-
-			MaterialGrid.Enabled	=true;
-
-			//update shader parameters
-			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
-			MaterialLib.Material	mat	=gs.GetParentMaterial();
-
-			Effect	fx	=mMatLib.GetMaterialShader(mat.Name);
-			mat.Technique	="";	//reset this
-			mat.UpdateShaderParameters(fx);
-
-			MaterialProperties.DataSource			=mat.ShaderParameters;
-			MaterialProperties.Columns[0].ReadOnly	=true;
-			MaterialProperties.Columns[1].ReadOnly	=true;
-			MaterialProperties.Columns[2].ReadOnly	=true;
-		}
-
-
-		void OnShaderListCancel(object sender, EventArgs ea)
-		{
-			mSL.eOk		-=OnShaderListOk;
-			mSL.eCancel	-=OnShaderListCancel;
-
-			MaterialGrid.Enabled	=true;
-		}
-
-
-		void GuessMaterials()
-		{
-			Dictionary<string, MaterialLib.Material>	mats	=mMatLib.GetMaterials();
-
-			for(int i=0;i < MeshPartGrid.Rows.Count;i++)
+			foreach(ListViewItem lvi in MeshPartList.Items)
 			{
-				string	meshName	=MeshPartGrid.Rows[i].Cells[0].Value as string;
-
-				if(meshName.EndsWith("Mesh"))
+				if(lvi.Bounds.Contains(mea.Location))
 				{
-					meshName	=meshName.Substring(0, meshName.Length - 4);
+					Mesh	m	=lvi.Tag as Mesh;
 
-					if(mats.ContainsKey(meshName))
+					foreach(ListViewItem.ListViewSubItem sub in lvi.SubItems)
 					{
-						MeshPartGrid.Rows[i].Cells[1].Value	=meshName;
+						if(sub.Bounds.Contains(mea.Location))
+						{
+							if(sub.Tag != null && (int)sub.Tag == 69)
+							{
+								if((string)sub.Text == "True")
+								{
+									sub.Text	="False";
+									m.Visible	=false;
+								}
+								else
+								{
+									sub.Text	="True";
+									m.Visible	=true;
+								}
+							}
+						}
 					}
 				}
 			}
 		}
 
 
-		public void EnableMeshPartGrid()
+		void OnMatListClick(object sender, MouseEventArgs e)
 		{
-			MeshPartGrid.Enabled	=true;
+			foreach(ListViewItem lvi in MaterialList.Items)
+			{
+				if(lvi.Bounds.Contains(e.Location))
+				{
+					foreach(ListViewItem.ListViewSubItem sub in lvi.SubItems)
+					{
+						if(sub.Bounds.Contains(e.Location))
+						{
+							if((string)sub.Tag == "MaterialEffect")
+							{
+								SpawnEffectComboBox(lvi.Text, sub);
+							}
+							else if((string)sub.Tag == "MaterialTechnique")
+							{
+								SpawnTechniqueComboBox(lvi.Text, sub);
+							}
+						}
+					}
+				}
+			}
 		}
 
 
-		public void UpdateMaterials()
-		{
-			mMatModel	=new MaterialGridModel(mMatLib.GetMaterials());
-
-			Action<DataGridView>	setSrc	=src => src.DataSource = mMatModel;
-
-			SharedForms.FormExtensions.Invoke(MaterialGrid, setSrc);
-
-			mMatLib.SetCelTexture(0);
-		}
-
-
+		//the new button becomes a clone button with a mat selected
 		void OnNewMaterial(object sender, EventArgs e)
 		{
-			MaterialLib.Material	m	=mMatLib.CreateMaterial();
+			string	baseName	="default";
+			bool	bClone		=false;
+			if(MaterialList.SelectedIndices.Count == 1)
+			{
+				baseName	=MaterialList.Items[MaterialList.SelectedIndices[0]].Text;
+				bClone		=true;
+			}
 
-			m.Name			="default";
-			m.ShaderName	="";
-			m.Technique		="";
+			List<string>	names	=mMatLib.GetMaterialNames();
 
+			string	tryName	=baseName;
 			bool	bFirst	=true;
 			int		cnt		=1;
-			while(mMatLib.GetMaterial(m.Name) != null)
+			while(names.Contains(tryName))
 			{
 				if(bFirst)
 				{
-					m.Name	+="000";
+					tryName	+="000";
 					bFirst	=false;
 				}
 				else
 				{
-					m.Name	="default" + String.Format("{0:000}", cnt);
+					tryName	=baseName + String.Format("{0:000}", cnt);
 					cnt++;
 				}
 			}
 
-			//set some defaults
-			m.BlendState	=BlendState.Opaque;
-			m.DepthState	=DepthStencilState.Default;
-			m.RasterState	=RasterizerState.CullCounterClockwise;
+			if(bClone)
+			{
+				mMatLib.CloneMaterial(baseName, tryName);
+			}
+			else
+			{
+				mMatLib.CreateMaterial(tryName);
+			}
 
-			mMatLib.AddMaterial(m);
-			mMatModel.Add(m.GetGUIStates());
+			RefreshMaterials();
+		}
 
-			MaterialProperties.DataSource			=m.ShaderParameters;
-			MaterialProperties.Columns[0].ReadOnly	=true;
-			MaterialProperties.Columns[1].ReadOnly	=true;
-			MaterialProperties.Columns[2].ReadOnly	=true;
+
+		internal void SetMesh(object sender)
+		{
+			StaticMesh	sm	=sender as StaticMesh;
+			Character	chr	=sender as Character;
+			if(sm == null && chr == null)
+			{
+				return;
+			}
+
+			if(sm != null)
+			{
+				MeshPartList.Tag	=sm;
+			}
+			else
+			{
+				MeshPartList.Tag	=chr;
+			}
+
+			RefreshMeshPartList();
+		}
+
+
+		void OnFormSizeChanged(object sender, EventArgs e)
+		{
+			//get the mesh part grid out of the material
+			//grid's junk
+			int	adjust	=MeshPartGroup.Top - 6;
+
+			adjust	-=(MeshPartList.Top + MeshPartList.Size.Height);
+
+			MeshPartList.SetBounds(MeshPartList.Left,
+				MeshPartList.Top + adjust,
+				MeshPartList.Width,
+				MeshPartList.Height);
+		}
+
+
+		void OnMeshPartNuking(object sender, DataGridViewRowCancelEventArgs e)
+		{
+			if(e.Row.DataBoundItem.GetType().BaseType == typeof(Mesh))
+			{
+				Mesh	nukeMe	=(Mesh)e.Row.DataBoundItem;
+				Misc.SafeInvoke(eNukedMeshPart, nukeMe);
+			}
+		}
+
+
+		void OnMatListKeyUp(object sender, KeyEventArgs e)
+		{
+			if(e.KeyValue == 46)	//delete
+			{
+				if(MaterialList.SelectedItems.Count < 1)
+				{
+					return;	//nothing to do
+				}
+
+				foreach(ListViewItem lvi in MaterialList.SelectedItems)
+				{
+					mMatLib.NukeMaterial(lvi.Text);
+				}
+
+				RefreshMaterials();
+				NewMaterial.Text	="New Mat";
+			}
+		}
+
+
+		void OnMeshPartListKeyUp(object sender, KeyEventArgs e)
+		{
+			if(e.KeyValue == 46)	//delete
+			{
+				if(MeshPartList.SelectedItems.Count < 1)
+				{
+					return;	//nothing to do
+				}
+
+				List<object>	toNuke	=new List<object>();
+
+				foreach(ListViewItem lvi in MeshPartList.SelectedItems)
+				{
+					toNuke.Add(lvi.Tag);
+				}
+
+				MeshPartList.Items.Clear();
+
+				foreach(object o in toNuke)
+				{
+					Misc.SafeInvoke(eNukedMeshPart, o);
+				}
+
+				RefreshMeshPartList();
+			}
 		}
 
 
 		void OnApplyMaterial(object sender, EventArgs e)
 		{
-			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-			DataGridViewSelectedRowCollection	mpSel	=MeshPartGrid.SelectedRows;
-
-			foreach(DataGridViewRow dgvr in mpSel)
+			if(MaterialList.SelectedItems.Count != 1)
 			{
-				dgvr.Cells[1].Value	=matSel[0].Cells[0].Value;
-			}
-		}
-
-
-		void OnSelectionChanged(object sender, EventArgs e)
-		{
-			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-
-			if(matSel.Count > 0)
-			{
-				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
-
-				Action<DataGridView>	wire	=src => src.DataSource = gs.ShaderParameters;
-				FormExtensions.Invoke(MaterialProperties, wire);
-
-				//probably a better way to do this
-				Action<DataGridView>	readOnly0	=src => src.Columns[0].ReadOnly = true;
-				Action<DataGridView>	readOnly1	=src => src.Columns[1].ReadOnly = true;
-				Action<DataGridView>	readOnly2	=src => src.Columns[2].ReadOnly = true;
-
-				FormExtensions.Invoke(MaterialProperties, readOnly0);
-				FormExtensions.Invoke(MaterialProperties, readOnly1);
-				FormExtensions.Invoke(MaterialProperties, readOnly2);
-			}
-		}
-
-
-		void OnCellValidated(object sender, DataGridViewCellEventArgs e)
-		{
-			//update name?
-			if(e.ColumnIndex == 0)
-			{
-				mMatLib.UpdateDictionaries();
-			}
-		}
-
-
-		void OnCellClick(object sender, DataGridViewCellMouseEventArgs e)
-		{
-			if(e.RowIndex == -1)
-			{
-				return;	//header click?
+				return;	//nothing to do
 			}
 
-			//if this is the shader name
-			if(e.ColumnIndex == mShaderColumn)
-			{
-				mSL	=new ShaderList(mMatLib);
-				mSL.eOk					+=OnShaderListOk;
-				mSL.eCancel				+=OnShaderListCancel;
-				mSL.Visible				=true;
-				MaterialGrid.Enabled	=false;
-			}
-			else if(e.ColumnIndex == mTechniqueColumn)
-			{
-				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)MaterialGrid.Rows[e.RowIndex].DataBoundItem;
-				MaterialLib.Material	m	=gs.GetParentMaterial();
+			string	matName	=MaterialList.SelectedItems[0].Text;
 
-				if(mMatLib.GetMaterialShader(m.Name) != null)
+			foreach(ListViewItem lvi in MeshPartList.SelectedItems)
+			{
+				Mesh	m	=lvi.Tag as Mesh;
+				if(m == null)
 				{
-					//techniques
-					mTL	=new TechniqueList(mMatLib, m.Name);
-					mTL.eOk					+=OnTechniqueListOk;
-					mTL.eCancel				+=OnTechniqueListCancel;
-					mTL.Visible				=true;
-					MaterialGrid.Enabled	=false;
+					continue;
 				}
-			}
-			else if(e.ColumnIndex == mEmissiveColumn)
-			{
-				ColorDialog	cd	=new ColorDialog();
 
-				cd.AllowFullOpen	=true;
-				cd.SolidColorOnly	=true;
-
-				DialogResult	dr	=cd.ShowDialog();
-
-				if(dr == DialogResult.OK)
-				{
-					MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)MaterialGrid.Rows[e.RowIndex].DataBoundItem;
-					MaterialLib.Material	m	=gs.GetParentMaterial();
-
-					m.Emissive	=DataGridViewColorCell.ConvertColor(cd.Color);
-				}
-			}
-			else if(e.ColumnIndex == mBlendFactorColumn)
-			{
-				ColorDialog	cd	=new ColorDialog();
-
-				cd.AllowFullOpen	=true;
-				cd.SolidColorOnly	=true;
-
-				DialogResult	dr	=cd.ShowDialog();
-
-				if(dr == DialogResult.OK)
-				{
-					MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)MaterialGrid.Rows[e.RowIndex].DataBoundItem;
-					MaterialLib.Material	m	=gs.GetParentMaterial();
-
-					gs.BlendFactor	=DataGridViewColorCell.ConvertColor(cd.Color);
-				}
+				m.MaterialName			=matName;
+				lvi.SubItems[1].Text	=matName;
 			}
 		}
 
 
-		void OnPropCellClick(object sender, DataGridViewCellEventArgs e)
+		void OnHideVariables(object sender, EventArgs e)
 		{
-			if(e.ColumnIndex != 3)
+			if(MaterialList.SelectedItems.Count != 1)
 			{
-				return;	//only interested in param value
-			}
-			if(e.RowIndex == -1)
-			{
-				return;
+				return;	//nothing to do
 			}
 
-			DataGridViewCell	cell	=
-				MaterialProperties.Rows[e.RowIndex].Cells[3];
+			string	matName	=MaterialList.SelectedItems[0].Text;
 
-			//figure out what type this is
-			EffectParameterClass	epc	=(EffectParameterClass)
-				MaterialProperties.Rows[e.RowIndex].Cells[1].Value;
-
-			if(epc == EffectParameterClass.Object)
+			List<string>	selected	=new List<string>();
+			foreach(DataGridViewRow dgvr in VariableList.SelectedRows)
 			{
-				EffectParameterType	ept	=(EffectParameterType)
-					MaterialProperties.Rows[e.RowIndex].Cells[2].Value;
-
-				if(ept == EffectParameterType.Texture
-					|| ept == EffectParameterType.Texture1D
-					|| ept == EffectParameterType.Texture2D
-					|| ept == EffectParameterType.Texture3D
-					|| ept == EffectParameterType.TextureCube)
-				{
-					//keep a reference to this cell while
-					//the tex gump comes up
-					mEditingCell	=cell;
-
-					mTF	=new TextureForm(mMatLib);
-					mTF.eOk						+=OnTextureListOk;
-					mTF.eCancel					+=OnTextureListCancel;
-					mTF.Visible					=true;
-					MaterialGrid.Enabled		=false;
-					MaterialProperties.Enabled	=false;
-				}
+				selected.Add(dgvr.Cells[0].Value as string);
 			}
+
+			mMatLib.HideMaterialVariables(matName, selected);
+
+			VariableList.DataSource	=mMatLib.GetMaterialGUIVariables(matName);
 		}
 
 
-		void OnSizeChanged(object sender, EventArgs e)
+		void OnIgnoreVariables(object sender, EventArgs e)
 		{
-			if(!mbMeshPartGridVisible)
+			if(MaterialList.SelectedItems.Count != 1)
 			{
-				return;
+				return;	//nothing to do
 			}
-			//get the mesh part grid out of the material
-			//grid's junk
-			int	adjust	=MaterialGrid.Top - 6;
 
-			adjust	-=(MeshPartGrid.Top + MeshPartGrid.Size.Height);
+			string	matName	=MaterialList.SelectedItems[0].Text;
 
-			MeshPartGrid.SetBounds(MeshPartGrid.Left,
-				MeshPartGrid.Top + adjust,
-				MeshPartGrid.Width,
-				MeshPartGrid.Height);
+			List<string>	selected	=new List<string>();
+			foreach(DataGridViewRow dgvr in VariableList.SelectedRows)
+			{
+				selected.Add(dgvr.Cells[0].Value as string);
+			}
+
+			mMatLib.IgnoreMaterialVariables(matName, selected);
+
+			VariableList.DataSource	=mMatLib.GetMaterialGUIVariables(matName);
 		}
 
 
-		void OnPropValueValidated(object sender, DataGridViewCellEventArgs e)
+		void OnGuessVisibility(object sender, EventArgs e)
 		{
-			if(e.ColumnIndex != 3)
+			ListView.SelectedListViewItemCollection	matSel	=MaterialList.SelectedItems;
+			foreach(ListViewItem lvi in matSel)
 			{
-				return;
+				mMatLib.GuessParameterVisibility(lvi.Text);
 			}
-			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)MaterialGrid.SelectedRows[0].DataBoundItem;
-			MaterialLib.Material	m	=gs.GetParentMaterial();
 
-			mMatLib.ApplyParameters(m.Name);
+			//if there's a single set selected, refresh
+			if(MaterialList.SelectedItems.Count == 1)
+			{
+				string	matName	=MaterialList.SelectedItems[0].Text;
+				VariableList.DataSource	=mMatLib.GetMaterialGUIVariables(matName);
+			}
 		}
 
 
-		void OnSave(object sender, EventArgs e)
+		void OnResetVisibility(object sender, EventArgs e)
+		{
+			ListView.SelectedListViewItemCollection	matSel	=MaterialList.SelectedItems;
+			foreach(ListViewItem lvi in matSel)
+			{
+				mMatLib.ResetParameterVisibility(lvi.Text);
+			}
+
+			//if there's a single set selected, refresh
+			if(MaterialList.SelectedItems.Count == 1)
+			{
+				string	matName	=MaterialList.SelectedItems[0].Text;
+				VariableList.DataSource	=mMatLib.GetMaterialGUIVariables(matName);
+			}
+		}
+
+
+		void OnSaveMaterialLib(object sender, EventArgs e)
 		{
 			mSFD.DefaultExt	="*.MatLib";
 			mSFD.Filter		="Material lib files (*.MatLib)|*.MatLib|All files (*.*)|*.*";
@@ -603,12 +712,10 @@ namespace SharedForms
 			}
 
 			mMatLib.SaveToFile(mSFD.FileName);
-
-			Misc.SafeInvoke(eLibrarySaved, mSFD.FileName);
 		}
 
-
-		void OnLoad(object sender, EventArgs e)
+		
+		void OnLoadMaterialLib(object sender, EventArgs e)
 		{
 			mOFD.DefaultExt	="*.MatLib";
 			mOFD.Filter		="Material lib files (*.MatLib)|*.MatLib|All files (*.*)|*.*";
@@ -620,98 +727,71 @@ namespace SharedForms
 				return;
 			}
 
-			mMatLib.ReadFromFile(mOFD.FileName, true, mGD);
-
-			//notify anyone interested
-			Misc.SafeInvoke(eLibraryCleared, null);
-
-			UpdateMaterials();
-
-			MaterialProperties.DataSource			=mMatModel[0].ShaderParameters;
-			MaterialProperties.Columns[0].ReadOnly	=true;
-			MaterialProperties.Columns[1].ReadOnly	=true;
-			MaterialProperties.Columns[2].ReadOnly	=true;
+			mMatLib.ReadFromFile(mOFD.FileName);
+			RefreshMaterials();
 		}
 
 
-		void OnNukeMaterial(object sender, DataGridViewRowCancelEventArgs e)
+		void OnMatchAndVisible(object sender, EventArgs e)
 		{
-			if(!MeshPartGrid.Visible)
+			foreach(ListViewItem lvi in MaterialList.Items)
 			{
-				//if working with indoor meshes, delete can screw up
-				//material vis indexing
-				e.Cancel	=true;
+				string	matName	=lvi.Text;
+
+				foreach(ListViewItem lviMesh in MeshPartList.Items)
+				{
+					string	meshName	=lviMesh.Text;
+
+					if(meshName.Contains(matName))
+					{
+						Mesh	m	=lviMesh.Tag as Mesh;
+
+						m.MaterialName				=matName;
+						lviMesh.SubItems[1].Text	=matName;
+					}
+				}
+			}
+		}
+
+
+		void OnStripElements(object sender, EventArgs e)
+		{
+			if(MeshPartList.SelectedItems.Count < 1)
+			{
 				return;
 			}
-			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)e.Row.DataBoundItem;
-			MaterialLib.Material	mat	=gs.GetParentMaterial();
 
-			MaterialProperties.DataSource	=null;
-
-			mMatLib.NukeMaterial(mat.Name);
-
-			Misc.SafeInvoke(eMaterialNuked, mat.Name);
-		}
-
-
-		void OnRefreshShaders(object sender, EventArgs e)
-		{
-			mMatLib.RefreshShaderParameters();
-		}
-
-
-		void OnGuessTextures(object sender, EventArgs e)
-		{
-			mMatLib.GuessTextures();
-			UpdateMaterials();
-		}
-
-
-		void OnTexSizeDown(object sender, EventArgs e)
-		{
-			if(Microsoft.Xna.Framework.Input.Keyboard.GetState()
-				.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
+			List<Mesh>	parts	=new List<Mesh>();
+			foreach(ListViewItem lviMesh in MeshPartList.SelectedItems)
 			{
-				mMatLib.BoostTexSizes(true);
+				parts.Add(lviMesh.Tag as Mesh);
 			}
-			else
-			{
-				foreach(DataGridViewRow dgvr in MaterialGrid.SelectedRows)
-				{
-					MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)dgvr.DataBoundItem;
-					mMatLib.BoostTexSize(gs.Name, true);
-				}
-			}
+
+			Misc.SafeInvoke(eStripElements, parts);
 		}
 
 
-		void OnTexSizeUp(object sender, EventArgs e)
+		void DisposeEffectBox(ListBox lb)
 		{
-			if(Microsoft.Xna.Framework.Input.Keyboard.GetState()
-				.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift))
-			{
-				mMatLib.BoostTexSizes(false);
-			}
-			else
-			{
-				foreach(DataGridViewRow dgvr in MaterialGrid.SelectedRows)
-				{
-					MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)dgvr.DataBoundItem;
-					mMatLib.BoostTexSize(gs.Name, false);
-				}
-			}
+			lb.Leave		-=OnEffectListBoxEscaped;
+			lb.KeyPress		-=OnEffectListBoxKey;
+			lb.MouseClick	-=OnEffectListBoxClick;
+			lb.LostFocus	-=OnEffectLostFocus;
+			lb.Parent.Dispose();
 		}
 
 
-		void OnGetEmissive(object sender, EventArgs e)
+		void DisposeTechBox(ListBox lb)
 		{
-			mMatLib.AssignEmissives();
-
-			MaterialGrid.Refresh();
+			lb.Leave		-=OnTechListBoxEscaped;
+			lb.KeyPress		-=OnTechListBoxKey;
+			lb.MouseClick	-=OnTechListBoxClick;
+			lb.LostFocus	-=OnTechLostFocus;
+			lb.Parent.Dispose();
 		}
 
 
-		void OnMergeMaterialLib(object sender, EventArgs e)
+		void OnMergeMatLib(object sender, EventArgs e)
 		{
 			mOFD.DefaultExt	="*.MatLib";
 			mOFD.Filter		="Material lib files (*.MatLib)|*.MatLib|All files (*.*)|*.*";
@@ -725,155 +805,7 @@ namespace SharedForms
 
 			mMatLib.MergeFromFile(mOFD.FileName);
 
-			UpdateMaterials();
-
-			MaterialProperties.DataSource			=mMatModel[0].ShaderParameters;
-			MaterialProperties.Columns[0].ReadOnly	=true;
-			MaterialProperties.Columns[1].ReadOnly	=true;
-			MaterialProperties.Columns[2].ReadOnly	=true;
-		}
-
-
-		void OnKeyUp(object sender, KeyEventArgs e)
-		{
-			if(e.Control)
-			{
-				if(e.KeyCode == Keys.G)
-				{
-					OnGenBiNormalTangent(null, null);
-				}
-				else if(e.KeyCode == Keys.D)
-				{
-					GuessMaterials();
-				}
-			}
-		}
-
-
-		void OnMatch(object sender, EventArgs e)
-		{
-			foreach(DataGridViewRow dgvr in MaterialGrid.Rows)
-			{
-				string	matName	=(string)dgvr.Cells[0].Value;
-
-				foreach(DataGridViewRow meshdgvr in MeshPartGrid.Rows)
-				{
-					string	meshName	=(string)meshdgvr.Cells[0].Value;
-
-					if(meshName.Contains(matName))
-					{
-						meshdgvr.Cells[1].Value							=matName;
-						meshdgvr.Cells[meshdgvr.Cells.Count - 1].Value	=true;
-					}
-				}
-			}
-		}
-
-
-		void OnStripElements(object sender, EventArgs e)
-		{
-			if(MeshPartGrid.SelectedRows.Count == 0)
-			{
-				return;
-			}
-
-			MeshPartGrid.Enabled	=false;
-
-			List<Mesh>	parts	=new List<Mesh>();
-
-			foreach(DataGridViewRow dgvr in MeshPartGrid.SelectedRows)
-			{
-				parts.Add(dgvr.DataBoundItem as Mesh);
-			}
-
-			Misc.SafeInvoke(eStripElements, parts);
-		}
-
-
-		void OnHideSelected(object sender, EventArgs e)
-		{
-			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-			if(matSel.Count != 1)
-			{
-				return;
-			}
-			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
-			MaterialLib.Material	mat	=gs.GetParentMaterial();
-
-			List<MaterialLib.ShaderParameters>	selected	=new List<MaterialLib.ShaderParameters>();
-			foreach(DataGridViewRow dgvr in MaterialProperties.SelectedRows)
-			{
-				selected.Add(dgvr.DataBoundItem as MaterialLib.ShaderParameters);
-			}
-
-			mat.HideShaderParameters(selected);
-		}
-
-
-		void OnUnHideAll(object sender, EventArgs e)
-		{
-			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-
-			foreach(DataGridViewRow dgvr in matSel)
-			{
-				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)dgvr.DataBoundItem;
-				MaterialLib.Material	mat	=gs.GetParentMaterial();
-
-				mat.UnHideAll();
-			}
-		}
-
-
-		void OnIgnoreSP(object sender, EventArgs e)
-		{
-			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-			if(matSel.Count != 1)
-			{
-				return;
-			}
-			MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)matSel[0].DataBoundItem;
-			MaterialLib.Material	mat	=gs.GetParentMaterial();
-
-			List<MaterialLib.ShaderParameters>	selected	=new List<MaterialLib.ShaderParameters>();
-			foreach(DataGridViewRow dgvr in MaterialProperties.SelectedRows)
-			{
-				selected.Add(dgvr.DataBoundItem as MaterialLib.ShaderParameters);
-			}
-
-			mat.IgnoreShaderParameters(selected);
-		}
-
-		
-		void OnWeldWeight(object sender, EventArgs e)
-		{
-			if(MeshPartGrid.SelectedRows.Count < 2
-				|| MeshPartGrid.SelectedRows.Count > 2)
-			{
-				return;
-			}
-
-			List<Mesh>	parts	=new List<Mesh>();
-
-			foreach(DataGridViewRow dgvr in MeshPartGrid.SelectedRows)
-			{
-				parts.Add(dgvr.DataBoundItem as Mesh);
-			}
-
-			Misc.SafeInvoke(eWeldWeights, parts);
-		}
-
-
-		void OnGuessParameterVisibility(object sender, EventArgs e)
-		{
-			DataGridViewSelectedRowCollection	matSel	=MaterialGrid.SelectedRows;
-
-			foreach(DataGridViewRow dgvr in matSel)
-			{
-				MaterialLib.GUIStates	gs	=(MaterialLib.GUIStates)dgvr.DataBoundItem;
-				MaterialLib.Material	mat	=gs.GetParentMaterial();
-
-				mMatLib.GuessParameterVisibility(mat);
-			}
+			RefreshMaterials();
 		}
 	}
 }

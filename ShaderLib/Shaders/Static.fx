@@ -188,6 +188,8 @@ technique10 TriTex0
 		VertexShader	=compile vs_4_0_level_9_3 TexTriVS();
 		PixelShader		=compile ps_4_0_level_9_3 Tex0Col0PS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -208,6 +210,8 @@ technique10 TriTex0NormalMapSolid
 		VertexShader	=compile vs_4_0_level_9_3 WNormWTanBTanWPosVS();
 		PixelShader		=compile ps_4_0_level_9_3 NormalMapTriTex0SolidPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -228,6 +232,8 @@ technique10 TriTex0Spec
 		VertexShader	=compile vs_4_0_level_9_3 WNormWPosTexVS();
 		PixelShader		=compile ps_4_0_level_9_3 TriTex0SpecPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -248,6 +254,8 @@ technique10 TriSolid
 		VertexShader	=compile vs_4_0_level_9_3 WNormWPosVS();
 		PixelShader		=compile ps_4_0_level_9_3 TriSolidPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -268,6 +276,30 @@ technique10 TriSolidSpec
 		VertexShader	=compile vs_4_0_level_9_3 WNormWPosVS();
 		PixelShader		=compile ps_4_0_level_9_3 TriSolidSpecPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
+	}
+}
+
+technique10 TriSolidSpecAlpha
+{     
+	pass P0
+	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 WNormWPosVS();
+		PixelShader		=compile ps_5_0 TriSolidSpecPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 WNormWPosVS();
+		PixelShader		=compile ps_4_1 TriSolidSpecPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 WNormWPosVS();
+		PixelShader		=compile ps_4_0 TriSolidSpecPS();
+#else
+		VertexShader	=compile vs_4_0_level_9_3 WNormWPosVS();
+		PixelShader		=compile ps_4_0_level_9_3 TriSolidSpecPS();
+#endif
+		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 }
 
@@ -288,6 +320,8 @@ technique10 TriCelSolidSpec
 		VertexShader	=compile vs_4_0_level_9_3 WNormWPosVS();
 		PixelShader		=compile ps_4_0_level_9_3 TriCelSolidSpecPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -308,6 +342,8 @@ technique10 TriTex0NormalMapSolidSpec
 		VertexShader	=compile vs_4_0_level_9_3 WNormWTanBTanWPosVS();
 		PixelShader		=compile ps_4_0_level_9_3 NormalMapTriTex0SolidSpecPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -328,6 +364,8 @@ technique10 TriTex0NormalMapSpec
 		VertexShader	=compile vs_4_0_level_9_3 WNormWTanBTanWPosVS();
 		PixelShader		=compile ps_4_0_level_9_3 NormalMapTriTex0SpecPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -348,6 +386,8 @@ technique10 TriTex0NormalMapSolidSpecInstanced
 		VertexShader	=compile vs_4_0_level_9_3 WNormWTanBTanWPosInstancedVS();
 		PixelShader		=compile ps_4_0_level_9_3 NormalMapTriTex0SolidSpecPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -368,6 +408,8 @@ technique10 Shadow
 		VertexShader	=compile vs_4_0_level_9_3 WPosVS();
 		PixelShader		=compile ps_4_0_level_9_3 ShadowPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -388,5 +430,7 @@ technique10 DMN
 		VertexShader	=compile vs_4_0_level_9_3 DMNVS();
 		PixelShader		=compile ps_4_0_level_9_3 DMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }

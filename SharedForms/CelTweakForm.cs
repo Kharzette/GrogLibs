@@ -5,12 +5,13 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using UtilityLib;
 
+using MatLib = MaterialLib.MaterialLib;
+using Device = SharpDX.Direct3D11.Device;
 
-namespace SharedForms
+
+namespace ColladaConvert
 {
 	public partial class CelTweakForm : Form
 	{
@@ -34,18 +35,18 @@ namespace SharedForms
 
 		BindingList<CelThreshLevel>	mCelValues	=new BindingList<CelThreshLevel>();
 
-		MaterialLib.MaterialLib	mMats;
-		GraphicsDevice			mGD;
+		MatLib	mMats;
+		Device	mGD;
 
 		int	mLastTexSize	=16;
 
 
-		public CelTweakForm(GraphicsDevice gd, MaterialLib.MaterialLib mats)
+		public CelTweakForm(Device gd, MatLib mats)
 		{
 			InitializeComponent();
 
-			mGD		=gd;
 			mMats	=mats;
+			mGD		=gd;
 
 			float	[]thresh;
 			float	[]level;
@@ -88,7 +89,9 @@ namespace SharedForms
 			}
 			levels[numLevels - 1]	=mCelValues[numLevels - 1].Level;
 
-			mMats.GenerateCelTexture(mGD, 0, (int)TextureSize.Value, thresholds, levels);
+			mMats.GenerateCelTexture(mGD,
+				mGD.FeatureLevel == SharpDX.Direct3D.FeatureLevel.Level_9_3,
+				0, (int)TextureSize.Value, thresholds, levels);
 			mMats.SetCelTexture(0);
 		}
 

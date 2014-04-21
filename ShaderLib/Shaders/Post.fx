@@ -15,9 +15,10 @@ float3		mFrustRay;
 float		mRandTexSize	=64;
 
 //textures
-Texture	mNormalTex;
-Texture	mRandTex;
-Texture	mColorTex;
+Texture2D	mNormalTex;
+Texture2D	mRandTex;
+Texture2D	mColorTex;
+Texture2D	mBlurTargetTex;
 
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
@@ -38,8 +39,7 @@ float2	mScreenSize;
 
 //ambient occlusion params
 #define		NUMSAMPLES		12
-const int	SamplesPerPass	=4;
-float2		mSamples[NUMSAMPLES];
+#define		SamplesPerPass	4
 float		mBias			=0.01;
 float		mEpsilon		=0.00001;
 float		mIntensityScale	=1;
@@ -47,12 +47,13 @@ float		mContrast		=1;
 float		mRadius			=1;
 float		mProjConst		=50.0;
 
+float2		mSamples[NUMSAMPLES];
+
 //gaussianblur stuff
 #define	RADIUS			30
 #define	KERNEL_SIZE		(RADIUS * 2 + 1)
 float	mWeightsX[KERNEL_SIZE], mWeightsY[KERNEL_SIZE];
 float2	mOffsetsX[KERNEL_SIZE], mOffsetsY[KERNEL_SIZE];
-texture	mBlurTargetTex;
 
 //bilateral blur stuff
 float	mBlurFallOff;
@@ -125,9 +126,9 @@ float4 AdjustSaturation(float4 color, float saturation)
 }
 
 
-VPosTex0Tex13	AOVS(VPosTex0 input)
+VVPosTex0Tex13	AOVS(VPosTex0 input)
 {
-	VPosTex0Tex13	output;
+	VVPosTex0Tex13	output;
 
 	output.Position.x	=input.Position.x - mInvViewPort.x * 0.5f;
 	output.Position.y	=input.Position.y + mInvViewPort.y * 0.5f;
@@ -141,9 +142,9 @@ VPosTex0Tex13	AOVS(VPosTex0 input)
 }
 
 
-VPosTex0	OutlineVS(VPosTex0 input)
+VVPosTex0	OutlineVS(VPosTex0 input)
 {
-	VPosTex0	output;
+	VVPosTex0	output;
 
 	output.Position.x	=input.Position.x - mInvViewPort.x * 0.5f;
 	output.Position.y	=input.Position.y + mInvViewPort.y * 0.5f;
@@ -156,7 +157,7 @@ VPosTex0	OutlineVS(VPosTex0 input)
 }
 
 
-float4	AOPS(VTex0Tex13VPos input) : COLOR0
+float4	AOPS(VVPosTex0Tex13 input) : SV_Target
 {
 	float2	ssc	=input.TexCoord0;
 
@@ -170,7 +171,7 @@ float4	AOPS(VTex0Tex13VPos input) : COLOR0
 
 	float	ssr	=mProjConst * mRadius / (depth * mFarClip);
 
-	float2	randomSpin	=mRandTex.Sample(PointWrap, input.VPos * mInvViewPort * mRandTexSize).rg;
+	float2	randomSpin	=mRandTex.Sample(PointWrap, input.Position.xy * mInvViewPort * mRandTexSize).rg;
 
 	float	amount	=0;
 	for(int i=0;i < NUMSAMPLES;++i)
@@ -203,18 +204,18 @@ float4	AOPS(VTex0Tex13VPos input) : COLOR0
 	return	float4(amount, 0, 0, 0);
 }
 
-float4	BloomExtractPS(VTex0Tex13VPos input) : COLOR0
+float4	BloomExtractPS(VVPos input) : SV_Target
 {
-	float4	ret	=mBlurTargetTex.Sample(LinearClamp, input.TexCoord0);
+	float4	ret	=mBlurTargetTex.Sample(LinearClamp, input.Position.xy);
 
 	return	saturate((ret - mBloomThreshold) / (1 - mBloomThreshold));
 }
 
-float4	BloomCombinePS(VTex0Tex13VPos input) : COLOR0
+float4	BloomCombinePS(VVPos input) : SV_Target
 {
 	//Look up the bloom and original base image colors.
-	float4	bloom	=mBlurTargetTex.Sample(LinearClamp, input.TexCoord0);
-	float4	base	=mColorTex.Sample(PointClamp, input.TexCoord0);
+	float4	bloom	=mBlurTargetTex.Sample(LinearClamp, input.Position.xy);
+	float4	base	=mColorTex.Sample(PointClamp, input.Position.xy);
     
 	//Adjust color saturation and intensity.
 	bloom	=AdjustSaturation(bloom, mBloomSaturation) * mBloomIntensity;
@@ -228,34 +229,33 @@ float4	BloomCombinePS(VTex0Tex13VPos input) : COLOR0
 	return	base + bloom;
 }
 
-float4	GaussianBlurXPS(VTex0Tex13VPos input) : COLOR0
+float4	GaussianBlurXPS(VVPos input) : SV_Target
 {
 	float4	ret	=float4(0, 0, 0, 0);
 
 	for(int i=0;i < KERNEL_SIZE;++i)
 	{
-		ret	+=mBlurTargetTex.Sample(LinearClamp, input.TexCoord0 + mOffsetsX[i]) * mWeightsX[i];
+		ret	+=mBlurTargetTex.Sample(LinearClamp, input.Position.xy + mOffsetsX[i]) * mWeightsX[i];
 	}
 	return	ret;
 }
 
-float4	GaussianBlurYPS(VTex0Tex13VPos input) : COLOR0
+float4	GaussianBlurYPS(VVPos input) : SV_Target
 {
 	float4	ret	=float4(0, 0, 0, 0);
 
 	for(int i=0;i < KERNEL_SIZE;++i)
 	{
-		ret	+=mBlurTargetTex.Sample(LinearClamp, input.TexCoord0 + mOffsetsY[i]) * mWeightsY[i];
+		ret	+=mBlurTargetTex.Sample(LinearClamp, input.Position.xy + mOffsetsY[i]) * mWeightsY[i];
 	}
 	return	ret;
 }
 
-float4	BiLatBlurXPS(VTex0Tex13VPos input) : COLOR0
+float4	BiLatBlurXPS(VVPos input) : SV_Target
 {
 	float	b			=0;
 	float	w_total		=0;
-//	float2	screenCoord	=input.VPos.xy * mInvViewPort;
-	float2	screenCoord	=input.TexCoord0;
+	float2	screenCoord	=input.Position.xy;
 	float	center_c	=mBlurTargetTex.Sample(LinearClamp, screenCoord);
 	float	center_d	=fetch_eye_z(screenCoord);
 
@@ -268,12 +268,11 @@ float4	BiLatBlurXPS(VTex0Tex13VPos input) : COLOR0
 	return	b / w_total;
 }
 
-float4	BiLatBlurYPS(VTex0Tex13VPos input) : COLOR0
+float4	BiLatBlurYPS(VVPos input) : SV_Target
 {
 	float	b			=0;
 	float	w_total		=0;
-//	float2	screenCoord	=input.VPos.xy * mInvViewPort;
-	float2	screenCoord	=input.TexCoord0;
+	float2	screenCoord	=input.Position.xy;
 	float	center_c	=mBlurTargetTex.Sample(LinearClamp, screenCoord);
 	float	center_d	=fetch_eye_z(screenCoord);
 
@@ -283,12 +282,11 @@ float4	BiLatBlurYPS(VTex0Tex13VPos input) : COLOR0
 		b			+=BlurFunction(uv, r, center_c, center_d, w_total);
 	}
 
-	return	b / w_total * mColorTex.Sample(PointClamp, input.TexCoord0);
-	return	b / w_total * mColorTex.Sample(PointClamp, input.TexCoord0);
+	return	b / w_total * mColorTex.Sample(PointClamp, screenCoord);
 }
 
 //draws the material id in shades for debuggery
-float4	DebugMatIDDraw(VTex0 input) : COLOR0
+float4	DebugMatIDDraw(VVPosTex0 input) : SV_Target
 {
 	half4	dmn	=mNormalTex.Sample(PointClamp, input.TexCoord0);
 
@@ -298,7 +296,7 @@ float4	DebugMatIDDraw(VTex0 input) : COLOR0
 }
 
 //draws the depth in shades for debuggery
-float4	DebugDepthDraw(VTex0 input) : COLOR0
+float4	DebugDepthDraw(VVPosTex0 input) : SV_Target
 {
 	half4	dmn	=mNormalTex.Sample(PointClamp, input.TexCoord0);
 
@@ -308,7 +306,7 @@ float4	DebugDepthDraw(VTex0 input) : COLOR0
 }
 
 //draws the normals for debuggery
-float4	DebugNormalDraw(VTex0 input) : COLOR0
+float4	DebugNormalDraw(VVPosTex0 input) : SV_Target
 {
 	half4	dmn	=mNormalTex.Sample(PointClamp, input.TexCoord0);
 
@@ -317,12 +315,12 @@ float4	DebugNormalDraw(VTex0 input) : COLOR0
 	return	float4(norm.x, norm.y, norm.z, 1);
 }
 
-float4	OutlinePS(VTex0 input) : COLOR0
+float4	OutlinePS(VVPosTex0 input) : SV_Target
 {
 	float2	ox	=float2(mTexelSteps / mScreenSize.x, 0.0);
 	float2	oy	=float2(0.0, mTexelSteps / mScreenSize.y);
 	
-	float2	uv	=input.TexCoord0;
+	float2	uv	=input.Position.xy;
 
 	//only do 5 samples for sm2
 	half4	center, up, left, right, down;
@@ -493,10 +491,10 @@ float4	OutlinePS(VTex0 input) : COLOR0
 }
 
 
-float4	ModulatePS(VTex0 input) : COLOR0
+float4	ModulatePS(VVPosTex0 input) : SV_Target
 {
-	float4	color	=mColorTex.Sample(PointClamp, input.TexCoord0);
-	float4	color2	=mBlurTargetTex.Sample(LinearClamp, input.TexCoord0);
+	float4	color	=mColorTex.Sample(PointClamp, input.Position.xy);
+	float4	color2	=mBlurTargetTex.Sample(LinearClamp, input.Position.xy);
 
 	color	*=color2;
 
@@ -504,9 +502,9 @@ float4	ModulatePS(VTex0 input) : COLOR0
 }
 
 
-float4	BleachBypassPS(VTex0 input) : COLOR0
+float4	BleachBypassPS(VVPosTex0 input) : SV_Target
 {
-	float4	base		=mColorTex.Sample(PointClamp, input.TexCoord0);
+	float4	base		=mColorTex.Sample(PointClamp, input.Position.xy);
 	float3	lumCoeff	=float3(0.25, 0.65, 0.1);
 	float	lum			=dot(lumCoeff, base.rgb);
 
@@ -532,13 +530,21 @@ technique10 AmbientOcclusion
 {
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 AOVS();
+		PixelShader		=compile ps_5_0 AOPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 AOVS();
+		PixelShader		=compile ps_4_1 AOPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 AOVS();
 		PixelShader		=compile ps_4_0 AOPS();
 #else
-		VertexShader	=compile vs_3_0 AOVS();
-		PixelShader		=compile ps_3_0 AOPS();
+		VertexShader	=compile vs_4_0_level_9_3 AOVS();
+		PixelShader		=compile ps_4_0_level_9_3 AOPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -546,13 +552,21 @@ technique10 GaussianBlurX
 {
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 AOVS();
+		PixelShader		=compile ps_5_0 GaussianBlurXPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 AOVS();
+		PixelShader		=compile ps_4_1 GaussianBlurXPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 AOVS();
 		PixelShader		=compile ps_4_0 GaussianBlurXPS();
 #else
-		VertexShader	=compile vs_3_0 AOVS();
-		PixelShader		=compile ps_3_0 GaussianBlurXPS();
+		VertexShader	=compile vs_4_0_level_9_3 AOVS();
+		PixelShader		=compile ps_4_0_level_9_3 GaussianBlurXPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -560,13 +574,21 @@ technique10 GaussianBlurY
 {
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 AOVS();
+		PixelShader		=compile ps_5_0 GaussianBlurYPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 AOVS();
+		PixelShader		=compile ps_4_1 GaussianBlurYPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 AOVS();
 		PixelShader		=compile ps_4_0 GaussianBlurYPS();
 #else
-		VertexShader	=compile vs_3_0 AOVS();
-		PixelShader		=compile ps_3_0 GaussianBlurYPS();
+		VertexShader	=compile vs_4_0_level_9_3 AOVS();
+		PixelShader		=compile ps_4_0_level_9_3 GaussianBlurYPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -574,24 +596,40 @@ technique10 BilateralBlur
 {
 	pass pX
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 AOVS();
+		PixelShader		=compile ps_5_0	BiLatBlurXPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 AOVS();
+		PixelShader		=compile ps_4_1	BiLatBlurXPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 AOVS();
 		PixelShader		=compile ps_4_0	BiLatBlurXPS();
 #else
-		VertexShader	=compile vs_3_0 AOVS();
-		PixelShader		=compile ps_3_0	BiLatBlurXPS();
+		VertexShader	=compile vs_4_0_level_9_3 AOVS();
+		PixelShader		=compile ps_4_0_level_9_3 BiLatBlurXPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 
 	pass pY
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 AOVS();
+		PixelShader		=compile ps_5_0	BiLatBlurYPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 AOVS();
+		PixelShader		=compile ps_4_1	BiLatBlurYPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 AOVS();
 		PixelShader		=compile ps_4_0	BiLatBlurYPS();
 #else
-		VertexShader	=compile vs_3_0 AOVS();
-		PixelShader		=compile ps_3_0	BiLatBlurYPS();
+		VertexShader	=compile vs_4_0_level_9_3 AOVS();
+		PixelShader		=compile ps_4_0_level_9_3 BiLatBlurYPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -599,13 +637,21 @@ technique10 BloomExtract
 {
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 OutlineVS();
+		PixelShader		=compile ps_5_0 BloomExtractPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 OutlineVS();
+		PixelShader		=compile ps_4_1 BloomExtractPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 OutlineVS();
 		PixelShader		=compile ps_4_0 BloomExtractPS();
 #else
-		VertexShader	=compile vs_3_0 OutlineVS();
-		PixelShader		=compile ps_3_0 BloomExtractPS();
+		VertexShader	=compile vs_4_0_level_9_3 OutlineVS();
+		PixelShader		=compile ps_4_0_level_9_3 BloomExtractPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -613,13 +659,21 @@ technique10 BloomCombine
 {
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 OutlineVS();
+		PixelShader		=compile ps_5_0 BloomCombinePS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 OutlineVS();
+		PixelShader		=compile ps_4_1 BloomCombinePS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 OutlineVS();
 		PixelShader		=compile ps_4_0 BloomCombinePS();
 #else
-		VertexShader	=compile vs_3_0 OutlineVS();
-		PixelShader		=compile ps_3_0 BloomCombinePS();
+		VertexShader	=compile vs_4_0_level_9_3 OutlineVS();
+		PixelShader		=compile ps_4_0_level_9_3 BloomCombinePS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 #endif
@@ -628,16 +682,21 @@ technique10 Outline
 {
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 OutlineVS();
+		PixelShader		=compile ps_5_0 OutlinePS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 OutlineVS();
+		PixelShader		=compile ps_4_1 OutlinePS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 OutlineVS();
 		PixelShader		=compile ps_4_0 OutlinePS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 OutlineVS();
-		PixelShader		=compile ps_3_0 OutlinePS();
 #else
-		VertexShader	=compile vs_2_0 OutlineVS();
+		VertexShader	=compile vs_4_0_level_9_3 OutlineVS();
 		PixelShader		=compile ps_4_0_level_9_3 OutlinePS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -645,16 +704,21 @@ technique10 BleachBypass
 {
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 OutlineVS();
+		PixelShader		=compile ps_5_0 BleachBypassPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 OutlineVS();
+		PixelShader		=compile ps_4_1 BleachBypassPS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 OutlineVS();
 		PixelShader		=compile ps_4_0 BleachBypassPS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 OutlineVS();
-		PixelShader		=compile ps_3_0 BleachBypassPS();
 #else
-		VertexShader	=compile vs_2_0 OutlineVS();
+		VertexShader	=compile vs_4_0_level_9_3 OutlineVS();
 		PixelShader		=compile ps_4_0_level_9_3 BleachBypassPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -662,15 +726,20 @@ technique10 Modulate
 {
 	pass P0
 	{
-#if defined(SM4)
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 OutlineVS();
+		PixelShader		=compile ps_5_0 ModulatePS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 OutlineVS();
+		PixelShader		=compile ps_4_1 ModulatePS();
+#elif defined(SM4)
 		VertexShader	=compile vs_4_0 OutlineVS();
 		PixelShader		=compile ps_4_0 ModulatePS();
-#elif defined(SM3)
-		VertexShader	=compile vs_3_0 OutlineVS();
-		PixelShader		=compile ps_3_0 ModulatePS();
 #else
 		VertexShader	=compile vs_4_0_level_9_3 OutlineVS();
 		PixelShader		=compile ps_4_0_level_9_3 ModulatePS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }

@@ -267,6 +267,8 @@ technique10 TriSkinTex0
 		VertexShader	=compile vs_4_0_level_9_3 SkinTexTriColVS();
 		PixelShader		=compile ps_4_0_level_9_3 Tex0Col0PS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -287,6 +289,8 @@ technique10 TriSkinSolidSpec
 		VertexShader	=compile vs_4_0_level_9_3 SkinWNormWPosVS();
 		PixelShader		=compile ps_4_0_level_9_3 TriSolidSpecPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -307,6 +311,8 @@ technique10 TriSkinCelSolidSpec
 		VertexShader	=compile vs_4_0_level_9_3 SkinWNormWPosVS();
 		PixelShader		=compile ps_4_0_level_9_3 TriCelSolidSpecPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -327,6 +333,8 @@ technique10 TriSkinDanglySolidSpec
 		VertexShader	=compile vs_4_0_level_9_3 SkinDanglyWnormWPos();
 		PixelShader		=compile ps_4_0_level_9_3 TriSolidSpecPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -347,6 +355,8 @@ technique10 TriSkinDanglyCelSolidSpec
 		VertexShader	=compile vs_4_0_level_9_3 SkinDanglyWnormWPos();
 		PixelShader		=compile ps_4_0_level_9_3 TriCelSolidSpecPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -367,6 +377,8 @@ technique10 TriSkinCelColorSpec
 		VertexShader	=compile vs_4_0_level_9_3 SkinWNormWPosColorVS();
 		PixelShader		=compile ps_4_0_level_9_3 TriCelColorSpecPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -387,6 +399,8 @@ technique10 TriSkinDecalTex0
 		VertexShader	=compile vs_4_0_level_9_3 SkinTexTriColVS();
 		PixelShader		=compile ps_4_0_level_9_3 Tex0Col0DecalPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -407,6 +421,8 @@ technique10 TriSkinDecalTex0Tex1
 		VertexShader	=compile vs_4_0_level_9_3 SkinTex0Tex1TriColVS();
 		PixelShader		=compile ps_4_0_level_9_3 Tex0Tex1Col0DecalPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -427,6 +443,8 @@ technique10 FullBrightSkin
 		VertexShader	=compile vs_4_0_level_9_3 SkinWNormVS();
 		PixelShader		=compile ps_4_0_level_9_3	FullBrightSkinPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -447,6 +465,8 @@ technique10 ShadowSkin
 		VertexShader	=compile vs_4_0_level_9_3 SkinWPosVS();
 		PixelShader		=compile ps_4_0_level_9_3 ShadowPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -467,6 +487,8 @@ technique10 DMN	//depth material normal
 		VertexShader	=compile vs_4_0_level_9_3 DMNVS();
 		PixelShader		=compile ps_4_0_level_9_3 DMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
 
@@ -487,5 +509,7 @@ technique10 DMNDangly
 		VertexShader	=compile vs_4_0_level_9_3 DMNDanglyVS();
 		PixelShader		=compile ps_4_0_level_9_3 DMNPS();
 #endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
 	}
 }
