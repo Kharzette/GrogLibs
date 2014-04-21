@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.Graphics;
+using SharpDX;
 using UtilityLib;
 
 
@@ -222,12 +220,12 @@ namespace ParticleLib
 			Mathery.WrapAngleDegrees(ref yaw);
 			Mathery.WrapAngleDegrees(ref pitch);
 
-			yaw		=MathHelper.ToRadians(yaw);
-			pitch	=MathHelper.ToRadians(pitch);
+			yaw		=MathUtil.DegreesToRadians(yaw);
+			pitch	=MathUtil.DegreesToRadians(pitch);
 
 
-			Matrix	gravMat	=Matrix.CreateRotationX(pitch);
-			gravMat			*=Matrix.CreateRotationY(yaw);
+			Matrix	gravMat	=Matrix.RotationX(pitch);
+			gravMat			*=Matrix.RotationY(yaw);
 
 			mGravity	=Vector3.TransformNormal(Vector3.UnitZ, gravMat);
 			mGravity	*=str;

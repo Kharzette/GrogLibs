@@ -2,11 +2,13 @@
 using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.Graphics;
-using SpriteMapLib;
+using SharpDX;
+using SharpDX.Direct3D11;
 using UtilityLib;
+
+using Buffer	=SharpDX.Direct3D11.Buffer;
+using Device	=SharpDX.Direct3D11.Device;
+using MatLib	=MaterialLib.MaterialLib;
 
 
 namespace ParticleLib
@@ -14,11 +16,8 @@ namespace ParticleLib
 	public class ParticleBoss
 	{
 		//graphics stuff
-		GraphicsDevice	mGD;
-		Effect			mFX;
-
-		//texture library
-		Dictionary<string, Texture2D>	mTextures;
+		Device	mGD;
+		MatLib	mMats;
 
 		//indexes
 		int	mNextIndex;
@@ -34,33 +33,14 @@ namespace ParticleLib
 		Dictionary<int, EmitterData>	mEmitters	=new Dictionary<int, EmitterData>();
 
 
-		public ParticleBoss(GraphicsDevice gd, Effect fx, Dictionary<string, Texture2D> texs)
+		public ParticleBoss(Device gd, MatLib mats)
 		{
-			mGD			=gd;
-			mFX			=fx;
-			mTextures	=texs;
+			mGD		=gd;
+			mMats	=mats;
 		}
 
 
-		public ParticleBoss(GraphicsDevice gd, ContentManager texCM, ContentManager sCM, string texLibPath)
-		{
-			mGD	=gd;
-
-			//load particle texture lib
-			Dictionary<string, TextureElement>	pTex	=new Dictionary<string, TextureElement>();
-			TextureElement.LoadTexLib(texCM.RootDirectory + "/TexLibs/Particles.TexLib", texCM, pTex);
-
-			mTextures	=new Dictionary<string, Texture2D>();
-			foreach(KeyValuePair<string, TextureElement> te in pTex)
-			{
-				mTextures.Add(te.Key, te.Value.GetTexture(0));
-			}
-
-			mFX	=sCM.Load<Effect>("Shaders/2D");
-		}
-
-
-		public int CreateEmitter(string texName, Vector4 color, bool bCel,
+		public int CreateEmitter(string matName, Vector4 color,
 			Emitter.Shapes shape, float shapeSize,
 			int maxParticles, Vector3 pos,
 			int gravYaw, int gravPitch, float gravStr,
@@ -70,11 +50,6 @@ namespace ParticleLib
 			float alphaVelMin, float alphaVelMax,
 			int lifeMin, int lifeMax)
 		{
-			if(!mTextures.ContainsKey(texName))
-			{
-				return	-1;
-			}
-
 			Emitter	newEmitter	=new Emitter(
 				maxParticles, shape, shapeSize, pos,
 				gravYaw, gravPitch, gravStr,
@@ -85,7 +60,7 @@ namespace ParticleLib
 
 			newEmitter.Activate(true);
 			
-			ParticleViewDynVB	pvd	=new ParticleViewDynVB(mGD, mFX, mTextures[texName], maxParticles);
+			ParticleViewDynVB	pvd	=new ParticleViewDynVB(mGD, mMats, matName, maxParticles);
 
 			EmitterData	ed	=new EmitterData();
 			ed.mColor		=color;
@@ -94,21 +69,19 @@ namespace ParticleLib
 
 			mEmitters.Add(mNextIndex++, ed);
 
-			pvd.SetCel(bCel);
-
 			return	mNextIndex - 1;
 		}
 
 
 		//returns true if emitter count changed
-		public void Update(int msDelta)
+		public void Update(DeviceContext dc, int msDelta)
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
 				int	numParticles	=0;
 				Particle	[]parts	=em.Value.mEmitter.Update(msDelta, out numParticles);
 
-				em.Value.mView.Update(parts, numParticles);
+				em.Value.mView.Update(dc, parts, numParticles);
 			}
 		}
 
@@ -117,27 +90,27 @@ namespace ParticleLib
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
-				em.Value.mView.DrawDMN(em.Value.mColor, view, proj, eyePos);
+//				em.Value.mView.DrawDMN(em.Value.mColor, view, proj, eyePos);
 			}
 		}
 
 
-		public void Draw(Matrix view, Matrix proj)
+		public void Draw(DeviceContext dc, Matrix view, Matrix proj)
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
-				em.Value.mView.Draw(em.Value.mColor, view, proj);
+				em.Value.mView.Draw(dc, em.Value.mColor, view, proj);
 			}
 		}
 
 
-		public void Draw(MaterialLib.AlphaPool ap, Matrix view, Matrix proj)
+/*		public void Draw(MaterialLib.AlphaPool ap, Matrix view, Matrix proj)
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
 				em.Value.mView.Draw(ap, em.Value.mEmitter.mPosition, em.Value.mColor, view, proj);
 			}
-		}
+		}*/
 
 
 		public int GetEmitterCount()
@@ -176,43 +149,23 @@ namespace ParticleLib
 		}
 
 
-		public void SetTextureByIndex(int index, Texture2D tex)
+		public void SetMaterialByIndex(int index, string mat)
 		{
 			if(!mEmitters.ContainsKey(index))
 			{
 				return;
 			}
-			mEmitters[index].mView.SetTexture(tex);
+			mEmitters[index].mView.SetMaterial(mat);
 		}
 
 
-		public void SetCelByIndex(int index, bool bOn)
-		{
-			if(!mEmitters.ContainsKey(index))
-			{
-				return;
-			}
-			mEmitters[index].mView.SetCel(bOn);
-		}
-
-
-		public bool GetCelByIndex(int index)
-		{
-			if(!mEmitters.ContainsKey(index))
-			{
-				return	false;
-			}
-			return	mEmitters[index].mView.GetCel();
-		}
-
-
-		public string GetTexturePathByIndex(int index)
+		public string GetMaterialByIndex(int index)
 		{
 			if(!mEmitters.ContainsKey(index))
 			{
 				return	"";
 			}
-			return	mEmitters[index].mView.GetTexturePath();
+			return	mEmitters[index].mView.GetMaterial();
 		}
 
 

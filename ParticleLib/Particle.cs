@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace ParticleLib
@@ -36,8 +36,8 @@ namespace ParticleLib
 
 			mVelocity	+=(gravity * msDelta) / 1000f;
 
-			mAlpha	=MathHelper.Clamp(mAlpha, 0f, 1f);
-			mSize	=MathHelper.Clamp(mSize, 0f, 10000f);
+			mAlpha	=MathUtil.Clamp(mAlpha, 0f, 1f);
+			mSize	=MathUtil.Clamp(mSize, 0f, 10000f);
 
 			return	false;
 		}

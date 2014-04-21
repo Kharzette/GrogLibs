@@ -2,10 +2,14 @@
 using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using MaterialLib;
+using SharpDX;
+using SharpDX.Direct3D11;
 using UtilityLib;
+
+using Buffer	=SharpDX.Direct3D11.Buffer;
+using Device	=SharpDX.Direct3D11.Device;
+using MatLib	=MaterialLib.MaterialLib;
 
 
 namespace ParticleLib
@@ -19,38 +23,39 @@ namespace ParticleLib
 
 	internal class ParticleViewDynVB
 	{
-		GraphicsDevice		mGD;
-		Effect				mFX;
-		Texture2D			mTex;
-		VertexDeclaration	mVD;
-		DynamicVertexBuffer	mVB;
+		Device				mGD;
+		Buffer				mVB;
+		VertexBufferBinding	mVBB;
+
 		ParticleVert		[]mPartBuf;
+
+		MatLib	mMatLib;
+		string	mMatName;
 
 		int		mNumParticles;
 		int		mMaxParticles;
-		bool	mbCel;
 
 
-		internal ParticleViewDynVB(GraphicsDevice gd, Effect fx, Texture2D tex, int maxParticles)
+		internal ParticleViewDynVB(Device gd, MatLib mats, string matName, int maxParticles)
 		{
-			mGD		=gd;
-			mFX		=fx;
-			mTex	=tex;
-
+			mGD				=gd;
+			mMatLib			=mats;
 			mMaxParticles	=maxParticles;
+			mMatName		=matName;
 
-			VertexElement	[]els	=new VertexElement[2];
-
-			els[0]	=new VertexElement(0, VertexElementFormat.Vector4, VertexElementUsage.Position, 0);
-			els[1]	=new VertexElement(16, VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 0);
-
-			mVD			=new VertexDeclaration(els);
-			mVB			=new DynamicVertexBuffer(gd, mVD, maxParticles * 6, BufferUsage.WriteOnly);
 			mPartBuf	=new ParticleVert[maxParticles * 6];
+
+			BufferDescription	bDesc	=new BufferDescription(
+				maxParticles * 6 * 32,
+				ResourceUsage.Dynamic, BindFlags.VertexBuffer,
+				CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
+
+			mVB		=Buffer.Create<ParticleVert>(gd, mPartBuf, bDesc);
+			mVBB	=new VertexBufferBinding(mVB, 32, 0);
 		}
 
 
-		internal void Update(Particle []parts, int count)
+		internal void Update(DeviceContext dc, Particle []parts, int count)
 		{
 			mNumParticles	=count;
 
@@ -109,54 +114,46 @@ namespace ParticleLib
 			}
 
 			//really annoying that I have to do this 3 times
-			mGD.SetVertexBuffer(null);
+//			mGD.SetVertexBuffer(null);
+			DataStream	ds;
+			dc.MapSubresource(mVB, MapMode.WriteDiscard, MapFlags.None, out ds);
 
-			mVB.SetData<ParticleVert>(mPartBuf, 0, count * 6);
+			for(int i=0;i < (count * 6);i++)
+			{
+				ds.Write<ParticleVert>(mPartBuf[i]);
+			}
+
+			dc.UnmapSubresource(mVB, 0);
 		}
 
 
-		internal void Draw(AlphaPool ap, Vector3 pos, Vector4 color, Matrix view, Matrix proj)
-		{
-			ap.StoreParticleDraw(pos, mVB, mNumParticles * 2, mbCel, color, mFX, mTex, view, proj);
-		}
+//		internal void Draw(AlphaPool ap, Vector3 pos, Vector4 color, Matrix view, Matrix proj)
+//		{
+//			ap.StoreParticleDraw(pos, mVB, mNumParticles * 2, mbCel, color, mFX, mTex, view, proj);
+//		}
 
 
-		internal void Draw(Vector4 color, Matrix view, Matrix proj)
+		internal void Draw(DeviceContext dc, Vector4 color, Matrix view, Matrix proj)
 		{
 			if(mNumParticles <= 0)
 			{
 				return;
 			}
 
-			mGD.SetVertexBuffer(mVB);
+			dc.InputAssembler.SetVertexBuffers(0, mVBB);
 
-			mGD.DepthStencilState	=DepthStencilState.DepthRead;
-			mGD.BlendState			=BlendState.Additive;
-			mGD.RasterizerState		=RasterizerState.CullCounterClockwise;
+			mMatLib.SetMaterialParameter(mMatName, "mSolidColour", color);
+			mMatLib.SetMaterialParameter(mMatName, "mView", view);
+			mMatLib.SetMaterialParameter(mMatName, "mProjection", proj);
 
-			if(mbCel)
-			{
-				mFX.CurrentTechnique	=mFX.Techniques["ParticleCel"];
-			}
-			else
-			{
-				mFX.CurrentTechnique	=mFX.Techniques["Particle"];
-			}
+			mMatLib.ApplyMaterialPass(mMatName, dc, 0);
 
-			mFX.Parameters["mSolidColour"].SetValue(color);
-			mFX.Parameters["mTexture"].SetValue(mTex);
-			mFX.Parameters["mView"].SetValue(view);
-			mFX.Parameters["mProjection"].SetValue(proj);
-
-			mFX.CurrentTechnique.Passes[0].Apply();
-
-			mGD.DrawPrimitives(PrimitiveType.TriangleList, 0, mNumParticles * 2);
-
-			mGD.SetVertexBuffer(null);
+			dc.Draw(mNumParticles * 6, 0);
 		}
 
 
 		//write into the depth/normal/material buffer
+		/*
 		internal void DrawDMN(Vector4 color, Matrix view, Matrix proj, Vector3 eyePos)
 		{
 			if(mNumParticles <= 0)
@@ -178,47 +175,27 @@ namespace ParticleLib
 			mGD.DrawPrimitives(PrimitiveType.TriangleList, 0, mNumParticles * 2);
 
 			mGD.SetVertexBuffer(null);
-		}
-
-
-		internal bool GetCel()
-		{
-			return	mbCel;
-		}
-
-
-		internal void SetCel(bool bOn)
-		{
-			mbCel	=bOn;
-		}
-
-
-		internal void SetTexture(Texture2D tex)
-		{
-			mTex	=tex;
-		}
-
-
-		internal string GetTexturePath()
-		{
-			return	mTex.Name;
-		}
+		}*/
 
 
 		//adds on to the end
 		internal string GetEntityFields(string ent)
 		{
-			string	texName	=mTex.Name;
-
-			if(mTex.Name.Contains("\\"))
-			{
-				texName	=texName.Substring(texName.LastIndexOf('\\') + 1);
-			}
-
-			ParticleBoss.AddField(ref ent, "cel_shade", (mbCel)? "1" : "0");
-			ParticleBoss.AddField(ref ent, "tex_name", texName);
+			ParticleBoss.AddField(ref ent, "tex_name", mMatName);
 
 			return	ent;
+		}
+
+
+		internal void SetMaterial(string mat)
+		{
+			mMatName	=mat;
+		}
+
+
+		internal string GetMaterial()
+		{
+			return	mMatName;
 		}
 	}
 }

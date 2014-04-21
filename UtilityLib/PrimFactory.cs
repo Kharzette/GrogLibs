@@ -671,6 +671,8 @@ namespace UtilityLib
 
 			inds.AddRange(otherHalf);
 
+			inds.Reverse();
+
 			BufferDescription	id	=new BufferDescription(inds.Count * 2,
 				ResourceUsage.Default, BindFlags.IndexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);

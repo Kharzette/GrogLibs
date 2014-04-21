@@ -46,11 +46,14 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FileUtil.cs" />
     <Compile Include="GameCamera.cs" />
     <Compile Include="GameState.cs" />
+    <Compile Include="GraphicsDevice.cs" />
     <Compile Include="Mathery.cs" />
     <Compile Include="Misc.cs" />
     <Compile Include="MiscNoXNA.cs" />
