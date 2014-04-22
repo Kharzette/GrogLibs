@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
+using SharpDX;
 using UtilityLib;
 
 
@@ -45,7 +44,7 @@ namespace BSPZone
 		public event EventHandler	eFunc;
 
 
-		public void Initialize(Zone zone, Audio aud, AudioListener lis,
+		public void Initialize(Zone zone,// Audio aud, AudioListener lis,
 			SwitchLight sl, OkToFireFunc okToFire)
 		{
 			//unwire from old
@@ -73,7 +72,7 @@ namespace BSPZone
 			}
 
 			//init the zone's basic model helper
-			mZone.InitBMHelper(this, aud, lis);
+			mZone.InitBMHelper(this);//, aud, lis);
 		}
 
 

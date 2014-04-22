@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using UtilityLib;
 
 
@@ -112,20 +112,20 @@ namespace BSPZone
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
-			FileUtil.WriteArray(mZoneModels, bw);
-			FileUtil.WriteArray(mZoneNodes, bw);
-			FileUtil.WriteArray(mZoneLeafs, bw);
-			FileUtil.WriteArray(mVisAreas, bw);
-			FileUtil.WriteArray(mVisAreaPortals, bw);
+//			FileUtil.WriteArray(mZoneModels, bw);
+//			FileUtil.WriteArray(mZoneNodes, bw);
+//			FileUtil.WriteArray(mZoneLeafs, bw);
+//			FileUtil.WriteArray(mVisAreas, bw);
+//			FileUtil.WriteArray(mVisAreaPortals, bw);
 			WritePlaneArray(bw);
-			FileUtil.WriteArray(mZoneEntities, bw);
-			FileUtil.WriteArray(mZoneLeafSides, bw);
+//			FileUtil.WriteArray(mZoneEntities, bw);
+//			FileUtil.WriteArray(mZoneLeafSides, bw);
 
 			bw.Write(bDebug);
 			if(bDebug)
 			{
 				FileUtil.WriteArray(bw, mDebugLeafFaces);
-				FileUtil.WriteArray(mDebugFaces, bw);
+//				FileUtil.WriteArray(mDebugFaces, bw);
 				FileUtil.WriteArray(bw, mDebugVerts);
 				FileUtil.WriteArray(bw, mDebugIndexes);
 			}
@@ -149,7 +149,7 @@ namespace BSPZone
 			{
 				bw.Write(false);
 			}
-			FileUtil.WriteArray(mVisClusters, bw);
+//			FileUtil.WriteArray(mVisClusters, bw);
 			bw.Write(mLightMapGridSize);
 			bw.Write(mNumVisLeafBytes);
 			bw.Write(mNumVisMaterialBytes);
@@ -161,23 +161,14 @@ namespace BSPZone
 
 		public void Read(string fileName, bool bTool)
 		{
-			Stream			file	=null;
-			if(bTool)
-			{
-				file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
-			}
-			else
-			{
-				file	=FileUtil.OpenTitleFile(fileName);
-			}
-
+			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
 			if(file == null)
 			{
 				return;
 			}
 			BinaryReader	br	=new BinaryReader(file);
 
-			mZoneModels		=FileUtil.ReadArray(br, delegate(Int32 count)
+/*			mZoneModels		=FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return FileUtil.InitArray<ZoneModel>(count); }) as ZoneModel[];
 			mZoneNodes		=FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return FileUtil.InitArray<ZoneNode>(count); }) as ZoneNode[];
@@ -187,18 +178,18 @@ namespace BSPZone
 							{ return FileUtil.InitArray<VisArea>(count); }) as VisArea[];
 			mVisAreaPortals	=FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return FileUtil.InitArray<VisAreaPortal>(count); }) as VisAreaPortal[];
-			ReadPlaneArray(br);
-			mZoneEntities	=FileUtil.ReadArray(br, delegate(Int32 count)
+*/			ReadPlaneArray(br);
+/*			mZoneEntities	=FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return FileUtil.InitArray<ZoneEntity>(count); }) as ZoneEntity[];
 			mZoneLeafSides	=FileUtil.ReadArray(br, delegate(Int32 count)
 							{ return FileUtil.InitArray<ZoneLeafSide>(count); }) as ZoneLeafSide[];
-
+*/
 			bool	bDebug	=br.ReadBoolean();
 			if(bDebug)
 			{
 				mDebugLeafFaces	=FileUtil.ReadIntArray(br);
-				mDebugFaces		=FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return FileUtil.InitArray<DebugFace>(count); }) as DebugFace[];
+//				mDebugFaces		=FileUtil.ReadArray(br, delegate(Int32 count)
+//							{ return FileUtil.InitArray<DebugFace>(count); }) as DebugFace[];
 				mDebugVerts		=FileUtil.ReadVecArray(br);
 				mDebugIndexes	=FileUtil.ReadIntArray(br);
 			}
@@ -206,8 +197,8 @@ namespace BSPZone
 			mVisData			=FileUtil.ReadByteArray(br);
 			mMaterialVisData	=FileUtil.ReadByteArray(br);
 
-			mVisClusters	=FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return FileUtil.InitArray<VisCluster>(count); }) as VisCluster[];
+//			mVisClusters	=FileUtil.ReadArray(br, delegate(Int32 count)
+//							{ return FileUtil.InitArray<VisCluster>(count); }) as VisCluster[];
 
 			mLightMapGridSize		=br.ReadInt32();
 			mNumVisLeafBytes		=br.ReadInt32();
@@ -275,21 +266,21 @@ namespace BSPZone
 
 
 		#region Model Related
-		public void UpdateModels(int msDelta, Microsoft.Xna.Framework.Audio.AudioListener lis)
+		public void UpdateModels(int msDelta)//, Microsoft.Xna.Framework.Audio.AudioListener lis)
 		{
 			//clear pushable push velocities
 			foreach(KeyValuePair<object, Pushable> push in mPushables)
 			{
 				push.Value.mMobile.ClearPushVelocity();
 			}
-			mBMHelper.Update(msDelta, lis);
+			mBMHelper.Update(msDelta);//, lis);
 		}
 
 
-		internal void InitBMHelper(TriggerHelper thelp, Audio aud,
-			Microsoft.Xna.Framework.Audio.AudioListener lis)
+		internal void InitBMHelper(TriggerHelper thelp)//, Audio aud,
+//			Microsoft.Xna.Framework.Audio.AudioListener lis)
 		{
-			mBMHelper.Initialize(this, thelp, aud, lis);
+			mBMHelper.Initialize(this, thelp);//, aud, lis);
 		}
 
 
@@ -549,7 +540,7 @@ namespace BSPZone
 					{
 						int	idx	=mDebugIndexes[k];
 
-						Vector3	transd	=Vector3.Transform(mDebugVerts[idx], mZoneModels[i].mTransform);
+						Vector3	transd	=Vector3.TransformCoordinate(mDebugVerts[idx], mZoneModels[i].mTransform);
 
 						verts.Add(transd);
 					}
@@ -727,8 +718,8 @@ namespace BSPZone
 				maxs	=Vector3.Zero;
 				return;
 			}
-			mins	=mZoneModels[0].mBounds.Min;
-			maxs	=mZoneModels[0].mBounds.Max;
+			mins	=mZoneModels[0].mBounds.Minimum;
+			maxs	=mZoneModels[0].mBounds.Maximum;
 		}
 	}
 }

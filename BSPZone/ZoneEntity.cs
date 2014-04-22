@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using UtilityLib;
 
 
 namespace BSPZone
 {
-	public class ZoneEntity : IReadWriteable
+	public class ZoneEntity
 	{
 		public Dictionary<string, string>	mData		=new Dictionary<string, string>();
 
@@ -158,11 +158,11 @@ namespace BSPZone
 				return		false;
 			}
 
-			yaw		=MathHelper.ToRadians(yaw);
-			pitch	=MathHelper.ToRadians(pitch);
-			roll	=MathHelper.ToRadians(roll);
+			yaw		=MathUtil.DegreesToRadians(yaw);
+			pitch	=MathUtil.DegreesToRadians(pitch);
+			roll	=MathUtil.DegreesToRadians(roll);
 
-			orientation	=Matrix.CreateFromYawPitchRoll(yaw, pitch, roll);
+			orientation	=Matrix.RotationYawPitchRoll(yaw, pitch, roll);
 
 			return	true;
 		}

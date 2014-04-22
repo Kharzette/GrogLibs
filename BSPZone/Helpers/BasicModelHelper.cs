@@ -2,8 +2,7 @@
 using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
+using SharpDX;
 using UtilityLib;
 
 
@@ -35,9 +34,9 @@ namespace BSPZone
 			internal float		mStageInterval;
 			internal float		mEaseIn, mEaseOut;
 
-			internal SoundEffectInstance	mSoundForward, mSoundBackward;
+//			internal SoundEffectInstance	mSoundForward, mSoundBackward;
 
-			internal AudioEmitter	mEmitter;
+//			internal AudioEmitter	mEmitter;
 
 			internal Mover3	mMover		=new Mover3();
 			internal Mover3	mRotator	=new Mover3();
@@ -52,10 +51,10 @@ namespace BSPZone
 
 				if(mbForward)
 				{
-					if(mSoundForward != null)
-					{
-						mSoundForward.Play();
-					}
+//					if(mSoundForward != null)
+//					{
+//						mSoundForward.Play();
+//					}
 
 					if(mMover.Done())
 					{
@@ -84,10 +83,10 @@ namespace BSPZone
 				}
 				else
 				{
-					if(mSoundBackward != null)
-					{
-						mSoundBackward.Play();
-					}
+//					if(mSoundBackward != null)
+//					{
+//						mSoundBackward.Play();
+//					}
 					if(mMover.Done())
 					{
 						mMover.SetUpMove(mOrigin + mMoveAxis * mMoveAmount,
@@ -116,7 +115,7 @@ namespace BSPZone
 			}
 
 
-			internal bool Update(int msDelta, Zone z, AudioListener lis)
+			internal bool Update(int msDelta, Zone z)//, AudioListener lis)
 			{
 				if(mMover.Done())
 				{
@@ -166,10 +165,10 @@ namespace BSPZone
 					}
 				}
 
-				mEmitter.Position	=mMover.GetPos() * Audio.InchWorldScale;
+//				mEmitter.Position	=mMover.GetPos() * Audio.InchWorldScale;
 
-				Apply3DToSound(mSoundForward, lis, mEmitter);
-				Apply3DToSound(mSoundBackward, lis, mEmitter);
+//				Apply3DToSound(mSoundForward, lis, mEmitter);
+//				Apply3DToSound(mSoundBackward, lis, mEmitter);
 
 				return	false;
 			}
@@ -183,7 +182,7 @@ namespace BSPZone
 		internal BasicModelHelper(){}
 
 
-		internal void Initialize(Zone zone, TriggerHelper thelp, Audio aud, AudioListener lis)
+		internal void Initialize(Zone zone, TriggerHelper thelp)//, Audio aud, AudioListener lis)
 		{
 			mZone	=zone;
 
@@ -213,12 +212,12 @@ namespace BSPZone
 					continue;
 				}
 
-				GetMoveStages(ze, model, org, aud, lis);
+				GetMoveStages(ze, model, org);//, aud, lis);
 			}
 		}
 
 
-		void UpdateSingle(int msDelta, int modelIndex, AudioListener lis)
+		void UpdateSingle(int msDelta, int modelIndex)//, AudioListener lis)
 		{
 			if(!mModelStages.ContainsKey(modelIndex))
 			{
@@ -233,7 +232,7 @@ namespace BSPZone
 
 			ModelMoveStage	mms	=ms.mStages[ms.mCurStage];
 
-			bool	bDone	=mms.Update(msDelta, mZone, lis);
+			bool	bDone	=mms.Update(msDelta, mZone);//, lis);
 
 			if(bDone)
 			{
@@ -267,11 +266,11 @@ namespace BSPZone
 		}
 
 
-		internal void Update(int msDelta, AudioListener lis)
+		internal void Update(int msDelta)//, AudioListener lis)
 		{
 			foreach(KeyValuePair<int, ModelStages> mss in mModelStages)
 			{
-				UpdateSingle(msDelta, mss.Key, lis);
+				UpdateSingle(msDelta, mss.Key);//, lis);
 			}
 		}
 
@@ -329,17 +328,17 @@ namespace BSPZone
 		}
 
 
-		internal static void Apply3DToSound(SoundEffectInstance sei,
-			AudioListener al, AudioEmitter em)
-		{
-			if(sei != null)
-			{
-				sei.Apply3D(al, em);
-			}
-		}
+//		internal static void Apply3DToSound(SoundEffectInstance sei,
+//			AudioListener al, AudioEmitter em)
+//		{
+//			if(sei != null)
+//			{
+//				sei.Apply3D(al, em);
+//			}
+//		}
 
 
-		void GetMoveStages(ZoneEntity ze, int modelIdx, Vector3 org, Audio aud, AudioListener lis)
+		void GetMoveStages(ZoneEntity ze, int modelIdx, Vector3 org)//, Audio aud, AudioListener lis)
 		{
 			if(ze == null)
 			{
@@ -378,18 +377,18 @@ namespace BSPZone
 			ModelMoveStage	mms	=new ModelMoveStage();
 			mms.mModelIndex		=modelIdx;
 			mms.mOrigin			=org;
-			mms.mEmitter		=new AudioEmitter();
+//			mms.mEmitter		=new AudioEmitter();
 
-			string	forward	=targ.GetValue("sound_forward");
-			string	back	=targ.GetValue("sound_backward");
+//			string	forward	=targ.GetValue("sound_forward");
+//			string	back	=targ.GetValue("sound_backward");
 
-			mms.mSoundForward	=aud.GetInstance(forward, false);
-			mms.mSoundBackward	=aud.GetInstance(back, false);
+//			mms.mSoundForward	=aud.GetInstance(forward, false);
+//			mms.mSoundBackward	=aud.GetInstance(back, false);
 
-			mms.mEmitter.Position	=org;
+//			mms.mEmitter.Position	=org;
 
-			Apply3DToSound(mms.mSoundForward, lis, mms.mEmitter);
-			Apply3DToSound(mms.mSoundBackward, lis, mms.mEmitter);
+//			Apply3DToSound(mms.mSoundForward, lis, mms.mEmitter);
+//			Apply3DToSound(mms.mSoundBackward, lis, mms.mEmitter);
 
 			targ.GetVectorNoConversion("rotation_target", out mms.mRotationTarget);
 			targ.GetVectorNoConversion("rotation_rate", out mms.mRotationRate);
@@ -409,7 +408,7 @@ namespace BSPZone
 
 			//recurse, offsetting by move amount
 			//TODO: rotation amount too
-			GetMoveStages(targ, modelIdx, org + (mms.mMoveAmount * mms.mMoveAxis), aud, lis);
+			GetMoveStages(targ, modelIdx, org + (mms.mMoveAmount * mms.mMoveAxis));//, aud, lis);
 		}
 
 

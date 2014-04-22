@@ -2,7 +2,7 @@
 using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using UtilityLib;
 
 
@@ -84,8 +84,8 @@ namespace BSPZone
 					if(box == null)
 					{
 						//the sphere routine doesn't automagically transform
-						Vector3		modelStart	=Vector3.Transform(start, zm.mInvertedTransform);
-						Vector3		modelEnd	=Vector3.Transform(end, zm.mInvertedTransform);
+						Vector3		modelStart	=Vector3.TransformCoordinate(start, zm.mInvertedTransform);
+						Vector3		modelEnd	=Vector3.TransformCoordinate(end, zm.mInvertedTransform);
 						rt.mOriginalStart		=modelStart;
 						rt.mOriginalEnd			=modelEnd;
 
@@ -94,7 +94,7 @@ namespace BSPZone
 							Collision	c	=rt.mCollision;
 
 							//transform results back to worldspace
-							c.mIntersection	=Vector3.Transform(c.mIntersection,
+							c.mIntersection	=Vector3.TransformCoordinate(c.mIntersection,
 								mZoneModels[c.mModelHit].mTransform);
 
 							c.mPlaneHit	=ZonePlane.Transform(c.mPlaneHit,
@@ -234,8 +234,8 @@ namespace BSPZone
 		//to intersect the world at the closest location.
 		//Starting outside the world is fine
 		public Vector3 TraceScreenPointRay(GameCamera cam,
-			Microsoft.Xna.Framework.Graphics.Viewport vp,
-			Vector2 screenPos, float rayDistance, out int modelOn)
+			Viewport vp, Vector2 screenPos,
+			float rayDistance, out int modelOn)
 		{
 			Vector3	camForward	=cam.Forward;
 			Vector3	start		=new Vector3(screenPos.X, screenPos.Y, 0f);
@@ -314,7 +314,7 @@ namespace BSPZone
 
 			if(bHit && !col.mbStartInside)
 			{
-				col.mIntersection	=Vector3.Transform(col.mIntersection, mod.mTransform);
+				col.mIntersection	=Vector3.TransformCoordinate(col.mIntersection, mod.mTransform);
 				col.mPlaneHit		=ZonePlane.Transform(col.mPlaneHit, mod.mTransform);
 			}
 			return	bHit;
@@ -339,13 +339,13 @@ namespace BSPZone
 			box.GetCorners(mTestBoxCorners);
 
 			//transform into model space
-			Vector3.Transform(mTestBoxCorners, ref mod.mInvertedTransform, mTestTransBoxCorners);
+			Vector3.TransformCoordinate(mTestBoxCorners, ref mod.mInvertedTransform, mTestTransBoxCorners);
 
 			//transform position
-			pos	=Vector3.Transform(pos, mod.mInvertedTransform);
+			pos	=Vector3.TransformCoordinate(pos, mod.mInvertedTransform);
 
 			//bound the modelSpace corners
-			box	=BoundingBox.CreateFromPoints(mTestTransBoxCorners);
+			box	=BoundingBox.FromPoints(mTestTransBoxCorners);
 
 			Mathery.CenterBoundingBoxAtOrigin(ref box);
 
@@ -429,14 +429,14 @@ namespace BSPZone
 			box.GetCorners(mTestBoxCorners);
 
 			//transform into model space
-			Vector3.Transform(mTestBoxCorners, ref mod.mInvertedTransform, mTestTransBoxCorners);
+			Vector3.TransformCoordinate(mTestBoxCorners, ref mod.mInvertedTransform, mTestTransBoxCorners);
 
 			//transform ray
-			start	=Vector3.Transform(start, mod.mInvertedTransform);
-			end		=Vector3.Transform(end, mod.mInvertedTransform);
+			start	=Vector3.TransformCoordinate(start, mod.mInvertedTransform);
+			end		=Vector3.TransformCoordinate(end, mod.mInvertedTransform);
 
 			//bound the modelSpace corners
-			box	=BoundingBox.CreateFromPoints(mTestTransBoxCorners);
+			box	=BoundingBox.FromPoints(mTestTransBoxCorners);
 
 			Mathery.CenterBoundingBoxAtOrigin(ref box);
 		}
@@ -467,7 +467,7 @@ namespace BSPZone
 			float	dist	=0.0f;
 			if(trace.mBounds != null)
 			{
-				dist	=Math.Abs(Vector3.Dot(trace.mBounds.Value.Max, p.mNormal));
+				dist	=Math.Abs(Vector3.Dot(trace.mBounds.Value.Maximum, p.mNormal));
 			}
 			else if(trace.mRadius != null)
 			{
@@ -613,7 +613,7 @@ namespace BSPZone
 			float	dist	=0.0f;
 			if(trace.mBounds != null)
 			{
-				dist	=Math.Abs(Vector3.Dot(trace.mBounds.Value.Max, p.mNormal));
+				dist	=Math.Abs(Vector3.Dot(trace.mBounds.Value.Maximum, p.mNormal));
 			}
 			else if(trace.mRadius != null)
 			{
@@ -662,7 +662,7 @@ namespace BSPZone
 			ZoneNode	zn	=mZoneNodes[node];
 			ZonePlane	p	=mZonePlanes[zn.mPlaneNum];
 
-			float	dist	=Math.Abs(Vector3.Dot(box.Max, p.mNormal));
+			float	dist	=Math.Abs(Vector3.Dot(box.Maximum, p.mNormal));
 
 			Vector3	clipPos;
 			if(PartBehind(p, -dist, pos, pos, out clipPos, out clipPos))
@@ -709,7 +709,7 @@ namespace BSPZone
 
 				if(trace.mBounds != null)
 				{
-					p.mDist	+=Math.Abs(Vector3.Dot(trace.mBounds.Value.Max, p.mNormal));
+					p.mDist	+=Math.Abs(Vector3.Dot(trace.mBounds.Value.Maximum, p.mNormal));
 				}
 				else if(trace.mRadius != null)
 				{
@@ -797,7 +797,7 @@ namespace BSPZone
 					p.Inverse();
 				}
 
-				p.mDist	+=Math.Abs(Vector3.Dot(box.Max, p.mNormal));
+				p.mDist	+=Math.Abs(Vector3.Dot(box.Maximum, p.mNormal));
 
 				float	dist	=p.Distance(pos);
 				if(dist >= 0)
@@ -845,7 +845,7 @@ namespace BSPZone
 
 				if((len1 * len2) < 0.0001f)
 				{
-					return	MathHelper.TwoPi;
+					return	MathUtil.TwoPi;
 				}
 
 				v1	/=len1;

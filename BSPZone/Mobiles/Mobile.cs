@@ -2,8 +2,9 @@
 using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using UtilityLib;
+using InputLib;
 
 
 namespace BSPZone
@@ -70,7 +71,7 @@ namespace BSPZone
 		{
 			mBox				=Misc.MakeBox(boxWidth, boxHeight);
 			mEyeHeight			=Vector3.UnitY * eyeHeight;
-			mBoxMiddleOffset	=Vector3.UnitY * ((mBox.Max.Y - mBox.Min.Y) * 0.5f);
+			mBoxMiddleOffset	=Vector3.UnitY * ((mBox.Maximum.Y - mBox.Minimum.Y) * 0.5f);
 		}
 
 
@@ -111,8 +112,8 @@ namespace BSPZone
 		{
 			BoundingBox	ret	=mBox;
 
-			ret.Min	+=mPosition;
-			ret.Max	+=mPosition;
+			ret.Minimum	+=mPosition;
+			ret.Maximum	+=mPosition;
 
 			return	ret;
 		}
@@ -221,9 +222,9 @@ namespace BSPZone
 			//the camera would be a frame behind here as it ordinarily
 			//hasn't been updated yet
 			Matrix	orientation	=
-				Matrix.CreateRotationY(MathHelper.ToRadians(ps.Yaw)) *
-				Matrix.CreateRotationX(MathHelper.ToRadians(ps.Pitch)) *
-				Matrix.CreateRotationZ(MathHelper.ToRadians(ps.Roll));
+				Matrix.RotationY(MathUtil.DegreesToRadians(ps.Yaw)) *
+				Matrix.RotationX(MathUtil.DegreesToRadians(ps.Pitch)) *
+				Matrix.RotationZ(MathUtil.DegreesToRadians(ps.Roll));
 
 			//transpose to get it out of wacky camera land
 			orientation		=Matrix.Transpose(orientation);
@@ -257,7 +258,7 @@ namespace BSPZone
 			camPos	=-camPos;
 
 			//transform the shoulder offset to get it into player space
-			shoulderOffset	=Vector3.Transform(shoulderOffset, orientation);
+			shoulderOffset	=Vector3.TransformCoordinate(shoulderOffset, orientation);
 
 			//for the third person camera, back the position out
 			//along the updated forward vector

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BSPZone
 {
-	internal class VisCluster : UtilityLib.IReadWriteable
+	internal class VisCluster
 	{
 		internal Int32	mVisOfs;
 

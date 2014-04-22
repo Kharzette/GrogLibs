@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using UtilityLib;
 using ParticleLib;
 
@@ -122,8 +122,8 @@ namespace BSPZone
 				lifeMax		*=1000;
 
 				int	idx	=mPB.CreateEmitter(
-					texPrefix + ze.GetValue("tex_name"),
-					color, bCel, shape, shapeSize, maxParticles,
+					texPrefix + ze.GetValue("mat_name"),
+					color, shape, shapeSize, maxParticles,
 					pos, (int)gravYaw, (int)gravPitch, gravStr,
 					startSize, startAlpha, emitMS, spinVelMin, spinVelMax,
 					velMin, velMax, sizeVelMin, sizeVelMax,

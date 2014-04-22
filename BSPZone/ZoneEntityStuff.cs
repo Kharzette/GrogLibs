@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using UtilityLib;
 
 
@@ -173,20 +173,20 @@ namespace BSPZone
 
 			Matrix	modXForm	=zm.mTransform;
 
-			bb.Max	=Vector3.Transform(bb.Max, modXForm);
-			bb.Min	=Vector3.Transform(bb.Min, modXForm);
+			bb.Maximum	=Vector3.TransformCoordinate(bb.Maximum, modXForm);
+			bb.Minimum	=Vector3.TransformCoordinate(bb.Minimum, modXForm);
 
 			int	iterations	=0;
 			point			=Vector3.Zero;
 			for(;iterations < 50;iterations++)
 			{
-				int	x	=rand.Next((int)bb.Min.X, (int)bb.Max.X);
-				int	y	=rand.Next((int)bb.Min.Y, (int)bb.Max.Y);
-				int	z	=rand.Next((int)bb.Min.Z, (int)bb.Max.Z);
+				int	x	=rand.Next((int)bb.Minimum.X, (int)bb.Maximum.X);
+				int	y	=rand.Next((int)bb.Minimum.Y, (int)bb.Maximum.Y);
+				int	z	=rand.Next((int)bb.Minimum.Z, (int)bb.Maximum.Z);
 
 				point	=new Vector3(x, y, z);
 
-				point	=Vector3.Transform(point, zm.mInvertedTransform);
+				point	=Vector3.TransformCoordinate(point, zm.mInvertedTransform);
 
 				RayTrace	rt	=new RayTrace(point, point);
 
@@ -194,7 +194,7 @@ namespace BSPZone
 
 				if(TraceNodeTrigger(rt, point, point, zm.mRootNode))
 				{
-					point	=Vector3.Transform(point, zm.mTransform);
+					point	=Vector3.TransformCoordinate(point, zm.mTransform);
 					break;
 				}
 			}
@@ -427,11 +427,11 @@ namespace BSPZone
 						float	pitch	=angles.X;
 						float	roll	=angles.Z;
 
-						yaw		=MathHelper.ToRadians(yaw);
-						pitch	=MathHelper.ToRadians(pitch);
-						roll	=MathHelper.ToRadians(roll);
+						yaw		=MathUtil.DegreesToRadians(yaw);
+						pitch	=MathUtil.DegreesToRadians(pitch);
+						roll	=MathUtil.DegreesToRadians(roll);
 
-						Matrix	rotMat	=Matrix.CreateFromYawPitchRoll(yaw, pitch, roll);
+						Matrix	rotMat	=Matrix.RotationYawPitchRoll(yaw, pitch, roll);
 						zl.mPosition	=rotMat.Backward;
 					}
 				}

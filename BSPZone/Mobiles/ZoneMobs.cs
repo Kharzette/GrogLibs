@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using UtilityLib;
 
 
@@ -11,7 +11,7 @@ namespace BSPZone
 	{
 		List<MobileAI>	mMobs	=new List<MobileAI>();
 
-		BoundingBox	mMiniBox	=BoundingBox.CreateFromSphere(new BoundingSphere(Vector3.Zero, 1f));
+		BoundingBox	mMiniBox	=BoundingBox.FromSphere(new BoundingSphere(Vector3.Zero, 1f));
 
 
 		public void AddMob(MobileAI mob)

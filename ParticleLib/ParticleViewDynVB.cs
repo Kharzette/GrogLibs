@@ -181,7 +181,7 @@ namespace ParticleLib
 		//adds on to the end
 		internal string GetEntityFields(string ent)
 		{
-			ParticleBoss.AddField(ref ent, "tex_name", mMatName);
+			ParticleBoss.AddField(ref ent, "mat_name", mMatName);
 
 			return	ent;
 		}

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BSPZone
 {
-	internal class VisArea : UtilityLib.IReadWriteable
+	internal class VisArea
 	{
 		internal Int32	NumAreaPortals;
 		internal Int32	FirstAreaPortal;

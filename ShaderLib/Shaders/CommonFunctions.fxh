@@ -195,6 +195,7 @@ float3 ComputeCheapSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 l
 
 //snaps a color to a celish range
 //makes a sort of EGA/CGA style look
+//This is horrible and in need of repair
 float3 CalcCelColor(float3 colVal)
 {
 	float3	ret;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using UtilityLib;
 using BSPZone;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace BSPZone

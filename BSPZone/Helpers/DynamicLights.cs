@@ -2,8 +2,15 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using SharpDX;
+using SharpDX.DXGI;
+using SharpDX.Direct3D11;
+using SharpDX.D3DCompiler;
+using UtilityLib;
+
+//ambiguous stuff
+using Device	=SharpDX.Direct3D11.Device;
+using Resource	=SharpDX.Direct3D11.Resource;
 
 
 namespace BSPZone
@@ -11,7 +18,8 @@ namespace BSPZone
 	public class DynamicLights
 	{
 		//simple vector4 tex for passing dyn lights to shaders
-		Texture2D	mDynLights;
+		Texture1D			mDynLights;
+		ShaderResourceView	mDynSRV;
 
 		//effect to set the dynamic light parameter on
 		//TODO: might need multiple
@@ -28,13 +36,35 @@ namespace BSPZone
 
 		public DynamicLights(GraphicsDevice gd, Effect fx)
 		{
-			//dynamic lights stuffed into a rendertarget
-			mDynLights	=new Texture2D(gd, MaxLights * 2, 1, false, SurfaceFormat.Vector4);
-
 			mDynArray	=new Vector4[MaxLights * 2];
 			mInUse		=new bool[MaxLights];
 
 			mFX	=fx;
+
+			SampleDescription	sampDesc	=new SampleDescription();
+			sampDesc.Count		=1;
+			sampDesc.Quality	=0;
+
+			Resource	res	=null;
+			DataStream	ds	=new DataStream(MaxLights * 2 * 16, false, true);
+			for(int x=0;x < MaxLights;x++)
+			{
+				ds.Write(Vector4.Zero);
+				ds.Write(Vector4.Zero);
+			}
+
+			Texture1DDescription	texDesc	=new Texture1DDescription();
+			texDesc.ArraySize		=1;
+			texDesc.BindFlags		=BindFlags.ShaderResource;
+			texDesc.CpuAccessFlags	=CpuAccessFlags.Write;
+			texDesc.MipLevels		=1;
+			texDesc.OptionFlags		=ResourceOptionFlags.None;
+			texDesc.Usage			=ResourceUsage.Dynamic;
+			texDesc.Width			=MaxLights * 2;
+			texDesc.Format			=Format.R32G32B32A32_Float;
+
+			mDynLights	=new Texture1D(gd.GD, texDesc, ds);
+			mDynSRV		=new ShaderResourceView(gd.GD, res);
 		}
 
 
@@ -85,18 +115,29 @@ namespace BSPZone
 
 		public void Update(int msDelta, GraphicsDevice gd)
 		{
+			DataStream	ds;
+
+			gd.DC.MapSubresource(mDynLights, 0, MapMode.WriteDiscard,
+				SharpDX.Direct3D11.MapFlags.None, out ds);
+
 			//clear device textures, annoying
-			for(int i=0;i < 16;i++)
+//			for(int i=0;i < 16;i++)
+//			{
+//				gd.Textures[i]	=null;
+//			}
+
+			for(int i=0;i < (MaxLights * 2);i++)
 			{
-				gd.Textures[i]	=null;
+				ds.Write<Vector4>(mDynArray[i]);
 			}
-			mDynLights.SetData<Vector4>(mDynArray);
+
+			gd.DC.UnmapSubresource(mDynLights, 0);
 		}
 
 
 		public void SetParameter()
 		{
-			mFX.Parameters["mDynLights"].SetValue(mDynLights);
+			mFX.GetVariableByName("mDynLights").AsShaderResource().SetResource(mDynSRV);
 		}
 
 

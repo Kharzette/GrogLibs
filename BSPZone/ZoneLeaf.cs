@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace BSPZone
 {
-	internal class ZoneLeaf : UtilityLib.IReadWriteable
+	internal class ZoneLeaf
 	{
 		internal UInt32		mContents;
 		internal Vector3	mMins, mMaxs;

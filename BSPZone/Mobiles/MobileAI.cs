@@ -2,9 +2,9 @@
 using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using UtilityLib;
-using PathLib;
+//using PathLib;
 
 
 namespace BSPZone
@@ -21,7 +21,7 @@ namespace BSPZone
 		Zone		mZone;
 		Mobile		mMob;
 		Random		mRand;
-		PathGraph	mGraph;
+//		PathGraph	mGraph;
 
 		//custom state set by the game
 		//could be dead or injured or invulnerable or whatever
@@ -214,7 +214,7 @@ namespace BSPZone
 			{
 				myPos			=mZone.DropToGround(myPos, false);
 				location		=mZone.DropToGround(location, false);
-				mbAwaitingPath	=mGraph.FindPath(myPos, location, OnPatherDone, mZone.FindWorldNodeLandedIn);
+//				mbAwaitingPath	=mGraph.FindPath(myPos, location, OnPatherDone, mZone.FindWorldNodeLandedIn);
 			}
 			return	true;
 		}
@@ -268,10 +268,10 @@ namespace BSPZone
 		}
 
 
-		public void ChangeLevel(Zone z, PathGraph pg)
+		public void ChangeLevel(Zone z)//, PathGraph pg)
 		{
 			mZone	=z;
-			mGraph	=pg;
+//			mGraph	=pg;
 
 			mZone.AddMob(this);
 		}
@@ -451,8 +451,8 @@ namespace BSPZone
 					myPos			=mZone.DropToGround(myPos, false);
 					tryPos			=mZone.DropToGround(tryPos, false);				
 					mbApproaching	=false;
-					mbAwaitingPath	=mGraph.FindPath(myPos, tryPos,
-						OnPatherDone, mZone.FindWorldNodeLandedIn);
+//					mbAwaitingPath	=mGraph.FindPath(myPos, tryPos,
+//						OnPatherDone, mZone.FindWorldNodeLandedIn);
 				}
 			}
 			else
@@ -527,7 +527,7 @@ namespace BSPZone
 				Debug.Assert(Mathery.IsBoundingBoxCentered(bounds));
 
 				//get a radius from the bounds
-				float	radius	=Vector3.Distance(Vector3.Zero, bounds.Max);
+				float	radius	=Vector3.Distance(Vector3.Zero, bounds.Maximum);
 				if(mMob.TrySphere(approachPos + middleOfs, radius, true))
 				{
 					goodPos		=approachPos;

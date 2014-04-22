@@ -4,12 +4,12 @@ using System.Diagnostics;
 using System.Text;
 using System.IO;
 using System.Reflection;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace BSPZone
 {
-	internal class ZoneNode : UtilityLib.IReadWriteable
+	internal class ZoneNode
 	{
 		internal Int32		mFront, mBack;
 		internal Int32		mNumFaces;

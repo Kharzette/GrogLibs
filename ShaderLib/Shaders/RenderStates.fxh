@@ -61,68 +61,68 @@ DepthStencilState DisableDepthTest
 
 SamplerState LinearClamp
 {
-	Filter = MIN_MAG_MIP_LINEAR;
-	AddressU = Clamp;
-	AddressV = Clamp;
+	Filter		=MIN_MAG_MIP_LINEAR;
+	AddressU	=Clamp;
+	AddressV	=Clamp;
 };
 
 SamplerState LinearWrap
 {
-	Filter = MIN_MAG_MIP_LINEAR;
-	AddressU = Wrap;
-	AddressV = Wrap;
+	Filter		=MIN_MAG_MIP_LINEAR;
+	AddressU	=Wrap;
+	AddressV	=Wrap;
 };
 
 SamplerState PointClamp
 {
-	Filter = MIN_MAG_MIP_POINT;
-	AddressU = Clamp;
-	AddressV = Clamp;
+	Filter		=MIN_MAG_MIP_POINT;
+	AddressU	=Clamp;
+	AddressV	=Clamp;
 };
 
 SamplerState PointWrap
 {
-	Filter = MIN_MAG_MIP_POINT;
-	AddressU = Wrap;
-	AddressV = Wrap;
+	Filter		=MIN_MAG_MIP_POINT;
+	AddressU	=Wrap;
+	AddressV	=Wrap;
 };
 
 SamplerState LinearClampCube
 {
-	Filter = MIN_MAG_MIP_LINEAR;
-	AddressU = Clamp;
-	AddressV = Clamp;
-	AddressW = Clamp;
+	Filter		=MIN_MAG_MIP_LINEAR;
+	AddressU	=Clamp;
+	AddressV	=Clamp;
+	AddressW	=Clamp;
 };
 
 SamplerState LinearWrapCube
 {
-	Filter = MIN_MAG_MIP_LINEAR;
-	AddressU = Wrap;
-	AddressV = Wrap;
-	AddressW = Wrap;
+	Filter		=MIN_MAG_MIP_LINEAR;
+	AddressU	=Wrap;
+	AddressV	=Wrap;
+	AddressW	=Wrap;
 };
 
 SamplerState PointClampCube
 {
-	Filter = MIN_MAG_MIP_POINT;
-	AddressU = Clamp;
-	AddressV = Clamp;
-	AddressW = Clamp;
+	Filter		=MIN_MAG_MIP_POINT;
+	AddressU	=Clamp;
+	AddressV	=Clamp;
+	AddressW	=Clamp;
 };
 
 SamplerState PointWrapCube
 {
-	Filter = MIN_MAG_MIP_POINT;
-	AddressU = Wrap;
-	AddressV = Wrap;
-	AddressW = Wrap;
+	Filter		=MIN_MAG_MIP_POINT;
+	AddressU	=Wrap;
+	AddressV	=Wrap;
+	AddressW	=Wrap;
 };
 
 SamplerState PointClamp1D
 {
-	Filter = MIN_MAG_MIP_POINT;
-	AddressU = Clamp;
+	Filter		=MIN_MAG_MIP_POINT;
+	AddressU	=Clamp;
 };
 
 #endif	//_RENDERSTATESFXH

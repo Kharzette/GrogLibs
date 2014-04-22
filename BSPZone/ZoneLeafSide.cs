@@ -5,7 +5,7 @@ using System.Text;
 
 namespace BSPZone
 {
-	public class ZoneLeafSide : UtilityLib.IReadWriteable
+	public class ZoneLeafSide
 	{
 		public Int32	mPlaneNum;
 		public bool		mbFlipSide;

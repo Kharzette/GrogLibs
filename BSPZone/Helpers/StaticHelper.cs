@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using SharpDX;
 using UtilityLib;
 
 
@@ -36,9 +35,9 @@ namespace BSPZone
 			internal void UpdateTransform()
 			{
 				//need a 90 degree bump to get the pitch started properly
-				mTransform	=Matrix.CreateRotationY(MathHelper.PiOver2);
-				mTransform	*=Matrix.CreateFromYawPitchRoll(mYaw, mPitch, mRoll);
-				mTransform	*=Matrix.CreateTranslation(mPosition);
+				mTransform	=Matrix.RotationY(MathUtil.PiOverTwo);
+				mTransform	*=Matrix.RotationYawPitchRoll(mYaw, mPitch, mRoll);
+				mTransform	*=Matrix.Translation(mPosition);
 			}
 		}
 
@@ -90,9 +89,9 @@ namespace BSPZone
 				Vector3	angles;
 				if(ze.GetVectorNoConversion("angles", out angles))
 				{
-					pu.mYaw		=MathHelper.ToRadians(angles.Y + 90);
-					pu.mPitch	=MathHelper.ToRadians(-angles.X);
-					pu.mRoll	=MathHelper.ToRadians(angles.Z);
+					pu.mYaw		=MathUtil.DegreesToRadians(angles.Y + 90);
+					pu.mPitch	=MathUtil.DegreesToRadians(-angles.X);
+					pu.mRoll	=MathUtil.DegreesToRadians(angles.Z);
 				}
 
 				mPickUps.Add(pu);

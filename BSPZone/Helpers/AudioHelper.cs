@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
+using SharpDX;
 using UtilityLib;
 
 
@@ -11,28 +10,28 @@ namespace BSPZone
 	public class AudioHelper
 	{
 		Zone	mZone;
-		Audio	mAudio;
+//		Audio	mAudio;
 
 		List<ZoneEntity>			mAudioEntities	=new List<ZoneEntity>();
-		List<AudioEmitter>			mEmitters		=new List<AudioEmitter>();
-		List<SoundEffectInstance>	mInstances		=new List<SoundEffectInstance>();
+//		List<AudioEmitter>			mEmitters		=new List<AudioEmitter>();
+//		List<SoundEffectInstance>	mInstances		=new List<SoundEffectInstance>();
 
 		bool	mbMiscListening;
 
 
-		public void Initialize(Zone zone, TriggerHelper th, Audio aud)
+		public void Initialize(Zone zone, TriggerHelper th)//, Audio aud)
 		{
 			if(mZone != null)
 			{
 				//if changing level, release previous instances
-				foreach(SoundEffectInstance sei in mInstances)
-				{
-					sei.Stop();
-					mAudio.ReleaseInstance(sei);
-				}
+//				foreach(SoundEffectInstance sei in mInstances)
+//				{
+//					sei.Stop();
+//					mAudio.ReleaseInstance(sei);
+//				}
 			}
 			mZone	=zone;
-			mAudio	=aud;
+//			mAudio	=aud;
 
 			//be sure to only wire this up once!
 			//can cause double toggling
@@ -43,8 +42,8 @@ namespace BSPZone
 			}
 
 			mAudioEntities.Clear();
-			mEmitters.Clear();
-			mInstances.Clear();
+//			mEmitters.Clear();
+//			mInstances.Clear();
 
 			//track index
 			int	index	=0;
@@ -58,9 +57,9 @@ namespace BSPZone
 				Vector3	pos;
 				ze.GetOrigin(out pos);
 
-				AudioEmitter	em	=new AudioEmitter();
-				em.Position	=pos * Audio.InchWorldScale;
-				mEmitters.Add(em);
+//				AudioEmitter	em	=new AudioEmitter();
+//				em.Position	=pos * Audio.InchWorldScale;
+//				mEmitters.Add(em);
 
 				string	fxName;
 				fxName	=ze.GetValue("effect_name");
@@ -71,16 +70,16 @@ namespace BSPZone
 				float	volume;
 				ze.GetFloat("volume", out volume);
 				
-				SoundEffectInstance	sei	=mAudio.GetInstance(fxName, (looping != 0));
-				sei.Volume	=volume;
-				sei.Apply3D(mAudio.mListener, em);
+//				SoundEffectInstance	sei	=mAudio.GetInstance(fxName, (looping != 0));
+//				sei.Volume	=volume;
+//				sei.Apply3D(mAudio.mListener, em);
 
-				mInstances.Add(sei);
+//				mInstances.Add(sei);
 
 				string	sOn	=ze.GetValue("activated");
 				if(sOn != "0")
 				{
-					sei.Play();
+//					sei.Play();
 				}
 
 				ze.SetInt("InstanceIndex", index);
@@ -91,14 +90,14 @@ namespace BSPZone
 
 		public void Update()
 		{
-			for(int i=0;i < mInstances.Count;i++)
-			{
-				SoundEffectInstance	sei	=mInstances[i];
-				if(sei.State == SoundState.Playing)
-				{
-					sei.Apply3D(mAudio.mListener, mEmitters[i]);
-				}
-			}
+//			for(int i=0;i < mInstances.Count;i++)
+//			{
+//				SoundEffectInstance	sei	=mInstances[i];
+//				if(sei.State == SoundState.Playing)
+//				{
+//					sei.Apply3D(mAudio.mListener, mEmitters[i]);
+//				}
+//			}
 		}
 
 
@@ -122,18 +121,18 @@ namespace BSPZone
 				return;
 			}
 
-			SoundEffectInstance	sei	=mInstances[index];
+//			SoundEffectInstance	sei	=mInstances[index];
 
-			if(sei.State == SoundState.Playing)
-			{
-				sei.Stop();
-			}
-			else
-			{
-				sei.Play();
-			}
+//			if(sei.State == SoundState.Playing)
+//			{
+//				sei.Stop();
+//			}
+//			else
+//			{
+//				sei.Play();
+//			}
 
-			ze.ToggleEntityActivated();
+//			ze.ToggleEntityActivated();
 		}
 	}
 }

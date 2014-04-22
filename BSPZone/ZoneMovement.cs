@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using UtilityLib;
 
 
@@ -650,10 +650,10 @@ namespace BSPZone
 				if(pa.Value.mModelOn == modelIndex)
 				{
 					//get riding on position relative to model's previous frame position
-					Vector3	start	=Vector3.Transform(pa.Value.mWorldCenter, oldMatInv);
+					Vector3	start	=Vector3.TransformCoordinate(pa.Value.mWorldCenter, oldMatInv);
 
 					//transform by this frame's mat
-					Vector3	end	=Vector3.Transform(start, newMat);
+					Vector3	end	=Vector3.TransformCoordinate(start, newMat);
 
 					//get delta
 					end	-=pa.Value.mWorldCenter;

@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using UtilityLib;
 
 
 namespace BSPZone
 {
-	public struct ZonePlane : UtilityLib.IReadWriteable
+	public struct ZonePlane
 	{
 		public Vector3	mNormal;
 		public float	mDist;
@@ -153,9 +153,9 @@ namespace BSPZone
 
 			UtilityLib.Mathery.PointsFromPlane(plane.mNormal, plane.mDist, out p0, out p1, out p2);
 
-			p0	=Vector3.Transform(p0, mat);
-			p1	=Vector3.Transform(p1, mat);
-			p2	=Vector3.Transform(p2, mat);
+			p0	=Vector3.TransformCoordinate(p0, mat);
+			p1	=Vector3.TransformCoordinate(p1, mat);
+			p2	=Vector3.TransformCoordinate(p2, mat);
 
 			ZonePlane	ret	=ZonePlane.Blank;
 

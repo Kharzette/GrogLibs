@@ -7,7 +7,7 @@ using System.IO;
 
 namespace BSPZone
 {
-	public class DebugFace : UtilityLib.IReadWriteable
+	public class DebugFace
 	{
 		public Int32	mFirstVert;
 		public Int32	mNumVerts;
