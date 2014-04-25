@@ -52,12 +52,16 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlphaNode.cs" />
+    <Compile Include="AlphaPool.cs" />
     <Compile Include="CelShading.cs" />
     <Compile Include="EffectVariableValue.cs" />
     <Compile Include="IDKeeper.cs" />
     <Compile Include="Material.cs" />
     <Compile Include="MaterialLib.cs" />
+    <Compile Include="PostProcess.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TexAtlas.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj">
