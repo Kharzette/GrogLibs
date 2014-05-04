@@ -531,6 +531,16 @@ namespace UtilityLib
 		}
 
 
+		public static bool CompareFloatEpsilon(float f1, float f2, float epsilon)
+		{
+			if((f1 - f2) < -epsilon || (f1 - f2) > epsilon)
+			{
+				return	false;
+			}
+			return	true;
+		}
+
+
 		public static bool CompareVectorEpsilon(Vector3 v1, Vector3 v2, float epsilon)
 		{
 			if((v1.X - v2.X) < -epsilon || (v1.X - v2.X) > epsilon)
@@ -546,6 +556,12 @@ namespace UtilityLib
 				return	false;
 			}
 			return	true;
+		}
+
+
+		public static bool CompareFloat(float f1, float f2)
+		{
+			return	CompareFloatEpsilon(f1, f2, VCompareEpsilon);
 		}
 
 

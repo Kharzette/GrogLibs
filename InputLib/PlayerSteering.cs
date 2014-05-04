@@ -214,7 +214,7 @@ namespace InputLib
 			}
 			else if(mMethod == SteeringMethod.TwinStick)
 			{
-				throw(new NotImplementedException());
+				UpdateGroundMovement(camForward, camLeft, camUp, actions, out moveVec);
 			}
 			else if(mMethod == SteeringMethod.Platformer)
 			{
@@ -224,6 +224,8 @@ namespace InputLib
 			{
 				throw(new NotImplementedException());
 			}
+
+			mDelta	=moveVec;
 
 			return	mPosition + moveVec;
 		}

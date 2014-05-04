@@ -87,6 +87,8 @@ namespace UtilityLib
 			Device.CreateWithSwapChain(adpt, DeviceCreationFlags.Debug, features,
 				scDesc, out mGD, out mSChain);
 
+			adpt.Dispose();
+
 			mDC	=mGD.ImmediateContext;
 
 			//I always use this, hope it doesn't change somehow
@@ -129,7 +131,7 @@ namespace UtilityLib
 			mRForm.UserResized	+=OnRenderFormResize;
 
 			mGCam	=new UtilityLib.GameCamera(mRForm.ClientSize.Width,
-				mRForm.ClientSize.Height, 16f/9f, 0.1f, 2000f);
+				mRForm.ClientSize.Height, 16f/9f, 0.1f, 3000f);
 		}
 
 
@@ -169,7 +171,7 @@ namespace UtilityLib
 			mDC.Rasterizer.SetViewport(vp);
 			mDC.OutputMerger.SetTargets(mDSView, mBBView);
 
-			mGCam	=new UtilityLib.GameCamera(mRForm.Width, mRForm.Height, 16f/9f, 0.1f, 2000f);
+			mGCam	=new UtilityLib.GameCamera(mRForm.Width, mRForm.Height, 16f/9f, 0.1f, 3000f);
 		}
 
 

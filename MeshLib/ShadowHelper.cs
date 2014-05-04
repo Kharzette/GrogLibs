@@ -2,9 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using UtilityLib;
+
+using SharpDX;
+using SharpDX.DXGI;
+using SharpDX.D3DCompiler;
+using SharpDX.Direct3D11;
+using SharpDX.Direct3D;
+
+//ambiguous stuff
+using Buffer	=SharpDX.Direct3D11.Buffer;
+using Color		=SharpDX.Color;
+using Device	=SharpDX.Direct3D11.Device;
+using MatLib	=MaterialLib.MaterialLib;
+using Resource	=SharpDX.Direct3D11.Resource;
 
 
 namespace MeshLib
@@ -15,8 +26,8 @@ namespace MeshLib
 		public class Shadower
 		{
 			//will be one of these, other will be null
-			public StaticMeshObject	mStatic;
-			public Character		mChar;
+			public StaticMesh	mStatic;
+			public Character	mChar;
 
 			//game specific info for differentiating instances and such
 			public object	mContext;
@@ -28,7 +39,7 @@ namespace MeshLib
 			internal bool		mbShadowNeeded;
 			internal bool		mbDirectional;
 			internal Vector3	mShadowLightPos;
-			internal Texture	mShadowTexture;
+			internal Texture2D	mShadowTexture;
 			internal float		mShadowAtten;
 			internal Matrix		mLightViewProj;
 
@@ -44,16 +55,17 @@ namespace MeshLib
 		}
 
 		GraphicsDevice			mGD;
-		RenderTargetCube		mPShadCube;
-		RenderTarget2D			mPShad;
-		BlendState				mShadowBlend;
+		Texture2D				mPShad;
+		Texture2D				mPShadCube;
+		RenderTargetView		mPShadView;
+		RenderTargetView		mPShadCubeView;
 		MaterialLib.PostProcess	mPost;
 
 		//game data
-		MaterialLib.MaterialLib			mZoneMats;
-		List<Shadower>					mShadowers		=new List<Shadower>();
-		List<MaterialLib.MaterialLib>	mShadowerMats	=new List<MaterialLib.MaterialLib>();
-		float							mDirectionalAttenuation;
+		MatLib			mZoneMats;
+		List<Shadower>	mShadowers		=new List<Shadower>();
+		List<MatLib>	mShadowerMats	=new List<MaterialLib.MaterialLib>();
+		float			mDirectionalAttenuation;
 
 		//delegates back to the game
 		GetCurrentShadowInfoFromLights	mGetShadInfo;
@@ -75,7 +87,7 @@ namespace MeshLib
 
 		public void Initialize(GraphicsDevice gd,
 			int bufferSizeXY, float dirAtten,
-			MaterialLib.MaterialLib zoneMats,
+			MatLib zoneMats,
 			MaterialLib.PostProcess post,
 			GetCurrentShadowInfoFromLights gcsifl,
 			GetTransformedBound gtb)
@@ -83,22 +95,35 @@ namespace MeshLib
 			mShadowers.Clear();
 			mShadowerMats.Clear();
 
-			mShadowBlend	=new BlendState();
+			SampleDescription	sampDesc	=new SampleDescription();
+			sampDesc.Count		=1;
+			sampDesc.Quality	=0;
 
-			mShadowBlend.AlphaBlendFunction		=BlendFunction.Add;
-			mShadowBlend.AlphaDestinationBlend	=Blend.One;
-			mShadowBlend.AlphaSourceBlend		=Blend.One;
-			mShadowBlend.ColorBlendFunction		=BlendFunction.ReverseSubtract;
-			mShadowBlend.ColorDestinationBlend	=Blend.One;
-			mShadowBlend.ColorSourceBlend		=Blend.One;
+			Resource	res	=null;
+
+			Texture2DDescription	texDesc	=new Texture2DDescription();
+			texDesc.ArraySize			=6;
+			texDesc.BindFlags			=BindFlags.RenderTarget | BindFlags.ShaderResource;
+			texDesc.CpuAccessFlags		=CpuAccessFlags.None;
+			texDesc.MipLevels			=1;
+			texDesc.OptionFlags			=ResourceOptionFlags.TextureCube;
+			texDesc.Usage				=ResourceUsage.Default;
+			texDesc.Width				=bufferSizeXY;
+			texDesc.Height				=bufferSizeXY;
+			texDesc.Format				=Format.R16_UNorm;
+			texDesc.SampleDescription	=sampDesc;
 
 			//for point lights
-			mPShadCube	=new RenderTargetCube(gd, bufferSizeXY, false,
-				SurfaceFormat.Single, DepthFormat.None);
+			mPShadCube	=new Texture2D(gd.GD, texDesc);
+
+			texDesc.ArraySize			=1;
+			texDesc.OptionFlags			=ResourceOptionFlags.None;
 
 			//directional
-			mPShad	=new RenderTarget2D(gd, bufferSizeXY, bufferSizeXY, false,
-				SurfaceFormat.Single, DepthFormat.None);
+			mPShad	=new Texture2D(gd.GD, texDesc);
+
+			mPShadCubeView	=new RenderTargetView(gd.GD, mPShadCube);
+			mPShadView		=new RenderTargetView(gd.GD, mPShad);
 
 			mZoneMats				=zoneMats;
 			mPost					=post;
@@ -127,8 +152,6 @@ namespace MeshLib
 
 			//set only the color portion for the shadow render
 			mPost.SetTarget(mGD, "SceneColor", false);
-
-			mGD.BlendState	=mShadowBlend;
 
 			//draw shadow pass
 			if(si.mbShadowNeeded)

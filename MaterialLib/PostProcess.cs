@@ -1,24 +1,35 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Content;
+using UtilityLib;
+using SharpDX;
+using SharpDX.DXGI;
+using SharpDX.Direct3D;
+using SharpDX.Direct3D11;
+
+using Buffer	=SharpDX.Direct3D11.Buffer;
 
 
 namespace MaterialLib
 {
 	public class PostProcess
 	{
-		//targets for doing postery
-		Dictionary<string, RenderTarget2D>	mPostTargets	=new Dictionary<string, RenderTarget2D>();
+		internal struct VertexPositionTexture
+		{
+			internal Vector3	Position;
+			internal Vector2	TextureCoordinate;
+		}
 
-		//bindings for multitarget
-		Dictionary<string, RenderTargetBinding []>	mBindings	=new Dictionary<string, RenderTargetBinding[]>();
+		//targets for doing postery
+		Dictionary<string, RenderTargetView>	mPostTargets	=new Dictionary<string, RenderTargetView>();
+		Dictionary<string, DepthStencilView>	mPostDepths		=new Dictionary<string, DepthStencilView>();
+		Dictionary<string, ShaderResourceView>	mPostTargSRVs	=new Dictionary<string, ShaderResourceView>();
 
 		//for a fullscreen quad
-		VertexBuffer	mQuadVB;
-		IndexBuffer		mQuadIB;
+		Buffer				mQuadVB;
+		Buffer				mQuadIB;
+		VertexBufferBinding	mQuadBinding;
 
 		//effect file that has most of the post stuff in it
 		Effect	mPostFX;
@@ -37,81 +48,89 @@ namespace MaterialLib
 		const float	BlurAmount	=4f;
 
 
-		public PostProcess(GraphicsDeviceManager gdm, ContentManager slib, int resx, int resy)
+		public PostProcess(GraphicsDevice gd, Effect fx, int resx, int resy)
 		{
-			mPostFX	=slib.Load<Effect>("Shaders/Post");
+			mPostFX	=fx;
 
 			mResX		=resx;
 			mResY		=resy;
 			mClearColor	=Color.CornflowerBlue;
 
-			MakeQuad(gdm.GraphicsDevice);
+			MakeQuad(gd);
 
 			InitPostParams();
 		}
 
 
-		public void MakePostTarget(GraphicsDevice gd, string name, bool bPreserve,
-			int resx, int resy, SurfaceFormat surf, DepthFormat depth)
+		public void MakePostTarget(GraphicsDevice gd, string name,
+			int resx, int resy, Format surf)
 		{
-			RenderTarget2D	rend	=null;
-
-			if(bPreserve)
+			Texture2DDescription	targDesc	=new Texture2DDescription()
 			{
-				rend	=new RenderTarget2D(gd, resx, resy, false, surf, depth, 0, RenderTargetUsage.PreserveContents);
-			}
-			else
-			{
-				rend	=new RenderTarget2D(gd, resx, resy, false, surf, depth);
-			}
+				//pick depth format based on feature level
+				Format				=surf,
+				ArraySize			=1,
+				MipLevels			=1,
+				Width				=resx,
+				Height				=resy,
+				SampleDescription	=new SampleDescription(1, 0),
+				Usage				=ResourceUsage.Default,
+				BindFlags			=BindFlags.RenderTarget | BindFlags.ShaderResource,
+				CpuAccessFlags		=CpuAccessFlags.None,
+				OptionFlags			=ResourceOptionFlags.None
+			};
 
-			mPostTargets.Add(name, rend);
+			Texture2D	targ	=new Texture2D(gd.GD, targDesc);
+
+			RenderTargetView	targView	=new RenderTargetView(gd.GD, targ);
+
+			ShaderResourceView	targSRV	=new ShaderResourceView(gd.GD, targ);
+
+			mPostTargets.Add(name, targView);
+			mPostTargSRVs.Add(name, targSRV);
 		}
 
 
-		public void MakePostTargetBindingArray(string name, List<string> targets)
+		public void MakePostDepth(GraphicsDevice gd, string name,
+			int resx, int resy, Format surf)
 		{
-			foreach(string targ in targets)
+			Texture2DDescription	targDesc	=new Texture2DDescription()
 			{
-				if(!mPostTargets.ContainsKey(targ))
-				{
-					return;
-				}
-			}
+				//pick depth format based on feature level
+				Format				=surf,
+				ArraySize			=1,
+				MipLevels			=1,
+				Width				=resx,
+				Height				=resy,
+				SampleDescription	=new SampleDescription(1, 0),
+				Usage				=ResourceUsage.Default,
+				BindFlags			=BindFlags.RenderTarget | BindFlags.ShaderResource,
+				CpuAccessFlags		=CpuAccessFlags.None,
+				OptionFlags			=ResourceOptionFlags.None
+			};
 
-			int					idx		=0;
-			RenderTargetBinding	[]binds	=new RenderTargetBinding[targets.Count];
-			foreach(string targ in targets)
-			{
-				binds[idx++]	=new RenderTargetBinding(mPostTargets[targ]);
-			}
+			Texture2D	targ	=new Texture2D(gd.GD, targDesc);
 
-			mBindings.Add(name, binds);
-		}
+			DepthStencilView	targView	=new DepthStencilView(gd.GD, targ);
 
-
-		//hax for ludum dare
-		public void SetIntensity(float val, float val2)
-		{
-			mPostFX.Parameters["mBloomIntensity"].SetValue(val);
-			mPostFX.Parameters["mOpacity"].SetValue(val2);
+			mPostDepths.Add(name, targView);
 		}
 
 
 		//set up parameters with known values
 		void InitPostParams()
 		{
-			mPostFX.Parameters["mTexelSteps"].SetValue(1.0f);
-			mPostFX.Parameters["mThreshold"].SetValue(0.01f);
-			mPostFX.Parameters["mScreenSize"].SetValue(new Vector2(mResX, mResY));
-			mPostFX.Parameters["mOpacity"].SetValue(0.75f);
+			mPostFX.GetVariableByName("mTexelSteps").AsScalar().Set(1f);
+			mPostFX.GetVariableByName("mThreshold").AsScalar().Set(0.01f);
+			mPostFX.GetVariableByName("mScreenSize").AsVector().Set(new Vector2(mResX, mResY));
+			mPostFX.GetVariableByName("mOpacity").AsScalar().Set(0.75f);
 
-			//bloom settings
-			mPostFX.Parameters["mBloomThreshold"].SetValue(0.25f);
-			mPostFX.Parameters["mBloomIntensity"].SetValue(1.25f);
-			mPostFX.Parameters["mBloomSaturation"].SetValue(1f);
-			mPostFX.Parameters["mBaseIntensity"].SetValue(1f);
-			mPostFX.Parameters["mBaseSaturation"].SetValue(1f);
+			//bloomstuffs
+			mPostFX.GetVariableByName("mBloomThreshold").AsScalar().Set(0.25f);
+			mPostFX.GetVariableByName("mBloomIntensity").AsScalar().Set(1.25f);
+			mPostFX.GetVariableByName("mBloomSaturation").AsScalar().Set(1f);
+			mPostFX.GetVariableByName("mBaseIntensity").AsScalar().Set(1f);
+			mPostFX.GetVariableByName("mBaseSaturation").AsScalar().Set(1f);
 
 			InitBlurParams(1.0f / (mResX / 2), 0, 0, 1.0f / (mResY / 2));
 
@@ -123,23 +142,20 @@ namespace MaterialLib
 
 		void SetBlurParams(bool bX)
 		{
-			EffectParameter weightsParameterX, offsetsParameterX;
-			EffectParameter weightsParameterY, offsetsParameterY;
-
-			weightsParameterX	=mPostFX.Parameters["mWeightsX"];
-			offsetsParameterX	=mPostFX.Parameters["mOffsetsX"];
-			weightsParameterY	=mPostFX.Parameters["mWeightsY"];
-			offsetsParameterY	=mPostFX.Parameters["mOffsetsY"];
+			EffectScalarVariable	weightsX	=mPostFX.GetVariableByName("mWeightsX").AsScalar();
+			EffectScalarVariable	weightsY	=mPostFX.GetVariableByName("mWeightsX").AsScalar();
+			EffectVectorVariable	offsetsX	=mPostFX.GetVariableByName("mOffsetsX").AsVector();
+			EffectVectorVariable	offsetsY	=mPostFX.GetVariableByName("mOffsetsY").AsVector();
 
 			if(bX)
 			{
-				weightsParameterX.SetValue(mSampleWeightsX);
-				offsetsParameterX.SetValue(mSampleOffsetsX);
+				weightsX.Set(mSampleWeightsX);
+				offsetsX.Set(mSampleOffsetsX);
 			}
 			else
 			{
-				weightsParameterY.SetValue(mSampleWeightsY);
-				offsetsParameterY.SetValue(mSampleOffsetsY);
+				weightsY.Set(mSampleWeightsY);
+				offsetsY.Set(mSampleOffsetsY);
 			}
 		}
 
@@ -147,17 +163,10 @@ namespace MaterialLib
 		//from the xna bloom sample
 		void InitBlurParams(float dxX, float dyX, float dxY, float dyY)
 		{
-			EffectParameter weightsParameterX, offsetsParameterX;
-			EffectParameter weightsParameterY, offsetsParameterY;
-
-			weightsParameterX	=mPostFX.Parameters["mWeightsX"];
-			offsetsParameterX	=mPostFX.Parameters["mOffsetsX"];
-			weightsParameterY	=mPostFX.Parameters["mWeightsY"];
-			offsetsParameterY	=mPostFX.Parameters["mOffsetsY"];
-			
-			//Look up how many samples our gaussian blur effect supports.
-			int	sampleCountX	=weightsParameterX.Elements.Count;
-			int	sampleCountY	=weightsParameterY.Elements.Count;
+			//Doesn't seem to be a way to get array sizes from shaders any more
+			//these values need to match KERNEL_SIZE in post.fx
+			int	sampleCountX	=61;
+			int	sampleCountY	=61;
 			
 			//Create temporary arrays for computing our filter settings.
 			mSampleWeightsX	=new float[sampleCountX];
@@ -264,11 +273,6 @@ namespace MaterialLib
 			verts[2].TextureCoordinate = new Vector2(0, 1);
 			verts[3].TextureCoordinate = new Vector2(1, 1);
 
-			mQuadVB	=new VertexBuffer(gd, typeof(VertexPositionTexture), 4, BufferUsage.WriteOnly);
-			mQuadVB.SetData(verts);
-
-			mQuadIB	=new IndexBuffer(gd, IndexElementSize.SixteenBits, 6, BufferUsage.WriteOnly);
-
 			UInt16	[]inds	=new UInt16[6];
 			inds[0]	=0;
 			inds[1]	=1;
@@ -277,7 +281,20 @@ namespace MaterialLib
 			inds[4]	=3;
 			inds[5]	=2;
 
-			mQuadIB.SetData(inds);
+			BufferDescription	bd	=new BufferDescription(
+				20 * verts.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			mQuadVB	=Buffer.Create(gd.GD, verts, bd);
+			
+			BufferDescription	id	=new BufferDescription(inds.Length * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			mQuadIB	=Buffer.Create<UInt16>(gd.GD, inds, id);
+
+			mQuadBinding	=new VertexBufferBinding(mQuadVB, 20, 0);
 		}
 
 
@@ -287,55 +304,50 @@ namespace MaterialLib
 		}
 
 
-		public void SetTarget(GraphicsDevice gd, string targName, bool bClear)
+		public void SetTargets(GraphicsDevice gd, string targName, string depthName)
 		{
 			if(targName == "null")
 			{
-				gd.SetRenderTarget(null);
+				gd.DC.OutputMerger.SetRenderTargets(null, (RenderTargetView)null);
 			}
-			else if(mBindings.ContainsKey(targName))
+			else if(mPostTargets.ContainsKey(targName)
+				&& mPostDepths.ContainsKey(depthName))
 			{
-				gd.SetRenderTargets(mBindings[targName]);
-			}
-			else if(mPostTargets.ContainsKey(targName))
-			{
-				gd.SetRenderTarget(mPostTargets[targName]);
+				gd.DC.OutputMerger.SetRenderTargets(mPostDepths[depthName], mPostTargets[targName]);
 			}
 			else
 			{
 				//need some sort of error here
+				Debug.Assert(false);
 				return;
 			}
-
-			if(bClear)
-			{
-				gd.Clear(mClearColor);
-			}
 		}
 
 
-		public Texture2D GetTargetTexture(string targName)
-		{
-			return	mPostTargets[targName];
-		}
+//		public Texture2D GetTargetTexture(string targName)
+//		{
+//			return	mPostTargets[targName];
+//		}
 
 
 		public void SetParameter(string paramName, string targName)
 		{
-			mPostFX.Parameters[paramName].SetValue(mPostTargets[targName]);
+			mPostFX.GetVariableByName(paramName).AsShaderResource().SetResource(mPostTargSRVs[targName]);
 		}
 
 
 		public void DrawStage(GraphicsDevice gd, string technique)
 		{
-			gd.SetVertexBuffer(mQuadVB);
-			gd.Indices	=mQuadIB;
+			gd.DC.InputAssembler.SetVertexBuffers(0, mQuadBinding);
+			gd.DC.InputAssembler.SetIndexBuffer(mQuadIB, Format.R16_UInt, 0);
 
-			mPostFX.CurrentTechnique	=mPostFX.Techniques[technique];
+			EffectTechnique	et	=mPostFX.GetTechniqueByName(technique);
 
-			mPostFX.CurrentTechnique.Passes[0].Apply();
+			EffectPass	ep	=et.GetPassByIndex(0);
 
-			gd.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, 4, 0, 2);
+			ep.Apply(gd.DC);
+
+			gd.DC.DrawIndexed(6, 0, 0);
 		}
 	}
 }

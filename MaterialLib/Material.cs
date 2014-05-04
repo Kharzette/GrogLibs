@@ -23,6 +23,7 @@ namespace MaterialLib
 		string			mName;			//name of the material
 		Effect			mEffect;		//ref of the shader
 		EffectTechnique	mTechnique;		//technique to use with this material
+		int				mNumPasses;		//number of passes for the technique
 
 		//vert formats expected
 		List<InputLayout>	mLayouts	=new List<InputLayout>();
@@ -90,6 +91,12 @@ namespace MaterialLib
 			ret.Ignore(ignore.ToList());
 
 			return	ret;
+		}
+
+
+		internal int GetNumPasses()
+		{
+			return	mNumPasses;
 		}
 
 
@@ -520,6 +527,8 @@ namespace MaterialLib
 
 			Device	dev	=mEffect.Device;
 
+			mNumPasses	=0;
+
 			for(int i=0;;i++)
 			{
 				EffectPass	ep	=mTechnique.GetPassByIndex(i);
@@ -531,6 +540,8 @@ namespace MaterialLib
 				{
 					break;
 				}
+
+				mNumPasses++;
 
 				EffectShaderDescription	sd	=ep.VertexShaderDescription.
 					Variable.GetShaderDescription(ep.VertexShaderDescription.Index);

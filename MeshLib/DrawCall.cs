@@ -3,26 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace MeshLib
 {
 	public class DrawCall
 	{
-		public int		mNumVerts;
+		public int		mCount;			//vert or index count depending on draw
 		public int		mStartIndex;	//offsets
-		public int		mPrimCount;		//num prims per call
-		public int		mMinVertIndex;	//minimum vertex used in this call
 		public Vector3	mSortPoint;
 
 
 		void Write(BinaryWriter bw)
 		{
-			bw.Write(mNumVerts);
+			bw.Write(mCount);
 			bw.Write(mStartIndex);
-			bw.Write(mPrimCount);
-			bw.Write(mMinVertIndex);
 
 			bw.Write(mSortPoint.X);
 			bw.Write(mSortPoint.Y);
@@ -32,10 +28,8 @@ namespace MeshLib
 
 		void Read(BinaryReader br)
 		{
-			mNumVerts		=br.ReadInt32();
+			mCount			=br.ReadInt32();
 			mStartIndex		=br.ReadInt32();
-			mPrimCount		=br.ReadInt32();
-			mMinVertIndex	=br.ReadInt32();
 
 			mSortPoint.X	=br.ReadSingle();
 			mSortPoint.Y	=br.ReadSingle();

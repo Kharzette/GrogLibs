@@ -1,8 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
 using System.Diagnostics;
+using UtilityLib;
 using SharpDX;
+using SharpDX.DXGI;
+using SharpDX.Direct3D11;
+
+//ambiguous stuff
+using Buffer	=SharpDX.Direct3D11.Buffer;
+using Device	=SharpDX.Direct3D11.Device;
+using MatLib	=MaterialLib.MaterialLib;
 
 
 namespace MaterialLib
@@ -15,40 +23,37 @@ namespace MaterialLib
 		List<AlphaNode>	mAlphas	=new List<AlphaNode>();
 
 
-		public void StoreDraw(Vector3 sortPoint, Material matRef,
-			VertexBuffer vb, IndexBuffer ib, Matrix worldMat,
-			Int32 baseVert, Int32 minVertIndex,
-			Int32 numVerts, Int32 startIndex, Int32 primCount)
+		public void StoreDraw(MatLib mlib, Vector3 sortPoint, string matName,
+			VertexBufferBinding vbb, Buffer ib, Matrix worldMat, Int32 indexCount)
 		{
-			AlphaNode	an	=new AlphaNode(sortPoint, matRef,
-				vb, ib, worldMat, baseVert, minVertIndex,
-				numVerts, startIndex, primCount);
+			AlphaNode	an	=new AlphaNode(mlib, sortPoint, matName,
+				vbb, ib, worldMat, indexCount);
 
 			mAlphas.Add(an);
 		}
 
 
-		public void StoreParticleDraw(Vector3 sortPoint,
-			VertexBuffer vb, Int32 primCount,
-			bool bCel, Vector4 color,
-			Effect fx, Texture2D tex,
+		public void StoreParticleDraw(MatLib mlib,
+			Vector3 sortPoint,
+			VertexBufferBinding vbb, Int32 vertCount,
+			Vector4 color, ShaderResourceView tex,
 			Matrix view, Matrix proj)
 		{
-			AlphaNode	an	=new AlphaNode(sortPoint, vb,
-				primCount, bCel, color, fx, tex, view, proj);
+			AlphaNode	an	=new AlphaNode(mlib, sortPoint, vbb,
+				vertCount, color, tex, view, proj);
 
 			mAlphas.Add(an);
 		}
 
 
-		public void DrawAll(GraphicsDevice g, MaterialLib mlib, Vector3 eyePos,
+		public void DrawAll(GraphicsDevice gd, Vector3 eyePos,
 			int numShadows, RenderShadows rendShad)
 		{
 			Sort(eyePos);
 
 			foreach(AlphaNode an in mAlphas)
 			{
-				an.Draw(g, mlib, numShadows, rendShad);
+				an.Draw(gd);
 			}
 
 			//clear nodes when done

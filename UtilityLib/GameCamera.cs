@@ -135,6 +135,22 @@ namespace UtilityLib
 		}
 
 
+		public void UpdateTopDown(Vector3 focusPos, float yaw, float povDist)
+		{
+			Matrix	yawMat		=Matrix.RotationY(MathUtil.DegreesToRadians(yaw));
+			Vector3	yawVec		=Vector3.TransformNormal(Vector3.UnitX, yawMat);
+			Vector3	aimVec		=yawVec + Vector3.Down;
+
+			aimVec.Normalize();
+
+			Vector3	camPos	=focusPos - aimVec * povDist;
+
+			mMATView		=Matrix.LookAtLH(camPos, focusPos, Vector3.Up);
+			mMatViewInverse	=Matrix.Invert(mMATView);			
+			mFrust.Matrix	=mMATView * mMATProjection;
+		}
+
+
 		public void Update(Vector3 camPos, float pitch, float yaw, float roll)
 		{
 			UpdateMatrices(camPos, pitch, yaw, roll);

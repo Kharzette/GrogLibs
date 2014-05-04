@@ -46,6 +46,9 @@ namespace MaterialLib
 		//list of shaders available
 		Dictionary<string, Effect>	mFX	=new Dictionary<string, Effect>();
 
+		//list of textures
+		Dictionary<string, ShaderResourceView>	mSRVs	=new Dictionary<string, ShaderResourceView>();
+
 		//list of parameter variables per shader
 		Dictionary<string, List<EffectVariable>>	mVars	=new Dictionary<string, List<EffectVariable>>();
 
@@ -353,6 +356,21 @@ namespace MaterialLib
 		}
 
 
+		public void AddMap(string name, ShaderResourceView srv)
+		{
+			mSRVs.Add(name, srv);
+		}
+
+
+		public void UpdateWVP(Matrix world, Matrix view, Matrix projection, Vector3 eyePos)
+		{
+			SetParameterForAll("mWorld", world);
+			SetParameterForAll("mView", view);
+			SetParameterForAll("mProjection", projection);
+			SetParameterForAll("mEyePos", eyePos);
+		}
+
+
 		public void GuessParameterVisibility(string matName)
 		{
 			if(!mMats.ContainsKey(matName))
@@ -464,6 +482,17 @@ namespace MaterialLib
 			}
 
 			var.AsMatrix().SetMatrix(mats);
+		}
+
+
+		public int GetNumMaterialPasses(string matName)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return	-1;
+			}
+
+			return	mMats[matName].GetNumPasses();
 		}
 
 

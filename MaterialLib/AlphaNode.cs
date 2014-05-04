@@ -1,8 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
 using System.Diagnostics;
+using UtilityLib;
 using SharpDX;
+using SharpDX.DXGI;
+using SharpDX.Direct3D11;
+
+//ambiguous stuff
+using Buffer	=SharpDX.Direct3D11.Buffer;
+using Device	=SharpDX.Direct3D11.Device;
+using MatLib	=MaterialLib.MaterialLib;
 
 
 namespace MaterialLib
@@ -43,60 +51,52 @@ namespace MaterialLib
 
 	internal class AlphaNode
 	{
-		Vector3		mSortPoint;
-		Material	mMaterial;
+		Vector3	mSortPoint;
+		string	mMaterialName;
+
+		MatLib	mMatLib;
 
 		//drawprim setup stuff
-		VertexBuffer		mVB;
-		IndexBuffer			mIB;
+		VertexBufferBinding	mVBB;
+		Buffer				mIB;
 		Matrix				mWorldMat;
 
-		//drawprim call numbers
-		Int32	mBaseVertex;
-		Int32	mMinVertexIndex;
-		Int32	mNumVerts;
-		Int32	mStartIndex;
-		Int32	mPrimCount;
+		//drawprim index or vertex count
+		Int32	mCount;
 
-		bool		mbParticle;	//particle draw?
-		bool		mbCel;
-		Vector4		mColor;
-		Effect		mFX;
-		Texture2D	mTex;
-		Matrix		mView;
-		Matrix		mProj;
+		bool				mbParticle;	//particle draw?
+		Vector4				mColor;
+		ShaderResourceView	mTex;
+		Matrix				mView, mProj;
 
 
-		internal AlphaNode(Vector3 sortPoint, Material matRef,
-			VertexBuffer vb, IndexBuffer ib, Matrix worldMat,
-			Int32 baseVert, Int32 minVertIndex,
-			Int32 numVerts, Int32 startIndex, Int32 primCount)
+		internal AlphaNode(MatLib matLib,
+			Vector3 sortPoint, string matName,
+			VertexBufferBinding vbb, Buffer ib,
+			Matrix worldMat, Int32 indexCount)
 		{
+			mMatLib			=matLib;
 			mSortPoint		=sortPoint;
-			mMaterial		=matRef;
-			mVB				=vb;
+			mMaterialName	=matName;
+			mVBB			=vbb;
 			mIB				=ib;
 			mWorldMat		=worldMat;
-			mBaseVertex		=baseVert;
-			mMinVertexIndex	=minVertIndex;
-			mNumVerts		=numVerts;
-			mStartIndex		=startIndex;
-			mPrimCount		=primCount;
+			mCount			=indexCount;
 		}
 
 
-		internal AlphaNode(Vector3 sortPoint,
-			VertexBuffer vb, Int32 primCount,
-			bool bCel, Vector4 color,
-			Effect fx, Texture2D tex,
+		internal AlphaNode(MatLib matLib,
+			Vector3 sortPoint,
+			VertexBufferBinding vbb,
+			Int32 vertCount, Vector4 color,
+			ShaderResourceView tex,
 			Matrix view, Matrix proj)
 		{
+			mMatLib		=matLib;
 			mSortPoint	=sortPoint;
-			mVB			=vb;
-			mPrimCount	=primCount;
-			mbCel		=bCel;
+			mVBB		=vbb;
+			mCount		=vertCount;
 			mColor		=color;
-			mFX			=fx;
 			mTex		=tex;
 			mView		=view;
 			mProj		=proj;
@@ -105,108 +105,60 @@ namespace MaterialLib
 		}
 
 
-		internal void Draw(GraphicsDevice g, MaterialLib mlib,
-			int numShadows, AlphaPool.RenderShadows renderShadows)
+		internal void Draw(GraphicsDevice gd)
 		{
 			if(mbParticle)
 			{
-				DrawParticle(g);
+				DrawParticle(gd);
 			}
 			else
 			{
-				DrawRegular(g, mlib, numShadows, renderShadows);
+				DrawRegular(gd);
 			}
 		}
 
 
-		void DrawParticle(GraphicsDevice g)
+		void DrawParticle(GraphicsDevice gd)
 		{
-            g.SetVertexBuffer(mVB, 0);
-
-			if(mPrimCount == 0)
+			if(mCount <= 0)
 			{
 				return;
 			}
 
-			g.DepthStencilState	=DepthStencilState.DepthRead;
-			g.BlendState		=BlendState.Additive;
-			g.RasterizerState	=RasterizerState.CullCounterClockwise;
+			gd.DC.InputAssembler.SetVertexBuffers(0, mVBB);
 
-			if(mbCel)
-			{
-				mFX.CurrentTechnique	=mFX.Techniques["ParticleCel"];
-			}
-			else
-			{
-				mFX.CurrentTechnique	=mFX.Techniques["Particle"];
-			}
+			mMatLib.SetMaterialParameter(mMaterialName, "mSolidColour", mColor);
+			mMatLib.SetMaterialParameter(mMaterialName, "mTexture", mTex);
+			mMatLib.SetMaterialParameter(mMaterialName, "mView", mView);
+			mMatLib.SetMaterialParameter(mMaterialName, "mProjection", mProj);
 
-			mFX.Parameters["mSolidColour"].SetValue(mColor);
-			mFX.Parameters["mTexture"].SetValue(mTex);
-			mFX.Parameters["mView"].SetValue(mView);
-			mFX.Parameters["mProjection"].SetValue(mProj);
+			mMatLib.ApplyMaterialPass(mMaterialName, gd.DC, 0);
 
-			mFX.CurrentTechnique.Passes[0].Apply();
-
-			g.DrawPrimitives(PrimitiveType.TriangleList, 0, mPrimCount);
-
-			g.SetVertexBuffer(null);
+			gd.DC.Draw(mCount, 0);
 		}
 
 
-		void DrawRegular(GraphicsDevice g, MaterialLib mlib,
-			int numShadows, AlphaPool.RenderShadows renderShadows)
+		void DrawRegular(GraphicsDevice gd)
 		{
-            g.SetVertexBuffer(mVB, 0);
-			g.Indices	=mIB;
-
-			if(mNumVerts == 0 || mPrimCount == 0)
+			if(mCount <= 0)
 			{
 				return;
 			}
 
-			Effect	fx	=mlib.GetShader(mMaterial.ShaderName);
-			if(fx == null)
-			{
-				return;
-			}
+			gd.DC.InputAssembler.SetVertexBuffers(0, mVBB);
+			gd.DC.InputAssembler.SetIndexBuffer(mIB, Format.R16_UInt, 0);
 
-			mlib.ApplyParameters(mMaterial.Name);
+			mMatLib.SetMaterialParameter(mMaterialName, "mWorld", mWorldMat);
 
-			mMaterial.ApplyRenderStates(g);
+			mMatLib.ApplyMaterialPass(mMaterialName, gd.DC, 0);
 
-			fx.Parameters["mWorld"].SetValue(mWorldMat);
-
-			fx.CurrentTechnique.Passes[0].Apply();
-
-			g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-				mBaseVertex, mMinVertexIndex, mNumVerts,
-				mStartIndex, mPrimCount);
-
-			//draw shadows
-			for(int i=0;i < numShadows;i++)
-			{
-				renderShadows(i);
-
-				g.SetVertexBuffer(mVB, 0);
-				g.Indices	=mIB;
-
-				mlib.ApplyParameters(mMaterial.Name);
-
-				fx.Parameters["mWorld"].SetValue(mWorldMat);
-
-				fx.CurrentTechnique.Passes[1].Apply();
-
-				g.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-					mBaseVertex, mMinVertexIndex, mNumVerts,
-					mStartIndex, mPrimCount);
-			}
+			gd.DC.DrawIndexed(mCount, 0, 0);
 		}
 
 
 		internal float DistSquared(Vector3 mEye)
 		{
-			Vector3	transformedSort	=Vector3.Transform(mSortPoint, mWorldMat);
+			Vector3	transformedSort	=Vector3.TransformCoordinate(mSortPoint, mWorldMat);
 
 			return	Vector3.DistanceSquared(transformedSort, mEye);
 		}

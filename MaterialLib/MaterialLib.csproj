@@ -64,12 +64,6 @@
     <Compile Include="TexAtlas.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\UtilityLib\UtilityLib.csproj">
-      <Project>{C2A1DDD2-0237-4CF3-8CBD-C77388FCC54D}</Project>
-      <Name>UtilityLib</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +73,12 @@
     <Content Include="sharpdx_direct3d11_effects_x86.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\UtilityLib\UtilityLib.csproj">
+      <Project>{C2A1DDD2-0237-4CF3-8CBD-C77388FCC54D}</Project>
+      <Name>UtilityLib</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

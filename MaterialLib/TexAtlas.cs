@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using SharpDX;
+using SharpDX.DXGI;
+using SharpDX.Direct3D11;
+using UtilityLib;
+
+using Buffer	=SharpDX.Direct3D11.Buffer;
 
 
 namespace MaterialLib
@@ -158,7 +163,9 @@ namespace MaterialLib
 
 	public class TexAtlas
 	{
-		Texture2D	mAtlasTexture;
+		Texture2D			mAtlasTexture;
+		ShaderResourceView	mSRV;
+
 		TexNode		mRoot;
 		Color		[]mBuildArray;
 		int			mWidth, mHeight;
@@ -179,80 +186,45 @@ namespace MaterialLib
 			mWidth	=width;
 			mHeight	=height;
 
-			mRoot			=new TexNode(width, height);
-			mAtlasTexture	=new Texture2D(g, width, height,
-								false, SurfaceFormat.Color);
+			mBuildArray	=new Color[mWidth * mHeight];
+
+			mRoot	=new TexNode(width, height);
 		}
 
 
-		public Texture2D GetAtlasTexture()
+		public ShaderResourceView GetAtlasSRV()
 		{
-			return	mAtlasTexture;
+			return	mSRV;
 		}
 
 
-		public void Finish()
+		public void Finish(GraphicsDevice gd)
 		{
-			if(mBuildArray != null)
-			{
-				mAtlasTexture.SetData<Color>(mBuildArray);
-			}
-
-			mBuildArray	=null;
-		}
-
-
-		public bool Insert(Color[] tex, int texW, int texH,
-			out double scaleU, out double scaleV, out double uoffs, out double voffs)
-		{
-			TexNode	n	=mRoot.Insert(texW, texH);
-
-			scaleU = scaleV = uoffs = voffs = 0.0;
-
-			if(n == null)
-			{
-				return false;
-			}
-
-			//copy pixels in
 			if(mBuildArray == null)
 			{
-				mBuildArray	=new Color[mWidth * mHeight];
-				mAtlasTexture.GetData<Color>(mBuildArray);
+				return;
 			}
 
-			Rectangle	target	=n.GetRect();
+			DataStream	ds	=new DataStream(mWidth * mHeight * 4, true, true);
 
-			int c	=0;
-			for(int y=target.Top;y < target.Bottom;y++)
+			foreach(Color c in mBuildArray)
 			{
-				for(int x=target.Left;x < target.Right;x++, c++)
-				{
-					mBuildArray[(y * mWidth) + x]	=tex[c];
-				}
+				ds.Write(c);
 			}
 
-			//maybe squeeze a little extra precision here
-			scaleU	=(double)texW / (double)mWidth;
-			scaleV	=(double)texH / (double)mHeight;
-
-			//get offsets in zero to one space
-			uoffs	=((double)target.Left / (double)mWidth);
-			voffs	=((double)target.Top / (double)mHeight);
-
-			return	true;
+			InitTex(gd, ds);
 		}
 
 
 		public void Write(BinaryWriter bw)
 		{
-			//grab color bits
-			byte	[]atlasTex	=new byte[mWidth * mHeight * 4];
-			mAtlasTexture.GetData<byte>(atlasTex);
-
 			bw.Write(mWidth);
 			bw.Write(mHeight);
-			bw.Write(atlasTex, 0, atlasTex.Length);
+
+			foreach(Color c in mBuildArray)
+			{
+				bw.Write(c.ToRgba());
+			}
 
 			mRoot.Write(bw);
 		}
@@ -263,31 +235,48 @@ namespace MaterialLib
 			mWidth	=br.ReadInt32();
 			mHeight	=br.ReadInt32();
 
-			mAtlasTexture	=new Texture2D(g, mWidth, mHeight,
-								false, SurfaceFormat.Color);
-#if XBOX
-			Color	[]atlas	=new Color[mWidth * mHeight];
-			for(int i=0;i < (mWidth * mHeight);i++)
-			{
-				byte	R	=br.ReadByte();
-				byte	G	=br.ReadByte();
-				byte	B	=br.ReadByte();
-				byte	A	=br.ReadByte();
+			DataStream	ds	=new DataStream(mWidth * mHeight * 4, true, true);
 
-				int	ir	=R;
-				int	ig	=G;
-				int	ib	=B;
-
-				atlas[i]	=new Color(ir, ig, ib, A);
-			}
-			mAtlasTexture.SetData<Color>(atlas);
-#else
 			byte	[]atlas	=br.ReadBytes(mWidth * mHeight * 4);
 
-			mAtlasTexture.SetData<byte>(atlas);
-#endif
+			ds.Write(atlas, 0, mWidth * mHeight * 4);
+
+			InitTex(g, ds);
+
 			mRoot	=new TexNode(mWidth, mHeight);
 			mRoot.Read(br);
+		}
+
+
+		void InitTex(GraphicsDevice gd, DataStream ds)
+		{
+			SampleDescription	sampDesc	=new SampleDescription();
+			sampDesc.Count		=1;
+			sampDesc.Quality	=0;
+
+			Texture2DDescription	texDesc	=new Texture2DDescription();
+			texDesc.ArraySize			=1;
+			texDesc.BindFlags			=BindFlags.ShaderResource;
+			texDesc.CpuAccessFlags		=CpuAccessFlags.None;
+			texDesc.MipLevels			=1;
+			texDesc.OptionFlags			=ResourceOptionFlags.None;
+			texDesc.Usage				=ResourceUsage.Immutable;
+			texDesc.Width				=mWidth;
+			texDesc.Height				=mHeight;
+			texDesc.Format				=Format.R8G8B8A8_UInt;
+			texDesc.SampleDescription	=sampDesc;
+			
+			DataBox	[]dbs	=new DataBox[1];
+
+			dbs[0]	=new DataBox(ds.DataPointer,
+				texDesc.Width *
+				(int)FormatHelper.SizeOfInBytes(texDesc.Format),
+				texDesc.Width * texDesc.Height *
+				(int)FormatHelper.SizeOfInBytes(texDesc.Format));
+
+			mAtlasTexture	=new Texture2D(gd.GD, texDesc);
+
+			mSRV	=new ShaderResourceView(gd.GD, mAtlasTexture);
 		}
 	}
 }
