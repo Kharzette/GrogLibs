@@ -65,7 +65,7 @@ namespace MaterialLib
 
 			MakeQuad(gd);
 
-			InitPostParams();
+			InitPostParams(gd.GD.FeatureLevel == FeatureLevel.Level_9_3);
 		}
 
 
@@ -125,11 +125,12 @@ namespace MaterialLib
 
 
 		//set up parameters with known values
-		void InitPostParams()
+		void InitPostParams(bool bNineThree)
 		{
 			mPostFX.GetVariableByName("mTexelSteps").AsScalar().Set(1f);
 			mPostFX.GetVariableByName("mThreshold").AsScalar().Set(0.01f);
 			mPostFX.GetVariableByName("mScreenSize").AsVector().Set(new Vector2(mResX, mResY));
+			mPostFX.GetVariableByName("mInvViewPort").AsVector().Set(new Vector2(1f / mResX, 1f / mResY));
 			mPostFX.GetVariableByName("mOpacity").AsScalar().Set(0.75f);
 
 			//bloomstuffs
@@ -139,7 +140,7 @@ namespace MaterialLib
 			mPostFX.GetVariableByName("mBaseIntensity").AsScalar().Set(1f);
 			mPostFX.GetVariableByName("mBaseSaturation").AsScalar().Set(1f);
 
-			InitBlurParams(1.0f / (mResX / 2), 0, 0, 1.0f / (mResY / 2));
+			InitBlurParams(1.0f / (mResX / 2), 0, 0, 1.0f / (mResY / 2), bNineThree);
 
 			//hidef can afford to store these once
 			SetBlurParams(true);
@@ -168,12 +169,23 @@ namespace MaterialLib
 
 
 		//from the xna bloom sample
-		void InitBlurParams(float dxX, float dyX, float dxY, float dyY)
+		void InitBlurParams(float dxX, float dyX, float dxY, float dyY, bool bNineThree)
 		{
+			int	sampleCountX;
+			int	sampleCountY;
+
 			//Doesn't seem to be a way to get array sizes from shaders any more
 			//these values need to match KERNEL_SIZE in post.fx
-			int	sampleCountX	=61;
-			int	sampleCountY	=61;
+			if(bNineThree)
+			{
+				sampleCountX	=15;
+				sampleCountY	=15;
+			}
+			else
+			{
+				sampleCountX	=61;
+				sampleCountY	=61;
+			}
 			
 			//Create temporary arrays for computing our filter settings.
 			mSampleWeightsX	=new float[sampleCountX];
@@ -378,6 +390,11 @@ namespace MaterialLib
 			gd.DC.InputAssembler.SetIndexBuffer(mQuadIB, Format.R16_UInt, 0);
 
 			EffectTechnique	et	=mPostFX.GetTechniqueByName(technique);
+
+			if(!et.IsValid)
+			{
+				return;
+			}
 
 			EffectPass	ep	=et.GetPassByIndex(0);
 

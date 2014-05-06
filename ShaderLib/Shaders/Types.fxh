@@ -3,6 +3,10 @@
 #define _TYPESFXH
 
 
+//vertex shader inputs
+//these all generally have a POSITION and
+//maybe some other stuff, and are the same
+//on all feature levels except where ifdefd
 struct VPos
 {
 	float3	Position	: POSITION;
@@ -400,6 +404,10 @@ struct VPosTex04Tex14Tex24Tex34Tex44Tex54
 	float4	TexCoord5	: TEXCOORD5;
 };
 
+
+//pixel shader input stuff for > 9_3 feature
+//levels, uses SV_POSITION and the pixel shader
+//is free to read from it.
 struct VVPosNorm
 {
 	float4	Position	: SV_POSITION;
@@ -639,4 +647,16 @@ struct VVPosTex04Tex14Tex24Tex34Tex44Tex54
 	float4	TexCoord4	: TEXCOORD4;
 	float4	TexCoord5	: TEXCOORD5;
 };
+
+
+//9_3 specific pixel shader inputs, these
+//use VPOS instead of SV_POSITION for
+//screen stuff, since SV_POSITION can't be
+//read from 9_3
+struct VVPos93
+{
+	float4	Position	: SV_POSITION;
+	float4	VPos		: VPOS;
+};
+
 #endif	//_TYPESFXH

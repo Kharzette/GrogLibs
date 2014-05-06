@@ -668,18 +668,22 @@ namespace MaterialLib
 						if(Directory.Exists("CompiledShaders"))
 						{
 							//see if a precompiled exists
-							DirectoryInfo	preDi	=new DirectoryInfo(
-								AppDomain.CurrentDomain.BaseDirectory +
-								"/CompiledShaders/" + macs[0].Name);
-
-							FileInfo[]	preFi	=preDi.GetFiles(f.Name + ".Compiled", SearchOption.TopDirectoryOnly);
-
-							if(preFi.Length == 1)
+							if(Directory.Exists(AppDomain.CurrentDomain.BaseDirectory +
+								"/CompiledShaders/" + macs[0].Name))
 							{
-								if(f.LastWriteTime <= preFi[0].LastWriteTime)
+								DirectoryInfo	preDi	=new DirectoryInfo(
+									AppDomain.CurrentDomain.BaseDirectory +
+									"/CompiledShaders/" + macs[0].Name);
+
+								FileInfo[]	preFi	=preDi.GetFiles(f.Name + ".Compiled", SearchOption.TopDirectoryOnly);
+
+								if(preFi.Length == 1)
 								{
-									LoadCompiledShader(dev, preFi[0].DirectoryName, preFi[0].Name, macs);
-									continue;
+									if(f.LastWriteTime <= preFi[0].LastWriteTime)
+									{
+										LoadCompiledShader(dev, preFi[0].DirectoryName, preFi[0].Name, macs);
+										continue;
+									}
 								}
 							}
 						}
