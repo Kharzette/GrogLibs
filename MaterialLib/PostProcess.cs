@@ -44,17 +44,24 @@ namespace MaterialLib
 		Vector2	[]mSampleOffsetsX;
 		Vector2	[]mSampleOffsetsY;
 
+		//datastream for setting above arrays
+		DataStream	mSampleOffsetsXDS, mSampleOffsetsYDS;
+
 		//constants
 		const float	BlurAmount	=4f;
 
 
-		public PostProcess(GraphicsDevice gd, Effect fx, int resx, int resy)
+		public PostProcess(GraphicsDevice gd, Effect fx, int resx, int resy,
+			RenderTargetView backBuffer, DepthStencilView backDepth)
 		{
 			mPostFX	=fx;
 
 			mResX		=resx;
 			mResY		=resy;
 			mClearColor	=Color.CornflowerBlue;
+
+			mPostTargets.Add("BackColor", backBuffer);
+			mPostDepths.Add("BackDepth", backDepth);
 
 			MakeQuad(gd);
 
@@ -104,7 +111,7 @@ namespace MaterialLib
 				Height				=resy,
 				SampleDescription	=new SampleDescription(1, 0),
 				Usage				=ResourceUsage.Default,
-				BindFlags			=BindFlags.RenderTarget | BindFlags.ShaderResource,
+				BindFlags			=BindFlags.DepthStencil,
 				CpuAccessFlags		=CpuAccessFlags.None,
 				OptionFlags			=ResourceOptionFlags.None
 			};
@@ -150,12 +157,12 @@ namespace MaterialLib
 			if(bX)
 			{
 				weightsX.Set(mSampleWeightsX);
-				offsetsX.Set(mSampleOffsetsX);
+				offsetsX.SetRawValue(mSampleOffsetsXDS, mSampleOffsetsX.Length * 8);
 			}
 			else
 			{
 				weightsY.Set(mSampleWeightsY);
-				offsetsY.Set(mSampleOffsetsY);
+				offsetsY.SetRawValue(mSampleOffsetsYDS, mSampleOffsetsY.Length * 8);
 			}
 		}
 
@@ -174,6 +181,11 @@ namespace MaterialLib
 			mSampleOffsetsX	=new Vector2[sampleCountX];
 			mSampleOffsetsY	=new Vector2[sampleCountY];
 			
+			//stupid effect stuff has no array capability for vector2
+			//pain in the ass
+			mSampleOffsetsXDS	=new DataStream(sampleCountX * 8, true, true);
+			mSampleOffsetsYDS	=new DataStream(sampleCountY * 8, true, true);
+
 			//The first sample always has a zero offset.
 			mSampleWeightsX[0]	=ComputeGaussian(0);
 			mSampleOffsetsX[0]	=new Vector2(0);
@@ -246,7 +258,14 @@ namespace MaterialLib
 			for(int i=0;i < mSampleWeightsY.Length;i++)
 			{
 				mSampleWeightsY[i]	/=totalWeightsY;
-			}			
+			}
+
+			//write to a datastream
+			for(int i=0;i < sampleCountX;i++)
+			{
+				mSampleOffsetsXDS.Write(mSampleOffsetsX[i]);
+				mSampleOffsetsYDS.Write(mSampleOffsetsY[i]);
+			}
 		}
 		
 
@@ -298,6 +317,18 @@ namespace MaterialLib
 		}
 
 
+		public void ClearTarget(GraphicsDevice gd, string targ, Color clearColor)
+		{
+			gd.DC.ClearRenderTargetView(mPostTargets[targ], clearColor);
+		}
+
+
+		public void ClearDepth(GraphicsDevice gd, string depth)
+		{
+			gd.DC.ClearDepthStencilView(mPostDepths[depth], DepthStencilClearFlags.Depth, 1f, 0);
+		}
+
+
 		public void SetClearColor(Color col)
 		{
 			mClearColor	=col;
@@ -314,6 +345,11 @@ namespace MaterialLib
 				&& mPostDepths.ContainsKey(depthName))
 			{
 				gd.DC.OutputMerger.SetRenderTargets(mPostDepths[depthName], mPostTargets[targName]);
+			}
+			else if(mPostTargets.ContainsKey(targName)
+				&& depthName == "null")
+			{
+				gd.DC.OutputMerger.SetRenderTargets(null, mPostTargets[targName]);
 			}
 			else
 			{

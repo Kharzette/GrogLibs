@@ -306,5 +306,13 @@ namespace MeshLib
 
 			return	ret;
 		}
+
+
+		public float[,] GetLudumDareHeightDataHack()
+		{
+			EditorMesh	em	=mMeshParts[0] as EditorMesh;
+
+			return	em.LudumDareTerrainDataHack();
+		}
 	}
 }

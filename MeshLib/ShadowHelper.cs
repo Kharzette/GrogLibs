@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UtilityLib;
+using MaterialLib;
 
 using SharpDX;
 using SharpDX.DXGI;
@@ -54,17 +55,18 @@ namespace MeshLib
 			}
 		}
 
-		GraphicsDevice			mGD;
-		Texture2D				mPShad;
-		Texture2D				mPShadCube;
-		RenderTargetView		mPShadView;
-		RenderTargetView		mPShadCubeView;
-		MaterialLib.PostProcess	mPost;
+		GraphicsDevice		mGD;
+		Texture2D			mPShad;
+		Texture2D			mPShadCube;
+		RenderTargetView	mPShadView;
+		RenderTargetView	[]mPShadCubeViews;
+		ShaderResourceView	mShad2D, mShadCube;
+		PostProcess			mPost;
 
 		//game data
 		MatLib			mZoneMats;
 		List<Shadower>	mShadowers		=new List<Shadower>();
-		List<MatLib>	mShadowerMats	=new List<MaterialLib.MaterialLib>();
+		List<MatLib>	mShadowerMats	=new List<MatLib>();
 		float			mDirectionalAttenuation;
 
 		//delegates back to the game
@@ -88,7 +90,7 @@ namespace MeshLib
 		public void Initialize(GraphicsDevice gd,
 			int bufferSizeXY, float dirAtten,
 			MatLib zoneMats,
-			MaterialLib.PostProcess post,
+			PostProcess post,
 			GetCurrentShadowInfoFromLights gcsifl,
 			GetTransformedBound gtb)
 		{
@@ -98,8 +100,6 @@ namespace MeshLib
 			SampleDescription	sampDesc	=new SampleDescription();
 			sampDesc.Count		=1;
 			sampDesc.Quality	=0;
-
-			Resource	res	=null;
 
 			Texture2DDescription	texDesc	=new Texture2DDescription();
 			texDesc.ArraySize			=6;
@@ -122,7 +122,22 @@ namespace MeshLib
 			//directional
 			mPShad	=new Texture2D(gd.GD, texDesc);
 
-			mPShadCubeView	=new RenderTargetView(gd.GD, mPShadCube);
+			mPShadCubeViews	=new RenderTargetView[6];
+
+			RenderTargetViewDescription	rtvDesc	=new RenderTargetViewDescription();
+
+			rtvDesc.Dimension		=RenderTargetViewDimension.Texture2DArray;
+			rtvDesc.Format			=Format.R16_UNorm;
+
+			rtvDesc.Texture2DArray.MipSlice		=0;
+			rtvDesc.Texture2DArray.ArraySize	=1;
+
+			for(int i=0;i < 6;i++)
+			{
+				rtvDesc.Texture2DArray.FirstArraySlice	=i;
+				mPShadCubeViews[i]	=new RenderTargetView(gd.GD, mPShadCube, rtvDesc);
+			}
+
 			mPShadView		=new RenderTargetView(gd.GD, mPShad);
 
 			mZoneMats				=zoneMats;
@@ -134,7 +149,7 @@ namespace MeshLib
 		}
 
 
-		public void RegisterShadower(Shadower mesh, MaterialLib.MaterialLib meshMats)
+		public void RegisterShadower(Shadower mesh, MatLib meshMats)
 		{
 			mShadowers.Add(mesh);
 			mShadowerMats.Add(meshMats);
@@ -151,19 +166,19 @@ namespace MeshLib
 			ShadowInfo	si	=DrawShadow(shadIndex);
 
 			//set only the color portion for the shadow render
-			mPost.SetTarget(mGD, "SceneColor", false);
+			mPost.SetTargets(mGD, "SceneColor", "SceneDepth");
 
 			//draw shadow pass
 			if(si.mbShadowNeeded)
 			{
-				mZoneMats.SetParameterOnAll("mShadowAtten", si.mShadowAtten);
-				mZoneMats.SetParameterOnAll("mShadowLightPos", si.mShadowLightPos);
-				mZoneMats.SetParameterOnAll("mShadowTexture", si.mShadowTexture);
-				mZoneMats.SetParameterOnAll("mbDirectional", si.mbDirectional);
+				mZoneMats.SetParameterForAll("mShadowAtten", si.mShadowAtten);
+				mZoneMats.SetParameterForAll("mShadowLightPos", si.mShadowLightPos);
+				mZoneMats.SetParameterForAll("mShadowTexture", si.mShadowTexture);
+				mZoneMats.SetParameterForAll("mbDirectional", si.mbDirectional);
 
 				if(si.mbDirectional)
 				{
-					mZoneMats.SetParameterOnAll("mLightViewProj", si.mLightViewProj);
+					mZoneMats.SetParameterForAll("mLightViewProj", si.mLightViewProj);
 				}
 			}
 		}
@@ -176,8 +191,8 @@ namespace MeshLib
 			bool	bDirectional;
 			float	intensity;
 
-			Shadower				shadower	=mShadowers[idx];
-			MaterialLib.MaterialLib	shadMats	=mShadowerMats[idx];
+			Shadower	shadower	=mShadowers[idx];
+			MatLib		shadMats	=mShadowerMats[idx];
 
 			bool	bShad	=mGetShadInfo(shadower, out shadowerTransform,
 				out intensity, out lightPos, out lightDir, out bDirectional);
@@ -208,12 +223,12 @@ namespace MeshLib
 			{
 				shadMats.SetMaterialParameter("Shadow", "mShadowLightPos", lightPos);
 
-				RenderShadowCubeFace(shadower, shadMats, CubeMapFace.PositiveX, lightPos);
-				RenderShadowCubeFace(shadower, shadMats, CubeMapFace.PositiveY, lightPos);
-				RenderShadowCubeFace(shadower, shadMats, CubeMapFace.PositiveZ, lightPos);
-				RenderShadowCubeFace(shadower, shadMats, CubeMapFace.NegativeX, lightPos);
-				RenderShadowCubeFace(shadower, shadMats, CubeMapFace.NegativeY, lightPos);
-				RenderShadowCubeFace(shadower, shadMats, CubeMapFace.NegativeZ, lightPos);
+				RenderShadowCubeFace(shadower, shadMats, 0, TextureCubeFace.PositiveX, lightPos);
+				RenderShadowCubeFace(shadower, shadMats, 1, TextureCubeFace.NegativeX, lightPos);
+				RenderShadowCubeFace(shadower, shadMats, 2, TextureCubeFace.PositiveY, lightPos);
+				RenderShadowCubeFace(shadower, shadMats, 3, TextureCubeFace.NegativeY, lightPos);
+				RenderShadowCubeFace(shadower, shadMats, 4, TextureCubeFace.PositiveZ, lightPos);
+				RenderShadowCubeFace(shadower, shadMats, 5, TextureCubeFace.NegativeZ, lightPos);
 
 				si.mShadowLightPos	=lightPos;
 				si.mShadowTexture	=mPShadCube;
@@ -221,8 +236,8 @@ namespace MeshLib
 			}
 			else
 			{
-				mGD.SetRenderTarget(mPShad);
-				mGD.Clear(Color.White);
+				mGD.DC.OutputMerger.SetRenderTargets(mPShadView);
+				mGD.DC.ClearRenderTargetView(mPShadView, Color.White);
 
 				Matrix	lightView, lightProj;
 				Vector3	fakeOrigin;
@@ -236,11 +251,11 @@ namespace MeshLib
 
 				if(shadower.mChar != null)
 				{
-					shadower.mChar.Draw(mGD, "Shadow");
+					shadower.mChar.Draw(mGD.DC, shadMats, "Shadow");
 				}
 				else
 				{
-					shadower.mStatic.Draw(mGD, "Shadow");
+					shadower.mStatic.Draw(mGD.DC, shadMats, "Shadow");
 				}
 
 				si.mLightViewProj	=lightView * lightProj;
@@ -254,13 +269,13 @@ namespace MeshLib
 
 
 		void RenderShadowCubeFace(Shadower shadower,
-			MaterialLib.MaterialLib shadMats,
-			CubeMapFace face, Vector3 lightPos)
+			MatLib shadMats, int index,
+			TextureCubeFace face, Vector3 lightPos)
 		{
 			Matrix	lightView, lightProj;
 
-			mGD.SetRenderTarget(mPShadCube, face);
-			mGD.Clear(Color.White);
+			mGD.DC.OutputMerger.SetTargets(mPShadCubeViews[index]);
+			mGD.DC.ClearRenderTargetView(mPShadCubeViews[index], Color.White);
 
 			Mathery.CreateCubeMapViewProjMatrix(face,
 				lightPos, 500f, out lightView, out lightProj);
@@ -269,11 +284,11 @@ namespace MeshLib
 
 			if(shadower.mChar != null)
 			{
-				shadower.mChar.Draw(mGD, "Shadow");
+				shadower.mChar.Draw(mGD.DC, shadMats, "Shadow");
 			}
 			else
 			{
-				shadower.mStatic.Draw(mGD, "Shadow");
+				shadower.mStatic.Draw(mGD.DC, shadMats, "Shadow");
 			}
 		}
 	}

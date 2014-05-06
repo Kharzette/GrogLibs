@@ -391,6 +391,12 @@ namespace MaterialLib
 		}
 
 
+		public Effect GetEffect(string fxName)
+		{
+			return	EffectForName(fxName);
+		}
+
+
 		public List<string> GetMaterialTechniques(string matName)
 		{
 			List<string>	ret	=new List<string>();

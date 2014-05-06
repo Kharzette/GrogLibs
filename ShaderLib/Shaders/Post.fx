@@ -315,12 +315,14 @@ float4	DebugNormalDraw(VVPosTex0 input) : SV_Target
 	return	float4(norm.x, norm.y, norm.z, 1);
 }
 
-float4	OutlinePS(VVPosTex0 input) : SV_Target
+float4	OutlinePS(VVPos input) : SV_Target
 {
 	float2	ox	=float2(mTexelSteps / mScreenSize.x, 0.0);
 	float2	oy	=float2(0.0, mTexelSteps / mScreenSize.y);
 	
 	float2	uv	=input.Position.xy;
+
+	uv	/=mScreenSize;
 
 	//only do 5 samples for sm2
 	half4	center, up, left, right, down;
@@ -491,10 +493,14 @@ float4	OutlinePS(VVPosTex0 input) : SV_Target
 }
 
 
-float4	ModulatePS(VVPosTex0 input) : SV_Target
+float4	ModulatePS(VVPos input) : SV_Target
 {
-	float4	color	=mColorTex.Sample(PointClamp, input.Position.xy);
-	float4	color2	=mBlurTargetTex.Sample(LinearClamp, input.Position.xy);
+	float2	uv	=input.Position.xy;
+
+	uv	/=mScreenSize;
+
+	float4	color	=mColorTex.Sample(PointClamp, uv);
+	float4	color2	=mBlurTargetTex.Sample(LinearClamp, uv);
 
 	color	*=color2;
 
@@ -544,7 +550,7 @@ technique10 AmbientOcclusion
 		PixelShader		=compile ps_4_0_level_9_3 AOPS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(EnableDepth, 0);
+		SetDepthStencilState(DisableDepth, 0);
 	}
 }
 
@@ -566,7 +572,7 @@ technique10 GaussianBlurX
 		PixelShader		=compile ps_4_0_level_9_3 GaussianBlurXPS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(EnableDepth, 0);
+		SetDepthStencilState(DisableDepth, 0);
 	}
 }
 
@@ -588,7 +594,7 @@ technique10 GaussianBlurY
 		PixelShader		=compile ps_4_0_level_9_3 GaussianBlurYPS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(EnableDepth, 0);
+		SetDepthStencilState(DisableDepth, 0);
 	}
 }
 
@@ -610,7 +616,7 @@ technique10 BilateralBlur
 		PixelShader		=compile ps_4_0_level_9_3 BiLatBlurXPS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(EnableDepth, 0);
+		SetDepthStencilState(DisableDepth, 0);
 	}
 
 	pass pY
@@ -629,7 +635,7 @@ technique10 BilateralBlur
 		PixelShader		=compile ps_4_0_level_9_3 BiLatBlurYPS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(EnableDepth, 0);
+		SetDepthStencilState(DisableDepth, 0);
 	}
 }
 
@@ -651,7 +657,7 @@ technique10 BloomExtract
 		PixelShader		=compile ps_4_0_level_9_3 BloomExtractPS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(EnableDepth, 0);
+		SetDepthStencilState(DisableDepth, 0);
 	}
 }
 
@@ -673,7 +679,7 @@ technique10 BloomCombine
 		PixelShader		=compile ps_4_0_level_9_3 BloomCombinePS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(EnableDepth, 0);
+		SetDepthStencilState(DisableDepth, 0);
 	}
 }
 #endif
@@ -696,7 +702,7 @@ technique10 Outline
 		PixelShader		=compile ps_4_0_level_9_3 OutlinePS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(EnableDepth, 0);
+		SetDepthStencilState(DisableDepth, 0);
 	}
 }
 
@@ -718,7 +724,7 @@ technique10 BleachBypass
 		PixelShader		=compile ps_4_0_level_9_3 BleachBypassPS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(EnableDepth, 0);
+		SetDepthStencilState(DisableDepth, 0);
 	}
 }
 
@@ -740,6 +746,6 @@ technique10 Modulate
 		PixelShader		=compile ps_4_0_level_9_3 ModulatePS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(EnableDepth, 0);
+		SetDepthStencilState(DisableDepth, 0);
 	}
 }

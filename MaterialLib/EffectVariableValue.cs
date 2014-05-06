@@ -69,6 +69,12 @@ namespace MaterialLib
 					Mathery.TryParse(sz, out bVal);
 					return	bVal;
 				}
+				else if(mVar.TypeInfo.Description.Type == ShaderVariableType.Int)
+				{
+					int	iVal;
+					Mathery.TryParse(sz, out iVal);
+					return	iVal;
+				}
 				else
 				{
 					Debug.Assert(false);
@@ -146,6 +152,10 @@ namespace MaterialLib
 				else if(mVar.TypeInfo.Description.Type == ShaderVariableType.Bool)
 				{
 					return	((bool)val).ToString(System.Globalization.CultureInfo.InvariantCulture);
+				}
+				else if(mVar.TypeInfo.Description.Type == ShaderVariableType.Int)
+				{
+					return	((int)val).ToString(System.Globalization.CultureInfo.InvariantCulture);
 				}
 				else
 				{
