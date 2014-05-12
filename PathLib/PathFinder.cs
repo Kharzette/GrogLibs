@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 using System.Threading;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace PathLib

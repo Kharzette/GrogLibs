@@ -8,9 +8,8 @@ using SharpDX.DXGI;
 using SharpDX.Direct3D11;
 
 //ambiguous stuff
-using Buffer = SharpDX.Direct3D11.Buffer;
-using Color = SharpDX.Color;
-using Device = SharpDX.Direct3D11.Device;
+using Buffer	=SharpDX.Direct3D11.Buffer;
+using Device	=SharpDX.Direct3D11.Device;
 
 
 namespace MeshLib
@@ -248,7 +247,7 @@ namespace MeshLib
 				return;
 			}
 
-			matLib.SetMaterialParameter(mMaterialName, "mWorld", (transform * mTransform));
+			matLib.SetMaterialParameter(mMaterialName, "mWorld", (mTransform * transform));
 
 			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
 			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);

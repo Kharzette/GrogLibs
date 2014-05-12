@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.IO;
 using System.Text;
-using Microsoft.Xna.Framework;
 
 
 namespace BSPCore
@@ -20,7 +19,6 @@ namespace BSPCore
 	{
 		public BSPBuildParams						mBSPParams;
 		public LightParams							mLightParams;
-		public CoreDelegates.GetEmissiveForMaterial	mC4M;
 		public string								mFileName;
 	}
 }

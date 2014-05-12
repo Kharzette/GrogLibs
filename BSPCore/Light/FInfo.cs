@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace BSPCore
@@ -173,7 +173,7 @@ namespace BSPCore
 
 					Vector3	point	=mTexOrg + mT2WVecU * curU + mT2WVecV * curV;
 
-					mPoints[(v * width) + u]	=Vector3.Transform(point, modelMat);
+					mPoints[(v * width) + u]	=Vector3.TransformCoordinate(point, modelMat);
 
 					InSolid[(v * width) + u]	=pointInSolid(mPoints[(v * width) + u]);
 

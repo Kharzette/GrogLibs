@@ -47,7 +47,7 @@ namespace BSPZone
 			{
 				Vector4	color;
 				Vector3	col, pos;
-				bool	bCel, bOn;
+				bool	bOn;
 				int		shapeIdx, maxParticles;
 				float	gravYaw, gravPitch, shapeSize;
 				float	gravStr, startSize, startAlpha, emitMS;
@@ -93,9 +93,6 @@ namespace BSPZone
 				int	bVal;
 				Mathery.TryParse(ze.GetValue("activated"), out bVal);
 				bOn	=(bVal != 0);
-
-				Mathery.TryParse(ze.GetValue("cel_shade"), out bVal);
-				bCel	=(bVal != 0);
 
 				Mathery.WrapAngleDegrees(ref gravYaw);
 				Mathery.WrapAngleDegrees(ref gravPitch);

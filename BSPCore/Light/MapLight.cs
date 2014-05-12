@@ -6,7 +6,8 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
-using Microsoft.Xna.Framework;
+using SharpDX;
+using UtilityLib;
 
 
 namespace BSPCore
@@ -40,7 +41,7 @@ namespace BSPCore
 
 		byte []LoadVisData(string fileName)
 		{
-			string	sansExt	=UtilityLib.FileUtil.StripExtension(fileName);
+			string	sansExt	=FileUtil.StripExtension(fileName);
 
 			//no longer sans I guess
 			sansExt	+=".VisData";
@@ -62,15 +63,14 @@ namespace BSPCore
 
 			byte	[]ret	=null;
 
-			ret	=UtilityLib.FileUtil.ReadByteArray(br);
+			ret	=FileUtil.ReadByteArray(br);
 
 			//check material vis, but
 			//donut need it for lighting
-			byte	[]donutNeed	=UtilityLib.FileUtil.ReadByteArray(br);
+			byte	[]donutNeed	=FileUtil.ReadByteArray(br);
 
 			//load clusters
-			mGFXClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXCluster>(count); }) as GFXCluster[];
+			mGFXClusters	=FileUtil.ReadArray<GFXCluster>(br);
 
 			br.Close();
 			fs.Close();
@@ -173,7 +173,7 @@ namespace BSPCore
 			file.Close();
 
 			//save entities, lightswitch stuff can modify
-			string	entName	=UtilityLib.FileUtil.StripExtension(lp.mFileName);
+			string	entName	=FileUtil.StripExtension(lp.mFileName);
 			entName			+=".EntData";
 
 			file	=new FileStream(entName, FileMode.Create, FileAccess.Write);
@@ -212,13 +212,12 @@ namespace BSPCore
 		}
 
 
-		public void LightGBSPFile(string fileName, CoreDelegates.GetEmissiveForMaterial c4m,
+		public void LightGBSPFile(string fileName,
 			LightParams lightParams, BSPBuildParams buildParams)
 		{
 			LightParameters	lp	=new LightParameters();
 			lp.mBSPParams	=buildParams;
 			lp.mLightParams	=lightParams;
-			lp.mC4M			=c4m;
 			lp.mFileName	=fileName;
 
 			ThreadPool.QueueUserWorkItem(LightGBSPFileCB, lp);
@@ -301,7 +300,6 @@ namespace BSPCore
 		bool CreateDirectLights(LightParameters lp)
 		{
 			Int32	numDirectLights	=0;
-			Int32	numSurfLights	=0;
 
 			mDirectClusterLights.Clear();
 
@@ -354,7 +352,7 @@ namespace BSPCore
 				}
 				else
 				{
-					color	=UtilityLib.Misc.ColorNormalize(color);
+					color	=Misc.ColorNormalize(color);
 				}
 
 				if(!ent.GetOrigin(out dLight.mOrigin))
@@ -399,12 +397,12 @@ namespace BSPCore
 					float	cone	=0.0f;
 					if(ent.GetFloat("_cone", out cone))
 					{
-						dLight.mCone	=MathHelper.ToRadians(cone);
+						dLight.mCone	=MathUtil.DegreesToRadians(cone);
 					}
 					else
 					{
 						//default of 10 degrees
-						dLight.mCone	=MathHelper.ToRadians(10f);
+						dLight.mCone	=MathUtil.DegreesToRadians(10f);
 					}
 
 					//should be a target
@@ -449,11 +447,11 @@ namespace BSPCore
 						roll	=(int)orient.Z;
 					}
 
-					yaw		=MathHelper.ToRadians(yaw);
-					pitch	=MathHelper.ToRadians(pitch);
-					roll	=MathHelper.ToRadians(roll);
+					yaw		=MathUtil.DegreesToRadians(yaw);
+					pitch	=MathUtil.DegreesToRadians(pitch);
+					roll	=MathUtil.DegreesToRadians(roll);
 
-					Matrix	rotMat	=Matrix.CreateFromYawPitchRoll(yaw, pitch, roll);
+					Matrix	rotMat	=Matrix.RotationYawPitchRoll(yaw, pitch, roll);
 					dLight.mNormal	=rotMat.Backward;
 
 					ent.GetFloat("strength", out dLight.mIntensity);
@@ -485,82 +483,8 @@ namespace BSPCore
 				numDirectLights++;
 			}
 
-			CoreEvents.Print("Num Normal Lights\t: " + numDirectLights + "\n");
+			CoreEvents.Print("Num Direct Lights\t: " + numDirectLights + "\n");
 
-			//surface lights below
-			if(!lp.mLightParams.mbSurfaceLighting)
-			{
-				return	true;
-			}
-			
-			//Now create the surface emitters
-			List<Vector3>	verts	=new List<Vector3>();
-			foreach(GFXFace f in mGFXFaces)
-			{
-				GFXTexInfo	tex	=mGFXTexInfos[f.mTexInfo];
-
-				//Only look at surfaces that want to emit light
-				if((tex.mFlags & TexInfo.EMITLIGHT) == 0)
-				{
-					continue;
-				}
-
-				//grab face verts
-				verts.Clear();
-				for(int i=f.mFirstVert;i < f.mNumVerts + f.mFirstVert;i++)
-				{
-					int	idx	=mGFXVertIndexes[i];
-					verts.Add(mGFXVerts[idx]);
-				}
-
-				GBSPPlane	fplane	=new GBSPPlane(mGFXPlanes[f.mPlaneNum]);
-				if(f.mbFlipSide)
-				{
-					fplane.Inverse();
-				}
-
-				//grab material name
-				string	trueName	=GFXTexInfo.ScryTrueName(f, tex);
-
-				//get material color
-				Vector3	surfColor	=lp.mC4M(trueName);
-
-				List<DirectLight>	sLights	=DirectLight.MakeSurfaceLights(
-					verts, tex, surfColor, fplane.mNormal,
-					lp.mLightParams.mSurfLightFrequency,
-					lp.mLightParams.mSurfLightStrength);
-
-				//Insert this surface direct light into the list of lights
-				foreach(DirectLight dl in sLights)
-				{
-					//find cluster
-					Int32	nodeLandedIn	=FindNodeLandedIn(0, dl.mOrigin);
-					Int32	leaf	=-(nodeLandedIn + 1);
-
-					Debug.Assert(leaf >= 0);
-					Debug.Assert(leaf < mGFXLeafs.Length);
-					
-					Int32	clust	=mGFXLeafs[leaf].mCluster;
-					if(clust < 0)
-					{
-						continue;	//light in solid
-					}
-
-					if(mDirectClusterLights.ContainsKey(clust))
-					{
-						mDirectClusterLights[clust].Add(dl);
-					}
-					else
-					{
-						mDirectClusterLights.Add(clust, new List<DirectLight>());
-						mDirectClusterLights[clust].Add(dl);
-					}
-
-					mDirectLights.Add(dl);
-					numSurfLights++;
-				}
-			}
-			CoreEvents.Print("Num Surf Lights\t\t: " + numSurfLights + "\n");
 			return	true;
 		}
 
@@ -604,7 +528,7 @@ namespace BSPCore
 				Int32	index	=mGFXVertIndexes[vn];
 				Vector3	vert	=mGFXVerts[index];
 
-				vert	=Vector3.Transform(vert, modelMat);
+				vert	=Vector3.TransformCoordinate(vert, modelMat);
 
 				if(tex.IsLight())
 				{
@@ -797,7 +721,7 @@ namespace BSPCore
 
 			object	prog	=ProgressWatcher.RegisterProgress(0, mGFXFaces.Length, 0);
 
-			UtilityLib.TSPool<bool []>	boolPool	=new UtilityLib.TSPool<bool[]>(() => new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE]);
+			TSPool<bool []>	boolPool	=new TSPool<bool[]>(() => new bool[LInfo.MAX_LMAP_SIZE * LInfo.MAX_LMAP_SIZE]);
 
 			if(lp.mLightParams.mbRecording)
 			{
@@ -1333,7 +1257,7 @@ namespace BSPCore
 		void CalcFacePoints(Matrix modelMat, Matrix modelInv, int modelIndex,
 			FInfo faceInfo, LInfo lightInfo, int lightGridSize,
 			Vector2 UVOfs, bool bExtraLightCorrection,
-			UtilityLib.TSPool<bool []> boolPool)
+			TSPool<bool []> boolPool)
 		{
 			faceInfo.CalcFacePoints(modelMat, modelInv, modelIndex, lightInfo, lightGridSize,
 				UVOfs, bExtraLightCorrection, boolPool,
@@ -1527,7 +1451,7 @@ namespace BSPCore
 						
 						for(int l=0;l < 3;l++)
 						{
-							float	val	=UtilityLib.Mathery.VecIdx(WorkRGB, l);
+							float	val	=WorkRGB[l];
 
 							LData[LDataOfs]	=(byte)(Math.Min(val, maxIntensity));
 							LDataOfs++;

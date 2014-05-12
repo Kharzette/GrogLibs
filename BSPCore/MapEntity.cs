@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Microsoft.Xna.Framework;
 using System.ComponentModel;
+using System.Collections.Generic;
+using SharpDX;
 using UtilityLib;
 
 
 namespace BSPCore
 {
-	public class MapEntity : UtilityLib.IReadWriteable
+	public class MapEntity
 	{
 		BindingList<MapBrush>	mBrushes	=new BindingList<MapBrush>();
 

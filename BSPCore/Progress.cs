@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UtilityLib;
+
 
 namespace BSPCore
 {
@@ -77,7 +79,7 @@ namespace BSPCore
 			pea.mMax		=0;
 			pea.mMin		=0;
 
-			UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
+			Misc.SafeInvoke(eProgressUpdated, null, pea);
 		}
 
 
@@ -102,7 +104,7 @@ namespace BSPCore
 				pea.mMax		=0;
 				pea.mMin		=0;
 
-				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
+				Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 
@@ -133,7 +135,7 @@ namespace BSPCore
 			}
 			if(bFound)
 			{
-				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
+				Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 
@@ -166,7 +168,7 @@ namespace BSPCore
 			}
 			if(bFound)
 			{
-				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
+				Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 
@@ -197,7 +199,7 @@ namespace BSPCore
 			}
 			if(bFound)
 			{
-				UtilityLib.Misc.SafeInvoke(eProgressUpdated, null, pea);
+				Misc.SafeInvoke(eProgressUpdated, null, pea);
 			}
 		}
 	}

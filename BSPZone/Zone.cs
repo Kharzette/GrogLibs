@@ -85,47 +85,26 @@ namespace BSPZone
 
 
 		#region IO
-		void WritePlaneArray(BinaryWriter bw)
-		{
-			bw.Write(mZonePlanes.Length);
-			for(int i=0;i < mZonePlanes.Length;i++)
-			{
-				mZonePlanes[i].Write(bw);
-			}
-		}
-
-
-		void ReadPlaneArray(BinaryReader br)
-		{
-			int	count	=br.ReadInt32();
-			mZonePlanes	=new ZonePlane[count];
-			for(int i=0;i < count;i++)
-			{
-				mZonePlanes[i].Read(br);
-			}
-		}
-
-
 		public void Write(string fileName, bool bDebug)
 		{
 			FileStream	file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
-//			FileUtil.WriteArray(mZoneModels, bw);
-//			FileUtil.WriteArray(mZoneNodes, bw);
-//			FileUtil.WriteArray(mZoneLeafs, bw);
-//			FileUtil.WriteArray(mVisAreas, bw);
-//			FileUtil.WriteArray(mVisAreaPortals, bw);
-			WritePlaneArray(bw);
-//			FileUtil.WriteArray(mZoneEntities, bw);
-//			FileUtil.WriteArray(mZoneLeafSides, bw);
+			FileUtil.WriteArray(mZoneModels, bw);
+			FileUtil.WriteArray(mZoneNodes, bw);
+			FileUtil.WriteArray(mZoneLeafs, bw);
+			FileUtil.WriteArray(mVisAreas, bw);
+			FileUtil.WriteArray(mVisAreaPortals, bw);
+			FileUtil.WriteArray(mZonePlanes, bw);
+			FileUtil.WriteArray(mZoneEntities, bw);
+			FileUtil.WriteArray(mZoneLeafSides, bw);
 
 			bw.Write(bDebug);
 			if(bDebug)
 			{
 				FileUtil.WriteArray(bw, mDebugLeafFaces);
-//				FileUtil.WriteArray(mDebugFaces, bw);
+				FileUtil.WriteArray(mDebugFaces, bw);
 				FileUtil.WriteArray(bw, mDebugVerts);
 				FileUtil.WriteArray(bw, mDebugIndexes);
 			}
@@ -149,7 +128,7 @@ namespace BSPZone
 			{
 				bw.Write(false);
 			}
-//			FileUtil.WriteArray(mVisClusters, bw);
+			FileUtil.WriteArray(mVisClusters, bw);
 			bw.Write(mLightMapGridSize);
 			bw.Write(mNumVisLeafBytes);
 			bw.Write(mNumVisMaterialBytes);
@@ -168,28 +147,20 @@ namespace BSPZone
 			}
 			BinaryReader	br	=new BinaryReader(file);
 
-/*			mZoneModels		=FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return FileUtil.InitArray<ZoneModel>(count); }) as ZoneModel[];
-			mZoneNodes		=FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return FileUtil.InitArray<ZoneNode>(count); }) as ZoneNode[];
-			mZoneLeafs		=FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return FileUtil.InitArray<ZoneLeaf>(count); }) as ZoneLeaf[];
-			mVisAreas		=FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return FileUtil.InitArray<VisArea>(count); }) as VisArea[];
-			mVisAreaPortals	=FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return FileUtil.InitArray<VisAreaPortal>(count); }) as VisAreaPortal[];
-*/			ReadPlaneArray(br);
-/*			mZoneEntities	=FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return FileUtil.InitArray<ZoneEntity>(count); }) as ZoneEntity[];
-			mZoneLeafSides	=FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return FileUtil.InitArray<ZoneLeafSide>(count); }) as ZoneLeafSide[];
-*/
+			mZoneModels		=FileUtil.ReadArray<ZoneModel>(br);
+			mZoneNodes		=FileUtil.ReadArray<ZoneNode>(br);
+			mZoneLeafs		=FileUtil.ReadArray<ZoneLeaf>(br);
+			mVisAreas		=FileUtil.ReadArray<VisArea>(br);
+			mVisAreaPortals	=FileUtil.ReadArray<VisAreaPortal>(br);
+			mZonePlanes		=FileUtil.ReadArray<ZonePlane>(br);
+			mZoneEntities	=FileUtil.ReadArray<ZoneEntity>(br);
+			mZoneLeafSides	=FileUtil.ReadArray<ZoneLeafSide>(br);
+
 			bool	bDebug	=br.ReadBoolean();
 			if(bDebug)
 			{
 				mDebugLeafFaces	=FileUtil.ReadIntArray(br);
-//				mDebugFaces		=FileUtil.ReadArray(br, delegate(Int32 count)
-//							{ return FileUtil.InitArray<DebugFace>(count); }) as DebugFace[];
+				mDebugFaces		=FileUtil.ReadArray<DebugFace>(br);
 				mDebugVerts		=FileUtil.ReadVecArray(br);
 				mDebugIndexes	=FileUtil.ReadIntArray(br);
 			}
@@ -197,8 +168,7 @@ namespace BSPZone
 			mVisData			=FileUtil.ReadByteArray(br);
 			mMaterialVisData	=FileUtil.ReadByteArray(br);
 
-//			mVisClusters	=FileUtil.ReadArray(br, delegate(Int32 count)
-//							{ return FileUtil.InitArray<VisCluster>(count); }) as VisCluster[];
+			mVisClusters	=FileUtil.ReadArray<VisCluster>(br);
 
 			mLightMapGridSize		=br.ReadInt32();
 			mNumVisLeafBytes		=br.ReadInt32();

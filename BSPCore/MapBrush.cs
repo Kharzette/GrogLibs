@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using UtilityLib;
 
 
@@ -46,14 +46,14 @@ namespace BSPCore
 
 				p.mNormal	=Vector3.Zero;
 
-				Mathery.VecIdxAssign(ref p.mNormal, i, 1.0f);
-				p.mDist	=Mathery.VecIdx(bnd.mMaxs, i);
+				p.mNormal[i]	=1f;
+				p.mDist			=bnd.mMaxs[i];
 
 				GBSPSide	side	=new GBSPSide();
 				side.mPlaneNum		=pp.FindPlane(p, out side.mbFlipSide);
 
-				Mathery.VecIdxAssign(ref p.mNormal, i, -1.0f);
-				p.mDist	=-(Mathery.VecIdx(bnd.mMins, i));
+				p.mNormal[i]	=-1f;
+				p.mDist			=-bnd.mMins[i];
 
 				GBSPSide	side2	=new GBSPSide();
 				side2.mPlaneNum		=pp.FindPlane(p, out side2.mbFlipSide);
@@ -312,8 +312,8 @@ namespace BSPCore
 
 			for(int i=0;i < 3;i++)
 			{
-				if(Mathery.VecIdx(mBounds.mMins, i) <= -Bounds.MIN_MAX_BOUNDS
-					|| Mathery.VecIdx(mBounds.mMaxs, i) >= Bounds.MIN_MAX_BOUNDS)
+				if(mBounds.mMins[i] <= -Bounds.MIN_MAX_BOUNDS
+					|| mBounds.mMaxs[i] >= Bounds.MIN_MAX_BOUNDS)
 				{
 					CoreEvents.Print("Entity " + mEntityNum + ", Brush bounds out of range\n");
 				}

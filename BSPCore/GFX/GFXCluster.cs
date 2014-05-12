@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace BSPCore
 {
-	public class GFXCluster : UtilityLib.IReadWriteable
+	public class GFXCluster
 	{
 		public Int32	mVisOfs;
 

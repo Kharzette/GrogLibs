@@ -198,6 +198,47 @@ namespace MaterialLib
 		}
 
 
+		public bool Insert(Color[] tex, int texW, int texH,
+			out double scaleU, out double scaleV, out double uoffs, out double voffs)
+		{
+			TexNode	n	=mRoot.Insert(texW, texH);
+
+			scaleU = scaleV = uoffs = voffs = 0.0;
+
+			if(n == null)
+			{
+				return false;
+			}
+
+			//copy pixels in
+			if(mBuildArray == null)
+			{
+				mBuildArray	=new Color[mWidth * mHeight];
+			}
+
+			Rectangle	target	=n.GetRect();
+
+			int c	=0;
+			for(int y=target.Top;y < target.Bottom;y++)
+			{
+				for(int x=target.Left;x < target.Right;x++, c++)
+				{
+					mBuildArray[(y * mWidth) + x]	=tex[c];
+				}
+			}
+
+			//maybe squeeze a little extra precision here
+			scaleU	=(double)texW / (double)mWidth;
+			scaleV	=(double)texH / (double)mHeight;
+
+			//get offsets in zero to one space
+			uoffs	=((double)target.Left / (double)mWidth);
+			voffs	=((double)target.Top / (double)mHeight);
+
+			return	true;
+		}
+
+
 		public void Finish(GraphicsDevice gd)
 		{
 			if(mBuildArray == null)

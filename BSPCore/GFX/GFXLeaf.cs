@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace BSPCore
 {
-	public class GFXLeaf : UtilityLib.IReadWriteable
+	public class GFXLeaf
 	{
 		public UInt32	mContents;
 		public Vector3	mMins, mMaxs;

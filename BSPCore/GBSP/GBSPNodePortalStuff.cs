@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace BSPCore
@@ -281,10 +281,8 @@ namespace BSPCore
 			//note genesis uses 128 for outside space, Q2 uses 8
 			for(int k=0;k < 3;k++)
 			{
-				if(UtilityLib.Mathery.VecIdx(nodeMins, k) - 8.0f
-					<= -Bounds.MIN_MAX_BOUNDS ||
-					UtilityLib.Mathery.VecIdx(nodeMaxs, k) + 8.0f
-					>= Bounds.MIN_MAX_BOUNDS)
+				if(nodeMins[k] - 8.0f <= -Bounds.MIN_MAX_BOUNDS ||
+					nodeMaxs[k] + 8.0f >= Bounds.MIN_MAX_BOUNDS)
 				{
 					CoreEvents.Print("CreateAllOutsidePortals:  World BOX out of range...\n");
 					return	false;

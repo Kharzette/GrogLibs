@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
 using MaterialLib;
 using MeshLib;
 using UtilityLib;
+
+using SharpDX;
+using SharpDX.Direct3D11;
+
+using Buffer	=SharpDX.Direct3D11.Buffer;
 
 
 namespace BSPCore
@@ -35,23 +37,23 @@ namespace BSPCore
 		MaterialLib.MaterialLib	mMatLib;
 
 		//vertex declarations
-		VertexDeclaration	mLMVD, mVLitVD, mFBVD, mAlphaVD;
-		VertexDeclaration	mMirrorVD, mSkyVD, mLMAnimVD;
-		VertexDeclaration	mLMAVD, mLMAAnimVD;
+//		VertexDeclaration	mLMVD, mVLitVD, mFBVD, mAlphaVD;
+//		VertexDeclaration	mMirrorVD, mSkyVD, mLMAnimVD;
+//		VertexDeclaration	mLMAVD, mLMAAnimVD;
 
 		//computed lightmapped geometry
 		List<Vector3>	mLMVerts		=new List<Vector3>();
 		List<Vector3>	mLMNormals		=new List<Vector3>();
 		List<Vector2>	mLMFaceTex0		=new List<Vector2>();
 		List<Vector2>	mLMFaceTex1		=new List<Vector2>();
-		List<Int32>		mLMIndexes		=new List<Int32>();
+		List<UInt16>	mLMIndexes		=new List<UInt16>();
 
 		//computed lightmapped alpha geometry
 		List<Vector3>	mLMAVerts		=new List<Vector3>();
 		List<Vector3>	mLMANormals		=new List<Vector3>();
 		List<Vector2>	mLMAFaceTex0	=new List<Vector2>();
 		List<Vector2>	mLMAFaceTex1	=new List<Vector2>();
-		List<Int32>		mLMAIndexes		=new List<Int32>();
+		List<UInt16>	mLMAIndexes		=new List<UInt16>();
 		List<Vector4>	mLMAColors		=new List<Vector4>();
 
 		//computed vertex lit geometry
@@ -59,20 +61,20 @@ namespace BSPCore
 		List<Vector2>	mVLitTex0		=new List<Vector2>();
 		List<Vector3>	mVLitNormals	=new List<Vector3>();
 		List<Vector4>	mVLitColors		=new List<Vector4>();
-		List<Int32>		mVLitIndexes	=new List<Int32>();
+		List<UInt16>	mVLitIndexes	=new List<UInt16>();
 
 		//computed fullbright geometry
 		List<Vector3>	mFBVerts	=new List<Vector3>();
 		List<Vector3>	mFBNormals	=new List<Vector3>();
 		List<Vector2>	mFBTex0		=new List<Vector2>();
-		List<Int32>		mFBIndexes	=new List<Int32>();
+		List<UInt16>	mFBIndexes	=new List<UInt16>();
 
 		//computed alpha geometry
 		List<Vector3>	mAlphaVerts		=new List<Vector3>();
 		List<Vector2>	mAlphaTex0		=new List<Vector2>();
 		List<Vector3>	mAlphaNormals	=new List<Vector3>();
 		List<Vector4>	mAlphaColors	=new List<Vector4>();
-		List<Int32>		mAlphaIndexes	=new List<Int32>();
+		List<UInt16>	mAlphaIndexes	=new List<UInt16>();
 
 		//computed mirror geometry
 		List<Vector3>		mMirrorVerts	=new List<Vector3>();
@@ -80,13 +82,13 @@ namespace BSPCore
 		List<Vector2>		mMirrorTex0		=new List<Vector2>();
 		List<Vector2>		mMirrorTex1		=new List<Vector2>();
 		List<Vector4>		mMirrorColors	=new List<Vector4>();
-		List<Int32>			mMirrorIndexes	=new List<Int32>();
+		List<UInt16>		mMirrorIndexes	=new List<UInt16>();
 		List<List<Vector3>>	mMirrorPolys	=new List<List<Vector3>>();
 
 		//computed sky geometry
 		List<Vector3>	mSkyVerts	=new List<Vector3>();
 		List<Vector2>	mSkyTex0	=new List<Vector2>();
-		List<Int32>		mSkyIndexes	=new List<Int32>();
+		List<UInt16>	mSkyIndexes	=new List<UInt16>();
 
 		//animated lightmap geometry
 		List<Vector3>	mLMAnimVerts	=new List<Vector3>();
@@ -96,7 +98,7 @@ namespace BSPCore
 		List<Vector2>	mLMAnimFaceTex2	=new List<Vector2>();
 		List<Vector2>	mLMAnimFaceTex3	=new List<Vector2>();
 		List<Vector2>	mLMAnimFaceTex4	=new List<Vector2>();
-		List<Int32>		mLMAnimIndexes	=new List<Int32>();
+		List<UInt16>	mLMAnimIndexes	=new List<UInt16>();
 		List<Vector4>	mLMAnimStyle	=new List<Vector4>();
 
 		//animated lightmap alpha geometry
@@ -107,13 +109,12 @@ namespace BSPCore
 		List<Vector2>	mLMAAnimFaceTex2	=new List<Vector2>();
 		List<Vector2>	mLMAAnimFaceTex3	=new List<Vector2>();
 		List<Vector2>	mLMAAnimFaceTex4	=new List<Vector2>();
-		List<Int32>		mLMAAnimIndexes		=new List<Int32>();
+		List<UInt16>	mLMAAnimIndexes		=new List<UInt16>();
 		List<Vector4>	mLMAAnimStyle		=new List<Vector4>();
 		List<Vector4>	mLMAAnimColors		=new List<Vector4>();
 
 		//computed material stuff
 		List<string>	mMaterialNames		=new List<string>();
-		List<Material>	mMaterials			=new List<Material>();
 
 		//material draw call information
 		//opaques
@@ -145,11 +146,11 @@ namespace BSPCore
 											GFXFace f, GFXTexInfo tex, int lightGridSize,
 											byte []lightData, TexAtlas atlas,
 											List<List<Vector3>> mirrorPolys);
-		internal delegate void FinishUp(int modelIndex, List<DrawDataChunk> matChunks, ref int vertOfs);
-		internal delegate void FinishUpAlpha(int modelIndex, List<Dictionary<Int32, DrawDataChunk>> perPlaneChunk, ref int vertOfs);
+		internal delegate void FinishUp(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs);
+		internal delegate void FinishUpAlpha(int modelIndex, List<Dictionary<Int32, DrawDataChunk>> perPlaneChunk, ref UInt16 vertOfs);
 
 		public MapGrinder(GraphicsDevice gd, GFXTexInfo []texs,
-			GFXFace []faces, int lightGridSize, int atlasSize, bool bDynamic)
+			GFXFace []faces, int lightGridSize, int atlasSize)
 		{
 			mGD				=gd;
 			mTexInfos		=texs;
@@ -163,44 +164,7 @@ namespace BSPCore
 			}
 
 			CalcMaterialNames();
-			CalcMaterials(bDynamic);
-			InitVertexDeclarations(gd);
-		}
-
-
-		void InitVertexDeclarations(GraphicsDevice gd)
-		{
-			if(gd == null)
-			{
-				return;
-			}
-
-			//make vertex declarations
-			//lightmapped
-			mLMVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex04));
-
-			//lightmapped alpha
-			mLMAVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex04Col0));
-
-			//vertex lit, alpha, and mirror
-			mVLitVD		=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Col0));
-			mAlphaVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Col0));
-			mMirrorVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0Tex1Col0));
-
-			//animated lightmapped, and alpha as well
-			//alpha is stored in the style vector4
-			mLMAnimVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormBlendTex04Tex14Tex24));
-			mLMAAnimVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormBlendTex04Tex14Tex24));
-
-			//FullBright and sky
-			mFBVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosNormTex0));
-			mSkyVD	=VertexTypes.GetVertexDeclarationForType(typeof(VPosTex0));
-		}
-
-
-		internal List<Material> GetMaterials()
-		{
-			return	mMaterials;
+			CalcMaterials();
 		}
 
 
@@ -259,7 +223,7 @@ namespace BSPCore
 		}
 
 
-		internal void GetLMBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetLMBuffers(out Buffer vb, out Buffer ib)
 		{
 			if(mLMVerts.Count == 0)
 			{
@@ -279,15 +243,22 @@ namespace BSPCore
 				varray[i].Normal		=mLMNormals[i];
 			}
 
-			vb	=new VertexBuffer(mGD, mLMVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosNormTex04>(varray);
+			BufferDescription	bd	=new BufferDescription(
+				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mLMIndexes.Count, BufferUsage.None);
-			ib.SetData<Int32>(mLMIndexes.ToArray());
+			vb	=Buffer.Create(mGD.GD, varray, bd);
+			
+			BufferDescription	id	=new BufferDescription(mLMIndexes.Count * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			ib	=Buffer.Create<UInt16>(mGD.GD, mLMIndexes.ToArray(), id);
 		}
 
 
-		internal void GetLMABuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetLMABuffers(out Buffer vb, out Buffer ib)
 		{
 			if(mLMAVerts.Count == 0)
 			{
@@ -308,15 +279,22 @@ namespace BSPCore
 				varray[i].Color0		=mLMAColors[i];
 			}
 
-			vb	=new VertexBuffer(mGD, mLMAVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosNormTex04Col0>(varray);
+			BufferDescription	bd	=new BufferDescription(
+				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mLMAIndexes.Count, BufferUsage.None);
-			ib.SetData<Int32>(mLMAIndexes.ToArray());
+			vb	=Buffer.Create(mGD.GD, varray, bd);
+			
+			BufferDescription	id	=new BufferDescription(mLMAIndexes.Count * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			ib	=Buffer.Create<UInt16>(mGD.GD, mLMAIndexes.ToArray(), id);
 		}
 
 
-		internal void GetVLitBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetVLitBuffers(out Buffer vb, out Buffer ib)
 		{
 			if(mVLitVerts.Count == 0)
 			{
@@ -334,15 +312,22 @@ namespace BSPCore
 				varray[i].Color0	=mVLitColors[i];
 			}
 
-			vb	=new VertexBuffer(mGD, mVLitVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosNormTex0Col0>(varray);
+			BufferDescription	bd	=new BufferDescription(
+				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mVLitIndexes.Count, BufferUsage.None);
-			ib.SetData<Int32>(mVLitIndexes.ToArray());
+			vb	=Buffer.Create(mGD.GD, varray, bd);
+			
+			BufferDescription	id	=new BufferDescription(mVLitIndexes.Count * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			ib	=Buffer.Create<UInt16>(mGD.GD, mVLitIndexes.ToArray(), id);
 		}
 
 
-		internal void GetAlphaBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetAlphaBuffers(out Buffer vb, out Buffer ib)
 		{
 			if(mAlphaVerts.Count == 0)
 			{
@@ -360,15 +345,22 @@ namespace BSPCore
 				varray[i].Color0	=mAlphaColors[i];
 			}
 
-			vb	=new VertexBuffer(mGD, mAlphaVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosNormTex0Col0>(varray);
+			BufferDescription	bd	=new BufferDescription(
+				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mAlphaIndexes.Count, BufferUsage.None);
-			ib.SetData<Int32>(mAlphaIndexes.ToArray());
+			vb	=Buffer.Create(mGD.GD, varray, bd);
+			
+			BufferDescription	id	=new BufferDescription(mAlphaIndexes.Count * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			ib	=Buffer.Create<UInt16>(mGD.GD, mAlphaIndexes.ToArray(), id);
 		}
 
 
-		internal void GetFullBrightBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetFullBrightBuffers(out Buffer vb, out Buffer ib)
 		{
 			if(mFBVerts.Count == 0)
 			{
@@ -385,15 +377,22 @@ namespace BSPCore
 				varray[i].TexCoord0	=mFBTex0[i];
 			}
 
-			vb	=new VertexBuffer(mGD, mFBVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosNormTex0>(varray);
+			BufferDescription	bd	=new BufferDescription(
+				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mFBIndexes.Count, BufferUsage.None);
-			ib.SetData<Int32>(mFBIndexes.ToArray());
+			vb	=Buffer.Create(mGD.GD, varray, bd);
+			
+			BufferDescription	id	=new BufferDescription(mFBIndexes.Count * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			ib	=Buffer.Create<UInt16>(mGD.GD, mFBIndexes.ToArray(), id);
 		}
 
 
-		internal void GetMirrorBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetMirrorBuffers(out Buffer vb, out Buffer ib)
 		{
 			if(mMirrorVerts.Count == 0)
 			{
@@ -412,15 +411,22 @@ namespace BSPCore
 				varray[i].Color0	=mMirrorColors[i];
 			}
 
-			vb	=new VertexBuffer(mGD, mMirrorVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosNormTex0Tex1Col0>(varray);
+			BufferDescription	bd	=new BufferDescription(
+				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mMirrorIndexes.Count, BufferUsage.None);
-			ib.SetData<Int32>(mMirrorIndexes.ToArray());
+			vb	=Buffer.Create(mGD.GD, varray, bd);
+			
+			BufferDescription	id	=new BufferDescription(mMirrorIndexes.Count * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			ib	=Buffer.Create<UInt16>(mGD.GD, mMirrorIndexes.ToArray(), id);
 		}
 
 
-		internal void GetSkyBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetSkyBuffers(out Buffer vb, out Buffer ib)
 		{
 			if(mSkyVerts.Count == 0)
 			{
@@ -436,15 +442,22 @@ namespace BSPCore
 				varray[i].TexCoord0	=mSkyTex0[i];
 			}
 
-			vb	=new VertexBuffer(mGD, mSkyVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosTex0>(varray);
+			BufferDescription	bd	=new BufferDescription(
+				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mSkyIndexes.Count, BufferUsage.None);
-			ib.SetData<Int32>(mSkyIndexes.ToArray());
+			vb	=Buffer.Create(mGD.GD, varray, bd);
+			
+			BufferDescription	id	=new BufferDescription(mSkyIndexes.Count * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			ib	=Buffer.Create<UInt16>(mGD.GD, mSkyIndexes.ToArray(), id);
 		}
 
 
-		internal void GetLMAnimBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetLMAnimBuffers(out Buffer vb, out Buffer ib)
 		{
 			if(mLMAnimVerts.Count == 0)
 			{
@@ -470,18 +483,25 @@ namespace BSPCore
 				varray[i].TexCoord2.X	=mLMAnimFaceTex4[i].X;
 				varray[i].TexCoord2.Y	=mLMAnimFaceTex4[i].Y;
 				varray[i].TexCoord2.Z	=1.0f;	//alpha
-				varray[i].AnimStyle		=new HalfVector4(mLMAnimStyle[i]);
+				varray[i].AnimStyle		=mLMAnimStyle[i];
 			}
 
-			vb	=new VertexBuffer(mGD, mLMAnimVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosNormBlendTex04Tex14Tex24>(varray);
+			BufferDescription	bd	=new BufferDescription(
+				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mLMAnimIndexes.Count, BufferUsage.None);
-			ib.SetData<Int32>(mLMAnimIndexes.ToArray());
+			vb	=Buffer.Create(mGD.GD, varray, bd);
+			
+			BufferDescription	id	=new BufferDescription(mLMAnimIndexes.Count * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			ib	=Buffer.Create<UInt16>(mGD.GD, mLMAnimIndexes.ToArray(), id);
 		}
 
 
-		internal void GetLMAAnimBuffers(out VertexBuffer vb, out IndexBuffer ib)
+		internal void GetLMAAnimBuffers(out Buffer vb, out Buffer ib)
 		{
 			if(mLMAAnimVerts.Count == 0)
 			{
@@ -507,14 +527,21 @@ namespace BSPCore
 				varray[i].TexCoord2.X	=mLMAAnimFaceTex4[i].X;
 				varray[i].TexCoord2.Y	=mLMAAnimFaceTex4[i].Y;
 				varray[i].TexCoord2.Z	=mLMAAnimColors[i].W;
-				varray[i].AnimStyle		=new HalfVector4(mLMAAnimStyle[i]);
+				varray[i].AnimStyle		=mLMAAnimStyle[i];
 			}
 
-			vb	=new VertexBuffer(mGD, mLMAAnimVD, varray.Length, BufferUsage.None);
-			vb.SetData<VPosNormBlendTex04Tex14Tex24>(varray);
+			BufferDescription	bd	=new BufferDescription(
+				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
+				ResourceUsage.Default, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-			ib	=new IndexBuffer(mGD, IndexElementSize.ThirtyTwoBits, mLMAAnimIndexes.Count, BufferUsage.None);
-			ib.SetData<Int32>(mLMAAnimIndexes.ToArray());
+			vb	=Buffer.Create(mGD.GD, varray, bd);
+			
+			BufferDescription	id	=new BufferDescription(mLMAAnimIndexes.Count * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			ib	=Buffer.Create<UInt16>(mGD.GD, mLMAAnimIndexes.ToArray(), id);
 		}
 
 
@@ -527,19 +554,19 @@ namespace BSPCore
 		{
 			GFXPlane	[]pp	=pobj as GFXPlane [];
 
-			int	vertOfs	=0;	//model offsets
+			UInt16	vertOfs	=0;	//model offsets
 			for(int i=0;i < models.Length;i++)
 			{
 				//store faces per material
 				List<DrawDataChunk>	matChunks	=new List<DrawDataChunk>();
 
-				foreach(Material mat in mMaterials)
+				foreach(string mat in mMaterialNames)
 				{
 					DrawDataChunk	ddc	=new DrawDataChunk();
 					matChunks.Add(ddc);
 
 					//skip on material name
-					if(!correct(null, null, mat.Name))
+					if(!correct(null, null, mat))
 					{
 						continue;
 					}
@@ -552,7 +579,7 @@ namespace BSPCore
 						GFXFace		f	=mFaces[face];
 						GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
-						if(!correct(f, tex, mat.Name))
+						if(!correct(f, tex, mat))
 						{
 							continue;
 						}
@@ -578,20 +605,20 @@ namespace BSPCore
 		{
 			GFXPlane	[]pp	=pobj as GFXPlane [];
 
-			int	vertOfs	=0;	//model offsets
+			UInt16	vertOfs	=0;	//model offsets
 			for(int i=0;i < models.Length;i++)
 			{
 				//store each plane used, and how many faces per material
 				List<Dictionary<Int32, DrawDataChunk>>	perPlaneChunks
 					=new List<Dictionary<Int32, DrawDataChunk>>();
 
-				foreach(Material mat in mMaterials)
+				foreach(string mat in mMaterialNames)
 				{
 					Dictionary<Int32, DrawDataChunk>	ddcs
 						=new Dictionary<Int32, DrawDataChunk>();
 					perPlaneChunks.Add(ddcs);
 
-					if(!correct(null, null, mat.Name))
+					if(!correct(null, null, mat))
 					{
 						continue;
 					}
@@ -604,7 +631,7 @@ namespace BSPCore
 						GFXFace		f	=mFaces[face];
 						GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
 
-						if(!correct(f, tex, mat.Name))
+						if(!correct(f, tex, mat))
 						{
 							continue;
 						}
@@ -727,7 +754,7 @@ namespace BSPCore
 		}
 
 
-		List<DrawCall> ComputeIndexes(List<int> inds, List<DrawDataChunk> ddcs, ref int vertOfs)
+		List<DrawCall> ComputeIndexes(List<UInt16> inds, List<DrawDataChunk> ddcs, ref UInt16 vertOfs)
 		{
 			List<DrawCall>	draws	=new List<DrawCall>();
 
@@ -739,34 +766,28 @@ namespace BSPCore
 				DrawCall	dc		=new DrawCall();				
 				dc.mStartIndex		=cnt;
 				dc.mSortPoint		=Vector3.Zero;	//unused for opaques
-				dc.mMinVertIndex	=696969;
 
 				for(int i=0;i < ddcs[j].mNumFaces;i++)
 				{
 					int	nverts	=ddcs[j].mVCounts[i];
 
 					//triangulate
-					for(int k=1;k < nverts-1;k++)
+					for(UInt16 k=1;k < nverts-1;k++)
 					{
 						inds.Add(vertOfs);
-						inds.Add(vertOfs + k);
-						inds.Add(vertOfs + ((k + 1) % nverts));
+						inds.Add((UInt16)(vertOfs + k));
+						inds.Add((UInt16)(vertOfs + ((k + 1) % nverts)));
 					}
 
-					if(vertOfs < dc.mMinVertIndex)
-					{
-						dc.mMinVertIndex	=vertOfs;
-					}
-
-					vertOfs	+=ddcs[j].mVCounts[i];
+					vertOfs	+=(UInt16)ddcs[j].mVCounts[i];
 				}
 
 				int	numTris	=(inds.Count - cnt);
 
 				numTris	/=3;
 
-				dc.mPrimCount	=numTris;
-				dc.mNumVerts	=ddcs[j].mVerts.Count;
+//				dc.mPrimCount	=numTris;
+//				dc.mNumVerts	=ddcs[j].mVerts.Count;
 
 				draws.Add(dc);
 			}
@@ -897,8 +918,8 @@ namespace BSPCore
 		}
 
 
-		List<List<DrawCall>> ComputeAlphaIndexes(List<int> inds,
-			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref int vertOfs)
+		List<List<DrawCall>> ComputeAlphaIndexes(List<UInt16> inds,
+			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref UInt16 vertOfs)
 		{
 			List<List<DrawCall>>	draws	=new List<List<DrawCall>>();
 
@@ -913,7 +934,6 @@ namespace BSPCore
 					DrawCall	dc		=new DrawCall();				
 					dc.mStartIndex		=cnt;
 					dc.mSortPoint		=ComputeSortPoint(pf.Value);
-					dc.mMinVertIndex	=696969;
 
 					for(int i=0;i < pf.Value.mNumFaces;i++)
 					{
@@ -923,24 +943,19 @@ namespace BSPCore
 						for(int k=1;k < nverts-1;k++)
 						{
 							inds.Add(vertOfs);
-							inds.Add(vertOfs + k);
-							inds.Add(vertOfs + ((k + 1) % nverts));
+							inds.Add((UInt16)(vertOfs + k));
+							inds.Add((UInt16)(vertOfs + ((k + 1) % nverts)));
 						}
 
-						if(vertOfs < dc.mMinVertIndex)
-						{
-							dc.mMinVertIndex	=vertOfs;
-						}
-
-						vertOfs	+=pf.Value.mVCounts[i];
+						vertOfs	+=(UInt16)pf.Value.mVCounts[i];
 					}
 
 					int	numTris	=(inds.Count - cnt);
 
 					numTris	/=3;
 
-					dc.mPrimCount	=numTris;
-					dc.mNumVerts	=pf.Value.mVerts.Count;
+//					dc.mPrimCount	=numTris;
+//					dc.mNumVerts	=pf.Value.mVerts.Count;
 
 					dcs.Add(dc);
 				}
@@ -956,18 +971,11 @@ namespace BSPCore
 		}
 
 
-		void CalcMaterials(bool bDynamic)
+		void CalcMaterials()
 		{
 			//build material list
 			foreach(string matName in mMaterialNames)
-			{				
-				MaterialLib.Material	mat	=mMatLib.CreateMaterial();
-				mat.Technique			="";
-				mat.BlendState			=BlendState.Opaque;
-				mat.DepthState			=DepthStencilState.Default;
-				mat.RasterState			=RasterizerState.CullCounterClockwise;
-				mat.ShaderName			="Shaders\\BSP";
-
+			{
 				bool	bCel	=false;
 				string	mn		=matName;
 				if(mn.Contains("*Cel"))
@@ -975,115 +983,102 @@ namespace BSPCore
 					bCel	=true;
 				}
 
-				mat.Name	=mn;
+				string	tech		="";
+				bool	bLightMap	=false;
 
 				//set some parameter defaults
 				if(mn.EndsWith("*Alpha"))
 				{
-					mat.BlendState	=BlendState.AlphaBlend;
-					mat.DepthState	=DepthStencilState.DepthRead;
 					if(bCel)
 					{
-						mat.Technique	="VertexLightingCel";
+						tech	="VertexLightingCel";
 					}
 					else
 					{
-						mat.Technique	="Alpha";
+						tech	="Alpha";
 					}
 				}
 				else if(mn.EndsWith("*LitAlpha"))
 				{
-					mat.BlendState	=BlendState.AlphaBlend;
-					mat.DepthState	=DepthStencilState.DepthRead;
-					mat.AddParameter("mLightMap",
-						EffectParameterClass.Object,
-						EffectParameterType.Texture, 1,
-						"LightMapAtlas");
+					bLightMap	=true;
 					if(bCel)
 					{
-						mat.Technique	="LightMapAlphaCel";
+						tech	="LightMapAlphaCel";
 					}
 					else
 					{
-						mat.Technique	="LightMapAlpha";
+						tech	="LightMapAlpha";
 					}
 				}
 				else if(mn.EndsWith("*LitAlphaAnim"))
 				{
-					mat.BlendState	=BlendState.AlphaBlend;
-					mat.DepthState	=DepthStencilState.DepthRead;
-					mat.AddParameter("mLightMap",
-						EffectParameterClass.Object,
-						EffectParameterType.Texture, 1,
-						"LightMapAtlas");
+					bLightMap	=true;
 					if(bCel)
 					{
-						mat.Technique	="LightMapAnimAlphaCel";
+						tech	="LightMapAnimAlphaCel";
 					}
 					else
 					{
-						mat.Technique	="LightMapAnimAlpha";
+						tech	="LightMapAnimAlpha";
 					}
 				}
 				else if(mn.EndsWith("*VertLit"))
 				{
 					if(bCel)
 					{
-						mat.Technique	="VertexLightingCel";
+						tech	="VertexLightingCel";
 					}
 					else
 					{
-						mat.Technique	="VertexLighting";
+						tech	="VertexLighting";
 					}
 				}
 				else if(mn.EndsWith("*FullBright"))
 				{
-					mat.Technique	="FullBright";
+					tech	="FullBright";
 				}
 				else if(mn.EndsWith("*Mirror"))
 				{
-					mat.Technique	="Mirror";
-					mat.AddParameter("mLightMap",
-						EffectParameterClass.Object,
-						EffectParameterType.Texture, 1,
-						"MirrorTexture");
+					bLightMap	=true;
+					tech		="Mirror";
 				}
 				else if(mn.EndsWith("*Sky"))
 				{
-					mat.Technique	="Sky";
+					tech	="Sky";
 				}
 				else if(mn.EndsWith("*Anim"))
 				{
 					if(bCel)
 					{
-						mat.Technique	="LightMapAnimCel";
+						tech	="LightMapAnimCel";
 					}
 					else
 					{
-						mat.Technique	="LightMapAnim";
+						tech	="LightMapAnim";
 					}
-					mat.AddParameter("mLightMap",
-						EffectParameterClass.Object,
-						EffectParameterType.Texture, 1,
-						"LightMapAtlas");
+					bLightMap	=true;
 				}
 				else
 				{
 					if(bCel)
 					{
-						mat.Technique	="LightMapCel";
+						tech	="LightMapCel";
 					}
 					else
 					{
-						mat.Technique	="LightMap";
+						tech	="LightMap";
 					}
-					mat.AddParameter("mLightMap",
-						EffectParameterClass.Object,
-						EffectParameterType.Texture, 1,
-						"LightMapAtlas");
+					bLightMap	=true;
 				}
 
-				mMaterials.Add(mat);
+				mMatLib.CreateMaterial(matName);
+
+				mMatLib.SetMaterialEffect(matName, "BSP.fx");
+				mMatLib.SetMaterialTechnique(matName, tech);
+				if(bLightMap)
+				{
+					mMatLib.SetMaterialParameter(matName, "mLightMap", "LightMapAtlas");
+				}
 			}
 		}
 

@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 namespace BSPCore
 {
 	//TODO: Should probably gank this and just use GBSPPlane
-	public class GFXPlane : UtilityLib.IReadWriteable
+	public class GFXPlane
 	{
 		public Vector3	mNormal;
 		public float	mDist;

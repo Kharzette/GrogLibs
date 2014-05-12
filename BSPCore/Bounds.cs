@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace BSPCore
@@ -68,8 +68,8 @@ namespace BSPCore
 		{
 			for(int i=0;i < 3;i++)
 			{
-				if(UtilityLib.Mathery.VecIdx(mMins, i) >= UtilityLib.Mathery.VecIdx(b2.mMaxs, i) ||
-					UtilityLib.Mathery.VecIdx(mMaxs, i) <= UtilityLib.Mathery.VecIdx(b2.mMins, i))
+				if(mMins[i] >= b2.mMaxs[i]
+					|| mMaxs[i] <= b2.mMins[i])
 				{
 					return	false;
 				}
@@ -97,8 +97,8 @@ namespace BSPCore
 		{
 			for(int i=0;i < 3;i++)
 			{
-				if(UtilityLib.Mathery.VecIdx(mMins, i) <= -MIN_MAX_BOUNDS
-					|| UtilityLib.Mathery.VecIdx(mMaxs, i) >= MIN_MAX_BOUNDS)
+				if(mMins[i] <= -MIN_MAX_BOUNDS
+					|| mMaxs[i] >= MIN_MAX_BOUNDS)
 				{
 					return	true;
 				}
@@ -150,7 +150,6 @@ namespace BSPCore
 		{
 			UInt32	Side;
 			Vector3	Corner1, Corner2;
-			float	Dist1, Dist2;
 
 			Corner1	=Vector3.Zero;
 			Corner2	=Vector3.Zero;
@@ -159,14 +158,12 @@ namespace BSPCore
 			{
 				Side	=0;
 
-				if(UtilityLib.Mathery.VecIdx(mMaxs, Plane.mType)
-					> Plane.mDist + GBSPPlane.PLANESIDE_EPSILON)
+				if(mMaxs[(int)Plane.mType] > (Plane.mDist + GBSPPlane.PLANESIDE_EPSILON))
 				{
 					Side	|=GBSPPlane.PSIDE_FRONT;
 				}
 
-				if(UtilityLib.Mathery.VecIdx(mMins, Plane.mType)
-					< Plane.mDist - GBSPPlane.PLANESIDE_EPSILON)
+				if(mMins[(int)Plane.mType] < (Plane.mDist - GBSPPlane.PLANESIDE_EPSILON))
 				{
 					Side	|=GBSPPlane.PSIDE_BACK;
 				}
@@ -175,24 +172,20 @@ namespace BSPCore
 			
 			for(int i=0;i < 3;i++)
 			{
-				if(UtilityLib.Mathery.VecIdx(Plane.mNormal, i) < 0)
+				if(Plane.mNormal[i] < 0)
 				{
-					UtilityLib.Mathery.VecIdxAssign(ref Corner1, i,
-						UtilityLib.Mathery.VecIdx(mMins, i));
-					UtilityLib.Mathery.VecIdxAssign(ref Corner2, i,
-						UtilityLib.Mathery.VecIdx(mMaxs, i));
+					Corner1[i]	=mMins[i];
+					Corner2[i]	=mMaxs[i];
 				}
 				else
 				{
-					UtilityLib.Mathery.VecIdxAssign(ref Corner2, i,
-						UtilityLib.Mathery.VecIdx(mMins, i));
-					UtilityLib.Mathery.VecIdxAssign(ref Corner1, i,
-						UtilityLib.Mathery.VecIdx(mMaxs, i));
+					Corner2[i]	=mMins[i];
+					Corner1[i]	=mMaxs[i];
 				}
 			}
 
-			Dist1	=Vector3.Dot(Plane.mNormal, Corner1) - Plane.mDist;
-			Dist2	=Vector3.Dot(Plane.mNormal, Corner2) - Plane.mDist;
+			float	Dist1	=Vector3.Dot(Plane.mNormal, Corner1) - Plane.mDist;
+			float	Dist2	=Vector3.Dot(Plane.mNormal, Corner2) - Plane.mDist;
 			Side	=0;
 			if(Dist1 >= GBSPPlane.PLANESIDE_EPSILON)
 			{

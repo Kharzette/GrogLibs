@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using UtilityLib;
 
 
@@ -136,7 +136,7 @@ namespace BSPCore
 
 				if(Misc.bFlagSet(ti.mFlags, TexInfo.TRANSPARENT | TexInfo.MIRROR))
 				{
-					ti.mAlpha	=MathHelper.Clamp(numbers[14], 0.0f, 1.0f);
+					ti.mAlpha	=MathUtil.Clamp(numbers[14], 0.0f, 1.0f);
 
 					if(ti.mAlpha == 1.0f)
 					{
@@ -182,8 +182,8 @@ namespace BSPCore
 				//wrap into 0 to 360
 				UtilityLib.Mathery.WrapAngleDegrees(ref rot);
 
-				Matrix	texRot	=Matrix.CreateFromAxisAngle(plane.mNormal,
-					MathHelper.ToRadians(rot));
+				Matrix	texRot	=Matrix.RotationAxis(plane.mNormal,
+					MathUtil.DegreesToRadians(rot));
 
 				//rotate tex vecs
 				ti.mUVec	=Vector3.TransformNormal(ti.mUVec, texRot);

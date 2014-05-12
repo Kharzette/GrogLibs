@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace BSPCore
@@ -1104,7 +1104,7 @@ namespace BSPCore
 							{
 								plane.Inverse();
 							}
-							if(UtilityLib.Mathery.VecIdx(plane.mNormal, Axis) == Dir)
+							if(plane.mNormal[Axis] == Dir)
 							{
 								break;
 							}
@@ -1114,16 +1114,16 @@ namespace BSPCore
 							//Add a new axial aligned side
 							plane.mNormal	=Vector3.Zero;
 
-							UtilityLib.Mathery.VecIdxAssign(ref plane.mNormal, Axis, Dir);
+							plane.mNormal[Axis]	=Dir;
 
 							//get the mins/maxs from the gbsp brush
 							if(Dir == 1)
 							{
-								plane.mDist	=UtilityLib.Mathery.VecIdx(bnd.mMaxs, Axis);
+								plane.mDist	=bnd.mMaxs[Axis];
 							}
 							else
 							{
-								plane.mDist	=-UtilityLib.Mathery.VecIdx(bnd.mMins, Axis);
+								plane.mDist	=-bnd.mMins[Axis];
 							}
 
 							bool	side;

@@ -4,8 +4,8 @@ using System.IO;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
-using Microsoft.Xna.Framework;
-using BSPCore;
+using SharpDX;
+using UtilityLib;
 
 
 namespace BSPCore
@@ -32,33 +32,23 @@ namespace BSPCore
 			}
 
 			//read regular bsp crap
-			mGFXModels		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXModel>(count); }) as GFXModel[];
-			mGFXNodes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXNode>(count); }) as GFXNode[];
-			mGFXLeafs		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXLeaf>(count); }) as GFXLeaf[];
+			mGFXModels		=FileUtil.ReadArray<GFXModel>(br);
+			mGFXNodes		=FileUtil.ReadArray<GFXNode>(br);
+			mGFXLeafs		=FileUtil.ReadArray<GFXLeaf>(br);
 
 			LoadGFXLeafFaces(br);
 
-			mGFXClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXCluster>(count); }) as GFXCluster[];
-			mGFXAreas		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXArea>(count); }) as GFXArea[];
-			mGFXAreaPortals	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXAreaPortal>(count); }) as GFXAreaPortal[];
-			mGFXLeafSides	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXLeafSide>(count); }) as GFXLeafSide[];
-			mGFXFaces		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXFace>(count); }) as GFXFace[];
-			mGFXPlanes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXPlane>(count); }) as GFXPlane[];
+			mGFXClusters	=FileUtil.ReadArray<GFXCluster>(br);
+			mGFXAreas		=FileUtil.ReadArray<GFXArea>(br);
+			mGFXAreaPortals	=FileUtil.ReadArray<GFXAreaPortal>(br);
+			mGFXLeafSides	=FileUtil.ReadArray<GFXLeafSide>(br);
+			mGFXFaces		=FileUtil.ReadArray<GFXFace>(br);
+			mGFXPlanes		=FileUtil.ReadArray<GFXPlane>(br);
 
 			LoadGFXVerts(br);
 			LoadGFXVertIndexes(br);
 
-			mGFXTexInfos	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXTexInfo>(count); }) as GFXTexInfo[];
+			mGFXTexInfos	=FileUtil.ReadArray<GFXTexInfo>(br);
 
 			if(header.mbHasLight)
 			{
@@ -69,14 +59,13 @@ namespace BSPCore
 			br.Close();
 			file.Close();
 
-			string	entName	=UtilityLib.FileUtil.StripExtension(fileName);
+			string	entName	=FileUtil.StripExtension(fileName);
 			entName			+=".EntData";
 
 			file	=new FileStream(entName, FileMode.Open, FileAccess.Read);
 			br		=new BinaryReader(file);
 
-			mGFXEntities	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<MapEntity>(count); }) as MapEntity[];
+			mGFXEntities	=FileUtil.ReadArray<MapEntity>(br);
 
 			br.Close();
 			file.Close();
@@ -437,9 +426,7 @@ namespace BSPCore
 			bw.Write(mGFXVerts.Length);
 			foreach(Vector3 vert in mGFXVerts)
 			{
-				bw.Write(vert.X);
-				bw.Write(vert.Y);
-				bw.Write(vert.Z);
+				FileUtil.WriteVector3(bw, vert);
 			}
 		}
 

@@ -216,6 +216,52 @@ namespace MeshLib
 		}
 
 
+		public float[,] LudumDareTerrainDataHack()
+		{
+			List<Vector3>	verts	=VertexTypes.GetPositions(mVertArray, mTypeIndex);
+
+			//these verts are in random order (oops)
+
+			//sort into y bucketses
+			Dictionary<int, List<Vector3>>	yBuckets	=new Dictionary<int,List<Vector3>>();
+			for(int y=-25;y < 26;y++)
+			{
+				yBuckets.Add(y, new List<Vector3>());
+			}
+
+			for(int y=-25;y < 26;y++)
+			{
+				foreach(Vector3 pos in verts)
+				{
+					if(Mathery.CompareFloat(pos.Y, y))
+					{
+						if(!yBuckets[y].Contains(pos))
+						{
+							yBuckets[y].Add(pos);
+						}
+					}
+				}
+			}
+
+			for(int y=-25;y < 26;y++)
+			{
+				yBuckets[y].OrderBy(x => x.X);
+			}
+
+			float	[,]ret	=new float[51, 51];
+
+			for(int y=-25;y < 26;y++)
+			{
+				int	x	=0;
+				foreach(Vector3 vec in yBuckets[y])
+				{
+					ret[y + 25, x++]	=vec.Z;
+				}
+			}
+			return	ret;
+		}
+
+
 		public void NukeVertexElement(List<int> indexes, Device gd)
 		{
 			mVertArray	=VertexTypes.NukeElements(mVertArray, mTypeIndex, indexes, out mTypeIndex);

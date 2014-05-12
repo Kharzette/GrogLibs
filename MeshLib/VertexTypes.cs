@@ -10,7 +10,8 @@ using System.Reflection.Emit;
 #endif
 using SharpDX;
 using SharpDX.Direct3D11;
-using Buffer = SharpDX.Direct3D11.Buffer;
+
+using Buffer	=SharpDX.Direct3D11.Buffer;
 
 
 namespace MeshLib

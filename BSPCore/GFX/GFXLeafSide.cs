@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace BSPCore
 {
-	public class GFXLeafSide : UtilityLib.IReadWriteable
+	public class GFXLeafSide
 	{
 		public Int32	mPlaneNum;
 		public bool		mbFlipSide;

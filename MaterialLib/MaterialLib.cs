@@ -323,6 +323,18 @@ namespace MaterialLib
 		}
 
 
+		//mapgrinder constructor, just leaves an empty matlib to use the methods
+		public MaterialLib()
+		{
+		}
+
+
+		public void NukeAllMaterials()
+		{
+			mMats.Clear();
+		}
+
+
 		public void CreateMaterial(string name)
 		{
 			Material	mat	=new Material(name);
@@ -388,6 +400,26 @@ namespace MaterialLib
 				return;
 			}
 			mMats[matName].ResetParameterVisibility();
+		}
+
+
+		public object GetMaterialValue(string matName, string varName)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return	null;
+			}
+
+			BindingList<EffectVariableValue>	vars	=mMats[matName].GetGUIVariables();
+
+			foreach(EffectVariableValue evv in vars)
+			{
+				if(evv.Name == varName)
+				{
+					return	evv.Value;
+				}
+			}
+			return	null;
 		}
 
 

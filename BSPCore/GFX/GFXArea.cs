@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace BSPCore
 {
 	//area stuff doesn't really work yet
-	public class GFXArea : UtilityLib.IReadWriteable
+	public class GFXArea
 	{
 		public Int32	NumAreaPortals;
 		public Int32	FirstAreaPortal;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace BSPCore
@@ -174,7 +174,7 @@ namespace BSPCore
 
 			UInt32	type	=mType % PLANE_ANYX;
 
-			if(UtilityLib.Mathery.VecIdx(mNormal, type) < 0)
+			if(mNormal[(int)type] < 0)
 			{
 				Inverse();
 				side	=true;

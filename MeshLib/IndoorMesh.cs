@@ -116,20 +116,20 @@ namespace MeshLib
 
 			int lightAtlasSize,
 			object pp,
-			out MaterialLib.TexAtlas lightAtlas, bool bDynamicLights);
+			out MaterialLib.TexAtlas lightAtlas);
 
 		public delegate void BuildVLitRenderData(GraphicsDevice g, out Buffer vb,
-			out Buffer ib, out Dictionary<int, List<DrawCall>> dcs, object pp, bool bDynamicLights);
+			out Buffer ib, out Dictionary<int, List<DrawCall>> dcs, object pp);
 
 		public delegate void BuildAlphaRenderData(GraphicsDevice g, out Buffer vb,
-			out Buffer ib, out Dictionary<int, List<List<MeshLib.DrawCall>>> adcs, object pp, bool bDynamicLights);
+			out Buffer ib, out Dictionary<int, List<List<MeshLib.DrawCall>>> adcs, object pp);
 
 		public delegate void BuildFullBrightRenderData(GraphicsDevice g, out Buffer vb,
 			out Buffer ib, out Dictionary<int, List<DrawCall>> dcs, object pp);
 
 		public delegate void BuildMirrorRenderData(GraphicsDevice g, out Buffer vb,
 			out Buffer ib, out Dictionary<int, List<MeshLib.DrawCall>> mdcalls,
-			out List<List<Vector3>> mirrorPolys, object pp, bool bDynamicLights);
+			out List<List<Vector3>> mirrorPolys, object pp);
 
 		public delegate void BuildSkyRenderData(GraphicsDevice g, out Buffer vb,
 			out Buffer ib, out Dictionary<int, List<DrawCall>> dcs, object pp);
@@ -198,12 +198,12 @@ namespace MeshLib
 		}
 
 
-		public void BuildLM(GraphicsDevice g, int atlasSize, BuildLMRenderData brd, object pp, bool bDyn)
+		public void BuildLM(GraphicsDevice g, int atlasSize, BuildLMRenderData brd, object pp)
 		{
 			brd(g, out mLMVB, out mLMIB, out mLMDrawCalls, out mLMAnimVB, out mLMAnimIB,
 				out mLMAnimDrawCalls, out mLMAVB, out mLMAIB, out mLMADrawCalls,
 				out mLMAAnimVB, out mLMAAnimIB,	out mLMAAnimDrawCalls,
-				atlasSize, pp, out mLightMapAtlas, bDyn);
+				atlasSize, pp, out mLightMapAtlas);
 
 			mLMVBB		=new VertexBufferBinding(mLMVB, 28, 0);
 			mLMAVBB		=new VertexBufferBinding(mLMAVB, 56, 0);
@@ -224,17 +224,17 @@ namespace MeshLib
 		}
 
 
-		public void BuildVLit(GraphicsDevice g, BuildVLitRenderData brd, object pp, bool bDyn)
+		public void BuildVLit(GraphicsDevice g, BuildVLitRenderData brd, object pp)
 		{
-			brd(g, out mVLitVB, out mVLitIB, out mVLitDrawCalls, pp, bDyn);
+			brd(g, out mVLitVB, out mVLitIB, out mVLitDrawCalls, pp);
 
 			mVLitVBB	=new VertexBufferBinding(mVLitVB, 48, 0);
 		}
 
 
-		public void BuildAlpha(GraphicsDevice g, BuildAlphaRenderData brd, object pp, bool bDyn)
+		public void BuildAlpha(GraphicsDevice g, BuildAlphaRenderData brd, object pp)
 		{
-			brd(g, out mAlphaVB, out mAlphaIB, out mAlphaDrawCalls, pp, bDyn);
+			brd(g, out mAlphaVB, out mAlphaIB, out mAlphaDrawCalls, pp);
 
 			mAlphaVBB	=new VertexBufferBinding(mAlphaVB, 48, 0);
 		}
@@ -248,9 +248,9 @@ namespace MeshLib
 		}
 
 
-		public void BuildMirror(GraphicsDevice g, BuildMirrorRenderData brd, object pp, bool bDyn)
+		public void BuildMirror(GraphicsDevice g, BuildMirrorRenderData brd, object pp)
 		{
-			brd(g, out mMirrorVB, out mMirrorIB, out mMirrorDrawCalls, out mMirrorPolys, pp, bDyn);
+			brd(g, out mMirrorVB, out mMirrorIB, out mMirrorDrawCalls, out mMirrorPolys, pp);
 
 			mMirrorVBB	=new VertexBufferBinding(mMirrorVB, 56, 0);
 		}
@@ -628,9 +628,9 @@ namespace MeshLib
 			int	numVerts	=br.ReadInt32();
 			if(numVerts != 0)
 			{
-				int	typeIdx	=br.ReadInt32();
+				mLMIndex	=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g.GD, out mLMVerts);
-				mLMVB	=VertexTypes.BuildABuffer(g.GD, mLMVerts, typeIdx);
+				mLMVB	=VertexTypes.BuildABuffer(g.GD, mLMVerts, mLMIndex);
 				mLMVBB	=new VertexBufferBinding(mLMVB, 28, 0);
 				if(bEditor)
 				{
@@ -645,9 +645,9 @@ namespace MeshLib
 			numVerts	=br.ReadInt32();
 			if(numVerts != 0)
 			{
-				int typeIdx	=br.ReadInt32();
+				mVLitIndex	=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g.GD, out mVLitVerts);
-				mVLitVB		=VertexTypes.BuildABuffer(g.GD, mVLitVerts, typeIdx);
+				mVLitVB		=VertexTypes.BuildABuffer(g.GD, mVLitVerts, mVLitIndex);
 				mVLitVBB	=new VertexBufferBinding(mVLitVB, 48, 0);
 				if(bEditor)
 				{
@@ -662,9 +662,9 @@ namespace MeshLib
 			numVerts	=br.ReadInt32();
 			if(numVerts != 0)
 			{
-				int	typeIdx		=br.ReadInt32();
+				mLMAnimIndex	=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g.GD, out mLMAnimVerts);
-				mLMAnimVB	=VertexTypes.BuildABuffer(g.GD, mLMAnimVerts, typeIdx);
+				mLMAnimVB	=VertexTypes.BuildABuffer(g.GD, mLMAnimVerts, mLMAnimIndex);
 				mLMAnimVBB	=new VertexBufferBinding(mLMAnimVB, 80, 0);
 				if(bEditor)
 				{
@@ -679,9 +679,9 @@ namespace MeshLib
 			numVerts	=br.ReadInt32();
 			if(numVerts != 0)
 			{
-				int	typeIdx		=br.ReadInt32();
+				mAlphaIndex	=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g.GD, out mAlphaVerts);
-				mAlphaVB	=VertexTypes.BuildABuffer(g.GD, mAlphaVerts, typeIdx);
+				mAlphaVB	=VertexTypes.BuildABuffer(g.GD, mAlphaVerts, mAlphaIndex);
 				mAlphaVBB	=new VertexBufferBinding(mAlphaVB, 48, 0);
 				if(bEditor)
 				{
@@ -696,9 +696,9 @@ namespace MeshLib
 			numVerts	=br.ReadInt32();
 			if(numVerts != 0)
 			{
-				int	typeIdx		=br.ReadInt32();
+				mSkyIndex	=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g.GD, out mSkyVerts);
-				mSkyVB	=VertexTypes.BuildABuffer(g.GD, mSkyVerts, typeIdx);
+				mSkyVB	=VertexTypes.BuildABuffer(g.GD, mSkyVerts, mSkyIndex);
 				mSkyVBB	=new VertexBufferBinding(mSkyVB, 20, 0);
 				if(bEditor)
 				{
@@ -713,9 +713,9 @@ namespace MeshLib
 			numVerts	=br.ReadInt32();
 			if(numVerts != 0)
 			{
-				int	typeIdx		=br.ReadInt32();
+				mFBIndex	=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g.GD, out mFBVerts);
-				mFBVB	=VertexTypes.BuildABuffer(g.GD, mFBVerts, typeIdx);
+				mFBVB	=VertexTypes.BuildABuffer(g.GD, mFBVerts, mFBIndex);
 				mFBVBB	=new VertexBufferBinding(mFBVB, 32, 0);
 				if(bEditor)
 				{
@@ -730,9 +730,9 @@ namespace MeshLib
 			numVerts	=br.ReadInt32();
 			if(numVerts != 0)
 			{
-				int	typeIdx		=br.ReadInt32();
+				mMirrorIndex	=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g.GD, out mMirrorVerts);
-				mMirrorVB	=VertexTypes.BuildABuffer(g.GD, mMirrorVerts, typeIdx);
+				mMirrorVB	=VertexTypes.BuildABuffer(g.GD, mMirrorVerts, mMirrorIndex);
 				mMirrorVBB	=new VertexBufferBinding(mMirrorVB, 56, 0);
 				if(bEditor)
 				{
@@ -747,9 +747,9 @@ namespace MeshLib
 			numVerts	=br.ReadInt32();
 			if(numVerts != 0)
 			{
-				int	typeIdx		=br.ReadInt32();
+				mLMAIndex	=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g.GD, out mLMAVerts);
-				mLMAVB	=VertexTypes.BuildABuffer(g.GD, mLMAVerts, typeIdx);
+				mLMAVB	=VertexTypes.BuildABuffer(g.GD, mLMAVerts, mLMAIndex);
 				mLMAVBB	=new VertexBufferBinding(mLMAVB, 56, 0);
 				if(bEditor)
 				{
@@ -764,9 +764,9 @@ namespace MeshLib
 			numVerts	=br.ReadInt32();
 			if(numVerts != 0)
 			{
-				int	typeIdx		=br.ReadInt32();
+				mLMAAnimIndex	=br.ReadInt32();
 				VertexTypes.ReadVerts(br, g.GD, out mLMAAnimVerts);
-				mLMAAnimVB	=VertexTypes.BuildABuffer(g.GD, mLMAAnimVerts, typeIdx);
+				mLMAAnimVB	=VertexTypes.BuildABuffer(g.GD, mLMAAnimVerts, mLMAAnimIndex);
 				mLMAAnimVBB	=new VertexBufferBinding(mLMAAnimVB, 80, 0);
 				if(bEditor)
 				{

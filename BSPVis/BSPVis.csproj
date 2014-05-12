@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{D28619D5-2D2D-40A1-AC3C-3509B7B89033}</ProjectGuid>
+    <ProjectGuid>{15ACA212-4BC5-4369-9527-FEB622617EED}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MeshLib</RootNamespace>
-    <AssemblyName>MeshLib</AssemblyName>
+    <RootNamespace>BSPVis</RootNamespace>
+    <AssemblyName>BSPVis</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,50 +32,32 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SharpDX, Version=2.6.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="SharpDX">
       <HintPath>$(SharpDXPackageBinDir)\SharpDX.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D11, Version=2.6.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(SharpDXPackageBinDir)\SharpDX.Direct3D11.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.DXGI, Version=2.6.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(SharpDXPackageBinDir)\SharpDX.DXGI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Anim.cs" />
-    <Compile Include="AnimLib.cs" />
-    <Compile Include="Character.cs" />
-    <Compile Include="DrawCall.cs" />
-    <Compile Include="EditorMesh.cs" />
-    <Compile Include="IndoorMesh.cs" />
-    <Compile Include="KeyFrame.cs" />
-    <Compile Include="Mesh.cs" />
+    <Compile Include="MapVis.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ShadowHelper.cs" />
-    <Compile Include="Skeleton.cs" />
-    <Compile Include="Skin.cs" />
-    <Compile Include="StaticMesh.cs" />
-    <Compile Include="SubAnim.cs" />
-    <Compile Include="TransitionHelper.cs" />
-    <Compile Include="VertexStructures.cs" />
-    <Compile Include="VertexTypes.cs" />
+    <Compile Include="VisPools.cs" />
+    <Compile Include="VISPortal.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MaterialLib\MaterialLib.csproj">
-      <Project>{CABCC4D8-8F21-4728-B317-28D5B500BEFB}</Project>
-      <Name>MaterialLib</Name>
+    <ProjectReference Include="..\BSPCore\BSPCore.csproj">
+      <Project>{5B74D062-FE45-4CC9-8327-698F2B237685}</Project>
+      <Name>BSPCore</Name>
     </ProjectReference>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj">
       <Project>{C2A1DDD2-0237-4CF3-8CBD-C77388FCC54D}</Project>

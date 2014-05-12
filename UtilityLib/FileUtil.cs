@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Linq;
 using System.Reflection;
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -55,6 +56,37 @@ namespace UtilityLib
 #else
 			return	false;
 #endif
+		}
+
+
+		public static void WriteArray<T>(T []zms, BinaryWriter bw)
+		{
+			MethodInfo	write	=typeof(T).GetMethods().Where(
+				x => x.Name == "Write").FirstOrDefault();
+
+			bw.Write(zms.Length);
+			for(int i=0;i < zms.Length;i++)
+			{
+				write.Invoke(zms[i], null);
+			}
+		}
+
+
+		public static T []ReadArray<T>(BinaryReader br)
+		{
+			int	count	=br.ReadInt32();
+
+			T	[]ret	=new T[count];
+
+			MethodInfo	read	=typeof(T).GetMethods().Where(
+				x => x.Name == "Read").FirstOrDefault();
+
+			for(int i=0;i < count;i++)
+			{
+				read.Invoke(ret[i], null);
+			}
+
+			return	ret;
 		}
 
 

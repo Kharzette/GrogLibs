@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 using System.IO;
-using System.Reflection;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace BSPCore
 {
-	public class GFXNode : UtilityLib.IReadWriteable
+	public class GFXNode
 	{
 		public Int32	mFront, mBack;
 		public Int32	mNumFaces;

@@ -1,14 +1,15 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.IO;
+using System.Text;
 using System.Threading;
-using Microsoft.Xna.Framework;
 using System.Diagnostics;
-#if !X64
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Content;
-#endif
+using System.Collections.Generic;
+using UtilityLib;
+
+using SharpDX;
+using SharpDX.Direct3D11;
+
+using Buffer	=SharpDX.Direct3D11.Buffer;
 
 
 namespace BSPCore
@@ -314,8 +315,8 @@ namespace BSPCore
 			{
 				Vector3	modelImpacto	=Vector3.Zero;
 
-				Vector3	frontInv	=Vector3.Transform(Front, modelInv);
-				Vector3	backInv		=Vector3.Transform(Back, modelInv);
+				Vector3	frontInv	=Vector3.TransformCoordinate(Front, modelInv);
+				Vector3	backInv		=Vector3.TransformCoordinate(Back, modelInv);
 
 				if(RayIntersect(frontInv, backInv, mGFXModels[modelIndex].mRootNode, ref modelImpacto, ref hitLeaf))
 				{
@@ -343,8 +344,8 @@ namespace BSPCore
 			{
 				Vector3	modelImpacto	=Vector3.Zero;
 
-				Vector3	frontInv	=Vector3.Transform(Front, modelInv);
-				Vector3	backInv		=Vector3.Transform(Back, modelInv);
+				Vector3	frontInv	=Vector3.TransformCoordinate(Front, modelInv);
+				Vector3	backInv		=Vector3.TransformCoordinate(Back, modelInv);
 
 				if(RayIntersectFace(frontInv, backInv, mGFXModels[modelIndex].mRootNode,
 					ref modelImpacto, ref hitLeaf, ref hit))
@@ -368,7 +369,7 @@ namespace BSPCore
 
 			for(int i=0;i < mGFXModels.Length;i++)
 			{
-				Matrix	mat	=Matrix.CreateTranslation(mGFXModels[i].mOrigin);
+				Matrix	mat	=Matrix.Translation(mGFXModels[i].mOrigin);
 
 				ret.Add(i, mat);
 			}
@@ -618,11 +619,11 @@ namespace BSPCore
 
 			BinaryWriter	bw	=new BinaryWriter(file);
 
-			UtilityLib.FileUtil.WriteArray(mGFXModels, bw);
-			UtilityLib.FileUtil.WriteArray(mGFXNodes, bw);
-			UtilityLib.FileUtil.WriteArray(mGFXLeafs, bw);
-			UtilityLib.FileUtil.WriteArray(mGFXAreas, bw);
-			UtilityLib.FileUtil.WriteArray(mGFXAreaPortals, bw);
+			FileUtil.WriteArray(mGFXModels, bw);
+			FileUtil.WriteArray(mGFXNodes, bw);
+			FileUtil.WriteArray(mGFXLeafs, bw);
+			FileUtil.WriteArray(mGFXAreas, bw);
+			FileUtil.WriteArray(mGFXAreaPortals, bw);
 
 			//planes get rid of the type variable
 			bw.Write(mGFXPlanes.Length);
@@ -631,13 +632,13 @@ namespace BSPCore
 				mGFXPlanes[i].WriteZone(bw);
 			}
 
-			UtilityLib.FileUtil.WriteArray(mGFXEntities, bw);
-			UtilityLib.FileUtil.WriteArray(mGFXLeafSides, bw);
+			FileUtil.WriteArray(mGFXEntities, bw);
+			FileUtil.WriteArray(mGFXLeafSides, bw);
 
 			bw.Write(bDebug);
 			if(bDebug)
 			{
-				UtilityLib.FileUtil.WriteArray(bw, mGFXLeafFaces);	//for debuggery, not used normally
+				FileUtil.WriteArray(bw, mGFXLeafFaces);	//for debuggery, not used normally
 
 				//write debugfaces
 				bw.Write(mGFXFaces.Length);
@@ -648,8 +649,8 @@ namespace BSPCore
 					f.WriteDebug(bw, tex);
 				}
 
-				UtilityLib.FileUtil.WriteArray(bw, mGFXVerts);
-				UtilityLib.FileUtil.WriteArray(bw, mGFXVertIndexes);
+				FileUtil.WriteArray(bw, mGFXVerts);
+				FileUtil.WriteArray(bw, mGFXVertIndexes);
 			}
 
 			saveVis(bw);
@@ -670,33 +671,23 @@ namespace BSPCore
 
 			BinaryReader	br	=new BinaryReader(file);
 
-			mGFXModels		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXModel>(count); }) as GFXModel[];
-			mGFXNodes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXNode>(count); }) as GFXNode[];
-			mGFXLeafs		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXLeaf>(count); }) as GFXLeaf[];
-			mGFXClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXCluster>(count); }) as GFXCluster[];
-			mGFXAreas		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXArea>(count); }) as GFXArea[];
-			mGFXAreaPortals	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXAreaPortal>(count); }) as GFXAreaPortal[];
-			mGFXPlanes		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXPlane>(count); }) as GFXPlane[];
-			mGFXEntities	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<MapEntity>(count); }) as MapEntity[];
-			mGFXLeafSides	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXLeafSide>(count); }) as GFXLeafSide[];
+			mGFXModels		=FileUtil.ReadArray<GFXModel>(br);
+			mGFXNodes		=FileUtil.ReadArray<GFXNode>(br);
+			mGFXLeafs		=FileUtil.ReadArray<GFXLeaf>(br);
+			mGFXClusters	=FileUtil.ReadArray<GFXCluster>(br);
+			mGFXAreas		=FileUtil.ReadArray<GFXArea>(br);
+			mGFXAreaPortals	=FileUtil.ReadArray<GFXAreaPortal>(br);
+			mGFXPlanes		=FileUtil.ReadArray<GFXPlane>(br);
+			mGFXEntities	=FileUtil.ReadArray<MapEntity>(br);
+			mGFXLeafSides	=FileUtil.ReadArray<GFXLeafSide>(br);
 
 			bool	bDebug	=br.ReadBoolean();
 			if(bDebug)
 			{
-				mGFXLeafFaces	=UtilityLib.FileUtil.ReadIntArray(br);
-				mGFXFaces		=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-								{ return UtilityLib.FileUtil.InitArray<GFXFace>(count); }) as GFXFace[];
-				mGFXVerts		=UtilityLib.FileUtil.ReadVecArray(br);
-				mGFXVertIndexes	=UtilityLib.FileUtil.ReadIntArray(br);
+				mGFXLeafFaces	=FileUtil.ReadIntArray(br);
+				mGFXFaces		=FileUtil.ReadArray<GFXFace>(br);
+				mGFXVerts		=FileUtil.ReadVecArray(br);
+				mGFXVertIndexes	=FileUtil.ReadIntArray(br);
 			}
 
 			mLightMapGridSize		=br.ReadInt32();
@@ -721,7 +712,7 @@ namespace BSPCore
 				{
 					string	s	="";
 
-					string	ext	=UtilityLib.FileUtil.GetExtension(mapFileName);
+					string	ext	=FileUtil.GetExtension(mapFileName);
 
 					ext	=ext.ToUpper();
 
@@ -995,7 +986,7 @@ namespace BSPCore
 		public void SaveUpdatedEntities(string fileName)
 		{
 			//save entities
-			string	entName	=UtilityLib.FileUtil.StripExtension(fileName);
+			string	entName	=FileUtil.StripExtension(fileName);
 			entName			+=".EntData";
 
 			FileStream		file	=new FileStream(entName, FileMode.Create, FileAccess.Write);
@@ -1199,7 +1190,7 @@ namespace BSPCore
 			file.Close();
 
 			//save entities
-			string	entName	=UtilityLib.FileUtil.StripExtension(sp.mFileName);
+			string	entName	=FileUtil.StripExtension(sp.mFileName);
 			entName			+=".EntData";
 
 			file	=new FileStream(entName, FileMode.Create, FileAccess.Write);
@@ -1393,7 +1384,7 @@ namespace BSPCore
 #if !X64
 		public MapGrinder	MakeMapGrinder()
 		{
-			return	new MapGrinder(null, mGFXTexInfos, mGFXFaces, 4, 1, false);
+			return	new MapGrinder(null, mGFXTexInfos, mGFXFaces, 4, 1);
 		}
 
 
@@ -1411,21 +1402,21 @@ namespace BSPCore
 		}
 
 
-		public List<MaterialLib.Material> GetMaterials(bool bDynamic)
+		public List<string> GetMaterials()
 		{
-			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1, bDynamic);
+			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
-			return	mg.GetMaterials();
+			return	mg.GetMaterialNames();
 		}
 
 
 		//an intermediate step to generate a set of materials
 		//so the user can set up emissives for radiosity
-		public List<MaterialLib.Material> GenerateMaterials(string fileName)
+		public List<string> GenerateMaterials(string fileName)
 		{
 			LoadGBSPFile(fileName);
 
-			List<MaterialLib.Material>	ret	=GetMaterials(false);
+			List<string>	ret	=GetMaterials();
 
 			FreeGBSPFile();
 
@@ -1554,30 +1545,30 @@ namespace BSPCore
 
 		public bool BuildLMRenderData(GraphicsDevice g,
 			//lightmap stuff
-			out VertexBuffer lmVB,
-			out IndexBuffer lmIB,
+			out Buffer lmVB,
+			out Buffer lmIB,
 			out Dictionary<int, List<MeshLib.DrawCall>> lmDCs,
 
 			//animated lightmap stuff
-			out VertexBuffer lmAnimVB,
-			out IndexBuffer lmAnimIB,
+			out Buffer lmAnimVB,
+			out Buffer lmAnimIB,
 			out Dictionary<int, List<MeshLib.DrawCall>> lmAnimDCs,
 
 			//lightmapped alpha stuff
-			out VertexBuffer lmaVB,
-			out IndexBuffer lmaIB,
+			out Buffer lmaVB,
+			out Buffer lmaIB,
 			out Dictionary<int, List<List<MeshLib.DrawCall>>> lmaDCalls,
 
 			//animated alpha lightmap stuff
-			out VertexBuffer lmaAnimVB,
-			out IndexBuffer lmaAnimIB,
+			out Buffer lmaAnimVB,
+			out Buffer lmaAnimIB,
 			out Dictionary<int, List<List<MeshLib.DrawCall>>> lmaAnimDCalls,
 
 			int lightAtlasSize,
 			object	pp,
-			out MaterialLib.TexAtlas lightAtlas, bool bDyn)
+			out MaterialLib.TexAtlas lightAtlas)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lightAtlasSize, bDyn);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lightAtlasSize);
 
 			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels))
 			{
@@ -1638,11 +1629,11 @@ namespace BSPCore
 		}
 
 
-		public void BuildVLitRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib,
-			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp, bool bDyn)
+		public void BuildVLitRenderData(GraphicsDevice g, out Buffer vb,
+			out Buffer ib,
+			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1, bDyn);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
@@ -1654,10 +1645,12 @@ namespace BSPCore
 		}
 
 
-		public void BuildAlphaRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib,	out Dictionary<int, List<List<MeshLib.DrawCall>>> alphaDrawCalls, object pp, bool bDyn)
+		public void BuildAlphaRenderData(GraphicsDevice g, out Buffer vb,
+			out Buffer ib,
+			out Dictionary<int, List<List<MeshLib.DrawCall>>> alphaDrawCalls,
+			object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1, bDyn);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
@@ -1669,11 +1662,11 @@ namespace BSPCore
 		}
 
 
-		public void BuildFullBrightRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib,
+		public void BuildFullBrightRenderData(GraphicsDevice g, out Buffer vb,
+			out Buffer ib,
 			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1, false);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
@@ -1685,11 +1678,11 @@ namespace BSPCore
 		}
 
 
-		public void BuildMirrorRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib, out Dictionary<int, List<MeshLib.DrawCall>> dcs,
-			out List<List<Vector3>> mirrorPolys, object pp, bool bDyn)
+		public void BuildMirrorRenderData(GraphicsDevice g, out Buffer vb,
+			out Buffer ib, out Dictionary<int, List<MeshLib.DrawCall>> dcs,
+			out List<List<Vector3>> mirrorPolys, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1, bDyn);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
@@ -1701,11 +1694,11 @@ namespace BSPCore
 		}
 
 
-		public void BuildSkyRenderData(GraphicsDevice g, out VertexBuffer vb,
-			out IndexBuffer ib,
+		public void BuildSkyRenderData(GraphicsDevice g, out Buffer vb,
+			out Buffer ib,
 			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1, false);
+			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			mg.BuildSkyFaceData(mGFXVerts, mGFXVertIndexes, pp, mGFXModels);
 

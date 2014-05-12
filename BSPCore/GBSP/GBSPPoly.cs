@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace BSPCore
@@ -121,7 +121,7 @@ namespace BSPCore
 			{
 				for(int k=0;k < 3;k++)
 				{
-					float	val	=UtilityLib.Mathery.VecIdx(mVerts[i], k);
+					float	val	=mVerts[i][k];
 
 					if(val == Bounds.MIN_MAX_BOUNDS)
 					{

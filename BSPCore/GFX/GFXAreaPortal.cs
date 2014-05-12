@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace BSPCore
 {
-	public class GFXAreaPortal : UtilityLib.IReadWriteable
+	public class GFXAreaPortal
 	{
 		public Int32	mModelNum;
 		public Int32	mArea;

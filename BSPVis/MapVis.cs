@@ -6,8 +6,9 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using BSPCore;
+using UtilityLib;
 
 
 namespace BSPVis
@@ -26,24 +27,12 @@ namespace BSPVis
 		public VisParams		mVisParams;
 		public string			mFileName;
 		public BinaryWriter		mBSPFile;
-
-		public ConcurrentQueue<MapVisClient>	mClients;
 	}
 
 	public class WorldLeaf
 	{
 		public Int32	mVisFrame;
 		public Int32	mParent;
-	}
-
-	class WorkDivided
-	{
-		public Int32		mStartPort, mEndPort;
-		public bool			mbAttempted;
-		public bool			mbFinished;
-		public DateTime		mTicTime;
-		public int			mPollSeconds;
-		public MapVisClient	mCruncher;
 	}
 
 	public class VisState
@@ -102,7 +91,7 @@ namespace BSPVis
 			//Clean out any old vis data
 			FreeFileVisData();
 
-			string	visExt	=UtilityLib.FileUtil.StripExtension(vp.mFileName);
+			string	visExt	=FileUtil.StripExtension(vp.mFileName);
 
 			visExt	+=".VisData";
 
@@ -138,7 +127,7 @@ namespace BSPVis
 			CoreEvents.Print("Starting vis at " + startTime + "\n");
 			
 			//Vis'em
-			if(!VisAllLeafs(vp.mClients, vp.mFileName, vp))
+			if(!VisAllLeafs(vp.mFileName, vp))
 			{
 				goto	ExitWithError;
 			}
@@ -189,25 +178,13 @@ namespace BSPVis
 		}
 
 
-		public void VisGBSPFile(string fileName, VisParams prms, BSPBuildParams prms2)
+		public void VisGBSPFile(string fileName,
+			VisParams prms, BSPBuildParams prms2)
 		{
 			VisParameters	vp	=new VisParameters();
 			vp.mBSPParams	=prms2;
 			vp.mVisParams	=prms;
 			vp.mFileName	=fileName;
-
-			ThreadPool.QueueUserWorkItem(ThreadVisCB, vp);
-		}
-
-
-		public void VisGBSPFile(string fileName, VisParams prms,
-			BSPBuildParams prms2, ConcurrentQueue<MapVisClient> clients)
-		{
-			VisParameters	vp	=new VisParameters();
-			vp.mBSPParams	=prms2;
-			vp.mVisParams	=prms;
-			vp.mFileName	=fileName;
-			vp.mClients		=clients;
 
 			ThreadPool.QueueUserWorkItem(ThreadVisCB, vp);
 		}
@@ -225,9 +202,9 @@ namespace BSPVis
 
 		public void SaveVisZoneData(BinaryWriter bw)
 		{
-			UtilityLib.FileUtil.WriteArray(mGFXVisData, bw);
-			UtilityLib.FileUtil.WriteArray(mGFXMaterialVisData, bw);
-			UtilityLib.FileUtil.WriteArray(mGFXClusters, bw); 
+			FileUtil.WriteArray(mGFXVisData, bw);
+			FileUtil.WriteArray(mGFXMaterialVisData, bw);
+			FileUtil.WriteArray(mGFXClusters, bw); 
 		}
 
 
@@ -249,8 +226,8 @@ namespace BSPVis
 				return	++differences;
 			}
 
-			byte	[]visData1	=UtilityLib.FileUtil.ReadByteArray(br);
-			byte	[]matData1	=UtilityLib.FileUtil.ReadByteArray(br);
+			byte	[]visData1	=FileUtil.ReadByteArray(br);
+			byte	[]matData1	=FileUtil.ReadByteArray(br);
 
 			br.Close();
 			fs.Close();
@@ -264,8 +241,8 @@ namespace BSPVis
 				return	++differences;
 			}
 
-			byte	[]visData2	=UtilityLib.FileUtil.ReadByteArray(br);
-			byte	[]matData2	=UtilityLib.FileUtil.ReadByteArray(br);
+			byte	[]visData2	=FileUtil.ReadByteArray(br);
+			byte	[]matData2	=FileUtil.ReadByteArray(br);
 
 			br.Close();
 			fs.Close();
@@ -304,7 +281,7 @@ namespace BSPVis
 
 		public bool LoadVisData(string fileName)
 		{
-			string	visExt	=UtilityLib.FileUtil.StripExtension(fileName);
+			string	visExt	=FileUtil.StripExtension(fileName);
 
 			visExt	+=".VisData";
 
@@ -323,12 +300,11 @@ namespace BSPVis
 				return	false;
 			}
 
-			mGFXVisData			=UtilityLib.FileUtil.ReadByteArray(br);
-			mGFXMaterialVisData	=UtilityLib.FileUtil.ReadByteArray(br);
+			mGFXVisData			=FileUtil.ReadByteArray(br);
+			mGFXMaterialVisData	=FileUtil.ReadByteArray(br);
 
 			//load clusters
-			mGFXClusters	=UtilityLib.FileUtil.ReadArray(br, delegate(Int32 count)
-							{ return UtilityLib.FileUtil.InitArray<GFXCluster>(count); }) as GFXCluster[];
+			mGFXClusters	=FileUtil.ReadArray<GFXCluster>(br);
 
 			br.Close();
 			fs.Close();
@@ -400,7 +376,7 @@ namespace BSPVis
 				return	false;
 			}
 
-			string	visExt	=UtilityLib.FileUtil.StripExtension(fileName);
+			string	visExt	=FileUtil.StripExtension(fileName);
 
 			visExt	+=".VisData";
 
@@ -669,7 +645,7 @@ namespace BSPVis
 		}
 
 
-		bool VisAllLeafs(ConcurrentQueue<MapVisClient> clients, string fileName, VisParameters vp)
+		bool VisAllLeafs(string fileName, VisParameters vp)
 		{
 			CoreEvents.Print("Rough vis for " + mVisPortals.Length + " portals...\n");
 
@@ -695,17 +671,10 @@ namespace BSPVis
 			if(vp.mVisParams.mbFullVis)
 			{
 				CoreEvents.Print("Full vis for " + mVisPortals.Length + " portals...\n");
-				if(vp.mVisParams.mbDistribute)
+				prog	=ProgressWatcher.RegisterProgress(0, mVisPortals.Length, 0);
+				if(!PortalFlow(0, mVisPortals.Length, vp.mBSPParams, prog))
 				{
-					DistributedVis(clients, fileName, vp.mVisParams.mbResume, vp.mBSPParams.mbVerbose);
-				}
-				else
-				{
-					prog	=ProgressWatcher.RegisterProgress(0, mVisPortals.Length, 0);
-					if(!PortalFlow(0, mVisPortals.Length, vp.mBSPParams, prog))
-					{
-						return	false;
-					}
+					return	false;
 				}
 			}
 			ProgressWatcher.Clear();

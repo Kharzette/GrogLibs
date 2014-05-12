@@ -3,8 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using SharpDX;
 using UtilityLib;
 
 
@@ -24,15 +23,6 @@ namespace PathLib
 
 		//game specific info on node occupation
 		List<object>	[]mNodeOccupation;
-
-		//drawing stuff
-		VertexBuffer		mNodeVB, mConVB;
-		IndexBuffer			mNodeIB, mConIB;
-
-		VertexPositionColor	[]mNodeVerts;
-		VertexPositionColor	[]mConVerts;
-		UInt16				[]mNodeIndexs;
-		UInt16				[]mConIndexs;
 
 		List<PathNode>	mNodery	=new List<PathNode>();
 
@@ -523,130 +513,6 @@ namespace PathLib
 				}
 			}
 			return	bestNode;
-		}
-
-
-		public void Render(GraphicsDevice gd, BasicEffect bfx)
-		{
-			if(mConVB != null)
-			{
-				//draw connection lines first
-				gd.SetVertexBuffer(mConVB);
-				gd.Indices	=mConIB;
-
-				bfx.CurrentTechnique.Passes[0].Apply();
-				gd.DrawIndexedPrimitives(PrimitiveType.LineList,
-					0, 0, mConVerts.Length, 0, mConIndexs.Length / 2);
-			}
-
-			if(mNodeVB != null)
-			{
-				//draw node polys
-				gd.SetVertexBuffer(mNodeVB);
-				gd.Indices	=mNodeIB;
-
-				bfx.CurrentTechnique.Passes[0].Apply();
-				gd.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-					0, 0, mNodeVerts.Length, 0, mNodeVerts.Length);
-			}
-		}
-
-
-		public void BuildDrawInfo(GraphicsDevice gd)
-		{
-			List<ConvexPoly>	built	=new List<ConvexPoly>();
-
-			List<int>		vertCounts	=new List<int>();
-			List<Vector3>	nodePoints	=new List<Vector3>();
-			List<UInt16>	indexes		=new List<UInt16>();
-			foreach(PathNode pn in mNodery)
-			{
-				if(built.Contains(pn.mPoly))
-				{
-					continue;
-				}
-
-				int	count	=nodePoints.Count;
-				pn.mPoly.GetTriangles(nodePoints, indexes);
-				vertCounts.Add(nodePoints.Count - count);
-			}
-
-			UInt16	idx		=0;
-			if(nodePoints.Count > 0)
-			{
-				mNodeVB	=new VertexBuffer(gd, VertexPositionColor.VertexDeclaration,
-					nodePoints.Count * 16, BufferUsage.WriteOnly);
-				mNodeIB	=new IndexBuffer(gd, IndexElementSize.SixteenBits,
-					indexes.Count * 2, BufferUsage.WriteOnly);
-
-				mNodeVerts	=new VertexPositionColor[nodePoints.Count];
-				mNodeIndexs	=indexes.ToArray();
-
-				Random	rnd	=new Random();
-
-				Color	randColor	=Mathery.RandomColor(rnd);
-
-				int		pcnt	=0;
-				int		poly	=0;
-				foreach(Vector3 pos in nodePoints)
-				{
-					mNodeVerts[idx].Position.X	=pos.X;
-					mNodeVerts[idx].Position.Y	=pos.Y;
-					mNodeVerts[idx].Position.Z	=pos.Z;
-					mNodeVerts[idx++].Color		=randColor;
-					pcnt++;
-					if(pcnt >= vertCounts[poly])
-					{
-						pcnt	=0;
-						poly++;
-						randColor	=Mathery.RandomColor(rnd);
-					}
-				}
-
-				mNodeVB.SetData<VertexPositionColor>(mNodeVerts);
-				mNodeIB.SetData<UInt16>(mNodeIndexs);
-			}
-			
-			//node connections
-			List<Edge>	conLines	=new List<Edge>();
-			foreach(PathNode pn in mNodery)
-			{
-				foreach(PathConnection pc in pn.mConnections)
-				{
-					Edge	ln	=new Edge();
-
-					ln.mA	=pn.mPoint + Vector3.UnitY;
-					ln.mB	=pc.mConnectedTo.mPoint + Vector3.UnitY;
-
-					conLines.Add(ln);
-				}
-			}
-
-			if(conLines.Count <= 0)
-			{
-				return;
-			}
-			mConVB	=new VertexBuffer(gd, VertexPositionColor.VertexDeclaration, conLines.Count * 2 * 16, BufferUsage.WriteOnly);
-			mConIB	=new IndexBuffer(gd, IndexElementSize.SixteenBits, conLines.Count * 2 * 2, BufferUsage.WriteOnly);
-
-			mConVerts	=new VertexPositionColor[conLines.Count * 2];
-			mConIndexs	=new UInt16[conLines.Count * 2];
-
-			idx	=0;
-			foreach(Edge ln in conLines)
-			{
-				//coords y and z swapped
-				mConIndexs[idx]			=idx;
-				mConVerts[idx].Position	=ln.mA;
-				mConVerts[idx++].Color	=Color.BlueViolet;
-
-				mConIndexs[idx]			=idx;
-				mConVerts[idx].Position	=ln.mB;
-				mConVerts[idx++].Color	=Color.Red;
-			}
-
-			mConVB.SetData<VertexPositionColor>(mConVerts);
-			mConIB.SetData<UInt16>(mConIndexs);
 		}
 
 

@@ -17,9 +17,6 @@ namespace BSPZone
 		static ZonePlane	mBlank	=new ZonePlane(Vector3.Zero, 0.0f);
 		static ZonePlane	mBlankX	=new ZonePlane(Vector3.UnitX, 0.0f);
 
-		//constants
-		public const float	GroundAngle	=0.8f;	//how sloped can you be to be considered ground
-
 
 		public ZonePlane(Vector3 norm, float dist)
 		{
@@ -87,7 +84,7 @@ namespace BSPZone
 
 		public bool IsGround()
 		{
-			return	(Vector3.Dot(mNormal, Vector3.UnitY) > GroundAngle);
+			return	(Vector3.Dot(mNormal, Vector3.UnitY) > Zone.RampAngle);
 		}
 
 

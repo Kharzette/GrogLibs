@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 namespace BSPCore
 {
 	//not in use yet
-	public class GFXSkyData : UtilityLib.IReadWriteable
+	public class GFXSkyData
 	{
 		public Vector3	mAxis;						// Axis of rotation
 		public float	mDpm;						// Degres per minute

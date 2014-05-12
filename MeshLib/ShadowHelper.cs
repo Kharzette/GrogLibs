@@ -7,7 +7,6 @@ using MaterialLib;
 
 using SharpDX;
 using SharpDX.DXGI;
-using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 using SharpDX.Direct3D;
 
@@ -37,12 +36,12 @@ namespace MeshLib
 		//for keeping track of shadows
 		class ShadowInfo
 		{
-			internal bool		mbShadowNeeded;
-			internal bool		mbDirectional;
-			internal Vector3	mShadowLightPos;
-			internal Texture2D	mShadowTexture;
-			internal float		mShadowAtten;
-			internal Matrix		mLightViewProj;
+			internal bool				mbShadowNeeded;
+			internal bool				mbDirectional;
+			internal Vector3			mShadowLightPos;
+			internal ShaderResourceView	mShadowTexture;
+			internal float				mShadowAtten;
+			internal Matrix				mLightViewProj;
 
 			internal ShadowInfo()
 			{
@@ -115,12 +114,14 @@ namespace MeshLib
 
 			//for point lights
 			mPShadCube	=new Texture2D(gd.GD, texDesc);
+			mShadCube	=new ShaderResourceView(gd.GD, mPShadCube);
 
 			texDesc.ArraySize			=1;
 			texDesc.OptionFlags			=ResourceOptionFlags.None;
 
 			//directional
 			mPShad	=new Texture2D(gd.GD, texDesc);
+			mShad2D	=new ShaderResourceView(gd.GD, mPShad);
 
 			mPShadCubeViews	=new RenderTargetView[6];
 
@@ -231,7 +232,7 @@ namespace MeshLib
 				RenderShadowCubeFace(shadower, shadMats, 5, TextureCubeFace.NegativeZ, lightPos);
 
 				si.mShadowLightPos	=lightPos;
-				si.mShadowTexture	=mPShadCube;
+				si.mShadowTexture	=mShadCube;
 				si.mShadowAtten		=intensity;
 			}
 			else
@@ -260,7 +261,7 @@ namespace MeshLib
 
 				si.mLightViewProj	=lightView * lightProj;
 				si.mShadowAtten		=mDirectionalAttenuation;
-				si.mShadowTexture	=mPShad;
+				si.mShadowTexture	=mShad2D;
 				si.mShadowLightPos	=fakeOrigin;
 			}
 

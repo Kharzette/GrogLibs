@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Diagnostics;
-using Microsoft.Xna.Framework;
+using SharpDX;
 
 
 namespace BSPCore
 {
-	public class GFXTexInfo : UtilityLib.IReadWriteable
+	public class GFXTexInfo
 	{
 		public Vector3	mVecU;
 		public Vector3	mVecV;

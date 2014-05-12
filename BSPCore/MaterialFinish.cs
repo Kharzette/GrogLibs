@@ -9,9 +9,9 @@ namespace BSPCore
 {
 	public partial class MapGrinder
 	{
-		void FinishLightMapped(int modelIndex, List<DrawDataChunk> matChunks, ref int vertOfs)
+		void FinishLightMapped(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
 		{
-			mLMAtlas.Finish();
+			mLMAtlas.Finish(mGD);
 
 			List<DrawCall>	modCalls	=ComputeIndexes(mLMIndexes, matChunks, ref vertOfs);
 
@@ -23,9 +23,9 @@ namespace BSPCore
 		}
 
 
-		void FinishLightMapAnimated(int modelIndex, List<DrawDataChunk> matChunks, ref int vertOfs)
+		void FinishLightMapAnimated(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
 		{
-			mLMAtlas.Finish();
+			mLMAtlas.Finish(mGD);
 
 			List<DrawCall>	modCalls	=ComputeIndexes(mLMAnimIndexes, matChunks, ref vertOfs);
 
@@ -37,7 +37,7 @@ namespace BSPCore
 		}
 
 
-		void FinishVLit(int modelIndex, List<DrawDataChunk> matChunks, ref int vertOfs)
+		void FinishVLit(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
 		{
 			List<DrawCall>	modCalls	=ComputeIndexes(mVLitIndexes, matChunks, ref vertOfs);
 
@@ -49,7 +49,7 @@ namespace BSPCore
 		}
 
 
-		void FinishSky(int modelIndex, List<DrawDataChunk> matChunks, ref int vertOfs)
+		void FinishSky(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
 		{
 			List<DrawCall>	modCalls	=ComputeIndexes(mSkyIndexes, matChunks, ref vertOfs);
 
@@ -61,7 +61,7 @@ namespace BSPCore
 		}
 
 
-		void FinishFullBright(int modelIndex, List<DrawDataChunk> matChunks, ref int vertOfs)
+		void FinishFullBright(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
 		{
 			List<DrawCall>	modCalls	=ComputeIndexes(mFBIndexes, matChunks, ref vertOfs);
 
@@ -74,9 +74,9 @@ namespace BSPCore
 
 
 		void FinishLightMappedAlpha(int modelIndex,
-			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref int vertOfs)
+			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref UInt16 vertOfs)
 		{
-			mLMAtlas.Finish();
+			mLMAtlas.Finish(mGD);
 
 			List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mLMAIndexes, perPlaneChunks, ref vertOfs);
 
@@ -88,7 +88,7 @@ namespace BSPCore
 		}
 
 
-		void FinishMirror(int modelIndex, List<DrawDataChunk> matChunks, ref int vertOfs)
+		void FinishMirror(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
 		{
 			List<DrawCall>	modCalls	=ComputeIndexes(mMirrorIndexes, matChunks, ref vertOfs);
 
@@ -101,7 +101,7 @@ namespace BSPCore
 
 
 		void FinishAlpha(int modelIndex,
-			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref int vertOfs)
+			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref UInt16 vertOfs)
 		{
 			List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mAlphaIndexes, perPlaneChunks, ref vertOfs);
 
@@ -114,9 +114,9 @@ namespace BSPCore
 
 
 		void FinishLightMappedAlphaAnimated(int modelIndex,
-			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref int vertOfs)
+			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref UInt16 vertOfs)
 		{
-			mLMAtlas.Finish();
+			mLMAtlas.Finish(mGD);
 
 			List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mLMAAnimIndexes, perPlaneChunks, ref vertOfs);
 

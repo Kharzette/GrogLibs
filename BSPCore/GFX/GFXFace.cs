@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 
 namespace BSPCore
 {
-	public class GFXFace : UtilityLib.IReadWriteable
+	public class GFXFace
 	{
 		public Int32	mFirstVert;
 		public Int32	mNumVerts;

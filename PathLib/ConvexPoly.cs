@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+using SharpDX;
 using UtilityLib;
 
 
@@ -139,7 +139,7 @@ namespace PathLib
 
 		internal BoundingBox GetBounds()
 		{
-			return	BoundingBox.CreateFromPoints(mVerts);
+			return	BoundingBox.FromPoints(mVerts.ToArray());
 		}
 
 
@@ -186,19 +186,19 @@ namespace PathLib
 
 			//this is a lot easier since we step in xz
 			//snap bounds to grid
-			bnd.Max.X	=(float)Math.Ceiling(bnd.Max.X / gridSize);
-			bnd.Max.Z	=(float)Math.Ceiling(bnd.Max.Z / gridSize);
+			bnd.Maximum.X	=(float)Math.Ceiling(bnd.Maximum.X / gridSize);
+			bnd.Maximum.Z	=(float)Math.Ceiling(bnd.Maximum.Z / gridSize);
 
-			bnd.Min.X	=(float)Math.Floor(bnd.Min.X / gridSize);
-			bnd.Min.Z	=(float)Math.Floor(bnd.Min.Z / gridSize);
+			bnd.Minimum.X	=(float)Math.Floor(bnd.Minimum.X / gridSize);
+			bnd.Minimum.Z	=(float)Math.Floor(bnd.Minimum.Z / gridSize);
 
-			int	xSize	=(int)(bnd.Max.X - bnd.Min.X);
-			int	zSize	=(int)(bnd.Max.Z - bnd.Min.Z);
+			int	xSize	=(int)(bnd.Maximum.X - bnd.Minimum.X);
+			int	zSize	=(int)(bnd.Maximum.Z - bnd.Minimum.Z);
 
-			bnd.Min.X	*=gridSize;
-			bnd.Min.Z	*=gridSize;
-			bnd.Max.X	*=gridSize;
-			bnd.Max.Z	*=gridSize;
+			bnd.Minimum.X	*=gridSize;
+			bnd.Minimum.Z	*=gridSize;
+			bnd.Maximum.X	*=gridSize;
+			bnd.Maximum.Z	*=gridSize;
 
 			int	halfGrid	=(int)(gridSize * 0.5f);
 
@@ -211,14 +211,14 @@ namespace PathLib
 
 			for(int z=0;z < zSize;z++)
 			{
-				int	zLoc	=(int)bnd.Min.Z;
+				int	zLoc	=(int)bnd.Minimum.Z;
 
 				zLoc	+=halfGrid;
 				zLoc	+=z * gridSize;
 
 				for(int x=0;x < xSize;x++)
 				{
-					int	xLoc	=(int)bnd.Min.X;
+					int	xLoc	=(int)bnd.Minimum.X;
 
 					xLoc	+=halfGrid;
 					xLoc	+=x * gridSize;
@@ -379,7 +379,7 @@ namespace PathLib
 
 				if((len1 * len2) < 0.0001f)
 				{
-					return	MathHelper.TwoPi;
+					return	MathUtil.TwoPi;
 				}
 
 				v1	/=len1;
