@@ -47,6 +47,9 @@ namespace MaterialLib
 		//list of shaders available
 		Dictionary<string, Effect>	mFX	=new Dictionary<string, Effect>();
 
+		//texture 2ds
+		Dictionary<string, Texture2D>	mTexture2s	=new Dictionary<string, Texture2D>();
+
 		//list of texturey things
 		Dictionary<string, Resource>	mResources	=new Dictionary<string, Resource>();
 
@@ -251,7 +254,11 @@ namespace MaterialLib
 
 				m.Read(br, EffectForName, GrabVariables);
 				mMats.Add(m.Name, m);
+
+				//set resourcy parameters to resource values
+				m.SetResources(ResourceForName);
 			}
+
 
 			br.Close();
 			file.Close();
@@ -302,6 +309,16 @@ namespace MaterialLib
 			if(mFX.ContainsKey(fxName))
 			{
 				return	mFX[fxName];
+			}
+			return	null;
+		}
+
+
+		ShaderResourceView ResourceForName(string fxName)
+		{
+			if(mSRVs.ContainsKey(fxName))
+			{
+				return	mSRVs[fxName];
 			}
 			return	null;
 		}
@@ -417,6 +434,45 @@ namespace MaterialLib
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
 				mat.Value.SetEffectParameter("mLightMap", mSRVs["LightMapAtlas"]);
+			}
+		}
+
+
+		public void GuessTextures()
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				string	rawMatName	=mat.Key;
+				if(rawMatName.Contains("*"))
+				{
+					rawMatName	=rawMatName.Substring(0, rawMatName.IndexOf('*'));
+				}
+
+				foreach(KeyValuePair<string, Resource> tex in mResources)
+				{
+					if(tex.Key.Contains(rawMatName)
+						|| tex.Key.Contains(rawMatName.ToLower()))
+					{
+						if(!mTexture2s.ContainsKey(tex.Key))
+						{
+							continue;
+						}
+						if(!mSRVs.ContainsKey(tex.Key))
+						{
+							continue;
+						}
+
+						Vector2	texSize	=Vector2.Zero;
+
+						texSize.X	=mTexture2s[tex.Key].Description.Width;
+						texSize.Y	=mTexture2s[tex.Key].Description.Height;
+
+						mat.Value.SetEffectParameter("mTexture", mSRVs[tex.Key]);
+						mat.Value.SetEffectParameter("mbTextureEnabled", true);
+						mat.Value.SetEffectParameter("mTexSize", texSize);
+						break;
+					}
+				}
 			}
 		}
 
@@ -720,10 +776,10 @@ namespace MaterialLib
 		void LoadResources(Device dev)
 		{
 			//see if Textures folder exists in Content
-			if(Directory.Exists("Content/Textures"))
+			if(Directory.Exists("Textures"))
 			{
 				DirectoryInfo	di	=new DirectoryInfo(
-					AppDomain.CurrentDomain.BaseDirectory + "Content/Textures/");
+					AppDomain.CurrentDomain.BaseDirectory + "/Textures/");
 
 				FileInfo[]		fi	=di.GetFiles("*.png", SearchOption.AllDirectories);
 				foreach(FileInfo f in fi)
@@ -841,10 +897,20 @@ namespace MaterialLib
 
 		void LoadTexture(Device dev, string path, string fileName)
 		{
+			string	extLess	=FileUtil.StripExtension(fileName);
+
 			Resource	res	=Texture2D.FromFile(dev, path + "\\" + fileName);
+
 			if(res != null)
 			{
-				mResources.Add(fileName, res);
+				mResources.Add(extLess, res);
+				mTexture2s.Add(extLess, res as Texture2D);
+
+				ShaderResourceView	srv	=new ShaderResourceView(dev, res);
+
+				srv.DebugName	=extLess;
+
+				mSRVs.Add(extLess, srv);
 			}
 		}
 

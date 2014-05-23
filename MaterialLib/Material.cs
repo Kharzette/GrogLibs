@@ -40,6 +40,7 @@ namespace MaterialLib
 		//delegates for IO
 		internal delegate string				NameForEffect(Effect e);
 		internal delegate Effect				EffectForName(string name);
+		internal delegate ShaderResourceView	ResourceForName(string name);
 		internal delegate List<EffectVariable>	GrabVariables(string fx);
 
 
@@ -382,6 +383,25 @@ namespace MaterialLib
 					else
 					{
 						Debug.Assert(false);
+					}
+				}
+			}
+		}
+
+
+		//after loading, resources are just in string form, fix em
+		internal void SetResources(ResourceForName resForName)
+		{
+			foreach(KeyValuePair<string, EffectVariableValue> varVal in mVars)
+			{
+				EffectVariable	var	=varVal.Value.mVar;
+				object			val	=varVal.Value.mValue;
+
+				if(var.TypeInfo.Description.Type == ShaderVariableType.Texture2D)
+				{
+					if(val != null)
+					{
+						varVal.Value.mValue	=resForName(val as string);
 					}
 				}
 			}

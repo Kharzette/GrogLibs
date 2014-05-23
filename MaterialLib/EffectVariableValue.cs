@@ -131,6 +131,11 @@ namespace MaterialLib
 				{
 					return	(string)val;
 				}
+				else if(val is ShaderResourceView)
+				{
+					ShaderResourceView	srv	=val as ShaderResourceView;
+					return	srv.DebugName;
+				}
 				else
 				{
 					return	"SomeObject";

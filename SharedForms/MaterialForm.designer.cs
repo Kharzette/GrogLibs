@@ -212,6 +212,7 @@
 			this.GuessTextures.TabIndex = 13;
 			this.GuessTextures.Text = "Guess Tex";
 			this.GuessTextures.UseVisualStyleBackColor = true;
+			this.GuessTextures.Click += new System.EventHandler(this.OnGuessTextures);
 			// 
 			// TexSizeUp
 			// 

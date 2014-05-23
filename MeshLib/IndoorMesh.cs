@@ -357,11 +357,11 @@ namespace MeshLib
 //			gd.Clear(Color.CornflowerBlue);
 
 			//draw solids first
-//			DrawMaterialsDC(gd, 0, getModMatrix, mFBVBB, mFBIB, mFBDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, 0, getModMatrix, mVLitVBB, mVLitIB, mVLitDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, 0, getModMatrix, mSkyVBB, mSkyIB, mSkyDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, 0, getModMatrix, mFBVBB, mFBIB, mFBDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, 0, getModMatrix, mVLitVBB, mVLitIB, mVLitDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, 0, getModMatrix, mSkyVBB, mSkyIB, mSkyDrawCalls, bMatVis);
 			DrawMaterialsDC(gd, 0, getModMatrix, mLMVBB, mLMIB, mLMDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, 0, getModMatrix, mLMAnimVBB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, 0, getModMatrix, mLMAnimVBB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
 
 			//draw shadows
 			for(int i=0;i < numShadows;i++)

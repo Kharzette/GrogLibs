@@ -820,5 +820,11 @@ namespace SharedForms
 
 			RefreshMaterials();
 		}
+
+
+		void OnGuessTextures(object sender, EventArgs e)
+		{
+			mMatLib.GuessTextures();
+		}
 	}
 }
