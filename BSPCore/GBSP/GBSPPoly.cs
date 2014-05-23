@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
 using SharpDX;
@@ -346,25 +347,32 @@ namespace BSPCore
 		}
 
 
-		public void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
+		public void GetTriangles(GBSPPlane facePlane,
+			Color matColor,
+			List<Vector3> verts,
+			List<Vector3> normals,
+			List<Color> colors,
+			List<UInt16> indexes, bool bCheckFlags)
 		{
-			int	ofs		=verts.Count;
+			Debug.Assert((verts.Count + mVerts.Length) < UInt16.MaxValue);
 
-			UInt32	offset	=(UInt32)ofs;
+			UInt16	ofs		=(UInt16)verts.Count;
 
 			//triangulate the brush face points
 			foreach(Vector3 pos in mVerts)
 			{
 				verts.Add(pos);
+				normals.Add(facePlane.mNormal);
+				colors.Add(matColor);
 			}
 
 			int i	=0;
 			for(i=1;i < mVerts.Length-1;i++)
 			{
 				//initial vertex
-				indexes.Add(offset);
-				indexes.Add((UInt32)(offset + i));
-				indexes.Add((UInt32)(offset + ((i + 1) % mVerts.Length)));
+				indexes.Add((UInt16)(ofs + ((i + 1) % mVerts.Length)));
+				indexes.Add((UInt16)(ofs + i));
+				indexes.Add(ofs);
 			}
 		}
 

@@ -528,6 +528,14 @@ struct VVPosTex03Tex13
 	float3	TexCoord1	: TEXCOORD1;
 };
 
+struct VVPosTex03Tex13Tex23
+{
+	float4	Position	: SV_POSITION;
+	float3	TexCoord0	: TEXCOORD0;
+	float3	TexCoord1	: TEXCOORD1;
+	float3	TexCoord2	: TexCoord2;
+};
+
 struct VVPosNormTex0Tex1
 {
 	float4	Position	: SV_POSITION;

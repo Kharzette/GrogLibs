@@ -455,8 +455,14 @@ namespace BSPCore
 		}
 
 
-		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool bGetClipOnly)
+		internal void GetTriangles(PlanePool pp,
+			List<Vector3> verts,
+			List<Vector3> normals,
+			List<Color> colors,
+			List<UInt16> indexes, bool bGetClipOnly)
 		{
+			Random rnd	=new Random();
+
 			if(mBrushes.Count > 0)
 			{
 				foreach(MapBrush mb in mBrushes)
@@ -465,12 +471,12 @@ namespace BSPCore
 					{
 						if((mb.mContents & Contents.BSP_CONTENTS_CLIP2) != 0)
 						{
-							mb.GetTriangles(verts, indexes, false);
+							mb.GetTriangles(rnd, pp, verts, normals, colors, indexes, false);
 						}
 					}
 					else
 					{
-						mb.GetTriangles(verts, indexes, false);
+						mb.GetTriangles(rnd, pp, verts, normals, colors, indexes, false);
 					}
 				}
 			}

@@ -53,6 +53,24 @@ VVPosTex03Tex13 WNormWPosVS(VPosNormTex0 input)
 	return	output;
 }
 
+//worldpos and worldnormal and vert color
+VVPosTex03Tex13Tex23 WNormWPosVColorVS(VPosNormCol0 input)
+{
+	VVPosTex03Tex13Tex23	output;	
+	
+	//generate the world-view-proj matrix
+	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
+	
+	//transform the input position to the output
+	output.Position		=mul(float4(input.Position, 1), wvp);
+	output.TexCoord0	=mul(input.Normal, mWorld);
+	output.TexCoord1	=mul(input.Position, mWorld);
+	output.TexCoord2	=input.Color;
+	
+	//return the output structure
+	return	output;
+}
+
 //texcoord + trilight color interpolated
 VVPosTex0Col0 TexTriVS(VPosNormTex0 input)
 {
@@ -187,6 +205,28 @@ technique10 TriTex0
 #else
 		VertexShader	=compile vs_4_0_level_9_3 TexTriVS();
 		PixelShader		=compile ps_4_0_level_9_3 Tex0Col0PS();
+#endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
+	}
+}
+
+technique10 TriVColor
+{     
+	pass P0
+	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 WNormWPosVColorVS();
+		PixelShader		=compile ps_5_0 TriSolidVColorSpecPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 WNormWPosVColorVS();
+		PixelShader		=compile ps_4_1 TriSolidVColorSpecPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 WNormWPosVColorVS();
+		PixelShader		=compile ps_4_0 TriSolidVColorSpecPS();
+#else
+		VertexShader	=compile vs_4_0_level_9_3 WNormWPosVColorVS();
+		PixelShader		=compile ps_4_0_level_9_3 TriSolidVColorSpecPS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
 		SetDepthStencilState(EnableDepth, 0);

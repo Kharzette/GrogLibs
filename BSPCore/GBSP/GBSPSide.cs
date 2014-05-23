@@ -118,12 +118,12 @@ namespace BSPCore
 				}
 			}
 
-			//deal with the numbers
-			//invert x and swap y and z
-			//to convert to left handed
-			mPoly	=new GBSPPoly(new Vector3(-numbers[0], numbers[2], numbers[1]),
-				new Vector3(-numbers[3], numbers[5], numbers[4]),
-				new Vector3(-numbers[6], numbers[8], numbers[7]));
+			//deal with the numbers...
+			//Back in the XNA days, x used to be negated to convert to left handed.
+			//Now for DX, only a swapping of y and z is needed
+			mPoly	=new GBSPPoly(new Vector3(numbers[0], numbers[2], numbers[1]),
+				new Vector3(numbers[3], numbers[5], numbers[4]),
+				new Vector3(numbers[6], numbers[8], numbers[7]));
 
 			//all special brush properties are now driven by these quake 3 style flags
 			//There used to be a ton of legacy stuff for determining properties from
@@ -270,7 +270,12 @@ namespace BSPCore
 		}
 
 
-		internal void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
+		internal void GetTriangles(PlanePool pp,
+			Color matColor,
+			List<Vector3> verts,
+			List<Vector3> normals,
+			List<Color> colors,
+			List<UInt16> indexes, bool bCheckFlags)
 		{
 			if(bCheckFlags)
 			{
@@ -281,7 +286,7 @@ namespace BSPCore
 			}
 			if(mPoly != null)
 			{
-				mPoly.GetTriangles(verts, indexes, bCheckFlags);
+				mPoly.GetTriangles(pp.mPlanes[mPlaneNum], matColor, verts, normals, colors, indexes, bCheckFlags);
 			}
 		}
 

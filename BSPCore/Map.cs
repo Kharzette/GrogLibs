@@ -17,6 +17,11 @@ namespace BSPCore
 {
 	public partial class Map
 	{
+		public enum DebugDrawChoice
+		{
+			MapBrushes, CollisionBrushes, GFXFaces
+		}
+
 		List<MapEntity>	mEntities;
 
 		//models
@@ -390,15 +395,19 @@ namespace BSPCore
 		}
 
 
-		public void GetTriangles(Vector3 pos, List<Vector3> verts, List<UInt32> indexes, string drawChoice)
+		public void GetTriangles(List<Vector3> verts,
+			List<Vector3> normals,
+			List<Color> colors,
+			List<UInt16> indexes,
+			DebugDrawChoice drawChoice)
 		{
-			if(drawChoice == "Map Brushes")
+			if(drawChoice == DebugDrawChoice.MapBrushes)
 			{
 				if(mEntities != null)
 				{
 					foreach(MapEntity ent in mEntities)
 					{
-						ent.GetTriangles(verts, indexes, false);
+						ent.GetTriangles(mPlanePool, verts, normals, colors, indexes, false);
 					}
 				}
 				else
@@ -406,13 +415,13 @@ namespace BSPCore
 					CoreEvents.Print("This is intended for use pre build.\n");
 				}
 			}
-			else if(drawChoice == "Collision Brushes")
+			else if(drawChoice == DebugDrawChoice.CollisionBrushes)
 			{
 				if(mEntities != null)
 				{
 					foreach(MapEntity ent in mEntities)
 					{
-						ent.GetTriangles(verts, indexes, true);
+						ent.GetTriangles(mPlanePool, verts, normals, colors, indexes, true);
 					}
 				}
 				else
@@ -420,48 +429,31 @@ namespace BSPCore
 					CoreEvents.Print("This is intended for use pre build.\n");
 				}
 			}
-			else if(drawChoice == "GFX Faces")
+			else if(drawChoice == DebugDrawChoice.GFXFaces)
 			{
+				Random	rnd	=new Random();
 				foreach(GFXFace face in mGFXFaces)
 				{
-					UInt32	vofs	=(UInt32)verts.Count;
+					UInt16	vofs	=(UInt16)verts.Count;
+					Color	fColor	=Mathery.RandomColor(rnd);
 
 					for(int i=0;i < face.mNumVerts;i++)
 					{
 						int	idx	=mGFXVertIndexes[i + face.mFirstVert];
 
 						verts.Add(mGFXVerts[idx]);
+						normals.Add(mPlanePool.mPlanes[face.mPlaneNum].mNormal);
+						colors.Add(fColor);
 					}
 
-					for(UInt32 i=1;i < (face.mNumVerts - 1);i++)
+					for(UInt16 i=1;i < (face.mNumVerts - 1);i++)
 					{
 						indexes.Add(vofs);
-						indexes.Add(vofs + i);
-						indexes.Add(vofs + ((i + 1) % (UInt32)face.mNumVerts));
+						indexes.Add((UInt16)(vofs + i));
+						indexes.Add((UInt16)(vofs + ((i + 1) % (UInt16)face.mNumVerts)));
 					}
 				}
 			}
-				/*
-			else if(drawChoice == "Vis Tree")
-			{
-				if(mGFXModels != null && mGFXModels.Length > 0)
-				{
-					int	root	=mGFXModels[0].mRootNode[0];
-
-					VisWorld(root, pos);
-
-					RenderBSPFrontBack_r2(root, pos, verts, indexes, true);
-
-					for(int i=1;i < mGFXModels.Length;i++)
-					{
-						RenderModelBSPFrontBack_r2(mGFXModels[i].mRootNode[0], pos, verts, indexes);
-					}
-				}
-				else
-				{
-					CoreEvents.Print("No GFXModels to draw!\n");
-				}
-			}*/
 		}
 
 
@@ -539,7 +531,11 @@ namespace BSPCore
 		}
 
 
-		public void GetWorldBrushTrianglesByIndex(int brushIndex, List<Vector3> verts, List<UInt32> indexes)
+		public void GetWorldBrushTrianglesByIndex(int brushIndex,
+			List<Vector3> verts,
+			List<Vector3> norms,
+			List<Color> colors,
+			List<UInt16> indexes)
 		{
 			MapEntity	me	=GetWorldSpawnEntity();
 			if(me == null)
@@ -548,7 +544,8 @@ namespace BSPCore
 			}
 			if(me.GetBrushes().Count > brushIndex)
 			{
-				me.GetBrushes()[brushIndex].GetTriangles(verts, indexes, false);
+				me.GetBrushes()[brushIndex].GetTriangles(new Random(),
+					mPlanePool, verts, norms, colors, indexes, false);
 			}
 			else
 			{

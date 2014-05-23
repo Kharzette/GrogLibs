@@ -313,17 +313,21 @@ namespace BSPVis
 		}
 
 
-		public int GetDebugClusterGeometry(int clust, List<Vector3> verts,
-			List<UInt32> inds, List<Vector3> norms,	List<Int32> portNums)
+		public int GetDebugClusterGeometry(int clust, Random rnd,
+			List<Vector3> verts, List<Vector3> norms,
+			List<Color> colors, List<UInt16> inds,
+			List<Int32> portNums)
 		{
 			if(clust >= mVisLeafs.Length || clust < 0)
 			{
 				return	0;
 			}
 
+			Color	clustColor	=Mathery.RandomColor(rnd);
+
 			foreach(VISPortal vp in mVisLeafs[clust].mPortals)
 			{
-				vp.mPoly.GetTriangles(verts, inds, false);
+				vp.mPoly.GetTriangles(vp.mPlane, clustColor, verts, norms, colors, inds, false);
 
 				norms.Add(vp.mCenter);
 				norms.Add(vp.mCenter + (vp.mPlane.mNormal * 25.0f));

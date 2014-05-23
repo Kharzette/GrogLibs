@@ -271,9 +271,11 @@ namespace BSPCore
 		}
 
 
-		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool bCheck)
+		internal void GetTriangles(PlanePool pp, Random rnd,
+			List<Vector3> verts, List<Vector3> norms,
+			List<Color> colors,	List<UInt16> indexes, bool bCheck)
 		{
-			mRootNode.GetLeafTriangles(verts, indexes, bCheck);
+			mRootNode.GetLeafTriangles(pp, rnd, verts, norms, colors, indexes, bCheck);
 		}
 
 

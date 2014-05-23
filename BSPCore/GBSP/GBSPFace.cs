@@ -162,11 +162,17 @@ namespace BSPCore
 		}
 
 
-		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool bCheckFlags)
+		internal void GetTriangles(
+			Color matColor,
+			PlanePool pp,
+			List<Vector3> verts,
+			List<Vector3> norms,
+			List<Color> colors,
+			List<UInt16> indexes, bool bCheckFlags)
 		{
 			if(mPoly != null)
 			{
-				mPoly.GetTriangles(verts, indexes, bCheckFlags);
+				mPoly.GetTriangles(pp.mPlanes[mPlaneNum], matColor, verts, norms, colors, indexes, bCheckFlags);
 			}
 		}
 

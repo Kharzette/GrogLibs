@@ -4,6 +4,7 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 using SharpDX;
+using UtilityLib;
 
 
 namespace BSPCore
@@ -410,11 +411,16 @@ namespace BSPCore
 		}
 
 
-		internal void GetTriangles(List<Vector3> verts, List<uint> indexes, bool bCheckFlags)
+		internal void GetTriangles(
+			PlanePool pp, Random rand,
+			List<Vector3> verts,
+			List<Vector3> norms,
+			List<Color> colors,
+			List<UInt16> indexes, bool bCheckFlags)
 		{
 			foreach(GBSPSide s in mSides)
 			{
-				s.GetTriangles(verts, indexes, bCheckFlags);
+				s.GetTriangles(pp, Mathery.RandomColor(rand), verts, norms, colors, indexes, bCheckFlags);
 			}
 		}
 		#endregion

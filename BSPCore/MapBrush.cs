@@ -322,11 +322,17 @@ namespace BSPCore
 		}
 
 
-		internal void GetTriangles(List<Vector3> tris, List<UInt32> ind, bool bCheckFlags)
+		internal void GetTriangles(
+			Random rand,
+			PlanePool pp,
+			List<Vector3> tris,
+			List<Vector3> normals,
+			List<Color> colors,
+			List<UInt16> ind, bool bCheckFlags)
 		{
 			foreach(GBSPSide s in mOriginalSides)
 			{
-				s.GetTriangles(tris, ind, bCheckFlags);
+				s.GetTriangles(pp, Mathery.RandomColor(rand), tris, normals, colors, ind, bCheckFlags);
 			}
 		}
 

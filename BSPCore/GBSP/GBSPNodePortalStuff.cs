@@ -4,6 +4,7 @@ using System.Text;
 using System.Diagnostics;
 using System.IO;
 using SharpDX;
+using UtilityLib;
 
 
 namespace BSPCore
@@ -50,7 +51,7 @@ namespace BSPCore
 				p.mBackNode.mPortals.Remove(p);
 
 				GBSPPoly	front, back;
-				p.mPoly.SplitEpsilon(UtilityLib.Mathery.VCompareEpsilon, thisPlane, out front, out back, false);
+				p.mPoly.SplitEpsilon(Mathery.VCompareEpsilon, thisPlane, out front, out back, false);
 
 				if(front != null && front.IsTiny())
 				{
@@ -300,7 +301,7 @@ namespace BSPCore
 				{
 					GBSPPortal	p	=new GBSPPortal();
 
-					p.mPlane.mNormal	=UtilityLib.Mathery.AxialNormals[i];
+					p.mPlane.mNormal	=Mathery.AxialNormals[i];
 					if(j == 0)
 					{
 						p.mPlane.mDist	=Vector3.Dot(p.mPlane.mNormal, nodeMins);
@@ -333,7 +334,7 @@ namespace BSPCore
 						continue;
 					}
 
-					if(!portA.mPoly.ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, portB.mPlane, false, cp))
+					if(!portA.mPoly.ClipPolyEpsilon(Mathery.ON_EPSILON, portB.mPlane, false, cp))
 					{
 						CoreEvents.Print("CreateAllOutsidePortals:  There was an error clipping the portal.\n");
 						return	false;
@@ -350,7 +351,9 @@ namespace BSPCore
 		}
 
 
-		internal void GetPortalTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
+		internal void GetPortalTriangles(Random rnd, List<Vector3> verts,
+			List<Vector3> norms, List<Color> colors,
+			List<UInt16> indexes, bool bCheckFlags)
 		{
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
@@ -363,15 +366,17 @@ namespace BSPCore
 					return;
 				}
 
+				Color	portColor	=Mathery.RandomColor(rnd);
+
 				foreach(GBSPPortal port in mPortals)
 				{
-					port.mPoly.GetTriangles(verts, indexes, bCheckFlags);
+					port.mPoly.GetTriangles(port.mPlane, portColor, verts, norms, colors, indexes, bCheckFlags);
 				}
 				return;
 			}
 
-			mFront.GetPortalTriangles(verts, indexes, bCheckFlags);
-			mBack.GetPortalTriangles(verts, indexes, bCheckFlags);
+			mFront.GetPortalTriangles(rnd, verts, norms, colors, indexes, bCheckFlags);
+			mBack.GetPortalTriangles(rnd, verts, norms, colors, indexes, bCheckFlags);
 		}
 
 
@@ -1025,7 +1030,7 @@ namespace BSPCore
 					break;
 				}
 
-				poly.ClipPolyEpsilon(UtilityLib.Mathery.ON_EPSILON, port.mPlane, bFlipSide, cp);
+				poly.ClipPolyEpsilon(Mathery.ON_EPSILON, port.mPlane, bFlipSide, cp);
 			}
 
 			if(poly.IsTiny())

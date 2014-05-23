@@ -101,6 +101,26 @@ float4 TriSolidPS(VVPosTex03Tex13 input) : SV_Target
 	return	float4(litSolid, mSolidColour.w);
 }
 
+//Solid color, vert color, trilight, specular
+float4 TriSolidVColorSpecPS(VVPosTex03Tex13Tex23 input) : SV_Target
+{
+	float3	pnorm	=input.TexCoord0;
+	float3	wpos	=input.TexCoord1;
+	float3	vcolor	=input.TexCoord2;
+
+	pnorm	=normalize(pnorm);
+
+	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
+							mLightColor0, mLightColor1, mLightColor2);
+
+	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, pnorm, triLight, mLightColor2);
+	float3	litSolid	=mSolidColour.xyz * triLight * vcolor;
+
+	specular	=saturate(specular + litSolid);
+
+	return	float4(specular, mSolidColour.w);
+}
+
 //Solid color, trilight, and specular
 float4 TriSolidSpecPS(VVPosTex03Tex13 input) : SV_Target
 {

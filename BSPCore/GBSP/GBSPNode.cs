@@ -4,6 +4,7 @@ using System.Text;
 using System.Diagnostics;
 using System.IO;
 using SharpDX;
+using UtilityLib;
 
 
 namespace BSPCore
@@ -249,29 +250,39 @@ namespace BSPCore
 		}
 
 
-		internal void GetTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
+		internal void GetTriangles(PlanePool pp,
+			Color matColor,
+			List<Vector3> verts,
+			List<Vector3> norms,
+			List<Color> colors,
+			List<UInt16> indexes,
+			bool bCheckFlags)
 		{
 			if(mSide != null)
 			{
-				mSide.GetTriangles(verts, indexes, bCheckFlags);
+				mSide.GetTriangles(pp, matColor, verts, norms, colors, indexes, bCheckFlags);
 			}
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
 				return;
 			}
 
-			mFront.GetTriangles(verts, indexes, bCheckFlags);
-			mBack.GetTriangles(verts, indexes, bCheckFlags);
+			mFront.GetTriangles(pp, matColor, verts, norms, colors, indexes, bCheckFlags);
+			mBack.GetTriangles(pp, matColor, verts, norms, colors, indexes, bCheckFlags);
 		}
 
 
-		internal void GetLeafTriangles(List<Vector3> verts, List<UInt32> indexes, bool bCheckFlags)
+		internal void GetLeafTriangles(PlanePool pp,
+			Random rnd,	List<Vector3> verts,
+			List<Vector3> norms, List<Color> colors,
+			List<UInt16> indexes, bool bCheckFlags)
 		{
 			if(mLeafFaces.Count > 0)
 			{
+				Color	leafColor	=Mathery.RandomColor(rnd);
 				foreach(GBSPFace face in mLeafFaces)
 				{
-					face.GetTriangles(verts, indexes, bCheckFlags);
+					face.GetTriangles(leafColor, pp, verts, norms, colors, indexes, bCheckFlags);
 				}
 			}
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
@@ -279,8 +290,8 @@ namespace BSPCore
 				return;
 			}
 
-			mFront.GetLeafTriangles(verts, indexes, bCheckFlags);
-			mBack.GetLeafTriangles(verts, indexes, bCheckFlags);
+			mFront.GetLeafTriangles(pp, rnd, verts, norms, colors, indexes, bCheckFlags);
+			mBack.GetLeafTriangles(pp, rnd, verts, norms, colors, indexes, bCheckFlags);
 		}
 
 
