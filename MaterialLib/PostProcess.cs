@@ -318,7 +318,7 @@ namespace MaterialLib
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			mQuadVB	=Buffer.Create(gd.GD, verts, bd);
-			
+
 			BufferDescription	id	=new BufferDescription(inds.Length * 2,
 				ResourceUsage.Default, BindFlags.IndexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);

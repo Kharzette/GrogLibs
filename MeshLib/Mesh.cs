@@ -193,13 +193,8 @@ namespace MeshLib
 					indArray[i]	=br.ReadUInt16();
 				}
 
-				VertexTypes.BuildABuffer(gd, vertArray, mTypeIndex);
-
-				BufferDescription	indDesc	=new BufferDescription(indArray.Length * 2,
-					ResourceUsage.Default, BindFlags.IndexBuffer,
-					CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-				mIndexs	=Buffer.Create<UInt16>(gd, indArray, indDesc);
+				mVerts	=VertexTypes.BuildABuffer(gd, vertArray, mTypeIndex);
+				mIndexs	=VertexTypes.BuildAnIndexBuffer(gd, indArray);
 
 				mVBBinding	=new VertexBufferBinding(mVerts,
 					VertexTypes.GetSizeForTypeIndex(mTypeIndex), 0);

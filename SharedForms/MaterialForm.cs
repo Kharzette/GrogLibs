@@ -43,28 +43,35 @@ namespace SharedForms
 		}
 
 
-		void RefreshMaterials()
+		public void RefreshMaterials()
 		{
-			MaterialList.Items.Clear();
+			Action<ListView>	clear	=lv => lv.Items.Clear();
+
+			FormExtensions.Invoke(MaterialList, clear);
 
 			List<string>	names	=mMatLib.GetMaterialNames();
 
 			foreach(string name in names)
 			{
-				MaterialList.Items.Add(name);
+				Action<ListView>	addItem	=lv => lv.Items.Add(name);
+
+				FormExtensions.Invoke(MaterialList, addItem);
 			}
 
 			for(int i=0;i < MaterialList.Items.Count;i++)
 			{
-				MaterialList.Items[i].Tag	="MaterialName";
+				Action<ListView>	tagAndSub	=lv =>
+				{
+					lv.Items[i].Tag = "MaterialName";
+					lv.Items[i].SubItems.Add(
+						mMatLib.GetMaterialEffect(MaterialList.Items[i].Text));
+					lv.Items[i].SubItems.Add(
+						mMatLib.GetMaterialTechnique(MaterialList.Items[i].Text));
+					lv.Items[i].SubItems[1].Tag	="MaterialEffect";
+					lv.Items[i].SubItems[2].Tag	="MaterialTechnique";
+				};
 
-				MaterialList.Items[i].SubItems.Add(
-					mMatLib.GetMaterialEffect(MaterialList.Items[i].Text));
-				MaterialList.Items[i].SubItems.Add(
-					mMatLib.GetMaterialTechnique(MaterialList.Items[i].Text));
-
-				MaterialList.Items[i].SubItems[1].Tag	="MaterialEffect";
-				MaterialList.Items[i].SubItems[2].Tag	="MaterialTechnique";
+				FormExtensions.Invoke(MaterialList, tagAndSub);
 			}
 
 			SizeColumns(MaterialList);
@@ -105,22 +112,28 @@ namespace SharedForms
 		void SizeColumns(ListView lv)
 		{
 			//set to header size first
-			lv.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+			Action<ListView>	autoResize	=lvar => lvar.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+			FormExtensions.Invoke(lv, autoResize);
 
 			List<int>	sizes	=new List<int>();
 			for(int i=0;i < lv.Columns.Count;i++)
 			{
-				sizes.Add(lv.Columns[i].Width);
+				Action<ListView>	addWidth	=lvar => sizes.Add(lvar.Columns[i].Width);
+				FormExtensions.Invoke(lv, addWidth);
 			}
 
 			for(int i=0;i < lv.Columns.Count;i++)
 			{
-				lv.Columns[i].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+				Action<ListView>	arHeader	=lvar => {
+					lvar.Columns[i].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
 
-				if(lv.Columns[i].Width < sizes[i])
-				{
-					lv.Columns[i].AutoResize(ColumnHeaderAutoResizeStyle.HeaderSize);
-				}
+					if(lvar.Columns[i].Width < sizes[i])
+					{
+						lvar.Columns[i].AutoResize(ColumnHeaderAutoResizeStyle.HeaderSize);
+					}
+				};
+
+				FormExtensions.Invoke(lv, arHeader);
 			}
 		}
 		

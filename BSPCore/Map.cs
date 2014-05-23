@@ -10,6 +10,7 @@ using SharpDX;
 using SharpDX.Direct3D11;
 
 using Buffer	=SharpDX.Direct3D11.Buffer;
+using MatLib	=MaterialLib.MaterialLib;
 
 
 namespace BSPCore
@@ -1382,9 +1383,9 @@ namespace BSPCore
 
 
 #if !X64
-		public MapGrinder	MakeMapGrinder()
+		public MapGrinder	MakeMapGrinder(GraphicsDevice gd)
 		{
-			return	new MapGrinder(null, mGFXTexInfos, mGFXFaces, 4, 1);
+			return	new MapGrinder(gd, null, mGFXTexInfos, mGFXFaces, 4, 1);
 		}
 
 
@@ -1402,25 +1403,11 @@ namespace BSPCore
 		}
 
 
-		public List<string> GetMaterials()
-		{
-			MapGrinder	mg	=new MapGrinder(null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
-
-			return	mg.GetMaterialNames();
-		}
-
-
-		//an intermediate step to generate a set of materials
-		//so the user can set up emissives for radiosity
-		public List<string> GenerateMaterials(string fileName)
+		public void MakeMaterials(GraphicsDevice gd, MatLib matLib, string fileName)
 		{
 			LoadGBSPFile(fileName);
 
-			List<string>	ret	=GetMaterials();
-
-			FreeGBSPFile();
-
-			return	ret;
+			MapGrinder	mg	=new MapGrinder(gd, matLib, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 		}
 
 
@@ -1545,78 +1532,78 @@ namespace BSPCore
 
 		public bool BuildLMRenderData(GraphicsDevice g,
 			//lightmap stuff
-			out Buffer lmVB,
-			out Buffer lmIB,
+			out int lmIndex,
+			out Array lmVerts,
+			out UInt16 []lmInds,
 			out Dictionary<int, List<MeshLib.DrawCall>> lmDCs,
 
 			//animated lightmap stuff
-			out Buffer lmAnimVB,
-			out Buffer lmAnimIB,
+			out int lmAnimIndex,
+			out Array lmAnimVerts,
+			out UInt16 []lmAnimInds,
 			out Dictionary<int, List<MeshLib.DrawCall>> lmAnimDCs,
 
 			//lightmapped alpha stuff
-			out Buffer lmaVB,
-			out Buffer lmaIB,
+			out int lmaIndex,
+			out Array lmaVerts,
+			out UInt16 []lmaInds,
 			out Dictionary<int, List<List<MeshLib.DrawCall>>> lmaDCalls,
 
 			//animated alpha lightmap stuff
-			out Buffer lmaAnimVB,
-			out Buffer lmaAnimIB,
+			out int lmaAnimIndex,
+			out Array lmaAnimVerts,
+			out UInt16 []lmaAnimInds,
 			out Dictionary<int, List<List<MeshLib.DrawCall>>> lmaAnimDCalls,
 
 			int lightAtlasSize,
 			object	pp,
 			out MaterialLib.TexAtlas lightAtlas)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lightAtlasSize);
+			MapGrinder	mg	=new MapGrinder(g, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lightAtlasSize);
 
 			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels))
 			{
-				lmVB	=null;	lmIB	=null;	lmDCs	=null;
-				lmAnimVB	=null;	lmAnimDCs	=null;
-				lmAnimIB	=null;	lmAnimVB	=null;
-				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
-				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
+				lmDCs		=null;	lmAnimDCs		=null;	lmaDCalls	=null;
 				lightAtlas	=null;	lmaAnimDCalls	=null;
+				lmVerts	=lmAnimVerts	=lmaVerts	=lmaAnimVerts	=null;
+				lmInds	=lmAnimInds		=lmaInds	=lmaAnimInds	=null;
+				lmIndex	=lmAnimIndex	=lmaIndex	=lmaAnimIndex	=-1;
 				return	false;
 			}
-			mg.GetLMBuffers(out lmVB, out lmIB);
+			mg.GetLMGeometry(out lmIndex, out lmVerts, out lmInds);
 
 			if(!mg.BuildLMAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels))
 			{
-				lmVB	=null;	lmIB	=null;	lmDCs	=null;
-				lmAnimVB	=null;	lmAnimDCs	=null;
-				lmAnimIB	=null;	lmAnimVB	=null;
-				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
-				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
+				lmDCs		=null;	lmAnimDCs		=null;	lmaDCalls	=null;
 				lightAtlas	=null;	lmaAnimDCalls	=null;
+				lmVerts	=lmAnimVerts	=lmaVerts	=lmaAnimVerts	=null;
+				lmInds	=lmAnimInds		=lmaInds	=lmaAnimInds	=null;
+				lmIndex	=lmAnimIndex	=lmaIndex	=lmaAnimIndex	=-1;
 				return	false;
 			}
-			mg.GetLMAnimBuffers(out lmAnimVB, out lmAnimIB);
+			mg.GetLMAnimGeometry(out lmAnimIndex, out lmAnimVerts, out lmAnimInds);
 
 			if(!mg.BuildLMAFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels))
 			{
-				lmVB	=null;	lmIB	=null;	lmDCs	=null;
-				lmAnimVB	=null;	lmAnimDCs	=null;
-				lmAnimIB	=null;	lmAnimVB	=null;
-				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
-				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
+				lmDCs		=null;	lmAnimDCs		=null;	lmaDCalls	=null;
 				lightAtlas	=null;	lmaAnimDCalls	=null;
+				lmVerts	=lmAnimVerts	=lmaVerts	=lmaAnimVerts	=null;
+				lmInds	=lmAnimInds		=lmaInds	=lmaAnimInds	=null;
+				lmIndex	=lmAnimIndex	=lmaIndex	=lmaAnimIndex	=-1;
 				return	false;
 			}
-			mg.GetLMABuffers(out lmaVB, out lmaIB);
+			mg.GetLMAGeometry(out lmaIndex, out lmaVerts, out lmaInds);
 
 			if(!mg.BuildLMAAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels))
 			{
-				lmVB	=null;	lmIB	=null;	lmDCs	=null;
-				lmAnimVB	=null;	lmAnimDCs	=null;
-				lmAnimIB	=null;	lmAnimVB	=null;
-				lmaVB	=null;	lmaIB	=null;	lmaAnimVB	=null;
-				lmaAnimIB	=null;	lmaAnimVB	=null;	lmaDCalls	=null;
+				lmDCs		=null;	lmAnimDCs		=null;	lmaDCalls	=null;
 				lightAtlas	=null;	lmaAnimDCalls	=null;
+				lmVerts	=lmAnimVerts	=lmaVerts	=lmaAnimVerts	=null;
+				lmInds	=lmAnimInds		=lmaInds	=lmaAnimInds	=null;
+				lmIndex	=lmAnimIndex	=lmaIndex	=lmaAnimIndex	=-1;
 				return	false;
 			}
-			mg.GetLMAAnimBuffers(out lmaAnimVB, out lmaAnimIB);
+			mg.GetLMAAnimGeometry(out lmaAnimIndex, out lmaAnimVerts, out lmaAnimInds);
 
 			lightAtlas	=mg.GetLightMapAtlas();
 
@@ -1629,80 +1616,81 @@ namespace BSPCore
 		}
 
 
-		public void BuildVLitRenderData(GraphicsDevice g, out Buffer vb,
-			out Buffer ib,
+		public void BuildVLitRenderData(GraphicsDevice g,
+			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
 			mg.BuildVLitFaceData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, pp, mGFXModels);
 
-			mg.GetVLitBuffers(out vb, out ib);
+			mg.GetVLitGeometry(out index, out verts, out inds);
 
 			mg.GetVLitMaterialData(out dcs);
 		}
 
 
-		public void BuildAlphaRenderData(GraphicsDevice g, out Buffer vb,
-			out Buffer ib,
+		public void BuildAlphaRenderData(GraphicsDevice g,
+			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<List<MeshLib.DrawCall>>> alphaDrawCalls,
 			object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
 			mg.BuildAlphaFaceData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, pp, mGFXModels);
 
-			mg.GetAlphaBuffers(out vb, out ib);
+			mg.GetAlphaGeometry(out index, out verts, out inds);
 
 			mg.GetAlphaMaterialData(out alphaDrawCalls);
 		}
 
 
-		public void BuildFullBrightRenderData(GraphicsDevice g, out Buffer vb,
-			out Buffer ib,
+		public void BuildFullBrightRenderData(GraphicsDevice g,
+			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
 			mg.BuildFullBrightFaceData(mGFXVerts, mGFXVertIndexes, pp, mGFXModels);
 
-			mg.GetFullBrightBuffers(out vb, out ib);
+			mg.GetFullBrightGeometry(out index, out verts, out inds);
 
 			mg.GetFullBrightMaterialData(out dcs);
 		}
 
 
-		public void BuildMirrorRenderData(GraphicsDevice g, out Buffer vb,
-			out Buffer ib, out Dictionary<int, List<MeshLib.DrawCall>> dcs,
+		public void BuildMirrorRenderData(GraphicsDevice g,
+			out int index, out Array verts, out UInt16 []inds,
+			out Dictionary<int, List<MeshLib.DrawCall>> dcs,
 			out List<List<Vector3>> mirrorPolys, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
 			mg.BuildMirrorFaceData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, pp, mGFXModels);
 
-			mg.GetMirrorBuffers(out vb, out ib);
+			mg.GetMirrorGeometry(out index, out verts, out inds);
 
 			mg.GetMirrorMaterialData(out dcs, out mirrorPolys);
 		}
 
 
-		public void BuildSkyRenderData(GraphicsDevice g, out Buffer vb,
-			out Buffer ib,
+		public void BuildSkyRenderData(GraphicsDevice g,
+			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			mg.BuildSkyFaceData(mGFXVerts, mGFXVertIndexes, pp, mGFXModels);
 
-			mg.GetSkyBuffers(out vb, out ib);
+			mg.GetSkyGeometry(out index, out verts, out inds);
 
 			mg.GetSkyMaterialData(out dcs);
 		}

@@ -11,8 +11,6 @@ namespace BSPCore
 	{
 		void FinishLightMapped(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
 		{
-			mLMAtlas.Finish(mGD);
-
 			List<DrawCall>	modCalls	=ComputeIndexes(mLMIndexes, matChunks, ref vertOfs);
 
 			StuffVBArrays(matChunks, mLMVerts, mLMNormals,
@@ -25,8 +23,6 @@ namespace BSPCore
 
 		void FinishLightMapAnimated(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
 		{
-			mLMAtlas.Finish(mGD);
-
 			List<DrawCall>	modCalls	=ComputeIndexes(mLMAnimIndexes, matChunks, ref vertOfs);
 
 			StuffVBArrays(matChunks, mLMAnimVerts, mLMAnimNormals,
@@ -76,8 +72,6 @@ namespace BSPCore
 		void FinishLightMappedAlpha(int modelIndex,
 			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref UInt16 vertOfs)
 		{
-			mLMAtlas.Finish(mGD);
-
 			List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mLMAIndexes, perPlaneChunks, ref vertOfs);
 
 			StuffVBArrays(perPlaneChunks, mLMAVerts, mLMANormals,
@@ -116,8 +110,6 @@ namespace BSPCore
 		void FinishLightMappedAlphaAnimated(int modelIndex,
 			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref UInt16 vertOfs)
 		{
-			mLMAtlas.Finish(mGD);
-
 			List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mLMAAnimIndexes, perPlaneChunks, ref vertOfs);
 
 			StuffVBArrays(perPlaneChunks, mLMAAnimVerts, mLMAAnimNormals,

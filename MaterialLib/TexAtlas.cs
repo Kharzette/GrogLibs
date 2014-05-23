@@ -315,7 +315,7 @@ namespace MaterialLib
 				texDesc.Width * texDesc.Height *
 				(int)FormatHelper.SizeOfInBytes(texDesc.Format));
 
-			mAtlasTexture	=new Texture2D(gd.GD, texDesc);
+			mAtlasTexture	=new Texture2D(gd.GD, texDesc, dbs);
 
 			mSRV	=new ShaderResourceView(gd.GD, mAtlasTexture);
 		}

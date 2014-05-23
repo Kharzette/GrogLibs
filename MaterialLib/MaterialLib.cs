@@ -14,9 +14,10 @@ using SharpDX.Direct3D11;
 using SharpDX.Direct3D;
 
 //ambiguous stuff
-using Buffer = SharpDX.Direct3D11.Buffer;
-using Color = SharpDX.Color;
-using Device = SharpDX.Direct3D11.Device;
+using Buffer	=SharpDX.Direct3D11.Buffer;
+using Color		=SharpDX.Color;
+using Device	=SharpDX.Direct3D11.Device;
+using Resource	=SharpDX.Direct3D11.Resource;
 
 
 namespace MaterialLib
@@ -46,7 +47,10 @@ namespace MaterialLib
 		//list of shaders available
 		Dictionary<string, Effect>	mFX	=new Dictionary<string, Effect>();
 
-		//list of textures
+		//list of texturey things
+		Dictionary<string, Resource>	mResources	=new Dictionary<string, Resource>();
+
+		//list of shader resource views for stuff like textures
 		Dictionary<string, ShaderResourceView>	mSRVs	=new Dictionary<string, ShaderResourceView>();
 
 		//list of parameter variables per shader
@@ -316,16 +320,41 @@ namespace MaterialLib
 		//editor constructor, loads or compiles all
 		public MaterialLib(Device dev, ShaderModel sm, bool bUsePreCompiled)
 		{
-			LoadShaders(dev, sm, bUsePreCompiled);
-			LoadParameterData();
-
-			GrabVariables();
+			Construct(dev, sm, bUsePreCompiled);
 		}
 
 
-		//mapgrinder constructor, just leaves an empty matlib to use the methods
-		public MaterialLib()
+		public MaterialLib(Device dev, FeatureLevel fl, bool bUsePreCompiled)
 		{
+			switch(fl)
+			{
+				case	FeatureLevel.Level_11_0:
+					Construct(dev, ShaderModel.SM5, bUsePreCompiled);
+					break;
+				case	FeatureLevel.Level_10_1:
+					Construct(dev, ShaderModel.SM41, bUsePreCompiled);
+					break;
+				case	FeatureLevel.Level_10_0:
+					Construct(dev, ShaderModel.SM4, bUsePreCompiled);
+					break;
+				case	FeatureLevel.Level_9_3:
+					Construct(dev, ShaderModel.SM2, bUsePreCompiled);
+					break;
+				default:
+					Debug.Assert(false);	//only support the above
+					Construct(dev, ShaderModel.SM2, bUsePreCompiled);
+					break;
+			}
+		}
+
+
+		void Construct(Device dev, ShaderModel sm, bool bUsePreCompiled)
+		{
+			LoadShaders(dev, sm, bUsePreCompiled);
+			LoadResources(dev);
+			LoadParameterData();
+
+			GrabVariables();
 		}
 
 
@@ -380,6 +409,15 @@ namespace MaterialLib
 			SetParameterForAll("mView", view);
 			SetParameterForAll("mProjection", projection);
 			SetParameterForAll("mEyePos", eyePos);
+		}
+
+
+		public void SetLightMapsToAtlas()
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				mat.Value.SetEffectParameter("mLightMap", mSRVs["LightMapAtlas"]);
+			}
 		}
 
 
@@ -679,6 +717,23 @@ namespace MaterialLib
 		}
 
 
+		void LoadResources(Device dev)
+		{
+			//see if Textures folder exists in Content
+			if(Directory.Exists("Content/Textures"))
+			{
+				DirectoryInfo	di	=new DirectoryInfo(
+					AppDomain.CurrentDomain.BaseDirectory + "Content/Textures/");
+
+				FileInfo[]		fi	=di.GetFiles("*.png", SearchOption.AllDirectories);
+				foreach(FileInfo f in fi)
+				{
+					LoadTexture(dev, f.DirectoryName, f.Name);
+				}
+			}
+		}
+
+
 		//load all shaders in the shaders folder
 		void LoadShaders(Device dev, ShaderModel sm, bool bUsePreCompiled)
 		{
@@ -780,6 +835,16 @@ namespace MaterialLib
 			if(fx != null)
 			{
 				mFX.Add(file, fx);
+			}
+		}
+
+
+		void LoadTexture(Device dev, string path, string fileName)
+		{
+			Resource	res	=Texture2D.FromFile(dev, path + "\\" + fileName);
+			if(res != null)
+			{
+				mResources.Add(fileName, res);
 			}
 		}
 

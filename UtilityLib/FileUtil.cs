@@ -64,10 +64,13 @@ namespace UtilityLib
 			MethodInfo	write	=typeof(T).GetMethods().Where(
 				x => x.Name == "Write").FirstOrDefault();
 
+			object	[]parms	=new object[1];
+			parms[0]		=bw;
+
 			bw.Write(zms.Length);
 			for(int i=0;i < zms.Length;i++)
 			{
-				write.Invoke(zms[i], null);
+				write.Invoke(zms[i], parms);
 			}
 		}
 
@@ -81,9 +84,18 @@ namespace UtilityLib
 			MethodInfo	read	=typeof(T).GetMethods().Where(
 				x => x.Name == "Read").FirstOrDefault();
 
+			ConstructorInfo	ci	=typeof(T).GetConstructor(Type.EmptyTypes);
+
+			object	[]parms	=new object[1];
+			parms[0]		=br;
+
 			for(int i=0;i < count;i++)
 			{
-				read.Invoke(ret[i], null);
+				if(ci != null)	//class?
+				{
+					ret[i]	=(T)ci.Invoke(null);
+				}
+				read.Invoke(ret[i], parms);
 			}
 
 			return	ret;

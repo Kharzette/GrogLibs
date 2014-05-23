@@ -46,10 +46,10 @@ namespace MaterialLib
 		}
 
 
-		public void DrawAll(GraphicsDevice gd, Vector3 eyePos,
+		public void DrawAll(GraphicsDevice gd,
 			int numShadows, RenderShadows rendShad)
 		{
-			Sort(eyePos);
+			Sort(gd.GCam.Position);
 
 			foreach(AlphaNode an in mAlphas)
 			{

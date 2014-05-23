@@ -342,7 +342,7 @@ namespace BSPVis
 		}
 
 
-		public bool MaterialVisGBSPFile(string fileName)
+		public bool MaterialVisGBSPFile(string fileName, GraphicsDevice gd)
 		{
 			CoreEvents.Print(" --- Material Vis GBSP File --- \n");
 
@@ -393,7 +393,7 @@ namespace BSPVis
 
 			//make a material vis, what materials
 			//can be seen from each leaf
-			VisMaterials();
+			VisMaterials(gd);
 
 			//Save the leafs, clusters, vis data, etc
 			bw	=new BinaryWriter(fs);
@@ -478,7 +478,7 @@ namespace BSPVis
 		}
 
 
-		public void VisMaterials()
+		public void VisMaterials(GraphicsDevice gd)
 		{
 			Dictionary<Int32, List<string>>	visibleMaterials
 				=new Dictionary<Int32, List<string>>();
@@ -495,7 +495,7 @@ namespace BSPVis
 
 			//make a temporary mapgrinder to help sync
 			//up material names and indexes and such
-			MapGrinder	mg	=mMap.MakeMapGrinder();
+			MapGrinder	mg	=mMap.MakeMapGrinder(gd);
 
 			object	prog	=ProgressWatcher.RegisterProgress(0, mGFXLeafs.Length, 0);
 

@@ -377,6 +377,10 @@ namespace MeshLib
 
 		public static Buffer BuildABuffer(Device gd, Array verts, int typeIdx)
 		{
+			if(typeIdx < 0)
+			{
+				return	null;
+			}
 			return	BuildABuffer(gd, verts, GetTypeForIndex(typeIdx));
 		}
 
@@ -400,6 +404,21 @@ namespace MeshLib
 			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
 
 			return	typedMethod.Invoke(null, new object[] {gd, verts, bDesc}) as Buffer;
+		}
+
+
+		public static Buffer BuildAnIndexBuffer(Device gd, UInt16 []inds)
+		{
+			if(gd == null || inds == null)
+			{
+				return	null;
+			}
+
+			BufferDescription	indDesc	=new BufferDescription(inds.Length * 2,
+				ResourceUsage.Default, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			return	Buffer.Create<UInt16>(gd, inds, indDesc);
 		}
 
 

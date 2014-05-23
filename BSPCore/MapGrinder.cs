@@ -10,6 +10,7 @@ using SharpDX;
 using SharpDX.Direct3D11;
 
 using Buffer	=SharpDX.Direct3D11.Buffer;
+using MatLib	=MaterialLib.MaterialLib;
 
 
 namespace BSPCore
@@ -149,14 +150,20 @@ namespace BSPCore
 		internal delegate void FinishUp(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs);
 		internal delegate void FinishUpAlpha(int modelIndex, List<Dictionary<Int32, DrawDataChunk>> perPlaneChunk, ref UInt16 vertOfs);
 
-		public MapGrinder(GraphicsDevice gd, GFXTexInfo []texs,
-			GFXFace []faces, int lightGridSize, int atlasSize)
+		public MapGrinder(GraphicsDevice gd, MatLib matLib,
+			GFXTexInfo []texs, GFXFace []faces,
+			int lightGridSize, int atlasSize)
 		{
 			mGD				=gd;
+			mMatLib			=matLib;
 			mTexInfos		=texs;
 			mLightGridSize	=lightGridSize;
 			mFaces			=faces;
-			mMatLib			=new MaterialLib.MaterialLib();
+
+			if(mMatLib == null)
+			{
+				mMatLib	=new MatLib(gd.GD, gd.GD.FeatureLevel, true);
+			}
 
 			if(gd != null)
 			{
@@ -223,12 +230,13 @@ namespace BSPCore
 		}
 
 
-		internal void GetLMBuffers(out Buffer vb, out Buffer ib)
+		internal void GetLMGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 		{
 			if(mLMVerts.Count == 0)
 			{
-				vb	=null;
-				ib	=null;
+				typeIndex	=-1;
+				verts		=null;
+				inds		=null;
 				return;
 			}
 
@@ -243,27 +251,19 @@ namespace BSPCore
 				varray[i].Normal		=mLMNormals[i];
 			}
 
-			BufferDescription	bd	=new BufferDescription(
-				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			vb	=Buffer.Create(mGD.GD, varray, bd);
-			
-			BufferDescription	id	=new BufferDescription(mLMIndexes.Count * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			ib	=Buffer.Create<UInt16>(mGD.GD, mLMIndexes.ToArray(), id);
+			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
+			verts		=varray;
+			inds		=mLMIndexes.ToArray();
 		}
 
 
-		internal void GetLMABuffers(out Buffer vb, out Buffer ib)
+		internal void GetLMAGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 		{
 			if(mLMAVerts.Count == 0)
 			{
-				vb	=null;
-				ib	=null;
+				typeIndex	=-1;
+				verts		=null;
+				inds		=null;
 				return;
 			}
 
@@ -279,27 +279,19 @@ namespace BSPCore
 				varray[i].Color0		=mLMAColors[i];
 			}
 
-			BufferDescription	bd	=new BufferDescription(
-				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			vb	=Buffer.Create(mGD.GD, varray, bd);
-			
-			BufferDescription	id	=new BufferDescription(mLMAIndexes.Count * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			ib	=Buffer.Create<UInt16>(mGD.GD, mLMAIndexes.ToArray(), id);
+			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
+			verts		=varray;
+			inds		=mLMAIndexes.ToArray();
 		}
 
 
-		internal void GetVLitBuffers(out Buffer vb, out Buffer ib)
+		internal void GetVLitGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 		{
 			if(mVLitVerts.Count == 0)
 			{
-				vb	=null;
-				ib	=null;
+				typeIndex	=-1;
+				verts		=null;
+				inds		=null;
 				return;
 			}
 
@@ -312,27 +304,19 @@ namespace BSPCore
 				varray[i].Color0	=mVLitColors[i];
 			}
 
-			BufferDescription	bd	=new BufferDescription(
-				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			vb	=Buffer.Create(mGD.GD, varray, bd);
-			
-			BufferDescription	id	=new BufferDescription(mVLitIndexes.Count * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			ib	=Buffer.Create<UInt16>(mGD.GD, mVLitIndexes.ToArray(), id);
+			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
+			verts		=varray;
+			inds		=mVLitIndexes.ToArray();
 		}
 
 
-		internal void GetAlphaBuffers(out Buffer vb, out Buffer ib)
+		internal void GetAlphaGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 		{
 			if(mAlphaVerts.Count == 0)
 			{
-				vb	=null;
-				ib	=null;
+				typeIndex	=-1;
+				verts		=null;
+				inds		=null;
 				return;
 			}
 
@@ -345,27 +329,19 @@ namespace BSPCore
 				varray[i].Color0	=mAlphaColors[i];
 			}
 
-			BufferDescription	bd	=new BufferDescription(
-				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			vb	=Buffer.Create(mGD.GD, varray, bd);
-			
-			BufferDescription	id	=new BufferDescription(mAlphaIndexes.Count * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			ib	=Buffer.Create<UInt16>(mGD.GD, mAlphaIndexes.ToArray(), id);
+			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
+			verts		=varray;
+			inds		=mAlphaIndexes.ToArray();
 		}
 
 
-		internal void GetFullBrightBuffers(out Buffer vb, out Buffer ib)
+		internal void GetFullBrightGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 		{
 			if(mFBVerts.Count == 0)
 			{
-				vb	=null;
-				ib	=null;
+				typeIndex	=-1;
+				verts		=null;
+				inds		=null;
 				return;
 			}
 
@@ -377,27 +353,19 @@ namespace BSPCore
 				varray[i].TexCoord0	=mFBTex0[i];
 			}
 
-			BufferDescription	bd	=new BufferDescription(
-				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			vb	=Buffer.Create(mGD.GD, varray, bd);
-			
-			BufferDescription	id	=new BufferDescription(mFBIndexes.Count * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			ib	=Buffer.Create<UInt16>(mGD.GD, mFBIndexes.ToArray(), id);
+			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
+			verts		=varray;
+			inds		=mFBIndexes.ToArray();
 		}
 
 
-		internal void GetMirrorBuffers(out Buffer vb, out Buffer ib)
+		internal void GetMirrorGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 		{
 			if(mMirrorVerts.Count == 0)
 			{
-				vb	=null;
-				ib	=null;
+				typeIndex	=-1;
+				verts		=null;
+				inds		=null;
 				return;
 			}
 
@@ -411,27 +379,19 @@ namespace BSPCore
 				varray[i].Color0	=mMirrorColors[i];
 			}
 
-			BufferDescription	bd	=new BufferDescription(
-				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			vb	=Buffer.Create(mGD.GD, varray, bd);
-			
-			BufferDescription	id	=new BufferDescription(mMirrorIndexes.Count * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			ib	=Buffer.Create<UInt16>(mGD.GD, mMirrorIndexes.ToArray(), id);
+			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
+			verts		=varray;
+			inds		=mMirrorIndexes.ToArray();
 		}
 
 
-		internal void GetSkyBuffers(out Buffer vb, out Buffer ib)
+		internal void GetSkyGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 		{
 			if(mSkyVerts.Count == 0)
 			{
-				vb	=null;
-				ib	=null;
+				typeIndex	=-1;
+				verts		=null;
+				inds		=null;
 				return;
 			}
 
@@ -442,27 +402,19 @@ namespace BSPCore
 				varray[i].TexCoord0	=mSkyTex0[i];
 			}
 
-			BufferDescription	bd	=new BufferDescription(
-				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			vb	=Buffer.Create(mGD.GD, varray, bd);
-			
-			BufferDescription	id	=new BufferDescription(mSkyIndexes.Count * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			ib	=Buffer.Create<UInt16>(mGD.GD, mSkyIndexes.ToArray(), id);
+			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
+			verts		=varray;
+			inds		=mSkyIndexes.ToArray();
 		}
 
 
-		internal void GetLMAnimBuffers(out Buffer vb, out Buffer ib)
+		internal void GetLMAnimGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 		{
 			if(mLMAnimVerts.Count == 0)
 			{
-				vb	=null;
-				ib	=null;
+				typeIndex	=-1;
+				verts		=null;
+				inds		=null;
 				return;
 			}
 
@@ -486,27 +438,19 @@ namespace BSPCore
 				varray[i].AnimStyle		=mLMAnimStyle[i];
 			}
 
-			BufferDescription	bd	=new BufferDescription(
-				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			vb	=Buffer.Create(mGD.GD, varray, bd);
-			
-			BufferDescription	id	=new BufferDescription(mLMAnimIndexes.Count * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			ib	=Buffer.Create<UInt16>(mGD.GD, mLMAnimIndexes.ToArray(), id);
+			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
+			verts		=varray;
+			inds		=mLMAnimIndexes.ToArray();
 		}
 
 
-		internal void GetLMAAnimBuffers(out Buffer vb, out Buffer ib)
+		internal void GetLMAAnimGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 		{
 			if(mLMAAnimVerts.Count == 0)
 			{
-				vb	=null;
-				ib	=null;
+				typeIndex	=-1;
+				verts		=null;
+				inds		=null;
 				return;
 			}
 
@@ -530,18 +474,9 @@ namespace BSPCore
 				varray[i].AnimStyle		=mLMAAnimStyle[i];
 			}
 
-			BufferDescription	bd	=new BufferDescription(
-				VertexTypes.GetSizeForType(varray[0].GetType()) * varray.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			vb	=Buffer.Create(mGD.GD, varray, bd);
-			
-			BufferDescription	id	=new BufferDescription(mLMAAnimIndexes.Count * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
-				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
-
-			ib	=Buffer.Create<UInt16>(mGD.GD, mLMAAnimIndexes.ToArray(), id);
+			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
+			verts		=varray;
+			inds		=mLMAAnimIndexes.ToArray();
 		}
 
 
@@ -772,22 +707,18 @@ namespace BSPCore
 					int	nverts	=ddcs[j].mVCounts[i];
 
 					//triangulate
+					//reverse with sharpdx coord change
 					for(UInt16 k=1;k < nverts-1;k++)
 					{
-						inds.Add(vertOfs);
-						inds.Add((UInt16)(vertOfs + k));
 						inds.Add((UInt16)(vertOfs + ((k + 1) % nverts)));
+						inds.Add((UInt16)(vertOfs + k));
+						inds.Add(vertOfs);
 					}
 
-					vertOfs	+=(UInt16)ddcs[j].mVCounts[i];
+					vertOfs	+=(UInt16)nverts;
 				}
 
-				int	numTris	=(inds.Count - cnt);
-
-				numTris	/=3;
-
-//				dc.mPrimCount	=numTris;
-//				dc.mNumVerts	=ddcs[j].mVerts.Count;
+				dc.mCount	=(inds.Count - cnt);
 
 				draws.Add(dc);
 			}
@@ -950,12 +881,7 @@ namespace BSPCore
 						vertOfs	+=(UInt16)pf.Value.mVCounts[i];
 					}
 
-					int	numTris	=(inds.Count - cnt);
-
-					numTris	/=3;
-
-//					dc.mPrimCount	=numTris;
-//					dc.mNumVerts	=pf.Value.mVerts.Count;
+					dc.mCount	=(inds.Count - cnt);
 
 					dcs.Add(dc);
 				}
@@ -1077,7 +1003,7 @@ namespace BSPCore
 				mMatLib.SetMaterialTechnique(matName, tech);
 				if(bLightMap)
 				{
-					mMatLib.SetMaterialParameter(matName, "mLightMap", "LightMapAtlas");
+					mMatLib.SetMaterialParameter(matName, "mLightMap", null);
 				}
 			}
 		}
