@@ -286,7 +286,14 @@ namespace BSPCore
 			}
 			if(mPoly != null)
 			{
-				mPoly.GetTriangles(pp.mPlanes[mPlaneNum], matColor, verts, normals, colors, indexes, bCheckFlags);
+				GBSPPlane	p	=pp.mPlanes[mPlaneNum];
+
+				if(mbFlipSide)
+				{
+					p.Inverse();
+				}
+
+				mPoly.GetTriangles(p, matColor, verts, normals, colors, indexes, bCheckFlags);
 			}
 		}
 

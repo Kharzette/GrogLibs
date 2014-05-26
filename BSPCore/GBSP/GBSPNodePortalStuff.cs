@@ -968,13 +968,14 @@ namespace BSPCore
 				}
 
 				//try opposite
-				p2.Inverse();
-				dot	=Vector3.Dot(p1.mNormal, p2.mNormal);
-				if(dot > bestDot)
-				{
-					bestDot		=dot;
-					bestSide	=side;
-				}
+				//this seems like a bad hack, commenting out (SharpDX Port)
+//				p2.Inverse();
+//				dot	=Vector3.Dot(p1.mNormal, p2.mNormal);
+//				if(dot > bestDot)
+//				{
+//					bestDot		=dot;
+//					bestSide	=side;
+//				}
 			}
 
 			if(bestSide == null)

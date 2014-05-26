@@ -424,6 +424,11 @@ namespace MeshLib
 			VertexBufferBinding vbb, Buffer ib, Dictionary<int, List<DrawCall>> dcs,
 			IsMaterialVisible bMatVis)
 		{
+			if(dcs == null)
+			{
+				return;
+			}
+
 			List<string>	mats	=mMatLib.GetMaterialNames();
 
 			g.DC.InputAssembler.SetVertexBuffers(0, vbb);
@@ -488,6 +493,11 @@ namespace MeshLib
 			VertexBufferBinding vbb, Buffer ib, Dictionary<int, List<List<DrawCall>>> dcs,
 			IsMaterialVisible bMatVis)
 		{
+			if(dcs == null)
+			{
+				return;
+			}
+
 			List<string>	mats	=mMatLib.GetMaterialNames();
 
 			//only pass 2 actually draws stuff here, others store draws for sorting

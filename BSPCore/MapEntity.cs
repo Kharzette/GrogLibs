@@ -42,8 +42,6 @@ namespace BSPCore
 			{
 				return	false;
 			}
-			//flip x
-			org.X	=-org.X;
 
 			//swap y and z
 			float	zTemp	=org.Z;
@@ -88,9 +86,6 @@ namespace BSPCore
 		{
 			if(GetVectorNoConversion(key, out org))
 			{
-				//flip x
-				org.X	=-org.X;
-
 				//swap y and z
 				float	zTemp	=org.Z;
 				org.Z	=org.Y;

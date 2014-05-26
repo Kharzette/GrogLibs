@@ -330,9 +330,10 @@ namespace BSPCore
 			List<Color> colors,
 			List<UInt16> ind, bool bCheckFlags)
 		{
+			Color	brushColor	=Mathery.RandomColor(rand);
 			foreach(GBSPSide s in mOriginalSides)
 			{
-				s.GetTriangles(pp, Mathery.RandomColor(rand), tris, normals, colors, ind, bCheckFlags);
+				s.GetTriangles(pp, brushColor, tris, normals, colors, ind, bCheckFlags);
 			}
 		}
 

@@ -339,6 +339,8 @@ namespace BSPCore
 				Vector3	vect1	=mVerts[i - 1] - mVerts[0];
 				Vector3	vect2	=mVerts[i] - mVerts[0];
 
+				//not sure if this ordering is correct, but since
+				//only the length is used, should be ok
 				Vector3	cross	=Vector3.Cross(vect1, vect2);
 
 				total	+=0.5f * cross.Length();
@@ -722,7 +724,9 @@ namespace BSPCore
 					Vector3	v2	=pass.mVerts[j] - source.mVerts[i];
 
 					GBSPPlane	plane	=new GBSPPlane();
-					plane.mNormal	=Vector3.Cross(v1, v2);
+
+					//testing reversing this for sharpdx
+					plane.mNormal	=Vector3.Cross(v2, v1);
 
 					float	len		=plane.mNormal.Length();
 					plane.mNormal	/=len;

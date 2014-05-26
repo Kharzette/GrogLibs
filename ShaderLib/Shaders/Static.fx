@@ -211,7 +211,7 @@ technique10 TriTex0
 	}
 }
 
-technique10 TriVColor
+technique10 TriVColorSolidSpec
 {     
 	pass P0
 	{

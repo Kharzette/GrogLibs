@@ -405,10 +405,11 @@ namespace BSPCore
 			{
 				if(mEntities != null)
 				{
-					foreach(MapEntity ent in mEntities)
-					{
-						ent.GetTriangles(mPlanePool, verts, normals, colors, indexes, false);
-					}
+					mEntities[0].GetTriangles(mPlanePool, verts, normals, colors, indexes, false);
+//					foreach(MapEntity ent in mEntities)
+//					{
+//						ent.GetTriangles(mPlanePool, verts, normals, colors, indexes, false);
+//					}
 				}
 				else
 				{
@@ -431,7 +432,13 @@ namespace BSPCore
 			}
 			else if(drawChoice == DebugDrawChoice.GFXFaces)
 			{
+				if(mGFXFaces == null)
+				{
+					return;
+				}
+
 				Random	rnd	=new Random();
+
 				foreach(GFXFace face in mGFXFaces)
 				{
 					UInt16	vofs	=(UInt16)verts.Count;
@@ -441,16 +448,24 @@ namespace BSPCore
 					{
 						int	idx	=mGFXVertIndexes[i + face.mFirstVert];
 
+						if(face.mbFlipSide)
+						{
+							normals.Add(-mGFXPlanes[face.mPlaneNum].mNormal);
+						}
+						else
+						{
+							normals.Add(mGFXPlanes[face.mPlaneNum].mNormal);
+						}
+
 						verts.Add(mGFXVerts[idx]);
-						normals.Add(mPlanePool.mPlanes[face.mPlaneNum].mNormal);
 						colors.Add(fColor);
 					}
 
 					for(UInt16 i=1;i < (face.mNumVerts - 1);i++)
 					{
-						indexes.Add(vofs);
-						indexes.Add((UInt16)(vofs + i));
 						indexes.Add((UInt16)(vofs + ((i + 1) % (UInt16)face.mNumVerts)));
+						indexes.Add((UInt16)(vofs + i));
+						indexes.Add(vofs);
 					}
 				}
 			}
