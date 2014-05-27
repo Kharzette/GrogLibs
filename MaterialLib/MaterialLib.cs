@@ -910,7 +910,7 @@ namespace MaterialLib
 			loadInfo.Depth			=0;
 			loadInfo.Filter			=FilterFlags.SRgbIn | FilterFlags.None;	//pngs are srgb
 			loadInfo.Format			=Format.R8G8B8A8_UNorm_SRgb;
-			loadInfo.Usage			=ResourceUsage.Default;
+			loadInfo.Usage			=ResourceUsage.Immutable;
 
 			Resource	res	=Texture2D.FromFile(dev, path + "\\" + fileName, loadInfo);
 

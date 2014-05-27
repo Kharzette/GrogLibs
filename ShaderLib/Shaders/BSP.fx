@@ -197,7 +197,11 @@ float4 LightMapPS(VVPosTex04Tex14Tex24 input) : SV_Target
 	
 	if(mbTextureEnabled)
 	{
+#if defined(POINTTEXTURES)
+		color	=mTexture.Sample(PointWrap, input.TexCoord0.xy);
+#else
 		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
+#endif
 	}
 	else
 	{
@@ -222,7 +226,11 @@ float4 LightMapCelPS(VVPosTex04Tex14Tex24 input) : SV_Target
 	
 	if(mbTextureEnabled)
 	{
+#if defined(POINTTEXTURES)
+		color	=mTexture.Sample(PointWrap, input.TexCoord0.xy);
+#else
 		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
+#endif
 	}
 	else
 	{
@@ -259,7 +267,11 @@ float4 VertexLitPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 	
 	if(mbTextureEnabled)
 	{
+#if defined(POINTTEXTURES)
+		color	=mTexture.Sample(PointWrap, tex0);
+#else
 		color	=mTexture.Sample(LinearWrap, tex0);
+#endif
 	}
 	else
 	{
@@ -305,7 +317,11 @@ float4 VertexLitCelPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 	
 	if(mbTextureEnabled)
 	{
+#if defined(POINTTEXTURES)
+		color	=mTexture.Sample(PointWrap, tex0);
+#else
 		color	=mTexture.Sample(LinearWrap, tex0);
+#endif
 	}
 	else
 	{
@@ -355,8 +371,11 @@ float4 FullBrightPixelShader(VVPosTex0 input) : SV_Target
 {
 	if(mbTextureEnabled)
 	{
+#if defined(POINTTEXTURES)
+		return	mTexture.Sample(PointWrap, input.TexCoord0);
+#else
 		return	mTexture.Sample(LinearWrap, input.TexCoord0);
-//		return	tex2D(TextureSampler, input.TexCoord0);
+#endif
 	}
 	return	float4(1, 1, 1, 1);
 }
@@ -367,7 +386,11 @@ float4 LightMapAnimPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 
 	if(mbTextureEnabled)
 	{
+#if defined(POINTTEXTURES)
+		color	=mTexture.Sample(PointWrap, input.TexCoord0.xy);
+#else
 		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
+#endif
 	}
 	else
 	{
@@ -417,7 +440,11 @@ float4 LightMapAnimCelPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 
 	if(mbTextureEnabled)
 	{
+#if defined(POINTTEXTURES)
+		color	=mTexture.Sample(PointWrap, input.TexCoord0.xy);
+#else
 		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
+#endif
 	}
 	else
 	{
@@ -481,7 +508,11 @@ float4 SkyPS(VVPosCubeTex0 input) : SV_Target
 	
 		eyeVec	=normalize(eyeVec);
 
+#if defined(POINTTEXTURES)
+		color	=mTexture.Sample(PointClampCube, eyeVec);
+#else
 		color	=mTexture.Sample(LinearClampCube, eyeVec);
+#endif
 	}
 	else
 	{
