@@ -81,7 +81,7 @@ namespace BSPCore
 		}
 
 
-		static float ClampLightIndex(int idx)
+		static byte ClampLightIndex(int idx)
 		{
 			if(idx == 255)
 			{
@@ -89,11 +89,11 @@ namespace BSPCore
 			}
 			else if(idx >= 32)	//switchable
 			{
-				return	idx - 20;
+				return	(byte)(idx - 20);
 			}
 			else if(idx < 12)
 			{
-				return	idx;
+				return	(byte)idx;
 			}
 
 			Debug.Assert(false);	//light style in a strange place
@@ -102,16 +102,16 @@ namespace BSPCore
 		}
 
 
-		static Vector4 AssignLightStyleIndex(GFXFace f)
+		static Color AssignLightStyleIndex(GFXFace f)
 		{
 			//switchable styles reference the same shader
 			//array as animated, so need a - 20
-			Vector4	ret	=Vector4.Zero;
+			Color	ret	=Color.White;
 
-			ret.X	=ClampLightIndex(f.mLType0);
-			ret.Y	=ClampLightIndex(f.mLType1);
-			ret.Z	=ClampLightIndex(f.mLType2);
-			ret.W	=ClampLightIndex(f.mLType3);
+			ret.R	=ClampLightIndex(f.mLType0);
+			ret.G	=ClampLightIndex(f.mLType1);
+			ret.B	=ClampLightIndex(f.mLType2);
+			ret.A	=ClampLightIndex(f.mLType3);
 
 			return	ret;
 		}
@@ -393,7 +393,7 @@ namespace BSPCore
 
 
 		static void ComputeFaceColors(GFXFace f, Vector3 []verts, int []indexes,
-			GFXTexInfo tex, Vector3 []rgbVerts,	List<Vector4> colors)
+			GFXTexInfo tex, Vector3 []rgbVerts,	List<Color> colors)
 		{
 			int	fvert	=f.mFirstVert;
 			for(int k=0;k < f.mNumVerts;k++)
@@ -412,7 +412,7 @@ namespace BSPCore
 				{
 					col.W	=tex.mAlpha;
 				}
-				colors.Add(col);
+				colors.Add(new Color(col));
 			}
 		}
 
@@ -470,7 +470,7 @@ namespace BSPCore
 
 			foreach(Vector3 v in faceVerts)
 			{
-				ddc.mColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
+				ddc.mColors.Add(new Color(255, 255, 255, tex.mAlpha * 255));
 			}
 
 			if(!AtlasAnimated(atlas, lightGridSize, ddc, f, lightData, faceVerts, pln, tex))
@@ -484,7 +484,7 @@ namespace BSPCore
 			//style index
 			for(int k=0;k < f.mNumVerts;k++)
 			{
-				Vector4	styleIndex	=AssignLightStyleIndex(f);
+				Color	styleIndex	=AssignLightStyleIndex(f);
 				ddc.mStyles.Add(styleIndex);
 			}
 
@@ -648,7 +648,7 @@ namespace BSPCore
 
 			foreach(Vector3 v in faceVerts)
 			{
-				ddc.mColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
+				ddc.mColors.Add(new Color(255, 255, 255, tex.mAlpha * 255));
 			}
 
 			if(!AtlasLightMap(atlas, lightGridSize, f, lightData, 0, faceVerts, pln, tex, ddc.mTex1))
@@ -684,7 +684,7 @@ namespace BSPCore
 
 			foreach(Vector3 v in faceVerts)
 			{
-				ddc.mColors.Add(new Vector4(1, 1, 1, tex.mAlpha));
+				ddc.mColors.Add(new Color(255, 255, 255, tex.mAlpha * 255));
 			}
 
 			if(!AtlasAnimated(atlas, lightGridSize, ddc, f, lightData, faceVerts, pln, tex))
@@ -697,7 +697,7 @@ namespace BSPCore
 			//style index
 			for(int k=0;k < f.mNumVerts;k++)
 			{
-				Vector4	styleIndex	=AssignLightStyleIndex(f);
+				Color	styleIndex	=AssignLightStyleIndex(f);
 				ddc.mStyles.Add(styleIndex);
 			}
 

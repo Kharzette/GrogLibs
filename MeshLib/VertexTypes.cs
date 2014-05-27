@@ -214,6 +214,10 @@ namespace MeshLib
 				{
 					size	+=4;
 				}
+				else if(fi.FieldType == typeof(Half2))
+				{
+					size	+=4;
+				}
 				else
 				{
 					Debug.Assert(false);	//unknown
@@ -587,14 +591,14 @@ namespace MeshLib
 
 			//count texcoords
 			int	texCnt	=0;
-			while(HasElement(newType, typeof(Vector2), "TexCoord" + texCnt))
+			while(HasElement(newType, typeof(Half2), "TexCoord" + texCnt))
 			{
 				texCnt++;
 			}
 
 			//count colors
 			int	colCnt	=0;
-			while(HasElement(newType, typeof(Vector4), "Color" + colCnt))
+			while(HasElement(newType, typeof(Color), "Color" + colCnt))
 			{
 				colCnt++;
 			}
@@ -603,8 +607,8 @@ namespace MeshLib
 			bool	bNorm		=HasElement(newType, typeof(Vector3), "Normal");
 			bool	bBoneIdx	=HasElement(newType, typeof(Color), "BoneIndex");
 			bool	bBoneWeight	=HasElement(newType, typeof(Half4), "BoneWeights");
-			bool	bTan		=HasElement(newType, typeof(Vector3), "Tangent");
-			bool	bBiTan		=HasElement(newType, typeof(Vector3), "BiTangent");
+			bool	bTan		=HasElement(newType, typeof(Half4), "Tangent");
+			bool	bBiTan		=HasElement(newType, typeof(Half4), "BiTangent");
 
 			//build the new type
 			Type	vtypeNew	=GetMatch(
@@ -661,20 +665,20 @@ namespace MeshLib
 
 		//create a new vert array with tangents added
 		public static Array AddTangents(Array verts, int typeIdx,
-			Vector4 []tans, out int typeIndex)
+			Half4 []tans, out int typeIndex)
 		{
 			Type	vtype	=mTypes[typeIdx];
 
 			//count texcoords
 			int	texCnt	=0;
-			while(HasElement(vtype, typeof(Vector2), "TexCoord" + texCnt))
+			while(HasElement(vtype, typeof(Half2), "TexCoord" + texCnt))
 			{
 				texCnt++;
 			}
 
 			//count colors
 			int	colCnt	=0;
-			while(HasElement(vtype, typeof(Vector4), "Color" + colCnt))
+			while(HasElement(vtype, typeof(Color), "Color" + colCnt))
 			{
 				colCnt++;
 			}
@@ -790,6 +794,12 @@ namespace MeshLib
 						bw.Write(vec.Z);
 						bw.Write(vec.W);
 					}
+					else if(fi.FieldType.Name == "Half2")
+					{
+						Half2	vec	=(Half2)GetArrayField(verts, i, fi.Name);
+						bw.Write(vec.X);
+						bw.Write(vec.Y);
+					}
 					else if(fi.FieldType.Name == "Color")
 					{
 						Color	col	=(Color)GetArrayField(verts, i, fi.Name);
@@ -858,6 +868,15 @@ namespace MeshLib
 						vec.Y	=br.ReadSingle();
 						vec.Z	=br.ReadSingle();
 						vec.W	=br.ReadSingle();
+
+						SetArrayField(outVerts, i, fi.Name, vec);
+					}
+					else if(fi.FieldType.Name == "Half2")
+					{
+						Half2	vec	=new Half2();
+
+						vec.X	=br.ReadSingle();
+						vec.Y	=br.ReadSingle();
 
 						SetArrayField(outVerts, i, fi.Name, vec);
 					}

@@ -463,7 +463,7 @@ namespace MaterialLib
 
 		Format	GetFormatFromParamDesc(ShaderParameterDescription spd)
 		{
-			//special case here
+			//special cases here
 			//the reflection stuff returns float4 for stuff I want half4
 			if(spd.SemanticName == "BLENDWEIGHTS")
 			{
@@ -472,6 +472,29 @@ namespace MaterialLib
 			if(spd.SemanticName == "BLENDINDICES")
 			{
 				return	Format.R8G8B8A8_UInt;
+			}
+			if(spd.SemanticName == "COLOR")
+			{
+				return	Format.R8G8B8A8_UNorm;
+			}
+			if(spd.SemanticName == "TEXCOORD")
+			{
+				if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentW) != 0))
+				{
+					return	Format.R16G16B16A16_Float;
+				}
+				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentZ) != 0))
+				{
+					Debug.Assert(false);	//xyz not supported I suppose
+				}
+				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentY) != 0))
+				{
+					return	Format.R16G16_Float;
+				}
+				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentX) != 0))
+				{
+					return	Format.R16_Float;
+				}
 			}
 
 			if(spd.ComponentType == RegisterComponentType.Float32)

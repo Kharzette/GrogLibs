@@ -378,14 +378,14 @@ struct VPosNormTex04Col0
 	float4	Color		: COLOR0;
 };
 
-struct VPosNormTex04Tex14Tex24Tex34
+struct VPosNormTex04HTex14HTex24HCol0
 {
 	float3	Position	: POSITION;
 	float3	Normal		: NORMAL;
-	float4	TexCoord0	: TEXCOORD0;
-	float4	TexCoord1	: TEXCOORD1;
-	float4	TexCoord2	: TEXCOORD2;
-	float4	TexCoord3	: TEXCOORD3;
+	half4	TexCoord0	: TEXCOORD0;
+	half4	TexCoord1	: TEXCOORD1;
+	half4	TexCoord2	: TEXCOORD2;
+	half4	Color		: COLOR0;
 };
 
 struct VPosTex04Tex14Tex24Tex34Tex44Tex54

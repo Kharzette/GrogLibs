@@ -26,8 +26,8 @@ namespace BSPCore
 		internal List<Vector2>	mTex2		=new List<Vector2>();
 		internal List<Vector2>	mTex3		=new List<Vector2>();
 		internal List<Vector2>	mTex4		=new List<Vector2>();
-		internal List<Vector4>	mColors		=new List<Vector4>();
-		internal List<Vector4>	mStyles		=new List<Vector4>();
+		internal List<Color>	mColors		=new List<Color>();
+		internal List<Color>	mStyles		=new List<Color>();
 	}
 
 
@@ -36,11 +36,6 @@ namespace BSPCore
 	{
 		GraphicsDevice			mGD;
 		MaterialLib.MaterialLib	mMatLib;
-
-		//vertex declarations
-//		VertexDeclaration	mLMVD, mVLitVD, mFBVD, mAlphaVD;
-//		VertexDeclaration	mMirrorVD, mSkyVD, mLMAnimVD;
-//		VertexDeclaration	mLMAVD, mLMAAnimVD;
 
 		//computed lightmapped geometry
 		List<Vector3>	mLMVerts		=new List<Vector3>();
@@ -55,13 +50,13 @@ namespace BSPCore
 		List<Vector2>	mLMAFaceTex0	=new List<Vector2>();
 		List<Vector2>	mLMAFaceTex1	=new List<Vector2>();
 		List<UInt16>	mLMAIndexes		=new List<UInt16>();
-		List<Vector4>	mLMAColors		=new List<Vector4>();
+		List<Color>		mLMAColors		=new List<Color>();
 
 		//computed vertex lit geometry
 		List<Vector3>	mVLitVerts		=new List<Vector3>();
 		List<Vector2>	mVLitTex0		=new List<Vector2>();
 		List<Vector3>	mVLitNormals	=new List<Vector3>();
-		List<Vector4>	mVLitColors		=new List<Vector4>();
+		List<Color>		mVLitColors		=new List<Color>();
 		List<UInt16>	mVLitIndexes	=new List<UInt16>();
 
 		//computed fullbright geometry
@@ -74,7 +69,7 @@ namespace BSPCore
 		List<Vector3>	mAlphaVerts		=new List<Vector3>();
 		List<Vector2>	mAlphaTex0		=new List<Vector2>();
 		List<Vector3>	mAlphaNormals	=new List<Vector3>();
-		List<Vector4>	mAlphaColors	=new List<Vector4>();
+		List<Color>		mAlphaColors	=new List<Color>();
 		List<UInt16>	mAlphaIndexes	=new List<UInt16>();
 
 		//computed mirror geometry
@@ -82,7 +77,7 @@ namespace BSPCore
 		List<Vector3>		mMirrorNormals	=new List<Vector3>();
 		List<Vector2>		mMirrorTex0		=new List<Vector2>();
 		List<Vector2>		mMirrorTex1		=new List<Vector2>();
-		List<Vector4>		mMirrorColors	=new List<Vector4>();
+		List<Color>			mMirrorColors	=new List<Color>();
 		List<UInt16>		mMirrorIndexes	=new List<UInt16>();
 		List<List<Vector3>>	mMirrorPolys	=new List<List<Vector3>>();
 
@@ -100,7 +95,7 @@ namespace BSPCore
 		List<Vector2>	mLMAnimFaceTex3	=new List<Vector2>();
 		List<Vector2>	mLMAnimFaceTex4	=new List<Vector2>();
 		List<UInt16>	mLMAnimIndexes	=new List<UInt16>();
-		List<Vector4>	mLMAnimStyle	=new List<Vector4>();
+		List<Color>		mLMAnimStyle	=new List<Color>();
 
 		//animated lightmap alpha geometry
 		List<Vector3>	mLMAAnimVerts		=new List<Vector3>();
@@ -111,8 +106,8 @@ namespace BSPCore
 		List<Vector2>	mLMAAnimFaceTex3	=new List<Vector2>();
 		List<Vector2>	mLMAAnimFaceTex4	=new List<Vector2>();
 		List<UInt16>	mLMAAnimIndexes		=new List<UInt16>();
-		List<Vector4>	mLMAAnimStyle		=new List<Vector4>();
-		List<Vector4>	mLMAAnimColors		=new List<Vector4>();
+		List<Color>		mLMAAnimStyle		=new List<Color>();
+		List<Color>		mLMAAnimColors		=new List<Color>();
 
 		//computed material stuff
 		List<string>	mMaterialNames		=new List<string>();
@@ -471,9 +466,9 @@ namespace BSPCore
 				varray[i].TexCoord1.W	=mLMAnimFaceTex3[i].Y;
 				varray[i].TexCoord2.X	=mLMAnimFaceTex4[i].X;
 				varray[i].TexCoord2.Y	=mLMAnimFaceTex4[i].Y;
-				varray[i].TexCoord2.Z	=mLMAAnimColors[i].W;	//alpha
+				varray[i].TexCoord2.Z	=mLMAAnimColors[i].A;	//alpha
 				varray[i].TexCoord2.W	=69.0f;	//nothin
-				varray[i].TexCoord3		=mLMAAnimStyle[i];
+				varray[i].TexCoord3.A	=mLMAAnimStyle[i].R;
 			}
 
 			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -763,7 +758,7 @@ namespace BSPCore
 		static void StuffVBArrays(List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks,
 			List<Vector3> verts, List<Vector3> norms, List<Vector2> tex0,
 			List<Vector2> tex1, List<Vector2> tex2, List<Vector2> tex3, 
-			List<Vector2> tex4, List<Vector4> colors, List<Vector4> styles)
+			List<Vector2> tex4, List<Color> colors, List<Color> styles)
 		{
 			foreach(Dictionary<Int32, DrawDataChunk> ppChunk in perPlaneChunks)
 			{
@@ -809,7 +804,7 @@ namespace BSPCore
 		static void StuffVBArrays(List<DrawDataChunk> matChunks,
 			List<Vector3> verts, List<Vector3> norms, List<Vector2> tex0,
 			List<Vector2> tex1, List<Vector2> tex2, List<Vector2> tex3, 
-			List<Vector2> tex4, List<Vector4> colors, List<Vector4> styles)
+			List<Vector2> tex4, List<Color> colors, List<Color> styles)
 		{
 			foreach(DrawDataChunk ddc in matChunks)
 			{

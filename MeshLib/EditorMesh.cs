@@ -135,7 +135,7 @@ namespace MeshLib
 
 			Vector3	[]stan	=new Vector3[mNumVerts];
 			Vector3	[]ttan	=new Vector3[mNumVerts];
-			Vector4	[]tang	=new Vector4[mNumVerts];
+			Half4	[]tang	=new Half4[mNumVerts];
 
 			for(int i=0;i < mNumTriangles;i++)
 			{

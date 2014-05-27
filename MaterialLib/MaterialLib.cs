@@ -416,6 +416,10 @@ namespace MaterialLib
 
 		public void AddMap(string name, ShaderResourceView srv)
 		{
+			if(mSRVs.ContainsKey(name))
+			{
+				mSRVs.Remove(name);
+			}
 			mSRVs.Add(name, srv);
 		}
 
@@ -899,7 +903,16 @@ namespace MaterialLib
 		{
 			string	extLess	=FileUtil.StripExtension(fileName);
 
-			Resource	res	=Texture2D.FromFile(dev, path + "\\" + fileName);
+			ImageLoadInformation	loadInfo	=new ImageLoadInformation();
+
+			loadInfo.BindFlags		=BindFlags.ShaderResource;
+			loadInfo.CpuAccessFlags	=CpuAccessFlags.None;
+			loadInfo.Depth			=0;
+			loadInfo.Filter			=FilterFlags.SRgbIn | FilterFlags.None;	//pngs are srgb
+			loadInfo.Format			=Format.R8G8B8A8_UNorm_SRgb;
+			loadInfo.Usage			=ResourceUsage.Default;
+
+			Resource	res	=Texture2D.FromFile(dev, path + "\\" + fileName, loadInfo);
 
 			if(res != null)
 			{

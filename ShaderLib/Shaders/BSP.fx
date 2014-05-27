@@ -115,7 +115,7 @@ VVPosCubeTex0 SkyVS(VPosTex0 input)
 }
 
 
-VVPosTex04Tex14Tex24Tex34Tex44Tex54 LightMapAnimVS(VPosNormTex04Tex14Tex24Tex34 input)
+VVPosTex04Tex14Tex24Tex34Tex44Tex54 LightMapAnimVS(VPosNormTex04HTex14HTex24HCol0 input)
 {
 	VVPosTex04Tex14Tex24Tex34Tex44Tex54	output;
 
@@ -131,7 +131,13 @@ VVPosTex04Tex14Tex24Tex34Tex44Tex54 LightMapAnimVS(VPosNormTex04Tex14Tex24Tex34 
 	output.TexCoord4	=worldPosition;
 	output.TexCoord5	=float4(-1, -1, -1, -1);
 	
-	float4	sidx	=input.TexCoord3;
+	//really silly that I have to do this
+	//initially tried using Format.R8G8B8A8_UInt to make
+	//the input values as a byte4 0-255...
+	//this worked, but the compiler interpreted it as a float4
+	//which caused a float to int conversion on the already int
+	//values.  I suppose this way it will work on 9.3 anyway
+	half4	sidx	=input.Color * 255;
 	
 	//look up style intensities
 	if(sidx.x < 44)
@@ -192,7 +198,6 @@ float4 LightMapPS(VVPosTex04Tex14Tex24 input) : SV_Target
 	if(mbTextureEnabled)
 	{
 		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
-//		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
 	}
 	else
 	{
@@ -218,7 +223,6 @@ float4 LightMapCelPS(VVPosTex04Tex14Tex24 input) : SV_Target
 	if(mbTextureEnabled)
 	{
 		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
-//		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
 	}
 	else
 	{
@@ -228,7 +232,7 @@ float4 LightMapCelPS(VVPosTex04Tex14Tex24 input) : SV_Target
 	float3	lm	=mLightMap.Sample(LinearClamp, input.TexCoord0.zw);
 
 #if !defined(SM2)
-//	lm	+=GetDynLight(input.TexCoord1, input.TexCoord2.xyz);
+	lm	+=GetDynLight(input.TexCoord1, input.TexCoord2.xyz);
 #endif
 
 #if defined(CELLIGHT)
@@ -256,7 +260,6 @@ float4 VertexLitPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 	if(mbTextureEnabled)
 	{
 		color	=mTexture.Sample(LinearWrap, tex0);
-//		color	=pow(abs(tex2D(TextureSampler, tex0)), 2.2);
 	}
 	else
 	{
@@ -303,7 +306,6 @@ float4 VertexLitCelPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 	if(mbTextureEnabled)
 	{
 		color	=mTexture.Sample(LinearWrap, tex0);
-//		color	=pow(abs(tex2D(TextureSampler, tex0)), 2.2);
 	}
 	else
 	{
@@ -366,7 +368,6 @@ float4 LightMapAnimPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 	if(mbTextureEnabled)
 	{
 		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
-//		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
 	}
 	else
 	{
@@ -417,7 +418,6 @@ float4 LightMapAnimCelPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 	if(mbTextureEnabled)
 	{
 		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
-//		color	=pow(abs(tex2D(TextureSampler, input.TexCoord0.xy)), 2.2);
 	}
 	else
 	{
@@ -487,6 +487,8 @@ float4 SkyPS(VVPosCubeTex0 input) : SV_Target
 	{
 		color	=float4(1, 1, 1, 1);
 	}
+
+	color	=pow(abs(color), 1 / 2.2);
 
 	return	color;
 }
