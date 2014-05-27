@@ -208,6 +208,7 @@ namespace MeshLib
 		public void FinishAtlas(GraphicsDevice gd)
 		{
 			mLightMapAtlas.Finish(gd);
+			mMatLib.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasSRV());
 		}
 
 
@@ -224,27 +225,15 @@ namespace MeshLib
 			mLMAnimVB	=VertexTypes.BuildABuffer(g.GD, mLMAnimVerts, mLMAnimIndex);
 			mLMAAnimVB	=VertexTypes.BuildABuffer(g.GD, mLMAAnimVerts, mLMAAnimIndex);
 
-			mLMVBB		=new VertexBufferBinding(mLMVB, 28, 0);
-			mLMAVBB		=new VertexBufferBinding(mLMAVB, 56, 0);
-			mLMAnimVBB	=new VertexBufferBinding(mLMAnimVB, 80, 0);
-			mLMAAnimVBB	=new VertexBufferBinding(mLMAAnimVB, 80, 0);
+			mLMVBB		=VertexTypes.BuildAVBB(mLMIndex, mLMVB);
+			mLMAVBB		=VertexTypes.BuildAVBB(mLMAIndex, mLMAVB);
+			mLMAnimVBB	=VertexTypes.BuildAVBB(mLMAnimIndex, mLMAnimVB);
+			mLMAAnimVBB	=VertexTypes.BuildAVBB(mLMAAnimIndex, mLMAAnimVB);
 
 			mLMIB		=VertexTypes.BuildAnIndexBuffer(g.GD, mLMInds);
 			mLMAIB		=VertexTypes.BuildAnIndexBuffer(g.GD, mLMAInds);
 			mLMAnimIB	=VertexTypes.BuildAnIndexBuffer(g.GD, mLMAnimInds);
 			mLMAAnimIB	=VertexTypes.BuildAnIndexBuffer(g.GD, mLMAAnimInds);
-
-			if(mLightMapAtlas == null)
-			{
-				return;
-			}
-
-			ShaderResourceView	lma	=mLightMapAtlas.GetAtlasSRV();
-			if(lma != null)
-			{
-				lma.DebugName	="LightMapAtlas";
-				mMatLib.AddMap("LightMapAtlas", lma);
-			}
 		}
 
 
@@ -253,10 +242,9 @@ namespace MeshLib
 			brd(g, out mVLitIndex, out mVLitVerts,
 				out mVLitInds, out mVLitDrawCalls, pp);
 
-			mVLitVB	=VertexTypes.BuildABuffer(g.GD, mVLitVerts, mVLitIndex);
-			mVLitIB	=VertexTypes.BuildAnIndexBuffer(g.GD, mVLitInds);
-
-			mVLitVBB	=new VertexBufferBinding(mVLitVB, 48, 0);
+			mVLitVB		=VertexTypes.BuildABuffer(g.GD, mVLitVerts, mVLitIndex);
+			mVLitIB		=VertexTypes.BuildAnIndexBuffer(g.GD, mVLitInds);
+			mVLitVBB	=VertexTypes.BuildAVBB(mVLitIndex, mVLitVB);
 		}
 
 
@@ -267,8 +255,7 @@ namespace MeshLib
 
 			mAlphaVB	=VertexTypes.BuildABuffer(g.GD, mAlphaVerts, mAlphaIndex);
 			mAlphaIB	=VertexTypes.BuildAnIndexBuffer(g.GD, mAlphaInds);
-
-			mAlphaVBB	=new VertexBufferBinding(mAlphaVB, 48, 0);
+			mAlphaVBB	=VertexTypes.BuildAVBB(mAlphaIndex, mAlphaVB);
 		}
 
 
@@ -279,8 +266,7 @@ namespace MeshLib
 
 			mFBVB	=VertexTypes.BuildABuffer(g.GD, mFBVerts, mFBIndex);
 			mFBIB	=VertexTypes.BuildAnIndexBuffer(g.GD, mFBInds);
-
-			mFBVBB	=new VertexBufferBinding(mFBVB, 32, 0);
+			mFBVBB	=VertexTypes.BuildAVBB(mFBIndex, mFBVB);
 		}
 
 
@@ -291,8 +277,7 @@ namespace MeshLib
 
 			mMirrorVB	=VertexTypes.BuildABuffer(g.GD, mMirrorVerts, mMirrorIndex);
 			mMirrorIB	=VertexTypes.BuildAnIndexBuffer(g.GD, mMirrorInds);
-
-			mMirrorVBB	=new VertexBufferBinding(mMirrorVB, 56, 0);
+			mMirrorVBB	=VertexTypes.BuildAVBB(mMirrorIndex, mMirrorVB);
 		}
 
 
@@ -303,8 +288,7 @@ namespace MeshLib
 
 			mSkyVB	=VertexTypes.BuildABuffer(g.GD, mSkyVerts, mSkyIndex);
 			mSkyIB	=VertexTypes.BuildAnIndexBuffer(g.GD, mSkyInds);
-
-			mSkyVBB	=new VertexBufferBinding(mSkyVB, 20, 0);
+			mSkyVBB	=VertexTypes.BuildAVBB(mSkyIndex, mSkyVB);
 		}
 
 
@@ -377,9 +361,9 @@ namespace MeshLib
 			}
 
 			//draw alphas
-//			DrawMaterialsDC(gd, 0, getModMatrix, mAlphaVBB, mAlphaIB, mAlphaDrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, 0, getModMatrix, mLMAVBB, mLMAIB, mLMADrawCalls, bMatVis);
-//			DrawMaterialsDC(gd, 0, getModMatrix, mLMAAnimVBB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, 0, getModMatrix, mAlphaVBB, mAlphaIB, mAlphaDrawCalls, bMatVis);
+			DrawMaterialsDC(gd, 0, getModMatrix, mLMAVBB, mLMAIB, mLMADrawCalls, bMatVis);
+			DrawMaterialsDC(gd, 0, getModMatrix, mLMAAnimVBB, mLMAAnimIB, mLMAAnimDrawCalls, bMatVis);
 
 			//draw outside stuff
 			rendExternal(mAlphaPool, gd.GCam);

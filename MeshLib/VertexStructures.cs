@@ -1101,13 +1101,13 @@ namespace MeshLib
 		public Vector4	Color0;
 	}
 
-	public struct VPosNormBlendTex04Tex14Tex24
+	public struct VPosNormTex04Tex14Tex24Tex34
 	{
 		public Vector3	Position;
 		public Vector3	Normal;
-		public Half4	AnimStyle;
 		public Vector4	TexCoord0;
 		public Vector4	TexCoord1;
 		public Vector4	TexCoord2;
+		public Vector4	TexCoord3;
 	}
 }

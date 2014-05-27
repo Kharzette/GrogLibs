@@ -418,8 +418,8 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormBlendTex04Tex14Tex24	[]varray
-				=new VPosNormBlendTex04Tex14Tex24[mLMAnimVerts.Count];
+			VPosNormTex04Tex14Tex24Tex34	[]varray
+				=new VPosNormTex04Tex14Tex24Tex34[mLMAnimVerts.Count];
 			for(int i=0;i < mLMAnimVerts.Count;i++)
 			{
 				varray[i].Position		=mLMAnimVerts[i];
@@ -435,7 +435,8 @@ namespace BSPCore
 				varray[i].TexCoord2.X	=mLMAnimFaceTex4[i].X;
 				varray[i].TexCoord2.Y	=mLMAnimFaceTex4[i].Y;
 				varray[i].TexCoord2.Z	=1.0f;	//alpha
-				varray[i].AnimStyle		=mLMAnimStyle[i];
+				varray[i].TexCoord2.W	=69.0f;	//nothin
+				varray[i].TexCoord3		=mLMAnimStyle[i];
 			}
 
 			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -454,24 +455,25 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormBlendTex04Tex14Tex24	[]varray
-				=new VPosNormBlendTex04Tex14Tex24[mLMAAnimVerts.Count];
+			VPosNormTex04Tex14Tex24Tex34	[]varray
+				=new VPosNormTex04Tex14Tex24Tex34[mLMAAnimVerts.Count];
 			for(int i=0;i < mLMAAnimVerts.Count;i++)
 			{
-				varray[i].Position		=mLMAAnimVerts[i];
-				varray[i].Normal		=mLMAAnimNormals[i];
-				varray[i].TexCoord0.X	=mLMAAnimFaceTex0[i].X;
-				varray[i].TexCoord0.Y	=mLMAAnimFaceTex0[i].Y;
-				varray[i].TexCoord0.Z	=mLMAAnimFaceTex1[i].X;
-				varray[i].TexCoord0.W	=mLMAAnimFaceTex1[i].Y;
-				varray[i].TexCoord1.X	=mLMAAnimFaceTex2[i].X;
-				varray[i].TexCoord1.Y	=mLMAAnimFaceTex2[i].Y;
-				varray[i].TexCoord1.Z	=mLMAAnimFaceTex3[i].X;
-				varray[i].TexCoord1.W	=mLMAAnimFaceTex3[i].Y;
-				varray[i].TexCoord2.X	=mLMAAnimFaceTex4[i].X;
-				varray[i].TexCoord2.Y	=mLMAAnimFaceTex4[i].Y;
-				varray[i].TexCoord2.Z	=mLMAAnimColors[i].W;
-				varray[i].AnimStyle		=mLMAAnimStyle[i];
+				varray[i].Position		=mLMAnimVerts[i];
+				varray[i].Normal		=mLMAnimNormals[i];
+				varray[i].TexCoord0.X	=mLMAnimFaceTex0[i].X;
+				varray[i].TexCoord0.Y	=mLMAnimFaceTex0[i].Y;
+				varray[i].TexCoord0.Z	=mLMAnimFaceTex1[i].X;
+				varray[i].TexCoord0.W	=mLMAnimFaceTex1[i].Y;
+				varray[i].TexCoord1.X	=mLMAnimFaceTex2[i].X;
+				varray[i].TexCoord1.Y	=mLMAnimFaceTex2[i].Y;
+				varray[i].TexCoord1.Z	=mLMAnimFaceTex3[i].X;
+				varray[i].TexCoord1.W	=mLMAnimFaceTex3[i].Y;
+				varray[i].TexCoord2.X	=mLMAnimFaceTex4[i].X;
+				varray[i].TexCoord2.Y	=mLMAnimFaceTex4[i].Y;
+				varray[i].TexCoord2.Z	=mLMAAnimColors[i].W;	//alpha
+				varray[i].TexCoord2.W	=69.0f;	//nothin
+				varray[i].TexCoord3		=mLMAAnimStyle[i];
 			}
 
 			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -871,11 +873,12 @@ namespace BSPCore
 						int	nverts	=pf.Value.mVCounts[i];
 
 						//triangulate
+						//reversing from xna to sharpdx
 						for(int k=1;k < nverts-1;k++)
 						{
-							inds.Add(vertOfs);
-							inds.Add((UInt16)(vertOfs + k));
 							inds.Add((UInt16)(vertOfs + ((k + 1) % nverts)));
+							inds.Add((UInt16)(vertOfs + k));
+							inds.Add(vertOfs);
 						}
 
 						vertOfs	+=(UInt16)pf.Value.mVCounts[i];

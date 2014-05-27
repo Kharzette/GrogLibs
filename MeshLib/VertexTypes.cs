@@ -127,7 +127,7 @@ namespace MeshLib
 			VertexTypes.AddType(typeof(VPosNormTanBiTanTex0));
 			VertexTypes.AddType(typeof(VPosNormTex04));
 			VertexTypes.AddType(typeof(VPosNormTex04Col0));
-			VertexTypes.AddType(typeof(VPosNormBlendTex04Tex14Tex24));
+			VertexTypes.AddType(typeof(VPosNormTex04Tex14Tex24Tex34));
 		}
 
 		public static void AddType(Type t)
@@ -404,6 +404,16 @@ namespace MeshLib
 			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
 
 			return	typedMethod.Invoke(null, new object[] {gd, verts, bDesc}) as Buffer;
+		}
+
+
+		public static VertexBufferBinding BuildAVBB(int index, Buffer vb)
+		{
+			if(vb == null || index == -1 || index >= mTypes.Count)
+			{
+				return	new VertexBufferBinding();
+			}
+			return	new VertexBufferBinding(vb, GetSizeForTypeIndex(index), 0);
 		}
 
 

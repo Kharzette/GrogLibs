@@ -115,7 +115,7 @@ VVPosCubeTex0 SkyVS(VPosTex0 input)
 }
 
 
-VVPosTex04Tex14Tex24Tex34Tex44Tex54 LightMapAnimVS(VPosNormBlendTex04Tex14Tex24 input)
+VVPosTex04Tex14Tex24Tex34Tex44Tex54 LightMapAnimVS(VPosNormTex04Tex14Tex24Tex34 input)
 {
 	VVPosTex04Tex14Tex24Tex34Tex44Tex54	output;
 
@@ -131,7 +131,7 @@ VVPosTex04Tex14Tex24Tex34Tex44Tex54 LightMapAnimVS(VPosNormBlendTex04Tex14Tex24 
 	output.TexCoord4	=worldPosition;
 	output.TexCoord5	=float4(-1, -1, -1, -1);
 	
-	float4	sidx	=input.Blend0;
+	float4	sidx	=input.TexCoord3;
 	
 	//look up style intensities
 	if(sidx.x < 44)
@@ -228,7 +228,7 @@ float4 LightMapCelPS(VVPosTex04Tex14Tex24 input) : SV_Target
 	float3	lm	=mLightMap.Sample(LinearClamp, input.TexCoord0.zw);
 
 #if !defined(SM2)
-	lm	+=GetDynLight(input.TexCoord1, input.TexCoord2.xyz);
+//	lm	+=GetDynLight(input.TexCoord1, input.TexCoord2.xyz);
 #endif
 
 #if defined(CELLIGHT)

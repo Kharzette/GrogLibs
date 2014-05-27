@@ -304,7 +304,7 @@ namespace MaterialLib
 			texDesc.Usage				=ResourceUsage.Immutable;
 			texDesc.Width				=mWidth;
 			texDesc.Height				=mHeight;
-			texDesc.Format				=Format.R8G8B8A8_UInt;
+			texDesc.Format				=Format.R8G8B8A8_UNorm;
 			texDesc.SampleDescription	=sampDesc;
 			
 			DataBox	[]dbs	=new DataBox[1];
