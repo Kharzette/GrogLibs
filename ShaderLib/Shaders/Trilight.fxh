@@ -59,9 +59,6 @@ float4 Tex0Col0PS(VVPosTex0Col0 input) : SV_Target
 {
 	float4	texel	=mTexture0.Sample(LinearWrap, input.TexCoord0);
 	
-	//gamma
-	texel	=pow(abs(texel), 2.2);
-
 	float4	inColor		=input.Color;	
 	float4	texLitColor	=inColor * texel;
 	
@@ -173,9 +170,6 @@ float4 TriTex0SpecPS(VVPosTex04Tex14 input) : SV_Target
 
 	float4	texColor	=mTexture0.Sample(LinearWrap, tex);
 
-	//gamma
-	texColor	=pow(abs(texColor), 2.2);
-
 	float3	pnorm	=input.TexCoord0.xyz;
 	float3	wpos	=input.TexCoord1.xyz;
 
@@ -192,8 +186,6 @@ float4 TriTex0SpecPS(VVPosTex04Tex14 input) : SV_Target
 
 	float3	litColor	=texColor.xyz * triLight;
 
-	//correct here or after specular?
-	litColor	=pow(abs(litColor), 1 / 2.2);
 	specular	=saturate((specular + litColor.xyz) * mSolidColour.xyz);
 
 	return	float4(specular, texColor.w);
@@ -271,9 +263,6 @@ float4 NormalMapTriTex0SpecPS(VVPosTex04Tex14Tex24Tex34 input) : SV_Target
 	float4	norm	=mTexture1.Sample(LinearWrap, tex);
 	float4	texCol	=mTexture0.Sample(LinearWrap, tex);
 
-	//gamma
-	texCol	=pow(abs(texCol), 2.2);
-
 	float3	pnorm	=input.TexCoord0.xyz;
 	float3	tan		=input.TexCoord1.xyz;
 	float3	bitan	=input.TexCoord2.xyz;
@@ -290,8 +279,6 @@ float4 NormalMapTriTex0SpecPS(VVPosTex04Tex14Tex24Tex34 input) : SV_Target
 #endif
 	float3	litSolid	=texCol.xyz * triLight;
 
-	//gamma here or after specular?
-	litSolid	=pow(abs(litSolid), 1 / 2.2);
 	specular	=saturate(specular + litSolid.xyz);
 
 	return	float4(specular, mSolidColour.w);

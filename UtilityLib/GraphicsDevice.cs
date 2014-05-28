@@ -68,11 +68,13 @@ namespace UtilityLib
 			scDesc.BufferCount			=1;
 			scDesc.Flags				=SwapChainFlags.None;
 			scDesc.IsWindowed			=true;
-			scDesc.ModeDescription		=new ModeDescription(mRForm.ClientSize.Width, mRForm.ClientSize.Height, new Rational(60, 1), Format.R8G8B8A8_UNorm);
 			scDesc.OutputHandle			=mRForm.Handle;
 			scDesc.SampleDescription	=new SampleDescription(1, 0);
 			scDesc.SwapEffect			=SwapEffect.Discard;
 			scDesc.Usage				=Usage.RenderTargetOutput;
+			scDesc.ModeDescription		=new ModeDescription(
+				mRForm.ClientSize.Width, mRForm.ClientSize.Height,
+				new Rational(60, 1), Format.R8G8B8A8_UNorm_SRgb);
 			
 			SharpDX.DXGI.Factory	fact	=new Factory();
 

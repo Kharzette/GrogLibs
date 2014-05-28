@@ -215,7 +215,6 @@ float4 LightMapPS(VVPosTex04Tex14Tex24 input) : SV_Target
 #endif
 
 	color	*=lm;
-	color	=pow(abs(color), 1 / 2.2);
 
 	return	float4(color, input.TexCoord1.w);
 }
@@ -248,7 +247,6 @@ float4 LightMapCelPS(VVPosTex04Tex14Tex24 input) : SV_Target
 #endif
 
 	color	*=lm;
-	color	=pow(abs(color), 1 / 2.2);
 
 #if defined(CELALL)
 	color	=CalcCelColor(color);
@@ -300,9 +298,6 @@ float4 VertexLitPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 #endif
 
 	color	*=inColor;
-
-	//back to srgb
-	color	=pow(abs(color), 1 / 2.2);
 
 	return	float4(color, input.TexCoord3.x);
 }
@@ -356,9 +351,6 @@ float4 VertexLitCelPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 #endif
 
 	color.rgb	*=light;
-
-	//back to srgb
-	color	=pow(abs(color), 1 / 2.2);
 
 #if defined(CELALL)
 	color	=CalcCelColor(color);
@@ -428,9 +420,6 @@ float4 LightMapAnimPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 	color	*=lm;
 	color	=saturate(color);
 
-	//back to srgb
-	color	=pow(color, 1 / 2.2);
-
 	return	float4(color, input.TexCoord2.z);
 }
 
@@ -485,9 +474,6 @@ float4 LightMapAnimCelPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 
 	color.rgb	*=lm;
 
-	//back to srgb
-	color	=pow(abs(color), 1 / 2.2);
-
 #if defined(CELALL)
 	color	=CalcCelColor(color);
 #endif
@@ -518,8 +504,6 @@ float4 SkyPS(VVPosCubeTex0 input) : SV_Target
 	{
 		color	=float4(1, 1, 1, 1);
 	}
-
-	color	=pow(abs(color), 1 / 2.2);
 
 	return	color;
 }
