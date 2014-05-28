@@ -395,7 +395,7 @@ namespace MeshLib
 
 			BufferDescription	bDesc	=new BufferDescription(
 				vertSize * verts.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
+				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 //			IEnumerable<MethodInfo>	meths	=typeof(Buffer).GetMethods().Where(x => x.Name == "Create");
@@ -429,7 +429,7 @@ namespace MeshLib
 			}
 
 			BufferDescription	indDesc	=new BufferDescription(inds.Length * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
+				ResourceUsage.Immutable, BindFlags.IndexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			return	Buffer.Create<UInt16>(gd, inds, indDesc);

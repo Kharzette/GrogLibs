@@ -547,16 +547,16 @@ namespace MaterialLib
 				return	ret;
 			}
 
-			for(int i=0;;i++)
+			for(int i=0;i < matFX.Description.TechniqueCount;i++)
 			{
 				EffectTechnique	et	=matFX.GetTechniqueByIndex(i);
 				if(et == null)
 				{
-					break;
+					continue;
 				}
 				if(!et.IsValid)
 				{
-					break;
+					continue;
 				}
 				ret.Add(et.Description.Name);
 			}

@@ -124,7 +124,7 @@ namespace UtilityLib
 
 			BufferDescription	bd	=new BufferDescription(
 				32 * vpnt.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
+				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	vb	=Buffer.Create(gd, vpnt, bd);
@@ -139,7 +139,7 @@ namespace UtilityLib
 			}
 
 			BufferDescription	id	=new BufferDescription(indexes.Length * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
+				ResourceUsage.Immutable, BindFlags.IndexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
@@ -283,7 +283,7 @@ namespace UtilityLib
 			
 			BufferDescription	bd	=new BufferDescription(
 				32 * vpnt.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
+				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	vb	=Buffer.Create(gd, vpnt, bd);
@@ -298,7 +298,7 @@ namespace UtilityLib
 			}
 
 			BufferDescription	id	=new BufferDescription(indexes.Length * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
+				ResourceUsage.Immutable, BindFlags.IndexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
@@ -367,7 +367,7 @@ namespace UtilityLib
 
 			BufferDescription	bd	=new BufferDescription(
 				32 * vpnt.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
+				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	vb	=Buffer.Create(gd, vpnt, bd);
@@ -382,7 +382,7 @@ namespace UtilityLib
 			}
 
 			BufferDescription	id	=new BufferDescription(indexes.Length * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
+				ResourceUsage.Immutable, BindFlags.IndexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
@@ -522,7 +522,7 @@ namespace UtilityLib
 			
 			BufferDescription	bd	=new BufferDescription(
 				32 * vpnt.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
+				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	vb	=Buffer.Create(gd, vpnt, bd);
@@ -543,7 +543,7 @@ namespace UtilityLib
 			}
 
 			BufferDescription	id	=new BufferDescription(indexes.Length * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
+				ResourceUsage.Immutable, BindFlags.IndexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
@@ -651,7 +651,7 @@ namespace UtilityLib
 
 			BufferDescription	bd	=new BufferDescription(
 				32 * vpnt.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
+				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	vb	=Buffer.Create(gd, vpnt, bd);
@@ -673,7 +673,7 @@ namespace UtilityLib
 			inds.Reverse();
 
 			BufferDescription	id	=new BufferDescription(inds.Count * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
+				ResourceUsage.Immutable, BindFlags.IndexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, inds.ToArray(), id);
@@ -716,7 +716,7 @@ namespace UtilityLib
 
 			BufferDescription	bd	=new BufferDescription(
 				16 * vpc.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
+				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	vb	=Buffer.Create(gd, vpc, bd);
@@ -800,7 +800,7 @@ namespace UtilityLib
 			indexes[65]	=7;
 
 			BufferDescription	id	=new BufferDescription(indexes.Length * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
+				ResourceUsage.Immutable, BindFlags.IndexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
@@ -851,7 +851,7 @@ namespace UtilityLib
 
 			BufferDescription	bd	=new BufferDescription(
 				32 * vpnt.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
+				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	vb	=Buffer.Create(gd, vpnt, bd);
@@ -918,7 +918,7 @@ namespace UtilityLib
 			indexes[39 + 42]	=(UInt16)(0);
 
 			BufferDescription	id	=new BufferDescription(indexes.Length * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
+				ResourceUsage.Immutable, BindFlags.IndexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);

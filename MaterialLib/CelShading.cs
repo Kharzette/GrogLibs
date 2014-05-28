@@ -143,7 +143,7 @@ namespace MaterialLib
 				texDesc.CpuAccessFlags		=CpuAccessFlags.None;
 				texDesc.MipLevels			=1;
 				texDesc.OptionFlags			=ResourceOptionFlags.None;
-				texDesc.Usage				=ResourceUsage.Default;
+				texDesc.Usage				=ResourceUsage.Immutable;
 				texDesc.Width				=size;
 				texDesc.Height				=size;
 				texDesc.Format				=Format.R16_UNorm;

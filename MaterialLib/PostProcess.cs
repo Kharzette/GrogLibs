@@ -314,13 +314,13 @@ namespace MaterialLib
 
 			BufferDescription	bd	=new BufferDescription(
 				20 * verts.Length,
-				ResourceUsage.Default, BindFlags.VertexBuffer,
+				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			mQuadVB	=Buffer.Create(gd.GD, verts, bd);
 
 			BufferDescription	id	=new BufferDescription(inds.Length * 2,
-				ResourceUsage.Default, BindFlags.IndexBuffer,
+				ResourceUsage.Immutable, BindFlags.IndexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 			mQuadIB	=Buffer.Create<UInt16>(gd.GD, inds, id);
