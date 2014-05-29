@@ -237,6 +237,8 @@ namespace MeshLib
 
 			FinalizeDrawCalls(mLMDrawCalls);
 			FinalizeDrawCalls(mLMAnimDrawCalls);
+			FinalizeDrawCalls(mLMADrawCalls);
+			FinalizeDrawCalls(mLMAAnimDrawCalls);
 		}
 
 
@@ -261,6 +263,8 @@ namespace MeshLib
 			mAlphaVB	=VertexTypes.BuildABuffer(g.GD, mAlphaVerts, mAlphaIndex);
 			mAlphaIB	=VertexTypes.BuildAnIndexBuffer(g.GD, mAlphaInds);
 			mAlphaVBB	=VertexTypes.BuildAVBB(mAlphaIndex, mAlphaVB);
+
+			FinalizeDrawCalls(mAlphaDrawCalls);
 		}
 
 
@@ -434,7 +438,7 @@ namespace MeshLib
 			{
 				foreach(DrawCall call in modCall.Value)
 				{
-					Debug.Assert(call.mCount != 0);
+					Debug.Assert(call.mCount > 0);
 
 					string	mat	=mats[call.mMaterialID];
 
@@ -452,7 +456,7 @@ namespace MeshLib
 
 					//modcall key is the model index
 					//zero is always the big world model
-					//if zero can check material vis
+					//zero can check material vis
 					if(modCall.Key == 0)
 					{
 						if(!bMatVis(g.GCam.Position, call.mMaterialID))
@@ -498,65 +502,63 @@ namespace MeshLib
 			//cycle through models
 			foreach(KeyValuePair<int, List<List<DrawCall>>> modCall in dcs)
 			{
-				int	idx	=0;
-
-				foreach(string mat in mats)
+				foreach(List<DrawCall> planeCalls in modCall.Value)
 				{
-					if(modCall.Value.Count == 0)
+					Debug.Assert(planeCalls.Count > 0);
+
+					//do some sanity checks based on call 0
+					int		objMatId	=planeCalls[0].mMaterialID;
+					string	mat			=mats[objMatId];
+
+					int	 numPasses	=mMatLib.GetNumMaterialPasses(mat);
+					if(numPasses <= pass)
 					{
-						idx++;
-						continue;
-					}
-					if(modCall.Value[idx].Count == 0)
-					{
-						idx++;
 						continue;
 					}
 
 					string	fx	=mMatLib.GetMaterialEffect(mat);
 					if(fx == null || fx == "")
 					{
-						idx++;
 						continue;
 					}
+
+					//modcall key is the model index
+					//zero is always the big world model
+					//zero can check material vis
 					if(modCall.Key == 0)
 					{
-						if(!bMatVis(g.GCam.Position, idx))
+						if(!bMatVis(g.GCam.Position, objMatId))
 						{
-							idx++;
 							continue;
 						}
 					}
 
-					Matrix	modMat	=getModMatrix(modCall.Key);
-					if(pass == 2)
+					foreach(DrawCall call in planeCalls)
 					{
-						//I guess we do this because if it isn't pass 2
-						//nothing is actually drawn right now
-						mMatLib.SetMaterialParameter(mat, "mWorld", modMat);
-					}
+						Debug.Assert(call.mCount > 0);
+						Debug.Assert(call.mMaterialID == objMatId);
 
-					foreach(DrawCall dc in modCall.Value[idx])
-					{
-						if(dc.mCount <= 0)
+						Matrix	modMat	=getModMatrix(modCall.Key);
+						if(pass == 2)
 						{
-							continue;
+							//I guess we do this because if it isn't pass 2
+							//nothing is actually drawn right now
+							mMatLib.SetMaterialParameter(mat, "mWorld", modMat);
 						}
 
 						if(pass != 2)
 						{
-							mAlphaPool.StoreDraw(mMatLib, dc.mSortPoint,
-								mat, vbb, ib, modMat, dc.mStartIndex, dc.mCount);
+							mAlphaPool.StoreDraw(mMatLib, call.mSortPoint,
+								mat, vbb, ib, modMat, call.mStartIndex, call.mCount);
 						}
 						else
 						{
 							mMatLib.ApplyMaterialPass(mat, g.DC, pass);
 
 							//material depth normal pass draws directly
-							g.DC.DrawIndexed(dc.mCount, dc.mStartIndex, 0);
+							g.DC.DrawIndexed(call.mCount, call.mStartIndex, 0);
 						}
 					}
-					idx++;
 				}
 			}
 		}
@@ -620,6 +622,58 @@ namespace MeshLib
 		public void SwitchLight(int lightIndex, bool bOn)
 		{
 			mSwitches[lightIndex - 32]	=bOn;
+		}
+
+
+		void FinalizeDrawCalls(Dictionary<int, List<List<DrawCall>>> alphaCalls)
+		{
+			//assign material ids
+			foreach(KeyValuePair<int, List<List<DrawCall>>> call in alphaCalls)
+			{
+				int	idx	=0;
+				foreach(List<DrawCall> planeCalls in call.Value)
+				{
+					foreach(DrawCall planeCall in planeCalls)
+					{
+						planeCall.mMaterialID	=idx;
+					}
+					idx++;
+				}
+			}
+
+			//remove empties
+			foreach(KeyValuePair<int, List<List<DrawCall>>> call in alphaCalls)
+			{
+				List<List<DrawCall>>	toNuke	=new List<List<DrawCall>>();
+
+				foreach(List<DrawCall> planeCalls in call.Value)
+				{
+					if(planeCalls.Count <= 0)
+					{
+						toNuke.Add(planeCalls);
+					}
+				}
+
+				foreach(List<DrawCall> nuke in toNuke)
+				{
+					call.Value.Remove(nuke);
+				}
+			}
+
+			//remove empty listlists
+			List<int>	idToNuke	=new List<int>();
+			foreach(KeyValuePair<int, List<List<DrawCall>>> call in alphaCalls)
+			{
+				if(call.Value.Count <= 0)
+				{
+					idToNuke.Add(call.Key);
+				}
+			}
+
+			foreach(int nuke in idToNuke)
+			{
+				alphaCalls.Remove(nuke);
+			}
 		}
 
 

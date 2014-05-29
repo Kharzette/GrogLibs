@@ -112,7 +112,7 @@ namespace MeshLib
 			texDesc.Usage				=ResourceUsage.Default;
 			texDesc.Width				=bufferSizeXY;
 			texDesc.Height				=bufferSizeXY;
-			texDesc.Format				=Format.R16_UNorm;
+			texDesc.Format				=Format.R32_Float;
 			texDesc.SampleDescription	=sampDesc;
 
 			//for point lights
@@ -131,7 +131,7 @@ namespace MeshLib
 			RenderTargetViewDescription	rtvDesc	=new RenderTargetViewDescription();
 
 			rtvDesc.Dimension		=RenderTargetViewDimension.Texture2DArray;
-			rtvDesc.Format			=Format.R16_UNorm;
+			rtvDesc.Format			=Format.R32_Float;
 
 			rtvDesc.Texture2DArray.MipSlice		=0;
 			rtvDesc.Texture2DArray.ArraySize	=1;
