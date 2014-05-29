@@ -12,6 +12,7 @@ namespace MeshLib
 	{
 		public int		mCount;			//vert or index count depending on draw
 		public int		mStartIndex;	//offsets
+		public int		mMaterialID;
 		public Vector3	mSortPoint;
 
 

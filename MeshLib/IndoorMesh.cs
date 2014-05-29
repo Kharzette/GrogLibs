@@ -234,6 +234,9 @@ namespace MeshLib
 			mLMAIB		=VertexTypes.BuildAnIndexBuffer(g.GD, mLMAInds);
 			mLMAnimIB	=VertexTypes.BuildAnIndexBuffer(g.GD, mLMAnimInds);
 			mLMAAnimIB	=VertexTypes.BuildAnIndexBuffer(g.GD, mLMAAnimInds);
+
+			FinalizeDrawCalls(mLMDrawCalls);
+			FinalizeDrawCalls(mLMAnimDrawCalls);
 		}
 
 
@@ -245,6 +248,8 @@ namespace MeshLib
 			mVLitVB		=VertexTypes.BuildABuffer(g.GD, mVLitVerts, mVLitIndex);
 			mVLitIB		=VertexTypes.BuildAnIndexBuffer(g.GD, mVLitInds);
 			mVLitVBB	=VertexTypes.BuildAVBB(mVLitIndex, mVLitVB);
+
+			FinalizeDrawCalls(mVLitDrawCalls);
 		}
 
 
@@ -267,6 +272,8 @@ namespace MeshLib
 			mFBVB	=VertexTypes.BuildABuffer(g.GD, mFBVerts, mFBIndex);
 			mFBIB	=VertexTypes.BuildAnIndexBuffer(g.GD, mFBInds);
 			mFBVBB	=VertexTypes.BuildAVBB(mFBIndex, mFBVB);
+
+			FinalizeDrawCalls(mFBDrawCalls);
 		}
 
 
@@ -278,6 +285,8 @@ namespace MeshLib
 			mMirrorVB	=VertexTypes.BuildABuffer(g.GD, mMirrorVerts, mMirrorIndex);
 			mMirrorIB	=VertexTypes.BuildAnIndexBuffer(g.GD, mMirrorInds);
 			mMirrorVBB	=VertexTypes.BuildAVBB(mMirrorIndex, mMirrorVB);
+
+			FinalizeDrawCalls(mMirrorDrawCalls);
 		}
 
 
@@ -289,6 +298,8 @@ namespace MeshLib
 			mSkyVB	=VertexTypes.BuildABuffer(g.GD, mSkyVerts, mSkyIndex);
 			mSkyIB	=VertexTypes.BuildAnIndexBuffer(g.GD, mSkyInds);
 			mSkyVBB	=VertexTypes.BuildAVBB(mSkyIndex, mSkyVB);
+
+			FinalizeDrawCalls(mSkyDrawCalls);
 		}
 
 
@@ -421,38 +432,33 @@ namespace MeshLib
 			//cycle through models
 			foreach(KeyValuePair<int, List<DrawCall>> modCall in dcs)
 			{
-				int	idx	=0;
-
-				foreach(string mat in mats)
+				foreach(DrawCall call in modCall.Value)
 				{
-					DrawCall	call	=modCall.Value[idx];
-					if(call.mCount == 0)
+					Debug.Assert(call.mCount != 0);
+
+					string	mat	=mats[call.mMaterialID];
+
+					int	 numPasses	=mMatLib.GetNumMaterialPasses(mat);
+					if(numPasses <= pass)
 					{
-						idx++;
 						continue;
 					}
 
 					string	fx	=mMatLib.GetMaterialEffect(mat);
 					if(fx == null || fx == "")
 					{
-						idx++;
 						continue;
 					}
+
+					//modcall key is the model index
+					//zero is always the big world model
+					//if zero can check material vis
 					if(modCall.Key == 0)
 					{
-						if(!bMatVis(g.GCam.Position, idx))
+						if(!bMatVis(g.GCam.Position, call.mMaterialID))
 						{
-							idx++;
 							continue;
 						}
-					}
-
-					int	 numPasses	=mMatLib.GetNumMaterialPasses(mat);
-
-					if(numPasses <= pass)
-					{
-						idx++;
-						continue;
 					}
 
 					//set world mat from model transforms
@@ -464,8 +470,6 @@ namespace MeshLib
 					mMatLib.ApplyMaterialPass(mat, g.DC, pass);
 
 					g.DC.DrawIndexed(call.mCount, call.mStartIndex, 0);
-
-					idx++;
 				}
 			}
 		}
@@ -616,6 +620,56 @@ namespace MeshLib
 		public void SwitchLight(int lightIndex, bool bOn)
 		{
 			mSwitches[lightIndex - 32]	=bOn;
+		}
+
+
+		//extract empties and assign material ids
+		void FinalizeDrawCalls(Dictionary<int, List<DrawCall>> calls)
+		{
+			//assign material ids
+			foreach(KeyValuePair<int, List<DrawCall>> call in calls)
+			{
+				int	idx	=0;
+				foreach(DrawCall dc in call.Value)
+				{
+					dc.mMaterialID	=idx++;
+				}
+			}
+
+			//remove empties from lists
+			List<DrawCall>	toNuke	=new List<DrawCall>();
+			foreach(KeyValuePair<int, List<DrawCall>> call in calls)
+			{
+				toNuke.Clear();
+
+				foreach(DrawCall dc in call.Value)
+				{
+					if(dc.mCount <= 0)
+					{
+						toNuke.Add(dc);
+					}
+				}
+
+				foreach(DrawCall nuke in toNuke)
+				{
+					call.Value.Remove(nuke);
+				}
+			}
+
+			//remove empties from dictionary
+			List<int>	toNukeDict	=new List<int>();
+			foreach(KeyValuePair<int, List<DrawCall>> call in calls)
+			{
+				if(call.Value.Count <= 0)
+				{
+					toNukeDict.Add(call.Key);
+				}
+			}
+
+			foreach(int nukeKey in toNukeDict)
+			{
+				calls.Remove(nukeKey);
+			}
 		}
 
 

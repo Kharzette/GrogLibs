@@ -166,15 +166,19 @@ namespace BSPCore
 
 			GBSPPlane.TextureAxisFromPlane(plane, out ti.mUVec, out ti.mVVec);
 
+			//flip elements
+			ti.mUVec.X	=-ti.mUVec.X;
+			ti.mVVec.X	=-ti.mVVec.X;
+
 			if(numbers[11] != 0.0f)
 			{
 				float	rot	=numbers[11];
 
 				int	axis	=GBSPPlane.GetBestAxisFromPlane(plane);
 
-				//planes pointing in x, z, and -y need rotation flipped
+				//some planes need rotation flipped
 				//due to the coordinate system change
-				if(axis == 3 || axis == 4 || axis == 1)
+				if(axis == 0 || axis == 3 || axis == 5)
 				{
 					rot	=-rot;
 				}
