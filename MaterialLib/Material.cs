@@ -118,6 +118,8 @@ namespace MaterialLib
 				return;
 			}
 
+			Debug.Assert(ep.IsValid);
+
 			if(!ep.IsValid)
 			{
 				return;
@@ -572,16 +574,19 @@ namespace MaterialLib
 
 			mNumPasses	=0;
 
-			for(int i=0;;i++)
+			for(int i=0;i < mTechnique.Description.PassCount;i++)
 			{
 				EffectPass	ep	=mTechnique.GetPassByIndex(i);
 				if(ep == null)
 				{
 					break;
 				}
+
+				Debug.Assert(ep.IsValid);
+
 				if(!ep.IsValid)
 				{
-					break;
+					continue;
 				}
 
 				mNumPasses++;

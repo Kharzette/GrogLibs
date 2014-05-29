@@ -6,6 +6,13 @@ BlendState AlphaBlending
 {
 	AlphaToCoverageEnable		=FALSE;
 	BlendEnable[0]				=TRUE;
+	BlendEnable[1]				=TRUE;
+	BlendEnable[2]				=TRUE;
+	BlendEnable[3]				=TRUE;
+	BlendEnable[4]				=TRUE;
+	BlendEnable[5]				=TRUE;
+	BlendEnable[6]				=TRUE;
+	BlendEnable[7]				=TRUE;
 	SrcBlend					=SRC_ALPHA;
 	DestBlend					=INV_SRC_ALPHA;
 	BlendOp						=ADD;
@@ -19,12 +26,26 @@ BlendState NoBlending
 {
 	AlphaToCoverageEnable	=FALSE;
 	BlendEnable[0]			=FALSE;
+	BlendEnable[1]			=FALSE;
+	BlendEnable[2]			=FALSE;
+	BlendEnable[3]			=FALSE;
+	BlendEnable[4]			=FALSE;
+	BlendEnable[5]			=FALSE;
+	BlendEnable[6]			=FALSE;
+	BlendEnable[7]			=FALSE;
 };
 
 BlendState ShadowBlending
 {
 	AlphaToCoverageEnable		=FALSE;
 	BlendEnable[0]				=TRUE;
+	BlendEnable[1]				=TRUE;
+	BlendEnable[2]				=TRUE;
+	BlendEnable[3]				=TRUE;
+	BlendEnable[4]				=TRUE;
+	BlendEnable[5]				=TRUE;
+	BlendEnable[6]				=TRUE;
+	BlendEnable[7]				=TRUE;
 	SrcBlend					=ONE;
 	DestBlend					=ONE;
 	BlendOp						=REV_SUBTRACT;

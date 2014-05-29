@@ -878,6 +878,28 @@ namespace MaterialLib
 			CompilationResult	shdRes	=ShaderBytecode.CompileFromFile(
 				fullPath, "fx_5_0", ShaderFlags.Debug, EffectFlags.None, macs, mIFX);
 
+			Effect	fx	=new Effect(dev, shdRes);
+			if(fx == null)
+			{
+				return;
+			}
+
+			Debug.Assert(fx.IsValid);
+
+			//do a validity check on all techniques and passes
+			for(int i=0;i < fx.Description.TechniqueCount;i++)
+			{
+				EffectTechnique	et	=fx.GetTechniqueByIndex(i);
+
+				Debug.Assert(et.IsValid);
+
+				for(int j=0;j < et.Description.PassCount;j++)
+				{
+					EffectPass	ep	=et.GetPassByIndex(j);
+
+					Debug.Assert(ep.IsValid);
+				}
+			}
 
 			FileStream	fs	=new FileStream("CompiledShaders/"
 				+ macs[0].Name + "/" + file + ".Compiled",
@@ -891,11 +913,7 @@ namespace MaterialLib
 			bw.Close();
 			fs.Close();
 
-			Effect	fx	=new Effect(dev, shdRes);
-			if(fx != null)
-			{
-				mFX.Add(file, fx);
-			}
+			mFX.Add(file, fx);
 		}
 
 

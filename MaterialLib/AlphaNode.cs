@@ -63,6 +63,7 @@ namespace MaterialLib
 
 		//drawprim index or vertex count
 		Int32	mCount;
+		Int32	mStartIndex;
 
 		bool				mbParticle;	//particle draw?
 		Vector4				mColor;
@@ -73,7 +74,7 @@ namespace MaterialLib
 		internal AlphaNode(MatLib matLib,
 			Vector3 sortPoint, string matName,
 			VertexBufferBinding vbb, Buffer ib,
-			Matrix worldMat, Int32 indexCount)
+			Matrix worldMat, Int32 startIndex, Int32 indexCount)
 		{
 			mMatLib			=matLib;
 			mSortPoint		=sortPoint;
@@ -82,6 +83,7 @@ namespace MaterialLib
 			mIB				=ib;
 			mWorldMat		=worldMat;
 			mCount			=indexCount;
+			mStartIndex		=startIndex;
 		}
 
 
@@ -152,7 +154,7 @@ namespace MaterialLib
 
 			mMatLib.ApplyMaterialPass(mMaterialName, gd.DC, 0);
 
-			gd.DC.DrawIndexed(mCount, 0, 0);
+			gd.DC.DrawIndexed(mCount, mStartIndex, 0);
 		}
 
 

@@ -542,7 +542,7 @@ namespace MeshLib
 						if(pass != 2)
 						{
 							mAlphaPool.StoreDraw(mMatLib, dc.mSortPoint,
-								mat, vbb, ib, modMat, dc.mCount);
+								mat, vbb, ib, modMat, dc.mStartIndex, dc.mCount);
 						}
 						else
 						{

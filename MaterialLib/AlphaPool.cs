@@ -24,10 +24,11 @@ namespace MaterialLib
 
 
 		public void StoreDraw(MatLib mlib, Vector3 sortPoint, string matName,
-			VertexBufferBinding vbb, Buffer ib, Matrix worldMat, Int32 indexCount)
+			VertexBufferBinding vbb, Buffer ib,
+			Matrix worldMat, Int32 startIndex, Int32 indexCount)
 		{
 			AlphaNode	an	=new AlphaNode(mlib, sortPoint, matName,
-				vbb, ib, worldMat, indexCount);
+				vbb, ib, worldMat, startIndex, indexCount);
 
 			mAlphas.Add(an);
 		}

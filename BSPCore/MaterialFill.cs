@@ -470,7 +470,7 @@ namespace BSPCore
 
 			foreach(Vector3 v in faceVerts)
 			{
-				ddc.mColors.Add(new Color(255, 255, 255, tex.mAlpha * 255));
+				ddc.mColors.Add(new Color(1f, 1f, 1f, tex.mAlpha));
 			}
 
 			if(!AtlasAnimated(atlas, lightGridSize, ddc, f, lightData, faceVerts, pln, tex))
@@ -648,7 +648,7 @@ namespace BSPCore
 
 			foreach(Vector3 v in faceVerts)
 			{
-				ddc.mColors.Add(new Color(255, 255, 255, tex.mAlpha * 255));
+				ddc.mColors.Add(new Color(1f, 1f, 1f, tex.mAlpha));
 			}
 
 			if(!AtlasLightMap(atlas, lightGridSize, f, lightData, 0, faceVerts, pln, tex, ddc.mTex1))
@@ -684,7 +684,7 @@ namespace BSPCore
 
 			foreach(Vector3 v in faceVerts)
 			{
-				ddc.mColors.Add(new Color(255, 255, 255, tex.mAlpha * 255));
+				ddc.mColors.Add(new Color(1f, 1f, 1f, tex.mAlpha));
 			}
 
 			if(!AtlasAnimated(atlas, lightGridSize, ddc, f, lightData, faceVerts, pln, tex))
