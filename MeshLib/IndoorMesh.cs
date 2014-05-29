@@ -344,7 +344,7 @@ namespace MeshLib
 			IsMaterialVisible bMatVis,
 			GetModelMatrix getModMatrix,
 			RenderExternal rendExternal,
-			MaterialLib.AlphaPool.RenderShadows renderShadows)
+			ShadowHelper.RenderShadows renderShadows)
 		{
 			//update materiallib wvp
 			mMatLib.UpdateWVP(Matrix.Identity, gd.GCam.View, gd.GCam.Projection, gd.GCam.Position);
@@ -378,7 +378,7 @@ namespace MeshLib
 
 			//draw outside stuff
 			rendExternal(mAlphaPool, gd.GCam);
-			mAlphaPool.DrawAll(gd, numShadows, renderShadows);
+			mAlphaPool.DrawAll(gd);
 		}
 
 

@@ -724,7 +724,7 @@ technique10 LightMapCel
 	}
 }
 
-technique10 Alpha
+technique10 VertexLightingAlpha
 {
 	pass Base
 	{
@@ -740,6 +740,64 @@ technique10 Alpha
 #else
 		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitPS();
+#endif
+		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
+	}
+	pass Shadow
+	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 VertexLitVS();
+		PixelShader		=compile ps_5_0 VertexLitShadowPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 VertexLitVS();
+		PixelShader		=compile ps_4_1 VertexLitShadowPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 VertexLitVS();
+		PixelShader		=compile ps_4_0 VertexLitShadowPS();
+#else
+		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitShadowPS();
+#endif
+		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
+	}
+	pass DMN
+	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 VertexLitVS();
+		PixelShader		=compile ps_5_0 VertexLitDMNPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 VertexLitVS();
+		PixelShader		=compile ps_4_1 VertexLitDMNPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 VertexLitVS();
+		PixelShader		=compile ps_4_0 VertexLitDMNPS();
+#else
+		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitDMNPS();
+#endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
+	}
+}
+
+technique10 VertexLightingAlphaCel
+{
+	pass Base
+	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 VertexLitVS();
+		PixelShader		=compile ps_5_0 VertexLitCelPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 VertexLitVS();
+		PixelShader		=compile ps_4_1 VertexLitCelPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 VertexLitVS();
+		PixelShader		=compile ps_4_0 VertexLitCelPS();
+#else
+		VertexShader	=compile vs_4_0_level_9_3 VertexLitVS();
+		PixelShader		=compile ps_4_0_level_9_3 VertexLitCelPS();
 #endif
 		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
 		SetDepthStencilState(DisableDepthWrite, 0);

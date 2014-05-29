@@ -915,11 +915,11 @@ namespace BSPCore
 				{
 					if(bCel)
 					{
-						tech	="VertexLightingCel";
+						tech	="VertexLightingAlphaCel";
 					}
 					else
 					{
-						tech	="Alpha";
+						tech	="VertexLightingAlpha";
 					}
 				}
 				else if(mn.EndsWith("*LitAlpha"))

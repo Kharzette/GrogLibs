@@ -627,6 +627,9 @@ float4	Modulate93PS(VVPos93 input) : SV_Target
 float4	BleachBypassPS(VVPos input) : SV_Target
 {
 	float2	uv			=input.Position.xy;
+
+	uv	/=mScreenSize;
+
 	float4	base		=mColorTex.Sample(PointClamp, uv);
 	float3	lumCoeff	=float3(0.25, 0.65, 0.1);
 	float	lum			=dot(lumCoeff, base.rgb);

@@ -17,9 +17,6 @@ namespace MaterialLib
 {
 	public class AlphaPool
 	{
-		//render shadowing objects
-		public delegate void RenderShadows(int shadIndex);
-
 		List<AlphaNode>	mAlphas	=new List<AlphaNode>();
 
 
@@ -47,8 +44,7 @@ namespace MaterialLib
 		}
 
 
-		public void DrawAll(GraphicsDevice gd,
-			int numShadows, RenderShadows rendShad)
+		public void DrawAll(GraphicsDevice gd)
 		{
 			Sort(gd.GCam.Position);
 

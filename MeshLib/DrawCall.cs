@@ -20,6 +20,7 @@ namespace MeshLib
 		{
 			bw.Write(mCount);
 			bw.Write(mStartIndex);
+			bw.Write(mMaterialID);
 
 			bw.Write(mSortPoint.X);
 			bw.Write(mSortPoint.Y);
@@ -31,6 +32,7 @@ namespace MeshLib
 		{
 			mCount			=br.ReadInt32();
 			mStartIndex		=br.ReadInt32();
+			mMaterialID		=br.ReadInt32();
 
 			mSortPoint.X	=br.ReadSingle();
 			mSortPoint.Y	=br.ReadSingle();

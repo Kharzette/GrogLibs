@@ -22,6 +22,9 @@ namespace MeshLib
 {
 	public class ShadowHelper
 	{
+		//render shadowing objects
+		public delegate void RenderShadows(int shadIndex);
+
 		//need a struct to help game keep track of instances
 		public class Shadower
 		{
@@ -157,7 +160,7 @@ namespace MeshLib
 		}
 
 
-		public void RenderShadows(int shadIndex)
+		public void DrawShadows(int shadIndex)
 		{
 			if(shadIndex < 0 || shadIndex >= mShadowers.Count)
 			{
