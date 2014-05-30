@@ -265,7 +265,7 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormTex04Col0	[]varray	=new VPosNormTex04Col0[mLMAVerts.Count];
+			VPosNormTex04	[]varray	=new VPosNormTex04[mLMAVerts.Count];
 			for(int i=0;i < mLMAVerts.Count;i++)
 			{
 				varray[i].Position		=mLMAVerts[i];
@@ -273,11 +273,10 @@ namespace BSPCore
 				varray[i].TexCoord0.Y	=mLMAFaceTex0[i].Y;
 				varray[i].TexCoord0.Z	=mLMAFaceTex1[i].X;
 				varray[i].TexCoord0.W	=mLMAFaceTex1[i].Y;
-				varray[i].Color0		=mLMAColors[i];
 				varray[i].Normal.X		=mLMANormals[i].X;
 				varray[i].Normal.Y		=mLMANormals[i].Y;
 				varray[i].Normal.Z		=mLMANormals[i].Z;
-				varray[i].Normal.W		=1f;
+				varray[i].Normal.W		=(float)mLMAColors[i].A / 255f;
 			}
 
 			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());

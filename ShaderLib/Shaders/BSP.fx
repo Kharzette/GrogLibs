@@ -29,24 +29,7 @@ VVPosTex04Tex14Tex24 LightMapVS(VPosNormTex04 input)
 	output.TexCoord1	=worldPosition;
 	output.TexCoord2	=input.Normal;
 	output.Position		=mul(mul(worldPosition, mView), mProjection);
-	
-	return	output;
-}
-
-
-VVPosTex04Tex14Tex24 LightMapAlphaVS(VPosNormTex04Col0 input)
-{
-	VVPosTex04Tex14Tex24	output;
-
-	float4	worldPosition	=mul(float4(input.Position, 1), mWorld);
-
-	output.Position	=mul(mul(worldPosition, mView), mProjection);
-
-	output.TexCoord0.xy	=input.TexCoord0.xy / mTexSize;
-	output.TexCoord0.zw	=input.TexCoord0.zw;
-	output.TexCoord1	=worldPosition;
-	output.TexCoord2	=input.Normal;
-	output.TexCoord1.w	=input.Color.w;
+	output.TexCoord1.w	=input.Normal.w;	//alpha stored in normal w
 	
 	return	output;
 }
@@ -961,16 +944,16 @@ technique10 LightMapAlpha
 	pass Base
 	{
 #if defined(SM5)
-		VertexShader	=compile vs_5_0 LightMapAlphaVS();
+		VertexShader	=compile vs_5_0 LightMapVS();
 		PixelShader		=compile ps_5_0 LightMapPS();
 #elif defined(SM41)
-		VertexShader	=compile vs_4_1 LightMapAlphaVS();
+		VertexShader	=compile vs_4_1 LightMapVS();
 		PixelShader		=compile ps_4_1 LightMapPS();
 #elif defined(SM4)
-		VertexShader	=compile vs_4_0 LightMapAlphaVS();
+		VertexShader	=compile vs_4_0 LightMapVS();
 		PixelShader		=compile ps_4_0 LightMapPS();
 #else
-		VertexShader	=compile vs_4_0_level_9_3 LightMapAlphaVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
 		PixelShader		=compile ps_4_0_level_9_3 LightMapPS();
 #endif
 		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
@@ -979,16 +962,16 @@ technique10 LightMapAlpha
 	pass Shadow
 	{
 #if defined(SM5)
-		VertexShader	=compile vs_5_0 LightMapAlphaVS();
+		VertexShader	=compile vs_5_0 LightMapVS();
 		PixelShader		=compile ps_5_0 LightMapShadowPS();
 #elif defined(SM41)
-		VertexShader	=compile vs_4_1 LightMapAlphaVS();
+		VertexShader	=compile vs_4_1 LightMapVS();
 		PixelShader		=compile ps_4_1 LightMapShadowPS();
 #elif defined(SM4)
-		VertexShader	=compile vs_4_0 LightMapAlphaVS();
+		VertexShader	=compile vs_4_0 LightMapVS();
 		PixelShader		=compile ps_4_0 LightMapShadowPS();
 #else
-		VertexShader	=compile vs_4_0_level_9_3 LightMapAlphaVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
 		PixelShader		=compile ps_4_0_level_9_3 LightMapShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
@@ -1019,16 +1002,16 @@ technique10 LightMapAlphaCel
 	pass Base
 	{
 #if defined(SM5)
-		VertexShader	=compile vs_5_0 LightMapAlphaVS();
+		VertexShader	=compile vs_5_0 LightMapVS();
 		PixelShader		=compile ps_5_0 LightMapCelPS();
 #elif defined(SM41)
-		VertexShader	=compile vs_4_1 LightMapAlphaVS();
+		VertexShader	=compile vs_4_1 LightMapVS();
 		PixelShader		=compile ps_4_1 LightMapCelPS();
 #elif defined(SM4)
-		VertexShader	=compile vs_4_0 LightMapAlphaVS();
+		VertexShader	=compile vs_4_0 LightMapVS();
 		PixelShader		=compile ps_4_0 LightMapCelPS();
 #else
-		VertexShader	=compile vs_4_0_level_9_3 LightMapAlphaVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
 		PixelShader		=compile ps_4_0_level_9_3 LightMapCelPS();
 #endif
 		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
@@ -1037,16 +1020,16 @@ technique10 LightMapAlphaCel
 	pass Shadow
 	{
 #if defined(SM5)
-		VertexShader	=compile vs_5_0 LightMapAlphaVS();
+		VertexShader	=compile vs_5_0 LightMapVS();
 		PixelShader		=compile ps_5_0 LightMapShadowPS();
 #elif defined(SM41)
-		VertexShader	=compile vs_4_1 LightMapAlphaVS();
+		VertexShader	=compile vs_4_1 LightMapVS();
 		PixelShader		=compile ps_4_1 LightMapShadowPS();
 #elif defined(SM4)
-		VertexShader	=compile vs_4_0 LightMapAlphaVS();
+		VertexShader	=compile vs_4_0 LightMapVS();
 		PixelShader		=compile ps_4_0 LightMapShadowPS();
 #else
-		VertexShader	=compile vs_4_0_level_9_3 LightMapAlphaVS();
+		VertexShader	=compile vs_4_0_level_9_3 LightMapVS();
 		PixelShader		=compile ps_4_0_level_9_3 LightMapShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
