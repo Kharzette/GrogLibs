@@ -15,7 +15,7 @@ namespace MeshLib
 	public struct VPosNorm
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 	}
 
 	public struct VPosBone
@@ -516,14 +516,14 @@ namespace MeshLib
 	public struct VPosNormTex0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 	}
 
 	public struct VPosNormTanTex0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half4	Tangent;
 		public Half2	TexCoord0;
 	}
@@ -531,7 +531,7 @@ namespace MeshLib
 	public struct VPosNormTanBiTanTex0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half4	Tangent;
 		public Half4	BiTangent;
 		public Half2	TexCoord0;
@@ -540,7 +540,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 	}
@@ -548,7 +548,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Tex2
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Half2	TexCoord2;
@@ -557,7 +557,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Tex2Tex3
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Half2	TexCoord2;
@@ -567,14 +567,14 @@ namespace MeshLib
 	public struct VPosNormCol0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	Color0;
 	}
 
 	public struct VPosNormCol0Col1
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	Color0;
 		public Color	Color1;
 	}
@@ -582,7 +582,7 @@ namespace MeshLib
 	public struct VPosNormCol0Col1Col2
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	Color0;
 		public Color	Color1;
 		public Color	Color2;
@@ -591,7 +591,7 @@ namespace MeshLib
 	public struct VPosNormCol0Col1Col2Col3
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	Color0;
 		public Color	Color1;
 		public Color	Color2;
@@ -601,7 +601,7 @@ namespace MeshLib
 	public struct VPosNormTex0Col0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Color	Color0;
 	}
@@ -609,7 +609,7 @@ namespace MeshLib
 	public struct VPosNormTex0Col0Col1
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Color	Color0;
 		public Color	Color1;
@@ -618,7 +618,7 @@ namespace MeshLib
 	public struct VPosNormTex0Col0Col1Col2
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Color	Color0;
 		public Color	Color1;
@@ -628,7 +628,7 @@ namespace MeshLib
 	public struct VPosNormTex0Col0Col1Col2Col3
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Color	Color0;
 		public Color	Color1;
@@ -639,7 +639,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Col0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Color	Color0;
@@ -648,7 +648,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Col0Col1
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Color	Color0;
@@ -658,7 +658,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Col0Col1Col2
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Color	Color0;
@@ -669,7 +669,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Col0Col1Col2Col3
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Color	Color0;
@@ -681,7 +681,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Tex2Col0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Half2	TexCoord2;
@@ -691,7 +691,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Tex2Col0Col1
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Half2	TexCoord2;
@@ -702,7 +702,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Tex2Col0Col1Col2
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Half2	TexCoord2;
@@ -714,7 +714,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Tex2Col0Col1Col2Col3
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Half2	TexCoord2;
@@ -727,7 +727,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Tex2Tex3Col0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Half2	TexCoord2;
@@ -738,7 +738,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Tex2Tex3Col0Col1
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Half2	TexCoord2;
@@ -750,7 +750,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Tex2Tex3Col0Col1Col2
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Half2	TexCoord2;
@@ -763,7 +763,7 @@ namespace MeshLib
 	public struct VPosNormTex0Tex1Tex2Tex3Col0Col1Col2Col3
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
 		public Half2	TexCoord2;
@@ -777,7 +777,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -786,7 +786,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -796,7 +796,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Tex2
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -807,7 +807,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Tex2Tex3
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -819,7 +819,7 @@ namespace MeshLib
 	public struct VPosNormBoneCol0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Color	Color0;
@@ -828,7 +828,7 @@ namespace MeshLib
 	public struct VPosNormBoneCol0Col1
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Color	Color0;
@@ -838,7 +838,7 @@ namespace MeshLib
 	public struct VPosNormBoneCol0Col1Col2
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Color	Color0;
@@ -849,7 +849,7 @@ namespace MeshLib
 	public struct VPosNormBoneCol0Col1Col2Col3
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Color	Color0;
@@ -861,7 +861,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Col0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -871,7 +871,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Col0Col1
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -882,7 +882,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Col0Col1Col2
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -894,7 +894,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Col0Col1Col2Col3
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -907,7 +907,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Col0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -918,7 +918,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Col0Col1
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -930,7 +930,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Col0Col1Col2
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -943,7 +943,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Col0Col1Col2Col3
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -957,7 +957,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Tex2Col0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -969,7 +969,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Tex2Col0Col1
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -982,7 +982,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Tex2Col0Col1Col2
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -996,7 +996,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Tex2Col0Col1Col2Col3
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -1011,7 +1011,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Tex2Tex3Col0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -1024,7 +1024,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Tex2Tex3Col0Col1
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -1038,7 +1038,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Tex2Tex3Col0Col1Col2
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -1053,7 +1053,7 @@ namespace MeshLib
 	public struct VPosNormBoneTex0Tex1Tex2Tex3Col0Col1Col2Col3
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 		public Half2	TexCoord0;
@@ -1069,7 +1069,7 @@ namespace MeshLib
 	public struct VPosNormBone
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half4	BoneWeights;
 	}
@@ -1077,7 +1077,7 @@ namespace MeshLib
 	public struct VPosNormBlendTex0Tex1Tex2Tex3Tex4
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Color	BoneIndex;
 		public Half2	TexCoord0;
 		public Half2	TexCoord1;
@@ -1089,14 +1089,14 @@ namespace MeshLib
 	public struct VPosNormTex04
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half4	TexCoord0;
 	}
 
 	public struct VPosNormTex04Col0
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half4	TexCoord0;
 		public Color	Color0;
 	}
@@ -1104,7 +1104,7 @@ namespace MeshLib
 	public struct VPosNormTex04Tex14Tex24Tex34
 	{
 		public Vector3	Position;
-		public Vector3	Normal;
+		public Half4	Normal;
 		public Half4	TexCoord0;
 		public Half4	TexCoord1;
 		public Half4	TexCoord2;

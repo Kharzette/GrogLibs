@@ -15,46 +15,40 @@ struct VPos
 struct VPosNorm
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
+	half4	Normal		: NORMAL;
 };
 
 struct VPosTex0
 {
 	float3	Position	: POSITION;
-	float2	TexCoord0	: TEXCOORD0;
+	half2	TexCoord0	: TEXCOORD0;
 };
 
 struct VPosTex01
 {
 	float3	Position	: POSITION;
-	float	TexCoord0	: TEXCOORD0;
-};
-
-struct VPosTex03
-{
-	float3	Position	: POSITION;
-	float3	TexCoord0	: TEXCOORD0;
+	half	TexCoord0	: TEXCOORD0;
 };
 
 struct VPos4Tex04
 {
 	float4	Position	: POSITION;
-	float4	TexCoord0	: TEXCOORD0;
+	half4	TexCoord0	: TEXCOORD0;
 };
 
 struct VPosCol0
 {
 	float3	Position	: POSITION;
-	float4	Color		: COLOR0;
+	half4	Color		: COLOR0;
 };
 
 struct VPosCol0Tex04Tex14Tex24
 {
 	float3	Position	: POSITION;
-	float4	Color		: COLOR0;
-	float4	TexCoord0	: TEXCOORD0;
-	float4	TexCoord1	: TEXCOORD1;
-	float4	TexCoord2	: TEXCOORD2;
+	half4	Color		: COLOR0;
+	half4	TexCoord0	: TEXCOORD0;
+	half4	TexCoord1	: TEXCOORD1;
+	half4	TexCoord2	: TEXCOORD2;
 };
 
 struct VPosBone
@@ -71,152 +65,61 @@ struct VPosBone
 struct VPosTex0Col0
 {
 	float3	Position	: POSITION;
-	float2	TexCoord0	: TEXCOORD0;
-	float4	Color		: COLOR0;	
+	half2	TexCoord0	: TEXCOORD0;
+	half4	Color		: COLOR0;	
 };
 
 struct VPosTex0Col0Tan
 {
 	float3	Position	: POSITION;
-	float2	TexCoord0	: TEXCOORD0;
-	float4	Color		: COLOR0;
-	float4	Tangent		: TANGENT0;
-};
-
-struct VPosTex0Single
-{
-	float3	Position	: POSITION;
-	float	TexCoord0	: TEXCOORD0;
-};
-
-struct VPosTex0SingleCol0
-{
-	float3	Position	: POSITION;
-	float	TexCoord0	: TEXCOORD0;
-	float4	Color		: COLOR0;	
+	half2	TexCoord0	: TEXCOORD0;
+	half4	Color		: COLOR0;
+	half4	Tangent		: TANGENT0;
 };
 
 struct VPosTex0Tex1Col0
 {
 	float3	Position	: POSITION;
-	float2	TexCoord0	: TEXCOORD0;
-	float2	TexCoord1	: TEXCOORD1;
-	float4	Color		: COLOR0;	
+	half2	TexCoord0	: TEXCOORD0;
+	half2	TexCoord1	: TEXCOORD1;
+	half4	Color		: COLOR0;	
 };
 
 struct VPosTex0Tex1Col0Col1
 {
 	float3	Position	: POSITION;
-	float2	TexCoord0	: TEXCOORD0;
-	float2	TexCoord1	: TEXCOORD1;
-	float4	Color0		: COLOR0;
-	float4	Color1		: COLOR1;
-};
-
-struct VPosCubeTex0
-{
-	float3	Position	: POSITION;
-	float3	TexCoord0	: TEXCOORD0;
+	half2	TexCoord0	: TEXCOORD0;
+	half2	TexCoord1	: TEXCOORD1;
+	half4	Color0		: COLOR0;
+	half4	Color1		: COLOR1;
 };
 
 struct VPosTex0Tex1
 {
 	float3	Position	: POSITION;
-	float2	TexCoord0	: TEXCOORD0;
-	float2	TexCoord1	: TEXCOORD1;
-};
-
-struct VPosTex03Tex13
-{
-	float3	Position	: POSITION;
-	float3	TexCoord0	: TEXCOORD0;
-	float3	TexCoord1	: TEXCOORD1;
-};
-
-struct VPosTex04Tex14
-{
-	float3	Position	: POSITION;
-	float4	TexCoord0	: TEXCOORD0;
-	float4	TexCoord1	: TEXCOORD1;
-};
-
-struct VPosTex04Tex14Tex24Tex31
-{
-	float3	Position	: POSITION;
-	float4	TexCoord0	: TEXCOORD0;
-	float4	TexCoord1	: TEXCOORD1;
-	float4	TexCoord2	: TEXCOORD2;
-	float	TexCoord3	: TEXCOORD3;
-};
-
-struct VPosTex04Tex14Tex24Tex34
-{
-	float3	Position	: POSITION;
-	float4	TexCoord0	: TEXCOORD0;
-	float4	TexCoord1	: TEXCOORD1;
-	float4	TexCoord2	: TEXCOORD2;
-	float4	TexCoord3	: TEXCOORD3;
-};
-
-struct VPosTex0Tex13
-{
-	float3	Position	: POSITION;
-	float2	TexCoord0	: TEXCOORD0;
-	float3	TexCoord1	: TEXCOORD1;
-};
-
-struct VPosTex0Tex14
-{
-	float3	Position	: POSITION;
-	float2	TexCoord0	: TEXCOORD0;
-	float4	TexCoord1	: TEXCOORD1;
-};
-
-struct VPosTex0Tex1Single
-{
-	float3	Position	: POSITION;
-	float2	TexCoord0	: TEXCOORD0;
-	float	TexCoord1	: TEXCOORD1;
-};
-
-struct VPosNormTanBiTanTex0
-{
-	float3	Position	: POSITION;
-	float3	Normal		: TEXCOORD0;
-	float3	Tangent		: TEXCOORD1;
-	float3	BiTangent	: TEXCOORD2;
-	float2	TexCoord0	: TEXCOORD3;
+	half2	TexCoord0	: TEXCOORD0;
+	half2	TexCoord1	: TEXCOORD1;
 };
 
 struct VPosNormTex0
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
-	float2	TexCoord0	: TEXCOORD0;
+	half4	Normal		: NORMAL;
+	half2	TexCoord0	: TEXCOORD0;
 };
 
 struct VPosNormTanTex0
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
-	float4	Tangent		: TANGENT0;
-	float2	TexCoord0	: TEXCOORD0;
-};
-
-struct VPosNormTanBiTanTex0Col0
-{
-	float3	Position	: POSITION;
-	float3	Normal		: TEXCOORD0;
-	float3	Tangent		: TEXCOORD1;
-	float3	BiTangent	: TEXCOORD2;
-	float2	TexCoord0	: TEXCOORD3;
-	float4	Color		: COLOR0;
+	half4	Normal		: NORMAL;
+	half4	Tangent		: TANGENT0;
+	half2	TexCoord0	: TEXCOORD0;
 };
 
 struct VPosNormBone
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
+	half4	Normal		: NORMAL;
 #if defined(SM2)
 	half4	Blend0		: BLENDINDICES0;
 #else
@@ -229,38 +132,30 @@ struct VPosNormBone
 struct VPosNormTex0Col0
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
-	float2	TexCoord0	: TEXCOORD0;
-	float4	Color		: COLOR0;	
+	half4	Normal		: NORMAL;
+	half2	TexCoord0	: TEXCOORD0;
+	half4	Color		: COLOR0;	
 };
 
 struct VPosNormTex0Tex1
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
-	float2	TexCoord0	: TEXCOORD0;
-	float2	TexCoord1	: TEXCOORD1;
-};
-
-struct VPosNormTex0Tex1Single
-{
-	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
-	float2	TexCoord0	: TEXCOORD0;
-	float	TexCoord1	: TEXCOORD1;
+	half4	Normal		: NORMAL;
+	half2	TexCoord0	: TEXCOORD0;
+	half2	TexCoord1	: TEXCOORD1;
 };
 
 struct VPosNormCol0
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
-	float4	Color		: COLOR0;	
+	half4	Normal		: NORMAL;
+	half4	Color		: COLOR0;	
 };
 
 struct VPosNormBoneTex0
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
+	half4	Normal		: NORMAL;
 #if defined(SM2)
 	half4	Blend0		: BLENDINDICES0;
 #else
@@ -268,13 +163,13 @@ struct VPosNormBoneTex0
 #endif
 
 	half4	Weight0		: BLENDWEIGHTS0;
-	float2	TexCoord0	: TEXCOORD0;
+	half2	TexCoord0	: TEXCOORD0;
 };
 
 struct VPosNormBoneTex0Tex1
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
+	half4	Normal		: NORMAL;
 #if defined(SM2)
 	half4	Blend0		: BLENDINDICES0;
 #else
@@ -282,14 +177,14 @@ struct VPosNormBoneTex0Tex1
 #endif
 
 	half4	Weight0		: BLENDWEIGHTS0;
-	float2	TexCoord0	: TEXCOORD0;
-	float2	TexCoord1	: TEXCOORD1;
+	half2	TexCoord0	: TEXCOORD0;
+	half2	TexCoord1	: TEXCOORD1;
 };
 
 struct VPosNormBoneCol0
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
+	half4	Normal		: NORMAL;
 #if defined(SM2)
 	half4	Blend0		: BLENDINDICES0;
 #else
@@ -297,13 +192,13 @@ struct VPosNormBoneCol0
 #endif
 
 	half4	Weight0		: BLENDWEIGHTS0;
-	float4	Color		: COLOR0;	
+	half4	Color		: COLOR0;	
 };
 
 struct VPosNormBoneTex0Col0
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
+	half4	Normal		: NORMAL;
 #if defined(SM2)
 	half4	Blend0		: BLENDINDICES0;
 #else
@@ -311,92 +206,42 @@ struct VPosNormBoneTex0Col0
 #endif
 
 	half4	Weight0		: BLENDWEIGHTS0;
-	float2	TexCoord0	: TEXCOORD0;
-	float4	Color		: COLOR0;	
+	half2	TexCoord0	: TEXCOORD0;
+	half4	Color		: COLOR0;	
 };
 
 struct VPosNormTex0Tex1Col0
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
-	float2	TexCoord0	: TEXCOORD0;
-	float2	TexCoord1	: TEXCOORD1;
-	float4	Color		: COLOR0;	
-};
-
-struct VPosNormBlendTex0Tex1Tex2Tex3Tex4
-{
-	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
-#if defined(SM2)
-	half4	Blend0		: BLENDINDICES0;
-#else
-	int4	Blend0		: BLENDINDICES0;
-#endif
-
-	float2	TexCoord0	: TEXCOORD0;
-	float2	TexCoord1	: TEXCOORD1;
-	float2	TexCoord2	: TEXCOORD2;
-	float2	TexCoord3	: TEXCOORD3;
-	float2	TexCoord4	: TEXCOORD4;
-};
-
-struct VPosTex04Tex14Tex24Tex34Tex44
-{
-	float3	Position	: POSITION;
-	float4	TexCoord0	: TEXCOORD0;	//tex0 & tex1
-	float4	TexCoord1	: TEXCOORD1;	//tex2 & tex3
-	float4	TexCoord2	: TEXCOORD2;	//worldPos.xyz & norm.x
-	float4	TexCoord3	: TEXCOORD3;	//norm.yz & style1 & style2
-	float4	TexCoord4	: TEXCOORD4;	//style3 & style4 & alpha
-};
-
-struct VPosTex0Tex1Tex2Tex3Tex4Col0Intensity
-{
-	float3	Position	: POSITION;
-	float2	TexCoord0	: TEXCOORD0;
-	float2	TexCoord1	: TEXCOORD1;
-	float2	TexCoord2	: TEXCOORD2;
-	float2	TexCoord3	: TEXCOORD3;
-	float2	TexCoord4	: TEXCOORD4;
-	float4	Color		: COLOR0;
-	float4	Intensity	: TEXCOORD5;
+	half4	Normal		: NORMAL;
+	half2	TexCoord0	: TEXCOORD0;
+	half2	TexCoord1	: TEXCOORD1;
+	half4	Color		: COLOR0;	
 };
 
 struct VPosNormTex04
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
-	float4	TexCoord0	: TEXCOORD0;	
+	half4	Normal		: NORMAL;
+	half4	TexCoord0	: TEXCOORD0;	
 };
 
 struct VPosNormTex04Col0
 {
 	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
-	float4	TexCoord0	: TEXCOORD0;	
-	float4	Color		: COLOR0;
-};
-
-struct VPosNormTex04HTex14HTex24HCol0
-{
-	float3	Position	: POSITION;
-	float3	Normal		: NORMAL;
-	half4	TexCoord0	: TEXCOORD0;
-	half4	TexCoord1	: TEXCOORD1;
-	half4	TexCoord2	: TEXCOORD2;
+	half4	Normal		: NORMAL;
+	half4	TexCoord0	: TEXCOORD0;	
 	half4	Color		: COLOR0;
 };
 
-struct VPosTex04Tex14Tex24Tex34Tex44Tex54
+struct VPosNormTex04Tex14Tex24Col04
 {
 	float3	Position	: POSITION;
-	float4	TexCoord0	: TEXCOORD0;
-	float4	TexCoord1	: TEXCOORD1;
-	float4	TexCoord2	: TEXCOORD2;
-	float4	TexCoord3	: TEXCOORD3;
-	float4	TexCoord4	: TEXCOORD4;
-	float4	TexCoord5	: TEXCOORD5;
+	half4	Normal		: NORMAL;
+	half4	TexCoord0	: TEXCOORD0;	
+	half4	TexCoord1	: TEXCOORD1;	
+	half4	TexCoord2	: TEXCOORD2;	
+	half4	Color		: COLOR0;
 };
 
 
@@ -534,7 +379,7 @@ struct VVPosTex03Tex13Tex23
 struct VVPosNormTex0Tex1
 {
 	float4	Position	: SV_POSITION;
-	float3	Normal		: Normal;
+	float3	Normal		: NORMAL;
 	float2	TexCoord0	: TEXCOORD0;
 	float2	TexCoord1	: TEXCOORD1;
 };

@@ -243,7 +243,10 @@ namespace BSPCore
 				varray[i].TexCoord0.Y	=mLMFaceTex0[i].Y;
 				varray[i].TexCoord0.Z	=mLMFaceTex1[i].X;
 				varray[i].TexCoord0.W	=mLMFaceTex1[i].Y;
-				varray[i].Normal		=mLMNormals[i];
+				varray[i].Normal.X		=mLMNormals[i].X;
+				varray[i].Normal.Y		=mLMNormals[i].Y;
+				varray[i].Normal.Z		=mLMNormals[i].Z;
+				varray[i].Normal.W		=1f;
 			}
 
 			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -270,8 +273,11 @@ namespace BSPCore
 				varray[i].TexCoord0.Y	=mLMAFaceTex0[i].Y;
 				varray[i].TexCoord0.Z	=mLMAFaceTex1[i].X;
 				varray[i].TexCoord0.W	=mLMAFaceTex1[i].Y;
-				varray[i].Normal		=mLMANormals[i];
 				varray[i].Color0		=mLMAColors[i];
+				varray[i].Normal.X		=mLMANormals[i].X;
+				varray[i].Normal.Y		=mLMANormals[i].Y;
+				varray[i].Normal.Z		=mLMANormals[i].Z;
+				varray[i].Normal.W		=1f;
 			}
 
 			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -295,8 +301,11 @@ namespace BSPCore
 			{
 				varray[i].Position	=mVLitVerts[i];
 				varray[i].TexCoord0	=mVLitTex0[i];
-				varray[i].Normal	=mVLitNormals[i];
 				varray[i].Color0	=mVLitColors[i];
+				varray[i].Normal.X	=mVLitNormals[i].X;
+				varray[i].Normal.Y	=mVLitNormals[i].Y;
+				varray[i].Normal.Z	=mVLitNormals[i].Z;
+				varray[i].Normal.W	=1f;
 			}
 
 			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -320,8 +329,11 @@ namespace BSPCore
 			{
 				varray[i].Position	=mAlphaVerts[i];
 				varray[i].TexCoord0	=mAlphaTex0[i];
-				varray[i].Normal	=mAlphaNormals[i];
 				varray[i].Color0	=mAlphaColors[i];
+				varray[i].Normal.X	=mAlphaNormals[i].X;
+				varray[i].Normal.Y	=mAlphaNormals[i].Y;
+				varray[i].Normal.Z	=mAlphaNormals[i].Z;
+				varray[i].Normal.W	=1f;
 			}
 
 			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -344,8 +356,11 @@ namespace BSPCore
 			for(int i=0;i < mFBVerts.Count;i++)
 			{
 				varray[i].Position	=mFBVerts[i];
-				varray[i].Normal	=mFBNormals[i];
 				varray[i].TexCoord0	=mFBTex0[i];
+				varray[i].Normal.X	=mFBNormals[i].X;
+				varray[i].Normal.Y	=mFBNormals[i].Y;
+				varray[i].Normal.Z	=mFBNormals[i].Z;
+				varray[i].Normal.W	=1f;
 			}
 
 			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -370,8 +385,11 @@ namespace BSPCore
 				varray[i].Position	=mMirrorVerts[i];
 				varray[i].TexCoord0	=mMirrorTex0[i];
 				varray[i].TexCoord1	=mMirrorTex1[i];
-				varray[i].Normal	=mMirrorNormals[i];
 				varray[i].Color0	=mMirrorColors[i];
+				varray[i].Normal.X	=mMirrorNormals[i].X;
+				varray[i].Normal.Y	=mMirrorNormals[i].Y;
+				varray[i].Normal.Z	=mMirrorNormals[i].Z;
+				varray[i].Normal.W	=1f;
 			}
 
 			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -418,7 +436,10 @@ namespace BSPCore
 			for(int i=0;i < mLMAnimVerts.Count;i++)
 			{
 				varray[i].Position		=mLMAnimVerts[i];
-				varray[i].Normal		=mLMAnimNormals[i];
+				varray[i].Normal.X		=mLMAnimNormals[i].X;
+				varray[i].Normal.Y		=mLMAnimNormals[i].Y;
+				varray[i].Normal.Z		=mLMAnimNormals[i].Z;
+				varray[i].Normal.W		=1f;
 				varray[i].TexCoord0.X	=mLMAnimFaceTex0[i].X;
 				varray[i].TexCoord0.Y	=mLMAnimFaceTex0[i].Y;
 				varray[i].TexCoord0.Z	=mLMAnimFaceTex1[i].X;
@@ -455,7 +476,10 @@ namespace BSPCore
 			for(int i=0;i < mLMAAnimVerts.Count;i++)
 			{
 				varray[i].Position		=mLMAnimVerts[i];
-				varray[i].Normal		=mLMAnimNormals[i];
+				varray[i].Normal.X		=mLMAnimNormals[i].X;
+				varray[i].Normal.Y		=mLMAnimNormals[i].Y;
+				varray[i].Normal.Z		=mLMAnimNormals[i].Z;
+				varray[i].Normal.W		=1f;
 				varray[i].TexCoord0.X	=mLMAnimFaceTex0[i].X;
 				varray[i].TexCoord0.Y	=mLMAnimFaceTex0[i].Y;
 				varray[i].TexCoord0.Z	=mLMAnimFaceTex1[i].X;

@@ -479,7 +479,8 @@ namespace MaterialLib
 			{
 				return	Format.R8G8B8A8_UNorm;
 			}
-			if(spd.SemanticName == "TEXCOORD")
+
+			if(spd.SemanticName == "TEXCOORD" || spd.SemanticName == "NORMAL")
 			{
 				if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentW) != 0))
 				{
@@ -487,7 +488,7 @@ namespace MaterialLib
 				}
 				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentZ) != 0))
 				{
-					Debug.Assert(false);	//xyz not supported I suppose
+					return	Format.R16G16B16A16_Float;	//xyz not supported I suppose
 				}
 				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentY) != 0))
 				{

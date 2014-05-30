@@ -522,8 +522,11 @@ namespace MeshLib
 					//this might not be positional data!
 					if(fi.Name == "Normal")
 					{
-						Vector3	vec	=(Vector3)GetArrayField(verts, i, fi.Name);
-						norms.Add(vec);
+						Half4	vec	=(Half4)GetArrayField(verts, i, fi.Name);
+
+						Vector3	norm	=new Vector3(vec.X, vec.Y, vec.Z);
+
+						norms.Add(norm);
 					}
 				}
 			}
@@ -546,8 +549,11 @@ namespace MeshLib
 					//this might not be positional data!
 					if(fi.Name == "TexCoord" + set)
 					{
-						Vector2	vec	=(Vector2)GetArrayField(verts, i, fi.Name);
-						texs.Add(vec);
+						Half2	vec	=(Half2)GetArrayField(verts, i, fi.Name);
+
+						Vector2	tex	=new Vector2(vec.X, vec.Y);
+
+						texs.Add(tex);
 					}
 				}
 			}
@@ -604,7 +610,7 @@ namespace MeshLib
 			}
 
 			bool	bPos		=HasElement(newType, typeof(Vector3), "Position");
-			bool	bNorm		=HasElement(newType, typeof(Vector3), "Normal");
+			bool	bNorm		=HasElement(newType, typeof(Half4), "Normal");
 			bool	bBoneIdx	=HasElement(newType, typeof(Color), "BoneIndex");
 			bool	bBoneWeight	=HasElement(newType, typeof(Half4), "BoneWeights");
 			bool	bTan		=HasElement(newType, typeof(Half4), "Tangent");
@@ -684,7 +690,7 @@ namespace MeshLib
 			}
 
 			bool	bPos		=HasElement(vtype, typeof(Vector3), "Position");
-			bool	bNorm		=HasElement(vtype, typeof(Vector3), "Normal");
+			bool	bNorm		=HasElement(vtype, typeof(Half4), "Normal");
 			bool	bBoneIdx	=HasElement(vtype, typeof(Color), "BoneIndex");
 			bool	bBoneWeight	=HasElement(vtype, typeof(Half4), "BoneWeights");
 

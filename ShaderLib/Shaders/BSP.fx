@@ -27,7 +27,7 @@ VVPosTex04Tex14Tex24 LightMapVS(VPosNormTex04 input)
 	output.TexCoord0.xy	=input.TexCoord0.xy / mTexSize;
 	output.TexCoord0.zw	=input.TexCoord0.zw;
 	output.TexCoord1	=worldPosition;
-	output.TexCoord2	=float4(input.Normal, 0);
+	output.TexCoord2	=input.Normal;
 	output.Position		=mul(mul(worldPosition, mView), mProjection);
 	
 	return	output;
@@ -45,7 +45,7 @@ VVPosTex04Tex14Tex24 LightMapAlphaVS(VPosNormTex04Col0 input)
 	output.TexCoord0.xy	=input.TexCoord0.xy / mTexSize;
 	output.TexCoord0.zw	=input.TexCoord0.zw;
 	output.TexCoord1	=worldPosition;
-	output.TexCoord2	=float4(input.Normal, 0);
+	output.TexCoord2	=input.Normal;
 	output.TexCoord1.w	=input.Color.w;
 	
 	return	output;
@@ -115,7 +115,7 @@ VVPosCubeTex0 SkyVS(VPosTex0 input)
 }
 
 
-VVPosTex04Tex14Tex24Tex34Tex44Tex54 LightMapAnimVS(VPosNormTex04HTex14HTex24HCol0 input)
+VVPosTex04Tex14Tex24Tex34Tex44Tex54 LightMapAnimVS(VPosNormTex04Tex14Tex24Col04 input)
 {
 	VVPosTex04Tex14Tex24Tex34Tex44Tex54	output;
 
@@ -127,7 +127,7 @@ VVPosTex04Tex14Tex24Tex34Tex44Tex54 LightMapAnimVS(VPosNormTex04HTex14HTex24HCol
 	output.TexCoord0.zw	=input.TexCoord0.zw;
 	output.TexCoord1	=input.TexCoord1;
 	output.TexCoord2	=input.TexCoord2;
-	output.TexCoord3	=float4(input.Normal.xyz, 0);
+	output.TexCoord3	=input.Normal;
 	output.TexCoord4	=worldPosition;
 	output.TexCoord5	=float4(-1, -1, -1, -1);
 	

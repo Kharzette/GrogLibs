@@ -40,7 +40,7 @@ VVPosTex03Tex13 ComputeSkinWorldDangly(VPosNormBoneCol0 input, float4x4 bones[MA
 	output.Position	=mul(worldPos, vp);
 
 	//skin transform the normal
-	float3	worldNormal	=mul(input.Normal, skinTransform);
+	float3	worldNormal	=mul(input.Normal.xyz, skinTransform);
 	
 	//world transform the normal
 	output.TexCoord0	=mul(worldNormal, mWorld);
@@ -68,7 +68,7 @@ VVPosNorm ComputeSkin(VPosNormBone input, float4x4 bones[MAX_BONES])
 	output.Position	=mul(vertPos, wvp);
 
 	//skin transform the normal
-	float3	worldNormal	=mul(input.Normal, skinTransform);
+	float3	worldNormal	=mul(input.Normal.xyz, skinTransform);
 	
 	//world transform the normal
 	output.Normal	=mul(worldNormal, mWorld);
@@ -84,7 +84,7 @@ VVPosCol0 ComputeSkinTrilight(VPosNormBone input, float4x4 bones[MAX_BONES],
 	VVPosNorm	skinny	=ComputeSkin(input, bones);
 
 	output.Position		=skinny.Position;	
-	output.Color.xyz	=ComputeTrilight(skinny.Normal, lightDir, c0, c1, c2);
+	output.Color.xyz	=ComputeTrilight(skinny.Normal.xyz, lightDir, c0, c1, c2);
 	output.Color.w		=1.0;
 	
 	return	output;
@@ -114,7 +114,7 @@ VVPosTex03Tex13 ComputeSkinWorld(VPosNormBone input, float4x4 bones[MAX_BONES])
 	output.Position	=mul(worldPos, vp);
 
 	//skin transform the normal
-	float3	worldNormal	=mul(input.Normal, skinTransform);
+	float3	worldNormal	=mul(input.Normal.xyz, skinTransform);
 	
 	//world transform the normal
 	output.TexCoord0	=mul(worldNormal, mWorld);
