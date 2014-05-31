@@ -86,16 +86,31 @@ namespace UtilityLib
 
 			ConstructorInfo	ci	=typeof(T).GetConstructor(Type.EmptyTypes);
 
-			object	[]parms	=new object[1];
-			parms[0]		=br;
+			object	[]parms;
+			if(ci != null)
+			{
+				parms		=new object[1];
+				parms[0]	=br;
+			}
+			else
+			{
+				parms		=new object[2];
+				parms[0]	=br;
+				parms[1]	=null;
+			}
 
 			for(int i=0;i < count;i++)
 			{
 				if(ci != null)	//class?
 				{
 					ret[i]	=(T)ci.Invoke(null);
+					read.Invoke(ret[i], parms);
 				}
-				read.Invoke(ret[i], parms);
+				else
+				{
+					read.Invoke(ret[i], parms);
+					ret[i]	=(T)parms[1];	//out parameter
+				}
 			}
 
 			return	ret;

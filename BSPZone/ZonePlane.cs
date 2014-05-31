@@ -67,12 +67,12 @@ namespace BSPZone
 		}
 
 
-		public void Read(BinaryReader br)
+		public void Read(BinaryReader br, out ZonePlane read)
 		{
-			mNormal.X	=br.ReadSingle();
-			mNormal.Y	=br.ReadSingle();
-			mNormal.Z	=br.ReadSingle();
-			mDist		=br.ReadSingle();
+			read.mNormal.X	=br.ReadSingle();
+			read.mNormal.Y	=br.ReadSingle();
+			read.mNormal.Z	=br.ReadSingle();
+			read.mDist		=br.ReadSingle();
 		}
 
 

@@ -173,6 +173,8 @@ namespace BSPZone
 					if(mBestColorMover.Done())
 					{
 						mLightColor	=Vector4.Zero;
+						mFill1		=Vector4.Zero;
+						mFill2		=Vector4.Zero;
 					}
 					else
 					{
@@ -366,6 +368,8 @@ namespace BSPZone
 					//too far to affect us
 					mLightColor		=Vector4.Zero;
 					mLightColor.W	=1.0f;
+					mFill1			=mLightColor;
+					mFill2			=mLightColor;
 					return;
 				}
 
@@ -376,14 +380,21 @@ namespace BSPZone
 				atten	/=curStrength;
 
 				mLightColor	*=atten;
+				mFill1		*=atten;
+				mFill2		*=atten;
 
 				//check the light style if applicable
 				if(mBestLight.mStyle != 0)
 				{
-					mLightColor	*=mStyleStrength(mBestLight.mStyle);
+					float	styleStrength	=mStyleStrength(mBestLight.mStyle);
+					mLightColor	*=styleStrength;
+					mFill1		*=styleStrength;
+					mFill2		*=styleStrength;
 				}
 
-				mLightColor.W	=1.0f;
+				mLightColor.W	=1f;
+				mFill1.W		=1f;
+				mFill2.W		=1f;
 				mCurLightDir	=curLightDir;
 				mCurLightPos	=curPos;
 			}
@@ -397,7 +408,6 @@ namespace BSPZone
 			List<TriLightFill>	inRange	=new List<TriLightFill>();
 
 			//find all fills in range
-			float	totalDistance	=0f;
 			foreach(TriLightFill fill in mFills)
 			{
 				float	dist	=Vector3.Distance(fill.mPosition, pos);
@@ -405,9 +415,6 @@ namespace BSPZone
 				{
 					continue;
 				}
-
-				totalDistance	+=dist;
-
 				inRange.Add(fill);
 			}
 
@@ -433,15 +440,29 @@ namespace BSPZone
 			}
 
 			//average out weighting by distance
+			float	total	=0;
 			foreach(TriLightFill fill in inRange)
 			{
 				float	dist	=Vector3.Distance(fill.mPosition, pos);
 
-				float	ratio	=dist / totalDistance;
+				float	ratio	=1f - (dist / FillDistance);
+
+				total	+=ratio;
+			}
+
+			float	totalPieces	=0f;
+			foreach(TriLightFill fill in inRange)
+			{
+				float	dist	=Vector3.Distance(fill.mPosition, pos);
+				float	ratio	=(1f - (dist / FillDistance)) / total;
+
+				totalPieces	+=ratio;
 
 				mFill1	+=fill.mColor1 * ratio;
 				mFill2	+=fill.mColor2 * ratio;
 			}
+
+			Debug.Assert(totalPieces > 0.99f && totalPieces < 1.01f);
 		}
 
 

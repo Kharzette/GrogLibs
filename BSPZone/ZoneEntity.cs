@@ -39,9 +39,6 @@ namespace BSPZone
 				return	false;
 			}
 
-			//flip x
-			org.X	=-org.X;
-
 			//swap y and z
 			float	zTemp	=org.Z;
 			org.Z	=org.Y;
