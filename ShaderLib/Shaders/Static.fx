@@ -5,23 +5,6 @@
 #include "Trilight.fxh"
 
 
-//depth material normal
-VVPosTex03Tex13 DMNVS(VPosNorm input)
-{
-	VVPosTex03Tex13	output;	
-	
-	//generate the world-view-proj matrix
-	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
-
-	//transform the input position to the output
-	output.Position		=mul(float4(input.Position, 1), wvp);
-	output.TexCoord0	=mul(input.Normal.xyz, mWorld);
-	output.TexCoord1	=mul(input.Position, mWorld);
-	
-	//return the output structure
-	return	output;
-}
-
 //just world position
 VVPosTex03 WPosVS(VPos input)
 {
@@ -458,16 +441,16 @@ technique10 DMN
 	pass P0
 	{
 #if defined(SM5)
-		VertexShader	=compile vs_5_0 DMNVS();
+		VertexShader	=compile vs_5_0 WNormWPosVS();
 		PixelShader		=compile ps_5_0 DMNPS();
 #elif defined(SM41)
-		VertexShader	=compile vs_4_1 DMNVS();
+		VertexShader	=compile vs_4_1 WNormWPosVS();
 		PixelShader		=compile ps_4_1 DMNPS();
 #elif defined(SM4)
-		VertexShader	=compile vs_4_0 DMNVS();
+		VertexShader	=compile vs_4_0 WNormWPosVS();
 		PixelShader		=compile ps_4_0 DMNPS();
 #else
-		VertexShader	=compile vs_4_0_level_9_3 DMNVS();
+		VertexShader	=compile vs_4_0_level_9_3 WNormWPosVS();
 		PixelShader		=compile ps_4_0_level_9_3 DMNPS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);

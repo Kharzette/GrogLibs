@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics;
 using UtilityLib;
 using BSPZone;
 using SharpDX;
@@ -12,6 +13,14 @@ namespace BSPZone
 	//in the world that needs lighting
 	public class LightHelper
 	{
+		//see http://home.comcast.net/~tom_forsyth/blog.wiki.html#Trilights
+		internal class TriLightFill
+		{
+			internal Vector3	mPosition;
+			internal Vector4	mColor1;
+			internal Vector4	mColor2;
+		}
+
 		Zone	mZone;
 
 		//sunlight entity
@@ -28,14 +37,19 @@ namespace BSPZone
 		Vector4	mLightColor;
 		Vector3	mCurLightDir;
 		Vector3	mCurLightPos;
+		Vector4	mFill1, mFill2;
 
 		//list of all affecting lights
 		List<Zone.ZoneLight>	mAffecting	=new List<Zone.ZoneLight>();
+
+		//list of all trilight fill entity values
+		List<TriLightFill>	mFills	=new List<TriLightFill>();
 
 		//constants
 		const float	LightLerpTime	=0.25f;	//in seconds
 		const float	LightEaseIn		=0.2f;
 		const float	LightEaseOut	=0.2f;
+		const int	FillDistance	=1000;
 
 
 		public void Initialize(Zone z, Zone.GetStyleStrength styleStrength)
@@ -46,6 +60,8 @@ namespace BSPZone
 			mStyleStrength	=styleStrength;
 
 			GrabSun();
+
+			GrabFills();
 		}
 
 
@@ -56,14 +72,18 @@ namespace BSPZone
 
 
 		public bool GetCurrentValues(out Vector4 color0,
+			out Vector4 color1,
+			out Vector4 color2,
 			out float intensity,
 			out Vector3 lightPos,
 			out Vector3 lightDir,
 			out bool bDirectional)
 		{
-			color0			=mLightColor;
-			lightDir		=mCurLightDir;
-			lightPos		=mCurLightPos;
+			color0		=mLightColor;
+			lightDir	=mCurLightDir;
+			lightPos	=mCurLightPos;
+			color1		=mFill1;
+			color2		=mFill2;
 
 			if(mBestLight == null)
 			{
@@ -89,6 +109,9 @@ namespace BSPZone
 		//opposite axiseesseseseeseses, use quat slerp?
 		public void Update(int msDelta, Vector3 pos, DynamicLights dyn)
 		{
+			//calculate fill lights
+			CalcFill(pos);
+
 			mAffecting	=mZone.GetAffectingLights(pos, mSunEnt, mStyleStrength, dyn);
 
 			//look for the strongest for the trilight lighting
@@ -367,6 +390,99 @@ namespace BSPZone
 		}
 
 
+		void CalcFill(Vector3 pos)
+		{
+			Debug.Assert(mFills.Count > 0);
+
+			List<TriLightFill>	inRange	=new List<TriLightFill>();
+
+			//find all fills in range
+			float	totalDistance	=0f;
+			foreach(TriLightFill fill in mFills)
+			{
+				float	dist	=Vector3.Distance(fill.mPosition, pos);
+				if(dist > FillDistance)
+				{
+					continue;
+				}
+
+				totalDistance	+=dist;
+
+				inRange.Add(fill);
+			}
+
+			mFill1	=Vector4.Zero;
+			mFill2	=Vector4.Zero;
+
+			if(inRange.Count <= 0)
+			{
+				float	bestDist	=float.MaxValue;
+
+				//just use nearest
+				foreach(TriLightFill fill in mFills)
+				{
+					float	dist	=Vector3.Distance(fill.mPosition, pos);
+					if(dist < bestDist)
+					{
+						bestDist	=dist;
+						mFill1		=fill.mColor1;
+						mFill2		=fill.mColor2;
+					}
+				}
+				return;
+			}
+
+			//average out weighting by distance
+			foreach(TriLightFill fill in inRange)
+			{
+				float	dist	=Vector3.Distance(fill.mPosition, pos);
+
+				float	ratio	=dist / totalDistance;
+
+				mFill1	+=fill.mColor1 * ratio;
+				mFill2	+=fill.mColor2 * ratio;
+			}
+		}
+
+
+		void GrabFills()
+		{
+			List<ZoneEntity>	fills	=mZone.GetEntities("misc_trilight_info");
+			if(fills.Count == 0)
+			{
+				//I guess just use a default
+				TriLightFill	defaultFill	=new TriLightFill();
+
+				//sort of a blue sky type thing
+				defaultFill.mColor1	=new Vector4(0.3f, 0.5f, 0.7f, 1f);
+
+				//earthy color
+				defaultFill.mColor2	=new Vector4(0.6f, 0.5f, 0.4f, 1f);
+
+				defaultFill.mPosition	=Vector3.Zero;
+
+				mFills.Add(defaultFill);
+				return;
+			}
+
+			foreach(ZoneEntity ze in fills)
+			{
+				TriLightFill	fill	=new TriLightFill();
+
+				Vector3	cVal;
+				ze.GetVectorNoConversion("trilight1", out cVal);
+				fill.mColor1	=new Vector4(cVal.X, cVal.Y, cVal.Z, 1f);
+
+				ze.GetVectorNoConversion("trilight2", out cVal);
+				fill.mColor2	=new Vector4(cVal.X, cVal.Y, cVal.Z, 1f);
+
+				ze.GetOrigin(out fill.mPosition);
+
+				mFills.Add(fill);
+			}
+		}
+
+
 		void GrabSun()
 		{
 			List<ZoneEntity>	suns	=mZone.GetEntities("light_sun");
@@ -382,6 +498,7 @@ namespace BSPZone
 				mSunEnt	=null;
 				return;
 			}
+			//there cannot be two skies
 			mSunEnt	=suns[0];
 		}
 	}

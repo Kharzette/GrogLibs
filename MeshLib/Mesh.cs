@@ -262,7 +262,7 @@ namespace MeshLib
 				return;
 			}
 
-			matLib.SetMaterialParameter(altMat, "mWorld", (transform * mTransform));
+			matLib.SetMaterialParameter(altMat, "mWorld", (mTransform * transform));
 
 			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
 			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);

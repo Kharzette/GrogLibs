@@ -8,7 +8,8 @@ using SharpDX.DXGI;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 
-using Buffer	=SharpDX.Direct3D11.Buffer;
+using Buffer		=SharpDX.Direct3D11.Buffer;
+using RenderForm	=SharpDX.Windows.RenderForm;
 
 
 namespace MaterialLib
@@ -21,7 +22,9 @@ namespace MaterialLib
 			internal Vector2	TextureCoordinate;
 		}
 
-		//targets for doing postery
+		//data for doing postery
+		Dictionary<string, Texture2D>			mPostTex2Ds		=new Dictionary<string, Texture2D>();
+		Dictionary<string, Texture2D>			mPostTexDepths	=new Dictionary<string, Texture2D>();
 		Dictionary<string, RenderTargetView>	mPostTargets	=new Dictionary<string, RenderTargetView>();
 		Dictionary<string, DepthStencilView>	mPostDepths		=new Dictionary<string, DepthStencilView>();
 		Dictionary<string, ShaderResourceView>	mPostTargSRVs	=new Dictionary<string, ShaderResourceView>();
@@ -51,21 +54,28 @@ namespace MaterialLib
 		const float	BlurAmount	=4f;
 
 
-		public PostProcess(GraphicsDevice gd, Effect fx, int resx, int resy,
-			RenderTargetView backBuffer, DepthStencilView backDepth)
+		public PostProcess(GraphicsDevice gd, Effect fx)
 		{
 			mPostFX	=fx;
 
-			mResX		=resx;
-			mResY		=resy;
+			mResX		=gd.RendForm.ClientRectangle.Width;
+			mResY		=gd.RendForm.ClientRectangle.Height;
 			mClearColor	=Color.CornflowerBlue;
 
-			mPostTargets.Add("BackColor", backBuffer);
+			RenderTargetView	[]backBuf	=new RenderTargetView[1];
+			DepthStencilView	backDepth;
+
+			backBuf	=gd.DC.OutputMerger.GetRenderTargets(1, out backDepth);
+
+			mPostTargets.Add("BackColor", backBuf[0]);
 			mPostDepths.Add("BackDepth", backDepth);
 
 			MakeQuad(gd);
 
 			InitPostParams(gd.GD.FeatureLevel == FeatureLevel.Level_9_3);
+
+			gd.ePreResize	+=OnPreResize;
+			gd.eResized		+=OnResized;
 		}
 
 
@@ -93,6 +103,7 @@ namespace MaterialLib
 
 			ShaderResourceView	targSRV	=new ShaderResourceView(gd.GD, targ);
 
+			mPostTex2Ds.Add(name, targ);
 			mPostTargets.Add(name, targView);
 			mPostTargSRVs.Add(name, targSRV);
 		}
@@ -120,6 +131,7 @@ namespace MaterialLib
 
 			DepthStencilView	targView	=new DepthStencilView(gd.GD, targ);
 
+			mPostTexDepths.Add(name, targ);
 			mPostDepths.Add(name, targView);
 		}
 
@@ -380,7 +392,22 @@ namespace MaterialLib
 
 		public void SetParameter(string paramName, string targName)
 		{
-			mPostFX.GetVariableByName(paramName).AsShaderResource().SetResource(mPostTargSRVs[targName]);
+			EffectShaderResourceVariable	esrv	=
+				mPostFX.GetVariableByName(paramName).AsShaderResource();
+
+			if(esrv == null)
+			{
+				return;
+			}
+
+			if(targName == null || targName == "null" || targName == "")
+			{
+				esrv.SetResource(null);
+			}
+			else
+			{
+				esrv.SetResource(mPostTargSRVs[targName]);
+			}
 		}
 
 
@@ -401,6 +428,105 @@ namespace MaterialLib
 			ep.Apply(gd.DC);
 
 			gd.DC.DrawIndexed(6, 0, 0);
+		}
+
+
+		void OnPreResize(object sender, EventArgs ea)
+		{
+			GraphicsDevice	gd	=sender as GraphicsDevice;
+			if(gd == null)
+			{
+				return;
+			}
+
+			//release these so the device can resize the swapchain
+			mPostTargets.Remove("BackColor");
+			mPostDepths.Remove("BackDepths");
+		}
+
+
+		void OnResized(object sender, EventArgs ea)
+		{
+			GraphicsDevice	gd	=sender as GraphicsDevice;
+			if(gd == null)
+			{
+				return;
+			}
+
+			mResX	=gd.RendForm.ClientRectangle.Width;
+			mResY	=gd.RendForm.ClientRectangle.Height;
+
+			InitPostParams(gd.GD.FeatureLevel == FeatureLevel.Level_9_3);
+
+			//back buffer will already be resized
+			RenderTargetView	[]backBuf	=new RenderTargetView[1];
+			DepthStencilView	backDepth;
+
+			backBuf	=gd.DC.OutputMerger.GetRenderTargets(1, out backDepth);
+
+			//dispose all views
+			foreach(KeyValuePair<string, RenderTargetView> view in mPostTargets)
+			{
+				view.Value.Dispose();
+			}
+			foreach(KeyValuePair<string, DepthStencilView> view in mPostDepths)
+			{
+				view.Value.Dispose();
+			}
+
+			//dispose all srvs
+			foreach(KeyValuePair<string, ShaderResourceView> srv in mPostTargSRVs)
+			{
+				srv.Value.Dispose();
+			}
+
+			mPostTargets.Clear();
+			mPostDepths.Clear();
+			mPostTargSRVs.Clear();
+
+
+			//resize textures
+			foreach(KeyValuePair<string, Texture2D> tex in mPostTex2Ds)
+			{
+				Texture2DDescription	resizeDesc	=new Texture2DDescription()
+				{
+					Format				=tex.Value.Description.Format,
+					ArraySize			=tex.Value.Description.ArraySize,
+					MipLevels			=tex.Value.Description.MipLevels,
+					Width				=mResX,
+					Height				=mResY,
+					SampleDescription	=new SampleDescription(1, 0),
+					Usage				=tex.Value.Description.Usage,
+					BindFlags			=tex.Value.Description.BindFlags,
+					CpuAccessFlags		=tex.Value.Description.CpuAccessFlags,
+					OptionFlags			=tex.Value.Description.OptionFlags
+				};
+
+				Texture2D	newTex	=new Texture2D(gd.GD, resizeDesc);
+
+				mPostTex2Ds.Remove(tex.Key);
+
+				mPostTex2Ds.Add(tex.Key, newTex);
+
+				if(Misc.bFlagSet((uint)newTex.Description.BindFlags, (uint)BindFlags.DepthStencil))
+				{
+					DepthStencilView	dsv	=new DepthStencilView(gd.GD, newTex);
+
+					mPostDepths.Add(tex.Key, dsv);
+				}
+				else
+				{
+					RenderTargetView	rtv	=new RenderTargetView(gd.GD, newTex);
+					ShaderResourceView	srv	=new ShaderResourceView(gd.GD, newTex);
+
+					mPostTargets.Add(tex.Key, rtv);
+					mPostTargSRVs.Add(tex.Key, srv);
+				}
+			}
+
+			//readd the device backbuffer
+			mPostTargets.Add("BackColor", backBuf[0]);
+			mPostDepths.Add("BackDepth", backDepth);
 		}
 	}
 }

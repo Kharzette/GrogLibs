@@ -37,6 +37,9 @@ namespace UtilityLib
 		System.Drawing.Point		mStoredMousePos	=System.Drawing.Point.Empty;
 		System.Drawing.Rectangle	mStoredClipRect	=Cursor.Clip;
 
+		public event EventHandler	ePreResize;
+		public event EventHandler	eResized;
+
 
 		public Device GD
 		{
@@ -139,12 +142,19 @@ namespace UtilityLib
 
 		void HandleResize()
 		{
+			//fire this event, and hopefully other code will
+			//use it to let go of references to device stuff
+			Misc.SafeInvoke(ePreResize, this);
+
 			Utilities.Dispose(ref mBackBuffer);
 			Utilities.Dispose(ref mBBView);
 			Utilities.Dispose(ref mDepthBuffer);
 			Utilities.Dispose(ref mDSView);
 
-			mSChain.ResizeBuffers(1, mRForm.Width, mRForm.Height, Format.Unknown, SwapChainFlags.None);
+			int	width	=mRForm.ClientRectangle.Width;
+			int	height	=mRForm.ClientRectangle.Height;
+
+			mSChain.ResizeBuffers(1, width, height, Format.Unknown, SwapChainFlags.None);
 
 			mBackBuffer	=Texture2D.FromSwapChain<Texture2D>(mSChain, 0);
 			mBBView		=new RenderTargetView(mGD, mBackBuffer);
@@ -156,8 +166,8 @@ namespace UtilityLib
 										Format.D32_Float_S8X24_UInt : Format.D24_UNorm_S8_UInt,
 				ArraySize			=1,
 				MipLevels			=1,
-				Width				=mRForm.Width,
-				Height				=mRForm.Height,
+				Width				=width,
+				Height				=height,
 				SampleDescription	=new SampleDescription(1, 0),
 				Usage				=ResourceUsage.Default,
 				BindFlags			=BindFlags.DepthStencil,
@@ -168,12 +178,15 @@ namespace UtilityLib
 			mDepthBuffer	=new Texture2D(mGD, depthDesc);
 			mDSView			=new DepthStencilView(mGD, mDepthBuffer);
 
-			Viewport	vp	=new Viewport(0, 0, mRForm.Width, mRForm.Height, 0f, 1f);
+			Viewport	vp	=new Viewport(0, 0, width, height, 0f, 1f);
 
 			mDC.Rasterizer.SetViewport(vp);
 			mDC.OutputMerger.SetTargets(mDSView, mBBView);
 
-			mGCam	=new UtilityLib.GameCamera(mRForm.Width, mRForm.Height, 16f/9f, 0.1f, 3000f);
+			mGCam	=new UtilityLib.GameCamera(width, height, 16f/9f, 0.1f, 3000f);
+
+			//other stuff can now resize rendertargets and such
+			Misc.SafeInvoke(eResized, this);
 		}
 
 

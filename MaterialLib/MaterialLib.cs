@@ -433,6 +433,18 @@ namespace MaterialLib
 		}
 
 
+		public void SetTriLightValues(Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				mat.Value.SetEffectParameter("mLightColor0", col0);
+				mat.Value.SetEffectParameter("mLightColor1", col1);
+				mat.Value.SetEffectParameter("mLightColor2", col2);
+				mat.Value.SetEffectParameter("mLightDirection", lightDir);
+			}
+		}
+
+
 		public void SetLightMapsToAtlas()
 		{
 			foreach(KeyValuePair<string, Material> mat in mMats)
