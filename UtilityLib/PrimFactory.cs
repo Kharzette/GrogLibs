@@ -67,8 +67,8 @@ namespace UtilityLib
 		internal struct VertexPositionNormalTexture
 		{
 			internal Vector3	Position;
-			internal Vector3	Normal;
-			internal Vector2	TextureCoordinate;
+			internal Half4		Normal;
+			internal Half2		TextureCoordinate;
 		}
 
 		internal struct VertexPositionColor
@@ -92,13 +92,13 @@ namespace UtilityLib
 
 			VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[6];
 
-			vpnt[0].Normal		=Vector3.UnitZ;
-			vpnt[1].Normal		=Vector3.UnitZ;
-			vpnt[2].Normal		=Vector3.UnitZ;
+			vpnt[0].Normal		=Vector4.UnitZ;
+			vpnt[1].Normal		=Vector4.UnitZ;
+			vpnt[2].Normal		=Vector4.UnitZ;
 
-			vpnt[3].Normal		=Vector3.UnitZ;
-			vpnt[4].Normal		=Vector3.UnitZ;
-			vpnt[5].Normal		=Vector3.UnitZ;
+			vpnt[3].Normal		=Vector4.UnitZ;
+			vpnt[4].Normal		=Vector4.UnitZ;
+			vpnt[5].Normal		=Vector4.UnitZ;
 
 			//need to have a lot of duplicates since each
 			//vertex will contain a copy of the face normal
@@ -123,7 +123,7 @@ namespace UtilityLib
 			vpnt[5].TextureCoordinate	=bottomTex + leftTex;
 
 			BufferDescription	bd	=new BufferDescription(
-				32 * vpnt.Length,
+				24 * vpnt.Length,
 				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
@@ -144,7 +144,7 @@ namespace UtilityLib
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(vb, 32, ib, indexes.Length, true);
+			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true);
 
 			return	po;
 		}
@@ -169,14 +169,14 @@ namespace UtilityLib
 			VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[24];
 
 			//hacky guessy normals for the 8 directions
-			Vector3	topUpperLeft	=-Vector3.UnitY + Vector3.UnitX + Vector3.UnitZ;
-			Vector3	topUpperRight	=-Vector3.UnitY - Vector3.UnitX + Vector3.UnitZ;
-			Vector3	topLowerLeft	=-Vector3.UnitY + Vector3.UnitX - Vector3.UnitZ;
-			Vector3	topLowerRight	=-Vector3.UnitY - Vector3.UnitX - Vector3.UnitZ;
-			Vector3	botUpperLeft	=Vector3.UnitY + Vector3.UnitX + Vector3.UnitZ;
-			Vector3	botUpperRight	=Vector3.UnitY - Vector3.UnitX + Vector3.UnitZ;
-			Vector3	botLowerLeft	=Vector3.UnitY + Vector3.UnitX - Vector3.UnitZ;
-			Vector3	botLowerRight	=Vector3.UnitY - Vector3.UnitX - Vector3.UnitZ;
+			Vector4	topUpperLeft	=-Vector4.UnitY + Vector4.UnitX + Vector4.UnitZ;
+			Vector4	topUpperRight	=-Vector4.UnitY - Vector4.UnitX + Vector4.UnitZ;
+			Vector4	topLowerLeft	=-Vector4.UnitY + Vector4.UnitX - Vector4.UnitZ;
+			Vector4	topLowerRight	=-Vector4.UnitY - Vector4.UnitX - Vector4.UnitZ;
+			Vector4	botUpperLeft	=Vector4.UnitY + Vector4.UnitX + Vector4.UnitZ;
+			Vector4	botUpperRight	=Vector4.UnitY - Vector4.UnitX + Vector4.UnitZ;
+			Vector4	botLowerLeft	=Vector4.UnitY + Vector4.UnitX - Vector4.UnitZ;
+			Vector4	botLowerRight	=Vector4.UnitY - Vector4.UnitX - Vector4.UnitZ;
 
 			vpnt[0].Normal		=topUpperLeft;
 			vpnt[1].Normal		=topUpperLeft;
@@ -282,7 +282,7 @@ namespace UtilityLib
 			vpnt[23].TextureCoordinate	=bottomTex;
 			
 			BufferDescription	bd	=new BufferDescription(
-				32 * vpnt.Length,
+				24 * vpnt.Length,
 				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
@@ -303,7 +303,7 @@ namespace UtilityLib
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(vb, 32, ib, indexes.Length, true);
+			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true);
 
 			return	po;
 		}
@@ -320,10 +320,10 @@ namespace UtilityLib
 			VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[12];
 
 			//hacky guessy normals for the 8 directions
-			Vector3	topUpperLeft	=Vector3.UnitY + Vector3.UnitX + Vector3.UnitZ;
-			Vector3	topUpperRight	=Vector3.UnitY - Vector3.UnitX + Vector3.UnitZ;
-			Vector3	topLowerLeft	=Vector3.UnitY + Vector3.UnitX - Vector3.UnitZ;
-			Vector3	topLowerRight	=Vector3.UnitY - Vector3.UnitX - Vector3.UnitZ;
+			Vector4	topUpperLeft	=Vector4.UnitY + Vector4.UnitX + Vector4.UnitZ;
+			Vector4	topUpperRight	=Vector4.UnitY - Vector4.UnitX + Vector4.UnitZ;
+			Vector4	topLowerLeft	=Vector4.UnitY + Vector4.UnitX - Vector4.UnitZ;
+			Vector4	topLowerRight	=Vector4.UnitY - Vector4.UnitX - Vector4.UnitZ;
 
 			vpnt[0].Normal		=topUpperLeft;
 			vpnt[1].Normal		=topUpperLeft;
@@ -366,7 +366,7 @@ namespace UtilityLib
 			vpnt[9].Position	=bottom;
 
 			BufferDescription	bd	=new BufferDescription(
-				32 * vpnt.Length,
+				24 * vpnt.Length,
 				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
@@ -387,7 +387,7 @@ namespace UtilityLib
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(vb, 32, ib, indexes.Length, true);
+			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true);
 
 			return	po;
 		}
@@ -481,35 +481,35 @@ namespace UtilityLib
 			vpnt[20].Position	=lowerTopRight;
 
 			//normals
-			vpnt[0].Normal	=Vector3.UnitY;
-			vpnt[1].Normal	=Vector3.UnitY;
-			vpnt[2].Normal	=Vector3.UnitY;
-			vpnt[3].Normal	=Vector3.UnitY;
+			vpnt[0].Normal	=Vector4.UnitY;
+			vpnt[1].Normal	=Vector4.UnitY;
+			vpnt[2].Normal	=Vector4.UnitY;
+			vpnt[3].Normal	=Vector4.UnitY;
 
-			vpnt[4].Normal	=-Vector3.UnitY;
-			vpnt[5].Normal	=-Vector3.UnitY;
-			vpnt[6].Normal	=-Vector3.UnitY;
-			vpnt[7].Normal	=-Vector3.UnitY;
+			vpnt[4].Normal	=-Vector4.UnitY;
+			vpnt[5].Normal	=-Vector4.UnitY;
+			vpnt[6].Normal	=-Vector4.UnitY;
+			vpnt[7].Normal	=-Vector4.UnitY;
 
-			vpnt[8].Normal	=Vector3.UnitZ;
-			vpnt[9].Normal	=Vector3.UnitZ;
-			vpnt[10].Normal	=Vector3.UnitZ;
-			vpnt[11].Normal	=Vector3.UnitZ;
+			vpnt[8].Normal	=Vector4.UnitZ;
+			vpnt[9].Normal	=Vector4.UnitZ;
+			vpnt[10].Normal	=Vector4.UnitZ;
+			vpnt[11].Normal	=Vector4.UnitZ;
 
-			vpnt[12].Normal	=-Vector3.UnitZ;
-			vpnt[13].Normal	=-Vector3.UnitZ;
-			vpnt[14].Normal	=-Vector3.UnitZ;
-			vpnt[15].Normal	=-Vector3.UnitZ;
+			vpnt[12].Normal	=-Vector4.UnitZ;
+			vpnt[13].Normal	=-Vector4.UnitZ;
+			vpnt[14].Normal	=-Vector4.UnitZ;
+			vpnt[15].Normal	=-Vector4.UnitZ;
 
-			vpnt[16].Normal	=Vector3.UnitX;
-			vpnt[17].Normal	=Vector3.UnitX;
-			vpnt[18].Normal	=Vector3.UnitX;
-			vpnt[19].Normal	=Vector3.UnitX;
+			vpnt[16].Normal	=Vector4.UnitX;
+			vpnt[17].Normal	=Vector4.UnitX;
+			vpnt[18].Normal	=Vector4.UnitX;
+			vpnt[19].Normal	=Vector4.UnitX;
 
-			vpnt[20].Normal	=-Vector3.UnitX;
-			vpnt[21].Normal	=-Vector3.UnitX;
-			vpnt[22].Normal	=-Vector3.UnitX;
-			vpnt[23].Normal	=-Vector3.UnitX;
+			vpnt[20].Normal	=-Vector4.UnitX;
+			vpnt[21].Normal	=-Vector4.UnitX;
+			vpnt[22].Normal	=-Vector4.UnitX;
+			vpnt[23].Normal	=-Vector4.UnitX;
 
 			//texcoords
 			for(int i=0;i < 24;i+=4)
@@ -521,7 +521,7 @@ namespace UtilityLib
 			}
 			
 			BufferDescription	bd	=new BufferDescription(
-				32 * vpnt.Length,
+				24 * vpnt.Length,
 				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
@@ -548,7 +548,7 @@ namespace UtilityLib
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(vb, 32, ib, indexes.Length, true);
+			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true);
 
 			return	po;
 		}
@@ -628,10 +628,15 @@ namespace UtilityLib
 			//copy in hemisphere
 			for(int i=0;i < points.Count;i++)
 			{
-				vpnt[i].Normal	=points[i];
-				vpnt[i].Normal.Normalize();
+				Vector3	norm	=points[i];
+				norm.Normalize();
 
-				vpnt[i].Position			=vpnt[i].Normal * radius + center;
+				vpnt[i].Normal.X	=norm.X;
+				vpnt[i].Normal.Y	=norm.Y;
+				vpnt[i].Normal.Z	=norm.Z;
+				vpnt[i].Normal.W	=1f;
+
+				vpnt[i].Position			=norm * radius + center;
 				vpnt[i].TextureCoordinate	=Vector2.Zero;	//not tackling this yet
 			}
 
@@ -639,18 +644,21 @@ namespace UtilityLib
 			int	ofs	=points.Count;
 			for(int i=ofs;i < points.Count + ofs;i++)
 			{
-				vpnt[i].Normal	=points[i - ofs];
-				vpnt[i].Normal.Normalize();
+				Vector3	norm	=points[i - ofs];
+				norm.Normalize();
 
 				//flip normal
-				vpnt[i].Normal	=-vpnt[i].Normal;
+				vpnt[i].Normal.X	=-norm.X;
+				vpnt[i].Normal.Y	=-norm.Y;
+				vpnt[i].Normal.Z	=-norm.Z;
+				vpnt[i].Normal.W	=1f;
 
-				vpnt[i].Position			=vpnt[i].Normal * radius + center;
+				vpnt[i].Position			=-norm * radius + center;
 				vpnt[i].TextureCoordinate	=Vector2.Zero;	//not tackling this yet
 			}
 
 			BufferDescription	bd	=new BufferDescription(
-				32 * vpnt.Length,
+				24 * vpnt.Length,
 				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
@@ -678,7 +686,7 @@ namespace UtilityLib
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, inds.ToArray(), id);
 
-			PrimObject	po	=new PrimObject(vb, 32, ib, inds.Count, true);
+			PrimObject	po	=new PrimObject(vb, 24, ib, inds.Count, true);
 
 			return	po;
 		}
@@ -827,8 +835,8 @@ namespace UtilityLib
 				vpnt[i].Position		=rotPos;
 				vpnt[i + 8].Position	=rotPos - Vector3.UnitY * len;
 
-				vpnt[i].Normal		=-Vector3.UnitY;
-				vpnt[i + 8].Normal	=Vector3.UnitY;
+				vpnt[i].Normal		=-Vector4.UnitY;
+				vpnt[i + 8].Normal	=Vector4.UnitY;
 
 				rotPos	=Vector3.TransformCoordinate(rotPos, rotMat);
 
@@ -850,7 +858,7 @@ namespace UtilityLib
 			}
 
 			BufferDescription	bd	=new BufferDescription(
-				32 * vpnt.Length,
+				24 * vpnt.Length,
 				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
@@ -923,7 +931,7 @@ namespace UtilityLib
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(vb, 32, ib, indexes.Length, true);
+			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true);
 
 			return	po;
 		}

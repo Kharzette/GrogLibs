@@ -146,10 +146,14 @@ namespace UtilityLib
 			//use it to let go of references to device stuff
 			Misc.SafeInvoke(ePreResize, this);
 
-			Utilities.Dispose(ref mBackBuffer);
 			Utilities.Dispose(ref mBBView);
-			Utilities.Dispose(ref mDepthBuffer);
 			Utilities.Dispose(ref mDSView);
+			Utilities.Dispose(ref mBackBuffer);
+			Utilities.Dispose(ref mDepthBuffer);
+
+			DC.ClearState();
+
+			DC.InputAssembler.PrimitiveTopology	=PrimitiveTopology.TriangleList;
 
 			int	width	=mRForm.ClientRectangle.Width;
 			int	height	=mRForm.ClientRectangle.Height;

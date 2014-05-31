@@ -24,7 +24,7 @@ namespace MaterialLib
 
 		//data for doing postery
 		Dictionary<string, Texture2D>			mPostTex2Ds		=new Dictionary<string, Texture2D>();
-		Dictionary<string, Texture2D>			mPostTexDepths	=new Dictionary<string, Texture2D>();
+//		Dictionary<string, Texture2D>			mPostTexDepths	=new Dictionary<string, Texture2D>();
 		Dictionary<string, RenderTargetView>	mPostTargets	=new Dictionary<string, RenderTargetView>();
 		Dictionary<string, DepthStencilView>	mPostDepths		=new Dictionary<string, DepthStencilView>();
 		Dictionary<string, ShaderResourceView>	mPostTargSRVs	=new Dictionary<string, ShaderResourceView>();
@@ -131,7 +131,7 @@ namespace MaterialLib
 
 			DepthStencilView	targView	=new DepthStencilView(gd.GD, targ);
 
-			mPostTexDepths.Add(name, targ);
+			mPostTex2Ds.Add(name, targ);
 			mPostDepths.Add(name, targView);
 		}
 
@@ -359,9 +359,31 @@ namespace MaterialLib
 		}
 
 
+		//sometimes dx11 thinks a rendertarget is still bound as a resource
+		//setting that resource to null and then calling this will give it
+		//a kick in the pants to actually free the resource up
+		public void HackyTechniqueRefresh(DeviceContext dc, string tech)
+		{
+			EffectTechnique	et	=mPostFX.GetTechniqueByName(tech);
+
+			if(!et.IsValid)
+			{
+				return;
+			}
+
+			EffectPass	ep	=et.GetPassByIndex(0);
+
+			ep.Apply(dc);
+		}
+
+
 		public void SetTargets(GraphicsDevice gd, string targName, string depthName)
 		{
-			if(targName == "null")
+			if(targName == null && depthName == null)
+			{
+				gd.DC.OutputMerger.SetRenderTargets(null, (RenderTargetView)null);
+			}
+			else if(targName == "null")
 			{
 				gd.DC.OutputMerger.SetRenderTargets(null, (RenderTargetView)null);
 			}
@@ -439,9 +461,14 @@ namespace MaterialLib
 				return;
 			}
 
+			RenderTargetView	backRTV	=mPostTargets["BackColor"];
+			DepthStencilView	backDSV	=mPostDepths["BackDepth"];
+
 			//release these so the device can resize the swapchain
 			mPostTargets.Remove("BackColor");
-			mPostDepths.Remove("BackDepths");
+			mPostDepths.Remove("BackDepth");
+			backRTV.Dispose();
+			backDSV.Dispose();
 		}
 
 
@@ -484,8 +511,9 @@ namespace MaterialLib
 			mPostDepths.Clear();
 			mPostTargSRVs.Clear();
 
+			//copy the descriptions
+			Dictionary<string, Texture2DDescription>	descs	=new Dictionary<string, Texture2DDescription>();
 
-			//resize textures
 			foreach(KeyValuePair<string, Texture2D> tex in mPostTex2Ds)
 			{
 				Texture2DDescription	resizeDesc	=new Texture2DDescription()
@@ -501,26 +529,36 @@ namespace MaterialLib
 					CpuAccessFlags		=tex.Value.Description.CpuAccessFlags,
 					OptionFlags			=tex.Value.Description.OptionFlags
 				};
+				descs.Add(tex.Key, resizeDesc);
+			}
 
-				Texture2D	newTex	=new Texture2D(gd.GD, resizeDesc);
+			//blast all textures
+			foreach(KeyValuePair<string, Texture2D> tex in mPostTex2Ds)
+			{
+				tex.Value.Dispose();
+			}
+			mPostTex2Ds.Clear();
+			
+			//make resized versions
+			foreach(KeyValuePair<string, Texture2DDescription> texDesc in descs)
+			{
+				Texture2D	newTex	=new Texture2D(gd.GD, texDesc.Value);
 
-				mPostTex2Ds.Remove(tex.Key);
-
-				mPostTex2Ds.Add(tex.Key, newTex);
+				mPostTex2Ds.Add(texDesc.Key, newTex);
 
 				if(Misc.bFlagSet((uint)newTex.Description.BindFlags, (uint)BindFlags.DepthStencil))
 				{
 					DepthStencilView	dsv	=new DepthStencilView(gd.GD, newTex);
 
-					mPostDepths.Add(tex.Key, dsv);
+					mPostDepths.Add(texDesc.Key, dsv);
 				}
 				else
 				{
 					RenderTargetView	rtv	=new RenderTargetView(gd.GD, newTex);
 					ShaderResourceView	srv	=new ShaderResourceView(gd.GD, newTex);
 
-					mPostTargets.Add(tex.Key, rtv);
-					mPostTargSRVs.Add(tex.Key, srv);
+					mPostTargets.Add(texDesc.Key, rtv);
+					mPostTargSRVs.Add(texDesc.Key, srv);
 				}
 			}
 
