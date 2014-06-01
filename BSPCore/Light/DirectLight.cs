@@ -20,7 +20,6 @@ namespace BSPCore
 		internal const Int32		DLight_Blank	=0;
 		internal const Int32		DLight_Point	=1;
 		internal const Int32		DLight_Spot		=2;
-		internal const Int32		DLight_Surface	=4;
 		internal const Int32		DLight_Sun		=8;
 	}
 }

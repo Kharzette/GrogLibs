@@ -375,6 +375,49 @@ namespace MaterialLib
 		}
 
 
+		public void FreeAll()
+		{
+			NukeAllMaterials();
+
+			foreach(KeyValuePair<string, Effect> fx in mFX)
+			{
+				fx.Value.Dispose();
+			}
+			mFX.Clear();
+
+			foreach(KeyValuePair<string, Texture2D> tex in mTexture2s)
+			{
+				tex.Value.Dispose();
+			}
+			mTexture2s.Clear();
+
+			foreach(KeyValuePair<string, Resource> res in mResources)
+			{
+				res.Value.Dispose();
+			}
+			mResources.Clear();
+
+			foreach(KeyValuePair<string, ShaderResourceView> srv in mSRVs)
+			{
+				srv.Value.Dispose();
+			}
+			mSRVs.Clear();
+
+			foreach(KeyValuePair<string, List<EffectVariable>> effList in mVars)
+			{
+				foreach(EffectVariable efv in effList.Value)
+				{
+					efv.Dispose();
+				}
+				effList.Value.Clear();
+			}
+			mVars.Clear();
+
+			mIgnoreData.Clear();
+			mHiddenData.Clear();
+		}
+
+
 		public void NukeAllMaterials()
 		{
 			mMats.Clear();

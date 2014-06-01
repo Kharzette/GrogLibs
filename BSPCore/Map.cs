@@ -1624,6 +1624,8 @@ namespace BSPCore
 			mg.GetLMAMaterialData(out lmaDCalls);
 			mg.GetLMAAnimMaterialData(out lmaAnimDCalls);
 
+			mg.FreeAll();
+
 			return	true;
 		}
 
@@ -1641,6 +1643,8 @@ namespace BSPCore
 			mg.GetVLitGeometry(out index, out verts, out inds);
 
 			mg.GetVLitMaterialData(out dcs);
+
+			mg.FreeAll();
 		}
 
 
@@ -1658,6 +1662,8 @@ namespace BSPCore
 			mg.GetAlphaGeometry(out index, out verts, out inds);
 
 			mg.GetAlphaMaterialData(out alphaDrawCalls);
+
+			mg.FreeAll();
 		}
 
 
@@ -1674,6 +1680,8 @@ namespace BSPCore
 			mg.GetFullBrightGeometry(out index, out verts, out inds);
 
 			mg.GetFullBrightMaterialData(out dcs);
+
+			mg.FreeAll();
 		}
 
 
@@ -1691,6 +1699,8 @@ namespace BSPCore
 			mg.GetMirrorGeometry(out index, out verts, out inds);
 
 			mg.GetMirrorMaterialData(out dcs, out mirrorPolys);
+
+			mg.FreeAll();
 		}
 
 
@@ -1705,6 +1715,8 @@ namespace BSPCore
 			mg.GetSkyGeometry(out index, out verts, out inds);
 
 			mg.GetSkyMaterialData(out dcs);
+
+			mg.FreeAll();
 		}
 #endif
 	}

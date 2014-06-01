@@ -574,6 +574,9 @@ namespace BSPVis
 						|=(byte)(1 << (idx & 7));
 				}
 			}
+
+			mg.FreeAll();
+
 			CoreEvents.Print("Material Vis Complete:  " + mGFXMaterialVisData.Length + " bytes.\n");
 		}
 #endif

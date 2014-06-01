@@ -170,6 +170,12 @@ namespace BSPCore
 		}
 
 
+		public void FreeAll()
+		{
+			mMatLib.FreeAll();
+		}
+
+
 		internal void GetLMMaterialData(out Dictionary<int, List<DrawCall>> draws)
 		{
 			draws	=mLMDraws;

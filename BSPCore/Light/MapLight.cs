@@ -583,16 +583,6 @@ namespace BSPCore
 							val	=(intensity - dist) * angle;
 							break;
 						}
-						case DirectLight.DLight_Surface:
-						{
-							float Angle2	=-Vector3.Dot(vect, dLight.mNormal);
-							if(Angle2 <= 0.001f)
-							{
-								goto Skip;	//Behind light surface
-							}
-							val	=(intensity / dist) * angle * Angle2;
-							break;
-						}
 						case DirectLight.DLight_Sun:
 						{
 							//Find the angle between the light, and the vert
@@ -1021,17 +1011,6 @@ namespace BSPCore
 								val	=(intensity - dist) * angle;
 								break;
 							}
-							case DirectLight.DLight_Surface:
-							{
-								float	Angle2	=-Vector3.Dot(vect, dLight.mNormal);
-								if(Angle2 <= 0.001f)
-								{
-									continue;	// Behind light surface
-								}
-
-								val	=(intensity / dist) * angle * Angle2;
-								break;
-							}
 							default:
 							{
 								CoreEvents.Print("ApplyLightsToFace:  Invalid light.\n");
@@ -1200,17 +1179,6 @@ namespace BSPCore
 							}
 
 							val	=(intensity - dist) * angle;
-							break;
-						}
-						case DirectLight.DLight_Surface:
-						{
-							float	Angle2	=-Vector3.Dot(vect, dLight.mNormal);
-							if(Angle2 <= 0.001f)
-							{
-								continue;	// Behind light surface
-							}
-
-							val	=(intensity / dist) * angle * Angle2;
 							break;
 						}
 						default:
