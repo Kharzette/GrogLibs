@@ -1020,8 +1020,16 @@ namespace MaterialLib
 			{
 				afterTex	=path.Substring(texIndex + 9);
 			}
+			string	extLess	="";
 
-			string	extLess	=afterTex + "\\" + FileUtil.StripExtension(fileName);
+			if(afterTex != "")
+			{
+				extLess	=afterTex + "\\" + FileUtil.StripExtension(fileName);
+			}
+			else
+			{
+				extLess	=FileUtil.StripExtension(fileName);
+			}
 
 			ImageLoadInformation	loadInfo	=new ImageLoadInformation();
 

@@ -133,10 +133,12 @@ namespace ParticleLib
 		}
 
 
-//		internal void Draw(AlphaPool ap, Vector3 pos, Vector4 color, Matrix view, Matrix proj)
-//		{
-//			ap.StoreParticleDraw(pos, mVB, mNumParticles * 2, mbCel, color, mFX, mTex, view, proj);
-//		}
+		internal void Draw(MatLib mlib, AlphaPool ap,
+			Vector3 pos, Vector4 color,
+			Matrix view, Matrix proj)
+		{
+			ap.StoreParticleDraw(mlib, pos, mVBB, mNumParticles * 6, color, mTexName, view, proj);
+		}
 
 
 		internal void Draw(DeviceContext dc, Vector4 color,
@@ -184,7 +186,7 @@ namespace ParticleLib
 		//adds on to the end
 		internal string GetEntityFields(string ent)
 		{
-			ParticleBoss.AddField(ref ent, "mat_name", mTexName);
+			ParticleBoss.AddField(ref ent, "tex_name", mTexName);
 
 			return	ent;
 		}

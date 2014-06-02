@@ -36,11 +36,11 @@ namespace MaterialLib
 				return	0;
 			}
 
-			if(x.DistSquared(mEye) == y.DistSquared(mEye))
+			if(x.Distance(mEye) == y.Distance(mEye))
 			{
 				return	0;
 			}
-			if(x.DistSquared(mEye) > y.DistSquared(mEye))
+			if(x.Distance(mEye) > y.Distance(mEye))
 			{
 				return	-1;
 			}
@@ -65,10 +65,10 @@ namespace MaterialLib
 		Int32	mCount;
 		Int32	mStartIndex;
 
-		bool				mbParticle;	//particle draw?
-		Vector4				mColor;
-		ShaderResourceView	mTex;
-		Matrix				mView, mProj;
+		bool	mbParticle;	//particle draw?
+		Vector4	mColor;
+		string	mTex;
+		Matrix	mView, mProj;
 
 
 		internal AlphaNode(MatLib matLib,
@@ -91,17 +91,19 @@ namespace MaterialLib
 			Vector3 sortPoint,
 			VertexBufferBinding vbb,
 			Int32 vertCount, Vector4 color,
-			ShaderResourceView tex,
+			string tex,
 			Matrix view, Matrix proj)
 		{
-			mMatLib		=matLib;
-			mSortPoint	=sortPoint;
-			mVBB		=vbb;
-			mCount		=vertCount;
-			mColor		=color;
-			mTex		=tex;
-			mView		=view;
-			mProj		=proj;
+			mMatLib			=matLib;
+			mSortPoint		=sortPoint;
+			mVBB			=vbb;
+			mCount			=vertCount;
+			mColor			=color;
+			mTex			=tex;
+			mView			=view;
+			mProj			=proj;
+			mMaterialName	="Particle";
+			mWorldMat		=Matrix.Identity;
 
 			mbParticle	=true;
 		}
@@ -130,7 +132,7 @@ namespace MaterialLib
 			gd.DC.InputAssembler.SetVertexBuffers(0, mVBB);
 
 			mMatLib.SetMaterialParameter(mMaterialName, "mSolidColour", mColor);
-			mMatLib.SetMaterialParameter(mMaterialName, "mTexture", mTex);
+			mMatLib.SetMaterialTexture(mMaterialName, "mTexture", mTex);
 			mMatLib.SetMaterialParameter(mMaterialName, "mView", mView);
 			mMatLib.SetMaterialParameter(mMaterialName, "mProjection", mProj);
 
@@ -158,11 +160,11 @@ namespace MaterialLib
 		}
 
 
-		internal float DistSquared(Vector3 mEye)
+		internal float Distance(Vector3 mEye)
 		{
 			Vector3	transformedSort	=Vector3.TransformCoordinate(mSortPoint, mWorldMat);
 
-			return	Vector3.DistanceSquared(transformedSort, mEye);
+			return	Vector3.Distance(transformedSort, mEye);
 		}
 	}
 }

@@ -39,6 +39,14 @@ namespace ParticleLib
 			mMats	=mats;
 
 			//create particle materials
+			CreateParticleMats();
+		}
+
+
+		//if tied into a matlib that does io or clears,
+		//this will recreate the needed materials
+		public void CreateParticleMats()
+		{
 			mMats.CreateMaterial("Particle");
 			mMats.SetMaterialEffect("Particle", "2D.fx");
 			mMats.SetMaterialTechnique("Particle", "Particle");
@@ -113,13 +121,13 @@ namespace ParticleLib
 		}
 
 
-/*		public void Draw(MaterialLib.AlphaPool ap, Matrix view, Matrix proj)
+		public void Draw(MaterialLib.AlphaPool ap, Matrix view, Matrix proj)
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
-				em.Value.mView.Draw(ap, em.Value.mEmitter.mPosition, em.Value.mColor, view, proj);
+				em.Value.mView.Draw(mMats, ap, em.Value.mEmitter.mPosition, em.Value.mColor, view, proj);
 			}
-		}*/
+		}
 
 
 		public int GetEmitterCount()

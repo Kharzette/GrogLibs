@@ -19,7 +19,7 @@ namespace BSPZone
 		bool	mbMiscListening;
 
 
-		public void Initialize(Zone zone, TriggerHelper th, ParticleBoss pb, string texPrefix)
+		public void Initialize(Zone zone, TriggerHelper th, ParticleBoss pb)
 		{
 			mZone	=zone;
 			mPB		=pb;
@@ -119,7 +119,7 @@ namespace BSPZone
 				lifeMax		*=1000;
 
 				int	idx	=mPB.CreateEmitter(
-					texPrefix + ze.GetValue("mat_name"),
+					ze.GetValue("tex_name"),
 					color, shape, shapeSize, maxParticles,
 					pos, (int)gravYaw, (int)gravPitch, gravStr,
 					startSize, startAlpha, emitMS, spinVelMin, spinVelMax,

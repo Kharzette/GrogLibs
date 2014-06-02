@@ -77,10 +77,10 @@ VVPosTex03Tex13 ParticleDMNVS(VPos4Tex04 input)
 	float4x4	viewProj	=mul(mView, mProjection);
 
 	//get view vector
-	float3	viewDir	=mView._m02_m12_m22;
+	float3	viewDir	=-mView._m02_m12_m22;
 
 	//all verts at 000, add instance pos
-	float3	pos	=input.Position.xyz;
+	float4	pos	=float4(input.Position.xyz, 1);
 	
 	//cross with up to get right
 	float3	rightVec	=normalize(cross(viewDir, float3(0, 1, 0)));
@@ -88,14 +88,12 @@ VVPosTex03Tex13 ParticleDMNVS(VPos4Tex04 input)
 	//cross right with view to get good up
 	float3	upVec	=normalize(cross(rightVec, viewDir));
 
-	float3	ofs	=pos;
-
 	//quad offset mul by size stored in tex0.x
-	ofs.xyz	=rightVec * (input.Position.w - 0.5f) * input.TexCoord0.x;
-	ofs.xyz	+=upVec * (input.TexCoord0.w - 0.5f) * input.TexCoord0.x;
+	float4	ofs	=float4(rightVec * (input.Position.w - 0.5f) * input.TexCoord0.x, 1);
+	ofs.xyz		+=upVec * (input.TexCoord0.w - 0.5f) * input.TexCoord0.x;
 
 	//add in centerpoint
-	ofs	+=pos;
+	ofs.xyz	+=pos.xyz;
 
 	output.TexCoord1	=pos.xyz;
 
@@ -187,7 +185,6 @@ technique10 Particle
 #endif
 		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
 		SetDepthStencilState(DisableDepthWrite, 0);
-		SetRasterizerState(NoCull);
 	}
 }
 
