@@ -37,6 +37,15 @@ namespace ParticleLib
 		{
 			mGD		=gd;
 			mMats	=mats;
+
+			//create particle materials
+			mMats.CreateMaterial("Particle");
+			mMats.SetMaterialEffect("Particle", "2D.fx");
+			mMats.SetMaterialTechnique("Particle", "Particle");
+
+			mMats.CreateMaterial("ParticleDMN");
+			mMats.SetMaterialEffect("ParticleDMN", "2D.fx");
+			mMats.SetMaterialTechnique("ParticleDMN", "ParticleDMN");
 		}
 
 
@@ -74,7 +83,7 @@ namespace ParticleLib
 
 
 		//returns true if emitter count changed
-		public void Update(DeviceContext dc, int msDelta)
+		public void Update(DeviceContext dc, float msDelta)
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
@@ -86,11 +95,11 @@ namespace ParticleLib
 		}
 
 
-		public void DrawDMN(Matrix view, Matrix proj, Vector3 eyePos)
+		public void DrawDMN(DeviceContext dc, Matrix view, Matrix proj, Vector3 eyePos)
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
-//				em.Value.mView.DrawDMN(em.Value.mColor, view, proj, eyePos);
+				em.Value.mView.DrawDMN(dc, em.Value.mColor, view, proj, eyePos);
 			}
 		}
 
@@ -149,23 +158,23 @@ namespace ParticleLib
 		}
 
 
-		public void SetMaterialByIndex(int index, string mat)
+		public void SetTextureByIndex(int index, string tex)
 		{
 			if(!mEmitters.ContainsKey(index))
 			{
 				return;
 			}
-			mEmitters[index].mView.SetMaterial(mat);
+			mEmitters[index].mView.SetTexture(tex);
 		}
 
 
-		public string GetMaterialByIndex(int index)
+		public string GetTextureByIndex(int index)
 		{
 			if(!mEmitters.ContainsKey(index))
 			{
 				return	"";
 			}
-			return	mEmitters[index].mView.GetMaterial();
+			return	mEmitters[index].mView.GetTexture();
 		}
 
 

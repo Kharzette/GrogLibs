@@ -497,6 +497,22 @@ namespace MaterialLib
 		}
 
 
+		//textures in the particles dir
+		public List<string> GetParticleTextures()
+		{
+			List<string>	ret	=new List<string>();
+
+			foreach(KeyValuePair<string, Texture2D> tex in mTexture2s)
+			{
+				if(tex.Key.StartsWith("Particles"))
+				{
+					ret.Add(tex.Key);
+				}
+			}
+			return	ret;
+		}
+
+
 		public void GuessTextures()
 		{
 			foreach(KeyValuePair<string, Material> mat in mMats)
@@ -804,6 +820,28 @@ namespace MaterialLib
 		}
 
 
+		public void SetMaterialTexture(string matName, string varName, string texName)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return;
+			}
+
+			if(!mSRVs.ContainsKey(texName))
+			{
+				return;
+			}
+
+			Material	mat	=mMats[matName];
+
+			if(mat.Shader == null)
+			{
+				return;
+			}
+			mat.SetEffectParameter(varName, mSRVs[texName]);
+		}
+
+
 		public void SetMaterialParameter(string matName, string varName, object value)
 		{
 			if(!mMats.ContainsKey(matName))
@@ -974,7 +1012,16 @@ namespace MaterialLib
 
 		void LoadTexture(Device dev, string path, string fileName)
 		{
-			string	extLess	=FileUtil.StripExtension(fileName);
+			int	texIndex	=path.LastIndexOf("Textures");
+
+			string	afterTex	="";
+
+			if((texIndex + 9) < path.Length)
+			{
+				afterTex	=path.Substring(texIndex + 9);
+			}
+
+			string	extLess	=afterTex + "\\" + FileUtil.StripExtension(fileName);
 
 			ImageLoadInformation	loadInfo	=new ImageLoadInformation();
 

@@ -95,7 +95,7 @@ namespace ParticleLib
 		}
 
 
-		internal Particle []Update(int msDelta, out int numParticles)
+		internal Particle []Update(float msDelta, out int numParticles)
 		{
 			numParticles	=0;
 

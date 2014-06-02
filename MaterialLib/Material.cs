@@ -583,6 +583,13 @@ namespace MaterialLib
 					break;
 				}
 
+				//use to investigate layout of a particlar technique
+//				if(mTechnique.Description.Name == "")
+//				{
+//					int	j=0;
+//					j++;
+//				}
+
 				Debug.Assert(ep.IsValid);
 
 				if(!ep.IsValid)

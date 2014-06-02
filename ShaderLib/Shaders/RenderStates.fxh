@@ -80,6 +80,11 @@ DepthStencilState DisableDepthTest
 	DepthFunc		=ALWAYS;
 };
 
+RasterizerState NoCull
+{
+	CullMode	=NONE;
+};
+
 SamplerState LinearClamp
 {
 	Filter		=MIN_MAG_MIP_LINEAR;

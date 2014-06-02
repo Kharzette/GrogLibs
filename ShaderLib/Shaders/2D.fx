@@ -20,10 +20,10 @@ VVPosTex03 ParticleVS(VPos4Tex04 input)
 	float4x4	viewProj	=mul(mView, mProjection);
 
 	//get view vector
-	float3	viewDir	=mView._m02_m12_m22;
+	float3	viewDir	=-mView._m02_m12_m22;
 
 	//all verts at 000, add instance pos
-	float3	pos	=input.Position.xyz;
+	float4	pos	=float4(input.Position.xyz, 1);
 	
 	//cross with up to get right
 	float3	rightVec	=normalize(cross(viewDir, float3(0, 1, 0)));
@@ -31,14 +31,12 @@ VVPosTex03 ParticleVS(VPos4Tex04 input)
 	//cross right with view to get good up
 	float3	upVec	=normalize(cross(rightVec, viewDir));
 
-	float3	ofs	=pos;
-
 	//quad offset mul by size stored in tex0.x
-	ofs	=rightVec * (input.Position.w - 0.5f) * input.TexCoord0.x;
-	ofs	+=upVec * (input.TexCoord0.w - 0.5f) * input.TexCoord0.x;
+	float4	ofs	=float4(rightVec * (input.Position.w - 0.5f) * input.TexCoord0.x, 1);
+	ofs.xyz		+=upVec * (input.TexCoord0.w - 0.5f) * input.TexCoord0.x;
 
 	//add in centerpoint
-	ofs	+=pos;
+	ofs.xyz	+=pos.xyz;
 
 	//screen transformed centerpoint
 	float4	screenPos	=mul(pos, viewProj);
@@ -145,26 +143,6 @@ float4 ParticlePS(VVPosTex03 input) : SV_Target
 	return	texLitColor;
 }
 
-float4 ParticleCelPS(VVPosTex03 input) : SV_Target
-{
-	//texture
-	float4	texel	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
-
-	//gamma
-	float4	texLitColor	=pow(abs(texel), 2.2);
-
-	//store alpha in z
-	texLitColor.w	*=input.TexCoord0.z;
-
-	texLitColor	*=mSolidColour;
-
-	texLitColor.xyz	=CalcCelColor(texLitColor.xyz);
-
-	texLitColor	=pow(abs(texLitColor), 1 / 2.2);
-
-	return	texLitColor;
-}
-
 //write to depth/material/normal if dense enough
 half4 ParticleDMNPS(VVPosTex03Tex13 input) : SV_Target
 {
@@ -190,26 +168,6 @@ half4 ParticleDMNPS(VVPosTex03Tex13 input) : SV_Target
 }
 
 
-technique10 ParticleCel
-{     
-	pass P0
-	{
-#if defined(SM5)
-		VertexShader	=compile vs_5_0 ParticleVS();
-		PixelShader		=compile ps_5_0 ParticleCelPS();
-#elif defined(SM41)
-		VertexShader	=compile vs_4_1 ParticleVS();
-		PixelShader		=compile ps_4_1 ParticleCelPS();
-#elif defined(SM4)
-		VertexShader	=compile vs_4_0 ParticleVS();
-		PixelShader		=compile ps_4_0 ParticleCelPS();
-#else
-		VertexShader	=compile vs_4_0_level_9_3 ParticleVS();
-		PixelShader		=compile ps_4_0_level_9_3 ParticleCelPS();
-#endif
-	}
-}
-
 technique10 Particle
 {     
 	pass P0
@@ -227,6 +185,9 @@ technique10 Particle
 		VertexShader	=compile vs_4_0_level_9_3 ParticleVS();
 		PixelShader		=compile ps_4_0_level_9_3 ParticlePS();
 #endif
+		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
+		SetRasterizerState(NoCull);
 	}
 }
 

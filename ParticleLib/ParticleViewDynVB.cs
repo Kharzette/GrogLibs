@@ -17,7 +17,7 @@ namespace ParticleLib
 	internal struct ParticleVert
 	{
 		internal Vector4	mPosition;
-		internal Vector4	mSizeRotAlpha;
+		internal Half4		mSizeRotAlpha;
 	}
 
 
@@ -30,28 +30,28 @@ namespace ParticleLib
 		ParticleVert		[]mPartBuf;
 
 		MatLib	mMatLib;
-		string	mMatName;
+		string	mTexName;
 
 		int		mNumParticles;
 		int		mMaxParticles;
 
 
-		internal ParticleViewDynVB(Device gd, MatLib mats, string matName, int maxParticles)
+		internal ParticleViewDynVB(Device gd, MatLib mats, string texName, int maxParticles)
 		{
 			mGD				=gd;
 			mMatLib			=mats;
 			mMaxParticles	=maxParticles;
-			mMatName		=matName;
+			mTexName		=texName;
 
 			mPartBuf	=new ParticleVert[maxParticles * 6];
 
 			BufferDescription	bDesc	=new BufferDescription(
-				maxParticles * 6 * 32,
+				maxParticles * 6 * 24,
 				ResourceUsage.Dynamic, BindFlags.VertexBuffer,
 				CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
 
 			mVB		=Buffer.Create<ParticleVert>(gd, mPartBuf, bDesc);
-			mVBB	=new VertexBufferBinding(mVB, 32, 0);
+			mVBB	=new VertexBufferBinding(mVB, 24, 0);
 		}
 
 
@@ -82,14 +82,20 @@ namespace ParticleLib
 				mPartBuf[i * 6 + 5].mPosition	=pos;
 
 				//texcoordx
-				mPartBuf[i * 6 + 1].mPosition.W	=1;
 				mPartBuf[i * 6 + 2].mPosition.W	=1;
 				mPartBuf[i * 6 + 4].mPosition.W	=1;
+				mPartBuf[i * 6 + 5].mPosition.W	=1;
+//				mPartBuf[i * 6 + 1].mPosition.W	=1;
+//				mPartBuf[i * 6 + 2].mPosition.W	=1;
+//				mPartBuf[i * 6 + 4].mPosition.W	=1;
 
 				//texcoordy
+				mPartBuf[i * 6 + 1].mSizeRotAlpha.W	=1;
 				mPartBuf[i * 6 + 2].mSizeRotAlpha.W	=1;
 				mPartBuf[i * 6 + 4].mSizeRotAlpha.W	=1;
-				mPartBuf[i * 6 + 5].mSizeRotAlpha.W	=1;
+//				mPartBuf[i * 6 + 2].mSizeRotAlpha.W	=1;
+//				mPartBuf[i * 6 + 4].mSizeRotAlpha.W	=1;
+//				mPartBuf[i * 6 + 5].mSizeRotAlpha.W	=1;
 
 				mPartBuf[i * 6].mSizeRotAlpha.X		=parts[i].mSize;
 				mPartBuf[i * 6 + 1].mSizeRotAlpha.X	=parts[i].mSize;
@@ -133,7 +139,8 @@ namespace ParticleLib
 //		}
 
 
-		internal void Draw(DeviceContext dc, Vector4 color, Matrix view, Matrix proj)
+		internal void Draw(DeviceContext dc, Vector4 color,
+			Matrix view, Matrix proj)
 		{
 			if(mNumParticles <= 0)
 			{
@@ -142,60 +149,56 @@ namespace ParticleLib
 
 			dc.InputAssembler.SetVertexBuffers(0, mVBB);
 
-			mMatLib.SetMaterialParameter(mMatName, "mSolidColour", color);
-			mMatLib.SetMaterialParameter(mMatName, "mView", view);
-			mMatLib.SetMaterialParameter(mMatName, "mProjection", proj);
+			mMatLib.SetMaterialParameter("Particle", "mSolidColour", color);
+			mMatLib.SetMaterialParameter("Particle", "mView", view);
+			mMatLib.SetMaterialParameter("Particle", "mProjection", proj);
+			mMatLib.SetMaterialTexture("Particle", "mTexture", mTexName);
 
-			mMatLib.ApplyMaterialPass(mMatName, dc, 0);
+			mMatLib.ApplyMaterialPass("Particle", dc, 0);
 
 			dc.Draw(mNumParticles * 6, 0);
 		}
 
 
 		//write into the depth/normal/material buffer
-		/*
-		internal void DrawDMN(Vector4 color, Matrix view, Matrix proj, Vector3 eyePos)
+		internal void DrawDMN(DeviceContext dc, Vector4 color,
+			Matrix view, Matrix proj, Vector3 eyePos)
 		{
 			if(mNumParticles <= 0)
 			{
 				return;
 			}
 
-			mGD.SetVertexBuffer(mVB);
+			dc.InputAssembler.SetVertexBuffers(0, mVBB);
 
-			mFX.CurrentTechnique	=mFX.Techniques["ParticleDMN"];
+			mMatLib.SetMaterialParameter("ParticleDMN", "mView", view);
+			mMatLib.SetMaterialParameter("ParticleDMN", "mProjection", proj);
+			mMatLib.SetMaterialTexture("ParticleDMN", "mTexture", mTexName);
 
-			mFX.Parameters["mTexture"].SetValue(mTex);
-			mFX.Parameters["mView"].SetValue(view);
-			mFX.Parameters["mProjection"].SetValue(proj);
-			mFX.Parameters["mEyePos"].SetValue(eyePos);
+			mMatLib.ApplyMaterialPass("ParticleDMN", dc, 0);
 
-			mFX.CurrentTechnique.Passes[0].Apply();
-
-			mGD.DrawPrimitives(PrimitiveType.TriangleList, 0, mNumParticles * 2);
-
-			mGD.SetVertexBuffer(null);
-		}*/
+			dc.Draw(mNumParticles * 6, 0);
+		}
 
 
 		//adds on to the end
 		internal string GetEntityFields(string ent)
 		{
-			ParticleBoss.AddField(ref ent, "mat_name", mMatName);
+			ParticleBoss.AddField(ref ent, "mat_name", mTexName);
 
 			return	ent;
 		}
 
 
-		internal void SetMaterial(string mat)
+		internal void SetTexture(string tex)
 		{
-			mMatName	=mat;
+			mTexName	=tex;
 		}
 
 
-		internal string GetMaterial()
+		internal string GetTexture()
 		{
-			return	mMatName;
+			return	mTexName;
 		}
 	}
 }

@@ -12,7 +12,7 @@ namespace ParticleLib
 		internal float		mSize;
 		internal float		mRotation;
 		internal float		mAlpha;
-		internal int		mLifeRemaining;
+		internal float		mLifeRemaining;
 
 		internal Vector3	mVelocity;
 		internal float		mRotationalVelocity;
@@ -21,7 +21,7 @@ namespace ParticleLib
 
 
 		//return true if expired
-		internal bool Update(int msDelta, Vector3 gravity)
+		internal bool Update(float msDelta, Vector3 gravity)
 		{
 			mLifeRemaining	-=msDelta;
 			if(mLifeRemaining < 0)
