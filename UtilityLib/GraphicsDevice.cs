@@ -21,6 +21,7 @@ namespace UtilityLib
 		RenderForm	mRForm;
 
 		Device			mGD;
+		DeviceDebug		mGDD;
 		DeviceContext	mDC;
 
 		SwapChain	mSChain;
@@ -91,6 +92,8 @@ namespace UtilityLib
 
 			Device.CreateWithSwapChain(adpt, DeviceCreationFlags.Debug, features,
 				scDesc, out mGD, out mSChain);
+
+			mGDD	=new DeviceDebug(mGD);
 
 			adpt.Dispose();
 
@@ -209,6 +212,9 @@ namespace UtilityLib
 
 		public void ReleaseAll()
 		{
+			mDC.ClearState();
+			mDC.Flush();
+
 			mBBView.Dispose();
 			mBackBuffer.Dispose();
 			mDSView.Dispose();
@@ -216,6 +222,10 @@ namespace UtilityLib
 			mDC.Dispose();
 			mSChain.Dispose();
 			mGD.Dispose();
+
+			mGDD.ReportLiveDeviceObjects(ReportingLevel.Detail);
+
+			mGDD.Dispose();
 		}
 
 

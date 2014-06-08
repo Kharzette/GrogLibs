@@ -43,6 +43,15 @@ namespace ParticleLib
 		}
 
 
+		public void FreeAll()
+		{
+			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
+			{
+				em.Value.mView.FreeAll();
+			}
+		}
+
+
 		//if tied into a matlib that does io or clears,
 		//this will recreate the needed materials
 		public void CreateParticleMats()
@@ -57,7 +66,7 @@ namespace ParticleLib
 		}
 
 
-		public int CreateEmitter(string matName, Vector4 color,
+		public int CreateEmitter(string texName, Vector4 color,
 			Emitter.Shapes shape, float shapeSize,
 			int maxParticles, Vector3 pos,
 			int gravYaw, int gravPitch, float gravStr,
@@ -65,7 +74,7 @@ namespace ParticleLib
 			float rotVelMin, float rotVelMax, float velMin,
 			float velMax, float sizeVelMin, float sizeVelMax,
 			float alphaVelMin, float alphaVelMax,
-			int lifeMin, int lifeMax)
+			int lifeMin, int lifeMax, int sortPri)
 		{
 			Emitter	newEmitter	=new Emitter(
 				maxParticles, shape, shapeSize, pos,
@@ -73,11 +82,11 @@ namespace ParticleLib
 				startSize, startAlpha, emitMS,
 				rotVelMin, rotVelMax, velMin, velMax,
 				sizeVelMin, sizeVelMax, alphaVelMin, alphaVelMax,
-				lifeMin, lifeMax);
+				lifeMin, lifeMax, sortPri);
 
 			newEmitter.Activate(true);
 			
-			ParticleViewDynVB	pvd	=new ParticleViewDynVB(mGD, mMats, matName, maxParticles);
+			ParticleViewDynVB	pvd	=new ParticleViewDynVB(mGD, mMats, texName, maxParticles);
 
 			EmitterData	ed	=new EmitterData();
 			ed.mColor		=color;
@@ -205,6 +214,176 @@ namespace ParticleLib
 		internal static void AddField(ref string ent, string fieldName, string value)
 		{
 			ent	+="    " + fieldName + " = \"" + value + "\"\n";
+		}
+
+
+		string GrabValue(string line)
+		{
+			int	quoteIndex	=line.IndexOf('\"');
+			if(quoteIndex < 0)
+			{
+				return	"";
+			}
+
+			string	fromQuote	=line.Substring(quoteIndex + 1);
+
+			quoteIndex	=fromQuote.IndexOf('\"');
+			if(quoteIndex < 0)
+			{
+				return	"";
+			}
+
+			return	fromQuote.Substring(0, quoteIndex);
+		}
+
+
+		public int CreateEmitterFromQuArK(string entityText)
+		{
+			if(!entityText.StartsWith("QQRKSRC1"))
+			{
+				//doesn't look like this came from quarkland
+				return	-1;
+			}
+
+			int		maxPart, shape, shapeSize, gravYaw, gravPitch, sortPri;
+			float	gravStr, startSize, startAlpha;
+			float	velMin, velMax, sizeMin, sizeMax, spinMin, spinMax;
+			float	alphaMin, alphaMax, lifeMin, lifeMax, emitMS;
+			string	texName	="";
+			Vector4	color	=Vector4.Zero;
+
+			//initialize, annoying
+			maxPart		=1000;		shape		=(int)Emitter.Shapes.Point;
+			shapeSize	=10;		gravYaw		=-90;
+			gravStr		=0.001f;	startSize	=4;
+			startAlpha	=1f;		spinMin		=0;
+			spinMax		=0;			velMin		=-0.1f;
+			velMax		=.1f;		sizeMin		=-0.1f;
+			sizeMax		=.1f;		alphaMin	=-0.1f;
+			alphaMax	=.1f;		lifeMin		=4000;
+			lifeMax		=8000;		emitMS		=0.04f;
+			gravPitch	=0;			sortPri		=0;
+
+			string	[]lines	=entityText.Split('\n');
+			foreach(string line in lines)
+			{
+				string	trimmed	=line.TrimStart();
+
+				if(trimmed.StartsWith("max_particles"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out maxPart);
+				}
+				else if(trimmed.StartsWith("shape_size"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out shapeSize);
+				}
+				else if(trimmed.StartsWith("shape"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out shape);
+				}
+				else if(trimmed.StartsWith("grav_yaw"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out gravYaw);
+				}
+				else if(trimmed.StartsWith("grav_pitch"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out gravPitch);
+				}
+				else if(trimmed.StartsWith("grav_strength"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out gravStr);
+				}
+				else if(trimmed.StartsWith("start_size"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out startSize);
+				}
+				else if(trimmed.StartsWith("start_alpha"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out startAlpha);
+				}
+				else if(trimmed.StartsWith("emit_ms"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out emitMS);
+				}
+				else if(trimmed.StartsWith("velocity_min"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out velMin);
+				}
+				else if(trimmed.StartsWith("velocity_max"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out velMax);
+				}
+				else if(trimmed.StartsWith("size_velocity_min"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out sizeMin);
+				}
+				else if(trimmed.StartsWith("size_velocity_max"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out sizeMax);
+				}
+				else if(trimmed.StartsWith("spin_velocity_min"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out spinMin);
+				}
+				else if(trimmed.StartsWith("spin_velocity_max"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out spinMax);
+				}
+				else if(trimmed.StartsWith("alpha_velocity_min"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out alphaMin);
+				}
+				else if(trimmed.StartsWith("alpha_velocity_max"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out alphaMax);
+				}
+				else if(trimmed.StartsWith("lifetime_min"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out lifeMin);
+				}
+				else if(trimmed.StartsWith("lifetime_max"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out lifeMax);
+				}
+				else if(trimmed.StartsWith("sort_priority"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out sortPri);
+				}
+				else if(trimmed.StartsWith("tex_name"))
+				{
+					texName	=GrabValue(trimmed);
+				}
+				else if(trimmed.StartsWith("color"))
+				{
+					Vector3	col;
+					col	=Misc.StringToVector3(GrabValue(trimmed));
+					color.X	=col.X;
+					color.Y	=col.Y;
+					color.Z	=col.Z;
+				}
+				else if(trimmed.StartsWith("alpha"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out color.W);
+				}
+			}
+
+			//scale some to millisecond values
+			spinMin		/=1000f;
+			spinMax		/=1000f;
+			velMin		/=1000f;
+			velMax		/=1000f;
+			sizeMin		/=1000f;
+			sizeMax		/=1000f;
+			alphaMin	/=1000f;
+			alphaMax	/=1000f;
+			lifeMin		*=1000;
+			lifeMax		*=1000;
+
+			return	CreateEmitter(texName, color, (Emitter.Shapes)shape, shapeSize,
+				maxPart, Vector3.Zero, gravYaw, gravPitch, gravStr,
+				startSize, startAlpha, emitMS, spinMin, spinMax, velMin,
+				velMax, sizeMin, sizeMax, alphaMin, alphaMax,
+				(int)lifeMin, (int)lifeMax, sortPri);
 		}
 
 		

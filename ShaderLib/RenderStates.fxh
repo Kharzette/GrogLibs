@@ -13,7 +13,27 @@ BlendState AlphaBlending
 	BlendEnable[5]				=TRUE;
 	BlendEnable[6]				=TRUE;
 	BlendEnable[7]				=TRUE;
-	SrcBlend					=SRC_ALPHA;
+	SrcBlend					=ONE;
+	DestBlend					=INV_SRC_ALPHA;
+	BlendOp						=ADD;
+	SrcBlendAlpha				=ZERO;
+	DestBlendAlpha				=ZERO;
+	BlendOpAlpha				=ADD;
+	RenderTargetWriteMask[0]	=0x0F;
+};
+
+BlendState AlphaAdditiveBlending
+{
+	AlphaToCoverageEnable		=FALSE;
+	BlendEnable[0]				=TRUE;
+	BlendEnable[1]				=TRUE;
+	BlendEnable[2]				=TRUE;
+	BlendEnable[3]				=TRUE;
+	BlendEnable[4]				=TRUE;
+	BlendEnable[5]				=TRUE;
+	BlendEnable[6]				=TRUE;
+	BlendEnable[7]				=TRUE;
+	SrcBlend					=ONE;
 	DestBlend					=INV_SRC_ALPHA;
 	BlendOp						=ADD;
 	SrcBlendAlpha				=ZERO;

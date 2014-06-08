@@ -144,6 +144,13 @@ namespace InputLib
 		}
 
 
+		public void FreeAll()
+		{
+			Device.KeyboardInput	-=OnKeyInput;
+			Device.MouseInput		-=OnMouseInput;
+		}
+
+
 		void OnMouseInput(object sender, MouseInputEventArgs miea)
 		{
 			if(mbResetPos)

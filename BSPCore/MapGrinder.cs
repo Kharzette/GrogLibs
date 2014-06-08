@@ -145,7 +145,8 @@ namespace BSPCore
 		internal delegate void FinishUp(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs);
 		internal delegate void FinishUpAlpha(int modelIndex, List<Dictionary<Int32, DrawDataChunk>> perPlaneChunk, ref UInt16 vertOfs);
 
-		public MapGrinder(GraphicsDevice gd, MatLib matLib,
+		public MapGrinder(GraphicsDevice gd,
+			string gameRoot, MatLib matLib,
 			GFXTexInfo []texs, GFXFace []faces,
 			int lightGridSize, int atlasSize)
 		{
@@ -157,7 +158,7 @@ namespace BSPCore
 
 			if(mMatLib == null)
 			{
-				mMatLib	=new MatLib(gd.GD, gd.GD.FeatureLevel, true);
+				mMatLib	=new MatLib(gd, gameRoot, true);
 			}
 
 			if(gd != null)

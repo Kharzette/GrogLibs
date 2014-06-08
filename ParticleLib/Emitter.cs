@@ -38,6 +38,10 @@ namespace ParticleLib
 		public float	mGravityStrength;
 		Vector3			mGravity;
 
+		//if two emitters occupy the same location, higher
+		//priority emitters render first
+		public int	mSortPriority;
+
 		//state data
 		public bool	mbOn;
 		bool		mbBuffer;
@@ -55,7 +59,7 @@ namespace ParticleLib
 			float rotVelMin, float rotVelMax, float velMin,
 			float velMax, float sizeVelMin, float sizeVelMax,
 			float alphaVelMin, float alphaVelMax,
-			int lifeMin, int lifeMax)
+			int lifeMin, int lifeMax, int sortPri)
 		{
 			mShape					=shape;
 			mShapeSize				=shapeSize;
@@ -76,6 +80,7 @@ namespace ParticleLib
 			mAlphaVelocityMax		=alphaVelMax;
 			mLifeMin				=lifeMin;
 			mLifeMax				=lifeMax;
+			mSortPriority			=sortPri;
 
 			mLineAxis	=Vector3.UnitX;	//default
 
@@ -244,8 +249,6 @@ namespace ParticleLib
 			ParticleBoss.AddField(ref entity, "start_size", "" + Misc.FloatToString(mStartSize, 1));
 			ParticleBoss.AddField(ref entity, "start_alpha", "" + Misc.FloatToString(mStartAlpha, 2));
 			ParticleBoss.AddField(ref entity, "emit_ms", "" + Misc.FloatToString(mEmitMS, 3));
-			ParticleBoss.AddField(ref entity, "rot_velocity_min", "" + Misc.FloatToString(mRotationalVelocityMin * 1000f, 2));
-			ParticleBoss.AddField(ref entity, "rot_velocity_max", "" + Misc.FloatToString(mRotationalVelocityMax * 1000f, 2));
 			ParticleBoss.AddField(ref entity, "velocity_min", "" + Misc.FloatToString(mVelocityMin * 1000f, 2));
 			ParticleBoss.AddField(ref entity, "velocity_max", "" + Misc.FloatToString(mVelocityMax * 1000f, 2));
 			ParticleBoss.AddField(ref entity, "size_velocity_min", "" + Misc.FloatToString(mSizeVelocityMin * 1000f, 2));

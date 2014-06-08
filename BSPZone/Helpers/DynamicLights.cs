@@ -68,6 +68,14 @@ namespace BSPZone
 		}
 
 
+		public void FreeAll()
+		{
+			mDynSRV.Dispose();
+			mDynLights.Dispose();
+			mFX.Dispose();
+		}
+
+
 		public Dictionary<int, Zone.ZoneLight> GetZoneLights()
 		{
 			return	mDynZoneLights;

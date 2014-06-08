@@ -55,6 +55,12 @@ namespace ParticleLib
 		}
 
 
+		internal void FreeAll()
+		{
+			mVB	=null;
+		}
+
+
 		internal void Update(DeviceContext dc, Particle []parts, int count)
 		{
 			mNumParticles	=count;

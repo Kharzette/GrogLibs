@@ -105,6 +105,12 @@ namespace MaterialLib
 		{
 			mEffect		=null;
 			mTechnique	=null;
+
+			foreach(InputLayout il in mLayouts)
+			{
+				il.Dispose();
+			}
+
 			mLayouts.Clear();
 			mVars.Clear();
 		}

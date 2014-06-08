@@ -26,6 +26,15 @@ namespace MeshLib
 		}
 
 
+		public void FreeAll()
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				m.FreeAll();
+			}
+		}
+
+
 		public Matrix GetTransform()
 		{
 			return	mTransform;

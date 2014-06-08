@@ -192,6 +192,13 @@ namespace MaterialLib
 		}
 
 
+		public void FreeAll()
+		{
+			mSRV.Dispose();
+			mAtlasTexture.Dispose();
+		}
+
+
 		public ShaderResourceView GetAtlasSRV()
 		{
 			return	mSRV;

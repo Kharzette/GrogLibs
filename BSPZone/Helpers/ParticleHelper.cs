@@ -48,7 +48,7 @@ namespace BSPZone
 				Vector4	color;
 				Vector3	col, pos;
 				bool	bOn;
-				int		shapeIdx, maxParticles;
+				int		shapeIdx, maxParticles, sortPri;
 				float	gravYaw, gravPitch, shapeSize;
 				float	gravStr, startSize, startAlpha, emitMS;
 				float	velMin, velMax;
@@ -89,6 +89,7 @@ namespace BSPZone
 				Mathery.TryParse(ze.GetValue("alpha_velocity_max"), out alphaVelMax);
 				Mathery.TryParse(ze.GetValue("lifetime_min"), out lifeMin);
 				Mathery.TryParse(ze.GetValue("lifetime_max"), out lifeMax);
+				Mathery.TryParse(ze.GetValue("sort_priority"), out sortPri);
 
 				int	bVal;
 				Mathery.TryParse(ze.GetValue("activated"), out bVal);
@@ -124,7 +125,8 @@ namespace BSPZone
 					pos, (int)gravYaw, (int)gravPitch, gravStr,
 					startSize, startAlpha, emitMS, spinVelMin, spinVelMax,
 					velMin, velMax, sizeVelMin, sizeVelMax,
-					alphaVelMin, alphaVelMax, (int)lifeMin, (int)lifeMax);
+					alphaVelMin, alphaVelMax,
+					(int)lifeMin, (int)lifeMax, sortPri);
 
 				if(idx == -1)
 				{

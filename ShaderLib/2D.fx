@@ -128,15 +128,12 @@ float4 ParticlePS(VVPosTex03 input) : SV_Target
 	//texture
 	float4	texel	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
 
-	//gamma
-	texel	=pow(abs(texel), 2.2);
-
 	float4	texLitColor	=texel * mSolidColour;
 
 	//store alpha in z
 	texLitColor.w	*=input.TexCoord0.z;
 
-	texLitColor	=pow(abs(texLitColor), 1 / 2.2);
+//	texLitColor.xyz	*=texLitColor.w;
 
 	return	texLitColor;
 }
@@ -147,14 +144,11 @@ half4 ParticleDMNPS(VVPosTex03Tex13 input) : SV_Target
 	//texture
 	float4	texel	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
 
-	//gamma
-	float4	texLitColor	=pow(abs(texel), 2.2);
+	texel.w	*=input.TexCoord0.z;
 
-	texLitColor.w	*=input.TexCoord0.z;
+	texel	*=mSolidColour;
 
-	texLitColor	*=mSolidColour;
-
-	clip(texLitColor.w - OUTLINE_ALPHA_THRESHOLD);
+	clip(texel.w - OUTLINE_ALPHA_THRESHOLD);
 
 	half4	ret;
 
@@ -183,7 +177,7 @@ technique10 Particle
 		VertexShader	=compile vs_4_0_level_9_3 ParticleVS();
 		PixelShader		=compile ps_4_0_level_9_3 ParticlePS();
 #endif
-		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetBlendState(AlphaAdditiveBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
 		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 }

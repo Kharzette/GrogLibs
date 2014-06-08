@@ -26,6 +26,13 @@ namespace MaterialLib
 	{
 		internal class IncludeFX : CallbackBase, Include
 		{
+			string	mRootDir;
+
+			internal IncludeFX(string rootDir)
+			{
+				mRootDir	=rootDir;
+			}
+
 			static string includeDirectory = "Shaders\\";
 			public void Close(Stream stream)
 			{
@@ -35,11 +42,14 @@ namespace MaterialLib
 
 			public Stream Open(IncludeType type, string fileName, Stream parentStream)
 			{
-				return	new FileStream(includeDirectory + fileName, FileMode.Open);
+				return	new FileStream(mRootDir + "\\" + includeDirectory + fileName, FileMode.Open);
 			}
 		}
 
-		IncludeFX	mIFX	=new IncludeFX();
+		IncludeFX	mIFX;
+
+		//game directory
+		string	mGameRootDir;
 
 		//list of materials in the library (user or tool made)
 		Dictionary<string, Material>	mMats	=new Dictionary<string, Material>();
@@ -334,41 +344,38 @@ namespace MaterialLib
 		}
 
 
-		//editor constructor, loads or compiles all
-		public MaterialLib(Device dev, ShaderModel sm, bool bUsePreCompiled)
+		public MaterialLib(GraphicsDevice gd, string gameRootDir, bool bUsePreCompiled)
 		{
-			Construct(dev, sm, bUsePreCompiled);
-		}
+			mGameRootDir	=gameRootDir;
+			mIFX			=new IncludeFX(gameRootDir);
 
-
-		public MaterialLib(Device dev, FeatureLevel fl, bool bUsePreCompiled)
-		{
-			switch(fl)
+			switch(gd.GD.FeatureLevel)
 			{
 				case	FeatureLevel.Level_11_0:
-					Construct(dev, ShaderModel.SM5, bUsePreCompiled);
+					Construct(gd, ShaderModel.SM5, bUsePreCompiled);
 					break;
 				case	FeatureLevel.Level_10_1:
-					Construct(dev, ShaderModel.SM41, bUsePreCompiled);
+					Construct(gd, ShaderModel.SM41, bUsePreCompiled);
 					break;
 				case	FeatureLevel.Level_10_0:
-					Construct(dev, ShaderModel.SM4, bUsePreCompiled);
+					Construct(gd, ShaderModel.SM4, bUsePreCompiled);
 					break;
 				case	FeatureLevel.Level_9_3:
-					Construct(dev, ShaderModel.SM2, bUsePreCompiled);
+					Construct(gd, ShaderModel.SM2, bUsePreCompiled);
 					break;
 				default:
 					Debug.Assert(false);	//only support the above
-					Construct(dev, ShaderModel.SM2, bUsePreCompiled);
+					Construct(gd, ShaderModel.SM2, bUsePreCompiled);
 					break;
 			}
 		}
 
 
-		void Construct(Device dev, ShaderModel sm, bool bUsePreCompiled)
+		void Construct(GraphicsDevice gd, ShaderModel sm, bool bUsePreCompiled)
 		{
-			LoadShaders(dev, sm, bUsePreCompiled);
-			LoadResources(dev);
+			LoadShaders(gd.GD, sm, bUsePreCompiled);
+			SaveHeaderTimeStamps();
+			LoadResources(gd);
 			LoadParameterData();
 
 			GrabVariables();
@@ -415,11 +422,47 @@ namespace MaterialLib
 
 			mIgnoreData.Clear();
 			mHiddenData.Clear();
+
+			//celstuff
+			if(mCelResources != null)
+			{
+				foreach(ShaderResourceView srv in mCelResources)
+				{
+					srv.Dispose();
+				}
+			}
+			if(mCelTex2Ds != null)
+			{
+				foreach(Texture2D tex in mCelTex2Ds)
+				{
+					if(tex != null)
+					{
+						tex.Dispose();
+					}
+				}
+			}
+			if(mCelTex1Ds != null)
+			{
+				foreach(Texture1D tex in mCelTex1Ds)
+				{
+					if(tex != null)
+					{
+						tex.Dispose();
+					}
+				}
+			}
+			mCelResources	=null;
+			mCelTex2Ds		=null;
+			mCelTex1Ds		=null;
 		}
 
 
 		public void NukeAllMaterials()
 		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				mat.Value.Clear();
+			}
 			mMats.Clear();
 		}
 
@@ -870,18 +913,17 @@ namespace MaterialLib
 		}
 
 
-		void LoadResources(Device dev)
+		void LoadResources(GraphicsDevice gd)
 		{
 			//see if Textures folder exists in Content
-			if(Directory.Exists("Textures"))
+			if(Directory.Exists(mGameRootDir + "/Textures"))
 			{
-				DirectoryInfo	di	=new DirectoryInfo(
-					AppDomain.CurrentDomain.BaseDirectory + "/Textures/");
+				DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Textures/");
 
 				FileInfo[]		fi	=di.GetFiles("*.png", SearchOption.AllDirectories);
 				foreach(FileInfo f in fi)
 				{
-					LoadTexture(dev, f.DirectoryName, f.Name);
+					LoadTexture(gd, f.DirectoryName, f.Name);
 				}
 			}
 		}
@@ -895,25 +937,24 @@ namespace MaterialLib
 			macs[0]	=new ShaderMacro(sm.ToString(), 1);
 
 			//see if Shader folder exists in Content
-			if(Directory.Exists("Shaders"))
+			if(Directory.Exists(mGameRootDir + "/Shaders"))
 			{
-				DirectoryInfo	di	=new DirectoryInfo(
-					AppDomain.CurrentDomain.BaseDirectory + "/Shaders/");
+				DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Shaders/");
+
+				bool	bHeaderSame	=CheckHeaderTimeStamps(di);
 
 				FileInfo[]		fi	=di.GetFiles("*.fx", SearchOption.AllDirectories);
 				foreach(FileInfo f in fi)
 				{
-					if(bUsePreCompiled)
+					if(bUsePreCompiled && bHeaderSame)
 					{
-						if(Directory.Exists("CompiledShaders"))
+						if(Directory.Exists(mGameRootDir + "/CompiledShaders"))
 						{
 							//see if a precompiled exists
-							if(Directory.Exists(AppDomain.CurrentDomain.BaseDirectory +
-								"/CompiledShaders/" + macs[0].Name))
+							if(Directory.Exists(mGameRootDir + "/CompiledShaders/" + macs[0].Name))
 							{
 								DirectoryInfo	preDi	=new DirectoryInfo(
-									AppDomain.CurrentDomain.BaseDirectory +
-									"/CompiledShaders/" + macs[0].Name);
+									mGameRootDir + "/CompiledShaders/" + macs[0].Name);
 
 								FileInfo[]	preFi	=preDi.GetFiles(f.Name + ".Compiled", SearchOption.TopDirectoryOnly);
 
@@ -928,7 +969,6 @@ namespace MaterialLib
 							}
 						}
 					}
-
 					LoadShader(dev, f.DirectoryName, f.Name, macs);
 				}
 			}
@@ -954,16 +994,115 @@ namespace MaterialLib
 		}
 
 
-		void LoadShader(Device dev, string dir, string file, ShaderMacro []macs)
+		void SaveHeaderTimeStamps()
 		{
-			if(!Directory.Exists("CompiledShaders"))
+			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Shaders/");
+
+			FileStream	fs	=new FileStream(
+				di.FullName + "Header.TimeStamps",
+				FileMode.Create, FileAccess.Write);
+
+			Debug.Assert(fs != null);
+
+			BinaryWriter	bw	=new BinaryWriter(fs);
+
+			Dictionary<string, DateTime>	stamps	=GetHeaderTimeStamps(di);
+
+			bw.Write(stamps.Count);
+			foreach(KeyValuePair<string, DateTime> time in stamps)
 			{
-				Directory.CreateDirectory("CompiledShaders");
+				bw.Write(time.Key);
+				bw.Write(time.Value.Ticks);
 			}
 
-			if(!Directory.Exists("CompiledShaders/" + macs[0].Name))
+			bw.Close();
+			fs.Close();
+		}
+
+
+		Dictionary<string, DateTime> GetHeaderTimeStamps(DirectoryInfo di)
+		{
+			FileInfo[]		fi	=di.GetFiles("*.fxh", SearchOption.AllDirectories);
+
+			Dictionary<string, DateTime>	ret	=new Dictionary<string, DateTime>();
+
+			foreach(FileInfo f in fi)
 			{
-				Directory.CreateDirectory("CompiledShaders/" + macs[0].Name);
+				ret.Add(f.Name, f.LastWriteTime);
+			}
+			return	ret;
+		}
+
+
+		//returns true if headers haven't changed
+		bool CheckHeaderTimeStamps(DirectoryInfo di)
+		{
+			//see if there is a binary file here that contains the
+			//timestamps of the fxh files
+			FileInfo[]	hTime	=di.GetFiles("Header.TimeStamps", SearchOption.TopDirectoryOnly);
+			if(hTime.Length != 1)
+			{
+				return	false;
+			}
+
+			FileStream	fs	=new FileStream(hTime[0].DirectoryName + "\\" + hTime[0].Name, FileMode.Open, FileAccess.Read);
+			if(fs == null)
+			{
+				return	false;
+			}
+
+			BinaryReader	br	=new BinaryReader(fs);
+
+			Dictionary<string, DateTime>	times	=new Dictionary<string, DateTime>();
+
+			int	count	=br.ReadInt32();
+			for(int i=0;i < count;i++)
+			{
+				string	fileName	=br.ReadString();
+				long	time		=br.ReadInt64();
+
+				DateTime	t	=new DateTime(time);
+
+				times.Add(fileName, t);
+			}
+
+			br.Close();
+			fs.Close();
+
+			Dictionary<string, DateTime>	onDisk	=GetHeaderTimeStamps(di);
+
+			//check the timestamp data against the dates
+			if(onDisk.Count != times.Count)
+			{
+				return	false;
+			}
+
+			foreach(KeyValuePair<string, DateTime> tstamp in onDisk)
+			{
+				if(!times.ContainsKey(tstamp.Key))
+				{
+					return	false;
+				}
+
+				if(times[tstamp.Key] < tstamp.Value)
+				{
+					return	false;
+				}
+			}
+			return	true;
+		}
+
+
+		void LoadShader(Device dev, string dir, string file, ShaderMacro []macs)
+		{
+			if(!Directory.Exists(mGameRootDir + "/CompiledShaders"))
+			{
+				Directory.CreateDirectory(mGameRootDir + "/CompiledShaders");
+			}
+
+			if(!Directory.Exists(mGameRootDir + "/CompiledShaders/" + macs[0].Name))
+			{
+				Directory.CreateDirectory(mGameRootDir + "/CompiledShaders/" + macs[0].Name);
 			}
 
 			string	fullPath	=dir + "\\" + file;
@@ -994,7 +1133,7 @@ namespace MaterialLib
 				}
 			}
 
-			FileStream	fs	=new FileStream("CompiledShaders/"
+			FileStream	fs	=new FileStream(mGameRootDir + "/CompiledShaders/"
 				+ macs[0].Name + "/" + file + ".Compiled",
 				FileMode.Create, FileAccess.Write);
 
@@ -1010,7 +1149,7 @@ namespace MaterialLib
 		}
 
 
-		void LoadTexture(Device dev, string path, string fileName)
+		void LoadTexture(GraphicsDevice gd, string path, string fileName)
 		{
 			int	texIndex	=path.LastIndexOf("Textures");
 
@@ -1033,26 +1172,62 @@ namespace MaterialLib
 
 			ImageLoadInformation	loadInfo	=new ImageLoadInformation();
 
-			loadInfo.BindFlags		=BindFlags.ShaderResource;
-			loadInfo.CpuAccessFlags	=CpuAccessFlags.None;
+			loadInfo.BindFlags		=BindFlags.None;
+			loadInfo.CpuAccessFlags	=CpuAccessFlags.Read | CpuAccessFlags.Write;
 			loadInfo.Depth			=0;
-			loadInfo.Filter			=FilterFlags.SRgbIn | FilterFlags.None;	//pngs are srgb
-			loadInfo.Format			=Format.R8G8B8A8_UNorm_SRgb;
-			loadInfo.Usage			=ResourceUsage.Immutable;
+			loadInfo.Filter			=FilterFlags.None;
+			loadInfo.Format			=Format.R8G8B8A8_UNorm;
+			loadInfo.Usage			=ResourceUsage.Staging;
 
-			Resource	res	=Texture2D.FromFile(dev, path + "\\" + fileName, loadInfo);
-
-			if(res != null)
+			Resource	res	=Texture2D.FromFile(gd.GD, path + "\\" + fileName, loadInfo);
+			if(res == null)
 			{
-				mResources.Add(extLess, res);
-				mTexture2s.Add(extLess, res as Texture2D);
-
-				ShaderResourceView	srv	=new ShaderResourceView(dev, res);
-
-				srv.DebugName	=extLess;
-
-				mSRVs.Add(extLess, srv);
+				return;
 			}
+
+			DataBox	db	=gd.DC.MapSubresource(res, 0, MapMode.Read, SharpDX.Direct3D11.MapFlags.None);
+
+			Texture2D	tex	=res as Texture2D;
+
+			PreMultAndLinear(db, tex.Description.Width * tex.Description.Height);
+
+			Texture2D	finalTex	=MakeTexture(gd.GD, db, tex.Description.Width, tex.Description.Height);
+
+			mResources.Add(extLess, finalTex as Resource);
+			mTexture2s.Add(extLess, finalTex);
+
+			ShaderResourceView	srv	=new ShaderResourceView(gd.GD, finalTex);
+
+			srv.DebugName	=extLess;
+
+			mSRVs.Add(extLess, srv);
+
+			tex.Dispose();
+			res.Dispose();
+		}
+
+
+		Texture2D MakeTexture(Device dev, DataBox db, int width, int height)
+		{
+			Texture2DDescription	texDesc	=new Texture2DDescription();
+			texDesc.ArraySize				=1;
+			texDesc.BindFlags				=BindFlags.ShaderResource;
+			texDesc.CpuAccessFlags			=CpuAccessFlags.None;
+			texDesc.MipLevels				=1;
+			texDesc.OptionFlags				=ResourceOptionFlags.None;
+			texDesc.Usage					=ResourceUsage.Immutable;
+			texDesc.Width					=width;
+			texDesc.Height					=height;
+			texDesc.Format					=Format.R8G8B8A8_UNorm;
+			texDesc.SampleDescription		=new SampleDescription(1, 0);
+
+			DataBox	[]dbs	=new DataBox[1];
+
+			dbs[0]	=db;
+
+			Texture2D	tex	=new Texture2D(dev, texDesc, dbs);
+
+			return	tex;
 		}
 
 
@@ -1078,6 +1253,37 @@ namespace MaterialLib
 					}
 					mVars[fx.Key].Add(ev);
 				}
+			}
+		}
+
+
+		unsafe void PreMultAndLinear(DataBox db, int len)
+		{
+			if(db.IsEmpty)
+			{
+				return;
+			}
+
+			var	pSrc	=(Color *)@db.DataPointer;
+
+			for(int i=0;i < len;i++)
+			{
+				Color	c	=*(pSrc + i);
+
+				Vector4	vColor	=c.ToVector4();
+
+				//convert to linear
+				vColor.X	=(float)Math.Pow(vColor.X, 2.2);
+				vColor.Y	=(float)Math.Pow(vColor.Y, 2.2);
+				vColor.Z	=(float)Math.Pow(vColor.Z, 2.2);
+
+				vColor.X	*=vColor.W;
+				vColor.Y	*=vColor.W;
+				vColor.Z	*=vColor.W;
+
+				Color	done	=new Color(vColor);
+
+				*(pSrc + i)	=done;
 			}
 		}
 
@@ -1108,7 +1314,7 @@ namespace MaterialLib
 
 		void LoadParameterData()
 		{
-			FileStream		fs	=new FileStream("Shaders/ParameterData.txt", FileMode.Open, FileAccess.Read);
+			FileStream		fs	=new FileStream(mGameRootDir + "/Shaders/ParameterData.txt", FileMode.Open, FileAccess.Read);
 			StreamReader	sr	=new StreamReader(fs);
 
 			string			curTechnique	="";

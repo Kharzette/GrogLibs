@@ -91,7 +91,7 @@ namespace MeshLib
 
 		//tool side delegates for building the indoor mesh
 		//from raw parts
-		public delegate bool BuildLMRenderData(GraphicsDevice g,
+		public delegate bool BuildLMRenderData(GraphicsDevice g, string gameRoot,
 			//lightmap stuff
 			out int lmIndex,
 			out Array lmVerts,
@@ -120,24 +120,24 @@ namespace MeshLib
 			object pp,
 			out MaterialLib.TexAtlas lightAtlas);
 
-		public delegate void BuildVLitRenderData(GraphicsDevice g,
+		public delegate void BuildVLitRenderData(GraphicsDevice g, string gameRoot,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<DrawCall>> dcs, object pp);
 
-		public delegate void BuildAlphaRenderData(GraphicsDevice g,
+		public delegate void BuildAlphaRenderData(GraphicsDevice g, string gameRoot,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<List<MeshLib.DrawCall>>> adcs, object pp);
 
-		public delegate void BuildFullBrightRenderData(GraphicsDevice g,
+		public delegate void BuildFullBrightRenderData(GraphicsDevice g, string gameRoot,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<DrawCall>> dcs, object pp);
 
-		public delegate void BuildMirrorRenderData(GraphicsDevice g,
+		public delegate void BuildMirrorRenderData(GraphicsDevice g, string gameRoot,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<MeshLib.DrawCall>> mdcalls,
 			out List<List<Vector3>> mirrorPolys, object pp);
 
-		public delegate void BuildSkyRenderData(GraphicsDevice g,
+		public delegate void BuildSkyRenderData(GraphicsDevice g, string gameRoot,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<DrawCall>> dcs, object pp);
 		#endregion
@@ -212,9 +212,36 @@ namespace MeshLib
 		}
 
 
-		public void BuildLM(GraphicsDevice g, int atlasSize, BuildLMRenderData brd, object pp)
+		public void FreeAll()
 		{
-			brd(g, out mLMIndex, out mLMVerts, out mLMInds, out mLMDrawCalls,
+			if(mLMVB != null)		mLMVB.Dispose();
+			if(mVLitVB != null)		mVLitVB.Dispose();
+			if(mLMAnimVB != null)	mLMAnimVB.Dispose();
+			if(mAlphaVB != null)	mAlphaVB.Dispose();
+			if(mSkyVB != null)		mSkyVB.Dispose();
+			if(mFBVB != null)		mFBVB.Dispose();
+			if(mMirrorVB != null)	mMirrorVB.Dispose();
+			if(mLMAVB != null)		mLMAVB.Dispose();
+			if(mLMAAnimVB != null)	mLMAAnimVB.Dispose();
+			
+			if(mLMIB != null)		mLMIB.Dispose();
+			if(mVLitIB != null)		mVLitIB.Dispose();
+			if(mLMAnimIB != null)	mLMAnimIB.Dispose();
+			if(mAlphaIB != null)	mAlphaIB.Dispose();
+			if(mSkyIB != null)		mSkyIB.Dispose();
+			if(mFBIB != null)		mFBIB.Dispose();
+			if(mMirrorIB != null)	mMirrorIB.Dispose();
+			if(mLMAIB != null)		mLMAIB.Dispose();
+			if(mLMAAnimIB != null)	mLMAAnimIB.Dispose();
+
+			mLightMapAtlas.FreeAll();
+		}
+
+
+		public void BuildLM(GraphicsDevice g, string gameRoot,
+			int atlasSize, BuildLMRenderData brd, object pp)
+		{
+			brd(g, gameRoot, out mLMIndex, out mLMVerts, out mLMInds, out mLMDrawCalls,
 				out mLMAnimIndex, out mLMAnimVerts, out mLMAnimInds, out mLMAnimDrawCalls,
 				out mLMAIndex, out mLMAVerts, out mLMAInds, out mLMADrawCalls,
 				out mLMAAnimIndex, out mLMAAnimVerts, out mLMAAnimInds, out mLMAAnimDrawCalls,
@@ -242,9 +269,10 @@ namespace MeshLib
 		}
 
 
-		public void BuildVLit(GraphicsDevice g, BuildVLitRenderData brd, object pp)
+		public void BuildVLit(GraphicsDevice g, string gameRoot,
+			BuildVLitRenderData brd, object pp)
 		{
-			brd(g, out mVLitIndex, out mVLitVerts,
+			brd(g, gameRoot, out mVLitIndex, out mVLitVerts,
 				out mVLitInds, out mVLitDrawCalls, pp);
 
 			mVLitVB		=VertexTypes.BuildABuffer(g.GD, mVLitVerts, mVLitIndex);
@@ -255,9 +283,10 @@ namespace MeshLib
 		}
 
 
-		public void BuildAlpha(GraphicsDevice g, BuildAlphaRenderData brd, object pp)
+		public void BuildAlpha(GraphicsDevice g, string gameRoot,
+			BuildAlphaRenderData brd, object pp)
 		{
-			brd(g, out mAlphaIndex, out mAlphaVerts,
+			brd(g, gameRoot, out mAlphaIndex, out mAlphaVerts,
 				out mAlphaInds, out mAlphaDrawCalls, pp);
 
 			mAlphaVB	=VertexTypes.BuildABuffer(g.GD, mAlphaVerts, mAlphaIndex);
@@ -268,9 +297,10 @@ namespace MeshLib
 		}
 
 
-		public void BuildFullBright(GraphicsDevice g, BuildFullBrightRenderData brd, object pp)
+		public void BuildFullBright(GraphicsDevice g, string gameRoot,
+			BuildFullBrightRenderData brd, object pp)
 		{
-			brd(g, out mFBIndex, out mFBVerts,
+			brd(g, gameRoot, out mFBIndex, out mFBVerts,
 				out mFBInds, out mFBDrawCalls, pp);
 
 			mFBVB	=VertexTypes.BuildABuffer(g.GD, mFBVerts, mFBIndex);
@@ -281,9 +311,10 @@ namespace MeshLib
 		}
 
 
-		public void BuildMirror(GraphicsDevice g, BuildMirrorRenderData brd, object pp)
+		public void BuildMirror(GraphicsDevice g, string gameRoot,
+			BuildMirrorRenderData brd, object pp)
 		{
-			brd(g, out mMirrorIndex, out mMirrorVerts,
+			brd(g, gameRoot, out mMirrorIndex, out mMirrorVerts,
 				out mMirrorInds, out mMirrorDrawCalls, out mMirrorPolys, pp);
 
 			mMirrorVB	=VertexTypes.BuildABuffer(g.GD, mMirrorVerts, mMirrorIndex);
@@ -294,9 +325,10 @@ namespace MeshLib
 		}
 
 
-		public void BuildSky(GraphicsDevice g, BuildSkyRenderData brd, object pp)
+		public void BuildSky(GraphicsDevice g, string gameRoot,
+			BuildSkyRenderData brd, object pp)
 		{
-			brd(g, out mSkyIndex, out mSkyVerts,
+			brd(g, gameRoot, out mSkyIndex, out mSkyVerts,
 				out mSkyInds, out mSkyDrawCalls, pp);
 
 			mSkyVB	=VertexTypes.BuildABuffer(g.GD, mSkyVerts, mSkyIndex);

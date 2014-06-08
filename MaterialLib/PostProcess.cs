@@ -24,7 +24,6 @@ namespace MaterialLib
 
 		//data for doing postery
 		Dictionary<string, Texture2D>			mPostTex2Ds		=new Dictionary<string, Texture2D>();
-//		Dictionary<string, Texture2D>			mPostTexDepths	=new Dictionary<string, Texture2D>();
 		Dictionary<string, RenderTargetView>	mPostTargets	=new Dictionary<string, RenderTargetView>();
 		Dictionary<string, DepthStencilView>	mPostDepths		=new Dictionary<string, DepthStencilView>();
 		Dictionary<string, ShaderResourceView>	mPostTargSRVs	=new Dictionary<string, ShaderResourceView>();
@@ -450,6 +449,47 @@ namespace MaterialLib
 			ep.Apply(gd.DC);
 
 			gd.DC.DrawIndexed(6, 0, 0);
+		}
+
+
+		public void FreeAll()
+		{
+			//dispose all views
+			foreach(KeyValuePair<string, RenderTargetView> view in mPostTargets)
+			{
+				view.Value.Dispose();
+			}
+			foreach(KeyValuePair<string, DepthStencilView> view in mPostDepths)
+			{
+				view.Value.Dispose();
+			}
+
+			//dispose all srvs
+			foreach(KeyValuePair<string, ShaderResourceView> srv in mPostTargSRVs)
+			{
+				srv.Value.Dispose();
+			}
+
+			//dispose all tex2ds
+			foreach(KeyValuePair<string, Texture2D> tex in mPostTex2Ds)
+			{
+				tex.Value.Dispose();
+			}
+
+			mPostTargets.Clear();
+			mPostDepths.Clear();
+			mPostTargSRVs.Clear();
+			mPostTex2Ds.Clear();
+
+			//buffers
+			mQuadIB.Dispose();
+			mQuadVB.Dispose();
+
+			//datastream
+			mSampleOffsetsXDS.Dispose();
+			mSampleOffsetsYDS.Dispose();
+
+			mPostFX.Dispose();
 		}
 
 

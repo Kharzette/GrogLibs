@@ -88,6 +88,13 @@ namespace MeshLib
 		}
 
 
+		public void FreeAll()
+		{
+			mVerts.Dispose();
+			mIndexs.Dispose();
+		}
+
+
 		public Matrix GetTransform()
 		{
 			return	mTransform;

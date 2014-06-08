@@ -153,6 +153,20 @@ namespace MeshLib
 		}
 
 
+		public void FreeAll()
+		{
+			mShad2D.Dispose();
+			mShadCube.Dispose();
+			mPShad.Dispose();
+			mPShadView.Dispose();
+			mPShadView.Dispose();
+			for(int i=0;i < 6;i++)
+			{
+				mPShadCubeViews[i].Dispose();
+			}
+		}
+
+
 		public void RegisterShadower(Shadower mesh, MatLib meshMats)
 		{
 			mShadowers.Add(mesh);
