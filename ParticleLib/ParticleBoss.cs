@@ -68,7 +68,7 @@ namespace ParticleLib
 		public int CreateEmitter(string texName, Vector4 startColor,
 			Emitter.Shapes shape, float shapeSize,
 			int maxParticles, Vector3 pos,
-			int gravYaw, int gravPitch, float gravStr,
+			Vector3 gravPos, float gravStr,
 			float startSize, float emitMS,
 			float rotVelMin, float rotVelMax, float velMin,
 			float velMax, float sizeVelMin, float sizeVelMax,
@@ -77,7 +77,7 @@ namespace ParticleLib
 		{
 			Emitter	newEmitter	=new Emitter(
 				maxParticles, shape, shapeSize, pos,
-				startColor,	gravYaw, gravPitch, gravStr,
+				startColor,	gravPos, gravStr,
 				startSize, emitMS,
 				rotVelMin, rotVelMax,
 				velMin, velMax,
@@ -225,7 +225,7 @@ namespace ParticleLib
 				return	-1;
 			}
 
-			int		maxPart, shape, shapeSize, gravYaw, gravPitch;
+			int		maxPart, shape, shapeSize;
 			float	gravStr, startSize, startAlpha;
 			float	velMin, velMax, sizeMin, sizeMax, spinMin, spinMax;
 			float	alphaMin, alphaMax, lifeMin, lifeMax, emitMS;
@@ -233,10 +233,11 @@ namespace ParticleLib
 			Vector4	colorVelMin	=Vector4.Zero;
 			Vector4	colorVelMax	=Vector4.Zero;
 			Vector4	startColor	=Vector4.Zero;
+			Vector3	gravPos		=Vector3.Zero;
 
 			//initialize, annoying
 			maxPart		=1000;		shape		=(int)Emitter.Shapes.Point;
-			shapeSize	=10;		gravYaw		=-90;
+			shapeSize	=10;
 			gravStr		=0.001f;	startSize	=4;
 			startAlpha	=1f;		spinMin		=0;
 			spinMax		=0;			velMin		=-0.1f;
@@ -244,7 +245,6 @@ namespace ParticleLib
 			sizeMax		=.1f;		alphaMin	=-0.1f;
 			alphaMax	=.1f;		lifeMin		=4000;
 			lifeMax		=8000;		emitMS		=0.04f;
-			gravPitch	=0;
 
 			string	[]lines	=entityText.Split('\n');
 			foreach(string line in lines)
@@ -263,13 +263,9 @@ namespace ParticleLib
 				{
 					Mathery.TryParse(GrabValue(trimmed), out shape);
 				}
-				else if(trimmed.StartsWith("grav_yaw"))
+				else if(trimmed.StartsWith("grav_loc"))
 				{
-					Mathery.TryParse(GrabValue(trimmed), out gravYaw);
-				}
-				else if(trimmed.StartsWith("grav_pitch"))
-				{
-					Mathery.TryParse(GrabValue(trimmed), out gravPitch);
+					gravPos	=Misc.StringToVector3(GrabValue(trimmed));
 				}
 				else if(trimmed.StartsWith("grav_strength"))
 				{
@@ -374,7 +370,7 @@ namespace ParticleLib
 
 			return	CreateEmitter(texName, startColor,
 				(Emitter.Shapes)shape, shapeSize,
-				maxPart, Vector3.Zero, gravYaw, gravPitch, gravStr,
+				maxPart, Vector3.Zero, gravPos, gravStr,
 				startSize, emitMS, spinMin, spinMax, velMin,
 				velMax, sizeMin, sizeMax,
 				colorVelMin, colorVelMax,

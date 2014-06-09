@@ -46,13 +46,12 @@ namespace BSPZone
 			foreach(ZoneEntity ze in parts)
 			{
 				Vector4	color;
-				Vector3	col, pos;
+				Vector3	col, pos, gravPos;
 				Vector3	colVelMin, colVelMax;
 				Vector4	colorVelMin, colorVelMax;
 				bool	bOn;
 				int		shapeIdx, maxParticles;
-				float	gravYaw, gravPitch, shapeSize;
-				float	gravStr, startSize, emitMS;
+				float	gravStr, startSize, emitMS, shapeSize;
 				float	velMin, velMax, alphaVelMin, alphaVelMax;
 				float	sizeVelMin, sizeVelMax, spinVelMin, spinVelMax;
 				float	lifeMin, lifeMax;
@@ -75,8 +74,6 @@ namespace BSPZone
 				Mathery.TryParse(ze.GetValue("max_particles"), out maxParticles);
 				Mathery.TryParse(ze.GetValue("shape"), out shapeIdx);
 				Mathery.TryParse(ze.GetValue("shape_size"), out shapeSize);
-				Mathery.TryParse(ze.GetValue("grav_yaw"), out gravYaw);
-				Mathery.TryParse(ze.GetValue("grav_pitch"), out gravPitch);
 				Mathery.TryParse(ze.GetValue("grav_strength"), out gravStr);
 				Mathery.TryParse(ze.GetValue("start_size"), out startSize);
 				Mathery.TryParse(ze.GetValue("emit_ms"), out emitMS);
@@ -91,6 +88,7 @@ namespace BSPZone
 				Mathery.TryParse(ze.GetValue("lifetime_min"), out lifeMin);
 				Mathery.TryParse(ze.GetValue("lifetime_max"), out lifeMax);
 
+				ze.GetVectorNoConversion("grav_loc", out gravPos);
 				ze.GetVectorNoConversion("color_velocity_min", out colVelMin);
 				ze.GetVectorNoConversion("color_velocity_max", out colVelMax);
 
@@ -100,9 +98,6 @@ namespace BSPZone
 				int	bVal;
 				Mathery.TryParse(ze.GetValue("activated"), out bVal);
 				bOn	=(bVal != 0);
-
-				Mathery.WrapAngleDegrees(ref gravYaw);
-				Mathery.WrapAngleDegrees(ref gravPitch);
 
 				if(shapeIdx >= 0 && shapeIdx < shapeVals.Length)
 				{
@@ -130,7 +125,7 @@ namespace BSPZone
 				int	idx	=mPB.CreateEmitter(
 					ze.GetValue("tex_name"),
 					color, shape, shapeSize, maxParticles,
-					pos, (int)gravYaw, (int)gravPitch, gravStr,
+					pos, gravPos, gravStr,
 					startSize, emitMS, spinVelMin, spinVelMax,
 					velMin, velMax, sizeVelMin, sizeVelMax,
 					colorVelMin, colorVelMax,

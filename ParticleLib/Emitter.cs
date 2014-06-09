@@ -36,9 +36,8 @@ namespace ParticleLib
 		public float	mSizeVelocityMin, mSizeVelocityMax;
 		public Vector4	mColorVelocityMin, mColorVelocityMax;
 		public int		mLifeMin, mLifeMax;
-		public int		mGravityYaw, mGravityPitch;
 		public float	mGravityStrength;
-		Vector3			mGravity;
+		public Vector3	mGravityLocation;
 
 		//state data
 		public bool	mbOn;
@@ -52,7 +51,8 @@ namespace ParticleLib
 
 
 		public Emitter(int maxParticles, Shapes shape, float shapeSize,
-			Vector3 pos, Vector4 startColor, int gy, int gp, float gs,
+			Vector3 pos, Vector4 startColor,
+			Vector3 gravPos, float gs,
 			float startSize, float emitMS,
 			float rotVelMin, float rotVelMax, float velMin,
 			float velMax, float sizeVelMin, float sizeVelMax,
@@ -63,8 +63,7 @@ namespace ParticleLib
 			mShapeSize				=shapeSize;
 			mPosition				=pos;
 			mStartColor				=startColor;
-			mGravityYaw				=gy;
-			mGravityPitch			=gp;
+			mGravityLocation		=gravPos;
 			mGravityStrength		=gs;
 			mStartSize				=startSize;
 			mEmitMS					=emitMS;
@@ -85,8 +84,6 @@ namespace ParticleLib
 
 			mParticles1	=new Particle[maxParticles];
 			mParticles2	=new Particle[maxParticles];
-
-			UpdateGravity();
 		}
 
 
@@ -110,7 +107,7 @@ namespace ParticleLib
 			int	idx	=0;
 			for(int i=0;i < mCurNumParticles;i++)
 			{
-				if(!buf[i].Update(msDelta, mGravity))
+				if(!buf[i].Update(msDelta, mGravityLocation, mGravityStrength))
 				{
 					buf2[idx++]	=buf[i];
 				}
@@ -220,27 +217,6 @@ namespace ParticleLib
 		}
 
 
-		public void UpdateGravity()
-		{
-			float	yaw		=mGravityYaw;
-			float	pitch	=mGravityPitch;
-			float	str		=mGravityStrength;
-
-			Mathery.WrapAngleDegrees(ref yaw);
-			Mathery.WrapAngleDegrees(ref pitch);
-
-			yaw		=MathUtil.DegreesToRadians(yaw);
-			pitch	=MathUtil.DegreesToRadians(pitch);
-
-
-			Matrix	gravMat	=Matrix.RotationX(pitch);
-			gravMat			*=Matrix.RotationY(yaw);
-
-			mGravity	=Vector3.TransformNormal(Vector3.UnitZ, gravMat);
-			mGravity	*=str;
-		}
-
-
 		internal string GetEntityFields(string entity)
 		{
 			//quark doesn't like vector4s
@@ -252,8 +228,7 @@ namespace ParticleLib
 			ParticleBoss.AddField(ref entity, "max_particles", "" + mMaxParticles);
 			ParticleBoss.AddField(ref entity, "shape", "" + (int)mShape);
 			ParticleBoss.AddField(ref entity, "shape_size", "" + Misc.FloatToString(mShapeSize, 1));
-			ParticleBoss.AddField(ref entity, "grav_yaw", "" + mGravityYaw);
-			ParticleBoss.AddField(ref entity, "grav_pitch", "" + mGravityPitch);
+			ParticleBoss.AddField(ref entity, "grav_loc", "" + Misc.VectorToString(mGravityLocation));
 			ParticleBoss.AddField(ref entity, "grav_strength", "" + Misc.FloatToString(mGravityStrength, 3));
 			ParticleBoss.AddField(ref entity, "start_size", "" + Misc.FloatToString(mStartSize, 1));
 			ParticleBoss.AddField(ref entity, "start_color", Misc.VectorToString(startColXYZ));

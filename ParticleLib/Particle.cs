@@ -18,11 +18,11 @@ namespace ParticleLib
 		internal Vector3	mVelocity;
 		internal float		mRotationalVelocity;
 		internal float		mSizeVelocity;
-		internal Vector4	mColorVelocity;	//transparency in W
+		internal Vector4	mColorVelocity;		//transparency in W
 
 
 		//return true if expired
-		internal bool Update(float msDelta, Vector3 gravity)
+		internal bool Update(float msDelta, Vector3 gravLoc, float gravStr)
 		{
 			mLifeRemaining	-=msDelta;
 			if(mLifeRemaining < 0)
@@ -35,7 +35,13 @@ namespace ParticleLib
 			mSize		+=(mSizeVelocity * msDelta);
 			mRotation	+=(mRotationalVelocity * msDelta);
 
-			mVelocity	+=(gravity * msDelta) / 1000f;
+			Vector3	gravVec	=gravLoc - mPosition;
+
+			gravVec.Normalize();
+
+			gravVec	*=gravStr;
+
+			mVelocity	+=(gravVec * msDelta) / 1000f;
 
 			mSize	=MathUtil.Clamp(mSize, 0f, 10000f);
 			mColor	=Mathery.ClampVector(mColor, Vector4.Zero, Vector4.One);

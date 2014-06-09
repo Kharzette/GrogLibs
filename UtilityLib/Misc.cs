@@ -72,6 +72,11 @@ namespace UtilityLib
 			Vector3	ret	=Vector3.Zero;
 
 			string	[]elements	=vstring.Split(' ');
+
+			if(elements.Length != 3)
+			{
+				return	ret;
+			}
 			
 			Mathery.TryParse(elements[0], out ret.X);
 			Mathery.TryParse(elements[1], out ret.Y);

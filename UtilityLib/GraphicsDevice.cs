@@ -235,7 +235,7 @@ namespace UtilityLib
 		}
 
 
-		public void ToggleCapture(bool bOn)
+		public void SetCapture(bool bOn)
 		{
 			if(bOn)
 			{

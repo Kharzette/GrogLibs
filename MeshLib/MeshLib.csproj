@@ -53,6 +53,7 @@
     <Compile Include="Anim.cs" />
     <Compile Include="AnimLib.cs" />
     <Compile Include="Character.cs" />
+    <Compile Include="CommonPrims.cs" />
     <Compile Include="DrawCall.cs" />
     <Compile Include="EditorMesh.cs" />
     <Compile Include="IndoorMesh.cs" />
