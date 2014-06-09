@@ -30,10 +30,11 @@ struct VPosTex01
 	half	TexCoord0	: TEXCOORD0;
 };
 
-struct VPos4Tex04
+struct VPos4Tex04Tex14
 {
 	float4	Position	: POSITION;
 	half4	TexCoord0	: TEXCOORD0;
+	half4	TexCoord1	: TEXCOORD1;
 };
 
 struct VPosCol0

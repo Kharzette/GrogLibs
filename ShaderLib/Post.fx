@@ -641,12 +641,14 @@ float4	BleachBypassPS(VVPos input) : SV_Target
 	float3	result2		=1.0f - 2.0f * (1.0f - blend) * (1.0f - base.rgb);
 	float3	newColor	=lerp(result1, result2, L);
 
-	float	A2			=mOpacity * base.a;
+//	float	A2			=mOpacity * base.a;
+	float	A2			=mOpacity;
 	float3	mixRGB		=A2 * newColor.rgb;
 
 	mixRGB	+=((1.0f - A2) * base.rgb);
 
-	return	float4(mixRGB, base.a);	
+//	return	float4(mixRGB, base.a);	
+	return	float4(mixRGB, 1);	
 }
 
 float4	BleachBypass93PS(VVPos93 input) : SV_Target
@@ -663,12 +665,14 @@ float4	BleachBypass93PS(VVPos93 input) : SV_Target
 	float3	result2		=1.0f - 2.0f * (1.0f - blend) * (1.0f - base.rgb);
 	float3	newColor	=lerp(result1, result2, L);
 
-	float	A2			=mOpacity * base.a;
+//	float	A2			=mOpacity * base.a;
+	float	A2			=mOpacity;
 	float3	mixRGB		=A2 * newColor.rgb;
 
 	mixRGB	+=((1.0f - A2) * base.rgb);
 
-	return	float4(mixRGB, base.a);	
+//	return	float4(mixRGB, base.a);	
+	return	float4(mixRGB, 1);	
 }
 
 
