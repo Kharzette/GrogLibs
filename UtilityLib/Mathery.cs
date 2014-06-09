@@ -892,6 +892,19 @@ namespace UtilityLib
 		}
 
 
+		public static Vector4 ClampVector(Vector4 val, Vector4 min, Vector4 max)
+		{
+			Vector4	ret	=Vector4.Zero;
+
+			ret.X	=MathUtil.Clamp(val.X, min.X, max.X);
+			ret.Y	=MathUtil.Clamp(val.Y, min.Y, max.Y);
+			ret.Z	=MathUtil.Clamp(val.Z, min.Z, max.Z);
+			ret.W	=MathUtil.Clamp(val.W, min.W, max.W);
+
+			return	ret;
+		}
+
+
 		public static void ClipRayToBox(BoundingBox box,
 			ref Vector3 rayStart, ref Vector3 rayEnd)
 		{

@@ -26,7 +26,6 @@ namespace ParticleLib
 		{
 			internal Emitter			mEmitter;
 			internal ParticleViewDynVB	mView;
-			internal Vector4			mColor;
 		}
 
 		//data
@@ -66,30 +65,31 @@ namespace ParticleLib
 		}
 
 
-		public int CreateEmitter(string texName, Vector4 color,
+		public int CreateEmitter(string texName, Vector4 startColor,
 			Emitter.Shapes shape, float shapeSize,
 			int maxParticles, Vector3 pos,
 			int gravYaw, int gravPitch, float gravStr,
-			float startSize, float startAlpha, float emitMS,
+			float startSize, float emitMS,
 			float rotVelMin, float rotVelMax, float velMin,
 			float velMax, float sizeVelMin, float sizeVelMax,
-			float alphaVelMin, float alphaVelMax,
-			int lifeMin, int lifeMax, int sortPri)
+			Vector4 colorVelMin, Vector4 colorVelMax,
+			int lifeMin, int lifeMax)
 		{
 			Emitter	newEmitter	=new Emitter(
 				maxParticles, shape, shapeSize, pos,
-				gravYaw, gravPitch, gravStr,
-				startSize, startAlpha, emitMS,
-				rotVelMin, rotVelMax, velMin, velMax,
-				sizeVelMin, sizeVelMax, alphaVelMin, alphaVelMax,
-				lifeMin, lifeMax, sortPri);
+				startColor,	gravYaw, gravPitch, gravStr,
+				startSize, emitMS,
+				rotVelMin, rotVelMax,
+				velMin, velMax,
+				sizeVelMin, sizeVelMax,
+				colorVelMin, colorVelMax,
+				lifeMin, lifeMax);
 
 			newEmitter.Activate(true);
 			
 			ParticleViewDynVB	pvd	=new ParticleViewDynVB(mGD, mMats, texName, maxParticles);
 
 			EmitterData	ed	=new EmitterData();
-			ed.mColor		=color;
 			ed.mEmitter		=newEmitter;
 			ed.mView		=pvd;
 
@@ -116,7 +116,7 @@ namespace ParticleLib
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
-				em.Value.mView.DrawDMN(dc, em.Value.mColor, view, proj, eyePos);
+				em.Value.mView.DrawDMN(dc, view, proj, eyePos);
 			}
 		}
 
@@ -125,7 +125,7 @@ namespace ParticleLib
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
-				em.Value.mView.Draw(dc, em.Value.mColor, view, proj);
+				em.Value.mView.Draw(dc, view, proj);
 			}
 		}
 
@@ -134,7 +134,7 @@ namespace ParticleLib
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
-				em.Value.mView.Draw(mMats, ap, em.Value.mEmitter.mPosition, em.Value.mColor, view, proj);
+				em.Value.mView.Draw(mMats, ap, em.Value.mEmitter.mPosition, view, proj);
 			}
 		}
 
@@ -152,26 +152,6 @@ namespace ParticleLib
 				return	null;
 			}
 			return	mEmitters[index].mEmitter;
-		}
-
-
-		public Vector4 GetColorByIndex(int index)
-		{
-			if(!mEmitters.ContainsKey(index))
-			{
-				return	Vector4.One;
-			}
-			return	mEmitters[index].mColor;
-		}
-
-
-		public void SetColorByIndex(int index, Vector4 col)
-		{
-			if(!mEmitters.ContainsKey(index))
-			{
-				return;
-			}
-			mEmitters[index].mColor	=col;
 		}
 
 
@@ -245,12 +225,14 @@ namespace ParticleLib
 				return	-1;
 			}
 
-			int		maxPart, shape, shapeSize, gravYaw, gravPitch, sortPri;
+			int		maxPart, shape, shapeSize, gravYaw, gravPitch;
 			float	gravStr, startSize, startAlpha;
 			float	velMin, velMax, sizeMin, sizeMax, spinMin, spinMax;
 			float	alphaMin, alphaMax, lifeMin, lifeMax, emitMS;
 			string	texName	="";
-			Vector4	color	=Vector4.Zero;
+			Vector4	colorVelMin	=Vector4.Zero;
+			Vector4	colorVelMax	=Vector4.Zero;
+			Vector4	startColor	=Vector4.Zero;
 
 			//initialize, annoying
 			maxPart		=1000;		shape		=(int)Emitter.Shapes.Point;
@@ -262,7 +244,7 @@ namespace ParticleLib
 			sizeMax		=.1f;		alphaMin	=-0.1f;
 			alphaMax	=.1f;		lifeMin		=4000;
 			lifeMax		=8000;		emitMS		=0.04f;
-			gravPitch	=0;			sortPri		=0;
+			gravPitch	=0;
 
 			string	[]lines	=entityText.Split('\n');
 			foreach(string line in lines)
@@ -296,6 +278,11 @@ namespace ParticleLib
 				else if(trimmed.StartsWith("start_size"))
 				{
 					Mathery.TryParse(GrabValue(trimmed), out startSize);
+				}
+				else if(trimmed.StartsWith("start_color"))
+				{
+					Vector3	col	=Misc.StringToVector3(GrabValue(trimmed));
+					startColor	=new Vector4(col, 1f);
 				}
 				else if(trimmed.StartsWith("start_alpha"))
 				{
@@ -331,11 +318,11 @@ namespace ParticleLib
 				}
 				else if(trimmed.StartsWith("alpha_velocity_min"))
 				{
-					Mathery.TryParse(GrabValue(trimmed), out alphaMin);
+					Mathery.TryParse(GrabValue(trimmed), out colorVelMin.W);
 				}
 				else if(trimmed.StartsWith("alpha_velocity_max"))
 				{
-					Mathery.TryParse(GrabValue(trimmed), out alphaMax);
+					Mathery.TryParse(GrabValue(trimmed), out colorVelMax.W);
 				}
 				else if(trimmed.StartsWith("lifetime_min"))
 				{
@@ -345,27 +332,31 @@ namespace ParticleLib
 				{
 					Mathery.TryParse(GrabValue(trimmed), out lifeMax);
 				}
-				else if(trimmed.StartsWith("sort_priority"))
-				{
-					Mathery.TryParse(GrabValue(trimmed), out sortPri);
-				}
 				else if(trimmed.StartsWith("tex_name"))
 				{
 					texName	=GrabValue(trimmed);
 				}
-				else if(trimmed.StartsWith("color"))
+				else if(trimmed.StartsWith("color_velocity_min"))
 				{
-					Vector3	col;
-					col	=Misc.StringToVector3(GrabValue(trimmed));
-					color.X	=col.X;
-					color.Y	=col.Y;
-					color.Z	=col.Z;
+					Vector3	col	=Misc.StringToVector3(GrabValue(trimmed));
+					colorVelMin	=new Vector4(col, colorVelMin.W);
 				}
-				else if(trimmed.StartsWith("alpha"))
+				else if(trimmed.StartsWith("color_velocity_max"))
 				{
-					Mathery.TryParse(GrabValue(trimmed), out color.W);
+					Vector3	col	=Misc.StringToVector3(GrabValue(trimmed));
+					colorVelMax	=new Vector4(col, colorVelMax.W);
+				}
+				else if(trimmed.StartsWith("color_velocity_min_w"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out colorVelMin.W);
+				}
+				else if(trimmed.StartsWith("color_velocity_max_w"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out colorVelMax.W);
 				}
 			}
+
+			startColor.W	=startAlpha;
 
 			//scale some to millisecond values
 			spinMin		/=1000f;
@@ -378,12 +369,16 @@ namespace ParticleLib
 			alphaMax	/=1000f;
 			lifeMin		*=1000;
 			lifeMax		*=1000;
+			colorVelMin	/=10000f;
+			colorVelMax	/=10000f;
 
-			return	CreateEmitter(texName, color, (Emitter.Shapes)shape, shapeSize,
+			return	CreateEmitter(texName, startColor,
+				(Emitter.Shapes)shape, shapeSize,
 				maxPart, Vector3.Zero, gravYaw, gravPitch, gravStr,
-				startSize, startAlpha, emitMS, spinMin, spinMax, velMin,
-				velMax, sizeMin, sizeMax, alphaMin, alphaMax,
-				(int)lifeMin, (int)lifeMax, sortPri);
+				startSize, emitMS, spinMin, spinMax, velMin,
+				velMax, sizeMin, sizeMax,
+				colorVelMin, colorVelMax,
+				(int)lifeMin, (int)lifeMax);
 		}
 
 		
@@ -401,16 +396,6 @@ namespace ParticleLib
 
 			entity	=ed.mEmitter.GetEntityFields(entity);
 			entity	=ed.mView.GetEntityFields(entity);
-
-			Vector4	col	=ed.mColor;
-
-			AddField(ref entity, "color", Misc.FloatToString(col.X, 4)
-				+ " " + Misc.FloatToString(col.Y, 4)
-				+ " " + Misc.FloatToString(col.Z, 4));
-
-			//color's w component goes in alpha
-			//quark doesn't like 4 component stuff
-			AddField(ref entity, "alpha", "" + Misc.FloatToString(col.W, 4));
 
 			entity	+="  }\n}";
 

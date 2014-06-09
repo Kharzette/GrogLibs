@@ -66,7 +66,6 @@ namespace MaterialLib
 		Int32	mStartIndex;
 
 		bool	mbParticle;	//particle draw?
-		Vector4	mColor;
 		string	mTex;
 		Matrix	mView, mProj;
 
@@ -90,15 +89,13 @@ namespace MaterialLib
 		internal AlphaNode(MatLib matLib,
 			Vector3 sortPoint,
 			VertexBufferBinding vbb,
-			Int32 vertCount, Vector4 color,
-			string tex,
+			Int32 vertCount, string tex,
 			Matrix view, Matrix proj)
 		{
 			mMatLib			=matLib;
 			mSortPoint		=sortPoint;
 			mVBB			=vbb;
 			mCount			=vertCount;
-			mColor			=color;
 			mTex			=tex;
 			mView			=view;
 			mProj			=proj;
@@ -131,7 +128,6 @@ namespace MaterialLib
 
 			gd.DC.InputAssembler.SetVertexBuffers(0, mVBB);
 
-			mMatLib.SetMaterialParameter(mMaterialName, "mSolidColour", mColor);
 			mMatLib.SetMaterialTexture(mMaterialName, "mTexture", mTex);
 			mMatLib.SetMaterialParameter(mMaterialName, "mView", mView);
 			mMatLib.SetMaterialParameter(mMaterialName, "mProjection", mProj);

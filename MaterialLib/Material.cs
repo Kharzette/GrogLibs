@@ -590,7 +590,7 @@ namespace MaterialLib
 				}
 
 				//use to investigate layout of a particlar technique
-//				if(mTechnique.Description.Name == "")
+//				if(mTechnique.Description.Name == "Particle")
 //				{
 //					int	j=0;
 //					j++;

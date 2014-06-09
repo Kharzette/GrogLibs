@@ -10,6 +10,7 @@ namespace ParticleLib
 	{
 		public enum Shapes
 		{
+			//todo, filled or solid (right now is solid)
 			Point, Sphere, Box, Line, Plane
 		}
 
@@ -18,7 +19,8 @@ namespace ParticleLib
 
 		//basic info
 		public Vector3	mPosition;
-		public float	mStartSize, mStartAlpha;
+		public float	mStartSize;
+		public Vector4	mStartColor;
 		public float	mEmitMS;
 		public Shapes	mShape;
 		public float	mShapeSize;
@@ -32,15 +34,11 @@ namespace ParticleLib
 		public float	mRotationalVelocityMin, mRotationalVelocityMax;
 		public float	mVelocityMin, mVelocityMax;
 		public float	mSizeVelocityMin, mSizeVelocityMax;
-		public float	mAlphaVelocityMin, mAlphaVelocityMax;
+		public Vector4	mColorVelocityMin, mColorVelocityMax;
 		public int		mLifeMin, mLifeMax;
 		public int		mGravityYaw, mGravityPitch;
 		public float	mGravityStrength;
 		Vector3			mGravity;
-
-		//if two emitters occupy the same location, higher
-		//priority emitters render first
-		public int	mSortPriority;
 
 		//state data
 		public bool	mbOn;
@@ -54,21 +52,21 @@ namespace ParticleLib
 
 
 		public Emitter(int maxParticles, Shapes shape, float shapeSize,
-			Vector3 pos, int gy, int gp, float gs,
-			float startSize, float startAlpha, float emitMS,
+			Vector3 pos, Vector4 startColor, int gy, int gp, float gs,
+			float startSize, float emitMS,
 			float rotVelMin, float rotVelMax, float velMin,
 			float velMax, float sizeVelMin, float sizeVelMax,
-			float alphaVelMin, float alphaVelMax,
-			int lifeMin, int lifeMax, int sortPri)
+			Vector4 colorVelMin, Vector4 colorVelMax,
+			int lifeMin, int lifeMax)
 		{
 			mShape					=shape;
 			mShapeSize				=shapeSize;
 			mPosition				=pos;
+			mStartColor				=startColor;
 			mGravityYaw				=gy;
 			mGravityPitch			=gp;
 			mGravityStrength		=gs;
 			mStartSize				=startSize;
-			mStartAlpha				=startAlpha;
 			mEmitMS					=emitMS;
 			mRotationalVelocityMin	=rotVelMin;
 			mRotationalVelocityMax	=rotVelMax;
@@ -76,11 +74,10 @@ namespace ParticleLib
 			mVelocityMax			=velMax;
 			mSizeVelocityMin		=sizeVelMin;
 			mSizeVelocityMax		=sizeVelMax;
-			mAlphaVelocityMin		=alphaVelMin;
-			mAlphaVelocityMax		=alphaVelMax;
 			mLifeMin				=lifeMin;
 			mLifeMax				=lifeMax;
-			mSortPriority			=sortPri;
+			mColorVelocityMin		=colorVelMin;
+			mColorVelocityMax		=colorVelMax;
 
 			mLineAxis	=Vector3.UnitX;	//default
 
@@ -200,17 +197,24 @@ namespace ParticleLib
 			ret.mPosition		=PositionForShape();
 			ret.mSize			=mStartSize;
 			ret.mRotation		=0;
-			ret.mAlpha			=mStartAlpha;
+			ret.mColor			=mStartColor;
 			ret.mLifeRemaining	=mRand.Next(mLifeMin, mLifeMax);
 
 			ret.mVelocity	=Mathery.RandomDirection(mRand)
 				* Mathery.RandomFloatNext(mRand, mVelocityMin, mVelocityMax);
 
+			ret.mColorVelocity.X	=Mathery.RandomFloatNext(mRand,
+				mColorVelocityMin.X, mColorVelocityMax.X);
+			ret.mColorVelocity.Y	=Mathery.RandomFloatNext(mRand,
+				mColorVelocityMin.Y, mColorVelocityMax.Y);
+			ret.mColorVelocity.Z	=Mathery.RandomFloatNext(mRand,
+				mColorVelocityMin.Z, mColorVelocityMax.Z);
+			ret.mColorVelocity.W	=Mathery.RandomFloatNext(mRand,
+				mColorVelocityMin.W, mColorVelocityMax.W);
+
 			ret.mRotationalVelocity	=Mathery.RandomFloatNext(mRand, mRotationalVelocityMin, mRotationalVelocityMax);
 
 			ret.mSizeVelocity	=Mathery.RandomFloatNext(mRand, mSizeVelocityMin, mSizeVelocityMax);
-
-			ret.mAlphaVelocity	=Mathery.RandomFloatNext(mRand, mAlphaVelocityMin, mAlphaVelocityMax);
 
 			return	ret;
 		}
@@ -239,6 +243,11 @@ namespace ParticleLib
 
 		internal string GetEntityFields(string entity)
 		{
+			//quark doesn't like vector4s
+			Vector3	colorMin	=new Vector3(mColorVelocityMin.X, mColorVelocityMin.Y, mColorVelocityMin.Z);
+			Vector3	colorMax	=new Vector3(mColorVelocityMax.X, mColorVelocityMax.Y, mColorVelocityMax.Z);
+			Vector3	startColXYZ	=new Vector3(mStartColor.X, mStartColor.Y, mStartColor.Z);
+
 			ParticleBoss.AddField(ref entity, "origin", Misc.VectorToString(mPosition));
 			ParticleBoss.AddField(ref entity, "max_particles", "" + mMaxParticles);
 			ParticleBoss.AddField(ref entity, "shape", "" + (int)mShape);
@@ -247,7 +256,8 @@ namespace ParticleLib
 			ParticleBoss.AddField(ref entity, "grav_pitch", "" + mGravityPitch);
 			ParticleBoss.AddField(ref entity, "grav_strength", "" + Misc.FloatToString(mGravityStrength, 3));
 			ParticleBoss.AddField(ref entity, "start_size", "" + Misc.FloatToString(mStartSize, 1));
-			ParticleBoss.AddField(ref entity, "start_alpha", "" + Misc.FloatToString(mStartAlpha, 2));
+			ParticleBoss.AddField(ref entity, "start_color", Misc.VectorToString(startColXYZ));
+			ParticleBoss.AddField(ref entity, "start_alpha", "" + Misc.FloatToString(mStartColor.W, 2));
 			ParticleBoss.AddField(ref entity, "emit_ms", "" + Misc.FloatToString(mEmitMS, 3));
 			ParticleBoss.AddField(ref entity, "velocity_min", "" + Misc.FloatToString(mVelocityMin * 1000f, 2));
 			ParticleBoss.AddField(ref entity, "velocity_max", "" + Misc.FloatToString(mVelocityMax * 1000f, 2));
@@ -255,10 +265,12 @@ namespace ParticleLib
 			ParticleBoss.AddField(ref entity, "size_velocity_max", "" + Misc.FloatToString(mSizeVelocityMax * 1000f, 2));
 			ParticleBoss.AddField(ref entity, "spin_velocity_min", "" + Misc.FloatToString(mRotationalVelocityMin * 1000f, 2));
 			ParticleBoss.AddField(ref entity, "spin_velocity_max", "" + Misc.FloatToString(mRotationalVelocityMax * 1000f, 2));
-			ParticleBoss.AddField(ref entity, "alpha_velocity_min", "" + Misc.FloatToString(mAlphaVelocityMin * 1000f, 2));
-			ParticleBoss.AddField(ref entity, "alpha_velocity_max", "" + Misc.FloatToString(mAlphaVelocityMax * 1000f, 2));
+			ParticleBoss.AddField(ref entity, "alpha_velocity_min", "" + Misc.FloatToString(mColorVelocityMin.W * 10000f, 2));
+			ParticleBoss.AddField(ref entity, "alpha_velocity_max", "" + Misc.FloatToString(mColorVelocityMax.W * 10000f, 2));
 			ParticleBoss.AddField(ref entity, "lifetime_min", "" + Misc.FloatToString(mLifeMin / 1000f, 2));
 			ParticleBoss.AddField(ref entity, "lifetime_max", "" + Misc.FloatToString(mLifeMax / 1000f, 2));
+			ParticleBoss.AddField(ref entity, "color_velocity_min", Misc.VectorToString(colorMin * 10000f, 2));
+			ParticleBoss.AddField(ref entity, "color_velocity_max", Misc.VectorToString(colorMax * 10000f, 2));
 			ParticleBoss.AddField(ref entity, "activated", (mbOn)? "1" : "0");
 
 			return	entity;

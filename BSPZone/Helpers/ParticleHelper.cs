@@ -47,19 +47,21 @@ namespace BSPZone
 			{
 				Vector4	color;
 				Vector3	col, pos;
+				Vector3	colVelMin, colVelMax;
+				Vector4	colorVelMin, colorVelMax;
 				bool	bOn;
-				int		shapeIdx, maxParticles, sortPri;
+				int		shapeIdx, maxParticles;
 				float	gravYaw, gravPitch, shapeSize;
-				float	gravStr, startSize, startAlpha, emitMS;
-				float	velMin, velMax;
+				float	gravStr, startSize, emitMS;
+				float	velMin, velMax, alphaVelMin, alphaVelMax;
 				float	sizeVelMin, sizeVelMax, spinVelMin, spinVelMax;
-				float	alphaVelMin, alphaVelMax, lifeMin, lifeMax;
+				float	lifeMin, lifeMax;
 
 				Emitter.Shapes	shape;
 
 				ze.GetOrigin(out pos);
 
-				if(!ze.GetVectorNoConversion("color", out col))
+				if(!ze.GetVectorNoConversion("start_color", out col))
 				{
 					color	=Vector4.One;
 				}
@@ -68,7 +70,7 @@ namespace BSPZone
 					color.X	=col.X;
 					color.Y	=col.Y;
 					color.Z	=col.Z;
-					Mathery.TryParse(ze.GetValue("alpha"), out color.W);				
+					Mathery.TryParse(ze.GetValue("start_alpha"), out color.W);				
 				}
 				Mathery.TryParse(ze.GetValue("max_particles"), out maxParticles);
 				Mathery.TryParse(ze.GetValue("shape"), out shapeIdx);
@@ -77,7 +79,6 @@ namespace BSPZone
 				Mathery.TryParse(ze.GetValue("grav_pitch"), out gravPitch);
 				Mathery.TryParse(ze.GetValue("grav_strength"), out gravStr);
 				Mathery.TryParse(ze.GetValue("start_size"), out startSize);
-				Mathery.TryParse(ze.GetValue("start_alpha"), out startAlpha);
 				Mathery.TryParse(ze.GetValue("emit_ms"), out emitMS);
 				Mathery.TryParse(ze.GetValue("velocity_min"), out velMin);
 				Mathery.TryParse(ze.GetValue("velocity_max"), out velMax);
@@ -89,7 +90,12 @@ namespace BSPZone
 				Mathery.TryParse(ze.GetValue("alpha_velocity_max"), out alphaVelMax);
 				Mathery.TryParse(ze.GetValue("lifetime_min"), out lifeMin);
 				Mathery.TryParse(ze.GetValue("lifetime_max"), out lifeMax);
-				Mathery.TryParse(ze.GetValue("sort_priority"), out sortPri);
+
+				ze.GetVectorNoConversion("color_velocity_min", out colVelMin);
+				ze.GetVectorNoConversion("color_velocity_max", out colVelMax);
+
+				colorVelMin	=new Vector4(colVelMin.X, colVelMin.Y, colVelMin.Z, alphaVelMin);
+				colorVelMax	=new Vector4(colVelMax.X, colVelMax.Y, colVelMax.Z, alphaVelMax);
 
 				int	bVal;
 				Mathery.TryParse(ze.GetValue("activated"), out bVal);
@@ -114,19 +120,21 @@ namespace BSPZone
 				velMax		/=1000f;
 				sizeVelMin	/=1000f;
 				sizeVelMax	/=1000f;
-				alphaVelMin	/=1000f;
-				alphaVelMax	/=1000f;
 				lifeMin		*=1000;
 				lifeMax		*=1000;
+
+				//color scaled even smaller
+				colorVelMin	/=10000f;
+				colorVelMax	/=10000f;
 
 				int	idx	=mPB.CreateEmitter(
 					ze.GetValue("tex_name"),
 					color, shape, shapeSize, maxParticles,
 					pos, (int)gravYaw, (int)gravPitch, gravStr,
-					startSize, startAlpha, emitMS, spinVelMin, spinVelMax,
+					startSize, emitMS, spinVelMin, spinVelMax,
 					velMin, velMax, sizeVelMin, sizeVelMax,
-					alphaVelMin, alphaVelMax,
-					(int)lifeMin, (int)lifeMax, sortPri);
+					colorVelMin, colorVelMax,
+					(int)lifeMin, (int)lifeMax);
 
 				if(idx == -1)
 				{

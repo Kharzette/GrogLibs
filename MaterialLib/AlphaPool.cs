@@ -34,11 +34,10 @@ namespace MaterialLib
 		public void StoreParticleDraw(MatLib mlib,
 			Vector3 sortPoint,
 			VertexBufferBinding vbb, Int32 vertCount,
-			Vector4 color, string tex,
-			Matrix view, Matrix proj)
+			string tex,	Matrix view, Matrix proj)
 		{
 			AlphaNode	an	=new AlphaNode(mlib, sortPoint, vbb,
-				vertCount, color, tex, view, proj);
+				vertCount, tex, view, proj);
 
 			mAlphas.Add(an);
 		}

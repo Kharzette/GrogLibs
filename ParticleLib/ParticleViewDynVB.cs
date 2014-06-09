@@ -16,8 +16,9 @@ namespace ParticleLib
 {
 	internal struct ParticleVert
 	{
-		internal Vector4	mPosition;
-		internal Half4		mSizeRotAlpha;
+		internal Vector4	mPositionTex;
+		internal Half4		mTexSizeRotBlank;
+		internal Half4		mColor;
 	}
 
 
@@ -46,12 +47,12 @@ namespace ParticleLib
 			mPartBuf	=new ParticleVert[maxParticles * 6];
 
 			BufferDescription	bDesc	=new BufferDescription(
-				maxParticles * 6 * 24,
+				maxParticles * 6 * 32,
 				ResourceUsage.Dynamic, BindFlags.VertexBuffer,
 				CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
 
 			mVB		=Buffer.Create<ParticleVert>(gd, mPartBuf, bDesc);
-			mVBB	=new VertexBufferBinding(mVB, 24, 0);
+			mVBB	=new VertexBufferBinding(mVB, 32, 0);
 		}
 
 
@@ -80,53 +81,45 @@ namespace ParticleLib
 				pos.Y	=parts[i].mPosition.Y;
 				pos.Z	=parts[i].mPosition.Z;
 
-				mPartBuf[i * 6].mPosition		=pos;
-				mPartBuf[i * 6 + 1].mPosition	=pos;
-				mPartBuf[i * 6 + 2].mPosition	=pos;
-				mPartBuf[i * 6 + 3].mPosition	=pos;
-				mPartBuf[i * 6 + 4].mPosition	=pos;
-				mPartBuf[i * 6 + 5].mPosition	=pos;
+				mPartBuf[i * 6].mPositionTex		=pos;
+				mPartBuf[i * 6 + 1].mPositionTex	=pos;
+				mPartBuf[i * 6 + 2].mPositionTex	=pos;
+				mPartBuf[i * 6 + 3].mPositionTex	=pos;
+				mPartBuf[i * 6 + 4].mPositionTex	=pos;
+				mPartBuf[i * 6 + 5].mPositionTex	=pos;
 
 				//texcoordx
-				mPartBuf[i * 6 + 2].mPosition.W	=1;
-				mPartBuf[i * 6 + 4].mPosition.W	=1;
-				mPartBuf[i * 6 + 5].mPosition.W	=1;
-//				mPartBuf[i * 6 + 1].mPosition.W	=1;
-//				mPartBuf[i * 6 + 2].mPosition.W	=1;
-//				mPartBuf[i * 6 + 4].mPosition.W	=1;
+				mPartBuf[i * 6 + 2].mPositionTex.W	=1;
+				mPartBuf[i * 6 + 4].mPositionTex.W	=1;
+				mPartBuf[i * 6 + 5].mPositionTex.W	=1;
 
 				//texcoordy
-				mPartBuf[i * 6 + 1].mSizeRotAlpha.W	=1;
-				mPartBuf[i * 6 + 2].mSizeRotAlpha.W	=1;
-				mPartBuf[i * 6 + 4].mSizeRotAlpha.W	=1;
-//				mPartBuf[i * 6 + 2].mSizeRotAlpha.W	=1;
-//				mPartBuf[i * 6 + 4].mSizeRotAlpha.W	=1;
-//				mPartBuf[i * 6 + 5].mSizeRotAlpha.W	=1;
+				mPartBuf[i * 6 + 1].mTexSizeRotBlank.X	=1;
+				mPartBuf[i * 6 + 2].mTexSizeRotBlank.X	=1;
+				mPartBuf[i * 6 + 4].mTexSizeRotBlank.X	=1;
 
-				mPartBuf[i * 6].mSizeRotAlpha.X		=parts[i].mSize;
-				mPartBuf[i * 6 + 1].mSizeRotAlpha.X	=parts[i].mSize;
-				mPartBuf[i * 6 + 2].mSizeRotAlpha.X	=parts[i].mSize;
-				mPartBuf[i * 6 + 3].mSizeRotAlpha.X	=parts[i].mSize;
-				mPartBuf[i * 6 + 4].mSizeRotAlpha.X	=parts[i].mSize;
-				mPartBuf[i * 6 + 5].mSizeRotAlpha.X	=parts[i].mSize;
+				mPartBuf[i * 6].mTexSizeRotBlank.Y		=parts[i].mSize;
+				mPartBuf[i * 6 + 1].mTexSizeRotBlank.Y	=parts[i].mSize;
+				mPartBuf[i * 6 + 2].mTexSizeRotBlank.Y	=parts[i].mSize;
+				mPartBuf[i * 6 + 3].mTexSizeRotBlank.Y	=parts[i].mSize;
+				mPartBuf[i * 6 + 4].mTexSizeRotBlank.Y	=parts[i].mSize;
+				mPartBuf[i * 6 + 5].mTexSizeRotBlank.Y	=parts[i].mSize;
 
-				mPartBuf[i * 6].mSizeRotAlpha.Y		=parts[i].mRotation;
-				mPartBuf[i * 6 + 1].mSizeRotAlpha.Y	=parts[i].mRotation;
-				mPartBuf[i * 6 + 2].mSizeRotAlpha.Y	=parts[i].mRotation;
-				mPartBuf[i * 6 + 3].mSizeRotAlpha.Y	=parts[i].mRotation;
-				mPartBuf[i * 6 + 4].mSizeRotAlpha.Y	=parts[i].mRotation;
-				mPartBuf[i * 6 + 5].mSizeRotAlpha.Y	=parts[i].mRotation;
+				mPartBuf[i * 6].mTexSizeRotBlank.Z		=parts[i].mRotation;
+				mPartBuf[i * 6 + 1].mTexSizeRotBlank.Z	=parts[i].mRotation;
+				mPartBuf[i * 6 + 2].mTexSizeRotBlank.Z	=parts[i].mRotation;
+				mPartBuf[i * 6 + 3].mTexSizeRotBlank.Z	=parts[i].mRotation;
+				mPartBuf[i * 6 + 4].mTexSizeRotBlank.Z	=parts[i].mRotation;
+				mPartBuf[i * 6 + 5].mTexSizeRotBlank.Z	=parts[i].mRotation;
 
-				mPartBuf[i * 6].mSizeRotAlpha.Z		=parts[i].mAlpha;
-				mPartBuf[i * 6 + 1].mSizeRotAlpha.Z	=parts[i].mAlpha;
-				mPartBuf[i * 6 + 2].mSizeRotAlpha.Z	=parts[i].mAlpha;
-				mPartBuf[i * 6 + 3].mSizeRotAlpha.Z	=parts[i].mAlpha;
-				mPartBuf[i * 6 + 4].mSizeRotAlpha.Z	=parts[i].mAlpha;
-				mPartBuf[i * 6 + 5].mSizeRotAlpha.Z	=parts[i].mAlpha;
+				mPartBuf[i * 6].mColor		=parts[i].mColor;
+				mPartBuf[i * 6 + 1].mColor	=parts[i].mColor;
+				mPartBuf[i * 6 + 2].mColor	=parts[i].mColor;
+				mPartBuf[i * 6 + 3].mColor	=parts[i].mColor;
+				mPartBuf[i * 6 + 4].mColor	=parts[i].mColor;
+				mPartBuf[i * 6 + 5].mColor	=parts[i].mColor;
 			}
 
-			//really annoying that I have to do this 3 times
-//			mGD.SetVertexBuffer(null);
 			DataStream	ds;
 			dc.MapSubresource(mVB, MapMode.WriteDiscard, MapFlags.None, out ds);
 
@@ -140,15 +133,13 @@ namespace ParticleLib
 
 
 		internal void Draw(MatLib mlib, AlphaPool ap,
-			Vector3 pos, Vector4 color,
-			Matrix view, Matrix proj)
+			Vector3 pos, Matrix view, Matrix proj)
 		{
-			ap.StoreParticleDraw(mlib, pos, mVBB, mNumParticles * 6, color, mTexName, view, proj);
+			ap.StoreParticleDraw(mlib, pos, mVBB, mNumParticles * 6, mTexName, view, proj);
 		}
 
 
-		internal void Draw(DeviceContext dc, Vector4 color,
-			Matrix view, Matrix proj)
+		internal void Draw(DeviceContext dc, Matrix view, Matrix proj)
 		{
 			if(mNumParticles <= 0)
 			{
@@ -157,7 +148,6 @@ namespace ParticleLib
 
 			dc.InputAssembler.SetVertexBuffers(0, mVBB);
 
-			mMatLib.SetMaterialParameter("Particle", "mSolidColour", color);
 			mMatLib.SetMaterialParameter("Particle", "mView", view);
 			mMatLib.SetMaterialParameter("Particle", "mProjection", proj);
 			mMatLib.SetMaterialTexture("Particle", "mTexture", mTexName);
@@ -169,7 +159,7 @@ namespace ParticleLib
 
 
 		//write into the depth/normal/material buffer
-		internal void DrawDMN(DeviceContext dc, Vector4 color,
+		internal void DrawDMN(DeviceContext dc,
 			Matrix view, Matrix proj, Vector3 eyePos)
 		{
 			if(mNumParticles <= 0)

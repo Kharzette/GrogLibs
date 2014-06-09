@@ -143,6 +143,14 @@ namespace UtilityLib
 		}
 
 
+		public static string VectorToString(Vector3 vec, int numDecimalPlaces)
+		{
+			return	FloatToString(vec.X, numDecimalPlaces)
+				+ " " + FloatToString(vec.Y, numDecimalPlaces)
+				+ " " + FloatToString(vec.Z, numDecimalPlaces);
+		}
+
+
 		public static string VectorToString(Vector3 vec)
 		{
 			return	vec.X.ToString(System.Globalization.CultureInfo.InvariantCulture)
