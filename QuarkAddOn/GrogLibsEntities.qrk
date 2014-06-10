@@ -135,6 +135,18 @@ QQRKSRC1
           activated = "1"
           ;desc = "Emit particles from this entity"
         }
+        misc_trilight_info:e =
+        {
+          origin = "0 0 0"
+          ;desc = "An automatically generated description"
+          trilight1 = ".5 .5 .5"
+          trilight2 = ".3 .3 .3"
+        }
+        misc_particle_gravity:e =
+        {
+          origin = "0 0 0"
+          ;desc = "Link to Emitter to define grav_pos"
+        }
       }
       Key_* entities.qtxfolder =
       {
@@ -1303,6 +1315,36 @@ QQRKSRC1
         Txt = "&"
         Hint = "Specifies a facing direction in 3 dimensions, defined by pitch"
          ", yaw, and roll. (Default=0 0 0)."
+      }
+    }
+    misc_trilight_info:form =
+    {
+      Help = "A newly created Entity type."
+      bbox = '-16 -16 0 16 16 32'
+      ;desc: =
+      {
+        Txt = "&"
+        Hint = "Sets nearby fill light values"
+      }
+      trilight1: =
+      {
+        Txt = "&"
+        Hint = "0 to 1 RGB Value such as 0.5 0.5 0.5"
+      }
+      trilight2: =
+      {
+        Txt = "&"
+        Hint = "0 to 1 RGB Value such as 0.5 0.5 0.5"
+      }
+    }
+    misc_particle_gravity:form =
+    {
+      Help = "A newly created Entity type."
+      bbox = '-16 -16 -16 16 16 16'
+      ;desc: =
+      {
+        Txt = "&"
+        Hint = "Link to an Emitter to define grav_pos"
       }
     }
   }

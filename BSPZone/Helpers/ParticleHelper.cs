@@ -41,8 +41,33 @@ namespace BSPZone
 
 			Array	shapeVals	=Enum.GetValues(typeof(Emitter.Shapes));
 
+			Dictionary<string, Vector3>	gravTargs	=new Dictionary<string, Vector3>();
+
+			//grab any gravity entities
+			List<ZoneEntity>	gravs	=mZone.GetEntitiesStartsWith("misc_particle_grav");
+			foreach(ZoneEntity grav in gravs)
+			{
+				string	targ	=grav.GetTargetName();
+				if(targ == null)
+				{
+					continue;
+				}
+				if(targ == "")
+				{
+					continue;
+				}
+
+				Vector3	org;
+				if(!grav.GetOrigin(out org))
+				{
+					continue;
+				}
+
+				gravTargs.Add(targ, org);
+			}
+
 			//grab out all particle emitters
-			List<ZoneEntity>	parts	=mZone.GetEntitiesStartsWith("misc_particle");
+			List<ZoneEntity>	parts	=mZone.GetEntitiesStartsWith("misc_particle_emitter");
 			foreach(ZoneEntity ze in parts)
 			{
 				Vector4	color;
@@ -122,10 +147,24 @@ namespace BSPZone
 				colorVelMin	/=10000f;
 				colorVelMax	/=10000f;
 
+				//set up the gravity pos if any
+				string	targ			=ze.GetTarget();
+				Vector3	gravityPosition	=gravPos;
+				if(gravTargs.ContainsKey(targ))
+				{
+					//aimed at an entity
+					gravityPosition	=gravTargs[targ];
+				}
+				else
+				{
+					//relative to emitter position
+					gravityPosition	+=pos;
+				}
+
 				int	idx	=mPB.CreateEmitter(
 					ze.GetValue("tex_name"),
 					color, shape, shapeSize, maxParticles,
-					pos, gravPos, gravStr,
+					pos, gravityPosition, gravStr,
 					startSize, emitMS, spinVelMin, spinVelMax,
 					velMin, velMax, sizeVelMin, sizeVelMax,
 					colorVelMin, colorVelMax,

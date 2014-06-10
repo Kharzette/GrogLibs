@@ -37,9 +37,12 @@ namespace ParticleLib
 
 			Vector3	gravVec	=gravLoc - mPosition;
 
-			gravVec.Normalize();
+			float	gravDist	=gravVec.Length();
 
-			gravVec	*=gravStr;
+			//normalize
+			gravVec	/=gravDist;
+
+			gravVec	*=Math.Min((gravStr / gravDist), gravStr);
 
 			mVelocity	+=(gravVec * msDelta) / 1000f;
 
