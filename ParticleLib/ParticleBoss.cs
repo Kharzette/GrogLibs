@@ -342,14 +342,6 @@ namespace ParticleLib
 					Vector3	col	=Misc.StringToVector3(GrabValue(trimmed));
 					colorVelMax	=new Vector4(col, colorVelMax.W);
 				}
-				else if(trimmed.StartsWith("color_velocity_min_w"))
-				{
-					Mathery.TryParse(GrabValue(trimmed), out colorVelMin.W);
-				}
-				else if(trimmed.StartsWith("color_velocity_max_w"))
-				{
-					Mathery.TryParse(GrabValue(trimmed), out colorVelMax.W);
-				}
 			}
 
 			startColor.W	=startAlpha;

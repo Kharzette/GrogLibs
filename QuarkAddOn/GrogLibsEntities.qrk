@@ -110,21 +110,16 @@ QQRKSRC1
         {
           origin = "0 0 0"
           tex_name = "GlowParticle"
-          color = "1 1 1"
-          alpha = "1"
+          start_color = "1 1 1"
+          start_alpha = "1"
           max_particles = "256"
-          cell_shade = "1"
           shape = "0"
           shape_size = "16"
-          grav_yaw = "0"
-          grav_pitch = "0"
-          grav_roll = "0"
+          grav_loc = "0"
           grav_strength = "0"
           start_size = "1"
           start_alpha = "1"
           emit_ms = "0.04"
-          rot_velocity_min = "0"
-          rot_velocity_max = "0"
           velocity_min = "-5"
           velocity_max = "5"
           size_velocity_min = "-0.5"
@@ -135,6 +130,8 @@ QQRKSRC1
           alpha_velocity_max = "0"
           lifetime_min = "3"
           lifetime_max = "4"
+		  color_velocity_min = "0 0 0"
+		  color_velocity_max = "0 0 0"
           activated = "1"
           ;desc = "Emit particles from this entity"
         }
@@ -964,18 +961,18 @@ QQRKSRC1
     misc_particle_emitter:form =
     {
       Help = "Emit particles from this entity"
-      bbox = '-16 -16 -16 16 16 16'
+      bbox = '-16 -16 -24 16 16 32'
       tex_name: =
       {
         Txt = "&"
         Hint = "Particle texture name including extension"
       }
-      color: =
+      start_color: =
       {
         Typ = "LN"
         Hint = "Click here to pick the particle color."
       }
-      alpha: =
+      start_alpha: =
       {
         Txt = "&"
         Hint = "Alpha component of the color"
@@ -984,11 +981,6 @@ QQRKSRC1
       {
         Txt = "&"
         Hint = "Size of the particle buffers"
-      }
-      cell_shade: =
-      {
-        Txt = "&"
-        Hint = "0 for no, 1 for yes"
       }
       shape: =
       {
@@ -1000,20 +992,10 @@ QQRKSRC1
         Txt = "&"
         Hint = "Size of emitter shape (radius)"
       }
-      grav_yaw: =
+      grav_loc: =
       {
         Txt = "&"
-        Hint = "Angle of yaw on the gravity in degrees"
-      }
-      grav_pitch: =
-      {
-        Txt = "&"
-        Hint = "Angle of pitch on the gravity in degrees"
-      }
-      grav_roll: =
-      {
-        Txt = "&"
-        Hint = "Angle of roll on the gravity in degrees"
+        Hint = "Position gravity pulls particles towards"
       }
       grav_strength: =
       {
@@ -1034,16 +1016,6 @@ QQRKSRC1
       {
         Txt = "&"
         Hint = "Number of particles to emit per millisecond"
-      }
-      rot_velocity_min: =
-      {
-        Txt = "&"
-        Hint = "Rotational velocity minimum"
-      }
-      rot_velocity_max: =
-      {
-        Txt = "&"
-        Hint = "Rotational velocity maximum"
       }
       velocity_min: =
       {
@@ -1094,6 +1066,16 @@ QQRKSRC1
       {
         Txt = "&"
         Hint = "Particle life minimum time in seconds"
+      }
+      color_velocity_min: =
+      {
+        Txt = "&"
+        Hint = "Min rate of change for color xyz"
+      }
+      color_velocity_max: =
+      {
+        Txt = "&"
+        Hint = "Max rate of change for color xyz"
       }
       activated: =
       {

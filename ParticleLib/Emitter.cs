@@ -8,6 +8,7 @@ namespace ParticleLib
 {
 	public class Emitter
 	{
+		//if these change, modify Entities.qrk to match
 		public enum Shapes
 		{
 			//todo, filled or solid (right now is solid)
@@ -225,14 +226,14 @@ namespace ParticleLib
 			Vector3	startColXYZ	=new Vector3(mStartColor.X, mStartColor.Y, mStartColor.Z);
 
 			ParticleBoss.AddField(ref entity, "origin", Misc.VectorToString(mPosition));
+			ParticleBoss.AddField(ref entity, "start_color", Misc.VectorToString(startColXYZ));
+			ParticleBoss.AddField(ref entity, "start_alpha", "" + Misc.FloatToString(mStartColor.W, 2));
 			ParticleBoss.AddField(ref entity, "max_particles", "" + mMaxParticles);
 			ParticleBoss.AddField(ref entity, "shape", "" + (int)mShape);
 			ParticleBoss.AddField(ref entity, "shape_size", "" + Misc.FloatToString(mShapeSize, 1));
 			ParticleBoss.AddField(ref entity, "grav_loc", "" + Misc.VectorToString(mGravityLocation));
 			ParticleBoss.AddField(ref entity, "grav_strength", "" + Misc.FloatToString(mGravityStrength, 3));
 			ParticleBoss.AddField(ref entity, "start_size", "" + Misc.FloatToString(mStartSize, 1));
-			ParticleBoss.AddField(ref entity, "start_color", Misc.VectorToString(startColXYZ));
-			ParticleBoss.AddField(ref entity, "start_alpha", "" + Misc.FloatToString(mStartColor.W, 2));
 			ParticleBoss.AddField(ref entity, "emit_ms", "" + Misc.FloatToString(mEmitMS, 3));
 			ParticleBoss.AddField(ref entity, "velocity_min", "" + Misc.FloatToString(mVelocityMin * 1000f, 2));
 			ParticleBoss.AddField(ref entity, "velocity_max", "" + Misc.FloatToString(mVelocityMax * 1000f, 2));
