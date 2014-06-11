@@ -77,7 +77,7 @@ namespace BSPZone
 				bool	bOn;
 				int		shapeIdx, maxParticles;
 				float	gravStr, startSize, emitMS, shapeSize;
-				float	velMin, velMax, alphaVelMin, alphaVelMax;
+				float	velMin, velMax, velCap, alphaVelMin, alphaVelMax;
 				float	sizeVelMin, sizeVelMax, spinVelMin, spinVelMax;
 				float	lifeMin, lifeMax;
 
@@ -104,6 +104,7 @@ namespace BSPZone
 				Mathery.TryParse(ze.GetValue("emit_ms"), out emitMS);
 				Mathery.TryParse(ze.GetValue("velocity_min"), out velMin);
 				Mathery.TryParse(ze.GetValue("velocity_max"), out velMax);
+				Mathery.TryParse(ze.GetValue("velocity_cap"), out velCap);
 				Mathery.TryParse(ze.GetValue("size_velocity_min"), out sizeVelMin);
 				Mathery.TryParse(ze.GetValue("size_velocity_max"), out sizeVelMax);
 				Mathery.TryParse(ze.GetValue("spin_velocity_min"), out spinVelMin);
@@ -166,7 +167,8 @@ namespace BSPZone
 					color, shape, shapeSize, maxParticles,
 					pos, gravityPosition, gravStr,
 					startSize, emitMS, spinVelMin, spinVelMax,
-					velMin, velMax, sizeVelMin, sizeVelMax,
+					velMin, velMax, velCap,
+					sizeVelMin, sizeVelMax,
 					colorVelMin, colorVelMax,
 					(int)lifeMin, (int)lifeMax);
 

@@ -68,7 +68,7 @@ namespace MaterialLib
 
 
 		//this works for BSP materials but not static/char
-		public void AssignIDsToMaterials(string forEffect)
+		public void AssignIDsToEffectMaterials(string fxName)
 		{
 			foreach(MaterialLib mlib in mLibs)
 			{
@@ -81,12 +81,18 @@ namespace MaterialLib
 						continue;
 					}
 
-					if(mlib.GetMaterialEffect(mat) != forEffect)
+					if(mlib.GetMaterialEffect(mat) != fxName)
 					{
 						continue;
 					}
 
-					mlib.SetMaterialParameter(mat, "mMaterialID", mIDs[mat]);
+					string	stripped	=StripName(mat);
+					if(!mIDs.ContainsKey(stripped))
+					{
+						continue;
+					}
+
+					mlib.SetMaterialParameter(mat, "mMaterialID", mIDs[stripped].mID);
 				}
 			}
 		}

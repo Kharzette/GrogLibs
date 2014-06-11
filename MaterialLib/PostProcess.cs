@@ -33,6 +33,9 @@ namespace MaterialLib
 		Buffer				mQuadIB;
 		VertexBufferBinding	mQuadBinding;
 
+		//array for binding two targets
+		RenderTargetView	[]mDualTargs;
+
 		//effect file that has most of the post stuff in it
 		Effect	mPostFX;
 
@@ -70,6 +73,8 @@ namespace MaterialLib
 			mPostDepths.Add("BackDepth", backDepth);
 
 			MakeQuad(gd);
+
+			mDualTargs	=new RenderTargetView[2];
 
 			InitPostParams(gd.GD.FeatureLevel == FeatureLevel.Level_9_3);
 
@@ -139,7 +144,7 @@ namespace MaterialLib
 		void InitPostParams(bool bNineThree)
 		{
 			mPostFX.GetVariableByName("mTexelSteps").AsScalar().Set(1f);
-			mPostFX.GetVariableByName("mThreshold").AsScalar().Set(0.01f);
+			mPostFX.GetVariableByName("mThreshold").AsScalar().Set(5f);
 			mPostFX.GetVariableByName("mScreenSize").AsVector().Set(new Vector2(mResX, mResY));
 			mPostFX.GetVariableByName("mInvViewPort").AsVector().Set(new Vector2(1f / mResX, 1f / mResY));
 			mPostFX.GetVariableByName("mOpacity").AsScalar().Set(0.75f);
@@ -405,6 +410,43 @@ namespace MaterialLib
 		}
 
 
+		public void SetTwoTargets(GraphicsDevice gd,
+			string targName1, string targName2,
+			string depthName)
+		{
+			if(targName1 == null && targName2 == null && depthName == null)
+			{
+				gd.DC.OutputMerger.SetRenderTargets(null, (RenderTargetView)null);
+			}
+			else if(targName1 == "null")
+			{
+				gd.DC.OutputMerger.SetRenderTargets(null, (RenderTargetView)null);
+			}
+			else if(mPostTargets.ContainsKey(targName1)
+				&& mPostTargets.ContainsKey(targName2)
+				&& mPostDepths.ContainsKey(depthName))
+			{
+				gd.DC.OutputMerger.SetTargets(mPostDepths[depthName],
+					mPostTargets[targName1], mPostTargets[targName2]);
+			}
+			else if(mPostTargets.ContainsKey(targName1)
+				&& mPostTargets.ContainsKey(targName2)
+				&& depthName == "null")
+			{
+				mDualTargs[0]	=mPostTargets[targName1];
+				mDualTargs[1]	=mPostTargets[targName2];
+
+				gd.DC.OutputMerger.SetRenderTargets(null, mDualTargs);
+			}
+			else
+			{
+				//need some sort of error here
+				Debug.Assert(false);
+				return;
+			}
+		}
+
+
 //		public Texture2D GetTargetTexture(string targName)
 //		{
 //			return	mPostTargets[targName];
@@ -488,6 +530,9 @@ namespace MaterialLib
 			//datastream
 			mSampleOffsetsXDS.Dispose();
 			mSampleOffsetsYDS.Dispose();
+
+			mDualTargs[0]	=null;
+			mDualTargs[1]	=null;
 
 			mPostFX.Dispose();
 		}

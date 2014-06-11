@@ -158,11 +158,6 @@ namespace BSPCore
 				return	true;
 			}
 
-			if((tex.mFlags & TexInfo.SKY) != 0)
-			{
-				return	true;
-			}
-
 			indexVerts	=new Int32[mTempIndexes.Count];
 				
 			for(i=0;i < mTempIndexes.Count;i++)
