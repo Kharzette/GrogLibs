@@ -533,6 +533,11 @@ namespace MaterialLib
 
 		public void SetLightMapsToAtlas()
 		{
+			if(!mSRVs.ContainsKey("LightMapAtlas"))
+			{
+				return;
+			}
+
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
 				mat.Value.SetEffectParameter("mLightMap", mSRVs["LightMapAtlas"]);

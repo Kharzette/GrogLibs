@@ -300,8 +300,7 @@ namespace MeshLib
 				foreach(FileInfo f in fi)
 				{
 					//strip back
-					string	path	=f.DirectoryName.Substring(
-						f.DirectoryName.LastIndexOf(dir));
+					string	path	=f.DirectoryName;
 
 					StaticMesh	smo	=new StaticMesh();
 					bool	bWorked	=smo.ReadFromFile(path + "\\" + f.Name, gd, false);

@@ -207,6 +207,11 @@ namespace MeshLib
 
 		public void FinishAtlas(GraphicsDevice gd)
 		{
+			if(mLightMapAtlas == null)
+			{
+				return;
+			}
+
 			mLightMapAtlas.Finish(gd);
 			mMatLib.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasSRV());
 		}
@@ -659,6 +664,11 @@ namespace MeshLib
 
 		void FinalizeDrawCalls(Dictionary<int, List<List<DrawCall>>> alphaCalls)
 		{
+			if(alphaCalls == null)
+			{
+				return;
+			}
+
 			//assign material ids
 			foreach(KeyValuePair<int, List<List<DrawCall>>> call in alphaCalls)
 			{
@@ -712,6 +722,11 @@ namespace MeshLib
 		//extract empties and assign material ids
 		void FinalizeDrawCalls(Dictionary<int, List<DrawCall>> calls)
 		{
+			if(calls == null)
+			{
+				return;
+			}
+
 			//assign material ids
 			foreach(KeyValuePair<int, List<DrawCall>> call in calls)
 			{

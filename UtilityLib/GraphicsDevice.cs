@@ -90,10 +90,15 @@ namespace UtilityLib
 
 			features[0]	=flevel;
 
+#if DEBUG
 			Device.CreateWithSwapChain(adpt, DeviceCreationFlags.Debug, features,
 				scDesc, out mGD, out mSChain);
-
 			mGDD	=new DeviceDebug(mGD);
+#else
+			Device.CreateWithSwapChain(adpt, DeviceCreationFlags.None, features,
+				scDesc, out mGD, out mSChain);
+#endif
+
 
 			adpt.Dispose();
 
@@ -223,9 +228,11 @@ namespace UtilityLib
 			mSChain.Dispose();
 			mGD.Dispose();
 
+#if DEBUG
 			mGDD.ReportLiveDeviceObjects(ReportingLevel.Detail);
 
 			mGDD.Dispose();
+#endif
 		}
 
 
