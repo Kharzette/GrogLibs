@@ -39,6 +39,7 @@ namespace ParticleLib
 		public int		mLifeMin, mLifeMax;
 		public float	mGravityStrength;
 		public Vector3	mGravityLocation;
+		public float	mVelocityCap;	//a hard cap on velocity due to gravity etc
 
 		//state data
 		public bool	mbOn;
@@ -55,8 +56,9 @@ namespace ParticleLib
 			Vector3 pos, Vector4 startColor,
 			Vector3 gravPos, float gs,
 			float startSize, float emitMS,
-			float rotVelMin, float rotVelMax, float velMin,
-			float velMax, float sizeVelMin, float sizeVelMax,
+			float rotVelMin, float rotVelMax,
+			float velMin, float velMax, float velCap,
+			float sizeVelMin, float sizeVelMax,
 			Vector4 colorVelMin, Vector4 colorVelMax,
 			int lifeMin, int lifeMax)
 		{
@@ -72,6 +74,7 @@ namespace ParticleLib
 			mRotationalVelocityMax	=rotVelMax;
 			mVelocityMin			=velMin;
 			mVelocityMax			=velMax;
+			mVelocityCap			=velCap;
 			mSizeVelocityMin		=sizeVelMin;
 			mSizeVelocityMax		=sizeVelMax;
 			mLifeMin				=lifeMin;
@@ -108,7 +111,7 @@ namespace ParticleLib
 			int	idx	=0;
 			for(int i=0;i < mCurNumParticles;i++)
 			{
-				if(!buf[i].Update(msDelta, mGravityLocation, mGravityStrength))
+				if(!buf[i].Update(msDelta, mGravityLocation, mGravityStrength, mVelocityCap))
 				{
 					buf2[idx++]	=buf[i];
 				}
@@ -248,6 +251,7 @@ namespace ParticleLib
 			ParticleBoss.AddField(ref entity, "color_velocity_min", Misc.VectorToString(colorMin * 10000f, 2));
 			ParticleBoss.AddField(ref entity, "color_velocity_max", Misc.VectorToString(colorMax * 10000f, 2));
 			ParticleBoss.AddField(ref entity, "activated", (mbOn)? "1" : "0");
+			ParticleBoss.AddField(ref entity, "velocity_cap", "" + Misc.FloatToString(mVelocityCap, 2));
 
 			return	entity;
 		}

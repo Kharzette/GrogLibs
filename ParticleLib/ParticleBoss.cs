@@ -70,8 +70,9 @@ namespace ParticleLib
 			int maxParticles, Vector3 pos,
 			Vector3 gravPos, float gravStr,
 			float startSize, float emitMS,
-			float rotVelMin, float rotVelMax, float velMin,
-			float velMax, float sizeVelMin, float sizeVelMax,
+			float rotVelMin, float rotVelMax,
+			float velMin, float velMax, float velCap,
+			float sizeVelMin, float sizeVelMax,
 			Vector4 colorVelMin, Vector4 colorVelMax,
 			int lifeMin, int lifeMax)
 		{
@@ -80,7 +81,7 @@ namespace ParticleLib
 				startColor,	gravPos, gravStr,
 				startSize, emitMS,
 				rotVelMin, rotVelMax,
-				velMin, velMax,
+				velMin, velMax, velCap,
 				sizeVelMin, sizeVelMax,
 				colorVelMin, colorVelMax,
 				lifeMin, lifeMax);
@@ -226,7 +227,7 @@ namespace ParticleLib
 			}
 
 			int		maxPart, shape, shapeSize;
-			float	gravStr, startSize, startAlpha;
+			float	gravStr, startSize, startAlpha, velCap;
 			float	velMin, velMax, sizeMin, sizeMax, spinMin, spinMax;
 			float	alphaMin, alphaMax, lifeMin, lifeMax, emitMS;
 			string	texName	="";
@@ -245,6 +246,7 @@ namespace ParticleLib
 			sizeMax		=.1f;		alphaMin	=-0.1f;
 			alphaMax	=.1f;		lifeMin		=4000;
 			lifeMax		=8000;		emitMS		=0.04f;
+			velCap		=0.04f;
 
 			string	[]lines	=entityText.Split('\n');
 			foreach(string line in lines)
@@ -295,6 +297,10 @@ namespace ParticleLib
 				else if(trimmed.StartsWith("velocity_max"))
 				{
 					Mathery.TryParse(GrabValue(trimmed), out velMax);
+				}
+				else if(trimmed.StartsWith("velocity_cap"))
+				{
+					Mathery.TryParse(GrabValue(trimmed), out velCap);
 				}
 				else if(trimmed.StartsWith("size_velocity_min"))
 				{
@@ -363,8 +369,9 @@ namespace ParticleLib
 			return	CreateEmitter(texName, startColor,
 				(Emitter.Shapes)shape, shapeSize,
 				maxPart, Vector3.Zero, gravPos, gravStr,
-				startSize, emitMS, spinMin, spinMax, velMin,
-				velMax, sizeMin, sizeMax,
+				startSize, emitMS, spinMin, spinMax,
+				velMin, velMax, velCap,
+				sizeMin, sizeMax,
 				colorVelMin, colorVelMax,
 				(int)lifeMin, (int)lifeMax);
 		}

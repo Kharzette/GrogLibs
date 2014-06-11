@@ -22,7 +22,9 @@ namespace ParticleLib
 
 
 		//return true if expired
-		internal bool Update(float msDelta, Vector3 gravLoc, float gravStr)
+		internal bool Update(float msDelta,
+			Vector3 gravLoc, float gravStr,
+			float maxVelocity)
 		{
 			mLifeRemaining	-=msDelta;
 			if(mLifeRemaining < 0)
@@ -42,9 +44,21 @@ namespace ParticleLib
 			//normalize
 			gravVec	/=gravDist;
 
-			gravVec	*=Math.Min((gravStr / gravDist), gravStr);
+			if(gravDist < 1f)
+			{
+				gravDist	=1f;
+			}
+			gravVec	*=(gravStr / (gravDist * gravDist));
 
 			mVelocity	+=(gravVec * msDelta) / 1000f;
+
+			//clamp velocity
+			float	velLen	=mVelocity.Length();
+
+			if(velLen > maxVelocity)
+			{
+				mVelocity	*=(maxVelocity / velLen);
+			}
 
 			mSize	=MathUtil.Clamp(mSize, 0f, 10000f);
 			mColor	=Mathery.ClampVector(mColor, Vector4.Zero, Vector4.One);

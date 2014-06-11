@@ -72,7 +72,7 @@ QQRKSRC1
       Flags:   ={Txt=""     Cap="Transparent"    Typ="X16"      Hint="Partially transparent"}
       Flags:   ={Txt=""     Cap="Gouraud"        Typ="X32"      Hint="Uses vertex lighting with smoothed normals"}
       Flags:   ={Txt=""     Cap="Flat"           Typ="X64"      Hint="Vertex lighting with face normals"}
-      Flags:   ={Txt=""     Cap="CellShade"      Typ="X128"     Hint="Use a cartoony shader"}
+      Flags:   ={Txt=""     Cap="CelShade"       Typ="X128"     Hint="Use a cartoony shader"}
 
       Sep:     ={Txt="" Typ="S"}  // separator
 
