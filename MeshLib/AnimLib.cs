@@ -156,7 +156,7 @@ namespace MeshLib
 		}
 
 
-		public bool ReadFromFile(string fileName, bool bTool)
+		public bool ReadFromFile(string fileName)
 		{
 			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
 			if(file == null)

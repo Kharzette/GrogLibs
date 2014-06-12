@@ -212,7 +212,7 @@ namespace MeshLib
 		internal void DrawDMN(DeviceContext dc,
 			MaterialLib.MaterialLib matLib,
 			MaterialLib.IDKeeper idk,
-			Matrix world)
+			Matrix transform)
 		{
 			if(!mbVisible)
 			{
@@ -233,10 +233,10 @@ namespace MeshLib
 			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
 			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
 
-			matLib.SetMaterialParameter("DMN", "mWorld", world);
+			matLib.SetMaterialParameter("DMN", "mWorld", (mTransform * transform));
 			matLib.SetMaterialParameter("DMN", "mMaterialID", id);
 
-			matLib.ApplyMaterialPass(mMaterialName, dc, 0);
+			matLib.ApplyMaterialPass("DMN", dc, 0);
 
 			dc.DrawIndexed(mNumTriangles * 3, 0, 0);
 		}

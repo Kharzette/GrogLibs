@@ -33,9 +33,6 @@ namespace MaterialLib
 		Buffer				mQuadIB;
 		VertexBufferBinding	mQuadBinding;
 
-		//array for binding two targets
-		RenderTargetView	[]mDualTargs;
-
 		//effect file that has most of the post stuff in it
 		Effect	mPostFX;
 
@@ -46,11 +43,8 @@ namespace MaterialLib
 		//gaussian blur stuff
 		float	[]mSampleWeightsX;
 		float	[]mSampleWeightsY;
-		Vector2	[]mSampleOffsetsX;
-		Vector2	[]mSampleOffsetsY;
-
-		//datastream for setting above arrays
-		DataStream	mSampleOffsetsXDS, mSampleOffsetsYDS;
+		float	[]mSampleOffsetsX;
+		float	[]mSampleOffsetsY;
 
 		//constants
 		const float	BlurAmount	=4f;
@@ -73,8 +67,6 @@ namespace MaterialLib
 			mPostDepths.Add("BackDepth", backDepth);
 
 			MakeQuad(gd);
-
-			mDualTargs	=new RenderTargetView[2];
 
 			InitPostParams(gd.GD.FeatureLevel == FeatureLevel.Level_9_3);
 
@@ -167,19 +159,19 @@ namespace MaterialLib
 		void SetBlurParams(bool bX)
 		{
 			EffectScalarVariable	weightsX	=mPostFX.GetVariableByName("mWeightsX").AsScalar();
-			EffectScalarVariable	weightsY	=mPostFX.GetVariableByName("mWeightsX").AsScalar();
-			EffectVectorVariable	offsetsX	=mPostFX.GetVariableByName("mOffsetsX").AsVector();
-			EffectVectorVariable	offsetsY	=mPostFX.GetVariableByName("mOffsetsY").AsVector();
+			EffectScalarVariable	weightsY	=mPostFX.GetVariableByName("mWeightsY").AsScalar();
+			EffectScalarVariable	offsetsX	=mPostFX.GetVariableByName("mOffsetsX").AsScalar();
+			EffectScalarVariable	offsetsY	=mPostFX.GetVariableByName("mOffsetsY").AsScalar();
 
 			if(bX)
 			{
 				weightsX.Set(mSampleWeightsX);
-				offsetsX.SetRawValue(mSampleOffsetsXDS, mSampleOffsetsX.Length * 8);
+				offsetsX.Set(mSampleOffsetsX);
 			}
 			else
 			{
 				weightsY.Set(mSampleWeightsY);
-				offsetsY.SetRawValue(mSampleOffsetsYDS, mSampleOffsetsY.Length * 8);
+				offsetsY.Set(mSampleOffsetsY);
 			}
 		}
 
@@ -206,19 +198,14 @@ namespace MaterialLib
 			//Create temporary arrays for computing our filter settings.
 			mSampleWeightsX	=new float[sampleCountX];
 			mSampleWeightsY	=new float[sampleCountY];
-			mSampleOffsetsX	=new Vector2[sampleCountX];
-			mSampleOffsetsY	=new Vector2[sampleCountY];
+			mSampleOffsetsX	=new float[sampleCountX];
+			mSampleOffsetsY	=new float[sampleCountY];
 			
-			//stupid effect stuff has no array capability for vector2
-			//pain in the ass
-			mSampleOffsetsXDS	=new DataStream(sampleCountX * 8, true, true);
-			mSampleOffsetsYDS	=new DataStream(sampleCountY * 8, true, true);
-
 			//The first sample always has a zero offset.
 			mSampleWeightsX[0]	=ComputeGaussian(0);
-			mSampleOffsetsX[0]	=new Vector2(0);
+			mSampleOffsetsX[0]	=0f;
 			mSampleWeightsY[0]	=ComputeGaussian(0);
-			mSampleOffsetsY[0]	=new Vector2(0);
+			mSampleOffsetsY[0]	=0f;
 			
 			//Maintain a sum of all the weighting values.
 			float	totalWeightsX	=mSampleWeightsX[0];
@@ -247,8 +234,8 @@ namespace MaterialLib
 				Vector2	deltaX	=new Vector2(dxX, dyX) * sampleOffset;
 
 				//Store texture coordinate offsets for the positive and negative taps.
-				mSampleOffsetsX[i * 2 + 1]	=deltaX;
-				mSampleOffsetsX[i * 2 + 2]	=-deltaX;
+				mSampleOffsetsX[i * 2 + 1]	=deltaX.X;
+				mSampleOffsetsX[i * 2 + 2]	=-deltaX.X;
 			}
 
 			//Add pairs of additional sample taps, positioned
@@ -274,8 +261,8 @@ namespace MaterialLib
 				Vector2	deltaY	=new Vector2(dxY, dyY) * sampleOffset;
 
 				//Store texture coordinate offsets for the positive and negative taps.
-				mSampleOffsetsY[i * 2 + 1]	=deltaY;
-				mSampleOffsetsY[i * 2 + 2]	=-deltaY;
+				mSampleOffsetsY[i * 2 + 1]	=deltaY.Y;
+				mSampleOffsetsY[i * 2 + 2]	=-deltaY.Y;
 			}
 
 			//Normalize the list of sample weightings, so they will always sum to one.
@@ -286,13 +273,6 @@ namespace MaterialLib
 			for(int i=0;i < mSampleWeightsY.Length;i++)
 			{
 				mSampleWeightsY[i]	/=totalWeightsY;
-			}
-
-			//write to a datastream
-			for(int i=0;i < sampleCountX;i++)
-			{
-				mSampleOffsetsXDS.Write(mSampleOffsetsX[i]);
-				mSampleOffsetsYDS.Write(mSampleOffsetsY[i]);
 			}
 		}
 		
@@ -433,10 +413,7 @@ namespace MaterialLib
 				&& mPostTargets.ContainsKey(targName2)
 				&& depthName == "null")
 			{
-				mDualTargs[0]	=mPostTargets[targName1];
-				mDualTargs[1]	=mPostTargets[targName2];
-
-				gd.DC.OutputMerger.SetRenderTargets(null, mDualTargs);
+				gd.DC.OutputMerger.SetTargets(mPostTargets[targName1], mPostTargets[targName2]);
 			}
 			else
 			{
@@ -526,13 +503,6 @@ namespace MaterialLib
 			//buffers
 			mQuadIB.Dispose();
 			mQuadVB.Dispose();
-
-			//datastream
-			mSampleOffsetsXDS.Dispose();
-			mSampleOffsetsYDS.Dispose();
-
-			mDualTargs[0]	=null;
-			mDualTargs[1]	=null;
 
 			mPostFX.Dispose();
 		}
