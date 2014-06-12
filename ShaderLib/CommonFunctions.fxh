@@ -47,6 +47,8 @@ float	mSpecPower;
 #include "RenderStates.fxh"
 
 
+//stole these normal compression routines from @aras_p
+//see http://aras-p.info/texts/CompactNormalStorage.html
 //chops a half3 down to a half2
 half2 EncodeNormal(half3 norm)
 {

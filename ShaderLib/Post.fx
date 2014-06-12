@@ -559,6 +559,41 @@ float4	Outline93PS(VVPos93 input) : SV_Target
 	{
 		return	float4(0, 0, 0, 1);
 	}
+
+	//if the normals are fairly similar, and no mat boundary,
+	//check if the samples all lie in the same plane
+	half3	centerPos	=mColorTex.Sample(PointClamp, uv).xyz;
+	float	centerDist	=dot(centerPos, centerNorm);
+
+	half3	upPos		=mColorTex.Sample(PointClamp, uv + oy).xyz;
+	half3	leftPos		=mColorTex.Sample(PointClamp, uv - ox).xyz;
+	half3	rightPos	=mColorTex.Sample(PointClamp, uv + ox).xyz;
+	half3	downPos		=mColorTex.Sample(PointClamp, uv - oy).xyz;
+	float	planeDist	=dot(upPos, centerNorm) - centerDist;
+
+	if(abs(planeDist) > mThreshold)
+	{
+		return	float4(0, 0, 0, 1);
+	}
+
+	planeDist	=dot(leftPos, centerNorm) - centerDist;
+	if(abs(planeDist) > mThreshold)
+	{
+		return	float4(0, 0, 0, 1);
+	}
+
+	planeDist	=dot(rightPos, centerNorm) - centerDist;
+	if(abs(planeDist) > mThreshold)
+	{
+		return	float4(0, 0, 0, 1);
+	}
+
+	planeDist	=dot(downPos, centerNorm) - centerDist;
+	if(abs(planeDist) > mThreshold)
+	{
+		return	float4(0, 0, 0, 1);
+	}
+
     return	float4(1, 1, 1, 1);
 }
 
