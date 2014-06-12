@@ -55,30 +55,13 @@ half2 EncodeNormal(half3 norm)
 
 
 //half2 to half3
-half3 DecodeNormal(half2 encoded)
+half3 DecodeNormal(half2 encoded, float3 view)
 {
 	half3	ret;
 
-	const half	theSign	=(encoded.x < 0)? -1.0f : 1.0f;
-	
-	ret.x	=abs(encoded.x) * 2.0f - 1.0f;
-	ret.y	=encoded.y;
-	ret.z	=sqrt(1.0f - dot(ret.xy, ret.xy)) * theSign;
-	
-	return	ret;
-}
+	ret.xy	=(encoded * 2) - 1;
+	ret.z	=sqrt(1 - dot(ret.xy, ret.xy));
 
-
-//half2 to half3
-//tries to save some instructions
-half3 DecodeNormalSM2(half2 encoded)
-{
-	half3	ret;
-
-	ret.x	=encoded.x * 2.0f - 1.0f;
-	ret.y	=encoded.y;
-	ret.z	=sqrt(1.0f - dot(ret.xy, ret.xy));
-	
 	return	ret;
 }
 

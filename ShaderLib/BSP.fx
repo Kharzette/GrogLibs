@@ -492,23 +492,28 @@ float4 SkyPS(VVPosCubeTex0 input) : SV_Target
 }
 
 
+struct TwoHalf4Targets
+{
+	half4	targ1, targ2;
+};
+
 //depth normal material pixel shaders
 //these all spit out depth in x, material id in y
 //and encoded normal in zw
-half4 LightMapDMNPS(VVPosTex04Tex14Tex24 input) : SV_Target
+TwoHalf4Targets LightMapDMNPS(VVPosTex04Tex14Tex24 input) : SV_Target
 {
-	half4	ret;
+	TwoHalf4Targets	ret;
 
-	ret.x	=distance(input.TexCoord1, mEyePos);
-	ret.y	=mMaterialID;
-	ret.zw	=EncodeNormal(input.TexCoord2.xyz);
+	ret.targ1.x		=mMaterialID;
+	ret.targ1.yzw	=input.TexCoord2.xyz;
+	ret.targ2		=input.TexCoord1;
 
 	return	ret;
 }
 
-half4 VertexLitDMNPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
+TwoHalf4Targets VertexLitDMNPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 {
-	half4	ret;
+	TwoHalf4Targets	ret;
 
 	float3	worldPos;
 	worldPos.x	=input.TexCoord0.z;
@@ -520,33 +525,34 @@ half4 VertexLitDMNPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 	norm.y		=input.TexCoord1.w;
 	norm.z		=input.TexCoord2.x;
 
-	ret.x	=distance(worldPos, mEyePos);
-	ret.y	=mMaterialID;
-	ret.zw	=EncodeNormal(norm);
+	ret.targ1.x		=mMaterialID;
+	ret.targ1.yzw	=norm;
+	ret.targ2		=float4(worldPos, 0);
 
 	return	ret;
 }
 
-half4 LightMapAnimDMNPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
+TwoHalf4Targets LightMapAnimDMNPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 {
 	float3	norm		=input.TexCoord3.xyz;
 	float3	worldPos	=input.TexCoord4.xyz;
-	half4	ret;
 
-	ret.x	=distance(worldPos, mEyePos);
-	ret.y	=mMaterialID;
-	ret.zw	=EncodeNormal(norm);
+	TwoHalf4Targets	ret;
+
+	ret.targ1.x		=mMaterialID;
+	ret.targ1.yzw	=norm;
+	ret.targ2		=float4(worldPos, 0);
 
 	return	ret;
 }
 
-half4 SkyDMNPS(VVPosCubeTex0 input) : SV_Target
+TwoHalf4Targets SkyDMNPS(VVPosCubeTex0 input) : SV_Target
 {
-	half4	ret;
+	TwoHalf4Targets	ret;
 
-	ret.x	=MAX_HALF;
-	ret.y	=mMaterialID;
-	ret.zw	=EncodeNormal(float3(0, -1, 0));
+	ret.targ1.x		=mMaterialID;
+	ret.targ1.yzw	=float3(0, -1, 0);
+	ret.targ2		=float4(0, 0, 0, 0);
 
 	return	ret;
 }

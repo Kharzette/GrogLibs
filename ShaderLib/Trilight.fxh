@@ -31,6 +31,13 @@ float4 ShadowPS(VVPosTex03 input) : SV_Target
 	return	float4(dist, 0, 0, 0);
 }
 
+float4 Shadow2PS(VVPosTex03Tex13 input) : SV_Target
+{
+	float	dist	=distance(mShadowLightPos, input.TexCoord1);
+
+	return	float4(dist, 0, 0, 0);
+}
+
 //writes depth
 float4 DepthPS(VVPosTex01 input) : SV_Target0
 {
@@ -43,13 +50,18 @@ float4 MaterialPS(VVPosTex01 input) : SV_Target0
 	return	float4(mMaterialID, 0, 0, 0);
 }
 
-half4 DMNPS(VVPosTex03Tex13 input) : SV_Target0
+struct TwoHalf4Targets
 {
-	half4	ret;
+	half4	targ1, targ2;
+};
 
-	ret.x	=distance(input.TexCoord1, mEyePos);
-	ret.y	=mMaterialID;
-	ret.zw	=EncodeNormal(input.TexCoord0);
+TwoHalf4Targets DMNPS(VVPosTex03Tex13 input) : SV_Target0
+{
+	TwoHalf4Targets	ret;
+
+	ret.targ1.x		=mMaterialID;
+	ret.targ1.yzw	=input.TexCoord0;
+	ret.targ2		=float4(input.TexCoord1, 0);
 
 	return	ret;
 }

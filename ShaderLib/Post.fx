@@ -35,7 +35,7 @@ float	mBaseSaturation;
 float	mTexelSteps;
 float	mThreshold;
 float2	mScreenSize;
-#define	NORM_LINE_THRESHOLD	0.8
+#define	NORM_LINE_THRESHOLD	0.6
 
 //gaussianblur stuff
 #if !defined(SM2)
@@ -45,28 +45,15 @@ float2	mScreenSize;
 #endif
 #define	KERNEL_SIZE		(RADIUS * 2 + 1)
 float	mWeightsX[KERNEL_SIZE], mWeightsY[KERNEL_SIZE];
-float2	mOffsetsX[KERNEL_SIZE], mOffsetsY[KERNEL_SIZE];
+float	mOffsetsX[KERNEL_SIZE], mOffsetsY[KERNEL_SIZE];
 
 //bilateral blur stuff
 float	mBlurFallOff;
 float	mSharpNess;
-float	mBlurRadius	=7;
 float	mOpacity;
 
 
 //helper functions
-float3 DecodeNormal(float4 enc)
-{
-	return	enc.xyz;	//my normals aren't compressed
-//	half4	nn	=enc * half4(2, 2, 0, 0) + half4(-1, -1, 1, -1);
-//	half	l	=dot(nn.xyz, -nn.xyw);
-	
-//	nn.z	=l;
-//	nn.xy	*=sqrt(l);
-	
-//	return	nn.xyz * 2 + half3(0, 0, -1);
-}
-
 float3 PositionFromDepth(float2 texCoord, float3 ray)
 {
 	float	depth	=mNormalTex.Sample(PointClamp, texCoord).w;
@@ -146,7 +133,7 @@ VVPos93	SimpleQuad93VS(VPos input)
 
 float4	BloomExtractPS(VVPos input) : SV_Target
 {
-	float2	uv	=input.Position.xy / mScreenSize;
+	float2	uv	=input.Position.xy / (mScreenSize / 2);	//half size rendertarget
 	float4	ret	=mBlurTargetTex.Sample(LinearClamp, uv);
 
 	return	saturate((ret - mBloomThreshold) / (1 - mBloomThreshold));
@@ -154,7 +141,7 @@ float4	BloomExtractPS(VVPos input) : SV_Target
 
 float4	BloomExtract93PS(VVPos93 input) : SV_Target
 {
-	float2	uv	=input.VPos.xy;
+	float2	uv	=input.VPos.xy * 2;	//half size
 	float4	ret	=mBlurTargetTex.Sample(LinearClamp, uv);
 
 	return	saturate((ret - mBloomThreshold) / (1 - mBloomThreshold));
@@ -207,7 +194,11 @@ float4	GaussianBlurXPS(VVPos input) : SV_Target
 
 	for(int i=0;i < KERNEL_SIZE;++i)
 	{
-		ret	+=mBlurTargetTex.Sample(LinearClamp, uv + mOffsetsX[i]) * mWeightsX[i];
+		float2	uvOfs	=uv;
+
+		uvOfs.x	+=mOffsetsX[i];
+
+		ret	+=mBlurTargetTex.Sample(LinearClamp, uv + uvOfs) * mWeightsX[i];
 	}
 	return	ret;
 }
@@ -219,7 +210,11 @@ float4	GaussianBlurX93PS(VVPos93 input) : SV_Target
 
 	for(int i=0;i < KERNEL_SIZE;++i)
 	{
-		ret	+=mBlurTargetTex.Sample(LinearClamp, uv + mOffsetsX[i]) * mWeightsX[i];
+		float2	uvOfs	=uv;
+
+		uvOfs.x	+=mOffsetsX[i];
+
+		ret	+=mBlurTargetTex.Sample(LinearClamp, uv + uvOfs) * mWeightsX[i];
 	}
 	return	ret;
 }
@@ -231,7 +226,11 @@ float4	GaussianBlurYPS(VVPos input) : SV_Target
 
 	for(int i=0;i < KERNEL_SIZE;++i)
 	{
-		ret	+=mBlurTargetTex.Sample(LinearClamp, uv + mOffsetsY[i]) * mWeightsY[i];
+		float2	uvOfs	=uv;
+
+		uvOfs.y	+=mOffsetsY[i];
+
+		ret	+=mBlurTargetTex.Sample(LinearClamp, uv + uvOfs) * mWeightsY[i];
 	}
 	return	ret;
 }
@@ -243,7 +242,11 @@ float4	GaussianBlurY93PS(VVPos93 input) : SV_Target
 
 	for(int i=0;i < KERNEL_SIZE;++i)
 	{
-		ret	+=mBlurTargetTex.Sample(LinearClamp, uv + mOffsetsY[i]) * mWeightsY[i];
+		float2	uvOfs	=uv;
+
+		uvOfs.y	+=mOffsetsY[i];
+
+		ret	+=mBlurTargetTex.Sample(LinearClamp, uv + uvOfs) * mWeightsY[i];
 	}
 	return	ret;
 }
@@ -310,7 +313,7 @@ float4	DebugNormalDraw(VVPos input) : SV_Target
 	float2	uv	=input.Position.xy / mScreenSize;
 	half4	dmn	=mNormalTex.Sample(PointClamp, uv);
 
-	half3	norm	=DecodeNormal(dmn.zw);
+	half3	norm	=DecodeNormal(dmn.zw, mView._m02_m12_m22);
 
 	return	float4(norm.x, norm.y, norm.z, 1);
 }
@@ -334,15 +337,14 @@ float4	OutlinePS(VVPos input) : SV_Target
 #if defined(LINE_OCCLUSION_TEST)
 	//check for material ID 0, this is a hack for stuff like
 	//particles that need to occlude a line
-	if(center.y == 0)
+	if(center.x == 0)
 	{
 		return	float4(1, 1, 1, 1);
 	}
 #endif
 
 	//one texel around center
-	//format is x depth, y matid, zw normal
-	up			=mNormalTex.Sample(PointClamp, uv + oy);
+	//format is x matid, yzw normal
 	up			=mNormalTex.Sample(PointClamp, uv + oy);
 	left		=mNormalTex.Sample(PointClamp, uv - ox);
 	right		=mNormalTex.Sample(PointClamp, uv + ox);
@@ -379,15 +381,15 @@ float4	OutlinePS(VVPos input) : SV_Target
 #endif
 
 	//normal stuff, too many instructions for sm2
-	half3	centerNorm		=DecodeNormal(center.zw);
-	half3	upNorm			=DecodeNormal(up.zw);
-	half3	leftNorm		=DecodeNormal(left.zw);
-	half3	rightNorm		=DecodeNormal(right.zw);
-	half3	downNorm		=DecodeNormal(down.zw);
-	half3	upLeftNorm		=DecodeNormal(upLeft.zw);
-	half3	upRightNorm		=DecodeNormal(upRight.zw);
-	half3	downLeftNorm	=DecodeNormal(downLeft.zw);
-	half3	downRightNorm	=DecodeNormal(downRight.zw);
+	half3	centerNorm		=center.yzw;
+	half3	upNorm			=up.yzw;
+	half3	leftNorm		=left.yzw;
+	half3	rightNorm		=right.yzw;
+	half3	downNorm		=down.yzw;
+	half3	upLeftNorm		=upLeft.yzw;
+	half3	upRightNorm		=upRight.yzw;
+	half3	downLeftNorm	=downLeft.yzw;
+	half3	downRightNorm	=downRight.yzw;
 
 	float4	normDots0;
 	float4	normDots1;
@@ -412,77 +414,93 @@ float4	OutlinePS(VVPos input) : SV_Target
 
 	float4	matDiff1;
 
-	matDiff1.x	=center.y - up.y;
-	matDiff1.y	=center.y - right.y;
-	matDiff1.z	=center.y - left.y;
-	matDiff1.w	=center.y - down.y;
+	matDiff1.x	=center.x - up.x;
+	matDiff1.y	=center.x - right.x;
+	matDiff1.z	=center.x - left.x;
+	matDiff1.w	=center.x - down.x;
 
 	matDiff1	=abs(matDiff1);
 
 	//extra corners for > SM2
 	float4	matDiff2;
 
-	matDiff2.x	=center.y - upLeft.y;
-	matDiff2.y	=center.y - upRight.y;
-	matDiff2.z	=center.y - downLeft.y;
-	matDiff2.w	=center.y - downRight.y;
+	matDiff2.x	=center.x - upLeft.x;
+	matDiff2.y	=center.x - upRight.x;
+	matDiff2.z	=center.x - downLeft.x;
+	matDiff2.w	=center.x - downRight.x;
 
 	matDiff1	+=abs(matDiff2);
 
-	float	K00	=-1;
-	float	K01	=-2;
-	float	K02	=-1;
-	float	K10	=0;
-	float	K11	=0;
-	float	K12	=0;
-	float	K20	=1;
-	float	K21	=2;
-	float	K22	=1;
-
-	float	sx	=0;
-	float	sy	=0;
-
-	sx	+=down.x * K01;
-	sx	+=up.x * K21;
-	sy	+=left.x * K01;
-	sy	+=right.x * K21;
-
-	//these are all optimized out
-//	sy	+=down.x * K10;
-//	sx	+=left.x * K10;
-//	sx	+=center.x * K11;
-//	sy	+=center.x * K11;
-//	sx	+=right.x * K12;
-//	sy	+=up.x * K12;
-
-	//extra corners for > SM2
-	sx	+=downLeft.x * K00;
-	sy	+=downLeft.x * K00;
-	sx	+=downRight.x * K02;
-	sy	+=downRight.x * K20;
-	sx	+=upLeft.x * K20;
-	sy	+=upLeft.x * K02;
-	sx	+=upRight.x * K22; 
-	sy	+=upRight.x * K22;
-
-	float	dist	=sqrt(sx * sx + sy * sy);
-
-	//if there's no material boundary, bias
-	//heavily toward no outline, this helps prevent
-	//steeply oblique to screen polys keep from going
-	//super black from the outliner freaking out
-	if(!any(matDiff1))
+	//if any material differences do black line
+	if(any(matDiff1))
 	{
-		dist	-=50;
-	}
-	float	result	=1;
-	
-	if(dist > mThreshold)
-	{
-		result	=0;
+		return	float4(0, 0, 0, 1);
 	}
 
-    return	float4(result, result, result, 1);
+	//if the normals are fairly similar, and no mat boundary,
+	//check if the samples all lie in the same plane
+	half3	centerPos	=mColorTex.Sample(PointClamp, uv).xyz;
+	float	centerDist	=dot(centerPos, centerNorm);
+
+	half3	upPos		=mColorTex.Sample(PointClamp, uv + oy).xyz;
+	half3	leftPos		=mColorTex.Sample(PointClamp, uv - ox).xyz;
+	half3	rightPos	=mColorTex.Sample(PointClamp, uv + ox).xyz;
+	half3	downPos		=mColorTex.Sample(PointClamp, uv - oy).xyz;
+
+	half3	upLeftPos		=mColorTex.Sample(PointClamp, uv - ox + oy).xyz;
+	half3	upRightPos		=mColorTex.Sample(PointClamp, uv + ox + oy).xyz;
+	half3	downLeftPos		=mColorTex.Sample(PointClamp, uv - ox - oy).xyz;
+	half3	downRightPos	=mColorTex.Sample(PointClamp, uv + ox - oy).xyz;
+
+	float	planeDist	=dot(upPos, centerNorm) - centerDist;
+	if(abs(planeDist) > mThreshold)
+	{
+		return	float4(0, 0, 0, 1);
+	}
+
+	planeDist	=dot(leftPos, centerNorm) - centerDist;
+	if(abs(planeDist) > mThreshold)
+	{
+		return	float4(0, 0, 0, 1);
+	}
+
+	planeDist	=dot(rightPos, centerNorm) - centerDist;
+	if(abs(planeDist) > mThreshold)
+	{
+		return	float4(0, 0, 0, 1);
+	}
+
+	planeDist	=dot(downPos, centerNorm) - centerDist;
+	if(abs(planeDist) > mThreshold)
+	{
+		return	float4(0, 0, 0, 1);
+	}
+
+	planeDist	=dot(upLeftPos, centerNorm) - centerDist;
+	if(abs(planeDist) > mThreshold)
+	{
+		return	float4(0, 0, 0, 1);
+	}
+
+	planeDist	=dot(upRightPos, centerNorm) - centerDist;
+	if(abs(planeDist) > mThreshold)
+	{
+		return	float4(0, 0, 0, 1);
+	}
+
+	planeDist	=dot(downLeftPos, centerNorm) - centerDist;
+	if(abs(planeDist) > mThreshold)
+	{
+		return	float4(0, 0, 0, 1);
+	}
+
+	planeDist	=dot(downRightPos, centerNorm) - centerDist;
+	if(abs(planeDist) > mThreshold)
+	{
+		return	float4(0, 0, 0, 1);
+	}
+
+	return	float4(1, 1, 1, 1);
 }
 
 //for 9_3 feature levels
@@ -499,15 +517,6 @@ float4	Outline93PS(VVPos93 input) : SV_Target
 	//read center
 	center	=mNormalTex.Sample(PointClamp, uv);
 
-#if defined(LINE_OCCLUSION_TEST)
-	//check for material ID 0, this is a hack for stuff like
-	//particles that need to occlude a line
-	if(center.y == 0)
-	{
-		return	float4(1, 1, 1, 1);
-	}
-#endif
-
 	//one texel around center
 	//format is x depth, y matid, zw normal
 	up			=mNormalTex.Sample(PointClamp, uv + oy);
@@ -516,83 +525,41 @@ float4	Outline93PS(VVPos93 input) : SV_Target
 	right		=mNormalTex.Sample(PointClamp, uv + ox);
 	down		=mNormalTex.Sample(PointClamp, uv - oy);
 
-#if defined(LINE_OCCLUSION_TEST)
-	//check for material ID 0, this is a hack for stuff like
-	//particles that need to occlude a line
-	half4	zeroTest1, zeroTest2;
+	half3	centerNorm		=center.yzw;
+	half3	upNorm			=up.yzw;
+	half3	leftNorm		=left.yzw;
+	half3	rightNorm		=right.yzw;
+	half3	downNorm		=down.yzw;
 
-	zeroTest1.x	=upLeft.y;
-	zeroTest1.y	=up.y;
-	zeroTest1.z	=upRight.y;
-	zeroTest1.w	=left.y;
-	zeroTest2.x	=right.y;
-	zeroTest2.y	=downLeft.y;
-	zeroTest2.z	=down.y;
-	zeroTest2.w	=downRight.y;
+	float4	normDots0;
+	normDots0.x	=dot(centerNorm, upNorm);
+	normDots0.y	=dot(centerNorm, rightNorm);
+	normDots0.z	=dot(centerNorm, leftNorm);
+	normDots0.w	=dot(centerNorm, downNorm);
 
-	if(!all(zeroTest1))
+	normDots0	=step(normDots0, NORM_LINE_THRESHOLD);
+
+	//can early out with the normal test
+	if(any(normDots0))
 	{
-		return	float4(1, 1, 1, 1);
+		return	float4(0, 0, 0, 1);
 	}
-	if(!all(zeroTest2))
-	{
-		return	float4(1, 1, 1, 1);
-	}
-#endif
 
 	float4	matDiff1;
 
-	matDiff1.x	=center.y - up.y;
-	matDiff1.y	=center.y - right.y;
-	matDiff1.z	=center.y - left.y;
-	matDiff1.w	=center.y - down.y;
+	matDiff1.x	=center.x - up.x;
+	matDiff1.y	=center.x - right.x;
+	matDiff1.z	=center.x - left.x;
+	matDiff1.w	=center.x - down.x;
 
 	matDiff1	=abs(matDiff1);
 
-	float	K00	=-1;
-	float	K01	=-2;
-	float	K02	=-1;
-	float	K10	=0;
-	float	K11	=0;
-	float	K12	=0;
-	float	K20	=1;
-	float	K21	=2;
-	float	K22	=1;
-
-	float	sx	=0;
-	float	sy	=0;
-
-	sx	+=down.x * K01;
-	sx	+=up.x * K21;
-	sy	+=left.x * K01;
-	sy	+=right.x * K21;
-
-	//these are all optimized out
-//	sy	+=down.x * K10;
-//	sx	+=left.x * K10;
-//	sx	+=center.x * K11;
-//	sy	+=center.x * K11;
-//	sx	+=right.x * K12;
-//	sy	+=up.x * K12;
-
-	float	dist	=sqrt(sx * sx + sy * sy);
-
-	//if there's no material boundary, bias
-	//heavily toward no outline, this helps prevent
-	//steeply oblique to screen polys keep from going
-	//super black from the outliner freaking out
-	if(!any(matDiff1))
+	//if any material differences do black line
+	if(any(matDiff1))
 	{
-		dist	-=50;
+		return	float4(0, 0, 0, 1);
 	}
-	float	result	=1;
-	
-	if(dist > mThreshold)
-	{
-		result	=0;
-	}
-
-    return	float4(result, result, result, 1);
+    return	float4(1, 1, 1, 1);
 }
 
 

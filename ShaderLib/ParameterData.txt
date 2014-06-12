@@ -33,6 +33,8 @@ TriTex0
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture1
 		mSolidColour
@@ -79,6 +81,8 @@ TriTex0NormalMapSolid
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture1
 		mBones
@@ -123,9 +127,58 @@ TriTex0Spec
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture1
 		mSolidColour
+		mBones
+		mWorld
+		mView
+		mProjection
+		mLightViewProj
+		mEyePos
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+TriSolid
+	Ignored
+		mTexture0
+		mTexture1
+		mBones
+		mLightViewProj
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
+		ShadowBlending
+		NoCull
+		mSpecColor
+		mSpecPower
+	Hidden
+		mTexture0
+		mTexture1
 		mBones
 		mWorld
 		mView
@@ -166,6 +219,98 @@ TriSolidSpec
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
+	Hidden
+		mTexture0
+		mTexture1
+		mBones
+		mWorld
+		mView
+		mProjection
+		mLightViewProj
+		mEyePos
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+TriSolidSpecAlpha
+	Ignored
+		mTexture0
+		mTexture1
+		mBones
+		mLightViewProj
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
+		ShadowBlending
+		NoCull
+	Hidden
+		mTexture0
+		mTexture1
+		mBones
+		mWorld
+		mView
+		mProjection
+		mLightViewProj
+		mEyePos
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+TriVColorSolidSpec
+	Ignored
+		mTexture0
+		mTexture1
+		mBones
+		mLightViewProj
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture0
 		mTexture1
@@ -208,6 +353,8 @@ TriCelSolidSpec
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture0
 		mTexture1
@@ -252,6 +399,8 @@ TriTex0NormalMapSolidSpec
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture1
 		mBones
@@ -294,6 +443,8 @@ TriTex0NormalMapSpec
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mSolidColour
 		mBones
@@ -335,6 +486,8 @@ TriTex0NormalMapSolidSpecInstanced
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture1
 		mBones
@@ -380,6 +533,8 @@ TriSkinTex0
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture1
 		mSolidColour
@@ -427,6 +582,8 @@ TriSkinSolidSpec
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture0
 		mTexture1
@@ -471,6 +628,8 @@ TriSkinCelSolidSpec
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture0
 		mTexture1
@@ -515,6 +674,8 @@ TriSkinDanglySolidSpec
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture0
 		mTexture1
@@ -557,6 +718,8 @@ TriSkinDanglyCelSolidSpec
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture0
 		mTexture1
@@ -601,6 +764,8 @@ TriSkinCelColorSpec
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture0
 		mTexture1
@@ -649,6 +814,8 @@ TriSkinDecalTex0
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mSolidColour
 		mBones
@@ -697,6 +864,8 @@ TriSkinDecalTex0Tex1
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mSolidColour
 		mBones
@@ -750,6 +919,8 @@ FullBrightSkin
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture0
 		mTexture1
@@ -808,6 +979,8 @@ ShadowSkin
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture0
 		mTexture1
@@ -865,6 +1038,8 @@ Shadow
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture0
 		mTexture1
@@ -918,6 +1093,8 @@ DMN
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture0
 		mTexture1
@@ -970,6 +1147,8 @@ DMNDangly
 		PointClampCube
 		PointWrapCube
 		PointClamp1D
+		ShadowBlending
+		NoCull
 	Hidden
 		mTexture0
 		mTexture1
