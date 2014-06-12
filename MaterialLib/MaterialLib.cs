@@ -374,7 +374,7 @@ namespace MaterialLib
 		void Construct(GraphicsDevice gd, ShaderModel sm, bool bUsePreCompiled)
 		{
 			LoadShaders(gd.GD, sm, bUsePreCompiled);
-			SaveHeaderTimeStamps();
+			SaveHeaderTimeStamps(sm);
 			LoadResources(gd);
 			LoadParameterData();
 
@@ -999,9 +999,9 @@ namespace MaterialLib
 		}
 
 
-		void SaveHeaderTimeStamps()
+		void SaveHeaderTimeStamps(ShaderModel sm)
 		{
-			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Shaders/");
+			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/CompiledShaders/" + sm.ToString() + "/");
 
 			FileStream	fs	=new FileStream(
 				di.FullName + "Header.TimeStamps",
@@ -1011,7 +1011,9 @@ namespace MaterialLib
 
 			BinaryWriter	bw	=new BinaryWriter(fs);
 
-			Dictionary<string, DateTime>	stamps	=GetHeaderTimeStamps(di);
+			DirectoryInfo	src	=new DirectoryInfo(mGameRootDir + "/Shaders/");
+
+			Dictionary<string, DateTime>	stamps	=GetHeaderTimeStamps(src);
 
 			bw.Write(stamps.Count);
 			foreach(KeyValuePair<string, DateTime> time in stamps)
