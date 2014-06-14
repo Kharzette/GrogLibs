@@ -633,7 +633,7 @@ technique10 LightMap
 		PixelShader		=compile ps_4_0_level_9_3 LightMapShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
+		SetDepthStencilState(ShadowDepth, 0);
 	}
 	pass DMN
 	{
@@ -691,7 +691,7 @@ technique10 LightMapCel
 		PixelShader		=compile ps_4_0_level_9_3 LightMapShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
+		SetDepthStencilState(ShadowDepth, 0);
 	}
 	pass DMN
 	{
@@ -749,7 +749,7 @@ technique10 VertexLightingAlpha
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
+		SetDepthStencilState(ShadowDepth, 0);
 	}
 	pass DMN
 	{
@@ -807,7 +807,7 @@ technique10 VertexLightingAlphaCel
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
+		SetDepthStencilState(ShadowDepth, 0);
 	}
 	pass DMN
 	{
@@ -865,7 +865,7 @@ technique10 VertexLighting
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
+		SetDepthStencilState(ShadowDepth, 0);
 	}
 	pass DMN
 	{
@@ -923,7 +923,7 @@ technique10 VertexLightingCel
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
+		SetDepthStencilState(ShadowDepth, 0);
 	}
 	pass DMN
 	{
@@ -981,7 +981,7 @@ technique10 LightMapAlpha
 		PixelShader		=compile ps_4_0_level_9_3 LightMapShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
+		SetDepthStencilState(ShadowDepth, 0);
 	}
 	pass DMN
 	{
@@ -1039,7 +1039,7 @@ technique10 LightMapAlphaCel
 		PixelShader		=compile ps_4_0_level_9_3 LightMapShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
+		SetDepthStencilState(ShadowDepth, 0);
 	}
 	pass DMN
 	{
@@ -1097,7 +1097,7 @@ technique10 FullBright
 		PixelShader		=compile ps_4_0_level_9_3 VertexLitShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
+		SetDepthStencilState(ShadowDepth, 0);
 	}
 	pass DMN
 	{
@@ -1155,7 +1155,7 @@ technique10 LightMapAnim
 		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
+		SetDepthStencilState(ShadowDepth, 0);
 	}
 	pass DMN
 	{
@@ -1213,7 +1213,7 @@ technique10 LightMapAnimAlpha
 		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
+		SetDepthStencilState(ShadowDepth, 0);
 	}
 	pass DMN
 	{
@@ -1271,7 +1271,7 @@ technique10 LightMapAnimAlphaCel
 		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
+		SetDepthStencilState(ShadowDepth, 0);
 	}
 	pass DMN
 	{
@@ -1329,7 +1329,7 @@ technique10 LightMapAnimCel
 		PixelShader		=compile ps_4_0_level_9_3 LightMapAnimShadowPS();
 #endif
 		SetBlendState(ShadowBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
+		SetDepthStencilState(ShadowDepth, 0);
 	}
 	pass DMN
 	{

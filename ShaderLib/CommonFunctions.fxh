@@ -29,7 +29,7 @@ shared Texture1D	mCelTable;
 
 //for shadowmaps
 shared Texture2D	mShadowTexture;		//2D
-shared Texture3D	mShadowCube;		//cube
+shared TextureCube	mShadowCube;		//cube
 float3				mShadowLightPos;	//point light location
 bool				mbDirectional;		//sunnish or point
 float				mShadowAtten;		//shadow attenuation
@@ -303,9 +303,7 @@ float4	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float4 
 	if(bDirectional)
 	{
 		//pull direction vector from light matrix
-		shadDir.x	=-mLightViewProj._m02;
-		shadDir.y	=-mLightViewProj._m12;
-		shadDir.z	=-mLightViewProj._m22;
+		shadDir	=-mLightViewProj._m02_m12_m22;
 	}
 	else
 	{
@@ -356,7 +354,7 @@ float4	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float4 
 	}
 	else
 	{
-		mapDepth	=mShadowTexture.Sample(PointClampCube, shadDir).r;
+		mapDepth	=mShadowCube.Sample(PointClampCube, shadDir).r;
 	}
 
 	return	ApplyShadow(mapDepth, pixDepth, color);

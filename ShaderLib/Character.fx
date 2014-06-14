@@ -149,7 +149,7 @@ VVPosTex03Tex13 SkinWNormWPosVS(VPosNormBone input)
 }
 
 //skin world pos
-VVPosTex03 SkinWPosVS(VPosBone input)
+VVPosTex03 ShadowSkinWPosVS(VPosNormBone input)
 {
 	float4	vertPos	=float4(input.Position, 1);
 
@@ -453,17 +453,17 @@ technique10 ShadowSkin
 	pass P0
 	{
 #if defined(SM5)
-		VertexShader	=compile vs_5_0 SkinWNormWPosVS();
-		PixelShader		=compile ps_5_0 Shadow2PS();
+		VertexShader	=compile vs_5_0 ShadowSkinWPosVS();
+		PixelShader		=compile ps_5_0 ShadowPS();
 #elif defined(SM41)
-		VertexShader	=compile vs_4_1 SkinWNormWPosVS();
-		PixelShader		=compile ps_4_1 Shadow2PS();
+		VertexShader	=compile vs_4_1 ShadowSkinWPosVS();
+		PixelShader		=compile ps_4_1 ShadowPS();
 #elif defined(SM4)
-		VertexShader	=compile vs_4_0 SkinWNormWPosVS();
-		PixelShader		=compile ps_4_0 Shadow2PS();
+		VertexShader	=compile vs_4_0 ShadowSkinWPosVS();
+		PixelShader		=compile ps_4_0 ShadowPS();
 #else
-		VertexShader	=compile vs_4_0_level_9_3 SkinWNormWPosVS();
-		PixelShader		=compile ps_4_0_level_9_3 Shadow2PS();
+		VertexShader	=compile vs_4_0_level_9_3 ShadowSkinWPosVS();
+		PixelShader		=compile ps_4_0_level_9_3 ShadowPS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
 		SetDepthStencilState(EnableDepth, 0);
