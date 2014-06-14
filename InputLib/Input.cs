@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -6,11 +7,18 @@ using SharpDX.RawInput;
 using SharpDX.Multimedia;
 using SharpDX.XInput;
 
+using System.Runtime.InteropServices;
+
 
 namespace InputLib
 {
 	public class Input
 	{
+		//need these for translating keys
+		[DllImport("user32.dll")] static extern int MapVirtualKey(uint uCode, uint uMapType);
+		[DllImport("user32", SetLastError=true, CharSet=CharSet.Unicode)]
+			static extern int GetKeyNameTextW(uint lParam, StringBuilder lpString, int nSize);
+
 		public class InputAction
 		{
 			public float	mMultiplier;	//time or analog amount
@@ -102,11 +110,16 @@ namespace InputLib
 		//active toggles
 		List<int>	mActiveToggles	=new List<int>();
 
+		//buffer for winapi key name
+		StringBuilder	mNameBuf	=new StringBuilder(260);
+
 		//sticks/pads
 		Controller	[]mXControllers;
 
 		//keep track of buttons held on controllers
 		List<int>	[]mXButtonsHeld	=new List<int>[4];
+
+		System.Windows.Forms.KeysConverter	mKeyConverter	=new KeysConverter();
 
 		//mouse pos at last update
 		int		mLastMouseX, mLastMouseY;
@@ -273,12 +286,38 @@ namespace InputLib
 		}
 
 
+		public string GetKeyName(int makeCode, ScanCodeFlags scf)
+		{
+			uint	e0Thing	=0;
+			
+			if(((int)scf & (int)ScanCodeFlags.E0) != 0)
+			{
+				e0Thing	=(1 << 24);
+			}
+
+			uint	bigKey	=((uint)makeCode << 16) | e0Thing;
+
+			int ret	=GetKeyNameTextW(bigKey, mNameBuf, 260);
+
+			if(ret != 0)
+			{
+				return	mNameBuf.ToString();
+			}
+			return	"Unknown";
+		}
+
+
 		void OnKeyInput(object sender, EventArgs ea)
 		{
 			KeyboardInputEventArgs	kiea	=ea as KeyboardInputEventArgs;
 			if(kiea == null)
 			{
 				return;
+			}
+
+			if((int)kiea.Key == 255)
+			{
+				return;	//fake key
 			}
 
 			long	ts	=Stopwatch.GetTimestamp();
@@ -314,6 +353,14 @@ namespace InputLib
 		public void MapAction(Enum action, VariousButtons button)
 		{
 			MapAction(action, (int)button);
+		}
+
+
+		public void MapAction(Enum Action, System.Windows.Forms.Keys key)
+		{
+			int	keyCode	=MapVirtualKey((uint)key, 0);
+
+			MapAction(Action, keyCode);
 		}
 
 

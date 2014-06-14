@@ -23,7 +23,7 @@ namespace MeshLib
 	public class ShadowHelper
 	{
 		//render shadowing objects
-		public delegate void RenderShadows(int shadIndex);
+		public delegate bool RenderShadows(int shadIndex);
 
 		//need a struct to help game keep track of instances
 		public class Shadower
@@ -174,11 +174,11 @@ namespace MeshLib
 		}
 
 
-		public void DrawShadows(int shadIndex)
+		public bool DrawShadows(int shadIndex)
 		{
 			if(shadIndex < 0 || shadIndex >= mShadowers.Count)
 			{
-				return;
+				return	false;
 			}
 
 			ShadowInfo	si	=DrawShadow(shadIndex);
@@ -191,14 +191,19 @@ namespace MeshLib
 			{
 				mZoneMats.SetParameterForAll("mShadowAtten", si.mShadowAtten);
 				mZoneMats.SetParameterForAll("mShadowLightPos", si.mShadowLightPos);
-				mZoneMats.SetParameterForAll("mShadowTexture", si.mShadowTexture);
 				mZoneMats.SetParameterForAll("mbDirectional", si.mbDirectional);
 
 				if(si.mbDirectional)
 				{
 					mZoneMats.SetParameterForAll("mLightViewProj", si.mLightViewProj);
+					mZoneMats.SetParameterForAll("mShadowTexture", si.mShadowTexture);
+				}
+				else
+				{
+					mZoneMats.SetParameterForAll("mShadowCube", si.mShadowTexture);
 				}
 			}
+			return	si.mbShadowNeeded;
 		}
 
 

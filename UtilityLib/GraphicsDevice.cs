@@ -29,6 +29,7 @@ namespace UtilityLib
 		Texture2D			mBackBuffer, mDepthBuffer;
 		RenderTargetView	mBBView;
 		DepthStencilView	mDSView;
+		Viewport			mScreenPort, mShadowPort;
 
 		GameCamera	mGCam;
 
@@ -134,10 +135,19 @@ namespace UtilityLib
 			
 			//Create the depth buffer view
 			mDSView	=new DepthStencilView(mGD, mDepthBuffer);
-			
+
+			//screen viewport
+			mScreenPort	=new Viewport(0, 0,
+				mRForm.ClientRectangle.Width,
+				mRForm.ClientRectangle.Height,
+				0f, 1f);
+
+			//shadow viewport
+			mShadowPort	=new Viewport(0, 0,
+				512, 512, 0f, 1f);
+
 			//Setup targets and viewport for rendering
-			mDC.Rasterizer.SetViewport(new Viewport(0, 0,
-				mRForm.ClientSize.Width, mRForm.ClientSize.Height, 0.0f, 1.0f));
+			mDC.Rasterizer.SetViewport(mScreenPort);
 
 			mDC.OutputMerger.SetTargets(mDSView, mBBView);
 
@@ -190,9 +200,9 @@ namespace UtilityLib
 			mDepthBuffer	=new Texture2D(mGD, depthDesc);
 			mDSView			=new DepthStencilView(mGD, mDepthBuffer);
 
-			Viewport	vp	=new Viewport(0, 0, width, height, 0f, 1f);
+			mScreenPort	=new Viewport(0, 0, width, height, 0f, 1f);
 
-			mDC.Rasterizer.SetViewport(vp);
+			mDC.Rasterizer.SetViewport(mScreenPort);
 			mDC.OutputMerger.SetTargets(mDSView, mBBView);
 
 			mGCam	=new UtilityLib.GameCamera(width, height, 16f/9f, 0.1f, 3000f);
@@ -233,6 +243,18 @@ namespace UtilityLib
 
 			mGDD.Dispose();
 #endif
+		}
+
+
+		public void SetShadowViewPort()
+		{
+			mDC.Rasterizer.SetViewport(mShadowPort);
+		}
+
+
+		public void SetScreenViewPort()
+		{
+			mDC.Rasterizer.SetViewport(mScreenPort);
 		}
 
 

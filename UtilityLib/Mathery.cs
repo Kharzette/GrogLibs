@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics;
 using SharpDX;
 using SharpDX.Direct3D11;
 
@@ -145,7 +146,8 @@ namespace UtilityLib
 				case	TextureCubeFace.PositiveZ:
 					return	Vector3.UnitZ;
 			}
-			return	Vector3.UnitX;
+			Debug.Assert(false);
+			return	Vector3.One;
 		}
 
 
@@ -171,7 +173,7 @@ namespace UtilityLib
 
 			//Values are to project on the cube face
 			cubeProj	=Matrix.PerspectiveFovLH(
-				MathUtil.PiOverTwo, -1f, 1f, farPlane);
+				MathUtil.PiOverTwo, 1f, 1f, farPlane);
         }
 
 

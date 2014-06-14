@@ -45,7 +45,6 @@ namespace BSPZone
 			sampDesc.Count		=1;
 			sampDesc.Quality	=0;
 
-			Resource	res	=null;
 			DataStream	ds	=new DataStream(MaxLights * 2 * 16, false, true);
 			for(int x=0;x < MaxLights;x++)
 			{
@@ -64,7 +63,7 @@ namespace BSPZone
 			texDesc.Format			=Format.R32G32B32A32_Float;
 
 			mDynLights	=new Texture1D(gd.GD, texDesc, ds);
-			mDynSRV		=new ShaderResourceView(gd.GD, res);
+			mDynSRV		=new ShaderResourceView(gd.GD, mDynLights);
 		}
 
 

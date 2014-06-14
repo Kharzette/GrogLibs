@@ -402,8 +402,17 @@ namespace MeshLib
 			//draw shadows
 			for(int i=0;i < numShadows;i++)
 			{
+				gd.SetShadowViewPort();
+
 				//draw shad and set up materials for second pass
-				renderShadows(i);
+				bool	bShadDrawn	=renderShadows(i);
+
+				gd.SetScreenViewPort();
+
+				if(!bShadDrawn)
+				{
+					continue;
+				}
 
 				//draw second pass with shadowing
 				DrawMaterialsDC(gd, 1, getModMatrix, mFBVBB, mFBIB, mFBDrawCalls, bMatVis);

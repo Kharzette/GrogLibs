@@ -946,7 +946,18 @@ namespace MaterialLib
 			{
 				DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Shaders/");
 
-				bool	bHeaderSame	=CheckHeaderTimeStamps(di);
+				bool	bHeaderSame	=false;
+				if(Directory.Exists(mGameRootDir + "/CompiledShaders"))
+				{
+					//see if a precompiled exists
+					if(Directory.Exists(mGameRootDir + "/CompiledShaders/" + macs[0].Name))
+					{
+						DirectoryInfo	preDi	=new DirectoryInfo(
+							mGameRootDir + "/CompiledShaders/" + macs[0].Name);
+
+						bHeaderSame	=CheckHeaderTimeStamps(preDi, di);
+					}
+				}
 
 				FileInfo[]		fi	=di.GetFiles("*.fx", SearchOption.AllDirectories);
 				foreach(FileInfo f in fi)
@@ -1042,11 +1053,11 @@ namespace MaterialLib
 
 
 		//returns true if headers haven't changed
-		bool CheckHeaderTimeStamps(DirectoryInfo di)
+		bool CheckHeaderTimeStamps(DirectoryInfo preDi, DirectoryInfo srcDi)
 		{
 			//see if there is a binary file here that contains the
 			//timestamps of the fxh files
-			FileInfo[]	hTime	=di.GetFiles("Header.TimeStamps", SearchOption.TopDirectoryOnly);
+			FileInfo[]	hTime	=preDi.GetFiles("Header.TimeStamps", SearchOption.TopDirectoryOnly);
 			if(hTime.Length != 1)
 			{
 				return	false;
@@ -1076,7 +1087,7 @@ namespace MaterialLib
 			br.Close();
 			fs.Close();
 
-			Dictionary<string, DateTime>	onDisk	=GetHeaderTimeStamps(di);
+			Dictionary<string, DateTime>	onDisk	=GetHeaderTimeStamps(srcDi);
 
 			//check the timestamp data against the dates
 			if(onDisk.Count != times.Count)
