@@ -266,7 +266,7 @@ namespace MeshLib
 				Vector3	fakeOrigin;
 
 				Mathery.CreateBoundedDirectionalOrthoViewProj(
-					mGetTransformedBound(shadower), -lightDir,
+					mGetTransformedBound(shadower), lightDir,
 					out lightView, out lightProj, out fakeOrigin);
 
 				shadMats.SetMaterialParameter("Shadow", "mLightViewProj", lightView * lightProj);

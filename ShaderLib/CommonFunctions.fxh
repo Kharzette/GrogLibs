@@ -303,7 +303,7 @@ float4	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float4 
 	if(bDirectional)
 	{
 		//pull direction vector from light matrix
-		shadDir	=-mLightViewProj._m02_m12_m22;
+		shadDir	=mLightViewProj._m02_m12_m22;
 	}
 	else
 	{
