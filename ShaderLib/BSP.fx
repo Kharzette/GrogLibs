@@ -505,7 +505,7 @@ TwoHalf4Targets LightMapDMNPS(VVPosTex04Tex14Tex24 input) : SV_Target
 	TwoHalf4Targets	ret;
 
 	ret.targ1.x		=mMaterialID;
-	ret.targ1.yzw	=input.TexCoord2.xyz;
+	ret.targ1.yzw	=normalize(input.TexCoord2.xyz);
 	ret.targ2		=input.TexCoord1;
 
 	return	ret;
@@ -526,7 +526,7 @@ TwoHalf4Targets VertexLitDMNPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 	norm.z		=input.TexCoord2.x;
 
 	ret.targ1.x		=mMaterialID;
-	ret.targ1.yzw	=norm;
+	ret.targ1.yzw	=normalize(norm);
 	ret.targ2		=float4(worldPos, 0);
 
 	return	ret;
@@ -540,7 +540,7 @@ TwoHalf4Targets LightMapAnimDMNPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : S
 	TwoHalf4Targets	ret;
 
 	ret.targ1.x		=mMaterialID;
-	ret.targ1.yzw	=norm;
+	ret.targ1.yzw	=normalize(norm);
 	ret.targ2		=float4(worldPos, 0);
 
 	return	ret;
