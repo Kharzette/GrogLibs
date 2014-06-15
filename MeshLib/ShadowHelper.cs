@@ -178,6 +178,25 @@ namespace MeshLib
 		}
 
 
+		public void UnRegisterShadower(Shadower shad)
+		{
+			int	idx	=mShadowers.IndexOf(shad);
+			if(idx < 0)
+			{
+				return;
+			}
+
+			mShadowers.RemoveAt(idx);
+			mShadowerMats.RemoveAt(idx);
+		}
+
+
+		public int GetShadowCount()
+		{
+			return	mShadowers.Count();
+		}
+
+
 		public bool DrawShadows(int shadIndex)
 		{
 			if(shadIndex < 0 || shadIndex >= mShadowers.Count)

@@ -50,7 +50,7 @@ namespace BSPZone
 		//pickups about to be nuked
 		List<PickUp>	mNuking	=new List<PickUp>();
 
-		public event EventHandler	ePickUp;
+		public event EventHandler<PickUpEventArgs>	ePickUp;
 
 		const float	PickUpDistance	=32.0f;
 		const float	YawPerMS		=0.007f;
@@ -99,6 +99,12 @@ namespace BSPZone
 		}
 
 
+		public List<ZoneEntity>	GetStaticEntities()
+		{
+			return	mStaticEntities;
+		}
+
+
 		//for manual removal (handy if levels are revisited)
 		public void NukeStatic(ZoneEntity ze)
 		{
@@ -110,6 +116,19 @@ namespace BSPZone
 					return;
 				}
 			}
+		}
+
+
+		public Matrix GetTransform(ZoneEntity ze)
+		{
+			foreach(PickUp pu in mPickUps)
+			{
+				if(pu.mEntity == ze)
+				{
+					return	pu.mTransform;
+				}
+			}
+			return	Matrix.Identity;
 		}
 
 
@@ -174,7 +193,10 @@ namespace BSPZone
 				if(dist < PickUpDistance)
 				{
 					mNuking.Add(pu);
-					Misc.SafeInvoke(ePickUp, context, new PickUpEventArgs(context, pu.mEntity));
+					if(ePickUp != null)
+					{
+						ePickUp(context, new PickUpEventArgs(context, pu.mEntity));
+					}
 				}
 			}
 
