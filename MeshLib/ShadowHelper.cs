@@ -11,7 +11,6 @@ using SharpDX.Direct3D11;
 using SharpDX.Direct3D;
 
 //ambiguous stuff
-using Buffer	=SharpDX.Direct3D11.Buffer;
 using Color		=SharpDX.Color;
 using Device	=SharpDX.Direct3D11.Device;
 using MatLib	=MaterialLib.MaterialLib;
@@ -144,6 +143,9 @@ namespace MeshLib
 
 			mPShadView		=new RenderTargetView(gd.GD, mPShad);
 
+			mPShad.DebugName		="2DShadowBuf";
+			mPShadCube.DebugName	="CubeShadowBuf";
+
 			mZoneMats				=zoneMats;
 			mPost					=post;
 			mGetShadInfo			=gcsifl;
@@ -157,13 +159,15 @@ namespace MeshLib
 		{
 			mShad2D.Dispose();
 			mShadCube.Dispose();
-			mPShad.Dispose();
-			mPShadView.Dispose();
+
 			mPShadView.Dispose();
 			for(int i=0;i < 6;i++)
 			{
 				mPShadCubeViews[i].Dispose();
 			}
+
+			mPShad.Dispose();
+			mPShadCube.Dispose();
 		}
 
 

@@ -7,8 +7,6 @@ using SharpDX.DXGI;
 using SharpDX.Direct3D11;
 using UtilityLib;
 
-using Buffer	=SharpDX.Direct3D11.Buffer;
-
 
 namespace MaterialLib
 {
@@ -323,6 +321,8 @@ namespace MaterialLib
 				(int)FormatHelper.SizeOfInBytes(texDesc.Format));
 
 			mAtlasTexture	=new Texture2D(gd.GD, texDesc, dbs);
+
+			mAtlasTexture.DebugName	="LightMapAtlas";
 
 			mSRV	=new ShaderResourceView(gd.GD, mAtlasTexture);
 		}

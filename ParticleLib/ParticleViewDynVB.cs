@@ -58,7 +58,7 @@ namespace ParticleLib
 
 		internal void FreeAll()
 		{
-			mVB	=null;
+			mVB.Dispose();
 		}
 
 

@@ -7,9 +7,11 @@ using System.Diagnostics;
 using SharpDX;
 using SharpDX.Direct3D11;
 using UtilityLib;
+using MaterialLib;
 
 using Buffer	=SharpDX.Direct3D11.Buffer;
 using Device	=SharpDX.Direct3D11.Device;
+using MatLib	=MaterialLib.MaterialLib;
 
 
 namespace MeshLib
@@ -45,10 +47,10 @@ namespace MeshLib
 		int	mFBIndex, mMirrorIndex, mLMAIndex, mLMAAnimIndex;
 
 		//material library reference
-		MaterialLib.MaterialLib	mMatLib;
+		MatLib	mMatLib;
 
 		//light map atlas
-		MaterialLib.TexAtlas	mLightMapAtlas;
+		TexAtlas	mLightMapAtlas;
 
 		//lightmap animation stuff
 		Dictionary<int, string>	mStyles				=new Dictionary<int, string>();
@@ -75,7 +77,7 @@ namespace MeshLib
 		List<List<Vector3>>	mMirrorPolys	=new List<List<Vector3>>();
 
 		//for sorting alphas
-		MaterialLib.AlphaPool	mAlphaPool	=new MaterialLib.AlphaPool();
+		AlphaPool	mAlphaPool	=new AlphaPool();
 
 		//constants
 		const float		ThirtyFPS	=(1000.0f / 30.0f);
@@ -86,12 +88,13 @@ namespace MeshLib
 		public delegate Matrix GetModelMatrix(int modelIndex);
 
 		//render external stuff
-		public delegate void RenderExternal(MaterialLib.AlphaPool ap, GameCamera gcam);
+		public delegate void RenderExternal(AlphaPool ap, GameCamera gcam);
 		public delegate void RenderExternalDMN(GameCamera gcam);
 
 		//tool side delegates for building the indoor mesh
 		//from raw parts
-		public delegate bool BuildLMRenderData(GraphicsDevice g, string gameRoot,
+		public delegate bool BuildLMRenderData(
+			GraphicsDevice g, StuffKeeper sk,
 			//lightmap stuff
 			out int lmIndex,
 			out Array lmVerts,
@@ -118,32 +121,37 @@ namespace MeshLib
 
 			int lightAtlasSize,
 			object pp,
-			out MaterialLib.TexAtlas lightAtlas);
+			out TexAtlas lightAtlas);
 
-		public delegate void BuildVLitRenderData(GraphicsDevice g, string gameRoot,
+		public delegate void BuildVLitRenderData(
+			GraphicsDevice g, StuffKeeper sk,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<DrawCall>> dcs, object pp);
 
-		public delegate void BuildAlphaRenderData(GraphicsDevice g, string gameRoot,
+		public delegate void BuildAlphaRenderData(
+			GraphicsDevice g, StuffKeeper sk,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<List<MeshLib.DrawCall>>> adcs, object pp);
 
-		public delegate void BuildFullBrightRenderData(GraphicsDevice g, string gameRoot,
+		public delegate void BuildFullBrightRenderData(
+			GraphicsDevice g, StuffKeeper sk,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<DrawCall>> dcs, object pp);
 
-		public delegate void BuildMirrorRenderData(GraphicsDevice g, string gameRoot,
+		public delegate void BuildMirrorRenderData(
+			GraphicsDevice g, StuffKeeper sk,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<MeshLib.DrawCall>> mdcalls,
 			out List<List<Vector3>> mirrorPolys, object pp);
 
-		public delegate void BuildSkyRenderData(GraphicsDevice g, string gameRoot,
+		public delegate void BuildSkyRenderData(
+			GraphicsDevice g, StuffKeeper sk,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<DrawCall>> dcs, object pp);
 		#endregion
 
 
-		public IndoorMesh(GraphicsDevice gd, MaterialLib.MaterialLib matLib)
+		public IndoorMesh(GraphicsDevice gd, MatLib matLib)
 		{
 			mMatLib	=matLib;
 
@@ -205,7 +213,7 @@ namespace MeshLib
 		}
 
 
-		public void FinishAtlas(GraphicsDevice gd)
+		public void FinishAtlas(GraphicsDevice gd, StuffKeeper sk)
 		{
 			if(mLightMapAtlas == null)
 			{
@@ -213,7 +221,7 @@ namespace MeshLib
 			}
 
 			mLightMapAtlas.Finish(gd);
-			mMatLib.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasSRV());
+			sk.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasSRV());
 		}
 
 
@@ -243,10 +251,10 @@ namespace MeshLib
 		}
 
 
-		public void BuildLM(GraphicsDevice g, string gameRoot,
+		public void BuildLM(GraphicsDevice g, StuffKeeper sk,
 			int atlasSize, BuildLMRenderData brd, object pp)
 		{
-			brd(g, gameRoot, out mLMIndex, out mLMVerts, out mLMInds, out mLMDrawCalls,
+			brd(g, sk, out mLMIndex, out mLMVerts, out mLMInds, out mLMDrawCalls,
 				out mLMAnimIndex, out mLMAnimVerts, out mLMAnimInds, out mLMAnimDrawCalls,
 				out mLMAIndex, out mLMAVerts, out mLMAInds, out mLMADrawCalls,
 				out mLMAAnimIndex, out mLMAAnimVerts, out mLMAAnimInds, out mLMAAnimDrawCalls,
@@ -274,10 +282,10 @@ namespace MeshLib
 		}
 
 
-		public void BuildVLit(GraphicsDevice g, string gameRoot,
+		public void BuildVLit(GraphicsDevice g, StuffKeeper sk,
 			BuildVLitRenderData brd, object pp)
 		{
-			brd(g, gameRoot, out mVLitIndex, out mVLitVerts,
+			brd(g, sk, out mVLitIndex, out mVLitVerts,
 				out mVLitInds, out mVLitDrawCalls, pp);
 
 			mVLitVB		=VertexTypes.BuildABuffer(g.GD, mVLitVerts, mVLitIndex);
@@ -288,10 +296,10 @@ namespace MeshLib
 		}
 
 
-		public void BuildAlpha(GraphicsDevice g, string gameRoot,
+		public void BuildAlpha(GraphicsDevice g, StuffKeeper sk,
 			BuildAlphaRenderData brd, object pp)
 		{
-			brd(g, gameRoot, out mAlphaIndex, out mAlphaVerts,
+			brd(g, sk, out mAlphaIndex, out mAlphaVerts,
 				out mAlphaInds, out mAlphaDrawCalls, pp);
 
 			mAlphaVB	=VertexTypes.BuildABuffer(g.GD, mAlphaVerts, mAlphaIndex);
@@ -302,10 +310,10 @@ namespace MeshLib
 		}
 
 
-		public void BuildFullBright(GraphicsDevice g, string gameRoot,
+		public void BuildFullBright(GraphicsDevice g, StuffKeeper sk,
 			BuildFullBrightRenderData brd, object pp)
 		{
-			brd(g, gameRoot, out mFBIndex, out mFBVerts,
+			brd(g, sk, out mFBIndex, out mFBVerts,
 				out mFBInds, out mFBDrawCalls, pp);
 
 			mFBVB	=VertexTypes.BuildABuffer(g.GD, mFBVerts, mFBIndex);
@@ -316,10 +324,10 @@ namespace MeshLib
 		}
 
 
-		public void BuildMirror(GraphicsDevice g, string gameRoot,
+		public void BuildMirror(GraphicsDevice g, StuffKeeper sk,
 			BuildMirrorRenderData brd, object pp)
 		{
-			brd(g, gameRoot, out mMirrorIndex, out mMirrorVerts,
+			brd(g, sk, out mMirrorIndex, out mMirrorVerts,
 				out mMirrorInds, out mMirrorDrawCalls, out mMirrorPolys, pp);
 
 			mMirrorVB	=VertexTypes.BuildABuffer(g.GD, mMirrorVerts, mMirrorIndex);
@@ -330,10 +338,10 @@ namespace MeshLib
 		}
 
 
-		public void BuildSky(GraphicsDevice g, string gameRoot,
+		public void BuildSky(GraphicsDevice g, StuffKeeper sk,
 			BuildSkyRenderData brd, object pp)
 		{
-			brd(g, gameRoot, out mSkyIndex, out mSkyVerts,
+			brd(g, sk, out mSkyIndex, out mSkyVerts,
 				out mSkyInds, out mSkyDrawCalls, pp);
 
 			mSkyVB	=VertexTypes.BuildABuffer(g.GD, mSkyVerts, mSkyIndex);
@@ -784,7 +792,8 @@ namespace MeshLib
 
 
 		#region IO
-		public void Read(GraphicsDevice g, string fileName, bool bEditor)
+		public void Read(GraphicsDevice g, StuffKeeper sk,
+			string fileName, bool bEditor)
 		{
 			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
 			if(file == null)
@@ -800,7 +809,7 @@ namespace MeshLib
 				return;
 			}
 
-			mLightMapAtlas	=new MaterialLib.TexAtlas(g, 1, 1);
+			mLightMapAtlas	=new TexAtlas(g, 1, 1);
 
 			bool	bLightMapNeeded	=br.ReadBoolean();
 
@@ -811,7 +820,7 @@ namespace MeshLib
 				ShaderResourceView	lma	=mLightMapAtlas.GetAtlasSRV();
 
 				lma.DebugName	="LightMapAtlas";
-				mMatLib.AddMap("LightMapAtlas", lma);
+				sk.AddMap("LightMapAtlas", lma);
 			}
 
 

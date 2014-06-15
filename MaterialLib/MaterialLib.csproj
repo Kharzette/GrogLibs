@@ -69,6 +69,7 @@
     <Compile Include="MaterialLib.cs" />
     <Compile Include="PostProcess.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StuffKeeper.cs" />
     <Compile Include="TexAtlas.cs" />
   </ItemGroup>
   <ItemGroup>

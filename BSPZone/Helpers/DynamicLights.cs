@@ -72,6 +72,11 @@ namespace BSPZone
 			mDynSRV.Dispose();
 			mDynLights.Dispose();
 			mFX.Dispose();
+
+			mDynZoneLights.Clear();
+
+			mDynArray	=null;
+			mInUse		=null;
 		}
 
 

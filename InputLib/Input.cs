@@ -385,6 +385,36 @@ namespace InputLib
 		}
 
 
+		//event fires on release of the key
+		public void MapReleaseAction(Enum action, System.Windows.Forms.Keys key)
+		{
+			int	keyCode	=MapVirtualKey((uint)key, 0);
+
+			MapReleaseAction(action, keyCode);
+		}
+
+
+		public void MapReleaseAction(Enum action, int keyCode)
+		{
+			if(mActionMap.ContainsKey(keyCode))
+			{
+				//overwrite existing?
+				mActionMap[keyCode].mAction		=action;
+				mActionMap[keyCode].mActionType	=ActionMapping.ActionTypes.PressAndRelease;
+			}
+			else
+			{
+				ActionMapping	amap	=new ActionMapping();
+
+				amap.mAction		=action;
+				amap.mActionType	=ActionMapping.ActionTypes.PressAndRelease;
+				amap.mKeyCode		=keyCode;
+
+				mActionMap.Add(keyCode, amap);
+			}
+		}
+
+
 		public void MapToggleAction(Enum actionOn, Enum actionOff, VariousButtons button)
 		{
 			MapToggleAction(actionOn, actionOff, (int)button);

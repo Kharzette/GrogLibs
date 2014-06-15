@@ -39,6 +39,16 @@ namespace MeshLib
 		}
 
 
+		public void FreeAll()
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				m.FreeAll();
+			}
+			mBones	=null;
+		}
+
+
 		//copies bones into the shader
 		//materials should be set up to ignore
 		//the mBones parameter

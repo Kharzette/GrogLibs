@@ -5,11 +5,11 @@ using System.Threading;
 using System.Diagnostics;
 using System.Collections.Generic;
 using UtilityLib;
+using MaterialLib;
 
 using SharpDX;
 using SharpDX.Direct3D11;
 
-using Buffer	=SharpDX.Direct3D11.Buffer;
 using MatLib	=MaterialLib.MaterialLib;
 
 
@@ -1395,9 +1395,9 @@ namespace BSPCore
 
 
 #if !X64
-		public MapGrinder	MakeMapGrinder(GraphicsDevice gd, string gameRoot)
+		public MapGrinder	MakeMapGrinder(GraphicsDevice gd, StuffKeeper sk)
 		{
-			return	new MapGrinder(gd, gameRoot, null, mGFXTexInfos, mGFXFaces, 4, 1);
+			return	new MapGrinder(gd, sk, null, mGFXTexInfos, mGFXFaces, 4, 1);
 		}
 
 
@@ -1542,7 +1542,9 @@ namespace BSPCore
 		}
 
 
-		public bool BuildLMRenderData(GraphicsDevice g, string gameRoot,
+		public bool BuildLMRenderData(
+			GraphicsDevice g, StuffKeeper sk,
+
 			//lightmap stuff
 			out int lmIndex,
 			out Array lmVerts,
@@ -1569,9 +1571,9 @@ namespace BSPCore
 
 			int lightAtlasSize,
 			object	pp,
-			out MaterialLib.TexAtlas lightAtlas)
+			out TexAtlas lightAtlas)
 		{
-			MapGrinder	mg	=new MapGrinder(g, gameRoot, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lightAtlasSize);
+			MapGrinder	mg	=new MapGrinder(g, sk, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lightAtlasSize);
 
 			if(!mg.BuildLMFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels))
 			{
@@ -1630,11 +1632,12 @@ namespace BSPCore
 		}
 
 
-		public void BuildVLitRenderData(GraphicsDevice g, string gameRoot,
+		public void BuildVLitRenderData(
+			GraphicsDevice g, StuffKeeper sk,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, gameRoot, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, sk, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
@@ -1648,12 +1651,13 @@ namespace BSPCore
 		}
 
 
-		public void BuildAlphaRenderData(GraphicsDevice g, string gameRoot,
+		public void BuildAlphaRenderData(
+			GraphicsDevice g, StuffKeeper sk,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<List<MeshLib.DrawCall>>> alphaDrawCalls,
 			object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, gameRoot, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, sk, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
@@ -1667,11 +1671,12 @@ namespace BSPCore
 		}
 
 
-		public void BuildFullBrightRenderData(GraphicsDevice g, string gameRoot,
+		public void BuildFullBrightRenderData(
+			GraphicsDevice g, StuffKeeper sk,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, gameRoot, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, sk, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
@@ -1685,12 +1690,13 @@ namespace BSPCore
 		}
 
 
-		public void BuildMirrorRenderData(GraphicsDevice g, string gameRoot,
+		public void BuildMirrorRenderData(
+			GraphicsDevice g, StuffKeeper sk,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<MeshLib.DrawCall>> dcs,
 			out List<List<Vector3>> mirrorPolys, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, gameRoot, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, sk, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			Vector3	[]vnorms	=MakeSmoothVertNormals();
 
@@ -1704,11 +1710,12 @@ namespace BSPCore
 		}
 
 
-		public void BuildSkyRenderData(GraphicsDevice g, string gameRoot,
+		public void BuildSkyRenderData(
+			GraphicsDevice g, StuffKeeper sk,
 			out int index, out Array verts, out UInt16 []inds,
 			out Dictionary<int, List<MeshLib.DrawCall>> dcs, object pp)
 		{
-			MapGrinder	mg	=new MapGrinder(g, gameRoot, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+			MapGrinder	mg	=new MapGrinder(g, sk, null, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
 
 			mg.BuildSkyFaceData(mGFXVerts, mGFXVertIndexes, pp, mGFXModels);
 

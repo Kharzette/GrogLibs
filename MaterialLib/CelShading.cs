@@ -202,6 +202,8 @@ namespace MaterialLib
 				texDesc.Format			=Format.R16_Float;
 
 				res	=mCelTex1Ds[index]	=new Texture1D(gd, texDesc, ds);
+
+				mCelTex1Ds[index].DebugName	="CelTex" + index;
 			}
 
 			mCelResources[index]	=new ShaderResourceView(gd, res);

@@ -203,6 +203,8 @@ namespace MeshLib
 				mVerts	=VertexTypes.BuildABuffer(gd, vertArray, mTypeIndex);
 				mIndexs	=VertexTypes.BuildAnIndexBuffer(gd, indArray);
 
+				mVerts.DebugName	=mName;
+
 				mVBBinding	=new VertexBufferBinding(mVerts,
 					VertexTypes.GetSizeForTypeIndex(mTypeIndex), 0);
 			}

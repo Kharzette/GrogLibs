@@ -9,7 +9,6 @@ using UtilityLib;
 using SharpDX;
 using SharpDX.Direct3D11;
 
-using Buffer	=SharpDX.Direct3D11.Buffer;
 using MatLib	=MaterialLib.MaterialLib;
 
 
@@ -146,7 +145,7 @@ namespace BSPCore
 		internal delegate void FinishUpAlpha(int modelIndex, List<Dictionary<Int32, DrawDataChunk>> perPlaneChunk, ref UInt16 vertOfs);
 
 		public MapGrinder(GraphicsDevice gd,
-			string gameRoot, MatLib matLib,
+			StuffKeeper sk, MatLib matLib,
 			GFXTexInfo []texs, GFXFace []faces,
 			int lightGridSize, int atlasSize)
 		{
@@ -158,7 +157,7 @@ namespace BSPCore
 
 			if(mMatLib == null)
 			{
-				mMatLib	=new MatLib(gd, gameRoot, true);
+				mMatLib	=new MatLib(gd, sk);
 			}
 
 			if(gd != null)

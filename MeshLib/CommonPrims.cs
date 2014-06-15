@@ -22,10 +22,10 @@ namespace MeshLib
 		const float	AxisSize	=50f;
 
 
-		public CommonPrims(GraphicsDevice gd, string gameRoot)
+		public CommonPrims(GraphicsDevice gd, MaterialLib.StuffKeeper sk)
 		{
 			//extra material lib for prim stuff
-			mMatLib	=new MatLib(gd, gameRoot, true);
+			mMatLib	=new MatLib(gd, sk);
 
 			//axis boxes
 			BoundingBox	xBox	=Misc.MakeBox(AxisSize, 1f, 1f);

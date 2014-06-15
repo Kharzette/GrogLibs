@@ -19,16 +19,19 @@ namespace SharedForms
 //		ListBoxContainer	mLBC	=new ListBoxContainer();
 
 		MaterialLib.MaterialLib	mMatLib;
+		MaterialLib.StuffKeeper	mSKeeper;
 
 		public event EventHandler	eNukedMeshPart;
 		public event EventHandler	eStripElements;
 
 
-		public MaterialForm(MaterialLib.MaterialLib matLib)
+		public MaterialForm(MaterialLib.MaterialLib matLib,
+			MaterialLib.StuffKeeper sk)
 		{
 			InitializeComponent();
 
-			mMatLib	=matLib;
+			mMatLib		=matLib;
+			mSKeeper	=sk;
 
 			MaterialList.Columns.Add("Name");
 			MaterialList.Columns.Add("Effect");
@@ -156,7 +159,7 @@ namespace SharedForms
 		
 		void SpawnEffectComboBox(string matName, ListViewItem.ListViewSubItem sub)
 		{
-			List<string>	effects	=mMatLib.GetEffects();
+			List<string>	effects	=mSKeeper.GetEffectList();
 			if(effects.Count <= 0)
 			{
 				return;

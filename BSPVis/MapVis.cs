@@ -346,7 +346,7 @@ namespace BSPVis
 		}
 
 
-		public bool MaterialVisGBSPFile(string fileName, GraphicsDevice gd, string gameRoot)
+		public bool MaterialVisGBSPFile(string fileName, GraphicsDevice gd)
 		{
 			CoreEvents.Print(" --- Material Vis GBSP File --- \n");
 
@@ -397,7 +397,7 @@ namespace BSPVis
 
 			//make a material vis, what materials
 			//can be seen from each leaf
-			VisMaterials(gd, gameRoot);
+			VisMaterials(gd, mMap.CalcMaterialNames());
 
 			//Save the leafs, clusters, vis data, etc
 			bw	=new BinaryWriter(fs);
@@ -482,7 +482,7 @@ namespace BSPVis
 		}
 
 
-		public void VisMaterials(GraphicsDevice gd, string gameRoot)
+		public void VisMaterials(GraphicsDevice gd, List<string> matNames)
 		{
 			Dictionary<Int32, List<string>>	visibleMaterials
 				=new Dictionary<Int32, List<string>>();
@@ -496,10 +496,6 @@ namespace BSPVis
 
 			//Grab map stuff needed to compute this
 			int			firstLeaf	=mMap.GetWorldFirstLeaf();
-
-			//make a temporary mapgrinder to help sync
-			//up material names and indexes and such
-			MapGrinder	mg	=mMap.MakeMapGrinder(gd, gameRoot);
 
 			object	prog	=ProgressWatcher.RegisterProgress(0, mGFXLeafs.Length, 0);
 
@@ -555,9 +551,6 @@ namespace BSPVis
 
 			ProgressWatcher.Clear();
 
-			//grab list of material names
-			List<string>	matNames	=mg.GetMaterialNames();
-
 			//alloc compressed bytes
 			mNumVisMaterialBytes	=((matNames.Count + 63) & ~63) >> 3;
 
@@ -574,8 +567,6 @@ namespace BSPVis
 						|=(byte)(1 << (idx & 7));
 				}
 			}
-
-			mg.FreeAll();
 
 			CoreEvents.Print("Material Vis Complete:  " + mGFXMaterialVisData.Length + " bytes.\n");
 		}

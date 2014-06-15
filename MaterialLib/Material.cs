@@ -11,9 +11,7 @@ using SharpDX.Direct3D11;
 using SharpDX.D3DCompiler;
 
 //ambiguous stuff
-using Buffer = SharpDX.Direct3D11.Buffer;
-using Color = SharpDX.Color;
-using Device = SharpDX.Direct3D11.Device;
+using Device	=SharpDX.Direct3D11.Device;
 
 
 namespace MaterialLib
@@ -118,6 +116,11 @@ namespace MaterialLib
 
 		internal void ApplyPass(DeviceContext dc, int pass)
 		{
+			if(mTechnique == null)
+			{
+				return;
+			}
+
 			EffectPass	ep	=mTechnique.GetPassByIndex(pass);
 			if(ep == null)
 			{
@@ -625,6 +628,8 @@ namespace MaterialLib
 				InputLayout	il	=new InputLayout(dev,
 					ep.Description.Signature, elements);
 				mLayouts.Add(il);
+
+				il.DebugName	=mTechnique.Description.Name + i;
 			}
 		}
 

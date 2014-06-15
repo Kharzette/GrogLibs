@@ -135,6 +135,27 @@ namespace BSPCore
 		}
 
 
+		public List<string> CalcMaterialNames()
+		{
+			List<string>	ret	=new List<string>();
+			if(mGFXFaces == null)
+			{
+				return	ret;
+			}
+
+			foreach(GFXFace f in mGFXFaces)
+			{
+				string	matName	=GFXTexInfo.ScryTrueName(f, mGFXTexInfos[f.mTexInfo]);
+
+				if(!ret.Contains(matName))
+				{
+					ret.Add(matName);
+				}
+			}
+			return	ret;
+		}
+
+
 		void SaveGFXEntDataList(BinaryWriter bw)
 		{
 			bw.Write(mEntities.Count);
