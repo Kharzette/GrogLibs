@@ -103,6 +103,10 @@ namespace MaterialLib
 					Debug.Assert(false);
 				}
 			}
+			else
+			{
+				Debug.Assert(false);
+			}
 			return	null;
 		}
 

@@ -284,6 +284,18 @@ namespace MaterialLib
 		}
 
 
+		//look for any string paths that should be texture SRVs
+		public void FixTextureVariables(string matName)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return;
+			}
+
+			mMats[matName].SetResources(mKeeper.ResourceForName);
+		}
+
+
 		public void GuessTextures()
 		{
 			List<string>	textures	=mKeeper.GetTexture2DList();

@@ -9,6 +9,8 @@ using SharpDX.XInput;
 
 using System.Runtime.InteropServices;
 
+using FormsKeys	=System.Windows.Forms.Keys;
+
 
 namespace InputLib
 {
@@ -105,13 +107,22 @@ namespace InputLib
 		List<MouseMovementInfo>			mMouseMoves	=new List<MouseMovementInfo>();
 
 		//mappings to controllers / keys / mice / whatever
-		Dictionary<int, ActionMapping>	mActionMap	=new Dictionary<int, ActionMapping>();
+		Dictionary<UInt32, ActionMapping>	mActionMap	=new Dictionary<uint, ActionMapping>();
 
 		//active toggles
 		List<int>	mActiveToggles	=new List<int>();
 
+		//fired actions (for once per press activations)
+		List<int>	mOnceActives	=new List<int>();
+
+		//for a press & release action, to ensure the combo was down
+		List<UInt32>	mWasHeld	=new List<UInt32>();
+
 		//buffer for winapi key name
 		StringBuilder	mNameBuf	=new StringBuilder(260);
+
+		//list of all possible modifiers for checking held key combos
+		List<UInt32>	mModCombos	=new List<UInt32>();
 
 		//sticks/pads
 		Controller	[]mXControllers;
@@ -154,6 +165,16 @@ namespace InputLib
 			{
 				mXButtonsHeld[i]	=new List<int>();
 			}
+
+			//modifier combos pre shifted
+			mModCombos.Add((UInt32)Modifiers.None << 29);
+			mModCombos.Add((UInt32)Modifiers.ShiftHeld << 29);
+			mModCombos.Add((UInt32)(Modifiers.ControlHeld) << 29);
+			mModCombos.Add((UInt32)(Modifiers.ShiftHeld | Modifiers.ControlHeld) << 29);
+			mModCombos.Add((UInt32)(Modifiers.AltHeld) << 29);
+			mModCombos.Add((UInt32)(Modifiers.ShiftHeld | Modifiers.AltHeld) << 29);
+			mModCombos.Add((UInt32)(Modifiers.ControlHeld | Modifiers.AltHeld) << 29);
+			mModCombos.Add((UInt32)(Modifiers.ShiftHeld | Modifiers.ControlHeld | Modifiers.AltHeld) << 29);
 		}
 
 
@@ -350,103 +371,102 @@ namespace InputLib
 		}
 
 
-		public void MapAction(Enum action, VariousButtons button)
+		UInt32 KeyPlusMod(int keyCode, Modifiers mod)
 		{
-			MapAction(action, (int)button);
+			return	(UInt32)(keyCode & 0x1FFFFFFF) | ((UInt32)mod << 29);
 		}
 
 
-		public void MapAction(Enum Action, System.Windows.Forms.Keys key)
+		public void MapAction(Enum action, ActionTypes mode,
+			Modifiers mod, int keyCode)
 		{
-			int	keyCode	=MapVirtualKey((uint)key, 0);
+			Debug.Assert(mode != ActionTypes.Toggle);
 
-			MapAction(Action, keyCode);
-		}
+			UInt32	code	=KeyPlusMod(keyCode, mod);
 
-
-		public void MapAction(Enum action, int keyCode)
-		{
-			if(mActionMap.ContainsKey(keyCode))
-			{
-				//overwrite existing?
-				mActionMap[keyCode].mAction		=action;
-				mActionMap[keyCode].mActionType	=ActionMapping.ActionTypes.ContinuousHold;
-			}
-			else
-			{
-				ActionMapping	amap	=new ActionMapping();
-
-				amap.mAction		=action;
-				amap.mActionType	=ActionMapping.ActionTypes.ContinuousHold;
-				amap.mKeyCode		=keyCode;
-
-				mActionMap.Add(keyCode, amap);
-			}
-		}
-
-
-		//event fires on release of the key
-		public void MapReleaseAction(Enum action, System.Windows.Forms.Keys key)
-		{
-			int	keyCode	=MapVirtualKey((uint)key, 0);
-
-			MapReleaseAction(action, keyCode);
-		}
-
-
-		public void MapReleaseAction(Enum action, int keyCode)
-		{
-			if(mActionMap.ContainsKey(keyCode))
-			{
-				//overwrite existing?
-				mActionMap[keyCode].mAction		=action;
-				mActionMap[keyCode].mActionType	=ActionMapping.ActionTypes.PressAndRelease;
-			}
-			else
-			{
-				ActionMapping	amap	=new ActionMapping();
-
-				amap.mAction		=action;
-				amap.mActionType	=ActionMapping.ActionTypes.PressAndRelease;
-				amap.mKeyCode		=keyCode;
-
-				mActionMap.Add(keyCode, amap);
-			}
-		}
-
-
-		public void MapToggleAction(Enum actionOn, Enum actionOff, VariousButtons button)
-		{
-			MapToggleAction(actionOn, actionOff, (int)button);
-		}
-
-
-		public void MapToggleAction(Enum action, Enum actionOff, int code)
-		{
 			if(mActionMap.ContainsKey(code))
 			{
 				//overwrite existing?
 				mActionMap[code].mAction		=action;
-				mActionMap[code].mActionOff		=actionOff;
-				mActionMap[code].mActionType	=ActionMapping.ActionTypes.Toggle;
+				mActionMap[code].mActionType	=mode;
+				mActionMap[code].mModifier		=mod;
 			}
 			else
 			{
 				ActionMapping	amap	=new ActionMapping();
 
 				amap.mAction		=action;
-				amap.mActionOff		=actionOff;
-				amap.mActionType	=ActionMapping.ActionTypes.Toggle;
-				amap.mKeyCode		=code;
+				amap.mActionType	=mode;
+				amap.mKeyCode		=keyCode;
+				amap.mModifier		=mod;
 
 				mActionMap.Add(code, amap);
 			}
 		}
 
 
+		public void MapAction(Enum action, ActionTypes mode,
+			Modifiers mod, VariousButtons button)
+		{
+			MapAction(action, mode, mod, (int)button);
+		}
+
+
+		public void MapAction(Enum Action, ActionTypes mode,
+			Modifiers mod, FormsKeys key)
+		{
+			int	keyCode	=MapVirtualKey((uint)key, 0);
+
+			MapAction(Action, mode, mod, keyCode);
+		}
+
+
+		public void MapToggleAction(Enum action, Enum actionOff, Modifiers mod, int keyCode)
+		{
+			UInt32	code	=KeyPlusMod(keyCode, mod);
+
+			if(mActionMap.ContainsKey(code))
+			{
+				//overwrite existing?
+				mActionMap[code].mAction		=action;
+				mActionMap[code].mModifier		=mod;
+				mActionMap[code].mActionOff		=actionOff;
+				mActionMap[code].mActionType	=ActionTypes.Toggle;
+			}
+			else
+			{
+				ActionMapping	amap	=new ActionMapping();
+
+				amap.mAction		=action;
+				amap.mModifier		=mod;
+				amap.mActionOff		=actionOff;
+				amap.mActionType	=ActionTypes.Toggle;
+				amap.mKeyCode		=keyCode;
+
+				mActionMap.Add(code, amap);
+			}
+		}
+
+
+		public void MapToggleAction(Enum action, Enum actionOff,
+			Modifiers mod, VariousButtons button)
+		{
+			MapToggleAction(action, actionOff, mod, (int)button);
+		}
+
+
+		public void MapToggleAction(Enum action, Enum actionOff,
+			Modifiers mod, FormsKeys key)
+		{
+			int	keyCode	=MapVirtualKey((uint)key, 0);
+
+			MapToggleAction(action, actionOff, mod, keyCode);
+		}
+
+
 		public void UnMapAxisAction(Enum action, MoveAxis ma)
 		{
-			int	moveCode	=(int)ma;
+			UInt32	moveCode	=(UInt32)ma;
 
 			if(mActionMap.ContainsKey(moveCode))
 			{
@@ -457,24 +477,75 @@ namespace InputLib
 
 		public void MapAxisAction(Enum action, MoveAxis ma)
 		{
-			int	moveCode	=(int)ma;
+			UInt32	moveCode	=(UInt32)ma;
 
 			if(mActionMap.ContainsKey(moveCode))
 			{
 				//overwrite existing?
 				mActionMap[moveCode].mAction		=action;
-				mActionMap[moveCode].mActionType	=ActionMapping.ActionTypes.AnalogAmount;
+				mActionMap[moveCode].mActionType	=ActionTypes.AnalogAmount;
 			}
 			else
 			{
 				ActionMapping	amap	=new ActionMapping();
 
 				amap.mAction		=action;
-				amap.mActionType	=ActionMapping.ActionTypes.AnalogAmount;
-				amap.mKeyCode		=moveCode;
+				amap.mActionType	=ActionTypes.AnalogAmount;
+				amap.mKeyCode		=(int)moveCode;
 
 				mActionMap.Add(moveCode, amap);
 			}
+		}
+
+
+		bool IsModifierHeld(UInt32 mod)
+		{
+			//test shift/ctrl/alt
+			bool	bShiftHeld	=false;
+			bool	bCtrlHeld	=false;
+			bool	bAltHeld	=false;
+
+			foreach(KeyValuePair<int, KeyHeldInfo> held in mKeysHeld)
+			{
+				FormsKeys	key	=(FormsKeys)MapVirtualKey((uint)held.Key, 1);
+				if(key == FormsKeys.ShiftKey)
+				{
+					bShiftHeld	=true;
+				}
+				else if(key == FormsKeys.ControlKey)
+				{
+					bCtrlHeld	=true;
+				}
+				else if(key == FormsKeys.Menu)
+				{
+					bAltHeld	=true;
+				}
+			}
+
+			if(mod == (UInt32)Modifiers.None)
+			{
+				//none wants no modifier keys held
+				return	(!bShiftHeld && !bCtrlHeld && !bAltHeld);
+			}
+
+			bool	bRet	=true;
+
+			if((mod & ((UInt32)Modifiers.ShiftHeld << 29)) != 0)
+			{
+				bRet	&=bShiftHeld;
+			}
+
+			if((mod & ((UInt32)Modifiers.ControlHeld << 29)) != 0)
+			{
+				bRet	&=bCtrlHeld;
+			}
+
+			if((mod & ((UInt32)Modifiers.AltHeld << 29)) != 0)
+			{
+				bRet	&=bAltHeld;
+			}
+
+			return	bRet;
 		}
 
 
@@ -603,87 +674,122 @@ namespace InputLib
 
 			foreach(KeyValuePair<int, KeyHeldInfo> heldKey in mKeysHeld)
 			{
-				if(mActionMap.ContainsKey(heldKey.Key))
+				foreach(UInt32 combo in mModCombos)
 				{
-					KeyHeldInfo	khi	=heldKey.Value;
+					UInt32	modKey	=combo | (UInt32)(heldKey.Key & 0x1FFFFFFF);
 
-					//make sure at least some time has passed
-					if(khi.mInitialPressTime == ts || khi.mTimeHeld == 0)
+					if(mActionMap.ContainsKey(modKey) && IsModifierHeld(combo))
 					{
-						continue;
-					}
+						KeyHeldInfo	khi	=heldKey.Value;
 
-					ActionMapping	map	=mActionMap[heldKey.Key];
-
-					if(map.mActionType == ActionMapping.ActionTypes.ContinuousHold)
-					{
-						InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mAction);
-						acts.Add(act);
-
-						//reset time
-						heldKey.Value.mInitialPressTime	=ts;
-						heldKey.Value.mTimeHeld			=0;
-					}
-					else if(map.mActionType == ActionMapping.ActionTypes.PressAndRelease)
-					{
-						//no action till released
-					}
-					else if(map.mActionType == ActionMapping.ActionTypes.Toggle)
-					{
-						if(!mActiveToggles.Contains(heldKey.Key))
+						//make sure at least some time has passed
+						if(khi.mInitialPressTime == ts || khi.mTimeHeld == 0)
 						{
-							//toggle on
+							continue;
+						}
+
+						ActionMapping	map	=mActionMap[modKey];
+
+						if(map.mActionType == ActionTypes.ContinuousHold)
+						{
 							InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mAction);
 							acts.Add(act);
 
-							mActiveToggles.Add(heldKey.Key);
+							//reset time
+							heldKey.Value.mInitialPressTime	=ts;
+							heldKey.Value.mTimeHeld			=0;
 						}
-					}
-					else
-					{
-						Debug.Assert(false);
+						else if(map.mActionType == ActionTypes.PressAndRelease)
+						{
+							if(!mWasHeld.Contains(modKey))
+							{
+								mWasHeld.Add(modKey);
+							}
+						}
+						else if(map.mActionType == ActionTypes.Toggle)
+						{
+							if(!mActiveToggles.Contains(heldKey.Key))
+							{
+								//toggle on
+								InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mAction);
+								acts.Add(act);
+
+								mActiveToggles.Add(heldKey.Key);
+							}
+						}
+						else if(map.mActionType == ActionTypes.ActivateOnce)
+						{
+							if(!mOnceActives.Contains(heldKey.Key))
+							{
+								//not yet fired
+								InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mAction);
+								acts.Add(act);
+
+								mOnceActives.Add(heldKey.Key);
+							}
+						}
+						else
+						{
+							Debug.Assert(false);
+						}
 					}
 				}
 			}
 
 			foreach(KeyValuePair<int, KeyHeldInfo> heldKey in mKeysUp)
 			{
-				if(mActionMap.ContainsKey(heldKey.Key))
+				foreach(UInt32 combo in mModCombos)
 				{
-					KeyHeldInfo	khi	=heldKey.Value;
+					UInt32	modKey	=combo | (UInt32)(heldKey.Key & 0x1FFFFFFF);
 
-					//make sure at least some time has passed
-					if(khi.mInitialPressTime == ts || khi.mTimeHeld == 0)
+					if(mActionMap.ContainsKey(modKey))
 					{
-						continue;
-					}
+						KeyHeldInfo	khi	=heldKey.Value;
 
-					ActionMapping	map	=mActionMap[heldKey.Key];
-
-					if(map.mActionType == ActionMapping.ActionTypes.ContinuousHold)
-					{
-						//nothing to do here
-					}
-					else if(map.mActionType == ActionMapping.ActionTypes.PressAndRelease)
-					{
-						//release action
-						InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mAction);
-						acts.Add(act);
-					}
-					else if(map.mActionType == ActionMapping.ActionTypes.Toggle)
-					{
-						if(mActiveToggles.Contains(heldKey.Key))
+						//make sure at least some time has passed
+						if(khi.mInitialPressTime == ts || khi.mTimeHeld == 0)
 						{
-							//toggle off
-							InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mActionOff);
-							acts.Add(act);
-
-							mActiveToggles.Remove(heldKey.Key);
+							continue;
 						}
-					}
-					else
-					{
-						Debug.Assert(false);
+
+						ActionMapping	map	=mActionMap[modKey];
+
+						if(map.mActionType == ActionTypes.ContinuousHold)
+						{
+							//nothing to do here
+						}
+						else if(map.mActionType == ActionTypes.PressAndRelease)
+						{
+							if(mWasHeld.Contains(modKey))
+							{
+								//release action
+								InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mAction);
+								acts.Add(act);
+								mWasHeld.Remove(modKey);
+							}
+						}
+						else if(map.mActionType == ActionTypes.Toggle)
+						{
+							if(mActiveToggles.Contains(heldKey.Key))
+							{
+								//toggle off
+								InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mActionOff);
+								acts.Add(act);
+
+								mActiveToggles.Remove(heldKey.Key);
+							}
+						}
+						else if(map.mActionType == ActionTypes.ActivateOnce)
+						{
+							if(mOnceActives.Contains(heldKey.Key))
+							{
+								mOnceActives.Remove(heldKey.Key);
+							}
+						}
+						else
+						{
+							Debug.Assert(false);
+						}
 					}
 				}
 			}

@@ -92,6 +92,7 @@
 			this.VariableList.Name = "VariableList";
 			this.VariableList.Size = new System.Drawing.Size(324, 165);
 			this.VariableList.TabIndex = 3;
+			this.VariableList.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnVariableValueChanged);
 			// 
 			// FileGroup
 			// 

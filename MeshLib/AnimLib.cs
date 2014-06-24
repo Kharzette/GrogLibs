@@ -266,6 +266,43 @@ namespace MeshLib
 		}
 
 
+		public Anim GetAnim(string name)
+		{
+			if(mAnims.ContainsKey(name))
+			{
+				return	mAnims[name];
+			}
+			return	null;
+		}
+
+
+		public bool RenameAnim(string name, string newName)
+		{
+			if(name == null || newName == null)
+			{
+				return	false;
+			}
+			if(!mAnims.ContainsKey(name))
+			{
+				return	false;
+			}
+			if(mAnims.ContainsKey(newName))
+			{
+				return	false;
+			}
+			
+			Anim	anm	=mAnims[name];
+
+			mAnims.Remove(name);
+
+			anm.Name	=newName;
+
+			mAnims.Add(newName, anm);
+
+			return	true;
+		}
+
+
 		public void FixRename()
 		{
 			List<string>	toFix	=new List<string>();

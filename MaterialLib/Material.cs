@@ -410,7 +410,7 @@ namespace MaterialLib
 
 				if(var.TypeInfo.Description.Type == ShaderVariableType.Texture2D)
 				{
-					if(val != null)
+					if(val != null && val is string)
 					{
 						varVal.Value.mValue	=resForName(val as string);
 					}

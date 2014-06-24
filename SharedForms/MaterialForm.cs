@@ -829,5 +829,17 @@ namespace SharedForms
 		{
 			mMatLib.GuessTextures();
 		}
+
+
+		void OnVariableValueChanged(object sender, DataGridViewCellEventArgs e)
+		{
+			if(MaterialList.SelectedItems.Count < 1
+				|| MaterialList.SelectedItems.Count > 1)
+			{
+				return;	//nothing to do
+			}
+
+			mMatLib.FixTextureVariables(MaterialList.SelectedItems[0].Text);
+		}
 	}
 }
