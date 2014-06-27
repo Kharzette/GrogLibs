@@ -9,6 +9,8 @@ namespace MeshLib
 	public class GSNode
 	{
 		internal string	mName;
+		internal int	mIndex;
+
 		List<GSNode>	mChildren	=new List<GSNode>();
 
 		//current pos / rot / scale
@@ -42,7 +44,28 @@ namespace MeshLib
 		}
 
 
-		public bool GetMatrixForBone(string boneName, out Matrix ret)
+		internal bool GetMatrixForBone(int index, out Matrix ret)
+		{
+			if(index == mIndex)
+			{
+				ret	=GetMatrix();
+				return	true;
+			}
+
+			foreach(GSNode n in mChildren)
+			{
+				if(n.GetMatrixForBone(index, out ret))
+				{
+					ret	*=GetMatrix();
+					return	true;
+				}
+			}
+			ret	=Matrix.Identity;
+			return	false;
+		}
+
+
+		internal bool GetMatrixForBone(string boneName, out Matrix ret)
 		{
 			if(boneName == mName)
 			{
@@ -170,6 +193,20 @@ namespace MeshLib
 		}
 
 
+		internal void SetIndexes(Dictionary<string, int> nameToIndex)
+		{
+			if(nameToIndex.ContainsKey(mName))
+			{
+				mIndex	=nameToIndex[mName];
+			}
+
+			foreach(GSNode n in mChildren)
+			{
+				n.SetIndexes(nameToIndex);
+			}
+		}
+
+
 		internal void IterateStructure(Skeleton.IterateStruct ist)
 		{
 			foreach(GSNode gsn in mChildren)
@@ -188,6 +225,8 @@ namespace MeshLib
 	public class Skeleton
 	{
 		List<GSNode>	mRoots	=new List<GSNode>();
+
+		Dictionary<string, int>	mNameToIndex	=new Dictionary<string, int>();
 
 		public delegate void IterateStruct(string name, string parent);
 
@@ -209,6 +248,20 @@ namespace MeshLib
 			{
 				n.GetBoneNames(names);
 			}
+		}
+
+
+		public bool GetMatrixForBone(int index, out Matrix ret)
+		{
+			foreach(GSNode n in mRoots)
+			{
+				if(n.GetMatrixForBone(index, out ret))
+				{
+					return	true;
+				}
+			}
+			ret	=Matrix.Identity;
+			return	false;
 		}
 
 
@@ -252,6 +305,7 @@ namespace MeshLib
 
 				mRoots.Add(n);
 			}
+			ComputeNameIndex();
 		}
 
 
@@ -306,6 +360,78 @@ namespace MeshLib
 			foreach(GSNode gsn in mRoots)
 			{
 				gsn.IterateStructure(ist);
+			}
+		}
+
+
+		public int GetBoneIndex(string name)
+		{
+			if(!mNameToIndex.ContainsKey(name))
+			{
+				return	-1;
+			}
+			return	mNameToIndex[name];
+		}
+
+
+		public int GetNumIndexedBones()
+		{
+			return	mNameToIndex.Count;
+		}
+
+
+		public bool CheckSkeletonIndexes(Skeleton otherSkel)
+		{
+			if(otherSkel.mNameToIndex.Count != mNameToIndex.Count)
+			{
+				return	false;
+			}
+
+			foreach(KeyValuePair<string, int> idx in mNameToIndex)
+			{
+				if(!otherSkel.mNameToIndex.ContainsKey(idx.Key))
+				{
+					return	false;
+				}
+				if(otherSkel.mNameToIndex[idx.Key] != idx.Value)
+				{
+					return	false;
+				}
+			}
+			return	true;
+		}
+
+
+		public void ComputeNameIndex()
+		{
+			mNameToIndex.Clear();
+
+			List<string>	names	=new List<string>();
+
+			GetBoneNames(names);
+
+			int	idx	=0;
+			foreach(string name in names)
+			{
+				if(!name.StartsWith("Bip"))
+				{
+					continue;
+				}
+				if(name.EndsWith("Nub"))
+				{
+					continue;
+				}
+				if(name.Contains("Footstep"))
+				{
+					continue;
+				}
+				mNameToIndex.Add(name, idx++);
+			}
+
+			//set indexes in the bones
+			foreach(GSNode gsn in mRoots)
+			{
+				gsn.SetIndexes(mNameToIndex);
 			}
 		}
 	}

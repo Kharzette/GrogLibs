@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,13 @@ namespace MeshLib
 {
 	public class EditorMesh : Mesh
 	{
+		//for welding weights
+		public class WeightSeam
+		{
+			public EditorMesh					mMeshA, mMeshB;
+			public Dictionary<int, List<int>>	mSeam;
+		};
+
 		//extra data for modifying stuff for editors
 		Array	mVertArray;
 		UInt16	[]mIndArray;
@@ -72,9 +80,10 @@ namespace MeshLib
 		}
 
 
-		//weld mesh 2 to this mesh's weights for verts in the same spot
-		public void WeldWeights(Device gd, EditorMesh mesh2)
+		//try to find verts that are shared but different weights
+		public Dictionary<int, List<int>> FindWeightSeam(EditorMesh mesh2)
 		{
+			//grab positions
 			List<Vector3>	myVerts		=VertexTypes.GetPositions(mVertArray, mTypeIndex);
 			List<Vector3>	otherVerts	=VertexTypes.GetPositions(mesh2.mVertArray, mesh2.mTypeIndex);
 
@@ -96,13 +105,255 @@ namespace MeshLib
 				}
 			}
 
-			//weld
+			//weights and indexes
 			List<Half4>	myWeights		=VertexTypes.GetWeights(mVertArray, mTypeIndex);
 			List<Half4>	otherWeights	=VertexTypes.GetWeights(mesh2.mVertArray, mesh2.mTypeIndex);
 			List<Color>	myInds			=VertexTypes.GetBoneIndexes(mVertArray, mTypeIndex);
 			List<Color>	otherInds		=VertexTypes.GetBoneIndexes(mesh2.mVertArray, mesh2.mTypeIndex);
 
+			//stuff differences in a dictionary
+			Dictionary<int, List<int>>	seam	=new Dictionary<int, List<int>>();
 			foreach(KeyValuePair<int, List<int>> weldSpot in toWeld)
+			{
+				Half4	goodWeight	=myWeights[weldSpot.Key];
+				Color	goodIdx		=myInds[weldSpot.Key];
+
+				foreach(int ow in weldSpot.Value)
+				{
+					if(!CompareWeights(goodWeight, goodIdx,
+						otherWeights[ow], otherInds[ow]))
+					{
+						if(seam.ContainsKey(weldSpot.Key))
+						{
+							seam[weldSpot.Key].Add(ow);
+						}
+						else
+						{
+							seam.Add(weldSpot.Key, new List<int>());
+							seam[weldSpot.Key].Add(ow);
+						}
+					}
+				}
+			}
+			return	seam;
+		}
+
+
+		//return true if equal
+		bool CompareWeights(Half4 weight0, Color idx0, Half4 weight1, Color idx1)
+		{
+			//indexes might not be in the same order
+			for(int i=0;i < 4;i++)
+			{
+				byte	colVal;
+				Half	weightVal;
+
+				if(i == 0)
+				{
+					colVal		=idx0.R;
+					weightVal	=weight0.X;
+				}
+				else if(i == 1)
+				{
+					colVal		=idx0.G;
+					weightVal	=weight0.Y;
+				}
+				else if(i == 2)
+				{
+					colVal		=idx0.B;
+					weightVal	=weight0.Z;
+				}
+				else
+				{
+					colVal		=idx0.A;
+					weightVal	=weight0.W;
+				}
+
+				if(weightVal == 0)
+				{
+					continue;	//not in use
+				}
+
+				if(colVal == idx1.R)
+				{
+					if(weightVal != weight1.X)
+					{
+						return	false;
+					}
+				}
+				else if(colVal == idx1.G)
+				{
+					if(weightVal != weight1.Y)
+					{
+						return	false;
+					}
+				}
+				else if(colVal == idx1.B)
+				{
+					if(weightVal != weight1.Z)
+					{
+						return	false;
+					}
+				}
+				else if(colVal == idx1.A)
+				{
+					if(weightVal != weight1.W)
+					{
+						return	false;
+					}
+				}
+				else
+				{
+					return	false;
+				}
+			}
+			return	true;
+		}
+
+
+		void AverageWeight(Half4 weight0, Color idx0, Half4 weight1, Color idx1,
+			out Half4 avgWeight, out Color avgIndex)
+		{
+			avgWeight	=new Half4(0, 0, 0, 0);
+			avgIndex	=new Color(0, 0, 0, 0);
+
+			//indexes might not be in the same order
+			for(int i=0;i < 4;i++)
+			{
+				byte	colVal;
+				Half	weightVal;
+
+				if(i == 0)
+				{
+					colVal		=idx0.R;
+					weightVal	=weight0.X;
+				}
+				else if(i == 1)
+				{
+					colVal		=idx0.G;
+					weightVal	=weight0.Y;
+				}
+				else if(i == 2)
+				{
+					colVal		=idx0.B;
+					weightVal	=weight0.Z;
+				}
+				else
+				{
+					colVal		=idx0.A;
+					weightVal	=weight0.W;
+				}
+
+				if(weightVal == 0)
+				{
+					continue;	//not in use
+				}
+
+				float	avg	=0;
+
+				if(colVal == idx1.R)
+				{
+					avg	=(weightVal + weight1.X) * 0.5f;
+				}
+				else if(colVal == idx1.G)
+				{
+					avg	=(weightVal + weight1.Y) * 0.5f;
+				}
+				else if(colVal == idx1.B)
+				{
+					avg	=(weightVal + weight1.Z) * 0.5f;
+				}
+				else if(colVal == idx1.A)
+				{
+					avg	=(weightVal + weight1.W) * 0.5f;
+				}
+				else
+				{
+					//not assigned to that bone, just use weightVal
+					avg	=weightVal;
+				}
+
+				if(i == 0)
+				{
+					avgWeight.X	=avg;
+				}
+				else if(i == 1)
+				{
+					avgWeight.Y	=avg;
+				}
+				else if(i == 2)
+				{
+					avgWeight.Z	=avg;
+				}
+				else
+				{
+					avgWeight.W	=avg;
+				}
+			}
+
+			avgIndex	=idx0;
+		}
+
+
+		public void WeldAverage(Device gd, WeightSeam ws)
+		{
+			//weld
+			List<Half4>	myWeights		=VertexTypes.GetWeights(mVertArray, mTypeIndex);
+			List<Half4>	otherWeights	=VertexTypes.GetWeights(ws.mMeshB.mVertArray, ws.mMeshB.mTypeIndex);
+			List<Color>	myInds			=VertexTypes.GetBoneIndexes(mVertArray, mTypeIndex);
+			List<Color>	otherInds		=VertexTypes.GetBoneIndexes(ws.mMeshB.mVertArray, ws.mMeshB.mTypeIndex);
+
+			foreach(KeyValuePair<int, List<int>> weldSpot in ws.mSeam)
+			{
+				Half4	myWeight	=myWeights[weldSpot.Key];
+				Color	myIdx		=myInds[weldSpot.Key];
+
+				//just use index zero?  TODO: assert they are all the same
+				Half4	otherWeight	=otherWeights[weldSpot.Value[0]];
+				Color	otherIndex	=otherInds[weldSpot.Value[0]];
+
+				Half4	finalWeight;
+				Color	finalIndex;
+
+				AverageWeight(myWeight, myIdx, otherWeight, otherIndex,
+					out finalWeight, out finalIndex);
+
+				myWeights[weldSpot.Key]	=finalWeight;
+				
+				foreach(int ow in weldSpot.Value)
+				{
+					otherWeights[ow]	=finalWeight;
+					otherInds[ow]		=finalIndex;
+				}
+			}
+
+			VertexTypes.ReplaceWeights(mVertArray, myWeights.ToArray());
+			VertexTypes.ReplaceBoneIndexes(mVertArray, myInds.ToArray());
+			VertexTypes.ReplaceWeights(ws.mMeshB.mVertArray, otherWeights.ToArray());
+			VertexTypes.ReplaceBoneIndexes(ws.mMeshB.mVertArray, otherInds.ToArray());
+
+			mVerts.Dispose();
+			ws.mMeshB.mVerts.Dispose();
+
+			mVerts				=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
+			ws.mMeshB.mVerts	=VertexTypes.BuildABuffer(gd, ws.mMeshB.mVertArray, ws.mMeshB.mTypeIndex);
+
+			mVBBinding				=new VertexBufferBinding(mVerts, VertexTypes.GetSizeForTypeIndex(mTypeIndex), 0);
+			ws.mMeshB.mVBBinding	=new VertexBufferBinding(ws.mMeshB.mVerts,
+				VertexTypes.GetSizeForTypeIndex(ws.mMeshB.mTypeIndex), 0);
+		}
+
+
+		//welds the other's seam to this mesh's weights
+		public void WeldOtherWeights(Device gd, WeightSeam ws)
+		{
+			//weld
+			List<Half4>	myWeights		=VertexTypes.GetWeights(mVertArray, mTypeIndex);
+			List<Half4>	otherWeights	=VertexTypes.GetWeights(ws.mMeshB.mVertArray, ws.mMeshB.mTypeIndex);
+			List<Color>	myInds			=VertexTypes.GetBoneIndexes(mVertArray, mTypeIndex);
+			List<Color>	otherInds		=VertexTypes.GetBoneIndexes(ws.mMeshB.mVertArray, ws.mMeshB.mTypeIndex);
+
+			foreach(KeyValuePair<int, List<int>> weldSpot in ws.mSeam)
 			{
 				Half4	goodWeight	=myWeights[weldSpot.Key];
 				Color	goodIdx		=myInds[weldSpot.Key];
@@ -114,10 +365,41 @@ namespace MeshLib
 				}
 			}
 
-			VertexTypes.ReplaceWeights(mesh2.mVertArray, otherWeights.ToArray());
-			VertexTypes.ReplaceBoneIndexes(mesh2.mVertArray, otherInds.ToArray());
+			VertexTypes.ReplaceWeights(ws.mMeshB.mVertArray, otherWeights.ToArray());
+			VertexTypes.ReplaceBoneIndexes(ws.mMeshB.mVertArray, otherInds.ToArray());
 
-			mesh2.mVerts	=VertexTypes.BuildABuffer(gd, mesh2.mVertArray, mesh2.mTypeIndex);
+			ws.mMeshB.mVerts.Dispose();
+
+			ws.mMeshB.mVerts	=VertexTypes.BuildABuffer(gd, ws.mMeshB.mVertArray, ws.mMeshB.mTypeIndex);
+
+			ws.mMeshB.mVBBinding	=new VertexBufferBinding(ws.mMeshB.mVerts,
+				VertexTypes.GetSizeForTypeIndex(ws.mMeshB.mTypeIndex), 0);
+		}
+
+
+		//welds, taking values from the other mesh
+		public void WeldMyWeights(Device gd, WeightSeam ws)
+		{
+			//weld
+			List<Half4>	myWeights		=VertexTypes.GetWeights(mVertArray, mTypeIndex);
+			List<Half4>	otherWeights	=VertexTypes.GetWeights(ws.mMeshB.mVertArray, ws.mMeshB.mTypeIndex);
+			List<Color>	myInds			=VertexTypes.GetBoneIndexes(mVertArray, mTypeIndex);
+			List<Color>	otherInds		=VertexTypes.GetBoneIndexes(ws.mMeshB.mVertArray, ws.mMeshB.mTypeIndex);
+
+			foreach(KeyValuePair<int, List<int>> weldSpot in ws.mSeam)
+			{
+				//just use index zero?  TODO: assert they are all the same
+				myWeights[weldSpot.Key]	=otherWeights[weldSpot.Value[0]];
+				myInds[weldSpot.Key]	=otherInds[weldSpot.Value[0]];
+			}
+
+			VertexTypes.ReplaceWeights(mVertArray, myWeights.ToArray());
+			VertexTypes.ReplaceBoneIndexes(mVertArray, myInds.ToArray());
+
+			mVerts.Dispose();
+
+			mVerts		=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
+			mVBBinding	=new VertexBufferBinding(mVerts, VertexTypes.GetSizeForTypeIndex(mTypeIndex), 0);
 		}
 
 

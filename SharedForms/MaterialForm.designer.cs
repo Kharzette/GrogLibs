@@ -28,6 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+			this.components = new System.ComponentModel.Container();
 			this.MaterialList = new System.Windows.Forms.ListView();
 			this.VariableList = new System.Windows.Forms.DataGridView();
 			this.FileGroup = new System.Windows.Forms.GroupBox();
@@ -52,6 +53,7 @@
 			this.GenBiNormalTangent = new System.Windows.Forms.Button();
 			this.ApplyMaterial = new System.Windows.Forms.Button();
 			this.MeshPartList = new System.Windows.Forms.ListView();
+			this.MatFormToolTips = new System.Windows.Forms.ToolTip(this.components);
 			((System.ComponentModel.ISupportInitialize)(this.VariableList)).BeginInit();
 			this.FileGroup.SuspendLayout();
 			this.groupBox1.SuspendLayout();
@@ -172,6 +174,8 @@
 			this.GuessShaderParameterVisibility.Size = new System.Drawing.Size(79, 29);
 			this.GuessShaderParameterVisibility.TabIndex = 20;
 			this.GuessShaderParameterVisibility.Text = "Guess Vars";
+			this.MatFormToolTips.SetToolTip(this.GuessShaderParameterVisibility, "Attempts to look up the current material effect in ParameterData.txt to obtain th" +
+        "e correct hide/ignore settings");
 			this.GuessShaderParameterVisibility.UseVisualStyleBackColor = true;
 			this.GuessShaderParameterVisibility.Click += new System.EventHandler(this.OnGuessVisibility);
 			// 
@@ -182,6 +186,7 @@
 			this.UnHideAll.Size = new System.Drawing.Size(79, 29);
 			this.UnHideAll.TabIndex = 19;
 			this.UnHideAll.Text = "Reset Vars";
+			this.MatFormToolTips.SetToolTip(this.UnHideAll, "Reset to unhide and unignore all variables the effect has access to");
 			this.UnHideAll.UseVisualStyleBackColor = true;
 			this.UnHideAll.Click += new System.EventHandler(this.OnResetVisibility);
 			// 
@@ -192,6 +197,8 @@
 			this.IgnoreParameter.Size = new System.Drawing.Size(79, 29);
 			this.IgnoreParameter.TabIndex = 18;
 			this.IgnoreParameter.Text = "Ignore Var";
+			this.MatFormToolTips.SetToolTip(this.IgnoreParameter, "Prevents a variable from being used at all when drawing at runtime, and hides it " +
+        "as well.");
 			this.IgnoreParameter.UseVisualStyleBackColor = true;
 			this.IgnoreParameter.Click += new System.EventHandler(this.OnIgnoreVariables);
 			// 
@@ -202,6 +209,8 @@
 			this.HideSelected.Size = new System.Drawing.Size(79, 29);
 			this.HideSelected.TabIndex = 17;
 			this.HideSelected.Text = "Hide Var";
+			this.MatFormToolTips.SetToolTip(this.HideSelected, "Hide a shader variable from the GUI.  This won\'t prevent it from being used when " +
+        "the material is applied for drawing.");
 			this.HideSelected.UseVisualStyleBackColor = true;
 			this.HideSelected.Click += new System.EventHandler(this.OnHideVariables);
 			// 
@@ -212,6 +221,7 @@
 			this.GuessTextures.Size = new System.Drawing.Size(74, 29);
 			this.GuessTextures.TabIndex = 13;
 			this.GuessTextures.Text = "Guess Tex";
+			this.MatFormToolTips.SetToolTip(this.GuessTextures, "Try to guess a texture value from the material name");
 			this.GuessTextures.UseVisualStyleBackColor = true;
 			this.GuessTextures.Click += new System.EventHandler(this.OnGuessTextures);
 			// 
@@ -222,6 +232,7 @@
 			this.TexSizeUp.Size = new System.Drawing.Size(74, 29);
 			this.TexSizeUp.TabIndex = 14;
 			this.TexSizeUp.Text = "TexUp";
+			this.MatFormToolTips.SetToolTip(this.TexSizeUp, "Crank up texture size, hold CTRL for all materials");
 			this.TexSizeUp.UseVisualStyleBackColor = true;
 			// 
 			// TexSizeDown
@@ -231,6 +242,7 @@
 			this.TexSizeDown.Size = new System.Drawing.Size(74, 29);
 			this.TexSizeDown.TabIndex = 15;
 			this.TexSizeDown.Text = "TexDown";
+			this.MatFormToolTips.SetToolTip(this.TexSizeDown, "Crank down texture size, hold CTRL for all materials");
 			this.TexSizeDown.UseVisualStyleBackColor = true;
 			// 
 			// MeshPartGroup
@@ -245,20 +257,23 @@
 			this.MeshPartGroup.Controls.Add(this.ApplyMaterial);
 			this.MeshPartGroup.Location = new System.Drawing.Point(12, 355);
 			this.MeshPartGroup.Name = "MeshPartGroup";
-			this.MeshPartGroup.Size = new System.Drawing.Size(466, 53);
+			this.MeshPartGroup.Size = new System.Drawing.Size(425, 53);
 			this.MeshPartGroup.TabIndex = 22;
 			this.MeshPartGroup.TabStop = false;
-			this.MeshPartGroup.Text = "Mesh Part";
+			this.MeshPartGroup.Text = "Mesh Parts";
 			// 
 			// WeldWeight
 			// 
 			this.WeldWeight.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.WeldWeight.Location = new System.Drawing.Point(372, 19);
+			this.WeldWeight.Image = global::SharedForms.Properties.Resources.Frankenstein_icon;
+			this.WeldWeight.Location = new System.Drawing.Point(372, 10);
 			this.WeldWeight.Name = "WeldWeight";
-			this.WeldWeight.Size = new System.Drawing.Size(88, 28);
+			this.WeldWeight.Size = new System.Drawing.Size(46, 37);
 			this.WeldWeight.TabIndex = 25;
-			this.WeldWeight.Text = "Weld Weights";
+			this.MatFormToolTips.SetToolTip(this.WeldWeight, "Attempts to stitch together the selected mesh parts by welding weights and vertic" +
+        "es along boundaries");
 			this.WeldWeight.UseVisualStyleBackColor = true;
+			this.WeldWeight.Click += new System.EventHandler(this.OnFrankenstein);
 			// 
 			// StripElements
 			// 
@@ -268,6 +283,7 @@
 			this.StripElements.Size = new System.Drawing.Size(91, 28);
 			this.StripElements.TabIndex = 24;
 			this.StripElements.Text = "Strip Elements";
+			this.MatFormToolTips.SetToolTip(this.StripElements, "Brings up the vertex format allowing deletion of elements");
 			this.StripElements.UseVisualStyleBackColor = true;
 			this.StripElements.Click += new System.EventHandler(this.OnStripElements);
 			// 
@@ -279,6 +295,8 @@
 			this.Match.Size = new System.Drawing.Size(72, 28);
 			this.Match.TabIndex = 23;
 			this.Match.Text = "Match Mat";
+			this.MatFormToolTips.SetToolTip(this.Match, "Attempt to guess which materials to assign to mesh parts based on the names.  Usu" +
+        "ally doesn\'t work very well.");
 			this.Match.UseVisualStyleBackColor = true;
 			this.Match.Click += new System.EventHandler(this.OnMatchAndVisible);
 			// 
@@ -304,6 +322,7 @@
 			this.TexCoordSet.Name = "TexCoordSet";
 			this.TexCoordSet.Size = new System.Drawing.Size(42, 20);
 			this.TexCoordSet.TabIndex = 22;
+			this.MatFormToolTips.SetToolTip(this.TexCoordSet, "Texture coordinate set to use when generating tangents");
 			// 
 			// GenBiNormalTangent
 			// 
@@ -313,6 +332,7 @@
 			this.GenBiNormalTangent.Size = new System.Drawing.Size(57, 28);
 			this.GenBiNormalTangent.TabIndex = 21;
 			this.GenBiNormalTangent.Text = "Gen Tan";
+			this.MatFormToolTips.SetToolTip(this.GenBiNormalTangent, "Generate tangents for normal mapping on the selected mesh parts");
 			this.GenBiNormalTangent.UseVisualStyleBackColor = true;
 			// 
 			// ApplyMaterial
@@ -323,6 +343,7 @@
 			this.ApplyMaterial.Size = new System.Drawing.Size(74, 28);
 			this.ApplyMaterial.TabIndex = 20;
 			this.ApplyMaterial.Text = "Apply Mat";
+			this.MatFormToolTips.SetToolTip(this.ApplyMaterial, "Applies the selected material to the selected mesh parts");
 			this.ApplyMaterial.UseVisualStyleBackColor = true;
 			this.ApplyMaterial.Click += new System.EventHandler(this.OnApplyMaterial);
 			// 
@@ -398,5 +419,6 @@
 		private System.Windows.Forms.Button GenBiNormalTangent;
 		private System.Windows.Forms.Button ApplyMaterial;
 		private System.Windows.Forms.ListView MeshPartList;
+		private System.Windows.Forms.ToolTip MatFormToolTips;
 	}
 }

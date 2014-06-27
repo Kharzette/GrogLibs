@@ -90,20 +90,7 @@ namespace MeshLib
 				return	false;
 			}
 
-			List<string>	existingBones	=new List<string>();
-			List<string>	newBones		=new List<string>();
-
-			mSkeleton.GetBoneNames(existingBones);
-			sk.GetBoneNames(newBones);
-
-			foreach(string bone in existingBones)
-			{
-				if(!newBones.Contains(bone))
-				{
-					return	false;
-				}
-			}
-			return	true;
+			return	mSkeleton.CheckSkeletonIndexes(sk);
 		}
 
 

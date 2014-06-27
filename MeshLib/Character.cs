@@ -71,12 +71,18 @@ namespace MeshLib
 
 			if(mBones == null)
 			{
-				mBones	=new Matrix[skn.GetNumBones()];
+				mBones	=new Matrix[sk.GetNumIndexedBones()];
 			}
 			for(int i=0;i < mBones.Length;i++)
 			{
 				mBones[i]	=skn.GetBoneByIndex(i, sk);
 			}
+		}
+
+
+		public Skin GetSkin()
+		{
+			return	mSkin;
 		}
 
 
@@ -104,6 +110,12 @@ namespace MeshLib
 			{
 				mMeshParts.Remove(m);
 			}
+		}
+
+
+		public bool HasSkin()
+		{
+			return	mSkin != null;
 		}
 
 
@@ -258,18 +270,18 @@ namespace MeshLib
 			}
 
 			Skeleton		skel		=mAnimLib.GetSkeleton();
-			List<string>	boneNames	=mSkin.GetBoneNames();
 			List<Vector3>	points		=new List<Vector3>();
+			int				numIndexed	=skel.GetNumIndexedBones();
 
 			if(skel == null)
 			{
 				return;
 			}
 
-			foreach(string bone in boneNames)
+			for(int i=0;i < numIndexed;i++)
 			{
 				Matrix	mat	=Matrix.Identity;
-				skel.GetMatrixForBone(bone, out mat);
+				skel.GetMatrixForBone(i, out mat);
 
 				mat	*=Matrix.RotationX((float)Math.PI / -2.0f);
 				mat	*=Matrix.RotationY((float)Math.PI);

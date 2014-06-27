@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -23,6 +24,9 @@ namespace SharedForms
 
 		public event EventHandler	eNukedMeshPart;
 		public event EventHandler	eStripElements;
+		public event EventHandler	eFindSeams;
+		public event EventHandler	eSeamFound;
+		public event EventHandler	eSeamsDone;
 
 
 		public MaterialForm(MaterialLib.MaterialLib matLib,
@@ -77,7 +81,7 @@ namespace SharedForms
 				FormExtensions.Invoke(MaterialList, tagAndSub);
 			}
 
-			SizeColumns(MaterialList);
+			FormExtensions.SizeColumns(MaterialList);
 		}
 
 
@@ -108,39 +112,10 @@ namespace SharedForms
 				vis.Tag	=69;
 			}
 
-			SizeColumns(MeshPartList);
+			FormExtensions.SizeColumns(MeshPartList);
 		}
 
 
-		void SizeColumns(ListView lv)
-		{
-			//set to header size first
-			Action<ListView>	autoResize	=lvar => lvar.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
-			FormExtensions.Invoke(lv, autoResize);
-
-			List<int>	sizes	=new List<int>();
-			for(int i=0;i < lv.Columns.Count;i++)
-			{
-				Action<ListView>	addWidth	=lvar => sizes.Add(lvar.Columns[i].Width);
-				FormExtensions.Invoke(lv, addWidth);
-			}
-
-			for(int i=0;i < lv.Columns.Count;i++)
-			{
-				Action<ListView>	arHeader	=lvar => {
-					lvar.Columns[i].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
-
-					if(lvar.Columns[i].Width < sizes[i])
-					{
-						lvar.Columns[i].AutoResize(ColumnHeaderAutoResizeStyle.HeaderSize);
-					}
-				};
-
-				FormExtensions.Invoke(lv, arHeader);
-			}
-		}
-		
-		
 		//from a stacko question
 		int DropDownWidth(ListBox myBox)
 		{
@@ -416,7 +391,7 @@ namespace SharedForms
 			}
 			else
 			{
-				SizeColumns(MaterialList);	//this doesn't work, still has the old value
+				FormExtensions.SizeColumns(MaterialList);	//this doesn't work, still has the old value
 			}
 		}
 
@@ -840,6 +815,78 @@ namespace SharedForms
 			}
 
 			mMatLib.FixTextureVariables(MaterialList.SelectedItems[0].Text);
+		}
+
+
+		void OnFrankenstein(object sender, EventArgs e)
+		{
+			Character	chr	=MeshPartList.Tag as Character;
+			if(chr == null)
+			{
+				return;
+			}
+
+			List<Mesh>	partList	=chr.GetMeshPartList();
+
+			Misc.SafeInvoke(eFindSeams, partList);
+
+			//make a "compared against" dictionary to prevent
+			//needless work
+			Dictionary<Mesh, List<Mesh>>	comparedAgainst	=new Dictionary<Mesh, List<Mesh>>();
+			foreach(Mesh m in partList)
+			{
+				comparedAgainst.Add(m, new List<Mesh>());
+			}
+
+			for(int i=0;i < partList.Count;i++)
+			{
+				EditorMesh	meshA	=partList[i] as EditorMesh;
+				if(meshA == null)
+				{
+					continue;
+				}
+
+				for(int j=0;j < partList.Count;j++)
+				{
+					if(i == j)
+					{
+						continue;
+					}
+
+					EditorMesh	meshB	=partList[j] as EditorMesh;
+					if(meshB == null)
+					{
+						continue;
+					}
+
+					if(comparedAgainst[meshA].Contains(meshB)
+						|| comparedAgainst[meshB].Contains(meshA))
+					{
+						continue;
+					}
+
+					Dictionary<int, List<int>>	seam	=meshA.FindWeightSeam(meshB);
+
+					comparedAgainst[meshA].Add(meshB);
+
+					if(seam.Count == 0)
+					{
+						continue;
+					}
+
+					Debug.WriteLine("Seam between " + meshA.Name + ", and "
+						+ meshB.Name + " :Verts: " + seam.Count);
+
+					EditorMesh.WeightSeam	ws	=new EditorMesh.WeightSeam();
+
+					ws.mMeshA	=meshA;
+					ws.mMeshB	=meshB;
+					ws.mSeam	=seam;
+
+					Misc.SafeInvoke(eSeamFound, ws);
+				}
+			}
+			Misc.SafeInvoke(eSeamsDone, null);
 		}
 	}
 }

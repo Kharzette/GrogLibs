@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
 using SharpDX;
@@ -13,67 +14,45 @@ namespace MeshLib
 	//are all the same for each bone
 	public class Skin
 	{
-		List<string>	mBoneNames			=new List<string>();
-		List<Matrix>	mInverseBindPoses	=new List<Matrix>();
-		Matrix			mMaxAdjust;	//coordinate system stuff
-
-		//generated map of bone name to index
-		Dictionary<string, int>	mBoneNameIndexes	=new Dictionary<string, int>();
+		Dictionary<int, Matrix>	mInverseBindPoses	=new Dictionary<int, Matrix>();
 
 
 		public Skin()
 		{
-//			mMaxAdjust	=Matrix.RotationYawPitchRoll(0,
-//										MathUtil.DegreesToRadians(-90),
-//										MathUtil.DegreesToRadians(180));
-			mMaxAdjust	=Matrix.Identity;
 		}
 
 
-		internal List<string> GetBoneNames()
+		//adds to existing
+		public void SetBonePoses(Dictionary<int, Matrix> invBindPoses)
 		{
-			return	mBoneNames;
-		}
-
-
-		public int GetBoneIndex(string boneName)
-		{
-			if(!mBoneNameIndexes.ContainsKey(boneName))
+			foreach(KeyValuePair<int, Matrix> bp in invBindPoses)
 			{
-				return	-1;
-			}
-			return	mBoneNameIndexes[boneName];
-		}
-
-
-		public void SetBoneNamesAndPoses(Dictionary<string, Matrix> invBindPoses)
-		{
-			mBoneNames.Clear();
-			mInverseBindPoses.Clear();
-
-			foreach(KeyValuePair<string, Matrix> bp in invBindPoses)
-			{
-				if(mBoneNames.Contains(bp.Key))
+				if(mInverseBindPoses.ContainsKey(bp.Key))
 				{
-					continue;
+					//if bone name already added, make sure the
+					//inverse bind pose is the same for this skin
+					Debug.Assert(Mathery.CompareMatrix(bp.Value, mInverseBindPoses[bp.Key], Mathery.VCompareEpsilon));
+					mInverseBindPoses[bp.Key]	=bp.Value;
 				}
-				mBoneNames.Add(bp.Key);
-				mInverseBindPoses.Add(bp.Value);
+				else
+				{
+					mInverseBindPoses.Add(bp.Key, bp.Value);
+				}
 			}
-			CalcNameToIndexMap();
 		}
 
 
+		//I think this is used for gamecode manipulation of bones
 		public Matrix GetBoneByName(string name, Skeleton sk)
 		{
 			Matrix	ret	=Matrix.Identity;
 
 			sk.GetMatrixForBone(name, out ret);
 
-			int	idx	=mBoneNameIndexes[name];
+			int	idx	=sk.GetBoneIndex(name);
 
 			//multiply by inverse bind pose
-			ret	=mInverseBindPoses[idx] * ret * mMaxAdjust;
+			ret	=mInverseBindPoses[idx] * ret;
 
 			return	ret;
 		}
@@ -85,13 +64,7 @@ namespace MeshLib
 
 			sk.GetMatrixForBone(name, out ret);
 
-			return	ret * mMaxAdjust;
-		}
-
-
-		public int GetNumBones()
-		{
-			return	mBoneNames.Count;
+			return	ret;
 		}
 
 
@@ -99,10 +72,17 @@ namespace MeshLib
 		{
 			Matrix	ret	=Matrix.Identity;
 
-			sk.GetMatrixForBone(mBoneNames[idx], out ret);
+			sk.GetMatrixForBone(idx, out ret);
+
+			Matrix	ibp	=Matrix.Identity;
+
+			if(mInverseBindPoses.ContainsKey(idx))
+			{
+				ibp	=mInverseBindPoses[idx];
+			}
 
 			//multiply by inverse bind pose
-			ret	=mInverseBindPoses[idx] * ret * mMaxAdjust;
+			ret	=ibp * ret;
 
 			return	ret;
 		}
@@ -110,49 +90,27 @@ namespace MeshLib
 
 		public void Read(BinaryReader br)
 		{
-			mBoneNames.Clear();
 			mInverseBindPoses.Clear();
 
-			int	numNames	=br.ReadInt32();
-			for(int i=0;i < numNames;i++)
+			int	numIBP	=br.ReadInt32();
+			for(int i=0;i < numIBP;i++)
 			{
-				string	name	=br.ReadString();
+				int	idx	=br.ReadInt32();
 
-				mBoneNames.Add(name);
-			}
-
-			int	numInvs	=br.ReadInt32();
-			for(int i=0;i < numInvs;i++)
-			{
 				Matrix	mat	=FileUtil.ReadMatrix(br);
-				mInverseBindPoses.Add(mat);
-			}
 
-			CalcNameToIndexMap();
+				mInverseBindPoses.Add(idx, mat);
+			}
 		}
 
 
 		public void Write(BinaryWriter bw)
 		{
-			bw.Write(mBoneNames.Count);
-			foreach(string name in mBoneNames)
-			{
-				bw.Write(name);
-			}
-
 			bw.Write(mInverseBindPoses.Count);
-			foreach(Matrix m in mInverseBindPoses)
+			foreach(KeyValuePair<int, Matrix> ibp in mInverseBindPoses)
 			{
-				FileUtil.WriteMatrix(bw, m);
-			}
-		}
-
-
-		void CalcNameToIndexMap()
-		{
-			for(int i=0;i < mBoneNames.Count;i++)
-			{
-				mBoneNameIndexes.Add(mBoneNames[i], i);
+				bw.Write(ibp.Key);
+				FileUtil.WriteMatrix(bw, ibp.Value);
 			}
 		}
 	}
