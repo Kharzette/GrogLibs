@@ -588,6 +588,15 @@ namespace SharedForms
 
 				RefreshMeshPartList();
 			}
+			else if(e.KeyValue == 113)	//F2
+			{
+				if(MeshPartList.SelectedItems.Count != 1)
+				{
+					return;	//nothing to do
+				}
+
+				MeshPartList.SelectedItems[0].BeginEdit();
+			}
 		}
 
 
@@ -865,28 +874,56 @@ namespace SharedForms
 						continue;
 					}
 
-					Dictionary<int, List<int>>	seam	=meshA.FindWeightSeam(meshB);
+					EditorMesh.WeightSeam	seam	=meshA.FindSeam(meshB);
 
 					comparedAgainst[meshA].Add(meshB);
 
-					if(seam.Count == 0)
+					if(seam.mSeam.Count == 0)
 					{
 						continue;
 					}
 
 					Debug.WriteLine("Seam between " + meshA.Name + ", and "
-						+ meshB.Name + " :Verts: " + seam.Count);
+						+ meshB.Name + " :Verts: " + seam.mSeam.Count);
 
-					EditorMesh.WeightSeam	ws	=new EditorMesh.WeightSeam();
-
-					ws.mMeshA	=meshA;
-					ws.mMeshB	=meshB;
-					ws.mSeam	=seam;
-
-					Misc.SafeInvoke(eSeamFound, ws);
+					Misc.SafeInvoke(eSeamFound, seam);
 				}
 			}
 			Misc.SafeInvoke(eSeamsDone, null);
+		}
+
+
+		void OnMeshPartRename(object sender, LabelEditEventArgs e)
+		{
+			StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
+			Character	chr	=MeshPartList.Tag as Character;
+			if(sm == null && chr == null)
+			{
+				return;
+			}
+
+			if(sm == null)
+			{
+				if(!chr.RenameMesh(MeshPartList.Items[e.Item].Text, e.Label))
+				{
+					e.CancelEdit	=true;
+				}
+				else
+				{
+					FormExtensions.SizeColumns(MeshPartList);	//this doesn't work, still has the old value
+				}
+			}
+			else
+			{
+				if(!sm.RenameMesh(MeshPartList.Items[e.Item].Text, e.Label))
+				{
+					e.CancelEdit	=true;
+				}
+				else
+				{
+					FormExtensions.SizeColumns(MeshPartList);	//this doesn't work, still has the old value
+				}
+			}
 		}
 	}
 }

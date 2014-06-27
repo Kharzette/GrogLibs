@@ -46,6 +46,20 @@ namespace MeshLib
 		}
 
 
+		public bool RenameMesh(string oldName, string newName)
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				if(m.Name == oldName)
+				{
+					m.Name	=newName;
+					return	true;
+				}
+			}
+			return	false;
+		}
+
+
 		public void AddMeshPart(Mesh m)
 		{
 			if(m != null)

@@ -471,7 +471,6 @@ namespace MeshLib
 			{
 				foreach(FieldInfo fi in finfo)
 				{
-					//this might not be positional data!
 					if(fi.Name == "BoneWeights")
 					{
 						Half4	vec	=(Half4)GetArrayField(verts, i, fi.Name);
@@ -495,7 +494,6 @@ namespace MeshLib
 			{
 				foreach(FieldInfo fi in finfo)
 				{
-					//this might not be positional data!
 					if(fi.Name == "BoneIndex")
 					{
 						Color	vec	=(Color)GetArrayField(verts, i, fi.Name);
@@ -519,7 +517,6 @@ namespace MeshLib
 			{
 				foreach(FieldInfo fi in finfo)
 				{
-					//this might not be positional data!
 					if(fi.Name == "Normal")
 					{
 						Half4	vec	=(Half4)GetArrayField(verts, i, fi.Name);
@@ -546,7 +543,6 @@ namespace MeshLib
 			{
 				foreach(FieldInfo fi in finfo)
 				{
-					//this might not be positional data!
 					if(fi.Name == "TexCoord" + set)
 					{
 						Half2	vec	=(Half2)GetArrayField(verts, i, fi.Name);
@@ -643,6 +639,36 @@ namespace MeshLib
 			typeIndex	=GetIndex(vtypeNew);
 
 			return	newVerts;
+		}
+
+
+		public static void ReplacePositions(Array verts, Vector3 []newPos)
+		{
+			Debug.Assert(verts.Length == newPos.Length);
+
+			for(int i=0;i < verts.Length;i++)
+			{
+				SetArrayField(verts, i, "Position", newPos[i]);
+			}
+		}
+
+
+		public static void ReplaceNormals(Array verts, Vector3 []newNorm)
+		{
+			Debug.Assert(verts.Length == newNorm.Length);
+
+			for(int i=0;i < verts.Length;i++)
+			{
+				Half4	smallNorm;
+				Vector3	norm	=newNorm[i];
+
+				smallNorm.X	=newNorm[i].X;
+				smallNorm.Y	=newNorm[i].Y;
+				smallNorm.Z	=newNorm[i].Z;
+				smallNorm.W	=0f;
+
+				SetArrayField(verts, i, "Normal", smallNorm);
+			}
 		}
 
 

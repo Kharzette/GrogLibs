@@ -362,6 +362,7 @@
 			this.MeshPartList.TabIndex = 23;
 			this.MeshPartList.UseCompatibleStateImageBehavior = false;
 			this.MeshPartList.View = System.Windows.Forms.View.Details;
+			this.MeshPartList.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.OnMeshPartRename);
 			this.MeshPartList.KeyUp += new System.Windows.Forms.KeyEventHandler(this.OnMeshPartListKeyUp);
 			this.MeshPartList.MouseUp += new System.Windows.Forms.MouseEventHandler(this.OnMeshPartMouseUp);
 			// 
