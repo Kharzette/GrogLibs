@@ -89,6 +89,21 @@ float4 Tex0Col0PS(VVPosTex0Col0 input) : SV_Target
 	return	texLitColor;
 }
 
+//single texture, single color modulated, cel
+float4 Tex0Col0CelPS(VVPosTex0Col0 input) : SV_Target
+{
+	float4	texel	=mTexture0.Sample(LinearWrap, input.TexCoord0);
+	
+	float4	inColor		=input.Color;
+
+#if defined(CELLIGHT)
+	inColor.xyz	=CalcCelColor(inColor.xyz);
+#endif
+	float4	texLitColor	=inColor * texel;
+	
+	return	texLitColor;
+}
+
 //normal mapped from tex1, with tex0 texturing
 float4 NormalMapTriTex0Tex1PS(VVPosNormTanBiTanTex0Tex1 input) : SV_Target
 {
@@ -184,7 +199,7 @@ float4 NormalMapTriTex0SolidPS(VVPosTex04Tex14Tex24Tex34 input) : SV_Target
 	return	float4(litSolid, mSolidColour.w);
 }
 
-//Texture 0, trilight, and specular
+//Texture 0, trilight, modulate solid, and specular
 float4 TriTex0SpecPS(VVPosTex04Tex14 input) : SV_Target
 {
 	float2	tex;
@@ -211,6 +226,52 @@ float4 TriTex0SpecPS(VVPosTex04Tex14 input) : SV_Target
 	float3	litColor	=texColor.xyz * triLight;
 
 	specular	=saturate((specular + litColor.xyz) * mSolidColour.xyz);
+
+	return	float4(specular, texColor.w);
+}
+
+//Texture 0, trilight, modulate solid, cel, and specular
+float4 TriCelTex0SpecPS(VVPosTex04Tex14 input) : SV_Target
+{
+	float2	tex;
+
+	tex.x	=input.TexCoord0.w;
+	tex.y	=input.TexCoord1.w;
+
+	float4	texColor	=mTexture0.Sample(LinearWrap, tex);
+
+	float3	pnorm	=input.TexCoord0.xyz;
+	float3	wpos	=input.TexCoord1.xyz;
+
+	pnorm	=normalize(pnorm);
+
+	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
+							mLightColor0, mLightColor1, mLightColor2);
+
+	//this quantizes the light value
+#if defined(CELLIGHT)
+	triLight	=CalcCelColor(triLight);
+#endif
+
+#if defined(SM2)
+	float3	specular	=ComputeCheapSpecular(wpos, mLightDirection, pnorm, triLight, mLightColor2);
+#else
+	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, pnorm, triLight, mLightColor2);
+#endif
+
+	//this will quantize the specularity as well
+#if defined(CELSPECULAR)
+	specular	=CalcCelColor(specular);
+#endif
+
+	float3	litColor	=texColor.xyz * triLight;
+
+	specular	=saturate((specular + litColor.xyz) * mSolidColour.xyz);
+
+	//for super retro goofy color action
+#if defined(CELALL)
+	specular	=CalcCelColor(specular);
+#endif
 
 	return	float4(specular, texColor.w);
 }

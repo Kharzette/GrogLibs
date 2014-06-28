@@ -148,6 +148,29 @@ VVPosTex03Tex13 SkinWNormWPosVS(VPosNormBone input)
 	return	ComputeSkinWorld(input, mBones);
 }
 
+//skin world norm and pos and texcoord
+VVPosTex04Tex14 SkinWNormWPosTex0VS(VPosNormBoneTex0 input)
+{
+	VPosNormBone skinny;
+
+	skinny.Position	=input.Position;
+	skinny.Normal	=input.Normal;
+	skinny.Blend0	=input.Blend0;
+	skinny.Weight0	=input.Weight0;
+
+	VVPosTex03Tex13	skint	=ComputeSkinWorld(skinny, mBones);
+
+	VVPosTex04Tex14	output;
+
+	output.Position			=skint.Position;
+	output.TexCoord0.xyz	=skint.TexCoord0.xyz;
+	output.TexCoord1.xyz	=skint.TexCoord1.xyz;
+	output.TexCoord0.w		=input.TexCoord0.x;
+	output.TexCoord1.w		=input.TexCoord0.y;
+	
+	return	output;
+}
+
 //skin world pos
 VVPosTex03 ShadowSkinWPosVS(VPosNormBone input)
 {
@@ -266,6 +289,28 @@ technique10 TriSkinTex0
 #else
 		VertexShader	=compile vs_4_0_level_9_3 SkinTexTriColVS();
 		PixelShader		=compile ps_4_0_level_9_3 Tex0Col0PS();
+#endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
+	}
+}
+
+technique10 TriSkinCelTex0Spec
+{     
+	pass P0
+	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 SkinWNormWPosTex0VS();
+		PixelShader		=compile ps_5_0 TriCelTex0SpecPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 SkinWNormWPosTex0VS();
+		PixelShader		=compile ps_4_1 TriCelTex0SpecPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 SkinWNormWPosTex0VS();
+		PixelShader		=compile ps_4_0 TriCelTex0SpecPS();
+#else
+		VertexShader	=compile vs_4_0_level_9_3 SkinWNormWPosTex0VS();
+		PixelShader		=compile ps_4_0_level_9_3 TriCelTex0SpecPS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
 		SetDepthStencilState(EnableDepth, 0);

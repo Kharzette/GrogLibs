@@ -260,6 +260,28 @@ technique10 TriTex0Spec
 	}
 }
 
+technique10 TriCelTex0Spec
+{     
+	pass P0
+	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 WNormWPosTexVS();
+		PixelShader		=compile ps_5_0 TriCelTex0SpecPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 WNormWPosTexVS();
+		PixelShader		=compile ps_4_1 TriCelTex0SpecPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 WNormWPosTexVS();
+		PixelShader		=compile ps_4_0 TriCelTex0SpecPS();
+#else
+		VertexShader	=compile vs_4_0_level_9_3 WNormWPosTexVS();
+		PixelShader		=compile ps_4_0_level_9_3 TriCelTex0SpecPS();
+#endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
+	}
+}
+
 technique10 TriSolid
 {     
 	pass P0

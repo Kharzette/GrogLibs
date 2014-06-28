@@ -35,6 +35,7 @@ TriTex0
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture1
 		mSolidColour
@@ -83,6 +84,7 @@ TriTex0NormalMapSolid
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture1
 		mBones
@@ -102,7 +104,6 @@ TriTex0NormalMapSolid
 TriTex0Spec
 	Ignored
 		mTexture1
-		mSolidColour
 		mBones
 		mLightViewProj
 		mCelTable
@@ -129,9 +130,52 @@ TriTex0Spec
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture1
-		mSolidColour
+		mBones
+		mWorld
+		mView
+		mProjection
+		mLightViewProj
+		mEyePos
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+TriCelTex0Spec
+	Ignored
+		mTexture1
+		mBones
+		mLightViewProj
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
+		ShadowBlending
+		NoCull
+		ShadowDepth
+	Hidden
+		mTexture1
 		mBones
 		mWorld
 		mView
@@ -176,6 +220,7 @@ TriSolid
 		NoCull
 		mSpecColor
 		mSpecPower
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
@@ -221,6 +266,7 @@ TriSolidSpec
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
@@ -266,6 +312,7 @@ TriSolidSpecAlpha
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
@@ -311,6 +358,7 @@ TriVColorSolidSpec
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
@@ -355,6 +403,7 @@ TriCelSolidSpec
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
@@ -401,6 +450,7 @@ TriTex0NormalMapSolidSpec
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture1
 		mBones
@@ -445,6 +495,7 @@ TriTex0NormalMapSpec
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mSolidColour
 		mBones
@@ -488,6 +539,7 @@ TriTex0NormalMapSolidSpecInstanced
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture1
 		mBones
@@ -535,6 +587,7 @@ TriSkinTex0
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture1
 		mSolidColour
@@ -584,6 +637,7 @@ TriSkinSolidSpec
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
@@ -630,8 +684,54 @@ TriSkinCelSolidSpec
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
+		mTexture1
+		mBones
+		mWorld
+		mView
+		mProjection
+		mLightViewProj
+		mEyePos
+		mDanglyForce
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+TriSkinCelTex0Spec
+	Ignored
+		mTexture1
+		mBones
+		mLightViewProj
+		mDanglyForce
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
+		ShadowBlending
+		NoCull
+		ShadowDepth
+	Hidden
 		mTexture1
 		mBones
 		mWorld
@@ -676,6 +776,7 @@ TriSkinDanglySolidSpec
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
@@ -720,6 +821,7 @@ TriSkinDanglyCelSolidSpec
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
@@ -766,6 +868,7 @@ TriSkinCelColorSpec
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
@@ -816,6 +919,7 @@ TriSkinDecalTex0
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mSolidColour
 		mBones
@@ -866,6 +970,7 @@ TriSkinDecalTex0Tex1
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mSolidColour
 		mBones
@@ -921,6 +1026,7 @@ FullBrightSkin
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
@@ -981,6 +1087,7 @@ ShadowSkin
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
@@ -1040,6 +1147,7 @@ Shadow
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
@@ -1095,6 +1203,7 @@ DMN
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
@@ -1149,6 +1258,7 @@ DMNDangly
 		PointClamp1D
 		ShadowBlending
 		NoCull
+		ShadowDepth
 	Hidden
 		mTexture0
 		mTexture1
