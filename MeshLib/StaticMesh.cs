@@ -60,6 +60,15 @@ namespace MeshLib
 		}
 
 
+		public void AssignMaterialIDs(MaterialLib.IDKeeper keeper)
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				m.AssignMaterialIDs(keeper);
+			}
+		}
+
+
 		public void AddMeshPart(Mesh m)
 		{
 			if(m != null)
@@ -187,8 +196,7 @@ namespace MeshLib
 
 
 		public void DrawDMN(DeviceContext dc,
-			MaterialLib.MaterialLib matLib,
-			MaterialLib.IDKeeper idk)
+			MaterialLib.MaterialLib matLib)
 		{
 			foreach(Mesh m in mMeshParts)
 			{
@@ -196,7 +204,7 @@ namespace MeshLib
 				{
 					continue;
 				}
-				m.DrawDMN(dc, matLib, idk, mTransform);
+				m.DrawDMN(dc, matLib, mTransform);
 			}
 		}
 

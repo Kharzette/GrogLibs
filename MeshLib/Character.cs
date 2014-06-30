@@ -63,6 +63,15 @@ namespace MeshLib
 		}
 
 
+		public void AssignMaterialIDs(MaterialLib.IDKeeper keeper)
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				m.AssignMaterialIDs(keeper);
+			}
+		}
+
+
 		//copies bones into the shader
 		//materials should be set up to ignore
 		//the mBones parameter
@@ -339,8 +348,7 @@ namespace MeshLib
 
 
 		public void DrawDMN(DeviceContext dc,
-			MaterialLib.MaterialLib matLib,
-			MaterialLib.IDKeeper idk)
+			MaterialLib.MaterialLib matLib)
 		{
 			UpdateShaderBones(matLib);
 
@@ -350,7 +358,7 @@ namespace MeshLib
 				{
 					continue;
 				}
-				m.DrawDMN(dc, matLib, idk, mTransform);
+				m.DrawDMN(dc, matLib, mTransform);
 			}
 		}
 

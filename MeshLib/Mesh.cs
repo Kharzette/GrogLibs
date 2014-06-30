@@ -54,6 +54,7 @@ namespace MeshLib
 		protected BoundingBox		mBoxBound;
 		protected BoundingSphere	mSphereBound;
 		protected Matrix			mTransform;
+		protected int				mMaterialID;
 
 		protected VertexBufferBinding	mVBBinding;
 
@@ -144,6 +145,12 @@ namespace MeshLib
 		}
 
 
+		public void SetMaterialID(int id)
+		{
+			mMaterialID	=id;
+		}
+
+
 		public virtual void Write(BinaryWriter bw)
 		{
 			bw.Write(mName);
@@ -213,7 +220,6 @@ namespace MeshLib
 
 		internal void DrawDMN(DeviceContext dc,
 			MaterialLib.MaterialLib matLib,
-			MaterialLib.IDKeeper idk,
 			Matrix transform)
 		{
 			if(!mbVisible)
@@ -226,17 +232,11 @@ namespace MeshLib
 				return;
 			}
 
-			int	id	=idk.GetID(mMaterialName);
-			if(id == -1)
-			{
-				return;
-			}
-
 			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
 			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
 
 			matLib.SetMaterialParameter("DMN", "mWorld", (mTransform * transform));
-			matLib.SetMaterialParameter("DMN", "mMaterialID", id);
+			matLib.SetMaterialParameter("DMN", "mMaterialID", mMaterialID);
 
 			matLib.ApplyMaterialPass("DMN", dc, 0);
 
@@ -310,6 +310,12 @@ namespace MeshLib
 		public BoundingSphere GetSphereBounds()
 		{
 			return	mSphereBound;
+		}
+
+
+		internal void AssignMaterialIDs(MaterialLib.IDKeeper keeper)
+		{
+			mMaterialID	=keeper.GetID(mMaterialName);
 		}
 	}
 }
