@@ -10,6 +10,7 @@ using MaterialLibrary	=MaterialLib.MaterialLib;
 
 namespace MeshLib
 {
+	//an instance of a character
 	public class Character
 	{
 		//parts

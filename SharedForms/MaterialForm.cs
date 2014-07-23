@@ -87,7 +87,7 @@ namespace SharedForms
 
 		public void RefreshMeshPartList()
 		{
-			StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
+			StaticArch	sm	=MeshPartList.Tag as StaticArch;
 			Character	chr	=MeshPartList.Tag as Character;
 			if(sm == null && chr == null)
 			{
@@ -498,7 +498,7 @@ namespace SharedForms
 
 		public void SetMesh(object sender)
 		{
-			StaticMesh	sm	=sender as StaticMesh;
+			StaticArch	sm	=sender as StaticArch;
 			Character	chr	=sender as Character;
 			if(sm == null && chr == null)
 			{
@@ -895,7 +895,7 @@ namespace SharedForms
 
 		void OnMeshPartRename(object sender, LabelEditEventArgs e)
 		{
-			StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
+			StaticArch	sm	=MeshPartList.Tag as StaticArch;
 			Character	chr	=MeshPartList.Tag as Character;
 			if(sm == null && chr == null)
 			{

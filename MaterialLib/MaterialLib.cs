@@ -269,6 +269,23 @@ namespace MaterialLib
 		}
 
 
+		public void SetTriLightValues(string matName,
+			Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return;
+			}
+
+			Material	mat	=mMats[matName];
+
+			mat.SetEffectParameter("mLightColor0", col0);
+			mat.SetEffectParameter("mLightColor1", col1);
+			mat.SetEffectParameter("mLightColor2", col2);
+			mat.SetEffectParameter("mLightDirection", lightDir);
+		}
+
+
 		public void SetLightMapsToAtlas()
 		{
 			ShaderResourceView	srv	=mKeeper.GetSRV("LightMapAtlas");

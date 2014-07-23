@@ -63,6 +63,7 @@
     <Compile Include="ShadowHelper.cs" />
     <Compile Include="Skeleton.cs" />
     <Compile Include="Skin.cs" />
+    <Compile Include="StaticArch.cs" />
     <Compile Include="StaticMesh.cs" />
     <Compile Include="SubAnim.cs" />
     <Compile Include="TransitionHelper.cs" />
