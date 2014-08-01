@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
 using SharpDX;
@@ -21,6 +22,9 @@ namespace MeshLib
 		Matrix	mTransform;
 		Matrix	mTransInverted;
 
+		//materials per part
+		List<MeshMaterial>	mPartMats	=new List<MeshMaterial>();
+
 
 		public StaticMesh(StaticArch statA)
 		{
@@ -36,6 +40,104 @@ namespace MeshLib
 		}
 
 
+		public bool SetPartName(int index, string name)
+		{
+			return	mArch.RenameMesh(index, name);
+		}
+
+
+		public void SetPartVisible(int index, bool bVisible)
+		{
+			Debug.Assert(index >= 0 && index < mPartMats.Count);
+
+			if(index < 0 || index >= mPartMats.Count)
+			{
+				return;
+			}
+
+			mPartMats[index].mbVisible	=bVisible;
+		}
+
+
+		public void SetPartMaterialName(int index, string matName)
+		{
+			Debug.Assert(index >= 0 && index < mPartMats.Count);
+
+			if(index < 0 || index >= mPartMats.Count)
+			{
+				return;
+			}
+
+			mPartMats[index].mMaterialName	=matName;
+		}
+
+
+		public void AddMeshPart(Mesh m, MatLib mats)
+		{
+			mArch.AddMeshPart(m);
+
+			MeshMaterial	mm	=new MeshMaterial();
+
+			mm.mMatLib			=mats;
+			mm.mMaterialName	="NoMaterial";
+			mm.mbVisible		=true;
+			mm.mObjectTransform	=mTransform;
+
+			mPartMats.Add(mm);
+		}
+
+
+		public void NukeMeshPart(int index)
+		{
+			Debug.Assert(index >= 0 && index < mPartMats.Count);
+
+			if(index < 0 || index >= mPartMats.Count)
+			{
+				return;
+			}
+
+			mArch.NukeMesh(index);
+
+			mPartMats.RemoveAt(index);
+		}
+
+
+		public Mesh GetMeshPart(int index)
+		{
+			return	mArch.GetMeshPart(index);
+		}
+
+
+		public int GetMeshPartCount()
+		{
+			return	mArch.GetMeshPartList().Count;
+		}
+
+
+		public string GetMeshPartName(int index)
+		{
+			Mesh	mp	=mArch.GetMeshPart(index);
+
+			if(mp == null)
+			{
+				return	"null part";
+			}
+			return	mp.Name;
+		}
+
+
+		public Type GetMeshPartVertexType(int index)
+		{
+			Mesh	mp	=mArch.GetMeshPart(index);
+
+			if(mp == null)
+			{
+				return	null;	//does this work for Type?
+			}
+			return	mp.VertexType;
+		}
+
+
 		public Matrix GetTransform()
 		{
 			return	mTransform;
@@ -48,6 +150,12 @@ namespace MeshLib
 			mTransInverted	=mTransform;
 
 			mTransInverted.Invert();
+
+			//set in the materials
+			foreach(MeshMaterial mm in mPartMats)
+			{
+				mm.mObjectTransform	=mat;
+			}
 		}
 
 
@@ -73,23 +181,26 @@ namespace MeshLib
 		}
 
 
-		public void SetTriLightValues(MatLib mats,
+		public void SetTriLightValues(
 			Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
 		{
-			mArch.SetTriLightValues(mats, col0, col1, col2, lightDir);
+			foreach(MeshMaterial mm in mPartMats)
+			{
+				mm.mMatLib.SetTriLightValues(
+					mm.mMaterialName, col0, col1, col2, lightDir);
+			}
 		}
 
 
-		public void Draw(DeviceContext dc, MaterialLib.MaterialLib matLib)
+		public void Draw(DeviceContext dc)
 		{
-			mArch.Draw(dc, matLib, mTransform);
+			mArch.Draw(dc, mPartMats);
 		}
 
 
-		public void DrawDMN(DeviceContext dc,
-			MaterialLib.MaterialLib matLib)
+		public void DrawDMN(DeviceContext dc)
 		{
-			mArch.DrawDMN(dc, matLib, mTransform);
+			mArch.DrawDMN(dc, mPartMats);
 		}
 
 
@@ -97,7 +208,7 @@ namespace MeshLib
 			MaterialLib.MaterialLib matLib,
 			string altMatName)
 		{
-			mArch.Draw(dc, matLib, altMatName, mTransform);
+			mArch.Draw(dc, mPartMats);
 		}
 
 

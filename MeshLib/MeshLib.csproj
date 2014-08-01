@@ -59,6 +59,7 @@
     <Compile Include="IndoorMesh.cs" />
     <Compile Include="KeyFrame.cs" />
     <Compile Include="Mesh.cs" />
+    <Compile Include="MeshMaterial.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShadowHelper.cs" />
     <Compile Include="Skeleton.cs" />

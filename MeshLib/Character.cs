@@ -68,7 +68,7 @@ namespace MeshLib
 		{
 			foreach(Mesh m in mMeshParts)
 			{
-				m.AssignMaterialIDs(keeper);
+//				m.AssignMaterialIDs(keeper);
 			}
 		}
 
@@ -146,26 +146,6 @@ namespace MeshLib
 		public void SetSkin(Skin s)
 		{
 			mSkin	=s;
-		}
-
-
-		public void SetAppearance(List<string> meshParts, List<string> materials)
-		{
-			foreach(Mesh m in mMeshParts)
-			{
-				if(meshParts.Contains(m.Name))
-				{
-					m.Visible	=true;
-
-					int	idx	=meshParts.IndexOf(m.Name);
-
-					m.MaterialName	=materials[idx];
-				}
-				else
-				{
-					m.Visible	=false;
-				}
-			}
 		}
 
 
@@ -339,11 +319,7 @@ namespace MeshLib
 
 			foreach(Mesh m in mMeshParts)
 			{
-				if(!m.Visible)
-				{
-					continue;
-				}
-				m.Draw(dc, matLib, mTransform);
+				m.Draw(dc, null);
 			}
 		}
 
@@ -355,11 +331,7 @@ namespace MeshLib
 
 			foreach(Mesh m in mMeshParts)
 			{
-				if(!m.Visible)
-				{
-					continue;
-				}
-				m.DrawDMN(dc, matLib, mTransform);
+				m.DrawDMN(dc, null);
 			}
 		}
 
@@ -370,11 +342,7 @@ namespace MeshLib
 
 			foreach(Mesh m in mMeshParts)
 			{
-				if(!m.Visible)
-				{
-					continue;
-				}
-				m.Draw(dc, matLib, mTransform, altMaterial);
+				m.Draw(dc, null);
 			}
 		}
 

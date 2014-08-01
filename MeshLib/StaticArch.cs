@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
 using SharpDX;
@@ -28,26 +29,35 @@ namespace MeshLib
 		}
 
 
-		public bool RenameMesh(string oldName, string newName)
+		internal bool RenameMesh(int index, string newName)
 		{
-			foreach(Mesh m in mMeshParts)
+			if(index < 0 || index >= mMeshParts.Count)
 			{
-				if(m.Name == oldName)
-				{
-					m.Name	=newName;
-					return	true;
-				}
+				return	false;
 			}
-			return	false;
+
+			mMeshParts[index].Name	=newName;
+
+			return	true;
 		}
 
 
-		public void AddMeshPart(Mesh m)
+		internal void AddMeshPart(Mesh m)
 		{
 			if(m != null)
 			{
 				mMeshParts.Add(m);
 			}
+		}
+
+
+		public Mesh GetMeshPart(int index)
+		{
+			if(index < 0 || index >= mMeshParts.Count)
+			{
+				return	null;
+			}
+			return	mMeshParts[index];
 		}
 
 
@@ -64,15 +74,14 @@ namespace MeshLib
 		}
 
 
-		public void NukeMesh(Mesh m)
+		internal void NukeMesh(int index)
 		{
-			if(m != null)
+			if(index < 0 || index >= mMeshParts.Count)
 			{
-				if(mMeshParts.Contains(m))
-				{
-					mMeshParts.Remove(m);
-				}
+				return;
 			}
+
+			mMeshParts.RemoveAt(index);
 		}
 
 
@@ -83,68 +92,44 @@ namespace MeshLib
 		}
 
 
-		public void AssignMaterialIDs(MaterialLib.IDKeeper keeper)
-		{
-			foreach(Mesh m in mMeshParts)
-			{
-				m.AssignMaterialIDs(keeper);
-			}
-		}
-
-
-		internal void SetTriLightValues(MatLib mats,
-			Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
-		{
-			foreach(Mesh m in mMeshParts)
-			{
-				mats.SetTriLightValues(m.MaterialName, col0, col1, col2, lightDir);
-			}
-		}
-
-
 		internal void Draw(DeviceContext dc,
-			MaterialLib.MaterialLib matLib,
-			Matrix transform)
+			List<MeshMaterial> meshMats)
 		{
-			foreach(Mesh m in mMeshParts)
+			Debug.Assert(meshMats.Count == mMeshParts.Count);
+
+			for(int i=0;i < mMeshParts.Count;i++)
 			{
-				if(!m.Visible)
+				MeshMaterial	mm	=meshMats[i];
+
+				if(!mm.mbVisible)
 				{
 					continue;
 				}
-				m.Draw(dc, matLib, transform);
+
+				Mesh	m	=mMeshParts[i];
+
+				m.Draw(dc, mm);
 			}
 		}
 
 
 		internal void DrawDMN(DeviceContext dc,
-			MaterialLib.MaterialLib matLib,
-			Matrix transform)
+			List<MeshMaterial> meshMats)
 		{
-			foreach(Mesh m in mMeshParts)
-			{
-				if(!m.Visible)
-				{
-					continue;
-				}
-				m.DrawDMN(dc, matLib, transform);
-			}
-		}
+			Debug.Assert(meshMats.Count == mMeshParts.Count);
 
-
-		internal void Draw(DeviceContext dc,
-			MaterialLib.MaterialLib matLib,
-			string altMatName,
-			Matrix transform)
-		{
-			foreach(Mesh m in mMeshParts)
+			for(int i=0;i < mMeshParts.Count;i++)
 			{
-				if(!m.Visible)
+				MeshMaterial	mm	=meshMats[i];
+
+				if(!mm.mbVisible)
 				{
 					continue;
 				}
 
-				m.Draw(dc, matLib, transform, altMatName);
+				Mesh	m	=mMeshParts[i];
+
+				m.DrawDMN(dc, mm);
 			}
 		}
 
@@ -157,10 +142,6 @@ namespace MeshLib
 
 			foreach(Mesh m in mMeshParts)
 			{
-				if(!m.Visible)
-				{
-					continue;
-				}
 				Nullable<float>	dist	=m.RayIntersect(start, end, bBox);
 				if(dist != null)
 				{

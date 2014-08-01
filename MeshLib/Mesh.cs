@@ -14,47 +14,16 @@ using Device	=SharpDX.Direct3D11.Device;
 
 namespace MeshLib
 {
-	public enum WearLocations
-	{
-		NONE					=0,
-		BOOT					=1,
-		TORSO					=2,
-		GLOVE					=4,
-		HAT						=8,
-		SHOULDERS				=16,
-		FACE					=32,
-		LEFT_HAND				=64,
-		RIGHT_HAND				=128,
-		HAIR					=256,
-		BACK					=512,
-		BRACERS					=1024,
-		RING_LEFT				=2048,
-		RING_RIGHT				=4096,
-		EARRING_LEFT			=8192,
-		EARRING_RIGHT			=16384,
-		BELT					=32768,	//is this gonna overflow?
-		HAT_FACE				=24,	//orred together values
-		HAT_HAIR				=40,	//for the editor
-		FACE_HAIR				=48,
-		HAT_EARRINGS			=24584,
-		HAT_HAIR_EARRINGS		=24840,
-		HAT_FACE_HAIR_EARRINGS	=24872,
-		GLOVE_RINGS				=6148
-	}
-
 	public class Mesh
 	{
 		protected string			mName;
 		protected Buffer			mVerts;
 		protected Buffer			mIndexs;
 		protected int				mNumVerts, mNumTriangles, mVertSize;
-		protected string			mMaterialName;
 		protected int				mTypeIndex;
-		protected bool				mbVisible;
 		protected BoundingBox		mBoxBound;
 		protected BoundingSphere	mSphereBound;
 		protected Matrix			mTransform;
-		protected int				mMaterialID;
 
 		protected VertexBufferBinding	mVBBinding;
 
@@ -64,28 +33,17 @@ namespace MeshLib
 			get { return mName; }
 			set { mName = ((value == null)? "" : value); }
 		}
-		public string MaterialName
-		{
-			get { return mMaterialName; }
-			set { mMaterialName = ((value == null)? "" : value); }
-		}
 		public Type VertexType
 		{
 			get { return VertexTypes.GetTypeForIndex(mTypeIndex); }
 			private set { mTypeIndex = VertexTypes.GetIndex(value); }
-		}
-		public bool Visible
-		{
-			get { return mbVisible; }
-			set { mbVisible = value; }
 		}
 		
 
 		public Mesh() { }
 		public Mesh(string name)
 		{
-			Name			=name;
-			mMaterialName	="";
+			Name	=name;
 		}
 
 
@@ -145,21 +103,13 @@ namespace MeshLib
 		}
 
 
-		public void SetMaterialID(int id)
-		{
-			mMaterialID	=id;
-		}
-
-
 		public virtual void Write(BinaryWriter bw)
 		{
 			bw.Write(mName);
 			bw.Write(mNumVerts);
 			bw.Write(mNumTriangles);
 			bw.Write(mVertSize);
-			bw.Write(mMaterialName);
 			bw.Write(mTypeIndex);
-			bw.Write(mbVisible);
 
 			//transform
 			FileUtil.WriteMatrix(bw, mTransform);
@@ -180,9 +130,7 @@ namespace MeshLib
 			mNumVerts		=br.ReadInt32();
 			mNumTriangles	=br.ReadInt32();
 			mVertSize		=br.ReadInt32();
-			mMaterialName	=br.ReadString();
 			mTypeIndex		=br.ReadInt32();
-			mbVisible		=br.ReadBoolean();
 
 			mTransform	=FileUtil.ReadMatrix(br);
 
@@ -218,16 +166,14 @@ namespace MeshLib
 		}
 
 
-		internal void DrawDMN(DeviceContext dc,
-			MaterialLib.MaterialLib matLib,
-			Matrix transform)
+		internal void DrawDMN(DeviceContext dc, MeshMaterial mm)
 		{
-			if(!mbVisible)
+			if(!mm.mbVisible)
 			{
 				return;
 			}
 
-			if(!matLib.MaterialExists("DMN"))
+			if(!mm.mMatLib.MaterialExists("DMN"))
 			{
 				return;
 			}
@@ -235,48 +181,30 @@ namespace MeshLib
 			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
 			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
 
-			matLib.SetMaterialParameter("DMN", "mWorld", (mTransform * transform));
-			matLib.SetMaterialParameter("DMN", "mMaterialID", mMaterialID);
-
-			matLib.ApplyMaterialPass("DMN", dc, 0);
+			mm.mMatLib.SetMaterialParameter("DMN", "mMaterialID", mm.mMaterialID);
+			mm.mMatLib.SetMaterialParameter("DMN", "mWorld",
+				(mTransform * mm.mObjectTransform));
+			
+			mm.mMatLib.ApplyMaterialPass("DMN", dc, 0);
 
 			dc.DrawIndexed(mNumTriangles * 3, 0, 0);
 		}
 
 
-		internal void Draw(DeviceContext dc, MaterialLib.MaterialLib matLib, Matrix transform)
+		internal void Draw(DeviceContext dc, MeshMaterial mm)
 		{
-			if(!matLib.MaterialExists(mMaterialName))
+			if(!mm.mMatLib.MaterialExists(mm.mMaterialName))
 			{
 				return;
 			}
 
-			matLib.SetMaterialParameter(mMaterialName, "mWorld", (mTransform * transform));
+			mm.mMatLib.SetMaterialParameter(mm.mMaterialName, "mWorld",
+				(mTransform * mm.mObjectTransform));
 
 			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
 			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
 
-			matLib.ApplyMaterialPass(mMaterialName, dc, 0);
-
-			dc.DrawIndexed(mNumTriangles * 3, 0, 0);
-		}
-
-
-		internal void Draw(DeviceContext dc,
-			MaterialLib.MaterialLib matLib,
-			Matrix transform, string altMat)
-		{
-			if(!matLib.MaterialExists(altMat))
-			{
-				return;
-			}
-
-			matLib.SetMaterialParameter(altMat, "mWorld", (mTransform * transform));
-
-			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
-			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
-
-			matLib.ApplyMaterialPass(altMat, dc, 0);
+			mm.mMatLib.ApplyMaterialPass(mm.mMaterialName, dc, 0);
 
 			dc.DrawIndexed(mNumTriangles * 3, 0, 0);
 		}
@@ -310,12 +238,6 @@ namespace MeshLib
 		public BoundingSphere GetSphereBounds()
 		{
 			return	mSphereBound;
-		}
-
-
-		internal void AssignMaterialIDs(MaterialLib.IDKeeper keeper)
-		{
-			mMaterialID	=keeper.GetID(mMaterialName);
 		}
 	}
 }
