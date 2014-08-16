@@ -5,6 +5,7 @@ using System.IO;
 using SharpDX;
 using SharpDX.DXGI;
 using SharpDX.Direct3D11;
+using UtilityLib;
 
 //ambiguous stuff
 using Color		=SharpDX.Color;
@@ -16,7 +17,11 @@ namespace MeshLib
 {
 	public class StaticMesh
 	{
-		StaticArch	mArch;
+		MeshPartStuff	mParts;
+
+		//bounds
+		BoundingBox		mBoxBound;
+		BoundingSphere	mSphereBound;
 
 		//transform
 		Matrix	mTransform;
@@ -26,9 +31,9 @@ namespace MeshLib
 		List<MeshMaterial>	mPartMats	=new List<MeshMaterial>();
 
 
-		public StaticMesh(StaticArch statA)
+		public StaticMesh(IArch statA)
 		{
-			mArch	=statA;
+			mParts	=new MeshPartStuff(statA);
 
 			SetTransform(Matrix.Identity);
 		}
@@ -36,113 +41,9 @@ namespace MeshLib
 
 		public void FreeAll()
 		{
-			mArch		=null;
-		}
+			mParts.FreeAll();
 
-
-		public bool SetPartName(int index, string name)
-		{
-			return	mArch.RenameMesh(index, name);
-		}
-
-
-		public void SetPartVisible(int index, bool bVisible)
-		{
-			Debug.Assert(index >= 0 && index < mPartMats.Count);
-
-			if(index < 0 || index >= mPartMats.Count)
-			{
-				return;
-			}
-
-			mPartMats[index].mbVisible	=bVisible;
-		}
-
-
-		public void SetPartMaterialName(int index, string matName)
-		{
-			Debug.Assert(index >= 0 && index < mPartMats.Count);
-
-			if(index < 0 || index >= mPartMats.Count)
-			{
-				return;
-			}
-
-			mPartMats[index].mMaterialName	=matName;
-		}
-
-
-		public void AddMeshPart(Mesh m, MatLib mats)
-		{
-			mArch.AddMeshPart(m);
-
-			MeshMaterial	mm	=new MeshMaterial();
-
-			mm.mMatLib			=mats;
-			mm.mMaterialName	="NoMaterial";
-			mm.mbVisible		=true;
-			mm.mObjectTransform	=mTransform;
-
-			mPartMats.Add(mm);
-		}
-
-
-		public void NukeMeshPart(List<int> indexes)
-		{
-			List<MeshMaterial>	toNuke	=new List<MeshMaterial>();
-			foreach(int ind in indexes)
-			{
-				Debug.Assert(ind >= 0 && ind < mPartMats.Count);
-
-				if(ind < 0 || ind >= mPartMats.Count)
-				{
-					continue;
-				}
-
-				toNuke.Add(mPartMats[ind]);
-			}
-
-			mPartMats.RemoveAll(mp => toNuke.Contains(mp));
-
-			toNuke.Clear();
-
-			mArch.NukeMesh(indexes);
-		}
-
-
-		public Mesh GetMeshPart(int index)
-		{
-			return	mArch.GetMeshPart(index);
-		}
-
-
-		public int GetMeshPartCount()
-		{
-			return	mArch.GetMeshPartList().Count;
-		}
-
-
-		public string GetMeshPartName(int index)
-		{
-			Mesh	mp	=mArch.GetMeshPart(index);
-
-			if(mp == null)
-			{
-				return	"null part";
-			}
-			return	mp.Name;
-		}
-
-
-		public Type GetMeshPartVertexType(int index)
-		{
-			Mesh	mp	=mArch.GetMeshPart(index);
-
-			if(mp == null)
-			{
-				return	null;	//does this work for Type?
-			}
-			return	mp.VertexType;
+			mParts	=null;
 		}
 
 
@@ -160,16 +61,13 @@ namespace MeshLib
 			mTransInverted.Invert();
 
 			//set in the materials
-			foreach(MeshMaterial mm in mPartMats)
-			{
-				mm.mObjectTransform	=mat;
-			}
+			mParts.SetMatObjTransforms(mat);
 		}
 
 
 		public BoundingBox GetBoxBound()
 		{
-			BoundingBox	box	=mArch.GetBoxBound();
+			BoundingBox	box	=mParts.GetBoxBound();
 
 			box.Minimum	=Vector3.TransformCoordinate(box.Minimum, mTransform);
 			box.Maximum	=Vector3.TransformCoordinate(box.Maximum, mTransform);
@@ -180,7 +78,7 @@ namespace MeshLib
 
 		public BoundingSphere GetSphereBound()
 		{
-			BoundingSphere	ret	=mArch.GetSphereBound();
+			BoundingSphere	ret	=mParts.GetSphereBound();
 
 			ret.Center	=Vector3.TransformCoordinate(ret.Center, mTransform);
 			ret.Radius	*=mTransform.ScaleVector.Length();
@@ -189,34 +87,41 @@ namespace MeshLib
 		}
 
 
+		//these index the same as the mesh part list in the archetype
+		public void AddPart(MatLib mats)
+		{
+			mParts.AddPart(mats, mTransform);
+		}
+
+
+		public void NukePart(int index)
+		{
+			mParts.NukePart(index);
+		}
+
+
+		public void NukeParts(List<int> indexes)
+		{
+			mParts.NukeParts(indexes);
+		}
+
+
+		public void SetPartMaterialName(int index, string matName)
+		{
+			mParts.SetPartMaterialName(index, matName);
+		}
+
+
+		public void SetPartVisible(int index, bool bVisible)
+		{
+			mParts.SetPartVisible(index, bVisible);
+		}
+
+
 		public void SetTriLightValues(
 			Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
 		{
-			foreach(MeshMaterial mm in mPartMats)
-			{
-				mm.mMatLib.SetTriLightValues(
-					mm.mMaterialName, col0, col1, col2, lightDir);
-			}
-		}
-
-
-		public void Draw(DeviceContext dc)
-		{
-			mArch.Draw(dc, mPartMats);
-		}
-
-
-		public void DrawDMN(DeviceContext dc)
-		{
-			mArch.DrawDMN(dc, mPartMats);
-		}
-
-
-		public void Draw(DeviceContext dc,
-			MaterialLib.MaterialLib matLib,
-			string altMatName)
-		{
-			mArch.Draw(dc, mPartMats);
+			mParts.SetTriLightValues(col0, col1, col2, lightDir);
 		}
 
 
@@ -227,7 +132,55 @@ namespace MeshLib
 			Vector3	backStart	=Vector3.TransformCoordinate(start, mTransInverted);
 			Vector3	backEnd		=Vector3.TransformCoordinate(end, mTransInverted);
 
-			return	mArch.RayIntersect(backStart, backEnd, bBox, out partHit);
+			return	mParts.RayIntersect(backStart, backEnd, bBox, out partHit);
+		}
+
+	
+		public float? RayIntersect(Vector3 start, Vector3 end, bool bBox)
+		{
+			//backtransform the ray
+			Vector3	backStart	=Vector3.TransformCoordinate(start, mTransInverted);
+			Vector3	backEnd		=Vector3.TransformCoordinate(end, mTransInverted);
+
+			if(bBox)
+			{
+				return	Mathery.RayIntersectBox(backStart, backEnd, mBoxBound);
+			}
+			else
+			{
+				return	Mathery.RayIntersectSphere(backStart, backEnd, mSphereBound);
+			}
+		}
+
+
+		public void UpdateBounds()
+		{
+			mBoxBound		=mParts.GetBoxBound();
+			mSphereBound	=mParts.GetSphereBound();
+		}
+
+
+		public void Draw(DeviceContext dc, MatLib matLib)
+		{
+			mParts.Draw(dc);
+		}
+
+
+		public void Draw(DeviceContext dc, MatLib matLib, string altMaterial)
+		{
+			mParts.Draw(dc, altMaterial);
+		}
+
+
+		public void DrawDMN(DeviceContext dc, MatLib matLib)
+		{
+			mParts.DrawDMN(dc);
+		}
+
+
+		public Vector3 GetForwardVector()
+		{
+			return	mTransform.Forward;
 		}
 	}
 }

@@ -269,5 +269,34 @@ namespace MeshLib
 		{
 			return	mSphereBound;
 		}
+
+
+		static Dictionary<string, IArch> LoadAllStaticMeshes(
+			string dir,	Device gd)
+		{
+			Dictionary<string, IArch>	ret	=new Dictionary<string, IArch>();
+
+			if(Directory.Exists(dir))
+			{
+				DirectoryInfo	di	=new DirectoryInfo(dir + "/");
+
+				FileInfo[]		fi	=di.GetFiles("*.Static", SearchOption.TopDirectoryOnly);
+				foreach(FileInfo f in fi)
+				{
+					//strip back
+					string	path	=f.DirectoryName;
+
+					IArch	smo	=new StaticArch();
+					bool	bWorked	=smo.ReadFromFile(path + "\\" + f.Name, gd, false);
+
+					if(bWorked)
+					{
+						ret.Add(f.Name, smo);
+					}
+				}
+			}
+
+			return	ret;
+		}
 	}
 }

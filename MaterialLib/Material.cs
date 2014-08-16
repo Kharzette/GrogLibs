@@ -488,6 +488,10 @@ namespace MaterialLib
 			{
 				return	Format.R8G8B8A8_UNorm;
 			}
+			else if(spd.SemanticName == "TANGENT")
+			{
+				return	Format.R16G16B16A16_Float;
+			}
 
 			if(spd.SemanticName == "TEXCOORD" || spd.SemanticName == "NORMAL")
 			{

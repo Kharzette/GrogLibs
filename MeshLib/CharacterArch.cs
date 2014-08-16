@@ -378,35 +378,6 @@ namespace MeshLib
 		}
 
 
-		internal static Dictionary<string, StaticArch> LoadAllMeshes(
-			string dir,	Device gd)
-		{
-			Dictionary<string, StaticArch>	ret	=new Dictionary<string, StaticArch>();
-
-			if(Directory.Exists(dir))
-			{
-				DirectoryInfo	di	=new DirectoryInfo(dir + "/");
-
-				FileInfo[]		fi	=di.GetFiles("*.Static", SearchOption.TopDirectoryOnly);
-				foreach(FileInfo f in fi)
-				{
-					//strip back
-					string	path	=f.DirectoryName;
-
-					StaticArch	smo	=new StaticArch();
-					bool	bWorked	=smo.ReadFromFile(path + "\\" + f.Name, gd, false);
-
-					if(bWorked)
-					{
-						ret.Add(f.Name, smo);
-					}
-				}
-			}
-
-			return	ret;
-		}
-
-
 		void IArch.SaveToFile(string fileName)
 		{
 			FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
