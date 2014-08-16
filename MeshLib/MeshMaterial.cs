@@ -1,8 +1,10 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using SharpDX;
+using UtilityLib;
 
 using MatLib	=MaterialLib.MaterialLib;
 
@@ -47,5 +49,23 @@ namespace MeshLib
 
 		//reference to material lib
 		public MatLib	mMatLib;
+
+
+		internal void Read(BinaryReader br)
+		{
+			mMaterialName		=br.ReadString();
+			mMaterialID			=br.ReadInt32();
+			mbVisible			=br.ReadBoolean();
+			mObjectTransform	=FileUtil.ReadMatrix(br);
+		}
+
+
+		internal void Write(BinaryWriter bw)
+		{
+			bw.Write(mMaterialName);
+			bw.Write(mMaterialID);
+			bw.Write(mbVisible);
+			FileUtil.WriteMatrix(bw, mObjectTransform);
+		}
 	}
 }

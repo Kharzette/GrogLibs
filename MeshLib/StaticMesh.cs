@@ -90,6 +90,12 @@ namespace MeshLib
 		}
 
 
+		public void SetMatLib(MatLib mats)
+		{
+			mParts.SetMatLibs(mats);
+		}
+
+
 		//these index the same as the mesh part list in the archetype
 		public void AddPart(MatLib mats)
 		{
@@ -190,6 +196,55 @@ namespace MeshLib
 		public Vector3 GetForwardVector()
 		{
 			return	mTransform.Forward;
+		}
+
+
+		public void SaveToFile(string fileName)
+		{
+			FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
+			BinaryWriter	bw		=new BinaryWriter(file);
+
+			//write a magic number identifying characters
+			UInt32	magic	=0xCA1EC7BE;
+
+			bw.Write(magic);
+
+			//save mesh parts
+			mParts.Write(bw);
+
+			bw.Close();
+			file.Close();
+		}
+
+
+		public bool ReadFromFile(string fileName)
+		{
+			if(!File.Exists(fileName))
+			{
+				return	false;
+			}
+
+			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			if(file == null)
+			{
+				return	false;
+			}
+			BinaryReader	br	=new BinaryReader(file);
+
+			UInt32	magic	=br.ReadUInt32();
+			if(magic != 0xCA1EC7BE)
+			{
+				br.Close();
+				file.Close();
+				return	false;
+			}
+
+			mParts.Read(br);
+
+			br.Close();
+			file.Close();
+
+			return	true;
 		}
 	}
 }

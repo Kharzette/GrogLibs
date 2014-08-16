@@ -179,6 +179,11 @@ namespace MeshLib
 				return;
 			}
 
+			if(mm.mMatLib == null)
+			{
+				return;
+			}
+
 			if(!mm.mMatLib.MaterialExists("DMN"))
 			{
 				return;

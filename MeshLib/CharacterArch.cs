@@ -380,7 +380,7 @@ namespace MeshLib
 			BinaryWriter	bw		=new BinaryWriter(file);
 
 			//write a magic number identifying characters
-			UInt32	magic	=0xCA1EC7BE;
+			UInt32	magic	=0xCA1EABC8;
 
 			bw.Write(magic);
 
@@ -416,7 +416,7 @@ namespace MeshLib
 			//read magic number
 			UInt32	magic	=br.ReadUInt32();
 
-			if(magic != 0xCA1EC7BE)
+			if(magic != 0xCA1EABC8)
 			{
 				br.Close();
 				file.Close();

@@ -20,7 +20,7 @@ VVPosTex03 WPosVS(VPos input)
 }
 
 //worldpos and worldnormal
-VVPosTex03Tex13 WNormWPosVS(VPosNormTex0 input)
+VVPosTex03Tex13 WNormWPosVS(VPosNorm input)
 {
 	VVPosTex03Tex13	output;	
 	
