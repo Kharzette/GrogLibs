@@ -445,6 +445,8 @@ namespace MeshLib
 
 			return	true;
 		}
+
+
 		internal void UpdateBounds()
 		{
 			foreach(Mesh m in mMeshParts)

@@ -437,7 +437,7 @@ namespace SharedForms
 								{
 									sub.Text	="False";
 
-									if(sm == null)
+									if(sm != null)
 									{
 										sm.SetPartVisible(index, false);
 									}

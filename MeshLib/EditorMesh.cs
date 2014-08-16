@@ -562,6 +562,9 @@ namespace MeshLib
 				mVerts.Dispose();
 			}
 			mVerts	=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
+
+			mVBBinding	=new VertexBufferBinding(mVerts,
+				VertexTypes.GetSizeForTypeIndex(mTypeIndex), 0);
 		}
 
 
@@ -620,6 +623,9 @@ namespace MeshLib
 				mVerts.Dispose();
 			}
 			mVerts	=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
+
+			mVBBinding	=new VertexBufferBinding(mVerts,
+				VertexTypes.GetSizeForTypeIndex(mTypeIndex), 0);
 		}
 
 
