@@ -10,6 +10,7 @@ using System.Reflection.Emit;
 #endif
 using SharpDX;
 using SharpDX.Direct3D11;
+using UtilityLib;
 
 using Buffer	=SharpDX.Direct3D11.Buffer;
 
@@ -777,7 +778,7 @@ namespace MeshLib
 			List<Vector3>	points	=GetPositions(verts, typeIdx);
 
 			box		=BoundingBox.FromPoints(points.ToArray());
-			sphere	=UtilityLib.Mathery.SphereFromPoints(points);
+			sphere	=Mathery.SphereFromPoints(points);
 		}
 
 

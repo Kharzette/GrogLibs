@@ -50,6 +50,12 @@ namespace MeshLib
 		}
 
 
+		public bool IsEmpty()
+		{
+			return	mParts.IsEmpty();
+		}
+
+
 		public Matrix GetTransform()
 		{
 			return	mTransform;
@@ -83,10 +89,7 @@ namespace MeshLib
 		{
 			BoundingSphere	ret	=mParts.GetSphereBound();
 
-			ret.Center	=Vector3.TransformCoordinate(ret.Center, mTransform);
-			ret.Radius	*=mTransform.ScaleVector.Length();
-
-			return	ret;
+			return	Mathery.TransformSphere(mTransform, ret);
 		}
 
 
@@ -112,6 +115,12 @@ namespace MeshLib
 		public void SetPartMaterialName(int index, string matName)
 		{
 			mParts.SetPartMaterialName(index, matName);
+		}
+
+
+		public string GetPartMaterialName(int index)
+		{
+			return	mParts.GetPartMaterialName(index);
 		}
 
 
@@ -207,6 +216,12 @@ namespace MeshLib
 		public void UpdateBounds()
 		{
 			Skeleton		skel		=mAnimLib.GetSkeleton();
+
+			if(skel == null)
+			{
+				return;	//no anim stuff loaded
+			}
+
 			List<Vector3>	points		=new List<Vector3>();
 			int				numIndexed	=skel.GetNumIndexedBones();
 

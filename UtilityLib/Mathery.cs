@@ -754,6 +754,47 @@ namespace UtilityLib
 		}
 
 
+		//returns the largest axis value
+		public static float GreatestDimension(Vector3 vec)
+		{
+			if(vec.X > vec.Y)
+			{
+				if(vec.X > vec.Z)
+				{
+					return	vec.X;
+				}
+				else
+				{
+					return	vec.Z;
+				}
+			}
+			else
+			{
+				if(vec.Y > vec.Z)
+				{
+					return	vec.Y;
+				}
+				else
+				{
+					return	vec.Z;
+				}
+			}
+		}
+
+
+		public static BoundingSphere TransformSphere(Matrix trans, BoundingSphere bs)
+		{
+			Vector3	pos		=bs.Center;
+
+			bs.Center	=Vector3.TransformCoordinate(pos, trans);
+				
+			//use the greatest dimension
+			bs.Radius	*=GreatestDimension(trans.ScaleVector);
+
+			return	bs;
+		}
+
+
 		public static float? RayIntersectSphere(Vector3 start, Vector3 end, BoundingSphere sphere)
 		{
 			Ray	ray;

@@ -99,16 +99,23 @@ namespace SharedForms
 			for(int i=0;i < count;i++)
 			{
 				string	partName	=maa.mArch.GetPartName(i);
-				Type	partType;
+				Type	partType	=maa.mArch.GetPartVertexType(i);
 
-				partName	=maa.mArch.GetPartName(i);
-				partType	=maa.mArch.GetPartVertexType(i);
+				string	matName	="";
+				if(maa.mMesh is StaticMesh)
+				{
+					matName	=(maa.mMesh as StaticMesh).GetPartMaterialName(i);
+				}
+				else
+				{
+					matName	=(maa.mMesh as Character).GetPartMaterialName(i);
+				}
 
 				ListViewItem	lvi	=MeshPartList.Items.Add(partName);
 
 				lvi.Tag	=i;
 
-				lvi.SubItems.Add(partName);
+				lvi.SubItems.Add(matName);
 				lvi.SubItems.Add(partType.ToString());
 
 				//set the tag on this one for click detection help
@@ -449,7 +456,7 @@ namespace SharedForms
 								else
 								{
 									sub.Text	="True";
-									if(chr == null)
+									if(sm != null)
 									{
 										sm.SetPartVisible(index, true);
 									}

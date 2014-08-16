@@ -5,6 +5,7 @@ using System.IO;
 using SharpDX;
 using SharpDX.DXGI;
 using SharpDX.Direct3D11;
+using UtilityLib;
 
 //ambiguous stuff
 using Color		=SharpDX.Color;
@@ -303,12 +304,7 @@ namespace MeshLib
 				BoundingSphere	s			=m.GetSphereBounds();
 				Matrix			meshTrans	=m.GetTransform();
 
-				Vector3	pos		=s.Center;
-
-				s.Center	=Vector3.TransformCoordinate(pos, meshTrans);
-				
-				//this should work but needs testing TODO
-				s.Radius	*=meshTrans.ScaleVector.Length();
+				s	=Mathery.TransformSphere(meshTrans, s);
 
 				merged	=BoundingSphere.Merge(merged, s);
 			}
