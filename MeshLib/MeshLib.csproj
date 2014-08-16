@@ -53,13 +53,16 @@
     <Compile Include="Anim.cs" />
     <Compile Include="AnimLib.cs" />
     <Compile Include="Character.cs" />
+    <Compile Include="CharacterArch.cs" />
     <Compile Include="CommonPrims.cs" />
     <Compile Include="DrawCall.cs" />
     <Compile Include="EditorMesh.cs" />
+    <Compile Include="IArch.cs" />
     <Compile Include="IndoorMesh.cs" />
     <Compile Include="KeyFrame.cs" />
     <Compile Include="Mesh.cs" />
     <Compile Include="MeshMaterial.cs" />
+    <Compile Include="MeshPartStuff.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShadowHelper.cs" />
     <Compile Include="Skeleton.cs" />

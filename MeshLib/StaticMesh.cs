@@ -87,18 +87,26 @@ namespace MeshLib
 		}
 
 
-		public void NukeMeshPart(int index)
+		public void NukeMeshPart(List<int> indexes)
 		{
-			Debug.Assert(index >= 0 && index < mPartMats.Count);
-
-			if(index < 0 || index >= mPartMats.Count)
+			List<MeshMaterial>	toNuke	=new List<MeshMaterial>();
+			foreach(int ind in indexes)
 			{
-				return;
+				Debug.Assert(ind >= 0 && ind < mPartMats.Count);
+
+				if(ind < 0 || ind >= mPartMats.Count)
+				{
+					continue;
+				}
+
+				toNuke.Add(mPartMats[ind]);
 			}
 
-			mArch.NukeMesh(index);
+			mPartMats.RemoveAll(mp => toNuke.Contains(mp));
 
-			mPartMats.RemoveAt(index);
+			toNuke.Clear();
+
+			mArch.NukeMesh(indexes);
 		}
 
 

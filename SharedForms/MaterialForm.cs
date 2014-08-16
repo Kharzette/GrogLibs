@@ -24,9 +24,8 @@ namespace SharedForms
 
 		public event EventHandler	eNukedMeshPart;
 		public event EventHandler	eStripElements;
-		public event EventHandler	eFindSeams;
-		public event EventHandler	eSeamFound;
-		public event EventHandler	eSeamsDone;
+		public event EventHandler	eGenTangents;
+		public event EventHandler	eFoundSeams;
 
 
 		public MaterialForm(MaterialLib.MaterialLib matLib,
@@ -87,17 +86,23 @@ namespace SharedForms
 
 		public void RefreshMeshPartList()
 		{
-			StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
-			if(sm == null)
+			MeshPartList.Items.Clear();
+
+			Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
+			if(maa == null)
 			{
 				return;
 			}
 
-			int	count	=sm.GetMeshPartCount();
+			int	count	=maa.mArch.GetPartCount();
+
 			for(int i=0;i < count;i++)
 			{
-				string	partName	=sm.GetMeshPartName(i);
-				Type	partType	=sm.GetMeshPartVertexType(i);
+				string	partName	=maa.mArch.GetPartName(i);
+				Type	partType;
+
+				partName	=maa.mArch.GetPartName(i);
+				partType	=maa.mArch.GetPartVertexType(i);
 
 				ListViewItem	lvi	=MeshPartList.Items.Add(partName);
 
@@ -112,6 +117,12 @@ namespace SharedForms
 			}
 
 			FormExtensions.SizeColumns(MeshPartList);
+		}
+
+
+		public int GetTexCoordSet()
+		{
+			return	(int)TexCoordSet.Value;
 		}
 
 
@@ -397,8 +408,15 @@ namespace SharedForms
 
 		void OnMeshPartMouseUp(object sender, MouseEventArgs mea)
 		{
-			StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
-			if(sm == null)
+			Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
+			if(maa == null)
+			{
+				return;
+			}
+
+			StaticMesh	sm	=maa.mMesh as StaticMesh;
+			Character	chr	=maa.mMesh as Character;
+			if(sm == null && chr == null)
 			{
 				return;
 			}
@@ -418,12 +436,27 @@ namespace SharedForms
 								if((string)sub.Text == "True")
 								{
 									sub.Text	="False";
-									sm.SetPartVisible(index, false);
+
+									if(sm == null)
+									{
+										sm.SetPartVisible(index, false);
+									}
+									else
+									{
+										chr.SetPartVisible(index, false);
+									}
 								}
 								else
 								{
 									sub.Text	="True";
-									sm.SetPartVisible(index, true);
+									if(chr == null)
+									{
+										sm.SetPartVisible(index, true);
+									}
+									else
+									{
+										chr.SetPartVisible(index, true);
+									}
 								}
 							}
 						}
@@ -503,13 +536,13 @@ namespace SharedForms
 
 		public void SetMesh(object sender)
 		{
-			StaticMesh	sm	=sender as StaticMesh;
-			if(sm == null)
+			Mesh.MeshAndArch	maa	=sender as Mesh.MeshAndArch;
+			if(maa == null)
 			{
 				return;
 			}
 
-			MeshPartList.Tag	=sm;
+			MeshPartList.Tag	=maa;
 
 			RefreshMeshPartList();
 		}
@@ -527,16 +560,6 @@ namespace SharedForms
 				MeshPartList.Top + adjust,
 				MeshPartList.Width,
 				MeshPartList.Height);
-		}
-
-
-		void OnMeshPartNuking(object sender, DataGridViewRowCancelEventArgs e)
-		{
-			if(e.Row.DataBoundItem.GetType().BaseType == typeof(Mesh))
-			{
-				Mesh	nukeMe	=(Mesh)e.Row.DataBoundItem;
-				Misc.SafeInvoke(eNukedMeshPart, nukeMe);
-			}
 		}
 
 
@@ -569,19 +592,14 @@ namespace SharedForms
 					return;	//nothing to do
 				}
 
-				List<object>	toNuke	=new List<object>();
+				List<int>	toNuke	=new List<int>();
 
 				foreach(ListViewItem lvi in MeshPartList.SelectedItems)
 				{
-					toNuke.Add(lvi.Tag);
+					toNuke.Add((int)lvi.Tag);
 				}
 
-				MeshPartList.Items.Clear();
-
-				foreach(object o in toNuke)
-				{
-					Misc.SafeInvoke(eNukedMeshPart, o);
-				}
+				Misc.SafeInvoke(eNukedMeshPart, toNuke);
 
 				RefreshMeshPartList();
 			}
@@ -604,8 +622,15 @@ namespace SharedForms
 				return;	//nothing to do
 			}
 
-			StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
-			if(sm == null)
+			Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
+			if(maa == null)
+			{
+				return;
+			}
+
+			StaticMesh	sm	=maa.mMesh as StaticMesh;
+			Character	chr	=maa.mMesh as Character;
+			if(sm == null && chr == null)
 			{
 				return;
 			}
@@ -616,7 +641,14 @@ namespace SharedForms
 			{
 				int	meshIndex	=(int)lvi.Tag;
 
-				sm.SetPartMaterialName(meshIndex, matName);
+				if(chr == null)
+				{
+					sm.SetPartMaterialName(meshIndex, matName);
+				}
+				else
+				{
+					chr.SetPartMaterialName(meshIndex, matName);
+				}
 
 				lvi.SubItems[1].Text	=matName;
 			}
@@ -734,8 +766,15 @@ namespace SharedForms
 
 		void OnMatchAndVisible(object sender, EventArgs e)
 		{
-			StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
-			if(sm == null)
+			Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
+			if(maa == null)
+			{
+				return;
+			}
+
+			StaticMesh	sm	=maa.mMesh as StaticMesh;
+			Character	chr	=maa.mMesh as Character;
+			if(sm == null && chr == null)
 			{
 				return;
 			}
@@ -752,9 +791,16 @@ namespace SharedForms
 					{
 						int	meshIndex	=(int)lviMesh.Tag;
 
-						sm.SetPartMaterialName(meshIndex, matName);
+						if(chr == null)
+						{
+							sm.SetPartMaterialName(meshIndex, matName);
+						}
+						else
+						{
+							chr.SetPartMaterialName(meshIndex, matName);
+						}
 
-						lvi.SubItems[1].Text	=matName;
+						lviMesh.SubItems[1].Text	=matName;
 					}
 				}
 			}
@@ -768,23 +814,24 @@ namespace SharedForms
 				return;
 			}
 
-			StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
-			if(sm == null)
+			Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
+			if(maa == null)
 			{
 				return;
 			}
 
-			List<Mesh>	parts	=new List<Mesh>();
+			List<int>	parts	=new List<int>();
 			foreach(ListViewItem lviMesh in MeshPartList.SelectedItems)
 			{
-				Mesh	m	=sm.GetMeshPart((int)lviMesh.Tag);
-				if(m != null)
-				{
-					parts.Add(m);
-				}
+				parts.Add((int)lviMesh.Tag);
 			}
 
-			Misc.SafeInvoke(eStripElements, parts);
+			ArchEventArgs	aea	=new ArchEventArgs();
+
+			aea.mArch		=maa.mArch;
+			aea.mIndexes	=parts;
+
+			Misc.SafeInvoke(eStripElements, null, aea);
 		}
 
 
@@ -846,81 +893,27 @@ namespace SharedForms
 
 		void OnFrankenstein(object sender, EventArgs e)
 		{
-			Character	chr	=MeshPartList.Tag as Character;
-			if(chr == null)
+			Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
+			if(maa == null)
 			{
 				return;
 			}
 
-			List<Mesh>	partList	=chr.GetMeshPartList();
-
-			Misc.SafeInvoke(eFindSeams, partList);
-
-			//make a "compared against" dictionary to prevent
-			//needless work
-			Dictionary<Mesh, List<Mesh>>	comparedAgainst	=new Dictionary<Mesh, List<Mesh>>();
-			foreach(Mesh m in partList)
-			{
-				comparedAgainst.Add(m, new List<Mesh>());
-			}
-
-			for(int i=0;i < partList.Count;i++)
-			{
-				EditorMesh	meshA	=partList[i] as EditorMesh;
-				if(meshA == null)
-				{
-					continue;
-				}
-
-				for(int j=0;j < partList.Count;j++)
-				{
-					if(i == j)
-					{
-						continue;
-					}
-
-					EditorMesh	meshB	=partList[j] as EditorMesh;
-					if(meshB == null)
-					{
-						continue;
-					}
-
-					if(comparedAgainst[meshA].Contains(meshB)
-						|| comparedAgainst[meshB].Contains(meshA))
-					{
-						continue;
-					}
-
-					EditorMesh.WeightSeam	seam	=meshA.FindSeam(meshB);
-
-					comparedAgainst[meshA].Add(meshB);
-
-					if(seam.mSeam.Count == 0)
-					{
-						continue;
-					}
-
-					Debug.WriteLine("Seam between " + meshA.Name + ", and "
-						+ meshB.Name + " :Verts: " + seam.mSeam.Count);
-
-					Misc.SafeInvoke(eSeamFound, seam);
-				}
-			}
-			Misc.SafeInvoke(eSeamsDone, null);
+			Misc.SafeInvoke(eFoundSeams, maa.mArch.Frankenstein());
 		}
 
 
 		void OnMeshPartRename(object sender, LabelEditEventArgs e)
 		{
-			StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
-			if(sm == null)
+			Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
+			if(maa == null)
 			{
 				return;
 			}
 
 			int	meshIndex	=(int)MeshPartList.Items[e.Item].Tag;
 
-			if(!sm.SetPartName(meshIndex, e.Label))
+			if(!maa.mArch.RenamePart(meshIndex, e.Label))
 			{
 				e.CancelEdit	=true;
 			}
@@ -928,6 +921,36 @@ namespace SharedForms
 			{
 				FormExtensions.SizeColumns(MeshPartList);	//this doesn't work, still has the old value
 			}
+		}
+
+
+		void OnGenTangents(object sender, EventArgs e)
+		{
+			if(MeshPartList.SelectedItems.Count <= 0)
+			{
+				return;
+			}
+
+			Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
+			if(maa == null)
+			{
+				return;
+			}
+
+			List<int>	parts	=new List<int>();
+			foreach(ListViewItem lviMesh in MeshPartList.SelectedItems)
+			{
+				parts.Add((int)lviMesh.Tag);
+			}
+
+			ArchEventArgs	aea	=new ArchEventArgs();
+
+			aea.mArch		=maa.mArch;
+			aea.mIndexes	=parts;
+
+			Misc.SafeInvoke(eGenTangents, null, aea);
+
+			RefreshMeshPartList();
 		}
 	}
 }

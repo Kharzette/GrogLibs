@@ -334,6 +334,7 @@
 			this.GenBiNormalTangent.Text = "Gen Tan";
 			this.MatFormToolTips.SetToolTip(this.GenBiNormalTangent, "Generate tangents for normal mapping on the selected mesh parts");
 			this.GenBiNormalTangent.UseVisualStyleBackColor = true;
+			this.GenBiNormalTangent.Click += new System.EventHandler(this.OnGenTangents);
 			// 
 			// ApplyMaterial
 			// 

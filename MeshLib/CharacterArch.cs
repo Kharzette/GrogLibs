@@ -14,13 +14,16 @@ using MatLib	=MaterialLib.MaterialLib;
 
 namespace MeshLib
 {
-	//this is a mesh archetype, whereas staticmesh is an instance
-	public class StaticArch
+	public class CharacterArch : IArch
 	{
+		//parts
 		List<Mesh>	mMeshParts	=new List<Mesh>();
 
+		//skin info
+		Skin	mSkin;
 
-		public void FreeAll()
+
+		void IArch.FreeAll()
 		{
 			foreach(Mesh m in mMeshParts)
 			{
@@ -29,7 +32,19 @@ namespace MeshLib
 		}
 
 
-		internal bool RenameMesh(int index, string newName)
+		void IArch.SetSkin(Skin s)
+		{
+			mSkin	=s;
+		}
+
+
+		Skin IArch.GetSkin()
+		{
+			return	mSkin;
+		}
+
+
+		bool IArch.RenamePart(int index, string newName)
 		{
 			if(index < 0 || index >= mMeshParts.Count)
 			{
@@ -42,7 +57,7 @@ namespace MeshLib
 		}
 
 
-		internal void AddMeshPart(Mesh m)
+		void IArch.AddPart(Mesh m)
 		{
 			if(m != null)
 			{
@@ -51,30 +66,68 @@ namespace MeshLib
 		}
 
 
-		internal Mesh GetMeshPart(int index)
+		int IArch.GetPartCount()
 		{
-			if(index < 0 || index >= mMeshParts.Count)
-			{
-				return	null;
-			}
-			return	mMeshParts[index];
+			return	mMeshParts.Count;
 		}
 
 
-		internal Mesh GetMeshPart(string name)
+		void IArch.GenTangents(Device gd,
+			List<int> parts, int texCoordSet)
 		{
-			foreach(Mesh m in mMeshParts)
+			List<Mesh>	toChange	=new List<Mesh>();
+			foreach(int ind in parts)
 			{
-				if(m.Name == name)
+				Debug.Assert(ind >= 0 && ind < mMeshParts.Count);
+
+				if(ind < 0 || ind >= mMeshParts.Count)
 				{
-					return	m;
+					continue;
 				}
+
+				toChange.Add(mMeshParts[ind]);
 			}
-			return	null;
+
+			foreach(EditorMesh em in toChange)
+			{
+				if(em == null)
+				{
+					continue;
+				}
+				em.GenTangents(gd, texCoordSet);
+			}
 		}
 
 
-		internal void NukeMesh(int index)
+		void IArch.NukeVertexElements(Device gd,
+			List<int> indexes,
+			List<int> vertElementIndexes)
+		{
+			List<Mesh>	toChange	=new List<Mesh>();
+			foreach(int ind in indexes)
+			{
+				Debug.Assert(ind >= 0 && ind < mMeshParts.Count);
+
+				if(ind < 0 || ind >= mMeshParts.Count)
+				{
+					continue;
+				}
+
+				toChange.Add(mMeshParts[ind]);
+			}
+
+			foreach(EditorMesh em in toChange)
+			{
+				if(em == null)
+				{
+					continue;
+				}
+				em.NukeVertexElement(vertElementIndexes, gd);
+			}
+		}
+
+
+		void IArch.NukePart(int index)
 		{
 			if(index < 0 || index >= mMeshParts.Count)
 			{
@@ -85,7 +138,7 @@ namespace MeshLib
 		}
 
 
-		internal void NukeMesh(List<int> indexes)
+		void IArch.NukeParts(List<int> indexes)
 		{
 			List<Mesh>	toNuke	=new List<Mesh>();
 			foreach(int ind in indexes)
@@ -106,14 +159,27 @@ namespace MeshLib
 		}
 
 
-		//for gui
-		internal List<Mesh> GetMeshPartList()
+		Type IArch.GetPartVertexType(int index)
 		{
-			return	mMeshParts;
+			if(index < 0 || index >= mMeshParts.Count)
+			{
+				return	null;
+			}
+			return	mMeshParts[index].VertexType;
 		}
 
 
-		internal void Draw(DeviceContext dc,
+		string IArch.GetPartName(int index)
+		{
+			if(index < 0 || index >= mMeshParts.Count)
+			{
+				return	"";
+			}
+			return	mMeshParts[index].Name;
+		}
+
+
+		void IArch.Draw(DeviceContext dc,
 			List<MeshMaterial> meshMats)
 		{
 			Debug.Assert(meshMats.Count == mMeshParts.Count);
@@ -134,8 +200,28 @@ namespace MeshLib
 		}
 
 
-		internal void DrawDMN(DeviceContext dc,
-			List<MeshMaterial> meshMats)
+		void IArch.Draw(DeviceContext dc,
+			List<MeshMaterial> meshMats, string altMaterial)
+		{
+			Debug.Assert(meshMats.Count == mMeshParts.Count);
+
+			for(int i=0;i < mMeshParts.Count;i++)
+			{
+				MeshMaterial	mm	=meshMats[i];
+
+				if(!mm.mbVisible)
+				{
+					continue;
+				}
+
+				Mesh	m	=mMeshParts[i];
+
+				m.Draw(dc, mm, altMaterial);
+			}
+		}
+
+
+		void IArch.DrawDMN(DeviceContext dc, List<MeshMaterial> meshMats)
 		{
 			Debug.Assert(meshMats.Count == mMeshParts.Count);
 
@@ -155,7 +241,7 @@ namespace MeshLib
 		}
 
 
-		internal float? RayIntersect(Vector3 start, Vector3 end, bool bBox, out Mesh partHit)
+		float? IArch.RayIntersect(Vector3 start, Vector3 end, bool bBox, out Mesh partHit)
 		{
 			//find which piece was hit
 			float		minDist	=float.MaxValue;
@@ -182,7 +268,7 @@ namespace MeshLib
 		}
 
 
-		internal void UpdateBounds()
+		void IArch.UpdateBounds()
 		{
 			foreach(Mesh m in mMeshParts)
 			{
@@ -191,7 +277,7 @@ namespace MeshLib
 		}
 
 
-		internal BoundingBox GetBoxBound()
+		BoundingBox IArch.GetBoxBound()
 		{
 			List<Vector3>	pnts	=new List<Vector3>();
 			foreach(Mesh m in mMeshParts)
@@ -210,7 +296,7 @@ namespace MeshLib
 		}
 
 
-		internal BoundingSphere GetSphereBound()
+		BoundingSphere IArch.GetSphereBound()
 		{
 			BoundingSphere	merged;
 			merged.Center	=Vector3.Zero;
@@ -233,7 +319,65 @@ namespace MeshLib
 		}
 
 
-		//this probably won't work TODO
+		//find borders of shared verts between mesh parts
+		List<EditorMesh.WeightSeam> IArch.Frankenstein()
+		{
+			List<EditorMesh.WeightSeam>	seams	=new List<EditorMesh.WeightSeam>();
+
+			//make a "compared against" dictionary to prevent
+			//needless work
+			Dictionary<Mesh, List<Mesh>>	comparedAgainst	=new Dictionary<Mesh, List<Mesh>>();
+			foreach(Mesh m in mMeshParts)
+			{
+				comparedAgainst.Add(m, new List<Mesh>());
+			}
+
+			for(int i=0;i < mMeshParts.Count;i++)
+			{
+				EditorMesh	meshA	=mMeshParts[i] as EditorMesh;
+				if(meshA == null)
+				{
+					continue;
+				}
+
+				for(int j=0;j < mMeshParts.Count;j++)
+				{
+					if(i == j)
+					{
+						continue;
+					}
+
+					EditorMesh	meshB	=mMeshParts[j] as EditorMesh;
+					if(meshB == null)
+					{
+						continue;
+					}
+
+					if(comparedAgainst[meshA].Contains(meshB)
+						|| comparedAgainst[meshB].Contains(meshA))
+					{
+						continue;
+					}
+
+					EditorMesh.WeightSeam	seam	=meshA.FindSeam(meshB);
+
+					comparedAgainst[meshA].Add(meshB);
+
+					if(seam.mSeam.Count == 0)
+					{
+						continue;
+					}
+
+					Debug.WriteLine("Seam between " + meshA.Name + ", and "
+						+ meshB.Name + " :Verts: " + seam.mSeam.Count);
+
+					seams.Add(seam);
+				}
+			}
+			return	seams;
+		}
+
+
 		internal static Dictionary<string, StaticArch> LoadAllMeshes(
 			string dir,	Device gd)
 		{
@@ -263,13 +407,13 @@ namespace MeshLib
 		}
 
 
-		internal void SaveToFile(string fileName)
+		void IArch.SaveToFile(string fileName)
 		{
 			FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
 			BinaryWriter	bw		=new BinaryWriter(file);
 
-			//write a magic number identifying a static
-			UInt32	magic	=0x57A71C35;
+			//write a magic number identifying characters
+			UInt32	magic	=0xCA1EC7BE;
 
 			bw.Write(magic);
 
@@ -280,6 +424,9 @@ namespace MeshLib
 				m.Write(bw);
 			}
 
+			//save skin
+			mSkin.Write(bw);
+
 			bw.Close();
 			file.Close();
 		}
@@ -287,7 +434,7 @@ namespace MeshLib
 
 		//set bEditor if you want the buffers set to readable
 		//so they can be resaved if need be
-		internal bool ReadFromFile(string fileName, Device gd, bool bEditor)
+		bool IArch.ReadFromFile(string fileName, Device gd, bool bEditor)
 		{
 			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
 			if(file == null)
@@ -302,8 +449,10 @@ namespace MeshLib
 			//read magic number
 			UInt32	magic	=br.ReadUInt32();
 
-			if(magic != 0x57A71C35)
+			if(magic != 0xCA1EC7BE)
 			{
+				br.Close();
+				file.Close();
 				return	false;
 			}
 
@@ -325,6 +474,9 @@ namespace MeshLib
 				m.Read(br, gd, bEditor);
 				mMeshParts.Add(m);
 			}
+
+			mSkin	=new Skin();
+			mSkin.Read(br);
 
 			br.Close();
 			file.Close();

@@ -1074,6 +1074,17 @@ namespace MeshLib
 		public Half4	BoneWeights;
 	}
 
+	public struct VPosNormBoneTanTex0Col0
+	{
+		public Vector3	Position;
+		public Half4	Normal;
+		public Color	BoneIndex;
+		public Half4	BoneWeights;
+		public Half4	Tangent;
+		public Half2	TexCoord0;
+		public Color	Color0;
+	}
+
 	public struct VPosNormBlendTex0Tex1Tex2Tex3Tex4
 	{
 		public Vector3	Position;

@@ -1,23 +1,22 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
 using SharpDX;
 using SharpDX.DXGI;
 using SharpDX.Direct3D11;
+using UtilityLib;
 
-using Device			=SharpDX.Direct3D11.Device;
-using MaterialLibrary	=MaterialLib.MaterialLib;
+using Device	=SharpDX.Direct3D11.Device;
+using MatLib	=MaterialLib.MaterialLib;
+
 
 namespace MeshLib
 {
 	//an instance of a character
 	public class Character
 	{
-		//parts
-		List<Mesh>	mMeshParts	=new List<Mesh>();
-
-		//skin info
-		Skin	mSkin;
+		MeshPartStuff	mParts;
 
 		//refs to anim lib
 		AnimLib	mAnimLib;
@@ -28,13 +27,15 @@ namespace MeshLib
 
 		//transform
 		Matrix	mTransform;
+		Matrix	mTransInverted;
 
 		//raw bone transforms for shader
 		Matrix	[]mBones;
 
 
-		public Character(AnimLib al)
+		public Character(IArch ca, AnimLib al)
 		{
+			mParts		=new MeshPartStuff(ca);
 			mAnimLib	=al;
 			mTransform	=Matrix.Identity;
 		}
@@ -42,41 +43,106 @@ namespace MeshLib
 
 		public void FreeAll()
 		{
-			foreach(Mesh m in mMeshParts)
-			{
-				m.FreeAll();
-			}
+			mParts.FreeAll();
+
 			mBones	=null;
+			mParts	=null;
 		}
 
 
-		public bool RenameMesh(string oldName, string newName)
+		public Matrix GetTransform()
 		{
-			foreach(Mesh m in mMeshParts)
-			{
-				if(m.Name == oldName)
-				{
-					m.Name	=newName;
-					return	true;
-				}
-			}
-			return	false;
+			return	mTransform;
 		}
 
 
-		public void AssignMaterialIDs(MaterialLib.IDKeeper keeper)
+		public void SetTransform(Matrix mat)
 		{
-			foreach(Mesh m in mMeshParts)
-			{
-//				m.AssignMaterialIDs(keeper);
-			}
+			mTransform		=mat;
+			mTransInverted	=mTransform;
+
+			mTransInverted.Invert();
+
+			//set in the materials
+			mParts.SetMatObjTransforms(mat);
 		}
 
 
+		public BoundingBox GetBoxBound()
+		{
+			BoundingBox	box	=mParts.GetBoxBound();
+
+			box.Minimum	=Vector3.TransformCoordinate(box.Minimum, mTransform);
+			box.Maximum	=Vector3.TransformCoordinate(box.Maximum, mTransform);
+
+			return	box;
+		}
+
+
+		public BoundingSphere GetSphereBound()
+		{
+			BoundingSphere	ret	=mParts.GetSphereBound();
+
+			ret.Center	=Vector3.TransformCoordinate(ret.Center, mTransform);
+			ret.Radius	*=mTransform.ScaleVector.Length();
+
+			return	ret;
+		}
+
+
+		//these index the same as the mesh part list in the archetype
+		public void AddPart(MatLib mats)
+		{
+			mParts.AddPart(mats, mTransform);
+		}
+
+
+		public void NukePart(int index)
+		{
+			mParts.NukePart(index);
+		}
+
+
+		public void NukeParts(List<int> indexes)
+		{
+			mParts.NukeParts(indexes);
+		}
+
+
+		public void SetPartMaterialName(int index, string matName)
+		{
+			mParts.SetPartMaterialName(index, matName);
+		}
+
+
+		public void SetPartVisible(int index, bool bVisible)
+		{
+			mParts.SetPartVisible(index, bVisible);
+		}
+
+
+		public void SetTriLightValues(
+			Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
+		{
+			mParts.SetTriLightValues(col0, col1, col2, lightDir);
+		}
+
+
+		//TODO: needs testing
+		public float? RayIntersect(Vector3 start, Vector3 end, bool bBox, out Mesh partHit)
+		{
+			//backtransform the ray
+			Vector3	backStart	=Vector3.TransformCoordinate(start, mTransInverted);
+			Vector3	backEnd		=Vector3.TransformCoordinate(end, mTransInverted);
+
+			return	mParts.RayIntersect(backStart, backEnd, bBox, out partHit);
+		}
+
+	
 		//copies bones into the shader
 		//materials should be set up to ignore
 		//the mBones parameter
-		void UpdateShaderBones(MaterialLibrary matLib)
+		void UpdateShaderBones(MatLib matLib)
 		{
 			if(mBones != null)
 			{
@@ -104,144 +170,12 @@ namespace MeshLib
 		}
 
 
-		public Skin GetSkin()
-		{
-			return	mSkin;
-		}
-
-
-		public void SetTransform(Matrix mat)
-		{
-			mTransform	=mat;
-		}
-
-
-		public Matrix GetTransform()
-		{
-			return	mTransform;
-		}
-
-
-		public void AddMeshPart(Mesh m)
-		{
-			mMeshParts.Add(m);
-		}
-
-
-		public void NukeMesh(Mesh m)
-		{
-			if(mMeshParts.Contains(m))
-			{
-				mMeshParts.Remove(m);
-			}
-		}
-
-
-		public bool HasSkin()
-		{
-			return	mSkin != null;
-		}
-
-
-		public void SetSkin(Skin s)
-		{
-			mSkin	=s;
-		}
-
-
-		//for gui
-		public List<Mesh> GetMeshPartList()
-		{
-			return	mMeshParts;
-		}
-
-
-		public void SaveToFile(string fileName)
-		{
-			FileStream	file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
-
-			BinaryWriter	bw	=new BinaryWriter(file);
-
-			//write a magic number identifying characters
-			UInt32	magic	=0xCA1EC7BE;
-
-			bw.Write(magic);
-
-			//save mesh parts
-			bw.Write(mMeshParts.Count);
-			foreach(Mesh m in mMeshParts)
-			{
-				m.Write(bw);
-			}
-
-			//save skin
-			mSkin.Write(bw);
-
-			bw.Close();
-			file.Close();
-		}
-
-
-		//set bEditor if you want the buffers set to readable
-		//so they can be resaved if need be
-		public bool ReadFromFile(string fileName, Device gd, bool bEditor)
-		{
-			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
-			if(file == null)
-			{
-				return	false;
-			}
-			BinaryReader	br	=new BinaryReader(file);
-
-			//clear existing data
-			mMeshParts.Clear();
-
-			//read magic number
-			UInt32	magic	=br.ReadUInt32();
-
-			if(magic != 0xCA1EC7BE)
-			{
-				br.Close();
-				file.Close();
-				return	false;
-			}
-
-			int	numMesh	=br.ReadInt32();
-			for(int i=0;i < numMesh;i++)
-			{
-				Mesh	m;
-
-				if(bEditor)
-				{
-					m	=new EditorMesh("temp");
-				}
-				else
-				{
-					m	=new Mesh();
-				}
-
-				m.Read(br, gd, bEditor);
-				mMeshParts.Add(m);
-			}
-
-			mSkin	=new Skin();
-			mSkin.Read(br);
-
-			br.Close();
-			file.Close();
-
-			mTransform	=Matrix.Identity;
-
-			return	true;
-		}
-
-
 		public void Blend(string anim1, float anim1Time,
 			string anim2, float anim2Time, float percentage)
 		{
 			mAnimLib.Blend(anim1, anim1Time, anim2, anim2Time, percentage);
 
-			UpdateBones(mAnimLib.GetSkeleton(), mSkin);
+			UpdateBones(mAnimLib.GetSkeleton(), mParts.GetSkin());
 		}
 
 
@@ -249,30 +183,29 @@ namespace MeshLib
 		{
 			mAnimLib.Animate(anim, time);
 
-			UpdateBones(mAnimLib.GetSkeleton(), mSkin);
+			UpdateBones(mAnimLib.GetSkeleton(), mParts.GetSkin());
 		}
 
 
 		public float? RayIntersect(Vector3 start, Vector3 end, bool bBox)
 		{
+			//backtransform the ray
+			Vector3	backStart	=Vector3.TransformCoordinate(start, mTransInverted);
+			Vector3	backEnd		=Vector3.TransformCoordinate(end, mTransInverted);
+
 			if(bBox)
 			{
-				return	UtilityLib.Mathery.RayIntersectBox(start, end, mBoxBound);
+				return	Mathery.RayIntersectBox(backStart, backEnd, mBoxBound);
 			}
 			else
 			{
-				return	UtilityLib.Mathery.RayIntersectSphere(start, end, mSphereBound);
+				return	Mathery.RayIntersectSphere(backStart, backEnd, mSphereBound);
 			}
 		}
 
 
 		public void UpdateBounds()
 		{
-			if(mSkin == null)
-			{
-				return;
-			}
-
 			Skeleton		skel		=mAnimLib.GetSkeleton();
 			List<Vector3>	points		=new List<Vector3>();
 			int				numIndexed	=skel.GetNumIndexedBones();
@@ -297,65 +230,37 @@ namespace MeshLib
 				points.Add(pnt);
 			}
 			mBoxBound		=BoundingBox.FromPoints(points.ToArray());
-			mSphereBound	=UtilityLib.Mathery.SphereFromPoints(points);
+			mSphereBound	=Mathery.SphereFromPoints(points);
 		}
 
 
-		public BoundingBox GetBoxBound()
-		{
-			return	mBoxBound;
-		}
-
-
-		public BoundingSphere GetSphereBound()
-		{
-			return	mSphereBound;
-		}
-
-		
-		public void Draw(DeviceContext dc, MaterialLib.MaterialLib matLib)
+		public void Draw(DeviceContext dc, MatLib matLib)
 		{
 			UpdateShaderBones(matLib);
 
-			foreach(Mesh m in mMeshParts)
-			{
-				m.Draw(dc, null);
-			}
+			mParts.Draw(dc);
 		}
 
 
-		public void DrawDMN(DeviceContext dc,
-			MaterialLib.MaterialLib matLib)
+		public void Draw(DeviceContext dc, MatLib matLib, string altMaterial)
 		{
 			UpdateShaderBones(matLib);
 
-			foreach(Mesh m in mMeshParts)
-			{
-				m.DrawDMN(dc, null);
-			}
+			mParts.Draw(dc, altMaterial);
 		}
 
 
-		public void Draw(DeviceContext dc, MaterialLib.MaterialLib matLib, string altMaterial)
+		public void DrawDMN(DeviceContext dc, MatLib matLib)
 		{
 			UpdateShaderBones(matLib);
 
-			foreach(Mesh m in mMeshParts)
-			{
-				m.Draw(dc, null);
-			}
+			mParts.DrawDMN(dc);
 		}
 
 
 		public Vector3 GetForwardVector()
 		{
 			return	mTransform.Forward;
-		}
-
-
-		public Matrix GetBoneMatrix(string boneName)
-		{
-			return	mSkin.GetBoneByNameNoBind(boneName, mAnimLib.GetSkeleton());
 		}
 	}
 }

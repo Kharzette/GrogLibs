@@ -66,6 +66,15 @@ namespace MeshLib
 				mIndArray[i]	=br.ReadUInt16();
 			}
 
+			if(mVerts != null)
+			{
+				mVerts.Dispose();
+			}
+			if(mIndexs != null)
+			{
+				mIndexs.Dispose();
+			}
+
 			mVerts	=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
 			mIndexs	=VertexTypes.BuildAnIndexBuffer(gd, mIndArray);
 
@@ -548,6 +557,10 @@ namespace MeshLib
 
 			mVertArray	=VertexTypes.AddTangents(mVertArray, mTypeIndex, tang, out mTypeIndex);
 
+			if(mVerts != null)
+			{
+				mVerts.Dispose();
+			}
 			mVerts	=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
 		}
 
@@ -602,6 +615,10 @@ namespace MeshLib
 		{
 			mVertArray	=VertexTypes.NukeElements(mVertArray, mTypeIndex, indexes, out mTypeIndex);
 
+			if(mVerts != null)
+			{
+				mVerts.Dispose();
+			}
 			mVerts	=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
 		}
 

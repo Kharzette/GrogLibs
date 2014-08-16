@@ -16,6 +16,12 @@ namespace MeshLib
 {
 	public class Mesh
 	{
+		public class MeshAndArch
+		{
+			public object	mMesh;
+			public IArch	mArch;
+		};
+
 		protected string			mName;
 		protected Buffer			mVerts;
 		protected Buffer			mIndexs;
@@ -186,6 +192,30 @@ namespace MeshLib
 				(mTransform * mm.mObjectTransform));
 			
 			mm.mMatLib.ApplyMaterialPass("DMN", dc, 0);
+
+			dc.DrawIndexed(mNumTriangles * 3, 0, 0);
+		}
+
+
+		internal void Draw(DeviceContext dc, MeshMaterial mm, string altMaterial)
+		{
+			if(!mm.mbVisible)
+			{
+				return;
+			}
+
+			if(!mm.mMatLib.MaterialExists(altMaterial))
+			{
+				return;
+			}
+
+			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
+			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
+
+			mm.mMatLib.SetMaterialParameter(altMaterial, "mWorld",
+				(mTransform * mm.mObjectTransform));
+			
+			mm.mMatLib.ApplyMaterialPass(altMaterial, dc, 0);
 
 			dc.DrawIndexed(mNumTriangles * 3, 0, 0);
 		}
