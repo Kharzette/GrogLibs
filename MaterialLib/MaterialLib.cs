@@ -613,6 +613,29 @@ namespace MaterialLib
 		}
 
 
+		public void SetMaterialFontTexture(string matName, string varName, string texName)
+		{
+			if(!mMats.ContainsKey(matName))
+			{
+				return;
+			}
+
+			ShaderResourceView	srv	=mKeeper.GetFontSRV(texName);
+			if(srv == null)
+			{
+				return;
+			}
+
+			Material	mat	=mMats[matName];
+
+			if(mat.Shader == null)
+			{
+				return;
+			}
+			mat.SetEffectParameter(varName, srv);
+		}
+
+
 		public void SetMaterialParameter(string matName, string varName, object value)
 		{
 			if(!mMats.ContainsKey(matName))
@@ -662,6 +685,12 @@ namespace MaterialLib
 			Material	mat	=mMats[matName];
 
 			mat.Ignore(toIgnore);
+		}
+
+
+		internal Font GetFont(string fontName)
+		{
+			return	mKeeper.GetFont(fontName);
 		}
 	}
 }

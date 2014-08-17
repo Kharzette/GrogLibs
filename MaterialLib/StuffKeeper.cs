@@ -57,11 +57,17 @@ namespace MaterialLib
 		//texture 2ds
 		Dictionary<string, Texture2D>	mTexture2s	=new Dictionary<string, Texture2D>();
 
+		//font texture 2ds
+		Dictionary<string, Texture2D>	mFontTexture2s	=new Dictionary<string, Texture2D>();
+
 		//list of texturey things
 		Dictionary<string, Resource>	mResources	=new Dictionary<string, Resource>();
 
 		//list of shader resource views for stuff like textures
 		Dictionary<string, ShaderResourceView>	mSRVs	=new Dictionary<string, ShaderResourceView>();
+
+		//shader resource views for fonts
+		Dictionary<string, ShaderResourceView>	mFontSRVs	=new Dictionary<string, ShaderResourceView>();
 
 		//list of parameter variables per shader
 		Dictionary<string, List<EffectVariable>>	mVars	=new Dictionary<string, List<EffectVariable>>();
@@ -69,6 +75,9 @@ namespace MaterialLib
 		//data driven set of ignored and hidden parameters (see text file)
 		Dictionary<string, List<string>>	mIgnoreData	=new Dictionary<string,List<string>>();
 		Dictionary<string, List<string>>	mHiddenData	=new Dictionary<string,List<string>>();
+
+		//list of font data
+		Dictionary<string, Font>	mFonts	=new Dictionary<string, Font>();
 
 		public enum ShaderModel
 		{
@@ -108,6 +117,7 @@ namespace MaterialLib
 			LoadShaders(gd.GD, sm);
 			SaveHeaderTimeStamps(sm);
 			LoadResources(gd);
+			LoadFonts(gd);
 			LoadParameterData();
 
 			GrabVariables();
@@ -133,6 +143,16 @@ namespace MaterialLib
 				return	null;
 			}
 			return	mTexture2s[name];
+		}
+
+
+		internal Font GetFont(string name)
+		{
+			if(!mFonts.ContainsKey(name))
+			{
+				return	null;
+			}
+			return	mFonts[name];
 		}
 
 
@@ -165,6 +185,16 @@ namespace MaterialLib
 				return	null;
 			}
 			return	mSRVs[name];
+		}
+
+
+		internal ShaderResourceView GetFontSRV(string name)
+		{
+			if(!mFontSRVs.ContainsKey(name))
+			{
+				return	null;
+			}
+			return	mFontSRVs[name];
 		}
 
 
@@ -263,6 +293,12 @@ namespace MaterialLib
 			}
 			mTexture2s.Clear();
 
+			foreach(KeyValuePair<string, Texture2D> tex in mFontTexture2s)
+			{
+				tex.Value.Dispose();
+			}
+			mFontTexture2s.Clear();
+
 			foreach(KeyValuePair<string, Resource> res in mResources)
 			{
 				res.Value.Dispose();
@@ -274,6 +310,12 @@ namespace MaterialLib
 				srv.Value.Dispose();
 			}
 			mSRVs.Clear();
+
+			foreach(KeyValuePair<string, ShaderResourceView> srv in mFontSRVs)
+			{
+				srv.Value.Dispose();
+			}
+			mFontSRVs.Clear();
 
 			foreach(KeyValuePair<string, List<EffectVariable>> effList in mVars)
 			{
@@ -301,6 +343,27 @@ namespace MaterialLib
 				foreach(FileInfo f in fi)
 				{
 					LoadTexture(gd, f.DirectoryName, f.Name);
+				}
+			}
+		}
+
+
+		void LoadFonts(GraphicsDevice gd)
+		{
+			//see if Fonts folder exists in Content
+			if(Directory.Exists(mGameRootDir + "/Fonts"))
+			{
+				DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Fonts/");
+
+				FileInfo[]		fi	=di.GetFiles("*.png", SearchOption.AllDirectories);
+				foreach(FileInfo f in fi)
+				{
+					LoadFontTexture(gd, f.DirectoryName, f.Name);
+
+					string	extLess	=FileUtil.StripExtension(f.Name);
+
+					Font	font	=new Font(f.DirectoryName + "/" + extLess + ".dat");
+					mFonts.Add(extLess, font);
 				}
 			}
 		}
@@ -591,6 +654,64 @@ namespace MaterialLib
 			srv.DebugName	=extLess;
 
 			mSRVs.Add(extLess, srv);
+
+			tex.Dispose();
+			res.Dispose();
+		}
+
+
+		void LoadFontTexture(GraphicsDevice gd, string path, string fileName)
+		{
+			int	texIndex	=path.LastIndexOf("Fonts");
+
+			string	afterTex	="";
+
+			if((texIndex + 6) < path.Length)
+			{
+				afterTex	=path.Substring(texIndex + 6);
+			}
+			string	extLess	="";
+
+			if(afterTex != "")
+			{
+				extLess	=afterTex + "\\" + FileUtil.StripExtension(fileName);
+			}
+			else
+			{
+				extLess	=FileUtil.StripExtension(fileName);
+			}
+
+			ImageLoadInformation	loadInfo	=new ImageLoadInformation();
+
+			loadInfo.BindFlags		=BindFlags.None;
+			loadInfo.CpuAccessFlags	=CpuAccessFlags.Read | CpuAccessFlags.Write;
+			loadInfo.Depth			=0;
+			loadInfo.Filter			=FilterFlags.None;
+			loadInfo.Format			=Format.R8G8B8A8_UNorm;
+			loadInfo.Usage			=ResourceUsage.Staging;
+
+			Resource	res	=Texture2D.FromFile(gd.GD, path + "\\" + fileName, loadInfo);
+			if(res == null)
+			{
+				return;
+			}
+
+			DataBox	db	=gd.DC.MapSubresource(res, 0, MapMode.Read, SharpDX.Direct3D11.MapFlags.None);
+
+			Texture2D	tex	=res as Texture2D;
+
+			PreMultAndLinear(db, tex.Description.Width * tex.Description.Height);
+
+			Texture2D	finalTex	=MakeTexture(gd.GD, db, tex.Description.Width, tex.Description.Height);
+
+			mResources.Add(extLess, finalTex as Resource);
+			mFontTexture2s.Add(extLess, finalTex);
+
+			ShaderResourceView	srv	=new ShaderResourceView(gd.GD, finalTex);
+
+			srv.DebugName	=extLess;
+
+			mFontSRVs.Add(extLess, srv);
 
 			tex.Dispose();
 			res.Dispose();
