@@ -755,8 +755,12 @@ namespace UtilityLib
 
 
 		//returns the largest axis value
-		public static float GreatestDimension(Vector3 vec)
+		public static float GreatestSphereDimension(Vector3 vec)
 		{
+			vec.X	=Math.Abs(vec.X);
+			vec.Y	=Math.Abs(vec.Y);
+			vec.Z	=Math.Abs(vec.Z);
+
 			if(vec.X > vec.Y)
 			{
 				if(vec.X > vec.Z)
@@ -789,7 +793,7 @@ namespace UtilityLib
 			bs.Center	=Vector3.TransformCoordinate(pos, trans);
 				
 			//use the greatest dimension
-			bs.Radius	*=GreatestDimension(trans.ScaleVector);
+			bs.Radius	*=GreatestSphereDimension(trans.ScaleVector);
 
 			return	bs;
 		}

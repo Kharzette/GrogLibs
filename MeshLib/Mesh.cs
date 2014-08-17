@@ -276,7 +276,7 @@ namespace MeshLib
 		}
 
 
-		static Dictionary<string, IArch> LoadAllStaticMeshes(
+		public static Dictionary<string, IArch> LoadAllStaticMeshes(
 			string dir,	Device gd)
 		{
 			Dictionary<string, IArch>	ret	=new Dictionary<string, IArch>();
