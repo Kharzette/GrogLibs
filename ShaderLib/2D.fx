@@ -6,6 +6,21 @@ Texture2D	mTexture;
 #include "RenderStates.fxh"
 
 
+VVPosTex0 TextVS(VPos2Tex02 input)
+{
+	VVPosTex0	output;
+
+	float4x4	viewProj	=mul(mView, mProjection);
+
+	output.Position	=mul(float4(input.Position, 4, 1), viewProj);
+
+	output.TexCoord0.x	=input.TexCoord0.x;
+	output.TexCoord0.y	=input.TexCoord0.y;
+
+	return	output;
+}
+
+
 VVPosTex04Tex14 ParticleVS(VPos4Tex04Tex14 input)
 {
 	VVPosTex04Tex14	output;
@@ -146,6 +161,17 @@ float4 ParticlePS(VVPosTex04Tex14 input) : SV_Target
 	return	texel;
 }
 
+float4 TextPS(VVPosTex0 input) : SV_Target
+{
+	//texture
+	float4	texel	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
+
+	//multiply by color
+//	texel	*=input.TexCoord1;
+
+	return	texel;
+}
+
 struct TwoHalf4Targets
 {
 	half4	targ1, targ2;
@@ -214,5 +240,27 @@ technique10 ParticleDMN
 		VertexShader	=compile vs_4_0_level_9_3 ParticleDMNVS();
 		PixelShader		=compile ps_4_0_level_9_3 ParticleDMNPS();
 #endif
+	}
+}
+
+technique10 Text
+{     
+	pass P0
+	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 TextVS();
+		PixelShader		=compile ps_5_0 TextPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 TextVS();
+		PixelShader		=compile ps_4_1 TextPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 TextVS();
+		PixelShader		=compile ps_4_0 TextPS();
+#else
+		VertexShader	=compile vs_4_0_level_9_3 TextVS();
+		PixelShader		=compile ps_4_0_level_9_3 TextPS();
+#endif
+		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepth, 0);
 	}
 }
