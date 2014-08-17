@@ -61,21 +61,23 @@ namespace MaterialLib
 			ret.X	=posOffset * mCellWidth;
 			ret.Y	=yOffset * mCellHeight;
 
+			int	charWidth	=GetCharacterWidth(letter);
+
 			switch(triangleIndex)
 			{
 				case	0:
 					break;
 				case	1:
-					ret.X	+=mCellWidth;
+					ret.X	+=charWidth;
 					break;
 				case	2:
-					ret.X	+=mCellWidth;
+					ret.X	+=charWidth;
 					ret.Y	+=mCellHeight;
 					break;
 				case	3:
 					break;
 				case	4:
-					ret.X	+=mCellWidth;
+					ret.X	+=charWidth;
 					ret.Y	+=mCellHeight;
 					break;
 				case	5:
@@ -96,6 +98,12 @@ namespace MaterialLib
 		internal int GetCharacterWidth()
 		{
 			return	mCellWidth;
+		}
+
+
+		internal int GetCharacterWidth(char c)
+		{
+			return	mWidths[c];
 		}
 
 

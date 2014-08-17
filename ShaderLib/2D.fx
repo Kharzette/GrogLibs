@@ -5,14 +5,24 @@ Texture2D	mTexture;
 #include "CommonFunctions.fxh"
 #include "RenderStates.fxh"
 
+float2	mTextPosition;
+float2	mTextScale;
+float4	mTextColor;
+
 
 VVPosTex0 TextVS(VPos2Tex02 input)
 {
 	VVPosTex0	output;
 
+	float4	pos;
+
+	pos.xy	=(input.Position.xy * mTextScale) + mTextPosition;
+	pos.z	=4;
+	pos.w	=1;
+
 	float4x4	viewProj	=mul(mView, mProjection);
 
-	output.Position	=mul(float4(input.Position, 4, 1), viewProj);
+	output.Position	=mul(pos, viewProj);
 
 	output.TexCoord0.x	=input.TexCoord0.x;
 	output.TexCoord0.y	=input.TexCoord0.y;
@@ -167,7 +177,7 @@ float4 TextPS(VVPosTex0 input) : SV_Target
 	float4	texel	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
 
 	//multiply by color
-//	texel	*=input.TexCoord1;
+	texel	*=mTextColor;
 
 	return	texel;
 }

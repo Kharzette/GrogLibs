@@ -20,6 +20,15 @@ namespace MaterialLib
 	}
 
 
+	internal class StringData
+	{
+		internal TextVert	[]mVerts;
+		internal Vector4	mColor;
+		internal Vector2	mPosition;
+		internal Vector2	mScale;
+	}
+
+
 	public class ScreenText
 	{
 		Device				mGD;
@@ -34,7 +43,7 @@ namespace MaterialLib
 		int		mNumVerts;
 		string	mFontTexName;
 
-		Dictionary<string, TextVert[]>	mStrings	=new Dictionary<string, TextVert[]>();
+		Dictionary<string, StringData>	mStrings	=new Dictionary<string, StringData>();
 
 
 		public ScreenText(Device gd,
@@ -59,9 +68,12 @@ namespace MaterialLib
 		}
 
 
-		public void AddString(string fontName, string text, string id)
+		public void AddString(string fontName, string text, string id,
+			Vector4 color, Vector2 position, Vector2 scale)
 		{
-			TextVert	[]textVerts	=new TextVert[text.Length * 6];
+			StringData	sd	=new StringData();
+
+			sd.mVerts	=new TextVert[text.Length * 6];
 
 			Font	font	=mMatLib.GetFont(fontName);
 			if(font == null)
@@ -69,30 +81,66 @@ namespace MaterialLib
 				return;
 			}
 
-			CopyLetters(textVerts, font, text);
+			CopyLetters(sd.mVerts, font, text);
 
-			mStrings.Add(id, textVerts);
+			sd.mColor		=color;
+			sd.mPosition	=position;
+			sd.mScale		=scale;
+
+			mStrings.Add(id, sd);
 
 			mbDirty	=true;
 		}
 
 
-		public void ModifyString(string fontName, string text, string id)
+		public void ModifyStringColor(string id, Vector4 color)
+		{
+			if(!mStrings.ContainsKey(id))
+			{
+				return;
+			}
+			mStrings[id].mColor	=color;
+		}
+
+
+		public void ModifyStringScale(string id, Vector2 scale)
+		{
+			if(!mStrings.ContainsKey(id))
+			{
+				return;
+			}
+			mStrings[id].mScale	=scale;
+		}
+
+
+		public void ModifyStringPosition(string id, Vector2 pos)
+		{
+			if(!mStrings.ContainsKey(id))
+			{
+				return;
+			}
+			mStrings[id].mPosition	=pos;
+		}
+
+
+		public void ModifyStringText(string fontName, string text, string id)
 		{
 			if(!mStrings.ContainsKey(id))
 			{
 				return;
 			}
 
+			StringData	sd	=mStrings[id];
+
 			Font	font	=mMatLib.GetFont(fontName);
 			if(font == null)
 			{
 				return;
 			}
 
-			mStrings[id]	=new TextVert[text.Length * 6];
+			sd.mVerts	=new TextVert[text.Length * 6];
 
-			CopyLetters(mStrings[id], font, text);
+			CopyLetters(sd.mVerts, font, text);
 
 			mbDirty	=true;
 		}
@@ -111,10 +159,13 @@ namespace MaterialLib
 
 		void CopyLetters(TextVert []tv, Font font, string text)
 		{
+			int	curWidth	=0;
 			for(int i=0;i < text.Length;i++)
 			{
-				Vector2	xCoord	=Vector2.UnitX * i * font.GetCharacterWidth();
-				Vector2	xCoord2	=Vector2.UnitX * (i + 1) * font.GetCharacterWidth();
+				int	nextWidth	=curWidth + font.GetCharacterWidth(text[i]);
+
+				Vector2	xCoord	=Vector2.UnitX * curWidth;
+				Vector2	xCoord2	=Vector2.UnitX * nextWidth;
 				Vector2	yCoord	=Vector2.Zero;
 				Vector2	yCoord2	=Vector2.UnitY * font.GetCharacterHeight();
 
@@ -135,6 +186,8 @@ namespace MaterialLib
 
 				tv[(i * 6) + 5].Position	=xCoord + yCoord2;
 				tv[(i * 6) + 5].TexCoord0	=font.GetUV(text[i], 5);
+
+				curWidth	=nextWidth;
 			}
 		}
 
@@ -152,11 +205,11 @@ namespace MaterialLib
 		void RebuildVB(DeviceContext dc)
 		{
 			mNumVerts	=0;
-			foreach(KeyValuePair<string, TextVert[]> str in mStrings)
+			foreach(KeyValuePair<string, StringData> str in mStrings)
 			{
-				str.Value.CopyTo(mTextBuf, mNumVerts);
+				str.Value.mVerts.CopyTo(mTextBuf, mNumVerts);
 				
-				mNumVerts	+=str.Value.Length;
+				mNumVerts	+=str.Value.mVerts.Length;
 			}
 
 			DataStream	ds;
@@ -184,9 +237,21 @@ namespace MaterialLib
 			mMatLib.SetMaterialParameter("Text", "mProjection", proj);
 			mMatLib.SetMaterialFontTexture("Text", "mTexture", mFontTexName);
 
-			mMatLib.ApplyMaterialPass("Text", dc, 0);
+			int	offset	=0;
+			foreach(KeyValuePair<string, StringData> str in mStrings)
+			{
+				int	len	=str.Value.mVerts.Length;
 
-			dc.Draw(mNumVerts, 0);
+				mMatLib.SetMaterialParameter("Text", "mTextPosition", str.Value.mPosition);
+				mMatLib.SetMaterialParameter("Text", "mTextScale", str.Value.mScale);
+				mMatLib.SetMaterialParameter("Text", "mTextColor", str.Value.mColor);
+
+				mMatLib.ApplyMaterialPass("Text", dc, 0);
+
+				dc.Draw(len, offset);
+
+				offset	+=len;
+			}
 		}
 	}
 }
