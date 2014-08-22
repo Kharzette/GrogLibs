@@ -71,6 +71,7 @@
     <Compile Include="PostProcess.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScreenText.cs" />
+    <Compile Include="ScreenUI.cs" />
     <Compile Include="StuffKeeper.cs" />
     <Compile Include="TexAtlas.cs" />
   </ItemGroup>

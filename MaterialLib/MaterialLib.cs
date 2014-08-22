@@ -688,6 +688,12 @@ namespace MaterialLib
 		}
 
 
+		internal Texture2D GetTexture2D(string texName)
+		{
+			return	mKeeper.GetTexture2D(texName);
+		}
+
+
 		internal Font GetFont(string fontName)
 		{
 			return	mKeeper.GetFont(fontName);
