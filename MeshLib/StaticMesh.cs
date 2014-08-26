@@ -246,5 +246,12 @@ namespace MeshLib
 
 			return	true;
 		}
+
+
+		//this if for the DMN renderererererer
+		public void AssignMaterialIDs(MaterialLib.IDKeeper idk)
+		{
+			mParts.AssignMaterialIDs(idk);
+		}
 	}
 }

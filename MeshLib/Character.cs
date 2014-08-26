@@ -279,6 +279,13 @@ namespace MeshLib
 		}
 
 
+		//this if for the DMN renderererererer
+		public void AssignMaterialIDs(MaterialLib.IDKeeper idk)
+		{
+			mParts.AssignMaterialIDs(idk);
+		}
+
+
 		public Vector3 GetForwardVector()
 		{
 			return	mTransform.Forward;

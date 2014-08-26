@@ -71,6 +71,10 @@ namespace MaterialLib
 			uid.mVerts		=new TextVert[6];
 
 			Texture2D	tex	=mMatLib.GetTexture2D(texName);
+			if(tex == null)
+			{
+				return;
+			}
 
 			RectangleF	rect	=new RectangleF();
 
