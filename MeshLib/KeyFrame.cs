@@ -69,17 +69,23 @@ namespace MeshLib
 
 			Matrix	final	=scaleMat * rotMat * transMat;
 
-			final.M31	=-final.M31;
-			final.M32	=-final.M32;
-			final.M33	=-final.M33;
-			final.M34	=-final.M34;
-
-			final.M13	=-final.M13;
-			final.M23	=-final.M23;
-			final.M33	=-final.M33;
-			final.M43	=-final.M43;
+			RightHandToLeft(ref final);
 
 			final.Decompose(out mScale, out mRotation, out mPosition);
+		}
+
+
+		public static void RightHandToLeft(ref Matrix mat)
+		{
+			mat.M31	=-mat.M31;
+			mat.M32	=-mat.M32;
+			mat.M33	=-mat.M33;
+			mat.M34	=-mat.M34;
+
+			mat.M13	=-mat.M13;
+			mat.M23	=-mat.M23;
+			mat.M33	=-mat.M33;
+			mat.M43	=-mat.M43;
 		}
 
 
