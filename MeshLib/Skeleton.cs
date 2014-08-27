@@ -219,6 +219,17 @@ namespace MeshLib
 				gsn.IterateStructure(ist);
 			}
 		}
+
+
+		internal void ConvertToLeftHanded()
+		{
+			foreach(GSNode gsn in mChildren)
+			{
+				gsn.ConvertToLeftHanded();
+			}
+
+			mKeyValue.ConvertToLeftHanded();
+		}
 	}
 
 
@@ -399,6 +410,16 @@ namespace MeshLib
 				}
 			}
 			return	true;
+		}
+
+
+		public void ConvertToLeftHanded()
+		{
+			//do the roots
+			foreach(GSNode gsn in mRoots)
+			{
+				gsn.ConvertToLeftHanded();
+			}
 		}
 
 

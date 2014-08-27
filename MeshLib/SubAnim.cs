@@ -212,5 +212,14 @@ namespace MeshLib
 
 			Animate(time, ref mBone);
 		}
+
+
+		public void ConvertToLeftHanded()
+		{
+			foreach(KeyFrame kf in mKeys)
+			{
+				kf.ConvertToLeftHanded();
+			}
+		}
 	}
 }

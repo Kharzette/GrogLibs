@@ -61,6 +61,28 @@ namespace MeshLib
 		}
 
 
+		internal void ConvertToLeftHanded()
+		{
+			Matrix	rotMat		=Matrix.RotationQuaternion(mRotation);
+			Matrix	transMat	=Matrix.Translation(mPosition);
+			Matrix	scaleMat	=Matrix.Scaling(mScale);
+
+			Matrix	final	=scaleMat * rotMat * transMat;
+
+			final.M31	=-final.M31;
+			final.M32	=-final.M32;
+			final.M33	=-final.M33;
+			final.M34	=-final.M34;
+
+			final.M13	=-final.M13;
+			final.M23	=-final.M23;
+			final.M33	=-final.M33;
+			final.M43	=-final.M43;
+
+			final.Decompose(out mScale, out mRotation, out mPosition);
+		}
+
+
 		internal static void Lerp(KeyFrame key0, KeyFrame key1,
 			float percentage, KeyFrame result)
 		{
