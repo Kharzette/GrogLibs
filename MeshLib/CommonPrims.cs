@@ -103,12 +103,14 @@ namespace MeshLib
 		}
 
 
-		public void DrawBox(DeviceContext dc)
+		public void DrawBox(DeviceContext dc, Matrix transform)
 		{
 			if(mBoxBound == null)
 			{
 				return;
 			}
+
+			mMatLib.SetMaterialParameter("BoundMat", "mWorld", transform);
 
 			mMatLib.ApplyMaterialPass("BoundMat", dc, 0);
 			mBoxBound.Draw(dc);

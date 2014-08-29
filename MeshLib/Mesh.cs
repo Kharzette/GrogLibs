@@ -31,6 +31,8 @@ namespace MeshLib
 		protected BoundingSphere	mSphereBound;
 		protected Matrix			mTransform;
 
+		Matrix	mTransInverted;
+
 		protected VertexBufferBinding	mVBBinding;
 
 
@@ -105,7 +107,10 @@ namespace MeshLib
 
 		public void SetTransform(Matrix mat)
 		{
-			mTransform	=mat;
+			mTransform		=mat;
+			mTransInverted	=mat;
+
+			mTransInverted.Invert();
 		}
 
 
@@ -139,6 +144,8 @@ namespace MeshLib
 			mTypeIndex		=br.ReadInt32();
 
 			mTransform	=FileUtil.ReadMatrix(br);
+
+			SetTransform(mTransform);
 
 			mBoxBound.Minimum	=FileUtil.ReadVector3(br);
 			mBoxBound.Maximum	=FileUtil.ReadVector3(br);
@@ -247,13 +254,17 @@ namespace MeshLib
 
 		public float? RayIntersect(Vector3 start, Vector3 end, bool bBox)
 		{
+			//backtransform the ray
+			Vector3	backStart	=Vector3.TransformCoordinate(start, mTransInverted);
+			Vector3	backEnd		=Vector3.TransformCoordinate(end, mTransInverted);
+
 			if(bBox)
 			{
-				return	Mathery.RayIntersectBox(start, end, mBoxBound);
+				return	Mathery.RayIntersectBox(backStart, backEnd, mBoxBound);
 			}
 			else
 			{
-				return	Mathery.RayIntersectSphere(start, end, mSphereBound);
+				return	Mathery.RayIntersectSphere(backStart, backEnd, mSphereBound);
 			}
 		}
 
@@ -292,7 +303,7 @@ namespace MeshLib
 					string	path	=f.DirectoryName;
 
 					IArch	smo	=new StaticArch();
-					bool	bWorked	=smo.ReadFromFile(path + "\\" + f.Name, gd, false);
+					bool	bWorked	=smo.ReadFromFile(path + "\\" + f.Name, gd, true);
 
 					if(bWorked)
 					{

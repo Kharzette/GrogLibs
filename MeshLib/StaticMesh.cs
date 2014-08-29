@@ -73,6 +73,18 @@ namespace MeshLib
 
 		public BoundingBox GetBoxBound()
 		{
+			return	mParts.GetBoxBound();
+		}
+
+
+		public BoundingSphere GetSphereBound()
+		{
+			return	mParts.GetSphereBound();
+		}
+
+
+		public BoundingBox GetTransformedBoxBound()
+		{
 			BoundingBox	box	=mParts.GetBoxBound();
 
 			box.Minimum	=Vector3.TransformCoordinate(box.Minimum, mTransform);
@@ -82,7 +94,7 @@ namespace MeshLib
 		}
 
 
-		public BoundingSphere GetSphereBound()
+		public BoundingSphere GetTransformedSphereBound()
 		{
 			BoundingSphere	ret	=mParts.GetSphereBound();
 
