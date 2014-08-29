@@ -303,5 +303,24 @@ namespace AudioLib
 			sei.SetVolume(volume);
 			sei.Play();
 		}
+
+
+		public void LoadAllSounds(string dir)
+		{
+			if(!Directory.Exists(dir))
+			{
+				return;
+			}
+			DirectoryInfo	di	=new DirectoryInfo(dir + "/");
+
+			FileInfo[]		fi	=di.GetFiles("*.wav", SearchOption.TopDirectoryOnly);
+			foreach(FileInfo f in fi)
+			{
+				//strip back
+				string	path	=f.DirectoryName;
+
+				LoadSound(f.Name, path + "\\" + f.Name);
+			}
+		}
 	}
 }

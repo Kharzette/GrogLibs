@@ -459,6 +459,19 @@ namespace MaterialLib
 		}
 
 
+		public void ClearResourceParameter(DeviceContext dc, string fxName, string tech, string varName)
+		{
+			EffectVariable	var	=mKeeper.GetVariable(fxName, varName);
+			if(var == null)
+			{
+				return;
+			}
+			var.AsShaderResource().SetResource(null);
+
+			mKeeper.HackyTechniqueRefresh(dc, fxName, tech);
+		}
+
+
 		//for variables that are usually ignored in the materials
 		//but some of the materials end up using it
 		public void SetEffectParameter(string fxName, string varName, Matrix []mats)

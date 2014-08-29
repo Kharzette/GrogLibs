@@ -332,6 +332,29 @@ namespace MaterialLib
 		}
 
 
+		//sometimes dx11 thinks a rendertarget is still bound as a resource
+		//setting that resource to null and then calling this will give it
+		//a kick in the pants to actually free the resource up
+		public void HackyTechniqueRefresh(DeviceContext dc, string fx, string tech)
+		{
+			if(!mFX.ContainsKey(fx))
+			{
+				return;
+			}
+
+			EffectTechnique	et	=mFX[fx].GetTechniqueByName(tech);
+
+			if(et == null || !et.IsValid)
+			{
+				return;
+			}
+
+			EffectPass	ep	=et.GetPassByIndex(0);
+
+			ep.Apply(dc);
+		}
+
+
 		void LoadResources(GraphicsDevice gd)
 		{
 			//see if Textures folder exists in Content
@@ -642,7 +665,7 @@ namespace MaterialLib
 
 			Texture2D	tex	=res as Texture2D;
 
-			PreMultAndLinear(db, tex.Description.Width * tex.Description.Height);
+			PreMultAndLinear(db, tex.Description.Width, tex.Description.Height);
 
 			Texture2D	finalTex	=MakeTexture(gd.GD, db, tex.Description.Width, tex.Description.Height);
 
@@ -700,7 +723,7 @@ namespace MaterialLib
 
 			Texture2D	tex	=res as Texture2D;
 
-			PreMultAndLinear(db, tex.Description.Width * tex.Description.Height);
+			PreMultAndLinear(db, tex.Description.Width, tex.Description.Height);
 
 			Texture2D	finalTex	=MakeTexture(gd.GD, db, tex.Description.Width, tex.Description.Height);
 
@@ -768,7 +791,7 @@ namespace MaterialLib
 		}
 
 
-		unsafe void PreMultAndLinear(DataBox db, int len)
+		unsafe void PreMultAndLinear(DataBox db, int width, int height)
 		{
 			if(db.IsEmpty)
 			{
@@ -777,24 +800,30 @@ namespace MaterialLib
 
 			var	pSrc	=(Color *)@db.DataPointer;
 
-			for(int i=0;i < len;i++)
+			for(int y=0;y < height;y++)
 			{
-				Color	c	=*(pSrc + i);
+				//divide pitch by sizeof(Color)
+				int	ofs	=y * (db.RowPitch / 4);
 
-				Vector4	vColor	=c.ToVector4();
+				for(int x=0;x < width;x++)
+				{
+					Color	c	=*(pSrc + ofs + x);
 
-				//convert to linear
-				vColor.X	=(float)Math.Pow(vColor.X, 2.2);
-				vColor.Y	=(float)Math.Pow(vColor.Y, 2.2);
-				vColor.Z	=(float)Math.Pow(vColor.Z, 2.2);
+					Vector4	vColor	=c.ToVector4();
 
-				vColor.X	*=vColor.W;
-				vColor.Y	*=vColor.W;
-				vColor.Z	*=vColor.W;
+					//convert to linear
+					vColor.X	=(float)Math.Pow(vColor.X, 2.2);
+					vColor.Y	=(float)Math.Pow(vColor.Y, 2.2);
+					vColor.Z	=(float)Math.Pow(vColor.Z, 2.2);
 
-				Color	done	=new Color(vColor);
+					vColor.X	*=vColor.W;
+					vColor.Y	*=vColor.W;
+					vColor.Z	*=vColor.W;
 
-				*(pSrc + i)	=done;
+					Color	done	=new Color(vColor);
+
+					*(pSrc + ofs + x)	=done;
+				}
 			}
 		}
 

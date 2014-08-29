@@ -343,24 +343,6 @@ namespace MaterialLib
 		}
 
 
-		//sometimes dx11 thinks a rendertarget is still bound as a resource
-		//setting that resource to null and then calling this will give it
-		//a kick in the pants to actually free the resource up
-		public void HackyTechniqueRefresh(DeviceContext dc, string tech)
-		{
-			EffectTechnique	et	=mPostFX.GetTechniqueByName(tech);
-
-			if(!et.IsValid)
-			{
-				return;
-			}
-
-			EffectPass	ep	=et.GetPassByIndex(0);
-
-			ep.Apply(dc);
-		}
-
-
 		public void SetTargets(GraphicsDevice gd, string targName, string depthName)
 		{
 			if(targName == null && depthName == null)

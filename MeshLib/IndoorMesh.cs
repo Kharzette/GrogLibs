@@ -427,6 +427,11 @@ namespace MeshLib
 				DrawMaterialsDC(gd, 1, getModMatrix, mVLitVBB, mVLitIB, mVLitDrawCalls, bMatVis);
 				DrawMaterialsDC(gd, 1, getModMatrix, mLMVBB, mLMIB, mLMDrawCalls, bMatVis);
 				DrawMaterialsDC(gd, 1, getModMatrix, mLMAnimVBB, mLMAnimIB, mLMAnimDrawCalls, bMatVis);
+
+				//without this, you get a bunch of that annoying spam about
+				//rendertarget still set to a resource etc etc
+				mMatLib.ClearResourceParameter(gd.DC, "BSP.fx", "FullBright", "mShadowTexture");
+				mMatLib.ClearResourceParameter(gd.DC, "BSP.fx", "FullBright", "mShadowCube");
 			}
 
 			//draw alphas
