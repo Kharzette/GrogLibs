@@ -278,6 +278,71 @@ namespace MeshLib
 		}
 
 
+		internal float? RayIntersectBones(Vector3 start, Vector3 end,
+			Skeleton skel, out int boneHit)
+		{
+			return	mSkin.RayIntersectBones(start, end,
+				skel, out boneHit);
+		}
+
+
+		public Dictionary<int, Matrix> GetBoneTransforms(Skeleton skel)
+		{
+			Dictionary<int, Matrix>	ret	=new Dictionary<int, Matrix>();
+
+			int	numBones	=skel.GetNumIndexedBones();
+
+			for(int i=0;i < numBones;i++)
+			{
+				Matrix	bone	=mSkin.GetBoneByIndex(i, skel);
+
+				ret.Add(i, bone);
+			}
+			return	ret;
+		}
+
+
+		public void BuildDebugBoundDrawData(Device gd, CommonPrims cprims)
+		{
+			mSkin.BuildDebugBoundDrawData(gd, cprims);
+		}
+
+
+		public void ComputeBoneBounds(Skeleton skel)
+		{
+			int	numBones	=skel.GetNumIndexedBones();
+
+			for(int i=0;i < numBones;i++)
+			{
+				List<Vector3>	boxPoints	=new List<Vector3>();
+
+				foreach(EditorMesh em in mMeshParts)
+				{
+					if(em == null)
+					{
+						return;
+					}
+					BoundingBox		box;
+					BoundingSphere	sphere;
+
+					em.GetInfluencedBound(i, out box, out sphere);
+
+					if(box.Minimum != Vector3.Zero
+						&& box.Maximum != Vector3.Zero)
+					{
+						boxPoints.Add(box.Minimum);
+						boxPoints.Add(box.Maximum);
+					}
+				}
+
+				if(boxPoints.Count > 0)
+				{
+					mSkin.SetBoneBounds(i, BoundingBox.FromPoints(boxPoints.ToArray()));
+				}
+			}
+		}
+
+
 		BoundingBox IArch.GetBoxBound()
 		{
 			List<Vector3>	pnts	=new List<Vector3>();

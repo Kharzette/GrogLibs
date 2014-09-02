@@ -5,6 +5,8 @@ using System.IO;
 using SharpDX;
 using UtilityLib;
 
+using Device	=SharpDX.Direct3D11.Device;
+
 
 namespace MeshLib
 {
@@ -15,6 +17,9 @@ namespace MeshLib
 	public class Skin
 	{
 		Dictionary<int, Matrix>	mInverseBindPoses	=new Dictionary<int, Matrix>();
+
+		//for doing character collision stuff
+		Dictionary<int, BoundingBox>	mBoneBoxes	=new Dictionary<int, BoundingBox>();
 
 
 		public Skin()
@@ -38,6 +43,74 @@ namespace MeshLib
 				{
 					mInverseBindPoses.Add(bp.Key, bp.Value);
 				}
+			}
+		}
+
+
+		internal void BuildDebugBoundDrawData(Device gd, CommonPrims cprims)
+		{
+			foreach(KeyValuePair<int, BoundingBox> boxen in mBoneBoxes)
+			{
+				cprims.AddBox(gd, boxen.Key, boxen.Value);
+			}
+		}
+
+
+		internal BoundingBox GetBoneBoundBox(int index)
+		{
+			if(mBoneBoxes.ContainsKey(index))
+			{
+				return	mBoneBoxes[index];
+			}
+			return	new BoundingBox();
+		}
+
+
+		internal float? RayIntersectBones(Vector3 start, Vector3 end,
+			Skeleton skel, out int boneHit)
+		{
+			boneHit	=-1;
+
+			float	bestDist	=float.MaxValue;
+			foreach(KeyValuePair<int, BoundingBox> boxen in mBoneBoxes)
+			{
+				BoundingBox	box	=boxen.Value;
+
+				Matrix	trans	=GetBoneByIndex(boxen.Key, skel);
+
+				box.Minimum	=Vector3.TransformCoordinate(box.Minimum, trans);
+				box.Maximum	=Vector3.TransformCoordinate(box.Maximum, trans);
+
+				float?	hit	=Mathery.RayIntersectBox(start, end, box);
+				if(hit == null)
+				{
+					continue;
+				}
+
+				if(hit.Value < bestDist)
+				{
+					bestDist	=hit.Value;
+					boneHit		=boxen.Key;
+				}
+			}
+
+			if(boneHit == -1)
+			{
+				return	null;
+			}
+			return	bestDist;
+		}
+
+
+		internal void SetBoneBounds(int index, BoundingBox box)
+		{
+			if(mBoneBoxes.ContainsKey(index))
+			{
+				mBoneBoxes[index]	=box;
+			}
+			else
+			{
+				mBoneBoxes.Add(index, box);
 			}
 		}
 

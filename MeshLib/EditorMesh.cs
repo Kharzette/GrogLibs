@@ -633,5 +633,15 @@ namespace MeshLib
 		{
 			VertexTypes.GetVertBounds(mVertArray, mTypeIndex, out mBoxBound, out mSphereBound);			
 		}
+
+
+		internal void GetInfluencedBound(int boneIndex, out BoundingBox box, out BoundingSphere sphere)
+		{
+			const float	boneInfluenceThreshold	=0.2f;
+
+			VertexTypes.GetInfluencedVertBounds(mVertArray, mTypeIndex, 
+				boneIndex, boneInfluenceThreshold,
+				out box, out sphere);
+		}
 	}
 }

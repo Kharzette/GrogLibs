@@ -143,6 +143,57 @@ namespace MeshLib
 		}
 
 
+		public float? RayIntersectBones2(Vector3 start, Vector3 end, out int boneHit)
+		{
+			//backtransform the ray
+			Vector3	backStart	=Vector3.TransformCoordinate(start, mTransInverted);
+			Vector3	backEnd		=Vector3.TransformCoordinate(end, mTransInverted);
+
+			boneHit	=-1;
+
+			Skin	sk	=mParts.GetSkin();
+
+			float	bestDist	=float.MaxValue;
+			for(int i=0;i < mBones.Length;i++)
+			{
+				BoundingBox	box	=sk.GetBoneBoundBox(i);
+
+				Matrix	trans	=mBones[i];
+
+				box.Minimum	=Vector3.TransformCoordinate(box.Minimum, trans);
+				box.Maximum	=Vector3.TransformCoordinate(box.Maximum, trans);
+
+				float?	hit	=Mathery.RayIntersectBox(backStart, backEnd, box);
+				if(hit == null)
+				{
+					continue;
+				}
+
+				if(hit.Value < bestDist)
+				{
+					bestDist	=hit.Value;
+					boneHit		=i;
+				}
+			}
+
+			if(boneHit == -1)
+			{
+				return	null;
+			}
+			return	bestDist;
+		}
+
+
+		public float? RayIntersectBones(Vector3 start, Vector3 end, out int boneHit)
+		{
+			//backtransform the ray
+			Vector3	backStart	=Vector3.TransformCoordinate(start, mTransInverted);
+			Vector3	backEnd		=Vector3.TransformCoordinate(end, mTransInverted);
+
+			return	mParts.RayIntersectBones(backStart, backEnd, mAnimLib.GetSkeleton(), out boneHit);
+		}
+
+
 		//TODO: needs testing
 		public float? RayIntersect(Vector3 start, Vector3 end, bool bBox, out Mesh partHit)
 		{

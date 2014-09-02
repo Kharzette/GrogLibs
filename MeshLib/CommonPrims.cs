@@ -19,6 +19,9 @@ namespace MeshLib
 		PrimObject	mXAxis, mYAxis, mZAxis;
 		PrimObject	mBoxBound, mSphereBound;
 
+		Dictionary<int, PrimObject>	mBoxes		=new Dictionary<int, PrimObject>();
+		Dictionary<int, PrimObject>	mSpheres	=new Dictionary<int, PrimObject>();
+
 		const float	AxisSize	=50f;
 
 
@@ -103,6 +106,35 @@ namespace MeshLib
 		}
 
 
+		public void DrawBox(DeviceContext dc, int index, Matrix transform)
+		{
+			if(!mBoxes.ContainsKey(index))
+			{
+				return;
+			}
+
+			mMatLib.SetMaterialParameter("BoundMat", "mWorld", transform);
+
+			mMatLib.ApplyMaterialPass("BoundMat", dc, 0);
+			mBoxes[index].Draw(dc);
+		}
+
+
+		public void DrawBox(DeviceContext dc, int index, Matrix transform, Vector4 color)
+		{
+			if(!mBoxes.ContainsKey(index))
+			{
+				return;
+			}
+
+			mMatLib.SetMaterialParameter("BoundMat", "mWorld", transform);
+			mMatLib.SetMaterialParameter("BoundMat", "mSolidColour", color);
+
+			mMatLib.ApplyMaterialPass("BoundMat", dc, 0);
+			mBoxes[index].Draw(dc);
+		}
+
+
 		public void DrawBox(DeviceContext dc, Matrix transform)
 		{
 			if(mBoxBound == null)
@@ -117,15 +149,57 @@ namespace MeshLib
 		}
 
 
-		public void DrawSphere(DeviceContext dc)
+		public void DrawSphere(DeviceContext dc, int index, Matrix transform)
+		{
+			if(!mSpheres.ContainsKey(index))
+			{
+				return;
+			}
+
+			mMatLib.SetMaterialParameter("BoundMat", "mWorld", transform);
+
+			mMatLib.ApplyMaterialPass("BoundMat", dc, 0);
+
+			mSpheres[index].Draw(dc);
+		}
+
+
+		public void DrawSphere(DeviceContext dc, Matrix transform)
 		{
 			if(mSphereBound == null)
 			{
 				return;
 			}
 
+			mMatLib.SetMaterialParameter("BoundMat", "mWorld", transform);
 			mMatLib.ApplyMaterialPass("BoundMat", dc, 0);
 			mSphereBound.Draw(dc);
+		}
+
+
+		public void AddBox(Device gd, int index, BoundingBox box)
+		{
+			if(mBoxes.ContainsKey(index))
+			{
+				return;	//already a box here
+			}
+
+			PrimObject	po	=PrimFactory.CreateCube(gd, box);
+
+			mBoxes.Add(index, po);
+		}
+
+
+		public void AddSphere(Device gd, int index, BoundingSphere sphere)
+		{
+			if(mSpheres.ContainsKey(index))
+			{
+				return;	//already a sphere here
+			}
+
+			PrimObject	po	=PrimFactory.CreateSphere(gd, sphere.Center, sphere.Radius);
+
+			mSpheres.Add(index, po);
 		}
 
 

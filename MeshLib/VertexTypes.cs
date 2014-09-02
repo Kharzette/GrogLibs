@@ -772,6 +772,76 @@ namespace MeshLib
 		}
 
 
+		//this is useful for making bone bounds
+		public static void GetInfluencedVertBounds(Array verts, int typeIdx,
+			int boneIndex, float boneInfluenceThreshold,
+			out BoundingBox box, out BoundingSphere sphere)
+		{
+			//init for early out
+			box.Minimum		=Vector3.Zero;
+			box.Maximum		=Vector3.Zero;
+			sphere.Center	=Vector3.Zero;
+			sphere.Radius	=0f;
+
+			List<Vector3>	points	=GetPositions(verts, typeIdx);
+			List<Color>		bnIdxs	=GetBoneIndexes(verts, typeIdx);
+			List<Half4>		weights	=GetWeights(verts, typeIdx);
+
+			if(points.Count == 0
+				|| bnIdxs.Count == 0
+				|| weights.Count == 0)
+			{
+				return;
+			}
+
+			Debug.Assert(points.Count == bnIdxs.Count);
+			Debug.Assert(points.Count == weights.Count);
+
+			List<Vector3>	boundPoints	=new List<Vector3>();
+
+			for(int i=0;i < points.Count;i++)
+			{
+				Color	idx		=bnIdxs[i];
+				Half4	weight	=weights[i];
+
+				if(idx.R == boneIndex)
+				{
+					if(weight.X >= boneInfluenceThreshold)
+					{
+						boundPoints.Add(points[i]);
+					}
+				}
+				else if(idx.G == boneIndex)
+				{
+					if(weight.Y >= boneInfluenceThreshold)
+					{
+						boundPoints.Add(points[i]);
+					}
+				}
+				else if(idx.B == boneIndex)
+				{
+					if(weight.Z >= boneInfluenceThreshold)
+					{
+						boundPoints.Add(points[i]);
+					}
+				}
+				else if(idx.A == boneIndex)
+				{
+					if(weight.W >= boneInfluenceThreshold)
+					{
+						boundPoints.Add(points[i]);
+					}
+				}
+			}
+
+			if(boundPoints.Count > 0)
+			{
+				box		=BoundingBox.FromPoints(boundPoints.ToArray());
+				sphere	=Mathery.SphereFromPoints(boundPoints);
+			}
+		}
+
+
 		public static void GetVertBounds(Array verts, int typeIdx,
 			out BoundingBox box, out BoundingSphere sphere)
 		{
