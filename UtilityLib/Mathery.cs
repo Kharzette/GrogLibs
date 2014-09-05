@@ -120,15 +120,6 @@ namespace UtilityLib
 		}
 
 
-		//find distance from point to the AB line (not segment)
-		public static float DistanceToLine(Vector3 A, Vector3 B, Vector3 point)
-		{
-			Vector3	shortLine	=Vector3.Zero;//ShortestLineBetweenTwoLines(A, B, point);
-
-			return	shortLine.Length();
-		}
-
-
 		static Vector3 VectorForCubeFace(TextureCubeFace face)
 		{
 			switch(face)

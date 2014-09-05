@@ -278,14 +278,6 @@ namespace MeshLib
 		}
 
 
-		internal float? RayIntersectBones(Vector3 start, Vector3 end,
-			Skeleton skel, out int boneHit)
-		{
-			return	mSkin.RayIntersectBones(start, end,
-				skel, out boneHit);
-		}
-
-
 		public Dictionary<int, Matrix> GetBoneTransforms(Skeleton skel)
 		{
 			Dictionary<int, Matrix>	ret	=new Dictionary<int, Matrix>();
@@ -308,7 +300,7 @@ namespace MeshLib
 		}
 
 
-		public void ComputeBoneBounds(Skeleton skel)
+		internal void ComputeBoneBounds(Skeleton skel, List<int> skipParts)
 		{
 			int	numBones	=skel.GetNumIndexedBones();
 
@@ -322,6 +314,12 @@ namespace MeshLib
 					{
 						return;
 					}
+
+					if(skipParts.Contains(mMeshParts.IndexOf(em)))
+					{
+						continue;
+					}
+
 					BoundingBox		box;
 					BoundingSphere	sphere;
 

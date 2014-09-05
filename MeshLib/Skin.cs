@@ -66,42 +66,6 @@ namespace MeshLib
 		}
 
 
-		internal float? RayIntersectBones(Vector3 start, Vector3 end,
-			Skeleton skel, out int boneHit)
-		{
-			boneHit	=-1;
-
-			float	bestDist	=float.MaxValue;
-			foreach(KeyValuePair<int, BoundingBox> boxen in mBoneBoxes)
-			{
-				BoundingBox	box	=boxen.Value;
-
-				Matrix	trans	=GetBoneByIndex(boxen.Key, skel);
-
-				box.Minimum	=Vector3.TransformCoordinate(box.Minimum, trans);
-				box.Maximum	=Vector3.TransformCoordinate(box.Maximum, trans);
-
-				float?	hit	=Mathery.RayIntersectBox(start, end, box);
-				if(hit == null)
-				{
-					continue;
-				}
-
-				if(hit.Value < bestDist)
-				{
-					bestDist	=hit.Value;
-					boneHit		=boxen.Key;
-				}
-			}
-
-			if(boneHit == -1)
-			{
-				return	null;
-			}
-			return	bestDist;
-		}
-
-
 		internal void SetBoneBounds(int index, BoundingBox box)
 		{
 			if(mBoneBoxes.ContainsKey(index))

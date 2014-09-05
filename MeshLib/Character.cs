@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpDX;
 using SharpDX.DXGI;
 using SharpDX.Direct3D11;
@@ -32,12 +34,33 @@ namespace MeshLib
 		//raw bone transforms for shader
 		Matrix	[]mBones;
 
+		//inverted bones for raycasting
+		Matrix			[]mInvertedBones;
+		bool			mbInvertedReady;	//thread done?
+		int				mThreadMisses;		//times had to invert on the spot
+		Action<object>	mInvertBones;
+		float			mTimeSinceLastInvert;
+		bool			mbAutoInvert;
+		float			mInvertInterval;
+		Task			mRunningTask;
+
 
 		public Character(IArch ca, AnimLib al)
 		{
 			mParts		=new MeshPartStuff(ca);
 			mAnimLib	=al;
 			mTransform	=Matrix.Identity;
+
+			//task to invert the bones
+			mInvertBones	=(object c) =>
+			{
+				Character	chr	=c as Character;
+				for(int i=0;i < chr.mInvertedBones.Length;i++)
+				{
+					chr.mInvertedBones[i]	=Matrix.Invert(chr.mBones[i]);
+				}
+				chr.mbInvertedReady	=true;
+			};
 		}
 
 
@@ -45,8 +68,22 @@ namespace MeshLib
 		{
 			mParts.FreeAll();
 
-			mBones	=null;
-			mParts	=null;
+			mBones			=null;
+			mParts			=null;
+			mInvertedBones	=null;
+		}
+
+
+		public void AutoInvert(bool bAuto, float interval)
+		{
+			mbAutoInvert	=bAuto;
+			mInvertInterval	=interval;
+		}
+
+
+		public int GetThreadMisses()
+		{
+			return	mThreadMisses;
 		}
 
 
@@ -130,6 +167,31 @@ namespace MeshLib
 		}
 
 
+		//if the character needs accurate box collision
+		public void UpdateInvertedBones(bool bImmediate)
+		{
+			if(bImmediate)
+			{
+				if(!mbInvertedReady)
+				{
+					mRunningTask.Wait();
+				}
+				else
+				{
+					mbInvertedReady	=false;
+					mRunningTask	=Task.Factory.StartNew(mInvertBones, this);
+					mRunningTask.Wait();
+				}
+			}
+			else if(mbInvertedReady)
+			{
+				//update inverted on a thread
+				mbInvertedReady	=false;
+				mRunningTask	=Task.Factory.StartNew(mInvertBones, this);
+			}
+		}
+
+
 		public void SetPartVisible(int index, bool bVisible)
 		{
 			mParts.SetPartVisible(index, bVisible);
@@ -143,7 +205,7 @@ namespace MeshLib
 		}
 
 
-		public float? RayIntersectBones2(Vector3 start, Vector3 end, out int boneHit)
+		public float? RayIntersectBones(Vector3 start, Vector3 end, bool bAccurate, out int boneHit)
 		{
 			//backtransform the ray
 			Vector3	backStart	=Vector3.TransformCoordinate(start, mTransInverted);
@@ -158,12 +220,25 @@ namespace MeshLib
 			{
 				BoundingBox	box	=sk.GetBoneBoundBox(i);
 
-				Matrix	trans	=mBones[i];
+				if(!mbInvertedReady)
+				{
+					mThreadMisses++;
+				}
 
-				box.Minimum	=Vector3.TransformCoordinate(box.Minimum, trans);
-				box.Maximum	=Vector3.TransformCoordinate(box.Maximum, trans);
+				Matrix	verted;
+				if(!mbInvertedReady && bAccurate)
+				{
+					verted	=Matrix.Invert(mBones[i]);
+				}
+				else
+				{
+					verted	=mInvertedBones[i];
+				}
 
-				float?	hit	=Mathery.RayIntersectBox(backStart, backEnd, box);
+				Vector3	boneStart	=Vector3.TransformCoordinate(backStart, verted);
+				Vector3	boneEnd		=Vector3.TransformCoordinate(backEnd, verted);
+
+				float?	hit	=Mathery.RayIntersectBox(boneStart, boneEnd, box);
 				if(hit == null)
 				{
 					continue;
@@ -184,16 +259,6 @@ namespace MeshLib
 		}
 
 
-		public float? RayIntersectBones(Vector3 start, Vector3 end, out int boneHit)
-		{
-			//backtransform the ray
-			Vector3	backStart	=Vector3.TransformCoordinate(start, mTransInverted);
-			Vector3	backEnd		=Vector3.TransformCoordinate(end, mTransInverted);
-
-			return	mParts.RayIntersectBones(backStart, backEnd, mAnimLib.GetSkeleton(), out boneHit);
-		}
-
-
 		//TODO: needs testing
 		public float? RayIntersect(Vector3 start, Vector3 end, bool bBox, out Mesh partHit)
 		{
@@ -202,6 +267,12 @@ namespace MeshLib
 			Vector3	backEnd		=Vector3.TransformCoordinate(end, mTransInverted);
 
 			return	mParts.RayIntersect(backStart, backEnd, bBox, out partHit);
+		}
+
+
+		public void ComputeBoneBounds(List<string> skipMaterials)
+		{
+			mParts.ComputeBoneBounds(skipMaterials, mAnimLib.GetSkeleton());
 		}
 
 	
@@ -227,17 +298,29 @@ namespace MeshLib
 
 			if(mBones == null)
 			{
-				mBones	=new Matrix[sk.GetNumIndexedBones()];
+				mBones			=new Matrix[sk.GetNumIndexedBones()];
+				mInvertedBones	=new Matrix[mBones.Length];
+				mbInvertedReady	=true;
 			}
 			for(int i=0;i < mBones.Length;i++)
 			{
 				mBones[i]	=skn.GetBoneByIndex(i, sk);
 			}
+
+			if(mbAutoInvert)
+			{
+				if(mbInvertedReady && mTimeSinceLastInvert > mInvertInterval)
+				{
+					mTimeSinceLastInvert	=0f;
+					UpdateInvertedBones(false);
+				}
+			}
 		}
 
 
 		public void Blend(string anim1, float anim1Time,
-			string anim2, float anim2Time, float percentage)
+			string anim2, float anim2Time,
+			float percentage)
 		{
 			mAnimLib.Blend(anim1, anim1Time, anim2, anim2Time, percentage);
 
@@ -250,6 +333,8 @@ namespace MeshLib
 			mAnimLib.Animate(anim, time);
 
 			UpdateBones(mAnimLib.GetSkeleton(), mParts.GetSkin());
+
+			mTimeSinceLastInvert	+=time;
 		}
 
 
@@ -272,35 +357,26 @@ namespace MeshLib
 
 		public void UpdateBounds()
 		{
-			Skeleton		skel		=mAnimLib.GetSkeleton();
-
-			if(skel == null)
-			{
-				return;	//no anim stuff loaded
-			}
-
 			List<Vector3>	points		=new List<Vector3>();
-			int				numIndexed	=skel.GetNumIndexedBones();
 
-			if(skel == null)
+			Vector3	[]corners	=new Vector3[8];
+
+			Skin	sk	=mParts.GetSkin();
+
+			for(int i=0;i < mBones.Length;i++)
 			{
-				return;
+				BoundingBox	box	=sk.GetBoneBoundBox(i);
+
+				box.GetCorners(corners);
+
+				for(int j=0;j < 8;j++)
+				{
+					Vector3	transd	=Vector3.TransformCoordinate(corners[j], mBones[i]);
+
+					points.Add(transd);
+				}
 			}
 
-			for(int i=0;i < numIndexed;i++)
-			{
-				Matrix	mat	=Matrix.Identity;
-				skel.GetMatrixForBone(i, out mat);
-
-				mat	*=Matrix.RotationX((float)Math.PI / -2.0f);
-				mat	*=Matrix.RotationY((float)Math.PI);
-
-				Vector3	pnt	=Vector3.Zero;
-
-				pnt	=Vector3.TransformCoordinate(pnt, mat);
-
-				points.Add(pnt);
-			}
 			mBoxBound		=BoundingBox.FromPoints(points.ToArray());
 			mSphereBound	=Mathery.SphereFromPoints(points);
 		}
