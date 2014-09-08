@@ -25,7 +25,6 @@ namespace MeshLib
 
 		//bounds
 		BoundingBox		mBoxBound;
-		BoundingSphere	mSphereBound;
 
 		//transform
 		Matrix	mTransform;
@@ -60,6 +59,7 @@ namespace MeshLib
 					chr.mInvertedBones[i]	=Matrix.Invert(chr.mBones[i]);
 				}
 				chr.mbInvertedReady	=true;
+				UpdateBounds();
 			};
 		}
 
@@ -113,12 +113,7 @@ namespace MeshLib
 
 		public BoundingBox GetBoxBound()
 		{
-			BoundingBox	box	=mParts.GetBoxBound();
-
-			box.Minimum	=Vector3.TransformCoordinate(box.Minimum, mTransform);
-			box.Maximum	=Vector3.TransformCoordinate(box.Maximum, mTransform);
-
-			return	box;
+			return	mBoxBound;
 		}
 
 
@@ -318,6 +313,12 @@ namespace MeshLib
 		}
 
 
+		public void Update(float secDelta)
+		{
+			mTimeSinceLastInvert	+=secDelta;
+		}
+
+
 		public void Blend(string anim1, float anim1Time,
 			string anim2, float anim2Time,
 			float percentage)
@@ -333,39 +334,41 @@ namespace MeshLib
 			mAnimLib.Animate(anim, time);
 
 			UpdateBones(mAnimLib.GetSkeleton(), mParts.GetSkin());
-
-			mTimeSinceLastInvert	+=time;
 		}
 
 
-		public float? RayIntersect(Vector3 start, Vector3 end, bool bBox)
+		public float? RayIntersect(Vector3 start, Vector3 end)
 		{
 			//backtransform the ray
 			Vector3	backStart	=Vector3.TransformCoordinate(start, mTransInverted);
 			Vector3	backEnd		=Vector3.TransformCoordinate(end, mTransInverted);
 
-			if(bBox)
-			{
-				return	Mathery.RayIntersectBox(backStart, backEnd, mBoxBound);
-			}
-			else
-			{
-				return	Mathery.RayIntersectSphere(backStart, backEnd, mSphereBound);
-			}
+			return	Mathery.RayIntersectBox(backStart, backEnd, mBoxBound);
 		}
 
 
 		public void UpdateBounds()
 		{
-			List<Vector3>	points		=new List<Vector3>();
-
 			Vector3	[]corners	=new Vector3[8];
 
 			Skin	sk	=mParts.GetSkin();
 
+			//clear bounds
+			mBoxBound.Maximum	=Vector3.One * -float.MaxValue;
+			mBoxBound.Minimum	=Vector3.One * float.MaxValue;
+
 			for(int i=0;i < mBones.Length;i++)
 			{
 				BoundingBox	box	=sk.GetBoneBoundBox(i);
+				
+				Vector3	size	=box.Maximum - box.Minimum;
+				float	vol		=size.X + size.Y + size.Z;
+
+				//skip bones without much influence
+				if(vol < 1f)
+				{
+					continue;
+				}
 
 				box.GetCorners(corners);
 
@@ -373,12 +376,9 @@ namespace MeshLib
 				{
 					Vector3	transd	=Vector3.TransformCoordinate(corners[j], mBones[i]);
 
-					points.Add(transd);
+					Mathery.AddPointToBoundingBox(ref mBoxBound, transd);
 				}
 			}
-
-			mBoxBound		=BoundingBox.FromPoints(points.ToArray());
-			mSphereBound	=Mathery.SphereFromPoints(points);
 		}
 
 

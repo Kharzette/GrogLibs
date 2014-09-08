@@ -244,28 +244,8 @@ namespace MeshLib
 
 		float? IArch.RayIntersect(Vector3 start, Vector3 end, bool bBox, out Mesh partHit)
 		{
-			//find which piece was hit
-			float		minDist	=float.MaxValue;
-			partHit				=null;
-
-			foreach(Mesh m in mMeshParts)
-			{
-				Nullable<float>	dist	=m.RayIntersect(start, end, bBox);
-				if(dist != null)
-				{
-					if(dist.Value < minDist)
-					{
-						partHit	=m;
-						minDist	=dist.Value;
-					}
-				}
-			}
-
-			if(partHit == null)
-			{
-				return	null;
-			}
-			return	minDist;
+			partHit	=null;
+			return	null;	//characters don't use this
 		}
 
 

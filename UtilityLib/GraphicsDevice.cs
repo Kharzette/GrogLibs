@@ -160,6 +160,14 @@ namespace UtilityLib
 
 		void HandleResize()
 		{
+			int	width	=mRForm.ClientRectangle.Width;
+			int	height	=mRForm.ClientRectangle.Height;
+
+			if(width == 0 || height == 0)
+			{
+				return;	//minimize?
+			}
+
 			//fire this event, and hopefully other code will
 			//use it to let go of references to device stuff
 			Misc.SafeInvoke(ePreResize, this);
@@ -173,8 +181,6 @@ namespace UtilityLib
 
 			DC.InputAssembler.PrimitiveTopology	=PrimitiveTopology.TriangleList;
 
-			int	width	=mRForm.ClientRectangle.Width;
-			int	height	=mRForm.ClientRectangle.Height;
 
 			mSChain.ResizeBuffers(1, width, height, Format.Unknown, SwapChainFlags.None);
 
