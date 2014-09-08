@@ -61,6 +61,20 @@ namespace MeshLib
 		}
 
 
+		internal void Transform(Matrix trans)
+		{
+			Matrix	rotMat		=Matrix.RotationQuaternion(mRotation);
+			Matrix	transMat	=Matrix.Translation(mPosition);
+			Matrix	scaleMat	=Matrix.Scaling(mScale);
+
+			Matrix	final	=scaleMat * rotMat * transMat;
+
+			final	*=trans;
+
+			final.Decompose(out mScale, out mRotation, out mPosition);
+		}
+
+
 		internal void ConvertToLeftHanded()
 		{
 			Matrix	rotMat		=Matrix.RotationQuaternion(mRotation);

@@ -127,6 +127,20 @@ namespace MeshLib
 		}
 
 
+		public void TransformBoneAnim(string bone, Matrix trans)
+		{
+			for(int i=0;i < mSubAnims.Length;i++)
+			{
+				string	boneName	=mSubAnims[i].GetBoneName();
+				if(boneName != bone)
+				{
+					continue;
+				}
+				mSubAnims[i].Transform(trans);
+			}
+		}
+
+
 		public void SetBoneRefs(Skeleton skel)
 		{
 			for(int i=0;i < mSubAnims.Length;i++)
