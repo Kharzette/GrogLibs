@@ -59,7 +59,6 @@ namespace MeshLib
 					chr.mInvertedBones[i]	=Matrix.Invert(chr.mBones[i]);
 				}
 				chr.mbInvertedReady	=true;
-				UpdateBounds();
 			};
 		}
 
@@ -310,6 +309,9 @@ namespace MeshLib
 					UpdateInvertedBones(false);
 				}
 			}
+
+			//should be cheap to do this whenever bones change
+			UpdateBounds();
 		}
 
 
