@@ -49,11 +49,12 @@ namespace BSPZone
 		Vector3		mEyeHeight;
 
 		//constants
-		const float MidAirMoveScale		=0.03f;
-		const float	JumpVelocity		=1.5f;
+		const float MidAirMoveScale		=0.01f;
+		const float	JumpVelocity		=1.25f;
 		const float	Friction			=0.6f;
 		const float	MinCamDist			=10f;
 		const float	CamCollisionRadius	=4f;
+		const float	GravityConstant		=4f / 1000f;
 
 
 		public Mobile(object owner, float boxWidth, float boxHeight,
@@ -351,7 +352,7 @@ namespace BSPZone
 			{
 				moveDelta.X	*=MidAirMoveScale;
 				moveDelta.Z	*=MidAirMoveScale;
-				mVelocity.Y	-=((9.8f / 1000.0f) * msDelta);	//gravity
+				mVelocity.Y	-=(GravityConstant * msDelta);	//gravity
 			}
 
 			//get ideal final position

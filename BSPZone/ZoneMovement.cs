@@ -20,6 +20,8 @@ namespace BSPZone
 
 		Dictionary<object, Pushable>	mPushables	=new Dictionary<object, Pushable>();
 
+		const float	FootDistance	=0.4f;
+
 
 		#region Bipedal Movement
 		bool FootCheck(BoundingBox box, Vector3 footPos, float dist, out int modelOn)
@@ -192,7 +194,7 @@ namespace BSPZone
 			{
 				//didn't move enough to bother
 				finalPos	=start;
-				return		FootCheck(box, start, 4f, out modelOn);
+				return		FootCheck(box, start, FootDistance, out modelOn);
 			}
 
 			//try the standard box move
@@ -507,7 +509,7 @@ namespace BSPZone
 			{
 				finalPos	=pos;
 
-				return	FootCheck(box, finalPos, 4f, out modelOn);
+				return	FootCheck(box, finalPos, FootDistance, out modelOn);
 			}
 			modelOn	=-1;
 			return	false;
@@ -545,7 +547,7 @@ namespace BSPZone
 				}
 				finalPos	=modelPos;
 			}
-			return	FootCheck(box, finalPos, 4.0f, out modelOn);
+			return	FootCheck(box, finalPos, FootDistance, out modelOn);
 		}
 		#endregion
 
