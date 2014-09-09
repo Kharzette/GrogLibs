@@ -43,6 +43,7 @@ namespace BSPZone
 
 				if(rt.mCollision.mPlaneHit.IsGround())
 				{
+					modelOn	=0;
 					return	true;
 				}
 			}
@@ -141,7 +142,7 @@ namespace BSPZone
 						//landed on the ground
 						stepPos		=col.mIntersection;
 						bGroundStep	=true;
-						rt.mCollision.mPlaneHit.ReflectPosition(ref stepPos);
+						col.mPlaneHit.ReflectPosition(ref stepPos);
 					}
 					else
 					{
@@ -152,7 +153,7 @@ namespace BSPZone
 							{
 								stepPos		=col.mIntersection;
 								bGroundStep	=true;
-								rt.mCollision.mPlaneHit.ReflectPosition(ref stepPos);
+								col.mPlaneHit.ReflectPosition(ref stepPos);
 							}
 						}
 					}

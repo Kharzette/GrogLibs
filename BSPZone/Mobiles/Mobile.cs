@@ -148,7 +148,7 @@ namespace BSPZone
 		{
 			if(mbOnGround)
 			{
-				if(mModelOn != 0)
+				if(mModelOn > 0)
 				{
 					mVelocity	+=(mPushVelocity * 0.5f);
 				}
@@ -308,12 +308,6 @@ namespace BSPZone
 			{
 				mTHelper.CheckMobile(this, mBox,
 					mPosition, endPos, msDelta);
-			}
-
-			mPosition	=endPos;
-			if(mbPushable)
-			{
-				mZone.UpdatePushable(this, mPosition, mModelOn);
 			}
 		}
 
