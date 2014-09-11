@@ -558,7 +558,7 @@ namespace BSPCore
 		}
 
 
-		//alphas come in per plane chunks with a sort point
+		//alphas come in per face chunks with a sort point
 		internal bool BuildAlphaFaceData(Vector3 []verts, int[] indexes,
 			Vector3 []rgbVerts, Vector3 []vnorms,
 			object pobj, GFXModel []models, byte []lightData,
@@ -569,15 +569,15 @@ namespace BSPCore
 			UInt16	vertOfs	=0;	//model offsets
 			for(int i=0;i < models.Length;i++)
 			{
-				//store each plane used, and how many faces per material
-				List<Dictionary<Int32, DrawDataChunk>>	perPlaneChunks
+				//store each face used, and how many faces per material
+				List<Dictionary<Int32, DrawDataChunk>>	perFaceChunks
 					=new List<Dictionary<Int32, DrawDataChunk>>();
 
 				foreach(string mat in mMaterialNames)
 				{
 					Dictionary<Int32, DrawDataChunk>	ddcs
 						=new Dictionary<Int32, DrawDataChunk>();
-					perPlaneChunks.Add(ddcs);
+					perFaceChunks.Add(ddcs);
 
 					if(!correct(null, null, mat))
 					{
@@ -599,9 +599,9 @@ namespace BSPCore
 
 						DrawDataChunk	ddc	=null;
 
-						if(ddcs.ContainsKey(f.mPlaneNum))
+						if(ddcs.ContainsKey(face))
 						{
-							ddc	=ddcs[f.mPlaneNum];
+							Debug.Assert(false);
 						}
 						else
 						{
@@ -613,13 +613,13 @@ namespace BSPCore
 							return	false;
 						}
 
-						if(!ddcs.ContainsKey(f.mPlaneNum))
+						if(!ddcs.ContainsKey(face))
 						{
-							ddcs.Add(f.mPlaneNum, ddc);
+							ddcs.Add(face, ddc);
 						}
 					}
 				}
-				fin(i, perPlaneChunks, ref vertOfs);
+				fin(i, perFaceChunks, ref vertOfs);
 			}
 			return	true;
 		}
@@ -754,30 +754,15 @@ namespace BSPCore
 
 		Vector3 ComputeSortPoint(DrawDataChunk ddc)
 		{
-			double	X	=0.0;
-			double	Y	=0.0;
-			double	Z	=0.0;
+			Bounds	bnd	=new Bounds();
 
 			//compute sort point
-			int	numAvg	=0;
 			foreach(Vector3 v in ddc.mVerts)
 			{
-				X	+=v.X;
-				Y	+=v.Y;
-				Z	+=v.Z;
-
-				numAvg++;
+				bnd.AddPointToBounds(v);
 			}
 
-			X	/=numAvg;
-			Y	/=numAvg;
-			Z	/=numAvg;
-
-			Vector3	ret	=Vector3.Zero;
-
-			ret.X	=(float)X;
-			ret.Y	=(float)Y;
-			ret.Z	=(float)Z;
+			Vector3	ret	=bnd.GetCenter();
 
 			return	ret;
 		}
