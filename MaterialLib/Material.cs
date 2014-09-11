@@ -22,12 +22,16 @@ namespace MaterialLib
 		Effect			mEffect;		//ref of the shader
 		EffectTechnique	mTechnique;		//technique to use with this material
 		int				mNumPasses;		//number of passes for the technique
+		bool			mbFinalized;	//trimmed down ignored yet?
 
 		//vert formats expected
 		List<InputLayout>	mLayouts	=new List<InputLayout>();
 
 		//all of the shader variables TODO: hide/ignore some
 		Dictionary<string, EffectVariableValue>	mVars	=new Dictionary<string, EffectVariableValue>();
+
+		//finalized list with the ignored stuff removed
+		Dictionary<string, EffectVariableValue>	mFinalVars	=new Dictionary<string, EffectVariableValue>();
 
 		//stuff the gui doesn't want to see
 		List<EffectVariableValue>	mHidden	=new List<EffectVariableValue>();
@@ -111,6 +115,27 @@ namespace MaterialLib
 
 			mLayouts.Clear();
 			mVars.Clear();
+		}
+
+
+		internal void Finalize()
+		{
+			if(mbFinalized)
+			{
+				//redo?
+				mFinalVars.Clear();
+			}
+
+			foreach(KeyValuePair<string, EffectVariableValue> varVal in mVars)
+			{
+				if(mIgnored.Contains(varVal.Value))
+				{
+					continue;
+				}
+				mFinalVars.Add(varVal.Key, varVal.Value);
+			}
+
+			mbFinalized	=true;
 		}
 
 
@@ -280,8 +305,129 @@ namespace MaterialLib
 		#endregion
 
 
+		void ApplyVar(EffectVariable evar, object eval)
+		{
+			//todo: need to support setting params to null
+			if(eval == null)
+			{
+				return;
+			}
+
+			if(eval.GetType().IsArray)
+			{
+				if(eval is Matrix [])
+				{
+					evar.AsMatrix().SetMatrix((Matrix [])eval);
+				}
+				else if(eval is bool [])
+				{
+					evar.AsScalar().Set((bool [])eval);
+				}
+				else if(eval is float [])
+				{
+					evar.AsScalar().Set((float [])eval);
+				}
+				else if(eval is int [])
+				{
+					evar.AsScalar().Set((int [])eval);
+				}
+				else if(eval is uint [])
+				{
+					evar.AsScalar().Set((uint [])eval);
+				}
+				else if(eval is Color4 [])
+				{
+					evar.AsVector().Set((Color4 [])eval);
+				}
+				else if(eval is Int4 [])
+				{
+					evar.AsVector().Set((Int4 [])eval);
+				}
+				else if(eval is Vector4 [])
+				{
+					evar.AsVector().Set((Vector4 [])eval);
+				}
+				else if(eval is Bool4 [])
+				{
+					evar.AsVector().Set((Bool4 [])eval);
+				}
+				else
+				{
+					Debug.Assert(false);
+				}
+			}
+			else
+			{
+				if(eval is Matrix)
+				{
+					evar.AsMatrix().SetMatrix((Matrix)eval);
+				}
+				else if(eval is bool)
+				{
+					evar.AsScalar().Set((bool)eval);
+				}
+				else if(eval is float)
+				{
+					evar.AsScalar().Set((float)eval);
+				}
+				else if(eval is int)
+				{
+					evar.AsScalar().Set((int)eval);
+				}
+				else if(eval is uint)
+				{
+					evar.AsScalar().Set((uint)eval);
+				}
+				else if(eval is Bool4)
+				{
+					evar.AsVector().Set((Bool4)eval);
+				}
+				else if(eval is Color4)
+				{
+					evar.AsVector().Set((Color4)eval);
+				}
+				else if(eval is Int4)
+				{
+					evar.AsVector().Set((Int4)eval);
+				}
+				else if(eval is Vector2)
+				{
+					evar.AsVector().Set((Vector2)eval);
+				}
+				else if(eval is Vector3)
+				{
+					evar.AsVector().Set((Vector3)eval);
+				}
+				else if(eval is Vector4)
+				{
+					evar.AsVector().Set((Vector4)eval);
+				}
+				else if(eval is ShaderResourceView)
+				{
+					evar.AsShaderResource().SetResource(eval as ShaderResourceView);
+				}
+				else
+				{
+					Debug.Assert(false);
+				}
+			}
+		}
+
+
 		void ApplyVariables()
 		{
+			if(mbFinalized)
+			{
+				foreach(KeyValuePair<string, EffectVariableValue> varVal in mFinalVars)
+				{
+					object			val	=varVal.Value.mValue;
+					EffectVariable	var	=varVal.Value.mVar;
+
+					ApplyVar(var, val);
+				}
+				return;
+			}
+
 			foreach(KeyValuePair<string, EffectVariableValue> varVal in mVars)
 			{
 				if(mIgnored.Contains(varVal.Value))
@@ -292,110 +438,7 @@ namespace MaterialLib
 				object			val	=varVal.Value.mValue;
 				EffectVariable	var	=varVal.Value.mVar;
 
-				//todo: need to support setting params to null
-				if(val == null)
-				{
-					continue;
-				}
-
-				if(val.GetType().IsArray)
-				{
-					if(val is Matrix [])
-					{
-						var.AsMatrix().SetMatrix((Matrix [])val);
-					}
-					else if(val is bool [])
-					{
-						var.AsScalar().Set((bool [])val);
-					}
-					else if(val is float [])
-					{
-						var.AsScalar().Set((float [])val);
-					}
-					else if(val is int [])
-					{
-						var.AsScalar().Set((int [])val);
-					}
-					else if(val is uint [])
-					{
-						var.AsScalar().Set((uint [])val);
-					}
-					else if(val is Color4 [])
-					{
-						var.AsVector().Set((Color4 [])val);
-					}
-					else if(val is Int4 [])
-					{
-						var.AsVector().Set((Int4 [])val);
-					}
-					else if(val is Vector4 [])
-					{
-						var.AsVector().Set((Vector4 [])val);
-					}
-					else if(val is Bool4 [])
-					{
-						var.AsVector().Set((Bool4 [])val);
-					}
-					else
-					{
-						Debug.Assert(false);
-					}
-				}
-				else
-				{
-					if(val is Matrix)
-					{
-						var.AsMatrix().SetMatrix((Matrix)val);
-					}
-					else if(val is bool)
-					{
-						var.AsScalar().Set((bool)val);
-					}
-					else if(val is float)
-					{
-						var.AsScalar().Set((float)val);
-					}
-					else if(val is int)
-					{
-						var.AsScalar().Set((int)val);
-					}
-					else if(val is uint)
-					{
-						var.AsScalar().Set((uint)val);
-					}
-					else if(val is Bool4)
-					{
-						var.AsVector().Set((Bool4)val);
-					}
-					else if(val is Color4)
-					{
-						var.AsVector().Set((Color4)val);
-					}
-					else if(val is Int4)
-					{
-						var.AsVector().Set((Int4)val);
-					}
-					else if(val is Vector2)
-					{
-						var.AsVector().Set((Vector2)val);
-					}
-					else if(val is Vector3)
-					{
-						var.AsVector().Set((Vector3)val);
-					}
-					else if(val is Vector4)
-					{
-						var.AsVector().Set((Vector4)val);
-					}
-					else if(val is ShaderResourceView)
-					{
-						var.AsShaderResource().SetResource(val as ShaderResourceView);
-					}
-					else
-					{
-						Debug.Assert(false);
-					}
-				}
+				ApplyVar(var, val);
 			}
 		}
 

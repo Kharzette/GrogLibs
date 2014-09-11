@@ -665,6 +665,18 @@ namespace MaterialLib
 		}
 
 
+		//game side slight speedup
+		//keeps the effect stuff from needing to constantly
+		//search through dictionaries when setting up a draw call
+		public void FinalizeMaterials()
+		{
+			foreach(KeyValuePair<string, Material> mat in mMats)
+			{
+				mat.Value.Finalize();
+			}
+		}
+
+
 		public void ApplyMaterialPass(string matName, DeviceContext dc, int pass)
 		{
 			if(!mMats.ContainsKey(matName))
