@@ -155,7 +155,7 @@ namespace BSPZone
 				}
 				else
 				{
-					Vector3	rotAmount	=mRotationRate * msDelta;
+					Vector3	rotAmount	=(mRotationRate / 1000f) * msDelta;
 
 					if(rotAmount != Vector3.Zero)
 					{
@@ -391,7 +391,7 @@ namespace BSPZone
 //			Apply3DToSound(mms.mSoundBackward, lis, mms.mEmitter);
 
 			targ.GetVectorNoConversion("rotation_target", out mms.mRotationTarget);
-			targ.GetVectorNoConversion("rotation_rate", out mms.mRotationRate);
+			targ.GetVectorNoConversion("rotation_rate", out mms.mRotationRate);	//degrees per second
 
 			targ.GetBool("rotate_to_target", out mms.mbRotateToTarget);
 

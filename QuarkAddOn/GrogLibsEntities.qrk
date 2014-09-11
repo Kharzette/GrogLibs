@@ -653,7 +653,7 @@ QQRKSRC1
       rotation_rate: =
       {
         Txt = "&"
-        Hint = "rotation rate in xyz per millisecond"
+        Hint = "rotation rate in degrees per second"
       }
       stage_interval: =
       {

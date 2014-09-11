@@ -442,8 +442,8 @@ namespace BSPCore
 					if(ent.GetVectorNoConversion("angles", out orient))
 					{
 						//coordinate system goblinry
-						yaw		=(int)orient.Y - 90;
-						pitch	=(int)orient.X;
+						pitch	=(int)-orient.X;
+						yaw		=-90 + (int)-orient.Y;
 						roll	=(int)orient.Z;
 					}
 
@@ -452,7 +452,7 @@ namespace BSPCore
 					roll	=MathUtil.DegreesToRadians(roll);
 
 					Matrix	rotMat	=Matrix.RotationYawPitchRoll(yaw, pitch, roll);
-					dLight.mNormal	=rotMat.Backward;
+					dLight.mNormal	=rotMat.Forward;
 
 					ent.GetFloat("strength", out dLight.mIntensity);
 				}

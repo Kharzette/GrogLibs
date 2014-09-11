@@ -145,9 +145,10 @@ namespace BSPZone
 			if(GetVectorNoConversion(key, out orient))
 			{
 				//coordinate system goblinry
-				yaw		=(int)orient.Y + 90;
 				pitch	=(int)-orient.X;
+				yaw		=-90 + (int)-orient.Y;
 				roll	=(int)orient.Z;
+				roll	=0;
 			}
 			else
 			{
