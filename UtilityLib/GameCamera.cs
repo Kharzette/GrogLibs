@@ -10,8 +10,8 @@ namespace UtilityLib
 	public class GameCamera
 	{
 		//mats
-		protected Matrix	mMATView, mMatViewInverse;
-		protected Matrix	mMATProjection;
+		protected Matrix	mView, mViewInverse;
+		protected Matrix	mProjection;
 
 		BoundingFrustum	mFrust	=new BoundingFrustum(Matrix.Identity);
 
@@ -34,19 +34,19 @@ namespace UtilityLib
 
 		public Matrix View
 		{
-			get { return mMATView; }
-			set { mMATView = value; mMatViewInverse = Matrix.Invert(mMATView); }
+			get { return mView; }
+			set { mView = value; mViewInverse = Matrix.Invert(mView); }
 		}
 
 		public Matrix ViewInverse
 		{
-			get { return mMatViewInverse; }
+			get { return mViewInverse; }
 		}
 
 		public Matrix Projection
 		{
-			get { return mMATProjection; }
-			set { mMATProjection = value; }
+			get { return mProjection; }
+			set { mProjection = value; }
 		}
 
 		//returns transposed, useful for worldspace stuff
@@ -90,7 +90,7 @@ namespace UtilityLib
 		{
 			get
 			{
-				return	mMatViewInverse.TranslationVector;
+				return	mViewInverse.TranslationVector;
 			}
 		}
 
@@ -129,9 +129,9 @@ namespace UtilityLib
 
 			Vector3	camPos	=(focusPos + Vector3.Up * 32f) - aimVec * povDist;
 
-			mMATView		=Matrix.LookAtLH(camPos, focusPos, Vector3.Up);
-			mMatViewInverse	=Matrix.Invert(mMATView);			
-			mFrust.Matrix	=mMATView * mMATProjection;
+			mView		=Matrix.LookAtLH(camPos, focusPos, Vector3.Up);
+			mViewInverse	=Matrix.Invert(mView);			
+			mFrust.Matrix	=mView * mProjection;
 		}
 
 
@@ -145,9 +145,19 @@ namespace UtilityLib
 
 			Vector3	camPos	=focusPos - aimVec * povDist;
 
-			mMATView		=Matrix.LookAtLH(camPos, focusPos, Vector3.Up);
-			mMatViewInverse	=Matrix.Invert(mMATView);			
-			mFrust.Matrix	=mMATView * mMATProjection;
+			mView			=Matrix.LookAtLH(camPos, focusPos, Vector3.Up);
+			mViewInverse	=Matrix.Invert(mView);			
+			mFrust.Matrix	=mView * mProjection;
+		}
+
+
+		public void UpdateIntermission(Vector3 camPos, Vector3 camDir)
+		{
+			mView	=Matrix.LookAtLH(camPos, camPos + camDir, Vector3.Up);
+
+			mViewInverse	=Matrix.Invert(mView);
+			
+			mFrust.Matrix	=mView * mProjection;
 		}
 
 
@@ -215,25 +225,25 @@ namespace UtilityLib
 
 		public void UpdateMatrices(Vector3 camPos, float pitch, float yaw, float roll)
 		{
-			mMATView	=Matrix.Translation(camPos) *
+			mView	=Matrix.Translation(camPos) *
 				Matrix.RotationY(MathUtil.DegreesToRadians(yaw)) *
 				Matrix.RotationX(MathUtil.DegreesToRadians(pitch)) *
 				Matrix.RotationZ(MathUtil.DegreesToRadians(roll));
 
 //			mMATView	=Matrix.LookAtLH(new Vector3(0, 0, -1), new Vector3(0, 0, 0), Vector3.UnitY);
 
-			mMatViewInverse	=Matrix.Invert(mMATView);
+			mViewInverse	=Matrix.Invert(mView);
 			
-			mFrust.Matrix	=mMATView * mMATProjection;
+			mFrust.Matrix	=mView * mProjection;
 		}
 
 
 		void InitializeMats()
 		{
-			mMATView		=Matrix.Translation(Vector3.Zero);
-			mMatViewInverse	=Matrix.Invert(mMATView);
+			mView		=Matrix.Translation(Vector3.Zero);
+			mViewInverse	=Matrix.Invert(mView);
 
-			mMATProjection	=Matrix.PerspectiveFovLH(
+			mProjection	=Matrix.PerspectiveFovLH(
 				MathUtil.DegreesToRadians(45),
 				mWidth / mHeight, mNearClip, mFarClip);
 		}

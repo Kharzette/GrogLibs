@@ -136,29 +136,39 @@ namespace BSPZone
 		}
 
 
-		public bool GetMatrixFromAngles(string key, out Matrix orientation)
+		internal bool GetCorrectedAngles(string key, out int pitch, out int yaw, out int roll)
 		{
 			Vector3	orient;
-			float	yaw		=0f;
-			float	pitch	=0f;
-			float	roll	=0f;
 			if(GetVectorNoConversion(key, out orient))
 			{
 				//coordinate system goblinry
 				pitch	=(int)-orient.X;
 				yaw		=-90 + (int)-orient.Y;
-				roll	=(int)orient.Z;
-				roll	=0;
+				roll	=(int)orient.Z;	//roll shouldn't ever really be used I think
 			}
 			else
+			{
+				pitch	=yaw	=roll	=0;
+				return	false;
+			}
+			return	true;
+		}
+
+
+		public bool GetMatrixFromAngles(string key, out Matrix orientation)
+		{
+			int		iPitch, iYaw, iRoll;
+			float	yaw, pitch, roll;
+
+			if(!GetCorrectedAngles(key, out iPitch, out iYaw, out iRoll))
 			{
 				orientation	=Matrix.Identity;
 				return		false;
 			}
 
-			yaw		=MathUtil.DegreesToRadians(yaw);
-			pitch	=MathUtil.DegreesToRadians(pitch);
-			roll	=MathUtil.DegreesToRadians(roll);
+			yaw		=MathUtil.DegreesToRadians(iYaw);
+			pitch	=MathUtil.DegreesToRadians(iPitch);
+			roll	=MathUtil.DegreesToRadians(iRoll);
 
 			orientation	=Matrix.RotationYawPitchRoll(yaw, pitch, roll);
 

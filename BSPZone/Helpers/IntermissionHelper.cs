@@ -15,7 +15,7 @@ namespace BSPZone
 		List<ZoneEntity>	mIMEntities	=new List<ZoneEntity>();
 
 
-		public void Initlialize(Zone zone)
+		public void Initialize(Zone zone)
 		{
 			mZone	=zone;
 
@@ -23,14 +23,12 @@ namespace BSPZone
 		}
 
 
-		public void GetRandomIntermissionData(Random mRand, out Vector3 pos,
-			out int pitch, out int yaw, out int roll)
+		public void GetRandomIntermissionData(Random mRand,
+			out Vector3 pos, out Vector3 lookDir)
 		{
 			//defaults
 			pos		=Vector3.Zero;
-			yaw		=0;
-			pitch	=0;
-			roll	=0;
+			lookDir	=Vector3.UnitX;
 
 			if(mIMEntities.Count <= 0)
 			{
@@ -42,25 +40,16 @@ namespace BSPZone
 			ZoneEntity	ze	=mIMEntities[choice];
 
 			ze.GetOrigin(out pos);
-			Vector3	orient;
-			if(ze.GetVectorNoConversion("angles", out orient))
-			{
-				//coordinate system goblinry
-				yaw		=(int)-orient.Y - 90;
-				pitch	=(int)orient.X;
-				roll	=(int)orient.Z;
-			}
+			ze.GetDirectionFromAngles("angles", out lookDir);
 		}
 
 
-		public void GetIntermissionDataNearestTo(Vector3 nearPos, out Vector3 pos,
-			out int pitch, out int yaw, out int roll)
+		public void GetIntermissionDataNearestTo(Vector3 nearPos,
+			out Vector3 pos, out Vector3 lookDir)
 		{
 			//defaults
 			pos		=Vector3.Zero;
-			yaw		=0;
-			pitch	=0;
-			roll	=0;
+			lookDir	=Vector3.UnitX;
 
 			if(mIMEntities.Count <= 0)
 			{
@@ -83,14 +72,7 @@ namespace BSPZone
 			}
 
 			nearest.GetOrigin(out pos);
-			Vector3	orient;
-			if(nearest.GetVectorNoConversion("angles", out orient))
-			{
-				//coordinate system goblinry
-				yaw		=(int)-orient.Y - 90;
-				pitch	=(int)orient.X;
-				roll	=(int)orient.Z;
-			}
+			nearest.GetDirectionFromAngles("angles", out lookDir);
 		}
 	}
 }

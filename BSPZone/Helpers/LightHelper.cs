@@ -513,6 +513,11 @@ namespace BSPZone
 				return;
 			}
 
+			if(suns.Count > 1)
+			{
+				Debug.WriteLine("Dakkon Warning!  There cannot be two skies!\n");
+			}
+
 			Vector3	angles;
 			if(!suns[0].GetVectorNoConversion("angles", out angles))
 			{
