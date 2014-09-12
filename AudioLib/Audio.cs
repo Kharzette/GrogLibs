@@ -194,8 +194,18 @@ namespace AudioLib
 					emToNuke.Add(threeD.Key);
 				}
 
-				foreach(SoundEffectInstance sei in threeD.Value)
+				for(int i=0;i < threeD.Value.Count;i++)
 				{
+					SoundEffectInstance	sei	=threeD.Value[i];
+
+					if(!sei.IsPlaying())
+					{
+						ReleaseInstance(sei);
+						threeD.Value.RemoveAt(i);
+						i--;
+						continue;
+					}
+
 					//this is for mono sounds TODO: assert
 					//The zerocenter flag below I think shouldn't be needed
 					//but without it there is an audio "hole" when facing toward
@@ -234,6 +244,10 @@ namespace AudioLib
 		public void PlayAtLocation(string name, float volume, Emitter em)
 		{
 			SoundEffectInstance	sei	=GetInstance(name, false, true);
+			if(sei == null)
+			{
+				return;
+			}
 
 			sei.SetVolume(volume);
 
@@ -318,8 +332,9 @@ namespace AudioLib
 			{
 				//strip back
 				string	path	=f.DirectoryName;
+				string	extLess	=FileUtil.StripExtension(f.Name);
 
-				LoadSound(f.Name, path + "\\" + f.Name);
+				LoadSound(extLess, path + "\\" + f.Name);
 			}
 		}
 	}
