@@ -44,7 +44,7 @@ namespace BSPZone
 		public event EventHandler	eFunc;
 
 
-		public void Initialize(Zone zone,// Audio aud, AudioListener lis,
+		public void Initialize(Zone zone, AudioLib.Audio aud,
 			SwitchLight sl, OkToFireFunc okToFire)
 		{
 			//unwire from old
@@ -72,7 +72,26 @@ namespace BSPZone
 			}
 
 			//init the zone's basic model helper
-			mZone.InitBMHelper(this);//, aud, lis);
+			mZone.InitBMHelper(this, aud);
+		}
+
+
+		//returns true if the entity is attached to a trigger
+		public bool IsTriggerAttached(ZoneEntity ze)
+		{
+			string	entTargName	=ze.GetTargetName();
+
+			List<ZoneEntity>	trigs	=mZone.GetEntitiesStartsWith("trigger");
+			foreach(ZoneEntity te in trigs)
+			{
+				string	targ	=te.GetTarget();
+
+				if(targ == entTargName)
+				{
+					return	true;
+				}
+			}
+			return	false;
 		}
 
 

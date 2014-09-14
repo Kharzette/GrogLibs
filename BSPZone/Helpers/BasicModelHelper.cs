@@ -3,6 +3,9 @@ using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
 using SharpDX;
+using SharpDX.XAudio2;
+using SharpDX.X3DAudio;
+using AudioLib;
 using UtilityLib;
 
 
@@ -24,6 +27,8 @@ namespace BSPZone
 
 		class ModelMoveStage
 		{
+			internal	Audio	mAudio;	//ref to audio module
+
 			internal int		mModelIndex;
 			internal Vector3	mOrigin;
 			internal bool		mbForward;
@@ -34,9 +39,8 @@ namespace BSPZone
 			internal float		mStageInterval;
 			internal float		mEaseIn, mEaseOut;
 
-//			internal SoundEffectInstance	mSoundForward, mSoundBackward;
-
-//			internal AudioEmitter	mEmitter;
+			internal string		mSoundForward, mSoundBackward;
+			internal Emitter	mEmitter;
 
 			internal Mover3	mMover		=new Mover3();
 			internal Mover3	mRotator	=new Mover3();
@@ -51,10 +55,10 @@ namespace BSPZone
 
 				if(mbForward)
 				{
-//					if(mSoundForward != null)
-//					{
-//						mSoundForward.Play();
-//					}
+					if(mSoundForward != null)
+					{
+						mAudio.PlayAtLocation(mSoundForward, 1f, false, mEmitter);
+					}
 
 					if(mMover.Done())
 					{
@@ -83,10 +87,10 @@ namespace BSPZone
 				}
 				else
 				{
-//					if(mSoundBackward != null)
-//					{
-//						mSoundBackward.Play();
-//					}
+					if(mSoundBackward != null)
+					{
+						mAudio.PlayAtLocation(mSoundBackward, 1f, false, mEmitter);
+					}
 					if(mMover.Done())
 					{
 						mMover.SetUpMove(mOrigin + mMoveAxis * mMoveAmount,
@@ -115,7 +119,7 @@ namespace BSPZone
 			}
 
 
-			internal bool Update(int msDelta, Zone z)//, AudioListener lis)
+			internal bool Update(int msDelta, Zone z)
 			{
 				if(mMover.Done())
 				{
@@ -165,10 +169,7 @@ namespace BSPZone
 					}
 				}
 
-//				mEmitter.Position	=mMover.GetPos() * Audio.InchWorldScale;
-
-//				Apply3DToSound(mSoundForward, lis, mEmitter);
-//				Apply3DToSound(mSoundBackward, lis, mEmitter);
+				mEmitter.Position	=mMover.GetPos();
 
 				return	false;
 			}
@@ -182,7 +183,7 @@ namespace BSPZone
 		internal BasicModelHelper(){}
 
 
-		internal void Initialize(Zone zone, TriggerHelper thelp)//, Audio aud, AudioListener lis)
+		internal void Initialize(Zone zone, TriggerHelper thelp, Audio aud)
 		{
 			mZone	=zone;
 
@@ -212,12 +213,12 @@ namespace BSPZone
 					continue;
 				}
 
-				GetMoveStages(ze, model, org);//, aud, lis);
+				GetMoveStages(ze, model, org, aud);
 			}
 		}
 
 
-		void UpdateSingle(int msDelta, int modelIndex)//, AudioListener lis)
+		void UpdateSingle(int msDelta, int modelIndex)
 		{
 			if(!mModelStages.ContainsKey(modelIndex))
 			{
@@ -266,11 +267,11 @@ namespace BSPZone
 		}
 
 
-		internal void Update(int msDelta)//, AudioListener lis)
+		internal void Update(int msDelta)
 		{
 			foreach(KeyValuePair<int, ModelStages> mss in mModelStages)
 			{
-				UpdateSingle(msDelta, mss.Key);//, lis);
+				UpdateSingle(msDelta, mss.Key);
 			}
 		}
 
@@ -328,17 +329,7 @@ namespace BSPZone
 		}
 
 
-//		internal static void Apply3DToSound(SoundEffectInstance sei,
-//			AudioListener al, AudioEmitter em)
-//		{
-//			if(sei != null)
-//			{
-//				sei.Apply3D(al, em);
-//			}
-//		}
-
-
-		void GetMoveStages(ZoneEntity ze, int modelIdx, Vector3 org)//, Audio aud, AudioListener lis)
+		void GetMoveStages(ZoneEntity ze, int modelIdx, Vector3 org, Audio aud)
 		{
 			if(ze == null)
 			{
@@ -377,18 +368,11 @@ namespace BSPZone
 			ModelMoveStage	mms	=new ModelMoveStage();
 			mms.mModelIndex		=modelIdx;
 			mms.mOrigin			=org;
-//			mms.mEmitter		=new AudioEmitter();
+			mms.mAudio			=aud;
+			mms.mEmitter		=Audio.MakeEmitter(org);
 
-//			string	forward	=targ.GetValue("sound_forward");
-//			string	back	=targ.GetValue("sound_backward");
-
-//			mms.mSoundForward	=aud.GetInstance(forward, false);
-//			mms.mSoundBackward	=aud.GetInstance(back, false);
-
-//			mms.mEmitter.Position	=org;
-
-//			Apply3DToSound(mms.mSoundForward, lis, mms.mEmitter);
-//			Apply3DToSound(mms.mSoundBackward, lis, mms.mEmitter);
+			mms.mSoundForward	=targ.GetValue("sound_forward");
+			mms.mSoundBackward	=targ.GetValue("sound_backward");
 
 			targ.GetVectorNoConversion("rotation_target", out mms.mRotationTarget);
 			targ.GetVectorNoConversion("rotation_rate", out mms.mRotationRate);	//degrees per second
@@ -408,7 +392,7 @@ namespace BSPZone
 
 			//recurse, offsetting by move amount
 			//TODO: rotation amount too
-			GetMoveStages(targ, modelIdx, org + (mms.mMoveAmount * mms.mMoveAxis));//, aud, lis);
+			GetMoveStages(targ, modelIdx, org + (mms.mMoveAmount * mms.mMoveAxis), aud);
 		}
 
 

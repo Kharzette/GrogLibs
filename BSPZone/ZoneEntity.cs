@@ -329,30 +329,34 @@ namespace BSPZone
 		}
 
 
-		//flips and returns new state
-		public bool ToggleEntityActivated()
+		public bool IsActivated()
 		{
 			//see if already on
 			int	activated;
 			if(GetInt("activated", out activated))
 			{
-				if(activated != 0)
-				{
-					//flip bit in entity data
-					activated	=0;
-					SetInt("activated", activated);
-				}
-				else
-				{
-					activated	=1;
-					SetInt("activated", activated);
-				}
+				return	activated != 0;
+			}
+			return	false;
+		}
+
+
+		//flips and returns new state
+		public bool ToggleEntityActivated()
+		{
+			//see if already on
+			int	activated;
+
+			if(IsActivated())
+			{
+				activated	=0;
 			}
 			else
 			{
 				activated	=1;
-				SetInt("activated", 1);
 			}
+
+			SetInt("activated", activated);
 
 			return	(activated != 0);
 		}

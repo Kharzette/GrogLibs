@@ -49,8 +49,14 @@ namespace AudioLib
 		internal void Update3D(DspSettings dsp)
 		{
 			Debug.Assert(mb3D);
+			Debug.Assert(mbPlaying);
 
-			mSourceVoice.SetOutputMatrix(1, 1, dsp.MatrixCoefficients);
+			if(!mbPlaying)
+			{
+				return;
+			}
+
+			mSourceVoice.SetOutputMatrix(dsp.SourceChannelCount, dsp.DestinationChannelCount, dsp.MatrixCoefficients);
 			mSourceVoice.SetFrequencyRatio(dsp.DopplerFactor);
 		}
 
@@ -84,14 +90,12 @@ namespace AudioLib
 	internal class SoundEffect
 	{
 		AudioBuffer	mBuffer;
-		uint		[]mRawStuff;
 		WaveFormat	mFormat;
 
 
-		internal SoundEffect(AudioBuffer ab, uint []rawStuff, WaveFormat wf)
+		internal SoundEffect(AudioBuffer ab, WaveFormat wf)
 		{
 			mBuffer		=ab;
-			mRawStuff	=rawStuff;
 			mFormat		=wf;
 		}
 
@@ -109,7 +113,7 @@ namespace AudioLib
 				mBuffer.LoopCount	=0;
 			}
 
-			sv.SubmitSourceBuffer(mBuffer, mRawStuff);
+			sv.SubmitSourceBuffer(mBuffer, null);
 
 			return	sv;
 		}
@@ -120,7 +124,7 @@ namespace AudioLib
 		{
 			SourceVoice	sv	=new SourceVoice(xaud, mFormat);
 
-			sv.SubmitSourceBuffer(mBuffer, mRawStuff);
+			sv.SubmitSourceBuffer(mBuffer, null);
 
 			sv.SetVolume(volume);
 

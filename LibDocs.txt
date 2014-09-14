@@ -1,3 +1,12 @@
+Audio Entity
+	The activated flag makes the sound immediately play when
+	the level is running.  Unless the player is nearby, this
+	probably only makes sense for a looping sound.
+	
+	If the audio is triggered, if also activated a triggering
+	will turn the sound off.  If not activated a triggering
+	will turn it on.
+
 Moving Models
 	To build moving pieces of geometry such as doors or moving
 	platforms, create a func_door or func_plat entity in quark,

@@ -247,10 +247,9 @@ namespace BSPZone
 		}
 
 
-		internal void InitBMHelper(TriggerHelper thelp)//, Audio aud,
-//			Microsoft.Xna.Framework.Audio.AudioListener lis)
+		internal void InitBMHelper(TriggerHelper thelp, AudioLib.Audio aud)
 		{
-			mBMHelper.Initialize(this, thelp);//, aud, lis);
+			mBMHelper.Initialize(this, thelp, aud);
 		}
 
 

@@ -18,6 +18,7 @@ namespace AudioLib
 		XAudio2			mXAud	=new XAudio2();
 		MasteringVoice	mMV;
 		X3DAudio		m3DAud;
+		DeviceDetails	mDetails;
 
 		//the listener everyclass will use
 		Listener	mListener;
@@ -43,9 +44,9 @@ namespace AudioLib
 		{
 			mMV	=new MasteringVoice(mXAud);
 
-			DeviceDetails	det	=mXAud.GetDeviceDetails(0);
+			mDetails	=mXAud.GetDeviceDetails(0);
 
-			m3DAud	=new X3DAudio(det.OutputFormat.ChannelMask);
+			m3DAud	=new X3DAudio(mDetails.OutputFormat.ChannelMask);
 
 			mListener	=new Listener();
 
@@ -88,7 +89,7 @@ namespace AudioLib
 			ab.AudioBytes	=(int)ss.Length;
 			ab.Flags		=BufferFlags.EndOfStream;
 
-			SoundEffect	se	=new SoundEffect(ab, ss.DecodedPacketsInfo, ss.Format);
+			SoundEffect	se	=new SoundEffect(ab, ss.Format);
 
 			mFX.Add(name, se);
 
@@ -206,14 +207,16 @@ namespace AudioLib
 						continue;
 					}
 
+					CalculateFlags	calcFlags	=CalculateFlags.Matrix | CalculateFlags.Doppler;
+
+					if((mDetails.OutputFormat.ChannelMask & Speakers.LowFrequency) != 0)
+					{
+						calcFlags	|=CalculateFlags.RedirectToLfe;
+					}
+
 					//this is for mono sounds TODO: assert
-					//The zerocenter flag below I think shouldn't be needed
-					//but without it there is an audio "hole" when facing toward
-					//a sound
 					DspSettings	dsp	=m3DAud.Calculate(mListener, threeD.Key,
-						CalculateFlags.Matrix | CalculateFlags.Doppler
-						| CalculateFlags.ZeroCenter,	//TODO: Investigate / bugreport
-						1, 1);
+						calcFlags, 1, mDetails.OutputFormat.Channels);
 
 					sei.Update3D(dsp);
 				}
@@ -240,82 +243,95 @@ namespace AudioLib
 		}
 
 
-		//fire and forget play from Emitter, no looping tracked in this class
-		public void PlayAtLocation(string name, float volume, Emitter em)
+		public void StopEmitter(Emitter em)
 		{
-			SoundEffectInstance	sei	=GetInstance(name, false, true);
-			if(sei == null)
+			if(m3DHere.ContainsKey(em))
 			{
-				return;
-			}
-
-			sei.SetVolume(volume);
-
-			//this is for mono sounds TODO: assert
-			//The zerocenter flag below I think shouldn't be needed
-			//but without it there is an audio "hole" when facing toward
-			//a sound
-			DspSettings	dsp	=m3DAud.Calculate(mListener, em,
-				CalculateFlags.Matrix | CalculateFlags.Doppler
-				| CalculateFlags.ZeroCenter,	//TODO: Investigate / bugreport
-				1, 1);
-
-			sei.Play();
-
-			sei.Update3D(dsp);
-
-			lock(mActive)
-			{
-				mActive.Add(sei);
-			}
-
-			lock(m3DHere)
-			{
-				if(m3DHere.ContainsKey(em))
+				foreach(SoundEffectInstance sei in m3DHere[em])
 				{
-					m3DHere[em].Add(sei);
-				}
-				else
-				{
-					m3DHere.Add(em, new List<SoundEffectInstance>());
-					m3DHere[em].Add(sei);
+					sei.Stop();
 				}
 			}
 		}
 
 
+		public void StopSound(object seiObj)
+		{
+			SoundEffectInstance	sei	=seiObj as SoundEffectInstance;
+			if(sei == null)
+			{
+				return;
+			}
+			sei.Stop();
+		}
+
+
+		//fire and forget play from Emitter
+		public object PlayAtLocation(string name, float volume, bool bLooping, Emitter em)
+		{
+			SoundEffectInstance	sei	=GetInstance(name, bLooping, true);
+			if(sei == null)
+			{
+				return	null;
+			}
+
+			sei.SetVolume(volume);
+
+			CalculateFlags	calcFlags	=CalculateFlags.Matrix | CalculateFlags.Doppler;
+
+			if((mDetails.OutputFormat.ChannelMask & Speakers.LowFrequency) != 0)
+			{
+				calcFlags	|=CalculateFlags.RedirectToLfe;
+			}
+
+			//this is for mono sounds TODO: assert
+			DspSettings	dsp	=m3DAud.Calculate(mListener, em,
+				calcFlags, 1, mDetails.OutputFormat.Channels);
+
+			sei.Play();
+
+			sei.Update3D(dsp);
+
+			if(m3DHere.ContainsKey(em))
+			{
+				m3DHere[em].Add(sei);
+			}
+			else
+			{
+				m3DHere.Add(em, new List<SoundEffectInstance>());
+				m3DHere[em].Add(sei);
+			}
+			return	sei;
+		}
+
+
 		//tracked in this class
-		public void Play(string name, bool bLooping, float volume)
+		public object Play(string name, bool bLooping, float volume)
 		{
 			if(!mFX.ContainsKey(name) || mActive.Count >= MaxInstances)
 			{
-				return;
+				return	null;
 			}
 
 			SoundEffect	se	=mFX[name];
 
 			SoundEffectInstance	sei	=new SoundEffectInstance(se.GetSourceVoice(mXAud, bLooping), false);
 
-			//todo:  This looks like maybe a race condition could happen
-			lock(mActive)
+			mActive.Add(sei);
+			if(mPlayingHere.ContainsKey(name))
 			{
-				mActive.Add(sei);
+				mPlayingHere[name].Add(sei);
 			}
-			lock(mPlayingHere)
+			else
 			{
-				if(mPlayingHere.ContainsKey(name))
-				{
-					mPlayingHere[name].Add(sei);
-				}
-				else
-				{
-					mPlayingHere.Add(name, new List<SoundEffectInstance>());
-					mPlayingHere[name].Add(sei);
-				}
+				mPlayingHere.Add(name, new List<SoundEffectInstance>());
+				mPlayingHere[name].Add(sei);
 			}
 
 			sei.SetVolume(volume);
 			sei.Play();
+
+			return	sei;
 		}
 
 
@@ -336,6 +352,22 @@ namespace AudioLib
 
 				LoadSound(extLess, path + "\\" + f.Name);
 			}
+		}
+
+
+		public static Emitter MakeEmitter(Vector3 loc)
+		{
+			Emitter	ret	=new Emitter();
+
+			ret.Position			=loc;
+			ret.OrientFront			=Vector3.ForwardRH;
+			ret.OrientTop			=Vector3.Up;
+			ret.Velocity			=Vector3.Zero;
+			ret.CurveDistanceScaler	=50f;
+			ret.ChannelCount		=1;
+			ret.DopplerScaler		=1f;
+
+			return	ret;
 		}
 	}
 }
