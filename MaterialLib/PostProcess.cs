@@ -28,6 +28,11 @@ namespace MaterialLib
 		Dictionary<string, DepthStencilView>	mPostDepths		=new Dictionary<string, DepthStencilView>();
 		Dictionary<string, ShaderResourceView>	mPostTargSRVs	=new Dictionary<string, ShaderResourceView>();
 
+		//data for looking up outline colours
+		Texture1D			mOutlineLookupTex;
+		ShaderResourceView	mOutlineLookupSRV;
+		Color				[]mOutLineColors	=new Color[MaxOutlineColours];
+
 		//for a fullscreen quad
 		Buffer				mQuadVB;
 		Buffer				mQuadIB;
@@ -47,7 +52,8 @@ namespace MaterialLib
 		float	[]mSampleOffsetsY;
 
 		//constants
-		const float	BlurAmount	=4f;
+		const float	BlurAmount			=4f;
+		const int	MaxOutlineColours	=1024;
 
 
 		public PostProcess(GraphicsDevice gd, Effect fx)
@@ -67,6 +73,11 @@ namespace MaterialLib
 			mPostDepths.Add("BackDepth", backDepth);
 
 			MakeQuad(gd);
+
+			if(gd.GD.FeatureLevel != FeatureLevel.Level_9_3)
+			{
+				MakeOutlineLookUp(gd);
+			}
 
 			InitPostParams(gd.GD.FeatureLevel == FeatureLevel.Level_9_3);
 
@@ -325,6 +336,71 @@ namespace MaterialLib
 		}
 
 
+		public Color []GetOutlineColors()
+		{
+			return	mOutLineColors;
+		}
+
+
+		void MakeOutlineLookUp(GraphicsDevice gd)
+		{
+			SampleDescription	sampDesc	=new SampleDescription();
+			sampDesc.Count		=1;
+			sampDesc.Quality	=0;
+
+			DataStream	ds	=new DataStream(MaxOutlineColours * 4, false, true);
+			for(int x=0;x < MaxOutlineColours;x++)
+			{
+				ds.Write(Color.White);
+			}
+
+			Texture1DDescription	texDesc	=new Texture1DDescription();
+			texDesc.ArraySize		=1;
+			texDesc.BindFlags		=BindFlags.ShaderResource;
+			texDesc.CpuAccessFlags	=CpuAccessFlags.Write;
+			texDesc.MipLevels		=1;
+			texDesc.OptionFlags		=ResourceOptionFlags.None;
+			texDesc.Usage			=ResourceUsage.Dynamic;
+			texDesc.Width			=MaxOutlineColours;
+			texDesc.Format			=Format.R8G8B8A8_UNorm;
+
+			mOutlineLookupTex	=new Texture1D(gd.GD, texDesc, ds);
+			mOutlineLookupSRV	=new ShaderResourceView(gd.GD, mOutlineLookupTex);
+		}
+
+
+		public void UpdateOutlineColours(GraphicsDevice gd, int numMaterials)
+		{
+			EffectShaderResourceVariable	esrv	=
+				mPostFX.GetVariableByName("mOutlineTex").AsShaderResource();
+
+			if(esrv == null)
+			{
+				return;
+			}
+
+			DataStream	ds;
+
+			gd.DC.MapSubresource(mOutlineLookupTex, 0, MapMode.WriteDiscard,
+				SharpDX.Direct3D11.MapFlags.None, out ds);
+
+			for(int i=0;i < numMaterials;i++)
+			{
+				Color	col	=mOutLineColors[i];
+
+				col.R	/=2;
+				col.G	/=2;
+				col.B	/=2;
+
+				ds.Write<Color>(col);
+			}
+
+			gd.DC.UnmapSubresource(mOutlineLookupTex, 0);
+
+			esrv.SetResource(mOutlineLookupSRV);
+		}
+
+
 		public void ClearTarget(GraphicsDevice gd, string targ, Color clearColor)
 		{
 			gd.DC.ClearRenderTargetView(mPostTargets[targ], clearColor);
@@ -487,6 +563,9 @@ namespace MaterialLib
 			mQuadVB.Dispose();
 
 			mPostFX.Dispose();
+
+			mOutlineLookupSRV.Dispose();
+			mOutlineLookupTex.Dispose();
 		}
 
 

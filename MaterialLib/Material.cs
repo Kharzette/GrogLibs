@@ -118,7 +118,8 @@ namespace MaterialLib
 		}
 
 
-		internal void Finalize()
+		//oops be careful using the name Finalize, it means something in the language!
+		internal void FinalizeMat()
 		{
 			if(mbFinalized)
 			{

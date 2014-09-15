@@ -23,6 +23,8 @@ namespace MaterialLib
 
 		Dictionary<string, MatID>	mIDs	=new Dictionary<string, MatID>();
 
+		public delegate Color CalcMaterialOutlineColor(string matName);
+
 		const int	StartIndex	=10;	//0 is for occluders, 10 seems like a nice number!?
 
 
@@ -107,6 +109,30 @@ namespace MaterialLib
 						mIDs.Add(matName, mid);
 					}
 				}
+			}
+		}
+
+
+		public int GetHighestMatID()
+		{
+			int	highID	=-1;
+			foreach(KeyValuePair<string, MatID> id in mIDs)
+			{
+				if(id.Value.mID > highID)
+				{
+					highID	=id.Value.mID;
+				}
+			}
+
+			return	highID;
+		}
+
+
+		public void CalcMaterialOutlineColors(CalcMaterialOutlineColor calc, Color []colors)
+		{
+			foreach(KeyValuePair<string, MatID> id in mIDs)
+			{
+				colors[id.Value.mID]	=calc(id.Key);
 			}
 		}
 

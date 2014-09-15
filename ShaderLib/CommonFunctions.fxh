@@ -30,9 +30,10 @@ shared Texture1D	mCelTable;
 //for shadowmaps
 shared Texture2D	mShadowTexture;		//2D
 shared TextureCube	mShadowCube;		//cube
-float3				mShadowLightPos;	//point light location
-bool				mbDirectional;		//sunnish or point
-float				mShadowAtten;		//shadow attenuation
+
+float3	mShadowLightPos;	//point light location
+bool	mbDirectional;		//sunnish or point
+float	mShadowAtten;		//shadow attenuation
 
 //specular stuff
 float4	mSpecColor;

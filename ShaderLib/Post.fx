@@ -9,16 +9,16 @@
 
 //post process stuff
 float2		mInvViewPort;
-float3		mFrustCorners[4];
-float		mFarClip;
-float3		mFrustRay;
-float		mRandTexSize	=64;
 
 //textures
 Texture2D	mNormalTex;
-Texture2D	mRandTex;
 Texture2D	mColorTex;
 Texture2D	mBlurTargetTex;
+
+#if !defined(SM2)
+#define		OUTLINE_TEX_SIZE	4096	//should match MaxOutlineColours in PostProcess.cs
+Texture1D	mOutlineTex;				//lookup table for outline colors per material id
+#endif
 
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
@@ -54,21 +54,6 @@ float	mOpacity;
 
 
 //helper functions
-float3 PositionFromDepth(float2 texCoord, float3 ray)
-{
-	float	depth	=mNormalTex.Sample(PointClamp, texCoord).w;
-	float3	pos		=ray * depth;
-	
-	return	pos;
-}
- 
-float3 GetFrustumRay(in float2 texCoord)
-{
-	float	index	=texCoord.x + (texCoord.y * 2);
-	
-	return	mFrustCorners[index];
-}
-
 float fetch_eye_z(float2 uv)
 {
 	return	mNormalTex.Sample(PointClamp, uv).w;
@@ -334,6 +319,16 @@ float4	OutlinePS(VVPos input) : SV_Target
 	//read center
 	center	=mNormalTex.Sample(PointClamp, uv);
 
+	//grab material colour
+	//need to ifdef this, SM2 errors even though
+	//this function isn't used
+#if !defined(SM2)
+	float4	matColour	=mOutlineTex.Sample(PointClamp1D,
+							(center.x / OUTLINE_TEX_SIZE));
+#else
+	float4	matColour	=float4(0, 0, 0, 1);
+#endif
+
 #if defined(LINE_OCCLUSION_TEST)
 	//check for material ID 0, this is a hack for stuff like
 	//particles that need to occlude a line
@@ -409,7 +404,7 @@ float4	OutlinePS(VVPos input) : SV_Target
 	//can early out with the normal test
 	if(any(normDots0))
 	{
-		return	float4(0, 0, 0, 1);
+		return	matColour;
 	}
 
 	float4	matDiff1;
@@ -434,7 +429,7 @@ float4	OutlinePS(VVPos input) : SV_Target
 	//if any material differences do black line
 	if(any(matDiff1))
 	{
-		return	float4(0, 0, 0, 1);
+		return	matColour;
 	}
 
 	//if the normals are fairly similar, and no mat boundary,
@@ -455,49 +450,49 @@ float4	OutlinePS(VVPos input) : SV_Target
 	float	planeDist	=dot(upPos, centerNorm) - centerDist;
 	if(abs(planeDist) > mThreshold)
 	{
-		return	float4(0, 0, 0, 1);
+		return	matColour;
 	}
 
 	planeDist	=dot(leftPos, centerNorm) - centerDist;
 	if(abs(planeDist) > mThreshold)
 	{
-		return	float4(0, 0, 0, 1);
+		return	matColour;
 	}
 
 	planeDist	=dot(rightPos, centerNorm) - centerDist;
 	if(abs(planeDist) > mThreshold)
 	{
-		return	float4(0, 0, 0, 1);
+		return	matColour;
 	}
 
 	planeDist	=dot(downPos, centerNorm) - centerDist;
 	if(abs(planeDist) > mThreshold)
 	{
-		return	float4(0, 0, 0, 1);
+		return	matColour;
 	}
 
 	planeDist	=dot(upLeftPos, centerNorm) - centerDist;
 	if(abs(planeDist) > mThreshold)
 	{
-		return	float4(0, 0, 0, 1);
+		return	matColour;
 	}
 
 	planeDist	=dot(upRightPos, centerNorm) - centerDist;
 	if(abs(planeDist) > mThreshold)
 	{
-		return	float4(0, 0, 0, 1);
+		return	matColour;
 	}
 
 	planeDist	=dot(downLeftPos, centerNorm) - centerDist;
 	if(abs(planeDist) > mThreshold)
 	{
-		return	float4(0, 0, 0, 1);
+		return	matColour;
 	}
 
 	planeDist	=dot(downRightPos, centerNorm) - centerDist;
 	if(abs(planeDist) > mThreshold)
 	{
-		return	float4(0, 0, 0, 1);
+		return	matColour;
 	}
 
 	return	float4(1, 1, 1, 1);

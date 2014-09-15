@@ -266,38 +266,61 @@ namespace InputLib
 		{
 			moveVec	=Vector3.Zero;
 
+			float	actionMult	=0f;
+			int		multCount	=0;
 			foreach(Input.InputAction act in actions)
 			{
 				if(act.mAction.Equals(mMoveLeftRight))
 				{
 					mbMovedThisFrame	=true;
-					moveVec				-=camLeft * act.mMultiplier * mGroundSpeed;
+					moveVec				-=camLeft;
+					actionMult			+=act.mMultiplier;
+					multCount++;
 				}
 				else if(act.mAction.CompareTo(mMoveLeft) == 0)
 				{
 					mbMovedThisFrame	=true;
-					moveVec				+=camLeft * act.mMultiplier * mGroundSpeed;
+					moveVec				+=camLeft;
+					actionMult			+=act.mMultiplier;
+					multCount++;
 				}
 				else if(act.mAction.CompareTo(mMoveRight) == 0)
 				{
 					mbMovedThisFrame	=true;
-					moveVec				-=camLeft * act.mMultiplier * mGroundSpeed;
+					moveVec				-=camLeft;
+					actionMult			+=act.mMultiplier;
+					multCount++;
 				}
 				else if(act.mAction.Equals(mMoveForwardBack))
 				{
 					mbMovedThisFrame	=true;
-					moveVec				-=camForward * act.mMultiplier * mGroundSpeed;
+					moveVec				-=camForward;
+					actionMult			+=act.mMultiplier;
+					multCount++;
 				}
 				else if(act.mAction.CompareTo(mMoveForward) == 0)
 				{
 					mbMovedThisFrame	=true;
-					moveVec				+=camForward * act.mMultiplier * mGroundSpeed;
+					moveVec				+=camForward;
+					actionMult			+=act.mMultiplier;
+					multCount++;
 				}
 				else if(act.mAction.CompareTo(mMoveBack) == 0)
 				{
 					mbMovedThisFrame	=true;
-					moveVec				-=camForward * act.mMultiplier * mGroundSpeed;
+					moveVec				-=camForward;
+					actionMult			+=act.mMultiplier;
+					multCount++;
 				}
+			}
+
+			if(mbMovedThisFrame)
+			{
+				moveVec.Normalize();
+
+				actionMult	/=multCount;
+
+				moveVec	*=actionMult * mGroundSpeed;
 			}
 		}
 

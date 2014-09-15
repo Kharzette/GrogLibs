@@ -672,7 +672,7 @@ namespace MaterialLib
 		{
 			foreach(KeyValuePair<string, Material> mat in mMats)
 			{
-				mat.Value.Finalize();
+				mat.Value.FinalizeMat();
 			}
 		}
 
