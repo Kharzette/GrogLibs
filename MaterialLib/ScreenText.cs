@@ -56,7 +56,7 @@ namespace MaterialLib
 			mMatLib			=matLib;
 			mFontTexName	=fontTexName;
 
-			mTextBuf	=new TextVert[mMaxCharacters];
+			mTextBuf	=new TextVert[mMaxCharacters * 6];
 
 			BufferDescription	bDesc	=new BufferDescription(
 				mMaxCharacters * 6 * 12,

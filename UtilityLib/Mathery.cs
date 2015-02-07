@@ -333,6 +333,22 @@ namespace UtilityLib
 		}
 
 
+		//range should be the value to keep the position within
+		//positive or negative.  Like 5 10 15 would return a
+		//vector within plus or minus 5 x, plus or minus 10 y,
+		//and plus or minus 15 z
+		public static Vector3 RandomPosition(Random rnd, Vector3 range)
+		{
+			Vector3	ret	=Vector3.Zero;
+
+			ret.X	=(float)rnd.NextDouble(-range.X, range.X);
+			ret.Y	=(float)rnd.NextDouble(-range.Y, range.Y);
+			ret.Z	=(float)rnd.NextDouble(-range.Z, range.Z);
+
+			return	ret;
+		}
+
+
 		public static float RandomFloatNext(Random rnd, float min, float max)
 		{
 			double	d	=rnd.NextDouble();

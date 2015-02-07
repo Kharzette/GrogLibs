@@ -58,6 +58,11 @@ namespace MaterialLib
 
 		public PostProcess(GraphicsDevice gd, Effect fx)
 		{
+			if(fx == null)
+			{
+				return;
+			}
+
 			mPostFX	=fx;
 
 			mResX		=gd.RendForm.ClientRectangle.Width;

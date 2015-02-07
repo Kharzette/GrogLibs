@@ -470,6 +470,11 @@ namespace MaterialLib
 
 		void SaveHeaderTimeStamps(ShaderModel sm)
 		{
+			if(!Directory.Exists(mGameRootDir + "/CompiledShaders"))
+			{
+				return;
+			}
+
 			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/CompiledShaders/" + sm.ToString() + "/");
 
 			FileStream	fs	=new FileStream(
@@ -830,6 +835,11 @@ namespace MaterialLib
 
 		void LoadParameterData()
 		{
+			if(!Directory.Exists(mGameRootDir + "/Shaders"))
+			{
+				return;
+			}
+
 			FileStream		fs	=new FileStream(mGameRootDir + "/Shaders/ParameterData.txt", FileMode.Open, FileAccess.Read);
 			StreamReader	sr	=new StreamReader(fs);
 
