@@ -58,6 +58,28 @@ namespace MaterialLib
 
 		public PostProcess(GraphicsDevice gd, Effect fx)
 		{
+			Init(gd, fx);
+		}
+
+
+		public PostProcess(GraphicsDevice gd, MaterialLib mlib, string fxName)
+		{
+			if(mlib == null)
+			{
+				return;
+			}
+
+			Effect	fx	=mlib.GetEffect(fxName);
+			if(fx == null)
+			{
+				return;
+			}
+			Init(gd, fx);
+		}
+
+
+		void Init(GraphicsDevice gd, Effect fx)
+		{
 			if(fx == null)
 			{
 				return;

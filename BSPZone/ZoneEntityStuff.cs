@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Text;
+using System.Diagnostics;
 using System.Collections.Generic;
 using SharpDX;
 using UtilityLib;
+
+using DynLight	=MaterialLib.DynamicLights.DynLight;
 
 
 namespace BSPZone
@@ -202,9 +205,10 @@ namespace BSPZone
 		}
 
 
-		List<ZoneLight>	GetLightsInLOS(Vector3 pos, DynamicLights dyn)
+		//rets will either be zone or dyn lights
+		List<object>	GetLightsInLOS(Vector3 pos, MaterialLib.DynamicLights dyn)
 		{
-			List<ZoneLight>	ret	=new List<ZoneLight>();
+			List<object>	ret	=new List<object>();
 
 			foreach(KeyValuePair<ZoneEntity, ZoneLight> zl in mLightCache)
 			{
@@ -223,14 +227,15 @@ namespace BSPZone
 				return	ret;
 			}
 
-			Dictionary<int, ZoneLight>	dyns	=dyn.GetZoneLights();
-			foreach(KeyValuePair<int, ZoneLight> zl in dyns)
+			Dictionary<int, DynLight>	dyns	=dyn.GetDynLights();
+			foreach(KeyValuePair<int, DynLight> zl in dyns)
 			{
 				if(IsVisibleFrom(pos, zl.Value.mPosition))
 				{
 					Collision	col;
 					if(!TraceAll(null, null, pos, zl.Value.mPosition, out col))
 					{
+
 						ret.Add(zl.Value);
 					}
 				}
@@ -240,35 +245,40 @@ namespace BSPZone
 		}
 
 
-		public List<ZoneLight> GetAffectingLights(Vector3 pos,
-			ZoneEntity sunEnt, GetStyleStrength gss, DynamicLights dyn)
+		public List<object> GetAffectingLights(Vector3 pos,
+			ZoneEntity sunEnt, GetStyleStrength gss, MaterialLib.DynamicLights dyn)
 		{
-			List<Zone.ZoneLight>	inRange	=new List<Zone.ZoneLight>();
-			List<Zone.ZoneLight>	losd	=GetLightsInLOS(pos, dyn);
+			List<object>	inRange	=new List<object>();
+			List<object>	losd	=GetLightsInLOS(pos, dyn);
 
 			//check attenuation
-			foreach(Zone.ZoneLight zl in losd)
+			foreach(object light in losd)
 			{
-				if(!zl.mbOn || zl.mbSun)
+				bool	bOn		=LightHelper.GetLightOn(light);
+				bool	bSun	=LightHelper.GetLightSun(light);
+				if(!bOn || bSun)
 				{
 					continue;
 				}
 
-				float	dist	=Vector3.Distance(zl.mPosition, pos);
+				Vector3	lpos	=LightHelper.GetLightPosition(light);
+				float	dist	=Vector3.Distance(lpos, pos);
 				float	atten	=0;
+				int		style	=LightHelper.GetLightStyle(light);
+				float	str		=LightHelper.GetLightStrength(light);
 
-				if(zl.mStyle != 0)
+				if(style != 0)
 				{
-					atten	=(zl.mStrength * gss(zl.mStyle));
+					atten	=(str * gss(style));
 				}
 				else
 				{
-					atten	=zl.mStrength;
+					atten	=str;
 				}
 
 				if(dist <= atten)
 				{
-					inRange.Add(zl);
+					inRange.Add(light);
 				}
 			}
 
@@ -294,43 +304,51 @@ namespace BSPZone
 
 
 		//for assigning character lights
-		public ZoneLight GetStrongestLightInLOS(Vector3 pos,
-			ZoneEntity sunEnt, GetStyleStrength gss, DynamicLights dyn)
+		public object GetStrongestLightInLOS(Vector3 pos,
+			ZoneEntity sunEnt, GetStyleStrength gss, MaterialLib.DynamicLights dyn)
 		{
-			List<ZoneLight>	visLights	=GetLightsInLOS(pos, dyn);
+			List<object>	visLights	=GetLightsInLOS(pos, dyn);
 
 			//look for distance minus strength
-			float		bestDist	=float.MaxValue;
-			ZoneLight	bestLight	=null;
-			foreach(ZoneLight zl in visLights)
+			float	bestDist	=float.MaxValue;
+			object	bestLight	=null;
+			foreach(object light in visLights)
 			{
-				if(!zl.mbOn || zl.mbSun)
+				bool	bOn		=LightHelper.GetLightOn(light);
+				bool	bSun	=LightHelper.GetLightSun(light);
+				if(!bOn || bSun)
 				{
 					continue;
 				}
 
-				float	dist	=Vector3.Distance(pos, zl.mPosition);
+				Vector3	lpos	=LightHelper.GetLightPosition(light);
+				float	dist	=Vector3.Distance(lpos, pos);
+				float	str		=LightHelper.GetLightStrength(light);
 
-				if(dist >= zl.mStrength)
+				if(dist >= str)
 				{
 					continue;
 				}
 
-				if(zl.mStyle != 0)
+				int	style	=LightHelper.GetLightStyle(light);
+
+				if(style != 0)
 				{
-					dist	-=(zl.mStrength * gss(zl.mStyle));
+					dist	-=(str * gss(style));
 				}
 				else
 				{
-					dist	-=zl.mStrength;
+					dist	-=str;
 				}
 
 				if(dist < bestDist)
 				{
-					bestLight	=zl;
+					bestLight	=light;
 					bestDist	=dist;
 				}
 			}
+
+			float	bestStrength	=LightHelper.GetLightStrength(bestLight);
 
 			if(sunEnt != null && mLightCache.ContainsKey(sunEnt))
 			{
@@ -341,9 +359,9 @@ namespace BSPZone
 				if(bestLight != null)
 				{
 					float	bestLightPower	=bestDist;
-					if(bestDist > bestLight.mStrength)
+					if(bestDist > bestStrength)
 					{
-						bestLightPower	*=(bestLight.mStrength / bestDist);
+						bestLightPower	*=(bestStrength / bestDist);
 					}
 
 					if(bestLightPower > sunLight.mStrength)
