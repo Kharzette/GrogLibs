@@ -460,6 +460,9 @@ namespace MaterialLib
 
 			byte	[]code	=br.ReadBytes(len);
 
+			//if you get an unable to find dll in path error here, make
+			//sure materiallib's sharpdx effect dlls are marked as
+			//content with copy if newer
 			Effect	fx	=new Effect(dev, code);
 			if(fx != null)
 			{
