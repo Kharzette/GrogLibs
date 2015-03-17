@@ -174,7 +174,7 @@ float4 ParticlePS(VVPosTex04Tex14 input) : SV_Target
 float4 TextPS(VVPosTex0 input) : SV_Target
 {
 	//texture
-	float4	texel	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
+	float4	texel	=mTexture.Sample(PointClamp, input.TexCoord0.xy);
 
 	//multiply by color
 	texel	*=mTextColor;

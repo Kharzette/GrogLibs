@@ -16,7 +16,7 @@ Texture2D	mColorTex;
 Texture2D	mBlurTargetTex;
 
 #if !defined(SM2)
-#define		OUTLINE_TEX_SIZE	4096	//should match MaxOutlineColours in PostProcess.cs
+#define		OUTLINE_TEX_SIZE	1024	//should match MaxOutlineColours in PostProcess.cs
 Texture1D	mOutlineTex;				//lookup table for outline colors per material id
 #endif
 
