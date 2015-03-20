@@ -39,7 +39,6 @@
 			this.Prog.Location = new System.Drawing.Point(12, 12);
 			this.Prog.Name = "Prog";
 			this.Prog.Size = new System.Drawing.Size(424, 23);
-			this.Prog.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
 			this.Prog.TabIndex = 0;
 			// 
 			// ThreadedProgress
@@ -52,6 +51,7 @@
 			this.Cursor = System.Windows.Forms.Cursors.WaitCursor;
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
 			this.Name = "ThreadedProgress";
+			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "Working...";
 			this.ResumeLayout(false);
 

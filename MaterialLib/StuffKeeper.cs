@@ -84,8 +84,13 @@ namespace MaterialLib
 			SM5, SM41, SM4, SM2
 		};
 
+		public event EventHandler	eCompilesNeeded;	//shader compiles needed, passes the number
+		public event EventHandler	eCompileDone;		//fired as each compile finishes
 
-		public StuffKeeper(GraphicsDevice gd, string gameRootDir)
+
+		public StuffKeeper() { }
+
+		public void Init(GraphicsDevice gd, string gameRootDir)
 		{
 			mGameRootDir	=gameRootDir;
 			mIFX			=new IncludeFX(gameRootDir);
@@ -417,6 +422,9 @@ namespace MaterialLib
 					}
 				}
 
+				List<string>	dirNames	=new List<string>();
+				List<string>	fileNames	=new List<string>();
+
 				FileInfo[]		fi	=di.GetFiles("*.fx", SearchOption.AllDirectories);
 				foreach(FileInfo f in fi)
 				{
@@ -443,7 +451,21 @@ namespace MaterialLib
 							}
 						}
 					}
-					LoadShader(dev, f.DirectoryName, f.Name, macs);
+					dirNames.Add(f.DirectoryName);
+					fileNames.Add(f.Name);
+				}
+
+				if(fileNames.Count > 0)
+				{
+					Debug.Assert(fileNames.Count == dirNames.Count);
+
+					Misc.SafeInvoke(eCompilesNeeded, fileNames.Count);
+
+					for(int i=0;i < fileNames.Count;i++)
+					{
+						LoadShader(dev, dirNames[i], fileNames[i], macs);
+						Misc.SafeInvoke(eCompileDone, i + 1);
+					}
 				}
 			}
 		}
