@@ -93,6 +93,16 @@ namespace MaterialLib
 		}
 
 
+		public void FreeAll()
+		{
+			mStrings.Clear();
+			mMatLib.FreeAll();
+			mVB.Dispose();
+
+			mGD		=null;
+		}
+
+
 		public void ModifyStringColor(string id, Vector4 color)
 		{
 			if(!mStrings.ContainsKey(id))

@@ -50,7 +50,7 @@ namespace MaterialLib
 
 			int	numColumns	=mWidth / mCellWidth;
 			int	yOffset		=0;
-			while(posOffset > numColumns)
+			while(posOffset >= numColumns)
 			{
 				yOffset++;
 				posOffset	-=numColumns;

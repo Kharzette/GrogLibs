@@ -262,6 +262,22 @@ namespace MaterialLib
 		}
 
 
+		public List<string> GetFontList()
+		{
+			List<string>	ret	=new List<string>();
+
+			//sort fonts by height
+			IOrderedEnumerable<KeyValuePair<string, Font>>	sorted
+				=mFonts.OrderBy(fnt => fnt.Value.GetCharacterHeight());
+
+			foreach(KeyValuePair<string, Font> font in sorted)
+			{
+				ret.Add(font.Key);
+			}
+			return	ret;
+		}
+
+
 		public List<string> GetEffectList()
 		{
 			List<string>	ret	=new List<string>();
@@ -379,20 +395,22 @@ namespace MaterialLib
 		void LoadFonts(GraphicsDevice gd)
 		{
 			//see if Fonts folder exists in Content
-			if(Directory.Exists(mGameRootDir + "/Fonts"))
+			if(!Directory.Exists(mGameRootDir + "/Fonts"))
 			{
-				DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Fonts/");
+				return;
+			}
 
-				FileInfo[]		fi	=di.GetFiles("*.png", SearchOption.AllDirectories);
-				foreach(FileInfo f in fi)
-				{
-					LoadFontTexture(gd, f.DirectoryName, f.Name);
+			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Fonts/");
 
-					string	extLess	=FileUtil.StripExtension(f.Name);
+			FileInfo[]		fi	=di.GetFiles("*.png", SearchOption.AllDirectories);
+			foreach(FileInfo f in fi)
+			{
+				LoadFontTexture(gd, f.DirectoryName, f.Name);
 
-					Font	font	=new Font(f.DirectoryName + "/" + extLess + ".dat");
-					mFonts.Add(extLess, font);
-				}
+				string	extLess	=FileUtil.StripExtension(f.Name);
+
+				Font	font	=new Font(f.DirectoryName + "/" + extLess + ".dat");
+				mFonts.Add(extLess, font);
 			}
 		}
 

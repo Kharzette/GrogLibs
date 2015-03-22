@@ -156,8 +156,9 @@ namespace BSPZone
 			bool	bestSun			=GetLightSun(bestLight);
 
 			//check for a sun
-			foreach(Zone.ZoneLight zl in mAffecting)
+			foreach(object light in mAffecting)
 			{
+				ZoneLight	zl	=light as ZoneLight;
 				if(zl == null || !zl.mbSun || !zl.mbOn)
 				{
 					continue;

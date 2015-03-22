@@ -49,8 +49,8 @@ namespace AudioLib
 		internal void Update3D(DspSettings dsp)
 		{
 			Debug.Assert(mb3D);
-			Debug.Assert(mbPlaying);
 
+			//this is possible
 			if(!mbPlaying)
 			{
 				return;

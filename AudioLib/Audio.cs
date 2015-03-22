@@ -335,6 +335,12 @@ namespace AudioLib
 		}
 
 
+		public List<string> GetSoundList()
+		{
+			return	mFX.Keys.ToList();
+		}
+
+
 		public void LoadAllSounds(string dir)
 		{
 			if(!Directory.Exists(dir))
