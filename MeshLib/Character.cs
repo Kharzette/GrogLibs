@@ -426,7 +426,7 @@ namespace MeshLib
 			FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
 			BinaryWriter	bw		=new BinaryWriter(file);
 
-			//write a magic number identifying characters
+			//write a magic number identifying character instances
 			UInt32	magic	=0xCA1EC7BE;
 
 			bw.Write(magic);

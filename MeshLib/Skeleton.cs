@@ -385,6 +385,19 @@ namespace MeshLib
 		}
 
 
+		public string GetBoneName(int index)
+		{
+			foreach(KeyValuePair<string, int> bn in mNameToIndex)
+			{
+				if(bn.Value == index)
+				{
+					return	bn.Key;
+				}
+			}
+			return	"None";
+		}
+
+
 		public int GetNumIndexedBones()
 		{
 			return	mNameToIndex.Count;

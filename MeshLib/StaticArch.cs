@@ -376,8 +376,8 @@ namespace MeshLib
 			FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
 			BinaryWriter	bw		=new BinaryWriter(file);
 
-			//write a magic number identifying characters
-			UInt32	magic	=0xCA1EC7BE;
+			//write a magic number identifying statics
+			UInt32	magic	=0x57A71CA8;
 
 			bw.Write(magic);
 
@@ -410,7 +410,7 @@ namespace MeshLib
 			//read magic number
 			UInt32	magic	=br.ReadUInt32();
 
-			if(magic != 0xCA1EC7BE)
+			if(magic != 0x57A71CA8)
 			{
 				br.Close();
 				file.Close();

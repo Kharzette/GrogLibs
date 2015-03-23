@@ -217,6 +217,13 @@ namespace MaterialLib
 			mNumVerts	=0;
 			foreach(KeyValuePair<string, StringData> str in mStrings)
 			{
+				//make sure we donut blast beyond the end
+				int	nextSize	=mNumVerts + str.Value.mVerts.Length;
+				if(nextSize > mTextBuf.Length)
+				{
+					//TODO, warn
+					continue;
+				}
 				str.Value.mVerts.CopyTo(mTextBuf, mNumVerts);
 				
 				mNumVerts	+=str.Value.mVerts.Length;
@@ -236,6 +243,11 @@ namespace MaterialLib
 
 		public void Draw(DeviceContext dc, Matrix view, Matrix proj)
 		{
+			//if this assert fires, make sure
+			//all text modification stuff happens
+			//before the call to update
+			Debug.Assert(!mbDirty);
+
 			if(mNumVerts <= 0)
 			{
 				return;
