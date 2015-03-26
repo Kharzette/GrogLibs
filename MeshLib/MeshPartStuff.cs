@@ -155,6 +155,12 @@ namespace MeshLib
 		}
 
 
+		internal Dictionary<Mesh, BoundingBox> GetBoundData()
+		{
+			return	(mArch as StaticArch).GetBoundData();
+		}
+
+
 		internal BoundingBox GetBoxBound()
 		{
 			return	mArch.GetBoxBound();

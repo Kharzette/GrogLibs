@@ -84,7 +84,7 @@ namespace MaterialLib
 			SM5, SM41, SM4, SM2
 		};
 
-		public event EventHandler	eCompilesNeeded;	//shader compiles needed, passes the number
+		public event EventHandler	eCompileNeeded;	//shader compiles needed, passes the number
 		public event EventHandler	eCompileDone;		//fired as each compile finishes
 
 
@@ -477,7 +477,7 @@ namespace MaterialLib
 				{
 					Debug.Assert(fileNames.Count == dirNames.Count);
 
-					Misc.SafeInvoke(eCompilesNeeded, fileNames.Count);
+					Misc.SafeInvoke(eCompileNeeded, fileNames.Count);
 
 					for(int i=0;i < fileNames.Count;i++)
 					{

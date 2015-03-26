@@ -40,6 +40,13 @@ namespace UtilityLib
 		}
 
 
+		public void Free()
+		{
+			mIB.Dispose();
+			mVB.Dispose();
+		}
+
+
 		public Matrix World
 		{
 			get { return mWorld; }

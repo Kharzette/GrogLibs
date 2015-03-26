@@ -71,6 +71,12 @@ namespace MeshLib
 		}
 
 
+		public Dictionary<Mesh, BoundingBox> GetBoundData()
+		{
+			return	mParts.GetBoundData();
+		}
+
+
 		public BoundingBox GetBoxBound()
 		{
 			return	mParts.GetBoxBound();

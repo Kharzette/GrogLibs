@@ -111,6 +111,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="ShaderCompileHelper.cs" />
     <Compile Include="ThreadedProgress.cs">
       <SubType>Form</SubType>
     </Compile>

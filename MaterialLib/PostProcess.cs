@@ -591,8 +591,14 @@ namespace MaterialLib
 
 			mPostFX.Dispose();
 
-			mOutlineLookupSRV.Dispose();
-			mOutlineLookupTex.Dispose();
+			if(mOutlineLookupSRV != null)
+			{
+				mOutlineLookupSRV.Dispose();
+			}
+			if(mOutlineLookupTex != null)
+			{
+				mOutlineLookupTex.Dispose();
+			}
 		}
 
 

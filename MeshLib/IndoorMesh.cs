@@ -247,7 +247,7 @@ namespace MeshLib
 			if(mLMAIB != null)		mLMAIB.Dispose();
 			if(mLMAAnimIB != null)	mLMAAnimIB.Dispose();
 
-			mLightMapAtlas.FreeAll();
+			if(mLightMapAtlas != null)	mLightMapAtlas.FreeAll();
 		}
 
 

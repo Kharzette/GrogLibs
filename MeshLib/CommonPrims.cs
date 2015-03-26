@@ -81,6 +81,20 @@ namespace MeshLib
 		}
 
 
+		public void FreeAll()
+		{
+			foreach(KeyValuePair<int, PrimObject> box in mBoxes)
+			{
+				box.Value.Free();
+			}
+
+			foreach(KeyValuePair<int, PrimObject> sphere in mSpheres)
+			{
+				sphere.Value.Free();
+			}
+		}
+
+
 		public void Update(GameCamera gcam, Vector3 lightDir)
 		{
 			mMatLib.SetParameterForAll("mLightDirection", -lightDir);

@@ -12,7 +12,7 @@ namespace SharedForms
 	//use this like the following:
 	//Thread	uiThread	=new Thread(() =>
 	//	{
-	//		tProg	=new ThreadedProgress("Compiling Shaders...");
+	//		tProg	=new ThreadedProgress("Doing Stuff...");
 	//		Application.Run(tProg);
 	//	});
 	//uiThread.SetApartmentState(ApartmentState.STA);

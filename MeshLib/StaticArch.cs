@@ -443,6 +443,20 @@ namespace MeshLib
 		}
 
 
+		//for collisionry
+		internal Dictionary<Mesh, BoundingBox> GetBoundData()
+		{
+			Dictionary<Mesh, BoundingBox>	ret	=new Dictionary<Mesh, BoundingBox>();
+
+			foreach(Mesh m in mMeshParts)
+			{
+				ret.Add(m, m.GetBoxBounds());
+			}
+
+			return	ret;
+		}
+
+
 		internal void UpdateBounds()
 		{
 			foreach(Mesh m in mMeshParts)

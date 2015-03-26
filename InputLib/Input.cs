@@ -292,7 +292,7 @@ namespace InputLib
 			{
 				if(bUp)
 				{
-					//not really sure how this happens
+					//Land here after a ctrl-alt-del with code 1
 					return;
 				}
 				KeyHeldInfo	kh			=new KeyHeldInfo();
@@ -325,6 +325,21 @@ namespace InputLib
 				return	mNameBuf.ToString();
 			}
 			return	"Unknown";
+		}
+
+
+		public void ClearInputs()
+		{
+			mKeysHeld.Clear();
+			mKeysUp.Clear();
+			mMouseMoves.Clear();
+			mActiveToggles.Clear();
+			mOnceActives.Clear();
+			mWasHeld.Clear();
+			foreach(List<int> xb in mXButtonsHeld)
+			{
+				xb.Clear();
+			}
 		}
 
 
