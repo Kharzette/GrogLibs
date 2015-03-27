@@ -165,7 +165,25 @@ namespace MeshLib
 			Vector3	backStart	=Vector3.TransformCoordinate(start, mTransInverted);
 			Vector3	backEnd		=Vector3.TransformCoordinate(end, mTransInverted);
 
-			return	mParts.RayIntersect(backStart, backEnd, bBox, out partHit);
+			float?	dist	=mParts.RayIntersect(backStart, backEnd, bBox, out partHit);
+
+			if(dist != null)
+			{
+				//get the collision ray
+				Vector3	ray	=backEnd - backStart;
+
+				ray.Normalize();
+				ray	*=dist.Value;
+
+				Vector3	hitPos	=backStart + ray;
+
+				//transform hit pos back into worldspace
+				hitPos	=Vector3.TransformCoordinate(hitPos, mTransform);
+
+				//return distance
+				return	Vector3.Distance(hitPos, start);
+			}
+			return	dist;
 		}
 
 	
