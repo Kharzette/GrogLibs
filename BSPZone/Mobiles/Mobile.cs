@@ -50,11 +50,11 @@ namespace BSPZone
 
 		//constants
 		const float MidAirMoveScale		=0.01f;
-		const float	JumpVelocity		=1.7f;
+		const float	JumpVelocity		=8f;
 		const float	Friction			=0.6f;
 		const float	MinCamDist			=10f;
 		const float	CamCollisionRadius	=4f;
-		const float	GravityConstant		=4f / 1000f;
+		const float	GravityConstant		=0.02f;
 
 
 		public Mobile(object owner, float boxWidth, float boxHeight,

@@ -53,6 +53,7 @@ namespace InputLib
 		Enum	mMoveForwardBack, mMoveForward, mMoveBack;
 		Enum	mTurnBoth, mTurnLeft, mTurnRight;
 		Enum	mPitchBoth, mPitchUp, mPitchDown;
+		Enum	mMoveForwardFast;
 
 
 		public PlayerSteering()
@@ -60,13 +61,14 @@ namespace InputLib
 		}
 
 		public void SetMoveEnums(Enum moveLeftRight,	Enum moveLeft, Enum moveRight,
-			Enum moveForwardBack, Enum moveForward, Enum moveBack)
+			Enum moveForwardBack, Enum moveForward, Enum moveBack, Enum moveForwardFast)
 		{
 			mMoveLeftRight		=moveLeftRight;
 			mMoveLeft			=moveLeft;
 			mMoveRight			=moveRight;
 			mMoveForwardBack	=moveForwardBack;
 			mMoveForward		=moveForward;
+			mMoveForwardFast	=moveForwardFast;
 			mMoveBack			=moveBack;
 		}
 
@@ -210,7 +212,7 @@ namespace InputLib
 			}
 			else if(mMethod == SteeringMethod.Fly)
 			{
-				UpdateFly(camForward, camLeft, camUp, actions);
+				UpdateFly(camForward, camLeft, camUp, actions, out moveVec);
 			}
 			else if(mMethod == SteeringMethod.TwinStick)
 			{
@@ -225,6 +227,9 @@ namespace InputLib
 				throw(new NotImplementedException());
 			}
 
+			//camera direction stuff is backwards
+			moveVec	=-moveVec;
+
 			mDelta	=moveVec;
 
 			return	mPosition + moveVec;
@@ -232,18 +237,11 @@ namespace InputLib
 
 
 		void UpdateFly(Vector3 camForward, Vector3 camLeft, Vector3 camUp,
-			List<Input.InputAction> actions)
+			List<Input.InputAction> actions, out Vector3 moveVec)
 		{
 			GetTurn(actions);
 
-			Vector3	moveVec;
 			GetMove(camForward, camLeft, camUp, actions, out moveVec);
-
-			if(moveVec.LengthSquared() > 0.001f)
-			{
-				moveVec.Normalize();
-				mPosition	+=moveVec * mGroundSpeed;
-			}
 		}
 
 
@@ -303,6 +301,13 @@ namespace InputLib
 					mbMovedThisFrame	=true;
 					moveVec				+=camForward;
 					actionMult			+=act.mMultiplier;
+					multCount++;
+				}
+				else if(act.mAction.CompareTo(mMoveForwardFast) == 0)
+				{
+					mbMovedThisFrame	=true;
+					moveVec				+=camForward;
+					actionMult			+=act.mMultiplier * 2f;	//double speed
 					multCount++;
 				}
 				else if(act.mAction.CompareTo(mMoveBack) == 0)
