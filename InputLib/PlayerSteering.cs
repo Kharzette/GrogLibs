@@ -34,6 +34,12 @@ namespace InputLib
 		bool	mbInvertYAxis		=false;
 		bool	mbUsePadIfPossible	=true;
 
+		//sprint settings
+		float	SprintForwardFactor	=1.8f;
+		float	SprintBackFactor	=1.5f;
+		float	SprintLeftFactor	=1.5f;
+		float	SprintRightFactor	=1.5f;
+
 		//position info
 		Vector3	mPosition, mDelta;
 		Vector3	mCursorPos;
@@ -53,23 +59,28 @@ namespace InputLib
 		Enum	mMoveForwardBack, mMoveForward, mMoveBack;
 		Enum	mTurnBoth, mTurnLeft, mTurnRight;
 		Enum	mPitchBoth, mPitchUp, mPitchDown;
-		Enum	mMoveForwardFast;
+		Enum	mMoveForwardFast, mMoveBackFast;
+		Enum	mMoveLeftFast, mMoveRightFast;
 
 
 		public PlayerSteering()
 		{
 		}
 
-		public void SetMoveEnums(Enum moveLeftRight,	Enum moveLeft, Enum moveRight,
-			Enum moveForwardBack, Enum moveForward, Enum moveBack, Enum moveForwardFast)
+		public void SetMoveEnums(Enum moveForwardBack, Enum moveLeftRight,
+			Enum moveForward, Enum moveBack, Enum moveLeft, Enum moveRight,
+			Enum moveForwardFast, Enum moveBackFast, Enum moveLeftFast, Enum moveRightFast)
 		{
 			mMoveLeftRight		=moveLeftRight;
-			mMoveLeft			=moveLeft;
-			mMoveRight			=moveRight;
 			mMoveForwardBack	=moveForwardBack;
 			mMoveForward		=moveForward;
-			mMoveForwardFast	=moveForwardFast;
 			mMoveBack			=moveBack;
+			mMoveLeft			=moveLeft;
+			mMoveRight			=moveRight;
+			mMoveForwardFast	=moveForwardFast;
+			mMoveBackFast		=moveBackFast;
+			mMoveLeftFast		=moveLeftFast;
+			mMoveRightFast		=moveRightFast;
 		}
 
 		public void SetTurnEnums(Enum turn, Enum turnLeft, Enum turnRight)
@@ -191,12 +202,12 @@ namespace InputLib
 
 			foreach(Input.InputAction act in actions)
 			{
-				if(act.mAction.CompareTo(mZoomIn) == 0)
+				if(act.mAction.Equals(mZoomIn))
 				{
 					mZoom	-=act.mMultiplier * 0.04f;
 					mZoom	=MathUtil.Clamp(mZoom, 5f, 500f);
 				}
-				else if(act.mAction.CompareTo(mZoomOut) == 0)
+				else if(act.mAction.Equals(mZoomOut))
 				{
 					mZoom	+=act.mMultiplier * 0.04f;
 					mZoom	=MathUtil.Clamp(mZoom, 5f, 500f);
@@ -275,20 +286,6 @@ namespace InputLib
 					actionMult			+=act.mMultiplier;
 					multCount++;
 				}
-				else if(act.mAction.CompareTo(mMoveLeft) == 0)
-				{
-					mbMovedThisFrame	=true;
-					moveVec				+=camLeft;
-					actionMult			+=act.mMultiplier;
-					multCount++;
-				}
-				else if(act.mAction.CompareTo(mMoveRight) == 0)
-				{
-					mbMovedThisFrame	=true;
-					moveVec				-=camLeft;
-					actionMult			+=act.mMultiplier;
-					multCount++;
-				}
 				else if(act.mAction.Equals(mMoveForwardBack))
 				{
 					mbMovedThisFrame	=true;
@@ -296,25 +293,60 @@ namespace InputLib
 					actionMult			+=act.mMultiplier;
 					multCount++;
 				}
-				else if(act.mAction.CompareTo(mMoveForward) == 0)
+				else if(act.mAction.Equals(mMoveForward))
 				{
 					mbMovedThisFrame	=true;
 					moveVec				+=camForward;
 					actionMult			+=act.mMultiplier;
 					multCount++;
 				}
-				else if(act.mAction.CompareTo(mMoveForwardFast) == 0)
-				{
-					mbMovedThisFrame	=true;
-					moveVec				+=camForward;
-					actionMult			+=act.mMultiplier * 2f;	//double speed
-					multCount++;
-				}
-				else if(act.mAction.CompareTo(mMoveBack) == 0)
+				else if(act.mAction.Equals(mMoveBack))
 				{
 					mbMovedThisFrame	=true;
 					moveVec				-=camForward;
 					actionMult			+=act.mMultiplier;
+					multCount++;
+				}
+				else if(act.mAction.Equals(mMoveLeft))
+				{
+					mbMovedThisFrame	=true;
+					moveVec				+=camLeft;
+					actionMult			+=act.mMultiplier;
+					multCount++;
+				}
+				else if(act.mAction.Equals(mMoveRight))
+				{
+					mbMovedThisFrame	=true;
+					moveVec				-=camLeft;
+					actionMult			+=act.mMultiplier;
+					multCount++;
+				}
+				else if(act.mAction.Equals(mMoveForwardFast))
+				{
+					mbMovedThisFrame	=true;
+					moveVec				+=camForward;
+					actionMult			+=act.mMultiplier * SprintForwardFactor;
+					multCount++;
+				}
+				else if(act.mAction.Equals(mMoveBackFast))
+				{
+					mbMovedThisFrame	=true;
+					moveVec				-=camForward;
+					actionMult			+=act.mMultiplier * SprintBackFactor;
+					multCount++;
+				}
+				else if(act.mAction.Equals(mMoveLeftFast))
+				{
+					mbMovedThisFrame	=true;
+					moveVec				+=camLeft;
+					actionMult			+=act.mMultiplier * SprintLeftFactor;
+					multCount++;
+				}
+				else if(act.mAction.Equals(mMoveRightFast))
+				{
+					mbMovedThisFrame	=true;
+					moveVec				-=camLeft;
+					actionMult			+=act.mMultiplier * SprintRightFactor;
 					multCount++;
 				}
 			}
@@ -334,7 +366,7 @@ namespace InputLib
 		{
 			foreach(Input.InputAction act in actions)
 			{
-				if(act.mAction.CompareTo(mPitchBoth) == 0)
+				if(act.mAction.Equals(mPitchBoth))
 				{
 					float	pitchAmount	=act.mMultiplier * 0.4f;
 
@@ -347,7 +379,7 @@ namespace InputLib
 						mPitch	-=pitchAmount;
 					}
 				}
-				else if(act.mAction.CompareTo(mPitchUp) == 0)
+				else if(act.mAction.Equals(mPitchUp))
 				{
 					float	pitchAmount	=act.mMultiplier * 0.4f;
 
@@ -360,7 +392,7 @@ namespace InputLib
 						mPitch	-=pitchAmount;
 					}
 				}
-				else if(act.mAction.CompareTo(mPitchDown) == 0)
+				else if(act.mAction.Equals(mPitchDown))
 				{
 					float	pitchAmount	=act.mMultiplier * 0.4f;
 
@@ -373,17 +405,17 @@ namespace InputLib
 						mPitch	-=pitchAmount;
 					}
 				}
-				else if(act.mAction.CompareTo(mTurnBoth) == 0)
+				else if(act.mAction.Equals(mTurnBoth))
 				{
 					float	delta	=act.mMultiplier * 0.4f;
 					mYaw	-=delta;
 				}
-				else if(act.mAction.CompareTo(mTurnLeft) == 0)
+				else if(act.mAction.Equals(mTurnLeft))
 				{
 					float	delta	=act.mMultiplier * 0.4f;
 					mYaw	+=delta;
 				}
-				else if(act.mAction.CompareTo(mTurnRight) == 0)
+				else if(act.mAction.Equals(mTurnRight))
 				{
 					float	delta	=act.mMultiplier * 0.4f;
 					mYaw	-=delta;

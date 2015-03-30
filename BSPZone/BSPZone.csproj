@@ -147,6 +147,9 @@
       <Name>UtilityLib</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Helpers\LightHelperDesign.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\Games\packages\SharpDX.2.6.3\build\SharpDX.targets" Condition="Exists('..\..\Games\packages\SharpDX.2.6.3\build\SharpDX.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

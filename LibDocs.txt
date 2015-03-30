@@ -57,3 +57,11 @@ Character Notes
 	Bone bounding boxes are axial from the reference pose.  If
 	the pose is relaxed and not the usual T, this can cause
 	the limb bounds to stick out quite a bit.
+
+Fill Lights
+	Characters and statics are lit via the strongest light in
+	line of sight.  There are two fill lights that aren't
+	affected by this.  These can be specified regionally via
+	the misc_trilight_info entity.  The character or static
+	will pick up the nearest ones and blend between them via
+	the lighthelper class.

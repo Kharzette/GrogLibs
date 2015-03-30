@@ -1,0 +1,29 @@
+Lighthelper should find the best lighting for mobile meshes:
+	Best light details for a shadow of the mesh
+	Best light to do trilight illumination
+	Best fill for the trilight fill lights
+
+When switching from a previous best light to a new best light, a period of interpolation should
+occur.
+
+From point light to point light:
+	interpolate the positions and colors, attenuating color and fill
+
+From point light to sun light:
+	Make the point light position into a direction
+	Interpolate the directions
+	Sunlights are not attenuated, so during interpolation, lerp attenuation factor
+	Attenuate color and fill during interpolation via lerped attenuation factor
+
+From sun light to sun light:
+	Interpolate direction and colors
+
+from sun light to point light:
+	Convert the sun direction into a position, probably quite distant
+	Interpolate positions
+	Sunlights are not attenuated, so during interpolation, lerp attenuation factor from 1
+	Attenuate color and fill during interpolation
+
+Note that intensity cannot be used for attenuation.  It is used as a distance to fade out shadows.
+For point lights this directly corresponds to the point light's strength.  For suns this is just a
+number that prevents the shadow from showing through too much geometry in very non-convex levels.

@@ -30,6 +30,44 @@ namespace UtilityLib
 		}
 
 
+		//Vector extension methods
+		public static Vector3 XYZ(this Vector4 v4)
+		{
+			Vector3	ret	=Vector3.Zero;
+
+			ret.X	=v4.X;
+			ret.Y	=v4.Y;
+			ret.Z	=v4.Z;
+
+			return	ret;
+		}
+
+
+		public static Vector4 MulXYZ(this Vector4 v4, float scalar)
+		{
+			Vector4	ret	=v4;
+
+			ret.X	*=scalar;
+			ret.Y	*=scalar;
+			ret.Z	*=scalar;
+
+			return	ret;
+		}
+
+
+		public static Vector4 ToV4(this Vector3 v3, float wVal)
+		{
+			Vector4	ret	=Vector4.Zero;
+
+			ret.X	=v3.X;
+			ret.Y	=v3.Y;
+			ret.Z	=v3.Z;
+			ret.W	=wVal;
+
+			return	ret;
+		}
+
+
 		//extension methods don't work on value types :(
 		public static void ClearBoundingBox(ref BoundingBox bb)
 		{
