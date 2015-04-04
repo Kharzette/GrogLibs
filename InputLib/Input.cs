@@ -21,15 +21,26 @@ namespace InputLib
 		[DllImport("user32", SetLastError=true, CharSet=CharSet.Unicode)]
 			static extern int GetKeyNameTextW(uint lParam, StringBuilder lpString, int nSize);
 
+		static float	FreqMS	=((float)Stopwatch.Frequency) / 1000f;
+
 		public class InputAction
 		{
 			public float	mMultiplier;	//time or analog amount
 			public Enum		mAction;		//user specified thing?
+			public bool		mbTime;			//multiplier is time
 
 			internal InputAction(long timeHeld, Enum act)
 			{
-				mMultiplier	=(float)timeHeld / ((float)Stopwatch.Frequency / 1000f);
+				mMultiplier	=(float)timeHeld / Input.FreqMS;
 				mAction		=act;
+				mbTime		=true;
+			}
+
+			internal InputAction(float amount, Enum act)
+			{
+				mMultiplier	=amount;
+				mAction		=act;
+				mbTime		=false;
 			}
 		}
 
@@ -104,7 +115,9 @@ namespace InputLib
 		//via the handlers
 		Dictionary<int, KeyHeldInfo>	mKeysHeld	=new Dictionary<int, KeyHeldInfo>();
 		Dictionary<int, KeyHeldInfo>	mKeysUp		=new Dictionary<int, KeyHeldInfo>();
-		List<MouseMovementInfo>			mMouseMoves	=new List<MouseMovementInfo>();
+
+		//all moves accumulated for the update
+		MouseMovementInfo	mMouseMoves;
 
 		//mappings to controllers / keys / mice / whatever
 		Dictionary<UInt32, ActionMapping>	mActionMap	=new Dictionary<uint, ActionMapping>();
@@ -136,11 +149,12 @@ namespace InputLib
 		int		mLastMouseX, mLastMouseY;
 		bool	mbResetPos;
 		long	mLastUpdateTime;
+		float	mMouseTurnMultiplier;
 
 		const float	DeadZone	=5000f;
 
 
-		public Input()
+		public Input(float mouseTurnMultiplier)
 		{
 			List<DeviceInfo>	devs	=Device.GetDevices();
 
@@ -153,6 +167,8 @@ namespace InputLib
 
 			Device.KeyboardInput	+=OnKeyInput;
 			Device.MouseInput		+=OnMouseInput;
+
+			mMouseTurnMultiplier	=mouseTurnMultiplier;
 
 			mXControllers	=new Controller[4];
 
@@ -196,12 +212,13 @@ namespace InputLib
 
 			if(miea.X != 0 || miea.Y != 0)
 			{
-				MouseMovementInfo	mmi	=new MouseMovementInfo();
-				mmi.mDevice				=miea.Device;
-				mmi.mXMove				=miea.X;// - mLastMouseX;
-				mmi.mYMove				=miea.Y;// - mLastMouseY;
-
-				mMouseMoves.Add(mmi);
+				if(mMouseMoves == null)
+				{
+					mMouseMoves			=new MouseMovementInfo();
+					mMouseMoves.mDevice	=miea.Device;
+				}
+				mMouseMoves.mXMove	+=miea.X;
+				mMouseMoves.mYMove	+=miea.Y;
 			}
 
 			List<int>	buttonsDown	=new List<int>();
@@ -332,7 +349,6 @@ namespace InputLib
 		{
 			mKeysHeld.Clear();
 			mKeysUp.Clear();
-			mMouseMoves.Clear();
 			mActiveToggles.Clear();
 			mOnceActives.Clear();
 			mWasHeld.Clear();
@@ -340,6 +356,7 @@ namespace InputLib
 			{
 				xb.Clear();
 			}
+			mMouseMoves	=null;
 		}
 
 
@@ -585,9 +602,9 @@ namespace InputLib
 						|| state.Gamepad.LeftThumbX > Gamepad.LeftThumbDeadZone)
 					{
 						ActionMapping	map	=mActionMap[(int)MoveAxis.GamePadLeftXAxis];
-						InputAction	ma	=new InputAction(
-							(long)(0.05f * (float)state.Gamepad.LeftThumbX),
-							map.mAction);
+
+						float	ax		=state.Gamepad.LeftThumbX / 32768f;
+						InputAction	ma	=new InputAction(ax, map.mAction);
 						acts.Add(ma);
 					}
 				}
@@ -598,9 +615,9 @@ namespace InputLib
 						|| state.Gamepad.LeftThumbY > Gamepad.LeftThumbDeadZone)
 					{
 						ActionMapping	map	=mActionMap[(int)MoveAxis.GamePadLeftYAxis];
-						InputAction	ma	=new InputAction(
-							(long)(-0.05f * (float)state.Gamepad.LeftThumbY),
-							map.mAction);
+
+						float	ax		=state.Gamepad.LeftThumbY / 32768f;
+						InputAction	ma	=new InputAction(ax, map.mAction);
 						acts.Add(ma);
 					}
 				}
@@ -611,9 +628,9 @@ namespace InputLib
 						|| state.Gamepad.RightThumbX > Gamepad.RightThumbDeadZone)
 					{
 						ActionMapping	map	=mActionMap[(int)MoveAxis.GamePadRightXAxis];
-						InputAction	ma	=new InputAction(
-							(long)(0.05f * (float)state.Gamepad.RightThumbX),
-							map.mAction);
+
+						float	ax		=state.Gamepad.RightThumbX / 32768f;
+						InputAction	ma	=new InputAction(ax, map.mAction);
 						acts.Add(ma);
 					}
 				}
@@ -624,9 +641,9 @@ namespace InputLib
 						|| state.Gamepad.RightThumbY > Gamepad.RightThumbDeadZone)
 					{
 						ActionMapping	map	=mActionMap[(int)MoveAxis.GamePadRightYAxis];
-						InputAction	ma	=new InputAction(
-							(long)(-0.05f * (float)state.Gamepad.RightThumbY),
-							map.mAction);
+
+						float	ax		=state.Gamepad.RightThumbY / 32768f;
+						InputAction	ma	=new InputAction(ax, map.mAction);
 						acts.Add(ma);
 					}
 				}
@@ -636,9 +653,7 @@ namespace InputLib
 					if(state.Gamepad.LeftTrigger > Gamepad.TriggerThreshold)
 					{
 						ActionMapping	map	=mActionMap[(int)MoveAxis.GamePadLeftTrigger];
-						InputAction	ma	=new InputAction(
-							(long)(0.5f * (float)state.Gamepad.LeftTrigger),
-							map.mAction);
+						InputAction	ma	=new InputAction(state.Gamepad.LeftTrigger / 255f, map.mAction);
 						acts.Add(ma);
 					}
 				}
@@ -648,9 +663,7 @@ namespace InputLib
 					if(state.Gamepad.RightTrigger > Gamepad.TriggerThreshold)
 					{
 						ActionMapping	map	=mActionMap[(int)MoveAxis.GamePadRightTrigger];
-						InputAction	ma	=new InputAction(
-							(long)(0.5f * (float)state.Gamepad.RightTrigger),
-							map.mAction);
+						InputAction	ma	=new InputAction((float)state.Gamepad.RightTrigger / 255f, map.mAction);
 						acts.Add(ma);
 					}
 				}
@@ -809,27 +822,29 @@ namespace InputLib
 				}
 			}
 
-			foreach(MouseMovementInfo mmi in mMouseMoves)
+			if(mMouseMoves != null)
 			{
-				if(mmi.mXMove != 0)
+				if(mMouseMoves.mXMove != 0)
 				{
 					if(mActionMap.ContainsKey((int)MoveAxis.MouseXAxis))
 					{
 						ActionMapping	map	=mActionMap[(int)MoveAxis.MouseXAxis];
 
-						InputAction	ma	=new InputAction(mmi.mXMove * 300, map.mAction);
+						InputAction	ma	=new InputAction(
+							(mMouseMoves.mXMove * mMouseTurnMultiplier), map.mAction);
 
 						acts.Add(ma);
 					}
 				}
 
-				if(mmi.mYMove != 0)
+				if(mMouseMoves.mYMove != 0)
 				{
 					if(mActionMap.ContainsKey((int)MoveAxis.MouseYAxis))
 					{
 						ActionMapping	map	=mActionMap[(int)MoveAxis.MouseYAxis];
 
-						InputAction	ma	=new InputAction(mmi.mYMove * 300, map.mAction);
+						InputAction	ma	=new InputAction(
+							(mMouseMoves.mYMove * mMouseTurnMultiplier), map.mAction);
 
 						acts.Add(ma);
 					}
@@ -837,7 +852,7 @@ namespace InputLib
 			}
 
 			mKeysUp.Clear();
-			mMouseMoves.Clear();
+			mMouseMoves	=null;
 
 			return	acts;
 		}
