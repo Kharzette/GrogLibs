@@ -25,14 +25,8 @@ namespace InputLib
 		SteeringMethod	mMethod;
 
 		//movement settings
-		float	mGroundSpeed		=0.1f;
-		float	mMouseSensitivity	=0.01f;
-		float	mKeySensitivity		=0.1f;	//for key turning
-		float	mGamePadSensitivity	=0.25f;
-		float	mTurnSpeed			=1.0f;
 		float	mWheelScrollSpeed	=0.04f;
 		bool	mbInvertYAxis		=false;
-		bool	mbUsePadIfPossible	=true;
 
 		//sprint settings
 		float	SprintForwardFactor	=1.8f;
@@ -41,14 +35,11 @@ namespace InputLib
 		float	SprintRightFactor	=1.5f;
 
 		//position info
-		Vector3	mPosition, mDelta;
+		Vector3	mDelta;
 		Vector3	mCursorPos;
 		float	mPitch, mYaw, mRoll;
 		float	mZoom	=80f;		//default
 		bool	mbMovedThisFrame;	//true if the player gave movement input
-
-		//for mouselook
-		bool	mbRightClickToTurn;
 
 		//constants
 		const float	PitchClamp	=80.0f;
@@ -109,28 +100,10 @@ namespace InputLib
 			set { mCursorPos = value; }
 		}
 
-		public bool RightClickToTurn
-		{
-			get { return mbRightClickToTurn; }
-			set { mbRightClickToTurn = value; }
-		}
-
 		public bool MovedThisFrame
 		{
 			get { return mbMovedThisFrame; }
 			set { mbMovedThisFrame = value; }
-		}
-
-		public float Speed
-		{
-			get { return mGroundSpeed; }
-			set { mGroundSpeed = value; }
-		}
-
-		public float TurnSpeed
-		{
-			get { return mTurnSpeed; }
-			set { mTurnSpeed = value; }
 		}
 
 		public Vector3 Delta
@@ -163,28 +136,10 @@ namespace InputLib
 			set { mZoom = value; }
 		}
 
-		public float MouseSensitivity
-		{
-			get { return mMouseSensitivity; }
-			set { mMouseSensitivity = value; }
-		}
-
-		public float GamePadSensitivity
-		{
-			get { return mGamePadSensitivity; }
-			set { mGamePadSensitivity = value; }
-		}
-
 		public bool InvertYAxis
 		{
 			get { return mbInvertYAxis; }
 			set { mbInvertYAxis = value; }
-		}
-
-		public bool UseGamePadIfPossible
-		{
-			get { return mbUsePadIfPossible; }
-			set { mbUsePadIfPossible = value; }
 		}
 
 
@@ -194,7 +149,6 @@ namespace InputLib
 		{
 			mbMovedThisFrame	=false;
 
-			mPosition	=pos;
 			if(mMethod == SteeringMethod.None)
 			{
 				return	pos;
@@ -204,12 +158,12 @@ namespace InputLib
 			{
 				if(act.mAction.Equals(mZoomIn))
 				{
-					mZoom	-=act.mMultiplier * 0.04f;
+					mZoom	-=act.mMultiplier * mWheelScrollSpeed;
 					mZoom	=MathUtil.Clamp(mZoom, 5f, 500f);
 				}
 				else if(act.mAction.Equals(mZoomOut))
 				{
-					mZoom	+=act.mMultiplier * 0.04f;
+					mZoom	+=act.mMultiplier * mWheelScrollSpeed;
 					mZoom	=MathUtil.Clamp(mZoom, 5f, 500f);
 				}
 			}

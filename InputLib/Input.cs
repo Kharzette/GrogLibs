@@ -26,22 +26,31 @@ namespace InputLib
 
 		public class InputAction
 		{
-			public float	mMultiplier;	//time or analog amount
-			public Enum		mAction;		//user specified thing?
-			public bool		mbTime;			//multiplier is time
-
-			internal InputAction(long timeHeld, Enum act)
+			public enum DeviceType
 			{
+				KEYS, ANALOG, MOUSE
+			}
+
+			public float		mMultiplier;	//time or analog amount
+			public Enum			mAction;		//user specified thing?
+			public bool			mbTime;			//multiplier is time
+			public DeviceType	mDevice;		//so can scale to user preferences
+
+			internal InputAction(DeviceType dev, long timeHeld, Enum act)
+			{
+				//scale time to program preference
 				mMultiplier	=(float)timeHeld * Input.TimeScalar;
 				mAction		=act;
 				mbTime		=true;
+				mDevice		=dev;
 			}
 
-			internal InputAction(float amount, Enum act)
+			internal InputAction(DeviceType dev, float amount, Enum act)
 			{
 				mMultiplier	=amount;
 				mAction		=act;
 				mbTime		=false;
+				mDevice		=dev;
 			}
 		}
 
@@ -150,12 +159,11 @@ namespace InputLib
 		int		mLastMouseX, mLastMouseY;
 		bool	mbResetPos;
 		long	mLastUpdateTime;
-		float	mMouseTurnMultiplier;
 
 		const float	DeadZone	=5000f;
 
 
-		public Input(float mouseTurnMultiplier, float timeScalar)
+		public Input(float timeScalar)
 		{
 			TimeScalar	=timeScalar;
 
@@ -170,8 +178,6 @@ namespace InputLib
 
 			Device.KeyboardInput	+=OnKeyInput;
 			Device.MouseInput		+=OnMouseInput;
-
-			mMouseTurnMultiplier	=mouseTurnMultiplier;
 
 			mXControllers	=new Controller[4];
 
@@ -201,6 +207,25 @@ namespace InputLib
 		{
 			Device.KeyboardInput	-=OnKeyInput;
 			Device.MouseInput		-=OnMouseInput;
+		}
+
+
+		//in case of big delta times in a game, like sitting at a breakpoint
+		//or a big drop in framerate
+		public void ClampInputTimes(float amount)
+		{
+			long	clampTo	=(long)(amount / TimeScalar);
+
+			foreach(KeyValuePair<int, KeyHeldInfo> key in mKeysHeld)
+			{
+				if(key.Value.mTimeHeld > clampTo)
+				{
+					int	j=0;
+					j++;
+				}
+				key.Value.mTimeHeld =Math.Min(key.Value.mTimeHeld, clampTo);
+				Debug.WriteLine("" + key.Value.mTimeHeld);
+			}
 		}
 
 
@@ -607,7 +632,8 @@ namespace InputLib
 						ActionMapping	map	=mActionMap[(int)MoveAxis.GamePadLeftXAxis];
 
 						float	ax		=state.Gamepad.LeftThumbX / 32768f;
-						InputAction	ma	=new InputAction(ax, map.mAction);
+						InputAction	ma	=new InputAction(
+							InputAction.DeviceType.ANALOG, ax, map.mAction);
 						acts.Add(ma);
 					}
 				}
@@ -620,7 +646,8 @@ namespace InputLib
 						ActionMapping	map	=mActionMap[(int)MoveAxis.GamePadLeftYAxis];
 
 						float	ax		=state.Gamepad.LeftThumbY / 32768f;
-						InputAction	ma	=new InputAction(ax, map.mAction);
+						InputAction	ma	=new InputAction(
+							InputAction.DeviceType.ANALOG, ax, map.mAction);
 						acts.Add(ma);
 					}
 				}
@@ -633,7 +660,8 @@ namespace InputLib
 						ActionMapping	map	=mActionMap[(int)MoveAxis.GamePadRightXAxis];
 
 						float	ax		=state.Gamepad.RightThumbX / 32768f;
-						InputAction	ma	=new InputAction(ax, map.mAction);
+						InputAction	ma	=new InputAction(
+							InputAction.DeviceType.ANALOG, ax, map.mAction);
 						acts.Add(ma);
 					}
 				}
@@ -646,7 +674,8 @@ namespace InputLib
 						ActionMapping	map	=mActionMap[(int)MoveAxis.GamePadRightYAxis];
 
 						float	ax		=state.Gamepad.RightThumbY / 32768f;
-						InputAction	ma	=new InputAction(ax, map.mAction);
+						InputAction	ma	=new InputAction(
+							InputAction.DeviceType.ANALOG, ax, map.mAction);
 						acts.Add(ma);
 					}
 				}
@@ -656,7 +685,8 @@ namespace InputLib
 					if(state.Gamepad.LeftTrigger > Gamepad.TriggerThreshold)
 					{
 						ActionMapping	map	=mActionMap[(int)MoveAxis.GamePadLeftTrigger];
-						InputAction	ma	=new InputAction(state.Gamepad.LeftTrigger / 255f, map.mAction);
+						InputAction	ma	=new InputAction(
+							InputAction.DeviceType.ANALOG, state.Gamepad.LeftTrigger / 255f, map.mAction);
 						acts.Add(ma);
 					}
 				}
@@ -666,7 +696,8 @@ namespace InputLib
 					if(state.Gamepad.RightTrigger > Gamepad.TriggerThreshold)
 					{
 						ActionMapping	map	=mActionMap[(int)MoveAxis.GamePadRightTrigger];
-						InputAction	ma	=new InputAction((float)state.Gamepad.RightTrigger / 255f, map.mAction);
+						InputAction	ma	=new InputAction(
+							InputAction.DeviceType.ANALOG, (float)state.Gamepad.RightTrigger / 255f, map.mAction);
 						acts.Add(ma);
 					}
 				}
@@ -723,7 +754,8 @@ namespace InputLib
 
 						if(map.mActionType == ActionTypes.ContinuousHold)
 						{
-							InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mAction);
+							InputAction	act	=new InputAction(
+								InputAction.DeviceType.KEYS, heldKey.Value.mTimeHeld, map.mAction);
 							acts.Add(act);
 
 							//reset time
@@ -742,7 +774,8 @@ namespace InputLib
 							if(!mActiveToggles.Contains(heldKey.Key))
 							{
 								//toggle on
-								InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mAction);
+								InputAction	act	=new InputAction(
+									InputAction.DeviceType.KEYS, heldKey.Value.mTimeHeld, map.mAction);
 								acts.Add(act);
 
 								mActiveToggles.Add(heldKey.Key);
@@ -753,7 +786,8 @@ namespace InputLib
 							if(!mOnceActives.Contains(heldKey.Key))
 							{
 								//not yet fired
-								InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mAction);
+								InputAction	act	=new InputAction(
+									InputAction.DeviceType.KEYS, heldKey.Value.mTimeHeld, map.mAction);
 								acts.Add(act);
 
 								mOnceActives.Add(heldKey.Key);
@@ -794,7 +828,8 @@ namespace InputLib
 							if(mWasHeld.Contains(modKey))
 							{
 								//release action
-								InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mAction);
+								InputAction	act	=new InputAction(
+									InputAction.DeviceType.KEYS, heldKey.Value.mTimeHeld, map.mAction);
 								acts.Add(act);
 								mWasHeld.Remove(modKey);
 							}
@@ -804,7 +839,8 @@ namespace InputLib
 							if(mActiveToggles.Contains(heldKey.Key))
 							{
 								//toggle off
-								InputAction	act	=new InputAction(heldKey.Value.mTimeHeld, map.mActionOff);
+								InputAction	act	=new InputAction(
+									InputAction.DeviceType.KEYS, heldKey.Value.mTimeHeld, map.mActionOff);
 								acts.Add(act);
 
 								mActiveToggles.Remove(heldKey.Key);
@@ -834,7 +870,7 @@ namespace InputLib
 						ActionMapping	map	=mActionMap[(int)MoveAxis.MouseXAxis];
 
 						InputAction	ma	=new InputAction(
-							(mMouseMoves.mXMove * mMouseTurnMultiplier), map.mAction);
+							InputAction.DeviceType.MOUSE, (float)mMouseMoves.mXMove, map.mAction);
 
 						acts.Add(ma);
 					}
@@ -847,7 +883,7 @@ namespace InputLib
 						ActionMapping	map	=mActionMap[(int)MoveAxis.MouseYAxis];
 
 						InputAction	ma	=new InputAction(
-							(mMouseMoves.mYMove * mMouseTurnMultiplier), map.mAction);
+							InputAction.DeviceType.MOUSE, (float)mMouseMoves.mYMove, map.mAction);
 
 						acts.Add(ma);
 					}
