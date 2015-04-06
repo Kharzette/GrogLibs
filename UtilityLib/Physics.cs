@@ -72,8 +72,6 @@ namespace UtilityLib
 
 		public void SetProps(float mass, float it, float friction)
 		{
-			Debug.Assert(friction > 1f);
-
 			mCur.mMass			=mass;
 			mCur.mInertiaTensor	=it;
 			mCur.mFriction		=friction;
