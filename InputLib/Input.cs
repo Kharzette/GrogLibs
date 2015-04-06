@@ -21,7 +21,8 @@ namespace InputLib
 		[DllImport("user32", SetLastError=true, CharSet=CharSet.Unicode)]
 			static extern int GetKeyNameTextW(uint lParam, StringBuilder lpString, int nSize);
 
-		static float	FreqMS	=((float)Stopwatch.Frequency) / 1000f;
+		//convert from cpu tics to whatever is desired
+		static internal float	TimeScalar;
 
 		public class InputAction
 		{
@@ -31,7 +32,7 @@ namespace InputLib
 
 			internal InputAction(long timeHeld, Enum act)
 			{
-				mMultiplier	=(float)timeHeld / Input.FreqMS;
+				mMultiplier	=(float)timeHeld * Input.TimeScalar;
 				mAction		=act;
 				mbTime		=true;
 			}
@@ -154,8 +155,10 @@ namespace InputLib
 		const float	DeadZone	=5000f;
 
 
-		public Input(float mouseTurnMultiplier)
+		public Input(float mouseTurnMultiplier, float timeScalar)
 		{
+			TimeScalar	=timeScalar;
+
 			List<DeviceInfo>	devs	=Device.GetDevices();
 
 			Device.RegisterDevice(UsagePage.Generic, UsageId.GenericKeyboard, DeviceFlags.None);

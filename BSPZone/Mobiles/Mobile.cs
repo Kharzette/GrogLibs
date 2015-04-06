@@ -37,9 +37,8 @@ namespace BSPZone
 		//push velocity from riding on or being pushed by models
 		Vector3	mPushVelocity;
 
-		//position and momentum
+		//position
 		Vector3	mPosition;
-		Vector3	mVelocity;
 
 		//collision box, sized for this mobile
 		BoundingBox	mBox;
@@ -49,12 +48,8 @@ namespace BSPZone
 		Vector3		mEyeHeight;
 
 		//constants
-		const float MidAirMoveScale		=0.01f;
-		const float	JumpVelocity		=8f;
-		const float	Friction			=0.6f;
 		const float	MinCamDist			=10f;
 		const float	CamCollisionRadius	=4f;
-		const float	GravityConstant		=0.02f;
 
 
 		public Mobile(object owner, float boxWidth, float boxHeight,
@@ -135,32 +130,6 @@ namespace BSPZone
 		public Vector3 GetEyePos()
 		{
 			return	(mPosition - mBoxMiddleOffset + mEyeHeight);
-		}
-
-
-		public void ApplyForce(Vector3 force)
-		{
-			mVelocity	+=force;
-		}
-
-
-		public void Jump()
-		{
-			if(mbOnGround)
-			{
-				if(mModelOn > 0)
-				{
-					mVelocity	+=(mPushVelocity * 0.5f);
-				}
-				mVelocity	+=Vector3.UnitY * JumpVelocity;
-			}
-		}
-
-
-		//helps AI come to a stop without sliding beyond a goal
-		public void KillVelocity()
-		{
-			mVelocity	=Vector3.Zero;
 		}
 
 
@@ -314,26 +283,22 @@ namespace BSPZone
 
 		//ins and outs are ground based
 		public void Move(Vector3 endPos, int msDelta, bool bWorldOnly,
-			bool bAffectVelocity, bool bFly, bool bTriggerCheck, bool bDistCheck,
+			bool bFly, bool bTriggerCheck, bool bDistCheck,
 			out Vector3 retPos, out Vector3 camPos)
 		{
 			retPos	=Vector3.Zero;
 			camPos	=Vector3.Zero;
-
-			//adjust to box middle
-			endPos	+=mBoxMiddleOffset;
 
 			if(mZone == null)
 			{
 				return;
 			}
 
-			Vector3	moveDelta	=endPos - mPosition;
-
 			if(bFly)
 			{
-				retPos	=mPosition	=endPos;
-				camPos	=-mPosition;
+				mPosition	=endPos + mBoxMiddleOffset;
+				retPos		=endPos;
+				camPos		=-endPos;
 				if(mbPushable)
 				{
 					mZone.UpdatePushable(this, mPosition, mModelOn);
@@ -341,55 +306,17 @@ namespace BSPZone
 				return;
 			}
 
-			//if not on the ground, limit midair movement
-			if(!mbOnGround && bAffectVelocity)
-			{
-				moveDelta.X	*=MidAirMoveScale;
-				moveDelta.Z	*=MidAirMoveScale;
-				mVelocity.Y	-=(GravityConstant * msDelta);	//gravity
-			}
+			//adjust to box middle
+			endPos	+=mBoxMiddleOffset;
 
-			//get ideal final position
-			if(bAffectVelocity)
-			{
-				endPos	=mPosition + mVelocity + moveDelta;
-			}
-			else
-			{
-				endPos	=mPosition + moveDelta;
-			}
+			Vector3	moveDelta	=endPos - mPosition;
 
 			//move it through the bsp
 			bool	bUsedStairs	=false;
-			if(mZone.BipedMoveBox(mBox, mPosition, endPos, mbOnGround, bWorldOnly, bDistCheck,
-				out endPos, out bUsedStairs, ref mModelOn))
-			{
-				mbOnGround	=true;
 
-				//on ground, friction velocity
-				if(bAffectVelocity)
-				{
-					mVelocity	=endPos - mPosition;
-					mVelocity	*=Friction;
-
-					//clamp really small velocities
-					Mathery.TinyToZero(ref mVelocity);
-
-					//prevent stairsteps from launching the velocity
-					if(bUsedStairs)
-					{
-						mVelocity.Y	=0.0f;
-					}
-				}
-			}
-			else
-			{
-				if(bAffectVelocity)
-				{
-					mVelocity	=endPos - mPosition;
-				}
-				mbOnGround	=false;
-			}
+			mbOnGround	=mZone.BipedMoveBox(mBox, mPosition, endPos,
+				mbOnGround, bWorldOnly, bDistCheck,
+				out endPos, out bUsedStairs, ref mModelOn);
 
 			retPos	=endPos - mBoxMiddleOffset;
 
@@ -483,7 +410,7 @@ namespace BSPZone
 
 			Vector3	pushedTo, camTo;
 			Move(delta + GetGroundPos(), 1,
-				true, false, false, true, false, out pushedTo, out camTo);
+				true, false, true, false, out pushedTo, out camTo);
 
 			SetGroundPos(pushedTo);
 

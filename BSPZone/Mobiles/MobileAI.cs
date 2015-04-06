@@ -172,7 +172,7 @@ namespace BSPZone
 		public void StopHere()
 		{
 			ClearGoals();
-			mMob.KillVelocity();
+			//mMob.KillVelocity();
 		}
 
 
@@ -287,7 +287,7 @@ namespace BSPZone
 			//not much to do while falling
 			if(!mMob.IsOnGround())
 			{
-				mMob.Move(endPos, msDelta, false, true, false, true, true, out endPos, out camPos);
+				mMob.Move(endPos, msDelta, false, false, true, true, out endPos, out camPos);
 				return	false;
 			}
 
@@ -305,7 +305,7 @@ namespace BSPZone
 			{
 				bMoved	=UpdateFollowPath(msDelta, startPos, ref endPos);
 			}
-			mMob.Move(endPos, msDelta, false, true, false, true, true, out endPos, out camPos);
+			mMob.Move(endPos, msDelta, false, false, true, true, out endPos, out camPos);
 
 			return	bMoved;
 		}
@@ -317,7 +317,7 @@ namespace BSPZone
 			if(mPath.Count <= 0)
 			{
 				mbFollowingPath	=false;
-				mMob.KillVelocity();
+				//mMob.KillVelocity();
 			}
 			else
 			{
@@ -371,7 +371,7 @@ namespace BSPZone
 				if(Mathery.CompareVectorEpsilon(mDirectMoveGoal, startPos, CloseEnough))
 				{
 					mbMovingToGoal	=false;
-					mMob.KillVelocity();
+					//mMob.KillVelocity();
 				}
 				else
 				{
@@ -391,7 +391,7 @@ namespace BSPZone
 				if(ApproachMobile(msDelta, out endPos))
 				{
 					mbApproaching	=false;
-					mMob.KillVelocity();
+					//mMob.KillVelocity();
 				}
 				return	true;
 			}

@@ -243,7 +243,7 @@ namespace InputLib
 
 			mDelta	=moveVec;
 
-			return	mPosition + moveVec;
+			return	moveVec;
 		}
 
 
@@ -282,15 +282,29 @@ namespace InputLib
 				if(act.mAction.Equals(mMoveLeftRight))
 				{
 					mbMovedThisFrame	=true;
-					moveVec				-=camLeft;
-					actionMult			+=act.mMultiplier;
+					if(act.mMultiplier > 0)
+					{
+						moveVec	-=camLeft;
+					}
+					else
+					{
+						moveVec	+=camLeft;
+					}
+					actionMult	+=act.mMultiplier;
 					multCount++;
 				}
 				else if(act.mAction.Equals(mMoveForwardBack))
 				{
 					mbMovedThisFrame	=true;
-					moveVec				-=camForward;
-					actionMult			+=act.mMultiplier;
+					if(act.mMultiplier > 0)
+					{
+						moveVec	+=camForward;
+					}
+					else
+					{
+						moveVec	-=camForward;
+					}
+					actionMult	+=act.mMultiplier;
 					multCount++;
 				}
 				else if(act.mAction.Equals(mMoveForward))
@@ -357,7 +371,7 @@ namespace InputLib
 
 				actionMult	/=multCount;
 
-				moveVec	*=actionMult * mGroundSpeed;
+				moveVec	*=Math.Abs(actionMult);
 			}
 		}
 

@@ -371,6 +371,23 @@ namespace UtilityLib
 		}
 
 
+		public static void TinyToZero(ref Vector3 val, float amount)
+		{
+			if(val.X < amount && val.X > -amount)
+			{
+				val.X	=0.0f;
+			}
+			if(val.Y < amount && val.Y > -amount)
+			{
+				val.Y	=0.0f;
+			}
+			if(val.Z < amount && val.Z > -amount)
+			{
+				val.Z	=0.0f;
+			}
+		}
+
+
 		//range should be the value to keep the position within
 		//positive or negative.  Like 5 10 15 would return a
 		//vector within plus or minus 5 x, plus or minus 10 y,

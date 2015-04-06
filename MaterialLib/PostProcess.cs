@@ -28,6 +28,12 @@ namespace MaterialLib
 		Dictionary<string, DepthStencilView>	mPostDepths		=new Dictionary<string, DepthStencilView>();
 		Dictionary<string, ShaderResourceView>	mPostTargSRVs	=new Dictionary<string, ShaderResourceView>();
 
+		//keep track of lower res rendertargets
+		//this info needed when a resize happens
+		List<string>	mHalfResTargets		=new List<string>();
+		List<string>	mQuarterResTargets	=new List<string>();
+		List<string>	mFixedResTargets	=new List<string>();	//don't resize
+
 		//data for looking up outline colours
 		Texture1D			mOutlineLookupTex;
 		ShaderResourceView	mOutlineLookupSRV;
@@ -110,6 +116,28 @@ namespace MaterialLib
 
 			gd.ePreResize	+=OnPreResize;
 			gd.eResized		+=OnResized;
+		}
+
+
+		public void MakePostTargetHalfRes(GraphicsDevice gd, string name,
+			int resx, int resy, Format surf)
+		{
+			mHalfResTargets.Add(name);
+			MakePostTarget(gd, name, resx, resy, surf);
+		}
+
+		public void MakePostTargetQuarterRes(GraphicsDevice gd, string name,
+			int resx, int resy, Format surf)
+		{
+			mQuarterResTargets.Add(name);
+			MakePostTarget(gd, name, resx, resy, surf);
+		}
+
+		public void MakePostTargetFixedRes(GraphicsDevice gd, string name,
+			int resx, int resy, Format surf)
+		{
+			mFixedResTargets.Add(name);
+			MakePostTarget(gd, name, resx, resy, surf);
 		}
 
 
@@ -670,14 +698,34 @@ namespace MaterialLib
 					Format				=tex.Value.Description.Format,
 					ArraySize			=tex.Value.Description.ArraySize,
 					MipLevels			=tex.Value.Description.MipLevels,
-					Width				=mResX,
-					Height				=mResY,
 					SampleDescription	=new SampleDescription(1, 0),
 					Usage				=tex.Value.Description.Usage,
 					BindFlags			=tex.Value.Description.BindFlags,
 					CpuAccessFlags		=tex.Value.Description.CpuAccessFlags,
 					OptionFlags			=tex.Value.Description.OptionFlags
 				};
+
+				if(mHalfResTargets.Contains(tex.Key))
+				{
+					resizeDesc.Width	=mResX / 2;
+					resizeDesc.Height	=mResY / 2;
+				}
+				else if(mQuarterResTargets.Contains(tex.Key))
+				{
+					resizeDesc.Width	=mResX / 2;
+					resizeDesc.Height	=mResY / 2;
+				}
+				else if(mFixedResTargets.Contains(tex.Key))
+				{
+					resizeDesc.Width	=tex.Value.Description.Width;
+					resizeDesc.Height	=tex.Value.Description.Height;
+				}
+				else
+				{
+					resizeDesc.Width	=mResX;
+					resizeDesc.Height	=mResY;
+				}
+
 				descs.Add(tex.Key, resizeDesc);
 			}
 
