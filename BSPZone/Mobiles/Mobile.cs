@@ -31,6 +31,9 @@ namespace BSPZone
 		//true if there is solid footing underneath
 		bool	mbOnGround;
 
+		//true if there's something underfoot, but not good traction
+		bool	mbBadFooting;
+
 		//true if this object can be pushed by models
 		bool	mbPushable;
 
@@ -89,6 +92,18 @@ namespace BSPZone
 		public void SetGroundPos(Vector3 pos)
 		{
 			mPosition	=pos + mBoxMiddleOffset;
+		}
+
+
+		public bool IsOnGround()
+		{
+			return	mbOnGround;
+		}
+
+
+		public bool IsBadFooting()
+		{
+			return	mbBadFooting;
 		}
 
 
@@ -316,7 +331,7 @@ namespace BSPZone
 
 			mbOnGround	=mZone.BipedMoveBox(mBox, mPosition, endPos,
 				mbOnGround, bWorldOnly, bDistCheck,
-				out endPos, out bUsedStairs, ref mModelOn);
+				out endPos, out bUsedStairs, out mbBadFooting, ref mModelOn);
 
 			retPos	=endPos - mBoxMiddleOffset;
 
@@ -335,12 +350,6 @@ namespace BSPZone
 			{
 				mZone.UpdatePushable(this, mPosition, mModelOn);
 			}
-		}
-
-
-		public bool IsOnGround()
-		{
-			return	mbOnGround;
 		}
 
 
@@ -364,8 +373,9 @@ namespace BSPZone
 			//move it through the bsp
 			bool	bUsedStairs	=false;
 			int		modelOn		=-1;
+			bool	bBadFooting	=false;
 			bool	bOnGround	=mZone.BipedMoveBox(mBox, mPosition, endPos, mbOnGround, false, true,
-									out endPos, out bUsedStairs, ref modelOn);
+									out endPos, out bUsedStairs, out bBadFooting, ref modelOn);
 
 			//test distance without the Y
 			tryPos.Y	=0f;
@@ -421,7 +431,8 @@ namespace BSPZone
 				//try to resolve
 				Vector3	resolvePos;
 				int		modelOn;
-				if(mZone.ResolvePosition(mBox, mPosition, out resolvePos, out modelOn))
+				bool	bBadFooting;
+				if(mZone.ResolvePosition(mBox, mPosition, out resolvePos, out bBadFooting, out modelOn))
 				{
 					mPosition	=resolvePos;
 				}

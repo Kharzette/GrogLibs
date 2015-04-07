@@ -31,6 +31,39 @@ namespace UtilityLib
 
 
 		//Vector extension methods
+		public static float dot(this Vector3 aVec, Vector3 bVec)
+		{
+			return	Vector3.Dot(aVec, bVec);
+		}
+
+
+		public static float Distance(this Vector3 aVec, Vector3 bVec)
+		{
+			return	Vector3.Distance(aVec, bVec);
+		}
+
+
+		//flip negatives
+		public static Vector3 Positive(this Vector3 vec)
+		{
+			Vector3	ret	=vec;
+
+			if(ret.X < 0)
+			{
+				ret.X	=-ret.X;
+			}
+			if(ret.Y < 0)
+			{
+				ret.Y	=-ret.Y;
+			}
+			if(ret.Z < 0)
+			{
+				ret.Z	=-ret.Z;
+			}
+			return	ret;
+		}
+
+
 		public static Vector3 XYZ(this Vector4 v4)
 		{
 			Vector3	ret	=Vector3.Zero;
@@ -73,6 +106,14 @@ namespace UtilityLib
 		{
 			bb.Minimum	=Vector3.One * MIN_MAX_BOUNDS;
 			bb.Maximum	=-bb.Minimum;
+		}
+
+
+		public static float BoxPlaneDistance(this BoundingBox bb, Vector3 planeNormal)
+		{
+			Vector3	posNorm	=planeNormal.Positive();
+
+			return	Vector3.Dot(posNorm, bb.Maximum);
 		}
 
 

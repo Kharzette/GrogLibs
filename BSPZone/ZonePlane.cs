@@ -95,17 +95,17 @@ namespace BSPZone
 			float	dist		=Distance(end);
 
 			//is the direction vector valid to find a collision response?
-			if(startDist <= 0f || dist >= Mathery.VCompareEpsilon)
+			if(startDist <= 0f || dist >= Mathery.DIST_EPSILON)
 			{
 				//place end directly on the plane
 				end	-=(mNormal * dist);
 
 				//adjust it to the front side
-				end	+=(mNormal * Mathery.VCompareEpsilon);
+				end	+=(mNormal * Mathery.DIST_EPSILON);
 			}
 			else
 			{
-				end	-=(mNormal * (dist - Mathery.VCompareEpsilon));
+				end	-=(mNormal * (dist - Mathery.DIST_EPSILON));
 			}
 			return	end;
 		}
@@ -117,17 +117,17 @@ namespace BSPZone
 			float	dist	=Distance(pos);
 
 			//directly on or off a bit?
-			if(dist >= Mathery.VCompareEpsilon)
+			if(dist >= Mathery.DIST_EPSILON)
 			{
 				//place end directly on the plane
 				pos	-=(mNormal * dist);
 
 				//adjust it to the front side
-				pos	+=(mNormal * Mathery.VCompareEpsilon);
+				pos	+=(mNormal * Mathery.DIST_EPSILON);
 			}
 			else
 			{
-				pos	-=(mNormal * (dist - Mathery.VCompareEpsilon));
+				pos	-=(mNormal * (dist - Mathery.DIST_EPSILON));
 			}
 		}
 

@@ -24,12 +24,13 @@ namespace BSPZone
 
 
 		#region Bipedal Movement
-		bool FootCheck(BoundingBox box, Vector3 footPos, float dist, out int modelOn)
+		bool FootCheck(BoundingBox box, Vector3 footPos, float dist, out int modelOn, out bool bBadFooting)
 		{
 			//see if the feet are still on the ground
 			Vector3		footCheck	=footPos - Vector3.UnitY * dist;
 
-			modelOn	=-1;
+			modelOn		=-1;
+			bBadFooting	=false;
 
 			RayTrace	rt	=new RayTrace(footPos, footCheck);
 
@@ -38,14 +39,17 @@ namespace BSPZone
 			{
 				if(rt.mCollision.mbStartInside)
 				{
+					bBadFooting	=true;
 					return	false;
 				}
 
 				if(rt.mCollision.mPlaneHit.IsGround())
 				{
-					modelOn	=0;
+					bBadFooting	=false;
+					modelOn		=0;
 					return	true;
 				}
+				bBadFooting	=true;
 			}
 
 			//try models
@@ -54,14 +58,17 @@ namespace BSPZone
 			{
 				if(col.mbStartInside)
 				{
+					bBadFooting	=true;
 					return	false;
 				}
 
 				if(col.mPlaneHit.IsGround())
 				{
-					modelOn	=col.mModelHit;
+					bBadFooting	=false;
+					modelOn		=col.mModelHit;
 					return	true;
 				}
+				bBadFooting	=true;
 			}
 			return	false;
 		}
@@ -97,8 +104,9 @@ namespace BSPZone
 
 			//movebox from start step height to end step height
 			stepPos	=Vector3.Zero;
+			bool	bBadFooting;
 			bool	bGroundStep	=MoveBox(box, start + stairAxis * stepHeight,
-				end + stairAxis * stepHeight, false, out stepPos, out modelOn);
+				end + stairAxis * stepHeight, false, out stepPos, out modelOn, out bBadFooting);
 
 			if(!bGroundStep)
 			{
@@ -184,9 +192,10 @@ namespace BSPZone
 		//TODO: This gets a bit strange on gentle slopes
 		public bool BipedMoveBox(BoundingBox box, Vector3 start, Vector3 end,
 			bool bPrevOnGround, bool bWorldOnly, bool bDistCheck,
-			out Vector3 finalPos, out bool bUsedStairs, ref int modelOn)
+			out Vector3 finalPos, out bool bUsedStairs, out bool bBadFooting, ref int modelOn)
 		{
 			bUsedStairs	=false;
+			bBadFooting	=false;
 
 			//first check if we are moving at all
 			Vector3	moveVec	=end - start;
@@ -195,12 +204,12 @@ namespace BSPZone
 			{
 				//didn't move enough to bother
 				finalPos	=start;
-				return		FootCheck(box, start, FootDistance, out modelOn);
+				return		FootCheck(box, start, FootDistance, out modelOn, out bBadFooting);
 			}
 
 			//try the standard box move
 			int		firstModelOn;
-			bool	bGround	=MoveBox(box, start, end, bWorldOnly, out finalPos, out firstModelOn);
+			bool	bGround	=MoveBox(box, start, end, bWorldOnly, out finalPos, out firstModelOn, out bBadFooting);
 
 			//see how far it went
 			moveVec	=finalPos - start;
@@ -378,29 +387,41 @@ namespace BSPZone
 		{
 			int	i	=0;
 
+			Vector3	newEnd		=end;
+			Vector3	newStart	=start;
+
 			List<ZonePlane>	hitPlanes	=new List<ZonePlane>();
 			for(i=0;i < MaxMoveBoxIterations;i++)
 			{
-				RayTrace	rt	=new RayTrace(start, end);
+				RayTrace	rt	=new RayTrace(newStart, newEnd);
 				rt.mBounds		=box;
 
-				bool	bHitSomething	=TraceNode(rt, start, end, 0);
+				bool	bHitSomething	=TraceNode(rt, newStart, newEnd, 0);
 				if(!bHitSomething)
 				{
 					break;
 				}
 
+				ZonePlane	zp	=rt.mCollision.mPlaneHit;
+
 				if(rt.mCollision.mbStartInside)
 				{
+					//see if start is exactly plane on
+					float	checkDist	=zp.Distance(newStart);
+					if(checkDist == 0f)
+					{
+						zp.ReflectPosition(ref newStart);
+						continue;
+					}
+
 					//TODO: report and solve via intersection
 					//can't solve!
 					finalPos	=start;
 					return	false;
 				}
 
-				ZonePlane	zp	=rt.mCollision.mPlaneHit;
 
-				end	=zp.ReflectPosition(start, end);
+				newEnd	=zp.ReflectPosition(newStart, newEnd);
 
 				if(!hitPlanes.Contains(zp))
 				{
@@ -408,14 +429,96 @@ namespace BSPZone
 				}
 			}
 
-			finalPos	=end;
+			finalPos	=newEnd;
 			if(i == MaxMoveBoxIterations)
 			{
-				//can't solve!
-				finalPos	=end;
-				return	false;
+				//this is usually caused by oblique planes causing
+				//the reflected motion to bounce back and forth
+
+				//get all the collision points along the motion
+				List<Vector3>	contacts	=GetCollisions(hitPlanes, start, end);
+
+				//get distance start to end
+				float	motionDistance	=start.Distance(end);
+
+				//stop at the closest contact to start
+				float	bestDist	=float.MaxValue;
+				Vector3	bestCon		=start;
+				foreach(Vector3 con in contacts)
+				{
+					float	startDist	=con.Distance(start);
+					float	endDist		=con.Distance(end);
+
+					if(endDist > motionDistance)
+					{
+						//this contact is in front of the start!
+						//this can only mean the starting position
+						//was in solid
+						finalPos	=start;
+						return	false;
+					}
+
+					if(startDist < bestDist)
+					{
+						bestDist	=startDist;
+						bestCon		=con;
+					}
+				}
+
+				if(bestCon.Distance(start) <= Mathery.VCompareEpsilon)
+				{
+					//so close might as well use the start position
+					finalPos	=start;
+					return	true;
+				}
+				//push back along the vector a bit
+				Vector3	motionVec	=end - start;
+
+				motionVec	/=motionDistance;
+				motionVec	*=Mathery.VCompareEpsilon;
+
+				finalPos	=bestCon - motionVec;
+				return	true;
 			}
 			return	true;
+		}
+
+
+		List<Vector3>	GetCollisions(List<ZonePlane> planes, Vector3 start, Vector3 end)
+		{
+			List<Vector3>	ret	=new List<Vector3>();
+
+			foreach(ZonePlane zp in planes)
+			{
+				float	startDist	=zp.Distance(start);
+				float	endDist		=zp.Distance(end);
+
+				if(startDist == endDist)
+				{
+					continue;
+				}
+
+//				if(startDist == 0 || endDist == 0)
+//				{
+//					continue;
+//				}
+
+				if(startDist < 0 && endDist < 0)
+				{
+					continue;
+				}
+
+				if(startDist > 0 && endDist > 0)
+				{
+					continue;
+				}
+
+				float	ratio	=startDist / (startDist - endDist);
+
+				ret.Add(start + ratio * (end - start));
+			}
+
+			return	ret;
 		}
 
 
@@ -467,9 +570,10 @@ namespace BSPZone
 		//use this whenever a collision returns in solid, it
 		//will try to work free of the solid space
 		public bool ResolvePosition(BoundingBox box, Vector3 pos,
-			out Vector3 finalPos, out int modelOn)
+			out Vector3 finalPos, out bool bBadFooting, out int modelOn)
 		{
 			finalPos	=pos;
+			bBadFooting	=false;
 
 			int	i;
 			for(i=0;i < MaxMoveBoxIterations;i++)
@@ -510,7 +614,7 @@ namespace BSPZone
 			{
 				finalPos	=pos;
 
-				return	FootCheck(box, finalPos, FootDistance, out modelOn);
+				return	FootCheck(box, finalPos, FootDistance, out modelOn, out bBadFooting);
 			}
 			modelOn	=-1;
 			return	false;
@@ -520,8 +624,10 @@ namespace BSPZone
 		//positions should be in the middle of the box
 		//returns true if on the ground
 		public bool MoveBox(BoundingBox box, Vector3 start, Vector3 end, bool bWorldOnly,
-			out Vector3 finalPos, out int modelOn)
+			out Vector3 finalPos, out int modelOn, out bool bBadFooting)
 		{
+			bBadFooting	=false;
+
 			bool	bWorldOk	=MoveBoxWorld(box, start, end, out finalPos);
 			if(!bWorldOk)
 			{
@@ -548,7 +654,7 @@ namespace BSPZone
 				}
 				finalPos	=modelPos;
 			}
-			return	FootCheck(box, finalPos, FootDistance, out modelOn);
+			return	FootCheck(box, finalPos, FootDistance, out modelOn, out bBadFooting);
 		}
 		#endregion
 

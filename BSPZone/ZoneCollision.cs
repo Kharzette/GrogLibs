@@ -467,7 +467,7 @@ namespace BSPZone
 			float	dist	=0.0f;
 			if(trace.mBounds != null)
 			{
-				dist	=Math.Abs(Vector3.Dot(trace.mBounds.Value.Maximum, p.mNormal));
+				dist	=trace.mBounds.Value.BoxPlaneDistance(p.mNormal);
 			}
 			else if(trace.mRadius != null)
 			{
@@ -605,15 +605,16 @@ namespace BSPZone
 				return	false;
 			}
 
-			ZoneNode	zn	=mZoneNodes[node];
-			ZonePlane	p	=mZonePlanes[zn.mPlaneNum];
+			ZoneNode	zn		=mZoneNodes[node];
+			ZonePlane	p		=mZonePlanes[zn.mPlaneNum];
 
 			Vector3	ray	=end - start;
 
+			//get plane distance to boundBox side
 			float	dist	=0.0f;
 			if(trace.mBounds != null)
 			{
-				dist	=Math.Abs(Vector3.Dot(trace.mBounds.Value.Maximum, p.mNormal));
+				dist	=trace.mBounds.Value.BoxPlaneDistance(p.mNormal);
 			}
 			else if(trace.mRadius != null)
 			{
@@ -662,7 +663,7 @@ namespace BSPZone
 			ZoneNode	zn	=mZoneNodes[node];
 			ZonePlane	p	=mZonePlanes[zn.mPlaneNum];
 
-			float	dist	=Math.Abs(Vector3.Dot(box.Maximum, p.mNormal));
+			float	dist	=box.BoxPlaneDistance(p.mNormal);
 
 			Vector3	clipPos;
 			if(PartBehind(p, -dist, pos, pos, out clipPos, out clipPos))
@@ -707,25 +708,28 @@ namespace BSPZone
 					p.Inverse();
 				}
 
+				float	distAdjust	=0f;
+
 				if(trace.mBounds != null)
 				{
-					p.mDist	+=Math.Abs(Vector3.Dot(trace.mBounds.Value.Maximum, p.mNormal));
+					distAdjust	+=trace.mBounds.Value.BoxPlaneDistance(p.mNormal);
 				}
 				else if(trace.mRadius != null)
 				{
-					p.mDist	+=trace.mRadius.Value;
+					distAdjust	+=trace.mRadius.Value;
 				}
 
-				float	frontDist	=p.Distance(start);
-				float	backDist	=p.Distance(end);
+				float	frontDist	=p.Distance(start) - distAdjust;
+				float	backDist	=p.Distance(end) - distAdjust;
 
 				//track the plane nearest to the front
 				//just in case the startpoint is in solid
 				float	absDist	=Math.Abs(frontDist);
 				if(absDist < nearestFront)
 				{
-					nearestFront	=absDist;
-					closeFront		=p;
+					nearestFront		=absDist;
+					closeFront			=p;
+					closeFront.mDist	+=distAdjust;
 				}
 
 				if(frontDist > 0 && backDist >= 0)
@@ -742,12 +746,14 @@ namespace BSPZone
 				float	ratio			=frontDist / (frontDist - backDist);
 				Vector3	intersection	=start + ratio * (end - start);
 
-				if(frontDist >= 0)
+				if(frontDist > 0)
 				{
 					bAnyInFront	=true;
 					start		=intersection;
 					clipPlane	=p;
 					bClipped	=true;
+
+					clipPlane.mDist	+=distAdjust;
 				}
 				else
 				{
@@ -797,10 +803,10 @@ namespace BSPZone
 					p.Inverse();
 				}
 
-				p.mDist	+=Math.Abs(Vector3.Dot(box.Maximum, p.mNormal));
+				p.mDist	+=box.BoxPlaneDistance(p.mNormal);
 
 				float	dist	=p.Distance(pos);
-				if(dist >= 0)
+				if(dist > 0)
 				{
 					return	false;	//not intersecting
 				}

@@ -36,7 +36,6 @@ namespace InputLib
 
 		//position info
 		Vector3	mDelta;
-		Vector3	mCursorPos;
 		float	mPitch, mYaw, mRoll;
 		float	mZoom	=80f;		//default
 		bool	mbMovedThisFrame;	//true if the player gave movement input
@@ -92,12 +91,6 @@ namespace InputLib
 		{
 			get { return mMethod; }
 			set { mMethod = value; }
-		}
-
-		public Vector3 CursorPos
-		{
-			get { return mCursorPos; }
-			set { mCursorPos = value; }
 		}
 
 		public bool MovedThisFrame
