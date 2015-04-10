@@ -278,6 +278,30 @@ namespace PathLib
 		}
 
 
+		//for debug drawing
+		public void GetNodePolys(List<Vector3> verts, List<UInt32> indexes,
+			List<Vector3> normals, List<int> vertCounts)
+		{
+			foreach(PathNode pn in mNodery)
+			{
+				int	count	=verts.Count;
+
+				Vector3	norm;
+				float	dist;
+				pn.mPoly.GetPlane(out norm, out dist);
+
+				pn.mPoly.GetTriangles(verts, indexes);
+
+				for(int i=count;i < verts.Count;i++)
+				{
+					normals.Add(norm);
+				}
+
+				vertCounts.Add(verts.Count - count);
+			}
+		}
+
+
 		public List<object> GetNodeOccupants(int index)
 		{
 			return	mNodeOccupation[index];

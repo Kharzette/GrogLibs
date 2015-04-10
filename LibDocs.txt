@@ -56,7 +56,9 @@ Map Coordinate System notes
 Character Notes
 	Bone bounding boxes are axial from the reference pose.  If
 	the pose is relaxed and not the usual T, this can cause
-	the limb bounds to stick out quite a bit.
+	the limb bounds to stick out quite a bit.  Will be replacing
+	the boxes with capsules eventually as they don't require
+	a matrix invert.
 
 Fill Lights
 	Characters and statics are lit via the strongest light in
@@ -65,3 +67,14 @@ Fill Lights
 	the misc_trilight_info entity.  The character or static
 	will pick up the nearest ones and blend between them via
 	the lighthelper class.
+
+Particles
+	To create a static particle emitter as an entity in a map,
+	use the particle editor to get the look as desired, then
+	select the emitter and copy and paste it into Quark.  For
+	gravity, the misc_particle_gravity entity creates a point
+	that draws linked entity particles in towards it.  Give
+	the gravity entity a targetname such as gravity00, then for
+	each entity that wants to be attracted to it, set the target
+	of the entity to gravity00 and they will link together in
+	Quark.

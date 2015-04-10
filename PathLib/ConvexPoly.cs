@@ -339,13 +339,13 @@ namespace PathLib
 		}
 
 
-		internal void GetTriangles(List<Vector3> verts, List<UInt16> indexes)
+		internal void GetTriangles(List<Vector3> verts, List<UInt32> indexes)
 		{
 			int	ofs		=verts.Count;
 
-			UInt16	offset	=(UInt16)ofs;
+			UInt32	offset	=(UInt32)ofs;
 
-			//triangulate the brush face points
+			//triangulate
 			foreach(Vector3 pos in mVerts)
 			{
 				verts.Add(pos);
@@ -354,10 +354,9 @@ namespace PathLib
 			int i	=0;
 			for(i=1;i < mVerts.Count - 1;i++)
 			{
-				//initial vertex
+				indexes.Add((UInt32)(offset + ((i + 1) % mVerts.Count)));
+				indexes.Add((UInt32)(offset + i));
 				indexes.Add(offset);
-				indexes.Add((UInt16)(offset + i));
-				indexes.Add((UInt16)(offset + ((i + 1) % mVerts.Count)));
 			}
 		}
 

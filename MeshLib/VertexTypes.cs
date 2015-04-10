@@ -438,6 +438,21 @@ namespace MeshLib
 		}
 
 
+		public static Buffer BuildAnIndexBuffer(Device gd, UInt32 []inds)
+		{
+			if(gd == null || inds == null)
+			{
+				return	null;
+			}
+
+			BufferDescription	indDesc	=new BufferDescription(inds.Length * 4,
+				ResourceUsage.Immutable, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			return	Buffer.Create<UInt32>(gd, inds, indDesc);
+		}
+
+
 		public static List<Vector3> GetPositions(Array verts, int typeIdx)
 		{
 			List<Vector3>	vecs	=new List<Vector3>();
