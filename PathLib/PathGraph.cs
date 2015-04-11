@@ -11,6 +11,12 @@ namespace PathLib
 {
 	public class PathGraph
 	{
+		//for debug draw of the connections
+		public class LineSeg
+		{
+			public Vector3	mA, mB;
+		}
+
 		//game lookup for path nodes
 		Dictionary<int, List<PathNode>>	mGameLeafPathNodes	=new Dictionary<int, List<PathNode>>();
 
@@ -299,6 +305,27 @@ namespace PathLib
 
 				vertCounts.Add(verts.Count - count);
 			}
+		}
+
+
+		//debug draw connections
+		public List<LineSeg> GetNodeConnections()
+		{
+			List<LineSeg>	ret	=new List<LineSeg>();
+
+			foreach(PathNode pn in mNodery)
+			{
+				foreach(PathConnection pc in pn.mConnections)
+				{
+					LineSeg	ln	=new LineSeg();
+
+					ln.mA	=pn.mPoint;
+					ln.mB	=pc.mConnectedTo.mPoint;
+
+					ret.Add(ln);
+				}
+			}
+			return	ret;
 		}
 
 
@@ -658,8 +685,8 @@ namespace PathLib
 					int	pn2Idx	=mNodery.IndexOf(pn2);
 
 					//good place to break if you have 2 tricksy nodes
-					//(find via bsptest, stand on them)
-//					if(pnIdx == 183 && pn2Idx == 161)
+					//(find via TestPathing, stand on them)
+//					if(pnIdx == 521)
 //					{
 //						int	gack	=0;
 //						gack++;

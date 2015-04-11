@@ -231,6 +231,12 @@ namespace UtilityLib
 		}
 
 
+		public void ClearDepth()
+		{
+			mDC.ClearDepthStencilView(mDSView, DepthStencilClearFlags.Depth, 1f, 0);
+		}
+
+
 		public void ReleaseAll()
 		{
 			mDC.ClearState();

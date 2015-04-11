@@ -743,8 +743,18 @@ namespace BSPZone
 				}
 
 				//split
-				float	ratio			=frontDist / (frontDist - backDist);
-				Vector3	intersection	=start + ratio * (end - start);
+				float	ratio;
+				Vector3	intersection;
+
+				if(frontDist == 0 && backDist == 0)
+				{
+					intersection	=start;
+				}
+				else
+				{
+					ratio			=frontDist / (frontDist - backDist);
+					intersection	=start + ratio * (end - start);
+				}
 
 				if(frontDist > 0)
 				{
