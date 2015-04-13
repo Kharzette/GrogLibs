@@ -167,6 +167,23 @@ namespace PathLib
 		}
 
 
+		internal float DistToNearestEdge(Vector3 pos)
+		{
+			float	bestDist	=float.MaxValue;
+			Edge	nearest		=null;
+			foreach(Edge e in mEdges)
+			{
+				float	dist	=e.Distance(pos);
+				if(dist < bestDist)
+				{
+					bestDist	=dist;
+					nearest		=e;
+				}
+			}
+			return	bestDist;
+		}
+
+
 		//find centerpoints for imaginary grid snapped polys of gridSize
 		internal List<Vector3> GetGridPoints(int gridSize)
 		{

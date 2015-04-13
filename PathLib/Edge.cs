@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Diagnostics;
 using System.Collections.Generic;
 using SharpDX;
 using UtilityLib;
@@ -111,6 +112,28 @@ namespace PathLib
 		internal Vector3 GetCenter()
 		{
 			return	((mA + mB) * 0.5f);
+		}
+
+
+		internal float Distance(Vector3 pos)
+		{
+			Vector3	line	=mB - mA;
+
+			Vector3	lineToPos	=pos - mA;
+
+			Vector3	perp	=Vector3.Cross(lineToPos, line);
+
+			Vector3	norm	=Vector3.Cross(line, perp);
+
+			norm.Normalize();
+
+			float	dist	=norm.dot(mA);
+
+			float	posDist	=norm.dot(pos) - dist;
+
+			Debug.Assert(posDist >= 0f);
+
+			return	posDist;
 		}
 	}
 }

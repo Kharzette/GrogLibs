@@ -37,8 +37,12 @@ namespace PathLib
 		public delegate void	PathCB(List<Vector3> resultPath);
 		public delegate void	GetWalkableFaces(out List<List<Vector3>> faces, out List<int> leaves);
 		public delegate Int32	FindLeaf(Vector3 pos);
-		public delegate bool	IsPositionValid(Vector3 pos);
+		public delegate bool	IsPositionValid(ref Vector3 pos);
 		public delegate bool	CanReach(Vector3 start, Vector3 end);
+
+		//constants
+		float	MinEdgeDistance	=4f;
+
 
 		PathGraph() { }
 
@@ -66,7 +70,7 @@ namespace PathLib
 
 		public void GenerateGraph(GetWalkableFaces getWalkable,
 			int gridSize, float stepHeight,
-			CanReach canReach)
+			CanReach canReach, IsPositionValid isValid)
 		{
 			mNodery.Clear();
 
@@ -84,7 +88,35 @@ namespace PathLib
 
 				foreach(Vector3 gp in gridPoints)
 				{
-					PathNode	pn	=new PathNode(cp, gp);
+					//reject points too close to an edge
+//					float	dist	=cp.DistToNearestEdge(gp);
+//					if(dist < MinEdgeDistance)
+//					{
+//						continue;
+//					}
+
+					//reject points that are too near something already created
+					bool	bTooClose	=false;
+					foreach(PathNode pnn in mNodery)
+					{
+						float	dist	=pnn.mPoint.Distance(gp);
+						if(dist < (gridSize * 0.5f))
+						{
+							bTooClose	=true;
+							break;
+						}
+					}
+					if(bTooClose)
+					{
+						continue;
+					}
+
+					Vector3	adjusted	=gp;
+					if(!isValid(ref adjusted))
+					{
+						continue;
+					}
+					PathNode	pn	=new PathNode(cp, adjusted);
 
 					mNodery.Add(pn);
 
@@ -685,8 +717,8 @@ namespace PathLib
 					int	pn2Idx	=mNodery.IndexOf(pn2);
 
 					//good place to break if you have 2 tricksy nodes
-					//(find via TestPathing, stand on them)
-//					if(pnIdx == 521)
+					//(find via TestPathing)
+//					if(pnIdx == 89 && pn2Idx == 104)
 //					{
 //						int	gack	=0;
 //						gack++;
@@ -742,6 +774,19 @@ namespace PathLib
 					if(!(Mathery.CompareVectorEpsilon(pnNorm, pn2Norm, 0.001f)
 						&& (close > -0.01f && close < 0.01f)))
 					{
+						//first just try the move
+						if(canReach(pn.mPoint, pn2.mPoint))
+						{
+							PathConnection	pc	=new PathConnection();
+							pc.mConnectedTo		=pn2;
+							pc.mDistanceBetween	=pn.DistanceBetweenNodes(pn2);
+							pc.mbPassable		=true;
+							pc.mbUseEdge		=false;
+
+							pn.mConnections.Add(pc);
+							continue;
+						}
+
 						bUseEdge	=true;
 
 						//if these are not coplanar, should be in seperate polys
@@ -758,6 +803,8 @@ namespace PathLib
 							e2	=pn2.mPoly.GetSharedEdgeXZ(pn.mPoly, stepHeight);
 							if(e1 == null || e2 == null)
 							{
+								//no shared edges, could be a step up on a slope
+								//like stepping up to the side of a ramp
 								continue;
 							}
 
@@ -829,13 +876,13 @@ namespace PathLib
 						}
 					}
 
-					PathConnection	pc	=new PathConnection();
-					pc.mConnectedTo		=pn2;
-					pc.mDistanceBetween	=pn.DistanceBetweenNodes(pn2);
-					pc.mbPassable		=true;
-					pc.mbUseEdge		=bUseEdge;
+					PathConnection	pc2		=new PathConnection();
+					pc2.mConnectedTo		=pn2;
+					pc2.mDistanceBetween	=pn.DistanceBetweenNodes(pn2);
+					pc2.mbPassable			=true;
+					pc2.mbUseEdge			=bUseEdge;
 
-					pn.mConnections.Add(pc);
+					pn.mConnections.Add(pc2);
 				}
 			}
 		}

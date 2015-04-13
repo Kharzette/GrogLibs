@@ -1035,6 +1035,8 @@ namespace MeshLib
 				bw.Write(index);
 				MeshLib.VertexTypes.WriteVerts(bw, verts, index);
 
+				Debug.Assert(ib.Length < UInt16.MaxValue);
+
 				bw.Write(ib.Length);
 				foreach(UInt16 idx in ib)
 				{
@@ -1047,6 +1049,8 @@ namespace MeshLib
 		void ReadIndexBuffer(BinaryReader br, out Buffer ib, GraphicsDevice g)
 		{
 			int	numIdx	=br.ReadInt32();
+
+			Debug.Assert(numIdx < UInt16.MaxValue);
 
 			if(numIdx >= UInt16.MaxValue)
 			{
