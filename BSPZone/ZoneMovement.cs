@@ -24,13 +24,15 @@ namespace BSPZone
 
 
 		#region Bipedal Movement
-		bool FootCheck(BoundingBox box, Vector3 footPos, float dist, out int modelOn, out bool bBadFooting)
+		bool FootCheck(BoundingBox box, Vector3 footPos, float dist,
+			out ZonePlane groundPlane, out int modelOn, out bool bBadFooting)
 		{
 			//see if the feet are still on the ground
 			Vector3		footCheck	=footPos - Vector3.UnitY * dist;
 
 			modelOn		=-1;
 			bBadFooting	=false;
+			groundPlane	=ZonePlane.Blank;
 
 			RayTrace	rt	=new RayTrace(footPos, footCheck);
 
@@ -47,6 +49,7 @@ namespace BSPZone
 				{
 					bBadFooting	=false;
 					modelOn		=0;
+					groundPlane	=rt.mCollision.mPlaneHit;
 					return	true;
 				}
 				bBadFooting	=true;
@@ -66,6 +69,7 @@ namespace BSPZone
 				{
 					bBadFooting	=false;
 					modelOn		=col.mModelHit;
+					groundPlane	=col.mPlaneHit;
 					return	true;
 				}
 				bBadFooting	=true;
@@ -76,13 +80,15 @@ namespace BSPZone
 
 		//check for small steps that a bipedal would be able to surmount
 		bool StairMove(BoundingBox box, Vector3 start, Vector3 end, Vector3 stairAxis,
-			bool bSlopeOk, float stepHeight, float originalLen,
-			ref Vector3 stepPos, out int modelOn)
+			float stepHeight, float originalLen, ref Vector3 stepPos,
+			out ZonePlane stairPlane, out int modelOn)
 		{
 			//first trace up from the start point to world
 			//to make sure there's head room
 			Vector3	stairStart	=start;
 			Vector3	stairEnd	=start + stairAxis * stepHeight;
+
+			stairPlane	=ZonePlane.Blank;
 
 			RayTrace	rt	=new RayTrace(stairStart, stairEnd);
 			rt.mBounds		=box;
@@ -104,9 +110,11 @@ namespace BSPZone
 
 			//movebox from start step height to end step height
 			stepPos	=Vector3.Zero;
-			bool	bBadFooting;
-			bool	bGroundStep	=MoveBox(box, start + stairAxis * stepHeight,
-				end + stairAxis * stepHeight, false, out stepPos, out modelOn, out bBadFooting);
+
+			bool		bBadFooting;
+			bool		bGroundStep	=MoveBox(box, start + stairAxis * stepHeight,
+				end + stairAxis * stepHeight, false,
+				out stairPlane,	out stepPos, out modelOn, out bBadFooting);
 
 			if(!bGroundStep)
 			{
@@ -125,19 +133,6 @@ namespace BSPZone
 						bGroundStep	=true;
 						rt.mCollision.mPlaneHit.ReflectPosition(ref stepPos);
 					}
-					else
-					{
-						if(bSlopeOk)
-						{
-							//see if the plane has any footing at all
-							if(Vector3.Dot(Vector3.UnitY, rt.mCollision.mPlaneHit.mNormal) > RampAngle)
-							{
-								stepPos		=rt.mCollision.mIntersection;
-								bGroundStep	=true;
-								rt.mCollision.mPlaneHit.ReflectPosition(ref stepPos);
-							}
-						}
-					}
 				}
 
 				float	stepDist	=Vector3.Distance(stepPos, rt.mCollision.mIntersection);
@@ -151,19 +146,6 @@ namespace BSPZone
 						stepPos		=col.mIntersection;
 						bGroundStep	=true;
 						col.mPlaneHit.ReflectPosition(ref stepPos);
-					}
-					else
-					{
-						if(bSlopeOk)
-						{
-							//see if the plane has any footing at all
-							if(Vector3.Dot(Vector3.UnitY, col.mPlaneHit.mNormal) > RampAngle)
-							{
-								stepPos		=col.mIntersection;
-								bGroundStep	=true;
-								col.mPlaneHit.ReflectPosition(ref stepPos);
-							}
-						}
 					}
 				}
 			}
@@ -191,7 +173,7 @@ namespace BSPZone
 		//this one assumes 2 legs, so navigates stairs
 		//TODO: This gets a bit strange on gentle slopes
 		public bool BipedMoveBox(BoundingBox box, Vector3 start, Vector3 end,
-			bool bPrevOnGround, bool bWorldOnly, bool bDistCheck,
+			bool bPrevOnGround, bool bWorldOnly, bool bDistCheck, out ZonePlane groundPlane,
 			out Vector3 finalPos, out bool bUsedStairs, out bool bBadFooting, ref int modelOn)
 		{
 			bUsedStairs	=false;
@@ -204,12 +186,14 @@ namespace BSPZone
 			{
 				//didn't move enough to bother
 				finalPos	=start;
-				return		FootCheck(box, start, FootDistance, out modelOn, out bBadFooting);
+				return		FootCheck(box, start, FootDistance,
+					out groundPlane, out modelOn, out bBadFooting);
 			}
 
 			//try the standard box move
 			int		firstModelOn;
-			bool	bGround	=MoveBox(box, start, end, bWorldOnly, out finalPos, out firstModelOn, out bBadFooting);
+			bool	bGround	=MoveBox(box, start, end, bWorldOnly,
+				out groundPlane, out finalPos, out firstModelOn, out bBadFooting);
 
 			//see how far it went
 			moveVec	=finalPos - start;
@@ -245,19 +229,24 @@ namespace BSPZone
 			//try a step at a quarter stair height
 			//this can get us over cracks where the
 			//returned plane is one of the extra axials
-			Vector3	stairPos	=Vector3.Zero;
-			if(StairMove(box, start, end, Vector3.UnitY, true, StepHeight * 0.25f, deltMove, ref stairPos, out modelOn))
+			Vector3		stairPos	=Vector3.Zero;
+			ZonePlane	stairPlane;
+			if(StairMove(box, start, end, Vector3.UnitY, StepHeight * 0.25f,
+				deltMove, ref stairPos, out stairPlane, out modelOn))
 			{
 				finalPos	=stairPos;
 				bUsedStairs	=true;
+				groundPlane	=stairPlane;
 				return		true;
 			}
 
 			//try a full step height
-			if(StairMove(box, start, end, Vector3.UnitY, false, StepHeight, deltMove, ref stairPos, out modelOn))
+			if(StairMove(box, start, end, Vector3.UnitY, StepHeight,
+				deltMove, ref stairPos, out stairPlane, out modelOn))
 			{
 				finalPos	=stairPos;
 				bUsedStairs	=true;
+				groundPlane	=stairPlane;
 				return		true;
 			}
 
@@ -570,7 +559,8 @@ namespace BSPZone
 		//use this whenever a collision returns in solid, it
 		//will try to work free of the solid space
 		public bool ResolvePosition(BoundingBox box, Vector3 pos,
-			out Vector3 finalPos, out bool bBadFooting, out int modelOn)
+			out ZonePlane groundPlane, out Vector3 finalPos,
+			out bool bBadFooting, out int modelOn)
 		{
 			finalPos	=pos;
 			bBadFooting	=false;
@@ -614,9 +604,13 @@ namespace BSPZone
 			{
 				finalPos	=pos;
 
-				return	FootCheck(box, finalPos, FootDistance, out modelOn, out bBadFooting);
+				return	FootCheck(box, finalPos, FootDistance,
+					out groundPlane, out modelOn, out bBadFooting);
 			}
-			modelOn	=-1;
+
+			modelOn		=-1;
+			groundPlane	=ZonePlane.Blank;
+
 			return	false;
 		}
 
@@ -624,22 +618,16 @@ namespace BSPZone
 		//positions should be in the middle of the box
 		//returns true if on the ground
 		public bool MoveBox(BoundingBox box, Vector3 start, Vector3 end, bool bWorldOnly,
-			out Vector3 finalPos, out int modelOn, out bool bBadFooting)
+			out ZonePlane groundPlane, out Vector3 finalPos,
+			out int modelOn, out bool bBadFooting)
 		{
 			bBadFooting	=false;
 
 			bool	bWorldOk	=MoveBoxWorld(box, start, end, out finalPos);
 			if(!bWorldOk)
 			{
-				//solve via intersection
-				ZonePlane	zp	=ZonePlane.Blank;
-				if(IntersectBoxNode(box, start, 0, ref zp))
-				{
-					modelOn		=-1;
-					finalPos	=start;
-					zp.ReflectPosition(ref finalPos);
-					return	true;
-				}
+				return	ResolvePosition(box, start, out groundPlane,
+					out finalPos, out bBadFooting, out modelOn);
 			}
 
 			if(!bWorldOnly)
@@ -647,14 +635,18 @@ namespace BSPZone
 				Vector3	modelPos;
 				if(!MoveBoxModels(box, start, finalPos, out modelPos))
 				{
+					FootCheck(box, finalPos, FootDistance, out groundPlane, out modelOn, out bBadFooting);
+
 					//if models are messed up, just use the world position
 					//and report on ground so player can move
-					modelOn	=0;
+					modelOn		=0;
+					bBadFooting	=false;
+
 					return	true;
 				}
 				finalPos	=modelPos;
 			}
-			return	FootCheck(box, finalPos, FootDistance, out modelOn, out bBadFooting);
+			return	FootCheck(box, finalPos, FootDistance, out groundPlane, out modelOn, out bBadFooting);
 		}
 		#endregion
 

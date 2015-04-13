@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -129,6 +130,24 @@ namespace BSPZone
 			{
 				pos	-=(mNormal * (dist - Mathery.DIST_EPSILON));
 			}
+		}
+
+
+		//adjust a movement vec along the plane
+		internal void MoveAlong(ref Vector3 moveVec)
+		{
+			Debug.Assert(IsGround());
+
+			//save length
+			float	len	=moveVec.Length();
+
+			Vector3	sideVec	=Vector3.Cross(moveVec, mNormal);
+
+			Vector3	newVec	=Vector3.Cross(mNormal, sideVec);
+
+			newVec.Normalize();
+
+			moveVec	=newVec * len;
 		}
 
 

@@ -144,6 +144,39 @@ namespace BSPZone
 		}
 
 
+		//drop a box to the ground
+		public Vector3 DropToGround(BoundingBox box, Vector3 pos, bool bUseModels)
+		{
+			Collision	col;
+
+			RayTrace	trace	=new RayTrace(pos, pos + (Vector3.UnitY * - 300f));
+
+			trace.mBounds	=box;
+
+			bool	bHit	=false;
+			if(bUseModels)
+			{
+				bHit	=TraceAll(null, null, trace.mOriginalStart,
+					trace.mOriginalEnd, out col);
+			}
+			else
+			{
+				bHit	=TraceNode(trace, trace.mOriginalStart,
+					trace.mOriginalEnd, mZoneModels[0].mRootNode);
+			}
+
+			if(bHit && trace.mCollision.mbStartInside)
+			{
+				trace.mCollision.mPlaneHit.ReflectPosition(ref pos);
+			}
+			else if(bHit)
+			{
+				pos	=trace.mCollision.mIntersection + (trace.mCollision.mPlaneHit.mNormal * Mathery.ON_EPSILON);
+			}
+			return	pos;
+		}
+
+
 		//drop a worldspace position to the "floor"
 		public Vector3 DropToGround(Vector3 pos, bool bUseModels)
 		{
