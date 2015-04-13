@@ -40,4 +40,43 @@ namespace UtilityLib
 			mVector	=vec;
 		}
 	}
+
+
+	public class Vector2PairEventArgs : EventArgs
+	{
+		public Vector2	mVecA, mVecB;
+
+
+		public Vector2PairEventArgs(Vector2 vecA, Vector2 vecB)
+		{
+			mVecA	=vecA;
+			mVecB	=vecB;
+		}
+	}
+
+
+	public class Vector3PairEventArgs : EventArgs
+	{
+		public Vector3	mVecA, mVecB;
+
+
+		public Vector3PairEventArgs(Vector3 vecA, Vector3 vecB)
+		{
+			mVecA	=vecA;
+			mVecB	=vecB;
+		}
+	}
+
+
+	public class Vector4PairEventArgs : EventArgs
+	{
+		public Vector4	mVecA, mVecB;
+
+
+		public Vector4PairEventArgs(Vector4 vecA, Vector4 vecB)
+		{
+			mVecA	=vecA;
+			mVecB	=vecB;
+		}
+	}
 }

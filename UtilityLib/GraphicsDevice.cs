@@ -270,6 +270,12 @@ namespace UtilityLib
 		}
 
 
+		public Viewport GetScreenViewPort()
+		{
+			return	mScreenPort;
+		}
+
+
 		public void ResetCursorPos()
 		{
 			Cursor.Position	=mStoredMousePos;
