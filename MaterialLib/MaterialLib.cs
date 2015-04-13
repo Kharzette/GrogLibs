@@ -29,11 +29,11 @@ namespace MaterialLib
 		StuffKeeper	mKeeper;
 
 
-		public void SaveToFile(string fileName)
+		public bool SaveToFile(string fileName)
 		{
 			if(!CheckReadyToSave())
 			{
-				return;	//not ready
+				return	false;	//not ready
 			}
 
 			FileStream		fs	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
@@ -53,6 +53,8 @@ namespace MaterialLib
 
 			bw.Close();
 			fs.Close();
+
+			return	true;
 		}
 
 

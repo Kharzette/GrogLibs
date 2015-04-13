@@ -26,6 +26,7 @@ namespace SharedForms
 		public event EventHandler	eStripElements;
 		public event EventHandler	eGenTangents;
 		public event EventHandler	eFoundSeams;
+		public event EventHandler	eMatLibNotReadyToSave;
 
 
 		public MaterialForm(MaterialLib.MaterialLib matLib,
@@ -750,7 +751,11 @@ namespace SharedForms
 				return;
 			}
 
-			mMatLib.SaveToFile(mSFD.FileName);
+			bool	bRet	=mMatLib.SaveToFile(mSFD.FileName);
+			if(!bRet)
+			{
+				Misc.SafeInvoke(eMatLibNotReadyToSave, null);
+			}
 		}
 
 		
