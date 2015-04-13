@@ -13,7 +13,7 @@ namespace BSPZone
 	{
 		public enum LocomotionState
 		{
-			Idle, Walk, WalkBack, WalkLeft, WalkRight
+			Idle, Walk, WalkBack, WalkLeft, WalkRight, Stumbling
 		}
 
 		//owner of this mobile
@@ -33,6 +33,9 @@ namespace BSPZone
 
 		//true if there's something underfoot, but not good traction
 		bool	mbBadFooting;
+
+		//plane underfoot if on ground or bad footing
+		ZonePlane	mUnderFoot;
 
 		//true if this object can be pushed by models
 		bool	mbPushable;
@@ -95,6 +98,25 @@ namespace BSPZone
 		}
 
 
+		public void DropToGround(bool bUseModels)
+		{
+			mPosition	=mZone.DropToGround(mBox, mPosition, bUseModels);
+
+			SetFooting();
+		}
+
+
+		public void SetFooting()
+		{
+			Vector3	donutCare;
+			bool	bStairs;
+
+			//do a nothing move to establish footing and ground plane
+			//mainly used for pathfinding connection tests
+			mbOnGround	=mZone.BipedMoveBox(mBox, mPosition, mPosition, mbOnGround, true, true, out mUnderFoot, out donutCare, out bStairs, out mbBadFooting, ref mModelOn);
+		}
+
+
 		public bool IsOnGround()
 		{
 			return	mbOnGround;
@@ -151,6 +173,11 @@ namespace BSPZone
 		public LocomotionState DetermineLocoState(Vector3 moveDelta, Vector3 camForward)
 		{
 			LocomotionState	ls	=LocomotionState.Idle;
+
+			if(mbBadFooting)
+			{
+				return	LocomotionState.Stumbling;
+			}
 
 			float	moveLen	=moveDelta.Length();
 			if(moveLen > 0.001f)
@@ -298,7 +325,7 @@ namespace BSPZone
 
 		//ins and outs are ground based
 		public void Move(Vector3 endPos, int msDelta, bool bWorldOnly,
-			bool bFly, bool bTriggerCheck, bool bDistCheck,
+			bool bFly, bool bMoveAlongGround, bool bTriggerCheck, bool bDistCheck,
 			out Vector3 retPos, out Vector3 camPos)
 		{
 			retPos	=Vector3.Zero;
@@ -326,11 +353,19 @@ namespace BSPZone
 
 			Vector3	moveDelta	=endPos - mPosition;
 
+			//adjust onto the ground plane if desired and good footing
+			if(mbOnGround && bMoveAlongGround)
+			{
+				mUnderFoot.MoveAlong(ref moveDelta);
+			}
+
+			endPos	=mPosition + moveDelta;
+
 			//move it through the bsp
 			bool	bUsedStairs	=false;
 
 			mbOnGround	=mZone.BipedMoveBox(mBox, mPosition, endPos,
-				mbOnGround, bWorldOnly, bDistCheck,
+				mbOnGround, bWorldOnly, bDistCheck, out mUnderFoot,
 				out endPos, out bUsedStairs, out mbBadFooting, ref mModelOn);
 
 			retPos	=endPos - mBoxMiddleOffset;
@@ -364,18 +399,16 @@ namespace BSPZone
 			}
 
 			Vector3	moveDelta	=(tryPos + mBoxMiddleOffset) - mPosition;
-
-			//clear movedelta y so the move is flat
-			moveDelta.Y	=0f;
-
 			Vector3	endPos		=mPosition + moveDelta;
 
 			//move it through the bsp
-			bool	bUsedStairs	=false;
-			int		modelOn		=-1;
-			bool	bBadFooting	=false;
-			bool	bOnGround	=mZone.BipedMoveBox(mBox, mPosition, endPos, mbOnGround, false, true,
-									out endPos, out bUsedStairs, out bBadFooting, ref modelOn);
+			ZonePlane	groundPlane;
+			bool		bUsedStairs	=false;
+			int			modelOn		=-1;
+			bool		bBadFooting	=false;
+			bool		bOnGround	=mZone.BipedMoveBox(mBox, mPosition, endPos,
+				mbOnGround, false, true, out groundPlane, out endPos,
+				out bUsedStairs, out bBadFooting, ref modelOn);
 
 			//test distance without the Y
 			tryPos.Y	=0f;
@@ -409,6 +442,13 @@ namespace BSPZone
 		}
 
 
+		public bool CheckPosition()
+		{
+			ZonePlane	zp	=ZonePlane.Blank;
+			return	mZone.IntersectBoxModel(mBox, mPosition, 0, ref zp);
+		}
+
+
 		//return false if push leaves mobile in solid
 		internal bool Push(Vector3 delta, int modelIndex)
 		{
@@ -420,7 +460,7 @@ namespace BSPZone
 
 			Vector3	pushedTo, camTo;
 			Move(delta + GetGroundPos(), 1,
-				true, false, true, false, out pushedTo, out camTo);
+				true, false, true, true, false, out pushedTo, out camTo);
 
 			SetGroundPos(pushedTo);
 
@@ -432,7 +472,8 @@ namespace BSPZone
 				Vector3	resolvePos;
 				int		modelOn;
 				bool	bBadFooting;
-				if(mZone.ResolvePosition(mBox, mPosition, out resolvePos, out bBadFooting, out modelOn))
+				if(mZone.ResolvePosition(mBox, mPosition, out mUnderFoot,
+					out resolvePos, out bBadFooting, out modelOn))
 				{
 					mPosition	=resolvePos;
 				}
