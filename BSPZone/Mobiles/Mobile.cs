@@ -356,6 +356,9 @@ namespace BSPZone
 			//adjust onto the ground plane if desired and good footing
 			if(mbOnGround && bMoveAlongGround)
 			{
+				//this requires a valid ground plane
+				Debug.Assert(mUnderFoot.mNormal != Vector3.Zero);
+
 				mUnderFoot.MoveAlong(ref moveDelta);
 			}
 

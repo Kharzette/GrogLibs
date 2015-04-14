@@ -124,28 +124,54 @@ namespace BSPZone
 				Vector3	stepEnd		=stepPos - Vector3.UnitY * (stepHeight * 2f);
 				rt.mOriginalStart	=stepStart;
 				rt.mOriginalEnd		=stepEnd;
-				if(TraceNode(rt, stepStart, stepEnd, 0))
+
+				bool	bStepDownWorldHit	=TraceNode(rt, stepStart, stepEnd, 0);
+
+				float	stepDist	=0f;
+				if(bStepDownWorldHit)
 				{
 					if(rt.mCollision.mPlaneHit.IsGround())
 					{
 						//landed on the ground
 						stepPos		=rt.mCollision.mIntersection;
+						stairPlane	=rt.mCollision.mPlaneHit;
 						bGroundStep	=true;
-						rt.mCollision.mPlaneHit.ReflectPosition(ref stepPos);
+
+						stairPlane.ReflectPosition(ref stepPos);
+
+						stepDist	=Vector3.Distance(stepStart, stepPos);
 					}
 				}
-
-				float	stepDist	=Vector3.Distance(stepPos, rt.mCollision.mIntersection);
-
+				
 				//try models
 				if(TraceModelsBox(box, stepStart, stepEnd, out col))
 				{
 					if(col.mPlaneHit.IsGround())
 					{
 						//landed on the ground
-						stepPos		=col.mIntersection;
-						bGroundStep	=true;
-						col.mPlaneHit.ReflectPosition(ref stepPos);
+						bool	bUseModelHit	=false;
+						if(bStepDownWorldHit)
+						{
+							float	modDist	=col.mIntersection.Distance(stepStart);
+
+							//take the shortest distance collision
+							if(modDist < stepDist)
+							{
+								bUseModelHit	=true;
+							}
+						}
+						else
+						{
+							bUseModelHit	=true;
+						}
+
+						if(bUseModelHit)
+						{
+							stepPos		=col.mIntersection;
+							stairPlane	=rt.mCollision.mPlaneHit;
+							bGroundStep	=true;
+							col.mPlaneHit.ReflectPosition(ref stepPos);
+						}
 					}
 				}
 			}
