@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using SharpDX;
 using UtilityLib;
+using System.Diagnostics;
 
 
 namespace ParticleLib
@@ -98,8 +99,10 @@ namespace ParticleLib
 		}
 
 
-		internal Particle []Update(float msDelta, out int numParticles)
+		internal Particle []Update(int msDelta, out int numParticles)
 		{
+			Debug.Assert(msDelta > 0);	//zero deltatimes are not good for this stuff
+
 			numParticles	=0;
 
 			//update existing
