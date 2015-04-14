@@ -138,8 +138,22 @@ namespace BSPZone
 		{
 			Debug.Assert(IsGround());
 
+			if(moveVec == Vector3.Zero)
+			{
+				return;
+			}
+
 			//save length
 			float	len	=moveVec.Length();
+
+			Vector3	moveNorm	=moveVec / len;
+
+			float	dot	=moveNorm.dot(mNormal);
+
+			if(dot < -(1f -Zone.RampAngle) || dot > (1f - Zone.RampAngle))
+			{
+				return;	//movement is too perp for alignment
+			}
 
 			Vector3	sideVec	=Vector3.Cross(moveVec, mNormal);
 
