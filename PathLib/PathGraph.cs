@@ -268,6 +268,18 @@ namespace PathLib
 		}
 
 
+		public void Clear()
+		{
+			mGameLeafPathNodes.Clear();
+			mActivePathing.Clear();
+			mCallBacks.Clear();
+			mOccupation.Clear();
+			mNodery.Clear();
+
+			mNodeOccupation	=null;
+		}
+
+
 		//this is useful for obstacles like locked doors
 		public bool SetPathConnectionPassable(Vector3 pos, FindLeaf findLeaf, bool bPassable)
 		{
@@ -514,6 +526,8 @@ namespace PathLib
 			int msDelta, float speed,
 			out Vector3 direction)
 		{
+			Debug.Assert(msDelta > 0);
+
 			//this will make it really clear when something is wrong
 			//as it will make a nanny matrix
 			direction	=Vector3.Zero;
