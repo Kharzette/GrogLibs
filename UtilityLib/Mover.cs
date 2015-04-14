@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using SharpDX;
+using System.Diagnostics;
 
 
 namespace UtilityLib
@@ -99,6 +100,8 @@ namespace UtilityLib
 
 		public void Update(int msDelta)
 		{
+			Debug.Assert(msDelta > 0);
+
 			//convert to seconds
 			float	sDelta	=msDelta / 1000.0f;
 
@@ -250,6 +253,8 @@ namespace UtilityLib
 
 		public void Update(int msDelta)
 		{
+			Debug.Assert(msDelta > 0);
+
 			//convert to seconds
 			float	sDelta	=msDelta / 1000.0f;
 
@@ -404,6 +409,8 @@ namespace UtilityLib
 
 		public void Update(int msDelta)
 		{
+			Debug.Assert(msDelta > 0);
+
 			//convert to seconds
 			float	sDelta	=msDelta / 1000.0f;
 
@@ -558,6 +565,8 @@ namespace UtilityLib
 
 		public void Update(int msDelta)
 		{
+			Debug.Assert(msDelta > 0);
+
 			//convert to seconds
 			float	sDelta	=msDelta / 1000.0f;
 

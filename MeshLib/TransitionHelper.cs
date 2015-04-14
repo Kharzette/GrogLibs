@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 
 namespace MeshLib
 {
@@ -41,6 +42,8 @@ namespace MeshLib
 
 		public void Update(int msDelta, string curAnim, bool bCurLooped, Character chr)
 		{
+			Debug.Assert(msDelta > 0);
+
 			if(mbTransitioning)
 			{
 				if(curAnim != mTransTo)

@@ -301,6 +301,8 @@ namespace BSPZone
 		public void MoveWithoutCollision(Vector3 endPos, int msDelta,
 			bool bTriggerCheck, bool bDistCheck)
 		{
+			Debug.Assert(msDelta > 0);
+
 			if(mZone == null)
 			{
 				return;
@@ -328,6 +330,8 @@ namespace BSPZone
 			bool bFly, bool bMoveAlongGround, bool bTriggerCheck, bool bDistCheck,
 			out Vector3 retPos, out Vector3 camPos)
 		{
+			Debug.Assert(msDelta > 0);
+
 			retPos	=Vector3.Zero;
 			camPos	=Vector3.Zero;
 

@@ -352,8 +352,10 @@ namespace MeshLib
 		}
 
 
-		public void Update(float msDelta)
+		public void Update(int msDelta)
 		{
+			Debug.Assert(msDelta > 0);
+
 			UpdateAnimatedLightMaps(msDelta);
 		}
 
@@ -641,7 +643,7 @@ namespace MeshLib
 		}
 
 
-		void UpdateAnimatedLightMaps(float msDelta)
+		void UpdateAnimatedLightMaps(int msDelta)
 		{
 			List<string>	mats	=mMatLib.GetMaterialNames();
 

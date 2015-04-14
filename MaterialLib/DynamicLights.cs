@@ -157,18 +157,12 @@ namespace MaterialLib
 		}
 
 
-		public void Update(int msDelta, GraphicsDevice gd)
+		public void Update(GraphicsDevice gd)
 		{
 			DataStream	ds;
 
 			gd.DC.MapSubresource(mDynLights, 0, MapMode.WriteDiscard,
 				SharpDX.Direct3D11.MapFlags.None, out ds);
-
-			//clear device textures, annoying
-//			for(int i=0;i < 16;i++)
-//			{
-//				gd.Textures[i]	=null;
-//			}
 
 			for(int i=0;i < (MaxLights * 2);i++)
 			{

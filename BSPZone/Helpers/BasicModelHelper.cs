@@ -121,6 +121,8 @@ namespace BSPZone
 
 			internal bool Update(int msDelta, Zone z)
 			{
+				Debug.Assert(msDelta > 0);	//zero deltatimes are not good for this stuff
+
 				if(mMover.Done())
 				{
 					if(mbRotateToTarget && mRotator.Done())

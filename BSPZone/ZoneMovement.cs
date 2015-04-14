@@ -665,6 +665,7 @@ namespace BSPZone
 
 					//if models are messed up, just use the world position
 					//and report on ground so player can move
+					//TODO: maybe rethink this after improving collision response
 					modelOn		=0;
 					bBadFooting	=false;
 

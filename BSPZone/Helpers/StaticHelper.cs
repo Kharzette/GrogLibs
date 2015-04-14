@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
 using SharpDX;
@@ -165,6 +166,8 @@ namespace BSPZone
 
 		public void Update(int msDelta)
 		{
+			Debug.Assert(msDelta > 0);
+
 			//update transforms
 			foreach(PickUp pu in mPickUps)
 			{

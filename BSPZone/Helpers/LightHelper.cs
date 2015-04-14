@@ -116,6 +116,8 @@ namespace BSPZone
 		//opposite axiseesseseseeseses, use quat slerp?
 		public void Update(int msDelta, Vector3 pos, MaterialLib.DynamicLights dyn)
 		{
+			Debug.Assert(msDelta > 0);	//zero deltatimes are not good for this stuff
+
 			//calculate fill lights
 			CalcFill(pos);
 

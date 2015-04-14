@@ -238,6 +238,8 @@ namespace BSPZone
 		#region Model Related
 		public void UpdateModels(int msDelta)//, Microsoft.Xna.Framework.Audio.AudioListener lis)
 		{
+			Debug.Assert(msDelta > 0);	//zero deltatimes are not good for this stuff
+
 			//clear pushable push velocities
 			foreach(KeyValuePair<object, Pushable> push in mPushables)
 			{

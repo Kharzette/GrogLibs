@@ -279,6 +279,8 @@ namespace BSPZone
 
 		public bool UpdateAI(int msDelta)
 		{
+			Debug.Assert(msDelta > 0);
+
 			Vector3	startPos	=mMob.GetGroundPos();
 
 			Vector3	endPos	=startPos;

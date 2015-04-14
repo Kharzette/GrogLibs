@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using SharpDX;
 using UtilityLib;
+using System.Diagnostics;
 
 
 namespace BSPZone
@@ -97,6 +98,8 @@ namespace BSPZone
 
 		public void CheckMobile(object triggerer, BoundingBox playerBox, Vector3 startPos, Vector3 endPos, int msDelta)
 		{
+			Debug.Assert(msDelta > 0);
+
 			if(mZone == null)
 			{
 				return;
