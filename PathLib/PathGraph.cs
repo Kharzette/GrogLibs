@@ -88,12 +88,14 @@ namespace PathLib
 
 				foreach(Vector3 gp in gridPoints)
 				{
+#if REJECT_EDGE
 					//reject points too close to an edge
-//					float	dist	=cp.DistToNearestEdge(gp);
-//					if(dist < MinEdgeDistance)
-//					{
-//						continue;
-//					}
+					float	dist	=cp.DistToNearestEdge(gp);
+					if(dist < MinEdgeDistance)
+					{
+						continue;
+					}
+#endif
 
 					//reject points that are too near something already created
 					bool	bTooClose	=false;
@@ -277,6 +279,22 @@ namespace PathLib
 			mNodery.Clear();
 
 			mNodeOccupation	=null;
+		}
+
+
+		public void GetStats(out int numNodes, out int numCons, out int avgCon)
+		{
+			numNodes	=mNodery.Count;
+			numCons		=0;
+			avgCon		=0;
+
+			foreach(PathNode pn in mNodery)
+			{
+				numCons	+=pn.mConnections.Count;
+				avgCon	+=numCons;
+			}
+
+			avgCon	/=numNodes;
 		}
 
 

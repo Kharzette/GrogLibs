@@ -101,6 +101,13 @@ namespace UtilityLib
 		}
 
 
+		//handy for printing
+		public static string IntStr(this Vector3 vec)
+		{
+			return	"" + (int)vec.X + ", " + (int)vec.Y + ", " + (int)vec.Z;
+		}
+
+
 		//extension methods don't work on value types :(
 		public static void ClearBoundingBox(ref BoundingBox bb)
 		{
