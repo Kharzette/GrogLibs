@@ -9,7 +9,7 @@ namespace UtilityLib
 	public class UserSettings
 	{
 		public const float	MouseTurnMultiplier		=0.8f;
-		public const float	AnalogTurnMultiplier	=0.5f;
+		public const float	AnalogTurnMultiplier	=300f;
 		public const float	KeyTurnMultiplier		=300f;
 
 		public int	mTurnSensitivity	=5;
