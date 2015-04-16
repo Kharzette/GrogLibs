@@ -13,6 +13,7 @@ namespace UtilityLib
 		public const float	KeyTurnMultiplier		=300f;
 
 		public int	mTurnSensitivity	=5;
+		public bool	mbXAxisInverted		=false;
 		public bool	mbYAxisInverted		=false;
 		public bool	mbMultiSampling		=false;
 		public bool	mbFullScreen		=false;
@@ -31,6 +32,7 @@ namespace UtilityLib
 			BinaryWriter	bw	=new BinaryWriter(fs);
 
 			bw.Write(mTurnSensitivity);
+			bw.Write(mbXAxisInverted);
 			bw.Write(mbYAxisInverted);
 			bw.Write(mbMultiSampling);
 			bw.Write(mbFullScreen);
@@ -52,6 +54,7 @@ namespace UtilityLib
 			BinaryReader	br	=new BinaryReader(fs);
 
 			mTurnSensitivity	=br.ReadInt32();
+			mbXAxisInverted		=br.ReadBoolean();
 			mbYAxisInverted		=br.ReadBoolean();
 			mbMultiSampling		=br.ReadBoolean();
 			mbFullScreen		=br.ReadBoolean();

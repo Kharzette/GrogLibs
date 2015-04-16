@@ -237,6 +237,13 @@ namespace UtilityLib
 		}
 
 
+		public void SetFullScreen(bool bFull)
+		{
+			mSChain.SetFullscreenState(bFull, null);
+			mbResized	=true;
+		}
+
+
 		public void ReleaseAll()
 		{
 			mDC.ClearState();
