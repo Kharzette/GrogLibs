@@ -82,6 +82,7 @@
     <Compile Include="Pool.cs" />
     <Compile Include="PrimFactory.cs" />
     <Compile Include="TSPool.cs" />
+    <Compile Include="UserSettings.cs" />
     <Compile Include="VectorEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
