@@ -103,6 +103,33 @@ namespace MaterialLib
 		}
 
 
+		//no linefeed/cr!
+		public Vector2 MeasureString(string fontName, string toMeasure)
+		{
+			Vector2	ret	=Vector2.Zero;
+
+			Font	font	=mMatLib.GetFont(fontName);
+			if(font == null)
+			{
+				return	ret;
+			}
+
+			int	maxHeight	=0;
+			for(int i=0;i < toMeasure.Length;i++)
+			{
+				ret.X	+=font.GetCharacterWidth(toMeasure[i]);
+
+				int	height	=font.GetCharacterHeight();
+				if(height > maxHeight)
+				{
+					maxHeight	=height;
+					ret.Y		=height;
+				}
+			}
+			return	ret;
+		}
+
+
 		public void ModifyStringColor(string id, Vector4 color)
 		{
 			if(!mStrings.ContainsKey(id))

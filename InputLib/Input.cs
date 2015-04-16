@@ -229,6 +229,12 @@ namespace InputLib
 		}
 
 
+		public bool IsXControllerConnected(int index)
+		{
+			return	mXControllers[index].IsConnected;
+		}
+
+
 		void OnMouseInput(object sender, MouseInputEventArgs miea)
 		{
 			if(mbResetPos)
