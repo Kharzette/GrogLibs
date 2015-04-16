@@ -26,7 +26,6 @@ namespace InputLib
 
 		//movement settings
 		float	mWheelScrollSpeed	=0.04f;
-		bool	mbInvertYAxis		=false;
 
 		//sprint settings
 		float	SprintForwardFactor	=1.8f;
@@ -127,12 +126,6 @@ namespace InputLib
 		{
 			get { return mZoom; }
 			set { mZoom = value; }
-		}
-
-		public bool InvertYAxis
-		{
-			get { return mbInvertYAxis; }
-			set { mbInvertYAxis = value; }
 		}
 
 
@@ -237,7 +230,7 @@ namespace InputLib
 					{
 						moveVec	+=camLeft;
 					}
-					actionMult	+=act.mMultiplier;
+					actionMult	+=Math.Abs(act.mMultiplier);
 					multCount++;
 				}
 				else if(act.mAction.Equals(mMoveForwardBack))
@@ -251,7 +244,7 @@ namespace InputLib
 					{
 						moveVec	-=camForward;
 					}
-					actionMult	+=act.mMultiplier;
+					actionMult	+=Math.Abs(act.mMultiplier);
 					multCount++;
 				}
 				else if(act.mAction.Equals(mMoveForward))
@@ -318,7 +311,7 @@ namespace InputLib
 
 				actionMult	/=multCount;
 
-				moveVec	*=Math.Abs(actionMult);
+				moveVec	*=actionMult;
 			}
 		}
 
@@ -331,40 +324,19 @@ namespace InputLib
 				{
 					float	pitchAmount	=act.mMultiplier * 0.4f;
 
-					if(mbInvertYAxis)
-					{
-						mPitch	+=pitchAmount;
-					}
-					else
-					{
-						mPitch	-=pitchAmount;
-					}
+					mPitch	-=pitchAmount;
 				}
 				else if(act.mAction.Equals(mPitchUp))
 				{
 					float	pitchAmount	=act.mMultiplier * 0.4f;
 
-					if(mbInvertYAxis)
-					{
-						mPitch	+=pitchAmount;
-					}
-					else
-					{
-						mPitch	-=pitchAmount;
-					}
+					mPitch	-=pitchAmount;
 				}
 				else if(act.mAction.Equals(mPitchDown))
 				{
 					float	pitchAmount	=act.mMultiplier * 0.4f;
 
-					if(!mbInvertYAxis)
-					{
-						mPitch	+=pitchAmount;
-					}
-					else
-					{
-						mPitch	-=pitchAmount;
-					}
+					mPitch	-=pitchAmount;
 				}
 				else if(act.mAction.Equals(mTurnBoth))
 				{

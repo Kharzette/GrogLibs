@@ -530,17 +530,6 @@ namespace InputLib
 		}
 
 
-		public void UnMapAxisAction(Enum action, MoveAxis ma)
-		{
-			UInt32	moveCode	=(UInt32)ma;
-
-			if(mActionMap.ContainsKey(moveCode))
-			{
-				mActionMap.Remove(moveCode);
-			}
-		}
-
-
 		public void MapAxisAction(Enum action, MoveAxis ma)
 		{
 			UInt32	moveCode	=(UInt32)ma;
@@ -560,6 +549,36 @@ namespace InputLib
 				amap.mKeyCode		=(int)moveCode;
 
 				mActionMap.Add(moveCode, amap);
+			}
+		}
+
+
+		public void UnMapAction(int keyCode, Modifiers mod)
+		{
+			UInt32	code	=KeyPlusMod(keyCode, mod);
+
+			if(mActionMap.ContainsKey(code))
+			{
+				mActionMap.Remove(code);
+			}
+		}
+
+
+		public void UnMapAction(FormsKeys key, Modifiers mod)
+		{
+			int	keyCode	=MapVirtualKey((uint)key, 0);
+
+			UnMapAction(keyCode, mod);
+		}
+
+
+		public void UnMapAxisAction(MoveAxis ma)
+		{
+			UInt32	moveCode	=(UInt32)ma;
+
+			if(mActionMap.ContainsKey(moveCode))
+			{
+				mActionMap.Remove(moveCode);
 			}
 		}
 

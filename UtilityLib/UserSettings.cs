@@ -8,14 +8,15 @@ namespace UtilityLib
 {
 	public class UserSettings
 	{
-		float	mMouseTurnMultiplier	=0.13f;
-		float	mAnalogTurnMultiplier	=0.5f;
-		float	mKeyTurnMultiplier		=0.5f;
+		public const float	MouseTurnMultiplier		=0.8f;
+		public const float	AnalogTurnMultiplier	=0.5f;
+		public const float	KeyTurnMultiplier		=300f;
 
 		public int	mTurnSensitivity	=5;
 		public bool	mbYAxisInverted		=false;
 		public bool	mbMultiSampling		=false;
 		public bool	mbFullScreen		=false;
+		public bool	mbESDF				=false;
 
 
 		public UserSettings()
@@ -33,6 +34,7 @@ namespace UtilityLib
 			bw.Write(mbYAxisInverted);
 			bw.Write(mbMultiSampling);
 			bw.Write(mbFullScreen);
+			bw.Write(mbESDF);
 
 			bw.Close();
 			fs.Close();
@@ -53,6 +55,7 @@ namespace UtilityLib
 			mbYAxisInverted		=br.ReadBoolean();
 			mbMultiSampling		=br.ReadBoolean();
 			mbFullScreen		=br.ReadBoolean();
+			mbESDF				=br.ReadBoolean();
 
 			br.Close();
 			fs.Close();

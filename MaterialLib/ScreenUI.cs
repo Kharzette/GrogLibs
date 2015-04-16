@@ -59,6 +59,16 @@ namespace MaterialLib
 		}
 
 
+		public void FreeAll()
+		{
+			mVB.Dispose();
+
+			mGumpBuf	=null;
+
+			mGumps.Clear();
+		}
+
+
 		public void AddGump(string texName, string id,
 			Vector4 color, Vector2 pos, Vector2 scale)
 		{
