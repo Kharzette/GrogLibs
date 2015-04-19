@@ -37,6 +37,10 @@ namespace BSPCore
 			{
 				return	null;	//Portal does not bridge different visible contents
 			}
+			if((mSide.mFlags & GBSPSide.SIDE_VISIBLE) == 0)
+			{
+				return	null;	//invisible side
+			}
 
 			if(!bFlip)
 			{

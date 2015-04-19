@@ -652,7 +652,11 @@ namespace BSPCore
 
 				if(p.mSide != null)
 				{
-					p.mSide.mFlags	|=GBSPSide.SIDE_VISIBLE;
+					//clips are invisible
+					if((mContents & Contents.BSP_CONTENTS_CLIP2) == 0)
+					{
+						p.mSide.mFlags	|=GBSPSide.SIDE_VISIBLE;
+					}
 				}
 
 				if(p.mSide != null)
