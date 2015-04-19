@@ -803,7 +803,9 @@ namespace BSPCore
 
 					if(side == sides[ind])
 					{
-						Debug.Assert(false);
+						//can't really assert, happens alot
+						//when importing from static meshes
+						//Debug.Assert(false);
 						continue;
 					}
 				}
@@ -840,6 +842,22 @@ namespace BSPCore
 			}
 
 			me.GetBrushes().Add(mb);
+		}
+
+
+		public void DumpBrushListToQuarkMap(string mapName)
+		{
+			MapEntity	me	=GetWorldSpawnEntity();
+			if(me == null)
+			{
+				return;
+			}
+
+			List<MapBrush>	brushes	=new List<MapBrush>(me.GetBrushes());
+
+			List<GBSPBrush>	gbspBrushes	=GBSPBrush.ConvertMapBrushList(brushes, mPlanePool);
+
+			GBSPBrush.DumpBrushListToFile(gbspBrushes, mPlanePool, mapName + ".map");
 		}
 
 

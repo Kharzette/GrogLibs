@@ -656,11 +656,7 @@ namespace BSPCore
 			StreamWriter	sw	=new StreamWriter(fs);
 
 			sw.WriteLine("{");
-			sw.WriteLine("\"sounds\"	\"10\"");
-			sw.WriteLine("\"wad\"	\"gfx/metal.wad\"");
 			sw.WriteLine("\"classname\"	\"worldspawn\"");
-			sw.WriteLine("\"message\"	\"the Wind Tunnels\"");
-			sw.WriteLine("\"worldtype\"	\"1\"");
 			foreach(GBSPBrush b in brushList)
 			{
 				sw.WriteLine("{");
@@ -683,7 +679,7 @@ namespace BSPCore
 						planePoly.mVerts[1].Y + " ) ( " +
 						-planePoly.mVerts[2].X + " " +
 						planePoly.mVerts[2].Z + " " +
-						planePoly.mVerts[2].Y + " ) BOGUS 0 0 0 1.0 1.0");
+						planePoly.mVerts[2].Y + " ) BOGUS 0 0 0 1 1 0 128 0");
 				}
 				sw.WriteLine("}");
 			}

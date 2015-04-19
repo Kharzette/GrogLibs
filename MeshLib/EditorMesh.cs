@@ -643,5 +643,38 @@ namespace MeshLib
 				boneIndex, boneInfluenceThreshold,
 				out box, out sphere);
 		}
+
+
+		//grab a list of planes from a mesh
+		internal void ConvertToBrushes(out List<Vector3> norms, out List<float> dists)
+		{
+			norms	=new List<Vector3>();
+			dists	=new List<float>();
+
+			List<Vector3>	myVerts		=VertexTypes.GetPositions(mVertArray, mTypeIndex);
+			List<Vector3>	faceVerts	=new List<Vector3>();
+			for(int i=0;i < mIndArray.Length;)
+			{
+				faceVerts.Add(myVerts[mIndArray[i + 2]]);
+				faceVerts.Add(myVerts[mIndArray[i + 1]]);
+				faceVerts.Add(myVerts[mIndArray[i]]);
+
+				faceVerts[0]	=Vector3.TransformCoordinate(faceVerts[0], mTransform);
+				faceVerts[1]	=Vector3.TransformCoordinate(faceVerts[1], mTransform);
+				faceVerts[2]	=Vector3.TransformCoordinate(faceVerts[2], mTransform);
+
+				Vector3	norm;
+				float	dist;
+
+				Mathery.PlaneFromVerts(faceVerts, out norm, out dist);
+
+				norms.Add(norm);
+				dists.Add(dist);
+
+				i	+=3;
+
+				faceVerts.Clear();
+			}
+		}
 	}
 }

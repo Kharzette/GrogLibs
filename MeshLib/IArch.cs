@@ -28,6 +28,7 @@ namespace MeshLib
 		string GetPartName(int index);
 		Type GetPartVertexType(int index);
 		List<EditorMesh.WeightSeam> Frankenstein();
+		void GetPartPlanes(int meshIndex, out List<Vector3> normals, out List<float> distances);
 
 		void Draw(DeviceContext dc, List<MeshMaterial> meshMats);
 		void Draw(DeviceContext dc, List<MeshMaterial> meshMats, string altMaterial);

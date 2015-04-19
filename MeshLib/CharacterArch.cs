@@ -417,6 +417,14 @@ namespace MeshLib
 		}
 
 
+		void IArch.GetPartPlanes(int meshIndex, out List<Vector3> normals, out List<float> distances)
+		{
+			normals		=new List<Vector3>();
+			distances	=new List<float>();
+			return;
+		}
+
+
 		void IArch.SaveToFile(string fileName)
 		{
 			FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);

@@ -371,6 +371,29 @@ namespace MeshLib
 		}
 
 
+		void IArch.GetPartPlanes(int meshIndex, out List<Vector3> normals, out List<float> distances)
+		{
+			if(meshIndex < 0 || meshIndex >= mMeshParts.Count)
+			{
+				normals		=new List<Vector3>();
+				distances	=new List<float>();
+				return;
+			}
+
+			Mesh	m	=mMeshParts[meshIndex];
+			if(!(m is EditorMesh))
+			{
+				normals		=new List<Vector3>();
+				distances	=new List<float>();
+				return;
+			}
+
+			EditorMesh	em	=m as EditorMesh;
+
+			em.ConvertToBrushes(out normals, out distances);
+		}
+
+
 		void IArch.SaveToFile(string fileName)
 		{
 			FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
