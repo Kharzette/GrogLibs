@@ -139,6 +139,7 @@
     <Compile Include="TexInfo.cs" />
     <Compile Include="TexInfoPool.cs" />
     <Compile Include="ThreadParameters.cs" />
+    <Compile Include="TriBSP.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

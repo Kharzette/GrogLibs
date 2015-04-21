@@ -415,6 +415,27 @@ namespace MeshLib
 		}
 
 
+		void IArch.GetPartPositions(int meshIndex, out List<Vector3> positions, out List<int> indexes)
+		{
+			positions	=null;
+			indexes		=null;
+			if(meshIndex < 0 || meshIndex >= mMeshParts.Count)
+			{
+				return;
+			}
+
+			Mesh	m	=mMeshParts[meshIndex];
+			if(!(m is EditorMesh))
+			{
+				return;
+			}
+
+			EditorMesh	em	=m as EditorMesh;
+
+			em.GetPositions(out positions, out indexes);
+		}
+
+
 		void IArch.GetPartColladaPositions(int meshIndex, out float []positions)
 		{
 			positions	=null;

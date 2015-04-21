@@ -704,6 +704,19 @@ namespace MeshLib
 		}
 
 
+		internal void GetPositions(out List<Vector3> positions, out List<int> indexes)
+		{
+			positions	=VertexTypes.GetPositions(mVertArray, mTypeIndex);
+
+			indexes	=new List<int>();
+			
+			foreach(UInt16 ind in mIndArray)
+			{
+				indexes.Add(ind);
+			}
+		}
+
+
 		internal void GetColladaPositions(out float []positions)
 		{
 			List<Vector3>	myVerts		=VertexTypes.GetPositions(mVertArray, mTypeIndex);
@@ -714,7 +727,7 @@ namespace MeshLib
 			foreach(Vector3 pos in myVerts)
 			{
 				positions[idx]		=pos.X;
-				positions[idx + 1]	=pos.Y;
+				positions[idx + 1]	=-pos.Y;	//max coordinate system wackiness
 				positions[idx + 2]	=pos.Z;
 
 				idx	+=3;
@@ -732,7 +745,7 @@ namespace MeshLib
 			foreach(Vector3 norm in myNorms)
 			{
 				normals[idx]		=norm.X;
-				normals[idx + 1]	=norm.Y;
+				normals[idx + 1]	=-norm.Y;	//max coordinate system wackiness
 				normals[idx + 2]	=norm.Z;
 
 				idx	+=3;

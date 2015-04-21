@@ -55,6 +55,9 @@ namespace BSPCore
 		byte			[]mGFXLightData;
 		int				mLightMapGridSize;
 
+		//temporary bsp for converting max stuff
+		TriBSP	mTopNode;
+
 
 		public Map()
 		{
@@ -783,6 +786,39 @@ namespace BSPCore
 		}
 
 
+		public void AddBSPVolume(Bounds bnd)
+		{
+			ClipPools	cp	=new ClipPools();
+
+			MapBrush	mb	=new MapBrush(bnd, mPlanePool, cp);
+
+			GBSPBrush	gb	=new GBSPBrush(mb, mPlanePool);
+
+			mTopNode.InsertVolume(gb, mPlanePool, cp);
+		}
+
+
+		public void AddBSPTriangle(List<Vector3> tri)
+		{
+			GBSPPlane	plane	=new GBSPPlane();
+
+			Mathery.PlaneFromVerts(tri, out plane.mNormal, out plane.mDist);
+
+			bool	bSide;
+			int	planeNum	=mPlanePool.FindPlane(plane, out bSide);
+
+			if(mTopNode == null)
+			{
+				mTopNode	=new TriBSP();
+				mTopNode.MakeNode(tri, mPlanePool);
+			}
+			else
+			{
+				mTopNode.Insert(tri, mPlanePool);
+			}
+		}
+
+
 		//mainly used from the 2D editor
 		public void AddSingleBrush(List<GFXPlane> planes)
 		{
@@ -858,6 +894,18 @@ namespace BSPCore
 			List<GBSPBrush>	gbspBrushes	=GBSPBrush.ConvertMapBrushList(brushes, mPlanePool);
 
 			GBSPBrush.DumpBrushListToFile(gbspBrushes, mPlanePool, mapName + ".map");
+		}
+
+
+		public int	DumpBSPVolumesToQuarkMap(string mapName)
+		{
+			List<GBSPBrush>	brushes	=new List<GBSPBrush>();
+
+			mTopNode.GetVolumes(brushes);
+
+			GBSPBrush.DumpBrushListToFile(brushes, mPlanePool, mapName + ".map");
+
+			return	brushes.Count;
 		}
 
 

@@ -34,6 +34,9 @@ namespace MeshLib
 		int GetPartColladaPolys(int meshIndex, out string polys, out string counts);
 		void GetPartColladaPositions(int meshIndex, out float []positions);
 		void GetPartColladaNormals(int meshIndex, out float []normals);
+
+		//for bsp interchange
+		void GetPartPositions(int meshIndex, out List<Vector3> positions, out List<int> indexes);
 		Matrix GetPartTransform(int meshIndex);
 
 		void Draw(DeviceContext dc, List<MeshMaterial> meshMats);
