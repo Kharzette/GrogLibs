@@ -676,5 +676,67 @@ namespace MeshLib
 				faceVerts.Clear();
 			}
 		}
+
+
+		internal int GetColladaPolys(out string polys, out string counts)
+		{
+			polys	="";
+			counts	="";
+			for(int i=0;i < mIndArray.Length;i++)
+			{
+				//two for position/normal
+				polys	+=mIndArray[i] + " ";
+				polys	+=mIndArray[i] + " ";
+			}
+
+			int	polyCount	=mIndArray.Length / 3;
+
+			for(int i=0;i < polyCount;i++)
+			{
+				counts	+="3 ";
+			}
+
+			//cut off final " "
+			polys	=polys.Substring(0, polys.Length - 1);
+			counts	=counts.Substring(0, counts.Length - 1);
+
+			return	(mIndArray.Length / 3);
+		}
+
+
+		internal void GetColladaPositions(out float []positions)
+		{
+			List<Vector3>	myVerts		=VertexTypes.GetPositions(mVertArray, mTypeIndex);
+
+			positions	=new float[myVerts.Count * 3];
+
+			int	idx	=0;
+			foreach(Vector3 pos in myVerts)
+			{
+				positions[idx]		=pos.X;
+				positions[idx + 1]	=pos.Y;
+				positions[idx + 2]	=pos.Z;
+
+				idx	+=3;
+			}
+		}
+
+
+		internal void GetColladaNormals(out float []normals)
+		{
+			List<Vector3>	myNorms		=VertexTypes.GetNormals(mVertArray, mTypeIndex);
+
+			normals	=new float[myNorms.Count * 3];
+
+			int	idx	=0;
+			foreach(Vector3 norm in myNorms)
+			{
+				normals[idx]		=norm.X;
+				normals[idx + 1]	=norm.Y;
+				normals[idx + 2]	=norm.Z;
+
+				idx	+=3;
+			}
+		}
 	}
 }

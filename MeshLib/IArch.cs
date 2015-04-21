@@ -30,6 +30,12 @@ namespace MeshLib
 		List<EditorMesh.WeightSeam> Frankenstein();
 		void GetPartPlanes(int meshIndex, out List<Vector3> normals, out List<float> distances);
 
+		//for collada saving
+		int GetPartColladaPolys(int meshIndex, out string polys, out string counts);
+		void GetPartColladaPositions(int meshIndex, out float []positions);
+		void GetPartColladaNormals(int meshIndex, out float []normals);
+		Matrix GetPartTransform(int meshIndex);
+
 		void Draw(DeviceContext dc, List<MeshMaterial> meshMats);
 		void Draw(DeviceContext dc, List<MeshMaterial> meshMats, string altMaterial);
 		void DrawDMN(DeviceContext dc, List<MeshMaterial> meshMats);

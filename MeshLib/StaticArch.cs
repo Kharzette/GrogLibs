@@ -394,6 +394,77 @@ namespace MeshLib
 		}
 
 
+		int IArch.GetPartColladaPolys(int meshIndex, out string polys, out string counts)
+		{
+			polys	=null;
+			counts	=null;
+			if(meshIndex < 0 || meshIndex >= mMeshParts.Count)
+			{
+				return	0;
+			}
+
+			Mesh	m	=mMeshParts[meshIndex];
+			if(!(m is EditorMesh))
+			{
+				return	0;
+			}
+
+			EditorMesh	em	=m as EditorMesh;
+
+			return	em.GetColladaPolys(out polys, out counts);
+		}
+
+
+		void IArch.GetPartColladaPositions(int meshIndex, out float []positions)
+		{
+			positions	=null;
+			if(meshIndex < 0 || meshIndex >= mMeshParts.Count)
+			{
+				return;
+			}
+
+			Mesh	m	=mMeshParts[meshIndex];
+			if(!(m is EditorMesh))
+			{
+				return;
+			}
+
+			EditorMesh	em	=m as EditorMesh;
+
+			em.GetColladaPositions(out positions);
+		}
+
+
+		void IArch.GetPartColladaNormals(int meshIndex, out float []normals)
+		{
+			normals	=null;
+			if(meshIndex < 0 || meshIndex >= mMeshParts.Count)
+			{
+				return;
+			}
+
+			Mesh	m	=mMeshParts[meshIndex];
+			if(!(m is EditorMesh))
+			{
+				return;
+			}
+
+			EditorMesh	em	=m as EditorMesh;
+
+			em.GetColladaNormals(out normals);
+		}
+
+
+		Matrix IArch.GetPartTransform(int meshIndex)
+		{
+			if(meshIndex < 0 || meshIndex >= mMeshParts.Count)
+			{
+				return	Matrix.Identity;
+			}
+			return	mMeshParts[meshIndex].GetTransform();
+		}
+
+
 		void IArch.SaveToFile(string fileName)
 		{
 			FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
