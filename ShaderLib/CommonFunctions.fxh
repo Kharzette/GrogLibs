@@ -184,68 +184,13 @@ float3 ComputeCheapSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 l
 //This is horrible and in need of repair
 float3 CalcCelColor(float3 colVal)
 {
-	float3	ret;
+	float3	ret	=float3(0, 0, 0);
 
-//	float3	fracColor	=modf(colVal, colVal);
+	int3	range	=floor(colVal);
 
-//	ret.x	=mCelTable.Sample(PointClamp1D, fracColor.x) + colVal.x;
-//	ret.y	=mCelTable.Sample(PointClamp1D, fracColor.y) + colVal.y;
-//	ret.z	=mCelTable.Sample(PointClamp1D, fracColor.z) + colVal.z;
-
-	float3	fracColor	=frac(colVal);
-
-//	ret	=mCelTable.Sample(PointClampCube, colVal);
-
-	if(colVal.x > 1)
-	{
-#if defined(SM2)
-		ret.x	=mCelTable.Sample(PointClamp, fracColor.x) + (colVal.x - fracColor.x);
-#else
-		ret.x	=mCelTable.Sample(PointClamp1D, fracColor.x) + (colVal.x - fracColor.x);
-#endif
-	}
-	else
-	{
-#if defined(SM2)
-		ret.x	=mCelTable.Sample(PointClamp, float2(colVal.x, colVal.x));
-#else
-		ret.x	=mCelTable.Sample(PointClamp1D, colVal.x);
-#endif
-	}
-
-	if(colVal.y > 1)
-	{
-#if defined(SM2)
-		ret.y	=mCelTable.Sample(PointClamp, fracColor.y) + (colVal.y - fracColor.y);
-#else
-		ret.y	=mCelTable.Sample(PointClamp1D, fracColor.y) + (colVal.y - fracColor.y);
-#endif
-	}
-	else
-	{
-#if defined(SM2)
-		ret.y	=mCelTable.Sample(PointClamp, float2(colVal.y, colVal.y));
-#else
-		ret.y	=mCelTable.Sample(PointClamp1D, colVal.y);
-#endif
-	}
-
-	if(colVal.z > 1)
-	{
-#if defined(SM2)
-		ret.z	=mCelTable.Sample(PointClamp, fracColor.z) + (colVal.z - fracColor.z);
-#else
-		ret.z	=mCelTable.Sample(PointClamp1D, fracColor.z) + (colVal.z - fracColor.z);
-#endif
-	}
-	else
-	{
-#if defined(SM2)
-		ret.z	=mCelTable.Sample(PointClamp, float2(colVal.z, colVal.z));
-#else
-		ret.z	=mCelTable.Sample(PointClamp1D, colVal.z);
-#endif
-	}
+	ret.x	+=mCelTable.Sample(PointClamp1D, colVal.x - range.x) + range.x;
+	ret.y	+=mCelTable.Sample(PointClamp1D, colVal.y - range.y) + range.y;
+	ret.z	+=mCelTable.Sample(PointClamp1D, colVal.z - range.z) + range.z;
 
 	return	ret;
 }

@@ -156,8 +156,14 @@ float3	GetDynLight(float3 pixelPos, float3 normal)
 
 	for(int i=0;i < 16;i++)
 	{
-		float4	lPos1	=mDynLights.Sample(PointClamp1D, float(i * 2) / 32);
 		float4	lCol	=mDynLights.Sample(PointClamp1D, float((i * 2) + 1) / 32);
+
+		if(!any(lCol))
+		{
+			continue;
+		}
+
+		float4	lPos1	=mDynLights.Sample(PointClamp1D, float(i * 2) / 32);
 		float3	lDir	=lPos1.xyz - pixelPos;
 		float	atten	=saturate(1 - dot(lDir / lPos1.w, lDir / lPos1.w));
 
