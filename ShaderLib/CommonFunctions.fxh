@@ -181,13 +181,14 @@ float3 ComputeCheapSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 l
 
 //snaps a color to a celish range
 //makes a sort of EGA/CGA style look
-//This is horrible and in need of repair
 float3 CalcCelColor(float3 colVal)
 {
 	float3	ret	=float3(0, 0, 0);
 
 	int3	range	=floor(colVal);
 
+	//this provides the quantized light 0 to 1,
+	//but above 1 is added in for overbright lights
 	ret.x	+=mCelTable.Sample(PointClamp1D, colVal.x - range.x) + range.x;
 	ret.y	+=mCelTable.Sample(PointClamp1D, colVal.y - range.y) + range.y;
 	ret.z	+=mCelTable.Sample(PointClamp1D, colVal.z - range.z) + range.z;

@@ -31,6 +31,18 @@ namespace UtilityLib
 
 
 		//Vector extension methods
+		public static float dot(this Half4 aVec, Vector3 bVec)
+		{
+			Vector3	v3a	=Vector3.Zero;
+
+			v3a.X	=aVec.X;
+			v3a.Y	=aVec.Y;
+			v3a.Z	=aVec.Z;
+
+			return	aVec.dot(bVec);
+		}
+
+
 		public static float dot(this Vector3 aVec, Vector3 bVec)
 		{
 			return	Vector3.Dot(aVec, bVec);

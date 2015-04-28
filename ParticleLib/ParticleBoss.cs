@@ -100,9 +100,9 @@ namespace ParticleLib
 
 
 		//returns true if emitter count changed
-		public void Update(DeviceContext dc, int msDelta)
+		public void Update(DeviceContext dc, float msDelta)
 		{
-			Debug.Assert(msDelta > 0);
+			Debug.Assert(msDelta > 0f);
 
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{

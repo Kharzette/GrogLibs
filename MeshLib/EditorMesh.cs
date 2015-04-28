@@ -714,6 +714,14 @@ namespace MeshLib
 			{
 				indexes.Add(ind);
 			}
+
+			//transform
+			Vector3	[]yarr	=new Vector3[positions.Count];
+			Vector3	[]arr	=positions.ToArray();
+
+			Vector3.TransformCoordinate(arr, ref mTransform, yarr);
+
+			positions	=yarr.ToList();
 		}
 
 

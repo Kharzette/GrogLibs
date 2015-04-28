@@ -51,8 +51,9 @@ namespace UtilityLib
 		}
 
 
+		//all times in seconds
 		public void SetUpMove(float startPos, float endPos, float travelTime,
-                      float easeInPercent, float easeOutPercent)
+			float easeInPercent, float easeOutPercent)
 		{
 			//grab movement vital stats
 			mStartPos	=startPos;
@@ -98,18 +99,15 @@ namespace UtilityLib
 		}
 
 
-		public void Update(int msDelta)
+		public void Update(float secDelta)
 		{
-			Debug.Assert(msDelta > 0);
-
-			//convert to seconds
-			float	sDelta	=msDelta / 1000.0f;
+			Debug.Assert(secDelta > 0f);
 
 			//get the direction vector
 			float	dir	=mTargetPos - mStartPos;
 
 			//get current time
-			mCurTime	+=sDelta;
+			mCurTime	+=secDelta;
 
 			//limited movement
 			if(mCurTime > mTravelTime)
@@ -202,8 +200,9 @@ namespace UtilityLib
 		}
 
 
+		//all times in seconds
 		public void SetUpMove(Vector2 startPos, Vector2 endPos, float travelTime,
-                      float easeInPercent, float easeOutPercent)
+			float easeInPercent, float easeOutPercent)
 		{
 			//grab movement vital stats
 			mStartPos	=startPos;
@@ -251,12 +250,9 @@ namespace UtilityLib
 		}
 
 
-		public void Update(int msDelta)
+		public void Update(float secDelta)
 		{
-			Debug.Assert(msDelta > 0);
-
-			//convert to seconds
-			float	sDelta	=msDelta / 1000.0f;
+			Debug.Assert(secDelta > 0f);
 
 			//get the direction vector
 			Vector2	dir	=mTargetPos - mStartPos;
@@ -265,7 +261,7 @@ namespace UtilityLib
 			dir.Normalize();
 
 			//get current time
-			mCurTime	+=sDelta;
+			mCurTime	+=secDelta;
 
 			//limited movement
 			if(mCurTime > mTravelTime)
@@ -358,8 +354,9 @@ namespace UtilityLib
 		}
 
 
+		//all times in seconds
 		public void SetUpMove(Vector3 startPos, Vector3 endPos, float travelTime,
-                      float easeInPercent, float easeOutPercent)
+			float easeInPercent, float easeOutPercent)
 		{
 			//grab movement vital stats
 			mStartPos	=startPos;
@@ -407,12 +404,9 @@ namespace UtilityLib
 		}
 
 
-		public void Update(int msDelta)
+		public void Update(float secDelta)
 		{
-			Debug.Assert(msDelta > 0);
-
-			//convert to seconds
-			float	sDelta	=msDelta / 1000.0f;
+			Debug.Assert(secDelta > 0f);
 
 			//get the direction vector
 			Vector3	dir	=mTargetPos - mStartPos;
@@ -421,7 +415,7 @@ namespace UtilityLib
 			dir.Normalize();
 
 			//get current time
-			mCurTime	+=sDelta;
+			mCurTime	+=secDelta;
 
 			//limited movement
 			if(mCurTime > mTravelTime)
@@ -514,8 +508,9 @@ namespace UtilityLib
 		}
 
 
+		//all times in seconds
 		public void SetUpMove(Vector4 startPos, Vector4 endPos, float travelTime,
-                      float easeInPercent, float easeOutPercent)
+			float easeInPercent, float easeOutPercent)
 		{
 			//grab movement vital stats
 			mStartPos	=startPos;
@@ -563,12 +558,9 @@ namespace UtilityLib
 		}
 
 
-		public void Update(int msDelta)
+		public void Update(float secDelta)
 		{
-			Debug.Assert(msDelta > 0);
-
-			//convert to seconds
-			float	sDelta	=msDelta / 1000.0f;
+			Debug.Assert(secDelta > 0f);
 
 			//get the direction vector
 			Vector4	dir	=mTargetPos - mStartPos;
@@ -577,7 +569,7 @@ namespace UtilityLib
 			dir.Normalize();
 
 			//get current time
-			mCurTime	+=sDelta;
+			mCurTime	+=secDelta;
 
 			//limited movement
 			if(mCurTime > mTravelTime)

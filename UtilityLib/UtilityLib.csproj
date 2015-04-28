@@ -81,6 +81,7 @@
     <Compile Include="Physics.cs" />
     <Compile Include="Pool.cs" />
     <Compile Include="PrimFactory.cs" />
+    <Compile Include="UpdateTimer.cs" />
     <Compile Include="TSPool.cs" />
     <Compile Include="UserSettings.cs" />
     <Compile Include="VectorEventArgs.cs" />

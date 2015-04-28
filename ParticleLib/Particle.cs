@@ -22,7 +22,7 @@ namespace ParticleLib
 
 
 		//return true if expired
-		internal bool Update(int msDelta,
+		internal bool Update(float msDelta,
 			Vector3 gravLoc, float gravStr,
 			float maxVelocity)
 		{

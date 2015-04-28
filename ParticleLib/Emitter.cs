@@ -99,9 +99,9 @@ namespace ParticleLib
 		}
 
 
-		internal Particle []Update(int msDelta, out int numParticles)
+		internal Particle []Update(float msDelta, out int numParticles)
 		{
-			Debug.Assert(msDelta > 0);	//zero deltatimes are not good for this stuff
+			Debug.Assert(msDelta > 0f);	//zero deltatimes are not good for this stuff
 
 			numParticles	=0;
 

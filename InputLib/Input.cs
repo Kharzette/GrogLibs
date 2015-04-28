@@ -212,19 +212,15 @@ namespace InputLib
 
 		//in case of big delta times in a game, like sitting at a breakpoint
 		//or a big drop in framerate
+		//this is only needed for ActionTypes.ContinuousHold
 		public void ClampInputTimes(float amount)
 		{
 			long	clampTo	=(long)(amount / TimeScalar);
 
 			foreach(KeyValuePair<int, KeyHeldInfo> key in mKeysHeld)
 			{
-				if(key.Value.mTimeHeld > clampTo)
-				{
-					int	j=0;
-					j++;
-				}
 				key.Value.mTimeHeld =Math.Min(key.Value.mTimeHeld, clampTo);
-				Debug.WriteLine("" + key.Value.mTimeHeld);
+//				Debug.WriteLine("" + key.Value.mTimeHeld);
 			}
 		}
 
