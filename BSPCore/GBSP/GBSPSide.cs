@@ -202,6 +202,12 @@ namespace BSPCore
 		#endregion
 
 
+		internal void Free()
+		{
+			mPoly.Free();
+		}
+
+		
 		//make sure flags have legal values
 		internal void FixFlags(ref TexInfo ti)
 		{

@@ -96,9 +96,10 @@ namespace BSPZone
 		}
 
 
-		public void CheckMobile(object triggerer, BoundingBox playerBox, Vector3 startPos, Vector3 endPos, int msDelta)
+		public void CheckMobile(object triggerer, BoundingBox playerBox,
+			Vector3 startPos, Vector3 endPos, float msDelta)
 		{
-			Debug.Assert(msDelta > 0);
+			Debug.Assert(msDelta > 0f);
 
 			if(mZone == null)
 			{

@@ -27,7 +27,7 @@ namespace BSPZone
 		internal bool			mbTriggered;
 		internal bool			mbTriggerOnce;
 		internal bool			mbTriggerStandIn;
-		internal int			mTimeSinceTriggered;
+		internal double			mTimeSinceTriggered;
 		internal int			mWait;
 
 		internal List<object>	mTriggeringObjects	=new List<object>();
@@ -236,16 +236,16 @@ namespace BSPZone
 
 
 		#region Model Related
-		public void UpdateModels(int msDelta)//, Microsoft.Xna.Framework.Audio.AudioListener lis)
+		public void UpdateModels(float secDelta)//, Microsoft.Xna.Framework.Audio.AudioListener lis)
 		{
-			Debug.Assert(msDelta > 0);	//zero deltatimes are not good for this stuff
+			Debug.Assert(secDelta > 0f);	//zero deltatimes are not good for this stuff
 
 			//clear pushable push velocities
 			foreach(KeyValuePair<object, Pushable> push in mPushables)
 			{
 				push.Value.mMobile.ClearPushVelocity();
 			}
-			mBMHelper.Update(msDelta);//, lis);
+			mBMHelper.Update(secDelta);//, lis);
 		}
 
 

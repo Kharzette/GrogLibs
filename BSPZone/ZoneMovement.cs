@@ -1047,7 +1047,8 @@ namespace BSPZone
 
 		#region Triggers
 		//triggererereererereererrerererererrerererr
-		public void BoxTriggerCheck(object triggerer, BoundingBox box, Vector3 start, Vector3 end, int msDelta)
+		public void BoxTriggerCheck(object triggerer, BoundingBox box,
+			Vector3 start, Vector3 end, float msDelta)
 		{
 			//check for new entries
 			foreach(ZoneTrigger zt in mTriggers)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿//#define EMPTY_BRUSHES
+using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,10 +18,13 @@ namespace BSPCore
 
 		GBSPBrush	mVolume;
 
-		int		mPlaneNum;
+		int		mPlaneNum	=-1;
 		bool	mbSide;
 
 		TriBSP	mFront, mBack;
+
+		const int	BlockSize	=2048;
+		const float	fBlockSize	=2048f;
 
 
 		internal void InsertVolume(GBSPBrush b, PlanePool pp, ClipPools cp)
@@ -56,11 +60,34 @@ namespace BSPCore
 		}
 
 
+		internal void Free()
+		{
+			if(mFront != null)
+			{
+				mFront.Free();
+			}
+			if(mBack != null)
+			{
+				mBack.Free();
+			}
+
+			if(mPoly != null)
+			{
+				mPoly.Free();
+			}
+			if(mVolume != null)
+			{
+				mVolume.Free();
+			}
+		}
+
+
 		internal void GetVolumes(List<GBSPBrush> brushes)
 		{
 			if(mVolume != null)
 			{
-				brushes.Add(mVolume);
+				//clone these so the tree can be freed without freeing brushes
+				brushes.Add(new GBSPBrush(mVolume));
 			}
 
 			if(mFront != null)
@@ -86,6 +113,8 @@ namespace BSPCore
 		{
 			GBSPPlane	gp	=poly.GenPlane();
 
+			gp.Snap();
+
 			mPlaneNum	=pp.FindPlane(gp, out mbSide);
 
 			mPoly	=poly;
@@ -100,10 +129,58 @@ namespace BSPCore
 		}
 
 
+		//get the tree ready with block planes
+		//to sort of octree the top nodes
+		internal void PrepareTree(Bounds bnd, PlanePool pp)
+		{
+			int	kMinX	=(int)Math.Floor(bnd.mMins.X / fBlockSize);
+			int	kMinZ	=(int)Math.Floor(bnd.mMins.Z / fBlockSize);
+			int	kMaxX	=(int)Math.Ceiling(bnd.mMaxs.X / fBlockSize);
+			int	kMaxZ	=(int)Math.Ceiling(bnd.mMaxs.Z / fBlockSize);
+
+			Array	blockNodes	=Array.CreateInstance(typeof(TriBSP),
+				(kMaxX - kMinX) + 1,
+				(kMaxZ - kMinZ) + 1);
+
+			ClipPools	cp	=new ClipPools();
+			for(int z=kMinZ;z < kMaxZ;z++)
+			{
+				for(int x=kMinX;x < kMaxX;x++)
+				{
+					ProcessBlock(pp, x, z, cp);
+				}
+			}
+		}
+
+
+		void ProcessBlock(PlanePool pp, int xblock, int zblock, ClipPools cp)
+		{
+			Bounds	blockBounds	=new Bounds();
+
+			blockBounds.mMins.X	=xblock * BlockSize;
+			blockBounds.mMins.Z	=zblock * BlockSize;
+			blockBounds.mMins.Y	=-4096;
+			blockBounds.mMaxs.X	=(xblock + 1) * BlockSize;
+			blockBounds.mMaxs.Z	=(zblock + 1) * BlockSize;
+			blockBounds.mMaxs.Y	=4096;
+
+			MapBrush	mb	=new MapBrush(blockBounds, pp, cp);
+			GBSPBrush	gb	=new GBSPBrush(mb, pp);
+
+			gb.TriTreeInsert(this, pp);
+		}
+
+
 		//build a leafy non solidy facey tree
 		//not sure what these are called exactly
-		void Insert(GBSPPoly gp, PlanePool pp)
+		internal void Insert(GBSPPoly gp, PlanePool pp)
 		{
+			if(mPlaneNum == -1)
+			{
+				MakeNode(gp, pp);
+				return;
+			}
+
 			GBSPPlane	plane	=pp.mPlanes[mPlaneNum];
 			if(mbSide)
 			{

@@ -164,7 +164,7 @@ namespace BSPZone
 		}
 
 
-		public void Update(int msDelta)
+		public void Update(float msDelta)
 		{
 			Debug.Assert(msDelta > 0);
 

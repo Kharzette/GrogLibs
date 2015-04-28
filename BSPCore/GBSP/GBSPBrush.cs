@@ -75,6 +75,18 @@ namespace BSPCore
 				return;
 			}
 		}
+
+
+		internal void Free()
+		{
+			mBounds	=null;
+
+			foreach(GBSPSide s in mSides)
+			{
+				s.Free();
+			}
+			mSides.Clear();
+		}
 		#endregion
 
 
@@ -427,6 +439,27 @@ namespace BSPCore
 
 
 		#region Carving Operations
+		//insert sides into the newish tri tree
+		internal void TriTreeInsert(TriBSP tri, PlanePool pp)
+		{
+			foreach(GBSPSide side in mSides)
+			{
+				if(side.mbFlipSide)
+				{
+					GBSPPoly	copy	=new GBSPPoly(side.mPoly);
+
+					copy.Reverse();
+
+					tri.Insert(copy, pp);
+				}
+				else
+				{
+					tri.Insert(side.mPoly, pp);
+				}
+			}
+		}
+
+
 		//cut a clone of this brush down to the box planes passed in
 		GBSPBrush	ChopToBoxAndClone(int []planes, PlanePool pp, ClipPools cp)
 		{

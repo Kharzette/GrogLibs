@@ -119,9 +119,9 @@ namespace BSPZone
 			}
 
 
-			internal bool Update(int msDelta, Zone z)
+			internal bool Update(float secDelta, Zone z)
 			{
-				Debug.Assert(msDelta > 0);	//zero deltatimes are not good for this stuff
+				Debug.Assert(secDelta > 0f);	//zero deltatimes are not good for this stuff
 
 				if(mMover.Done())
 				{
@@ -137,7 +137,7 @@ namespace BSPZone
 
 				if(!mMover.Done())
 				{
-					mMover.Update(msDelta);
+					mMover.Update(secDelta);
 
 					//do the move
 					z.MoveModelTo(mModelIndex, mMover.GetPos());
@@ -150,7 +150,7 @@ namespace BSPZone
 					{
 						Vector3	rotPreUpdate	=mRotator.GetPos();
 
-						mRotator.Update(msDelta);
+						mRotator.Update(secDelta);
 
 						Vector3	rotPostUpdate	=mRotator.GetPos();
 
@@ -161,7 +161,7 @@ namespace BSPZone
 				}
 				else
 				{
-					Vector3	rotAmount	=(mRotationRate / 1000f) * msDelta;
+					Vector3	rotAmount	=mRotationRate * secDelta;
 
 					if(rotAmount != Vector3.Zero)
 					{
@@ -220,7 +220,7 @@ namespace BSPZone
 		}
 
 
-		void UpdateSingle(int msDelta, int modelIndex)
+		void UpdateSingle(float secDelta, int modelIndex)
 		{
 			if(!mModelStages.ContainsKey(modelIndex))
 			{
@@ -235,7 +235,7 @@ namespace BSPZone
 
 			ModelMoveStage	mms	=ms.mStages[ms.mCurStage];
 
-			bool	bDone	=mms.Update(msDelta, mZone);//, lis);
+			bool	bDone	=mms.Update(secDelta, mZone);//, lis);
 
 			if(bDone)
 			{
@@ -269,11 +269,11 @@ namespace BSPZone
 		}
 
 
-		internal void Update(int msDelta)
+		internal void Update(float secDelta)
 		{
 			foreach(KeyValuePair<int, ModelStages> mss in mModelStages)
 			{
-				UpdateSingle(msDelta, mss.Key);
+				UpdateSingle(secDelta, mss.Key);
 			}
 		}
 

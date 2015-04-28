@@ -671,15 +671,15 @@ namespace BSPCore
 					GBSPPoly	planePoly	=new GBSPPoly(sidePlane);
 
 					sw.WriteLine("( " +
-						-planePoly.mVerts[0].X + " " +
-						planePoly.mVerts[0].Z + " " +
-						planePoly.mVerts[0].Y + " ) ( " +
-						-planePoly.mVerts[1].X + " " +
+						planePoly.mVerts[2].X + " " +
+						planePoly.mVerts[2].Z + " " +
+						planePoly.mVerts[2].Y + " ) ( " +
+						planePoly.mVerts[1].X + " " +
 						planePoly.mVerts[1].Z + " " +
 						planePoly.mVerts[1].Y + " ) ( " +
-						-planePoly.mVerts[2].X + " " +
-						planePoly.mVerts[2].Z + " " +
-						planePoly.mVerts[2].Y + " ) BOGUS 0 0 0 1 1 0 128 0");
+						planePoly.mVerts[0].X + " " +
+						planePoly.mVerts[0].Z + " " +
+						planePoly.mVerts[0].Y + " ) BOGUS 0 0 0 1 1 0 128 0");
 				}
 				sw.WriteLine("}");
 			}

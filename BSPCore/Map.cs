@@ -18,7 +18,7 @@ namespace BSPCore
 	{
 		public enum DebugDrawChoice
 		{
-			MapBrushes, CollisionBrushes, GFXFaces
+			MapBrushes, CollisionBrushes, GFXFaces, TriTree
 		}
 
 		List<MapEntity>	mEntities;
@@ -56,7 +56,8 @@ namespace BSPCore
 		int				mLightMapGridSize;
 
 		//temporary bsp for converting max stuff
-		TriBSP	mTopNode;
+		TriBSP			mTopNode;
+		List<GBSPBrush>	mTriBrushes	=new List<GBSPBrush>();
 
 
 		public Map()
@@ -471,6 +472,14 @@ namespace BSPCore
 					}
 				}
 			}
+			else if(drawChoice == DebugDrawChoice.TriTree)
+			{
+				Random	rnd	=new Random();
+				foreach(GBSPBrush gb in mTriBrushes)
+				{
+					gb.GetTriangles(mPlanePool, rnd, verts, normals, colors, indexes, false);
+				}
+			}
 		}
 
 
@@ -800,13 +809,6 @@ namespace BSPCore
 
 		public void AddBSPTriangle(List<Vector3> tri)
 		{
-			GBSPPlane	plane	=new GBSPPlane();
-
-			Mathery.PlaneFromVerts(tri, out plane.mNormal, out plane.mDist);
-
-			bool	bSide;
-			int	planeNum	=mPlanePool.FindPlane(plane, out bSide);
-
 			if(mTopNode == null)
 			{
 				mTopNode	=new TriBSP();
@@ -897,15 +899,28 @@ namespace BSPCore
 		}
 
 
+		public void PrepareTriTree(Bounds bnd)
+		{
+			if(mTopNode != null)
+			{
+				mTopNode.Free();
+			}
+			mTopNode	=new TriBSP();
+			mTopNode.PrepareTree(bnd, mPlanePool);
+		}
+
+
+		public void AccumulateVolumes()
+		{
+			mTopNode.GetVolumes(mTriBrushes);
+		}
+
+
 		public int	DumpBSPVolumesToQuarkMap(string mapName)
 		{
-			List<GBSPBrush>	brushes	=new List<GBSPBrush>();
+			GBSPBrush.DumpBrushListToFile(mTriBrushes, mPlanePool, mapName + ".map");
 
-			mTopNode.GetVolumes(brushes);
-
-			GBSPBrush.DumpBrushListToFile(brushes, mPlanePool, mapName + ".map");
-
-			return	brushes.Count;
+			return	mTriBrushes.Count;
 		}
 
 

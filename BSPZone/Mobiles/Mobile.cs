@@ -326,11 +326,11 @@ namespace BSPZone
 
 
 		//ins and outs are ground based
-		public void Move(Vector3 endPos, int msDelta, bool bWorldOnly,
+		public void Move(Vector3 endPos, float msDelta, bool bWorldOnly,
 			bool bFly, bool bMoveAlongGround, bool bTriggerCheck, bool bDistCheck,
 			out Vector3 retPos, out Vector3 camPos)
 		{
-			Debug.Assert(msDelta > 0);
+			Debug.Assert(msDelta > 0f);
 
 			retPos	=Vector3.Zero;
 			camPos	=Vector3.Zero;

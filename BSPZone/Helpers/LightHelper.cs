@@ -114,9 +114,9 @@ namespace BSPZone
 
 		//TODO: mover3 might cause nans if lerping between
 		//opposite axiseesseseseeseses, use quat slerp?
-		public void Update(int msDelta, Vector3 pos, MaterialLib.DynamicLights dyn)
+		public void Update(float secDelta, Vector3 pos, MaterialLib.DynamicLights dyn)
 		{
-			Debug.Assert(msDelta > 0);	//zero deltatimes are not good for this stuff
+			Debug.Assert(secDelta > 0f);	//zero deltatimes are not good for this stuff
 
 			//calculate fill lights
 			CalcFill(pos);
@@ -137,7 +137,7 @@ namespace BSPZone
 					}
 					else
 					{
-						mBestColorMover.Update(msDelta);
+						mBestColorMover.Update(secDelta);
 						mLightColor	=mBestColorMover.GetPos();
 					}
 				}
@@ -146,7 +146,7 @@ namespace BSPZone
 					mBestColorMover.SetUpMove(mLightColor, Vector4.Zero,
 						LightLerpTime, LightEaseIn, LightEaseOut);
 
-					mBestColorMover.Update(msDelta);
+					mBestColorMover.Update(secDelta);
 					mLightColor		=mBestColorMover.GetPos();
 					mbLerpingToDark	=true;
 				}
@@ -172,8 +172,8 @@ namespace BSPZone
 
 			if(!mBestLightMover.Done())
 			{
-				mBestLightMover.Update(msDelta);
-				mBestColorMover.Update(msDelta);
+				mBestLightMover.Update(secDelta);
+				mBestColorMover.Update(secDelta);
 
 				Vector4	curLight	=mBestLightMover.GetPos();
 				Vector4	curColor	=mBestColorMover.GetPos();
