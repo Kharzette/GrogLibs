@@ -761,9 +761,6 @@ namespace PathLib
 //						gack++;
 //					}
 
-					//for stair check
-					bool	bStairs	=false;
-
 					//make sure we are not already connected
 					bool	bFound	=false;
 					foreach(PathConnection con in pn.mConnections)
@@ -798,135 +795,26 @@ namespace PathLib
 						continue;
 					}
 
-					//only allow upward movement equivlent to a stairstep
+					//only allow upward movement amounts of a stairstep...
+					//this will also prevent steep slope climbing
+					//TODO: use the GROUND_PLANE stuff instead?
 					float	upDist	=pn.mPoint.Y - pn2.mPoint.Y;
 					if(upDist < -stepHeight)
 					{
 						continue;
 					}
 
-					//see if p1 and p2 are planar
-					Vector3	pnNorm, pn2Norm;
-					float	pnDist, pn2Dist;
-					pn.mPoly.GetPlane(out pnNorm, out pnDist);
-					pn2.mPoly.GetPlane(out pn2Norm, out pn2Dist);
-
-					bool	bUseEdge;
-
-					//planar?
-					float	close	=pn2Dist - pnDist;
-					if(!(Mathery.CompareVectorEpsilon(pnNorm, pn2Norm, 0.001f)
-						&& (close > -0.01f && close < 0.01f)))
+					//try the move
+					if(canReach(pn.mPoint, pn2.mPoint))
 					{
-						//first just try the move
-						if(canReach(pn.mPoint, pn2.mPoint))
-						{
-							PathConnection	pc	=new PathConnection();
-							pc.mConnectedTo		=pn2;
-							pc.mDistanceBetween	=pn.DistanceBetweenNodes(pn2);
-							pc.mbPassable		=true;
-							pc.mbUseEdge		=false;
+						PathConnection	pc	=new PathConnection();
+						pc.mConnectedTo		=pn2;
+						pc.mDistanceBetween	=pn.DistanceBetweenNodes(pn2);
+						pc.mbPassable		=true;
+						pc.mbUseEdge		=false;
 
-							pn.mConnections.Add(pc);
-							continue;
-						}
-
-						bUseEdge	=true;
-
-						//if these are not coplanar, should be in seperate polys
-						Debug.Assert(pn.mPoly != pn2.mPoly);
-
-						Edge	e1	=pn.mPoly.GetSharedEdge(pn2.mPoly);
-						Edge	e2	=pn2.mPoly.GetSharedEdge(pn.mPoly);
-
-						//happens when connected via one vert
-						if(e1 == null || e2 == null)
-						{
-							//stairs?
-							e1	=pn.mPoly.GetSharedEdgeXZ(pn2.mPoly, stepHeight);
-							e2	=pn2.mPoly.GetSharedEdgeXZ(pn.mPoly, stepHeight);
-							if(e1 == null || e2 == null)
-							{
-								//no shared edges, could be a step up on a slope
-								//like stepping up to the side of a ramp
-								continue;
-							}
-
-							bStairs	=true;
-
-							//check endpoint distance to Y plane
-							float	e1Dist	=Vector3.Dot(Vector3.Up, e1.mA);
-							float	e2Dist	=Vector3.Dot(Vector3.Up, e2.mA);
-
-							float	yDist	=e2Dist - e1Dist;
-
-							if(yDist < -stepHeight || yDist > stepHeight)
-							{
-								continue;
-							}
-
-							//want e1 to be the "highest" edge
-							if(e1Dist < e2Dist)
-							{
-								Edge	temp	=e2;
-
-								e2	=e1;
-								e1	=temp;
-							}
-						}
-
-						//find the shortest line between the path and edge
-						Vector3	shortA, shortB;
-						if(!Mathery.ShortestLineBetweenTwoLines(e1.mA, e1.mB, pn.mPoint, pn2.mPoint,
-							out shortA, out shortB))
-						{
-							continue;
-						}
-
-						//see if the short line goes up or down from the edge
-						Vector3	e1Center	=e1.GetCenter();
-
-						Vector3	upVec	=shortB - shortA;
-						if(upVec.Y < 0f)
-						{
-							upVec	=-upVec;
-							shortB	+=(upVec * 2);
-						}
-
-						//trace pn to edge
-						if(!bStairs)
-						{
-							if(!CanReachTwoMoves(pn.mPoint, pn2.mPoint, shortB, canReach))
-							{
-								continue;
-							}
-						}
-						else
-						{
-							if(!CanReachStairStep(pn.mPoint, pn2.mPoint, shortB, canReach))
-							{
-								continue;
-							}
-						}
+						pn.mConnections.Add(pc);
 					}
-					else
-					{
-						bUseEdge	=false;
-
-						//test direct move
-						if(!canReach(pn.mPoint, pn2.mPoint))
-						{
-							continue;
-						}
-					}
-
-					PathConnection	pc2		=new PathConnection();
-					pc2.mConnectedTo		=pn2;
-					pc2.mDistanceBetween	=pn.DistanceBetweenNodes(pn2);
-					pc2.mbPassable			=true;
-					pc2.mbUseEdge			=bUseEdge;
-
-					pn.mConnections.Add(pc2);
 				}
 			}
 		}

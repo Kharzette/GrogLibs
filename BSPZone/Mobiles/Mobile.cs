@@ -113,7 +113,9 @@ namespace BSPZone
 
 			//do a nothing move to establish footing and ground plane
 			//mainly used for pathfinding connection tests
-			mbOnGround	=mZone.BipedMoveBox(mBox, mPosition, mPosition, mbOnGround, true, true, false, out mUnderFoot, out donutCare, out bStairs, out mbBadFooting, ref mModelOn);
+			mbOnGround	=mZone.BipedMoveBox(mBox, mPosition, mPosition,
+				mbOnGround, true, true, false, out mUnderFoot, out donutCare,
+				out bStairs, out mbBadFooting, ref mModelOn);
 		}
 
 
@@ -396,51 +398,6 @@ namespace BSPZone
 			{
 				mZone.UpdatePushable(this, mPosition, mModelOn);
 			}
-		}
-
-
-		//ins and outs are ground based
-		public void MoveAlongGroundOnly(Vector3 endPos, bool bWorldOnly,
-			out Vector3 retPos, out Vector3 camPos)
-		{
-			retPos	=mPosition - mBoxMiddleOffset;
-			camPos	=-(mPosition - mBoxMiddleOffset + mEyeHeight);
-
-			if(mZone == null || !mbOnGround)
-			{
-				return;
-			}
-
-			//adjust to box middle
-			endPos	+=mBoxMiddleOffset;
-
-			Vector3	moveDelta	=endPos - mPosition;
-
-			//adjust onto the ground plane if desired and good footing
-			//this requires a valid ground plane
-			Debug.Assert(mUnderFoot.mNormal != Vector3.Zero);
-
-			if(!mUnderFoot.MoveAlong(ref moveDelta))
-			{
-				return;
-			}
-
-			endPos	=mPosition + moveDelta;
-
-			//move it through the bsp
-			bool	bUsedStairs	=false;
-
-			mbOnGround	=mZone.BipedMoveBox(mBox, mPosition, endPos,
-				mbOnGround, bWorldOnly, true, true,
-				out mUnderFoot, out endPos, out bUsedStairs,
-				out mbBadFooting, ref mModelOn);
-
-			retPos	=endPos - mBoxMiddleOffset;
-
-			//pop up to eye height, and negate
-			camPos	=-(endPos - mBoxMiddleOffset + mEyeHeight);
-
-			mPosition	=endPos;
 		}
 
 
