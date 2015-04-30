@@ -28,7 +28,7 @@ namespace BSPZone
 		internal bool			mbTriggerOnce;
 		internal bool			mbTriggerStandIn;
 		internal double			mTimeSinceTriggered;
-		internal int			mWait;
+		internal double			mDelay;
 
 		internal List<object>	mTriggeringObjects	=new List<object>();
 	}
@@ -78,8 +78,10 @@ namespace BSPZone
 		public event EventHandler	eTriggerOutOfRange;
 
 		//pathing uses these to make the graph connections too
-		public const float	RampAngle	=0.7f;	//how steep can we climb?
-		public const float	StepHeight	=18.0f;	//stair step height for bipeds
+		public const float	RampAngle		=0.7f;	//how steep can we climb?
+		public const float	StepHeight		=18.0f;	//stair step height for bipeds
+		public const float	StepDownHeight	=10.0f;	//how far down can a biped step
+													//while in a sprint?
 
 		const int	MaxMoveBoxIterations	=16;
 
@@ -216,12 +218,12 @@ namespace BSPZone
 						ze.mData.Add("triggered", "false");
 					}
 
-					if(ze.mData.ContainsKey("wait"))
+					if(ze.mData.ContainsKey("delay"))
 					{
-						if(Mathery.TryParse(ze.mData["wait"], out zt.mWait))
+						if(Mathery.TryParse(ze.mData["delay"], out zt.mDelay))
 						{
 							//bump to milliseconds
-							zt.mWait	*=1000;
+							zt.mDelay	*=1000.0;
 						}
 					}
 

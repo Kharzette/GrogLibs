@@ -973,6 +973,27 @@ namespace UtilityLib
 		}
 
 
+		public static bool TryParse(string str, out double val)
+		{
+#if XBOX
+			try
+			{
+				val	=double.Parse(str);
+				return	true;
+			}
+			catch
+			{
+				val	=double.NaN;
+				return	false;
+			}
+#else
+			return	double.TryParse(str,
+				System.Globalization.NumberStyles.Float,
+				System.Globalization.CultureInfo.InvariantCulture, out val);
+#endif
+		}
+
+
 		public static bool TryParse(string str, out int val)
 		{
 #if XBOX

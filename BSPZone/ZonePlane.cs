@@ -134,13 +134,13 @@ namespace BSPZone
 
 
 		//adjust a movement vec along the plane
-		internal void MoveAlong(ref Vector3 moveVec)
+		internal bool MoveAlong(ref Vector3 moveVec)
 		{
 			Debug.Assert(IsGround());
 
 			if(moveVec == Vector3.Zero)
 			{
-				return;
+				return	false;
 			}
 
 			//save length
@@ -152,7 +152,7 @@ namespace BSPZone
 
 			if(dot < -(1f -Zone.RampAngle) || dot > (1f - Zone.RampAngle))
 			{
-				return;	//movement is too perp for alignment
+				return	false;	//movement is too perp for alignment
 			}
 
 			Vector3	sideVec	=Vector3.Cross(moveVec, mNormal);
@@ -162,6 +162,8 @@ namespace BSPZone
 			newVec.Normalize();
 
 			moveVec	=newVec * len;
+
+			return	true;
 		}
 
 

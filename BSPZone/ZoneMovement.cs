@@ -20,7 +20,7 @@ namespace BSPZone
 
 		Dictionary<object, Pushable>	mPushables	=new Dictionary<object, Pushable>();
 
-		const float	FootDistance	=0.4f;
+		const float	FootDistance	=1f;
 
 
 		#region Bipedal Movement
@@ -113,7 +113,7 @@ namespace BSPZone
 
 			bool		bBadFooting;
 			bool		bGroundStep	=MoveBox(box, start + stairAxis * stepHeight,
-				end + stairAxis * stepHeight, false,
+				end + stairAxis * stepHeight, false, false,
 				out stairPlane,	out stepPos, out modelOn, out bBadFooting);
 
 			if(!bGroundStep)
@@ -197,10 +197,10 @@ namespace BSPZone
 
 		//returns true if on ground
 		//this one assumes 2 legs, so navigates stairs
-		//TODO: This gets a bit strange on gentle slopes
 		public bool BipedMoveBox(BoundingBox box, Vector3 start, Vector3 end,
-			bool bPrevOnGround, bool bWorldOnly, bool bDistCheck, out ZonePlane groundPlane,
-			out Vector3 finalPos, out bool bUsedStairs, out bool bBadFooting, ref int modelOn)
+			bool bPrevOnGround, bool bWorldOnly, bool bDistCheck, bool bStepDown,
+			out ZonePlane groundPlane, out Vector3 finalPos,
+			out bool bUsedStairs, out bool bBadFooting, ref int modelOn)
 		{
 			bUsedStairs	=false;
 			bBadFooting	=false;
@@ -218,7 +218,7 @@ namespace BSPZone
 
 			//try the standard box move
 			int		firstModelOn;
-			bool	bGround	=MoveBox(box, start, end, bWorldOnly,
+			bool	bGround	=MoveBox(box, start, end, bWorldOnly, bStepDown,
 				out groundPlane, out finalPos, out firstModelOn, out bBadFooting);
 
 			//see how far it went
@@ -643,7 +643,8 @@ namespace BSPZone
 
 		//positions should be in the middle of the box
 		//returns true if on the ground
-		public bool MoveBox(BoundingBox box, Vector3 start, Vector3 end, bool bWorldOnly,
+		public bool MoveBox(BoundingBox box, Vector3 start, Vector3 end,
+			bool bWorldOnly, bool bStepDown,
 			out ZonePlane groundPlane, out Vector3 finalPos,
 			out int modelOn, out bool bBadFooting)
 		{
@@ -673,7 +674,27 @@ namespace BSPZone
 				}
 				finalPos	=modelPos;
 			}
-			return	FootCheck(box, finalPos, FootDistance, out groundPlane, out modelOn, out bBadFooting);
+
+			//move made, check footing
+			bool	bGround	=FootCheck(box, finalPos, FootDistance,
+				out groundPlane, out modelOn, out bBadFooting);
+
+			if(!bGround && bStepDown)
+			{
+				//see if running down a ramp or stairs
+				Collision	col;
+				if(TraceAll(null, box, finalPos, finalPos + Vector3.UnitY * -StepDownHeight, out col))
+				{
+					if(!col.mbStartInside)
+					{
+						finalPos	=col.mIntersection;
+						col.mPlaneHit.ReflectPosition(ref finalPos);
+						return	FootCheck(box, finalPos, FootDistance,
+							out groundPlane, out modelOn, out bBadFooting);
+					}
+				}
+			}
+			return	bGround;
 		}
 		#endregion
 
@@ -1053,8 +1074,6 @@ namespace BSPZone
 			//check for new entries
 			foreach(ZoneTrigger zt in mTriggers)
 			{
-				zt.mTimeSinceTriggered	+=msDelta;
-
 				//if a one shot and already tripped, skip
 				if(zt.mbTriggerOnce && zt.mbTriggered)
 				{
@@ -1072,7 +1091,8 @@ namespace BSPZone
 				rt.mBounds		=box;
 				if(TraceFakeOrientedBoxTrigger(rt, start, end, mZoneModels[zt.mModelNum]))
 				{
-					if(zt.mTimeSinceTriggered > zt.mWait)
+					zt.mTimeSinceTriggered	+=msDelta;
+					if(zt.mTimeSinceTriggered > zt.mDelay)
 					{
 						zt.mEntity.mData["triggered"]	="true";
 						zt.mbTriggered					=true;

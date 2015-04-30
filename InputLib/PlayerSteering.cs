@@ -24,9 +24,6 @@ namespace InputLib
 
 		SteeringMethod	mMethod;
 
-		//movement settings
-		float	mWheelScrollSpeed	=0.04f;
-
 		//sprint settings
 		float	SprintForwardFactor	=1.8f;
 		float	SprintBackFactor	=1.5f;
@@ -36,14 +33,12 @@ namespace InputLib
 		//position info
 		Vector3	mDelta;
 		float	mPitch, mYaw, mRoll;
-		float	mZoom	=80f;		//default
 		bool	mbMovedThisFrame;	//true if the player gave movement input
 
 		//constants
 		const float	PitchClamp	=80.0f;
 
 		//mapped actions from the game
-		Enum	mZoomIn, mZoomOut;
 		Enum	mMoveLeftRight, mMoveLeft, mMoveRight;
 		Enum	mMoveForwardBack, mMoveForward, mMoveBack;
 		Enum	mTurnBoth, mTurnLeft, mTurnRight;
@@ -122,12 +117,6 @@ namespace InputLib
 			set { mRoll = value; }
 		}
 
-		public float Zoom
-		{
-			get { return mZoom; }
-			set { mZoom = value; }
-		}
-
 
 		public Vector3 Update(Vector3 pos,
 			Vector3 camForward, Vector3 camLeft, Vector3 camUp,
@@ -138,20 +127,6 @@ namespace InputLib
 			if(mMethod == SteeringMethod.None)
 			{
 				return	pos;
-			}
-
-			foreach(Input.InputAction act in actions)
-			{
-				if(act.mAction.Equals(mZoomIn))
-				{
-					mZoom	-=act.mMultiplier * mWheelScrollSpeed;
-					mZoom	=MathUtil.Clamp(mZoom, 5f, 500f);
-				}
-				else if(act.mAction.Equals(mZoomOut))
-				{
-					mZoom	+=act.mMultiplier * mWheelScrollSpeed;
-					mZoom	=MathUtil.Clamp(mZoom, 5f, 500f);
-				}
 			}
 
 			Vector3	moveVec	=Vector3.Zero;
@@ -175,7 +150,7 @@ namespace InputLib
 			}
 			else if(mMethod == SteeringMethod.XCOM)
 			{
-				throw(new NotImplementedException());
+				UpdateGroundMovement(camForward, camLeft, camUp, actions, out moveVec);
 			}
 
 			//camera direction stuff is backwards

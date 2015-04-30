@@ -379,6 +379,11 @@ namespace PathLib
 			{
 				foreach(PathConnection pc in pn.mConnections)
 				{
+					if(!pc.mbPassable)
+					{
+						continue;
+					}
+
 					LineSeg	ln	=new LineSeg();
 
 					ln.mA	=pn.mPoint;
@@ -750,7 +755,7 @@ namespace PathLib
 
 					//good place to break if you have 2 tricksy nodes
 					//(find via TestPathing)
-//					if(pnIdx == 89 && pn2Idx == 104)
+//					if(pnIdx == 138 && pn2Idx == 137)
 //					{
 //						int	gack	=0;
 //						gack++;
@@ -789,6 +794,13 @@ namespace PathLib
 					//test 3D distance
 					float	dist	=Vector3.Distance(pn.mPoint, pn2.mPoint);
 					if(dist > (1.5f * gridSQ2))
+					{
+						continue;
+					}
+
+					//only allow upward movement equivlent to a stairstep
+					float	upDist	=pn.mPoint.Y - pn2.mPoint.Y;
+					if(upDist < -stepHeight)
 					{
 						continue;
 					}
