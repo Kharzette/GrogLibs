@@ -300,6 +300,60 @@ namespace MaterialLib
 		}
 
 
+		unsafe public bool AddTexToAtlas(TexAtlas atlas, string texName, GraphicsDevice gd,
+			out double scaleU, out double scaleV, out double uoffs, out double voffs)
+		{
+			scaleU	=scaleV	=uoffs	=voffs	=0.0;
+
+			if(!mTexture2s.ContainsKey(texName))
+			{
+				return	false;
+			}
+
+			//even though we already have this loaded, there appears
+			//to be no way to get at the bits, so load it again
+			ImageLoadInformation	loadInfo	=new ImageLoadInformation();
+
+			loadInfo.BindFlags		=BindFlags.None;
+			loadInfo.CpuAccessFlags	=CpuAccessFlags.Read | CpuAccessFlags.Write;
+			loadInfo.Depth			=0;
+			loadInfo.Filter			=FilterFlags.None;
+			loadInfo.Format			=Format.R8G8B8A8_UNorm;
+			loadInfo.Usage			=ResourceUsage.Staging;
+
+			Resource	res	=Texture2D.FromFile(gd.GD, mGameRootDir + "\\Textures\\" + texName + ".png", loadInfo);
+			if(res == null)
+			{
+				return	false;
+			}
+
+			DataBox	db	=gd.DC.MapSubresource(res, 0, MapMode.Read, SharpDX.Direct3D11.MapFlags.None);
+
+			Texture2D	tex	=res as Texture2D;
+
+			int	w	=tex.Description.Width;
+			int	h	=tex.Description.Height;
+
+			Color	[]colArray	=new Color[w * h];
+
+			var	pSrc	=(Color *)@db.DataPointer;
+
+			for(int y=0;y < h;y++)
+			{
+				//divide pitch by sizeof(Color)
+				int	ofs	=y * (db.RowPitch / 4);
+
+				for(int x=0;x < w;x++)
+				{
+					colArray[x + (y * w)]	=*(pSrc + ofs + x);
+				}
+			}
+
+			return	atlas.Insert(colArray, w, h,
+				out scaleU, out scaleV, out uoffs, out voffs);
+		}
+
+
 		public void FreeAll()
 		{
 			foreach(KeyValuePair<string, Effect> fx in mFX)

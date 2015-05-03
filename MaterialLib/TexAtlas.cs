@@ -5,6 +5,7 @@ using System.IO;
 using SharpDX;
 using SharpDX.DXGI;
 using SharpDX.Direct3D11;
+
 using UtilityLib;
 
 
@@ -192,8 +193,50 @@ namespace MaterialLib
 
 		public void FreeAll()
 		{
-			mSRV.Dispose();
-			mAtlasTexture.Dispose();
+			if(mSRV != null)
+			{
+				mSRV.Dispose();
+			}
+			if(mAtlasTexture != null)
+			{
+				mAtlasTexture.Dispose();
+			}
+		}
+
+
+		public unsafe System.Drawing.Bitmap GetAtlasImage(DeviceContext dc)
+		{
+			System.Drawing.Bitmap	bm	=new System.Drawing.Bitmap(mWidth, mHeight);
+
+			System.Drawing.Imaging.BitmapData	bmd	=new System.Drawing.Imaging.BitmapData();
+
+			System.Drawing.Rectangle	bmRect	=new System.Drawing.Rectangle(0, 0, mWidth, mHeight);
+
+			bmd	=bm.LockBits(bmRect,
+				System.Drawing.Imaging.ImageLockMode.WriteOnly,
+				System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+
+			IntPtr	ptr	=bmd.Scan0;
+
+			int	colSize	=(mWidth * mHeight * 4);
+
+			byte	[]copyOf	=new byte[colSize];			
+
+			for(int i=0;i < mBuildArray.Length;i++)
+			{
+				Color	c	=mBuildArray[i];
+
+				copyOf[i * 4]		=c.B;
+				copyOf[i * 4 + 1]	=c.G;
+				copyOf[i * 4 + 2]	=c.R;
+				copyOf[i * 4 + 3]	=c.A;
+			}
+
+			System.Runtime.InteropServices.Marshal.Copy(copyOf, 0, ptr, colSize);
+
+			bm.UnlockBits(bmd);
+
+			return	bm;
 		}
 
 

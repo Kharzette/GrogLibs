@@ -231,6 +231,9 @@ namespace MeshLib
 			{
 				Character	chr	=mesh as Character;
 
+				//bone bound stuff
+				chr.ComputeBoneBounds(new List<string>());
+
 				box		=chr.GetBoxBound();
 				sphere	=chr.GetSphereBound();
 			}
