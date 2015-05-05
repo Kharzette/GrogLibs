@@ -440,3 +440,37 @@ float4 Tex0Tex1Col0DecalPS(VVPosTex0Tex1Col0 input) : SV_Target
 	
 	return	texLitColor;
 }
+
+//trilight, up to 4 texture lookups
+float4	TriTexFact4PS(VVPosTex04Tex14Tex24Tex34Tex44 input) : SV_Target
+{
+	float4	texColor	=float4(0, 0, 0, 0);
+
+	if(input.TexCoord2.x > 0)
+	{
+		texColor	+=mTexture0.Sample(LinearClamp, input.TexCoord3.xy);
+	}
+	if(input.TexCoord2.y > 0)
+	{
+		texColor	+=mTexture0.Sample(LinearClamp, input.TexCoord3.zw);
+	}
+	if(input.TexCoord2.z > 0)
+	{
+		texColor	+=mTexture0.Sample(LinearClamp, input.TexCoord4.xy);
+	}
+	if(input.TexCoord2.w > 0)
+	{
+		texColor	+=mTexture0.Sample(LinearClamp, input.TexCoord4.zw);
+	}
+
+	float3	pnorm	=input.TexCoord0.xyz;
+
+	pnorm	=normalize(pnorm);
+
+	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
+							mLightColor0, mLightColor1, mLightColor2);
+
+	texColor.xyz	*=triLight;
+
+	return	texColor;
+}

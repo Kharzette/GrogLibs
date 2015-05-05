@@ -171,6 +171,26 @@ VVPosTex04Tex14 WNormWPosTexVS(VPosNormTex0 input)
 	return	output;
 }
 
+//worldpos and normal and texture factors
+VVPosTex04Tex14Tex24Tex34Tex44 WNormWPosTexFactVS(VPosNormTex04Tex14Tex24 input)
+{
+	VVPosTex04Tex14Tex24Tex34Tex44	output;
+	
+	//generate the world-view-proj matrix
+	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
+	
+	//transform the input position to the output
+	output.Position			=mul(float4(input.Position, 1), wvp);
+	output.TexCoord0.xyz	=mul(input.Normal.xyz, mWorld);
+	output.TexCoord1.xyz	=mul(input.Position, mWorld);
+	output.TexCoord2		=input.TexCoord0;
+	output.TexCoord3		=input.TexCoord1;
+	output.TexCoord4		=input.TexCoord2;
+	
+	//return the output structure
+	return	output;
+}
+
 
 technique10 TriTex0
 {     
@@ -188,6 +208,28 @@ technique10 TriTex0
 #else
 		VertexShader	=compile vs_4_0_level_9_3 TexTriVS();
 		PixelShader		=compile ps_4_0_level_9_3 Tex0Col0PS();
+#endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(EnableDepth, 0);
+	}
+}
+
+technique10 TriTerrain
+{     
+	pass P0
+	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 WNormWPosTexFactVS();
+		PixelShader		=compile ps_5_0 TriTexFact4PS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 WNormWPosTexFactVS();
+		PixelShader		=compile ps_4_1 TriTexFact4PS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 WNormWPosTexFactVS();
+		PixelShader		=compile ps_4_0 TriTexFact4PS();
+#else
+		VertexShader	=compile vs_4_0_level_9_3 WNormWPosTexFactVS();
+		PixelShader		=compile ps_4_0_level_9_3 TriTexFact4PS();
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
 		SetDepthStencilState(EnableDepth, 0);

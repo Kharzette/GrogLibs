@@ -39,7 +39,7 @@ namespace UtilityLib
 			v3a.Y	=aVec.Y;
 			v3a.Z	=aVec.Z;
 
-			return	aVec.dot(bVec);
+			return	v3a.dot(bVec);
 		}
 
 

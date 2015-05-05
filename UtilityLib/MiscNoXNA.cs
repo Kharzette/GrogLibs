@@ -26,7 +26,7 @@ namespace UtilityLib
 		}
 
 
-		public static void SafeInvole<T>(this EventHandler<T> eh, object sender, T ea) where T : EventArgs
+		public static void SafeInvoke<T>(this EventHandler<T> eh, object sender, T ea) where T : EventArgs
 		{
 			if(eh != null)
 			{

@@ -1,12 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using System.IO;
 using System.Threading;
 using System.Diagnostics;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
+using SharpDX;
+
+using UtilityLib;
+using MaterialLib;
+
+using MatLib	=MaterialLib.MaterialLib;
+
 
 namespace TerrainLib
 {
@@ -32,11 +36,6 @@ namespace TerrainLib
 		//only the nearby cells are kept in memory
 		HeightMap[,]	mStreamMaps;
 
-		//tex & shading, there is no 3
-		Texture2D			mTEXAtlas;
-		Effect				mFXTerrain;
-		VertexDeclaration	mVDTerrain;
-
 		//locations
 		Point	mCellCoord;
 		Vector3	mLevelPos;
@@ -48,19 +47,14 @@ namespace TerrainLib
 
 
 		//set up textures and such
-		public Terrain(Texture2D texAtlas, ContentManager cm,
-			float [,]data, int polySize,
+		public Terrain(float [,]data, int polySize,
 			int chunkDim, int cellGridMax)
 		{
-			mTEXAtlas	=texAtlas;
 			mChunkDim	=chunkDim;
 			mHeightData	=data;
 			mPolySize	=polySize;
 
 			mStreamMaps	=new HeightMap[cellGridMax, cellGridMax];
-
-			InitVertexDeclaration();
-			InitEffect(cm);
 		}
 
 
@@ -271,8 +265,8 @@ namespace TerrainLib
 				mChunkDim + 1, mChunkDim + 1,
 				(mChunkDim * cs.mChunkX) - startX,
 				(mChunkDim * cs.mChunkY) - startY,
-				mPolySize,
-				cs.mGD, mVDTerrain);
+				mPolySize, new List<HeightMap.TexData>(),
+				cs.mGD);
 
 			chunk	=null;
 
@@ -293,10 +287,10 @@ namespace TerrainLib
 		}
 
 
-		public Vector3 GetGoodColorForHeight(float height)
-		{
-			return	mStreamMaps[0, 0].GetGoodColorForHeight(height);
-		}
+//		public Vector3 GetGoodColorForHeight(float height)
+//		{
+//			return	mStreamMaps[0, 0].GetGoodColorForHeight(height);
+//		}
 
 
 		public void GetTimings(out long pos, out long norm, out long copy,
@@ -326,8 +320,9 @@ namespace TerrainLib
 		}
 
 
-		void InitEffect(ContentManager cm)
+		void InitEffect(MatLib mat)
 		{
+			/*
 			mFXTerrain	=cm.Load<Effect>("Shaders/Terrain");
 
 			//set up shader stuff that won't change for now
@@ -366,75 +361,13 @@ namespace TerrainLib
 			mFXTerrain.Parameters["mFogStart"].SetValue(500.0f);
 			mFXTerrain.Parameters["mFogEnd"].SetValue(1000.0f);
 			mFXTerrain.Parameters["mFogColor"].SetValue(fogColor);
-			mFXTerrain.Parameters["mEyePos"].SetValue(Vector3.Zero);
-		}
-
-
-		void InitVertexDeclaration()
-		{
-			//set up a 2 texcoord vert element
-			VertexElement	[]ve	=new VertexElement[4];
-
-			ve[0]	=new VertexElement(0, VertexElementFormat.Vector3,
-						VertexElementUsage.Position, 0);
-			ve[1]	=new VertexElement(12, VertexElementFormat.Vector3,
-						VertexElementUsage.Normal, 0);
-			ve[2]	=new VertexElement(24, VertexElementFormat.Vector4,
-						VertexElementUsage.Color, 0);
-			ve[3]	=new VertexElement(40, VertexElementFormat.Vector4,
-						VertexElementUsage.Color, 1);
-
-			mVDTerrain	=new VertexDeclaration(ve);
-		}
-
-
-		public void Draw(GraphicsDevice gd, BoundingFrustum frust,
-			Matrix pupNearViewProj, Matrix pupFarViewProj, Matrix avaLightViewProj,
-			RenderTarget2D pupNearShad, RenderTarget2D pupFarShad, RenderTarget2D avaShad)
-		{
-//			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLightingXSamp"];
-
-			if(pupNearShad == null)
-			{
-				mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLightingAvaShadOnly"];
-			}
-			else
-			{
-				mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["VertexLighting"];
-			}
-
-			if(pupNearShad != null)
-			{
-				mFXTerrain.Parameters["mPUPNearShadowTex"].SetValue(pupNearShad);
-			}
-			if(pupFarShad != null)
-			{
-				mFXTerrain.Parameters["mPUPFarShadowTex"].SetValue(pupFarShad);
-			}
-			if(avaShad != null)
-			{
-				mFXTerrain.Parameters["mAvaShadowTex"].SetValue(avaShad);
-			}
-			mFXTerrain.Parameters["mPUPNearLightViewProj"].SetValue(pupNearViewProj);
-			mFXTerrain.Parameters["mPUPFarLightViewProj"].SetValue(pupFarViewProj);
-			mFXTerrain.Parameters["mAvaLightViewProj"].SetValue(avaLightViewProj);
-
-			foreach(HeightMap m in mStreamMaps)
-			{
-				if(m == null)
-				{
-					continue;
-				}
-				if(m.InFrustum(frust))
-				{
-					m.Draw(gd, mFXTerrain);
-				}
-			}			
+			mFXTerrain.Parameters["mEyePos"].SetValue(Vector3.Zero);*/
 		}
 
 
 		public void Draw(GraphicsDevice gd, BoundingFrustum frust)
 		{
+			/*
 			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["Simple"];
 
 			gd.DepthStencilState	=DepthStencilState.Default;
@@ -448,7 +381,7 @@ namespace TerrainLib
 				if(m.InFrustum(frust))
 				{
 					m.Draw(gd, mFXTerrain);
-				}
+				}*/
 				//for testing bad boundboxes
 				/*
 				else
@@ -457,12 +390,13 @@ namespace TerrainLib
 					m.Draw(gd, mFXTerrain);
 					SetFogEnabled(true);
 				}*/
-			}			
+//			}
 		}
 
 
 		public void DrawWorldY(GraphicsDevice gd, BoundingFrustum frust)
 		{
+			/*
 			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["WorldY"];
 
 			foreach(HeightMap m in mStreamMaps)
@@ -475,7 +409,7 @@ namespace TerrainLib
 				{
 					m.Draw(gd, mFXTerrain);
 				}
-			}			
+			}*/
 		}
 
 
@@ -516,61 +450,61 @@ namespace TerrainLib
 		//matrices, matrii, matrixs?
 		public void UpdateMatrices(Matrix world, Matrix view, Matrix proj)
 		{
-			mFXTerrain.Parameters["mWorld"].SetValue(world);
-			mFXTerrain.Parameters["mView"].SetValue(view);
-			mFXTerrain.Parameters["mProjection"].SetValue(proj);
+//			mFXTerrain.Parameters["mWorld"].SetValue(world);
+//			mFXTerrain.Parameters["mView"].SetValue(view);
+//			mFXTerrain.Parameters["mProjection"].SetValue(proj);
 		}
 
 
 		public void UpdateLightColor(Vector4 lightColor)
 		{
-			mFXTerrain.Parameters["mLightColor"].SetValue(lightColor);
+//			mFXTerrain.Parameters["mLightColor"].SetValue(lightColor);
 		}
 
 
 		public void UpdateLightDirection(Vector3 lightDir)
 		{
-			mFXTerrain.Parameters["mLightDirection"].SetValue(lightDir);
+//			mFXTerrain.Parameters["mLightDirection"].SetValue(lightDir);
 		}
 
 
 		public void UpdateAmbientColor(Vector4 ambient)
 		{
-			mFXTerrain.Parameters["mAmbientColor"].SetValue(ambient);
+//			mFXTerrain.Parameters["mAmbientColor"].SetValue(ambient);
 		}
 
 
 		public void UpdatePosition(Vector3 pos)
 		{
-			Matrix	mat	=Matrix.CreateTranslation(pos);
+			Matrix	mat	=Matrix.Translation(pos);
 
 			mLevelPos	=pos;
 
-			mFXTerrain.Parameters["mLevel"].SetValue(mat);
+//			mFXTerrain.Parameters["mLevel"].SetValue(mat);
 		}
 
 
 		public void UpdateEyePos(Vector3 pos)
 		{
 			mEyePos	=pos;
-			mFXTerrain.Parameters["mEyePos"].SetValue(pos);
+//			mFXTerrain.Parameters["mEyePos"].SetValue(pos);
 		}
 
 
 		public void SetFogDetails(float fogStart, float fogEnd, Vector3 col)
 		{
-			mFXTerrain.Parameters["mFogStart"].SetValue(fogStart);
-			mFXTerrain.Parameters["mFogEnd"].SetValue(fogEnd);
-			mFXTerrain.Parameters["mFogColor"].SetValue(col);
+//			mFXTerrain.Parameters["mFogStart"].SetValue(fogStart);
+//			mFXTerrain.Parameters["mFogEnd"].SetValue(fogEnd);
+//			mFXTerrain.Parameters["mFogColor"].SetValue(col);
 		}
 
 
 		public void SetSkyFogDetails(float fogStart, float fogEnd, Vector3 col0, Vector3 col1)
 		{
-			mFXTerrain.Parameters["mFogStart"].SetValue(fogStart);
-			mFXTerrain.Parameters["mFogEnd"].SetValue(fogEnd);
-			mFXTerrain.Parameters["mSkyGradient0"].SetValue(col0);
-			mFXTerrain.Parameters["mSkyGradient1"].SetValue(col1);
+//			mFXTerrain.Parameters["mFogStart"].SetValue(fogStart);
+//			mFXTerrain.Parameters["mFogEnd"].SetValue(fogEnd);
+//			mFXTerrain.Parameters["mSkyGradient0"].SetValue(col0);
+//			mFXTerrain.Parameters["mSkyGradient1"].SetValue(col1);
 		}
 
 
@@ -578,11 +512,11 @@ namespace TerrainLib
 		{
 			if(bFog)
 			{
-				mFXTerrain.Parameters["mFogEnabled"].SetValue(1.0f);
+//				mFXTerrain.Parameters["mFogEnabled"].SetValue(1.0f);
 			}
 			else
 			{
-				mFXTerrain.Parameters["mFogEnabled"].SetValue(0.0f);
+//				mFXTerrain.Parameters["mFogEnabled"].SetValue(0.0f);
 			}
 		}
 	}

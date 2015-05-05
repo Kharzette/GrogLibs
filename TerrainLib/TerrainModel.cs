@@ -1,21 +1,18 @@
-﻿//Escape from Cube Mountain - Copyright © 2011 Ken Baird
-//For Ludum Dare 21
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.Xna.Framework;
+﻿using System;
+using System.Diagnostics;
+using SharpDX;
 
 
 namespace TerrainLib
 {
-	public class TerrainModel
+	class TerrainModel
 	{
 		float	[,]mHeightGrid;
 		float	mPolySize;
 		int		mGridSize;
 
 		BoundingBox	mBox;
+
 
 		public TerrainModel(float [,]grid, float polySize, int gridSize)
 		{
@@ -197,10 +194,10 @@ namespace TerrainLib
 		{
 			float	ret	=GetHeight(coord);
 
-			ret	=MathHelper.Max(ret, GetHeight(coord + Vector3.UnitX * rad));
-			ret	=MathHelper.Max(ret, GetHeight(coord + Vector3.UnitX * -rad));
-			ret	=MathHelper.Max(ret, GetHeight(coord + Vector3.UnitZ * rad));
-			ret	=MathHelper.Max(ret, GetHeight(coord + Vector3.UnitZ * -rad));
+			ret	=Math.Max(ret, GetHeight(coord + Vector3.UnitX * rad));
+			ret	=Math.Max(ret, GetHeight(coord + Vector3.UnitX * -rad));
+			ret	=Math.Max(ret, GetHeight(coord + Vector3.UnitZ * rad));
+			ret	=Math.Max(ret, GetHeight(coord + Vector3.UnitZ * -rad));
 
 			return	ret;
 		}

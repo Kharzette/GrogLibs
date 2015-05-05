@@ -435,8 +435,8 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormTex04Tex14Tex24Tex34	[]varray
-				=new VPosNormTex04Tex14Tex24Tex34[mLMAnimVerts.Count];
+			VPosNormTex04Tex14Tex24Color0	[]varray
+				=new VPosNormTex04Tex14Tex24Color0[mLMAnimVerts.Count];
 			for(int i=0;i < mLMAnimVerts.Count;i++)
 			{
 				varray[i].Position		=mLMAnimVerts[i];
@@ -475,8 +475,8 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormTex04Tex14Tex24Tex34	[]varray
-				=new VPosNormTex04Tex14Tex24Tex34[mLMAAnimVerts.Count];
+			VPosNormTex04Tex14Tex24Color0	[]varray
+				=new VPosNormTex04Tex14Tex24Color0[mLMAAnimVerts.Count];
 			for(int i=0;i < mLMAAnimVerts.Count;i++)
 			{
 				varray[i].Position		=mLMAnimVerts[i];

@@ -1112,7 +1112,7 @@ namespace MeshLib
 		public Color	Color0;
 	}
 
-	public struct VPosNormTex04Tex14Tex24Tex34
+	public struct VPosNormTex04Tex14Tex24Color0
 	{
 		public Vector3	Position;
 		public Half4	Normal;
@@ -1120,5 +1120,14 @@ namespace MeshLib
 		public Half4	TexCoord1;
 		public Half4	TexCoord2;
 		public Color	TexCoord3;
+	}
+
+	public struct VPosNormTex04Tex14Tex24
+	{
+		public Vector3	Position;
+		public Half4	Normal;
+		public Half4	TexCoord0;
+		public Half4	TexCoord1;
+		public Half4	TexCoord2;
 	}
 }

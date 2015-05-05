@@ -1,41 +1,65 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
+using SharpDX;
+using SharpDX.Direct3D11;
+using MaterialLib;
+using UtilityLib;
+using MeshLib;
+
+using Buffer	=SharpDX.Direct3D11.Buffer;
+using Device	=SharpDX.Direct3D11.Device;
+using MatLib	=MaterialLib.MaterialLib;
+
 
 
 namespace TerrainLib
 {
-	public struct VPNTT
-	{
-		public Vector3	Position;
-		public Vector3	Normal;
-		public Vector4	TexFactor0;
-		public Vector4	TexFactor1;
-	};
-
-
 	public class HeightMap
 	{
-		//height settings
-		const float	SnowHeight			=150.0f;
-		const float	StoneHighHeight		=150.0f;
-		const float	StoneMossyHeight	=80.0f;
-		const float	ForestHeight		=80.0f;
-		const float	GrassHeight			=30.0f;
-		const float	SandHeight			=0.0f;
-		const float	WaterHeight			=25.0f;
-		const float	TransitionHeight	=40.0f;
-		const float	SteepnessThreshold	=0.7f;
+		public class TexData
+		{
+			float	mBottomElevation;
+			float	mTopElevation;
+			bool	mbSteep;
+			string	mTextureName;
 
-		VertexBuffer		mVBTerrain;
-		IndexBuffer			mIBTerrain;
+			//uv adjustments from TexAtlas
+			public double	mScaleU, mScaleV;
+			public double	mUOffs, mVOffs;
 
-		int		mNumIndex, mNumVerts, mNumTris;
+			public float	BottomElevation
+			{
+				get {	return	mBottomElevation;	}
+				set {	mBottomElevation	=value;	}
+			}
+
+			public float	TopElevation
+			{
+				get {	return	mTopElevation;	}
+				set	{	mTopElevation	=value; }
+			}
+
+			public bool	Steep
+			{
+				get {	return mbSteep;	}
+				set {	mbSteep	=value;	}
+			}
+
+			public string	TextureName
+			{
+				get {	return mTextureName;	}
+				set {	mTextureName	=value;	}
+			}
+		}
+
+		Buffer				mVBTerrain;
+		VertexBufferBinding	mVBB;
+
+		int		mNumVerts, mNumTris;
 
 		//location stuff
 		Vector3	mPosition;
@@ -51,41 +75,51 @@ namespace TerrainLib
 		long	mPosTime, mNormTime, mCopyTime;
 		long	mTexFactTime, mIndexTime, mBufferTime;
 
+		const float	TransitionHeight	=2.0f;
+		const float	SteepnessThreshold	=0.7f;
+
 
 		//2D float array
-		public HeightMap(float				[,]data,
-						 Point				coord,
-						 int				w,
-						 int				h,
-						 int				actualWidth,
-						 int				actualHeight,
-						 int				offsetX,
-						 int				offsetY,
-						 float				polySize,
-						 GraphicsDevice		gd,
-						 VertexDeclaration	vd)
+		public HeightMap(float			[,]data,
+						 Point			coord,
+						 int			w,
+						 int			h,
+						 int			actualWidth,
+						 int			actualHeight,
+						 int			offsetX,
+						 int			offsetY,
+						 float			polySize,
+						 List<TexData>	texInfo,
+						 GraphicsDevice	gd)
 		{
 			mCellCoordinate	=coord;
 
 			mNumVerts	=actualWidth * actualHeight;
 			mNumTris	=((actualWidth - 1) * (actualHeight - 1)) * 2;
-			mNumIndex	=mNumTris * 3;
 
 			//alloc some space for verts and indexs
-			VPNTT	[]verts		=new VPNTT[w * h];
-			ushort	[]indexs	=new ushort[mNumIndex];
+			//verts need pos, norm, 4 scalars for tex percentage,
+			//and 4 uv sets
+			Type	vType	=typeof(VPosNormTex04Tex14Tex24);
+			Array	varray	=Array.CreateInstance(vType, w * h);
 
 			Stopwatch	sw	=new Stopwatch();
-
 			sw.Start();
+
+			bool	bUToggle	=false;
+			bool	bVToggle	=false;
 			
 			//load the height map
 			Vector3	min	=Vector3.One * float.MaxValue;
 			Vector3	max	=Vector3.One * float.MinValue;
 			for(int y=0;y < h;y++)
 			{
+				float	vCoord	=(bVToggle)? 1f : 0f;
+
 				for(int x=0;x < w;x++)
 				{
+					float	uCoord	=(bUToggle)? 1f : 0f;
+
 					Vector3	pos	=Vector3.Zero;
 					int		dex	=x + (y * w);
 
@@ -96,7 +130,11 @@ namespace TerrainLib
 					pos.X	*=polySize;
 					pos.Z	*=polySize;
 
-					verts[dex].Position	=pos;
+					VertexTypes.SetArrayField(varray, dex, "Position", pos);
+					VertexTypes.SetArrayField(varray, dex, "TexCoord0",
+						new Half4(uCoord, vCoord, 0f, 0f));
+
+					bUToggle	=!bUToggle;
 
 					//find bounds
 					if(pos.X < min.X)
@@ -123,11 +161,10 @@ namespace TerrainLib
 					{
 						max.Z	=pos.Z;
 					}
-
-					//texfactors
-					verts[dex].TexFactor0	=Vector4.Zero;
-					verts[dex].TexFactor1	=Vector4.Zero;
 				}
+
+				bVToggle	=!bVToggle;
+				bUToggle	=!bUToggle;
 			}
 			sw.Stop();
 
@@ -136,26 +173,26 @@ namespace TerrainLib
 			mPeak	=max.Y;
 			mValley	=min.Y;
 
-			mBounds.Max	=max;
-			mBounds.Min	=min;
+			mBounds.Maximum	=max;
+			mBounds.Minimum	=min;
 
+			//build normals with the full set
 			sw.Reset();
 			sw.Start();
-			//build normals with the full set
-			BuildNormals(verts, w, h);
+			BuildNormals(varray, w, h);
 			sw.Stop();
 			mNormTime	=sw.ElapsedTicks;
 
+			//reduce down to the active set
 			sw.Reset();
 			sw.Start();
-			//reduce down to the active set
-			VPNTT	[]actualVerts	=new VPNTT[mNumVerts];
+			Array	actualVerts	=Array.CreateInstance(vType, mNumVerts);
 			int	cnt	=0;
 			for(int y=offsetY;y < (actualHeight + offsetY);y++)
 			{
 				for(int x=offsetX;x < (actualWidth + offsetX);x++)
 				{
-					actualVerts[cnt++]	=verts[(y * w) + x];
+					actualVerts.SetValue(varray.GetValue((y * w) + x), cnt++);
 				}
 			}
 			sw.Stop();
@@ -163,27 +200,33 @@ namespace TerrainLib
 
 			sw.Reset();
 			sw.Start();
-			SetTextureFactors(actualVerts);
+			Array	triListVerts	=BreakIntoTriList(actualVerts, actualWidth, actualHeight);
+			sw.Stop();
+			mIndexTime	=sw.ElapsedTicks;
+
+			mNumVerts	=mNumTris * 3;
+
+			sw.Reset();
+			sw.Start();
+			SetTextureFactors(triListVerts, texInfo, actualWidth, actualHeight, TransitionHeight);
 			sw.Stop();
 			mTexFactTime	=sw.ElapsedTicks;
 
 			sw.Reset();
 			sw.Start();
-			IndexTris(actualWidth, actualHeight, gd);
-			sw.Stop();
-			mIndexTime	=sw.ElapsedTicks;
-
-			sw.Reset();
-			sw.Start();
-			mVBTerrain	=new VertexBuffer(gd, vd, mNumVerts, BufferUsage.WriteOnly);
-			mVBTerrain.SetData<VPNTT>(actualVerts);
+			mVBTerrain	=VertexTypes.BuildABuffer(gd.GD, triListVerts, vType);
+			mVBB		=new VertexBufferBinding(mVBTerrain, VertexTypes.GetSizeForType(vType), 0);
 			sw.Stop();
 			mBufferTime	=sw.ElapsedTicks;
+		}
 
-			//see if a water plane is needed
-			if(mValley < WaterHeight)
+
+		public void FreeAll()
+		{
+			if(mVBTerrain != null)
 			{
-//				VPNTT
+				mVBTerrain.Dispose();
+				mVBTerrain	=null;
 			}
 		}
 
@@ -200,30 +243,32 @@ namespace TerrainLib
 		}
 
 
-		void IndexTris(int w, int h, GraphicsDevice gd)
+		//converts indexy terrain into individual tris
+		//this makes texturing easier / more versatile
+		//can also do per terrain face normals
+		Array BreakIntoTriList(Array verts, int w, int h)
 		{
-			int	[]indexs	=new int[mNumIndex];
+			Array	ret	=Array.CreateInstance(typeof(VPosNormTex04Tex14Tex24), mNumTris * 3);
 
 			//index the tris
-			int	idx	=0;
-			for(int j=0;j < (h - 1);j++)
+			int	idx	=0;			
+			for(UInt16 j=0;j < (h - 1);j++)
 			{
-				for(int i=(j * w);i < ((j * w) + (w - 1));i++)
+				for(UInt16 i=(UInt16)(j * w);i < ((j * w) + (w - 1));i++)
 				{
-					indexs[idx++]	=i;
-					indexs[idx++]	=(i + 1);
-					indexs[idx++]	=(i + w);
+					ret.SetValue(verts.GetValue(i + w), idx++);
+					ret.SetValue(verts.GetValue(i + 1), idx++);
+					ret.SetValue(verts.GetValue(i), idx++);
 
-					indexs[idx++]	=(i + 1);
-					indexs[idx++]	=((i + 1) + w);
-					indexs[idx++]	=(i + w);
+					ret.SetValue(verts.GetValue(i + w), idx++);
+					ret.SetValue(verts.GetValue((i + 1) + w), idx++);
+					ret.SetValue(verts.GetValue(i + 1), idx++);
 				}
 			}
-			mIBTerrain	=new IndexBuffer(gd, IndexElementSize.ThirtyTwoBits, mNumIndex, BufferUsage.WriteOnly);
-			mIBTerrain.SetData<int>(indexs);
+			return	ret;
 		}
 
-
+		/*
 		internal Vector3 GetGoodColorForHeight(float height)
 		{
 			Vector3	snow	=Color.Snow.ToVector3();
@@ -290,170 +335,497 @@ namespace TerrainLib
 			{
 				return	sand;
 			}
-		}
+		}*/
 
 
-		void SetTextureFactors(VPNTT []v)
+		void GetSomething(List<TexData> texData, Array verts, int index)
 		{
-			//assign basic texturing based on height
-			for(int i=0;i < v.Length;i++)
+			Vector3	vert		=(Vector3)VertexTypes.GetArrayField(verts, index, "Position");
+			Half2	texCoord	=(Half2)VertexTypes.GetArrayField(verts, index, "TexCoord0");
+			float	height		=vert.Y;
+			double	texU		=texCoord.X;
+			double	texV		=texCoord.Y;
+			bool	bChanged	=false;
+			foreach(TexData td in texData)
 			{
-				float	height	=v[i].Position.Y;
-
-				if(height >= SnowHeight)
+				if(td.Steep)
 				{
-					//in the snowy area
-					//See if within transition
-					if(height < (SnowHeight + TransitionHeight))
-					{
-						//transition from snow to forest
-						float	transFactor	=
-							((SnowHeight + TransitionHeight) - height)
-							/ TransitionHeight;
-
-						v[i].TexFactor0.Z	=transFactor;
-						v[i].TexFactor1.W	=transFactor;
-						v[i].TexFactor1.Z	=1.0f - transFactor;
-						v[i].TexFactor0.Z	*=0.5f;
-						v[i].TexFactor1.W	*=0.5f;
-					}
-					else
-					{
-						//just snow
-						v[i].TexFactor1.Z	=1.0f;
-					}
+					continue;
 				}
-				else if(height >= ForestHeight)
-				{
-					//in the forest zone
-					if(height < (ForestHeight + TransitionHeight))
-					{
-						//transition from forest to grassland
-						float	transFactor	=
-							((ForestHeight + TransitionHeight) - height)
-							/ TransitionHeight;
 
-						v[i].TexFactor0.Y	=transFactor;
-						v[i].TexFactor0.Z	=1.0f - transFactor;
-						v[i].TexFactor1.W	=1.0f - transFactor;
-						v[i].TexFactor0.Z	*=0.5f;
-						v[i].TexFactor1.W	*=0.5f;
-					}
-					else
-					{
-						//just forest
-						v[i].TexFactor0.Z	=0.5f;
-						v[i].TexFactor1.W	=0.5f;
-					}
-				}
-				else if(height >= GrassHeight)
+				if(height >= td.BottomElevation
+					&& height < td.TopElevation)
 				{
-					//in the grass zone
-					if(height < (GrassHeight + TransitionHeight))
-					{
-						//transition from grass to sand
-						float	transFactor	=
-							((GrassHeight + TransitionHeight) - height)
-							/ TransitionHeight;
+					texU	*=td.mScaleU;
+					texV	*=td.mScaleV;
+					texU	+=td.mUOffs;
+					texV	+=td.mVOffs;
 
-						v[i].TexFactor0.X	=transFactor;
-						v[i].TexFactor0.Y	=1.0f - transFactor;
-					}
-					else
-					{
-						//just grass
-						v[i].TexFactor0.Y	=1.0f;
-					}
-				}
-				else
-				{
-					v[i].TexFactor0.X	=1.0f;
+					bChanged	=true;
+					break;
 				}
 			}
 
-			//look for steep surfaces
-			for(int i=0;i < v.Length;i++)
+			if(bChanged)
 			{
-				float	dot	=Vector3.Dot(v[i].Normal, Vector3.UnitY);
+				texCoord.X	=(float)texU;
+				texCoord.Y	=(float)texV;
 
-				if(dot < SteepnessThreshold)
-				{
-					float	fact	=(SteepnessThreshold - dot) / SteepnessThreshold;
-					fact	=(SteepnessThreshold - dot)
-						/ (SteepnessThreshold / 6.0f);
-
-					MathHelper.Clamp(fact, 0.0f, 1.0f);
-
-					if(v[i].TexFactor0.X > 0.0f)
-					{
-						//there's a bit of sand, use high stone
-						float	val	=v[i].TexFactor0.X;
-
-						v[i].TexFactor1.Y	+=val * fact;
-						v[i].TexFactor0.X	=val * (1.0f - fact);
-					}
-
-					if(v[i].TexFactor0.Y > 0.0f)
-					{
-						//grass is here, use mossy stone
-						float	val	=v[i].TexFactor0.Y;
-
-						v[i].TexFactor1.X	+=val * fact;
-						v[i].TexFactor0.Y	=val * (1.0f - fact);
-					}
-
-					if(v[i].TexFactor0.Z > 0.0f)
-					{
-						//forest is here, use mossy stone
-						float	val	=v[i].TexFactor0.Z;
-
-						v[i].TexFactor1.X	+=val * fact;
-						v[i].TexFactor0.Z	=val * (1.0f - fact);
-					}
-
-					if(v[i].TexFactor1.Z > 0.0f)
-					{
-						//snow, use high stone
-						//snow needs a harder transition
-						fact	=(SteepnessThreshold - dot)
-							/ (SteepnessThreshold / 6.0f);
-
-						MathHelper.Clamp(fact, 0.0f, 1.0f);
-
-						float	val	=v[i].TexFactor1.Z;
-
-						v[i].TexFactor1.Y	+=val * fact;
-						v[i].TexFactor1.Z	=val * (1.0f - fact);
-					}
-
-					//check for mossy and granite mix
-					if(v[i].TexFactor1.X > 0.0f && v[i].TexFactor1.Y > 0.0f)
-					{
-						//boost both, as they were taking a share
-						//of the tex factor from each other
-
-						//add up the factors
-						float	val	=v[i].TexFactor0.X;
-						val	+=v[i].TexFactor0.Y;
-						val	+=v[i].TexFactor0.Z;
-						val	+=v[i].TexFactor0.W;
-						val	+=v[i].TexFactor1.X;
-						val	+=v[i].TexFactor1.Y;
-						val	+=v[i].TexFactor1.Z;
-						val	+=v[i].TexFactor1.W;
-
-						val	=1.0f - val;
-						val	*=0.5f;
-
-						v[i].TexFactor1.X	+=val;
-						v[i].TexFactor1.Y	+=val;
-					}
-				}
+				VertexTypes.SetArrayField(verts, index, "TexCoord0", texCoord);
 			}
 		}
 
 
-		Vector3 CalcVertNormal(VPNTT []v, int x, int y, int w, int h)
+		List<int> GetVertTexures(List<TexData> texData, Vector3 vert, Half4 norm, float transitionHeight)
+		{
+			List<int>	affecting	=new List<int>();
+
+			float	height		=vert.Y;
+			float	halfTrans	=transitionHeight * 0.5f;
+			for(int i=0;i < texData.Count;i++)
+			{
+				TexData	td	=texData[i];
+				if(td.Steep)
+				{
+					//skip steeps for now
+					continue;
+				}
+
+				if(height >= td.BottomElevation
+					&& height < td.TopElevation)
+				{
+					affecting.Add(i);
+					continue;
+				}
+
+				if((height - halfTrans) >= td.BottomElevation
+					&& (height - halfTrans) < td.TopElevation)
+				{
+					affecting.Add(i);
+				}
+			}
+
+			//check for steeps
+			for(int i=0;i < texData.Count;i++)
+			{
+				TexData	td	=texData[i];
+				if(!td.Steep)
+				{
+					continue;
+				}
+
+				float	dot	=norm.dot(Vector3.UnitY);
+
+				if(dot >= SteepnessThreshold)
+				{
+					continue;
+				}
+
+				if(height >= td.BottomElevation
+					&& height < td.TopElevation)
+				{
+					affecting.Add(i);
+					continue;
+				}
+
+				if((height - halfTrans) >= td.BottomElevation
+					&& (height - halfTrans) < td.TopElevation)
+				{
+					affecting.Add(i);
+				}
+			}
+
+			return	affecting;
+		}
+
+
+		List<float>	ComputeVertTextureFactor(List<TexData> texData, List<int> affecting,
+			Vector3 vert, Half4 norm, float transitionHeight)
+		{
+			List<float>	ret	=new List<float>();
+
+			float	height		=vert.Y;
+			float	halfTrans	=transitionHeight * 0.5f;
+
+			foreach(int aff in affecting)
+			{
+				if(texData[aff].Steep)
+				{
+					continue;
+				}
+				float	min	=texData[aff].BottomElevation;
+				float	max	=texData[aff].TopElevation;
+
+				Debug.Assert(height <= (max + halfTrans) && height >= (min - halfTrans));
+				Debug.Assert(halfTrans < ((max - min) * 0.5f));
+
+				if(height > (min + halfTrans)
+					&& height < (max - halfTrans))
+				{
+					ret.Add(1f);
+					continue;
+				}
+
+				if(height < (min - halfTrans))
+				{
+					continue;
+				}
+
+				if(height > (max + halfTrans))
+				{
+					continue;
+				}
+
+				if(height < (min + halfTrans))
+				{
+					if(height < min)
+					{
+						ret.Add((min + halfTrans) / height);
+					}
+					else
+					{
+						ret.Add((height - min) / halfTrans);
+					}
+					continue;
+				}
+
+				if(height > (max - halfTrans))
+				{
+					if(height > max)
+					{
+						ret.Add((((max + halfTrans) - height) / halfTrans));
+					}
+					else
+					{
+						ret.Add(((max - height) / halfTrans));
+					}
+				}
+			}
+
+			foreach(int aff in affecting)
+			{
+				if(!texData[aff].Steep)
+				{
+					continue;
+				}
+				float	min	=texData[aff].BottomElevation;
+				float	max	=texData[aff].TopElevation;
+				float	dot	=norm.dot(Vector3.UnitY);
+
+				Debug.Assert(height <= max && height >= min);
+				Debug.Assert(halfTrans > ((max - min) * 0.5f));
+				Debug.Assert(dot < SteepnessThreshold);
+
+				float	steepFact	=(SteepnessThreshold - dot) / SteepnessThreshold;
+
+				if(height > (min + halfTrans)
+					&& height < (max - halfTrans))
+				{
+					ret.Add(steepFact);
+					continue;
+				}
+
+				if(height < (min + halfTrans))
+				{
+					ret.Add((height / (min + halfTrans)) * steepFact);
+					continue;
+				}
+
+				if(height > (max - halfTrans))
+				{
+					ret.Add(((max - height) / halfTrans) * steepFact);
+				}
+			}
+			return	ret;
+		}
+
+
+		void ComputeTriTextureFactors(Array verts, List<TexData> texData,
+			int idx1, int idx2, int idx3, float transitionHeight)
+		{
+			Vector3	vert1	=(Vector3)VertexTypes.GetArrayField(verts, idx1, "Position");
+			Half4	norm1	=(Half4)VertexTypes.GetArrayField(verts, idx1, "Normal");
+
+			List<int>	affecting1	=GetVertTexures(texData, vert1, norm1, transitionHeight);
+			List<float>	amounts1	=ComputeVertTextureFactor(texData, affecting1, vert1, norm1, transitionHeight);
+
+			Vector3	vert2	=(Vector3)VertexTypes.GetArrayField(verts, idx2, "Position");
+			Half4	norm2	=(Half4)VertexTypes.GetArrayField(verts, idx2, "Normal");
+
+			List<int>	affecting2	=GetVertTexures(texData, vert2, norm2, transitionHeight);
+			List<float>	amounts2	=ComputeVertTextureFactor(texData, affecting2, vert2, norm2, transitionHeight);
+
+			Vector3	vert3	=(Vector3)VertexTypes.GetArrayField(verts, idx3, "Position");
+			Half4	norm3	=(Half4)VertexTypes.GetArrayField(verts, idx3, "Normal");
+
+			List<int>	affecting3	=GetVertTexures(texData, vert3, norm3, transitionHeight);
+			List<float>	amounts3	=ComputeVertTextureFactor(texData, affecting3, vert3, norm3, transitionHeight);
+
+			Debug.Assert(affecting1.Count == amounts1.Count);
+			Debug.Assert(affecting2.Count == amounts2.Count);
+			Debug.Assert(affecting3.Count == amounts3.Count);
+			Debug.Assert(!amounts1.Contains(0f));
+			Debug.Assert(!amounts2.Contains(0f));
+			Debug.Assert(!amounts3.Contains(0f));
+
+			List<int>	combinedAff	=new List<int>();
+			foreach(int aff in affecting1)
+			{
+				if(!combinedAff.Contains(aff))
+				{
+					combinedAff.Add(aff);
+				}
+			}
+			foreach(int aff in affecting2)
+			{
+				if(!combinedAff.Contains(aff))
+				{
+					combinedAff.Add(aff);
+				}
+			}
+			foreach(int aff in affecting3)
+			{
+				if(!combinedAff.Contains(aff))
+				{
+					combinedAff.Add(aff);
+				}
+			}
+
+			Dictionary<int, float>	combinedFact	=new Dictionary<int, float>();
+			for(int i=0;i < affecting1.Count;i++)
+			{
+				if(combinedFact.ContainsKey(affecting1[i]))
+				{
+					combinedFact[affecting1[i]]	+=amounts1[i];
+				}
+			}
+			for(int i=0;i < affecting2.Count;i++)
+			{
+				if(combinedFact.ContainsKey(affecting2[i]))
+				{
+					combinedFact[affecting2[i]]	+=amounts2[i];
+				}
+			}
+			for(int i=0;i < affecting3.Count;i++)
+			{
+				if(combinedFact.ContainsKey(affecting3[i]))
+				{
+					combinedFact[affecting3[i]]	+=amounts3[i];
+				}
+			}
+
+			while(combinedAff.Count > 4)
+			{
+				//need to drop the smallest texture influence for the tri
+				float	smallestFact	=float.MaxValue;
+				int		smallest		=-1;
+				foreach(KeyValuePair<int, float> fact in combinedFact)
+				{
+					if(fact.Value < smallestFact)
+					{
+						smallestFact	=fact.Value;
+						smallest		=fact.Key;
+					}
+				}
+
+				//drop smallest
+				combinedAff.Remove(smallest);
+				combinedFact.Remove(smallest);
+
+				//drop factors from individual verts
+				if(affecting1.Contains(smallest))
+				{
+					amounts1.RemoveAt(affecting1.IndexOf(smallest));
+					affecting1.Remove(smallest);
+				}
+				if(affecting2.Contains(smallest))
+				{
+					amounts2.RemoveAt(affecting2.IndexOf(smallest));
+					affecting2.Remove(smallest);
+				}
+				if(affecting3.Contains(smallest))
+				{
+					amounts3.RemoveAt(affecting3.IndexOf(smallest));
+					affecting3.Remove(smallest);
+				}
+			}
+
+			//smooth out the remaining so that all factors add to 1
+			float	total	=0f;
+			for(int i=0;i < affecting1.Count;i++)
+			{
+				total	+=amounts1[i];
+			}
+			for(int i=0;i < affecting1.Count;i++)
+			{
+				amounts1[i]	/=total;
+			}
+
+			total	=0f;
+			for(int i=0;i < affecting2.Count;i++)
+			{
+				total	+=amounts2[i];
+			}
+			for(int i=0;i < affecting2.Count;i++)
+			{
+				amounts2[i]	/=total;
+			}
+
+			total	=0f;
+			for(int i=0;i < affecting3.Count;i++)
+			{
+				total	+=amounts3[i];
+			}
+			for(int i=0;i < affecting3.Count;i++)
+			{
+				amounts3[i]	/=total;
+			}
+
+			//set texcoords
+			SetVertTexCoords(verts, idx1, texData, affecting1);
+			SetVertTexCoords(verts, idx2, texData, affecting2);
+			SetVertTexCoords(verts, idx3, texData, affecting3);
+
+			//set values
+			SetVertFactor(verts, idx1, amounts1);
+			SetVertFactor(verts, idx2, amounts2);
+			SetVertFactor(verts, idx3, amounts3);
+		}
+
+
+		void SetVertTexCoords(Array verts, int index, List<TexData> texData, List<int> affecting)
+		{
+			if(affecting.Count == 0)
+			{
+				return;
+			}
+
+			VPosNormTex04Tex14Tex24	vert	=(VPosNormTex04Tex14Tex24)verts.GetValue(index);
+
+			//base uv starts off stored in texcoord0
+			double	baseU	=vert.TexCoord0.X;
+			double	baseV	=vert.TexCoord0.Y;
+
+			double	u	=baseU;
+			double	v	=baseV;
+
+			//texcoords 1 and 2 have 4 uv pairs
+			u	*=texData[affecting[0]].mScaleU;
+			v	*=texData[affecting[0]].mScaleV;
+
+			u	+=texData[affecting[0]].mUOffs;
+			v	+=texData[affecting[0]].mVOffs;
+
+			vert.TexCoord1.X	=(Half)u;
+			vert.TexCoord1.Y	=(Half)v;
+
+			if(affecting.Count > 1)
+			{
+				u	=baseU;
+				v	=baseV;
+
+				u	*=texData[affecting[1]].mScaleU;
+				v	*=texData[affecting[1]].mScaleV;
+
+				u	+=texData[affecting[1]].mUOffs;
+				v	+=texData[affecting[1]].mVOffs;
+
+				vert.TexCoord1.Z	=(Half)u;
+				vert.TexCoord1.W	=(Half)v;
+			}
+			else
+			{
+				vert.TexCoord1.Z	=0f;
+				vert.TexCoord1.W	=0f;
+			}
+
+			if(affecting.Count > 2)
+			{
+				u	=baseU;
+				v	=baseV;
+
+				u	*=texData[affecting[2]].mScaleU;
+				v	*=texData[affecting[2]].mScaleV;
+
+				u	+=texData[affecting[2]].mUOffs;
+				v	+=texData[affecting[2]].mVOffs;
+
+				vert.TexCoord2.X	=(Half)u;
+				vert.TexCoord2.Y	=(Half)v;
+			}
+			else
+			{
+				vert.TexCoord2.X	=0f;
+				vert.TexCoord2.Y	=0f;
+			}
+
+			if(affecting.Count > 3)
+			{
+				u	=baseU;
+				v	=baseV;
+
+				u	*=texData[affecting[3]].mScaleU;
+				v	*=texData[affecting[3]].mScaleV;
+
+				u	+=texData[affecting[3]].mUOffs;
+				v	+=texData[affecting[3]].mVOffs;
+
+				vert.TexCoord2.Z	=(Half)u;
+				vert.TexCoord2.W	=(Half)v;
+			}
+			else
+			{
+				vert.TexCoord2.Z	=0f;
+				vert.TexCoord2.W	=0f;
+			}
+
+			verts.SetValue(vert, index);
+		}
+
+
+		void SetVertFactor(Array verts, int index, List<float> amounts)
+		{
+			if(amounts.Count == 0)
+			{
+				return;
+			}
+			VPosNormTex04Tex14Tex24	v	=(VPosNormTex04Tex14Tex24)verts.GetValue(index);
+
+			//texcoord0 contains 4 factors
+			v.TexCoord0.X	=amounts[0];
+			if(amounts.Count > 1)
+			{
+				v.TexCoord0.Y	=amounts[1];
+			}
+			if(amounts.Count > 2)
+			{
+				v.TexCoord0.Z	=amounts[2];
+			}
+			if(amounts.Count > 3)
+			{
+				v.TexCoord0.W	=amounts[3];
+			}
+
+			verts.SetValue(v, index);
+		}
+
+
+		void SetTextureFactors(Array verts, List<TexData> texData,
+			int w, int h, float transitionHeight)
+		{
+			//each triangle can have up to 4 textures influencing
+			//if there are more than 4, the smallest needs to be dropped
+			//all factors combined, per vertex, should add up to 1
+
+			//look up per poly how many textures are in use
+			for(int i=0;i < verts.Length;i+=3)
+			{
+				ComputeTriTextureFactors(verts, texData, i, i + 1, i + 2, transitionHeight);
+			}
+		}
+
+		/*
+		Vector3 CalcVertNormal(TerrainVert []v, int x, int y, int w, int h)
 		{
 			//find all the neighboring verts
 			Vector3	upper		=Vector3.UnitY;
@@ -537,10 +909,10 @@ namespace TerrainLib
 			ret.Normalize();
 
 			return	ret;
-		}
+		}*/
 
 
-		void BuildNormals(VPNTT []v, int w, int h)
+		void BuildNormals(Array v, int w, int h)
 		{
 			Vector3	[]adjacent	=new Vector3[8];
 			bool	[]valid		=new bool[8];
@@ -560,7 +932,8 @@ namespace TerrainLib
 					{
 						if(x > 0)
 						{
-							adjacent[0]	=v[(x - 1) + ((y - 1) * w)].Position;
+//							adjacent[0]	=v[(x - 1) + ((y - 1) * w)].Position;
+							adjacent[0]	=(Vector3)VertexTypes.GetArrayField(v, (x - 1) + ((y - 1) * w), "Position");
 							valid[0]	=true;
 						}
 						else
@@ -568,12 +941,14 @@ namespace TerrainLib
 							valid[0]	=false;
 						}
 
-						adjacent[1]	=v[x + ((y - 1) * w)].Position;
+//						adjacent[1]	=v[x + ((y - 1) * w)].Position;
+						adjacent[1]	=(Vector3)VertexTypes.GetArrayField(v, x + ((y - 1) * w), "Position");
 						valid[1]	=true;
 
 						if(x < (w - 1))
 						{
-							adjacent[2]	=v[(x + 1) + ((y - 1) * w)].Position;
+//							adjacent[2]	=v[(x + 1) + ((y - 1) * w)].Position;
+							adjacent[2]	=(Vector3)VertexTypes.GetArrayField(v, (x + 1) + ((y - 1) * w), "Position");
 							valid[2]	=true;
 						}
 						else
@@ -592,7 +967,8 @@ namespace TerrainLib
 					//the calcing vert in X
 					if(x > 0)
 					{
-						adjacent[7]	=v[(x - 1) + (y * w)].Position;
+//						adjacent[7]	=v[(x - 1) + (y * w)].Position;
+						adjacent[7]	=(Vector3)VertexTypes.GetArrayField(v, (x - 1) + (y * w), "Position");
 						valid[7]	=true;
 					}
 					else
@@ -602,7 +978,8 @@ namespace TerrainLib
 
 					if(x < (w - 1))
 					{
-						adjacent[3]	=v[(x + 1) + (y * w)].Position;
+//						adjacent[3]	=v[(x + 1) + (y * w)].Position;
+						adjacent[3]	=(Vector3)VertexTypes.GetArrayField(v, (x + 1) + (y * w), "Position");
 						valid[3]	=true;
 					}
 					else
@@ -615,7 +992,8 @@ namespace TerrainLib
 					{
 						if(x > 0)
 						{
-							adjacent[6]	=v[(x - 1) + ((y + 1) * w)].Position;
+//							adjacent[6]	=v[(x - 1) + ((y + 1) * w)].Position;
+							adjacent[6]	=(Vector3)VertexTypes.GetArrayField(v, (x - 1) + ((y + 1) * w), "Position");
 							valid[6]	=true;
 						}
 						else
@@ -623,12 +1001,14 @@ namespace TerrainLib
 							valid[6]	=false;
 						}
 
-						adjacent[5]	=v[x + ((y + 1) * w)].Position;
+//						adjacent[5]	=v[x + ((y + 1) * w)].Position;
+						adjacent[5]	=(Vector3)VertexTypes.GetArrayField(v, x + ((y + 1) * w), "Position");
 						valid[5]	=true;
 
 						if(x < (w - 1))
 						{
-							adjacent[4]	=v[(x + 1) + ((y + 1) * w)].Position;
+//							adjacent[4]	=v[(x + 1) + ((y + 1) * w)].Position;
+							adjacent[4]	=(Vector3)VertexTypes.GetArrayField(v, (x + 1) + ((y + 1) * w), "Position");
 							valid[4]	=true;
 						}
 						else
@@ -662,7 +1042,8 @@ namespace TerrainLib
 						}
 
 						//note the i++
-						edge1	=adjacent[i++] - v[x + (y * w)].Position;
+//						edge1	=adjacent[i++] - v[x + (y * w)].Position;
+						edge1	=adjacent[i++] - (Vector3)VertexTypes.GetArrayField(v, x + (y * w), "Position");
 
 						//find next valid adjacent
 						while(i < 8 && !valid[i])
@@ -673,7 +1054,8 @@ namespace TerrainLib
 						{
 							break;
 						}
-						edge2	=adjacent[i] - v[x + (y * w)].Position;
+//						edge2	=adjacent[i] - v[x + (y * w)].Position;
+						edge2	=adjacent[i] - (Vector3)VertexTypes.GetArrayField(v, x + (y * w), "Position");
 
 						norm	+=Vector3.Cross(edge2, edge1);
 					}
@@ -681,24 +1063,32 @@ namespace TerrainLib
 					//average
 					norm.Normalize();
 
-					v[x + (y * w)].Normal	=norm;
+					Half4	halfNorm;
+					halfNorm.X	=norm.X;
+					halfNorm.Y	=norm.Y;
+					halfNorm.Z	=norm.Z;
+					halfNorm.W	=0f;
+
+//					v[x + (y * w)].Normal	=halfNorm;
+					VertexTypes.SetArrayField(v, x + (y * w), "Normal", halfNorm);
 				}
 			}
 		}
 
 
-		public void Draw(GraphicsDevice gd, Effect fx)
+		public void Draw(DeviceContext dc, MatLib mats,
+			Matrix world, Matrix view, Matrix proj)
 		{
-			gd.SetVertexBuffer(mVBTerrain);
-			gd.Indices	=mIBTerrain;
+			if(mNumTris <= 0)
+			{
+				return;
+			}
 
-			//set local matrix
-			fx.Parameters["mLocal"].SetValue(mMat);
+			dc.InputAssembler.SetVertexBuffers(0, mVBB);
 
-			fx.CurrentTechnique.Passes[0].Apply();
+			mats.ApplyMaterialPass("Terrain", dc, 0);
 
-			gd.DrawIndexedPrimitives(PrimitiveType.TriangleList,
-				0, 0, mNumVerts, 0, mNumTris);
+			dc.Draw(mNumVerts, 0);
 		}
 
 
@@ -758,11 +1148,11 @@ namespace TerrainLib
 			mPosition	=pos;
 
 			//update matrix
-			mMat	=Matrix.CreateTranslation(mPosition);
+			mMat	=Matrix.Translation(mPosition);
 
 			//update bounds
-			mCellBounds.Min	=mBounds.Min + pos;
-			mCellBounds.Max	=mBounds.Max + pos;
+			mCellBounds.Minimum	=mBounds.Minimum + pos;
+			mCellBounds.Maximum	=mBounds.Maximum + pos;
 		}
 
 
