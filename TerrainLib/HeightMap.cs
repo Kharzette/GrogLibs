@@ -25,6 +25,7 @@ namespace TerrainLib
 			float	mBottomElevation;
 			float	mTopElevation;
 			bool	mbSteep;
+			float	mScaleFactor;
 			string	mTextureName;
 
 			//uv adjustments from TexAtlas
@@ -41,6 +42,12 @@ namespace TerrainLib
 			{
 				get {	return	mTopElevation;	}
 				set	{	mTopElevation	=value; }
+			}
+
+			public float	ScaleFactor
+			{
+				get {	return mScaleFactor;	}
+				set	{	mScaleFactor	=value;	}
 			}
 
 			public bool	Steep
@@ -75,7 +82,7 @@ namespace TerrainLib
 		long	mPosTime, mNormTime, mCopyTime;
 		long	mTexFactTime, mIndexTime, mBufferTime;
 
-		const float	TransitionHeight	=2.0f;
+		const float	TransitionHeight	=1.0f;
 		const float	SteepnessThreshold	=0.7f;
 
 
@@ -391,14 +398,7 @@ namespace TerrainLib
 					continue;
 				}
 
-				if(height >= td.BottomElevation
-					&& height < td.TopElevation)
-				{
-					affecting.Add(i);
-					continue;
-				}
-
-				if((height - halfTrans) >= td.BottomElevation
+				if((height + halfTrans) >= td.BottomElevation
 					&& (height - halfTrans) < td.TopElevation)
 				{
 					affecting.Add(i);
@@ -421,14 +421,7 @@ namespace TerrainLib
 					continue;
 				}
 
-				if(height >= td.BottomElevation
-					&& height < td.TopElevation)
-				{
-					affecting.Add(i);
-					continue;
-				}
-
-				if((height - halfTrans) >= td.BottomElevation
+				if((height + halfTrans) >= td.BottomElevation
 					&& (height - halfTrans) < td.TopElevation)
 				{
 					affecting.Add(i);
@@ -476,30 +469,20 @@ namespace TerrainLib
 					continue;
 				}
 
-				if(height < (min + halfTrans))
+				if(height >= (min - halfTrans)
+					&& height < (min + halfTrans))
 				{
-					if(height < min)
-					{
-						ret.Add((min + halfTrans) / height);
-					}
-					else
-					{
-						ret.Add((height - min) / halfTrans);
-					}
+					ret.Add((height - (min - halfTrans)) / transitionHeight);
 					continue;
 				}
 
-				if(height > (max - halfTrans))
+				if(height > (max - halfTrans)
+					&& height < (max + halfTrans))
 				{
-					if(height > max)
-					{
-						ret.Add((((max + halfTrans) - height) / halfTrans));
-					}
-					else
-					{
-						ret.Add(((max - height) / halfTrans));
-					}
+					ret.Add(((max + halfTrans) - height) / transitionHeight);
+					continue;
 				}
+				Debug.Assert(false);	//should have hit something
 			}
 
 			foreach(int aff in affecting)
@@ -598,6 +581,10 @@ namespace TerrainLib
 				{
 					combinedFact[affecting1[i]]	+=amounts1[i];
 				}
+				else
+				{
+					combinedFact.Add(affecting1[i], amounts1[i]);
+				}
 			}
 			for(int i=0;i < affecting2.Count;i++)
 			{
@@ -605,12 +592,20 @@ namespace TerrainLib
 				{
 					combinedFact[affecting2[i]]	+=amounts2[i];
 				}
+				else
+				{
+					combinedFact.Add(affecting2[i], amounts2[i]);
+				}
 			}
 			for(int i=0;i < affecting3.Count;i++)
 			{
 				if(combinedFact.ContainsKey(affecting3[i]))
 				{
 					combinedFact[affecting3[i]]	+=amounts3[i];
+				}
+				else
+				{
+					combinedFact.Add(affecting3[i], amounts3[i]);
 				}
 			}
 

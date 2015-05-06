@@ -17,7 +17,8 @@ float3	mLightDirection;
 //terrain texturing variables
 #define	MAX_TERRAIN_TEX		16
 
-float4	mAtlasScalesOffsets[MAX_TERRAIN_TEX];
+float4	mAtlasUVData[MAX_TERRAIN_TEX];
+float	mAtlasTexScale[MAX_TERRAIN_TEX];
 
 #include "RenderStates.fxh"
 
@@ -460,11 +461,11 @@ float4	TriTexFact4PS(VVPosTex04Tex14Tex24Tex34 input) : SV_Target
 	//texcoord2 has texture factor
 	if(input.TexCoord2.x > 0)
 	{
-		float2	uv	=worldXZ * mSolidColour.x;
+		float2	uv	=worldXZ * mAtlasTexScale[input.TexCoord3.x];
 
 		//texture atlas offsets and scales
-		float2	scales	=mAtlasScalesOffsets[input.TexCoord3.x].xy;
-		float2	offsets	=mAtlasScalesOffsets[input.TexCoord3.x].zw;
+		float2	scales	=mAtlasUVData[input.TexCoord3.x].xy;
+		float2	offsets	=mAtlasUVData[input.TexCoord3.x].zw;
 
 		uv	=offsets + scales * frac(uv);
 
@@ -472,37 +473,37 @@ float4	TriTexFact4PS(VVPosTex04Tex14Tex24Tex34 input) : SV_Target
 	}
 	if(input.TexCoord2.y > 0)
 	{
-		float2	uv	=frac(worldXZ * mSolidColour.y);
+		float2	uv	=worldXZ * mAtlasTexScale[input.TexCoord3.y];
 
 		//texture atlas offsets and scales
-		float2	scales	=mAtlasScalesOffsets[input.TexCoord3.y].xy;
-		float2	offsets	=mAtlasScalesOffsets[input.TexCoord3.y].zw;
+		float2	scales	=mAtlasUVData[input.TexCoord3.y].xy;
+		float2	offsets	=mAtlasUVData[input.TexCoord3.y].zw;
 
-		uv	=offsets + scales * uv;
+		uv	=offsets + scales * frac(uv);
 
 		texColor	+=mTexture0.Sample(PointClamp, uv) * input.TexCoord2.y;
 	}
 	if(input.TexCoord2.z > 0)
 	{
-		float2	uv	=frac(worldXZ * mSolidColour.z);
+		float2	uv	=worldXZ * mAtlasTexScale[input.TexCoord3.z];
 
 		//texture atlas offsets and scales
-		float2	scales	=mAtlasScalesOffsets[input.TexCoord3.z].xy;
-		float2	offsets	=mAtlasScalesOffsets[input.TexCoord3.z].zw;
+		float2	scales	=mAtlasUVData[input.TexCoord3.z].xy;
+		float2	offsets	=mAtlasUVData[input.TexCoord3.z].zw;
 
-		uv	=offsets + scales * uv;
+		uv	=offsets + scales * frac(uv);
 
 		texColor	+=mTexture0.Sample(PointClamp, uv) * input.TexCoord2.z;
 	}
 	if(input.TexCoord2.w > 0)
 	{
-		float2	uv	=frac(worldXZ * mSolidColour.w);
+		float2	uv	=worldXZ * mAtlasTexScale[input.TexCoord3.w];
 
 		//texture atlas offsets and scales
-		float2	scales	=mAtlasScalesOffsets[input.TexCoord3.w].xy;
-		float2	offsets	=mAtlasScalesOffsets[input.TexCoord3.w].zw;
+		float2	scales	=mAtlasUVData[input.TexCoord3.w].xy;
+		float2	offsets	=mAtlasUVData[input.TexCoord3.w].zw;
 
-		uv	=offsets + scales * uv;
+		uv	=offsets + scales * frac(uv);
 
 		texColor	+=mTexture0.Sample(PointClamp, uv) * input.TexCoord2.w;
 	}
