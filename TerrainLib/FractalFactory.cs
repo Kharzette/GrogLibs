@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
+using SharpDX;
+
 using UtilityLib;
 
 
@@ -17,6 +18,8 @@ namespace TerrainLib
 		int		mHeight;
 
 		Random	mRnd;
+
+		const float	Log2e	=1.442695f;
 
 
 		public FractalFactory(float variance, float medianHeight, int width, int height)
@@ -304,8 +307,8 @@ namespace TerrainLib
 
 					float	average	=(top + bottom) * 0.5f;
 
-					float	finalTop	=MathHelper.Lerp(average, top, d / depth);
-					float	finalBottom	=MathHelper.Lerp(average, bottom, d / depth);
+					float	finalTop	=MathUtil.Lerp(average, top, d / depth);
+					float	finalBottom	=MathUtil.Lerp(average, bottom, d / depth);
 
 					data[d, x]			=finalTop;
 					data[h - d - 1, x]	=finalBottom;
@@ -322,8 +325,8 @@ namespace TerrainLib
 
 					float	average	=(left + right) * 0.5f;
 
-					float	finalLeft	=MathHelper.Lerp(average, left, d / depth);
-					float	finalRight	=MathHelper.Lerp(average, right, d / depth);
+					float	finalLeft	=MathUtil.Lerp(average, left, d / depth);
+					float	finalRight	=MathUtil.Lerp(average, right, d / depth);
 
 					data[y, d]			=finalLeft;
 					data[y, w - d - 1]	=finalRight;
@@ -485,7 +488,7 @@ namespace TerrainLib
 					if(heightBias > islandRange)
 					{
 						heightBias	-=islandRange;
-						heightBias	*=MathHelper.Log2E;
+						heightBias	*=Log2e;
 						data[y, x]	-=heightBias;
 					}
 				}
@@ -516,7 +519,7 @@ namespace TerrainLib
 			center	*=0.25f;
 
 			//add some variance
-			center	+=mRnd.Next(-4096, 4096) * (variance / 8192.0f);
+			center	+=mRnd.Next(-4096, 4096) * variance;
 
 			//set center point to center
 			map[yStart + halfHeight, xStart + halfWidth]	=center;

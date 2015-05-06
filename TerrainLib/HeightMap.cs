@@ -74,6 +74,7 @@ namespace TerrainLib
 		float	mPeak;		//max height
 		float	mValley;	//min height
 		Point	mCellCoordinate;
+		bool	mbReady	=false;
 
 		//bounds for frust rejection
 		BoundingBox	mBounds, mCellBounds;
@@ -486,7 +487,7 @@ namespace TerrainLib
 				float	dot	=norm.dot(Vector3.UnitY);
 
 				Debug.Assert(height <= max && height >= min);
-				Debug.Assert(halfTrans > ((max - min) * 0.5f));
+				Debug.Assert(halfTrans < ((max - min) * 0.5f));
 				Debug.Assert(dot < SteepnessThreshold);
 
 				float	steepFact	=(SteepnessThreshold - dot) / SteepnessThreshold;
@@ -1064,10 +1065,12 @@ namespace TerrainLib
 		public void Draw(DeviceContext dc, MatLib mats,
 			Matrix world, Matrix view, Matrix proj)
 		{
-			if(mNumTris <= 0)
+			if(mNumTris <= 0 || !mbReady)
 			{
 				return;
 			}
+
+			mats.SetMaterialParameter("Terrain", "mLocal", mMat);
 
 			dc.InputAssembler.SetVertexBuffers(0, mVBB);
 
@@ -1125,6 +1128,8 @@ namespace TerrainLib
 //			pos.Y	=relative.Y;	//for testing, to check edges
 
 			SetPos(pos);
+
+			mbReady	=true;
 		}
 
 

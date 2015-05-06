@@ -73,6 +73,7 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="FractalFactory.cs" />
     <Compile Include="HeightMap.cs" />
     <Compile Include="Terrain.cs" />
     <Compile Include="TerrainModel.cs" />

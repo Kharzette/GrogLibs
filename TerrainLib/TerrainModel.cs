@@ -5,7 +5,7 @@ using SharpDX;
 
 namespace TerrainLib
 {
-	class TerrainModel
+	public class TerrainModel
 	{
 		float	[,]mHeightGrid;
 		float	mPolySize;

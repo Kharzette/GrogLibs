@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Diagnostics;
+
 using SharpDX;
 
 using UtilityLib;
@@ -36,6 +37,12 @@ namespace TerrainLib
 		//only the nearby cells are kept in memory
 		HeightMap[,]	mStreamMaps;
 
+		//texturing data
+		List<HeightMap.TexData>	mTexData	=new List<HeightMap.TexData>();
+
+		//blending between layers
+		float	mTransitionHeight;
+
 		//locations
 		Point	mCellCoord;
 		Vector3	mLevelPos;
@@ -55,6 +62,13 @@ namespace TerrainLib
 			mPolySize	=polySize;
 
 			mStreamMaps	=new HeightMap[cellGridMax, cellGridMax];
+		}
+
+
+		public void SetTextureData(List<HeightMap.TexData> texData, float transHeight)
+		{
+			mTexData			=texData;
+			mTransitionHeight	=transHeight;
 		}
 
 
@@ -265,8 +279,8 @@ namespace TerrainLib
 				mChunkDim + 1, mChunkDim + 1,
 				(mChunkDim * cs.mChunkX) - startX,
 				(mChunkDim * cs.mChunkY) - startY,
-				mPolySize, 1f,
-				new List<HeightMap.TexData>(),
+				mPolySize, mTransitionHeight,
+				mTexData,
 				cs.mGD);
 
 			chunk	=null;
@@ -366,23 +380,19 @@ namespace TerrainLib
 		}
 
 
-		public void Draw(GraphicsDevice gd, BoundingFrustum frust)
+		public void Draw(GraphicsDevice gd, MatLib mats, BoundingFrustum frust)
 		{
-			/*
-			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["Simple"];
-
-			gd.DepthStencilState	=DepthStencilState.Default;
-
 			foreach(HeightMap m in mStreamMaps)
 			{
 				if(m == null)
 				{
 					continue;
 				}
-				if(m.InFrustum(frust))
+				if(true)//m.InFrustum(frust))
 				{
-					m.Draw(gd, mFXTerrain);
-				}*/
+					m.Draw(gd.DC, mats, Matrix.Identity,
+						gd.GCam.View, gd.GCam.Projection);
+				}
 				//for testing bad boundboxes
 				/*
 				else
@@ -391,7 +401,7 @@ namespace TerrainLib
 					m.Draw(gd, mFXTerrain);
 					SetFogEnabled(true);
 				}*/
-//			}
+			}
 		}
 
 
@@ -448,15 +458,6 @@ namespace TerrainLib
 		}
 
 
-		//matrices, matrii, matrixs?
-		public void UpdateMatrices(Matrix world, Matrix view, Matrix proj)
-		{
-//			mFXTerrain.Parameters["mWorld"].SetValue(world);
-//			mFXTerrain.Parameters["mView"].SetValue(view);
-//			mFXTerrain.Parameters["mProjection"].SetValue(proj);
-		}
-
-
 		public void UpdateLightColor(Vector4 lightColor)
 		{
 //			mFXTerrain.Parameters["mLightColor"].SetValue(lightColor);
@@ -475,13 +476,15 @@ namespace TerrainLib
 		}
 
 
-		public void UpdatePosition(Vector3 pos)
+		public void UpdatePosition(Vector3 pos, MatLib mats)
 		{
 			Matrix	mat	=Matrix.Translation(pos);
 
 			mLevelPos	=pos;
 
-//			mFXTerrain.Parameters["mLevel"].SetValue(mat);
+			mat	=Matrix.Identity;
+
+			mats.SetMaterialParameter("Terrain", "mLevel", mat);
 		}
 
 
