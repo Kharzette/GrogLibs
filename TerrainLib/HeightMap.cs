@@ -82,7 +82,6 @@ namespace TerrainLib
 		long	mPosTime, mNormTime, mCopyTime;
 		long	mTexFactTime, mIndexTime, mBufferTime;
 
-		const float	TransitionHeight	=1.0f;
 		const float	SteepnessThreshold	=0.7f;
 
 
@@ -96,6 +95,7 @@ namespace TerrainLib
 						 int			offsetX,
 						 int			offsetY,
 						 float			polySize,
+						 float			transHeight,
 						 List<TexData>	texInfo,
 						 GraphicsDevice	gd)
 		{
@@ -215,7 +215,7 @@ namespace TerrainLib
 
 			sw.Reset();
 			sw.Start();
-			SetTextureFactors(triListVerts, texInfo, actualWidth, actualHeight, TransitionHeight);
+			SetTextureFactors(triListVerts, texInfo, actualWidth, actualHeight, transHeight);
 			sw.Stop();
 			mTexFactTime	=sw.ElapsedTicks;
 
@@ -459,16 +459,6 @@ namespace TerrainLib
 					continue;
 				}
 
-				if(height < (min - halfTrans))
-				{
-					continue;
-				}
-
-				if(height > (max + halfTrans))
-				{
-					continue;
-				}
-
 				if(height >= (min - halfTrans)
 					&& height < (min + halfTrans))
 				{
@@ -518,6 +508,24 @@ namespace TerrainLib
 				{
 					ret.Add(((max - height) / halfTrans) * steepFact);
 				}
+				if(height >= (min - halfTrans)
+					&& height < (min + halfTrans))
+				{
+					float	fact	=(height - (min - halfTrans)) / transitionHeight;
+					fact			*=steepFact;
+					ret.Add(fact);
+					continue;
+				}
+
+				if(height > (max - halfTrans)
+					&& height < (max + halfTrans))
+				{
+					float	fact	=((max + halfTrans) - height) / transitionHeight;
+					fact			*=steepFact;
+					ret.Add(fact);
+					continue;
+				}
+				Debug.Assert(false);	//should have hit something
 			}
 			return	ret;
 		}

@@ -265,7 +265,8 @@ namespace TerrainLib
 				mChunkDim + 1, mChunkDim + 1,
 				(mChunkDim * cs.mChunkX) - startX,
 				(mChunkDim * cs.mChunkY) - startY,
-				mPolySize, new List<HeightMap.TexData>(),
+				mPolySize, 1f,
+				new List<HeightMap.TexData>(),
 				cs.mGD);
 
 			chunk	=null;
