@@ -99,8 +99,8 @@ namespace TerrainLib
 
 			//alloc some space for verts and indexs
 			//verts need pos, norm, 4 scalars for tex percentage,
-			//and 4 uv sets
-			Type	vType	=typeof(VPosNormTex04Tex14Tex24);
+			//and 4 intish lookups into tex table (col0)
+			Type	vType	=typeof(VPosNormTex04Col0);
 			Array	varray	=Array.CreateInstance(vType, w * h);
 
 			Stopwatch	sw	=new Stopwatch();
@@ -248,7 +248,7 @@ namespace TerrainLib
 		//can also do per terrain face normals
 		Array BreakIntoTriList(Array verts, int w, int h)
 		{
-			Array	ret	=Array.CreateInstance(typeof(VPosNormTex04Tex14Tex24), mNumTris * 3);
+			Array	ret	=Array.CreateInstance(typeof(VPosNormTex04Col0), mNumTris * 3);
 
 			//index the tris
 			int	idx	=0;			
@@ -681,102 +681,82 @@ namespace TerrainLib
 				amounts3[i]	/=total;
 			}
 
-			//set texcoords
-			SetVertTexCoords(verts, idx1, texData, affecting1);
-			SetVertTexCoords(verts, idx2, texData, affecting2);
-			SetVertTexCoords(verts, idx3, texData, affecting3);
+			//set affecting
+			//these use the per tri value to
+			//prevent interpolation in the pixel shader
+			SetVertAffecting(verts, idx1, texData, combinedAff);
+			SetVertAffecting(verts, idx2, texData, combinedAff);
+			SetVertAffecting(verts, idx3, texData, combinedAff);
 
-			//set values
-			SetVertFactor(verts, idx1, amounts1);
-			SetVertFactor(verts, idx2, amounts2);
-			SetVertFactor(verts, idx3, amounts3);
+			//match up the amounts to combinedAff
+			List<float>	temp	=new List<float>();
+			foreach(int aff in combinedAff)
+			{
+				if(!affecting1.Contains(aff))
+				{
+					temp.Add(0f);
+				}
+				else
+				{
+					temp.Add(amounts1[affecting1.IndexOf(aff)]);
+				}
+			}
+			SetVertFactor(verts, idx1, temp);
+
+			temp.Clear();
+			foreach(int aff in combinedAff)
+			{
+				if(!affecting2.Contains(aff))
+				{
+					temp.Add(0f);
+				}
+				else
+				{
+					temp.Add(amounts2[affecting2.IndexOf(aff)]);
+				}
+			}
+			SetVertFactor(verts, idx2, temp);
+
+			temp.Clear();
+			foreach(int aff in combinedAff)
+			{
+				if(!affecting3.Contains(aff))
+				{
+					temp.Add(0f);
+				}
+				else
+				{
+					temp.Add(amounts3[affecting3.IndexOf(aff)]);
+				}
+			}
+			SetVertFactor(verts, idx3, temp);
 		}
 
 
-		void SetVertTexCoords(Array verts, int index, List<TexData> texData, List<int> affecting)
+		void SetVertAffecting(Array verts, int index, List<TexData> texData, List<int> affecting)
 		{
 			if(affecting.Count == 0)
 			{
 				return;
 			}
 
-			VPosNormTex04Tex14Tex24	vert	=(VPosNormTex04Tex14Tex24)verts.GetValue(index);
+			VPosNormTex04Col0	vert	=(VPosNormTex04Col0)verts.GetValue(index);
 
-			//base uv starts off stored in texcoord0
-			double	baseU	=vert.TexCoord0.X;
-			double	baseV	=vert.TexCoord0.Y;
-
-			double	u	=baseU;
-			double	v	=baseV;
-
-			//texcoords 1 and 2 have 4 uv pairs
-			u	*=texData[affecting[0]].mScaleU;
-			v	*=texData[affecting[0]].mScaleV;
-
-			u	+=texData[affecting[0]].mUOffs;
-			v	+=texData[affecting[0]].mVOffs;
-
-			vert.TexCoord1.X	=(Half)u;
-			vert.TexCoord1.Y	=(Half)v;
+			vert.Color0.R	=(byte)affecting[0];
 
 			if(affecting.Count > 1)
 			{
-				u	=baseU;
-				v	=baseV;
-
-				u	*=texData[affecting[1]].mScaleU;
-				v	*=texData[affecting[1]].mScaleV;
-
-				u	+=texData[affecting[1]].mUOffs;
-				v	+=texData[affecting[1]].mVOffs;
-
-				vert.TexCoord1.Z	=(Half)u;
-				vert.TexCoord1.W	=(Half)v;
-			}
-			else
-			{
-				vert.TexCoord1.Z	=0f;
-				vert.TexCoord1.W	=0f;
+				vert.Color0.G	=(byte)affecting[1];
 			}
 
 			if(affecting.Count > 2)
 			{
-				u	=baseU;
-				v	=baseV;
-
-				u	*=texData[affecting[2]].mScaleU;
-				v	*=texData[affecting[2]].mScaleV;
-
-				u	+=texData[affecting[2]].mUOffs;
-				v	+=texData[affecting[2]].mVOffs;
-
-				vert.TexCoord2.X	=(Half)u;
-				vert.TexCoord2.Y	=(Half)v;
-			}
-			else
-			{
-				vert.TexCoord2.X	=0f;
-				vert.TexCoord2.Y	=0f;
+				vert.Color0.B	=(byte)affecting[2];
 			}
 
 			if(affecting.Count > 3)
 			{
-				u	=baseU;
-				v	=baseV;
-
-				u	*=texData[affecting[3]].mScaleU;
-				v	*=texData[affecting[3]].mScaleV;
-
-				u	+=texData[affecting[3]].mUOffs;
-				v	+=texData[affecting[3]].mVOffs;
-
-				vert.TexCoord2.Z	=(Half)u;
-				vert.TexCoord2.W	=(Half)v;
-			}
-			else
-			{
-				vert.TexCoord2.Z	=0f;
-				vert.TexCoord2.W	=0f;
+				vert.Color0.A	=(byte)affecting[3];
 			}
 
 			verts.SetValue(vert, index);
@@ -789,7 +769,9 @@ namespace TerrainLib
 			{
 				return;
 			}
-			VPosNormTex04Tex14Tex24	v	=(VPosNormTex04Tex14Tex24)verts.GetValue(index);
+			VPosNormTex04Col0	v	=(VPosNormTex04Col0)verts.GetValue(index);
+
+			v.TexCoord0	=Vector4.Zero;
 
 			//texcoord0 contains 4 factors
 			v.TexCoord0.X	=amounts[0];

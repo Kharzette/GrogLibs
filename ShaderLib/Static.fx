@@ -172,9 +172,9 @@ VVPosTex04Tex14 WNormWPosTexVS(VPosNormTex0 input)
 }
 
 //worldpos and normal and texture factors
-VVPosTex04Tex14Tex24Tex34Tex44 WNormWPosTexFactVS(VPosNormTex04Tex14Tex24 input)
+VVPosTex04Tex14Tex24Tex34 WNormWPosTexFactVS(VPosNormTex04Col0 input)
 {
-	VVPosTex04Tex14Tex24Tex34Tex44	output;
+	VVPosTex04Tex14Tex24Tex34	output;
 	
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
@@ -183,9 +183,8 @@ VVPosTex04Tex14Tex24Tex34Tex44 WNormWPosTexFactVS(VPosNormTex04Tex14Tex24 input)
 	output.Position			=mul(float4(input.Position, 1), wvp);
 	output.TexCoord0.xyz	=mul(input.Normal.xyz, mWorld);
 	output.TexCoord1.xyz	=mul(input.Position, mWorld);
-	output.TexCoord2		=input.TexCoord0;
-	output.TexCoord3		=input.TexCoord1;
-	output.TexCoord4		=input.TexCoord2;
+	output.TexCoord2		=input.TexCoord0;	//4 texture factors (adds to 1)
+	output.TexCoord3		=input.Color * 256;	//4 texture lookups (scale up to byte)
 	
 	//return the output structure
 	return	output;

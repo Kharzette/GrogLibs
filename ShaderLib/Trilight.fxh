@@ -14,6 +14,11 @@ float4	mLightColor1;		//trilights need 3 colors
 float4	mLightColor2;		//trilights need 3 colors
 float3	mLightDirection;
 
+//terrain texturing variables
+#define	MAX_TERRAIN_TEX		16
+
+float4	mAtlasScalesOffsets[MAX_TERRAIN_TEX];
+
 #include "RenderStates.fxh"
 
 //shared pixel shaders
@@ -442,35 +447,74 @@ float4 Tex0Tex1Col0DecalPS(VVPosTex0Tex1Col0 input) : SV_Target
 }
 
 //trilight, up to 4 texture lookups
-float4	TriTexFact4PS(VVPosTex04Tex14Tex24Tex34Tex44 input) : SV_Target
+float4	TriTexFact4PS(VVPosTex04Tex14Tex24Tex34 input) : SV_Target
 {
 	float4	texColor	=float4(0, 0, 0, 0);
 
+	//texcoord1 has worldspace position
+	float2	worldXZ	=input.TexCoord1.xz;
+
+	//mSolidColour has texture scale factor
+	//kind of a hack but it is a handy float4
+
+	//texcoord2 has texture factor
 	if(input.TexCoord2.x > 0)
 	{
-		texColor	+=mTexture0.Sample(LinearClamp, input.TexCoord3.xy);
+		float2	uv	=worldXZ * mSolidColour.x;
+
+		//texture atlas offsets and scales
+		float2	scales	=mAtlasScalesOffsets[input.TexCoord3.x].xy;
+		float2	offsets	=mAtlasScalesOffsets[input.TexCoord3.x].zw;
+
+		uv	=offsets + scales * frac(uv);
+
+		texColor	+=mTexture0.Sample(PointClamp, uv) * input.TexCoord2.x;
 	}
 	if(input.TexCoord2.y > 0)
 	{
-		texColor	+=mTexture0.Sample(LinearClamp, input.TexCoord3.zw);
+		float2	uv	=frac(worldXZ * mSolidColour.y);
+
+		//texture atlas offsets and scales
+		float2	scales	=mAtlasScalesOffsets[input.TexCoord3.y].xy;
+		float2	offsets	=mAtlasScalesOffsets[input.TexCoord3.y].zw;
+
+		uv	=offsets + scales * uv;
+
+		texColor	+=mTexture0.Sample(PointClamp, uv) * input.TexCoord2.y;
 	}
 	if(input.TexCoord2.z > 0)
 	{
-		texColor	+=mTexture0.Sample(LinearClamp, input.TexCoord4.xy);
+		float2	uv	=frac(worldXZ * mSolidColour.z);
+
+		//texture atlas offsets and scales
+		float2	scales	=mAtlasScalesOffsets[input.TexCoord3.z].xy;
+		float2	offsets	=mAtlasScalesOffsets[input.TexCoord3.z].zw;
+
+		uv	=offsets + scales * uv;
+
+		texColor	+=mTexture0.Sample(PointClamp, uv) * input.TexCoord2.z;
 	}
 	if(input.TexCoord2.w > 0)
 	{
-		texColor	+=mTexture0.Sample(LinearClamp, input.TexCoord4.zw);
+		float2	uv	=frac(worldXZ * mSolidColour.w);
+
+		//texture atlas offsets and scales
+		float2	scales	=mAtlasScalesOffsets[input.TexCoord3.w].xy;
+		float2	offsets	=mAtlasScalesOffsets[input.TexCoord3.w].zw;
+
+		uv	=offsets + scales * uv;
+
+		texColor	+=mTexture0.Sample(PointClamp, uv) * input.TexCoord2.w;
 	}
 
-	float3	pnorm	=input.TexCoord0.xyz;
+//	float3	pnorm	=input.TexCoord0.xyz;
 
-	pnorm	=normalize(pnorm);
+//	pnorm	=normalize(pnorm);
 
-	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
-							mLightColor0, mLightColor1, mLightColor2);
+//	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
+//							mLightColor0, mLightColor1, mLightColor2);
 
-	texColor.xyz	*=triLight;
+//	texColor.xyz	*=triLight;
 
 	return	texColor;
 }
