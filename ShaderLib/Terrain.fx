@@ -5,6 +5,9 @@
 #define	MAX_TERRAIN_TEX		16
 #endif
 
+//local matrix
+float4x4	mLocal;
+
 float4	mAtlasUVData[MAX_TERRAIN_TEX];
 float	mAtlasTexScale[MAX_TERRAIN_TEX];
 
@@ -18,13 +21,15 @@ VVPosTex04Tex14Tex24Tex34 WNormWPosTexFactVS(VPosNormTex04Col0 input)
 {
 	VVPosTex04Tex14Tex24Tex34	output;
 	
-	//generate the world-view-proj matrix
-	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
-	
-	//transform the input position to the output
-	output.Position			=mul(float4(input.Position, 1), wvp);
-	output.TexCoord0.xyz	=mul(input.Normal.xyz, mWorld);
-	output.TexCoord1.xyz	=mul(input.Position, mWorld);
+	float4x4	localWorld	=mul(mLocal, mWorld);
+	float4x4	viewProj	=mul(mView, mProjection);
+
+	//worldpos
+	float4	worldPos	=mul(float4(input.Position, 1), localWorld);
+
+	output.Position			=mul(worldPos, viewProj);
+	output.TexCoord0.xyz	=mul(input.Normal.xyz, localWorld);	
+	output.TexCoord1.xyz	=worldPos;
 	output.TexCoord2		=input.TexCoord0;	//4 texture factors (adds to 1)
 	output.TexCoord3		=input.Color * 256;	//4 texture lookups (scale up to byte)
 

@@ -486,11 +486,14 @@ namespace TerrainLib
 				float	max	=texData[aff].TopElevation;
 				float	dot	=norm.dot(Vector3.UnitY);
 
-				Debug.Assert(height <= max && height >= min);
+				Debug.Assert(height <= (max + halfTrans) && height >= (min - halfTrans));
 				Debug.Assert(halfTrans < ((max - min) * 0.5f));
 				Debug.Assert(dot < SteepnessThreshold);
 
 				float	steepFact	=(SteepnessThreshold - dot) / SteepnessThreshold;
+
+				//bias up a bit, too hard to see
+				steepFact	*=affecting.Count;
 
 				if(height > (min + halfTrans)
 					&& height < (max - halfTrans))
@@ -505,10 +508,6 @@ namespace TerrainLib
 					continue;
 				}
 
-				if(height > (max - halfTrans))
-				{
-					ret.Add(((max - height) / halfTrans) * steepFact);
-				}
 				if(height >= (min - halfTrans)
 					&& height < (min + halfTrans))
 				{

@@ -46,7 +46,6 @@ namespace TerrainLib
 		//locations
 		Point	mCellCoord;
 		Vector3	mLevelPos;
-		Vector3	mEyePos;
 
 		//thread counter
 		int	mThreadCounter;
@@ -208,11 +207,11 @@ namespace TerrainLib
 					cs.mChunkY		=wCellY;
 					cs.mGD			=gd;
 
-//					while(mThreadsActive > 2)
-//					{
-//						Thread.Sleep(2);
-//						GC.Collect();
-//					}
+					while(mThreadsActive > 0)
+					{
+						Thread.Sleep(2);
+						GC.Collect();
+					}
 
 					Interlocked.Increment(ref mThreadsActive);
 					ThreadPool.QueueUserWorkItem(DoChunk, cs);
@@ -388,7 +387,7 @@ namespace TerrainLib
 				{
 					continue;
 				}
-				if(true)//m.InFrustum(frust))
+				if(m.InFrustum(frust))
 				{
 					m.Draw(gd.DC, mats, Matrix.Identity,
 						gd.GCam.View, gd.GCam.Projection);
@@ -437,7 +436,7 @@ namespace TerrainLib
 				}
 				Vector3	dist	=m.GetPos();
 				dist	+=mLevelPos;
-				dist	+=mEyePos;
+				dist	+=pos;
 
 				float	len	=dist.Length();
 
@@ -481,17 +480,6 @@ namespace TerrainLib
 			Matrix	mat	=Matrix.Translation(pos);
 
 			mLevelPos	=pos;
-
-			mat	=Matrix.Identity;
-
-			mats.SetMaterialParameter("Terrain", "mLevel", mat);
-		}
-
-
-		public void UpdateEyePos(Vector3 pos)
-		{
-			mEyePos	=pos;
-//			mFXTerrain.Parameters["mEyePos"].SetValue(pos);
 		}
 
 
