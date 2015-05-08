@@ -25,6 +25,12 @@ namespace TerrainLib
 		}
 
 
+		public void FreeAll()
+		{
+			mHeightGrid	=null;
+		}
+
+
 		public int GetMapSize()
 		{
 			return	(int)(mGridSize * mPolySize);

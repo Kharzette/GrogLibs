@@ -32,6 +32,21 @@ namespace TerrainLib
 			public double	mScaleU, mScaleV;
 			public double	mUOffs, mVOffs;
 
+
+			public TexData() { }
+			public TexData(TexData copyMe)
+			{
+				mBottomElevation	=copyMe.mBottomElevation;
+				mTopElevation		=copyMe.mTopElevation;
+				mbSteep				=copyMe.mbSteep;
+				mScaleFactor		=copyMe.mScaleFactor;
+				mTextureName		=copyMe.mTextureName;
+				mScaleU				=copyMe.mScaleU;
+				mScaleV				=copyMe.mScaleV;
+				mUOffs				=copyMe.mUOffs;
+				mVOffs				=copyMe.mVOffs;
+			}
+
 			public float	BottomElevation
 			{
 				get {	return	mBottomElevation;	}
@@ -453,8 +468,8 @@ namespace TerrainLib
 				Debug.Assert(height <= (max + halfTrans) && height >= (min - halfTrans));
 				Debug.Assert(halfTrans < ((max - min) * 0.5f));
 
-				if(height > (min + halfTrans)
-					&& height < (max - halfTrans))
+				if(height >= (min + halfTrans)
+					&& height <= (max - halfTrans))
 				{
 					ret.Add(1f);
 					continue;
@@ -468,7 +483,7 @@ namespace TerrainLib
 				}
 
 				if(height > (max - halfTrans)
-					&& height < (max + halfTrans))
+					&& height <= (max + halfTrans))
 				{
 					ret.Add(((max + halfTrans) - height) / transitionHeight);
 					continue;
@@ -495,16 +510,10 @@ namespace TerrainLib
 				//bias up a bit, too hard to see
 				steepFact	*=affecting.Count;
 
-				if(height > (min + halfTrans)
-					&& height < (max - halfTrans))
+				if(height >= (min + halfTrans)
+					&& height <= (max - halfTrans))
 				{
 					ret.Add(steepFact);
-					continue;
-				}
-
-				if(height < (min + halfTrans))
-				{
-					ret.Add((height / (min + halfTrans)) * steepFact);
 					continue;
 				}
 
@@ -518,7 +527,7 @@ namespace TerrainLib
 				}
 
 				if(height > (max - halfTrans)
-					&& height < (max + halfTrans))
+					&& height <= (max + halfTrans))
 				{
 					float	fact	=((max + halfTrans) - height) / transitionHeight;
 					fact			*=steepFact;
@@ -555,9 +564,26 @@ namespace TerrainLib
 			Debug.Assert(affecting1.Count == amounts1.Count);
 			Debug.Assert(affecting2.Count == amounts2.Count);
 			Debug.Assert(affecting3.Count == amounts3.Count);
-			Debug.Assert(!amounts1.Contains(0f));
-			Debug.Assert(!amounts2.Contains(0f));
-			Debug.Assert(!amounts3.Contains(0f));
+
+			//eliminate any zeros
+			while(amounts1.Contains(0f))
+			{
+				int	index	=amounts1.IndexOf(0f);
+				affecting1.RemoveAt(index);
+				amounts1.RemoveAt(index);
+			}
+			while(amounts2.Contains(0f))
+			{
+				int	index	=amounts2.IndexOf(0f);
+				affecting2.RemoveAt(index);
+				amounts2.RemoveAt(index);
+			}
+			while(amounts3.Contains(0f))
+			{
+				int	index	=amounts3.IndexOf(0f);
+				affecting3.RemoveAt(index);
+				amounts3.RemoveAt(index);
+			}
 
 			List<int>	combinedAff	=new List<int>();
 			foreach(int aff in affecting1)

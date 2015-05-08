@@ -22,6 +22,13 @@ namespace TerrainLib
 		internal GraphicsDevice	mGD;
 	}
 
+	class BuildState
+	{
+		internal int			mDestroyAt;
+		internal Point			mCellCoord;
+		internal GraphicsDevice	mGD;
+	}
+
 
 	//constructs and stores multiple heightmaps
 	//handles the tiling and other such
@@ -47,9 +54,12 @@ namespace TerrainLib
 		Point	mCellCoord;
 		Vector3	mLevelPos;
 
-		//thread counter
-		int	mThreadCounter;
-		int	mThreadsActive;
+		//thread stuff
+		bool	mbBuilding;
+		int		mThreadCounter;
+		int		mThreadsActive;
+
+		const int	MaxThreads	=2;
 
 
 		//set up textures and such
@@ -61,6 +71,35 @@ namespace TerrainLib
 			mPolySize	=polySize;
 
 			mStreamMaps	=new HeightMap[cellGridMax, cellGridMax];
+		}
+
+
+		public void FreeAll()
+		{
+			while(mbBuilding)
+			{
+				Thread.Sleep(1);
+			}
+
+			mHeightData	=null;
+
+			foreach(HeightMap hm in mStreamMaps)
+			{
+				if(hm != null)
+				{
+					hm.FreeAll();
+				}
+			}
+
+			mTexData.Clear();
+		}
+
+
+		public List<HeightMap.TexData> GetTextureData(out float transitionHeight)
+		{
+			transitionHeight	=mTransitionHeight;
+
+			return	mTexData;
 		}
 
 
@@ -90,11 +129,46 @@ namespace TerrainLib
 		}
 
 
+		public int GetThreadsActive()
+		{
+			return	mThreadsActive;
+		}
+
+
+		public int GetThreadCounter()
+		{
+			return	mThreadCounter;
+		}
+
+
 		//streams in nearby stuff, and nukes stuff at
 		//destroyAt and beyond, should be called at a
 		//boundary crossing
 		public void BuildGrid(GraphicsDevice gd, int destroyAt)
 		{
+			if(mbBuilding)
+			{
+				return;
+			}
+			mbBuilding	=true;
+
+			BuildState	bs	=new BuildState();
+			bs.mGD			=gd;
+			bs.mDestroyAt	=destroyAt;
+			bs.mCellCoord	=mCellCoord;
+
+			ThreadPool.QueueUserWorkItem(BuildGridCB, bs);
+		}
+
+
+		void BuildGridCB(object state)
+		{
+			BuildState	bs	=state as BuildState;
+			if(bs == null)
+			{
+				return;
+			}
+
 			int	cw	=mStreamMaps.GetLength(1);
 			int	ch	=mStreamMaps.GetLength(0);
 
@@ -108,14 +182,14 @@ namespace TerrainLib
 					int	xWrapPos	=x + cw;
 					int	yWrapPos	=y + ch;
 
-					int	xDist	=Math.Abs(mCellCoord.X - x);
-					int	yDist	=Math.Abs(mCellCoord.Y - y);
+					int	xDist	=Math.Abs(bs.mCellCoord.X - x);
+					int	yDist	=Math.Abs(bs.mCellCoord.Y - y);
 
-					int	xDistWN	=Math.Abs(mCellCoord.X - xWrapNeg);
-					int	yDistWN	=Math.Abs(mCellCoord.Y - yWrapNeg);
+					int	xDistWN	=Math.Abs(bs.mCellCoord.X - xWrapNeg);
+					int	yDistWN	=Math.Abs(bs.mCellCoord.Y - yWrapNeg);
 
-					int	xDistWP	=Math.Abs(mCellCoord.X - xWrapPos);
-					int	yDistWP	=Math.Abs(mCellCoord.Y - yWrapPos);
+					int	xDistWP	=Math.Abs(bs.mCellCoord.X - xWrapPos);
+					int	yDistWP	=Math.Abs(bs.mCellCoord.Y - yWrapPos);
 
 					if(xDist > xDistWN)
 					{
@@ -134,9 +208,13 @@ namespace TerrainLib
 						yDist	=yDistWP;
 					}
 
-					if(xDist >= destroyAt || yDist >= destroyAt)
+					if(xDist >= bs.mDestroyAt || yDist >= bs.mDestroyAt)
 					{
-						mStreamMaps[y, x]	=null;
+						if(mStreamMaps[y, x] != null)
+						{
+							mStreamMaps[y, x].FreeAll();
+							mStreamMaps[y, x]	=null;
+						}
 					}
 				}
 			}
@@ -163,16 +241,16 @@ namespace TerrainLib
 			}
 			h	=1 << (pow - 1);
 
-			int	inRange	=destroyAt - 1;
+			int	inRange	=bs.mDestroyAt - 1;
 
 			mThreadCounter	=1 + 2 * inRange;
 			mThreadsActive	=0;
 
 			mThreadCounter	*=mThreadCounter;
 
-			for(int cellY = mCellCoord.Y - inRange;cellY <= mCellCoord.Y + inRange;cellY++)
+			for(int cellY = bs.mCellCoord.Y - inRange;cellY <= bs.mCellCoord.Y + inRange;cellY++)
 			{
-				for(int cellX = mCellCoord.X - inRange;cellX <= mCellCoord.X + inRange;cellX++)
+				for(int cellX = bs.mCellCoord.X - inRange;cellX <= bs.mCellCoord.X + inRange;cellX++)
 				{
 					int	wCellX	=cellX;
 					int	wCellY	=cellY;
@@ -205,9 +283,10 @@ namespace TerrainLib
 					ChunkState	cs	=new ChunkState();
 					cs.mChunkX		=wCellX;
 					cs.mChunkY		=wCellY;
-					cs.mGD			=gd;
+					cs.mGD			=bs.mGD;
 
-					while(mThreadsActive > 0)
+					//limit to MaxThreads
+					while(mThreadsActive >= MaxThreads)
 					{
 						Thread.Sleep(2);
 						GC.Collect();
@@ -218,13 +297,11 @@ namespace TerrainLib
 				}
 			}
 
-
-//			while(!Interlocked.Equals(mThreadCounter, 0))
-//			{
-//				Thread.Sleep(2);
-//			}
-
-//			ThreadPool.SetMaxThreads(8, 8);
+			while(!Interlocked.Equals(mThreadCounter, 0))
+			{
+				Thread.Sleep(2);
+			}
+			mbBuilding	=false;
 		}
 
 
