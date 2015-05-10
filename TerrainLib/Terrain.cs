@@ -286,7 +286,7 @@ namespace TerrainLib
 					cs.mGD			=bs.mGD;
 
 					//limit to MaxThreads
-					while(mThreadsActive >= MaxThreads)
+					while(mThreadsActive >= 1)//MaxThreads)
 					{
 						Thread.Sleep(2);
 						GC.Collect();
@@ -320,25 +320,8 @@ namespace TerrainLib
 
 			int	startY	=(mChunkDim * cs.mChunkY);
 			int	startX	=(mChunkDim * cs.mChunkX);
-			if(startY > 0)
-			{
-				startY--;	//back up one if possible
-			}
-			if(startX > 0)
-			{
-				startX--;
-			}
-
-			int	endY	=(mChunkDim * (cs.mChunkY + 1)) + 1;
-			int	endX	=(mChunkDim * (cs.mChunkX + 1)) + 1;
-			if(endY < h)
-			{
-				endY++;	//increase by one if possible
-			}
-			if(endX < w)
-			{
-				endX++;
-			}
+			int	endY	=(mChunkDim * (cs.mChunkY + 1)) + 2;
+			int	endX	=(mChunkDim * (cs.mChunkX + 1)) + 2;
 
 			for(int y=startY, t=0;y < endY;y++,t++)
 			{
@@ -352,9 +335,7 @@ namespace TerrainLib
 
 			HeightMap	map	=new HeightMap(chunk, coord,
 				endX - startX, endY - startY,
-				mChunkDim + 1, mChunkDim + 1,
-				(mChunkDim * cs.mChunkX) - startX,
-				(mChunkDim * cs.mChunkY) - startY,
+				mChunkDim, mChunkDim,
 				mPolySize, mTransitionHeight,
 				mTexData,
 				cs.mGD);

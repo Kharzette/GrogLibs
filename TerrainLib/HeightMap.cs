@@ -108,14 +108,17 @@ namespace TerrainLib
 						 int			h,
 						 int			actualWidth,
 						 int			actualHeight,
-						 int			offsetX,
-						 int			offsetY,
 						 float			polySize,
 						 float			transHeight,
 						 List<TexData>	texInfo,
 						 GraphicsDevice	gd)
 		{
 			mCellCoordinate	=coord;
+
+			//fed in are usually a nice power of two
+			//however an extra edge of verts are needed to fill
+			//in the gaps between
+			actualWidth++;	actualHeight++;
 
 			mNumVerts	=actualWidth * actualHeight;
 			mNumTris	=((actualWidth - 1) * (actualHeight - 1)) * 2;
@@ -146,8 +149,8 @@ namespace TerrainLib
 					Vector3	pos	=Vector3.Zero;
 					int		dex	=x + (y * w);
 
-					pos.X	=(float)(x - offsetX);
-					pos.Z	=(float)(y - offsetY);
+					pos.X	=(float)(x - 1);
+					pos.Z	=(float)(y - 1);
 					pos.Y	=data[y, x];
 
 					pos.X	*=polySize;
@@ -211,9 +214,9 @@ namespace TerrainLib
 			sw.Start();
 			Array	actualVerts	=Array.CreateInstance(vType, mNumVerts);
 			int	cnt	=0;
-			for(int y=offsetY;y < (actualHeight + offsetY);y++)
+			for(int y=1;y < (actualHeight + 1);y++)
 			{
-				for(int x=offsetX;x < (actualWidth + offsetX);x++)
+				for(int x=1;x < (actualWidth + 1);x++)
 				{
 					actualVerts.SetValue(varray.GetValue((y * w) + x), cnt++);
 				}

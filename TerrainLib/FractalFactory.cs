@@ -298,17 +298,19 @@ namespace TerrainLib
 			int	h	=data.GetLength(0);
 
 			//top edge
-			for(int d=0;d < depth;d++)
+			for(int d=1;d < depth;d++)
 			{
-				for(int x=0;x < w;x++)
+				for(int x=1;x < w;x++)
 				{
-					float	top		=data[d, x];
-					float	bottom	=data[h - d - 1, x];
+					float	top		=data[d + 1, x];
+					float	bottom	=data[h - d - 2, x];
 
 					float	average	=(top + bottom) * 0.5f;
 
-					float	finalTop	=MathUtil.Lerp(average, top, d / depth);
-					float	finalBottom	=MathUtil.Lerp(average, bottom, d / depth);
+					//bias lerp one towards the edge to
+					//keep the outer 2 height edges ==
+					float	finalTop	=MathUtil.Lerp(average, top, (d - 1) / depth);
+					float	finalBottom	=MathUtil.Lerp(average, bottom, (d - 1) / depth);
 
 					data[d, x]			=finalTop;
 					data[h - d - 1, x]	=finalBottom;
@@ -316,17 +318,17 @@ namespace TerrainLib
 			}
 
 			//left edge
-			for(int d=0;d < depth;d++)
+			for(int d=1;d < depth;d++)
 			{
-				for(int y=0;y < h;y++)
+				for(int y=1;y < h;y++)
 				{
-					float	left	=data[y, d];
-					float	right	=data[y, w - d - 1];
+					float	left	=data[y, d + 1];
+					float	right	=data[y, w - d - 2];
 
 					float	average	=(left + right) * 0.5f;
 
-					float	finalLeft	=MathUtil.Lerp(average, left, d / depth);
-					float	finalRight	=MathUtil.Lerp(average, right, d / depth);
+					float	finalLeft	=MathUtil.Lerp(average, left, (d - 1) / depth);
+					float	finalRight	=MathUtil.Lerp(average, right, (d - 1) / depth);
 
 					data[y, d]			=finalLeft;
 					data[y, w - d - 1]	=finalRight;
