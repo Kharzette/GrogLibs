@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
 using SharpDX;
@@ -31,7 +32,7 @@ namespace TerrainLib
 		}
 
 
-		public float[,] CreateFractal(int seed, int size)
+		public float[,] CreateFractal(int seed)
 		{
 			mRnd	=new Random(seed);
 
@@ -298,19 +299,19 @@ namespace TerrainLib
 			int	h	=data.GetLength(0);
 
 			//top edge
-			for(int d=1;d < depth;d++)
+			for(int d=0;d < depth;d++)
 			{
-				for(int x=1;x < w;x++)
+				for(int x=0;x < w;x++)
 				{
-					float	top		=data[d + 1, x];
-					float	bottom	=data[h - d - 2, x];
+					float	top		=data[d, x];
+					float	bottom	=data[h - d - 1, x];
 
 					float	average	=(top + bottom) * 0.5f;
 
 					//bias lerp one towards the edge to
 					//keep the outer 2 height edges ==
-					float	finalTop	=MathUtil.Lerp(average, top, (d - 1) / depth);
-					float	finalBottom	=MathUtil.Lerp(average, bottom, (d - 1) / depth);
+					float	finalTop	=MathUtil.Lerp(average, top, d / depth);
+					float	finalBottom	=MathUtil.Lerp(average, bottom, d / depth);
 
 					data[d, x]			=finalTop;
 					data[h - d - 1, x]	=finalBottom;
@@ -318,17 +319,17 @@ namespace TerrainLib
 			}
 
 			//left edge
-			for(int d=1;d < depth;d++)
+			for(int d=0;d < depth;d++)
 			{
-				for(int y=1;y < h;y++)
+				for(int y=0;y < h;y++)
 				{
-					float	left	=data[y, d + 1];
-					float	right	=data[y, w - d - 2];
+					float	left	=data[y, d];
+					float	right	=data[y, w - d - 1];
 
 					float	average	=(left + right) * 0.5f;
 
-					float	finalLeft	=MathUtil.Lerp(average, left, (d - 1) / depth);
-					float	finalRight	=MathUtil.Lerp(average, right, (d - 1) / depth);
+					float	finalLeft	=MathUtil.Lerp(average, left, d / depth);
+					float	finalRight	=MathUtil.Lerp(average, right, d / depth);
 
 					data[y, d]			=finalLeft;
 					data[y, w - d - 1]	=finalRight;
@@ -553,6 +554,226 @@ namespace TerrainLib
 			Subdivide(map, xStart + halfWidth, yStart, halfWidth + 1, halfHeight + 1, variance / 2.0f);
 			Subdivide(map, xStart, yStart + halfHeight, halfWidth + 1, halfHeight + 1, variance / 2.0f);
 			Subdivide(map, xStart + halfWidth, yStart + halfHeight, halfWidth + 1, halfHeight + 1, variance / 2.0f);
+		}
+
+
+		public Vector3[,] BuildNormals(float [,]map, float polySize)
+		{
+			Vector3	[]adjacent	=new Vector3[8];
+			bool	[]valid		=new bool[8];
+
+			int	w	=map.GetLength(1);
+			int	h	=map.GetLength(0);
+
+			Vector3	[,]ret	=new Vector3[h, w];
+
+			//generate normals
+			for(int y=0;y < h;y++)
+			{
+				for(int x=0;x < w;x++)
+				{
+					//get the positions of the 8
+					//adjacent verts, numbered clockwise
+					//from upper right on a grid
+
+					//grab first 3 spots which
+					//are negative in Y
+					if(y > 0)
+					{
+						if(x > 0)
+						{
+//							adjacent[0]	=(Vector3)VertexTypes.GetArrayField(v, (x - 1) + ((y - 1) * w), "Position");
+							adjacent[0].X	=(x - 1) * polySize;
+							adjacent[0].Z	=(y - 1) * polySize;
+							adjacent[0].Y	=map[y - 1, x - 1];
+							valid[0]		=true;
+						}
+						else
+						{
+							valid[0]	=false;
+						}
+
+//						adjacent[1]	=(Vector3)VertexTypes.GetArrayField(v, x + ((y - 1) * w), "Position");
+						adjacent[1].X	=x * polySize;
+						adjacent[1].Z	=(y - 1) * polySize;
+						adjacent[1].Y	=map[y - 1, x];
+						valid[1]		=true;
+
+						if(x < (w - 1))
+						{
+//							adjacent[2]	=(Vector3)VertexTypes.GetArrayField(v, (x + 1) + ((y - 1) * w), "Position");
+							adjacent[2].X	=(x + 1) * polySize;
+							adjacent[2].Z	=(y - 1) * polySize;
+							adjacent[2].Y	=map[y - 1, x + 1];
+							valid[2]		=true;
+						}
+						else
+						{
+							valid[2]	=false;
+						}
+					}
+					else
+					{
+						valid[0]	=false;
+						valid[1]	=false;
+						valid[2]	=false;
+					}
+
+					//next two are to the sides of
+					//the calcing vert in X
+					if(x > 0)
+					{
+//						adjacent[7]	=(Vector3)VertexTypes.GetArrayField(v, (x - 1) + (y * w), "Position");
+						adjacent[7].X	=(x - 1) * polySize;
+						adjacent[7].Z	=y * polySize;
+						adjacent[7].Y	=map[y, x - 1];
+						valid[7]		=true;
+					}
+					else
+					{
+						valid[7]	=false;
+					}
+
+					if(x < (w - 1))
+					{
+//						adjacent[3]	=(Vector3)VertexTypes.GetArrayField(v, (x + 1) + (y * w), "Position");
+						adjacent[3].X	=(x + 1) * polySize;
+						adjacent[3].Z	=y * polySize;
+						adjacent[3].Y	=map[y, x + 1];
+						valid[3]		=true;
+					}
+					else
+					{
+						valid[3]	=false;
+					}
+
+					//next three are positive in Y
+					if(y < (h - 1))
+					{
+						if(x > 0)
+						{
+//							adjacent[6]	=(Vector3)VertexTypes.GetArrayField(v, (x - 1) + ((y + 1) * w), "Position");
+							adjacent[6].X	=(x - 1) * polySize;
+							adjacent[6].Z	=(y + 1) * polySize;
+							adjacent[6].Y	=map[y + 1, x - 1];
+							valid[6]		=true;
+						}
+						else
+						{
+							valid[6]	=false;
+						}
+
+//						adjacent[5]	=(Vector3)VertexTypes.GetArrayField(v, x + ((y + 1) * w), "Position");
+						adjacent[5].X	=x * polySize;
+						adjacent[5].Z	=(y + 1) * polySize;
+						adjacent[5].Y	=map[y + 1, x];
+						valid[5]		=true;
+
+						if(x < (w - 1))
+						{
+//							adjacent[4]	=(Vector3)VertexTypes.GetArrayField(v, (x + 1) + ((y + 1) * w), "Position");
+							adjacent[4].X	=(x + 1) * polySize;
+							adjacent[4].Z	=(y + 1) * polySize;
+							adjacent[4].Y	=map[y + 1, x + 1];
+							valid[4]		=true;
+						}
+						else
+						{
+							valid[4]	=false;
+						}
+					}
+					else
+					{
+						valid[5]	=false;
+						valid[6]	=false;
+						valid[4]	=false;
+					}
+
+					//use the edges between adjacents
+					//to determine a good normal
+					Vector3	norm, edge1, edge2;
+
+					norm	=Vector3.Zero;
+
+					for(int i=0;i < 8;i++)
+					{
+						//find next valid adjacent
+						while(i < 8 && !valid[i])
+						{
+							i++;
+						}
+						if(i >= 8)
+						{
+							break;
+						}
+
+						//note the i++
+//						edge1	=adjacent[i++] - (Vector3)VertexTypes.GetArrayField(v, x + (y * w), "Position");
+						Vector3	pos;
+						pos.X	=x * polySize;
+						pos.Z	=y * polySize;
+						pos.Y	=map[y, x];
+	
+						edge1	=adjacent[i++] - pos;
+
+						//find next valid adjacent
+						while(i < 8 && !valid[i])
+						{
+							i++;
+						}
+						if(i >= 8)
+						{
+							break;
+						}
+//						edge2	=adjacent[i] - (Vector3)VertexTypes.GetArrayField(v, x + (y * w), "Position");
+						edge2	=adjacent[i] - pos;
+
+						norm	+=Vector3.Cross(edge2, edge1);
+					}
+
+					//average
+					norm.Normalize();
+
+					ret[y, x]	=norm;
+				}
+			}
+
+			//average outside edges
+			for(int x=0;x < w;x++)
+			{
+				Vector3	norm1	=ret[0, x];
+				Vector3	norm2	=ret[h - 1, x];
+
+				Vector3	average	=norm1 + norm2;
+
+				average.Normalize();
+
+				//terrain is convex, but you never know
+				Debug.Assert(!float.IsNaN(average.X));
+				Debug.Assert(!float.IsNaN(average.Y));
+				Debug.Assert(!float.IsNaN(average.Z));
+
+				ret[0, x]		=average;
+				ret[h - 1, x]	=average;
+			}
+			for(int y=0;y < h;y++)
+			{
+				Vector3	norm1	=ret[y, 0];
+				Vector3	norm2	=ret[y, w - 1];
+
+				Vector3	average	=norm1 + norm2;
+
+				average.Normalize();
+
+				//terrain is convex, but you never know
+				Debug.Assert(!float.IsNaN(average.X));
+				Debug.Assert(!float.IsNaN(average.Y));
+				Debug.Assert(!float.IsNaN(average.Z));
+
+				ret[y, 0]		=average;
+				ret[y, w - 1]	=average;
+			}
+			return	ret;
 		}
 	}
 }

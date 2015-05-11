@@ -95,15 +95,16 @@ namespace TerrainLib
 		BoundingBox	mBounds, mCellBounds;
 
 		//timings
-		long	mPosTime, mNormTime, mCopyTime;
-		long	mTexFactTime, mIndexTime, mBufferTime;
+		long	mPosTime, mTexFactTime, mIndexTime, mBufferTime;
 
 		const float	SteepnessThreshold	=0.7f;
 
 
 		//2D float array
 		public HeightMap(float			[,]data,
+						 Vector3		[,]norms,
 						 Point			coord,
+						 int			chunkDim,
 						 int			w,
 						 int			h,
 						 int			actualWidth,
@@ -127,7 +128,7 @@ namespace TerrainLib
 			//verts need pos, norm, 4 scalars for tex percentage,
 			//and 4 intish lookups into tex table (col0)
 			Type	vType	=typeof(VPosNormTex04Col0);
-			Array	varray	=Array.CreateInstance(vType, w * h);
+			Array	varray	=Array.CreateInstance(vType, actualWidth * actualHeight);
 
 			Stopwatch	sw	=new Stopwatch();
 			sw.Start();
@@ -136,29 +137,45 @@ namespace TerrainLib
 			bool	bVToggle	=false;
 			
 			//load the height map
+			int	startY	=(chunkDim * coord.Y);
+			int	startX	=(chunkDim * coord.X);
+			int	endY	=(chunkDim * (coord.Y + 1)) + 1;
+			int	endX	=(chunkDim * (coord.X + 1)) + 1;
+
 			Vector3	min	=Vector3.One * float.MaxValue;
 			Vector3	max	=Vector3.One * float.MinValue;
-			for(int y=0;y < h;y++)
+			for(int y=startY;y < endY;y++)
 			{
 				float	vCoord	=(bVToggle)? 1f : 0f;
 
-				for(int x=0;x < w;x++)
+				for(int x=startX;x < endX;x++)
 				{
 					float	uCoord	=(bUToggle)? 1f : 0f;
 
 					Vector3	pos	=Vector3.Zero;
 					int		dex	=x + (y * w);
 
-					pos.X	=(float)(x - 1);
-					pos.Z	=(float)(y - 1);
+					pos.X	=(float)(x - startX);
+					pos.Z	=(float)(y - startY);
 					pos.Y	=data[y, x];
 
 					pos.X	*=polySize;
 					pos.Z	*=polySize;
 
-					VertexTypes.SetArrayField(varray, dex, "Position", pos);
-					VertexTypes.SetArrayField(varray, dex, "TexCoord0",
+					Vector3	v3Norm	=norms[y, x];
+
+					Half4	norm;
+					norm.X	=v3Norm.X;
+					norm.Y	=v3Norm.Y;
+					norm.Z	=v3Norm.Z;
+					norm.W	=0f;
+
+					int	setDex	=(x - startX) + ((y - startY) * actualWidth);
+
+					VertexTypes.SetArrayField(varray, setDex, "Position", pos);
+					VertexTypes.SetArrayField(varray, setDex, "TexCoord0",
 						new Half4(uCoord, vCoord, 0f, 0f));
+					VertexTypes.SetArrayField(varray, setDex, "Normal", norm);
 
 					bUToggle	=!bUToggle;
 
@@ -202,31 +219,9 @@ namespace TerrainLib
 			mBounds.Maximum	=max;
 			mBounds.Minimum	=min;
 
-			//build normals with the full set
 			sw.Reset();
 			sw.Start();
-			BuildNormals(varray, w, h);
-			sw.Stop();
-			mNormTime	=sw.ElapsedTicks;
-
-			//reduce down to the active set
-			sw.Reset();
-			sw.Start();
-			Array	actualVerts	=Array.CreateInstance(vType, mNumVerts);
-			int	cnt	=0;
-			for(int y=1;y < (actualHeight + 1);y++)
-			{
-				for(int x=1;x < (actualWidth + 1);x++)
-				{
-					actualVerts.SetValue(varray.GetValue((y * w) + x), cnt++);
-				}
-			}
-			sw.Stop();
-			mCopyTime	=sw.ElapsedTicks;
-
-			sw.Reset();
-			sw.Start();
-			Array	triListVerts	=BreakIntoTriList(actualVerts, actualWidth, actualHeight);
+			Array	triListVerts	=BreakIntoTriList(varray, actualWidth, actualHeight);
 			sw.Stop();
 			mIndexTime	=sw.ElapsedTicks;
 
@@ -257,12 +252,10 @@ namespace TerrainLib
 		}
 
 
-		internal void GetTimings(out long pos, out long norm, out long copy,
-			out long texFact, out long index, out long buffer)
+		internal void GetTimings(out long pos, out long texFact,
+			out long index, out long buffer)
 		{
 			pos		=mPosTime;
-			norm	=mNormTime;
-			copy	=mCopyTime;
 			texFact	=mTexFactTime;
 			index	=mIndexTime;
 			buffer	=mBufferTime;
@@ -924,170 +917,6 @@ namespace TerrainLib
 
 			return	ret;
 		}*/
-
-
-		void BuildNormals(Array v, int w, int h)
-		{
-			Vector3	[]adjacent	=new Vector3[8];
-			bool	[]valid		=new bool[8];
-
-			//generate normals
-			for(int y=0;y < h;y++)
-			{
-				for(int x=0;x < w;x++)
-				{
-					//get the positions of the 8
-					//adjacent verts, numbered clockwise
-					//from upper right on a grid
-
-					//grab first 3 spots which
-					//are negative in Y
-					if(y > 0)
-					{
-						if(x > 0)
-						{
-//							adjacent[0]	=v[(x - 1) + ((y - 1) * w)].Position;
-							adjacent[0]	=(Vector3)VertexTypes.GetArrayField(v, (x - 1) + ((y - 1) * w), "Position");
-							valid[0]	=true;
-						}
-						else
-						{
-							valid[0]	=false;
-						}
-
-//						adjacent[1]	=v[x + ((y - 1) * w)].Position;
-						adjacent[1]	=(Vector3)VertexTypes.GetArrayField(v, x + ((y - 1) * w), "Position");
-						valid[1]	=true;
-
-						if(x < (w - 1))
-						{
-//							adjacent[2]	=v[(x + 1) + ((y - 1) * w)].Position;
-							adjacent[2]	=(Vector3)VertexTypes.GetArrayField(v, (x + 1) + ((y - 1) * w), "Position");
-							valid[2]	=true;
-						}
-						else
-						{
-							valid[2]	=false;
-						}
-					}
-					else
-					{
-						valid[0]	=false;
-						valid[1]	=false;
-						valid[2]	=false;
-					}
-
-					//next two are to the sides of
-					//the calcing vert in X
-					if(x > 0)
-					{
-//						adjacent[7]	=v[(x - 1) + (y * w)].Position;
-						adjacent[7]	=(Vector3)VertexTypes.GetArrayField(v, (x - 1) + (y * w), "Position");
-						valid[7]	=true;
-					}
-					else
-					{
-						valid[7]	=false;
-					}
-
-					if(x < (w - 1))
-					{
-//						adjacent[3]	=v[(x + 1) + (y * w)].Position;
-						adjacent[3]	=(Vector3)VertexTypes.GetArrayField(v, (x + 1) + (y * w), "Position");
-						valid[3]	=true;
-					}
-					else
-					{
-						valid[3]	=false;
-					}
-
-					//next three are positive in Y
-					if(y < (h - 1))
-					{
-						if(x > 0)
-						{
-//							adjacent[6]	=v[(x - 1) + ((y + 1) * w)].Position;
-							adjacent[6]	=(Vector3)VertexTypes.GetArrayField(v, (x - 1) + ((y + 1) * w), "Position");
-							valid[6]	=true;
-						}
-						else
-						{
-							valid[6]	=false;
-						}
-
-//						adjacent[5]	=v[x + ((y + 1) * w)].Position;
-						adjacent[5]	=(Vector3)VertexTypes.GetArrayField(v, x + ((y + 1) * w), "Position");
-						valid[5]	=true;
-
-						if(x < (w - 1))
-						{
-//							adjacent[4]	=v[(x + 1) + ((y + 1) * w)].Position;
-							adjacent[4]	=(Vector3)VertexTypes.GetArrayField(v, (x + 1) + ((y + 1) * w), "Position");
-							valid[4]	=true;
-						}
-						else
-						{
-							valid[4]	=false;
-						}
-					}
-					else
-					{
-						valid[5]	=false;
-						valid[6]	=false;
-						valid[4]	=false;
-					}
-
-					//use the edges between adjacents
-					//to determine a good normal
-					Vector3	norm, edge1, edge2;
-
-					norm	=Vector3.Zero;
-
-					for(int i=0;i < 8;i++)
-					{
-						//find next valid adjacent
-						while(i < 8 && !valid[i])
-						{
-							i++;
-						}
-						if(i >= 8)
-						{
-							break;
-						}
-
-						//note the i++
-//						edge1	=adjacent[i++] - v[x + (y * w)].Position;
-						edge1	=adjacent[i++] - (Vector3)VertexTypes.GetArrayField(v, x + (y * w), "Position");
-
-						//find next valid adjacent
-						while(i < 8 && !valid[i])
-						{
-							i++;
-						}
-						if(i >= 8)
-						{
-							break;
-						}
-//						edge2	=adjacent[i] - v[x + (y * w)].Position;
-						edge2	=adjacent[i] - (Vector3)VertexTypes.GetArrayField(v, x + (y * w), "Position");
-
-						norm	+=Vector3.Cross(edge2, edge1);
-					}
-
-					//average
-					norm.Normalize();
-
-					Half4	halfNorm;
-					halfNorm.X	=norm.X;
-					halfNorm.Y	=norm.Y;
-					halfNorm.Z	=norm.Z;
-					halfNorm.W	=0f;
-
-//					v[x + (y * w)].Normal	=halfNorm;
-					VertexTypes.SetArrayField(v, x + (y * w), "Normal", halfNorm);
-				}
-			}
-		}
 
 
 		public void Draw(DeviceContext dc, MatLib mats,

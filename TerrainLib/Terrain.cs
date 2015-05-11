@@ -39,6 +39,7 @@ namespace TerrainLib
 
 		//the raw data, might be very large
 		float	[,]mHeightData;
+		Vector3	[,]mNormals;
 
 		//grid of heights
 		//only the nearby cells are kept in memory
@@ -63,12 +64,13 @@ namespace TerrainLib
 
 
 		//set up textures and such
-		public Terrain(float [,]data, int polySize,
-			int chunkDim, int cellGridMax)
+		public Terrain(float [,]data, Vector3 [,]norms,
+			int polySize, int chunkDim, int cellGridMax)
 		{
 			mChunkDim	=chunkDim;
 			mHeightData	=data;
 			mPolySize	=polySize;
+			mNormals	=norms;
 
 			mStreamMaps	=new HeightMap[cellGridMax, cellGridMax];
 		}
@@ -286,7 +288,7 @@ namespace TerrainLib
 					cs.mGD			=bs.mGD;
 
 					//limit to MaxThreads
-					while(mThreadsActive >= 1)//MaxThreads)
+					while(mThreadsActive >= MaxThreads)
 					{
 						Thread.Sleep(2);
 						GC.Collect();
@@ -313,34 +315,18 @@ namespace TerrainLib
 				return;
 			}
 
-			float	[,]chunk	=new float[mChunkDim + 3, mChunkDim + 3];
-
 			int	w	=mHeightData.GetLength(1);
 			int	h	=mHeightData.GetLength(0);
 
-			int	startY	=(mChunkDim * cs.mChunkY);
-			int	startX	=(mChunkDim * cs.mChunkX);
-			int	endY	=(mChunkDim * (cs.mChunkY + 1)) + 2;
-			int	endX	=(mChunkDim * (cs.mChunkX + 1)) + 2;
-
-			for(int y=startY, t=0;y < endY;y++,t++)
-			{
-				for(int x=startX, s=0;x < endX;x++,s++)
-				{
-					chunk[t, s]	=mHeightData[y, x];
-				}
-			}
-
 			Point	coord	=new Point(cs.mChunkX, cs.mChunkY);
 
-			HeightMap	map	=new HeightMap(chunk, coord,
-				endX - startX, endY - startY,
+			HeightMap	map	=new HeightMap(mHeightData, mNormals,
+				coord, mChunkDim,
+				w, h,
 				mChunkDim, mChunkDim,
 				mPolySize, mTransitionHeight,
 				mTexData,
 				cs.mGD);
-
-			chunk	=null;
 
 //			Vector3	pos	=Vector3.Zero;
 //			pos.X	=cs.mChunkX * (mChunkDim) * mPolySize;
@@ -365,13 +351,13 @@ namespace TerrainLib
 //		}
 
 
-		public void GetTimings(out long pos, out long norm, out long copy,
-			out long texFact, out long index, out long buffer)
+		public void GetTimings(out long pos, out long texFact,
+			out long index, out long buffer)
 		{
-			long	posAccum, normAccum, copyAccum;
-			long	tfAccum, indAccum, bufAccum;
+			long	posAccum, tfAccum;
+			long	indAccum, bufAccum;
 
-			pos	=norm	=copy	=texFact	=index	=buffer	=0;
+			pos	=texFact	=index	=buffer	=0;
 
 			foreach(HeightMap hm in mStreamMaps)
 			{
@@ -379,12 +365,10 @@ namespace TerrainLib
 				{
 					continue;
 				}
-				hm.GetTimings(out posAccum, out normAccum, out copyAccum,
-					out tfAccum, out indAccum, out bufAccum);
+				hm.GetTimings(out posAccum, out tfAccum,
+					out indAccum, out bufAccum);
 
 				pos		+=posAccum;
-				norm	+=normAccum;
-				copy	+=copyAccum;
 				texFact	+=tfAccum;
 				index	+=indAccum;
 				buffer	+=bufAccum;
