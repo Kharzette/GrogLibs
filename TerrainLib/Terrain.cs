@@ -245,6 +245,13 @@ namespace TerrainLib
 
 			int	inRange	=bs.mDestroyAt - 1;
 
+			//clamp inrange within the size of the grid
+			int	smallDim	=Math.Min(w, h);
+
+			smallDim	/=mChunkDim;
+
+			inRange	=Math.Min(inRange, smallDim);
+
 			mThreadCounter	=1 + 2 * inRange;
 			mThreadsActive	=0;
 

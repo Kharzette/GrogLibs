@@ -298,6 +298,13 @@ namespace TerrainLib
 			int	w	=data.GetLength(1);
 			int	h	=data.GetLength(0);
 
+			int	smallDim	=Math.Min(w, h);
+
+			if(depth > (smallDim / 2))
+			{
+				depth	=(smallDim / 2) - 1;
+			}
+
 			//top edge
 			for(int d=0;d < depth;d++)
 			{
