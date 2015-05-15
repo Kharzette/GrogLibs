@@ -383,51 +383,6 @@ namespace TerrainLib
 		}
 
 
-		void InitEffect(MatLib mat)
-		{
-			/*
-			mFXTerrain	=cm.Load<Effect>("Shaders/Terrain");
-
-			//set up shader stuff that won't change for now
-			Vector4	colr	=Vector4.Zero;
-			colr.X	=1.0f;
-			colr.Y	=1.0f;
-			colr.Z	=1.0f;
-			colr.W	=1.0f;
-			mFXTerrain.Parameters["mLightColor"].SetValue(colr);
-
-			colr.X	=0.2f;
-			colr.Y	=0.2f;
-			colr.Z	=0.2f;
-			colr.W	=1.0f;
-			mFXTerrain.Parameters["mAmbientColor"].SetValue(colr);
-
-			Vector3	dir	=Vector3.Zero;
-			dir.X	=0.4f;
-			dir.Z	=-0.2f;
-			dir.Y	=-0.4f;
-			dir.Normalize();
-
-			mFXTerrain.Parameters["mLightDirection"].SetValue(dir);
-
-			if(mTEXAtlas != null)
-			{
-				mFXTerrain.Parameters["mTexAtlas"].SetValue(mTEXAtlas);
-			}
-
-			//fog stuff
-			Vector3	fogColor	=Vector3.Zero;
-			fogColor.X	=0.8f;
-			fogColor.Y	=0.9f;
-			fogColor.Z	=1.0f;
-			mFXTerrain.Parameters["mFogEnabled"].SetValue(1.0f);
-			mFXTerrain.Parameters["mFogStart"].SetValue(500.0f);
-			mFXTerrain.Parameters["mFogEnd"].SetValue(1000.0f);
-			mFXTerrain.Parameters["mFogColor"].SetValue(fogColor);
-			mFXTerrain.Parameters["mEyePos"].SetValue(Vector3.Zero);*/
-		}
-
-
 		public void Draw(GraphicsDevice gd, MatLib mats, BoundingFrustum frust)
 		{
 			foreach(HeightMap m in mStreamMaps)
@@ -450,25 +405,6 @@ namespace TerrainLib
 					SetFogEnabled(true);
 				}*/
 			}
-		}
-
-
-		public void DrawWorldY(GraphicsDevice gd, BoundingFrustum frust)
-		{
-			/*
-			mFXTerrain.CurrentTechnique	=mFXTerrain.Techniques["WorldY"];
-
-			foreach(HeightMap m in mStreamMaps)
-			{
-				if(m == null)
-				{
-					continue;
-				}
-				if(m.InFrustum(frust))
-				{
-					m.Draw(gd, mFXTerrain);
-				}
-			}*/
 		}
 
 
@@ -506,59 +442,11 @@ namespace TerrainLib
 		}
 
 
-		public void UpdateLightColor(Vector4 lightColor)
-		{
-//			mFXTerrain.Parameters["mLightColor"].SetValue(lightColor);
-		}
-
-
-		public void UpdateLightDirection(Vector3 lightDir)
-		{
-//			mFXTerrain.Parameters["mLightDirection"].SetValue(lightDir);
-		}
-
-
-		public void UpdateAmbientColor(Vector4 ambient)
-		{
-//			mFXTerrain.Parameters["mAmbientColor"].SetValue(ambient);
-		}
-
-
 		public void UpdatePosition(Vector3 pos, MatLib mats)
 		{
 			Matrix	mat	=Matrix.Translation(pos);
 
 			mLevelPos	=pos;
-		}
-
-
-		public void SetFogDetails(float fogStart, float fogEnd, Vector3 col)
-		{
-//			mFXTerrain.Parameters["mFogStart"].SetValue(fogStart);
-//			mFXTerrain.Parameters["mFogEnd"].SetValue(fogEnd);
-//			mFXTerrain.Parameters["mFogColor"].SetValue(col);
-		}
-
-
-		public void SetSkyFogDetails(float fogStart, float fogEnd, Vector3 col0, Vector3 col1)
-		{
-//			mFXTerrain.Parameters["mFogStart"].SetValue(fogStart);
-//			mFXTerrain.Parameters["mFogEnd"].SetValue(fogEnd);
-//			mFXTerrain.Parameters["mSkyGradient0"].SetValue(col0);
-//			mFXTerrain.Parameters["mSkyGradient1"].SetValue(col1);
-		}
-
-
-		public void SetFogEnabled(bool bFog)
-		{
-			if(bFog)
-			{
-//				mFXTerrain.Parameters["mFogEnabled"].SetValue(1.0f);
-			}
-			else
-			{
-//				mFXTerrain.Parameters["mFogEnabled"].SetValue(0.0f);
-			}
 		}
 	}
 }

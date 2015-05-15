@@ -5,16 +5,53 @@
 #define	MAX_TERRAIN_TEX		16
 #endif
 
-//local matrix
+//local matrix for terrain chunks
 float4x4	mLocal;
 
-float4	mAtlasUVData[MAX_TERRAIN_TEX];
-float	mAtlasTexScale[MAX_TERRAIN_TEX];
+//fog stuff
+float	mFogEnabled;
+float	mFogStart;
+float	mFogEnd;
+
+//sky colors
+float3	mSkyGradient0;
+float3	mSkyGradient1;
+
+//texturing info
+float4	mAtlasUVData[MAX_TERRAIN_TEX];		//each tex's world to tex
+float	mAtlasTexScale[MAX_TERRAIN_TEX];	//scale factor for each tex
 
 #include "Types.fxh"
 #include "CommonFunctions.fxh"
 #include "Trilight.fxh"
 
+
+//Compute fog factor, swiped from basic effect
+float ComputeFogFactor(float d)
+{
+    return clamp((d - mFogStart) / (mFogEnd - mFogStart), 0, 1) * mFogEnabled;
+}
+
+
+VVPosTex04Tex14 SkyBoxVS(VPosNormTex0 input)
+{
+	VVPosTex04Tex14	output;
+	
+	float4x4	viewProj	=mul(mView, mProjection);
+
+	//worldpos
+	float4	worldPos	=mul(float4(input.Position, 1), mWorld);
+
+	output.Position			=mul(worldPos, viewProj);
+	output.TexCoord0.xyz	=mul(input.Normal.xyz, mWorld);	
+	output.TexCoord1.xyz	=worldPos;
+
+	output.TexCoord0.w	=0;
+	output.TexCoord1.w	=0;
+	
+	//return the output structure
+	return	output;
+}
 
 //worldpos and normal and texture factors
 VVPosTex04Tex14Tex24Tex34 WNormWPosTexFactVS(VPosNormTex04Col0 input)
@@ -33,7 +70,8 @@ VVPosTex04Tex14Tex24Tex34 WNormWPosTexFactVS(VPosNormTex04Col0 input)
 	output.TexCoord2		=input.TexCoord0;	//4 texture factors (adds to 1)
 	output.TexCoord3		=input.Color * 256;	//4 texture lookups (scale up to byte)
 
-	output.TexCoord0.w	=0;
+	//store fog factor
+	output.TexCoord0.w	=ComputeFogFactor(length(worldPos - mEyePos));
 	output.TexCoord1.w	=0;
 	
 	//return the output structure
@@ -51,6 +89,9 @@ float4	TriTexFact4PS(VVPosTex04Tex14Tex24Tex34 input) : SV_Target
 
 	//texcoord2 has texture factor
 #if defined(SM2)
+	//the ifs are too complex for SM2 to handle
+	//so just do all the fetching and the zero
+	//factor removes the ones that are not affecting
 	float2	uv	=worldXZ * mAtlasTexScale[input.TexCoord3.x];
 
 	//texture atlas offsets and scales
@@ -142,6 +183,7 @@ float4	TriTexFact4PS(VVPosTex04Tex14Tex24Tex34 input) : SV_Target
 #endif
 
 	float3	pnorm	=input.TexCoord0.xyz;
+	float	fog		=input.TexCoord0.w;
 
 	pnorm	=normalize(pnorm);
 
@@ -149,6 +191,10 @@ float4	TriTexFact4PS(VVPosTex04Tex14Tex24Tex34 input) : SV_Target
 							mLightColor0, mLightColor1, mLightColor2);
 
 	texColor.xyz	*=triLight;
+
+	float3	skyColor	=CalcSkyColorGradient(input.TexCoord1.xyz, mSkyGradient0, mSkyGradient1);
+
+	texColor.xyz	=lerp(texColor.xyz, skyColor, fog);
 
 	return	texColor;
 }
@@ -267,6 +313,13 @@ float4	TriCelTexFact4PS(VVPosTex04Tex14Tex24Tex34 input) : SV_Target
 	return	texColor;
 }
 
+float4 SkyGradientFogPS(VVPosTex04Tex14 input) : SV_Target
+{
+	float3	skyColor	=CalcSkyColorGradient(input.TexCoord1.xyz, mSkyGradient0, mSkyGradient1);
+
+	return	float4(skyColor, 1);
+}
+
 
 technique10 TriTerrain
 {     
@@ -309,5 +362,27 @@ technique10 TriCelTerrain
 #endif
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
 		SetDepthStencilState(EnableDepth, 0);
+	}
+}
+
+technique10 SkyGradient
+{
+	pass P0
+	{
+#if defined(SM5)
+		VertexShader	=compile vs_5_0 SkyBoxVS();
+		PixelShader		=compile ps_5_0 SkyGradientFogPS();
+#elif defined(SM41)
+		VertexShader	=compile vs_4_1 SkyBoxVS();
+		PixelShader		=compile ps_4_1 SkyGradientFogPS();
+#elif defined(SM4)
+		VertexShader	=compile vs_4_0 SkyBoxVS();
+		PixelShader		=compile ps_4_0 SkyGradientFogPS();
+#else
+		VertexShader	=compile vs_4_0_level_9_3 SkyBoxVS();
+		PixelShader		=compile ps_4_0_level_9_3 SkyGradientFogPS();
+#endif
+		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
+		SetDepthStencilState(DisableDepthWrite, 0);
 	}
 }

@@ -200,7 +200,6 @@ float3 CalcSkyColorGradient(float3 worldPos, float3 skyGrad0, float3 skyGrad1)
 {
 	float3	upVec	=float3(0.0f, 1.0f, 0.0f);
 
-	//texcoord has world pos
 	float3	skyVec	=(worldPos - mEyePos);
 
 	skyVec	=normalize(skyVec);

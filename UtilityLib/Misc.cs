@@ -258,5 +258,18 @@ namespace UtilityLib
 
 			return	ret;
 		}
+
+
+		public static Color SystemColorToDXColor(System.Drawing.Color col)
+		{
+			Color	ret;
+
+			ret.R	=col.R;
+			ret.G	=col.G;
+			ret.B	=col.B;
+			ret.A	=col.A;
+
+			return	ret;
+		}
 	}
 }
