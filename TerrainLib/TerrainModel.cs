@@ -13,6 +13,8 @@ namespace TerrainLib
 
 		BoundingBox	mBox;
 
+		QuadTree	mTree;
+
 
 		public TerrainModel(float [,]grid, float polySize, int gridSize)
 		{
@@ -22,6 +24,11 @@ namespace TerrainLib
 
 			//calc box
 			CalcBounds();
+
+			//build tree
+			mTree	=new QuadTree();
+
+			mTree.Build(grid, mBox);
 		}
 
 

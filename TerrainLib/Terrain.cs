@@ -25,6 +25,7 @@ namespace TerrainLib
 	class BuildState
 	{
 		internal int			mDestroyAt;
+		internal int			mNumStreamThreads;
 		internal Point			mCellCoord;
 		internal GraphicsDevice	mGD;
 	}
@@ -59,8 +60,6 @@ namespace TerrainLib
 		bool	mbBuilding;
 		int		mThreadCounter;
 		int		mThreadsActive;
-
-		const int	MaxThreads	=2;
 
 
 		//set up textures and such
@@ -146,7 +145,7 @@ namespace TerrainLib
 		//streams in nearby stuff, and nukes stuff at
 		//destroyAt and beyond, should be called at a
 		//boundary crossing
-		public void BuildGrid(GraphicsDevice gd, int destroyAt)
+		public void BuildGrid(GraphicsDevice gd, int destroyAt, int threads)
 		{
 			if(mbBuilding)
 			{
@@ -155,9 +154,11 @@ namespace TerrainLib
 			mbBuilding	=true;
 
 			BuildState	bs	=new BuildState();
-			bs.mGD			=gd;
-			bs.mDestroyAt	=destroyAt;
-			bs.mCellCoord	=mCellCoord;
+
+			bs.mGD					=gd;
+			bs.mDestroyAt			=destroyAt;
+			bs.mNumStreamThreads	=threads;
+			bs.mCellCoord			=mCellCoord;
 
 			ThreadPool.QueueUserWorkItem(BuildGridCB, bs);
 		}
@@ -295,10 +296,10 @@ namespace TerrainLib
 					cs.mGD			=bs.mGD;
 
 					//limit to MaxThreads
-					while(mThreadsActive >= MaxThreads)
+					while(mThreadsActive >= bs.mNumStreamThreads)
 					{
 						Thread.Sleep(2);
-						GC.Collect();
+//						GC.Collect();
 					}
 
 					Interlocked.Increment(ref mThreadsActive);

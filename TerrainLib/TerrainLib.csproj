@@ -75,6 +75,8 @@
   <ItemGroup>
     <Compile Include="FractalFactory.cs" />
     <Compile Include="HeightMap.cs" />
+    <Compile Include="QuadNode.cs" />
+    <Compile Include="QuadTree.cs" />
     <Compile Include="Terrain.cs" />
     <Compile Include="TerrainModel.cs" />
   </ItemGroup>
