@@ -21,18 +21,20 @@ namespace UtilityLib
 		Buffer				mIB;
 		VertexBufferBinding	mVBBinding;
 		int					mNumIndexes;
+		bool				mb32BitIndexes;
 
 		Matrix				mWorld;
 		bool				mbHasNormals;
 
 
 		public PrimObject(Buffer vb, int vertSize,
-			Buffer ib, int numIndexes, bool bHasNormals)
+			Buffer ib, int numIndexes, bool bHasNormals, bool b32)
 		{
 			mVB				=vb;
 			mIB				=ib;
 			mNumIndexes		=numIndexes;
 			mbHasNormals	=bHasNormals;
+			mb32BitIndexes	=b32;
 
 			mVBBinding	=new VertexBufferBinding(mVB, vertSize, 0);
 
@@ -62,7 +64,15 @@ namespace UtilityLib
 				return;
 			}
 			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
-			dc.InputAssembler.SetIndexBuffer(mIB, Format.R16_UInt, 0);
+
+			if(mb32BitIndexes)
+			{
+				dc.InputAssembler.SetIndexBuffer(mIB, Format.R32_UInt, 0);
+			}
+			else
+			{
+				dc.InputAssembler.SetIndexBuffer(mIB, Format.R16_UInt, 0);
+			}
 
 			dc.DrawIndexed(mNumIndexes, 0, 0);
 		}
@@ -151,7 +161,7 @@ namespace UtilityLib
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true);
+			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true, false);
 
 			return	po;
 		}
@@ -310,7 +320,7 @@ namespace UtilityLib
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true);
+			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true, false);
 
 			return	po;
 		}
@@ -394,7 +404,7 @@ namespace UtilityLib
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true);
+			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true, false);
 
 			return	po;
 		}
@@ -433,6 +443,26 @@ namespace UtilityLib
 			corners.Add(Vector3.UnitY * box.Maximum.Y + Vector3.UnitX * box.Minimum.X + Vector3.UnitZ * box.Minimum.Z);
 
 			return	CreateCube(gd, corners.ToArray());
+		}
+
+
+		public static PrimObject CreateCubes(Device gd, List<BoundingBox> boxes)
+		{
+			List<Vector3>	corners	=new List<Vector3>();
+
+			//cube corners
+			foreach(BoundingBox box in boxes)
+			{
+				corners.Add(Vector3.UnitY * box.Minimum.Y + Vector3.UnitX * box.Maximum.X + Vector3.UnitZ * box.Maximum.Z);
+				corners.Add(Vector3.UnitY * box.Minimum.Y + Vector3.UnitX * box.Minimum.X + Vector3.UnitZ * box.Maximum.Z);
+				corners.Add(Vector3.UnitY * box.Minimum.Y + Vector3.UnitX * box.Maximum.X + Vector3.UnitZ * box.Minimum.Z);
+				corners.Add(Vector3.UnitY * box.Minimum.Y + Vector3.UnitX * box.Minimum.X + Vector3.UnitZ * box.Minimum.Z);
+				corners.Add(Vector3.UnitY * box.Maximum.Y + Vector3.UnitX * box.Maximum.X + Vector3.UnitZ * box.Maximum.Z);
+				corners.Add(Vector3.UnitY * box.Maximum.Y + Vector3.UnitX * box.Minimum.X + Vector3.UnitZ * box.Maximum.Z);
+				corners.Add(Vector3.UnitY * box.Maximum.Y + Vector3.UnitX * box.Maximum.X + Vector3.UnitZ * box.Minimum.Z);
+				corners.Add(Vector3.UnitY * box.Maximum.Y + Vector3.UnitX * box.Minimum.X + Vector3.UnitZ * box.Minimum.Z);
+			}
+			return	CreateCubes(gd, corners.ToArray());
 		}
 
 
@@ -555,7 +585,139 @@ namespace UtilityLib
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true);
+			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true, false);
+
+			return	po;
+		}
+
+
+		public static PrimObject CreateCubes(Device gd, Vector3 []corners)
+		{
+			VertexPositionNormalTexture	[]vpnt	=
+				new VertexPositionNormalTexture[corners.Length * 3];
+
+			for(int i=0;i < (corners.Length / 8);i++)
+			{
+				int	idx		=i * 8;
+				int	vidx	=i * 24;
+
+				//cube corners
+				Vector3	upperTopLeft	=corners[0 + idx];
+				Vector3	upperTopRight	=corners[1 + idx];
+				Vector3	upperBotLeft	=corners[2 + idx];
+				Vector3	upperBotRight	=corners[3 + idx];
+				Vector3	lowerTopLeft	=corners[4 + idx];
+				Vector3	lowerTopRight	=corners[5 + idx];
+				Vector3	lowerBotLeft	=corners[6 + idx];
+				Vector3	lowerBotRight	=corners[7 + idx];
+
+				//cube sides
+				//top
+				vpnt[0 + vidx].Position	=upperTopLeft;
+				vpnt[1 + vidx].Position	=upperTopRight;
+				vpnt[2 + vidx].Position	=upperBotRight;
+				vpnt[3 + vidx].Position	=upperBotLeft;
+
+				//bottom (note reversal)
+				vpnt[7 + vidx].Position	=lowerTopLeft;
+				vpnt[6 + vidx].Position	=lowerTopRight;
+				vpnt[5 + vidx].Position	=lowerBotRight;
+				vpnt[4 + vidx].Position	=lowerBotLeft;
+
+				//top z side
+				vpnt[11 + vidx].Position	=upperTopLeft;
+				vpnt[10 + vidx].Position	=upperTopRight;
+				vpnt[9 + vidx].Position		=lowerTopRight;
+				vpnt[8 + vidx].Position		=lowerTopLeft;
+
+				//bottom z side
+				vpnt[12 + vidx].Position	=upperBotLeft;
+				vpnt[13 + vidx].Position	=upperBotRight;
+				vpnt[14 + vidx].Position	=lowerBotRight;
+				vpnt[15 + vidx].Position	=lowerBotLeft;
+
+				//x side
+				vpnt[16 + vidx].Position	=upperTopLeft;
+				vpnt[17 + vidx].Position	=upperBotLeft;
+				vpnt[18 + vidx].Position	=lowerBotLeft;
+				vpnt[19 + vidx].Position	=lowerTopLeft;
+
+				//-x side
+				vpnt[23 + vidx].Position	=upperTopRight;
+				vpnt[22 + vidx].Position	=upperBotRight;
+				vpnt[21 + vidx].Position	=lowerBotRight;
+				vpnt[20 + vidx].Position	=lowerTopRight;
+
+				//normals
+				vpnt[0 + vidx].Normal	=Vector4.UnitY;
+				vpnt[1 + vidx].Normal	=Vector4.UnitY;
+				vpnt[2 + vidx].Normal	=Vector4.UnitY;
+				vpnt[3 + vidx].Normal	=Vector4.UnitY;
+
+				vpnt[4 + vidx].Normal	=-Vector4.UnitY;
+				vpnt[5 + vidx].Normal	=-Vector4.UnitY;
+				vpnt[6 + vidx].Normal	=-Vector4.UnitY;
+				vpnt[7 + vidx].Normal	=-Vector4.UnitY;
+
+				vpnt[8 + vidx].Normal	=Vector4.UnitZ;
+				vpnt[9 + vidx].Normal	=Vector4.UnitZ;
+				vpnt[10 + vidx].Normal	=Vector4.UnitZ;
+				vpnt[11 + vidx].Normal	=Vector4.UnitZ;
+
+				vpnt[12 + vidx].Normal	=-Vector4.UnitZ;
+				vpnt[13 + vidx].Normal	=-Vector4.UnitZ;
+				vpnt[14 + vidx].Normal	=-Vector4.UnitZ;
+				vpnt[15 + vidx].Normal	=-Vector4.UnitZ;
+
+				vpnt[16 + vidx].Normal	=Vector4.UnitX;
+				vpnt[17 + vidx].Normal	=Vector4.UnitX;
+				vpnt[18 + vidx].Normal	=Vector4.UnitX;
+				vpnt[19 + vidx].Normal	=Vector4.UnitX;
+
+				vpnt[20 + vidx].Normal	=-Vector4.UnitX;
+				vpnt[21 + vidx].Normal	=-Vector4.UnitX;
+				vpnt[22 + vidx].Normal	=-Vector4.UnitX;
+				vpnt[23 + vidx].Normal	=-Vector4.UnitX;
+
+				//texcoords
+				for(int j=0;j < 24;j+=4)
+				{
+					vpnt[vidx + j].TextureCoordinate		=Vector2.Zero;
+					vpnt[vidx + j + 1].TextureCoordinate	=Vector2.UnitX;
+					vpnt[vidx + j + 2].TextureCoordinate	=Vector2.UnitX + Vector2.UnitY;
+					vpnt[vidx + j + 3].TextureCoordinate	=Vector2.UnitY;
+				}
+			}
+			
+			BufferDescription	bd	=new BufferDescription(
+				24 * vpnt.Length,
+				ResourceUsage.Immutable, BindFlags.VertexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			Buffer	vb	=Buffer.Create(gd, vpnt, bd);
+
+			UInt32	[]indexes	=new UInt32[36 * (corners.Length / 8)];
+
+			int	idxx	=0;
+			for(int i=0;i < (36 * (corners.Length / 8));i+=6)
+			{
+				indexes[i]		=(UInt32)(idxx + 1);
+				indexes[i + 1]	=(UInt32)(idxx + 2);
+				indexes[i + 2]	=(UInt32)(idxx + 3);
+				indexes[i + 3]	=(UInt32)(idxx + 0);
+				indexes[i + 4]	=(UInt32)(idxx + 1);
+				indexes[i + 5]	=(UInt32)(idxx + 3);
+
+				idxx	+=4;
+			}
+
+			BufferDescription	id	=new BufferDescription(indexes.Length * 4,
+				ResourceUsage.Immutable, BindFlags.IndexBuffer,
+				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+			Buffer	ib	=Buffer.Create<UInt32>(gd, indexes, id);
+
+			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true, true);
 
 			return	po;
 		}
@@ -693,7 +855,7 @@ namespace UtilityLib
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, inds.ToArray(), id);
 
-			PrimObject	po	=new PrimObject(vb, 24, ib, inds.Count, true);
+			PrimObject	po	=new PrimObject(vb, 24, ib, inds.Count, true, false);
 
 			return	po;
 		}
@@ -820,7 +982,7 @@ namespace UtilityLib
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(vb, 16, ib, indexes.Length, true);
+			PrimObject	po	=new PrimObject(vb, 16, ib, indexes.Length, true, false);
 
 			return	po;
 		}
@@ -938,7 +1100,7 @@ namespace UtilityLib
 
 			Buffer	ib	=Buffer.Create<UInt16>(gd, indexes, id);
 
-			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true);
+			PrimObject	po	=new PrimObject(vb, 24, ib, indexes.Length, true, false);
 
 			return	po;
 		}

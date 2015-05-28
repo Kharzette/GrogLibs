@@ -26,5 +26,22 @@ namespace TerrainLib
 
 			mRoot.Build(data, bound);
 		}
+
+
+		//returns all node boxes, for debug draw
+		internal List<BoundingBox> GetAllBoxes()
+		{
+			List<BoundingBox>	ret	=new List<BoundingBox>();
+
+			mRoot.GetAllBoxes(ret);
+
+			return	ret;
+		}
+
+
+		internal void FixBoxHeights(float[,] heightGrid, float polySize)
+		{
+			mRoot.FixBoxHeights(heightGrid, polySize);
+		}
 	}
 }

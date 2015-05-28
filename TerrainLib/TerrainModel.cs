@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using SharpDX;
 
@@ -29,6 +30,18 @@ namespace TerrainLib
 			mTree	=new QuadTree();
 
 			mTree.Build(grid, mBox);
+		}
+
+
+		public List<BoundingBox> GetAllBoxes()
+		{
+			return	mTree.GetAllBoxes();
+		}
+
+
+		public void FixBoxHeights()
+		{
+			mTree.FixBoxHeights(mHeightGrid, mPolySize);
 		}
 
 

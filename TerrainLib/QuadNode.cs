@@ -55,6 +55,21 @@ namespace TerrainLib
 		}
 
 
+		internal void GetAllBoxes(List<BoundingBox> boxes)
+		{
+			if(mChildNorthEast == null)
+			{
+				boxes.Add(mBounds);
+				return;
+			}
+
+			mChildNorthWest.GetAllBoxes(boxes);
+			mChildNorthEast.GetAllBoxes(boxes);
+			mChildSouthWest.GetAllBoxes(boxes);
+			mChildSouthEast.GetAllBoxes(boxes);
+		}
+
+
 		void SplitHeights(float [,]data, out float[,]nwh,
 			out float[,]neh, out float[,]swh, out float[,]seh)
 		{
@@ -140,6 +155,47 @@ namespace TerrainLib
 			ne.Maximum.X	=bound.Maximum.X;
 			ne.Maximum.Z	=middle.Z;
 			ne.Maximum.Y	=bound.Maximum.Y;
+		}
+
+
+		internal void FixBoxHeights(float[,] heightGrid, float polySize)
+		{
+			if(mChildNorthEast == null)
+			{
+				int	startX	=(int)Math.Round(mBounds.Minimum.X / polySize);
+				int	startZ	=(int)Math.Round(mBounds.Minimum.Z / polySize);
+				int	endX	=(int)Math.Round(mBounds.Maximum.X / polySize);
+				int	endZ	=(int)Math.Round(mBounds.Maximum.Z / polySize);
+
+				float	minHeight	=float.MaxValue;
+				float	maxHeight	=float.MinValue;
+				for(int z=startZ;z <= endZ;z++)
+				{
+					for(int x=startX;x <= endX;x++)
+					{
+						float	height	=heightGrid[z, x];
+
+						if(height < minHeight)
+						{
+							minHeight	=height;
+						}
+						if(height > maxHeight)
+						{
+							maxHeight	=height;
+						}
+					}
+				}
+
+				mBounds.Minimum.Y	=minHeight;
+				mBounds.Maximum.Y	=maxHeight;
+
+				return;
+			}
+
+			mChildNorthWest.FixBoxHeights(heightGrid, polySize);
+			mChildNorthEast.FixBoxHeights(heightGrid, polySize);
+			mChildSouthWest.FixBoxHeights(heightGrid, polySize);
+			mChildSouthEast.FixBoxHeights(heightGrid, polySize);
 		}
 	}
 }
