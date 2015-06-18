@@ -76,6 +76,35 @@ namespace TerrainLib
 				get {	return mTextureName;	}
 				set {	mTextureName	=value;	}
 			}
+
+
+			internal void Write(BinaryWriter bw)
+			{
+				bw.Write(mBottomElevation);
+				bw.Write(mTopElevation);
+				bw.Write(mbSteep);
+				bw.Write(mScaleFactor);
+				bw.Write(mTextureName);
+
+				bw.Write(mScaleU);
+				bw.Write(mScaleV);
+				bw.Write(mUOffs);
+				bw.Write(mVOffs);
+			}
+
+			internal void Read(BinaryReader br)
+			{
+				mBottomElevation	=br.ReadSingle();
+				mTopElevation		=br.ReadSingle();
+				mbSteep				=br.ReadBoolean();
+				mScaleFactor		=br.ReadSingle();
+				mTextureName		=br.ReadString();
+
+				mScaleU	=br.ReadDouble();
+				mScaleV	=br.ReadDouble();
+				mUOffs	=br.ReadDouble();
+				mVOffs	=br.ReadDouble();
+			}
 		}
 
 		Buffer				mVBTerrain;

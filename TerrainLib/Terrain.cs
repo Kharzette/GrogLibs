@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -75,6 +76,12 @@ namespace TerrainLib
 		}
 
 
+		public Terrain(string fileName)
+		{
+			Load(fileName);
+		}
+
+
 		public void FreeAll()
 		{
 			while(mbBuilding)
@@ -111,9 +118,48 @@ namespace TerrainLib
 		}
 
 
+		public int GetCellGridMax()
+		{
+			int	w	=mHeightData.GetLength(1);
+			int	h	=mHeightData.GetLength(0);
+
+			Debug.Assert(w == h);
+
+			//set to nearest power of two
+			int	pow	=0;
+			while(w > 0)
+			{
+				w	>>=1;
+				pow++;
+			}
+			w	=1 << (pow - 1);
+
+			pow	=0;
+			while(h > 0)
+			{
+				h	>>=1;
+				pow++;
+			}
+			h	=1 << (pow - 1);
+
+			return	h / mChunkDim;
+		}
+
+
+		public int GetBoundary()
+		{
+			return	mChunkDim * mPolySize;
+		}
+
+
 		public void SetCellCoord(Point cellCoord)
 		{
 			mCellCoord	=cellCoord;
+
+			if(mStreamMaps == null)
+			{
+				return;
+			}
 
 			int	cw	=mStreamMaps.GetLength(1);
 			int	ch	=mStreamMaps.GetLength(0);
@@ -139,6 +185,117 @@ namespace TerrainLib
 		public int GetThreadCounter()
 		{
 			return	mThreadCounter;
+		}
+
+
+		void Load(string fileName)
+		{
+			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+			if(file == null)
+			{
+				return;
+			}
+			BinaryReader	br	=new BinaryReader(file);
+
+			UInt32	magic	=br.ReadUInt32();
+
+			if(magic != 0x7355A11F)
+			{
+				br.Close();
+				file.Close();
+				return;
+			}
+
+			mChunkDim			=br.ReadInt32();
+			mPolySize			=br.ReadInt32();
+			mTransitionHeight	=br.ReadSingle();
+
+			mTexData.Clear();
+
+			int	texCount	=br.ReadInt32();
+			for(int i=0;i < texCount;i++)
+			{
+				HeightMap.TexData	td	=new HeightMap.TexData();
+
+				td.Read(br);
+
+				mTexData.Add(td);
+			}
+
+			int	w	=br.ReadInt32();
+			int	h	=br.ReadInt32();
+
+			mHeightData	=new float[h, w];
+			mNormals	=new Vector3[h, w];
+
+			for(int y=0;y < h;y++)
+			{
+				for(int x=0;x < w;x++)
+				{
+					mHeightData[y, x]	=br.ReadSingle();
+				}
+			}
+
+			for(int y=0;y < h;y++)
+			{
+				for(int x=0;x < w;x++)
+				{
+					mNormals[y, x]	=FileUtil.ReadVector3(br);
+				}
+			}
+
+			br.Close();
+			file.Close();
+		}
+
+
+		public void Save(string fileName)
+		{
+			FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
+			BinaryWriter	bw		=new BinaryWriter(file);
+
+			//write a magic number identifying Terrain
+			UInt32	magic	=0x7355A11F;
+
+			bw.Write(magic);
+
+			bw.Write(mChunkDim);
+			bw.Write(mPolySize);
+			bw.Write(mTransitionHeight);
+
+			bw.Write(mTexData.Count);
+			foreach(HeightMap.TexData td in mTexData)
+			{
+				td.Write(bw);
+			}
+
+			int	w	=mHeightData.GetLength(1);
+			int	h	=mHeightData.GetLength(0);
+
+			bw.Write(w);
+			bw.Write(h);
+
+			for(int y=0;y < h;y++)
+			{
+				for(int x=0;x < w;x++)
+				{
+					bw.Write(mHeightData[y, x]);
+				}
+			}
+
+			Debug.Assert(mNormals.GetLength(1) == w);
+			Debug.Assert(mNormals.GetLength(0) == h);
+
+			for(int y=0;y < h;y++)
+			{
+				for(int x=0;x < w;x++)
+				{
+					FileUtil.WriteVector3(bw, mNormals[y, x]);
+				}
+			}
+
+			bw.Close();
+			file.Close();
 		}
 
 
@@ -170,6 +327,31 @@ namespace TerrainLib
 			if(bs == null)
 			{
 				return;
+			}
+
+			int	w	=mHeightData.GetLength(1);
+			int	h	=mHeightData.GetLength(0);
+
+			//set to nearest power of two
+			int	pow	=0;
+			while(w > 0)
+			{
+				w	>>=1;
+				pow++;
+			}
+			w	=1 << (pow - 1);
+
+			pow	=0;
+			while(h > 0)
+			{
+				h	>>=1;
+				pow++;
+			}
+			h	=1 << (pow - 1);
+
+			if(mStreamMaps == null)
+			{
+				mStreamMaps	=new HeightMap[h / mChunkDim, w / mChunkDim];
 			}
 
 			int	cw	=mStreamMaps.GetLength(1);
@@ -223,26 +405,6 @@ namespace TerrainLib
 			}
 
 			GC.Collect(1);
-
-			int	w	=mHeightData.GetLength(1);
-			int	h	=mHeightData.GetLength(0);
-
-			//set to nearest power of two
-			int	pow	=0;
-			while(w > 0)
-			{
-				w	>>=1;
-				pow++;
-			}
-			w	=1 << (pow - 1);
-
-			pow	=0;
-			while(h > 0)
-			{
-				h	>>=1;
-				pow++;
-			}
-			h	=1 << (pow - 1);
 
 			int	inRange	=bs.mDestroyAt - 1;
 
@@ -386,6 +548,11 @@ namespace TerrainLib
 
 		public void Draw(GraphicsDevice gd, MatLib mats, BoundingFrustum frust)
 		{
+			if(mStreamMaps == null)
+			{
+				return;
+			}
+
 			foreach(HeightMap m in mStreamMaps)
 			{
 				if(m == null)
