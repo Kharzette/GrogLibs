@@ -129,7 +129,7 @@ namespace UtilityLib
 
 			Vector3	camPos	=(focusPos + Vector3.Up * 32f) - aimVec * povDist;
 
-			mView		=Matrix.LookAtLH(camPos, focusPos, Vector3.Up);
+			mView			=Matrix.LookAtLH(camPos, focusPos, Vector3.Up);
 			mViewInverse	=Matrix.Invert(mView);			
 			mFrust.Matrix	=mView * mProjection;
 		}
@@ -230,8 +230,6 @@ namespace UtilityLib
 				Matrix.RotationX(MathUtil.DegreesToRadians(pitch)) *
 				Matrix.RotationZ(MathUtil.DegreesToRadians(roll));
 
-//			mMATView	=Matrix.LookAtLH(new Vector3(0, 0, -1), new Vector3(0, 0, 0), Vector3.UnitY);
-
 			mViewInverse	=Matrix.Invert(mView);
 			
 			mFrust.Matrix	=mView * mProjection;
@@ -240,7 +238,7 @@ namespace UtilityLib
 
 		void InitializeMats()
 		{
-			mView		=Matrix.Translation(Vector3.Zero);
+			mView			=Matrix.Translation(Vector3.Zero);
 			mViewInverse	=Matrix.Invert(mView);
 
 			mProjection	=Matrix.PerspectiveFovLH(

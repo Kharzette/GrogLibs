@@ -33,6 +33,10 @@ namespace UtilityLib
 
 		GameCamera	mGCam;
 
+		//keep near and far clip distances
+		//need for camera rebuild on device lost or resize
+		float	mClipNear, mClipFar;
+
 		bool	mbResized;
 
 		//keep track of mouse pos during mouse look
@@ -64,7 +68,7 @@ namespace UtilityLib
 		}
 
 
-		public GraphicsDevice(string formTitle, FeatureLevel flevel)
+		public GraphicsDevice(string formTitle, FeatureLevel flevel, float near, float far)
 		{
 			mRForm	=new RenderForm(formTitle);
 
@@ -153,8 +157,11 @@ namespace UtilityLib
 
 			mRForm.UserResized	+=OnRenderFormResize;
 
+			mClipNear	=near;
+			mClipFar	=far;
+
 			mGCam	=new UtilityLib.GameCamera(mRForm.ClientSize.Width,
-				mRForm.ClientSize.Height, 16f/9f, 0.1f, 3000f);
+				mRForm.ClientSize.Height, 16f/9f, near, far);
 		}
 
 
@@ -211,7 +218,7 @@ namespace UtilityLib
 			mDC.Rasterizer.SetViewport(mScreenPort);
 			mDC.OutputMerger.SetTargets(mDSView, mBBView);
 
-			mGCam	=new UtilityLib.GameCamera(width, height, 16f/9f, 0.1f, 3000f);
+			mGCam	=new UtilityLib.GameCamera(width, height, 16f/9f, mClipNear, mClipFar);
 
 			//other stuff can now resize rendertargets and such
 			Misc.SafeInvoke(eResized, this);
@@ -241,6 +248,13 @@ namespace UtilityLib
 		{
 			mSChain.SetFullscreenState(bFull, null);
 			mbResized	=true;
+		}
+
+
+		public void SetClip(float near, float far)
+		{
+			mClipNear	=near;
+			mClipFar	=far;
 		}
 
 
