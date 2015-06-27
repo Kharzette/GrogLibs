@@ -249,10 +249,20 @@ namespace TerrainLib
 		}
 
 
-		public void Save(string fileName)
+		public bool Save(string fileName)
 		{
 			FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
+			if(file == null)
+			{
+				return	false;
+			}
+
 			BinaryWriter	bw		=new BinaryWriter(file);
+			if(bw == null)
+			{
+				file.Close();
+				return	false;
+			}
 
 			//write a magic number identifying Terrain
 			UInt32	magic	=0x7355A11F;
@@ -296,6 +306,8 @@ namespace TerrainLib
 
 			bw.Close();
 			file.Close();
+
+			return	true;
 		}
 
 
