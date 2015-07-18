@@ -259,7 +259,7 @@ namespace PathLib
 
 					Vector3	onPlane	=coordA - coordB * ratio;
 
-					float	angSum	=ComputeAngleSum(onPlane);
+					float	angSum	=Mathery.ComputeAngleSum(onPlane, mVerts);
 
 					if(angSum >= closeToTwoPi)
 					{
@@ -375,42 +375,6 @@ namespace PathLib
 				indexes.Add((UInt32)(offset + i));
 				indexes.Add(offset);
 			}
-		}
-
-
-		//uses the add up the angles trick to determine point in poly
-		internal float ComputeAngleSum(Vector3 point)
-		{
-			float	dotSum	=0f;
-			for(int i=0;i < mVerts.Count;i++)
-			{
-				int	vIdx0	=i;
-				int	vIdx1	=((i + 1) % mVerts.Count);
-
-				Vector3	v1	=mVerts[vIdx0] - point;
-				Vector3	v2	=mVerts[vIdx1] - point;
-
-				float	len1	=v1.Length();
-				float	len2	=v2.Length();
-
-				if((len1 * len2) < 0.0001f)
-				{
-					return	MathUtil.TwoPi;
-				}
-
-				v1	/=len1;
-				v2	/=len2;
-
-				float	dot	=Vector3.Dot(v1, v2);
-
-				if(dot > 1f)
-				{
-					dot	=1f;
-				}
-
-				dotSum	+=(float)Math.Acos(dot);
-			}
-			return	dotSum;
 		}
 	}
 }

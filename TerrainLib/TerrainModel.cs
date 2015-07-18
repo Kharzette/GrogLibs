@@ -57,6 +57,12 @@ namespace TerrainLib
 		}
 
 
+		public bool Trace(Vector3 start, Vector3 end, out Vector3 hit)
+		{
+			return	mTree.Trace(start, end, out hit);
+		}
+
+
 		public Vector3 GetCenter()
 		{
 			int	halfGrid	=mGridSize / 2;

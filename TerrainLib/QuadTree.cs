@@ -11,7 +11,7 @@ namespace TerrainLib
 	{
 		QuadNode	mRoot;
 
-		internal static int	LeafPoints	=16;
+		internal static int	LeafPoints	=4;
 
 
 		internal QuadTree()
@@ -42,6 +42,14 @@ namespace TerrainLib
 		internal void FixBoxHeights(float[,] heightGrid, float polySize)
 		{
 			mRoot.FixBoxHeights(heightGrid, polySize);
+		}
+
+
+		internal bool Trace(Vector3 start, Vector3 end, out Vector3 hit)
+		{
+			Ray	ray	=new Ray(start, end - start);
+
+			return	mRoot.Trace(ref ray, out hit);
 		}
 	}
 }

@@ -97,7 +97,7 @@ namespace TerrainLib
 
 						float	lowHeight	=lowLand + lowWater;
 
-						if(i < iterations && (land - lowLand) < -0.0001f && (land - lowLand) > 0.0001f)
+						if(i < iterations && ((land - lowLand) > 0.0001f))
 						{
 							data[y, x]	-=solubility * Math.Abs(land - lowLand);
 						}

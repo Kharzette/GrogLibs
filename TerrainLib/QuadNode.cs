@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Text;
 using SharpDX;
+using UtilityLib;
 
 
 namespace TerrainLib
@@ -103,7 +104,7 @@ namespace TerrainLib
 			{
 				for(int x=(halfW - 1);x < w;x++)
 				{
-					nwh[y, x - halfW + 1]	=data[y, x];
+					neh[y, x - halfW + 1]	=data[y, x];
 				}
 			}
 
@@ -112,7 +113,7 @@ namespace TerrainLib
 			{
 				for(int x=0;x < halfW;x++)
 				{
-					nwh[y - halfH + 1, x]	=data[y, x];
+					swh[y - halfH + 1, x]	=data[y, x];
 				}
 			}
 
@@ -121,7 +122,7 @@ namespace TerrainLib
 			{
 				for(int x=(halfW - 1);x < w;x++)
 				{
-					nwh[y - halfH + 1, x - halfW + 1]	=data[y, x];
+					seh[y - halfH + 1, x - halfW + 1]	=data[y, x];
 				}
 			}
 		}
@@ -196,6 +197,138 @@ namespace TerrainLib
 			mChildNorthEast.FixBoxHeights(heightGrid, polySize);
 			mChildSouthWest.FixBoxHeights(heightGrid, polySize);
 			mChildSouthEast.FixBoxHeights(heightGrid, polySize);
+		}
+
+
+		bool TryCollide(List<Vector3> tri, ref Ray ray, out Vector3 hit)
+		{
+			Vector3	norm1, norm2;
+			float	dist1, dist2;
+
+			hit	=Vector3.Zero;
+
+			Vector3	start	=ray.Position;
+			Vector3	end		=ray.Position + ray.Direction;
+
+			Mathery.PlaneFromVerts(tri, out norm1, out dist1);
+
+			//check facing
+			if(norm1.dot(ray.Direction) >= 0f)
+			{
+				return	false;
+			}
+			float	d1	=norm1.dot(start) - dist1;
+			float	d2	=norm1.dot(end) - dist1;
+
+			if(d1 > 0 && d2 > 0)
+			{
+				return	false;
+			}
+
+			if(d1 < 0 && d2 < 0)
+			{
+				return	false;
+			}
+
+			if(d1 == 0 && d2 == 0)
+			{
+				//exactly along the plane?  possible I guess
+				//set a breakpoint here
+				return	false;
+			}
+
+			float	ratio	=d1 / (d1 - d2);
+
+			hit	=start + ratio * (end - start);
+
+			//check inside
+			float	closeToTwoPi	=6.2f;
+			float	angSum			=Mathery.ComputeAngleSum(hit, tri);
+			if(angSum >= closeToTwoPi)
+			{
+				return	true;
+			}
+			return	false;
+		}
+
+
+		internal bool Trace(ref Ray ray, out Vector3 hit)
+		{
+			if(!mBounds.Intersects(ref ray))
+			{
+				hit	=Vector3.Zero;
+				return	false;
+			}
+
+			if(mChildNorthWest == null)
+			{
+				//intersect heights
+				List<Vector3>	tri1	=new List<Vector3>();
+				tri1.Add(new Vector3(mBounds.Minimum.X, mHeights[0, 0], mBounds.Minimum.Z));
+				tri1.Add(new Vector3(mBounds.Maximum.X, mHeights[0, 1], mBounds.Minimum.Z));
+				tri1.Add(new Vector3(mBounds.Minimum.X, mHeights[1, 0], mBounds.Maximum.Z));
+
+				if(TryCollide(tri1, ref ray, out hit))
+				{
+					return	true;
+				}
+
+				tri1.Clear();
+				tri1.Add(new Vector3(mBounds.Maximum.X, mHeights[0, 1], mBounds.Minimum.Z));
+				tri1.Add(new Vector3(mBounds.Maximum.X, mHeights[1, 1], mBounds.Maximum.Z));
+				tri1.Add(new Vector3(mBounds.Minimum.X, mHeights[1, 0], mBounds.Maximum.Z));
+				if(TryCollide(tri1, ref ray, out hit))
+				{
+					return	true;
+				}
+				return	false;
+			}
+
+			Vector3	nw, ne, sw, se;
+
+			bool	nwHit	=mChildNorthWest.Trace(ref ray, out nw);
+			bool	neHit	=mChildNorthEast.Trace(ref ray, out ne);
+			bool	swHit	=mChildSouthWest.Trace(ref ray, out sw);
+			bool	seHit	=mChildSouthEast.Trace(ref ray, out se);
+
+			if(!(nwHit || neHit || swHit || seHit))
+			{
+				hit	=Vector3.Zero;
+				return	false;
+			}
+
+			float	nwDist	=(nwHit)? Vector3.Distance(nw, ray.Position) : float.MaxValue;
+			float	neDist	=(neHit)? Vector3.Distance(ne, ray.Position) : float.MaxValue;
+			float	swDist	=(swHit)? Vector3.Distance(sw, ray.Position) : float.MaxValue;
+			float	seDist	=(seHit)? Vector3.Distance(se, ray.Position) : float.MaxValue;
+
+			float	bestDist	=float.MaxValue;
+			Vector3	bestHit		=Vector3.Zero;
+
+			if(nwDist < bestDist)
+			{
+				bestDist	=nwDist;
+				bestHit		=nw;
+			}
+			if(neDist < bestDist)
+			{
+				bestDist	=neDist;
+				bestHit		=ne;
+			}
+			if(swDist < bestDist)
+			{
+				bestDist	=swDist;
+				bestHit		=sw;
+			}
+			if(seDist < bestDist)
+			{
+				bestDist	=seDist;
+				bestHit		=se;
+			}
+
+			hit	=bestHit;
+
+			return	true;
 		}
 	}
 }

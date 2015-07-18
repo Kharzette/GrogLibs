@@ -188,6 +188,12 @@ namespace TerrainLib
 		}
 
 
+		public TerrainModel ConstructModel()
+		{
+			return	new TerrainModel(mHeightData, mPolySize, mHeightData.GetLength(0));
+		}
+
+
 		void Load(string fileName)
 		{
 			Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);

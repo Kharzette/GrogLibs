@@ -1150,5 +1150,41 @@ namespace UtilityLib
 				rayEnd.Z	=box.Maximum.Z;
 			}
 		}
+
+
+		//uses the add up the angles trick to determine point in poly
+		public static float ComputeAngleSum(Vector3 point, List<Vector3> verts)
+		{
+			float	dotSum	=0f;
+			for(int i=0;i < verts.Count;i++)
+			{
+				int	vIdx0	=i;
+				int	vIdx1	=((i + 1) % verts.Count);
+
+				Vector3	v1	=verts[vIdx0] - point;
+				Vector3	v2	=verts[vIdx1] - point;
+
+				float	len1	=v1.Length();
+				float	len2	=v2.Length();
+
+				if((len1 * len2) < 0.0001f)
+				{
+					return	MathUtil.TwoPi;
+				}
+
+				v1	/=len1;
+				v2	/=len2;
+
+				float	dot	=Vector3.Dot(v1, v2);
+
+				if(dot > 1f)
+				{
+					dot	=1f;
+				}
+
+				dotSum	+=(float)Math.Acos(dot);
+			}
+			return	dotSum;
+		}
 	}
 }
