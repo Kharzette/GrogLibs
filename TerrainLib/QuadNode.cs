@@ -187,6 +187,12 @@ namespace TerrainLib
 					}
 				}
 
+				//don't allow a super flat box
+				if(minHeight == maxHeight)
+				{
+					maxHeight	+=0.1f;
+				}
+
 				mBounds.Minimum.Y	=minHeight;
 				mBounds.Maximum.Y	=maxHeight;
 

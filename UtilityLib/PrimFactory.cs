@@ -591,6 +591,27 @@ namespace UtilityLib
 		}
 
 
+		public static PrimObject CreateCubes(Device gd, List<Vector3> boxCenters, float size)
+		{
+			List<Vector3>	corners	=new List<Vector3>();
+
+			foreach(Vector3 center in boxCenters)
+			{
+				//cube corners
+				corners.Add(center - Vector3.UnitY * size + Vector3.UnitX * size + Vector3.UnitZ * size);
+				corners.Add(center - Vector3.UnitY * size - Vector3.UnitX * size + Vector3.UnitZ * size);
+				corners.Add(center - Vector3.UnitY * size + Vector3.UnitX * size - Vector3.UnitZ * size);
+				corners.Add(center - Vector3.UnitY * size - Vector3.UnitX * size - Vector3.UnitZ * size);
+				corners.Add(center + Vector3.UnitY * size + Vector3.UnitX * size + Vector3.UnitZ * size);
+				corners.Add(center + Vector3.UnitY * size - Vector3.UnitX * size + Vector3.UnitZ * size);
+				corners.Add(center + Vector3.UnitY * size + Vector3.UnitX * size - Vector3.UnitZ * size);
+				corners.Add(center + Vector3.UnitY * size - Vector3.UnitX * size - Vector3.UnitZ * size);
+			}
+
+			return	CreateCubes(gd, corners.ToArray());
+		}
+
+
 		public static PrimObject CreateCubes(Device gd, Vector3 []corners)
 		{
 			VertexPositionNormalTexture	[]vpnt	=
