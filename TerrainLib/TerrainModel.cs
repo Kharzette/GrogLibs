@@ -41,7 +41,7 @@ namespace TerrainLib
 
 		public void FixBoxHeights()
 		{
-			mTree.FixBoxHeights(mHeightGrid, mPolySize);
+			mTree.FixBoxHeights(mHeightGrid);
 		}
 
 
@@ -67,8 +67,8 @@ namespace TerrainLib
 		{
 			int	halfGrid	=mGridSize / 2;
 
-			Vector3	ret	=Vector3.UnitX * (halfGrid * mPolySize);
-			ret			+=Vector3.UnitZ * (halfGrid * mPolySize);
+			Vector3	ret	=Vector3.UnitX * halfGrid;
+			ret			+=Vector3.UnitZ * halfGrid;
 
 			ret.Y	=GetHeight(ret);
 
@@ -105,15 +105,13 @@ namespace TerrainLib
 		}
 
 
+		//takes model coordinates
 		unsafe public float GetHeight(Vector3 coord)
 		{
 			float	ret	=0.0f;
 
-			int	x	=(int)Math.Floor(coord.X / mPolySize);
-			int	y	=(int)Math.Floor(coord.Z / mPolySize);
-
-			float	xgrid	=x * mPolySize;
-			float	ygrid	=y * mPolySize;
+			int	x	=(int)Math.Floor(coord.X);
+			int	y	=(int)Math.Floor(coord.Z);
 
 			if(x >= (mGridSize - 1) || x < 0 || y >= (mGridSize - 1) || y < 0)
 			{
@@ -135,10 +133,10 @@ namespace TerrainLib
 			Vector2	upLeft	=Vector2.Zero;
 			Vector2	lwRight	=Vector2.Zero;
 
-			upLeft.X	=x * mPolySize;
-			upLeft.Y	=y * mPolySize;
-			lwRight.X	=(x + 1) * mPolySize;
-			lwRight.Y	=(y + 1) * mPolySize;
+			upLeft.X	=x;
+			upLeft.Y	=y;
+			lwRight.X	=(x + 1);
+			lwRight.Y	=(y + 1);
 
 			Vector2	inPos	=Vector2.Zero;
 			inPos.X	=coord.X;
@@ -148,18 +146,18 @@ namespace TerrainLib
 			{
 				//top left tri
 				//find gradient... reminds me of software rendering
-				float	deltaX	=(topRight - topLeft) / mPolySize;
-				float	deltaY	=(botLeft - topLeft) / mPolySize;
+				float	deltaX	=(topRight - topLeft);
+				float	deltaY	=(botLeft - topLeft);
 
-				ret	=topLeft + (deltaX * (coord.X - xgrid)) + (deltaY * (coord.Z - ygrid));
+				ret	=topLeft + (deltaX * (coord.X - x)) + (deltaY * (coord.Z - y));
 			}
 			else
 			{
 				//lower right tri
-				float	deltaX	=(botLeft - botRight) / mPolySize;
-				float	deltaY	=(topRight - botRight) / mPolySize;
+				float	deltaX	=(botLeft - botRight);
+				float	deltaY	=(topRight - botRight);
 
-				ret	=botRight + (deltaX * ((xgrid + mPolySize) - coord.X)) + (deltaY * ((ygrid + mPolySize) - coord.Z));
+				ret	=botRight + (deltaX * (x - coord.X)) + (deltaY * (y + mPolySize - coord.Z));
 			}
 
 			return	ret;
@@ -170,11 +168,8 @@ namespace TerrainLib
 		{
 			float	ret	=0.0f;
 
-			int	x	=(int)Math.Floor(coord.X / mPolySize);
-			int	y	=(int)Math.Floor(coord.Z / mPolySize);
-
-			float	xgrid	=x * mPolySize;
-			float	ygrid	=y * mPolySize;
+			int	x	=(int)Math.Floor(coord.X);
+			int	y	=(int)Math.Floor(coord.Z);
 
 			if(x >= (mGridSize - 1) || x < 0 || y >= (mGridSize - 1) || y < 0)
 			{
@@ -190,10 +185,10 @@ namespace TerrainLib
 			Vector2	upLeft	=Vector2.Zero;
 			Vector2	lwRight	=Vector2.Zero;
 
-			upLeft.X	=x * mPolySize;
-			upLeft.Y	=y * mPolySize;
-			lwRight.X	=(x + 1) * mPolySize;
-			lwRight.Y	=(y + 1) * mPolySize;
+			upLeft.X	=x;
+			upLeft.Y	=y;
+			lwRight.X	=(x + 1);
+			lwRight.Y	=(y + 1);
 
 			Vector2	inPos	=Vector2.Zero;
 			inPos.X	=coord.X;
@@ -203,18 +198,18 @@ namespace TerrainLib
 			{
 				//top left tri
 				//find gradient... reminds me of software rendering
-				float	deltaX	=(topRight - topLeft) / mPolySize;
-				float	deltaY	=(botLeft - topLeft) / mPolySize;
+				float	deltaX	=(topRight - topLeft);
+				float	deltaY	=(botLeft - topLeft);
 
-				ret	=topLeft + (deltaX * (coord.X - xgrid)) + (deltaY * (coord.Z - ygrid));
+				ret	=topLeft + (deltaX * (coord.X - x)) + (deltaY * (coord.Z - y));
 			}
 			else
 			{
 				//lower right tri
-				float	deltaX	=(botLeft - botRight) / mPolySize;
-				float	deltaY	=(topRight - botRight) / mPolySize;
+				float	deltaX	=(botLeft - botRight);
+				float	deltaY	=(topRight - botRight);
 
-				ret	=botRight + (deltaX * ((xgrid + mPolySize) - coord.X)) + (deltaY * ((ygrid + mPolySize) - coord.Z));
+				ret	=botRight + (deltaX * (x - coord.X)) + (deltaY * (y - coord.Z));
 			}
 
 			return	ret;
@@ -239,11 +234,8 @@ namespace TerrainLib
 		{
 			Plane	ret	=new Plane();
 
-			int	x	=(int)Math.Floor(coord.X / mPolySize);
-			int	y	=(int)Math.Floor(coord.Z / mPolySize);
-
-			float	xgrid	=x * mPolySize;
-			float	ygrid	=y * mPolySize;
+			int	x	=(int)Math.Floor(coord.X);
+			int	y	=(int)Math.Floor(coord.Z);
 
 			if(x >= (mGridSize - 1) || x < 0 || y >= (mGridSize - 1) || y < 0)
 			{				
@@ -259,10 +251,10 @@ namespace TerrainLib
 			Vector2	upLeft	=Vector2.Zero;
 			Vector2	lwRight	=Vector2.Zero;
 
-			upLeft.X	=x * mPolySize;
-			upLeft.Y	=y * mPolySize;
-			lwRight.X	=(x + 1) * mPolySize;
-			lwRight.Y	=(y + 1) * mPolySize;
+			upLeft.X	=x;
+			upLeft.Y	=y;
+			lwRight.X	=(x + 1);
+			lwRight.Y	=(y + 1);
 
 			Vector2	inPos	=Vector2.Zero;
 			inPos.X	=coord.X;
@@ -272,19 +264,19 @@ namespace TerrainLib
 			{
 				//top left tri
 				Vector3	topLeftVert	=Vector3.Zero;
-				topLeftVert.X		=xgrid;
+				topLeftVert.X		=x;
 				topLeftVert.Y		=topLeft;
-				topLeftVert.Z		=ygrid;
+				topLeftVert.Z		=y;
 
 				Vector3	topRightVert	=Vector3.Zero;
-				topRightVert.X			=xgrid + mPolySize;
+				topRightVert.X			=x;
 				topRightVert.Y			=topRight;
-				topRightVert.Z			=ygrid;
+				topRightVert.Z			=y;
 
 				Vector3	botLeftVert	=Vector3.Zero;
-				botLeftVert.X		=xgrid;
+				botLeftVert.X		=x;
 				botLeftVert.Y		=botLeft;
-				botLeftVert.Z		=ygrid + mPolySize;
+				botLeftVert.Z		=y;
 
 				ret.Normal	=Vector3.Cross(topLeftVert - botLeftVert, topLeftVert - topRightVert);
 				ret.Normal.Normalize();
@@ -294,19 +286,19 @@ namespace TerrainLib
 			{
 				//bottom right tri
 				Vector3	botRightVert	=Vector3.Zero;
-				botRightVert.X			=xgrid;
+				botRightVert.X			=x;
 				botRightVert.Y			=topLeft;
-				botRightVert.Z			=ygrid;
+				botRightVert.Z			=y;
 
 				Vector3	topRightVert	=Vector3.Zero;
-				topRightVert.X			=xgrid + mPolySize;
+				topRightVert.X			=x;
 				topRightVert.Y			=topRight;
-				topRightVert.Z			=ygrid;
+				topRightVert.Z			=y;
 
 				Vector3	botLeftVert	=Vector3.Zero;
-				botLeftVert.X		=xgrid;
+				botLeftVert.X		=x;
 				botLeftVert.Y		=botLeft;
-				botLeftVert.Z		=ygrid + mPolySize;
+				botLeftVert.Z		=y;
 
 				ret.Normal	=Vector3.Cross(botRightVert - botLeftVert, botRightVert - topRightVert);
 				ret.Normal.Normalize();
@@ -516,8 +508,8 @@ namespace TerrainLib
 					{
 						max		=height;
 						peak.Y	=height;
-						peak.X	=x * mPolySize;
-						peak.Z	=y * mPolySize;
+						peak.X	=x;
+						peak.Z	=y;
 					}
 				}
 			}
@@ -540,8 +532,8 @@ namespace TerrainLib
 					float	height	=mHeightGrid[y, x];
 
 					pos.Y	=height;
-					pos.X	=x * mPolySize;
-					pos.Z	=y * mPolySize;
+					pos.X	=x;
+					pos.Z	=y;
 
 					if(pos.X < min.X)
 					{

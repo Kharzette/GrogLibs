@@ -159,14 +159,14 @@ namespace TerrainLib
 		}
 
 
-		internal void FixBoxHeights(float[,] heightGrid, float polySize)
+		internal void FixBoxHeights(float[,] heightGrid)
 		{
 			if(mChildNorthEast == null)
 			{
-				int	startX	=(int)Math.Round(mBounds.Minimum.X / polySize);
-				int	startZ	=(int)Math.Round(mBounds.Minimum.Z / polySize);
-				int	endX	=(int)Math.Round(mBounds.Maximum.X / polySize);
-				int	endZ	=(int)Math.Round(mBounds.Maximum.Z / polySize);
+				int	startX	=(int)Math.Round(mBounds.Minimum.X);
+				int	startZ	=(int)Math.Round(mBounds.Minimum.Z);
+				int	endX	=(int)Math.Round(mBounds.Maximum.X);
+				int	endZ	=(int)Math.Round(mBounds.Maximum.Z);
 
 				float	minHeight	=float.MaxValue;
 				float	maxHeight	=float.MinValue;
@@ -193,32 +193,31 @@ namespace TerrainLib
 				return;
 			}
 
-			mChildNorthWest.FixBoxHeights(heightGrid, polySize);
-			mChildNorthEast.FixBoxHeights(heightGrid, polySize);
-			mChildSouthWest.FixBoxHeights(heightGrid, polySize);
-			mChildSouthEast.FixBoxHeights(heightGrid, polySize);
+			mChildNorthWest.FixBoxHeights(heightGrid);
+			mChildNorthEast.FixBoxHeights(heightGrid);
+			mChildSouthWest.FixBoxHeights(heightGrid);
+			mChildSouthEast.FixBoxHeights(heightGrid);
 		}
 
 
-		bool TryCollide(List<Vector3> tri, ref Ray ray, out Vector3 hit)
+		bool TryCollide(List<Vector3> tri, Vector3 start, Vector3 end, out Vector3 hit)
 		{
-			Vector3	norm1, norm2;
-			float	dist1, dist2;
+			Vector3	norm;
+			float	dist;
 
 			hit	=Vector3.Zero;
 
-			Vector3	start	=ray.Position;
-			Vector3	end		=ray.Position + ray.Direction;
+			Vector3	direction	=end - start;
 
-			Mathery.PlaneFromVerts(tri, out norm1, out dist1);
+			Mathery.PlaneFromVerts(tri, out norm, out dist);
 
 			//check facing
-			if(norm1.dot(ray.Direction) >= 0f)
+			if(norm.dot(direction) >= 0f)
 			{
 				return	false;
 			}
-			float	d1	=norm1.dot(start) - dist1;
-			float	d2	=norm1.dot(end) - dist1;
+			float	d1	=norm.dot(start) - dist;
+			float	d2	=norm.dot(end) - dist;
 
 			if(d1 > 0 && d2 > 0)
 			{
@@ -252,9 +251,10 @@ namespace TerrainLib
 		}
 
 
-		internal bool Trace(ref Ray ray, out Vector3 hit)
+		internal bool Trace(Vector3 start, Vector3 end, out Vector3 hit)
 		{
-			if(!mBounds.Intersects(ref ray))
+			float?	distHit	=Mathery.RayIntersectBox(start, end, mBounds);
+			if(distHit == null)
 			{
 				hit	=Vector3.Zero;
 				return	false;
@@ -268,7 +268,7 @@ namespace TerrainLib
 				tri1.Add(new Vector3(mBounds.Maximum.X, mHeights[0, 1], mBounds.Minimum.Z));
 				tri1.Add(new Vector3(mBounds.Minimum.X, mHeights[1, 0], mBounds.Maximum.Z));
 
-				if(TryCollide(tri1, ref ray, out hit))
+				if(TryCollide(tri1, start, end, out hit))
 				{
 					return	true;
 				}
@@ -277,7 +277,7 @@ namespace TerrainLib
 				tri1.Add(new Vector3(mBounds.Maximum.X, mHeights[0, 1], mBounds.Minimum.Z));
 				tri1.Add(new Vector3(mBounds.Maximum.X, mHeights[1, 1], mBounds.Maximum.Z));
 				tri1.Add(new Vector3(mBounds.Minimum.X, mHeights[1, 0], mBounds.Maximum.Z));
-				if(TryCollide(tri1, ref ray, out hit))
+				if(TryCollide(tri1, start, end, out hit))
 				{
 					return	true;
 				}
@@ -286,10 +286,10 @@ namespace TerrainLib
 
 			Vector3	nw, ne, sw, se;
 
-			bool	nwHit	=mChildNorthWest.Trace(ref ray, out nw);
-			bool	neHit	=mChildNorthEast.Trace(ref ray, out ne);
-			bool	swHit	=mChildSouthWest.Trace(ref ray, out sw);
-			bool	seHit	=mChildSouthEast.Trace(ref ray, out se);
+			bool	nwHit	=mChildNorthWest.Trace(start, end, out nw);
+			bool	neHit	=mChildNorthEast.Trace(start, end, out ne);
+			bool	swHit	=mChildSouthWest.Trace(start, end, out sw);
+			bool	seHit	=mChildSouthEast.Trace(start, end, out se);
 
 			if(!(nwHit || neHit || swHit || seHit))
 			{
@@ -297,10 +297,10 @@ namespace TerrainLib
 				return	false;
 			}
 
-			float	nwDist	=(nwHit)? Vector3.Distance(nw, ray.Position) : float.MaxValue;
-			float	neDist	=(neHit)? Vector3.Distance(ne, ray.Position) : float.MaxValue;
-			float	swDist	=(swHit)? Vector3.Distance(sw, ray.Position) : float.MaxValue;
-			float	seDist	=(seHit)? Vector3.Distance(se, ray.Position) : float.MaxValue;
+			float	nwDist	=(nwHit)? Vector3.Distance(nw, start) : float.MaxValue;
+			float	neDist	=(neHit)? Vector3.Distance(ne, start) : float.MaxValue;
+			float	swDist	=(swHit)? Vector3.Distance(sw, start) : float.MaxValue;
+			float	seDist	=(seHit)? Vector3.Distance(se, start) : float.MaxValue;
 
 			float	bestDist	=float.MaxValue;
 			Vector3	bestHit		=Vector3.Zero;

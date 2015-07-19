@@ -39,17 +39,15 @@ namespace TerrainLib
 		}
 
 
-		internal void FixBoxHeights(float[,] heightGrid, float polySize)
+		internal void FixBoxHeights(float[,] heightGrid)
 		{
-			mRoot.FixBoxHeights(heightGrid, polySize);
+			mRoot.FixBoxHeights(heightGrid);
 		}
 
 
 		internal bool Trace(Vector3 start, Vector3 end, out Vector3 hit)
 		{
-			Ray	ray	=new Ray(start, end - start);
-
-			return	mRoot.Trace(ref ray, out hit);
+			return	mRoot.Trace(start, end, out hit);
 		}
 	}
 }

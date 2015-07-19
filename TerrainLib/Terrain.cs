@@ -146,6 +146,18 @@ namespace TerrainLib
 		}
 
 
+		public int GetPolySize()
+		{
+			return	mPolySize;
+		}
+
+
+		public int GetChunkDim()
+		{
+			return	mChunkDim;
+		}
+
+
 		public int GetBoundary()
 		{
 			return	mChunkDim * mPolySize;
