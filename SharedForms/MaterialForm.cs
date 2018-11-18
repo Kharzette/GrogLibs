@@ -27,6 +27,7 @@ namespace SharedForms
 		public event EventHandler	eGenTangents;
 		public event EventHandler	eFoundSeams;
 		public event EventHandler	eMatLibNotReadyToSave;
+		public event EventHandler	eMatTechniqueChanged;
 
 
 		public MaterialForm(MaterialLib.MaterialLib matLib,
@@ -291,6 +292,7 @@ namespace SharedForms
 					mMatLib.SetMaterialTechnique(lb.Tag as string, lb.SelectedItem as string);
 					SetListTechnique(lb.Tag as string, lb.SelectedItem as string);
 					OnMaterialSelectionChanged(null, null);
+					Misc.SafeInvoke(eMatTechniqueChanged, lb.Tag as string);
 				}
 				DisposeTechBox(lb);
 			}
@@ -339,6 +341,7 @@ namespace SharedForms
 				mMatLib.SetMaterialTechnique(lb.Tag as string, lb.SelectedItem as string);
 				SetListTechnique(lb.Tag as string, lb.SelectedItem as string);
 				OnMaterialSelectionChanged(null, null);
+				Misc.SafeInvoke(eMatTechniqueChanged, lb.Tag as string);
 			}
 			DisposeTechBox(lb);
 		}
@@ -678,7 +681,7 @@ namespace SharedForms
 				selected.Add(dgvr.Cells[0].Value as string);
 			}
 
-			mMatLib.HideMaterialVariables(matName, selected);
+			mMatLib.HideMaterialVariables(matName, selected, false);
 
 			VariableList.DataSource	=mMatLib.GetMaterialGUIVariables(matName);
 		}
@@ -699,7 +702,7 @@ namespace SharedForms
 				selected.Add(dgvr.Cells[0].Value as string);
 			}
 
-			mMatLib.IgnoreMaterialVariables(matName, selected);
+			mMatLib.IgnoreMaterialVariables(matName, selected, false);
 
 			VariableList.DataSource	=mMatLib.GetMaterialGUIVariables(matName);
 		}

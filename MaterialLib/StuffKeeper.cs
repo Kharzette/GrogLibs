@@ -12,11 +12,13 @@ using SharpDX.DXGI;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 using SharpDX.Direct3D;
+using SharpDX.IO;
 
 //ambiguous stuff
 using Color		=SharpDX.Color;
 using Device	=SharpDX.Direct3D11.Device;
 using Resource	=SharpDX.Direct3D11.Resource;
+using wic		=SharpDX.WIC;
 
 
 namespace MaterialLib
@@ -47,6 +49,9 @@ namespace MaterialLib
 		}
 
 		IncludeFX	mIFX;
+
+		//for texture loading
+		wic.ImagingFactory	mIF	=new wic.ImagingFactory();
 
 		//game directory
 		string	mGameRootDir;
@@ -300,7 +305,7 @@ namespace MaterialLib
 		}
 
 
-		unsafe public bool AddTexToAtlas(TexAtlas atlas, string texName, GraphicsDevice gd,
+		public bool AddTexToAtlas(TexAtlas atlas, string texName, GraphicsDevice gd,
 			out double scaleU, out double scaleV, out double uoffs, out double voffs)
 		{
 			scaleU	=scaleV	=uoffs	=voffs	=0.0;
@@ -312,42 +317,9 @@ namespace MaterialLib
 
 			//even though we already have this loaded, there appears
 			//to be no way to get at the bits, so load it again
-			ImageLoadInformation	loadInfo	=new ImageLoadInformation();
-
-			loadInfo.BindFlags		=BindFlags.None;
-			loadInfo.CpuAccessFlags	=CpuAccessFlags.Read | CpuAccessFlags.Write;
-			loadInfo.Depth			=0;
-			loadInfo.Filter			=FilterFlags.None;
-			loadInfo.Format			=Format.R8G8B8A8_UNorm;
-			loadInfo.Usage			=ResourceUsage.Staging;
-
-			Resource	res	=Texture2D.FromFile(gd.GD, mGameRootDir + "\\Textures\\" + texName + ".png", loadInfo);
-			if(res == null)
-			{
-				return	false;
-			}
-
-			DataBox	db	=gd.DC.MapSubresource(res, 0, MapMode.Read, SharpDX.Direct3D11.MapFlags.None);
-
-			Texture2D	tex	=res as Texture2D;
-
-			int	w	=tex.Description.Width;
-			int	h	=tex.Description.Height;
-
-			Color	[]colArray	=new Color[w * h];
-
-			var	pSrc	=(Color *)@db.DataPointer;
-
-			for(int y=0;y < h;y++)
-			{
-				//divide pitch by sizeof(Color)
-				int	ofs	=y * (db.RowPitch / 4);
-
-				for(int x=0;x < w;x++)
-				{
-					colArray[x + (y * w)]	=*(pSrc + ofs + x);
-				}
-			}
+			int		w, h;
+			Color	[]colArray	=LoadPNGWIC(mGameRootDir + "\\Textures\\" + texName + ".png",
+									out w, out h);
 
 			return	atlas.Insert(colArray, w, h,
 				out scaleU, out scaleV, out uoffs, out voffs);
@@ -356,6 +328,8 @@ namespace MaterialLib
 
 		public void FreeAll()
 		{
+			mIF.Dispose();
+
 			foreach(KeyValuePair<string, Effect> fx in mFX)
 			{
 				fx.Value.Dispose();
@@ -748,28 +722,12 @@ namespace MaterialLib
 				extLess	=FileUtil.StripExtension(fileName);
 			}
 
-			ImageLoadInformation	loadInfo	=new ImageLoadInformation();
+			int	w, h;
+			Color	[]colArray	=LoadPNGWIC(path + "\\" + fileName, out w, out h);
 
-			loadInfo.BindFlags		=BindFlags.None;
-			loadInfo.CpuAccessFlags	=CpuAccessFlags.Read | CpuAccessFlags.Write;
-			loadInfo.Depth			=0;
-			loadInfo.Filter			=FilterFlags.None;
-			loadInfo.Format			=Format.R8G8B8A8_UNorm;
-			loadInfo.Usage			=ResourceUsage.Staging;
+			PreMultAndLinear(colArray, w, h);
 
-			Resource	res	=Texture2D.FromFile(gd.GD, path + "\\" + fileName, loadInfo);
-			if(res == null)
-			{
-				return;
-			}
-
-			DataBox	db	=gd.DC.MapSubresource(res, 0, MapMode.Read, SharpDX.Direct3D11.MapFlags.None);
-
-			Texture2D	tex	=res as Texture2D;
-
-			PreMultAndLinear(db, tex.Description.Width, tex.Description.Height);
-
-			Texture2D	finalTex	=MakeTexture(gd.GD, db, tex.Description.Width, tex.Description.Height);
+			Texture2D	finalTex	=MakeTexture(gd.GD, colArray, w, h);
 
 			mResources.Add(extLess, finalTex as Resource);
 			mTexture2s.Add(extLess, finalTex);
@@ -779,9 +737,6 @@ namespace MaterialLib
 			srv.DebugName	=extLess;
 
 			mSRVs.Add(extLess, srv);
-
-			tex.Dispose();
-			res.Dispose();
 		}
 
 
@@ -806,28 +761,12 @@ namespace MaterialLib
 				extLess	=FileUtil.StripExtension(fileName);
 			}
 
-			ImageLoadInformation	loadInfo	=new ImageLoadInformation();
+			int	w,h;
+			Color	[]colors	=LoadPNGWIC(path + "\\" + fileName, out w, out h);
 
-			loadInfo.BindFlags		=BindFlags.None;
-			loadInfo.CpuAccessFlags	=CpuAccessFlags.Read | CpuAccessFlags.Write;
-			loadInfo.Depth			=0;
-			loadInfo.Filter			=FilterFlags.None;
-			loadInfo.Format			=Format.R8G8B8A8_UNorm;
-			loadInfo.Usage			=ResourceUsage.Staging;
+			PreMultAndLinear(colors, w, h);
 
-			Resource	res	=Texture2D.FromFile(gd.GD, path + "\\" + fileName, loadInfo);
-			if(res == null)
-			{
-				return;
-			}
-
-			DataBox	db	=gd.DC.MapSubresource(res, 0, MapMode.Read, SharpDX.Direct3D11.MapFlags.None);
-
-			Texture2D	tex	=res as Texture2D;
-
-			PreMultAndLinear(db, tex.Description.Width, tex.Description.Height);
-
-			Texture2D	finalTex	=MakeTexture(gd.GD, db, tex.Description.Width, tex.Description.Height);
+			Texture2D	finalTex	=MakeTexture(gd.GD, colors, w, h);
 
 			mResources.Add(extLess, finalTex as Resource);
 			mFontTexture2s.Add(extLess, finalTex);
@@ -837,13 +776,10 @@ namespace MaterialLib
 			srv.DebugName	=extLess;
 
 			mFontSRVs.Add(extLess, srv);
-
-			tex.Dispose();
-			res.Dispose();
 		}
 
 
-		Texture2D MakeTexture(Device dev, DataBox db, int width, int height)
+		Texture2D MakeTexture(Device dev, Color []colors, int width, int height)
 		{
 			Texture2DDescription	texDesc	=new Texture2DDescription();
 			texDesc.ArraySize				=1;
@@ -857,11 +793,17 @@ namespace MaterialLib
 			texDesc.Format					=Format.R8G8B8A8_UNorm;
 			texDesc.SampleDescription		=new SampleDescription(1, 0);
 
+			DataStream	ds	=DataStream.Create<Color>(colors, true, true, 0);
+
+			ds.Position	=0;
+
 			DataBox	[]dbs	=new DataBox[1];
 
-			dbs[0]	=db;
+			dbs[0]	=new DataBox(ds.DataPointer, width * 4, width * height * 4);
 
 			Texture2D	tex	=new Texture2D(dev, texDesc, dbs);
+
+			ds.Dispose();
 
 			return	tex;
 		}
@@ -893,23 +835,16 @@ namespace MaterialLib
 		}
 
 
-		unsafe void PreMultAndLinear(DataBox db, int width, int height)
+		void PreMultAndLinear(Color []colors, int width, int height)
 		{
-			if(db.IsEmpty)
-			{
-				return;
-			}
-
-			var	pSrc	=(Color *)@db.DataPointer;
-
 			for(int y=0;y < height;y++)
 			{
 				//divide pitch by sizeof(Color)
-				int	ofs	=y * (db.RowPitch / 4);
+				int	ofs	=y * width;
 
 				for(int x=0;x < width;x++)
 				{
-					Color	c	=*(pSrc + ofs + x);
+					Color	c	=colors[ofs + x];
 
 					Vector4	vColor	=c.ToVector4();
 
@@ -924,9 +859,31 @@ namespace MaterialLib
 
 					Color	done	=new Color(vColor);
 
-					*(pSrc + ofs + x)	=done;
+					colors[ofs + x]	=done;
 				}
 			}
+		}
+
+
+		Color[] LoadPNGWIC(string path, out int w, out int h)
+		{
+			wic.BitmapDecoder	pbd	=new wic.BitmapDecoder(mIF, path,
+					NativeFileAccess.Read, wic.DecodeOptions.CacheOnDemand);
+
+			wic.BitmapFrameDecode	bfd	=pbd.GetFrame(0);
+
+			wic.FormatConverter	conv	=new wic.FormatConverter(mIF);
+
+			conv.Initialize(bfd, wic.PixelFormat.Format32bppRGBA);
+
+			w	=bfd.Size.Width;
+			h	=bfd.Size.Height;
+
+			Color	[]colArray	=new Color[w * h];
+
+			conv.CopyPixels<Color>(colArray);
+
+			return	colArray;
 		}
 
 

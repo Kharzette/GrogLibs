@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UtilityLib;
-
+using System.Diagnostics;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
@@ -16,7 +12,7 @@ using Cursor	=System.Windows.Forms.Cursor;
 
 namespace UtilityLib
 {
-	public class GraphicsDevice
+    public class GraphicsDevice
 	{
 		RenderForm	mRForm;
 
@@ -30,6 +26,7 @@ namespace UtilityLib
 		RenderTargetView	mBBView;
 		DepthStencilView	mDSView;
 		Viewport			mScreenPort, mShadowPort;
+		FeatureLevel		mFLevel;
 
 		GameCamera	mGCam;
 
@@ -45,6 +42,7 @@ namespace UtilityLib
 
 		public event EventHandler	ePreResize;
 		public event EventHandler	eResized;
+		public event EventHandler	eDeviceLost;
 
 
 		public Device GD
@@ -69,8 +67,46 @@ namespace UtilityLib
 
 
 		public GraphicsDevice(string formTitle, FeatureLevel flevel, float near, float far)
-		{
+		{			
 			mRForm	=new RenderForm(formTitle);
+
+			//screen viewport
+			mScreenPort	=new Viewport(0, 0,
+				mRForm.ClientRectangle.Width,
+				mRForm.ClientRectangle.Height,
+				0f, 1f);
+
+			//shadow viewport
+			mShadowPort	=new Viewport(0, 0,
+				512, 512, 0f, 1f);
+
+			mRForm.UserResized	+=OnRenderFormResize;
+
+			mClipNear	=near;
+			mClipFar	=far;
+			mFLevel		=flevel;
+
+			mGCam	=new UtilityLib.GameCamera(mRForm.ClientSize.Width,
+				mRForm.ClientSize.Height, 16f/9f, near, far);
+
+			Init();
+		}
+
+
+		void Init()
+		{
+			//release any existing
+			ReleaseAll();
+
+			Factory	fact	=new Factory1();
+
+			Adapter	adpt	=fact.GetAdapter(0);
+
+			FeatureLevel	[]features	=new FeatureLevel[1];
+
+			features[0]	=new FeatureLevel();
+
+			features[0]	=mFLevel;
 
 			SwapChainDescription	scDesc	=new SwapChainDescription();
 
@@ -84,16 +120,6 @@ namespace UtilityLib
 			scDesc.ModeDescription		=new ModeDescription(
 				mRForm.ClientSize.Width, mRForm.ClientSize.Height,
 				new Rational(60, 1), Format.R8G8B8A8_UNorm_SRgb);
-			
-			SharpDX.DXGI.Factory	fact	=new Factory();
-
-			Adapter	adpt	=fact.GetAdapter(0);
-
-			FeatureLevel	[]features	=new FeatureLevel[1];
-
-			features[0]	=new FeatureLevel();
-
-			features[0]	=flevel;
 
 #if DEBUG
 			Device.CreateWithSwapChain(adpt, DeviceCreationFlags.Debug, features,
@@ -103,7 +129,6 @@ namespace UtilityLib
 			Device.CreateWithSwapChain(adpt, DeviceCreationFlags.None, features,
 				scDesc, out mGD, out mSChain);
 #endif
-
 
 			adpt.Dispose();
 
@@ -157,11 +182,8 @@ namespace UtilityLib
 
 			mRForm.UserResized	+=OnRenderFormResize;
 
-			mClipNear	=near;
-			mClipFar	=far;
-
 			mGCam	=new UtilityLib.GameCamera(mRForm.ClientSize.Width,
-				mRForm.ClientSize.Height, 16f/9f, near, far);
+				mRForm.ClientSize.Height, 16f/9f, mClipNear, mClipFar);
 		}
 
 
@@ -227,7 +249,25 @@ namespace UtilityLib
 
 		public void Present()
 		{
-			mSChain.Present(0, PresentFlags.None);
+			try
+			{
+				mSChain.Present(0, PresentFlags.None);
+			}
+			catch(SharpDXException ex)
+			{
+				if(ex.ResultCode == SharpDX.DXGI.ResultCode.DeviceRemoved ||
+					ex.ResultCode == SharpDX.DXGI.ResultCode.DeviceReset ||
+					ex.ResultCode == SharpDX.DXGI.ResultCode.DeviceHung)
+				{
+					Debug.WriteLine("Device lost : " + ex.ResultCode.ToString());
+					Init();
+					Misc.SafeInvoke(eDeviceLost, null);
+				}
+				else
+				{
+					throw;
+				}
+			}
 		}
 
 
@@ -260,21 +300,26 @@ namespace UtilityLib
 
 		public void ReleaseAll()
 		{
-			mDC.ClearState();
-			mDC.Flush();
+			if(mDC != null)
+			{
+				mDC.ClearState();
+				mDC.Flush();
+				mDC.Dispose();
+			}
 
-			mBBView.Dispose();
-			mBackBuffer.Dispose();
-			mDSView.Dispose();
-			mDepthBuffer.Dispose();
-			mDC.Dispose();
-			mSChain.Dispose();
-			mGD.Dispose();
+			if(mBBView != null)			mBBView.Dispose();
+			if(mBackBuffer != null)		mBackBuffer.Dispose();
+			if(mDSView != null)			mDSView.Dispose();
+			if(mDepthBuffer != null)	mDepthBuffer.Dispose();
+			if(mSChain != null)			mSChain.Dispose();
+			if(mGD != null)				mGD.Dispose();
 
 #if DEBUG
-			mGDD.ReportLiveDeviceObjects(ReportingLevel.Detail);
-
-			mGDD.Dispose();
+			if(mGDD != null)
+			{
+				mGDD.ReportLiveDeviceObjects(ReportingLevel.Detail);
+				mGDD.Dispose();
+			}
 #endif
 		}
 

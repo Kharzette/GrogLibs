@@ -222,10 +222,15 @@ namespace MaterialLib
 		}
 
 
+		internal void UnIgnoreAll()
+		{
+			mIgnored.Clear();
+		}
+
+
 		internal void UnHideAll()
 		{
 			mHidden.Clear();
-			mIgnored.Clear();
 		}
 
 

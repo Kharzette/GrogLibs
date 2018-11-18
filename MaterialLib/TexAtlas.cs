@@ -204,7 +204,7 @@ namespace MaterialLib
 		}
 
 
-		public unsafe System.Drawing.Bitmap GetAtlasImage(DeviceContext dc)
+		public System.Drawing.Bitmap GetAtlasImage(DeviceContext dc)
 		{
 			System.Drawing.Bitmap	bm	=new System.Drawing.Bitmap(mWidth, mHeight);
 

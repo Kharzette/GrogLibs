@@ -691,25 +691,35 @@ namespace MaterialLib
 		}
 
 
-		public void HideMaterialVariables(string matName, List<string> toHide)
+		public void HideMaterialVariables(string matName, List<string> toHide, bool bReset)
 		{
 			if(!mMats.ContainsKey(matName))
 			{
 				return;
 			}
 			Material	mat	=mMats[matName];
+
+			if(bReset)
+			{
+				mat.UnHideAll();
+			}
 
 			mat.Hide(toHide);
 		}
 
 
-		public void IgnoreMaterialVariables(string matName, List<string> toIgnore)
+		public void IgnoreMaterialVariables(string matName, List<string> toIgnore, bool bReset)
 		{
 			if(!mMats.ContainsKey(matName))
 			{
 				return;
 			}
 			Material	mat	=mMats[matName];
+
+			if(bReset)
+			{
+				mat.UnIgnoreAll();
+			}
 
 			mat.Ignore(toIgnore);
 		}

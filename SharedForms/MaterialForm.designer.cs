@@ -265,7 +265,8 @@
 			// WeldWeight
 			// 
 			this.WeldWeight.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-			this.WeldWeight.Image = Properties.Resources.Frankenstein_icon;
+//			this.WeldWeight.Image = new System.Drawing.Bitmap(Properties.Resources.Frankenstein_icon);
+//			this.WeldWeight.Image	=Properties.Resources.GetFrankenstein_icon();
 			this.WeldWeight.Location = new System.Drawing.Point(372, 10);
 			this.WeldWeight.Name = "WeldWeight";
 			this.WeldWeight.Size = new System.Drawing.Size(46, 37);
