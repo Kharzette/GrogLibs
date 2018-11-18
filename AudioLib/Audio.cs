@@ -15,7 +15,7 @@ namespace AudioLib
 {
 	public class Audio
 	{
-		XAudio2			mXAud	=new XAudio2();
+		XAudio2			mXAud	=new XAudio2(XAudio2Version.Version27);
 		MasteringVoice	mMV;
 		X3DAudio		m3DAud;
 		DeviceDetails	mDetails;
