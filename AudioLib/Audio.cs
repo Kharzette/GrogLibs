@@ -15,7 +15,7 @@ namespace AudioLib
 {
 	public class Audio
 	{
-		XAudio2			mXAud	=new XAudio2(XAudio2Version.Version27);
+		XAudio2			mXAud	=new XAudio2(XAudio2Flags.None, ProcessorSpecifier.DefaultProcessor, XAudio2Version.Version27);
 		MasteringVoice	mMV;
 		X3DAudio		m3DAud;
 		DeviceDetails	mDetails;
@@ -42,9 +42,9 @@ namespace AudioLib
 
 		public Audio()
 		{
-			mMV	=new MasteringVoice(mXAud);
-
 			mDetails	=mXAud.GetDeviceDetails(0);
+
+			mMV	=new MasteringVoice(mXAud, mDetails.OutputFormat.Channels);
 
 			m3DAud	=new X3DAudio(mDetails.OutputFormat.ChannelMask);
 
