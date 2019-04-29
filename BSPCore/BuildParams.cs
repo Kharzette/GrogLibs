@@ -7,10 +7,11 @@ namespace BSPCore
 {
 	public class BSPBuildParams
 	{
-		public int	mMaxThreads;
-		public bool	mbVerbose;
-		public bool	mbBuildAsBModel;
-		public bool	mbFixTJunctions;
+		public int		mMaxThreads;
+		public bool		mbVerbose;
+		public bool		mbBuildAsBModel;
+		public bool		mbFixTJunctions;
+		public string	mMapName;
 	}
 
 

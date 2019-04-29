@@ -837,6 +837,8 @@ namespace MaterialLib
 
 		void PreMultAndLinear(Color []colors, int width, int height)
 		{
+			float	oo255	=1.0f / 255.0f;
+
 			for(int y=0;y < height;y++)
 			{
 				//divide pitch by sizeof(Color)
@@ -846,20 +848,24 @@ namespace MaterialLib
 				{
 					Color	c	=colors[ofs + x];
 
-					Vector4	vColor	=c.ToVector4();
+					float	xc	=c.R * oo255;
+					float	yc	=c.G * oo255;
+					float	zc	=c.B * oo255;
+					float	wc	=c.A * oo255;
 
 					//convert to linear
-					vColor.X	=(float)Math.Pow(vColor.X, 2.2);
-					vColor.Y	=(float)Math.Pow(vColor.Y, 2.2);
-					vColor.Z	=(float)Math.Pow(vColor.Z, 2.2);
+					xc	=(float)Math.Pow(xc, 2.2);
+					yc	=(float)Math.Pow(yc, 2.2);
+					zc	=(float)Math.Pow(zc, 2.2);
 
-					vColor.X	*=vColor.W;
-					vColor.Y	*=vColor.W;
-					vColor.Z	*=vColor.W;
+					//premultiply alpha
+					xc	*=wc;
+					yc	*=wc;
+					zc	*=wc;
 
-					Color	done	=new Color(vColor);
-
-					colors[ofs + x]	=done;
+					colors[ofs + x].R	=(byte)(xc * 255.0f);
+					colors[ofs + x].G	=(byte)(yc * 255.0f);
+					colors[ofs + x].B	=(byte)(zc * 255.0f);
 				}
 			}
 		}

@@ -1018,7 +1018,7 @@ namespace BSPCore
 
 			if(ProcessEntities(bp, cp))
 			{
-				CoreEvents.Print("Build GBSP Complete\n");
+				CoreEvents.Print("Build GBSP of " + bp.mMapName + " Complete\n");
 				CoreEvents.FireBuildDoneEvent(true, null);
 			}
 			else
