@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Diagnostics;
-using System.ComponentModel;
 using System.Collections.Generic;
 using UtilityLib;
 
@@ -318,7 +316,7 @@ namespace MaterialLib
 			//even though we already have this loaded, there appears
 			//to be no way to get at the bits, so load it again
 			int		w, h;
-			Color	[]colArray	=LoadPNGWIC(mGameRootDir + "\\Textures\\" + texName + ".png",
+			Color	[]colArray	=LoadPNGWIC(mIF, mGameRootDir + "\\Textures\\" + texName + ".png",
 									out w, out h);
 
 			return	atlas.Insert(colArray, w, h,
@@ -723,7 +721,7 @@ namespace MaterialLib
 			}
 
 			int	w, h;
-			Color	[]colArray	=LoadPNGWIC(path + "\\" + fileName, out w, out h);
+			Color	[]colArray	=LoadPNGWIC(mIF, path + "\\" + fileName, out w, out h);
 
 			PreMultAndLinear(colArray, w, h);
 
@@ -762,7 +760,7 @@ namespace MaterialLib
 			}
 
 			int	w,h;
-			Color	[]colors	=LoadPNGWIC(path + "\\" + fileName, out w, out h);
+			Color	[]colors	=LoadPNGWIC(mIF, path + "\\" + fileName, out w, out h);
 
 			PreMultAndLinear(colors, w, h);
 
@@ -871,14 +869,14 @@ namespace MaterialLib
 		}
 
 
-		Color[] LoadPNGWIC(string path, out int w, out int h)
+		public static Color[] LoadPNGWIC(wic.ImagingFactory wif, string path, out int w, out int h)
 		{
-			wic.BitmapDecoder	pbd	=new wic.BitmapDecoder(mIF, path,
+			wic.BitmapDecoder	pbd	=new wic.BitmapDecoder(wif, path,
 					NativeFileAccess.Read, wic.DecodeOptions.CacheOnDemand);
 
 			wic.BitmapFrameDecode	bfd	=pbd.GetFrame(0);
 
-			wic.FormatConverter	conv	=new wic.FormatConverter(mIF);
+			wic.FormatConverter	conv	=new wic.FormatConverter(wif);
 
 			conv.Initialize(bfd, wic.PixelFormat.Format32bppRGBA);
 
