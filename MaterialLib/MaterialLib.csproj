@@ -2,60 +2,25 @@
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
   </PropertyGroup>
-  <!--  This lib has the most sharpdx stuff -->
-  <Choose>
-    <When Condition="'$(SharpDXLocal)' == 'True'">
-      <!--  This group is for using locally built SharpDX -->
-      <ItemGroup>
-        <Reference Include="SharpDX">
-          <HintPath>E:\Code\Gits\SharpDX\Bin\net461\SharpDX.dll</HintPath>
-        </Reference>
-        <Reference Include="SharpDX.Direct2D1">
-          <HintPath>E:\Code\Gits\SharpDX\Bin\net461\SharpDX.Direct2D1.dll</HintPath>
-        </Reference>
-        <Reference Include="SharpDX.Desktop">
-          <HintPath>E:\Code\Gits\SharpDX\Bin\net461\SharpDX.Desktop.dll</HintPath>
-        </Reference>
-        <Reference Include="SharpDX.DXGI">
-          <HintPath>E:\Code\Gits\SharpDX\Bin\net461\SharpDX.DXGI.dll</HintPath>
-        </Reference>
-        <Reference Include="SharpDX.Direct3D11">
-          <HintPath>E:\Code\Gits\SharpDX\Bin\net461\SharpDX.Direct3D11.dll</HintPath>
-        </Reference>
-        <Reference Include="SharpDX.Direct3D11.Effects">
-          <HintPath>E:\Code\Gits\SharpDX\Bin\net461\SharpDX.Direct3D11.Effects.dll</HintPath>
-        </Reference>
-        <Reference Include="SharpDX.D3DCompiler">
-          <HintPath>E:\Code\Gits\SharpDX\Bin\net461\SharpDX.D3DCompiler.dll</HintPath>
-        </Reference>
-        <Reference Include="SharpDX.Mathematics">
-          <HintPath>E:\Code\Gits\SharpDX\Bin\net461\SharpDX.Mathematics.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-    <Otherwise>
-      <!--  For packaged SharpDX -->
-      <ItemGroup>
-        <PackageReference Include="SharpDX" Version="4.2.0" />
-        <PackageReference Include="SharpDX.Direct2D1" Version="4.2.0" />
-        <PackageReference Include="SharpDX.Desktop" Version="4.2.0" />
-        <PackageReference Include="SharpDX.DXGI" Version="4.2.0" />
-        <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
-        <PackageReference Include="SharpDX.D3DCompiler" Version="4.2.0" />
-        <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
-        <PackageReference Include="SharpDX.Direct3D11.Effects" Version="4.2.0" />
-      </ItemGroup>
-    </Otherwise>
-  </Choose>
+  <ItemGroup>
+	<PackageReference Include="SharpDX" Version="4.2.0" />
+	<PackageReference Include="SharpDX.Direct2D1" Version="4.2.0" />
+	<PackageReference Include="SharpDX.Desktop" Version="4.2.0" />
+	<PackageReference Include="SharpDX.DXGI" Version="4.2.0" />
+	<PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
+	<PackageReference Include="SharpDX.D3DCompiler" Version="4.2.0" />
+	<PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
+	<PackageReference Include="SharpDX.Direct3D11.Effects" Version="4.2.0" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Windows.Forms"/>
   </ItemGroup>
   <ItemGroup>
     <!--  This is supposed to automagically work... -->
     <!--  But something is busted with the nuget stuff -->
-    <Content Include="sharpdx_direct3d11_1_effects_x64.dll">
+<!--    <Content Include="sharpdx_direct3d11_1_effects_x64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </Content>	-->
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>

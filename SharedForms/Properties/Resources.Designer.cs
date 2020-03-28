@@ -58,16 +58,6 @@ namespace SharedForms.Properties {
             set {
                 resourceCulture = value;
             }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Frankenstein_icon {
-            get {
-                object obj = ResourceManager.GetObject("Frankenstein_icon", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
+        }        
     }
 }
