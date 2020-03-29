@@ -1,13 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+	<UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
     <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Windows.Forms"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MaterialLib\MaterialLib.csproj"/>

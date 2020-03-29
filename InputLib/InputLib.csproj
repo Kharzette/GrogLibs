@@ -1,14 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+	<UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="SharpDX.RawInput" Version="4.2.0" />
     <PackageReference Include="SharpDX.XInput" Version="4.2.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Windows.Forms"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>

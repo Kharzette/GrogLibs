@@ -544,6 +544,13 @@ namespace MaterialLib
 				return;
 			}
 
+			DirectoryInfo	src	=new DirectoryInfo(mGameRootDir + "/Shaders/");
+
+			if(!src.Exists)
+			{
+				return;
+			}
+
 			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/CompiledShaders/" + sm.ToString() + "/");
 
 			FileStream	fs	=new FileStream(
@@ -553,8 +560,6 @@ namespace MaterialLib
 			Debug.Assert(fs != null);
 
 			BinaryWriter	bw	=new BinaryWriter(fs);
-
-			DirectoryInfo	src	=new DirectoryInfo(mGameRootDir + "/Shaders/");
 
 			Dictionary<string, DateTime>	stamps	=GetHeaderTimeStamps(src);
 

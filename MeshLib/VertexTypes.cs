@@ -587,12 +587,12 @@ namespace MeshLib
 			AssemblyName	asmName	=new AssemblyName();
 			
 			asmName.Name	="FakeAsm";
+
+			AssemblyBuilder	asmBuild	=AssemblyBuilder.DefineDynamicAssembly(asmName,
+											AssemblyBuilderAccess.Run);
 			
-			AssemblyBuilder	asmBuild	=System.Threading.Thread.GetDomain()
-				.DefineDynamicAssembly(asmName, AssemblyBuilderAccess.RunAndSave);
-
-			ModuleBuilder	modBuild	=asmBuild.DefineDynamicModule("ModuleOne", "FakeAsm.dll");
-
+			ModuleBuilder	modBuild	=asmBuild.DefineDynamicModule("ModuleOne");
+			
 			TypeBuilder	tb	=modBuild.DefineType("VertStuff",
 				TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.SequentialLayout,
 				typeof(ValueType));
