@@ -14,13 +14,6 @@
 	<PackageReference Include="SharpDX.Direct3D11.Effects" Version="4.2.0" />
   </ItemGroup>
   <ItemGroup>
-    <!--  This is supposed to automagically work... -->
-    <!--  But something is busted with the nuget stuff -->
-<!--    <Content Include="sharpdx_direct3d11_1_effects_x64.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>	-->
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>
   </ItemGroup>
 </Project>
