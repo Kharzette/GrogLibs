@@ -4,7 +4,9 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-	<PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
+	<Reference Include="SharpDX.Mathematics">
+      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.Mathematics.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MaterialLib\MaterialLib.csproj"/>

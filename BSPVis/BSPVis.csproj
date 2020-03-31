@@ -4,9 +4,18 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="SharpDX" Version="4.2.0" />
-    <PackageReference Include="SharpDX.DXGI" Version="4.2.0" />
-    <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
+	<Reference Include="SharpDX">
+      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.dll</HintPath>
+    </Reference>
+	<Reference Include="SharpDX.Mathematics">
+      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.Mathematics.dll</HintPath>
+    </Reference>
+	<Reference Include="SharpDX.DXGI">
+      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.DXGI.dll</HintPath>
+    </Reference>
+	<Reference Include="SharpDX.Direct3D11">
+      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.Direct3D11.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BSPCore\BSPCore.csproj"/>

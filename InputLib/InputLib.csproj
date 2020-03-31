@@ -4,8 +4,18 @@
 	<UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="SharpDX.RawInput" Version="4.2.0" />
-    <PackageReference Include="SharpDX.XInput" Version="4.2.0" />
+	<Reference Include="SharpDX">
+      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.dll</HintPath>
+    </Reference>
+	<Reference Include="SharpDX.Mathematics">
+      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.Mathematics.dll</HintPath>
+    </Reference>
+	<Reference Include="SharpDX.RawInput">
+      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.RawInput.dll</HintPath>
+    </Reference>
+	<Reference Include="SharpDX.XInput">
+      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.XInput.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>
