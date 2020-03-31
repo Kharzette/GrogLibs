@@ -1,0 +1,3 @@
+[submodule "SharpDX"]
+	path = SharpDX
+	url = git@github.com:Kharzette/SharpDX.git
