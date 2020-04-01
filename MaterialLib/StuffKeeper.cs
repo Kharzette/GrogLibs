@@ -366,10 +366,6 @@ namespace MaterialLib
 
 			foreach(KeyValuePair<string, List<EffectVariable>> effList in mVars)
 			{
-				foreach(EffectVariable efv in effList.Value)
-				{
-					efv.Dispose();
-				}
 				effList.Value.Clear();
 			}
 			mVars.Clear();
