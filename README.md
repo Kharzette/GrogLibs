@@ -13,7 +13,8 @@ I wanted this to be just-the-libs to have this as a submodule to tools or games 
 
 See LibDocs.txt for details on how stuff works.  Also the ReadMe.txt under QuArKAddon for info on setting up quake army knife for map editing.
 
-#Building
+# Building
+
 There's a rather annoying dependency step here.  The released nuget packages for SharpDX have some breaking bugs for the stuff I use (rawinput, and 11 effects).  I've cloned it as a submodule of my fork, but it only builds for me from command line.  So it needs to have build.cmd ran or the projects will fail to find the assemblies.
 
 I've removed the universal stuff from my fork as it was impossible to build for me with that stuff in there.  The requirements can be a bit steep even without the universal's 11 gigs.  Two different windows sdks are needed for some reason.
