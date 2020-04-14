@@ -43,6 +43,9 @@ namespace MeshLib
 		float			mInvertInterval;
 		Task			mRunningTask;
 
+		//this must match the value in Character.fx in the shader lib!
+		const int	MAX_BONES	=55;
+
 
 		public Character(IArch ca, AnimLib al)
 		{
@@ -277,7 +280,15 @@ namespace MeshLib
 		{
 			if(mBones != null)
 			{
-				matLib.SetEffectParameter("Character.fx", "mBones", mBones);
+				if(mBones.Length <= MAX_BONES)
+				{
+					matLib.SetEffectParameter("Character.fx", "mBones", mBones);
+				}
+				else
+				{
+					//Too many bones will stomp gpu memory!
+					Debug.Assert(false);
+				}
 			}
 		}
 
