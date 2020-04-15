@@ -4,16 +4,16 @@
   </PropertyGroup>
   <ItemGroup>
 	<Reference Include="SharpDX">
-      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.dll</HintPath>
+      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.dll</HintPath>
     </Reference>
 	<Reference Include="SharpDX.Mathematics">
-      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.Mathematics.dll</HintPath>
+      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Mathematics.dll</HintPath>
     </Reference>
 	<Reference Include="SharpDX.DXGI">
-      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.DXGI.dll</HintPath>
+      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.DXGI.dll</HintPath>
     </Reference>
 	<Reference Include="SharpDX.Direct3D11">
-      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.Direct3D11.dll</HintPath>
+      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Direct3D11.dll</HintPath>
     </Reference>
 	<PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
   </ItemGroup>

@@ -165,6 +165,8 @@ namespace MaterialLib
 			dc.InputAssembler.InputLayout	=mLayouts[pass];
 
 			ep.Apply(dc);
+
+			ep.Dispose();
 		}
 
 
@@ -270,6 +272,11 @@ namespace MaterialLib
 			mEffect							=efn(fx);
 			List<EffectVariable>	vars	=gv(fx);
 
+			if(mEffect == null || vars.Count == 0)
+			{
+				return;
+			}
+
 			SetVariables(vars);
 
 			string	tech	=br.ReadString();
@@ -311,6 +318,386 @@ namespace MaterialLib
 		#endregion
 
 
+		void SetVar(EffectVariable ev, Matrix []val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectMatrixVariable	emv	=ev.AsMatrix();
+			if(emv == null)
+			{
+				return;
+			}
+
+			emv.SetMatrix(val);
+
+			emv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, bool []val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectScalarVariable	esv	=ev.AsScalar();
+			if(esv == null)
+			{
+				return;
+			}
+
+			esv.Set(val);
+
+			esv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, float []val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectScalarVariable	esv	=ev.AsScalar();
+			if(esv == null)
+			{
+				return;
+			}
+
+			esv.Set(val);
+
+			esv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, int []val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectScalarVariable	esv	=ev.AsScalar();
+			if(esv == null)
+			{
+				return;
+			}
+
+			esv.Set(val);
+
+			esv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, uint []val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectScalarVariable	esv	=ev.AsScalar();
+			if(esv == null)
+			{
+				return;
+			}
+
+			esv.Set(val);
+
+			esv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, Color4 []val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectVectorVariable	evv	=ev.AsVector();
+			if(evv == null)
+			{
+				return;
+			}
+
+			evv.Set(val);
+
+			evv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, Int4 []val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectVectorVariable	evv	=ev.AsVector();
+			if(evv == null)
+			{
+				return;
+			}
+
+			evv.Set(val);
+
+			evv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, Vector4 []val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectVectorVariable	evv	=ev.AsVector();
+			if(evv == null)
+			{
+				return;
+			}
+
+			evv.Set(val);
+
+			evv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, Bool4 []val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectVectorVariable	evv	=ev.AsVector();
+			if(evv == null)
+			{
+				return;
+			}
+
+			evv.Set(val);
+
+			evv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, Matrix val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectMatrixVariable	emv	=ev.AsMatrix();
+			if(emv == null)
+			{
+				return;
+			}
+
+			emv.SetMatrix(val);
+
+			emv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, bool val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectScalarVariable	esv	=ev.AsScalar();
+			if(esv == null)
+			{
+				return;
+			}
+
+			esv.Set(val);
+
+			esv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, float val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectScalarVariable	esv	=ev.AsScalar();
+			if(esv == null)
+			{
+				return;
+			}
+
+			esv.Set(val);
+
+			esv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, int val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectScalarVariable	esv	=ev.AsScalar();
+			if(esv == null)
+			{
+				return;
+			}
+
+			esv.Set(val);
+
+			esv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, uint val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectScalarVariable	esv	=ev.AsScalar();
+			if(esv == null)
+			{
+				return;
+			}
+
+			esv.Set(val);
+
+			esv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, Color4 val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectVectorVariable	evv	=ev.AsVector();
+			if(evv == null)
+			{
+				return;
+			}
+
+			evv.Set(val);
+
+			evv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, Int4 val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectVectorVariable	evv	=ev.AsVector();
+			if(evv == null)
+			{
+				return;
+			}
+
+			evv.Set(val);
+
+			evv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, Vector2 val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectVectorVariable	evv	=ev.AsVector();
+			if(evv == null)
+			{
+				return;
+			}
+
+			evv.Set(val);
+
+			evv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, Vector3 val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectVectorVariable	evv	=ev.AsVector();
+			if(evv == null)
+			{
+				return;
+			}
+
+			evv.Set(val);
+
+			evv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, Vector4 val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectVectorVariable	evv	=ev.AsVector();
+			if(evv == null)
+			{
+				return;
+			}
+
+			evv.Set(val);
+
+			evv.Dispose();
+		}
+
+
+		void SetVar(EffectVariable ev, Bool4 val)
+		{
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectVectorVariable	evv	=ev.AsVector();
+			if(evv == null)
+			{
+				return;
+			}
+
+			evv.Set(val);
+
+			evv.Dispose();
+		}
+
+
 		void ApplyVar(EffectVariable evar, object eval)
 		{
 			//todo: need to support setting params to null
@@ -323,39 +710,39 @@ namespace MaterialLib
 			{
 				if(eval is Matrix [])
 				{
-					evar.AsMatrix().SetMatrix((Matrix [])eval);
+					SetVar(evar, (Matrix [])eval);
 				}
 				else if(eval is bool [])
 				{
-					evar.AsScalar().Set((bool [])eval);
+					SetVar(evar, (bool [])eval);
 				}
 				else if(eval is float [])
 				{
-					evar.AsScalar().Set((float [])eval);
+					SetVar(evar, (float [])eval);
 				}
 				else if(eval is int [])
 				{
-					evar.AsScalar().Set((int [])eval);
+					SetVar(evar, (int [])eval);
 				}
 				else if(eval is uint [])
 				{
-					evar.AsScalar().Set((uint [])eval);
+					SetVar(evar, (uint [])eval);
 				}
 				else if(eval is Color4 [])
 				{
-					evar.AsVector().Set((Color4 [])eval);
+					SetVar(evar, (Color4 [])eval);
 				}
 				else if(eval is Int4 [])
 				{
-					evar.AsVector().Set((Int4 [])eval);
+					SetVar(evar, (Int4 [])eval);
 				}
 				else if(eval is Vector4 [])
 				{
-					evar.AsVector().Set((Vector4 [])eval);
+					SetVar(evar, (Vector4 [])eval);
 				}
 				else if(eval is Bool4 [])
 				{
-					evar.AsVector().Set((Bool4 [])eval);
+					SetVar(evar, (Bool4 [])eval);
 				}
 				else
 				{
@@ -366,47 +753,47 @@ namespace MaterialLib
 			{
 				if(eval is Matrix)
 				{
-					evar.AsMatrix().SetMatrix((Matrix)eval);
+					SetVar(evar, (Matrix)eval);
 				}
 				else if(eval is bool)
 				{
-					evar.AsScalar().Set((bool)eval);
+					SetVar(evar, (bool)eval);
 				}
 				else if(eval is float)
 				{
-					evar.AsScalar().Set((float)eval);
+					SetVar(evar, (float)eval);
 				}
 				else if(eval is int)
 				{
-					evar.AsScalar().Set((int)eval);
+					SetVar(evar, (int)eval);
 				}
 				else if(eval is uint)
 				{
-					evar.AsScalar().Set((uint)eval);
+					SetVar(evar, (uint)eval);
 				}
 				else if(eval is Bool4)
 				{
-					evar.AsVector().Set((Bool4)eval);
+					SetVar(evar, (Bool4)eval);
 				}
 				else if(eval is Color4)
 				{
-					evar.AsVector().Set((Color4)eval);
+					SetVar(evar, (Color4)eval);
 				}
 				else if(eval is Int4)
 				{
-					evar.AsVector().Set((Int4)eval);
+					SetVar(evar, (Int4)eval);
 				}
 				else if(eval is Vector2)
 				{
-					evar.AsVector().Set((Vector2)eval);
+					SetVar(evar, (Vector2)eval);
 				}
 				else if(eval is Vector3)
 				{
-					evar.AsVector().Set((Vector3)eval);
+					SetVar(evar, (Vector3)eval);
 				}
 				else if(eval is Vector4)
 				{
-					evar.AsVector().Set((Vector4)eval);
+					SetVar(evar, (Vector4)eval);
 				}
 				else if(eval is ShaderResourceView)
 				{
@@ -683,6 +1070,9 @@ namespace MaterialLib
 				mLayouts.Add(il);
 
 				il.DebugName	=mTechnique.Description.Name + i;
+
+				sr.Dispose();
+				ep.Dispose();
 			}
 		}
 

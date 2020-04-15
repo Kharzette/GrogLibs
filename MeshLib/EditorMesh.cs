@@ -90,6 +90,32 @@ namespace MeshLib
 		}
 
 
+		internal void GetBonesInUseByDraw(List<int> bones)
+		{
+			List<Color>	myInds	=VertexTypes.GetBoneIndexes(mVertArray, mTypeIndex);
+
+			foreach(Color c in myInds)
+			{
+				if(c.R > 0 && !bones.Contains(c.R))
+				{
+					bones.Add(c.R);					
+				}
+				if(c.G > 0 && !bones.Contains(c.G))
+				{
+					bones.Add(c.G);					
+				}
+				if(c.B > 0 && !bones.Contains(c.B))
+				{
+					bones.Add(c.B);					
+				}
+				if(c.A > 0 && !bones.Contains(c.A))
+				{
+					bones.Add(c.A);					
+				}
+			}			
+		}
+
+
 		//try to find verts that are shared
 		public WeightSeam FindSeam(EditorMesh mesh2)
 		{

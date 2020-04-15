@@ -127,6 +127,12 @@ namespace MeshLib
 		}
 
 
+		public void GetBoneNamesInUseByDraw(List<string> names)
+		{
+			mParts.GetBoneNamesInUseByDraw(names, mAnimLib.GetSkeleton());
+		}
+
+
 		//these index the same as the mesh part list in the archetype
 		public void AddPart(MatLib mats)
 		{

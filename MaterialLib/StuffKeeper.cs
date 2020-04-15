@@ -328,12 +328,6 @@ namespace MaterialLib
 		{
 			mIF.Dispose();
 
-			foreach(KeyValuePair<string, Effect> fx in mFX)
-			{
-				fx.Value.Dispose();
-			}
-			mFX.Clear();
-
 			foreach(KeyValuePair<string, Texture2D> tex in mTexture2s)
 			{
 				tex.Value.Dispose();
@@ -376,6 +370,12 @@ namespace MaterialLib
 
 			mIgnoreData.Clear();
 			mHiddenData.Clear();
+
+			foreach(KeyValuePair<string, Effect> fx in mFX)
+			{
+				fx.Value.Dispose();
+			}
+			mFX.Clear();
 		}
 
 
@@ -399,6 +399,9 @@ namespace MaterialLib
 			EffectPass	ep	=et.GetPassByIndex(0);
 
 			ep.Apply(dc);
+
+			ep.Dispose();
+			et.Dispose();
 		}
 
 
@@ -534,6 +537,9 @@ namespace MaterialLib
 			{
 				mFX.Add(file.Substring(0, file.Length - 9), fx);
 			}
+
+			br.Close();
+			fs.Close();
 		}
 
 
@@ -685,7 +691,11 @@ namespace MaterialLib
 					EffectPass	ep	=et.GetPassByIndex(j);
 
 					Debug.Assert(ep.IsValid);
+
+					ep.Dispose();
 				}
+
+				et.Dispose();
 			}
 
 			FileStream	fs	=new FileStream(mGameRootDir + "/CompiledShaders/"
@@ -891,6 +901,10 @@ namespace MaterialLib
 			Color	[]colArray	=new Color[w * h];
 
 			conv.CopyPixels<Color>(colArray);
+
+			conv.Dispose();
+			bfd.Dispose();
+			pbd.Dispose();
 
 			return	colArray;
 		}

@@ -5,7 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
 	<Reference Include="SharpDX.Mathematics">
-      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.Mathematics.dll</HintPath>
+      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Mathematics.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

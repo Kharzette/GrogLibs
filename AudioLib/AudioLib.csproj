@@ -5,13 +5,13 @@
   </PropertyGroup>
   <ItemGroup>
 	<Reference Include="SharpDX">
-      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.dll</HintPath>
+      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.dll</HintPath>
     </Reference>
 	<Reference Include="SharpDX.Mathematics">
-      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.Mathematics.dll</HintPath>
+      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Mathematics.dll</HintPath>
     </Reference>
 	<Reference Include="SharpDX.XAudio2">
-      <HintPath>..\SharpDX\Bin\Release\net45\SharpDX.XAudio2.dll</HintPath>
+      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.XAudio2.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

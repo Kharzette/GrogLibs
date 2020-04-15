@@ -198,21 +198,87 @@ namespace MaterialLib
 		}
 
 
+		void SetVar(string varName, float val)
+		{
+			EffectVariable	ev	=mPostFX.GetVariableByName(varName);
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectScalarVariable	esv	=ev.AsScalar();
+			if(esv == null)
+			{
+				ev.Dispose();
+				return;
+			}
+
+			esv.Set(val);
+
+			esv.Dispose();
+			ev.Dispose();
+		}
+
+
+		void SetVar(string varName, float []val)
+		{
+			EffectVariable	ev	=mPostFX.GetVariableByName(varName);
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectScalarVariable	esv	=ev.AsScalar();
+			if(esv == null)
+			{
+				ev.Dispose();
+				return;
+			}
+
+			esv.Set(val);
+
+			esv.Dispose();
+			ev.Dispose();
+		}
+
+
+		void SetVar(string varName, Vector2 val)
+		{
+			EffectVariable	ev	=mPostFX.GetVariableByName(varName);
+			if(ev == null)
+			{
+				return;
+			}
+
+			EffectVectorVariable	esv	=ev.AsVector();
+			if(esv == null)
+			{
+				ev.Dispose();
+				return;
+			}
+
+			esv.Set(val);
+
+			esv.Dispose();
+			ev.Dispose();
+		}
+
+
 		//set up parameters with known values
 		void InitPostParams(bool bNineThree)
 		{
-			mPostFX.GetVariableByName("mTexelSteps").AsScalar().Set(1f);
-			mPostFX.GetVariableByName("mThreshold").AsScalar().Set(5f);
-			mPostFX.GetVariableByName("mScreenSize").AsVector().Set(new Vector2(mResX, mResY));
-			mPostFX.GetVariableByName("mInvViewPort").AsVector().Set(new Vector2(1f / mResX, 1f / mResY));
-			mPostFX.GetVariableByName("mOpacity").AsScalar().Set(0.75f);
+			SetVar("mTexelSteps", 1f);
+			SetVar("mThreshold", 5f);
+			SetVar("mScreenSize", new Vector2(mResX, mResY));
+			SetVar("mInvViewPort", new Vector2(1f / mResX, 1f / mResY));
+			SetVar("mOpacity", 0.75f);
 
 			//bloomstuffs
-			mPostFX.GetVariableByName("mBloomThreshold").AsScalar().Set(0.25f);
-			mPostFX.GetVariableByName("mBloomIntensity").AsScalar().Set(1.25f);
-			mPostFX.GetVariableByName("mBloomSaturation").AsScalar().Set(1f);
-			mPostFX.GetVariableByName("mBaseIntensity").AsScalar().Set(1f);
-			mPostFX.GetVariableByName("mBaseSaturation").AsScalar().Set(1f);
+			SetVar("mBloomThreshold", 0.25f);
+			SetVar("mBloomIntensity", 1.25f);
+			SetVar("mBloomSaturation", 1f);
+			SetVar("mBaseIntensity", 1f);
+			SetVar("mBaseSaturation", 1f);
 
 			InitBlurParams(1.0f / (mResX / 2), 0, 0, 1.0f / (mResY / 2), bNineThree);
 
@@ -224,20 +290,15 @@ namespace MaterialLib
 
 		void SetBlurParams(bool bX)
 		{
-			EffectScalarVariable	weightsX	=mPostFX.GetVariableByName("mWeightsX").AsScalar();
-			EffectScalarVariable	weightsY	=mPostFX.GetVariableByName("mWeightsY").AsScalar();
-			EffectScalarVariable	offsetsX	=mPostFX.GetVariableByName("mOffsetsX").AsScalar();
-			EffectScalarVariable	offsetsY	=mPostFX.GetVariableByName("mOffsetsY").AsScalar();
-
 			if(bX)
 			{
-				weightsX.Set(mSampleWeightsX);
-				offsetsX.Set(mSampleOffsetsX);
+				SetVar("mWeightsX", mSampleWeightsX);
+				SetVar("mOffsetsX", mSampleOffsetsX);
 			}
 			else
 			{
-				weightsY.Set(mSampleWeightsY);
-				offsetsY.Set(mSampleOffsetsY);
+				SetVar("mWeightsY", mSampleWeightsY);
+				SetVar("mOffsetsY", mSampleOffsetsY);
 			}
 		}
 
@@ -426,11 +487,16 @@ namespace MaterialLib
 
 		public void UpdateOutlineColours(GraphicsDevice gd, int numMaterials)
 		{
-			EffectShaderResourceVariable	esrv	=
-				mPostFX.GetVariableByName("mOutlineTex").AsShaderResource();
+			EffectVariable	ev	=mPostFX.GetVariableByName("mOutlineTex");
+			if(ev == null)
+			{
+				return;
+			}
 
+			EffectShaderResourceVariable	esrv	=ev.AsShaderResource();
 			if(esrv == null)
 			{
+				ev.Dispose();
 				return;
 			}
 
@@ -453,6 +519,9 @@ namespace MaterialLib
 			gd.DC.UnmapSubresource(mOutlineLookupTex, 0);
 
 			esrv.SetResource(mOutlineLookupSRV);
+
+			esrv.Dispose();
+			ev.Dispose();
 		}
 
 
@@ -545,11 +614,16 @@ namespace MaterialLib
 
 		public void SetParameter(string paramName, string targName)
 		{
-			EffectShaderResourceVariable	esrv	=
-				mPostFX.GetVariableByName(paramName).AsShaderResource();
+			EffectVariable	ev	=mPostFX.GetVariableByName(paramName);
+			if(ev == null)
+			{
+				return;
+			}
 
+			EffectShaderResourceVariable	esrv	=ev.AsShaderResource();
 			if(esrv == null)
 			{
+				ev.Dispose();
 				return;
 			}
 
@@ -561,6 +635,9 @@ namespace MaterialLib
 			{
 				esrv.SetResource(mPostTargSRVs[targName]);
 			}
+
+			esrv.Dispose();
+			ev.Dispose();
 		}
 
 
@@ -581,11 +658,18 @@ namespace MaterialLib
 			ep.Apply(gd.DC);
 
 			gd.DC.DrawIndexed(6, 0, 0);
+
+			ep.Dispose();
+			et.Dispose();
 		}
 
 
-		public void FreeAll()
+		public void FreeAll(GraphicsDevice gd)
 		{
+			//unwire from device resize stuff
+			gd.ePreResize	-=OnPreResize;
+			gd.eResized		-=OnResized;
+
 			//dispose all views
 			foreach(KeyValuePair<string, RenderTargetView> view in mPostTargets)
 			{

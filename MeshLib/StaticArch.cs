@@ -177,6 +177,14 @@ namespace MeshLib
 		}
 
 
+		//statics don't do bones
+		void IArch.GetPartBoneNamesInUseByDraw(int index, List<string> names, Skeleton skel)
+		{
+			return;
+		}
+
+
+
 		void IArch.Draw(DeviceContext dc,
 			List<MeshMaterial> meshMats)
 		{

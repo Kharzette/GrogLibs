@@ -173,6 +173,16 @@ namespace MeshLib
 		}
 
 
+		internal void GetBoneNamesInUseByDraw(List<string> names, Skeleton skel)
+		{
+			int	partCount	=mArch.GetPartCount();
+			for(int i=0;i < partCount;i++)
+			{
+				mArch.GetPartBoneNamesInUseByDraw(i, names, skel);
+			}
+		}
+
+
 		internal void SetTriLightValues(
 			Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
 		{

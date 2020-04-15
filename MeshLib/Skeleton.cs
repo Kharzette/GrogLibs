@@ -447,10 +447,6 @@ namespace MeshLib
 			int	idx	=0;
 			foreach(string name in names)
 			{
-				if(!name.StartsWith("Bip"))
-				{
-					continue;
-				}
 				if(name.EndsWith("Nub"))
 				{
 					continue;

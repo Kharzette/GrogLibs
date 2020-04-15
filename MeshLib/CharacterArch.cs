@@ -180,6 +180,36 @@ namespace MeshLib
 		}
 
 
+		void IArch.GetPartBoneNamesInUseByDraw(int index, List<string> names, Skeleton skel)
+		{
+			if(index < 0 || index >= mMeshParts.Count)
+			{
+				return;
+			}
+
+			Mesh	m	=mMeshParts[index];
+
+			EditorMesh	em	=m as EditorMesh;
+			if(em == null)
+			{
+				return;
+			}
+
+			List<int>	boneInds	=new List<int>();
+
+			em.GetBonesInUseByDraw(boneInds);
+
+			foreach(int idx in boneInds)
+			{
+				string	boneName	=skel.GetBoneName(idx);
+				if(!names.Contains(boneName))
+				{
+					names.Add(boneName);
+				}
+			}
+		}
+
+
 		void IArch.Draw(DeviceContext dc,
 			List<MeshMaterial> meshMats)
 		{

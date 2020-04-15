@@ -26,6 +26,7 @@ namespace MeshLib
 		void NukeVertexElements(Device gd, List<int> indexes, List<int> elements);
 		void GenTangents(Device gd, List<int> parts, int texCoordSet);
 		string GetPartName(int index);
+		void GetPartBoneNamesInUseByDraw(int index, List<string> names, Skeleton skel);
 		Type GetPartVertexType(int index);
 		List<EditorMesh.WeightSeam> Frankenstein();
 		void GetPartPlanes(int meshIndex, out List<Vector3> normals, out List<float> distances);
