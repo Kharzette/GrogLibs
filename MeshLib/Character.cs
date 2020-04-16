@@ -278,6 +278,13 @@ namespace MeshLib
 			mParts.ComputeBoneBounds(skipMaterials, mAnimLib.GetSkeleton());
 		}
 
+
+		//this can be used to rebuild the bones if the skeleton changed
+		public void ClearBones()
+		{
+			mBones	=null;
+		}
+
 	
 		//copies bones into the shader
 		//materials should be set up to ignore

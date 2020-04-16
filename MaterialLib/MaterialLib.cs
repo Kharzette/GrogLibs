@@ -472,7 +472,6 @@ namespace MaterialLib
 			EffectShaderResourceVariable	esrv	=var.AsShaderResource();
 			if(esrv == null)
 			{
-				var.Dispose();
 				return;
 			}
 
@@ -481,7 +480,6 @@ namespace MaterialLib
 			mKeeper.HackyTechniqueRefresh(dc, fxName, tech);
 
 			esrv.Dispose();
-			var.Dispose();
 		}
 
 
@@ -498,13 +496,12 @@ namespace MaterialLib
 			EffectMatrixVariable	emv	=var.AsMatrix();
 			if(emv == null)
 			{
-				var.Dispose();
+				return;
 			}
 
 			emv.SetMatrix(mats);
 
 			emv.Dispose();
-			var.Dispose();
 		}
 
 
