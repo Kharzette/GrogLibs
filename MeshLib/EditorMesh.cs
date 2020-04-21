@@ -359,6 +359,32 @@ namespace MeshLib
 		}
 
 
+		internal void ReIndexVertWeights(Device gd, Dictionary<int, int> idxMap)
+		{
+			List<Color>	myInds	=VertexTypes.GetBoneIndexes(mVertArray, mTypeIndex);
+
+			for(int i=0;i < myInds.Count;i++)
+			{
+				Color	reIndexed	=Color.Black;
+
+				reIndexed.R	=(byte)idxMap[myInds[i].R];
+				reIndexed.G	=(byte)idxMap[myInds[i].G];
+				reIndexed.B	=(byte)idxMap[myInds[i].B];
+				reIndexed.A	=(byte)idxMap[myInds[i].A];
+
+				myInds[i]	=reIndexed;
+			}
+
+			VertexTypes.ReplaceBoneIndexes(mVertArray, myInds.ToArray());
+
+			mVerts.Dispose();
+
+			mVerts		=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
+
+			mVBBinding	=new VertexBufferBinding(mVerts, VertexTypes.GetSizeForTypeIndex(mTypeIndex), 0);
+		}
+
+
 		public void WeldAverage(Device gd, WeightSeam ws)
 		{
 			//weld

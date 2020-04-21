@@ -280,12 +280,20 @@ namespace MeshLib
 
 
 		//this can be used to rebuild the bones if the skeleton changed
-		public void ClearBones()
+		public void ReBuildBones(Device gd)
 		{
+			//clear
 			mBones	=null;
+
+			Skeleton	sk	=mAnimLib.GetSkeleton();
+
+			Dictionary<int, int>	reMap	=new Dictionary<int, int>();
+			sk.Compact(reMap);
+
+			mParts.ReIndexVertWeights(gd, reMap);
 		}
 
-	
+
 		//copies bones into the shader
 		//materials should be set up to ignore
 		//the mBones parameter

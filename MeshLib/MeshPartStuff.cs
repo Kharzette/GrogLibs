@@ -173,6 +173,12 @@ namespace MeshLib
 		}
 
 
+		internal void ReIndexVertWeights(Device gd, Dictionary<int, int> idxMap)
+		{
+			mArch.ReIndexVertWeights(gd, idxMap);
+		}
+
+
 		internal void GetBoneNamesInUseByDraw(List<string> names, Skeleton skel)
 		{
 			int	partCount	=mArch.GetPartCount();

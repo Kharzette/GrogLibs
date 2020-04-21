@@ -183,6 +183,12 @@ namespace MeshLib
 			return;
 		}
 
+		//statics don't do bones
+		void IArch.ReIndexVertWeights(Device gd, Dictionary<int, int> idxMap)
+		{
+			return;
+		}
+
 
 
 		void IArch.Draw(DeviceContext dc,

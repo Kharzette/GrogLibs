@@ -180,6 +180,21 @@ namespace MeshLib
 		}
 
 
+		void IArch.ReIndexVertWeights(Device gd, Dictionary<int, int> idxMap)
+		{
+			foreach(Mesh m in mMeshParts)
+			{
+				EditorMesh	em	=m as EditorMesh;
+				if(em == null)
+				{
+					continue;
+				}
+
+				em.ReIndexVertWeights(gd, idxMap);
+			}
+		}
+
+
 		void IArch.GetPartBoneNamesInUseByDraw(int index, List<string> names, Skeleton skel)
 		{
 			if(index < 0 || index >= mMeshParts.Count)

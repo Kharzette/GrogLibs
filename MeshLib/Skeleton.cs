@@ -436,6 +436,32 @@ namespace MeshLib
 		}
 
 
+		//squash the indexes so they match with a linear array for shaders
+		public void Compact(Dictionary<int, int> mapToOld)
+		{
+			if(mapToOld == null)
+			{
+				mapToOld	=new Dictionary<int, int>();
+			}
+			else
+			{
+				mapToOld.Clear();
+			}
+
+			List<string>	names	=new List<string>();
+
+			GetBoneNames(names);
+
+			for(int i=0;i < names.Count;i++)
+			{
+				mapToOld.Add(GetBoneIndex(names[i]), i);
+			}
+
+			//reindex
+			ComputeNameIndex();
+		}
+
+
 		public void ComputeNameIndex()
 		{
 			mNameToIndex.Clear();
@@ -447,14 +473,6 @@ namespace MeshLib
 			int	idx	=0;
 			foreach(string name in names)
 			{
-				if(name.EndsWith("Nub"))
-				{
-					continue;
-				}
-				if(name.Contains("Footstep"))
-				{
-					continue;
-				}
 				mNameToIndex.Add(name, idx++);
 			}
 
