@@ -48,6 +48,12 @@ namespace SharedForms
 			MeshPartList.Columns.Add("Material Name");
 			MeshPartList.Columns.Add("Vertex Format");
 			MeshPartList.Columns.Add("Visible");
+
+			//This needs to happen to get the middle stuff in the
+			//right spot.  It happens automagically but to no avail...
+			//I think everything isn't quite set up when it is called.
+			//So call it manually.
+			OnFormSizeChanged(null, null);
 		}
 
 
