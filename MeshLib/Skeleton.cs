@@ -436,6 +436,25 @@ namespace MeshLib
 		}
 
 
+		//return the root bone names
+		public void GetRootNames(List<string> ret)
+		{
+			if(ret == null)
+			{
+				ret	=new List<string>();
+			}
+			else
+			{
+				ret.Clear();
+			}
+
+			foreach(GSNode gsn in mRoots)
+			{
+				ret.Add(gsn.mName);
+			}
+		}
+
+
 		//squash the indexes so they match with a linear array for shaders
 		public void Compact(Dictionary<int, int> mapToOld)
 		{
