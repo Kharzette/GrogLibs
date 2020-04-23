@@ -835,6 +835,7 @@ namespace MaterialLib
 					}
 					if(!ev.IsValid)
 					{
+						ev.Dispose();
 						break;
 					}
 

@@ -427,9 +427,11 @@ namespace MaterialLib
 				}
 				if(!et.IsValid)
 				{
+					et.Dispose();
 					continue;
 				}
 				ret.Add(et.Description.Name);
+				et.Dispose();
 			}
 			return	ret;
 		}
@@ -480,6 +482,7 @@ namespace MaterialLib
 			mKeeper.HackyTechniqueRefresh(dc, fxName, tech);
 
 			esrv.Dispose();
+			var.Dispose();
 		}
 
 
