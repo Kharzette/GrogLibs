@@ -383,7 +383,8 @@ namespace MaterialLib
 				evv.mValue	=null;
 				evv.mVar	=var;
 
-				evv.SetCastThing();
+				//one time grab of the reflectiony data
+				evv.SetExtraData();
 
 				mVars.Add(var.Description.Name, evv);
 			}

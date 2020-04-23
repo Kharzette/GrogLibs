@@ -16,9 +16,18 @@ namespace MaterialLib
 {
 	public class EffectVariableValue
 	{
+		//these are releasable directx things
 		internal EffectVariable	mVar;
-		internal object			mValue;
 		internal object			mVarAs;	//AsVector AsMatrix etc...
+
+		//generic value that will go into the shader per draw
+		internal object	mValue;
+
+		//Descriptor stuff that is good to cache.
+		//Just checking these thrashes allocation alot
+		internal int					mNumElements, mNumColumns;
+		internal ShaderVariableType		mType;
+		internal ShaderVariableClass	mClass;
 
 		public string Name
 		{
@@ -41,19 +50,19 @@ namespace MaterialLib
 
 			string	sz	=(string)val;
 
-			if(bCheckClass(ShaderVariableClass.MatrixColumns))
+			if(mClass == ShaderVariableClass.MatrixColumns)
 			{
 				return	Misc.StringToMatrix(sz);
 			}
-			else if(bCheckClass(ShaderVariableClass.Object))
+			else if(mClass == ShaderVariableClass.Object)
 			{
 				return	sz;
 			}
-			else if(bCheckClass(ShaderVariableClass.Scalar))
+			else if(mClass == ShaderVariableClass.Scalar)
 			{
-				if(bCheckType(ShaderVariableType.Float))
+				if(mType == ShaderVariableType.Float)
 				{
-					if(GetNumElements() > 0)
+					if(mNumElements > 0)
 					{
 						return	ParseFloatArray(sz);
 					}
@@ -64,13 +73,13 @@ namespace MaterialLib
 						return	fval;
 					}
 				}
-				else if(bCheckType(ShaderVariableType.Bool))
+				else if(mType == ShaderVariableType.Bool)
 				{
 					bool	bVal;
 					Mathery.TryParse(sz, out bVal);
 					return	bVal;
 				}
-				else if(bCheckType(ShaderVariableType.Int))
+				else if(mType == ShaderVariableType.Int)
 				{
 					int	iVal;
 					Mathery.TryParse(sz, out iVal);
@@ -81,23 +90,21 @@ namespace MaterialLib
 					Debug.Assert(false);
 				}
 			}
-			else if(bCheckClass(ShaderVariableClass.Struct))
+			else if(mClass == ShaderVariableClass.Struct)
 			{
 				Debug.Assert(false);
 			}
-			else if(bCheckClass(ShaderVariableClass.Vector))
+			else if(mClass == ShaderVariableClass.Vector)
 			{
-				int	col	=GetNumColumns();
-
-				if(col == 2)
+				if(mNumColumns == 2)
 				{
 					return	Misc.StringToVector2(sz);
 				}
-				else if(col == 3)
+				else if(mNumColumns == 3)
 				{
 					return	Misc.StringToVector3(sz);
 				}
-				else if(col == 4)
+				else if(mNumColumns == 4)
 				{
 					return	Misc.StringToVector4(sz);
 				}
@@ -121,9 +128,9 @@ namespace MaterialLib
 				return	"";
 			}
 
-			if(bCheckClass(ShaderVariableClass.MatrixColumns))
+			if(mClass == ShaderVariableClass.MatrixColumns)
 			{
-				if(GetNumColumns() > 0)
+				if(mNumColumns > 0)
 				{
 					return	"Big Ass MatArray";
 				}
@@ -132,7 +139,7 @@ namespace MaterialLib
 					return	Misc.MatrixToString((Matrix)val);
 				}
 			}
-			else if(bCheckClass(ShaderVariableClass.Object))
+			else if(mClass == ShaderVariableClass.Object)
 			{
 				if(val is string)	//still in texname form?
 				{
@@ -148,11 +155,11 @@ namespace MaterialLib
 					return	"SomeObject";
 				}
 			}
-			else if(bCheckClass(ShaderVariableClass.Scalar))
+			else if(mClass == ShaderVariableClass.Scalar)
 			{
-				if(bCheckType(ShaderVariableType.Float))
+				if(mType == ShaderVariableType.Float)
 				{
-					if(GetNumElements() > 0)
+					if(mNumElements > 0)
 					{
 						return	Misc.FloatArrayToString((float [])val);
 					}
@@ -161,11 +168,11 @@ namespace MaterialLib
 						return	Misc.FloatToString((float)val);
 					}
 				}
-				else if(bCheckType(ShaderVariableType.Bool))
+				else if(mType == ShaderVariableType.Bool)
 				{
 					return	((bool)val).ToString(System.Globalization.CultureInfo.InvariantCulture);
 				}
-				else if(bCheckType(ShaderVariableType.Int))
+				else if(mType == ShaderVariableType.Int)
 				{
 					return	((int)val).ToString(System.Globalization.CultureInfo.InvariantCulture);
 				}
@@ -174,23 +181,21 @@ namespace MaterialLib
 					Debug.Assert(false);
 				}
 			}
-			else if(bCheckClass(ShaderVariableClass.Struct))
+			else if(mClass == ShaderVariableClass.Struct)
 			{
 				Debug.Assert(false);
 			}
-			else if(bCheckClass(ShaderVariableClass.Vector))
+			else if(mClass == ShaderVariableClass.Vector)
 			{
-				int	col	=GetNumColumns();
-
-				if(col == 2)
+				if(mNumColumns == 2)
 				{
 					return	Misc.VectorToString((Vector2)val);
 				}
-				else if(col == 3)
+				else if(mNumColumns == 3)
 				{
 					return	Misc.VectorToString((Vector3)val);
 				}
-				else if(col == 4)
+				else if(mNumColumns == 4)
 				{
 					return	Misc.VectorToString((Vector4)val);
 				}
@@ -562,73 +567,35 @@ namespace MaterialLib
 		}
 
 
-		bool	bCheckClass(ShaderVariableClass isIt)
+		internal void SetExtraData()
 		{
 			EffectType	et	=mVar.TypeInfo;
 
-			bool	bRet	=et.Description.Class == isIt;
+			mClass			=et.Description.Class;
+			mType			=et.Description.Type;
+			mNumColumns		=et.Description.Columns;
+			mNumElements	=et.Description.Elements;
 
 			et.Dispose();
 
-			return	bRet;
-		}
 
-
-		bool	bCheckType(ShaderVariableType isIt)
-		{
-			EffectType	et	=mVar.TypeInfo;
-
-			bool	bRet	=et.Description.Type == isIt;
-
-			et.Dispose();
-
-			return	bRet;
-		}
-
-
-		int	GetNumColumns()
-		{
-			EffectType	et	=mVar.TypeInfo;
-
-			int	ret	=et.Description.Columns;
-
-			et.Dispose();
-
-			return	ret;
-		}
-
-
-		int	GetNumElements()
-		{
-			EffectType	et	=mVar.TypeInfo;
-
-			int	ret	=et.Description.Elements;
-
-			et.Dispose();
-
-			return	ret;
-		}
-
-
-		internal void SetCastThing()
-		{
-			if(bCheckClass(ShaderVariableClass.MatrixColumns))
+			if(mClass == ShaderVariableClass.MatrixColumns)
 			{
 				mVarAs	=mVar.AsMatrix();
 			}
-			else if(bCheckClass(ShaderVariableClass.Object))
+			else if(mClass == ShaderVariableClass.Object)
 			{
 				mVarAs	=mVar.AsShaderResource();
 			}
-			else if(bCheckClass(ShaderVariableClass.Scalar))
+			else if(mClass == ShaderVariableClass.Scalar)
 			{
 				mVarAs	=mVar.AsScalar();
 			}
-			else if(bCheckClass(ShaderVariableClass.Struct))
+			else if(mClass == ShaderVariableClass.Struct)
 			{
 				Debug.Assert(false);
 			}
-			else if(bCheckClass(ShaderVariableClass.Vector))
+			else if(mClass == ShaderVariableClass.Vector)
 			{
 				mVarAs	=mVar.AsVector();
 			}
@@ -646,23 +613,23 @@ namespace MaterialLib
 				return;
 			}
 
-			if(bCheckClass(ShaderVariableClass.MatrixColumns))
+			if(mClass == ShaderVariableClass.MatrixColumns)
 			{
 				(mVarAs as EffectMatrixVariable).Dispose();
 			}
-			else if(bCheckClass(ShaderVariableClass.Object))
+			else if(mClass == ShaderVariableClass.Object)
 			{
 				(mVarAs as EffectShaderResourceVariable).Dispose();
 			}
-			else if(bCheckClass(ShaderVariableClass.Scalar))
+			else if(mClass == ShaderVariableClass.Scalar)
 			{
 				(mVarAs as EffectScalarVariable).Dispose();
 			}
-			else if(bCheckClass(ShaderVariableClass.Struct))
+			else if(mClass == ShaderVariableClass.Struct)
 			{
 				Debug.Assert(false);
 			}
-			else if(bCheckClass(ShaderVariableClass.Vector))
+			else if(mClass == ShaderVariableClass.Vector)
 			{
 				(mVarAs as EffectVectorVariable).Dispose();
 			}
