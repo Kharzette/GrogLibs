@@ -24,6 +24,9 @@ namespace MaterialLib
 		int				mNumPasses;		//number of passes for the technique
 		bool			mbFinalized;	//trimmed down ignored yet?
 
+		//Effect passes are allocated / freed alot unless cached
+		List<EffectPass>	mPasses		=new List<EffectPass>();
+
 		//vert formats expected
 		List<InputLayout>	mLayouts	=new List<InputLayout>();
 
@@ -113,8 +116,13 @@ namespace MaterialLib
 			{
 				il.Dispose();
 			}
-
 			mLayouts.Clear();
+			
+			foreach(EffectPass ep in mPasses)
+			{
+				ep.Dispose();
+			}
+			mPasses.Clear();
 
 			foreach(KeyValuePair<string, EffectVariableValue> varVal in mVars)
 			{
@@ -153,7 +161,7 @@ namespace MaterialLib
 				return;
 			}
 
-			EffectPass	ep	=mTechnique.GetPassByIndex(pass);
+			EffectPass	ep	=mPasses[pass];
 			if(ep == null)
 			{
 				return;
@@ -171,8 +179,6 @@ namespace MaterialLib
 			dc.InputAssembler.InputLayout	=mLayouts[pass];
 
 			ep.Apply(dc);
-
-			ep.Dispose();
 		}
 
 
@@ -531,7 +537,18 @@ namespace MaterialLib
 
 		void CalcLayouts()
 		{
+			//clear existing
+			foreach(InputLayout il in mLayouts)
+			{
+				il.Dispose();
+			}
 			mLayouts.Clear();
+
+			foreach(EffectPass ep in mPasses)
+			{
+				ep.Dispose();
+			}
+			mPasses.Clear();
 
 			if(mEffect == null || mTechnique == null)
 			{
@@ -561,8 +578,12 @@ namespace MaterialLib
 
 				if(!ep.IsValid)
 				{
+					//stick a null in the list for invalid passes
+					mPasses.Add(null);
 					continue;
 				}
+
+				mPasses.Add(ep);
 
 				mNumPasses++;
 
@@ -590,7 +611,6 @@ namespace MaterialLib
 				il.DebugName	=mTechnique.Description.Name + i;
 
 				sr.Dispose();
-				ep.Dispose();
 			}
 			dev.Dispose();
 		}
