@@ -29,6 +29,8 @@ namespace MaterialLib
 		Texture1D			mDynLights;
 		ShaderResourceView	mDynSRV;
 
+		EffectShaderResourceVariable	mESRV;
+
 		//effect to set the dynamic light parameter on
 		//TODO: might need multiple
 		Effect	mFX;
@@ -45,6 +47,8 @@ namespace MaterialLib
 		public DynamicLights(GraphicsDevice gd, Effect fx)
 		{
 			Init(gd, fx);
+
+			mESRV	=mFX.GetVariableByName("mDynLights").AsShaderResource();
 		}
 
 
@@ -100,6 +104,7 @@ namespace MaterialLib
 
 		public void FreeAll()
 		{
+			mESRV.Dispose();
 			mDynSRV.Dispose();
 			mDynLights.Dispose();
 			mFX.Dispose();
@@ -175,7 +180,7 @@ namespace MaterialLib
 
 		public void SetParameter()
 		{
-			mFX.GetVariableByName("mDynLights").AsShaderResource().SetResource(mDynSRV);
+			mESRV.SetResource(mDynSRV);
 		}
 
 

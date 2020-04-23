@@ -131,6 +131,7 @@ namespace UtilityLib
 #endif
 
 			adpt.Dispose();
+			fact.Dispose();
 
 			mDC	=mGD.ImmediateContext;
 

@@ -83,6 +83,7 @@ namespace MaterialLib
 				//this should be a valuetype?  hope no ref problems
 				evv2.mValue	=evv.Value.mValue;
 				evv2.mVar	=evv.Value.mVar;
+				evv2.mVarAs	=evv.Value.mVarAs;
 
 				ret.mVars.Add(evv.Key, evv2);
 			}
@@ -114,6 +115,11 @@ namespace MaterialLib
 			}
 
 			mLayouts.Clear();
+
+			foreach(KeyValuePair<string, EffectVariableValue> varVal in mVars)
+			{
+				varVal.Value.Dispose();
+			}
 			mVars.Clear();
 		}
 
@@ -318,505 +324,13 @@ namespace MaterialLib
 		#endregion
 
 
-		void SetVar(EffectVariable ev, Matrix []val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectMatrixVariable	emv	=ev.AsMatrix();
-			if(emv == null)
-			{
-				return;
-			}
-
-			emv.SetMatrix(val);
-
-			emv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, bool []val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectScalarVariable	esv	=ev.AsScalar();
-			if(esv == null)
-			{
-				return;
-			}
-
-			esv.Set(val);
-
-			esv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, float []val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectScalarVariable	esv	=ev.AsScalar();
-			if(esv == null)
-			{
-				return;
-			}
-
-			esv.Set(val);
-
-			esv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, int []val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectScalarVariable	esv	=ev.AsScalar();
-			if(esv == null)
-			{
-				return;
-			}
-
-			esv.Set(val);
-
-			esv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, uint []val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectScalarVariable	esv	=ev.AsScalar();
-			if(esv == null)
-			{
-				return;
-			}
-
-			esv.Set(val);
-
-			esv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, Color4 []val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectVectorVariable	evv	=ev.AsVector();
-			if(evv == null)
-			{
-				return;
-			}
-
-			evv.Set(val);
-
-			evv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, Int4 []val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectVectorVariable	evv	=ev.AsVector();
-			if(evv == null)
-			{
-				return;
-			}
-
-			evv.Set(val);
-
-			evv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, Vector4 []val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectVectorVariable	evv	=ev.AsVector();
-			if(evv == null)
-			{
-				return;
-			}
-
-			evv.Set(val);
-
-			evv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, Bool4 []val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectVectorVariable	evv	=ev.AsVector();
-			if(evv == null)
-			{
-				return;
-			}
-
-			evv.Set(val);
-
-			evv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, Matrix val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectMatrixVariable	emv	=ev.AsMatrix();
-			if(emv == null)
-			{
-				return;
-			}
-
-			emv.SetMatrix(val);
-
-			emv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, bool val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectScalarVariable	esv	=ev.AsScalar();
-			if(esv == null)
-			{
-				return;
-			}
-
-			esv.Set(val);
-
-			esv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, float val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectScalarVariable	esv	=ev.AsScalar();
-			if(esv == null)
-			{
-				return;
-			}
-
-			esv.Set(val);
-
-			esv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, int val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectScalarVariable	esv	=ev.AsScalar();
-			if(esv == null)
-			{
-				return;
-			}
-
-			esv.Set(val);
-
-			esv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, uint val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectScalarVariable	esv	=ev.AsScalar();
-			if(esv == null)
-			{
-				return;
-			}
-
-			esv.Set(val);
-
-			esv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, Color4 val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectVectorVariable	evv	=ev.AsVector();
-			if(evv == null)
-			{
-				return;
-			}
-
-			evv.Set(val);
-
-			evv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, Int4 val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectVectorVariable	evv	=ev.AsVector();
-			if(evv == null)
-			{
-				return;
-			}
-
-			evv.Set(val);
-
-			evv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, Vector2 val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectVectorVariable	evv	=ev.AsVector();
-			if(evv == null)
-			{
-				return;
-			}
-
-			evv.Set(val);
-
-			evv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, Vector3 val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectVectorVariable	evv	=ev.AsVector();
-			if(evv == null)
-			{
-				return;
-			}
-
-			evv.Set(val);
-
-			evv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, Vector4 val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectVectorVariable	evv	=ev.AsVector();
-			if(evv == null)
-			{
-				return;
-			}
-
-			evv.Set(val);
-
-			evv.Dispose();
-		}
-
-
-		void SetVar(EffectVariable ev, Bool4 val)
-		{
-			if(ev == null)
-			{
-				return;
-			}
-
-			EffectVectorVariable	evv	=ev.AsVector();
-			if(evv == null)
-			{
-				return;
-			}
-
-			evv.Set(val);
-
-			evv.Dispose();
-		}
-
-
-		void ApplyVar(EffectVariable evar, object eval)
-		{
-			//todo: need to support setting params to null
-			if(eval == null)
-			{
-				return;
-			}
-
-			if(eval.GetType().IsArray)
-			{
-				if(eval is Matrix [])
-				{
-					SetVar(evar, (Matrix [])eval);
-				}
-				else if(eval is bool [])
-				{
-					SetVar(evar, (bool [])eval);
-				}
-				else if(eval is float [])
-				{
-					SetVar(evar, (float [])eval);
-				}
-				else if(eval is int [])
-				{
-					SetVar(evar, (int [])eval);
-				}
-				else if(eval is uint [])
-				{
-					SetVar(evar, (uint [])eval);
-				}
-				else if(eval is Color4 [])
-				{
-					SetVar(evar, (Color4 [])eval);
-				}
-				else if(eval is Int4 [])
-				{
-					SetVar(evar, (Int4 [])eval);
-				}
-				else if(eval is Vector4 [])
-				{
-					SetVar(evar, (Vector4 [])eval);
-				}
-				else if(eval is Bool4 [])
-				{
-					SetVar(evar, (Bool4 [])eval);
-				}
-				else
-				{
-					Debug.Assert(false);
-				}
-			}
-			else
-			{
-				if(eval is Matrix)
-				{
-					SetVar(evar, (Matrix)eval);
-				}
-				else if(eval is bool)
-				{
-					SetVar(evar, (bool)eval);
-				}
-				else if(eval is float)
-				{
-					SetVar(evar, (float)eval);
-				}
-				else if(eval is int)
-				{
-					SetVar(evar, (int)eval);
-				}
-				else if(eval is uint)
-				{
-					SetVar(evar, (uint)eval);
-				}
-				else if(eval is Bool4)
-				{
-					SetVar(evar, (Bool4)eval);
-				}
-				else if(eval is Color4)
-				{
-					SetVar(evar, (Color4)eval);
-				}
-				else if(eval is Int4)
-				{
-					SetVar(evar, (Int4)eval);
-				}
-				else if(eval is Vector2)
-				{
-					SetVar(evar, (Vector2)eval);
-				}
-				else if(eval is Vector3)
-				{
-					SetVar(evar, (Vector3)eval);
-				}
-				else if(eval is Vector4)
-				{
-					SetVar(evar, (Vector4)eval);
-				}
-				else if(eval is ShaderResourceView)
-				{
-					evar.AsShaderResource().SetResource(eval as ShaderResourceView);
-				}
-				else
-				{
-					Debug.Assert(false);
-				}
-			}
-		}
-
-
 		void ApplyVariables()
 		{
 			if(mbFinalized)
 			{
 				foreach(KeyValuePair<string, EffectVariableValue> varVal in mFinalVars)
 				{
-					object			val	=varVal.Value.mValue;
-					EffectVariable	var	=varVal.Value.mVar;
-
-					ApplyVar(var, val);
+					varVal.Value.ApplyVar();
 				}
 				return;
 			}
@@ -828,10 +342,7 @@ namespace MaterialLib
 					continue;
 				}
 
-				object			val	=varVal.Value.mValue;
-				EffectVariable	var	=varVal.Value.mVar;
-
-				ApplyVar(var, val);
+				varVal.Value.ApplyVar();
 			}
 		}
 
@@ -857,6 +368,10 @@ namespace MaterialLib
 
 		internal void SetVariables(List<EffectVariable> vars)
 		{
+			foreach(KeyValuePair<string, EffectVariableValue> varVal in mVars)
+			{
+				varVal.Value.Dispose();
+			}
 			mVars.Clear();
 			mHidden.Clear();
 			mIgnored.Clear();
@@ -867,6 +382,8 @@ namespace MaterialLib
 
 				evv.mValue	=null;
 				evv.mVar	=var;
+
+				evv.SetCastThing();
 
 				mVars.Add(var.Description.Name, evv);
 			}
@@ -1074,6 +591,7 @@ namespace MaterialLib
 				sr.Dispose();
 				ep.Dispose();
 			}
+			dev.Dispose();
 		}
 
 

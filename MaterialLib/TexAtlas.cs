@@ -302,6 +302,8 @@ namespace MaterialLib
 			}
 
 			InitTex(gd, ds);
+
+			ds.Dispose();
 		}
 
 

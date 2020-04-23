@@ -18,6 +18,7 @@ namespace MaterialLib
 	{
 		internal EffectVariable	mVar;
 		internal object			mValue;
+		internal object			mVarAs;	//AsVector AsMatrix etc...
 
 		public string Name
 		{
@@ -212,6 +213,411 @@ namespace MaterialLib
 				}
 			}
 			return	ret.ToArray();
+		}
+
+
+		#region SetVars
+		void SetVar(Matrix []val)
+		{
+			EffectMatrixVariable	emv	=mVarAs as EffectMatrixVariable;
+			if(emv == null)
+			{
+				return;
+			}
+			emv.SetMatrix(val);
+		}
+
+
+		void SetVar(bool []val)
+		{
+			EffectScalarVariable	esv	=mVarAs as EffectScalarVariable;
+			if(esv == null)
+			{
+				return;
+			}
+			esv.Set(val);
+		}
+
+
+		void SetVar(float []val)
+		{
+			EffectScalarVariable	esv	=mVarAs as EffectScalarVariable;
+			if(esv == null)
+			{
+				return;
+			}
+			esv.Set(val);
+		}
+
+
+		void SetVar(int []val)
+		{
+			EffectScalarVariable	esv	=mVarAs as EffectScalarVariable;
+			if(esv == null)
+			{
+				return;
+			}
+			esv.Set(val);
+		}
+
+
+		void SetVar(uint []val)
+		{
+			EffectScalarVariable	esv	=mVarAs as EffectScalarVariable;
+			if(esv == null)
+			{
+				return;
+			}
+			esv.Set(val);
+		}
+
+
+		void SetVar(Color4 []val)
+		{
+			EffectVectorVariable	evv	=mVarAs as EffectVectorVariable;
+			if(evv == null)
+			{
+				return;
+			}
+			evv.Set(val);
+		}
+
+
+		void SetVar(Int4 []val)
+		{
+			EffectVectorVariable	evv	=mVarAs as EffectVectorVariable;
+			if(evv == null)
+			{
+				return;
+			}
+			evv.Set(val);
+		}
+
+
+		void SetVar(Vector4 []val)
+		{
+			EffectVectorVariable	evv	=mVarAs as EffectVectorVariable;
+			if(evv == null)
+			{
+				return;
+			}
+			evv.Set(val);
+		}
+
+
+		void SetVar(Bool4 []val)
+		{
+			EffectVectorVariable	evv	=mVarAs as EffectVectorVariable;
+			if(evv == null)
+			{
+				return;
+			}
+			evv.Set(val);
+		}
+
+
+		void SetVar(Matrix val)
+		{
+			EffectMatrixVariable	emv	=mVarAs as EffectMatrixVariable;
+			if(emv == null)
+			{
+				return;
+			}
+			emv.SetMatrix(val);
+		}
+
+
+		void SetVar(bool val)
+		{
+			EffectScalarVariable	esv	=mVarAs as EffectScalarVariable;
+			if(esv == null)
+			{
+				return;
+			}
+			esv.Set(val);
+		}
+
+
+		void SetVar(float val)
+		{
+			EffectScalarVariable	esv	=mVarAs as EffectScalarVariable;
+			if(esv == null)
+			{
+				return;
+			}
+			esv.Set(val);
+		}
+
+
+		void SetVar(int val)
+		{
+			EffectScalarVariable	esv	=mVarAs as EffectScalarVariable;
+			if(esv == null)
+			{
+				return;
+			}
+			esv.Set(val);
+		}
+
+
+		void SetVar(uint val)
+		{
+			EffectScalarVariable	esv	=mVarAs as EffectScalarVariable;
+			if(esv == null)
+			{
+				return;
+			}
+			esv.Set(val);
+		}
+
+
+		void SetVar(Color4 val)
+		{
+			EffectVectorVariable	evv	=mVarAs as EffectVectorVariable;
+			if(evv == null)
+			{
+				return;
+			}
+			evv.Set(val);
+		}
+
+
+		void SetVar(Int4 val)
+		{
+			EffectVectorVariable	evv	=mVarAs as EffectVectorVariable;
+			if(evv == null)
+			{
+				return;
+			}
+			evv.Set(val);
+		}
+
+
+		void SetVar(Vector2 val)
+		{
+			EffectVectorVariable	evv	=mVarAs as EffectVectorVariable;
+			if(evv == null)
+			{
+				return;
+			}
+			evv.Set(val);
+		}
+
+
+		void SetVar(Vector3 val)
+		{
+			EffectVectorVariable	evv	=mVarAs as EffectVectorVariable;
+			if(evv == null)
+			{
+				return;
+			}
+			evv.Set(val);
+		}
+
+
+		void SetVar(Vector4 val)
+		{
+			EffectVectorVariable	evv	=mVarAs as EffectVectorVariable;
+			if(evv == null)
+			{
+				return;
+			}
+			evv.Set(val);
+		}
+
+
+		void SetVar(Bool4 val)
+		{
+			EffectVectorVariable	evv	=mVarAs as EffectVectorVariable;
+			if(evv == null)
+			{
+				return;
+			}
+			evv.Set(val);
+		}
+
+
+		void SetVar(ShaderResourceView srv)
+		{
+			EffectShaderResourceVariable	esrv	=mVarAs as EffectShaderResourceVariable;
+			if(esrv == null)
+			{
+				return;
+			}
+			esrv.SetResource(srv);
+		}
+		#endregion
+
+
+		internal void ApplyVar()
+		{
+			//todo: need to support setting params to null
+			if(mValue == null)
+			{
+				return;
+			}
+
+			if(mValue.GetType().IsArray)
+			{
+				if(mValue is Matrix [])
+				{
+					SetVar((Matrix [])mValue);
+				}
+				else if(mValue is bool [])
+				{
+					SetVar((bool [])mValue);
+				}
+				else if(mValue is float [])
+				{
+					SetVar((float [])mValue);
+				}
+				else if(mValue is int [])
+				{
+					SetVar((int [])mValue);
+				}
+				else if(mValue is uint [])
+				{
+					SetVar((uint [])mValue);
+				}
+				else if(mValue is Color4 [])
+				{
+					SetVar((Color4 [])mValue);
+				}
+				else if(mValue is Int4 [])
+				{
+					SetVar((Int4 [])mValue);
+				}
+				else if(mValue is Vector4 [])
+				{
+					SetVar((Vector4 [])mValue);
+				}
+				else if(mValue is Bool4 [])
+				{
+					SetVar((Bool4 [])mValue);
+				}
+				else
+				{
+					Debug.Assert(false);
+				}
+			}
+			else
+			{
+				if(mValue is Matrix)
+				{
+					SetVar((Matrix)mValue);
+				}
+				else if(mValue is bool)
+				{
+					SetVar((bool)mValue);
+				}
+				else if(mValue is float)
+				{
+					SetVar((float)mValue);
+				}
+				else if(mValue is int)
+				{
+					SetVar((int)mValue);
+				}
+				else if(mValue is uint)
+				{
+					SetVar((uint)mValue);
+				}
+				else if(mValue is Bool4)
+				{
+					SetVar((Bool4)mValue);
+				}
+				else if(mValue is Color4)
+				{
+					SetVar((Color4)mValue);
+				}
+				else if(mValue is Int4)
+				{
+					SetVar((Int4)mValue);
+				}
+				else if(mValue is Vector2)
+				{
+					SetVar((Vector2)mValue);
+				}
+				else if(mValue is Vector3)
+				{
+					SetVar((Vector3)mValue);
+				}
+				else if(mValue is Vector4)
+				{
+					SetVar((Vector4)mValue);
+				}
+				else if(mValue is ShaderResourceView)
+				{
+					SetVar(mValue as ShaderResourceView);
+				}
+				else
+				{
+					Debug.Assert(false);
+				}
+			}
+		}
+
+
+		internal void SetCastThing()
+		{
+			if(mVar.TypeInfo.Description.Class == ShaderVariableClass.MatrixColumns)
+			{
+				mVarAs	=mVar.AsMatrix();
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Object)
+			{
+				mVarAs	=mVar.AsShaderResource();
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Scalar)
+			{
+				mVarAs	=mVar.AsScalar();
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Struct)
+			{
+				Debug.Assert(false);
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Vector)
+			{
+				mVarAs	=mVar.AsVector();
+			}
+			else
+			{
+				Debug.Assert(false);
+			}
+		}
+
+
+		internal void Dispose()
+		{
+			if(mVarAs == null)
+			{
+				return;
+			}
+
+			if(mVar.TypeInfo.Description.Class == ShaderVariableClass.MatrixColumns)
+			{
+				(mVarAs as EffectMatrixVariable).Dispose();
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Object)
+			{
+				(mVarAs as EffectShaderResourceVariable).Dispose();
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Scalar)
+			{
+				(mVarAs as EffectScalarVariable).Dispose();
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Struct)
+			{
+				Debug.Assert(false);
+			}
+			else if(mVar.TypeInfo.Description.Class == ShaderVariableClass.Vector)
+			{
+				(mVarAs as EffectVectorVariable).Dispose();
+			}
+			else
+			{
+				Debug.Assert(false);
+			}
 		}
 
 
