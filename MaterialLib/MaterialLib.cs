@@ -170,40 +170,7 @@ namespace MaterialLib
 		{
 			NukeAllMaterials();
 
-			//celstuff
-			if(mCelResources != null)
-			{
-				foreach(ShaderResourceView srv in mCelResources)
-				{
-					if(srv != null)
-					{
-						srv.Dispose();
-					}
-				}
-			}
-			if(mCelTex2Ds != null)
-			{
-				foreach(Texture2D tex in mCelTex2Ds)
-				{
-					if(tex != null)
-					{
-						tex.Dispose();
-					}
-				}
-			}
-			if(mCelTex1Ds != null)
-			{
-				foreach(Texture1D tex in mCelTex1Ds)
-				{
-					if(tex != null)
-					{
-						tex.Dispose();
-					}
-				}
-			}
-			mCelResources	=null;
-			mCelTex2Ds		=null;
-			mCelTex1Ds		=null;
+			FreeCelStuff();
 		}
 
 

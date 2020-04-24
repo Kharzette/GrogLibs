@@ -51,9 +51,37 @@ namespace MaterialLib
 
 		public void InitCelShading(int numShadingVariations)
 		{
+			FreeAll();
+
 			mCelResources	=new ShaderResourceView[numShadingVariations];
 			mCelTex1Ds		=new Texture1D[numShadingVariations];
 			mCelTex2Ds		=new Texture2D[numShadingVariations];
+		}
+
+
+		public void FreeCelStuff()
+		{
+			if(mCelResources == null)
+			{
+				return;
+			}
+
+			for(int i=0;i < mCelResources.Length;i++)
+			{
+				mCelResources[i].Dispose();
+
+				if(mCelTex1Ds[i] != null)
+				{
+					mCelTex1Ds[i].Dispose();
+				}
+				if(mCelTex2Ds[i] != null)
+				{
+					mCelTex2Ds[i].Dispose();
+				}
+			}
+			mCelResources	=null;
+			mCelTex2Ds		=null;
+			mCelTex1Ds		=null;
 		}
 
 
@@ -204,6 +232,12 @@ namespace MaterialLib
 				res	=mCelTex1Ds[index]	=new Texture1D(gd, texDesc, ds);
 
 				mCelTex1Ds[index].DebugName	="CelTex" + index;
+			}
+
+			if(mCelResources[index] != null)
+			{
+				//dispose previous
+				mCelResources[index].Dispose();
 			}
 
 			mCelResources[index]	=new ShaderResourceView(gd, res);
