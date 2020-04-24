@@ -567,6 +567,27 @@ namespace MaterialLib
 		}
 
 
+		bool	bIsShaderResourceType()
+		{
+			return	(mType == ShaderVariableType.Texture
+				|| mType == ShaderVariableType.Texture1D
+				|| mType == ShaderVariableType.Texture2D
+				|| mType == ShaderVariableType.Texture3D
+				|| mType == ShaderVariableType.TextureCube
+				|| mType == ShaderVariableType.Texture1DArray
+				|| mType == ShaderVariableType.Texture2DArray
+				|| mType == ShaderVariableType.RenderTargetView
+				|| mType == ShaderVariableType.DepthStencilView
+				|| mType == ShaderVariableType.Texture2DMultisampled
+				|| mType == ShaderVariableType.TextureCubeArray
+				|| mType == ShaderVariableType.RWTexture1D
+				|| mType == ShaderVariableType.RWTexture1DArray
+				|| mType == ShaderVariableType.RWTexture2D
+				|| mType == ShaderVariableType.RWTexture2DArray
+				|| mType == ShaderVariableType.RWTexture3D);
+		}
+
+
 		internal void SetExtraData()
 		{
 			EffectType	et	=mVar.TypeInfo;
@@ -585,7 +606,10 @@ namespace MaterialLib
 			}
 			else if(mClass == ShaderVariableClass.Object)
 			{
-				mVarAs	=mVar.AsShaderResource();
+				if(bIsShaderResourceType())
+				{
+					mVarAs	=mVar.AsShaderResource();
+				}
 			}
 			else if(mClass == ShaderVariableClass.Scalar)
 			{
@@ -606,7 +630,7 @@ namespace MaterialLib
 		}
 
 
-		internal void Dispose()
+		public void Dispose()
 		{
 			if(mVarAs == null)
 			{
@@ -619,7 +643,10 @@ namespace MaterialLib
 			}
 			else if(mClass == ShaderVariableClass.Object)
 			{
-				(mVarAs as EffectShaderResourceVariable).Dispose();
+				if(bIsShaderResourceType())
+				{
+					(mVarAs as EffectShaderResourceVariable).Dispose();
+				}
 			}
 			else if(mClass == ShaderVariableClass.Scalar)
 			{

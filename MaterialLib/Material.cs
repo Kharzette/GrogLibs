@@ -68,7 +68,7 @@ namespace MaterialLib
 		public EffectTechnique Technique
 		{
 			get { return mTechnique; }
-			set { mTechnique = value;  CalcLayouts(); }
+			set { ClearNoVars(); mTechnique = value;  CalcLayouts(); }
 		}
 
 
@@ -109,9 +109,18 @@ namespace MaterialLib
 
 		internal void Clear()
 		{
-			mEffect		=null;
-			mTechnique	=null;
+			foreach(KeyValuePair<string, EffectVariableValue> varVal in mVars)
+			{
+				varVal.Value.Dispose();
+			}
+			mVars.Clear();
 
+			ClearNoVars();
+		}
+
+
+		internal void ClearNoVars()
+		{
 			foreach(InputLayout il in mLayouts)
 			{
 				il.Dispose();
@@ -124,11 +133,10 @@ namespace MaterialLib
 			}
 			mPasses.Clear();
 
-			foreach(KeyValuePair<string, EffectVariableValue> varVal in mVars)
+			if(mTechnique != null)
 			{
-				varVal.Value.Dispose();
+				mTechnique.Dispose();
 			}
-			mVars.Clear();
 		}
 
 
@@ -277,6 +285,8 @@ namespace MaterialLib
 
 		internal void Read(BinaryReader br, EffectForName efn, GrabVariables gv)
 		{
+			Clear();
+
 			mName	=br.ReadString();
 
 			string	fx	=br.ReadString();
@@ -361,7 +371,7 @@ namespace MaterialLib
 				EffectVariable	var	=varVal.Value.mVar;
 				object			val	=varVal.Value.mValue;
 
-				if(var.TypeInfo.Description.Type == ShaderVariableType.Texture2D)
+				if(varVal.Value.mType == ShaderVariableType.Texture2D)
 				{
 					if(val != null && val is string)
 					{
@@ -404,9 +414,7 @@ namespace MaterialLib
 				return;
 			}
 
-			EffectVariableValue	evv	=mVars[name];
-
-			evv.mValue	=value;
+			mVars[name].mValue	=value;
 		}
 
 
@@ -537,19 +545,6 @@ namespace MaterialLib
 
 		void CalcLayouts()
 		{
-			//clear existing
-			foreach(InputLayout il in mLayouts)
-			{
-				il.Dispose();
-			}
-			mLayouts.Clear();
-
-			foreach(EffectPass ep in mPasses)
-			{
-				ep.Dispose();
-			}
-			mPasses.Clear();
-
 			if(mEffect == null || mTechnique == null)
 			{
 				return;
@@ -587,8 +582,11 @@ namespace MaterialLib
 
 				mNumPasses++;
 
-				EffectShaderDescription	sd	=ep.VertexShaderDescription.
-					Variable.GetShaderDescription(ep.VertexShaderDescription.Index);
+				EffectShaderVariable	esv	=ep.VertexShaderDescription.Variable;
+
+				EffectShaderDescription	sd	=esv.GetShaderDescription(ep.VertexShaderDescription.Index);
+
+				esv.Dispose();
 
 				ShaderReflection	sr	=new ShaderReflection(sd.Bytecode);
 

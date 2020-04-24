@@ -388,6 +388,13 @@ namespace SharedForms
 			if(MaterialList.SelectedIndices.Count < 1
 				|| MaterialList.SelectedIndices.Count > 1)
 			{
+				if(VariableList.DataSource != null)
+				{
+					BindingList<MaterialLib.EffectVariableValue>	oldVars
+						=VariableList.DataSource as BindingList<MaterialLib.EffectVariableValue>;
+					
+					oldVars.Clear();
+				}
 				VariableList.DataSource	=null;
 				NewMaterial.Text		="New Mat";
 				return;

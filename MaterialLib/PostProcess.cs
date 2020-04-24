@@ -44,8 +44,10 @@ namespace MaterialLib
 		Buffer				mQuadIB;
 		VertexBufferBinding	mQuadBinding;
 
-		//effect file that has most of the post stuff in it
-		Effect	mPostFX;
+		//effect file stuff
+		Effect			mPostFX;
+		EffectTechnique	mETech;
+		EffectPass		mEPass;
 
 		//stuff
 		int		mResX, mResY;
@@ -646,21 +648,24 @@ namespace MaterialLib
 			gd.DC.InputAssembler.SetVertexBuffers(0, mQuadBinding);
 			gd.DC.InputAssembler.SetIndexBuffer(mQuadIB, Format.R16_UInt, 0);
 
-			EffectTechnique	et	=mPostFX.GetTechniqueByName(technique);
+			if(mETech == null)
+			{
+				mETech	=mPostFX.GetTechniqueByName(technique);
+			}
 
-			if(!et.IsValid)
+			if(!mETech.IsValid)
 			{
 				return;
 			}
 
-			EffectPass	ep	=et.GetPassByIndex(0);
+			if(mEPass == null)
+			{
+				mEPass	=mETech.GetPassByIndex(0);
+			}
 
-			ep.Apply(gd.DC);
+			mEPass.Apply(gd.DC);
 
 			gd.DC.DrawIndexed(6, 0, 0);
-
-			ep.Dispose();
-			et.Dispose();
 		}
 
 
@@ -669,6 +674,10 @@ namespace MaterialLib
 			//unwire from device resize stuff
 			gd.ePreResize	-=OnPreResize;
 			gd.eResized		-=OnResized;
+
+			//effect stuff
+			mEPass.Dispose();
+			mETech.Dispose();
 
 			//dispose all views
 			foreach(KeyValuePair<string, RenderTargetView> view in mPostTargets)
