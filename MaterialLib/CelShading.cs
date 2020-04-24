@@ -51,7 +51,7 @@ namespace MaterialLib
 
 		public void InitCelShading(int numShadingVariations)
 		{
-			FreeAll();
+			FreeCelStuff();
 
 			mCelResources	=new ShaderResourceView[numShadingVariations];
 			mCelTex1Ds		=new Texture1D[numShadingVariations];
