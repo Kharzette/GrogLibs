@@ -47,8 +47,6 @@ namespace MaterialLib
 		public DynamicLights(GraphicsDevice gd, Effect fx)
 		{
 			Init(gd, fx);
-
-			mESRV	=mFX.GetVariableByName("mDynLights").AsShaderResource();
 		}
 
 
@@ -99,6 +97,12 @@ namespace MaterialLib
 
 			mDynLights	=new Texture1D(gd.GD, texDesc, ds);
 			mDynSRV		=new ShaderResourceView(gd.GD, mDynLights);
+
+			EffectVariable	esv	=mFX.GetVariableByName("mDynLights");
+
+			mESRV	=esv.AsShaderResource();
+
+			esv.Dispose();
 		}
 
 

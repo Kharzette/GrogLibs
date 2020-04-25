@@ -337,6 +337,14 @@ namespace BSPZone
 			{
 				return;
 			}
+			if(!ze.mData.ContainsKey("classname"))
+			{
+				return;
+			}
+			if(ze.mData["classname"] != "target_move_stage")
+			{
+				return;
+			}
 
 			string	moveTarg	=ze.GetValue("target");
 

@@ -91,6 +91,9 @@ namespace MeshLib
 		public delegate void RenderExternal(AlphaPool ap, GameCamera gcam);
 		public delegate void RenderExternalDMN(GameCamera gcam);
 
+		//this is needed to set rendertargets up for drawing alphas
+		public delegate void SetUpAlphaRenderTargets();
+
 		//tool side delegates for building the indoor mesh
 		//from raw parts
 		public delegate bool BuildLMRenderData(
@@ -395,7 +398,8 @@ namespace MeshLib
 			IsMaterialVisible bMatVis,
 			GetModelMatrix getModMatrix,
 			RenderExternal rendExternal,
-			ShadowHelper.RenderShadows renderShadows)
+			ShadowHelper.RenderShadows renderShadows,
+			SetUpAlphaRenderTargets setUpAlphaTargets)
 		{
 			//update materiallib wvp
 			mMatLib.UpdateWVP(Matrix.Identity, gd.GCam.View, gd.GCam.Projection, gd.GCam.Position);
@@ -435,6 +439,9 @@ namespace MeshLib
 				mMatLib.ClearResourceParameter(gd.DC, "BSP.fx", "FullBright", "mShadowTexture");
 				mMatLib.ClearResourceParameter(gd.DC, "BSP.fx", "FullBright", "mShadowCube");
 			}
+
+			//reset targets back in case shadow pass changed them
+			setUpAlphaTargets();
 
 			//draw alphas
 			DrawMaterialsDC(gd, 0, getModMatrix, mAlphaVBB, mAlphaIB, mAlphaDrawCalls, bMatVis);

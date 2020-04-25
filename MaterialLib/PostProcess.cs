@@ -676,8 +676,14 @@ namespace MaterialLib
 			gd.eResized		-=OnResized;
 
 			//effect stuff
-			mEPass.Dispose();
-			mETech.Dispose();
+			if(mEPass != null)
+			{
+				mEPass.Dispose();
+			}
+			if(mETech != null)
+			{
+				mETech.Dispose();
+			}
 
 			//dispose all views
 			foreach(KeyValuePair<string, RenderTargetView> view in mPostTargets)
