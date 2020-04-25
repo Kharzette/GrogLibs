@@ -205,18 +205,18 @@ namespace BSPCore
 			c1	=mOriginal.mContents;
 			c2	=otherBrush.mOriginal.mContents;
 
-			if(((c1 & Contents.BSP_CONTENTS_DETAIL2) != 0) &&
-				!((c2 & Contents.BSP_CONTENTS_DETAIL2) != 0))
+			if(((c1 & GrogContents.BSP_CONTENTS_DETAIL2) != 0) &&
+				!((c2 & GrogContents.BSP_CONTENTS_DETAIL2) != 0))
 			{
 				return	false;
 			}
 
-			if(((c1|c2) & Contents.BSP_CONTENTS_FLOCKING) != 0)
+			if(((c1|c2) & GrogContents.BSP_CONTENTS_FLOCKING) != 0)
 			{
 				return	false;
 			}
 
-			if((c1 & Contents.BSP_CONTENTS_SOLID2) != 0)
+			if((c1 & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return	true;
 			}
@@ -736,9 +736,9 @@ namespace BSPCore
 
 
 		//result list == a - b
-		static List<GBSPBrush> Subtract(GBSPBrush a, GBSPBrush b, PlanePool pool, ClipPools cp)
+		static void Subtract(GBSPBrush a, GBSPBrush b, PlanePool pool, ClipPools cp, List<GBSPBrush> outside)
 		{
-			List<GBSPBrush>	outside	=new List<GBSPBrush>();
+			outside.Clear();
 
 			GBSPBrush	inside	=a;	//Default a being inside b
 
@@ -770,12 +770,12 @@ namespace BSPCore
 			{
 				outside.Clear();
 				outside.Add(a);
-				return	outside;	//Nothing on inside list, so cancel all cuts, and return original
+				return;	//Nothing on inside list, so cancel all cuts, and return original
 			}
 			
 			inside	=null;	//Free all inside fragments
 
-			return	outside;	//Return what was on the outside
+			return;	//Return what was on the outside
 		}
 		#endregion
 	}

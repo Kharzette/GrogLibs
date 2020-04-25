@@ -113,7 +113,15 @@ namespace BSPCore
 				if(s.StartsWith("("))
 				{
 					GBSPSide	side	=new GBSPSide();
-					mContents	=side.ReadMapLine(s, tiPool, prms);
+
+					if(prms.mMapType == MapType.GrogLibs)
+					{
+						mContents	=side.ReadMapLineGrog(s, tiPool, prms);
+					}
+					else if(prms.mMapType == MapType.Quake1)
+					{
+						mContents	=side.ReadMapLineQuake1(s, tiPool, prms);
+					}
 
 					mOriginalSides.Add(side);
 					mEntityNum	=entityNum;
@@ -121,7 +129,7 @@ namespace BSPCore
 				else if(s.StartsWith("}"))
 				{
 					//origin brushes need their bounds early
-					if(Misc.bFlagSet(mContents, Contents.BSP_CONTENTS_ORIGIN))
+					if(Misc.bFlagSet(mContents, GrogContents.BSP_CONTENTS_ORIGIN))
 					{
 						EarlyBounds();
 					}
@@ -129,7 +137,7 @@ namespace BSPCore
 					//check for default brushes
 					if(mContents == 0)
 					{
-						mContents	=Contents.BSP_CONTENTS_SOLID2;
+						mContents	=GrogContents.BSP_CONTENTS_SOLID2;
 					}
 					return	ret;	//brush done
 				}
@@ -349,29 +357,29 @@ namespace BSPCore
 
 		internal void FixContents()
 		{
-			mContents	=Contents.FixContents(mContents);
+			mContents	=GrogContents.FixContents(mContents);
 
 			//Force clip to solid/detail, and mark faces as not visible (they will get put last in the tree)
-			if((mContents & Contents.BSP_CONTENTS_CLIP2) != 0)
+			if((mContents & GrogContents.BSP_CONTENTS_CLIP2) != 0)
 			{
 				for(int k=0;k < mOriginalSides.Count;k++)
 				{
 					mOriginalSides[k].mFlags	&=~GBSPSide.SIDE_VISIBLE;	//Clips won't have faces
 				}
-				mContents	|=Contents.BSP_CONTENTS_DETAIL2;	//Clips are allways detail
+				mContents	|=GrogContents.BSP_CONTENTS_DETAIL2;	//Clips are allways detail
 			}
 			
-			if((mContents & Contents.BSP_CONTENTS_SHEET) != 0)
+			if((mContents & GrogContents.BSP_CONTENTS_SHEET) != 0)
 			{
 				//Only the first side is visible for sheets
 				mOriginalSides[0].mFlags	|=GBSPSide.SIDE_SHEET;
 				
 				//Sheets are allways detail!!!
-				mContents	|=Contents.BSP_CONTENTS_DETAIL2;
+				mContents	|=GrogContents.BSP_CONTENTS_DETAIL2;
 			}
 			
 			//Convert all sides to hint if need so...
-			if((mContents & Contents.BSP_CONTENTS_HINT2) != 0)
+			if((mContents & GrogContents.BSP_CONTENTS_HINT2) != 0)
 			{
 				for(int k=0;k < mOriginalSides.Count;k++)
 				{
@@ -379,54 +387,54 @@ namespace BSPCore
 					mOriginalSides[k].mFlags	|=GBSPSide.SIDE_VISIBLE;
 				}
 				
-				if((mContents & Contents.BSP_CONTENTS_DETAIL2) != 0)
+				if((mContents & GrogContents.BSP_CONTENTS_DETAIL2) != 0)
 				{
-					mContents	&=~Contents.BSP_CONTENTS_DETAIL2;
+					mContents	&=~GrogContents.BSP_CONTENTS_DETAIL2;
 				}
 			}
 
 			//check for detail with no non solid flags
-			if((mContents & Contents.BSP_CONTENTS_DETAIL2) != 0)
+			if((mContents & GrogContents.BSP_CONTENTS_DETAIL2) != 0)
 			{
-				if((mContents & Contents.BSP_CONTENTS_SOLID2) == 0)
+				if((mContents & GrogContents.BSP_CONTENTS_SOLID2) == 0)
 				{
 					if((mContents &
-						(Contents.BSP_CONTENTS_EMPTY2
-						| Contents.BSP_CONTENTS_WINDOW2
-						| Contents.BSP_CONTENTS_TRANSLUCENT2
-						| Contents.BSP_CONTENTS_CLIP2
-						| Contents.BSP_CONTENTS_HINT2
-						| Contents.BSP_CONTENTS_AREA2))
+						(GrogContents.BSP_CONTENTS_EMPTY2
+						| GrogContents.BSP_CONTENTS_WINDOW2
+						| GrogContents.BSP_CONTENTS_TRANSLUCENT2
+						| GrogContents.BSP_CONTENTS_CLIP2
+						| GrogContents.BSP_CONTENTS_HINT2
+						| GrogContents.BSP_CONTENTS_AREA2))
 						== 0)
 					{
-						mContents	|=Contents.BSP_CONTENTS_SOLID2;
+						mContents	|=GrogContents.BSP_CONTENTS_SOLID2;
 					}
 				}
 			}
 
 			//make translucent stuff detail, so it isn't
 			//chosen for splitting planes
-			if(Misc.bFlagSet(Contents.BSP_CONTENTS_TRANSLUCENT2, mContents))
+			if(Misc.bFlagSet(GrogContents.BSP_CONTENTS_TRANSLUCENT2, mContents))
 			{
-				mContents	|=Contents.BSP_CONTENTS_DETAIL2;
+				mContents	|=GrogContents.BSP_CONTENTS_DETAIL2;
 			}
 
 			//translucent should be either window or empty
-			if(Misc.bFlagSet(Contents.BSP_CONTENTS_TRANSLUCENT2, mContents))
+			if(Misc.bFlagSet(GrogContents.BSP_CONTENTS_TRANSLUCENT2, mContents))
 			{
-				if(!(Misc.bFlagSet(Contents.BSP_CONTENTS_WINDOW2, mContents) ||
-					Misc.bFlagSet(Contents.BSP_CONTENTS_EMPTY2, mContents)))
+				if(!(Misc.bFlagSet(GrogContents.BSP_CONTENTS_WINDOW2, mContents) ||
+					Misc.bFlagSet(GrogContents.BSP_CONTENTS_EMPTY2, mContents)))
 				{
 					//I'm guessing they would want empty here
-					mContents	|=Contents.BSP_CONTENTS_EMPTY2;
+					mContents	|=GrogContents.BSP_CONTENTS_EMPTY2;
 				}
 			}
 
 			//make triggers invisible
-			if(Misc.bFlagSet(mContents, Contents.BSP_CONTENTS_TRIGGER))
+			if(Misc.bFlagSet(mContents, GrogContents.BSP_CONTENTS_TRIGGER))
 			{
 				//remove any flags other than trigger
-				mContents	&=Contents.BSP_CONTENTS_TRIGGER;
+				mContents	&=GrogContents.BSP_CONTENTS_TRIGGER;
 
 				//hide faces
 				for(int k=0;k < mOriginalSides.Count;k++)
@@ -436,10 +444,10 @@ namespace BSPCore
 			}
 
 			//make areaportals invisible
-			if(Misc.bFlagSet(mContents, Contents.BSP_CONTENTS_AREA2))
+			if(Misc.bFlagSet(mContents, GrogContents.BSP_CONTENTS_AREA2))
 			{
 				//remove any flags other than area
-				mContents	&=Contents.BSP_CONTENTS_AREA2;
+				mContents	&=GrogContents.BSP_CONTENTS_AREA2;
 
 				//hide faces
 				for(int k=0;k < mOriginalSides.Count;k++)

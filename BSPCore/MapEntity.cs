@@ -132,7 +132,7 @@ namespace BSPCore
 				//check for an origin brush
 				foreach(MapBrush mb in mBrushes)
 				{
-					if(Misc.bFlagSet(mb.mContents, Contents.BSP_CONTENTS_ORIGIN))
+					if(Misc.bFlagSet(mb.mContents, GrogContents.BSP_CONTENTS_ORIGIN))
 					{
 						//grab the origin
 						Vector3	org	=mb.mBounds.GetCenter();
@@ -464,7 +464,7 @@ namespace BSPCore
 				{
 					if(bGetClipOnly)
 					{
-						if((mb.mContents & Contents.BSP_CONTENTS_CLIP2) != 0)
+						if((mb.mContents & GrogContents.BSP_CONTENTS_CLIP2) != 0)
 						{
 							mb.GetTriangles(rnd, pp, verts, normals, colors, indexes, false);
 						}
@@ -520,11 +520,11 @@ namespace BSPCore
 		{
 			foreach(MapBrush mb in mBrushes)
 			{
-				if((mb.mContents & Contents.BSP_CONTENTS_DETAIL2) != 0)
+				if((mb.mContents & GrogContents.BSP_CONTENTS_DETAIL2) != 0)
 				{
 					numDetails++;
 				}
-				else if((mb.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+				else if((mb.mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					numSolids++;
 				}

@@ -130,7 +130,7 @@ namespace MaterialLib
 
 			if(mClass == ShaderVariableClass.MatrixColumns)
 			{
-				if(mNumColumns > 0)
+				if(mValue.GetType().IsArray)
 				{
 					return	"Big Ass MatArray";
 				}

@@ -86,7 +86,7 @@ namespace BSPCore
 			c1	=mFrontNode.ClusterContents();
 			c2	=mBackNode.ClusterContents();
 
-			if(Contents.VisSeeThru(c1) && Contents.VisSeeThru(c2))
+			if(GrogContents.VisSeeThru(c1) && GrogContents.VisSeeThru(c2))
 			{
 				return	true;
 			}

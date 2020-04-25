@@ -107,7 +107,7 @@ namespace BSPCore
 		{
 			if(list == null)
 			{
-				return	Contents.BSP_CONTENTS_SOLID2;
+				return	GrogContents.BSP_CONTENTS_SOLID2;
 			}
 
 			if(list.Count == 0)
@@ -119,7 +119,7 @@ namespace BSPCore
 
 			foreach(GBSPBrush b in list)
 			{
-				if((b.mOriginal.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+				if((b.mOriginal.mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					int	i=0;
 					for(i=0;i < b.mSides.Count;i++)
@@ -134,7 +134,7 @@ namespace BSPCore
 					//we can force this leaf to be solid...
 					if(i == b.mSides.Count)
 					{
-						ret	|=Contents.BSP_CONTENTS_SOLID2;
+						ret	|=GrogContents.BSP_CONTENTS_SOLID2;
 					}					
 				}
 				
@@ -212,12 +212,12 @@ namespace BSPCore
 				foreach(GBSPBrush b in list)
 				{
 					if(((pass & 1) != 0)
-						&& ((b.mOriginal.mContents & Contents.BSP_CONTENTS_DETAIL2) == 0))
+						&& ((b.mOriginal.mContents & GrogContents.BSP_CONTENTS_DETAIL2) == 0))
 					{
 						continue;
 					}
 					if(((pass & 1) == 0)
-						&& ((b.mOriginal.mContents & Contents.BSP_CONTENTS_DETAIL2) != 0))
+						&& ((b.mOriginal.mContents & GrogContents.BSP_CONTENTS_DETAIL2) != 0))
 					{
 						continue;
 					}
@@ -502,7 +502,7 @@ namespace BSPCore
 
 			foreach(GBSPBrush b in list)
 			{
-				if(Misc.bFlagSet(b.mOriginal.mContents, Contents.BSP_CONTENTS_DETAIL2))
+				if(Misc.bFlagSet(b.mOriginal.mContents, GrogContents.BSP_CONTENTS_DETAIL2))
 				{
 					ret.Add(b);
 				}
@@ -554,7 +554,7 @@ namespace BSPCore
 
 					if(b2.BrushCanBite(b1))
 					{
-						subResult1	=Subtract(b1, b2, pool, cp);
+						Subtract(b1, b2, pool, cp, subResult1);
 
 						if(subResult1.Contains(b1))
 						{
@@ -571,7 +571,7 @@ namespace BSPCore
 
 					if(b1.BrushCanBite(b2))
 					{
-						subResult2	=Subtract(b2, b1, pool, cp);
+						Subtract(b2, b1, pool, cp, subResult2);
 
 						if(subResult2.Contains(b2))
 						{
@@ -593,7 +593,7 @@ namespace BSPCore
 					{
 						if(GBSPBrush.SameContents(b1, b2))
 						{
-							subResult1	=Subtract(b1, b2, pool, cp);
+							Subtract(b1, b2, pool, cp, subResult1);
 
 							if(subResult1.Contains(b1))
 							{

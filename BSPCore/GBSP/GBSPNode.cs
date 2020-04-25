@@ -342,7 +342,7 @@ namespace BSPCore
 					return	false;
 				}
 
-				if((node.mContents & Contents.BSP_CONTENTS_SOLID2) == 0)
+				if((node.mContents & GrogContents.BSP_CONTENTS_SOLID2) == 0)
 				{
 					node.mEntity	=i;
 					bEmpty			=true;
@@ -409,7 +409,7 @@ namespace BSPCore
 			}
 
 			//Solid leafs never have visible faces
-			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return;
 			}
@@ -490,7 +490,7 @@ namespace BSPCore
 			}
 
 			//Solid leafs never have visible faces
-			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return;
 			}
@@ -539,8 +539,8 @@ namespace BSPCore
 			if(mFront.mPlaneNum == PlanePool.PLANENUM_LEAF
 				&& mBack.mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
-				if(((mFront.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
-					&& ((mBack.mContents & Contents.BSP_CONTENTS_SOLID2) != 0))
+				if(((mFront.mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
+					&& ((mBack.mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0))
 				{
 					if((mFront.mContents & 0xffff0000)
 						== (mBack.mContents & 0xffff0000))
@@ -622,7 +622,7 @@ namespace BSPCore
 			}
 			
 			//Either a leaf or detail node
-			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				mCluster	=-1;
 				return	true;
@@ -640,7 +640,7 @@ namespace BSPCore
 		{
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
-				if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+				if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					mCluster	=-1;
 				}
@@ -673,10 +673,10 @@ namespace BSPCore
 
 			con	=(c1 | c2);	//Or together children, and return
 
-			if(((c1 & Contents.BSP_CONTENTS_SOLID2) == 0)
-				|| ((c2 & Contents.BSP_CONTENTS_SOLID2) == 0))
+			if(((c1 & GrogContents.BSP_CONTENTS_SOLID2) == 0)
+				|| ((c2 & GrogContents.BSP_CONTENTS_SOLID2) == 0))
 			{
-				con	&=~Contents.BSP_CONTENTS_SOLID2;
+				con	&=~GrogContents.BSP_CONTENTS_SOLID2;
 			}
 			return	(con);
 		}
@@ -769,7 +769,7 @@ namespace BSPCore
 			//Prep the leaf and it's portals
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
-				if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+				if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					nc.mNumSolidLeafs++;	// Remember how many solid leafs there are
 				}
@@ -902,7 +902,7 @@ namespace BSPCore
 			}
 
 			//Only check visible contents
-			con	&=Contents.BSP_VISIBLE_CONTENTS;
+			con	&=GrogContents.BSP_VISIBLE_CONTENTS;
 			
 			//Return the strongest one, return the first lsb
 			for(int j=0;j < 32;j++)
@@ -920,24 +920,24 @@ namespace BSPCore
 
 		static internal bool WindowCheck(GBSPNode front, GBSPNode back)
 		{
-			return	(((front.mContents & Contents.BSP_CONTENTS_WINDOW2) != 0)
+			return	(((front.mContents & GrogContents.BSP_CONTENTS_WINDOW2) != 0)
 						&& VisibleContents(back.mContents
-						^ front.mContents) == Contents.BSP_CONTENTS_WINDOW2);
+						^ front.mContents) == GrogContents.BSP_CONTENTS_WINDOW2);
 		}
 
 
 		internal bool IsContentsSolid()
 		{
-			return	((mContents & Contents.BSP_CONTENTS_SOLID2) != 0);
+			return	((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0);
 		}
 
 
 		internal bool IsContentsTransparent()
 		{
 			return	((mContents &
-				(Contents.BSP_CONTENTS_EMPTY2
-				| Contents.BSP_CONTENTS_TRANSLUCENT2
-				| Contents.BSP_CONTENTS_WINDOW2)) != 0);
+				(GrogContents.BSP_CONTENTS_EMPTY2
+				| GrogContents.BSP_CONTENTS_TRANSLUCENT2
+				| GrogContents.BSP_CONTENTS_WINDOW2)) != 0);
 		}
 
 
@@ -999,7 +999,7 @@ namespace BSPCore
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
 				//Don't convert empty leafs
-				if((mContents & Contents.BSP_CONTENTS_SOLID_CLIP) == 0)
+				if((mContents & GrogContents.BSP_CONTENTS_SOLID_CLIP) == 0)
 				{
 					return	true;
 				}

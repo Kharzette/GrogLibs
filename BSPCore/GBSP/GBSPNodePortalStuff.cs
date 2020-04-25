@@ -276,7 +276,7 @@ namespace BSPCore
 			Vector3 nodeMins, Vector3 nodeMaxs, ClipPools cp)
 		{
 			outsideNode.mPlaneNum	=PlanePool.PLANENUM_LEAF;
-			outsideNode.mContents	=Contents.BSP_CONTENTS_SOLID2;
+			outsideNode.mContents	=GrogContents.BSP_CONTENTS_SOLID2;
 
 			//So there won't be NULL volume leafs when we create the outside portals
 			//note genesis uses 128 for outside space, Q2 uses 8
@@ -357,7 +357,7 @@ namespace BSPCore
 		{
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
-				if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+				if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					return;
 				}
@@ -394,7 +394,7 @@ namespace BSPCore
 		bool FillLeafs_r(bool bFill, Int32 dist, int curFill,
 			ref bool bHitEnt, ref GBSPNode hitNode)
 		{
-			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return	true;
 			}
@@ -410,7 +410,7 @@ namespace BSPCore
 			{
 				//Preserve user contents
 				mContents	&=0xffff0000;
-				mContents	|=Contents.BSP_CONTENTS_SOLID2;
+				mContents	|=GrogContents.BSP_CONTENTS_SOLID2;
 			}
 			else 
 			{
@@ -451,7 +451,7 @@ namespace BSPCore
 
 		bool FillLeafs2_r(int curFill)
 		{
-			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return	true;
 			}
@@ -507,7 +507,7 @@ namespace BSPCore
 
 				GBSPNode	node	=FindLeaf(org, pool);
 
-				if((node.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+				if((node.mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					continue;
 				}
@@ -539,7 +539,7 @@ namespace BSPCore
 				return;
 			}
 
-			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return;		//allready solid or removed...
 			}
@@ -548,7 +548,7 @@ namespace BSPCore
 			{
 				//Fill er in with solid so it does not show up...(Preserve user contents)
 				mContents	&=(0xffff0000);
-				mContents	|=Contents.BSP_CONTENTS_SOLID2;
+				mContents	|=GrogContents.BSP_CONTENTS_SOLID2;
 				numRemovedLeafs++;
 			}
 		}
@@ -653,7 +653,7 @@ namespace BSPCore
 				if(p.mSide != null)
 				{
 					//clips are invisible
-					if((mContents & Contents.BSP_CONTENTS_CLIP2) == 0)
+					if((mContents & GrogContents.BSP_CONTENTS_CLIP2) == 0)
 					{
 						p.mSide.mFlags	|=GBSPSide.SIDE_VISIBLE;
 					}
@@ -673,8 +673,8 @@ namespace BSPCore
 						theNode			=p.mFrontNode;
 					}
 
-					if(((oppositeNode.mContents & Contents.BSP_CONTENTS_SOLID2) == 0)
-						&& ((theNode.mContents & Contents.BSP_CONTENTS_SHEET) != 0)
+					if(((oppositeNode.mContents & GrogContents.BSP_CONTENTS_SOLID2) == 0)
+						&& ((theNode.mContents & GrogContents.BSP_CONTENTS_SHEET) != 0)
 						&& ((p.mSide.mFlags & GBSPSide.SIDE_SHEET) == 0))
 					{
 						p.mSide.mFlags	&=~GBSPSide.SIDE_VISIBLE;
@@ -758,7 +758,7 @@ namespace BSPCore
 				return	true;
 			}
 
-			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				mPortalLeafNum	=-1;
 				return	true;
@@ -814,7 +814,7 @@ namespace BSPCore
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF || mbDetail)
 			{
 				//Can't see from solid
-				if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+				if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					return	true;
 				}
@@ -910,8 +910,8 @@ namespace BSPCore
 			UInt32	visContents, majorContents;
 
 			//First, check to see if the contents are intersecting sheets (special case)
-			if(((front.mContents & Contents.BSP_CONTENTS_SHEET) != 0)
-				&& ((back.mContents & Contents.BSP_CONTENTS_SHEET) != 0))
+			if(((front.mContents & GrogContents.BSP_CONTENTS_SHEET) != 0)
+				&& ((back.mContents & GrogContents.BSP_CONTENTS_SHEET) != 0))
 			{
 				//The contents are intersecting sheets, so or them together
 				visContents	=front.mContents | back.mContents;
@@ -1078,12 +1078,12 @@ namespace BSPCore
 		
 		bool FillAreas_r(Int32 Area, CoreDelegates.ModelForLeafNode modForLeaf)
 		{
-			if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+			if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 			{
 				return	true;	//Stop at solid leafs
 			}
 
-			if((mContents & Contents.BSP_CONTENTS_AREA2) != 0)
+			if((mContents & GrogContents.BSP_CONTENTS_AREA2) != 0)
 			{
 				GBSPModel	Model;
 
@@ -1150,13 +1150,13 @@ namespace BSPCore
 			if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 			{
 				//Stop at solid
-				if((mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+				if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					return	true;
 				}
 
 				//Don't start at area portals
-				if((mContents & Contents.BSP_CONTENTS_AREA2) != 0)
+				if((mContents & GrogContents.BSP_CONTENTS_AREA2) != 0)
 				{
 					return	true;
 				}
@@ -1205,7 +1205,7 @@ namespace BSPCore
 				}
 			}
 
-			if((mContents & Contents.BSP_CONTENTS_AREA2) == 0)
+			if((mContents & GrogContents.BSP_CONTENTS_AREA2) == 0)
 			{
 				return	true;	//Only interested in area portals
 			}

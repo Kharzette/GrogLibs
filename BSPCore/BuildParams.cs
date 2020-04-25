@@ -5,6 +5,13 @@ using SharpDX;
 
 namespace BSPCore
 {
+	public enum MapType
+	{
+		GrogLibs,
+		Quake1, Quake2, Quake3,
+		Valve
+	}
+
 	public class BSPBuildParams
 	{
 		public int		mMaxThreads;
@@ -12,6 +19,7 @@ namespace BSPCore
 		public bool		mbBuildAsBModel;
 		public bool		mbFixTJunctions;
 		public string	mMapName;
+		public MapType	mMapType;
 	}
 
 

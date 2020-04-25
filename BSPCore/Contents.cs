@@ -4,7 +4,7 @@ using UtilityLib;
 
 namespace BSPCore
 {
-	public class Contents
+	public class GrogContents
 	{
 		//genesis style contents
 		public const UInt32 BSP_CONTENTS_SOLID2			=(1<<0);	//Solid (Visible)

@@ -72,7 +72,7 @@ namespace BSPCore
 
 			Int32	Leaf	=-(node + 1);
 
-			return	((mGFXLeafs[Leaf].mContents & Contents.BSP_CONTENTS_SOLID2) != 0);
+			return	((mGFXLeafs[Leaf].mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0);
 		}
 
 
@@ -87,7 +87,7 @@ namespace BSPCore
 				Int32	Leaf	=-(Node+1);
 
 				if((mGFXLeafs[Leaf].mContents
-					& Contents.BSP_CONTENTS_SOLID2) != 0)
+					& GrogContents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					return	true;	//Ray collided with solid space
 				}
@@ -211,7 +211,7 @@ namespace BSPCore
 				Int32	Leaf	=-(Node+1);
 				GFXLeaf	theLeaf	=mGFXLeafs[Leaf];
 
-				if((theLeaf.mContents & Contents.BSP_CONTENTS_SOLID2) != 0)
+				if((theLeaf.mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
 				{
 					return	true;	//Ray collided with solid space
 				}
@@ -855,7 +855,7 @@ namespace BSPCore
 			MapBrush	mb	=new MapBrush(mPlanePool, planeNums, sides, cp);
 
 			//set to solid
-			mb.mContents	=Contents.BSP_CONTENTS_SOLID2;
+			mb.mContents	=GrogContents.BSP_CONTENTS_SOLID2;
 
 			AddSingleBrush(mb);
 		}
