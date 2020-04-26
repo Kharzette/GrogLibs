@@ -13,7 +13,12 @@ namespace MeshLib
 		public int		mCount;			//vert or index count depending on draw
 		public int		mStartIndex;	//offsets
 		public int		mMaterialID;
+
+		//sort info if needed
 		public Vector3	mSortPoint;
+		public Vector3	mSortPlaneNormal;
+		public float	mSortPlaneDistance;
+		public bool		mbSortPlanar;
 
 
 		void Write(BinaryWriter bw)

@@ -1649,7 +1649,7 @@ namespace BSPCore
 			out UInt16 []lmaAnimInds,
 			out Dictionary<int, List<List<MeshLib.DrawCall>>> lmaAnimDCalls,
 
-			int lightAtlasSize,
+			int lightAtlasSize, bool bPerFaceAlpha,
 			object	pp,
 			out TexAtlas lightAtlas)
 		{
@@ -1677,7 +1677,7 @@ namespace BSPCore
 			}
 			mg.GetLMAnimGeometry(out lmAnimIndex, out lmAnimVerts, out lmAnimInds);
 
-			if(!mg.BuildLMAFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels))
+			if(!mg.BuildLMAFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels, bPerFaceAlpha))
 			{
 				lmDCs		=null;	lmAnimDCs		=null;	lmaDCalls	=null;
 				lightAtlas	=null;	lmaAnimDCalls	=null;
@@ -1688,7 +1688,7 @@ namespace BSPCore
 			}
 			mg.GetLMAGeometry(out lmaIndex, out lmaVerts, out lmaInds);
 
-			if(!mg.BuildLMAAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels))
+			if(!mg.BuildLMAAnimFaceData(mGFXVerts, mGFXVertIndexes, mGFXLightData, pp, mGFXModels, bPerFaceAlpha))
 			{
 				lmDCs		=null;	lmAnimDCs		=null;	lmaDCalls	=null;
 				lightAtlas	=null;	lmaAnimDCalls	=null;

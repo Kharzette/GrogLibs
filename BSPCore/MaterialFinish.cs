@@ -70,9 +70,10 @@ namespace BSPCore
 
 
 		void FinishLightMappedAlpha(int modelIndex,
-			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref UInt16 vertOfs)
+			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks,
+			GFXPlane []pp, ref UInt16 vertOfs)
 		{
-			List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mLMAIndexes, perPlaneChunks, ref vertOfs);
+			List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mLMAIndexes, perPlaneChunks, pp, ref vertOfs);
 
 			StuffVBArrays(perPlaneChunks, mLMAVerts, mLMANormals,
 				mLMAFaceTex0, mLMAFaceTex1, null, null,	null,
@@ -95,9 +96,10 @@ namespace BSPCore
 
 
 		void FinishAlpha(int modelIndex,
-			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref UInt16 vertOfs)
+			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks,
+			GFXPlane []pp, ref UInt16 vertOfs)
 		{
-			List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mAlphaIndexes, perPlaneChunks, ref vertOfs);
+			List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mAlphaIndexes, perPlaneChunks, pp, ref vertOfs);
 
 			StuffVBArrays(perPlaneChunks, mAlphaVerts, mAlphaNormals,
 				mAlphaTex0, null, null, null, null,
@@ -108,9 +110,10 @@ namespace BSPCore
 
 
 		void FinishLightMappedAlphaAnimated(int modelIndex,
-			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref UInt16 vertOfs)
+			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks,
+			GFXPlane []pp, ref UInt16 vertOfs)
 		{
-			List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mLMAAnimIndexes, perPlaneChunks, ref vertOfs);
+			List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mLMAAnimIndexes, perPlaneChunks, pp, ref vertOfs);
 
 			StuffVBArrays(perPlaneChunks, mLMAAnimVerts, mLMAAnimNormals,
 				mLMAAnimFaceTex0, mLMAAnimFaceTex1, mLMAAnimFaceTex2, 

@@ -122,7 +122,7 @@ namespace MeshLib
 			out UInt16 []lmaAnimInds,
 			out Dictionary<int, List<List<MeshLib.DrawCall>>> lmaAnimDCalls,
 
-			int lightAtlasSize,
+			int lightAtlasSize, bool bPerFaceAlpha,
 			object pp,
 			out TexAtlas lightAtlas);
 
@@ -255,13 +255,13 @@ namespace MeshLib
 
 
 		public void BuildLM(GraphicsDevice g, StuffKeeper sk,
-			int atlasSize, BuildLMRenderData brd, object pp)
+			int atlasSize, BuildLMRenderData brd, object pp, bool bPerFaceAlpha)
 		{
 			brd(g, sk, out mLMIndex, out mLMVerts, out mLMInds, out mLMDrawCalls,
 				out mLMAnimIndex, out mLMAnimVerts, out mLMAnimInds, out mLMAnimDrawCalls,
 				out mLMAIndex, out mLMAVerts, out mLMAInds, out mLMADrawCalls,
 				out mLMAAnimIndex, out mLMAAnimVerts, out mLMAAnimInds, out mLMAAnimDrawCalls,
-				atlasSize, pp, out mLightMapAtlas);
+				atlasSize, bPerFaceAlpha, pp, out mLightMapAtlas);
 
 			mLMVB		=VertexTypes.BuildABuffer(g.GD, mLMVerts, mLMIndex);
 			mLMAVB		=VertexTypes.BuildABuffer(g.GD, mLMAVerts, mLMAIndex);
@@ -616,8 +616,17 @@ namespace MeshLib
 
 						if(pass != 2)
 						{
-							mAlphaPool.StoreDraw(mMatLib, call.mSortPoint,
-								mat, vbb, ib, modMat, call.mStartIndex, call.mCount);
+							if(call.mbSortPlanar)
+							{
+								mAlphaPool.StoreDraw(mMatLib, call.mSortPoint,
+									call.mSortPlaneNormal, call.mSortPlaneDistance,
+									mat, vbb, ib, modMat, call.mStartIndex, call.mCount);
+							}
+							else
+							{
+								mAlphaPool.StoreDraw(mMatLib, call.mSortPoint,
+									mat, vbb, ib, modMat, call.mStartIndex, call.mCount);
+							}
 						}
 						else
 						{

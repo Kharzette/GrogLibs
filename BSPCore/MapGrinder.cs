@@ -26,6 +26,30 @@ namespace BSPCore
 		internal List<Vector2>	mTex4		=new List<Vector2>();
 		internal List<Color>	mColors		=new List<Color>();
 		internal List<Color>	mStyles		=new List<Color>();
+
+
+		internal float Area()
+		{
+			float	total	=0.0f;
+			int		vertOfs	=0;
+			for(int i=0;i < mNumFaces;i++)
+			{
+				int	nverts	=mVCounts[i];
+				for(int j=2;j < nverts;j++)
+				{
+					Vector3	vect1	=mVerts[j + vertOfs - 1] - mVerts[vertOfs];
+					Vector3	vect2	=mVerts[j + vertOfs] - mVerts[vertOfs];
+
+					//not sure if this ordering is correct, but since
+					//only the length is used, should be ok
+					Vector3	cross	=Vector3.Cross(vect1, vect2);
+
+					total	+=0.5f * cross.Length();
+				}
+				vertOfs	+=nverts;
+			}
+			return	total;
+		}
 	}
 
 
@@ -141,7 +165,11 @@ namespace BSPCore
 											byte []lightData, TexAtlas atlas,
 											List<List<Vector3>> mirrorPolys);
 		internal delegate void FinishUp(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs);
-		internal delegate void FinishUpAlpha(int modelIndex, List<Dictionary<Int32, DrawDataChunk>> perPlaneChunk, ref UInt16 vertOfs);
+		internal delegate void FinishUpAlpha(int modelIndex, List<Dictionary<Int32, DrawDataChunk>> perPlaneChunk, GFXPlane []pp, ref UInt16 vertOfs);
+
+		//only big planes
+		const float	PlanarSortArea	=100000f;
+
 
 		public MapGrinder(GraphicsDevice gd,
 			StuffKeeper sk, MatLib matLib,
@@ -479,21 +507,21 @@ namespace BSPCore
 				=new VPosNormTex04Tex14Tex24Color0[mLMAAnimVerts.Count];
 			for(int i=0;i < mLMAAnimVerts.Count;i++)
 			{
-				varray[i].Position		=mLMAnimVerts[i];
-				varray[i].Normal.X		=mLMAnimNormals[i].X;
-				varray[i].Normal.Y		=mLMAnimNormals[i].Y;
-				varray[i].Normal.Z		=mLMAnimNormals[i].Z;
+				varray[i].Position		=mLMAAnimVerts[i];
+				varray[i].Normal.X		=mLMAAnimNormals[i].X;
+				varray[i].Normal.Y		=mLMAAnimNormals[i].Y;
+				varray[i].Normal.Z		=mLMAAnimNormals[i].Z;
 				varray[i].Normal.W		=1f;
-				varray[i].TexCoord0.X	=mLMAnimFaceTex0[i].X;
-				varray[i].TexCoord0.Y	=mLMAnimFaceTex0[i].Y;
-				varray[i].TexCoord0.Z	=mLMAnimFaceTex1[i].X;
-				varray[i].TexCoord0.W	=mLMAnimFaceTex1[i].Y;
-				varray[i].TexCoord1.X	=mLMAnimFaceTex2[i].X;
-				varray[i].TexCoord1.Y	=mLMAnimFaceTex2[i].Y;
-				varray[i].TexCoord1.Z	=mLMAnimFaceTex3[i].X;
-				varray[i].TexCoord1.W	=mLMAnimFaceTex3[i].Y;
-				varray[i].TexCoord2.X	=mLMAnimFaceTex4[i].X;
-				varray[i].TexCoord2.Y	=mLMAnimFaceTex4[i].Y;
+				varray[i].TexCoord0.X	=mLMAAnimFaceTex0[i].X;
+				varray[i].TexCoord0.Y	=mLMAAnimFaceTex0[i].Y;
+				varray[i].TexCoord0.Z	=mLMAAnimFaceTex1[i].X;
+				varray[i].TexCoord0.W	=mLMAAnimFaceTex1[i].Y;
+				varray[i].TexCoord1.X	=mLMAAnimFaceTex2[i].X;
+				varray[i].TexCoord1.Y	=mLMAAnimFaceTex2[i].Y;
+				varray[i].TexCoord1.Z	=mLMAAnimFaceTex3[i].X;
+				varray[i].TexCoord1.W	=mLMAAnimFaceTex3[i].Y;
+				varray[i].TexCoord2.X	=mLMAAnimFaceTex4[i].X;
+				varray[i].TexCoord2.Y	=mLMAAnimFaceTex4[i].Y;
 				varray[i].TexCoord2.Z	=mLMAAnimColors[i].A;	//alpha
 				varray[i].TexCoord2.W	=69.0f;	//nothin
 				varray[i].TexCoord3.A	=mLMAAnimStyle[i].R;
@@ -557,8 +585,75 @@ namespace BSPCore
 		}
 
 
-		//alphas come in per face chunks with a sort point
+		//alphas come in per plane chunks with a sort point
 		internal bool BuildAlphaFaceData(Vector3 []verts, int[] indexes,
+			Vector3 []rgbVerts, Vector3 []vnorms,
+			object pobj, GFXModel []models, byte []lightData,
+			IsCorrectMaterial correct, FillDrawChunk fill, FinishUpAlpha fin)
+		{
+			GFXPlane	[]pp	=pobj as GFXPlane [];
+
+			UInt16	vertOfs	=0;	//model offsets
+			for(int i=0;i < models.Length;i++)
+			{
+				//store each plane used, and how many faces per material
+				List<Dictionary<Int32, DrawDataChunk>>	perPlaneChunks
+					=new List<Dictionary<Int32, DrawDataChunk>>();
+
+				foreach(string mat in mMaterialNames)
+				{
+					Dictionary<Int32, DrawDataChunk>	ddcs
+						=new Dictionary<Int32, DrawDataChunk>();
+					perPlaneChunks.Add(ddcs);
+
+					if(!correct(null, null, mat))
+					{
+						continue;
+					}
+
+					int	firstFace	=models[i].mFirstFace;
+					int	nFaces		=models[i].mNumFaces;
+
+					for(int face=firstFace;face < (firstFace + nFaces);face++)
+					{
+						GFXFace		f	=mFaces[face];
+						GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+						if(!correct(f, tex, mat))
+						{
+							continue;
+						}
+
+						DrawDataChunk	ddc	=null;
+
+						if(ddcs.ContainsKey(f.mPlaneNum))
+						{
+							ddc	=ddcs[f.mPlaneNum];
+						}
+						else
+						{
+							ddc	=new DrawDataChunk();
+						}
+
+						if(!fill(ddc, pp, verts, indexes, rgbVerts, vnorms, f, tex, mLightGridSize, lightData, mLMAtlas, mMirrorPolys))
+						{
+							return	false;
+						}
+
+						if(!ddcs.ContainsKey(f.mPlaneNum))
+						{
+							ddcs.Add(f.mPlaneNum, ddc);
+						}
+					}
+				}
+				fin(i, perPlaneChunks, pp, ref vertOfs);
+			}
+			return	true;
+		}
+
+
+		//alphas come in per face chunks with a sort point
+		internal bool BuildAlphaFaceDataPerFace(Vector3 []verts, int[] indexes,
 			Vector3 []rgbVerts, Vector3 []vnorms,
 			object pobj, GFXModel []models, byte []lightData,
 			IsCorrectMaterial correct, FillDrawChunk fill, FinishUpAlpha fin)
@@ -618,7 +713,7 @@ namespace BSPCore
 						}
 					}
 				}
-				fin(i, perFaceChunks, ref vertOfs);
+				fin(i, perFaceChunks, pp, ref vertOfs);
 			}
 			return	true;
 		}
@@ -635,12 +730,22 @@ namespace BSPCore
 
 
 		internal bool BuildLMAAnimFaceData(Vector3 []verts, int[] indexes,
-			byte []lightData, object pobj, GFXModel []models)
+			byte []lightData, object pobj, GFXModel []models, bool bPerFace)
 		{
-			return	BuildAlphaFaceData(verts, indexes, null, null, pobj, models, lightData,
-				MaterialCorrect.IsLightMappedAlphaAnimated,
-				MaterialFill.FillLightMappedAlphaAnimated,
-				FinishLightMappedAlphaAnimated);
+			if(bPerFace)
+			{
+				return	BuildAlphaFaceDataPerFace(verts, indexes, null, null, pobj, models, lightData,
+					MaterialCorrect.IsLightMappedAlphaAnimated,
+					MaterialFill.FillLightMappedAlphaAnimated,
+					FinishLightMappedAlphaAnimated);
+			}
+			else
+			{
+				return	BuildAlphaFaceData(verts, indexes, null, null, pobj, models, lightData,
+					MaterialCorrect.IsLightMappedAlphaAnimated,
+					MaterialFill.FillLightMappedAlphaAnimated,
+					FinishLightMappedAlphaAnimated);
+			}
 		}
 
 
@@ -655,12 +760,22 @@ namespace BSPCore
 
 
 		internal bool BuildLMAFaceData(Vector3 []verts, int[] indexes,
-			byte []lightData, object pobj, GFXModel []models)
+			byte []lightData, object pobj, GFXModel []models, bool bPerFace)
 		{
-			return	BuildAlphaFaceData(verts, indexes, null, null, pobj, models, lightData,
-				MaterialCorrect.IsLightMappedAlpha,
-				MaterialFill.FillLightMappedAlpha,
-				FinishLightMappedAlpha);
+			if(bPerFace)
+			{
+				return	BuildAlphaFaceDataPerFace(verts, indexes, null, null, pobj, models, lightData,
+					MaterialCorrect.IsLightMappedAlpha,
+					MaterialFill.FillLightMappedAlpha,
+					FinishLightMappedAlpha);
+			}
+			else
+			{
+				return	BuildAlphaFaceData(verts, indexes, null, null, pobj, models, lightData,
+					MaterialCorrect.IsLightMappedAlpha,
+					MaterialFill.FillLightMappedAlpha,
+					FinishLightMappedAlpha);
+			}
 		}
 
 
@@ -860,7 +975,8 @@ namespace BSPCore
 
 
 		List<List<DrawCall>> ComputeAlphaIndexes(List<UInt16> inds,
-			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks, ref UInt16 vertOfs)
+			List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks,
+			GFXPlane []pp, ref UInt16 vertOfs)
 		{
 			List<List<DrawCall>>	draws	=new List<List<DrawCall>>();
 
@@ -872,9 +988,19 @@ namespace BSPCore
 				{
 					int	cnt	=inds.Count;
 
+					//check area
+					float	area	=pf.Value.Area();
+
 					DrawCall	dc		=new DrawCall();				
 					dc.mStartIndex		=cnt;
 					dc.mSortPoint		=ComputeSortPoint(pf.Value);
+
+					if(area > PlanarSortArea)
+					{
+						dc.mbSortPlanar			=true;
+						dc.mSortPlaneNormal		=pp[pf.Key].mNormal;
+						dc.mSortPlaneDistance	=pp[pf.Key].mDist;
+					}
 
 					for(int i=0;i < pf.Value.mNumFaces;i++)
 					{

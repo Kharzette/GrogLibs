@@ -51,9 +51,13 @@ namespace MaterialLib
 
 	internal class AlphaNode
 	{
+		//sorting
 		Vector3	mSortPoint;
-		string	mMaterialName;
+		Vector3	mSortPlaneNormal;
+		float	mSortPlaneDistance;
+		bool	mbSortPlanar;
 
+		string	mMaterialName;
 		MatLib	mMatLib;
 
 		//drawprim setup stuff
@@ -83,6 +87,26 @@ namespace MaterialLib
 			mWorldMat		=worldMat;
 			mCount			=indexCount;
 			mStartIndex		=startIndex;
+		}
+
+
+		internal AlphaNode(MatLib matLib,
+			Vector3 sortPoint, Vector3 sortPlaneNormal,
+			float sortPlaneDistance, string matName,
+			VertexBufferBinding vbb, Buffer ib,
+			Matrix worldMat, Int32 startIndex, Int32 indexCount)
+		{
+			mMatLib				=matLib;
+			mSortPoint			=sortPoint;
+			mbSortPlanar		=true;
+			mSortPlaneNormal	=sortPlaneNormal;
+			mSortPlaneDistance	=sortPlaneDistance;
+			mMaterialName		=matName;
+			mVBB				=vbb;
+			mIB					=ib;
+			mWorldMat			=worldMat;
+			mCount				=indexCount;
+			mStartIndex			=startIndex;
 		}
 
 
@@ -153,6 +177,27 @@ namespace MaterialLib
 			mMatLib.ApplyMaterialPass(mMaterialName, gd.DC, 0);
 
 			gd.DC.DrawIndexed(mCount, mStartIndex, 0);
+		}
+
+
+		internal bool IsPlanar()
+		{
+			return	mbSortPlanar;
+		}
+
+
+		internal float PlaneDistance(Vector3 pos)
+		{
+			float	dist	=Vector3.Dot(mSortPlaneNormal, pos);
+			dist			-=mSortPlaneDistance;
+
+			return	dist;
+		}
+
+
+		internal float PlaneDistance(AlphaNode otherNode)
+		{
+			return	PlaneDistance(otherNode.mSortPoint);
 		}
 
 
