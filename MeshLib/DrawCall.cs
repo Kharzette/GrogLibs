@@ -18,7 +18,7 @@ namespace MeshLib
 		public Vector3	mSortPoint;
 		public Vector3	mSortPlaneNormal;
 		public float	mSortPlaneDistance;
-		public bool		mbSortPlanar;
+		public int		mAreaScore;
 
 
 		void Write(BinaryWriter bw)
@@ -35,7 +35,7 @@ namespace MeshLib
 			bw.Write(mSortPlaneNormal.Y);
 			bw.Write(mSortPlaneNormal.Z);
 			bw.Write(mSortPlaneDistance);
-			bw.Write(mbSortPlanar);
+			bw.Write(mAreaScore);
 		}
 
 
@@ -53,7 +53,7 @@ namespace MeshLib
 			mSortPlaneNormal.Y	=br.ReadSingle();
 			mSortPlaneNormal.Z	=br.ReadSingle();
 			mSortPlaneDistance	=br.ReadSingle();
-			mbSortPlanar		=br.ReadBoolean();
+			mAreaScore			=br.ReadInt32();
 		}
 
 

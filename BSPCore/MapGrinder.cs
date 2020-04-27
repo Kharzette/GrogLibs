@@ -28,9 +28,9 @@ namespace BSPCore
 		internal List<Color>	mStyles		=new List<Color>();
 
 
-		internal float Area()
+		internal int Area()
 		{
-			float	total	=0.0f;
+			double	total	=0.0;
 			int		vertOfs	=0;
 			for(int i=0;i < mNumFaces;i++)
 			{
@@ -48,7 +48,16 @@ namespace BSPCore
 				}
 				vertOfs	+=nverts;
 			}
-			return	total;
+
+			//cap
+			if(total > int.MaxValue)
+			{
+				return	int.MaxValue;
+			}
+			else
+			{
+				return	(int)total;
+			}
 		}
 	}
 
@@ -989,7 +998,7 @@ namespace BSPCore
 					int	cnt	=inds.Count;
 
 					//check area
-					float	area	=pf.Value.Area();
+					int	area	=pf.Value.Area();
 
 					DrawCall	dc		=new DrawCall();				
 					dc.mStartIndex		=cnt;
@@ -997,9 +1006,9 @@ namespace BSPCore
 
 					if(area > PlanarSortArea)
 					{
-						dc.mbSortPlanar			=true;
 						dc.mSortPlaneNormal		=pp[pf.Key].mNormal;
 						dc.mSortPlaneDistance	=pp[pf.Key].mDist;
+						dc.mAreaScore			=area;
 					}
 
 					for(int i=0;i < pf.Value.mNumFaces;i++)

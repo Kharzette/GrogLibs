@@ -34,12 +34,13 @@ namespace MaterialLib
 		}
 
 
-		public void StoreDraw(MatLib mlib, Vector3 sortPoint,
+		public void StoreDraw(MatLib mlib,
+			Vector3 sortPoint, int areaScore,
 			Vector3 sortPlaneNormal, float sortPlaneDistance,
 			string matName, VertexBufferBinding vbb, Buffer ib,
 			Matrix worldMat, Int32 startIndex, Int32 indexCount)
 		{
-			AlphaNode	an	=new AlphaNode(mlib, sortPoint,
+			AlphaNode	an	=new AlphaNode(mlib, sortPoint, areaScore,
 					sortPlaneNormal, sortPlaneDistance, matName,
 					vbb, ib, worldMat, startIndex, indexCount);
 
@@ -61,9 +62,14 @@ namespace MaterialLib
 
 		public void DrawAll(GraphicsDevice gd)
 		{
-			//get nearest planar sort
+			//check for planar special behaviour...
+			//
+			//Look for the largest area score.
+			//If there are several large ones in the map,
+			//material vis will usually make sure only one
+			//is in here, I hope.
 			AlphaNode	ps		=null;
-			float		nearest	=float.MaxValue;
+			int			largest	=int.MinValue;
 			Vector3		eyePos	=gd.GCam.Position;
 			foreach(AlphaNode an in mAlphas)
 			{
@@ -72,11 +78,9 @@ namespace MaterialLib
 					continue;
 				}
 
-				float	dist	=an.PlaneDistance(eyePos);
-
-				if(dist < nearest)
+				if(an.mAreaScore > largest)
 				{
-					nearest	=dist;
+					largest	=an.mAreaScore;
 					ps		=an;
 				}
 			}

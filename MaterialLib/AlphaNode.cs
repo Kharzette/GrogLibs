@@ -55,7 +55,8 @@ namespace MaterialLib
 		Vector3	mSortPoint;
 		Vector3	mSortPlaneNormal;
 		float	mSortPlaneDistance;
-		bool	mbSortPlanar;
+
+		internal readonly int	mAreaScore;
 
 		string	mMaterialName;
 		MatLib	mMatLib;
@@ -91,16 +92,16 @@ namespace MaterialLib
 
 
 		internal AlphaNode(MatLib matLib,
-			Vector3 sortPoint, Vector3 sortPlaneNormal,
-			float sortPlaneDistance, string matName,
-			VertexBufferBinding vbb, Buffer ib,
+			Vector3 sortPoint, int areaScore,
+			Vector3 sortPlaneNormal, float sortPlaneDistance,
+			string matName,	VertexBufferBinding vbb, Buffer ib,
 			Matrix worldMat, Int32 startIndex, Int32 indexCount)
 		{
 			mMatLib				=matLib;
 			mSortPoint			=sortPoint;
-			mbSortPlanar		=true;
 			mSortPlaneNormal	=sortPlaneNormal;
 			mSortPlaneDistance	=sortPlaneDistance;
+			mAreaScore			=areaScore;
 			mMaterialName		=matName;
 			mVBB				=vbb;
 			mIB					=ib;
@@ -182,7 +183,7 @@ namespace MaterialLib
 
 		internal bool IsPlanar()
 		{
-			return	mbSortPlanar;
+			return	mAreaScore > 0;
 		}
 
 

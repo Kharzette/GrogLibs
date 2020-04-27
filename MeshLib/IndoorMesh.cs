@@ -616,9 +616,9 @@ namespace MeshLib
 
 						if(pass != 2)
 						{
-							if(call.mbSortPlanar)
+							if(call.mAreaScore > 0)
 							{
-								mAlphaPool.StoreDraw(mMatLib, call.mSortPoint,
+								mAlphaPool.StoreDraw(mMatLib, call.mSortPoint, call.mAreaScore,
 									call.mSortPlaneNormal, call.mSortPlaneDistance,
 									mat, vbb, ib, modMat, call.mStartIndex, call.mCount);
 							}
