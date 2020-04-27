@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using SharpDX;
+using UtilityLib;
 
 
 namespace MeshLib
@@ -54,6 +55,20 @@ namespace MeshLib
 			mSortPlaneNormal.Z	=br.ReadSingle();
 			mSortPlaneDistance	=br.ReadSingle();
 			mAreaScore			=br.ReadInt32();
+		}
+
+
+		internal bool bPlaneOn(DrawCall other)
+		{
+			if(!Mathery.CompareFloatEpsilon(
+				other.mSortPlaneDistance, mSortPlaneDistance, 0.01f))
+			{
+				return	false;
+			}
+
+			float	dot	=Math.Abs(other.mSortPlaneNormal.dot(mSortPlaneNormal));
+
+			return	Mathery.CompareFloatEpsilon(dot, 1f, 0.001f);
 		}
 
 

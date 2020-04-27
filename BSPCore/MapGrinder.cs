@@ -1004,12 +1004,10 @@ namespace BSPCore
 					dc.mStartIndex		=cnt;
 					dc.mSortPoint		=ComputeSortPoint(pf.Value);
 
-					if(area > PlanarSortArea)
-					{
-						dc.mSortPlaneNormal		=pp[pf.Key].mNormal;
-						dc.mSortPlaneDistance	=pp[pf.Key].mDist;
-						dc.mAreaScore			=area;
-					}
+					//mark everything as planar for now
+					dc.mSortPlaneNormal		=pp[pf.Key].mNormal;
+					dc.mSortPlaneDistance	=pp[pf.Key].mDist;
+					dc.mAreaScore			=area;
 
 					for(int i=0;i < pf.Value.mNumFaces;i++)
 					{
@@ -1031,7 +1029,55 @@ namespace BSPCore
 
 					dcs.Add(dc);
 				}
+
 				draws.Add(dcs);
+
+				//Do a second pass...
+				//Get a list of draws that are large enough to be planar...
+				List<DrawCall>	planars	=new List<DrawCall>();
+				foreach(DrawCall dc in dcs)
+				{
+					if(dc.mAreaScore > PlanarSortArea)
+					{
+						planars.Add(dc);
+					}
+				}
+
+				//then find the others that are plane-on
+				List<DrawCall>	planeOns	=new List<DrawCall>();
+				foreach(DrawCall dc in dcs)
+				{
+					if(planars.Contains(dc))
+					{
+						continue;
+					}
+
+					foreach(DrawCall dcp in planars)
+					{
+						if(dc.bPlaneOn(dcp))
+						{
+							planeOns.AddUnique(dc);
+							break;
+						}
+					}
+				}
+
+				//remove planar data from the rest
+				foreach(DrawCall dc in dcs)
+				{
+					if(planars.Contains(dc))
+					{
+						continue;
+					}
+					if(planeOns.Contains(dc))
+					{
+						continue;
+					}
+
+					dc.mSortPlaneNormal		=Vector3.Zero;
+					dc.mSortPlaneDistance	=0;
+					dc.mAreaScore			=0;
+				}
 			}
 			return	draws;
 		}
