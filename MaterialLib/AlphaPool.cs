@@ -90,47 +90,28 @@ namespace MaterialLib
 				//sort into in front and behind bucketses
 				List<AlphaNode>	front	=new List<AlphaNode>();
 				List<AlphaNode>	back	=new List<AlphaNode>();
+				List<AlphaNode>	on		=new List<AlphaNode>();
 
 				foreach(AlphaNode an in mAlphas)
 				{
-					if(an == ps)
-					{
-						continue;
-					}
-
 					float	dist	=ps.PlaneDistance(an);
 					if(dist < 0f)
 					{
 						back.Add(an);
 					}
-					else
+					else if(dist > 0f)
 					{
 						front.Add(an);
+					}
+					else
+					{
+						on.Add(an);
 					}
 				}
 
 				//is eye on front or back of sort plane?
 				float	eyeDist	=ps.PlaneDistance(eyePos);
 				if(eyeDist < 0f)
-				{
-					//back side first
-					Sort(back, eyePos);
-					foreach(AlphaNode an in back)
-					{
-						an.Draw(gd);
-					}
-
-					//plane
-					ps.Draw(gd);
-
-					//front side last
-					Sort(front, eyePos);
-					foreach(AlphaNode an in front)
-					{
-						an.Draw(gd);
-					}
-				}
-				else
 				{
 					//front side first
 					Sort(front, eyePos);
@@ -140,11 +121,36 @@ namespace MaterialLib
 					}
 
 					//plane
-					ps.Draw(gd);
+					foreach(AlphaNode an in on)
+					{
+						an.Draw(gd);
+					}
 
 					//back side last
 					Sort(back, eyePos);
 					foreach(AlphaNode an in back)
+					{
+						an.Draw(gd);
+					}
+				}
+				else
+				{
+					//back side first
+					Sort(back, eyePos);
+					foreach(AlphaNode an in back)
+					{
+						an.Draw(gd);
+					}
+
+					//plane
+					foreach(AlphaNode an in on)
+					{
+						an.Draw(gd);
+					}
+
+					//front side last
+					Sort(front, eyePos);
+					foreach(AlphaNode an in front)
 					{
 						an.Draw(gd);
 					}
