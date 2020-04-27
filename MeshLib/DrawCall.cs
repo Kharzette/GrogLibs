@@ -58,7 +58,7 @@ namespace MeshLib
 		}
 
 
-		internal bool bPlaneOn(DrawCall other)
+		public bool bPlaneOn(DrawCall other)
 		{
 			if(!Mathery.CompareFloatEpsilon(
 				other.mSortPlaneDistance, mSortPlaneDistance, 0.01f))

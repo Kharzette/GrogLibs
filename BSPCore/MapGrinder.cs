@@ -176,9 +176,6 @@ namespace BSPCore
 		internal delegate void FinishUp(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs);
 		internal delegate void FinishUpAlpha(int modelIndex, List<Dictionary<Int32, DrawDataChunk>> perPlaneChunk, GFXPlane []pp, ref UInt16 vertOfs);
 
-		//only big planes
-		const float	PlanarSortArea	=100000f;
-
 
 		public MapGrinder(GraphicsDevice gd,
 			StuffKeeper sk, MatLib matLib,
@@ -1031,53 +1028,6 @@ namespace BSPCore
 				}
 
 				draws.Add(dcs);
-
-				//Do a second pass...
-				//Get a list of draws that are large enough to be planar...
-				List<DrawCall>	planars	=new List<DrawCall>();
-				foreach(DrawCall dc in dcs)
-				{
-					if(dc.mAreaScore > PlanarSortArea)
-					{
-						planars.Add(dc);
-					}
-				}
-
-				//then find the others that are plane-on
-				List<DrawCall>	planeOns	=new List<DrawCall>();
-				foreach(DrawCall dc in dcs)
-				{
-					if(planars.Contains(dc))
-					{
-						continue;
-					}
-
-					foreach(DrawCall dcp in planars)
-					{
-						if(dc.bPlaneOn(dcp))
-						{
-							planeOns.AddUnique(dc);
-							break;
-						}
-					}
-				}
-
-				//remove planar data from the rest
-				foreach(DrawCall dc in dcs)
-				{
-					if(planars.Contains(dc))
-					{
-						continue;
-					}
-					if(planeOns.Contains(dc))
-					{
-						continue;
-					}
-
-					dc.mSortPlaneNormal		=Vector3.Zero;
-					dc.mSortPlaneDistance	=0;
-					dc.mAreaScore			=0;
-				}
 			}
 			return	draws;
 		}

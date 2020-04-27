@@ -153,6 +153,9 @@ namespace MeshLib
 			out Dictionary<int, List<DrawCall>> dcs, object pp);
 		#endregion
 
+		//only big planes
+		const float	PlanarSortArea	=100000f;
+
 
 		public IndoorMesh(GraphicsDevice gd, MatLib matLib)
 		{
@@ -251,6 +254,112 @@ namespace MeshLib
 			if(mLMAAnimIB != null)	mLMAAnimIB.Dispose();
 
 			if(mLightMapAtlas != null)	mLightMapAtlas.FreeAll();
+		}
+
+
+		void GetPlanars(
+			Dictionary<int, List<List<DrawCall>>>	dcDict,
+			List<DrawCall>							outDraws)
+		{
+			if(!dcDict.ContainsKey(0))
+			{
+				return;
+			}
+			foreach(List<DrawCall> planeCalls in dcDict[0])
+			{
+				foreach(DrawCall dc in planeCalls)
+				{
+					if(dc.mAreaScore > PlanarSortArea)
+					{
+						outDraws.Add(dc);
+					}
+				}
+			}
+		}
+
+
+		void GetPlaneOns(
+			Dictionary<int, List<List<DrawCall>>>	dcDict,
+			List<DrawCall>							planars,
+			List<DrawCall>							outDraws)
+		{
+			if(!dcDict.ContainsKey(0))
+			{
+				return;
+			}
+			foreach(List<DrawCall> planeCalls in dcDict[0])
+			{
+				foreach(DrawCall dc in planeCalls)
+				{
+					if(planars.Contains(dc))
+					{
+						continue;
+					}
+
+					foreach(DrawCall dcp in planars)
+					{
+						if(dc.bPlaneOn(dcp))
+						{
+							if(!outDraws.Contains(dc))
+							{
+								outDraws.Add(dc);
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+
+
+		void SetNonPlanars(
+			Dictionary<int, List<List<DrawCall>>>	dcDict,
+			List<DrawCall>							planars,
+			List<DrawCall>							planeOns)
+		{
+			if(!dcDict.ContainsKey(0))
+			{
+				return;
+			}
+			foreach(List<DrawCall> planeCalls in dcDict[0])
+			{
+				foreach(DrawCall dc in planeCalls)
+				{
+					if(planars.Contains(dc))
+					{
+						continue;
+					}
+					if(planeOns.Contains(dc))
+					{
+						continue;
+					}
+					dc.mSortPlaneNormal		=Vector3.Zero;
+					dc.mSortPlaneDistance	=0;
+					dc.mAreaScore			=0;
+				}
+			}
+		}
+
+
+		public void FixAlphaDrawCalls()
+		{
+			//Do a second pass over all alpha draw calls...
+			//Get a list of draws that are large enough to be planar...
+			List<DrawCall>	planars	=new List<DrawCall>();
+			GetPlanars(mLMADrawCalls, planars);
+			GetPlanars(mLMAAnimDrawCalls, planars);
+			GetPlanars(mAlphaDrawCalls, planars);
+
+			//then find the others that are plane-on
+			List<DrawCall>	planeOns	=new List<DrawCall>();
+			GetPlaneOns(mLMADrawCalls, planars, planeOns);
+			GetPlaneOns(mLMAAnimDrawCalls, planars, planeOns);
+			GetPlaneOns(mAlphaDrawCalls, planars, planeOns);
+
+			//remove planar data from the rest
+			SetNonPlanars(mLMADrawCalls, planars, planeOns);
+			SetNonPlanars(mLMAAnimDrawCalls, planars, planeOns);
+			SetNonPlanars(mAlphaDrawCalls, planars, planeOns);
 		}
 
 
@@ -550,7 +659,8 @@ namespace MeshLib
 		//this one is for alphas with models
 		void DrawMaterialsDC(GraphicsDevice g,
 			int pass, GetModelMatrix getModMatrix,
-			VertexBufferBinding vbb, Buffer ib, Dictionary<int, List<List<DrawCall>>> dcs,
+			VertexBufferBinding vbb, Buffer ib,
+			Dictionary<int, List<List<DrawCall>>> dcs,
 			IsMaterialVisible bMatVis)
 		{
 			if(dcs == null)
