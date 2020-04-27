@@ -95,11 +95,11 @@ namespace MaterialLib
 				foreach(AlphaNode an in mAlphas)
 				{
 					float	dist	=ps.PlaneDistance(an);
-					if(dist < 0f)
+					if(dist < -0.1f)
 					{
 						back.Add(an);
 					}
-					else if(dist > 0f)
+					else if(dist > 0.1f)
 					{
 						front.Add(an);
 					}
