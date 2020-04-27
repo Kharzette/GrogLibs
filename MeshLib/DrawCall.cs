@@ -30,6 +30,12 @@ namespace MeshLib
 			bw.Write(mSortPoint.X);
 			bw.Write(mSortPoint.Y);
 			bw.Write(mSortPoint.Z);
+
+			bw.Write(mSortPlaneNormal.X);
+			bw.Write(mSortPlaneNormal.Y);
+			bw.Write(mSortPlaneNormal.Z);
+			bw.Write(mSortPlaneDistance);
+			bw.Write(mbSortPlanar);
 		}
 
 
@@ -42,6 +48,12 @@ namespace MeshLib
 			mSortPoint.X	=br.ReadSingle();
 			mSortPoint.Y	=br.ReadSingle();
 			mSortPoint.Z	=br.ReadSingle();
+
+			mSortPlaneNormal.X	=br.ReadSingle();
+			mSortPlaneNormal.Y	=br.ReadSingle();
+			mSortPlaneNormal.Z	=br.ReadSingle();
+			mSortPlaneDistance	=br.ReadSingle();
+			mbSortPlanar		=br.ReadBoolean();
 		}
 
 
