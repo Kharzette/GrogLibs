@@ -111,6 +111,31 @@ namespace BSPZone
 		}
 
 
+		public List<ZoneEntity> GetEntitiesByTarget(string targ)
+		{
+			//targets can have multiple entries
+			string	[]targs	=targ.Split(' ');
+
+			List<ZoneEntity>	ret	=new List<ZoneEntity>();
+			foreach(ZoneEntity ze in mZoneEntities)
+			{
+				if(ze.mData.ContainsKey("target"))
+				{
+					string	checkName	=ze.mData["target"];
+
+					foreach(string trg in targs)					
+					{
+						if(targ == checkName)
+						{
+							ret.Add(ze);
+						}
+					}
+				}
+			}
+			return	ret;
+		}
+
+
 		public List<ZoneEntity> GetEntitiesTargetNameStartsWith(string targName)
 		{
 			List<ZoneEntity>	ret	=new List<ZoneEntity>();
