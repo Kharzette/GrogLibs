@@ -316,7 +316,7 @@ namespace BSPCore
 					ti.mFlags	|=TexInfo.FULLBRIGHT;
 					ti.mFlags	|=TexInfo.TRANSPARENT;
 					ti.mFlags	|=TexInfo.EMITLIGHT;
-					ti.mAlpha	=0.95f;
+					ti.mAlpha	=0.98f;
 				}
 				else if(tok.Contains("water") || tok.Contains("WATER"))
 				{
@@ -324,7 +324,7 @@ namespace BSPCore
 					ret			|=GrogContents.BSP_CONTENTS_EMPTY2;
 					ret			|=GrogContents.BSP_CONTENTS_WAVY2;
 					ti.mFlags	|=TexInfo.TRANSPARENT;
-					ti.mAlpha	=0.75f;
+					ti.mAlpha	=0.85f;
 				}
 				else if(tok.StartsWith("slime") || tok.StartsWith("SLIME"))
 				{
@@ -332,7 +332,7 @@ namespace BSPCore
 					ret			|=GrogContents.BSP_CONTENTS_EMPTY2;
 					ret			|=GrogContents.BSP_CONTENTS_WAVY2;
 					ti.mFlags	|=TexInfo.TRANSPARENT;
-					ti.mAlpha	=0.85f;
+					ti.mAlpha	=0.95f;
 				}
 				else if(tok.StartsWith("trigger") || tok.StartsWith("TRIGGER"))
 				{
@@ -344,7 +344,7 @@ namespace BSPCore
 				{
 					ret			|=GrogContents.BSP_CONTENTS_WINDOW2;
 					ti.mFlags	|=TexInfo.TRANSPARENT;
-					ti.mAlpha	=0.5f;
+					ti.mAlpha	=0.35f;
 				}
 				else if(char.IsLetter(tok, 0))
 				{
