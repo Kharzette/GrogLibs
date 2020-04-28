@@ -11,7 +11,7 @@ using UtilityLib;
 
 namespace BSPZone
 {
-	internal class BasicModelHelper
+	internal partial class BasicModelHelper
 	{
 		Zone	mZone;
 
@@ -171,7 +171,10 @@ namespace BSPZone
 					}
 				}
 
-				mEmitter.Position	=mMover.GetPos();
+				if(mEmitter != null)
+				{
+					mEmitter.Position	=mMover.GetPos();
+				}
 
 				return	false;
 			}
@@ -217,6 +220,9 @@ namespace BSPZone
 
 				GetMoveStages(ze, model, org, aud);
 			}
+
+			//testing quake stuff
+			ConvertDoors(zone);
 		}
 
 
