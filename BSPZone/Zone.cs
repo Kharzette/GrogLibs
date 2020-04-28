@@ -47,7 +47,6 @@ namespace BSPZone
 		ZoneLeaf		[]mZoneLeafs;
 		ZoneLeafSide	[]mZoneLeafSides;
 		ZonePlane		[]mZonePlanes;
-		ZoneEntity		[]mZoneEntities;
 
 		//debug vis stuff
 		Int32			[]mDebugLeafFaces;
@@ -67,6 +66,7 @@ namespace BSPZone
 		byte		[]mMaterialVisData;
 
 		//gameplay stuff
+		List<ZoneEntity>	mEntities	=new List<ZoneEntity>();
 		List<ZoneTrigger>	mTriggers	=new List<ZoneTrigger>();
 		BasicModelHelper	mBMHelper	=new BasicModelHelper();
 
@@ -99,7 +99,7 @@ namespace BSPZone
 			FileUtil.WriteArray(mVisAreas, bw);
 			FileUtil.WriteArray(mVisAreaPortals, bw);
 			FileUtil.WriteArray(mZonePlanes, bw);
-			FileUtil.WriteArray(mZoneEntities, bw);
+			FileUtil.WriteArray(mEntities.ToArray(), bw);
 			FileUtil.WriteArray(mZoneLeafSides, bw);
 
 			bw.Write(bDebug);
@@ -155,7 +155,10 @@ namespace BSPZone
 			mVisAreas		=FileUtil.ReadArray<VisArea>(br);
 			mVisAreaPortals	=FileUtil.ReadArray<VisAreaPortal>(br);
 			mZonePlanes		=FileUtil.ReadArray<ZonePlane>(br);
-			mZoneEntities	=FileUtil.ReadArray<ZoneEntity>(br);
+
+			ZoneEntity	[]ents	=FileUtil.ReadArray<ZoneEntity>(br);
+			mEntities.AddRange(ents);
+
 			mZoneLeafSides	=FileUtil.ReadArray<ZoneLeafSide>(br);
 
 			bool	bDebug	=br.ReadBoolean();
@@ -275,6 +278,101 @@ namespace BSPZone
 				return	mZoneModels[modelNum].mBounds;
 			}
 			return	new BoundingBox();
+		}
+
+
+		int CopyNodesToTrigger(int node,
+			Dictionary<Int32, ZoneNode> newNodes,
+			Dictionary<Int32, ZoneLeaf> newLeafs)
+		{
+			if(node < 0)
+			{
+				Int32		leafIdx		=-(node + 1);
+				ZoneLeaf	zl			=mZoneLeafs[leafIdx];
+
+				ZoneLeaf	newLeaf	=new ZoneLeaf();
+
+				if(Misc.bFlagSet(zl.mContents, Contents.BSP_CONTENTS_SOLID2))
+				{
+					newLeaf.mContents	=Contents.BSP_CONTENTS_TRIGGER;
+				}
+
+				newLeaf.mMins		=zl.mMins;
+				newLeaf.mMaxs		=zl.mMaxs;
+
+				Int32	newLeafNum	=mZoneLeafs.Length + newLeafs.Count;
+				Int32	newNodeNum	=-(newLeafNum + 1);
+
+				newLeafs.Add(newLeafNum, newLeaf);
+
+				return	newNodeNum;
+			}
+
+			ZoneNode	zn	=mZoneNodes[node];
+			ZoneNode	cp	=new ZoneNode();
+
+			Int32	newNum	=mZoneNodes.Length + newNodes.Count;
+
+			newNodes.Add(newNum, cp);
+
+			cp.mPlaneNum	=zn.mPlaneNum;
+			cp.mMins		=zn.mMins;
+			cp.mMaxs		=zn.mMaxs;
+
+			cp.mFront	=CopyNodesToTrigger(zn.mFront, newNodes, newLeafs);
+			cp.mBack	=CopyNodesToTrigger(zn.mBack, newNodes, newLeafs);
+
+			return	newNum;
+		}
+
+
+		//makes a copy of a model and converts
+		//the contents to trigger
+		internal int CopyModelToTrigger(int modelNum)
+		{
+			Debug.Assert(modelNum > 0 && modelNum < mZoneModels.Length);
+
+			ZoneModel	zm	=new ZoneModel();
+			ZoneModel	cp	=mZoneModels[modelNum];
+
+			zm.mBounds				=cp.mBounds;
+			zm.mOrigin				=cp.mOrigin;
+			zm.mNumLeafs			=cp.mNumLeafs;
+			zm.mPitch				=cp.mPitch;
+			zm.mYaw					=cp.mYaw;
+			zm.mRoll				=cp.mRoll;
+			zm.mPosition			=cp.mPosition;
+			zm.mTransform			=cp.mTransform;
+			zm.mInvertedTransform	=cp.mInvertedTransform;
+
+			Dictionary<Int32, ZoneNode>	newNodes	=new Dictionary<Int32, ZoneNode>();
+			Dictionary<Int32, ZoneLeaf>	newLeafs	=new Dictionary<Int32, ZoneLeaf>();
+
+			zm.mRootNode	=CopyNodesToTrigger(cp.mRootNode, newNodes, newLeafs);
+
+			//alloc space for new stuff
+			Array.Resize(ref mZoneNodes, mZoneNodes.Length + newNodes.Count);
+			Array.Resize(ref mZoneLeafs, mZoneLeafs.Length + newLeafs.Count);
+			Array.Resize(ref mZoneModels, mZoneModels.Length + 1);
+
+			foreach(KeyValuePair<int, ZoneNode> nn in newNodes)
+			{
+				mZoneNodes[nn.Key]	=nn.Value;
+			}
+			foreach(KeyValuePair<int, ZoneLeaf> nl in newLeafs)
+			{
+				mZoneLeafs[nl.Key]	=nl.Value;
+			}
+
+			mZoneModels[mZoneModels.Length - 1]	=zm;
+
+			return	mZoneModels.Length - 1;
+		}
+
+
+		internal void AddTrigger(ZoneTrigger zt)
+		{
+			mTriggers.Add(zt);
 		}
 		#endregion
 

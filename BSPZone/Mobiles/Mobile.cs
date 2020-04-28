@@ -363,11 +363,9 @@ namespace BSPZone
 			Vector3	moveDelta	=endPos - mPosition;
 
 			//adjust onto the ground plane if desired and good footing
-			if(mbOnGround && bMoveAlongGround)
+			if(mbOnGround && bMoveAlongGround
+				&& mUnderFoot.mNormal != Vector3.Zero)
 			{
-				//this requires a valid ground plane
-				Debug.Assert(mUnderFoot.mNormal != Vector3.Zero);
-
 				mUnderFoot.MoveAlong(ref moveDelta);
 			}
 
@@ -389,7 +387,15 @@ namespace BSPZone
 			//do a trigger check if requested
 			if(bTriggerCheck)
 			{
-				mTHelper.CheckMobile(this, mBox,
+				//fatten the box a bit
+				BoundingBox	fatBox	=mBox;
+
+				fatBox.Minimum.X	-=1f;
+				fatBox.Minimum.Z	-=1f;
+				fatBox.Maximum.X	+=1f;
+				fatBox.Maximum.Z	+=1f;
+
+				mTHelper.CheckMobile(this, fatBox,
 					mPosition, endPos, msDelta);
 			}
 

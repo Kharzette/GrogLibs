@@ -222,7 +222,7 @@ namespace BSPZone
 			}
 
 			//testing quake stuff
-			ConvertDoors(zone);
+			ConvertFuncs(zone);
 		}
 
 

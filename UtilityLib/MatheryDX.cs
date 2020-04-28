@@ -505,6 +505,16 @@ namespace UtilityLib
 		}
 
 
+		public static string RandomString(int length)
+		{
+			string	ret	=System.IO.Path.GetRandomFileName();
+
+			ret	=ret.Substring(length);
+
+			return	ret.Replace(".", "");
+		}
+
+
 		public static Vector3 RandomColorVector(Random rnd)
 		{
 			Vector3	ret	=Vector3.Zero;

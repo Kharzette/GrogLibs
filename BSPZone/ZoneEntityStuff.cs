@@ -61,7 +61,7 @@ namespace BSPZone
 		{
 			angle	=0f;
 
-			foreach(ZoneEntity e in mZoneEntities)
+			foreach(ZoneEntity e in mEntities)
 			{
 				if(e.mData.ContainsKey("classname"))
 				{
@@ -92,7 +92,7 @@ namespace BSPZone
 			string	[]targs	=targName.Split(' ');
 
 			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity ze in mZoneEntities)
+			foreach(ZoneEntity ze in mEntities)
 			{
 				if(ze.mData.ContainsKey("targetname"))
 				{
@@ -117,7 +117,7 @@ namespace BSPZone
 			string	[]targs	=targ.Split(' ');
 
 			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity ze in mZoneEntities)
+			foreach(ZoneEntity ze in mEntities)
 			{
 				if(ze.mData.ContainsKey("target"))
 				{
@@ -139,7 +139,7 @@ namespace BSPZone
 		public List<ZoneEntity> GetEntitiesTargetNameStartsWith(string targName)
 		{
 			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity ze in mZoneEntities)
+			foreach(ZoneEntity ze in mEntities)
 			{
 				string	tName	=ze.GetTargetName();
 				if(tName.StartsWith(targName))
@@ -154,7 +154,7 @@ namespace BSPZone
 		public List<ZoneEntity> GetEntities(string className)
 		{
 			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity ze in mZoneEntities)
+			foreach(ZoneEntity ze in mEntities)
 			{
 				if(ze.mData.ContainsKey("classname"))
 				{
@@ -168,10 +168,34 @@ namespace BSPZone
 		}
 
 
+		internal string GenerateUniqueTargetName()
+		{
+			startOver:
+			string	ret	=Mathery.RandomString(8);
+
+			foreach(ZoneEntity ze in mEntities)
+			{
+				string	tn	=ze.GetTargetName();
+
+				if(tn == ret)
+				{
+					goto	startOver;
+				}
+			}
+			return	ret;
+		}
+
+
+		internal void AddEntity(ZoneEntity newEnt)
+		{
+			mEntities.Add(newEnt);
+		}
+
+
 		public List<ZoneEntity> GetEntitiesStartsWith(string startText)
 		{
 			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity ze in mZoneEntities)
+			foreach(ZoneEntity ze in mEntities)
 			{
 				if(ze.mData.ContainsKey("classname"))
 				{
