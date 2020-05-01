@@ -12,7 +12,7 @@ namespace UtilityLib
 		public const float	AnalogTurnMultiplier	=300f;
 		public const float	KeyTurnMultiplier		=300f;
 
-		public int	mTurnSensitivity	=5;
+		public int	mTurnSensitivity	=1;
 		public bool	mbXAxisInverted		=false;
 		public bool	mbYAxisInverted		=false;
 		public bool	mbMultiSampling		=false;

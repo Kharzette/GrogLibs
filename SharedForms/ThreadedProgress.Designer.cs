@@ -36,9 +36,9 @@
 			this.Prog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.Prog.Location = new System.Drawing.Point(12, 12);
+			this.Prog.Location = new System.Drawing.Point(0, 0);
 			this.Prog.Name = "Prog";
-			this.Prog.Size = new System.Drawing.Size(424, 23);
+			this.Prog.Size = new System.Drawing.Size(448, 50);
 			this.Prog.TabIndex = 0;
 			// 
 			// ThreadedProgress
