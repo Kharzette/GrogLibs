@@ -16,6 +16,7 @@ namespace InputLib
 			None,
 			TwinStick,		//left analog moves, right analog turns the camera
 			Fly,			//left aims, right moves, no leveling out of the movement
+			Swim,			//same as fly really
 			ThirdPerson,	//same as firstperson?
 			FirstPerson,	//leveled out (no Y) movement like fly
 			Platformer,		//not really finished
@@ -136,7 +137,7 @@ namespace InputLib
 			{
 				UpdateGroundMovement(camForward, camLeft, camUp, actions, out moveVec);
 			}
-			else if(mMethod == SteeringMethod.Fly)
+			else if(mMethod == SteeringMethod.Fly || mMethod == SteeringMethod.Swim)
 			{
 				UpdateFly(camForward, camLeft, camUp, actions, out moveVec);
 			}
@@ -181,6 +182,21 @@ namespace InputLib
 
 			//zero out up/down
 			moveVec.Y	=0.0f;
+		}
+
+
+		void ApplySprint(ref float actionMult, float multiplier, float fact)
+		{
+			//sprint only makes sense moving on ground
+			if(mMethod == SteeringMethod.FirstPerson
+				|| mMethod == SteeringMethod.ThirdPerson)
+			{
+				actionMult	+=multiplier * fact;
+			}
+			else
+			{
+				actionMult	+=multiplier;
+			}
 		}
 
 
@@ -254,28 +270,29 @@ namespace InputLib
 				{
 					mbMovedThisFrame	=true;
 					moveVec				+=camForward;
-					actionMult			+=act.mMultiplier * SprintForwardFactor;
+
+					ApplySprint(ref actionMult, act.mMultiplier, SprintForwardFactor);
 					multCount++;
 				}
 				else if(act.mAction.Equals(mMoveBackFast))
 				{
 					mbMovedThisFrame	=true;
 					moveVec				-=camForward;
-					actionMult			+=act.mMultiplier * SprintBackFactor;
+					ApplySprint(ref actionMult, act.mMultiplier, SprintBackFactor);
 					multCount++;
 				}
 				else if(act.mAction.Equals(mMoveLeftFast))
 				{
 					mbMovedThisFrame	=true;
 					moveVec				+=camLeft;
-					actionMult			+=act.mMultiplier * SprintLeftFactor;
+					ApplySprint(ref actionMult, act.mMultiplier, SprintLeftFactor);
 					multCount++;
 				}
 				else if(act.mAction.Equals(mMoveRightFast))
 				{
 					mbMovedThisFrame	=true;
 					moveVec				-=camLeft;
-					actionMult			+=act.mMultiplier * SprintRightFactor;
+					ApplySprint(ref actionMult, act.mMultiplier, SprintRightFactor);
 					multCount++;
 				}
 			}

@@ -230,6 +230,20 @@ namespace BSPZone
 		}
 
 
+		public UInt32	GetWorldContents(Vector3 pos)
+		{
+			Int32	node	=FindWorldNodeLandedIn(pos);
+			if(node > 0)
+			{
+				return	0;
+			}
+
+			Int32	leafIdx	=-(node + 1);
+			
+			return	mZoneLeafs[leafIdx].mContents;
+		}
+
+
 		public Int32 FindWorldNodeLandedIn(Vector3 pos)
 		{
 			return	FindNodeLandedIn(mZoneModels[0].mRootNode, pos);

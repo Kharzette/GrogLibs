@@ -513,5 +513,11 @@ namespace BSPZone
 		{
 			mPushVelocity	=Vector3.Zero;
 		}
+
+
+		public UInt32 GetWorldContents()
+		{
+			return	mZone.GetWorldContents(mPosition);
+		}
 	}
 }
