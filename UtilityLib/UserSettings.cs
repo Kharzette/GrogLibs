@@ -12,12 +12,12 @@ namespace UtilityLib
 		public const float	AnalogTurnMultiplier	=300f;
 		public const float	KeyTurnMultiplier		=300f;
 
-		public int	mTurnSensitivity	=1;
-		public bool	mbXAxisInverted		=false;
-		public bool	mbYAxisInverted		=false;
-		public bool	mbMultiSampling		=false;
-		public bool	mbFullScreen		=false;
-		public bool	mbESDF				=false;
+		public float	mTurnSensitivity	=1;
+		public bool		mbXAxisInverted		=false;
+		public bool		mbYAxisInverted		=false;
+		public bool		mbMultiSampling		=false;
+		public bool		mbFullScreen		=false;
+		public bool		mbESDF				=false;
 
 
 		public UserSettings()
@@ -53,7 +53,7 @@ namespace UtilityLib
 			FileStream		fs	=new FileStream("ControlSettings.sav", FileMode.Open, FileAccess.Read);
 			BinaryReader	br	=new BinaryReader(fs);
 
-			mTurnSensitivity	=br.ReadInt32();
+			mTurnSensitivity	=br.ReadSingle();
 			mbXAxisInverted		=br.ReadBoolean();
 			mbYAxisInverted		=br.ReadBoolean();
 			mbMultiSampling		=br.ReadBoolean();
