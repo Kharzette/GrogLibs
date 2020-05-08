@@ -21,6 +21,7 @@ namespace BSPZone
 			internal bool	mbForward;
 			internal bool	mbActive;
 			internal bool	mbBlocked;	//smashed into a solid object
+			internal bool	mbLooping;
 
 			internal List<ModelMoveStage>	mStages	=new List<ModelMoveStage>();
 		}
@@ -252,6 +253,13 @@ namespace BSPZone
 					if(ms.mStages.Count > (ms.mCurStage + 1))
 					{
 						ms.mCurStage++;
+						ms.mStages[ms.mCurStage].mbForward	=!ms.mStages[ms.mCurStage].mbForward;
+						ms.mStages[ms.mCurStage].Fire(ms.mbForward);
+					}
+					else if(ms.mbLooping)
+					{
+						ms.mCurStage	=0;
+						ms.mStages[ms.mCurStage].mbForward	=!ms.mStages[ms.mCurStage].mbForward;
 						ms.mStages[ms.mCurStage].Fire(ms.mbForward);
 					}
 					else
@@ -264,6 +272,13 @@ namespace BSPZone
 					if((ms.mCurStage - 1) >= 0)
 					{
 						ms.mCurStage--;
+						ms.mStages[ms.mCurStage].mbForward	=!ms.mStages[ms.mCurStage].mbForward;
+						ms.mStages[ms.mCurStage].Fire(ms.mbForward);
+					}
+					else if(ms.mbLooping)
+					{
+						ms.mCurStage	=ms.mStages.Count - 1;
+						ms.mStages[ms.mCurStage].mbForward	=!ms.mStages[ms.mCurStage].mbForward;
 						ms.mStages[ms.mCurStage].Fire(ms.mbForward);
 					}
 					else

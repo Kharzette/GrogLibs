@@ -49,8 +49,92 @@ namespace BSPZone
 		}
 
 
-		void ConvertTrain(Zone zone, ZoneEntity zeDoor, int modelIdx, Vector3 org)
+		void ConvertTrain(Zone zone, ZoneEntity zeTrain, int modelIdx, Vector3 org)
 		{
+			string	nms	=zeTrain.GetTarget();
+			if(nms == null || nms == "")
+			{
+				return;
+			}
+
+			if(!mModelStages.ContainsKey(modelIdx))
+			{
+				ModelStages	stg	=new ModelStages();
+				mModelStages.Add(modelIdx, stg);
+			}
+
+			//grab speed
+			float	speed	=-1f;
+			if(!zeTrain.GetFloat("speed", out speed))
+			{
+				speed	=100f;	//default
+			}
+
+			Dictionary<string, ModelMoveStage>	stages	=new Dictionary<string, ModelMoveStage>();
+
+			//path corners are offset by model mins for some strange reason
+			BoundingBox	bbox	=zone.GetModelBounds(modelIdx);
+
+			//gather stages, origins at the track corners
+			while(nms != null && nms != "")
+			{
+				List<ZoneEntity>	ents	=zone.GetEntitiesByTargetName(nms);
+				if(ents.Count == 0)
+				{
+					break;
+				}
+
+				//think this should always only be one
+				Debug.Assert(ents.Count == 1);
+
+				Vector3	trackOrg	=Vector3.Zero;
+				if(!ents[0].GetOrigin(out trackOrg))
+				{
+					break;
+				}
+
+				ModelMoveStage	mms	=new ModelMoveStage();
+				mms.mModelIndex		=modelIdx;
+				mms.mOrigin			=trackOrg - bbox.Minimum;
+				mms.mStageInterval	=1f;
+				mms.mEaseIn			=0.2f;
+				mms.mEaseOut		=0.2f;
+
+				stages.Add(nms, mms);
+
+				nms	=ents[0].GetTarget();
+
+				//see if this is a loop
+				if(stages.ContainsKey(nms))
+				{
+					mModelStages[modelIdx].mbLooping	=true;
+					break;
+				}
+			}
+
+			//copy to iterate easier
+			int	stageCount	=stages.Count;
+			ModelMoveStage	[]copy	=new ModelMoveStage[stageCount];
+			stages.Values.CopyTo(copy, 0);
+
+			//figure out move amount
+			for(int i=0;i < stageCount;i++)
+			{
+				int	j	=(i + 1) % stageCount;
+
+				Vector3	startPos	=copy[i].mOrigin;
+				Vector3	endPos		=copy[j].mOrigin;
+
+				Vector3	dir	=endPos - startPos;
+
+				float	len	=dir.Length();
+
+				copy[i].mMoveAmount		=len;
+				copy[i].mMoveAxis		=dir / len;
+				copy[i].mStageInterval	=len / speed;
+			}
+
+			mModelStages[modelIdx].mStages.AddRange(copy);
 		}
 
 
