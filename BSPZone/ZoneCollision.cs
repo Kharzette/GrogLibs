@@ -335,6 +335,30 @@ namespace BSPZone
 			}
 			return	hitPos;
 		}
+
+
+		//returns a list of models intersecting a nonmoving box
+		public bool TraceStaticBoxVsModels(BoundingBox boxBounds, Vector3 pos, List<int> intersecting)
+		{
+			bool	bRet	=false;
+
+			ZonePlane	zp	=ZonePlane.BlankX;
+
+			for(int i=1;i < mZoneModels.Length;i++)
+			{
+				if(mNonCollidingModels.Contains(i))
+				{
+					continue;	//don't bother vs triggers etc
+				}
+
+				if(IntersectBoxModel(boxBounds, pos, i, ref zp))
+				{
+					bRet	=true;
+					intersecting.Add(i);
+				}
+			}
+			return	bRet;
+		}
 		#endregion
 
 
