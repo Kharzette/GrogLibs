@@ -96,20 +96,6 @@ namespace BSPZone
 		}
 
 
-		public void CheckMobile(object triggerer, BoundingBox playerBox,
-			Vector3 startPos, Vector3 endPos, float msDelta)
-		{
-			Debug.Assert(msDelta > 0f);
-
-			if(mZone == null)
-			{
-				return;
-			}
-
-			mZone.BoxTriggerCheck(triggerer, playerBox, startPos, endPos, msDelta);
-		}
-
-
 		void OnTriggerLeaving(object sender, EventArgs ea)
 		{
 			ZoneEntity	ze	=sender as ZoneEntity;

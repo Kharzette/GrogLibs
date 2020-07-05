@@ -324,8 +324,7 @@ namespace BSPZone
 			//do a trigger check if requested
 			if(bTriggerCheck)
 			{
-				mTHelper.CheckMobile(this, mBox,
-					mPosition, endPos, msDelta);
+				mZone.BoxTriggerCheck(this, mBox, mPosition, endPos, msDelta);
 			}
 		}
 
@@ -387,16 +386,7 @@ namespace BSPZone
 			//do a trigger check if requested
 			if(bTriggerCheck)
 			{
-				//fatten the box a bit
-				BoundingBox	fatBox	=mBox;
-
-				fatBox.Minimum.X	-=1f;
-				fatBox.Minimum.Z	-=1f;
-				fatBox.Maximum.X	+=1f;
-				fatBox.Maximum.Z	+=1f;
-
-				mTHelper.CheckMobile(this, fatBox,
-					mPosition, endPos, msDelta);
+				mZone.BoxTriggerCheck(this, mBox, mPosition, endPos, msDelta);
 			}
 
 			mPosition	=endPos;

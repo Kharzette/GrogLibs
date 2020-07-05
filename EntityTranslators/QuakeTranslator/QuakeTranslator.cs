@@ -9,6 +9,11 @@ namespace EntityLib
 {
 	public class QuakeTranslator
 	{
+		public void TranslateTriggers(EntityBoss eb, Zone z)
+		{
+			
+		}
+
 		public void TranslateModels(EntityBoss eb, Zone z)
 		{
 			//grab doors and lifts and such
