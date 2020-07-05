@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+	</PropertyGroup>
+	<ItemGroup>
+		<Reference Include="SharpDX">
+			<HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.dll</HintPath>
+		</Reference>
+		<Reference Include="SharpDX.Mathematics">
+			<HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Mathematics.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>
+	</ItemGroup>
+</Project>

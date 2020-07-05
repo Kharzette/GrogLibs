@@ -250,7 +250,7 @@ namespace BSPZone
 			{
 				push.Value.mMobile.ClearPushVelocity();
 			}
-			mBMHelper.Update(secDelta);//, lis);
+			//mBMHelper.Update(secDelta);//, lis);
 		}
 
 
