@@ -170,10 +170,11 @@ namespace EntityLib
 		}
 
 
-		internal bool Update(float secDelta, BSPZone.Zone z)
+		internal bool Update(float secDelta, BSPZone.Zone z, out bool bBlocked)
 		{
 			Debug.Assert(secDelta > 0f);	//zero deltatimes are not good for this stuff
 
+			bBlocked	=false;
 			if(mMover.Done())
 			{
 				if(mbRotateToTarget && mRotator.Done())
@@ -191,7 +192,10 @@ namespace EntityLib
 				mMover.Update(secDelta);
 
 				//do the move
-				z.MoveModelTo(mModelIndex, mMover.GetPos());
+				if(!z.MoveModelTo(mModelIndex, mMover.GetPos()))
+				{
+					bBlocked	=true;
+				}
 			}
 
 			//update rotation if any
@@ -205,9 +209,26 @@ namespace EntityLib
 
 					Vector3	rotPostUpdate	=mRotator.GetPos();
 
-					z.RotateModelX(mModelIndex, rotPostUpdate.X - rotPreUpdate.X);
-					z.RotateModelY(mModelIndex, rotPostUpdate.Y - rotPreUpdate.Y);
-					z.RotateModelZ(mModelIndex, rotPostUpdate.Z - rotPreUpdate.Z);
+					//halt after an axis is blocked
+					if(z.RotateModelX(mModelIndex,
+						rotPostUpdate.X - rotPreUpdate.X))
+					{
+						bBlocked	=true;
+					}
+					else
+					{
+						if(z.RotateModelY(mModelIndex, rotPostUpdate.Y - rotPreUpdate.Y))
+						{
+							bBlocked	=true;
+						}
+						else
+						{
+							if(z.RotateModelZ(mModelIndex, rotPostUpdate.Z - rotPreUpdate.Z))
+							{
+								bBlocked	=true;
+							}
+						}
+					}
 				}
 			}
 			else
@@ -216,9 +237,24 @@ namespace EntityLib
 
 				if(rotAmount != Vector3.Zero)
 				{
-					z.RotateModelX(mModelIndex, rotAmount.X);
-					z.RotateModelY(mModelIndex, rotAmount.Y);
-					z.RotateModelZ(mModelIndex, rotAmount.Z);
+					if(z.RotateModelX(mModelIndex, rotAmount.X))
+					{
+						bBlocked	=true;
+					}
+					else
+					{
+						if(z.RotateModelY(mModelIndex, rotAmount.Y))
+						{
+							bBlocked	=true;
+						}
+						else
+						{
+							if(z.RotateModelZ(mModelIndex, rotAmount.Z))
+							{
+								bBlocked	=true;
+							}
+						}
+					}
 				}
 			}
 

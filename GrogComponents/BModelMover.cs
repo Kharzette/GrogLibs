@@ -10,20 +10,19 @@ namespace EntityLib
 		//but for model moving this is all we need
 		public enum States
 		{
-			Idle	=0,
+			Moving	=0,
 			Forward	=1,
-			Reverse	=2,
-			Blocked	=4
+			Blocked	=2
 		}
 
 		int	mModelIdx;
 
 		BModelStages	mModelStages;
-		UInt32			mState;
 		Zone			mZone;
 
 
-		public BModelMover(int idx, BModelStages bms, Zone z)
+		public BModelMover(int idx, BModelStages bms, Zone z,
+							Entity owner) : base(owner)
 		{
 			mModelIdx		=idx;
 			mModelStages	=bms;
@@ -37,7 +36,7 @@ namespace EntityLib
 		}
 
 
-		public void Update(UpdateTimer time)
+		public override void Update(UpdateTimer time)
 		{
 			BModelStages	ms	=mModelStages;
 			if(!ms.mbActive)
@@ -49,7 +48,7 @@ namespace EntityLib
 
 			float	secDelta	=time.GetUpdateDeltaSeconds();
 
-			bool	bDone	=mms.Update(secDelta, mZone);//, lis);
+			bool	bBlocked, bDone	=mms.Update(secDelta, mZone, out bBlocked);//, lis);
 
 			if(bDone)
 			{
@@ -105,11 +104,11 @@ namespace EntityLib
 		}
 
 
-		public void StateChange(Enum state, UInt32 value)
+		public override void StateChange(Enum state, UInt32 value)
 		{
-			if(state.Equals(States.Idle))
+			if(state.Equals(States.Moving))
 			{
-				if(value != 0)
+				if(value == 1)
 				{
 					if(mModelStages.mbActive)
 					{
@@ -131,10 +130,6 @@ namespace EntityLib
 			else if(state.Equals(States.Forward))
 			{
 				mModelStages.mbForward	=(value != 0);
-			}
-			else if(state.Equals(States.Reverse))
-			{
-				mModelStages.mbForward	=(value == 0);
 			}
 			else if(state.Equals(States.Blocked))
 			{
