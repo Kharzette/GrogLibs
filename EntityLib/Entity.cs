@@ -11,7 +11,15 @@ namespace EntityLib
 	{
 		List<Component>	mComponents	=new List<Component>();
 
-		public bool	mbWantUpdate;
+		public bool			mbWantUpdate;
+		public EntityBoss	mBoss;
+
+
+		public Entity(bool bWantUpdate, EntityBoss eb)
+		{
+			mbWantUpdate	=bWantUpdate;
+			mBoss			=eb;
+		}
 
 
 		public void AddComponent(Component c)
@@ -19,6 +27,12 @@ namespace EntityLib
 			Debug.Assert(!mComponents.Contains(c));
 
 			mComponents.Add(c);
+		}
+
+
+		public List<Component> GetComponents()
+		{
+			return	mComponents;
 		}
 
 

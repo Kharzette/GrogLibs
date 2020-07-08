@@ -18,10 +18,8 @@ namespace BSPZone
 		List<ZoneEntity>				mAudioEntities	=new List<ZoneEntity>();
 		Dictionary<ZoneEntity, Emitter>	mEmitters		=new Dictionary<ZoneEntity, Emitter>();
 
-		bool	mbMiscListening;
 
-
-		public void Initialize(Zone zone, TriggerHelper th, Audio aud)
+		public void Initialize(Zone zone, Audio aud)
 		{
 			if(mZone != null)
 			{
@@ -33,14 +31,6 @@ namespace BSPZone
 			}
 			mZone	=zone;
 			mAudio	=aud;
-
-			//be sure to only wire this up once!
-			//can cause double toggling
-			if(!mbMiscListening)
-			{
-				th.eMisc		+=OnTriggerMisc;
-				mbMiscListening	=true;
-			}
 
 			mAudioEntities.Clear();
 			mEmitters.Clear();

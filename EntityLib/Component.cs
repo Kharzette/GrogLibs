@@ -4,9 +4,16 @@ using UtilityLib;
 
 namespace EntityLib
 {
-    public interface Component
+    public class Component
     {
-		void Update(UpdateTimer timer);
-		void StateChange(Enum state, UInt32 value);
+		public Entity	mOwner;
+
+		public Component(Entity owner)
+		{
+			mOwner	=owner;
+		}
+
+		virtual public void Update(UpdateTimer timer) {}
+		virtual public void StateChange(Enum state, UInt32 value) {}
     }
 }

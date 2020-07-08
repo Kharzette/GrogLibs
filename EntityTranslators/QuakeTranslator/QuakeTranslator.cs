@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using SharpDX;
 using BSPZone;
+using UtilityLib;
 
 
 namespace EntityLib
@@ -11,8 +12,46 @@ namespace EntityLib
 	{
 		public void TranslateTriggers(EntityBoss eb, Zone z)
 		{
-			
+			List<ZoneEntity>	trigs	=z.GetEntitiesStartsWith("trigger");
+			foreach(ZoneEntity ze in trigs)
+			{
+				if(ze.mData.ContainsKey("Model"))
+				{
+					string	modelNum	=ze.mData["Model"];
+
+					int	modelNumi	=Convert.ToInt32(modelNum);
+
+					double	delay	=0;
+
+					if(ze.mData.ContainsKey("delay"))
+					{
+						if(Mathery.TryParse(ze.mData["delay"], out delay))
+						{
+							//bump to milliseconds
+							delay	*=1000.0;
+						}
+					}
+
+					string	targ	=ze.GetTarget();
+					Entity	e		=new Entity(false, eb);					
+					Trigger	t		=new Trigger(z, modelNumi,
+						z.GetModelBounds(modelNumi),
+						(ze.mData["classname"] == "trigger_once"),
+						(ze.mData["classname"] == "trigger_stand_in"),
+						targ, delay, e);
+
+					e.AddComponent(t);
+					eb.AddEntity(e);
+
+					string	myTarg	=ze.GetTargetName();
+					if(myTarg != "")
+					{
+						MakeEntityTargetName(e, myTarg);						
+					}
+				}
+			}
 		}
+
 
 		public void TranslateModels(EntityBoss eb, Zone z)
 		{
@@ -33,36 +72,47 @@ namespace EntityLib
 					continue;
 				}
 
-				Entity	xEnt;
+				Entity	xEnt	=new Entity(false, eb);
 
 				string	className	=ze.GetValue("classname");
 				if(className == "func_train")
 				{
-					xEnt	=ConvertTrain(z, ze, modelIdx, org);
+					ConvertTrain(z, ze, modelIdx, org, ref xEnt);
 				}
 				else if(className == "func_button")
 				{
-					xEnt	=ConvertButton(z, ze, modelIdx, org);
+					ConvertButton(z, ze, modelIdx, org, ref xEnt);
 				}
 				else
 				{
-					xEnt	=ConvertDoor(z, ze, modelIdx, org);
+					ConvertDoor(z, ze, modelIdx, org, ref xEnt);
 				}
 
-				if(xEnt != null)
+				if(xEnt == null)
 				{
-					eb.AddEntity(xEnt);
+					continue;
+				}
+
+				eb.AddEntity(xEnt);
+
+				string	myTarg	=ze.GetTargetName();
+				if(myTarg != "")
+				{
+					MakeEntityTargetName(xEnt, myTarg);
 				}
 			}
 		}
 
 
-		Entity ConvertTrain(Zone zone, ZoneEntity zeTrain, int modelIdx, Vector3 org)
+		void ConvertTrain(Zone zone, ZoneEntity zeTrain, int modelIdx,
+							Vector3 org, ref Entity outEnt)
 		{
 			string	nms	=zeTrain.GetTarget();
 			if(nms == null || nms == "")
 			{
-				return	null;
+				//no track to follow!
+				outEnt	=null;
+				return;
 			}
 
 			//grab speed
@@ -133,18 +183,28 @@ namespace EntityLib
 			}
 
 			BModelStages	bms	=new BModelStages(bLooping, copy);
+			BModelMover		bmm	=new BModelMover(modelIdx, bms, zone, outEnt);
 
-			Entity	ret	=new Entity();
+			outEnt.AddComponent(bmm);
 
-			BModelMover	bmm	=new BModelMover(modelIdx, bms, zone);
-
-			ret.AddComponent(bmm);
-
-			return	ret;
+			string	myTarg	=zeTrain.GetTargetName();
+			if(myTarg != "")
+			{
+				MakeEntityTargetName(outEnt, myTarg);
+			}
 		}
 
 
-		Entity ConvertDoor(Zone zone, ZoneEntity zeDoor, int modelIdx, Vector3 org)
+		void MakeEntityTargetName(Entity e, string targetName)
+		{
+			TargetName	tn	=new TargetName(targetName, e);
+
+			e.AddComponent(tn);
+		}
+
+
+		void ConvertDoor(Zone zone, ZoneEntity zeDoor, int modelIdx,
+						Vector3 org, ref Entity outEnt)
 		{
 			int		wait, speed, angle, lip;
 
@@ -196,17 +256,14 @@ namespace EntityLib
 				string	cname	=zea.GetValue("classname");
 			}
 
-			Entity	ret	=new Entity();
+			BModelMover	bmm	=new BModelMover(modelIdx, bms, zone, outEnt);
 
-			BModelMover	bmm	=new BModelMover(modelIdx, bms, zone);
-
-			ret.AddComponent(bmm);
-
-			return	ret;
+			outEnt.AddComponent(bmm);
 		}
 
 
-		Entity ConvertButton(Zone zone, ZoneEntity zeButton, int modelIdx, Vector3 org)
+		void ConvertButton(Zone zone, ZoneEntity zeButton, int modelIdx,
+							Vector3 org, ref Entity outEnt)
 		{
 			int		wait, angle;
 
@@ -245,13 +302,9 @@ namespace EntityLib
 
 			BModelStages	bms	=new BModelStages(false, mms);
 
-			Entity	ret	=new Entity();
-			
-			BModelMover	bmm	=new BModelMover(modelIdx, bms, zone);
+			BModelMover	bmm	=new BModelMover(modelIdx, bms, zone, outEnt);
 
-			ret.AddComponent(bmm);
-
-			return	ret;
+			outEnt.AddComponent(bmm);
 		}
 	}
 }

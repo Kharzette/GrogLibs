@@ -16,7 +16,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\UtilityLib\UtilityLib.csproj"/>
 		<ProjectReference Include="..\..\EntityLib\EntityLib.csproj"/>
-		<ProjectReference Include="..\..\GrogEntities\GrogEntities.csproj"/>
+		<ProjectReference Include="..\..\GrogComponents\GrogComponents.csproj"/>
 		<ProjectReference Include="..\..\AudioLib\AudioLib.csproj"/>
 		<ProjectReference Include="..\..\BSPZone\BSPZone.csproj"/>
 	</ItemGroup>

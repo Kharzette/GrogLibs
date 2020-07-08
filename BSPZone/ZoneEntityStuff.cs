@@ -168,24 +168,6 @@ namespace BSPZone
 		}
 
 
-		internal string GenerateUniqueTargetName()
-		{
-			startOver:
-			string	ret	=Mathery.RandomString(8);
-
-			foreach(ZoneEntity ze in mEntities)
-			{
-				string	tn	=ze.GetTargetName();
-
-				if(tn == ret)
-				{
-					goto	startOver;
-				}
-			}
-			return	ret;
-		}
-
-
 		internal void AddEntity(ZoneEntity newEnt)
 		{
 			mEntities.Add(newEnt);

@@ -701,11 +701,12 @@ namespace BSPZone
 
 		#region Model Movement
 		//this is an actual move, not a delta
-		public void MoveModelTo(int modelIndex, Vector3 pos)
+		//returns false if blocked
+		public bool MoveModelTo(int modelIndex, Vector3 pos)
 		{
 			if(mZoneModels.Length <= modelIndex)
 			{
-				return;
+				return	true;
 			}
 
 			ZoneModel	zm	=mZoneModels[modelIndex];
@@ -725,8 +726,7 @@ namespace BSPZone
 						//reset position
 						zm.SetPosition(oldPos);
 						//also need to reverse the model's motion here
-						mBMHelper.SetBlocked(modelIndex);
-						return;
+						return	false;
 					}
 				}
 			}
@@ -737,21 +737,23 @@ namespace BSPZone
 				zm.SetPosition(oldPos);
 
 				//also need to reverse the model's motion here
-				mBMHelper.SetBlocked(modelIndex);
+				return	false;
 			}
+			return	true;
 		}
 
 
-		public void RotateModelX(int modelIndex, float degrees)
+		//return false if blocked
+		public bool RotateModelX(int modelIndex, float degrees)
 		{
 			if(mZoneModels.Length <= modelIndex)
 			{
-				return;
+				return	true;
 			}
 
 			if(degrees == 0f)
 			{
-				return;
+				return	true;
 			}
 
 			ZoneModel	zm	=mZoneModels[modelIndex];
@@ -765,21 +767,23 @@ namespace BSPZone
 				zm.RotateX(-degrees);
 
 				//also need to reverse the model's motion here
-				mBMHelper.SetBlocked(modelIndex);
+				return	false;
 			}
+			return	true;
 		}
 
 
-		public void RotateModelY(int modelIndex, float degrees)
+		//return false if blocked
+		public bool RotateModelY(int modelIndex, float degrees)
 		{
 			if(mZoneModels.Length <= modelIndex)
 			{
-				return;
+				return	true;
 			}
 
 			if(degrees == 0f)
 			{
-				return;
+				return	true;
 			}
 
 			ZoneModel	zm	=mZoneModels[modelIndex];
@@ -818,8 +822,7 @@ namespace BSPZone
 						zm.RotateY(-degrees);
 
 						//also need to reverse the model's motion here
-						mBMHelper.SetBlocked(modelIndex);
-						return;
+						return	false;
 					}
 				}
 			}
@@ -830,21 +833,23 @@ namespace BSPZone
 				zm.RotateY(-degrees);
 
 				//also need to reverse the model's motion here
-				mBMHelper.SetBlocked(modelIndex);
+				return	false;
 			}
+			return	true;
 		}
 
 
-		public void RotateModelZ(int modelIndex, float degrees)
+		//return false if blocked
+		public bool RotateModelZ(int modelIndex, float degrees)
 		{
 			if(mZoneModels.Length <= modelIndex)
 			{
-				return;
+				return	true;
 			}
 
 			if(degrees == 0f)
 			{
-				return;
+				return	true;
 			}
 
 			ZoneModel	zm	=mZoneModels[modelIndex];
@@ -858,8 +863,9 @@ namespace BSPZone
 				zm.RotateZ(-degrees);
 
 				//also need to reverse the model's motion here
-				mBMHelper.SetBlocked(modelIndex);
+				return	false;
 			}
+			return	true;
 		}
 
 
@@ -1061,89 +1067,6 @@ namespace BSPZone
 			if(PartFront(p, 0f, start, end, out clipStart, out clipEnd))
 			{
 				TraceSegWorld(clipStart, clipEnd, zn.mFront, segz);
-			}
-		}
-		#endregion
-
-
-		#region Triggers
-		//triggererereererereererrerererererrerererr
-		public void BoxTriggerCheck(object triggerer, BoundingBox box,
-			Vector3 start, Vector3 end, float msDelta)
-		{
-			//check for new entries
-			foreach(ZoneTrigger zt in mTriggers)
-			{
-				//if a one shot and already tripped, skip
-				if(zt.mbTriggerOnce && zt.mbTriggered)
-				{
-					continue;
-				}
-
-				//if a stand in and the triggerer already in the list, skip
-				if(zt.mbTriggerStandIn &&
-					(zt.mbTriggered && zt.mTriggeringObjects.Contains(triggerer)))
-				{
-					continue;
-				}
-
-				RayTrace	rt	=new RayTrace(start, end);
-				rt.mBounds		=box;
-				if(TraceFakeOrientedBoxTrigger(rt, start, end, mZoneModels[zt.mModelNum]))
-				{
-					zt.mTimeSinceTriggered	+=msDelta;
-					if(zt.mTimeSinceTriggered > zt.mDelay)
-					{
-						zt.mEntity.mData["triggered"]	="true";
-						zt.mbTriggered					=true;
-						zt.mTimeSinceTriggered			=0;
-
-						//track who or what triggered if a stand in
-						if(zt.mbTriggerStandIn)
-						{
-							zt.mTriggeringObjects.Add(triggerer);
-						}
-
-						Misc.SafeInvoke(eTriggerHit, zt.mEntity, new TriggerContextEventArgs(triggerer));
-					}
-				}
-			}
-
-			//check for expiring standins
-			foreach(ZoneTrigger zt in mTriggers)
-			{
-				if(!zt.mbTriggerStandIn)
-				{
-					continue;
-				}
-
-				if(!zt.mbTriggered)
-				{
-					continue;
-				}
-
-				if(!zt.mTriggeringObjects.Contains(triggerer))
-				{
-					continue;
-				}
-
-				RayTrace	rt	=new RayTrace(start, end);
-				rt.mBounds		=box;
-				if(TraceFakeOrientedBoxTrigger(rt, start, end, mZoneModels[zt.mModelNum]))
-				{
-					continue;
-				}
-
-				zt.mTriggeringObjects.Remove(triggerer);
-
-				//set to non triggered only if no mobiles inside
-				if(zt.mTriggeringObjects.Count <= 0)
-				{
-					zt.mEntity.mData["triggered"]	="false";
-					zt.mbTriggered					=false;
-					zt.mTimeSinceTriggered			=0;
-				}
-				Misc.SafeInvoke(eTriggerOutOfRange, zt.mEntity, new TriggerContextEventArgs(triggerer));
 			}
 		}
 		#endregion

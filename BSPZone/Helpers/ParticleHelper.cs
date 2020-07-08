@@ -19,7 +19,7 @@ namespace BSPZone
 		bool	mbMiscListening;
 
 
-		public void Initialize(Zone zone, TriggerHelper th, ParticleBoss pb)
+		public void Initialize(Zone zone, ParticleBoss pb)
 		{
 			mZone	=zone;
 			mPB		=pb;
@@ -31,13 +31,6 @@ namespace BSPZone
 			}
 
 			mIndexes.Clear();
-
-			//make sure to wire event once only
-			if(!mbMiscListening)
-			{
-				th.eMisc		+=OnTriggerMisc;
-				mbMiscListening	=true;
-			}
 
 			Array	shapeVals	=Enum.GetValues(typeof(Emitter.Shapes));
 

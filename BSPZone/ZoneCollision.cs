@@ -563,6 +563,15 @@ namespace BSPZone
 		}
 
 
+		public bool	TriggerTrace(Vector3 start, Vector3 end, BoundingBox box, int modelIndex)
+		{
+			RayTrace	rt	=new RayTrace(start, end);
+			rt.mBounds		=box;
+
+			return	TraceFakeOrientedBoxTrigger(rt, start, end, mZoneModels[modelIndex]);
+		}
+
+
 		//expects worldspace values
 		bool TraceFakeOrientedBoxTrigger(RayTrace rt, Vector3 start, Vector3 end, ZoneModel mod)
 		{

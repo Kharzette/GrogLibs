@@ -9,30 +9,6 @@ using UtilityLib;
 
 namespace BSPZone
 {
-	public class TriggerContextEventArgs : EventArgs
-	{
-		public object	mContext;
-
-		public TriggerContextEventArgs(object context) : base()
-		{
-			mContext	=context;
-		}
-	}
-
-	internal class ZoneTrigger
-	{
-		internal ZoneEntity		mEntity;
-		internal BoundingBox	mBox;
-		internal Int32			mModelNum;
-		internal bool			mbTriggered;
-		internal bool			mbTriggerOnce;
-		internal bool			mbTriggerStandIn;
-		internal double			mTimeSinceTriggered;
-		internal double			mDelay;
-
-		internal List<object>	mTriggeringObjects	=new List<object>();
-	}
-
 	public partial class Zone
 	{
 		class WorldLeaf
@@ -67,15 +43,10 @@ namespace BSPZone
 
 		//gameplay stuff
 		List<ZoneEntity>	mEntities	=new List<ZoneEntity>();
-		List<ZoneTrigger>	mTriggers	=new List<ZoneTrigger>();
-		BasicModelHelper	mBMHelper	=new BasicModelHelper();
 
 		int	mLightMapGridSize;
 		int	mNumVisLeafBytes;
 		int	mNumVisMaterialBytes;
-
-		public event EventHandler	eTriggerHit;
-		public event EventHandler	eTriggerOutOfRange;
 
 		//pathing uses these to make the graph connections too
 		public const float	RampAngle		=0.7f;	//how steep can we climb?
@@ -196,44 +167,6 @@ namespace BSPZone
 
 			FindParents_r(mZoneModels[0].mRootNode, -1);
 
-			//grab out triggers
-			List<ZoneEntity>	trigs	=GetEntitiesStartsWith("trigger");
-			foreach(ZoneEntity ze in trigs)
-			{
-				if(ze.mData.ContainsKey("Model"))
-				{
-					ZoneTrigger	zt		=new ZoneTrigger();
-					string	modelNum	=ze.mData["Model"];
-					zt.mModelNum		=Convert.ToInt32(modelNum);
-					zt.mBox				=GetModelBounds(zt.mModelNum);
-					zt.mEntity			=ze;
-					zt.mbTriggered		=false;
-					zt.mbTriggerOnce	=(ze.mData["classname"] == "trigger_once");
-					zt.mbTriggerStandIn	=(ze.mData["classname"] == "trigger_stand_in");	//hax
-
-					//make a triggered field in the entity
-					if(ze.mData.ContainsKey("triggered"))
-					{
-						ze.mData["triggered"]	="false";
-					}
-					else
-					{
-						ze.mData.Add("triggered", "false");
-					}
-
-					if(ze.mData.ContainsKey("delay"))
-					{
-						if(Mathery.TryParse(ze.mData["delay"], out zt.mDelay))
-						{
-							//bump to milliseconds
-							zt.mDelay	*=1000.0;
-						}
-					}
-
-					mTriggers.Add(zt);
-				}
-			}
-
 			BuildLightCache();
 			BuildNonCollidingModelsList();
 		}
@@ -251,12 +184,6 @@ namespace BSPZone
 				push.Value.mMobile.ClearPushVelocity();
 			}
 			//mBMHelper.Update(secDelta);//, lis);
-		}
-
-
-		internal void InitBMHelper(TriggerHelper thelp, AudioLib.Audio aud)
-		{
-			mBMHelper.Initialize(this, thelp, aud);
 		}
 
 
@@ -630,60 +557,6 @@ namespace BSPZone
 			FindParents_r(mZoneNodes[Node].mBack, Node);
 		}
 		#endregion
-
-
-		//for debugging
-		public void GetTriggerGeometry(List<Vector3> verts, List<Int32> inds)
-		{
-			Int32	curIndex	=0;
-			foreach(ZoneTrigger zt in mTriggers)
-			{
-				if(zt.mbTriggerOnce && zt.mbTriggered)
-				{
-					continue;
-				}
-
-				Vector3	[]corners	=zt.mBox.GetCorners();
-
-				foreach(Vector3 v in corners)
-				{
-					verts.Add(v);
-				}
-
-				//wireframe lines
-				//front face
-				inds.Add(curIndex);
-				inds.Add(curIndex + 1);
-				inds.Add(curIndex + 1);
-				inds.Add(curIndex + 2);
-				inds.Add(curIndex + 2);
-				inds.Add(curIndex + 3);
-				inds.Add(curIndex + 3);
-				inds.Add(curIndex);
-
-				//back face
-				inds.Add(curIndex + 4);
-				inds.Add(curIndex + 5);
-				inds.Add(curIndex + 5);
-				inds.Add(curIndex + 6);
-				inds.Add(curIndex + 6);
-				inds.Add(curIndex + 7);
-				inds.Add(curIndex + 7);
-				inds.Add(curIndex + 4);
-
-				//connections for sides
-				inds.Add(curIndex);
-				inds.Add(curIndex + 4);
-				inds.Add(curIndex + 1);
-				inds.Add(curIndex + 5);
-				inds.Add(curIndex + 2);
-				inds.Add(curIndex + 6);
-				inds.Add(curIndex + 3);
-				inds.Add(curIndex + 7);
-
-				curIndex	+=8;
-			}
-		}
 
 
 		public void GetBounds(out Vector3 mins, out Vector3 maxs)

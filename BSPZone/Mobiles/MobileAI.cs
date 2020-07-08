@@ -289,7 +289,7 @@ namespace BSPZone
 			//not much to do while falling
 			if(!mMob.IsOnGround())
 			{
-				mMob.Move(endPos, msDelta, false, false, false, true, true, out endPos, out camPos);
+				mMob.Move(endPos, msDelta, false, false, false, true, out endPos, out camPos);
 				return	false;
 			}
 
@@ -307,7 +307,7 @@ namespace BSPZone
 			{
 				bMoved	=UpdateFollowPath(msDelta, startPos, ref endPos);
 			}
-			mMob.Move(endPos, msDelta, false, false, true, true, true, out endPos, out camPos);
+			mMob.Move(endPos, msDelta, false, false, true, true, out endPos, out camPos);
 
 			return	bMoved;
 		}

@@ -8,22 +8,20 @@ namespace EntityLib
 {
 	public class EntityBoss
 	{
-		Dictionary<int, Entity>	mEnts	=new Dictionary<int, Entity>();
+		List<Entity>	mEnts	=new List<Entity>();
 
 
 		public void AddEntity(Entity e)
 		{
-			int	hash	=e.GetHashCode();
-
-			mEnts.Add(hash, e);
+			mEnts.Add(e);
 		}
 
 
 		public void Update(UpdateTimer ut)
 		{
-			foreach(KeyValuePair<int, Entity> ent in mEnts)
+			foreach(Entity ent in mEnts)
 			{
-				ent.Value.Update(ut);
+				ent.Update(ut);
 			}
 		}
 
@@ -32,9 +30,9 @@ namespace EntityLib
 		{
 			List<Component>	ret	=new List<Component>();
 
-			foreach(KeyValuePair<int, Entity> ents in mEnts)
+			foreach(Entity ents in mEnts)
 			{
-				Component	c	=ents.Value.GetComponent(t);
+				Component	c	=ents.GetComponent(t);
 
 				if(c != null)
 				{

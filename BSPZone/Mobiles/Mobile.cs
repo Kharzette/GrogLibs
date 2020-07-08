@@ -22,9 +22,6 @@ namespace BSPZone
 		//zone to collide against
 		Zone	mZone;
 
-		//trigger helper
-		TriggerHelper	mTHelper;
-
 		//model index standing on, -1 for midair or sliding down
 		int	mModelOn;
 
@@ -59,11 +56,10 @@ namespace BSPZone
 
 
 		public Mobile(object owner, float boxWidth, float boxHeight,
-			float eyeHeight, bool bPushable, TriggerHelper th)
+			float eyeHeight, bool bPushable)
 		{
 			mParent				=owner;
 			mbPushable			=bPushable;
-			mTHelper			=th;
 
 			SetBoxShape(boxWidth, boxHeight, eyeHeight);
 		}
@@ -320,18 +316,12 @@ namespace BSPZone
 			{
 				mZone.UpdatePushable(this, mPosition, mModelOn);
 			}
-
-			//do a trigger check if requested
-			if(bTriggerCheck)
-			{
-				mZone.BoxTriggerCheck(this, mBox, mPosition, endPos, msDelta);
-			}
 		}
 
 
 		//ins and outs are ground based
 		public void Move(Vector3 endPos, float msDelta, bool bWorldOnly,
-			bool bFly, bool bMoveAlongGround, bool bTriggerCheck, bool bDistCheck,
+			bool bFly, bool bMoveAlongGround, bool bDistCheck,
 			out Vector3 retPos, out Vector3 camPos)
 		{
 			Debug.Assert(msDelta > 0f);
@@ -382,12 +372,6 @@ namespace BSPZone
 
 			//pop up to eye height, and negate
 			camPos	=-(endPos - mBoxMiddleOffset + mEyeHeight);
-
-			//do a trigger check if requested
-			if(bTriggerCheck)
-			{
-				mZone.BoxTriggerCheck(this, mBox, mPosition, endPos, msDelta);
-			}
 
 			mPosition	=endPos;
 			if(mbPushable)
@@ -470,7 +454,7 @@ namespace BSPZone
 
 			Vector3	pushedTo, camTo;
 			Move(delta + GetGroundPos(), 1f,
-				true, false, false, true, false, out pushedTo, out camTo);
+				true, false, false, false, out pushedTo, out camTo);
 
 			SetGroundPos(pushedTo);
 
