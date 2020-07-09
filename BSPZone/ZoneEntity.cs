@@ -280,7 +280,7 @@ namespace BSPZone
 		}
 
 
-		internal bool GetColor(out Vector3 color)
+		public bool GetColor(out Vector3 color)
 		{
 			color	=Vector3.One;
 			string	val	="";

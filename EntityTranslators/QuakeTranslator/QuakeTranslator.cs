@@ -10,6 +10,99 @@ namespace EntityLib
 {
 	public class QuakeTranslator
 	{
+		public void TranslateLights(EntityBoss eb, Zone z, Light.SwitchLight switchLight)
+		{
+			List<ZoneEntity>	lights	=z.GetEntitiesStartsWith("light");
+
+			foreach(ZoneEntity ze in lights)
+			{
+				Vector3	lightPos;
+				float	str;
+				bool	bSun	=false;
+
+				ze.GetOrigin(out lightPos);
+				if(!ze.GetLightValue(out str))
+				{
+					if(ze.GetFloat("strength", out str))
+					{
+						bSun	=true;
+
+						//stuff the direction in the position field
+						Vector3	angles;
+						if(!ze.GetVectorNoConversion("angles", out angles))
+						{
+							continue;	//something wrong with the entity
+						}
+						float	yaw		=angles.Y - 90;
+						float	pitch	=angles.X;
+						float	roll	=angles.Z;
+
+						yaw		=MathUtil.DegreesToRadians(yaw);
+						pitch	=MathUtil.DegreesToRadians(pitch);
+						roll	=MathUtil.DegreesToRadians(roll);
+
+						Matrix	rotMat	=Matrix.RotationYawPitchRoll(yaw, pitch, roll);
+
+						lightPos	=rotMat.Backward;
+					}
+				}
+
+				Vector3	color;
+				ze.GetColor(out color);
+
+				//check for switchable lights
+				bool	bSwitchable, bOn	=true;
+				int		switchNum			=-1;
+				if(ze.GetInt("LightSwitchNum", out switchNum))
+				{
+					bSwitchable	=true;
+					int	activated;
+					if(ze.GetInt("activated", out activated))
+					{
+						if(activated == 0)
+						{
+							bOn	=false;
+						}
+					}
+					else
+					{
+						bOn	=false;
+					}
+				}
+				else
+				{
+					bSwitchable	=false;
+				}
+
+				//check for styled lights
+				int	style;
+				ze.GetInt("style", out style);
+
+				Entity	e	=new Entity(false, eb);
+
+				Light	light	=new Light(e, str, style, lightPos, color,
+									bOn, bSwitchable, bSun, switchNum, switchLight);
+
+				e.AddComponent(light);
+
+				eb.AddEntity(e);
+
+				if(bSwitchable)
+				{
+					string	targName	=ze.GetTargetName();
+					if(targName != "")
+					{
+						TargetName	tn	=new TargetName(targName, e);
+						e.AddComponent(tn);
+					}
+					TriggerAble	ta	=new TriggerAble(e);
+
+					e.AddComponent(ta);
+				}
+			}
+		}
+
+
 		public void TranslateTriggers(EntityBoss eb, Zone z)
 		{
 			List<ZoneEntity>	trigs	=z.GetEntitiesStartsWith("trigger");

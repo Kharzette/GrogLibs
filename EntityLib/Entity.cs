@@ -49,19 +49,6 @@ namespace EntityLib
 		}
 
 
-		public bool HasComponent(Type t)
-		{
-			foreach(Component c in mComponents)
-			{
-				if(c.GetType() == t)
-				{
-					return	true;
-				}
-			}
-			return	false;
-		}
-
-
 		public void Update(UpdateTimer ut)
 		{
 			if(!mbWantUpdate)

@@ -50,6 +50,11 @@ namespace EntityLib
 					Trigger	trig	=c as Trigger;
 					trig.TriggerTarget(value);
 				}
+				else if(c is Light)
+				{
+					Light	lt	=c as Light;
+					c.StateChange(Light.State.On, value);
+				}
 			}
 		}
 	}
