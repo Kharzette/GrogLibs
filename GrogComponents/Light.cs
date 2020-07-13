@@ -17,14 +17,15 @@ namespace EntityLib
 		//delegate for switching lights on and off in the rendering
 		public delegate void SwitchLight(int light, bool bOn);
 
-		int		mRenderIndex;	//index for rendering
+		public readonly int		mRenderIndex;	//index for rendering
+		public readonly Vector3	mPosition;
+		public readonly Vector3	mColor;
+		public readonly int		mStyle;
+		public readonly bool	mbSwitchable;	//switchable lights
+		public readonly bool	mbSun;			//sun light
+
 		float	mStrength;
-		Vector3	mPosition;
-		Vector3	mColor;
-		int		mStyle;
-		bool	mbOn;			//on by default
-		bool	mbSwitchable;	//switchable lights
-		bool	mbSun;			//sun light
+		bool	mbOn, mbDamaged, mbDestroyed;
 
 		SwitchLight	mSwitch;
 
@@ -38,11 +39,24 @@ namespace EntityLib
 			mPosition		=pos;
 			mColor			=color;
 			mStyle			=style;
-			mbOn			=bOn;
 			mbSwitchable	=bSwitchable;
 			mbSun			=bSun;
 			mSwitch			=switchLight;
 			mRenderIndex	=rendIndex;
+
+			StateChange(State.On, (bOn)? 1u : 0u);
+		}
+
+
+		public float GetStrength()
+		{
+			return	mStrength;
+		}
+
+
+		public bool IsOn()
+		{
+			return	mbOn;
 		}
 
 
@@ -50,13 +64,19 @@ namespace EntityLib
 		{
 			if(state.Equals(State.Damaged))
 			{
+				mbDamaged	=value != 0;
 			}
 			else if(state.Equals(State.Destroyed))
 			{
+				mbDestroyed	=value != 0;
 			}
 			else if(state.Equals(State.On))
 			{
-				mSwitch(mRenderIndex, value != 0);
+				mbOn	=value != 0;
+				if(mbSwitchable)
+				{
+					mSwitch(mRenderIndex, value != 0);
+				}
 			}
 		}
 	}

@@ -236,185 +236,27 @@ namespace BSPZone
 		}
 
 
-		//rets will either be zone or dyn lights
-		List<object>	GetLightsInLOS(Vector3 pos, MaterialLib.DynamicLights dyn)
+		//check these positions for LOS
+		//fills the index list with indexes to positions in
+		//line of sight
+		public void	GetInLOS(Vector3 eyePos, List<Vector3> positions,
+							ref List<int> losIndexes)
 		{
-			List<object>	ret	=new List<object>();
+			losIndexes.Clear();
 
-			foreach(KeyValuePair<ZoneEntity, ZoneLight> zl in mLightCache)
+			for(int i=0;i < positions.Count;i++)
 			{
-				if(IsVisibleFrom(pos, zl.Value.mPosition))
+				Vector3	pos	=positions[i];
+
+				if(IsVisibleFrom(eyePos, pos))
 				{
 					Collision	col;
-					if(!TraceAll(null, null, pos, zl.Value.mPosition, out col))
+					if(!TraceAll(null, null, eyePos, pos, out col))
 					{
-						ret.Add(zl.Value);
+						losIndexes.Add(i);
 					}
 				}
 			}
-
-			if(dyn == null)
-			{
-				return	ret;
-			}
-
-			Dictionary<int, DynLight>	dyns	=dyn.GetDynLights();
-			foreach(KeyValuePair<int, DynLight> zl in dyns)
-			{
-				if(IsVisibleFrom(pos, zl.Value.mPosition))
-				{
-					Collision	col;
-					if(!TraceAll(null, null, pos, zl.Value.mPosition, out col))
-					{
-
-						ret.Add(zl.Value);
-					}
-				}
-			}
-
-			return	ret;
-		}
-
-
-		public List<object> GetAffectingLights(Vector3 pos,
-			ZoneEntity sunEnt, GetStyleStrength gss, MaterialLib.DynamicLights dyn)
-		{
-			List<object>	inRange	=new List<object>();
-			List<object>	losd	=GetLightsInLOS(pos, dyn);
-
-			//check attenuation
-			foreach(object light in losd)
-			{
-				bool	bOn		=LightHelper.GetLightOn(light);
-				bool	bSun	=LightHelper.GetLightSun(light);
-				if(!bOn || bSun)
-				{
-					continue;
-				}
-
-				Vector3	lpos	=LightHelper.GetLightPosition(light);
-				float	dist	=Vector3.Distance(lpos, pos);
-				float	atten	=0;
-				int		style	=LightHelper.GetLightStyle(light);
-				float	str		=LightHelper.GetLightStrength(light);
-
-				if(style != 0)
-				{
-					atten	=(str * gss(style));
-				}
-				else
-				{
-					atten	=str;
-				}
-
-				if(dist <= atten)
-				{
-					inRange.Add(light);
-				}
-			}
-
-			//see if the sun is shining on pos
-			if(sunEnt != null && mLightCache.ContainsKey(sunEnt))
-			{
-				ZoneLight	sunLight	=mLightCache[sunEnt];				
-
-				Collision	col;
-				if(TraceAll(null, null, pos, -sunLight.mPosition * 10000 + pos, out col))
-				{
-					if(col.mFaceHit != null)
-					{
-						if(Misc.bFlagSet(SKY, col.mFaceHit.mFlags))
-						{
-							inRange.Add(mLightCache[sunEnt]);
-						}
-					}
-				}
-			}
-			return	inRange;
-		}
-
-
-		//for assigning character lights
-		public object GetStrongestLightInLOS(Vector3 pos,
-			ZoneEntity sunEnt, GetStyleStrength gss, MaterialLib.DynamicLights dyn)
-		{
-			List<object>	visLights	=GetLightsInLOS(pos, dyn);
-
-			//look for distance minus strength
-			float	bestDist	=float.MaxValue;
-			object	bestLight	=null;
-			foreach(object light in visLights)
-			{
-				bool	bOn		=LightHelper.GetLightOn(light);
-				bool	bSun	=LightHelper.GetLightSun(light);
-				if(!bOn || bSun)
-				{
-					continue;
-				}
-
-				Vector3	lpos	=LightHelper.GetLightPosition(light);
-				float	dist	=Vector3.Distance(lpos, pos);
-				float	str		=LightHelper.GetLightStrength(light);
-
-				if(dist >= str)
-				{
-					continue;
-				}
-
-				int	style	=LightHelper.GetLightStyle(light);
-
-				if(style != 0)
-				{
-					dist	-=(str * gss(style));
-				}
-				else
-				{
-					dist	-=str;
-				}
-
-				if(dist < bestDist)
-				{
-					bestLight	=light;
-					bestDist	=dist;
-				}
-			}
-
-			float	bestStrength	=LightHelper.GetLightStrength(bestLight);
-
-			if(sunEnt != null && mLightCache.ContainsKey(sunEnt))
-			{
-				//first check if the sun can overpower the
-				//already chosen regular light
-				ZoneLight	sunLight	=mLightCache[sunEnt];				
-
-				if(bestLight != null)
-				{
-					float	bestLightPower	=bestDist;
-					if(bestDist > bestStrength)
-					{
-						bestLightPower	*=(bestStrength / bestDist);
-					}
-
-					if(bestLightPower > sunLight.mStrength)
-					{
-						return	bestLight;
-					}				
-				}
-				
-				Collision	col;
-				if(TraceAll(null, null, pos, -sunLight.mPosition * 10000 + pos, out col))	//pos contains ray direction
-				{
-					if(col.mFaceHit != null)
-					{
-						if(Misc.bFlagSet(SKY, col.mFaceHit.mFlags))
-						{
-							return	mLightCache[sunEnt];
-						}
-					}
-				}
-			}
-
-			return	bestLight;
 		}
 
 
