@@ -339,6 +339,11 @@ namespace BSPCore
 						colorVec.Z	=color.Z;
 						colorVec	*=300.0f;	//default
 					}
+					else
+					{
+						//some ents have no value, 200 default
+						colorVec.W	=200f;
+					}
 				}
 
 				color.X	=colorVec.X;
