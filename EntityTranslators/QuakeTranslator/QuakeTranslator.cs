@@ -56,17 +56,23 @@ namespace EntityLib
 				if(ze.GetInt("LightSwitchNum", out switchNum))
 				{
 					bSwitchable	=true;
+
+					//quake spawnflags of 1 means start off, otherwise start on
 					int	activated;
-					if(ze.GetInt("activated", out activated))
+					if(ze.GetInt("spawnflags", out activated))
 					{
-						if(activated == 0)
+						if(activated == 1)
 						{
 							bOn	=false;
+						}
+						else
+						{
+							bOn	=true;
 						}
 					}
 					else
 					{
-						bOn	=false;
+						bOn	=true;
 					}
 				}
 				else
