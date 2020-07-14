@@ -261,7 +261,7 @@ namespace MeshLib
 			Dictionary<int, List<List<DrawCall>>>	dcDict,
 			List<DrawCall>							outDraws)
 		{
-			if(!dcDict.ContainsKey(0))
+			if(dcDict == null || !dcDict.ContainsKey(0))
 			{
 				return;
 			}
@@ -283,7 +283,7 @@ namespace MeshLib
 			List<DrawCall>							planars,
 			List<DrawCall>							outDraws)
 		{
-			if(!dcDict.ContainsKey(0))
+			if(dcDict == null || !dcDict.ContainsKey(0))
 			{
 				return;
 			}
@@ -317,7 +317,7 @@ namespace MeshLib
 			List<DrawCall>							planars,
 			List<DrawCall>							planeOns)
 		{
-			if(!dcDict.ContainsKey(0))
+			if(dcDict == null || !dcDict.ContainsKey(0))
 			{
 				return;
 			}
