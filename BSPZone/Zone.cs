@@ -167,7 +167,6 @@ namespace BSPZone
 
 			FindParents_r(mZoneModels[0].mRootNode, -1);
 
-			BuildLightCache();
 			BuildNonCollidingModelsList();
 		}
 		#endregion
