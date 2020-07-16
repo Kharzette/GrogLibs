@@ -20,6 +20,9 @@ namespace EntityLib
 
 		Zone	mZone;
 
+		//components we may or may not have (for determining position)
+		PickUp	mPickUp;
+
 		//Designated sun if any
 		Light	mSunLight;
 
@@ -107,6 +110,20 @@ namespace EntityLib
 		public bool NeedsShadow()
 		{
 			return	!(mBestLight == null && mBestLightMover.Done());
+		}
+
+
+		public override void Update(UpdateTimer time)
+		{
+			if(mPickUp == null)
+			{
+				mPickUp	=mOwner.GetComponent(typeof(PickUp)) as PickUp;
+			}
+
+			if(mPickUp != null)
+			{
+				Update(time.GetUpdateDeltaMilliSeconds(), mPickUp.mPosition);
+			}
 		}
 
 
@@ -541,7 +558,11 @@ namespace EntityLib
 				}
 			}
 
-			float	bestStrength	=bestLight.GetStrength();
+			float	bestStrength	=float.MinValue;
+			if(bestLight != null)
+			{
+				bestStrength	=bestLight.GetStrength();
+			}
 
 			//check for a sun
 			foreach(Light light in mAffecting)

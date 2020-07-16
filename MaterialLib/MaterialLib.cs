@@ -449,7 +449,7 @@ namespace MaterialLib
 			mKeeper.HackyTechniqueRefresh(dc, fxName, tech);
 
 			esrv.Dispose();
-			var.Dispose();
+			//var.Dispose();
 		}
 
 

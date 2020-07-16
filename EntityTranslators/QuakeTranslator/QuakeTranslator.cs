@@ -10,6 +10,189 @@ namespace EntityLib
 {
 	public class QuakeTranslator
 	{
+		public delegate void GetDrawObject(string meshPath, out object draw, out BoundingBox box);
+
+
+		public void TranslateWeapons(EntityBoss eb, Zone z, GetDrawObject gdo)
+		{
+			List<ZoneEntity>	ents	=z.GetEntitiesStartsWith("weapon_");
+
+			foreach(ZoneEntity ze in ents)
+			{
+				object		drawObject	=null;
+				BoundingBox	box;
+				if(ze.GetValue("classname").EndsWith("supershotgun"))
+				{
+					gdo("BBGun.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("_nailgun"))
+				{
+					gdo("BBGun.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("supernailgun"))
+				{
+					gdo("BBGun.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("grenadelauncher"))
+				{
+					gdo("BBGun.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("rocketlauncher"))
+				{
+					gdo("BBGun.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("lightning"))
+				{
+					gdo("BBGun.Static", out drawObject, out box);
+				}
+				else
+				{
+					continue;
+				}
+
+				if(drawObject == null)
+				{
+					continue;
+				}
+
+				MakePickUpEnt(eb, ze, drawObject, box);
+			}
+		}
+
+
+		public void TranslateItems(EntityBoss eb, Zone z, GetDrawObject gdo)
+		{
+			List<ZoneEntity>	ents	=z.GetEntitiesStartsWith("item_");
+			foreach(ZoneEntity ze in ents)
+			{
+				object		drawObject	=null;
+				BoundingBox	box;
+				if(ze.GetValue("classname").EndsWith("cells"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("rockets"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("shells"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("spikes"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("weapon"))
+				{
+					gdo("BBGun.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("health"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("envirosuit"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("super_damage"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("invulnerability"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("invisibility"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("armorInv"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("armor2"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("armor1"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("key1"))
+				{
+					gdo("Key_Purple.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("key2"))
+				{
+					gdo("Key.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("sigil"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else
+				{
+					continue;
+				}
+
+				if(drawObject == null)
+				{
+					continue;
+				}
+
+				MakePickUpEnt(eb, ze, drawObject, box);
+			}
+		}
+
+
+		public void TranslateMisc(EntityBoss eb, Zone z, GetDrawObject gdo)
+		{
+			return;		//not ready to deal with these yet
+
+			List<ZoneEntity>	ents	=z.GetEntitiesStartsWith("misc_");
+			foreach(ZoneEntity ze in ents)
+			{
+				object		drawObject	=null;
+				BoundingBox	box;
+				if(ze.GetValue("classname").EndsWith("fireball"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("explobox"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("explobox2"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+				else if(ze.GetValue("classname").EndsWith("teleporttrain"))
+				{
+					gdo("Urn.Static", out drawObject, out box);
+				}
+
+				if(drawObject == null)
+				{
+					continue;
+				}
+
+				Entity	e	=new Entity(true, eb);
+
+				Vector3	pos;
+				ze.GetOrigin(out pos);
+
+				ShootObject	so	=new ShootObject(pos, e);
+
+				e.AddComponent(so);
+
+				StaticMeshComp	sm	=new StaticMeshComp(drawObject, e);
+
+				eb.AddEntity(e);
+			}
+		}
+
+
 		public void TranslateLights(EntityBoss eb, Zone z, Light.SwitchLight switchLight)
 		{
 			List<ZoneEntity>	lights	=z.GetEntitiesStartsWith("light");
@@ -404,6 +587,25 @@ namespace EntityLib
 			BModelMover	bmm	=new BModelMover(modelIdx, bms, zone, outEnt);
 
 			outEnt.AddComponent(bmm);
+		}
+
+
+		void MakePickUpEnt(EntityBoss eb, ZoneEntity ze, object draw, BoundingBox box)
+		{
+			Entity	e	=new Entity(true, eb);
+
+			Vector3	pos;
+			ze.GetOrigin(out pos);
+
+			PickUp			pu	=new PickUp(pos, e);
+			StaticMeshComp	sm	=new StaticMeshComp(draw, e);
+			ConvexVolume	cv	=new ConvexVolume(box, e);
+
+			e.AddComponent(pu);
+			e.AddComponent(sm);
+			e.AddComponent(cv);
+
+			eb.AddEntity(e);
 		}
 	}
 }

@@ -173,7 +173,7 @@ namespace BSPZone
 
 
 		#region Model Related
-		public void UpdateModels(float secDelta)//, Microsoft.Xna.Framework.Audio.AudioListener lis)
+		public void ClearPushableVelocities(float secDelta)//, Microsoft.Xna.Framework.Audio.AudioListener lis)
 		{
 			Debug.Assert(secDelta > 0f);	//zero deltatimes are not good for this stuff
 
@@ -182,7 +182,6 @@ namespace BSPZone
 			{
 				push.Value.mMobile.ClearPushVelocity();
 			}
-			//mBMHelper.Update(secDelta);//, lis);
 		}
 
 

@@ -8,18 +8,24 @@ namespace EntityLib
 {
 	public class EntityBoss
 	{
-		List<Entity>	mEnts	=new List<Entity>();
+		List<Entity>	mEnts		=new List<Entity>();
+		List<Entity>	mUpdateEnts	=new List<Entity>();
 
 
 		public void AddEntity(Entity e)
 		{
 			mEnts.Add(e);
+
+			if(e.mbWantUpdate)
+			{
+				mUpdateEnts.Add(e);
+			}
 		}
 
 
 		public void Update(UpdateTimer ut)
 		{
-			foreach(Entity ent in mEnts)
+			foreach(Entity ent in mUpdateEnts)
 			{
 				ent.Update(ut);
 			}

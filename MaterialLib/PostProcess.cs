@@ -44,10 +44,12 @@ namespace MaterialLib
 		Buffer				mQuadIB;
 		VertexBufferBinding	mQuadBinding;
 
-		//effect file stuff
-		Effect			mPostFX;
-		EffectTechnique	mETech;
-		EffectPass		mEPass;
+		//effect file
+		Effect	mPostFX;
+
+		//cached techniques and passes
+		Dictionary<EffectTechnique, EffectPass>	mEPasses	=new Dictionary<EffectTechnique, EffectPass>();
+		Dictionary<string, EffectTechnique>		mETechs		=new Dictionary<string, EffectTechnique>();
 
 		//stuff
 		int		mResX, mResY;
@@ -648,22 +650,26 @@ namespace MaterialLib
 			gd.DC.InputAssembler.SetVertexBuffers(0, mQuadBinding);
 			gd.DC.InputAssembler.SetIndexBuffer(mQuadIB, Format.R16_UInt, 0);
 
-			if(mETech == null)
+			if(!mETechs.ContainsKey(technique))
 			{
-				mETech	=mPostFX.GetTechniqueByName(technique);
+				mETechs.Add(technique, mPostFX.GetTechniqueByName(technique));
 			}
 
-			if(!mETech.IsValid)
+			EffectTechnique	et	=mETechs[technique];
+
+			if(et == null || !et.IsValid)
 			{
 				return;
 			}
 
-			if(mEPass == null)
+			if(!mEPasses.ContainsKey(et))
 			{
-				mEPass	=mETech.GetPassByIndex(0);
+				mEPasses.Add(et, et.GetPassByIndex(0));
 			}
 
-			mEPass.Apply(gd.DC);
+			EffectPass	ep	=mEPasses[et];
+
+			ep.Apply(gd.DC);
 
 			gd.DC.DrawIndexed(6, 0, 0);
 		}
@@ -674,16 +680,6 @@ namespace MaterialLib
 			//unwire from device resize stuff
 			gd.ePreResize	-=OnPreResize;
 			gd.eResized		-=OnResized;
-
-			//effect stuff
-			if(mEPass != null)
-			{
-				mEPass.Dispose();
-			}
-			if(mETech != null)
-			{
-				mETech.Dispose();
-			}
 
 			//dispose all views
 			foreach(KeyValuePair<string, RenderTargetView> view in mPostTargets)
@@ -705,6 +701,18 @@ namespace MaterialLib
 			foreach(KeyValuePair<string, Texture2D> tex in mPostTex2Ds)
 			{
 				tex.Value.Dispose();
+			}
+
+			//dispose all passes
+			foreach(KeyValuePair<EffectTechnique, EffectPass> pass in mEPasses)
+			{
+				pass.Value.Dispose();
+			}
+
+			//techniques
+			foreach(KeyValuePair<string, EffectTechnique> tech in mETechs)
+			{
+				tech.Value.Dispose();
 			}
 
 			mPostTargets.Clear();
