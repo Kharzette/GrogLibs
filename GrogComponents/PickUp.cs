@@ -7,7 +7,7 @@ namespace EntityLib
 {
 	public class PickUp : Component
 	{
-		enum State
+		public enum State
 		{
 			Static, Spinning, Bobbing, WaitingRespawn
 		}
@@ -17,6 +17,7 @@ namespace EntityLib
 		public readonly Vector3		mPosition;
 
 		internal float		mYaw, mPitch, mRoll;
+		internal bool		mbActive, mbSpinning;
 
 		const float	YawPerMS	=0.007f;
 		const float	Hover		=20f;
@@ -25,14 +26,23 @@ namespace EntityLib
 		public PickUp(Vector3 pos, Entity owner) : base(owner)
 		{
 			mPosition	=pos;
-			mPosition	+=Vector3.UnitY * Hover;
+			mbActive	=true;
+			mbSpinning	=true;	//default
 		}
 
 
 		public override void Update(UpdateTimer time)
 		{
-			mYaw	+=YawPerMS * time.GetUpdateDeltaMilliSeconds();
-			Mathery.WrapAngleDegrees(ref mYaw);
+			if(!mbActive)
+			{
+				return;
+			}
+
+			if(mbSpinning)
+			{
+				mYaw	+=YawPerMS * time.GetUpdateDeltaMilliSeconds();
+				Mathery.WrapAngleDegrees(ref mYaw);
+			}
 
 			if(mSMC == null)
 			{
@@ -47,12 +57,29 @@ namespace EntityLib
 			//need a 90 degree bump to get the pitch started properly
 			mSMC.mMat	=Matrix.RotationY(MathUtil.PiOverTwo);
 			mSMC.mMat	*=Matrix.RotationYawPitchRoll(mYaw, mPitch, mRoll);
-			mSMC.mMat	*=Matrix.Translation(mPosition);
+
+			if(mbSpinning)
+			{
+				mSMC.mMat	*=Matrix.Translation(mPosition + Vector3.UnitY * Hover);
+			}
+			else
+			{
+				mSMC.mMat	*=Matrix.Translation(mPosition);
+			}
 		}
 
 
 		public override void StateChange(Enum state, UInt32 value)
 		{
+			if(state.Equals(State.WaitingRespawn))
+			{
+				mSMC.StateChange(StaticMeshComp.State.Visible, 0);
+				mbActive	=false;
+			}
+			else if(state.Equals(State.Spinning))
+			{
+				mbSpinning	=(value != 0);
+			}
 		}
 	}
 }

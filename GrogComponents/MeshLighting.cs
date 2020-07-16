@@ -36,6 +36,7 @@ namespace EntityLib
 		Light				mBestLight;
 		GetStyleStrength	mStyleStrength;
 		bool				mbLerpingToDark;
+		float				mLightTraceOffset;	//adjust from base to center
 
 		//current light values post update
 		Vector4	mLightColor;
@@ -60,9 +61,13 @@ namespace EntityLib
 		const int	FillDistance	=1000;
 
 
-		public MeshLighting(Entity owner, Zone z, GetStyleStrength gss) : base(owner)
+		public MeshLighting(Entity owner, Zone z, float lightTraceOffset, GetStyleStrength gss) : base(owner)
 		{
 			mBestLight	=null;	//make sure this doesn't hold up free
+
+			//so stuff on the ground doesn't immediately
+			//hit the floor when raycasting to lights
+			mLightTraceOffset	=lightTraceOffset;
 
 			mZone			=z;
 			mStyleStrength	=gss;
@@ -122,7 +127,8 @@ namespace EntityLib
 
 			if(mPickUp != null)
 			{
-				Update(time.GetUpdateDeltaMilliSeconds(), mPickUp.mPosition);
+				Update(time.GetUpdateDeltaMilliSeconds(),
+					mPickUp.mPosition + Vector3.UnitY * mLightTraceOffset);
 			}
 		}
 

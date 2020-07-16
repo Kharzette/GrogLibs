@@ -10,7 +10,7 @@ namespace EntityLib
 {
 	public class QuakeTranslator
 	{
-		public delegate void GetDrawObject(string meshPath, out object draw, out BoundingBox box);
+		public delegate void GetDrawObject(string archPath, string instPath, out object draw, out BoundingBox box);
 
 
 		public void TranslateWeapons(EntityBoss eb, Zone z, GetDrawObject gdo)
@@ -23,27 +23,27 @@ namespace EntityLib
 				BoundingBox	box;
 				if(ze.GetValue("classname").EndsWith("supershotgun"))
 				{
-					gdo("BBGun.Static", out drawObject, out box);
+					gdo("BBGun.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("_nailgun"))
 				{
-					gdo("BBGun.Static", out drawObject, out box);
+					gdo("BBGun.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("supernailgun"))
 				{
-					gdo("BBGun.Static", out drawObject, out box);
+					gdo("BBGun.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("grenadelauncher"))
 				{
-					gdo("BBGun.Static", out drawObject, out box);
+					gdo("BBGun.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("rocketlauncher"))
 				{
-					gdo("BBGun.Static", out drawObject, out box);
+					gdo("BBGun.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("lightning"))
 				{
-					gdo("BBGun.Static", out drawObject, out box);
+					gdo("BBGun.Static", "", out drawObject, out box);
 				}
 				else
 				{
@@ -55,7 +55,7 @@ namespace EntityLib
 					continue;
 				}
 
-				MakePickUpEnt(eb, ze, drawObject, box);
+				MakePickUpEnt(eb, ze, drawObject, box, true);
 			}
 		}
 
@@ -67,69 +67,75 @@ namespace EntityLib
 			{
 				object		drawObject	=null;
 				BoundingBox	box;
+				bool		bSpin		=true;
 				if(ze.GetValue("classname").EndsWith("cells"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
+					bSpin	=false;
 				}
 				else if(ze.GetValue("classname").EndsWith("rockets"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
+					bSpin	=false;
 				}
 				else if(ze.GetValue("classname").EndsWith("shells"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
+					bSpin	=false;
 				}
 				else if(ze.GetValue("classname").EndsWith("spikes"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
+					bSpin	=false;
 				}
 				else if(ze.GetValue("classname").EndsWith("weapon"))
 				{
-					gdo("BBGun.Static", out drawObject, out box);
+					gdo("BBGun.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("health"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("HealthPack.Static", "HealthPack.StaticInstance", out drawObject, out box);
+					bSpin	=false;
 				}
 				else if(ze.GetValue("classname").EndsWith("envirosuit"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("super_damage"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("invulnerability"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("invisibility"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("armorInv"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("armor2"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("armor1"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("key1"))
 				{
-					gdo("Key_Purple.Static", out drawObject, out box);
+					gdo("Key.Static", "KeySilver.StaticInstance", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("key2"))
 				{
-					gdo("Key.Static", out drawObject, out box);
+					gdo("Key.Static", "KeyGold.StaticInstance", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("sigil"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
 				}
 				else
 				{
@@ -141,7 +147,7 @@ namespace EntityLib
 					continue;
 				}
 
-				MakePickUpEnt(eb, ze, drawObject, box);
+				MakePickUpEnt(eb, ze, drawObject, box, bSpin);
 			}
 		}
 
@@ -157,19 +163,19 @@ namespace EntityLib
 				BoundingBox	box;
 				if(ze.GetValue("classname").EndsWith("fireball"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("explobox"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("explobox2"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
 				}
 				else if(ze.GetValue("classname").EndsWith("teleporttrain"))
 				{
-					gdo("Urn.Static", out drawObject, out box);
+					gdo("Urn.Static", "", out drawObject, out box);
 				}
 
 				if(drawObject == null)
@@ -590,7 +596,7 @@ namespace EntityLib
 		}
 
 
-		void MakePickUpEnt(EntityBoss eb, ZoneEntity ze, object draw, BoundingBox box)
+		void MakePickUpEnt(EntityBoss eb, ZoneEntity ze, object draw, BoundingBox box, bool bSpinning)
 		{
 			Entity	e	=new Entity(true, eb);
 
@@ -599,13 +605,18 @@ namespace EntityLib
 
 			PickUp			pu	=new PickUp(pos, e);
 			StaticMeshComp	sm	=new StaticMeshComp(draw, e);
-			ConvexVolume	cv	=new ConvexVolume(box, e);
+			ConvexVolume	cv	=new ConvexVolume(box, pos, e);
 
 			e.AddComponent(pu);
 			e.AddComponent(sm);
 			e.AddComponent(cv);
 
 			eb.AddEntity(e);
+
+			if(!bSpinning)
+			{
+				pu.StateChange(PickUp.State.Spinning, 0);
+			}
 		}
 	}
 }

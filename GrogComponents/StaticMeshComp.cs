@@ -5,6 +5,11 @@ namespace EntityLib
 {
 	public class StaticMeshComp : Component
 	{
+		public enum State
+		{
+			Visible
+		}
+
 		public Matrix	mMat;
 		public object	mDrawObject;
 

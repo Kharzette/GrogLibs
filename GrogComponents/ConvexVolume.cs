@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using SharpDX;
 using BSPZone;
@@ -7,12 +8,28 @@ namespace EntityLib
 {
 	public class ConvexVolume : Component
 	{
+		public enum State
+		{
+			Active
+		}
+
 		List<ZonePlane>	mPlanes	=new List<ZonePlane>();
 
+		bool	mbActive;
 
-		public ConvexVolume(BoundingBox box, Entity owner) : base(owner)
+		public bool Active
+		{
+			get { return mbActive; }
+		}
+
+
+
+		public ConvexVolume(BoundingBox box, Vector3 pos, Entity owner) : base(owner)
 		{
 			ZonePlane	zp	=ZonePlane.Blank;
+
+			box.Minimum	+=pos;
+			box.Maximum	+=pos;
 
 			//max x
 			zp.mNormal	=Vector3.UnitX;
@@ -43,6 +60,8 @@ namespace EntityLib
 			zp.mNormal	=-Vector3.UnitZ;
 			zp.mDist	=-box.Minimum.Z;
 			mPlanes.Add(zp);
+
+			mbActive	=true;
 		}
 
 
@@ -59,6 +78,15 @@ namespace EntityLib
 				}
 			}
 			return	true;
+		}
+
+
+		public override void StateChange(Enum state, UInt32 value)
+		{
+			if(state.Equals(State.Active))
+			{
+				mbActive	=value != 0;
+			}
 		}
 	}
 }
