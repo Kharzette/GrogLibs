@@ -80,7 +80,7 @@ namespace EntityLib
 				}
 				else if(ze.GetValue("classname").EndsWith("shells"))
 				{
-					gdo("Urn.Static", "", out drawObject, out box);
+					gdo("Shells.Static", "Shells.StaticInstance", out drawObject, out box);
 					bSpin	=false;
 				}
 				else if(ze.GetValue("classname").EndsWith("spikes"))
