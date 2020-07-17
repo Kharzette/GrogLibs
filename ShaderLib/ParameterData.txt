@@ -145,6 +145,48 @@ TriTex0Spec
 		mbDirectional
 		mShadowAtten
 		mMaterialID
+TriTex0EM1Spec
+	Ignored
+		mBones
+		mLightViewProj
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
+		mShadowCube
+		AlphaBlending
+		NoBlending
+		EnableDepth
+		DisableDepth
+		DisableDepthWrite
+		DisableDepthTest
+		LinearClamp
+		LinearWrap
+		PointClamp
+		PointWrap
+		LinearClampCube
+		LinearWrapCube
+		PointClampCube
+		PointWrapCube
+		PointClamp1D
+		ShadowBlending
+		NoCull
+		ShadowDepth
+	Hidden
+		mBones
+		mWorld
+		mView
+		mProjection
+		mLightViewProj
+		mEyePos
+		mCelTable
+		mShadowTexture
+		mShadowLightPos
+		mbDirectional
+		mShadowAtten
+		mMaterialID
 TriCelTex0Spec
 	Ignored
 		mTexture1

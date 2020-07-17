@@ -230,6 +230,38 @@ float4 TriTex0SpecPS(VVPosTex04Tex14 input) : SV_Target
 	return	float4(specular, texColor.w);
 }
 
+//Texture 0, trilight, Texture 1 emissive, and specular
+float4 TriTex0EM1SpecPS(VVPosTex04Tex14 input) : SV_Target
+{
+	float2	tex;
+
+	tex.x	=input.TexCoord0.w;
+	tex.y	=input.TexCoord1.w;
+
+	float4	texColor	=mTexture0.Sample(LinearWrap, tex);
+	float4	texEmissive	=mTexture1.Sample(LinearWrap, tex);
+
+	float3	pnorm	=input.TexCoord0.xyz;
+	float3	wpos	=input.TexCoord1.xyz;
+
+	pnorm	=normalize(pnorm);
+
+	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
+							mLightColor0, mLightColor1, mLightColor2);
+
+#if defined(SM2)
+	float3	specular	=ComputeCheapSpecular(wpos, mLightDirection, pnorm, triLight, mLightColor2);
+#else
+	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, pnorm, triLight, mLightColor2);
+#endif
+
+	float3	litColor	=texColor.xyz * max(texEmissive, triLight);
+
+	specular	=saturate((specular + litColor.xyz) * mSolidColour.xyz);
+
+	return	float4(specular, texColor.w);
+}
+
 //Texture 0, trilight, modulate solid, cel, and specular
 float4 TriCelTex0SpecPS(VVPosTex04Tex14 input) : SV_Target
 {
