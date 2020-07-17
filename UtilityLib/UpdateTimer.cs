@@ -23,6 +23,8 @@ namespace UtilityLib
 		{
 			mbFixedStep			=bFixed;
 			mbSpendRemainder	=bSpendRemainder;
+
+			SetMaxDeltaSeconds(0.1f);	//default
 		}
 
 

@@ -167,14 +167,13 @@ namespace BSPZone
 
 			FindParents_r(mZoneModels[0].mRootNode, -1);
 
-			BuildLightCache();
 			BuildNonCollidingModelsList();
 		}
 		#endregion
 
 
 		#region Model Related
-		public void UpdateModels(float secDelta)//, Microsoft.Xna.Framework.Audio.AudioListener lis)
+		public void ClearPushableVelocities(float secDelta)//, Microsoft.Xna.Framework.Audio.AudioListener lis)
 		{
 			Debug.Assert(secDelta > 0f);	//zero deltatimes are not good for this stuff
 
@@ -183,7 +182,6 @@ namespace BSPZone
 			{
 				push.Value.mMobile.ClearPushVelocity();
 			}
-			//mBMHelper.Update(secDelta);//, lis);
 		}
 
 

@@ -50,6 +50,12 @@ namespace MeshLib
 		}
 
 
+		internal int GetNumParts()
+		{
+			return	mPartMats.Count;
+		}
+
+
 		internal void SetPartVisible(int index, bool bVisible)
 		{
 			Debug.Assert(index >= 0 && index < mPartMats.Count);

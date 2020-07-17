@@ -20,6 +20,9 @@ namespace EntityLib
 
 		Zone	mZone;
 
+		//components we may or may not have (for determining position)
+		PickUp	mPickUp;
+
 		//Designated sun if any
 		Light	mSunLight;
 
@@ -30,9 +33,10 @@ namespace EntityLib
 		//color in xyz, intensity (for shadow attenuation) in w
 		Mover4	mBestColorMover	=new Mover4();
 
-		Light					mBestLight;
-		Zone.GetStyleStrength	mStyleStrength;
-		bool					mbLerpingToDark;
+		Light				mBestLight;
+		GetStyleStrength	mStyleStrength;
+		bool				mbLerpingToDark;
+		float				mLightTraceOffset;	//adjust from base to center
 
 		//current light values post update
 		Vector4	mLightColor;
@@ -47,6 +51,9 @@ namespace EntityLib
 		//list of all trilight fill entity values
 		List<TriLightFill>	mFills	=new List<TriLightFill>();
 
+		//delegate for light style strength
+		public delegate float GetStyleStrength(int styleIndex);
+
 		//constants
 		const float	LightLerpTime	=0.25f;	//in seconds
 		const float	LightEaseIn		=0.2f;
@@ -54,9 +61,13 @@ namespace EntityLib
 		const int	FillDistance	=1000;
 
 
-		public MeshLighting(Entity owner, Zone z, Zone.GetStyleStrength gss) : base(owner)
+		public MeshLighting(Entity owner, Zone z, float lightTraceOffset, GetStyleStrength gss) : base(owner)
 		{
 			mBestLight	=null;	//make sure this doesn't hold up free
+
+			//so stuff on the ground doesn't immediately
+			//hit the floor when raycasting to lights
+			mLightTraceOffset	=lightTraceOffset;
 
 			mZone			=z;
 			mStyleStrength	=gss;
@@ -104,6 +115,21 @@ namespace EntityLib
 		public bool NeedsShadow()
 		{
 			return	!(mBestLight == null && mBestLightMover.Done());
+		}
+
+
+		public override void Update(UpdateTimer time)
+		{
+			if(mPickUp == null)
+			{
+				mPickUp	=mOwner.GetComponent(typeof(PickUp)) as PickUp;
+			}
+
+			if(mPickUp != null)
+			{
+				Update(time.GetUpdateDeltaMilliSeconds(),
+					mPickUp.mPosition + Vector3.UnitY * mLightTraceOffset);
+			}
 		}
 
 
@@ -538,7 +564,11 @@ namespace EntityLib
 				}
 			}
 
-			float	bestStrength	=bestLight.GetStrength();
+			float	bestStrength	=float.MinValue;
+			if(bestLight != null)
+			{
+				bestStrength	=bestLight.GetStrength();
+			}
 
 			//check for a sun
 			foreach(Light light in mAffecting)

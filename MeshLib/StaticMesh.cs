@@ -145,6 +145,12 @@ namespace MeshLib
 		}
 
 
+		public int GetNumParts()
+		{
+			return	mParts.GetNumParts();
+		}
+
+
 		public void SetPartVisible(int index, bool bVisible)
 		{
 			mParts.SetPartVisible(index, bVisible);

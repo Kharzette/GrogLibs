@@ -53,7 +53,9 @@ namespace EntityLib
 				else if(c is Light)
 				{
 					Light	lt	=c as Light;
-					c.StateChange(Light.State.On, value);
+
+					UInt32	lightToggle	=lt.IsOn()? 0u : 1u;
+					c.StateChange(Light.State.On, lightToggle);
 				}
 			}
 		}

@@ -12,23 +12,8 @@ namespace BSPZone
 {
 	public partial class Zone
 	{
-		public class ZoneLight
-		{
-			public float	mStrength;
-			public Vector3	mPosition;
-			public Vector3	mColor;
-			public int		mStyle;
-			public bool		mbOn;			//on by default
-			public bool		mbSwitchable;	//switchable lights
-			public bool		mbSun;			//sun light
-		}
-
 		//just a list of which model indexes are triggers
 		List<int>	mNonCollidingModels	=new List<int>();
-
-		Dictionary<ZoneEntity, ZoneLight>	mLightCache	=new Dictionary<ZoneEntity, ZoneLight>();
-
-		public delegate float GetStyleStrength(int styleIndex);
 
 		//face flag constants from core texinfos
 		public const UInt32	MIRROR		=(1<<0);
@@ -40,21 +25,6 @@ namespace BSPZone
 		public const UInt32	FLAT		=(1<<6);
 		public const UInt32	CELSHADE	=(1<<7);
 		public const UInt32	NO_LIGHTMAP	=(1<<15);
-
-
-		public List<ZoneEntity> GetSwitchedOnLights()
-		{
-			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-
-			foreach(KeyValuePair<ZoneEntity, ZoneLight> zl in mLightCache)
-			{
-				if(zl.Value.mbSwitchable && zl.Value.mbOn)
-				{
-					ret.Add(zl.Key);
-				}
-			}
-			return	ret;
-		}
 
 
 		public Vector3 GetPlayerStartPos(out float angle)
@@ -260,16 +230,6 @@ namespace BSPZone
 		}
 
 
-		internal void SwitchCachedLight(ZoneEntity ze)
-		{
-			if(!mLightCache.ContainsKey(ze))
-			{
-				return;
-			}
-			mLightCache[ze].mbOn	=!mLightCache[ze].mbOn;
-		}
-
-
 		void BuildNonCollidingModelsList()
 		{
 			List<ZoneEntity>	trigs	=GetEntitiesStartsWith("trigger_");
@@ -289,69 +249,6 @@ namespace BSPZone
 				int	modIdx	=Convert.ToInt32(mod);
 
 				mNonCollidingModels.Add(modIdx);
-			}
-		}
-
-
-		void BuildLightCache()
-		{
-			List<ZoneEntity>	lights	=GetEntitiesStartsWith("light");
-
-			foreach(ZoneEntity ze in lights)
-			{
-				ZoneLight	zl	=new ZoneLight();
-
-				ze.GetOrigin(out zl.mPosition);
-				if(!ze.GetLightValue(out zl.mStrength))
-				{
-					if(ze.GetFloat("strength", out zl.mStrength))
-					{
-						zl.mbSun	=true;
-
-						//stuff the direction in the position field
-						Vector3	angles;
-						if(!ze.GetVectorNoConversion("angles", out angles))
-						{
-							continue;	//something wrong with the entity
-						}
-						float	yaw		=angles.Y - 90;
-						float	pitch	=angles.X;
-						float	roll	=angles.Z;
-
-						yaw		=MathUtil.DegreesToRadians(yaw);
-						pitch	=MathUtil.DegreesToRadians(pitch);
-						roll	=MathUtil.DegreesToRadians(roll);
-
-						Matrix	rotMat	=Matrix.RotationYawPitchRoll(yaw, pitch, roll);
-						zl.mPosition	=rotMat.Backward;
-					}
-				}
-				ze.GetColor(out zl.mColor);
-
-				//check for switchable lights
-				zl.mbOn	=true;
-				int	switchNum;
-				if(ze.GetInt("LightSwitchNum", out switchNum))
-				{
-					zl.mbSwitchable	=true;
-					int	activated;
-					if(ze.GetInt("activated", out activated))
-					{
-						if(activated == 0)
-						{
-							zl.mbOn	=false;
-						}
-					}
-					else
-					{
-						zl.mbOn	=false;
-					}
-				}
-
-				//check for styled lights
-				ze.GetInt("style", out zl.mStyle);
-
-				mLightCache.Add(ze, zl);
 			}
 		}
 	}
