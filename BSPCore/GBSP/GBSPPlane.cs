@@ -12,8 +12,9 @@ namespace BSPCore
 		public float	mDist;
 		public UInt32	mType;
 
-		//for texture axis
-		static List<Vector3>	BaseAxis	=new List<Vector3>();
+		//for texturing
+		static Vector3	[]BaseAxisGrog		=new Vector3[6 * 3];
+		static Vector3	[]BaseAxisQuake1	=new Vector3[6 * 3];
 
 		public const UInt32	PLANE_X		=0;
 		public const UInt32	PLANE_Y		=1;
@@ -33,29 +34,55 @@ namespace BSPCore
 
 		static GBSPPlane()
 		{
-			BaseAxis.Add(Vector3.UnitY);
-			BaseAxis.Add(-Vector3.UnitX);
-			BaseAxis.Add(-Vector3.UnitZ);
+			//grog texturing
+			BaseAxisGrog[0]		=Vector3.UnitY;
+			BaseAxisGrog[1]		=-Vector3.UnitX;
+			BaseAxisGrog[2]		=-Vector3.UnitZ;
 
-			BaseAxis.Add(-Vector3.UnitY);
-			BaseAxis.Add(-Vector3.UnitX);
-			BaseAxis.Add(-Vector3.UnitZ);
+			BaseAxisGrog[3]		=-Vector3.UnitY;
+			BaseAxisGrog[4]		=-Vector3.UnitX;
+			BaseAxisGrog[5]		=-Vector3.UnitZ;
 
-			BaseAxis.Add(-Vector3.UnitX);
-			BaseAxis.Add(Vector3.UnitZ);
-			BaseAxis.Add(-Vector3.UnitY);
+			BaseAxisGrog[6]		=-Vector3.UnitX;
+			BaseAxisGrog[7]		=Vector3.UnitZ;
+			BaseAxisGrog[8]		=-Vector3.UnitY;
 
-			BaseAxis.Add(Vector3.UnitX);
-			BaseAxis.Add(Vector3.UnitZ);
-			BaseAxis.Add(-Vector3.UnitY);
+			BaseAxisGrog[9]		=Vector3.UnitX;
+			BaseAxisGrog[10]	=Vector3.UnitZ;
+			BaseAxisGrog[11]	=-Vector3.UnitY;
 
-			BaseAxis.Add(Vector3.UnitZ);
-			BaseAxis.Add(-Vector3.UnitX);
-			BaseAxis.Add(-Vector3.UnitY);
+			BaseAxisGrog[12]	=Vector3.UnitZ;
+			BaseAxisGrog[13]	=-Vector3.UnitX;
+			BaseAxisGrog[14]	=-Vector3.UnitY;
 
-			BaseAxis.Add(-Vector3.UnitZ);
-			BaseAxis.Add(-Vector3.UnitX);
-			BaseAxis.Add(-Vector3.UnitY);
+			BaseAxisGrog[15]	=-Vector3.UnitZ;
+			BaseAxisGrog[16]	=-Vector3.UnitX;
+			BaseAxisGrog[17]	=-Vector3.UnitY;
+
+			//quake texturing, in the original Q coordinate system
+			BaseAxisQuake1[0]	=Vector3.UnitZ;
+			BaseAxisQuake1[1]	=Vector3.UnitX;
+			BaseAxisQuake1[2]	=-Vector3.UnitY;
+
+			BaseAxisQuake1[3]	=-Vector3.UnitZ;
+			BaseAxisQuake1[4]	=Vector3.UnitX;
+			BaseAxisQuake1[5]	=-Vector3.UnitY;
+
+			BaseAxisQuake1[6]	=Vector3.UnitX;
+			BaseAxisQuake1[7]	=Vector3.UnitY;
+			BaseAxisQuake1[8]	=-Vector3.UnitZ;
+
+			BaseAxisQuake1[9]	=-Vector3.UnitX;
+			BaseAxisQuake1[10]	=Vector3.UnitY;
+			BaseAxisQuake1[11]	=-Vector3.UnitZ;
+
+			BaseAxisQuake1[12]	=Vector3.UnitY;
+			BaseAxisQuake1[13]	=Vector3.UnitX;
+			BaseAxisQuake1[14]	=-Vector3.UnitZ;
+
+			BaseAxisQuake1[15]	=-Vector3.UnitY;
+			BaseAxisQuake1[16]	=Vector3.UnitX;
+			BaseAxisQuake1[17]	=-Vector3.UnitZ;
 		}
 
 
@@ -212,12 +239,7 @@ namespace BSPCore
 		}
 
 
-		//quake style, the genesis style axis was off
-		//on 45 degree sloped faces (e3m3 is a good test)
-		//z and y swapped and x negated does the trick
-		//will need to dig in svn for the hammer compatible ver
-		//todo:  Make quake / valve / genesis texture alignment switchable
-		public static bool TextureAxisFromPlane(GBSPPlane pln, out Vector3 xv, out Vector3 yv)
+		public static bool TextureAxisFromPlaneGrog(GBSPPlane pln, out Vector3 xv, out Vector3 yv)
 		{
 			Int32	bestAxis;
 			float	dot, best;
@@ -230,7 +252,7 @@ namespace BSPCore
 
 			for(int i=0;i < 6;i++)
 			{
-				dot	=Vector3.Dot(pln.mNormal, BaseAxis[i * 3]);
+				dot	=Vector3.Dot(pln.mNormal, BaseAxisGrog[i * 3]);
 				if(dot > best)
 				{
 					best		=dot;
@@ -238,8 +260,48 @@ namespace BSPCore
 				}
 			}
 
-			xv	=BaseAxis[bestAxis * 3 + 1];
-			yv	=BaseAxis[bestAxis * 3 + 2];
+			xv	=BaseAxisGrog[bestAxis * 3 + 1];
+			yv	=BaseAxisGrog[bestAxis * 3 + 2];
+
+			return	true;
+		}
+
+
+		//Q1 tex vectors
+		public static bool TextureAxisFromPlaneQuake1(Vector3 planeNormal, out Vector3 xv, out Vector3 yv)
+		{
+			Int32	bestAxis;
+			float	dot, best;
+
+			//swap y and z
+			dot				=planeNormal.Z;
+			planeNormal.Z	=planeNormal.Y;
+			planeNormal.Y	=dot;
+			
+			best		=0.0f;
+			bestAxis	=-1;
+
+			xv	=Vector3.Zero;
+			yv	=Vector3.Zero;
+
+			for(int i=0;i < 6;i++)
+			{
+				dot	=Vector3.Dot(planeNormal, BaseAxisQuake1[i * 3]);
+				if(dot > best)
+				{
+					best		=dot;
+					bestAxis	=i;
+				}
+			}
+
+			//flip y and z to get back to grogland
+			xv.X	=BaseAxisQuake1[bestAxis * 3 + 1].X;
+			xv.Y	=BaseAxisQuake1[bestAxis * 3 + 1].Z;
+			xv.Z	=BaseAxisQuake1[bestAxis * 3 + 1].Y;
+
+			yv.X	=BaseAxisQuake1[bestAxis * 3 + 2].X;
+			yv.Y	=BaseAxisQuake1[bestAxis * 3 + 2].Z;
+			yv.Z	=BaseAxisQuake1[bestAxis * 3 + 2].Y;
 
 			return	true;
 		}
@@ -255,7 +317,7 @@ namespace BSPCore
 
 			for(int i=0;i < 6;i++)
 			{
-				dot	=Vector3.Dot(pln.mNormal, BaseAxis[i * 3]);
+				dot	=Vector3.Dot(pln.mNormal, BaseAxisGrog[i * 3]);
 				if(dot > best)
 				{
 					best		=dot;

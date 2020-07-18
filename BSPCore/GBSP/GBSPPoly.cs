@@ -67,7 +67,7 @@ namespace BSPCore
 
 			mVerts	=new Vector3[4];
 
-			if(!GBSPPlane.TextureAxisFromPlane(p, out rightVec, out upVec))
+			if(!GBSPPlane.TextureAxisFromPlaneGrog(p, out rightVec, out upVec))
 			{
 				CoreEvents.Print("Bad plane passed into poly constructor!\n");
 			}

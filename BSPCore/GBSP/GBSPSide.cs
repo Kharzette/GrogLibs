@@ -165,9 +165,10 @@ namespace BSPCore
 			ti.mDrawScaleV	=numbers[13];
 			ti.mTexture		=texName;
 
-			GBSPPlane.TextureAxisFromPlane(plane, out ti.mUVec, out ti.mVVec);
+			GBSPPlane.TextureAxisFromPlaneGrog(plane, out ti.mUVec, out ti.mVVec);
 
 			//flip elements
+			//TODO: why is this needed?
 			ti.mUVec.X	=-ti.mUVec.X;
 			ti.mVVec.X	=-ti.mVVec.X;
 
@@ -217,17 +218,20 @@ namespace BSPCore
 
 			List<float>		numbers =new List<float>();
 			List<UInt32>	flags	=new List<UInt32>();
-
-			int cnt	=0;
-
-			TexInfo	ti		=new TexInfo();
+			TexInfo			ti		=new TexInfo();
 
 			//grab all the numbers out
+			int 	cnt		=0;
 			string	texName	="";
 			foreach(string tok in tokens)
 			{
 				//skip ()
 				if(tok[0] == '(' || tok[0] == ')')
+				{
+					continue;
+				}
+				//skip comments
+				if(tok.StartsWith("//"))
 				{
 					continue;
 				}
@@ -400,29 +404,19 @@ namespace BSPCore
 			ti.mDrawScaleV	=numbers[13];
 			ti.mTexture		=texName;
 
-			GBSPPlane.TextureAxisFromPlane(plane, out ti.mUVec, out ti.mVVec);
+			GBSPPlane.TextureAxisFromPlaneQuake1(plane.mNormal, out ti.mUVec, out ti.mVVec);
 
 			if(numbers[11] != 0.0f)
 			{
 				float	rot	=numbers[11];
 
-				//planes pointing in -x, -z, and +y need rotation flipped
-				//TODO: fix the .8, should be .7 something
-				if(Vector3.Dot(plane.mNormal, Vector3.UnitX) > 0.8f)
-				{
-					rot	=-rot;
-				}
-				else if(Vector3.Dot(plane.mNormal, Vector3.UnitZ) > 0.8f)
-				{
-					rot	=-rot;
-				}
-				else if(Vector3.Dot(plane.mNormal, -Vector3.UnitY) > 0.8f)
-				{
-					rot	=-rot;
-				}
+				int	axis	=GBSPPlane.GetBestAxisFromPlane(plane);
 
-				//wrap into 0 to 360
-				UtilityLib.Mathery.WrapAngleDegrees(ref rot);
+				//some planes need rotation flipped
+				if(axis == 0 || axis == 3 || axis == 5)
+				{
+					rot	=-rot;
+				}
 
 				Matrix	texRot	=Matrix.RotationAxis(plane.mNormal,
 					MathUtil.DegreesToRadians(rot));
