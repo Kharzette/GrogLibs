@@ -183,6 +183,48 @@ namespace BSPCore
 			bw.Close();
 			file.Close();
 
+			//save recorded points if needed
+			if(lp.mLightParams.mbRecording)
+			{
+				Debug.Assert(lp.mLightParams.mFacePoints.Count == lp.mLightParams.mFacePlanes.Count);
+
+				string	sansExt	=FileUtil.StripExtension(lp.mFileName) + ".LightExplore";
+				FileStream	fs	=new FileStream(sansExt, FileMode.Create, FileAccess.Write);
+				if(fs == null)
+				{
+					CoreEvents.Print("Couldn't open light record output file: " + sansExt + "\n");
+					return;
+				}
+
+				bw	=new BinaryWriter(fs);
+				if(bw == null)
+				{
+					fs.Close();
+					CoreEvents.Print("Couldn't open light record output file: " + sansExt + "\n");
+					return;
+				}
+
+				bw.Write(lp.mLightParams.mFacePoints.Count);
+
+				for(int i=0;i < lp.mLightParams.mFacePoints.Count;i++)
+				{
+					bw.Write(lp.mLightParams.mFacePoints[i].Count);
+
+					for(int j=0;j < lp.mLightParams.mFacePoints[i].Count;j++)
+					{
+						FileUtil.WriteVector3(bw, lp.mLightParams.mFacePoints[i][j]);
+					}
+
+					//write plane for face i
+					lp.mLightParams.mFacePlanes[i].Write(bw);
+				}
+
+				bw.Close();
+				fs.Close();
+
+				CoreEvents.Print("Wrote " + lp.mLightParams.mFacePoints.Count
+								+ " faces points and planes to file: " + sansExt + "\n");
+			}
 			CleanupLight();
 
 			DateTime	done	=DateTime.Now;
