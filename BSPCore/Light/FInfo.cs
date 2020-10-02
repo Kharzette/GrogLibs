@@ -40,7 +40,7 @@ namespace BSPCore
 
 			Vector3	vecU;
 			Vector3	vecV;
-			GBSPPlane.TextureAxisFromPlane(pln, out vecU, out vecV);
+			GBSPPlane.TextureAxisFromPlaneGrog(pln.mNormal, out vecU, out vecV);
 
 			foreach(Vector3 vert in verts)
 			{
@@ -169,25 +169,40 @@ namespace BSPCore
 			{
 				for(int u=0;u < width;u++)
 				{
+					int	gridIdx	=(v * width) + u;
+
 					float	curU	=startU + u * lightGridSize;
 					float	curV	=startV + v * lightGridSize;
 
 					Vector3	point	=mTexOrg + mT2WVecU * curU + mT2WVecV * curV;
 
-					mPoints[(v * width) + u]	=Vector3.TransformCoordinate(point, modelMat);
+					mPoints[gridIdx]	=Vector3.TransformCoordinate(point, modelMat);
 
-					InSolid[(v * width) + u]	=pointInSolid(mPoints[(v * width) + u]);
+					InSolid[gridIdx]	=pointInSolid(mPoints[gridIdx]);
 
-					if(!bExtraLightCorrection)
+					//This code block would adjust trace points towards the center
+					//of the face to avoid darkened corners and creases.
+					//However the distance moved was sometimes unreasonable, and would
+					//exceed lightGridSize.  If checked for the distance would sometimes
+					//be less along an edge as the point became closer to the center
+					//leaving a sort of "notch" in the lightmaps.
+					if(false)
 					{
-						if(InSolid[(v * width) + u])
+						if(InSolid[gridIdx])
 						{
-							Vector3	colResult	=Vector3.Zero;
-							if(rayCollide(faceMid, mPoints[(v * width) + u], modelIndex, modelInv))
+							Vector3	colResult;
+							if(rayCollide(faceMid, mPoints[gridIdx], modelIndex, modelInv, out colResult))
 							{
-								Vector3	vect	=faceMid - mPoints[(v * width) + u];
+								Vector3	vect	=faceMid - mPoints[gridIdx];
 								vect.Normalize();
-								mPoints[(v * width) + u]	=colResult + vect;
+
+								colResult	+=vect;
+
+								float	adjDist	=Vector3.Distance(colResult, mPoints[gridIdx]);
+								if(adjDist < (lightGridSize * 0.5f))
+								{
+									mPoints[gridIdx]	=colResult + vect;
+								}
 							}
 						}
 					}

@@ -32,7 +32,7 @@ namespace BSPCore
 
 			//get a proper set of texvecs for lighting
 			Vector3	xv, yv;
-			GBSPPlane.TextureAxisFromPlane(pln, out xv, out yv);
+			GBSPPlane.TextureAxisFromPlaneGrog(pln.mNormal, out xv, out yv);
 
 			//calculate the min values for s and t
 			foreach(Vector3 pnt in verts)
@@ -151,7 +151,7 @@ namespace BSPCore
 
 			//get a proper set of texvecs for lighting
 			Vector3	xv, yv;
-			GBSPPlane.TextureAxisFromPlane(pln, out xv, out yv);
+			GBSPPlane.TextureAxisFromPlaneGrog(pln.mNormal, out xv, out yv);
 
 			double	sX	=xv.X;
 			double	sY	=xv.Y;

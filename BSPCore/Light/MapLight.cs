@@ -686,8 +686,8 @@ namespace BSPCore
 					}
 					else
 					{
-						Vector3	colResult	=Vector3.Zero;
-						if(RayCollide(vert, dLight.mOrigin, modelIndex, modelInv))
+						Vector3	colResult;
+						if(RayCollide(vert, dLight.mOrigin, modelIndex, modelInv, out colResult))
 						{
 							goto	Skip;	//Ray is in shadow
 						}
@@ -762,6 +762,10 @@ namespace BSPCore
 
 			if(lp.mLightParams.mbRecording)
 			{
+				//clear existing
+				lp.mLightParams.mFacePlanes.Clear();
+				lp.mLightParams.mFacePoints.Clear();
+
 				for(int i=0;i < mGFXFaces.Length;i++)
 				{
 					int		pnum	=mGFXFaces[i].mPlaneNum;
@@ -1071,8 +1075,8 @@ namespace BSPCore
 						}
 
 						// This is the slowest test, so make it last
-						Vector3	colResult	=Vector3.Zero;
-						if(RayCollide(facePoints[v], dLight.mOrigin, modelIndex, modelInv))
+						Vector3	colResult;
+						if(RayCollide(facePoints[v], dLight.mOrigin, modelIndex, modelInv, out colResult))
 						{
 							continue;	//Ray is in shadow
 						}
@@ -1241,8 +1245,8 @@ namespace BSPCore
 					}
 
 					// This is the slowest test, so make it last
-					Vector3	colResult	=Vector3.Zero;
-					if(RayCollide(facePoints[v], dLight.mOrigin, modelIndex, modelInv))
+					Vector3	colResult;
+					if(RayCollide(facePoints[v], dLight.mOrigin, modelIndex, modelInv, out colResult))
 					{
 						continue;	//Ray is in shadow
 					}

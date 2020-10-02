@@ -303,6 +303,26 @@ namespace MaterialLib
 		}
 
 
+		public void AddTex(Device dev, string name, Color []texData, int w, int h)
+		{
+			if(mTexture2s.ContainsKey(name))
+			{
+				return;
+			}
+
+			Texture2D	tex	=MakeTexture(dev, texData, w, h);
+
+			mResources.Add(name, tex as Resource);
+			mTexture2s.Add(name, tex);
+
+			ShaderResourceView	srv	=new ShaderResourceView(dev, tex);
+
+			srv.DebugName	=name;
+
+			mSRVs.Add(name, srv);
+		}
+
+
 		public bool AddTexToAtlas(TexAtlas atlas, string texName, GraphicsDevice gd,
 			out double scaleU, out double scaleV, out double uoffs, out double voffs)
 		{

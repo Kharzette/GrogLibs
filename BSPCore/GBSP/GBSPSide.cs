@@ -165,7 +165,7 @@ namespace BSPCore
 			ti.mDrawScaleV	=numbers[13];
 			ti.mTexture		=texName;
 
-			GBSPPlane.TextureAxisFromPlaneGrog(plane, out ti.mUVec, out ti.mVVec);
+			GBSPPlane.TextureAxisFromPlaneGrog(plane.mNormal, out ti.mUVec, out ti.mVVec);
 
 			//flip elements
 			//TODO: why is this needed?

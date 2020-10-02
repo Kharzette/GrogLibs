@@ -139,7 +139,7 @@ namespace UtilityLib
 			vpnt[4].TextureCoordinate	=bottomTex + rightTex;
 			vpnt[5].TextureCoordinate	=bottomTex + leftTex;
 
-			BufferDescription	bd	=new BufferDescription(
+			BufferDescription	bd	=new BufferDescription(				
 				24 * vpnt.Length,
 				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);

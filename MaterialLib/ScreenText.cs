@@ -280,6 +280,9 @@ namespace MaterialLib
 				return;
 			}
 
+			dc.InputAssembler.PrimitiveTopology
+				=SharpDX.Direct3D.PrimitiveTopology.TriangleList;
+
 			dc.InputAssembler.SetVertexBuffers(0, mVBB);
 
 			mMatLib.SetMaterialParameter("Text", "mView", view);

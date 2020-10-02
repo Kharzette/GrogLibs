@@ -39,7 +39,7 @@ VVPosTex03Tex13 WNormWPosVS(VPosNorm input)
 //worldpos and worldnormal and vert color
 VVPosTex03Tex13Tex23 WNormWPosVColorVS(VPosNormCol0 input)
 {
-	VVPosTex03Tex13Tex23	output;	
+	VVPosTex03Tex13Tex23	output;
 	
 	//generate the world-view-proj matrix
 	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);

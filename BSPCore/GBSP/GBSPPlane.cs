@@ -239,7 +239,7 @@ namespace BSPCore
 		}
 
 
-		public static bool TextureAxisFromPlaneGrog(GBSPPlane pln, out Vector3 xv, out Vector3 yv)
+		public static bool TextureAxisFromPlaneGrog(Vector3 planeNormal, out Vector3 xv, out Vector3 yv)
 		{
 			Int32	bestAxis;
 			float	dot, best;
@@ -252,7 +252,7 @@ namespace BSPCore
 
 			for(int i=0;i < 6;i++)
 			{
-				dot	=Vector3.Dot(pln.mNormal, BaseAxisGrog[i * 3]);
+				dot	=Vector3.Dot(planeNormal, BaseAxisGrog[i * 3]);
 				if(dot > best)
 				{
 					best		=dot;

@@ -31,6 +31,20 @@ namespace UtilityLib
 		}
 
 
+		//returns just the filename part
+		public static string StripPath(string fileName)
+		{
+			string	conv	=ConvertPathSlashes(fileName);
+
+			int	slashPos	=conv.LastIndexOf('/');
+			if(slashPos != -1)
+			{
+				return	conv.Substring(slashPos + 1);
+			}
+			return	fileName;
+		}
+
+
 		//converts \\ to /
 		public static string ConvertPathSlashes(string path)
 		{

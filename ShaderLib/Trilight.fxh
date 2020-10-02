@@ -83,7 +83,7 @@ float4 Tex0Col0PS(VVPosTex0Col0 input) : SV_Target
 {
 	float4	texel	=mTexture0.Sample(LinearWrap, input.TexCoord0);
 	
-	float4	inColor		=input.Color;	
+	float4	inColor		=input.Color;
 	float4	texLitColor	=inColor * texel;
 	
 	return	texLitColor;
