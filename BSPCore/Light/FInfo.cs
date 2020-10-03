@@ -1,7 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
-using System.Text;
 using SharpDX;
+using UtilityLib;
 
 
 namespace BSPCore
@@ -15,6 +16,51 @@ namespace BSPCore
 		Vector3		mTexOrg;
 		Vector3		mCenter;
 		Vector3		[]mPoints;
+
+
+		public FInfo()
+		{
+		}
+
+
+		//only used by the recording stuff
+		public FInfo(FInfo copyMe)
+		{
+			mT2WVecU	=copyMe.mT2WVecU;
+			mT2WVecV	=copyMe.mT2WVecV;
+			mTexOrg		=copyMe.mTexOrg;
+			mCenter		=copyMe.mCenter;
+		}
+
+
+		//only used by the recording stuff
+		public void WriteVecs(BinaryWriter bw)
+		{
+			FileUtil.WriteVector3(bw, mT2WVecU);
+			FileUtil.WriteVector3(bw, mT2WVecV);
+			FileUtil.WriteVector3(bw, mTexOrg);
+			FileUtil.WriteVector3(bw, mCenter);
+		}
+
+
+		//only used by the recording stuff
+		public void ReadVecs(BinaryReader br)
+		{
+			mT2WVecU	=FileUtil.ReadVector3(br);
+			mT2WVecV	=FileUtil.ReadVector3(br);
+			mTexOrg		=FileUtil.ReadVector3(br);
+			mCenter		=FileUtil.ReadVector3(br);
+		}
+
+
+		public void GetVecs(out Vector3 texOrg, out Vector3 t2WU,
+							out Vector3 t2WV, out Vector3 center)
+		{
+			texOrg	=mTexOrg;
+			t2WU	=mT2WVecU;
+			t2WV	=mT2WVecV;
+			center	=mCenter;
+		}
 
 
 		internal Int32 GetFaceIndex()

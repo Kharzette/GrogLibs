@@ -18,7 +18,7 @@ namespace InputLib
 			Fly,			//left aims, right moves, no leveling out of the movement
 			Swim,			//same as fly really
 			ThirdPerson,	//same as firstperson?
-			FirstPerson,	//leveled out (no Y) movement like fly
+			FirstPerson,	//leveled out (no Y) movement
 			Platformer,		//not really finished
 			XCOM			//left moves a "cursor", right moves camera
 		}

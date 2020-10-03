@@ -1593,7 +1593,7 @@ namespace BSPCore
 		}
 
 
-		//todo: remove when done testing
+		//for light explorer
 		public Color[] GetLightMapForFace(int fIdx, out int width, out int height)
 		{
 			GFXFace	face	=mGFXFaces[fIdx];

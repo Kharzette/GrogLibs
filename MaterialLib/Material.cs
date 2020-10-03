@@ -84,6 +84,7 @@ namespace MaterialLib
 				EffectVariableValue	evv2	=new EffectVariableValue();
 
 				//this should be a valuetype?  hope no ref problems
+				//TODO: there ARE ref problems here, these are gpu things
 				evv2.mValue	=evv.Value.mValue;
 				evv2.mVar	=evv.Value.mVar;
 				evv2.mVarAs	=evv.Value.mVarAs;

@@ -183,7 +183,7 @@ namespace BSPCore
 			bw.Close();
 			file.Close();
 
-			//save recorded points if needed
+			//save recorded stuff if needed
 			if(lp.mLightParams.mbRecording)
 			{
 				Debug.Assert(lp.mLightParams.mFacePoints.Count == lp.mLightParams.mFacePlanes.Count);
@@ -217,6 +217,17 @@ namespace BSPCore
 
 					//write plane for face i
 					lp.mLightParams.mFacePlanes[i].Write(bw);
+
+					//write finfo
+					if(lp.mLightParams.mFInfos.ContainsKey(i))
+					{
+						bw.Write(true);
+						lp.mLightParams.mFInfos[i].WriteVecs(bw);
+					}
+					else
+					{
+						bw.Write(false);
+					}
 				}
 
 				bw.Close();
@@ -765,6 +776,7 @@ namespace BSPCore
 				//clear existing
 				lp.mLightParams.mFacePlanes.Clear();
 				lp.mLightParams.mFacePoints.Clear();
+				lp.mLightParams.mFInfos.Clear();
 
 				for(int i=0;i < mGFXFaces.Length;i++)
 				{
@@ -833,6 +845,15 @@ namespace BSPCore
 					{
 //						continue;
 						return;
+					}
+
+					if(lp.mLightParams.mbRecording)
+					{
+						FInfo	dupeFI	=new FInfo(mFaceInfos[i]);
+						lock(lp.mLightParams.mFInfos)
+						{
+							lp.mLightParams.mFInfos.Add(i, dupeFI);
+						}
 					}
 			
 					Int32	size	=mLightMaps[i].CalcSize();

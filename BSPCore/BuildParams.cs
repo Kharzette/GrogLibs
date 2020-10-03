@@ -34,10 +34,10 @@ namespace BSPCore
 		//recording
 		public bool	mbRecording;
 
-		//recorded face points light traces to
+		//recorded data from the lighting process
 		public Dictionary<int, List<Vector3>>	mFacePoints	=new Dictionary<int, List<Vector3>>();
-
-		public Dictionary<int, GFXPlane>	mFacePlanes	=new Dictionary<int, GFXPlane>();
+		public Dictionary<int, GFXPlane>		mFacePlanes	=new Dictionary<int, GFXPlane>();
+		public Dictionary<int, FInfo>			mFInfos		=new Dictionary<int, FInfo>();
 	}
 
 
