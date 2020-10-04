@@ -198,11 +198,15 @@ namespace MaterialLib
 			{
 				return;
 			}
-			Material	mat	=mMats[existing].Clone(newMat);
-			if(mat != null)
-			{
-				mMats.Add(mat.Name, mat);
-			}
+
+			Material	mat	=new Material(newMat);
+
+			string	fxName	=GetMaterialEffect(existing);
+			mat.SetVariables(mKeeper.GetEffectVariables(fxName));
+
+			mMats[existing].CopyVarValues(mat);
+
+			mMats.Add(mat.Name, mat);
 		}
 
 

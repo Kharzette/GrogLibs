@@ -72,33 +72,30 @@ namespace MaterialLib
 		}
 
 
-		internal Material Clone(string newName)
+		internal void CopyVarValues(Material copyTo)
 		{
-			Material	ret	=new Material(newName);
-
-			ret.Shader		=Shader;
-			ret.Technique	=Technique;
+			copyTo.Shader		=Shader;
+			copyTo.Technique	=Technique;
 
 			foreach(KeyValuePair<string, EffectVariableValue> evv in mVars)
 			{
-				EffectVariableValue	evv2	=new EffectVariableValue();
+				//all variables should already exist
+				if(!copyTo.mVars.ContainsKey(evv.Key))
+				{
+					continue;	//warn?
+				}
+				EffectVariableValue	evvCopy	=copyTo.mVars[evv.Key];
 
-				//this should be a valuetype?  hope no ref problems
-				//TODO: there ARE ref problems here, these are gpu things
-				evv2.mValue	=evv.Value.mValue;
-				evv2.mVar	=evv.Value.mVar;
-				evv2.mVarAs	=evv.Value.mVarAs;
-
-				ret.mVars.Add(evv.Key, evv2);
+				//just set the mValue here, the object
+				//the other bits are done one up the call stack
+				evvCopy.mValue	=evv.Value.mValue;
 			}
 
 			IEnumerable<string>	hide	=from evv in mHidden select evv.mVar.Description.Name;
 			IEnumerable<string>	ignore	=from evv in mIgnored select evv.mVar.Description.Name;
 
-			ret.Hide(hide.ToList());
-			ret.Ignore(ignore.ToList());
-
-			return	ret;
+			copyTo.Hide(hide.ToList());
+			copyTo.Ignore(ignore.ToList());
 		}
 
 
