@@ -192,6 +192,17 @@ namespace MaterialLib
 		}
 
 
+		public void SetMaterialPrecision32(string name, bool b32)
+		{
+			if(!mMats.ContainsKey(name))
+			{
+				return;
+			}
+
+			mMats[name].F32	=b32;
+		}
+
+
 		public void CloneMaterial(string existing, string newMat)
 		{
 			if(!mMats.ContainsKey(existing))

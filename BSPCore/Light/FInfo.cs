@@ -69,7 +69,7 @@ namespace BSPCore
 		}
 
 
-		internal void CalcFaceLightInfo(LInfo lightInfo, List<Vector3> verts, int lightGridSize)
+		internal void CalcFaceLightInfo(LInfo lightInfo, List<Vector3> verts, int lightGridSize, GFXTexInfo tex)
 		{
 			float	minU	=Bounds.MIN_MAX_BOUNDS;
 			float	minV	=Bounds.MIN_MAX_BOUNDS;
@@ -84,10 +84,8 @@ namespace BSPCore
 			pln.mDist	=mPlane.mDist;
 			pln.mType	=mPlane.mType;
 
-			Vector3	vecU;
-			Vector3	vecV;
-			GBSPPlane.TextureAxisFromPlaneGrog(pln.mNormal, out vecU, out vecV);
-
+			Vector3	vecU	=tex.mVecU;
+			Vector3	vecV	=tex.mVecV;
 			foreach(Vector3 vert in verts)
 			{
 				float	d	=Vector3.Dot(vert, vecU);
@@ -322,6 +320,12 @@ namespace BSPCore
 		internal void SetPlane(GFXPlane pln)
 		{
 			mPlane	=new GBSPPlane(pln);
+		}
+
+
+		internal void SetPlane(GBSPPlane pln)
+		{
+			mPlane	=pln;
 		}
 
 

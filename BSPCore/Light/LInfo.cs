@@ -122,5 +122,12 @@ namespace BSPCore
 		{
 			return	(mLSizeU + 1) * (mLSizeV + 1);
 		}
+
+
+		internal void GetLMin(out Int32 lMinU, out Int32 lMinV)
+		{
+			lMinU	=mLMinU;
+			lMinV	=mLMinV;
+		}
 	}
 }

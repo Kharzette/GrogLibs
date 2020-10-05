@@ -562,7 +562,8 @@ namespace BSPCore
 				verts.Add(mGFXVerts[vIndex]);
 			}
 
-			faceInfo.CalcFaceLightInfo(lightInfo, verts, lightGridSize);
+			faceInfo.CalcFaceLightInfo(lightInfo, verts, lightGridSize,
+				mGFXTexInfos[mGFXFaces[fidx].mTexInfo]);
 
 			return	true;
 		}

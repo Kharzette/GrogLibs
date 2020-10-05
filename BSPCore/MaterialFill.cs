@@ -149,86 +149,31 @@ namespace BSPCore
 			sCoords	=new List<double>();
 			tCoords	=new List<double>();
 
-			//get a proper set of texvecs for lighting
-			Vector3	xv, yv;
-			GBSPPlane.TextureAxisFromPlaneGrog(pln.mNormal, out xv, out yv);
+			LInfo	li	=new LInfo();
+			FInfo	fi	=new FInfo();
 
-			double	sX	=xv.X;
-			double	sY	=xv.Y;
-			double	sZ	=xv.Z;
-			double	tX	=yv.X;
-			double	tY	=yv.Y;
-			double	tZ	=yv.Z;
-
-			double	minS, minT;
-			double	maxS, maxT;
-
-			minS	=Bounds.MIN_MAX_BOUNDS;
-			minT	=Bounds.MIN_MAX_BOUNDS;
-			maxS	=-Bounds.MIN_MAX_BOUNDS;
-			maxT	=-Bounds.MIN_MAX_BOUNDS;
-
-			//calculate texture space extents
-			foreach(Vector3 pnt in verts)
-			{
-				double	d	=(pnt.X * sX) + (pnt.Y * sY) + (pnt.Z * sZ);
-				if(d < minS)
-				{
-					minS	=d;
-				}
-				if(d > maxS)
-				{
-					maxS	=d;
-				}
-
-				d	=(pnt.X * tX) + (pnt.Y * tY) + (pnt.Z * tZ);
-				if(d < minT)
-				{
-					minT	=d;
-				}
-				if(d > maxT)
-				{
-					maxT	=d;
-				}
-			}
-
-			//extent is the size of the surface in texels
-			//note that these are texture texels not light
-			double	extentS	=maxS - minS;
-			double	extentT	=maxT - minT;
-
-			//adjust for lightmaps that extend out beyond the borders a bit
-			double	floorU	=Math.Floor(minS / lightGridSize);
-			double	floorV	=Math.Floor(minT / lightGridSize);
-
-			floorU	*=lightGridSize;
-			floorV	*=lightGridSize;
+			fi.SetPlane(pln);
+			fi.CalcFaceLightInfo(li, verts, lightGridSize, tex);
 
 			//offset to the start of the texture
-			double	shiftU	=-minS;
-			double	shiftV	=-minT;
-
-			//offset by the difference in the snapped coord
-			//and the actual polygon world coord
-			shiftU	-=(floorU - minS);
-			shiftV	-=(floorV - minT);
+			Int32	shiftU, shiftV;
+			li.GetLMin(out shiftU, out shiftV);
 
 			foreach(Vector3 pnt in verts)
 			{
 				double	crdX, crdY;
 
 				//dot product
-				crdX	=(pnt.X * sX) + (pnt.Y * sY) + (pnt.Z * sZ);
-				crdY	=(pnt.X * tX) + (pnt.Y * tY) + (pnt.Z * tZ);
+				crdX	=Vector3.Dot(pnt, tex.mVecU);
+				crdY	=Vector3.Dot(pnt, tex.mVecV);
 
-				//shift relative to start position
-				crdX	+=shiftU;
-				crdY	+=shiftV;
-
-				//now the coordinates are set for textures
 				//scale by light grid size
 				crdX	/=lightGridSize;
 				crdY	/=lightGridSize;
+
+				//shift relative to start position
+				crdX	-=shiftU;
+				crdY	-=shiftV;
 
 				sCoords.Add(crdX);
 				tCoords.Add(crdY);

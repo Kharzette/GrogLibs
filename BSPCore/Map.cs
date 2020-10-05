@@ -199,8 +199,9 @@ namespace BSPCore
 
 
 		//note that the front and back checks are 0 instead of 1!
-		bool RayIntersectFace(Vector3 Front, Vector3 Back, Int32 Node,
-			ref Vector3 intersectionPoint, ref bool hitLeaf, ref GFXFace hit)
+		public bool RayIntersectFace(Vector3 Front, Vector3 Back, Int32 Node,
+			ref Vector3 intersectionPoint, ref bool hitLeaf, ref GFXFace hit,
+			ref int faceIdx)
 		{
 			float	Fd, Bd, Dist;
 			Int32	Side;
@@ -234,12 +235,14 @@ namespace BSPCore
 			if(Fd >= 0 && Bd >= 0)
 			{
 				return	RayIntersectFace(Front, Back, n.mFront,
-							ref intersectionPoint, ref hitLeaf, ref hit);
+							ref intersectionPoint, ref hitLeaf,
+							ref hit, ref faceIdx);
 			}
 			if(Fd < 0 && Bd < 0)
 			{
 				return	RayIntersectFace(Front, Back, n.mBack,
-							ref intersectionPoint, ref hitLeaf, ref hit);
+							ref intersectionPoint, ref hitLeaf,
+							ref hit, ref faceIdx);
 			}
 
 			//Work our way to the front, from the back side.  As soon as there
@@ -248,7 +251,7 @@ namespace BSPCore
 			//solid space, then we found the front intersection point...
 			if(RayIntersectFace(Front, I,
 				(Fd < 0)? n.mBack : n.mFront,
-				ref intersectionPoint, ref hitLeaf, ref hit))
+				ref intersectionPoint, ref hitLeaf, ref hit, ref faceIdx))
 			{
 				return	true;
 			}
@@ -256,7 +259,7 @@ namespace BSPCore
 			{
 				bool	bSolid	=RayIntersectFace(I, Back,
 					(Fd < 0)? n.mFront : n.mBack,
-					ref intersectionPoint, ref hitLeaf, ref hit);
+					ref intersectionPoint, ref hitLeaf, ref hit, ref faceIdx);
 
 				if(bSolid)
 				{
@@ -268,7 +271,8 @@ namespace BSPCore
 						{
 							if(n.mNumFaces == 1)
 							{
-								hit	=mGFXFaces[n.mFirstFace];
+								hit		=mGFXFaces[n.mFirstFace];
+								faceIdx	=n.mFirstFace;
 							}
 							else
 							{
@@ -288,7 +292,8 @@ namespace BSPCore
 									float	score;
 									if(FaceContainsPointScore(f, intersectionPoint, out score))
 									{
-										hit	=f;
+										hit		=f;
+										faceIdx	=i + n.mFirstFace;
 										break;
 									}
 
@@ -296,6 +301,7 @@ namespace BSPCore
 									{
 										bestScore	=score;
 										hit			=f;
+										faceIdx		=i + n.mFirstFace;
 									}
 								}
 							}
@@ -344,9 +350,10 @@ namespace BSPCore
 		{
 			bool	hitLeaf			=false;
 			Vector3	worldImpacto	=Vector3.Zero;
+			int		faceHit			=0;
 
 			if(RayIntersectFace(Front, Back, mGFXModels[0].mRootNode,
-				ref worldImpacto, ref hitLeaf, ref hit))
+				ref worldImpacto, ref hitLeaf, ref hit, ref faceHit))
 			{
 				return	true;
 			}
@@ -359,7 +366,7 @@ namespace BSPCore
 				Vector3	backInv		=Vector3.TransformCoordinate(Back, modelInv);
 
 				if(RayIntersectFace(frontInv, backInv, mGFXModels[modelIndex].mRootNode,
-					ref modelImpacto, ref hitLeaf, ref hit))
+					ref modelImpacto, ref hitLeaf, ref hit, ref faceHit))
 				{
 					return	true;
 				}

@@ -274,7 +274,7 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormTex04	[]varray	=new VPosNormTex04[mLMVerts.Count];
+			VPosNormTex04F	[]varray	=new VPosNormTex04F[mLMVerts.Count];
 			for(int i=0;i < mLMVerts.Count;i++)
 			{
 				varray[i].Position		=mLMVerts[i];
@@ -304,7 +304,7 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormTex04	[]varray	=new VPosNormTex04[mLMAVerts.Count];
+			VPosNormTex04F	[]varray	=new VPosNormTex04F[mLMAVerts.Count];
 			for(int i=0;i < mLMAVerts.Count;i++)
 			{
 				varray[i].Position		=mLMAVerts[i];
@@ -469,8 +469,8 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormTex04Tex14Tex24Color0	[]varray
-				=new VPosNormTex04Tex14Tex24Color0[mLMAnimVerts.Count];
+			VPosNormTex04Tex14Tex24Color0F	[]varray
+				=new VPosNormTex04Tex14Tex24Color0F[mLMAnimVerts.Count];
 			for(int i=0;i < mLMAnimVerts.Count;i++)
 			{
 				varray[i].Position		=mLMAnimVerts[i];
@@ -490,7 +490,7 @@ namespace BSPCore
 				varray[i].TexCoord2.Y	=mLMAnimFaceTex4[i].Y;
 				varray[i].TexCoord2.Z	=1.0f;	//alpha
 				varray[i].TexCoord2.W	=69.0f;	//nothin
-				varray[i].TexCoord3		=mLMAnimStyle[i];
+				varray[i].Color0		=mLMAnimStyle[i];
 			}
 
 			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -509,8 +509,8 @@ namespace BSPCore
 				return;
 			}
 
-			VPosNormTex04Tex14Tex24Color0	[]varray
-				=new VPosNormTex04Tex14Tex24Color0[mLMAAnimVerts.Count];
+			VPosNormTex04Tex14Tex24Color0F	[]varray
+				=new VPosNormTex04Tex14Tex24Color0F[mLMAAnimVerts.Count];
 			for(int i=0;i < mLMAAnimVerts.Count;i++)
 			{
 				varray[i].Position		=mLMAAnimVerts[i];
@@ -530,7 +530,7 @@ namespace BSPCore
 				varray[i].TexCoord2.Y	=mLMAAnimFaceTex4[i].Y;
 				varray[i].TexCoord2.Z	=mLMAAnimColors[i].A;	//alpha
 				varray[i].TexCoord2.W	=69.0f;	//nothin
-				varray[i].TexCoord3.A	=mLMAAnimStyle[i].R;
+				varray[i].Color0		=mLMAAnimStyle[i];
 			}
 
 			typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -1140,12 +1140,17 @@ namespace BSPCore
 				}
 
 				mMatLib.CreateMaterial(matName);
+				if(bLightMap)
+				{
+					//lightmap atlases need 32 bit texcoords
+					mMatLib.SetMaterialPrecision32(matName, true);
+				}
 
 				mMatLib.SetMaterialEffect(matName, "BSP.fx");
 				mMatLib.SetMaterialTechnique(matName, tech);
 				if(bLightMap)
 				{
-					mMatLib.SetMaterialParameter(matName, "mLightMap", null);
+					mMatLib.SetMaterialParameter(matName, "mLightMap", null);					
 				}
 			}
 		}

@@ -130,6 +130,11 @@ namespace MeshLib
 			VertexTypes.AddType(typeof(VPosNormTex04Col0));
 			VertexTypes.AddType(typeof(VPosNormTex04Tex14Tex24Color0));
 			VertexTypes.AddType(typeof(VPosNormBoneTanTex0Col0));
+
+			//extra precision types
+			VertexTypes.AddType(typeof(VPosNormTex04F));
+			VertexTypes.AddType(typeof(VPosNormTex0Col0F));
+			VertexTypes.AddType(typeof(VPosNormTex04Tex14Tex24Color0F));
 		}
 
 		public static void AddType(Type t)

@@ -23,6 +23,7 @@ namespace MaterialLib
 		EffectTechnique	mTechnique;		//technique to use with this material
 		int				mNumPasses;		//number of passes for the technique
 		bool			mbFinalized;	//trimmed down ignored yet?
+		bool			mb32FElements;	//need precision for big textures?
 
 		//Effect passes are allocated / freed alot unless cached
 		List<EffectPass>	mPasses		=new List<EffectPass>();
@@ -69,6 +70,11 @@ namespace MaterialLib
 		{
 			get { return mTechnique; }
 			set { ClearNoVars(); mTechnique = value;  CalcLayouts(); }
+		}
+		public bool F32
+		{
+			get { return mb32FElements; }
+			set { mb32FElements = value; }
 		}
 
 
@@ -278,6 +284,8 @@ namespace MaterialLib
 			{
 				varVal.Value.Write(bw);
 			}
+
+			bw.Write(mb32FElements);
 		}
 
 
@@ -332,6 +340,8 @@ namespace MaterialLib
 					br.ReadString();	//consume
 				}
 			}
+
+			mb32FElements	=br.ReadBoolean();
 
 			CalcLayouts();
 		}
@@ -459,23 +469,48 @@ namespace MaterialLib
 				return	Format.R16G16B16A16_Float;
 			}
 
-			if(spd.SemanticName == "TEXCOORD" || spd.SemanticName == "NORMAL")
+			if(mb32FElements)	//tricksy atlases
 			{
-				if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentW) != 0))
+				if(spd.SemanticName == "TEXCOORD" || spd.SemanticName == "NORMAL")
 				{
-					return	Format.R16G16B16A16_Float;
+					if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentW) != 0))
+					{
+						return	Format.R32G32B32A32_Float;
+					}
+					else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentZ) != 0))
+					{
+						return	Format.R32G32B32A32_Float;	//xyz not supported I suppose
+					}
+					else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentY) != 0))
+					{
+						return	Format.R32G32_Float;
+					}
+					else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentX) != 0))
+					{
+						return	Format.R32_Float;
+					}
 				}
-				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentZ) != 0))
+			}
+			else
+			{
+				if(spd.SemanticName == "TEXCOORD" || spd.SemanticName == "NORMAL")
 				{
-					return	Format.R16G16B16A16_Float;	//xyz not supported I suppose
-				}
-				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentY) != 0))
-				{
-					return	Format.R16G16_Float;
-				}
-				else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentX) != 0))
-				{
-					return	Format.R16_Float;
+					if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentW) != 0))
+					{
+						return	Format.R16G16B16A16_Float;
+					}
+					else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentZ) != 0))
+					{
+						return	Format.R16G16B16A16_Float;	//xyz not supported I suppose
+					}
+					else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentY) != 0))
+					{
+						return	Format.R16G16_Float;
+					}
+					else if(((spd.UsageMask & RegisterComponentMaskFlags.ComponentX) != 0))
+					{
+						return	Format.R16_Float;
+					}
 				}
 			}
 
@@ -559,13 +594,6 @@ namespace MaterialLib
 				{
 					break;
 				}
-
-				//use to investigate layout of a particlar technique
-//				if(mTechnique.Description.Name == "Particle")
-//				{
-//					int	j=0;
-//					j++;
-//				}
 
 				Debug.Assert(ep.IsValid);
 
