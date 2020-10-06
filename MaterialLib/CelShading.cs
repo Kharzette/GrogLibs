@@ -205,6 +205,11 @@ namespace MaterialLib
 					texDesc.Width * texDesc.Height *
 					(int)FormatHelper.SizeOfInBytes(texDesc.Format));
 
+				if(mCelTex2Ds[index] != null)
+				{
+					mCelTex2Ds[index].Dispose();
+				}
+
 				res	=mCelTex2Ds[index]	=new Texture2D(gd, texDesc, dbs);
 			}
 			else
@@ -228,6 +233,11 @@ namespace MaterialLib
 				texDesc.Usage			=ResourceUsage.Immutable;
 				texDesc.Width			=size;
 				texDesc.Format			=Format.R16_Float;
+
+				if(mCelTex1Ds[index] != null)
+				{
+					mCelTex1Ds[index].Dispose();
+				}
 
 				res	=mCelTex1Ds[index]	=new Texture1D(gd, texDesc, ds);
 
