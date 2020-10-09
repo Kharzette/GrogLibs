@@ -189,8 +189,9 @@ namespace BSPCore
 		}
 
 
-		internal void CalcFacePoints(Matrix modelMat, Matrix modelInv, int modelIndex,
-			LInfo lightInfo, int lightGridSize, Vector2 UVOfs,
+		internal void CalcFacePoints(int []corrections,
+			Matrix modelMat, Matrix modelInv, int modelIndex,
+			LInfo lightInfo, int lightGridSize,
 			bool bExtraLightCorrection,
 			UtilityLib.TSPool<bool []> boolPool,
 			CoreDelegates.IsPointInSolid pointInSolid,
@@ -204,13 +205,12 @@ namespace BSPCore
 			float	midU, midV;
 			lightInfo.CalcMids(out midU, out midV);
 
-			bool	bSamp0	=UVOfs.X == 0f && UVOfs.Y == 0f;
-
 			Vector3	faceMid	=mTexOrg + mT2WVecU * midU + mT2WVecV * midV;
 
 			float	startU, startV;
 			Int32	width, height;
-			lightInfo.CalcSizeAndStart(UVOfs, lightGridSize, out width, out height, out startU, out startV);
+			lightInfo.CalcSizeAndStart(Vector2.Zero, lightGridSize,
+				out width, out height, out startU, out startV);
 
 			for(int v=0;v < height;v++)
 			{
@@ -227,15 +227,79 @@ namespace BSPCore
 
 					InSolid[gridIdx]	=pointInSolid(mPoints[gridIdx]);
 
-					if(bExtraLightCorrection && InSolid[gridIdx] && bSamp0)
+					if(bExtraLightCorrection && InSolid[gridIdx])
 					{
 						//now that extra samples are closer to the grid, use them to
 						//correct points slightly inside solid
-						if(correctPoint(ref mPoints[gridIdx], mT2WVecU, mT2WVecV))
+						int	c	=correctPoint(ref mPoints[gridIdx], mT2WVecU, mT2WVecV);
+						if(c != -1)
 						{
-							InSolid[gridIdx]	=false;
+							InSolid[gridIdx]		=false;
+							corrections[gridIdx]	=c;
+						}
+						else
+						{
+							corrections[gridIdx]	=0;
 						}
 					}
+					else
+					{
+						corrections[gridIdx]	=0;
+					}
+				}
+			}
+
+			//free cached vis stuff
+			boolPool.FlagFreeItem(InSolid);
+		}
+
+
+		internal void CalcFaceSampPoints(
+			int []corrections, Vector2 []sampOffsets,
+			Matrix modelMat, Matrix modelInv, int modelIndex,
+			LInfo lightInfo, int lightGridSize, Vector2 UVOfs,
+			UtilityLib.TSPool<bool []> boolPool,
+			CoreDelegates.IsPointInSolid pointInSolid,
+			CoreDelegates.RayCollision rayCollide)
+		{
+			bool	[]InSolid	=boolPool.GetFreeItem();
+
+			BlastArray(InSolid);
+
+			float	midU, midV;
+			lightInfo.CalcMids(out midU, out midV);
+
+			Vector3	faceMid	=mTexOrg + mT2WVecU * midU + mT2WVecV * midV;
+
+			float	startU, startV;
+			Int32	width, height;
+			lightInfo.CalcSizeAndStart(UVOfs, lightGridSize, out width, out height, out startU, out startV);
+
+			for(int v=0;v < height;v++)
+			{
+				for(int u=0;u < width;u++)
+				{
+					int	gridIdx	=(v * width) + u;
+
+					//see if the original point was adjusted
+					int	sampIdx	=corrections[gridIdx];
+
+					if(sampIdx != 0)
+					{
+						int	gack	=69;
+						gack++;
+					}
+
+					Vector2	adjust	=sampOffsets[sampIdx] * lightGridSize;
+
+					float	curU	=(adjust.X + startU) + u * lightGridSize;
+					float	curV	=(adjust.Y + startV) + v * lightGridSize;
+
+					Vector3	point	=mTexOrg + mT2WVecU * curU + mT2WVecV * curV;
+
+					mPoints[gridIdx]	=Vector3.TransformCoordinate(point, modelMat);
+
+					InSolid[gridIdx]	=pointInSolid(mPoints[gridIdx]);
 				}
 			}
 

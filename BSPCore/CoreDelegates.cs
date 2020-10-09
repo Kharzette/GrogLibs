@@ -8,7 +8,7 @@ namespace BSPCore
 {
 	public class CoreDelegates
 	{
-		public delegate bool CorrectLightPoint(ref Vector3 pos, Vector3 t2wU, Vector3 t2wV);
+		public delegate int CorrectLightPoint(ref Vector3 pos, Vector3 t2wU, Vector3 t2wV);
 		public delegate bool IsPointInSolid(Vector3 pos);
 		public delegate bool RayCollision(Vector3 front, Vector3 back, int modelIndex, Matrix modelInv, out Vector3 impact);
 		public delegate Int32 GetNodeLandedIn(Int32 node, Vector3 pos);

@@ -370,7 +370,7 @@ namespace BSPCore
 
 
 		//use extra samples to try to push a light trace point out of solid
-		bool CorrectLightPoint(ref Vector3 pos, Vector3 t2wU, Vector3 t2wV)
+		int CorrectLightPoint(ref Vector3 pos, Vector3 t2wU, Vector3 t2wV)
 		{
 			for(int i=1;i < 9;i++)
 			{
@@ -380,10 +380,10 @@ namespace BSPCore
 				if(!IsPointInSolidSpace(delta))
 				{
 					pos	=delta;
-					return	true;
+					return	i;
 				}
 			}
-			return	false;
+			return	-1;
 		}
 
 
@@ -845,8 +845,12 @@ namespace BSPCore
 			{
 				ProgressWatcher.UpdateProgressIncremental(prog);
 
-				int		pnum	=mGFXFaces[i].mPlaneNum;
-				bool	bFlip	=mGFXFaces[i].mbFlipSide;
+				GFXFace	face	=mGFXFaces[i];
+				FInfo	fi		=mFaceInfos[i];
+				LInfo	li		=mLightMaps[i];
+
+				int		pnum	=face.mPlaneNum;
+				bool	bFlip	=face.mbFlipSide;
 
 				GFXPlane	pln	=new GFXPlane();
 
@@ -859,11 +863,10 @@ namespace BSPCore
 					pln.Inverse();
 				}
 
-				mFaceInfos[i].SetPlane(pln);
-				mFaceInfos[i].SetFaceIndex(i);
+				fi.SetPlane(pln);
+				fi.SetFaceIndex(i);
 
-				GFXTexInfo	tex			=mGFXTexInfos[mGFXFaces[i].mTexInfo];
-				GFXFace		face		=mGFXFaces[i];
+				GFXTexInfo	tex			=mGFXTexInfos[face.mTexInfo];
 				int			modelIndex	=modelForFace[i];
 				Matrix		modelMat	=modelTransforms[modelIndex];
 				Matrix		modelInv	=modelInvs[modelIndex];
@@ -879,7 +882,7 @@ namespace BSPCore
 				}
 				else if(tex.IsLightMapped())
 				{
-					if(!CalcFaceInfo(mFaceInfos[i], mLightMaps[i], lp.mLightParams.mLightGridSize))
+					if(!CalcFaceInfo(fi, li, lp.mLightParams.mLightGridSize))
 					{
 //						continue;
 						return;
@@ -887,26 +890,43 @@ namespace BSPCore
 
 					if(lp.mLightParams.mbRecording)
 					{
-						FInfo	dupeFI	=new FInfo(mFaceInfos[i]);
+						FInfo	dupeFI	=new FInfo(fi);
 						lock(lp.mLightParams.mFInfos)
 						{
 							lp.mLightParams.mFInfos.Add(i, dupeFI);
 						}
 					}
 			
-					Int32	size	=mLightMaps[i].CalcSize();
+					Int32	size	=li.CalcSize();
 
-					mFaceInfos[i].AllocPoints(size);
+					fi.AllocPoints(size);
+
+					//temp store seam correction offsets
+					int	[]corrections	=new int[size];
 
 					for(int s=0;s < lp.mLightParams.mNumSamples;s++)
 					{
-						CalcFacePoints(modelMat, modelInv, modelIndex, mFaceInfos[i], mLightMaps[i],
-							lp.mLightParams.mLightGridSize,
-							mSampleOffsets[s], lp.mLightParams.mbSeamCorrection, boolPool);
+						if(s == 0)
+						{
+							fi.CalcFacePoints(corrections,
+								modelMat, modelInv, modelIndex,
+								li, lp.mLightParams.mLightGridSize,
+								lp.mLightParams.mbSeamCorrection, boolPool,
+								IsPointInSolidSpace,
+								RayCollide, CorrectLightPoint);
+						}
+						else
+						{
+							fi.CalcFaceSampPoints(corrections, mSampleOffsets,
+								modelMat, modelInv, modelIndex,
+								li, lp.mLightParams.mLightGridSize,
+								mSampleOffsets[s], boolPool,
+								IsPointInSolidSpace, RayCollide);
+						}
 
 						if(lp.mLightParams.mbRecording)
 						{
-							Vector3	[]fp	=mFaceInfos[i].GetPoints();
+							Vector3	[]fp	=fi.GetPoints();
 
 							foreach(Vector3 pos in fp)
 							{
@@ -916,7 +936,7 @@ namespace BSPCore
 
 						if(visData != null && visData.Length != 0 && !lp.mBSPParams.mbBuildAsBModel)
 						{
-							if(!ApplyLightsToFace(mFaceInfos[i], mLightMaps[i],
+							if(!ApplyLightsToFace(fi, li,
 								modelInv, modelIndex, skyClusters,
 								1 / (float)lp.mLightParams.mNumSamples, visData))
 							{
@@ -926,7 +946,7 @@ namespace BSPCore
 						}
 						else
 						{
-							if(!ApplyLightsToFaceNoVis(mFaceInfos[i], mLightMaps[i],
+							if(!ApplyLightsToFaceNoVis(fi, li,
 								modelInv, modelIndex,
 								1 / (float)lp.mLightParams.mNumSamples, visData))
 							{
@@ -1329,17 +1349,6 @@ namespace BSPCore
 				}
 			}
 			return	true;
-		}
-
-
-		void CalcFacePoints(Matrix modelMat, Matrix modelInv, int modelIndex,
-			FInfo faceInfo, LInfo lightInfo, int lightGridSize,
-			Vector2 UVOfs, bool bExtraLightCorrection,
-			TSPool<bool []> boolPool)
-		{
-			faceInfo.CalcFacePoints(modelMat, modelInv, modelIndex, lightInfo, lightGridSize,
-				UVOfs, bExtraLightCorrection, boolPool,
-				IsPointInSolidSpace, RayCollide, CorrectLightPoint);
 		}
 
 
