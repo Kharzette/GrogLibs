@@ -204,6 +204,9 @@ namespace BSPCore
 					return;
 				}
 
+				//sample count for drawing extras differently
+				bw.Write(lp.mLightParams.mNumSamples);
+
 				bw.Write(lp.mLightParams.mFacePoints.Count);
 
 				for(int i=0;i < lp.mLightParams.mFacePoints.Count;i++)
@@ -335,18 +338,34 @@ namespace BSPCore
 		}
 
 
+		//pattern goes like
+		//
+		//
+		//			8	1	5
+		//
+		//			3	0	2
+		//
+		//			6	4	7
+		//
+		//
 		void MakeSampleOffsets()
 		{
 			mSampleOffsets		=new Vector2[9];
 			mSampleOffsets[0]	=Vector2.Zero;
-			mSampleOffsets[1]	=Vector2.One * -0.5f;
-			mSampleOffsets[2]	=Vector2.UnitX * 0.5f + Vector2.UnitY * -0.5f;
-			mSampleOffsets[3]	=Vector2.One * 0.5f;
-			mSampleOffsets[4]	=Vector2.UnitX * -0.25f + Vector2.UnitY * 0.25f;
-			mSampleOffsets[5]	=Vector2.One * -0.25f;
-			mSampleOffsets[6]	=Vector2.UnitX * 0.25f + Vector2.UnitY * -0.25f;
-			mSampleOffsets[7]	=Vector2.One * 0.25f;
-			mSampleOffsets[8]	=Vector2.UnitX * -0.25f + Vector2.UnitY * 0.25f;
+			mSampleOffsets[1]	=Vector2.UnitY;
+			mSampleOffsets[2]	=Vector2.UnitX;
+			mSampleOffsets[3]	=-Vector2.UnitX;
+			mSampleOffsets[4]	=-Vector2.UnitY;
+			mSampleOffsets[5]	=Vector2.UnitX + Vector2.UnitY;
+			mSampleOffsets[6]	=-Vector2.UnitX - Vector2.UnitY;
+			mSampleOffsets[7]	=Vector2.UnitX - Vector2.UnitY;
+			mSampleOffsets[8]	=-Vector2.UnitX + Vector2.UnitY;
+
+			//sample points closer to the grid
+			for(int i=0;i < 9;i++)
+			{
+				mSampleOffsets[i]	*=0.25f;
+			}
 		}
 
 
