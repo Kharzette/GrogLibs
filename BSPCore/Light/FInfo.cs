@@ -194,7 +194,8 @@ namespace BSPCore
 			bool bExtraLightCorrection,
 			UtilityLib.TSPool<bool []> boolPool,
 			CoreDelegates.IsPointInSolid pointInSolid,
-			CoreDelegates.RayCollision rayCollide)
+			CoreDelegates.RayCollision rayCollide,
+			CoreDelegates.CorrectLightPoint correctPoint)
 		{
 			bool	[]InSolid	=boolPool.GetFreeItem();
 
@@ -202,6 +203,8 @@ namespace BSPCore
 
 			float	midU, midV;
 			lightInfo.CalcMids(out midU, out midV);
+
+			bool	bSamp0	=UVOfs.X == 0f && UVOfs.Y == 0f;
 
 			Vector3	faceMid	=mTexOrg + mT2WVecU * midU + mT2WVecV * midV;
 
@@ -224,80 +227,16 @@ namespace BSPCore
 
 					InSolid[gridIdx]	=pointInSolid(mPoints[gridIdx]);
 
-					//This code block would adjust trace points towards the center
-					//of the face to avoid darkened corners and creases.
-					//However the distance moved was sometimes unreasonable, and would
-					//exceed lightGridSize.  If checked for the distance would sometimes
-					//be less along an edge as the point became closer to the center
-					//leaving a sort of "notch" in the lightmaps.
-					if(false)
+					if(bExtraLightCorrection && InSolid[gridIdx] && bSamp0)
 					{
-						if(InSolid[gridIdx])
+						//now that extra samples are closer to the grid, use them to
+						//correct points slightly inside solid
+						if(correctPoint(ref mPoints[gridIdx], mT2WVecU, mT2WVecV))
 						{
-							Vector3	colResult;
-							if(rayCollide(faceMid, mPoints[gridIdx], modelIndex, modelInv, out colResult))
-							{
-								Vector3	vect	=faceMid - mPoints[gridIdx];
-								vect.Normalize();
-
-								colResult	+=vect;
-
-								float	adjDist	=Vector3.Distance(colResult, mPoints[gridIdx]);
-								if(adjDist < (lightGridSize * 0.5f))
-								{
-									mPoints[gridIdx]	=colResult + vect;
-								}
-							}
+							InSolid[gridIdx]	=false;
 						}
 					}
 				}
-			}
-
-			if(!bExtraLightCorrection)
-			{
-				boolPool.FlagFreeItem(InSolid);
-				return;
-			}
-
-			for(int v=0;v < mPoints.Length;v++)
-			{
-				if(!InSolid[v])
-				{
-					//Point is good, leave it alone
-					continue;
-				}
-
-				Vector3	bestPoint	=faceMid;
-				float	bestDist	=Bounds.MIN_MAX_BOUNDS;
-				
-				for(int u=0;u < mPoints.Length;u++)
-				{
-					if(mPoints[v] == mPoints[u])
-					{
-						continue;	//We know this point is bad
-					}
-
-					if(InSolid[u])
-					{
-						continue;	//We know this point is bad
-					}
-
-					//At this point, we have a good point,
-					//now see if it's closer than the current good point
-					Vector3	vect	=mPoints[u] - mPoints[v];
-					float	Dist	=vect.Length();
-					if(Dist < bestDist)
-					{
-						bestDist	=Dist;
-						bestPoint	=mPoints[u];
-
-						if(Dist <= (lightGridSize - 0.1f))
-						{
-							break;	//This should be good enough...
-						}
-					}
-				}
-				mPoints[v]	=bestPoint;
 			}
 
 			//free cached vis stuff

@@ -66,7 +66,7 @@ namespace BSPCore
 		}
 
 
-		bool IsPointInSolidSpace(Vector3 pos)
+		public bool IsPointInSolidSpace(Vector3 pos)
 		{
 			Int32	node	=FindNodeLandedIn(0, pos);
 

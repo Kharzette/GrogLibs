@@ -369,6 +369,24 @@ namespace BSPCore
 		}
 
 
+		//use extra samples to try to push a light trace point out of solid
+		bool CorrectLightPoint(ref Vector3 pos, Vector3 t2wU, Vector3 t2wV)
+		{
+			for(int i=1;i < 9;i++)
+			{
+				Vector3	delta	=pos + t2wU * mSampleOffsets[i].X * mLightMapGridSize
+					+ t2wV * mSampleOffsets[i].Y * mLightMapGridSize;
+
+				if(!IsPointInSolidSpace(delta))
+				{
+					pos	=delta;
+					return	true;
+				}
+			}
+			return	false;
+		}
+
+
 		bool CreateDirectLights(LightParameters lp)
 		{
 			Int32	numDirectLights	=0;
@@ -1321,7 +1339,7 @@ namespace BSPCore
 		{
 			faceInfo.CalcFacePoints(modelMat, modelInv, modelIndex, lightInfo, lightGridSize,
 				UVOfs, bExtraLightCorrection, boolPool,
-				IsPointInSolidSpace, RayCollide);
+				IsPointInSolidSpace, RayCollide, CorrectLightPoint);
 		}
 
 
