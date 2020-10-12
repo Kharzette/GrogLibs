@@ -284,12 +284,6 @@ namespace BSPCore
 					//see if the original point was adjusted
 					int	sampIdx	=corrections[gridIdx];
 
-					if(sampIdx != 0)
-					{
-						int	gack	=69;
-						gack++;
-					}
-
 					Vector2	adjust	=sampOffsets[sampIdx] * lightGridSize;
 
 					float	curU	=(adjust.X + startU) + u * lightGridSize;
