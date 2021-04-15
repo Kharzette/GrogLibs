@@ -405,14 +405,27 @@ namespace MeshLib
 				ResourceUsage.Immutable, BindFlags.VertexBuffer,
 				CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-//			IEnumerable<MethodInfo>	meths	=typeof(Buffer).GetMethods().Where(x => x.Name == "Create");
+			//newer dotnet returns the byref middle parameter somehow, need to be more specific
+			IEnumerable<MethodInfo>	meths	=typeof(Buffer).GetMethods().Where(x => x.Name == "Create");
 
-			MethodInfo genericMethod =
-				typeof (Buffer).GetMethods().Where(
-					x => x.Name == "Create" && x.IsGenericMethod
-						&& x.GetParameters().Length == 3).Last();
-            
-			var typedMethod = genericMethod.MakeGenericMethod(new Type[] {vtype});
+			MethodInfo	createWeWant	=null;
+			foreach(MethodInfo m in meths)
+			{
+				ParameterInfo	[]pars	=m.GetParameters();
+
+				if(pars.Length != 3)
+				{
+					continue;
+				}
+
+				if(pars[1].ParameterType.IsArray)
+				{
+					createWeWant	=m;
+					break;
+				}
+			}
+
+			var	typedMethod	=createWeWant.MakeGenericMethod(new Type[] {vtype});
 
 			return	typedMethod.Invoke(null, new object[] {gd, verts, bDesc}) as Buffer;
 		}
