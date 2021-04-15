@@ -172,6 +172,13 @@ namespace BSPZone
 		#endregion
 
 
+		public void FreeAll()
+		{
+			mNonCollidingModels.Clear();
+			mPushables.Clear();			
+		}
+
+
 		#region Model Related
 		public void ClearPushableVelocities(float secDelta)//, Microsoft.Xna.Framework.Audio.AudioListener lis)
 		{

@@ -11,6 +11,7 @@ using UtilityLib;
 
 namespace BSPZone
 {
+	/*
 	internal partial class BasicModelHelper
 	{
 		Zone	mZone;
@@ -466,5 +467,5 @@ namespace BSPZone
 			
 			SetState(modIdx, fea.mbTriggerState);
 		}
-	}
+	}*/
 }

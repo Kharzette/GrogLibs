@@ -11,6 +11,7 @@ using UtilityLib;
 
 namespace BSPZone
 {
+	/*
 	internal partial class BasicModelHelper
 	{
 		internal void ConvertFuncs(Zone zone)
@@ -249,5 +250,5 @@ namespace BSPZone
 			mModelStages[modelIdx].mStages.Add(mms);
 
 		}
-	}
+	}*/
 }

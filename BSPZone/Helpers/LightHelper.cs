@@ -7,7 +7,6 @@ using BSPZone;
 using SharpDX;
 
 using DynLight	=MaterialLib.DynamicLights.DynLight;
-using ZoneLight	=BSPZone.Zone.ZoneLight;
 
 namespace BSPZone
 {
@@ -15,6 +14,7 @@ namespace BSPZone
 	//in the world that needs lighting
 	public class LightHelper
 	{
+		/*
 		//see http://home.comcast.net/~tom_forsyth/blog.wiki.html#Trilights
 		internal class TriLightFill
 		{
@@ -657,6 +657,6 @@ namespace BSPZone
 			}
 			return	false;
 		}
-		#endregion
+		#endregion*/
 	}
 }

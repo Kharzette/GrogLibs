@@ -47,5 +47,12 @@ namespace EntityLib
 			}
 			return	ret;
 		}
+
+
+		public void FreeAll()
+		{
+			mUpdateEnts.Clear();
+			mEnts.Clear();
+		}
 	}
 }

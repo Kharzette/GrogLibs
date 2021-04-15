@@ -8,6 +8,7 @@ using System.Diagnostics;
 
 namespace BSPZone
 {
+	/*
 	//handles switchable lights, pickups, level changes etc
 	public class TriggerHelper
 	{
@@ -245,5 +246,5 @@ namespace BSPZone
 
 			Misc.SafeInvoke(eTeleport, dest, tcea);
 		}
-	}
+	}*/
 }
