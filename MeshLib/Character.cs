@@ -383,6 +383,11 @@ namespace MeshLib
 
 		public void UpdateBounds()
 		{
+			if(mBones == null)
+			{
+				return;
+			}
+
 			Vector3	[]corners	=new Vector3[8];
 
 			Skin	sk	=mParts.GetSkin();

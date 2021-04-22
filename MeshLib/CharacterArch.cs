@@ -202,6 +202,12 @@ namespace MeshLib
 				return;
 			}
 
+			if(skel == null)
+			{
+				Debug.WriteLine("No skeleton in GetPartBoneNamesInUseByDraw()");
+				return;
+			}
+
 			Mesh	m	=mMeshParts[index];
 
 			EditorMesh	em	=m as EditorMesh;
