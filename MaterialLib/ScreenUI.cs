@@ -2,7 +2,6 @@
 using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
-using MaterialLib;
 using SharpDX;
 using SharpDX.Direct3D11;
 using UtilityLib;
@@ -15,11 +14,18 @@ namespace MaterialLib
 {
 	internal class UIData
 	{
-		internal TextVert	[]mVerts;
+		internal string		mMatName;
+		internal GumpVert	[]mVerts;
 		internal Vector4	mColor;
-		internal Vector2	mPosition;
+		internal Vector2	mPosition, mSecondLayerOffset;
 		internal Vector2	mScale;
-		internal string		mTexture;
+		internal string		mTexture, mTexture2;
+	}
+
+	internal struct GumpVert
+	{
+		internal Vector2	Position;
+		internal Half4		TexCoord04;
 	}
 
 
@@ -30,7 +36,7 @@ namespace MaterialLib
 		MaterialLib			mMatLib;
 		VertexBufferBinding	mVBB;
 
-		TextVert	[]mGumpBuf;
+		GumpVert	[]mGumpBuf;
 
 		bool	mbDirty;
 		int		mMaxGumps;
@@ -47,15 +53,15 @@ namespace MaterialLib
 			mMaxGumps		=maxGumps;
 			mMatLib			=matLib;
 
-			mGumpBuf	=new TextVert[mMaxGumps];
+			mGumpBuf	=new GumpVert[mMaxGumps];
 
 			BufferDescription	bDesc	=new BufferDescription(
-				mMaxGumps * 6 * 12,
+				mMaxGumps * 6 * 16,
 				ResourceUsage.Dynamic, BindFlags.VertexBuffer,
 				CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
 
-			mVB		=Buffer.Create<TextVert>(gd, mGumpBuf, bDesc);
-			mVBB	=new VertexBufferBinding(mVB, 12, 0);
+			mVB		=Buffer.Create<GumpVert>(gd, mGumpBuf, bDesc);
+			mVBB	=new VertexBufferBinding(mVB, 16, 0);
 		}
 
 
@@ -69,22 +75,28 @@ namespace MaterialLib
 		}
 
 
-		public void AddGump(string texName, string id,
-			Vector4 color, Vector2 pos, Vector2 scale)
+		public void AddGump(string matName, string texName, string texName2,
+			string id, Vector4 color, Vector2 pos, Vector2 scale)
 		{
 			UIData	uid	=new UIData();
 
-			uid.mColor		=color;
-			uid.mPosition	=pos;
-			uid.mScale		=scale;
-			uid.mTexture	=texName;
-			uid.mVerts		=new TextVert[6];
+			uid.mMatName			=matName;
+			uid.mColor				=color;			
+			uid.mPosition			=pos;
+			uid.mSecondLayerOffset	=Vector2.Zero;
+			uid.mScale				=scale;
+			uid.mTexture			=texName;
+			uid.mTexture2			=texName2;
+			uid.mVerts				=new GumpVert[6];
 
 			Texture2D	tex	=mMatLib.GetTexture2D(texName);
 			if(tex == null)
 			{
 				return;
 			}
+
+			//ok if this one is null
+			Texture2D	tex2	=mMatLib.GetTexture2D(texName2);
 
 			RectangleF	rect	=new RectangleF();
 
@@ -130,25 +142,35 @@ namespace MaterialLib
 		}
 
 
-		void MakeQuad(TextVert []tv, RectangleF rect)
+		public void ModifyGumpSecondLayerOffset(string id, Vector2 pos)
 		{
-			tv[0].Position	=rect.TopLeft;
-			tv[0].TexCoord0	=Vector2.Zero;
+			if(!mGumps.ContainsKey(id))
+			{
+				return;
+			}
+			mGumps[id].mSecondLayerOffset	=pos;
+		}
 
-			tv[1].Position	=rect.TopRight;
-			tv[1].TexCoord0	=Vector2.UnitX;
 
-			tv[2].Position	=rect.BottomRight;
-			tv[2].TexCoord0	=Vector2.One;
+		void MakeQuad(GumpVert []tv, RectangleF rect)
+		{
+			tv[0].Position		=rect.TopLeft;
+			tv[0].TexCoord04	=Vector4.Zero;
 
-			tv[3].Position	=rect.TopLeft;
-			tv[3].TexCoord0	=Vector2.Zero;
+			tv[1].Position		=rect.TopRight;
+			tv[1].TexCoord04	=Vector4.UnitX + Vector4.UnitZ;
 
-			tv[4].Position	=rect.BottomRight;
-			tv[4].TexCoord0	=Vector2.One;
+			tv[2].Position		=rect.BottomRight;
+			tv[2].TexCoord04	=Vector4.One;
 
-			tv[5].Position	=rect.BottomLeft;
-			tv[5].TexCoord0	=Vector2.UnitY;
+			tv[3].Position		=rect.TopLeft;
+			tv[3].TexCoord04	=Vector4.Zero;
+
+			tv[4].Position		=rect.BottomRight;
+			tv[4].TexCoord04	=Vector4.One;
+
+			tv[5].Position		=rect.BottomLeft;
+			tv[5].TexCoord04	=Vector4.UnitY + Vector4.UnitW;
 		}
 
 
@@ -177,7 +199,7 @@ namespace MaterialLib
 
 			for(int i=0;i < mNumVerts;i++)
 			{
-				ds.Write<TextVert>(mGumpBuf[i]);
+				ds.Write<GumpVert>(mGumpBuf[i]);
 			}
 
 			dc.UnmapSubresource(mVB, 0);
@@ -193,20 +215,22 @@ namespace MaterialLib
 
 			dc.InputAssembler.SetVertexBuffers(0, mVBB);
 
-			mMatLib.SetMaterialParameter("Text", "mView", view);
-			mMatLib.SetMaterialParameter("Text", "mProjection", proj);
-
 			int	offset	=0;
 			foreach(KeyValuePair<string, UIData> str in mGumps)
 			{
-				int	len	=str.Value.mVerts.Length;
+				int		len		=str.Value.mVerts.Length;
+				string	matName	=str.Value.mMatName;
 
-				mMatLib.SetMaterialParameter("Text", "mTextPosition", str.Value.mPosition);
-				mMatLib.SetMaterialParameter("Text", "mTextScale", str.Value.mScale);
-				mMatLib.SetMaterialParameter("Text", "mTextColor", str.Value.mColor);
-				mMatLib.SetMaterialTexture("Text", "mTexture", str.Value.mTexture);
+				mMatLib.SetMaterialParameter(matName, "mView", view);
+				mMatLib.SetMaterialParameter(matName, "mProjection", proj);
+				mMatLib.SetMaterialParameter(matName, "mTextPosition", str.Value.mPosition);
+				mMatLib.SetMaterialParameter(matName, "mSecondLayerOffset", str.Value.mSecondLayerOffset);
+				mMatLib.SetMaterialParameter(matName, "mTextScale", str.Value.mScale);
+				mMatLib.SetMaterialParameter(matName, "mTextColor", str.Value.mColor);
+				mMatLib.SetMaterialTexture(matName, "mTexture", str.Value.mTexture);
+				mMatLib.SetMaterialTexture(matName, "mTexture2", str.Value.mTexture2);
 
-				mMatLib.ApplyMaterialPass("Text", dc, 0);
+				mMatLib.ApplyMaterialPass(matName, dc, 0);
 
 				dc.Draw(len, offset);
 

@@ -88,7 +88,7 @@ namespace MaterialLib
 		};
 
 		public event EventHandler	eCompileNeeded;	//shader compiles needed, passes the number
-		public event EventHandler	eCompileDone;		//fired as each compile finishes
+		public event EventHandler	eCompileDone;	//fired as each compile finishes
 
 
 		public StuffKeeper() { }
@@ -690,6 +690,8 @@ namespace MaterialLib
 
 			CompilationResult	shdRes	=ShaderBytecode.CompileFromFile(
 				fullPath, "fx_5_0", ShaderFlags.Debug, EffectFlags.None, macs, mIFX);
+
+			Debug.WriteLine(shdRes.Message);
 
 			Effect	fx	=new Effect(dev, shdRes);
 			if(fx == null)
