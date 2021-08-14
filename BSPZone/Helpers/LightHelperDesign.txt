@@ -27,3 +27,6 @@ from sun light to point light:
 Note that intensity cannot be used for attenuation.  It is used as a distance to fade out shadows.
 For point lights this directly corresponds to the point light's strength.  For suns this is just a
 number that prevents the shadow from showing through too much geometry in very non-convex levels.
+
+It would be cool to be able to set this intensity value per light or maybe per area to get the
+value just right so there's no shadow bleed thru.
