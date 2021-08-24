@@ -129,6 +129,7 @@ namespace MeshLib
 
 		public void TransformBoneAnim(string bone, Matrix trans)
 		{
+			bool	bFound	=false;
 			for(int i=0;i < mSubAnims.Length;i++)
 			{
 				string	boneName	=mSubAnims[i].GetBoneName();
@@ -136,7 +137,39 @@ namespace MeshLib
 				{
 					continue;
 				}
+
+				bFound	=true;
 				mSubAnims[i].Transform(trans);
+			}
+
+			if(!bFound)
+			{
+				//no animation on bone, create a basic identity key
+				List<float>		times	=new List<float>();
+				List<KeyFrame>	keys	=new List<KeyFrame>();
+
+				KeyFrame	kf	=new KeyFrame();
+				kf.mScale		=Vector3.One;
+				kf.mRotation	=Quaternion.Identity;
+				kf.Transform(trans);
+
+				keys.Add(kf);
+				keys.Add(new KeyFrame(kf));
+				times.Add(StartTime);
+				times.Add(StartTime + TotalTime);
+
+				SubAnim	sa	=new SubAnim(bone, times, keys);
+
+				SubAnim	[]newSubs	=new SubAnim[mSubAnims.Length + 1];
+
+				newSubs[0]	=sa;
+
+				for(int i=0;i < mSubAnims.Length;i++)
+				{
+					newSubs[i + 1]	=mSubAnims[i];
+				}
+
+				mSubAnims	=newSubs;
 			}
 		}
 

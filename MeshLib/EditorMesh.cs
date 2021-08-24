@@ -367,10 +367,48 @@ namespace MeshLib
 			{
 				Color	reIndexed	=Color.Black;
 
-				reIndexed.R	=(byte)idxMap[myInds[i].R];
-				reIndexed.G	=(byte)idxMap[myInds[i].G];
-				reIndexed.B	=(byte)idxMap[myInds[i].B];
-				reIndexed.A	=(byte)idxMap[myInds[i].A];
+				byte	r	=myInds[i].R;
+				byte	g	=myInds[i].G;
+				byte	b	=myInds[i].B;
+				byte	a	=myInds[i].A;
+
+				//if idxMap doesn't have the bone (deleted from skeleton editor?)
+				//use zero
+				if(idxMap.ContainsKey(r))
+				{
+					reIndexed.R	=(byte)idxMap[r];
+				}
+				else
+				{
+					reIndexed.R	=0;
+				}
+
+				if(idxMap.ContainsKey(g))
+				{
+					reIndexed.G	=(byte)idxMap[g];
+				}
+				else
+				{
+					reIndexed.G	=0;
+				}
+
+				if(idxMap.ContainsKey(b))
+				{
+					reIndexed.B	=(byte)idxMap[b];
+				}
+				else
+				{
+					reIndexed.B	=0;
+				}
+
+				if(idxMap.ContainsKey(a))
+				{
+					reIndexed.A	=(byte)idxMap[a];
+				}
+				else
+				{
+					reIndexed.A	=0;
+				}
 
 				myInds[i]	=reIndexed;
 			}
