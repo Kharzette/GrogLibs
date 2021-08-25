@@ -155,8 +155,17 @@ namespace MeshLib
 
 				keys.Add(kf);
 				keys.Add(new KeyFrame(kf));
-				times.Add(StartTime);
-				times.Add(StartTime + TotalTime);
+
+				float	startTime	=StartTime;
+				float	endTime		=StartTime + TotalTime;
+
+				if(startTime >= endTime)
+				{
+					endTime	+=0.1f;		//empty anim?
+				}
+
+				times.Add(startTime);
+				times.Add(endTime);
 
 				SubAnim	sa	=new SubAnim(bone, times, keys);
 
