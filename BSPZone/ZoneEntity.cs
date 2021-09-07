@@ -136,7 +136,7 @@ namespace BSPZone
 		}
 
 
-		internal bool GetCorrectedAngles(string key, out int pitch, out int yaw, out int roll)
+		public bool GetCorrectedAngles(string key, out int pitch, out int yaw, out int roll)
 		{
 			Vector3	orient;
 			if(GetVectorNoConversion(key, out orient))

@@ -55,7 +55,7 @@ namespace EntityLib
 					continue;
 				}
 
-				MakePickUpEnt(eb, ze, drawObject, box, true);
+				MakePickUpEnt(z, eb, ze, drawObject, box, true, -1);
 			}
 		}
 
@@ -65,9 +65,11 @@ namespace EntityLib
 			List<ZoneEntity>	ents	=z.GetEntitiesStartsWith("item_");
 			foreach(ZoneEntity ze in ents)
 			{
-				object		drawObject	=null;
 				BoundingBox	box;
+				object		drawObject	=null;
 				bool		bSpin		=true;
+				int			spinPart	=-1;
+
 				if(ze.GetValue("classname").EndsWith("cells"))
 				{
 					gdo("Urn.Static", "", out drawObject, out box);
@@ -94,8 +96,27 @@ namespace EntityLib
 				}
 				else if(ze.GetValue("classname").EndsWith("health"))
 				{
-					gdo("HealthPack.Static", "HealthPack.StaticInstance", out drawObject, out box);
+					int	spawnFlags;
+					if(!ze.GetInt("spawnflags", out spawnFlags))
+					{
+						spawnFlags	=0;
+					}
 					bSpin	=false;
+
+					if(spawnFlags == 1)	//large
+					{
+						gdo("LargeHealth.Static", "LargeHealth.StaticInstance", out drawObject, out box);
+					}
+					else if(spawnFlags == 2)	//mega
+					{
+						gdo("MegaHealth.Static", "MegaHealth.StaticInstance", out drawObject, out box);
+						bSpin		=true;
+						spinPart	=0;
+					}
+					else	//0 small
+					{
+						gdo("SmallHealth.Static", "SmallHealth.StaticInstance", out drawObject, out box);
+					}
 				}
 				else if(ze.GetValue("classname").EndsWith("envirosuit"))
 				{
@@ -147,7 +168,39 @@ namespace EntityLib
 					continue;
 				}
 
-				MakePickUpEnt(eb, ze, drawObject, box, bSpin);
+				MakePickUpEnt(z, eb, ze, drawObject, box, bSpin, spinPart);
+			}
+		}
+
+
+		void MakePickUpEnt(Zone z, EntityBoss eb, ZoneEntity ze, object draw,
+						   BoundingBox box, bool bSpinning, int spinPart)
+		{
+			Entity	e	=new Entity(true, eb);
+
+			int		pitch, yaw, roll;
+			Vector3	pos;
+			ze.GetOrigin(out pos);
+			ze.GetCorrectedAngles("angle", out pitch, out yaw, out roll);
+
+			//add first so smc picks it up
+			PosOrient		po	=new PosOrient(e, pos, yaw, pitch, roll);
+			e.AddComponent(po);
+
+			StaticMeshComp	sm	=new StaticMeshComp(draw, e);
+			e.AddComponent(sm);
+
+			PickUp			pu	=new PickUp(e, spinPart);
+			ConvexVolume	cv	=new ConvexVolume(box, pos, e);
+
+			e.AddComponent(pu);
+			e.AddComponent(cv);
+
+			eb.AddEntity(e);
+
+			if(!bSpinning)
+			{
+				pu.StateChange(PickUp.State.Spinning, 0);
 			}
 		}
 
@@ -233,6 +286,11 @@ namespace EntityLib
 						Matrix	rotMat	=Matrix.RotationYawPitchRoll(yaw, pitch, roll);
 
 						lightPos	=rotMat.Backward;
+					}
+					else
+					{
+						//default q1 light str is 200?
+						str	=200f;
 					}
 				}
 
@@ -593,30 +651,6 @@ namespace EntityLib
 			BModelMover	bmm	=new BModelMover(modelIdx, bms, zone, outEnt);
 
 			outEnt.AddComponent(bmm);
-		}
-
-
-		void MakePickUpEnt(EntityBoss eb, ZoneEntity ze, object draw, BoundingBox box, bool bSpinning)
-		{
-			Entity	e	=new Entity(true, eb);
-
-			Vector3	pos;
-			ze.GetOrigin(out pos);
-
-			PickUp			pu	=new PickUp(pos, e);
-			StaticMeshComp	sm	=new StaticMeshComp(draw, e);
-			ConvexVolume	cv	=new ConvexVolume(box, pos, e);
-
-			e.AddComponent(pu);
-			e.AddComponent(sm);
-			e.AddComponent(cv);
-
-			eb.AddEntity(e);
-
-			if(!bSpinning)
-			{
-				pu.StateChange(PickUp.State.Spinning, 0);
-			}
 		}
 	}
 }

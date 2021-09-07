@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using SharpDX;
 using UtilityLib;
 
@@ -14,20 +15,35 @@ namespace EntityLib
 
 		StaticMeshComp	mSMC;
 
-		public readonly Vector3		mPosition;
+		public readonly	int		mSpinningPart;	//part index to spin, -1 if all
 
-		internal float		mYaw, mPitch, mRoll;
 		internal bool		mbActive, mbSpinning;
+		
+		float	mSpinYaw;		//yaw for spinning pickups
 
 		const float	YawPerMS	=0.007f;
 		const float	Hover		=20f;
 
 
-		public PickUp(Vector3 pos, Entity owner) : base(owner)
+		public PickUp(Entity owner, int spinPart) : base(owner)
 		{
-			mPosition	=pos;
-			mbActive	=true;
-			mbSpinning	=true;	//default
+			mbActive		=true;
+			mbSpinning		=true;	//default
+			mSpinningPart	=spinPart;
+
+			mSMC	=mOwner.GetComponent(typeof(StaticMeshComp)) as StaticMeshComp;
+		}
+
+
+		public float	GetYaw()
+		{
+			return	mSpinYaw;
+		}
+
+
+		public StaticMeshComp	GetSMC()
+		{
+			return	mSMC;
 		}
 
 
@@ -38,33 +54,15 @@ namespace EntityLib
 				return;
 			}
 
-			if(mbSpinning)
-			{
-				mYaw	+=YawPerMS * time.GetUpdateDeltaMilliSeconds();
-				Mathery.WrapAngleDegrees(ref mYaw);
-			}
-
-			if(mSMC == null)
-			{
-				//lazy init
-				mSMC	=mOwner.GetComponent(typeof(StaticMeshComp)) as StaticMeshComp;
-			}
 			if(mSMC == null)
 			{
 				return;
 			}
-
-			//need a 90 degree bump to get the pitch started properly
-			mSMC.mMat	=Matrix.RotationY(MathUtil.PiOverTwo);
-			mSMC.mMat	*=Matrix.RotationYawPitchRoll(mYaw, mPitch, mRoll);
-
+			
 			if(mbSpinning)
 			{
-				mSMC.mMat	*=Matrix.Translation(mPosition + Vector3.UnitY * Hover);
-			}
-			else
-			{
-				mSMC.mMat	*=Matrix.Translation(mPosition);
+				mSpinYaw	+=YawPerMS * time.GetUpdateDeltaMilliSeconds();
+				Mathery.WrapAngleDegrees(ref mSpinYaw);
 			}
 		}
 

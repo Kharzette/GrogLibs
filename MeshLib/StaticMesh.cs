@@ -59,6 +59,13 @@ namespace MeshLib
 		}
 
 
+		//set only one part's material transform
+		public void SetPartTransform(int idx, Matrix mat)
+		{
+			mParts.SetMatObjTransform(idx, mat);
+		}
+
+
 		public void SetTransform(Matrix mat)
 		{
 			mTransform		=mat;

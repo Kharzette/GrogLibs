@@ -16,16 +16,24 @@ namespace EntityLib
 		List<ZonePlane>	mPlanes	=new List<ZonePlane>();
 
 		bool	mbActive;
+		float	mSizeY;
 
 		public bool Active
 		{
-			get { return mbActive; }
+			get { return	mbActive; }
+		}
+
+		public float SizeY
+		{
+			get { return	mSizeY; }
 		}
 
 
 
 		public ConvexVolume(BoundingBox box, Vector3 pos, Entity owner) : base(owner)
 		{
+			mSizeY	=box.Height;
+
 			ZonePlane	zp	=ZonePlane.Blank;
 
 			box.Minimum	+=pos;

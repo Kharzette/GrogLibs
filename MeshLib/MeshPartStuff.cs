@@ -152,6 +152,14 @@ namespace MeshLib
 		}
 
 
+		internal void SetMatObjTransform(int idx, Matrix trans)
+		{
+			Debug.Assert(idx >= 0 && idx < mPartMats.Count);
+
+			mPartMats[idx].mObjectTransform	=trans;
+		}
+
+
 		internal void SetMatObjTransforms(Matrix trans)
 		{
 			foreach(MeshMaterial mm in mPartMats)

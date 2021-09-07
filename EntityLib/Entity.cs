@@ -36,6 +36,20 @@ namespace EntityLib
 		}
 
 
+		public List<Component> GetComponents(Type t)
+		{
+			List<Component>	comps	=new List<Component>();
+			foreach(Component c in mComponents)
+			{
+				if(c.GetType() == t)
+				{
+					comps.Add(c);
+				}
+			}
+			return	comps;
+		}
+
+
 		public Component GetComponent(Type t)
 		{
 			foreach(Component c in mComponents)
