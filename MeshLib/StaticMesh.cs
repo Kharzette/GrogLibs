@@ -236,6 +236,12 @@ namespace MeshLib
 		}
 
 
+		public void DrawX(DeviceContext dc, MatLib matLib, int numInst, string altMaterial)
+		{
+			mParts.DrawX(dc, altMaterial, numInst);
+		}
+
+
 		public void DrawDMN(DeviceContext dc, MatLib matLib)
 		{
 			mParts.DrawDMN(dc);

@@ -273,6 +273,27 @@ namespace MeshLib
 		}
 
 
+		void IArch.DrawX(DeviceContext dc, List<MeshMaterial> meshMats,
+						 int numInst, string altMaterial)
+		{
+			Debug.Assert(meshMats.Count == mMeshParts.Count);
+
+			for(int i=0;i < mMeshParts.Count;i++)
+			{
+				MeshMaterial	mm	=meshMats[i];
+
+				if(!mm.mbVisible)
+				{
+					continue;
+				}
+
+				Mesh	m	=mMeshParts[i];
+
+				m.DrawX(dc, mm, numInst, altMaterial);
+			}
+		}
+
+
 		void IArch.DrawDMN(DeviceContext dc, List<MeshMaterial> meshMats)
 		{
 			Debug.Assert(meshMats.Count == mMeshParts.Count);

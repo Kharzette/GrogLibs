@@ -311,6 +311,13 @@ struct VVPosTex04
 	half4	TexCoord0	: TEXCOORD0;
 };
 
+struct VVPosTex04RTAI
+{
+	float4	Position	: SV_POSITION;
+	half4	TexCoord0	: TEXCOORD0;
+	uint	CubeFace	: SV_RenderTargetArrayIndex;
+};
+
 struct VVPosTex0TanBiNorm
 {
 	float4	Position	: SV_POSITION;

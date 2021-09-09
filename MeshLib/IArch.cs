@@ -43,6 +43,7 @@ namespace MeshLib
 
 		void Draw(DeviceContext dc, List<MeshMaterial> meshMats);
 		void Draw(DeviceContext dc, List<MeshMaterial> meshMats, string altMaterial);
+		void DrawX(DeviceContext dc, List<MeshMaterial> meshMats, int numInst, string altMaterial);
 		void DrawDMN(DeviceContext dc, List<MeshMaterial> meshMats);
 
 		void UpdateBounds();

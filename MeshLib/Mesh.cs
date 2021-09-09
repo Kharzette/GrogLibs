@@ -233,6 +233,31 @@ namespace MeshLib
 		}
 
 
+		//render X times
+		internal void DrawX(DeviceContext dc, MeshMaterial mm, int numInst, string altMaterial)
+		{
+			if(!mm.mbVisible)
+			{
+				return;
+			}
+
+			if(!mm.mMatLib.MaterialExists(altMaterial))
+			{
+				return;
+			}
+
+			dc.InputAssembler.SetVertexBuffers(0, mVBBinding);
+			dc.InputAssembler.SetIndexBuffer(mIndexs, Format.R16_UInt, 0);
+
+			mm.mMatLib.SetMaterialParameter(altMaterial, "mWorld",
+				(mTransform * mm.mObjectTransform));
+			
+			mm.mMatLib.ApplyMaterialPass(altMaterial, dc, 0);
+
+			dc.DrawIndexedInstanced(mNumTriangles * 3, numInst, 0, 0, 0);
+		}
+
+
 		internal void Draw(DeviceContext dc, MeshMaterial mm)
 		{
 			if(!mm.mMatLib.MaterialExists(mm.mMaterialName))

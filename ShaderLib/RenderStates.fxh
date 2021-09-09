@@ -22,6 +22,26 @@ BlendState AlphaBlending
 	RenderTargetWriteMask[0]	=0x0F;
 };
 
+BlendState MultiChannelDepth
+{
+	AlphaToCoverageEnable		=FALSE;
+	BlendEnable[0]				=TRUE;
+	BlendEnable[1]				=TRUE;
+	BlendEnable[2]				=TRUE;
+	BlendEnable[3]				=TRUE;
+	BlendEnable[4]				=TRUE;
+	BlendEnable[5]				=TRUE;
+	BlendEnable[6]				=TRUE;
+	BlendEnable[7]				=TRUE;
+	SrcBlend					=ONE;
+	DestBlend					=ONE;
+	BlendOp						=MIN;
+	SrcBlendAlpha				=ONE;
+	DestBlendAlpha				=ONE;
+	BlendOpAlpha				=MIN;
+	RenderTargetWriteMask[0]	=0x0F;
+};
+
 BlendState NoBlending
 {
 	AlphaToCoverageEnable	=FALSE;
