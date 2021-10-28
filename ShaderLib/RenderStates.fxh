@@ -93,6 +93,7 @@ DepthStencilState DisableDepth
 {
 	DepthEnable		=FALSE;
 	DepthWriteMask	=ZERO;
+	DepthFunc		=ALWAYS;
 };
 
 DepthStencilState DisableDepthWrite
