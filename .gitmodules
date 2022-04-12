@@ -1,3 +1,6 @@
 [submodule "Vortice.Windows"]
 	path = Vortice.Windows
 	url = git@github.com:amerkoleci/Vortice.Windows.git
+[submodule "Vortice.Mathematics"]
+	path = Vortice.Mathematics
+	url = git@github.com:Kharzette/Vortice.Mathematics.git
