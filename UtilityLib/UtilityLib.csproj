@@ -5,7 +5,7 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-	<ProjectReference Include="..\SharpDXRenderForm\SharpDXRenderForm.csproj"/>
+	<ProjectReference Include="..\SharpDXWindows\SharpDXWindows.csproj"/>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DirectX\Vortice.DirectX.csproj"/>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.D3DCompiler\Vortice.D3DCompiler.csproj"/>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DXGI\Vortice.DXGI.csproj"/>
