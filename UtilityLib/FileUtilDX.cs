@@ -3,8 +3,8 @@ using System.IO;
 using System.Reflection;
 using System.Diagnostics;
 using System.Collections.Generic;
-using SharpDX;
-using SharpDX.Direct3D11;
+using Vortice.Mathematics;
+using System.Numerics;
 
 
 namespace UtilityLib
@@ -32,7 +32,7 @@ namespace UtilityLib
 		}
 
 
-		public static void WriteMatrixArray(BinaryWriter bw, Matrix []matArray)
+		public static void WriteMatrixArray(BinaryWriter bw, Matrix4x4 []matArray)
 		{
 			if(matArray == null)
 			{
@@ -47,7 +47,7 @@ namespace UtilityLib
 		}
 
 
-		public static void WriteMatrix(BinaryWriter bw, Matrix mat)
+		public static void WriteMatrix(BinaryWriter bw, Matrix4x4 mat)
 		{
 			bw.Write(mat.M11);
 			bw.Write(mat.M12);
@@ -68,13 +68,13 @@ namespace UtilityLib
 		}
 
 
-		public static Matrix []ReadMatrixArray(BinaryReader br)
+		public static Matrix4x4 []ReadMatrixArray(BinaryReader br)
 		{
 			int	count	=br.ReadInt32();
 
 			Debug.Assert(count > 0);
 
-			Matrix	[]ret	=new Matrix[count];
+			Matrix4x4	[]ret	=new Matrix4x4[count];
 
 			for(int i=0;i < count;i++)
 			{
@@ -84,9 +84,9 @@ namespace UtilityLib
 		}
 
 
-		public static Matrix ReadMatrix(BinaryReader br)
+		public static Matrix4x4 ReadMatrix(BinaryReader br)
 		{
-			Matrix	ret	=Matrix.Identity;
+			Matrix4x4	ret	=Matrix4x4.Identity;
 
 			ret.M11	=br.ReadSingle();
 			ret.M12	=br.ReadSingle();
@@ -211,9 +211,9 @@ namespace UtilityLib
 				return	null;
 			}
 
-			Dictionary<string, Color>	ret	=new Dictionary<string,Color>();
+			Dictionary<string, Color>	ret	=new Dictionary<string, Color>();
 
-			SharpDX.Color	tempColor;
+			Color	tempColor;
 
 			int	count	=br.ReadInt32();
 			for(int i=0;i < count;i++)
@@ -303,9 +303,9 @@ namespace UtilityLib
 					bw.Write(gack.Z);
 					bw.Write(gack.W);
 				}
-				else if(madProp is Matrix)
+				else if(madProp is Matrix4x4)
 				{
-					Matrix	gack	=(Matrix)madProp;
+					Matrix4x4	gack	=(Matrix4x4)madProp;
 					bw.Write(gack.M11);
 					bw.Write(gack.M12);
 					bw.Write(gack.M13);
@@ -408,9 +408,9 @@ namespace UtilityLib
 
 					props[i].SetValue(ret, val, null);
 				}
-				else if(props[i].PropertyType == typeof(Matrix))
+				else if(props[i].PropertyType == typeof(Matrix4x4))
 				{
-					Matrix	val	=Matrix.Identity;
+					Matrix4x4	val	=Matrix4x4.Identity;
 
 					val.M11	=br.ReadSingle();
 					val.M12	=br.ReadSingle();

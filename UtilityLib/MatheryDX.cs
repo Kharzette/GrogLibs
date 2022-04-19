@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using SharpDX;
-using SharpDX.Direct3D11;
+using Vortice.Mathematics;
+using System.Numerics;
 
 
 namespace UtilityLib
@@ -30,21 +30,35 @@ namespace UtilityLib
 
 
 		//Vector extension methods
-		public static float dot(this Half4 aVec, Vector3 bVec)
-		{
-			Vector3	v3a	=Vector3.Zero;
-
-			v3a.X	=aVec.X;
-			v3a.Y	=aVec.Y;
-			v3a.Z	=aVec.Z;
-
-			return	v3a.dot(bVec);
-		}
-
-
 		public static float dot(this Vector3 aVec, Vector3 bVec)
 		{
 			return	Vector3.Dot(aVec, bVec);
+		}
+
+
+		//this was in sharpdx, and I used it alot for boundy stuff
+		//keeps things homogeneous
+		public static void TransformCoordinate(ref Vector3 coord, ref Matrix4x4 mat, out Vector3 result)
+		{
+			Vector3	vec	=Vector3.Zero;
+
+			vec.X	=(coord.X * mat.M11) + (coord.Y * mat.M21) + (coord.Z * mat.M31) + mat.M41;
+			vec.Y	=(coord.X * mat.M12) + (coord.Y * mat.M22) + (coord.Z * mat.M32) + mat.M42;
+			vec.Z	=(coord.X * mat.M13) + (coord.Y * mat.M23) + (coord.Z * mat.M33) + mat.M43;
+
+			float	w	=1f / ((coord.X * mat.M14) + (coord.Y * mat.M24) + (coord.Z * mat.M34) + mat.M44);
+
+			result	=Vector3.Multiply(vec, w);
+		}
+
+
+		public static Vector3 TransformCoordinate(ref Vector3 coord, ref Matrix4x4 mat)
+		{
+			Vector3	ret;
+
+			TransformCoordinate(ref coord, ref mat, out ret);
+
+			return	ret;
 		}
 
 
@@ -122,8 +136,8 @@ namespace UtilityLib
 		//extension methods don't work on value types :(
 		public static void ClearBoundingBox(ref BoundingBox bb)
 		{
-			bb.Minimum	=Vector3.One * MIN_MAX_BOUNDS;
-			bb.Maximum	=-bb.Minimum;
+			bb.Min	=Vector3.One * MIN_MAX_BOUNDS;
+			bb.Max	=-bb.Min;
 		}
 
 
@@ -131,7 +145,7 @@ namespace UtilityLib
 		{
 			Vector3	posNorm	=planeNormal.Positive();
 
-			return	Vector3.Dot(posNorm, bb.Maximum);
+			return	Vector3.Dot(posNorm, bb.Max);
 		}
 
 
@@ -191,6 +205,7 @@ namespace UtilityLib
 		}
 
 
+		/*	Vortice doesn't have cube face stuff
 		static Vector3 VectorForCubeFace(TextureCubeFace face)
 		{
 			switch(face)
@@ -236,17 +251,17 @@ namespace UtilityLib
 			//Values are to project on the cube face
 			cubeProj	=Matrix.PerspectiveFovLH(
 				MathUtil.PiOverTwo, 1f, 1f, farPlane);
-        }
+        }*/
 
 
 		//useful for directional shadow mapping, making item icons
 		//from a rendertarget, or even mini maps
 		public static void CreateBoundedDirectionalOrthoViewProj(
 			BoundingBox bounds, Vector3 direction,
-			out Matrix lightView, out Matrix lightProj, out Vector3 fakeOrigin)
+			out Matrix4x4 lightView, out Matrix4x4 lightProj, out Vector3 fakeOrigin)
 		{
 			//create a matrix aimed in the direction
-			Matrix	dirAim	=Matrix.LookAtLH(Vector3.Zero, -direction, Vector3.Up);
+			Matrix4x4	dirAim	=Matrix4x4.CreateLookAt(Vector3.Zero, -direction, Vector3.UnitY);
 
 			//Get the corners
 			Vector3[]	boxCorners	=bounds.GetCorners();
@@ -254,31 +269,38 @@ namespace UtilityLib
 			//Transform the positions of the corners into the direction
 			for(int i=0;i < boxCorners.Length;i++)
 			{
-				boxCorners[i]	=Vector3.TransformCoordinate(boxCorners[i], dirAim);
+				boxCorners[i]	=
+				Vector3.Transform(boxCorners[i], dirAim);
 			}
 			
 			//Find the smallest box around the points
 			//in the directional frame of reference
-			BoundingBox	dirSpaceBox	=BoundingBox.FromPoints(boxCorners);
+			BoundingBox	dirSpaceBox	=BoundingBox.CreateFromPoints(boxCorners);
 
-			Vector3	boxSize		=dirSpaceBox.Maximum - dirSpaceBox.Minimum;
+			Vector3	boxSize		=dirSpaceBox.Max - dirSpaceBox.Min;
 			Vector3	halfBoxSize	=boxSize * 0.5f;
 			
 			//The viewpoint should be in the center of the back
 			//panel of the box.
-			Vector3	viewPos	=dirSpaceBox.Minimum + halfBoxSize;
+			Vector3	viewPos	=dirSpaceBox.Min + halfBoxSize;
 			
-			viewPos.Z	=dirSpaceBox.Minimum.Z;
+			viewPos.Z	=dirSpaceBox.Min.Z;
+
+			Matrix4x4	viewInv;
+			if(!Matrix4x4.Invert(dirAim, out viewInv))
+			{
+				viewInv	=Matrix4x4.Identity;
+			}
 			
 			//transform the view position back into worldspace
-			viewPos	=Vector3.TransformCoordinate(viewPos, Matrix.Invert(dirAim));
+			viewPos	=Mathery.TransformCoordinate(ref viewPos, ref viewInv);
 			
 			//Create the view matrix
-			lightView	=Matrix.LookAtLH(viewPos,
-				viewPos - direction, Vector3.Up);
+			lightView	=Matrix4x4.CreateLookAt(viewPos,
+				viewPos - direction, Vector3.UnitY);
 
 			//Create the ortho projection matrix
-			lightProj	=Matrix.OrthoLH(
+			lightProj	=Matrix4x4.CreateOrthographic(
 					boxSize.X, boxSize.Y, -boxSize.Z, boxSize.Z);
 
 			//get a good fake position for use in shader distance calcs
@@ -294,22 +316,13 @@ namespace UtilityLib
 			//expand radius by 10
 			bs.Radius	+=10;			
 
-			ContainmentType	ct	=frust.Contains(bs);
-
-			if(ct == ContainmentType.Disjoint)
-			{
-				return	false;
-			}
-			return	true;
+			return	frust.Intersects(bs);
 		}
 
 
 		public static BoundingSphere SphereFromPoints(IEnumerable<Vector3> points)
 		{
-			BoundingSphere	ret;
-
-			ret.Center	=Vector3.Zero;
-			ret.Radius	=0.0f;
+			BoundingSphere	ret	=new BoundingSphere(Vector3.Zero, 0f);
 
 			//find min and max
 			Vector3	min	=Vector3.One * float.MaxValue;
@@ -360,30 +373,36 @@ namespace UtilityLib
 
 		public static void AddPointToBoundingBox(ref BoundingBox bb, Vector3 pnt)
 		{
-			if(pnt.X < bb.Minimum.X)
+			Vector3	min	=bb.Min;
+			Vector3	max	=bb.Max;
+
+			if(pnt.X < min.X)
 			{
-				bb.Minimum.X	=pnt.X;
+				min.X	=pnt.X;
 			}
-			if(pnt.X > bb.Maximum.X)
+			if(pnt.X > max.X)
 			{
-				bb.Maximum.X	=pnt.X;
+				max.X	=pnt.X;
 			}
-			if(pnt.Y < bb.Minimum.Y)
+			if(pnt.Y < min.Y)
 			{
-				bb.Minimum.Y	=pnt.Y;
+				min.Y	=pnt.Y;
 			}
-			if(pnt.Y > bb.Maximum.Y)
+			if(pnt.Y > max.Y)
 			{
-				bb.Maximum.Y	=pnt.Y;
+				max.Y	=pnt.Y;
 			}
-			if(pnt.Z < bb.Minimum.Z)
+			if(pnt.Z < min.Z)
 			{
-				bb.Minimum.Z	=pnt.Z;
+				min.Z	=pnt.Z;
 			}
-			if(pnt.Z > bb.Maximum.Z)
+			if(pnt.Z > max.Z)
 			{
-				bb.Maximum.Z	=pnt.Z;
+				max.Z	=pnt.Z;
 			}
+
+			bb.Min	=min;
+			bb.Max	=max;
 		}
 
 
@@ -428,10 +447,16 @@ namespace UtilityLib
 		public static Vector3 RandomPosition(Random rnd, Vector3 range)
 		{
 			Vector3	ret	=Vector3.Zero;
+			ret.X	=rnd.NextSingle();
+			ret.Y	=rnd.NextSingle();
+			ret.Z	=rnd.NextSingle();
 
-			ret.X	=(float)rnd.NextDouble(-range.X, range.X);
-			ret.Y	=(float)rnd.NextDouble(-range.Y, range.Y);
-			ret.Z	=(float)rnd.NextDouble(-range.Z, range.Z);
+			//scale to -1 to 1 range
+			ret	*=2f;
+			ret	-=Vector3.One;
+
+			//scale to range
+			ret	*=range;
 
 			return	ret;
 		}
@@ -470,7 +495,7 @@ namespace UtilityLib
 
 				ret	-=(Vector3.One * 0.5f);
 
-				ret.Normalize();
+				ret	=Vector3.Normalize(ret);
 
 				if(!float.IsNaN(ret.X))
 				{
@@ -494,7 +519,7 @@ namespace UtilityLib
 
 				ret	-=(Vector3.One * 0.5f);
 
-				ret.Normalize();
+				ret	=Vector3.Normalize(ret);
 
 				if(!float.IsNaN(ret.X))
 				{
@@ -541,73 +566,55 @@ namespace UtilityLib
 
 
 		//for radians use mathhelper
-		public static void WrapAngleDegrees(ref float angle)
-		{
-			while(angle < 0.0f)
-			{
-				angle	+=360.0f;
-			}
-			while(angle > 360.0f)
-			{
-				angle	-=360.0f;
-			}
-		}
-
-
 		public static void WrapAngleDegrees(ref Int16 angle)
 		{
-			while(angle < 0)
-			{
-				angle	+=360;
-			}
-			while(angle > 360)
-			{
-				angle	-=360;
-			}
+			angle	%=360;
 		}
 
 
+		//normalize degree angles into 0 to 360
+		public static void WrapAngleDegreesPositive(ref Half angle)
+		{
+			float	fAng	=(float)angle;
+
+			float	modAng	=fAng % 360f;
+
+			if(modAng < 0f)
+			{
+				modAng	+=360f;
+			}
+
+			angle	=(Half)modAng;
+		}
+
+
+		public static void WrapAngleDegreesPositive(ref float angle)
+		{
+			float	modAng	=angle % 360f;
+
+			if(modAng < 0f)
+			{
+				modAng	+=360f;
+			}
+
+			angle	=modAng;
+		}
+
+
+		//normalize degree angles into -360 to 360
 		public static void WrapAngleDegrees(ref Half angle)
 		{
-			while(angle < 0.0f)
-			{
-				angle	+=360.0f;
-			}
-			while(angle > 360.0f)
-			{
-				angle	-=360.0f;
-			}
+			float	fAng	=(float)angle;
+
+			float	modAng	=fAng % 360f;
+
+			angle	=(Half)modAng;
 		}
 
 
-		public static bool CompareMatrix(Matrix mat1, Matrix mat2, float epsilon)
+		public static void WrapAngleDegrees(ref float angle)
 		{
-			if(!CompareVectorEpsilon(mat1.Forward, mat2.Forward, epsilon))
-			{
-				return	false;
-			}
-
-			if(!CompareVectorEpsilon(mat1.Left, mat2.Left, epsilon))
-			{
-				return	false;
-			}
-
-			if(!CompareVectorEpsilon(mat1.Up, mat2.Up, epsilon))
-			{
-				return	false;
-			}
-
-			if(!CompareVectorEpsilon(mat1.TranslationVector, mat2.TranslationVector, epsilon))
-			{
-				return	false;
-			}
-			return	true;
-		}
-
-
-		public static bool IsIdentity(Matrix mat, float epsilon)
-		{
-			return	CompareMatrix(mat, Matrix.Identity, epsilon);
+			angle	%=360f;
 		}
 
 
@@ -697,27 +704,38 @@ namespace UtilityLib
 		}
 
 
-		public static void SnapVector(ref Vector3 vec)
+		//snaps near axial normals to perfectly axial
+		public static void SnapNormal(ref Vector3 vec)
 		{
-			for(int i=0;i < 3;i++)
+			if(CompareFloatEpsilon(vec.X, 1f, ANGLE_EPSILON))
 			{
-				float	vecElement	=vec[i];
-				vecElement	=Math.Abs(vecElement - 1.0f);
-				if(vecElement < ANGLE_EPSILON)
-				{
-					vec		=Vector3.Zero;
-					vec[i]	=1f;
-					break;
-				}
-
-				vecElement	=vec[i];
-				vecElement	=Math.Abs(vecElement - -1.0f);
-				if(vecElement < ANGLE_EPSILON)
-				{
-					vec	=Vector3.Zero;
-					vec[i]	=-1.0f;
-					break;
-				}
+				vec		=Vector3.Zero;
+				vec.X	=1f;
+			}
+			else if(CompareFloatEpsilon(vec.X, -1f, ANGLE_EPSILON))
+			{
+				vec		=Vector3.Zero;
+				vec.X	=-1f;
+			}
+			else if(CompareFloatEpsilon(vec.Y, 1f, ANGLE_EPSILON))
+			{
+				vec		=Vector3.Zero;
+				vec.Y	=1f;
+			}
+			else if(CompareFloatEpsilon(vec.Y, -1f, ANGLE_EPSILON))
+			{
+				vec		=Vector3.Zero;
+				vec.Y	=-1f;
+			}
+			else if(CompareFloatEpsilon(vec.Z, 1f, ANGLE_EPSILON))
+			{
+				vec		=Vector3.Zero;
+				vec.Z	=1f;
+			}
+			else if(CompareFloatEpsilon(vec.Z, -1f, ANGLE_EPSILON))
+			{
+				vec		=Vector3.Zero;
+				vec.Z	=-1f;
 			}
 		}
 
@@ -734,8 +752,8 @@ namespace UtilityLib
 
 			Vector3	tAxis	=Vector3.Cross(norm, sAxis);
 
-			sAxis.Normalize();
-			tAxis.Normalize();
+			sAxis	=Vector3.Normalize(sAxis);
+			tAxis	=Vector3.Normalize(tAxis);
 
 			p0	=p1	=p2	=p3 =norm * dist;
 
@@ -792,7 +810,7 @@ namespace UtilityLib
 				return;
 			}
 
-			norm.Normalize();
+			norm	=Vector3.Normalize(norm);
 			dist	=Vector3.Dot(v1, norm);
 		}
 
@@ -824,29 +842,25 @@ namespace UtilityLib
 				return;
 			}
 
-			norm.Normalize();
+			norm	=Vector3.Normalize(norm);
 			dist	=Vector3.Dot(verts[1], norm);
 		}
 
 
 		public static float? RayIntersectBox(Vector3 start, Vector3 end, BoundingBox box)
 		{
-			Ray	ray;
-
-			ray.Position	=start;
-			ray.Direction	=(end - start);
+			Vector3	dir	=end - start;
 
 			//keep the length
-			float	len	=ray.Direction.Length();
+			float	len	=dir.Length();
 
 			//normalize
-			ray.Direction	/=len;
+			dir	/=len;
 
-			float	dist;
+			Ray	ray	=new Ray(start, dir);
 
-			bool	bIntersects	=box.Intersects(ref ray, out dist);
-
-			if(!bIntersects)
+			float	?dist	=box.Intersects(ray);
+			if(dist == null)
 			{
 				return	null;
 			}
@@ -891,14 +905,16 @@ namespace UtilityLib
 		}
 
 
-		public static BoundingSphere TransformSphere(Matrix trans, BoundingSphere bs)
+		public static BoundingSphere TransformSphere(Matrix4x4 trans, BoundingSphere bs)
 		{
 			Vector3	pos		=bs.Center;
 
-			bs.Center	=Vector3.TransformCoordinate(pos, trans);
+			bs.Center	=Mathery.TransformCoordinate(ref pos, ref trans);
+
+			Vector3	scaleVec	=new Vector3(trans.M11, trans.M22, trans.M33);
 				
 			//use the greatest dimension
-			bs.Radius	*=GreatestSphereDimension(trans.ScaleVector);
+			bs.Radius	*=GreatestSphereDimension(scaleVec);
 
 			return	bs;
 		}
@@ -906,22 +922,18 @@ namespace UtilityLib
 
 		public static float? RayIntersectSphere(Vector3 start, Vector3 end, BoundingSphere sphere)
 		{
-			Ray	ray;
-
-			ray.Position	=start;
-			ray.Direction	=(end - start);
+			Vector3	dir	=end - start;
 
 			//keep the length
-			float	len	=ray.Direction.Length();
+			float	len	=dir.Length();
 
 			//normalize
-			ray.Direction	/=len;
+			dir	/=len;
 
-			float	dist;
+			Ray	ray	=new Ray(start, dir);
 
-			bool	bIntersects	=sphere.Intersects(ref ray, out dist);
-
-			if(!bIntersects)
+			float	?dist	=sphere.Intersects(ray);
+			if(dist == null)
 			{
 				return	null;
 			}
@@ -946,22 +958,18 @@ namespace UtilityLib
 		{
 			BoundingBox	start	=box;
 
-			float	xsize	=box.Maximum.X - box.Minimum.X;
-			float	zsize	=box.Maximum.Z - box.Minimum.Z;
-			float	height	=box.Maximum.Y - box.Minimum.Y;
+			float	xsize	=box.Max.X - box.Min.X;
+			float	zsize	=box.Max.Z - box.Min.Z;
+			float	height	=box.Max.Y - box.Min.Y;
 
 			xsize	*=0.5f;
 			zsize	*=0.5f;
 			height	*=0.5f;
 
-			box.Minimum.X	=-xsize;
-			box.Maximum.X	=xsize;
-			box.Minimum.Z	=-zsize;
-			box.Maximum.Z	=zsize;
-			box.Minimum.Y	=-height;
-			box.Maximum.Y	=height;
+			box.Min	=new Vector3(-xsize, -height, -zsize);
+			box.Max	=new Vector3(xsize, height, zsize);
 
-			return	start.Minimum - box.Minimum;
+			return	start.Min - box.Min;
 		}
 
 
@@ -969,10 +977,10 @@ namespace UtilityLib
 		{
 			Vector4	ret	=Vector4.Zero;
 
-			ret.X	=MathUtil.Clamp(val.X, min.X, max.X);
-			ret.Y	=MathUtil.Clamp(val.Y, min.Y, max.Y);
-			ret.Z	=MathUtil.Clamp(val.Z, min.Z, max.Z);
-			ret.W	=MathUtil.Clamp(val.W, min.W, max.W);
+			ret.X	=Math.Clamp(val.X, min.X, max.X);
+			ret.Y	=Math.Clamp(val.Y, min.Y, max.Y);
+			ret.Z	=Math.Clamp(val.Z, min.Z, max.Z);
+			ret.W	=Math.Clamp(val.W, min.W, max.W);
 
 			return	ret;
 		}
@@ -981,56 +989,56 @@ namespace UtilityLib
 		public static void ClipRayToBox(BoundingBox box,
 			ref Vector3 rayStart, ref Vector3 rayEnd)
 		{
-			if(rayStart.X < box.Minimum.X)
+			if(rayStart.X < box.Min.X)
 			{
-				rayStart.X	=box.Minimum.X;
+				rayStart.X	=box.Min.X;
 			}
-			if(rayStart.Y < box.Minimum.Y)
+			if(rayStart.Y < box.Min.Y)
 			{
-				rayStart.Y	=box.Minimum.Y;
+				rayStart.Y	=box.Min.Y;
 			}
-			if(rayStart.Z < box.Minimum.Z)
+			if(rayStart.Z < box.Min.Z)
 			{
-				rayStart.Z	=box.Minimum.Z;
-			}
-
-			if(rayStart.X > box.Maximum.X)
-			{
-				rayStart.X	=box.Maximum.X;
-			}
-			if(rayStart.Y > box.Maximum.Y)
-			{
-				rayStart.Y	=box.Maximum.Y;
-			}
-			if(rayStart.Z > box.Maximum.Z)
-			{
-				rayStart.Z	=box.Maximum.Z;
+				rayStart.Z	=box.Min.Z;
 			}
 
-			if(rayEnd.X < box.Minimum.X)
+			if(rayStart.X > box.Max.X)
 			{
-				rayEnd.X	=box.Minimum.X;
+				rayStart.X	=box.Max.X;
 			}
-			if(rayEnd.Y < box.Minimum.Y)
+			if(rayStart.Y > box.Max.Y)
 			{
-				rayEnd.Y	=box.Minimum.Y;
+				rayStart.Y	=box.Max.Y;
 			}
-			if(rayEnd.Z < box.Minimum.Z)
+			if(rayStart.Z > box.Max.Z)
 			{
-				rayEnd.Z	=box.Minimum.Z;
+				rayStart.Z	=box.Max.Z;
 			}
 
-			if(rayEnd.X > box.Maximum.X)
+			if(rayEnd.X < box.Min.X)
 			{
-				rayEnd.X	=box.Maximum.X;
+				rayEnd.X	=box.Min.X;
 			}
-			if(rayEnd.Y > box.Maximum.Y)
+			if(rayEnd.Y < box.Min.Y)
 			{
-				rayEnd.Y	=box.Maximum.Y;
+				rayEnd.Y	=box.Min.Y;
 			}
-			if(rayEnd.Z > box.Maximum.Z)
+			if(rayEnd.Z < box.Min.Z)
 			{
-				rayEnd.Z	=box.Maximum.Z;
+				rayEnd.Z	=box.Min.Z;
+			}
+
+			if(rayEnd.X > box.Max.X)
+			{
+				rayEnd.X	=box.Max.X;
+			}
+			if(rayEnd.Y > box.Max.Y)
+			{
+				rayEnd.Y	=box.Max.Y;
+			}
+			if(rayEnd.Z > box.Max.Z)
+			{
+				rayEnd.Z	=box.Max.Z;
 			}
 		}
 
@@ -1052,7 +1060,7 @@ namespace UtilityLib
 
 				if((len1 * len2) < 0.0001f)
 				{
-					return	MathUtil.TwoPi;
+					return	MathHelper.TwoPi;
 				}
 
 				v1	/=len1;

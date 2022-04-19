@@ -1,23 +1,15 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
 	<UseWindowsForms>true</UseWindowsForms>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-	<Reference Include="SharpDX">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.DXGI">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.DXGI.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.Direct3D11">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Direct3D11.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.Desktop">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Desktop.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.Mathematics">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Mathematics.dll</HintPath>
-    </Reference>
+	<ProjectReference Include="..\SharpDXRenderForm\SharpDXRenderForm.csproj"/>
+	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DirectX\Vortice.DirectX.csproj"/>
+	<ProjectReference Include="..\Vortice.Windows\src\Vortice.D3DCompiler\Vortice.D3DCompiler.csproj"/>
+	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DXGI\Vortice.DXGI.csproj"/>
+	<ProjectReference Include="..\Vortice.Windows\src\Vortice.Direct3D11\Vortice.Direct3D11.csproj"/>
+	<ProjectReference Include="..\Vortice.Mathematics\src\Vortice.Mathematics\Vortice.Mathematics.csproj"/>
   </ItemGroup>
 </Project>

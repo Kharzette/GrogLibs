@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SharpDX;
+using System.Numerics;
 
 namespace UtilityLib
 {
@@ -25,7 +21,7 @@ namespace UtilityLib
 				mVelocity		=mMomentum / mMass;
 				mAngVelocity	=mAngMomentum / mInertiaTensor;
 
-				mOrient.Normalize();
+				mOrient	=Quaternion.Normalize(mOrient);
 
 				mSpin.X	=mAngVelocity.X;
 				mSpin.Y	=mAngVelocity.Y;
@@ -124,10 +120,14 @@ namespace UtilityLib
 			Derivative	c	=evaluate(ref state, dt*0.5f, b);
 			Derivative	d	=evaluate(ref state, dt, c);
 		
-			state.mPosition		+=1.0f/6.0f * dt * (a.mVelocity + 2.0f*(b.mVelocity + c.mVelocity) + d.mVelocity);
-			state.mMomentum		+=1.0f/6.0f * dt * (a.mForce + 2.0f*(b.mForce + c.mForce) + d.mForce);
-			state.mOrient		+=1.0f/6.0f * dt * (a.mSpin + 2.0f*(b.mSpin + c.mSpin) + d.mSpin);
-			state.mAngMomentum	+=1.0f/6.0f * dt * (a.mTorque + 2.0f*(b.mTorque + c.mTorque) + d.mTorque);
+			state.mPosition		+=1.0f/6.0f * dt * (a.mVelocity + 2.0f * (b.mVelocity + c.mVelocity) + d.mVelocity);
+			state.mMomentum		+=1.0f/6.0f * dt * (a.mForce + 2.0f * (b.mForce + c.mForce) + d.mForce);
+
+			Quaternion	twoBPlusC	=Quaternion.Multiply(b.mSpin + c.mSpin, 2f);
+			Quaternion	allQuat		=(a.mSpin + twoBPlusC + d.mSpin);
+
+			state.mOrient		+=Quaternion.Multiply(allQuat, 1.0f/6.0f * dt);
+			state.mAngMomentum	+=1.0f/6.0f * dt * (a.mTorque + 2.0f * (b.mTorque + c.mTorque) + d.mTorque);
 
 			state.Recalculate();
 		}

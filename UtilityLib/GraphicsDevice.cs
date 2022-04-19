@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Diagnostics;
-using SharpDX;
-using SharpDX.Direct3D;
-using SharpDX.Direct3D11;
-using SharpDX.DXGI;
-using SharpDX.Windows;
+using SharpDX.Windows;		//renderform
+using Vortice.Mathematics;
+using Vortice.Direct3D;
+using Vortice.Direct3D11;
+using Vortice.Direct3D11.Debug;
+using Vortice.DXGI;
+using SharpGen.Runtime;
 
-using Device	=SharpDX.Direct3D11.Device;
-using Cursor	=System.Windows.Forms.Cursor;
+using Cursor		=System.Windows.Forms.Cursor;
+using ResultCode	=Vortice.DXGI.ResultCode;
 
 
 namespace UtilityLib
@@ -16,24 +18,24 @@ namespace UtilityLib
 	{
 		RenderForm	mRForm;
 
-		Device			mGD;
-		DeviceDebug		mGDD;
-		DeviceContext	mDC;
+		ID3D11Device		mGD;
+		ID3D11Debug			mGDD;
+		ID3D11DeviceContext	mDC;
 
-		SwapChain	mSChain;
+		IDXGISwapChain	mSChain;
 
-		Texture2D			mBackBuffer, mDepthBuffer;
-		RenderTargetView	mBBView;
-		DepthStencilView	mDSView;
-		Viewport			mScreenPort, mShadowPort;
-		FeatureLevel		mFLevel;
+		ID3D11Texture2D			mBackBuffer, mDepthBuffer;
+		ID3D11RenderTargetView	mBBView;
+		ID3D11DepthStencilView	mDSView;
+
+		Viewport		mScreenPort, mShadowPort;
+		FeatureLevel	?mFLevel;
 
 		GameCamera	mGCam;
 
 		//keep near and far clip distances
 		//need for camera rebuild on device lost or resize
 		float	mClipNear, mClipFar;
-
 		bool	mbResized;
 
 		//keep track of mouse pos during mouse look
@@ -45,12 +47,12 @@ namespace UtilityLib
 		public event EventHandler	eDeviceLost;
 
 
-		public Device GD
+		public ID3D11Device GD
 		{
 			get { return mGD; }
 		}
 
-		public DeviceContext DC
+		public ID3D11DeviceContext DC
 		{
 			get { return mDC; }
 		}
@@ -66,9 +68,10 @@ namespace UtilityLib
 		}
 
 
-		public GraphicsDevice(string formTitle, FeatureLevel flevel, float near, float far)
+		public GraphicsDevice(string formTitle, System.Drawing.Icon icon,
+			FeatureLevel ?flevel, float near, float far)
 		{			
-			mRForm	=new RenderForm(formTitle);
+			mRForm	=new RenderForm(formTitle, icon);
 
 			//screen viewport
 			mScreenPort	=new Viewport(0, 0,
@@ -84,65 +87,78 @@ namespace UtilityLib
 
 			mClipNear	=near;
 			mClipFar	=far;
-			mFLevel		=flevel;
 
 			mGCam	=new UtilityLib.GameCamera(mRForm.ClientSize.Width,
 				mRForm.ClientSize.Height, 16f/9f, near, far);
 
-			Init();
+			Init(flevel);
 		}
 
 
-		void Init()
+		void Init(FeatureLevel ?flevel)
 		{
 			//release any existing
 			ReleaseAll();
 
-			Factory	fact	=new Factory1();
+			IDXGIFactory2	fact2	=DXGI.CreateDXGIFactory1<IDXGIFactory2>();
 
-			Adapter	adpt	=fact.GetAdapter(0);
+			IDXGIFactory6	fact6	=fact2.QueryInterfaceOrNull<IDXGIFactory6>();
 
-			FeatureLevel	[]features	=new FeatureLevel[1];
+			IDXGIAdapter	adpt	=fact6.GetAdapter(0);
 
-			features[0]	=new FeatureLevel();
+			FeatureLevel	[]features	=null;
+			if(flevel != null)
+			{
+				features	=new FeatureLevel[1];
 
-			features[0]	=mFLevel;
+				features[0]	=new FeatureLevel();
+				features[0]	=flevel.Value;
+			}
+
+			FeatureLevel	?outFeatures;
 
 			SwapChainDescription	scDesc	=new SwapChainDescription();
 
 			scDesc.BufferCount			=1;
 			scDesc.Flags				=SwapChainFlags.None;
-			scDesc.IsWindowed			=true;
-			scDesc.OutputHandle			=mRForm.Handle;
+			scDesc.Windowed				=true;
+			scDesc.OutputWindow			=mRForm.Handle;
 			scDesc.SampleDescription	=new SampleDescription(1, 0);
 			scDesc.SwapEffect			=SwapEffect.Discard;
-			scDesc.Usage				=Usage.RenderTargetOutput;
-			scDesc.ModeDescription		=new ModeDescription(
-				mRForm.ClientSize.Width, mRForm.ClientSize.Height,
+			scDesc.BufferUsage			=Usage.RenderTargetOutput;
+			scDesc.BufferDescription	=new ModeDescription(
+				0, 0,
+//				mRForm.ClientSize.Width, mRForm.ClientSize.Height,
 				new Rational(60, 1), Format.R8G8B8A8_UNorm_SRgb);
 
-#if DEBUG
-			Device.CreateWithSwapChain(adpt, DeviceCreationFlags.Debug, features,
-				scDesc, out mGD, out mSChain);
-			mGDD	=new DeviceDebug(mGD);
-#else
-			Device.CreateWithSwapChain(adpt, DeviceCreationFlags.None, features,
-				scDesc, out mGD, out mSChain);
-#endif
+			Result	res	=D3D11.D3D11CreateDeviceAndSwapChain(null, DriverType.Hardware,
+				DeviceCreationFlags.Debug, features,
+				scDesc, out mSChain, out mGD, out outFeatures, out mDC);
+
+			mGDD	=mGD.QueryInterface<ID3D11Debug>();
 
 			adpt.Dispose();
-			fact.Dispose();
+			fact6.Dispose();
+			fact2.Dispose();
 
-			mDC	=mGD.ImmediateContext;
+			if(res != Result.Ok)
+			{
+				return;
+			}
+
+			if(outFeatures != null)
+			{
+				mFLevel	=outFeatures.Value;
+			}
+
 
 			//I always use this, hope it doesn't change somehow
-			mDC.InputAssembler.PrimitiveTopology	=PrimitiveTopology.TriangleList;
+			DC.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);
 
 			//Get the backbuffer from the swapchain
-			mBackBuffer	=Texture2D.FromSwapChain<Texture2D>(mSChain, 0);
-
 			//Renderview on the backbuffer
-			mBBView	=new RenderTargetView(mGD, mBackBuffer);
+			mBackBuffer	=mSChain.GetBuffer<ID3D11Texture2D>(0);
+			mBBView		=mGD.CreateRenderTargetView(mBackBuffer);
 			
 			//Create the depth buffer
 			Texture2DDescription	depthDesc	=new Texture2DDescription()
@@ -157,14 +173,12 @@ namespace UtilityLib
 				SampleDescription	=new SampleDescription(1, 0),
 				Usage				=ResourceUsage.Default,
 				BindFlags			=BindFlags.DepthStencil,
-				CpuAccessFlags		=CpuAccessFlags.None,
-				OptionFlags			=ResourceOptionFlags.None
+				CPUAccessFlags		=CpuAccessFlags.None,
+				MiscFlags			=ResourceOptionFlags.None
 			};
 
-			mDepthBuffer	=new Texture2D(mGD, depthDesc);
-			
-			//Create the depth buffer view
-			mDSView	=new DepthStencilView(mGD, mDepthBuffer);
+			mDepthBuffer	=mGD.CreateTexture2D(depthDesc);
+			mDSView			=mGD.CreateDepthStencilView(mDepthBuffer);
 
 			//screen viewport
 			mScreenPort	=new Viewport(0, 0,
@@ -177,9 +191,11 @@ namespace UtilityLib
 				512, 512, 0f, 1f);
 
 			//Setup targets and viewport for rendering
-			mDC.Rasterizer.SetViewport(mScreenPort);
+			mDC.RSSetViewport(mScreenPort);
+			mDC.RSSetScissorRect(mRForm.ClientRectangle.Width,
+				mRForm.ClientRectangle.Height);
 
-			mDC.OutputMerger.SetTargets(mDSView, mBBView);
+			mDC.OMSetRenderTargets(mBBView, mDSView);
 
 			mRForm.UserResized	+=OnRenderFormResize;
 
@@ -202,20 +218,19 @@ namespace UtilityLib
 			//use it to let go of references to device stuff
 			Misc.SafeInvoke(ePreResize, this);
 
-			Utilities.Dispose(ref mBBView);
-			Utilities.Dispose(ref mDSView);
-			Utilities.Dispose(ref mBackBuffer);
-			Utilities.Dispose(ref mDepthBuffer);
+			mBBView.Dispose();
+			mDSView.Dispose();
+			mBackBuffer.Dispose();
+			mDepthBuffer.Dispose();
 
 			DC.ClearState();
 
-			DC.InputAssembler.PrimitiveTopology	=PrimitiveTopology.TriangleList;
-
+			DC.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);
 
 			mSChain.ResizeBuffers(1, width, height, Format.Unknown, SwapChainFlags.None);
 
-			mBackBuffer	=Texture2D.FromSwapChain<Texture2D>(mSChain, 0);
-			mBBView		=new RenderTargetView(mGD, mBackBuffer);
+			mBackBuffer	=mSChain.GetBuffer<ID3D11Texture2D>(0);
+			mBBView		=mGD.CreateRenderTargetView(mBackBuffer);
 
 			Texture2DDescription	depthDesc	=new Texture2DDescription()
 			{
@@ -229,17 +244,17 @@ namespace UtilityLib
 				SampleDescription	=new SampleDescription(1, 0),
 				Usage				=ResourceUsage.Default,
 				BindFlags			=BindFlags.DepthStencil,
-				CpuAccessFlags		=CpuAccessFlags.None,
-				OptionFlags			=ResourceOptionFlags.None
+				CPUAccessFlags		=CpuAccessFlags.None,
+				MiscFlags			=ResourceOptionFlags.None
 			};
 
-			mDepthBuffer	=new Texture2D(mGD, depthDesc);
-			mDSView			=new DepthStencilView(mGD, mDepthBuffer);
+			mDepthBuffer	=mGD.CreateTexture2D(depthDesc);
+			mDSView			=mGD.CreateDepthStencilView(mDepthBuffer);
 
 			mScreenPort	=new Viewport(0, 0, width, height, 0f, 1f);
 
-			mDC.Rasterizer.SetViewport(mScreenPort);
-			mDC.OutputMerger.SetTargets(mDSView, mBBView);
+			mDC.RSSetViewport(mScreenPort);
+			mDC.OMSetRenderTargets(mBBView, mDSView);
 
 			mGCam	=new UtilityLib.GameCamera(width, height, 16f/9f, mClipNear, mClipFar);
 
@@ -250,24 +265,18 @@ namespace UtilityLib
 
 		public void Present()
 		{
-			try
+			Result	r	=mSChain.Present(0);
+			if(r.Failure)
 			{
-				mSChain.Present(0, PresentFlags.None);
-			}
-			catch(SharpDXException ex)
-			{
-				if(ex.ResultCode == SharpDX.DXGI.ResultCode.DeviceRemoved ||
-					ex.ResultCode == SharpDX.DXGI.ResultCode.DeviceReset ||
-					ex.ResultCode == SharpDX.DXGI.ResultCode.DeviceHung)
+				if(r.Code == ResultCode.DeviceRemoved
+					|| r.Code == ResultCode.DeviceReset
+					|| r.Code == ResultCode.DeviceHung
+					|| r.Code == ResultCode.DriverInternalError)
 				{
-					Debug.WriteLine("Device lost : " + ex.ResultCode.ToString());
-					Init();
+					Debug.WriteLine("Device lost : " + r.Code.ToString());
+					Init(mFLevel);
 					Misc.SafeInvoke(eDeviceLost, null);
-				}
-				else
-				{
-					throw;
-				}
+				}				
 			}
 		}
 
@@ -275,7 +284,8 @@ namespace UtilityLib
 		public void ClearViews()
 		{
 			mDC.ClearDepthStencilView(mDSView, DepthStencilClearFlags.Depth, 1f, 0);
-			mDC.ClearRenderTargetView(mBBView, Color.CornflowerBlue);
+			mDC.ClearRenderTargetView(mBBView,
+				Misc.SystemColorToDXColor(System.Drawing.Color.CornflowerBlue));
 		}
 
 
@@ -315,25 +325,26 @@ namespace UtilityLib
 			if(mSChain != null)			mSChain.Dispose();
 			if(mGD != null)				mGD.Dispose();
 
+/*
 #if DEBUG
 			if(mGDD != null)
 			{
 				mGDD.ReportLiveDeviceObjects(ReportingLevel.Detail);
 				mGDD.Dispose();
 			}
-#endif
+#endif*/
 		}
 
 
 		public void SetShadowViewPort()
 		{
-			mDC.Rasterizer.SetViewport(mShadowPort);
+			mDC.RSSetViewport(mShadowPort);
 		}
 
 
 		public void SetScreenViewPort()
 		{
-			mDC.Rasterizer.SetViewport(mScreenPort);
+			mDC.RSSetViewport(mScreenPort);
 		}
 
 

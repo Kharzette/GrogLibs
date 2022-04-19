@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using SharpDX;
-using SharpDX.Direct3D11;
+using Vortice.Mathematics;
+using System.Numerics;
 
 
 namespace UtilityLib
@@ -177,9 +176,9 @@ namespace UtilityLib
 		}
 
 
-		public static Matrix StringToMatrix(string vstring)
+		public static Matrix4x4 StringToMatrix(string vstring)
 		{
-			Matrix	ret	=Matrix.Identity;
+			Matrix4x4	ret	=Matrix4x4.Identity;
 
 			string	[]elements	=vstring.Split(' ');
 			
@@ -256,7 +255,7 @@ namespace UtilityLib
 		}
 
 
-		public static string MatrixToString(Matrix mat)
+		public static string MatrixToString(Matrix4x4 mat)
 		{
 			return	mat.M11.ToString(System.Globalization.CultureInfo.InvariantCulture)
 				+ " " + mat.M12.ToString(System.Globalization.CultureInfo.InvariantCulture)
@@ -287,26 +286,6 @@ namespace UtilityLib
 		}
 
 
-#if !X64
-		public static Color ModulateColour(Color a, Color b)
-		{
-			int	A	=a.A * b.A;
-			int	R	=a.R * b.R;
-			int	G	=a.G * b.G;
-			int	B	=a.B * b.B;
-
-			Color	ret	=Color.White;
-
-			ret.A	=(byte)(A >> 8);
-			ret.R	=(byte)(R >> 8);
-			ret.G	=(byte)(G >> 8);
-			ret.B	=(byte)(B >> 8);
-
-			return	ret;
-		}
-#endif
-
-
 		//returns a centered box
 		public static BoundingBox MakeBox(float width, float height)
 		{
@@ -317,35 +296,29 @@ namespace UtilityLib
 		//returns a centered box
 		public static BoundingBox MakeBox(float width, float height, float depth)
 		{
-			BoundingBox	ret;
-
 			float	halfWidth	=width * 0.5f;
 			float	halfHeight	=height * 0.5f;
 			float	halfDepth	=depth * 0.5f;
 
-			ret.Minimum.X	=-halfWidth;
-			ret.Maximum.X	=halfWidth;
+			Vector3	min	=Vector3.Zero;
+			Vector3	max	=Vector3.Zero;
+
+			min.X	=-halfWidth;
+			max.X	=halfWidth;
 			
-			ret.Minimum.Y	=-halfHeight;
-			ret.Maximum.Y	=halfHeight;
+			min.Y	=-halfHeight;
+			max.Y	=halfHeight;
 
-			ret.Minimum.Z	=-halfDepth;
-			ret.Maximum.Z	=halfDepth;
+			min.Z	=-halfDepth;
+			max.Z	=halfDepth;
 
-			return	ret;
+			return	new BoundingBox(min, max);
 		}
 
 
 		public static Color SystemColorToDXColor(System.Drawing.Color col)
 		{
-			Color	ret;
-
-			ret.R	=col.R;
-			ret.G	=col.G;
-			ret.B	=col.B;
-			ret.A	=col.A;
-
-			return	ret;
+			return	new Color(col.R, col.G, col.B, col.A);
 		}
 	}
 }

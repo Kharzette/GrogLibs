@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using SharpDX;
-using SharpDX.Direct3D11;
+using Vortice.Mathematics;
+using System.Numerics;
 
 
 namespace UtilityLib
@@ -10,10 +9,10 @@ namespace UtilityLib
 	public class GameCamera
 	{
 		//mats
-		protected Matrix	mView, mViewInverse;
-		protected Matrix	mProjection;
+		protected Matrix4x4	mView, mViewInverse;
+		protected Matrix4x4	mProjection, mViewProj;
 
-		BoundingFrustum	mFrust	=new BoundingFrustum(Matrix.Identity);
+		BoundingFrustum	mFrust	=new BoundingFrustum(Matrix4x4.Identity);
 
 		//camera settings
 		protected float		mAspect, mWidth, mHeight;
@@ -32,18 +31,18 @@ namespace UtilityLib
 		}
 
 
-		public Matrix View
+		public Matrix4x4 View
 		{
 			get { return mView; }
-			set { mView = value; mViewInverse = Matrix.Invert(mView); }
+			set { mView = value; }
 		}
 
-		public Matrix ViewInverse
+		public Matrix4x4 ViewInverse
 		{
 			get { return mViewInverse; }
 		}
 
-		public Matrix Projection
+		public Matrix4x4 Projection
 		{
 			get { return mProjection; }
 			set { mProjection = value; }
@@ -90,7 +89,7 @@ namespace UtilityLib
 		{
 			get
 			{
-				return	mViewInverse.TranslationVector;
+				return	mViewInverse.Translation;
 			}
 		}
 
@@ -121,43 +120,53 @@ namespace UtilityLib
 
 		public void UpdateTwinStick(Vector3 focusPos, float yaw, float povDist)
 		{
-			Matrix	yawMat	=Matrix.RotationY(MathUtil.DegreesToRadians(yaw));
-			Vector3	yawVec	=Vector3.TransformNormal(Vector3.UnitX, yawMat);
-			Vector3	aimVec	=yawVec + Vector3.Down;
+			Matrix4x4	yawMat	=Matrix4x4.CreateRotationY(MathHelper.ToRadians(yaw));
+			Vector3		yawVec	=Vector3.TransformNormal(Vector3.UnitX, yawMat);
+			Vector3		aimVec	=yawVec - Vector3.UnitY;
 
-			aimVec.Normalize();
+			aimVec	=Vector3.Normalize(aimVec);
 
-			Vector3	camPos	=(focusPos + Vector3.Up * 32f) - aimVec * povDist;
+			Vector3	camPos	=(focusPos + Vector3.UnitY * 32f) - aimVec * povDist;
 
-			mView			=Matrix.LookAtLH(camPos, focusPos, Vector3.Up);
-			mViewInverse	=Matrix.Invert(mView);			
-			mFrust.Matrix	=mView * mProjection;
+			mView	=Matrix4x4.CreateLookAt(camPos, focusPos, Vector3.UnitY);
+			if(!Matrix4x4.Invert(mView, out mViewInverse))
+			{
+				mViewInverse	=Matrix4x4.Identity;
+			}
+
+			mViewProj	=mView * mProjection;
 		}
 
 
 		public void UpdateTopDown(Vector3 focusPos, float yaw, float povDist)
 		{
-			Matrix	yawMat		=Matrix.RotationY(MathUtil.DegreesToRadians(yaw));
-			Vector3	yawVec		=Vector3.TransformNormal(Vector3.UnitX, yawMat);
-			Vector3	aimVec		=yawVec + Vector3.Down;
+			Matrix4x4	yawMat		=Matrix4x4.CreateRotationY(MathHelper.ToRadians(yaw));
+			Vector3		yawVec		=Vector3.TransformNormal(Vector3.UnitX, yawMat);
+			Vector3		aimVec		=yawVec - Vector3.UnitY;
 
-			aimVec.Normalize();
+			aimVec	=Vector3.Normalize(aimVec);
 
 			Vector3	camPos	=focusPos - aimVec * povDist;
 
-			mView			=Matrix.LookAtLH(camPos, focusPos, Vector3.Up);
-			mViewInverse	=Matrix.Invert(mView);			
-			mFrust.Matrix	=mView * mProjection;
+			mView	=Matrix4x4.CreateLookAt(camPos, focusPos, Vector3.UnitY);
+			if(!Matrix4x4.Invert(mView, out mViewInverse))
+			{
+				mViewInverse	=Matrix4x4.Identity;
+			}
+			mViewProj	=mView * mProjection;
 		}
 
 
 		public void UpdateIntermission(Vector3 camPos, Vector3 camDir)
 		{
-			mView	=Matrix.LookAtLH(camPos, camPos + camDir, Vector3.Up);
+			mView	=Matrix4x4.CreateLookAt(camPos, camPos + camDir, Vector3.UnitY);
 
-			mViewInverse	=Matrix.Invert(mView);
+			if(!Matrix4x4.Invert(mView, out mViewInverse))
+			{
+				mViewInverse	=Matrix4x4.Identity;
+			}
 			
-			mFrust.Matrix	=mView * mProjection;
+			mViewProj	=mView * mProjection;
 		}
 
 
@@ -167,9 +176,9 @@ namespace UtilityLib
 		}
 
 
-		public Rectangle GetScreenCoverage(List<Vector3> points)
+		public Rect GetScreenCoverage(List<Vector3> points)
 		{
-			Rectangle	rect	=new Rectangle();
+			Rect	rect	=new Rect();
 
 			rect.X		=5000;
 			rect.Y		=5000;
@@ -178,7 +187,7 @@ namespace UtilityLib
 
 			foreach(Vector3 pnt in points)
 			{
-				Vector4	transformed	=Vector3.Transform(pnt, mFrust.Matrix);
+				Vector3	transformed	=Vector3.Transform(pnt, mViewProj);
 
 				if(transformed.X < rect.X)
 				{
@@ -207,7 +216,7 @@ namespace UtilityLib
 
 		public bool IsBoxOnScreen(BoundingBox box)
 		{
-			return	mFrust.Intersects(ref box);
+			return	mFrust.Intersects(box);
 		}
 
 
@@ -225,24 +234,30 @@ namespace UtilityLib
 
 		public void UpdateMatrices(Vector3 camPos, float pitch, float yaw, float roll)
 		{
-			mView	=Matrix.Translation(camPos) *
-				Matrix.RotationY(MathUtil.DegreesToRadians(yaw)) *
-				Matrix.RotationX(MathUtil.DegreesToRadians(pitch)) *
-				Matrix.RotationZ(MathUtil.DegreesToRadians(roll));
+			mView	=Matrix4x4.CreateTranslation(camPos) *
+				Matrix4x4.CreateFromYawPitchRoll(MathHelper.ToRadians(yaw),
+					MathHelper.ToRadians(pitch),
+					MathHelper.ToRadians(roll));
 
-			mViewInverse	=Matrix.Invert(mView);
+			if(!Matrix4x4.Invert(mView, out mViewInverse))
+			{
+				mViewInverse	=Matrix4x4.Identity;
+			}
 			
-			mFrust.Matrix	=mView * mProjection;
+			mFrust	=new BoundingFrustum(mView * mProjection);
 		}
 
 
 		void InitializeMats()
 		{
-			mView			=Matrix.Translation(Vector3.Zero);
-			mViewInverse	=Matrix.Invert(mView);
+			mView			=Matrix4x4.Identity;
+			if(!Matrix4x4.Invert(mView, out mViewInverse))
+			{
+				mViewInverse	=Matrix4x4.Identity;
+			}
 
-			mProjection	=Matrix.PerspectiveFovLH(
-				MathUtil.DegreesToRadians(45),
+			mProjection	=Matrix4x4.CreatePerspectiveFieldOfView(
+				MathHelper.ToRadians(45),
 				mWidth / mHeight, mNearClip, mFarClip);
 		}
 	}

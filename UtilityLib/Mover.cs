@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using SharpDX;
 using System.Diagnostics;
+using System.Numerics;
 
 
 namespace UtilityLib
@@ -226,7 +224,7 @@ namespace UtilityLib
 				return;
 			}
 
-			distVec.Normalize();
+			distVec	/=mTotalDistance;
 
 			float	timeSlice	=0.5f * easeInPercent * travelTime * travelTime * (2 - easeInPercent - easeOutPercent);
 
@@ -258,7 +256,7 @@ namespace UtilityLib
 			Vector2	dir	=mTargetPos - mStartPos;
 
 			//make unit
-			dir.Normalize();
+			dir	=Vector2.Normalize(dir);
 
 			//get current time
 			mCurTime	+=secDelta;
@@ -380,7 +378,7 @@ namespace UtilityLib
 				return;
 			}
 
-			distVec.Normalize();
+			distVec	/=mTotalDistance;
 
 			float	timeSlice	=0.5f * easeInPercent * travelTime * travelTime * (2 - easeInPercent - easeOutPercent);
 
@@ -412,7 +410,7 @@ namespace UtilityLib
 			Vector3	dir	=mTargetPos - mStartPos;
 
 			//make unit
-			dir.Normalize();
+			dir	=Vector3.Normalize(dir);
 
 			//get current time
 			mCurTime	+=secDelta;
@@ -534,7 +532,7 @@ namespace UtilityLib
 				return;
 			}
 
-			distVec.Normalize();
+			distVec	/=mTotalDistance;
 
 			float	timeSlice	=0.5f * easeInPercent * travelTime * travelTime * (2 - easeInPercent - easeOutPercent);
 
@@ -566,7 +564,7 @@ namespace UtilityLib
 			Vector4	dir	=mTargetPos - mStartPos;
 
 			//make unit
-			dir.Normalize();
+			dir	=Vector4.Normalize(dir);
 
 			//get current time
 			mCurTime	+=secDelta;
