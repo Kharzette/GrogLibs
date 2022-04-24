@@ -1,0 +1,42 @@
+I'd like this lib to support control actions for steering, flying, activating
+	stuff, and even buffery text input for keys / mouse / pads / whatever.
+
+Supporting modifiers is great, like a mouse5 + shift binding for instance.
+
+Hold / axis style bindings, action on press, and action on release binding
+	modes.  Action on press activates one time, and doesn't activate again
+	until the button/key/whatever is released.
+
+Device specific stuff:
+
+Keyboard
+	Get which keys are down and how long they have been down since the last time
+	input data was gathered.  Could also store overall time held.
+
+	Test in low framerate sitatuions to make sure quick taps aren't lost.  Might
+	need a thread.  Thread might be better for high framerate situations too,
+	as fixed timestep can just get stuck using the same stale info.
+
+	Maybe a focused text input mode that uses WM_CHAR?  This would enable key
+	repeat and even pick up queued latters in low framerate situations.
+
+	Avoid sticky keys like how sometimes alt can get stuck on when the user
+	tabs out.
+
+Mouse
+	Need a low cost toggle between a cursor mode that uses standard windows
+	settings for the user's preferred mouse movement speed and accel and such
+	if they are crazy enough to have that on, and a delta based mode that gives
+	the amount moved since last checked.
+
+	Maybe optionally scale speed if a fullscreen mode is on with less res than
+	the standard desktop res?
+
+	Buttons should mix with keys and sticks and modifiers and not be missed in
+	low framerate situations.
+
+	I think rawinput handles the above well.
+
+Sticks etc
+	I'll likely do this one last.  I am not sure if XInput covers all devices
+	well, or if DirectInput is needed.

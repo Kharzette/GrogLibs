@@ -67,6 +67,7 @@ public class RenderForm : Form
 	private const int WM_ACTIVATEAPP = 0x001C;
 	private const int WM_POWERBROADCAST = 0x0218;
 	private const int WM_MENUCHAR = 0x0120;
+	private const int	WM_INPUT	=0x00FF;
 	private const int WM_SYSCOMMAND = 0x0112;
 	private const uint PBT_APMRESUMESUSPEND = 7;
 	private const uint PBT_APMQUERYSUSPEND = 0;
@@ -152,6 +153,11 @@ public class RenderForm : Form
 	/// Occurs when [user resized].
 	/// </summary>
 	public event EventHandler<EventArgs> UserResized;
+
+	/// <summary>
+	/// WM_INPUT message arrived
+	/// </summary>
+	public event EventHandler<MessageEventArgs> Input;
 
 	/// <summary>
 	/// Gets or sets a value indicating whether this form can be resized by the user. See remarks.
@@ -352,6 +358,12 @@ public class RenderForm : Form
 
 		switch (m.Msg)
 		{
+			case	WM_INPUT:
+			{
+				MessageEventArgs	mea	=new MessageEventArgs(m.WParam, m.LParam);
+				Input?.Invoke(m, mea);
+				break;
+			}
 			case WM_SIZE:
 				if (wparam == SIZE_MINIMIZED)
 				{

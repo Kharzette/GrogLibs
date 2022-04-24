@@ -1,23 +1,17 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
 	<UseWindowsForms>true</UseWindowsForms>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-	<Reference Include="SharpDX">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.Mathematics">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Mathematics.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.RawInput">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.RawInput.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.XInput">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.XInput.dll</HintPath>
-    </Reference>
+	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DirectX\Vortice.DirectX.csproj"/>
+	<ProjectReference Include="..\Vortice.Mathematics\src\Vortice.Mathematics\Vortice.Mathematics.csproj"/>
+	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DirectInput\Vortice.DirectInput.csproj"/>
+	<ProjectReference Include="..\Vortice.Windows\src\Vortice.XInput\Vortice.XInput.csproj"/>
   </ItemGroup>
   <ItemGroup>
+	<ProjectReference Include="..\SharpDXWindows\SharpDXWindows.csproj"/>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>
   </ItemGroup>
 </Project>
