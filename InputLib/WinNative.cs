@@ -54,6 +54,12 @@ internal static unsafe class WinNative
 	internal const UInt16	RI_MOUSE_WHEEL	=0x0400;
 	internal const UInt16	RI_MOUSE_HWHEEL	=0x0800;
 
+	//key data flags
+	internal const UInt16	RI_KEY_MAKE		=0x0000;
+	internal const UInt16	RI_KEY_BREAK	=0x0001;
+	internal const UInt16	RI_KEY_E0		=0x0002;
+	internal const UInt16	RI_KEY_E1		=0x0004;
+
 
 	[StructLayout(LayoutKind.Explicit, Pack = 0)]
 	internal struct RawInputDeviceList

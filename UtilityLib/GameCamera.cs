@@ -57,7 +57,7 @@ namespace UtilityLib
 				ret.X		=View.M13;
 				ret.Y		=View.M23;
 				ret.Z		=View.M33;
-				return		-ret;	//changed from xna
+				return		ret;
 			}
 		}
 
@@ -89,7 +89,7 @@ namespace UtilityLib
 		{
 			get
 			{
-				return	mViewInverse.Translation;
+				return	mView.Translation;
 			}
 		}
 

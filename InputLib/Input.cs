@@ -203,6 +203,7 @@ public class Input
 		}
 		else if(rid.Value.header.dwType == 1)
 		{
+			DoKeyInput(rid.Value.header.hDevice, ref dat.keyboard);
 			Console.WriteLine("Got input key message in the " + ground
 //				+ " from device " + mDeviceNames[rid.Value.header.hDevice]);
 				+ "MakeCode: " + rid.Value.keyboard.MakeCode
@@ -479,33 +480,28 @@ public class Input
 		mActiveToggles.Clear();
 		mOnceActives.Clear();
 		mWasHeld.Clear();
-		foreach(List<int> xb in mXButtonsHeld)
-		{
-			xb.Clear();
-		}
+//		foreach(List<int> xb in mXButtonsHeld)
+//		{
+//			xb.Clear();
+//		}
 		mMouseMoves	=null;
 	}
 
-/*
-	void OnKeyInput(object sender, EventArgs ea)
-	{
-		KeyboardInputEventArgs	kiea	=ea as KeyboardInputEventArgs;
-		if(kiea == null)
-		{
-			return;
-		}
 
-		if((int)kiea.Key == 255)
+	void DoKeyInput(IntPtr device, ref WinNative.RawInputKeyboardData keyData)
+	{
+		if((int)keyData.VKey == 255)
 		{
 			return;	//fake key
 		}
 
 		long	ts	=Stopwatch.GetTimestamp();
 
-		AddHeldKey(kiea.MakeCode, kiea.Key, ts,
-			kiea.State == KeyState.KeyUp, kiea.Device);
+		AddHeldKey(keyData.MakeCode, (Keys)keyData.VKey, ts,
+			(keyData.Flags & WinNative.RI_KEY_BREAK) != 0,
+			device);
 	}
-*/
+
 
 	void Update()
 	{

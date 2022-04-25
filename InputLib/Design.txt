@@ -37,6 +37,11 @@ Mouse
 
 	I think rawinput handles the above well.
 
+	Right now mouse moves are accumulated between update calls.  Would be cool
+	to have a way to store each small movement for shooters and such.  Could
+	improve the feel if a game wanted to process all that extra.  If you plot
+	as a curve over time it might make a difference.
+
 Sticks etc
 	I'll likely do this one last.  I am not sure if XInput covers all devices
 	well, or if DirectInput is needed.
