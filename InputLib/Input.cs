@@ -189,10 +189,13 @@ public class Input
 			return;
 		}
 
+		WinNative.RawInputData	dat	=rid.Value;
+
 		string	ground	=(ea.mWParam.ToInt64()==0)? "foreground": "background";
 
 		if(rid.Value.header.dwType == 0)
 		{
+			DoMouseInput(rid.Value.header.hDevice, ref dat.mouse);
 			Console.WriteLine("Got input mouse message in the " + ground
 //				+ " from device " + mDeviceNames[rid.Value.header.hDevice]);
 				+ "X: " + rid.Value.mouse.lLastX
@@ -224,6 +227,7 @@ public class Input
 		EnumDevices();
 
 		//listen for rawinput messages
+		//this ties to sharpjunx, probably bad
 		hwnd.Input	+=OnInput;
 
 		//interested in keyboards, and mice?
@@ -249,23 +253,14 @@ public class Input
 		WinNative.RegisterRawInputDevices(regs, 2, sizeof(WinNative.RegRawInputDevice));
 
 		/*
-
-		List<DeviceInfo>	devs	=Device.GetDevices();
-
-		Device.RegisterDevice(UsagePage.Generic, UsageId.GenericKeyboard, DeviceFlags.None);
-		Device.RegisterDevice(UsagePage.Generic, UsageId.GenericMouse, DeviceFlags.None);
-		Device.RegisterDevice(UsagePage.Generic, UsageId.GenericGamepad, DeviceFlags.None);
-
 		mbResetPos		=true;
-		mLastUpdateTime	=Stopwatch.GetTimestamp();
-
-		Device.KeyboardInput	+=OnKeyInput;
-		Device.MouseInput		+=OnMouseInput;
 
 		for(int i=0;i < 4 ;i++)
 		{
 			mXButtonsHeld[i]	=new List<int>();
 		}*/
+
+		mLastUpdateTime	=Stopwatch.GetTimestamp();
 
 		//modifier combos pre shifted
 		mModCombos.Add((UInt32)Modifiers.None << 29);
@@ -328,71 +323,72 @@ public class Input
 	public bool IsXControllerConnected(int index)
 	{
 		return	mXControllers[index].IsConnected;
-	}
+	}*/
 
 
-	void OnMouseInput(object sender, MouseInputEventArgs miea)
+	//C# really needs const
+	unsafe void DoMouseInput(IntPtr device, ref WinNative.RawInputMouseData rimd)
 	{
 		if(mbResetPos)
 		{
-			mLastMouseX	=miea.X;
-			mLastMouseY	=miea.Y;
+			mLastMouseX	=rimd.lLastX;
+			mLastMouseY	=rimd.lLastY;
 			mbResetPos	=false;
 		}
 
-		if(miea.X != 0 || miea.Y != 0)
+		if(rimd.lLastX != 0 || rimd.lLastY != 0)
 		{
 			if(mMouseMoves == null)
 			{
 				mMouseMoves			=new MouseMovementInfo();
-				mMouseMoves.mDevice	=miea.Device;
+				mMouseMoves.mDevice	=device;
 			}
-			mMouseMoves.mXMove	+=miea.X;
-			mMouseMoves.mYMove	+=miea.Y;
+			mMouseMoves.mXMove	+=rimd.lLastX;
+			mMouseMoves.mYMove	+=rimd.lLastY;
 		}
 
 		List<int>	buttonsDown	=new List<int>();
 		List<int>	buttonsUp	=new List<int>();
-		if(miea.ButtonFlags != MouseButtonFlags.None)
+		if(rimd.usButtonFlags != 0)
 		{
-			if((miea.ButtonFlags & MouseButtonFlags.LeftButtonDown) != 0)
+			if((rimd.usButtonFlags & WinNative.RI_MOUSE_BUTTON_1_DOWN) != 0)
 			{
 				buttonsDown.Add((int)VariousButtons.LeftMouseButton);
 			}
-			if((miea.ButtonFlags & MouseButtonFlags.RightButtonDown) != 0)
+			if((rimd.usButtonFlags & WinNative.RI_MOUSE_BUTTON_2_DOWN) != 0)
 			{
 				buttonsDown.Add((int)VariousButtons.RightMouseButton);
 			}
-			if((miea.ButtonFlags & MouseButtonFlags.MiddleButtonDown) != 0)
+			if((rimd.usButtonFlags & WinNative.RI_MOUSE_BUTTON_3_DOWN) != 0)
 			{
 				buttonsDown.Add((int)VariousButtons.MiddleMouseButton);
 			}
-			if((miea.ButtonFlags & MouseButtonFlags.Button4Down) != 0)
+			if((rimd.usButtonFlags & WinNative.RI_MOUSE_BUTTON_4_DOWN) != 0)
 			{
 				buttonsDown.Add((int)VariousButtons.MouseButton4);
 			}
-			if((miea.ButtonFlags & MouseButtonFlags.Button5Down) != 0)
+			if((rimd.usButtonFlags & WinNative.RI_MOUSE_BUTTON_5_DOWN) != 0)
 			{
 				buttonsDown.Add((int)VariousButtons.MouseButton5);
 			}
 
-			if((miea.ButtonFlags & MouseButtonFlags.LeftButtonUp) != 0)
+			if((rimd.usButtonFlags & WinNative.RI_MOUSE_BUTTON_1_UP) != 0)
 			{
 				buttonsUp.Add((int)VariousButtons.LeftMouseButton);
 			}
-			if((miea.ButtonFlags & MouseButtonFlags.RightButtonUp) != 0)
+			if((rimd.usButtonFlags & WinNative.RI_MOUSE_BUTTON_2_UP) != 0)
 			{
 				buttonsUp.Add((int)VariousButtons.RightMouseButton);
 			}
-			if((miea.ButtonFlags & MouseButtonFlags.MiddleButtonUp) != 0)
+			if((rimd.usButtonFlags & WinNative.RI_MOUSE_BUTTON_3_UP) != 0)
 			{
 				buttonsUp.Add((int)VariousButtons.MiddleMouseButton);
 			}
-			if((miea.ButtonFlags & MouseButtonFlags.Button4Up) != 0)
+			if((rimd.usButtonFlags & WinNative.RI_MOUSE_BUTTON_4_UP) != 0)
 			{
 				buttonsUp.Add((int)VariousButtons.MouseButton4);
 			}
-			if((miea.ButtonFlags & MouseButtonFlags.Button5Up) != 0)
+			if((rimd.usButtonFlags & WinNative.RI_MOUSE_BUTTON_5_UP) != 0)
 			{
 				buttonsUp.Add((int)VariousButtons.MouseButton5);
 			}
@@ -401,19 +397,19 @@ public class Input
 		long	ts	=Stopwatch.GetTimestamp();
 		foreach(int down in buttonsDown)
 		{
-			AddHeldKey(down, Keys.NoName, ts, false, miea.Device);
+			AddHeldKey(down, Keys.NoName, ts, false, device);
 		}
 		foreach(int up in buttonsUp)
 		{
-			AddHeldKey(up, Keys.NoName, ts, true, miea.Device);
+			AddHeldKey(up, Keys.NoName, ts, true, device);
 		}
 
 		if(!mbResetPos)
 		{
-			mLastMouseX	=miea.X;
-			mLastMouseY	=miea.Y;
+			mLastMouseX	=rimd.lLastX;
+			mLastMouseY	=rimd.lLastY;
 		}
-	}*/
+	}
 
 
 	void AddHeldKey(int code, Keys key, long ts, bool bUp, IntPtr dev)

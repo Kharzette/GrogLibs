@@ -36,6 +36,24 @@ internal static unsafe class WinNative
 	internal const UInt32 	RIDEV_CAPTUREMOUSE	=0x00000200;
 	internal const UInt32 	RIDEV_DEVNOTIFY		=0x00002000;	//connect msgs
 
+	//mouse buttons down
+	internal const UInt16	RI_MOUSE_BUTTON_1_DOWN	=0x0001;
+	internal const UInt16	RI_MOUSE_BUTTON_2_DOWN	=0x0004;
+	internal const UInt16	RI_MOUSE_BUTTON_3_DOWN	=0x0010;
+	internal const UInt16	RI_MOUSE_BUTTON_4_DOWN	=0x0040;
+	internal const UInt16	RI_MOUSE_BUTTON_5_DOWN	=0x0100;
+
+	//mouse buttons up
+	internal const UInt16	RI_MOUSE_BUTTON_1_UP	=0x0002;
+	internal const UInt16	RI_MOUSE_BUTTON_2_UP	=0x0008;
+	internal const UInt16	RI_MOUSE_BUTTON_3_UP	=0x0020;
+	internal const UInt16	RI_MOUSE_BUTTON_4_UP	=0x0080;
+	internal const UInt16	RI_MOUSE_BUTTON_5_UP	=0x0200;
+
+	//other mouse junx
+	internal const UInt16	RI_MOUSE_WHEEL	=0x0400;
+	internal const UInt16	RI_MOUSE_HWHEEL	=0x0800;
+
 
 	[StructLayout(LayoutKind.Explicit, Pack = 0)]
 	internal struct RawInputDeviceList
