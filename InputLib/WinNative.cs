@@ -137,15 +137,15 @@ internal static unsafe class WinNative
 		[FieldOffset(0)]
 		internal UInt16	usFlags;
 
+		//gap of 2 bytes here
 		//these are unioned
-		[FieldOffset(2)]
-		internal UInt32	ulButtons;
-		[FieldOffset(2)]
-		internal UInt16	usButtonFlags;
 		[FieldOffset(4)]
+		internal UInt32	ulButtons;
+		[FieldOffset(4)]
+		internal UInt16	usButtonFlags;
+		[FieldOffset(6)]
 		internal UInt16	usButtonData;
 
-		//aligns 4 for some reason
 		[FieldOffset(8)]
 		internal UInt32	ulRawButtons;
 
@@ -477,7 +477,7 @@ internal static unsafe class WinNative
 	[DllImport("hid.dll", SetLastError=true, CharSet=CharSet.Unicode)]
 	internal static extern bool	HidD_GetProductString(
 		IntPtr	HidDeviceObject,
-		IntPtr	Buffer,				//outs this
+		IntPtr	Buffer,				//fills this
 		UInt64	BufferLength);
 
 

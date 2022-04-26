@@ -7,21 +7,34 @@ Hold / axis style bindings, action on press, and action on release binding
 	modes.  Action on press activates one time, and doesn't activate again
 	until the button/key/whatever is released.
 
+Should support multiple binds per function.  Like if a user wants w and uparrow
+for forward for instance.
+
 Device specific stuff:
 
 Keyboard
 	Get which keys are down and how long they have been down since the last time
 	input data was gathered.  Could also store overall time held.
 
+	Overall time held is useful for accelerating key turning or buildup or
+	chargup style abilities etc.
+
 	Test in low framerate sitatuions to make sure quick taps aren't lost.  Might
 	need a thread.  Thread might be better for high framerate situations too,
 	as fixed timestep can just get stuck using the same stale info.
+
+	Maybe add a mode to InputTest that simulates slow framerates by sleeping in
+	the main loop?  This may not even be an issue since WM_INPUT might not drop
+	data the way checking state does.
 
 	Maybe a focused text input mode that uses WM_CHAR?  This would enable key
 	repeat and even pick up queued latters in low framerate situations.
 
 	Avoid sticky keys like how sometimes alt can get stuck on when the user
 	tabs out.
+
+	I noticed some stuff in the docs about a special message or flag for having
+	too many keys held.  That will need testing.
 
 Mouse
 	Need a low cost toggle between a cursor mode that uses standard windows
@@ -45,3 +58,6 @@ Mouse
 Sticks etc
 	I'll likely do this one last.  I am not sure if XInput covers all devices
 	well, or if DirectInput is needed.
+
+	I have steam controller and oculus rift controllers to test with.  And an
+	old analog flight stick.

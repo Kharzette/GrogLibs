@@ -199,7 +199,13 @@ public class Input
 			Console.WriteLine("Got input mouse message in the " + ground
 //				+ " from device " + mDeviceNames[rid.Value.header.hDevice]);
 				+ "X: " + rid.Value.mouse.lLastX
-				+ " Y: " + rid.Value.mouse.lLastY);
+				+ " Y: " + rid.Value.mouse.lLastY
+				+ ", usFlags: " + rid.Value.mouse.usFlags
+				+ ", usButtonFlags: " + rid.Value.mouse.usButtonFlags
+				+ ", usButtonData: " + rid.Value.mouse.usButtonData
+				+ ", ulRawButtons: " + rid.Value.mouse.ulRawButtons
+				+ ", ulButtons: " + rid.Value.mouse.ulButtons
+				);
 		}
 		else if(rid.Value.header.dwType == 1)
 		{
