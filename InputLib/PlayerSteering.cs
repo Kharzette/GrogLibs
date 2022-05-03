@@ -21,7 +21,7 @@ public class PlayerSteering
 
 	SteeringMethod	mMethod;
 
-	//sprint settings
+	//default sprint settings
 	float	SprintForwardFactor	=1.8f;
 	float	SprintBackFactor	=1.5f;
 	float	SprintLeftFactor	=1.5f;
@@ -318,7 +318,7 @@ public class PlayerSteering
 			{
 				float	pitchAmount	=act.mMultiplier * 0.4f;
 
-				mPitch	-=pitchAmount;
+				mPitch	+=pitchAmount;
 			}
 			else if(act.mAction.Equals(mPitchDown))
 			{

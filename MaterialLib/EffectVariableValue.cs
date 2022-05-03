@@ -4,12 +4,9 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SharpDX;
-using SharpDX.DXGI;
-using SharpDX.D3DCompiler;
-using SharpDX.Direct3D11;
-using SharpDX.Direct3D;
 using UtilityLib;
+
+/*
 
 
 namespace MaterialLib
@@ -686,4 +683,4 @@ namespace MaterialLib
 			mValue	=ValueFromString(val);
 		}
 	}
-}
+}*/

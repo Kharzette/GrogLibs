@@ -1,375 +1,370 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.IO;
-using SharpDX;
-using SharpDX.DXGI;
-using SharpDX.Direct3D11;
-
 using UtilityLib;
 
 
-namespace MaterialLib
+namespace MaterialLib;
+
+//based on this article
+//http://www.blackpawn.com/texts/lightmaps/default.html
+/*
+class TexNode
 {
-	//based on this article
-	//http://www.blackpawn.com/texts/lightmaps/default.html
-	class TexNode
+	TexNode		mFront;
+	TexNode		mBack;
+	Rectangle	mRect;
+	bool		mbOccupied;
+
+
+	public TexNode() { }
+	public TexNode(int w, int h)
 	{
-		TexNode		mFront;
-		TexNode		mBack;
-		Rectangle	mRect;
-		bool		mbOccupied;
+		mRect.X			=0;
+		mRect.Y			=0;
+		mRect.Width		=w;
+		mRect.Height	=h;
+	}
 
 
-		public TexNode() { }
-		public TexNode(int w, int h)
+	public Rectangle GetRect()
+	{
+		return	mRect;
+	}
+
+
+	public TexNode Insert(int texW, int texH)
+	{
+		TexNode	ret	=null;
+
+		if(mFront != null || mBack != null)
 		{
-			mRect.X			=0;
-			mRect.Y			=0;
-			mRect.Width		=w;
-			mRect.Height	=h;
-		}
-
-
-		public Rectangle GetRect()
-		{
-			return	mRect;
-		}
-
-
-		public TexNode Insert(int texW, int texH)
-		{
-			TexNode	ret	=null;
-
-			if(mFront != null || mBack != null)
-			{
-				if(mFront != null)
-				{
-					ret	=mFront.Insert(texW, texH);
-				}
-				if(ret != null)
-				{
-					return	ret;
-				}
-				if(mBack != null)
-				{
-					ret	=mBack.Insert(texW, texH);
-				}
-				if(ret != null)
-				{
-					return	ret;
-				}
-				return	ret;
-			}
-
-			if(mbOccupied)
-			{
-				return	null;
-			}
-
-			if(((mRect.Right - mRect.Left) < texW)
-				|| ((mRect.Bottom - mRect.Top) < texH))
-			{
-				return	null;	//too small
-			}
-			else if(((mRect.Right - mRect.Left) == texW)
-				&& ((mRect.Bottom - mRect.Top) == texH))
-			{
-				mbOccupied	=true;	//just right
-				return	this;
-			}
-
-			//split
-			int dw	=(mRect.Right - mRect.Left) - texW;
-			int dh	=(mRect.Bottom - mRect.Top) - texH;
-
-			mFront	=new TexNode();
-			mBack	=new TexNode();
-
-			if(dw > dh)
-			{
-				mFront.mRect	=new Rectangle(mRect.Left, mRect.Top,
-									texW,
-									(mRect.Bottom - mRect.Top));
-
-				mBack.mRect	=new Rectangle((mRect.Left + texW),
-								mRect.Top,
-								(mRect.Right - mRect.Left - texW),
-								(mRect.Bottom - mRect.Top));
-			}
-			else
-			{
-				mFront.mRect	=new Rectangle(mRect.Left, mRect.Top,
-									(mRect.Right - mRect.Left),
-									texH);
-
-				mBack.mRect	=new Rectangle(mRect.Left,
-								(mRect.Top + texH),
-								(mRect.Right - mRect.Left),
-								(mRect.Bottom - mRect.Top - texH));
-			}
-
-			return	mFront.Insert(texW, texH);
-		}
-
-
-		internal void Write(BinaryWriter bw)
-		{
-			bw.Write(mRect.X);
-			bw.Write(mRect.Y);
-			bw.Write(mRect.Width);
-			bw.Write(mRect.Height);
-			bw.Write(mbOccupied);
-
-			bw.Write(mFront != null);
-			bw.Write(mBack != null);
-
 			if(mFront != null)
 			{
-				mFront.Write(bw);
+				ret	=mFront.Insert(texW, texH);
+			}
+			if(ret != null)
+			{
+				return	ret;
 			}
 			if(mBack != null)
 			{
-				mBack.Write(bw);
+				ret	=mBack.Insert(texW, texH);
 			}
+			if(ret != null)
+			{
+				return	ret;
+			}
+			return	ret;
 		}
 
-
-		internal void Read(BinaryReader br)
+		if(mbOccupied)
 		{
-			mRect.X			=br.ReadInt32();
-			mRect.Y			=br.ReadInt32();
-			mRect.Width		=br.ReadInt32();
-			mRect.Height	=br.ReadInt32();
-			mbOccupied		=br.ReadBoolean();
+			return	null;
+		}
 
-			bool	bFront	=br.ReadBoolean();
-			bool	bBack	=br.ReadBoolean();
+		if(((mRect.Right - mRect.Left) < texW)
+			|| ((mRect.Bottom - mRect.Top) < texH))
+		{
+			return	null;	//too small
+		}
+		else if(((mRect.Right - mRect.Left) == texW)
+			&& ((mRect.Bottom - mRect.Top) == texH))
+		{
+			mbOccupied	=true;	//just right
+			return	this;
+		}
 
-			if(bFront)
-			{
-				mFront	=new TexNode();
-				mFront.Read(br);
-			}
-			if(bBack)
-			{
-				mBack	=new TexNode();
-				mBack.Read(br);
-			}
+		//split
+		int dw	=(mRect.Right - mRect.Left) - texW;
+		int dh	=(mRect.Bottom - mRect.Top) - texH;
+
+		mFront	=new TexNode();
+		mBack	=new TexNode();
+
+		if(dw > dh)
+		{
+			mFront.mRect	=new Rectangle(mRect.Left, mRect.Top,
+								texW,
+								(mRect.Bottom - mRect.Top));
+
+			mBack.mRect	=new Rectangle((mRect.Left + texW),
+							mRect.Top,
+							(mRect.Right - mRect.Left - texW),
+							(mRect.Bottom - mRect.Top));
+		}
+		else
+		{
+			mFront.mRect	=new Rectangle(mRect.Left, mRect.Top,
+								(mRect.Right - mRect.Left),
+								texH);
+
+			mBack.mRect	=new Rectangle(mRect.Left,
+							(mRect.Top + texH),
+							(mRect.Right - mRect.Left),
+							(mRect.Bottom - mRect.Top - texH));
+		}
+
+		return	mFront.Insert(texW, texH);
+	}
+
+
+	internal void Write(BinaryWriter bw)
+	{
+		bw.Write(mRect.X);
+		bw.Write(mRect.Y);
+		bw.Write(mRect.Width);
+		bw.Write(mRect.Height);
+		bw.Write(mbOccupied);
+
+		bw.Write(mFront != null);
+		bw.Write(mBack != null);
+
+		if(mFront != null)
+		{
+			mFront.Write(bw);
+		}
+		if(mBack != null)
+		{
+			mBack.Write(bw);
 		}
 	}
 
 
-	public class TexAtlas
+	internal void Read(BinaryReader br)
 	{
-		Texture2D			mAtlasTexture;
-		ShaderResourceView	mSRV;
+		mRect.X			=br.ReadInt32();
+		mRect.Y			=br.ReadInt32();
+		mRect.Width		=br.ReadInt32();
+		mRect.Height	=br.ReadInt32();
+		mbOccupied		=br.ReadBoolean();
 
-		TexNode		mRoot;
-		Color		[]mBuildArray;
-		int			mWidth, mHeight;
+		bool	bFront	=br.ReadBoolean();
+		bool	bBack	=br.ReadBoolean();
 
-
-		public int Width
+		if(bFront)
 		{
-			get { return mWidth; }
+			mFront	=new TexNode();
+			mFront.Read(br);
 		}
-		public int Height
+		if(bBack)
 		{
-			get { return mHeight; }
-		}
-
-
-		public TexAtlas(GraphicsDevice g, int width, int height)
-		{
-			mWidth	=width;
-			mHeight	=height;
-
-			mBuildArray	=new Color[mWidth * mHeight];
-
-			mRoot	=new TexNode(width, height);
-		}
-
-
-		public void FreeAll()
-		{
-			if(mSRV != null)
-			{
-				mSRV.Dispose();
-			}
-			if(mAtlasTexture != null)
-			{
-				mAtlasTexture.Dispose();
-			}
-		}
-
-
-		public System.Drawing.Bitmap GetAtlasImage(DeviceContext dc)
-		{
-			System.Drawing.Bitmap	bm	=new System.Drawing.Bitmap(mWidth, mHeight);
-
-			System.Drawing.Imaging.BitmapData	bmd	=new System.Drawing.Imaging.BitmapData();
-
-			System.Drawing.Rectangle	bmRect	=new System.Drawing.Rectangle(0, 0, mWidth, mHeight);
-
-			bmd	=bm.LockBits(bmRect,
-				System.Drawing.Imaging.ImageLockMode.WriteOnly,
-				System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
-
-			IntPtr	ptr	=bmd.Scan0;
-
-			int	colSize	=(mWidth * mHeight * 4);
-
-			byte	[]copyOf	=new byte[colSize];			
-
-			for(int i=0;i < mBuildArray.Length;i++)
-			{
-				Color	c	=mBuildArray[i];
-
-				copyOf[i * 4]		=c.B;
-				copyOf[i * 4 + 1]	=c.G;
-				copyOf[i * 4 + 2]	=c.R;
-				copyOf[i * 4 + 3]	=c.A;
-			}
-
-			System.Runtime.InteropServices.Marshal.Copy(copyOf, 0, ptr, colSize);
-
-			bm.UnlockBits(bmd);
-
-			return	bm;
-		}
-
-
-		public ShaderResourceView GetAtlasSRV()
-		{
-			return	mSRV;
-		}
-
-
-		public bool Insert(Color[] tex, int texW, int texH,
-			out double scaleU, out double scaleV, out double uoffs, out double voffs)
-		{
-			TexNode	n	=mRoot.Insert(texW, texH);
-
-			scaleU = scaleV = uoffs = voffs = 0.0;
-
-			if(n == null)
-			{
-				return false;
-			}
-
-			//copy pixels in
-			if(mBuildArray == null)
-			{
-				mBuildArray	=new Color[mWidth * mHeight];
-			}
-
-			Rectangle	target	=n.GetRect();
-
-			int c	=0;
-			for(int y=target.Top;y < target.Bottom;y++)
-			{
-				for(int x=target.Left;x < target.Right;x++, c++)
-				{
-					mBuildArray[(y * mWidth) + x]	=tex[c];
-				}
-			}
-
-			//maybe squeeze a little extra precision here
-			scaleU	=(double)texW / (double)mWidth;
-			scaleV	=(double)texH / (double)mHeight;
-
-			//get offsets in zero to one space
-			uoffs	=((double)target.Left / (double)mWidth);
-			voffs	=((double)target.Top / (double)mHeight);
-
-			return	true;
-		}
-
-
-		public void Finish(GraphicsDevice gd)
-		{
-			if(mBuildArray == null)
-			{
-				return;
-			}
-
-			DataStream	ds	=new DataStream(mWidth * mHeight * 4, true, true);
-
-			foreach(Color c in mBuildArray)
-			{
-				ds.Write(c);
-			}
-
-			InitTex(gd, ds);
-
-			ds.Dispose();
-		}
-
-
-		public void Write(BinaryWriter bw)
-		{
-			bw.Write(mWidth);
-			bw.Write(mHeight);
-
-			foreach(Color c in mBuildArray)
-			{
-				bw.Write(c.ToRgba());
-			}
-
-			mRoot.Write(bw);
-		}
-
-
-		public void Read(GraphicsDevice g, BinaryReader br)
-		{
-			mWidth	=br.ReadInt32();
-			mHeight	=br.ReadInt32();
-
-			DataStream	ds	=new DataStream(mWidth * mHeight * 4, true, true);
-
-			byte	[]atlas	=br.ReadBytes(mWidth * mHeight * 4);
-
-			ds.Write(atlas, 0, mWidth * mHeight * 4);
-
-			InitTex(g, ds);
-
-			mRoot	=new TexNode(mWidth, mHeight);
-			mRoot.Read(br);
-		}
-
-
-		void InitTex(GraphicsDevice gd, DataStream ds)
-		{
-			SampleDescription	sampDesc	=new SampleDescription();
-			sampDesc.Count		=1;
-			sampDesc.Quality	=0;
-
-			Texture2DDescription	texDesc	=new Texture2DDescription();
-			texDesc.ArraySize			=1;
-			texDesc.BindFlags			=BindFlags.ShaderResource;
-			texDesc.CpuAccessFlags		=CpuAccessFlags.None;
-			texDesc.MipLevels			=1;
-			texDesc.OptionFlags			=ResourceOptionFlags.None;
-			texDesc.Usage				=ResourceUsage.Immutable;
-			texDesc.Width				=mWidth;
-			texDesc.Height				=mHeight;
-			texDesc.Format				=Format.R8G8B8A8_UNorm;
-			texDesc.SampleDescription	=sampDesc;
-			
-			DataBox	[]dbs	=new DataBox[1];
-
-			dbs[0]	=new DataBox(ds.DataPointer,
-				texDesc.Width *
-				(int)FormatHelper.SizeOfInBytes(texDesc.Format),
-				texDesc.Width * texDesc.Height *
-				(int)FormatHelper.SizeOfInBytes(texDesc.Format));
-
-			mAtlasTexture	=new Texture2D(gd.GD, texDesc, dbs);
-
-			mAtlasTexture.DebugName	="LightMapAtlas";
-
-			mSRV	=new ShaderResourceView(gd.GD, mAtlasTexture);
+			mBack	=new TexNode();
+			mBack.Read(br);
 		}
 	}
 }
+
+
+public class TexAtlas
+{
+	Texture2D			mAtlasTexture;
+	ShaderResourceView	mSRV;
+
+	TexNode		mRoot;
+	Color		[]mBuildArray;
+	int			mWidth, mHeight;
+
+
+	public int Width
+	{
+		get { return mWidth; }
+	}
+	public int Height
+	{
+		get { return mHeight; }
+	}
+
+
+	public TexAtlas(GraphicsDevice g, int width, int height)
+	{
+		mWidth	=width;
+		mHeight	=height;
+
+		mBuildArray	=new Color[mWidth * mHeight];
+
+		mRoot	=new TexNode(width, height);
+	}
+
+
+	public void FreeAll()
+	{
+		if(mSRV != null)
+		{
+			mSRV.Dispose();
+		}
+		if(mAtlasTexture != null)
+		{
+			mAtlasTexture.Dispose();
+		}
+	}
+
+
+	public System.Drawing.Bitmap GetAtlasImage(DeviceContext dc)
+	{
+		System.Drawing.Bitmap	bm	=new System.Drawing.Bitmap(mWidth, mHeight);
+
+		System.Drawing.Imaging.BitmapData	bmd	=new System.Drawing.Imaging.BitmapData();
+
+		System.Drawing.Rectangle	bmRect	=new System.Drawing.Rectangle(0, 0, mWidth, mHeight);
+
+		bmd	=bm.LockBits(bmRect,
+			System.Drawing.Imaging.ImageLockMode.WriteOnly,
+			System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+
+		IntPtr	ptr	=bmd.Scan0;
+
+		int	colSize	=(mWidth * mHeight * 4);
+
+		byte	[]copyOf	=new byte[colSize];			
+
+		for(int i=0;i < mBuildArray.Length;i++)
+		{
+			Color	c	=mBuildArray[i];
+
+			copyOf[i * 4]		=c.B;
+			copyOf[i * 4 + 1]	=c.G;
+			copyOf[i * 4 + 2]	=c.R;
+			copyOf[i * 4 + 3]	=c.A;
+		}
+
+		System.Runtime.InteropServices.Marshal.Copy(copyOf, 0, ptr, colSize);
+
+		bm.UnlockBits(bmd);
+
+		return	bm;
+	}
+
+
+	public ShaderResourceView GetAtlasSRV()
+	{
+		return	mSRV;
+	}
+
+
+	public bool Insert(Color[] tex, int texW, int texH,
+		out double scaleU, out double scaleV, out double uoffs, out double voffs)
+	{
+		TexNode	n	=mRoot.Insert(texW, texH);
+
+		scaleU = scaleV = uoffs = voffs = 0.0;
+
+		if(n == null)
+		{
+			return false;
+		}
+
+		//copy pixels in
+		if(mBuildArray == null)
+		{
+			mBuildArray	=new Color[mWidth * mHeight];
+		}
+
+		Rectangle	target	=n.GetRect();
+
+		int c	=0;
+		for(int y=target.Top;y < target.Bottom;y++)
+		{
+			for(int x=target.Left;x < target.Right;x++, c++)
+			{
+				mBuildArray[(y * mWidth) + x]	=tex[c];
+			}
+		}
+
+		//maybe squeeze a little extra precision here
+		scaleU	=(double)texW / (double)mWidth;
+		scaleV	=(double)texH / (double)mHeight;
+
+		//get offsets in zero to one space
+		uoffs	=((double)target.Left / (double)mWidth);
+		voffs	=((double)target.Top / (double)mHeight);
+
+		return	true;
+	}
+
+
+	public void Finish(GraphicsDevice gd)
+	{
+		if(mBuildArray == null)
+		{
+			return;
+		}
+
+		DataStream	ds	=new DataStream(mWidth * mHeight * 4, true, true);
+
+		foreach(Color c in mBuildArray)
+		{
+			ds.Write(c);
+		}
+
+		InitTex(gd, ds);
+
+		ds.Dispose();
+	}
+
+
+	public void Write(BinaryWriter bw)
+	{
+		bw.Write(mWidth);
+		bw.Write(mHeight);
+
+		foreach(Color c in mBuildArray)
+		{
+			bw.Write(c.ToRgba());
+		}
+
+		mRoot.Write(bw);
+	}
+
+
+	public void Read(GraphicsDevice g, BinaryReader br)
+	{
+		mWidth	=br.ReadInt32();
+		mHeight	=br.ReadInt32();
+
+		DataStream	ds	=new DataStream(mWidth * mHeight * 4, true, true);
+
+		byte	[]atlas	=br.ReadBytes(mWidth * mHeight * 4);
+
+		ds.Write(atlas, 0, mWidth * mHeight * 4);
+
+		InitTex(g, ds);
+
+		mRoot	=new TexNode(mWidth, mHeight);
+		mRoot.Read(br);
+	}
+
+
+	void InitTex(GraphicsDevice gd, DataStream ds)
+	{
+		SampleDescription	sampDesc	=new SampleDescription();
+		sampDesc.Count		=1;
+		sampDesc.Quality	=0;
+
+		Texture2DDescription	texDesc	=new Texture2DDescription();
+		texDesc.ArraySize			=1;
+		texDesc.BindFlags			=BindFlags.ShaderResource;
+		texDesc.CpuAccessFlags		=CpuAccessFlags.None;
+		texDesc.MipLevels			=1;
+		texDesc.OptionFlags			=ResourceOptionFlags.None;
+		texDesc.Usage				=ResourceUsage.Immutable;
+		texDesc.Width				=mWidth;
+		texDesc.Height				=mHeight;
+		texDesc.Format				=Format.R8G8B8A8_UNorm;
+		texDesc.SampleDescription	=sampDesc;
+		
+		DataBox	[]dbs	=new DataBox[1];
+
+		dbs[0]	=new DataBox(ds.DataPointer,
+			texDesc.Width *
+			(int)FormatHelper.SizeOfInBytes(texDesc.Format),
+			texDesc.Width * texDesc.Height *
+			(int)FormatHelper.SizeOfInBytes(texDesc.Format));
+
+		mAtlasTexture	=new Texture2D(gd.GD, texDesc, dbs);
+
+		mAtlasTexture.DebugName	="LightMapAtlas";
+
+		mSRV	=new ShaderResourceView(gd.GD, mAtlasTexture);
+	}
+}
+*/

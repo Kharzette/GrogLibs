@@ -3,1042 +3,1048 @@ using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using SharpGen.Runtime;
 using UtilityLib;
-
-using SharpDX;
-using SharpDX.DXGI;
-using SharpDX.D3DCompiler;
-using SharpDX.Direct3D11;
-using SharpDX.Direct3D;
-using SharpDX.IO;
-
-//ambiguous stuff
-using Color		=SharpDX.Color;
-using Device	=SharpDX.Direct3D11.Device;
-using Resource	=SharpDX.Direct3D11.Resource;
-using wic		=SharpDX.WIC;
+using Vortice.DXGI;
+using Vortice.Direct3D;
+using Vortice.Direct3D11;
+using Vortice.D3DCompiler;
+using Vortice.Mathematics;
+using Vortice.WIC;
 
 
-namespace MaterialLib
+namespace MaterialLib;
+
+//hangs on to stuff like shaders and textures
+public class StuffKeeper
 {
-	//hangs on to stuff like shaders and textures
-	public class StuffKeeper
+	internal class IncludeFX : CallbackBase, Include
 	{
-		internal class IncludeFX : CallbackBase, Include
+		string	mRootDir;
+
+		internal IncludeFX(string rootDir)
 		{
-			string	mRootDir;
-
-			internal IncludeFX(string rootDir)
-			{
-				mRootDir	=rootDir;
-			}
-
-			static string includeDirectory = "Shaders\\";
-			public void Close(Stream stream)
-			{
-				stream.Close();
-				stream.Dispose();
-			}
-
-			public Stream Open(IncludeType type, string fileName, Stream parentStream)
-			{
-				return	new FileStream(mRootDir + "\\" + includeDirectory + fileName, FileMode.Open);
-			}
+			mRootDir	=rootDir;
 		}
 
-		IncludeFX	mIFX;
-
-		//for texture loading
-		wic.ImagingFactory	mIF	=new wic.ImagingFactory();
-
-		//game directory
-		string	mGameRootDir;
-
-		//list of shaders available
-		Dictionary<string, Effect>	mFX	=new Dictionary<string, Effect>();
-
-		//texture 2ds
-		Dictionary<string, Texture2D>	mTexture2s	=new Dictionary<string, Texture2D>();
-
-		//font texture 2ds
-		Dictionary<string, Texture2D>	mFontTexture2s	=new Dictionary<string, Texture2D>();
-
-		//list of texturey things
-		Dictionary<string, Resource>	mResources	=new Dictionary<string, Resource>();
-
-		//list of shader resource views for stuff like textures
-		Dictionary<string, ShaderResourceView>	mSRVs	=new Dictionary<string, ShaderResourceView>();
-
-		//shader resource views for fonts
-		Dictionary<string, ShaderResourceView>	mFontSRVs	=new Dictionary<string, ShaderResourceView>();
-
-		//list of parameter variables per shader
-		Dictionary<string, List<EffectVariable>>	mVars	=new Dictionary<string, List<EffectVariable>>();
-
-		//data driven set of ignored and hidden parameters (see text file)
-		Dictionary<string, List<string>>	mIgnoreData	=new Dictionary<string,List<string>>();
-		Dictionary<string, List<string>>	mHiddenData	=new Dictionary<string,List<string>>();
-
-		//list of font data
-		Dictionary<string, Font>	mFonts	=new Dictionary<string, Font>();
-
-		public enum ShaderModel
+		static string includeDirectory = "Shaders\\";
+		public void Close(Stream stream)
 		{
-			SM5, SM41, SM4, SM2
-		};
-
-		public event EventHandler	eCompileNeeded;	//shader compiles needed, passes the number
-		public event EventHandler	eCompileDone;	//fired as each compile finishes
-
-
-		public StuffKeeper() { }
-
-		public void Init(GraphicsDevice gd, string gameRootDir)
-		{
-			mGameRootDir	=gameRootDir;
-			mIFX			=new IncludeFX(gameRootDir);
-
-			switch(gd.GD.FeatureLevel)
-			{
-				case	FeatureLevel.Level_11_0:
-					Construct(gd, ShaderModel.SM5);
-					break;
-				case	FeatureLevel.Level_10_1:
-					Construct(gd, ShaderModel.SM41);
-					break;
-				case	FeatureLevel.Level_10_0:
-					Construct(gd, ShaderModel.SM4);
-					break;
-				case	FeatureLevel.Level_9_3:
-					Construct(gd, ShaderModel.SM2);
-					break;
-				default:
-					Debug.Assert(false);	//only support the above
-					Construct(gd, ShaderModel.SM2);
-					break;
-			}
+			stream.Close();
+			stream.Dispose();
 		}
 
-
-		void Construct(GraphicsDevice gd, ShaderModel sm)
+		public Stream Open(IncludeType type, string fileName, Stream parentStream)
 		{
-			LoadShaders(gd.GD, sm);
-			SaveHeaderTimeStamps(sm);
-			LoadResources(gd);
-			LoadFonts(gd);
-			LoadParameterData();
-
-			GrabVariables();
+			return	new FileStream(mRootDir + "\\" + includeDirectory + fileName, FileMode.Open);
 		}
+	}
+
+	IncludeFX	mIFX;
+
+	//for texture loading
+	IWICImagingFactory	mIF	=new IWICImagingFactory();
+
+	//game directory
+	string	mGameRootDir;
+
+	//not sure what I'm going to do with all this yet
+	//list of shaders available
+	//Dictionary<string, Effect>	mFX	=new Dictionary<string, Effect>();
+
+	//texture 2ds
+	Dictionary<string, ID3D11Texture2D>	mTexture2s	=new Dictionary<string, ID3D11Texture2D>();
+
+	//font texture 2ds
+	Dictionary<string, ID3D11Texture2D>	mFontTexture2s	=new Dictionary<string, ID3D11Texture2D>();
+
+	//list of texturey things
+	Dictionary<string, ID3D11Resource>	mResources	=new Dictionary<string, ID3D11Resource>();
+
+	//list of shader resource views for stuff like textures
+	Dictionary<string, ID3D11ShaderResourceView>	mSRVs	=new Dictionary<string, ID3D11ShaderResourceView>();
+
+	//shader resource views for fonts
+	Dictionary<string, ID3D11ShaderResourceView>	mFontSRVs	=new Dictionary<string, ID3D11ShaderResourceView>();
+
+	//list of parameter variables per shader
+//	Dictionary<string, List<EffectVariable>>	mVars	=new Dictionary<string, List<EffectVariable>>();
+
+	//data driven set of ignored and hidden parameters (see text file)
+//	Dictionary<string, List<string>>	mIgnoreData	=new Dictionary<string,List<string>>();
+//	Dictionary<string, List<string>>	mHiddenData	=new Dictionary<string,List<string>>();
+
+	//list of font data
+	Dictionary<string, Font>	mFonts	=new Dictionary<string, Font>();
+
+	public enum ShaderModel
+	{
+		SM5, SM41, SM4, SM2
+	};
+
+	public event EventHandler	eCompileNeeded;	//shader compiles needed, passes the number
+	public event EventHandler	eCompileDone;	//fired as each compile finishes
 
 
-		internal Dictionary<string, List<string>> GetIgnoreData()
+	public StuffKeeper() { }
+
+	public void Init(GraphicsDevice gd, string gameRootDir)
+	{
+		mGameRootDir	=gameRootDir;
+		mIFX			=new IncludeFX(gameRootDir);
+
+		switch(gd.GD.FeatureLevel)
 		{
-			return	mIgnoreData;
+			case	FeatureLevel.Level_11_0:
+				Construct(gd, ShaderModel.SM5);
+				break;
+			case	FeatureLevel.Level_10_1:
+				Construct(gd, ShaderModel.SM41);
+				break;
+			case	FeatureLevel.Level_10_0:
+				Construct(gd, ShaderModel.SM4);
+				break;
+			case	FeatureLevel.Level_9_3:
+				Construct(gd, ShaderModel.SM2);
+				break;
+			default:
+				Debug.Assert(false);	//only support the above
+				Construct(gd, ShaderModel.SM2);
+				break;
 		}
+	}
 
 
-		internal Dictionary<string, List<string>> GetHideData()
+	void Construct(GraphicsDevice gd, ShaderModel sm)
+	{
+//		LoadShaders(gd.GD, sm);
+//		SaveHeaderTimeStamps(sm);
+		LoadResources(gd);
+		LoadFonts(gd);
+//		LoadParameterData();
+
+//		GrabVariables();
+	}
+
+
+//	internal Dictionary<string, List<string>> GetIgnoreData()
+//	{
+//		return	mIgnoreData;
+//	}
+
+
+//	internal Dictionary<string, List<string>> GetHideData()
+//	{
+//		return	mHiddenData;
+//	}
+
+
+	internal ID3D11Texture2D GetTexture2D(string name)
+	{
+		if(!mTexture2s.ContainsKey(name))
 		{
-			return	mHiddenData;
+			return	null;
 		}
+		return	mTexture2s[name];
+	}
 
 
-		internal Texture2D GetTexture2D(string name)
+	internal Font GetFont(string name)
+	{
+		if(!mFonts.ContainsKey(name))
 		{
-			if(!mTexture2s.ContainsKey(name))
-			{
-				return	null;
-			}
-			return	mTexture2s[name];
+			return	null;
 		}
+		return	mFonts[name];
+	}
 
-
-		internal Font GetFont(string name)
+/*
+	internal List<EffectVariable> GetEffectVariables(string fxName)
+	{
+		if(!mVars.ContainsKey(fxName))
 		{
-			if(!mFonts.ContainsKey(name))
-			{
-				return	null;
-			}
-			return	mFonts[name];
-		}
-
-
-		internal List<EffectVariable> GetEffectVariables(string fxName)
-		{
-			if(!mVars.ContainsKey(fxName))
-			{
-				return	null;
-			}
-
-			return	mVars[fxName];
-		}
-
-
-		internal EffectVariable GetVariable(string fxName, string varName)
-		{
-			if(!mFX.ContainsKey(fxName))
-			{
-				return	null;
-			}
-
-			return	mVars[fxName].FirstOrDefault(v => v.Description.Name == varName);
-		}
-
-
-		internal ShaderResourceView GetSRV(string name)
-		{
-			if(!mSRVs.ContainsKey(name))
-			{
-				return	null;
-			}
-			return	mSRVs[name];
-		}
-
-
-		internal ShaderResourceView GetFontSRV(string name)
-		{
-			if(!mFontSRVs.ContainsKey(name))
-			{
-				return	null;
-			}
-			return	mFontSRVs[name];
-		}
-
-
-		internal Effect EffectForName(string fxName)
-		{
-			if(mFX.ContainsKey(fxName))
-			{
-				return	mFX[fxName];
-			}
 			return	null;
 		}
 
+		return	mVars[fxName];
+	}
 
-		internal ShaderResourceView ResourceForName(string fxName)
+	internal string NameForEffect(Effect fx)
+	{
+		if(mFX.ContainsValue(fx))
 		{
-			if(mSRVs.ContainsKey(fxName))
+			foreach(KeyValuePair<string, Effect> ef in mFX)
 			{
-				return	mSRVs[fxName];
+				if(ef.Value == fx)
+				{
+					return	ef.Key;
+				}
 			}
+		}
+		return	"";
+	}
+
+
+	internal List<EffectVariable> GrabVariables(string fx)
+	{
+		if(mVars.ContainsKey(fx))
+		{
+			return	mVars[fx];
+		}
+		return	new List<EffectVariable>();
+	}
+
+
+	internal Effect EffectForName(string fxName)
+	{
+		if(mFX.ContainsKey(fxName))
+		{
+			return	mFX[fxName];
+		}
+		return	null;
+	}
+
+
+	public List<string> GetEffectList()
+	{
+		List<string>	ret	=new List<string>();
+
+		foreach(KeyValuePair<string, Effect> fx in mFX)
+		{
+			ret.Add(fx.Key);
+		}
+		return	ret;
+	}
+
+
+	internal EffectVariable GetVariable(string fxName, string varName)
+	{
+		if(!mFX.ContainsKey(fxName))
+		{
 			return	null;
 		}
 
+		return	mVars[fxName].FirstOrDefault(v => v.Description.Name == varName);
+	}*/
 
-		internal string NameForEffect(Effect fx)
+
+	internal ID3D11ShaderResourceView GetSRV(string name)
+	{
+		if(!mSRVs.ContainsKey(name))
 		{
-			if(mFX.ContainsValue(fx))
-			{
-				foreach(KeyValuePair<string, Effect> ef in mFX)
-				{
-					if(ef.Value == fx)
-					{
-						return	ef.Key;
-					}
-				}
-			}
-			return	"";
+			return	null;
+		}
+		return	mSRVs[name];
+	}
+
+
+	internal ID3D11ShaderResourceView GetFontSRV(string name)
+	{
+		if(!mFontSRVs.ContainsKey(name))
+		{
+			return	null;
+		}
+		return	mFontSRVs[name];
+	}
+
+
+	internal ID3D11ShaderResourceView ResourceForName(string fxName)
+	{
+		if(mSRVs.ContainsKey(fxName))
+		{
+			return	mSRVs[fxName];
+		}
+		return	null;
+	}
+
+
+	//for tools mainly
+	public List<string> GetTexture2DList()
+	{
+		List<string>	ret	=new List<string>();
+
+		foreach(KeyValuePair<string, ID3D11Texture2D> tex in mTexture2s)
+		{
+			ret.Add(tex.Key);
+		}
+		return	ret;
+	}
+
+
+	public List<string> GetFontList()
+	{
+		List<string>	ret	=new List<string>();
+
+		//sort fonts by height
+		IOrderedEnumerable<KeyValuePair<string, Font>>	sorted
+			=mFonts.OrderBy(fnt => fnt.Value.GetCharacterHeight());
+
+		foreach(KeyValuePair<string, Font> font in sorted)
+		{
+			ret.Add(font.Key);
+		}
+		return	ret;
+	}
+
+
+	public void AddMap(string name, ID3D11ShaderResourceView srv)
+	{
+		if(mSRVs.ContainsKey(name))
+		{
+			mSRVs.Remove(name);
+		}
+		mSRVs.Add(name, srv);
+	}
+
+
+	public void AddTex(ID3D11Device dev, string name, byte []texData, int w, int h)
+	{
+		if(mTexture2s.ContainsKey(name))
+		{
+			return;
 		}
 
+		ID3D11Texture2D	tex	=MakeTexture(dev, texData, w, h);
 
-		internal List<EffectVariable> GrabVariables(string fx)
+		mResources.Add(name, tex as ID3D11Resource);
+		mTexture2s.Add(name, tex);
+
+		ID3D11ShaderResourceView	srv	=dev.CreateShaderResourceView(tex);
+		srv.DebugName	=name;
+
+		mSRVs.Add(name, srv);
+	}
+
+/*
+	public bool AddTexToAtlas(TexAtlas atlas, string texName, GraphicsDevice gd,
+		out double scaleU, out double scaleV, out double uoffs, out double voffs)
+	{
+		scaleU	=scaleV	=uoffs	=voffs	=0.0;
+
+		if(!mTexture2s.ContainsKey(texName))
 		{
-			if(mVars.ContainsKey(fx))
-			{
-				return	mVars[fx];
-			}
-			return	new List<EffectVariable>();
+			return	false;
 		}
 
+		//even though we already have this loaded, there appears
+		//to be no way to get at the bits, so load it again
+		int		w, h;
+		Color	[]colArray	=LoadPNGWIC(mIF, mGameRootDir + "\\Textures\\" + texName + ".png",
+								out w, out h);
 
-		//for tools mainly
-		public List<string> GetTexture2DList()
+		return	atlas.Insert(colArray, w, h,
+			out scaleU, out scaleV, out uoffs, out voffs);
+	}*/
+
+
+	public void FreeAll()
+	{
+		mIF.Dispose();
+
+		foreach(KeyValuePair<string, ID3D11Texture2D> tex in mTexture2s)
 		{
-			List<string>	ret	=new List<string>();
+			tex.Value.Dispose();
+		}
+		mTexture2s.Clear();
 
-			foreach(KeyValuePair<string, Texture2D> tex in mTexture2s)
+		foreach(KeyValuePair<string, ID3D11Texture2D> tex in mFontTexture2s)
+		{
+			tex.Value.Dispose();
+		}
+		mFontTexture2s.Clear();
+
+		foreach(KeyValuePair<string, ID3D11Resource> res in mResources)
+		{
+			res.Value.Dispose();
+		}
+		mResources.Clear();
+
+		foreach(KeyValuePair<string, ID3D11ShaderResourceView> srv in mSRVs)
+		{
+			srv.Value.Dispose();
+		}
+		mSRVs.Clear();
+
+		foreach(KeyValuePair<string, ID3D11ShaderResourceView> srv in mFontSRVs)
+		{
+			srv.Value.Dispose();
+		}
+		mFontSRVs.Clear();
+/*
+		foreach(KeyValuePair<string, List<EffectVariable>> effList in mVars)
+		{
+			foreach(EffectVariable efv in effList.Value)
 			{
-				ret.Add(tex.Key);
+				efv.Dispose();
 			}
-			return	ret;
+			effList.Value.Clear();
+		}
+		mVars.Clear();
+
+		mIgnoreData.Clear();
+		mHiddenData.Clear();
+
+		foreach(KeyValuePair<string, Effect> fx in mFX)
+		{
+			fx.Value.Dispose();
+		}
+		mFX.Clear();*/
+	}
+
+
+	//sometimes dx11 thinks a rendertarget is still bound as a resource
+	//setting that resource to null and then calling this will give it
+	//a kick in the pants to actually free the resource up
+	/*
+	public void HackyTechniqueRefresh(ID3D11DeviceContext dc, string fx, string tech)
+	{
+		if(!mFX.ContainsKey(fx))
+		{
+			return;
 		}
 
+		EffectTechnique	et	=mFX[fx].GetTechniqueByName(tech);
 
-		public List<string> GetFontList()
+		if(et == null || !et.IsValid)
 		{
-			List<string>	ret	=new List<string>();
-
-			//sort fonts by height
-			IOrderedEnumerable<KeyValuePair<string, Font>>	sorted
-				=mFonts.OrderBy(fnt => fnt.Value.GetCharacterHeight());
-
-			foreach(KeyValuePair<string, Font> font in sorted)
-			{
-				ret.Add(font.Key);
-			}
-			return	ret;
+			return;
 		}
 
+		EffectPass	ep	=et.GetPassByIndex(0);
 
-		public List<string> GetEffectList()
+		ep.Apply(dc);
+
+		ep.Dispose();
+		et.Dispose();
+	}*/
+
+
+	void LoadResources(GraphicsDevice gd)
+	{
+		//see if Textures folder exists in Content
+		if(Directory.Exists(mGameRootDir + "/Textures"))
 		{
-			List<string>	ret	=new List<string>();
-
-			foreach(KeyValuePair<string, Effect> fx in mFX)
-			{
-				ret.Add(fx.Key);
-			}
-			return	ret;
-		}
-
-
-		public void AddMap(string name, ShaderResourceView srv)
-		{
-			if(mSRVs.ContainsKey(name))
-			{
-				mSRVs.Remove(name);
-			}
-			mSRVs.Add(name, srv);
-		}
-
-
-		public void AddTex(Device dev, string name, Color []texData, int w, int h)
-		{
-			if(mTexture2s.ContainsKey(name))
-			{
-				return;
-			}
-
-			Texture2D	tex	=MakeTexture(dev, texData, w, h);
-
-			mResources.Add(name, tex as Resource);
-			mTexture2s.Add(name, tex);
-
-			ShaderResourceView	srv	=new ShaderResourceView(dev, tex);
-
-			srv.DebugName	=name;
-
-			mSRVs.Add(name, srv);
-		}
-
-
-		public bool AddTexToAtlas(TexAtlas atlas, string texName, GraphicsDevice gd,
-			out double scaleU, out double scaleV, out double uoffs, out double voffs)
-		{
-			scaleU	=scaleV	=uoffs	=voffs	=0.0;
-
-			if(!mTexture2s.ContainsKey(texName))
-			{
-				return	false;
-			}
-
-			//even though we already have this loaded, there appears
-			//to be no way to get at the bits, so load it again
-			int		w, h;
-			Color	[]colArray	=LoadPNGWIC(mIF, mGameRootDir + "\\Textures\\" + texName + ".png",
-									out w, out h);
-
-			return	atlas.Insert(colArray, w, h,
-				out scaleU, out scaleV, out uoffs, out voffs);
-		}
-
-
-		public void FreeAll()
-		{
-			mIF.Dispose();
-
-			foreach(KeyValuePair<string, Texture2D> tex in mTexture2s)
-			{
-				tex.Value.Dispose();
-			}
-			mTexture2s.Clear();
-
-			foreach(KeyValuePair<string, Texture2D> tex in mFontTexture2s)
-			{
-				tex.Value.Dispose();
-			}
-			mFontTexture2s.Clear();
-
-			foreach(KeyValuePair<string, Resource> res in mResources)
-			{
-				res.Value.Dispose();
-			}
-			mResources.Clear();
-
-			foreach(KeyValuePair<string, ShaderResourceView> srv in mSRVs)
-			{
-				srv.Value.Dispose();
-			}
-			mSRVs.Clear();
-
-			foreach(KeyValuePair<string, ShaderResourceView> srv in mFontSRVs)
-			{
-				srv.Value.Dispose();
-			}
-			mFontSRVs.Clear();
-
-			foreach(KeyValuePair<string, List<EffectVariable>> effList in mVars)
-			{
-				foreach(EffectVariable efv in effList.Value)
-				{
-					efv.Dispose();
-				}
-				effList.Value.Clear();
-			}
-			mVars.Clear();
-
-			mIgnoreData.Clear();
-			mHiddenData.Clear();
-
-			foreach(KeyValuePair<string, Effect> fx in mFX)
-			{
-				fx.Value.Dispose();
-			}
-			mFX.Clear();
-		}
-
-
-		//sometimes dx11 thinks a rendertarget is still bound as a resource
-		//setting that resource to null and then calling this will give it
-		//a kick in the pants to actually free the resource up
-		public void HackyTechniqueRefresh(DeviceContext dc, string fx, string tech)
-		{
-			if(!mFX.ContainsKey(fx))
-			{
-				return;
-			}
-
-			EffectTechnique	et	=mFX[fx].GetTechniqueByName(tech);
-
-			if(et == null || !et.IsValid)
-			{
-				return;
-			}
-
-			EffectPass	ep	=et.GetPassByIndex(0);
-
-			ep.Apply(dc);
-
-			ep.Dispose();
-			et.Dispose();
-		}
-
-
-		void LoadResources(GraphicsDevice gd)
-		{
-			//see if Textures folder exists in Content
-			if(Directory.Exists(mGameRootDir + "/Textures"))
-			{
-				DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Textures/");
-
-				FileInfo[]		fi	=di.GetFiles("*.png", SearchOption.AllDirectories);
-				foreach(FileInfo f in fi)
-				{
-					LoadTexture(gd, f.DirectoryName, f.Name);
-				}
-			}
-		}
-
-
-		void LoadFonts(GraphicsDevice gd)
-		{
-			//see if Fonts folder exists in Content
-			if(!Directory.Exists(mGameRootDir + "/Fonts"))
-			{
-				return;
-			}
-
-			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Fonts/");
+			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Textures/");
 
 			FileInfo[]		fi	=di.GetFiles("*.png", SearchOption.AllDirectories);
 			foreach(FileInfo f in fi)
 			{
-				LoadFontTexture(gd, f.DirectoryName, f.Name);
-
-				string	extLess	=FileUtil.StripExtension(f.Name);
-
-				Font	font	=new Font(f.DirectoryName + "/" + extLess + ".dat");
-				mFonts.Add(extLess, font);
+				LoadTexture(gd, f.DirectoryName, f.Name);
 			}
 		}
+	}
 
 
-		//load all shaders in the shaders folder
-		void LoadShaders(Device dev, ShaderModel sm)
+	void LoadFonts(GraphicsDevice gd)
+	{
+		//see if Fonts folder exists in Content
+		if(!Directory.Exists(mGameRootDir + "/Fonts"))
 		{
-			ShaderMacro []macs	=new ShaderMacro[1];
+			return;
+		}
 
-			macs[0]	=new ShaderMacro(sm.ToString(), 1);
+		DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Fonts/");
 
-			//see if Shader folder exists in Content
-			if(Directory.Exists(mGameRootDir + "/Shaders"))
+		FileInfo[]		fi	=di.GetFiles("*.png", SearchOption.AllDirectories);
+		foreach(FileInfo f in fi)
+		{
+			LoadFontTexture(gd, f.DirectoryName, f.Name);
+
+			string	extLess	=FileUtil.StripExtension(f.Name);
+
+			Font	font	=new Font(f.DirectoryName + "/" + extLess + ".dat");
+			mFonts.Add(extLess, font);
+		}
+	}
+
+
+	//load all shaders in the shaders folder
+	/*
+	void LoadShaders(Device dev, ShaderModel sm)
+	{
+		ShaderMacro []macs	=new ShaderMacro[1];
+
+		macs[0]	=new ShaderMacro(sm.ToString(), 1);
+
+		//see if Shader folder exists in Content
+		if(Directory.Exists(mGameRootDir + "/Shaders"))
+		{
+			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Shaders/");
+
+			bool	bHeaderSame	=false;
+			if(Directory.Exists(mGameRootDir + "/CompiledShaders"))
 			{
-				DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Shaders/");
-
-				bool	bHeaderSame	=false;
-				if(Directory.Exists(mGameRootDir + "/CompiledShaders"))
+				//see if a precompiled exists
+				if(Directory.Exists(mGameRootDir + "/CompiledShaders/" + macs[0].Name))
 				{
-					//see if a precompiled exists
-					if(Directory.Exists(mGameRootDir + "/CompiledShaders/" + macs[0].Name))
-					{
-						DirectoryInfo	preDi	=new DirectoryInfo(
-							mGameRootDir + "/CompiledShaders/" + macs[0].Name);
+					DirectoryInfo	preDi	=new DirectoryInfo(
+						mGameRootDir + "/CompiledShaders/" + macs[0].Name);
 
-						bHeaderSame	=CheckHeaderTimeStamps(preDi, di);
-					}
+					bHeaderSame	=CheckHeaderTimeStamps(preDi, di);
 				}
+			}
 
-				List<string>	dirNames	=new List<string>();
-				List<string>	fileNames	=new List<string>();
+			List<string>	dirNames	=new List<string>();
+			List<string>	fileNames	=new List<string>();
 
-				FileInfo[]		fi	=di.GetFiles("*.fx", SearchOption.AllDirectories);
-				foreach(FileInfo f in fi)
+			FileInfo[]		fi	=di.GetFiles("*.fx", SearchOption.AllDirectories);
+			foreach(FileInfo f in fi)
+			{
+				if(bHeaderSame)
 				{
-					if(bHeaderSame)
+					if(Directory.Exists(mGameRootDir + "/CompiledShaders"))
 					{
-						if(Directory.Exists(mGameRootDir + "/CompiledShaders"))
+						//see if a precompiled exists
+						if(Directory.Exists(mGameRootDir + "/CompiledShaders/" + macs[0].Name))
 						{
-							//see if a precompiled exists
-							if(Directory.Exists(mGameRootDir + "/CompiledShaders/" + macs[0].Name))
+							DirectoryInfo	preDi	=new DirectoryInfo(
+								mGameRootDir + "/CompiledShaders/" + macs[0].Name);
+
+							FileInfo[]	preFi	=preDi.GetFiles(f.Name + ".Compiled", SearchOption.TopDirectoryOnly);
+
+							if(preFi.Length == 1)
 							{
-								DirectoryInfo	preDi	=new DirectoryInfo(
-									mGameRootDir + "/CompiledShaders/" + macs[0].Name);
-
-								FileInfo[]	preFi	=preDi.GetFiles(f.Name + ".Compiled", SearchOption.TopDirectoryOnly);
-
-								if(preFi.Length == 1)
+								if(f.LastWriteTime <= preFi[0].LastWriteTime)
 								{
-									if(f.LastWriteTime <= preFi[0].LastWriteTime)
-									{
-										LoadCompiledShader(dev, preFi[0].DirectoryName, preFi[0].Name, macs);
-										continue;
-									}
+									LoadCompiledShader(dev, preFi[0].DirectoryName, preFi[0].Name, macs);
+									continue;
 								}
 							}
 						}
 					}
-					dirNames.Add(f.DirectoryName);
-					fileNames.Add(f.Name);
 				}
+				dirNames.Add(f.DirectoryName);
+				fileNames.Add(f.Name);
+			}
 
-				if(fileNames.Count > 0)
+			if(fileNames.Count > 0)
+			{
+				Debug.Assert(fileNames.Count == dirNames.Count);
+
+				Misc.SafeInvoke(eCompileNeeded, fileNames.Count);
+
+				for(int i=0;i < fileNames.Count;i++)
 				{
-					Debug.Assert(fileNames.Count == dirNames.Count);
-
-					Misc.SafeInvoke(eCompileNeeded, fileNames.Count);
-
-					for(int i=0;i < fileNames.Count;i++)
-					{
-						LoadShader(dev, dirNames[i], fileNames[i], macs);
-						Misc.SafeInvoke(eCompileDone, i + 1);
-					}
+					LoadShader(dev, dirNames[i], fileNames[i], macs);
+					Misc.SafeInvoke(eCompileDone, i + 1);
 				}
 			}
 		}
+	}
 
 
-		void LoadCompiledShader(Device dev, string dir, string file, ShaderMacro []macs)
+	void LoadCompiledShader(Device dev, string dir, string file, ShaderMacro []macs)
+	{
+		string	fullPath	=dir + "\\" + file;
+
+		FileStream		fs	=new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+		BinaryReader	br	=new BinaryReader(fs);
+
+		int	len	=br.ReadInt32();
+
+		byte	[]code	=br.ReadBytes(len);
+
+		//if you get an unable to find dll in path error here, make
+		//sure materiallib's sharpdx effect dlls are marked as
+		//content with copy if newer
+		Effect	fx	=new Effect(dev, code);
+		if(fx != null)
 		{
-			string	fullPath	=dir + "\\" + file;
-
-			FileStream		fs	=new FileStream(fullPath, FileMode.Open, FileAccess.Read);
-			BinaryReader	br	=new BinaryReader(fs);
-
-			int	len	=br.ReadInt32();
-
-			byte	[]code	=br.ReadBytes(len);
-
-			//if you get an unable to find dll in path error here, make
-			//sure materiallib's sharpdx effect dlls are marked as
-			//content with copy if newer
-			Effect	fx	=new Effect(dev, code);
-			if(fx != null)
-			{
-				mFX.Add(file.Substring(0, file.Length - 9), fx);
-			}
-
-			br.Close();
-			fs.Close();
+			mFX.Add(file.Substring(0, file.Length - 9), fx);
 		}
 
+		br.Close();
+		fs.Close();
+	}
 
-		void SaveHeaderTimeStamps(ShaderModel sm)
+
+	void SaveHeaderTimeStamps(ShaderModel sm)
+	{
+		if(!Directory.Exists(mGameRootDir + "/CompiledShaders"))
 		{
-			if(!Directory.Exists(mGameRootDir + "/CompiledShaders"))
-			{
-				return;
-			}
-
-			DirectoryInfo	src	=new DirectoryInfo(mGameRootDir + "/Shaders/");
-
-			if(!src.Exists)
-			{
-				return;
-			}
-
-			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/CompiledShaders/" + sm.ToString() + "/");
-
-			FileStream	fs	=new FileStream(
-				di.FullName + "Header.TimeStamps",
-				FileMode.Create, FileAccess.Write);
-
-			Debug.Assert(fs != null);
-
-			BinaryWriter	bw	=new BinaryWriter(fs);
-
-			Dictionary<string, DateTime>	stamps	=GetHeaderTimeStamps(src);
-
-			bw.Write(stamps.Count);
-			foreach(KeyValuePair<string, DateTime> time in stamps)
-			{
-				bw.Write(time.Key);
-				bw.Write(time.Value.Ticks);
-			}
-
-			bw.Close();
-			fs.Close();
+			return;
 		}
 
+		DirectoryInfo	src	=new DirectoryInfo(mGameRootDir + "/Shaders/");
 
-		Dictionary<string, DateTime> GetHeaderTimeStamps(DirectoryInfo di)
+		if(!src.Exists)
 		{
-			FileInfo[]		fi	=di.GetFiles("*.fxh", SearchOption.AllDirectories);
-
-			Dictionary<string, DateTime>	ret	=new Dictionary<string, DateTime>();
-
-			foreach(FileInfo f in fi)
-			{
-				ret.Add(f.Name, f.LastWriteTime);
-			}
-			return	ret;
+			return;
 		}
 
+		DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/CompiledShaders/" + sm.ToString() + "/");
 
-		//returns true if headers haven't changed
-		bool CheckHeaderTimeStamps(DirectoryInfo preDi, DirectoryInfo srcDi)
+		FileStream	fs	=new FileStream(
+			di.FullName + "Header.TimeStamps",
+			FileMode.Create, FileAccess.Write);
+
+		Debug.Assert(fs != null);
+
+		BinaryWriter	bw	=new BinaryWriter(fs);
+
+		Dictionary<string, DateTime>	stamps	=GetHeaderTimeStamps(src);
+
+		bw.Write(stamps.Count);
+		foreach(KeyValuePair<string, DateTime> time in stamps)
 		{
-			//see if there is a binary file here that contains the
-			//timestamps of the fxh files
-			FileInfo[]	hTime	=preDi.GetFiles("Header.TimeStamps", SearchOption.TopDirectoryOnly);
-			if(hTime.Length != 1)
+			bw.Write(time.Key);
+			bw.Write(time.Value.Ticks);
+		}
+
+		bw.Close();
+		fs.Close();
+	}
+
+
+	Dictionary<string, DateTime> GetHeaderTimeStamps(DirectoryInfo di)
+	{
+		FileInfo[]		fi	=di.GetFiles("*.fxh", SearchOption.AllDirectories);
+
+		Dictionary<string, DateTime>	ret	=new Dictionary<string, DateTime>();
+
+		foreach(FileInfo f in fi)
+		{
+			ret.Add(f.Name, f.LastWriteTime);
+		}
+		return	ret;
+	}
+
+
+	//returns true if headers haven't changed
+	bool CheckHeaderTimeStamps(DirectoryInfo preDi, DirectoryInfo srcDi)
+	{
+		//see if there is a binary file here that contains the
+		//timestamps of the fxh files
+		FileInfo[]	hTime	=preDi.GetFiles("Header.TimeStamps", SearchOption.TopDirectoryOnly);
+		if(hTime.Length != 1)
+		{
+			return	false;
+		}
+
+		FileStream	fs	=new FileStream(hTime[0].DirectoryName + "\\" + hTime[0].Name, FileMode.Open, FileAccess.Read);
+		if(fs == null)
+		{
+			return	false;
+		}
+
+		BinaryReader	br	=new BinaryReader(fs);
+
+		Dictionary<string, DateTime>	times	=new Dictionary<string, DateTime>();
+
+		int	count	=br.ReadInt32();
+		for(int i=0;i < count;i++)
+		{
+			string	fileName	=br.ReadString();
+			long	time		=br.ReadInt64();
+
+			DateTime	t	=new DateTime(time);
+
+			times.Add(fileName, t);
+		}
+
+		br.Close();
+		fs.Close();
+
+		Dictionary<string, DateTime>	onDisk	=GetHeaderTimeStamps(srcDi);
+
+		//check the timestamp data against the dates
+		if(onDisk.Count != times.Count)
+		{
+			return	false;
+		}
+
+		foreach(KeyValuePair<string, DateTime> tstamp in onDisk)
+		{
+			if(!times.ContainsKey(tstamp.Key))
 			{
 				return	false;
 			}
 
-			FileStream	fs	=new FileStream(hTime[0].DirectoryName + "\\" + hTime[0].Name, FileMode.Open, FileAccess.Read);
-			if(fs == null)
+			if(times[tstamp.Key] < tstamp.Value)
 			{
 				return	false;
 			}
+		}
+		return	true;
+	}
 
-			BinaryReader	br	=new BinaryReader(fs);
 
-			Dictionary<string, DateTime>	times	=new Dictionary<string, DateTime>();
+	void LoadShader(Device dev, string dir, string file, ShaderMacro []macs)
+	{
+		if(!Directory.Exists(mGameRootDir + "/CompiledShaders"))
+		{
+			Directory.CreateDirectory(mGameRootDir + "/CompiledShaders");
+		}
 
-			int	count	=br.ReadInt32();
-			for(int i=0;i < count;i++)
+		if(!Directory.Exists(mGameRootDir + "/CompiledShaders/" + macs[0].Name))
+		{
+			Directory.CreateDirectory(mGameRootDir + "/CompiledShaders/" + macs[0].Name);
+		}
+
+		string	fullPath	=dir + "\\" + file;
+
+		CompilationResult	shdRes	=ShaderBytecode.CompileFromFile(
+			fullPath, "fx_5_0", ShaderFlags.Debug, EffectFlags.None, macs, mIFX);
+
+		Debug.WriteLine(shdRes.Message);
+
+		Effect	fx	=new Effect(dev, shdRes);
+		if(fx == null)
+		{
+			return;
+		}
+
+		Debug.Assert(fx.IsValid);
+
+		//do a validity check on all techniques and passes
+		for(int i=0;i < fx.Description.TechniqueCount;i++)
+		{
+			EffectTechnique	et	=fx.GetTechniqueByIndex(i);
+
+			Debug.Assert(et.IsValid);
+
+			for(int j=0;j < et.Description.PassCount;j++)
 			{
-				string	fileName	=br.ReadString();
-				long	time		=br.ReadInt64();
+				EffectPass	ep	=et.GetPassByIndex(j);
 
-				DateTime	t	=new DateTime(time);
+				Debug.Assert(ep.IsValid);
 
-				times.Add(fileName, t);
+				ep.Dispose();
 			}
 
-			br.Close();
-			fs.Close();
+			et.Dispose();
+		}
 
-			Dictionary<string, DateTime>	onDisk	=GetHeaderTimeStamps(srcDi);
+		FileStream	fs	=new FileStream(mGameRootDir + "/CompiledShaders/"
+			+ macs[0].Name + "/" + file + ".Compiled",
+			FileMode.Create, FileAccess.Write);
 
-			//check the timestamp data against the dates
-			if(onDisk.Count != times.Count)
+		BinaryWriter	bw	=new BinaryWriter(fs);
+
+		bw.Write(shdRes.Bytecode.Data.Length);
+		bw.Write(shdRes.Bytecode.Data, 0, shdRes.Bytecode.Data.Length);
+
+		bw.Close();
+		fs.Close();
+
+		mFX.Add(file, fx);
+	}*/
+
+
+	void LoadTexture(GraphicsDevice gd, string path, string fileName)
+	{
+		int	texIndex	=path.LastIndexOf("Textures");
+
+		string	afterTex	="";
+
+		if((texIndex + 9) < path.Length)
+		{
+			afterTex	=path.Substring(texIndex + 9);
+		}
+		string	extLess	="";
+
+		if(afterTex != "")
+		{
+			extLess	=afterTex + "\\" + FileUtil.StripExtension(fileName);
+		}
+		else
+		{
+			extLess	=FileUtil.StripExtension(fileName);
+		}
+
+		int	w, h;
+		byte	[]colArray	=LoadPNGWIC(mIF, path + "\\" + fileName, out w, out h);
+
+		PreMultAndLinear(colArray, w, h);
+
+		ID3D11Texture2D	finalTex	=MakeTexture(gd.GD, colArray, w, h);
+
+		mResources.Add(extLess, finalTex as ID3D11Resource);
+		mTexture2s.Add(extLess, finalTex);
+
+		ID3D11ShaderResourceView	srv	=gd.GD.CreateShaderResourceView(finalTex);
+		srv.DebugName	=extLess;
+
+		mSRVs.Add(extLess, srv);
+	}
+
+
+	void LoadFontTexture(GraphicsDevice gd, string path, string fileName)
+	{
+		int	texIndex	=path.LastIndexOf("Fonts");
+
+		string	afterTex	="";
+
+		if((texIndex + 6) < path.Length)
+		{
+			afterTex	=path.Substring(texIndex + 6);
+		}
+		string	extLess	="";
+
+		if(afterTex != "")
+		{
+			extLess	=afterTex + "\\" + FileUtil.StripExtension(fileName);
+		}
+		else
+		{
+			extLess	=FileUtil.StripExtension(fileName);
+		}
+
+		int	w,h;
+		byte	[]colors	=LoadPNGWIC(mIF, path + "\\" + fileName, out w, out h);
+
+		PreMultAndLinear(colors, w, h);
+
+		ID3D11Texture2D	finalTex	=MakeTexture(gd.GD, colors, w, h);
+
+		mResources.Add(extLess, finalTex as ID3D11Resource);
+		mFontTexture2s.Add(extLess, finalTex);
+
+		ID3D11ShaderResourceView	srv	=gd.GD.CreateShaderResourceView(finalTex);
+		srv.DebugName	=extLess;
+
+		mFontSRVs.Add(extLess, srv);
+	}
+
+
+	unsafe ID3D11Texture2D MakeTexture(ID3D11Device dev, byte []colors, int width, int height)
+	{
+		Texture2DDescription	texDesc	=new Texture2DDescription();
+		texDesc.ArraySize				=1;
+		texDesc.BindFlags				=BindFlags.ShaderResource;
+		texDesc.CPUAccessFlags			=CpuAccessFlags.None;
+		texDesc.MipLevels				=1;
+		texDesc.MiscFlags				=ResourceOptionFlags.None;
+		texDesc.Usage					=ResourceUsage.Immutable;
+		texDesc.Width					=width;
+		texDesc.Height					=height;
+		texDesc.Format					=Format.R8G8B8A8_UNorm;
+		texDesc.SampleDescription		=new SampleDescription(1, 0);
+
+		ID3D11Texture2D	tex;
+
+		//alloc temp space for color data
+		IntPtr	texData	=Marshal.AllocHGlobal(width * height * 4);
+
+		Marshal.Copy(colors, 0, texData, width * height * 4);
+
+		SubresourceData	[]srd	=new SubresourceData[1];
+
+		srd[0]	=new SubresourceData(texData, width * 4);
+				
+		tex	=dev.CreateTexture2D(texDesc, srd);
+
+		Marshal.FreeHGlobal(texData);
+
+		return	tex;
+	}
+
+/*
+	void GrabVariables()
+	{
+		foreach(KeyValuePair<string, Effect> fx in mFX)
+		{
+			for(int i=0;;i++)
 			{
-				return	false;
-			}
-
-			foreach(KeyValuePair<string, DateTime> tstamp in onDisk)
-			{
-				if(!times.ContainsKey(tstamp.Key))
+				EffectVariable	ev	=fx.Value.GetVariableByIndex(i);
+				if(ev == null)
 				{
-					return	false;
+					break;
+				}
+				if(!ev.IsValid)
+				{
+					ev.Dispose();
+					break;
 				}
 
-				if(times[tstamp.Key] < tstamp.Value)
+				if(!mVars.ContainsKey(fx.Key))
 				{
-					return	false;
+					mVars.Add(fx.Key, new List<EffectVariable>());
+				}
+				mVars[fx.Key].Add(ev);
+			}
+		}
+	}*/
+
+
+	void PreMultAndLinear(byte []colors, int width, int height)
+	{
+		float	oo255	=1.0f / 255.0f;
+
+		for(int y=0;y < height;y++)
+		{
+			int	ofs	=y * width * 4;
+
+			for(int x=0;x < width;x+=4)
+			{
+				int	ofsX	=ofs + (x * 4);
+
+				byte	cR	=colors[ofsX];
+				byte	cG	=colors[ofsX + 1];
+				byte	cB	=colors[ofsX + 2];
+				byte	cA	=colors[ofsX + 3];
+
+				float	xc	=cR * oo255;
+				float	yc	=cG * oo255;
+				float	zc	=cB * oo255;
+				float	wc	=cA * oo255;
+
+				//convert to linear
+				xc	=(float)Math.Pow(xc, 2.2);
+				yc	=(float)Math.Pow(yc, 2.2);
+				zc	=(float)Math.Pow(zc, 2.2);
+
+				//premultiply alpha
+				xc	*=wc;
+				yc	*=wc;
+				zc	*=wc;
+
+				colors[ofsX]		=(byte)(xc * 255.0f);
+				colors[ofsX + 1]	=(byte)(yc * 255.0f);
+				colors[ofsX + 2]	=(byte)(zc * 255.0f);
+			}
+		}
+	}
+
+
+	public static byte[] LoadPNGWIC(IWICImagingFactory wif, string path,
+										out int w, out int h)
+	{		
+		IWICBitmapDecoder	pbd	=wif.CreateDecoderFromFileName(path,
+			FileAccess.Read,DecodeOptions.CacheOnDemand);
+
+		IWICBitmapFrameDecode	bfd	=pbd.GetFrame(0);
+
+		IWICFormatConverter	conv	=wif.CreateFormatConverter();
+
+		conv.Initialize(bfd, PixelFormat.Format32bppRGBA);
+
+		w	=bfd.Size.Width;
+		h	=bfd.Size.Height;
+
+		byte	[]colArray	=new byte[w * h * 4];
+
+		conv.CopyPixels(w * 4, colArray);
+
+		conv.Dispose();
+		bfd.Dispose();
+		pbd.Dispose();
+
+		return	colArray;
+	}
+
+/*
+	void LoadParameterData()
+	{
+		if(!Directory.Exists(mGameRootDir + "/Shaders"))
+		{
+			return;
+		}
+
+		if(!File.Exists(mGameRootDir + "/Shaders/ParameterData.txt"))
+		{
+			return;
+		}
+
+		FileStream		fs	=new FileStream(mGameRootDir + "/Shaders/ParameterData.txt", FileMode.Open, FileAccess.Read);
+		StreamReader	sr	=new StreamReader(fs);
+
+		string			curTechnique	="";
+		string			curCategory		="";
+		List<string>	curStuff		=new List<string>();
+		for(;;)
+		{
+			string	line	=sr.ReadLine();
+			if(line.StartsWith("//"))
+			{
+				continue;
+			}
+
+			//python style!
+			if(line.StartsWith("\t\t"))
+			{
+				Debug.Assert(curTechnique != "");
+				Debug.Assert(curCategory != "");
+
+				if(curCategory == "Ignored")
+				{
+					curStuff.Add(line.Trim());
+				}
+				else if(curCategory == "Hidden")
+				{
+					curStuff.Add(line.Trim());
+				}
+				else
+				{
+					Debug.Assert(false);
 				}
 			}
-			return	true;
-		}
-
-
-		void LoadShader(Device dev, string dir, string file, ShaderMacro []macs)
-		{
-			if(!Directory.Exists(mGameRootDir + "/CompiledShaders"))
+			else if(line.StartsWith("\t"))
 			{
-				Directory.CreateDirectory(mGameRootDir + "/CompiledShaders");
-			}
-
-			if(!Directory.Exists(mGameRootDir + "/CompiledShaders/" + macs[0].Name))
-			{
-				Directory.CreateDirectory(mGameRootDir + "/CompiledShaders/" + macs[0].Name);
-			}
-
-			string	fullPath	=dir + "\\" + file;
-
-			CompilationResult	shdRes	=ShaderBytecode.CompileFromFile(
-				fullPath, "fx_5_0", ShaderFlags.Debug, EffectFlags.None, macs, mIFX);
-
-			Debug.WriteLine(shdRes.Message);
-
-			Effect	fx	=new Effect(dev, shdRes);
-			if(fx == null)
-			{
-				return;
-			}
-
-			Debug.Assert(fx.IsValid);
-
-			//do a validity check on all techniques and passes
-			for(int i=0;i < fx.Description.TechniqueCount;i++)
-			{
-				EffectTechnique	et	=fx.GetTechniqueByIndex(i);
-
-				Debug.Assert(et.IsValid);
-
-				for(int j=0;j < et.Description.PassCount;j++)
+				if(curStuff.Count > 0)
 				{
-					EffectPass	ep	=et.GetPassByIndex(j);
-
-					Debug.Assert(ep.IsValid);
-
-					ep.Dispose();
-				}
-
-				et.Dispose();
-			}
-
-			FileStream	fs	=new FileStream(mGameRootDir + "/CompiledShaders/"
-				+ macs[0].Name + "/" + file + ".Compiled",
-				FileMode.Create, FileAccess.Write);
-
-			BinaryWriter	bw	=new BinaryWriter(fs);
-
-			bw.Write(shdRes.Bytecode.Data.Length);
-			bw.Write(shdRes.Bytecode.Data, 0, shdRes.Bytecode.Data.Length);
-
-			bw.Close();
-			fs.Close();
-
-			mFX.Add(file, fx);
-		}
-
-
-		void LoadTexture(GraphicsDevice gd, string path, string fileName)
-		{
-			int	texIndex	=path.LastIndexOf("Textures");
-
-			string	afterTex	="";
-
-			if((texIndex + 9) < path.Length)
-			{
-				afterTex	=path.Substring(texIndex + 9);
-			}
-			string	extLess	="";
-
-			if(afterTex != "")
-			{
-				extLess	=afterTex + "\\" + FileUtil.StripExtension(fileName);
-			}
-			else
-			{
-				extLess	=FileUtil.StripExtension(fileName);
-			}
-
-			int	w, h;
-			Color	[]colArray	=LoadPNGWIC(mIF, path + "\\" + fileName, out w, out h);
-
-			PreMultAndLinear(colArray, w, h);
-
-			Texture2D	finalTex	=MakeTexture(gd.GD, colArray, w, h);
-
-			mResources.Add(extLess, finalTex as Resource);
-			mTexture2s.Add(extLess, finalTex);
-
-			ShaderResourceView	srv	=new ShaderResourceView(gd.GD, finalTex);
-
-			srv.DebugName	=extLess;
-
-			mSRVs.Add(extLess, srv);
-		}
-
-
-		void LoadFontTexture(GraphicsDevice gd, string path, string fileName)
-		{
-			int	texIndex	=path.LastIndexOf("Fonts");
-
-			string	afterTex	="";
-
-			if((texIndex + 6) < path.Length)
-			{
-				afterTex	=path.Substring(texIndex + 6);
-			}
-			string	extLess	="";
-
-			if(afterTex != "")
-			{
-				extLess	=afterTex + "\\" + FileUtil.StripExtension(fileName);
-			}
-			else
-			{
-				extLess	=FileUtil.StripExtension(fileName);
-			}
-
-			int	w,h;
-			Color	[]colors	=LoadPNGWIC(mIF, path + "\\" + fileName, out w, out h);
-
-			PreMultAndLinear(colors, w, h);
-
-			Texture2D	finalTex	=MakeTexture(gd.GD, colors, w, h);
-
-			mResources.Add(extLess, finalTex as Resource);
-			mFontTexture2s.Add(extLess, finalTex);
-
-			ShaderResourceView	srv	=new ShaderResourceView(gd.GD, finalTex);
-
-			srv.DebugName	=extLess;
-
-			mFontSRVs.Add(extLess, srv);
-		}
-
-
-		Texture2D MakeTexture(Device dev, Color []colors, int width, int height)
-		{
-			Texture2DDescription	texDesc	=new Texture2DDescription();
-			texDesc.ArraySize				=1;
-			texDesc.BindFlags				=BindFlags.ShaderResource;
-			texDesc.CpuAccessFlags			=CpuAccessFlags.None;
-			texDesc.MipLevels				=1;
-			texDesc.OptionFlags				=ResourceOptionFlags.None;
-			texDesc.Usage					=ResourceUsage.Immutable;
-			texDesc.Width					=width;
-			texDesc.Height					=height;
-			texDesc.Format					=Format.R8G8B8A8_UNorm;
-			texDesc.SampleDescription		=new SampleDescription(1, 0);
-
-			DataStream	ds	=DataStream.Create<Color>(colors, true, true, 0);
-
-			ds.Position	=0;
-
-			DataBox	[]dbs	=new DataBox[1];
-
-			dbs[0]	=new DataBox(ds.DataPointer, width * 4, width * height * 4);
-
-			Texture2D	tex	=new Texture2D(dev, texDesc, dbs);
-
-			ds.Dispose();
-
-			return	tex;
-		}
-
-
-		void GrabVariables()
-		{
-			foreach(KeyValuePair<string, Effect> fx in mFX)
-			{
-				for(int i=0;;i++)
-				{
-					EffectVariable	ev	=fx.Value.GetVariableByIndex(i);
-					if(ev == null)
-					{
-						break;
-					}
-					if(!ev.IsValid)
-					{
-						ev.Dispose();
-						break;
-					}
-
-					if(!mVars.ContainsKey(fx.Key))
-					{
-						mVars.Add(fx.Key, new List<EffectVariable>());
-					}
-					mVars[fx.Key].Add(ev);
-				}
-			}
-		}
-
-
-		void PreMultAndLinear(Color []colors, int width, int height)
-		{
-			float	oo255	=1.0f / 255.0f;
-
-			for(int y=0;y < height;y++)
-			{
-				//divide pitch by sizeof(Color)
-				int	ofs	=y * width;
-
-				for(int x=0;x < width;x++)
-				{
-					Color	c	=colors[ofs + x];
-
-					float	xc	=c.R * oo255;
-					float	yc	=c.G * oo255;
-					float	zc	=c.B * oo255;
-					float	wc	=c.A * oo255;
-
-					//convert to linear
-					xc	=(float)Math.Pow(xc, 2.2);
-					yc	=(float)Math.Pow(yc, 2.2);
-					zc	=(float)Math.Pow(zc, 2.2);
-
-					//premultiply alpha
-					xc	*=wc;
-					yc	*=wc;
-					zc	*=wc;
-
-					colors[ofs + x].R	=(byte)(xc * 255.0f);
-					colors[ofs + x].G	=(byte)(yc * 255.0f);
-					colors[ofs + x].B	=(byte)(zc * 255.0f);
-				}
-			}
-		}
-
-
-		public static Color[] LoadPNGWIC(wic.ImagingFactory wif, string path, out int w, out int h)
-		{
-			wic.BitmapDecoder	pbd	=new wic.BitmapDecoder(wif, path,
-					NativeFileAccess.Read, wic.DecodeOptions.CacheOnDemand);
-
-			wic.BitmapFrameDecode	bfd	=pbd.GetFrame(0);
-
-			wic.FormatConverter	conv	=new wic.FormatConverter(wif);
-
-			conv.Initialize(bfd, wic.PixelFormat.Format32bppRGBA);
-
-			w	=bfd.Size.Width;
-			h	=bfd.Size.Height;
-
-			Color	[]colArray	=new Color[w * h];
-
-			conv.CopyPixels<Color>(colArray);
-
-			conv.Dispose();
-			bfd.Dispose();
-			pbd.Dispose();
-
-			return	colArray;
-		}
-
-
-		void LoadParameterData()
-		{
-			if(!Directory.Exists(mGameRootDir + "/Shaders"))
-			{
-				return;
-			}
-
-			FileStream		fs	=new FileStream(mGameRootDir + "/Shaders/ParameterData.txt", FileMode.Open, FileAccess.Read);
-			StreamReader	sr	=new StreamReader(fs);
-
-			string			curTechnique	="";
-			string			curCategory		="";
-			List<string>	curStuff		=new List<string>();
-			for(;;)
-			{
-				string	line	=sr.ReadLine();
-				if(line.StartsWith("//"))
-				{
-					continue;
-				}
-
-				//python style!
-				if(line.StartsWith("\t\t"))
-				{
-					Debug.Assert(curTechnique != "");
-					Debug.Assert(curCategory != "");
-
 					if(curCategory == "Ignored")
 					{
-						curStuff.Add(line.Trim());
+						mIgnoreData.Add(curTechnique, curStuff);
 					}
 					else if(curCategory == "Hidden")
 					{
-						curStuff.Add(line.Trim());
+						mHiddenData.Add(curTechnique, curStuff);
 					}
 					else
 					{
 						Debug.Assert(false);
 					}
+					curStuff	=new List<string>();
 				}
-				else if(line.StartsWith("\t"))
+				curCategory	=line.Trim();
+			}
+			else
+			{
+				if(curStuff.Count > 0)
 				{
-					if(curStuff.Count > 0)
+					if(curCategory == "Ignored")
 					{
-						if(curCategory == "Ignored")
-						{
-							mIgnoreData.Add(curTechnique, curStuff);
-						}
-						else if(curCategory == "Hidden")
-						{
-							mHiddenData.Add(curTechnique, curStuff);
-						}
-						else
-						{
-							Debug.Assert(false);
-						}
-						curStuff	=new List<string>();
+						mIgnoreData.Add(curTechnique, curStuff);
 					}
-					curCategory	=line.Trim();
-				}
-				else
-				{
-					if(curStuff.Count > 0)
+					else if(curCategory == "Hidden")
 					{
-						if(curCategory == "Ignored")
-						{
-							mIgnoreData.Add(curTechnique, curStuff);
-						}
-						else if(curCategory == "Hidden")
-						{
-							mHiddenData.Add(curTechnique, curStuff);
-						}
-						else
-						{
-							Debug.Assert(false);
-						}
-						curStuff	=new List<string>();
+						mHiddenData.Add(curTechnique, curStuff);
 					}
-					curCategory		="";
-					curTechnique	=line.Trim();
-				}
-
-				if(sr.EndOfStream)
-				{
-					if(curStuff.Count > 0)
+					else
 					{
-						if(curCategory == "Ignored")
-						{
-							mIgnoreData.Add(curTechnique, curStuff);
-						}
-						else if(curCategory == "Hidden")
-						{
-							mHiddenData.Add(curTechnique, curStuff);
-						}
-						else
-						{
-							Debug.Assert(false);
-						}
-						curStuff	=new List<string>();
+						Debug.Assert(false);
 					}
-					break;
+					curStuff	=new List<string>();
 				}
+				curCategory		="";
+				curTechnique	=line.Trim();
 			}
 
-			sr.Close();
-			fs.Close();
+			if(sr.EndOfStream)
+			{
+				if(curStuff.Count > 0)
+				{
+					if(curCategory == "Ignored")
+					{
+						mIgnoreData.Add(curTechnique, curStuff);
+					}
+					else if(curCategory == "Hidden")
+					{
+						mHiddenData.Add(curTechnique, curStuff);
+					}
+					else
+					{
+						Debug.Assert(false);
+					}
+					curStuff	=new List<string>();
+				}
+				break;
+			}
 		}
-	}
+
+		sr.Close();
+		fs.Close();
+	}*/
 }
