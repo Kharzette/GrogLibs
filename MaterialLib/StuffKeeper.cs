@@ -557,7 +557,8 @@ public class StuffKeeper
 	//load all shaders in the shaders folder
 	void LoadShaders(ID3D11Device dev, ShaderModel sm)
 	{
-		ShaderMacro []macs	=new ShaderMacro[1];
+		//need 2 of these for some reason
+		ShaderMacro []macs	=new ShaderMacro[2];
 
 		macs[0]	=new ShaderMacro(sm.ToString(), 1);
 
@@ -837,7 +838,8 @@ public class StuffKeeper
 		string	profile	=ProfileFromSM(sm, set);
 
 		Result	res	=Compiler.CompileFromFile(fullPath, macs, mIFX,
-			entryPoint, profile, ShaderFlags.None, out codeBlob, out errBlob);
+			entryPoint, profile, ShaderFlags.None,
+			EffectFlags.None, out codeBlob, out errBlob);
 		if(res != Result.Ok)
 		{
 			Console.WriteLine(errBlob.AsString());
@@ -858,7 +860,7 @@ public class StuffKeeper
 		bw.Close();
 		fs.Close();
 
-		mCode.Add("", code);
+		mCode.Add(entryPoint, code);
 	}
 
 
