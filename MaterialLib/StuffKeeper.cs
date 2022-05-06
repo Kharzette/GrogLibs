@@ -41,6 +41,11 @@ public class StuffKeeper
 		}
 	}
 
+	internal enum	ShaderEntryType
+	{
+		Vertex, Pixel, Compute, Geometry, Hull, Domain
+	}
+
 	IncludeFX	mIFX;
 
 	//for texture loading
@@ -49,9 +54,12 @@ public class StuffKeeper
 	//game directory
 	string	mGameRootDir;
 
-	//not sure what I'm going to do with all this yet
-	//list of shaders available
-	//Dictionary<string, Effect>	mFX	=new Dictionary<string, Effect>();
+	//entry points for shaders
+	Dictionary<string, List<string>>	mVSEntryPoints	=new Dictionary<string, List<string>>();
+	Dictionary<string, List<string>>	mPSEntryPoints	=new Dictionary<string, List<string>>();
+
+	//compiled shader bytecode
+	Dictionary<string, byte[]>	mCode	=new Dictionary<string, byte[]>();
 
 	//texture 2ds
 	Dictionary<string, ID3D11Texture2D>	mTexture2s	=new Dictionary<string, ID3D11Texture2D>();
@@ -118,8 +126,9 @@ public class StuffKeeper
 
 	void Construct(GraphicsDevice gd, ShaderModel sm)
 	{
-//		LoadShaders(gd.GD, sm);
-//		SaveHeaderTimeStamps(sm);
+		LoadEntryPoints();
+		LoadShaders(gd.GD, sm);
+		SaveHeaderTimeStamps(sm);
 		LoadResources(gd);
 		LoadFonts(gd);
 //		LoadParameterData();
@@ -459,9 +468,94 @@ public class StuffKeeper
 	}
 
 
+	void ReadEntryPoints(StreamReader sr, Dictionary<string, List<string>> dict)
+	{
+		string	curShader	="";
+		for(;;)
+		{
+			string	line	=sr.ReadLine();
+			if(line.StartsWith("//"))
+			{
+				continue;	//comment
+			}
+
+			//python style!
+			if(line.StartsWith("\t"))
+			{
+				Debug.Assert(curShader != "");
+
+				dict[curShader].Add(line.Trim());
+			}
+			else
+			{
+				curShader	=FileUtil.StripExtension(line);
+				dict.Add(curShader, new List<string>());
+			}
+
+			if(sr.EndOfStream)
+			{
+				break;
+			}
+		}
+	}
+
+
+	void LoadEntryPoints()
+	{
+		//see if Shader folder exists in Content
+		if(!Directory.Exists(mGameRootDir + "/Shaders"))
+		{
+			return;
+		}
+		if(!File.Exists(mGameRootDir + "/Shaders/VSEntryPoints.txt"))
+		{
+			return;
+		}
+		if(!File.Exists(mGameRootDir + "/Shaders/PSEntryPoints.txt"))
+		{
+			return;
+		}
+
+		FileStream	fs	=new FileStream(mGameRootDir + "/Shaders/VSEntryPoints.txt", FileMode.Open, FileAccess.Read);
+		if(fs == null)
+		{
+			return;
+		}
+
+		StreamReader	sr	=new StreamReader(fs);
+		if(sr == null)
+		{
+			fs.Close();
+			return;
+		}
+
+		ReadEntryPoints(sr, mVSEntryPoints);
+
+		sr.Close();
+		fs.Close();
+
+		fs	=new FileStream(mGameRootDir + "/Shaders/PSEntryPoints.txt", FileMode.Open, FileAccess.Read);
+		if(fs == null)
+		{
+			return;
+		}
+
+		sr	=new StreamReader(fs);
+		if(sr == null)
+		{
+			fs.Close();
+			return;
+		}
+
+		ReadEntryPoints(sr, mPSEntryPoints);
+
+		sr.Close();
+		fs.Close();
+	}
+
+
 	//load all shaders in the shaders folder
-	/*
-	void LoadShaders(Device dev, ShaderModel sm)
+	void LoadShaders(ID3D11Device dev, ShaderModel sm)
 	{
 		ShaderMacro []macs	=new ShaderMacro[1];
 
@@ -488,7 +582,7 @@ public class StuffKeeper
 			List<string>	dirNames	=new List<string>();
 			List<string>	fileNames	=new List<string>();
 
-			FileInfo[]		fi	=di.GetFiles("*.fx", SearchOption.AllDirectories);
+			FileInfo[]		fi	=di.GetFiles("*.hlsl", SearchOption.AllDirectories);
 			foreach(FileInfo f in fi)
 			{
 				if(bHeaderSame)
@@ -526,7 +620,28 @@ public class StuffKeeper
 
 				for(int i=0;i < fileNames.Count;i++)
 				{
-					LoadShader(dev, dirNames[i], fileNames[i], macs);
+					string	noExt	=FileUtil.StripExtension(fileNames[i]);
+
+					//vertexstuff
+					if(mVSEntryPoints.ContainsKey(noExt))
+					{
+						foreach(string entryPoint in mVSEntryPoints[noExt])
+						{
+							LoadShader(dev, dirNames[i], fileNames[i],
+								entryPoint, ShaderEntryType.Vertex, sm, macs);
+						}
+					}
+
+					//pixelstuff
+					if(mPSEntryPoints.ContainsKey(noExt))
+					{
+						foreach(string entryPoint in mPSEntryPoints[noExt])
+						{
+							LoadShader(dev, dirNames[i], fileNames[i],
+								entryPoint, ShaderEntryType.Pixel, sm, macs);
+						}
+					}
+
 					Misc.SafeInvoke(eCompileDone, i + 1);
 				}
 			}
@@ -534,7 +649,7 @@ public class StuffKeeper
 	}
 
 
-	void LoadCompiledShader(Device dev, string dir, string file, ShaderMacro []macs)
+	void LoadCompiledShader(ID3D11Device dev, string dir, string file, ShaderMacro []macs)
 	{
 		string	fullPath	=dir + "\\" + file;
 
@@ -545,14 +660,9 @@ public class StuffKeeper
 
 		byte	[]code	=br.ReadBytes(len);
 
-		//if you get an unable to find dll in path error here, make
-		//sure materiallib's sharpdx effect dlls are marked as
-		//content with copy if newer
-		Effect	fx	=new Effect(dev, code);
-		if(fx != null)
-		{
-			mFX.Add(file.Substring(0, file.Length - 9), fx);
-		}
+		string	justName	=file.Substring(0, file.Length - 9);
+
+		mCode.Add(justName, code);
 
 		br.Close();
 		fs.Close();
@@ -670,7 +780,47 @@ public class StuffKeeper
 	}
 
 
-	void LoadShader(Device dev, string dir, string file, ShaderMacro []macs)
+	string	VersionString(ShaderModel sm)
+	{
+		switch(sm)
+		{
+			case	ShaderModel.SM2:
+			return	"2_0";
+			case	ShaderModel.SM4:
+			return	"4_0";
+			case	ShaderModel.SM41:
+			return	"4_1";
+			case	ShaderModel.SM5:
+			return	"5_0";
+		}
+		return	"69";
+	}
+
+
+	string	ProfileFromSM(ShaderModel sm, ShaderEntryType set)
+	{
+		switch(set)
+		{
+			case	ShaderEntryType.Compute:
+			return	"cs_" + VersionString(sm);
+			case	ShaderEntryType.Geometry:
+			return	"gs_" + VersionString(sm);
+			case	ShaderEntryType.Pixel:
+			return	"ps_" + VersionString(sm);
+			case	ShaderEntryType.Vertex:
+			return	"vs_" + VersionString(sm);
+			case	ShaderEntryType.Domain:
+			return	"ds_" + VersionString(sm);
+			case	ShaderEntryType.Hull:
+			return	"hs_" + VersionString(sm);
+		}
+		return	"broken";
+	}
+
+
+	void LoadShader(ID3D11Device dev, string dir, string file,
+		string entryPoint, ShaderEntryType set,
+		ShaderModel sm, ShaderMacro []macs)
 	{
 		if(!Directory.Exists(mGameRootDir + "/CompiledShaders"))
 		{
@@ -683,53 +833,33 @@ public class StuffKeeper
 		}
 
 		string	fullPath	=dir + "\\" + file;
+		Blob	codeBlob, errBlob;
+		string	profile	=ProfileFromSM(sm, set);
 
-		CompilationResult	shdRes	=ShaderBytecode.CompileFromFile(
-			fullPath, "fx_5_0", ShaderFlags.Debug, EffectFlags.None, macs, mIFX);
-
-		Debug.WriteLine(shdRes.Message);
-
-		Effect	fx	=new Effect(dev, shdRes);
-		if(fx == null)
+		Result	res	=Compiler.CompileFromFile(fullPath, macs, mIFX,
+			entryPoint, profile, ShaderFlags.None, out codeBlob, out errBlob);
+		if(res != Result.Ok)
 		{
+			Console.WriteLine(errBlob.AsString());
 			return;
 		}
 
-		Debug.Assert(fx.IsValid);
-
-		//do a validity check on all techniques and passes
-		for(int i=0;i < fx.Description.TechniqueCount;i++)
-		{
-			EffectTechnique	et	=fx.GetTechniqueByIndex(i);
-
-			Debug.Assert(et.IsValid);
-
-			for(int j=0;j < et.Description.PassCount;j++)
-			{
-				EffectPass	ep	=et.GetPassByIndex(j);
-
-				Debug.Assert(ep.IsValid);
-
-				ep.Dispose();
-			}
-
-			et.Dispose();
-		}
+		byte	[]code	=codeBlob.AsBytes();
 
 		FileStream	fs	=new FileStream(mGameRootDir + "/CompiledShaders/"
-			+ macs[0].Name + "/" + file + ".Compiled",
+			+ macs[0].Name + "/" + file + ".CSO",
 			FileMode.Create, FileAccess.Write);
 
 		BinaryWriter	bw	=new BinaryWriter(fs);
 
-		bw.Write(shdRes.Bytecode.Data.Length);
-		bw.Write(shdRes.Bytecode.Data, 0, shdRes.Bytecode.Data.Length);
+		bw.Write(code.Length);
+		bw.Write(code, 0, code.Length);
 
 		bw.Close();
 		fs.Close();
 
-		mFX.Add(file, fx);
-	}*/
+		mCode.Add("", code);
+	}
 
 
 	void LoadTexture(GraphicsDevice gd, string path, string fileName)

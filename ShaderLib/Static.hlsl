@@ -1,100 +1,158 @@
 //For static geometry
-
 #include "Types.hlsli"
 #include "CommonFunctions.hlsli"
-#include "Trilight.hlsli"
 
-
-cbuffer PerObject : register(b0)
-{
-	float4x4	mWorld;
-	float4		mSolidColour;
-	float4		mSpecColor;
-
-	//These are considered directional (no falloff)
-	float4	mLightColor0;		//trilights need 3 colors
-	float4	mLightColor1;		//trilights need 3 colors
-	float4	mLightColor2;		//trilights need 3 colors
-
-	float3	mLightDirection;
-	float	mSpecPower;
-}
-
-cbuffer	PerFrame : register(b1)
-{
-	float4x4	mView;
-	float4x4	mLightViewProj;	//for shadowing
-	float3		mEyePos;
-	uint		mPadding;
-}
-
-cbuffer ChangeLess : register(b2)
-{
-	float4x4	mProjection;
-}
 
 //texture layers used on the surface
 Texture2D	mTexture0 : register(t0);
 Texture2D	mTexture1 : register(t1);
 
 
-//compute the 3 light effects on the vert
-//see http://home.comcast.net/~tom_forsyth/blog.wiki.html
-float3 ComputeTrilight(float3 normal, float3 lightDir, float3 c0, float3 c1, float3 c2)
+//just world position
+VVPosTex03 WPosVS(VPos input)
 {
-    float3	totalLight;
-	float	LdotN	=dot(normal, lightDir);
-	
-	//trilight
-	totalLight	=(c0 * max(0, LdotN))
-		+ (c1 * (1 - abs(LdotN)))
-		+ (c2 * max(0, -LdotN));
-		
-	return	totalLight;
+	float4	vertPos			=float4(input.Position, 1);
+	float4	worldVertPos	=mul(vertPos, mWorld);
+
+	VVPosTex03	output;
+
+	output.Position		=mul(worldVertPos, mLightViewProj);
+	output.TexCoord0	=worldVertPos.xyz;
+
+	return	output;
 }
 
-float3 ComputeGoodSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 lightVal, float4 fillLight)
+//worldpos and worldnormal
+VVPosTex03Tex13 WNormWPosVS(VPosNorm input)
 {
-	float3	eyeVec	=normalize(mEyePos - wpos);
-	float3	halfVec	=normalize(eyeVec + lightDir);
-	float	ndotv	=saturate(dot(eyeVec, pnorm));
-	float	ndoth	=saturate(dot(halfVec, pnorm));
-
-	float	normalizationTerm	=(mSpecPower + 2.0f) / 8.0f;
-	float	blinnPhong			=pow(ndoth, mSpecPower);
-	float	specTerm			=normalizationTerm * blinnPhong;
+	VVPosTex03Tex13	output;	
 	
-	//fresnel stuff
-	float	base		=1.0f - dot(halfVec, lightDir);
-	float	exponential	=pow(base, 5.0f);
-	float3	fresTerm	=mSpecColor + (1.0f - mSpecColor) * exponential;
-
-	//vis stuff
-	float	alpha	=1.0f / (sqrt(PI_OVER_FOUR * mSpecPower + PI_OVER_TWO));
-	float	visTerm	=(lightVal * (1.0f - alpha) + alpha) *
-				(ndotv * (1.0f - alpha) + alpha);
-
-	visTerm	=1.0f / visTerm;
-
-	float3	specular	=specTerm * lightVal * fresTerm * visTerm * fillLight;
-
-	return	specular;
+	//generate the world-view-proj matrix
+	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
+	
+	//transform the input position to the output
+	output.Position		=mul(float4(input.Position, 1), wvp);
+	output.TexCoord0	=mul(input.Normal.xyz, mWorld);
+	output.TexCoord1	=mul(input.Position, mWorld);
+	
+	//return the output structure
+	return	output;
 }
 
-float3 ComputeCheapSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 lightVal, float4 fillLight)
+//worldpos and worldnormal and vert color
+VVPosTex03Tex13Tex23 WNormWPosVColorVS(VPosNormCol0 input)
 {
-	float3	eyeVec	=normalize(mEyePos - wpos);
-	float3	halfVec	=normalize(eyeVec + lightDir);
-	float	ndotv	=saturate(dot(eyeVec, pnorm));
-	float	ndoth	=saturate(dot(halfVec, pnorm));
-
-	float	normalizationTerm	=(mSpecPower + 2.0f) / 8.0f;
-	float	blinnPhong			=pow(ndoth, mSpecPower);
-	float	specTerm			=normalizationTerm * blinnPhong;
+	VVPosTex03Tex13Tex23	output;
 	
-	float3	specular	=specTerm * lightVal * fillLight;
+	//generate the world-view-proj matrix
+	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
+	
+	//transform the input position to the output
+	output.Position		=mul(float4(input.Position, 1), wvp);
+	output.TexCoord0	=mul(input.Normal.xyz, mWorld);
+	output.TexCoord1	=mul(input.Position, mWorld);
+	output.TexCoord2	=input.Color;
+	
+	//return the output structure
+	return	output;
+}
 
-	return	specular;
+//texcoord + trilight color interpolated
+VVPosTex0Col0 TexTriVS(VPosNormTex0 input)
+{
+	VVPosTex0Col0	output;	
+	
+	//generate the world-view-proj matrix
+	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
+	
+	//transform the input position to the output
+	output.Position	=mul(float4(input.Position, 1), wvp);
+	
+	float3 worldNormal	=mul(input.Normal.xyz, mWorld);
+
+	output.Color.xyz	=ComputeTrilight(worldNormal, mLightDirection,
+							mLightColor0, mLightColor1, mLightColor2);
+	output.Color.w		=1.0f;
+	
+	//direct copy of texcoords
+	output.TexCoord0	=input.TexCoord0;
+	
+	//return the output structure
+	return	output;
+}
+
+//tangent stuff
+VVPosNormTanBiTanTex0 WNormWTanBTanTexVS(VPosNormTanTex0 input)
+{
+	VVPosNormTanBiTanTex0	output;
+	
+	//generate the world-view-proj matrix
+	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
+	
+	output.Position		=mul(float4(input.Position, 1), wvp);
+	output.Normal		=mul(input.Normal.xyz, mWorld);
+	output.Tangent		=mul(input.Tangent.xyz, mWorld);
+	output.TexCoord0	=input.TexCoord0;
+
+	float3	biTan	=cross(input.Normal.xyz, input.Tangent) * input.Tangent.w;
+
+	output.BiTangent	=normalize(biTan);
+
+	//return the output structure
+	return	output;
+}
+
+//packed tangents with worldspace pos
+VVPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosVS(VPosNormTanTex0 input)
+{
+	VVPosTex04Tex14Tex24Tex34	output;
+	
+	//generate the world-view-proj matrix
+	float4x4	wvp	=mul(mul(mWorld, mView), mProjection);
+
+	//pos4
+	//tex2
+	//wtan3
+	//bitan3
+	
+	output.Position			=mul(float4(input.Position, 1), wvp);
+	output.TexCoord0.xyz	=mul(input.Normal.xyz, mWorld);
+	output.TexCoord0.w		=input.TexCoord0.x;
+	output.TexCoord1.xyz	=mul(input.Tangent.xyz, mWorld);
+	output.TexCoord1.w		=input.TexCoord0.y;
+
+	float3	biTan	=cross(input.Normal.xyz, input.Tangent) * input.Tangent.w;
+
+	output.TexCoord2		=float4(normalize(biTan), 0);
+	output.TexCoord3		=mul(input.Position, mWorld);
+
+	//return the output structure
+	return	output;
+}
+
+//packed tangents with worldspace pos and instancing
+VVPosTex04Tex14Tex24Tex34 WNormWTanBTanWPosInstancedVS(VPosNormTanTex0 input, float4x4 instWorld : BLENDWEIGHT)
+{
+	VVPosTex04Tex14Tex24Tex34	output;
+
+	float4x4	world	=transpose(instWorld);
+	
+	//generate the world-view-proj matrix
+	float4x4	wvp	=mul(mul(world, mView), mProjection);
+	
+	output.Position			=mul(float4(input.Position, 1), wvp);
+	output.TexCoord0.xyz	=mul(input.Normal.xyz, world);
+	output.TexCoord0.w		=input.TexCoord0.x;
+	output.TexCoord1.xyz	=mul(input.Tangent.xyz, world);
+	output.TexCoord1.w		=input.TexCoord0.y;
+
+	float3	biTan	=cross(input.Normal, input.Tangent) * input.Tangent.w;
+
+	output.TexCoord2		=float4(normalize(biTan), 0);
+	output.TexCoord3		=mul(input.Position, world);
+
+	//return the output structure
+	return	output;
 }
 
 //worldpos and normal
@@ -114,36 +172,4 @@ VVPosTex04Tex14 WNormWPosTexVS(VPosNormTex0 input)
 	
 	//return the output structure
 	return	output;
-}
-
-//Texture 0, trilight, modulate solid, and specular
-float4 TriTex0SpecPS(VVPosTex04Tex14 input) : SV_Target
-{
-	float2	tex;
-
-	tex.x	=input.TexCoord0.w;
-	tex.y	=input.TexCoord1.w;
-
-//	float4	texColor	=mTexture0.Sample(LinearWrap, tex);
-	float4	texColor	=float4(1,1,1,1);
-
-	float3	pnorm	=input.TexCoord0.xyz;
-	float3	wpos	=input.TexCoord1.xyz;
-
-	pnorm	=normalize(pnorm);
-
-	float3	triLight	=ComputeTrilight(pnorm, mLightDirection,
-							mLightColor0, mLightColor1, mLightColor2);
-
-#if defined(SM2)
-	float3	specular	=ComputeCheapSpecular(wpos, mLightDirection, pnorm, triLight, mLightColor2);
-#else
-	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, pnorm, triLight, mLightColor2);
-#endif
-
-	float3	litColor	=texColor.xyz * triLight;
-
-	specular	=saturate((specular + litColor.xyz) * mSolidColour.xyz);
-
-	return	float4(specular, texColor.w);
 }

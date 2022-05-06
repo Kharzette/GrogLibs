@@ -70,8 +70,8 @@ shared TextureCube	mShadowCube;		//cube
 //#define	CELSPECULAR		//for quantized specular
 #define	CELLIGHT		//for quantized light (the default)
 
-#include "Types.fxh"
-#include "RenderStates.fxh"
+#include "Types.hlsli"
+#include "RenderStates.hlsli"
 
 
 //stole these normal compression routines from @aras_p

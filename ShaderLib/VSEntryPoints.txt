@@ -8,3 +8,14 @@ Static.hlsl
 	WNormWTanBTanWPosVS
 	WNormWTanBTanWPosInstancedVS
 	WNormWPosTexVS
+Character.hlsl
+	DMNVS
+	DMNDanglyVS
+	SkinWNormVS
+	SkinWNormWPosVS
+	SkinWNormWPosTex0VS
+	ShadowSkinWPosVS
+	SkinWNormWPosColorVS
+	SkinDanglyWnormWPos
+	SkinTexTriColVS
+	SkinTex0Tex1TriColVS

@@ -1,14 +1,17 @@
 //Character - stuff with bones
 
-#include "Types.fxh"
-#include "CommonFunctions.fxh"
-#include "Trilight.fxh"
+#include "Types.hlsli"
+#include "CommonFunctions.hlsli"
 
-//matrii for skinning
-float4x4	mBones[MAX_BONES];
 
-//for dangly shaders
-float3	mDanglyForce;
+cbuffer Character : register(b4)
+{
+	//matrii for skinning
+	float4x4	mBones[MAX_BONES];
+	
+	//for dangly shaders
+	float3	mDanglyForce;
+}
 
 
 //functions
@@ -272,7 +275,7 @@ VVPosTex0Tex1Col0 SkinTex0Tex1TriColVS(VPosNormBoneTex0Tex1 input)
 	return	output;
 }
 
-
+/*
 technique10 TriSkinTex0
 {     
 	pass P0
@@ -557,4 +560,4 @@ technique10 DMNDangly
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
 		SetDepthStencilState(EnableDepth, 0);
 	}
-}
+}*/

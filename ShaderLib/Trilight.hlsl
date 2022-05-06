@@ -1,14 +1,13 @@
 //shaders using TomF's trilights for light
 //see http://home.comcast.net/~tom_forsyth/blog.wiki.html#Trilights
-#ifndef _TRILIGHTH
-#define _TRILIGHTH
-
 
 //texture layers used on the surface
 shared Texture2D	mTexture0;
 shared Texture2D	mTexture1;
 
-#include "RenderStates.fxh"
+#include "CommonFunctions.hlsli"
+//#include "Types.hlsli"
+//#include "RenderStates.hlsli"
 
 //shared pixel shaders
 //just shows the shape for debugging
@@ -513,4 +512,3 @@ float4 Tex0Tex1Col0DecalPS(VVPosTex0Tex1Col0 input) : SV_Target
 	
 	return	texLitColor;
 }
-#endif	//_TRILIGHTH

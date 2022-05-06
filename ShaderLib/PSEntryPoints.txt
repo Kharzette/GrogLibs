@@ -1,0 +1,25 @@
+//This file specifies the various pixel shader programs in each hlsl file
+Trilight.hlsl
+	FullBrightSkinPS
+	ShadowPS
+	ShadowCubePS
+	DepthPS
+	MaterialPS
+	DMNPS
+	Tex0Col0PS
+	Tex0Col0CelPS
+	NormalMapTriTex0Tex1PS
+	TriSolidPS
+	TriSolidVColorSpecPS
+	TriSolidSpecPS
+	NormalMapTriTex0SolidPS
+	TriTex0SpecPS
+	TriTex0EM1SpecPS
+	TriCelTex0EM1SpecPS
+	TriCelTex0SpecPS
+	TriCelSolidSpecPS
+	NormalMapTriTex0SolidSpecPS
+	NormalMapTriTex0SpecPS
+	TriCelColorSpecPS
+	Tex0Col0DecalPS
+	Tex0Tex1Col0DecalPS
