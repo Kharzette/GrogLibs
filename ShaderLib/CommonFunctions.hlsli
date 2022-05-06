@@ -9,15 +9,48 @@
 #define MAX_HALF				65504
 #define	OUTLINE_ALPHA_THRESHOLD	0.15
 
-//matrii
-float4x4	mWorld;
-float4x4	mView;
-float4x4	mProjection;
-float4x4	mLightViewProj;	//for shadowing
-float3		mEyePos;
 
-//for tinting or diffuse
-float4	mSolidColour;
+cbuffer	PerFrame : register(b1)
+{
+	float4x4	mView;
+	float4x4	mLightViewProj;	//for shadowing
+	float3		mEyePos;
+	uint		mPadding;
+}
+
+
+cbuffer PerObject : register(b0)
+{
+	float4x4	mWorld;
+	float4		mSolidColour;
+	float4		mSpecColor;
+
+	//These are considered directional (no falloff)
+	float4	mLightColor0;		//trilights need 3 colors
+	float4	mLightColor1;		//trilights need 3 colors
+	float4	mLightColor2;		//trilights need 3 colors
+
+	float3	mLightDirection;
+	float	mSpecPower;
+	
+	//material id for borders etc
+	int	mMaterialID;
+}
+
+
+cbuffer ChangeLess : register(b2)
+{
+	float4x4	mProjection;
+}
+
+
+cbuffer PerShadow : register(b3)
+{
+	float3	mShadowLightPos;	//point light location
+	bool	mbDirectional;		//sunnish or point
+	float	mShadowAtten;		//shadow attenuation
+}
+
 
 //outline / cel related
 //1D textures are not supported in 9_3 feature levels
@@ -31,13 +64,6 @@ shared Texture1D	mCelTable;
 shared Texture2D	mShadowTexture;		//2D
 shared TextureCube	mShadowCube;		//cube
 
-float3	mShadowLightPos;	//point light location
-bool	mbDirectional;		//sunnish or point
-float	mShadowAtten;		//shadow attenuation
-
-//specular stuff
-float4	mSpecColor;
-float	mSpecPower;
 
 //specular behaviour defines
 //#define	CELALL			//for a goofy retro cga look

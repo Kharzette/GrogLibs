@@ -222,13 +222,15 @@ namespace UtilityLib
 
 		public bool IsPointOnScreen(Vector3 point)
 		{
-			ContainmentType	ct	=mFrust.Contains(point);
-
-			if(ct == ContainmentType.Contains)
+			foreach(Plane p in mFrust.Planes)
 			{
-				return	true;
+				float	side	=p.Normal.dot(point) - p.D;
+				if(side > 0f)
+				{
+					return	false;
+				}
 			}
-			return	false;
+			return	true;
 		}
 
 

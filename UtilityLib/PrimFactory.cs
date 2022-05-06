@@ -620,6 +620,11 @@ public static class PrimFactory
 			idx	+=4;
 		}
 
+		//flip indexes for handedness change
+		List<UInt16>	lazyReverser	=new List<UInt16>(indexes);
+		lazyReverser.Reverse();
+		lazyReverser.CopyTo(0, indexes, 0, lazyReverser.Count);		
+
 		BufferDescription	id	=new BufferDescription(indexes.Length * 2,
 			BindFlags.IndexBuffer, ResourceUsage.Immutable,
 			CpuAccessFlags.None, ResourceOptionFlags.None, 0);
@@ -906,7 +911,8 @@ public static class PrimFactory
 
 		inds.AddRange(otherHalf);
 
-		inds.Reverse();
+		//don't need this because of handedness change
+		//inds.Reverse();
 
 		BufferDescription	id	=new BufferDescription(inds.Count * 2,
 			BindFlags.IndexBuffer, ResourceUsage.Immutable,

@@ -191,11 +191,10 @@ public class Input
 
 		WinNative.RawInputData	dat	=rid.Value;
 
-		string	ground	=(ea.mWParam.ToInt64()==0)? "foreground": "background";
-
 		if(rid.Value.header.dwType == 0)
 		{
 			DoMouseInput(rid.Value.header.hDevice, ref dat.mouse);
+			/*
 			Console.WriteLine("Got input mouse message in the " + ground
 //				+ " from device " + mDeviceNames[rid.Value.header.hDevice]);
 				+ "X: " + rid.Value.mouse.lLastX
@@ -205,10 +204,11 @@ public class Input
 				+ ", usButtonData: " + rid.Value.mouse.usButtonData
 				+ ", ulRawButtons: " + rid.Value.mouse.ulRawButtons
 				+ ", ulButtons: " + rid.Value.mouse.ulButtons
-				);
+				);*/
 		}
 		else if(rid.Value.header.dwType == 1)
 		{
+			string	ground	=(ea.mWParam.ToInt64()==0)? "foreground": "background";
 			DoKeyInput(rid.Value.header.hDevice, ref dat.keyboard);
 			Console.WriteLine("Got input key message in the " + ground
 //				+ " from device " + mDeviceNames[rid.Value.header.hDevice]);
@@ -217,6 +217,7 @@ public class Input
 		}
 		else
 		{
+			string	ground	=(ea.mWParam.ToInt64()==0)? "foreground": "background";
 			Console.WriteLine("Got input hid message in the " + ground
 //				+ " from device " + mDeviceNames[rid.Value.header.hDevice]);
 				+ "count: " + rid.Value.hid.dwCount

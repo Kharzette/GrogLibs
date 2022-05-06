@@ -1,18 +1,12 @@
 //shaders using TomF's trilights for light
 //see http://home.comcast.net/~tom_forsyth/blog.wiki.html#Trilights
+#ifndef _TRILIGHTH
+#define _TRILIGHTH
 
-//material id for borders etc
-int	mMaterialID;
 
 //texture layers used on the surface
 shared Texture2D	mTexture0;
 shared Texture2D	mTexture1;
-
-//These are considered directional (no falloff)
-float4	mLightColor0;		//trilights need 3 colors
-float4	mLightColor1;		//trilights need 3 colors
-float4	mLightColor2;		//trilights need 3 colors
-float3	mLightDirection;
 
 #include "RenderStates.fxh"
 
@@ -519,3 +513,4 @@ float4 Tex0Tex1Col0DecalPS(VVPosTex0Tex1Col0 input) : SV_Target
 	
 	return	texLitColor;
 }
+#endif	//_TRILIGHTH

@@ -1,30 +1,9 @@
-struct VPosNormTex0
-{
-	float3	Position	: POSITION;
-	half4	Normal		: NORMAL;
-	half2	TexCoord0	: TEXCOORD0;
-};
+//For static geometry
 
-struct VVPosTex04Tex14
-{
-	float4	Position	: SV_POSITION;
-	half4	TexCoord0	: TEXCOORD0;
-	half4	TexCoord1	: TEXCOORD1;
-};
+#include "Types.hlsli"
+#include "CommonFunctions.hlsli"
+#include "Trilight.hlsli"
 
-SamplerState LinearWrap
-{
-	Filter		=MIN_MAG_MIP_LINEAR;
-	AddressU	=Wrap;
-	AddressV	=Wrap;
-};
-
-//constants
-#define	MAX_BONES				55
-#define	PI_OVER_FOUR			0.7853981634f
-#define	PI_OVER_TWO				1.5707963268f
-#define MAX_HALF				65504
-#define	OUTLINE_ALPHA_THRESHOLD	0.15
 
 cbuffer PerObject : register(b0)
 {

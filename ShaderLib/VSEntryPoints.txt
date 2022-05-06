@@ -1,0 +1,10 @@
+//This file specifies the various vertex shader programs in each hlsl file
+Static.hlsl
+	WPosVS
+	WNormWPosTexVS
+	WNormWPosVColorVS
+	TexTriVS
+	WNormWTanBTanTexVS
+	WNormWTanBTanWPosVS
+	WNormWTanBTanWPosInstancedVS
+	WNormWPosTexVS
