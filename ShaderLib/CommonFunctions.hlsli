@@ -34,7 +34,10 @@ cbuffer PerObject : register(b0)
 	float	mSpecPower;
 	
 	//material id for borders etc
-	int	mMaterialID;
+	int		mMaterialID;
+
+	//pad out to 16 boundary
+	uint	mPadding0, mPadding1, mPadding2;
 }
 
 

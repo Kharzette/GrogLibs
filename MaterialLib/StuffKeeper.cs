@@ -73,6 +73,10 @@ public class StuffKeeper
 	Dictionary<string, byte[]>	mHSCode	=new Dictionary<string, byte[]>();
 	Dictionary<string, byte[]>	mCSCode	=new Dictionary<string, byte[]>();
 
+	//shaders
+	Dictionary<string, ID3D11VertexShader>	mVShaders	=new Dictionary<string, ID3D11VertexShader>();
+	Dictionary<string, ID3D11PixelShader>	mPShaders	=new Dictionary<string, ID3D11PixelShader>();
+
 	//texture 2ds
 	Dictionary<string, ID3D11Texture2D>	mTexture2s	=new Dictionary<string, ID3D11Texture2D>();
 
@@ -250,7 +254,37 @@ public class StuffKeeper
 	}*/
 
 
-	internal ID3D11ShaderResourceView GetSRV(string name)
+	//This can be used to generate input layouts
+	public byte[]	GetVSCompiledCode(string name)
+	{
+		if(!mVSCode.ContainsKey(name))
+		{
+			return	null;
+		}
+		return	mVSCode[name];
+	}
+
+
+	public ID3D11VertexShader	GetVertexShader(string name)
+	{
+		if(!mVShaders.ContainsKey(name))
+		{
+			return	null;
+		}
+		return	mVShaders[name];
+	}
+
+	public ID3D11PixelShader	GetPixelShader(string name)
+	{
+		if(!mPShaders.ContainsKey(name))
+		{
+			return	null;
+		}
+		return	mPShaders[name];
+	}
+
+
+	public ID3D11ShaderResourceView GetSRV(string name)
 	{
 		if(!mSRVs.ContainsKey(name))
 		{
@@ -668,6 +702,16 @@ public class StuffKeeper
 					Misc.SafeInvoke(eCompileDone, i + 1);
 				}
 			}
+		}
+
+		//create shaders
+		foreach(KeyValuePair<string, byte []> code in mVSCode)
+		{
+			mVShaders.Add(code.Key,	dev.CreateVertexShader(code.Value));
+		}
+		foreach(KeyValuePair<string, byte []> code in mPSCode)
+		{
+			mPShaders.Add(code.Key,	dev.CreatePixelShader(code.Value));
 		}
 	}
 

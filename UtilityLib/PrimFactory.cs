@@ -91,7 +91,7 @@ public static class PrimFactory
 		[FieldOffset(20)]
 		internal Half2		TextureCoordinate;
 
-		internal static ID3D11InputLayout MakeLayout(ID3D11Device gd, Span<byte> vShader)
+		internal static ID3D11InputLayout MakeLayout(ID3D11Device gd, byte []vShader)
 		{
 			InputElementDescription	[]ied	=new[]
 			{
@@ -110,7 +110,7 @@ public static class PrimFactory
 		internal Vector3	Position;
 		internal Color		Color;
 
-		internal static ID3D11InputLayout MakeLayout(ID3D11Device gd, Span<byte> vShader)
+		internal static ID3D11InputLayout MakeLayout(ID3D11Device gd, byte []vShader)
 		{
 			InputElementDescription	[]ied	=new[]
 			{
@@ -124,7 +124,7 @@ public static class PrimFactory
 
 
 	public static PrimObject CreatePlane(ID3D11Device gd,
-		Span<byte> fxBytes, float size)
+		byte []fxBytes, float size)
 	{
 		Vector3	top			=Vector3.UnitY * (size * 0.5f);
 		Vector3	bottom		=-Vector3.UnitY * (size * 0.5f);
@@ -199,7 +199,7 @@ public static class PrimFactory
 
 
 	public static PrimObject CreatePrism(ID3D11Device gd,
-		Span<byte> fxBytes, float size)
+		byte []fxBytes, float size)
 	{
 		Vector3	topPoint	=Vector3.UnitY * size * 2.0f;
 		Vector3	bottomPoint	=Vector3.Zero;
@@ -361,7 +361,7 @@ public static class PrimFactory
 
 
 	public static PrimObject CreateHalfPrism(ID3D11Device gd,
-		Span<byte> fxBytes, float size)
+		byte []fxBytes, float size)
 	{
 		Vector3	topPoint	=Vector3.Zero;
 		Vector3	top			=(Vector3.UnitY * size * 5.0f) + size * Vector3.UnitZ;
@@ -448,7 +448,7 @@ public static class PrimFactory
 
 
 	public static PrimObject CreateCube(ID3D11Device gd,
-		Span<byte> fxBytes, float size)
+		byte []fxBytes, float size)
 	{
 		List<Vector3>	corners	=new List<Vector3>();
 
@@ -467,7 +467,7 @@ public static class PrimFactory
 
 
 	public static PrimObject CreateCube(ID3D11Device gd,
-		Span<byte> fxBytes, BoundingBox box)
+		byte []fxBytes, BoundingBox box)
 	{
 		List<Vector3>	corners	=new List<Vector3>();
 
@@ -486,7 +486,7 @@ public static class PrimFactory
 
 
 	public static PrimObject CreateCubes(ID3D11Device gd,
-		Span<byte> fxBytes, List<BoundingBox> boxes)
+		byte []fxBytes, List<BoundingBox> boxes)
 	{
 		List<Vector3>	corners	=new List<Vector3>();
 
@@ -507,7 +507,7 @@ public static class PrimFactory
 
 
 	public unsafe static PrimObject CreateCube(ID3D11Device gd,
-		Span<byte> fxBytes, Vector3 []corners)
+		byte []fxBytes, Vector3 []corners)
 	{
 		VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[24];
 
@@ -640,7 +640,7 @@ public static class PrimFactory
 
 
 	public static PrimObject CreateCubes(ID3D11Device gd,
-		Span<byte> fxBytes, List<Vector3> boxCenters, float size)
+		byte []fxBytes, List<Vector3> boxCenters, float size)
 	{
 		List<Vector3>	corners	=new List<Vector3>();
 
@@ -662,7 +662,7 @@ public static class PrimFactory
 
 
 	public static PrimObject CreateCubes(ID3D11Device gd,
-		Span<byte> fxBytes, Vector3 []corners)
+		byte []fxBytes, Vector3 []corners)
 	{
 		VertexPositionNormalTexture	[]vpnt	=
 			new VertexPositionNormalTexture[corners.Length * 3];
@@ -797,7 +797,7 @@ public static class PrimFactory
 
 
 	public static PrimObject CreateSphere(ID3D11Device gd,
-		Span<byte> fxBytes, Vector3 center, float radius)
+		byte []fxBytes, Vector3 center, float radius)
 	{
 		int	theta, phi;
 
@@ -929,7 +929,7 @@ public static class PrimFactory
 
 
 	public static PrimObject CreateShadowCircle(ID3D11Device gd,
-		Span<byte> fxBytes, float radius)
+		byte []fxBytes, float radius)
 	{
 		VertexPositionColor	[]vpc	=new VertexPositionColor[16];
 
@@ -1059,7 +1059,7 @@ public static class PrimFactory
 
 
 	public static PrimObject CreateCylinder(ID3D11Device gd,
-		Span<byte> fxBytes, float radius, float len)
+		byte []fxBytes, float radius, float len)
 	{
 		VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[32];
 
