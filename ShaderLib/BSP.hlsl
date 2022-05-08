@@ -2,20 +2,21 @@
 Texture2D	mTexture;
 Texture2D	mLightMap;
 Texture1D	mDynLights;
-bool		mbTextureEnabled;
-float2		mTexSize;
-
-//mat id
-int	mMaterialID;
-
-//intensity levels for the animated / switchable light styles
-half	mAniIntensities[44];
 
 #define	POINTTEXTURES	1
 
-#include "Types.fxh"
-#include "CommonFunctions.fxh"
-#include "RenderStates.fxh"
+#include "Types.hlsli"
+#include "CommonFunctions.hlsli"
+#include "RenderStates.hlsli"
+
+cbuffer BSP : register(b4)
+{
+	bool		mbTextureEnabled;
+	float2		mTexSize;
+
+	//intensity levels for the animated / switchable light styles
+	half	mAniIntensities[44];
+}
 
 
 VVPosTex04Tex14Tex24 LightMapVS(VPosNormTex04 input)
@@ -600,7 +601,7 @@ float4 LightMapAnimShadowPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Targ
 	//shadow map
 	return	ShadowColor(mbDirectional, input.TexCoord4, norm, color);
 }
-
+/*
 
 //techniques
 technique10 LightMap
@@ -1395,4 +1396,4 @@ technique10 Sky
 		SetBlendState(NoBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
 		SetDepthStencilState(EnableDepth, 0);
 	}
-}
+}*/

@@ -19,3 +19,14 @@ Character.hlsl
 	SkinDanglyWnormWPos
 	SkinTexTriColVS
 	SkinTex0Tex1TriColVS
+2D.hlsl
+	TextVS
+	KeyedGumpVS
+	ParticleVS
+	ParticleDMNVS
+BSP.hlsl
+	LightMapVS
+	VertexLitVS
+	FullBrightVS
+	SkyVS
+	LightMapAnimVS

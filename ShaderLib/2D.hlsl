@@ -1,14 +1,16 @@
 //shader for UI and particles and such
 Texture2D	mTexture, mTexture2;
 
-#include "Types.fxh"
-#include "CommonFunctions.fxh"
-#include "RenderStates.fxh"
+#include "Types.hlsli"
+#include "CommonFunctions.hlsli"
+#include "RenderStates.hlsli"
 
-float2	mTextPosition, mSecondLayerOffset;
-float2	mTextScale;
-float4	mTextColor;
-
+cbuffer TwoD : register(b4)
+{
+	float2	mTextPosition, mSecondLayerOffset;
+	float2	mTextScale;
+	float4	mTextColor;
+}
 
 VVPosTex0 TextVS(VPos2Tex02 input)
 {
@@ -255,113 +257,4 @@ TwoHalf4Targets ParticleDMNPS(VVPosTex04Tex14Tex24 input) : SV_Target
 	ret.targ2		=input.TexCoord2;
 
 	return	ret;
-}
-
-
-technique10 Particle
-{     
-	pass P0
-	{
-#if defined(SM5)
-		VertexShader	=compile vs_5_0 ParticleVS();
-		PixelShader		=compile ps_5_0 ParticlePS();
-#elif defined(SM41)
-		VertexShader	=compile vs_4_1 ParticleVS();
-		PixelShader		=compile ps_4_1 ParticlePS();
-#elif defined(SM4)
-		VertexShader	=compile vs_4_0 ParticleVS();
-		PixelShader		=compile ps_4_0 ParticlePS();
-#else
-		VertexShader	=compile vs_4_0_level_9_3 ParticleVS();
-		PixelShader		=compile ps_4_0_level_9_3 ParticlePS();
-#endif
-		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepthWrite, 0);
-	}
-}
-
-technique10 ParticleDMN
-{
-	pass P0
-	{
-#if defined(SM5)
-		VertexShader	=compile vs_5_0 ParticleDMNVS();
-		PixelShader		=compile ps_5_0 ParticleDMNPS();
-#elif defined(SM41)
-		VertexShader	=compile vs_4_1 ParticleDMNVS();
-		PixelShader		=compile ps_4_1 ParticleDMNPS();
-#elif defined(SM4)
-		VertexShader	=compile vs_4_0 ParticleDMNVS();
-		PixelShader		=compile ps_4_0 ParticleDMNPS();
-#else
-		VertexShader	=compile vs_4_0_level_9_3 ParticleDMNVS();
-		PixelShader		=compile ps_4_0_level_9_3 ParticleDMNPS();
-#endif
-	}
-}
-
-technique10 Text
-{     
-	pass P0
-	{
-#if defined(SM5)
-		VertexShader	=compile vs_5_0 TextVS();
-		PixelShader		=compile ps_5_0 TextPS();
-#elif defined(SM41)
-		VertexShader	=compile vs_4_1 TextVS();
-		PixelShader		=compile ps_4_1 TextPS();
-#elif defined(SM4)
-		VertexShader	=compile vs_4_0 TextVS();
-		PixelShader		=compile ps_4_0 TextPS();
-#else
-		VertexShader	=compile vs_4_0_level_9_3 TextVS();
-		PixelShader		=compile ps_4_0_level_9_3 TextPS();
-#endif
-		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepth, 0);
-	}
-}
-
-technique10 KeyedGump
-{     
-	pass P0
-	{
-#if defined(SM5)
-		VertexShader	=compile vs_5_0 KeyedGumpVS();
-		PixelShader		=compile ps_5_0 KeyedGumpPS();
-#elif defined(SM41)
-		VertexShader	=compile vs_4_1 KeyedGumpVS();
-		PixelShader		=compile ps_4_1 KeyedGumpPS();
-#elif defined(SM4)
-		VertexShader	=compile vs_4_0 KeyedGumpVS();
-		PixelShader		=compile ps_4_0 KeyedGumpPS();
-#else
-		VertexShader	=compile vs_4_0_level_9_3 KeyedGumpVS();
-		PixelShader		=compile ps_4_0_level_9_3 KeyedGumpPS();
-#endif
-		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepth, 0);
-	}
-}
-
-technique10 Gump
-{     
-	pass P0
-	{
-#if defined(SM5)
-		VertexShader	=compile vs_5_0 KeyedGumpVS();
-		PixelShader		=compile ps_5_0 GumpPS();
-#elif defined(SM41)
-		VertexShader	=compile vs_4_1 KeyedGumpVS();
-		PixelShader		=compile ps_4_1 GumpPS();
-#elif defined(SM4)
-		VertexShader	=compile vs_4_0 KeyedGumpVS();
-		PixelShader		=compile ps_4_0 GumpPS();
-#else
-		VertexShader	=compile vs_4_0_level_9_3 KeyedGumpVS();
-		PixelShader		=compile ps_4_0_level_9_3 GumpPS();
-#endif
-		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepth, 0);
-	}
 }

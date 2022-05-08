@@ -41,9 +41,16 @@ public class StuffKeeper
 		}
 	}
 
-	internal enum	ShaderEntryType
+	[Flags]
+	internal enum	ShaderEntryType : byte
 	{
-		Vertex, Pixel, Compute, Geometry, Hull, Domain
+		None,
+		Vertex		=1,
+		Pixel		=2,
+		Compute		=4,
+		Geometry	=8,
+		Hull		=16,
+		Domain		=32
 	}
 
 	IncludeFX	mIFX;
@@ -59,7 +66,12 @@ public class StuffKeeper
 	Dictionary<string, List<string>>	mPSEntryPoints	=new Dictionary<string, List<string>>();
 
 	//compiled shader bytecode
-	Dictionary<string, byte[]>	mCode	=new Dictionary<string, byte[]>();
+	Dictionary<string, byte[]>	mVSCode	=new Dictionary<string, byte[]>();
+	Dictionary<string, byte[]>	mPSCode	=new Dictionary<string, byte[]>();
+	Dictionary<string, byte[]>	mGSCode	=new Dictionary<string, byte[]>();
+	Dictionary<string, byte[]>	mDSCode	=new Dictionary<string, byte[]>();
+	Dictionary<string, byte[]>	mHSCode	=new Dictionary<string, byte[]>();
+	Dictionary<string, byte[]>	mCSCode	=new Dictionary<string, byte[]>();
 
 	//texture 2ds
 	Dictionary<string, ID3D11Texture2D>	mTexture2s	=new Dictionary<string, ID3D11Texture2D>();
@@ -628,6 +640,11 @@ public class StuffKeeper
 					{
 						foreach(string entryPoint in mVSEntryPoints[noExt])
 						{
+							if(mVSCode.ContainsKey(entryPoint))
+							{
+								continue;	//already loaded
+							}
+
 							LoadShader(dev, dirNames[i], fileNames[i],
 								entryPoint, ShaderEntryType.Vertex, sm, macs);
 						}
@@ -638,6 +655,11 @@ public class StuffKeeper
 					{
 						foreach(string entryPoint in mPSEntryPoints[noExt])
 						{
+							if(mPSCode.ContainsKey(entryPoint))
+							{
+								continue;	//already loaded
+							}
+
 							LoadShader(dev, dirNames[i], fileNames[i],
 								entryPoint, ShaderEntryType.Pixel, sm, macs);
 						}
@@ -646,6 +668,32 @@ public class StuffKeeper
 					Misc.SafeInvoke(eCompileDone, i + 1);
 				}
 			}
+		}
+	}
+
+
+	void AddCompiledCode(ShaderEntryType set, string name, byte []code)
+	{
+		switch(set)
+		{
+			case	ShaderEntryType.Compute:
+				mCSCode.Add(name, code);
+				break;
+			case	ShaderEntryType.Domain:
+				mDSCode.Add(name, code);
+				break;
+			case	ShaderEntryType.Geometry:
+				mGSCode.Add(name, code);
+				break;
+			case	ShaderEntryType.Hull:
+				mHSCode.Add(name, code);
+				break;
+			case	ShaderEntryType.Pixel:
+				mPSCode.Add(name, code);
+				break;
+			case	ShaderEntryType.Vertex:
+				mVSCode.Add(name, code);
+				break;
 		}
 	}
 
@@ -659,11 +707,13 @@ public class StuffKeeper
 
 		int	len	=br.ReadInt32();
 
+		ShaderEntryType	set	=(ShaderEntryType)br.ReadByte();
+
 		byte	[]code	=br.ReadBytes(len);
 
-		string	justName	=file.Substring(0, file.Length - 9);
+		string	justName	=FileUtil.StripExtension(file);
 
-		mCode.Add(justName, code);
+		AddCompiledCode(set, justName, code);
 
 		br.Close();
 		fs.Close();
@@ -710,7 +760,7 @@ public class StuffKeeper
 
 	Dictionary<string, DateTime> GetHeaderTimeStamps(DirectoryInfo di)
 	{
-		FileInfo[]		fi	=di.GetFiles("*.fxh", SearchOption.AllDirectories);
+		FileInfo[]		fi	=di.GetFiles("*.cso", SearchOption.AllDirectories);
 
 		Dictionary<string, DateTime>	ret	=new Dictionary<string, DateTime>();
 
@@ -726,7 +776,7 @@ public class StuffKeeper
 	bool CheckHeaderTimeStamps(DirectoryInfo preDi, DirectoryInfo srcDi)
 	{
 		//see if there is a binary file here that contains the
-		//timestamps of the fxh files
+		//timestamps of the cso files
 		FileInfo[]	hTime	=preDi.GetFiles("Header.TimeStamps", SearchOption.TopDirectoryOnly);
 		if(hTime.Length != 1)
 		{
@@ -836,6 +886,7 @@ public class StuffKeeper
 		string	fullPath	=dir + "\\" + file;
 		Blob	codeBlob, errBlob;
 		string	profile	=ProfileFromSM(sm, set);
+		string	extLess	=FileUtil.StripExtension(file);
 
 		Result	res	=Compiler.CompileFromFile(fullPath, macs, mIFX,
 			entryPoint, profile, ShaderFlags.None,
@@ -849,18 +900,19 @@ public class StuffKeeper
 		byte	[]code	=codeBlob.AsBytes();
 
 		FileStream	fs	=new FileStream(mGameRootDir + "/CompiledShaders/"
-			+ macs[0].Name + "/" + file + ".CSO",
+			+ macs[0].Name + "/" + entryPoint + ".cso",
 			FileMode.Create, FileAccess.Write);
 
 		BinaryWriter	bw	=new BinaryWriter(fs);
 
 		bw.Write(code.Length);
+		bw.Write((byte)set);
 		bw.Write(code, 0, code.Length);
 
 		bw.Close();
 		fs.Close();
 
-		mCode.Add(entryPoint, code);
+		AddCompiledCode(set, entryPoint, code);
 	}
 
 

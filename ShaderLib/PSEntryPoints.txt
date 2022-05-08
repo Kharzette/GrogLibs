@@ -23,3 +23,25 @@ Trilight.hlsl
 	TriCelColorSpecPS
 	Tex0Col0DecalPS
 	Tex0Tex1Col0DecalPS
+2D.hlsl
+	ParticlePS
+	TextPS
+	KeyedGumpPS
+	GumpPS
+	ParticleDMNPS
+BSP.hlsl
+	LightMapPS
+	LightMapCelPS
+	VertexLitPS
+	VertexLitCelPS
+	FullBrightPixelShader
+	LightMapAnimPS
+	LightMapAnimCelPS
+	SkyPS
+	LightMapDMNPS
+	VertexLitDMNPS
+	LightMapAnimDMNPS
+	SkyDMNPS
+	LightMapShadowPS
+	VertexLitShadowPS
+	LightMapAnimShadowPS
