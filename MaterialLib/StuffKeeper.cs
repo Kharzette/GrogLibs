@@ -426,6 +426,18 @@ public class StuffKeeper
 			srv.Value.Dispose();
 		}
 		mFontSRVs.Clear();
+
+		foreach(KeyValuePair<string, ID3D11VertexShader> shd in mVShaders)
+		{
+			shd.Value.Dispose();
+		}
+		mVShaders.Clear();
+
+		foreach(KeyValuePair<string, ID3D11PixelShader> shd in mPShaders)
+		{
+			shd.Value.Dispose();
+		}
+		mPShaders.Clear();
 /*
 		foreach(KeyValuePair<string, List<EffectVariable>> effList in mVars)
 		{
@@ -1161,6 +1173,38 @@ public class StuffKeeper
 
 		return	colArray;
 	}
+
+
+	public ID3D11InputLayout	MakeLayout(
+		ID3D11Device 			dev,
+		string 					vsEntry,
+		InputElementDescription []ied)
+	{
+		if(!mVSCode.ContainsKey(vsEntry))
+		{
+			return	null;
+		}
+
+		return	dev.CreateInputLayout(ied, mVSCode[vsEntry]);
+	}
+
+
+	public static ID3D11Buffer	MakeConstantBuffer(ID3D11Device dev, int size)
+	{
+		BufferDescription	cbDesc	=new BufferDescription();
+
+		//these are kind of odd, but change any one and it breaks		
+		cbDesc.BindFlags			=BindFlags.ConstantBuffer;
+		cbDesc.ByteWidth			=size;
+		cbDesc.CPUAccessFlags		=CpuAccessFlags.None;	//you'd think write, but nope
+		cbDesc.MiscFlags			=ResourceOptionFlags.None;
+		cbDesc.Usage				=ResourceUsage.Default;	//you'd think dynamic here but nope
+		cbDesc.StructureByteStride	=0;
+
+		//alloc
+		return	dev.CreateBuffer(cbDesc);
+	}
+
 
 /*
 	void LoadParameterData()

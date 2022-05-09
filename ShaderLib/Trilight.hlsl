@@ -6,8 +6,6 @@ shared Texture2D	mTexture0;
 shared Texture2D	mTexture1;
 
 #include "CommonFunctions.hlsli"
-//#include "Types.hlsli"
-//#include "RenderStates.hlsli"
 
 //shared pixel shaders
 //just shows the shape for debugging

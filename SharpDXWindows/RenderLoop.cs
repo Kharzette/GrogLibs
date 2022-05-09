@@ -47,7 +47,7 @@ namespace SharpDX.Windows;
 public class RenderLoop : IDisposable
 {
 	private IntPtr controlHandle;
-	private Control control;
+	private Control ?control;
 	private bool isControlAlive;
 	private bool switchControl;
 
@@ -69,7 +69,7 @@ public class RenderLoop : IDisposable
 	/// </summary>
 	/// <value>The control.</value>
 	/// <exception cref="System.InvalidOperationException">Control is already disposed</exception>
-	public Control Control
+	public Control ?Control
 	{
 		get
 		{

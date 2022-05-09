@@ -94,7 +94,7 @@ public class RenderForm : Form
 	/// Initializes a new instance of the <see cref="RenderForm"/> class.
 	/// </summary>
 	/// <param name="text">The text.</param>
-	public RenderForm(String text, System.Drawing.Icon icon)
+	public RenderForm(String text, System.Drawing.Icon ?icon)
 	{
 		Text = text;
 		ClientSize = new System.Drawing.Size(800, 600);
@@ -112,52 +112,52 @@ public class RenderForm : Form
 	/// <summary>
 	/// Occurs when [app activated].
 	/// </summary>
-	public event EventHandler<EventArgs> AppActivated;
+	public event EventHandler<EventArgs> ?AppActivated;
 
 	/// <summary>
 	/// Occurs when [app deactivated].
 	/// </summary>
-	public event EventHandler<EventArgs> AppDeactivated;
+	public event EventHandler<EventArgs> ?AppDeactivated;
 
 	/// <summary>
 	/// Occurs when [monitor changed].
 	/// </summary>
-	public event EventHandler<EventArgs> MonitorChanged;
+	public event EventHandler<EventArgs> ?MonitorChanged;
 
 	/// <summary>
 	/// Occurs when [pause rendering].
 	/// </summary>
-	public event EventHandler<EventArgs> PauseRendering;
+	public event EventHandler<EventArgs> ?PauseRendering;
 
 	/// <summary>
 	/// Occurs when [resume rendering].
 	/// </summary>
-	public event EventHandler<EventArgs> ResumeRendering;
+	public event EventHandler<EventArgs> ?ResumeRendering;
 
 	/// <summary>
 	/// Occurs when [screensaver].
 	/// </summary>
-	public event EventHandler<CancelEventArgs> Screensaver;
+	public event EventHandler<CancelEventArgs> ?Screensaver;
 
 	/// <summary>
 	/// Occurs when [system resume].
 	/// </summary>
-	public event EventHandler<EventArgs> SystemResume;
+	public event EventHandler<EventArgs> ?SystemResume;
 
 	/// <summary>
 	/// Occurs when [system suspend].
 	/// </summary>
-	public event EventHandler<EventArgs> SystemSuspend;
+	public event EventHandler<EventArgs> ?SystemSuspend;
 
 	/// <summary>
 	/// Occurs when [user resized].
 	/// </summary>
-	public event EventHandler<EventArgs> UserResized;
+	public event EventHandler<EventArgs> ?UserResized;
 
 	/// <summary>
 	/// WM_INPUT message arrived
 	/// </summary>
-	public event EventHandler<MessageEventArgs> Input;
+	public event EventHandler<MessageEventArgs> ?Input;
 
 	/// <summary>
 	/// Gets or sets a value indicating whether this form can be resized by the user. See remarks.

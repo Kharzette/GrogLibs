@@ -9,7 +9,8 @@ cbuffer TwoD : register(b4)
 {
 	float2	mTextPosition, mSecondLayerOffset;
 	float2	mTextScale;
-	float4	mTextColor;
+	float2	mPad;			//use later for something
+	float4	mTextColor;		//can't cross 16 boundary
 }
 
 VVPosTex0 TextVS(VPos2Tex02 input)
@@ -19,12 +20,10 @@ VVPosTex0 TextVS(VPos2Tex02 input)
 	float4	pos;
 
 	pos.xy	=(input.Position.xy * mTextScale) + mTextPosition;
-	pos.z	=4;
+	pos.z	=0;
 	pos.w	=1;
 
-	float4x4	viewProj	=mul(mView, mProjection);
-
-	output.Position	=mul(pos, viewProj);
+	output.Position	=mul(pos, mProjection);
 
 	output.TexCoord0.x	=input.TexCoord0.x;
 	output.TexCoord0.y	=input.TexCoord0.y;
