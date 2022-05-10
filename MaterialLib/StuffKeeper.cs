@@ -61,6 +61,9 @@ public class StuffKeeper
 	//game directory
 	string	mGameRootDir;
 
+	//constant buffer keeper
+	CBKeeper	mCBKeeper;
+
 	//entry points for shaders
 	Dictionary<string, List<string>>	mVSEntryPoints	=new Dictionary<string, List<string>>();
 	Dictionary<string, List<string>>	mPSEntryPoints	=new Dictionary<string, List<string>>();
@@ -116,6 +119,7 @@ public class StuffKeeper
 	public void Init(GraphicsDevice gd, string gameRootDir)
 	{
 		mGameRootDir	=gameRootDir;
+		mCBKeeper			=new CBKeeper(gd.GD);
 		mIFX			=new IncludeFX(gameRootDir);
 
 		switch(gd.GD.FeatureLevel)
@@ -371,6 +375,12 @@ public class StuffKeeper
 		mSRVs.Add(name, srv);
 	}
 
+
+	public CBKeeper GetCBKeeper()
+	{
+		return	mCBKeeper;
+	}
+
 /*
 	public bool AddTexToAtlas(TexAtlas atlas, string texName, GraphicsDevice gd,
 		out double scaleU, out double scaleV, out double uoffs, out double voffs)
@@ -396,6 +406,8 @@ public class StuffKeeper
 	public void FreeAll()
 	{
 		mIF.Dispose();
+
+		mCBKeeper.FreeAll();
 
 		foreach(KeyValuePair<string, ID3D11Texture2D> tex in mTexture2s)
 		{
@@ -1186,23 +1198,6 @@ public class StuffKeeper
 		}
 
 		return	dev.CreateInputLayout(ied, mVSCode[vsEntry]);
-	}
-
-
-	public static ID3D11Buffer	MakeConstantBuffer(ID3D11Device dev, int size)
-	{
-		BufferDescription	cbDesc	=new BufferDescription();
-
-		//these are kind of odd, but change any one and it breaks		
-		cbDesc.BindFlags			=BindFlags.ConstantBuffer;
-		cbDesc.ByteWidth			=size;
-		cbDesc.CPUAccessFlags		=CpuAccessFlags.None;	//you'd think write, but nope
-		cbDesc.MiscFlags			=ResourceOptionFlags.None;
-		cbDesc.Usage				=ResourceUsage.Default;	//you'd think dynamic here but nope
-		cbDesc.StructureByteStride	=0;
-
-		//alloc
-		return	dev.CreateBuffer(cbDesc);
 	}
 
 

@@ -17,15 +17,6 @@ internal struct TextVert
 	internal Half2		TexCoord0;
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 4)]
-internal struct TwoD
-{
-	internal Vector2	mTextPosition, mSecondLayerOffset;
-	internal Vector2	mTextScale;
-	internal Vector2	mPadding;
-	internal Vector4	mTextColor;
-}
-
 internal class StringData
 {
 	internal TextVert	[]mVerts;
@@ -39,8 +30,8 @@ public class ScreenText
 {
 	GraphicsDevice				mGD;
 	StuffKeeper					mSK;
+	CBKeeper					mCBK;
 	ID3D11Buffer				mVB;
-	ID3D11Buffer				mCB;
 	ID3D11InputLayout			mLayout;
 	ID3D11ShaderResourceView	mFontSRV;
 	ID3D11VertexShader			mVS;
@@ -54,9 +45,6 @@ public class ScreenText
 	int		mNumVerts;
 	string	mFontTexName;
 
-	//constant buffer cpu copy
-	TwoD	mCB2D;
-
 	Dictionary<string, StringData>	mStrings	=new Dictionary<string, StringData>();
 
 
@@ -67,9 +55,9 @@ public class ScreenText
 	{
 		mGD				=gd;
 		mSK				=sk;
+		mCBK			=sk.GetCBKeeper();
 		mMaxCharacters	=maxCharacters;
 		mFontTexName	=fontTexName;
-		mCB2D			=new TwoD();
 		mFontSRV		=sk.GetFontSRV(fontName);
 
 		mFont	=sk.GetFont(fontName);
@@ -90,7 +78,6 @@ public class ScreenText
 		};
 
 		mLayout	=sk.MakeLayout(gd.GD, "TextVS", ied);
-		mCB		=StuffKeeper.MakeConstantBuffer(gd.GD, sizeof(TwoD));
 		mVS		=sk.GetVertexShader("TextVS");
 		mPS		=sk.GetPixelShader("TextPS");
 	}
@@ -271,17 +258,6 @@ public class ScreenText
 		}
 
 		mGD.DC.UpdateSubresource<TextVert>(mTextBuf, mVB);
-/*
-		DataStream	ds;
-		dc.MapSubresource(mVB, MapMode.WriteDiscard, MapFlags.None, out ds);
-
-		for(int i=0;i < mNumVerts;i++)
-		{
-			ds.Write<TextVert>(mTextBuf[i]);
-		}
-
-		dc.UnmapSubresource(mVB, 0);
-		*/
 	}
 
 
@@ -305,23 +281,18 @@ public class ScreenText
 		mGD.DC.VSSetShader(mVS);
 		mGD.DC.PSSetShader(mPS);
 		mGD.DC.PSSetShaderResource(0, mFontSRV);
-		mGD.DC.VSSetConstantBuffer(4, mCB);
-		mGD.DC.PSSetConstantBuffer(4, mCB);
 
-//		mMatLib.SetMaterialParameter("Text", "mView", view);
-//		mMatLib.SetMaterialParameter("Text", "mProjection", proj);
-//		mMatLib.SetMaterialFontTexture("Text", "mTexture", mFontTexName);
+		mCBK.Set2DCBToShaders(mGD.DC);
 
 		int	offset	=0;
 		foreach(KeyValuePair<string, StringData> str in mStrings)
 		{
 			int	len	=str.Value.mVerts.Length;
 
-			mCB2D.mTextPosition	=str.Value.mPosition;
-			mCB2D.mTextScale	=str.Value.mScale;
-			mCB2D.mTextColor	=str.Value.mColor;
+			mCBK.SetTextTransform(str.Value.mPosition, str.Value.mScale);
+			mCBK.SetTextColor(str.Value.mColor);
 
-			mGD.DC.UpdateSubresource<TwoD>(mCB2D, mCB);
+			mCBK.UpdateTwoD(mGD.DC);
 
 			mGD.DC.Draw(len, offset);
 
