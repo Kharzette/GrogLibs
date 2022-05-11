@@ -302,6 +302,25 @@ public class StuffKeeper
 	}
 
 
+	public void AddTex(ID3D11Device dev, string name, Color []texData, int w, int h)
+	{
+		if(mTexture2s.ContainsKey(name))
+		{
+			return;
+		}
+
+		ID3D11Texture2D	tex	=MakeTexture(dev, texData, w, h);
+
+		mResources.Add(name, tex as ID3D11Resource);
+		mTexture2s.Add(name, tex);
+
+		ID3D11ShaderResourceView	srv	=dev.CreateShaderResourceView(tex);
+		srv.DebugName	=name;
+
+		mSRVs.Add(name, srv);
+	}
+
+
 	public void AddTex(ID3D11Device dev, string name, byte []texData, int w, int h)
 	{
 		if(mTexture2s.ContainsKey(name))
@@ -1029,6 +1048,34 @@ public class StuffKeeper
 
 		Marshal.FreeHGlobal(texData);
 
+		return	tex;
+	}
+
+
+	unsafe ID3D11Texture2D MakeTexture(ID3D11Device dev, Color []colors, int width, int height)
+	{
+		Texture2DDescription	texDesc	=new Texture2DDescription();
+		texDesc.ArraySize				=1;
+		texDesc.BindFlags				=BindFlags.ShaderResource;
+		texDesc.CPUAccessFlags			=CpuAccessFlags.None;
+		texDesc.MipLevels				=1;
+		texDesc.MiscFlags				=ResourceOptionFlags.None;
+		texDesc.Usage					=ResourceUsage.Immutable;
+		texDesc.Width					=width;
+		texDesc.Height					=height;
+		texDesc.Format					=Format.R8G8B8A8_UNorm;
+		texDesc.SampleDescription		=new SampleDescription(1, 0);
+
+		ID3D11Texture2D	tex;
+
+		SubresourceData	[]srd	=new SubresourceData[1];
+
+		fixed(void *pColors = colors)
+		{
+			srd[0]	=new SubresourceData(pColors, width * 4);
+				
+			tex	=dev.CreateTexture2D(texDesc, srd);
+		}
 		return	tex;
 	}
 

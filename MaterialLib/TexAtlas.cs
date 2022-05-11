@@ -1,18 +1,20 @@
 using System;
 using System.IO;
+using System.Numerics;
 using UtilityLib;
+using Vortice.Direct3D11;
+using Vortice.Mathematics;
 
 
 namespace MaterialLib;
 
 //based on this article
 //http://www.blackpawn.com/texts/lightmaps/default.html
-/*
 class TexNode
 {
 	TexNode		mFront;
 	TexNode		mBack;
-	Rectangle	mRect;
+	RectI		mRect;
 	bool		mbOccupied;
 
 
@@ -26,7 +28,7 @@ class TexNode
 	}
 
 
-	public Rectangle GetRect()
+	public RectI GetRect()
 	{
 		return	mRect;
 	}
@@ -83,22 +85,22 @@ class TexNode
 
 		if(dw > dh)
 		{
-			mFront.mRect	=new Rectangle(mRect.Left, mRect.Top,
+			mFront.mRect	=new RectI(mRect.Left, mRect.Top,
 								texW,
 								(mRect.Bottom - mRect.Top));
 
-			mBack.mRect	=new Rectangle((mRect.Left + texW),
+			mBack.mRect	=new RectI((mRect.Left + texW),
 							mRect.Top,
 							(mRect.Right - mRect.Left - texW),
 							(mRect.Bottom - mRect.Top));
 		}
 		else
 		{
-			mFront.mRect	=new Rectangle(mRect.Left, mRect.Top,
+			mFront.mRect	=new RectI(mRect.Left, mRect.Top,
 								(mRect.Right - mRect.Left),
 								texH);
 
-			mBack.mRect	=new Rectangle(mRect.Left,
+			mBack.mRect	=new RectI(mRect.Left,
 							(mRect.Top + texH),
 							(mRect.Right - mRect.Left),
 							(mRect.Bottom - mRect.Top - texH));
@@ -157,8 +159,8 @@ class TexNode
 
 public class TexAtlas
 {
-	Texture2D			mAtlasTexture;
-	ShaderResourceView	mSRV;
+	ID3D11Texture2D				mAtlasTexture;
+	ID3D11ShaderResourceView	mSRV;
 
 	TexNode		mRoot;
 	Color		[]mBuildArray;
@@ -199,7 +201,7 @@ public class TexAtlas
 	}
 
 
-	public System.Drawing.Bitmap GetAtlasImage(DeviceContext dc)
+	public System.Drawing.Bitmap GetAtlasImage(ID3D11DeviceContext dc)
 	{
 		System.Drawing.Bitmap	bm	=new System.Drawing.Bitmap(mWidth, mHeight);
 
@@ -235,7 +237,7 @@ public class TexAtlas
 	}
 
 
-	public ShaderResourceView GetAtlasSRV()
+	public ID3D11ShaderResourceView GetAtlasSRV()
 	{
 		return	mSRV;
 	}
@@ -259,7 +261,7 @@ public class TexAtlas
 			mBuildArray	=new Color[mWidth * mHeight];
 		}
 
-		Rectangle	target	=n.GetRect();
+		RectI	target	=n.GetRect();
 
 		int c	=0;
 		for(int y=target.Top;y < target.Bottom;y++)
@@ -282,23 +284,14 @@ public class TexAtlas
 	}
 
 
-	public void Finish(GraphicsDevice gd)
+	public void Finish(GraphicsDevice gd, StuffKeeper sk)
 	{
 		if(mBuildArray == null)
 		{
 			return;
 		}
 
-		DataStream	ds	=new DataStream(mWidth * mHeight * 4, true, true);
-
-		foreach(Color c in mBuildArray)
-		{
-			ds.Write(c);
-		}
-
-		InitTex(gd, ds);
-
-		ds.Dispose();
+		sk.AddTex(gd.GD, "LightMapAtlas", mBuildArray, mWidth, mHeight);
 	}
 
 
@@ -309,62 +302,23 @@ public class TexAtlas
 
 		foreach(Color c in mBuildArray)
 		{
-			bw.Write(c.ToRgba());
+			bw.Write(c.PackedValue);
 		}
 
 		mRoot.Write(bw);
 	}
 
 
-	public void Read(GraphicsDevice g, BinaryReader br)
+	public void Read(GraphicsDevice gd, BinaryReader br, StuffKeeper sk)
 	{
 		mWidth	=br.ReadInt32();
 		mHeight	=br.ReadInt32();
 
-		DataStream	ds	=new DataStream(mWidth * mHeight * 4, true, true);
-
 		byte	[]atlas	=br.ReadBytes(mWidth * mHeight * 4);
 
-		ds.Write(atlas, 0, mWidth * mHeight * 4);
-
-		InitTex(g, ds);
+		sk.AddTex(gd.GD, "LightMapAtlas", mBuildArray, mWidth, mHeight);
 
 		mRoot	=new TexNode(mWidth, mHeight);
 		mRoot.Read(br);
 	}
-
-
-	void InitTex(GraphicsDevice gd, DataStream ds)
-	{
-		SampleDescription	sampDesc	=new SampleDescription();
-		sampDesc.Count		=1;
-		sampDesc.Quality	=0;
-
-		Texture2DDescription	texDesc	=new Texture2DDescription();
-		texDesc.ArraySize			=1;
-		texDesc.BindFlags			=BindFlags.ShaderResource;
-		texDesc.CpuAccessFlags		=CpuAccessFlags.None;
-		texDesc.MipLevels			=1;
-		texDesc.OptionFlags			=ResourceOptionFlags.None;
-		texDesc.Usage				=ResourceUsage.Immutable;
-		texDesc.Width				=mWidth;
-		texDesc.Height				=mHeight;
-		texDesc.Format				=Format.R8G8B8A8_UNorm;
-		texDesc.SampleDescription	=sampDesc;
-		
-		DataBox	[]dbs	=new DataBox[1];
-
-		dbs[0]	=new DataBox(ds.DataPointer,
-			texDesc.Width *
-			(int)FormatHelper.SizeOfInBytes(texDesc.Format),
-			texDesc.Width * texDesc.Height *
-			(int)FormatHelper.SizeOfInBytes(texDesc.Format));
-
-		mAtlasTexture	=new Texture2D(gd.GD, texDesc, dbs);
-
-		mAtlasTexture.DebugName	="LightMapAtlas";
-
-		mSRV	=new ShaderResourceView(gd.GD, mAtlasTexture);
-	}
 }
-*/
