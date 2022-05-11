@@ -80,6 +80,11 @@ public class StuffKeeper
 	Dictionary<string, ID3D11VertexShader>	mVShaders	=new Dictionary<string, ID3D11VertexShader>();
 	Dictionary<string, ID3D11PixelShader>	mPShaders	=new Dictionary<string, ID3D11PixelShader>();
 
+	//renderstates... was better when these were in hlsl
+	Dictionary<string, ID3D11BlendState>		mBlends	=new Dictionary<string, ID3D11BlendState>();
+	Dictionary<string, ID3D11DepthStencilState>	mDSSs	=new Dictionary<string, ID3D11DepthStencilState>();
+	Dictionary<string, ID3D11SamplerState>		mSSs	=new Dictionary<string, ID3D11SamplerState>();
+
 	//texture 2ds
 	Dictionary<string, ID3D11Texture2D>	mTexture2s	=new Dictionary<string, ID3D11Texture2D>();
 
@@ -94,13 +99,6 @@ public class StuffKeeper
 
 	//shader resource views for fonts
 	Dictionary<string, ID3D11ShaderResourceView>	mFontSRVs	=new Dictionary<string, ID3D11ShaderResourceView>();
-
-	//list of parameter variables per shader
-//	Dictionary<string, List<EffectVariable>>	mVars	=new Dictionary<string, List<EffectVariable>>();
-
-	//data driven set of ignored and hidden parameters (see text file)
-//	Dictionary<string, List<string>>	mIgnoreData	=new Dictionary<string,List<string>>();
-//	Dictionary<string, List<string>>	mHiddenData	=new Dictionary<string,List<string>>();
 
 	//list of font data
 	Dictionary<string, Font>	mFonts	=new Dictionary<string, Font>();
@@ -151,22 +149,38 @@ public class StuffKeeper
 		SaveHeaderTimeStamps(sm);
 		LoadResources(gd);
 		LoadFonts(gd);
-//		LoadParameterData();
-
-//		GrabVariables();
+		MakeCommonRenderStates(gd);
 	}
 
 
-//	internal Dictionary<string, List<string>> GetIgnoreData()
-//	{
-//		return	mIgnoreData;
-//	}
+	internal ID3D11SamplerState	GetSamplerState(string name)
+	{
+		if(mSSs.ContainsKey(name))
+		{
+			return	mSSs[name];
+		}
+		return	null;
+	}
 
 
-//	internal Dictionary<string, List<string>> GetHideData()
-//	{
-//		return	mHiddenData;
-//	}
+	internal ID3D11DepthStencilState	GetDepthStencilState(string name)
+	{
+		if(mDSSs.ContainsKey(name))
+		{
+			return	mDSSs[name];
+		}
+		return	null;
+	}
+
+
+	internal ID3D11BlendState	GetBlendState(string name)
+	{
+		if(mBlends.ContainsKey(name))
+		{
+			return	mBlends[name];
+		}
+		return	null;
+	}
 
 
 	internal ID3D11Texture2D GetTexture2D(string name)
@@ -187,75 +201,6 @@ public class StuffKeeper
 		}
 		return	mFonts[name];
 	}
-
-/*
-	internal List<EffectVariable> GetEffectVariables(string fxName)
-	{
-		if(!mVars.ContainsKey(fxName))
-		{
-			return	null;
-		}
-
-		return	mVars[fxName];
-	}
-
-	internal string NameForEffect(Effect fx)
-	{
-		if(mFX.ContainsValue(fx))
-		{
-			foreach(KeyValuePair<string, Effect> ef in mFX)
-			{
-				if(ef.Value == fx)
-				{
-					return	ef.Key;
-				}
-			}
-		}
-		return	"";
-	}
-
-
-	internal List<EffectVariable> GrabVariables(string fx)
-	{
-		if(mVars.ContainsKey(fx))
-		{
-			return	mVars[fx];
-		}
-		return	new List<EffectVariable>();
-	}
-
-
-	internal Effect EffectForName(string fxName)
-	{
-		if(mFX.ContainsKey(fxName))
-		{
-			return	mFX[fxName];
-		}
-		return	null;
-	}
-
-
-	public List<string> GetEffectList()
-	{
-		List<string>	ret	=new List<string>();
-
-		foreach(KeyValuePair<string, Effect> fx in mFX)
-		{
-			ret.Add(fx.Key);
-		}
-		return	ret;
-	}
-
-
-	internal EffectVariable GetVariable(string fxName, string varName)
-	{
-		if(!mFX.ContainsKey(fxName))
-		{
-			return	null;
-		}
-
-		return	mVars[fxName].FirstOrDefault(v => v.Description.Name == varName);
-	}*/
 
 
 	//This can be used to generate input layouts
@@ -450,25 +395,20 @@ public class StuffKeeper
 			shd.Value.Dispose();
 		}
 		mPShaders.Clear();
-/*
-		foreach(KeyValuePair<string, List<EffectVariable>> effList in mVars)
-		{
-			foreach(EffectVariable efv in effList.Value)
-			{
-				efv.Dispose();
-			}
-			effList.Value.Clear();
-		}
-		mVars.Clear();
 
-		mIgnoreData.Clear();
-		mHiddenData.Clear();
-
-		foreach(KeyValuePair<string, Effect> fx in mFX)
+		//renderstates
+		foreach(KeyValuePair<string, ID3D11BlendState> bld in mBlends)
 		{
-			fx.Value.Dispose();
+			bld.Value.Dispose();
 		}
-		mFX.Clear();*/
+		foreach(KeyValuePair<string, ID3D11DepthStencilState> dss in mDSSs)
+		{
+			dss.Value.Dispose();
+		}
+		foreach(KeyValuePair<string, ID3D11SamplerState> dss in mSSs)
+		{
+			dss.Value.Dispose();
+		}
 	}
 
 
@@ -1092,33 +1032,6 @@ public class StuffKeeper
 		return	tex;
 	}
 
-/*
-	void GrabVariables()
-	{
-		foreach(KeyValuePair<string, Effect> fx in mFX)
-		{
-			for(int i=0;;i++)
-			{
-				EffectVariable	ev	=fx.Value.GetVariableByIndex(i);
-				if(ev == null)
-				{
-					break;
-				}
-				if(!ev.IsValid)
-				{
-					ev.Dispose();
-					break;
-				}
-
-				if(!mVars.ContainsKey(fx.Key))
-				{
-					mVars.Add(fx.Key, new List<EffectVariable>());
-				}
-				mVars[fx.Key].Add(ev);
-			}
-		}
-	}*/
-
 
 	void PreMultAndLinear(byte []colors, int width, int height)
 	{
@@ -1201,117 +1114,69 @@ public class StuffKeeper
 	}
 
 
-/*
-	void LoadParameterData()
+	void MakeCommonRenderStates(GraphicsDevice gd)
 	{
-		if(!Directory.Exists(mGameRootDir + "/Shaders"))
-		{
-			return;
-		}
+		//samplers
+		SamplerDescription	sd	=new SamplerDescription(
+			Filter.MinMagMipLinear,
+			TextureAddressMode.Clamp,
+			TextureAddressMode.Clamp,
+			TextureAddressMode.Clamp,
+			0f, 16,
+			ComparisonFunction.Less,
+			0, float.MaxValue);
+		mSSs.Add("LinearClamp", gd.GD.CreateSamplerState(sd));
 
-		if(!File.Exists(mGameRootDir + "/Shaders/ParameterData.txt"))
-		{
-			return;
-		}
+		sd.Filter				=Filter.MinMagMipLinear;
+		sd.AddressU				=TextureAddressMode.Wrap;
+		sd.AddressV				=TextureAddressMode.Wrap;
+		sd.AddressW				=TextureAddressMode.Wrap;		
+		mSSs.Add("LinearWrap", gd.GD.CreateSamplerState(sd));
 
-		FileStream		fs	=new FileStream(mGameRootDir + "/Shaders/ParameterData.txt", FileMode.Open, FileAccess.Read);
-		StreamReader	sr	=new StreamReader(fs);
+		sd.Filter	=Filter.MinMagMipPoint;
+		mSSs.Add("PointWrap", gd.GD.CreateSamplerState(sd));
 
-		string			curTechnique	="";
-		string			curCategory		="";
-		List<string>	curStuff		=new List<string>();
-		for(;;)
-		{
-			string	line	=sr.ReadLine();
-			if(line.StartsWith("//"))
-			{
-				continue;
-			}
+		sd.AddressU				=TextureAddressMode.Wrap;
+		sd.AddressV				=TextureAddressMode.Wrap;
+		sd.AddressW				=TextureAddressMode.Wrap;
+		mSSs.Add("PointClamp", gd.GD.CreateSamplerState(sd));
 
-			//python style!
-			if(line.StartsWith("\t\t"))
-			{
-				Debug.Assert(curTechnique != "");
-				Debug.Assert(curCategory != "");
+		
+		//depth stencils
+		DepthStencilDescription	dsd	=new DepthStencilDescription(true,
+			DepthWriteMask.All, ComparisonFunction.Less);
+		mDSSs.Add("EnableDepth", gd.GD.CreateDepthStencilState(dsd));
 
-				if(curCategory == "Ignored")
-				{
-					curStuff.Add(line.Trim());
-				}
-				else if(curCategory == "Hidden")
-				{
-					curStuff.Add(line.Trim());
-				}
-				else
-				{
-					Debug.Assert(false);
-				}
-			}
-			else if(line.StartsWith("\t"))
-			{
-				if(curStuff.Count > 0)
-				{
-					if(curCategory == "Ignored")
-					{
-						mIgnoreData.Add(curTechnique, curStuff);
-					}
-					else if(curCategory == "Hidden")
-					{
-						mHiddenData.Add(curTechnique, curStuff);
-					}
-					else
-					{
-						Debug.Assert(false);
-					}
-					curStuff	=new List<string>();
-				}
-				curCategory	=line.Trim();
-			}
-			else
-			{
-				if(curStuff.Count > 0)
-				{
-					if(curCategory == "Ignored")
-					{
-						mIgnoreData.Add(curTechnique, curStuff);
-					}
-					else if(curCategory == "Hidden")
-					{
-						mHiddenData.Add(curTechnique, curStuff);
-					}
-					else
-					{
-						Debug.Assert(false);
-					}
-					curStuff	=new List<string>();
-				}
-				curCategory		="";
-				curTechnique	=line.Trim();
-			}
+		dsd.DepthWriteMask	=DepthWriteMask.Zero;
+		dsd.DepthFunc		=ComparisonFunction.Equal;
+		mDSSs.Add("ShadowDepth", gd.GD.CreateDepthStencilState(dsd));
 
-			if(sr.EndOfStream)
-			{
-				if(curStuff.Count > 0)
-				{
-					if(curCategory == "Ignored")
-					{
-						mIgnoreData.Add(curTechnique, curStuff);
-					}
-					else if(curCategory == "Hidden")
-					{
-						mHiddenData.Add(curTechnique, curStuff);
-					}
-					else
-					{
-						Debug.Assert(false);
-					}
-					curStuff	=new List<string>();
-				}
-				break;
-			}
-		}
+		dsd.DepthEnable		=false;
+		dsd.DepthFunc		=ComparisonFunction.Always;
+		mDSSs.Add("DisableDepth", gd.GD.CreateDepthStencilState(dsd));
 
-		sr.Close();
-		fs.Close();
-	}*/
+		dsd.DepthEnable		=true;
+		dsd.DepthFunc		=ComparisonFunction.Less;
+		mDSSs.Add("DisableDepthWrite", gd.GD.CreateDepthStencilState(dsd));
+
+		dsd.DepthWriteMask	=DepthWriteMask.All;
+		dsd.DepthFunc		=ComparisonFunction.Always;
+		mDSSs.Add("DisableDepthTest", gd.GD.CreateDepthStencilState(dsd));
+
+		//blendstates, note that BlendOp has been moved to rendertarget?
+		//blend op and blend op alpha are both ADD on this one
+		BlendDescription	bd	=new BlendDescription(Blend.One,
+			Blend.InverseSourceAlpha, Blend.Zero, Blend.Zero);
+		mBlends.Add("AlphaBlending", gd.GD.CreateBlendState(bd));
+
+		//blend op and blend op alpha are both MIN on this one
+		bd	=new BlendDescription(Blend.One,
+			Blend.One, Blend.One, Blend.One);
+		mBlends.Add("MultiChannelDepth", gd.GD.CreateBlendState(bd));
+
+		//blend op is REV_SUBTRACT and blend op alpha is ADD
+		bd	=new BlendDescription(Blend.One,
+			Blend.One, Blend.One, Blend.One);
+		mBlends.Add("ShadowBlending", gd.GD.CreateBlendState(bd));
+	}
 }

@@ -3,7 +3,7 @@
 #define _COMMONFUNCTIONSFXH
 
 //constants
-#define	MAX_BONES				55
+#define	MAX_BONES				55				//ensure matches CBKeeper
 #define	PI_OVER_FOUR			0.7853981634f
 #define	PI_OVER_TWO				1.5707963268f
 #define MAX_HALF				65504
@@ -36,8 +36,8 @@ cbuffer PerObject : register(b0)
 	//material id for borders etc
 	int		mMaterialID;
 
-	//pad out to 16 boundary
-	uint	mPadding0, mPadding1, mPadding2;
+	//a force vector for doing physicsy stuff
+	float3	mDanglyForce;
 }
 
 

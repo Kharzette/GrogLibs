@@ -48,9 +48,7 @@ public unsafe class CBKeeper
 
 		//material id for borders etc
 		internal int		mMaterialID;
-		internal UInt32		mPadding0;
-		internal UInt32		mPadding1;
-		internal UInt32		mPadding2;	//pad to 16
+		internal Vector3	mDanglyForce;
 	}
 
 	//CommonFunctions.hlsli
@@ -60,8 +58,9 @@ public unsafe class CBKeeper
 		internal Matrix4x4	mProjection;
 	}
 
+	//2D.hlsl
 	[StructLayout(LayoutKind.Sequential, Pack = 4)]
-	internal struct TwoD
+	struct TwoD
 	{
 		internal Vector2	mTextPosition, mSecondLayerOffset;
 		internal Vector2	mTextScale;
@@ -69,17 +68,39 @@ public unsafe class CBKeeper
 		internal Vector4	mTextColor;
 	}
 
+	//BSP.hlsl
+	[StructLayout(LayoutKind.Sequential, Pack = 4)]
+	struct BSP
+	{
+		internal bool		mbTextureEnabled;
+		internal Vector2	mTexSize;
+	}
+
+	//Character.hlsl bone array
+	Matrix4x4	[]mBones;
+
+	//BSP.hlsl light style array
+	Half	[]mAniIntensities;
+
 	//gpu side
 	ID3D11Buffer	mPerObjectBuf;
 	ID3D11Buffer	mPerFrameBuf;
 	ID3D11Buffer	mChangeLessBuf;
 	ID3D11Buffer	mTwoDBuf;
+	ID3D11Buffer	mCharacterBuf;
+	ID3D11Buffer	mBSPBuf, mBSPStylesBuf;
 
 	//cpu side
 	PerObject	mPerObject;
 	PerFrame	mPerFrame;
 	ChangeLess	mChangeLess;
 	TwoD		mTwoD;
+	BSP			mBSP;
+
+
+	//ensure matches Character.hlsl
+	const int	MaxBones	=55;
+	const int	NumStyles	=44;	//match bsp.hlsl
 
 
 	//stuffkeeper constructs this
@@ -94,6 +115,10 @@ public unsafe class CBKeeper
 		mPerObjectBuf.Dispose();
 		mPerFrameBuf.Dispose();
 		mChangeLessBuf.Dispose();
+		mTwoDBuf.Dispose();
+		mCharacterBuf.Dispose();
+		mBSPBuf.Dispose();
+		mBSPStylesBuf.Dispose();
 	}
 
 
@@ -104,12 +129,18 @@ public unsafe class CBKeeper
 		mPerFrameBuf	=MakeConstantBuffer(dev, sizeof(PerFrame));
 		mChangeLessBuf	=MakeConstantBuffer(dev, sizeof(ChangeLess));
 		mTwoDBuf		=MakeConstantBuffer(dev, sizeof(TwoD));
+		mBSPBuf			=MakeConstantBuffer(dev, sizeof(BSP));
+		mCharacterBuf	=MakeConstantBuffer(dev, sizeof(Matrix4x4) * MaxBones);
+		mBSPStylesBuf	=MakeConstantBuffer(dev, sizeof(Half) * NumStyles);
 
 		//alloc C# side constant buffer data
-		mPerObject	=new PerObject();
-		mPerFrame	=new PerFrame();
-		mChangeLess	=new ChangeLess();
-		mTwoD		=new TwoD();
+		mPerObject		=new PerObject();
+		mPerFrame		=new PerFrame();
+		mChangeLess		=new ChangeLess();
+		mTwoD			=new TwoD();
+		mBones			=new Matrix4x4[MaxBones];
+		mAniIntensities	=new Half[NumStyles];
+		mBSP			=new BSP();
 	}
 
 
@@ -144,9 +175,27 @@ public unsafe class CBKeeper
 
 	public void Set2DCBToShaders(ID3D11DeviceContext dc)
 	{
-		//commonfunctions
+		//2d
 		dc.VSSetConstantBuffer(4, mTwoDBuf);
 		dc.PSSetConstantBuffer(4, mTwoDBuf);
+	}
+
+
+	public void SetCharacterToShaders(ID3D11DeviceContext dc)
+	{
+		//character
+		dc.VSSetConstantBuffer(4, mCharacterBuf);
+		dc.PSSetConstantBuffer(4, mCharacterBuf);
+	}
+
+
+	public void SetBSPToShaders(ID3D11DeviceContext dc)
+	{
+		//bsp
+		dc.VSSetConstantBuffer(4, mBSPBuf);
+		dc.PSSetConstantBuffer(4, mBSPBuf);
+		dc.VSSetConstantBuffer(5, mBSPStylesBuf);
+		dc.PSSetConstantBuffer(5, mBSPStylesBuf);
 	}
 
 
@@ -171,6 +220,19 @@ public unsafe class CBKeeper
 	public void UpdateTwoD(ID3D11DeviceContext dc)
 	{
 		dc.UpdateSubresource<TwoD>(mTwoD, mTwoDBuf);
+	}
+
+
+	public void UpdateCharacter(ID3D11DeviceContext dc)
+	{
+		dc.UpdateSubresource(mBones, mCharacterBuf);
+	}
+
+
+	public void UpdateBSP(ID3D11DeviceContext dc)
+	{
+		dc.UpdateSubresource<BSP>(mBSP, mBSPBuf);
+		dc.UpdateSubresource(mAniIntensities, mBSPStylesBuf);
 	}
 
 
@@ -233,6 +295,12 @@ public unsafe class CBKeeper
 	}
 
 
+	internal void SetSpecularPower(float specPow)
+	{
+		mPerObject.mSpecPower	=specPow;
+	}
+
+
 	public void SetWorldMat(Matrix4x4 world)
 	{
 		mPerObject.mWorld	=world;
@@ -242,6 +310,12 @@ public unsafe class CBKeeper
 	public void SetMaterialID(int matID)
 	{
 		mPerObject.mMaterialID	=matID;
+	}
+
+
+	public void SetDanglyForce(Vector3 force)
+	{
+		mPerObject.mDanglyForce	=force;
 	}
 #endregion
 
@@ -265,6 +339,30 @@ public unsafe class CBKeeper
 		mTwoD.mTextColor	=col;
 	}
 #endregion
+
+
+	public void SetTextureEnabled(bool bOn)
+	{
+		mBSP.mbTextureEnabled	=bOn;
+	}
+
+
+	public void SetTexSize(Vector2 size)
+	{
+		mBSP.mTexSize	=size;
+	}
+
+
+	public void SetAniIntensities(Half	[]ani)
+	{
+		Array.Copy(ani, mAniIntensities, NumStyles);
+	}
+
+
+	public void SetBones(Matrix4x4 []bones)
+	{
+		bones.CopyTo(mBones, 0);
+	}
 
 
 	public void SetProjection(Matrix4x4 proj)

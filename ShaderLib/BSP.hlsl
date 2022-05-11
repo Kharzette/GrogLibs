@@ -13,7 +13,12 @@ cbuffer BSP : register(b4)
 {
 	bool		mbTextureEnabled;
 	float2		mTexSize;
+}
 
+//putting these in their own cbuffer
+//because of how painful arrays are in C#
+cbuffer BSPStyles : register(b5)
+{
 	//intensity levels for the animated / switchable light styles
 	half	mAniIntensities[44];
 }

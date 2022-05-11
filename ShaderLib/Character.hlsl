@@ -7,10 +7,7 @@
 cbuffer Character : register(b4)
 {
 	//matrii for skinning
-	float4x4	mBones[MAX_BONES];
-	
-	//for dangly shaders
-	float3	mDanglyForce;
+	float4x4	mBones[MAX_BONES];	
 }
 
 
