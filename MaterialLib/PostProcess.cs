@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
+using Vortice.DXGI;
+using Vortice.Direct3D11;
+using Vortice.Mathematics;
 using UtilityLib;
 
 
 namespace MaterialLib;
-/*
+
 public class PostProcess
 {
 	internal struct VertexPositionTexture
@@ -15,10 +19,10 @@ public class PostProcess
 	}
 
 	//data for doing postery
-	Dictionary<string, Texture2D>			mPostTex2Ds		=new Dictionary<string, Texture2D>();
-	Dictionary<string, RenderTargetView>	mPostTargets	=new Dictionary<string, RenderTargetView>();
-	Dictionary<string, DepthStencilView>	mPostDepths		=new Dictionary<string, DepthStencilView>();
-	Dictionary<string, ShaderResourceView>	mPostTargSRVs	=new Dictionary<string, ShaderResourceView>();
+	Dictionary<string, ID3D11Texture2D>			mPostTex2Ds			=new Dictionary<string, ID3D11Texture2D>();
+	Dictionary<string, ID3D11RenderTargetView>	mPostTargets		=new Dictionary<string, ID3D11RenderTargetView>();
+	Dictionary<string, ID3D11DepthStencilView>	mPostDepths			=new Dictionary<string, ID3D11DepthStencilView>();
+	Dictionary<string, ID3D11ShaderResourceView>	mPostTargSRVs	=new Dictionary<string, ID3D11ShaderResourceView>();
 
 	//keep track of lower res rendertargets
 	//this info needed when a resize happens
@@ -27,25 +31,18 @@ public class PostProcess
 	List<string>	mFixedResTargets	=new List<string>();	//don't resize
 
 	//data for looking up outline colours
-	Texture1D			mOutlineLookupTex;
-	ShaderResourceView	mOutlineLookupSRV;
-	Color				[]mOutLineColors	=new Color[MaxOutlineColours];
+	ID3D11Texture1D				mOutlineLookupTex;
+	ID3D11ShaderResourceView	mOutlineLookupSRV;
+	Color						[]mOutLineColors	=new Color[MaxOutlineColours];
 
 	//for a fullscreen quad
-	Buffer				mQuadVB;
-	Buffer				mQuadIB;
-	VertexBufferBinding	mQuadBinding;
-
-	//effect file
-	Effect	mPostFX;
-
-	//cached techniques and passes
-	Dictionary<EffectTechnique, EffectPass>	mEPasses	=new Dictionary<EffectTechnique, EffectPass>();
-	Dictionary<string, EffectTechnique>		mETechs		=new Dictionary<string, EffectTechnique>();
+	ID3D11Buffer	mQuadVB;
+	ID3D11Buffer	mQuadIB;
 
 	//stuff
-	int		mResX, mResY;
-	Color	mClearColor;
+	StuffKeeper	mSK;
+	int			mResX, mResY;
+	Color		mClearColor;
 
 	//gaussian blur stuff
 	float	[]mSampleWeightsX;
@@ -58,57 +55,28 @@ public class PostProcess
 	const int	MaxOutlineColours	=1024;
 
 
-	public PostProcess(GraphicsDevice gd, Effect fx)
+	public PostProcess(GraphicsDevice gd, StuffKeeper sk)
 	{
-		Init(gd, fx);
-	}
-
-
-	public PostProcess(GraphicsDevice gd, MaterialLib mlib, string fxName)
-	{
-		if(mlib == null)
-		{
-			return;
-		}
-
-		Effect	fx	=mlib.GetEffect(fxName);
-		if(fx == null)
-		{
-			return;
-		}
-		Init(gd, fx);
-	}
-
-
-	void Init(GraphicsDevice gd, Effect fx)
-	{
-		if(fx == null)
-		{
-			return;
-		}
-
-		mPostFX	=fx;
-
 		mResX		=gd.RendForm.ClientRectangle.Width;
 		mResY		=gd.RendForm.ClientRectangle.Height;
-		mClearColor	=Color.CornflowerBlue;
+		mClearColor	=Misc.SystemColorToDXColor(System.Drawing.Color.CornflowerBlue);
 
-		RenderTargetView	[]backBuf	=new RenderTargetView[1];
-		DepthStencilView	backDepth;
+		ID3D11RenderTargetView	[]backBuf	=new ID3D11RenderTargetView[1];
+		ID3D11DepthStencilView	backDepth;
 
-		backBuf	=gd.DC.OutputMerger.GetRenderTargets(1, out backDepth);
+		gd.DC.OMGetRenderTargets(1, backBuf, out backDepth);
 
 		mPostTargets.Add("BackColor", backBuf[0]);
 		mPostDepths.Add("BackDepth", backDepth);
 
 		MakeQuad(gd);
 
-		if(gd.GD.FeatureLevel != FeatureLevel.Level_9_3)
+		if(gd.GD.FeatureLevel != Vortice.Direct3D.FeatureLevel.Level_9_3)
 		{
 			MakeOutlineLookUp(gd);
 		}
 
-		InitPostParams(gd.GD.FeatureLevel == FeatureLevel.Level_9_3);
+		InitPostParams(gd.GD.FeatureLevel == Vortice.Direct3D.FeatureLevel.Level_9_3);
 
 		gd.ePreResize	+=OnPreResize;
 		gd.eResized		+=OnResized;
@@ -151,15 +119,15 @@ public class PostProcess
 			SampleDescription	=new SampleDescription(1, 0),
 			Usage				=ResourceUsage.Default,
 			BindFlags			=BindFlags.RenderTarget | BindFlags.ShaderResource,
-			CpuAccessFlags		=CpuAccessFlags.None,
-			OptionFlags			=ResourceOptionFlags.None
+			CPUAccessFlags		=CpuAccessFlags.None,
+			MiscFlags			=ResourceOptionFlags.None
 		};
 
-		Texture2D	targ	=new Texture2D(gd.GD, targDesc);
+		ID3D11Texture2D	targ	=gd.GD.CreateTexture2D(targDesc);
 
-		RenderTargetView	targView	=new RenderTargetView(gd.GD, targ);
-
-		ShaderResourceView	targSRV	=new ShaderResourceView(gd.GD, targ);
+		ID3D11RenderTargetView	targView	=gd.GD.CreateRenderTargetView(targ);
+		
+		ID3D11ShaderResourceView	targSRV	=gd.GD.CreateShaderResourceView(targ);
 
 		mPostTex2Ds.Add(name, targ);
 		mPostTargets.Add(name, targView);
@@ -181,121 +149,36 @@ public class PostProcess
 			SampleDescription	=new SampleDescription(1, 0),
 			Usage				=ResourceUsage.Default,
 			BindFlags			=BindFlags.DepthStencil,
-			CpuAccessFlags		=CpuAccessFlags.None,
-			OptionFlags			=ResourceOptionFlags.None
+			CPUAccessFlags		=CpuAccessFlags.None,
+			MiscFlags			=ResourceOptionFlags.None
 		};
 
-		Texture2D	targ	=new Texture2D(gd.GD, targDesc);
+		ID3D11Texture2D	targ	=gd.GD.CreateTexture2D(targDesc);
 
-		DepthStencilView	targView	=new DepthStencilView(gd.GD, targ);
+		ID3D11DepthStencilView	targView	=gd.GD.CreateDepthStencilView(targ);
 
 		mPostTex2Ds.Add(name, targ);
 		mPostDepths.Add(name, targView);
 	}
 
 
-	void SetVar(string varName, float val)
-	{
-		EffectVariable	ev	=mPostFX.GetVariableByName(varName);
-		if(ev == null)
-		{
-			return;
-		}
-
-		EffectScalarVariable	esv	=ev.AsScalar();
-		if(esv == null)
-		{
-			ev.Dispose();
-			return;
-		}
-
-		esv.Set(val);
-
-		esv.Dispose();
-		ev.Dispose();
-	}
-
-
-	void SetVar(string varName, float []val)
-	{
-		EffectVariable	ev	=mPostFX.GetVariableByName(varName);
-		if(ev == null)
-		{
-			return;
-		}
-
-		EffectScalarVariable	esv	=ev.AsScalar();
-		if(esv == null)
-		{
-			ev.Dispose();
-			return;
-		}
-
-		esv.Set(val);
-
-		esv.Dispose();
-		ev.Dispose();
-	}
-
-
-	void SetVar(string varName, Vector2 val)
-	{
-		EffectVariable	ev	=mPostFX.GetVariableByName(varName);
-		if(ev == null)
-		{
-			return;
-		}
-
-		EffectVectorVariable	esv	=ev.AsVector();
-		if(esv == null)
-		{
-			ev.Dispose();
-			return;
-		}
-
-		esv.Set(val);
-
-		esv.Dispose();
-		ev.Dispose();
-	}
-
-
 	//set up parameters with known values
 	void InitPostParams(bool bNineThree)
 	{
-		SetVar("mTexelSteps", 1f);
-		SetVar("mThreshold", 5f);
-		SetVar("mScreenSize", new Vector2(mResX, mResY));
-		SetVar("mInvViewPort", new Vector2(1f / mResX, 1f / mResY));
-		SetVar("mOpacity", 0.75f);
+		CBKeeper	cbk	=mSK.GetCBKeeper();
 
-		//bloomstuffs
-		SetVar("mBloomThreshold", 0.25f);
-		SetVar("mBloomIntensity", 1.25f);
-		SetVar("mBloomSaturation", 1f);
-		SetVar("mBaseIntensity", 1f);
-		SetVar("mBaseSaturation", 1f);
+		cbk.SetOutlinerVars(new Vector2(mResX, mResY), 1f, 5f);
+
+		cbk.SetInvViewPort(new Vector2(1f / mResX, 1f / mResY));
+
+		cbk.SetBilateralBlurVars(1f, 1f, 0.75f);
+
+		cbk.SetBloomVars(0.25f, 1.25f, 1f, 1f, 1f);
 
 		InitBlurParams(1.0f / (mResX / 2), 0, 0, 1.0f / (mResY / 2), bNineThree);
 
-		//hidef can afford to store these once
-		SetBlurParams(true);
-		SetBlurParams(false);
-	}
-
-
-	void SetBlurParams(bool bX)
-	{
-		if(bX)
-		{
-			SetVar("mWeightsX", mSampleWeightsX);
-			SetVar("mOffsetsX", mSampleOffsetsX);
-		}
-		else
-		{
-			SetVar("mWeightsY", mSampleWeightsY);
-			SetVar("mOffsetsY", mSampleOffsetsY);
-		}
+		cbk.SetWeightsOffsets(mSampleWeightsX, mSampleOffsetsY,
+			mSampleOffsetsX, mSampleOffsetsY);
 	}
 
 
@@ -432,19 +315,14 @@ public class PostProcess
 		inds[5]	=2;
 
 		BufferDescription	bd	=new BufferDescription(
-			20 * verts.Length,
-			ResourceUsage.Immutable, BindFlags.VertexBuffer,
-			CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+			20 * verts.Length, BindFlags.VertexBuffer);
 
-		mQuadVB	=Buffer.Create(gd.GD, verts, bd);
+		mQuadVB	=gd.GD.CreateBuffer<VertexPositionTexture>(verts, bd);
 
-		BufferDescription	id	=new BufferDescription(inds.Length * 2,
-			ResourceUsage.Immutable, BindFlags.IndexBuffer,
-			CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+		BufferDescription	id	=new BufferDescription(
+			inds.Length * 2, BindFlags.IndexBuffer);
 
-		mQuadIB	=Buffer.Create<UInt16>(gd.GD, inds, id);
-
-		mQuadBinding	=new VertexBufferBinding(mQuadVB, 20, 0);
+		mQuadIB	=gd.GD.CreateBuffer<UInt16>(inds, id);
 	}
 
 
@@ -454,70 +332,26 @@ public class PostProcess
 	}
 
 
-	void MakeOutlineLookUp(GraphicsDevice gd)
+	unsafe void MakeOutlineLookUp(GraphicsDevice gd)
 	{
-		SampleDescription	sampDesc	=new SampleDescription();
-		sampDesc.Count		=1;
-		sampDesc.Quality	=0;
-
-		DataStream	ds	=new DataStream(MaxOutlineColours * 4, false, true);
-		for(int x=0;x < MaxOutlineColours;x++)
-		{
-			ds.Write(Color.White);
-		}
-
 		Texture1DDescription	texDesc	=new Texture1DDescription();
 		texDesc.ArraySize		=1;
 		texDesc.BindFlags		=BindFlags.ShaderResource;
-		texDesc.CpuAccessFlags	=CpuAccessFlags.Write;
+		texDesc.CPUAccessFlags	=CpuAccessFlags.Write;
 		texDesc.MipLevels		=1;
-		texDesc.OptionFlags		=ResourceOptionFlags.None;
+		texDesc.MiscFlags		=ResourceOptionFlags.None;
 		texDesc.Usage			=ResourceUsage.Dynamic;
 		texDesc.Width			=MaxOutlineColours;
 		texDesc.Format			=Format.R8G8B8A8_UNorm;
 
-		mOutlineLookupTex	=new Texture1D(gd.GD, texDesc, ds);
-		mOutlineLookupSRV	=new ShaderResourceView(gd.GD, mOutlineLookupTex);
+		mOutlineLookupTex	=gd.GD.CreateTexture1D(texDesc);
+		mOutlineLookupSRV	=gd.GD.CreateShaderResourceView(mOutlineLookupTex);
 	}
 
 
 	public void UpdateOutlineColours(GraphicsDevice gd, int numMaterials)
 	{
-		EffectVariable	ev	=mPostFX.GetVariableByName("mOutlineTex");
-		if(ev == null)
-		{
-			return;
-		}
-
-		EffectShaderResourceVariable	esrv	=ev.AsShaderResource();
-		if(esrv == null)
-		{
-			ev.Dispose();
-			return;
-		}
-
-		DataStream	ds;
-
-		gd.DC.MapSubresource(mOutlineLookupTex, 0, MapMode.WriteDiscard,
-			SharpDX.Direct3D11.MapFlags.None, out ds);
-
-		for(int i=0;i < numMaterials;i++)
-		{
-			Color	col	=mOutLineColors[i];
-
-			col.R	/=2;
-			col.G	/=2;
-			col.B	/=2;
-
-			ds.Write<Color>(col);
-		}
-
-		gd.DC.UnmapSubresource(mOutlineLookupTex, 0);
-
-		esrv.SetResource(mOutlineLookupSRV);
-
-		esrv.Dispose();
-		ev.Dispose();
+		gd.DC.UpdateSubresource(mOutLineColors, mOutlineLookupTex);
 	}
 
 
@@ -543,21 +377,21 @@ public class PostProcess
 	{
 		if(targName == null && depthName == null)
 		{
-			gd.DC.OutputMerger.SetRenderTargets(null, (RenderTargetView)null);
+			gd.DC.OMSetRenderTargets((ID3D11RenderTargetView)null, null);
 		}
 		else if(targName == "null")
 		{
-			gd.DC.OutputMerger.SetRenderTargets(null, (RenderTargetView)null);
+			gd.DC.OMSetRenderTargets((ID3D11RenderTargetView)null, null);
 		}
 		else if(mPostTargets.ContainsKey(targName)
 			&& mPostDepths.ContainsKey(depthName))
 		{
-			gd.DC.OutputMerger.SetRenderTargets(mPostDepths[depthName], mPostTargets[targName]);
+			gd.DC.OMSetRenderTargets(mPostTargets[targName], mPostDepths[depthName]);
 		}
 		else if(mPostTargets.ContainsKey(targName)
 			&& depthName == "null")
 		{
-			gd.DC.OutputMerger.SetRenderTargets(null, mPostTargets[targName]);
+			gd.DC.OMSetRenderTargets(mPostTargets[targName]);
 		}
 		else
 		{
@@ -574,24 +408,33 @@ public class PostProcess
 	{
 		if(targName1 == null && targName2 == null && depthName == null)
 		{
-			gd.DC.OutputMerger.SetRenderTargets(null, (RenderTargetView)null);
+			gd.DC.OMSetRenderTargets((ID3D11RenderTargetView)null, null);
 		}
 		else if(targName1 == "null")
 		{
-			gd.DC.OutputMerger.SetRenderTargets(null, (RenderTargetView)null);
+			gd.DC.OMSetRenderTargets((ID3D11RenderTargetView)null, null);
 		}
 		else if(mPostTargets.ContainsKey(targName1)
 			&& mPostTargets.ContainsKey(targName2)
 			&& mPostDepths.ContainsKey(depthName))
 		{
-			gd.DC.OutputMerger.SetTargets(mPostDepths[depthName],
-				mPostTargets[targName1], mPostTargets[targName2]);
+			ID3D11RenderTargetView	[]targs	=new ID3D11RenderTargetView[2];
+
+			targs[0]	=mPostTargets[targName1];
+			targs[1]	=mPostTargets[targName2];
+
+			gd.DC.OMSetRenderTargets(2, targs, mPostDepths[depthName]);
 		}
 		else if(mPostTargets.ContainsKey(targName1)
 			&& mPostTargets.ContainsKey(targName2)
 			&& depthName == "null")
 		{
-			gd.DC.OutputMerger.SetTargets(mPostTargets[targName1], mPostTargets[targName2]);
+			ID3D11RenderTargetView	[]targs	=new ID3D11RenderTargetView[2];
+
+			targs[0]	=mPostTargets[targName1];
+			targs[1]	=mPostTargets[targName2];
+
+			gd.DC.OMSetRenderTargets(2, targs);
 		}
 		else
 		{
@@ -608,60 +451,14 @@ public class PostProcess
 //		}
 
 
-	public void SetParameter(string paramName, string targName)
+	public void DrawStage(GraphicsDevice gd, string vs, string ps)
 	{
-		EffectVariable	ev	=mPostFX.GetVariableByName(paramName);
-		if(ev == null)
-		{
-			return;
-		}
+		gd.DC.IASetVertexBuffer(0, mQuadVB, 20);
+		gd.DC.IASetIndexBuffer(mQuadIB, Format.R16_UInt, 0);
 
-		EffectShaderResourceVariable	esrv	=ev.AsShaderResource();
-		if(esrv == null)
-		{
-			ev.Dispose();
-			return;
-		}
+		CBKeeper	cbk	=mSK.GetCBKeeper();
 
-		if(targName == null || targName == "null" || targName == "")
-		{
-			esrv.SetResource(null);
-		}
-		else
-		{
-			esrv.SetResource(mPostTargSRVs[targName]);
-		}
-
-		esrv.Dispose();
-		ev.Dispose();
-	}
-
-
-	public void DrawStage(GraphicsDevice gd, string technique)
-	{
-		gd.DC.InputAssembler.SetVertexBuffers(0, mQuadBinding);
-		gd.DC.InputAssembler.SetIndexBuffer(mQuadIB, Format.R16_UInt, 0);
-
-		if(!mETechs.ContainsKey(technique))
-		{
-			mETechs.Add(technique, mPostFX.GetTechniqueByName(technique));
-		}
-
-		EffectTechnique	et	=mETechs[technique];
-
-		if(et == null || !et.IsValid)
-		{
-			return;
-		}
-
-		if(!mEPasses.ContainsKey(et))
-		{
-			mEPasses.Add(et, et.GetPassByIndex(0));
-		}
-
-		EffectPass	ep	=mEPasses[et];
-
-		ep.Apply(gd.DC);
+		cbk.UpdatePost(gd.DC);
 
 		gd.DC.DrawIndexed(6, 0, 0);
 	}
@@ -674,37 +471,25 @@ public class PostProcess
 		gd.eResized		-=OnResized;
 
 		//dispose all views
-		foreach(KeyValuePair<string, RenderTargetView> view in mPostTargets)
+		foreach(KeyValuePair<string, ID3D11RenderTargetView> view in mPostTargets)
 		{
 			view.Value.Dispose();
 		}
-		foreach(KeyValuePair<string, DepthStencilView> view in mPostDepths)
+		foreach(KeyValuePair<string, ID3D11DepthStencilView> view in mPostDepths)
 		{
 			view.Value.Dispose();
 		}
 
 		//dispose all srvs
-		foreach(KeyValuePair<string, ShaderResourceView> srv in mPostTargSRVs)
+		foreach(KeyValuePair<string, ID3D11ShaderResourceView> srv in mPostTargSRVs)
 		{
 			srv.Value.Dispose();
 		}
 
 		//dispose all tex2ds
-		foreach(KeyValuePair<string, Texture2D> tex in mPostTex2Ds)
+		foreach(KeyValuePair<string, ID3D11Texture2D> tex in mPostTex2Ds)
 		{
 			tex.Value.Dispose();
-		}
-
-		//dispose all passes
-		foreach(KeyValuePair<EffectTechnique, EffectPass> pass in mEPasses)
-		{
-			pass.Value.Dispose();
-		}
-
-		//techniques
-		foreach(KeyValuePair<string, EffectTechnique> tech in mETechs)
-		{
-			tech.Value.Dispose();
 		}
 
 		mPostTargets.Clear();
@@ -715,8 +500,6 @@ public class PostProcess
 		//buffers
 		mQuadIB.Dispose();
 		mQuadVB.Dispose();
-
-		mPostFX.Dispose();
 
 		if(mOutlineLookupSRV != null)
 		{
@@ -737,8 +520,8 @@ public class PostProcess
 			return;
 		}
 
-		RenderTargetView	backRTV	=mPostTargets["BackColor"];
-		DepthStencilView	backDSV	=mPostDepths["BackDepth"];
+		ID3D11RenderTargetView	backRTV	=mPostTargets["BackColor"];
+		ID3D11DepthStencilView	backDSV	=mPostDepths["BackDepth"];
 
 		//release these so the device can resize the swapchain
 		mPostTargets.Remove("BackColor");
@@ -759,26 +542,26 @@ public class PostProcess
 		mResX	=gd.RendForm.ClientRectangle.Width;
 		mResY	=gd.RendForm.ClientRectangle.Height;
 
-		InitPostParams(gd.GD.FeatureLevel == FeatureLevel.Level_9_3);
+		InitPostParams(gd.GD.FeatureLevel == Vortice.Direct3D.FeatureLevel.Level_9_3);
 
 		//back buffer will already be resized
-		RenderTargetView	[]backBuf	=new RenderTargetView[1];
-		DepthStencilView	backDepth;
+		ID3D11RenderTargetView	[]backBuf	=new ID3D11RenderTargetView[1];
+		ID3D11DepthStencilView	backDepth;
 
-		backBuf	=gd.DC.OutputMerger.GetRenderTargets(1, out backDepth);
+		gd.DC.OMGetRenderTargets(1, backBuf, out backDepth);
 
 		//dispose all views
-		foreach(KeyValuePair<string, RenderTargetView> view in mPostTargets)
+		foreach(KeyValuePair<string, ID3D11RenderTargetView> view in mPostTargets)
 		{
 			view.Value.Dispose();
 		}
-		foreach(KeyValuePair<string, DepthStencilView> view in mPostDepths)
+		foreach(KeyValuePair<string, ID3D11DepthStencilView> view in mPostDepths)
 		{
 			view.Value.Dispose();
 		}
 
 		//dispose all srvs
-		foreach(KeyValuePair<string, ShaderResourceView> srv in mPostTargSRVs)
+		foreach(KeyValuePair<string, ID3D11ShaderResourceView> srv in mPostTargSRVs)
 		{
 			srv.Value.Dispose();
 		}
@@ -790,7 +573,7 @@ public class PostProcess
 		//copy the descriptions
 		Dictionary<string, Texture2DDescription>	descs	=new Dictionary<string, Texture2DDescription>();
 
-		foreach(KeyValuePair<string, Texture2D> tex in mPostTex2Ds)
+		foreach(KeyValuePair<string, ID3D11Texture2D> tex in mPostTex2Ds)
 		{
 			Texture2DDescription	resizeDesc	=new Texture2DDescription()
 			{
@@ -800,8 +583,8 @@ public class PostProcess
 				SampleDescription	=new SampleDescription(1, 0),
 				Usage				=tex.Value.Description.Usage,
 				BindFlags			=tex.Value.Description.BindFlags,
-				CpuAccessFlags		=tex.Value.Description.CpuAccessFlags,
-				OptionFlags			=tex.Value.Description.OptionFlags
+				CPUAccessFlags		=tex.Value.Description.CPUAccessFlags,
+				MiscFlags			=tex.Value.Description.MiscFlags
 			};
 
 			if(mHalfResTargets.Contains(tex.Key))
@@ -829,7 +612,7 @@ public class PostProcess
 		}
 
 		//blast all textures
-		foreach(KeyValuePair<string, Texture2D> tex in mPostTex2Ds)
+		foreach(KeyValuePair<string, ID3D11Texture2D> tex in mPostTex2Ds)
 		{
 			tex.Value.Dispose();
 		}
@@ -838,20 +621,19 @@ public class PostProcess
 		//make resized versions
 		foreach(KeyValuePair<string, Texture2DDescription> texDesc in descs)
 		{
-			Texture2D	newTex	=new Texture2D(gd.GD, texDesc.Value);
-
+			ID3D11Texture2D	newTex	=gd.GD.CreateTexture2D(texDesc.Value);
 			mPostTex2Ds.Add(texDesc.Key, newTex);
 
 			if(Misc.bFlagSet((uint)newTex.Description.BindFlags, (uint)BindFlags.DepthStencil))
 			{
-				DepthStencilView	dsv	=new DepthStencilView(gd.GD, newTex);
-
+				ID3D11DepthStencilView	dsv	=gd.GD.CreateDepthStencilView(newTex);
 				mPostDepths.Add(texDesc.Key, dsv);
 			}
 			else
 			{
-				RenderTargetView	rtv	=new RenderTargetView(gd.GD, newTex);
-				ShaderResourceView	srv	=new ShaderResourceView(gd.GD, newTex);
+				ID3D11RenderTargetView	rtv	=gd.GD.CreateRenderTargetView(newTex);
+
+				ID3D11ShaderResourceView	srv	=gd.GD.CreateShaderResourceView(newTex);
 
 				mPostTargets.Add(texDesc.Key, rtv);
 				mPostTargSRVs.Add(texDesc.Key, srv);
@@ -863,4 +645,3 @@ public class PostProcess
 		mPostDepths.Add("BackDepth", backDepth);
 	}
 }
-*/

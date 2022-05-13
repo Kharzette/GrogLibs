@@ -45,3 +45,23 @@ BSP.hlsl
 	LightMapShadowPS
 	VertexLitShadowPS
 	LightMapAnimShadowPS
+Post.hlsl
+	BloomExtractPS
+	BloomExtract93PS
+	BloomCombinePS
+	BloomCombine93PS
+	GaussianBlurXPS
+	GaussianBlurX93PS
+	GaussianBlurYPS
+	GaussianBlurY93PS
+	BiLatBlurXPS
+	BiLatBlurYPS
+	DebugMatIDDraw
+	DebugDepthDraw
+	OutlinePS
+	Outline93PS
+	ModulatePS
+	Modulate93PS
+	BleachBypassPS
+	BleachBypass93PS
+

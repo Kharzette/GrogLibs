@@ -6,9 +6,46 @@
 //
 //edge detection from nvidia
 //
+#include "types.hlsli"
+
+//gaussianblur stuff
+#if !defined(SM2)
+#define	RADIUS			30
+#else
+#define	RADIUS			7
+#endif
+#define	KERNEL_SIZE		(RADIUS * 2 + 1)
 
 //post process stuff
-float2		mInvViewPort;
+cbuffer Post : register(b0)
+{
+	float2		mInvViewPort;
+
+	//bloom params
+	float	mBloomThreshold;
+	float	mBloomIntensity;
+	float	mBaseIntensity;
+	float	mBloomSaturation;
+	float	mBaseSaturation;
+
+	//outliner params
+	float	mTexelSteps;
+	float	mThreshold;
+	float2	mScreenSize;
+
+	//bilateral blur stuff
+	float	mBlurFallOff;
+	float	mSharpNess;
+	float	mOpacity;
+}
+
+//this will probably be a KERNEL_SIZE * 4 float array on the C# side
+cbuffer PostBlur : register(b1)
+{
+	//gaussianblur stuff
+	float	mWeightsX[KERNEL_SIZE], mWeightsY[KERNEL_SIZE];
+	float	mOffsetsX[KERNEL_SIZE], mOffsetsY[KERNEL_SIZE];
+}
 
 //textures
 Texture2D	mNormalTex;
@@ -20,37 +57,10 @@ Texture2D	mBlurTargetTex;
 Texture1D	mOutlineTex;				//lookup table for outline colors per material id
 #endif
 
-#include "Types.fxh"
-#include "CommonFunctions.fxh"
-#include "RenderStates.fxh"
+SamplerState	PointClamp : register(s0);
+SamplerState	LinearClamp : register(s1);
 
-//bloom params
-float	mBloomThreshold;
-float	mBloomIntensity;
-float	mBaseIntensity;
-float	mBloomSaturation;
-float	mBaseSaturation;
-
-//outliner params
-float	mTexelSteps;
-float	mThreshold;
-float2	mScreenSize;
 #define	NORM_LINE_THRESHOLD	0.6
-
-//gaussianblur stuff
-#if !defined(SM2)
-#define	RADIUS			30
-#else
-#define	RADIUS			7
-#endif
-#define	KERNEL_SIZE		(RADIUS * 2 + 1)
-float	mWeightsX[KERNEL_SIZE], mWeightsY[KERNEL_SIZE];
-float	mOffsetsX[KERNEL_SIZE], mOffsetsY[KERNEL_SIZE];
-
-//bilateral blur stuff
-float	mBlurFallOff;
-float	mSharpNess;
-float	mOpacity;
 
 
 //helper functions
@@ -293,6 +303,7 @@ float4	DebugDepthDraw(VVPos input) : SV_Target
 }
 
 //draws the normals for debuggery
+/*
 float4	DebugNormalDraw(VVPos input) : SV_Target
 {
 	float2	uv	=input.Position.xy / mScreenSize;
@@ -301,7 +312,7 @@ float4	DebugNormalDraw(VVPos input) : SV_Target
 	half3	norm	=DecodeNormal(dmn.zw, mView._m02_m12_m22);
 
 	return	float4(norm.x, norm.y, norm.z, 1);
-}
+}*/
 
 
 //for > 9 feature levels
@@ -323,7 +334,7 @@ float4	OutlinePS(VVPos input) : SV_Target
 	//need to ifdef this, SM2 errors even though
 	//this function isn't used
 #if !defined(SM2)
-	float4	matColour	=mOutlineTex.Sample(PointClamp1D,
+	float4	matColour	=mOutlineTex.Sample(PointClamp,
 							(center.x / OUTLINE_TEX_SIZE));
 #else
 	float4	matColour	=float4(0, 0, 0, 1);

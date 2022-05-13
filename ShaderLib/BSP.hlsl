@@ -13,6 +13,7 @@ cbuffer BSP : register(b4)
 {
 	bool		mbTextureEnabled;
 	float2		mTexSize;
+	uint		mPad;		//16 boundary
 }
 
 //putting these in their own cbuffer

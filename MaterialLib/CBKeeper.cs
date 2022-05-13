@@ -74,6 +74,34 @@ public unsafe class CBKeeper
 	{
 		internal bool		mbTextureEnabled;
 		internal Vector2	mTexSize;
+		internal uint		mPadding;
+	}
+
+	//post.hlsl
+	[StructLayout(LayoutKind.Sequential, Pack = 4)]
+	struct Post
+	{
+		internal Vector2	mInvViewPort;
+
+		//bloom stuff
+		internal float		mBloomThreshold;
+		internal float		mBloomIntensity;
+		internal float		mBaseIntensity;
+		internal float		mBloomSaturation;
+		internal float		mBaseSaturation;
+
+		//outliner stuff
+		internal float		mTexelSteps;
+		internal float		mThreshold;
+		internal Vector2	mScreenSize;
+
+		//bilateral blur stuff
+		internal float		mBlurFallOff;
+		internal float		mSharpNess;
+		internal float		mOpacity;
+
+		//padding
+		internal uint	mPad0, mPad1;
 	}
 
 	//Character.hlsl bone array
@@ -82,6 +110,9 @@ public unsafe class CBKeeper
 	//BSP.hlsl light style array
 	Half	[]mAniIntensities;
 
+	//post.hlsl weights & offsets array
+	float	[]mWeightsOffsetsXY;
+
 	//gpu side
 	ID3D11Buffer	mPerObjectBuf;
 	ID3D11Buffer	mPerFrameBuf;
@@ -89,6 +120,7 @@ public unsafe class CBKeeper
 	ID3D11Buffer	mTwoDBuf;
 	ID3D11Buffer	mCharacterBuf;
 	ID3D11Buffer	mBSPBuf, mBSPStylesBuf;
+	ID3D11Buffer	mPostBuf, mPostWOXYBuf;
 
 	//cpu side
 	PerObject	mPerObject;
@@ -96,6 +128,7 @@ public unsafe class CBKeeper
 	ChangeLess	mChangeLess;
 	TwoD		mTwoD;
 	BSP			mBSP;
+	Post		mPost;
 
 
 	//ensure matches Character.hlsl
@@ -131,7 +164,8 @@ public unsafe class CBKeeper
 		mTwoDBuf		=MakeConstantBuffer(dev, sizeof(TwoD));
 		mBSPBuf			=MakeConstantBuffer(dev, sizeof(BSP));
 		mCharacterBuf	=MakeConstantBuffer(dev, sizeof(Matrix4x4) * MaxBones);
-		mBSPStylesBuf	=MakeConstantBuffer(dev, sizeof(Half) * NumStyles);
+		mBSPStylesBuf	=MakeConstantBuffer(dev, sizeof(Half) * NumStyles + 8);
+		mPostBuf		=MakeConstantBuffer(dev, sizeof(Post));
 
 		//alloc C# side constant buffer data
 		mPerObject		=new PerObject();
@@ -141,6 +175,16 @@ public unsafe class CBKeeper
 		mBones			=new Matrix4x4[MaxBones];
 		mAniIntensities	=new Half[NumStyles];
 		mBSP			=new BSP();
+		mPost			=new Post();
+
+		int	woxySize	=61 * 4;
+
+		if(dev.FeatureLevel == FeatureLevel.Level_9_3)
+		{
+			woxySize	=15 * 4;
+		}
+		mWeightsOffsetsXY	=new float[woxySize];
+		mPostWOXYBuf		=MakeConstantBuffer(dev, sizeof(float) * woxySize);
 	}
 
 
@@ -199,6 +243,15 @@ public unsafe class CBKeeper
 	}
 
 
+	public void SetPostToShaders(ID3D11DeviceContext dc)
+	{
+		dc.VSSetConstantBuffer(0, mPostBuf);
+		dc.PSSetConstantBuffer(0, mPostBuf);
+		dc.VSSetConstantBuffer(1, mPostWOXYBuf);
+		dc.PSSetConstantBuffer(1, mPostWOXYBuf);
+	}
+
+
 	public void UpdateFrame(ID3D11DeviceContext dc)
 	{
 		dc.UpdateSubresource<PerFrame>(mPerFrame, mPerFrameBuf);
@@ -233,6 +286,13 @@ public unsafe class CBKeeper
 	{
 		dc.UpdateSubresource<BSP>(mBSP, mBSPBuf);
 		dc.UpdateSubresource(mAniIntensities, mBSPStylesBuf);
+	}
+
+
+	public void UpdatePost(ID3D11DeviceContext dc)
+	{
+		dc.UpdateSubresource<Post>(mPost, mPostBuf);
+		dc.UpdateSubresource(mWeightsOffsetsXY, mPostWOXYBuf);
 	}
 
 
@@ -369,4 +429,48 @@ public unsafe class CBKeeper
 	{
 		mChangeLess.mProjection	=proj;
 	}
+
+
+#region	PostProcess
+	public void SetInvViewPort(Vector2 port)
+	{
+		mPost.mInvViewPort	=port;
+	}
+
+
+	public void SetOutlinerVars(Vector2 size, float texelSteps, float threshold)
+	{
+		mPost.mScreenSize	=size;
+		mPost.mTexelSteps	=texelSteps;
+		mPost.mThreshold	=threshold;
+	}
+
+
+	public void SetBilateralBlurVars(float fallOff, float sharpness, float opacity)
+	{
+		mPost.mBlurFallOff	=fallOff;
+		mPost.mSharpNess	=sharpness;
+		mPost.mOpacity		=opacity;
+	}
+
+
+	public void SetBloomVars(float thresh, float intensity,
+		float sat, float baseIntensity, float baseSat)
+	{
+		mPost.mBloomThreshold	=thresh;
+		mPost.mBloomIntensity	=intensity;
+		mPost.mBloomSaturation	=sat;
+		mPost.mBaseIntensity	=baseIntensity;
+		mPost.mBaseSaturation	=baseSat;
+	}
+
+
+	public void SetWeightsOffsets(float []wx, float []wy, float []offx, float []offy)
+	{
+		wx.CopyTo(mWeightsOffsetsXY, 0);
+		wy.CopyTo(mWeightsOffsetsXY, wx.Length);
+		offx.CopyTo(mWeightsOffsetsXY, wx.Length * 2);
+		offy.CopyTo(mWeightsOffsetsXY, wx.Length * 3);
+	}
+#endregion
 }

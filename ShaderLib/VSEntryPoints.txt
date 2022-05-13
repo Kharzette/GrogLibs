@@ -30,3 +30,6 @@ BSP.hlsl
 	FullBrightVS
 	SkyVS
 	LightMapAnimVS
+Post.hlsl
+	SimpleQuadVS
+	SimpleQuad93VS

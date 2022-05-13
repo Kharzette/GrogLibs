@@ -284,14 +284,14 @@ public class TexAtlas
 	}
 
 
-	public void Finish(GraphicsDevice gd, StuffKeeper sk)
+	public void Finish(GraphicsDevice gd, StuffKeeper sk, string texName)
 	{
 		if(mBuildArray == null)
 		{
 			return;
 		}
 
-		sk.AddTex(gd.GD, "LightMapAtlas", mBuildArray, mWidth, mHeight);
+		sk.AddTex(gd.GD, texName, mBuildArray, mWidth, mHeight);
 	}
 
 
@@ -314,9 +314,14 @@ public class TexAtlas
 		mWidth	=br.ReadInt32();
 		mHeight	=br.ReadInt32();
 
+		string	texName	=br.ReadString();
+
 		byte	[]atlas	=br.ReadBytes(mWidth * mHeight * 4);
 
-		sk.AddTex(gd.GD, "LightMapAtlas", mBuildArray, mWidth, mHeight);
+		//this kind of ties it to lightmaps
+		//want to use this eventually to atlas all the textures
+		//as well for bsp meshes
+		sk.AddTex(gd.GD, texName, mBuildArray, mWidth, mHeight);
 
 		mRoot	=new TexNode(mWidth, mHeight);
 		mRoot.Read(br);

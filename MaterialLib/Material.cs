@@ -58,6 +58,7 @@ internal class Material
 	internal void Apply(ID3D11DeviceContext dc, StuffKeeper sk)
 	{
 		CBKeeper	cbk	=sk.GetCBKeeper();
+		
 		cbk.SetCommonCBToShaders(dc);
 		if(mBSPVars != null)
 		{
