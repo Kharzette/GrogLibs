@@ -9,7 +9,6 @@ float4x4	mLightViews[BATCH_SIZE * 6];	//cubemap face viewmats
 float4x4	mLightProjs[BATCH_SIZE * 6];	//cubemap face projections
 
 #include "Types.fxh"
-#include "RenderStates.fxh"
 
 
 VVPosTex04	WorldPosVS(VPos input, uint InstanceID : SV_InstanceID)

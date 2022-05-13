@@ -7,7 +7,6 @@ Texture1D	mDynLights;
 
 #include "Types.hlsli"
 #include "CommonFunctions.hlsli"
-#include "RenderStates.hlsli"
 
 cbuffer BSP : register(b4)
 {
@@ -163,14 +162,14 @@ float3	GetDynLight(float3 pixelPos, float3 normal)
 
 	for(int i=0;i < 16;i++)
 	{
-		float4	lCol	=mDynLights.Sample(PointClamp1D, float((i * 2) + 1) / 32);
+		float4	lCol	=mDynLights.Sample(PointClamp, float((i * 2) + 1) / 32);
 
 		if(!any(lCol))
 		{
 			continue;
 		}
 
-		float4	lPos1	=mDynLights.Sample(PointClamp1D, float(i * 2) / 32);
+		float4	lPos1	=mDynLights.Sample(PointClamp, float(i * 2) / 32);
 		float3	lDir	=lPos1.xyz - pixelPos;
 		float	atten	=saturate(1 - dot(lDir / lPos1.w, lDir / lPos1.w));
 
@@ -491,7 +490,7 @@ float4 SkyPS(VVPosCubeTex0 input) : SV_Target
 		eyeVec	=normalize(eyeVec);
 
 #if defined(POINTTEXTURES)
-		color	=mTexture.Sample(PointClampCube, eyeVec);
+		color	=mTexture.Sample(PointClamp, eyeVec);
 #else
 		color	=mTexture.Sample(LinearClampCube, eyeVec);
 #endif

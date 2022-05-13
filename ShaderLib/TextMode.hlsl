@@ -1,7 +1,6 @@
 //shader for doing an old style "character mode" like old
 //pc CGA 40x25 text mode etc
 #include	"Types.fxh"
-#include	"RenderStates.fxh"
 #include	"CommonFunctions.fxh"
 
 //dynamic texture containing text contents of the screen

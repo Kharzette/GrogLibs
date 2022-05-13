@@ -67,6 +67,12 @@ shared Texture1D	mCelTable;
 shared Texture2D	mShadowTexture;		//2D
 shared TextureCube	mShadowCube;		//cube
 
+//these are assigned from C# side
+SamplerState	PointClamp : register(s0);
+SamplerState	PointWrap : register(s1);
+SamplerState	LinearClamp : register(s2);
+SamplerState	LinearWrap : register(s3);
+
 
 //specular behaviour defines
 //#define	CELALL			//for a goofy retro cga look
@@ -74,7 +80,6 @@ shared TextureCube	mShadowCube;		//cube
 #define	CELLIGHT		//for quantized light (the default)
 
 #include "Types.hlsli"
-#include "RenderStates.hlsli"
 
 
 //stole these normal compression routines from @aras_p
@@ -218,9 +223,9 @@ float3 CalcCelColor(float3 colVal)
 
 	//this provides the quantized light 0 to 1,
 	//but above 1 is added in for overbright lights
-	ret.x	+=mCelTable.Sample(PointClamp1D, colVal.x - range.x) + range.x;
-	ret.y	+=mCelTable.Sample(PointClamp1D, colVal.y - range.y) + range.y;
-	ret.z	+=mCelTable.Sample(PointClamp1D, colVal.z - range.z) + range.z;
+	ret.x	+=mCelTable.Sample(PointClamp, colVal.x - range.x) + range.x;
+	ret.y	+=mCelTable.Sample(PointClamp, colVal.y - range.y) + range.y;
+	ret.z	+=mCelTable.Sample(PointClamp, colVal.z - range.z) + range.z;
 
 	return	ret;
 }
@@ -329,7 +334,7 @@ float4	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float4 
 	}
 	else
 	{
-		mapDepth	=mShadowCube.Sample(PointClampCube, shadDir).r;
+		mapDepth	=mShadowCube.Sample(PointClamp, shadDir).r;
 	}
 
 	return	ApplyShadow(mapDepth, pixDepth, color);

@@ -1,18 +1,8 @@
 using System;
-using System.IO;
-using System.Linq;
 using System.Numerics;
-using System.Diagnostics;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using SharpGen.Runtime;
-using UtilityLib;
-using Vortice.DXGI;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
-using Vortice.D3DCompiler;
-using Vortice.Mathematics;
-using Vortice.WIC;
 
 
 namespace MaterialLib;

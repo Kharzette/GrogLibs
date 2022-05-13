@@ -3,7 +3,6 @@ Texture2D	mTexture, mTexture2;
 
 #include "Types.hlsli"
 #include "CommonFunctions.hlsli"
-#include "RenderStates.hlsli"
 
 cbuffer TwoD : register(b4)
 {
