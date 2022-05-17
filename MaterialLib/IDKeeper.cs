@@ -4,7 +4,7 @@ using Vortice.Mathematics;
 
 
 namespace MaterialLib;
-/*
+
 //tries to assign unique material ids to stuff
 public class IDKeeper
 {
@@ -134,37 +134,6 @@ public class IDKeeper
 	}
 
 
-	//this works for BSP materials but not static/char
-	public void AssignIDsToEffectMaterials(string fxName)
-	{
-		foreach(MaterialLib mlib in mLibs)
-		{
-			List<string>	mats	=mlib.GetMaterialNames();
-
-			foreach(string mat in mats)
-			{
-				if(mat == "DMN")
-				{
-					continue;
-				}
-
-				if(mlib.GetMaterialEffect(mat) != fxName)
-				{
-					continue;
-				}
-
-				string	stripped	=StripName(mat);
-				if(!mIDs.ContainsKey(stripped))
-				{
-					continue;
-				}
-
-				mlib.SetMaterialParameter(mat, "mMaterialID", mIDs[stripped].mID);
-			}
-		}
-	}
-
-
 	public int GetID(string matName)
 	{
 		string	stripped	=StripName(matName);
@@ -189,4 +158,4 @@ public class IDKeeper
 
 		return	bigName.Substring(0, assIndex);
 	}
-}*/
+}

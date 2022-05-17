@@ -1,505 +1,508 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Diagnostics;
-using SharpDX;
+using System.Collections.Generic;
+using Vortice.DXGI;
+using Vortice.Direct3D;
+using Vortice.Direct3D11;
 
-namespace MeshLib
+
+namespace MeshLib;
+
+public class GSNode
 {
-	public class GSNode
+	internal string	mName;
+	internal int	mIndex;
+
+	List<GSNode>	mChildren	=new List<GSNode>();
+
+	//current pos / rot / scale
+	KeyFrame	mKeyValue	=new KeyFrame();
+
+
+	public GSNode()
 	{
-		internal string	mName;
-		internal int	mIndex;
-
-		List<GSNode>	mChildren	=new List<GSNode>();
-
-		//current pos / rot / scale
-		KeyFrame	mKeyValue	=new KeyFrame();
+	}
 
 
-		public GSNode()
+	public void AddChild(GSNode kid)
+	{
+		mChildren.Add(kid);
+	}
+
+
+	public void SetName(string name)
+	{
+		mName	=UtilityLib.Misc.AssignValue(name);
+	}
+
+
+	public Matrix4x4 GetMatrix()
+	{
+		Matrix4x4	mat	=Matrix4x4.CreateScale(mKeyValue.mScale) *
+			Matrix4x4.CreateFromQuaternion(mKeyValue.mRotation) *
+			Matrix4x4.CreateTranslation(mKeyValue.mPosition);
+
+		return	mat;
+	}
+
+
+	internal bool GetMatrixForBone(int index, out Matrix4x4 ret)
+	{
+		if(index == mIndex)
 		{
+			ret	=GetMatrix();
+			return	true;
 		}
 
-
-		public void AddChild(GSNode kid)
+		foreach(GSNode n in mChildren)
 		{
-			mChildren.Add(kid);
-		}
-
-
-		public void SetName(string name)
-		{
-			mName	=UtilityLib.Misc.AssignValue(name);
-		}
-
-
-		public Matrix GetMatrix()
-		{
-			Matrix	mat	=Matrix.Scaling(mKeyValue.mScale) *
-				Matrix.RotationQuaternion(mKeyValue.mRotation) *
-				Matrix.Translation(mKeyValue.mPosition);
-
-			return	mat;
-		}
-
-
-		internal bool GetMatrixForBone(int index, out Matrix ret)
-		{
-			if(index == mIndex)
+			if(n.GetMatrixForBone(index, out ret))
 			{
-				ret	=GetMatrix();
+				ret	*=GetMatrix();
 				return	true;
 			}
+		}
+		ret	=Matrix4x4.Identity;
+		return	false;
+	}
 
-			foreach(GSNode n in mChildren)
-			{
-				if(n.GetMatrixForBone(index, out ret))
-				{
-					ret	*=GetMatrix();
-					return	true;
-				}
-			}
-			ret	=Matrix.Identity;
-			return	false;
+
+	internal bool GetMatrixForBone(string boneName, out Matrix4x4 ret)
+	{
+		if(boneName == mName)
+		{
+			ret	=GetMatrix();
+			return	true;
 		}
 
-
-		internal bool GetMatrixForBone(string boneName, out Matrix ret)
+		foreach(GSNode n in mChildren)
 		{
-			if(boneName == mName)
+			if(n.GetMatrixForBone(boneName, out ret))
 			{
-				ret	=GetMatrix();
+				ret	*=GetMatrix();
 				return	true;
 			}
-
-			foreach(GSNode n in mChildren)
-			{
-				if(n.GetMatrixForBone(boneName, out ret))
-				{
-					ret	*=GetMatrix();
-					return	true;
-				}
-			}
-			ret	=Matrix.Identity;
-			return	false;
 		}
+		ret	=Matrix4x4.Identity;
+		return	false;
+	}
 
 
-		internal void NukeBone(string boneName)
+	internal void NukeBone(string boneName)
+	{
+		foreach(GSNode n in mChildren)
 		{
-			foreach(GSNode n in mChildren)
+			if(n.mName == boneName)
 			{
-				if(n.mName == boneName)
-				{
-					mChildren.Remove(n);
-					return;
-				}
-				n.NukeBone(boneName);
+				mChildren.Remove(n);
+				return;
 			}
-		}
-
-
-		public void Read(BinaryReader br)
-		{
-			mName	=br.ReadString();
-
-			mKeyValue.Read(br);
-
-			int	numChildren	=br.ReadInt32();
-			for(int i=0;i < numChildren;i++)
-			{
-				GSNode	n	=new GSNode();
-				n.Read(br);
-
-				mChildren.Add(n);
-			}
-		}
-
-
-		public void Write(BinaryWriter bw)
-		{
-			bw.Write(mName);
-
-			mKeyValue.Write(bw);
-
-			bw.Write(mChildren.Count);
-			foreach(GSNode n in mChildren)
-			{
-				n.Write(bw);
-			}
-		}
-
-
-		internal void GetBoneNames(List<string> names)
-		{
-			foreach(GSNode n in mChildren)
-			{
-				n.GetBoneNames(names);
-			}
-			names.Add(mName);
-		}
-
-
-		internal bool GetBoneParentName(string boneName, out string parent)
-		{
-			if(boneName == mName)
-			{
-				parent	="";
-				return	true;
-			}
-
-			foreach(GSNode n in mChildren)
-			{
-				if(n.GetBoneParentName(boneName, out parent))
-				{
-					if(parent == "")
-					{
-						parent	=mName;
-					}
-					return	true;
-				}
-			}
-			parent	=null;
-			return	false;
-		}
-
-
-		internal bool GetBoneKey(string bone, out KeyFrame ret)
-		{
-			if(mName == bone)
-			{
-				ret	=mKeyValue;
-				return	true;
-			}
-
-			foreach(GSNode n in mChildren)
-			{
-				if(n.GetBoneKey(bone, out ret))
-				{
-					return	true;
-				}
-			}
-			ret	=null;
-			return	false;
-		}
-
-
-		public void SetKey(KeyFrame keyFrame)
-		{
-			mKeyValue.mPosition	=keyFrame.mPosition;
-			mKeyValue.mRotation	=keyFrame.mRotation;
-			mKeyValue.mScale	=keyFrame.mScale;
-		}
-
-
-		internal void SetIndexes(Dictionary<string, int> nameToIndex)
-		{
-			if(nameToIndex.ContainsKey(mName))
-			{
-				mIndex	=nameToIndex[mName];
-			}
-
-			foreach(GSNode n in mChildren)
-			{
-				n.SetIndexes(nameToIndex);
-			}
-		}
-
-
-		internal void IterateStructure(Skeleton.IterateStruct ist)
-		{
-			foreach(GSNode gsn in mChildren)
-			{
-				ist(gsn.mName, mName);
-			}
-
-			foreach(GSNode gsn in mChildren)
-			{
-				gsn.IterateStructure(ist);
-			}
-		}
-
-
-		internal void ConvertToLeftHanded()
-		{
-			foreach(GSNode gsn in mChildren)
-			{
-				gsn.ConvertToLeftHanded();
-			}
-
-			mKeyValue.ConvertToLeftHanded();
+			n.NukeBone(boneName);
 		}
 	}
 
 
-	public class Skeleton
+	public void Read(BinaryReader br)
 	{
-		List<GSNode>	mRoots	=new List<GSNode>();
+		mName	=br.ReadString();
 
-		Dictionary<string, int>	mNameToIndex	=new Dictionary<string, int>();
+		mKeyValue.Read(br);
 
-		public delegate void IterateStruct(string name, string parent);
-
-
-		public Skeleton()
+		int	numChildren	=br.ReadInt32();
+		for(int i=0;i < numChildren;i++)
 		{
+			GSNode	n	=new GSNode();
+			n.Read(br);
+
+			mChildren.Add(n);
 		}
+	}
 
 
-		public void AddRoot(GSNode gsn)
+	public void Write(BinaryWriter bw)
+	{
+		bw.Write(mName);
+
+		mKeyValue.Write(bw);
+
+		bw.Write(mChildren.Count);
+		foreach(GSNode n in mChildren)
 		{
-			mRoots.Add(gsn);
+			n.Write(bw);
 		}
+	}
 
 
-		public void GetBoneNames(List<string> names)
+	internal void GetBoneNames(List<string> names)
+	{
+		foreach(GSNode n in mChildren)
 		{
-			foreach(GSNode n in mRoots)
-			{
-				n.GetBoneNames(names);
-			}
+			n.GetBoneNames(names);
 		}
+		names.Add(mName);
+	}
 
 
-		public bool GetMatrixForBone(int index, out Matrix ret)
+	internal bool GetBoneParentName(string boneName, out string parent)
+	{
+		if(boneName == mName)
 		{
-			foreach(GSNode n in mRoots)
-			{
-				if(n.GetMatrixForBone(index, out ret))
-				{
-					return	true;
-				}
-			}
-			ret	=Matrix.Identity;
-			return	false;
-		}
-
-
-		public bool GetMatrixForBone(string boneName, out Matrix ret)
-		{
-			foreach(GSNode n in mRoots)
-			{
-				if(n.GetMatrixForBone(boneName, out ret))
-				{
-					return	true;
-				}
-			}
-			ret	=Matrix.Identity;
-			return	false;
-		}
-
-
-		public void NukeBone(string name)
-		{
-			foreach(GSNode n in mRoots)
-			{
-				if(n.mName == name)
-				{
-					mRoots.Remove(n);
-					return;
-				}
-				n.NukeBone(name);
-			}
-		}
-
-
-		public void Read(BinaryReader br)
-		{
-			int	numRoots	=br.ReadInt32();
-
-			for(int i=0;i < numRoots;i++)
-			{
-				GSNode	n	=new GSNode();
-
-				n.Read(br);
-
-				mRoots.Add(n);
-			}
-			ComputeNameIndex();
-		}
-
-
-		public void Write(BinaryWriter bw)
-		{
-			bw.Write(mRoots.Count);
-
-			foreach(GSNode n in mRoots)
-			{
-				n.Write(bw);
-			}
-		}
-
-
-		internal bool GetBoneParentName(string boneName, out string parent)
-		{
-			foreach(GSNode n in mRoots)
-			{
-				if(n.GetBoneParentName(boneName, out parent))
-				{
-					return	true;
-				}
-			}
-			parent	=null;
-			return	false;
-		}
-
-
-		public KeyFrame GetBoneKey(string bone)
-		{
-			KeyFrame	ret	=null;
-			foreach(GSNode n in mRoots)
-			{
-				if(n.GetBoneKey(bone, out ret))
-				{
-					return	ret;
-				}
-			}
-			return	ret;
-		}
-
-
-		public void IterateStructure(IterateStruct ist)
-		{
-			//do the roots
-			foreach(GSNode gsn in mRoots)
-			{
-				ist(gsn.mName, null);
-			}
-
-			//recurse
-			foreach(GSNode gsn in mRoots)
-			{
-				gsn.IterateStructure(ist);
-			}
-		}
-
-
-		public int GetBoneIndex(string name)
-		{
-			if(!mNameToIndex.ContainsKey(name))
-			{
-				return	-1;
-			}
-			return	mNameToIndex[name];
-		}
-
-
-		public string GetBoneName(int index)
-		{
-			foreach(KeyValuePair<string, int> bn in mNameToIndex)
-			{
-				if(bn.Value == index)
-				{
-					return	bn.Key;
-				}
-			}
-			return	"None";
-		}
-
-
-		public int GetNumIndexedBones()
-		{
-			return	mNameToIndex.Count;
-		}
-
-
-		public bool CheckSkeletonIndexes(Skeleton otherSkel)
-		{
-			if(otherSkel.mNameToIndex.Count != mNameToIndex.Count)
-			{
-				return	false;
-			}
-
-			foreach(KeyValuePair<string, int> idx in mNameToIndex)
-			{
-				if(!otherSkel.mNameToIndex.ContainsKey(idx.Key))
-				{
-					return	false;
-				}
-				if(otherSkel.mNameToIndex[idx.Key] != idx.Value)
-				{
-					return	false;
-				}
-			}
+			parent	="";
 			return	true;
 		}
 
-
-		public void ConvertToLeftHanded()
+		foreach(GSNode n in mChildren)
 		{
-			//do the roots
-			foreach(GSNode gsn in mRoots)
+			if(n.GetBoneParentName(boneName, out parent))
 			{
-				gsn.ConvertToLeftHanded();
+				if(parent == "")
+				{
+					parent	=mName;
+				}
+				return	true;
 			}
 		}
+		parent	=null;
+		return	false;
+	}
 
 
-		//return the root bone names
-		public void GetRootNames(List<string> ret)
+	internal bool GetBoneKey(string bone, out KeyFrame ret)
+	{
+		if(mName == bone)
 		{
-			if(ret == null)
-			{
-				ret	=new List<string>();
-			}
-			else
-			{
-				ret.Clear();
-			}
-
-			foreach(GSNode gsn in mRoots)
-			{
-				ret.Add(gsn.mName);
-			}
+			ret	=mKeyValue;
+			return	true;
 		}
 
-
-		//squash the indexes so they match with a linear array for shaders
-		public void Compact(Dictionary<int, int> mapToOld)
+		foreach(GSNode n in mChildren)
 		{
-			if(mapToOld == null)
+			if(n.GetBoneKey(bone, out ret))
 			{
-				mapToOld	=new Dictionary<int, int>();
+				return	true;
 			}
-			else
-			{
-				mapToOld.Clear();
-			}
+		}
+		ret	=null;
+		return	false;
+	}
 
-			List<string>	names	=new List<string>();
 
-			GetBoneNames(names);
+	public void SetKey(KeyFrame keyFrame)
+	{
+		mKeyValue.mPosition	=keyFrame.mPosition;
+		mKeyValue.mRotation	=keyFrame.mRotation;
+		mKeyValue.mScale	=keyFrame.mScale;
+	}
 
-			for(int i=0;i < names.Count;i++)
-			{
-				mapToOld.Add(GetBoneIndex(names[i]), i);
-			}
 
-			//reindex
-			ComputeNameIndex();
+	internal void SetIndexes(Dictionary<string, int> nameToIndex)
+	{
+		if(nameToIndex.ContainsKey(mName))
+		{
+			mIndex	=nameToIndex[mName];
 		}
 
-
-		public void ComputeNameIndex()
+		foreach(GSNode n in mChildren)
 		{
-			mNameToIndex.Clear();
+			n.SetIndexes(nameToIndex);
+		}
+	}
 
-			List<string>	names	=new List<string>();
 
-			GetBoneNames(names);
+	internal void IterateStructure(Skeleton.IterateStruct ist)
+	{
+		foreach(GSNode gsn in mChildren)
+		{
+			ist(gsn.mName, mName);
+		}
 
-			int	idx	=0;
-			foreach(string name in names)
+		foreach(GSNode gsn in mChildren)
+		{
+			gsn.IterateStructure(ist);
+		}
+	}
+
+
+	internal void ConvertToLeftHanded()
+	{
+		foreach(GSNode gsn in mChildren)
+		{
+			gsn.ConvertToLeftHanded();
+		}
+
+		mKeyValue.ConvertToLeftHanded();
+	}
+}
+
+
+public class Skeleton
+{
+	List<GSNode>	mRoots	=new List<GSNode>();
+
+	Dictionary<string, int>	mNameToIndex	=new Dictionary<string, int>();
+
+	public delegate void IterateStruct(string name, string parent);
+
+
+	public Skeleton()
+	{
+	}
+
+
+	public void AddRoot(GSNode gsn)
+	{
+		mRoots.Add(gsn);
+	}
+
+
+	public void GetBoneNames(List<string> names)
+	{
+		foreach(GSNode n in mRoots)
+		{
+			n.GetBoneNames(names);
+		}
+	}
+
+
+	public bool GetMatrixForBone(int index, out Matrix4x4 ret)
+	{
+		foreach(GSNode n in mRoots)
+		{
+			if(n.GetMatrixForBone(index, out ret))
 			{
-				mNameToIndex.Add(name, idx++);
+				return	true;
 			}
+		}
+		ret	=Matrix4x4.Identity;
+		return	false;
+	}
 
-			//set indexes in the bones
-			foreach(GSNode gsn in mRoots)
+
+	public bool GetMatrixForBone(string boneName, out Matrix4x4 ret)
+	{
+		foreach(GSNode n in mRoots)
+		{
+			if(n.GetMatrixForBone(boneName, out ret))
 			{
-				gsn.SetIndexes(mNameToIndex);
+				return	true;
 			}
+		}
+		ret	=Matrix4x4.Identity;
+		return	false;
+	}
+
+
+	public void NukeBone(string name)
+	{
+		foreach(GSNode n in mRoots)
+		{
+			if(n.mName == name)
+			{
+				mRoots.Remove(n);
+				return;
+			}
+			n.NukeBone(name);
+		}
+	}
+
+
+	public void Read(BinaryReader br)
+	{
+		int	numRoots	=br.ReadInt32();
+
+		for(int i=0;i < numRoots;i++)
+		{
+			GSNode	n	=new GSNode();
+
+			n.Read(br);
+
+			mRoots.Add(n);
+		}
+		ComputeNameIndex();
+	}
+
+
+	public void Write(BinaryWriter bw)
+	{
+		bw.Write(mRoots.Count);
+
+		foreach(GSNode n in mRoots)
+		{
+			n.Write(bw);
+		}
+	}
+
+
+	internal bool GetBoneParentName(string boneName, out string parent)
+	{
+		foreach(GSNode n in mRoots)
+		{
+			if(n.GetBoneParentName(boneName, out parent))
+			{
+				return	true;
+			}
+		}
+		parent	=null;
+		return	false;
+	}
+
+
+	public KeyFrame GetBoneKey(string bone)
+	{
+		KeyFrame	ret	=null;
+		foreach(GSNode n in mRoots)
+		{
+			if(n.GetBoneKey(bone, out ret))
+			{
+				return	ret;
+			}
+		}
+		return	ret;
+	}
+
+
+	public void IterateStructure(IterateStruct ist)
+	{
+		//do the roots
+		foreach(GSNode gsn in mRoots)
+		{
+			ist(gsn.mName, null);
+		}
+
+		//recurse
+		foreach(GSNode gsn in mRoots)
+		{
+			gsn.IterateStructure(ist);
+		}
+	}
+
+
+	public int GetBoneIndex(string name)
+	{
+		if(!mNameToIndex.ContainsKey(name))
+		{
+			return	-1;
+		}
+		return	mNameToIndex[name];
+	}
+
+
+	public string GetBoneName(int index)
+	{
+		foreach(KeyValuePair<string, int> bn in mNameToIndex)
+		{
+			if(bn.Value == index)
+			{
+				return	bn.Key;
+			}
+		}
+		return	"None";
+	}
+
+
+	public int GetNumIndexedBones()
+	{
+		return	mNameToIndex.Count;
+	}
+
+
+	public bool CheckSkeletonIndexes(Skeleton otherSkel)
+	{
+		if(otherSkel.mNameToIndex.Count != mNameToIndex.Count)
+		{
+			return	false;
+		}
+
+		foreach(KeyValuePair<string, int> idx in mNameToIndex)
+		{
+			if(!otherSkel.mNameToIndex.ContainsKey(idx.Key))
+			{
+				return	false;
+			}
+			if(otherSkel.mNameToIndex[idx.Key] != idx.Value)
+			{
+				return	false;
+			}
+		}
+		return	true;
+	}
+
+
+	public void ConvertToLeftHanded()
+	{
+		//do the roots
+		foreach(GSNode gsn in mRoots)
+		{
+			gsn.ConvertToLeftHanded();
+		}
+	}
+
+
+	//return the root bone names
+	public void GetRootNames(List<string> ret)
+	{
+		if(ret == null)
+		{
+			ret	=new List<string>();
+		}
+		else
+		{
+			ret.Clear();
+		}
+
+		foreach(GSNode gsn in mRoots)
+		{
+			ret.Add(gsn.mName);
+		}
+	}
+
+
+	//squash the indexes so they match with a linear array for shaders
+	public void Compact(Dictionary<int, int> mapToOld)
+	{
+		if(mapToOld == null)
+		{
+			mapToOld	=new Dictionary<int, int>();
+		}
+		else
+		{
+			mapToOld.Clear();
+		}
+
+		List<string>	names	=new List<string>();
+
+		GetBoneNames(names);
+
+		for(int i=0;i < names.Count;i++)
+		{
+			mapToOld.Add(GetBoneIndex(names[i]), i);
+		}
+
+		//reindex
+		ComputeNameIndex();
+	}
+
+
+	public void ComputeNameIndex()
+	{
+		mNameToIndex.Clear();
+
+		List<string>	names	=new List<string>();
+
+		GetBoneNames(names);
+
+		int	idx	=0;
+		foreach(string name in names)
+		{
+			mNameToIndex.Add(name, idx++);
+		}
+
+		//set indexes in the bones
+		foreach(GSNode gsn in mRoots)
+		{
+			gsn.SetIndexes(mNameToIndex);
 		}
 	}
 }

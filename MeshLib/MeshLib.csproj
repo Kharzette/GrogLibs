@@ -1,24 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0-windows7.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-	<Reference Include="SharpDX">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.Mathematics">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Mathematics.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.DXGI">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.DXGI.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.Direct3D11">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Direct3D11.dll</HintPath>
-    </Reference>
-	<PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MaterialLib\MaterialLib.csproj"/>
+	<ProjectReference Include="..\Vortice.Mathematics\src\Vortice.Mathematics\Vortice.Mathematics.csproj"/>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>
+    <ProjectReference Include="..\MaterialLib\MaterialLib.csproj"/>
   </ItemGroup>
 </Project>

@@ -6,7 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>
-	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DirectX\Vortice.DirectX.csproj"/>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.D3DCompiler\Vortice.D3DCompiler.csproj"/>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DXGI\Vortice.DXGI.csproj"/>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.Direct2D1\Vortice.Direct2D1.csproj"/>

@@ -76,6 +76,32 @@ public partial class MaterialLib
 	}
 
 
+	public void SetMaterialID(string matName, int id)
+	{
+		if(!mMats.ContainsKey(matName))
+		{
+			return;
+		}
+
+		Material	mat	=mMats[matName];
+
+		mat.SetMaterialID(id);
+	}
+
+
+	public void SetWorld(string matName, Matrix4x4 world)
+	{
+		if(!mMats.ContainsKey(matName))
+		{
+			return;
+		}
+
+		Material	mat	=mMats[matName];
+
+		mat.SetWorld(world);
+	}
+
+
 	public void GuessTextures()
 	{
 		List<string>	textures	=mSKeeper.GetTexture2DList();

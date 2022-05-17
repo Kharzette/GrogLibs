@@ -52,20 +52,21 @@ cbuffer PerShadow : register(b3)
 	float3	mShadowLightPos;	//point light location
 	bool	mbDirectional;		//sunnish or point
 	float	mShadowAtten;		//shadow attenuation
+	float3	mShadPadding;		//pad out to 16 boundary
 }
 
 
 //outline / cel related
 //1D textures are not supported in 9_3 feature levels
 #if defined(SM2)
-shared Texture2D	mCelTable;
+shared Texture2D	mCelTable : register(t2);
 #else
-shared Texture1D	mCelTable;
+shared Texture1D	mCelTable : register(t2);
 #endif
 
 //for shadowmaps
-shared Texture2D	mShadowTexture;		//2D
-shared TextureCube	mShadowCube;		//cube
+shared Texture2D	mShadowTexture : register(t4);	//directional
+shared TextureCube	mShadowCube : register(t5);		//point
 
 //these are assigned from C# side
 SamplerState	PointClamp : register(s0);

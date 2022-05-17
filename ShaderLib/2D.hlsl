@@ -1,5 +1,6 @@
 //shader for UI and particles and such
-Texture2D	mTexture, mTexture2;
+Texture2D	mTexture0 : register(t0);
+Texture2D	mTexture1 : register(t1);
 
 #include "Types.hlsli"
 #include "CommonFunctions.hlsli"
@@ -183,7 +184,7 @@ VVPosTex04Tex14Tex24 ParticleDMNVS(VPos4Tex04Tex14 input)
 float4 ParticlePS(VVPosTex04Tex14 input) : SV_Target
 {
 	//texture
-	float4	texel	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
+	float4	texel	=mTexture0.Sample(LinearWrap, input.TexCoord0.xy);
 
 	//multiply by color
 	texel	*=input.TexCoord1;
@@ -194,7 +195,7 @@ float4 ParticlePS(VVPosTex04Tex14 input) : SV_Target
 float4 TextPS(VVPosTex0 input) : SV_Target
 {
 	//texture
-	float4	texel	=mTexture.Sample(PointClamp, input.TexCoord0.xy);
+	float4	texel	=mTexture0.Sample(PointClamp, input.TexCoord0.xy);
 
 	//multiply by color
 	texel	*=mTextColor;
@@ -207,8 +208,8 @@ float4 KeyedGumpPS(VVPosTex04 input) : SV_Target
 	//2 layers
 	//top is a mask
 	//second draws multiplied by top alpha
-	float4	texel	=mTexture.Sample(PointClamp, input.TexCoord0.xy);
-	float4	texel2	=mTexture2.Sample(PointClamp,
+	float4	texel	=mTexture0.Sample(PointClamp, input.TexCoord0.xy);
+	float4	texel2	=mTexture1.Sample(PointClamp,
 		input.TexCoord0.zw + mSecondLayerOffset);
 
 	//multiply under layer by color
@@ -222,7 +223,7 @@ float4 KeyedGumpPS(VVPosTex04 input) : SV_Target
 
 float4 GumpPS(VVPosTex04 input) : SV_Target
 {
-	float4	texel	=mTexture.Sample(PointClamp, input.TexCoord0.xy);
+	float4	texel	=mTexture0.Sample(PointClamp, input.TexCoord0.xy);
 
 	texel	*=mTextColor;
 
@@ -238,7 +239,7 @@ struct TwoHalf4Targets
 TwoHalf4Targets ParticleDMNPS(VVPosTex04Tex14Tex24 input) : SV_Target
 {
 	//texture
-	float4	texel	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
+	float4	texel	=mTexture0.Sample(LinearWrap, input.TexCoord0.xy);
 
 	//multiply by color
 	texel	*=input.TexCoord1;

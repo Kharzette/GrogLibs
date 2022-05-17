@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Vortice.Direct3D11;
 using Vortice.Mathematics;
 using System.Numerics;
 
@@ -38,7 +40,7 @@ namespace UtilityLib
 
 		//this was in sharpdx, and I used it alot for boundy stuff
 		//keeps things homogeneous
-		public static void TransformCoordinate(ref Vector3 coord, ref Matrix4x4 mat, out Vector3 result)
+		public static void TransformCoordinate(Vector3 coord, ref Matrix4x4 mat, out Vector3 result)
 		{
 			Vector3	vec	=Vector3.Zero;
 
@@ -52,13 +54,49 @@ namespace UtilityLib
 		}
 
 
-		public static Vector3 TransformCoordinate(ref Vector3 coord, ref Matrix4x4 mat)
+		//non ref matrix ver
+		public static void TransformCoordinate(Vector3 coord, Matrix4x4 mat, out Vector3 result)
+		{
+			Vector3	vec	=Vector3.Zero;
+
+			vec.X	=(coord.X * mat.M11) + (coord.Y * mat.M21) + (coord.Z * mat.M31) + mat.M41;
+			vec.Y	=(coord.X * mat.M12) + (coord.Y * mat.M22) + (coord.Z * mat.M32) + mat.M42;
+			vec.Z	=(coord.X * mat.M13) + (coord.Y * mat.M23) + (coord.Z * mat.M33) + mat.M43;
+
+			float	w	=1f / ((coord.X * mat.M14) + (coord.Y * mat.M24) + (coord.Z * mat.M34) + mat.M44);
+
+			result	=Vector3.Multiply(vec, w);
+		}
+
+
+		public static Vector3 TransformCoordinate(Vector3 coord, ref Matrix4x4 mat)
 		{
 			Vector3	ret;
 
-			TransformCoordinate(ref coord, ref mat, out ret);
+			TransformCoordinate(coord, ref mat, out ret);
 
 			return	ret;
+		}
+
+
+		//array ver
+		public static void TransformCoordinate(Vector3 []coords, Matrix4x4 mat, Vector3 []results)
+		{
+			Debug.Assert(results.Length >= coords.Length);
+	
+			Parallel.For(0, coords.Length, (k) =>
+			{
+				Vector3	vec		=Vector3.Zero;
+				Vector3	coord	=coords[k];
+
+				vec.X	=(coord.X * mat.M11) + (coord.Y * mat.M21) + (coord.Z * mat.M31) + mat.M41;
+				vec.Y	=(coord.X * mat.M12) + (coord.Y * mat.M22) + (coord.Z * mat.M32) + mat.M42;
+				vec.Z	=(coord.X * mat.M13) + (coord.Y * mat.M23) + (coord.Z * mat.M33) + mat.M43;
+
+				float	w	=1f / ((coord.X * mat.M14) + (coord.Y * mat.M24) + (coord.Z * mat.M34) + mat.M44);
+
+				results[k]	=Vector3.Multiply(vec, w);
+			});
 		}
 
 
@@ -205,7 +243,6 @@ namespace UtilityLib
 		}
 
 
-		/*	Vortice doesn't have cube face stuff
 		static Vector3 VectorForCubeFace(TextureCubeFace face)
 		{
 			switch(face)
@@ -231,7 +268,7 @@ namespace UtilityLib
 		//direction points at a cube face
 		public static void CreateCubeMapViewProjMatrix(TextureCubeFace face,
 			Vector3 cubeCenter, float farPlane,
-			out Matrix cubeView, out Matrix cubeProj)
+			out Matrix4x4 cubeView, out Matrix4x4 cubeProj)
 		{
 			//find a good up vector
 			Vector3	upVec	=Vector3.UnitY;
@@ -245,13 +282,13 @@ namespace UtilityLib
 			}
 
 			//Create the view matrix aimed at the cube face
-			cubeView	=Matrix.LookAtLH(cubeCenter,
+			cubeView	=Matrix4x4.CreateLookAt(cubeCenter,
 				cubeCenter + VectorForCubeFace(face), upVec);
 
 			//Values are to project on the cube face
-			cubeProj	=Matrix.PerspectiveFovLH(
-				MathUtil.PiOverTwo, 1f, 1f, farPlane);
-        }*/
+			cubeProj	=Matrix4x4.CreatePerspectiveFieldOfView(
+				MathHelper.PiOver2, 1f, 1f, farPlane);
+        }
 
 
 		//useful for directional shadow mapping, making item icons
@@ -293,7 +330,7 @@ namespace UtilityLib
 			}
 			
 			//transform the view position back into worldspace
-			viewPos	=Mathery.TransformCoordinate(ref viewPos, ref viewInv);
+			viewPos	=Mathery.TransformCoordinate(viewPos, ref viewInv);
 			
 			//Create the view matrix
 			lightView	=Matrix4x4.CreateLookAt(viewPos,
@@ -909,7 +946,7 @@ namespace UtilityLib
 		{
 			Vector3	pos		=bs.Center;
 
-			bs.Center	=Mathery.TransformCoordinate(ref pos, ref trans);
+			bs.Center	=Mathery.TransformCoordinate(pos, ref trans);
 
 			Vector3	scaleVec	=new Vector3(trans.M11, trans.M22, trans.M33);
 				

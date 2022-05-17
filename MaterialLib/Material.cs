@@ -25,7 +25,11 @@ internal class Material
 	string	mSamplerState1;	//sampling
 
 	//variable stuffs
-	internal int			mMaterialID;	//ID for doing outlines and such
+	internal Matrix4x4	mWorld;			//world matrix
+	internal int		mMaterialID;	//ID for doing outlines and such
+
+
+	//variables for specific meshtypes
 	internal BSPMat			mBSPVars;		//bsp specific, might be null
 	internal MeshMat		mMeshVars;		//mesh specific, should be non null
 	internal CharacterMat	mCharVars;		//character specific, might be null
@@ -97,5 +101,17 @@ internal class Material
 		mMeshVars.LightColor1		=col1;
 		mMeshVars.LightColor2		=col2;
 		mMeshVars.LightDirection	=lightDir;
+	}
+
+
+	internal void SetMaterialID(int id)
+	{
+		mMaterialID	=id;
+	}
+
+
+	internal void SetWorld(Matrix4x4 mat)
+	{
+		mWorld	=mat;
 	}
 }

@@ -1,311 +1,307 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
+using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SharpDX;
-using SharpDX.Direct3D11;
+using Vortice.Mathematics;
+using Vortice.Direct3D11;
 
 using MatLib	=MaterialLib.MaterialLib;
 
+namespace MeshLib;
 
-namespace MeshLib
+//handles collections of meshes
+//used by characters and static meshes
+internal class MeshPartStuff
 {
-	//handles collections of meshes
-	//used by characters and static meshes
-	internal class MeshPartStuff
+	IArch	mArch;
+
+	//materials per part
+	List<MeshMaterial>	mPartMats	=new List<MeshMaterial>();
+
+
+	internal MeshPartStuff(IArch arch)
 	{
-		IArch	mArch;
-
-		//materials per part
-		List<MeshMaterial>	mPartMats	=new List<MeshMaterial>();
+		mArch	=arch;
+	}
 
 
-		internal MeshPartStuff(IArch arch)
+	internal void FreeAll()
+	{
+		mPartMats.Clear();
+
+		//arch is likely being used elsewhere
+		//don't free it here
+		mArch	=null;
+	}
+
+
+	internal bool IsEmpty()
+	{
+		return	(mPartMats.Count <= 0);
+	}
+
+
+	internal Skin GetSkin()
+	{
+		return	mArch.GetSkin();
+	}
+
+
+	internal int GetNumParts()
+	{
+		return	mPartMats.Count;
+	}
+
+
+	internal void SetPartVisible(int index, bool bVisible)
+	{
+		Debug.Assert(index >= 0 && index < mPartMats.Count);
+
+		if(index < 0 || index >= mPartMats.Count)
 		{
-			mArch	=arch;
+			return;
 		}
 
+		mPartMats[index].mbVisible	=bVisible;
+	}
 
-		internal void FreeAll()
+
+	internal void SetPartMaterialName(int index, string matName)
+	{
+		Debug.Assert(index >= 0 && index < mPartMats.Count);
+
+		if(index < 0 || index >= mPartMats.Count)
 		{
-			mPartMats.Clear();
-
-			//arch is likely being used elsewhere
-			//don't free it here
-			mArch	=null;
+			return;
 		}
 
+		mPartMats[index].mMaterialName	=matName;
+	}
 
-		internal bool IsEmpty()
+
+	internal string GetPartMaterialName(int index)
+	{
+		Debug.Assert(index >= 0 && index < mPartMats.Count);
+
+		if(index < 0 || index >= mPartMats.Count)
 		{
-			return	(mPartMats.Count <= 0);
+			return	"Nothing";
 		}
 
+		return	mPartMats[index].mMaterialName;
+	}
 
-		internal Skin GetSkin()
+
+	internal void SetMatLibs(MatLib mats)
+	{
+		foreach(MeshMaterial mm in mPartMats)
 		{
-			return	mArch.GetSkin();
+			mm.mMatLib	=mats;
+		}
+	}
+
+
+	//these need to be kept in sync with the arch's mesh parts
+	internal void AddPart(MatLib mats, Matrix4x4 objectTrans)
+	{
+		MeshMaterial	mm	=new MeshMaterial();
+
+		mm.mMatLib			=mats;
+		mm.mMaterialName	="NoMaterial";
+		mm.mbVisible		=true;
+		mm.mObjectTransform	=objectTrans;
+
+		mPartMats.Add(mm);
+	}
+
+
+	internal void NukePart(int index)
+	{
+		Debug.Assert(index >= 0 && index < mPartMats.Count);
+
+		if(index < 0 || index >= mPartMats.Count)
+		{
+			return;
 		}
 
+		mPartMats.RemoveAt(index);
+	}
 
-		internal int GetNumParts()
+
+	internal void NukeParts(List<int> indexes)
+	{
+		List<MeshMaterial>	toNuke	=new List<MeshMaterial>();
+		foreach(int ind in indexes)
 		{
-			return	mPartMats.Count;
-		}
+			Debug.Assert(ind >= 0 && ind < mPartMats.Count);
 
-
-		internal void SetPartVisible(int index, bool bVisible)
-		{
-			Debug.Assert(index >= 0 && index < mPartMats.Count);
-
-			if(index < 0 || index >= mPartMats.Count)
+			if(ind < 0 || ind >= mPartMats.Count)
 			{
-				return;
+				continue;
 			}
 
-			mPartMats[index].mbVisible	=bVisible;
+			toNuke.Add(mPartMats[ind]);
 		}
 
+		mPartMats.RemoveAll(mp => toNuke.Contains(mp));
 
-		internal void SetPartMaterialName(int index, string matName)
+		toNuke.Clear();
+	}
+
+
+	internal void SetMatObjTransform(int idx, Matrix4x4 trans)
+	{
+		Debug.Assert(idx >= 0 && idx < mPartMats.Count);
+
+		mPartMats[idx].mObjectTransform	=trans;
+	}
+
+
+	internal void SetMatObjTransforms(Matrix4x4 trans)
+	{
+		foreach(MeshMaterial mm in mPartMats)
 		{
-			Debug.Assert(index >= 0 && index < mPartMats.Count);
-
-			if(index < 0 || index >= mPartMats.Count)
-			{
-				return;
-			}
-
-			mPartMats[index].mMaterialName	=matName;
+			mm.mObjectTransform	=trans;
 		}
+	}
 
 
-		internal string GetPartMaterialName(int index)
+	internal Dictionary<Mesh, BoundingBox> GetBoundData()
+	{
+		return	(mArch as StaticArch).GetBoundData();
+	}
+
+
+	internal BoundingBox GetBoxBound()
+	{
+		return	mArch.GetBoxBound();
+	}
+
+
+	internal BoundingSphere GetSphereBound()
+	{
+		return	mArch.GetSphereBound();
+	}
+
+
+	internal void ReIndexVertWeights(ID3D11Device gd, Dictionary<int, int> idxMap)
+	{
+		mArch.ReIndexVertWeights(gd, idxMap);
+	}
+
+
+	internal void GetBoneNamesInUseByDraw(List<string> names, Skeleton skel)
+	{
+		int	partCount	=mArch.GetPartCount();
+		for(int i=0;i < partCount;i++)
 		{
-			Debug.Assert(index >= 0 && index < mPartMats.Count);
-
-			if(index < 0 || index >= mPartMats.Count)
-			{
-				return	"Nothing";
-			}
-
-			return	mPartMats[index].mMaterialName;
+			mArch.GetPartBoneNamesInUseByDraw(i, names, skel);
 		}
+	}
 
 
-		internal void SetMatLibs(MatLib mats)
+	internal void SetTriLightValues(
+		Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
+	{
+		foreach(MeshMaterial mm in mPartMats)
 		{
-			foreach(MeshMaterial mm in mPartMats)
-			{
-				mm.mMatLib	=mats;
-			}
+			mm.mMatLib.SetTriLightValues(
+				mm.mMaterialName, col0, col1, col2, lightDir);
 		}
+	}
 
 
-		//these need to be kept in sync with the arch's mesh parts
-		internal void AddPart(MatLib mats, Matrix objectTrans)
+	internal void Draw(ID3D11DeviceContext dc)
+	{
+		mArch.Draw(dc, mPartMats);
+	}
+
+
+	internal void Draw(ID3D11DeviceContext dc, string altMaterial)
+	{
+		mArch.Draw(dc, mPartMats, altMaterial);
+	}
+
+
+	internal void DrawX(ID3D11DeviceContext dc, string altMaterial, int numInst)
+	{
+		mArch.DrawX(dc, mPartMats, numInst, altMaterial);
+	}
+
+
+	internal void DrawDMN(ID3D11DeviceContext dc)
+	{
+		mArch.DrawDMN(dc, mPartMats);
+	}
+
+
+	internal float? RayIntersect(Vector3 start, Vector3 end, bool bBox, out Mesh partHit)
+	{
+		return	mArch.RayIntersect(start, end, bBox, out partHit);
+	}
+
+
+	internal void Write(BinaryWriter bw)
+	{
+		bw.Write(mPartMats.Count);
+
+		foreach(MeshMaterial mm in mPartMats)
+		{
+			mm.Write(bw);
+		}
+	}
+
+
+	internal void Read(BinaryReader br)
+	{
+		mPartMats.Clear();
+
+		int	cnt	=br.ReadInt32();
+
+		for(int i=0;i < cnt;i++)
 		{
 			MeshMaterial	mm	=new MeshMaterial();
 
-			mm.mMatLib			=mats;
-			mm.mMaterialName	="NoMaterial";
-			mm.mbVisible		=true;
-			mm.mObjectTransform	=objectTrans;
+			mm.Read(br);
 
 			mPartMats.Add(mm);
 		}
+	}
 
 
-		internal void NukePart(int index)
+	internal void AssignMaterialIDs(MaterialLib.IDKeeper idk)
+	{
+		foreach(MeshMaterial mm in mPartMats)
 		{
-			Debug.Assert(index >= 0 && index < mPartMats.Count);
+			mm.mMaterialID	=idk.GetID(mm.mMaterialName);
+		}
+	}
 
-			if(index < 0 || index >= mPartMats.Count)
+
+	internal void ComputeBoneBounds(List<string> skipMaterials, Skeleton skeleton)
+	{
+		CharacterArch	ca	=mArch as CharacterArch;
+		if(ca == null)
+		{
+			return;
+		}
+
+		List<int>	skipParts	=new List<int>();
+		for(int i=0;i < mPartMats.Count;i++)
+		{
+			if(!mPartMats[i].mbVisible)
 			{
-				return;
+				skipParts.Add(i);
+				continue;
 			}
 
-			mPartMats.RemoveAt(index);
-		}
-
-
-		internal void NukeParts(List<int> indexes)
-		{
-			List<MeshMaterial>	toNuke	=new List<MeshMaterial>();
-			foreach(int ind in indexes)
+			if(skipMaterials.Contains(mPartMats[i].mMaterialName))
 			{
-				Debug.Assert(ind >= 0 && ind < mPartMats.Count);
-
-				if(ind < 0 || ind >= mPartMats.Count)
-				{
-					continue;
-				}
-
-				toNuke.Add(mPartMats[ind]);
-			}
-
-			mPartMats.RemoveAll(mp => toNuke.Contains(mp));
-
-			toNuke.Clear();
-		}
-
-
-		internal void SetMatObjTransform(int idx, Matrix trans)
-		{
-			Debug.Assert(idx >= 0 && idx < mPartMats.Count);
-
-			mPartMats[idx].mObjectTransform	=trans;
-		}
-
-
-		internal void SetMatObjTransforms(Matrix trans)
-		{
-			foreach(MeshMaterial mm in mPartMats)
-			{
-				mm.mObjectTransform	=trans;
+				skipParts.Add(i);
+				continue;
 			}
 		}
 
-
-		internal Dictionary<Mesh, BoundingBox> GetBoundData()
-		{
-			return	(mArch as StaticArch).GetBoundData();
-		}
-
-
-		internal BoundingBox GetBoxBound()
-		{
-			return	mArch.GetBoxBound();
-		}
-
-
-		internal BoundingSphere GetSphereBound()
-		{
-			return	mArch.GetSphereBound();
-		}
-
-
-		internal void ReIndexVertWeights(Device gd, Dictionary<int, int> idxMap)
-		{
-			mArch.ReIndexVertWeights(gd, idxMap);
-		}
-
-
-		internal void GetBoneNamesInUseByDraw(List<string> names, Skeleton skel)
-		{
-			int	partCount	=mArch.GetPartCount();
-			for(int i=0;i < partCount;i++)
-			{
-				mArch.GetPartBoneNamesInUseByDraw(i, names, skel);
-			}
-		}
-
-
-		internal void SetTriLightValues(
-			Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
-		{
-			foreach(MeshMaterial mm in mPartMats)
-			{
-				mm.mMatLib.SetTriLightValues(
-					mm.mMaterialName, col0, col1, col2, lightDir);
-			}
-		}
-
-
-		internal void Draw(DeviceContext dc)
-		{
-			mArch.Draw(dc, mPartMats);
-		}
-
-
-		internal void Draw(DeviceContext dc, string altMaterial)
-		{
-			mArch.Draw(dc, mPartMats, altMaterial);
-		}
-
-
-		internal void DrawX(DeviceContext dc, string altMaterial, int numInst)
-		{
-			mArch.DrawX(dc, mPartMats, numInst, altMaterial);
-		}
-
-
-		internal void DrawDMN(DeviceContext dc)
-		{
-			mArch.DrawDMN(dc, mPartMats);
-		}
-
-
-		internal float? RayIntersect(Vector3 start, Vector3 end, bool bBox, out Mesh partHit)
-		{
-			return	mArch.RayIntersect(start, end, bBox, out partHit);
-		}
-
-
-		internal void Write(BinaryWriter bw)
-		{
-			bw.Write(mPartMats.Count);
-
-			foreach(MeshMaterial mm in mPartMats)
-			{
-				mm.Write(bw);
-			}
-		}
-
-
-		internal void Read(BinaryReader br)
-		{
-			mPartMats.Clear();
-
-			int	cnt	=br.ReadInt32();
-
-			for(int i=0;i < cnt;i++)
-			{
-				MeshMaterial	mm	=new MeshMaterial();
-
-				mm.Read(br);
-
-				mPartMats.Add(mm);
-			}
-		}
-
-
-		internal void AssignMaterialIDs(MaterialLib.IDKeeper idk)
-		{
-			foreach(MeshMaterial mm in mPartMats)
-			{
-				mm.mMaterialID	=idk.GetID(mm.mMaterialName);
-			}
-		}
-
-
-		internal void ComputeBoneBounds(List<string> skipMaterials, Skeleton skeleton)
-		{
-			CharacterArch	ca	=mArch as CharacterArch;
-			if(ca == null)
-			{
-				return;
-			}
-
-			List<int>	skipParts	=new List<int>();
-			for(int i=0;i < mPartMats.Count;i++)
-			{
-				if(!mPartMats[i].mbVisible)
-				{
-					skipParts.Add(i);
-					continue;
-				}
-
-				if(skipMaterials.Contains(mPartMats[i].mMaterialName))
-				{
-					skipParts.Add(i);
-					continue;
-				}
-			}
-
-			ca.ComputeBoneBounds(skeleton, skipParts);
-		}
+		ca.ComputeBoneBounds(skeleton, skipParts);
 	}
 }

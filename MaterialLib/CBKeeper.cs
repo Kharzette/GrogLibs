@@ -48,6 +48,16 @@ public unsafe class CBKeeper
 		internal Matrix4x4	mProjection;
 	}
 
+	//CommonFunctions.hlsli
+	[StructLayout(LayoutKind.Sequential, Pack = 4)]
+	struct PerShadow
+	{
+		internal Vector3	mShadowLightPos;
+		internal bool		mbDirectional;
+		internal float		mShadowAtten;
+		internal Vector3	mShadPadding;
+	}
+
 	//2D.hlsl
 	[StructLayout(LayoutKind.Sequential, Pack = 4)]
 	struct TwoD
@@ -111,6 +121,7 @@ public unsafe class CBKeeper
 	ID3D11Buffer	mCharacterBuf;
 	ID3D11Buffer	mBSPBuf, mBSPStylesBuf;
 	ID3D11Buffer	mPostBuf, mPostWOXYBuf;
+	ID3D11Buffer	mPerShadowBuf;
 
 	//cpu side
 	PerObject	mPerObject;
@@ -119,6 +130,7 @@ public unsafe class CBKeeper
 	TwoD		mTwoD;
 	BSP			mBSP;
 	Post		mPost;
+	PerShadow	mPerShadow;
 
 
 	//ensure matches Character.hlsl
@@ -142,6 +154,7 @@ public unsafe class CBKeeper
 		mCharacterBuf.Dispose();
 		mBSPBuf.Dispose();
 		mBSPStylesBuf.Dispose();
+		mPerShadowBuf.Dispose();
 	}
 
 
@@ -156,6 +169,7 @@ public unsafe class CBKeeper
 		mCharacterBuf	=MakeConstantBuffer(dev, sizeof(Matrix4x4) * MaxBones);
 		mBSPStylesBuf	=MakeConstantBuffer(dev, sizeof(Half) * NumStyles + 8);
 		mPostBuf		=MakeConstantBuffer(dev, sizeof(Post));
+		mPerShadowBuf	=MakeConstantBuffer(dev, sizeof(PerShadow));
 
 		//alloc C# side constant buffer data
 		mPerObject		=new PerObject();
@@ -166,6 +180,7 @@ public unsafe class CBKeeper
 		mAniIntensities	=new Half[NumStyles];
 		mBSP			=new BSP();
 		mPost			=new Post();
+		mPerShadow		=new PerShadow();
 
 		int	woxySize	=61 * 4;
 
@@ -242,6 +257,13 @@ public unsafe class CBKeeper
 	}
 
 
+	public void SetPerShadowToShaders(ID3D11DeviceContext dc)
+	{
+		dc.VSSetConstantBuffer(3, mPerShadowBuf);
+		dc.PSSetConstantBuffer(3, mPerShadowBuf);
+	}
+
+
 	public void UpdateFrame(ID3D11DeviceContext dc)
 	{
 		dc.UpdateSubresource<PerFrame>(mPerFrame, mPerFrameBuf);
@@ -283,6 +305,12 @@ public unsafe class CBKeeper
 	{
 		dc.UpdateSubresource<Post>(mPost, mPostBuf);
 		dc.UpdateSubresource(mWeightsOffsetsXY, mPostWOXYBuf);
+	}
+
+
+	public void	UpdatePerShadow(ID3D11DeviceContext dc)
+	{
+		dc.UpdateSubresource<PerShadow>(mPerShadow, mPerShadowBuf);
 	}
 
 
@@ -463,4 +491,24 @@ public unsafe class CBKeeper
 		offy.CopyTo(mWeightsOffsetsXY, wx.Length * 3);
 	}
 #endregion
+
+
+	public void SetPerShadow(Vector3 shadowLightPos, bool bDirectional, float shadowAtten)
+	{
+		mPerShadow.mShadowLightPos	=shadowLightPos;
+		mPerShadow.mbDirectional	=bDirectional;
+		mPerShadow.mShadowAtten		=shadowAtten;
+	}
+
+
+	public void SetPerShadowDirectional(bool bDirectional)
+	{
+		mPerShadow.mbDirectional	=bDirectional;
+	}
+
+
+	public void SetPerShadowLightPos(Vector3 pos)
+	{
+		mPerShadow.mShadowLightPos	=pos;
+	}
 }

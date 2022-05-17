@@ -53,27 +53,27 @@ public class PrimObject
 
 
 	//custom shader
-	public void Draw(GraphicsDevice gd)
+	public void Draw(ID3D11DeviceContext dc)
 	{
-		if(gd.DC == null)
+		if(dc == null)
 		{
 			return;
 		}
 
-		gd.DC.IASetVertexBuffer(0, mVB, mVertStride);
+		dc.IASetVertexBuffer(0, mVB, mVertStride);
 
 		if(mb32BitIndexes)
 		{
-			gd.DC.IASetIndexBuffer(mIB, Format.R32_UInt, 0);
+			dc.IASetIndexBuffer(mIB, Format.R32_UInt, 0);
 		}
 		else
 		{
-			gd.DC.IASetIndexBuffer(mIB, Format.R16_UInt, 0);
+			dc.IASetIndexBuffer(mIB, Format.R16_UInt, 0);
 		}
 
-		gd.DC.IASetInputLayout(mLayout);
+		dc.IASetInputLayout(mLayout);
 
-		gd.DC.DrawIndexed(mNumIndexes, 0, 0);
+		dc.DrawIndexed(mNumIndexes, 0, 0);
 	}
 }
 
@@ -946,7 +946,7 @@ public static class PrimFactory
 		for(int i=0;i < 8;i++)
 		{
 			vpc[i].Position	=rotPos;
-			rotPos			=Mathery.TransformCoordinate(ref rotPos, ref rotMat);
+			rotPos			=Mathery.TransformCoordinate(rotPos, ref rotMat);
 			vpc[i].Color	=halfDarken;
 		}
 
@@ -955,7 +955,7 @@ public static class PrimFactory
 		for(int i=8;i < 16;i++)
 		{
 			vpc[i].Position	=rotPos;
-			rotPos			=Mathery.TransformCoordinate(ref rotPos, ref rotMat);
+			rotPos			=Mathery.TransformCoordinate(rotPos, ref rotMat);
 			vpc[i].Color	=fadeOut;
 		}
 
@@ -1078,7 +1078,7 @@ public static class PrimFactory
 			vpnt[i].Normal		=-Vector4.UnitY;
 			vpnt[i + 8].Normal	=Vector4.UnitY;
 
-			rotPos	=Mathery.TransformCoordinate(ref rotPos, ref rotMat);
+			rotPos	=Mathery.TransformCoordinate(rotPos, ref rotMat);
 
 			Vector3	rotDir	=Vector3.Normalize(rotPos);
 
