@@ -12,6 +12,9 @@ public class CommonPrims
 {
 	StuffKeeper	mSK;
 
+	ID3D11VertexShader	mVS;
+	ID3D11PixelShader	mPS;
+
 	PrimObject	mXAxis, mYAxis, mZAxis;
 	PrimObject	mBoxBound, mSphereBound;
 
@@ -28,6 +31,10 @@ public class CommonPrims
 		//extra material lib for prim stuff
 		mSK	=sk;
 
+		//shaders
+		mVS	=sk.GetVertexShader("WNormWPosTexVS");
+		mPS	=sk.GetPixelShader("TriTex0SpecPS");
+
 		//axis boxes
 		BoundingBox	xBox	=Misc.MakeBox(AxisSize, 1f, 1f);
 		BoundingBox	yBox	=Misc.MakeBox(1f, AxisSize, 1f);
@@ -38,6 +45,10 @@ public class CommonPrims
 		mXAxis	=PrimFactory.CreateCube(gd.GD, code, xBox);
 		mYAxis	=PrimFactory.CreateCube(gd.GD, code, yBox);
 		mZAxis	=PrimFactory.CreateCube(gd.GD, code, zBox);
+
+		mXAxis.World	=Matrix4x4.Identity;
+		mYAxis.World	=Matrix4x4.Identity;
+		mZAxis.World	=Matrix4x4.Identity;
 	}
 
 
@@ -52,12 +63,15 @@ public class CommonPrims
 		{
 			sphere.Value.Free();
 		}
+
+		mVS.Dispose();
+		mPS.Dispose();
 	}
 
 
 	public void Update(GameCamera gcam, Vector3 lightDir)
 	{
-		mSK.GetCBKeeper().SetView(gcam.View, gcam.Position);
+		mSK.GetCBKeeper().SetView(gcam.ViewTransposed, gcam.Position);
 
 		mLightDir	=lightDir;
 	}
@@ -65,7 +79,13 @@ public class CommonPrims
 
 	public void DrawAxis(ID3D11DeviceContext dc)
 	{
-		CBKeeper	cbk	=mSK.GetCBKeeper();		
+		CBKeeper	cbk	=mSK.GetCBKeeper();
+
+		dc.VSSetShader(mVS);
+		dc.PSSetShader(mPS);
+
+		cbk.SetWorldMat(Matrix4x4.Transpose(Matrix4x4.Identity));
+//		cbk.SetWorldMat(Matrix4x4.Identity);
 
 		Vector4	redColor	=Vector4.One;
 		Vector4	greenColor	=Vector4.One;

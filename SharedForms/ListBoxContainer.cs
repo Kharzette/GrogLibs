@@ -6,13 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace SharedForms
+namespace SharedForms;
+
+public partial class ListBoxContainer : Form
 {
-	public partial class ListBoxContainer : Form
+	public ListBoxContainer()
 	{
-		public ListBoxContainer()
-		{
-			InitializeComponent();
-		}
+		InitializeComponent();
 	}
 }

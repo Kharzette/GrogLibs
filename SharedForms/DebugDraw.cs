@@ -1,124 +1,112 @@
 ﻿using System;
+using System.Numerics;
 using System.Collections.Generic;
+using Vortice.DXGI;
+using Vortice.Direct3D11;
+using Vortice.Mathematics;
+using Vortice.Mathematics.PackedVector;
 using UtilityLib;
 using MeshLib;
-
-using SharpDX;
-using SharpDX.DXGI;
-using SharpDX.Direct3D11;
-
-using MatLib = MaterialLib.MaterialLib;
-using Buffer = SharpDX.Direct3D11.Buffer;
-using Device = SharpDX.Direct3D11.Device;
+using MaterialLib;
 
 
-namespace SharedForms
+namespace SharedForms;
+
+public class DebugDraw
 {
-	public class DebugDraw
+	StuffKeeper			mSK;
+	ID3D11Buffer		mVB, mIB;
+	int					mNumIndexes;
+	Vector3				mLightDir;
+	Random				mRand	=new Random();
+
+
+	public DebugDraw(GraphicsDevice gd, StuffKeeper sk)
 	{
-		Buffer				mVB, mIB;
-		VertexBufferBinding	mVBBinding;
-		int					mNumIndexes;
-		Vector3				mLightDir;
-		Random				mRand	=new Random();
+		mSK	=sk;
 
-		MatLib	mMatLib;
+		mLightDir	=Mathery.RandomDirection(mRand);
+
+		Vector4	lightColor2	=Vector4.One * 0.8f;
+		Vector4	lightColor3	=Vector4.One * 0.6f;
+
+		lightColor2.W	=lightColor3.W	=1f;
+
+		byte	[]code	=sk.GetVSCompiledCode("WNormWPosVColorVS");
+
+	}
 
 
-		public DebugDraw(GraphicsDevice gd, MaterialLib.StuffKeeper sk)
+	public void MakeDrawStuff(ID3D11Device dev,
+		List<Vector3> verts,
+		List<Vector3> norms,
+		List<Color> colors,
+		List<UInt16> inds)
+	{
+		if(verts.Count <= 0)
 		{
-			mMatLib	=new MatLib(gd, sk);
-
-			mLightDir	=Mathery.RandomDirection(mRand);
-
-			Vector4	lightColor2	=Vector4.One * 0.8f;
-			Vector4	lightColor3	=Vector4.One * 0.6f;
-
-			lightColor2.W	=lightColor3.W	=1f;
-
-			mMatLib.CreateMaterial("LevelGeometry");
-			mMatLib.SetMaterialEffect("LevelGeometry", "Static.fx");
-			mMatLib.SetMaterialTechnique("LevelGeometry", "TriVColorSolidSpec");
-			mMatLib.SetMaterialParameter("LevelGeometry", "mLightColor0", Vector4.One);
-			mMatLib.SetMaterialParameter("LevelGeometry", "mLightColor1", lightColor2);
-			mMatLib.SetMaterialParameter("LevelGeometry", "mLightColor2", lightColor3);
-			mMatLib.SetMaterialParameter("LevelGeometry", "mSolidColour", Vector4.One);
-			mMatLib.SetMaterialParameter("LevelGeometry", "mSpecPower", 1);
-			mMatLib.SetMaterialParameter("LevelGeometry", "mSpecColor", Vector4.One);
-			mMatLib.SetMaterialParameter("LevelGeometry", "mWorld", Matrix.Identity);
+			return;
 		}
 
+		VPosNormCol0	[]vpnc	=new VPosNormCol0[verts.Count];
 
-		public void MakeDrawStuff(Device dev,
-			List<Vector3> verts,
-			List<Vector3> norms,
-			List<Color> colors,
-			List<UInt16> inds)
+		for(int i=0;i < vpnc.Length;i++)
 		{
-			if(verts.Count <= 0)
-			{
-				return;
-			}
+			Vector3	norm	=norms[i];
 
-			VPosNormCol0	[]vpnc	=new VPosNormCol0[verts.Count];
-
-			for(int i=0;i < vpnc.Length;i++)
-			{
-				vpnc[i].Position	=verts[i];
-				vpnc[i].Color0		=colors[i];
-				vpnc[i].Normal.X	=norms[i].X;
-				vpnc[i].Normal.Y	=norms[i].Y;
-				vpnc[i].Normal.Z	=norms[i].Z;
-				vpnc[i].Normal.W	=1f;
-			}
-
-			mVB			=VertexTypes.BuildABuffer(dev, vpnc, vpnc[0].GetType());
-			mIB			=VertexTypes.BuildAnIndexBuffer(dev, inds.ToArray());
-			mVBBinding	=VertexTypes.BuildAVBB(VertexTypes.GetIndex(vpnc[0].GetType()), mVB);
-
-			mNumIndexes	=inds.Count;
+			vpnc[i].Position	=verts[i];
+			vpnc[i].Color0		=colors[i];
+			vpnc[i].Normal		=new Half4(norm.X, norm.Y, norm.Z, 1f);
 		}
 
+		mVB	=VertexTypes.BuildABuffer(dev, vpnc, vpnc[0].GetType());
+		mIB	=VertexTypes.BuildAnIndexBuffer(dev, inds.ToArray());
 
-		public void FreeAll()
+		mNumIndexes	=inds.Count;
+	}
+
+
+	public void FreeAll()
+	{
+		if(mVB != null)
 		{
-			mMatLib.FreeAll();
-			if(mVB != null)
-			{
-				mVB.Dispose();
-			}
-			if(mIB != null)
-			{
-				mIB.Dispose();
-			}
+			mVB.Dispose();
+		}
+		if(mIB != null)
+		{
+			mIB.Dispose();
+		}
+	}
+
+
+	public void Draw(GraphicsDevice gd)
+	{
+		if(gd.DC == null)
+		{
+			return;
+		}
+		if(mVB == null)
+		{
+			return;
 		}
 
+		CBKeeper	cbk	=mSK.GetCBKeeper();
 
-		public void Draw(GraphicsDevice gd)
-		{
-			if(gd.DC == null)
-			{
-				return;
-			}
-			if(mVB == null)
-			{
-				return;
-			}
+		gd.DC.IASetVertexBuffer(0, mVB, 24);
+		gd.DC.IASetIndexBuffer(mIB, Format.R16_UInt, 0);
 
-			mMatLib.SetParameterForAll("mLightDirection", -mLightDir);
-			mMatLib.SetParameterForAll("mView", gd.GCam.View);
-			mMatLib.SetParameterForAll("mEyePos", gd.GCam.Position);
-			mMatLib.SetParameterForAll("mProjection", gd.GCam.Projection);
+		Vector4	lightColor2	=Vector4.One * 0.8f;
+		Vector4	lightColor3	=Vector4.One * 0.6f;
 
-			mMatLib.ApplyMaterialPass("LevelGeometry", gd.DC, 0);
+		lightColor2.W	=lightColor3.W	=1f;
 
-			gd.DC.InputAssembler.PrimitiveTopology
-				=SharpDX.Direct3D.PrimitiveTopology.TriangleList;
-				
-			gd.DC.InputAssembler.SetVertexBuffers(0, mVBBinding);
-			gd.DC.InputAssembler.SetIndexBuffer(mIB, Format.R16_UInt, 0);
+		cbk.SetView(gd.GCam.ViewTransposed, gd.GCam.Position);
+		cbk.SetWorldMat(Matrix4x4.Identity);
 
-			gd.DC.DrawIndexed(mNumIndexes, 0, 0);
-		}
+		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
+		cbk.SetSpecular(Vector4.One, 1f);
+		cbk.UpdateObject(gd.DC);
+
+		gd.DC.DrawIndexed(mNumIndexes, 0, 0);
 	}
 }

@@ -292,6 +292,18 @@ public class StuffKeeper
 	}
 
 
+	public List<string> GetVSEntryList()
+	{
+		return	mVSEntryPoints.Keys.ToList();
+	}
+
+
+	public List<string> GetPSEntryList()
+	{
+		return	mPSEntryPoints.Keys.ToList();
+	}
+
+
 	public void AddMap(string name, ID3D11ShaderResourceView srv)
 	{
 		if(mSRVs.ContainsKey(name))

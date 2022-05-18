@@ -6,41 +6,40 @@ using System.Threading;
 using System.Windows.Forms;
 
 
-namespace SharedForms
+namespace SharedForms;
+
+public static class ShaderCompileHelper
 {
-	public static class ShaderCompileHelper
-	{
-		public static ThreadedProgress	mTProg;
-		public static string			mTitle;
+	public static ThreadedProgress	mTProg;
+	public static string			mTitle;
 
-		public static EventHandler	CompileNeededHandler	=new EventHandler(
-			delegate(object sender, EventArgs ea)
-			{
-				Thread	uiThread	=new Thread(() =>
-					{
-						mTProg	=new ThreadedProgress(mTitle);
-						Application.Run(mTProg);
-					});
-
-				uiThread.SetApartmentState(ApartmentState.STA);
-				uiThread.Start();
-
-				while(mTProg == null)
+	public static EventHandler	CompileNeededHandler	=new EventHandler(
+		delegate(object sender, EventArgs ea)
+		{
+			Thread	uiThread	=new Thread(() =>
 				{
-					Thread.Sleep(0);
-				}
+					mTProg	=new ThreadedProgress(mTitle);
+					Application.Run(mTProg);
+				});
 
-				mTProg.SetSizeInfo(0, (int)sender);
-			});
+			uiThread.SetApartmentState(ApartmentState.STA);
+			uiThread.Start();
 
-		public static EventHandler	CompileDoneHandler	=new EventHandler(
-			delegate(object sender, EventArgs ea)
+			while(mTProg == null)
 			{
-				mTProg.SetCurrent((int)sender);
-				if((int)sender == mTProg.GetMax())
-				{
-					mTProg.Nuke();
-				}
-			});
-	}
+				Thread.Sleep(0);
+			}
+
+			mTProg.SetSizeInfo(0, (int)sender);
+		});
+
+	public static EventHandler	CompileDoneHandler	=new EventHandler(
+		delegate(object sender, EventArgs ea)
+		{
+			mTProg.SetCurrent((int)sender);
+			if((int)sender == mTProg.GetMax())
+			{
+				mTProg.Nuke();
+			}
+		});
 }

@@ -19,9 +19,9 @@ public class PostProcess
 	}
 
 	//data for doing postery
-	Dictionary<string, ID3D11Texture2D>			mPostTex2Ds			=new Dictionary<string, ID3D11Texture2D>();
-	Dictionary<string, ID3D11RenderTargetView>	mPostTargets		=new Dictionary<string, ID3D11RenderTargetView>();
-	Dictionary<string, ID3D11DepthStencilView>	mPostDepths			=new Dictionary<string, ID3D11DepthStencilView>();
+	Dictionary<string, ID3D11Texture2D>				mPostTex2Ds		=new Dictionary<string, ID3D11Texture2D>();
+	Dictionary<string, ID3D11RenderTargetView>		mPostTargets	=new Dictionary<string, ID3D11RenderTargetView>();
+	Dictionary<string, ID3D11DepthStencilView>		mPostDepths		=new Dictionary<string, ID3D11DepthStencilView>();
 	Dictionary<string, ID3D11ShaderResourceView>	mPostTargSRVs	=new Dictionary<string, ID3D11ShaderResourceView>();
 
 	//keep track of lower res rendertargets
@@ -57,6 +57,8 @@ public class PostProcess
 
 	public PostProcess(GraphicsDevice gd, StuffKeeper sk)
 	{
+		mSK	=sk;
+		
 		mResX		=gd.RendForm.ClientRectangle.Width;
 		mResY		=gd.RendForm.ClientRectangle.Height;
 		mClearColor	=Misc.SystemColorToDXColor(System.Drawing.Color.CornflowerBlue);

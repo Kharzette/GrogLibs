@@ -9,7 +9,7 @@ namespace UtilityLib
 	public class GameCamera
 	{
 		//mats
-		protected Matrix4x4	mView, mViewInverse;
+		protected Matrix4x4	mView;
 		protected Matrix4x4	mProjection, mViewProj;
 
 		BoundingFrustum	mFrust	=new BoundingFrustum(Matrix4x4.Identity);
@@ -37,15 +37,20 @@ namespace UtilityLib
 			set { mView = value; }
 		}
 
-		public Matrix4x4 ViewInverse
+		public Matrix4x4 ViewTransposed
 		{
-			get { return mViewInverse; }
+			get { return Matrix4x4.Transpose(mView); }
 		}
 
 		public Matrix4x4 Projection
 		{
 			get { return mProjection; }
 			set { mProjection = value; }
+		}
+
+		public Matrix4x4 ProjectionTransposed
+		{
+			get { return Matrix4x4.Transpose(mProjection); }
 		}
 
 		//returns transposed, useful for worldspace stuff
@@ -129,10 +134,6 @@ namespace UtilityLib
 			Vector3	camPos	=(focusPos + Vector3.UnitY * 32f) - aimVec * povDist;
 
 			mView	=Matrix4x4.CreateLookAt(camPos, focusPos, Vector3.UnitY);
-			if(!Matrix4x4.Invert(mView, out mViewInverse))
-			{
-				mViewInverse	=Matrix4x4.Identity;
-			}
 
 			mViewProj	=mView * mProjection;
 		}
@@ -148,11 +149,7 @@ namespace UtilityLib
 
 			Vector3	camPos	=focusPos - aimVec * povDist;
 
-			mView	=Matrix4x4.CreateLookAt(camPos, focusPos, Vector3.UnitY);
-			if(!Matrix4x4.Invert(mView, out mViewInverse))
-			{
-				mViewInverse	=Matrix4x4.Identity;
-			}
+			mView		=Matrix4x4.CreateLookAt(camPos, focusPos, Vector3.UnitY);
 			mViewProj	=mView * mProjection;
 		}
 
@@ -161,11 +158,6 @@ namespace UtilityLib
 		{
 			mView	=Matrix4x4.CreateLookAt(camPos, camPos + camDir, Vector3.UnitY);
 
-			if(!Matrix4x4.Invert(mView, out mViewInverse))
-			{
-				mViewInverse	=Matrix4x4.Identity;
-			}
-			
 			mViewProj	=mView * mProjection;
 		}
 
@@ -241,23 +233,13 @@ namespace UtilityLib
 					MathHelper.ToRadians(pitch),
 					MathHelper.ToRadians(roll));
 
-			if(!Matrix4x4.Invert(mView, out mViewInverse))
-			{
-				mViewInverse	=Matrix4x4.Identity;
-			}
-			
 			mFrust	=new BoundingFrustum(mView * mProjection);
 		}
 
 
 		void InitializeMats()
 		{
-			mView			=Matrix4x4.Identity;
-			if(!Matrix4x4.Invert(mView, out mViewInverse))
-			{
-				mViewInverse	=Matrix4x4.Identity;
-			}
-
+			mView		=Matrix4x4.Identity;
 			mProjection	=Matrix4x4.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(45),
 				mWidth / mHeight, mNearClip, mFarClip);

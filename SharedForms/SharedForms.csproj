@@ -1,22 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
 	<UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
-  <ItemGroup>
-	<Reference Include="SharpDX">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.DXGI">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.DXGI.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.Mathematics">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Mathematics.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.Direct3D11">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Direct3D11.dll</HintPath>
-    </Reference>
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MaterialLib\MaterialLib.csproj"/>
     <ProjectReference Include="..\MeshLib\MeshLib.csproj"/>
