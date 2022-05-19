@@ -294,13 +294,25 @@ public class StuffKeeper
 
 	public List<string> GetVSEntryList()
 	{
-		return	mVSEntryPoints.Keys.ToList();
+		List<string>	ret	=new List<string>();
+
+		foreach(KeyValuePair<string, List<string>> entry in mVSEntryPoints)
+		{
+			ret.AddRange(entry.Value);
+		}
+		return	ret;
 	}
 
 
 	public List<string> GetPSEntryList()
 	{
-		return	mPSEntryPoints.Keys.ToList();
+		List<string>	ret	=new List<string>();
+
+		foreach(KeyValuePair<string, List<string>> entry in mPSEntryPoints)
+		{
+			ret.AddRange(entry.Value);
+		}
+		return	ret;
 	}
 
 
@@ -1237,5 +1249,8 @@ public class StuffKeeper
 		bd	=new BlendDescription(Blend.One,
 			Blend.One, Blend.One, Blend.One);
 		mBlends.Add("ShadowBlending", gd.GD.CreateBlendState(bd));
+
+		bd	=new BlendDescription(Blend.One, Blend.Zero);
+		mBlends.Add("NoBlending", gd.GD.CreateBlendState(bd));
 	}
 }

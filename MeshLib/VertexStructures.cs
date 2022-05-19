@@ -1,6 +1,5 @@
-﻿using System;
-using System.Numerics;
-using System.Diagnostics;
+﻿using System.Numerics;
+using System.Runtime.InteropServices;
 using Vortice.Mathematics;
 using Vortice.Mathematics.PackedVector;
 
@@ -516,10 +515,14 @@ public struct VPosBoneTex0Tex1Tex2Tex3Col0Col1Col2Col3
 	public Color	Color3;
 }
 
+[StructLayout(LayoutKind.Explicit, Pack =0)]
 public struct VPosNormTex0
 {
+	[FieldOffset(0)]
 	public Vector3	Position;
+	[FieldOffset(12)]
 	public Half4	Normal;
+	[FieldOffset(20)]
 	public Half2	TexCoord0;
 }
 

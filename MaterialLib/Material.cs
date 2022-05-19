@@ -49,6 +49,12 @@ internal class Material
 		{
 			mCharVars	=new CharacterMat();
 		}
+
+		//defaults
+		mDSS			="EnableDepth";
+		mBlendState		="NoBlending";
+		mSamplerState0	="PointClamp";
+		mSamplerState1	="PointClamp";
 	}
 
 
@@ -56,6 +62,20 @@ internal class Material
 	{
 		get { return mName; }
 		set { mName = value; }
+	}
+
+
+	public string VSName
+	{
+		get { return mVSName; }
+		set { mVSName = value; }
+	}
+
+
+	public string PSName
+	{
+		get { return mPSName; }
+		set { mPSName = value; }
 	}
 
 

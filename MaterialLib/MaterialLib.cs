@@ -193,6 +193,28 @@ public partial class MaterialLib
 	}
 
 
+	public void SetMaterialVShader(string matName, string VShader)
+	{
+		if(!mMats.ContainsKey(matName))
+		{
+			return;
+		}
+
+		mMats[matName].VSName	=VShader;
+	}
+
+
+	public void SetMaterialPShader(string matName, string PShader)
+	{
+		if(!mMats.ContainsKey(matName))
+		{
+			return;
+		}
+
+		mMats[matName].PSName	=PShader;
+	}
+
+
 	public void SetMaterialTexture0(string matName, string texName)
 	{
 		if(!mMats.ContainsKey(matName))
@@ -233,5 +255,38 @@ public partial class MaterialLib
 	internal Font GetFont(string fontName)
 	{
 		return	mSKeeper.GetFont(fontName);
+	}
+
+
+	public string GetMaterialVShader(string matName)
+	{
+		if(!mMats.ContainsKey(matName))
+		{
+			return	null;
+		}
+
+		return	mMats[matName].VSName;
+	}
+
+
+	public string GetMaterialPShader(string matName)
+	{
+		if(!mMats.ContainsKey(matName))
+		{
+			return	null;
+		}
+
+		return	mMats[matName].PSName;
+	}
+
+
+	public string GetMaterialTexture0(string matName)
+	{
+		if(!mMats.ContainsKey(matName))
+		{
+			return	null;
+		}
+
+		return	mMats[matName].mMeshVars.Texture0;
 	}
 }

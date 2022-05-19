@@ -22,6 +22,14 @@ internal class BSPMat
 
 	string	mTexture;
 
+
+	internal BSPMat()
+	{
+		mbTextureEnabled	=false;
+		mTexSize			=Vector2.One * 64f;
+		mTexture			="";		
+	}
+
 	internal bool	TextureEnabled
 	{
 		get	{	return	mbTextureEnabled;	}

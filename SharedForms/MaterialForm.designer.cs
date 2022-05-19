@@ -36,6 +36,8 @@
             this.LoadButton = new System.Windows.Forms.Button();
             this.SaveButton = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.SolidColor = new System.Windows.Forms.Button();
             this.GuessTextures = new System.Windows.Forms.Button();
             this.MeshPartGroup = new System.Windows.Forms.GroupBox();
             this.WeldWeight = new System.Windows.Forms.Button();
@@ -47,11 +49,21 @@
             this.ApplyMaterial = new System.Windows.Forms.Button();
             this.MeshPartList = new System.Windows.Forms.ListView();
             this.MatFormToolTips = new System.Windows.Forms.ToolTip(this.components);
-            this.VSEntry = new System.Windows.Forms.ComboBox();
+            this.button1 = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.SpecPower = new System.Windows.Forms.NumericUpDown();
+            this.Texture0Pic = new System.Windows.Forms.PictureBox();
+            this.Texture1Pic = new System.Windows.Forms.PictureBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
             this.FileGroup.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.MeshPartGroup.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.TexCoordSet)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.SpecPower)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.Texture0Pic)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.Texture1Pic)).BeginInit();
             this.SuspendLayout();
             // 
             // MaterialList
@@ -137,21 +149,49 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox1.Controls.Add(this.VSEntry);
+            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.label6);
+            this.groupBox1.Controls.Add(this.label5);
+            this.groupBox1.Controls.Add(this.Texture1Pic);
+            this.groupBox1.Controls.Add(this.Texture0Pic);
+            this.groupBox1.Controls.Add(this.SpecPower);
+            this.groupBox1.Controls.Add(this.label4);
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.button1);
+            this.groupBox1.Controls.Add(this.label2);
+            this.groupBox1.Controls.Add(this.SolidColor);
             this.groupBox1.Controls.Add(this.GuessTextures);
-            this.groupBox1.Location = new System.Drawing.Point(13, 219);
+            this.groupBox1.Location = new System.Drawing.Point(13, 12);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.groupBox1.Size = new System.Drawing.Size(586, 190);
+            this.groupBox1.Size = new System.Drawing.Size(586, 253);
             this.groupBox1.TabIndex = 19;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Shader Shtuff";
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(88, 26);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(65, 15);
+            this.label2.TabIndex = 15;
+            this.label2.Text = "Solid Color";
+            // 
+            // SolidColor
+            // 
+            this.SolidColor.Location = new System.Drawing.Point(7, 22);
+            this.SolidColor.Name = "SolidColor";
+            this.SolidColor.Size = new System.Drawing.Size(75, 23);
+            this.SolidColor.TabIndex = 14;
+            this.SolidColor.UseVisualStyleBackColor = true;
+            this.SolidColor.Click += new System.EventHandler(this.OnSolidColor);
+            // 
             // GuessTextures
             // 
-            this.GuessTextures.Location = new System.Drawing.Point(492, 151);
+            this.GuessTextures.Location = new System.Drawing.Point(492, 214);
             this.GuessTextures.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.GuessTextures.Name = "GuessTextures";
             this.GuessTextures.Size = new System.Drawing.Size(86, 33);
@@ -171,7 +211,7 @@
             this.MeshPartGroup.Controls.Add(this.TexCoordSet);
             this.MeshPartGroup.Controls.Add(this.GenBiNormalTangent);
             this.MeshPartGroup.Controls.Add(this.ApplyMaterial);
-            this.MeshPartGroup.Location = new System.Drawing.Point(13, 152);
+            this.MeshPartGroup.Location = new System.Drawing.Point(13, 411);
             this.MeshPartGroup.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.MeshPartGroup.Name = "MeshPartGroup";
             this.MeshPartGroup.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -279,10 +319,10 @@
             this.MeshPartList.GridLines = true;
             this.MeshPartList.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.MeshPartList.LabelEdit = true;
-            this.MeshPartList.Location = new System.Drawing.Point(14, 12);
+            this.MeshPartList.Location = new System.Drawing.Point(13, 271);
             this.MeshPartList.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.MeshPartList.Name = "MeshPartList";
-            this.MeshPartList.Size = new System.Drawing.Size(584, 134);
+            this.MeshPartList.Size = new System.Drawing.Size(586, 134);
             this.MeshPartList.TabIndex = 23;
             this.MeshPartList.UseCompatibleStateImageBehavior = false;
             this.MeshPartList.View = System.Windows.Forms.View.Details;
@@ -290,13 +330,90 @@
             this.MeshPartList.KeyUp += new System.Windows.Forms.KeyEventHandler(this.OnMeshPartListKeyUp);
             this.MeshPartList.MouseUp += new System.Windows.Forms.MouseEventHandler(this.OnMeshPartMouseUp);
             // 
-            // VSEntry
+            // button1
             // 
-            this.VSEntry.FormattingEnabled = true;
-            this.VSEntry.Location = new System.Drawing.Point(7, 22);
-            this.VSEntry.Name = "VSEntry";
-            this.VSEntry.Size = new System.Drawing.Size(121, 23);
-            this.VSEntry.TabIndex = 14;
+            this.button1.Location = new System.Drawing.Point(7, 51);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 16;
+            this.button1.UseVisualStyleBackColor = true;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(88, 55);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(64, 15);
+            this.label3.TabIndex = 17;
+            this.label3.Text = "Spec Color";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(89, 83);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(68, 15);
+            this.label4.TabIndex = 19;
+            this.label4.Text = "Spec Power";
+            // 
+            // SpecPower
+            // 
+            this.SpecPower.Location = new System.Drawing.Point(8, 80);
+            this.SpecPower.Maximum = new decimal(new int[] {
+            500,
+            0,
+            0,
+            0});
+            this.SpecPower.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.SpecPower.Name = "SpecPower";
+            this.SpecPower.Size = new System.Drawing.Size(75, 23);
+            this.SpecPower.TabIndex = 20;
+            this.SpecPower.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // Texture0Pic
+            // 
+            this.Texture0Pic.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.Texture0Pic.Location = new System.Drawing.Point(515, 22);
+            this.Texture0Pic.Name = "Texture0Pic";
+            this.Texture0Pic.Size = new System.Drawing.Size(64, 64);
+            this.Texture0Pic.TabIndex = 21;
+            this.Texture0Pic.TabStop = false;
+            this.Texture0Pic.Click += new System.EventHandler(this.OnTexture0Click);
+            // 
+            // Texture1Pic
+            // 
+            this.Texture1Pic.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.Texture1Pic.Location = new System.Drawing.Point(515, 92);
+            this.Texture1Pic.Name = "Texture1Pic";
+            this.Texture1Pic.Size = new System.Drawing.Size(64, 64);
+            this.Texture1Pic.TabIndex = 22;
+            this.Texture1Pic.TabStop = false;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(458, 22);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(51, 15);
+            this.label5.TabIndex = 23;
+            this.label5.Text = "Texture0";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(458, 92);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(51, 15);
+            this.label6.TabIndex = 24;
+            this.label6.Text = "Texture1";
             // 
             // MaterialForm
             // 
@@ -318,9 +435,13 @@
             this.SizeChanged += new System.EventHandler(this.OnFormSizeChanged);
             this.FileGroup.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.MeshPartGroup.ResumeLayout(false);
             this.MeshPartGroup.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.TexCoordSet)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.SpecPower)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.Texture0Pic)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.Texture1Pic)).EndInit();
             this.ResumeLayout(false);
 
 		}
@@ -345,6 +466,15 @@
 		private System.Windows.Forms.Button ApplyMaterial;
 		private System.Windows.Forms.ListView MeshPartList;
 		private System.Windows.Forms.ToolTip MatFormToolTips;
-        private System.Windows.Forms.ComboBox VSEntry;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button SolidColor;
+        private System.Windows.Forms.NumericUpDown SpecPower;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.PictureBox Texture1Pic;
+        private System.Windows.Forms.PictureBox Texture0Pic;
     }
 }

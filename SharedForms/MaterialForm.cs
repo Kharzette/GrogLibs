@@ -14,12 +14,10 @@ namespace SharedForms;
 
 public partial class MaterialForm : Form
 {
-	OpenFileDialog			mOFD	=new OpenFileDialog();
-	SaveFileDialog			mSFD	=new SaveFileDialog();
+	OpenFileDialog		mOFD	=new OpenFileDialog();
+	SaveFileDialog		mSFD	=new SaveFileDialog();
+	ColorDialog			mCD		=new ColorDialog();
 
-//		ListBoxContainer	mLBC	=new ListBoxContainer();
-
-	BindingList<string>	mVSEntryPoints;
 
 	MaterialLib.MaterialLib	mMatLib;
 	MaterialLib.StuffKeeper	mSKeeper;
@@ -29,7 +27,6 @@ public partial class MaterialForm : Form
 	public event EventHandler	eGenTangents;
 	public event EventHandler	eFoundSeams;
 	public event EventHandler	eMatLibNotReadyToSave;
-	public event EventHandler	eMatTechniqueChanged;
 
 
 	public MaterialForm(MaterialLib.MaterialLib matLib,
@@ -41,8 +38,8 @@ public partial class MaterialForm : Form
 		mSKeeper	=sk;
 
 		MaterialList.Columns.Add("Name");
-		MaterialList.Columns.Add("Effect");
-		MaterialList.Columns.Add("Technique");
+		MaterialList.Columns.Add("VShader");
+		MaterialList.Columns.Add("PShader");
 
 		RefreshMaterials();
 
@@ -52,12 +49,9 @@ public partial class MaterialForm : Form
 		MeshPartList.Columns.Add("Visible");
 
 		//shader entry points
-		List<string>	vsel	=mSKeeper.GetVSEntryList();
-		mVSEntryPoints	=new BindingList<string>(vsel);
+//		List<string>	vsel	=mSKeeper.GetVSEntryList();
+	//	mVSEntryPoints	=new BindingList<string>(vsel);
 		
-		VSEntry.DataSource	=mVSEntryPoints;
-
-
 		//This needs to happen to get the middle stuff in the
 		//right spot.  It happens automagically but to no avail...
 		//I think everything isn't quite set up when it is called.
@@ -166,10 +160,10 @@ public partial class MaterialForm : Form
 	}
 	
 	
-	void SpawnEffectComboBox(string matName, ListViewItem.ListViewSubItem sub)
-	{	/*
-		List<string>	effects	=mSKeeper.GetEffectList();
-		if(effects.Count <= 0)
+	void SpawnVSComboBox(string matName, ListViewItem.ListViewSubItem sub)
+	{	
+		List<string>	vsEntries	=mSKeeper.GetVSEntryList();
+		if(vsEntries.Count <= 0)
 		{
 			return;
 		}
@@ -185,9 +179,9 @@ public partial class MaterialForm : Form
 		lbox.Location	=new Point(0, 0);
 		lbox.Tag		=matName;
 
-		string	current	=mMatLib.GetMaterialEffect(matName);
+		string	current	=mMatLib.GetMaterialVShader(matName);
 
-		foreach(string fx in effects)
+		foreach(string fx in vsEntries)
 		{
 			lbox.Items.Add(fx);
 		}
@@ -209,18 +203,18 @@ public partial class MaterialForm : Form
 		lbc.Visible		=true;
 		lbox.Visible	=true;
 
-		lbox.MouseClick	+=OnEffectListBoxClick;
-		lbox.Leave		+=OnEffectListBoxEscaped;
-		lbox.KeyPress	+=OnEffectListBoxKey;
-		lbox.LostFocus	+=OnEffectLostFocus;
-		lbox.Focus();*/
+		lbox.MouseClick	+=OnVSListBoxClick;
+		lbox.Leave		+=OnVSListBoxEscaped;
+		lbox.KeyPress	+=OnVSListBoxKey;
+		lbox.LostFocus	+=OnVSLostFocus;
+		lbox.Focus();
 	}
 
 
-	void SpawnTechniqueComboBox(string matName, ListViewItem.ListViewSubItem sub)
-	{	/*
-		List<string>	techs	=mMatLib.GetMaterialTechniques(matName);
-		if(techs.Count <= 0)
+	void SpawnPSComboBox(string matName, ListViewItem.ListViewSubItem sub)
+	{
+		List<string>	psEntries	=mSKeeper.GetPSEntryList();
+		if(psEntries.Count <= 0)
 		{
 			return;
 		}
@@ -235,12 +229,12 @@ public partial class MaterialForm : Form
 		lbox.Location	=new Point(0, 0);
 		lbox.Tag		=matName;
 
-		foreach(string tn in techs)
+		foreach(string pe in psEntries)
 		{
-			lbox.Items.Add(tn);
+			lbox.Items.Add(pe);
 		}
 
-		string	current	=mMatLib.GetMaterialTechnique(matName);
+		string	current	=mMatLib.GetMaterialPShader(matName);
 		if(current != null)
 		{
 			lbox.SelectedItem	=current;
@@ -258,143 +252,246 @@ public partial class MaterialForm : Form
 		lbox.Visible	=true;
 		lbc.Visible	=true;
 
-		lbox.Leave		+=OnTechListBoxEscaped;
-		lbox.KeyPress	+=OnTechListBoxKey;
-		lbox.MouseClick	+=OnTechListBoxClick;
-		lbox.LostFocus	+=OnTechLostFocus;
-		lbox.Focus();*/
+		lbox.Leave		+=OnPSListBoxEscaped;
+		lbox.KeyPress	+=OnPSListBoxKey;
+		lbox.MouseClick	+=OnPSListBoxClick;
+		lbox.LostFocus	+=OnPSLostFocus;
+		lbox.Focus();
 	}
 
 
-	void SetListEffect(string mat, string fx)
+	void SpawnTextureComboBox(PictureBox pb, string matName)
+	{
+		List<string>	texs	=mSKeeper.GetTexture2DList();
+		if(texs.Count <= 0)
+		{
+			return;
+		}
+
+		ListBox				lbox	=new ListBox();
+		ListBoxContainer	lbc		=new ListBoxContainer();
+
+		Point	loc	=pb.Bounds.Location;
+
+		lbc.Location	=MaterialList.PointToScreen(loc);
+		lbox.Parent		=lbc;
+		lbox.Location	=new Point(0, 0);
+		lbox.Tag		=pb.Name;
+
+		foreach(string pe in texs)
+		{
+			lbox.Items.Add(pe);
+		}
+
+		string	current	=mMatLib.GetMaterialTexture0(matName);
+		if(current != null)
+		{
+			lbox.SelectedItem	=current;
+		}
+
+		int	width	=DropDownWidth(lbox);
+
+		width	+=SystemInformation.VerticalScrollBarWidth;
+
+		Size	fit	=new System.Drawing.Size(width, lbox.Size.Height);
+
+		lbox.Size	=fit;
+		lbc.Size	=fit;
+
+		lbox.Visible	=true;
+		lbc.Visible	=true;
+
+		lbox.Leave		+=OnTexListBoxEscaped;
+		lbox.KeyPress	+=OnTexListBoxKey;
+		lbox.MouseClick	+=OnTexListBoxClick;
+		lbox.LostFocus	+=OnTexLostFocus;
+		lbox.Focus();
+	}
+
+
+	void SetListVShader(string mat, string shd)
 	{
 		foreach(ListViewItem lvi in MaterialList.Items)
 		{
 			if(lvi.Text == mat)
 			{
-				lvi.SubItems[1].Text	=fx;
+				lvi.SubItems[1].Text	=shd;
 				return;
 			}
 		}
 	}
 
 
-	void SetListTechnique(string mat, string tech)
+	void SetListPShader(string mat, string shd)
 	{
 		foreach(ListViewItem lvi in MaterialList.Items)
 		{
 			if(lvi.Text == mat)
 			{
-				lvi.SubItems[2].Text	=tech;
+				lvi.SubItems[2].Text	=shd;
 				return;
 			}
 		}
 	}
 
 
-	void OnTechListBoxKey(object sender, KeyPressEventArgs kpea)
+	void SetListTexture(string mat, string shd)
 	{
-		/*
+		foreach(ListViewItem lvi in MaterialList.Items)
+		{
+			if(lvi.Text == mat)
+			{
+				lvi.SubItems[2].Text	=shd;
+				return;
+			}
+		}
+	}
+
+
+	void OnPSListBoxKey(object sender, KeyPressEventArgs kpea)
+	{
 		ListBox	lb	=sender as ListBox;
 
 		if(kpea.KeyChar == 27)	//escape
 		{
-			DisposeTechBox(lb);
+			DisposePBox(lb);
 		}
 		else if(kpea.KeyChar == '\r')
 		{
 			if(lb.SelectedIndex != -1)
 			{
-				mMatLib.SetMaterialTechnique(lb.Tag as string, lb.SelectedItem as string);
-				SetListTechnique(lb.Tag as string, lb.SelectedItem as string);
+				mMatLib.SetMaterialPShader(lb.Tag as string, lb.SelectedItem as string);
+				SetListPShader(lb.Tag as string, lb.SelectedItem as string);
 				OnMaterialSelectionChanged(null, null);
-				Misc.SafeInvoke(eMatTechniqueChanged, lb.Tag as string);
 			}
-			DisposeTechBox(lb);
-		}*/
+			DisposePBox(lb);
+		}
 	}
 
 
-	void OnEffectLostFocus(object sender, EventArgs ea)
+	void OnTexListBoxKey(object sender, KeyPressEventArgs kpea)
 	{
-		//DisposeEffectBox(sender as ListBox);
-	}
-
-
-	void OnTechLostFocus(object sender, EventArgs ea)
-	{
-		//DisposeEffectBox(sender as ListBox);
-	}
-
-
-	void OnEffectListBoxKey(object sender, KeyPressEventArgs kpea)
-	{
-		/*
 		ListBox	lb	=sender as ListBox;
 
 		if(kpea.KeyChar == 27)	//escape
 		{
-			DisposeEffectBox(lb);
+			DisposeTexBox(lb);
 		}
 		else if(kpea.KeyChar == '\r')
 		{
 			if(lb.SelectedIndex != -1)
 			{
-				mMatLib.SetMaterialEffect(lb.Tag as string, lb.SelectedItem as string);
-				SetListEffect(lb.Tag as string, lb.SelectedItem as string);
+				mMatLib.SetMaterialTexture0(lb.Tag as string, lb.SelectedItem as string);
+				SetListTexture(lb.Tag as string, lb.SelectedItem as string);
 				OnMaterialSelectionChanged(null, null);
 			}
-			DisposeEffectBox(lb);
-		}*/
+			DisposePBox(lb);
+		}
 	}
 
 
-	void OnTechListBoxClick(object sender, MouseEventArgs mea)
+	void OnVSLostFocus(object sender, EventArgs ea)
 	{
-		/*
+		DisposeVBox(sender as ListBox);
+	}
+
+
+	void OnPSLostFocus(object sender, EventArgs ea)
+	{
+		DisposeVBox(sender as ListBox);
+	}
+
+
+	void OnTexLostFocus(object sender, EventArgs ea)
+	{
+		DisposeTexBox(sender as ListBox);
+	}
+
+
+	void OnVSListBoxKey(object sender, KeyPressEventArgs kpea)
+	{
+		ListBox	lb	=sender as ListBox;
+
+		if(kpea.KeyChar == 27)	//escape
+		{
+			DisposeVBox(lb);
+		}
+		else if(kpea.KeyChar == '\r')
+		{
+			if(lb.SelectedIndex != -1)
+			{
+				mMatLib.SetMaterialVShader(lb.Tag as string, lb.SelectedItem as string);
+				SetListVShader(lb.Tag as string, lb.SelectedItem as string);
+				OnMaterialSelectionChanged(null, null);
+			}
+			DisposeVBox(lb);
+		}
+	}
+
+
+	void OnPSListBoxClick(object sender, MouseEventArgs mea)
+	{
 		ListBox	lb	=sender as ListBox;
 
 		if(lb.SelectedIndex != -1)
 		{
-			mMatLib.SetMaterialTechnique(lb.Tag as string, lb.SelectedItem as string);
-			SetListTechnique(lb.Tag as string, lb.SelectedItem as string);
+			mMatLib.SetMaterialPShader(lb.Tag as string, lb.SelectedItem as string);
+			SetListPShader(lb.Tag as string, lb.SelectedItem as string);
 			OnMaterialSelectionChanged(null, null);
-			Misc.SafeInvoke(eMatTechniqueChanged, lb.Tag as string);
 		}
-		DisposeTechBox(lb);*/
+		DisposePBox(lb);
 	}
 
 
-	void OnEffectListBoxClick(object sender, MouseEventArgs mea)
+	void OnTexListBoxClick(object sender, MouseEventArgs mea)
 	{
-		/*	no effects anymore
 		ListBox	lb	=sender as ListBox;
 
 		if(lb.SelectedIndex != -1)
 		{
-			mMatLib.SetMaterialEffect(lb.Tag as string, lb.SelectedItem as string);
-			SetListEffect(lb.Tag as string, lb.SelectedItem as string);
+			mMatLib.SetMaterialTexture0(lb.Tag as string, lb.SelectedItem as string);
+			SetListTexture(lb.Tag as string, lb.SelectedItem as string);
 			OnMaterialSelectionChanged(null, null);
 		}
-		DisposeEffectBox(lb);*/
+		DisposePBox(lb);
 	}
 
 
-	void OnTechListBoxEscaped(object sender, EventArgs ea)
+	void OnVSListBoxClick(object sender, MouseEventArgs mea)
 	{
-		/* no techs
 		ListBox	lb	=sender as ListBox;
 
-		DisposeTechBox(lb);*/
+		if(lb.SelectedIndex != -1)
+		{
+			mMatLib.SetMaterialVShader(lb.Tag as string, lb.SelectedItem as string);
+			SetListVShader(lb.Tag as string, lb.SelectedItem as string);
+			OnMaterialSelectionChanged(null, null);
+		}
+		DisposeVBox(lb);
 	}
 
 
-	void OnEffectListBoxEscaped(object sender, EventArgs ea)
-	{
-		/*
+	void OnPSListBoxEscaped(object sender, EventArgs ea)
+	{		
 		ListBox	lb	=sender as ListBox;
 
-		DisposeEffectBox(lb);*/
+		DisposePBox(lb);
+	}
+
+
+	void OnVSListBoxEscaped(object sender, EventArgs ea)
+	{
+		ListBox	lb	=sender as ListBox;
+
+		DisposeVBox(lb);
+	}
+
+
+	void OnTexListBoxEscaped(object sender, EventArgs ea)
+	{
+		ListBox	lb	=sender as ListBox;
+
+		DisposeVBox(lb);
 	}
 
 
@@ -486,13 +583,13 @@ public partial class MaterialForm : Form
 				{
 					if(sub.Bounds.Contains(e.Location))
 					{
-						if((string)sub.Tag == "MaterialEffect")
+						if((string)sub.Tag == "MaterialVS")
 						{
-							SpawnEffectComboBox(lvi.Text, sub);
+							SpawnVSComboBox(lvi.Text, sub);
 						}
-						else if((string)sub.Tag == "MaterialTechnique")
+						else if((string)sub.Tag == "MaterialPS")
 						{
-							SpawnTechniqueComboBox(lvi.Text, sub);
+							SpawnPSComboBox(lvi.Text, sub);
 						}
 					}
 				}
@@ -665,85 +762,6 @@ public partial class MaterialForm : Form
 	}
 
 
-	void OnHideVariables(object sender, EventArgs e)
-	{
-		/*
-		if(MaterialList.SelectedItems.Count != 1)
-		{
-			return;	//nothing to do
-		}
-
-		string	matName	=MaterialList.SelectedItems[0].Text;
-
-		List<string>	selected	=new List<string>();
-		foreach(DataGridViewRow dgvr in VariableList.SelectedRows)
-		{
-			selected.Add(dgvr.Cells[0].Value as string);
-		}
-
-		mMatLib.HideMaterialVariables(matName, selected, false);
-
-		VariableList.DataSource	=mMatLib.GetMaterialGUIVariables(matName);
-		*/
-	}
-
-
-	void OnIgnoreVariables(object sender, EventArgs e)
-	{
-/*		if(MaterialList.SelectedItems.Count != 1)
-		{
-			return;	//nothing to do
-		}
-
-		string	matName	=MaterialList.SelectedItems[0].Text;
-
-		List<string>	selected	=new List<string>();
-		foreach(DataGridViewRow dgvr in VariableList.SelectedRows)
-		{
-			selected.Add(dgvr.Cells[0].Value as string);
-		}
-
-		mMatLib.IgnoreMaterialVariables(matName, selected, false);
-
-		VariableList.DataSource	=mMatLib.GetMaterialGUIVariables(matName);
-		*/
-	}
-
-
-	void OnGuessVisibility(object sender, EventArgs e)
-	{
-/*		ListView.SelectedListViewItemCollection	matSel	=MaterialList.SelectedItems;
-		foreach(ListViewItem lvi in matSel)
-		{
-			mMatLib.GuessParameterVisibility(lvi.Text);
-		}
-
-		//if there's a single set selected, refresh
-		if(MaterialList.SelectedItems.Count == 1)
-		{
-			string	matName	=MaterialList.SelectedItems[0].Text;
-			VariableList.DataSource	=mMatLib.GetMaterialGUIVariables(matName);
-		}*/
-	}
-
-
-	void OnResetVisibility(object sender, EventArgs e)
-	{
-		ListView.SelectedListViewItemCollection	matSel	=MaterialList.SelectedItems;
-/*		foreach(ListViewItem lvi in matSel)
-		{
-			mMatLib.ResetParameterVisibility(lvi.Text);
-		}
-
-		//if there's a single set selected, refresh
-		if(MaterialList.SelectedItems.Count == 1)
-		{
-			string	matName	=MaterialList.SelectedItems[0].Text;
-			VariableList.DataSource	=mMatLib.GetMaterialGUIVariables(matName);
-		}*/
-	}
-
-
 	void OnSaveMaterialLib(object sender, EventArgs e)
 	{
 		mSFD.DefaultExt	="*.MatLib";
@@ -852,22 +870,32 @@ public partial class MaterialForm : Form
 	}
 
 
-	void DisposeEffectBox(ListBox lb)
+	void DisposeVBox(ListBox lb)
 	{
-		lb.Leave		-=OnEffectListBoxEscaped;
-		lb.KeyPress		-=OnEffectListBoxKey;
-		lb.MouseClick	-=OnEffectListBoxClick;
-		lb.LostFocus	-=OnEffectLostFocus;
+		lb.Leave		-=OnVSListBoxEscaped;
+		lb.KeyPress		-=OnVSListBoxKey;
+		lb.MouseClick	-=OnVSListBoxClick;
+		lb.LostFocus	-=OnVSLostFocus;
 		lb.Parent.Dispose();
 	}
 
 
-	void DisposeTechBox(ListBox lb)
+	void DisposePBox(ListBox lb)
 	{
-		lb.Leave		-=OnTechListBoxEscaped;
-		lb.KeyPress		-=OnTechListBoxKey;
-		lb.MouseClick	-=OnTechListBoxClick;
-		lb.LostFocus	-=OnTechLostFocus;
+		lb.Leave		-=OnPSListBoxEscaped;
+		lb.KeyPress		-=OnPSListBoxKey;
+		lb.MouseClick	-=OnPSListBoxClick;
+		lb.LostFocus	-=OnPSLostFocus;
+		lb.Parent.Dispose();
+	}
+
+
+	void DisposeTexBox(ListBox lb)
+	{
+		lb.Leave		-=OnTexListBoxEscaped;
+		lb.KeyPress		-=OnTexListBoxKey;
+		lb.MouseClick	-=OnTexListBoxClick;
+		lb.LostFocus	-=OnTexLostFocus;
 		lb.Parent.Dispose();
 	}
 
@@ -968,5 +996,23 @@ public partial class MaterialForm : Form
 		Misc.SafeInvoke(eGenTangents, null, aea);
 
 		RefreshMeshPartList();
+	}
+	
+	
+	void OnSolidColor(object sender, EventArgs e)
+	{
+		DialogResult	dr	=mCD.ShowDialog();
+
+		if(dr == DialogResult.Cancel)
+		{
+			return;
+		}
+
+		SolidColor.BackColor	=mCD.Color;
+	}
+	
+	
+	void OnTexture0Click(object sender, EventArgs e)
+	{
 	}
 }

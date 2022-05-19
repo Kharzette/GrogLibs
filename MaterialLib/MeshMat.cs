@@ -20,6 +20,12 @@ internal class MeshMat
 
 	string	mTexture0, mTexture1;
 
+
+	internal MeshMat()
+	{
+		mTexture0	=mTexture1	="";
+	}
+
 	internal Vector4	SolidColour
 	{
 		get	{	return	mSolidColour;	}
