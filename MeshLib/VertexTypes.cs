@@ -402,19 +402,15 @@ public static class VertexTypes
 			ResourceUsage.Immutable);
 
 		//newer dotnet returns the byref middle parameter somehow, need to be more specific
-		IEnumerable<MethodInfo>	meths	=typeof(Buffer).GetMethods().Where(x => x.Name == "Create");
+		IEnumerable<MethodInfo>	meths	=typeof(ID3D11Device).GetMethods().Where(
+			x => x.ContainsGenericParameters == true && x.Name == "CreateBuffer");
 
 		MethodInfo	createWeWant	=null;
 		foreach(MethodInfo m in meths)
 		{
 			ParameterInfo	[]pars	=m.GetParameters();
 
-			if(pars.Length != 3)
-			{
-				continue;
-			}
-
-			if(pars[1].ParameterType.IsArray)
+			if(pars.Length == 7)
 			{
 				createWeWant	=m;
 				break;
@@ -423,7 +419,10 @@ public static class VertexTypes
 
 		var	typedMethod	=createWeWant.MakeGenericMethod(new Type[] {vtype});
 
-		return	typedMethod.Invoke(null, new object[] {gd, verts, bDesc}) as ID3D11Buffer;
+		return	typedMethod.Invoke(gd, new object[] {
+			bDesc.BindFlags, verts, bDesc.ByteWidth, bDesc.Usage,
+			bDesc.CPUAccessFlags, bDesc.MiscFlags,
+			bDesc.StructureByteStride }) as ID3D11Buffer;
 	}
 
 
