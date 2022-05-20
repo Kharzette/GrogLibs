@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Numerics;
 using UtilityLib;
+using Vortice.Direct3D11;
 
 using MatLib	=MaterialLib.MaterialLib;
 
@@ -43,7 +44,8 @@ public class MeshMaterial
 	public Matrix4x4	mObjectTransform;
 
 	//reference to material lib
-	public MatLib	mMatLib;
+	public MatLib				mMatLib;
+	public ID3D11InputLayout	mLayout;
 
 
 	internal void Read(BinaryReader br)

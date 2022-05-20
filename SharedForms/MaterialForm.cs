@@ -48,10 +48,6 @@ public partial class MaterialForm : Form
 		MeshPartList.Columns.Add("Vertex Format");
 		MeshPartList.Columns.Add("Visible");
 
-		//shader entry points
-//		List<string>	vsel	=mSKeeper.GetVSEntryList();
-	//	mVSEntryPoints	=new BindingList<string>(vsel);
-		
 		//This needs to happen to get the middle stuff in the
 		//right spot.  It happens automagically but to no avail...
 		//I think everything isn't quite set up when it is called.
@@ -309,6 +305,13 @@ public partial class MaterialForm : Form
 	}
 
 
+	//not a real type, just is it a bsp, basic mesh, character etc
+	void CheckMaterialType(string mat)
+	{
+		mMatLib.CheckMaterialType(mat);
+	}
+
+
 	void SetListVShader(string mat, string shd)
 	{
 		foreach(ListViewItem lvi in MaterialList.Items)
@@ -316,6 +319,7 @@ public partial class MaterialForm : Form
 			if(lvi.Text == mat)
 			{
 				lvi.SubItems[1].Text	=shd;
+				CheckMaterialType(mat);
 				return;
 			}
 		}
@@ -750,11 +754,11 @@ public partial class MaterialForm : Form
 
 			if(chr == null)
 			{
-				sm.SetPartMaterialName(meshIndex, matName);
+				sm.SetPartMaterialName(meshIndex, matName, mSKeeper);
 			}
 			else
 			{
-				chr.SetPartMaterialName(meshIndex, matName);
+				chr.SetPartMaterialName(meshIndex, matName, mSKeeper);
 			}
 
 			lvi.SubItems[1].Text	=matName;
@@ -828,11 +832,11 @@ public partial class MaterialForm : Form
 
 					if(chr == null)
 					{
-						sm.SetPartMaterialName(meshIndex, matName);
+						sm.SetPartMaterialName(meshIndex, matName, mSKeeper);
 					}
 					else
 					{
-						chr.SetPartMaterialName(meshIndex, matName);
+						chr.SetPartMaterialName(meshIndex, matName, mSKeeper);
 					}
 
 					lviMesh.SubItems[1].Text	=matName;

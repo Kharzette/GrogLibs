@@ -14,7 +14,8 @@ public partial class Output : Form
 
 	public void Print(string toPrint)
 	{
-		Action<TextBox>	ta	=con => con.AppendText(toPrint);
+		string	fixNewLines	=toPrint.ReplaceLineEndings();
+		Action<TextBox>	ta	=con => con.AppendText(fixNewLines);
 		FormExtensions.Invoke(ConsoleOut, ta);
 	}
 

@@ -135,9 +135,9 @@ public class Character
 	}
 
 
-	public void SetMatLib(MatLib mats)
+	public void SetMatLib(MatLib mats, StuffKeeper sk)
 	{
-		mParts.SetMatLibs(mats);
+		mParts.SetMatLibs(mats, sk);
 	}
 
 
@@ -153,9 +153,10 @@ public class Character
 	}
 
 
-	public void SetPartMaterialName(int index, string matName)
+	public void SetPartMaterialName(int index, string matName,
+									StuffKeeper sk)
 	{
-		mParts.SetPartMaterialName(index, matName);
+		mParts.SetPartMaterialName(index, matName, sk);
 	}
 
 
@@ -196,13 +197,14 @@ public class Character
 	//copies bones into the shader
 	//materials should be set up to ignore
 	//the mBones parameter
-	void UpdateShaderBones(CBKeeper cbk)
+	void UpdateShaderBones(ID3D11DeviceContext dc, CBKeeper cbk)
 	{
 		if(mBones != null)
 		{
 			if(mBones.Length <= MAX_BONES)
 			{
 				cbk.SetBones(mBones);
+				cbk.UpdateCharacter(dc);
 			}
 			else
 			{
@@ -303,7 +305,7 @@ public class Character
 
 	public void Draw(ID3D11DeviceContext dc, CBKeeper cbk)
 	{
-		UpdateShaderBones(cbk);
+		UpdateShaderBones(dc, cbk);
 
 		mParts.Draw(dc);
 	}
@@ -311,7 +313,7 @@ public class Character
 
 	public void Draw(ID3D11DeviceContext dc, CBKeeper cbk, string altMaterial)
 	{
-		UpdateShaderBones(cbk);
+		UpdateShaderBones(dc, cbk);
 
 		mParts.Draw(dc, altMaterial);
 	}
@@ -319,7 +321,7 @@ public class Character
 
 	public void DrawDMN(ID3D11DeviceContext dc, CBKeeper cbk)
 	{
-		UpdateShaderBones(cbk);
+		UpdateShaderBones(dc, cbk);
 
 		mParts.DrawDMN(dc);
 	}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -9,6 +10,7 @@ using UtilityLib;
 using Vortice.DXGI;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
+using Vortice.Direct3D11.Shader;
 using Vortice.D3DCompiler;
 using Vortice.Mathematics;
 using Vortice.WIC;
@@ -79,6 +81,9 @@ public class StuffKeeper
 	//shaders
 	Dictionary<string, ID3D11VertexShader>	mVShaders	=new Dictionary<string, ID3D11VertexShader>();
 	Dictionary<string, ID3D11PixelShader>	mPShaders	=new Dictionary<string, ID3D11PixelShader>();
+
+	//input layouts
+	Dictionary<string, ID3D11InputLayout>	mLayouts	=new Dictionary<string, ID3D11InputLayout>();
 
 	//renderstates... was better when these were in hlsl
 	Dictionary<string, ID3D11BlendState>		mBlends	=new Dictionary<string, ID3D11BlendState>();
@@ -287,6 +292,127 @@ public class StuffKeeper
 		foreach(KeyValuePair<string, Font> font in sorted)
 		{
 			ret.Add(font.Key);
+		}
+		return	ret;
+	}
+
+
+	//see which hlsl this entry came from
+	//this is handy to tell what sort of material bits are needed
+	public string GetHLSLName(string vsEntry)
+	{
+		foreach(KeyValuePair<string, List<string>> files in mVSEntryPoints)
+		{
+			if(files.Value.Contains(vsEntry))
+			{
+				return	files.Key;
+			}
+		}
+		return	null;
+	}
+
+
+	Format	SemanticToFormat(string sem)
+	{
+		if(sem == "POSITION")
+		{
+			return	Format.R32G32B32_Float;
+		}
+		else if(sem == "NORMAL")
+		{
+			return	Format.R16G16B16A16_Float;
+		}
+		else if(sem == "BLENDINDICES")
+		{
+			return	Format.R8G8B8A8_UInt;
+		}
+		else if(sem == "BLENDWEIGHTS")
+		{
+			return	Format.R16G16B16A16_Float;
+		}
+		else if(sem == "TEXCOORD")
+		{
+			return	Format.R16G16_Float;
+		}
+		else if(sem == "COLOR")
+		{
+			return	Format.R8G8B8A8_UNorm;
+		}
+		return	Format.Unknown;
+	}
+
+
+	int	SemanticToSize(string sem)
+	{
+		if(sem == "POSITION")
+		{
+			return	12;
+		}
+		else if(sem == "NORMAL")
+		{
+			return	8;
+		}
+		else if(sem == "BLENDINDICES")
+		{
+			return	4;
+		}
+		else if(sem == "BLENDWEIGHTS")
+		{
+			return	8;
+		}
+		else if(sem == "TEXCOORD")
+		{
+			return	4;
+		}
+		else if(sem == "COLOR")
+		{
+			return	4;
+		}
+		return	0;
+	}
+
+
+	ID3D11InputLayout	MakeLayout(ID3D11Device gd, string vsEntry)
+	{
+		if(!mVSCode.ContainsKey(vsEntry))
+		{
+			return	null;
+		}
+
+		ID3D11ShaderReflection	sr	=Compiler.Reflect<ID3D11ShaderReflection>(mVSCode[vsEntry]);
+
+		InputElementDescription	[]ied	=new InputElementDescription[sr.InputParameters.Length];
+
+		int	ofs	=0;
+		for(int i=0;i < sr.InputParameters.Length;i++)
+		{
+			ShaderParameterDescription	spd	=sr.InputParameters[i];
+
+			ied[i]	=new InputElementDescription(spd.SemanticName,
+				spd.SemanticIndex, SemanticToFormat(spd.SemanticName), ofs, 0);
+			ofs		+=SemanticToSize(spd.SemanticName);
+		}
+
+		sr.Release();
+
+		return	gd.CreateInputLayout(ied, mVSCode[vsEntry]);
+	}
+
+
+	public ID3D11InputLayout GetOrCreateLayout(string vsEntry)
+	{
+		if(mLayouts.ContainsKey(vsEntry))
+		{
+			return	mLayouts[vsEntry];
+		}
+
+		//grab device from any shader stored
+		ID3D11Device	dev	=mVShaders.FirstOrDefault().Value.Device;
+
+		ID3D11InputLayout	ret	=MakeLayout(dev, vsEntry);
+		if(ret != null)
+		{
+			mLayouts.Add(vsEntry, ret);
 		}
 		return	ret;
 	}

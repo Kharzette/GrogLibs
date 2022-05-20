@@ -184,6 +184,7 @@ public class Mesh
 
 		dc.IASetVertexBuffer(0, mVerts, mVertSize);
 		dc.IASetIndexBuffer(mIndexs, Format.R16_UInt, 0);
+		dc.IASetInputLayout(mm.mLayout);
 
 		mm.mMatLib.SetMaterialID("DMN", mm.mMaterialID);
 		mm.mMatLib.SetWorld("DMN", (mTransform * mm.mObjectTransform));
@@ -208,6 +209,7 @@ public class Mesh
 
 		dc.IASetVertexBuffer(0, mVerts, mVertSize);
 		dc.IASetIndexBuffer(mIndexs, Format.R16_UInt, 0);
+		dc.IASetInputLayout(mm.mLayout);
 
 		mm.mMatLib.SetWorld(altMaterial, (mTransform * mm.mObjectTransform));
 		
@@ -232,6 +234,7 @@ public class Mesh
 
 		dc.IASetVertexBuffer(0, mVerts, mVertSize);
 		dc.IASetIndexBuffer(mIndexs, Format.R16_UInt, 0);
+		dc.IASetInputLayout(mm.mLayout);
 
 		mm.mMatLib.SetWorld(altMaterial, (mTransform * mm.mObjectTransform));
 		
@@ -252,6 +255,7 @@ public class Mesh
 
 		dc.IASetVertexBuffer(0, mVerts, mVertSize);
 		dc.IASetIndexBuffer(mIndexs, Format.R16_UInt, 0);
+		dc.IASetInputLayout(mm.mLayout);
 
 		mm.mMatLib.ApplyMaterial(mm.mMaterialName, dc);
 

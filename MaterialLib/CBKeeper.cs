@@ -439,7 +439,7 @@ public unsafe class CBKeeper
 
 	public void SetBones(Matrix4x4 []bones)
 	{
-		bones.CopyTo(mBones, 0);
+		bones?.CopyTo(mBones, 0);
 	}
 
 

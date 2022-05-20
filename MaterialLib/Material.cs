@@ -114,6 +114,36 @@ internal class Material
 	}
 
 
+	//often in tools the material doesn't know what sort of
+	//geometry it will be attached to (at construct time)
+	internal void ChangeType(bool bBSP, bool bCharacter)
+	{
+		if(bBSP)
+		{
+			if(mBSPVars == null)
+			{
+				mBSPVars	=new BSPMat();
+			}
+		}
+		else if(mBSPVars != null)
+		{
+			mBSPVars	=null;
+		}
+
+		if(bCharacter)
+		{
+			if(mCharVars == null)
+			{
+				mCharVars	=new CharacterMat();
+			}
+		}
+		else if(mCharVars != null)
+		{
+			mCharVars	=null;
+		}
+	}
+
+
 	internal void SetTrilightValues(Vector4 col0, Vector4 col1,
 									Vector4 col2, Vector3 lightDir)
 	{

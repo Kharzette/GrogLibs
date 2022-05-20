@@ -148,6 +148,32 @@ public partial class MaterialLib
 	}
 
 
+	public void CheckMaterialType(string name)
+	{
+		if(!mMats.ContainsKey(name))
+		{
+			return;
+		}
+
+		Material	mat	=mMats[name];
+
+		bool	bBsp	=false;
+		bool	bChar	=false;
+
+		string	hlslFile	=mSKeeper.GetHLSLName(mat.VSName);
+		if(hlslFile == "BSP")
+		{
+			bBsp	=true;
+		}
+		else if(hlslFile == "Character")
+		{
+			bChar	=true;
+		}
+
+		mat.ChangeType(bBsp, bChar);
+	}
+
+
 	public bool RenameMaterial(string name, string newName)
 	{
 		if(name == null || newName == null)

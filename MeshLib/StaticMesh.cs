@@ -8,6 +8,7 @@ using Vortice.Direct3D;
 using Vortice.Direct3D11;
 using Vortice.Mathematics;
 using UtilityLib;
+using MaterialLib;
 
 using MatLib	=MaterialLib.MaterialLib;
 
@@ -109,9 +110,9 @@ public class StaticMesh
 	}
 
 
-	public void SetMatLib(MatLib mats)
+	public void SetMatLib(MatLib mats, StuffKeeper sk)
 	{
-		mParts.SetMatLibs(mats);
+		mParts.SetMatLibs(mats, sk);
 	}
 
 
@@ -134,9 +135,10 @@ public class StaticMesh
 	}
 
 
-	public void SetPartMaterialName(int index, string matName)
+	public void SetPartMaterialName(int index, string matName,
+									StuffKeeper sk)
 	{
-		mParts.SetPartMaterialName(index, matName);
+		mParts.SetPartMaterialName(index, matName, sk);
 	}
 
 

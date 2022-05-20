@@ -1,9 +1,11 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
 using Vortice.Mathematics;
 using Vortice.Direct3D11;
+using MaterialLib;
 
 using MatLib	=MaterialLib.MaterialLib;
 
@@ -66,7 +68,7 @@ internal class MeshPartStuff
 	}
 
 
-	internal void SetPartMaterialName(int index, string matName)
+	internal void SetPartMaterialName(int index, string matName, StuffKeeper sk)
 	{
 		Debug.Assert(index >= 0 && index < mPartMats.Count);
 
@@ -75,7 +77,13 @@ internal class MeshPartStuff
 			return;
 		}
 
-		mPartMats[index].mMaterialName	=matName;
+		MeshMaterial	mm	=mPartMats[index];
+
+		mm.mMaterialName	=matName;
+
+		string	vsName	=mm.mMatLib.GetMaterialVShader(matName);		
+
+		mPartMats[index].mLayout	=sk.GetOrCreateLayout(vsName);
 	}
 
 
@@ -92,11 +100,15 @@ internal class MeshPartStuff
 	}
 
 
-	internal void SetMatLibs(MatLib mats)
+	internal void SetMatLibs(MatLib mats, StuffKeeper sk)
 	{
 		foreach(MeshMaterial mm in mPartMats)
 		{
 			mm.mMatLib	=mats;
+
+			string	vsName	=mats.GetMaterialVShader(mm.mMaterialName);
+
+			mm.mLayout	=sk.GetOrCreateLayout(vsName);
 		}
 	}
 
@@ -107,6 +119,7 @@ internal class MeshPartStuff
 		MeshMaterial	mm	=new MeshMaterial();
 
 		mm.mMatLib			=mats;
+		mm.mLayout			=null;	//no material info yet
 		mm.mMaterialName	="NoMaterial";
 		mm.mbVisible		=true;
 		mm.mObjectTransform	=objectTrans;
