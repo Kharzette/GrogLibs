@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Diagnostics;
@@ -393,36 +394,56 @@ public static class VertexTypes
 	}
 
 
-	public static ID3D11Buffer BuildABuffer(ID3D11Device gd, Array verts, Type vtype)
+	//Having major trouble with padding being inserted into arrays,
+	//making copying to gpu buffers problematic.  Had to write this
+	//abomination to keep it from doing that.
+	public static IntPtr	ArrayToRam<T>(Array arr)
 	{
-		int	vertSize	=VertexTypes.GetSizeForType(vtype);
+		int	vertSize	=VertexTypes.GetSizeForType(typeof(T));
+
+		IntPtr	arrMem	=Marshal.AllocHGlobal(vertSize * arr.Length);
+
+		byte	[]structBytes	=new byte[vertSize];
+
+		IntPtr	pMem	=arrMem;
+		for(int i=0;i < arr.Length;i++)
+		{
+			T	vStruct	=(T)arr.GetValue(i);
+
+			IntPtr	structPtr	=Marshal.AllocHGlobal(vertSize);
+
+			Marshal.StructureToPtr<T>(vStruct, structPtr, false);
+
+			Marshal.Copy(structPtr, structBytes, 0, vertSize);
+
+			Marshal.Copy(structBytes, 0, pMem, vertSize);
+
+			pMem	+=vertSize;
+		}
+		return	arrMem;
+	}
+
+
+	public static ID3D11Buffer BuildABuffer(ID3D11Device gd, Array verts, Type vType)
+	{
+		int	vertSize	=VertexTypes.GetSizeForType(vType);
 
 		BufferDescription	bDesc	=new BufferDescription(
 			vertSize * verts.Length, BindFlags.VertexBuffer,
 			ResourceUsage.Immutable);
 
-		//newer dotnet returns the byref middle parameter somehow, need to be more specific
-		IEnumerable<MethodInfo>	meths	=typeof(ID3D11Device).GetMethods().Where(
-			x => x.ContainsGenericParameters == true && x.Name == "CreateBuffer");
+		IEnumerable<MethodInfo>	meths	=typeof(VertexTypes).GetMethods().Where(
+			x => x.ContainsGenericParameters == true && x.Name == "ArrayToRam");
 
-		MethodInfo	createWeWant	=null;
-		foreach(MethodInfo m in meths)
-		{
-			ParameterInfo	[]pars	=m.GetParameters();
+		MethodInfo	arr2	=meths.First().MakeGenericMethod(vType);
 
-			if(pars.Length == 7)
-			{
-				createWeWant	=m;
-				break;
-			}
-		}
+		IntPtr	arrMem	=(IntPtr)arr2.Invoke(null, new object[] {verts});
 
-		var	typedMethod	=createWeWant.MakeGenericMethod(new Type[] {vtype});
+		ID3D11Buffer	ret	=gd.CreateBuffer(bDesc, arrMem);
 
-		return	typedMethod.Invoke(gd, new object[] {
-			bDesc.BindFlags, verts, bDesc.ByteWidth, bDesc.Usage,
-			bDesc.CPUAccessFlags, bDesc.MiscFlags,
-			bDesc.StructureByteStride }) as ID3D11Buffer;
+		Marshal.FreeHGlobal(arrMem);
+
+		return	ret;
 	}
 
 
