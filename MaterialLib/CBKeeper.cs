@@ -1,5 +1,7 @@
 using System;
 using System.Numerics;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
@@ -440,6 +442,22 @@ public unsafe class CBKeeper
 	public void SetBones(Matrix4x4 []bones)
 	{
 		bones?.CopyTo(mBones, 0);
+	}
+
+
+	public void SetBonesWithTranspose(Matrix4x4 []bones)
+	{
+		if(bones == null)
+		{
+			return;
+		}
+
+		Debug.Assert(bones.Length <= MaxBones);
+
+		Parallel.For(0, bones.Length, (b) =>
+		{
+			mBones[b]	=Matrix4x4.Transpose(bones[b]);
+		});
 	}
 
 

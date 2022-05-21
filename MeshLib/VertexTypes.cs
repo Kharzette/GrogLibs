@@ -397,29 +397,35 @@ public static class VertexTypes
 	//Having major trouble with padding being inserted into arrays,
 	//making copying to gpu buffers problematic.  Had to write this
 	//abomination to keep it from doing that.
+	//Caller should free the returned mem after use
 	public static IntPtr	ArrayToRam<T>(Array arr)
 	{
 		int	vertSize	=VertexTypes.GetSizeForType(typeof(T));
 
-		IntPtr	arrMem	=Marshal.AllocHGlobal(vertSize * arr.Length);
+		IntPtr	arrMem		=Marshal.AllocHGlobal(vertSize * arr.Length);
+		IntPtr	structPtr	=Marshal.AllocHGlobal(vertSize);
 
 		byte	[]structBytes	=new byte[vertSize];
 
 		IntPtr	pMem	=arrMem;
 		for(int i=0;i < arr.Length;i++)
 		{
-			T	vStruct	=(T)arr.GetValue(i);
-
-			IntPtr	structPtr	=Marshal.AllocHGlobal(vertSize);
+			T	vStruct	=(T)arr.GetValue(i);	//arrrr matey
 
 			Marshal.StructureToPtr<T>(vStruct, structPtr, false);
 
+			//should probably just call memcpy instead of copying
+			//this twice
 			Marshal.Copy(structPtr, structBytes, 0, vertSize);
 
 			Marshal.Copy(structBytes, 0, pMem, vertSize);
 
 			pMem	+=vertSize;
 		}
+
+		//free struct chunk
+		Marshal.FreeHGlobal(structPtr);
+
 		return	arrMem;
 	}
 

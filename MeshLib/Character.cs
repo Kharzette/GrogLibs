@@ -31,15 +31,6 @@ public class Character
 	//raw bone transforms for shader
 	Matrix4x4	[]mBones;
 
-	//inverted bones for raycasting
-	Matrix4x4		[]mInvertedBones;
-	bool			mbInvertedReady;	//thread done?
-	int				mThreadMisses;		//times had to invert on the spot
-	Action<object>	mInvertBones;
-	float			mTimeSinceLastInvert;
-	bool			mbAutoInvert;
-	float			mInvertInterval;
-	
 	//this must match the value in Character.fx in the shader lib!
 	const int	MAX_BONES	=55;
 
@@ -49,17 +40,6 @@ public class Character
 		mParts		=new MeshPartStuff(ca);
 		mAnimLib	=al;
 		mTransform	=Matrix4x4.Identity;
-
-		//task to invert the bones
-		mInvertBones	=(object c) =>
-		{
-			Character	chr	=c as Character;
-			for(int i=0;i < chr.mInvertedBones.Length;i++)
-			{
-				Matrix4x4.Invert(chr.mBones[i], out chr.mInvertedBones[i]);
-			}
-			chr.mbInvertedReady	=true;
-		};
 	}
 
 
@@ -67,22 +47,8 @@ public class Character
 	{
 		mParts.FreeAll();
 
-		mBones			=null;
-		mParts			=null;
-		mInvertedBones	=null;
-	}
-
-
-	public void AutoInvert(bool bAuto, float interval)
-	{
-		mbAutoInvert	=bAuto;
-		mInvertInterval	=interval;
-	}
-
-
-	public int GetThreadMisses()
-	{
-		return	mThreadMisses;
+		mBones	=null;
+		mParts	=null;
 	}
 
 
@@ -203,7 +169,7 @@ public class Character
 		{
 			if(mBones.Length <= MAX_BONES)
 			{
-				cbk.SetBones(mBones);
+				cbk.SetBonesWithTranspose(mBones);
 				cbk.UpdateCharacter(dc);
 			}
 			else
@@ -225,9 +191,7 @@ public class Character
 
 		if(mBones == null)
 		{
-			mBones			=new Matrix4x4[sk.GetNumIndexedBones()];
-			mInvertedBones	=new Matrix4x4[mBones.Length];
-			mbInvertedReady	=true;
+			mBones	=new Matrix4x4[sk.GetNumIndexedBones()];
 		}
 		for(int i=0;i < mBones.Length;i++)
 		{
@@ -241,7 +205,6 @@ public class Character
 
 	public void Update(float secDelta)
 	{
-		mTimeSinceLastInvert	+=secDelta;
 	}
 
 
