@@ -20,7 +20,7 @@ VVPosTex0 TextVS(VPos2Tex02 input)
 	float4	pos;
 
 	pos.xy	=(input.Position.xy * mTextScale) + mTextPosition;
-	pos.z	=0;
+	pos.z	=-0.5;
 	pos.w	=1;
 
 	output.Position	=mul(pos, mProjection);

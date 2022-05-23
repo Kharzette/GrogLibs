@@ -276,6 +276,7 @@ public class ScreenText
 		mGD.DC.IASetPrimitiveTopology(Vortice.Direct3D.PrimitiveTopology.TriangleList);
 
 		mGD.DC.IASetVertexBuffer(0, mVB, 12);
+		mGD.DC.IASetIndexBuffer(null, Format.Unknown, 0);
 		mGD.DC.IASetInputLayout(mLayout);
 
 		mGD.DC.VSSetShader(mVS);

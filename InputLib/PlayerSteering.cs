@@ -150,9 +150,6 @@ public class PlayerSteering
 			UpdateGroundMovement(camForward, camLeft, camUp, actions, out moveVec);
 		}
 
-		//camera direction stuff is backwards
-		moveVec	=-moveVec;
-
 		mDelta	=moveVec;
 
 		return	moveVec;
@@ -312,34 +309,34 @@ public class PlayerSteering
 			{
 				float	pitchAmount	=act.mMultiplier * 0.4f;
 
-				mPitch	-=pitchAmount;
+				mPitch	+=pitchAmount;
 			}
 			else if(act.mAction.Equals(mPitchUp))
 			{
 				float	pitchAmount	=act.mMultiplier * 0.4f;
 
-				mPitch	+=pitchAmount;
+				mPitch	-=pitchAmount;
 			}
 			else if(act.mAction.Equals(mPitchDown))
 			{
 				float	pitchAmount	=act.mMultiplier * 0.4f;
 
-				mPitch	-=pitchAmount;
+				mPitch	+=pitchAmount;
 			}
 			else if(act.mAction.Equals(mTurnBoth))
 			{
 				float	delta	=act.mMultiplier * 0.4f;
-				mYaw	-=delta;
+				mYaw	+=delta;
 			}
 			else if(act.mAction.Equals(mTurnLeft))
 			{
 				float	delta	=act.mMultiplier * 0.4f;
-				mYaw	+=delta;
+				mYaw	-=delta;
 			}
 			else if(act.mAction.Equals(mTurnRight))
 			{
 				float	delta	=act.mMultiplier * 0.4f;
-				mYaw	-=delta;
+				mYaw	+=delta;
 			}
 		}
 

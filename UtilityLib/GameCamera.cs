@@ -229,9 +229,9 @@ namespace UtilityLib
 		public void UpdateMatrices(Vector3 camPos, float pitch, float yaw, float roll)
 		{
 			mView	=Matrix4x4.CreateTranslation(camPos) *
-				Matrix4x4.CreateFromYawPitchRoll(MathHelper.ToRadians(yaw),
-					MathHelper.ToRadians(pitch),
-					MathHelper.ToRadians(roll));
+				Matrix4x4.CreateRotationZ(MathHelper.ToRadians(roll)) *
+				Matrix4x4.CreateRotationY(MathHelper.ToRadians(yaw)) *
+				Matrix4x4.CreateRotationX(MathHelper.ToRadians(pitch));
 
 			mFrust	=new BoundingFrustum(mView * mProjection);
 		}
