@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -19,10 +20,10 @@ internal struct TextVert
 
 internal class StringData
 {
-	internal TextVert	[]mVerts;
-	internal Vector4	mColor;
-	internal Vector2	mPosition;
-	internal Vector2	mScale;
+	internal Memory<TextVert>	mVerts;
+	internal Vector4			mColor;
+	internal Vector2			mPosition;
+	internal Vector2			mScale;
 }
 
 
@@ -38,7 +39,7 @@ public class ScreenText
 	ID3D11PixelShader			mPS;
 	Font						mFont;
 
-	TextVert	[]mTextBuf;
+	Memory<TextVert>	mTextBuf;
 
 	bool	mbDirty;
 	int		mMaxCharacters;
@@ -69,7 +70,7 @@ public class ScreenText
 			ResourceUsage.Dynamic, CpuAccessFlags.Write,
 			ResourceOptionFlags.None, 0);
 
-		mVB		=gd.GD.CreateBuffer<TextVert>(mTextBuf, bDesc);
+		mVB		=gd.GD.CreateBuffer<TextVert>(mTextBuf.Span, bDesc);
 
 		InputElementDescription	[]ied	=new[]
 		{
@@ -90,7 +91,7 @@ public class ScreenText
 
 		sd.mVerts	=new TextVert[text.Length * 6];
 
-		CopyLetters(sd.mVerts, text);
+		CopyLetters(sd.mVerts.Span, text);
 
 		sd.mColor		=color;
 		sd.mPosition	=position;
@@ -178,7 +179,7 @@ public class ScreenText
 
 		sd.mVerts	=new TextVert[text.Length * 6];
 
-		CopyLetters(sd.mVerts, text);
+		CopyLetters(sd.mVerts.Span, text);
 
 		mbDirty	=true;
 	}
@@ -195,7 +196,7 @@ public class ScreenText
 	}
 
 
-	void CopyLetters(TextVert []tv, string text)
+	void CopyLetters(Span<TextVert> tv, string text)
 	{
 		int	curWidth	=0;
 		for(int i=0;i < text.Length;i++)
@@ -243,6 +244,7 @@ public class ScreenText
 	void RebuildVB()
 	{
 		mNumVerts	=0;
+
 		foreach(KeyValuePair<string, StringData> str in mStrings)
 		{
 			//make sure we donut blast beyond the end
@@ -252,12 +254,24 @@ public class ScreenText
 				//TODO, warn
 				continue;
 			}
-			str.Value.mVerts.CopyTo(mTextBuf, mNumVerts);
-			
+
+			Memory<TextVert>	stringChunk	=mTextBuf.Slice(mNumVerts);
+
+			str.Value.mVerts.CopyTo(stringChunk);
+
 			mNumVerts	+=str.Value.mVerts.Length;
 		}
 
-		mGD.DC.UpdateSubresource<TextVert>(mTextBuf, mVB);
+		MappedSubresource	msr	=mGD.DC.Map(mVB, MapMode.WriteDiscard);
+
+		//AsSpan needs size in bytes, but that might change
+		Span<TextVert>	verts	=msr.AsSpan<TextVert>(mNumVerts * 12);
+
+		Memory<TextVert>	allStrings	=mTextBuf.Slice(0, mNumVerts);
+
+		allStrings.Span.CopyTo(verts);
+
+		mGD.DC.Unmap(mVB);
 	}
 
 
