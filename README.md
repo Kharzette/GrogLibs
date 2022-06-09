@@ -15,8 +15,10 @@ See LibDocs.txt for details on how stuff works.  Also the ReadMe.txt under QuArK
 
 # Building
 
-There's a rather annoying dependency step here.  The released nuget packages for SharpDX have some breaking bugs for the stuff I use (rawinput, and 11 effects).  I've cloned it as a submodule of my fork, but it only builds for me from command line.  So it needs to have build.cmd ran or the projects will fail to find the assemblies.
+I'm switching from SharpDX to Vortice for my DirectX layer stuff.  This makes building much less painful.  Individual projects should build just fine with dotnet build, or the whole solution.
 
-I've removed the universal stuff from my fork as it was impossible to build for me with that stuff in there.  The requirements can be a bit steep even without the universal's 11 gigs.  Two different windows sdks are needed for some reason.
+Things are however quite broken as of this change.  I am slowly fixing and rewiring things to get it all working again.
 
-Eventually I'll get around to converting over to Vulkan.
+The most major change so far is the elimination of the dependency on the effect framework.  This has made the concept of a material a bit more challenging to deal with.  As such material related things will be alot less generic.  I won't be able to just connect a datagrid to a list of materials and have it just work.
+
+The coordinate system stays the same but anything passed to directX needs a transpose.  The effect framework was handling this for me without me even realizing it, so I'm still adjusting to that.
