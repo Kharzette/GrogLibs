@@ -62,6 +62,15 @@ public partial class MaterialLib
 	}
 
 
+	public void SetLightDirection(Vector3 lightDir)
+	{
+		foreach(KeyValuePair<string, Material> mat in mMats)
+		{
+			mat.Value.SetlightDirection(lightDir);
+		}
+	}
+
+
 	public void SetTriLightValues(string matName,
 		Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
 	{
@@ -241,25 +250,6 @@ public partial class MaterialLib
 	}
 
 
-	public void SetMaterialTexture0(string matName, string texName)
-	{
-		if(!mMats.ContainsKey(matName))
-		{
-			return;
-		}
-
-		ID3D11ShaderResourceView	srv	=mSKeeper.GetSRV(texName);
-		if(srv == null)
-		{
-			return;
-		}
-
-		Material	mat	=mMats[matName];
-
-		mat.mMeshVars.Texture0	=texName;
-	}
-
-
 	public void ApplyMaterial(string matName, ID3D11DeviceContext dc)
 	{
 		if(!mMats.ContainsKey(matName))
@@ -306,13 +296,24 @@ public partial class MaterialLib
 	}
 
 
-	public string GetMaterialTexture0(string matName)
+	public BSPMat GetMaterialBSPMat(string matName)
 	{
 		if(!mMats.ContainsKey(matName))
 		{
 			return	null;
 		}
 
-		return	mMats[matName].mMeshVars.Texture0;
+		return	mMats[matName].mBSPVars;
+	}
+
+
+	public MeshMat GetMaterialMeshMat(string matName)
+	{
+		if(!mMats.ContainsKey(matName))
+		{
+			return	null;
+		}
+
+		return	mMats[matName].mMeshVars;
 	}
 }

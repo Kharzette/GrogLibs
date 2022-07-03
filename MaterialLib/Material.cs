@@ -154,6 +154,12 @@ internal class Material
 	}
 
 
+	internal void SetlightDirection(Vector3 lightDir)
+	{
+		mMeshVars.LightDirection	=lightDir;
+	}
+
+
 	internal void SetMaterialID(int id)
 	{
 		mMaterialID	=id;

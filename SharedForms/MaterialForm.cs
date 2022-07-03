@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using MeshLib;
 using UtilityLib;
+using MaterialLib;
 
 
 namespace SharedForms;
@@ -20,7 +21,7 @@ public partial class MaterialForm : Form
 
 
 	MaterialLib.MaterialLib	mMatLib;
-	MaterialLib.StuffKeeper	mSKeeper;
+	StuffKeeper				mSKeeper;
 
 	public event EventHandler	eNukedMeshPart;
 	public event EventHandler	eStripElements;
@@ -30,7 +31,7 @@ public partial class MaterialForm : Form
 
 
 	public MaterialForm(MaterialLib.MaterialLib matLib,
-		MaterialLib.StuffKeeper sk)
+		StuffKeeper sk)
 	{
 		InitializeComponent();
 
@@ -269,20 +270,23 @@ public partial class MaterialForm : Form
 
 		Point	loc	=pb.Bounds.Location;
 
-		lbc.Location	=MaterialList.PointToScreen(loc);
+		lbc.Location	=this.PointToScreen(loc);
 		lbox.Parent		=lbc;
 		lbox.Location	=new Point(0, 0);
-		lbox.Tag		=pb.Name;
+		lbox.Tag		=pb;
 
 		foreach(string pe in texs)
 		{
 			lbox.Items.Add(pe);
 		}
 
-		string	current	=mMatLib.GetMaterialTexture0(matName);
-		if(current != null)
+		MeshMat	mmat	=mMatLib.GetMaterialMeshMat(matName);
+		if(mmat != null)
 		{
-			lbox.SelectedItem	=current;
+			if(mmat.Texture0 != null && mmat.Texture0 != "")
+			{
+				lbox.SelectedItem	=mmat.Texture0;
+			}
 		}
 
 		int	width	=DropDownWidth(lbox);
@@ -339,19 +343,6 @@ public partial class MaterialForm : Form
 	}
 
 
-	void SetListTexture(string mat, string shd)
-	{
-		foreach(ListViewItem lvi in MaterialList.Items)
-		{
-			if(lvi.Text == mat)
-			{
-				lvi.SubItems[2].Text	=shd;
-				return;
-			}
-		}
-	}
-
-
 	void OnPSListBoxKey(object sender, KeyPressEventArgs kpea)
 	{
 		ListBox	lb	=sender as ListBox;
@@ -385,8 +376,21 @@ public partial class MaterialForm : Form
 		{
 			if(lb.SelectedIndex != -1)
 			{
-				mMatLib.SetMaterialTexture0(lb.Tag as string, lb.SelectedItem as string);
-				SetListTexture(lb.Tag as string, lb.SelectedItem as string);
+				if(MaterialList.SelectedItems.Count > 0)
+				{
+					foreach(ListViewItem lvi in MaterialList.SelectedItems)
+					{
+						if(lb.Tag == Texture1Pic)
+						{
+							Texture1Pic.Tag	=lb.SelectedItem as string;
+						}
+						else
+						{
+							Texture0Pic.Tag	=lb.SelectedItem as string;
+						}
+						SetAllValues(lvi.Text);
+					}
+				}
 				OnMaterialSelectionChanged(null, null);
 			}
 			DisposePBox(lb);
@@ -453,8 +457,22 @@ public partial class MaterialForm : Form
 
 		if(lb.SelectedIndex != -1)
 		{
-			mMatLib.SetMaterialTexture0(lb.Tag as string, lb.SelectedItem as string);
-			SetListTexture(lb.Tag as string, lb.SelectedItem as string);
+			if(MaterialList.SelectedItems.Count > 0)
+			{
+				foreach(ListViewItem lvi in MaterialList.SelectedItems)
+				{
+					if(lb.Tag == Texture1Pic)
+					{
+						Texture1Pic.Tag	=lb.SelectedItem as string;
+					}
+					else
+					{
+						Texture0Pic.Tag	=lb.SelectedItem as string;
+					}
+					SetAllValues(lvi.Text);
+				}
+			}
+
 			OnMaterialSelectionChanged(null, null);
 		}
 		DisposePBox(lb);
@@ -501,6 +519,47 @@ public partial class MaterialForm : Form
 
 	void OnMaterialSelectionChanged(object sender, EventArgs e)
 	{
+		//fill in the material info at the top
+
+		//if no mat selected, grey the controls
+		if(MaterialList.SelectedItems.Count == 0)
+		{
+			MatGroupBox.Enabled	=false;
+			return;
+		}
+
+		//one selected is the easy case
+		if(MaterialList.SelectedItems.Count == 1)
+		{
+			MatGroupBox.Enabled	=true;
+
+			string	matName	=MaterialList.SelectedItems[0].Text;
+
+			MeshMat	mm	=mMatLib.GetMaterialMeshMat(matName);
+
+			if(mm == null)
+			{
+				return;
+			}
+
+			//material solid colour
+			SolidColor.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.SolidColour));
+
+			//specular
+			SpecColor.BackColor		=Color.FromArgb(Misc.Vector4ToARGB(mm.SpecColor));
+			SpecPower.Value			=(decimal)mm.SpecPower;
+
+			//trilight
+			LightColor0.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.LightColor0));
+			LightColor1.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.LightColor1));
+			LightColor2.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.LightColor2));
+
+			Texture0Pic.Image	=mSKeeper.GetTextureBitmap(mm.Texture0);
+			Texture1Pic.Image	=mSKeeper.GetTextureBitmap(mm.Texture1);
+
+			Texture0Pic.Tag	=mm.Texture0;
+			Texture1Pic.Tag	=mm.Texture1;
+		}
 	}
 
 	
@@ -656,6 +715,31 @@ public partial class MaterialForm : Form
 		MeshPartList.Tag	=maa;
 
 		RefreshMeshPartList();
+	}
+
+
+	void SetAllValues(string matName)
+	{
+		MeshMat	mmat	=mMatLib.GetMaterialMeshMat(matName);
+		if(mmat == null)
+		{
+			return;
+		}
+
+		//trilight values
+		mmat.LightColor0	=Misc.ARGBToVector4(LightColor0.BackColor.ToArgb());
+		mmat.LightColor1	=Misc.ARGBToVector4(LightColor1.BackColor.ToArgb());
+		mmat.LightColor2	=Misc.ARGBToVector4(LightColor2.BackColor.ToArgb());
+
+		mmat.SolidColour	=Misc.ARGBToVector4(SolidColor.BackColor.ToArgb());
+
+		//spec
+		mmat.SpecColor		=Misc.ARGBToVector4(SpecColor.BackColor.ToArgb());
+		mmat.SpecPower		=(float)SpecPower.Value;
+
+		//textures
+		mmat.Texture0	=Texture0Pic.Tag as string;
+		mmat.Texture1	=Texture1Pic.Tag as string;
 	}
 
 
@@ -1018,5 +1102,73 @@ public partial class MaterialForm : Form
 	
 	void OnTexture0Click(object sender, EventArgs e)
 	{
+		if(MaterialList.SelectedItems.Count != 1)
+		{
+			return; //nothing to do
+		}
+
+		string	matName	=MaterialList.SelectedItems[0].Text;
+
+		SpawnTextureComboBox(Texture0Pic, matName);
+	}
+
+	private void OnSpecColor(object sender, EventArgs e)
+	{
+		DialogResult	dr	=mCD.ShowDialog();
+
+		if(dr == DialogResult.Cancel)
+		{
+			return;
+		}
+
+		SpecColor.BackColor	=mCD.Color;
+	}
+
+	private void OnLightColor0(object sender, EventArgs e)
+	{
+		DialogResult	dr	=mCD.ShowDialog();
+
+		if(dr == DialogResult.Cancel)
+		{
+			return;
+		}
+
+		LightColor0.BackColor	=mCD.Color;
+	}
+
+	private void OnLightColor1(object sender, EventArgs e)
+	{
+		DialogResult	dr	=mCD.ShowDialog();
+
+		if(dr == DialogResult.Cancel)
+		{
+			return;
+		}
+
+		LightColor1.BackColor	=mCD.Color;
+	}
+
+	private void OnLightColor2(object sender, EventArgs e)
+	{
+		DialogResult	dr	=mCD.ShowDialog();
+
+		if(dr == DialogResult.Cancel)
+		{
+			return;
+		}
+
+		LightColor2.BackColor	=mCD.Color;
+	}
+
+	private void OnTexture1Click(object sender, EventArgs e)
+	{
+		if(MaterialList.SelectedItems.Count != 1)
+		{
+			return; //nothing to do
+		}
+
+		string	matName	=MaterialList.SelectedItems[0].Text;
+
+		SpawnTextureComboBox(Texture0Pic, matName);
 	}
 }

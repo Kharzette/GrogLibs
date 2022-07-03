@@ -12,7 +12,7 @@ using UtilityLib;
 namespace MaterialLib;
 
 //Material stuff specific to BSP meshes
-internal class BSPMat
+public class BSPMat
 {
 	bool	mbTextureEnabled;
 	Vector2	mTexSize;
@@ -30,24 +30,24 @@ internal class BSPMat
 		mTexture			="";		
 	}
 
-	internal bool	TextureEnabled
+	public bool	TextureEnabled
 	{
 		get	{	return	mbTextureEnabled;	}
 		set	{	mbTextureEnabled	=value;	}
 	}
 
-	internal Vector2	TextureSize
+	public Vector2	TextureSize
 	{
 		get	{	return	mTexSize;	}
 		set	{	mTexSize	=value;	}
 	}
 
-	internal Half	[]AniIntensities
+	public Half	[]AniIntensities
 	{
 		set	{	mAniIntensities	=value;	}
 	}
 
-	internal string	Texture
+	public string	Texture
 	{
 		get	{	return	mTexture;	}
 		set	{	mTexture	=value;	}

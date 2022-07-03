@@ -495,6 +495,43 @@ public class StuffKeeper
 		return	mCBKeeper;
 	}
 
+
+	public System.Drawing.Bitmap	GetTextureBitmap(string texName)
+	{
+		if(!mTexture2s.ContainsKey(texName))
+		{
+			return	null;
+		}
+
+		//even though we already have this loaded, there appears
+		//to be no way to get at the bits, so load it again
+		int		w, h;
+		byte	[]colArray	=LoadPNGWIC(mIF, mGameRootDir + "\\Textures\\" + texName + ".png",
+								out w, out h);
+
+		if(w == 0 && h == 0)
+		{
+			return	null;
+		}
+
+		System.Drawing.Bitmap				bm		=new System.Drawing.Bitmap(w, h);
+		System.Drawing.Rectangle			bmRect	=new System.Drawing.Rectangle(0, 0, w, h);
+		System.Drawing.Imaging.BitmapData	bmd		=new System.Drawing.Imaging.BitmapData();
+
+		bmd	=bm.LockBits(bmRect, System.Drawing.Imaging.ImageLockMode.WriteOnly,
+			System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+		IntPtr	ptr	=bmd.Scan0;
+
+		int	colSize	=(w * h * 4);
+
+		System.Runtime.InteropServices.Marshal.Copy(colArray, 0, ptr, colSize);
+
+		bm.UnlockBits(bmd);
+
+		return	bm;
+	}
+
 /*
 	public bool AddTexToAtlas(TexAtlas atlas, string texName, GraphicsDevice gd,
 		out double scaleU, out double scaleV, out double uoffs, out double voffs)
