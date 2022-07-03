@@ -514,18 +514,35 @@ public class StuffKeeper
 			return	null;
 		}
 
+		byte	[]rgb	=new byte[(w * h) * 3];
+
+		//loadpngwic provides RGBA and bitmap wants BGR
+		for(int i=0;i < (colArray.Length / 4);i++)
+		{
+			byte	A, R, G, B;
+
+			R	=colArray[i * 4];
+			G	=colArray[1 + (i * 4)];
+			B	=colArray[2 + (i * 4)];
+			A	=colArray[3 + (i * 4)];
+
+			rgb[i * 3]			=B;
+			rgb[1 + (i * 3)]	=G;
+			rgb[2 + (i * 3)]	=R;
+		}
+
 		System.Drawing.Bitmap				bm		=new System.Drawing.Bitmap(w, h);
 		System.Drawing.Rectangle			bmRect	=new System.Drawing.Rectangle(0, 0, w, h);
 		System.Drawing.Imaging.BitmapData	bmd		=new System.Drawing.Imaging.BitmapData();
 
 		bmd	=bm.LockBits(bmRect, System.Drawing.Imaging.ImageLockMode.WriteOnly,
-			System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+			System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 
 		IntPtr	ptr	=bmd.Scan0;
 
-		int	colSize	=(w * h * 4);
+		int	colSize	=(w * h * 3);
 
-		System.Runtime.InteropServices.Marshal.Copy(colArray, 0, ptr, colSize);
+		Marshal.Copy(rgb, 0, ptr, colSize);
 
 		bm.UnlockBits(bmd);
 

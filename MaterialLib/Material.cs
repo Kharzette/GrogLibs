@@ -111,6 +111,8 @@ internal class Material
 		mMeshVars.Apply(dc, cbk, sk);
 		mBSPVars?.Apply(dc, cbk, sk);
 		mCharVars?.Apply(dc, cbk, sk);
+
+		cbk.UpdateObject(dc);
 	}
 
 

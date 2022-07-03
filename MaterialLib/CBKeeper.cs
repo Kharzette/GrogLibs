@@ -435,6 +435,11 @@ public unsafe class CBKeeper
 
 	public void SetAniIntensities(Half	[]ani)
 	{
+		if(ani == null)
+		{
+			return;
+		}
+
 		Array.Copy(ani, mAniIntensities, NumStyles);
 	}
 

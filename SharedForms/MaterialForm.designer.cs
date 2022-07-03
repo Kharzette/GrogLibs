@@ -240,7 +240,7 @@
 			// label6
 			// 
 			this.label6.AutoSize = true;
-			this.label6.Location = new System.Drawing.Point(458, 92);
+			this.label6.Location = new System.Drawing.Point(230, 128);
 			this.label6.Name = "label6";
 			this.label6.Size = new System.Drawing.Size(51, 15);
 			this.label6.TabIndex = 24;
@@ -249,7 +249,7 @@
 			// label5
 			// 
 			this.label5.AutoSize = true;
-			this.label5.Location = new System.Drawing.Point(458, 22);
+			this.label5.Location = new System.Drawing.Point(230, 19);
 			this.label5.Name = "label5";
 			this.label5.Size = new System.Drawing.Size(51, 15);
 			this.label5.TabIndex = 23;
@@ -258,9 +258,10 @@
 			// Texture1Pic
 			// 
 			this.Texture1Pic.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.Texture1Pic.Location = new System.Drawing.Point(515, 92);
+			this.Texture1Pic.Location = new System.Drawing.Point(287, 128);
 			this.Texture1Pic.Name = "Texture1Pic";
-			this.Texture1Pic.Size = new System.Drawing.Size(64, 64);
+			this.Texture1Pic.Size = new System.Drawing.Size(100, 100);
+			this.Texture1Pic.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
 			this.Texture1Pic.TabIndex = 22;
 			this.Texture1Pic.TabStop = false;
 			this.Texture1Pic.Click += new System.EventHandler(this.OnTexture1Click);
@@ -268,9 +269,10 @@
 			// Texture0Pic
 			// 
 			this.Texture0Pic.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.Texture0Pic.Location = new System.Drawing.Point(515, 22);
+			this.Texture0Pic.Location = new System.Drawing.Point(287, 22);
 			this.Texture0Pic.Name = "Texture0Pic";
-			this.Texture0Pic.Size = new System.Drawing.Size(64, 64);
+			this.Texture0Pic.Size = new System.Drawing.Size(100, 100);
+			this.Texture0Pic.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
 			this.Texture0Pic.TabIndex = 21;
 			this.Texture0Pic.TabStop = false;
 			this.Texture0Pic.Click += new System.EventHandler(this.OnTexture0Click);
