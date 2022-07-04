@@ -1292,7 +1292,7 @@ public class StuffKeeper
 		{
 			int	ofs	=y * width * 4;
 
-			for(int x=0;x < width;x+=4)
+			for(int x=0;x < width;x++)
 			{
 				int	ofsX	=ofs + (x * 4);
 
