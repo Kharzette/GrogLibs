@@ -35,6 +35,38 @@ internal class Material
 	internal CharacterMat	mCharVars;		//character specific, might be null
 
 
+	internal Material Clone(string newName)
+	{
+		Material	ret	=new Material(newName, mBSPVars != null, mCharVars != null);
+
+		ret.mVSName			=mVSName;
+		ret.mPSName			=mPSName;
+		ret.mDSS			=mDSS;
+		ret.mBlendState		=mBlendState;
+		ret.mSamplerState0	=mSamplerState0;
+		ret.mSamplerState1	=mSamplerState1;
+		ret.mWorld			=mWorld;
+		ret.mMaterialID		=mMaterialID;
+
+		if(mBSPVars != null)
+		{
+			ret.mBSPVars =mBSPVars.Clone();
+		}
+
+		if(mMeshVars != null)
+		{
+			ret.mMeshVars	=mMeshVars.Clone();
+		}
+
+		if(mCharVars != null)
+		{
+			ret.mCharVars	=mCharVars.Clone();
+		}
+
+		return	ret;
+	}
+
+
 	internal Material(string name, bool bBSP, bool bCharacter)
 	{
 		mName	=name;

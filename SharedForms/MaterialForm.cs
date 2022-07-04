@@ -64,8 +64,6 @@ public partial class MaterialForm : Form
 		FormExtensions.Invoke(MaterialList, clear);
 
 		List<string>	names	=mMatLib.GetMaterialNames();
-		List<string>	vsEnts	=mSKeeper.GetVSEntryList();
-		List<string>	psEnts	=mSKeeper.GetVSEntryList();
 
 		foreach(string name in names)
 		{
@@ -79,8 +77,11 @@ public partial class MaterialForm : Form
 			Action<ListView>	tagAndSub	=lv =>
 			{
 				lv.Items[i].Tag = "MaterialName";
-				lv.Items[i].SubItems.Add(MaterialList.Items[i].Text);
-				lv.Items[i].SubItems.Add(MaterialList.Items[i].Text);
+
+				string	mn	=MaterialList.Items[i].Text;
+
+				lv.Items[i].SubItems.Add(mMatLib.GetMaterialVShader(mn));
+				lv.Items[i].SubItems.Add(mMatLib.GetMaterialPShader(mn));
 				lv.Items[i].SubItems[1].Tag	="MaterialVS";
 				lv.Items[i].SubItems[2].Tag	="MaterialPS";
 			};
@@ -525,6 +526,7 @@ public partial class MaterialForm : Form
 		if(MaterialList.SelectedItems.Count == 0)
 		{
 			MatGroupBox.Enabled	=false;
+			NewMaterial.Text	="New Mat";
 			return;
 		}
 
@@ -532,6 +534,7 @@ public partial class MaterialForm : Form
 		if(MaterialList.SelectedItems.Count == 1)
 		{
 			MatGroupBox.Enabled	=true;
+			NewMaterial.Text	="Clone Mat";
 
 			string	matName	=MaterialList.SelectedItems[0].Text;
 
@@ -559,7 +562,12 @@ public partial class MaterialForm : Form
 
 			Texture0Pic.Tag	=mm.Texture0;
 			Texture1Pic.Tag	=mm.Texture1;
+			return;
 		}
+
+		//multiple selected?
+		MatGroupBox.Enabled	=true;
+		NewMaterial.Text	="New Mat";
 	}
 
 	
@@ -661,7 +669,7 @@ public partial class MaterialForm : Form
 	}
 
 
-	//the new button becomes a clone button with a mat selected
+	//the new button becomes a clone button with a single mat selected
 	void OnNewMaterial(object sender, EventArgs e)
 	{
 		string	baseName	="default";
@@ -693,7 +701,7 @@ public partial class MaterialForm : Form
 
 		if(bClone)
 		{
-//			mMatLib.CloneMaterial(baseName, tryName);
+			mMatLib.CloneMaterial(baseName, tryName);
 		}
 		else
 		{
@@ -1113,7 +1121,7 @@ public partial class MaterialForm : Form
 		SpawnTextureComboBox(Texture0Pic, matName);
 	}
 
-	private void OnSpecColor(object sender, EventArgs e)
+	void OnSpecColor(object sender, EventArgs e)
 	{
 		DialogResult	dr	=mCD.ShowDialog();
 
@@ -1127,7 +1135,7 @@ public partial class MaterialForm : Form
 		SetAllValues();
 	}
 
-	private void OnLightColor0(object sender, EventArgs e)
+	void OnLightColor0(object sender, EventArgs e)
 	{
 		DialogResult	dr	=mCD.ShowDialog();
 
@@ -1141,7 +1149,7 @@ public partial class MaterialForm : Form
 		SetAllValues();
 	}
 
-	private void OnLightColor1(object sender, EventArgs e)
+	void OnLightColor1(object sender, EventArgs e)
 	{
 		DialogResult	dr	=mCD.ShowDialog();
 
@@ -1155,7 +1163,7 @@ public partial class MaterialForm : Form
 		SetAllValues();
 	}
 
-	private void OnLightColor2(object sender, EventArgs e)
+	void OnLightColor2(object sender, EventArgs e)
 	{
 		DialogResult	dr	=mCD.ShowDialog();
 
@@ -1169,7 +1177,7 @@ public partial class MaterialForm : Form
 		SetAllValues();
 	}
 
-	private void OnTexture1Click(object sender, EventArgs e)
+	void OnTexture1Click(object sender, EventArgs e)
 	{
 		if(MaterialList.SelectedItems.Count != 1)
 		{
@@ -1178,6 +1186,14 @@ public partial class MaterialForm : Form
 
 		string	matName	=MaterialList.SelectedItems[0].Text;
 
-		SpawnTextureComboBox(Texture0Pic, matName);
+		SpawnTextureComboBox(Texture1Pic, matName);
+	}
+
+
+	//this is a validate event.  If you do the "changed" event,
+	//it triggers when code changes it too, causing various goblinry
+	void OnSpecPowerChanged(object sender, EventArgs e)
+	{
+		SetAllValues();
 	}
 }

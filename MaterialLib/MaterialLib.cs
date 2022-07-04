@@ -43,6 +43,19 @@ public partial class MaterialLib
 	}
 
 
+	public void CloneMaterial(string toClone, string newName)
+	{
+		if(!mMats.ContainsKey(toClone))
+		{
+			return;
+		}
+
+		Material	clone	=mMats[toClone].Clone(newName);
+
+		mMats.Add(newName, clone);
+	}
+
+
 	public void NukeMaterial(string matName)
 	{
 		if(!mMats.ContainsKey(matName))

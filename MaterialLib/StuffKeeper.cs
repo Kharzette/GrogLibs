@@ -160,7 +160,7 @@ public class StuffKeeper
 
 	internal ID3D11SamplerState	GetSamplerState(string name)
 	{
-		if(mSSs.ContainsKey(name))
+		if(name != null && mSSs.ContainsKey(name))
 		{
 			return	mSSs[name];
 		}
@@ -170,7 +170,7 @@ public class StuffKeeper
 
 	internal ID3D11DepthStencilState	GetDepthStencilState(string name)
 	{
-		if(mDSSs.ContainsKey(name))
+		if(name != null && mDSSs.ContainsKey(name))
 		{
 			return	mDSSs[name];
 		}
@@ -180,7 +180,7 @@ public class StuffKeeper
 
 	internal ID3D11BlendState	GetBlendState(string name)
 	{
-		if(mBlends.ContainsKey(name))
+		if(name != null && mBlends.ContainsKey(name))
 		{
 			return	mBlends[name];
 		}
@@ -190,7 +190,7 @@ public class StuffKeeper
 
 	internal ID3D11Texture2D GetTexture2D(string name)
 	{
-		if(!mTexture2s.ContainsKey(name))
+		if(name == null || !mTexture2s.ContainsKey(name))
 		{
 			return	null;
 		}
@@ -200,7 +200,7 @@ public class StuffKeeper
 
 	internal Font GetFont(string name)
 	{
-		if(!mFonts.ContainsKey(name))
+		if(name == null || !mFonts.ContainsKey(name))
 		{
 			return	null;
 		}
@@ -211,7 +211,7 @@ public class StuffKeeper
 	//This can be used to generate input layouts
 	public byte[]	GetVSCompiledCode(string name)
 	{
-		if(!mVSCode.ContainsKey(name))
+		if(name == null || !mVSCode.ContainsKey(name))
 		{
 			return	null;
 		}
@@ -221,7 +221,7 @@ public class StuffKeeper
 
 	public ID3D11VertexShader	GetVertexShader(string name)
 	{
-		if(!mVShaders.ContainsKey(name))
+		if(name == null || !mVShaders.ContainsKey(name))
 		{
 			return	null;
 		}
@@ -230,7 +230,7 @@ public class StuffKeeper
 
 	public ID3D11PixelShader	GetPixelShader(string name)
 	{
-		if(!mPShaders.ContainsKey(name))
+		if(name == null || !mPShaders.ContainsKey(name))
 		{
 			return	null;
 		}
@@ -240,7 +240,7 @@ public class StuffKeeper
 
 	public ID3D11ShaderResourceView GetSRV(string name)
 	{
-		if(!mSRVs.ContainsKey(name))
+		if(name == null || !mSRVs.ContainsKey(name))
 		{
 			return	null;
 		}
@@ -250,7 +250,7 @@ public class StuffKeeper
 
 	internal ID3D11ShaderResourceView GetFontSRV(string name)
 	{
-		if(!mFontSRVs.ContainsKey(name))
+		if(name == null || !mFontSRVs.ContainsKey(name))
 		{
 			return	null;
 		}
@@ -258,11 +258,11 @@ public class StuffKeeper
 	}
 
 
-	internal ID3D11ShaderResourceView ResourceForName(string fxName)
+	internal ID3D11ShaderResourceView ResourceForName(string name)
 	{
-		if(mSRVs.ContainsKey(fxName))
+		if(name == null || mSRVs.ContainsKey(name))
 		{
-			return	mSRVs[fxName];
+			return	mSRVs[name];
 		}
 		return	null;
 	}
@@ -498,6 +498,11 @@ public class StuffKeeper
 
 	public System.Drawing.Bitmap	GetTextureBitmap(string texName)
 	{
+		if(texName == null)
+		{
+			return	null;
+		}
+
 		if(!mTexture2s.ContainsKey(texName))
 		{
 			return	null;

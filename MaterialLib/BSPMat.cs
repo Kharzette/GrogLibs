@@ -30,6 +30,20 @@ public class BSPMat
 		mTexture			="";		
 	}
 
+	internal BSPMat Clone()
+	{
+		BSPMat	ret	=new BSPMat();
+
+		ret.mbTextureEnabled	=mbTextureEnabled;
+		ret.mTexSize			=mTexSize;
+
+		ret.mAniIntensities	=new Half[mAniIntensities.Length];
+
+		mAniIntensities.CopyTo(ret.mAniIntensities,0);
+
+		return	ret;
+	}
+
 	public bool	TextureEnabled
 	{
 		get	{	return	mbTextureEnabled;	}

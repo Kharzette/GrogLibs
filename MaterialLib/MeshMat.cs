@@ -27,6 +27,12 @@ public class MeshMat
 		mTexture0	=mTexture1	="";
 	}
 
+
+	internal MeshMat Clone()
+	{
+		return	(MeshMat)MemberwiseClone();
+	}
+
 	public Vector4	SolidColour
 	{
 		get	{	return	mSolidColour;	}

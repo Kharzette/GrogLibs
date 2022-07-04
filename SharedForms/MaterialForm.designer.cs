@@ -295,10 +295,11 @@
 			this.SpecPower.Size = new System.Drawing.Size(75, 23);
 			this.SpecPower.TabIndex = 20;
 			this.SpecPower.Value = new decimal(new int[] {
-            1,
+            4,
             0,
             0,
             0});
+			this.SpecPower.Leave += new System.EventHandler(this.OnSpecPowerChanged);
 			// 
 			// label4
 			// 

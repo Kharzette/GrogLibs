@@ -22,6 +22,20 @@ internal class CharacterMat
 	}
 
 
+	internal CharacterMat Clone()
+	{
+		CharacterMat	ret	=new CharacterMat();
+
+		if(mBones != null)
+		{
+			ret.mBones	=new Matrix4x4[mBones.Length];
+
+			mBones.CopyTo(ret.mBones, 0);
+		}
+		return	ret;
+	}
+
+
 	internal void Apply(ID3D11DeviceContext dc,
 						CBKeeper cbk, StuffKeeper sk)
 	{
