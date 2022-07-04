@@ -718,6 +718,17 @@ public partial class MaterialForm : Form
 	}
 
 
+	void SetAllValues()
+	{
+		if(MaterialList.SelectedItems.Count != 1)
+		{
+			return;	//nothing to do
+		}
+
+		SetAllValues(MaterialList.SelectedItems[0].Text);
+	}
+
+
 	void SetAllValues(string matName)
 	{
 		MeshMat	mmat	=mMatLib.GetMaterialMeshMat(matName);
@@ -1012,18 +1023,6 @@ public partial class MaterialForm : Form
 	}
 
 
-	void OnVariableValueChanged(object sender, DataGridViewCellEventArgs e)
-	{
-		if(MaterialList.SelectedItems.Count < 1
-			|| MaterialList.SelectedItems.Count > 1)
-		{
-			return;	//nothing to do
-		}
-
-//		mMatLib.FixTextureVariables(MaterialList.SelectedItems[0].Text);
-	}
-
-
 	void OnFrankenstein(object sender, EventArgs e)
 	{
 		Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
@@ -1097,6 +1096,8 @@ public partial class MaterialForm : Form
 		}
 
 		SolidColor.BackColor	=mCD.Color;
+
+		SetAllValues();
 	}
 	
 	
@@ -1122,6 +1123,8 @@ public partial class MaterialForm : Form
 		}
 
 		SpecColor.BackColor	=mCD.Color;
+
+		SetAllValues();
 	}
 
 	private void OnLightColor0(object sender, EventArgs e)
@@ -1134,6 +1137,8 @@ public partial class MaterialForm : Form
 		}
 
 		LightColor0.BackColor	=mCD.Color;
+
+		SetAllValues();
 	}
 
 	private void OnLightColor1(object sender, EventArgs e)
@@ -1146,6 +1151,8 @@ public partial class MaterialForm : Form
 		}
 
 		LightColor1.BackColor	=mCD.Color;
+
+		SetAllValues();
 	}
 
 	private void OnLightColor2(object sender, EventArgs e)
@@ -1158,6 +1165,8 @@ public partial class MaterialForm : Form
 		}
 
 		LightColor2.BackColor	=mCD.Color;
+
+		SetAllValues();
 	}
 
 	private void OnTexture1Click(object sender, EventArgs e)

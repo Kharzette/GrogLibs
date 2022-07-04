@@ -162,9 +162,9 @@ float3 ComputeTrilight(float3 normal, float3 lightDir, float3 c0, float3 c1, flo
 	float	LdotN	=dot(normal, lightDir);
 	
 	//trilight
-	totalLight	=(c0 * max(0, -LdotN))
-		+ (c2 * (abs(LdotN)))
-		+ (c1 * max(0, 1 - LdotN));
+	totalLight	=(c2 * max(0, LdotN))
+		+ (c1 * (1 - abs(LdotN)))
+		+ (c0 * max(0, -LdotN));
 		
 	return	totalLight;
 }
