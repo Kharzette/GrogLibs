@@ -14,24 +14,14 @@ namespace MaterialLib;
 //Material stuff specific to characters
 internal class CharacterMat
 {
-	Matrix4x4	[]mBones;
-
-	internal Matrix4x4	[]Bones
-	{
-		set	{	mBones	=value;	}
-	}
+	//bones are directly set in meshlib
+	//so nothing here right now
 
 
 	internal CharacterMat Clone()
 	{
 		CharacterMat	ret	=new CharacterMat();
 
-		if(mBones != null)
-		{
-			ret.mBones	=new Matrix4x4[mBones.Length];
-
-			mBones.CopyTo(ret.mBones, 0);
-		}
 		return	ret;
 	}
 
@@ -39,6 +29,5 @@ internal class CharacterMat
 	internal void Apply(ID3D11DeviceContext dc,
 						CBKeeper cbk, StuffKeeper sk)
 	{
-		cbk.SetBones(mBones);
 	}
 }

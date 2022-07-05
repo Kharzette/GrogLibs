@@ -881,11 +881,7 @@ public partial class MaterialForm : Form
 			return;
 		}
 
-//		bool	bRet	=mMatLib.SaveToFile(mSFD.FileName);
-//		if(!bRet)
-		{
-			Misc.SafeInvoke(eMatLibNotReadyToSave, null);
-		}
+		mMatLib.Save(mSFD.FileName);
 	}
 
 	
@@ -901,7 +897,8 @@ public partial class MaterialForm : Form
 			return;
 		}
 
-//		mMatLib.ReadFromFile(mOFD.FileName);
+		mMatLib.Load(mOFD.FileName, false);
+
 		RefreshMaterials();
 	}
 
@@ -1019,7 +1016,7 @@ public partial class MaterialForm : Form
 			return;
 		}
 
-//		mMatLib.MergeFromFile(mOFD.FileName);
+		mMatLib.Load(mOFD.FileName, true);
 
 		RefreshMaterials();
 	}

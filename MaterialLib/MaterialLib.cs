@@ -124,6 +124,86 @@ public partial class MaterialLib
 	}
 
 
+	public void Save(string fileName)
+	{
+		FileStream	fs	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
+		if(fs == null)
+		{
+			return;
+		}
+
+		BinaryWriter	bw	=new BinaryWriter(fs);
+		if(bw == null)
+		{
+			fs.Close();
+			return;
+		}
+
+		bw.Write(0xFA77DA77);	//FALLDALL?  FATTDATT?
+
+		bw.Write(mMats.Count);	//num materials
+
+		foreach(KeyValuePair<string, Material> m in mMats)
+		{
+			m.Value.Save(bw);
+		}
+
+		bw.Close();
+		fs.Close();
+	}
+
+
+	public void Load(string fileName, bool bMerge)
+	{
+		FileStream	fs	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+		if(fs == null)
+		{
+			return;
+		}
+
+		BinaryReader	br	=new BinaryReader(fs);
+		if(br == null)
+		{
+			fs.Close();
+			return;
+		}
+
+		if(!bMerge)
+		{
+			//dump existing
+			mMats.Clear();
+		}
+		
+		UInt32	magic	=br.ReadUInt32();		
+		if(magic != 0xFA77DA77)
+		{
+			br.Close();
+			fs.Close();
+			return;
+		}
+
+		int	numMats	=br.ReadInt32();
+		for(int i=0;i < numMats;i++)
+		{
+			Material	m	=new Material("derp", false, false);
+
+			m.Load(br);
+
+			//probably will never happen but check for collisions
+			if(mMats.ContainsKey(m.Name))
+			{
+				//overwrite I guess!?
+				mMats.Remove(m.Name);
+			}
+
+			mMats.Add(m.Name, m);
+		}
+
+		br.Close();
+		fs.Close();
+	}
+
+
 	public void GuessTextures()
 	{
 		List<string>	textures	=mSKeeper.GetTexture2DList();

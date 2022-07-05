@@ -35,6 +35,58 @@ internal class Material
 	internal CharacterMat	mCharVars;		//character specific, might be null
 
 
+	internal void Save(BinaryWriter bw)
+	{
+		bw.Write(mName);
+		bw.Write(mVSName);
+		bw.Write(mPSName);
+		bw.Write(mDSS);
+		bw.Write(mBlendState);
+		bw.Write(mSamplerState0);
+		bw.Write(mSamplerState1);
+		
+		FileUtil.WriteMatrix(bw, mWorld);
+		bw.Write(mMaterialID);
+
+		bw.Write(mBSPVars != null);
+		mBSPVars?.Save(bw);
+
+		bw.Write(mMeshVars != null);
+		mMeshVars?.Save(bw);
+
+		//nothing in character stuff yet
+	}
+
+
+	internal void Load(BinaryReader br)
+	{
+		mName			=br.ReadString();
+		mVSName			=br.ReadString();
+		mPSName			=br.ReadString();
+		mDSS			=br.ReadString();
+		mBlendState		=br.ReadString();
+		mSamplerState0	=br.ReadString();
+		mSamplerState1	=br.ReadString();
+
+		mWorld		=FileUtil.ReadMatrix(br);
+		mMaterialID	=br.ReadInt32();
+
+		bool	bBSP	=br.ReadBoolean();
+		if(bBSP)
+		{
+			mBSPVars	=new BSPMat();
+			mBSPVars.Load(br);
+		}
+
+		bool	bMesh	=br.ReadBoolean();
+		if(bMesh)
+		{
+			mMeshVars	=new MeshMat();
+			mMeshVars.Load(br);
+		}
+	}
+
+
 	internal Material Clone(string newName)
 	{
 		Material	ret	=new Material(newName, mBSPVars != null, mCharVars != null);
@@ -115,18 +167,7 @@ internal class Material
 	{
 		CBKeeper	cbk	=sk.GetCBKeeper();
 		
-		cbk.SetCommonCBToShaders(dc);
-		if(mBSPVars != null)
-		{
-			cbk.SetBSPToShaders(dc);
-		}
-		if(mCharVars != null)
-		{
-			cbk.SetCharacterToShaders(dc);
-		}
-
-
-		//shaders
+		//shaders first
 		dc.VSSetShader(sk.GetVertexShader(mVSName));
 		dc.PSSetShader(sk.GetPixelShader(mPSName));
 
@@ -142,9 +183,14 @@ internal class Material
 
 		mMeshVars.Apply(dc, cbk, sk);
 		mBSPVars?.Apply(dc, cbk, sk);
-		mCharVars?.Apply(dc, cbk, sk);
 
 		cbk.UpdateObject(dc);
+
+		cbk.SetCommonCBToShaders(dc);
+		if(mBSPVars != null)
+		{
+			cbk.SetBSPToShaders(dc);
+		}
 	}
 
 

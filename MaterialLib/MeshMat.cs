@@ -25,6 +25,37 @@ public class MeshMat
 	internal MeshMat()
 	{
 		mTexture0	=mTexture1	="";
+		mSpecPower	=3f;
+	}
+
+
+	internal void Load(BinaryReader br)
+	{
+		mSolidColour	=FileUtil.ReadVector4(br);
+		mSpecColor		=FileUtil.ReadVector4(br);
+		mLightColor0	=FileUtil.ReadVector4(br);
+		mLightColor1	=FileUtil.ReadVector4(br);
+		mLightColor2	=FileUtil.ReadVector4(br);
+		mLightDirection	=FileUtil.ReadVector3(br);
+		mDanglyForce	=FileUtil.ReadVector3(br);
+		mSpecPower		=br.ReadSingle();
+		mTexture0		=br.ReadString();
+		mTexture1		=br.ReadString();
+	}
+
+
+	internal void Save(BinaryWriter bw)
+	{
+		FileUtil.WriteVector4(bw, SolidColour);
+		FileUtil.WriteVector4(bw, SpecColor);
+		FileUtil.WriteVector4(bw, LightColor0);
+		FileUtil.WriteVector4(bw, LightColor1);
+		FileUtil.WriteVector4(bw, LightColor2);
+		FileUtil.WriteVector3(bw, LightDirection);
+		FileUtil.WriteVector3(bw, DanglyForce);
+		bw.Write(mSpecPower);
+		bw.Write(mTexture0);
+		bw.Write(mTexture1);
 	}
 
 

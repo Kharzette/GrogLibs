@@ -23,6 +23,25 @@ public class BSPMat
 	string	mTexture;
 
 
+	internal void Load(BinaryReader br)
+	{
+		mbTextureEnabled	=br.ReadBoolean();
+		mTexSize			=FileUtil.ReadVector2(br);
+		mTexture			=br.ReadString();
+	}
+
+
+	internal void Save(BinaryWriter bw)
+	{
+		bw.Write(mbTextureEnabled);
+		FileUtil.WriteVector2(bw, mTexSize);
+
+		//don't bother with the animated light array
+
+		bw.Write(mTexture);
+	}
+
+
 	internal BSPMat()
 	{
 		mbTextureEnabled	=false;
@@ -37,10 +56,11 @@ public class BSPMat
 		ret.mbTextureEnabled	=mbTextureEnabled;
 		ret.mTexSize			=mTexSize;
 
-		ret.mAniIntensities	=new Half[mAniIntensities.Length];
-
-		mAniIntensities.CopyTo(ret.mAniIntensities,0);
-
+		if(mAniIntensities != null)
+		{
+			ret.mAniIntensities	=new Half[mAniIntensities.Length];
+			mAniIntensities.CopyTo(ret.mAniIntensities,0);
+		}
 		return	ret;
 	}
 

@@ -171,6 +171,7 @@ public class Character
 			{
 				cbk.SetBonesWithTranspose(mBones);
 				cbk.UpdateCharacter(dc);
+				cbk.SetCharacterToShaders(dc);
 			}
 			else
 			{
