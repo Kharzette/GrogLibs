@@ -211,8 +211,7 @@ float4 TriTex0SpecPS(VVPosTex04Tex14 input) : SV_Target
 #if defined(SM2)
 	float3	specular	=ComputeCheapSpecular(wpos, mLightDirection, pnorm, triLight);
 #else
-//	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, pnorm, triLight);
-	float3	specular	=ComputeSchlick(wpos, mLightDirection, pnorm);
+	float3	specular	=ComputeGoodSpecular(wpos, mLightDirection, pnorm, triLight);
 #endif
 
 	float3	litColor	=texColor.xyz * triLight;
