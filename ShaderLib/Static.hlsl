@@ -3,11 +3,6 @@
 #include "CommonFunctions.hlsli"
 
 
-//texture layers used on the surface
-Texture2D	mTexture0 : register(t0);
-Texture2D	mTexture1 : register(t1);
-
-
 //just world position
 VVPosTex03 WPosVS(VPos input)
 {

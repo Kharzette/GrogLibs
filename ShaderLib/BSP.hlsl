@@ -1,9 +1,5 @@
-//This fx is for the auto generated materials from the bsp compiler
-Texture2D	mTexture;
-Texture2D	mLightMap;
-Texture1D	mDynLights;
-
-#define	POINTTEXTURES	1
+//This hlsl is for the auto generated materials from the bsp compiler
+Texture1D	mDynLights : register(t3);
 
 #include "Types.hlsli"
 #include "CommonFunctions.hlsli"
@@ -162,14 +158,14 @@ float3	GetDynLight(float3 pixelPos, float3 normal)
 
 	for(int i=0;i < 16;i++)
 	{
-		float4	lCol	=mDynLights.Sample(PointClamp, float((i * 2) + 1) / 32);
+		float4	lCol	=mDynLights.Sample(CelSampler, float((i * 2) + 1) / 32);
 
 		if(!any(lCol))
 		{
 			continue;
 		}
 
-		float4	lPos1	=mDynLights.Sample(PointClamp, float(i * 2) / 32);
+		float4	lPos1	=mDynLights.Sample(CelSampler, float(i * 2) / 32);
 		float3	lDir	=lPos1.xyz - pixelPos;
 		float	atten	=saturate(1 - dot(lDir / lPos1.w, lDir / lPos1.w));
 
@@ -192,18 +188,14 @@ float4 LightMapPS(VVPosTex04Tex14Tex24 input) : SV_Target
 	
 	if(mbTextureEnabled)
 	{
-#if defined(POINTTEXTURES)
-		color	=mTexture.Sample(PointWrap, input.TexCoord0.xy);
-#else
-		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
-#endif
+		color	=mTexture0.Sample(Tex0Sampler, input.TexCoord0.xy);
 	}
 	else
 	{
 		color	=float3(1.0, 1.0, 1.0);
 	}
 
-	float3	lm	=mLightMap.Sample(LinearClamp, input.TexCoord0.zw);
+	float3	lm	=mTexture1.Sample(Tex1Sampler, input.TexCoord0.zw);
 
 #if !defined(SM2)
 	lm	+=GetDynLight(input.TexCoord1, input.TexCoord2.xyz);
@@ -220,18 +212,14 @@ float4 LightMapCelPS(VVPosTex04Tex14Tex24 input) : SV_Target
 	
 	if(mbTextureEnabled)
 	{
-#if defined(POINTTEXTURES)
-		color	=mTexture.Sample(PointWrap, input.TexCoord0.xy);
-#else
-		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
-#endif
+		color	=mTexture0.Sample(Tex0Sampler, input.TexCoord0.xy);
 	}
 	else
 	{
 		color	=float3(1.0, 1.0, 1.0);
 	}
 	
-	float3	lm	=mLightMap.Sample(LinearClamp, input.TexCoord0.zw);
+	float3	lm	=mTexture1.Sample(Tex1Sampler, input.TexCoord0.zw);
 
 #if !defined(SM2)
 	lm	+=GetDynLight(input.TexCoord1, input.TexCoord2.xyz);
@@ -260,11 +248,7 @@ float4 VertexLitPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 	
 	if(mbTextureEnabled)
 	{
-#if defined(POINTTEXTURES)
-		color	=mTexture.Sample(PointWrap, tex0);
-#else
-		color	=mTexture.Sample(LinearWrap, tex0);
-#endif
+		color	=mTexture0.Sample(Tex0Sampler, tex0);
 	}
 	else
 	{
@@ -307,11 +291,7 @@ float4 VertexLitCelPS(VVPosTex04Tex14Tex24Tex31 input) : SV_Target
 	
 	if(mbTextureEnabled)
 	{
-#if defined(POINTTEXTURES)
-		color	=mTexture.Sample(PointWrap, tex0);
-#else
-		color	=mTexture.Sample(LinearWrap, tex0);
-#endif
+		color	=mTexture0.Sample(Tex0Sampler, tex0);
 	}
 	else
 	{
@@ -358,11 +338,7 @@ float4 FullBrightPixelShader(VVPosTex0 input) : SV_Target
 {
 	if(mbTextureEnabled)
 	{
-#if defined(POINTTEXTURES)
-		return	mTexture.Sample(PointWrap, input.TexCoord0);
-#else
-		return	mTexture.Sample(LinearWrap, input.TexCoord0);
-#endif
+		return	mTexture0.Sample(Tex0Sampler, input.TexCoord0);
 	}
 	return	float4(1, 1, 1, 1);
 }
@@ -373,11 +349,7 @@ float4 LightMapAnimPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 
 	if(mbTextureEnabled)
 	{
-#if defined(POINTTEXTURES)
-		color	=mTexture.Sample(PointWrap, input.TexCoord0.xy);
-#else
-		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
-#endif
+		color	=mTexture0.Sample(Tex0Sampler, input.TexCoord0.xy);
 	}
 	else
 	{
@@ -391,19 +363,19 @@ float4 LightMapAnimPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 	//grab style intensity
 	if(input.TexCoord5.x > 0)
 	{
-		lm	+=(input.TexCoord5.x * mLightMap.Sample(LinearClamp, input.TexCoord0.zw));
+		lm	+=(input.TexCoord5.x * mTexture1.Sample(Tex1Sampler, input.TexCoord0.zw));
 	}
 	if(input.TexCoord5.y > 0)
 	{
-		lm	+=(input.TexCoord5.y * mLightMap.Sample(LinearClamp, input.TexCoord1.xy));
+		lm	+=(input.TexCoord5.y * mTexture1.Sample(Tex1Sampler, input.TexCoord1.xy));
 	}
 	if(input.TexCoord5.z > 0)
 	{
-		lm	+=(input.TexCoord5.z * mLightMap.Sample(LinearClamp, input.TexCoord1.zw));
+		lm	+=(input.TexCoord5.z * mTexture1.Sample(Tex1Sampler, input.TexCoord1.zw));
 	}
 	if(input.TexCoord5.w > 0)
 	{
-		lm	+=(input.TexCoord5.w * mLightMap.Sample(LinearClamp, input.TexCoord2.xy));
+		lm	+=(input.TexCoord5.w * mTexture1.Sample(Tex1Sampler, input.TexCoord2.xy));
 	}
 
 	//dyn lights
@@ -424,11 +396,7 @@ float4 LightMapAnimCelPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 
 	if(mbTextureEnabled)
 	{
-#if defined(POINTTEXTURES)
-		color	=mTexture.Sample(PointWrap, input.TexCoord0.xy);
-#else
-		color	=mTexture.Sample(LinearWrap, input.TexCoord0.xy);
-#endif
+		color	=mTexture0.Sample(Tex0Sampler, input.TexCoord0.xy);
 	}
 	else
 	{
@@ -442,19 +410,19 @@ float4 LightMapAnimCelPS(VVPosTex04Tex14Tex24Tex34Tex44Tex54 input) : SV_Target
 	//grab style intensity
 	if(input.TexCoord5.x > 0)
 	{
-		lm	+=(input.TexCoord5.x * mLightMap.Sample(LinearClamp, input.TexCoord0.zw));
+		lm	+=(input.TexCoord5.x * mTexture1.Sample(Tex1Sampler, input.TexCoord0.zw));
 	}
 	if(input.TexCoord5.y > 0)
 	{
-		lm	+=(input.TexCoord5.y * mLightMap.Sample(LinearClamp, input.TexCoord1.xy));
+		lm	+=(input.TexCoord5.y * mTexture1.Sample(Tex1Sampler, input.TexCoord1.xy));
 	}
 	if(input.TexCoord5.z > 0)
 	{
-		lm	+=(input.TexCoord5.z * mLightMap.Sample(LinearClamp, input.TexCoord1.zw));
+		lm	+=(input.TexCoord5.z * mTexture1.Sample(Tex1Sampler, input.TexCoord1.zw));
 	}
 	if(input.TexCoord5.w > 0)
 	{
-		lm	+=(input.TexCoord5.w * mLightMap.Sample(LinearClamp, input.TexCoord2.xy));
+		lm	+=(input.TexCoord5.w * mTexture1.Sample(Tex1Sampler, input.TexCoord2.xy));
 	}
 
 	//dynamic
@@ -489,11 +457,7 @@ float4 SkyPS(VVPosCubeTex0 input) : SV_Target
 	
 		eyeVec	=normalize(eyeVec);
 
-#if defined(POINTTEXTURES)
-		color	=mTexture.Sample(PointClamp, eyeVec);
-#else
-		color	=mTexture.Sample(LinearClampCube, eyeVec);
-#endif
+		color	=mTexture0.Sample(Tex0Sampler, eyeVec);
 	}
 	else
 	{

@@ -1,10 +1,6 @@
 //shaders using TomF's trilights for light
 //see http://home.comcast.net/~tom_forsyth/blog.wiki.html#Trilights
 
-//texture layers used on the surface
-shared Texture2D	mTexture0;
-shared Texture2D	mTexture1;
-
 #include "CommonFunctions.hlsli"
 
 //shared pixel shaders

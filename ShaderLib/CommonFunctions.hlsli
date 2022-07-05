@@ -55,6 +55,11 @@ cbuffer PerShadow : register(b3)
 	float3	mShadPadding;		//pad out to 16 boundary
 }
 
+//this could be texture + emissive for trilight
+//or texture + lightmap for BSP
+//or gumpy stuff for 2D
+Texture2D	mTexture0 : register(t0);
+Texture2D	mTexture1 : register(t1);
 
 //outline / cel related
 //1D textures are not supported in 9_3 feature levels
@@ -71,7 +76,7 @@ shared TextureCube	mShadowCube : register(t5);		//point
 //these are assigned from C# side
 SamplerState	Tex0Sampler : register(s0);
 SamplerState	Tex1Sampler : register(s1);
-SamplerState	CelSampler : register(s1);
+SamplerState	CelSampler : register(s2);
 
 
 //specular behaviour defines
@@ -169,25 +174,6 @@ float3 ComputeTrilight(float3 normal, float3 lightDir, float3 c0, float3 c1, flo
 }
 
 
-//trying this from wiki
-float3	ComputeSchlick(float3 wpos, float3 lightDir, float3 pnorm)
-{
-	float3	eyeVec	=normalize(mEyePos - wpos);
-	float3	halfVec	=normalize(eyeVec + lightDir);
-
-	float	ndoth	=saturate(dot(halfVec, pnorm));
-
-	//refractive indexes
-	float	n1	=1;	//air
-	float	n2	=4;	//metalish
-
-	float	r0	=(n1 - n2) / (n1 + n2);
-	r0	*=r0;
-
-	return	mSpecColor * (r0 + (1 - r0) * pow((1 - ndoth), 5));
-}
-
-
 float3 ComputeGoodSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 lightVal)
 {
 	float3	eyeVec	=normalize(mEyePos - wpos);
@@ -220,8 +206,8 @@ float3 ComputeCheapSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 l
 {
 	float3	eyeVec	=normalize(mEyePos - wpos);
 	float3	halfVec	=normalize(eyeVec + lightDir);
-	float	ndotv	=saturate(dot(eyeVec, pnorm));
-	float	ndoth	=saturate(dot(halfVec, pnorm));
+	float	ndotv	=saturate(-dot(eyeVec, pnorm));
+	float	ndoth	=saturate(-dot(halfVec, pnorm));
 
 	float	normalizationTerm	=(mSpecPower + 2.0f) / 8.0f;
 	float	blinnPhong			=pow(ndoth, mSpecPower);
