@@ -5,7 +5,7 @@ Supporting modifiers is great, like a mouse5 + shift binding for instance.
 
 Hold / axis style bindings, action on press, and action on release binding
 	modes.  Action on press activates one time, and doesn't activate again
-	until the button/key/whatever is released.
+	until the button/key/whatever is released and re-pressed.
 
 Should support multiple binds per function.  Like if a user wants w and uparrow
 for forward for instance.

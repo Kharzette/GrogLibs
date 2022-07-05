@@ -210,10 +210,10 @@ public class Input
 		{
 			string	ground	=(ea.mWParam.ToInt64()==0)? "foreground": "background";
 			DoKeyInput(rid.Value.header.hDevice, ref dat.keyboard);
-			Console.WriteLine("Got input key message in the " + ground
+//			Console.WriteLine("Got input key message in the " + ground
 //				+ " from device " + mDeviceNames[rid.Value.header.hDevice]);
-				+ "MakeCode: " + rid.Value.keyboard.MakeCode
-				+ " VKey: " + rid.Value.keyboard.VKey);
+//				+ "MakeCode: " + rid.Value.keyboard.MakeCode
+//				+ " VKey: " + rid.Value.keyboard.VKey);
 		}
 		else
 		{

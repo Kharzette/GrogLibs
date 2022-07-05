@@ -33,7 +33,7 @@ public class CommonPrims
 
 		//shaders
 		mVS	=sk.GetVertexShader("WNormWPosTexVS");
-		mPS	=sk.GetPixelShader("TriTex0SpecPS");
+		mPS	=sk.GetPixelShader("TriSolidSpecPS");
 
 		//axis boxes
 		BoundingBox	xBox	=Misc.MakeBox(AxisSize, 1f, 1f);

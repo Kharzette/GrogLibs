@@ -218,14 +218,14 @@ public static class PrimFactory
 		VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[24];
 
 		//hacky guessy normals for the 8 directions
-		Vector4	topUpperLeft	=-Vector4.UnitY + Vector4.UnitX + Vector4.UnitZ;
-		Vector4	topUpperRight	=-Vector4.UnitY - Vector4.UnitX + Vector4.UnitZ;
-		Vector4	topLowerLeft	=-Vector4.UnitY + Vector4.UnitX - Vector4.UnitZ;
-		Vector4	topLowerRight	=-Vector4.UnitY - Vector4.UnitX - Vector4.UnitZ;
-		Vector4	botUpperLeft	=Vector4.UnitY + Vector4.UnitX + Vector4.UnitZ;
-		Vector4	botUpperRight	=Vector4.UnitY - Vector4.UnitX + Vector4.UnitZ;
-		Vector4	botLowerLeft	=Vector4.UnitY + Vector4.UnitX - Vector4.UnitZ;
-		Vector4	botLowerRight	=Vector4.UnitY - Vector4.UnitX - Vector4.UnitZ;
+		Vector4	topUpperLeft	=Vector4.UnitY + Vector4.UnitX + Vector4.UnitZ;
+		Vector4	topUpperRight	=Vector4.UnitY - Vector4.UnitX + Vector4.UnitZ;
+		Vector4	topLowerLeft	=Vector4.UnitY + Vector4.UnitX - Vector4.UnitZ;
+		Vector4	topLowerRight	=Vector4.UnitY - Vector4.UnitX - Vector4.UnitZ;
+		Vector4	botUpperLeft	=-Vector4.UnitY + Vector4.UnitX + Vector4.UnitZ;
+		Vector4	botUpperRight	=-Vector4.UnitY - Vector4.UnitX + Vector4.UnitZ;
+		Vector4	botLowerLeft	=-Vector4.UnitY + Vector4.UnitX - Vector4.UnitZ;
+		Vector4	botLowerRight	=-Vector4.UnitY - Vector4.UnitX - Vector4.UnitZ;
 
 		vpnt[0].Normal		=topUpperLeft;
 		vpnt[1].Normal		=topUpperLeft;
@@ -512,14 +512,14 @@ public static class PrimFactory
 		VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[24];
 
 		//cube corners
-		Vector3	upperTopLeft	=corners[0];
-		Vector3	upperTopRight	=corners[1];
-		Vector3	upperBotLeft	=corners[2];
-		Vector3	upperBotRight	=corners[3];
-		Vector3	lowerTopLeft	=corners[4];
-		Vector3	lowerTopRight	=corners[5];
-		Vector3	lowerBotLeft	=corners[6];
-		Vector3	lowerBotRight	=corners[7];
+		Vector3	lowerTopRight	=corners[0];
+		Vector3	lowerTopLeft	=corners[1];
+		Vector3	lowerBotRight	=corners[2];
+		Vector3	lowerBotLeft	=corners[3];
+		Vector3	upperTopRight	=corners[4];
+		Vector3	upperTopLeft	=corners[5];
+		Vector3	upperBotRight	=corners[6];
+		Vector3	upperBotLeft	=corners[7];
 
 		//cube sides
 		//top
@@ -546,13 +546,13 @@ public static class PrimFactory
 		vpnt[14].Position	=lowerBotRight;
 		vpnt[15].Position	=lowerBotLeft;
 
-		//x side
+		//-x side
 		vpnt[16].Position	=upperTopLeft;
 		vpnt[17].Position	=upperBotLeft;
 		vpnt[18].Position	=lowerBotLeft;
 		vpnt[19].Position	=lowerTopLeft;
 
-		//-x side
+		//x side
 		vpnt[23].Position	=upperTopRight;
 		vpnt[22].Position	=upperBotRight;
 		vpnt[21].Position	=lowerBotRight;
@@ -579,15 +579,15 @@ public static class PrimFactory
 		vpnt[14].Normal	=-Vector4.UnitZ;
 		vpnt[15].Normal	=-Vector4.UnitZ;
 
-		vpnt[16].Normal	=Vector4.UnitX;
-		vpnt[17].Normal	=Vector4.UnitX;
-		vpnt[18].Normal	=Vector4.UnitX;
-		vpnt[19].Normal	=Vector4.UnitX;
+		vpnt[16].Normal	=-Vector4.UnitX;
+		vpnt[17].Normal	=-Vector4.UnitX;
+		vpnt[18].Normal	=-Vector4.UnitX;
+		vpnt[19].Normal	=-Vector4.UnitX;
 
-		vpnt[20].Normal	=-Vector4.UnitX;
-		vpnt[21].Normal	=-Vector4.UnitX;
-		vpnt[22].Normal	=-Vector4.UnitX;
-		vpnt[23].Normal	=-Vector4.UnitX;
+		vpnt[20].Normal	=Vector4.UnitX;
+		vpnt[21].Normal	=Vector4.UnitX;
+		vpnt[22].Normal	=Vector4.UnitX;
+		vpnt[23].Normal	=Vector4.UnitX;
 
 		//texcoords
 		for(int i=0;i < 24;i+=4)
@@ -610,20 +610,15 @@ public static class PrimFactory
 		int	idx	=0;
 		for(int i=0;i < 36;i+=6)
 		{
-			indexes[i]		=(UInt16)(idx + 1);
-			indexes[i + 1]	=(UInt16)(idx + 2);
-			indexes[i + 2]	=(UInt16)(idx + 3);
-			indexes[i + 3]	=(UInt16)(idx + 0);
-			indexes[i + 4]	=(UInt16)(idx + 1);
-			indexes[i + 5]	=(UInt16)(idx + 3);
+			indexes[i]		=(UInt16)(idx + 2);
+			indexes[i + 1]	=(UInt16)(idx + 1);
+			indexes[i + 2]	=(UInt16)(idx + 0);
+			indexes[i + 3]	=(UInt16)(idx + 3);
+			indexes[i + 4]	=(UInt16)(idx + 2);
+			indexes[i + 5]	=(UInt16)(idx + 0);
 
 			idx	+=4;
 		}
-
-		//flip indexes for handedness change
-		List<UInt16>	lazyReverser	=new List<UInt16>(indexes);
-		lazyReverser.Reverse();
-		lazyReverser.CopyTo(0, indexes, 0, lazyReverser.Count);		
 
 		BufferDescription	id	=new BufferDescription(indexes.Length * 2,
 			BindFlags.IndexBuffer, ResourceUsage.Immutable,
@@ -673,14 +668,14 @@ public static class PrimFactory
 			int	vidx	=i * 24;
 
 			//cube corners
-			Vector3	upperTopLeft	=corners[0 + idx];
-			Vector3	upperTopRight	=corners[1 + idx];
-			Vector3	upperBotLeft	=corners[2 + idx];
-			Vector3	upperBotRight	=corners[3 + idx];
-			Vector3	lowerTopLeft	=corners[4 + idx];
-			Vector3	lowerTopRight	=corners[5 + idx];
-			Vector3	lowerBotLeft	=corners[6 + idx];
-			Vector3	lowerBotRight	=corners[7 + idx];
+			Vector3	lowerTopRight	=corners[0 + idx];
+			Vector3	lowerTopLeft	=corners[1 + idx];
+			Vector3	lowerBotRight	=corners[2 + idx];
+			Vector3	lowerBotLeft	=corners[3 + idx];
+			Vector3	upperTopRight	=corners[4 + idx];
+			Vector3	upperTopLeft	=corners[5 + idx];
+			Vector3	upperBotRight	=corners[6 + idx];
+			Vector3	upperBotLeft	=corners[7 + idx];
 
 			//cube sides
 			//top
@@ -707,13 +702,13 @@ public static class PrimFactory
 			vpnt[14 + vidx].Position	=lowerBotRight;
 			vpnt[15 + vidx].Position	=lowerBotLeft;
 
-			//x side
+			//-x side
 			vpnt[16 + vidx].Position	=upperTopLeft;
 			vpnt[17 + vidx].Position	=upperBotLeft;
 			vpnt[18 + vidx].Position	=lowerBotLeft;
 			vpnt[19 + vidx].Position	=lowerTopLeft;
 
-			//-x side
+			//x side
 			vpnt[23 + vidx].Position	=upperTopRight;
 			vpnt[22 + vidx].Position	=upperBotRight;
 			vpnt[21 + vidx].Position	=lowerBotRight;
@@ -740,15 +735,15 @@ public static class PrimFactory
 			vpnt[14 + vidx].Normal	=-Vector4.UnitZ;
 			vpnt[15 + vidx].Normal	=-Vector4.UnitZ;
 
-			vpnt[16 + vidx].Normal	=Vector4.UnitX;
-			vpnt[17 + vidx].Normal	=Vector4.UnitX;
-			vpnt[18 + vidx].Normal	=Vector4.UnitX;
-			vpnt[19 + vidx].Normal	=Vector4.UnitX;
+			vpnt[16 + vidx].Normal	=-Vector4.UnitX;
+			vpnt[17 + vidx].Normal	=-Vector4.UnitX;
+			vpnt[18 + vidx].Normal	=-Vector4.UnitX;
+			vpnt[19 + vidx].Normal	=-Vector4.UnitX;
 
-			vpnt[20 + vidx].Normal	=-Vector4.UnitX;
-			vpnt[21 + vidx].Normal	=-Vector4.UnitX;
-			vpnt[22 + vidx].Normal	=-Vector4.UnitX;
-			vpnt[23 + vidx].Normal	=-Vector4.UnitX;
+			vpnt[20 + vidx].Normal	=Vector4.UnitX;
+			vpnt[21 + vidx].Normal	=Vector4.UnitX;
+			vpnt[22 + vidx].Normal	=Vector4.UnitX;
+			vpnt[23 + vidx].Normal	=Vector4.UnitX;
 
 			//texcoords
 			for(int j=0;j < 24;j+=4)
@@ -772,12 +767,12 @@ public static class PrimFactory
 		int	idxx	=0;
 		for(int i=0;i < (36 * (corners.Length / 8));i+=6)
 		{
-			indexes[i]		=(UInt32)(idxx + 1);
-			indexes[i + 1]	=(UInt32)(idxx + 2);
-			indexes[i + 2]	=(UInt32)(idxx + 3);
-			indexes[i + 3]	=(UInt32)(idxx + 0);
-			indexes[i + 4]	=(UInt32)(idxx + 1);
-			indexes[i + 5]	=(UInt32)(idxx + 3);
+			indexes[i]		=(UInt32)(idxx + 2);
+			indexes[i + 1]	=(UInt32)(idxx + 1);
+			indexes[i + 2]	=(UInt32)(idxx + 0);
+			indexes[i + 3]	=(UInt32)(idxx + 3);
+			indexes[i + 4]	=(UInt32)(idxx + 2);
+			indexes[i + 5]	=(UInt32)(idxx + 0);
 
 			idxx	+=4;
 		}
@@ -1073,7 +1068,7 @@ public static class PrimFactory
 		for(int i=0;i < 8;i++)
 		{
 			vpnt[i].Position		=rotPos;
-			vpnt[i + 8].Position	=rotPos - Vector3.UnitY * len;
+			vpnt[i + 8].Position	=rotPos + Vector3.UnitY * len;
 
 			vpnt[i].Normal		=-Vector4.UnitY;
 			vpnt[i + 8].Normal	=Vector4.UnitY;
@@ -1086,12 +1081,6 @@ public static class PrimFactory
 
 			vpnt[i].TextureCoordinate		=new Half2(rotDir.X, rotDir.Z);
 			vpnt[i + 8].TextureCoordinate	=new Half2(rotDir.X, rotDir.Z);
-		}
-
-		//shift to center
-		for(int i=0;i < 16;i++)
-		{
-			vpnt[i].Position	+=Vector3.UnitY * (len);
 		}
 
 		//duplicate top and bottom and generate a side facing normal
@@ -1119,63 +1108,63 @@ public static class PrimFactory
 		UInt16	[]indexes	=new UInt16[36 + 48];
 
 		//top surface
-		indexes[17]	=0;
-		indexes[16]	=1;
-		indexes[15]	=7;
-		indexes[14]	=1;
-		indexes[13]	=2;
-		indexes[12]	=3;
-		indexes[11]	=3;
-		indexes[10]	=4;
-		indexes[9]	=5;
+		indexes[0]	=0;
+		indexes[1]	=1;
+		indexes[2]	=7;
+		indexes[3]	=1;
+		indexes[4]	=2;
+		indexes[5]	=3;
+		indexes[6]	=3;
+		indexes[7]	=4;
 		indexes[8]	=5;
-		indexes[7]	=6;
-		indexes[6]	=7;
-		indexes[5]	=7;
-		indexes[4]	=1;
-		indexes[3]	=5;
-		indexes[2]	=1;
-		indexes[1]	=3;
-		indexes[0]	=5;
+		indexes[9]	=5;
+		indexes[10]	=6;
+		indexes[11]	=7;
+		indexes[12]	=7;
+		indexes[13]	=1;
+		indexes[14]	=5;
+		indexes[15]	=1;
+		indexes[16]	=3;
+		indexes[17]	=5;
 
 		//bottom surface
-		indexes[18]	=0 + 8;
-		indexes[19]	=1 + 8;
-		indexes[20]	=7 + 8;
-		indexes[21]	=1 + 8;
-		indexes[22]	=2 + 8;
-		indexes[23]	=3 + 8;
-		indexes[24]	=3 + 8;
-		indexes[25]	=4 + 8;
-		indexes[26]	=5 + 8;
+		indexes[35]	=0 + 8;
+		indexes[34]	=1 + 8;
+		indexes[33]	=7 + 8;
+		indexes[32]	=1 + 8;
+		indexes[31]	=2 + 8;
+		indexes[30]	=3 + 8;
+		indexes[29]	=3 + 8;
+		indexes[28]	=4 + 8;
 		indexes[27]	=5 + 8;
-		indexes[28]	=6 + 8;
-		indexes[29]	=7 + 8;
-		indexes[30]	=7 + 8;
-		indexes[31]	=1 + 8;
-		indexes[32]	=5 + 8;
-		indexes[33]	=1 + 8;
-		indexes[34]	=3 + 8;
-		indexes[35]	=5 + 8;
+		indexes[26]	=5 + 8;
+		indexes[25]	=6 + 8;
+		indexes[24]	=7 + 8;
+		indexes[23]	=7 + 8;
+		indexes[22]	=1 + 8;
+		indexes[21]	=5 + 8;
+		indexes[20]	=1 + 8;
+		indexes[19]	=3 + 8;
+		indexes[18]	=5 + 8;
 
 		//connexions
 		for(int i=0;i < 7;i++)
 		{
-			indexes[38 + (i * 6)]	=(UInt16)(i + 1 + 16);
+			indexes[36 + (i * 6)]	=(UInt16)(i + 1 + 16);
 			indexes[37 + (i * 6)]	=(UInt16)(i + 0 + 16);
-			indexes[36 + (i * 6)]	=(UInt16)(i + 8 + 16);
-			indexes[41 + (i * 6)]	=(UInt16)(i + 8 + 16);
+			indexes[38 + (i * 6)]	=(UInt16)(i + 8 + 16);
+			indexes[39 + (i * 6)]	=(UInt16)(i + 8 + 16);
 			indexes[40 + (i * 6)]	=(UInt16)(i + 9 + 16);
-			indexes[39 + (i * 6)]	=(UInt16)(i + 1 + 16);
+			indexes[41 + (i * 6)]	=(UInt16)(i + 1 + 16);
 		}
 
 		//last 2 faces are goofy
-		indexes[38 + 42]	=(UInt16)(0 + 16);
+		indexes[36 + 42]	=(UInt16)(0 + 16);
 		indexes[37 + 42]	=(UInt16)(7 + 16);
-		indexes[36 + 42]	=(UInt16)(7 + 8 + 16);
-		indexes[41 + 42]	=(UInt16)(7 + 8 + 16);
+		indexes[38 + 42]	=(UInt16)(7 + 8 + 16);
+		indexes[39 + 42]	=(UInt16)(7 + 8 + 16);
 		indexes[40 + 42]	=(UInt16)(8 + 16);
-		indexes[39 + 42]	=(UInt16)(0 + 16);
+		indexes[41 + 42]	=(UInt16)(0 + 16);
 
 		BufferDescription	id	=new BufferDescription(indexes.Length * 2,
 			BindFlags.IndexBuffer, ResourceUsage.Immutable,
