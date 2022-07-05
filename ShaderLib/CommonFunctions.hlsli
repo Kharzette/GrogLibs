@@ -69,10 +69,9 @@ shared Texture2D	mShadowTexture : register(t4);	//directional
 shared TextureCube	mShadowCube : register(t5);		//point
 
 //these are assigned from C# side
-SamplerState	PointClamp : register(s0);
-SamplerState	PointWrap : register(s1);
-SamplerState	LinearClamp : register(s2);
-SamplerState	LinearWrap : register(s3);
+SamplerState	Tex0Sampler : register(s0);
+SamplerState	Tex1Sampler : register(s1);
+SamplerState	CelSampler : register(s1);
 
 
 //specular behaviour defines
@@ -170,7 +169,26 @@ float3 ComputeTrilight(float3 normal, float3 lightDir, float3 c0, float3 c1, flo
 }
 
 
-float3 ComputeGoodSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 lightVal, float4 fillLight)
+//trying this from wiki
+float3	ComputeSchlick(float3 wpos, float3 lightDir, float3 pnorm)
+{
+	float3	eyeVec	=normalize(mEyePos - wpos);
+	float3	halfVec	=normalize(eyeVec + lightDir);
+
+	float	ndoth	=saturate(dot(halfVec, pnorm));
+
+	//refractive indexes
+	float	n1	=1;	//air
+	float	n2	=4;	//metalish
+
+	float	r0	=(n1 - n2) / (n1 + n2);
+	r0	*=r0;
+
+	return	mSpecColor * (r0 + (1 - r0) * pow((1 - ndoth), 5));
+}
+
+
+float3 ComputeGoodSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 lightVal)
 {
 	float3	eyeVec	=normalize(mEyePos - wpos);
 	float3	halfVec	=normalize(eyeVec + lightDir);
@@ -193,12 +211,12 @@ float3 ComputeGoodSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 li
 
 	visTerm	=1.0f / visTerm;
 
-	float3	specular	=specTerm * lightVal * fresTerm * visTerm * fillLight;
+	float3	specular	=specTerm * lightVal * fresTerm * visTerm;
 
 	return	specular;
 }
 
-float3 ComputeCheapSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 lightVal, float4 fillLight)
+float3 ComputeCheapSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 lightVal)
 {
 	float3	eyeVec	=normalize(mEyePos - wpos);
 	float3	halfVec	=normalize(eyeVec + lightDir);
@@ -209,7 +227,7 @@ float3 ComputeCheapSpecular(float3 wpos, float3 lightDir, float3 pnorm, float3 l
 	float	blinnPhong			=pow(ndoth, mSpecPower);
 	float	specTerm			=normalizationTerm * blinnPhong;
 	
-	float3	specular	=specTerm * lightVal * fillLight;
+	float3	specular	=specTerm * lightVal;
 
 	return	specular;
 }
@@ -224,9 +242,9 @@ float3 CalcCelColor(float3 colVal)
 
 	//this provides the quantized light 0 to 1,
 	//but above 1 is added in for overbright lights
-	ret.x	+=mCelTable.Sample(PointClamp, colVal.x - range.x) + range.x;
-	ret.y	+=mCelTable.Sample(PointClamp, colVal.y - range.y) + range.y;
-	ret.z	+=mCelTable.Sample(PointClamp, colVal.z - range.z) + range.z;
+	ret.x	+=mCelTable.Sample(CelSampler, colVal.x - range.x) + range.x;
+	ret.y	+=mCelTable.Sample(CelSampler, colVal.y - range.y) + range.y;
+	ret.z	+=mCelTable.Sample(CelSampler, colVal.z - range.z) + range.z;
 
 	return	ret;
 }
@@ -331,11 +349,11 @@ float4	ShadowColor(bool bDirectional, float4 worldPos, float3 worldNorm, float4 
 	float	mapDepth;
 	if(bDirectional)
 	{
-		mapDepth	=mShadowTexture.Sample(PointClamp, shadCoord.xy).r;
+		mapDepth	=mShadowTexture.Sample(CelSampler, shadCoord.xy).r;
 	}
 	else
 	{
-		mapDepth	=mShadowCube.Sample(PointClamp, shadDir).r;
+		mapDepth	=mShadowCube.Sample(CelSampler, shadDir).r;
 	}
 
 	return	ApplyShadow(mapDepth, pixDepth, color);

@@ -325,6 +325,7 @@ public partial class MaterialForm : Form
 			{
 				lvi.SubItems[1].Text	=shd;
 				CheckMaterialType(mat);
+				FormExtensions.SizeColumns(MaterialList);
 				return;
 			}
 		}
@@ -338,6 +339,7 @@ public partial class MaterialForm : Form
 			if(lvi.Text == mat)
 			{
 				lvi.SubItems[2].Text	=shd;
+				FormExtensions.SizeColumns(MaterialList);
 				return;
 			}
 		}
@@ -726,6 +728,7 @@ public partial class MaterialForm : Form
 	}
 
 
+	//copy gui values into the real material
 	void SetAllValues()
 	{
 		if(MaterialList.SelectedItems.Count != 1)
@@ -737,6 +740,7 @@ public partial class MaterialForm : Form
 	}
 
 
+	//copy gui values into the real material
 	void SetAllValues(string matName)
 	{
 		MeshMat	mmat	=mMatLib.GetMaterialMeshMat(matName);
