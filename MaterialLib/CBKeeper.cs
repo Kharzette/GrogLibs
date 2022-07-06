@@ -320,7 +320,7 @@ public unsafe class CBKeeper
 	public void SetView(Matrix4x4 view, Vector3 eyePos)
 	{
 		mPerFrame.mView		=view;
-		mPerFrame.mEyePos	=eyePos;
+		mPerFrame.mEyePos	=-eyePos;	//negate into viewspace
 	}
 
 
