@@ -53,7 +53,7 @@ namespace UtilityLib
 			get { return Matrix4x4.Transpose(mProjection); }
 		}
 
-		//returns transposed, useful for worldspace stuff
+		//returns invert equiv for a worldspace matrix style
 		public Vector3 Forward
 		{
 			get
@@ -62,7 +62,7 @@ namespace UtilityLib
 				ret.X		=View.M13;
 				ret.Y		=View.M23;
 				ret.Z		=View.M33;
-				return		ret;
+				return		-ret;
 			}
 		}
 
@@ -74,7 +74,7 @@ namespace UtilityLib
 				ret.X		=View.M12;
 				ret.Y		=View.M22;
 				ret.Z		=View.M32;
-				return		ret;
+				return		-ret;
 			}
 		}
 
@@ -86,7 +86,7 @@ namespace UtilityLib
 				ret.X		=View.M11;
 				ret.Y		=View.M21;
 				ret.Z		=View.M31;
-				return		ret;
+				return		-ret;
 			}
 		}
 
@@ -94,7 +94,7 @@ namespace UtilityLib
 		{
 			get
 			{
-				return	mView.Translation;
+				return	-mView.Translation;
 			}
 		}
 
@@ -228,7 +228,8 @@ namespace UtilityLib
 
 		public void UpdateMatrices(Vector3 camPos, float pitch, float yaw, float roll)
 		{
-			mView	=Matrix4x4.CreateTranslation(camPos) *
+			//view mats are inverted world mats, so negate translation
+			mView	=Matrix4x4.CreateTranslation(-camPos) *
 				Matrix4x4.CreateRotationZ(MathHelper.ToRadians(roll)) *
 				Matrix4x4.CreateRotationY(MathHelper.ToRadians(yaw)) *
 				Matrix4x4.CreateRotationX(MathHelper.ToRadians(pitch));

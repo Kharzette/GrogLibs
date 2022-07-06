@@ -1,3 +1,10 @@
+Coordinate System Notes
+	Up is positive Y
+	Forward is positive Z
+	Left is positive X
+	This is right handed I think.
+	At pitch yaw roll of 0 0 0 the camera faces -Z	
+
 Audio Entity
 	The activated flag makes the sound immediately play when
 	the level is running.  Unless the player is nearby, this
