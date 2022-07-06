@@ -26,6 +26,7 @@ public class PlayerSteering
 	float	SprintBackFactor	=1.5f;
 	float	SprintLeftFactor	=1.5f;
 	float	SprintRightFactor	=1.5f;
+	bool	mbSprintEnabled		=true;
 
 	//position info
 	Vector3	mDelta;
@@ -82,6 +83,12 @@ public class PlayerSteering
 	{
 		get { return mMethod; }
 		set { mMethod = value; }
+	}
+
+	public bool SprintEnabled
+	{
+		get { return mbSprintEnabled; }
+		set { mbSprintEnabled = value; }
 	}
 
 	public bool MovedThisFrame
@@ -180,9 +187,7 @@ public class PlayerSteering
 
 	void ApplySprint(ref float actionMult, float multiplier, float fact)
 	{
-		//sprint only makes sense moving on ground
-		if(mMethod == SteeringMethod.FirstPerson
-			|| mMethod == SteeringMethod.ThirdPerson)
+		if(mbSprintEnabled)
 		{
 			actionMult	+=multiplier * fact;
 		}
@@ -292,11 +297,15 @@ public class PlayerSteering
 
 		if(mbMovedThisFrame)
 		{
-			moveVec	=Vector3.Normalize(moveVec);
+			float	len	=moveVec.Length();
+			if(len > 0)
+			{
+				actionMult	/=multCount;
 
-			actionMult	/=multCount;
+				moveVec	*=actionMult;
 
-			moveVec	*=actionMult;
+				moveVec	/=len;
+			}
 		}
 	}
 
