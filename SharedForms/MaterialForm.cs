@@ -23,11 +23,13 @@ public partial class MaterialForm : Form
 	MaterialLib.MaterialLib	mMatLib;
 	StuffKeeper				mSKeeper;
 
+	//for resizing columns after a label edit
+	Timer	mHackTimer;
+
 	public event EventHandler	eNukedMeshPart;
 	public event EventHandler	eStripElements;
 	public event EventHandler	eGenTangents;
 	public event EventHandler	eFoundSeams;
-	public event EventHandler	eMatLibNotReadyToSave;
 
 
 	public MaterialForm(MaterialLib.MaterialLib matLib,
@@ -37,6 +39,10 @@ public partial class MaterialForm : Form
 
 		mMatLib		=matLib;
 		mSKeeper	=sk;
+
+		mHackTimer			=new Timer();
+		mHackTimer.Interval	=200;
+		mHackTimer.Tick		+=OnMatLabelHack;
 
 		MaterialList.Columns.Add("Name");
 		MaterialList.Columns.Add("VShader");
@@ -54,6 +60,12 @@ public partial class MaterialForm : Form
 		//I think everything isn't quite set up when it is called.
 		//So call it manually.
 		OnFormSizeChanged(null, null);
+	}
+
+
+	void OnClosing(object sender, FormClosingEventArgs e)
+	{
+		mHackTimer.Tick	-=OnMatLabelHack;
 	}
 
 
@@ -572,6 +584,14 @@ public partial class MaterialForm : Form
 		NewMaterial.Text	="New Mat";
 	}
 
+
+	void OnMatLabelHack(object sender, EventArgs ea)
+	{
+		mHackTimer.Stop();
+
+		FormExtensions.SizeColumns(mHackTimer.Tag as ListView);
+	}
+
 	
 	void OnMaterialRename(object sender, LabelEditEventArgs e)
 	{
@@ -581,7 +601,15 @@ public partial class MaterialForm : Form
 		}
 		else
 		{
-			FormExtensions.SizeColumns(MaterialList);	//this doesn't work, still has the old value
+			//here we want to resize the columns since the new label
+			//might have increased the size of the column it is in.
+			//But the text isn't actually commited until this event returns
+			//so set a timer to do it
+			if(!mHackTimer.Enabled)
+			{
+				mHackTimer.Start();
+				mHackTimer.Tag	=MaterialList;
+			}
 		}
 	}
 
@@ -797,6 +825,15 @@ public partial class MaterialForm : Form
 
 			RefreshMaterials();
 			NewMaterial.Text	="New Mat";
+		}
+		else if(e.KeyValue == 113)	//F2
+		{
+			if(MaterialList.SelectedItems.Count != 1)
+			{
+				return;	//nothing to do
+			}
+
+			MaterialList.SelectedItems[0].BeginEdit();
 		}
 	}
 
@@ -1060,7 +1097,15 @@ public partial class MaterialForm : Form
 		}
 		else
 		{
-			FormExtensions.SizeColumns(MeshPartList);	//this doesn't work, still has the old value
+			//here we want to resize the columns since the new label
+			//might have increased the size of the column it is in.
+			//But the text isn't actually commited until this event returns
+			//so set a timer to do it
+			if(!mHackTimer.Enabled)
+			{
+				mHackTimer.Start();
+				mHackTimer.Tag	=MeshPartList;
+			}
 		}
 	}
 

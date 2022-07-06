@@ -504,6 +504,7 @@
 			this.Name = "MaterialForm";
 			this.ShowInTaskbar = false;
 			this.Text = "MaterialForm";
+			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OnClosing);
 			this.SizeChanged += new System.EventHandler(this.OnFormSizeChanged);
 			this.FileGroup.ResumeLayout(false);
 			this.MatGroupBox.ResumeLayout(false);
