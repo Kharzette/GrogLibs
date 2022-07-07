@@ -122,7 +122,7 @@ public class StuffKeeper
 	public void Init(GraphicsDevice gd, string gameRootDir)
 	{
 		mGameRootDir	=gameRootDir;
-		mCBKeeper			=new CBKeeper(gd.GD);
+		mCBKeeper		=new CBKeeper(gd.GD);
 		mIFX			=new IncludeFX(gameRootDir);
 
 		switch(gd.GD.FeatureLevel)
@@ -151,7 +151,7 @@ public class StuffKeeper
 	{
 		LoadEntryPoints();
 		LoadShaders(gd.GD, sm);
-		SaveHeaderTimeStamps(sm);
+		SaveSourceFileDates(sm);
 		LoadResources(gd);
 		LoadFonts(gd);
 		MakeCommonRenderStates(gd);
@@ -792,7 +792,161 @@ public class StuffKeeper
 	}
 
 
-	//load all shaders in the shaders folder
+	//if there's no source files at all, just load compiled
+	void LoadCompiledShaders(ID3D11Device dev, ShaderModel sm)
+	{
+		//need 2 of these for some reason
+		ShaderMacro []macs	=new ShaderMacro[2];
+
+		macs[0]	=new ShaderMacro(sm.ToString(), 1);
+
+		if(Directory.Exists(mGameRootDir + "/CompiledShaders"))
+		{
+			//see if a precompiled exists
+			if(Directory.Exists(mGameRootDir + "/CompiledShaders/" + macs[0].Name))
+			{
+				DirectoryInfo	preDi	=new DirectoryInfo(
+					mGameRootDir + "/CompiledShaders/" + macs[0].Name);
+
+				//vert
+				foreach(KeyValuePair<string, List<string>> ent in mVSEntryPoints)
+				{
+					foreach(string e in ent.Value)
+					{
+						if(mVSCode.ContainsKey(e))
+						{
+							//already loaded
+							continue;
+						}
+
+						FileInfo[]	preFi	=preDi.GetFiles(e + ".cso", SearchOption.TopDirectoryOnly);
+
+						if(preFi.Length == 1)
+						{
+							LoadCompiledShader(dev, preFi[0].DirectoryName, preFi[0].Name, macs);
+						}
+					}
+				}
+
+				//pixel
+				foreach(KeyValuePair<string, List<string>> ent in mPSEntryPoints)
+				{
+					foreach(string e in ent.Value)
+					{
+						if(mPSCode.ContainsKey(e))
+						{
+							//already loaded
+							continue;
+						}
+
+						FileInfo[]	preFi	=preDi.GetFiles(e + ".cso", SearchOption.TopDirectoryOnly);
+
+						if(preFi.Length == 1)
+						{
+							LoadCompiledShader(dev, preFi[0].DirectoryName, preFi[0].Name, macs);
+						}
+					}
+				}
+			}
+		}
+	}
+
+
+	void CompileShaders(List<string> srcFiles, ID3D11Device dev, ShaderModel sm)
+	{
+		if(srcFiles.Count == 0)
+		{
+			return;
+		}
+
+		//need 2 of these for some reason
+		ShaderMacro []macs	=new ShaderMacro[2];
+
+		macs[0]	=new ShaderMacro(sm.ToString(), 1);
+
+		//count up how many compiles needed
+		List<string>	counted	=new List<string>();
+		foreach(string srcFile in srcFiles)
+		{
+			string	src	=FileUtil.StripExtension(srcFile);
+
+			if(mVSEntryPoints.ContainsKey(src))
+			{
+				foreach(string entry in mVSEntryPoints[src])
+				{
+					if(!mVSCode.ContainsKey(entry))
+					{
+						if(!counted.Contains(entry))
+						{
+							counted.Add(entry);
+						}
+					}
+				}
+			}
+
+			if(mPSEntryPoints.ContainsKey(src))
+			{
+				foreach(string entry in mPSEntryPoints[src])
+				{
+					if(!mPSCode.ContainsKey(entry))
+					{
+						if(!counted.Contains(entry))
+						{
+							counted.Add(entry);
+						}
+					}
+				}
+			}
+		}
+
+		//notify of how many to go
+		Misc.SafeInvoke(eCompileNeeded, counted.Count);
+
+		counted.Clear();
+
+		int	compiled	=0;
+		foreach(string srcFile in srcFiles)
+		{
+			string	src	=FileUtil.StripExtension(srcFile);
+
+			//vertex entry points
+			if(mVSEntryPoints.ContainsKey(src))
+			{
+				foreach(string entry in mVSEntryPoints[src])
+				{
+					if(mVSCode.ContainsKey(entry))
+					{
+						continue;	//already loaded
+					}
+
+					CompileShader(dev, mGameRootDir + "/Shaders", srcFile,
+						entry, ShaderEntryType.Vertex, sm, macs);
+
+					Misc.SafeInvoke(eCompileDone, ++compiled);
+				}
+			}
+
+			//pixel entry points
+			if(mPSEntryPoints.ContainsKey(src))
+			{
+				foreach(string entry in mPSEntryPoints[src])
+				{
+					if(mPSCode.ContainsKey(entry))
+					{
+						continue;	//already loaded
+					}
+
+					CompileShader(dev, mGameRootDir + "/Shaders", srcFile,
+						entry, ShaderEntryType.Pixel, sm, macs);
+
+					Misc.SafeInvoke(eCompileDone, ++compiled);
+				}
+			}
+		}
+	}
+
+
+	//load all shaders in the shaders folder, compiling as needed
 	void LoadShaders(ID3D11Device dev, ShaderModel sm)
 	{
 		//need 2 of these for some reason
@@ -800,103 +954,56 @@ public class StuffKeeper
 
 		macs[0]	=new ShaderMacro(sm.ToString(), 1);
 
+		string	srcDir	=mGameRootDir + "/Shaders";
+		string	cmpDir	=mGameRootDir + "/CompiledShaders/" + macs[0].Name;
+
 		//see if Shader folder exists in Content
-		if(Directory.Exists(mGameRootDir + "/Shaders"))
+		if(!Directory.Exists(srcDir))
 		{
-			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Shaders/");
+			//if no source just try to load compiled
+			LoadCompiledShaders(dev, sm);
+			return;
+		}
 
-			bool	bHeaderSame	=false;
-			if(Directory.Exists(mGameRootDir + "/CompiledShaders"))
+		//see if compiled folder exists
+		if(!Directory.Exists(cmpDir))
+		{
+			Directory.CreateDirectory(cmpDir);
+		}
+
+		DirectoryInfo	sdi	=new DirectoryInfo(srcDir);
+		DirectoryInfo	cdi	=new DirectoryInfo(cmpDir);
+
+		//see which source needs compile
+		List<string>	needsCompile	=CheckSourceTimeStamps(cdi, sdi);
+
+		//if any are headers, just compile everything
+		bool	bCompileAll	=false;
+		foreach(string nc in needsCompile)
+		{
+			if(nc.EndsWith(".hlsli"))
 			{
-				//see if a precompiled exists
-				if(Directory.Exists(mGameRootDir + "/CompiledShaders/" + macs[0].Name))
-				{
-					DirectoryInfo	preDi	=new DirectoryInfo(
-						mGameRootDir + "/CompiledShaders/" + macs[0].Name);
-
-					bHeaderSame	=CheckHeaderTimeStamps(preDi, di);
-				}
-			}
-
-			List<string>	dirNames	=new List<string>();
-			List<string>	fileNames	=new List<string>();
-
-			FileInfo[]		fi	=di.GetFiles("*.hlsl", SearchOption.AllDirectories);
-			foreach(FileInfo f in fi)
-			{
-				if(bHeaderSame)
-				{
-					if(Directory.Exists(mGameRootDir + "/CompiledShaders"))
-					{
-						//see if a precompiled exists
-						if(Directory.Exists(mGameRootDir + "/CompiledShaders/" + macs[0].Name))
-						{
-							DirectoryInfo	preDi	=new DirectoryInfo(
-								mGameRootDir + "/CompiledShaders/" + macs[0].Name);
-
-							FileInfo[]	preFi	=preDi.GetFiles(f.Name + ".Compiled", SearchOption.TopDirectoryOnly);
-
-							if(preFi.Length == 1)
-							{
-								if(f.LastWriteTime <= preFi[0].LastWriteTime)
-								{
-									LoadCompiledShader(dev, preFi[0].DirectoryName, preFi[0].Name, macs);
-									continue;
-								}
-							}
-						}
-					}
-				}
-				dirNames.Add(f.DirectoryName);
-				fileNames.Add(f.Name);
-			}
-
-			if(fileNames.Count > 0)
-			{
-				Debug.Assert(fileNames.Count == dirNames.Count);
-
-				Misc.SafeInvoke(eCompileNeeded, fileNames.Count);
-
-				for(int i=0;i < fileNames.Count;i++)
-				{
-					string	noExt	=FileUtil.StripExtension(fileNames[i]);
-
-					//vertexstuff
-					if(mVSEntryPoints.ContainsKey(noExt))
-					{
-						foreach(string entryPoint in mVSEntryPoints[noExt])
-						{
-							if(mVSCode.ContainsKey(entryPoint))
-							{
-								continue;	//already loaded
-							}
-
-							LoadShader(dev, dirNames[i], fileNames[i],
-								entryPoint, ShaderEntryType.Vertex, sm, macs);
-						}
-					}
-
-					//pixelstuff
-					if(mPSEntryPoints.ContainsKey(noExt))
-					{
-						foreach(string entryPoint in mPSEntryPoints[noExt])
-						{
-							if(mPSCode.ContainsKey(entryPoint))
-							{
-								continue;	//already loaded
-							}
-
-							LoadShader(dev, dirNames[i], fileNames[i],
-								entryPoint, ShaderEntryType.Pixel, sm, macs);
-						}
-					}
-
-					Misc.SafeInvoke(eCompileDone, i + 1);
-				}
+				bCompileAll	=true;
+				break;
 			}
 		}
 
-		//create shaders
+		if(bCompileAll)
+		{
+			CompileShaders(GetShaderSourceFiles(), dev, sm);
+		}
+		else
+		{
+			CompileShaders(needsCompile, dev, sm);
+		}
+
+		if(!bCompileAll)
+		{
+			//the ones we didn't compile just need loading from disc
+			LoadCompiledShaders(dev, sm);
+		}
+
+		//create shaders from bytecode
 		foreach(KeyValuePair<string, byte []> code in mVSCode)
 		{
 			mVShaders.Add(code.Key,	dev.CreateVertexShader(code.Value));
@@ -956,7 +1063,7 @@ public class StuffKeeper
 	}
 
 
-	void SaveHeaderTimeStamps(ShaderModel sm)
+	void SaveSourceFileDates(ShaderModel sm)
 	{
 		if(!Directory.Exists(mGameRootDir + "/CompiledShaders"))
 		{
@@ -973,14 +1080,14 @@ public class StuffKeeper
 		DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/CompiledShaders/" + sm.ToString() + "/");
 
 		FileStream	fs	=new FileStream(
-			di.FullName + "Header.TimeStamps",
+			di.FullName + "ShaderSource.TimeStamps",
 			FileMode.Create, FileAccess.Write);
 
 		Debug.Assert(fs != null);
 
 		BinaryWriter	bw	=new BinaryWriter(fs);
 
-		Dictionary<string, DateTime>	stamps	=GetHeaderTimeStamps(src);
+		Dictionary<string, DateTime>	stamps	=GetSourceTimeStamps(src);
 
 		bw.Write(stamps.Count);
 		foreach(KeyValuePair<string, DateTime> time in stamps)
@@ -994,12 +1101,44 @@ public class StuffKeeper
 	}
 
 
-	Dictionary<string, DateTime> GetHeaderTimeStamps(DirectoryInfo di)
+	List<string>	GetShaderSourceFiles()
 	{
-		FileInfo[]		fi	=di.GetFiles("*.cso", SearchOption.AllDirectories);
+		List<string>	files	=new List<string>();
+
+		if(Directory.Exists(mGameRootDir + "/Shaders"))
+		{
+			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Shaders/");
+
+			FileInfo	[]fi	=di.GetFiles("*.hlsl", SearchOption.AllDirectories);
+			foreach(FileInfo f in fi)
+			{
+				files.Add(f.Name);
+			}
+
+			//headers too
+			fi	=di.GetFiles("*.hlsli", SearchOption.AllDirectories);
+			foreach(FileInfo f in fi)
+			{
+				files.Add(f.Name);
+			}
+		}
+		return	files;
+	}
+
+
+	Dictionary<string, DateTime> GetSourceTimeStamps(DirectoryInfo di)
+	{
+		FileInfo[]		fi	=di.GetFiles("*.hlsl", SearchOption.AllDirectories);
 
 		Dictionary<string, DateTime>	ret	=new Dictionary<string, DateTime>();
 
+		foreach(FileInfo f in fi)
+		{
+			ret.Add(f.Name, f.LastWriteTime);
+		}
+
+		//headers too
+		fi	=di.GetFiles("*.hlsli", SearchOption.AllDirectories);
 		foreach(FileInfo f in fi)
 		{
 			ret.Add(f.Name, f.LastWriteTime);
@@ -1008,25 +1147,26 @@ public class StuffKeeper
 	}
 
 
-	//returns true if headers haven't changed
-	bool CheckHeaderTimeStamps(DirectoryInfo preDi, DirectoryInfo srcDi)
+	//returns a list of source files that have changed and probably need recompile
+	List<string> CheckSourceTimeStamps(DirectoryInfo preDi, DirectoryInfo srcDi)
 	{
-		//see if there is a binary file here that contains the
-		//timestamps of the cso files
-		FileInfo[]	hTime	=preDi.GetFiles("Header.TimeStamps", SearchOption.TopDirectoryOnly);
+		FileInfo[]	hTime	=preDi.GetFiles("ShaderSource.TimeStamps", SearchOption.TopDirectoryOnly);
 		if(hTime.Length != 1)
 		{
-			return	false;
+			return	GetShaderSourceFiles();
 		}
 
 		FileStream	fs	=new FileStream(hTime[0].DirectoryName + "\\" + hTime[0].Name, FileMode.Open, FileAccess.Read);
 		if(fs == null)
 		{
-			return	false;
+			return	GetShaderSourceFiles();
 		}
+
+		List<string>	needsCompile	=new List<string>();
 
 		BinaryReader	br	=new BinaryReader(fs);
 
+		//load stored dates for previously compiled
 		Dictionary<string, DateTime>	times	=new Dictionary<string, DateTime>();
 
 		int	count	=br.ReadInt32();
@@ -1043,27 +1183,34 @@ public class StuffKeeper
 		br.Close();
 		fs.Close();
 
-		Dictionary<string, DateTime>	onDisk	=GetHeaderTimeStamps(srcDi);
+		//get current on disc dates for source files
+		Dictionary<string, DateTime>	onDisk	=GetSourceTimeStamps(srcDi);
 
 		//check the timestamp data against the dates
-		if(onDisk.Count != times.Count)
-		{
-			return	false;
-		}
-
 		foreach(KeyValuePair<string, DateTime> tstamp in onDisk)
 		{
+			//no record of tstamp source file?
 			if(!times.ContainsKey(tstamp.Key))
 			{
-				return	false;
+				if(!needsCompile.Contains(tstamp.Key))
+				{
+					needsCompile.Add(tstamp.Key);
+				}
+				continue;
 			}
 
+			//record is older than current source?
 			if(times[tstamp.Key] < tstamp.Value)
 			{
-				return	false;
+				if(!needsCompile.Contains(tstamp.Key))
+				{
+					needsCompile.Add(tstamp.Key);
+				}
+				continue;
 			}
 		}
-		return	true;
+
+		return	needsCompile;
 	}
 
 
@@ -1105,7 +1252,7 @@ public class StuffKeeper
 	}
 
 
-	void LoadShader(ID3D11Device dev, string dir, string file,
+	void CompileShader(ID3D11Device dev, string dir, string file,
 		string entryPoint, ShaderEntryType set,
 		ShaderModel sm, ShaderMacro []macs)
 	{

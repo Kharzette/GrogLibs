@@ -223,7 +223,7 @@ float4 TriTex0EM1SpecPS(VVPosTex04Tex14 input) : SV_Target
 	float2	tex;
 
 	tex.x	=input.TexCoord0.w;
-	tex.y	=input.TexCoord1.w;
+	tex.y	=1 - input.TexCoord1.w;
 
 	float4	texColor	=mTexture0.Sample(Tex0Sampler, tex);
 	float4	texEmissive	=mTexture1.Sample(Tex1Sampler, tex);
