@@ -367,6 +367,45 @@ public partial class MaterialLib
 	}
 
 
+	//grab device context from some loaded resource
+	public ID3D11DeviceContext GetDC()
+	{
+		return	mSKeeper.GetDC();
+	}
+
+
+	public CBKeeper	GetCBKeeper()
+	{
+		return	mSKeeper.GetCBKeeper();
+	}
+
+
+	public void SetMaterialShadersAndLayout(string matName)
+	{
+		if(!mMats.ContainsKey(matName))
+		{
+			return;
+		}
+
+		Material	m	=mMats[matName];
+
+		ID3D11VertexShader	vs	=mSKeeper.GetVertexShader(m.VSName);
+		ID3D11PixelShader	ps	=mSKeeper.GetPixelShader(m.PSName);
+
+		if(vs == null || ps == null)
+		{
+			return;
+		}
+
+		ID3D11DeviceContext	dc	=vs.Device.ImmediateContext;
+
+		dc.VSSetShader(vs);
+		dc.PSSetShader(ps);
+
+		dc.IASetInputLayout(mSKeeper.GetOrCreateLayout(m.VSName));
+	}
+
+
 	public string GetMaterialVShader(string matName)
 	{
 		if(!mMats.ContainsKey(matName))

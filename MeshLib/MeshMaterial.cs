@@ -43,10 +43,6 @@ public class MeshMaterial
 	public bool			mbVisible;
 	public Matrix4x4	mObjectTransform;
 
-	//reference to material lib
-	public MatLib				mMatLib;
-	public ID3D11InputLayout	mLayout;
-
 
 	internal void Read(BinaryReader br)
 	{

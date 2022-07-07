@@ -110,19 +110,6 @@ public class StaticMesh
 	}
 
 
-	public void SetMatLib(MatLib mats, StuffKeeper sk)
-	{
-		mParts.SetMatLibs(mats, sk);
-	}
-
-
-	//these index the same as the mesh part list in the archetype
-	public void AddPart(MatLib mats)
-	{
-		mParts.AddPart(mats, mTransform);
-	}
-
-
 	public void NukePart(int index)
 	{
 		mParts.NukePart(index);
@@ -160,14 +147,6 @@ public class StaticMesh
 	}
 
 
-	public void SetTriLightValues(
-		Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
-	{
-		lightDir.Length();
-		mParts.SetTriLightValues(col0, col1, col2, lightDir);
-	}
-
-
 	public void UpdateBounds()
 	{
 		mBoxBound		=mParts.GetBoxBound();
@@ -175,27 +154,27 @@ public class StaticMesh
 	}
 
 
-	public void Draw(ID3D11DeviceContext dc, MatLib matLib)
+	public void Draw(MatLib mlib)
 	{
-		mParts.Draw(dc);
+		mParts.Draw(mlib);
 	}
 
 
-	public void Draw(ID3D11DeviceContext dc, MatLib matLib, string altMaterial)
+	public void Draw(MatLib mlib, string altMaterial)
 	{
-		mParts.Draw(dc, altMaterial);
+		mParts.Draw(mlib, altMaterial);
 	}
 
 
-	public void DrawX(ID3D11DeviceContext dc, MatLib matLib, int numInst, string altMaterial)
+	public void DrawX(MatLib mlib, int numInst, string altMaterial)
 	{
-		mParts.DrawX(dc, altMaterial, numInst);
+		mParts.DrawX(mlib, altMaterial, numInst);
 	}
 
 
-	public void DrawDMN(ID3D11DeviceContext dc, MatLib matLib)
+	public void DrawDMN(MatLib mlib)
 	{
-		mParts.DrawDMN(dc);
+		mParts.DrawDMN(mlib);
 	}
 
 

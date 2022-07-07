@@ -202,7 +202,7 @@ public class ShadowHelper
 		}
 
 		CBKeeper	cbk	=sk.GetCBKeeper();
-		ShadowInfo	si	=DrawShadow(shadIndex, cbk);
+		ShadowInfo	si	=DrawShadow(shadIndex);
 
 		//set only the color portion for the shadow render
 		mPost.SetTargets(mGD, "SceneColor", "SceneDepth");
@@ -227,7 +227,7 @@ public class ShadowHelper
 	}
 
 
-	ShadowInfo DrawShadow(int idx, CBKeeper cbk)
+	ShadowInfo DrawShadow(int idx)
 	{
 		Vector3	lightPos, lightDir;
 		Matrix4x4	shadowerTransform;
@@ -259,6 +259,8 @@ public class ShadowHelper
 		{
 			shadower.mChar.SetTransform(shadowerTransform);
 		}
+
+		CBKeeper	cbk	=shadMats.GetCBKeeper();
 
 		cbk.SetPerShadowDirectional(bDirectional);
 
@@ -301,11 +303,11 @@ public class ShadowHelper
 
 			if(shadower.mChar != null)
 			{
-				shadower.mChar.Draw(mGD.DC, cbk, "Shadow");
+				shadower.mChar.Draw(shadMats, "Shadow");
 			}
 			else
 			{
-				shadower.mStatic.Draw(mGD.DC, shadMats, "Shadow");
+				shadower.mStatic.Draw(shadMats, "Shadow");
 			}
 
 			si.mLightViewProj	=lightView * lightProj;
@@ -337,11 +339,11 @@ public class ShadowHelper
 
 		if(shadower.mChar != null)
 		{
-			shadower.mChar.Draw(mGD.DC, cbk, "Shadow");
+			shadower.mChar.Draw(shadMats, "Shadow");
 		}
 		else
 		{
-			shadower.mStatic.Draw(mGD.DC, shadMats, "Shadow");
+			shadower.mStatic.Draw(shadMats, "Shadow");
 		}
 	}
 }

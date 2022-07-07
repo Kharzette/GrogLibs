@@ -7,6 +7,7 @@ using Vortice.Mathematics;
 using Vortice.Direct3D11;
 using UtilityLib;
 
+using MatLib	=MaterialLib.MaterialLib;
 
 namespace MeshLib;
 
@@ -186,7 +187,7 @@ public class StaticArch : IArch
 
 
 
-	void IArch.Draw(ID3D11DeviceContext dc,
+	void IArch.Draw(MatLib mlib,
 		List<MeshMaterial> meshMats)
 	{
 		Debug.Assert(meshMats.Count == mMeshParts.Count);
@@ -202,12 +203,12 @@ public class StaticArch : IArch
 
 			Mesh	m	=mMeshParts[i];
 
-			m.Draw(dc, mm);
+			m.Draw(mlib, mm);
 		}
 	}
 
 
-	void IArch.Draw(ID3D11DeviceContext dc,
+	void IArch.Draw(MatLib mlib,
 		List<MeshMaterial> meshMats, string altMaterial)
 	{
 		Debug.Assert(meshMats.Count == mMeshParts.Count);
@@ -223,12 +224,12 @@ public class StaticArch : IArch
 
 			Mesh	m	=mMeshParts[i];
 
-			m.Draw(dc, mm, altMaterial);
+			m.Draw(mlib, mm, altMaterial);
 		}
 	}
 
 
-	void IArch.DrawX(ID3D11DeviceContext dc, List<MeshMaterial> meshMats,
+	void IArch.DrawX(MatLib mlib, List<MeshMaterial> meshMats,
 						int numInst, string altMaterial)
 	{
 		Debug.Assert(meshMats.Count == mMeshParts.Count);
@@ -244,12 +245,12 @@ public class StaticArch : IArch
 
 			Mesh	m	=mMeshParts[i];
 
-			m.DrawX(dc, mm, numInst, altMaterial);
+			m.DrawX(mlib, mm, numInst, altMaterial);
 		}
 	}
 
 
-	void IArch.DrawDMN(ID3D11DeviceContext dc, List<MeshMaterial> meshMats)
+	void IArch.DrawDMN(MatLib mlib, List<MeshMaterial> meshMats)
 	{
 		Debug.Assert(meshMats.Count == mMeshParts.Count);
 
@@ -264,7 +265,7 @@ public class StaticArch : IArch
 
 			Mesh	m	=mMeshParts[i];
 
-			m.DrawDMN(dc, mm);
+			m.DrawDMN(mlib, mm);
 		}
 	}
 

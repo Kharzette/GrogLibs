@@ -31,7 +31,7 @@ public class Character
 	//raw bone transforms for shader
 	Matrix4x4	[]mBones;
 
-	//this must match the value in Character.fx in the shader lib!
+	//this must match the value in CommonFunctions.hlsli in the shader lib!
 	const int	MAX_BONES	=55;
 
 
@@ -94,19 +94,6 @@ public class Character
 	}
 
 
-	//these index the same as the mesh part list in the archetype
-	public void AddPart(MatLib mats)
-	{
-		mParts.AddPart(mats, mTransform);
-	}
-
-
-	public void SetMatLib(MatLib mats, StuffKeeper sk)
-	{
-		mParts.SetMatLibs(mats, sk);
-	}
-
-
 	public void NukePart(int index)
 	{
 		mParts.NukePart(index);
@@ -135,13 +122,6 @@ public class Character
 	public void SetPartVisible(int index, bool bVisible)
 	{
 		mParts.SetPartVisible(index, bVisible);
-	}
-
-
-	public void SetTriLightValues(
-		Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
-	{
-		mParts.SetTriLightValues(col0, col1, col2, lightDir);
 	}
 
 
@@ -267,27 +247,27 @@ public class Character
 	}
 
 
-	public void Draw(ID3D11DeviceContext dc, CBKeeper cbk)
+	public void Draw(MatLib mlib)
 	{
-		UpdateShaderBones(dc, cbk);
+		UpdateShaderBones(mlib.GetDC(), mlib.GetCBKeeper());
 
-		mParts.Draw(dc);
+		mParts.Draw(mlib);
 	}
 
 
-	public void Draw(ID3D11DeviceContext dc, CBKeeper cbk, string altMaterial)
+	public void Draw(MatLib mlib, string altMaterial)
 	{
-		UpdateShaderBones(dc, cbk);
+		UpdateShaderBones(mlib.GetDC(), mlib.GetCBKeeper());
 
-		mParts.Draw(dc, altMaterial);
+		mParts.Draw(mlib, altMaterial);
 	}
 
 
-	public void DrawDMN(ID3D11DeviceContext dc, CBKeeper cbk)
+	public void DrawDMN(MatLib mlib)
 	{
-		UpdateShaderBones(dc, cbk);
+		UpdateShaderBones(mlib.GetDC(), mlib.GetCBKeeper());
 
-		mParts.DrawDMN(dc);
+		mParts.DrawDMN(mlib);
 	}
 
 

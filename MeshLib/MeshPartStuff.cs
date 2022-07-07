@@ -80,10 +80,6 @@ internal class MeshPartStuff
 		MeshMaterial	mm	=mPartMats[index];
 
 		mm.mMaterialName	=matName;
-
-		string	vsName	=mm.mMatLib.GetMaterialVShader(matName);		
-
-		mPartMats[index].mLayout	=sk.GetOrCreateLayout(vsName);
 	}
 
 
@@ -100,26 +96,11 @@ internal class MeshPartStuff
 	}
 
 
-	internal void SetMatLibs(MatLib mats, StuffKeeper sk)
-	{
-		foreach(MeshMaterial mm in mPartMats)
-		{
-			mm.mMatLib	=mats;
-
-			string	vsName	=mats.GetMaterialVShader(mm.mMaterialName);
-
-			mm.mLayout	=sk.GetOrCreateLayout(vsName);
-		}
-	}
-
-
 	//these need to be kept in sync with the arch's mesh parts
-	internal void AddPart(MatLib mats, Matrix4x4 objectTrans)
+	internal void AddPart(Matrix4x4 objectTrans)
 	{
 		MeshMaterial	mm	=new MeshMaterial();
 
-		mm.mMatLib			=mats;
-		mm.mLayout			=null;	//no material info yet
 		mm.mMaterialName	="NoMaterial";
 		mm.mbVisible		=true;
 		mm.mObjectTransform	=objectTrans;
@@ -213,38 +194,27 @@ internal class MeshPartStuff
 	}
 
 
-	internal void SetTriLightValues(
-		Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
+	internal void Draw(MatLib mlib)
 	{
-		foreach(MeshMaterial mm in mPartMats)
-		{
-			mm.mMatLib.SetTriLightValues(
-				mm.mMaterialName, col0, col1, col2, lightDir);
-		}
+		mArch.Draw(mlib, mPartMats);
 	}
 
 
-	internal void Draw(ID3D11DeviceContext dc)
+	internal void Draw(MatLib mlib, string altMaterial)
 	{
-		mArch.Draw(dc, mPartMats);
+		mArch.Draw(mlib, mPartMats, altMaterial);
 	}
 
 
-	internal void Draw(ID3D11DeviceContext dc, string altMaterial)
+	internal void DrawX(MatLib mlib, string altMaterial, int numInst)
 	{
-		mArch.Draw(dc, mPartMats, altMaterial);
+		mArch.DrawX(mlib, mPartMats, numInst, altMaterial);
 	}
 
 
-	internal void DrawX(ID3D11DeviceContext dc, string altMaterial, int numInst)
+	internal void DrawDMN(MatLib mlib)
 	{
-		mArch.DrawX(dc, mPartMats, numInst, altMaterial);
-	}
-
-
-	internal void DrawDMN(ID3D11DeviceContext dc)
-	{
-		mArch.DrawDMN(dc, mPartMats);
+		mArch.DrawDMN(mlib, mPartMats);
 	}
 
 

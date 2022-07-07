@@ -3,9 +3,12 @@ using System.IO;
 using System.Numerics;
 using System.Collections.Generic;
 using UtilityLib;
+using MaterialLib;
 using Vortice.DXGI;
 using Vortice.Direct3D11;
 using Vortice.Mathematics;
+
+using MatLib	=MaterialLib.MaterialLib;
 
 
 namespace MeshLib;
@@ -165,99 +168,158 @@ public class Mesh
 	}
 
 
-	internal void DrawDMN(ID3D11DeviceContext dc, MeshMaterial mm)
+	internal void DrawDMN(MatLib mlib, MeshMaterial mm)
 	{
 		if(!mm.mbVisible)
 		{
 			return;
 		}
 
-		if(mm.mMatLib == null)
+		if(mlib == null)
 		{
 			return;
 		}
 
-		if(!mm.mMatLib.MaterialExists("DMN"))
+		if(!mlib.MaterialExists("DMN"))
 		{
 			return;
 		}
+
+		string	vs	=mlib.GetMaterialVShader("DMN");
+		if(vs == null)
+		{
+			return;
+		}
+
+		ID3D11DeviceContext	dc	=mlib.GetDC();
 
 		dc.IASetVertexBuffer(0, mVerts, mVertSize);
 		dc.IASetIndexBuffer(mIndexs, Format.R16_UInt, 0);
-		dc.IASetInputLayout(mm.mLayout);
 
-		mm.mMatLib.SetMaterialID("DMN", mm.mMaterialID);
-		mm.mMatLib.SetWorld("DMN", (mTransform * mm.mObjectTransform));
+		mlib.SetMaterialShadersAndLayout("DMN");
+
+		mlib.SetMaterialID("DMN", mm.mMaterialID);
+		mlib.SetWorld("DMN", (mTransform * mm.mObjectTransform));
 		
-		mm.mMatLib.ApplyMaterial("DMN", dc);
+		mlib.ApplyMaterial("DMN", dc);
 
 		dc.DrawIndexed(mNumTriangles * 3, 0, 0);
 	}
 
 
-	internal void Draw(ID3D11DeviceContext dc, MeshMaterial mm, string altMaterial)
+	internal void Draw(MatLib mlib, MeshMaterial mm, string altMaterial)
 	{
 		if(!mm.mbVisible)
 		{
 			return;
 		}
 
-		if(!mm.mMatLib.MaterialExists(altMaterial))
+		if(mlib == null)
 		{
 			return;
 		}
 
+		if(!mlib.MaterialExists(altMaterial))
+		{
+			return;
+		}
+
+		string	vs	=mlib.GetMaterialVShader(altMaterial);
+		if(vs == null)
+		{
+			return;
+		}
+
+		ID3D11DeviceContext	dc	=mlib.GetDC();
+
 		dc.IASetVertexBuffer(0, mVerts, mVertSize);
 		dc.IASetIndexBuffer(mIndexs, Format.R16_UInt, 0);
-		dc.IASetInputLayout(mm.mLayout);
 
-		mm.mMatLib.SetWorld(altMaterial, (mTransform * mm.mObjectTransform));
+		mlib.SetMaterialShadersAndLayout(altMaterial);
+
+		mlib.SetMaterialID(altMaterial, mm.mMaterialID);
+		mlib.SetWorld(altMaterial, (mTransform * mm.mObjectTransform));
 		
-		mm.mMatLib.ApplyMaterial(altMaterial, dc);
+		mlib.ApplyMaterial(altMaterial, dc);
 
 		dc.DrawIndexed(mNumTriangles * 3, 0, 0);
 	}
 
 
 	//render X times
-	internal void DrawX(ID3D11DeviceContext dc, MeshMaterial mm, int numInst, string altMaterial)
+	internal void DrawX(MatLib mlib, MeshMaterial mm, int numInst, string altMaterial)
 	{
 		if(!mm.mbVisible)
 		{
 			return;
 		}
 
-		if(!mm.mMatLib.MaterialExists(altMaterial))
+		if(mlib == null)
 		{
 			return;
 		}
 
+		if(!mlib.MaterialExists(altMaterial))
+		{
+			return;
+		}
+
+		string	vs	=mlib.GetMaterialVShader(altMaterial);
+		if(vs == null)
+		{
+			return;
+		}
+
+		ID3D11DeviceContext	dc	=mlib.GetDC();
+
 		dc.IASetVertexBuffer(0, mVerts, mVertSize);
 		dc.IASetIndexBuffer(mIndexs, Format.R16_UInt, 0);
-		dc.IASetInputLayout(mm.mLayout);
 
-		mm.mMatLib.SetWorld(altMaterial, (mTransform * mm.mObjectTransform));
+		mlib.SetMaterialShadersAndLayout(altMaterial);
+
+		mlib.SetMaterialID(altMaterial, mm.mMaterialID);
+		mlib.SetWorld(altMaterial, (mTransform * mm.mObjectTransform));
 		
-		mm.mMatLib.ApplyMaterial(altMaterial, dc);
+		mlib.ApplyMaterial(altMaterial, dc);
 
 		dc.DrawIndexedInstanced(mNumTriangles * 3, numInst, 0, 0, 0);
 	}
 
 
-	internal void Draw(ID3D11DeviceContext dc, MeshMaterial mm)
+	internal void Draw(MatLib mlib, MeshMaterial mm)
 	{
-		if(!mm.mMatLib.MaterialExists(mm.mMaterialName))
+		if(!mm.mbVisible)
 		{
 			return;
 		}
 
-		mm.mMatLib.SetWorld(mm.mMaterialName, (mTransform * mm.mObjectTransform));
+		if(mlib == null)
+		{
+			return;
+		}
+
+		if(!mlib.MaterialExists(mm.mMaterialName))
+		{
+			return;
+		}
+
+		string	vs	=mlib.GetMaterialVShader(mm.mMaterialName);
+		if(vs == null)
+		{
+			return;
+		}
+
+		ID3D11DeviceContext	dc	=mlib.GetDC();
 
 		dc.IASetVertexBuffer(0, mVerts, mVertSize);
 		dc.IASetIndexBuffer(mIndexs, Format.R16_UInt, 0);
-		dc.IASetInputLayout(mm.mLayout);
 
-		mm.mMatLib.ApplyMaterial(mm.mMaterialName, dc);
+		mlib.SetMaterialShadersAndLayout(mm.mMaterialName);
+
+		mlib.SetMaterialID(mm.mMaterialName, mm.mMaterialID);
+		mlib.SetWorld(mm.mMaterialName, (mTransform * mm.mObjectTransform));
+		
+		mlib.ApplyMaterial(mm.mMaterialName, dc);
 
 		dc.DrawIndexed(mNumTriangles * 3, 0, 0);
 	}

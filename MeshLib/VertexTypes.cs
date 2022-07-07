@@ -1004,27 +1004,23 @@ public static class VertexTypes
 				}
 				else if(fi.FieldType.Name == "Half4")
 				{
-					Vector4	vec	=Vector4.Zero;
+					Half	x	=br.ReadHalf();
+					Half	y	=br.ReadHalf();
+					Half	z	=br.ReadHalf();
+					Half	w	=br.ReadHalf();
 
-					vec.X	=br.ReadSingle();
-					vec.Y	=br.ReadSingle();
-					vec.Z	=br.ReadSingle();
-					vec.W	=br.ReadSingle();
-
-					SetArrayField(outVerts, i, fi.Name, new Half4(vec));
+					SetArrayField(outVerts, i, fi.Name, new Half4(x, y, z, w));
 				}
 				else if(fi.FieldType.Name == "Half2")
 				{
-					Vector2	vec	=Vector2.Zero;
+					Half	x	=br.ReadHalf();
+					Half	y	=br.ReadHalf();
 
-					vec.X	=br.ReadSingle();
-					vec.Y	=br.ReadSingle();
-
-					SetArrayField(outVerts, i, fi.Name, new Half2(vec.X, vec.Y));
+					SetArrayField(outVerts, i, fi.Name, new Half2(x, y));
 				}
 				else if(fi.FieldType.Name == "Color")
 				{
-					int	packedCol	=br.ReadInt32();
+					UInt32	packedCol	=br.ReadUInt32();
 
 					Color	col	=new Color(packedCol);
 

@@ -418,6 +418,21 @@ public class StuffKeeper
 	}
 
 
+	//try to grab a dc from the most commonly loaded stuff
+	internal ID3D11DeviceContext GetDC()
+	{
+		if(mVShaders.Count == 0)
+		{
+			if(mTexture2s.Count == 0)
+			{
+				return	null;
+			}
+			return	mTexture2s.FirstOrDefault().Value.Device.ImmediateContext;
+		}
+		return	mVShaders.FirstOrDefault().Value.Device.ImmediateContext;
+	}
+
+
 	public List<string> GetVSEntryList()
 	{
 		List<string>	ret	=new List<string>();

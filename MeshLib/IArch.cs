@@ -37,10 +37,10 @@ public interface IArch
 	void GetPartPositions(int meshIndex, out List<Vector3> positions, out List<int> indexes);
 	Matrix4x4 GetPartTransform(int meshIndex);
 
-	void Draw(ID3D11DeviceContext dc, List<MeshMaterial> meshMats);
-	void Draw(ID3D11DeviceContext dc, List<MeshMaterial> meshMats, string altMaterial);
-	void DrawX(ID3D11DeviceContext dc, List<MeshMaterial> meshMats, int numInst, string altMaterial);
-	void DrawDMN(ID3D11DeviceContext dc, List<MeshMaterial> meshMats);
+	void Draw(MaterialLib.MaterialLib mlib, List<MeshMaterial> meshMats);
+	void Draw(MaterialLib.MaterialLib mlib, List<MeshMaterial> meshMats, string altMaterial);
+	void DrawX(MaterialLib.MaterialLib mlib, List<MeshMaterial> meshMats, int numInst, string altMaterial);
+	void DrawDMN(MaterialLib.MaterialLib mlib, List<MeshMaterial> meshMats);
 
 	void UpdateBounds();
 	BoundingBox GetBoxBound();
