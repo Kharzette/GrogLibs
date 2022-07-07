@@ -18,15 +18,8 @@ public class StaticMesh
 {
 	MeshPartStuff	mParts;
 
-	//bounds
-	BoundingBox		mBoxBound;
-	BoundingSphere	mSphereBound;
-
 	//transform
 	Matrix4x4	mTransform;
-
-	//materials per part
-	List<MeshMaterial>	mPartMats	=new List<MeshMaterial>();
 
 
 	public StaticMesh(IArch statA)
@@ -144,13 +137,6 @@ public class StaticMesh
 	public void SetPartVisible(int index, bool bVisible)
 	{
 		mParts.SetPartVisible(index, bVisible);
-	}
-
-
-	public void UpdateBounds()
-	{
-		mBoxBound		=mParts.GetBoxBound();
-		mSphereBound	=mParts.GetSphereBound();
 	}
 
 

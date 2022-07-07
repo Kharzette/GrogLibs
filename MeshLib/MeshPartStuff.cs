@@ -24,6 +24,11 @@ internal class MeshPartStuff
 	internal MeshPartStuff(IArch arch)
 	{
 		mArch	=arch;
+
+		for(int i=0;i < mArch.GetPartCount();i++)
+		{
+			AddPart(mArch.GetPartTransform(i));
+		}
 	}
 
 
@@ -97,7 +102,7 @@ internal class MeshPartStuff
 
 
 	//these need to be kept in sync with the arch's mesh parts
-	internal void AddPart(Matrix4x4 objectTrans)
+	void AddPart(Matrix4x4 objectTrans)
 	{
 		MeshMaterial	mm	=new MeshMaterial();
 
