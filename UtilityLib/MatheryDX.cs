@@ -408,11 +408,8 @@ namespace UtilityLib
 		}
 
 
-		public static void AddPointToBoundingBox(ref BoundingBox bb, Vector3 pnt)
+		public static void AddPointToBoundingBox(ref Vector3 min, ref Vector3 max, Vector3 pnt)
 		{
-			Vector3	min	=bb.Min;
-			Vector3	max	=bb.Max;
-
 			if(pnt.X < min.X)
 			{
 				min.X	=pnt.X;
@@ -437,9 +434,6 @@ namespace UtilityLib
 			{
 				max.Z	=pnt.Z;
 			}
-
-			bb.Min	=min;
-			bb.Max	=max;
 		}
 
 

@@ -23,6 +23,7 @@ public class Character
 
 	//bounds
 	BoundingBox		mBoxBound;
+	BoundingSphere	mSphereBound;
 
 	//transform
 	Matrix4x4	mTransform;
@@ -82,9 +83,7 @@ public class Character
 
 	public BoundingSphere GetSphereBound()
 	{
-		BoundingSphere	ret	=mParts.GetSphereBound();
-
-		return	Mathery.TransformSphere(mTransform, ret);
+		return	mSphereBound;
 	}
 
 
@@ -132,6 +131,10 @@ public class Character
 		mBones	=null;
 
 		Skeleton	sk	=mAnimLib.GetSkeleton();
+		if(sk == null)
+		{
+			return;
+		}
 
 		Dictionary<int, int>	reMap	=new Dictionary<int, int>();
 		sk.Compact(reMap);
@@ -178,9 +181,6 @@ public class Character
 		{
 			mBones[i]	=skn.GetBoneByIndex(i, sk);
 		}
-
-		//should be cheap to do this whenever bones change
-		UpdateBounds();
 	}
 
 
@@ -214,13 +214,16 @@ public class Character
 			return;
 		}
 
+		//mParts.ComputeBoneBounds(null, mAnimLib.GetSkeleton());
+
 		Vector3	[]corners	=new Vector3[8];
 
 		Skin	sk	=mParts.GetSkin();
 
-		//clear bounds
-		mBoxBound.Max	=Vector3.One * -float.MaxValue;
-		mBoxBound.Min	=Vector3.One * float.MaxValue;
+		Vector3	max	=Vector3.One * -float.MaxValue;
+		Vector3	min	=Vector3.One * float.MaxValue;
+
+		Vector3	center	=Vector3.Zero;
 
 		for(int i=0;i < mBones.Length;i++)
 		{
@@ -237,13 +240,29 @@ public class Character
 
 			box.GetCorners(corners);
 
+			Vector3	boxCenter	=Vector3.Zero;
 			for(int j=0;j < 8;j++)
 			{
 				Vector3	transd	=Vector3.Transform(corners[j], mBones[i]);
 
-				Mathery.AddPointToBoundingBox(ref mBoxBound, transd);
+				Mathery.AddPointToBoundingBox(ref min, ref max, transd);
+
+				boxCenter	+=transd;
 			}
+
+			center	+=boxCenter / 8;
 		}
+
+		center	/=mBones.Length;
+
+		mBoxBound.Min	=min;
+		mBoxBound.Max	=max;
+
+		float	distMin	=Vector3.Distance(min, center);
+		float	distMax	=Vector3.Distance(max, center);
+
+		mSphereBound.Center	=center;
+		mSphereBound.Radius	=(distMin > distMax)? distMin : distMax;
 	}
 
 

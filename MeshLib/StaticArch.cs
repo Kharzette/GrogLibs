@@ -26,7 +26,7 @@ public class StaticArch : IArch
 	}
 
 
-	void IArch.SetSkin(Skin s)
+	void IArch.SetSkin(Skin s, Skeleton sk)
 	{
 		//statics don't do skin
 	}

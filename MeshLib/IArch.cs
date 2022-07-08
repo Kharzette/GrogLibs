@@ -11,7 +11,7 @@ public interface IArch
 {
 	void FreeAll();
 
-	void SetSkin(Skin s);
+	void SetSkin(Skin s, Skeleton sk);
 	Skin GetSkin();
 
 	int GetPartCount();

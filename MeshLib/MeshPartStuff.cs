@@ -283,13 +283,13 @@ internal class MeshPartStuff
 				continue;
 			}
 
-			if(skipMaterials.Contains(mPartMats[i].mMaterialName))
+			if(skipMaterials != null && skipMaterials.Contains(mPartMats[i].mMaterialName))
 			{
 				skipParts.Add(i);
 				continue;
 			}
 		}
 
-		ca.ComputeBoneBounds(skeleton, skipParts);
+		//ca.ComputeBoneBounds(skeleton, skipParts);
 	}
 }

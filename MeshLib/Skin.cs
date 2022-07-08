@@ -138,6 +138,20 @@ public class Skin
 
 			mInverseBindPoses.Add(idx, mat);
 		}
+
+		int	numBoxes	=br.ReadInt32();
+
+		mBoneBoxes	=new Dictionary<int, BoundingBox>();
+
+		for(int i=0;i < numBoxes;i++)
+		{
+			BoundingBox	box	=new BoundingBox();
+
+			box.Min	=FileUtil.ReadVector3(br);
+			box.Max	=FileUtil.ReadVector3(br);
+
+			mBoneBoxes.Add(i, box);
+		}
 	}
 
 
@@ -148,6 +162,13 @@ public class Skin
 		{
 			bw.Write(ibp.Key);
 			FileUtil.WriteMatrix(bw, ibp.Value);
+		}
+
+		bw.Write(mBoneBoxes.Count);
+		for(int i=0;i < mBoneBoxes.Count;i++)
+		{
+			FileUtil.WriteVector3(bw, mBoneBoxes[i].Min);
+			FileUtil.WriteVector3(bw, mBoneBoxes[i].Max);
 		}
 	}
 }

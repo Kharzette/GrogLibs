@@ -29,9 +29,11 @@ public class CharacterArch : IArch
 	}
 
 
-	void IArch.SetSkin(Skin s)
+	void IArch.SetSkin(Skin s, Skeleton sk)
 	{
 		mSkin	=s;
+
+		ComputeBoneBounds(sk);
 	}
 
 
@@ -318,10 +320,7 @@ public class CharacterArch : IArch
 
 	void IArch.UpdateBounds()
 	{
-		foreach(Mesh m in mMeshParts)
-		{
-			m.Bound();
-		}
+		//this is kind of meaningless for character archetypes
 	}
 
 
@@ -347,7 +346,7 @@ public class CharacterArch : IArch
 	}
 
 
-	internal void ComputeBoneBounds(Skeleton skel, List<int> skipParts)
+	void ComputeBoneBounds(Skeleton skel)
 	{
 		int	numBones	=skel.GetNumIndexedBones();
 
@@ -360,11 +359,6 @@ public class CharacterArch : IArch
 				if(em == null)
 				{
 					return;
-				}
-
-				if(skipParts.Contains(mMeshParts.IndexOf(em)))
-				{
-					continue;
 				}
 
 				BoundingBox		box;
