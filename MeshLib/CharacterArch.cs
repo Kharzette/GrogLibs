@@ -406,17 +406,9 @@ public class CharacterArch : IArch
 
 	BoundingSphere IArch.GetSphereBound()
 	{
+		//not sure what I want this to do yet
 		BoundingSphere	merged	=new BoundingSphere(Vector3.Zero, 0f);
 
-		foreach(Mesh m in mMeshParts)
-		{
-			BoundingSphere	s			=m.GetSphereBounds();
-			Matrix4x4		meshTrans	=m.GetTransform();
-
-			s	=Mathery.TransformSphere(meshTrans, s);
-
-			merged	=merged.Merge(s);
-		}
 		return	merged;
 	}
 

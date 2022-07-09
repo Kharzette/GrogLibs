@@ -265,7 +265,7 @@ internal static unsafe class WinNative
 	internal static string GetProductName(string longAssUSBName)
 	{
 		IntPtr	handy	=TryToOpenDevice(longAssUSBName);
-		if(handy == null)
+		if(handy == IntPtr.Zero)
 		{
 			return	null;
 		}
