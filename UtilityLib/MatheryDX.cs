@@ -38,6 +38,12 @@ namespace UtilityLib
 		}
 
 
+		public static Vector3 XYZ(this in Quaternion q)
+		{
+			return	new Vector3(q.X, q.Y, q.Z);
+		}
+
+
 		//this was in sharpdx, and I used it alot for boundy stuff
 		//keeps things homogeneous
 		public static void TransformCoordinate(Vector3 coord, ref Matrix4x4 mat, out Vector3 result)

@@ -296,9 +296,19 @@ public partial class MaterialForm : Form
 		MeshMat	mmat	=mMatLib.GetMaterialMeshMat(matName);
 		if(mmat != null)
 		{
-			if(mmat.Texture0 != null && mmat.Texture0 != "")
+			if(pb == Texture0Pic)
 			{
-				lbox.SelectedItem	=mmat.Texture0;
+				if(mmat.Texture0 != null && mmat.Texture0 != "")
+				{
+					lbox.SelectedItem	=mmat.Texture0;
+				}
+			}
+			else
+			{
+				if(mmat.Texture1 != null && mmat.Texture1 != "")
+				{
+					lbox.SelectedItem	=mmat.Texture1;
+				}
 			}
 		}
 
@@ -306,7 +316,7 @@ public partial class MaterialForm : Form
 
 		width	+=SystemInformation.VerticalScrollBarWidth;
 
-		Size	fit	=new System.Drawing.Size(width, lbox.Size.Height);
+		Size	fit	=new Size(width, lbox.Size.Height);
 
 		lbox.Size	=fit;
 		lbc.Size	=fit;

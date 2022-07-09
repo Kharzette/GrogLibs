@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -19,7 +18,9 @@ public class Skin
 	Dictionary<int, Matrix4x4>	mInverseBindPoses	=new Dictionary<int, Matrix4x4>();
 
 	//for doing character collision stuff
-	Dictionary<int, BoundingBox>	mBoneBoxes	=new Dictionary<int, BoundingBox>();
+	Dictionary<int, BoundingBox>		mBoneBoxes		=new Dictionary<int, BoundingBox>();
+	Dictionary<int, BoundingSphere>		mBoneSpheres	=new Dictionary<int, BoundingSphere>();
+	Dictionary<int, BoundingCapsule>	mBoneCapsules	=new Dictionary<int, BoundingCapsule>();
 
 
 	public Skin()
