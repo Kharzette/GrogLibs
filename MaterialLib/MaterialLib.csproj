@@ -9,5 +9,6 @@
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.D3DCompiler\Vortice.D3DCompiler.csproj"/>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DXGI\Vortice.DXGI.csproj"/>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.Direct2D1\Vortice.Direct2D1.csproj"/>
+	<ProjectReference Include="..\Vortice.Mathematics\src\Vortice.Mathematics\Vortice.Mathematics.csproj"/>
   </ItemGroup>
 </Project>

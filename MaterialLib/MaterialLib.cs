@@ -17,7 +17,7 @@ public partial class MaterialLib
 	StuffKeeper	mSKeeper;
 
 
-	public MaterialLib(GraphicsDevice gd, StuffKeeper sk)
+	public MaterialLib(StuffKeeper sk)
 	{
 		mSKeeper	=sk;
 	}

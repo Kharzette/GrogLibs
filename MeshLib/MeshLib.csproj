@@ -3,8 +3,8 @@
     <TargetFramework>net6.0-windows7.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-	<ProjectReference Include="..\Vortice.Mathematics\src\Vortice.Mathematics\Vortice.Mathematics.csproj"/>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>
     <ProjectReference Include="..\MaterialLib\MaterialLib.csproj"/>
+	<ProjectReference Include="..\Vortice.Mathematics\src\Vortice.Mathematics\Vortice.Mathematics.csproj"/>
   </ItemGroup>
 </Project>

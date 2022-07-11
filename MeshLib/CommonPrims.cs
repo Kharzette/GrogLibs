@@ -26,7 +26,7 @@ public class CommonPrims
 	const float	AxisSize	=50f;
 
 
-	public CommonPrims(GraphicsDevice gd, StuffKeeper sk)
+	public CommonPrims(ID3D11Device gd, StuffKeeper sk)
 	{
 		//extra material lib for prim stuff
 		mSK	=sk;
@@ -42,9 +42,9 @@ public class CommonPrims
 
 		byte	[]code	=sk.GetVSCompiledCode("WNormWPosTexVS");
 
-		mXAxis	=PrimFactory.CreateCube(gd.GD, code, xBox);
-		mYAxis	=PrimFactory.CreateCube(gd.GD, code, yBox);
-		mZAxis	=PrimFactory.CreateCube(gd.GD, code, zBox);
+		mXAxis	=PrimFactory.CreateCube(gd, code, xBox);
+		mYAxis	=PrimFactory.CreateCube(gd, code, yBox);
+		mZAxis	=PrimFactory.CreateCube(gd, code, zBox);
 
 		mXAxis.World	=Matrix4x4.Identity;
 		mYAxis.World	=Matrix4x4.Identity;
