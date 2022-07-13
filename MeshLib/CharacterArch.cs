@@ -340,9 +340,9 @@ public class CharacterArch : IArch
 	}
 
 
-	public void BuildDebugBoundDrawData(ID3D11Device gd, CommonPrims cprims)
+	public void BuildDebugBoundDrawData(CommonPrims cprims)
 	{
-		mSkin.BuildDebugBoundDrawData(gd, cprims);
+		mSkin.BuildDebugBoundDrawData(cprims);
 	}
 
 

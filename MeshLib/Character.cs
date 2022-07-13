@@ -27,7 +27,6 @@ public class Character
 
 	//transform
 	Matrix4x4	mTransform;
-	Matrix4x4	mTransInverted;
 
 	//raw bone transforms for shader
 	Matrix4x4	[]mBones;
@@ -68,7 +67,6 @@ public class Character
 	public void SetTransform(Matrix4x4 mat)
 	{
 		mTransform		=mat;
-		Matrix4x4.Invert(mat, out mTransInverted);
 
 		//set in the materials
 		mParts.SetMatObjTransforms(mat);

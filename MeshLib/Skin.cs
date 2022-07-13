@@ -48,11 +48,21 @@ public class Skin
 	}
 
 
-	internal void BuildDebugBoundDrawData(ID3D11Device gd, CommonPrims cprims)
+	internal void BuildDebugBoundDrawData(CommonPrims cprims)
 	{
-		foreach(KeyValuePair<int, BoundingBox> boxen in mBoneBoxes)
+//		foreach(KeyValuePair<int, BoundingBox> boxen in mBoneBoxes)
+//		{
+//			cprims.AddBox(boxen.Key, boxen.Value);
+//		}
+
+//		foreach(KeyValuePair<int, BoundingSphere> sp in mBoneSpheres)
+//		{
+//			cprims.AddSphere(sp.Key, sp.Value);
+//		}
+
+		foreach(KeyValuePair<int, BoundingCapsule> caps in mBoneCapsules)
 		{
-			cprims.AddBox(gd, boxen.Key, boxen.Value);
+			cprims.AddCapsule(caps.Key, caps.Value);
 		}
 	}
 
@@ -69,13 +79,20 @@ public class Skin
 
 	internal void SetBoneBounds(int index, BoundingBox box)
 	{
+		BoundingSphere	bs	=BoundingSphere.CreateFromBoundingBox(box);
+		BoundingCapsule	bc	=BoundingCapsule.CreateFromBoundingBox(box);
+
 		if(mBoneBoxes.ContainsKey(index))
 		{
-			mBoneBoxes[index]	=box;
+			mBoneBoxes[index]		=box;
+			mBoneSpheres[index]		=bs;
+			mBoneCapsules[index]	=bc;
 		}
 		else
 		{
 			mBoneBoxes.Add(index, box);
+			mBoneSpheres.Add(index, bs);
+			mBoneCapsules.Add(index, bc);
 		}
 	}
 
@@ -153,6 +170,27 @@ public class Skin
 
 			mBoneBoxes.Add(i, box);
 		}
+
+		mBoneSpheres	=new Dictionary<int, BoundingSphere>();
+
+		for(int i=0;i < numBoxes;i++)
+		{
+			BoundingSphere	sp	=new BoundingSphere();
+
+			sp.Center	=FileUtil.ReadVector3(br);
+			sp.Radius	=br.ReadSingle();
+
+			mBoneSpheres.Add(i, sp);
+		}
+
+		mBoneCapsules	=new Dictionary<int, BoundingCapsule>();
+
+		for(int i=0;i < numBoxes;i++)
+		{
+			BoundingCapsule	bc	=new BoundingCapsule(br);
+
+			mBoneCapsules.Add(i, bc);
+		}
 	}
 
 
@@ -170,6 +208,15 @@ public class Skin
 		{
 			FileUtil.WriteVector3(bw, mBoneBoxes[i].Min);
 			FileUtil.WriteVector3(bw, mBoneBoxes[i].Max);
+		}
+		for(int i=0;i < mBoneBoxes.Count;i++)
+		{
+			FileUtil.WriteVector3(bw, mBoneSpheres[i].Center);
+			bw.Write(mBoneSpheres[i].Radius);
+		}
+		for(int i=0;i < mBoneBoxes.Count;i++)
+		{
+			mBoneCapsules[i].Write(bw);
 		}
 	}
 }

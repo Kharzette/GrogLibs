@@ -20,6 +20,7 @@ public class CommonPrims
 
 	Dictionary<int, PrimObject>	mBoxes		=new Dictionary<int, PrimObject>();
 	Dictionary<int, PrimObject>	mSpheres	=new Dictionary<int, PrimObject>();
+	Dictionary<int, PrimObject>	mCapsules	=new Dictionary<int, PrimObject>();
 
 	Vector3	mLightDir	=-Vector3.UnitY;
 
@@ -64,6 +65,11 @@ public class CommonPrims
 			sphere.Value.Free();
 		}
 
+		foreach(KeyValuePair<int, PrimObject> capsule in mCapsules)
+		{
+			capsule.Value.Free();
+		}
+
 		mVS.Dispose();
 		mPS.Dispose();
 	}
@@ -77,9 +83,10 @@ public class CommonPrims
 	}
 
 
-	public void DrawAxis(ID3D11DeviceContext dc)
+	public void DrawAxis()
 	{
-		CBKeeper	cbk	=mSK.GetCBKeeper();
+		CBKeeper			cbk	=mSK.GetCBKeeper();
+		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
 
 		dc.VSSetShader(mVS);
 		dc.PSSetShader(mPS);
@@ -116,13 +123,15 @@ public class CommonPrims
 	}
 
 
-	public void DrawBox(ID3D11DeviceContext dc, int index, Matrix4x4 transform)
+	public void DrawCapsule(int index, Matrix4x4 transform)
 	{
-		if(!mBoxes.ContainsKey(index))
+		if(!mCapsules.ContainsKey(index))
 		{
 			return;
 		}
-		CBKeeper	cbk	=mSK.GetCBKeeper();		
+
+		CBKeeper			cbk	=mSK.GetCBKeeper();
+		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
 
 		Vector4	lightColor2	=Vector4.One * 0.8f;
 		Vector4	lightColor3	=Vector4.One * 0.6f;
@@ -134,19 +143,44 @@ public class CommonPrims
 		cbk.SetSpecular(Vector4.One, 1);
 		cbk.SetWorldMat(transform);
 		cbk.UpdateObject(dc);
-		mXAxis.Draw(dc);
-		mBoxes[index].Draw(dc);
+
+		mCapsules[index].Draw(dc);
 	}
 
 
-	public void DrawBox(ID3D11DeviceContext dc, int index,
-						Matrix4x4 transform, Vector4 color)
+	public void DrawBox(int index, Matrix4x4 transform)
 	{
 		if(!mBoxes.ContainsKey(index))
 		{
 			return;
 		}
-		CBKeeper	cbk	=mSK.GetCBKeeper();		
+
+		CBKeeper			cbk	=mSK.GetCBKeeper();
+		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
+
+		Vector4	lightColor2	=Vector4.One * 0.8f;
+		Vector4	lightColor3	=Vector4.One * 0.6f;
+
+		lightColor2.W	=lightColor3.W	=1f;
+
+		cbk.SetSolidColour(Vector4.One * 0.5f);
+		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
+		cbk.SetSpecular(Vector4.One, 1);
+		cbk.SetWorldMat(transform);
+		cbk.UpdateObject(dc);
+		mBoxes[index].Draw(dc);
+	}
+
+
+	public void DrawBox(int index, Matrix4x4 transform, Vector4 color)
+	{
+		if(!mBoxes.ContainsKey(index))
+		{
+			return;
+		}
+
+		CBKeeper			cbk	=mSK.GetCBKeeper();		
+		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
 
 		Vector4	lightColor2	=Vector4.One * 0.8f;
 		Vector4	lightColor3	=Vector4.One * 0.6f;
@@ -160,13 +194,15 @@ public class CommonPrims
 	}
 
 
-	public void DrawBox(ID3D11DeviceContext dc, Matrix4x4 transform)
+	public void DrawBox(Matrix4x4 transform)
 	{
 		if(mBoxBound == null)
 		{
 			return;
 		}
-		CBKeeper	cbk	=mSK.GetCBKeeper();		
+
+		CBKeeper			cbk	=mSK.GetCBKeeper();		
+		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
 
 		Vector4	lightColor2	=Vector4.One * 0.8f;
 		Vector4	lightColor3	=Vector4.One * 0.6f;
@@ -180,13 +216,15 @@ public class CommonPrims
 	}
 
 
-	public void DrawSphere(ID3D11DeviceContext dc, int index, Matrix4x4 transform)
+	public void DrawSphere(int index, Matrix4x4 transform)
 	{
 		if(!mSpheres.ContainsKey(index))
 		{
 			return;
 		}
-		CBKeeper	cbk	=mSK.GetCBKeeper();		
+
+		CBKeeper			cbk	=mSK.GetCBKeeper();		
+		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
 
 		Vector4	lightColor2	=Vector4.One * 0.8f;
 		Vector4	lightColor3	=Vector4.One * 0.6f;
@@ -200,13 +238,14 @@ public class CommonPrims
 	}
 
 
-	public void DrawSphere(ID3D11DeviceContext dc, Matrix4x4 transform)
+	public void DrawSphere(Matrix4x4 transform)
 	{
 		if(mSphereBound == null)
 		{
 			return;
 		}
-		CBKeeper	cbk	=mSK.GetCBKeeper();		
+		CBKeeper			cbk	=mSK.GetCBKeeper();		
+		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
 
 		Vector4	lightColor2	=Vector4.One * 0.8f;
 		Vector4	lightColor3	=Vector4.One * 0.6f;
@@ -220,7 +259,7 @@ public class CommonPrims
 	}
 
 
-	public void AddBox(ID3D11Device gd, int index, BoundingBox box)
+	public void AddBox(int index, BoundingBox box)
 	{
 		if(mBoxes.ContainsKey(index))
 		{
@@ -229,13 +268,13 @@ public class CommonPrims
 
 		byte	[]code	=mSK.GetVSCompiledCode("WNormWPosTexVS");
 
-		PrimObject	po	=PrimFactory.CreateCube(gd, code, box);
+		PrimObject	po	=PrimFactory.CreateCube(mVS.Device, code, box);
 
 		mBoxes.Add(index, po);
 	}
 
 
-	public void AddSphere(ID3D11Device gd, int index, BoundingSphere sphere)
+	public void AddSphere(int index, BoundingSphere sphere)
 	{
 		if(mSpheres.ContainsKey(index))
 		{
@@ -244,14 +283,29 @@ public class CommonPrims
 
 		byte	[]code	=mSK.GetVSCompiledCode("WNormWPosTexVS");
 
-		PrimObject	po	=PrimFactory.CreateSphere(gd,
+		PrimObject	po	=PrimFactory.CreateSphere(mVS.Device,
 								code, sphere.Center, sphere.Radius);
 
 		mSpheres.Add(index, po);
 	}
 
 
-	public void ReBuildBoundsDrawData(ID3D11Device gd, object mesh)
+	public void AddCapsule(int index, BoundingCapsule cap)
+	{
+		if(mCapsules.ContainsKey(index))
+		{
+			return;	//already here
+		}
+
+		byte	[]code	=mSK.GetVSCompiledCode("WNormWPosTexVS");
+
+		PrimObject	po	=PrimFactory.CreateCapsule(mVS.Device, code, cap.mRadius, cap.mLength);
+
+		mCapsules.Add(index, po);
+	}
+
+
+	public void ReBuildBoundsDrawData(object mesh)
 	{
 		BoundingBox		box		=new BoundingBox(Vector3.Zero, Vector3.Zero);
 		BoundingSphere	sphere	=new BoundingSphere(Vector3.Zero, 0f);
@@ -276,8 +330,8 @@ public class CommonPrims
 
 		byte	[]code	=mSK.GetVSCompiledCode("WNormWPosTexVS");
 
-		mBoxBound		=PrimFactory.CreateCube(gd, code, box);
-		mSphereBound	=PrimFactory.CreateSphere(gd,
+		mBoxBound		=PrimFactory.CreateCube(mVS.Device, code, box);
+		mSphereBound	=PrimFactory.CreateSphere(mVS.Device,
 							code, sphere.Center, sphere.Radius);
 	}
 }

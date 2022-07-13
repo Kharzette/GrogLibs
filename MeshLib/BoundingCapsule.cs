@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.IO;
+using System.Numerics;
 using Vortice.Mathematics;
 using UtilityLib;
 
@@ -6,16 +7,57 @@ namespace MeshLib;
 
 
 //this is a cylinder shape with rounded ends
-internal class BoundingCapsule
+public class BoundingCapsule
 {
-	float	mRadius;
-	float	mLength;
+	internal float	mRadius;
+	internal float	mLength;
 	
 
 	internal BoundingCapsule(float rad, float len)
 	{
 		mRadius	=rad;
 		mLength	=len;
+	}
+
+
+	internal BoundingCapsule(BinaryReader br)
+	{
+		mRadius	=br.ReadSingle();
+		mLength	=br.ReadSingle();
+	}
+
+
+	internal void Write(BinaryWriter bw)
+	{
+		bw.Write(mRadius);
+		bw.Write(mLength);
+	}
+
+
+	static internal BoundingCapsule CreateFromBoundingBox(BoundingBox box)
+	{
+		//find radius
+		float	radius	=0f;
+
+		//measure from center to most distant side
+		if(box.Min.Z < box.Min.X)
+		{
+			radius	=box.Center.Z - box.Min.Z;
+		}
+		else
+		{
+			radius	=box.Center.X - box.Min.X;
+		}
+
+		float	length =box.Height - (2 * radius);
+		if(length < 0)
+		{
+			//this shape is goofy and probably won't work
+			//boost length to at least 1
+			length	=1;
+		}
+
+		return	new BoundingCapsule(radius, length);
 	}
 
 

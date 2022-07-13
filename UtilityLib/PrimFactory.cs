@@ -923,6 +923,262 @@ public static class PrimFactory
 	}
 
 
+	//should orient along the Z axis
+	public static PrimObject CreateCapsule(ID3D11Device gd,
+		byte []fxBytes, float radius, float len)
+	{
+		int	theta, phi;
+
+		//density
+		int	dtheta	=20;
+		int	dphi	=20;
+		
+		List<Vector3>	points	=new List<Vector3>();
+		List<UInt16>	inds	=new List<UInt16>();
+
+		//build and index a hemisphere
+		UInt16	curIdx	=0;
+		for(theta=-90;theta <= 0-dtheta;theta += dtheta)
+		{
+			for(phi=0;phi <= 360-dphi;phi += dphi)
+			{
+				Vector3	pos	=Vector3.Zero;
+
+				float	rtheta	=MathHelper.ToRadians(theta);
+				float	rdtheta	=MathHelper.ToRadians(dtheta);
+				float	rphi	=MathHelper.ToRadians(phi);
+				float	rdphi	=MathHelper.ToRadians(dphi);
+
+				if(curIdx == 0)
+				{
+					pos.X	=(float)(Math.Cos(rtheta) * Math.Cos(rphi));
+					pos.Z	=(float)(Math.Cos(rtheta) * Math.Sin(rphi));
+					pos.Y	=(float)Math.Sin(rtheta);
+
+					points.Add(pos);
+					curIdx++;
+				}
+				
+				pos.X	=(float)(Math.Cos((rtheta + rdtheta)) * Math.Cos(rphi));
+				pos.Z	=(float)(Math.Cos((rtheta + rdtheta)) * Math.Sin(rphi));
+				pos.Y	=(float)Math.Sin((rtheta + rdtheta));
+
+				points.Add(pos);
+
+//				pos.X	=(float)(Math.Cos((rtheta + rdtheta)) * Math.Cos((rphi + rdphi)));
+//				pos.Z	=(float)(Math.Cos((rtheta + rdtheta)) * Math.Sin((rphi + rdphi)));
+//				pos.Y	=(float)Math.Sin((rtheta + rdtheta));
+
+//				points.Add(pos);
+
+/*				if(theta > -90 && theta < 0)
+				{
+					pos.X	=(float)(Math.Cos(rtheta) * Math.Cos((rphi + rdphi)));
+					pos.Z	=(float)(Math.Cos(rtheta) * Math.Sin((rphi + rdphi)));
+					pos.Y	=(float)Math.Sin(rtheta);
+
+					points.Add(pos);
+
+					inds.Add(curIdx);
+					inds.Add((UInt16)(curIdx + 2));
+					inds.Add((UInt16)(curIdx + 1));
+					inds.Add((UInt16)(curIdx + 0));
+					inds.Add((UInt16)(curIdx + 3));
+					inds.Add((UInt16)(curIdx + 2));
+
+					curIdx	+=4;
+				}
+				else
+				{
+					inds.Add(curIdx);
+					inds.Add((UInt16)(curIdx + 2));
+					inds.Add((UInt16)(curIdx + 1));
+					curIdx	+=3;
+				}*/
+			}
+		}
+
+//		curIdx++;
+		for(UInt16 i=1;i < 18;i++)
+		{
+			//base ring
+			inds.Add(0);
+			inds.Add(i);
+			inds.Add((ushort)(i + 1));
+		}
+
+		//final tri
+		inds.Add(0);
+		inds.Add(18);
+		inds.Add(1);	//wrap
+
+		//next ring
+		for(UInt16 i=19;i < 36;i++)
+		{
+			inds.Add((ushort)(i - 18));
+			inds.Add((ushort)(i));
+			inds.Add((ushort)(i + 1));
+
+			inds.Add((ushort)(i - 18));
+			inds.Add((ushort)(i + 1));
+			inds.Add((ushort)(i - 17));
+		}
+
+		//finish quad for this ring
+		inds.Add(18);
+		inds.Add(36);
+		inds.Add(19);
+
+		inds.Add(18);
+		inds.Add(19);
+		inds.Add(1);	//wrap
+
+		//next ring
+		for(UInt16 i=37;i < 54;i++)
+		{
+			inds.Add((ushort)(i - 18));
+			inds.Add((ushort)(i));
+			inds.Add((ushort)(i + 1));
+
+			inds.Add((ushort)(i - 18));
+			inds.Add((ushort)(i + 1));
+			inds.Add((ushort)(i - 17));
+		}
+
+		//finish quad
+		inds.Add(36);
+		inds.Add(54);
+		inds.Add(37);
+
+		inds.Add(36);
+		inds.Add(37);
+		inds.Add(19);	//wrap
+
+		//next ring
+		for(UInt16 i=55;i < 72;i++)
+		{
+			inds.Add((ushort)(i - 18));
+			inds.Add((ushort)(i));
+			inds.Add((ushort)(i + 1));
+
+			inds.Add((ushort)(i - 18));
+			inds.Add((ushort)(i + 1));
+			inds.Add((ushort)(i - 17));
+		}
+
+		//finish quad
+		inds.Add(54);
+		inds.Add(72);
+		inds.Add(55);
+
+		inds.Add(54);
+		inds.Add(55);
+		inds.Add(37);	//wrap
+
+		VertexPositionNormalTexture	[]vpnt	=new VertexPositionNormalTexture[points.Count * 2];
+
+		//copy in hemisphere
+		for(int i=0;i < points.Count;i++)
+		{
+			Vector3	norm	=Vector3.Normalize(points[i]);
+
+			vpnt[i].Normal				=new Half4(norm.X, norm.Y, norm.Z, 1f);
+			vpnt[i].Position			=norm * radius;
+			vpnt[i].TextureCoordinate	=Vector2.Zero;	//not tackling this yet
+		}
+
+		//dupe for other half
+		int	ofs	=points.Count;
+		for(int i=ofs;i < points.Count + ofs;i++)
+		{
+			Vector3	norm	=Vector3.Normalize(points[i - ofs]);
+
+			//flip normal
+			vpnt[i].Normal				=new Half4(-norm.X, -norm.Y, -norm.Z, 1f);
+			vpnt[i].Position			=-norm * radius + (Vector3.UnitY * len);
+			vpnt[i].TextureCoordinate	=Vector2.Zero;	//not tackling this yet
+		}
+
+		BufferDescription	bd	=new BufferDescription(
+			24 * vpnt.Length,
+			BindFlags.VertexBuffer,	ResourceUsage.Immutable, 
+			CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+		ID3D11Buffer	vb	=gd.CreateBuffer<VertexPositionNormalTexture>(vpnt, bd);
+
+		//index the other half
+		List<UInt16>	otherHalf	=new List<UInt16>();
+
+		int	halfCount	=inds.Count;
+		for(int i=0;i < halfCount;i++)
+		{
+			otherHalf.Add((UInt16)(ofs + inds[i]));
+		}
+
+		//reverse order
+		otherHalf.Reverse();
+
+		inds.AddRange(otherHalf);
+
+		//rings from renderdoc
+		//55 to 72 for the lower index ring
+		//128 to 145 for the higher index ring
+		//9 is added because the verts are on opposite sides
+		int	ringOfs	=128 - 55 + 9;
+
+		//connect the 2 hemispheres
+		//half ring
+		for(int i=55;i < 63;i++)
+		{
+			inds.Add((UInt16)i);
+			inds.Add((UInt16)(i + ringOfs));
+			inds.Add((UInt16)(i + ringOfs + 1));
+
+			inds.Add((UInt16)i);
+			inds.Add((UInt16)(i + ringOfs + 1));
+			inds.Add((UInt16)(i + 1));
+		}
+
+		inds.Add(63);
+		inds.Add(145);
+		inds.Add(128);	//wrap
+
+		//correct back to opposite side
+		ringOfs	=128 - 63;
+
+		//other half
+		for(int i=63;i < 72;i++)
+		{
+			inds.Add((UInt16)i);
+			inds.Add((UInt16)(i + ringOfs));
+			inds.Add((UInt16)(i + ringOfs + 1));
+
+			inds.Add((UInt16)i);
+			inds.Add((UInt16)(i + ringOfs + 1));
+			inds.Add((UInt16)(i + 1));
+		}
+
+		inds.Add(72);
+		inds.Add(137);
+		inds.Add(55);	//wrap
+
+		//inside out
+		inds.Reverse();
+
+		BufferDescription	id	=new BufferDescription(inds.Count * 2,
+			BindFlags.IndexBuffer, ResourceUsage.Immutable,
+			CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+
+		ID3D11Buffer	ib	=gd.CreateBuffer<UInt16>(inds.ToArray(), id);
+
+		ID3D11InputLayout	lay	=VertexPositionNormalTexture.MakeLayout(gd, fxBytes);
+
+		PrimObject	po	=new PrimObject(vb, ib, lay, 24, inds.Count, false);
+
+		return	po;
+	}
+
+
 	public static PrimObject CreateShadowCircle(ID3D11Device gd,
 		byte []fxBytes, float radius)
 	{
