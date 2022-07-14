@@ -320,7 +320,9 @@ public class CommonPrims
 	{
 		if(mCapsules.ContainsKey(index))
 		{
-			return;	//already here
+			//blast old
+			mCapsules[index].Free();
+			mCapsules.Remove(index);
 		}
 
 		byte	[]code	=mSK.GetVSCompiledCode("WNormWPosTexVS");

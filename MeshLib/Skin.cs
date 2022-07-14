@@ -21,6 +21,7 @@ public class Skin
 	Dictionary<int, BoundingBox>		mBoneBoxes		=new Dictionary<int, BoundingBox>();
 	Dictionary<int, BoundingSphere>		mBoneSpheres	=new Dictionary<int, BoundingSphere>();
 	Dictionary<int, BoundingCapsule>	mBoneCapsules	=new Dictionary<int, BoundingCapsule>();
+	Dictionary<int, int>				mBoneColShapes	=new Dictionary<int, int>();
 
 	//This is only needed by collision shapes, as the collision data
 	//is already around the origin, ready to be transformed into bone space.
@@ -28,6 +29,10 @@ public class Skin
 	//whatever units the user wants (grog, quake, etc)
 	float		mScalefactor;
 	Matrix4x4	mScaleMat;
+
+	const int	Box		=0;
+	const int	Sphere	=1;
+	const int	Capsule	=2;
 
 
 	public Skin(float scaleFactor)
@@ -57,21 +62,34 @@ public class Skin
 	}
 
 
+	internal void BuildDebugBoundDrawData(int index, CommonPrims cprims)
+	{
+		if(!mBoneColShapes.ContainsKey(index))
+		{
+			return;
+		}
+
+		int	choice	=mBoneColShapes[index];
+		if(choice == Box)
+		{
+			cprims.AddBox(index, mBoneBoxes[index]);
+		}
+		else if(choice == Sphere)
+		{
+			cprims.AddSphere(index, mBoneSpheres[index]);
+		}
+		else if(choice == Capsule)
+		{
+			cprims.AddCapsule(index, mBoneCapsules[index]);
+		}
+	}
+
+
 	internal void BuildDebugBoundDrawData(CommonPrims cprims)
 	{
-//		foreach(KeyValuePair<int, BoundingBox> boxen in mBoneBoxes)
-//		{
-//			cprims.AddBox(boxen.Key, boxen.Value);
-//		}
-
-//		foreach(KeyValuePair<int, BoundingSphere> sp in mBoneSpheres)
-//		{
-//			cprims.AddSphere(sp.Key, sp.Value);
-//		}
-
-		foreach(KeyValuePair<int, BoundingCapsule> caps in mBoneCapsules)
+		foreach(KeyValuePair<int, int> choice in mBoneColShapes)
 		{
-			cprims.AddCapsule(caps.Key, caps.Value);
+			BuildDebugBoundDrawData(choice.Key, cprims);
 		}
 	}
 
@@ -86,6 +104,7 @@ public class Skin
 	}
 
 
+	//this is used to get an initial guess based on box bounds
 	internal void SetBoneBounds(int index, BoundingBox box)
 	{
 		BoundingSphere	bs	=BoundingSphere.CreateFromBoundingBox(box);
@@ -102,6 +121,55 @@ public class Skin
 			mBoneBoxes.Add(index, box);
 			mBoneSpheres.Add(index, bs);
 			mBoneCapsules.Add(index, bc);
+		}
+
+		//default the shape to capsule
+		if(mBoneColShapes.ContainsKey(index))
+		{
+			mBoneColShapes[index]	=Capsule;
+		}
+		else
+		{
+			mBoneColShapes.Add(index, Capsule);
+		}
+	}
+
+
+	//set the type of collision shape wanted for this particular bone
+	public void SetBoundChoice(int index, int choice)
+	{
+		if(mBoneColShapes.ContainsKey(index))
+		{
+			mBoneColShapes[index]	=choice;
+		}
+		else
+		{
+			mBoneColShapes.Add(index, choice);
+		}
+	}
+
+
+	public void AdjustBoneBoundRadius(int index, float radiusDelta)
+	{
+		if(!mBoneColShapes.ContainsKey(index))
+		{
+			return;
+		}
+
+		int	shape	=mBoneColShapes[index];
+
+		if(shape == Box)
+		{
+			//probably not even going to use boxes
+		}
+		else if(shape == Sphere)
+		{
+			BoundingSphere	bs	=mBoneSpheres[index];
+			bs.Radius			+=radiusDelta;
+		}
+		else	//capsule
+		{
+			mBoneCapsules[index].mRadius	+=radiusDelta;
 		}
 	}
 

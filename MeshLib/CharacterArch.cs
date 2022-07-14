@@ -345,6 +345,11 @@ public class CharacterArch : IArch
 		mSkin?.BuildDebugBoundDrawData(cprims);
 	}
 
+	public void BuildDebugBoundDrawData(int index, CommonPrims cprims)
+	{
+		mSkin?.BuildDebugBoundDrawData(index, cprims);
+	}
+
 
 	void ComputeBoneBounds(Skeleton skel)
 	{
