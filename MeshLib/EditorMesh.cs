@@ -723,9 +723,9 @@ public class EditorMesh : Mesh
 			faceVerts.Add(myVerts[mIndArray[i + 1]]);
 			faceVerts.Add(myVerts[mIndArray[i]]);
 
-			faceVerts[0]	=Mathery.TransformCoordinate(faceVerts[0], ref mTransform);
-			faceVerts[1]	=Mathery.TransformCoordinate(faceVerts[1], ref mTransform);
-			faceVerts[2]	=Mathery.TransformCoordinate(faceVerts[2], ref mTransform);
+			faceVerts[0]	=Mathery.TransformCoordinate(faceVerts[0], ref mPart);
+			faceVerts[1]	=Mathery.TransformCoordinate(faceVerts[1], ref mPart);
+			faceVerts[2]	=Mathery.TransformCoordinate(faceVerts[2], ref mPart);
 
 			Vector3	norm;
 			float	dist;
@@ -783,7 +783,7 @@ public class EditorMesh : Mesh
 		Vector3	[]yarr	=new Vector3[positions.Count];
 		Vector3	[]arr	=positions.ToArray();
 
-		Mathery.TransformCoordinate(arr, mTransform, yarr);
+		Mathery.TransformCoordinate(arr, mPart, yarr);
 
 		positions	=yarr.ToList();
 	}

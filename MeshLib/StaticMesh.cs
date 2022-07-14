@@ -50,19 +50,9 @@ public class StaticMesh
 	}
 
 
-	//set only one part's material transform
-	public void SetPartTransform(int idx, Matrix4x4 mat)
-	{
-		mParts.SetMatObjTransform(idx, mat);
-	}
-
-
 	public void SetTransform(Matrix4x4 mat)
 	{
 		mTransform		=mat;
-
-		//set in the materials
-		mParts.SetMatObjTransforms(mat);
 	}
 
 
@@ -142,25 +132,25 @@ public class StaticMesh
 
 	public void Draw(MatLib mlib)
 	{
-		mParts.Draw(mlib);
+		mParts.Draw(mlib, mTransform);
 	}
 
 
 	public void Draw(MatLib mlib, string altMaterial)
 	{
-		mParts.Draw(mlib, altMaterial);
+		mParts.Draw(mlib, mTransform, altMaterial);
 	}
 
 
 	public void DrawX(MatLib mlib, int numInst, string altMaterial)
 	{
-		mParts.DrawX(mlib, altMaterial, numInst);
+		mParts.DrawX(mlib, mTransform, altMaterial, numInst);
 	}
 
 
 	public void DrawDMN(MatLib mlib)
 	{
-		mParts.DrawDMN(mlib);
+		mParts.DrawDMN(mlib, mTransform);
 	}
 
 

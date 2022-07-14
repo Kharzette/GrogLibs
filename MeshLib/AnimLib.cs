@@ -41,6 +41,11 @@ public class AnimLib
 
 	public void AddAnim(Anim an)
 	{
+		if(mAnims.ContainsKey(an.Name))
+		{
+			return;	//already in there
+		}
+
 		mAnims.Add(an.Name, an);
 	}
 

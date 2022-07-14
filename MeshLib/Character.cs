@@ -67,9 +67,6 @@ public class Character
 	public void SetTransform(Matrix4x4 mat)
 	{
 		mTransform		=mat;
-
-		//set in the materials
-		mParts.SetMatObjTransforms(mat);
 	}
 
 
@@ -268,7 +265,7 @@ public class Character
 	{
 		UpdateShaderBones(mlib.GetDC(), mlib.GetCBKeeper());
 
-		mParts.Draw(mlib);
+		mParts.Draw(mlib, mTransform);
 	}
 
 
@@ -276,7 +273,7 @@ public class Character
 	{
 		UpdateShaderBones(mlib.GetDC(), mlib.GetCBKeeper());
 
-		mParts.Draw(mlib, altMaterial);
+		mParts.Draw(mlib, mTransform, altMaterial);
 	}
 
 
@@ -284,7 +281,7 @@ public class Character
 	{
 		UpdateShaderBones(mlib.GetDC(), mlib.GetCBKeeper());
 
-		mParts.DrawDMN(mlib);
+		mParts.DrawDMN(mlib, mTransform);
 	}
 
 

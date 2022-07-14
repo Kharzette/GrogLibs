@@ -187,7 +187,7 @@ public class StaticArch : IArch
 
 
 
-	void IArch.Draw(MatLib mlib,
+	void IArch.Draw(MatLib mlib, Matrix4x4 transform,
 		List<MeshMaterial> meshMats)
 	{
 		Debug.Assert(meshMats.Count == mMeshParts.Count);
@@ -203,12 +203,12 @@ public class StaticArch : IArch
 
 			Mesh	m	=mMeshParts[i];
 
-			m.Draw(mlib, mm);
+			m.Draw(mlib, transform, mm);
 		}
 	}
 
 
-	void IArch.Draw(MatLib mlib,
+	void IArch.Draw(MatLib mlib, Matrix4x4 transform,
 		List<MeshMaterial> meshMats, string altMaterial)
 	{
 		Debug.Assert(meshMats.Count == mMeshParts.Count);
@@ -224,13 +224,13 @@ public class StaticArch : IArch
 
 			Mesh	m	=mMeshParts[i];
 
-			m.Draw(mlib, mm, altMaterial);
+			m.Draw(mlib, transform, mm, altMaterial);
 		}
 	}
 
 
-	void IArch.DrawX(MatLib mlib, List<MeshMaterial> meshMats,
-						int numInst, string altMaterial)
+	void IArch.DrawX(MatLib mlib, Matrix4x4 transform,
+		List<MeshMaterial> meshMats, int numInst, string altMaterial)
 	{
 		Debug.Assert(meshMats.Count == mMeshParts.Count);
 
@@ -245,12 +245,12 @@ public class StaticArch : IArch
 
 			Mesh	m	=mMeshParts[i];
 
-			m.DrawX(mlib, mm, numInst, altMaterial);
+			m.DrawX(mlib, transform, mm, numInst, altMaterial);
 		}
 	}
 
 
-	void IArch.DrawDMN(MatLib mlib, List<MeshMaterial> meshMats)
+	void IArch.DrawDMN(MatLib mlib, Matrix4x4 transform, List<MeshMaterial> meshMats)
 	{
 		Debug.Assert(meshMats.Count == mMeshParts.Count);
 
@@ -265,7 +265,7 @@ public class StaticArch : IArch
 
 			Mesh	m	=mMeshParts[i];
 
-			m.DrawDMN(mlib, mm);
+			m.DrawDMN(mlib, transform, mm);
 		}
 	}
 

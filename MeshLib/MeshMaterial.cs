@@ -41,7 +41,6 @@ public class MeshMaterial
 	public string		mMaterialName;
 	public int			mMaterialID;
 	public bool			mbVisible;
-	public Matrix4x4	mObjectTransform;
 
 
 	internal void Read(BinaryReader br)
@@ -49,7 +48,6 @@ public class MeshMaterial
 		mMaterialName		=br.ReadString();
 		mMaterialID			=br.ReadInt32();
 		mbVisible			=br.ReadBoolean();
-		mObjectTransform	=FileUtil.ReadMatrix(br);
 	}
 
 
@@ -58,6 +56,5 @@ public class MeshMaterial
 		bw.Write(mMaterialName);
 		bw.Write(mMaterialID);
 		bw.Write(mbVisible);
-		FileUtil.WriteMatrix(bw, mObjectTransform);
 	}
 }

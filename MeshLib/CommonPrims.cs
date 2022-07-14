@@ -133,6 +133,9 @@ public class CommonPrims
 		CBKeeper			cbk	=mSK.GetCBKeeper();
 		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
 
+		dc.VSSetShader(mVS);
+		dc.PSSetShader(mPS);
+
 		Vector4	lightColor2	=Vector4.One * 0.8f;
 		Vector4	lightColor3	=Vector4.One * 0.6f;
 
@@ -158,6 +161,9 @@ public class CommonPrims
 		CBKeeper			cbk	=mSK.GetCBKeeper();
 		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
 
+		dc.VSSetShader(mVS);
+		dc.PSSetShader(mPS);
+
 		Vector4	lightColor2	=Vector4.One * 0.8f;
 		Vector4	lightColor3	=Vector4.One * 0.6f;
 
@@ -182,6 +188,9 @@ public class CommonPrims
 		CBKeeper			cbk	=mSK.GetCBKeeper();		
 		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
 
+		dc.VSSetShader(mVS);
+		dc.PSSetShader(mPS);
+
 		Vector4	lightColor2	=Vector4.One * 0.8f;
 		Vector4	lightColor3	=Vector4.One * 0.6f;
 
@@ -203,6 +212,9 @@ public class CommonPrims
 
 		CBKeeper			cbk	=mSK.GetCBKeeper();		
 		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
+
+		dc.VSSetShader(mVS);
+		dc.PSSetShader(mPS);
 
 		Vector4	lightColor2	=Vector4.One * 0.8f;
 		Vector4	lightColor3	=Vector4.One * 0.6f;
@@ -226,6 +238,9 @@ public class CommonPrims
 		CBKeeper			cbk	=mSK.GetCBKeeper();		
 		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
 
+		dc.VSSetShader(mVS);
+		dc.PSSetShader(mPS);
+
 		Vector4	lightColor2	=Vector4.One * 0.8f;
 		Vector4	lightColor3	=Vector4.One * 0.6f;
 
@@ -246,6 +261,9 @@ public class CommonPrims
 		}
 		CBKeeper			cbk	=mSK.GetCBKeeper();		
 		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
+
+		dc.VSSetShader(mVS);
+		dc.PSSetShader(mPS);
 
 		Vector4	lightColor2	=Vector4.One * 0.8f;
 		Vector4	lightColor3	=Vector4.One * 0.6f;

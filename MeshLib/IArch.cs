@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Vortice.Direct3D11;
 using Vortice.Mathematics;
 
+using MatLib	=MaterialLib.MaterialLib;
 
 namespace MeshLib;
 
@@ -37,10 +38,12 @@ public interface IArch
 	void GetPartPositions(int meshIndex, out List<Vector3> positions, out List<int> indexes);
 	Matrix4x4 GetPartTransform(int meshIndex);
 
-	void Draw(MaterialLib.MaterialLib mlib, List<MeshMaterial> meshMats);
-	void Draw(MaterialLib.MaterialLib mlib, List<MeshMaterial> meshMats, string altMaterial);
-	void DrawX(MaterialLib.MaterialLib mlib, List<MeshMaterial> meshMats, int numInst, string altMaterial);
-	void DrawDMN(MaterialLib.MaterialLib mlib, List<MeshMaterial> meshMats);
+	//the transform here will come from the gameside instance
+	//like a particular character or static in a scene with location / orientation inside
+	void Draw(MatLib mlib, Matrix4x4 transform, List<MeshMaterial> meshMats);
+	void Draw(MatLib mlib, Matrix4x4 transform, List<MeshMaterial> meshMats, string altMaterial);
+	void DrawX(MatLib mlib, Matrix4x4 transform, List<MeshMaterial> meshMats, int numInst, string altMaterial);
+	void DrawDMN(MatLib mlib, Matrix4x4 transform, List<MeshMaterial> meshMats);
 
 	void UpdateBounds();
 	BoundingBox GetBoxBound();

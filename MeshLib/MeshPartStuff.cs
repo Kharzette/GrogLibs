@@ -27,7 +27,7 @@ internal class MeshPartStuff
 
 		for(int i=0;i < mArch.GetPartCount();i++)
 		{
-			AddPart(mArch.GetPartTransform(i));
+			AddPart();
 		}
 	}
 
@@ -102,13 +102,12 @@ internal class MeshPartStuff
 
 
 	//these need to be kept in sync with the arch's mesh parts
-	void AddPart(Matrix4x4 objectTrans)
+	void AddPart()
 	{
 		MeshMaterial	mm	=new MeshMaterial();
 
 		mm.mMaterialName	="NoMaterial";
 		mm.mbVisible		=true;
-		mm.mObjectTransform	=objectTrans;
 
 		mPartMats.Add(mm);
 	}
@@ -148,23 +147,6 @@ internal class MeshPartStuff
 	}
 
 
-	internal void SetMatObjTransform(int idx, Matrix4x4 trans)
-	{
-		Debug.Assert(idx >= 0 && idx < mPartMats.Count);
-
-		mPartMats[idx].mObjectTransform	=trans;
-	}
-
-
-	internal void SetMatObjTransforms(Matrix4x4 trans)
-	{
-		foreach(MeshMaterial mm in mPartMats)
-		{
-			mm.mObjectTransform	=trans;
-		}
-	}
-
-
 	internal Dictionary<Mesh, BoundingBox> GetBoundData()
 	{
 		return	(mArch as StaticArch).GetBoundData();
@@ -199,27 +181,27 @@ internal class MeshPartStuff
 	}
 
 
-	internal void Draw(MatLib mlib)
+	internal void Draw(MatLib mlib, Matrix4x4 transform)
 	{
-		mArch.Draw(mlib, mPartMats);
+		mArch.Draw(mlib, transform, mPartMats);
 	}
 
 
-	internal void Draw(MatLib mlib, string altMaterial)
+	internal void Draw(MatLib mlib, Matrix4x4 transform, string altMaterial)
 	{
-		mArch.Draw(mlib, mPartMats, altMaterial);
+		mArch.Draw(mlib, transform, mPartMats, altMaterial);
 	}
 
 
-	internal void DrawX(MatLib mlib, string altMaterial, int numInst)
+	internal void DrawX(MatLib mlib, Matrix4x4 transform, string altMaterial, int numInst)
 	{
-		mArch.DrawX(mlib, mPartMats, numInst, altMaterial);
+		mArch.DrawX(mlib, transform, mPartMats, numInst, altMaterial);
 	}
 
 
-	internal void DrawDMN(MatLib mlib)
+	internal void DrawDMN(MatLib mlib, Matrix4x4 transform)
 	{
-		mArch.DrawDMN(mlib, mPartMats);
+		mArch.DrawDMN(mlib, transform, mPartMats);
 	}
 
 

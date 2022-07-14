@@ -28,7 +28,10 @@ public class Mesh
 	protected int				mTypeIndex;
 	protected BoundingBox		mBoxBound;
 	protected BoundingSphere	mSphereBound;
-	protected Matrix4x4			mTransform;
+
+	//this is a sort of submesh transform
+	//like an offset to a piece from the origin
+	protected Matrix4x4			mPart;
 
 
 
@@ -60,7 +63,7 @@ public class Mesh
 
 	public Matrix4x4 GetTransform()
 	{
-		return	mTransform;
+		return	mPart;
 	}
 
 
@@ -102,7 +105,7 @@ public class Mesh
 
 	public void SetTransform(Matrix4x4 mat)
 	{
-		mTransform		=mat;
+		mPart		=mat;
 	}
 
 
@@ -115,7 +118,7 @@ public class Mesh
 		bw.Write(mTypeIndex);
 
 		//transform
-		FileUtil.WriteMatrix(bw, mTransform);
+		FileUtil.WriteMatrix(bw, mPart);
 
 		//box bound
 		FileUtil.WriteVector3(bw, mBoxBound.Min);
@@ -135,9 +138,9 @@ public class Mesh
 		mVertSize		=br.ReadInt32();
 		mTypeIndex		=br.ReadInt32();
 
-		mTransform	=FileUtil.ReadMatrix(br);
+		mPart	=FileUtil.ReadMatrix(br);
 
-		SetTransform(mTransform);
+		SetTransform(mPart);
 
 		mBoxBound.Min	=FileUtil.ReadVector3(br);
 		mBoxBound.Max	=FileUtil.ReadVector3(br);
@@ -168,7 +171,7 @@ public class Mesh
 	}
 
 
-	internal void DrawDMN(MatLib mlib, MeshMaterial mm)
+	internal void DrawDMN(MatLib mlib, Matrix4x4 transform, MeshMaterial mm)
 	{
 		if(!mm.mbVisible)
 		{
@@ -199,7 +202,7 @@ public class Mesh
 		mlib.SetMaterialShadersAndLayout("DMN");
 
 		mlib.SetMaterialID("DMN", mm.mMaterialID);
-		mlib.SetWorld("DMN", (mTransform * mm.mObjectTransform));
+		mlib.SetWorld("DMN", transform * mPart);
 		
 		mlib.ApplyMaterial("DMN", dc);
 
@@ -207,7 +210,8 @@ public class Mesh
 	}
 
 
-	internal void Draw(MatLib mlib, MeshMaterial mm, string altMaterial)
+	internal void Draw(MatLib mlib, Matrix4x4 transform,
+						MeshMaterial mm, string altMaterial)
 	{
 		if(!mm.mbVisible)
 		{
@@ -238,7 +242,7 @@ public class Mesh
 		mlib.SetMaterialShadersAndLayout(altMaterial);
 
 		mlib.SetMaterialID(altMaterial, mm.mMaterialID);
-		mlib.SetWorld(altMaterial, (mTransform * mm.mObjectTransform));
+		mlib.SetWorld(altMaterial, transform * mPart);
 		
 		mlib.ApplyMaterial(altMaterial, dc);
 
@@ -247,7 +251,8 @@ public class Mesh
 
 
 	//render X times
-	internal void DrawX(MatLib mlib, MeshMaterial mm, int numInst, string altMaterial)
+	internal void DrawX(MatLib mlib, Matrix4x4 transform,
+		MeshMaterial mm, int numInst, string altMaterial)
 	{
 		if(!mm.mbVisible)
 		{
@@ -278,7 +283,7 @@ public class Mesh
 		mlib.SetMaterialShadersAndLayout(altMaterial);
 
 		mlib.SetMaterialID(altMaterial, mm.mMaterialID);
-		mlib.SetWorld(altMaterial, (mTransform * mm.mObjectTransform));
+		mlib.SetWorld(altMaterial, transform * mPart);
 		
 		mlib.ApplyMaterial(altMaterial, dc);
 
@@ -286,7 +291,7 @@ public class Mesh
 	}
 
 
-	internal void Draw(MatLib mlib, MeshMaterial mm)
+	internal void Draw(MatLib mlib, Matrix4x4 transform, MeshMaterial mm)
 	{
 		if(!mm.mbVisible)
 		{
@@ -317,7 +322,7 @@ public class Mesh
 		mlib.SetMaterialShadersAndLayout(mm.mMaterialName);
 
 		mlib.SetMaterialID(mm.mMaterialName, mm.mMaterialID);
-		mlib.SetWorld(mm.mMaterialName, (mTransform * mm.mObjectTransform));
+		mlib.SetWorld(mm.mMaterialName, transform * mPart);
 		
 		mlib.ApplyMaterial(mm.mMaterialName, dc);
 

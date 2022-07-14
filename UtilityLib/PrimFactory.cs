@@ -952,16 +952,16 @@ public static class PrimFactory
 				if(curIdx == 0)
 				{
 					pos.X	=(float)(Math.Cos(rtheta) * Math.Cos(rphi));
-					pos.Z	=(float)(Math.Cos(rtheta) * Math.Sin(rphi));
-					pos.Y	=(float)Math.Sin(rtheta);
+					pos.Y	=(float)(Math.Cos(rtheta) * Math.Sin(rphi));
+					pos.Z	=(float)Math.Sin(rtheta);
 
 					points.Add(pos);
 					curIdx++;
 				}
 				
 				pos.X	=(float)(Math.Cos((rtheta + rdtheta)) * Math.Cos(rphi));
-				pos.Z	=(float)(Math.Cos((rtheta + rdtheta)) * Math.Sin(rphi));
-				pos.Y	=(float)Math.Sin((rtheta + rdtheta));
+				pos.Y	=(float)(Math.Cos((rtheta + rdtheta)) * Math.Sin(rphi));
+				pos.Z	=(float)Math.Sin((rtheta + rdtheta));
 
 				points.Add(pos);
 
@@ -1095,7 +1095,7 @@ public static class PrimFactory
 
 			//flip normal
 			vpnt[i].Normal				=new Half4(-norm.X, -norm.Y, -norm.Z, 1f);
-			vpnt[i].Position			=-norm * radius + (Vector3.UnitY * len);
+			vpnt[i].Position			=-norm * radius + (Vector3.UnitZ * len);
 			vpnt[i].TextureCoordinate	=Vector2.Zero;	//not tackling this yet
 		}
 
@@ -1161,9 +1161,6 @@ public static class PrimFactory
 		inds.Add(72);
 		inds.Add(137);
 		inds.Add(55);	//wrap
-
-		//inside out
-		inds.Reverse();
 
 		BufferDescription	id	=new BufferDescription(inds.Count * 2,
 			BindFlags.IndexBuffer, ResourceUsage.Immutable,
