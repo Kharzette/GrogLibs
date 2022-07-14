@@ -24,7 +24,10 @@ public class CommonPrims
 
 	Vector3	mLightDir	=-Vector3.UnitY;
 
-	const float	AxisSize	=50f;
+	Matrix4x4	mAxisScale	=Matrix4x4.Identity;
+
+	const float	AxisSize	=5f;			//meters
+	const float	AxisWidth	=0.0254000443f;	//meters
 
 
 	public CommonPrims(ID3D11Device gd, StuffKeeper sk)
@@ -37,9 +40,9 @@ public class CommonPrims
 		mPS	=sk.GetPixelShader("TriSolidSpecPS");
 
 		//axis boxes
-		BoundingBox	xBox	=Misc.MakeBox(AxisSize, 1f, 1f);
-		BoundingBox	yBox	=Misc.MakeBox(1f, AxisSize, 1f);
-		BoundingBox	zBox	=Misc.MakeBox(1f, 1f, AxisSize);
+		BoundingBox	xBox	=Misc.MakeBox(AxisSize, AxisWidth, AxisWidth);
+		BoundingBox	yBox	=Misc.MakeBox(AxisWidth, AxisSize, AxisWidth);
+		BoundingBox	zBox	=Misc.MakeBox(AxisWidth, AxisWidth, AxisSize);
 
 		byte	[]code	=sk.GetVSCompiledCode("WNormWPosTexVS");
 
@@ -75,6 +78,12 @@ public class CommonPrims
 	}
 
 
+	public void SetAxisScale(float scale)
+	{
+		mAxisScale	=Matrix4x4.CreateScale(scale);
+	}
+
+
 	public void Update(GameCamera gcam, Vector3 lightDir)
 	{
 		mSK.GetCBKeeper().SetView(gcam.ViewTransposed, gcam.Position);
@@ -91,8 +100,7 @@ public class CommonPrims
 		dc.VSSetShader(mVS);
 		dc.PSSetShader(mPS);
 
-		cbk.SetWorldMat(Matrix4x4.Transpose(Matrix4x4.Identity));
-//		cbk.SetWorldMat(Matrix4x4.Identity);
+		cbk.SetWorldMat(Matrix4x4.Transpose(mAxisScale));
 
 		Vector4	redColor	=Vector4.One;
 		Vector4	greenColor	=Vector4.One;

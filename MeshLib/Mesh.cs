@@ -33,6 +33,11 @@ public class Mesh
 	//like an offset to a piece from the origin
 	protected Matrix4x4			mPart;
 
+	//scale factors, collada always in meterish scale
+	public const float	MetersToQuakeUnits	=37.6471f;
+	public const float	MetersToValveUnits	=39.37001f;
+	public const float	MetersToGrogUnits	=MetersToValveUnits;
+	public const float	MetersToCentiMeters	=100f;
 
 
 	public string Name

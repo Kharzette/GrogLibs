@@ -342,7 +342,7 @@ public class CharacterArch : IArch
 
 	public void BuildDebugBoundDrawData(CommonPrims cprims)
 	{
-		mSkin.BuildDebugBoundDrawData(cprims);
+		mSkin?.BuildDebugBoundDrawData(cprims);
 	}
 
 
