@@ -640,7 +640,7 @@ public class CharacterArch : IArch
 			mMeshParts.Add(m);
 		}
 
-		mSkin	=new Skin();
+		mSkin	=new Skin(1f);
 		mSkin.Read(br);
 
 		br.Close();

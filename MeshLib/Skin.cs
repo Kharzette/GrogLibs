@@ -22,9 +22,18 @@ public class Skin
 	Dictionary<int, BoundingSphere>		mBoneSpheres	=new Dictionary<int, BoundingSphere>();
 	Dictionary<int, BoundingCapsule>	mBoneCapsules	=new Dictionary<int, BoundingCapsule>();
 
+	//This is only needed by collision shapes, as the collision data
+	//is already around the origin, ready to be transformed into bone space.
+	//However all bone space is in meters, and the bind poses scale to
+	//whatever units the user wants (grog, quake, etc)
+	float		mScalefactor;
+	Matrix4x4	mScaleMat;
 
-	public Skin()
+
+	public Skin(float scaleFactor)
 	{
+		mScalefactor	=scaleFactor;
+		mScaleMat		=Matrix4x4.CreateScale(1f / scaleFactor);
 	}
 
 
@@ -119,7 +128,7 @@ public class Skin
 
 		sk.GetMatrixForBone(name, out ret);
 
-		return	ret;
+		return	mScaleMat * ret;
 	}
 
 
@@ -191,6 +200,9 @@ public class Skin
 
 			mBoneCapsules.Add(i, bc);
 		}
+
+		mScalefactor	=br.ReadSingle();
+		mScaleMat		=Matrix4x4.CreateScale(1f / mScalefactor);
 	}
 
 
@@ -218,5 +230,7 @@ public class Skin
 		{
 			mBoneCapsules[i].Write(bw);
 		}
+
+		bw.Write(mScalefactor);
 	}
 }
