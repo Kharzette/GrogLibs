@@ -174,6 +174,30 @@ public class Skin
 	}
 
 
+	public void AdjustBoneBoundLength(int index, float lenDelta)
+	{
+		if(!mBoneColShapes.ContainsKey(index))
+		{
+			return;
+		}
+
+		int	shape	=mBoneColShapes[index];
+
+		if(shape == Box)
+		{
+			//probably not even going to use boxes
+		}
+		else if(shape == Sphere)
+		{
+			//no len for spheres
+		}
+		else	//capsule
+		{
+			mBoneCapsules[index].mLength	+=lenDelta;
+		}
+	}
+
+
 	//I think this is used for gamecode manipulation of bones
 	public Matrix4x4 GetBoneByName(string name, Skeleton sk)
 	{
