@@ -131,7 +131,7 @@ public class CommonPrims
 	}
 
 
-	public void DrawCapsule(int index, Matrix4x4 transform)
+	public void DrawCapsule(int index, Matrix4x4 transform, Vector4 color)
 	{
 		if(!mCapsules.ContainsKey(index))
 		{
@@ -149,40 +149,13 @@ public class CommonPrims
 
 		lightColor2.W	=lightColor3.W	=1f;
 
-		cbk.SetSolidColour(Vector4.One * 0.5f);
+		cbk.SetSolidColour(color);
 		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
 		cbk.SetSpecular(Vector4.One, 1);
 		cbk.SetWorldMat(transform);
 		cbk.UpdateObject(dc);
 
 		mCapsules[index].Draw(dc);
-	}
-
-
-	public void DrawBox(int index, Matrix4x4 transform)
-	{
-		if(!mBoxes.ContainsKey(index))
-		{
-			return;
-		}
-
-		CBKeeper			cbk	=mSK.GetCBKeeper();
-		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
-
-		dc.VSSetShader(mVS);
-		dc.PSSetShader(mPS);
-
-		Vector4	lightColor2	=Vector4.One * 0.8f;
-		Vector4	lightColor3	=Vector4.One * 0.6f;
-
-		lightColor2.W	=lightColor3.W	=1f;
-
-		cbk.SetSolidColour(Vector4.One * 0.5f);
-		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
-		cbk.SetSpecular(Vector4.One, 1);
-		cbk.SetWorldMat(transform);
-		cbk.UpdateObject(dc);
-		mBoxes[index].Draw(dc);
 	}
 
 
@@ -236,7 +209,7 @@ public class CommonPrims
 	}
 
 
-	public void DrawSphere(int index, Matrix4x4 transform)
+	public void DrawSphere(int index, Matrix4x4 transform, Vector4 color)
 	{
 		if(!mSpheres.ContainsKey(index))
 		{
@@ -252,7 +225,7 @@ public class CommonPrims
 		Vector4	lightColor2	=Vector4.One * 0.8f;
 		Vector4	lightColor3	=Vector4.One * 0.6f;
 
-		cbk.SetSolidColour(Vector4.One * 0.5f);
+		cbk.SetSolidColour(color);
 		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
 		cbk.SetSpecular(Vector4.One, 1);
 		cbk.SetWorldMat(transform);

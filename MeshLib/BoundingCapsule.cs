@@ -7,7 +7,7 @@ namespace MeshLib;
 
 
 //this is a cylinder shape with rounded ends
-public class BoundingCapsule
+public struct BoundingCapsule
 {
 	internal float	mRadius;
 	internal float	mLength;

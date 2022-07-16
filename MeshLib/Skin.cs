@@ -30,9 +30,10 @@ public class Skin
 	float		mScalefactor;
 	Matrix4x4	mScaleMat;
 
-	const int	Box		=0;
-	const int	Sphere	=1;
-	const int	Capsule	=2;
+	public const int	Box		=0;
+	public const int	Sphere	=1;
+	public const int	Capsule	=2;
+	public const int	Invalid	=3;
 
 
 	public Skin(float scaleFactor)
@@ -135,6 +136,52 @@ public class Skin
 	}
 
 
+	public void CopyBound(int src, int dst)
+	{
+		if(!mBoneColShapes.ContainsKey(src))
+		{
+			return;
+		}
+		if(!mBoneColShapes.ContainsKey(dst))
+		{
+			return;
+		}
+
+		int	shape	=mBoneColShapes[src];
+
+		mBoneColShapes[dst]	=shape;
+
+		if(shape == Box)
+		{
+			mBoneBoxes[dst]		=mBoneBoxes[src];	//structs jsut copy
+		}
+		else if(shape == Sphere)
+		{
+			mBoneSpheres[dst]	=mBoneSpheres[src];
+		}
+		else	//capsule
+		{
+			mBoneCapsules[dst]	=mBoneCapsules[src];
+		}
+	}
+
+
+	public float GetScaleFactor()
+	{
+		return	mScalefactor;
+	}
+
+
+	public int	GetBoundChoice(int index)
+	{
+		if(mBoneColShapes.ContainsKey(index))
+		{
+			return	mBoneColShapes[index];
+		}
+		return	Invalid;
+	}
+
+
 	//set the type of collision shape wanted for this particular bone
 	public void SetBoundChoice(int index, int choice)
 	{
@@ -166,10 +213,13 @@ public class Skin
 		{
 			BoundingSphere	bs	=mBoneSpheres[index];
 			bs.Radius			+=radiusDelta;
+			mBoneSpheres[index]	=bs;	//struct so copy
 		}
 		else	//capsule
 		{
-			mBoneCapsules[index].mRadius	+=radiusDelta;
+			BoundingCapsule	bc		=mBoneCapsules[index];
+			bc.mRadius				+=radiusDelta;
+			mBoneCapsules[index]	=bc;	//struct so copy
 		}
 	}
 
@@ -193,7 +243,9 @@ public class Skin
 		}
 		else	//capsule
 		{
-			mBoneCapsules[index].mLength	+=lenDelta;
+			BoundingCapsule	bc		=mBoneCapsules[index];
+			bc.mLength				+=lenDelta;
+			mBoneCapsules[index]	=bc;	//struct so copy
 		}
 	}
 
@@ -244,6 +296,16 @@ public class Skin
 	}
 
 
+	public Matrix4x4 GetBoneByIndexNoBind(int idx, Skeleton sk)
+	{
+		Matrix4x4	ret	=Matrix4x4.Identity;
+
+		sk.GetMatrixForBone(idx, out ret);
+
+		return	mScaleMat * ret;
+	}
+
+
 	public void Read(BinaryReader br)
 	{
 		mInverseBindPoses.Clear();
@@ -260,7 +322,7 @@ public class Skin
 
 		int	numBoxes	=br.ReadInt32();
 
-		mBoneBoxes	=new Dictionary<int, BoundingBox>();
+		mBoneBoxes.Clear();
 
 		for(int i=0;i < numBoxes;i++)
 		{
@@ -272,7 +334,7 @@ public class Skin
 			mBoneBoxes.Add(i, box);
 		}
 
-		mBoneSpheres	=new Dictionary<int, BoundingSphere>();
+		mBoneSpheres.Clear();
 
 		for(int i=0;i < numBoxes;i++)
 		{
@@ -284,13 +346,20 @@ public class Skin
 			mBoneSpheres.Add(i, sp);
 		}
 
-		mBoneCapsules	=new Dictionary<int, BoundingCapsule>();
+		mBoneCapsules.Clear();
 
 		for(int i=0;i < numBoxes;i++)
 		{
 			BoundingCapsule	bc	=new BoundingCapsule(br);
 
 			mBoneCapsules.Add(i, bc);
+		}
+
+		mBoneColShapes.Clear();
+
+		for(int i=0;i < numBoxes;i++)
+		{
+			mBoneColShapes.Add(i, br.ReadInt32());
 		}
 
 		mScalefactor	=br.ReadSingle();
@@ -321,6 +390,10 @@ public class Skin
 		for(int i=0;i < mBoneBoxes.Count;i++)
 		{
 			mBoneCapsules[i].Write(bw);
+		}
+		for(int i=0;i < mBoneBoxes.Count;i++)
+		{
+			bw.Write(mBoneColShapes[i]);
 		}
 
 		bw.Write(mScalefactor);

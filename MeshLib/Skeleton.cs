@@ -257,6 +257,54 @@ public class Skeleton
 	}
 
 
+	public string GetBoneNameMirror(string name)
+	{
+		//some stuff to watch for...
+		//ending with .L or .R (blender gamerig)
+		//contains Left or Right (mixamo)
+		//contains _L_ or _R_ (biped)
+		string	mirror	="";
+
+		if(!mNameToIndex.ContainsKey(name))
+		{
+			return	null;
+		}
+
+		if(name.Contains("Left"))
+		{
+			mirror	=name.Replace("Left", "Right");
+		}
+		else if(name.Contains("Right"))
+		{
+			mirror	=name.Replace("Right", "Left");
+		}
+		else if(name.EndsWith('L'))
+		{
+			mirror	=name.Substring(0, name.Length - 1);
+			mirror	+='R';
+		}
+		else if(name.EndsWith('R'))
+		{
+			mirror	=name.Substring(0, name.Length - 1);
+			mirror	+='L';
+		}
+		else if(name.Contains("_L_"))
+		{
+			mirror	=name.Replace("_L_", "_R_");
+		}
+		else if(name.Contains("_R_"))
+		{
+			mirror	=name.Replace("_R_", "_L_");
+		}
+
+		if(mNameToIndex.ContainsKey(mirror))
+		{
+			return	mirror;
+		}
+		return	null;
+	}
+
+
 	public void GetBoneNames(List<string> names)
 	{
 		foreach(GSNode n in mRoots)
