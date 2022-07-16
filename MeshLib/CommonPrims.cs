@@ -262,7 +262,9 @@ public class CommonPrims
 	{
 		if(mBoxes.ContainsKey(index))
 		{
-			return;	//already a box here
+			//blast old
+			mBoxes[index].Free();
+			mBoxes.Remove(index);
 		}
 
 		byte	[]code	=mSK.GetVSCompiledCode("WNormWPosTexVS");
@@ -277,7 +279,9 @@ public class CommonPrims
 	{
 		if(mSpheres.ContainsKey(index))
 		{
-			return;	//already a sphere here
+			//blast old
+			mSpheres[index].Free();
+			mSpheres.Remove(index);
 		}
 
 		byte	[]code	=mSK.GetVSCompiledCode("WNormWPosTexVS");
