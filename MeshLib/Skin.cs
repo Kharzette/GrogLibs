@@ -308,7 +308,13 @@ public class Skin
 		}
 		else if(shape == Sphere)
 		{
-			//no len for spheres
+			//len key for spheres moves the centerpoint along
+			//the bone's Z axis
+			BoundingSphere	bs	=mBoneSpheres[index];
+
+			bs.Center	+=Vector3.UnitZ * lenDelta;
+
+			mBoneSpheres[index] =bs;
 		}
 		else	//capsule
 		{
@@ -319,6 +325,48 @@ public class Skin
 			bc.mLength =MathHelper.Max(bc.mLength, 0f);
 			mBoneCapsules[index]	=bc;	//struct so copy
 		}
+	}
+
+
+	public void SnapBoneBoundToJoint(int index)
+	{
+		if(!mBoneColShapes.ContainsKey(index))
+		{
+			return;
+		}
+
+		int	shape	=mBoneColShapes[index];
+
+		if(shape == Box)
+		{
+			//snap box base to joint pos (0, 0, 0) in bone space
+			BoundingBox	bb	=mBoneBoxes[index];
+
+			float	xExtent	=bb.Max.X - bb.Min.X;
+			float	yExtent	=bb.Max.Y - bb.Min.Y;
+			float	zExtent	=bb.Max.Z - bb.Min.Z;
+
+			Vector3	min	=Vector3.Zero;
+			Vector3	max	=Vector3.Zero;
+
+			min.X	=-xExtent * 0.5f;
+			min.Y	=-yExtent * 0.5f;
+
+			max.X	=xExtent * 0.5f;
+			max.Y	=yExtent * 0.5f;
+			max.Z	=zExtent;
+
+			mBoneBoxes[index]	=new BoundingBox(min, max);
+		}
+		else if(shape == Sphere)
+		{
+			BoundingSphere	bs	=mBoneSpheres[index];
+
+			bs.Center	=Vector3.Zero;
+
+			mBoneSpheres[index]	=bs;
+		}
+		//capsule only works from the joint pos
 	}
 
 
