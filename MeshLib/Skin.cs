@@ -236,8 +236,6 @@ public class Skin
 
 			min.X	-=radiusDelta * 0.5f;
 			max.X	+=radiusDelta * 0.5f;
-			min.Y	-=radiusDelta * 0.5f;
-			max.Y	+=radiusDelta * 0.5f;
 
 			mBoneBoxes[index]	=new BoundingBox(min, max);
 		}
@@ -252,6 +250,38 @@ public class Skin
 			BoundingCapsule	bc		=mBoneCapsules[index];
 			bc.mRadius				+=radiusDelta;
 			mBoneCapsules[index]	=bc;	//struct so copy
+		}
+	}
+
+
+	public void AdjustBoneBoundDepth(int index, float depthDelta)
+	{
+		if(!mBoneColShapes.ContainsKey(index))
+		{
+			return;
+		}
+
+		int	shape	=mBoneColShapes[index];
+
+		if(shape == Box)
+		{
+			BoundingBox	bb	=mBoneBoxes[index];
+
+			Vector3	min	=bb.Min;
+			Vector3	max	=bb.Max;
+
+			min.Y	-=depthDelta * 0.5f;
+			max.Y	+=depthDelta * 0.5f;
+
+			mBoneBoxes[index]	=new BoundingBox(min, max);
+		}
+		else if(shape == Sphere)
+		{
+			//no sphere depth
+		}
+		else	//capsule
+		{
+			//no capsule depth
 		}
 	}
 
@@ -284,6 +314,9 @@ public class Skin
 		{
 			BoundingCapsule	bc		=mBoneCapsules[index];
 			bc.mLength				+=lenDelta;
+
+			//don't allow negative
+			bc.mLength =MathHelper.Max(bc.mLength, 0f);
 			mBoneCapsules[index]	=bc;	//struct so copy
 		}
 	}
