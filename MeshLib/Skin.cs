@@ -27,7 +27,7 @@ public class Skin
 	//is already around the origin, ready to be transformed into bone space.
 	//However all bone space is in meters, and the bind poses scale to
 	//whatever units the user wants (grog, quake, etc)
-	float		mScalefactor;
+	float		mScaleFactor;
 	Matrix4x4	mScaleMat;
 
 	public const int	Box		=0;
@@ -38,7 +38,7 @@ public class Skin
 
 	public Skin(float scaleFactor)
 	{
-		mScalefactor	=scaleFactor;
+		mScaleFactor	=scaleFactor;
 		mScaleMat		=Matrix4x4.CreateScale(1f / scaleFactor);
 	}
 
@@ -59,6 +59,27 @@ public class Skin
 			{
 				mInverseBindPoses.Add(bp.Key, bp.Value);
 			}
+		}
+	}
+
+
+	//this is used to adjust points to a bone origin before bounding
+	internal void MulByIBP(int index, List<Vector3> toMul)
+	{
+		if(!mInverseBindPoses.ContainsKey(index))
+		{
+			return;
+		}
+
+		Matrix4x4	scale	=Matrix4x4.CreateScale(mScaleFactor);
+
+		Matrix4x4	ibp	=mInverseBindPoses[index];
+
+		ibp	*=scale;
+
+		for(int i=0;i < toMul.Count;i++)
+		{
+			toMul[i]	=Mathery.TransformCoordinate(toMul[i], ref ibp);
 		}
 	}
 
@@ -106,20 +127,21 @@ public class Skin
 
 
 	//this is used to get an initial guess based on box bounds
-	internal void SetBoneBounds(int index, BoundingBox box)
+	//worldbox is in worldspace, bonebox in the space of the indexed bone
+	internal void SetBoneBounds(int index, BoundingBox worldBox, BoundingBox boneBox)
 	{
-		BoundingSphere	bs	=BoundingSphere.CreateFromBoundingBox(box);
-		BoundingCapsule	bc	=BoundingCapsule.CreateFromBoundingBox(box);
+		BoundingSphere	bs	=BoundingSphere.CreateFromBoundingBox(boneBox);
+		BoundingCapsule	bc	=BoundingCapsule.CreateFromBoundingBox(worldBox);
 
 		if(mBoneBoxes.ContainsKey(index))
 		{
-			mBoneBoxes[index]		=box;
+			mBoneBoxes[index]		=boneBox;
 			mBoneSpheres[index]		=bs;
 			mBoneCapsules[index]	=bc;
 		}
 		else
 		{
-			mBoneBoxes.Add(index, box);
+			mBoneBoxes.Add(index, boneBox);
 			mBoneSpheres.Add(index, bs);
 			mBoneCapsules.Add(index, bc);
 		}
@@ -168,7 +190,7 @@ public class Skin
 
 	public float GetScaleFactor()
 	{
-		return	mScalefactor;
+		return	mScaleFactor;
 	}
 
 
@@ -207,7 +229,17 @@ public class Skin
 
 		if(shape == Box)
 		{
-			//probably not even going to use boxes
+			BoundingBox	bb	=mBoneBoxes[index];
+
+			Vector3	min	=bb.Min;
+			Vector3	max	=bb.Max;
+
+			min.X	-=radiusDelta * 0.5f;
+			max.X	+=radiusDelta * 0.5f;
+			min.Y	-=radiusDelta * 0.5f;
+			max.Y	+=radiusDelta * 0.5f;
+
+			mBoneBoxes[index]	=new BoundingBox(min, max);
 		}
 		else if(shape == Sphere)
 		{
@@ -235,7 +267,14 @@ public class Skin
 
 		if(shape == Box)
 		{
-			//probably not even going to use boxes
+			BoundingBox	bb	=mBoneBoxes[index];
+
+			Vector3	min	=bb.Min;
+			Vector3	max	=bb.Max;
+
+			max.Z	+=lenDelta;
+
+			mBoneBoxes[index]	=new BoundingBox(min, max);
 		}
 		else if(shape == Sphere)
 		{
@@ -362,8 +401,8 @@ public class Skin
 			mBoneColShapes.Add(i, br.ReadInt32());
 		}
 
-		mScalefactor	=br.ReadSingle();
-		mScaleMat		=Matrix4x4.CreateScale(1f / mScalefactor);
+		mScaleFactor	=br.ReadSingle();
+		mScaleMat		=Matrix4x4.CreateScale(1f / mScaleFactor);
 	}
 
 
@@ -396,6 +435,6 @@ public class Skin
 			bw.Write(mBoneColShapes[i]);
 		}
 
-		bw.Write(mScalefactor);
+		bw.Write(mScaleFactor);
 	}
 }

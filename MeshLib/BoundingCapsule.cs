@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Numerics;
 using Vortice.Mathematics;
 using UtilityLib;
@@ -7,6 +8,8 @@ namespace MeshLib;
 
 
 //this is a cylinder shape with rounded ends
+//Intended to work as a bone space capsule with
+//base at the joint, no translation and extend along Z
 public struct BoundingCapsule
 {
 	internal float	mRadius;
@@ -38,24 +41,29 @@ public struct BoundingCapsule
 	{
 		//find radius
 		float	radius	=0f;
+		float	length	=0f;
+		Vector3	radVec	=Vector3.Zero;
 
 		//measure from center to most distant side
-		if(box.Min.Z < box.Min.X)
+		if(box.Min.Z < box.Min.X && box.Min.Z < box.Min.Y)
 		{
-			radius	=box.Center.Z - box.Min.Z;
+			//use Z for length
+			length	=box.Max.Z - box.Min.Z;
+			radVec	=Vector3.UnitX + Vector3.UnitY;	//xy for radius
+		}
+		else if(box.Min.Y < box.Min.X && box.Min.Y < box.Min.Z)
+		{
+			length	=box.Max.Y - box.Min.Y;
+			radVec	=Vector3.UnitX + Vector3.UnitZ;	//xz for radius
 		}
 		else
 		{
-			radius	=box.Center.X - box.Min.X;
+			length	=box.Max.X - box.Min.X;
+			radVec	=Vector3.UnitZ + Vector3.UnitY;	//zy for radius
 		}
 
-		float	length =box.Height - (2 * radius);
-		if(length < 0)
-		{
-			//this shape is goofy and probably won't work
-			//boost length to at least 1
-			length	=1;
-		}
+		radVec	=Vector3.Normalize(radVec);
+		radius	=Vector3.Dot(radVec, box.Max - box.Center);
 
 		return	new BoundingCapsule(radius, length);
 	}

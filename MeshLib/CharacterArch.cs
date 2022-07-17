@@ -381,7 +381,22 @@ public class CharacterArch : IArch
 
 			if(boxPoints.Count > 0)
 			{
-				mSkin.SetBoneBounds(i, BoundingBox.CreateFromPoints(boxPoints.ToArray()));
+				//make a copy that is transformed by inverse bind pose
+				List<Vector3>	boneyPoints	=new List<Vector3>(boxPoints);
+
+				//this makes a better box bound
+				mSkin.MulByIBP(i, boneyPoints);
+
+				//sometimes the origin of the bone, where the joint is
+				//doesn't get a point
+				boneyPoints.Add(Vector3.Zero);
+
+				BoundingBox	worldBox	=BoundingBox.CreateFromPoints(boxPoints.ToArray());
+				BoundingBox	boneBox		=BoundingBox.CreateFromPoints(boneyPoints.ToArray());
+
+				//but cyl and sphere get a better bound from the world box
+				//so pass them both in
+				mSkin.SetBoneBounds(i, worldBox, boneBox);
 			}
 		}
 	}
