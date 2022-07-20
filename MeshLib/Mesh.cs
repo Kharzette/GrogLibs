@@ -207,8 +207,10 @@ public class Mesh
 		mlib.SetMaterialShadersAndLayout("DMN");
 
 		mlib.SetMaterialID("DMN", mm.mMaterialID);
-		mlib.SetWorld("DMN", transform * mPart);
-		
+
+		CBKeeper	cbk	=mlib.GetCBKeeper();
+
+		cbk.SetAndTransposeWorldMat(transform * mPart);		
 		mlib.ApplyMaterial("DMN", dc);
 
 		dc.DrawIndexed(mNumTriangles * 3, 0, 0);
@@ -247,8 +249,10 @@ public class Mesh
 		mlib.SetMaterialShadersAndLayout(altMaterial);
 
 		mlib.SetMaterialID(altMaterial, mm.mMaterialID);
-		mlib.SetWorld(altMaterial, transform * mPart);
-		
+
+		CBKeeper	cbk	=mlib.GetCBKeeper();
+
+		cbk.SetAndTransposeWorldMat(transform * mPart);		
 		mlib.ApplyMaterial(altMaterial, dc);
 
 		dc.DrawIndexed(mNumTriangles * 3, 0, 0);
@@ -288,8 +292,10 @@ public class Mesh
 		mlib.SetMaterialShadersAndLayout(altMaterial);
 
 		mlib.SetMaterialID(altMaterial, mm.mMaterialID);
-		mlib.SetWorld(altMaterial, transform * mPart);
-		
+
+		CBKeeper	cbk	=mlib.GetCBKeeper();
+
+		cbk.SetAndTransposeWorldMat(transform * mPart);
 		mlib.ApplyMaterial(altMaterial, dc);
 
 		dc.DrawIndexedInstanced(mNumTriangles * 3, numInst, 0, 0, 0);
@@ -327,8 +333,10 @@ public class Mesh
 		mlib.SetMaterialShadersAndLayout(mm.mMaterialName);
 
 		mlib.SetMaterialID(mm.mMaterialName, mm.mMaterialID);
-		mlib.SetWorld(mm.mMaterialName, transform * mPart);
-		
+
+		CBKeeper	cbk	=mlib.GetCBKeeper();
+
+		cbk.SetAndTransposeWorldMat(transform * mPart);
 		mlib.ApplyMaterial(mm.mMaterialName, dc);
 
 		dc.DrawIndexed(mNumTriangles * 3, 0, 0);

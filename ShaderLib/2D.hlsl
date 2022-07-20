@@ -2,7 +2,7 @@
 #include "Types.hlsli"
 #include "CommonFunctions.hlsli"
 
-cbuffer TwoD : register(b4)
+cbuffer TwoD : register(b3)
 {
 	float2	mTextPosition, mSecondLayerOffset;
 	float2	mTextScale;

@@ -275,7 +275,7 @@ public class ScreenText
 	}
 
 
-	public void Draw(Matrix4x4 view, Matrix4x4 proj)
+	public void Draw()
 	{
 		//if this assert fires, make sure
 		//all text modification stuff happens

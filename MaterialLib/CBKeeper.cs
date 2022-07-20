@@ -17,6 +17,7 @@ public unsafe class CBKeeper
 	struct PerFrame
 	{
 		internal Matrix4x4	mView;
+		internal Matrix4x4	mProjection;
 		internal Matrix4x4	mLightViewProj;	//for shadows
 		internal Vector3	mEyePos;
 		internal UInt32		mPadding;		//pad to 16 boundary
@@ -41,13 +42,6 @@ public unsafe class CBKeeper
 		//material id for borders etc
 		internal int		mMaterialID;
 		internal Vector3	mDanglyForce;
-	}
-
-	//CommonFunctions.hlsli
-	[StructLayout(LayoutKind.Sequential, Pack = 4)]
-	struct ChangeLess
-	{
-		internal Matrix4x4	mProjection;
 	}
 
 	//CommonFunctions.hlsli
@@ -118,7 +112,6 @@ public unsafe class CBKeeper
 	//gpu side
 	ID3D11Buffer	mPerObjectBuf;
 	ID3D11Buffer	mPerFrameBuf;
-	ID3D11Buffer	mChangeLessBuf;
 	ID3D11Buffer	mTwoDBuf;
 	ID3D11Buffer	mCharacterBuf;
 	ID3D11Buffer	mBSPBuf, mBSPStylesBuf;
@@ -128,7 +121,6 @@ public unsafe class CBKeeper
 	//cpu side
 	PerObject	mPerObject;
 	PerFrame	mPerFrame;
-	ChangeLess	mChangeLess;
 	TwoD		mTwoD;
 	BSP			mBSP;
 	Post		mPost;
@@ -151,7 +143,6 @@ public unsafe class CBKeeper
 	{
 		mPerObjectBuf.Dispose();
 		mPerFrameBuf.Dispose();
-		mChangeLessBuf.Dispose();
 		mTwoDBuf.Dispose();
 		mCharacterBuf.Dispose();
 		mBSPBuf.Dispose();
@@ -165,7 +156,6 @@ public unsafe class CBKeeper
 		//create constant buffers
 		mPerObjectBuf	=MakeConstantBuffer(dev, sizeof(PerObject));
 		mPerFrameBuf	=MakeConstantBuffer(dev, sizeof(PerFrame));
-		mChangeLessBuf	=MakeConstantBuffer(dev, sizeof(ChangeLess));
 		mTwoDBuf		=MakeConstantBuffer(dev, sizeof(TwoD));
 		mBSPBuf			=MakeConstantBuffer(dev, sizeof(BSP));
 		mCharacterBuf	=MakeConstantBuffer(dev, sizeof(Matrix4x4) * MaxBones);
@@ -176,7 +166,6 @@ public unsafe class CBKeeper
 		//alloc C# side constant buffer data
 		mPerObject		=new PerObject();
 		mPerFrame		=new PerFrame();
-		mChangeLess		=new ChangeLess();
 		mTwoD			=new TwoD();
 		mBones			=new Matrix4x4[MaxBones];
 		mAniIntensities	=new Half[NumStyles];
@@ -219,16 +208,14 @@ public unsafe class CBKeeper
 		dc.PSSetConstantBuffer(0, mPerObjectBuf);
 		dc.VSSetConstantBuffer(1, mPerFrameBuf);
 		dc.PSSetConstantBuffer(1, mPerFrameBuf);
-		dc.VSSetConstantBuffer(2, mChangeLessBuf);
-		dc.PSSetConstantBuffer(2, mChangeLessBuf);
 	}
 
 
 	public void Set2DCBToShaders(ID3D11DeviceContext dc)
 	{
 		//2d
-		dc.VSSetConstantBuffer(4, mTwoDBuf);
-		dc.PSSetConstantBuffer(4, mTwoDBuf);
+		dc.VSSetConstantBuffer(3, mTwoDBuf);
+		dc.PSSetConstantBuffer(3, mTwoDBuf);
 	}
 
 
@@ -243,10 +230,10 @@ public unsafe class CBKeeper
 	public void SetBSPToShaders(ID3D11DeviceContext dc)
 	{
 		//bsp
-		dc.VSSetConstantBuffer(4, mBSPBuf);
-		dc.PSSetConstantBuffer(4, mBSPBuf);
-		dc.VSSetConstantBuffer(5, mBSPStylesBuf);
-		dc.PSSetConstantBuffer(5, mBSPStylesBuf);
+		dc.VSSetConstantBuffer(5, mBSPBuf);
+		dc.PSSetConstantBuffer(5, mBSPBuf);
+		dc.VSSetConstantBuffer(6, mBSPStylesBuf);
+		dc.PSSetConstantBuffer(6, mBSPStylesBuf);
 	}
 
 
@@ -261,8 +248,8 @@ public unsafe class CBKeeper
 
 	public void SetPerShadowToShaders(ID3D11DeviceContext dc)
 	{
-		dc.VSSetConstantBuffer(3, mPerShadowBuf);
-		dc.PSSetConstantBuffer(3, mPerShadowBuf);
+		dc.VSSetConstantBuffer(2, mPerShadowBuf);
+		dc.PSSetConstantBuffer(2, mPerShadowBuf);
 	}
 
 
@@ -275,12 +262,6 @@ public unsafe class CBKeeper
 	public void UpdateObject(ID3D11DeviceContext dc)
 	{
 		dc.UpdateSubresource<PerObject>(mPerObject, mPerObjectBuf);
-	}
-
-
-	public void UpdateChangeLess(ID3D11DeviceContext dc)
-	{
-		dc.UpdateSubresource<ChangeLess>(mChangeLess, mChangeLessBuf);
 	}
 
 
@@ -381,9 +362,9 @@ public unsafe class CBKeeper
 	}
 
 
-	public void SetWorldMat(Matrix4x4 world)
+	public void SetAndTransposeWorldMat(Matrix4x4 world)
 	{
-		mPerObject.mWorld	=world;
+		mPerObject.mWorld	=Matrix4x4.Transpose(world);
 	}
 
 
@@ -468,7 +449,7 @@ public unsafe class CBKeeper
 
 	public void SetProjection(Matrix4x4 proj)
 	{
-		mChangeLess.mProjection	=proj;
+		mPerFrame.mProjection	=proj;
 	}
 
 

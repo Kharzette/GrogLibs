@@ -25,8 +25,7 @@ internal class Material
 	string	mSamplerState1;	//sampling
 
 	//variable stuffs
-	internal Matrix4x4	mWorld;			//world matrix
-	internal int		mMaterialID;	//ID for doing outlines and such
+	internal int	mMaterialID;	//ID for doing outlines and such
 
 
 	//variables for specific meshtypes
@@ -45,7 +44,6 @@ internal class Material
 		bw.Write(mSamplerState0);
 		bw.Write(mSamplerState1);
 		
-		FileUtil.WriteMatrix(bw, mWorld);
 		bw.Write(mMaterialID);
 
 		bw.Write(mBSPVars != null);
@@ -68,7 +66,6 @@ internal class Material
 		mSamplerState0	=br.ReadString();
 		mSamplerState1	=br.ReadString();
 
-		mWorld		=FileUtil.ReadMatrix(br);
 		mMaterialID	=br.ReadInt32();
 
 		bool	bBSP	=br.ReadBoolean();
@@ -97,7 +94,6 @@ internal class Material
 		ret.mBlendState		=mBlendState;
 		ret.mSamplerState0	=mSamplerState0;
 		ret.mSamplerState1	=mSamplerState1;
-		ret.mWorld			=mWorld;
 		ret.mMaterialID		=mMaterialID;
 
 		if(mBSPVars != null)
@@ -184,7 +180,7 @@ internal class Material
 		mMeshVars.Apply(dc, cbk, sk);
 		mBSPVars?.Apply(dc, cbk, sk);
 
-		cbk.SetWorldMat(mWorld);
+		//hopefully the world matrix is set by now
 		cbk.UpdateObject(dc);
 
 		cbk.SetCommonCBToShaders(dc);
@@ -244,11 +240,5 @@ internal class Material
 	internal void SetMaterialID(int id)
 	{
 		mMaterialID	=id;
-	}
-
-
-	internal void SetWorld(Matrix4x4 mat)
-	{
-		mWorld	=mat;
 	}
 }

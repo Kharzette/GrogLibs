@@ -13,6 +13,7 @@
 cbuffer	PerFrame : register(b1)
 {
 	float4x4	mView;
+	float4x4	mProjection;
 	float4x4	mLightViewProj;	//for shadowing
 	float3		mEyePos;
 	uint		mPadding;
@@ -41,13 +42,7 @@ cbuffer PerObject : register(b0)
 }
 
 
-cbuffer ChangeLess : register(b2)
-{
-	float4x4	mProjection;
-}
-
-
-cbuffer PerShadow : register(b3)
+cbuffer PerShadow : register(b2)
 {
 	float3	mShadowLightPos;	//point light location
 	bool	mbDirectional;		//sunnish or point

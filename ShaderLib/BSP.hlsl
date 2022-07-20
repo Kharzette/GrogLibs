@@ -4,7 +4,7 @@ Texture1D	mDynLights : register(t3);
 #include "Types.hlsli"
 #include "CommonFunctions.hlsli"
 
-cbuffer BSP : register(b4)
+cbuffer BSP : register(b5)
 {
 	bool		mbTextureEnabled;
 	float2		mTexSize;
@@ -13,7 +13,7 @@ cbuffer BSP : register(b4)
 
 //putting these in their own cbuffer
 //because of how painful arrays are in C#
-cbuffer BSPStyles : register(b5)
+cbuffer BSPStyles : register(b6)
 {
 	//intensity levels for the animated / switchable light styles
 	half	mAniIntensities[44];

@@ -1,20 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-	<Reference Include="SharpDX">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.Mathematics">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Mathematics.dll</HintPath>
-    </Reference>
-	<Reference Include="SharpDX.XAudio2">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.XAudio2.dll</HintPath>
-    </Reference>
+	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DirectX\Vortice.DirectX.csproj"/>
+	<ProjectReference Include="..\Vortice.Mathematics\src\Vortice.Mathematics\Vortice.Mathematics.csproj"/>
+	<ProjectReference Include="..\Vortice.Windows\src\Vortice.XAudio2\Vortice.XAudio2.csproj"/>
   </ItemGroup>
   <ItemGroup>
+	<ProjectReference Include="..\SharpDXWindows\SharpDXWindows.csproj"/>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>
   </ItemGroup>
 </Project>

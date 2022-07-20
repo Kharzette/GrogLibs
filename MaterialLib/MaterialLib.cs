@@ -111,19 +111,6 @@ public partial class MaterialLib
 	}
 
 
-	public void SetWorld(string matName, Matrix4x4 world)
-	{
-		if(!mMats.ContainsKey(matName))
-		{
-			return;
-		}
-
-		Material	mat	=mMats[matName];
-
-		mat.SetWorld(world);
-	}
-
-
 	public void Save(string fileName)
 	{
 		FileStream	fs	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
