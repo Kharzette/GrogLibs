@@ -100,7 +100,7 @@ public class DebugDraw
 
 		lightColor2.W	=lightColor3.W	=1f;
 
-		cbk.SetView(gd.GCam.ViewTransposed, gd.GCam.Position);
+		cbk.SetTransposedView(gd.GCam.ViewTransposed, gd.GCam.Position);
 		cbk.SetWorldMat(Matrix4x4.Identity);
 
 		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);

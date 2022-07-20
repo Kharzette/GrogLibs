@@ -300,14 +300,39 @@ public unsafe class CBKeeper
 #region PerFrame
 	public void SetView(Matrix4x4 view, Vector3 eyePos)
 	{
+		mPerFrame.mView		=Matrix4x4.Transpose(view);
+		mPerFrame.mEyePos	=-eyePos;	//negate into viewspace
+	}
+
+
+	public void SetTransposedView(Matrix4x4 view, Vector3 eyePos)
+	{
 		mPerFrame.mView		=view;
 		mPerFrame.mEyePos	=-eyePos;	//negate into viewspace
 	}
 
 
-	public void SetLightViewProj(Matrix4x4 lvp)
+	public void SetTransposedLightViewProj(Matrix4x4 lvp)
 	{
 		mPerFrame.mLightViewProj	=lvp;
+	}
+
+
+	public void SetLightViewProj(Matrix4x4 lvp)
+	{
+		mPerFrame.mLightViewProj	=Matrix4x4.Transpose(lvp);
+	}
+
+
+	public void SetTransposedProjection(Matrix4x4 proj)
+	{
+		mPerFrame.mProjection	=proj;
+	}
+
+	
+	public void SetProjection(Matrix4x4 proj)
+	{
+		mPerFrame.mProjection	=Matrix4x4.Transpose(proj);
 	}
 #endregion
 
@@ -362,9 +387,15 @@ public unsafe class CBKeeper
 	}
 
 
-	public void SetAndTransposeWorldMat(Matrix4x4 world)
+	public void SetWorldMat(Matrix4x4 world)
 	{
 		mPerObject.mWorld	=Matrix4x4.Transpose(world);
+	}
+
+
+	public void SetTransposedWorldMat(Matrix4x4 world)
+	{
+		mPerObject.mWorld	=world;
 	}
 
 
@@ -444,12 +475,6 @@ public unsafe class CBKeeper
 		{
 			mBones[b]	=Matrix4x4.Transpose(bones[b]);
 		});
-	}
-
-
-	public void SetProjection(Matrix4x4 proj)
-	{
-		mPerFrame.mProjection	=proj;
 	}
 
 

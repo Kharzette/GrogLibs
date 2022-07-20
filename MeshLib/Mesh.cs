@@ -210,7 +210,7 @@ public class Mesh
 
 		CBKeeper	cbk	=mlib.GetCBKeeper();
 
-		cbk.SetAndTransposeWorldMat(transform * mPart);		
+		cbk.SetWorldMat(transform * mPart);		
 		mlib.ApplyMaterial("DMN", dc);
 
 		dc.DrawIndexed(mNumTriangles * 3, 0, 0);
@@ -252,7 +252,7 @@ public class Mesh
 
 		CBKeeper	cbk	=mlib.GetCBKeeper();
 
-		cbk.SetAndTransposeWorldMat(transform * mPart);		
+		cbk.SetWorldMat(transform * mPart);		
 		mlib.ApplyMaterial(altMaterial, dc);
 
 		dc.DrawIndexed(mNumTriangles * 3, 0, 0);
@@ -295,7 +295,7 @@ public class Mesh
 
 		CBKeeper	cbk	=mlib.GetCBKeeper();
 
-		cbk.SetAndTransposeWorldMat(transform * mPart);
+		cbk.SetWorldMat(transform * mPart);
 		mlib.ApplyMaterial(altMaterial, dc);
 
 		dc.DrawIndexedInstanced(mNumTriangles * 3, numInst, 0, 0, 0);
@@ -336,7 +336,7 @@ public class Mesh
 
 		CBKeeper	cbk	=mlib.GetCBKeeper();
 
-		cbk.SetAndTransposeWorldMat(transform * mPart);
+		cbk.SetWorldMat(transform * mPart);
 		mlib.ApplyMaterial(mm.mMaterialName, dc);
 
 		dc.DrawIndexed(mNumTriangles * 3, 0, 0);

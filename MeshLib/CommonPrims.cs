@@ -86,7 +86,7 @@ public class CommonPrims
 
 	public void Update(GameCamera gcam, Vector3 lightDir)
 	{
-		mSK.GetCBKeeper().SetView(gcam.ViewTransposed, gcam.Position);
+		mSK.GetCBKeeper().SetTransposedView(gcam.ViewTransposed, gcam.Position);
 
 		mLightDir	=lightDir;
 	}
@@ -100,7 +100,7 @@ public class CommonPrims
 		dc.VSSetShader(mVS);
 		dc.PSSetShader(mPS);
 
-		cbk.SetWorldMat(Matrix4x4.Transpose(mAxisScale));
+		cbk.SetWorldMat(mAxisScale);
 
 		Vector4	redColor	=Vector4.One;
 		Vector4	greenColor	=Vector4.One;
