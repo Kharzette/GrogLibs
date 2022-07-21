@@ -29,15 +29,19 @@ internal class StringData
 
 public class ScreenText
 {
-	GraphicsDevice				mGD;
-	StuffKeeper					mSK;
-	CBKeeper					mCBK;
+	GraphicsDevice	mGD;
+	StuffKeeper		mSK;
+	CBKeeper		mCBK;
+	Font			mFont;
+
+	//d3d stuff
 	ID3D11Buffer				mVB;
 	ID3D11InputLayout			mLayout;
 	ID3D11ShaderResourceView	mFontSRV;
 	ID3D11VertexShader			mVS;
 	ID3D11PixelShader			mPS;
-	Font						mFont;
+	ID3D11DepthStencilState		mDSS;
+	ID3D11BlendState			mBS;
 
 	Memory<TextVert>	mTextBuf;
 
@@ -81,6 +85,8 @@ public class ScreenText
 		mLayout	=sk.MakeLayout(gd.GD, "TextVS", ied);
 		mVS		=sk.GetVertexShader("TextVS");
 		mPS		=sk.GetPixelShader("TextPS");
+		mDSS	=sk.GetDepthStencilState("DisableDepth");
+		mBS		=sk.GetBlendState("AlphaBlending");
 	}
 
 
@@ -296,6 +302,9 @@ public class ScreenText
 		mGD.DC.VSSetShader(mVS);
 		mGD.DC.PSSetShader(mPS);
 		mGD.DC.PSSetShaderResource(0, mFontSRV);
+
+		mGD.DC.OMSetDepthStencilState(mDSS);
+		mGD.DC.OMSetBlendState(mBS);
 
 		mCBK.Set2DCBToShaders(mGD.DC);
 
