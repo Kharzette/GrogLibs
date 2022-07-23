@@ -17,6 +17,7 @@ public class CommonPrims
 
 	PrimObject	mXAxis, mYAxis, mZAxis;
 	PrimObject	mBoxBound, mSphereBound;
+	PrimObject	mLightAxis, mLightPointyEnd;
 
 	Dictionary<int, PrimObject>	mBoxes		=new Dictionary<int, PrimObject>();
 	Dictionary<int, PrimObject>	mSpheres	=new Dictionary<int, PrimObject>();
@@ -24,7 +25,8 @@ public class CommonPrims
 
 	Vector3	mLightDir	=-Vector3.UnitY;
 
-	Matrix4x4	mAxisScale	=Matrix4x4.Identity;
+	Matrix4x4	mAxisScale			=Matrix4x4.Identity;
+	Matrix4x4	mArrowHeadOffset	=Matrix4x4.Identity;
 
 	const float	AxisSize	=5f;			//meters
 	const float	AxisWidth	=0.0254000443f;	//meters
@@ -40,19 +42,28 @@ public class CommonPrims
 		mPS	=sk.GetPixelShader("TriSolidSpecPS");
 
 		//axis boxes
-		BoundingBox	xBox	=Misc.MakeBox(AxisSize, AxisWidth, AxisWidth);
-		BoundingBox	yBox	=Misc.MakeBox(AxisWidth, AxisSize, AxisWidth);
-		BoundingBox	zBox	=Misc.MakeBox(AxisWidth, AxisWidth, AxisSize);
+		BoundingBox	xBox		=Misc.MakeBox(AxisSize, AxisWidth, AxisWidth);
+		BoundingBox	yBox		=Misc.MakeBox(AxisWidth, AxisSize, AxisWidth);
+		BoundingBox	zBox		=Misc.MakeBox(AxisWidth, AxisWidth, AxisSize);
+		BoundingBox	lightBox	=Misc.MakeBaseOrgBox(AxisWidth, AxisWidth, 1f);
 
 		byte	[]code	=sk.GetVSCompiledCode("WNormWPosTexVS");
 
-		mXAxis	=PrimFactory.CreateCube(gd, code, xBox);
-		mYAxis	=PrimFactory.CreateCube(gd, code, yBox);
-		mZAxis	=PrimFactory.CreateCube(gd, code, zBox);
+		mXAxis		=PrimFactory.CreateCube(gd, code, xBox);
+		mYAxis		=PrimFactory.CreateCube(gd, code, yBox);
+		mZAxis		=PrimFactory.CreateCube(gd, code, zBox);
+		mLightAxis	=PrimFactory.CreateCube(gd, code, lightBox);
 
-		mXAxis.World	=Matrix4x4.Identity;
-		mYAxis.World	=Matrix4x4.Identity;
-		mZAxis.World	=Matrix4x4.Identity;
+		mLightPointyEnd	=PrimFactory.CreateHalfPrism(gd, code, AxisWidth * 2f);
+
+		mXAxis.World			=Matrix4x4.Identity;
+		mYAxis.World			=Matrix4x4.Identity;
+		mZAxis.World			=Matrix4x4.Identity;
+		mLightAxis.World		=Matrix4x4.Identity;
+		mLightPointyEnd.World	=Matrix4x4.Identity;
+
+		mArrowHeadOffset	=Matrix4x4.CreateRotationX(-MathHelper.PiOver2)
+							*Matrix4x4.CreateTranslation(Vector3.UnitZ * (1f + (AxisWidth * 8)));
 	}
 
 
@@ -89,6 +100,34 @@ public class CommonPrims
 		mSK.GetCBKeeper().SetTransposedView(gcam.ViewTransposed, gcam.Position);
 
 		mLightDir	=lightDir;
+	}
+
+
+	public void DrawLightArrow(Matrix4x4 transform, Vector4 color)
+	{
+		CBKeeper			cbk	=mSK.GetCBKeeper();
+		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
+
+		dc.VSSetShader(mVS);
+		dc.PSSetShader(mPS);
+
+		Vector4	lightColor2	=Vector4.One * 0.8f;
+		Vector4	lightColor3	=Vector4.One * 0.6f;
+
+		lightColor2.W	=lightColor3.W	=1f;
+
+		cbk.SetSolidColour(color);
+		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
+		cbk.SetSpecular(Vector4.One, 1);
+		cbk.SetWorldMat(mAxisScale * transform);
+		cbk.UpdateObject(dc);
+
+		mLightAxis.Draw(dc);
+
+		cbk.SetWorldMat(mArrowHeadOffset * mAxisScale * transform);
+		cbk.UpdateObject(dc);
+
+		mLightPointyEnd.Draw(dc);
 	}
 
 

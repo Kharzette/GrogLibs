@@ -271,6 +271,33 @@ namespace UtilityLib
 		}
 
 
+		public static Matrix4x4 MatrixFromDirection(Vector3 dir)
+		{
+			//get a good side vec
+			Vector3	side	=Vector3.Cross(Vector3.UnitY, dir);
+
+			float	len	=side.LengthSquared();
+			if(len <= 0f)
+			{
+				//dir must be pointing straight up or down
+				side	=Vector3.Cross(Vector3.UnitZ, dir);
+			}
+
+			//get up vec
+			Vector3	up	=Vector3.Cross(dir, side);
+
+			//recross for better side
+			side	=Vector3.Cross(up, dir);
+
+			Matrix4x4	ret	=new Matrix4x4(side.X, side.Y, side.Z, 0f,
+				up.X, up.Y, up.Z, 0f,
+				dir.X, dir.Y, dir.Z, 0f,
+				0f, 0f, 0f, 1f);
+
+			return	ret;
+		}
+
+
 		//direction points at a cube face
 		public static void CreateCubeMapViewProjMatrix(TextureCubeFace face,
 			Vector3 cubeCenter, float farPlane,

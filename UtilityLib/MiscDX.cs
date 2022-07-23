@@ -316,6 +316,28 @@ namespace UtilityLib
 		}
 
 
+		//returns a box with the Z base at the origin
+		public static BoundingBox MakeBaseOrgBox(float width, float height, float depth)
+		{
+			float	halfWidth	=width * 0.5f;
+			float	halfHeight	=height * 0.5f;
+
+			Vector3	min	=Vector3.Zero;
+			Vector3	max	=Vector3.Zero;
+
+			min.X	=-halfWidth;
+			max.X	=halfWidth;
+			
+			min.Y	=-halfHeight;
+			max.Y	=halfHeight;
+
+			min.Z	=0;
+			max.Z	=depth;
+
+			return	new BoundingBox(min, max);
+		}
+
+
 		public static Color SystemColorToDXColor(System.Drawing.Color col)
 		{
 			return	new Color(col.R, col.G, col.B, col.A);
