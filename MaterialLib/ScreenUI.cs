@@ -1,11 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Numerics;
+using System.Diagnostics;
+using System.Collections.Generic;
+using Vortice;
+using Vortice.DXGI;
+using Vortice.Direct3D11;
+using Vortice.Mathematics.PackedVector;
+using UtilityLib;
 
 
 namespace MaterialLib;
-/*
+
 internal class UIData
 {
-	internal string		mMatName;
 	internal GumpVert	[]mVerts;
 	internal Vector4	mColor;
 	internal Vector2	mPosition, mSecondLayerOffset;
@@ -22,10 +29,9 @@ internal struct GumpVert
 
 public class ScreenUI
 {
-	Device				mGD;
-	Buffer				mVB;
-	MaterialLib			mMatLib;
-	VertexBufferBinding	mVBB;
+	GraphicsDevice	mGD;
+	StuffKeeper		mSK;
+	ID3D11Buffer	mVB;
 
 	GumpVert	[]mGumpBuf;
 
@@ -36,23 +42,19 @@ public class ScreenUI
 	Dictionary<string, UIData>	mGumps	=new Dictionary<string, UIData>();
 
 
-	public ScreenUI(Device gd,
-		MaterialLib matLib,
-		int maxGumps)
+	public ScreenUI(GraphicsDevice gd, StuffKeeper sk, int maxGumps)
 	{
-		mGD				=gd;
-		mMaxGumps		=maxGumps;
-		mMatLib			=matLib;
+		mGD			=gd;
+		mSK			=sk;
+		mMaxGumps	=maxGumps;
 
 		mGumpBuf	=new GumpVert[mMaxGumps];
 
 		BufferDescription	bDesc	=new BufferDescription(
-			mMaxGumps * 6 * 16,
-			ResourceUsage.Dynamic, BindFlags.VertexBuffer,
+			mMaxGumps * 6 * 16, BindFlags.VertexBuffer, ResourceUsage.Dynamic,
 			CpuAccessFlags.Write, ResourceOptionFlags.None, 0);
 
-		mVB		=Buffer.Create<GumpVert>(gd, mGumpBuf, bDesc);
-		mVBB	=new VertexBufferBinding(mVB, 16, 0);
+		mVB		=gd.GD.CreateBuffer<GumpVert>(mGumpBuf, bDesc);
 	}
 
 
@@ -66,12 +68,11 @@ public class ScreenUI
 	}
 
 
-	public void AddGump(string matName, string texName, string texName2,
+	public void AddGump(string texName, string texName2,
 		string id, Vector4 color, Vector2 pos, Vector2 scale)
 	{
 		UIData	uid	=new UIData();
 
-		uid.mMatName			=matName;
 		uid.mColor				=color;			
 		uid.mPosition			=pos;
 		uid.mSecondLayerOffset	=Vector2.Zero;
@@ -80,20 +81,10 @@ public class ScreenUI
 		uid.mTexture2			=texName2;
 		uid.mVerts				=new GumpVert[6];
 
-		Texture2D	tex	=mMatLib.GetTexture2D(texName);
-		if(tex == null)
-		{
-			return;
-		}
+		ID3D11Texture2D	tex	=mSK.GetTexture2D(texName);
 
-		//ok if this one is null
-		Texture2D	tex2	=mMatLib.GetTexture2D(texName2);
-
-		RectangleF	rect	=new RectangleF();
-
-		rect.X		=rect.Y	=0f;
-		rect.Width	=tex.Description.Width;
-		rect.Height	=tex.Description.Height;
+		RawRectF	rect	=new RawRectF(0f, 0f,
+			tex.Description.Width, tex.Description.Height);
 
 		MakeQuad(uid.mVerts, rect);
 
@@ -143,29 +134,29 @@ public class ScreenUI
 	}
 
 
-	void MakeQuad(GumpVert []tv, RectangleF rect)
+	void MakeQuad(GumpVert []tv, RawRectF rect)
 	{
-		tv[0].Position		=rect.TopLeft;
+		tv[0].Position		=Vector2.UnitX * rect.Left + Vector2.UnitY * rect.Top;
 		tv[0].TexCoord04	=Vector4.Zero;
 
-		tv[1].Position		=rect.TopRight;
+		tv[1].Position		=Vector2.UnitX * rect.Right + Vector2.UnitY * rect.Top;
 		tv[1].TexCoord04	=Vector4.UnitX + Vector4.UnitZ;
 
-		tv[2].Position		=rect.BottomRight;
+		tv[2].Position		=Vector2.UnitX * rect.Right + Vector2.UnitY * rect.Bottom;
 		tv[2].TexCoord04	=Vector4.One;
 
-		tv[3].Position		=rect.TopLeft;
+		tv[3].Position		=Vector2.UnitX * rect.Left + Vector2.UnitY * rect.Top;
 		tv[3].TexCoord04	=Vector4.Zero;
 
-		tv[4].Position		=rect.BottomRight;
+		tv[4].Position		=Vector2.UnitX * rect.Right + Vector2.UnitY * rect.Bottom;
 		tv[4].TexCoord04	=Vector4.One;
 
-		tv[5].Position		=rect.BottomLeft;
+		tv[5].Position		=Vector2.UnitX * rect.Left + Vector2.UnitY * rect.Bottom;
 		tv[5].TexCoord04	=Vector4.UnitY + Vector4.UnitW;
 	}
 
 
-	public void Update(DeviceContext dc)
+	public void Update(ID3D11DeviceContext dc)
 	{
 		if(mbDirty)
 		{
@@ -175,7 +166,7 @@ public class ScreenUI
 	}
 
 
-	void RebuildVB(DeviceContext dc)
+	void RebuildVB(ID3D11DeviceContext dc)
 	{
 		mNumVerts	=0;
 		foreach(KeyValuePair<string, UIData> uid in mGumps)
@@ -185,48 +176,71 @@ public class ScreenUI
 			mNumVerts	+=uid.Value.mVerts.Length;
 		}
 
-		DataStream	ds;
-		dc.MapSubresource(mVB, MapMode.WriteDiscard, MapFlags.None, out ds);
+		MappedSubresource	msr	=dc.Map(mVB, MapMode.WriteDiscard);
+
+		Span<GumpVert>	verts	=msr.AsSpan<GumpVert>(mNumVerts * 16);
 
 		for(int i=0;i < mNumVerts;i++)
 		{
-			ds.Write<GumpVert>(mGumpBuf[i]);
+			verts[i]	=mGumpBuf[i];
 		}
 
-		dc.UnmapSubresource(mVB, 0);
+		dc.Unmap(mVB);
 	}
 
 
-	public void Draw(DeviceContext dc, Matrix view, Matrix proj)
+	public void Draw(Matrix4x4 view, Matrix4x4 proj)
 	{
+		//if this assert fires, make sure
+		//all text modification stuff happens
+		//before the call to update
+		Debug.Assert(!mbDirty);
+
 		if(mNumVerts <= 0)
 		{
 			return;
 		}
 
-		dc.InputAssembler.SetVertexBuffers(0, mVBB);
+		ID3D11DeviceContext	dc	=mSK.GetDC();
+
+		dc.IASetPrimitiveTopology(Vortice.Direct3D.PrimitiveTopology.TriangleList);
+
+		dc.IASetVertexBuffer(0, mVB, 16);
+		dc.IASetIndexBuffer(null, Format.Unknown, 0);
+
+		ID3D11InputLayout	lay	=mSK.GetOrCreateLayout("KeyedGumpVS");
+
+		dc.VSSetShader(mSK.GetVertexShader("KeyedGumpVS"));
+		dc.PSSetShader(mSK.GetPixelShader("GumpPS"));
+		dc.IASetInputLayout(lay);
+
+		dc.OMSetBlendState(mSK.GetBlendState("AlphaBlending"));
+		dc.OMSetDepthStencilState(mSK.GetDepthStencilState("DisableDepth"));		
+
+		CBKeeper	cbk	=mSK.GetCBKeeper();
+
+		cbk.SetView(view, Vector3.Zero);
+		cbk.SetProjection(proj);
+		cbk.UpdateFrame(dc);
 
 		int	offset	=0;
 		foreach(KeyValuePair<string, UIData> str in mGumps)
 		{
-			int		len		=str.Value.mVerts.Length;
-			string	matName	=str.Value.mMatName;
+			int	len	=str.Value.mVerts.Length;
 
-			mMatLib.SetMaterialParameter(matName, "mView", view);
-			mMatLib.SetMaterialParameter(matName, "mProjection", proj);
-			mMatLib.SetMaterialParameter(matName, "mTextPosition", str.Value.mPosition);
-			mMatLib.SetMaterialParameter(matName, "mSecondLayerOffset", str.Value.mSecondLayerOffset);
-			mMatLib.SetMaterialParameter(matName, "mTextScale", str.Value.mScale);
-			mMatLib.SetMaterialParameter(matName, "mTextColor", str.Value.mColor);
-			mMatLib.SetMaterialTexture(matName, "mTexture", str.Value.mTexture);
-			mMatLib.SetMaterialTexture(matName, "mTexture2", str.Value.mTexture2);
+			dc.PSSetShaderResource(0, mSK.GetSRV(str.Value.mTexture));
+			dc.PSSetShaderResource(1, mSK.GetSRV(str.Value.mTexture2));
 
-			mMatLib.ApplyMaterialPass(matName, dc, 0);
+			cbk.SetTextColor(str.Value.mColor);
+			cbk.SetTextTransform(str.Value.mPosition, str.Value.mScale);
+			cbk.SetSecondLayerOffset(str.Value.mSecondLayerOffset);
+
+			cbk.UpdateTwoD(dc);
 
 			dc.Draw(len, offset);
 
 			offset	+=len;
 		}
 	}
-}*/
+}
 
