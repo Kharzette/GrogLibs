@@ -44,6 +44,12 @@ namespace UtilityLib
 		}
 
 
+		public static Vector3 Forward(this in Matrix4x4 mat)
+		{
+			return	new Vector3(mat.M31, mat.M32, mat.M33);
+		}
+
+
 		//this was in sharpdx, and I used it alot for boundy stuff
 		//keeps things homogeneous
 		public static void TransformCoordinate(Vector3 coord, ref Matrix4x4 mat, out Vector3 result)

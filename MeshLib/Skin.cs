@@ -27,7 +27,7 @@ public class Skin
 	//is already around the origin, ready to be transformed into bone space.
 	//However all bone space is in meters, and the bind poses scale to
 	//whatever units the user wants (grog, quake, etc)
-	float		mScaleFactor;
+	float		mScaleFactor, mInvScaleFactor;
 	Matrix4x4	mScaleMat;
 
 	public const int	Box		=0;
@@ -39,7 +39,8 @@ public class Skin
 	public Skin(float scaleFactor)
 	{
 		mScaleFactor	=scaleFactor;
-		mScaleMat		=Matrix4x4.CreateScale(1f / scaleFactor);
+		mInvScaleFactor	=1f / scaleFactor;
+		mScaleMat		=Matrix4x4.CreateScale(mInvScaleFactor);
 	}
 
 
@@ -116,13 +117,44 @@ public class Skin
 	}
 
 
-	internal BoundingBox GetBoneBoundBox(int index)
+	internal BoundingBox? GetBoneBoundBox(int index, bool bScale = false)
 	{
 		if(mBoneBoxes.ContainsKey(index))
 		{
 			return	mBoneBoxes[index];
 		}
-		return	new BoundingBox();
+		return	null;
+	}
+
+
+	internal BoundingSphere? GetBoneBoundSphere(int index, bool bScale = false)
+	{
+		if(mBoneBoxes.ContainsKey(index))
+		{
+			return	mBoneSpheres[index];
+		}
+		return	null;
+	}
+
+
+	internal BoundingCapsule? GetBoneBoundCapsule(int index, bool bScale = false)
+	{
+		if(mBoneCapsules.ContainsKey(index))
+		{
+			if(!bScale)
+			{
+				return	mBoneCapsules[index];
+			}
+			else
+			{
+				BoundingCapsule	ret	=mBoneCapsules[index];
+
+				ret.Scale(mInvScaleFactor);
+
+				return	ret;
+			}
+		}
+		return	null;
 	}
 
 

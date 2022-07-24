@@ -202,6 +202,62 @@ public class Character
 	}
 
 
+	public bool RayIntersectBones(Vector3 startPos, Vector3 endPos, float rayRadius,
+									out int boneHit, out Vector3 hitPos)
+	{
+		Skin		sk		=mParts.GetSkin();
+		Skeleton	skel	=mAnimLib.GetSkeleton();
+
+		Matrix4x4	boneToWorld	=Matrix4x4.Identity;
+
+		float	bestDist	=float.MaxValue;
+		int		bestBone	=-1;
+		Vector3	bestHit		=Vector3.Zero;
+		for(int i=0;i < mBones.Length;i++)
+		{
+			int	choice	=sk.GetBoundChoice(i);
+
+			if(choice == Skin.Capsule)
+			{
+				BoundingCapsule	?bc	=sk.GetBoneBoundCapsule(i, false);
+				if(bc == null)
+				{
+					continue;
+				}
+
+				boneToWorld	=sk.GetBoneByIndexNoBind(i, skel);
+				boneToWorld	*=mTransform;
+
+				if(i == 28)
+				{
+					//right shinbone
+					int	j=69;
+					j++;
+				}
+
+				Vector3	jointPos	=Mathery.TransformCoordinate(Vector3.Zero, ref boneToWorld);
+				
+				Vector3	impacto;
+				if(bc.Value.RayCollide(jointPos, boneToWorld.Forward(), startPos, endPos, rayRadius, out impacto))
+				{
+					float	dist	=Vector3.Distance(startPos, impacto);
+					if(dist < bestDist)
+					{
+						bestBone	=i;
+						bestDist	=dist;
+						bestHit		=impacto;
+					}
+				}
+			}
+		}
+
+		boneHit	=bestBone;
+		hitPos	=bestHit;
+
+		return	(bestBone != -1);
+	}
+
+
 	public void UpdateBounds()
 	{
 		if(mBones == null)
@@ -222,9 +278,13 @@ public class Character
 
 		for(int i=0;i < mBones.Length;i++)
 		{
-			BoundingBox	box	=sk.GetBoneBoundBox(i);
+			BoundingBox	?box	=sk.GetBoneBoundBox(i);
+			if(box == null)
+			{
+				continue;
+			}
 			
-			Vector3	size	=box.Max - box.Min;
+			Vector3	size	=box.Value.Max - box.Value.Min;
 			float	vol		=size.X + size.Y + size.Z;
 
 			//skip bones without much influence
@@ -233,7 +293,7 @@ public class Character
 				continue;
 			}
 
-			box.GetCorners(corners);
+			box?.GetCorners(corners);
 
 			Vector3	boxCenter	=Vector3.Zero;
 			for(int j=0;j < 8;j++)

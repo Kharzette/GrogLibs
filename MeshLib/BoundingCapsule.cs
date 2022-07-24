@@ -13,8 +13,8 @@ namespace MeshLib;
 public struct BoundingCapsule
 {
 	internal float	mRadius;
-	internal float	mLength;
-	
+	internal float	mLength;	//distance between cap sphere centers
+								//not the actual full length of the capsule	
 
 	internal BoundingCapsule(float rad, float len)
 	{
@@ -34,6 +34,13 @@ public struct BoundingCapsule
 	{
 		bw.Write(mRadius);
 		bw.Write(mLength);
+	}
+
+
+	internal void Scale(float scalar)
+	{
+		mRadius	*=scalar;
+		mLength	*=scalar;
 	}
 
 
@@ -69,19 +76,19 @@ public struct BoundingCapsule
 	}
 
 
-	internal bool RayCollide(Vector3 position, Quaternion orientation,
-		Vector3	rayStart, Vector3 unitRayDirection, float len, out Vector3 impacto)
+	internal bool RayCollide(Vector3 position, Vector3 orientation,
+		Vector3	rayStart, Vector3 rayEnd, float rayRadius, out Vector3 impacto)
 	{
 		//position is the base of the capsule in world space
 		//get the centerpoint of the base sphere == point A
-		Vector3	A	=position + orientation.XYZ() * mRadius;
+		Vector3	A	=position + orientation * mRadius;
 
 		//find B which is the endpoint sphere center
-		Vector3	B	=position + orientation.XYZ() * (mLength - mRadius);
+		Vector3	B	=position + orientation * mLength;
 
 		//rayStart is C, the start point of the ray
 		//D is the end point of the ray
-		Vector3	D	=rayStart + (unitRayDirection * len);
+		Vector3	D	=rayEnd;
 
 		Vector3	segStart, segEnd;
 		bool	bSolved	=Mathery.ShortestLineBetweenTwoLines(A, B, rayStart, D,
@@ -97,7 +104,7 @@ public struct BoundingCapsule
 		Vector3	segVector	=segEnd - segStart;
 
 		float	dist	=segVector.Length();
-		if(dist > mRadius)
+		if(dist > (mRadius + rayRadius))
 		{
 			//no hit
 			impacto	=Vector3.Zero;
@@ -111,12 +118,82 @@ public struct BoundingCapsule
 			return	true;
 		}
 
-		//normalize
-		segVector	/=dist;
+		//A line segment has been found that is shorter than
+		//the combined radiusesesesees of the capsule and the line...
+		//
+		//Now check if the segment lies between the two endpoints of the capsule.
+		//this is checking the cylinder portion of the capsule
 
-		impacto	=segVector * mRadius;
+		//plane at the base of the capsule...
+		Vector3	baseNormal	=orientation;
+		float	baseDist	=Vector3.Dot(baseNormal, A);
 
-		return	true;
+		//plane at the end of the capsule
+		Vector3	endNormal	=-orientation;
+		float	endDist		=Vector3.Dot(endNormal, B);
+
+		//segstart / end will always have the same distance to these planes
+		float	segBaseDist	=Vector3.Dot(baseNormal, segStart) - baseDist;
+		float	segEndDist	=Vector3.Dot(endNormal, segStart) - endDist;
+
+		if(segBaseDist >= 0 && segEndDist >= 0)
+		{
+			//segment is within the cylinder
+			//find impact
+			//normalize
+			segVector	/=dist;
+
+			//this impact point could project outside the original ray
+			//might need to rethink this
+			impacto	=segStart + (segVector * (mRadius + rayRadius));
+
+			return	true;
+		}
+
+		//Shortest line segment is not within the cylinder section...
+		//Check the end spheres
+		segBaseDist	=Vector3.Distance(segEnd, A);
+		segEndDist	=Vector3.Distance(segEnd, B);
+
+		if(segBaseDist < (mRadius + rayRadius))
+		{
+			//hit on base sphere
+			//normalize
+			segVector	/=dist;
+
+			//vector between ray and sphere center
+			Vector3	capDir	=segEnd - A;
+
+			//normalize
+			capDir	/=segBaseDist;
+
+			//this impact point could project outside the original ray
+			//might need to rethink this
+			impacto	=A + (capDir * (mRadius + rayRadius));
+
+			return	true;
+		}
+		else if(segEndDist < (mRadius + rayRadius))
+		{
+			//hit on end sphere
+			//normalize
+			segVector	/=dist;
+
+			//vector between ray and sphere center
+			Vector3	capDir	=segEnd - B;
+
+			//normalize
+			capDir	/=segEndDist;
+
+			//this impact point could project outside the original ray
+			//might need to rethink this
+			impacto	=B + (capDir * (mRadius + rayRadius));
+
+			return	true;
+		}
+
+		impacto	=Vector3.Zero;
+		return	false;
 	}
 
 
