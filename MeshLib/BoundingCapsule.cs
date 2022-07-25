@@ -8,8 +8,8 @@ namespace MeshLib;
 
 
 //this is a cylinder shape with rounded ends
-//Intended to work as a bone space capsule with
-//base at the joint, no translation and extend along Z
+//Intended to work as a bone space capsule with the bottom
+//sphere center at the joint, no translation and extend along Z
 public struct BoundingCapsule
 {
 	internal float	mRadius;
@@ -79,9 +79,8 @@ public struct BoundingCapsule
 	internal bool RayCollide(Vector3 position, Vector3 orientation,
 		Vector3	rayStart, Vector3 rayEnd, float rayRadius, out Vector3 impacto)
 	{
-		//position is the base of the capsule in world space
-		//get the centerpoint of the base sphere == point A
-		Vector3	A	=position + orientation * mRadius;
+		//position is the bottom sphere center
+		Vector3	A	=position;
 
 		//find B which is the endpoint sphere center
 		Vector3	B	=position + orientation * mLength;
@@ -96,9 +95,9 @@ public struct BoundingCapsule
 
 		if(!bSolved)
 		{
-			//not sure this would ever really happen
-			impacto	=position;
-			return	true;
+			//happens with bad data I think
+			impacto	=Vector3.Zero;
+			return	false;
 		}
 
 		Vector3	segVector	=segEnd - segStart;
