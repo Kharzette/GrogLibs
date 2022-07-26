@@ -76,6 +76,7 @@ public struct BoundingCapsule
 	}
 
 
+	//returned impact should be along the ray
 	internal bool RayCollide(Vector3 position, Vector3 orientation,
 		Vector3	rayStart, Vector3 rayEnd, float rayRadius, out Vector3 impacto)
 	{
@@ -139,12 +140,48 @@ public struct BoundingCapsule
 		{
 			//segment is within the cylinder
 			//find impact
-			//normalize
-			segVector	/=dist;
 
-			//this impact point could project outside the original ray
-			//might need to rethink this
-			impacto	=segStart + (segVector * (mRadius + rayRadius));
+			//segStart is along the capsule line between A and B
+			//segEnd is on the ray
+			//
+			//impacto should be the point along the ray where the
+			//distance to capsule line AB is mRadius + rayRadius
+			//and make sure impacto is still within the ray segment
+			//
+			//Finding a ratio between the distance from rayStart to
+			//segStart, and length of segVector might work
+
+			float	bothRadii	=(mRadius + rayRadius);
+
+			float	rsDist	=Vector3.Distance(rayStart, segStart);
+
+			float	ratio	=(dist - bothRadii) / (rsDist - bothRadii);
+
+			//scale radii by ratio
+//			ratio	*=(mRadius + rayRadius);
+
+			Vector3	raySegment	=segEnd - rayStart;
+
+			//this will be the ray where dist == radii
+			raySegment	*=ratio;
+
+			impacto	=segEnd + raySegment;
+
+//			float	raySegLen	=raySegment.Length();
+
+//			raySegment	/=raySegLen;
+
+//			raySegment	*=(mRadius + rayRadius);
+
+			//a perfectly perpendicular collision would get a
+			//zero ratio.  The dot will show how much additional
+			//vector length is needed to put the collision point
+			//at the radiuseseesses boundary
+//			float	ratio	=Vector3.Dot(raySegment, orientation);
+
+//			impacto	=segEnd - (raySegment * ratio);
+
+//			impacto	=segEnd;
 
 			return	true;
 		}

@@ -38,6 +38,17 @@ namespace UtilityLib
 		}
 
 
+		//returns a + (b * scalar)
+		public static Vector3 MAdd(Vector3 aVec, Vector3 bVec, float scalar)
+		{
+			Vector3	ret	=bVec * scalar;
+
+			ret	+=aVec;
+
+			return	ret;
+		}
+
+
 		public static Vector3 XYZ(this in Quaternion q)
 		{
 			return	new Vector3(q.X, q.Y, q.Z);
@@ -196,6 +207,33 @@ namespace UtilityLib
 			Vector3	posNorm	=planeNormal.Positive();
 
 			return	Vector3.Dot(posNorm, bb.Max);
+		}
+
+
+		//distance from point to line
+		//from Paul Bourke's site
+		public static bool	PointLineDistance(Vector3 point, Vector3 lineStart, Vector3 lineEnd, out float dist)
+		{
+			Vector3	lineVec	=lineEnd - lineStart;
+
+			float	lenSquared	=lineVec.LengthSquared();
+
+			float	u	=(((point.X - lineStart.X) * (lineEnd.X - lineStart.X)) +
+				((point.Y - lineStart.Y) * (lineEnd.Y - lineStart.Y)) +
+				((point.Z - lineStart.Z) * (lineEnd.Z - lineStart.Z))) / lenSquared;
+
+			if(u < 0f || u > 1f)
+			{
+				//closest point lies outside the line segment
+				dist	=0f;
+				return	false;
+			}
+
+			Vector3	intersection	=MAdd(lineStart, lineVec, u);
+
+			dist	=Vector3.Distance(point, intersection);
+
+			return	true;
 		}
 
 
