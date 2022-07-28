@@ -207,6 +207,7 @@ public class Character
 	{
 		Skin		sk		=mParts.GetSkin();
 		Skeleton	skel	=mAnimLib.GetSkeleton();
+		Ray			ray		=new Ray(startPos, Vector3.Normalize(endPos - startPos));
 
 		Matrix4x4	boneToWorld	=Matrix4x4.Identity;
 
@@ -228,24 +229,33 @@ public class Character
 				boneToWorld	=sk.GetBoneByIndexNoBind(i, skel);
 				boneToWorld	*=mTransform;
 
-				if(i == 28)
+				if(i == 3)
 				{
-					//right shinbone
+					//upper arm
 					int	j=69;
 					j++;
 				}
 
 				Vector3	jointPos	=Mathery.TransformCoordinate(Vector3.Zero, ref boneToWorld);
 				
-				Vector3	impacto;
-				if(bc.Value.RayCollide(jointPos, boneToWorld.Forward(), startPos, endPos, rayRadius, out impacto))
+				Vector3	impact1, impact2;
+				Vector3	norm1, norm2;
+//				if(bc.Value.RayCollide(jointPos, boneToWorld.Forward(), startPos, endPos, rayRadius, out impacto))
+				if(bc.Value.IntersectRay(jointPos, boneToWorld.Forward(), ray, out impact1, out impact2, out norm1, out norm2))
 				{
-					float	dist	=Vector3.Distance(startPos, impacto);
+					float	dist	=Vector3.Distance(startPos, impact1);
 					if(dist < bestDist)
 					{
 						bestBone	=i;
 						bestDist	=dist;
-						bestHit		=impacto;
+						bestHit		=impact1;
+					}
+					dist	=Vector3.Distance(startPos, impact2);
+					if(dist < bestDist)
+					{
+						bestBone	=i;
+						bestDist	=dist;
+						bestHit		=impact2;
 					}
 				}
 			}
