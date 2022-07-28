@@ -1047,6 +1047,9 @@ public static partial class Mathery
 
 
 	//from Jim Drygiannakis on github
+	//This one is nice because it gives 2 intersections
+	//which is handy for capsules as the "inner" side of
+	//the endpoint spheres can be excluded
 	public static bool	IntersectRaySphere(Ray ray, BoundingSphere sphere, out float tmin, out float tmax)
 	{
 		Vector3	CO	=ray.Position - sphere.Center;
@@ -1071,6 +1074,220 @@ public static partial class Mathery
 			tmin	=tmax;
 			tmax	=temp;
 		}
+		return	true;
+	}
+
+
+	//from Jim Drygiannakis on github
+	//This is the best intersection I've found, way way better
+	//than my own efforts, which didn't cover all the corner cases.
+	public static bool IntersectRayCapsule(
+		Vector3	A, Vector3 B, float capRadius,	//capsule dimensions
+		Ray ray, float rayRadius,				//ray
+		out Vector3 p1, out Vector3 p2,			//impact points
+		out Vector3 n1, out Vector3 n2)			//impact normals
+	{
+		// http://pastebin.com/2XrrNcxb
+		// Substituting equ. (1) - (6) to equ. (I) and solving for t' gives:
+		//
+		// t' = (t * dot(AB, d) + dot(AB, AO)) / dot(AB, AB); (7) or
+		// t' = t * m + n where 
+		// m = dot(AB, d) / dot(AB, AB) and 
+		// n = dot(AB, AO) / dot(AB, AB)
+		//
+		Vector3	AB	=B - A;
+		Vector3	AO	=ray.Position - A;
+
+		float	bothRads	=capRadius + rayRadius;
+
+		float	AB_dot_d	=Vector3.Dot(AB, ray.Direction);
+		float	AB_dot_AO	=Vector3.Dot(AB, AO);
+		float	AB_dot_AB	=Vector3.Dot(AB, AB);
+		
+		float	m	=AB_dot_d / AB_dot_AB;
+		float	n	=AB_dot_AO / AB_dot_AB;
+
+		// Substituting (7) into (II) and solving for t gives:
+		//
+		// dot(Q, Q)*t^2 + 2*dot(Q, R)*t + (dot(R, R) - r^2) = 0
+		// where
+		// Q = d - AB * m
+		// R = AO - AB * n
+		Vector3	Q	=ray.Direction - (AB * m);
+		Vector3	R	=AO - (AB * n);
+
+		float	a	=Vector3.Dot(Q, Q);
+		float	b	=2.0f * Vector3.Dot(Q, R);
+		float	c	=Vector3.Dot(R, R) - (bothRads * bothRads);
+
+		if(a == 0f)
+		{
+			// Special case: AB and ray direction are parallel. If there is an intersection it will be on the end spheres...
+			// NOTE: Why is that?
+			// Q = d - AB * m =>
+			// Q = d - AB * (|AB|*|d|*cos(AB,d) / |AB|^2) => |d| == 1.0
+			// Q = d - AB * (|AB|*cos(AB,d)/|AB|^2) =>
+			// Q = d - AB * cos(AB, d) / |AB| =>
+			// Q = d - unit(AB) * cos(AB, d)
+			//
+			// |Q| == 0 means Q = (0, 0, 0) or d = unit(AB) * cos(AB,d)
+			// both d and unit(AB) are unit vectors, so cos(AB, d) = 1 => AB and d are parallel.
+			// 
+			BoundingSphere	sphereA	=new BoundingSphere(A, bothRads);
+			BoundingSphere	sphereB	=new BoundingSphere(B, bothRads);
+
+			float	atmin, atmax, btmin, btmax;
+			
+			if(!IntersectRaySphere(ray, sphereA, out atmin, out atmax) ||
+				!IntersectRaySphere(ray, sphereB, out btmin, out btmax))
+			{
+				// No intersection with one of the spheres means no intersection at all...
+				p1	=p2	=n1	=n2	=Vector3.Zero;
+				return	false;
+			}
+
+			if(atmin < btmin)
+			{
+				p1	=ray.Position + (ray.Direction * atmin);
+				n1	=p1 - A;
+				n1	=Vector3.Normalize(n1);
+			}
+			else
+			{
+				p1	=ray.Position + (ray.Direction * btmin);
+				n1	=p1 - B;
+				n1	=Vector3.Normalize(n1);
+			}
+
+			if(atmax > btmax)
+			{
+				p2	=ray.Position + (ray.Direction * atmax);
+				n2	=p2 - A;
+				n2	=Vector3.Normalize(n2);
+			}
+			else
+			{
+				p2	=ray.Position + (ray.Direction * btmax);
+				n2	=p2 - B;
+				n2	=Vector3.Normalize(n2);
+			}
+
+			return true;
+		}
+
+		float	discriminant	=b * b - 4.0f * a * c;
+		if(discriminant < 0.0f)
+		{
+			// The ray doesn't hit the infinite cylinder defined by (A, B).
+			// No intersection.
+			p1	=p2	=n1	=n2	=Vector3.Zero;
+			return	false;
+		}
+
+		float	tmin	=(-b - MathHelper.Sqrt(discriminant)) / (2.0f * a);
+		float	tmax	=(-b + MathHelper.Sqrt(discriminant)) / (2.0f * a);
+		if(tmin > tmax)
+		{
+			float	temp	=tmin;
+
+			tmin	=tmax;
+			tmax	=temp;
+		}
+
+		// Now check to see if K1 and K2 are inside the line segment defined by A,B
+		float	t_k1	=tmin * m + n;
+		if(t_k1 < 0f)
+		{
+			// On sphere (A, r)...
+			BoundingSphere	s	=new BoundingSphere(A, bothRads);
+
+			float	stmin, stmax;
+			if(IntersectRaySphere(ray, s, out stmin, out stmax))
+			{
+				p1	=ray.Position + (ray.Direction * stmin);
+				n1	=p1 - A;
+				n1	=Vector3.Normalize(n1);
+			}
+			else
+			{
+				p1	=p2	=n1	=n2	=Vector3.Zero;
+				return	false;
+			}
+		}
+		else if(t_k1 > 1f)
+		{
+			// On sphere (B, r)...
+			BoundingSphere	s	=new BoundingSphere(B, bothRads);
+
+			float	stmin, stmax;
+			if(IntersectRaySphere(ray, s, out stmin, out stmax))
+			{
+				p1	=ray.Position + (ray.Direction * stmin);
+				n1	=p1 - B;
+				n1	=Vector3.Normalize(n1);
+			}
+			else
+			{
+				p1	=p2	=n1	=n2	=Vector3.Zero;
+				return	false;
+			}
+		}
+		else
+		{
+			// On the cylinder...
+			p1	=ray.Position + (ray.Direction * tmin);
+
+			Vector3	k1	=A + AB * t_k1;
+			n1	=p1 - k1;
+			n1	=Vector3.Normalize(n1);
+		}
+
+		float	t_k2	=tmax * m + n;
+		if(t_k2 < 0f)
+		{
+			// On sphere (A, r)...
+			BoundingSphere	s	=new BoundingSphere(A, bothRads);
+
+			float	stmin, stmax;
+			if(IntersectRaySphere(ray, s, out stmin, out stmax))
+			{
+				p2	=ray.Position + (ray.Direction * stmax);
+				n2	=p2 - A;
+				n2	=Vector3.Normalize(n2);
+			}
+			else
+			{
+				p1	=p2	=n1	=n2	=Vector3.Zero;
+				return	false;
+			}
+		}
+		else if(t_k2 > 1f)
+		{
+			// On sphere (B, r)...
+			BoundingSphere	s	=new BoundingSphere(B, bothRads);
+
+			float	stmin, stmax;
+			if(IntersectRaySphere(ray, s, out stmin, out stmax))
+			{
+				p2	=ray.Position + (ray.Direction * stmax);
+				n2	=p2 - B;
+				n2	=Vector3.Normalize(n2);
+			}
+			else
+			{
+				p1	=p2	=n1	=n2	=Vector3.Zero;
+				return	false;
+			}
+		}
+		else
+		{
+			p2	=ray.Position + (ray.Direction * tmax);
+
+			Vector3	k2	=A + AB * t_k2;
+			n2	=p2 - k2;
+			n2	=Vector3.Normalize(n2);
+		}
+		
 		return	true;
 	}
 

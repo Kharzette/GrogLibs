@@ -203,7 +203,7 @@ public class Character
 
 
 	public bool RayIntersectBones(Vector3 startPos, Vector3 endPos, float rayRadius,
-									out int boneHit, out Vector3 hitPos)
+									out int boneHit, out Vector3 hitPos, out Vector3 hitNorm)
 	{
 		Skin		sk		=mParts.GetSkin();
 		Skeleton	skel	=mAnimLib.GetSkeleton();
@@ -214,6 +214,7 @@ public class Character
 		float	bestDist	=float.MaxValue;
 		int		bestBone	=-1;
 		Vector3	bestHit		=Vector3.Zero;
+		Vector3	bestNorm	=Vector3.UnitZ;
 		for(int i=0;i < mBones.Length;i++)
 		{
 			int	choice	=sk.GetBoundChoice(i);
@@ -226,22 +227,16 @@ public class Character
 					continue;
 				}
 
+				//really seems like this should work with the shader bones already here
 				boneToWorld	=sk.GetBoneByIndexNoBind(i, skel);
 				boneToWorld	*=mTransform;
-
-				if(i == 3)
-				{
-					//upper arm
-					int	j=69;
-					j++;
-				}
 
 				Vector3	jointPos	=Mathery.TransformCoordinate(Vector3.Zero, ref boneToWorld);
 				
 				Vector3	impact1, impact2;
 				Vector3	norm1, norm2;
-//				if(bc.Value.RayCollide(jointPos, boneToWorld.Forward(), startPos, endPos, rayRadius, out impacto))
-				if(bc.Value.IntersectRay(jointPos, boneToWorld.Forward(), ray, out impact1, out impact2, out norm1, out norm2))
+				if(bc.Value.IntersectRay(jointPos, boneToWorld.Forward(), ray, rayRadius,
+					out impact1, out impact2, out norm1, out norm2))
 				{
 					float	dist	=Vector3.Distance(startPos, impact1);
 					if(dist < bestDist)
@@ -249,6 +244,7 @@ public class Character
 						bestBone	=i;
 						bestDist	=dist;
 						bestHit		=impact1;
+						bestNorm	=norm1;
 					}
 					dist	=Vector3.Distance(startPos, impact2);
 					if(dist < bestDist)
@@ -256,13 +252,52 @@ public class Character
 						bestBone	=i;
 						bestDist	=dist;
 						bestHit		=impact2;
+						bestNorm	=norm2;
 					}
+				}
+			}
+			else if(choice == Skin.Sphere)
+			{
+				BoundingSphere	?bs	=sk.GetBoneBoundSphere(i, false);
+				if(bs == null)
+				{
+					continue;
+				}
+
+				boneToWorld	=sk.GetBoneByIndexNoBind(i, skel);
+				boneToWorld	*=mTransform;
+
+				//spheres can move along the bone's Z axis
+				Vector3	jointPos	=Mathery.TransformCoordinate(bs.Value.Center, ref boneToWorld);
+
+				BoundingSphere	tbs	=new BoundingSphere(jointPos, bs.Value.Radius);
+
+				if(i == 15)
+				{
+					int	gack	=69;
+					gack++;
+				}
+
+				float	?dist;
+				dist	=tbs.Intersects(ray);
+				if(dist == null)
+				{
+					continue;
+				}
+
+				if(dist < bestDist)
+				{
+					bestBone	=i;
+					bestDist	=dist.Value;
+					bestHit		=ray.Position + ray.Direction * dist.Value;
+					bestNorm	=Vector3.Normalize(bestHit - tbs.Center);
 				}
 			}
 		}
 
 		boneHit	=bestBone;
 		hitPos	=bestHit;
+		hitNorm	=bestNorm;
 
 		return	(bestBone != -1);
 	}
@@ -297,8 +332,8 @@ public class Character
 			Vector3	size	=box.Value.Max - box.Value.Min;
 			float	vol		=size.X + size.Y + size.Z;
 
-			//skip bones without much influence
-			if(vol < 1f)
+			//skip bones without much influence?
+			if(vol < 1f)	//TODO: this 1 will go wrong at meter scale
 			{
 				continue;
 			}
