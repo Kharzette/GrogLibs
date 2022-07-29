@@ -272,12 +272,6 @@ public class Character
 
 				BoundingSphere	tbs	=new BoundingSphere(jointPos, bs.Value.Radius);
 
-				if(i == 15)
-				{
-					int	gack	=69;
-					gack++;
-				}
-
 				float	?dist;
 				dist	=tbs.Intersects(ray);
 				if(dist == null)
@@ -291,6 +285,49 @@ public class Character
 					bestDist	=dist.Value;
 					bestHit		=ray.Position + ray.Direction * dist.Value;
 					bestNorm	=Vector3.Normalize(bestHit - tbs.Center);
+				}
+			}
+			else if(choice == Skin.Box)
+			{
+				BoundingBox	?bb	=sk.GetBoneBoundBox(i, false);
+				if(bb == null)
+				{
+					continue;
+				}
+
+				boneToWorld	=sk.GetBoneByIndexNoBind(i, skel);
+				boneToWorld	*=mTransform;
+
+				//costly!
+				Matrix4x4	btwInvert;
+				if(!Matrix4x4.Invert(boneToWorld, out btwInvert))
+				{
+					continue;
+				}
+
+				//try moving the ray into bone space
+				Vector3	rayInvDir	=Vector3.TransformNormal(ray.Direction, btwInvert);
+				Vector3	rayInvStart	=Mathery.TransformCoordinate(ray.Position, ref btwInvert);
+
+				Ray	boneRay	=new Ray(rayInvStart, rayInvDir);
+
+				float	?dist;
+				dist	=bb.Value.Intersects(boneRay);
+				if(dist == null)
+				{
+					continue;
+				}
+
+				if(dist < bestDist)
+				{
+					Vector3	boneSpaceHit	=rayInvStart + rayInvDir * dist.Value;
+
+					bestNorm	=Mathery.BoxNormalAtPoint(bb.Value, boneSpaceHit);
+
+					bestBone	=i;
+					bestDist	=dist.Value;
+					bestHit		=ray.Position + ray.Direction * dist.Value;
+					bestNorm	=Vector3.TransformNormal(bestNorm, boneToWorld);
 				}
 			}
 		}

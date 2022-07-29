@@ -345,6 +345,8 @@ public static partial class Mathery
 			side	=Vector3.Cross(Vector3.UnitZ, dir);
 		}
 
+		side	=Vector3.Normalize(side);
+
 		//get up vec
 		Vector3	up	=Vector3.Cross(dir, side);
 
@@ -1031,6 +1033,26 @@ public static partial class Mathery
 	}
 
 
+	public static Vector3	BoxNormalAtPoint(BoundingBox bb, Vector3 pos)
+	{
+		Vector3	pbVec	=(pos - bb.Center);
+		Vector3	ret		=Vector3.Zero;
+
+		float	bestDist	=float.MinValue;
+
+		foreach(Vector3 ax in AxialNormals)
+		{
+			float	dist	=Vector3.Dot(ax, pbVec);
+			if(dist > bestDist)
+			{
+				ret			=ax;
+				bestDist	=dist;
+			}
+		}
+		return	ret;
+	}
+
+
 	public static BoundingSphere TransformSphere(Matrix4x4 trans, BoundingSphere bs)
 	{
 		Vector3	pos		=bs.Center;
@@ -1412,46 +1434,6 @@ public static partial class Mathery
 		{
 			rayEnd.Z	=box.Max.Z;
 		}
-	}
-
-
-	//from Paul Bourke's site
-	/*Calculate the intersection of a ray and a sphere
-	The line segment is defined from p1 to p2
-	The sphere is of radius r and centered at sc
-	There are potentially two points of intersection given by
-	p = p1 + mu1 (p2 - p1)
-	p = p1 + mu2 (p2 - p1)
-	Return FALSE if the ray doesn't intersect the sphere.*/
-	static bool	RaySphere(Vector3 p1, Vector3 p2, Vector3 sc, float r, out float mu1, out float mu2)
-	{
-		float	a,b,c;
-		float	bb4ac;
-		Vector3	dp;
-		
-		dp.X	=p2.X - p1.X;
-		dp.Y	=p2.Y - p1.Y;
-		dp.Z	=p2.Z - p1.Z;
-		a		=dp.X * dp.X + dp.Y * dp.Y + dp.Z * dp.Z;
-		b		=2 * (dp.X * (p1.X - sc.X) + dp.Y * (p1.Y - sc.Y) + dp.Z * (p1.Z - sc.Z));
-		c		=sc.X * sc.X + sc.Y * sc.Y + sc.Z * sc.Z;
-		c		+=p1.X * p1.X + p1.Y * p1.Y + p1.Z * p1.Z;
-		c		-=2 * (sc.X * p1.X + sc.Y * p1.Y + sc.Z * p1.Z);
-		c		-=r * r;
-		
-		bb4ac	=b * b - 4 * a * c;
-		
-		if(Math.Abs(a) < ANGLE_EPSILON || bb4ac < 0)
-		{
-			mu1	=0;
-			mu2	=0;
-			return	false;
-		}
-		
-		mu1	=(-b + MathHelper.Sqrt(bb4ac)) / (2 * a);
-		mu2	=(-b - MathHelper.Sqrt(bb4ac)) / (2 * a);
-		
-		return	true;
 	}
 
 
