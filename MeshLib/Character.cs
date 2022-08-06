@@ -21,10 +21,6 @@ public class Character
 	//refs to anim lib
 	AnimLib	mAnimLib;
 
-	//bounds
-	BoundingBox		mBoxBound;
-	BoundingSphere	mSphereBound;
-
 	//transform
 	Matrix4x4	mTransform;
 
@@ -67,18 +63,6 @@ public class Character
 	public void SetTransform(Matrix4x4 mat)
 	{
 		mTransform		=mat;
-	}
-
-
-	public BoundingBox GetBoxBound()
-	{
-		return	mBoxBound;
-	}
-
-
-	public BoundingSphere GetSphereBound()
-	{
-		return	mSphereBound;
 	}
 
 
@@ -340,6 +324,7 @@ public class Character
 	}
 
 
+/*
 	public void UpdateBounds()
 	{
 		if(mBones == null)
@@ -400,7 +385,7 @@ public class Character
 
 		mSphereBound.Center	=center;
 		mSphereBound.Radius	=(distMin > distMax)? distMin : distMax;
-	}
+	}*/
 
 
 	public void Draw(MatLib mlib)

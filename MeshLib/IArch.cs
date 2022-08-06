@@ -8,6 +8,11 @@ using MatLib	=MaterialLib.MaterialLib;
 
 namespace MeshLib;
 
+public enum BoundChoice
+{
+	Box, Sphere, Invalid
+}
+
 public interface IArch
 {
 	void FreeAll();
@@ -45,10 +50,18 @@ public interface IArch
 	void DrawX(MatLib mlib, Matrix4x4 transform, List<MeshMaterial> meshMats, int numInst, string altMaterial);
 	void DrawDMN(MatLib mlib, Matrix4x4 transform, List<MeshMaterial> meshMats);
 
-	void UpdateBounds();
-	BoundingBox GetBoxBound();
-	BoundingSphere GetSphereBound();
-	float? RayIntersect(Vector3 start, Vector3 end, bool bBox, out Mesh partHit);
+	//these are the rough overall bounds that cover all submesh parts
+	//should be editable by ColladaConvert
+	void GenerateRoughBounds();
+	BoundChoice	GetRoughBoundChoice();
+	BoundingBox GetRoughBoxBound();
+	BoundingSphere GetRoughSphereBound();
+
+	//per part bounds
+	//probably only meaningful for statics
+	BoundChoice?	GetPartBoundChoice(int index);
+	BoundingBox?	GetPartBoxBound(int index);
+	BoundingSphere?	GetPartSphereBound(int index);
 
 	void SaveToFile(string fileName);
 	bool ReadFromFile(string fileName, ID3D11Device gd, bool bEditor);

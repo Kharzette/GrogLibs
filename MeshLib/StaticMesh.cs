@@ -56,40 +56,161 @@ public class StaticMesh
 	}
 
 
-	public Dictionary<Mesh, BoundingBox> GetBoundData()
+	//Checks first against a box encompassing all parts
+	//TODO: cache that matrix invert somehow?
+	//TODO: what about reporting ALL collisions?
+	public bool RayIntersect(Vector3 startPos, Vector3 endPos, float rayRadius,
+							out Vector3 hitPos, out Vector3 hitNorm)
 	{
-		return	mParts.GetBoundData();
-	}
+		hitPos	=hitNorm	=Vector3.Zero;
 
+		IArch	arch	=mParts.GetArch();
 
-	public BoundingBox GetBoxBound()
-	{
-		return	mParts.GetBoxBound();
-	}
+		//need this for boxes only
+		Matrix4x4	tInv;
 
+		//check rough bounds
+		BoundChoice	bc	=arch.GetRoughBoundChoice();
 
-	public BoundingSphere GetSphereBound()
-	{
-		return	mParts.GetSphereBound();
-	}
+		Vector3	rayDir	=Vector3.Normalize(endPos - startPos);
 
+		if(bc == BoundChoice.Invalid)
+		{
+			return	false;
+		}
+		else if(bc == BoundChoice.Box)
+		{
+			BoundingBox	box	=arch.GetRoughBoxBound();
 
-	public BoundingBox GetTransformedBoxBound()
-	{
-		BoundingBox	box	=mParts.GetBoxBound();
+			if(!Matrix4x4.Invert(mTransform, out tInv))
+			{
+				return	false;
+			}
 
-		box.Min	=Vector3.Transform(box.Min, mTransform);
-		box.Max	=Vector3.Transform(box.Max, mTransform);
+			Vector3	rayInvDir	=Vector3.TransformNormal(rayDir, tInv);
+			Vector3	rayInvStart	=Mathery.TransformCoordinate(startPos, ref tInv);
 
-		return	box;
-	}
+			Ray	ray	=new Ray(rayInvStart, rayInvDir);
 
+			float	?dist	=box.Intersects(ray);
+			if(dist == null)
+			{
+				return	false;
+			}
+		}
+		else
+		{
+			//sphere
+			BoundingSphere	bs	=arch.GetRoughSphereBound();
 
-	public BoundingSphere GetTransformedSphereBound()
-	{
-		BoundingSphere	ret	=mParts.GetSphereBound();
+			Ray	ray	=new Ray(startPos, rayDir);
 
-		return	Mathery.TransformSphere(mTransform, ret);
+			float	?dist	=bs.Intersects(ray);
+			if(dist == null)
+			{
+				return	false;
+			}
+		}
+
+		//grab closest intersection
+		float	bestDist	=float.MaxValue;
+		int		bestPart	=-1;
+		Vector3	bestHit		=Vector3.Zero;
+		Vector3	bestNorm	=Vector3.Zero;
+
+		//check submesh bounds or bone bounds
+		int	partCount	=mParts.GetNumParts();
+
+		for(int i=0;i < partCount;i++)
+		{
+			BoundChoice?	nbc	=arch.GetPartBoundChoice(i);
+
+			if(nbc == null)
+			{
+				continue;
+			}
+
+			if(nbc.Value == BoundChoice.Invalid)
+			{
+				continue;
+			}
+
+			//TODO: hmm there seems to be no mechanism for instances
+			//to have their own submesh transforms...
+			//this might be a problem for like machines with moving parts
+			Matrix4x4	partXForm	=arch.GetPartTransform(i);
+
+			if(nbc.Value == BoundChoice.Box)
+			{
+				BoundingBox?	pbox	=arch.GetPartBoxBound(i);
+				if(pbox == null)
+				{
+					continue;
+				}
+
+				partXForm	*=mTransform;
+				if(!Matrix4x4.Invert(partXForm, out tInv))
+				{
+					return	false;
+				}
+				Vector3	rayInvDir	=Vector3.TransformNormal(rayDir, tInv);
+				Vector3	rayInvStart	=Mathery.TransformCoordinate(startPos, ref tInv);
+
+				Ray	ray	=new Ray(rayInvStart, rayInvDir);
+
+				float	?dist	=pbox.Value.Intersects(ray);
+				if(dist == null)
+				{
+					continue;
+				}
+
+				if(dist < bestDist)
+				{
+					bestPart	=i;
+					bestDist	=dist.Value;
+					bestHit		=rayInvStart + rayInvDir * dist.Value;	//boxspace
+					bestNorm	=Mathery.BoxNormalAtPoint(pbox.Value, bestHit);
+					bestHit		=startPos + rayDir * dist.Value;	//worldspace
+					bestNorm	=Vector3.TransformNormal(bestNorm, mTransform);
+				}
+			}
+			else
+			{
+				//sphere
+				BoundingSphere?	ps	=arch.GetPartSphereBound(i);
+				if(ps == null)
+				{
+					continue;
+				}
+
+				Ray	ray	=new Ray(startPos, rayDir);
+
+				float	?dist	=ps.Value.Intersects(ray);
+				if(dist == null)
+				{
+					continue;
+				}
+
+				if(dist < bestDist)
+				{
+					bestPart	=i;
+					bestDist	=dist.Value;
+					bestHit		=startPos + rayDir * dist.Value;
+					bestNorm	=Vector3.Normalize(bestHit - ps.Value.Center);	//might be backwards?
+				}
+			}
+		}
+
+		if(bestPart == -1)
+		{
+			//no submesh collisions, though it passed the rough check
+			return	false;
+		}
+
+		hitPos	=bestHit;
+		hitNorm	=bestNorm;
+
+		return	true;
 	}
 
 

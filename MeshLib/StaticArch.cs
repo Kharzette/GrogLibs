@@ -16,6 +16,12 @@ public class StaticArch : IArch
 {
 	List<Mesh>	mMeshParts	=new List<Mesh>();
 
+	//here store an encompassing bound that covers all parts...
+	//should be editable by ColladaConvert, and maybe save which shape?
+	BoundChoice		mBoundChoice;
+	BoundingSphere	mBoundSphere;
+	BoundingBox		mBoundBox;
+
 
 	void IArch.FreeAll()
 	{
@@ -270,50 +276,16 @@ public class StaticArch : IArch
 	}
 
 
-	float? IArch.RayIntersect(Vector3 start, Vector3 end, bool bBox, out Mesh partHit)
-	{
-		partHit	=null;
-		return	null;
-/*		//find which piece was hit
-		float		minDist	=float.MaxValue;
-		partHit				=null;
-
-		foreach(Mesh m in mMeshParts)
-		{
-			Nullable<float>	dist	=m.RayIntersect(start, end, bBox);
-			if(dist != null)
-			{
-				if(dist.Value < minDist)
-				{
-					partHit	=m;
-					minDist	=dist.Value;
-				}
-			}
-		}
-
-		if(partHit == null)
-		{
-			return	null;
-		}
-		return	minDist;*/
-	}
-
-
-	void IArch.UpdateBounds()
-	{
-		foreach(Mesh m in mMeshParts)
-		{
-			m.Bound();
-		}
-	}
-
-
-	BoundingBox IArch.GetBoxBound()
+	//this will be a starting point, user can edit the shape
+	//in ColladaConvert
+	void IArch.GenerateRoughBounds()
 	{
 		List<Vector3>	pnts	=new List<Vector3>();
 		foreach(Mesh m in mMeshParts)
 		{
-			BoundingBox	b	=m.GetBoxBounds();
+			m.Bound();
+
+			BoundingBox	b	=m.GetBoxBound();
 
 			//internal part transforms
 			Vector3	transMin;
@@ -326,15 +298,59 @@ public class StaticArch : IArch
 			pnts.Add(transMax);
 		}
 
-		return	BoundingBox.CreateFromPoints(pnts.ToArray());
+		mBoundBox		=BoundingBox.CreateFromPoints(pnts.ToArray());
+		mBoundSphere	=Mathery.SphereFromPoints(pnts);
 	}
 
 
-	BoundingSphere IArch.GetSphereBound()
+	BoundChoice	IArch.GetRoughBoundChoice()
 	{
-		//not sure what I want this to do yet
-		BoundingSphere	merged	=new BoundingSphere(Vector3.Zero, 0f);
-		return	merged;
+		return	mBoundChoice;
+	}
+
+
+	//all arch stuff in local space
+	BoundingBox IArch.GetRoughBoxBound()
+	{
+		return	mBoundBox;
+	}
+
+
+	BoundingSphere IArch.GetRoughSphereBound()
+	{
+		return	mBoundSphere;
+	}
+
+
+	BoundChoice?	IArch.GetPartBoundChoice(int index)
+	{
+		if(index < 0 || index >= mMeshParts.Count)
+		{
+			return	null;
+		}
+		return	mMeshParts[index].GetBoundChoice();
+	}
+
+
+	BoundingBox?	IArch.GetPartBoxBound(int index)
+	{
+		if(index < 0 || index >= mMeshParts.Count)
+		{
+			return	null;
+		}
+
+		return	mMeshParts[index].GetBoxBound();
+	}
+
+
+	BoundingSphere?	IArch.GetPartSphereBound(int index)
+	{
+		if(index < 0 || index >= mMeshParts.Count)
+		{
+			return	null;
+		}
+
+		return	mMeshParts[index].GetSphereBound();
 	}
 
 
@@ -581,20 +597,6 @@ public class StaticArch : IArch
 		file.Close();
 
 		return	true;
-	}
-
-
-	//for collisionry
-	internal Dictionary<Mesh, BoundingBox> GetBoundData()
-	{
-		Dictionary<Mesh, BoundingBox>	ret	=new Dictionary<Mesh, BoundingBox>();
-
-		foreach(Mesh m in mMeshParts)
-		{
-			ret.Add(m, m.GetBoxBounds());
-		}
-
-		return	ret;
 	}
 
 

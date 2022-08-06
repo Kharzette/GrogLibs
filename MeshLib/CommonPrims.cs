@@ -349,33 +349,15 @@ public class CommonPrims
 	}
 
 
-	public void ReBuildBoundsDrawData(object mesh)
+	public void ReBuildBoundsDrawData(IArch arch)
 	{
-		BoundingBox		box		=new BoundingBox(Vector3.Zero, Vector3.Zero);
-		BoundingSphere	sphere	=new BoundingSphere(Vector3.Zero, 0f);
-
-		if(mesh is Character)
-		{
-			Character	chr	=mesh as Character;
-
-			//bone bound stuff
-//			chr.ComputeBoneBounds(new List<string>());
-
-			box		=chr.GetBoxBound();
-			sphere	=chr.GetSphereBound();
-		}
-		else
-		{
-			StaticMesh	sm	=mesh as StaticMesh;
-
-			box		=sm.GetBoxBound();
-			sphere	=sm.GetSphereBound();
-		}
+		BoundingBox		box		=arch.GetRoughBoxBound();
+		BoundingSphere	bs		=arch.GetRoughSphereBound();
 
 		byte	[]code	=mSK.GetVSCompiledCode("WNormWPosTexVS");
 
 		mBoxBound		=PrimFactory.CreateCube(mVS.Device, code, box);
 		mSphereBound	=PrimFactory.CreateSphere(mVS.Device,
-							code, sphere.Center, sphere.Radius);
+							code, bs.Center, bs.Radius);
 	}
 }

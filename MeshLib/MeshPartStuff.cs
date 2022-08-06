@@ -54,6 +54,12 @@ internal class MeshPartStuff
 	}
 
 
+	internal IArch GetArch()
+	{
+		return	mArch;
+	}
+
+
 	internal int GetNumParts()
 	{
 		return	mPartMats.Count;
@@ -147,24 +153,6 @@ internal class MeshPartStuff
 	}
 
 
-	internal Dictionary<Mesh, BoundingBox> GetBoundData()
-	{
-		return	(mArch as StaticArch).GetBoundData();
-	}
-
-
-	internal BoundingBox GetBoxBound()
-	{
-		return	mArch.GetBoxBound();
-	}
-
-
-	internal BoundingSphere GetSphereBound()
-	{
-		return	mArch.GetSphereBound();
-	}
-
-
 	internal void ReIndexVertWeights(ID3D11Device gd, Dictionary<int, int> idxMap)
 	{
 		mArch.ReIndexVertWeights(gd, idxMap);
@@ -202,12 +190,6 @@ internal class MeshPartStuff
 	internal void DrawDMN(MatLib mlib, Matrix4x4 transform)
 	{
 		mArch.DrawDMN(mlib, transform, mPartMats);
-	}
-
-
-	internal float? RayIntersect(Vector3 start, Vector3 end, bool bBox, out Mesh partHit)
-	{
-		return	mArch.RayIntersect(start, end, bBox, out partHit);
 	}
 
 

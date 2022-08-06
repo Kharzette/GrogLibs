@@ -15,7 +15,7 @@ Audio Entity
 	will turn the sound off.  If not activated a triggering
 	will turn it on.
 
-Moving Models
+Moving BSP Models
 	To build moving pieces of geometry such as doors or moving
 	platforms, create a func_door or func_plat entity in quark,
 	then give it a name such as Door00 in the TargetName field.
@@ -62,11 +62,23 @@ Map Coordinate System notes
 	a sunlight entity.
 	
 Character Notes
-	Bone bounding boxes are axial from the reference pose.  If
-	the pose is relaxed and not the usual T, this can cause
-	the limb bounds to stick out quite a bit.  Will be replacing
-	the boxes with capsules eventually as they don't require
-	a matrix invert.
+	See CharacterNotes.txt in the ColladaConvert tool source.
+	
+Static Meshes
+	Statics (and characters) have an archetype and an instance.
+	Imagine the arch for a static as a kind of rock, and the
+	instances being rocks of various sizes scattered about with
+	odd rotations and scales.  For a character the arch might
+	be a male or female player, and the instances each copy
+	with their own scales and colours and customization.  The
+	arch stores the actual data such as vert info.
+	
+Bounds
+	Meshes will have an overall bound editable by ColladaConvert,
+	as well as submesh bounds.  These can be sphere or box,
+	but box can involve matrix inverts so sphere is a bit better.
+	Characters can have bone bounds of box, sphere, or capsule
+	type.
 
 Fill Lights
 	Characters and statics are lit via the strongest light in

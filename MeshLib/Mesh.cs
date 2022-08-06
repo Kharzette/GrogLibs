@@ -26,6 +26,9 @@ public class Mesh
 	protected ID3D11Buffer		mIndexs;
 	protected int				mNumVerts, mNumTriangles, mVertSize;
 	protected int				mTypeIndex;
+
+	//bound stuff for this part
+	protected BoundChoice		mBoundChoice;
 	protected BoundingBox		mBoxBound;
 	protected BoundingSphere	mSphereBound;
 
@@ -349,15 +352,21 @@ public class Mesh
 	}
 
 
-	public BoundingBox GetBoxBounds()
+	public BoundingBox GetBoxBound()
 	{
 		return	mBoxBound;
 	}
 
 
-	public BoundingSphere GetSphereBounds()
+	public BoundingSphere GetSphereBound()
 	{
 		return	mSphereBound;
+	}
+
+
+	public BoundChoice GetBoundChoice()
+	{
+		return	mBoundChoice;
 	}
 
 

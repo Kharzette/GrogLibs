@@ -19,6 +19,12 @@ public class CharacterArch : IArch
 	//skin info
 	Skin	mSkin;
 
+	//here store an encompassing bound that covers all parts...
+	//should be editable by ColladaConvert
+	BoundChoice		mBoundChoice;
+	BoundingSphere	mBoundSphere;
+	BoundingBox		mBoundBox;
+
 
 	void IArch.FreeAll()
 	{
@@ -311,16 +317,80 @@ public class CharacterArch : IArch
 	}
 
 
-	float? IArch.RayIntersect(Vector3 start, Vector3 end, bool bBox, out Mesh partHit)
+	//this will be a starting point, user can edit the shape
+	//in ColladaConvert
+	void IArch.GenerateRoughBounds()
 	{
-		partHit	=null;
-		return	null;	//characters don't use this
+		List<Vector3>	pnts	=new List<Vector3>();
+		foreach(Mesh m in mMeshParts)
+		{
+			m.Bound();
+
+			BoundingBox	b	=m.GetBoxBound();
+
+			//internal part transforms
+			Vector3	transMin;
+			Vector3	transMax;
+
+			Mathery.TransformCoordinate(b.Min, m.GetTransform(), out transMin);
+			Mathery.TransformCoordinate(b.Max, m.GetTransform(), out transMax);
+
+			pnts.Add(transMin);
+			pnts.Add(transMax);
+		}
+
+		mBoundBox		=BoundingBox.CreateFromPoints(pnts.ToArray());
+		mBoundSphere	=Mathery.SphereFromPoints(pnts);
 	}
 
 
-	void IArch.UpdateBounds()
+	BoundChoice	IArch.GetRoughBoundChoice()
 	{
-		//this is kind of meaningless for character archetypes
+		return	mBoundChoice;
+	}
+	
+	
+	BoundingBox IArch.GetRoughBoxBound()
+	{
+		return	mBoundBox;
+	}
+
+
+	BoundingSphere IArch.GetRoughSphereBound()
+	{
+		return	mBoundSphere;
+	}
+
+
+	BoundChoice?	IArch.GetPartBoundChoice(int index)
+	{
+		if(index < 0 || index >= mMeshParts.Count)
+		{
+			return	null;
+		}
+		return	mMeshParts[index].GetBoundChoice();
+	}
+
+
+	BoundingBox?	IArch.GetPartBoxBound(int index)
+	{
+		if(index < 0 || index >= mMeshParts.Count)
+		{
+			return	null;
+		}
+
+		return	mMeshParts[index].GetBoxBound();
+	}
+
+
+	BoundingSphere?	IArch.GetPartSphereBound(int index)
+	{
+		if(index < 0 || index >= mMeshParts.Count)
+		{
+			return	null;
+		}
+
+		return	mMeshParts[index].GetSphereBound();
 	}
 
 
@@ -399,37 +469,6 @@ public class CharacterArch : IArch
 				mSkin.SetBoneBounds(i, worldBox, boneBox);
 			}
 		}
-	}
-
-
-	BoundingBox IArch.GetBoxBound()
-	{
-		List<Vector3>	pnts	=new List<Vector3>();
-		foreach(Mesh m in mMeshParts)
-		{
-			BoundingBox	b	=m.GetBoxBounds();
-
-			//internal part transforms
-			Vector3	transMin;
-			Vector3	transMax;
-
-			Mathery.TransformCoordinate(b.Min, m.GetTransform(), out transMin);
-			Mathery.TransformCoordinate(b.Max, m.GetTransform(), out transMax);
-
-			pnts.Add(transMin);
-			pnts.Add(transMax);
-		}
-
-		return	BoundingBox.CreateFromPoints(pnts.ToArray());
-	}
-
-
-	BoundingSphere IArch.GetSphereBound()
-	{
-		//not sure what I want this to do yet
-		BoundingSphere	merged	=new BoundingSphere(Vector3.Zero, 0f);
-
-		return	merged;
 	}
 
 
