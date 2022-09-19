@@ -53,6 +53,7 @@ public interface IArch
 	//these are the rough overall bounds that cover all submesh parts
 	//should be editable by ColladaConvert
 	void GenerateRoughBounds();
+	void SetRoughBoundChoice(BoundChoice bc);
 	BoundChoice	GetRoughBoundChoice();
 	BoundingBox GetRoughBoxBound();
 	BoundingSphere GetRoughSphereBound();

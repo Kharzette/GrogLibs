@@ -303,6 +303,12 @@ public class StaticArch : IArch
 	}
 
 
+	void	IArch.SetRoughBoundChoice(BoundChoice bc)
+	{
+		mBoundChoice	=bc;
+	}
+
+
 	BoundChoice	IArch.GetRoughBoundChoice()
 	{
 		return	mBoundChoice;

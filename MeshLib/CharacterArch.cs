@@ -362,6 +362,12 @@ public class CharacterArch : IArch
 	}
 
 
+	void	IArch.SetRoughBoundChoice(BoundChoice bc)
+	{
+		mBoundChoice	=bc;
+	}
+
+
 	BoundChoice?	IArch.GetPartBoundChoice(int index)
 	{
 		if(index < 0 || index >= mMeshParts.Count)

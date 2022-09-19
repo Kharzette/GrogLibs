@@ -12,7 +12,7 @@ namespace MeshLib;
 //sphere center at the joint, no translation and extend along Z
 public struct BoundingCapsule
 {
-	internal float	mRadius;
+	internal float	mRadius;	//Same for cylinder and both ends
 	internal float	mLength;	//distance between cap sphere centers
 								//not the actual full length of the capsule	
 
