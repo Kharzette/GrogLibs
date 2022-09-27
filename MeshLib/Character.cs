@@ -14,43 +14,53 @@ using MatLib	=MaterialLib.MaterialLib;
 namespace MeshLib;
 
 //an instance of a character
-public class Character
+public partial class Character
 {
-	MeshPartStuff	mParts;
+	//these should always have the same Count
+	List<Mesh>			mParts		=new List<Mesh>();
+	List<MeshMaterial>	mPartMats	=new List<MeshMaterial>();
 
-	//refs to anim lib
+	//unlike statics, there is no per part transform...
+	//ColladaConvert should ensure all parts are origined properly
+
+	//ref to anim lib
 	AnimLib	mAnimLib;
 
-	//transform
 	Matrix4x4	mTransform;
+	MeshBound	mBound;
 
 	//raw bone transforms for shader
 	Matrix4x4	[]mBones;
+
+	Skin	mSkin;
 
 	//this must match the value in CommonFunctions.hlsli in the shader lib!
 	const int	MAX_BONES	=55;
 
 
-	public Character(IArch ca, AnimLib al)
+	public Character(List<Mesh> parts, Skin sk, AnimLib al)
 	{
-		mParts		=new MeshPartStuff(ca);
+		mParts.AddRange(parts);
+
+		mSkin		=sk;
 		mAnimLib	=al;
 		mTransform	=Matrix4x4.Identity;
 	}
 
 
+	//clear only instance data
 	public void FreeAll()
 	{
-		mParts.FreeAll();
+		mParts.Clear();
+		mPartMats.Clear();
 
 		mBones	=null;
-		mParts	=null;
 	}
 
 
 	public bool IsEmpty()
 	{
-		return	mParts.IsEmpty();
+		return	(mParts.Count == 0);
 	}
 
 
@@ -66,59 +76,81 @@ public class Character
 	}
 
 
-	public void GetBoneNamesInUseByDraw(List<string> names)
-	{
-		mParts.GetBoneNamesInUseByDraw(names, mAnimLib.GetSkeleton());
-	}
-
-
+	//I think in all cases where this is used the part meshes go too
 	public void NukePart(int index)
 	{
-		mParts.NukePart(index);
+		if(index < 0 || index >= mParts.Count)
+		{
+			return;
+		}
+
+		Mesh			m	=mParts[index];
+		MeshMaterial	mm	=mPartMats[index];
+
+		m.FreeAll();
+
+		mParts.RemoveAt(index);
+		mPartMats.RemoveAt(index);
 	}
 
 
 	public void NukeParts(List<int> indexes)
 	{
-		mParts.NukeParts(indexes);
+		List<Mesh>			toNuke		=new List<Mesh>();
+		List<MeshMaterial>	toNukeMM	=new List<MeshMaterial>();
+		foreach(int ind in indexes)
+		{
+			Debug.Assert(ind >= 0 && ind < mParts.Count);
+
+			if(ind < 0 || ind >= mParts.Count)
+			{
+				continue;
+			}
+
+			toNuke.Add(mParts[ind]);
+			toNukeMM.Add(mPartMats[ind]);
+		}
+
+		mParts.RemoveAll(mp => toNuke.Contains(mp));
+		mPartMats.RemoveAll(mp => toNukeMM.Contains(mp));
+
+		foreach(Mesh m in toNuke)
+		{
+			m.FreeAll();
+		}
+
+		toNuke.Clear();
 	}
 
 
 	public void SetPartMaterialName(int index, string matName,
 									StuffKeeper sk)
 	{
-		mParts.SetPartMaterialName(index, matName, sk);
+		if(index < 0 || index >= mParts.Count)
+		{
+			return;
+		}
+		mPartMats[index].mMaterialName	=matName;
 	}
 
 
 	public string GetPartMaterialName(int index)
 	{
-		return	mParts.GetPartMaterialName(index);
+		if(index < 0 || index >= mParts.Count)
+		{
+			return	"";
+		}
+		return	mPartMats[index].mMaterialName;
 	}
 
 
 	public void SetPartVisible(int index, bool bVisible)
 	{
-		mParts.SetPartVisible(index, bVisible);
-	}
-
-
-	//this can be used to rebuild the bones if the skeleton changed
-	public void ReBuildBones(ID3D11Device gd)
-	{
-		//clear
-		mBones	=null;
-
-		Skeleton	sk	=mAnimLib.GetSkeleton();
-		if(sk == null)
+		if(index < 0 || index >= mParts.Count)
 		{
 			return;
 		}
-
-		Dictionary<int, int>	reMap	=new Dictionary<int, int>();
-		sk.Compact(reMap);
-
-		mParts.ReIndexVertWeights(gd, reMap);
+		mPartMats[index].mbVisible	=bVisible;
 	}
 
 
@@ -174,7 +206,7 @@ public class Character
 	{
 		mAnimLib.Blend(anim1, anim1Time, anim2, anim2Time, percentage);
 
-		UpdateBones(mAnimLib.GetSkeleton(), mParts.GetSkin());
+		UpdateBones(mAnimLib.GetSkeleton(), mSkin);
 	}
 
 
@@ -182,14 +214,13 @@ public class Character
 	{
 		mAnimLib.Animate(anim, time);
 
-		UpdateBones(mAnimLib.GetSkeleton(), mParts.GetSkin());
+		UpdateBones(mAnimLib.GetSkeleton(), mSkin);
 	}
 
 
 	public bool RayIntersectBones(Vector3 startPos, Vector3 endPos, float rayRadius,
 									out int boneHit, out Vector3 hitPos, out Vector3 hitNorm)
 	{
-		Skin		sk		=mParts.GetSkin();
 		Skeleton	skel	=mAnimLib.GetSkeleton();
 		Ray			ray		=new Ray(startPos, Vector3.Normalize(endPos - startPos));
 
@@ -201,18 +232,18 @@ public class Character
 		Vector3	bestNorm	=Vector3.UnitZ;
 		for(int i=0;i < mBones.Length;i++)
 		{
-			int	choice	=sk.GetBoundChoice(i);
+			int	choice	=mSkin.GetBoundChoice(i);
 
 			if(choice == Skin.Capsule)
 			{
-				BoundingCapsule	?bc	=sk.GetBoneBoundCapsule(i, false);
+				BoundingCapsule	?bc	=mSkin.GetBoneBoundCapsule(i, false);
 				if(bc == null)
 				{
 					continue;
 				}
 
 				//really seems like this should work with the shader bones already here
-				boneToWorld	=sk.GetBoneByIndexNoBind(i, skel);
+				boneToWorld	=mSkin.GetBoneByIndexNoBind(i, skel);
 				boneToWorld	*=mTransform;
 
 				Vector3	jointPos	=Mathery.TransformCoordinate(Vector3.Zero, ref boneToWorld);
@@ -242,13 +273,13 @@ public class Character
 			}
 			else if(choice == Skin.Sphere)
 			{
-				BoundingSphere	?bs	=sk.GetBoneBoundSphere(i, false);
+				BoundingSphere	?bs	=mSkin.GetBoneBoundSphere(i, false);
 				if(bs == null)
 				{
 					continue;
 				}
 
-				boneToWorld	=sk.GetBoneByIndexNoBind(i, skel);
+				boneToWorld	=mSkin.GetBoneByIndexNoBind(i, skel);
 				boneToWorld	*=mTransform;
 
 				//spheres can move along the bone's Z axis
@@ -273,13 +304,13 @@ public class Character
 			}
 			else if(choice == Skin.Box)
 			{
-				BoundingBox	?bb	=sk.GetBoneBoundBox(i, false);
+				BoundingBox	?bb	=mSkin.GetBoneBoundBox(i, false);
 				if(bb == null)
 				{
 					continue;
 				}
 
-				boneToWorld	=sk.GetBoneByIndexNoBind(i, skel);
+				boneToWorld	=mSkin.GetBoneByIndexNoBind(i, skel);
 				boneToWorld	*=mTransform;
 
 				//costly!
@@ -390,32 +421,77 @@ public class Character
 
 	public void Draw(MatLib mlib)
 	{
+		Debug.Assert(mPartMats.Count == mParts.Count);
+
 		UpdateShaderBones(mlib.GetDC(), mlib.GetCBKeeper());
 
-		mParts.Draw(mlib, mTransform);
+		for(int i=0;i < mParts.Count;i++)
+		{
+			MeshMaterial	mm	=mPartMats[i];
+
+			if(!mm.mbVisible)
+			{
+				continue;
+			}
+
+			Mesh	m	=mParts[i];
+
+			m.Draw(mlib, mTransform, mm);
+		}
 	}
 
 
 	public void Draw(MatLib mlib, string altMaterial)
 	{
+		Debug.Assert(mPartMats.Count == mParts.Count);
+
 		UpdateShaderBones(mlib.GetDC(), mlib.GetCBKeeper());
 
-		mParts.Draw(mlib, mTransform, altMaterial);
+		for(int i=0;i < mParts.Count;i++)
+		{
+			MeshMaterial	mm	=mPartMats[i];
+
+			if(!mm.mbVisible)
+			{
+				continue;
+			}
+
+			Mesh	m	=mParts[i];
+
+			m.Draw(mlib, mTransform, mm, altMaterial);
+		}
 	}
 
 
 	public void DrawDMN(MatLib mlib)
 	{
+		Debug.Assert(mPartMats.Count == mParts.Count);
+
 		UpdateShaderBones(mlib.GetDC(), mlib.GetCBKeeper());
 
-		mParts.DrawDMN(mlib, mTransform);
+		for(int i=0;i < mParts.Count;i++)
+		{
+			MeshMaterial	mm	=mPartMats[i];
+
+			if(!mm.mbVisible)
+			{
+				continue;
+			}
+
+			Mesh	m	=mParts[i];
+
+			m.DrawDMN(mlib, mTransform, mm);
+		}
 	}
 
 
 	//this if for the DMN renderererererer
 	public void AssignMaterialIDs(MaterialLib.IDKeeper idk)
 	{
-		mParts.AssignMaterialIDs(idk);
+		foreach(MeshMaterial mm in mPartMats)
+		{
+			mm.mMaterialID	=idk.GetID(mm.mMaterialName);
+		}
 	}
 
 
@@ -437,8 +513,8 @@ public class Character
 
 		bw.Write(magic);
 
-		//save mesh parts
-		mParts.Write(bw);
+		//save skin
+		mSkin.Write(bw);
 
 		bw.Close();
 		file.Close();
@@ -467,7 +543,8 @@ public class Character
 			return	false;
 		}
 
-		mParts.Read(br);
+		mSkin	=new Skin(1f);
+		mSkin.Read(br);
 
 		br.Close();
 		file.Close();

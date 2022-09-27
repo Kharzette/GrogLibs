@@ -1,616 +1,165 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
-using Vortice.Mathematics;
+using Vortice.DXGI;
+using Vortice.Direct3D;
 using Vortice.Direct3D11;
+using Vortice.Mathematics;
 using UtilityLib;
+using MaterialLib;
 
 using MatLib	=MaterialLib.MaterialLib;
 
 namespace MeshLib;
 
-//this is a mesh archetype, whereas staticmesh is an instance
-public class StaticArch : IArch
+//editor / tool related code
+public partial class StaticMesh
 {
-	List<Mesh>	mMeshParts	=new List<Mesh>();
-
-	//here store an encompassing bound that covers all parts...
-	//should be editable by ColladaConvert, and maybe save which shape?
-	BoundChoice		mBoundChoice;
-	BoundingSphere	mBoundSphere;
-	BoundingBox		mBoundBox;
-
-
-	void IArch.FreeAll()
-	{
-		foreach(Mesh m in mMeshParts)
-		{
-			m.FreeAll();
-		}
-	}
-
-
-	void IArch.SetSkin(Skin s, Skeleton sk)
-	{
-		//statics don't do skin
-	}
-
-
-	Skin IArch.GetSkin()
-	{
-		return	null;
-	}
-
-
-	bool IArch.RenamePart(int index, string newName)
-	{
-		if(index < 0 || index >= mMeshParts.Count)
-		{
-			return	false;
-		}
-
-		mMeshParts[index].Name	=newName;
-
-		return	true;
-	}
-
-
-	void IArch.AddPart(Mesh m)
-	{
-		if(m != null)
-		{
-			mMeshParts.Add(m);
-		}
-	}
-
-
-	int IArch.GetPartCount()
-	{
-		return	mMeshParts.Count;
-	}
-
-
-	void IArch.GenTangents(ID3D11Device gd,
+	void GenTangents(ID3D11Device gd,
 		List<int> parts, int texCoordSet)
 	{
-		List<Mesh>	toChange	=new List<Mesh>();
-		foreach(int ind in parts)
-		{
-			Debug.Assert(ind >= 0 && ind < mMeshParts.Count);
-
-			if(ind < 0 || ind >= mMeshParts.Count)
-			{
-				continue;
-			}
-
-			toChange.Add(mMeshParts[ind]);
-		}
-
-		foreach(EditorMesh em in toChange)
-		{
-			if(em == null)
-			{
-				continue;
-			}
-			em.GenTangents(gd, texCoordSet);
-		}
+		SharedMeshStuff.GenTangents(gd, mParts, parts, texCoordSet);
 	}
 
 
-	void IArch.NukeVertexElements(ID3D11Device gd,
+	public void	NukeVertexElements(ID3D11Device gd,
 		List<int> indexes,
 		List<int> vertElementIndexes)
 	{
-		List<Mesh>	toChange	=new List<Mesh>();
-		foreach(int ind in indexes)
-		{
-			Debug.Assert(ind >= 0 && ind < mMeshParts.Count);
-
-			if(ind < 0 || ind >= mMeshParts.Count)
-			{
-				continue;
-			}
-
-			toChange.Add(mMeshParts[ind]);
-		}
-
-		foreach(EditorMesh em in toChange)
-		{
-			if(em == null)
-			{
-				continue;
-			}
-			em.NukeVertexElement(vertElementIndexes, gd);
-		}
+		SharedMeshStuff.NukeVertexElements(gd, mParts, indexes, vertElementIndexes);
 	}
 
 
-	void IArch.NukePart(int index)
+	public void GenerateRoughBounds()
 	{
-		if(index < 0 || index >= mMeshParts.Count)
-		{
-			return;
-		}
-
-		mMeshParts.RemoveAt(index);
-	}
-
-
-	void IArch.NukeParts(List<int> indexes)
-	{
-		List<Mesh>	toNuke	=new List<Mesh>();
-		foreach(int ind in indexes)
-		{
-			Debug.Assert(ind >= 0 && ind < mMeshParts.Count);
-
-			if(ind < 0 || ind >= mMeshParts.Count)
-			{
-				continue;
-			}
-
-			toNuke.Add(mMeshParts[ind]);
-		}
-
-		mMeshParts.RemoveAll(mp => toNuke.Contains(mp));
-
-		toNuke.Clear();
-	}
-
-
-	Type IArch.GetPartVertexType(int index)
-	{
-		if(index < 0 || index >= mMeshParts.Count)
-		{
-			return	null;
-		}
-		return	mMeshParts[index].VertexType;
-	}
-
-
-	string IArch.GetPartName(int index)
-	{
-		if(index < 0 || index >= mMeshParts.Count)
-		{
-			return	"";
-		}
-		return	mMeshParts[index].Name;
-	}
-
-
-	//statics don't do bones
-	void IArch.GetPartBoneNamesInUseByDraw(int index, List<string> names, Skeleton skel)
-	{
-		return;
-	}
-
-	//statics don't do bones
-	void IArch.ReIndexVertWeights(ID3D11Device gd, Dictionary<int, int> idxMap)
-	{
-		return;
-	}
-
-
-
-	void IArch.Draw(MatLib mlib, Matrix4x4 transform,
-		List<MeshMaterial> meshMats)
-	{
-		Debug.Assert(meshMats.Count == mMeshParts.Count);
-
-		for(int i=0;i < mMeshParts.Count;i++)
-		{
-			MeshMaterial	mm	=meshMats[i];
-
-			if(!mm.mbVisible)
-			{
-				continue;
-			}
-
-			Mesh	m	=mMeshParts[i];
-
-			m.Draw(mlib, transform, mm);
-		}
-	}
-
-
-	void IArch.Draw(MatLib mlib, Matrix4x4 transform,
-		List<MeshMaterial> meshMats, string altMaterial)
-	{
-		Debug.Assert(meshMats.Count == mMeshParts.Count);
-
-		for(int i=0;i < mMeshParts.Count;i++)
-		{
-			MeshMaterial	mm	=meshMats[i];
-
-			if(!mm.mbVisible)
-			{
-				continue;
-			}
-
-			Mesh	m	=mMeshParts[i];
-
-			m.Draw(mlib, transform, mm, altMaterial);
-		}
-	}
-
-
-	void IArch.DrawX(MatLib mlib, Matrix4x4 transform,
-		List<MeshMaterial> meshMats, int numInst, string altMaterial)
-	{
-		Debug.Assert(meshMats.Count == mMeshParts.Count);
-
-		for(int i=0;i < mMeshParts.Count;i++)
-		{
-			MeshMaterial	mm	=meshMats[i];
-
-			if(!mm.mbVisible)
-			{
-				continue;
-			}
-
-			Mesh	m	=mMeshParts[i];
-
-			m.DrawX(mlib, transform, mm, numInst, altMaterial);
-		}
-	}
-
-
-	void IArch.DrawDMN(MatLib mlib, Matrix4x4 transform, List<MeshMaterial> meshMats)
-	{
-		Debug.Assert(meshMats.Count == mMeshParts.Count);
-
-		for(int i=0;i < mMeshParts.Count;i++)
-		{
-			MeshMaterial	mm	=meshMats[i];
-
-			if(!mm.mbVisible)
-			{
-				continue;
-			}
-
-			Mesh	m	=mMeshParts[i];
-
-			m.DrawDMN(mlib, transform, mm);
-		}
-	}
-
-
-	//this will be a starting point, user can edit the shape
-	//in ColladaConvert
-	void IArch.GenerateRoughBounds()
-	{
-		List<Vector3>	pnts	=new List<Vector3>();
-		foreach(Mesh m in mMeshParts)
-		{
-			m.Bound();
-
-			BoundingBox	b	=m.GetBoxBound();
-
-			//internal part transforms
-			Vector3	transMin;
-			Vector3	transMax;
-
-			Mathery.TransformCoordinate(b.Min, m.GetTransform(), out transMin);
-			Mathery.TransformCoordinate(b.Max, m.GetTransform(), out transMax);
-
-			pnts.Add(transMin);
-			pnts.Add(transMax);
-		}
-
-		mBoundBox		=BoundingBox.CreateFromPoints(pnts.ToArray());
-		mBoundSphere	=Mathery.SphereFromPoints(pnts);
-	}
-
-
-	void	IArch.SetRoughBoundChoice(BoundChoice bc)
-	{
-		mBoundChoice	=bc;
-	}
-
-
-	BoundChoice	IArch.GetRoughBoundChoice()
-	{
-		return	mBoundChoice;
-	}
-
-
-	//all arch stuff in local space
-	BoundingBox IArch.GetRoughBoxBound()
-	{
-		return	mBoundBox;
-	}
-
-
-	BoundingSphere IArch.GetRoughSphereBound()
-	{
-		return	mBoundSphere;
-	}
-
-
-	BoundChoice?	IArch.GetPartBoundChoice(int index)
-	{
-		if(index < 0 || index >= mMeshParts.Count)
-		{
-			return	null;
-		}
-		return	mMeshParts[index].GetBoundChoice();
-	}
-
-
-	BoundingBox?	IArch.GetPartBoxBound(int index)
-	{
-		if(index < 0 || index >= mMeshParts.Count)
-		{
-			return	null;
-		}
-
-		return	mMeshParts[index].GetBoxBound();
-	}
-
-
-	BoundingSphere?	IArch.GetPartSphereBound(int index)
-	{
-		if(index < 0 || index >= mMeshParts.Count)
-		{
-			return	null;
-		}
-
-		return	mMeshParts[index].GetSphereBound();
+		mBounds.ComputeOverall(mParts, mTransforms);
 	}
 
 
 	//find borders of shared verts between mesh parts
-	List<EditorMesh.WeightSeam> IArch.Frankenstein()
+	public List<EditorMesh.WeightSeam> Frankenstein()
 	{
-		List<EditorMesh.WeightSeam>	seams	=new List<EditorMesh.WeightSeam>();
-
-		//make a "compared against" dictionary to prevent
-		//needless work
-		Dictionary<Mesh, List<Mesh>>	comparedAgainst	=new Dictionary<Mesh, List<Mesh>>();
-		foreach(Mesh m in mMeshParts)
-		{
-			comparedAgainst.Add(m, new List<Mesh>());
-		}
-
-		for(int i=0;i < mMeshParts.Count;i++)
-		{
-			EditorMesh	meshA	=mMeshParts[i] as EditorMesh;
-			if(meshA == null)
-			{
-				continue;
-			}
-
-			for(int j=0;j < mMeshParts.Count;j++)
-			{
-				if(i == j)
-				{
-					continue;
-				}
-
-				EditorMesh	meshB	=mMeshParts[j] as EditorMesh;
-				if(meshB == null)
-				{
-					continue;
-				}
-
-				if(comparedAgainst[meshA].Contains(meshB)
-					|| comparedAgainst[meshB].Contains(meshA))
-				{
-					continue;
-				}
-
-				EditorMesh.WeightSeam	seam	=meshA.FindSeam(meshB);
-
-				comparedAgainst[meshA].Add(meshB);
-
-				if(seam.mSeam.Count == 0)
-				{
-					continue;
-				}
-
-				Debug.WriteLine("Seam between " + meshA.Name + ", and "
-					+ meshB.Name + " :Verts: " + seam.mSeam.Count);
-
-				seams.Add(seam);
-			}
-		}
-		return	seams;
+		return	SharedMeshStuff.Frankenstein(mParts);
 	}
 
 
-	void IArch.GetPartPlanes(int meshIndex, out List<Vector3> normals, out List<float> distances)
+	//for conversion to BSP, probably won't work very well
+	public void GetPartPlanes(int meshIndex, out List<Vector3> normals, out List<float> distances)
 	{
-		if(meshIndex < 0 || meshIndex >= mMeshParts.Count)
+		if(meshIndex < 0 || meshIndex >= mParts.Count)
 		{
 			normals		=new List<Vector3>();
 			distances	=new List<float>();
 			return;
 		}
 
-		Mesh	m	=mMeshParts[meshIndex];
-		if(!(m is EditorMesh))
-		{
-			normals		=new List<Vector3>();
-			distances	=new List<float>();
-			return;
-		}
+		Mesh		m			=mParts[meshIndex];
+		Matrix4x4	partTrans	=mTransforms[meshIndex];
 
-		EditorMesh	em	=m as EditorMesh;
-
-		em.ConvertToBrushes(out normals, out distances);
+		SharedMeshStuff.GetPartPlanes(m, partTrans, out normals, out distances);
 	}
 
 
-	int IArch.GetPartColladaPolys(int meshIndex, out string polys, out string counts)
+	public int GetPartColladaPolys(int meshIndex, out string polys, out string counts)
 	{
 		polys	=null;
 		counts	=null;
-		if(meshIndex < 0 || meshIndex >= mMeshParts.Count)
+		if(meshIndex < 0 || meshIndex >= mParts.Count)
 		{
 			return	0;
 		}
 
-		Mesh	m	=mMeshParts[meshIndex];
-		if(!(m is EditorMesh))
-		{
-			return	0;
-		}
+		Mesh	m	=mParts[meshIndex];
 
-		EditorMesh	em	=m as EditorMesh;
-
-		return	em.GetColladaPolys(out polys, out counts);
+		return	SharedMeshStuff.GetPartColladaPolys(m, out polys, out counts);
 	}
 
 
-	void IArch.GetPartPositions(int meshIndex, out List<Vector3> positions, out List<int> indexes)
+	public void GetPartPositions(int meshIndex, out List<Vector3> positions, out List<int> indexes)
 	{
 		positions	=null;
 		indexes		=null;
-		if(meshIndex < 0 || meshIndex >= mMeshParts.Count)
+		if(meshIndex < 0 || meshIndex >= mParts.Count)
 		{
 			return;
 		}
 
-		Mesh	m	=mMeshParts[meshIndex];
-		if(!(m is EditorMesh))
-		{
-			return;
-		}
+		Mesh		m			=mParts[meshIndex];
+		Matrix4x4	partTrans	=mTransforms[meshIndex];
 
-		EditorMesh	em	=m as EditorMesh;
-
-		em.GetPositions(out positions, out indexes);
+		SharedMeshStuff.GetPartPositions(m, partTrans, out positions, out indexes);
 	}
 
 
-	void IArch.GetPartColladaPositions(int meshIndex, out float []positions)
+	public void GetPartColladaPositions(int meshIndex, out float []positions)
 	{
 		positions	=null;
-		if(meshIndex < 0 || meshIndex >= mMeshParts.Count)
+		if(meshIndex < 0 || meshIndex >= mParts.Count)
 		{
 			return;
 		}
 
-		Mesh	m	=mMeshParts[meshIndex];
-		if(!(m is EditorMesh))
-		{
-			return;
-		}
+		Mesh	m	=mParts[meshIndex];
 
-		EditorMesh	em	=m as EditorMesh;
-
-		em.GetColladaPositions(out positions);
+		SharedMeshStuff.GetPartColladaPositions(m, out positions);
 	}
 
 
-	void IArch.GetPartColladaNormals(int meshIndex, out float []normals)
+	public void GetPartColladaNormals(int meshIndex, out float []normals)
 	{
 		normals	=null;
-		if(meshIndex < 0 || meshIndex >= mMeshParts.Count)
+		if(meshIndex < 0 || meshIndex >= mParts.Count)
 		{
 			return;
 		}
 
-		Mesh	m	=mMeshParts[meshIndex];
-		if(!(m is EditorMesh))
-		{
-			return;
-		}
+		Mesh	m	=mParts[meshIndex];
 
-		EditorMesh	em	=m as EditorMesh;
-
-		em.GetColladaNormals(out normals);
+		SharedMeshStuff.GetPartColladaNormals(m, out normals);
 	}
 
 
-	Matrix4x4 IArch.GetPartTransform(int meshIndex)
+	public Matrix4x4 GetPartTransform(int meshIndex)
 	{
-		if(meshIndex < 0 || meshIndex >= mMeshParts.Count)
+		if(meshIndex < 0 || meshIndex >= mParts.Count)
 		{
 			return	Matrix4x4.Identity;
 		}
-		return	mMeshParts[meshIndex].GetTransform();
+		return	mTransforms[meshIndex];
 	}
 
 
-	void IArch.SaveToFile(string fileName)
+	public Type GetPartVertexType(int index)
 	{
-		FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
-		BinaryWriter	bw		=new BinaryWriter(file);
-
-		//write a magic number identifying statics
-		UInt32	magic	=0x57A71CA8;
-
-		bw.Write(magic);
-
-		//save mesh parts
-		bw.Write(mMeshParts.Count);
-		foreach(Mesh m in mMeshParts)
+		if(index < 0 || index >= mParts.Count)
 		{
-			m.Write(bw);
+			return	null;
 		}
-
-		bw.Close();
-		file.Close();
+		return	mParts[index].VertexType;
 	}
 
 
-	//set bEditor if you want the buffers set to readable
-	//so they can be resaved if need be
-	bool IArch.ReadFromFile(string fileName, ID3D11Device gd, bool bEditor)
+	public string	GetPartName(int index)
 	{
-		Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
-		if(file == null)
+		if(index < 0 || index >= mParts.Count)
+		{
+			return	"";
+		}
+		return	mParts[index].Name;
+	}
+
+
+	public bool RenamePart(int index, string newName)
+	{
+		if(index < 0 || index >= mParts.Count)
 		{
 			return	false;
 		}
-		BinaryReader	br	=new BinaryReader(file);
 
-		//clear existing data
-		mMeshParts.Clear();
-
-		//read magic number
-		UInt32	magic	=br.ReadUInt32();
-
-		if(magic != 0x57A71CA8)
-		{
-			br.Close();
-			file.Close();
-			return	false;
-		}
-
-		int	numMesh	=br.ReadInt32();
-
-		for(int i=0;i < numMesh;i++)
-		{
-			Mesh	m;
-
-			if(bEditor)
-			{
-				m	=new EditorMesh("temp");
-			}
-			else
-			{
-				m	=new Mesh();
-			}
-
-			m.Read(br, gd, bEditor);
-			mMeshParts.Add(m);
-		}
-
-		br.Close();
-		file.Close();
+		mParts[index].Name	=newName;
 
 		return	true;
-	}
-
-
-	internal void UpdateBounds()
-	{
-		foreach(Mesh m in mMeshParts)
-		{
-			m.Bound();
-		}
 	}
 }

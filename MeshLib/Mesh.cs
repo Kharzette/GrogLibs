@@ -10,31 +10,20 @@ using Vortice.Mathematics;
 
 using MatLib	=MaterialLib.MaterialLib;
 
-
 namespace MeshLib;
 
+//contains the gpu specific stuff for mesh rendering
+//might be part of a static or a character
 public class Mesh
 {
-	public class MeshAndArch
-	{
-		public object	mMesh;
-		public IArch	mArch;
-	};
+	string			mName;
+	ID3D11Buffer	mVerts;
+	ID3D11Buffer	mIndexs;
+	int				mNumVerts, mNumTriangles, mVertSize;
+	int				mTypeIndex;
 
-	protected string			mName;
-	protected ID3D11Buffer		mVerts;
-	protected ID3D11Buffer		mIndexs;
-	protected int				mNumVerts, mNumTriangles, mVertSize;
-	protected int				mTypeIndex;
-
-	//bound stuff for this part
-	protected BoundChoice		mBoundChoice;
-	protected BoundingBox		mBoxBound;
-	protected BoundingSphere	mSphereBound;
-
-	//this is a sort of submesh transform
-	//like an offset to a piece from the origin
-	protected Matrix4x4			mPart;
+	//optional editor data, will be null usually in a game
+	EditorMesh	mEditorMesh;
 
 	//scale factors, collada always in meterish scale
 	public const float	MetersToQuakeUnits	=37.6471f;
@@ -69,12 +58,6 @@ public class Mesh
 	}
 
 
-	public Matrix4x4 GetTransform()
-	{
-		return	mPart;
-	}
-
-
 	public void SetVertSize(int size)
 	{
 		mVertSize	=size;
@@ -90,6 +73,12 @@ public class Mesh
 	public void SetNumTriangles(int numTri)
 	{
 		mNumTriangles	=numTri;
+	}
+
+
+	internal int GetNumTriangles()
+	{
+		return	mNumTriangles;
 	}
 
 
@@ -111,71 +100,88 @@ public class Mesh
 	}
 
 
-	public void SetTransform(Matrix4x4 mat)
+	public void Write(string fileName)
 	{
-		mPart		=mat;
-	}
+		if(mEditorMesh == null)
+		{
+			return;	//can only save from editors
+		}
+		
+		FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
+		BinaryWriter	bw		=new BinaryWriter(file);
 
+		//write a magic number identifying character instances
+		UInt32	magic	=0xB0135313;
 
-	public virtual void Write(BinaryWriter bw)
-	{
+		bw.Write(magic);
+
 		bw.Write(mName);
 		bw.Write(mNumVerts);
 		bw.Write(mNumTriangles);
 		bw.Write(mVertSize);
 		bw.Write(mTypeIndex);
 
-		//transform
-		FileUtil.WriteMatrix(bw, mPart);
+		mEditorMesh.Write(bw);
 
-		//box bound
-		FileUtil.WriteVector3(bw, mBoxBound.Min);
-		FileUtil.WriteVector3(bw, mBoxBound.Max);
+		bw.Write(mNumTriangles * 3);
 
-		//sphere bound
-		FileUtil.WriteVector3(bw, mSphereBound.Center);
-		bw.Write(mSphereBound.Radius);
+		bw.Close();
+		file.Close();
 	}
 
 
-	public virtual void Read(BinaryReader br, ID3D11Device gd, bool bEditor)
+	public void Read(string fileName, ID3D11Device gd, bool bEditor)
 	{
+		if(!File.Exists(fileName))
+		{
+			return;
+		}
+
+		Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+		if(file == null)
+		{
+			return;
+		}
+		BinaryReader	br	=new BinaryReader(file);
+
+		UInt32	magic	=br.ReadUInt32();
+		if(magic != 0xb0135313)
+		{
+			br.Close();
+			file.Close();
+			return;
+		}
+
 		mName			=br.ReadString();
 		mNumVerts		=br.ReadInt32();
 		mNumTriangles	=br.ReadInt32();
 		mVertSize		=br.ReadInt32();
 		mTypeIndex		=br.ReadInt32();
 
-		mPart	=FileUtil.ReadMatrix(br);
+		Array	vertArray;
 
-		SetTransform(mPart);
+		VertexTypes.ReadVerts(br, gd, out vertArray);
+		
+		UInt16	[]indArray	=FileUtil.ReadArray<UInt16>(br);
 
-		mBoxBound.Min	=FileUtil.ReadVector3(br);
-		mBoxBound.Max	=FileUtil.ReadVector3(br);
+		mVerts	=VertexTypes.BuildABuffer(gd, vertArray, mTypeIndex);
+		mIndexs	=VertexTypes.BuildAnIndexBuffer(gd, indArray);
 
-		mSphereBound.Center	=FileUtil.ReadVector3(br);
-		mSphereBound.Radius	=br.ReadSingle();
+		mVerts.DebugName	=mName;
 
-		if(!bEditor)
+		if(bEditor)
 		{
-			Array	vertArray;
-
-			VertexTypes.ReadVerts(br, gd, out vertArray);
-
-			int	indLen	=br.ReadInt32();
-
-			UInt16	[]indArray	=new UInt16[indLen];
-
-			for(int i=0;i < indLen;i++)
-			{
-				indArray[i]	=br.ReadUInt16();
-			}
-
-			mVerts	=VertexTypes.BuildABuffer(gd, vertArray, mTypeIndex);
-			mIndexs	=VertexTypes.BuildAnIndexBuffer(gd, indArray);
-
-			mVerts.DebugName	=mName;
+			mEditorMesh.SetData(mTypeIndex, vertArray, indArray);
 		}
+
+		br.Close();
+		file.Close();
+	}
+
+
+	internal EditorMesh	GetEditorMesh()
+	{
+		return	mEditorMesh;
 	}
 
 
@@ -213,7 +219,12 @@ public class Mesh
 
 		CBKeeper	cbk	=mlib.GetCBKeeper();
 
-		cbk.SetWorldMat(transform * mPart);		
+		//TODO: this used to have a sort of offset transform
+//		cbk.SetWorldMat(transform * mPart);
+
+		//now there is only this passed in transform
+		cbk.SetWorldMat(transform);
+
 		mlib.ApplyMaterial("DMN", dc);
 
 		dc.DrawIndexed(mNumTriangles * 3, 0, 0);
@@ -255,7 +266,12 @@ public class Mesh
 
 		CBKeeper	cbk	=mlib.GetCBKeeper();
 
-		cbk.SetWorldMat(transform * mPart);		
+		//TODO: this used to have a sort of offset transform
+//		cbk.SetWorldMat(transform * mPart);
+
+		//now there is only this passed in transform
+		cbk.SetWorldMat(transform);
+
 		mlib.ApplyMaterial(altMaterial, dc);
 
 		dc.DrawIndexed(mNumTriangles * 3, 0, 0);
@@ -298,7 +314,11 @@ public class Mesh
 
 		CBKeeper	cbk	=mlib.GetCBKeeper();
 
-		cbk.SetWorldMat(transform * mPart);
+		//TODO: this used to have a sort of offset transform
+//		cbk.SetWorldMat(transform * mPart);
+
+		//now there is only this passed in transform
+		cbk.SetWorldMat(transform);
 		mlib.ApplyMaterial(altMaterial, dc);
 
 		dc.DrawIndexedInstanced(mNumTriangles * 3, numInst, 0, 0, 0);
@@ -339,59 +359,51 @@ public class Mesh
 
 		CBKeeper	cbk	=mlib.GetCBKeeper();
 
-		cbk.SetWorldMat(transform * mPart);
+		//TODO: this used to have a sort of offset transform
+//		cbk.SetWorldMat(transform * mPart);
+
+		//now there is only this passed in transform
+		cbk.SetWorldMat(transform);
 		mlib.ApplyMaterial(mm.mMaterialName, dc);
 
 		dc.DrawIndexed(mNumTriangles * 3, 0, 0);
 	}
 
 
-	public virtual void Bound()
-	{
-		throw new NotImplementedException();
-	}
-
-
-	public BoundingBox GetBoxBound()
-	{
-		return	mBoxBound;
-	}
-
-
-	public BoundingSphere GetSphereBound()
-	{
-		return	mSphereBound;
-	}
-
-
-	public BoundChoice GetBoundChoice()
-	{
-		return	mBoundChoice;
-	}
-
-
-	public static Dictionary<string, IArch> LoadAllStaticMeshes(
+	public static Dictionary<string, StaticMesh> LoadAllStaticMeshes(
 		string dir,	ID3D11Device gd)
 	{
-		Dictionary<string, IArch>	ret	=new Dictionary<string, IArch>();
+		Dictionary<string, StaticMesh>	ret	=new Dictionary<string, StaticMesh>();
 
 		if(Directory.Exists(dir))
 		{
 			DirectoryInfo	di	=new DirectoryInfo(dir + "/");
 
-			FileInfo[]		fi	=di.GetFiles("*.Static", SearchOption.TopDirectoryOnly);
+			//load all mesh
+			Dictionary<string, Mesh>	meshes	=new Dictionary<string, Mesh>();
+
+			FileInfo[]		fi	=di.GetFiles("*.Mesh", SearchOption.TopDirectoryOnly);
 			foreach(FileInfo f in fi)
 			{
 				//strip back
 				string	path	=f.DirectoryName;
 
-				IArch	smo	=new StaticArch();
-				bool	bWorked	=smo.ReadFromFile(path + "\\" + f.Name, gd, true);
+				Mesh	m	=new Mesh();
+				m.Read(path + "\\" + f.Name, gd, true);
 
-				if(bWorked)
-				{
-					ret.Add(f.Name, smo);
-				}
+				meshes.Add(m.Name, m);
+			}
+
+			//load statics
+			fi	=di.GetFiles("*.Static", SearchOption.TopDirectoryOnly);
+			foreach(FileInfo f in fi)
+			{
+				//strip back
+				string	path	=f.DirectoryName;
+
+				StaticMesh	sm	=new StaticMesh(path + "\\" + f.Name, meshes);
+
+				ret.Add(f.Name, sm);
 			}
 		}
 

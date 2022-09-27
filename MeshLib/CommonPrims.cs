@@ -16,7 +16,6 @@ public class CommonPrims
 	ID3D11PixelShader	mPS;
 
 	PrimObject	mXAxis, mYAxis, mZAxis;
-	PrimObject	mBoxBound, mSphereBound;
 	PrimObject	mLightAxis, mLightPointyEnd;
 
 	Dictionary<int, PrimObject>	mBoxes		=new Dictionary<int, PrimObject>();
@@ -223,31 +222,6 @@ public class CommonPrims
 	}
 
 
-	public void DrawBox(Matrix4x4 transform)
-	{
-		if(mBoxBound == null)
-		{
-			return;
-		}
-
-		CBKeeper			cbk	=mSK.GetCBKeeper();		
-		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
-
-		dc.VSSetShader(mVS);
-		dc.PSSetShader(mPS);
-
-		Vector4	lightColor2	=Vector4.One * 0.8f;
-		Vector4	lightColor3	=Vector4.One * 0.6f;
-
-		cbk.SetSolidColour(Vector4.One * 0.5f);
-		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
-		cbk.SetSpecular(Vector4.One, 1);
-		cbk.SetWorldMat(transform);
-		cbk.UpdateObject(dc);
-		mBoxBound.Draw(dc);
-	}
-
-
 	public void DrawSphere(int index, Matrix4x4 transform, Vector4 color)
 	{
 		if(!mSpheres.ContainsKey(index))
@@ -270,30 +244,6 @@ public class CommonPrims
 		cbk.SetWorldMat(transform);
 		cbk.UpdateObject(dc);
 		mSpheres[index].Draw(dc);
-	}
-
-
-	public void DrawSphere(Matrix4x4 transform)
-	{
-		if(mSphereBound == null)
-		{
-			return;
-		}
-		CBKeeper			cbk	=mSK.GetCBKeeper();		
-		ID3D11DeviceContext	dc	=mVS.Device.ImmediateContext;
-
-		dc.VSSetShader(mVS);
-		dc.PSSetShader(mPS);
-
-		Vector4	lightColor2	=Vector4.One * 0.8f;
-		Vector4	lightColor3	=Vector4.One * 0.6f;
-
-		cbk.SetSolidColour(Vector4.One * 0.5f);
-		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
-		cbk.SetSpecular(Vector4.One, 1);
-		cbk.SetWorldMat(transform);
-		cbk.UpdateObject(dc);
-		mSphereBound.Draw(dc);
 	}
 
 
@@ -346,18 +296,5 @@ public class CommonPrims
 		PrimObject	po	=PrimFactory.CreateCapsule(mVS.Device, code, cap.mRadius, cap.mLength);
 
 		mCapsules.Add(index, po);
-	}
-
-
-	public void ReBuildBoundsDrawData(IArch arch)
-	{
-		BoundingBox		box		=arch.GetRoughBoxBound();
-		BoundingSphere	bs		=arch.GetRoughSphereBound();
-
-		byte	[]code	=mSK.GetVSCompiledCode("WNormWPosTexVS");
-
-		mBoxBound		=PrimFactory.CreateCube(mVS.Device, code, box);
-		mSphereBound	=PrimFactory.CreateSphere(mVS.Device,
-							code, bs.Center, bs.Radius);
 	}
 }

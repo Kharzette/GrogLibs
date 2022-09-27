@@ -14,33 +14,93 @@ using MatLib	=MaterialLib.MaterialLib;
 
 namespace MeshLib;
 
-public class StaticMesh
+//an instance of a non animating boneless style mesh (or meshes)
+public partial class StaticMesh
 {
-	MeshPartStuff	mParts;
-
-	//transform
+	//Overall transform of the whole thing
 	Matrix4x4	mTransform;
 
+	//bounding information
+	MeshBound	mBounds;
 
-	public StaticMesh(IArch statA)
+	//mesh parts and their relative xforms
+	//should always have the same count
+	List<Mesh>			mParts		=new List<Mesh>();
+	List<Matrix4x4>		mTransforms	=new List<Matrix4x4>();
+	List<MeshMaterial>	mPartMats	=new List<MeshMaterial>();
+
+
+	public StaticMesh(List<Mesh> parts)
 	{
-		mParts	=new MeshPartStuff(statA);
+		mParts.AddRange(parts);
 
 		SetTransform(Matrix4x4.Identity);
 	}
 
 
+	//construct from file + a dictionary of possible part meshes
+	public StaticMesh(string fileName, Dictionary<string, Mesh> meshes)
+	{
+		if(!File.Exists(fileName))
+		{
+			return;
+		}
+
+		Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+		if(file == null)
+		{
+			return;
+		}
+
+		BinaryReader	br	=new BinaryReader(file);
+
+		UInt32	magic	=br.ReadUInt32();
+		if(magic != 0x57A71C15)
+		{
+			br.Close();
+			file.Close();
+			return;
+		}
+
+		mTransform	=FileUtil.ReadMatrix(br);
+
+		mBounds.Read(br);
+
+		int	numParts	=br.ReadInt32();
+
+		for(int i=0;i < numParts;i++)
+		{
+			string	name	=br.ReadString();
+
+			Matrix4x4	mat	=FileUtil.ReadMatrix(br);
+
+			if(!meshes.ContainsKey(name))
+			{
+				continue;
+			}
+
+			mParts.Add(meshes[name]);
+			mTransforms.Add(mat);
+		}
+
+		br.Close();
+		file.Close();
+	}
+
+
 	public void FreeAll()
 	{
-		mParts.FreeAll();
+		mParts.Clear();	//don't free Mesh parts, this is an instance
 
 		mParts	=null;
+
+		mBounds.FreeAll();
 	}
 
 
 	public bool IsEmpty()
 	{
-		return	mParts.IsEmpty();
+		return	(mParts.Count == 0);
 	}
 
 
@@ -56,222 +116,158 @@ public class StaticMesh
 	}
 
 
-	//Checks first against a box encompassing all parts
-	//TODO: cache that matrix invert somehow?
-	//TODO: what about reporting ALL collisions?
+	//Checks first against a bound encompassing all parts
 	public bool RayIntersect(Vector3 startPos, Vector3 endPos, float rayRadius,
 							out Vector3 hitPos, out Vector3 hitNorm)
 	{
 		hitPos	=hitNorm	=Vector3.Zero;
 
-		IArch	arch	=mParts.GetArch();
-
-		//need this for boxes only
-		Matrix4x4	tInv;
-
-		//check rough bounds
-		BoundChoice	bc	=arch.GetRoughBoundChoice();
-
-		Vector3	rayDir	=Vector3.Normalize(endPos - startPos);
-
-		if(bc == BoundChoice.Invalid)
+		if(!mBounds.RayIntersectRough(ref mTransform, startPos, endPos, rayRadius))
 		{
 			return	false;
 		}
-		else if(bc == BoundChoice.Box)
-		{
-			BoundingBox	box	=arch.GetRoughBoxBound();
 
-			if(!Matrix4x4.Invert(mTransform, out tInv))
-			{
-				return	false;
-			}
-
-			Vector3	rayInvDir	=Vector3.TransformNormal(rayDir, tInv);
-			Vector3	rayInvStart	=Mathery.TransformCoordinate(startPos, ref tInv);
-
-			Ray	ray	=new Ray(rayInvStart, rayInvDir);
-
-			float	?dist	=box.Intersects(ray);
-			if(dist == null)
-			{
-				return	false;
-			}
-		}
-		else
-		{
-			//sphere
-			BoundingSphere	bs	=arch.GetRoughSphereBound();
-
-			Ray	ray	=new Ray(startPos, rayDir);
-
-			float	?dist	=bs.Intersects(ray);
-			if(dist == null)
-			{
-				return	false;
-			}
-		}
-
-		//grab closest intersection
-		float	bestDist	=float.MaxValue;
-		int		bestPart	=-1;
-		Vector3	bestHit		=Vector3.Zero;
-		Vector3	bestNorm	=Vector3.Zero;
-
-		//check submesh bounds or bone bounds
-		int	partCount	=mParts.GetNumParts();
-
-		for(int i=0;i < partCount;i++)
-		{
-			BoundChoice?	nbc	=arch.GetPartBoundChoice(i);
-
-			if(nbc == null)
-			{
-				continue;
-			}
-
-			if(nbc.Value == BoundChoice.Invalid)
-			{
-				continue;
-			}
-
-			//TODO: hmm there seems to be no mechanism for instances
-			//to have their own submesh transforms...
-			//this might be a problem for like machines with moving parts
-			Matrix4x4	partXForm	=arch.GetPartTransform(i);
-
-			if(nbc.Value == BoundChoice.Box)
-			{
-				BoundingBox?	pbox	=arch.GetPartBoxBound(i);
-				if(pbox == null)
-				{
-					continue;
-				}
-
-				partXForm	*=mTransform;
-				if(!Matrix4x4.Invert(partXForm, out tInv))
-				{
-					return	false;
-				}
-				Vector3	rayInvDir	=Vector3.TransformNormal(rayDir, tInv);
-				Vector3	rayInvStart	=Mathery.TransformCoordinate(startPos, ref tInv);
-
-				Ray	ray	=new Ray(rayInvStart, rayInvDir);
-
-				float	?dist	=pbox.Value.Intersects(ray);
-				if(dist == null)
-				{
-					continue;
-				}
-
-				if(dist < bestDist)
-				{
-					bestPart	=i;
-					bestDist	=dist.Value;
-					bestHit		=rayInvStart + rayInvDir * dist.Value;	//boxspace
-					bestNorm	=Mathery.BoxNormalAtPoint(pbox.Value, bestHit);
-					bestHit		=startPos + rayDir * dist.Value;	//worldspace
-					bestNorm	=Vector3.TransformNormal(bestNorm, mTransform);
-				}
-			}
-			else
-			{
-				//sphere
-				BoundingSphere?	ps	=arch.GetPartSphereBound(i);
-				if(ps == null)
-				{
-					continue;
-				}
-
-				Ray	ray	=new Ray(startPos, rayDir);
-
-				float	?dist	=ps.Value.Intersects(ray);
-				if(dist == null)
-				{
-					continue;
-				}
-
-				if(dist < bestDist)
-				{
-					bestPart	=i;
-					bestDist	=dist.Value;
-					bestHit		=startPos + rayDir * dist.Value;
-					bestNorm	=Vector3.Normalize(bestHit - ps.Value.Center);	//might be backwards?
-				}
-			}
-		}
-
-		if(bestPart == -1)
-		{
-			//no submesh collisions, though it passed the rough check
-			return	false;
-		}
-
-		hitPos	=bestHit;
-		hitNorm	=bestNorm;
-
-		return	true;
+		return	mBounds.RayIntersectParts(ref mTransform, mTransforms,
+			startPos, endPos, rayRadius,
+			out hitPos, out hitNorm);
 	}
 
 
+	//I think in all cases where this is used the part meshes go too
 	public void NukePart(int index)
 	{
-		mParts.NukePart(index);
+		if(index < 0 || index >= mParts.Count)
+		{
+			return;
+		}
+
+		Mesh	m	=mParts[index];
+
+		m.FreeAll();
+
+		mParts.RemoveAt(index);
+		mTransforms.RemoveAt(index);
 	}
 
 
 	public void NukeParts(List<int> indexes)
 	{
-		mParts.NukeParts(indexes);
+		List<Mesh>		toNuke	=new List<Mesh>();
+		List<Matrix4x4>	toNukeT	=new List<Matrix4x4>();
+		foreach(int ind in indexes)
+		{
+			Debug.Assert(ind >= 0 && ind < mParts.Count);
+
+			if(ind < 0 || ind >= mParts.Count)
+			{
+				continue;
+			}
+
+			toNuke.Add(mParts[ind]);
+			toNukeT.Add(mTransforms[ind]);
+		}
+
+		mParts.RemoveAll(mp => toNuke.Contains(mp));
+		mTransforms.RemoveAll(mp => toNukeT.Contains(mp));
+
+		foreach(Mesh m in toNuke)
+		{
+			m.FreeAll();
+		}
+
+		toNuke.Clear();
+		toNukeT.Clear();
 	}
 
 
 	public void SetPartMaterialName(int index, string matName,
 									StuffKeeper sk)
 	{
-		mParts.SetPartMaterialName(index, matName, sk);
+		if(index < 0 || index >= mParts.Count)
+		{
+			return;
+		}
+		mPartMats[index].mMaterialName	=matName;
 	}
 
 
 	public string GetPartMaterialName(int index)
 	{
-		return	mParts.GetPartMaterialName(index);
-	}
-
-
-	public int GetNumParts()
-	{
-		return	mParts.GetNumParts();
+		if(index < 0 || index >= mParts.Count)
+		{
+			return	"";
+		}
+		return	mPartMats[index].mMaterialName;
 	}
 
 
 	public void SetPartVisible(int index, bool bVisible)
 	{
-		mParts.SetPartVisible(index, bVisible);
+		if(index < 0 || index >= mParts.Count)
+		{
+			return;
+		}
+		mPartMats[index].mbVisible	=bVisible;
 	}
 
 
 	public void Draw(MatLib mlib)
 	{
-		mParts.Draw(mlib, mTransform);
+		Debug.Assert(mPartMats.Count == mParts.Count);
+
+		for(int i=0;i < mParts.Count;i++)
+		{
+			MeshMaterial	mm	=mPartMats[i];
+
+			if(!mm.mbVisible)
+			{
+				continue;
+			}
+
+			Mesh	m	=mParts[i];
+
+			m.Draw(mlib, mTransform, mm);
+		}
 	}
 
 
 	public void Draw(MatLib mlib, string altMaterial)
 	{
-		mParts.Draw(mlib, mTransform, altMaterial);
-	}
+		Debug.Assert(mPartMats.Count == mParts.Count);
 
+		for(int i=0;i < mParts.Count;i++)
+		{
+			MeshMaterial	mm	=mPartMats[i];
 
-	public void DrawX(MatLib mlib, int numInst, string altMaterial)
-	{
-		mParts.DrawX(mlib, mTransform, altMaterial, numInst);
+			if(!mm.mbVisible)
+			{
+				continue;
+			}
+
+			Mesh	m	=mParts[i];
+
+			m.Draw(mlib, mTransform, mm, altMaterial);
+		}
 	}
 
 
 	public void DrawDMN(MatLib mlib)
 	{
-		mParts.DrawDMN(mlib, mTransform);
+		Debug.Assert(mPartMats.Count == mParts.Count);
+
+		for(int i=0;i < mParts.Count;i++)
+		{
+			MeshMaterial	mm	=mPartMats[i];
+
+			if(!mm.mbVisible)
+			{
+				continue;
+			}
+
+			Mesh	m	=mParts[i];
+
+			m.DrawDMN(mlib, mTransform, mm);
+		}
 	}
 
 
@@ -283,6 +279,9 @@ public class StaticMesh
 
 	public void SaveToFile(string fileName)
 	{
+		Debug.Assert(mParts.Count == mTransforms.Count);
+		Debug.Assert(mParts.Count == mPartMats.Count);
+
 		FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
 		BinaryWriter	bw		=new BinaryWriter(file);
 
@@ -291,8 +290,17 @@ public class StaticMesh
 
 		bw.Write(magic);
 
-		//save mesh parts
-		mParts.Write(bw);
+		FileUtil.WriteMatrix(bw, mTransform);
+
+		mBounds.Write(bw);
+
+		bw.Write(mParts.Count);
+
+		for(int i=0;i < mParts.Count;i++)
+		{
+			FileUtil.WriteMatrix(bw, mTransforms[i]);
+			mPartMats[i].Write(bw);
+		}
 
 		bw.Close();
 		file.Close();
@@ -321,7 +329,23 @@ public class StaticMesh
 			return	false;
 		}
 
-		mParts.Read(br);
+		mTransform	=FileUtil.ReadMatrix(br);
+
+		mBounds.Read(br);
+
+		int	numParts	=br.ReadInt32();
+
+		for(int i=0;i < numParts;i++)
+		{
+			Matrix4x4	mat	=FileUtil.ReadMatrix(br);
+
+			MeshMaterial	mm	=new MeshMaterial();
+
+			mm.Read(br);
+
+			mTransforms.Add(mat);
+			mPartMats.Add(mm);
+		}
 
 		br.Close();
 		file.Close();
@@ -333,6 +357,9 @@ public class StaticMesh
 	//this if for the DMN renderererererer
 	public void AssignMaterialIDs(MaterialLib.IDKeeper idk)
 	{
-		mParts.AssignMaterialIDs(idk);
+		foreach(MeshMaterial mm in mPartMats)
+		{
+			mm.mMaterialID	=idk.GetID(mm.mMaterialName);
+		}
 	}
 }

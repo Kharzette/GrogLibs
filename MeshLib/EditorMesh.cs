@@ -9,10 +9,12 @@ using Vortice.Mathematics.PackedVector;
 using Vortice.Direct3D11;
 using UtilityLib;
 
+using Half	=System.Half;
+
 
 namespace MeshLib;
 
-public class EditorMesh : Mesh
+public class EditorMesh
 {
 	//for welding weights
 	public class WeightSeam
@@ -25,61 +27,21 @@ public class EditorMesh : Mesh
 	//extra data for modifying stuff for editors
 	Array	mVertArray;
 	UInt16	[]mIndArray;
+	int		mTypeIndex;
 
 
-	public EditorMesh(string name) : base(name)
+	internal void SetData(int typeIdx, Array vertArray, UInt16 []indArray)
 	{
-	}
-
-
-	public override void Write(BinaryWriter bw)
-	{
-		base.Write(bw);
-
-		VertexTypes.WriteVerts(bw, mVertArray, mTypeIndex);
-
-		bw.Write(mIndArray.Length);
-
-		foreach(UInt16 ind in mIndArray)
-		{
-			bw.Write(ind);
-		}
-	}
-
-
-	public override void Read(BinaryReader br, ID3D11Device gd, bool bEditor)
-	{
-		base.Read(br, gd, bEditor);
-
-		VertexTypes.ReadVerts(br, gd, out mVertArray);
-
-		int	indLen	=br.ReadInt32();
-
-		mIndArray	=new UInt16[indLen];
-
-		for(int i=0;i < indLen;i++)
-		{
-			mIndArray[i]	=br.ReadUInt16();
-		}
-
-		if(mVerts != null)
-		{
-			mVerts.Dispose();
-		}
-		if(mIndexs != null)
-		{
-			mIndexs.Dispose();
-		}
-
-		mVerts	=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
-		mIndexs	=VertexTypes.BuildAnIndexBuffer(gd, mIndArray);
-	}
-
-
-	public void SetData(Array vertArray, UInt16 []indArray)
-	{
+		mTypeIndex	=typeIdx;
 		mVertArray	=vertArray;
 		mIndArray	=indArray;
+	}
+
+
+	internal void Write(BinaryWriter bw)
+	{
+		VertexTypes.WriteVerts(bw, mVertArray, mTypeIndex);
+		FileUtil.WriteArray(mIndArray, bw);
 	}
 
 
@@ -405,10 +367,6 @@ public class EditorMesh : Mesh
 		}
 
 		VertexTypes.ReplaceBoneIndexes(mVertArray, myInds.ToArray());
-
-		mVerts.Dispose();
-
-		mVerts		=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
 	}
 
 
@@ -476,12 +434,6 @@ public class EditorMesh : Mesh
 		VertexTypes.ReplaceBoneIndexes(ws.mMeshB.mVertArray, otherInds.ToArray());
 		VertexTypes.ReplacePositions(ws.mMeshB.mVertArray, otherVerts.ToArray());
 		VertexTypes.ReplacePositions(mVertArray, myVerts.ToArray());
-
-		mVerts.Dispose();
-		ws.mMeshB.mVerts.Dispose();
-
-		mVerts				=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
-		ws.mMeshB.mVerts	=VertexTypes.BuildABuffer(gd, ws.mMeshB.mVertArray, ws.mMeshB.mTypeIndex);
 	}
 
 
@@ -526,10 +478,6 @@ public class EditorMesh : Mesh
 		VertexTypes.ReplacePositions(ws.mMeshB.mVertArray, otherVerts.ToArray());
 		VertexTypes.ReplaceWeights(ws.mMeshB.mVertArray, otherWeights.ToArray());
 		VertexTypes.ReplaceBoneIndexes(ws.mMeshB.mVertArray, otherInds.ToArray());
-
-		ws.mMeshB.mVerts.Dispose();
-
-		ws.mMeshB.mVerts	=VertexTypes.BuildABuffer(gd, ws.mMeshB.mVertArray, ws.mMeshB.mTypeIndex);
 	}
 
 
@@ -544,7 +492,7 @@ public class EditorMesh : Mesh
 
 
 	//borrowed from http://www.terathon.com/code/tangent.html
-	public void GenTangents(ID3D11Device gd, int texCoordSet)
+	public void GenTangents(ID3D11Device gd, int texCoordSet, int numTris)
 	{
 		List<Vector3>	verts	=VertexTypes.GetPositions(mVertArray, mTypeIndex);			
 		List<Vector2>	texs	=VertexTypes.GetTexCoord(mVertArray, mTypeIndex, texCoordSet);
@@ -555,11 +503,17 @@ public class EditorMesh : Mesh
 			return;
 		}
 
-		Vector3	[]stan	=new Vector3[mNumVerts];
-		Vector3	[]ttan	=new Vector3[mNumVerts];
-		Half4	[]tang	=new Half4[mNumVerts];
+		int	count	=verts.Count;
+		if(texs.Count != count || norms.Count != count)
+		{
+			return;
+		}
 
-		for(int i=0;i < mNumTriangles;i++)
+		Vector3	[]stan	=new Vector3[count];
+		Vector3	[]ttan	=new Vector3[count];
+		Half4	[]tang	=new Half4[count];
+
+		for(int i=0;i < numTris;i++)
 		{
 			int	idx0	=mIndArray[0 + (i * 3)];
 			int	idx1	=mIndArray[1 + (i * 3)];
@@ -605,7 +559,7 @@ public class EditorMesh : Mesh
 			ttan[idx2]	=tdir;
 		}
 
-		for(int i=0;i < mNumVerts;i++)
+		for(int i=0;i < count;i++)
 		{
 			Vector3	norm	=norms[i];
 			Vector3	t		=stan[i];
@@ -626,80 +580,22 @@ public class EditorMesh : Mesh
 		}
 
 		mVertArray	=VertexTypes.AddTangents(mVertArray, mTypeIndex, tang, out mTypeIndex);
-
-		if(mVerts != null)
-		{
-			mVerts.Dispose();
-		}
-		mVerts	=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
-	}
-
-
-	public float[,] LudumDareTerrainDataHack()
-	{
-		List<Vector3>	verts	=VertexTypes.GetPositions(mVertArray, mTypeIndex);
-
-		//these verts are in random order (oops)
-
-		//sort into y bucketses
-		Dictionary<int, List<Vector3>>	yBuckets	=new Dictionary<int,List<Vector3>>();
-		for(int y=-25;y < 26;y++)
-		{
-			yBuckets.Add(y, new List<Vector3>());
-		}
-
-		for(int y=-25;y < 26;y++)
-		{
-			foreach(Vector3 pos in verts)
-			{
-				if(Mathery.CompareFloat(pos.Y, y))
-				{
-					if(!yBuckets[y].Contains(pos))
-					{
-						yBuckets[y].Add(pos);
-					}
-				}
-			}
-		}
-
-		for(int y=-25;y < 26;y++)
-		{
-			yBuckets[y].OrderBy(x => x.X);
-		}
-
-		float	[,]ret	=new float[51, 51];
-
-		for(int y=-25;y < 26;y++)
-		{
-			int	x	=0;
-			foreach(Vector3 vec in yBuckets[y])
-			{
-				ret[y + 25, x++]	=vec.Z;
-			}
-		}
-		return	ret;
 	}
 
 
 	public void NukeVertexElement(List<int> indexes, ID3D11Device gd)
 	{
 		mVertArray	=VertexTypes.NukeElements(mVertArray, mTypeIndex, indexes, out mTypeIndex);
-
-		if(mVerts != null)
-		{
-			mVerts.Dispose();
-		}
-		mVerts	=VertexTypes.BuildABuffer(gd, mVertArray, mTypeIndex);
 	}
 
 
-	public override void Bound()
+	public void ComputeRoughBound(out BoundingBox box, out BoundingSphere spr)
 	{
-		VertexTypes.GetVertBounds(mVertArray, mTypeIndex, out mBoxBound, out mSphereBound);			
+		VertexTypes.GetVertBounds(mVertArray, mTypeIndex, out box, out spr);			
 	}
 
 
-	internal void GetInfluencedBound(int boneIndex, out BoundingBox box, out BoundingSphere sphere)
+	internal void ComputeInfluencedBound(int boneIndex, out BoundingBox box, out BoundingSphere sphere)
 	{
 		const float	boneInfluenceThreshold	=0.2f;
 
@@ -710,7 +606,7 @@ public class EditorMesh : Mesh
 
 
 	//grab a list of planes from a mesh
-	internal void ConvertToBrushes(out List<Vector3> norms, out List<float> dists)
+	internal void ConvertToBrushes(ref Matrix4x4 mat, out List<Vector3> norms, out List<float> dists)
 	{
 		norms	=new List<Vector3>();
 		dists	=new List<float>();
@@ -723,9 +619,9 @@ public class EditorMesh : Mesh
 			faceVerts.Add(myVerts[mIndArray[i + 1]]);
 			faceVerts.Add(myVerts[mIndArray[i]]);
 
-			faceVerts[0]	=Mathery.TransformCoordinate(faceVerts[0], ref mPart);
-			faceVerts[1]	=Mathery.TransformCoordinate(faceVerts[1], ref mPart);
-			faceVerts[2]	=Mathery.TransformCoordinate(faceVerts[2], ref mPart);
+			faceVerts[0]	=Mathery.TransformCoordinate(faceVerts[0], ref mat);
+			faceVerts[1]	=Mathery.TransformCoordinate(faceVerts[1], ref mat);
+			faceVerts[2]	=Mathery.TransformCoordinate(faceVerts[2], ref mat);
 
 			Vector3	norm;
 			float	dist;
@@ -768,7 +664,7 @@ public class EditorMesh : Mesh
 	}
 
 
-	internal void GetPositions(out List<Vector3> positions, out List<int> indexes)
+	internal void GetPositions(ref Matrix4x4 mat, out List<Vector3> positions, out List<int> indexes)
 	{
 		positions	=VertexTypes.GetPositions(mVertArray, mTypeIndex);
 
@@ -783,7 +679,7 @@ public class EditorMesh : Mesh
 		Vector3	[]yarr	=new Vector3[positions.Count];
 		Vector3	[]arr	=positions.ToArray();
 
-		Mathery.TransformCoordinate(arr, mPart, yarr);
+		Mathery.TransformCoordinate(arr, mat, yarr);
 
 		positions	=yarr.ToList();
 	}
