@@ -21,7 +21,7 @@ public partial class StaticMesh
 	Matrix4x4	mTransform;
 
 	//bounding information
-	MeshBound	mBounds;
+	MeshBound	mBounds	=new MeshBound();
 
 	//mesh parts and their relative xforms
 	//should always have the same count
@@ -30,10 +30,8 @@ public partial class StaticMesh
 	List<MeshMaterial>	mPartMats	=new List<MeshMaterial>();
 
 
-	public StaticMesh(List<Mesh> parts)
+	public StaticMesh()
 	{
-		mParts.AddRange(parts);
-
 		SetTransform(Matrix4x4.Identity);
 	}
 
@@ -72,7 +70,8 @@ public partial class StaticMesh
 		{
 			string	name	=br.ReadString();
 
-			Matrix4x4	mat	=FileUtil.ReadMatrix(br);
+			Matrix4x4		mat	=FileUtil.ReadMatrix(br);
+			MeshMaterial	mm	=new MeshMaterial(br);
 
 			if(!meshes.ContainsKey(name))
 			{
@@ -81,6 +80,7 @@ public partial class StaticMesh
 
 			mParts.Add(meshes[name]);
 			mTransforms.Add(mat);
+			mPartMats.Add(mm);
 		}
 
 		br.Close();
@@ -98,6 +98,32 @@ public partial class StaticMesh
 	}
 
 
+	public void AddPart(Mesh part, Matrix4x4 mat, string matName)
+	{
+		if(matName == null || matName == "")
+		{
+			matName	="default";
+		}
+
+		mParts.Add(part);
+		mTransforms.Add(mat);
+
+		MeshMaterial	mm	=new MeshMaterial();
+
+		mm.mbVisible		=true;
+		mm.mMaterialID		=0;
+		mm.mMaterialName	=matName;
+
+		mPartMats.Add(mm);
+	}
+
+
+	public int GetPartCount()
+	{
+		return	mParts.Count;
+	}
+
+
 	public bool IsEmpty()
 	{
 		return	(mParts.Count == 0);
@@ -107,6 +133,13 @@ public partial class StaticMesh
 	public Matrix4x4 GetTransform()
 	{
 		return	mTransform;
+	}
+
+
+	public void GetRoughBounds(out BoundingBox box, out BoundingSphere sph)
+	{
+		box	=mBounds.GetRoughBox();
+		sph	=mBounds.GetRoughSphere();
 	}
 
 

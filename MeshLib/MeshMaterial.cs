@@ -43,6 +43,16 @@ public class MeshMaterial
 	public bool			mbVisible;
 
 
+	internal MeshMaterial()
+	{
+	}
+
+	internal MeshMaterial(BinaryReader br)
+	{
+		Read(br);
+	}
+
+
 	internal void Read(BinaryReader br)
 	{
 		mMaterialName		=br.ReadString();

@@ -26,10 +26,10 @@ public partial class MaterialForm : Form
 	//for resizing columns after a label edit
 	Timer	mHackTimer;
 
-	public event EventHandler	eNukedMeshPart;
-	public event EventHandler	eStripElements;
-	public event EventHandler	eGenTangents;
-	public event EventHandler	eFoundSeams;
+	public event EventHandler				eNukedMeshPart;
+	public event EventHandler<ObjEventArgs>	eStripElements;
+	public event EventHandler<ObjEventArgs>	eGenTangents;
+	public event EventHandler				eFoundSeams;
 
 
 	public MaterialForm(MaterialLib.MaterialLib matLib,
@@ -109,27 +109,36 @@ public partial class MaterialForm : Form
 	{
 		MeshPartList.Items.Clear();
 
-		Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
-		if(maa == null)
-		{
-			return;
-		}
+		int			count;
+		StaticMesh	smo		=MeshPartList.Tag as StaticMesh;
+		Character	charO	=MeshPartList.Tag as Character;
 
-		int	count	=maa.mArch.GetPartCount();
+		if(smo != null)
+		{
+			count	=smo.GetPartCount();
+		}
+		else
+		{
+			count	=charO.GetPartCount();
+		}
 
 		for(int i=0;i < count;i++)
 		{
-			string	partName	=maa.mArch.GetPartName(i);
-			Type	partType	=maa.mArch.GetPartVertexType(i);
+			string	partName;
+			Type	partType;
+			string	matName		="";
 
-			string	matName	="";
-			if(maa.mMesh is StaticMesh)
+			if(smo != null)
 			{
-				matName	=(maa.mMesh as StaticMesh).GetPartMaterialName(i);
+				partName	=smo.GetPartName(i);
+				partType	=smo.GetPartVertexType(i);
+				matName		=smo.GetPartMaterialName(i);
 			}
 			else
 			{
-				matName	=(maa.mMesh as Character).GetPartMaterialName(i);
+				partName	=charO.GetPartName(i);
+				partType	=charO.GetPartVertexType(i);
+				matName		=charO.GetPartMaterialName(i);
 			}
 
 			ListViewItem	lvi	=MeshPartList.Items.Add(partName);
@@ -626,14 +635,19 @@ public partial class MaterialForm : Form
 
 	void OnMeshPartMouseUp(object sender, MouseEventArgs mea)
 	{
-		Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
-		if(maa == null)
+		int			count;
+		StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
+		Character	chr	=MeshPartList.Tag as Character;
+
+		if(sm != null)
 		{
-			return;
+			count	=sm.GetPartCount();
+		}
+		else
+		{
+			count	=chr.GetPartCount();
 		}
 
-		StaticMesh	sm	=maa.mMesh as StaticMesh;
-		Character	chr	=maa.mMesh as Character;
 		if(sm == null && chr == null)
 		{
 			return;
@@ -754,13 +768,7 @@ public partial class MaterialForm : Form
 
 	public void SetMesh(object sender)
 	{
-		Mesh.MeshAndArch	maa	=sender as Mesh.MeshAndArch;
-		if(maa == null)
-		{
-			return;
-		}
-
-		MeshPartList.Tag	=maa;
+		MeshPartList.Tag	=sender;
 
 		RefreshMeshPartList();
 	}
@@ -887,14 +895,9 @@ public partial class MaterialForm : Form
 			return;	//nothing to do
 		}
 
-		Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
-		if(maa == null)
-		{
-			return;
-		}
+		StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
+		Character	chr	=MeshPartList.Tag as Character;
 
-		StaticMesh	sm	=maa.mMesh as StaticMesh;
-		Character	chr	=maa.mMesh as Character;
 		if(sm == null && chr == null)
 		{
 			return;
@@ -956,14 +959,9 @@ public partial class MaterialForm : Form
 
 	void OnMatchAndVisible(object sender, EventArgs e)
 	{
-		Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
-		if(maa == null)
-		{
-			return;
-		}
+		StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
+		Character	chr	=MeshPartList.Tag as Character;
 
-		StaticMesh	sm	=maa.mMesh as StaticMesh;
-		Character	chr	=maa.mMesh as Character;
 		if(sm == null && chr == null)
 		{
 			return;
@@ -1004,8 +1002,10 @@ public partial class MaterialForm : Form
 			return;
 		}
 
-		Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
-		if(maa == null)
+		StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
+		Character	chr	=MeshPartList.Tag as Character;
+
+		if(sm == null && chr == null)
 		{
 			return;
 		}
@@ -1016,12 +1016,9 @@ public partial class MaterialForm : Form
 			parts.Add((int)lviMesh.Tag);
 		}
 
-		ArchEventArgs	aea	=new ArchEventArgs();
+		ObjEventArgs	oea	=new ObjEventArgs(parts);
 
-		aea.mArch		=maa.mArch;
-		aea.mIndexes	=parts;
-
-		Misc.SafeInvoke(eStripElements, null, aea);
+		Misc.SafeInvoke(eStripElements, MeshPartList.Tag, oea);
 	}
 
 
@@ -1081,27 +1078,48 @@ public partial class MaterialForm : Form
 
 	void OnFrankenstein(object sender, EventArgs e)
 	{
-		Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
-		if(maa == null)
+		StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
+		Character	chr	=MeshPartList.Tag as Character;
+
+		if(sm == null && chr == null)
 		{
 			return;
 		}
 
-		Misc.SafeInvoke(eFoundSeams, maa.mArch.Frankenstein());
+		if(sm != null)
+		{
+			Misc.SafeInvoke(eFoundSeams, sm.Frankenstein());
+		}
+		else
+		{
+			Misc.SafeInvoke(eFoundSeams, chr.Frankenstein());
+		}
 	}
 
 
 	void OnMeshPartRename(object sender, LabelEditEventArgs e)
 	{
-		Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
-		if(maa == null)
+		StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
+		Character	chr	=MeshPartList.Tag as Character;
+
+		if(sm == null && chr == null)
 		{
 			return;
 		}
 
 		int	meshIndex	=(int)MeshPartList.Items[e.Item].Tag;
 
-		if(!maa.mArch.RenamePart(meshIndex, e.Label))
+		bool	bSuccess	=false;
+		if(sm != null)
+		{
+			bSuccess	=sm.RenamePart(meshIndex, e.Label);
+		}
+		else
+		{
+			bSuccess	=chr.RenamePart(meshIndex, e.Label);
+		}
+
+		if(!bSuccess)
 		{
 			e.CancelEdit	=true;
 		}
@@ -1127,8 +1145,10 @@ public partial class MaterialForm : Form
 			return;
 		}
 
-		Mesh.MeshAndArch	maa	=MeshPartList.Tag as Mesh.MeshAndArch;
-		if(maa == null)
+		StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
+		Character	chr	=MeshPartList.Tag as Character;
+
+		if(sm == null && chr == null)
 		{
 			return;
 		}
@@ -1139,12 +1159,9 @@ public partial class MaterialForm : Form
 			parts.Add((int)lviMesh.Tag);
 		}
 
-		ArchEventArgs	aea	=new ArchEventArgs();
+		ObjEventArgs	oea	=new ObjEventArgs(parts);
 
-		aea.mArch		=maa.mArch;
-		aea.mIndexes	=parts;
-
-		Misc.SafeInvoke(eGenTangents, null, aea);
+		Misc.SafeInvoke(eGenTangents, MeshPartList.Tag, oea);
 
 		RefreshMeshPartList();
 	}

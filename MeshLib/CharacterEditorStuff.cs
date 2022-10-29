@@ -14,7 +14,7 @@ namespace MeshLib;
 //editor / tool related code
 public partial class Character
 {
-	bool RenamePart(int index, string newName)
+	public bool RenamePart(int index, string newName)
 	{
 		if(index < 0 || index >= mParts.Count)
 		{
@@ -27,20 +27,14 @@ public partial class Character
 	}
 
 
-	int	GetPartCount()
-	{
-		return	mParts.Count;
-	}
-
-
-	void GenTangents(ID3D11Device gd,
+	public void GenTangents(ID3D11Device gd,
 		List<int> parts, int texCoordSet)
 	{
 		SharedMeshStuff.GenTangents(gd, mParts, parts, texCoordSet);
 	}
 
 
-	void NukeVertexElements(ID3D11Device gd,
+	public void NukeVertexElements(ID3D11Device gd,
 		List<int> indexes,
 		List<int> vertElementIndexes)
 	{
@@ -48,7 +42,7 @@ public partial class Character
 	}
 
 
-	Type GetPartVertexType(int index)
+	public Type GetPartVertexType(int index)
 	{
 		if(index < 0 || index >= mParts.Count)
 		{
@@ -58,7 +52,7 @@ public partial class Character
 	}
 
 
-	string GetPartName(int index)
+	public string GetPartName(int index)
 	{
 		if(index < 0 || index >= mParts.Count)
 		{
@@ -83,7 +77,7 @@ public partial class Character
 	}
 
 
-	void GetBoneNamesInUseByDraw(List<string> names)
+	public void GetBoneNamesInUseByDraw(List<string> names)
 	{
 		Skeleton	skel	=mAnimLib.GetSkeleton();
 
@@ -147,7 +141,7 @@ public partial class Character
 
 	//this will be a starting point, user can edit the shape
 	//in ColladaConvert
-	void GenerateRoughBounds()
+	public void GenerateRoughBounds()
 	{
 		mBound.ComputeOverall(mParts, null);
 	}
@@ -159,9 +153,10 @@ public partial class Character
 	}
 	
 	
-	public BoundingBox GetRoughBoxBound()
+	public void GetRoughBounds(out BoundingBox box, out BoundingSphere sph)
 	{
-		return	mBound.GetRoughBox();
+		box	=mBound.GetRoughBox();
+		sph	=mBound.GetRoughSphere();
 	}
 
 
@@ -289,7 +284,7 @@ public partial class Character
 
 
 	//find borders of shared verts between mesh parts
-	List<EditorMesh.WeightSeam> Frankenstein()
+	public List<EditorMesh.WeightSeam> Frankenstein()
 	{
 		return	SharedMeshStuff.Frankenstein(mParts);
 	}
@@ -303,7 +298,7 @@ public partial class Character
 	}
 
 
-	int GetPartColladaPolys(int meshIndex, out string polys, out string counts)
+	public int GetPartColladaPolys(int meshIndex, out string polys, out string counts)
 	{
 		polys	=null;
 		counts	=null;
@@ -329,7 +324,7 @@ public partial class Character
 	}
 
 
-	void GetPartColladaPositions(int meshIndex, out float []positions)
+	public void GetPartColladaPositions(int meshIndex, out float []positions)
 	{
 		positions	=null;
 		if(meshIndex < 0 || meshIndex >= mParts.Count)
@@ -341,7 +336,7 @@ public partial class Character
 	}
 
 
-	void GetPartColladaNormals(int meshIndex, out float []normals)
+	public void GetPartColladaNormals(int meshIndex, out float []normals)
 	{
 		normals	=null;
 		if(meshIndex < 0 || meshIndex >= mParts.Count)
@@ -353,7 +348,7 @@ public partial class Character
 	}
 
 
-	Matrix4x4 GetPartTransform(int meshIndex)
+	public Matrix4x4 GetPartTransform(int meshIndex)
 	{
 		return	Matrix4x4.Identity;
 	}

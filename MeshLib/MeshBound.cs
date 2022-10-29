@@ -330,10 +330,6 @@ internal class MeshBound
 			{
 				//sphere
 				BoundingSphere	ps	=mPartSpheres[i];
-				if(ps == null)
-				{
-					continue;
-				}
 
 				Ray	ray	=new Ray(startPos, rayDir);
 

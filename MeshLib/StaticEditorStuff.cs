@@ -17,7 +17,7 @@ namespace MeshLib;
 //editor / tool related code
 public partial class StaticMesh
 {
-	void GenTangents(ID3D11Device gd,
+	public void GenTangents(ID3D11Device gd,
 		List<int> parts, int texCoordSet)
 	{
 		SharedMeshStuff.GenTangents(gd, mParts, parts, texCoordSet);

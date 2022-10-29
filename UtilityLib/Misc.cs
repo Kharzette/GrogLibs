@@ -3,6 +3,17 @@
 
 namespace UtilityLib
 {
+	public class ObjEventArgs : EventArgs
+	{
+		public	object	mObj;
+
+		public ObjEventArgs(object obj) : base()
+		{
+			mObj	=obj;
+		}
+	}
+
+
 	public static partial class Misc
 	{
 		public static void SafeInvoke(this EventHandler eh, object sender)

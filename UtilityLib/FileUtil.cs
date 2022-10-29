@@ -31,6 +31,20 @@ namespace UtilityLib
 		}
 
 
+		//returns only the path bit
+		public static string StripFileName(string fileName)
+		{
+			string	conv	=ConvertPathSlashes(fileName);
+
+			int	slashPos	=conv.LastIndexOf('/');
+			if(slashPos != -1)
+			{
+				return	conv.Substring(0, slashPos);
+			}
+			return	".";
+		}
+
+
 		//returns just the filename part
 		public static string StripPath(string fileName)
 		{

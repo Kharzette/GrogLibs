@@ -42,9 +42,69 @@ public partial class Character
 	{
 		mParts.AddRange(parts);
 
+		//create material dummy values
+		int	count	=0;
+		foreach(Mesh m in parts)
+		{
+			MeshMaterial	mm	=new MeshMaterial();
+
+			mm.mbVisible		=true;
+			mm.mMaterialID		=count++;
+			mm.mMaterialName	=m.Name + "Mat";
+
+			mPartMats.Add(mm);
+		}		
+
 		mSkin		=sk;
 		mAnimLib	=al;
 		mTransform	=Matrix4x4.Identity;
+	}
+
+
+	//construct from file + a dictionary of possible part meshes
+	public Character(string fileName, Dictionary<string, Mesh> meshes, AnimLib al)
+	{
+		if(!File.Exists(fileName))
+		{
+			return;
+		}
+
+		Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
+		if(file == null)
+		{
+			return;
+		}
+
+		BinaryReader	br	=new BinaryReader(file);
+
+		UInt32	magic	=br.ReadUInt32();
+		if(magic != 0xCA1EC7BE)
+		{
+			br.Close();
+			file.Close();
+			return;
+		}
+
+		mTransform	=FileUtil.ReadMatrix(br);
+
+		mBound.Read(br);
+
+		int	numParts	=br.ReadInt32();
+
+		for(int i=0;i < numParts;i++)
+		{
+			string	name	=br.ReadString();
+
+			MeshMaterial	mm	=new MeshMaterial(br);
+
+			if(!meshes.ContainsKey(name))
+			{
+				continue;
+			}
+
+			mParts.Add(meshes[name]);
+			mPartMats.Add(mm);
+		}
 	}
 
 
@@ -55,6 +115,37 @@ public partial class Character
 		mPartMats.Clear();
 
 		mBones	=null;
+	}
+
+
+	public Skin GetSkin()
+	{
+		return	mSkin;
+	}
+
+
+	public void AddPart(Mesh part, string matName)
+	{
+		if(matName == null || matName == "")
+		{
+			matName	="default";
+		}
+
+		mParts.Add(part);
+
+		MeshMaterial	mm	=new MeshMaterial();
+
+		mm.mbVisible		=true;
+		mm.mMaterialID		=0;
+		mm.mMaterialName	=matName;
+
+		mPartMats.Add(mm);
+	}
+
+
+	public int GetPartCount()
+	{
+		return	mParts.Count;
 	}
 
 

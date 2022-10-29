@@ -100,6 +100,14 @@ public class Mesh
 	}
 
 
+	public void SetEditorData(Array verts, ushort []inds)
+	{
+		mEditorMesh	=new EditorMesh();
+
+		mEditorMesh.SetData(mTypeIndex, verts, inds);
+	}
+
+
 	public void Write(string fileName)
 	{
 		if(mEditorMesh == null)
@@ -370,10 +378,19 @@ public class Mesh
 	}
 
 
-	public static Dictionary<string, StaticMesh> LoadAllStaticMeshes(
+	public void DeleteVertElement(ID3D11Device gd, List<int> inds)
+	{
+		if(mEditorMesh != null)
+		{
+			mEditorMesh.NukeVertexElement(inds, gd);
+		}
+	}
+
+
+	public static Dictionary<string, Mesh> LoadAllMeshes(
 		string dir,	ID3D11Device gd)
 	{
-		Dictionary<string, StaticMesh>	ret	=new Dictionary<string, StaticMesh>();
+		Dictionary<string, Mesh>	ret	=new Dictionary<string, Mesh>();
 
 		if(Directory.Exists(dir))
 		{
@@ -393,9 +410,26 @@ public class Mesh
 
 				meshes.Add(m.Name, m);
 			}
+		}
+
+		return	ret;
+	}
+
+
+	public static Dictionary<string, StaticMesh> LoadAllStaticMeshes(
+		string dir,	ID3D11Device gd)
+	{
+		Dictionary<string, StaticMesh>	ret	=new Dictionary<string, StaticMesh>();
+
+		if(Directory.Exists(dir))
+		{
+			DirectoryInfo	di	=new DirectoryInfo(dir + "/");
+
+			//load all mesh
+			Dictionary<string, Mesh>	meshes	=LoadAllMeshes(dir, gd);
 
 			//load statics
-			fi	=di.GetFiles("*.Static", SearchOption.TopDirectoryOnly);
+			FileInfo	[]fi	=di.GetFiles("*.Static", SearchOption.TopDirectoryOnly);
 			foreach(FileInfo f in fi)
 			{
 				//strip back
