@@ -146,15 +146,22 @@ public partial class Character
 	//in ColladaConvert
 	public void GenerateRoughBounds()
 	{
-		if(mBones == null)
+		Skeleton	skel	=mAnimLib.GetSkeleton();
+		if(skel == null)
 		{
 			return;
 		}
 
-		//see if guess of bone bounds have been created
+		int	boneCount	=skel.GetBoneCount();
+		if(boneCount <= 0)
+		{
+			return;
+		}
+
+		//see if a guess of bone bounds have been created
 		if(mSkin.GetBoneBoundBox(0) == null)
 		{
-			ComputeBoneBounds(mAnimLib.GetSkeleton());
+			ComputeBoneBounds(skel);
 		}
 
 		Vector3	[]corners	=new Vector3[8];
@@ -164,29 +171,66 @@ public partial class Character
 
 		Vector3	center	=Vector3.Zero;
 
-		for(int i=0;i < mBones.Length;i++)
+		for(int i=0;i < boneCount;i++)
 		{
-			BoundingBox	?box	=mSkin.GetBoneBoundBox(i);
-			if(box == null)
+			int	choice	=mSkin.GetBoundChoice(i);
+			if(choice == Skin.Invalid)
+			{
+				continue;
+			}
+
+			//rattling the
+			BoundingBox	?boneBox;
+
+			//this is the most likely
+			if(choice == Skin.Capsule)
+			{
+				BoundingCapsule	?bc	=mSkin.GetBoneBoundCapsule(i);
+				if(bc == null)
+				{
+					continue;
+				}
+
+				boneBox	=BoundingCapsule.BoxFromCapsule(bc.Value);
+			}
+			else if(choice == Skin.Sphere)
+			{
+				BoundingSphere	?bs	=mSkin.GetBoneBoundSphere(i);				
+				if(bs == null)
+				{
+					continue;
+				}
+
+				boneBox	=new BoundingBox(bs.Value.Center - (Vector3.One * bs.Value.Radius),
+					bs.Value.Center + (Vector3.One * bs.Value.Radius));
+			}
+			else if(choice == Skin.Box)
+			{
+				boneBox	=mSkin.GetBoneBoundBox(i);
+				if(boneBox == null)
+				{
+					continue;
+				}
+			}
+			else
 			{
 				continue;
 			}
 			
-			Vector3	size	=box.Value.Max - box.Value.Min;
+			Vector3	size	=boneBox.Value.Max - boneBox.Value.Min;
 			float	vol		=size.X + size.Y + size.Z;
-
 			//skip bones without much influence?
 			if(vol < (mSkin.GetScaleFactor() * MinVolume))	//should be around an inch cubed
 			{
 				continue;
 			}
 
-			box?.GetCorners(corners);
+			boneBox?.GetCorners(corners);
 
 			Vector3	boxCenter	=Vector3.Zero;
 			for(int j=0;j < 8;j++)
 			{
-				Vector3	transd	=Vector3.Transform(corners[j], mBones[i]);
+				Vector3	transd	=Vector3.Transform(corners[j], mSkin.GetBoneByIndexNoBind(i, skel));
 
 				Mathery.AddPointToBoundingBox(ref min, ref max, transd);
 
@@ -196,7 +240,7 @@ public partial class Character
 			center	+=boxCenter / 8;
 		}
 
-		center	/=mBones.Length;
+		center	/=boneCount;
 
 		mBound	=new MeshBound();
 		mBound.ComputeRoughFromBox(center, min, max);

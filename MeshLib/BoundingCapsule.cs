@@ -44,6 +44,19 @@ public struct BoundingCapsule
 	}
 
 
+	static internal BoundingBox BoxFromCapsule(BoundingCapsule bc)
+	{
+		Vector3	min, max;
+
+		Vector3	zEnd	=Vector3.UnitZ * bc.mRadius;
+
+		min	=new Vector3(-bc.mRadius, -bc.mRadius, -bc.mRadius);
+		max	=new Vector3(zEnd.X + bc.mRadius, zEnd.Y + bc.mRadius, zEnd.Z + bc.mRadius);
+
+		return	new BoundingBox(min, max);
+	}
+
+
 	static internal BoundingCapsule CreateFromBoundingBox(BoundingBox box)
 	{
 		//find radius

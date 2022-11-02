@@ -26,6 +26,19 @@ public class GSNode
 	}
 
 
+	internal int	Count(int cnt)
+	{
+		foreach(GSNode n in mChildren)
+		{
+			cnt	=n.Count(cnt);
+		}
+
+		cnt++;
+
+		return	cnt;
+	}
+
+
 	public void AddChild(GSNode kid)
 	{
 		mChildren.Add(kid);
@@ -248,6 +261,17 @@ public class Skeleton
 
 	public Skeleton()
 	{
+	}
+
+
+	public int	GetBoneCount()
+	{
+		int	count	=0;
+		foreach(GSNode n in mRoots)
+		{
+			count	=n.Count(count);
+		}
+		return	count;
 	}
 
 
