@@ -87,7 +87,11 @@ public partial class Character
 
 		mTransform	=FileUtil.ReadMatrix(br);
 
+		mBound	=new MeshBound();
 		mBound.Read(br);
+
+		mSkin	=new Skin(1f);
+		mSkin.Read(br);
 
 		int	numParts	=br.ReadInt32();
 
@@ -105,6 +109,8 @@ public partial class Character
 			mParts.Add(meshes[name]);
 			mPartMats.Add(mm);
 		}
+
+		mAnimLib	=al;
 	}
 
 
@@ -446,70 +452,6 @@ public partial class Character
 	}
 
 
-/*
-	public void UpdateBounds()
-	{
-		if(mBones == null)
-		{
-			return;
-		}
-
-		//mParts.ComputeBoneBounds(null, mAnimLib.GetSkeleton());
-
-		Vector3	[]corners	=new Vector3[8];
-
-		Skin	sk	=mParts.GetSkin();
-
-		Vector3	max	=Vector3.One * -float.MaxValue;
-		Vector3	min	=Vector3.One * float.MaxValue;
-
-		Vector3	center	=Vector3.Zero;
-
-		for(int i=0;i < mBones.Length;i++)
-		{
-			BoundingBox	?box	=sk.GetBoneBoundBox(i);
-			if(box == null)
-			{
-				continue;
-			}
-			
-			Vector3	size	=box.Value.Max - box.Value.Min;
-			float	vol		=size.X + size.Y + size.Z;
-
-			//skip bones without much influence?
-			if(vol < 1f)	//TODO: this 1 will go wrong at meter scale
-			{
-				continue;
-			}
-
-			box?.GetCorners(corners);
-
-			Vector3	boxCenter	=Vector3.Zero;
-			for(int j=0;j < 8;j++)
-			{
-				Vector3	transd	=Vector3.Transform(corners[j], mBones[i]);
-
-				Mathery.AddPointToBoundingBox(ref min, ref max, transd);
-
-				boxCenter	+=transd;
-			}
-
-			center	+=boxCenter / 8;
-		}
-
-		center	/=mBones.Length;
-
-		mBoxBound.Min	=min;
-		mBoxBound.Max	=max;
-
-		float	distMin	=Vector3.Distance(min, center);
-		float	distMax	=Vector3.Distance(max, center);
-
-		mSphereBound.Center	=center;
-		mSphereBound.Radius	=(distMin > distMax)? distMin : distMax;
-	}*/
-
-
 	public void Draw(MatLib mlib)
 	{
 		Debug.Assert(mPartMats.Count == mParts.Count);
@@ -594,6 +536,15 @@ public partial class Character
 	}
 
 
+	public void SaveParts(string pathDir)
+	{
+		foreach(Mesh m in mParts)
+		{
+			m.Write(pathDir + "/" + m.Name + ".mesh");
+		}
+	}
+
+
 	public void SaveToFile(string fileName)
 	{
 		FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
@@ -604,42 +555,21 @@ public partial class Character
 
 		bw.Write(magic);
 
+		FileUtil.WriteMatrix(bw, mTransform);
+
+		mBound.Write(bw);
+
 		//save skin
 		mSkin.Write(bw);
 
+		bw.Write(mParts.Count);
+		for(int i=0;i < mParts.Count;i++)
+		{
+			bw.Write(mParts[i].Name);
+			mPartMats[i].Write(bw);
+		}
+
 		bw.Close();
 		file.Close();
-	}
-
-
-	public bool ReadFromFile(string fileName)
-	{
-		if(!File.Exists(fileName))
-		{
-			return	false;
-		}
-
-		Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
-		if(file == null)
-		{
-			return	false;
-		}
-		BinaryReader	br	=new BinaryReader(file);
-
-		UInt32	magic	=br.ReadUInt32();
-		if(magic != 0xCA1EC7BE)
-		{
-			br.Close();
-			file.Close();
-			return	false;
-		}
-
-		mSkin	=new Skin(1f);
-		mSkin.Read(br);
-
-		br.Close();
-		file.Close();
-
-		return	true;
 	}
 }

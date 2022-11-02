@@ -124,6 +124,20 @@ internal class MeshBound
 	}
 
 
+	//this is used by characters
+	internal void ComputeRoughFromBox(Vector3 center, Vector3 min, Vector3 max)
+	{
+		mBox.Min	=min;
+		mBox.Max	=max;
+
+		float	distMin	=Vector3.Distance(min, center);
+		float	distMax	=Vector3.Distance(max, center);
+
+		mSphere.Center	=center;
+		mSphere.Radius	=(distMin > distMax)? distMin : distMax;
+	}
+
+
 	public void SetRoughChoice(bool bChoice)
 	{
 		mbChoice	=bChoice;

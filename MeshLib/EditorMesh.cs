@@ -41,7 +41,7 @@ public class EditorMesh
 	internal void Write(BinaryWriter bw)
 	{
 		VertexTypes.WriteVerts(bw, mVertArray, mTypeIndex);
-		FileUtil.WriteArray(mIndArray, bw);
+		FileUtil.WriteArray(bw, mIndArray);
 	}
 
 

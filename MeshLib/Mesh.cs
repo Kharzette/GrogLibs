@@ -170,7 +170,7 @@ public class Mesh
 
 		VertexTypes.ReadVerts(br, gd, out vertArray);
 		
-		UInt16	[]indArray	=FileUtil.ReadArray<UInt16>(br);
+		UInt16	[]indArray	=FileUtil.Read16Array(br);
 
 		mVerts	=VertexTypes.BuildABuffer(gd, vertArray, mTypeIndex);
 		mIndexs	=VertexTypes.BuildAnIndexBuffer(gd, indArray);
@@ -179,6 +179,7 @@ public class Mesh
 
 		if(bEditor)
 		{
+			mEditorMesh	=new EditorMesh();
 			mEditorMesh.SetData(mTypeIndex, vertArray, indArray);
 		}
 

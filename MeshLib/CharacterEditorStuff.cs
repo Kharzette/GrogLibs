@@ -14,6 +14,9 @@ namespace MeshLib;
 //editor / tool related code
 public partial class Character
 {
+	const float	MinVolume	=0.05f;	//in meters
+
+
 	public bool RenamePart(int index, string newName)
 	{
 		if(index < 0 || index >= mParts.Count)
@@ -143,7 +146,60 @@ public partial class Character
 	//in ColladaConvert
 	public void GenerateRoughBounds()
 	{
-		mBound.ComputeOverall(mParts, null);
+		if(mBones == null)
+		{
+			return;
+		}
+
+		//see if guess of bone bounds have been created
+		if(mSkin.GetBoneBoundBox(0) == null)
+		{
+			ComputeBoneBounds(mAnimLib.GetSkeleton());
+		}
+
+		Vector3	[]corners	=new Vector3[8];
+
+		Vector3	max	=Vector3.One * -float.MaxValue;
+		Vector3	min	=Vector3.One * float.MaxValue;
+
+		Vector3	center	=Vector3.Zero;
+
+		for(int i=0;i < mBones.Length;i++)
+		{
+			BoundingBox	?box	=mSkin.GetBoneBoundBox(i);
+			if(box == null)
+			{
+				continue;
+			}
+			
+			Vector3	size	=box.Value.Max - box.Value.Min;
+			float	vol		=size.X + size.Y + size.Z;
+
+			//skip bones without much influence?
+			if(vol < (mSkin.GetScaleFactor() * MinVolume))	//should be around an inch cubed
+			{
+				continue;
+			}
+
+			box?.GetCorners(corners);
+
+			Vector3	boxCenter	=Vector3.Zero;
+			for(int j=0;j < 8;j++)
+			{
+				Vector3	transd	=Vector3.Transform(corners[j], mBones[i]);
+
+				Mathery.AddPointToBoundingBox(ref min, ref max, transd);
+
+				boxCenter	+=transd;
+			}
+
+			center	+=boxCenter / 8;
+		}
+
+		center	/=mBones.Length;
+
+		mBound	=new MeshBound();
+		mBound.ComputeRoughFromBox(center, min, max);
 	}
 
 

@@ -88,6 +88,8 @@ namespace UtilityLib
 			MethodInfo	write	=typeof(T).GetMethods().Where(
 				x => x.Name == "Write").FirstOrDefault();
 
+			Debug.Assert(write != null);
+
 			object	[]parms	=new object[1];
 			parms[0]		=bw;
 
@@ -107,6 +109,8 @@ namespace UtilityLib
 
 			MethodInfo	read	=typeof(T).GetMethods().Where(
 				x => x.Name == "Read").FirstOrDefault();
+
+			Debug.Assert(read != null);
 
 			ConstructorInfo	ci	=typeof(T).GetConstructor(Type.EmptyTypes);
 
@@ -160,6 +164,25 @@ namespace UtilityLib
 		}
 
 
+		public static void WriteArray(BinaryWriter bw, UInt16 []arr16)
+		{
+			if(arr16 == null)
+			{
+				bw.Write(false);
+				return;
+			}
+			else
+			{
+				bw.Write(true);
+			}
+			bw.Write(arr16.Length);
+			for(int i=0;i < arr16.Length;i++)
+			{
+				bw.Write(arr16[i]);
+			}
+		}
+
+
 		public static void WriteArray(BinaryWriter bw, float []fArray)
 		{
 			bw.Write(fArray.Length);
@@ -179,6 +202,24 @@ namespace UtilityLib
 			}
 			int	count	=br.ReadInt32();
 			return	br.ReadBytes(count);
+		}
+
+
+		public static UInt16 []Read16Array(BinaryReader br)
+		{
+			bool	bNull	=!br.ReadBoolean();
+			if(bNull)
+			{
+				return	null;
+			}
+			int	len	=br.ReadInt32();
+
+			UInt16	[]ret	=new UInt16[len];
+			for(int i=0;i < len;i++)
+			{
+				ret[i]	=br.ReadUInt16();
+			}
+			return	ret;
 		}
 
 
