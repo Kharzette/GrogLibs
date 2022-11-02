@@ -388,32 +388,30 @@ public class Mesh
 	}
 
 
-	public static Dictionary<string, Mesh> LoadAllMeshes(
-		string dir,	ID3D11Device gd)
+	public static void LoadAllMeshes(string dir, ID3D11Device gd, Dictionary<string, Mesh> meshes)
 	{
-		Dictionary<string, Mesh>	ret	=new Dictionary<string, Mesh>();
+		if(meshes == null)
+		{
+			return;
+		}
 
 		if(Directory.Exists(dir))
 		{
 			DirectoryInfo	di	=new DirectoryInfo(dir + "/");
 
 			//load all mesh
-			Dictionary<string, Mesh>	meshes	=new Dictionary<string, Mesh>();
-
 			FileInfo[]		fi	=di.GetFiles("*.Mesh", SearchOption.TopDirectoryOnly);
 			foreach(FileInfo f in fi)
 			{
-				//strip back
-				string	path	=f.DirectoryName;
-
 				Mesh	m	=new Mesh();
-				m.Read(path + "\\" + f.Name, gd, true);
+				m.Read(f.FullName, gd, true);
 
-				meshes.Add(m.Name, m);
+				if(!meshes.ContainsKey(m.Name))
+				{
+					meshes.Add(m.Name, m);
+				}
 			}
 		}
-
-		return	ret;
 	}
 
 
@@ -427,7 +425,8 @@ public class Mesh
 			DirectoryInfo	di	=new DirectoryInfo(dir + "/");
 
 			//load all mesh
-			Dictionary<string, Mesh>	meshes	=LoadAllMeshes(dir, gd);
+			Dictionary<string, Mesh>	meshes	=new Dictionary<string, Mesh>();
+			LoadAllMeshes(dir, gd, meshes);
 
 			//load statics
 			FileInfo	[]fi	=di.GetFiles("*.Static", SearchOption.TopDirectoryOnly);

@@ -253,8 +253,15 @@ public partial class Character
 	}
 	
 	
-	public void GetRoughBounds(out BoundingBox box, out BoundingSphere sph)
+	public void GetRoughBounds(out BoundingBox ?box, out BoundingSphere ?sph)
 	{
+		if(mBound == null)
+		{
+			box	=null;
+			sph	=null;
+			return;
+		}
+		
 		box	=mBound.GetRoughBox();
 		sph	=mBound.GetRoughSphere();
 	}

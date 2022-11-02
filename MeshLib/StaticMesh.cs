@@ -136,8 +136,15 @@ public partial class StaticMesh
 	}
 
 
-	public void GetRoughBounds(out BoundingBox box, out BoundingSphere sph)
+	public void GetRoughBounds(out BoundingBox ?box, out BoundingSphere ?sph)
 	{
+		if(mBounds == null)
+		{
+			box	=null;
+			sph	=null;
+			return;
+		}
+		
 		box	=mBounds.GetRoughBox();
 		sph	=mBounds.GetRoughSphere();
 	}
