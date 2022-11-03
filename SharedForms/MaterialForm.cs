@@ -24,12 +24,13 @@ public partial class MaterialForm : Form
 	StuffKeeper				mSKeeper;
 
 	//for resizing columns after a label edit
-	Timer	mHackTimer;
+	System.Windows.Forms.Timer	mHackTimer;
 
 	public event EventHandler				eNukedMeshPart;
 	public event EventHandler<ObjEventArgs>	eStripElements;
 	public event EventHandler<ObjEventArgs>	eGenTangents;
 	public event EventHandler				eFoundSeams;
+	public event EventHandler				ePrint;
 
 
 	public MaterialForm(MaterialLib.MaterialLib matLib,
@@ -40,7 +41,7 @@ public partial class MaterialForm : Form
 		mMatLib		=matLib;
 		mSKeeper	=sk;
 
-		mHackTimer			=new Timer();
+		mHackTimer			=new System.Windows.Forms.Timer();
 		mHackTimer.Interval	=200;
 		mHackTimer.Tick		+=OnMatLabelHack;
 
@@ -66,6 +67,12 @@ public partial class MaterialForm : Form
 	void OnClosing(object sender, FormClosingEventArgs e)
 	{
 		mHackTimer.Tick	-=OnMatLabelHack;
+	}
+
+
+	void Print(string stuff)
+	{
+		Misc.SafeInvoke(ePrint, stuff);
 	}
 
 
@@ -954,6 +961,11 @@ public partial class MaterialForm : Form
 		mMatLib.Load(mOFD.FileName, false);
 
 		RefreshMaterials();
+
+		int	matCount	=mMatLib.GetMaterialNames().Count;
+
+		Print("Material Library: " + FileUtil.StripPath(mOFD.FileName) + " loaded with " +
+			 matCount + " materials.\n");
 	}
 
 

@@ -9,6 +9,7 @@ using UtilityLib;
 using MeshLib;
 using MaterialLib;
 
+using Colour	=Vortice.Mathematics.Color;
 
 namespace SharedForms;
 
@@ -40,7 +41,7 @@ public class DebugDraw
 	public void MakeDrawStuff(ID3D11Device dev,
 		List<Vector3> verts,
 		List<Vector3> norms,
-		List<Color> colors,
+		List<Colour> colors,
 		List<UInt16> inds)
 	{
 		if(verts.Count <= 0)
