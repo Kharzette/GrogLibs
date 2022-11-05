@@ -30,6 +30,25 @@ public partial class Character
 	}
 
 
+	public void AdjustBoundLength(float lenDelta, bool bChoice)
+	{
+		mBound.SetRoughChoice(bChoice);
+		mBound?.AdjustLength(lenDelta);
+	}
+
+	public void AdjustBoundRadius(float lenDelta, bool bChoice)
+	{
+		mBound.SetRoughChoice(bChoice);
+		mBound?.AdjustRadius(lenDelta);
+	}
+
+	public void AdjustBoundDepth(float lenDelta, bool bChoice)
+	{
+		mBound.SetRoughChoice(bChoice);
+		mBound?.AdjustDepth(lenDelta);
+	}
+
+
 	public void GenTangents(ID3D11Device gd,
 		List<int> parts, int texCoordSet)
 	{

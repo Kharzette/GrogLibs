@@ -124,6 +124,64 @@ internal class MeshBound
 	}
 
 
+	internal void AdjustLength(float lenDelta)
+	{
+		if(mbChoice)
+		{
+			Vector3	min	=mBox.Min;
+			Vector3	max	=mBox.Max;
+
+			min.Z	-=lenDelta;
+			max.Z	+=lenDelta;
+
+			mBox	=new BoundingBox(min, max);			
+		}
+		else
+		{
+			//len key for spheres moves the centerpoint along
+			//the Z axis
+			mSphere.Center	+=Vector3.UnitZ * lenDelta;
+		}
+	}
+
+
+	internal void AdjustDepth(float depthDelta)
+	{
+		if(mbChoice)
+		{
+			Vector3	min	=mBox.Min;
+			Vector3	max	=mBox.Max;
+
+			max.Y	+=depthDelta * 0.5f;
+
+			mBox	=new BoundingBox(min, max);			
+		}
+		else
+		{
+			//no sphere depth
+		}
+	}
+
+
+	internal void AdjustRadius(float radDelta)
+	{
+		if(mbChoice)
+		{
+			Vector3	min	=mBox.Min;
+			Vector3	max	=mBox.Max;
+
+			min.X	-=radDelta * 0.5f;
+			max.X	+=radDelta * 0.5f;
+
+			mBox	=new BoundingBox(min, max);			
+		}
+		else
+		{
+			mSphere.Radius	+=radDelta;
+		}
+	}
+
+
 	//this is used by characters
 	internal void ComputeRoughFromBox(Vector3 center, Vector3 min, Vector3 max)
 	{
