@@ -1,10 +1,14 @@
 using System;
+using System.Numerics;
 using System.Collections.Generic;
+using Vortice.Direct3D11;
+using Vortice.DXGI;
 using UtilityLib;
 
+using Color		=Vortice.Mathematics.Color;
 
 namespace MaterialLib;
-/*
+
 public class Screen
 {
 	internal struct VertexPosition
@@ -13,27 +17,18 @@ public class Screen
 	}
 
 	//for a fullscreen quad
-	Buffer				mQuadVB;
-	Buffer				mQuadIB;
-	VertexBufferBinding	mQuadBinding;
-
-	//effect file
-	Effect	mPostFX;
+	ID3D11Buffer	mQuadVB;
+	ID3D11Buffer	mQuadIB;
 
 	//screen text contents
-	Texture1D						mScreenContents;
-	ShaderResourceView				mScreenContentsSRV;
-	EffectShaderResourceVariable	mESRV;
-	ShaderResourceView				mFontSRV;
-	MaterialLib						mMats;
-
-	//cached techniques and passes
-	Dictionary<EffectTechnique, EffectPass>	mEPasses	=new Dictionary<EffectTechnique, EffectPass>();
-	Dictionary<string, EffectTechnique>		mETechs		=new Dictionary<string, EffectTechnique>();
+	ID3D11Texture1D				mScreenContents;
+	ID3D11ShaderResourceView	mScreenContentsSRV;
+	ID3D11ShaderResourceView	mFontSRV;
 
 	//stuff
-	int		mResX, mResY;
-	Color	mClearColor;
+	StuffKeeper	mSK;
+	int			mResX, mResY;
+	Color		mClearColor;
 
 	//constants
 	const UInt32	NumColumns		=16;
@@ -44,82 +39,48 @@ public class Screen
 	const UInt32	StartChar		=0;
 
 
-	internal Screen(GraphicsDevice gd, Effect fx)
+	public Screen(GraphicsDevice gd, StuffKeeper sk)
 	{
-		Init(gd, fx);
-	}
-
-
-	public Screen(GraphicsDevice gd, StuffKeeper sk, MaterialLib mats)
-	{
+		mSK			=sk;
 		mFontSRV	=sk.GetFontSRV("CGA");
-		mMats		=mats;
 
-		Init(gd, sk.EffectForName("TextMode.fx"));
+		Init(gd);
 	}
 
 
-	void Init(GraphicsDevice gd, Effect fx)
+	void Init(GraphicsDevice gd)
 	{
-		if(fx == null)
-		{
-			return;
-		}
-
-		mPostFX	=fx;
-
 		mResX		=gd.RendForm.ClientRectangle.Width;
 		mResY		=gd.RendForm.ClientRectangle.Height;
-		mClearColor	=Color.CornflowerBlue;
+		mClearColor	=Misc.SystemColorToDXColor(System.Drawing.Color.CornflowerBlue);
 
 		MakeQuad(gd);
 
 		InitScreenParams();
 
 		//make the screen contents 1d tex
-		DataStream	ds	=new DataStream((int)(ScreenWidth * ScreenHeight), false, true);
-
 		Texture1DDescription	texDesc	=new Texture1DDescription();
 		texDesc.ArraySize		=1;
 		texDesc.BindFlags		=BindFlags.ShaderResource;
-		texDesc.CpuAccessFlags	=CpuAccessFlags.Write;
+		texDesc.CPUAccessFlags	=CpuAccessFlags.Write;
 		texDesc.MipLevels		=1;
-		texDesc.OptionFlags		=ResourceOptionFlags.None;
+		texDesc.MiscFlags		=ResourceOptionFlags.None;
 		texDesc.Usage			=ResourceUsage.Dynamic;
 		texDesc.Width			=(int)(ScreenWidth * ScreenHeight);
 		texDesc.Format			=Format.R8_UInt;
 
-		mScreenContents		=new Texture1D(gd.GD, texDesc, ds);
-		mScreenContentsSRV	=new ShaderResourceView(gd.GD, mScreenContents);
-
-		EffectVariable	esv	=mPostFX.GetVariableByName("mScreenContents");
-
-		mESRV	=esv.AsShaderResource();
-
-		esv.Dispose();
-
-		EffectVariable	evf	=mPostFX.GetVariableByName("mFont");
-
-		EffectShaderResourceVariable	fsrv	=evf.AsShaderResource();
-
-		fsrv.SetResource(mFontSRV);
-
-		fsrv.Dispose();
-		evf.Dispose();
+		mScreenContents		=gd.GD.CreateTexture1D(texDesc);
+		mScreenContentsSRV	=gd.GD.CreateShaderResourceView(mScreenContents);
 	}
 
 
 	//set up parameters with known values
 	void InitScreenParams()
 	{
-		mMats.SetMaterialParameter("TextMode", "mWidth", 1280);
-		mMats.SetMaterialParameter("TextMode", "mHeight", 720);
-		mMats.SetMaterialParameter("TextMode", "mCWidth", 40);
-		mMats.SetMaterialParameter("TextMode", "mCHeight", 25);
-		mMats.SetMaterialParameter("TextMode", "mStartChar", StartChar);
-		mMats.SetMaterialParameter("TextMode", "mNumColumns", NumColumns);
-		mMats.SetMaterialParameter("TextMode", "mCharWidth", CharWidth);
-		mMats.SetMaterialParameter("TextMode", "mCharHeight", CharHeight);
+		CBKeeper	cbk	=mSK.GetCBKeeper();
+
+		cbk.SetTextModeScreenSize(1280, 720, ScreenWidth, ScreenHeight);
+		cbk.SetTextModeFontInfo(StartChar, NumColumns, CharWidth, CharHeight);
 	}
 
 
@@ -127,68 +88,76 @@ public class Screen
 	{
 		VertexPosition	[]verts	=new VertexPosition[4];
 
-		verts[0].Position = new Vector3(-1, 1, 1);
-		verts[1].Position = new Vector3(1, 1, 1);
-		verts[2].Position = new Vector3(-1, -1, 1);
-		verts[3].Position = new Vector3(1, -1, 1);
+		verts[0].Position = new Vector3(0, 720, -0.5f);
+		verts[1].Position = new Vector3(1280, 720, -0.5f);
+		verts[2].Position = new Vector3(0, 0, -0.5f);
+		verts[3].Position = new Vector3(1280, 0, -0.5f);
 		
 		UInt16	[]inds	=new UInt16[6];
 		inds[0]	=0;
-		inds[1]	=1;
-		inds[2]	=2;
+		inds[1]	=2;
+		inds[2]	=1;
 		inds[3]	=1;
-		inds[4]	=3;
-		inds[5]	=2;
+		inds[4]	=2;
+		inds[5]	=3;
 
 		BufferDescription	bd	=new BufferDescription(
-			12 * verts.Length,
-			ResourceUsage.Immutable, BindFlags.VertexBuffer,
-			CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+			12 * verts.Length, BindFlags.VertexBuffer);
 
-		mQuadVB	=Buffer.Create(gd.GD, verts, bd);
+		mQuadVB	=gd.GD.CreateBuffer<VertexPosition>(verts, bd);
 
 		BufferDescription	id	=new BufferDescription(inds.Length * 2,
-			ResourceUsage.Immutable, BindFlags.IndexBuffer,
+			BindFlags.IndexBuffer, ResourceUsage.Immutable,
 			CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
-		mQuadIB	=Buffer.Create<UInt16>(gd.GD, inds, id);
-
-		mQuadBinding	=new VertexBufferBinding(mQuadVB, 12, 0);
+		mQuadIB	=gd.GD.CreateBuffer<UInt16>(inds, id);
 	}
 
 
-	public void UpdateWVP(GameCamera cam)
+	public unsafe void SetScreenContents(GraphicsDevice gd, byte []stuff)
 	{
-		mMats.UpdateWVP(Matrix.Identity, cam.View,
-						cam.Projection, cam.Position);
+//		Span<uint>	blort	=gd.DC.Map<uint>(mScreenContents, 0, 0, MapMode.WriteDiscard);
+//		stuff.CopyTo<UInt32>(blort);
+//		gd.DC.Unmap(mScreenContents, 0, 0);
+
+//		Vortice.Mathematics.Box	b	=new Vortice.Mathematics.Box(0, 0, 0, 1000, 1, 1);
+//		fixed(void *pStuff = stuff)
+//		{
+//			gd.DC.UpdateSubresource(mScreenContents, 0, b, (IntPtr)pStuff, 1000, 0);
+//		}
+
+//		gd.DC.UpdateSubresource<byte>(stuff, mScreenContents, 0, 1000);
+
+		Span<byte>	blort	=gd.DC.Map<byte>(mScreenContents, 0, 0, MapMode.WriteDiscard);
+
+		stuff.CopyTo(blort);
+
+		gd.DC.Unmap(mScreenContents, 0, 0);
+
+		
 	}
 
 
-	public void SetScreenContents(GraphicsDevice gd, byte []stuff)
+	public void DrawStage(GraphicsDevice gd)
 	{
-		DataStream	ds;
+		gd.DC.IASetPrimitiveTopology(Vortice.Direct3D.PrimitiveTopology.TriangleList);
 
-		gd.DC.MapSubresource(mScreenContents, 0, MapMode.WriteDiscard,
-			SharpDX.Direct3D11.MapFlags.None, out ds);
+		gd.DC.IASetVertexBuffer(0, mQuadVB, 12);
+		gd.DC.IASetIndexBuffer(mQuadIB, Format.R16_UInt, 0);
 
-		ds.Write(stuff, 0, stuff.Length);
+		ID3D11InputLayout	lay	=mSK.GetOrCreateLayout("SimpleVS");
 
-		gd.DC.UnmapSubresource(mScreenContents, 0);
+		gd.DC.VSSetShader(mSK.GetVertexShader("SimpleVS"));
+		gd.DC.PSSetShader(mSK.GetPixelShader("TextModePS"));
+		gd.DC.IASetInputLayout(lay);
 
-	}
+		gd.DC.PSSetShaderResource(0, mScreenContentsSRV);
+		gd.DC.PSSetShaderResource(1, mFontSRV);
 
+		CBKeeper	cbk	=mSK.GetCBKeeper();
 
-	public void DrawStage(GraphicsDevice gd, string technique)
-	{
-		gd.DC.InputAssembler.PrimitiveTopology
-			=SharpDX.Direct3D.PrimitiveTopology.TriangleList;
-
-		gd.DC.InputAssembler.SetVertexBuffers(0, mQuadBinding);
-		gd.DC.InputAssembler.SetIndexBuffer(mQuadIB, Format.R16_UInt, 0);
-
-		mMats.SetMaterialParameter("TextMode", "mScreenContents", mScreenContentsSRV);
-
-		mMats.ApplyMaterialPass("TextMode", gd.DC, 0);
+		cbk.UpdateTextMode(gd.DC);
+		cbk.SetTextModeToShaders(gd.DC);
 
 		gd.DC.DrawIndexed(6, 0, 0);
 	}
@@ -196,29 +165,12 @@ public class Screen
 
 	public void FreeAll(GraphicsDevice gd)
 	{
-		mESRV.Dispose();
 		mFontSRV.Dispose();
 		mScreenContentsSRV.Dispose();
 		mScreenContents.Dispose();
 
-		//dispose all passes
-		foreach(KeyValuePair<EffectTechnique, EffectPass> pass in mEPasses)
-		{
-			pass.Value.Dispose();
-		}
-
-		//techniques
-		foreach(KeyValuePair<string, EffectTechnique> tech in mETechs)
-		{
-			tech.Value.Dispose();
-		}
-
 		//buffers
 		mQuadIB.Dispose();
 		mQuadVB.Dispose();
-
-		mPostFX.Dispose();
-
-		mMats.FreeAll();
 	}
-}*/
+}

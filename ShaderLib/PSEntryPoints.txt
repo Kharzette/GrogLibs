@@ -64,4 +64,5 @@ Post.hlsl
 	Modulate93PS
 	BleachBypassPS
 	BleachBypass93PS
-
+TextMode.hlsl
+	TextModePS

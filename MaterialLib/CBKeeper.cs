@@ -100,6 +100,20 @@ public unsafe class CBKeeper
 		internal uint	mPad0, mPad1;
 	}
 
+	//TextMode.hlsl
+	[StructLayout(LayoutKind.Sequential, Pack = 4)]
+	struct	TextMode
+	{
+		internal uint	mWidth, mHeight;	//dimensions of screen in pixels
+		internal uint	mCWidth, mCHeight;	//dimensions of screen in character blocks
+
+		//font texture info
+		internal uint	mStartChar;		//first letter of the font bitmap
+		internal uint	mNumColumns;	//number of font columns in the font texture
+		internal uint	mCharWidth;		//width of characters in texels in the font texture (fixed)
+		internal uint	mCharHeight;	//height of characters in texels in the font texture (fixed)
+	}
+
 	//Character.hlsl bone array
 	Matrix4x4	[]mBones;
 
@@ -117,6 +131,7 @@ public unsafe class CBKeeper
 	ID3D11Buffer	mBSPBuf, mBSPStylesBuf;
 	ID3D11Buffer	mPostBuf, mPostWOXYBuf;
 	ID3D11Buffer	mPerShadowBuf;
+	ID3D11Buffer	mTextModeBuf;
 
 	//cpu side
 	PerObject	mPerObject;
@@ -125,6 +140,7 @@ public unsafe class CBKeeper
 	BSP			mBSP;
 	Post		mPost;
 	PerShadow	mPerShadow;
+	TextMode	mTextMode;
 
 
 	//ensure matches Character.hlsl
@@ -148,6 +164,7 @@ public unsafe class CBKeeper
 		mBSPBuf.Dispose();
 		mBSPStylesBuf.Dispose();
 		mPerShadowBuf.Dispose();
+		mTextModeBuf.Dispose();
 	}
 
 
@@ -162,6 +179,7 @@ public unsafe class CBKeeper
 		mBSPStylesBuf	=MakeConstantBuffer(dev, sizeof(Half) * NumStyles + 8);
 		mPostBuf		=MakeConstantBuffer(dev, sizeof(Post));
 		mPerShadowBuf	=MakeConstantBuffer(dev, sizeof(PerShadow));
+		mTextModeBuf	=MakeConstantBuffer(dev, sizeof(TextMode));
 
 		//alloc C# side constant buffer data
 		mPerObject		=new PerObject();
@@ -172,6 +190,7 @@ public unsafe class CBKeeper
 		mBSP			=new BSP();
 		mPost			=new Post();
 		mPerShadow		=new PerShadow();
+		mTextMode		=new TextMode();
 
 		int	woxySize	=61 * 4;
 
@@ -210,7 +229,6 @@ public unsafe class CBKeeper
 		dc.PSSetConstantBuffer(1, mPerFrameBuf);
 	}
 
-
 	public void Set2DCBToShaders(ID3D11DeviceContext dc)
 	{
 		//2d
@@ -218,14 +236,12 @@ public unsafe class CBKeeper
 		dc.PSSetConstantBuffer(3, mTwoDBuf);
 	}
 
-
 	public void SetCharacterToShaders(ID3D11DeviceContext dc)
 	{
 		//character
 		dc.VSSetConstantBuffer(4, mCharacterBuf);
 		dc.PSSetConstantBuffer(4, mCharacterBuf);
 	}
-
 
 	public void SetBSPToShaders(ID3D11DeviceContext dc)
 	{
@@ -236,7 +252,6 @@ public unsafe class CBKeeper
 		dc.PSSetConstantBuffer(6, mBSPStylesBuf);
 	}
 
-
 	public void SetPostToShaders(ID3D11DeviceContext dc)
 	{
 		dc.VSSetConstantBuffer(0, mPostBuf);
@@ -245,11 +260,15 @@ public unsafe class CBKeeper
 		dc.PSSetConstantBuffer(1, mPostWOXYBuf);
 	}
 
-
 	public void SetPerShadowToShaders(ID3D11DeviceContext dc)
 	{
 		dc.VSSetConstantBuffer(2, mPerShadowBuf);
 		dc.PSSetConstantBuffer(2, mPerShadowBuf);
+	}
+
+	public void SetTextModeToShaders(ID3D11DeviceContext dc)
+	{
+		dc.PSSetConstantBuffer(7, mTextModeBuf);
 	}
 
 
@@ -258,24 +277,20 @@ public unsafe class CBKeeper
 		dc.UpdateSubresource<PerFrame>(mPerFrame, mPerFrameBuf);
 	}
 
-
 	public void UpdateObject(ID3D11DeviceContext dc)
 	{
 		dc.UpdateSubresource<PerObject>(mPerObject, mPerObjectBuf);
 	}
-
 
 	public void UpdateTwoD(ID3D11DeviceContext dc)
 	{
 		dc.UpdateSubresource<TwoD>(mTwoD, mTwoDBuf);
 	}
 
-
 	public void UpdateCharacter(ID3D11DeviceContext dc)
 	{
 		dc.UpdateSubresource(mBones, mCharacterBuf);
 	}
-
 
 	public void UpdateBSP(ID3D11DeviceContext dc)
 	{
@@ -283,17 +298,20 @@ public unsafe class CBKeeper
 		dc.UpdateSubresource(mAniIntensities, mBSPStylesBuf);
 	}
 
-
 	public void UpdatePost(ID3D11DeviceContext dc)
 	{
 		dc.UpdateSubresource<Post>(mPost, mPostBuf);
 		dc.UpdateSubresource(mWeightsOffsetsXY, mPostWOXYBuf);
 	}
 
-
 	public void	UpdatePerShadow(ID3D11DeviceContext dc)
 	{
 		dc.UpdateSubresource<PerShadow>(mPerShadow, mPerShadowBuf);
+	}
+
+	public void UpdateTextMode(ID3D11DeviceContext dc)
+	{
+		dc.UpdateSubresource<TextMode>(mTextMode, mTextModeBuf);
 	}
 
 
@@ -522,6 +540,7 @@ public unsafe class CBKeeper
 #endregion
 
 
+#region PerShadow
 	public void SetPerShadow(Vector3 shadowLightPos, bool bDirectional, float shadowAtten)
 	{
 		mPerShadow.mShadowLightPos	=shadowLightPos;
@@ -540,4 +559,25 @@ public unsafe class CBKeeper
 	{
 		mPerShadow.mShadowLightPos	=pos;
 	}
+#endregion
+
+
+#region	TextMode
+	public void SetTextModeScreenSize(uint width, uint height, uint cwidth, uint cheight)
+	{
+		mTextMode.mWidth	=width;
+		mTextMode.mHeight	=height;
+		mTextMode.mCWidth	=cwidth;
+		mTextMode.mCHeight	=cheight;
+	}
+
+
+	public void SetTextModeFontInfo(uint startChar, uint numColumns, uint charWidth, uint charHeight)
+	{
+		mTextMode.mStartChar	=startChar;
+		mTextMode.mNumColumns	=numColumns;
+		mTextMode.mCharWidth	=charWidth;
+		mTextMode.mCharHeight	=charHeight;
+	}
+#endregion
 }

@@ -33,3 +33,5 @@ BSP.hlsl
 Post.hlsl
 	SimpleQuadVS
 	SimpleQuad93VS
+TextMode.hlsl
+	SimpleVS

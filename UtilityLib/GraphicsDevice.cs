@@ -104,7 +104,7 @@ namespace UtilityLib
 
 			IDXGIFactory6	fact6	=fact2.QueryInterfaceOrNull<IDXGIFactory6>();
 
-			IDXGIAdapter	adpt	=fact6.GetAdapter(0);
+			int	highPerf	=fact6.GetAdapterByGpuPreference(GpuPreference.HighPerformance);
 
 			FeatureLevel	[]features	=null;
 			if(flevel != null)
@@ -137,7 +137,6 @@ namespace UtilityLib
 
 			mGDD	=mGD.QueryInterface<ID3D11Debug>();
 
-			adpt.Dispose();
 			fact6.Dispose();
 			fact2.Dispose();
 

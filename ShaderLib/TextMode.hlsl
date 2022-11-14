@@ -1,22 +1,25 @@
 //shader for doing an old style "character mode" like old
 //pc CGA 40x25 text mode etc
-#include	"Types.fxh"
-#include	"CommonFunctions.fxh"
+#include	"Types.hlsli"
+#include	"CommonFunctions.hlsli"
 
-//dynamic texture containing text contents of the screen
-Texture1D<uint>	mScreenContents;
+//contents of the screen
+Texture1D<uint>	mScreenContents : register(t0);
 
 //font texture
-Texture2D		mFont;
+Texture2D		mFont : register(t1);
 
-uint	mWidth, mHeight;	//dimensions of screen in pixels
-uint	mCWidth, mCHeight;	//dimensions of screen in character blocks
+cbuffer	TextMode : register(b7)
+{
+	uint	mWidth, mHeight;	//dimensions of screen in pixels
+	uint	mCWidth, mCHeight;	//dimensions of screen in character blocks
 
-//font texture info
-uint	mStartChar;		//first letter of the font bitmap
-uint	mNumColumns;	//number of font columns in the font texture
-uint	mCharWidth;		//width of characters in texels in the font texture (fixed)
-uint	mCharHeight;	//height of characters in texels in the font texture (fixed)
+	//font texture info
+	uint	mStartChar;		//first letter of the font bitmap
+	uint	mNumColumns;	//number of font columns in the font texture
+	uint	mCharWidth;		//width of characters in texels in the font texture (fixed)
+	uint	mCharHeight;	//height of characters in texels in the font texture (fixed)
+}
 
 
 VVPos	SimpleVS(float3 pos : POSITION)
@@ -48,8 +51,10 @@ float4	TextModePS(float4 pos : SV_POSITION) : SV_Target
 	//convert character coordinate to 1D
 	int	coord	=(xyText.y * mCWidth) + xyText.x;
 
+	int2	loadCoord	=int2(coord, 0);
+
 	//look up character
-	uint	char	=mScreenContents.Load(int2(coord, 0));
+	uint	char	=mScreenContents.Load(loadCoord);
 
 	int	posOffset	=char - mStartChar;
 	if(posOffset < 0)
@@ -72,17 +77,4 @@ float4	TextModePS(float4 pos : SV_POSITION) : SV_Target
 						  yOffset + xyPix.y, 0);
 
 	return	mFont.Load(fontPix);
-}
-
-
-technique10	TextMode
-{
-	pass	P0
-	{
-		VertexShader	=compile vs_5_0	SimpleVS();
-		PixelShader		=compile ps_5_0	TextModePS();
-
-		SetBlendState(AlphaBlending, float4(0, 0, 0, 0), 0xFFFFFFFF);
-		SetDepthStencilState(DisableDepth, 0);
-	}
 }
