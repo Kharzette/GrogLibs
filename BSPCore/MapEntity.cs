@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Numerics;
 using System.ComponentModel;
 using System.Collections.Generic;
-using SharpDX;
+using Vortice.Mathematics;
 using UtilityLib;
 
 

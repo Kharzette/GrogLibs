@@ -1,13 +1,10 @@
 ﻿using System;
+using System.IO;
+using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using SharpDX;
-using SharpDX.XAudio2;
-using SharpDX.X3DAudio;
-using SharpDX.Multimedia;
+using Vortice.XAudio2;
+using Vortice.Multimedia;
 using UtilityLib;
 
 
@@ -15,10 +12,10 @@ namespace AudioLib
 {
 	public class Audio
 	{
-		XAudio2			mXAud	=new XAudio2(XAudio2Flags.None, ProcessorSpecifier.DefaultProcessor, XAudio2Version.Version27);
-		MasteringVoice	mMV;
-		X3DAudio		m3DAud;
-		DeviceDetails	mDetails;
+		IXAudio2	mXAud	=XAudio2.XAudio2Create(ProcessorSpecifier.DefaultProcessor);
+
+		IXAudio2MasteringVoice	mMV;
+		X3DAudio				m3DAud;
 
 		//the listener everyclass will use
 		Listener	mListener;
@@ -42,11 +39,9 @@ namespace AudioLib
 
 		public Audio()
 		{
-			mDetails	=mXAud.GetDeviceDetails(0);
+			mMV	=mXAud.CreateMasteringVoice();
 
-			mMV	=new MasteringVoice(mXAud, mDetails.OutputFormat.Channels);
-
-			m3DAud	=new X3DAudio(mDetails.OutputFormat.ChannelMask);
+			m3DAud	=new X3DAudio();
 
 			mListener	=new Listener();
 
@@ -279,14 +274,14 @@ namespace AudioLib
 
 			CalculateFlags	calcFlags	=CalculateFlags.Matrix | CalculateFlags.Doppler;
 
-			if((mDetails.OutputFormat.ChannelMask & Speakers.LowFrequency) != 0)
-			{
+//			if((mDetails.OutputFormat.ChannelMask & Speakers.LowFrequency) != 0)
+//			{
 				calcFlags	|=CalculateFlags.RedirectToLfe;
-			}
+//			}
 
 			//this is for mono sounds TODO: assert
 			DspSettings	dsp	=m3DAud.Calculate(mListener, em,
-				calcFlags, 1, mDetails.OutputFormat.Channels);
+				calcFlags, 1);
 
 			sei.Play();
 
@@ -335,9 +330,9 @@ namespace AudioLib
 		}
 
 
-		public List<string> GetSoundList()
+		public void GetSoundList(out string []list)
 		{
-			return	mFX.Keys.ToList();
+			return	mFX.Keys.CopyTo(list, 0);
 		}
 
 
@@ -366,8 +361,8 @@ namespace AudioLib
 			Emitter	ret	=new Emitter();
 
 			ret.Position			=loc;
-			ret.OrientFront			=Vector3.ForwardRH;
-			ret.OrientTop			=Vector3.Up;
+			ret.OrientFront			=Vector3.UnitZ;
+			ret.OrientTop			=Vector3.UnitY;
 			ret.Velocity			=Vector3.Zero;
 			ret.CurveDistanceScaler	=50f;
 			ret.ChannelCount		=1;

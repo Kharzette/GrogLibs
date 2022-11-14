@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
-using SharpDX;
+using System.Numerics;
+using System.Collections.Generic;
 
 
 namespace BSPCore

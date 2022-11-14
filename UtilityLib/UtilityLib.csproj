@@ -7,6 +7,5 @@
   <ItemGroup>
 	<ProjectReference Include="..\SharpDXWindows\SharpDXWindows.csproj"/>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.Direct3D11\Vortice.Direct3D11.csproj"/>
-	<ProjectReference Include="..\Vortice.Mathematics\src\Vortice.Mathematics\Vortice.Mathematics.csproj"/>
   </ItemGroup>
 </Project>

@@ -1,13 +1,14 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Numerics;
 using System.Threading;
 using System.Diagnostics;
 using System.Collections.Generic;
+using Vortice.Mathematics;
 using UtilityLib;
 using MaterialLib;
 
-using SharpDX;
 
 using MatLib	=MaterialLib.MaterialLib;
 
@@ -316,7 +317,7 @@ namespace BSPCore
 
 		//tests vs world (model 0) as well as modelIndex if not zero
 		//modelInv should be an inverted model matrix
-		bool RayCollide(Vector3 Front, Vector3 Back, int modelIndex, Matrix modelInv, out Vector3 impact)
+		bool RayCollide(Vector3 Front, Vector3 Back, int modelIndex, Matrix4x4 modelInv, out Vector3 impact)
 		{
 			bool	hitLeaf	=false;
 
@@ -346,7 +347,7 @@ namespace BSPCore
 
 		//tests vs world (model 0) as well as modelIndex if not zero
 		//modelInv should be an inverted model matrix
-		bool RayCollideToFace(Vector3 Front, Vector3 Back, int modelIndex, Matrix modelInv, ref GFXFace hit)
+		bool RayCollideToFace(Vector3 Front, Vector3 Back, int modelIndex, Matrix4x4 modelInv, ref GFXFace hit)
 		{
 			bool	hitLeaf			=false;
 			Vector3	worldImpacto	=Vector3.Zero;
@@ -376,18 +377,18 @@ namespace BSPCore
 
 
 		#region Queries
-		public Dictionary<int, Matrix> GetModelTransforms()
+		public Dictionary<int, Matrix4x4> GetModelTransforms()
 		{
 			if(mGFXModels == null)
 			{
 				return	null;
 			}
 
-			Dictionary<int, Matrix>	ret	=new Dictionary<int,Matrix>();
+			Dictionary<int, Matrix4x4>	ret	=new Dictionary<int, Matrix4x4>();
 
 			for(int i=0;i < mGFXModels.Length;i++)
 			{
-				Matrix	mat	=Matrix.Translation(mGFXModels[i].mOrigin);
+				Matrix4x4	mat	=Matrix4x4.Translation(mGFXModels[i].mOrigin);
 
 				ret.Add(i, mat);
 			}

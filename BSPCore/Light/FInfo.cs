@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Numerics;
 using System.IO;
 using System.Collections.Generic;
-using SharpDX;
 using UtilityLib;
 
 
@@ -190,7 +190,7 @@ namespace BSPCore
 
 
 		internal void CalcFacePoints(int []corrections,
-			Matrix modelMat, Matrix modelInv, int modelIndex,
+			Matrix4x4 modelMat, Matrix4x4 modelInv, int modelIndex,
 			LInfo lightInfo, int lightGridSize,
 			bool bExtraLightCorrection,
 			UtilityLib.TSPool<bool []> boolPool,
@@ -256,7 +256,7 @@ namespace BSPCore
 
 		internal void CalcFaceSampPoints(
 			int []corrections, Vector2 []sampOffsets,
-			Matrix modelMat, Matrix modelInv, int modelIndex,
+			Matrix4x4 modelMat, Matrix4x4 modelInv, int modelIndex,
 			LInfo lightInfo, int lightGridSize, Vector2 UVOfs,
 			UtilityLib.TSPool<bool []> boolPool,
 			CoreDelegates.IsPointInSolid pointInSolid,

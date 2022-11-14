@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Threading;
-using System.IO;
-using System.Text;
-
-
-namespace BSPCore
+﻿namespace BSPCore
 {
 	public class GBSPSaveParameters
 	{

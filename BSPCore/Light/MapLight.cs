@@ -1,12 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Diagnostics;
+using System.Numerics;
 using System.Threading;
+using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Collections.Concurrent;
-using SharpDX;
+using Vortice.Mathematics;
 using UtilityLib;
 
 
@@ -546,7 +547,7 @@ namespace BSPCore
 					pitch	=MathUtil.DegreesToRadians(pitch);
 					roll	=MathUtil.DegreesToRadians(roll);
 
-					Matrix	rotMat	=Matrix.RotationYawPitchRoll(yaw, pitch, roll);
+					Matrix4x4	rotMat	=Matrix4x4.RotationYawPitchRoll(yaw, pitch, roll);
 					dLight.mNormal	=rotMat.Forward;
 
 					ent.GetFloat("strength", out dLight.mIntensity);
@@ -607,7 +608,7 @@ namespace BSPCore
 
 
 		bool VertexShadeFace(Int32 faceNum, Vector3 []vertNormals,
-			Matrix modelMat, Matrix modelInv, int modelIndex)
+			Matrix4x4 modelMat, Matrix4x4 modelInv, int modelIndex)
 		{
 			if(mGFXRGBVerts == null || mGFXRGBVerts.Length == 0)
 			{
@@ -796,13 +797,13 @@ namespace BSPCore
 			}
 
 			//need a bunch of model transforms, just translation for now
-			Dictionary<int, Matrix>	modelTransforms	=GetModelTransforms();
+			Dictionary<int, Matrix4x4>	modelTransforms	=GetModelTransforms();
 
 			//inverted transforms for raycasts
-			Dictionary<int, Matrix>	modelInvs		=new Dictionary<int, Matrix>();
-			foreach(KeyValuePair<int, Matrix> modelX in modelTransforms)
+			Dictionary<int, Matrix4x4>	modelInvs		=new Dictionary<int, Matrix4x4>();
+			foreach(KeyValuePair<int, Matrix4x4> modelX in modelTransforms)
 			{
-				modelInvs.Add(modelX.Key, Matrix.Invert(modelX.Value));
+				modelInvs.Add(modelX.Key, Matrix4x4.Invert(modelX.Value));
 			}
 
 			object	prog	=ProgressWatcher.RegisterProgress(0, mGFXFaces.Length, 0);
@@ -868,8 +869,8 @@ namespace BSPCore
 
 				GFXTexInfo	tex			=mGFXTexInfos[face.mTexInfo];
 				int			modelIndex	=modelForFace[i];
-				Matrix		modelMat	=modelTransforms[modelIndex];
-				Matrix		modelInv	=modelInvs[modelIndex];
+				Matrix4x4	modelMat	=modelTransforms[modelIndex];
+				Matrix4x4	modelInv	=modelInvs[modelIndex];
 
 				if(tex.IsGouraud() || tex.IsFlat())
 				{
@@ -965,7 +966,7 @@ namespace BSPCore
 
 
 		bool ApplyLightsToFace(FInfo faceInfo, LInfo lightInfo,
-			Matrix modelInv, int modelIndex, List<int> skyClusters,
+			Matrix4x4 modelInv, int modelIndex, List<int> skyClusters,
 			float scale, byte []visData)
 		{
 			Vector3	norm	=faceInfo.GetPlaneNormal();
@@ -1186,7 +1187,7 @@ namespace BSPCore
 
 		//use this when there is no vis information
 		bool ApplyLightsToFaceNoVis(FInfo faceInfo, LInfo lightInfo,
-			Matrix modelInv, int modelIndex,
+			Matrix4x4 modelInv, int modelIndex,
 			float scale, byte []visData)
 		{
 			Vector3	norm	=faceInfo.GetPlaneNormal();

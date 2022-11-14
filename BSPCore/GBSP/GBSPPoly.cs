@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Text;
+using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
-using System.Text;
-using SharpDX;
+using Vortice.Mathematics;
 
 
 namespace BSPCore

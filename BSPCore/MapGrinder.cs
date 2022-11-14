@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text;
+using System.Numerics;
+using System.Diagnostics;
+using System.Collections.Generic;
+using Vortice.Mathematics;
 using MaterialLib;
 using MeshLib;
 using UtilityLib;
-
-using SharpDX;
 
 using MatLib	=MaterialLib.MaterialLib;
 

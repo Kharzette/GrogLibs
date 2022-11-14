@@ -1,16 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-	<Reference Include="SharpDX.Mathematics">
-      <HintPath>..\SharpDX\Bin\$(Configuration)\net45\SharpDX.Mathematics.dll</HintPath>
-    </Reference>
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MaterialLib\MaterialLib.csproj"/>
     <ProjectReference Include="..\MeshLib\MeshLib.csproj"/>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>
+	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DXGI\Vortice.DXGI.csproj"/>
   </ItemGroup>
 </Project>

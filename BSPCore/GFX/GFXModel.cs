@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Numerics;
 using System.IO;
-using SharpDX;
 
 
 namespace BSPCore

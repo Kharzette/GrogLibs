@@ -5,8 +5,8 @@
   </PropertyGroup>
   <ItemGroup>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DirectX\Vortice.DirectX.csproj"/>
-	<ProjectReference Include="..\Vortice.Mathematics\src\Vortice.Mathematics\Vortice.Mathematics.csproj"/>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.XAudio2\Vortice.XAudio2.csproj"/>
+	<ProjectReference Include="..\Vortice.Windows\src\Vortice.MediaFoundation\Vortice.MediaFoundation.csproj"/>
   </ItemGroup>
   <ItemGroup>
 	<ProjectReference Include="..\SharpDXWindows\SharpDXWindows.csproj"/>

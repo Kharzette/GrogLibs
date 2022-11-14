@@ -133,7 +133,7 @@ public class IndoorMesh
 			return;
 		}
 
-		mLightMapAtlas.Finish(gd);
+		mLightMapAtlas.Finish(gd, sk, "LightMapAtlas");
 		sk.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasSRV());
 	}
 
@@ -180,7 +180,7 @@ public class IndoorMesh
 		RenderExternalDMN rendExternalDMN)
 	{
 		//update materiallib wvp
-		mMatLib.UpdateWVP(Matrix4x4.Identity, gd.GCam.View, gd.GCam.Projection, gd.GCam.Position);
+//		mMatLib.UpdateWVP(Matrix4x4.Identity, gd.GCam.View, gd.GCam.Projection, gd.GCam.Position);
 
 		//draw solids first
 		DrawMaterialsDC(gd, 2, getModMatrix, mFBVBB, mFBIB, mFBDrawCalls, bMatVis);
@@ -296,8 +296,8 @@ public class IndoorMesh
 
 	//for opaques with models
 	void DrawMaterialsDC(GraphicsDevice g,
-		int pass, GetModelMatrix getModMatrix,
-		VertexBufferBinding vbb, Buffer ib, Dictionary<int, List<DrawCall>> dcs,
+		int pass, GetModelMatrix getModMatrix, Buffer vb,
+		Buffer ib, Dictionary<int, List<DrawCall>> dcs,
 		IsMaterialVisible bMatVis)
 	{
 		if(dcs == null)
@@ -309,6 +309,8 @@ public class IndoorMesh
 
 		g.DC.InputAssembler.SetVertexBuffers(0, vbb);
 		g.DC.InputAssembler.SetIndexBuffer(ib, SharpDX.DXGI.Format.R16_UInt, 0);
+
+		g.DC.IASetVertexBuffer(0, vb,
 		
 		//cycle through models
 		foreach(KeyValuePair<int, List<DrawCall>> modCall in dcs)
@@ -440,7 +442,7 @@ public class IndoorMesh
 					}
 					else
 					{
-						mMatLib.ApplyMaterialPass(mat, g.DC, pass);
+						mMatLib.ApplyMaterial(mat, g.DC);//, pass);
 
 						//material depth normal pass draws directly
 						g.DC.DrawIndexed(call.mCount, call.mStartIndex, 0);

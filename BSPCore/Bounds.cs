@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Numerics;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
-using SharpDX;
 
 
 namespace BSPCore
