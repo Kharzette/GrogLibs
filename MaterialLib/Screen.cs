@@ -116,25 +116,9 @@ public class Screen
 
 	public unsafe void SetScreenContents(GraphicsDevice gd, byte []stuff)
 	{
-//		Span<uint>	blort	=gd.DC.Map<uint>(mScreenContents, 0, 0, MapMode.WriteDiscard);
-//		stuff.CopyTo<UInt32>(blort);
-//		gd.DC.Unmap(mScreenContents, 0, 0);
-
-//		Vortice.Mathematics.Box	b	=new Vortice.Mathematics.Box(0, 0, 0, 1000, 1, 1);
-//		fixed(void *pStuff = stuff)
-//		{
-//			gd.DC.UpdateSubresource(mScreenContents, 0, b, (IntPtr)pStuff, 1000, 0);
-//		}
-
-//		gd.DC.UpdateSubresource<byte>(stuff, mScreenContents, 0, 1000);
-
 		Span<byte>	blort	=gd.DC.Map<byte>(mScreenContents, 0, 0, MapMode.WriteDiscard);
-
 		stuff.CopyTo(blort);
-
-		gd.DC.Unmap(mScreenContents, 0, 0);
-
-		
+		gd.DC.Unmap(mScreenContents, 0, 0);		
 	}
 
 
