@@ -41,7 +41,9 @@ namespace AudioLib
 		{
 			mMV	=mXAud.CreateMasteringVoice();
 
-			m3DAud	=new X3DAudio();
+	        WaveFormatExtensible format = new(96000, 24, 2);
+
+			m3DAud	=new X3DAudio(format.ChannelMask);
 
 			mListener	=new Listener();
 
@@ -78,9 +80,8 @@ namespace AudioLib
 
 			SoundStream	ss	=new SoundStream(fs);
 
-			AudioBuffer	ab	=new AudioBuffer();
+			AudioBuffer	ab	=new AudioBuffer(ss.ToDataStream());
 
-			ab.Stream		=ss;
 			ab.AudioBytes	=(int)ss.Length;
 			ab.Flags		=BufferFlags.EndOfStream;
 
@@ -147,7 +148,30 @@ namespace AudioLib
 
 		public int GetNumInstances()
 		{
-			return	mActive.Count();
+			return	mActive.Count;
+		}
+
+
+		int	ChannelCountFromMasteringVoice()
+		{
+			Wavef
+			switch(mMV.ChannelMask)
+			{
+				case	Speakers.TwoPointOne:
+					return	3;
+				case	Speakers.FourPointOne:
+					return	5;
+				case	Speakers.FivePointOne:
+					return	6;
+				case	Speakers.SevenPointOne:
+					return	8;
+				case	Speakers.FivePointOneSurround:
+					return	6;
+				case	Speakers.SevenPointOneSurround:
+					return	8;
+				default:
+					return	1;
+			}
 		}
 
 
@@ -204,14 +228,16 @@ namespace AudioLib
 
 					CalculateFlags	calcFlags	=CalculateFlags.Matrix | CalculateFlags.Doppler;
 
-					if((mDetails.OutputFormat.ChannelMask & Speakers.LowFrequency) != 0)
+					if((mMV.ChannelMask & Speakers.LowFrequency) != 0)
 					{
 						calcFlags	|=CalculateFlags.RedirectToLfe;
 					}
 
+					
+
 					//this is for mono sounds TODO: assert
 					DspSettings	dsp	=m3DAud.Calculate(mListener, threeD.Key,
-						calcFlags, 1, mDetails.OutputFormat.Channels);
+						calcFlags, 1, ChannelCountFromMasteringVoice());
 
 					sei.Update3D(dsp);
 				}

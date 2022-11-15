@@ -118,7 +118,7 @@ namespace AudioLib
 		//simple fire and forget 2D
 		internal void Play(IXAudio2 xaud, float volume)
 		{
-			SourceVoice	sv	=new SourceVoice(xaud, mFormat);
+			IXAudio2SourceVoice	sv	=xaud.CreateSourceVoice(mFormat, false);
 
 			sv.SubmitSourceBuffer(mBuffer, null);
 
