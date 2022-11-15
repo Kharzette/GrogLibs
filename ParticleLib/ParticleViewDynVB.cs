@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Text;
+using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
 using MaterialLib;
-using SharpDX;
-using SharpDX.Direct3D11;
 using UtilityLib;
-
-using Buffer	=SharpDX.Direct3D11.Buffer;
-using Device	=SharpDX.Direct3D11.Device;
-using MatLib	=MaterialLib.MaterialLib;
 
 
 namespace ParticleLib

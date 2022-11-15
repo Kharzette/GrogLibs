@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Text;
+using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
-using SharpDX;
 using UtilityLib;
 
 
@@ -125,7 +124,7 @@ namespace PathLib
 
 			Vector3	norm	=Vector3.Cross(line, perp);
 
-			norm.Normalize();
+			norm	=Vector3.Normalize(norm);
 
 			float	dist	=norm.dot(mA);
 

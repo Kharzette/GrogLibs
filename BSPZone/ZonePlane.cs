@@ -1,9 +1,8 @@
 ﻿using System;
+using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
-using SharpDX;
 using UtilityLib;
 
 

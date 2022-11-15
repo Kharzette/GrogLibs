@@ -1,6 +1,6 @@
 using System;
+using System.Numerics;
 using System.Collections.Generic;
-using SharpDX;
 using UtilityLib;
 using System.Diagnostics;
 

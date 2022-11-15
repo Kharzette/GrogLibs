@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Text;
+using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
-using SharpDX;
 using UtilityLib;
 
 using DynLight	=MaterialLib.DynamicLights.DynLight;

@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Text;
+using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
-using SharpDX;
-using SharpDX.Direct3D11;
 using UtilityLib;
-
-using Device	=SharpDX.Direct3D11.Device;
-using MatLib	=MaterialLib.MaterialLib;
 
 
 namespace ParticleLib
@@ -114,7 +109,7 @@ namespace ParticleLib
 		}
 
 
-		public void DrawDMN(DeviceContext dc, Matrix view, Matrix proj, Vector3 eyePos)
+		public void DrawDMN(DeviceContext dc, Matrix4x4 view, Matrix4x4 proj, Vector3 eyePos)
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
@@ -123,7 +118,7 @@ namespace ParticleLib
 		}
 
 
-		public void Draw(DeviceContext dc, Matrix view, Matrix proj)
+		public void Draw(DeviceContext dc, Matrix4x4 view, Matrix4x4 proj)
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
@@ -132,7 +127,7 @@ namespace ParticleLib
 		}
 
 
-		public void Draw(MaterialLib.AlphaPool ap, Matrix view, Matrix proj)
+		public void Draw(MaterialLib.AlphaPool ap, Matrix4x4 view, Matrix4x4 proj)
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{

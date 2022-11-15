@@ -1,8 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows7.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+	<ProjectReference Include="..\Vortice.Windows\src\Vortice.Direct3D11\Vortice.Direct3D11.csproj"/>
     <ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>
   </ItemGroup>
 </Project>

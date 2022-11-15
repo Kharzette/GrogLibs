@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Numerics;
 using System.Threading;
 using System.Diagnostics;
 using System.Collections.Generic;
-using SharpDX;
 using UtilityLib;
 
 
@@ -572,7 +572,7 @@ namespace PathLib
 
 				//use last 2 nodes for direction
 				direction	=(nodes[nodes.Count - 2] - nodes[nodes.Count - 1]);
-				direction.Normalize();
+				direction	=Vector3.Normalize(direction);
 				return	true;
 			}
 
@@ -677,7 +677,7 @@ namespace PathLib
 			if(start.Y < end.Y)
 			{
 				//get an up target for the start
-				Vector3	startUp	=start + (Vector3.Up * (mid.Y - start.Y));
+				Vector3	startUp	=start + (Vector3.UnitY * (mid.Y - start.Y));
 
 				if(!canReach(start, startUp))
 				{
@@ -695,7 +695,7 @@ namespace PathLib
 			else
 			{
 				//get an up target for the end
-				Vector3	endUp	=end + (Vector3.Up * (mid.Y - end.Y));
+				Vector3	endUp	=end + (Vector3.UnitY * (mid.Y - end.Y));
 
 				if(!canReach(start, mid))
 				{

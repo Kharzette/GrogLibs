@@ -6,7 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DirectX\Vortice.DirectX.csproj"/>
-	<ProjectReference Include="..\Vortice.Mathematics\src\Vortice.Mathematics\Vortice.Mathematics.csproj"/>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DirectInput\Vortice.DirectInput.csproj"/>
 	<ProjectReference Include="..\Vortice.Windows\src\Vortice.XInput\Vortice.XInput.csproj"/>
   </ItemGroup>

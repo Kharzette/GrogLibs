@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Text;
+using System.Numerics;
 using System.Collections.Generic;
-using SharpDX;
+using Vortice.Mathematics;
 using UtilityLib;
 
 
@@ -139,7 +139,7 @@ namespace PathLib
 
 		internal BoundingBox GetBounds()
 		{
-			return	BoundingBox.FromPoints(mVerts.ToArray());
+			return	BoundingBox.CreateFromPoints(mVerts.ToArray());
 		}
 
 
@@ -203,19 +203,22 @@ namespace PathLib
 
 			//this is a lot easier since we step in xz
 			//snap bounds to grid
-			bnd.Maximum.X	=(float)Math.Ceiling(bnd.Maximum.X / gridSize);
-			bnd.Maximum.Z	=(float)Math.Ceiling(bnd.Maximum.Z / gridSize);
+			Vector3	snapMax	=Vector3.Zero;
+			Vector3	snapMin	=Vector3.Zero;
 
-			bnd.Minimum.X	=(float)Math.Floor(bnd.Minimum.X / gridSize);
-			bnd.Minimum.Z	=(float)Math.Floor(bnd.Minimum.Z / gridSize);
+			snapMax.X	=(float)Math.Ceiling(bnd.Max.X / gridSize);
+			snapMax.Z	=(float)Math.Ceiling(bnd.Max.Z / gridSize);
 
-			int	xSize	=(int)(bnd.Maximum.X - bnd.Minimum.X);
-			int	zSize	=(int)(bnd.Maximum.Z - bnd.Minimum.Z);
+			snapMin.X	=(float)Math.Floor(bnd.Min.X / gridSize);
+			snapMin.Z	=(float)Math.Floor(bnd.Min.Z / gridSize);
 
-			bnd.Minimum.X	*=gridSize;
-			bnd.Minimum.Z	*=gridSize;
-			bnd.Maximum.X	*=gridSize;
-			bnd.Maximum.Z	*=gridSize;
+			int	xSize	=(int)(snapMax.X - snapMin.X);
+			int	zSize	=(int)(snapMax.Z - snapMin.Z);
+
+			snapMin.X	*=gridSize;
+			snapMin.Z	*=gridSize;
+			snapMax.X	*=gridSize;
+			snapMax.Z	*=gridSize;
 
 			int	halfGrid	=(int)(gridSize * 0.5f);
 
@@ -228,14 +231,14 @@ namespace PathLib
 
 			for(int z=0;z < zSize;z++)
 			{
-				int	zLoc	=(int)bnd.Minimum.Z;
+				int	zLoc	=(int)snapMin.Z;
 
 				zLoc	+=halfGrid;
 				zLoc	+=z * gridSize;
 
 				for(int x=0;x < xSize;x++)
 				{
-					int	xLoc	=(int)bnd.Minimum.X;
+					int	xLoc	=(int)snapMin.X;
 
 					xLoc	+=halfGrid;
 					xLoc	+=x * gridSize;

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
-using SharpDX;
-using SharpDX.XAudio2;
-using SharpDX.X3DAudio;
 using UtilityLib;
 using AudioLib;
 
