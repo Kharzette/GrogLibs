@@ -221,13 +221,4 @@ public class SubAnim
 			kf.Transform(trans);
 		}
 	}
-
-
-	public void ConvertToLeftHanded()
-	{
-		foreach(KeyFrame kf in mKeys)
-		{
-			kf.ConvertToLeftHanded();
-		}
-	}
 }

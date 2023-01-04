@@ -28,7 +28,7 @@ VVPosTex03Tex13 WNormWPosVS(VPosNorm input)
 	//transform the input position to the output
 	output.Position		=mul(float4(input.Position, 1), wvp);
 	output.TexCoord0	=mul(input.Normal.xyz, mWorld);
-	output.TexCoord1	=mul(input.Position, mWorld);
+	output.TexCoord1	=mul(float4(input.Position, 1), mWorld);
 	
 	//return the output structure
 	return	output;
@@ -45,7 +45,7 @@ VVPosTex03Tex13Tex23 WNormWPosVColorVS(VPosNormCol0 input)
 	//transform the input position to the output
 	output.Position		=mul(float4(input.Position, 1), wvp);
 	output.TexCoord0	=mul(input.Normal.xyz, mWorld);
-	output.TexCoord1	=mul(input.Position, mWorld);
+	output.TexCoord1	=mul(float4(input.Position, 1), mWorld);
 	output.TexCoord2	=input.Color;
 	
 	//return the output structure
