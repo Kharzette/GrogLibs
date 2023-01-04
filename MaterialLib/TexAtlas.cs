@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Numerics;
 using UtilityLib;
+using Vortice;
 using Vortice.Direct3D11;
 using Vortice.Mathematics;
 
@@ -14,21 +15,18 @@ class TexNode
 {
 	TexNode		mFront;
 	TexNode		mBack;
-	RectI		mRect;
+	RawRect		mRect;
 	bool		mbOccupied;
 
 
 	public TexNode() { }
 	public TexNode(int w, int h)
 	{
-		mRect.X			=0;
-		mRect.Y			=0;
-		mRect.Width		=w;
-		mRect.Height	=h;
+		mRect	=new RawRect(0, 0, w, h);
 	}
 
 
-	public RectI GetRect()
+	public RawRect GetRect()
 	{
 		return	mRect;
 	}
@@ -85,22 +83,22 @@ class TexNode
 
 		if(dw > dh)
 		{
-			mFront.mRect	=new RectI(mRect.Left, mRect.Top,
+			mFront.mRect	=new RawRect(mRect.Left, mRect.Top,
 								texW,
 								(mRect.Bottom - mRect.Top));
 
-			mBack.mRect	=new RectI((mRect.Left + texW),
+			mBack.mRect	=new RawRect((mRect.Left + texW),
 							mRect.Top,
 							(mRect.Right - mRect.Left - texW),
 							(mRect.Bottom - mRect.Top));
 		}
 		else
 		{
-			mFront.mRect	=new RectI(mRect.Left, mRect.Top,
+			mFront.mRect	=new RawRect(mRect.Left, mRect.Top,
 								(mRect.Right - mRect.Left),
 								texH);
 
-			mBack.mRect	=new RectI(mRect.Left,
+			mBack.mRect	=new RawRect(mRect.Left,
 							(mRect.Top + texH),
 							(mRect.Right - mRect.Left),
 							(mRect.Bottom - mRect.Top - texH));
@@ -112,10 +110,10 @@ class TexNode
 
 	internal void Write(BinaryWriter bw)
 	{
-		bw.Write(mRect.X);
-		bw.Write(mRect.Y);
-		bw.Write(mRect.Width);
-		bw.Write(mRect.Height);
+		bw.Write(mRect.Left);
+		bw.Write(mRect.Top);
+		bw.Write(mRect.Right);
+		bw.Write(mRect.Bottom);
 		bw.Write(mbOccupied);
 
 		bw.Write(mFront != null);
@@ -134,11 +132,13 @@ class TexNode
 
 	internal void Read(BinaryReader br)
 	{
-		mRect.X			=br.ReadInt32();
-		mRect.Y			=br.ReadInt32();
-		mRect.Width		=br.ReadInt32();
-		mRect.Height	=br.ReadInt32();
-		mbOccupied		=br.ReadBoolean();
+		int	X		=br.ReadInt32();
+		int	Y		=br.ReadInt32();
+		int	Width	=br.ReadInt32();
+		int	Height	=br.ReadInt32();
+		mbOccupied	=br.ReadBoolean();
+
+		mRect	=new RawRect(X, Y, Width, Height);
 
 		bool	bFront	=br.ReadBoolean();
 		bool	bBack	=br.ReadBoolean();
@@ -261,7 +261,7 @@ public class TexAtlas
 			mBuildArray	=new Color[mWidth * mHeight];
 		}
 
-		RectI	target	=n.GetRect();
+		RawRect	target	=n.GetRect();
 
 		int c	=0;
 		for(int y=target.Top;y < target.Bottom;y++)

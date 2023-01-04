@@ -75,21 +75,59 @@ public class KeyFrame
 	}
 
 
-	internal void ConvertToLeftHanded()
+	public void ConvertToLeftHanded()
 	{
-		Matrix4x4	rotMat		=Matrix4x4.CreateFromQuaternion(mRotation);
-		Matrix4x4	transMat	=Matrix4x4.CreateTranslation(mPosition);
-		Matrix4x4	scaleMat	=Matrix4x4.CreateScale(mScale);
+		mRotation.Y	=-mRotation.Y;
+		mRotation.Z	=-mRotation.Z;
+		mRotation.W	=-mRotation.W;
 
-		Matrix4x4	final	=scaleMat * rotMat * transMat;
+//		Matrix4x4	rotMat		=Matrix4x4.CreateFromQuaternion(mRotation);
+//		Matrix4x4	transMat	=Matrix4x4.CreateTranslation(mPosition);
+//		Matrix4x4	scaleMat	=Matrix4x4.CreateScale(mScale);
 
-		RightHandToLeft(ref final);
+//		Matrix4x4	final	=scaleMat * rotMat * transMat;
 
-		Matrix4x4.Decompose(final, out mScale, out mRotation, out mPosition);
+//		RightHandToLeft(ref final);
+
+//		Matrix4x4.Decompose(final, out mScale, out mRotation, out mPosition);
 	}
 
 
+	//none of these work btw
 	public static void RightHandToLeft(ref Matrix4x4 mat)
+	{
+		//negate x column
+		mat.M11	=-mat.M11;
+		mat.M12	=-mat.M12;
+		mat.M13	=-mat.M13;
+		mat.M14	=-mat.M14;
+	}
+
+
+	public static void RightHandToLeft2(ref Matrix4x4 mat)
+	{
+		//swap 12 and 13
+		float	temp	=mat.M12;
+		mat.M12	=mat.M13;
+		mat.M13	=temp;
+
+		//swap row 2 and 3
+		Vector3	tempVec;
+		tempVec.X	=mat.M21;
+		tempVec.Y	=mat.M22;
+		tempVec.Z	=mat.M23;
+
+		mat.M21	=mat.M31;
+		mat.M22	=mat.M33;	//swap y
+		mat.M23	=mat.M32;	//and z also
+
+		mat.M31	=tempVec.X;
+		mat.M32	=tempVec.Z;	//same here
+		mat.M33	=tempVec.Y;	//swap
+	}
+
+
+	public static void RightHandToLeft3(ref Matrix4x4 mat)
 	{
 		mat.M31	=-mat.M31;
 		mat.M32	=-mat.M32;

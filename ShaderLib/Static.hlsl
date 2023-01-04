@@ -161,7 +161,7 @@ VVPosTex04Tex14 WNormWPosTexVS(VPosNormTex0 input)
 	//transform the input position to the output
 	output.Position			=mul(float4(input.Position, 1), wvp);
 	output.TexCoord0.xyz	=mul(input.Normal.xyz, mWorld);
-	output.TexCoord1.xyz	=mul(input.Position, mWorld);
+	output.TexCoord1		=mul(float4(input.Position, 1), mWorld);
 	output.TexCoord0.w		=input.TexCoord0.x;
 	output.TexCoord1.w		=input.TexCoord0.y;
 	

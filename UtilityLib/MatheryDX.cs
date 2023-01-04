@@ -197,8 +197,9 @@ public static partial class Mathery
 	//extension methods don't work on value types :(
 	public static void ClearBoundingBox(ref BoundingBox bb)
 	{
-		bb.Min	=Vector3.One * MIN_MAX_BOUNDS;
-		bb.Max	=-bb.Min;
+		bb	=new BoundingBox(
+			Vector3.One * MIN_MAX_BOUNDS,
+			-Vector3.One * MIN_MAX_BOUNDS);
 	}
 
 
@@ -445,18 +446,17 @@ public static partial class Mathery
 	public static bool InFrustumLightAdjust(BoundingFrustum frust, Vector3 lightDir, BoundingSphere bs)
 	{
 		//extend down light ray 5 units
-		bs.Center	+=(lightDir * 5.0f);
-
 		//expand radius by 10
-		bs.Radius	+=10;			
+		BoundingSphere	bsAdjusted	=new BoundingSphere(bs.Center + (lightDir * 5f), bs.Radius + 10f);
 
-		return	frust.Intersects(bs);
+		return	frust.Intersects(bsAdjusted);
 	}
 
 
 	public static BoundingSphere SphereFromPoints(IEnumerable<Vector3> points)
 	{
-		BoundingSphere	ret	=new BoundingSphere(Vector3.Zero, 0f);
+		Vector3	center	=Vector3.Zero;
+		float	radius	=0f;
 
 		//find min and max
 		Vector3	min	=Vector3.One * float.MaxValue;
@@ -490,18 +490,18 @@ public static partial class Mathery
 			}
 		}
 
-		ret.Center	=min + (max - min) / 2.0f;
+		center	=min + (max - min) / 2.0f;
 
 		foreach(Vector3 pnt in points)
 		{
-			float	dist	=Vector3.Distance(pnt, ret.Center);
-			if(dist > ret.Radius)
+			float	dist	=Vector3.Distance(pnt, center);
+			if(dist > radius)
 			{
-				ret.Radius	=dist;
+				radius	=dist;
 			}
 		}
 
-		return	ret;
+		return	new BoundingSphere(center, radius);
 	}
 
 
@@ -1055,16 +1055,17 @@ public static partial class Mathery
 
 	public static BoundingSphere TransformSphere(Matrix4x4 trans, BoundingSphere bs)
 	{
-		Vector3	pos		=bs.Center;
+		Vector3	pos	=bs.Center;
+		float	rad	=bs.Radius;
 
-		bs.Center	=Mathery.TransformCoordinate(pos, ref trans);
+		pos	=Mathery.TransformCoordinate(pos, ref trans);
 
 		Vector3	scaleVec	=new Vector3(trans.M11, trans.M22, trans.M33);
 			
 		//use the greatest dimension
-		bs.Radius	*=GreatestSphereDimension(scaleVec);
+		rad	*=GreatestSphereDimension(scaleVec);
 
-		return	bs;
+		return	new BoundingSphere(pos, rad);
 	}
 
 
@@ -1360,8 +1361,7 @@ public static partial class Mathery
 		zsize	*=0.5f;
 		height	*=0.5f;
 
-		box.Min	=new Vector3(-xsize, -height, -zsize);
-		box.Max	=new Vector3(xsize, height, zsize);
+		box	=new BoundingBox(new Vector3(-xsize, -height, -zsize), new Vector3(xsize, height, zsize));
 
 		return	start.Min - box.Min;
 	}

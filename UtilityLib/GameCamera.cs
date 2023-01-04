@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Vortice.Mathematics;
+using Vortice;
 using System.Numerics;
 
 
@@ -168,41 +169,39 @@ namespace UtilityLib
 		}
 
 
-		public Rect GetScreenCoverage(List<Vector3> points)
+		public RawRect GetScreenCoverage(List<Vector3> points)
 		{
-			Rect	rect	=new Rect();
-
-			rect.X		=5000;
-			rect.Y		=5000;
-			rect.Width	=-5000;
-			rect.Height	=-5000;
+			int	X		=5000;
+			int	Y		=5000;
+			int	Width	=-5000;
+			int	Height	=-5000;
 
 			foreach(Vector3 pnt in points)
 			{
 				Vector3	transformed	=Vector3.Transform(pnt, mViewProj);
 
-				if(transformed.X < rect.X)
+				if(transformed.X < X)
 				{
-					rect.X	=(int)transformed.X;
+					X	=(int)transformed.X;
 				}
-				if(transformed.X > rect.Width)
+				if(transformed.X > Width)
 				{
-					rect.Width	=(int)transformed.X;
+					Width	=(int)transformed.X;
 				}
-				if(transformed.Y < rect.Y)
+				if(transformed.Y < Y)
 				{
-					rect.Y	=(int)transformed.Y;
+					Y	=(int)transformed.Y;
 				}
-				if(transformed.Y > rect.Height)
+				if(transformed.Y > Height)
 				{
-					rect.Height	=(int)transformed.Y;
+					Height	=(int)transformed.Y;
 				}
 			}
 
-			rect.Width	-=rect.X;
-			rect.Height	-=rect.Y;
+			Width	-=X;
+			Height	-=Y;
 
-			return	rect;
+			return	new RawRect(X, Y, Width, Height);
 		}
 
 

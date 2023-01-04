@@ -166,6 +166,45 @@ public class CommonPrims
 		cbk.SetSolidColour(blueColor);
 		cbk.UpdateObject(dc);
 		mZAxis.Draw(dc);
+
+		//transform for pointy end to aim at positive axiseseeses
+		Vector3	axisOfs	=Vector3.UnitY	* ((AxisSize * 0.5f) + (AxisWidth * 8));
+		axisOfs	=Vector3.Transform(axisOfs, mAxisScale);
+
+		Matrix4x4	rot		=Matrix4x4.CreateRotationX(MathHelper.Pi);
+		Matrix4x4	trans	=Matrix4x4.CreateTranslation(axisOfs);
+
+		//arrow pointy end for positive Y
+		cbk.SetWorldMat(mAxisScale * rot * trans);
+		cbk.SetSolidColour(greenColor);
+		cbk.UpdateObject(dc);
+		mLightPointyEnd.Draw(dc);
+
+		//adjust for Z
+		axisOfs	=Vector3.UnitZ	* ((AxisSize * 0.5f) + (AxisWidth * 8));
+		axisOfs	=Vector3.Transform(axisOfs, mAxisScale);
+		
+		rot		=Matrix4x4.CreateRotationX(-MathHelper.PiOver2);
+		trans	=Matrix4x4.CreateTranslation(axisOfs);
+
+		//for Z
+		cbk.SetWorldMat(mAxisScale * rot * trans);
+		cbk.SetSolidColour(blueColor);
+		cbk.UpdateObject(dc);
+		mLightPointyEnd.Draw(dc);
+
+		//adjust for X
+		axisOfs	=Vector3.UnitX	* ((AxisSize * 0.5f) + (AxisWidth * 8));
+		axisOfs	=Vector3.Transform(axisOfs, mAxisScale);
+		
+		rot		=Matrix4x4.CreateRotationZ(MathHelper.PiOver2);
+		trans	=Matrix4x4.CreateTranslation(axisOfs);
+
+		//for Z
+		cbk.SetWorldMat(mAxisScale * rot * trans);
+		cbk.SetSolidColour(redColor);
+		cbk.UpdateObject(dc);
+		mLightPointyEnd.Draw(dc);
 	}
 
 

@@ -32,11 +32,14 @@ internal class MeshBound
 
 	internal void Read(BinaryReader br)
 	{
-		mSphere.Center	=FileUtil.ReadVector3(br);
-		mSphere.Radius	=br.ReadSingle();
+		Vector3	center	=FileUtil.ReadVector3(br);
+		float	radius	=br.ReadSingle();
 
-		mBox.Min	=FileUtil.ReadVector3(br);
-		mBox.Max	=FileUtil.ReadVector3(br);
+		Vector3	min	=FileUtil.ReadVector3(br);
+		Vector3	max	=FileUtil.ReadVector3(br);
+
+		mSphere	=new BoundingSphere(center, radius);
+		mBox	=new BoundingBox(min, max);
 
 		mbChoice	=br.ReadBoolean();
 
@@ -48,14 +51,14 @@ internal class MeshBound
 
 		for(int i=0;i < numParts;i++)
 		{
-			BoundingBox		bb	=BoundingBox.Empty;
-			BoundingSphere	sp	=BoundingSphere.Empty;
+			min	=FileUtil.ReadVector3(br);
+			max	=FileUtil.ReadVector3(br);
 
-			bb.Min	=FileUtil.ReadVector3(br);
-			bb.Max	=FileUtil.ReadVector3(br);
+			center	=FileUtil.ReadVector3(br);
+			radius	=br.ReadSingle();
 
-			mSphere.Center	=FileUtil.ReadVector3(br);
-			mSphere.Radius	=br.ReadSingle();
+			BoundingBox		bb	=new BoundingBox(min, max);
+			BoundingSphere	sp	=new BoundingSphere(center, radius);
 
 			bool	bChoice	=br.ReadBoolean();
 
@@ -140,7 +143,7 @@ internal class MeshBound
 		{
 			//len key for spheres moves the centerpoint along
 			//the Z axis
-			mSphere.Center	+=Vector3.UnitZ * lenDelta;
+			mSphere	=new BoundingSphere(mSphere.Center + Vector3.UnitZ * lenDelta, mSphere.Radius);
 		}
 	}
 
@@ -177,7 +180,7 @@ internal class MeshBound
 		}
 		else
 		{
-			mSphere.Radius	+=radDelta;
+			mSphere	=new BoundingSphere(mSphere.Center, mSphere.Radius + radDelta);
 		}
 	}
 
@@ -185,14 +188,12 @@ internal class MeshBound
 	//this is used by characters
 	internal void ComputeRoughFromBox(Vector3 center, Vector3 min, Vector3 max)
 	{
-		mBox.Min	=min;
-		mBox.Max	=max;
+		mBox	=new BoundingBox(min, max);
 
 		float	distMin	=Vector3.Distance(min, center);
 		float	distMax	=Vector3.Distance(max, center);
 
-		mSphere.Center	=center;
-		mSphere.Radius	=(distMin > distMax)? distMin : distMax;
+		mSphere	=new BoundingSphere(center, (distMin > distMax)? distMin : distMax);
 	}
 
 

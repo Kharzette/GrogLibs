@@ -131,11 +131,33 @@ namespace UtilityLib
 //				mRForm.ClientSize.Width, mRForm.ClientSize.Height,
 				new Rational(60, 1), Format.R8G8B8A8_UNorm_SRgb);
 
+			bool	bDebug	=true;
+
 			Result	res	=D3D11.D3D11CreateDeviceAndSwapChain(null, DriverType.Hardware,
 				DeviceCreationFlags.Debug, features,
 				scDesc, out mSChain, out mGD, out outFeatures, out mDC);
+			
+			if(res != Result.Ok)
+			{
+				//probably no debug stuff installed
+				bDebug	=false;
+				res	=D3D11.D3D11CreateDeviceAndSwapChain(null, DriverType.Hardware,
+					DeviceCreationFlags.None, features,
+					scDesc, out mSChain, out mGD, out outFeatures, out mDC);
 
-			mGDD	=mGD.QueryInterface<ID3D11Debug>();
+				if(res != Result.Ok)
+				{
+					Debug.WriteLine("Device creation failed: " + res.ToString());
+					fact6.Dispose();
+					fact2.Dispose();
+					return;
+				}
+			}
+
+			if(bDebug)
+			{
+				mGDD	=mGD.QueryInterface<ID3D11Debug>();
+			}
 
 			fact6.Dispose();
 			fact2.Dispose();

@@ -547,6 +547,12 @@ public partial class Character
 
 	public void SaveToFile(string fileName)
 	{
+		if(mBound == null)
+		{
+			Debug.WriteLine("Bound not set up yet!");
+			return;
+		}
+
 		FileStream		file	=new FileStream(fileName, FileMode.Create, FileAccess.Write);
 		BinaryWriter	bw		=new BinaryWriter(file);
 

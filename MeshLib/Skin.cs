@@ -274,8 +274,7 @@ public class Skin
 		else if(shape == Sphere)
 		{
 			BoundingSphere	bs	=mBoneSpheres[index];
-			bs.Radius			+=radiusDelta;
-			mBoneSpheres[index]	=bs;	//struct so copy
+			mBoneSpheres[index]	=new BoundingSphere(bs.Center, bs.Radius + radiusDelta);
 		}
 		else	//capsule
 		{
@@ -343,10 +342,7 @@ public class Skin
 			//len key for spheres moves the centerpoint along
 			//the bone's Z axis
 			BoundingSphere	bs	=mBoneSpheres[index];
-
-			bs.Center	+=Vector3.UnitZ * lenDelta;
-
-			mBoneSpheres[index] =bs;
+			mBoneSpheres[index]	=new BoundingSphere(bs.Center + Vector3.UnitZ * lenDelta, bs.Radius);
 		}
 		else	//capsule
 		{
@@ -393,10 +389,7 @@ public class Skin
 		else if(shape == Sphere)
 		{
 			BoundingSphere	bs	=mBoneSpheres[index];
-
-			bs.Center	=Vector3.Zero;
-
-			mBoneSpheres[index]	=bs;
+			mBoneSpheres[index]	=new BoundingSphere(Vector3.Zero, bs.Radius);
 		}
 		//capsule only works from the joint pos
 	}
@@ -478,10 +471,10 @@ public class Skin
 
 		for(int i=0;i < numBoxes;i++)
 		{
-			BoundingBox	box	=new BoundingBox();
+			Vector3	min	=FileUtil.ReadVector3(br);
+			Vector3	max	=FileUtil.ReadVector3(br);
 
-			box.Min	=FileUtil.ReadVector3(br);
-			box.Max	=FileUtil.ReadVector3(br);
+			BoundingBox	box	=new BoundingBox(min, max);
 
 			mBoneBoxes.Add(i, box);
 		}
@@ -490,10 +483,10 @@ public class Skin
 
 		for(int i=0;i < numBoxes;i++)
 		{
-			BoundingSphere	sp	=new BoundingSphere();
+			Vector3	center	=FileUtil.ReadVector3(br);
+			float	radius	=br.ReadSingle();
 
-			sp.Center	=FileUtil.ReadVector3(br);
-			sp.Radius	=br.ReadSingle();
+			BoundingSphere	sp	=new BoundingSphere(center, radius);
 
 			mBoneSpheres.Add(i, sp);
 		}

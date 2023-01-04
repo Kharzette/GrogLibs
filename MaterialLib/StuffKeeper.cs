@@ -30,7 +30,7 @@ public class StuffKeeper
 			mRootDir	=rootDir;
 		}
 
-		static string includeDirectory = "Shaders\\";
+		static string includeDirectory = "ShadersWin64\\";
 		public void Close(Stream stream)
 		{
 			stream.Close();
@@ -756,20 +756,20 @@ public class StuffKeeper
 	void LoadEntryPoints()
 	{
 		//see if Shader folder exists in Content
-		if(!Directory.Exists(mGameRootDir + "/Shaders"))
+		if(!Directory.Exists(mGameRootDir + "/ShadersWin64"))
 		{
 			return;
 		}
-		if(!File.Exists(mGameRootDir + "/Shaders/VSEntryPoints.txt"))
+		if(!File.Exists(mGameRootDir + "/ShadersWin64/VSEntryPoints.txt"))
 		{
 			return;
 		}
-		if(!File.Exists(mGameRootDir + "/Shaders/PSEntryPoints.txt"))
+		if(!File.Exists(mGameRootDir + "/ShadersWin64/PSEntryPoints.txt"))
 		{
 			return;
 		}
 
-		FileStream	fs	=new FileStream(mGameRootDir + "/Shaders/VSEntryPoints.txt", FileMode.Open, FileAccess.Read);
+		FileStream	fs	=new FileStream(mGameRootDir + "/ShadersWin64/VSEntryPoints.txt", FileMode.Open, FileAccess.Read);
 		if(fs == null)
 		{
 			return;
@@ -787,7 +787,7 @@ public class StuffKeeper
 		sr.Close();
 		fs.Close();
 
-		fs	=new FileStream(mGameRootDir + "/Shaders/PSEntryPoints.txt", FileMode.Open, FileAccess.Read);
+		fs	=new FileStream(mGameRootDir + "/ShadersWin64/PSEntryPoints.txt", FileMode.Open, FileAccess.Read);
 		if(fs == null)
 		{
 			return;
@@ -934,7 +934,7 @@ public class StuffKeeper
 						continue;	//already loaded
 					}
 
-					CompileShader(dev, mGameRootDir + "/Shaders", srcFile,
+					CompileShader(dev, mGameRootDir + "/ShadersWin64", srcFile,
 						entry, ShaderEntryType.Vertex, sm, macs);
 
 					Misc.SafeInvoke(eCompileDone, ++compiled);
@@ -951,7 +951,7 @@ public class StuffKeeper
 						continue;	//already loaded
 					}
 
-					CompileShader(dev, mGameRootDir + "/Shaders", srcFile,
+					CompileShader(dev, mGameRootDir + "/ShadersWin64", srcFile,
 						entry, ShaderEntryType.Pixel, sm, macs);
 
 					Misc.SafeInvoke(eCompileDone, ++compiled);
@@ -969,7 +969,7 @@ public class StuffKeeper
 
 		macs[0]	=new ShaderMacro(sm.ToString(), 1);
 
-		string	srcDir	=mGameRootDir + "/Shaders";
+		string	srcDir	=mGameRootDir + "/ShadersWin64";
 		string	cmpDir	=mGameRootDir + "/CompiledShaders/" + macs[0].Name;
 
 		//see if Shader folder exists in Content
@@ -1085,7 +1085,7 @@ public class StuffKeeper
 			return;
 		}
 
-		DirectoryInfo	src	=new DirectoryInfo(mGameRootDir + "/Shaders/");
+		DirectoryInfo	src	=new DirectoryInfo(mGameRootDir + "/ShadersWin64/");
 
 		if(!src.Exists)
 		{
@@ -1120,9 +1120,9 @@ public class StuffKeeper
 	{
 		List<string>	files	=new List<string>();
 
-		if(Directory.Exists(mGameRootDir + "/Shaders"))
+		if(Directory.Exists(mGameRootDir + "/ShadersWin64"))
 		{
-			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/Shaders/");
+			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/ShadersWin64/");
 
 			FileInfo	[]fi	=di.GetFiles("*.hlsl", SearchOption.AllDirectories);
 			foreach(FileInfo f in fi)
@@ -1493,9 +1493,10 @@ public class StuffKeeper
 
 	public static byte[] LoadPNGWIC(IWICImagingFactory wif, string path,
 										out int w, out int h)
-	{		
-		IWICBitmapDecoder	pbd	=wif.CreateDecoderFromFileName(path,
-			FileAccess.Read,DecodeOptions.CacheOnDemand);
+	{
+		FileStream	fs	=new FileStream(path, FileMode.Open, FileAccess.Read);
+
+		IWICBitmapDecoder	pbd	=wif.CreateDecoderFromStream(fs);
 
 		IWICBitmapFrameDecode	bfd	=pbd.GetFrame(0);
 
@@ -1513,6 +1514,8 @@ public class StuffKeeper
 		conv.Dispose();
 		bfd.Dispose();
 		pbd.Dispose();
+
+		fs.Close();
 
 		return	colArray;
 	}

@@ -646,6 +646,11 @@ public partial class MaterialForm : Form
 		StaticMesh	sm	=MeshPartList.Tag as StaticMesh;
 		Character	chr	=MeshPartList.Tag as Character;
 
+		if(sm == null && chr == null)
+		{
+			return;
+		}
+
 		if(sm != null)
 		{
 			count	=sm.GetPartCount();
@@ -653,11 +658,6 @@ public partial class MaterialForm : Form
 		else
 		{
 			count	=chr.GetPartCount();
-		}
-
-		if(sm == null && chr == null)
-		{
-			return;
 		}
 
 		foreach(ListViewItem lvi in MeshPartList.Items)

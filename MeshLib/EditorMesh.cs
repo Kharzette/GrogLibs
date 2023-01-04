@@ -271,29 +271,31 @@ public class EditorMesh
 		}
 
 		Vector4	averageWeight	=Vector4.Zero;
-		Int4	wval			=Int4.Zero;
+		int	X, Y, Z, W;
+
+		X	=Y	=Z	=W	=0;
 
 		int	count	=0;
 		foreach(KeyValuePair<int, List<float>> weight in boneVals)
 		{			
 			if(count == 0)
 			{
-				wval.X			=weight.Key;
+				X			=weight.Key;
 				averageWeight.X	=weight.Value.Sum() / weight.Value.Count;
 			}
 			else if(count == 1)
 			{
-				wval.Y			=weight.Key;
+				Y			=weight.Key;
 				averageWeight.Y	=weight.Value.Sum() / weight.Value.Count;
 			}
 			else if(count == 2)
 			{
-				wval.Z			=weight.Key;
+				Z			=weight.Key;
 				averageWeight.Z	=weight.Value.Sum() / weight.Value.Count;
 			}
 			else if(count == 3)
 			{
-				wval.W			=weight.Key;
+				W			=weight.Key;
 				averageWeight.W	=weight.Value.Sum() / weight.Value.Count;
 			}
 			count++;
@@ -309,7 +311,7 @@ public class EditorMesh
 			averageWeight	*=totalSize;
 		}
 
-		avgIndex	=new Color(wval.X, wval.Y, wval.Z, wval.W);
+		avgIndex	=new Color(X, Y, Z, W);
 		avgWeight	=averageWeight;
 	}
 
