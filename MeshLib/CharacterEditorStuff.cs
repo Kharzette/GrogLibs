@@ -238,18 +238,21 @@ public partial class Character
 			
 			Vector3	size	=boneBox.Value.Max - boneBox.Value.Min;
 			float	vol		=size.X + size.Y + size.Z;
+
 			//skip bones without much influence?
-			if(vol < (mSkin.GetScaleFactor() * MinVolume))	//should be around an inch cubed
+			if(vol < MinVolume)	//should be around an inch cubed
 			{
 				continue;
 			}
 
 			boneBox?.GetCorners(corners);
 
+			Matrix4x4	bone	=mSkin.GetBoneByIndexNoBind(i, skel);
+
 			Vector3	boxCenter	=Vector3.Zero;
 			for(int j=0;j < 8;j++)
 			{
-				Vector3	transd	=Vector3.Transform(corners[j], mSkin.GetBoneByIndexNoBind(i, skel));
+				Vector3	transd	=Vector3.Transform(corners[j], bone);
 
 				Mathery.AddPointToBoundingBox(ref min, ref max, transd);
 
@@ -398,12 +401,11 @@ public partial class Character
 				//doesn't get a point
 				boneyPoints.Add(Vector3.Zero);
 
-				BoundingBox	worldBox	=BoundingBox.CreateFromPoints(boxPoints.ToArray());
 				BoundingBox	boneBox		=BoundingBox.CreateFromPoints(boneyPoints.ToArray());
 
 				//but cyl and sphere get a better bound from the world box
 				//so pass them both in
-				mSkin.SetBoneBounds(i, worldBox, boneBox);
+				mSkin.SetBoneBounds(i, boneBox);
 			}
 		}
 	}

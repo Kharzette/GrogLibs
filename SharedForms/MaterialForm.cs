@@ -120,6 +120,11 @@ public partial class MaterialForm : Form
 		StaticMesh	smo		=MeshPartList.Tag as StaticMesh;
 		Character	charO	=MeshPartList.Tag as Character;
 
+		if(smo == null && charO == null)
+		{
+			return;
+		}
+
 		if(smo != null)
 		{
 			count	=smo.GetPartCount();

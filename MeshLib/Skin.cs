@@ -28,7 +28,16 @@ public class Skin
 	//However all bone space is in meters, and the bind poses scale to
 	//whatever units the user wants (grog, quake, etc)
 	float		mScaleFactor, mInvScaleFactor;
-	Matrix4x4	mScaleMat;
+	Matrix4x4	mScaleMat, mInvScaleMat;
+
+	//Changing things so that anim/bone space is all in meters.
+	//Render bones will need to scale by scalefactor
+	//
+	//Also the rotational difference from art package to here is
+	//stored here in a matrix.  This will be applied to the root
+	//in the case of hierarchy bones.
+	Matrix4x4	mRootTransform;
+
 
 	public const int	Box		=0;
 	public const int	Sphere	=1;
@@ -40,7 +49,14 @@ public class Skin
 	{
 		mScaleFactor	=scaleFactor;
 		mInvScaleFactor	=1f / scaleFactor;
-		mScaleMat		=Matrix4x4.CreateScale(mInvScaleFactor);
+		mScaleMat		=Matrix4x4.CreateScale(mScaleFactor);
+		mInvScaleMat	=Matrix4x4.CreateScale(mInvScaleFactor);
+	}
+
+
+	public void SetRootTransform(Matrix4x4 mat)
+	{
+		mRootTransform	=mat;
 	}
 
 
@@ -72,11 +88,7 @@ public class Skin
 			return;
 		}
 
-		Matrix4x4	scale	=Matrix4x4.CreateScale(mScaleFactor);
-
 		Matrix4x4	ibp	=mInverseBindPoses[index];
-
-		ibp	*=scale;
 
 		for(int i=0;i < toMul.Count;i++)
 		{
@@ -149,7 +161,7 @@ public class Skin
 			{
 				BoundingCapsule	ret	=mBoneCapsules[index];
 
-				ret.Scale(mInvScaleFactor);
+//				ret.Scale(mInvScaleFactor);
 
 				return	ret;
 			}
@@ -160,10 +172,10 @@ public class Skin
 
 	//this is used to get an initial guess based on box bounds
 	//worldbox is in worldspace, bonebox in the space of the indexed bone
-	internal void SetBoneBounds(int index, BoundingBox worldBox, BoundingBox boneBox)
+	internal void SetBoneBounds(int index, BoundingBox boneBox)
 	{
 		BoundingSphere	bs	=BoundingSphere.CreateFromBoundingBox(boneBox);
-		BoundingCapsule	bc	=BoundingCapsule.CreateFromBoundingBox(worldBox);
+		BoundingCapsule	bc	=BoundingCapsule.CreateFromBoundingBox(boneBox);
 
 		if(mBoneBoxes.ContainsKey(index))
 		{
@@ -417,7 +429,7 @@ public class Skin
 
 		sk.GetMatrixForBone(name, out ret);
 
-		return	mScaleMat * ret;
+		return	ret * mScaleMat * mRootTransform;
 	}
 
 
@@ -435,7 +447,10 @@ public class Skin
 		}
 
 		//multiply by inverse bind pose
-		ret	=ibp * ret;
+		//and scale factor
+		//and rotate into grog coordinates
+//		ret	=mScaleMat * ibp * ret * mRootTransform;
+		ret	=ibp * ret * mRootTransform * mScaleMat;
 
 		return	ret;
 	}
@@ -447,7 +462,7 @@ public class Skin
 
 		sk.GetMatrixForBone(idx, out ret);
 
-		return	mScaleMat * ret;
+		return	ret * mScaleMat * mRootTransform;
 	}
 
 
@@ -508,7 +523,11 @@ public class Skin
 		}
 
 		mScaleFactor	=br.ReadSingle();
-		mScaleMat		=Matrix4x4.CreateScale(1f / mScaleFactor);
+		mScaleMat		=Matrix4x4.CreateScale(mScaleFactor);
+		mInvScaleMat	=Matrix4x4.CreateScale(1f / mScaleFactor);
+
+		//read the root transform
+		mRootTransform	=FileUtil.ReadMatrix(br);
 	}
 
 
@@ -542,5 +561,7 @@ public class Skin
 		}
 
 		bw.Write(mScaleFactor);
+
+		FileUtil.WriteMatrix(bw, mRootTransform);
 	}
 }

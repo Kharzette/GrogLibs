@@ -599,7 +599,7 @@ public class EditorMesh
 
 	internal void ComputeInfluencedBound(int boneIndex, out BoundingBox box, out BoundingSphere sphere)
 	{
-		const float	boneInfluenceThreshold	=0.2f;
+		const float	boneInfluenceThreshold	=0.02f;
 
 		VertexTypes.GetInfluencedVertBounds(mVertArray, mTypeIndex, 
 			boneIndex, boneInfluenceThreshold,

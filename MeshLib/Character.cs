@@ -550,6 +550,7 @@ public partial class Character
 		if(mBound == null)
 		{
 			Debug.WriteLine("Bound not set up yet!");
+			Debug.Assert(false);
 			return;
 		}
 
