@@ -449,7 +449,6 @@ public class Skin
 		//multiply by inverse bind pose
 		//and scale factor
 		//and rotate into grog coordinates
-//		ret	=mScaleMat * ibp * ret * mRootTransform;
 		ret	=ibp * ret * mRootTransform * mScaleMat;
 
 		return	ret;
