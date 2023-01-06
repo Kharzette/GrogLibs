@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup />
+  <ItemGroup>
+    <Compile Update="CelTweakForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="ListBoxContainer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="MaterialForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Output.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="PowerOfTwoUpDown.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="TabbyPropertyGrid.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="ThreadedProgress.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+</Project>
