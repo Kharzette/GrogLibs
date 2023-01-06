@@ -154,7 +154,6 @@ namespace AudioLib
 
 		int	ChannelCountFromMasteringVoice()
 		{
-			Wavef
 			switch(mMV.ChannelMask)
 			{
 				case	Speakers.TwoPointOne:

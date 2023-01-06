@@ -3,14 +3,15 @@
     <TargetFramework>net6.0-windows</TargetFramework>
 	<UseWindowsForms>true</UseWindowsForms>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
   <ItemGroup>
-	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DirectX\Vortice.DirectX.csproj"/>
-	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DirectInput\Vortice.DirectInput.csproj"/>
-	<ProjectReference Include="..\Vortice.Windows\src\Vortice.XInput\Vortice.XInput.csproj"/>
+	<ProjectReference Include="..\SharpDXWindows\SharpDXWindows.csproj" />
+    <ProjectReference Include="..\UtilityLib\UtilityLib.csproj" />
   </ItemGroup>
   <ItemGroup>
-	<ProjectReference Include="..\SharpDXWindows\SharpDXWindows.csproj"/>
-    <ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>
+    <PackageReference Include="Vortice.DirectInput" Version="2.2.0" />
+    <PackageReference Include="Vortice.DirectX" Version="2.2.0" />
+    <PackageReference Include="Vortice.XInput" Version="2.2.0" />
   </ItemGroup>
 </Project>

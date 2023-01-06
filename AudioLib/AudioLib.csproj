@@ -2,14 +2,15 @@
   <PropertyGroup>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <TargetFramework>net6.0-windows</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
   <ItemGroup>
-	<ProjectReference Include="..\Vortice.Windows\src\Vortice.DirectX\Vortice.DirectX.csproj"/>
-	<ProjectReference Include="..\Vortice.Windows\src\Vortice.XAudio2\Vortice.XAudio2.csproj"/>
-	<ProjectReference Include="..\Vortice.Windows\src\Vortice.MediaFoundation\Vortice.MediaFoundation.csproj"/>
+    <ProjectReference Include="..\SharpDXWindows\SharpDXWindows.csproj" />
+    <ProjectReference Include="..\UtilityLib\UtilityLib.csproj" />
   </ItemGroup>
   <ItemGroup>
-	<ProjectReference Include="..\SharpDXWindows\SharpDXWindows.csproj"/>
-    <ProjectReference Include="..\UtilityLib\UtilityLib.csproj"/>
+    <PackageReference Include="Vortice.DirectX" Version="2.2.0" />
+    <PackageReference Include="Vortice.MediaFoundation" Version="2.2.0" />
+    <PackageReference Include="Vortice.XAudio2" Version="2.2.0" />
   </ItemGroup>
 </Project>

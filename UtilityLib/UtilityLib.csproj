@@ -3,9 +3,14 @@
     <TargetFramework>net6.0-windows</TargetFramework>
 	<UseWindowsForms>true</UseWindowsForms>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
   <ItemGroup>
-	<ProjectReference Include="..\SharpDXWindows\SharpDXWindows.csproj"/>
-	<ProjectReference Include="..\Vortice.Windows\src\Vortice.Direct3D11\Vortice.Direct3D11.csproj"/>
+	<ProjectReference Include="..\SharpDXWindows\SharpDXWindows.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Vortice.Direct3D11" Version="2.2.0" />
+    <PackageReference Include="Vortice.DirectX" Version="2.2.0" />
+    <PackageReference Include="Vortice.DXGI" Version="2.2.0" />
   </ItemGroup>
 </Project>
