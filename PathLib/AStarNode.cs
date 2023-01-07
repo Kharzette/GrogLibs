@@ -1,11 +1,10 @@
 ﻿using System;
 
-namespace PathLib
+namespace PathLib;
+
+class AStarNode
 {
-	class AStarNode
-	{
-		internal PathNode	mNode;
-		internal AStarNode	mParent;
-		internal float		mGScore, mHScore;
-	}
+	internal PathNode	mNode;
+	internal AStarNode	mParent;
+	internal float		mGScore, mHScore;
 }

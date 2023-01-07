@@ -5,227 +5,226 @@ using System.Diagnostics;
 using System.Threading;
 
 
-namespace PathLib
+namespace PathLib;
+
+internal class PathFinder
 {
-	internal class PathFinder
+	AStarNode	mStartNode;
+	AStarNode	mEndNode;
+
+	bool	mbDone;
+
+	List<Vector3>	mResultPath	=new List<Vector3>();
+
+	List<AStarNode>	mOpen	=new List<AStarNode>();
+	List<AStarNode>	mClosed	=new List<AStarNode>();
+
+
+	internal List<Vector3> GetResultPath()
 	{
-		AStarNode	mStartNode;
-		AStarNode	mEndNode;
-
-		bool	mbDone;
-
-		List<Vector3>	mResultPath	=new List<Vector3>();
-
-		List<AStarNode>	mOpen	=new List<AStarNode>();
-		List<AStarNode>	mClosed	=new List<AStarNode>();
+		return	mResultPath;
+	}
 
 
-		internal List<Vector3> GetResultPath()
+	public void StartPath(PathNode start, PathNode end)
+	{
+		mbDone		=false;
+
+		//clear lists
+		mResultPath.Clear();
+		mOpen.Clear();
+		mClosed.Clear();
+
+		AStarNode	asStart	=new AStarNode();
+		asStart.mNode		=start;
+		asStart.mParent		=null;
+
+		AStarNode	asEnd	=new AStarNode();
+		asEnd.mNode			=end;
+		asEnd.mParent		=null;
+
+		mStartNode	=asStart;
+		mEndNode	=asEnd;
+	}
+
+
+	public bool IsDone()
+	{
+		return	mbDone;
+	}
+
+
+	public void Go(List<PathNode> occupied)
+	{
+		if(mStartNode.mNode == mEndNode.mNode)
 		{
-			return	mResultPath;
+			mbDone	=true;
+			return;
 		}
 
-
-		public void StartPath(PathNode start, PathNode end)
+		foreach(PathNode pn in occupied)
 		{
-			mbDone		=false;
-
-			//clear lists
-			mResultPath.Clear();
-			mOpen.Clear();
-			mClosed.Clear();
-
-			AStarNode	asStart	=new AStarNode();
-			asStart.mNode		=start;
-			asStart.mParent		=null;
-
-			AStarNode	asEnd	=new AStarNode();
-			asEnd.mNode			=end;
-			asEnd.mParent		=null;
-
-			mStartNode	=asStart;
-			mEndNode	=asEnd;
+			AStarNode	asOcc	=new AStarNode();
+			asOcc.mNode			=pn;
+			asOcc.mParent		=null;
+			mClosed.Add(asOcc);
 		}
+		mOpen.Add(mStartNode);
+		SelectNode(mStartNode);
 
-
-		public bool IsDone()
+		while(!mbDone)
 		{
-			return	mbDone;
+			Step();
 		}
+	}
 
 
-		public void Go(List<PathNode> occupied)
+	AStarNode IsNodeInOpen(PathNode pn)
+	{
+		foreach(AStarNode asn in mOpen)
 		{
-			if(mStartNode.mNode == mEndNode.mNode)
+			if(asn.mNode == pn)
 			{
-				mbDone	=true;
-				return;
-			}
-
-			foreach(PathNode pn in occupied)
-			{
-				AStarNode	asOcc	=new AStarNode();
-				asOcc.mNode			=pn;
-				asOcc.mParent		=null;
-				mClosed.Add(asOcc);
-			}
-			mOpen.Add(mStartNode);
-			SelectNode(mStartNode);
-
-			while(!mbDone)
-			{
-				Step();
+				return	asn;
 			}
 		}
+		return	null;
+	}
 
 
-		AStarNode IsNodeInOpen(PathNode pn)
+	AStarNode IsNodeInClosed(PathNode pn)
+	{
+		foreach(AStarNode asn in mClosed)
 		{
-			foreach(AStarNode asn in mOpen)
+			if(asn.mNode == pn)
 			{
-				if(asn.mNode == pn)
-				{
-					return	asn;
-				}
+				return	asn;
 			}
-			return	null;
+		}
+		return	null;
+	}
+
+
+	void FinishPath()
+	{
+		AStarNode	walk	=mEndNode;
+		while(walk != mStartNode)
+		{
+			Vector3	pos	=walk.mNode.mPoint;
+
+			Debug.WriteLine("Walking path " + pos);
+
+			mResultPath.Add(pos);
+			walk	=walk.mParent;
 		}
 
-
-		AStarNode IsNodeInClosed(PathNode pn)
-		{
-			foreach(AStarNode asn in mClosed)
-			{
-				if(asn.mNode == pn)
-				{
-					return	asn;
-				}
-			}
-			return	null;
-		}
-
-
-		void FinishPath()
-		{
-			AStarNode	walk	=mEndNode;
-			while(walk != mStartNode)
-			{
-				Vector3	pos	=walk.mNode.mPoint;
-
-				Debug.WriteLine("Walking path " + pos);
-
-				mResultPath.Add(pos);
-				walk	=walk.mParent;
-			}
-
-			//add in the center of the start node for good measure
+		//add in the center of the start node for good measure
 /*			Vector3	centerStart	=Vector3.Zero;
-			if(mStartNode.mNode.mPoly != null)
+		if(mStartNode.mNode.mPoly != null)
+		{
+			centerStart	=mStartNode.mNode.mPoly.GetCenter();
+		}
+		else
+		{
+			centerStart	=mStartNode.mNode.mPoint;
+		}
+		mResultPath.Add(centerStart);*/
+
+		//path is in reverse order, flip it
+		mResultPath.Reverse();
+	}
+
+
+	public void SelectNode(AStarNode asn)
+	{
+		mOpen.Remove(asn);
+		mClosed.Add(asn);
+
+		if(asn.mNode == mEndNode.mNode)
+		{
+			mEndNode	=asn;
+			FinishPath();
+			mbDone	=true;
+			return;
+		}
+		
+		foreach(PathConnection con in asn.mNode.mConnections)
+		{
+			if(!con.mbPassable)
 			{
-				centerStart	=mStartNode.mNode.mPoly.GetCenter();
+				continue;	//something in the way
+			}
+
+			AStarNode	found	=IsNodeInOpen(con.mConnectedTo);
+
+			if(found != null)
+			{
+				//check the G score
+				float	newGScore	=asn.mGScore + con.mDistanceBetween;
+
+				//switch parents if this is faster
+				if(newGScore < found.mGScore)
+				{
+					found.mParent	=asn;
+					found.mGScore	=newGScore;
+				}
 			}
 			else
 			{
-				centerStart	=mStartNode.mNode.mPoint;
+				//ensure this node isn't in the closed list
+				AStarNode	clnode	=IsNodeInClosed(con.mConnectedTo);
+				if(clnode != null)
+				{
+					continue;
+				}
+
+				AStarNode	kid	=new AStarNode();
+				kid.mNode		=con.mConnectedTo;
+				kid.mParent		=asn;
+				kid.mGScore		=kid.mParent.mGScore + con.mDistanceBetween;
+				CalculateHScore(kid);
+
+				mOpen.Add(kid);
 			}
-			mResultPath.Add(centerStart);*/
-
-			//path is in reverse order, flip it
-			mResultPath.Reverse();
 		}
+	}
 
 
-		public void SelectNode(AStarNode asn)
+	public void CalculateHScore(AStarNode asn)
+	{
+		//typically this is multiplied by 10, but I am using
+		//real world position instead of number of nodes over
+		//so this is about the same
+		asn.mHScore	=mEndNode.mNode.DistanceBetweenNodes(asn.mNode);
+		asn.mHScore	+=mEndNode.mNode.mHScorePenalty;
+	}
+
+
+	public void Step()
+	{
+		//pick the node with the smallest f
+		float		minScore	=float.MaxValue;
+		AStarNode	least		=null;
+		foreach(AStarNode asn in mOpen)
 		{
-			mOpen.Remove(asn);
-			mClosed.Add(asn);
-
-			if(asn.mNode == mEndNode.mNode)
+			float	fscore	=asn.mGScore + asn.mHScore;
+			if(fscore <= minScore)	//take the last one
 			{
-				mEndNode	=asn;
-				FinishPath();
-				mbDone	=true;
-				return;
-			}
-			
-			foreach(PathConnection con in asn.mNode.mConnections)
-			{
-				if(!con.mbPassable)
-				{
-					continue;	//something in the way
-				}
-
-				AStarNode	found	=IsNodeInOpen(con.mConnectedTo);
-
-				if(found != null)
-				{
-					//check the G score
-					float	newGScore	=asn.mGScore + con.mDistanceBetween;
-
-					//switch parents if this is faster
-					if(newGScore < found.mGScore)
-					{
-						found.mParent	=asn;
-						found.mGScore	=newGScore;
-					}
-				}
-				else
-				{
-					//ensure this node isn't in the closed list
-					AStarNode	clnode	=IsNodeInClosed(con.mConnectedTo);
-					if(clnode != null)
-					{
-						continue;
-					}
-
-					AStarNode	kid	=new AStarNode();
-					kid.mNode		=con.mConnectedTo;
-					kid.mParent		=asn;
-					kid.mGScore		=kid.mParent.mGScore + con.mDistanceBetween;
-					CalculateHScore(kid);
-
-					mOpen.Add(kid);
-				}
+				minScore	=fscore;
+				least		=asn;
 			}
 		}
 
-
-		public void CalculateHScore(AStarNode asn)
+		if(least == null)
 		{
-			//typically this is multiplied by 10, but I am using
-			//real world position instead of number of nodes over
-			//so this is about the same
-			asn.mHScore	=mEndNode.mNode.DistanceBetweenNodes(asn.mNode);
-			asn.mHScore	+=mEndNode.mNode.mHScorePenalty;
+			//something has gone wrong
+			//this usually means there just isn't
+			//any path to where requested
+			mbDone	=true;
+			return;
 		}
 
-
-		public void Step()
-		{
-			//pick the node with the smallest f
-			float		minScore	=float.MaxValue;
-			AStarNode	least		=null;
-			foreach(AStarNode asn in mOpen)
-			{
-				float	fscore	=asn.mGScore + asn.mHScore;
-				if(fscore <= minScore)	//take the last one
-				{
-					minScore	=fscore;
-					least		=asn;
-				}
-			}
-
-			if(least == null)
-			{
-				//something has gone wrong
-				//this usually means there just isn't
-				//any path to where requested
-				mbDone	=true;
-				return;
-			}
-
-			//step to this node
-			SelectNode(least);
-		}
+		//step to this node
+		SelectNode(least);
 	}
 }
