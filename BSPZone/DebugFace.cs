@@ -2,36 +2,35 @@
 using System.IO;
 
 
-namespace BSPZone
+namespace BSPZone;
+
+public class DebugFace
 {
-	public class DebugFace
+	public Int32	mFirstVert;
+	public Int32	mNumVerts;
+	public Int32	mPlaneNum;
+	public bool		mbFlipSide;
+	public UInt32	mFlags;		//mirror, sky etc
+	public string	mMaterial;
+
+
+	public void Write(BinaryWriter bw)
 	{
-		public Int32	mFirstVert;
-		public Int32	mNumVerts;
-		public Int32	mPlaneNum;
-		public bool		mbFlipSide;
-		public UInt32	mFlags;		//mirror, sky etc
-		public string	mMaterial;
+		bw.Write(mFirstVert);
+		bw.Write(mNumVerts);
+		bw.Write(mPlaneNum);
+		bw.Write(mbFlipSide);
+		bw.Write(mFlags);
+		bw.Write(mMaterial);
+	}
 
-
-		public void Write(BinaryWriter bw)
-		{
-			bw.Write(mFirstVert);
-			bw.Write(mNumVerts);
-			bw.Write(mPlaneNum);
-			bw.Write(mbFlipSide);
-			bw.Write(mFlags);
-			bw.Write(mMaterial);
-		}
-
-		public void Read(BinaryReader br)
-		{
-			mFirstVert	=br.ReadInt32();
-			mNumVerts	=br.ReadInt32();
-			mPlaneNum	=br.ReadInt32();
-			mbFlipSide	=br.ReadBoolean();
-			mFlags		=br.ReadUInt32();
-			mMaterial	=br.ReadString();
-		}
+	public void Read(BinaryReader br)
+	{
+		mFirstVert	=br.ReadInt32();
+		mNumVerts	=br.ReadInt32();
+		mPlaneNum	=br.ReadInt32();
+		mbFlipSide	=br.ReadBoolean();
+		mFlags		=br.ReadUInt32();
+		mMaterial	=br.ReadString();
 	}
 }

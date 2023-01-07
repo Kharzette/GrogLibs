@@ -7,248 +7,247 @@ using UtilityLib;
 using DynLight	=MaterialLib.DynamicLights.DynLight;
 
 
-namespace BSPZone
+namespace BSPZone;
+
+public partial class Zone
 {
-	public partial class Zone
+	//just a list of which model indexes are triggers
+	List<int>	mNonCollidingModels	=new List<int>();
+
+	//face flag constants from core texinfos
+	public const UInt32	MIRROR		=(1<<0);
+	public const UInt32	FULLBRIGHT	=(1<<1);
+	public const UInt32	SKY			=(1<<2);
+	public const UInt32	EMITLIGHT	=(1<<3);
+	public const UInt32	TRANSPARENT	=(1<<4);
+	public const UInt32	GOURAUD		=(1<<5);
+	public const UInt32	FLAT		=(1<<6);
+	public const UInt32	CELSHADE	=(1<<7);
+	public const UInt32	NO_LIGHTMAP	=(1<<15);
+
+
+	public Vector3 GetPlayerStartPos(out float angle)
 	{
-		//just a list of which model indexes are triggers
-		List<int>	mNonCollidingModels	=new List<int>();
+		angle	=0f;
 
-		//face flag constants from core texinfos
-		public const UInt32	MIRROR		=(1<<0);
-		public const UInt32	FULLBRIGHT	=(1<<1);
-		public const UInt32	SKY			=(1<<2);
-		public const UInt32	EMITLIGHT	=(1<<3);
-		public const UInt32	TRANSPARENT	=(1<<4);
-		public const UInt32	GOURAUD		=(1<<5);
-		public const UInt32	FLAT		=(1<<6);
-		public const UInt32	CELSHADE	=(1<<7);
-		public const UInt32	NO_LIGHTMAP	=(1<<15);
-
-
-		public Vector3 GetPlayerStartPos(out float angle)
+		foreach(ZoneEntity e in mEntities)
 		{
-			angle	=0f;
-
-			foreach(ZoneEntity e in mEntities)
+			if(e.mData.ContainsKey("classname"))
 			{
-				if(e.mData.ContainsKey("classname"))
-				{
-					if(e.mData["classname"] != "info_player_start")
-					{
-						continue;
-					}
-				}
-				else
+				if(e.mData["classname"] != "info_player_start")
 				{
 					continue;
 				}
-
-				Vector3	ret	=Vector3.Zero;
-				if(e.GetOrigin(out ret))
-				{
-					e.GetFloat("angle", out angle);
-					return	ret;
-				}
 			}
-			return	Vector3.Zero;
-		}
-
-
-		public List<ZoneEntity> GetEntitiesByTargetName(string targName)
-		{
-			//targetnames can have multiple entries
-			string	[]targs	=targName.Split(' ');
-
-			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity ze in mEntities)
+			else
 			{
-				if(ze.mData.ContainsKey("targetname"))
-				{
-					string	checkName	=ze.mData["targetname"];
+				continue;
+			}
 
-					foreach(string targ in targs)					
+			Vector3	ret	=Vector3.Zero;
+			if(e.GetOrigin(out ret))
+			{
+				e.GetFloat("angle", out angle);
+				return	ret;
+			}
+		}
+		return	Vector3.Zero;
+	}
+
+
+	public List<ZoneEntity> GetEntitiesByTargetName(string targName)
+	{
+		//targetnames can have multiple entries
+		string	[]targs	=targName.Split(' ');
+
+		List<ZoneEntity>	ret	=new List<ZoneEntity>();
+		foreach(ZoneEntity ze in mEntities)
+		{
+			if(ze.mData.ContainsKey("targetname"))
+			{
+				string	checkName	=ze.mData["targetname"];
+
+				foreach(string targ in targs)					
+				{
+					if(targ == checkName)
 					{
-						if(targ == checkName)
-						{
-							ret.Add(ze);
-						}
+						ret.Add(ze);
 					}
 				}
 			}
-			return	ret;
 		}
+		return	ret;
+	}
 
 
-		public List<ZoneEntity> GetEntitiesByTarget(string targ)
+	public List<ZoneEntity> GetEntitiesByTarget(string targ)
+	{
+		//targets can have multiple entries
+		string	[]targs	=targ.Split(' ');
+
+		List<ZoneEntity>	ret	=new List<ZoneEntity>();
+		foreach(ZoneEntity ze in mEntities)
 		{
-			//targets can have multiple entries
-			string	[]targs	=targ.Split(' ');
-
-			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity ze in mEntities)
+			if(ze.mData.ContainsKey("target"))
 			{
-				if(ze.mData.ContainsKey("target"))
-				{
-					string	checkName	=ze.mData["target"];
+				string	checkName	=ze.mData["target"];
 
-					foreach(string trg in targs)					
+				foreach(string trg in targs)					
+				{
+					if(targ == checkName)
 					{
-						if(targ == checkName)
-						{
-							ret.Add(ze);
-						}
+						ret.Add(ze);
 					}
 				}
 			}
-			return	ret;
 		}
+		return	ret;
+	}
 
 
-		public List<ZoneEntity> GetEntitiesTargetNameStartsWith(string targName)
+	public List<ZoneEntity> GetEntitiesTargetNameStartsWith(string targName)
+	{
+		List<ZoneEntity>	ret	=new List<ZoneEntity>();
+		foreach(ZoneEntity ze in mEntities)
 		{
-			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity ze in mEntities)
+			string	tName	=ze.GetTargetName();
+			if(tName.StartsWith(targName))
 			{
-				string	tName	=ze.GetTargetName();
-				if(tName.StartsWith(targName))
+				ret.Add(ze);
+			}
+		}
+		return	ret;
+	}
+
+
+	public List<ZoneEntity> GetEntities(string className)
+	{
+		List<ZoneEntity>	ret	=new List<ZoneEntity>();
+		foreach(ZoneEntity ze in mEntities)
+		{
+			if(ze.mData.ContainsKey("classname"))
+			{
+				if(ze.mData["classname"] == className)
 				{
 					ret.Add(ze);
 				}
 			}
-			return	ret;
 		}
+		return	ret;
+	}
 
 
-		public List<ZoneEntity> GetEntities(string className)
+	internal void AddEntity(ZoneEntity newEnt)
+	{
+		mEntities.Add(newEnt);
+	}
+
+
+	public List<ZoneEntity> GetEntitiesStartsWith(string startText)
+	{
+		List<ZoneEntity>	ret	=new List<ZoneEntity>();
+		foreach(ZoneEntity ze in mEntities)
 		{
-			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity ze in mEntities)
+			if(ze.mData.ContainsKey("classname"))
 			{
-				if(ze.mData.ContainsKey("classname"))
+				if(ze.mData["classname"].StartsWith(startText))
 				{
-					if(ze.mData["classname"] == className)
-					{
-						ret.Add(ze);
-					}
-				}
-			}
-			return	ret;
-		}
-
-
-		internal void AddEntity(ZoneEntity newEnt)
-		{
-			mEntities.Add(newEnt);
-		}
-
-
-		public List<ZoneEntity> GetEntitiesStartsWith(string startText)
-		{
-			List<ZoneEntity>	ret	=new List<ZoneEntity>();
-			foreach(ZoneEntity ze in mEntities)
-			{
-				if(ze.mData.ContainsKey("classname"))
-				{
-					if(ze.mData["classname"].StartsWith(startText))
-					{
-						ret.Add(ze);
-					}
-				}
-			}
-			return	ret;
-		}
-
-
-		public bool GetRandomPointInsideModelEntity(ZoneEntity ent, Random rand, out Vector3 point)
-		{
-			string	idxStr	=ent.GetValue("Model");
-
-			int	modIdx;
-			if(!Int32.TryParse(idxStr, out modIdx))
-			{
-				point	=Vector3.Zero;
-				return	false;
-			}
-
-			ZoneModel	zm	=mZoneModels[modIdx];
-			BoundingBox	bb	=zm.mBounds;
-
-			Matrix	modXForm	=zm.mTransform;
-
-			bb.Maximum	=Vector3.TransformCoordinate(bb.Maximum, modXForm);
-			bb.Minimum	=Vector3.TransformCoordinate(bb.Minimum, modXForm);
-
-			int	iterations	=0;
-			point			=Vector3.Zero;
-			for(;iterations < 50;iterations++)
-			{
-				int	x	=rand.Next((int)bb.Minimum.X, (int)bb.Maximum.X);
-				int	y	=rand.Next((int)bb.Minimum.Y, (int)bb.Maximum.Y);
-				int	z	=rand.Next((int)bb.Minimum.Z, (int)bb.Maximum.Z);
-
-				point	=new Vector3(x, y, z);
-
-				point	=Vector3.TransformCoordinate(point, zm.mInvertedTransform);
-
-				RayTrace	rt	=new RayTrace(point, point);
-
-				rt.mCollision.mModelHit	=modIdx;
-
-				if(TraceNodeTrigger(rt, point, point, zm.mRootNode))
-				{
-					point	=Vector3.TransformCoordinate(point, zm.mTransform);
-					break;
-				}
-			}
-			return	(iterations < 50);
-		}
-
-
-		//check these positions for LOS
-		//fills the index list with indexes to positions in
-		//line of sight
-		public void	GetInLOS(Vector3 eyePos, List<Vector3> positions,
-							ref List<int> losIndexes)
-		{
-			losIndexes.Clear();
-
-			for(int i=0;i < positions.Count;i++)
-			{
-				Vector3	pos	=positions[i];
-
-				if(IsVisibleFrom(eyePos, pos))
-				{
-					Collision	col;
-					if(!TraceAll(null, null, eyePos, pos, out col))
-					{
-						losIndexes.Add(i);
-					}
+					ret.Add(ze);
 				}
 			}
 		}
+		return	ret;
+	}
 
 
-		void BuildNonCollidingModelsList()
+	public bool GetRandomPointInsideModelEntity(ZoneEntity ent, Random rand, out Vector3 point)
+	{
+		string	idxStr	=ent.GetValue("Model");
+
+		int	modIdx;
+		if(!Int32.TryParse(idxStr, out modIdx))
 		{
-			List<ZoneEntity>	trigs	=GetEntitiesStartsWith("trigger_");
-			List<ZoneEntity>	regs	=GetEntitiesStartsWith("func_region");
+			point	=Vector3.Zero;
+			return	false;
+		}
 
-			//combine
-			trigs.AddRange(regs);
+		ZoneModel	zm	=mZoneModels[modIdx];
+		BoundingBox	bb	=zm.mBounds;
 
-			foreach(ZoneEntity ze in trigs)
+		Matrix	modXForm	=zm.mTransform;
+
+		bb.Maximum	=Vector3.TransformCoordinate(bb.Maximum, modXForm);
+		bb.Minimum	=Vector3.TransformCoordinate(bb.Minimum, modXForm);
+
+		int	iterations	=0;
+		point			=Vector3.Zero;
+		for(;iterations < 50;iterations++)
+		{
+			int	x	=rand.Next((int)bb.Minimum.X, (int)bb.Maximum.X);
+			int	y	=rand.Next((int)bb.Minimum.Y, (int)bb.Maximum.Y);
+			int	z	=rand.Next((int)bb.Minimum.Z, (int)bb.Maximum.Z);
+
+			point	=new Vector3(x, y, z);
+
+			point	=Vector3.TransformCoordinate(point, zm.mInvertedTransform);
+
+			RayTrace	rt	=new RayTrace(point, point);
+
+			rt.mCollision.mModelHit	=modIdx;
+
+			if(TraceNodeTrigger(rt, point, point, zm.mRootNode))
 			{
-				string	mod	=ze.GetValue("Model");
-				if(mod == null || mod == "")
-				{
-					continue;
-				}
-
-				int	modIdx	=Convert.ToInt32(mod);
-
-				mNonCollidingModels.Add(modIdx);
+				point	=Vector3.TransformCoordinate(point, zm.mTransform);
+				break;
 			}
+		}
+		return	(iterations < 50);
+	}
+
+
+	//check these positions for LOS
+	//fills the index list with indexes to positions in
+	//line of sight
+	public void	GetInLOS(Vector3 eyePos, List<Vector3> positions,
+						ref List<int> losIndexes)
+	{
+		losIndexes.Clear();
+
+		for(int i=0;i < positions.Count;i++)
+		{
+			Vector3	pos	=positions[i];
+
+			if(IsVisibleFrom(eyePos, pos))
+			{
+				Collision	col;
+				if(!TraceAll(null, null, eyePos, pos, out col))
+				{
+					losIndexes.Add(i);
+				}
+			}
+		}
+	}
+
+
+	void BuildNonCollidingModelsList()
+	{
+		List<ZoneEntity>	trigs	=GetEntitiesStartsWith("trigger_");
+		List<ZoneEntity>	regs	=GetEntitiesStartsWith("func_region");
+
+		//combine
+		trigs.AddRange(regs);
+
+		foreach(ZoneEntity ze in trigs)
+		{
+			string	mod	=ze.GetValue("Model");
+			if(mod == null || mod == "")
+			{
+				continue;
+			}
+
+			int	modIdx	=Convert.ToInt32(mod);
+
+			mNonCollidingModels.Add(modIdx);
 		}
 	}
 }

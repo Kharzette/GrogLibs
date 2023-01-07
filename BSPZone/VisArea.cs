@@ -1,23 +1,22 @@
 ﻿using System;
 using System.IO;
 
-namespace BSPZone
+namespace BSPZone;
+
+internal class VisArea
 {
-	internal class VisArea
+	internal Int32	NumAreaPortals;
+	internal Int32	FirstAreaPortal;
+
+	public void Write(BinaryWriter bw)
 	{
-		internal Int32	NumAreaPortals;
-		internal Int32	FirstAreaPortal;
+		bw.Write(NumAreaPortals);
+		bw.Write(FirstAreaPortal);
+	}
 
-		public void Write(BinaryWriter bw)
-		{
-			bw.Write(NumAreaPortals);
-			bw.Write(FirstAreaPortal);
-		}
-
-		public void Read(BinaryReader br)
-		{
-			NumAreaPortals	=br.ReadInt32();
-			FirstAreaPortal	=br.ReadInt32();
-		}
+	public void Read(BinaryReader br)
+	{
+		NumAreaPortals	=br.ReadInt32();
+		FirstAreaPortal	=br.ReadInt32();
 	}
 }
