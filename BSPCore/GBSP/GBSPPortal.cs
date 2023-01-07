@@ -2,118 +2,117 @@
 using System.IO;
 
 
-namespace BSPCore
+namespace BSPCore;
+
+internal class GBSPPortal
 {
-	internal class GBSPPortal
+	internal GBSPPoly	mPoly;					//Convex poly that holds the shape of the portal
+	internal GBSPNode	mFrontNode, mBackNode;	//Node on each side of the portal
+	internal GBSPPlane	mPlane;
+
+	internal GBSPNode	mOnNode;
+	internal GBSPFace	mFrontFace, mBackFace;
+	internal GBSPSide	mSide;
+	internal bool		mSideFound;
+
+
+	internal GBSPPortal() { }
+	internal GBSPPortal(GBSPPortal copyMe)
 	{
-		internal GBSPPoly	mPoly;					//Convex poly that holds the shape of the portal
-		internal GBSPNode	mFrontNode, mBackNode;	//Node on each side of the portal
-		internal GBSPPlane	mPlane;
+		mPoly		=new GBSPPoly(copyMe.mPoly);
+		mFrontNode	=copyMe.mFrontNode;
+		mBackNode	=copyMe.mBackNode;
+		mPlane		=copyMe.mPlane;
+		mOnNode		=copyMe.mOnNode;
+		mFrontFace	=copyMe.mFrontFace;
+		mBackFace	=copyMe.mBackFace;
+		mSide		=copyMe.mSide;
+		mSideFound	=copyMe.mSideFound;
+	}
 
-		internal GBSPNode	mOnNode;
-		internal GBSPFace	mFrontFace, mBackFace;
-		internal GBSPSide	mSide;
-		internal bool		mSideFound;
 
-
-		internal GBSPPortal() { }
-		internal GBSPPortal(GBSPPortal copyMe)
+	internal GBSPFace FaceFromPortal(bool bFlip)
+	{
+		if(mSide == null)
 		{
-			mPoly		=new GBSPPoly(copyMe.mPoly);
-			mFrontNode	=copyMe.mFrontNode;
-			mBackNode	=copyMe.mBackNode;
-			mPlane		=copyMe.mPlane;
-			mOnNode		=copyMe.mOnNode;
-			mFrontFace	=copyMe.mFrontFace;
-			mBackFace	=copyMe.mBackFace;
-			mSide		=copyMe.mSide;
-			mSideFound	=copyMe.mSideFound;
+			return	null;	//Portal does not bridge different visible contents
+		}
+		if((mSide.mFlags & GBSPSide.SIDE_VISIBLE) == 0)
+		{
+			return	null;	//invisible side
 		}
 
-
-		internal GBSPFace FaceFromPortal(bool bFlip)
+		if(!bFlip)
 		{
-			if(mSide == null)
+			if(GBSPNode.WindowCheck(mFrontNode, mBackNode))
 			{
-				return	null;	//Portal does not bridge different visible contents
+				return	null;
 			}
-			if((mSide.mFlags & GBSPSide.SIDE_VISIBLE) == 0)
+		}
+		else
+		{
+			if(GBSPNode.WindowCheck(mBackNode, mFrontNode))
 			{
-				return	null;	//invisible side
+				return	null;
 			}
+		}
+		return	new GBSPFace(this, bFlip);
+	}
 
-			if(!bFlip)
-			{
-				if(GBSPNode.WindowCheck(mFrontNode, mBackNode))
-				{
-					return	null;
-				}
-			}
-			else
-			{
-				if(GBSPNode.WindowCheck(mBackNode, mFrontNode))
-				{
-					return	null;
-				}
-			}
-			return	new GBSPFace(this, bFlip);
+
+	internal void FindPortalSide(PlanePool pool)
+	{
+		GBSPSide	bestSide	=mOnNode.GetBestPortalSide(mFrontNode, mBackNode, pool);
+		if(bestSide == null)
+		{
+			return;
 		}
 
+		mSideFound	=true;
+		mSide		=bestSide;
+	}
 
-		internal void FindPortalSide(PlanePool pool)
+
+	internal bool CanSeeThroughPortal()
+	{
+		UInt32	c1, c2;
+
+		if(mOnNode == null)
 		{
-			GBSPSide	bestSide	=mOnNode.GetBestPortalSide(mFrontNode, mBackNode, pool);
-			if(bestSide == null)
-			{
-				return;
-			}
-
-			mSideFound	=true;
-			mSide		=bestSide;
-		}
-
-
-		internal bool CanSeeThroughPortal()
-		{
-			UInt32	c1, c2;
-
-			if(mOnNode == null)
-			{
-				return	false;
-			}
-
-			//'Or' together all cluster contents under portals nodes
-			c1	=mFrontNode.ClusterContents();
-			c2	=mBackNode.ClusterContents();
-
-			if(GrogContents.VisSeeThru(c1) && GrogContents.VisSeeThru(c2))
-			{
-				return	true;
-			}
 			return	false;
 		}
 
+		//'Or' together all cluster contents under portals nodes
+		c1	=mFrontNode.ClusterContents();
+		c2	=mBackNode.ClusterContents();
 
-		internal bool Check()
+		if(GrogContents.VisSeeThru(c1) && GrogContents.VisSeeThru(c2))
 		{
-			if(mPoly.VertCount() < 3)
-			{
-				CoreEvents.Print("CheckPortal:  NumVerts < 3.\n");
-				return	false;
-			}
-
-			if(mPoly.IsMaxExtents())
-			{
-				CoreEvents.Print("CheckPortal:  Portal was not clipped on all sides!!!\n");
-				return	false;
-			}
 			return	true;
 		}
+		return	false;
+	}
 
 
-		internal void Write(BinaryWriter bw)
+	internal bool Check()
+	{
+		if(mPoly.VertCount() < 3)
 		{
-			mPoly.Write(bw);
+			CoreEvents.Print("CheckPortal:  NumVerts < 3.\n");
+			return	false;
 		}
+
+		if(mPoly.IsMaxExtents())
+		{
+			CoreEvents.Print("CheckPortal:  Portal was not clipped on all sides!!!\n");
+			return	false;
+		}
+		return	true;
+	}
+
+
+	internal void Write(BinaryWriter bw)
+	{
+		mPoly.Write(bw);
 	}
 }
