@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Collections.Generic;
 using UtilityLib;
+using Vortice.Mathematics;
 
 
 namespace ParticleLib
@@ -59,7 +60,7 @@ namespace ParticleLib
 				mVelocity	*=(maxVelocity / velLen);
 			}
 
-			mSize	=MathUtil.Clamp(mSize, 0f, 10000f);
+			MathHelper.Clamp(mSize, 0f, 10000f);
 			mColor	=Mathery.ClampVector(mColor, Vector4.Zero, Vector4.One);
 
 			return	false;

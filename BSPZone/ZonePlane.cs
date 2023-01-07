@@ -158,7 +158,7 @@ namespace BSPZone
 
 			Vector3	newVec	=Vector3.Cross(mNormal, sideVec);
 
-			newVec.Normalize();
+			newVec	=Vector3.Normalize(newVec);
 
 			moveVec	=newVec * len;
 
@@ -173,7 +173,7 @@ namespace BSPZone
 		}
 	
 
-		internal static ZonePlane Transform(ZonePlane plane, Matrix mat)
+		internal static ZonePlane Transform(ZonePlane plane, Matrix4x4 mat)
 		{
 			Vector3	p0, p1, p2;
 
@@ -182,11 +182,11 @@ namespace BSPZone
 				return	plane;
 			}
 
-			UtilityLib.Mathery.PointsFromPlane(plane.mNormal, plane.mDist, out p0, out p1, out p2);
+			Mathery.PointsFromPlane(plane.mNormal, plane.mDist, out p0, out p1, out p2);
 
-			p0	=Vector3.TransformCoordinate(p0, mat);
-			p1	=Vector3.TransformCoordinate(p1, mat);
-			p2	=Vector3.TransformCoordinate(p2, mat);
+			Mathery.TransformCoordinate(p0, ref mat, out p0);
+			Mathery.TransformCoordinate(p1, ref mat, out p1);
+			Mathery.TransformCoordinate(p2, ref mat, out p2);
 
 			ZonePlane	ret	=ZonePlane.Blank;
 
@@ -200,7 +200,7 @@ namespace BSPZone
 		//which is quite odd
 		//note this method doesn't work very well at all
 		//getting very off the wall results with rotations
-		internal static ZonePlane XNATransform(ZonePlane zonePlane, Matrix matrix)
+		internal static ZonePlane XNATransform(ZonePlane zonePlane, Matrix4x4 matrix)
 		{
 			Plane	XNAPlane;
 			XNAPlane.D		=zonePlane.mDist;

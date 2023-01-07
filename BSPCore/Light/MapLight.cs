@@ -318,7 +318,7 @@ namespace BSPCore
 
 			for(int i=0;i < mGFXVerts.Length;i++)
 			{
-				ret[i].Normalize();
+				ret[i]	=Vector3.Normalize(ret[i]);
 			}
 			return	ret;
 		}
@@ -493,12 +493,12 @@ namespace BSPCore
 					float	cone	=0.0f;
 					if(ent.GetFloat("_cone", out cone))
 					{
-						dLight.mCone	=MathUtil.DegreesToRadians(cone);
+						dLight.mCone	=MathHelper.ToRadians(cone);
 					}
 					else
 					{
 						//default of 10 degrees
-						dLight.mCone	=MathUtil.DegreesToRadians(10f);
+						dLight.mCone	=MathHelper.ToRadians(10f);
 					}
 
 					//should be a target
@@ -525,7 +525,7 @@ namespace BSPCore
 						if(bFound)
 						{
 							dLight.mNormal	=targPos - dLight.mOrigin;
-							dLight.mNormal.Normalize();
+							dLight.mNormal	=Vector3.Normalize(dLight.mNormal);
 						}
 					}
 				}
@@ -543,12 +543,13 @@ namespace BSPCore
 						roll	=(int)orient.Z;
 					}
 
-					yaw		=MathUtil.DegreesToRadians(yaw);
-					pitch	=MathUtil.DegreesToRadians(pitch);
-					roll	=MathUtil.DegreesToRadians(roll);
+					yaw		=MathHelper.ToRadians(yaw);
+					pitch	=MathHelper.ToRadians(pitch);
+					roll	=MathHelper.ToRadians(roll);					
 
-					Matrix4x4	rotMat	=Matrix4x4.RotationYawPitchRoll(yaw, pitch, roll);
-					dLight.mNormal	=rotMat.Forward;
+					Matrix4x4	rotMat	=Matrix4x4.CreateFromYawPitchRoll(yaw, pitch, roll);
+
+					dLight.mNormal	=rotMat.Forward();
 
 					ent.GetFloat("strength", out dLight.mIntensity);
 				}
@@ -625,7 +626,7 @@ namespace BSPCore
 				Int32	index	=mGFXVertIndexes[vn];
 				Vector3	vert	=mGFXVerts[index];
 
-				vert	=Vector3.TransformCoordinate(vert, modelMat);
+				Mathery.TransformCoordinate(vert, ref modelMat, out vert);
 
 				if(tex.IsLight())
 				{
@@ -652,8 +653,8 @@ namespace BSPCore
 					//Find the angle between the light, and the face normal
 					Vector3	vect	=dLight.mOrigin - vert;				
 					float	dist	=vect.Length();
-					vect.Normalize();
-
+					
+					vect			=Vector3.Normalize(vect);
 					float	angle	=Vector3.Dot(vect, norm);
 
 					if(angle <= 0.001f)
@@ -684,8 +685,7 @@ namespace BSPCore
 						{
 							//Find the angle between the light, and the vert
 							Vector3	sunRay		=vert + dLight.mNormal * -SunRayDist;
-							Vector3	normRay		=sunRay;
-							normRay.Normalize();
+							Vector3	normRay		=Vector3.Normalize(sunRay);
 
 							float	angle2	=Vector3.Dot(normRay, norm);
 							if(angle2 <= 0.001f)
@@ -803,7 +803,16 @@ namespace BSPCore
 			Dictionary<int, Matrix4x4>	modelInvs		=new Dictionary<int, Matrix4x4>();
 			foreach(KeyValuePair<int, Matrix4x4> modelX in modelTransforms)
 			{
-				modelInvs.Add(modelX.Key, Matrix4x4.Invert(modelX.Value));
+				Matrix4x4	inv;
+
+				if(!Matrix4x4.Invert(modelX.Value, out inv))
+				{
+					CoreEvents.Print("Couldn't invert model matrix for model: " + modelX.Key + "\n");					
+
+					inv	=Matrix4x4.Identity;
+				}				
+
+				modelInvs.Add(modelX.Key, inv);
 			}
 
 			object	prog	=ProgressWatcher.RegisterProgress(0, mGFXFaces.Length, 0);
@@ -1018,8 +1027,7 @@ namespace BSPCore
 					{
 						//Find the angle between the light, and the face normal
 						Vector3	sunRay		=facePoints[v] + sunLight.mNormal * -SunRayDist;
-						Vector3	normRay		=sunRay;
-						normRay.Normalize();
+						Vector3	normRay		=Vector3.Normalize(sunRay);
 
 						float	angle	=Vector3.Dot(normRay, norm);
 						if(angle <= 0.001f)
@@ -1114,7 +1122,7 @@ namespace BSPCore
 						{
 							continue;
 						}
-						vect.Normalize();
+						vect	=Vector3.Normalize(vect);
 
 						float	angle	=Vector3.Dot(vect, norm);
 						if(angle <= 0.001f)
@@ -1222,8 +1230,7 @@ namespace BSPCore
 				{
 					//Find the angle between the light, and the face normal
 					Vector3	sunRay	=facePoints[v] + sunLight.mNormal * -SunRayDist;
-					Vector3	normRay	=sunRay;
-					normRay.Normalize();
+					Vector3	normRay	=Vector3.Normalize(sunRay);
 
 					float	angle	=Vector3.Dot(normRay, norm);
 					if(angle <= 0.001f)
@@ -1284,7 +1291,7 @@ namespace BSPCore
 					{
 						continue;
 					}
-					vect.Normalize();
+					vect	=Vector3.Normalize(vect);
 
 					float	angle	=Vector3.Dot(vect, norm);
 					if(angle <= 0.001f)
@@ -1536,15 +1543,25 @@ namespace BSPCore
 						{
 							WorkRGB	+=minLight;
 						}
-						
-						for(int l=0;l < 3;l++)
-						{
-							float	val	=WorkRGB[l];
 
-							LData[LDataOfs]	=(byte)(Math.Min(val, maxIntensity));
-							LDataOfs++;
-							LightOffset++;
-						}
+						//clamp and convert to bytes
+						float	lum	=Math.Min(WorkRGB.X, maxIntensity);
+
+						LData[LDataOfs]	=(byte)lum;
+						LDataOfs++;
+						LightOffset++;
+
+						lum	=Math.Min(WorkRGB.Y, maxIntensity);
+
+						LData[LDataOfs]	=(byte)lum;
+						LDataOfs++;
+						LightOffset++;
+						
+						lum	=Math.Min(WorkRGB.Z, maxIntensity);
+
+						LData[LDataOfs]	=(byte)lum;
+						LDataOfs++;
+						LightOffset++;
 					}
 
 					for(int lidx=0;lidx < (3 * size);lidx++)

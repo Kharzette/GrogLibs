@@ -3,6 +3,8 @@ using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
 using UtilityLib;
+using MaterialLib;
+using Vortice.Direct3D11;
 
 
 namespace ParticleLib
@@ -10,8 +12,8 @@ namespace ParticleLib
 	public class ParticleBoss
 	{
 		//graphics stuff
-		Device	mGD;
-		MatLib	mMats;
+		GraphicsDevice	mGD;
+		StuffKeeper		mSK;
 
 		//indexes
 		int	mNextIndex;
@@ -26,13 +28,10 @@ namespace ParticleLib
 		Dictionary<int, EmitterData>	mEmitters	=new Dictionary<int, EmitterData>();
 
 
-		public ParticleBoss(Device gd, MatLib mats)
+		public ParticleBoss(GraphicsDevice gd, StuffKeeper sk)
 		{
 			mGD		=gd;
-			mMats	=mats;
-
-			//create particle materials
-			CreateParticleMats();
+			mSK		=sk;
 		}
 
 
@@ -42,20 +41,6 @@ namespace ParticleLib
 			{
 				em.Value.mView.FreeAll();
 			}
-		}
-
-
-		//if tied into a matlib that does io or clears,
-		//this will recreate the needed materials
-		public void CreateParticleMats()
-		{
-			mMats.CreateMaterial("Particle");
-			mMats.SetMaterialEffect("Particle", "2D.fx");
-			mMats.SetMaterialTechnique("Particle", "Particle");
-
-			mMats.CreateMaterial("ParticleDMN");
-			mMats.SetMaterialEffect("ParticleDMN", "2D.fx");
-			mMats.SetMaterialTechnique("ParticleDMN", "ParticleDMN");
 		}
 
 
@@ -82,7 +67,7 @@ namespace ParticleLib
 
 			newEmitter.Activate(true);
 			
-			ParticleViewDynVB	pvd	=new ParticleViewDynVB(mGD, mMats, texName, maxParticles);
+			ParticleViewDynVB	pvd	=new ParticleViewDynVB(mGD, mSK, texName, maxParticles);
 
 			EmitterData	ed	=new EmitterData();
 			ed.mEmitter		=newEmitter;
@@ -95,7 +80,7 @@ namespace ParticleLib
 
 
 		//returns true if emitter count changed
-		public void Update(DeviceContext dc, float msDelta)
+		public void Update(ID3D11DeviceContext dc, float msDelta)
 		{
 			Debug.Assert(msDelta > 0f);
 
@@ -109,7 +94,7 @@ namespace ParticleLib
 		}
 
 
-		public void DrawDMN(DeviceContext dc, Matrix4x4 view, Matrix4x4 proj, Vector3 eyePos)
+		public void DrawDMN(ID3D11DeviceContext dc, Matrix4x4 view, Matrix4x4 proj, Vector3 eyePos)
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
@@ -118,20 +103,11 @@ namespace ParticleLib
 		}
 
 
-		public void Draw(DeviceContext dc, Matrix4x4 view, Matrix4x4 proj)
+		public void Draw(ID3D11DeviceContext dc, Matrix4x4 view, Matrix4x4 proj, Vector3 eyePos)
 		{
 			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
 			{
-				em.Value.mView.Draw(dc, view, proj);
-			}
-		}
-
-
-		public void Draw(MaterialLib.AlphaPool ap, Matrix4x4 view, Matrix4x4 proj)
-		{
-			foreach(KeyValuePair<int, EmitterData> em in mEmitters)
-			{
-				em.Value.mView.Draw(mMats, ap, em.Value.mEmitter.mPosition, view, proj);
+				em.Value.mView.Draw(dc, view, proj, eyePos);
 			}
 		}
 

@@ -40,26 +40,59 @@ namespace BSPCore
 		//brush to fit the passed in bounds
 		internal MapBrush(Bounds bnd, PlanePool pp, ClipPools cp)
 		{
-			for(int i=0;i < 3;i++)
 			{
 				GBSPPlane	p	=new GBSPPlane();
-
 				p.mNormal	=Vector3.Zero;
-
-				p.mNormal[i]	=1f;
-				p.mDist			=bnd.mMaxs[i];
+				p.mNormal.X	=1f;
+				p.mDist		=bnd.mMaxs.X;
 
 				GBSPSide	side	=new GBSPSide();
 				side.mPlaneNum		=pp.FindPlane(p, out side.mbFlipSide);
 
-				p.mNormal[i]	=-1f;
-				p.mDist			=-bnd.mMins[i];
+				p.mNormal	=Vector3.Zero;
+				p.mNormal.X	=-1f;
+				p.mDist		=-bnd.mMins.X;
 
 				GBSPSide	side2	=new GBSPSide();
 				side2.mPlaneNum		=pp.FindPlane(p, out side2.mbFlipSide);
 
-//				side.FixFlags();
-//				side2.FixFlags();
+				mOriginalSides.Add(side);
+				mOriginalSides.Add(side2);
+			}
+			{
+				GBSPPlane	p	=new GBSPPlane();
+				p.mNormal	=Vector3.Zero;
+				p.mNormal.Y	=1f;
+				p.mDist		=bnd.mMaxs.Y;
+
+				GBSPSide	side	=new GBSPSide();
+				side.mPlaneNum		=pp.FindPlane(p, out side.mbFlipSide);
+
+				p.mNormal	=Vector3.Zero;
+				p.mNormal.Y	=-1f;
+				p.mDist		=-bnd.mMins.Y;
+
+				GBSPSide	side2	=new GBSPSide();
+				side2.mPlaneNum		=pp.FindPlane(p, out side2.mbFlipSide);
+
+				mOriginalSides.Add(side);
+				mOriginalSides.Add(side2);
+			}
+			{
+				GBSPPlane	p	=new GBSPPlane();
+				p.mNormal	=Vector3.Zero;
+				p.mNormal.Z	=1f;
+				p.mDist		=bnd.mMaxs.Z;
+
+				GBSPSide	side	=new GBSPSide();
+				side.mPlaneNum		=pp.FindPlane(p, out side.mbFlipSide);
+
+				p.mNormal	=Vector3.Zero;
+				p.mNormal.Z	=-1f;
+				p.mDist		=-bnd.mMins.Z;
+
+				GBSPSide	side2	=new GBSPSide();
+				side2.mPlaneNum		=pp.FindPlane(p, out side2.mbFlipSide);
 
 				mOriginalSides.Add(side);
 				mOriginalSides.Add(side2);
@@ -317,14 +350,14 @@ namespace BSPCore
 				}
 			}
 
-
-			for(int i=0;i < 3;i++)
+			if(mBounds.mMins.X <= -Bounds.MIN_MAX_BOUNDS
+				|| mBounds.mMins.Y <= -Bounds.MIN_MAX_BOUNDS
+				|| mBounds.mMins.Z <= -Bounds.MIN_MAX_BOUNDS
+				|| mBounds.mMaxs.X >= Bounds.MIN_MAX_BOUNDS
+				|| mBounds.mMaxs.Y >= Bounds.MIN_MAX_BOUNDS
+				|| mBounds.mMaxs.Z >= Bounds.MIN_MAX_BOUNDS)
 			{
-				if(mBounds.mMins[i] <= -Bounds.MIN_MAX_BOUNDS
-					|| mBounds.mMaxs[i] >= Bounds.MIN_MAX_BOUNDS)
-				{
-					CoreEvents.Print("Entity " + mEntityNum + ", Brush bounds out of range\n");
-				}
+				CoreEvents.Print("Entity " + mEntityNum + ", Brush bounds out of range\n");
 			}
 			return	true;
 		}

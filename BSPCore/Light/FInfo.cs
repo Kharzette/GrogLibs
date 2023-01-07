@@ -118,7 +118,8 @@ namespace BSPCore
 			//Get the texture normal from the texture vecs
 			//swapping for sharpdx
 			Vector3	texNormal	=Vector3.Cross(vecV, vecU);
-			texNormal.Normalize();
+
+			texNormal	=Vector3.Normalize(texNormal);
 			
 			//Flip it towards plane normal
 			float	distScale	=Vector3.Dot(texNormal, mPlane.mNormal);
@@ -223,7 +224,7 @@ namespace BSPCore
 
 					Vector3	point	=mTexOrg + mT2WVecU * curU + mT2WVecV * curV;
 
-					mPoints[gridIdx]	=Vector3.TransformCoordinate(point, modelMat);
+					Mathery.TransformCoordinate(point, ref modelMat, out mPoints[gridIdx]);
 
 					InSolid[gridIdx]	=pointInSolid(mPoints[gridIdx]);
 
@@ -291,7 +292,7 @@ namespace BSPCore
 
 					Vector3	point	=mTexOrg + mT2WVecU * curU + mT2WVecV * curV;
 
-					mPoints[gridIdx]	=Vector3.TransformCoordinate(point, modelMat);
+					Mathery.TransformCoordinate(point, ref modelMat, out mPoints[gridIdx]);
 
 					InSolid[gridIdx]	=pointInSolid(mPoints[gridIdx]);
 				}
