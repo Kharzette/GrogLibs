@@ -7,647 +7,646 @@ using System.Collections.Generic;
 using Vortice.Mathematics;
 
 
-namespace BSPCore
+namespace BSPCore;
+
+internal class MaterialFill
 {
-	internal class MaterialFill
+	static void GetMirrorTexCoords(List<Vector3> verts,
+		GFXTexInfo tex,	out List<Vector2> coords)
 	{
-		static void GetMirrorTexCoords(List<Vector3> verts,
-			GFXTexInfo tex,	out List<Vector2> coords)
+		coords	=new List<Vector2>();
+
+		float	minS, minT;
+		float	maxS, maxT;
+
+		minS	=Bounds.MIN_MAX_BOUNDS;
+		minT	=Bounds.MIN_MAX_BOUNDS;
+		maxS	=-Bounds.MIN_MAX_BOUNDS;
+		maxT	=-Bounds.MIN_MAX_BOUNDS;
+
+		GBSPPlane	pln;
+		pln.mNormal	=Vector3.Cross(tex.mVecU, tex.mVecV);
+
+		pln.mNormal.Normalize();
+		pln.mDist	=0;
+		pln.mType	=GBSPPlane.PLANE_ANY;
+
+		//get a proper set of texvecs for lighting
+		Vector3	xv, yv;
+		GBSPPlane.TextureAxisFromPlaneGrog(pln.mNormal, out xv, out yv);
+
+		//calculate the min values for s and t
+		foreach(Vector3 pnt in verts)
 		{
-			coords	=new List<Vector2>();
-
-			float	minS, minT;
-			float	maxS, maxT;
-
-			minS	=Bounds.MIN_MAX_BOUNDS;
-			minT	=Bounds.MIN_MAX_BOUNDS;
-			maxS	=-Bounds.MIN_MAX_BOUNDS;
-			maxT	=-Bounds.MIN_MAX_BOUNDS;
-
-			GBSPPlane	pln;
-			pln.mNormal	=Vector3.Cross(tex.mVecU, tex.mVecV);
-
-			pln.mNormal.Normalize();
-			pln.mDist	=0;
-			pln.mType	=GBSPPlane.PLANE_ANY;
-
-			//get a proper set of texvecs for lighting
-			Vector3	xv, yv;
-			GBSPPlane.TextureAxisFromPlaneGrog(pln.mNormal, out xv, out yv);
-
-			//calculate the min values for s and t
-			foreach(Vector3 pnt in verts)
+			float	d	=Vector3.Dot(xv, pnt);
+			if(d < minS)
 			{
-				float	d	=Vector3.Dot(xv, pnt);
-				if(d < minS)
-				{
-					minS	=d;
-				}
-				if(d > maxS)
-				{
-					maxS	=d;
-				}
-
-				d	=Vector3.Dot(yv, pnt);
-				if(d < minT)
-				{
-					minT	=d;
-				}
-				if(d > maxT)
-				{
-					maxT	=d;
-				}
+				minS	=d;
+			}
+			if(d > maxS)
+			{
+				maxS	=d;
 			}
 
-			float	shiftU	=-minS;
-			float	shiftV	=-minT;
-
-			Vector2	scale	=Vector2.Zero;
-			scale.X	=maxS - minS;
-			scale.Y	=maxT - minT;
-
-			foreach(Vector3 pnt in verts)
+			d	=Vector3.Dot(yv, pnt);
+			if(d < minT)
 			{
-				Vector2	crd;
-				crd.X	=Vector3.Dot(xv, pnt);
-				crd.Y	=Vector3.Dot(yv, pnt);
-
-				crd.X	+=shiftU;
-				crd.Y	+=shiftV;
-
-				crd	/=scale;
-
-				coords.Add(crd);
+				minT	=d;
+			}
+			if(d > maxT)
+			{
+				maxT	=d;
 			}
 		}
 
+		float	shiftU	=-minS;
+		float	shiftV	=-minT;
 
-		static byte ClampLightIndex(int idx)
+		Vector2	scale	=Vector2.Zero;
+		scale.X	=maxS - minS;
+		scale.Y	=maxT - minT;
+
+		foreach(Vector3 pnt in verts)
 		{
-			if(idx == 255)
-			{
-				return	255;	//not in use
-			}
-			else if(idx >= 32)	//switchable
-			{
-				return	(byte)(idx - 20);
-			}
-			else if(idx < 12)
-			{
-				return	(byte)idx;
-			}
+			Vector2	crd;
+			crd.X	=Vector3.Dot(xv, pnt);
+			crd.Y	=Vector3.Dot(yv, pnt);
 
-			Debug.Assert(false);	//light style in a strange place
+			crd.X	+=shiftU;
+			crd.Y	+=shiftV;
 
-			return	0;
+			crd	/=scale;
+
+			coords.Add(crd);
+		}
+	}
+
+
+	static byte ClampLightIndex(int idx)
+	{
+		if(idx == 255)
+		{
+			return	255;	//not in use
+		}
+		else if(idx >= 32)	//switchable
+		{
+			return	(byte)(idx - 20);
+		}
+		else if(idx < 12)
+		{
+			return	(byte)idx;
 		}
 
+		Debug.Assert(false);	//light style in a strange place
 
-		static Color AssignLightStyleIndex(GFXFace f)
+		return	0;
+	}
+
+
+	static Color AssignLightStyleIndex(GFXFace f)
+	{
+		//switchable styles reference the same shader
+		//array as animated, so need a - 20
+		Color	ret	=Color.White;
+
+		ret.R	=ClampLightIndex(f.mLType0);
+		ret.G	=ClampLightIndex(f.mLType1);
+		ret.B	=ClampLightIndex(f.mLType2);
+		ret.A	=ClampLightIndex(f.mLType3);
+
+		return	ret;
+	}
+
+
+	static void AddTexCoordsToList(MaterialLib.TexAtlas atlas,
+		List<Vector2> tc, List<double> uList, List<double> vList, double offsetU, double offsetV)
+	{
+		for(int k=0;k < uList.Count;k++)
 		{
-			//switchable styles reference the same shader
-			//array as animated, so need a - 20
-			Color	ret	=Color.White;
+			double	tcU	=uList[k];
+			double	tcV	=vList[k];
 
-			ret.R	=ClampLightIndex(f.mLType0);
-			ret.G	=ClampLightIndex(f.mLType1);
-			ret.B	=ClampLightIndex(f.mLType2);
-			ret.A	=ClampLightIndex(f.mLType3);
+			//scale to atlas space
+			tcU	/=atlas.Width;
+			tcV	/=atlas.Height;
 
-			return	ret;
+			//step half a pixel in atlas space
+			tcU	+=1.0 / (atlas.Width * 2.0);
+			tcV	+=1.0 / (atlas.Height * 2.0);
+
+			//move to atlas position
+			tcU	+=offsetU;
+			tcV	+=offsetV;
+
+			tc.Add(new Vector2((float)tcU, (float)tcV));
 		}
+	}
 
 
-		static void AddTexCoordsToList(MaterialLib.TexAtlas atlas,
-			List<Vector2> tc, List<double> uList, List<double> vList, double offsetU, double offsetV)
+	static void GetTexCoords1(List<Vector3> verts, GBSPPlane pln, int lightGridSize,
+		int	lwidth, int lheight, GFXTexInfo tex,
+		out List<double> sCoords, out List<double> tCoords)
+	{
+		sCoords	=new List<double>();
+		tCoords	=new List<double>();
+
+		LInfo	li	=new LInfo();
+		FInfo	fi	=new FInfo();
+
+		fi.SetPlane(pln);
+		fi.CalcFaceLightInfo(li, verts, lightGridSize, tex);
+
+		//offset to the start of the texture
+		Int32	shiftU, shiftV;
+		li.GetLMin(out shiftU, out shiftV);
+
+		foreach(Vector3 pnt in verts)
 		{
-			for(int k=0;k < uList.Count;k++)
-			{
-				double	tcU	=uList[k];
-				double	tcV	=vList[k];
+			double	crdX, crdY;
 
-				//scale to atlas space
-				tcU	/=atlas.Width;
-				tcV	/=atlas.Height;
+			//dot product
+			crdX	=Vector3.Dot(pnt, tex.mVecU);
+			crdY	=Vector3.Dot(pnt, tex.mVecV);
 
-				//step half a pixel in atlas space
-				tcU	+=1.0 / (atlas.Width * 2.0);
-				tcV	+=1.0 / (atlas.Height * 2.0);
+			//scale by light grid size
+			crdX	/=lightGridSize;
+			crdY	/=lightGridSize;
 
-				//move to atlas position
-				tcU	+=offsetU;
-				tcV	+=offsetV;
+			//shift relative to start position
+			crdX	-=shiftU;
+			crdY	-=shiftV;
 
-				tc.Add(new Vector2((float)tcU, (float)tcV));
-			}
+			sCoords.Add(crdX);
+			tCoords.Add(crdY);
 		}
+	}
 
 
-		static void GetTexCoords1(List<Vector3> verts, GBSPPlane pln, int lightGridSize,
-			int	lwidth, int lheight, GFXTexInfo tex,
-			out List<double> sCoords, out List<double> tCoords)
+	static bool AtlasAnimated(MaterialLib.TexAtlas atlas, int lightGridSize,
+		DrawDataChunk ddc, GFXFace f, byte []lightData,
+		List<Vector3> faceVerts, GBSPPlane pln, GFXTexInfo tex)
+	{
+		for(int s=0;s < 4;s++)
 		{
-			sCoords	=new List<double>();
-			tCoords	=new List<double>();
+			List<Vector2>	coordSet	=null;
+			bool			bTuFittyFi	=false;
 
-			LInfo	li	=new LInfo();
-			FInfo	fi	=new FInfo();
-
-			fi.SetPlane(pln);
-			fi.CalcFaceLightInfo(li, verts, lightGridSize, tex);
-
-			//offset to the start of the texture
-			Int32	shiftU, shiftV;
-			li.GetLMin(out shiftU, out shiftV);
-
-			foreach(Vector3 pnt in verts)
+			if(s == 0)
 			{
-				double	crdX, crdY;
-
-				//dot product
-				crdX	=Vector3.Dot(pnt, tex.mVecU);
-				crdY	=Vector3.Dot(pnt, tex.mVecV);
-
-				//scale by light grid size
-				crdX	/=lightGridSize;
-				crdY	/=lightGridSize;
-
-				//shift relative to start position
-				crdX	-=shiftU;
-				crdY	-=shiftV;
-
-				sCoords.Add(crdX);
-				tCoords.Add(crdY);
+				if(f.mLType0 == 255)
+				{
+					bTuFittyFi	=true;
+				}
+				coordSet	=ddc.mTex1;
 			}
-		}
-
-
-		static bool AtlasAnimated(MaterialLib.TexAtlas atlas, int lightGridSize,
-			DrawDataChunk ddc, GFXFace f, byte []lightData,
-			List<Vector3> faceVerts, GBSPPlane pln, GFXTexInfo tex)
-		{
-			for(int s=0;s < 4;s++)
+			else if(s == 1)
 			{
-				List<Vector2>	coordSet	=null;
-				bool			bTuFittyFi	=false;
-
-				if(s == 0)
+				if(f.mLType1 == 255)
 				{
-					if(f.mLType0 == 255)
-					{
-						bTuFittyFi	=true;
-					}
-					coordSet	=ddc.mTex1;
+					bTuFittyFi	=true;
 				}
-				else if(s == 1)
-				{
-					if(f.mLType1 == 255)
-					{
-						bTuFittyFi	=true;
-					}
-					coordSet	=ddc.mTex2;
-				}
-				else if(s == 2)
-				{
-					if(f.mLType2 == 255)
-					{
-						bTuFittyFi	=true;
-					}
-					coordSet	=ddc.mTex3;
-				}
-				else if(s == 3)
-				{
-					if(f.mLType3 == 255)
-					{
-						bTuFittyFi	=true;
-					}
-					coordSet	=ddc.mTex4;
-				}
-
-				if(bTuFittyFi)
-				{
-					for(int i=0;i < faceVerts.Count;i++)
-					{
-						coordSet.Add(Vector2.Zero);
-					}
-					continue;
-				}
-
-				if(!AtlasLightMap(atlas, lightGridSize, f, lightData, s, faceVerts, pln, tex, coordSet))
-				{
-					return	false;
-				}
+				coordSet	=ddc.mTex2;
 			}
-			return	true;
-		}
-
-
-		static bool AtlasLightMap(MaterialLib.TexAtlas atlas, int lightGridSize,
-			GFXFace f, byte []lightData, int styleIndex, List<Vector3> faceVerts,
-			GBSPPlane sidedPlane, GFXTexInfo tex, List<Vector2> texCoords)
-		{
-			double	scaleU, scaleV, offsetU, offsetV;
-			scaleU	=scaleV	=offsetU	=offsetV	=0.0;
-			Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
-
-			int	sizeOffset	=f.mLHeight * f.mLWidth * 3;
-
-			sizeOffset	*=styleIndex;
-
-			for(int i=0;i < lmap.Length;i++)
+			else if(s == 2)
 			{
-				lmap[i].R	=lightData[sizeOffset + f.mLightOfs + (i * 3)];
-				lmap[i].G	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 1];
-				lmap[i].B	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 2];
-				lmap[i].A	=0xFF;
+				if(f.mLType2 == 255)
+				{
+					bTuFittyFi	=true;
+				}
+				coordSet	=ddc.mTex3;
+			}
+			else if(s == 3)
+			{
+				if(f.mLType3 == 255)
+				{
+					bTuFittyFi	=true;
+				}
+				coordSet	=ddc.mTex4;
 			}
 
-			if(!atlas.Insert(lmap, f.mLWidth, f.mLHeight,
-				out scaleU, out scaleV, out offsetU, out offsetV))
+			if(bTuFittyFi)
 			{
-				CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
-				return	false;
-			}
-
-			List<double>	coordsU	=new List<double>();
-			List<double>	coordsV	=new List<double>();
-			GetTexCoords1(faceVerts, sidedPlane, lightGridSize, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
-			AddTexCoordsToList(atlas, texCoords, coordsU, coordsV, offsetU, offsetV);
-
-			return	true;
-		}
-
-
-		static List<Vector3> GetFaceVerts(GFXFace f, Vector3 []verts, int []indexes)
-		{
-			List<Vector3>	ret	=new List<Vector3>();
-			for(int k=0;k < f.mNumVerts;k++)
-			{
-				int		idx	=indexes[f.mFirstVert + k];
-				Vector3	pnt	=verts[idx];
-
-				ret.Add(pnt);
-			}
-			return	ret;
-		}
-
-
-		//sided plane should be pre flipped if side != 0
-		static void ComputeFaceNormals(GFXFace f, Vector3 []verts, int []indexes,
-			GFXTexInfo tex, Vector3 []vnorms, GBSPPlane sidedPlane,
-			List<Vector3> norms)
-		{
-			for(int k=0;k < f.mNumVerts;k++)
-			{
-				int		idx	=indexes[f.mFirstVert + k];
-
-				if(tex.IsGouraud())						
+				for(int i=0;i < faceVerts.Count;i++)
 				{
-					norms.Add(vnorms[idx]);
+					coordSet.Add(Vector2.Zero);
 				}
-				else
-				{
-					norms.Add(sidedPlane.mNormal);
-				}
-			}
-		}
-
-
-		//handles basic verts and texcoord 0 with model matrix
-		static void ComputeFaceData(GFXFace f, Vector3 []verts, int []indexes,
-			GFXTexInfo tex,	List<Vector2> tex0, List<Vector3> outVerts)
-		{
-			List<Vector3>	worldVerts	=GetFaceVerts(f, verts, indexes);
-
-			foreach(Vector3 v in worldVerts)
-			{
-				Vector2	crd;
-				crd.X	=Vector3.Dot(tex.mVecU, v);
-				crd.Y	=Vector3.Dot(tex.mVecV, v);
-
-				crd.X	/=tex.mDrawScaleU;
-				crd.Y	/=tex.mDrawScaleV;
-
-				crd.X	+=tex.mShiftU;
-				crd.Y	+=tex.mShiftV;
-
-				tex0.Add(crd);
-
-				outVerts.Add(v);
-			}
-		}
-
-
-		static void ComputeFaceColors(GFXFace f, Vector3 []verts, int []indexes,
-			GFXTexInfo tex, Vector3 []rgbVerts,	List<Color> colors)
-		{
-			int	fvert	=f.mFirstVert;
-			for(int k=0;k < f.mNumVerts;k++)
-			{
-				int		idx	=indexes[fvert + k];
-
-				Vector4	col	=Vector4.One;
-				if((tex.mFlags & TexInfo.FULLBRIGHT) == 0 && rgbVerts != null)
-				{
-					col.X	=rgbVerts[fvert + k].X / 255.0f;
-					col.Y	=rgbVerts[fvert + k].Y / 255.0f;
-					col.Z	=rgbVerts[fvert + k].Z / 255.0f;
-				}
-
-				if(UtilityLib.Misc.bFlagSet(tex.mFlags, TexInfo.MIRROR | TexInfo.TRANSPARENT))
-				{
-					col.W	=tex.mAlpha;
-				}
-				colors.Add(new Color(col));
-			}
-		}
-
-
-		internal static bool FillLightMapped(DrawDataChunk ddc, GFXPlane []pp,
-					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
-					GFXFace f, GFXTexInfo tex, int lightGridSize,
-					byte []lightData, MaterialLib.TexAtlas atlas,
-					List<List<Vector3>> mirrorPolys)
-		{
-			ddc.mNumFaces++;
-			ddc.mVCounts.Add(f.mNumVerts);
-
-			//grab plane for dynamic lighting normals
-			GFXPlane	pl	=pp[f.mPlaneNum];
-			GBSPPlane	pln	=new GBSPPlane(pl);
-			if(f.mbFlipSide)
-			{
-				pln.Inverse();
+				continue;
 			}
 
-			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-			ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
-
-			if(!AtlasLightMap(atlas, lightGridSize, f, lightData, 0, faceVerts, pln, tex, ddc.mTex1))
+			if(!AtlasLightMap(atlas, lightGridSize, f, lightData, s, faceVerts, pln, tex, coordSet))
 			{
 				return	false;
 			}
-			ddc.mVerts.AddRange(faceVerts);
-
-			return	true;
 		}
+		return	true;
+	}
 
 
-		internal static bool FillLightMapAnimated(DrawDataChunk ddc, GFXPlane []pp,
-					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
-					GFXFace f, GFXTexInfo tex, int lightGridSize,
-					byte []lightData, MaterialLib.TexAtlas atlas,
-					List<List<Vector3>> mirrorPolys)
+	static bool AtlasLightMap(MaterialLib.TexAtlas atlas, int lightGridSize,
+		GFXFace f, byte []lightData, int styleIndex, List<Vector3> faceVerts,
+		GBSPPlane sidedPlane, GFXTexInfo tex, List<Vector2> texCoords)
+	{
+		double	scaleU, scaleV, offsetU, offsetV;
+		scaleU	=scaleV	=offsetU	=offsetV	=0.0;
+		Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
+
+		int	sizeOffset	=f.mLHeight * f.mLWidth * 3;
+
+		sizeOffset	*=styleIndex;
+
+		for(int i=0;i < lmap.Length;i++)
 		{
-			ddc.mNumFaces++;
-			ddc.mVCounts.Add(f.mNumVerts);
-
-			GFXPlane	pl	=pp[f.mPlaneNum];
-			GBSPPlane	pln	=new GBSPPlane(pl);
-			if(f.mbFlipSide)
-			{
-				pln.Inverse();
-			}
-
-			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-			ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
-
-			foreach(Vector3 v in faceVerts)
-			{
-				ddc.mColors.Add(new Color(1f, 1f, 1f, tex.mAlpha));
-			}
-
-			if(!AtlasAnimated(atlas, lightGridSize, ddc, f, lightData, faceVerts, pln, tex))
-			{
-				CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
-				return	false;
-			}
-
-			ddc.mVerts.AddRange(faceVerts);
-
-			//style index
-			for(int k=0;k < f.mNumVerts;k++)
-			{
-				Color	styleIndex	=AssignLightStyleIndex(f);
-				ddc.mStyles.Add(styleIndex);
-			}
-
-			return	true;
+			lmap[i].R	=lightData[sizeOffset + f.mLightOfs + (i * 3)];
+			lmap[i].G	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 1];
+			lmap[i].B	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 2];
+			lmap[i].A	=0xFF;
 		}
 
-
-		internal static bool FillVLit(DrawDataChunk ddc, GFXPlane []pp,
-					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
-					GFXFace f, GFXTexInfo tex, int lightGridSize,
-					byte []lightData, MaterialLib.TexAtlas atlas,
-					List<List<Vector3>> mirrorPolys)
+		if(!atlas.Insert(lmap, f.mLWidth, f.mLHeight,
+			out scaleU, out scaleV, out offsetU, out offsetV))
 		{
-			ddc.mNumFaces++;
-			ddc.mVCounts.Add(f.mNumVerts);
-
-			//grab plane for dynamic lighting normals
-			GFXPlane	pl	=pp[f.mPlaneNum];
-			GBSPPlane	pln	=new GBSPPlane(pl);
-			if(f.mbFlipSide)
-			{
-				pln.Inverse();
-			}
-
-			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-			ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
-			ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
-
-			ddc.mVerts.AddRange(faceVerts);
-
-			return	true;
+			CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
+			return	false;
 		}
 
+		List<double>	coordsU	=new List<double>();
+		List<double>	coordsV	=new List<double>();
+		GetTexCoords1(faceVerts, sidedPlane, lightGridSize, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
+		AddTexCoordsToList(atlas, texCoords, coordsU, coordsV, offsetU, offsetV);
 
-		internal static bool FillFullBright(DrawDataChunk ddc, GFXPlane []pp,
-					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
-					GFXFace f, GFXTexInfo tex, int lightGridSize,
-					byte []lightData, MaterialLib.TexAtlas atlas,
-					List<List<Vector3>> mirrorPolys)
+		return	true;
+	}
+
+
+	static List<Vector3> GetFaceVerts(GFXFace f, Vector3 []verts, int []indexes)
+	{
+		List<Vector3>	ret	=new List<Vector3>();
+		for(int k=0;k < f.mNumVerts;k++)
 		{
-			ddc.mNumFaces++;
-			ddc.mVCounts.Add(f.mNumVerts);
+			int		idx	=indexes[f.mFirstVert + k];
+			Vector3	pnt	=verts[idx];
 
-			//grab plane for dynamic lighting normals
-			GFXPlane	pl	=pp[f.mPlaneNum];
-			GBSPPlane	pln	=new GBSPPlane(pl);
-			if(f.mbFlipSide)
-			{
-				pln.Inverse();
-			}
-
-			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-			ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
-
-			ddc.mVerts.AddRange(faceVerts);
-
-			return	true;
+			ret.Add(pnt);
 		}
+		return	ret;
+	}
 
 
-		internal static bool FillSky(DrawDataChunk ddc, GFXPlane []pp,
-					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
-					GFXFace f, GFXTexInfo tex, int lightGridSize,
-					byte []lightData, MaterialLib.TexAtlas atlas,
-					List<List<Vector3>> mirrorPolys)
+	//sided plane should be pre flipped if side != 0
+	static void ComputeFaceNormals(GFXFace f, Vector3 []verts, int []indexes,
+		GFXTexInfo tex, Vector3 []vnorms, GBSPPlane sidedPlane,
+		List<Vector3> norms)
+	{
+		for(int k=0;k < f.mNumVerts;k++)
 		{
-			ddc.mNumFaces++;
-			ddc.mVCounts.Add(f.mNumVerts);
+			int		idx	=indexes[f.mFirstVert + k];
 
-			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-
-			ddc.mVerts.AddRange(faceVerts);
-
-			return	true;
+			if(tex.IsGouraud())						
+			{
+				norms.Add(vnorms[idx]);
+			}
+			else
+			{
+				norms.Add(sidedPlane.mNormal);
+			}
 		}
+	}
 
 
-		internal static bool FillMirror(DrawDataChunk ddc, GFXPlane []pp,
-					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
-					GFXFace f, GFXTexInfo tex, int lightGridSize,
-					byte []lightData, MaterialLib.TexAtlas atlas,
-					List<List<Vector3>> mirrorPolys)
+	//handles basic verts and texcoord 0 with model matrix
+	static void ComputeFaceData(GFXFace f, Vector3 []verts, int []indexes,
+		GFXTexInfo tex,	List<Vector2> tex0, List<Vector3> outVerts)
+	{
+		List<Vector3>	worldVerts	=GetFaceVerts(f, verts, indexes);
+
+		foreach(Vector3 v in worldVerts)
 		{
-			ddc.mNumFaces++;
-			ddc.mVCounts.Add(f.mNumVerts);
+			Vector2	crd;
+			crd.X	=Vector3.Dot(tex.mVecU, v);
+			crd.Y	=Vector3.Dot(tex.mVecV, v);
 
-			GFXPlane	pl	=pp[f.mPlaneNum];
-			GBSPPlane	pln	=new GBSPPlane(pl);
-			if(f.mbFlipSide)
-			{
-				pln.Inverse();
-			}
+			crd.X	/=tex.mDrawScaleU;
+			crd.Y	/=tex.mDrawScaleV;
 
-			List<Vector3>	fverts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, fverts);
-			ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
-			ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
+			crd.X	+=tex.mShiftU;
+			crd.Y	+=tex.mShiftV;
 
-			ddc.mVerts.AddRange(fverts);
+			tex0.Add(crd);
 
-			List<Vector2>	coords	=new List<Vector2>();
-			GetMirrorTexCoords(fverts, tex, out coords);
-			ddc.mTex1.AddRange(coords);
-
-			mirrorPolys.Add(fverts);
-
-			return	true;
+			outVerts.Add(v);
 		}
+	}
 
 
-		internal static bool FillAlpha(DrawDataChunk ddc, GFXPlane []pp,
-					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
-					GFXFace f, GFXTexInfo tex, int lightGridSize,
-					byte []lightData, MaterialLib.TexAtlas atlas,
-					List<List<Vector3>> mirrorPolys)
+	static void ComputeFaceColors(GFXFace f, Vector3 []verts, int []indexes,
+		GFXTexInfo tex, Vector3 []rgbVerts,	List<Color> colors)
+	{
+		int	fvert	=f.mFirstVert;
+		for(int k=0;k < f.mNumVerts;k++)
 		{
-			ddc.mNumFaces++;
-			ddc.mVCounts.Add(f.mNumVerts);
+			int		idx	=indexes[fvert + k];
 
-			GFXPlane	pl	=pp[f.mPlaneNum];
-			GBSPPlane	pln	=new GBSPPlane(pl);
-			if(f.mbFlipSide)
+			Vector4	col	=Vector4.One;
+			if((tex.mFlags & TexInfo.FULLBRIGHT) == 0 && rgbVerts != null)
 			{
-				pln.Inverse();
+				col.X	=rgbVerts[fvert + k].X / 255.0f;
+				col.Y	=rgbVerts[fvert + k].Y / 255.0f;
+				col.Z	=rgbVerts[fvert + k].Z / 255.0f;
 			}
 
-			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-			ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
-			ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
-
-			ddc.mVerts.AddRange(faceVerts);
-
-			return	true;
+			if(UtilityLib.Misc.bFlagSet(tex.mFlags, TexInfo.MIRROR | TexInfo.TRANSPARENT))
+			{
+				col.W	=tex.mAlpha;
+			}
+			colors.Add(new Color(col));
 		}
+	}
 
 
-		internal static bool FillLightMappedAlpha(DrawDataChunk ddc, GFXPlane []pp,
-					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
-					GFXFace f, GFXTexInfo tex, int lightGridSize,
-					byte []lightData, MaterialLib.TexAtlas atlas,
-					List<List<Vector3>> mirrorPolys)
+	internal static bool FillLightMapped(DrawDataChunk ddc, GFXPlane []pp,
+				Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
+				GFXFace f, GFXTexInfo tex, int lightGridSize,
+				byte []lightData, MaterialLib.TexAtlas atlas,
+				List<List<Vector3>> mirrorPolys)
+	{
+		ddc.mNumFaces++;
+		ddc.mVCounts.Add(f.mNumVerts);
+
+		//grab plane for dynamic lighting normals
+		GFXPlane	pl	=pp[f.mPlaneNum];
+		GBSPPlane	pln	=new GBSPPlane(pl);
+		if(f.mbFlipSide)
 		{
-			ddc.mNumFaces++;
-			ddc.mVCounts.Add(f.mNumVerts);
-
-			//grab plane for dynamic lighting normals
-			GFXPlane	pl	=pp[f.mPlaneNum];
-			GBSPPlane	pln	=new GBSPPlane(pl);
-			if(f.mbFlipSide)
-			{
-				pln.Inverse();
-			}
-
-			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-			ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
-
-			foreach(Vector3 v in faceVerts)
-			{
-				ddc.mColors.Add(new Color(1f, 1f, 1f, tex.mAlpha));
-			}
-
-			if(!AtlasLightMap(atlas, lightGridSize, f, lightData, 0, faceVerts, pln, tex, ddc.mTex1))
-			{
-				return	false;
-			}
-
-			ddc.mVerts.AddRange(faceVerts);
-
-			return	true;
+			pln.Inverse();
 		}
 
+		List<Vector3>	faceVerts	=new List<Vector3>();
+		ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
+		ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
 
-		internal static bool FillLightMappedAlphaAnimated(DrawDataChunk ddc, GFXPlane []pp,
-					Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
-					GFXFace f, GFXTexInfo tex, int lightGridSize,
-					byte []lightData, MaterialLib.TexAtlas atlas,
-					List<List<Vector3>> mirrorPolys)
+		if(!AtlasLightMap(atlas, lightGridSize, f, lightData, 0, faceVerts, pln, tex, ddc.mTex1))
 		{
-			ddc.mNumFaces++;
-			ddc.mVCounts.Add(f.mNumVerts);
-
-			GFXPlane	pl	=pp[f.mPlaneNum];
-			GBSPPlane	pln	=new GBSPPlane(pl);
-			if(f.mbFlipSide)
-			{
-				pln.Inverse();
-			}
-
-			List<Vector3>	faceVerts	=new List<Vector3>();
-			ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-			ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
-
-			foreach(Vector3 v in faceVerts)
-			{
-				ddc.mColors.Add(new Color(1f, 1f, 1f, tex.mAlpha));
-			}
-
-			if(!AtlasAnimated(atlas, lightGridSize, ddc, f, lightData, faceVerts, pln, tex))
-			{
-				CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
-				return	false;
-			}
-			ddc.mVerts.AddRange(faceVerts);
-
-			//style index
-			for(int k=0;k < f.mNumVerts;k++)
-			{
-				Color	styleIndex	=AssignLightStyleIndex(f);
-				ddc.mStyles.Add(styleIndex);
-			}
-
-			return	true;
+			return	false;
 		}
+		ddc.mVerts.AddRange(faceVerts);
+
+		return	true;
+	}
+
+
+	internal static bool FillLightMapAnimated(DrawDataChunk ddc, GFXPlane []pp,
+				Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
+				GFXFace f, GFXTexInfo tex, int lightGridSize,
+				byte []lightData, MaterialLib.TexAtlas atlas,
+				List<List<Vector3>> mirrorPolys)
+	{
+		ddc.mNumFaces++;
+		ddc.mVCounts.Add(f.mNumVerts);
+
+		GFXPlane	pl	=pp[f.mPlaneNum];
+		GBSPPlane	pln	=new GBSPPlane(pl);
+		if(f.mbFlipSide)
+		{
+			pln.Inverse();
+		}
+
+		List<Vector3>	faceVerts	=new List<Vector3>();
+		ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
+		ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
+
+		foreach(Vector3 v in faceVerts)
+		{
+			ddc.mColors.Add(new Color(1f, 1f, 1f, tex.mAlpha));
+		}
+
+		if(!AtlasAnimated(atlas, lightGridSize, ddc, f, lightData, faceVerts, pln, tex))
+		{
+			CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
+			return	false;
+		}
+
+		ddc.mVerts.AddRange(faceVerts);
+
+		//style index
+		for(int k=0;k < f.mNumVerts;k++)
+		{
+			Color	styleIndex	=AssignLightStyleIndex(f);
+			ddc.mStyles.Add(styleIndex);
+		}
+
+		return	true;
+	}
+
+
+	internal static bool FillVLit(DrawDataChunk ddc, GFXPlane []pp,
+				Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
+				GFXFace f, GFXTexInfo tex, int lightGridSize,
+				byte []lightData, MaterialLib.TexAtlas atlas,
+				List<List<Vector3>> mirrorPolys)
+	{
+		ddc.mNumFaces++;
+		ddc.mVCounts.Add(f.mNumVerts);
+
+		//grab plane for dynamic lighting normals
+		GFXPlane	pl	=pp[f.mPlaneNum];
+		GBSPPlane	pln	=new GBSPPlane(pl);
+		if(f.mbFlipSide)
+		{
+			pln.Inverse();
+		}
+
+		List<Vector3>	faceVerts	=new List<Vector3>();
+		ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
+		ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
+		ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
+
+		ddc.mVerts.AddRange(faceVerts);
+
+		return	true;
+	}
+
+
+	internal static bool FillFullBright(DrawDataChunk ddc, GFXPlane []pp,
+				Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
+				GFXFace f, GFXTexInfo tex, int lightGridSize,
+				byte []lightData, MaterialLib.TexAtlas atlas,
+				List<List<Vector3>> mirrorPolys)
+	{
+		ddc.mNumFaces++;
+		ddc.mVCounts.Add(f.mNumVerts);
+
+		//grab plane for dynamic lighting normals
+		GFXPlane	pl	=pp[f.mPlaneNum];
+		GBSPPlane	pln	=new GBSPPlane(pl);
+		if(f.mbFlipSide)
+		{
+			pln.Inverse();
+		}
+
+		List<Vector3>	faceVerts	=new List<Vector3>();
+		ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
+		ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
+
+		ddc.mVerts.AddRange(faceVerts);
+
+		return	true;
+	}
+
+
+	internal static bool FillSky(DrawDataChunk ddc, GFXPlane []pp,
+				Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
+				GFXFace f, GFXTexInfo tex, int lightGridSize,
+				byte []lightData, MaterialLib.TexAtlas atlas,
+				List<List<Vector3>> mirrorPolys)
+	{
+		ddc.mNumFaces++;
+		ddc.mVCounts.Add(f.mNumVerts);
+
+		List<Vector3>	faceVerts	=new List<Vector3>();
+		ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
+
+		ddc.mVerts.AddRange(faceVerts);
+
+		return	true;
+	}
+
+
+	internal static bool FillMirror(DrawDataChunk ddc, GFXPlane []pp,
+				Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
+				GFXFace f, GFXTexInfo tex, int lightGridSize,
+				byte []lightData, MaterialLib.TexAtlas atlas,
+				List<List<Vector3>> mirrorPolys)
+	{
+		ddc.mNumFaces++;
+		ddc.mVCounts.Add(f.mNumVerts);
+
+		GFXPlane	pl	=pp[f.mPlaneNum];
+		GBSPPlane	pln	=new GBSPPlane(pl);
+		if(f.mbFlipSide)
+		{
+			pln.Inverse();
+		}
+
+		List<Vector3>	fverts	=new List<Vector3>();
+		ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, fverts);
+		ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
+		ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
+
+		ddc.mVerts.AddRange(fverts);
+
+		List<Vector2>	coords	=new List<Vector2>();
+		GetMirrorTexCoords(fverts, tex, out coords);
+		ddc.mTex1.AddRange(coords);
+
+		mirrorPolys.Add(fverts);
+
+		return	true;
+	}
+
+
+	internal static bool FillAlpha(DrawDataChunk ddc, GFXPlane []pp,
+				Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
+				GFXFace f, GFXTexInfo tex, int lightGridSize,
+				byte []lightData, MaterialLib.TexAtlas atlas,
+				List<List<Vector3>> mirrorPolys)
+	{
+		ddc.mNumFaces++;
+		ddc.mVCounts.Add(f.mNumVerts);
+
+		GFXPlane	pl	=pp[f.mPlaneNum];
+		GBSPPlane	pln	=new GBSPPlane(pl);
+		if(f.mbFlipSide)
+		{
+			pln.Inverse();
+		}
+
+		List<Vector3>	faceVerts	=new List<Vector3>();
+		ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
+		ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
+		ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
+
+		ddc.mVerts.AddRange(faceVerts);
+
+		return	true;
+	}
+
+
+	internal static bool FillLightMappedAlpha(DrawDataChunk ddc, GFXPlane []pp,
+				Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
+				GFXFace f, GFXTexInfo tex, int lightGridSize,
+				byte []lightData, MaterialLib.TexAtlas atlas,
+				List<List<Vector3>> mirrorPolys)
+	{
+		ddc.mNumFaces++;
+		ddc.mVCounts.Add(f.mNumVerts);
+
+		//grab plane for dynamic lighting normals
+		GFXPlane	pl	=pp[f.mPlaneNum];
+		GBSPPlane	pln	=new GBSPPlane(pl);
+		if(f.mbFlipSide)
+		{
+			pln.Inverse();
+		}
+
+		List<Vector3>	faceVerts	=new List<Vector3>();
+		ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
+		ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
+
+		foreach(Vector3 v in faceVerts)
+		{
+			ddc.mColors.Add(new Color(1f, 1f, 1f, tex.mAlpha));
+		}
+
+		if(!AtlasLightMap(atlas, lightGridSize, f, lightData, 0, faceVerts, pln, tex, ddc.mTex1))
+		{
+			return	false;
+		}
+
+		ddc.mVerts.AddRange(faceVerts);
+
+		return	true;
+	}
+
+
+	internal static bool FillLightMappedAlphaAnimated(DrawDataChunk ddc, GFXPlane []pp,
+				Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
+				GFXFace f, GFXTexInfo tex, int lightGridSize,
+				byte []lightData, MaterialLib.TexAtlas atlas,
+				List<List<Vector3>> mirrorPolys)
+	{
+		ddc.mNumFaces++;
+		ddc.mVCounts.Add(f.mNumVerts);
+
+		GFXPlane	pl	=pp[f.mPlaneNum];
+		GBSPPlane	pln	=new GBSPPlane(pl);
+		if(f.mbFlipSide)
+		{
+			pln.Inverse();
+		}
+
+		List<Vector3>	faceVerts	=new List<Vector3>();
+		ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
+		ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
+
+		foreach(Vector3 v in faceVerts)
+		{
+			ddc.mColors.Add(new Color(1f, 1f, 1f, tex.mAlpha));
+		}
+
+		if(!AtlasAnimated(atlas, lightGridSize, ddc, f, lightData, faceVerts, pln, tex))
+		{
+			CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
+			return	false;
+		}
+		ddc.mVerts.AddRange(faceVerts);
+
+		//style index
+		for(int k=0;k < f.mNumVerts;k++)
+		{
+			Color	styleIndex	=AssignLightStyleIndex(f);
+			ddc.mStyles.Add(styleIndex);
+		}
+
+		return	true;
 	}
 }

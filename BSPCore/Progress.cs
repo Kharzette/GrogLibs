@@ -5,202 +5,201 @@ using System.Collections.Generic;
 using UtilityLib;
 
 
-namespace BSPCore
+namespace BSPCore;
+
+public class ProgressEventArgs : EventArgs
 {
-	public class ProgressEventArgs : EventArgs
+	public int	mMin;
+	public int	mMax;
+	public int	mCurrent;
+	public int	mIndex;
+}
+
+
+class Progress
+{
+	public int	mMin;
+	public int	mMax;
+	public int	mCurrent;
+
+
+	public Progress()
 	{
-		public int	mMin;
-		public int	mMax;
-		public int	mCurrent;
-		public int	mIndex;
+	}
+}
+
+
+public static class ProgressWatcher
+{
+	static List<Progress>	mProgs	=new List<Progress>();
+
+	public static event EventHandler	eProgressUpdated;
+
+
+	public static object RegisterProgress(int min, int max, int current)
+	{
+		Progress	outProg	=new Progress();
+
+		outProg.mMin		=min;
+		outProg.mMax		=max;
+		outProg.mCurrent	=current;
+
+		lock(mProgs)
+		{
+			mProgs.Add(outProg);
+		}
+
+		return	outProg;
 	}
 
 
-	class Progress
+	public static void DestroyProgress(object prog)
 	{
-		public int	mMin;
-		public int	mMax;
-		public int	mCurrent;
-
-
-		public Progress()
+		Progress	pr	=prog as Progress;
+		if(pr == null)
 		{
+			return;
 		}
+
+		int	index	=-1;
+
+		lock(mProgs)
+		{
+			if(mProgs.Contains(pr))
+			{
+				index	=mProgs.IndexOf(pr);
+				mProgs.Remove(pr);
+			}
+		}
+
+		//clear the bar for the next use
+		ProgressEventArgs	pea		=new ProgressEventArgs();
+		pea.mCurrent	=0;
+		pea.mIndex		=index;
+		pea.mMax		=0;
+		pea.mMin		=0;
+
+		Misc.SafeInvoke(eProgressUpdated, null, pea);
 	}
 
 
-	public static class ProgressWatcher
+	public static void Clear()
 	{
-		static List<Progress>	mProgs	=new List<Progress>();
-
-		public static event EventHandler	eProgressUpdated;
-
-
-		public static object RegisterProgress(int min, int max, int current)
+		List<int>	resets	=new List<int>();
+		lock(mProgs)
 		{
-			Progress	outProg	=new Progress();
-
-			outProg.mMin		=min;
-			outProg.mMax		=max;
-			outProg.mCurrent	=current;
-
-			lock(mProgs)
+			foreach(Progress prog in mProgs)
 			{
-				mProgs.Add(outProg);
+				resets.Add(mProgs.IndexOf(prog));
 			}
-
-			return	outProg;
+			mProgs.Clear();
 		}
 
-
-		public static void DestroyProgress(object prog)
+		foreach(int i in resets)
 		{
-			Progress	pr	=prog as Progress;
-			if(pr == null)
-			{
-				return;
-			}
-
-			int	index	=-1;
-
-			lock(mProgs)
-			{
-				if(mProgs.Contains(pr))
-				{
-					index	=mProgs.IndexOf(pr);
-					mProgs.Remove(pr);
-				}
-			}
-
 			//clear the bar for the next use
 			ProgressEventArgs	pea		=new ProgressEventArgs();
 			pea.mCurrent	=0;
-			pea.mIndex		=index;
+			pea.mIndex		=i;
 			pea.mMax		=0;
 			pea.mMin		=0;
 
 			Misc.SafeInvoke(eProgressUpdated, null, pea);
 		}
+	}
 
 
-		public static void Clear()
+	public static void UpdateProgress(object prog, int cur)
+	{
+		Progress	pr	=prog as Progress;
+		if(pr == null)
 		{
-			List<int>	resets	=new List<int>();
-			lock(mProgs)
-			{
-				foreach(Progress prog in mProgs)
-				{
-					resets.Add(mProgs.IndexOf(prog));
-				}
-				mProgs.Clear();
-			}
-
-			foreach(int i in resets)
-			{
-				//clear the bar for the next use
-				ProgressEventArgs	pea		=new ProgressEventArgs();
-				pea.mCurrent	=0;
-				pea.mIndex		=i;
-				pea.mMax		=0;
-				pea.mMin		=0;
-
-				Misc.SafeInvoke(eProgressUpdated, null, pea);
-			}
+			return;
 		}
 
-
-		public static void UpdateProgress(object prog, int cur)
+		bool				bFound	=false;
+		ProgressEventArgs	pea		=null;
+		lock(mProgs)
 		{
-			Progress	pr	=prog as Progress;
-			if(pr == null)
+			if(mProgs.Contains(pr))
 			{
-				return;
-			}
+				bFound		=true;
+				pr.mCurrent	=cur;
 
-			bool				bFound	=false;
-			ProgressEventArgs	pea		=null;
-			lock(mProgs)
-			{
-				if(mProgs.Contains(pr))
-				{
-					bFound		=true;
-					pr.mCurrent	=cur;
-
-					pea				=new ProgressEventArgs();
-					pea.mCurrent	=cur;
-					pea.mIndex		=mProgs.IndexOf(pr);
-					pea.mMax		=pr.mMax;
-					pea.mMin		=pr.mMin;
-				}
-			}
-			if(bFound)
-			{
-				Misc.SafeInvoke(eProgressUpdated, null, pea);
+				pea				=new ProgressEventArgs();
+				pea.mCurrent	=cur;
+				pea.mIndex		=mProgs.IndexOf(pr);
+				pea.mMax		=pr.mMax;
+				pea.mMin		=pr.mMin;
 			}
 		}
-
-
-		public static void UpdateProgress(object prog, int min, int max, int cur)
+		if(bFound)
 		{
-			Progress	pr	=prog as Progress;
-			if(pr == null)
-			{
-				return;
-			}
+			Misc.SafeInvoke(eProgressUpdated, null, pea);
+		}
+	}
 
-			bool				bFound	=false;
-			ProgressEventArgs	pea		=null;
-			lock(mProgs)
-			{
-				if(mProgs.Contains(pr))
-				{
-					bFound		=true;
-					pr.mMin		=min;
-					pr.mMax		=max;
-					pr.mCurrent	=cur;
 
-					pea				=new ProgressEventArgs();
-					pea.mCurrent	=cur;
-					pea.mIndex		=mProgs.IndexOf(pr);
-					pea.mMax		=max;
-					pea.mMin		=min;
-				}
-			}
-			if(bFound)
-			{
-				Misc.SafeInvoke(eProgressUpdated, null, pea);
-			}
+	public static void UpdateProgress(object prog, int min, int max, int cur)
+	{
+		Progress	pr	=prog as Progress;
+		if(pr == null)
+		{
+			return;
 		}
 
-
-		public static void UpdateProgressIncremental(object prog)
+		bool				bFound	=false;
+		ProgressEventArgs	pea		=null;
+		lock(mProgs)
 		{
-			Progress	pr	=prog as Progress;
-			if(pr == null)
+			if(mProgs.Contains(pr))
 			{
-				return;
-			}
+				bFound		=true;
+				pr.mMin		=min;
+				pr.mMax		=max;
+				pr.mCurrent	=cur;
 
-			bool				bFound	=false;
-			ProgressEventArgs	pea		=null;
-			lock(mProgs)
-			{
-				if(mProgs.Contains(pr))
-				{
-					bFound		=true;
-					pr.mCurrent++;
+				pea				=new ProgressEventArgs();
+				pea.mCurrent	=cur;
+				pea.mIndex		=mProgs.IndexOf(pr);
+				pea.mMax		=max;
+				pea.mMin		=min;
+			}
+		}
+		if(bFound)
+		{
+			Misc.SafeInvoke(eProgressUpdated, null, pea);
+		}
+	}
 
-					pea				=new ProgressEventArgs();
-					pea.mCurrent	=pr.mCurrent;
-					pea.mIndex		=mProgs.IndexOf(pr);
-					pea.mMax		=pr.mMax;
-					pea.mMin		=pr.mMin;
-				}
-			}
-			if(bFound)
+
+	public static void UpdateProgressIncremental(object prog)
+	{
+		Progress	pr	=prog as Progress;
+		if(pr == null)
+		{
+			return;
+		}
+
+		bool				bFound	=false;
+		ProgressEventArgs	pea		=null;
+		lock(mProgs)
+		{
+			if(mProgs.Contains(pr))
 			{
-				Misc.SafeInvoke(eProgressUpdated, null, pea);
+				bFound		=true;
+				pr.mCurrent++;
+
+				pea				=new ProgressEventArgs();
+				pea.mCurrent	=pr.mCurrent;
+				pea.mIndex		=mProgs.IndexOf(pr);
+				pea.mMax		=pr.mMax;
+				pea.mMin		=pr.mMin;
 			}
+		}
+		if(bFound)
+		{
+			Misc.SafeInvoke(eProgressUpdated, null, pea);
 		}
 	}
 }

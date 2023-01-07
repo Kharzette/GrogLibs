@@ -5,79 +5,37 @@ using System.Text;
 using System.Collections.Generic;
 
 
-namespace BSPCore
+namespace BSPCore;
+
+internal class PlanePool
 {
-	internal class PlanePool
+	internal List<GBSPPlane>	mPlanes	=new List<GBSPPlane>();
+
+	internal const Int32	MAX_BSP_PLANES		=132000;
+	internal const Int32	PLANENUM_LEAF		=-1;
+	
+
+
+	internal Int32 FindPlane(GBSPPlane plane, out bool side)
 	{
-		internal List<GBSPPlane>	mPlanes	=new List<GBSPPlane>();
+		GBSPPlane	plane1	=new GBSPPlane(plane);
 
-		internal const Int32	MAX_BSP_PLANES		=132000;
-		internal const Int32	PLANENUM_LEAF		=-1;
+		plane1.Snap();
+		plane1.Side(out side);
+
+		for(int i=0;i < mPlanes.Count;i++)
+		{
+			if(plane1.Compare(mPlanes[i]))
+			{
+				return	i;
+			}
+		}
 		
-
-
-		internal Int32 FindPlane(GBSPPlane plane, out bool side)
+		if(plane1.mType >= GBSPPlane.PLANE_ANYX)
 		{
-			GBSPPlane	plane1	=new GBSPPlane(plane);
-
-			plane1.Snap();
-			plane1.Side(out side);
-
-			for(int i=0;i < mPlanes.Count;i++)
-			{
-				if(plane1.Compare(mPlanes[i]))
-				{
-					return	i;
-				}
-			}
-			
-			if(plane1.mType >= GBSPPlane.PLANE_ANYX)
-			{
-				//try finding a flipped match
-				plane1.Inverse();
-				side	=!side;
-				for(int i=0;i < mPlanes.Count;i++)
-				{
-					if(plane1.Compare(mPlanes[i]))
-					{
-						return	i;
-					}
-				}
-
-				//try finding a flipped match snapped
-				plane1.Snap();
-				for(int i=0;i < mPlanes.Count;i++)
-				{
-					if(plane1.Compare(mPlanes[i]))
-					{
-						return	i;
-					}
-				}
-
-				//no luck, go with original
-				plane1	=new GBSPPlane(plane);
-				plane1.Snap();
-				plane1.Side(out side);
-			}
-
-			if(mPlanes.Count > MAX_BSP_PLANES)
-			{
-				return	-1;
-			}
-
-			mPlanes.Add(plane1);
-
-			return	mPlanes.Count - 1;
-		}
-
-
-		internal Int32 FindPlane(GFXPlane plane, out bool side)
-		{
-			GBSPPlane	plane1	=new GBSPPlane(plane);
-
-			plane1.Snap();
-			plane1.Side(out side);
-
+			//try finding a flipped match
+			plane1.Inverse();
+			side	=!side;
 			for(int i=0;i < mPlanes.Count;i++)
 			{
 				if(plane1.Compare(mPlanes[i]))
@@ -86,57 +44,98 @@ namespace BSPCore
 				}
 			}
 
-			if(mPlanes.Count > MAX_BSP_PLANES)
-			{
-				return	-1;
-			}
-
-			mPlanes.Add(plane1);
-
-			return	mPlanes.Count - 1;
-		}
-
-
-		internal GFXPlane[] GetGFXArray()
-		{
-			GFXPlane	[]ret	=new GFXPlane[mPlanes.Count];
-
+			//try finding a flipped match snapped
+			plane1.Snap();
 			for(int i=0;i < mPlanes.Count;i++)
 			{
-				ret[i]			=new GFXPlane();
-				ret[i].mNormal	=mPlanes[i].mNormal;
-				ret[i].mDist	=mPlanes[i].mDist;
-				ret[i].mType	=mPlanes[i].mType;
+				if(plane1.Compare(mPlanes[i]))
+				{
+					return	i;
+				}
 			}
-			return	ret;
+
+			//no luck, go with original
+			plane1	=new GBSPPlane(plane);
+			plane1.Snap();
+			plane1.Side(out side);
 		}
 
-
-		internal void Write(BinaryWriter bw)
+		if(mPlanes.Count > MAX_BSP_PLANES)
 		{
-			bw.Write(mPlanes.Count);
+			return	-1;
+		}
 
-			foreach(GBSPPlane p in mPlanes)
+		mPlanes.Add(plane1);
+
+		return	mPlanes.Count - 1;
+	}
+
+
+	internal Int32 FindPlane(GFXPlane plane, out bool side)
+	{
+		GBSPPlane	plane1	=new GBSPPlane(plane);
+
+		plane1.Snap();
+		plane1.Side(out side);
+
+		for(int i=0;i < mPlanes.Count;i++)
+		{
+			if(plane1.Compare(mPlanes[i]))
 			{
-				p.Write(bw);
+				return	i;
 			}
 		}
 
-
-		internal void Read(BinaryReader br)
+		if(mPlanes.Count > MAX_BSP_PLANES)
 		{
-			int	cnt	=br.ReadInt32();
+			return	-1;
+		}
 
-			mPlanes.Clear();
+		mPlanes.Add(plane1);
 
-			for(int i=0;i < cnt;i++)
-			{
-				GBSPPlane	p	=new GBSPPlane();
+		return	mPlanes.Count - 1;
+	}
 
-				p.Read(br);
 
-				mPlanes.Add(p);
-			}
+	internal GFXPlane[] GetGFXArray()
+	{
+		GFXPlane	[]ret	=new GFXPlane[mPlanes.Count];
+
+		for(int i=0;i < mPlanes.Count;i++)
+		{
+			ret[i]			=new GFXPlane();
+			ret[i].mNormal	=mPlanes[i].mNormal;
+			ret[i].mDist	=mPlanes[i].mDist;
+			ret[i].mType	=mPlanes[i].mType;
+		}
+		return	ret;
+	}
+
+
+	internal void Write(BinaryWriter bw)
+	{
+		bw.Write(mPlanes.Count);
+
+		foreach(GBSPPlane p in mPlanes)
+		{
+			p.Write(bw);
+		}
+	}
+
+
+	internal void Read(BinaryReader br)
+	{
+		int	cnt	=br.ReadInt32();
+
+		mPlanes.Clear();
+
+		for(int i=0;i < cnt;i++)
+		{
+			GBSPPlane	p	=new GBSPPlane();
+
+			p.Read(br);
+
+			mPlanes.Add(p);
 		}
 	}
 }

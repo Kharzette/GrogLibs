@@ -6,248 +6,247 @@ using System.IO;
 using System.Diagnostics;
 
 
-namespace BSPCore
+namespace BSPCore;
+
+public class Bounds
 {
-	public class Bounds
+	public Vector3	mMins, mMaxs;
+
+	public const float	MIN_MAX_BOUNDS	=15192.0f;
+
+
+	public Bounds()
 	{
-		public Vector3	mMins, mMaxs;
+		Clear();
+	}
 
-		public const float	MIN_MAX_BOUNDS	=15192.0f;
+
+	public Bounds(Bounds bnd)
+	{
+		mMins	=bnd.mMins;
+		mMaxs	=bnd.mMaxs;
+	}
 
 
-		public Bounds()
+	public void Clear()
+	{
+		mMins.X	=mMins.Y =mMins.Z	=MIN_MAX_BOUNDS;
+		mMaxs	=-mMins;
+	}
+
+
+	public void AddPointToBounds(Vector3 pnt)
+	{
+		if(pnt.X < mMins.X)
 		{
-			Clear();
+			mMins.X	=pnt.X;
 		}
-
-
-		public Bounds(Bounds bnd)
+		if(pnt.X > mMaxs.X)
 		{
-			mMins	=bnd.mMins;
-			mMaxs	=bnd.mMaxs;
+			mMaxs.X	=pnt.X;
 		}
-
-
-		public void Clear()
+		if(pnt.Y < mMins.Y)
 		{
-			mMins.X	=mMins.Y =mMins.Z	=MIN_MAX_BOUNDS;
-			mMaxs	=-mMins;
+			mMins.Y	=pnt.Y;
 		}
-
-
-		public void AddPointToBounds(Vector3 pnt)
+		if(pnt.Y > mMaxs.Y)
 		{
-			if(pnt.X < mMins.X)
-			{
-				mMins.X	=pnt.X;
-			}
-			if(pnt.X > mMaxs.X)
-			{
-				mMaxs.X	=pnt.X;
-			}
-			if(pnt.Y < mMins.Y)
-			{
-				mMins.Y	=pnt.Y;
-			}
-			if(pnt.Y > mMaxs.Y)
-			{
-				mMaxs.Y	=pnt.Y;
-			}
-			if(pnt.Z < mMins.Z)
-			{
-				mMins.Z	=pnt.Z;
-			}
-			if(pnt.Z > mMaxs.Z)
-			{
-				mMaxs.Z	=pnt.Z;
-			}
+			mMaxs.Y	=pnt.Y;
 		}
-
-
-		internal bool Overlaps(Bounds b2)
+		if(pnt.Z < mMins.Z)
 		{
-			for(int i=0;i < 3;i++)
-			{
-				if(mMins[i] >= b2.mMaxs[i]
-					|| mMaxs[i] <= b2.mMins[i])
-				{
-					return	false;
-				}
-			}
-			return	true;
+			mMins.Z	=pnt.Z;
 		}
-
-
-		public void Merge(Bounds b1, Bounds b2)
+		if(pnt.Z > mMaxs.Z)
 		{
-			if(b1 != null)
+			mMaxs.Z	=pnt.Z;
+		}
+	}
+
+
+	internal bool Overlaps(Bounds b2)
+	{
+		for(int i=0;i < 3;i++)
+		{
+			if(mMins[i] >= b2.mMaxs[i]
+				|| mMaxs[i] <= b2.mMins[i])
 			{
-				AddPointToBounds(b1.mMins);
-				AddPointToBounds(b1.mMaxs);
-			}
-			if(b2 != null)
-			{
-				AddPointToBounds(b2.mMins);
-				AddPointToBounds(b2.mMaxs);
+				return	false;
 			}
 		}
+		return	true;
+	}
 
 
-		internal bool IsMaxExtents()
+	public void Merge(Bounds b1, Bounds b2)
+	{
+		if(b1 != null)
 		{
-			for(int i=0;i < 3;i++)
-			{
-				if(mMins[i] <= -MIN_MAX_BOUNDS
-					|| mMaxs[i] >= MIN_MAX_BOUNDS)
-				{
-					return	true;
-				}
-			}
-			return	false;
+			AddPointToBounds(b1.mMins);
+			AddPointToBounds(b1.mMaxs);
 		}
-
-
-		internal void GetPlanes(PlanePool pp, out int []planes)
+		if(b2 != null)
 		{
-			planes	=new int[6];
-
-			GBSPPlane	p	=new GBSPPlane();
-			bool		bFlip;
-
-			//max x
-			p.mNormal	=Vector3.UnitX;
-			p.mDist		=mMaxs.X;
-			planes[0]	=pp.FindPlane(p, out bFlip);
-
-			//max y
-			p.mNormal	=Vector3.UnitY;
-			p.mDist		=mMaxs.Y;
-			planes[1]	=pp.FindPlane(p, out bFlip);
-
-			//max z
-			p.mNormal	=Vector3.UnitZ;
-			p.mDist		=mMaxs.Z;
-			planes[2]	=pp.FindPlane(p, out bFlip);
-
-			//min x
-			p.mNormal	=-Vector3.UnitX;
-			p.mDist		=-mMins.X;
-			planes[3]	=pp.FindPlane(p, out bFlip);
-
-			//min y
-			p.mNormal	=-Vector3.UnitY;
-			p.mDist		=-mMins.Y;
-			planes[4]	=pp.FindPlane(p, out bFlip);
-
-			//min z
-			p.mNormal	=-Vector3.UnitZ;
-			p.mDist		=-mMins.Z;
-			planes[5]	=pp.FindPlane(p, out bFlip);
+			AddPointToBounds(b2.mMins);
+			AddPointToBounds(b2.mMaxs);
 		}
+	}
 
 
-		internal UInt32 BoxOnPlaneSide(GBSPPlane Plane)
+	internal bool IsMaxExtents()
+	{
+		for(int i=0;i < 3;i++)
 		{
-			UInt32	Side;
-			Vector3	Corner1, Corner2;
-
-			Corner1	=Vector3.Zero;
-			Corner2	=Vector3.Zero;
-			
-			if(Plane.mType < 3)
+			if(mMins[i] <= -MIN_MAX_BOUNDS
+				|| mMaxs[i] >= MIN_MAX_BOUNDS)
 			{
-				Side	=0;
-
-				if(mMaxs[(int)Plane.mType] > (Plane.mDist + GBSPPlane.PLANESIDE_EPSILON))
-				{
-					Side	|=GBSPPlane.PSIDE_FRONT;
-				}
-
-				if(mMins[(int)Plane.mType] < (Plane.mDist - GBSPPlane.PLANESIDE_EPSILON))
-				{
-					Side	|=GBSPPlane.PSIDE_BACK;
-				}
-				return	Side;
+				return	true;
 			}
-			
-			for(int i=0;i < 3;i++)
-			{
-				if(Plane.mNormal[i] < 0)
-				{
-					Corner1[i]	=mMins[i];
-					Corner2[i]	=mMaxs[i];
-				}
-				else
-				{
-					Corner2[i]	=mMins[i];
-					Corner1[i]	=mMaxs[i];
-				}
-			}
+		}
+		return	false;
+	}
 
-			float	Dist1	=Vector3.Dot(Plane.mNormal, Corner1) - Plane.mDist;
-			float	Dist2	=Vector3.Dot(Plane.mNormal, Corner2) - Plane.mDist;
+
+	internal void GetPlanes(PlanePool pp, out int []planes)
+	{
+		planes	=new int[6];
+
+		GBSPPlane	p	=new GBSPPlane();
+		bool		bFlip;
+
+		//max x
+		p.mNormal	=Vector3.UnitX;
+		p.mDist		=mMaxs.X;
+		planes[0]	=pp.FindPlane(p, out bFlip);
+
+		//max y
+		p.mNormal	=Vector3.UnitY;
+		p.mDist		=mMaxs.Y;
+		planes[1]	=pp.FindPlane(p, out bFlip);
+
+		//max z
+		p.mNormal	=Vector3.UnitZ;
+		p.mDist		=mMaxs.Z;
+		planes[2]	=pp.FindPlane(p, out bFlip);
+
+		//min x
+		p.mNormal	=-Vector3.UnitX;
+		p.mDist		=-mMins.X;
+		planes[3]	=pp.FindPlane(p, out bFlip);
+
+		//min y
+		p.mNormal	=-Vector3.UnitY;
+		p.mDist		=-mMins.Y;
+		planes[4]	=pp.FindPlane(p, out bFlip);
+
+		//min z
+		p.mNormal	=-Vector3.UnitZ;
+		p.mDist		=-mMins.Z;
+		planes[5]	=pp.FindPlane(p, out bFlip);
+	}
+
+
+	internal UInt32 BoxOnPlaneSide(GBSPPlane Plane)
+	{
+		UInt32	Side;
+		Vector3	Corner1, Corner2;
+
+		Corner1	=Vector3.Zero;
+		Corner2	=Vector3.Zero;
+		
+		if(Plane.mType < 3)
+		{
 			Side	=0;
-			if(Dist1 >= GBSPPlane.PLANESIDE_EPSILON)
+
+			if(mMaxs[(int)Plane.mType] > (Plane.mDist + GBSPPlane.PLANESIDE_EPSILON))
 			{
-				Side	=GBSPPlane.PSIDE_FRONT;
+				Side	|=GBSPPlane.PSIDE_FRONT;
 			}
-			if(Dist2 < GBSPPlane.PLANESIDE_EPSILON)
+
+			if(mMins[(int)Plane.mType] < (Plane.mDist - GBSPPlane.PLANESIDE_EPSILON))
 			{
 				Side	|=GBSPPlane.PSIDE_BACK;
 			}
-
 			return	Side;
 		}
-
-
-		internal bool IsPointInbounds(Vector3 pnt)
+		
+		for(int i=0;i < 3;i++)
 		{
-			return	IsPointInbounds(pnt, 0.0f);
+			if(Plane.mNormal[i] < 0)
+			{
+				Corner1[i]	=mMins[i];
+				Corner2[i]	=mMaxs[i];
+			}
+			else
+			{
+				Corner2[i]	=mMins[i];
+				Corner1[i]	=mMaxs[i];
+			}
 		}
 
-
-		internal bool IsPointInbounds(Vector3 pnt, float epsilon)
+		float	Dist1	=Vector3.Dot(Plane.mNormal, Corner1) - Plane.mDist;
+		float	Dist2	=Vector3.Dot(Plane.mNormal, Corner2) - Plane.mDist;
+		Side	=0;
+		if(Dist1 >= GBSPPlane.PLANESIDE_EPSILON)
 		{
-			if(pnt.X < (mMins.X - epsilon))
-			{
-				return	false;
-			}
-			if(pnt.Y < (mMins.Y - epsilon))
-			{
-				return	false;
-			}
-			if(pnt.Z < (mMins.Z - epsilon))
-			{
-				return	false;
-			}
-			if(pnt.X > (mMaxs.X + epsilon))
-			{
-				return	false;
-			}
-			if(pnt.Y > (mMaxs.Y + epsilon))
-			{
-				return	false;
-			}
-			if(pnt.Z > (mMaxs.Z + epsilon))
-			{
-				return	false;
-			}
-			return	true;
+			Side	=GBSPPlane.PSIDE_FRONT;
+		}
+		if(Dist2 < GBSPPlane.PLANESIDE_EPSILON)
+		{
+			Side	|=GBSPPlane.PSIDE_BACK;
 		}
 
+		return	Side;
+	}
 
-		internal Vector3 GetCenter()
+
+	internal bool IsPointInbounds(Vector3 pnt)
+	{
+		return	IsPointInbounds(pnt, 0.0f);
+	}
+
+
+	internal bool IsPointInbounds(Vector3 pnt, float epsilon)
+	{
+		if(pnt.X < (mMins.X - epsilon))
 		{
-			return	(mMins + mMaxs) / 2.0f;
+			return	false;
 		}
-
-		internal void AddPointToBounds(Vector2 vec2)
+		if(pnt.Y < (mMins.Y - epsilon))
 		{
-			Vector3	vec3	=Vector3.Zero;
-			vec3.X	=vec2.X;
-			vec3.Y	=vec2.Y;
-
-			AddPointToBounds(vec3);
+			return	false;
 		}
+		if(pnt.Z < (mMins.Z - epsilon))
+		{
+			return	false;
+		}
+		if(pnt.X > (mMaxs.X + epsilon))
+		{
+			return	false;
+		}
+		if(pnt.Y > (mMaxs.Y + epsilon))
+		{
+			return	false;
+		}
+		if(pnt.Z > (mMaxs.Z + epsilon))
+		{
+			return	false;
+		}
+		return	true;
+	}
+
+
+	internal Vector3 GetCenter()
+	{
+		return	(mMins + mMaxs) / 2.0f;
+	}
+
+	internal void AddPointToBounds(Vector2 vec2)
+	{
+		Vector3	vec3	=Vector3.Zero;
+		vec3.X	=vec2.X;
+		vec3.Y	=vec2.Y;
+
+		AddPointToBounds(vec3);
 	}
 }
