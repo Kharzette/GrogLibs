@@ -4,55 +4,54 @@ using System.Collections.Generic;
 using UtilityLib;
 
 
-namespace EntityLib
+namespace EntityLib;
+
+public class EntityBoss
 {
-	public class EntityBoss
+	List<Entity>	mEnts		=new List<Entity>();
+	List<Entity>	mUpdateEnts	=new List<Entity>();
+
+
+	public void AddEntity(Entity e)
 	{
-		List<Entity>	mEnts		=new List<Entity>();
-		List<Entity>	mUpdateEnts	=new List<Entity>();
+		mEnts.Add(e);
 
-
-		public void AddEntity(Entity e)
+		if(e.mbWantUpdate)
 		{
-			mEnts.Add(e);
+			mUpdateEnts.Add(e);
+		}
+	}
 
-			if(e.mbWantUpdate)
+
+	public void Update(UpdateTimer ut)
+	{
+		foreach(Entity ent in mUpdateEnts)
+		{
+			ent.Update(ut);
+		}
+	}
+
+
+	public List<Component> GetEntityComponents(Type t)
+	{
+		List<Component>	ret	=new List<Component>();
+
+		foreach(Entity ents in mEnts)
+		{
+			Component	c	=ents.GetComponent(t);
+
+			if(c != null)
 			{
-				mUpdateEnts.Add(e);
+				ret.Add(c);
 			}
 		}
+		return	ret;
+	}
 
 
-		public void Update(UpdateTimer ut)
-		{
-			foreach(Entity ent in mUpdateEnts)
-			{
-				ent.Update(ut);
-			}
-		}
-
-
-		public List<Component> GetEntityComponents(Type t)
-		{
-			List<Component>	ret	=new List<Component>();
-
-			foreach(Entity ents in mEnts)
-			{
-				Component	c	=ents.GetComponent(t);
-
-				if(c != null)
-				{
-					ret.Add(c);
-				}
-			}
-			return	ret;
-		}
-
-
-		public void FreeAll()
-		{
-			mUpdateEnts.Clear();
-			mEnts.Clear();
-		}
+	public void FreeAll()
+	{
+		mUpdateEnts.Clear();
+		mEnts.Clear();
 	}
 }
