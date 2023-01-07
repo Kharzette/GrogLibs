@@ -3,234 +3,233 @@ using System.Threading;
 using System.Diagnostics;
 
 
-namespace UtilityLib
+namespace UtilityLib;
+
+public class UpdateTimer
 {
-	public class UpdateTimer
+	//time stats
+	long	mLastTimeStamp;	//previous time
+	long	mTimeNow;		//time as of last Stamp() call
+	long	mMaxDelta;		//biggest allowed deltatime
+
+	//time step related
+	bool	mbFixedStep;		//use a fixed time stamp for game/physics updates?
+	bool	mbSpendRemainder;	//spend or roll over the small remainder?
+	long	mStep;				//fixed step in tics
+	long	mFullUpdateTime;	//counts down over the updates for this frame
+
+
+	public UpdateTimer(bool bFixed, bool bSpendRemainder)
 	{
-		//time stats
-		long	mLastTimeStamp;	//previous time
-		long	mTimeNow;		//time as of last Stamp() call
-		long	mMaxDelta;		//biggest allowed deltatime
+		mbFixedStep			=bFixed;
+		mbSpendRemainder	=bSpendRemainder;
 
-		//time step related
-		bool	mbFixedStep;		//use a fixed time stamp for game/physics updates?
-		bool	mbSpendRemainder;	//spend or roll over the small remainder?
-		long	mStep;				//fixed step in tics
-		long	mFullUpdateTime;	//counts down over the updates for this frame
+		SetMaxDeltaSeconds(0.1f);	//default
+	}
 
 
-		public UpdateTimer(bool bFixed, bool bSpendRemainder)
+	public long GetRenderUpdateDeltaTics()
+	{
+		long	tics	=Delta();
+		if(mbFixedStep && !mbSpendRemainder)
 		{
-			mbFixedStep			=bFixed;
-			mbSpendRemainder	=bSpendRemainder;
-
-			SetMaxDeltaSeconds(0.1f);	//default
+			//subtract remainder
+			//return	tics - mFullUpdateTime;
+			return	tics;
 		}
-
-
-		public long GetRenderUpdateDeltaTics()
+		else
 		{
-			long	tics	=Delta();
-			if(mbFixedStep && !mbSpendRemainder)
-			{
-				//subtract remainder
-				//return	tics - mFullUpdateTime;
-				return	tics;
-			}
-			else
-			{
-				return	tics;
-			}
+			return	tics;
 		}
+	}
 
 
-		public float GetRenderUpdateDeltaSeconds()
+	public float GetRenderUpdateDeltaSeconds()
+	{
+		return	TicsToSeconds(GetRenderUpdateDeltaTics());
+	} 
+
+
+	public float GetRenderUpdateDeltaMilliSeconds()
+	{
+		return	TicsToMilliSeconds(GetRenderUpdateDeltaTics());
+	} 
+
+
+	public long GetUpdateDeltaTics()
+	{
+		if(mbFixedStep)
 		{
-			return	TicsToSeconds(GetRenderUpdateDeltaTics());
-		} 
-
-
-		public float GetRenderUpdateDeltaMilliSeconds()
-		{
-			return	TicsToMilliSeconds(GetRenderUpdateDeltaTics());
-		} 
-
-
-		public long GetUpdateDeltaTics()
-		{
-			if(mbFixedStep)
+			if(mFullUpdateTime >= mStep)
 			{
-				if(mFullUpdateTime >= mStep)
-				{
-					return	mStep;
-				}
-
-				if(mbSpendRemainder && mFullUpdateTime > 0)
-				{
-					return	mFullUpdateTime;
-				}
-				return	0L;
+				return	mStep;
 			}
-			else
+
+			if(mbSpendRemainder && mFullUpdateTime > 0)
 			{
 				return	mFullUpdateTime;
 			}
+			return	0L;
 		}
-
-
-		public float GetUpdateDeltaSeconds()
+		else
 		{
-			long	tics	=GetUpdateDeltaTics();
-
-			return	TicsToSeconds(tics);
+			return	mFullUpdateTime;
 		}
+	}
 
 
-		public float GetUpdateDeltaMilliSeconds()
+	public float GetUpdateDeltaSeconds()
+	{
+		long	tics	=GetUpdateDeltaTics();
+
+		return	TicsToSeconds(tics);
+	}
+
+
+	public float GetUpdateDeltaMilliSeconds()
+	{
+		long	tics	=GetUpdateDeltaTics();
+
+		return	TicsToMilliSeconds(tics);
+	}
+
+
+	public void UpdateDone()
+	{
+		if(mbFixedStep)
 		{
-			long	tics	=GetUpdateDeltaTics();
-
-			return	TicsToMilliSeconds(tics);
-		}
-
-
-		public void UpdateDone()
-		{
-			if(mbFixedStep)
+			if(mFullUpdateTime >= mStep)
 			{
-				if(mFullUpdateTime >= mStep)
-				{
-					mFullUpdateTime	-=mStep;
-				}
-				else
-				{
-					if(mbSpendRemainder)
-					{
-						mFullUpdateTime	=0;
-					}
-				}
+				mFullUpdateTime	-=mStep;
 			}
 			else
 			{
-				mFullUpdateTime	=0;
+				if(mbSpendRemainder)
+				{
+					mFullUpdateTime	=0;
+				}
 			}
 		}
-
-
-		//allows a user preference on the maximum
-		//deltatime allowed (for game stability)
-		public void SetMaxDeltaTics(long tics)
+		else
 		{
-			mMaxDelta	=tics;
+			mFullUpdateTime	=0;
 		}
+	}
 
 
-		public void SetMaxDeltaMilliSeconds(float milliSeconds)
-		{
-			mMaxDelta	=MilliSecondsToTics(milliSeconds);
-		}
+	//allows a user preference on the maximum
+	//deltatime allowed (for game stability)
+	public void SetMaxDeltaTics(long tics)
+	{
+		mMaxDelta	=tics;
+	}
 
 
-		public void SetMaxDeltaSeconds(float seconds)
-		{
-			mMaxDelta	=SecondsToTics(seconds);
-		}
+	public void SetMaxDeltaMilliSeconds(float milliSeconds)
+	{
+		mMaxDelta	=MilliSecondsToTics(milliSeconds);
+	}
 
 
-		public void SetFixedTimeStepTics(long tics)
-		{
-			mStep	=tics;
-		}
+	public void SetMaxDeltaSeconds(float seconds)
+	{
+		mMaxDelta	=SecondsToTics(seconds);
+	}
 
 
-		public void SetFixedTimeStepSeconds(float seconds)
-		{
-			mStep	=SecondsToTics(seconds);
-		}
+	public void SetFixedTimeStepTics(long tics)
+	{
+		mStep	=tics;
+	}
 
 
-		public void SetFixedTimeStepMilliSeconds(float milliSeconds)
-		{
-			mStep	=MilliSecondsToTics(milliSeconds);
-		}
+	public void SetFixedTimeStepSeconds(float seconds)
+	{
+		mStep	=SecondsToTics(seconds);
+	}
 
 
-		public void Stamp()
-		{
-			mLastTimeStamp	=mTimeNow;
-
-			mTimeNow	=Stopwatch.GetTimestamp();
-
-			mFullUpdateTime	+=Delta();
-		}
+	public void SetFixedTimeStepMilliSeconds(float milliSeconds)
+	{
+		mStep	=MilliSecondsToTics(milliSeconds);
+	}
 
 
-		public long DeltaTics()
-		{
-			return	Delta();
-		}
+	public void Stamp()
+	{
+		mLastTimeStamp	=mTimeNow;
+
+		mTimeNow	=Stopwatch.GetTimestamp();
+
+		mFullUpdateTime	+=Delta();
+	}
 
 
-		//deltas are reasonably safe in floats
-		public float DeltaSeconds()
-		{
-			long	tics	=Delta();
-
-			return	TicsToSeconds(tics);
-		}
+	public long DeltaTics()
+	{
+		return	Delta();
+	}
 
 
-		//deltas are reasonably safe in floats
-		public float DeltaMilliSeconds()
-		{
-			long	tics	=Delta();
+	//deltas are reasonably safe in floats
+	public float DeltaSeconds()
+	{
+		long	tics	=Delta();
 
-			return	TicsToMilliSeconds(tics);
-		}
-
-
-		long Delta()
-		{
-			long	delta	=mTimeNow - mLastTimeStamp;
-
-			//will this ever overflow?
-			Debug.Assert(delta < long.MaxValue);
-
-			return	Math.Min(delta, mMaxDelta);
-		}
+		return	TicsToSeconds(tics);
+	}
 
 
-		float TicsToSeconds(long tics)
-		{
-			double	secs	=tics / (double)Stopwatch.Frequency;
+	//deltas are reasonably safe in floats
+	public float DeltaMilliSeconds()
+	{
+		long	tics	=Delta();
 
-			return	(float)secs;
-		}
-
-
-		float TicsToMilliSeconds(long tics)
-		{
-			double	msecs	=tics / (double)Stopwatch.Frequency;
-
-			msecs	*=1000.0;
-
-			return	(float)msecs;
-		}
+		return	TicsToMilliSeconds(tics);
+	}
 
 
-		long SecondsToTics(float seconds)
-		{
-			double	tics	=(double)seconds * (double)Stopwatch.Frequency;
+	long Delta()
+	{
+		long	delta	=mTimeNow - mLastTimeStamp;
 
-			return	(long)tics;
-		}
+		//will this ever overflow?
+		Debug.Assert(delta < long.MaxValue);
+
+		return	Math.Min(delta, mMaxDelta);
+	}
 
 
-		long MilliSecondsToTics(float milliSeconds)
-		{
-			double	msFreq	=Stopwatch.Frequency / 1000.0;
+	float TicsToSeconds(long tics)
+	{
+		double	secs	=tics / (double)Stopwatch.Frequency;
 
-			return	(long)((double)milliSeconds * msFreq);
-		}
+		return	(float)secs;
+	}
+
+
+	float TicsToMilliSeconds(long tics)
+	{
+		double	msecs	=tics / (double)Stopwatch.Frequency;
+
+		msecs	*=1000.0;
+
+		return	(float)msecs;
+	}
+
+
+	long SecondsToTics(float seconds)
+	{
+		double	tics	=(double)seconds * (double)Stopwatch.Frequency;
+
+		return	(long)tics;
+	}
+
+
+	long MilliSecondsToTics(float milliSeconds)
+	{
+		double	msFreq	=Stopwatch.Frequency / 1000.0;
+
+		return	(long)((double)milliSeconds * msFreq);
 	}
 }

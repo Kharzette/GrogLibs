@@ -65,7 +65,7 @@ Map Coordinate System notes
 Character Notes
 	See CharacterNotes.txt in the ColladaConvert tool source.
 	
-Static Meshes
+Static Meshes	-TODO: old outdated info
 	Statics (and characters) have an archetype and an instance.
 	Imagine the arch for a static as a kind of rock, and the
 	instances being rocks of various sizes scattered about with

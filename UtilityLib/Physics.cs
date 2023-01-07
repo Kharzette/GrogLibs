@@ -1,198 +1,197 @@
 ﻿using System;
 using System.Numerics;
 
-namespace UtilityLib
+namespace UtilityLib;
+
+public class Physics
 {
-	public class Physics
+	public struct PhyState
 	{
-		public struct PhyState
+		public Vector3		mPosition, mMomentum, mAngMomentum;
+		public Quaternion	mOrient;
+
+		public Vector3		mVelocity, mAngVelocity;
+		public Quaternion	mSpin;
+
+		public float	mMass, mInertiaTensor, mFriction;
+
+
+		internal void Recalculate()
 		{
-			public Vector3		mPosition, mMomentum, mAngMomentum;
-			public Quaternion	mOrient;
+			mVelocity		=mMomentum / mMass;
+			mAngVelocity	=mAngMomentum / mInertiaTensor;
 
-			public Vector3		mVelocity, mAngVelocity;
-			public Quaternion	mSpin;
+			mOrient	=Quaternion.Normalize(mOrient);
 
-			public float	mMass, mInertiaTensor, mFriction;
+			mSpin.X	=mAngVelocity.X;
+			mSpin.Y	=mAngVelocity.Y;
+			mSpin.Z	=mAngVelocity.Z;
+			mSpin.W	=0f;
 
-
-			internal void Recalculate()
-			{
-				mVelocity		=mMomentum / mMass;
-				mAngVelocity	=mAngMomentum / mInertiaTensor;
-
-				mOrient	=Quaternion.Normalize(mOrient);
-
-				mSpin.X	=mAngVelocity.X;
-				mSpin.Y	=mAngVelocity.Y;
-				mSpin.Z	=mAngVelocity.Z;
-				mSpin.W	=0f;
-
-				mSpin	*=0.5f;
-				mSpin	*=mOrient;
-			}
+			mSpin	*=0.5f;
+			mSpin	*=mOrient;
 		}
+	}
 
-		public struct Derivative
-		{
-			public Vector3		mVelocity, mForce, mTorque;
-			public Quaternion	mSpin;
-		}
+	public struct Derivative
+	{
+		public Vector3		mVelocity, mForce, mTorque;
+		public Quaternion	mSpin;
+	}
 
-		PhyState	mPrev, mCur;
+	PhyState	mPrev, mCur;
 
-		//external forces
-		Vector3	mExternalDV;
-
-
-		public Physics()
-		{
-			mCur.mMomentum	=Vector3.Zero;
-			mCur.mOrient	=Quaternion.Identity;
-		}
+	//external forces
+	Vector3	mExternalDV;
 
 
-		public void Update(float dt)
-		{
-			mPrev	=mCur;
-
-			Integrate(ref mCur, dt);
-		}
-
-
-		public void ClearVerticalMomentum()
-		{
-			mCur.mMomentum.Y	=0f;
-		}
+	public Physics()
+	{
+		mCur.mMomentum	=Vector3.Zero;
+		mCur.mOrient	=Quaternion.Identity;
+	}
 
 
-		public void SetProps(float mass, float it, float friction)
-		{
-			mCur.mMass			=mass;
-			mCur.mInertiaTensor	=it;
-			mCur.mFriction		=friction;
+	public void Update(float dt)
+	{
+		mPrev	=mCur;
 
-			mCur.Recalculate();
-			mPrev	=mCur;
-		}
+		Integrate(ref mCur, dt);
+	}
 
 
-		public void SetFriction(float friction)
-		{
-			mCur.mFriction	=friction;
-		}
+	public void ClearVerticalMomentum()
+	{
+		mCur.mMomentum.Y	=0f;
+	}
 
 
-		public void SetPosition(Vector3 pos)
-		{
-			mCur.mPosition	=pos;
-		}
+	public void SetProps(float mass, float it, float friction)
+	{
+		mCur.mMass			=mass;
+		mCur.mInertiaTensor	=it;
+		mCur.mFriction		=friction;
+
+		mCur.Recalculate();
+		mPrev	=mCur;
+	}
 
 
-		public void ApplyForce(Vector3 force)
-		{
-			mExternalDV	+=force / mCur.mMass;
-		}
+	public void SetFriction(float friction)
+	{
+		mCur.mFriction	=friction;
+	}
 
 
-		public Vector3 GetVelocity()
-		{
-			return	mCur.mVelocity;
-		}
+	public void SetPosition(Vector3 pos)
+	{
+		mCur.mPosition	=pos;
+	}
 
 
-		public Vector3 GetPosition()
-		{
-			return	mCur.mPosition;
-		}
+	public void ApplyForce(Vector3 force)
+	{
+		mExternalDV	+=force / mCur.mMass;
+	}
 
 
-		public Quaternion GetOrient()
-		{
-			return	mCur.mOrient;
-		}
+	public Vector3 GetVelocity()
+	{
+		return	mCur.mVelocity;
+	}
 
 
-		void Integrate(ref PhyState state, float dt)
-		{
-			Derivative	a	=evaluate(state, dt);
-			Derivative	b	=evaluate(ref state, dt*0.5f, a);
-			Derivative	c	=evaluate(ref state, dt*0.5f, b);
-			Derivative	d	=evaluate(ref state, dt, c);
-		
-			state.mPosition		+=1.0f/6.0f * dt * (a.mVelocity + 2.0f * (b.mVelocity + c.mVelocity) + d.mVelocity);
-			state.mMomentum		+=1.0f/6.0f * dt * (a.mForce + 2.0f * (b.mForce + c.mForce) + d.mForce);
-
-			Quaternion	twoBPlusC	=Quaternion.Multiply(b.mSpin + c.mSpin, 2f);
-			Quaternion	allQuat		=(a.mSpin + twoBPlusC + d.mSpin);
-
-			state.mOrient		+=Quaternion.Multiply(allQuat, 1.0f/6.0f * dt);
-			state.mAngMomentum	+=1.0f/6.0f * dt * (a.mTorque + 2.0f * (b.mTorque + c.mTorque) + d.mTorque);
-
-			state.Recalculate();
-		}
+	public Vector3 GetPosition()
+	{
+		return	mCur.mPosition;
+	}
 
 
-		Derivative evaluate(PhyState state, float dt)
-		{
-			Derivative	output;
-			output.mVelocity	=state.mVelocity;
-			output.mSpin		=state.mSpin;
-
-			forces(state, out output.mForce, out output.mTorque);
-
-			return	output;
-		}
+	public Quaternion GetOrient()
+	{
+		return	mCur.mOrient;
+	}
 
 
-		Derivative evaluate(ref PhyState state, float dt, Derivative derivative)
-		{
-			state.mPosition		+=derivative.mVelocity * dt;
-			state.mMomentum		+=derivative.mForce * dt;
-			state.mOrient		+=derivative.mSpin * dt;
-			state.mAngMomentum	+=derivative.mTorque * dt;
-			state.Recalculate();
-		
-			Derivative	output;
-			output.mVelocity	=state.mVelocity;
-			output.mSpin		=state.mSpin;
-
-			forces(state, out output.mForce, out output.mTorque);
-
-			return	output;
-		}
-
-
-		void forces(PhyState state, out Vector3 force, out Vector3 torque)
-		{
-			//friction
-			Vector3	frictionForce	=state.mMass * state.mVelocity;
-			frictionForce	*=-state.mFriction;
-
-			force	=mExternalDV + frictionForce;
-			torque	=Vector3.Zero;
-
-			//clear after update
-			mExternalDV	=Vector3.Zero;
-		}
-
-
-		void forcesRandomish(PhyState state, float t, out Vector3 force, out Vector3 torque)
-		{
-			force	=-10 * state.mPosition;
+	void Integrate(ref PhyState state, float dt)
+	{
+		Derivative	a	=evaluate(state, dt);
+		Derivative	b	=evaluate(ref state, dt*0.5f, a);
+		Derivative	c	=evaluate(ref state, dt*0.5f, b);
+		Derivative	d	=evaluate(ref state, dt, c);
 	
-			// sine force to add some randomness to the motion
-			force.X += 10f * (float)Math.Sin(t * 0.9f + 0.5f);
-			force.Y += 11f * (float)Math.Sin(t * 0.5f + 0.4f);
-			force.Z += 12f * (float)Math.Sin(t * 0.7f + 0.9f);
+		state.mPosition		+=1.0f/6.0f * dt * (a.mVelocity + 2.0f * (b.mVelocity + c.mVelocity) + d.mVelocity);
+		state.mMomentum		+=1.0f/6.0f * dt * (a.mForce + 2.0f * (b.mForce + c.mForce) + d.mForce);
 
-			// sine torque to get some spinning action
-			torque.X = 1.0f * (float)Math.Sin(t * 0.9f + 0.5f);
-			torque.Y = 1.1f * (float)Math.Sin(t * 0.5f + 0.4f);
-			torque.Z = 1.2f * (float)Math.Sin(t * 0.7f + 0.9f);
+		Quaternion	twoBPlusC	=Quaternion.Multiply(b.mSpin + c.mSpin, 2f);
+		Quaternion	allQuat		=(a.mSpin + twoBPlusC + d.mSpin);
 
-			// damping torque so we dont spin too fast
-			torque	-=0.2f * state.mAngVelocity;
-		}
+		state.mOrient		+=Quaternion.Multiply(allQuat, 1.0f/6.0f * dt);
+		state.mAngMomentum	+=1.0f/6.0f * dt * (a.mTorque + 2.0f * (b.mTorque + c.mTorque) + d.mTorque);
+
+		state.Recalculate();
+	}
+
+
+	Derivative evaluate(PhyState state, float dt)
+	{
+		Derivative	output;
+		output.mVelocity	=state.mVelocity;
+		output.mSpin		=state.mSpin;
+
+		forces(state, out output.mForce, out output.mTorque);
+
+		return	output;
+	}
+
+
+	Derivative evaluate(ref PhyState state, float dt, Derivative derivative)
+	{
+		state.mPosition		+=derivative.mVelocity * dt;
+		state.mMomentum		+=derivative.mForce * dt;
+		state.mOrient		+=derivative.mSpin * dt;
+		state.mAngMomentum	+=derivative.mTorque * dt;
+		state.Recalculate();
+	
+		Derivative	output;
+		output.mVelocity	=state.mVelocity;
+		output.mSpin		=state.mSpin;
+
+		forces(state, out output.mForce, out output.mTorque);
+
+		return	output;
+	}
+
+
+	void forces(PhyState state, out Vector3 force, out Vector3 torque)
+	{
+		//friction
+		Vector3	frictionForce	=state.mMass * state.mVelocity;
+		frictionForce	*=-state.mFriction;
+
+		force	=mExternalDV + frictionForce;
+		torque	=Vector3.Zero;
+
+		//clear after update
+		mExternalDV	=Vector3.Zero;
+	}
+
+
+	void forcesRandomish(PhyState state, float t, out Vector3 force, out Vector3 torque)
+	{
+		force	=-10 * state.mPosition;
+
+		// sine force to add some randomness to the motion
+		force.X += 10f * (float)Math.Sin(t * 0.9f + 0.5f);
+		force.Y += 11f * (float)Math.Sin(t * 0.5f + 0.4f);
+		force.Z += 12f * (float)Math.Sin(t * 0.7f + 0.9f);
+
+		// sine torque to get some spinning action
+		torque.X = 1.0f * (float)Math.Sin(t * 0.9f + 0.5f);
+		torque.Y = 1.1f * (float)Math.Sin(t * 0.5f + 0.4f);
+		torque.Z = 1.2f * (float)Math.Sin(t * 0.7f + 0.9f);
+
+		// damping torque so we dont spin too fast
+		torque	-=0.2f * state.mAngVelocity;
 	}
 }
