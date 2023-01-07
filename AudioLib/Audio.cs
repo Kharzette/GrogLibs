@@ -154,23 +154,81 @@ namespace AudioLib
 
 		int	ChannelCountFromMasteringVoice()
 		{
-			switch(mMV.ChannelMask)
+			int	ret	=0;
+
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.BackCenter))
 			{
-				case	Speakers.TwoPointOne:
-					return	3;
-				case	Speakers.FourPointOne:
-					return	5;
-				case	Speakers.FivePointOne:
-					return	6;
-				case	Speakers.SevenPointOne:
-					return	8;
-				case	Speakers.FivePointOneSurround:
-					return	6;
-				case	Speakers.SevenPointOneSurround:
-					return	8;
-				default:
-					return	1;
+				ret++;
 			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.BackLeft))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.BackRight))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.FrontCenter))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.FrontLeft))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.FrontLeftOfCenter))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.FrontRight))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.FrontRightOfCenter))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.LowFrequency))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.SideLeft))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.SideRight))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.TopBackCenter))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.TopBackLeft))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.TopBackRight))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.TopCenter))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.TopFrontCenter))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.TopFrontLeft))
+			{
+				ret++;
+			}
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.TopFrontRight))
+			{
+				ret++;
+			}
+			return	ret;
 		}
 
 
@@ -227,12 +285,10 @@ namespace AudioLib
 
 					CalculateFlags	calcFlags	=CalculateFlags.Matrix | CalculateFlags.Doppler;
 
-					if((mMV.ChannelMask & Speakers.LowFrequency) != 0)
+					if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.LowFrequency))
 					{
 						calcFlags	|=CalculateFlags.RedirectToLfe;
-					}
-
-					
+					}					
 
 					//this is for mono sounds TODO: assert
 					DspSettings	dsp	=m3DAud.Calculate(mListener, threeD.Key,
@@ -299,14 +355,14 @@ namespace AudioLib
 
 			CalculateFlags	calcFlags	=CalculateFlags.Matrix | CalculateFlags.Doppler;
 
-//			if((mDetails.OutputFormat.ChannelMask & Speakers.LowFrequency) != 0)
-//			{
+			if(Misc.bFlagSet((uint)mMV.ChannelMask, (uint)Speakers.LowFrequency))
+			{
 				calcFlags	|=CalculateFlags.RedirectToLfe;
-//			}
+			}					
 
 			//this is for mono sounds TODO: assert
 			DspSettings	dsp	=m3DAud.Calculate(mListener, em,
-				calcFlags, 1);
+				calcFlags, 1, ChannelCountFromMasteringVoice());
 
 			sei.Play();
 
@@ -357,7 +413,9 @@ namespace AudioLib
 
 		public void GetSoundList(out string []list)
 		{
-			return	mFX.Keys.CopyTo(list, 0);
+			list	=new string[mFX.Keys.Count];
+
+			mFX.Keys.CopyTo(list, 0);
 		}
 
 
