@@ -28,7 +28,7 @@ Keyboard
 	data the way checking state does.
 
 	Maybe a focused text input mode that uses WM_CHAR?  This would enable key
-	repeat and even pick up queued latters in low framerate situations.
+	repeat and even pick up queued letters in low framerate situations.
 
 	Avoid sticky keys like how sometimes alt can get stuck on when the user
 	tabs out.
