@@ -1,22 +1,21 @@
 using SharpDX;
 
 
-namespace EntityLib
+namespace EntityLib;
+
+//shoot me for things to happen
+public class ShootObject : Component
 {
-	//shoot me for things to happen
-	public class ShootObject : Component
+	enum State
 	{
-		enum State
-		{
-			Idle, Shot
-		}
+		Idle, Shot
+	}
 
-		Vector3		mPosition;
+	Vector3		mPosition;
 
 
-		public ShootObject(Vector3 pos, Entity owner) : base(owner)
-		{
-			mPosition	=pos;
-		}
+	public ShootObject(Vector3 pos, Entity owner) : base(owner)
+	{
+		mPosition	=pos;
 	}
 }

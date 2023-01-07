@@ -5,58 +5,57 @@ using BSPZone;
 using SharpDX;
 
 
-namespace EntityLib
+namespace EntityLib;
+
+public class TriggerAble : Component
 {
-	public class TriggerAble : Component
+	public enum TState
 	{
-		public enum TState
+		Triggered
+	}
+
+	bool	mbTriggered;
+
+
+	public TriggerAble(Entity owner) : base(owner)
+	{
+	}
+
+
+	public override void Update(UpdateTimer time)
+	{
+	}
+
+
+	public override void StateChange(Enum state, UInt32 value)
+	{
+		if(!state.Equals(TState.Triggered))
 		{
-			Triggered
+			return;
 		}
 
-		bool	mbTriggered;
+		mbTriggered	=(value != 0);
 
-
-		public TriggerAble(Entity owner) : base(owner)
+		//notify owner components
+		List<Component>	comps	=mOwner.GetComponents();
+		foreach(Component c in comps)
 		{
-		}
-
-
-		public override void Update(UpdateTimer time)
-		{
-		}
-
-
-		public override void StateChange(Enum state, UInt32 value)
-		{
-			if(!state.Equals(TState.Triggered))
+			if(c is BModelMover)
 			{
-				return;
+				c.StateChange(BModelMover.States.Forward, value);
+				c.StateChange(BModelMover.States.Moving, value);
 			}
-
-			mbTriggered	=(value != 0);
-
-			//notify owner components
-			List<Component>	comps	=mOwner.GetComponents();
-			foreach(Component c in comps)
+			else if(c is Trigger)
 			{
-				if(c is BModelMover)
-				{
-					c.StateChange(BModelMover.States.Forward, value);
-					c.StateChange(BModelMover.States.Moving, value);
-				}
-				else if(c is Trigger)
-				{
-					Trigger	trig	=c as Trigger;
-					trig.TriggerTarget(value);
-				}
-				else if(c is Light)
-				{
-					Light	lt	=c as Light;
+				Trigger	trig	=c as Trigger;
+				trig.TriggerTarget(value);
+			}
+			else if(c is Light)
+			{
+				Light	lt	=c as Light;
 
-					UInt32	lightToggle	=lt.IsOn()? 0u : 1u;
-					c.StateChange(Light.State.On, lightToggle);
-				}
+				UInt32	lightToggle	=lt.IsOn()? 0u : 1u;
+				c.StateChange(Light.State.On, lightToggle);
 			}
 		}
 	}

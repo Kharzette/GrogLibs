@@ -1,13 +1,12 @@
-namespace EntityLib
+namespace EntityLib;
+
+public class TargetName : Component
 {
-	public class TargetName : Component
+	public readonly	string	mTargetName;
+
+
+	public TargetName(string name, Entity owner) : base(owner)
 	{
-		public readonly	string	mTargetName;
-
-
-		public TargetName(string name, Entity owner) : base(owner)
-		{
-			mTargetName	=name;
-		}
+		mTargetName	=name;
 	}
 }
