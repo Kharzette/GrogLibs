@@ -58,7 +58,7 @@ public class StuffKeeper
 	IncludeFX	mIFX;
 
 	//for texture loading
-	IWICImagingFactory	mIF	=new IWICImagingFactory();
+	IWICImagingFactory	mIF;
 
 	//game directory
 	string	mGameRootDir;
@@ -124,6 +124,7 @@ public class StuffKeeper
 		mGameRootDir	=gameRootDir;
 		mCBKeeper		=new CBKeeper(gd.GD);
 		mIFX			=new IncludeFX(gameRootDir);
+		mIF				=new IWICImagingFactory();
 
 		switch(gd.GD.FeatureLevel)
 		{

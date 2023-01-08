@@ -93,6 +93,11 @@ public class DebugDraw
 
 		CBKeeper	cbk	=mSK.GetCBKeeper();
 
+		gd.DC.VSSetShader(mSK.GetVertexShader("WNormWPosVColorVS"));
+		gd.DC.PSSetShader(mSK.GetPixelShader("TriSolidVColorSpecPS"));
+
+		gd.DC.IASetInputLayout(mSK.GetOrCreateLayout("WNormWPosVColorVS"));
+
 		gd.DC.IASetVertexBuffer(0, mVB, 24);
 		gd.DC.IASetIndexBuffer(mIB, Format.R16_UInt, 0);
 
@@ -107,6 +112,8 @@ public class DebugDraw
 		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
 		cbk.SetSpecular(Vector4.One, 1f);
 		cbk.UpdateObject(gd.DC);
+
+		cbk.SetCommonCBToShaders(gd.DC);
 
 		gd.DC.DrawIndexed(mNumIndexes, 0, 0);
 	}
