@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Collections.Generic;
 using System.Text;
+using UtilityLib;
 
 
 namespace BSPCore;
@@ -133,7 +134,7 @@ public struct GBSPPlane
 			return;
 		}
 
-		mNormal.Normalize();
+		mNormal	=Vector3.Normalize(mNormal);
 		mDist	=Vector3.Dot(verts[1], mNormal);
 		mType	=GetPlaneType(mNormal);
 	}
@@ -147,7 +148,7 @@ public struct GBSPPlane
 
 	internal void Snap()
 	{
-		UtilityLib.Mathery.SnapVector(ref mNormal);
+		Mathery.SnapNormal(ref mNormal);
 
 		float	roundedDist	=(float)Math.Round((double)mDist);
 
@@ -202,7 +203,7 @@ public struct GBSPPlane
 
 		UInt32	type	=mType % PLANE_ANYX;
 
-		if(mNormal[(int)type] < 0)
+		if(mNormal.ArrayAccess((int)type) < 0)
 		{
 			Inverse();
 			side	=true;

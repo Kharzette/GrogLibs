@@ -9,6 +9,7 @@ namespace BSPCore;
 
 public partial class MapGrinder
 {
+	/*
 	void FinishLightMapped(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
 	{
 		List<DrawCall>	modCalls	=ComputeIndexes(mLMIndexes, matChunks, ref vertOfs);
@@ -121,5 +122,5 @@ public partial class MapGrinder
 			mLMAAnimStyle);
 
 		mLMAAnimDraws.Add(modelIndex, modCalls);
-	}
+	}*/
 }

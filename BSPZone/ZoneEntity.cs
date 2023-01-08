@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Collections.Generic;
 using System.IO;
 using UtilityLib;
+using Vortice.Mathematics;
 
 
 namespace BSPZone;
@@ -124,10 +125,10 @@ public class ZoneEntity
 
 	public bool GetDirectionFromAngles(string key, out Vector3 dir)
 	{
-		Matrix	orient;
+		Matrix4x4	orient;
 		if(GetMatrixFromAngles(key, out orient))
 		{
-			dir		=orient.Forward;
+			dir		=orient.Forward();
 			return	true;
 		}
 		dir		=Vector3.Zero;
@@ -154,22 +155,22 @@ public class ZoneEntity
 	}
 
 
-	public bool GetMatrixFromAngles(string key, out Matrix orientation)
+	public bool GetMatrixFromAngles(string key, out Matrix4x4 orientation)
 	{
 		int		iPitch, iYaw, iRoll;
 		float	yaw, pitch, roll;
 
 		if(!GetCorrectedAngles(key, out iPitch, out iYaw, out iRoll))
 		{
-			orientation	=Matrix.Identity;
+			orientation	=Matrix4x4.Identity;
 			return		false;
 		}
 
-		yaw		=MathUtil.DegreesToRadians(iYaw);
-		pitch	=MathUtil.DegreesToRadians(iPitch);
-		roll	=MathUtil.DegreesToRadians(iRoll);
+		yaw		=MathHelper.ToRadians(iYaw);
+		pitch	=MathHelper.ToRadians(iPitch);
+		roll	=MathHelper.ToRadians(iRoll);
 
-		orientation	=Matrix.RotationYawPitchRoll(yaw, pitch, roll);
+		orientation	=Matrix4x4.CreateFromYawPitchRoll(yaw, pitch, roll);
 
 		return	true;
 	}

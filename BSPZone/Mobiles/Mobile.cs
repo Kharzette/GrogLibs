@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using UtilityLib;
 using InputLib;
+using Vortice.Mathematics;
 
 
 namespace BSPZone;
@@ -69,7 +70,7 @@ public class Mobile
 	{
 		mBox				=Misc.MakeBox(boxWidth, boxHeight);
 		mEyeHeight			=Vector3.UnitY * eyeHeight;
-		mBoxMiddleOffset	=Vector3.UnitY * ((mBox.Maximum.Y - mBox.Minimum.Y) * 0.5f);
+		mBoxMiddleOffset	=Vector3.UnitY * ((mBox.Max.Y - mBox.Min.Y) * 0.5f);
 	}
 
 
@@ -141,12 +142,7 @@ public class Mobile
 
 	public BoundingBox GetTransformedBound()
 	{
-		BoundingBox	ret	=mBox;
-
-		ret.Minimum	+=mPosition;
-		ret.Maximum	+=mPosition;
-
-		return	ret;
+		return	new BoundingBox(mBox.Min + mPosition, mBox.Max + mPosition);
 	}
 
 
@@ -182,8 +178,8 @@ public class Mobile
 		{
 			//need a leveled out forward direction
 			Vector3	dir		=camForward;
-			Vector3	side	=Vector3.Cross(dir, Vector3.Up);
-			dir				=Vector3.Cross(side, Vector3.Up);
+			Vector3	side	=Vector3.Cross(dir, Vector3.UnitY);
+			dir				=Vector3.Cross(side, Vector3.UnitY);
 
 			//check the direction moving vs axis
 			moveDelta	/=moveLen;
@@ -231,16 +227,16 @@ public class Mobile
 		//grab the orientation from the just updated player steering
 		//the camera would be a frame behind here as it ordinarily
 		//hasn't been updated yet
-		Matrix	orientation	=
-			Matrix.RotationY(MathUtil.DegreesToRadians(ps.Yaw)) *
-			Matrix.RotationX(MathUtil.DegreesToRadians(ps.Pitch)) *
-			Matrix.RotationZ(MathUtil.DegreesToRadians(ps.Roll));
+		Matrix4x4	orientation	=
+			Matrix4x4.CreateRotationY(MathHelper.ToRadians(ps.Yaw)) *
+			Matrix4x4.CreateRotationX(MathHelper.ToRadians(ps.Pitch)) *
+			Matrix4x4.CreateRotationZ(MathHelper.ToRadians(ps.Roll));
 
 		//transpose to get it out of wacky camera land
-		orientation		=Matrix.Transpose(orientation);
+		orientation		=Matrix4x4.Transpose(orientation);
 
 		//grab transpose forward
-		Vector3	forward	=orientation.Forward;
+		Vector3	forward	=orientation.Forward();
 
 		if(bMoving)
 		{
@@ -268,7 +264,7 @@ public class Mobile
 		camPos	=-camPos;
 
 		//transform the shoulder offset to get it into player space
-		shoulderOffset	=Vector3.TransformCoordinate(shoulderOffset, orientation);
+		Mathery.TransformCoordinate(shoulderOffset, orientation, out shoulderOffset);
 
 		//for the third person camera, back the position out
 		//along the updated forward vector

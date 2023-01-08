@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using UtilityLib;
 using PathLib;
+using Vortice.Mathematics;
 
 
 namespace BSPZone;
@@ -529,7 +530,7 @@ public class MobileAI
 			Debug.Assert(Mathery.IsBoundingBoxCentered(bounds));
 
 			//get a radius from the bounds
-			float	radius	=Vector3.Distance(Vector3.Zero, bounds.Maximum);
+			float	radius	=Vector3.Distance(Vector3.Zero, bounds.Max);
 			if(mMob.TrySphere(approachPos + middleOfs, radius, true))
 			{
 				goodPos		=approachPos;
@@ -579,7 +580,7 @@ public class MobileAI
 		}
 
 		//do unflattened move
-		aim.Normalize();
+		aim	=Vector3.Normalize(aim);
 		aim	*=mSpeed * msDelta;
 
 		endPos	=myPos - aim;

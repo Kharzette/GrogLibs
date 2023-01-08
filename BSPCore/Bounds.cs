@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Numerics;
-using System.Collections.Generic;
-using System.Text;
-using System.IO;
-using System.Diagnostics;
+using UtilityLib;
 
 
 namespace BSPCore;
@@ -68,8 +65,8 @@ public class Bounds
 	{
 		for(int i=0;i < 3;i++)
 		{
-			if(mMins[i] >= b2.mMaxs[i]
-				|| mMaxs[i] <= b2.mMins[i])
+			if(mMins.ArrayAccess(i) >= b2.mMaxs.ArrayAccess(i)
+				|| mMaxs.ArrayAccess(i) <= b2.mMins.ArrayAccess(i))
 			{
 				return	false;
 			}
@@ -97,8 +94,8 @@ public class Bounds
 	{
 		for(int i=0;i < 3;i++)
 		{
-			if(mMins[i] <= -MIN_MAX_BOUNDS
-				|| mMaxs[i] >= MIN_MAX_BOUNDS)
+			if(mMins.ArrayAccess(i) <= -MIN_MAX_BOUNDS
+				|| mMaxs.ArrayAccess(i) >= MIN_MAX_BOUNDS)
 			{
 				return	true;
 			}
@@ -158,12 +155,12 @@ public class Bounds
 		{
 			Side	=0;
 
-			if(mMaxs[(int)Plane.mType] > (Plane.mDist + GBSPPlane.PLANESIDE_EPSILON))
+			if(mMaxs.ArrayAccess((int)Plane.mType) > (Plane.mDist + GBSPPlane.PLANESIDE_EPSILON))
 			{
 				Side	|=GBSPPlane.PSIDE_FRONT;
 			}
 
-			if(mMins[(int)Plane.mType] < (Plane.mDist - GBSPPlane.PLANESIDE_EPSILON))
+			if(mMins.ArrayAccess((int)Plane.mType) < (Plane.mDist - GBSPPlane.PLANESIDE_EPSILON))
 			{
 				Side	|=GBSPPlane.PSIDE_BACK;
 			}
@@ -172,15 +169,15 @@ public class Bounds
 		
 		for(int i=0;i < 3;i++)
 		{
-			if(Plane.mNormal[i] < 0)
+			if(Plane.mNormal.ArrayAccess(i) < 0)
 			{
-				Corner1[i]	=mMins[i];
-				Corner2[i]	=mMaxs[i];
+				Corner1.ArraySet(i, mMins.ArrayAccess(i));
+				Corner2.ArraySet(i, mMaxs.ArrayAccess(i));				
 			}
 			else
 			{
-				Corner2[i]	=mMins[i];
-				Corner1[i]	=mMaxs[i];
+				Corner2.ArraySet(i, mMins.ArrayAccess(i));
+				Corner1.ArraySet(i, mMaxs.ArrayAccess(i));
 			}
 		}
 

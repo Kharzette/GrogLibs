@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using BSPCore;
 using UtilityLib;
+using Vortice.Mathematics;
 
 
 namespace BSPVis;

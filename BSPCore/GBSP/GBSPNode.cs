@@ -1115,7 +1115,7 @@ internal partial class GBSPNode
 						{
 							plane.Inverse();
 						}
-						if(plane.mNormal[Axis] == Dir)
+						if(plane.mNormal.ArrayAccess(Axis) == Dir)
 						{
 							break;
 						}
@@ -1125,16 +1125,16 @@ internal partial class GBSPNode
 						//Add a new axial aligned side
 						plane.mNormal	=Vector3.Zero;
 
-						plane.mNormal[Axis]	=Dir;
+						plane.mNormal.ArraySet(Axis, Dir);
 
 						//get the mins/maxs from the gbsp brush
 						if(Dir == 1)
 						{
-							plane.mDist	=bnd.mMaxs[Axis];
+							plane.mDist	=bnd.mMaxs.ArrayAccess(Axis);
 						}
 						else
 						{
-							plane.mDist	=-bnd.mMins[Axis];
+							plane.mDist	=-bnd.mMins.ArrayAccess(Axis);
 						}
 
 						bool	side;

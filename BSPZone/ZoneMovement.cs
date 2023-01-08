@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
 using UtilityLib;
+using Vortice.Mathematics;
 
 
 namespace BSPZone;
@@ -234,7 +235,8 @@ public partial class Zone
 
 		//see if original movement is mostly non vertical
 		moveVec	=end - start;
-		moveVec.Normalize();
+		moveVec	=Vector3.Normalize(moveVec);
+
 		float	vert	=Vector3.Dot(Vector3.UnitY, moveVec);
 
 		if(vert > RampAngle || vert < -RampAngle)
@@ -787,12 +789,12 @@ public partial class Zone
 
 		ZoneModel	zm	=mZoneModels[modelIndex];
 
-		Matrix	oldMatInv	=zm.mInvertedTransform;
+		Matrix4x4	oldMatInv	=zm.mInvertedTransform;
 
 		//do the actual rotation
 		zm.RotateY(degrees);
 
-		Matrix	newMat		=zm.mTransform;
+		Matrix4x4	newMat		=zm.mTransform;
 
 		//stuff rotating in y, bipeds should be able to stand on it
 		//as it moves, might look odd at high speeds
@@ -801,11 +803,13 @@ public partial class Zone
 			//if any are riding on this model, move them too
 			if(pa.Value.mModelOn == modelIndex)
 			{
+				Vector3	start, end;
+
 				//get riding on position relative to model's previous frame position
-				Vector3	start	=Vector3.TransformCoordinate(pa.Value.mWorldCenter, oldMatInv);
+				Mathery.TransformCoordinate(pa.Value.mWorldCenter, ref oldMatInv, out start);
 
 				//transform by this frame's mat
-				Vector3	end	=Vector3.TransformCoordinate(start, newMat);
+				Mathery.TransformCoordinate(start, ref newMat, out end);
 
 				//get delta
 				end	-=pa.Value.mWorldCenter;

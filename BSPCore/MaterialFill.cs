@@ -27,7 +27,7 @@ internal class MaterialFill
 		GBSPPlane	pln;
 		pln.mNormal	=Vector3.Cross(tex.mVecU, tex.mVecV);
 
-		pln.mNormal.Normalize();
+		pln.mNormal	=Vector3.Normalize(pln.mNormal);
 		pln.mDist	=0;
 		pln.mType	=GBSPPlane.PLANE_ANY;
 
@@ -107,14 +107,10 @@ internal class MaterialFill
 	{
 		//switchable styles reference the same shader
 		//array as animated, so need a - 20
-		Color	ret	=Color.White;
-
-		ret.R	=ClampLightIndex(f.mLType0);
-		ret.G	=ClampLightIndex(f.mLType1);
-		ret.B	=ClampLightIndex(f.mLType2);
-		ret.A	=ClampLightIndex(f.mLType3);
-
-		return	ret;
+		return	new Color(ClampLightIndex(f.mLType0),
+			ClampLightIndex(f.mLType1),
+			ClampLightIndex(f.mLType2),
+			ClampLightIndex(f.mLType3));
 	}
 
 
@@ -256,10 +252,10 @@ internal class MaterialFill
 
 		for(int i=0;i < lmap.Length;i++)
 		{
-			lmap[i].R	=lightData[sizeOffset + f.mLightOfs + (i * 3)];
-			lmap[i].G	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 1];
-			lmap[i].B	=lightData[sizeOffset + f.mLightOfs + (i * 3) + 2];
-			lmap[i].A	=0xFF;
+			lmap[i]	=new Color(lightData[sizeOffset + f.mLightOfs + (i * 3)],
+				lightData[sizeOffset + f.mLightOfs + (i * 3) + 1],
+				lightData[sizeOffset + f.mLightOfs + (i * 3) + 2],
+				(byte)0xFF);
 		}
 
 		if(!atlas.Insert(lmap, f.mLWidth, f.mLHeight,

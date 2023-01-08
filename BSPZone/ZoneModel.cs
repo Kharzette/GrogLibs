@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Numerics;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using Vortice.Mathematics;
 
 
 namespace BSPZone;
@@ -24,18 +25,18 @@ internal class ZoneModel
 	internal Vector3	mPosition;
 
 	//these are updated whenever the above changes
-	internal Matrix	mTransform, mInvertedTransform;
+	internal Matrix4x4	mTransform, mInvertedTransform;
 
 
 	public void Write(BinaryWriter bw)
 	{
 		bw.Write(mRootNode);
-		bw.Write(mBounds.Minimum.X);
-		bw.Write(mBounds.Minimum.Y);
-		bw.Write(mBounds.Minimum.Z);
-		bw.Write(mBounds.Maximum.X);
-		bw.Write(mBounds.Maximum.Y);
-		bw.Write(mBounds.Maximum.Z);
+		bw.Write(mBounds.Min.X);
+		bw.Write(mBounds.Min.Y);
+		bw.Write(mBounds.Min.Z);
+		bw.Write(mBounds.Max.X);
+		bw.Write(mBounds.Max.Y);
+		bw.Write(mBounds.Max.Z);
 		bw.Write(mOrigin.X);
 		bw.Write(mOrigin.Y);
 		bw.Write(mOrigin.Z);
@@ -51,13 +52,15 @@ internal class ZoneModel
 
 	public void Read(BinaryReader br)
 	{
+		Vector3	min, max;
+
 		mRootNode			=br.ReadInt32();
-		mBounds.Minimum.X	=br.ReadSingle();
-		mBounds.Minimum.Y	=br.ReadSingle();
-		mBounds.Minimum.Z	=br.ReadSingle();
-		mBounds.Maximum.X	=br.ReadSingle();
-		mBounds.Maximum.Y	=br.ReadSingle();
-		mBounds.Maximum.Z	=br.ReadSingle();
+		min.X				=br.ReadSingle();
+		min.Y				=br.ReadSingle();
+		min.Z				=br.ReadSingle();
+		max.X				=br.ReadSingle();
+		max.Y				=br.ReadSingle();
+		max.Z				=br.ReadSingle();
 		mOrigin.X			=br.ReadSingle();
 		mOrigin.Y			=br.ReadSingle();
 		mOrigin.Z			=br.ReadSingle();
@@ -69,6 +72,8 @@ internal class ZoneModel
 		mNumClusters		=br.ReadInt32();
 		mAreaFront			=br.ReadInt32();
 		mAreaBack			=br.ReadInt32();
+
+		mBounds	=new BoundingBox(min, max);
 
 		mPosition	=mOrigin;
 		UpdateTransforms();
@@ -115,11 +120,15 @@ internal class ZoneModel
 
 	internal void UpdateTransforms()
 	{
-		mTransform	=Matrix.RotationZ(MathUtil.DegreesToRadians(mRoll)) *
-			Matrix.RotationX(MathUtil.DegreesToRadians(mPitch)) *
-			Matrix.RotationY(MathUtil.DegreesToRadians(mYaw)) *
-			Matrix.Translation(mPosition);
+		mTransform	=Matrix4x4.CreateRotationZ(MathHelper.ToRadians(mRoll)) *
+			Matrix4x4.CreateRotationX(MathHelper.ToRadians(mPitch)) *
+			Matrix4x4.CreateRotationY(MathHelper.ToRadians(mYaw)) *
+			Matrix4x4.CreateTranslation(mPosition);
 
-		mInvertedTransform	=Matrix.Invert(mTransform);
+		if(!Matrix4x4.Invert(mTransform, out mInvertedTransform))
+		{
+			//need some kind of warning here, maybe assert for now
+			Debug.Assert(false);
+		}
 	}
 }

@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
 using Vortice.Mathematics;
+using UtilityLib;
 
 
 namespace BSPCore;
@@ -73,11 +74,11 @@ public class GBSPPoly
 			CoreEvents.Print("Bad plane passed into poly constructor!\n");
 		}
 
-		Vector3.Cross(ref p.mNormal, ref upVec, out rightVec);
-		Vector3.Cross(ref p.mNormal, ref rightVec, out upVec);
+		rightVec	=Vector3.Cross(p.mNormal, upVec);
+		upVec		=Vector3.Cross(p.mNormal, rightVec);
 
-		upVec.Normalize();
-		rightVec.Normalize();
+		upVec		=Vector3.Normalize(upVec);
+		rightVec	=Vector3.Normalize(rightVec);
 
 		org			=p.mDist * p.mNormal;
 		upVec		*=Bounds.MIN_MAX_BOUNDS;
@@ -121,9 +122,10 @@ public class GBSPPoly
 	{
 		for(int i=0;i < mVerts.Length;i++)
 		{
+			Vector3	v	=mVerts[i];
 			for(int k=0;k < 3;k++)
 			{
-				float	val	=mVerts[i][k];
+				float	val	=v.ArrayAccess(k);
 
 				if(val == Bounds.MIN_MAX_BOUNDS)
 				{
@@ -172,7 +174,9 @@ public class GBSPPoly
 			}
 
 			Vector3	edgeNorm	=Vector3.Cross(norm, vect1);
-			edgeNorm.Normalize();
+			
+			edgeNorm	=Vector3.Normalize(edgeNorm);
+
 			float	edgeDist	=Vector3.Dot(v1, edgeNorm);
 			
 			//Check for convexity

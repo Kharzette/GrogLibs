@@ -280,14 +280,15 @@ internal partial class GBSPNode
 
 		//So there won't be NULL volume leafs when we create the outside portals
 		//note genesis uses 128 for outside space, Q2 uses 8
-		for(int k=0;k < 3;k++)
+		if(nodeMins.X - 8f <= -Bounds.MIN_MAX_BOUNDS
+			|| nodeMins.Y - 8f <= -Bounds.MIN_MAX_BOUNDS
+			|| nodeMins.Z - 8f <= -Bounds.MIN_MAX_BOUNDS
+			|| nodeMaxs.X + 8f >= Bounds.MIN_MAX_BOUNDS
+			|| nodeMaxs.Y + 8f >= Bounds.MIN_MAX_BOUNDS
+			|| nodeMaxs.Z + 8f >= Bounds.MIN_MAX_BOUNDS)
 		{
-			if(nodeMins[k] - 8.0f <= -Bounds.MIN_MAX_BOUNDS ||
-				nodeMaxs[k] + 8.0f >= Bounds.MIN_MAX_BOUNDS)
-			{
-				CoreEvents.Print("CreateAllOutsidePortals:  World BOX out of range...\n");
-				return	false;
-			}
+			CoreEvents.Print("CreateAllOutsidePortals:  World BOX out of range...\n");
+			return	false;
 		}
 
 		nodeMins	-=(Vector3.One * 8.0f);

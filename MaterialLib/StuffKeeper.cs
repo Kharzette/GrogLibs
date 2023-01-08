@@ -723,6 +723,8 @@ public class StuffKeeper
 
 	void ReadEntryPoints(StreamReader sr, Dictionary<string, List<string>> dict)
 	{
+		dict.Clear();
+
 		string	curShader	="";
 		for(;;)
 		{

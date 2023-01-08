@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
-using System.Text;
 using UtilityLib;
 using ParticleLib;
 
@@ -170,7 +169,7 @@ public class ParticleHelper
 				continue;	//creation failed, probably missing texture
 			}
 
-			Matrix	orient;
+			Matrix4x4	orient;
 			if(ze.GetMatrixFromAngles("angles", out orient))
 			{
 				mPB.GetEmitterByIndex(idx).mLineAxis	=

@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Collections.Generic;
 using UtilityLib;
+using Vortice.Mathematics;
 
 
 namespace BSPZone;
@@ -10,7 +11,7 @@ public partial class Zone
 {
 	List<MobileAI>	mMobs	=new List<MobileAI>();
 
-	BoundingBox	mMiniBox	=BoundingBox.FromSphere(new BoundingSphere(Vector3.Zero, 1f));
+	BoundingBox	mMiniBox	=new BoundingBox(-Vector3.One, Vector3.One);
 
 
 	public void AddMob(MobileAI mob)

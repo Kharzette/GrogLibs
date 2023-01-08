@@ -3,8 +3,9 @@ using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
 using UtilityLib;
+using Vortice.Mathematics;
 
-using DynLight	=MaterialLib.DynamicLights.DynLight;
+//using DynLight	=MaterialLib.DynamicLights.DynLight;
 
 
 namespace BSPZone;
@@ -174,22 +175,25 @@ public partial class Zone
 		ZoneModel	zm	=mZoneModels[modIdx];
 		BoundingBox	bb	=zm.mBounds;
 
-		Matrix	modXForm	=zm.mTransform;
+		Matrix4x4	modXForm	=zm.mTransform;
 
-		bb.Maximum	=Vector3.TransformCoordinate(bb.Maximum, modXForm);
-		bb.Minimum	=Vector3.TransformCoordinate(bb.Minimum, modXForm);
+		Vector3	min, max;
+		Mathery.TransformCoordinate(bb.Max, ref modXForm, out max);
+		Mathery.TransformCoordinate(bb.Min, ref modXForm, out min);
+
+		bb	=new BoundingBox(min, max);
 
 		int	iterations	=0;
 		point			=Vector3.Zero;
 		for(;iterations < 50;iterations++)
 		{
-			int	x	=rand.Next((int)bb.Minimum.X, (int)bb.Maximum.X);
-			int	y	=rand.Next((int)bb.Minimum.Y, (int)bb.Maximum.Y);
-			int	z	=rand.Next((int)bb.Minimum.Z, (int)bb.Maximum.Z);
+			int	x	=rand.Next((int)bb.Min.X, (int)bb.Max.X);
+			int	y	=rand.Next((int)bb.Min.Y, (int)bb.Max.Y);
+			int	z	=rand.Next((int)bb.Min.Z, (int)bb.Max.Z);
 
 			point	=new Vector3(x, y, z);
 
-			point	=Vector3.TransformCoordinate(point, zm.mInvertedTransform);
+			Mathery.TransformCoordinate(point, ref zm.mInvertedTransform, out point);
 
 			RayTrace	rt	=new RayTrace(point, point);
 
@@ -197,7 +201,7 @@ public partial class Zone
 
 			if(TraceNodeTrigger(rt, point, point, zm.mRootNode))
 			{
-				point	=Vector3.TransformCoordinate(point, zm.mTransform);
+				Mathery.TransformCoordinate(point, ref zm.mTransform, out point);
 				break;
 			}
 		}

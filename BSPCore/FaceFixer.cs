@@ -98,7 +98,8 @@ public class FaceFixer
 			mEdgeDir	=Edge2 - mEdgeStart;
 
 			Len	=mEdgeDir.Length();
-			mEdgeDir.Normalize();
+			
+			mEdgeDir	=Vector3.Normalize(mEdgeDir);
 
 			Start[i]	=mTempIndexes.Count;
 

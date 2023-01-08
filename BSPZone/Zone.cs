@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
 using UtilityLib;
+using Vortice.Mathematics;
 
 
 namespace BSPZone;
@@ -191,11 +192,11 @@ public partial class Zone
 	}
 
 
-	public Matrix GetModelTransform(int modelIndex)
+	public Matrix4x4 GetModelTransform(int modelIndex)
 	{
 		if(modelIndex >= mZoneModels.Length)
 		{
-			return	Matrix.Identity;
+			return	Matrix4x4.Identity;
 		}
 
 		return	mZoneModels[modelIndex].mTransform;
@@ -447,7 +448,8 @@ public partial class Zone
 				{
 					int	idx	=mDebugIndexes[k];
 
-					Vector3	transd	=Vector3.TransformCoordinate(mDebugVerts[idx], mZoneModels[i].mTransform);
+					Vector3	transd;
+					Mathery.TransformCoordinate(mDebugVerts[idx], ref mZoneModels[i].mTransform, out transd);
 
 					verts.Add(transd);
 				}
@@ -571,7 +573,7 @@ public partial class Zone
 			maxs	=Vector3.Zero;
 			return;
 		}
-		mins	=mZoneModels[0].mBounds.Minimum;
-		maxs	=mZoneModels[0].mBounds.Maximum;
+		mins	=mZoneModels[0].mBounds.Min;
+		maxs	=mZoneModels[0].mBounds.Max;
 	}
 }

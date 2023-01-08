@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
 using UtilityLib;
+using Vortice.Mathematics;
 
 
 namespace BSPZone;
@@ -83,8 +84,11 @@ public partial class Zone
 				if(box == null)
 				{
 					//the sphere routine doesn't automagically transform
-					Vector3		modelStart	=Vector3.TransformCoordinate(start, zm.mInvertedTransform);
-					Vector3		modelEnd	=Vector3.TransformCoordinate(end, zm.mInvertedTransform);
+					Vector3		modelStart, modelEnd;
+
+					Mathery.TransformCoordinate(start, ref zm.mInvertedTransform, out modelStart);
+					Mathery.TransformCoordinate(end, ref zm.mInvertedTransform, out modelEnd);
+
 					rt.mOriginalStart		=modelStart;
 					rt.mOriginalEnd			=modelEnd;
 
@@ -93,8 +97,8 @@ public partial class Zone
 						Collision	c	=rt.mCollision;
 
 						//transform results back to worldspace
-						c.mIntersection	=Vector3.TransformCoordinate(c.mIntersection,
-							mZoneModels[c.mModelHit].mTransform);
+						Mathery.TransformCoordinate(c.mIntersection,
+							ref mZoneModels[c.mModelHit].mTransform, out c.mIntersection);
 
 						c.mPlaneHit	=ZonePlane.Transform(c.mPlaneHit,
 							mZoneModels[c.mModelHit].mTransform);
@@ -287,12 +291,12 @@ public partial class Zone
 		Vector3	start		=new Vector3(screenPos.X, screenPos.Y, 0f);
 		Vector3	end			=new Vector3(screenPos.X, screenPos.Y, 1f);
 
-		start	=vp.Unproject(start, cam.Projection, cam.View, Matrix.Identity);
-		end		=vp.Unproject(end, cam.Projection, cam.View, Matrix.Identity);
+		start	=vp.Unproject(start, cam.Projection, cam.View, Matrix4x4.Identity);
+		end		=vp.Unproject(end, cam.Projection, cam.View, Matrix4x4.Identity);
 
 		Vector3	ray	=end - start;
 
-		ray.Normalize();
+		ray	=Vector3.Normalize(ray);
 
 		start	=cam.Position;
 		end		=start + ray * rayDistance;
@@ -384,7 +388,8 @@ public partial class Zone
 
 		if(bHit && !col.mbStartInside)
 		{
-			col.mIntersection	=Vector3.TransformCoordinate(col.mIntersection, mod.mTransform);
+			Mathery.TransformCoordinate(col.mIntersection, ref mod.mTransform, out col.mIntersection);
+
 			col.mPlaneHit		=ZonePlane.Transform(col.mPlaneHit, mod.mTransform);
 		}
 		return	bHit;
@@ -409,13 +414,17 @@ public partial class Zone
 		box.GetCorners(mTestBoxCorners);
 
 		//transform into model space
-		Vector3.TransformCoordinate(mTestBoxCorners, ref mod.mInvertedTransform, mTestTransBoxCorners);
+		for(int i=0;i < mTestBoxCorners.Length;i++)
+		{
+			Mathery.TransformCoordinate(mTestBoxCorners[i],
+				ref mod.mInvertedTransform, out mTestTransBoxCorners[i]);
+		}
 
 		//transform position
-		pos	=Vector3.TransformCoordinate(pos, mod.mInvertedTransform);
+		Mathery.TransformCoordinate(pos, ref mod.mInvertedTransform, out pos);
 
 		//bound the modelSpace corners
-		box	=BoundingBox.FromPoints(mTestTransBoxCorners);
+		box	=BoundingBox.CreateFromPoints(mTestTransBoxCorners);
 
 		Mathery.CenterBoundingBoxAtOrigin(ref box);
 
@@ -499,14 +508,18 @@ public partial class Zone
 		box.GetCorners(mTestBoxCorners);
 
 		//transform into model space
-		Vector3.TransformCoordinate(mTestBoxCorners, ref mod.mInvertedTransform, mTestTransBoxCorners);
+		for(int i=0;i < mTestBoxCorners.Length;i++)
+		{
+			Mathery.TransformCoordinate(mTestBoxCorners[i],
+				ref mod.mInvertedTransform, out mTestTransBoxCorners[i]);
+		}
 
 		//transform ray
-		start	=Vector3.TransformCoordinate(start, mod.mInvertedTransform);
-		end		=Vector3.TransformCoordinate(end, mod.mInvertedTransform);
+		Mathery.TransformCoordinate(start, ref mod.mInvertedTransform, out start);
+		Mathery.TransformCoordinate(end, ref mod.mInvertedTransform, out end);
 
 		//bound the modelSpace corners
-		box	=BoundingBox.FromPoints(mTestTransBoxCorners);
+		box	=BoundingBox.CreateFromPoints(mTestTransBoxCorners);
 
 		Mathery.CenterBoundingBoxAtOrigin(ref box);
 	}
@@ -940,7 +953,7 @@ public partial class Zone
 
 			if((len1 * len2) < 0.0001f)
 			{
-				return	MathUtil.TwoPi;
+				return	MathHelper.TwoPi;
 			}
 
 			v1	/=len1;

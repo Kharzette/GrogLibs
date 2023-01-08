@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Diagnostics;
 using System.Collections.Generic;
 using Vortice.Mathematics;
+using Vortice.Mathematics.PackedVector;
 using MaterialLib;
 using MeshLib;
 using UtilityLib;
@@ -165,7 +166,7 @@ public partial class MapGrinder
 
 		if(mMatLib == null)
 		{
-			mMatLib	=new MatLib(gd, sk);
+			mMatLib	=new MatLib(sk);
 		}
 
 		if(gd != null)
@@ -260,10 +261,9 @@ public partial class MapGrinder
 			varray[i].Position	=mVLitVerts[i];
 			varray[i].TexCoord0	=mVLitTex0[i];
 			varray[i].Color0	=mVLitColors[i];
-			varray[i].Normal.X	=mVLitNormals[i].X;
-			varray[i].Normal.Y	=mVLitNormals[i].Y;
-			varray[i].Normal.Z	=mVLitNormals[i].Z;
-			varray[i].Normal.W	=1f;
+
+			varray[i].Normal	=new Half4(mVLitNormals[i].X,
+				mVLitNormals[i].Y, mVLitNormals[i].Z, 1f);
 		}
 
 		typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -288,10 +288,8 @@ public partial class MapGrinder
 			varray[i].Position	=mAlphaVerts[i];
 			varray[i].TexCoord0	=mAlphaTex0[i];
 			varray[i].Color0	=mAlphaColors[i];
-			varray[i].Normal.X	=mAlphaNormals[i].X;
-			varray[i].Normal.Y	=mAlphaNormals[i].Y;
-			varray[i].Normal.Z	=mAlphaNormals[i].Z;
-			varray[i].Normal.W	=1f;
+			varray[i].Normal	=new Half4(mAlphaNormals[i].X,
+				mAlphaNormals[i].Y, mAlphaNormals[i].Z, 1f);
 		}
 
 		typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -315,10 +313,8 @@ public partial class MapGrinder
 		{
 			varray[i].Position	=mFBVerts[i];
 			varray[i].TexCoord0	=mFBTex0[i];
-			varray[i].Normal.X	=mFBNormals[i].X;
-			varray[i].Normal.Y	=mFBNormals[i].Y;
-			varray[i].Normal.Z	=mFBNormals[i].Z;
-			varray[i].Normal.W	=1f;
+			varray[i].Normal	=new Half4(mFBNormals[i].X,
+				mFBNormals[i].Y, mFBNormals[i].Z, 1f);
 		}
 
 		typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -344,10 +340,8 @@ public partial class MapGrinder
 			varray[i].TexCoord0	=mMirrorTex0[i];
 			varray[i].TexCoord1	=mMirrorTex1[i];
 			varray[i].Color0	=mMirrorColors[i];
-			varray[i].Normal.X	=mMirrorNormals[i].X;
-			varray[i].Normal.Y	=mMirrorNormals[i].Y;
-			varray[i].Normal.Z	=mMirrorNormals[i].Z;
-			varray[i].Normal.W	=1f;
+			varray[i].Normal	=new Half4(mMirrorNormals[i].X,
+				mMirrorNormals[i].Y, mMirrorNormals[i].Z, 1f);
 		}
 
 		typeIndex	=VertexTypes.GetIndex(varray[0].GetType());
@@ -565,18 +559,18 @@ public partial class MapGrinder
 				bLightMap	=true;
 			}
 
-			mMatLib.CreateMaterial(matName);
+			mMatLib.CreateMaterial(matName, true, false);
 			if(bLightMap)
 			{
 				//lightmap atlases need 32 bit texcoords
-				mMatLib.SetMaterialPrecision32(matName, true);
+//				mMatLib.SetMaterialPrecision32(matName, true);
 			}
 
-			mMatLib.SetMaterialEffect(matName, "BSP.fx");
-			mMatLib.SetMaterialTechnique(matName, tech);
+//			mMatLib.SetMaterialEffect(matName, "BSP.fx");
+//			mMatLib.SetMaterialTechnique(matName, tech);
 			if(bLightMap)
 			{
-				mMatLib.SetMaterialParameter(matName, "mLightMap", null);					
+//				mMatLib.SetMaterialParameter(matName, "mLightMap", null);					
 			}
 		}
 	}

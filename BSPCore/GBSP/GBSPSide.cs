@@ -137,7 +137,7 @@ internal class GBSPSide
 
 			if(Misc.bFlagSet(ti.mFlags, TexInfo.TRANSPARENT | TexInfo.MIRROR))
 			{
-				ti.mAlpha	=MathUtil.Clamp(numbers[14], 0.0f, 1.0f);
+				ti.mAlpha	=Math.Clamp(numbers[14], 0f, 1f);
 
 				if(ti.mAlpha == 1.0f)
 				{
@@ -188,8 +188,8 @@ internal class GBSPSide
 			//wrap into 0 to 360
 			UtilityLib.Mathery.WrapAngleDegrees(ref rot);
 
-			Matrix	texRot	=Matrix.RotationAxis(plane.mNormal,
-				MathUtil.DegreesToRadians(rot));
+			Matrix4x4	texRot	=Matrix4x4.CreateFromAxisAngle(
+				plane.mNormal, MathHelper.ToRadians(rot));
 
 			//rotate tex vecs
 			ti.mUVec	=Vector3.TransformNormal(ti.mUVec, texRot);
@@ -418,8 +418,8 @@ internal class GBSPSide
 				rot	=-rot;
 			}
 
-			Matrix	texRot	=Matrix.RotationAxis(plane.mNormal,
-				MathUtil.DegreesToRadians(rot));
+			Matrix4x4	texRot	=Matrix4x4.CreateFromAxisAngle(plane.mNormal,
+				MathHelper.ToRadians(rot));
 
 			//rotate tex vecs
 			ti.mUVec	=Vector3.TransformNormal(ti.mUVec, texRot);

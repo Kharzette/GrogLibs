@@ -187,6 +187,37 @@ public static partial class Mathery
 	}
 
 
+	public static float ArrayAccess(this Vector3 v3, int sub)
+	{
+		if(sub == 0)
+		{
+			return	v3.X;
+		}
+		else if(sub == 1)
+		{
+			return	v3.Y;
+		}
+		return	v3.Z;
+	}
+
+
+	public static void ArraySet(this Vector3 v3, int sub, float value)
+	{
+		if(sub == 0)
+		{
+			v3.X	=value;
+		}
+		else if(sub == 1)
+		{
+			v3.Y	=value;
+		}
+		else
+		{
+			v3.Z	=value;
+		}
+	}
+
+
 	//handy for printing
 	public static string IntStr(this Vector3 vec)
 	{
