@@ -9,9 +9,13 @@ namespace BSPCore;
 
 public partial class MapGrinder
 {
-	/*
-	void FinishLightMapped(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
+	void FinishLightMapped(int modelIndex, Dictionary<int, DrawDataChunk> matChunks, ref UInt16 vertOfs)
 	{
+		if(matChunks.Count == 0)
+		{
+			return;
+		}
+		
 		List<DrawCall>	modCalls	=ComputeIndexes(mLMIndexes, matChunks, ref vertOfs);
 
 		StuffVBArrays(matChunks, mLMVerts, mLMNormals,
@@ -21,7 +25,7 @@ public partial class MapGrinder
 		mLMDraws.Add(modelIndex, modCalls);
 	}
 
-
+/*
 	void FinishLightMapAnimated(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
 	{
 		List<DrawCall>	modCalls	=ComputeIndexes(mLMAnimIndexes, matChunks, ref vertOfs);

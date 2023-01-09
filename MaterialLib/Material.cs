@@ -167,6 +167,9 @@ internal class Material
 		dc.VSSetShader(sk.GetVertexShader(mVSName));
 		dc.PSSetShader(sk.GetPixelShader(mPSName));
 
+		//layout
+		dc.IASetInputLayout(sk.GetOrCreateLayout(mVSName));
+
 		//renderstates
 		dc.OMSetBlendState(sk.GetBlendState(mBlendState));
 		dc.OMSetDepthStencilState(sk.GetDepthStencilState(mDSS));
@@ -218,6 +221,13 @@ internal class Material
 		{
 			mCharVars	=null;
 		}
+	}
+
+
+	internal void SetStates(string blendState, string depthState)
+	{
+		mBlendState	=blendState;
+		mDSS		=depthState;
 	}
 
 

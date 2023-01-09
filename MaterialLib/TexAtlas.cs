@@ -13,20 +13,28 @@ namespace MaterialLib;
 //http://www.blackpawn.com/texts/lightmaps/default.html
 class TexNode
 {
+	//hate readonly garbage
+	public struct	Rect
+	{
+		public int	X, Y, W, H;
+	};
+
 	TexNode		mFront;
 	TexNode		mBack;
-	RawRect		mRect;
+	Rect		mRect;
 	bool		mbOccupied;
 
 
 	public TexNode() { }
 	public TexNode(int w, int h)
 	{
-		mRect	=new RawRect(0, 0, w, h);
+		mRect.X	=mRect.Y	=0;
+		mRect.W	=w;
+		mRect.H	=h;
 	}
 
 
-	public RawRect GetRect()
+	public Rect GetRect()
 	{
 		return	mRect;
 	}
@@ -62,46 +70,47 @@ class TexNode
 			return	null;
 		}
 
-		if(((mRect.Right - mRect.Left) < texW)
-			|| ((mRect.Bottom - mRect.Top) < texH))
+		if(mRect.W < texW || mRect.H < texH)
 		{
 			return	null;	//too small
 		}
-		else if(((mRect.Right - mRect.Left) == texW)
-			&& ((mRect.Bottom - mRect.Top) == texH))
+		else if(mRect.W == texW	&& mRect.H == texH)
 		{
 			mbOccupied	=true;	//just right
 			return	this;
 		}
 
 		//split
-		int dw	=(mRect.Right - mRect.Left) - texW;
-		int dh	=(mRect.Bottom - mRect.Top) - texH;
+		int dw	=mRect.W - texW;
+		int dh	=mRect.H - texH;
 
 		mFront	=new TexNode();
 		mBack	=new TexNode();
 
 		if(dw > dh)
 		{
-			mFront.mRect	=new RawRect(mRect.Left, mRect.Top,
-								texW,
-								(mRect.Bottom - mRect.Top));
+			//split vertical
+			mFront.mRect.X	=mRect.X;
+			mFront.mRect.Y	=mRect.Y;
+			mFront.mRect.W	=texW;
+			mFront.mRect.H	=mRect.H;
 
-			mBack.mRect	=new RawRect((mRect.Left + texW),
-							mRect.Top,
-							(mRect.Right - mRect.Left - texW),
-							(mRect.Bottom - mRect.Top));
+			mBack.mRect.X	=mRect.X + texW;
+			mBack.mRect.Y	=mRect.Y;
+			mBack.mRect.W	=mRect.W - texW;
+			mBack.mRect.H	=mRect.H;
 		}
 		else
 		{
-			mFront.mRect	=new RawRect(mRect.Left, mRect.Top,
-								(mRect.Right - mRect.Left),
-								texH);
+			mFront.mRect.X	=mRect.X;
+			mFront.mRect.Y	=mRect.Y;
+			mFront.mRect.W	=mRect.W;
+			mFront.mRect.H	=texH;
 
-			mBack.mRect	=new RawRect(mRect.Left,
-							(mRect.Top + texH),
-							(mRect.Right - mRect.Left),
-							(mRect.Bottom - mRect.Top - texH));
+			mBack.mRect.X	=mRect.X;
+			mBack.mRect.Y	=mRect.Y + texH;
+			mBack.mRect.W	=mRect.W;
+			mBack.mRect.H	=mRect.H - texH;
 		}
 
 		return	mFront.Insert(texW, texH);
@@ -110,10 +119,10 @@ class TexNode
 
 	internal void Write(BinaryWriter bw)
 	{
-		bw.Write(mRect.Left);
-		bw.Write(mRect.Top);
-		bw.Write(mRect.Right);
-		bw.Write(mRect.Bottom);
+		bw.Write(mRect.X);
+		bw.Write(mRect.Y);
+		bw.Write(mRect.W);
+		bw.Write(mRect.H);
 		bw.Write(mbOccupied);
 
 		bw.Write(mFront != null);
@@ -132,13 +141,11 @@ class TexNode
 
 	internal void Read(BinaryReader br)
 	{
-		int	X		=br.ReadInt32();
-		int	Y		=br.ReadInt32();
-		int	Width	=br.ReadInt32();
-		int	Height	=br.ReadInt32();
+		mRect.X		=br.ReadInt32();
+		mRect.Y		=br.ReadInt32();
+		mRect.W		=br.ReadInt32();
+		mRect.H		=br.ReadInt32();
 		mbOccupied	=br.ReadBoolean();
-
-		mRect	=new RawRect(X, Y, Width, Height);
 
 		bool	bFront	=br.ReadBoolean();
 		bool	bBack	=br.ReadBoolean();
@@ -159,9 +166,6 @@ class TexNode
 
 public class TexAtlas
 {
-	ID3D11Texture2D				mAtlasTexture;
-	ID3D11ShaderResourceView	mSRV;
-
 	TexNode		mRoot;
 	Color		[]mBuildArray;
 	int			mWidth, mHeight;
@@ -190,14 +194,6 @@ public class TexAtlas
 
 	public void FreeAll()
 	{
-		if(mSRV != null)
-		{
-			mSRV.Dispose();
-		}
-		if(mAtlasTexture != null)
-		{
-			mAtlasTexture.Dispose();
-		}
 	}
 
 
@@ -237,12 +233,6 @@ public class TexAtlas
 	}
 
 
-	public ID3D11ShaderResourceView GetAtlasSRV()
-	{
-		return	mSRV;
-	}
-
-
 	public bool Insert(Color[] tex, int texW, int texH,
 		out double scaleU, out double scaleV, out double uoffs, out double voffs)
 	{
@@ -261,12 +251,12 @@ public class TexAtlas
 			mBuildArray	=new Color[mWidth * mHeight];
 		}
 
-		RawRect	target	=n.GetRect();
+		TexNode.Rect	target	=n.GetRect();
 
 		int c	=0;
-		for(int y=target.Top;y < target.Bottom;y++)
+		for(int y=target.Y;y < (target.Y + target.H);y++)
 		{
-			for(int x=target.Left;x < target.Right;x++, c++)
+			for(int x=target.X;x < (target.X + target.W);x++, c++)
 			{
 				mBuildArray[(y * mWidth) + x]	=tex[c];
 			}
@@ -277,8 +267,8 @@ public class TexAtlas
 		scaleV	=(double)texH / (double)mHeight;
 
 		//get offsets in zero to one space
-		uoffs	=((double)target.Left / (double)mWidth);
-		voffs	=((double)target.Top / (double)mHeight);
+		uoffs	=((double)target.X / (double)mWidth);
+		voffs	=((double)target.Y / (double)mHeight);
 
 		return	true;
 	}

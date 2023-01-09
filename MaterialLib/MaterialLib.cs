@@ -393,6 +393,19 @@ public partial class MaterialLib
 	}
 
 
+	public void SetMaterialStates(string matName, string blendState, string depthState)
+	{
+		if(!mMats.ContainsKey(matName))
+		{
+			return;
+		}
+
+		Material	m	=mMats[matName];
+
+		m.SetStates(blendState, depthState);
+	}
+
+
 	public string GetMaterialVShader(string matName)
 	{
 		if(!mMats.ContainsKey(matName))

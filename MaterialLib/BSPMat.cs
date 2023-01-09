@@ -108,5 +108,6 @@ public class BSPMat
 		{
 			dc.PSSetShaderResource(1, lm);
 		}
+		cbk.UpdateBSP(dc);
 	}
 }

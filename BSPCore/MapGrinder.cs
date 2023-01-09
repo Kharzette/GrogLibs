@@ -141,6 +141,11 @@ public partial class MapGrinder
 	List<Color>		mLMAAnimStyle		=new List<Color>();
 	List<Color>		mLMAAnimColors		=new List<Color>();
 
+	//material draw call information
+	//opaques
+	//indexed by material and model number
+	Dictionary<int, List<DrawCall>>	mLMDraws		=new Dictionary<int, List<DrawCall>>();
+
 	//computed material stuff
 	List<string>	mMaterialNames		=new List<string>();
 
@@ -185,7 +190,75 @@ public partial class MapGrinder
 	}
 
 
-	internal void GetLMGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
+	public TexAtlas GetLMAtlas()
+	{
+		return	mLMAtlas;
+	}
+
+
+	public Dictionary<int, List<DrawCall>>	GetLMDrawCalls()
+	{
+		return	mLMDraws;
+	}
+
+
+	internal bool BuildLMData(Vector3 []verts, int[] inds,
+			GFXPlane []pp, GFXModel []models, byte []lightData)
+	{
+		UInt16	vertOfs	=0;	//model offset
+		for(int i=0;i < models.Length;i++)
+		{
+			//store faces per material
+			Dictionary<int,	DrawDataChunk>	matChunks	=new Dictionary<int, DrawDataChunk>();
+
+			foreach(string mat in mMaterialNames)
+			{
+				int	firstFace	=models[i].mFirstFace;
+				int	nFaces		=models[i].mNumFaces;
+
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
+				{
+					GFXFace		f	=mFaces[face];
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					//skip non lightmap materials
+					if(!MaterialCorrect.IsLightMapped(f, tex, mat))
+					{
+						continue;
+					}
+
+					int	matIndex	=mMaterialNames.IndexOf(mat);
+
+					DrawDataChunk	ddc;
+					if(matChunks.ContainsKey(matIndex))
+					{
+						ddc	=matChunks[matIndex];
+					}
+					else
+					{
+						ddc	=new DrawDataChunk();
+						matChunks.Add(matIndex, ddc);
+					}
+
+					if(!MaterialFill.FillLightMapped(ddc, pp, verts, inds,
+						f, tex, mLightGridSize, lightData, mLMAtlas))
+					{
+						return	false;
+					}
+				}
+			}
+			FinishLightMapped(i, matChunks, ref vertOfs);
+		}
+		return	true;
+	}
+
+
+	public void GetLMGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mLMVerts.Count == 0)
 		{
@@ -471,108 +544,211 @@ public partial class MapGrinder
 				bCel	=true;
 			}
 
-			string	tech		="";
+			//grab all the info that used to be contained
+			//within effect techniques
+			string	vs					="";
+			string	ps					="";
+			string	blendState			="";
+			string	depthState			="";
 			bool	bLightMap	=false;
 
 			//set some parameter defaults
 			if(mn.EndsWith("*Alpha"))
 			{
+				blendState			="AlphaBlending";
+				depthState			="DisableDepthWrite";
 				if(bCel)
 				{
-					tech	="VertexLightingAlphaCel";
+					//old effect tech VertexLightingAlphaCel
+					vs	="VertexLitVS";
+					ps	="VertexLitCelPS";
 				}
 				else
 				{
-					tech	="VertexLightingAlpha";
+					//old effect tech VertexLightingAlpha
+					vs	="VertexLitVS";
+					ps	="VertexLitPS";
 				}
 			}
 			else if(mn.EndsWith("*LitAlpha"))
 			{
-				bLightMap	=true;
+				blendState			="AlphaBlending";
+				depthState			="DisableDepthWrite";
+				bLightMap			=true;
 				if(bCel)
 				{
-					tech	="LightMapAlphaCel";
+					//old effect tech LightMapAlphaCel
+					vs	="LightMapVS";
+					ps	="LightMapCelPS";
 				}
 				else
 				{
-					tech	="LightMapAlpha";
+					//old effect tech LightMapAlpha
+					vs	="LightMapVS";
+					ps	="LightMapPS";
 				}
 			}
 			else if(mn.EndsWith("*LitAlphaAnim"))
 			{
+				blendState			="AlphaBlending";
+				depthState			="DisableDepthWrite";
 				bLightMap	=true;
 				if(bCel)
 				{
-					tech	="LightMapAnimAlphaCel";
+					//old effect tech LightMapAnimAlphaCel
+					vs	="LightMapAnimVS";
+					ps	="LightMapAnimCelPS";
 				}
 				else
 				{
-					tech	="LightMapAnimAlpha";
+					//old effect tech LightMapAnimAlpha
+					vs	="LightMapAnimVS";
+					ps	="LightMapAnimPS";
 				}
 			}
 			else if(mn.EndsWith("*VertLit"))
 			{
+				blendState			="NoBlending";
+				depthState			="EnableDepth";
 				if(bCel)
 				{
-					tech	="VertexLightingCel";
+					//old effect tech VertexLightingCel
+					vs	="VertexLitVS";
+					ps	="VertexLitCelPS";
 				}
 				else
 				{
-					tech	="VertexLighting";
+					//old effect tech VertexLighting
+					vs	="VertexLitVS";
+					ps	="VertexLitPS";
 				}
 			}
 			else if(mn.EndsWith("*FullBright"))
 			{
-				tech	="FullBright";
+				//old effect tech FullBright
+				blendState			="NoBlending";
+				depthState			="EnableDepth";
+				vs					="FullBrightVS";
+				ps					="VertexLitCelPS";
 			}
 			else if(mn.EndsWith("*Mirror"))
 			{
-				bLightMap	=true;
-				tech		="Mirror";
+				//old effect tech Mirror
+				//but I will tackle this one later
+				blendState			="NoBlending";
+				depthState			="EnableDepth";
+				bLightMap			=true;
+				vs					="VertexLitVS";
+				ps					="VertexLitPS";
 			}
 			else if(mn.EndsWith("*Sky"))
 			{
-				tech	="Sky";
+				//old effect tech Sky
+				blendState			="NoBlending";
+				depthState			="EnableDepth";
+				vs					="SkyVS";
+				ps					="SkyPS";
 			}
 			else if(mn.EndsWith("*Anim"))
 			{
+				blendState			="NoBlending";
+				depthState			="EnableDepth";
 				if(bCel)
 				{
-					tech	="LightMapAnimCel";
+					//old effect tech LightMapAnimCel
+					vs	="LightMapAnimVS";
+					ps	="LightMapAnimCelPS";
 				}
 				else
 				{
-					tech	="LightMapAnim";
+					//old effect tech LightMapAnim
+					vs	="LightMapAnimVS";
+					ps	="LightMapAnimPS";
 				}
 				bLightMap	=true;
 			}
 			else
 			{
+				blendState			="NoBlending";
+				depthState			="EnableDepth";
 				if(bCel)
 				{
-					tech	="LightMapCel";
+					//old effect tech LightMapCel
+					vs	="LightMapVS";
+					ps	="LightMapCelPS";
 				}
 				else
 				{
-					tech	="LightMap";
+					//old effect tech LightMap
+					vs	="LightMapVS";
+					ps	="LightMapPS";
 				}
 				bLightMap	=true;
 			}
 
+			//The main material only takes care of the 0 pass.
+			//A single material will be used for all DMN passes
+			//in the categories above, same for shadows
 			mMatLib.CreateMaterial(matName, true, false);
+			mMatLib.SetMaterialStates(matName, blendState, depthState);
+			mMatLib.SetMaterialVShader(matName, vs);
+			mMatLib.SetMaterialPShader(matName, ps);
 			if(bLightMap)
 			{
 				//lightmap atlases need 32 bit texcoords
+				//I will deal with that later
 //				mMatLib.SetMaterialPrecision32(matName, true);
-			}
-
-//			mMatLib.SetMaterialEffect(matName, "BSP.fx");
-//			mMatLib.SetMaterialTechnique(matName, tech);
-			if(bLightMap)
-			{
 //				mMatLib.SetMaterialParameter(matName, "mLightMap", null);					
 			}
 		}
+
+		//create generic DMN materials
+
+		//vertlit covers vlit, *Alpha, *Mirror
+		mMatLib.CreateMaterial("VertexLitDMN", true, false);
+		mMatLib.SetMaterialStates("VertexLitDMN", "NoBlending", "EnableDepth");
+		mMatLib.SetMaterialVShader("VertexLitDMN", "VertexLitVS");
+		mMatLib.SetMaterialPShader("VertexLitDMN", "VertexLitDMNPS");
+		mMatLib.CreateMaterial("VertexLitShadow", true, false);
+		mMatLib.SetMaterialStates("VertexLitShadow", "ShadowBlending", "ShadowDepth");
+		mMatLib.SetMaterialVShader("VertexLitShadow", "VertexLitVS");
+		mMatLib.SetMaterialPShader("VertexLitShadow", "VertexLitShadowPS");
+
+		//covers *LitAlpha, LightMap
+		mMatLib.CreateMaterial("LightMapDMN", true, false);
+		mMatLib.SetMaterialStates("LightMapDMN", "NoBlending", "EnableDepth");
+		mMatLib.SetMaterialVShader("LightMapDMN", "LightMapVS");
+		mMatLib.SetMaterialPShader("LightMapDMN", "LightMapDMNPS");
+		mMatLib.CreateMaterial("LightMapShadow", true, false);
+		mMatLib.SetMaterialStates("LightMapShadow", "ShadowBlending", "ShadowDepth");
+		mMatLib.SetMaterialVShader("LightMapShadow", "LightMapVS");
+		mMatLib.SetMaterialPShader("LightMapShadow", "LightMapShadowPS");
+
+		//*LightAlphaAnim, *Anim
+		mMatLib.CreateMaterial("LightMapAnimDMN", true, false);
+		mMatLib.SetMaterialStates("LightMapAnimDMN", "NoBlending", "EnableDepth");
+		mMatLib.SetMaterialVShader("LightMapAnimDMN", "LightMapAnimVS");
+		mMatLib.SetMaterialPShader("LightMapAnimDMN", "LightMapAnimDMNPS");
+		mMatLib.CreateMaterial("LightMapAnimShadow", true, false);
+		mMatLib.SetMaterialStates("LightMapAnimShadow", "ShadowBlending", "ShadowDepth");
+		mMatLib.SetMaterialVShader("LightMapAnimShadow", "LightMapAnimVS");
+		mMatLib.SetMaterialPShader("LightMapAnimShadow", "LightMapAnimShadowPS");
+
+		//fullbright
+		mMatLib.CreateMaterial("FullBrightDMN", true, false);
+		mMatLib.SetMaterialStates("FullBrightDMN", "NoBlending", "EnableDepth");
+		mMatLib.SetMaterialVShader("FullBrightDMN", "FullBrightVS");
+		mMatLib.SetMaterialPShader("FullBrightDMN", "VertexLitDMNPS");
+		mMatLib.CreateMaterial("FullBrightShadow", true, false);
+		mMatLib.SetMaterialStates("FullBrightShadow", "ShadowBlending", "ShadowDepth");
+		mMatLib.SetMaterialVShader("FullBrightShadow", "FullBrightVS");
+		mMatLib.SetMaterialPShader("FullBrightShadow", "VertexLitShadowPS");
+
+		//no casting shadows on the sky
+		mMatLib.CreateMaterial("SkyDMN", true, false);
+		mMatLib.SetMaterialStates("SkyDMN", "NoBlending", "EnableDepth");
+		mMatLib.SetMaterialVShader("SkyDMN", "SkyVS");
+		mMatLib.SetMaterialPShader("SkyDMN", "SkyDMNPS");
 	}
 
 
@@ -600,5 +776,86 @@ public partial class MapGrinder
 	internal TexAtlas GetLightMapAtlas()
 	{
 		return	mLMAtlas;
+	}
+
+
+	//for opaques
+	static void StuffVBArrays(Dictionary<int, DrawDataChunk> matChunks,
+		List<Vector3> verts, List<Vector3> norms, List<Vector2> tex0,
+		List<Vector2> tex1, List<Vector2> tex2, List<Vector2> tex3, 
+		List<Vector2> tex4, List<Color> colors, List<Color> styles)
+	{
+		foreach(KeyValuePair<int, DrawDataChunk> matChunk in matChunks)
+		{
+			verts.AddRange(matChunk.Value.mVerts);
+
+			if(norms != null)
+			{
+				norms.AddRange(matChunk.Value.mNorms);
+			}
+			if(tex0 != null)
+			{
+				tex0.AddRange(matChunk.Value.mTex0);
+			}
+			if(tex1 != null)
+			{
+				tex1.AddRange(matChunk.Value.mTex1);
+			}
+			if(tex2 != null)
+			{
+				tex2.AddRange(matChunk.Value.mTex2);
+			}
+			if(tex3 != null)
+			{
+				tex3.AddRange(matChunk.Value.mTex3);
+			}
+			if(tex4 != null)
+			{
+				tex4.AddRange(matChunk.Value.mTex4);
+			}
+			if(colors != null)
+			{
+				colors.AddRange(matChunk.Value.mColors);
+			}
+			if(styles != null)
+			{
+				styles.AddRange(matChunk.Value.mStyles);
+			}
+		}
+	}
+
+	List<DrawCall> ComputeIndexes(List<UInt16> inds, Dictionary<int, DrawDataChunk> matChunks, ref UInt16 vertOfs)
+	{
+		List<DrawCall>	draws	=new List<DrawCall>();
+
+		foreach(KeyValuePair<int, DrawDataChunk> matChunk in matChunks)
+		{
+			int	cnt	=inds.Count;
+
+			DrawCall	dc		=new DrawCall();				
+			dc.mStartIndex		=cnt;
+			dc.mMaterialID		=matChunk.Key;
+
+			for(int i=0;i < matChunk.Value.mNumFaces;i++)
+			{
+				int	nverts	=matChunk.Value.mVCounts[i];
+
+				//triangulate
+				//reverse with sharpdx coord change
+				for(UInt16 k=1;k < nverts-1;k++)
+				{
+					inds.Add((UInt16)(vertOfs + ((k + 1) % nverts)));
+					inds.Add((UInt16)(vertOfs + k));
+					inds.Add(vertOfs);
+				}
+
+				vertOfs	+=(UInt16)nverts;
+			}
+
+			dc.mCount	=(inds.Count - cnt);
+
+			draws.Add(dc);
+		}
+		return	draws;
 	}
 }

@@ -25,6 +25,9 @@ public class IndoorMesh
 	ID3D11Buffer	mLMIB, mVLitIB, mLMAnimIB, mAlphaIB;
 	ID3D11Buffer	mSkyIB, mFBIB, mMirrorIB, mLMAIB, mLMAAnimIB;
 
+	//draw calls indexed by model
+	Dictionary<int, List<DrawCall>>	mLMDraws;
+
 	//vert copies saved for writing (for editor)
 	Array	mLMVerts, mVLitVerts, mLMAnimVerts;
 	Array	mAlphaVerts, mSkyVerts, mFBVerts;
@@ -126,6 +129,25 @@ public class IndoorMesh
 	}
 
 
+	public void SetLMData(ID3D11Device gd, int typeIndex, Array verts, UInt16 []inds,
+		Dictionary<int, List<DrawCall>> lmDraws)
+	{
+		mLMVB	=VertexTypes.BuildABuffer(gd, verts, typeIndex);
+		mLMIB	=VertexTypes.BuildAnIndexBuffer(gd, inds);
+
+		mLMVerts	=verts;
+		mLMInds		=inds;
+		mLMIndex	=typeIndex;
+		mLMDraws	=lmDraws;
+	}
+
+
+	public void SetLMAtlas(TexAtlas lma)
+	{
+		mLightMapAtlas	=lma;
+	}
+
+
 	public void FinishAtlas(GraphicsDevice gd, StuffKeeper sk)
 	{
 		if(mLightMapAtlas == null)
@@ -134,7 +156,7 @@ public class IndoorMesh
 		}
 
 		mLightMapAtlas.Finish(gd, sk, "LightMapAtlas");
-		sk.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasSRV());
+//		sk.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasSRV());
 	}
 
 
@@ -184,12 +206,35 @@ public class IndoorMesh
 
 	//helpful overload for doing vis testing
 	public void Draw(GraphicsDevice gd,
-		int numShadows,
 		IsMaterialVisible bMatVis,
-		GetModelMatrix getModMatrix,
-		RenderExternal rendExternal,
-		ShadowHelper.RenderShadows renderShadows)
+		GetModelMatrix getModMatrix)
 	{
+		CBKeeper	cbk	=mMatLib.GetCBKeeper();
+
+		cbk.SetAniIntensities(mAniIntensities);
+
+		gd.DC.IASetVertexBuffer(0, mLMVB, VertexTypes.GetSizeForTypeIndex(mLMIndex), 0);
+		gd.DC.IASetIndexBuffer(mLMIB, Vortice.DXGI.Format.R16_UInt, 0);
+
+		List<string>	matNames	=mMatLib.GetMaterialNames();
+
+		foreach(KeyValuePair<int, List<DrawCall>> modCall in mLMDraws)
+		{
+			Matrix4x4	worldMat	=getModMatrix(modCall.Key);
+
+			cbk.SetTransposedWorldMat(worldMat);
+
+			foreach(DrawCall dc in modCall.Value)
+			{
+				Debug.Assert(dc.mCount > 0);
+
+				string	mat	=matNames[dc.mMaterialID];
+
+				mMatLib.ApplyMaterial(mat, gd.DC);
+
+				gd.DC.DrawIndexed(dc.mCount, dc.mStartIndex, 0);
+			}
+		}
 	}
 
 
@@ -311,11 +356,7 @@ public class IndoorMesh
 		if(bLightMapNeeded)
 		{
 			mLightMapAtlas.Read(g, br, sk);
-
-			ID3D11ShaderResourceView	lma	=mLightMapAtlas.GetAtlasSRV();
-
-			lma.DebugName	="LightMapAtlas";
-			sk.AddMap("LightMapAtlas", lma);
+			mLightMapAtlas.Finish(g, sk, "LightMapAtlas");
 		}
 
 

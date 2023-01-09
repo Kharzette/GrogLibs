@@ -1507,11 +1507,19 @@ public partial class Map
 	}
 
 
-	public void MakeMaterials(GraphicsDevice gd, MatLib matLib, string fileName)
+	public MapGrinder MakeMaterials(GraphicsDevice gd, StuffKeeper sk, MatLib matLib, int lmaSize, string fileName)
 	{
 		LoadGBSPFile(fileName);
 
-		MapGrinder	mg	=new MapGrinder(gd, null, matLib, mGFXTexInfos, mGFXFaces, mLightMapGridSize, 1);
+		MapGrinder	mg	=new MapGrinder(gd, sk, matLib, mGFXTexInfos, mGFXFaces, mLightMapGridSize, lmaSize);
+
+		return	mg;
+	}
+
+
+	public void MakeLMData(MapGrinder mg)
+	{
+		mg.BuildLMData(mGFXVerts, mGFXVertIndexes, mGFXPlanes, mGFXModels, mGFXLightData);
 	}
 
 
