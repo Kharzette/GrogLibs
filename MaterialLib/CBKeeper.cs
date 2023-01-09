@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
+using Vortice.Mathematics.PackedVector;
 
 
 namespace MaterialLib;
@@ -70,7 +71,7 @@ public unsafe class CBKeeper
 	{
 		internal bool		mbTextureEnabled;
 		internal Vector2	mTexSize;
-		internal uint		mPadding;
+		internal uint		mNumDynLights;
 	}
 
 	//post.hlsl
@@ -120,6 +121,15 @@ public unsafe class CBKeeper
 	//BSP.hlsl light style array
 	Half	[]mAniIntensities;
 
+	//BSP.hlsl dynamic lights
+	Half4	[]mDynPos;
+	Half4	[]mDynColor;
+
+	//styles + lights crammed into a single buffer
+	//C# is such a pain sometimes
+	IntPtr	mStylesMem;
+	int		mStylesSize;
+
 	//post.hlsl weights & offsets array
 	float	[]mWeightsOffsetsXY;
 
@@ -144,8 +154,9 @@ public unsafe class CBKeeper
 
 
 	//ensure matches Character.hlsl
-	const int	MaxBones	=55;
-	const int	NumStyles	=44;	//match bsp.hlsl
+	const int	MaxBones		=55;	//match CommonFunctions.hlsli
+	const int	NumStyles		=44;	//match bsp.hlsl
+	const int	MaxDynLights	=16;	//match bsp.hlsl
 
 
 	//stuffkeeper constructs this
@@ -165,6 +176,8 @@ public unsafe class CBKeeper
 		mBSPStylesBuf.Dispose();
 		mPerShadowBuf.Dispose();
 		mTextModeBuf.Dispose();
+
+		Marshal.FreeHGlobal(mStylesMem);
 	}
 
 
@@ -176,10 +189,14 @@ public unsafe class CBKeeper
 		mTwoDBuf		=MakeConstantBuffer(dev, sizeof(TwoD));
 		mBSPBuf			=MakeConstantBuffer(dev, sizeof(BSP));
 		mCharacterBuf	=MakeConstantBuffer(dev, sizeof(Matrix4x4) * MaxBones);
-		mBSPStylesBuf	=MakeConstantBuffer(dev, sizeof(Half) * NumStyles + 8);
 		mPostBuf		=MakeConstantBuffer(dev, sizeof(Post));
 		mPerShadowBuf	=MakeConstantBuffer(dev, sizeof(PerShadow));
 		mTextModeBuf	=MakeConstantBuffer(dev, sizeof(TextMode));
+
+		//this one has the styles + dynlights
+		mBSPStylesBuf	=MakeConstantBuffer(dev,
+			sizeof(Half) * NumStyles + 8
+			+ sizeof(Half4) * 2 * MaxDynLights);
 
 		//alloc C# side constant buffer data
 		mPerObject		=new PerObject();
@@ -191,6 +208,13 @@ public unsafe class CBKeeper
 		mPost			=new Post();
 		mPerShadow		=new PerShadow();
 		mTextMode		=new TextMode();
+		mDynColor		=new Half4[MaxDynLights];
+		mDynPos			=new Half4[MaxDynLights];
+
+		//combined half buffer to store dyns & styles
+		//the +4 is for the uint padding
+		mStylesSize	=sizeof(Half) * (MaxDynLights * 2 + NumStyles + 4);
+		mStylesMem	=Marshal.AllocHGlobal(mStylesSize);
 
 		int	woxySize	=61 * 4;
 
@@ -294,8 +318,38 @@ public unsafe class CBKeeper
 
 	public void UpdateBSP(ID3D11DeviceContext dc)
 	{
+		IntPtr	pDest	=mStylesMem;
+
+		//dump stuff into the half buffer
+		fixed(Half *pAn	= mAniIntensities)
+		{
+			//styles
+			Buffer.MemoryCopy(pAn, (void*)pDest, mStylesSize, sizeof(Half) * NumStyles);
+		}
+
+		pDest	+=sizeof(Half) * NumStyles;
+
+		fixed(Half4 *pCol = mDynColor)
+		{
+			//8 bytes of fluff here, just copy colors in
+			Buffer.MemoryCopy(pCol, (void *)pDest, mStylesSize, 8);
+
+			pDest	+=8;
+
+			//actual colors
+			Buffer.MemoryCopy(pCol, (void *)pDest, mStylesSize, sizeof(Half4) * MaxDynLights);
+		}
+
+		pDest	+=sizeof(Half4) * MaxDynLights;
+
+		fixed(Half4 *pPos = mDynPos)
+		{
+			//light positions
+			Buffer.MemoryCopy(pPos, (void *)pDest, mStylesSize, sizeof(Half4) * MaxDynLights);
+		}
+
 		dc.UpdateSubresource<BSP>(mBSP, mBSPBuf);
-		dc.UpdateSubresource(mAniIntensities, mBSPStylesBuf);
+		dc.UpdateSubresource(mStylesMem, mBSPStylesBuf);
 	}
 
 	public void UpdatePost(ID3D11DeviceContext dc)

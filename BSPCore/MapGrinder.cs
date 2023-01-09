@@ -272,10 +272,10 @@ public partial class MapGrinder
 		for(int i=0;i < mLMVerts.Count;i++)
 		{
 			varray[i].Position		=mLMVerts[i];
-			varray[i].TexCoord0.X	=mLMFaceTex0[i].X;
-			varray[i].TexCoord0.Y	=mLMFaceTex0[i].Y;
-			varray[i].TexCoord0.Z	=mLMFaceTex1[i].X;
-			varray[i].TexCoord0.W	=mLMFaceTex1[i].Y;
+			varray[i].TexCoord04.X	=mLMFaceTex0[i].X;
+			varray[i].TexCoord04.Y	=mLMFaceTex0[i].Y;
+			varray[i].TexCoord04.Z	=mLMFaceTex1[i].X;
+			varray[i].TexCoord04.W	=mLMFaceTex1[i].Y;
 			varray[i].Normal.X		=mLMNormals[i].X;
 			varray[i].Normal.Y		=mLMNormals[i].Y;
 			varray[i].Normal.Z		=mLMNormals[i].Z;
@@ -302,10 +302,10 @@ public partial class MapGrinder
 		for(int i=0;i < mLMAVerts.Count;i++)
 		{
 			varray[i].Position		=mLMAVerts[i];
-			varray[i].TexCoord0.X	=mLMAFaceTex0[i].X;
-			varray[i].TexCoord0.Y	=mLMAFaceTex0[i].Y;
-			varray[i].TexCoord0.Z	=mLMAFaceTex1[i].X;
-			varray[i].TexCoord0.W	=mLMAFaceTex1[i].Y;
+			varray[i].TexCoord04.X	=mLMAFaceTex0[i].X;
+			varray[i].TexCoord04.Y	=mLMAFaceTex0[i].Y;
+			varray[i].TexCoord04.Z	=mLMAFaceTex1[i].X;
+			varray[i].TexCoord04.W	=mLMAFaceTex1[i].Y;
 			varray[i].Normal.X		=mLMANormals[i].X;
 			varray[i].Normal.Y		=mLMANormals[i].Y;
 			varray[i].Normal.Z		=mLMANormals[i].Z;
@@ -465,18 +465,18 @@ public partial class MapGrinder
 			varray[i].Normal.Y		=mLMAnimNormals[i].Y;
 			varray[i].Normal.Z		=mLMAnimNormals[i].Z;
 			varray[i].Normal.W		=1f;
-			varray[i].TexCoord0.X	=mLMAnimFaceTex0[i].X;
-			varray[i].TexCoord0.Y	=mLMAnimFaceTex0[i].Y;
-			varray[i].TexCoord0.Z	=mLMAnimFaceTex1[i].X;
-			varray[i].TexCoord0.W	=mLMAnimFaceTex1[i].Y;
-			varray[i].TexCoord1.X	=mLMAnimFaceTex2[i].X;
-			varray[i].TexCoord1.Y	=mLMAnimFaceTex2[i].Y;
-			varray[i].TexCoord1.Z	=mLMAnimFaceTex3[i].X;
-			varray[i].TexCoord1.W	=mLMAnimFaceTex3[i].Y;
-			varray[i].TexCoord2.X	=mLMAnimFaceTex4[i].X;
-			varray[i].TexCoord2.Y	=mLMAnimFaceTex4[i].Y;
-			varray[i].TexCoord2.Z	=1.0f;	//alpha
-			varray[i].TexCoord2.W	=69.0f;	//nothin
+			varray[i].TexCoord04.X	=mLMAnimFaceTex0[i].X;
+			varray[i].TexCoord04.Y	=mLMAnimFaceTex0[i].Y;
+			varray[i].TexCoord04.Z	=mLMAnimFaceTex1[i].X;
+			varray[i].TexCoord04.W	=mLMAnimFaceTex1[i].Y;
+			varray[i].TexCoord14.X	=mLMAnimFaceTex2[i].X;
+			varray[i].TexCoord14.Y	=mLMAnimFaceTex2[i].Y;
+			varray[i].TexCoord14.Z	=mLMAnimFaceTex3[i].X;
+			varray[i].TexCoord14.W	=mLMAnimFaceTex3[i].Y;
+			varray[i].TexCoord24.X	=mLMAnimFaceTex4[i].X;
+			varray[i].TexCoord24.Y	=mLMAnimFaceTex4[i].Y;
+			varray[i].TexCoord24.Z	=1.0f;	//alpha
+			varray[i].TexCoord24.W	=69.0f;	//nothin
 			varray[i].Color0		=mLMAnimStyle[i];
 		}
 
@@ -505,18 +505,18 @@ public partial class MapGrinder
 			varray[i].Normal.Y		=mLMAAnimNormals[i].Y;
 			varray[i].Normal.Z		=mLMAAnimNormals[i].Z;
 			varray[i].Normal.W		=1f;
-			varray[i].TexCoord0.X	=mLMAAnimFaceTex0[i].X;
-			varray[i].TexCoord0.Y	=mLMAAnimFaceTex0[i].Y;
-			varray[i].TexCoord0.Z	=mLMAAnimFaceTex1[i].X;
-			varray[i].TexCoord0.W	=mLMAAnimFaceTex1[i].Y;
-			varray[i].TexCoord1.X	=mLMAAnimFaceTex2[i].X;
-			varray[i].TexCoord1.Y	=mLMAAnimFaceTex2[i].Y;
-			varray[i].TexCoord1.Z	=mLMAAnimFaceTex3[i].X;
-			varray[i].TexCoord1.W	=mLMAAnimFaceTex3[i].Y;
-			varray[i].TexCoord2.X	=mLMAAnimFaceTex4[i].X;
-			varray[i].TexCoord2.Y	=mLMAAnimFaceTex4[i].Y;
-			varray[i].TexCoord2.Z	=mLMAAnimColors[i].A;	//alpha
-			varray[i].TexCoord2.W	=69.0f;	//nothin
+			varray[i].TexCoord04.X	=mLMAAnimFaceTex0[i].X;
+			varray[i].TexCoord04.Y	=mLMAAnimFaceTex0[i].Y;
+			varray[i].TexCoord04.Z	=mLMAAnimFaceTex1[i].X;
+			varray[i].TexCoord04.W	=mLMAAnimFaceTex1[i].Y;
+			varray[i].TexCoord14.X	=mLMAAnimFaceTex2[i].X;
+			varray[i].TexCoord14.Y	=mLMAAnimFaceTex2[i].Y;
+			varray[i].TexCoord14.Z	=mLMAAnimFaceTex3[i].X;
+			varray[i].TexCoord14.W	=mLMAAnimFaceTex3[i].Y;
+			varray[i].TexCoord24.X	=mLMAAnimFaceTex4[i].X;
+			varray[i].TexCoord24.Y	=mLMAAnimFaceTex4[i].Y;
+			varray[i].TexCoord24.Z	=mLMAAnimColors[i].A;	//alpha
+			varray[i].TexCoord24.W	=69.0f;	//nothin
 			varray[i].Color0		=mLMAAnimStyle[i];
 		}
 
@@ -841,12 +841,11 @@ public partial class MapGrinder
 				int	nverts	=matChunk.Value.mVCounts[i];
 
 				//triangulate
-				//reverse with sharpdx coord change
 				for(UInt16 k=1;k < nverts-1;k++)
 				{
-					inds.Add((UInt16)(vertOfs + ((k + 1) % nverts)));
-					inds.Add((UInt16)(vertOfs + k));
 					inds.Add(vertOfs);
+					inds.Add((UInt16)(vertOfs + k));
+					inds.Add((UInt16)(vertOfs + ((k + 1) % nverts)));
 				}
 
 				vertOfs	+=(UInt16)nverts;

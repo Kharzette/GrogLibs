@@ -1927,7 +1927,7 @@ public struct VPosNormTex04F
 	[FieldOffset(12)]
 	public Vector4	Normal;
 	[FieldOffset(28)]
-	public Vector4	TexCoord0;
+	public Vector4	TexCoord04;
 }
 
 [StructLayout(LayoutKind.Explicit, Pack = 0)]
@@ -1951,11 +1951,11 @@ public struct VPosNormTex04Tex14Tex24Color0F
 	[FieldOffset(12)]
 	public Vector4	Normal;
 	[FieldOffset(28)]
-	public Vector4	TexCoord0;
+	public Vector4	TexCoord04;
 	[FieldOffset(44)]
-	public Vector4	TexCoord1;
+	public Vector4	TexCoord14;
 	[FieldOffset(60)]
-	public Vector4	TexCoord2;
+	public Vector4	TexCoord24;
 	[FieldOffset(76)]
 	public Color	Color0;
 }

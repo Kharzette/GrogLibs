@@ -78,6 +78,10 @@ public class StuffKeeper
 	Dictionary<string, byte[]>	mHSCode	=new Dictionary<string, byte[]>();
 	Dictionary<string, byte[]>	mCSCode	=new Dictionary<string, byte[]>();
 
+	//high precision shaders
+	//These need full F32 norms and texcoords etc
+	List<string>	mHighPrecisionVS	=new List<string>();
+
 	//shaders
 	Dictionary<string, ID3D11VertexShader>	mVShaders	=new Dictionary<string, ID3D11VertexShader>();
 	Dictionary<string, ID3D11PixelShader>	mPShaders	=new Dictionary<string, ID3D11PixelShader>();
@@ -313,7 +317,7 @@ public class StuffKeeper
 	}
 
 
-	Format	SemanticToFormat(string sem)
+	Format	SemanticToFormat(string sem, bool b32Floats, RegisterComponentMaskFlags usage)
 	{
 		if(sem == "POSITION")
 		{
@@ -321,7 +325,7 @@ public class StuffKeeper
 		}
 		else if(sem == "NORMAL")
 		{
-			return	Format.R16G16B16A16_Float;
+			return	b32Floats?	Format.R32G32B32A32_Float : Format.R16G16B16A16_Float;
 		}
 		else if(sem == "BLENDINDICES")
 		{
@@ -333,7 +337,14 @@ public class StuffKeeper
 		}
 		else if(sem == "TEXCOORD")
 		{
-			return	Format.R16G16_Float;
+			if(usage == RegisterComponentMaskFlags.All)
+			{
+				return	b32Floats?	Format.R32G32B32A32_Float : Format.R16G16B16A16_Float;
+			}
+			else
+			{
+				return	b32Floats?	Format.R32G32_Float : Format.R16G16_Float;
+			}
 		}
 		else if(sem == "COLOR")
 		{
@@ -343,7 +354,7 @@ public class StuffKeeper
 	}
 
 
-	int	SemanticToSize(string sem)
+	int	SemanticToSize(string sem, bool b32Floats, RegisterComponentMaskFlags usage)
 	{
 		if(sem == "POSITION")
 		{
@@ -351,7 +362,7 @@ public class StuffKeeper
 		}
 		else if(sem == "NORMAL")
 		{
-			return	8;
+			return	b32Floats? 16 : 8;
 		}
 		else if(sem == "BLENDINDICES")
 		{
@@ -363,7 +374,14 @@ public class StuffKeeper
 		}
 		else if(sem == "TEXCOORD")
 		{
-			return	4;
+			if(usage == RegisterComponentMaskFlags.All)
+			{
+				return	b32Floats? 16 : 8;
+			}
+			else
+			{
+				return	b32Floats? 8 : 4;
+			}
 		}
 		else if(sem == "COLOR")
 		{
@@ -373,7 +391,7 @@ public class StuffKeeper
 	}
 
 
-	ID3D11InputLayout	MakeLayout(ID3D11Device gd, string vsEntry)
+	ID3D11InputLayout	MakeLayout(ID3D11Device gd, string vsEntry, bool b32Floats)
 	{
 		if(!mVSCode.ContainsKey(vsEntry))
 		{
@@ -390,8 +408,8 @@ public class StuffKeeper
 			ShaderParameterDescription	spd	=sr.InputParameters[i];
 
 			ied[i]	=new InputElementDescription(spd.SemanticName,
-				spd.SemanticIndex, SemanticToFormat(spd.SemanticName), ofs, 0);
-			ofs		+=SemanticToSize(spd.SemanticName);
+				spd.SemanticIndex, SemanticToFormat(spd.SemanticName, b32Floats, spd.UsageMask), ofs, 0);
+			ofs		+=SemanticToSize(spd.SemanticName, b32Floats, spd.UsageMask);
 		}
 
 		sr.Release();
@@ -410,7 +428,7 @@ public class StuffKeeper
 		//grab device from any shader stored
 		ID3D11Device	dev	=mVShaders.FirstOrDefault().Value.Device;
 
-		ID3D11InputLayout	ret	=MakeLayout(dev, vsEntry);
+		ID3D11InputLayout	ret	=MakeLayout(dev, vsEntry, mHighPrecisionVS.Contains(vsEntry));
 		if(ret != null)
 		{
 			mLayouts.Add(vsEntry, ret);
@@ -789,6 +807,18 @@ public class StuffKeeper
 
 		sr.Close();
 		fs.Close();
+
+		//mark the bsp entry points as high precision
+		foreach(KeyValuePair<string, List<string>> vs in mVSEntryPoints)
+		{
+			if(vs.Key == "BSP")
+			{
+				foreach(string ent in vs.Value)
+				{
+					mHighPrecisionVS.Add(ent);
+				}
+			}
+		}
 
 		fs	=new FileStream(mGameRootDir + "/ShadersWin64/PSEntryPoints.txt", FileMode.Open, FileAccess.Read);
 		if(fs == null)
