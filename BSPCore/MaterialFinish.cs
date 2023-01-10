@@ -122,7 +122,7 @@ public partial class MapGrinder
 
 	void FinishAlpha(int modelIndex,
 		Dictionary<int, DrawDataChunk> matChunks,
-		GFXPlane []pp, ref UInt16 vertOfs)
+		ref UInt16 vertOfs)
 	{
 		List<DrawCall>	modCalls	=ComputeIndexes(mAlphaIndexes, matChunks, ref vertOfs);
 

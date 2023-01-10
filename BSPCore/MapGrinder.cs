@@ -231,6 +231,11 @@ public partial class MapGrinder
 		return	mLMAAnimDraws;
 	}
 
+	public Dictionary<int, List<DrawCall>>	GetVLitAlphaDrawCalls()
+	{
+		return	mAlphaDraws;
+	}
+
 
 	internal bool BuildLMData(Vector3 []verts, int[] inds,
 			GFXPlane []pp, GFXModel []models, byte []lightData)
@@ -509,6 +514,61 @@ public partial class MapGrinder
 		return	true;
 	}
 
+	internal bool BuildVLitAlphaData(Vector3 []verts, int[] inds, Vector3 []rgbVerts,
+			Vector3 []vnorms, GFXPlane []pp, GFXModel []models)
+	{
+		UInt16	vertOfs	=0;	//model offset into the vertex buffer
+		for(int i=0;i < models.Length;i++)
+		{
+			//store faces per material
+			Dictionary<int,	DrawDataChunk>	matChunks	=new Dictionary<int, DrawDataChunk>();
+
+			foreach(string mat in mMaterialNames)
+			{
+				int	firstFace	=models[i].mFirstFace;
+				int	nFaces		=models[i].mNumFaces;
+
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
+				{
+					GFXFace		f	=mFaces[face];
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					//skip unmatched materials
+					if(!MaterialCorrect.IsAlpha(f, tex, mat))
+					{
+						continue;
+					}
+
+					int	matIndex	=mMaterialNames.IndexOf(mat);
+
+					DrawDataChunk	ddc;
+					if(matChunks.ContainsKey(matIndex))
+					{
+						ddc	=matChunks[matIndex];
+					}
+					else
+					{
+						ddc	=new DrawDataChunk();
+						matChunks.Add(matIndex, ddc);
+					}
+
+					if(!MaterialFill.FillAlpha(ddc, pp, verts, inds,
+						rgbVerts, vnorms, f, tex))
+					{
+						return	false;
+					}
+				}
+			}
+			FinishAlpha(i, matChunks, ref vertOfs);
+		}
+		return	true;
+	}
+
 
 	public void GetLMGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
@@ -578,14 +638,14 @@ public partial class MapGrinder
 			return;
 		}
 
-		VPosNormTex0Col0	[]varray	=new VPosNormTex0Col0[mVLitVerts.Count];
+		VPosNormTex0Col0F	[]varray	=new VPosNormTex0Col0F[mVLitVerts.Count];
 		for(int i=0;i < mVLitVerts.Count;i++)
 		{
 			varray[i].Position	=mVLitVerts[i];
 			varray[i].TexCoord0	=mVLitTex0[i];
 			varray[i].Color0	=mVLitColors[i];
 
-			varray[i].Normal	=new Half4(mVLitNormals[i].X,
+			varray[i].Normal	=new Vector4(mVLitNormals[i].X,
 				mVLitNormals[i].Y, mVLitNormals[i].Z, 1f);
 		}
 
@@ -594,7 +654,7 @@ public partial class MapGrinder
 		inds		=mVLitIndexes.ToArray();
 	}
 
-	internal void GetAlphaGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
+	public void GetAlphaGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mAlphaVerts.Count == 0)
 		{
@@ -604,13 +664,13 @@ public partial class MapGrinder
 			return;
 		}
 
-		VPosNormTex0Col0	[]varray	=new VPosNormTex0Col0[mAlphaVerts.Count];
+		VPosNormTex0Col0F	[]varray	=new VPosNormTex0Col0F[mAlphaVerts.Count];
 		for(int i=0;i < mAlphaVerts.Count;i++)
 		{
 			varray[i].Position	=mAlphaVerts[i];
 			varray[i].TexCoord0	=mAlphaTex0[i];
 			varray[i].Color0	=mAlphaColors[i];
-			varray[i].Normal	=new Half4(mAlphaNormals[i].X,
+			varray[i].Normal	=new Vector4(mAlphaNormals[i].X,
 				mAlphaNormals[i].Y, mAlphaNormals[i].Z, 1f);
 		}
 
@@ -629,12 +689,12 @@ public partial class MapGrinder
 			return;
 		}
 
-		VPosNormTex0	[]varray	=new VPosNormTex0[mFBVerts.Count];
+		VPosNormTex0F	[]varray	=new VPosNormTex0F[mFBVerts.Count];
 		for(int i=0;i < mFBVerts.Count;i++)
 		{
 			varray[i].Position	=mFBVerts[i];
 			varray[i].TexCoord0	=mFBTex0[i];
-			varray[i].Normal	=new Half4(mFBNormals[i].X,
+			varray[i].Normal	=new Vector4(mFBNormals[i].X,
 				mFBNormals[i].Y, mFBNormals[i].Z, 1f);
 		}
 

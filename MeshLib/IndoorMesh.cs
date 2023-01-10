@@ -31,6 +31,7 @@ public class IndoorMesh
 	Dictionary<int, List<DrawCall>>	mLMAAnimDraws;
 	Dictionary<int, List<DrawCall>>	mLMADraws;
 	Dictionary<int, List<DrawCall>>	mVLitDraws;
+	Dictionary<int, List<DrawCall>>	mAlphaDraws;
 
 	//vert copies saved for writing (for editor)
 	Array	mLMVerts, mVLitVerts, mLMAnimVerts;
@@ -213,6 +214,22 @@ public class IndoorMesh
 		mVLitDraws	=draws;
 	}
 
+	public void SetAlphaData(ID3D11Device gd, int typeIndex, Array verts, UInt16 []inds,
+		Dictionary<int, List<DrawCall>> draws)
+	{
+		if(typeIndex == -1)
+		{
+			return;
+		}
+		mAlphaVB	=VertexTypes.BuildABuffer(gd, verts, typeIndex);
+		mAlphaIB	=VertexTypes.BuildAnIndexBuffer(gd, inds);
+
+		mAlphaVerts	=verts;
+		mAlphaInds	=inds;
+		mAlphaIndex	=typeIndex;
+		mAlphaDraws	=draws;
+	}
+
 
 	public void SetLMAtlas(TexAtlas lma)
 	{
@@ -292,6 +309,7 @@ public class IndoorMesh
 		//alphas
 		DrawStuff(gd, bMatVis, getModMatrix, mLMADraws, mLMAIndex, mLMAVB, mLMAIB);
 		DrawStuff(gd, bMatVis, getModMatrix, mLMAAnimDraws, mLMAAnimIndex, mLMAAnimVB, mLMAAnimIB);
+		DrawStuff(gd, bMatVis, getModMatrix, mAlphaDraws, mAlphaIndex, mAlphaVB, mAlphaIB);
 	}
 
 
@@ -353,6 +371,8 @@ public class IndoorMesh
 	float ComputeStyleStrength(float stylePos, string styleString)
 	{
 		int	curPos	=(int)Math.Floor(stylePos / ThirtyFPS);
+
+		curPos	=Math.Clamp(curPos, 0, styleString.Length - 1);
 
 		float	val		=StyleVal(styleString.Substring(curPos, 1));
 		float	nextVal	=StyleVal(styleString.Substring((curPos + 1) % styleString.Length, 1));

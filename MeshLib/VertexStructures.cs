@@ -1959,3 +1959,14 @@ public struct VPosNormTex04Tex14Tex24Color0F
 	[FieldOffset(76)]
 	public Color	Color0;
 }
+
+[StructLayout(LayoutKind.Explicit, Pack = 0)]
+public struct VPosNormTex0F
+{
+	[FieldOffset(0)]
+	public Vector3	Position;
+	[FieldOffset(12)]
+	public Vector4	Normal;
+	[FieldOffset(28)]
+	public Vector2	TexCoord0;
+}
