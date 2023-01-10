@@ -1523,6 +1523,12 @@ public partial class Map
 	}
 
 
+	public void MakeLMAData(MapGrinder mg)
+	{
+		mg.BuildLMAData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, mGFXPlanes, mGFXModels, mGFXLightData);
+	}
+
+
 	//get normals for rendering them
 	public List<Vector3> GetFaceNormals()
 	{

@@ -25,9 +25,13 @@ public partial class MapGrinder
 		mLMDraws.Add(modelIndex, modCalls);
 	}
 
-/*
-	void FinishLightMapAnimated(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
+
+	void FinishLightMapAnimated(int modelIndex, Dictionary<int, DrawDataChunk> matChunks, ref UInt16 vertOfs)
 	{
+		if(matChunks.Count == 0)
+		{
+			return;
+		}
 		List<DrawCall>	modCalls	=ComputeIndexes(mLMAnimIndexes, matChunks, ref vertOfs);
 
 		StuffVBArrays(matChunks, mLMAnimVerts, mLMAnimNormals,
@@ -38,8 +42,12 @@ public partial class MapGrinder
 	}
 
 
-	void FinishVLit(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
+	void FinishVLit(int modelIndex, Dictionary<int, DrawDataChunk> matChunks, ref UInt16 vertOfs)
 	{
+		if(matChunks.Count == 0)
+		{
+			return;
+		}
 		List<DrawCall>	modCalls	=ComputeIndexes(mVLitIndexes, matChunks, ref vertOfs);
 
 		StuffVBArrays(matChunks, mVLitVerts, mVLitNormals,
@@ -50,8 +58,12 @@ public partial class MapGrinder
 	}
 
 
-	void FinishSky(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
+	void FinishSky(int modelIndex, Dictionary<int, DrawDataChunk> matChunks, ref UInt16 vertOfs)
 	{
+		if(matChunks.Count == 0)
+		{
+			return;
+		}
 		List<DrawCall>	modCalls	=ComputeIndexes(mSkyIndexes, matChunks, ref vertOfs);
 
 		StuffVBArrays(matChunks, mSkyVerts, null,
@@ -62,8 +74,12 @@ public partial class MapGrinder
 	}
 
 
-	void FinishFullBright(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
+	void FinishFullBright(int modelIndex, Dictionary<int, DrawDataChunk> matChunks, ref UInt16 vertOfs)
 	{
+		if(matChunks.Count == 0)
+		{
+			return;
+		}
 		List<DrawCall>	modCalls	=ComputeIndexes(mFBIndexes, matChunks, ref vertOfs);
 
 		StuffVBArrays(matChunks, mFBVerts, mFBNormals,
@@ -75,20 +91,24 @@ public partial class MapGrinder
 
 
 	void FinishLightMappedAlpha(int modelIndex,
-		List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks,
-		GFXPlane []pp, ref UInt16 vertOfs)
+		Dictionary<int, DrawDataChunk> matChunks,
+		ref UInt16 vertOfs)
 	{
-		List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mLMAIndexes, perPlaneChunks, pp, ref vertOfs);
+		if(matChunks.Count == 0)
+		{
+			return;
+		}
+		List<DrawCall>	modCalls	=ComputeIndexes(mLMAIndexes, matChunks, ref vertOfs);
 
-		StuffVBArrays(perPlaneChunks, mLMAVerts, mLMANormals,
+		StuffVBArrays(matChunks, mLMAVerts, mLMANormals,
 			mLMAFaceTex0, mLMAFaceTex1, null, null,	null,
 			mLMAColors, null);
 
 		mLMADraws.Add(modelIndex, modCalls);
 	}
 
-
-	void FinishMirror(int modelIndex, List<DrawDataChunk> matChunks, ref UInt16 vertOfs)
+/*
+	void FinishMirror(int modelIndex, Dictionary<int, DrawDataChunk> matChunks, ref UInt16 vertOfs)
 	{
 		List<DrawCall>	modCalls	=ComputeIndexes(mMirrorIndexes, matChunks, ref vertOfs);
 
@@ -97,16 +117,16 @@ public partial class MapGrinder
 			mMirrorColors, null);
 
 		mMirrorDraws.Add(modelIndex, modCalls);
-	}
+	}*/
 
 
 	void FinishAlpha(int modelIndex,
-		List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks,
+		Dictionary<int, DrawDataChunk> matChunks,
 		GFXPlane []pp, ref UInt16 vertOfs)
 	{
-		List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mAlphaIndexes, perPlaneChunks, pp, ref vertOfs);
+		List<DrawCall>	modCalls	=ComputeIndexes(mAlphaIndexes, matChunks, ref vertOfs);
 
-		StuffVBArrays(perPlaneChunks, mAlphaVerts, mAlphaNormals,
+		StuffVBArrays(matChunks, mAlphaVerts, mAlphaNormals,
 			mAlphaTex0, null, null, null, null,
 			mAlphaColors, null);
 
@@ -115,16 +135,16 @@ public partial class MapGrinder
 
 
 	void FinishLightMappedAlphaAnimated(int modelIndex,
-		List<Dictionary<Int32, DrawDataChunk>> perPlaneChunks,
+		Dictionary<int, DrawDataChunk> matChunks,
 		GFXPlane []pp, ref UInt16 vertOfs)
 	{
-		List<List<DrawCall>>	modCalls	=ComputeAlphaIndexes(mLMAAnimIndexes, perPlaneChunks, pp, ref vertOfs);
+		List<DrawCall>	modCalls	=ComputeIndexes(mLMAAnimIndexes, matChunks, ref vertOfs);
 
-		StuffVBArrays(perPlaneChunks, mLMAAnimVerts, mLMAAnimNormals,
+		StuffVBArrays(matChunks, mLMAAnimVerts, mLMAAnimNormals,
 			mLMAAnimFaceTex0, mLMAAnimFaceTex1, mLMAAnimFaceTex2, 
 			mLMAAnimFaceTex3, mLMAAnimFaceTex4, mLMAAnimColors,
 			mLMAAnimStyle);
 
 		mLMAAnimDraws.Add(modelIndex, modCalls);
-	}*/
+	}
 }

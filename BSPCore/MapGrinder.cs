@@ -14,6 +14,9 @@ using MatLib	=MaterialLib.MaterialLib;
 
 namespace BSPCore;
 
+//This is all the stuff that goes into a single draw.
+//For BSP this is a bunch of face triangles that are all the
+//same texture and shader.
 class DrawDataChunk
 {
 	internal int			mNumFaces;
@@ -143,8 +146,15 @@ public partial class MapGrinder
 
 	//material draw call information
 	//opaques
-	//indexed by material and model number
+	//indexed by model number
 	Dictionary<int, List<DrawCall>>	mLMDraws		=new Dictionary<int, List<DrawCall>>();
+	Dictionary<int, List<DrawCall>>	mLMAnimDraws	=new Dictionary<int, List<DrawCall>>();
+	Dictionary<int, List<DrawCall>>	mVLitDraws		=new Dictionary<int, List<DrawCall>>();
+	Dictionary<int, List<DrawCall>>	mSkyDraws		=new Dictionary<int, List<DrawCall>>();
+	Dictionary<int, List<DrawCall>>	mFBDraws		=new Dictionary<int, List<DrawCall>>();
+	Dictionary<int, List<DrawCall>>	mLMADraws		=new Dictionary<int, List<DrawCall>>();
+	Dictionary<int, List<DrawCall>>	mAlphaDraws		=new Dictionary<int, List<DrawCall>>();
+	Dictionary<int, List<DrawCall>>	mLMAAnimDraws	=new Dictionary<int, List<DrawCall>>();
 
 	//computed material stuff
 	List<string>	mMaterialNames		=new List<string>();
@@ -202,10 +212,16 @@ public partial class MapGrinder
 	}
 
 
+	public Dictionary<int, List<DrawCall>>	GetLMADrawCalls()
+	{
+		return	mLMADraws;
+	}
+
+
 	internal bool BuildLMData(Vector3 []verts, int[] inds,
 			GFXPlane []pp, GFXModel []models, byte []lightData)
 	{
-		UInt16	vertOfs	=0;	//model offset
+		UInt16	vertOfs	=0;	//model offset into the vertex buffer
 		for(int i=0;i < models.Length;i++)
 		{
 			//store faces per material
@@ -258,6 +274,63 @@ public partial class MapGrinder
 	}
 
 
+	//alphas
+	internal bool BuildLMAData(Vector3 []verts, int[] inds, Vector3 []rgbVerts,
+			GFXPlane []pp, GFXModel []models, byte []lightData)
+	{
+		UInt16	vertOfs	=0;	//model offset into the vertex buffer
+		for(int i=0;i < models.Length;i++)
+		{
+			//store faces per material
+			Dictionary<int,	DrawDataChunk>	matChunks	=new Dictionary<int, DrawDataChunk>();
+
+			foreach(string mat in mMaterialNames)
+			{
+				int	firstFace	=models[i].mFirstFace;
+				int	nFaces		=models[i].mNumFaces;
+
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
+				{
+					GFXFace		f	=mFaces[face];
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					//skip non lightmap materials
+					if(!MaterialCorrect.IsLightMappedAlpha(f, tex, mat))
+					{
+						continue;
+					}
+
+					int	matIndex	=mMaterialNames.IndexOf(mat);
+
+					DrawDataChunk	ddc;
+					if(matChunks.ContainsKey(matIndex))
+					{
+						ddc	=matChunks[matIndex];
+					}
+					else
+					{
+						ddc	=new DrawDataChunk();
+						matChunks.Add(matIndex, ddc);
+					}
+
+					if(!MaterialFill.FillLightMappedAlpha(ddc, pp, verts, inds,
+						rgbVerts, f, tex, mLightGridSize, lightData, mLMAtlas))
+					{
+						return	false;
+					}
+				}
+			}
+			FinishLightMappedAlpha(i, matChunks, ref vertOfs);
+		}
+		return	true;
+	}
+
+
 	public void GetLMGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mLMVerts.Count == 0)
@@ -288,7 +361,7 @@ public partial class MapGrinder
 	}
 
 
-	internal void GetLMAGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
+	public void GetLMAGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mLMAVerts.Count == 0)
 		{

@@ -27,6 +27,7 @@ public class IndoorMesh
 
 	//draw calls indexed by model
 	Dictionary<int, List<DrawCall>>	mLMDraws;
+	Dictionary<int, List<DrawCall>>	mLMADraws;
 
 	//vert copies saved for writing (for editor)
 	Array	mLMVerts, mVLitVerts, mLMAnimVerts;
@@ -132,6 +133,10 @@ public class IndoorMesh
 	public void SetLMData(ID3D11Device gd, int typeIndex, Array verts, UInt16 []inds,
 		Dictionary<int, List<DrawCall>> lmDraws)
 	{
+		if(typeIndex == -1)
+		{
+			return;
+		}
 		mLMVB	=VertexTypes.BuildABuffer(gd, verts, typeIndex);
 		mLMIB	=VertexTypes.BuildAnIndexBuffer(gd, inds);
 
@@ -139,6 +144,23 @@ public class IndoorMesh
 		mLMInds		=inds;
 		mLMIndex	=typeIndex;
 		mLMDraws	=lmDraws;
+	}
+
+
+	public void SetLMAData(ID3D11Device gd, int typeIndex, Array verts, UInt16 []inds,
+		Dictionary<int, List<DrawCall>> draws)
+	{
+		if(typeIndex == -1)
+		{
+			return;
+		}
+		mLMAVB	=VertexTypes.BuildABuffer(gd, verts, typeIndex);
+		mLMAIB	=VertexTypes.BuildAnIndexBuffer(gd, inds);
+
+		mLMAVerts	=verts;
+		mLMAInds	=inds;
+		mLMAIndex	=typeIndex;
+		mLMADraws	=draws;
 	}
 
 
@@ -204,11 +226,23 @@ public class IndoorMesh
 	}
 
 
-	//helpful overload for doing vis testing
 	public void Draw(GraphicsDevice gd,
 		IsMaterialVisible bMatVis,
 		GetModelMatrix getModMatrix)
 	{
+		DrawLM(gd, bMatVis, getModMatrix);
+		DrawLMA(gd, bMatVis, getModMatrix);
+	}
+
+
+	internal void DrawLM(GraphicsDevice gd,
+		IsMaterialVisible bMatVis,
+		GetModelMatrix getModMatrix)
+	{
+		if(mLMADraws == null)
+		{
+			return;
+		}
 		CBKeeper	cbk	=mMatLib.GetCBKeeper();
 
 		cbk.SetAniIntensities(mAniIntensities);
@@ -219,6 +253,44 @@ public class IndoorMesh
 		List<string>	matNames	=mMatLib.GetMaterialNames();
 
 		foreach(KeyValuePair<int, List<DrawCall>> modCall in mLMDraws)
+		{
+			Matrix4x4	worldMat	=getModMatrix(modCall.Key);
+
+			cbk.SetTransposedWorldMat(worldMat);
+
+			foreach(DrawCall dc in modCall.Value)
+			{
+				Debug.Assert(dc.mCount > 0);
+
+				string	mat	=matNames[dc.mMaterialID];
+
+				mMatLib.ApplyMaterial(mat, gd.DC);
+
+				gd.DC.DrawIndexed(dc.mCount, dc.mStartIndex, 0);
+			}
+		}
+	}
+
+
+	public void DrawLMA(GraphicsDevice gd,
+		IsMaterialVisible bMatVis,
+		GetModelMatrix getModMatrix)
+	{
+		if(mLMADraws == null)
+		{
+			return;
+		}
+
+		CBKeeper	cbk	=mMatLib.GetCBKeeper();
+
+		cbk.SetAniIntensities(mAniIntensities);
+
+		gd.DC.IASetVertexBuffer(0, mLMAVB, VertexTypes.GetSizeForTypeIndex(mLMAIndex), 0);
+		gd.DC.IASetIndexBuffer(mLMAIB, Vortice.DXGI.Format.R16_UInt, 0);
+
+		List<string>	matNames	=mMatLib.GetMaterialNames();
+
+		foreach(KeyValuePair<int, List<DrawCall>> modCall in mLMADraws)
 		{
 			Matrix4x4	worldMat	=getModMatrix(modCall.Key);
 

@@ -9,6 +9,8 @@ using Vortice.Mathematics;
 
 namespace BSPCore;
 
+//this class mostly converts draw data into vertex
+//buffer ready info of the right format
 internal class MaterialFill
 {
 	static void GetMirrorTexCoords(List<Vector3> verts,
@@ -380,6 +382,7 @@ internal class MaterialFill
 
 		if(!AtlasLightMap(atlas, lightGridSize, f, lightData, 0, faceVerts, pln, tex, ddc.mTex1))
 		{
+			CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
 			return	false;
 		}
 		ddc.mVerts.AddRange(faceVerts);
@@ -566,10 +569,8 @@ internal class MaterialFill
 
 
 	internal static bool FillLightMappedAlpha(DrawDataChunk ddc, GFXPlane []pp,
-				Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
-				GFXFace f, GFXTexInfo tex, int lightGridSize,
-				byte []lightData, MaterialLib.TexAtlas atlas,
-				List<List<Vector3>> mirrorPolys)
+				Vector3 []verts, int []indexes, Vector3 []rgbVerts, GFXFace f, GFXTexInfo tex,
+				int lightGridSize, byte []lightData, MaterialLib.TexAtlas atlas)
 	{
 		ddc.mNumFaces++;
 		ddc.mVCounts.Add(f.mNumVerts);
@@ -584,7 +585,8 @@ internal class MaterialFill
 
 		List<Vector3>	faceVerts	=new List<Vector3>();
 		ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-		ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
+		ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
+		ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
 
 		foreach(Vector3 v in faceVerts)
 		{
@@ -593,6 +595,7 @@ internal class MaterialFill
 
 		if(!AtlasLightMap(atlas, lightGridSize, f, lightData, 0, faceVerts, pln, tex, ddc.mTex1))
 		{
+			CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
 			return	false;
 		}
 
