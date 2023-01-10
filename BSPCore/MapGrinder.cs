@@ -211,10 +211,14 @@ public partial class MapGrinder
 		return	mLMDraws;
 	}
 
-
 	public Dictionary<int, List<DrawCall>>	GetLMADrawCalls()
 	{
 		return	mLMADraws;
+	}
+
+	public Dictionary<int, List<DrawCall>>	GetVLitDrawCalls()
+	{
+		return	mVLitDraws;
 	}
 
 
@@ -273,8 +277,7 @@ public partial class MapGrinder
 		return	true;
 	}
 
-
-	//alphas
+	//alphas with lightmaps
 	internal bool BuildLMAData(Vector3 []verts, int[] inds, Vector3 []rgbVerts,
 			GFXPlane []pp, GFXModel []models, byte []lightData)
 	{
@@ -330,6 +333,61 @@ public partial class MapGrinder
 		return	true;
 	}
 
+	internal bool BuildVLitData(Vector3 []verts, int[] inds, Vector3 []rgbVerts,
+			Vector3 []vnorms, GFXPlane []pp, GFXModel []models)
+	{
+		UInt16	vertOfs	=0;	//model offset into the vertex buffer
+		for(int i=0;i < models.Length;i++)
+		{
+			//store faces per material
+			Dictionary<int,	DrawDataChunk>	matChunks	=new Dictionary<int, DrawDataChunk>();
+
+			foreach(string mat in mMaterialNames)
+			{
+				int	firstFace	=models[i].mFirstFace;
+				int	nFaces		=models[i].mNumFaces;
+
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
+				{
+					GFXFace		f	=mFaces[face];
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					//skip non lightmap materials
+					if(!MaterialCorrect.IsVLit(f, tex, mat))
+					{
+						continue;
+					}
+
+					int	matIndex	=mMaterialNames.IndexOf(mat);
+
+					DrawDataChunk	ddc;
+					if(matChunks.ContainsKey(matIndex))
+					{
+						ddc	=matChunks[matIndex];
+					}
+					else
+					{
+						ddc	=new DrawDataChunk();
+						matChunks.Add(matIndex, ddc);
+					}
+
+					if(!MaterialFill.FillVLit(ddc, pp, verts, inds,
+						rgbVerts, vnorms, f, tex))
+					{
+						return	false;
+					}
+				}
+			}
+			FinishVLit(i, matChunks, ref vertOfs);
+		}
+		return	true;
+	}
+
 
 	public void GetLMGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
@@ -360,7 +418,6 @@ public partial class MapGrinder
 		inds		=mLMIndexes.ToArray();
 	}
 
-
 	public void GetLMAGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mLMAVerts.Count == 0)
@@ -390,8 +447,7 @@ public partial class MapGrinder
 		inds		=mLMAIndexes.ToArray();
 	}
 
-
-	internal void GetVLitGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
+	public void GetVLitGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mVLitVerts.Count == 0)
 		{

@@ -28,6 +28,7 @@ public class IndoorMesh
 	//draw calls indexed by model
 	Dictionary<int, List<DrawCall>>	mLMDraws;
 	Dictionary<int, List<DrawCall>>	mLMADraws;
+	Dictionary<int, List<DrawCall>>	mVLitDraws;
 
 	//vert copies saved for writing (for editor)
 	Array	mLMVerts, mVLitVerts, mLMAnimVerts;
@@ -146,7 +147,6 @@ public class IndoorMesh
 		mLMDraws	=lmDraws;
 	}
 
-
 	public void SetLMAData(ID3D11Device gd, int typeIndex, Array verts, UInt16 []inds,
 		Dictionary<int, List<DrawCall>> draws)
 	{
@@ -161,6 +161,22 @@ public class IndoorMesh
 		mLMAInds	=inds;
 		mLMAIndex	=typeIndex;
 		mLMADraws	=draws;
+	}
+
+	public void SetVLitData(ID3D11Device gd, int typeIndex, Array verts, UInt16 []inds,
+		Dictionary<int, List<DrawCall>> draws)
+	{
+		if(typeIndex == -1)
+		{
+			return;
+		}
+		mVLitVB	=VertexTypes.BuildABuffer(gd, verts, typeIndex);
+		mVLitIB	=VertexTypes.BuildAnIndexBuffer(gd, inds);
+
+		mVLitVerts	=verts;
+		mVLitInds	=inds;
+		mVLitIndex	=typeIndex;
+		mVLitDraws	=draws;
 	}
 
 
@@ -230,67 +246,35 @@ public class IndoorMesh
 		IsMaterialVisible bMatVis,
 		GetModelMatrix getModMatrix)
 	{
-		DrawLM(gd, bMatVis, getModMatrix);
-		DrawLMA(gd, bMatVis, getModMatrix);
+		CBKeeper	cbk	=mMatLib.GetCBKeeper();
+		cbk.SetAniIntensities(mAniIntensities);
+
+		DrawStuff(gd, bMatVis, getModMatrix, mLMDraws, mLMIndex, mLMVB, mLMIB);
+		DrawStuff(gd, bMatVis, getModMatrix, mVLitDraws, mVLitIndex, mVLitVB, mVLitIB);
+		DrawStuff(gd, bMatVis, getModMatrix, mLMADraws, mLMAIndex, mLMAVB, mLMAIB);
 	}
 
 
-	internal void DrawLM(GraphicsDevice gd,
-		IsMaterialVisible bMatVis,
-		GetModelMatrix getModMatrix)
+	internal void DrawStuff(GraphicsDevice gd, IsMaterialVisible bMatVis, GetModelMatrix getModMatrix,
+		Dictionary<int, List<DrawCall>> draws, int typeIdx, ID3D11Buffer vb, ID3D11Buffer ib)
 	{
-		if(mLMADraws == null)
+		if(draws == null)
 		{
 			return;
 		}
-		CBKeeper	cbk	=mMatLib.GetCBKeeper();
-
-		cbk.SetAniIntensities(mAniIntensities);
-
-		gd.DC.IASetVertexBuffer(0, mLMVB, VertexTypes.GetSizeForTypeIndex(mLMIndex), 0);
-		gd.DC.IASetIndexBuffer(mLMIB, Vortice.DXGI.Format.R16_UInt, 0);
-
-		List<string>	matNames	=mMatLib.GetMaterialNames();
-
-		foreach(KeyValuePair<int, List<DrawCall>> modCall in mLMDraws)
-		{
-			Matrix4x4	worldMat	=getModMatrix(modCall.Key);
-
-			cbk.SetTransposedWorldMat(worldMat);
-
-			foreach(DrawCall dc in modCall.Value)
-			{
-				Debug.Assert(dc.mCount > 0);
-
-				string	mat	=matNames[dc.mMaterialID];
-
-				mMatLib.ApplyMaterial(mat, gd.DC);
-
-				gd.DC.DrawIndexed(dc.mCount, dc.mStartIndex, 0);
-			}
-		}
-	}
-
-
-	public void DrawLMA(GraphicsDevice gd,
-		IsMaterialVisible bMatVis,
-		GetModelMatrix getModMatrix)
-	{
-		if(mLMADraws == null)
+		if(draws.Count == 0)
 		{
 			return;
 		}
 
 		CBKeeper	cbk	=mMatLib.GetCBKeeper();
 
-		cbk.SetAniIntensities(mAniIntensities);
-
-		gd.DC.IASetVertexBuffer(0, mLMAVB, VertexTypes.GetSizeForTypeIndex(mLMAIndex), 0);
-		gd.DC.IASetIndexBuffer(mLMAIB, Vortice.DXGI.Format.R16_UInt, 0);
+		gd.DC.IASetVertexBuffer(0, vb, VertexTypes.GetSizeForTypeIndex(typeIdx), 0);
+		gd.DC.IASetIndexBuffer(ib, Vortice.DXGI.Format.R16_UInt, 0);
 
 		List<string>	matNames	=mMatLib.GetMaterialNames();
 
-		foreach(KeyValuePair<int, List<DrawCall>> modCall in mLMADraws)
+		foreach(KeyValuePair<int, List<DrawCall>> modCall in draws)
 		{
 			Matrix4x4	worldMat	=getModMatrix(modCall.Key);
 

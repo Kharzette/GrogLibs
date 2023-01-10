@@ -436,10 +436,8 @@ internal class MaterialFill
 
 
 	internal static bool FillVLit(DrawDataChunk ddc, GFXPlane []pp,
-				Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
-				GFXFace f, GFXTexInfo tex, int lightGridSize,
-				byte []lightData, MaterialLib.TexAtlas atlas,
-				List<List<Vector3>> mirrorPolys)
+				Vector3 []verts, int []indexes, Vector3 []rgbVerts,
+				Vector3 []vnorms, GFXFace f, GFXTexInfo tex)
 	{
 		ddc.mNumFaces++;
 		ddc.mVCounts.Add(f.mNumVerts);
