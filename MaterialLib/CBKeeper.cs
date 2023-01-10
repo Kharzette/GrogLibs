@@ -315,6 +315,10 @@ public unsafe class CBKeeper
 	public void UpdateBSP(ID3D11DeviceContext dc)
 	{
 		dc.UpdateSubresource<BSP>(mBSP, mBSPBuf);
+	}
+
+	public void UpdateBSPArrays(ID3D11DeviceContext dc)
+	{
 		dc.UpdateSubresource(mAniIntensities, mBSPStylesBuf);
 		dc.UpdateSubresource(mDynColor, mDynColBuf);
 		dc.UpdateSubresource(mDynPos, mDynPosBuf);

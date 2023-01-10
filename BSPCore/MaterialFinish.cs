@@ -136,7 +136,7 @@ public partial class MapGrinder
 
 	void FinishLightMappedAlphaAnimated(int modelIndex,
 		Dictionary<int, DrawDataChunk> matChunks,
-		GFXPlane []pp, ref UInt16 vertOfs)
+		ref UInt16 vertOfs)
 	{
 		List<DrawCall>	modCalls	=ComputeIndexes(mLMAAnimIndexes, matChunks, ref vertOfs);
 

@@ -28,6 +28,7 @@ public class IndoorMesh
 	//draw calls indexed by model
 	Dictionary<int, List<DrawCall>>	mLMDraws;
 	Dictionary<int, List<DrawCall>>	mLMAnimDraws;
+	Dictionary<int, List<DrawCall>>	mLMAAnimDraws;
 	Dictionary<int, List<DrawCall>>	mLMADraws;
 	Dictionary<int, List<DrawCall>>	mVLitDraws;
 
@@ -164,6 +165,22 @@ public class IndoorMesh
 		mLMAnimDraws	=draws;
 	}
 
+	public void SetLMAAnimData(ID3D11Device gd, int typeIndex, Array verts,
+		UInt16 []inds, Dictionary<int, List<DrawCall>> draws)
+	{
+		if(typeIndex == -1)
+		{
+			return;
+		}
+		mLMAAnimVB	=VertexTypes.BuildABuffer(gd, verts, typeIndex);
+		mLMAAnimIB	=VertexTypes.BuildAnIndexBuffer(gd, inds);
+
+		mLMAAnimVerts	=verts;
+		mLMAAnimInds	=inds;
+		mLMAAnimIndex	=typeIndex;
+		mLMAAnimDraws	=draws;
+	}
+
 	public void SetLMAData(ID3D11Device gd, int typeIndex, Array verts, UInt16 []inds,
 		Dictionary<int, List<DrawCall>> draws)
 	{
@@ -265,12 +282,16 @@ public class IndoorMesh
 	{
 		CBKeeper	cbk	=mMatLib.GetCBKeeper();
 
+		//lightstyles and dynamics
+		cbk.UpdateBSPArrays(gd.DC);
+
 		DrawStuff(gd, bMatVis, getModMatrix, mLMDraws, mLMIndex, mLMVB, mLMIB);
 		DrawStuff(gd, bMatVis, getModMatrix, mLMAnimDraws, mLMAnimIndex, mLMAnimVB, mLMAnimIB);
 		DrawStuff(gd, bMatVis, getModMatrix, mVLitDraws, mVLitIndex, mVLitVB, mVLitIB);
 
 		//alphas
 		DrawStuff(gd, bMatVis, getModMatrix, mLMADraws, mLMAIndex, mLMAVB, mLMAIB);
+		DrawStuff(gd, bMatVis, getModMatrix, mLMAAnimDraws, mLMAAnimIndex, mLMAAnimVB, mLMAAnimIB);
 	}
 
 

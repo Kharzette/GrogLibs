@@ -226,6 +226,11 @@ public partial class MapGrinder
 		return	mLMAnimDraws;
 	}
 
+	public Dictionary<int, List<DrawCall>>	GetLMAAnimDrawCalls()
+	{
+		return	mLMAAnimDraws;
+	}
+
 
 	internal bool BuildLMData(Vector3 []verts, int[] inds,
 			GFXPlane []pp, GFXModel []models, byte []lightData)
@@ -306,7 +311,7 @@ public partial class MapGrinder
 						continue;
 					}
 
-					//skip non lightmap materials
+					//skip unmatched materials
 					if(!MaterialCorrect.IsLightMapAnimated(f, tex, mat))
 					{
 						continue;
@@ -362,7 +367,7 @@ public partial class MapGrinder
 						continue;
 					}
 
-					//skip non lightmap materials
+					//skip unmatched materials
 					if(!MaterialCorrect.IsLightMappedAlpha(f, tex, mat))
 					{
 						continue;
@@ -393,6 +398,62 @@ public partial class MapGrinder
 		return	true;
 	}
 
+	//alphas with lightmaps
+	internal bool BuildLMAAnimData(Vector3 []verts, int[] inds, Vector3 []rgbVerts,
+			GFXPlane []pp, GFXModel []models, byte []lightData)
+	{
+		UInt16	vertOfs	=0;	//model offset into the vertex buffer
+		for(int i=0;i < models.Length;i++)
+		{
+			//store faces per material
+			Dictionary<int,	DrawDataChunk>	matChunks	=new Dictionary<int, DrawDataChunk>();
+
+			foreach(string mat in mMaterialNames)
+			{
+				int	firstFace	=models[i].mFirstFace;
+				int	nFaces		=models[i].mNumFaces;
+
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
+				{
+					GFXFace		f	=mFaces[face];
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					//skip unmatched materials
+					if(!MaterialCorrect.IsLightMappedAlphaAnimated(f, tex, mat))
+					{
+						continue;
+					}
+
+					int	matIndex	=mMaterialNames.IndexOf(mat);
+
+					DrawDataChunk	ddc;
+					if(matChunks.ContainsKey(matIndex))
+					{
+						ddc	=matChunks[matIndex];
+					}
+					else
+					{
+						ddc	=new DrawDataChunk();
+						matChunks.Add(matIndex, ddc);
+					}
+
+					if(!MaterialFill.FillLightMappedAlphaAnimated(ddc, pp, verts, inds,
+						rgbVerts, f, tex, mLightGridSize, lightData, mLMAtlas))
+					{
+						return	false;
+					}
+				}
+			}
+			FinishLightMappedAlphaAnimated(i, matChunks, ref vertOfs);
+		}
+		return	true;
+	}
+
 	internal bool BuildVLitData(Vector3 []verts, int[] inds, Vector3 []rgbVerts,
 			Vector3 []vnorms, GFXPlane []pp, GFXModel []models)
 	{
@@ -417,7 +478,7 @@ public partial class MapGrinder
 						continue;
 					}
 
-					//skip non lightmap materials
+					//skip unmatched materials
 					if(!MaterialCorrect.IsVLit(f, tex, mat))
 					{
 						continue;
@@ -670,7 +731,7 @@ public partial class MapGrinder
 	}
 
 
-	internal void GetLMAAnimGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
+	public void GetLMAAnimGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mLMAAnimVerts.Count == 0)
 		{
@@ -699,7 +760,7 @@ public partial class MapGrinder
 			varray[i].TexCoord14.W	=mLMAAnimFaceTex3[i].Y;
 			varray[i].TexCoord24.X	=mLMAAnimFaceTex4[i].X;
 			varray[i].TexCoord24.Y	=mLMAAnimFaceTex4[i].Y;
-			varray[i].TexCoord24.Z	=mLMAAnimColors[i].A;	//alpha
+			varray[i].TexCoord24.Z	=(float)mLMAAnimColors[i].A / 255f;	//alpha
 			varray[i].TexCoord24.W	=69.0f;	//nothin
 			varray[i].Color0		=mLMAAnimStyle[i];
 		}

@@ -583,7 +583,6 @@ internal class MaterialFill
 		List<Vector3>	faceVerts	=new List<Vector3>();
 		ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
 		ComputeFaceNormals(f, verts, indexes, tex, null, pln, ddc.mNorms);
-		ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
 
 		foreach(Vector3 v in faceVerts)
 		{
@@ -603,10 +602,9 @@ internal class MaterialFill
 
 
 	internal static bool FillLightMappedAlphaAnimated(DrawDataChunk ddc, GFXPlane []pp,
-				Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
+				Vector3 []verts, int []indexes, Vector3 []rgbVerts,
 				GFXFace f, GFXTexInfo tex, int lightGridSize,
-				byte []lightData, MaterialLib.TexAtlas atlas,
-				List<List<Vector3>> mirrorPolys)
+				byte []lightData, MaterialLib.TexAtlas atlas)
 	{
 		ddc.mNumFaces++;
 		ddc.mVCounts.Add(f.mNumVerts);

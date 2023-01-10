@@ -1527,6 +1527,11 @@ public partial class Map
 		mg.BuildLMAnimData(mGFXVerts, mGFXVertIndexes, mGFXPlanes, mGFXModels, mGFXLightData);
 	}
 
+	public void MakeLMAAnimData(MapGrinder mg)
+	{
+		mg.BuildLMAAnimData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, mGFXPlanes, mGFXModels, mGFXLightData);
+	}
+
 	public void MakeLMAData(MapGrinder mg)
 	{
 		mg.BuildLMAData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, mGFXPlanes, mGFXModels, mGFXLightData);
