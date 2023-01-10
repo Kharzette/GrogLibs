@@ -1522,6 +1522,10 @@ public partial class Map
 		mg.BuildLMData(mGFXVerts, mGFXVertIndexes, mGFXPlanes, mGFXModels, mGFXLightData);
 	}
 
+	public void MakeLMAnimData(MapGrinder mg)
+	{
+		mg.BuildLMAnimData(mGFXVerts, mGFXVertIndexes, mGFXPlanes, mGFXModels, mGFXLightData);
+	}
 
 	public void MakeLMAData(MapGrinder mg)
 	{

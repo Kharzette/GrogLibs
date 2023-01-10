@@ -167,6 +167,13 @@ internal class Material
 		dc.VSSetShader(sk.GetVertexShader(mVSName));
 		dc.PSSetShader(sk.GetPixelShader(mPSName));
 
+		cbk.SetCommonCBToShaders(dc);
+
+		if(mBSPVars != null)
+		{
+			cbk.SetBSPToShaders(dc);
+		}
+
 		//layout
 		dc.IASetInputLayout(sk.GetOrCreateLayout(mVSName));
 
@@ -185,12 +192,6 @@ internal class Material
 
 		//hopefully the world matrix is set by now
 		cbk.UpdateObject(dc);
-
-		cbk.SetCommonCBToShaders(dc);
-		if(mBSPVars != null)
-		{
-			cbk.SetBSPToShaders(dc);
-		}
 	}
 
 

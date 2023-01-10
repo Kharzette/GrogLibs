@@ -221,6 +221,11 @@ public partial class MapGrinder
 		return	mVLitDraws;
 	}
 
+	public Dictionary<int, List<DrawCall>>	GetLMAnimDrawCalls()
+	{
+		return	mLMAnimDraws;
+	}
+
 
 	internal bool BuildLMData(Vector3 []verts, int[] inds,
 			GFXPlane []pp, GFXModel []models, byte []lightData)
@@ -273,6 +278,61 @@ public partial class MapGrinder
 				}
 			}
 			FinishLightMapped(i, matChunks, ref vertOfs);
+		}
+		return	true;
+	}
+
+	internal bool BuildLMAnimData(Vector3 []verts, int[] inds,
+			GFXPlane []pp, GFXModel []models, byte []lightData)
+	{
+		UInt16	vertOfs	=0;	//model offset into the vertex buffer
+		for(int i=0;i < models.Length;i++)
+		{
+			//store faces per material
+			Dictionary<int,	DrawDataChunk>	matChunks	=new Dictionary<int, DrawDataChunk>();
+
+			foreach(string mat in mMaterialNames)
+			{
+				int	firstFace	=models[i].mFirstFace;
+				int	nFaces		=models[i].mNumFaces;
+
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
+				{
+					GFXFace		f	=mFaces[face];
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					//skip non lightmap materials
+					if(!MaterialCorrect.IsLightMapAnimated(f, tex, mat))
+					{
+						continue;
+					}
+
+					int	matIndex	=mMaterialNames.IndexOf(mat);
+
+					DrawDataChunk	ddc;
+					if(matChunks.ContainsKey(matIndex))
+					{
+						ddc	=matChunks[matIndex];
+					}
+					else
+					{
+						ddc	=new DrawDataChunk();
+						matChunks.Add(matIndex, ddc);
+					}
+
+					if(!MaterialFill.FillLightMapAnimated(ddc, pp, verts, inds,
+						f, tex, mLightGridSize, lightData, mLMAtlas))
+					{
+						return	false;
+					}
+				}
+			}
+			FinishLightMapAnimated(i, matChunks, ref vertOfs);
 		}
 		return	true;
 	}
@@ -473,7 +533,6 @@ public partial class MapGrinder
 		inds		=mVLitIndexes.ToArray();
 	}
 
-
 	internal void GetAlphaGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mAlphaVerts.Count == 0)
@@ -499,7 +558,6 @@ public partial class MapGrinder
 		inds		=mAlphaIndexes.ToArray();
 	}
 
-
 	internal void GetFullBrightGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mFBVerts.Count == 0)
@@ -523,7 +581,6 @@ public partial class MapGrinder
 		verts		=varray;
 		inds		=mFBIndexes.ToArray();
 	}
-
 
 	internal void GetMirrorGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
@@ -551,7 +608,6 @@ public partial class MapGrinder
 		inds		=mMirrorIndexes.ToArray();
 	}
 
-
 	internal void GetSkyGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mSkyVerts.Count == 0)
@@ -574,8 +630,7 @@ public partial class MapGrinder
 		inds		=mSkyIndexes.ToArray();
 	}
 
-
-	internal void GetLMAnimGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
+	public void GetLMAnimGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mLMAnimVerts.Count == 0)
 		{

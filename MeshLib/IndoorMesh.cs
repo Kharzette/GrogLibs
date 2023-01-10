@@ -27,6 +27,7 @@ public class IndoorMesh
 
 	//draw calls indexed by model
 	Dictionary<int, List<DrawCall>>	mLMDraws;
+	Dictionary<int, List<DrawCall>>	mLMAnimDraws;
 	Dictionary<int, List<DrawCall>>	mLMADraws;
 	Dictionary<int, List<DrawCall>>	mVLitDraws;
 
@@ -54,7 +55,7 @@ public class IndoorMesh
 	Dictionary<int, string>	mStyles				=new Dictionary<int, string>();
 	Dictionary<int, float>	mCurStylePos		=new Dictionary<int, float>();
 	bool					[]mSwitches			=new bool[32];	//switchable on / off
-	Half					[]mAniIntensities	=new Half[44];
+	float					[]mAniIntensities	=new float[44];
 
 	//constants
 	const float		ThirtyFPS	=(1000.0f / 30.0f);
@@ -145,6 +146,22 @@ public class IndoorMesh
 		mLMInds		=inds;
 		mLMIndex	=typeIndex;
 		mLMDraws	=lmDraws;
+	}
+
+	public void SetLMAnimData(ID3D11Device gd, int typeIndex, Array verts,
+		UInt16 []inds, Dictionary<int, List<DrawCall>> draws)
+	{
+		if(typeIndex == -1)
+		{
+			return;
+		}
+		mLMAnimVB	=VertexTypes.BuildABuffer(gd, verts, typeIndex);
+		mLMAnimIB	=VertexTypes.BuildAnIndexBuffer(gd, inds);
+
+		mLMAnimVerts	=verts;
+		mLMAnimInds		=inds;
+		mLMAnimIndex	=typeIndex;
+		mLMAnimDraws	=draws;
 	}
 
 	public void SetLMAData(ID3D11Device gd, int typeIndex, Array verts, UInt16 []inds,
@@ -247,10 +264,12 @@ public class IndoorMesh
 		GetModelMatrix getModMatrix)
 	{
 		CBKeeper	cbk	=mMatLib.GetCBKeeper();
-		cbk.SetAniIntensities(mAniIntensities);
 
 		DrawStuff(gd, bMatVis, getModMatrix, mLMDraws, mLMIndex, mLMVB, mLMIB);
+		DrawStuff(gd, bMatVis, getModMatrix, mLMAnimDraws, mLMAnimIndex, mLMAnimVB, mLMAnimIB);
 		DrawStuff(gd, bMatVis, getModMatrix, mVLitDraws, mVLitIndex, mVLitVB, mVLitIB);
+
+		//alphas
 		DrawStuff(gd, bMatVis, getModMatrix, mLMADraws, mLMAIndex, mLMAVB, mLMAIB);
 	}
 
@@ -360,24 +379,16 @@ public class IndoorMesh
 
 			float	lerped	=ComputeStyleStrength(mCurStylePos[i], mStyles[i]);
 
-			mAniIntensities[i]	=(Half)lerped;
+			mAniIntensities[i]	=lerped;
 		}
 
 		//switchable lights
 		for(int i=0;i < 32;i++)
 		{
-			mAniIntensities[12 + i]	=(Half)((mSwitches[i])? 1.0f : 0.0f);
+			mAniIntensities[12 + i]	=((mSwitches[i])? 1.0f : 0.0f);
 		}
 
-		foreach(string mat in mats)
-		{
-			if(mat.EndsWith("Anim"))
-			{
-				BSPMat	bm	=mMatLib.GetMaterialBSPMat(mat);
-
-				bm.AniIntensities	=mAniIntensities;
-			}
-		}
+		mMatLib.GetCBKeeper().SetAniIntensities(mAniIntensities);
 	}
 
 

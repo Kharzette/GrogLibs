@@ -17,9 +17,6 @@ public class BSPMat
 	bool	mbTextureEnabled;
 	Vector2	mTexSize;
 
-	//intensity levels for the animated / switchable light styles
-	Half	[]mAniIntensities;
-
 	string	mTexture;
 
 
@@ -56,11 +53,6 @@ public class BSPMat
 		ret.mbTextureEnabled	=mbTextureEnabled;
 		ret.mTexSize			=mTexSize;
 
-		if(mAniIntensities != null)
-		{
-			ret.mAniIntensities	=new Half[mAniIntensities.Length];
-			mAniIntensities.CopyTo(ret.mAniIntensities,0);
-		}
 		return	ret;
 	}
 
@@ -76,11 +68,6 @@ public class BSPMat
 		set	{	mTexSize	=value;	}
 	}
 
-	public Half	[]AniIntensities
-	{
-		set	{	mAniIntensities	=value;	}
-	}
-
 	public string	Texture
 	{
 		get	{	return	mTexture;	}
@@ -93,7 +80,6 @@ public class BSPMat
 	{
 		cbk.SetTextureEnabled(mbTextureEnabled);
 		cbk.SetTexSize(mTexSize);
-		cbk.SetAniIntensities(mAniIntensities);
 
 		ID3D11ShaderResourceView	srv	=sk.GetSRV(mTexture);
 		if(srv != null)
