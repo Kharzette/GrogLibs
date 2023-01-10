@@ -372,7 +372,7 @@ public class IndoorMesh
 		{
 			Matrix4x4	worldMat	=getModMatrix(modCall.Key);
 
-			cbk.SetTransposedWorldMat(worldMat);
+			cbk.SetWorldMat(worldMat);
 
 			foreach(DrawCall dc in modCall.Value)
 			{

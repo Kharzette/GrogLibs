@@ -30,39 +30,6 @@ class DrawDataChunk
 	internal List<Vector2>	mTex4		=new List<Vector2>();
 	internal List<Color>	mColors		=new List<Color>();
 	internal List<Color>	mStyles		=new List<Color>();
-
-
-	internal int Area()
-	{
-		double	total	=0.0;
-		int		vertOfs	=0;
-		for(int i=0;i < mNumFaces;i++)
-		{
-			int	nverts	=mVCounts[i];
-			for(int j=2;j < nverts;j++)
-			{
-				Vector3	vect1	=mVerts[j + vertOfs - 1] - mVerts[vertOfs];
-				Vector3	vect2	=mVerts[j + vertOfs] - mVerts[vertOfs];
-
-				//not sure if this ordering is correct, but since
-				//only the length is used, should be ok
-				Vector3	cross	=Vector3.Cross(vect1, vect2);
-
-				total	+=0.5f * cross.Length();
-			}
-			vertOfs	+=nverts;
-		}
-
-		//cap
-		if(total > int.MaxValue)
-		{
-			return	int.MaxValue;
-		}
-		else
-		{
-			return	(int)total;
-		}
-	}
 }
 
 
@@ -152,6 +119,8 @@ public partial class MapGrinder
 	Dictionary<int, List<DrawCall>>	mVLitDraws		=new Dictionary<int, List<DrawCall>>();
 	Dictionary<int, List<DrawCall>>	mSkyDraws		=new Dictionary<int, List<DrawCall>>();
 	Dictionary<int, List<DrawCall>>	mFBDraws		=new Dictionary<int, List<DrawCall>>();
+	
+	//alphas
 	Dictionary<int, List<DrawCall>>	mLMADraws		=new Dictionary<int, List<DrawCall>>();
 	Dictionary<int, List<DrawCall>>	mAlphaDraws		=new Dictionary<int, List<DrawCall>>();
 	Dictionary<int, List<DrawCall>>	mLMAAnimDraws	=new Dictionary<int, List<DrawCall>>();
@@ -973,7 +942,6 @@ public partial class MapGrinder
 			string	ps					="";
 			string	blendState			="";
 			string	depthState			="";
-			bool	bLightMap	=false;
 
 			//set some parameter defaults
 			if(mn.EndsWith("*Alpha"))
@@ -997,7 +965,6 @@ public partial class MapGrinder
 			{
 				blendState			="AlphaBlending";
 				depthState			="DisableDepthWrite";
-				bLightMap			=true;
 				if(bCel)
 				{
 					//old effect tech LightMapAlphaCel
@@ -1015,7 +982,6 @@ public partial class MapGrinder
 			{
 				blendState			="AlphaBlending";
 				depthState			="DisableDepthWrite";
-				bLightMap	=true;
 				if(bCel)
 				{
 					//old effect tech LightMapAnimAlphaCel
@@ -1060,7 +1026,6 @@ public partial class MapGrinder
 				//but I will tackle this one later
 				blendState			="NoBlending";
 				depthState			="EnableDepth";
-				bLightMap			=true;
 				vs					="VertexLitVS";
 				ps					="VertexLitPS";
 			}
@@ -1088,7 +1053,6 @@ public partial class MapGrinder
 					vs	="LightMapAnimVS";
 					ps	="LightMapAnimPS";
 				}
-				bLightMap	=true;
 			}
 			else
 			{
@@ -1106,7 +1070,6 @@ public partial class MapGrinder
 					vs	="LightMapVS";
 					ps	="LightMapPS";
 				}
-				bLightMap	=true;
 			}
 
 			//The main material only takes care of the 0 pass.
