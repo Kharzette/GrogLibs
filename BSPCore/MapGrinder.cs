@@ -221,6 +221,11 @@ public partial class MapGrinder
 		return	mVLitDraws;
 	}
 
+	public Dictionary<int, List<DrawCall>>	GetFullBrightDrawCalls()
+	{
+		return	mFBDraws;
+	}
+
 	public Dictionary<int, List<DrawCall>>	GetLMAnimDrawCalls()
 	{
 		return	mLMAnimDraws;
@@ -234,6 +239,11 @@ public partial class MapGrinder
 	public Dictionary<int, List<DrawCall>>	GetVLitAlphaDrawCalls()
 	{
 		return	mAlphaDraws;
+	}
+
+	public Dictionary<int, List<DrawCall>>	GetSkyDrawCalls()
+	{
+		return	mSkyDraws;
 	}
 
 
@@ -514,6 +524,115 @@ public partial class MapGrinder
 		return	true;
 	}
 
+	internal bool BuildFullBrightData(Vector3 []verts, int[] inds, Vector3 []rgbVerts,
+			Vector3 []vnorms, GFXPlane []pp, GFXModel []models)
+	{
+		UInt16	vertOfs	=0;	//model offset into the vertex buffer
+		for(int i=0;i < models.Length;i++)
+		{
+			//store faces per material
+			Dictionary<int,	DrawDataChunk>	matChunks	=new Dictionary<int, DrawDataChunk>();
+
+			foreach(string mat in mMaterialNames)
+			{
+				int	firstFace	=models[i].mFirstFace;
+				int	nFaces		=models[i].mNumFaces;
+
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
+				{
+					GFXFace		f	=mFaces[face];
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					//skip unmatched materials
+					if(!MaterialCorrect.IsFullBright(f, tex, mat))
+					{
+						continue;
+					}
+
+					int	matIndex	=mMaterialNames.IndexOf(mat);
+
+					DrawDataChunk	ddc;
+					if(matChunks.ContainsKey(matIndex))
+					{
+						ddc	=matChunks[matIndex];
+					}
+					else
+					{
+						ddc	=new DrawDataChunk();
+						matChunks.Add(matIndex, ddc);
+					}
+
+					if(!MaterialFill.FillFullBright(ddc, pp, verts, inds,
+						rgbVerts, vnorms, f, tex))
+					{
+						return	false;
+					}
+				}
+			}
+			FinishFullBright(i, matChunks, ref vertOfs);
+		}
+		return	true;
+	}
+
+	internal bool BuildSkyData(Vector3 []verts, int[] inds,
+			GFXPlane []pp, GFXModel []models)
+	{
+		UInt16	vertOfs	=0;	//model offset into the vertex buffer
+		for(int i=0;i < models.Length;i++)
+		{
+			//store faces per material
+			Dictionary<int,	DrawDataChunk>	matChunks	=new Dictionary<int, DrawDataChunk>();
+
+			foreach(string mat in mMaterialNames)
+			{
+				int	firstFace	=models[i].mFirstFace;
+				int	nFaces		=models[i].mNumFaces;
+
+				for(int face=firstFace;face < (firstFace + nFaces);face++)
+				{
+					GFXFace		f	=mFaces[face];
+					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+
+					if(!mat.StartsWith(tex.mMaterial))
+					{
+						continue;
+					}
+
+					//skip unmatched materials
+					if(!MaterialCorrect.IsSky(f, tex, mat))
+					{
+						continue;
+					}
+
+					int	matIndex	=mMaterialNames.IndexOf(mat);
+
+					DrawDataChunk	ddc;
+					if(matChunks.ContainsKey(matIndex))
+					{
+						ddc	=matChunks[matIndex];
+					}
+					else
+					{
+						ddc	=new DrawDataChunk();
+						matChunks.Add(matIndex, ddc);
+					}
+
+					if(!MaterialFill.FillSky(ddc, pp, verts, inds, f, tex))
+					{
+						return	false;
+					}
+				}
+			}
+			FinishSky(i, matChunks, ref vertOfs);
+		}
+		return	true;
+	}
+
 	internal bool BuildVLitAlphaData(Vector3 []verts, int[] inds, Vector3 []rgbVerts,
 			Vector3 []vnorms, GFXPlane []pp, GFXModel []models)
 	{
@@ -568,7 +687,6 @@ public partial class MapGrinder
 		}
 		return	true;
 	}
-
 
 	public void GetLMGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
@@ -679,7 +797,7 @@ public partial class MapGrinder
 		inds		=mAlphaIndexes.ToArray();
 	}
 
-	internal void GetFullBrightGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
+	public void GetFullBrightGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mFBVerts.Count == 0)
 		{
@@ -729,7 +847,7 @@ public partial class MapGrinder
 		inds		=mMirrorIndexes.ToArray();
 	}
 
-	internal void GetSkyGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
+	public void GetSkyGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mSkyVerts.Count == 0)
 		{
@@ -934,7 +1052,7 @@ public partial class MapGrinder
 				blendState			="NoBlending";
 				depthState			="EnableDepth";
 				vs					="FullBrightVS";
-				ps					="VertexLitCelPS";
+				ps					="VertexLitPS";
 			}
 			else if(mn.EndsWith("*Mirror"))
 			{
@@ -998,13 +1116,6 @@ public partial class MapGrinder
 			mMatLib.SetMaterialStates(matName, blendState, depthState);
 			mMatLib.SetMaterialVShader(matName, vs);
 			mMatLib.SetMaterialPShader(matName, ps);
-			if(bLightMap)
-			{
-				//lightmap atlases need 32 bit texcoords
-				//I will deal with that later
-//				mMatLib.SetMaterialPrecision32(matName, true);
-//				mMatLib.SetMaterialParameter(matName, "mLightMap", null);					
-			}
 		}
 
 		//create generic DMN materials

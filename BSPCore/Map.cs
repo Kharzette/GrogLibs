@@ -1549,6 +1549,17 @@ public partial class Map
 		mg.BuildVLitAlphaData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, mGFXPlanes, mGFXModels);
 	}
 
+	public void MakeFullBrightData(MapGrinder mg)
+	{
+		Vector3	[]vnorms	=MakeSmoothVertNormals();
+		mg.BuildFullBrightData(mGFXVerts, mGFXVertIndexes, mGFXRGBVerts, vnorms, mGFXPlanes, mGFXModels);
+	}
+
+	public void MakeSkyData(MapGrinder mg)
+	{
+		mg.BuildSkyData(mGFXVerts, mGFXVertIndexes, mGFXPlanes, mGFXModels);
+	}
+
 
 	//get normals for rendering them
 	public List<Vector3> GetFaceNormals()

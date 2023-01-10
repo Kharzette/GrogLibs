@@ -31,7 +31,9 @@ public class IndoorMesh
 	Dictionary<int, List<DrawCall>>	mLMAAnimDraws;
 	Dictionary<int, List<DrawCall>>	mLMADraws;
 	Dictionary<int, List<DrawCall>>	mVLitDraws;
+	Dictionary<int, List<DrawCall>>	mFBDraws;
 	Dictionary<int, List<DrawCall>>	mAlphaDraws;
+	Dictionary<int, List<DrawCall>>	mSkyDraws;
 
 	//vert copies saved for writing (for editor)
 	Array	mLMVerts, mVLitVerts, mLMAnimVerts;
@@ -214,6 +216,38 @@ public class IndoorMesh
 		mVLitDraws	=draws;
 	}
 
+	public void SetFullBrightData(ID3D11Device gd, int typeIndex, Array verts, UInt16 []inds,
+		Dictionary<int, List<DrawCall>> draws)
+	{
+		if(typeIndex == -1)
+		{
+			return;
+		}
+		mFBVB	=VertexTypes.BuildABuffer(gd, verts, typeIndex);
+		mFBIB	=VertexTypes.BuildAnIndexBuffer(gd, inds);
+
+		mFBVerts	=verts;
+		mFBInds		=inds;
+		mFBIndex	=typeIndex;
+		mFBDraws	=draws;
+	}
+
+	public void SetSkyData(ID3D11Device gd, int typeIndex, Array verts, UInt16 []inds,
+		Dictionary<int, List<DrawCall>> draws)
+	{
+		if(typeIndex == -1)
+		{
+			return;
+		}
+		mSkyVB	=VertexTypes.BuildABuffer(gd, verts, typeIndex);
+		mSkyIB	=VertexTypes.BuildAnIndexBuffer(gd, inds);
+
+		mSkyVerts	=verts;
+		mSkyInds	=inds;
+		mSkyIndex	=typeIndex;
+		mSkyDraws	=draws;
+	}
+
 	public void SetAlphaData(ID3D11Device gd, int typeIndex, Array verts, UInt16 []inds,
 		Dictionary<int, List<DrawCall>> draws)
 	{
@@ -305,6 +339,8 @@ public class IndoorMesh
 		DrawStuff(gd, bMatVis, getModMatrix, mLMDraws, mLMIndex, mLMVB, mLMIB);
 		DrawStuff(gd, bMatVis, getModMatrix, mLMAnimDraws, mLMAnimIndex, mLMAnimVB, mLMAnimIB);
 		DrawStuff(gd, bMatVis, getModMatrix, mVLitDraws, mVLitIndex, mVLitVB, mVLitIB);
+		DrawStuff(gd, bMatVis, getModMatrix, mFBDraws, mFBIndex, mFBVB, mFBIB);
+		DrawStuff(gd, bMatVis, getModMatrix, mSkyDraws, mSkyIndex, mSkyVB, mSkyIB);
 
 		//alphas
 		DrawStuff(gd, bMatVis, getModMatrix, mLMADraws, mLMAIndex, mLMAVB, mLMAIB);

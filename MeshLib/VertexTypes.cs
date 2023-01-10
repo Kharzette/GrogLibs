@@ -133,6 +133,7 @@ public static class VertexTypes
 		VertexTypes.AddType(typeof(VPosNormTex04F));
 		VertexTypes.AddType(typeof(VPosNormTex0Col0F));
 		VertexTypes.AddType(typeof(VPosNormTex04Tex14Tex24Color0F));
+		VertexTypes.AddType(typeof(VPosNormTex0F));
 	}
 
 	public static void AddType(Type t)
