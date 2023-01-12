@@ -14,6 +14,9 @@ public class MapEntity
 {
 	BindingList<MapBrush>	mBrushes	=new BindingList<MapBrush>();
 
+	//for converting between quark / grogspace
+	Matrix4x4	mRot90	=Matrix4x4.CreateRotationX(-MathHelper.PiOver2);
+
 	internal Dictionary<string, string>	mData		=new Dictionary<string, string>();
 	internal Int32						mModelNum;	//donut use this, use the key/value
 
@@ -44,10 +47,8 @@ public class MapEntity
 			return	false;
 		}
 
-		//swap y and z
-		float	zTemp	=org.Z;
-		org.Z	=org.Y;
-		org.Y	=zTemp;
+		//rotate into grogspace
+		Mathery.TransformCoordinate(org, ref mRot90, out org);
 
 		return	true;
 	}
@@ -87,10 +88,8 @@ public class MapEntity
 	{
 		if(GetVectorNoConversion(key, out org))
 		{
-			//swap y and z
-			float	zTemp	=org.Z;
-			org.Z	=org.Y;
-			org.Y	=zTemp;
+			//rotate into grogspace
+			Mathery.TransformCoordinate(org, ref mRot90, out org);
 
 			return	true;
 		}

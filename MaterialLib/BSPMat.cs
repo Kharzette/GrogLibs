@@ -81,10 +81,19 @@ public class BSPMat
 		cbk.SetTextureEnabled(mbTextureEnabled);
 		cbk.SetTexSize(mTexSize);
 
+		ID3D11Texture2D	tex	=sk.GetTexture2D(mTexture);
+
 		ID3D11ShaderResourceView	srv	=sk.GetSRV(mTexture);
 		if(srv != null)
 		{
-			dc.PSSetShaderResource(0, srv);
+			if(tex.Description.ArraySize > 1)
+			{
+				dc.PSSetShaderResource(3, srv);
+			}
+			else
+			{
+				dc.PSSetShaderResource(0, srv);
+			}
 		}
 
 		//not really sure yet how I'll identify the correct lightmap

@@ -122,8 +122,14 @@ public partial class MaterialForm : Form
 
 		if(smo == null && charO == null)
 		{
-			return;
+			MeshMatGroupBox.Enabled	=false;
+			GuessTextures.Enabled	=true;
+			Texture1Pic.Enabled		=false;	//will just be lmatlas
+			return;	//TODO: fill with bsp stuff?  Or hide?
 		}
+		MeshMatGroupBox.Enabled	=true;
+		GuessTextures.Enabled	=false;
+		Texture1Pic.Enabled		=true;
 
 		if(smo != null)
 		{
@@ -293,12 +299,22 @@ public partial class MaterialForm : Form
 
 	void SpawnTextureComboBox(PictureBox pb, string matName)
 	{
-		List<string>	texs	=mSKeeper.GetTexture2DList();
+		List<string>	texs;
+
+		//see if a sky material is selected
+		if(mMatLib.GetMaterialVShader(matName) == "SkyVS")
+		{
+			texs	=mSKeeper.GetTexture2DList(true);
+		}
+		else
+		{
+			texs	=mSKeeper.GetTexture2DList(false);
+		}
 		if(texs.Count <= 0)
 		{
 			return;
 		}
-
+		
 		ListBox				lbox	=new ListBox();
 		ListBoxContainer	lbc		=new ListBoxContainer();
 
@@ -570,7 +586,7 @@ public partial class MaterialForm : Form
 		//if no mat selected, grey the controls
 		if(MaterialList.SelectedItems.Count == 0)
 		{
-			MatGroupBox.Enabled	=false;
+			MeshMatGroupBox.Enabled	=false;
 			NewMaterial.Text	="New Mat";
 			return;
 		}
@@ -578,8 +594,8 @@ public partial class MaterialForm : Form
 		//one selected is the easy case
 		if(MaterialList.SelectedItems.Count == 1)
 		{
-			MatGroupBox.Enabled	=true;
-			NewMaterial.Text	="Clone Mat";
+			MeshMatGroupBox.Enabled	=true;
+			NewMaterial.Text		="Clone Mat";
 
 			string	matName	=MaterialList.SelectedItems[0].Text;
 
@@ -611,7 +627,7 @@ public partial class MaterialForm : Form
 		}
 
 		//multiple selected?
-		MatGroupBox.Enabled	=true;
+		MeshMatGroupBox.Enabled	=true;
 		NewMaterial.Text	="New Mat";
 	}
 
@@ -798,15 +814,8 @@ public partial class MaterialForm : Form
 	}
 
 
-	//copy gui values into the real material
-	void SetAllValues(string matName)
+	void SetAllMeshValues(MeshMat mmat)
 	{
-		MeshMat	mmat	=mMatLib.GetMaterialMeshMat(matName);
-		if(mmat == null)
-		{
-			return;
-		}
-
 		//trilight values
 		mmat.LightColor0	=Misc.ARGBToVector4(LightColor0.BackColor.ToArgb());
 		mmat.LightColor1	=Misc.ARGBToVector4(LightColor1.BackColor.ToArgb());
@@ -821,6 +830,35 @@ public partial class MaterialForm : Form
 		//textures
 		mmat.Texture0	=Texture0Pic.Tag as string;
 		mmat.Texture1	=Texture1Pic.Tag as string;
+	}
+
+	void SetAllBSPValues(BSPMat bspMat)
+	{
+		bspMat.Texture	=Texture0Pic.Tag as string;
+
+		if(bspMat.Texture != null && bspMat.Texture != "")
+		{
+			bspMat.TextureEnabled	=true;
+
+			bspMat.TextureSize	=mSKeeper.GetTextureSize(bspMat.Texture);			
+		}
+	}
+
+
+	//copy gui values into the real material
+	void SetAllValues(string matName)
+	{
+		MeshMat	mmat	=mMatLib.GetMaterialMeshMat(matName);
+		if(mmat != null)
+		{
+			SetAllMeshValues(mmat);
+		}
+
+		BSPMat	bspMat	=mMatLib.GetMaterialBSPMat(matName);
+		if(bspMat != null)
+		{
+			SetAllBSPValues(bspMat);
+		}
 	}
 
 

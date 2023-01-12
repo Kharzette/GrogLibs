@@ -119,12 +119,19 @@ internal class GBSPSide
 			}
 		}
 
-		//deal with the numbers...
-		//Back in the XNA days, x used to be negated to convert to left handed.
-		//Now for DX, only a swapping of y and z is needed
-		mPoly	=new GBSPPoly(new Vector3(numbers[0], numbers[2], numbers[1]),
-			new Vector3(numbers[3], numbers[5], numbers[4]),
-			new Vector3(numbers[6], numbers[8], numbers[7]));
+		//coordinate system notes:
+		//Quark is Z up, so a 90 degree rotate works
+		Matrix4x4	rot90	=Matrix4x4.CreateRotationX(-MathHelper.PiOver2);
+
+		Vector3	planePos0	=new Vector3(numbers[0], numbers[1], numbers[2]);
+		Vector3	planePos1	=new Vector3(numbers[3], numbers[4], numbers[5]);
+		Vector3	planePos2	=new Vector3(numbers[6], numbers[7], numbers[8]);
+
+		Mathery.TransformCoordinate(planePos0, ref rot90, out planePos0);
+		Mathery.TransformCoordinate(planePos1, ref rot90, out planePos1);
+		Mathery.TransformCoordinate(planePos2, ref rot90, out planePos2);
+
+		mPoly	=new GBSPPoly(planePos0, planePos1, planePos2);
 
 		//all special brush properties are now driven by these quake 3 style flags
 		//There used to be a ton of legacy stuff for determining properties from

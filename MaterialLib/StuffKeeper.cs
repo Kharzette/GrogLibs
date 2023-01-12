@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Diagnostics;
+using System.Numerics;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using SharpGen.Runtime;
@@ -96,6 +97,9 @@ public class StuffKeeper
 
 	//texture 2ds
 	Dictionary<string, ID3D11Texture2D>	mTexture2s	=new Dictionary<string, ID3D11Texture2D>();
+
+	//cubemaps
+	Dictionary<string, ID3D11Texture2D>	mTextureCubes	=new Dictionary<string, ID3D11Texture2D>();
 
 	//font texture 2ds
 	Dictionary<string, ID3D11Texture2D>	mFontTexture2s	=new Dictionary<string, ID3D11Texture2D>();
@@ -195,11 +199,19 @@ public class StuffKeeper
 
 	internal ID3D11Texture2D GetTexture2D(string name)
 	{
-		if(name == null || !mTexture2s.ContainsKey(name))
+		if(name == null)
 		{
 			return	null;
 		}
-		return	mTexture2s[name];
+		if(mTexture2s.ContainsKey(name))
+		{
+			return	mTexture2s[name];
+		}
+		if(mTextureCubes.ContainsKey(name))
+		{
+			return	mTextureCubes[name];
+		}
+		return	null;
 	}
 
 
@@ -274,13 +286,38 @@ public class StuffKeeper
 
 
 	//for tools mainly
-	public List<string> GetTexture2DList()
+	public List<string> GetTexture2DList(bool bCubesToo)
 	{
 		List<string>	ret	=new List<string>();
 
 		foreach(KeyValuePair<string, ID3D11Texture2D> tex in mTexture2s)
 		{
 			ret.Add(tex.Key);
+		}
+
+		if(bCubesToo)
+		{
+			foreach(KeyValuePair<string, ID3D11Texture2D> cube in mTextureCubes)
+			{
+				ret.Add(cube.Key);
+			}
+		}
+
+		return	ret;
+	}
+
+	public Vector2	GetTextureSize(string texName)
+	{
+		Vector2	ret	=Vector2.Zero;
+		if(mTexture2s.ContainsKey(texName))
+		{
+			ret.X	=mTexture2s[texName].Description.Width;
+			ret.Y	=mTexture2s[texName].Description.Height;
+		}
+		else if(mTextureCubes.ContainsKey(texName))
+		{
+			ret.X	=mTextureCubes[texName].Description.Width;
+			ret.Y	=mTextureCubes[texName].Description.Height;
 		}
 		return	ret;
 	}
@@ -622,6 +659,12 @@ public class StuffKeeper
 		}
 		mTexture2s.Clear();
 
+		foreach(KeyValuePair<string, ID3D11Texture2D> tex in mTextureCubes)
+		{
+			tex.Value.Dispose();
+		}
+		mTextureCubes.Clear();
+
 		foreach(KeyValuePair<string, ID3D11Texture2D> tex in mFontTexture2s)
 		{
 			tex.Value.Dispose();
@@ -712,6 +755,27 @@ public class StuffKeeper
 			foreach(FileInfo f in fi)
 			{
 				LoadTexture(gd, f.DirectoryName, f.Name);
+			}
+		}
+
+		//cubes
+		if(Directory.Exists(mGameRootDir + "/TextureCubes"))
+		{
+			DirectoryInfo	di	=new DirectoryInfo(mGameRootDir + "/TextureCubes");
+
+			//cubes will be little dirs with nx ny nz px py pz files in them
+			DirectoryInfo	[]subDirs	=di.GetDirectories();
+			foreach(DirectoryInfo sub in subDirs)
+			{
+				if(File.Exists(sub.FullName + "/nx.png") &&
+					File.Exists(sub.FullName + "/ny.png") &&
+					File.Exists(sub.FullName + "/nz.png") &&
+					File.Exists(sub.FullName + "/px.png") &&
+					File.Exists(sub.FullName + "/py.png") &&
+					File.Exists(sub.FullName + "/pz.png"))
+				{
+					LoadTextureCube(gd, sub.FullName);
+				}
 			}
 		}
 	}
@@ -1385,6 +1449,45 @@ public class StuffKeeper
 	}
 
 
+	void LoadTextureCube(GraphicsDevice gd, string path)
+	{
+		int	texIndex	=path.LastIndexOf("TextureCubes");
+
+		string	afterTex	="";
+
+		if((texIndex +13) < path.Length)
+		{
+			afterTex	=path.Substring(texIndex + 13);
+		}
+
+		int	w, h;
+
+		byte	[][]colArray	=new byte[6][];
+
+		colArray[0]	=LoadPNGWIC(mIF, path + "/px.png", out w, out h);
+		colArray[1]	=LoadPNGWIC(mIF, path + "/nx.png", out w, out h);
+		colArray[2]	=LoadPNGWIC(mIF, path + "/py.png", out w, out h);
+		colArray[3]	=LoadPNGWIC(mIF, path + "/ny.png", out w, out h);
+		colArray[4]	=LoadPNGWIC(mIF, path + "/pz.png", out w, out h);
+		colArray[5]	=LoadPNGWIC(mIF, path + "/nz.png", out w, out h);
+
+		for(int i=0;i < 6;i++)
+		{
+			PreMultAndLinear(colArray[i], w, h);
+		}
+
+		ID3D11Texture2D	finalTex	=MakeTextureCube(gd.GD, colArray, w, h);
+
+		mResources.Add(afterTex, finalTex as ID3D11Resource);
+		mTextureCubes.Add(afterTex, finalTex);
+
+		ID3D11ShaderResourceView	srv	=gd.GD.CreateShaderResourceView(finalTex);
+		srv.DebugName	=afterTex;
+
+		mSRVs.Add(afterTex, srv);
+	}
+
+
 	void LoadFontTexture(GraphicsDevice gd, string path, string fileName)
 	{
 		int	texIndex	=path.LastIndexOf("Fonts");
@@ -1420,6 +1523,48 @@ public class StuffKeeper
 		srv.DebugName	=extLess;
 
 		mFontSRVs.Add(extLess, srv);
+	}
+
+
+	unsafe ID3D11Texture2D MakeTextureCube(ID3D11Device dev, byte [][]colors, int width, int height)
+	{
+		Texture2DDescription	texDesc	=new Texture2DDescription();
+		texDesc.ArraySize				=6;
+		texDesc.BindFlags				=BindFlags.ShaderResource;
+		texDesc.CPUAccessFlags			=CpuAccessFlags.None;
+		texDesc.MipLevels				=1;
+		texDesc.MiscFlags				=ResourceOptionFlags.TextureCube;
+		texDesc.Usage					=ResourceUsage.Immutable;
+		texDesc.Width					=width;
+		texDesc.Height					=height;
+		texDesc.Format					=Format.R8G8B8A8_UNorm;
+		texDesc.SampleDescription		=new SampleDescription(1, 0);
+
+		ID3D11Texture2D	tex;
+
+		SubresourceData	[]srd	=new SubresourceData[6];
+
+		//alloc temp space for color data
+		List<IntPtr>	texData	=new List<IntPtr>();
+		for(int i=0;i < 6;i++)
+		{
+			IntPtr	td	=Marshal.AllocHGlobal(width * height * 4);
+
+			Marshal.Copy(colors[i], 0, td, width * height * 4);
+
+			texData.Add(td);
+
+			srd[i]	=new SubresourceData(td, width * 4);
+		}
+				
+		tex	=dev.CreateTexture2D(texDesc, srd);
+
+		for(int i=0;i < 6;i++)
+		{
+			Marshal.FreeHGlobal(texData[i]);
+		}
+
+		return	tex;
 	}
 
 

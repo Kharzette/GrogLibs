@@ -193,7 +193,7 @@ public partial class MaterialLib
 
 	public void GuessTextures()
 	{
-		List<string>	textures	=mSKeeper.GetTexture2DList();
+		List<string>	textures	=mSKeeper.GetTexture2DList(true);
 
 		foreach(KeyValuePair<string, Material> mat in mMats)
 		{
