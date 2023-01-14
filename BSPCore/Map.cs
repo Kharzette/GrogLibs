@@ -60,6 +60,12 @@ public partial class Map
 	TriBSP			mTopNode;
 	List<GBSPBrush>	mTriBrushes	=new List<GBSPBrush>();
 
+	//coordinate system transform:
+	//Quark is Z up, so a 90 degree rotate will get Y up
+	//then a 180 yaw to get X pointing left and Z forward
+	internal static Matrix4x4	mGrogTransform	=
+		Matrix4x4.CreateRotationX(-MathHelper.PiOver2) *
+		Matrix4x4.CreateRotationY(MathHelper.Pi);
 
 	public Map()
 	{

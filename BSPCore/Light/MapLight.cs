@@ -538,8 +538,10 @@ public partial class Map
 				if(ent.GetVectorNoConversion("angles", out orient))
 				{
 					//coordinate system goblinry
-					pitch	=(int)-orient.X;
-					yaw		=-90 + (int)-orient.Y;
+					//in Q land the pitch is dropped 90
+					//to face +Z.
+					pitch	=(int)orient.X;
+					yaw		=(int)orient.Y + 270;
 					roll	=(int)orient.Z;
 				}
 
@@ -550,6 +552,9 @@ public partial class Map
 				Matrix4x4	rotMat	=Matrix4x4.CreateFromYawPitchRoll(yaw, pitch, roll);
 
 				dLight.mNormal	=rotMat.Forward();
+
+				//grogspace
+				Vector3.TransformNormal(dLight.mNormal, Map.mGrogTransform);
 
 				ent.GetFloat("strength", out dLight.mIntensity);
 			}
@@ -850,8 +855,8 @@ public partial class Map
 		ParallelOptions	po			=new ParallelOptions();
 		po.MaxDegreeOfParallelism	=lp.mBSPParams.mMaxThreads;
 
-		Parallel.For(0, mGFXFaces.Length, po, i =>
-//			for(int i=0;i < mGFXFaces.Length;i++)
+//		Parallel.For(0, mGFXFaces.Length, po, i =>
+			for(int i=0;i < mGFXFaces.Length;i++)
 		{
 			ProgressWatcher.UpdateProgressIncremental(prog);
 
@@ -886,16 +891,16 @@ public partial class Map
 				if(!VertexShadeFace(i, vertNormals, modelMat, modelInv, modelIndex))
 				{
 					CoreEvents.Print("LightFaces:  VertexShadeFace failed...\n");
-//						continue;
-					return;
+						continue;
+//					return;
 				}					
 			}
 			else if(tex.IsLightMapped())
 			{
 				if(!CalcFaceInfo(fi, li, lp.mLightParams.mLightGridSize))
 				{
-//						continue;
-					return;
+						continue;
+//					return;
 				}
 
 				if(lp.mLightParams.mbRecording)
@@ -950,8 +955,8 @@ public partial class Map
 							modelInv, modelIndex, skyClusters,
 							1 / (float)lp.mLightParams.mNumSamples, visData))
 						{
-//								continue;
-							return;
+								continue;
+//							return;
 						}
 					}
 					else
@@ -960,13 +965,13 @@ public partial class Map
 							modelInv, modelIndex,
 							1 / (float)lp.mLightParams.mNumSamples, visData))
 						{
-//								continue;
-							return;
+								continue;
+//							return;
 						}
 					}
 				}				
 			}
-		});
+		}//);
 
 		ProgressWatcher.Clear();
 

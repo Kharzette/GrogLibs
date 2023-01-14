@@ -3,7 +3,7 @@ Coordinate System Notes
 	Forward is positive Z
 	Left is positive X
 	This is right handed.
-	At pitch yaw roll of 0 0 0 the camera faces -Z
+	At pitch yaw roll of 0 0 0 the camera aims +Z
 	For exporter info, see CharacterNotes.txt in the 
 	ColladaConvert dir.
 

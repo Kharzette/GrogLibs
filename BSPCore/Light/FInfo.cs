@@ -116,8 +116,7 @@ public class FInfo
 		lightInfo.CalcInfo(minU, minV, maxU, maxV, lightGridSize);
 
 		//Get the texture normal from the texture vecs
-		//swapping for sharpdx
-		Vector3	texNormal	=Vector3.Cross(vecV, vecU);
+		Vector3	texNormal	=Vector3.Cross(vecU, vecV);
 
 		texNormal	=Vector3.Normalize(texNormal);
 		

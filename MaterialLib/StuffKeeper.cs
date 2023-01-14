@@ -574,7 +574,7 @@ public class StuffKeeper
 			return	null;
 		}
 
-		if(!mTexture2s.ContainsKey(texName))
+		if(!mTexture2s.ContainsKey(texName) && !mTextureCubes.ContainsKey(texName))
 		{
 			return	null;
 		}
@@ -582,8 +582,24 @@ public class StuffKeeper
 		//even though we already have this loaded, there appears
 		//to be no way to get at the bits, so load it again
 		int		w, h;
-		byte	[]colArray	=LoadPNGWIC(mIF, mGameRootDir + "\\Textures\\" + texName + ".png",
-								out w, out h);
+		byte	[]colArray	=null;
+		string	fileName;
+
+		w	=h	=0;		
+		if(mTexture2s.ContainsKey(texName))
+		{
+			fileName	=mGameRootDir + "\\Textures\\" + texName + ".png";
+		}
+		else
+		{
+			//a cube, just grab x face
+			fileName	=mGameRootDir + "/TextureCubes/" + texName + "/px.png";
+		}
+
+		if(File.Exists(fileName))
+		{
+			colArray	=LoadPNGWIC(mIF, fileName, out w, out h);
+		}
 
 		if(w == 0 && h == 0)
 		{

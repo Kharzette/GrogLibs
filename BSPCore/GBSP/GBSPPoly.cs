@@ -730,8 +730,7 @@ public class GBSPPoly
 
 				GBSPPlane	plane	=new GBSPPlane();
 
-				//testing reversing this for sharpdx
-				plane.mNormal	=Vector3.Cross(v2, v1);
+				plane.mNormal	=Vector3.Cross(v1, v2);
 
 				float	len		=plane.mNormal.Length();
 				plane.mNormal	/=len;

@@ -116,7 +116,6 @@ public struct GBSPPlane
 			Vector3	v1  =verts[i] - verts[(i + 1) % verts.Length];
 			Vector3	v2  =verts[(i + 2) % verts.Length] - verts[(i + 1) % verts.Length];
 
-			//reverse cross order for sharpdx
 			mNormal   =Vector3.Cross(v1, v2);
 
 			if(!mNormal.Equals(Vector3.Zero))

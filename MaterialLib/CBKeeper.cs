@@ -345,14 +345,14 @@ public unsafe class CBKeeper
 	public void SetView(Matrix4x4 view, Vector3 eyePos)
 	{
 		mPerFrame.mView		=Matrix4x4.Transpose(view);
-		mPerFrame.mEyePos	=-eyePos;	//negate into viewspace
+		mPerFrame.mEyePos	=eyePos;
 	}
 
 
 	public void SetTransposedView(Matrix4x4 view, Vector3 eyePos)
 	{
 		mPerFrame.mView		=view;
-		mPerFrame.mEyePos	=-eyePos;	//negate into viewspace
+		mPerFrame.mEyePos	=eyePos;
 	}
 
 

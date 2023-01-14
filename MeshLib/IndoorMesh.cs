@@ -270,7 +270,6 @@ public class IndoorMesh
 		mLightMapAtlas	=lma;
 	}
 
-
 	public void FinishAtlas(GraphicsDevice gd, StuffKeeper sk)
 	{
 		if(mLightMapAtlas == null)
@@ -280,6 +279,11 @@ public class IndoorMesh
 
 		mLightMapAtlas.Finish(gd, sk, "LightMapAtlas");
 //		sk.AddMap("LightMapAtlas", mLightMapAtlas.GetAtlasSRV());
+	}
+
+	public System.Drawing.Bitmap	GetAtlasImage(ID3D11DeviceContext dc)
+	{
+		return	mLightMapAtlas.GetAtlasImage(dc);
 	}
 
 

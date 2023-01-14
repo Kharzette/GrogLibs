@@ -932,7 +932,6 @@ internal partial class GBSPNode
 		}
 
 		GBSPSide	bestSide	=null;
-		float		bestDot		=0.0f;
 		GBSPPlane	p1			=pool.mPlanes[mPlaneNum];
 
 		List<GBSPSide>	ogSides	=new List<GBSPSide>();
@@ -962,36 +961,11 @@ internal partial class GBSPNode
 				bFoundExact	=true;
 				return	side;
 			}
-
-			//In the mean time, try for the closest match
-			GBSPPlane	p2	=pool.mPlanes[side.mPlaneNum];
-			float	dot	=Vector3.Dot(p1.mNormal, p2.mNormal);
-			if(dot > bestDot)
-			{
-				bestDot		=dot;
-				bestSide	=side;
-			}
-
-			//try opposite
-			//this seems like a bad hack, commenting out (SharpDX Port)
-//				p2.Inverse();
-//				dot	=Vector3.Dot(p1.mNormal, p2.mNormal);
-//				if(dot > bestDot)
-//				{
-//					bestDot		=dot;
-//					bestSide	=side;
-//				}
 		}
 
 		if(bestSide == null)
 		{
 			CoreEvents.Print("WARNING: Could not map portal to original brush...\n");
-		}
-
-		if(!bFoundExact)
-		{
-			CoreEvents.Print("WARNING: Could not map portal to original brush exactly!\n");
-			CoreEvents.Print("Error factor is " + bestDot + "\n");
 		}
 
 		return	bestSide;
@@ -1048,6 +1022,21 @@ internal partial class GBSPNode
 		newPortal.mPlane		=pool.mPlanes[mPlaneNum];
 		newPortal.mOnNode		=this;
 		newPortal.mPoly			=poly;
+
+		//test
+		foreach(Vector3 v in newPortal.mPoly.mVerts)
+		{
+			float	checkDist	=Vector3.Dot(v, newPortal.mPlane.mNormal);
+
+			checkDist	-=newPortal.mPlane.mDist;
+
+			if(checkDist > GBSPPlane.PLANESIDE_EPSILON
+				|| checkDist < -GBSPPlane.PLANESIDE_EPSILON)
+			{
+				int	gack	=69;
+				gack++;
+			}
+		}
 
 		newPortal.mFrontNode	=mFront;
 		newPortal.mBackNode		=mBack;

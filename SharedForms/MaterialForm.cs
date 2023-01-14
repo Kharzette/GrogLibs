@@ -26,6 +26,10 @@ public partial class MaterialForm : Form
 	//for resizing columns after a label edit
 	System.Windows.Forms.Timer	mHackTimer;
 
+	//threadsafe control stuff
+	Action<Control>		mControlEnable	=ctr	=>	{	ctr.Enabled	=true;	};
+	Action<Control>		mControlDisable	=ctr	=>	{	ctr.Enabled	=false;	};
+
 	public event EventHandler				eNukedMeshPart;
 	public event EventHandler<ObjEventArgs>	eStripElements;
 	public event EventHandler<ObjEventArgs>	eGenTangents;
@@ -116,26 +120,47 @@ public partial class MaterialForm : Form
 	{
 		MeshPartList.Items.Clear();
 
-		int			count;
+		int			count	=0;
 		StaticMesh	smo		=MeshPartList.Tag as StaticMesh;
 		Character	charO	=MeshPartList.Tag as Character;
+		IndoorMesh	imo		=MeshPartList.Tag as IndoorMesh;
 
-		if(smo == null && charO == null)
+		if(smo == null && charO == null && imo == null)
 		{
-			MeshMatGroupBox.Enabled	=false;
-			GuessTextures.Enabled	=true;
-			Texture1Pic.Enabled		=false;	//will just be lmatlas
-			return;	//TODO: fill with bsp stuff?  Or hide?
+			FormExtensions.Invoke(MeshMatGroupBox, mControlDisable);
+			FormExtensions.Invoke(TextureGroupBox, mControlDisable);
+			FormExtensions.Invoke(GuessTextures, mControlDisable);
+			FormExtensions.Invoke(MeshPartList, mControlDisable);
+			return;
 		}
-		MeshMatGroupBox.Enabled	=true;
-		GuessTextures.Enabled	=false;
-		Texture1Pic.Enabled		=true;
+		else if(imo != null)
+		{
+			FormExtensions.Invoke(MeshMatGroupBox, mControlDisable);
+			FormExtensions.Invoke(Texture1Pic, mControlDisable);	//auto assigned
+			FormExtensions.Invoke(MeshPartList, mControlDisable);
+
+			FormExtensions.Invoke(TextureGroupBox, mControlEnable);
+			FormExtensions.Invoke(GuessTextures, mControlEnable);
+			FormExtensions.Invoke(Texture0Pic, mControlEnable);
+			return;
+		}
+		else
+		{
+			//character/static mode
+			FormExtensions.Invoke(GuessTextures, mControlDisable);
+
+			FormExtensions.Invoke(MeshMatGroupBox, mControlEnable);
+			FormExtensions.Invoke(TextureGroupBox, mControlEnable);
+			FormExtensions.Invoke(Texture1Pic, mControlEnable);
+			FormExtensions.Invoke(Texture0Pic, mControlEnable);
+			FormExtensions.Invoke(MeshPartList, mControlEnable);
+		}
 
 		if(smo != null)
 		{
 			count	=smo.GetPartCount();
 		}
-		else
+		else if(charO != null)
 		{
 			count	=charO.GetPartCount();
 		}
@@ -600,29 +625,48 @@ public partial class MaterialForm : Form
 			string	matName	=MaterialList.SelectedItems[0].Text;
 
 			MeshMat	mm	=mMatLib.GetMaterialMeshMat(matName);
+			BSPMat	bm	=mMatLib.GetMaterialBSPMat(matName);
 
-			if(mm == null)
+			if(bm != null)
 			{
-				return;
+				Texture0Pic.Image	=mSKeeper.GetTextureBitmap(bm.Texture);
+
+				IndoorMesh	im	=MeshPartList.Tag as IndoorMesh;
+				if(im != null)
+				{
+					Texture1Pic.Image	=im.GetAtlasImage(mMatLib.GetDC());
+				}
+
+				Texture0Pic.Tag	=bm.Texture;
+				Texture1Pic.Tag	="LightMapAtlas";
+
+				MeshMatGroupBox.Enabled	=false;
+				TextureGroupBox.Enabled	=true;
+			}
+			else if(mm != null)
+			{
+				//material solid colour
+				SolidColor.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.SolidColour));
+
+				//specular
+				SpecColor.BackColor		=Color.FromArgb(Misc.Vector4ToARGB(mm.SpecColor));
+				SpecPower.Value			=(decimal)mm.SpecPower;
+
+				//trilight
+				LightColor0.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.LightColor0));
+				LightColor1.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.LightColor1));
+				LightColor2.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.LightColor2));
+
+				Texture0Pic.Image	=mSKeeper.GetTextureBitmap(mm.Texture0);
+				Texture1Pic.Image	=mSKeeper.GetTextureBitmap(mm.Texture1);
+
+				Texture0Pic.Tag	=mm.Texture0;
+				Texture1Pic.Tag	=mm.Texture1;
+
+				MeshMatGroupBox.Enabled	=true;
+				TextureGroupBox.Enabled	=false;
 			}
 
-			//material solid colour
-			SolidColor.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.SolidColour));
-
-			//specular
-			SpecColor.BackColor		=Color.FromArgb(Misc.Vector4ToARGB(mm.SpecColor));
-			SpecPower.Value			=(decimal)mm.SpecPower;
-
-			//trilight
-			LightColor0.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.LightColor0));
-			LightColor1.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.LightColor1));
-			LightColor2.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.LightColor2));
-
-			Texture0Pic.Image	=mSKeeper.GetTextureBitmap(mm.Texture0);
-			Texture1Pic.Image	=mSKeeper.GetTextureBitmap(mm.Texture1);
-
-			Texture0Pic.Tag	=mm.Texture0;
-			Texture1Pic.Tag	=mm.Texture1;
 			return;
 		}
 
@@ -848,17 +892,20 @@ public partial class MaterialForm : Form
 	//copy gui values into the real material
 	void SetAllValues(string matName)
 	{
-		MeshMat	mmat	=mMatLib.GetMaterialMeshMat(matName);
-		if(mmat != null)
-		{
-			SetAllMeshValues(mmat);
-		}
-
 		BSPMat	bspMat	=mMatLib.GetMaterialBSPMat(matName);
+		MeshMat	mmat	=mMatLib.GetMaterialMeshMat(matName);
+
+		//for now not mixing the two, but eventually may
+		//want specular and such on bsp geometry
 		if(bspMat != null)
 		{
 			SetAllBSPValues(bspMat);
 		}
+		else if(mmat != null)
+		{
+			SetAllMeshValues(mmat);
+		}
+
 	}
 
 
