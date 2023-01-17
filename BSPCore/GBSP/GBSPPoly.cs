@@ -377,9 +377,9 @@ public class GBSPPoly
 		for(i=1;i < mVerts.Length-1;i++)
 		{
 			//initial vertex
-			indexes.Add((UInt16)(ofs + ((i + 1) % mVerts.Length)));
-			indexes.Add((UInt16)(ofs + i));
 			indexes.Add(ofs);
+			indexes.Add((UInt16)(ofs + i));
+			indexes.Add((UInt16)(ofs + ((i + 1) % mVerts.Length)));
 		}
 	}
 

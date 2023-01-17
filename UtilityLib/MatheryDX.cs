@@ -637,7 +637,7 @@ public static partial class Mathery
 		Color	randColor
 			=new Color(Convert.ToByte(rnd.Next(255)),
 					Convert.ToByte(rnd.Next(255)),
-					Convert.ToByte(rnd.Next(255)));
+					Convert.ToByte(rnd.Next(55)));	//avoid background color
 		return	randColor;
 	}
 

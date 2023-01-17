@@ -23,15 +23,15 @@ internal partial class GBSPNode
 {
 	//Info for this node as a node or leaf
 	Int32			mPlaneNum;						//-1 if a leaf
+	Int32			mPlaneSide;
 	UInt32			mContents;						//Contents node/leaf
 	List<GBSPFace>	mFaces	=new List<GBSPFace>();	//Faces on this node
 	GBSPNode		mFront, mBack;					//Front and back child
 	GBSPNode		mParent;						//Parent of this node
 	Bounds			mBounds	=new Bounds();			//Current BBox of node
-	GBSPBrush		mVolume;						//chopped up cube used during the bsp build
 
 	//Info for this node as a leaf
-	List<GBSPPortal>	mPortals	=new List<GBSPPortal>();//Portals on this leaf
+	GBSPPortal			mPortals;							//Portals on this leaf
 	List<GBSPFace>		mLeafFaces	=new List<GBSPFace>();	//Faces touching this leaf
 	Int32				mCurrentFill;						//For the outside filling stage
 	Int32				mEntity;							//1 if entity touching leaf
@@ -41,10 +41,9 @@ internal partial class GBSPNode
 	Int32	mCluster;	//vis cluster
 	Int32	mArea;		//Area number, 0 == invalid area
 
+	GBSPBrush		mVolume;	//chopped up cube used during the bsp build
 	GBSPSide		mSide;
 	List<GBSPBrush>	mBrushList	=new List<GBSPBrush>();
-	internal Int32	mFirstSide;			//For bevel bbox clipping
-	internal Int32	mNumSides;
 
 	//For GFX file saving
 	internal Int32	mFrontID, mBackID;
@@ -52,6 +51,10 @@ internal partial class GBSPNode
 	internal Int32	mNumFaces;
 	internal Int32	mFirstPortal;
 	internal Int32	mNumPortals;
+
+	internal Int32	mFirstSide;			//For bevel bbox clipping
+	internal Int32	mNumSides;
+
 
 	internal const int	MAX_AREAS			=256;
 	internal const int	MAX_AREA_PORTALS	=1024;
@@ -415,10 +418,19 @@ internal partial class GBSPNode
 		}
 
 		//See which portals are valid
-		bool	side;
-		foreach(GBSPPortal p in mPortals)
+		bool		side;
+		GBSPPortal	next;
+		for(GBSPPortal p = mPortals;p != null;p = next)
 		{
 			side	=(p.mBackNode == this);
+			if(side)
+			{
+				next	=p.mNextBack;
+			}
+			else
+			{
+				next	=p.mNextFront;
+			}
 
 			GBSPFace	newFace;
 			if(!side)
@@ -496,8 +508,19 @@ internal partial class GBSPNode
 		}
 
 		//See which portals are valid
-		foreach(GBSPPortal p in mPortals)
+		GBSPPortal	next;
+		for(GBSPPortal p = mPortals;p != null;p = next)
 		{
+			bool	side	=(p.mBackNode == this);
+			if(side)
+			{
+				next	=p.mNextBack;
+			}
+			else
+			{
+				next	=p.mNextFront;
+			}
+
 			if(p.mFrontNode == this)
 			{
 				if(p.mFrontFace == null)
@@ -1017,34 +1040,24 @@ internal partial class GBSPNode
 			List<Int32>	LPlaneNumbers	=new List<int>();
 			List<bool>	LPlaneSides		=new List<bool>();
 
-			foreach(GBSPPortal port in mPortals)
+			GBSPPortal	next;
+			for(GBSPPortal port = mPortals;port != null;port = next)
 			{
-				GBSPPlane	portPlane	=port.mPlane;
-
-				int	numPlanes	=pool.mPlanes.Count;
-
-				bool	portSide;
-				int		portPlaneNum	=pool.FindPlane(portPlane, out portSide);
-
-				bool	actualSide	=(port.mFrontNode == this);
-
-				if(portSide)
+				bool	side	=(port.mFrontNode == this);
+				if(side)
 				{
-					actualSide	=!actualSide;
+					next	=port.mNextFront;
 				}
-
-				//make sure we aren't adding new planes at this late stage
-				//unless the outside node is involved
-				if(port.mBackNode != outsideNode)
+				else
 				{
-					Debug.Assert(numPlanes == pool.mPlanes.Count);
+					next	=port.mNextBack;
 				}
 
 				int	i;
 				for(i=0;i < CNumLeafSides;i++)
 				{
-					if(LPlaneNumbers[i] == portPlaneNum
-						&& LPlaneSides[i] == actualSide)
+					if(LPlaneNumbers[i] == port.mPlaneNum
+						&& LPlaneSides[i] == side)
 					{
 						break;
 					}
@@ -1052,8 +1065,8 @@ internal partial class GBSPNode
 
 				if(i >= CNumLeafSides)
 				{
-					LPlaneNumbers.Add(portPlaneNum);
-					LPlaneSides.Add(actualSide);
+					LPlaneNumbers.Add(port.mPlaneNum);
+					LPlaneSides.Add(side);
 					CNumLeafSides++;
 				}
 			}

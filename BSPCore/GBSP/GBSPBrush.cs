@@ -279,7 +279,7 @@ internal partial class GBSPBrush
 
 					if(mSides[j].mbFlipSide)
 					{
-						jPlane.Inverse();
+					jPlane.Inverse();
 					}
 
 					if(!iPoly.ClipPoly(jPlane, true, cp))
@@ -340,6 +340,9 @@ internal partial class GBSPBrush
 
 			volume	+=d * area;
 		}
+		
+		//volume should never be negative
+		Debug.Assert(volume > -Mathery.NORMAL_EPSILON);
 
 		volume	/=3.0f;
 		return	volume;
@@ -454,10 +457,10 @@ internal partial class GBSPBrush
 				tri.Insert(copy, pp);
 			}
 			else
-			{
-				tri.Insert(side.mPoly, pp);
-			}
+		{
+			tri.Insert(side.mPoly, pp);
 		}
+	}
 	}
 
 
@@ -560,7 +563,7 @@ internal partial class GBSPBrush
 				break;
 			}
 			GBSPPlane	plane2	=pool.mPlanes[s.mPlaneNum];
-			
+
 			midPoly.ClipPolyEpsilon(0.0f, plane2, !s.mbFlipSide, cp);
 		}
 

@@ -94,7 +94,8 @@ public class DebugDraw
 		CBKeeper	cbk	=mSK.GetCBKeeper();
 
 		gd.DC.VSSetShader(mSK.GetVertexShader("WNormWPosVColorVS"));
-		gd.DC.PSSetShader(mSK.GetPixelShader("TriSolidVColorSpecPS"));
+//		gd.DC.PSSetShader(mSK.GetPixelShader("TriSolidVColorSpecPS"));
+		gd.DC.PSSetShader(mSK.GetPixelShader("VColorPS"));
 
 		gd.DC.IASetInputLayout(mSK.GetOrCreateLayout("WNormWPosVColorVS"));
 

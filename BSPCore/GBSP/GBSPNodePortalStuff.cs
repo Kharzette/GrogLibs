@@ -19,7 +19,7 @@ internal partial class GBSPNode
 			CoreEvents.Print(" --- Create Portals --- \n");
 		}
 
-		if(!CreateAllOutsidePortals(pool, ref outNode, nodeMins, nodeMaxs, cp))
+		if(!CreateAllOutsidePortals(pool, this, outNode, nodeMins, nodeMaxs, cp))
 		{
 			CoreEvents.Print("CreatePortals:  Could not create bbox portals.\n");
 			return	false;
@@ -34,125 +34,10 @@ internal partial class GBSPNode
 	}
 
 
-	bool SplitNodePortals(PlanePool pool)
-	{
-		GBSPPlane	thisPlane	=pool.mPlanes[mPlaneNum];
-
-		//dupe the portal list so removes work
-		List<GBSPPortal>	ports	=new List<GBSPPortal>(mPortals);
-
-		foreach(GBSPPortal p in ports)
-		{
-			bool	bFront	=(this == p.mFrontNode);
-
-			GBSPNode	otherNode	=(bFront)? p.mBackNode : p.mFrontNode;
-
-			p.mFrontNode.mPortals.Remove(p);
-			p.mBackNode.mPortals.Remove(p);
-
-			GBSPPoly	front, back;
-			p.mPoly.SplitEpsilon(Mathery.VCompareEpsilon, thisPlane, out front, out back, false);
-
-			if(front != null && front.IsTiny())
-			{
-				front	=null;
-			}
-
-			if(back != null && back.IsTiny())
-			{
-				back	=null;
-			}
-			
-			if(front == null && back == null)
-			{
-				continue;
-			}
-			
-			if(front == null)
-			{
-				p.mPoly	=back;
-				if(bFront)
-				{
-					mBack.mPortals.Add(p);
-					otherNode.mPortals.Add(p);
-					p.mFrontNode	=mBack;
-					p.mBackNode		=otherNode;
-				}
-				else
-				{
-					otherNode.mPortals.Add(p);
-					mBack.mPortals.Add(p);
-					p.mFrontNode	=otherNode;
-					p.mBackNode		=mBack;
-				}
-				continue;
-			}
-
-			if(back == null)
-			{
-				p.mPoly	=front;
-				if(bFront)
-				{
-					mFront.mPortals.Add(p);
-					otherNode.mPortals.Add(p);
-					p.mFrontNode	=mFront;
-					p.mBackNode		=otherNode;
-				}
-				else
-				{
-					otherNode.mPortals.Add(p);
-					mFront.mPortals.Add(p);
-					p.mFrontNode	=otherNode;
-					p.mBackNode		=mFront;
-				}
-				continue;
-			}
-
-			//Portal was split
-			p.mPoly	=front;
-
-			GBSPPortal	newPort	=new GBSPPortal(p);
-			if(newPort == null)
-			{
-				CoreEvents.Print("SplitNodePortals_r:  Out of memory for portal.\n");
-				return	false;
-			}
-			newPort.mPoly	=back;
-			
-			if(bFront)
-			{
-				mFront.mPortals.Add(p);
-				otherNode.mPortals.Add(p);
-				mBack.mPortals.Add(newPort);
-				otherNode.mPortals.Add(newPort);
-				p.mFrontNode		=mFront;
-				p.mBackNode			=otherNode;
-				newPort.mFrontNode	=mBack;
-				newPort.mBackNode	=otherNode;
-			}
-			else
-			{
-				otherNode.mPortals.Add(p);
-				mFront.mPortals.Add(p);
-				otherNode.mPortals.Add(newPort);
-				mBack.mPortals.Add(newPort);
-				p.mFrontNode		=otherNode;
-				p.mBackNode			=mFront;
-				newPort.mFrontNode	=otherNode;
-				newPort.mBackNode	=mBack;
-			}
-		}
-
-		Debug.Assert(mPortals.Count == 0);
-
-		return	true;
-	}
-
-
 	static	int	portDumps	=0;
 	void DumpPortals()
 	{
-		FileStream		fs	=new FileStream("Portals" + portDumps++ + ".portals", FileMode.Create, FileAccess.Write);
+/*		FileStream		fs	=new FileStream("Portals" + portDumps++ + ".portals", FileMode.Create, FileAccess.Write);
 		BinaryWriter	bw	=new BinaryWriter(fs);
 
 		bw.Write(mPortals.Count);
@@ -162,20 +47,20 @@ internal partial class GBSPNode
 		}
 
 		bw.Close();
-		fs.Close();
+		fs.Close();*/
 	}
 
 
 	void DumpPortals_r(BinaryWriter bw)
 	{
 //			bw.Write(mPortals.Count);
-		foreach(GBSPPortal p in mPortals)
+/*		foreach(GBSPPortal p in mPortals)
 		{
 			if(mPlaneNum == -1)
 			{
 				p.mPoly.Write(bw);
 			}
-		}
+		}*/
 
 		if(mFront != null)
 		{
@@ -202,7 +87,7 @@ internal partial class GBSPNode
 
 		if(this.mPlaneNum == -1)
 		{
-			ret	+=mPortals.Count;
+			ret++;
 		}
 
 		return	ret;
@@ -225,6 +110,159 @@ internal partial class GBSPNode
 	}
 
 
+	bool	ClipByAttachedPortals(GBSPPoly newPoly, PlanePool pool, ClipPools cp)
+	{
+		for(GBSPPortal port = mPortals;port != null && newPoly != null; )
+		{
+			bool	bSide;
+
+			if(port.mFrontNode == this)
+			{
+				bSide	=false;
+			}
+			else if(port.mBackNode == this)
+			{
+				bSide	=true;
+			}
+			else
+			{
+				CoreEvents.Print("ClipByAttachedPortals:  Portal does not look at either node.\n");
+				return false;
+			}
+
+			GBSPPlane	portPlane	=pool.mPlanes[port.mPlaneNum];
+
+			if(!newPoly.ClipPolyEpsilon(0.001f, portPlane, bSide, cp))
+			{
+				CoreEvents.Print("ClipByAttachedPortals:  There was an error clipping the poly.\n");
+				return	false;
+			}
+
+			if(newPoly.IsTiny())
+			{
+				CoreEvents.Print("ClipByAttachedPortals:  Portal was cut away\n");
+				newPoly.Free();
+				newPoly	=null;
+				break;
+			}
+
+			if(bSide)
+			{
+				port	=port.mNextBack;
+			}
+			else
+			{
+				port	=port.mNextFront;
+			}
+		}
+		return	(newPoly != null);
+	}
+
+
+	bool	ClipAllByPortal(PlanePool pool)
+	{
+		GBSPPlane	thisPlane	=pool.mPlanes[mPlaneNum];
+
+		GBSPPortal	next	=null;
+		for(GBSPPortal port = mPortals;port != null;port=next)
+		{
+			bool		bSide;
+			GBSPNode	oppositeNode;
+
+			if(port.mFrontNode == this)
+			{
+				bSide			=false;
+				oppositeNode	=port.mBackNode;
+				next			=port.mNextFront;
+			}
+			else if(port.mBackNode == this)
+			{
+				bSide			=true;
+				oppositeNode	=port.mFrontNode;
+				next			=port.mNextBack;
+			}
+			else
+			{
+				CoreEvents.Print("ClipAllByPortal:  Portal does not look at either node.\n");
+				return false;
+			}
+
+			RemovePortalFromNode(port, port.mFrontNode);
+			RemovePortalFromNode(port, port.mBackNode);
+
+			GBSPPoly	frontPoly, backPoly;
+			if(!port.mPoly.SplitEpsilon(0.001f, thisPlane, out frontPoly, out backPoly, false))
+			{
+				CoreEvents.Print("ClipAllByPortal:  Could not split portal.\n");
+				return false;
+			}
+
+			if(frontPoly != null && frontPoly.IsTiny())
+			{
+				frontPoly.Free();
+				frontPoly	=null;
+			}
+
+			if(backPoly != null && backPoly.IsTiny())
+			{
+				backPoly.Free();
+				backPoly	=null;
+			}
+
+			if(frontPoly == null && backPoly == null)
+			{
+				continue;
+			}
+
+			if(frontPoly == null)
+			{
+				port.mPoly	=backPoly;
+				if(bSide)
+				{
+					AddPortalToNodes(port, oppositeNode, mBack);
+				}
+				else
+				{
+					AddPortalToNodes(port, mBack, oppositeNode);
+				}
+				continue;
+			}
+
+			if(backPoly == null)
+			{
+				port.mPoly	=frontPoly;
+				if(bSide)
+				{
+					AddPortalToNodes(port, oppositeNode, mFront);
+				}
+				else
+				{
+					AddPortalToNodes(port, mFront, oppositeNode);
+				}
+				continue;
+			}
+
+			//portal was split, copy portal
+			GBSPPortal	newPortal	=new GBSPPortal(port);
+
+			port.mPoly		=frontPoly;
+			newPortal.mPoly	=backPoly;
+
+			if(bSide)
+			{
+				AddPortalToNodes(port, oppositeNode, mFront);
+				AddPortalToNodes(newPortal, oppositeNode, mBack);
+			}
+			else
+			{
+				AddPortalToNodes(port, mFront, oppositeNode);
+				AddPortalToNodes(newPortal, mBack, oppositeNode);
+			}
+		}
+		return	true;
+	}
+
+
 	bool PartitionPortals_r(PlanePool pool, bool bVisPortals, ClipPools cp)
 	{
 		CalcBoundsFromPortals();
@@ -243,19 +281,42 @@ internal partial class GBSPNode
 		GBSPPlane	thisPlane	=pool.mPlanes[mPlaneNum];
 
 		//Create a new portal
-		if(!CreatePortalOnNode(pool, cp))
+		GBSPPoly	newPoly;
+		if(!CreatePortalOnNode(pool, out newPoly, cp))
 		{
 			CoreEvents.Print("PartitionPortals_r:  CreatePortalOnNode failed.\n");
-			return false;
+			return	false;
 		}
 
-		if(!SplitNodePortals(pool))
+		//clip against attached portals
+		if(!ClipByAttachedPortals(newPoly, pool, cp))
 		{
-			CoreEvents.Print("PartitionPortals_r:  SplitNodePortals failed.\n");
+			return	false;
+		}
+
+		GBSPPortal	newPortal	=new GBSPPortal();
+		if(newPoly != null)
+		{
+			newPortal.mPoly		=newPoly;
+			newPortal.mPlaneNum	=mPlaneNum;
+			newPortal.mOnNode	=this;
+
+			if(!newPortal.Check())
+			{
+				CoreEvents.Print("PartitionPortals_r:  Check Portal failed.\n");
+				return false;
+			}
+
+			AddPortalToNodes(newPortal, mFront, mBack);
+		}
+
+		if(!ClipAllByPortal(pool))
+		{
+			CoreEvents.Print("PartitionPortals_r:  ClipAllByPortal failed.\n");
 			return false;
 		}
 
-		if(mPortals.Count > 0)
+		if(mPortals != null)
 		{
 			CoreEvents.Print("*WARNING* PartitionPortals_r:  Portals still on node after distribution...\n");
 		}
@@ -272,11 +333,148 @@ internal partial class GBSPNode
 	}
 
 
-	bool CreateAllOutsidePortals(PlanePool pool, ref GBSPNode outsideNode,
+	static bool	RemovePortalFromNode(GBSPPortal port, GBSPNode node)
+	{
+		Debug.Assert(node.mPortals != null);
+		Debug.Assert(!(port.mFrontNode == node && port.mBackNode == node));
+		Debug.Assert(port.mFrontNode == node || port.mBackNode == node);
+
+		//find the portal on this node
+		GBSPPortal	p			=null;
+		GBSPPortal	prev		=node.mPortals;
+		bool		prevSide	=false;
+		for(p = node.mPortals;p != null;)
+		{
+			bool	bSide	=(p.mBackNode == node);
+
+			if(p == port)
+			{
+				break;
+			}
+
+			if(bSide)
+			{
+				prev		=p;
+				prevSide	=bSide;
+				p			=p.mNextBack;
+			}
+			else
+			{
+				prev		=p;
+				prevSide	=bSide;
+				p			=p.mNextFront;
+			}
+		}
+
+		//this is very confusing, but it is basically
+		//pointing the previous portal to port->next
+		bool	newSide	=(port.mBackNode == node);
+		if(p == prev)
+		{
+			//very first portal in the list
+			if(newSide)
+			{
+				node.mPortals	=port.mNextBack;
+				port.mBackNode	=null;
+			}
+			else
+			{
+				node.mPortals	=port.mNextFront;
+				port.mFrontNode	=null;
+			}
+		}
+		else
+		{
+			if(newSide)
+			{
+				if(prevSide)
+				{
+					prev.mNextBack	=port.mNextBack;
+				}
+				else
+				{
+					prev.mNextFront	=port.mNextBack;
+				}
+				port.mBackNode	=null;
+			}
+			else
+			{
+				if(prevSide)
+				{
+					prev.mNextBack	=port.mNextFront;
+				}
+				else
+				{
+					prev.mNextFront	=port.mNextFront;
+				}
+				port.mFrontNode	=null;
+			}
+		}
+		return	true;
+	}
+
+
+	static bool	AddPortalToNodes(GBSPPortal port, GBSPNode front, GBSPNode back)
+	{
+		if(port.mFrontNode != null || port.mBackNode != null)
+		{
+			CoreEvents.Print("AddPortalToNodes:  Portal already looks at one of the nodes.\n");
+			return	false;
+		}
+
+		port.mFrontNode	=front;
+		port.mNextFront	=front.mPortals;
+		front.mPortals	=port;
+
+		port.mBackNode	=back;
+		port.mNextBack	=back.mPortals;
+		back.mPortals	=port;
+
+		return	true;
+	}
+
+
+	static GBSPPortal	CreateOutsidePortal(GBSPPlane plane, GBSPNode node,
+											GBSPNode outerNode, PlanePool pool)
+	{
+		GBSPPortal	newPortal	=new GBSPPortal();
+		bool		side;
+
+		newPortal.mPoly	=new GBSPPoly(plane);
+
+		newPortal.mPlaneNum	=pool.FindPlane(plane, out side);
+		if(newPortal.mPlaneNum == -1)
+		{
+			CoreEvents.Print("CreateOutsidePortal:  -1 plane num\n");
+			return	null;
+		}
+
+		if(!side)
+		{
+			if(!AddPortalToNodes(newPortal, node, outerNode))
+			{
+				return	null;
+			}
+		}
+		else
+		{
+			if(!AddPortalToNodes(newPortal, outerNode, node))
+			{
+				return	null;
+			}
+		}
+
+		return	newPortal;
+	}
+
+
+	static bool CreateAllOutsidePortals(PlanePool pool,
+		GBSPNode node, GBSPNode outerNode,
 		Vector3 nodeMins, Vector3 nodeMaxs, ClipPools cp)
 	{
-		outsideNode.mPlaneNum	=PlanePool.PLANENUM_LEAF;
-		outsideNode.mContents	=GrogContents.BSP_CONTENTS_SOLID2;
+		outerNode.mPlaneNum	=PlanePool.PLANENUM_LEAF;
+		outerNode.mContents	=GrogContents.BSP_CONTENTS_SOLID2;
+		outerNode.mPortals	=null;		
 
 		//So there won't be NULL volume leafs when we create the outside portals
 		//note genesis uses 128 for outside space, Q2 uses 8
@@ -295,33 +493,32 @@ internal partial class GBSPNode
 		nodeMaxs	+=(Vector3.One * 8.0f);
 
 		List<GBSPPortal>	outPorts	=new List<GBSPPortal>();
+		List<GBSPPlane>		outPlanes	=new List<GBSPPlane>();
 
 		for(int i=0;i < 3;i++)
 		{
 			for(int j=0;j < 2;j++)
 			{
-				GBSPPortal	p	=new GBSPPortal();
+				GBSPPlane	pln	=new GBSPPlane();
 
-				p.mPlane.mNormal	=Mathery.AxialNormals[i];
+				pln.mNormal	=Mathery.AxialNormals[i];
 				if(j == 0)
 				{
-					p.mPlane.mDist	=Vector3.Dot(p.mPlane.mNormal, nodeMins);
+					pln.mDist	=Vector3.Dot(pln.mNormal, nodeMins);
 				}
 				else
 				{
-					p.mPlane.mDist	=Vector3.Dot(p.mPlane.mNormal, nodeMaxs);
-					p.mPlane.Inverse();
+					pln.mDist	=Vector3.Dot(pln.mNormal, nodeMaxs);
+					pln.Inverse();
 				}
 
-				p.mPoly	=new GBSPPoly(p.mPlane);
-
-				mPortals.Add(p);
-				outsideNode.mPortals.Add(p);
-
-				p.mFrontNode	=this;
-				p.mBackNode		=outsideNode;
-
+				GBSPPortal	p	=CreateOutsidePortal(pln, node, outerNode, pool);
+				if(p == null)
+				{
+					return	false;
+				}
 				outPorts.Add(p);
+				outPlanes.Add(pln);
 			}
 		}
 
@@ -335,7 +532,11 @@ internal partial class GBSPNode
 					continue;
 				}
 
-				if(!portA.mPoly.ClipPolyEpsilon(Mathery.ON_EPSILON, portB.mPlane, false, cp))
+				//use the list planes instead of the plane num as
+				//portals don't keep track of plane side
+				GBSPPlane	portBPlane	=outPlanes[outPorts.IndexOf(portB)];
+
+				if(!portA.mPoly.ClipPolyEpsilon(Mathery.ON_EPSILON, portBPlane, false, cp))
 				{
 					CoreEvents.Print("CreateAllOutsidePortals:  There was an error clipping the portal.\n");
 					return	false;
@@ -356,6 +557,7 @@ internal partial class GBSPNode
 		List<Vector3> norms, List<Color> colors,
 		List<UInt16> indexes, bool bCheckFlags)
 	{
+		/*
 		if(mPlaneNum == PlanePool.PLANENUM_LEAF)
 		{
 			if((mContents & GrogContents.BSP_CONTENTS_SOLID2) != 0)
@@ -378,6 +580,7 @@ internal partial class GBSPNode
 
 		mFront.GetPortalTriangles(rnd, verts, norms, colors, indexes, bCheckFlags);
 		mBack.GetPortalTriangles(rnd, verts, norms, colors, indexes, bCheckFlags);
+		*/
 	}
 
 
@@ -385,9 +588,22 @@ internal partial class GBSPNode
 	{
 		mBounds.Clear();
 
-		foreach(GBSPPortal p in mPortals)
+		for(GBSPPortal port = mPortals;port != null; )
 		{
-			p.mPoly.AddToBounds(mBounds);
+			port.mPoly.AddToBounds(mBounds);
+
+			if(port.mFrontNode == this)
+			{
+				port	=port.mNextFront;
+			}
+			else if(port.mBackNode == this)
+			{
+				port	=port.mNextBack;
+			}
+			else
+			{
+				Debug.Assert(false);
+			}
 		}
 	}
 
@@ -423,7 +639,7 @@ internal partial class GBSPNode
 			}
 		}
 
-		foreach(GBSPPortal port in mPortals)
+		for(GBSPPortal port = mPortals;port != null; )
 		{
 			if(port.mFrontNode == this)
 			{
@@ -431,6 +647,7 @@ internal partial class GBSPNode
 				{
 					return	false;
 				}
+				port	=port.mNextFront;
 			}
 			else if(port.mBackNode == this)
 			{
@@ -438,6 +655,7 @@ internal partial class GBSPNode
 				{
 					return	false;
 				}
+				port	=port.mNextBack;
 			}
 			else
 			{
@@ -464,7 +682,7 @@ internal partial class GBSPNode
 
 		mCurrentFill	=curFill;
 
-		foreach(GBSPPortal port in mPortals)
+		for(GBSPPortal port = mPortals;port != null; )
 		{
 			if(port == null)
 			{
@@ -479,6 +697,7 @@ internal partial class GBSPNode
 				{
 					return	false;
 				}
+				port	=port.mNextFront;
 			}
 			else
 			{
@@ -486,6 +705,7 @@ internal partial class GBSPNode
 				{
 					return	false;
 				}
+				port	=port.mNextBack;
 			}
 		}
 
@@ -577,13 +797,13 @@ internal partial class GBSPNode
 		GBSPNode	hitNode		=null;
 		int			currentFill	=1;
 		GBSPNode	oppositeNode;
-		if(outsideNode.mPortals[0].mFrontNode == outsideNode)
+		if(outsideNode.mPortals.mFrontNode == outsideNode)
 		{
-			oppositeNode	=outsideNode.mPortals[0].mBackNode;
+			oppositeNode	=outsideNode.mPortals.mBackNode;
 		}
 		else
 		{
-			oppositeNode	=outsideNode.mPortals[0].mFrontNode;
+			oppositeNode	=outsideNode.mPortals.mFrontNode;
 		}
 
 		if(!oppositeNode.FillLeafs_r(false, 1, currentFill, ref bHitEntity, ref hitNode))
@@ -639,10 +859,13 @@ internal partial class GBSPNode
 			return;
 		}
 
-		foreach(GBSPPortal p in mPortals)
+		for(GBSPPortal p=mPortals;p != null;)
 		{
+			bool	bSide	=p.mBackNode == this;
+
 			if(p.mOnNode == null)
 			{
+				p	=(bSide)? p.mNextBack : p.mNextFront;
 				continue;	//outside node
 			}
 
@@ -683,8 +906,8 @@ internal partial class GBSPNode
 					p.mSideFound	=true;		// Don't look for this side again!!!
 				}
 			}
+			p	=(bSide)? p.mNextBack : p.mNextFront;
 		}
-
 	}
 
 
@@ -716,7 +939,31 @@ internal partial class GBSPNode
 			return	true;
 		}
 
-		node.mPortals.Clear();
+		GBSPPortal	next	=null;
+		for(GBSPPortal port=node.mPortals;port != null;port = next)
+		{
+			bool	bSide	=port.mBackNode == node;
+
+			if(bSide)
+			{
+				next	=port.mNextBack;
+			}
+			else
+			{
+				next	=port.mNextFront;
+			}
+
+			if(!RemovePortalFromNode(port, port.mFrontNode))
+			{
+				return	false;
+			}
+
+			if(!RemovePortalFromNode(port, port.mBackNode))
+			{
+				return	false;
+			}
+			port.Free();
+		}
 		
 		if(node.mPlaneNum == PlanePool.PLANENUM_LEAF)
 		{
@@ -776,14 +1023,19 @@ internal partial class GBSPNode
 		}
 
 		//Save out all the portals that belong to this leaf...
-		foreach(GBSPPortal port in mPortals)
+		GBSPPortal	next	=null;
+		for(GBSPPortal port =mPortals;port != null;port = next)
 		{
 			GBSPNode	front	=port.mFrontNode;
 			GBSPNode	back	=port.mBackNode;
 		
 			if(back == this)
 			{
-				continue;
+				next	=port.mNextBack;
+			}
+			else
+			{
+				next	=port.mNextFront;
 			}
 
 			if(port.mPoly == null)
@@ -825,14 +1077,24 @@ internal partial class GBSPNode
 				return	true;
 			}
 
-			foreach(GBSPPortal port in mPortals)
+			GBSPPortal	next	=null;
+			for(GBSPPortal port =mPortals;port != null;port = next)
 			{
 				GBSPNode	front	=port.mFrontNode;
 				GBSPNode	back	=port.mBackNode;
 
 				if(back == this)
 				{
-					continue;	//only write the forward facing
+					next	=port.mNextBack;
+				}
+				else
+				{
+					next	=port.mNextFront;
+				}
+
+				if(back == this)
+				{
+//					continue;	//only write the forward facing
 				}
 				if(port.mPoly == null)
 				{
@@ -875,7 +1137,7 @@ internal partial class GBSPNode
 				}
 
 				GBSPPlane	pln	=new GBSPPlane(port.mPoly);
-				if(Vector3.Dot(port.mPlane.mNormal, pln.mNormal) < 0.99f)
+				if(Vector3.Dot(pool.mPlanes[port.mPlaneNum].mNormal, pln.mNormal) < 0.99f)
 				{
 					bw.Write(back.mCluster);
 					bw.Write(front.mCluster);
@@ -889,7 +1151,7 @@ internal partial class GBSPNode
 			return	true;
 		}
 
-		if(mPortals.Count > 0)
+		if(mPortals != null)
 		{
 			CoreEvents.Print("*WARNING* SavePortalFile_r:  Node with portal.\n");
 		}
@@ -906,21 +1168,21 @@ internal partial class GBSPNode
 	}
 
 
-	internal GBSPSide GetBestPortalSide(GBSPNode front, GBSPNode back, PlanePool pool)
+	internal static GBSPSide FindPortalSide(GBSPPortal port, PlanePool pool)
 	{
 		UInt32	visContents, majorContents;
 
 		//First, check to see if the contents are intersecting sheets (special case)
-		if(((front.mContents & GrogContents.BSP_CONTENTS_SHEET) != 0)
-			&& ((back.mContents & GrogContents.BSP_CONTENTS_SHEET) != 0))
+		if(((port.mFrontNode.mContents & GrogContents.BSP_CONTENTS_SHEET) != 0)
+			&& ((port.mBackNode.mContents & GrogContents.BSP_CONTENTS_SHEET) != 0))
 		{
 			//The contents are intersecting sheets, so or them together
-			visContents	=front.mContents | back.mContents;
+			visContents	=port.mFrontNode.mContents | port.mBackNode.mContents;
 		}
 		else
 		{
 			//Make sure the contents on both sides are not the same
-			visContents	=front.mContents ^ back.mContents;
+			visContents	=port.mFrontNode.mContents ^ port.mBackNode.mContents;
 		}
 
 		//There must be a visible contents on at least one side of the portal...
@@ -932,12 +1194,12 @@ internal partial class GBSPNode
 		}
 
 		GBSPSide	bestSide	=null;
-		GBSPPlane	p1			=pool.mPlanes[mPlaneNum];
+		GBSPPlane	p1			=pool.mPlanes[port.mOnNode.mPlaneNum];
 
 		List<GBSPSide>	ogSides	=new List<GBSPSide>();
 
-		GBSPBrush.GetOriginalSidesByContents(front.mBrushList, majorContents, ogSides);
-		GBSPBrush.GetOriginalSidesByContents(back.mBrushList, majorContents, ogSides);
+		GBSPBrush.GetOriginalSidesByContents(port.mFrontNode.mBrushList, majorContents, ogSides);
+		GBSPBrush.GetOriginalSidesByContents(port.mBackNode.mBrushList, majorContents, ogSides);
 
 		if(ogSides.Count == 0)
 		{
@@ -947,7 +1209,7 @@ internal partial class GBSPNode
 
 		//there's a flaw in this, noticed on some maps by the warning below
 		//TODO: narrow down one of these cases and figure out an exact fix
-		bool	bFoundExact	=false;
+		float	bestDot		=0f;
 		foreach(GBSPSide side in ogSides)
 		{
 			if((side.mFlags & GBSPSide.SIDE_NODE) != 0)
@@ -956,10 +1218,18 @@ internal partial class GBSPNode
 			}
 
 			//First, Try an exact match
-			if(side.mPlaneNum == mPlaneNum)
+			if(side.mPlaneNum == port.mOnNode.mPlaneNum)
 			{
-				bFoundExact	=true;
 				return	side;
+			}
+
+			//try for closest match
+			GBSPPlane	p2	=pool.mPlanes[side.mPlaneNum];
+			float	dot	=Vector3.Dot(p1.mNormal, p2.mNormal);
+			if(dot > bestDot)
+			{
+				bestDot		=dot;
+				bestSide	=side;
 			}
 		}
 
@@ -972,9 +1242,9 @@ internal partial class GBSPNode
 	}
 
 
-	bool CreatePortalOnNode(PlanePool pool, ClipPools cp)
+	bool CreatePortalOnNode(PlanePool pool, out GBSPPoly poly, ClipPools cp)
 	{
-		GBSPPoly	poly	=new GBSPPoly(pool.mPlanes[mPlaneNum]);
+		poly	=new GBSPPoly(pool.mPlanes[mPlaneNum]);
 		if(poly == null)
 		{
 			CoreEvents.Print("CreatePolyOnNode:  Could not create poly.\n");
@@ -999,50 +1269,6 @@ internal partial class GBSPNode
 			node	=parent;
 			parent	=parent.mParent;
 		}
-
-		//clip by portals on the node
-		foreach(GBSPPortal port in mPortals)
-		{
-			bool	bFlipSide	=(port.mFrontNode != this);
-
-			if(poly.IsTiny())
-			{
-				break;
-			}
-
-			poly.ClipPolyEpsilon(Mathery.ON_EPSILON, port.mPlane, bFlipSide, cp);
-		}
-
-		if(poly.IsTiny())
-		{
-			return	false;
-		}
-
-		GBSPPortal	newPortal	=new GBSPPortal();
-		newPortal.mPlane		=pool.mPlanes[mPlaneNum];
-		newPortal.mOnNode		=this;
-		newPortal.mPoly			=poly;
-
-		//test
-		foreach(Vector3 v in newPortal.mPoly.mVerts)
-		{
-			float	checkDist	=Vector3.Dot(v, newPortal.mPlane.mNormal);
-
-			checkDist	-=newPortal.mPlane.mDist;
-
-			if(checkDist > GBSPPlane.PLANESIDE_EPSILON
-				|| checkDist < -GBSPPlane.PLANESIDE_EPSILON)
-			{
-				int	gack	=69;
-				gack++;
-			}
-		}
-
-		newPortal.mFrontNode	=mFront;
-		newPortal.mBackNode		=mBack;
-		mFront.mPortals.Add(newPortal);
-		mBack.mPortals.Add(newPortal);
-
 		return	true;
 	}
 
@@ -1058,8 +1284,17 @@ internal partial class GBSPNode
 			return	false;
 		}
 
-		foreach(GBSPPortal port in mPortals)
+		GBSPPortal	next	=null;
+		for(GBSPPortal port =mPortals;port != null;port = next)
 		{
+			if(port.mBackNode == this)
+			{
+				next	=port.mNextBack;
+			}
+			else
+			{
+				next	=port.mNextFront;
+			}
 			port.mPoly.AddToBounds(bnd);
 		}
 		return	true;
@@ -1113,11 +1348,13 @@ internal partial class GBSPNode
 		mArea	=Area;
 
 		//Flood through all of this leafs portals
-		foreach(GBSPPortal port in mPortals)
+		GBSPPortal	next	=null;
+		for(GBSPPortal port =mPortals;port != null;port = next)
 		{
 			//flood through opposite node
 			if(port.mBackNode == this)
 			{
+				next	=port.mNextBack;
 				if(!port.mFrontNode.FillAreas_r(Area, modForLeaf))
 				{
 					return	false;
@@ -1125,6 +1362,7 @@ internal partial class GBSPNode
 			}
 			else
 			{
+				next	=port.mNextFront;
 				if(!port.mBackNode.FillAreas_r(Area, modForLeaf))
 				{
 					return	false;

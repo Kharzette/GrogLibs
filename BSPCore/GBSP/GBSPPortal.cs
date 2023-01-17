@@ -8,7 +8,8 @@ internal class GBSPPortal
 {
 	internal GBSPPoly	mPoly;					//Convex poly that holds the shape of the portal
 	internal GBSPNode	mFrontNode, mBackNode;	//Node on each side of the portal
-	internal GBSPPlane	mPlane;
+	internal GBSPPortal	mNextFront, mNextBack;	//Next portal for each node
+	internal int		mPlaneNum;
 
 	internal GBSPNode	mOnNode;
 	internal GBSPFace	mFrontFace, mBackFace;
@@ -22,12 +23,22 @@ internal class GBSPPortal
 		mPoly		=new GBSPPoly(copyMe.mPoly);
 		mFrontNode	=copyMe.mFrontNode;
 		mBackNode	=copyMe.mBackNode;
-		mPlane		=copyMe.mPlane;
+		mNextFront	=copyMe.mNextFront;
+		mNextBack	=copyMe.mNextBack;
+		mPlaneNum	=copyMe.mPlaneNum;
 		mOnNode		=copyMe.mOnNode;
 		mFrontFace	=copyMe.mFrontFace;
 		mBackFace	=copyMe.mBackFace;
 		mSide		=copyMe.mSide;
 		mSideFound	=copyMe.mSideFound;
+	}
+
+	internal void Free()
+	{
+		if(mPoly != null)
+		{
+			mPoly.Free();
+		}
 	}
 
 
@@ -62,7 +73,7 @@ internal class GBSPPortal
 
 	internal void FindPortalSide(PlanePool pool)
 	{
-		GBSPSide	bestSide	=mOnNode.GetBestPortalSide(mFrontNode, mBackNode, pool);
+		GBSPSide	bestSide	=GBSPNode.FindPortalSide(this, pool);
 		if(bestSide == null)
 		{
 			return;
