@@ -1,3 +1,62 @@
+Future
+	My medium term goal for a long time has been to return to
+	the days when I could crank games out really quickly.  My
+	first few Ludum Dare were grand and I want to get back to
+	that level of productivity.  Getting old means I probably
+	can't, but at least I can improve my tools.
+
+	Though Unity and Unreal are no doubt far better than any-
+	thing I could come up with, I am just not very speedy with
+	them.  Knowing your own stuff, the stuff you wrote yourself
+	seems a very large factor.
+
+	Jank is a thing though.  I made a simple map last week and
+	uncovered some serious flaws in my bsp compiler.  To be
+	fair, the id tools also had trouble with it, being unable
+	to remove the outer nodes.
+
+	I experimented a bit with more modern developed compilers
+	and found an active one through github, and it built it
+	flawlessly without even a warning.
+
+	This + struggling against the restrictive nature of C# has
+	made me think about just using one of those excellent map
+	compilers with all my live game stuff in C.  C has been a
+	joy to work with.
+
+	For tools though, I only really know / like winforms.  C#
+	is fantastic at this.  So I'll likely keep my C# tools
+	going, and just call into C libraries maybe.
+
+	Another revelation is radiant.  The map editor.  While
+	checking out newer compilers I looked at GTKRadiant and
+	was at first turned off.  I've tried it in the past as well
+	and the interface just seemed unusable.  This time I kept
+	at it and managed to get it into a standard 4 view.  Entity
+	placement was a bit odd, but the vertex editing is
+	fantastic, everything is snappy, the 2D views are easy on
+	the eyes (I get major eye strain when mapping) thanks to
+	GL antialiasing.  Overall much better than Quark.
+
+	Quark is easy to hack though.  Radiant seems to use game
+	packs to support different games.
+
+	So things that need to be done:
+		Make a game pack for groglibs for GTKRadiant
+			This is mainly for my brush flags
+		See about texture formats.  I use loose pngs, will
+			gtkradiant support this?
+		Might need to change the build tools to support my
+			flags.  The one I'm using is q2tool.  I think
+			rad needs texture data now as well, maybe for
+			stained glass windows and such?  Will it do png?
+		BSPBuilder should load and do material stuff on bsp
+			files out of q2tool.  Mapgrinder and such.
+		C side libs will probably continue to use BSPZone.
+			Have I written that yet?  I can't remember.
+	
+	Order of the above might vary but is probably as listed.
+
 Coordinate System Notes
 	Up is positive Y
 	Forward is positive Z
