@@ -6,32 +6,35 @@ namespace BSPCore;
 
 internal class GBSPPortal
 {
-	internal GBSPPoly	mPoly;					//Convex poly that holds the shape of the portal
+	internal GBSPPlane	mPlane;
+	internal GBSPNode	mOnNode;
 	internal GBSPNode	mFrontNode, mBackNode;	//Node on each side of the portal
 	internal GBSPPortal	mNextFront, mNextBack;	//Next portal for each node
-	internal int		mPlaneNum;
+	internal GBSPPoly	mPoly;					//Convex poly that holds the shape of the portal
 
-	internal GBSPNode	mOnNode;
-	internal GBSPFace	mFrontFace, mBackFace;
+	internal bool		mbSideFound;
 	internal GBSPSide	mSide;
-	internal bool		mSideFound;
+	internal GBSPFace	mFrontFace, mBackFace;
 
 
 	internal GBSPPortal() { }
+
 	internal GBSPPortal(GBSPPortal copyMe)
 	{
-		mPoly		=new GBSPPoly(copyMe.mPoly);
+		mPlane		=copyMe.mPlane;
+		mOnNode		=copyMe.mOnNode;
 		mFrontNode	=copyMe.mFrontNode;
 		mBackNode	=copyMe.mBackNode;
 		mNextFront	=copyMe.mNextFront;
 		mNextBack	=copyMe.mNextBack;
-		mPlaneNum	=copyMe.mPlaneNum;
-		mOnNode		=copyMe.mOnNode;
+		mPoly		=new GBSPPoly(copyMe.mPoly);
+
 		mFrontFace	=copyMe.mFrontFace;
 		mBackFace	=copyMe.mBackFace;
 		mSide		=copyMe.mSide;
-		mSideFound	=copyMe.mSideFound;
+		mbSideFound	=copyMe.mbSideFound;
 	}
+
 
 	internal void Free()
 	{
@@ -79,7 +82,7 @@ internal class GBSPPortal
 			return;
 		}
 
-		mSideFound	=true;
+		mbSideFound	=true;
 		mSide		=bestSide;
 	}
 

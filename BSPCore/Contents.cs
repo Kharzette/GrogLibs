@@ -4,6 +4,43 @@ using UtilityLib;
 
 namespace BSPCore;
 
+public class Q2Contents
+{
+	//quake 2 style contents
+	public const UInt32	CONTENTS_SOLID			=1;		// an eye is never valid in a solid
+	public const UInt32	CONTENTS_WINDOW			=2;		// translucent, but not watery
+	public const UInt32	CONTENTS_AUX			=4;
+	public const UInt32	CONTENTS_LAVA			=8;
+	public const UInt32	CONTENTS_SLIME			=16;
+	public const UInt32	CONTENTS_WATER			=32;
+	public const UInt32	CONTENTS_MIST			=64;
+	public const UInt32	LAST_VISIBLE_CONTENTS	=64;
+	
+	//remaining contents are non-visible, and don't eat brushes
+	
+	public const UInt32	CONTENTS_AREAPORTAL		=0x8000;
+	
+	public const UInt32	CONTENTS_PLAYERCLIP		=0x10000;
+	public const UInt32	CONTENTS_MONSTERCLIP	=0x20000;
+	
+	// currents can be added to any other contents, and may be mixed
+	public const UInt32	CONTENTS_CURRENT_0		=0x40000;
+	public const UInt32	CONTENTS_CURRENT_90		=0x80000;
+	public const UInt32	CONTENTS_CURRENT_180	=0x100000;
+	public const UInt32	CONTENTS_CURRENT_270	=0x200000;
+	public const UInt32	CONTENTS_CURRENT_UP		=0x400000;
+	public const UInt32	CONTENTS_CURRENT_DOWN	=0x800000;
+	
+	public const UInt32	CONTENTS_ORIGIN			=0x1000000;		//removed before bsping an entity
+
+	
+	public const UInt32	CONTENTS_MONSTER		=0x2000000;		//should never be on a brush, only in game
+	public const UInt32	CONTENTS_DEADMONSTER	=0x4000000;
+	public const UInt32	CONTENTS_DETAIL			=0x8000000;		//brushes to be added after vis leafs
+	public const UInt32	CONTENTS_TRANSLUCENT	=0x10000000;	//auto set if any surface has trans
+	public const UInt32	CONTENTS_LADDER			=0x20000000;
+}
+
 public class GrogContents
 {
 	//genesis style contents

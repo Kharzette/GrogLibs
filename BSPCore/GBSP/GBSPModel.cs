@@ -86,7 +86,8 @@ internal class GBSPModel
 
 		glist	=null;
 
-		if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs, cp))
+//		if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs, cp))
+		if(!root.CreatePortals(mOutsideNode, bVerbose, pool, mBounds.mMins, mBounds.mMaxs, cp))
 		{
 			CoreEvents.Print("Could not create the portals.\n");
 			return	false;
@@ -127,7 +128,7 @@ internal class GBSPModel
 
 		CoreEvents.FireNumPlanesChangedEvent(pool.mPlanes.Count, null);
 
-		if(!root.CreatePortals(mOutsideNode, false, bVerbose, pool, mBounds.mMins, mBounds.mMaxs, cp))
+		if(!root.CreatePortals(mOutsideNode, bVerbose, pool, mBounds.mMins, mBounds.mMaxs, cp))
 		{
 			CoreEvents.Print("Could not create the portals.\n");
 			return	false;
@@ -247,7 +248,7 @@ internal class GBSPModel
 
 		glist	=null;
 
-		if(!root.CreatePortals(mOutsideNode, false, false, pool, mBounds.mMins, mBounds.mMaxs, cp))
+		if(!root.CreatePortals(mOutsideNode, false, pool, mBounds.mMins, mBounds.mMaxs, cp))
 		{
 			CoreEvents.Print("Could not create the portals.\n");
 			return	false;
@@ -285,7 +286,7 @@ internal class GBSPModel
 	{
 		if(bSaveVis)
 		{
-			if(!mRootNode.CreatePortals(mOutsideNode, true, false, pool, mBounds.mMins, mBounds.mMaxs, cp))
+			if(!mRootNode.CreatePortals(mOutsideNode, false, pool, mBounds.mMins, mBounds.mMaxs, cp))
 			{
 				CoreEvents.Print("Could not create VIS portals.\n");
 				return	false;
@@ -318,7 +319,7 @@ internal class GBSPModel
 			mNumClusters	=0;
 		}
 
-		if(!mRootNode.CreatePortals(mOutsideNode, false, false, pool, mBounds.mMins, mBounds.mMaxs, cp))
+		if(!mRootNode.CreatePortals(mOutsideNode, false, pool, mBounds.mMins, mBounds.mMaxs, cp))
 		{
 			CoreEvents.Print("Could not create REAL portals.\n");
 			return	false;

@@ -1039,7 +1039,7 @@ internal partial class GBSPNode
 
 			List<Int32>	LPlaneNumbers	=new List<int>();
 			List<bool>	LPlaneSides		=new List<bool>();
-
+/*
 			GBSPPortal	next;
 			for(GBSPPortal port = mPortals;port != null;port = next)
 			{
@@ -1069,7 +1069,7 @@ internal partial class GBSPNode
 					LPlaneSides.Add(side);
 					CNumLeafSides++;
 				}
-			}
+			}*/
 			
 			if(!FinishLeafSides(pool, ref CNumLeafSides,
 				LPlaneSides, LPlaneNumbers,

@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Text;
+using System.IO;
 using System.Numerics;
 using System.Collections.Generic;
+using UtilityLib;
 
 
 namespace BSPCore;
@@ -27,6 +28,18 @@ public class TexInfo
 	public const UInt32	FLAT		=(1<<6);
 	public const UInt32	CELSHADE	=(1<<7);
 	public const UInt32	NO_LIGHTMAP	=(1<<15);
+
+	//Q2 texinfo flags
+	public const UInt32	SURF_LIGHT		=0x1;	//value will hold the light strength
+	public const UInt32	SURF_SLICK		=0x2;	//effects game physics
+	public const UInt32	SURF_SKY		=0x4;	//don't draw, but add to skybox
+	public const UInt32	SURF_WARP		=0x8;	//turbulent water warp
+	public const UInt32	SURF_TRANS33	=0x10;
+	public const UInt32	SURF_TRANS66	=0x20;
+	public const UInt32	SURF_FLOWING	=0x40;	//scroll towards angle
+	public const UInt32	SURF_NODRAW		=0x80;	//don't bother referencing the texture
+	public const UInt32	SURF_HINT		=0x100;	//make a primary bsp splitter
+	public const UInt32	SURF_SKIP		=0x200;	//completely ignore, allowing non-closed brushes
 
 
 	internal bool Compare(TexInfo other)
@@ -72,5 +85,30 @@ public class TexInfo
 			return	false;
 		}
 		return	true;
+	}
+
+
+	internal void	QRead(BinaryReader br)
+	{
+		Vector4	vecs0	=FileUtil.ReadVector4(br);
+		Vector4	vecs1	=FileUtil.ReadVector4(br);
+
+		mUVec	=vecs0.XYZ();
+		mVVec	=vecs1.XYZ();
+
+		mShiftU	=vecs0.W;
+		mShiftV	=vecs1.W;
+
+		mFlags	=br.ReadUInt32();
+
+		mLightMapScale	=8f;	//guessing?
+
+		//not sure what this is for yet
+		uint	value	=br.ReadUInt32();
+
+		char	[]texture	=br.ReadChars(32);
+		mTexture	=new string(texture);
+
+		uint	nextTexInfo	=br.ReadUInt32();
 	}
 }
