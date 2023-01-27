@@ -154,10 +154,10 @@ public class FaceFixer
 			return	true;
 		}
 
-		if((tex.mFlags & TexInfo.MIRROR) != 0)
-		{
-			return	true;
-		}
+//		if((tex.mFlags & TexInfo.MIRROR) != 0)
+//		{
+//			return	true;
+//		}
 
 		indexVerts	=new Int32[mTempIndexes.Count];
 			

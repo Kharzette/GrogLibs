@@ -1493,18 +1493,12 @@ public partial class Map
 
 
 #if !X64
-	public MapGrinder	MakeMapGrinder(GraphicsDevice gd, StuffKeeper sk)
-	{
-		return	new MapGrinder(gd, sk, null, mGFXTexInfos, mGFXFaces, 4, 1);
-	}
-
-
 	public Int32	GetWorldFirstLeaf()
 	{
 		return	mGFXModels[0].mFirstLeaf;
 	}
 
-
+/*
 	public string	GetMaterialNameForLeafFace(Int32 faceIndex)
 	{
 		GFXFace	f	=mGFXFaces[mGFXLeafFaces[faceIndex]];
@@ -1564,7 +1558,7 @@ public partial class Map
 	public void MakeSkyData(MapGrinder mg)
 	{
 		mg.BuildSkyData(mGFXVerts, mGFXVertIndexes, mGFXPlanes, mGFXModels);
-	}
+	}*/
 
 
 	//get normals for rendering them

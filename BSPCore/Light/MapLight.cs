@@ -606,8 +606,8 @@ public partial class Map
 			verts.Add(mGFXVerts[vIndex]);
 		}
 
-		faceInfo.CalcFaceLightInfo(lightInfo, verts, lightGridSize,
-			mGFXTexInfos[mGFXFaces[fidx].mTexInfo]);
+//		faceInfo.CalcFaceLightInfo(lightInfo, verts, lightGridSize,
+//			mGFXTexInfos[mGFXFaces[fidx].mTexInfo]);
 
 		return	true;
 	}
@@ -633,21 +633,21 @@ public partial class Map
 
 			Mathery.TransformCoordinate(vert, ref modelMat, out vert);
 
-			if(tex.IsLight())
+//			if(tex.IsLight())
 			{
 				//lights should glow
 				mGFXRGBVerts[vn]	=Vector3.One * 255.0f;
 			}
 
 			Vector3	norm;
-			if(tex.IsFlat())
+//			if(tex.IsFlat())
 			{
 				norm	=mFaceInfos[faceNum].GetPlaneNormal();
 			}
-			else
-			{
-				norm	=vertNormals[index];
-			}
+//			else
+//			{
+//				norm	=vertNormals[index];
+//			}
 			
 			for(int i=0;i < mDirectLights.Count;i++)
 			{
@@ -704,7 +704,7 @@ public partial class Map
 						{
 							if(faceHit != null)
 							{
-								if(mGFXTexInfos[faceHit.mTexInfo].IsSky())
+//								if(mGFXTexInfos[faceHit.mTexInfo].IsSky())
 								{
 									val	=(angle2 * dLight.mIntensity);
 								}
@@ -886,7 +886,7 @@ public partial class Map
 			Matrix4x4	modelMat	=modelTransforms[modelIndex];
 			Matrix4x4	modelInv	=modelInvs[modelIndex];
 
-			if(tex.IsGouraud() || tex.IsFlat())
+//			if(tex.IsGouraud() || tex.IsFlat())
 			{
 				if(!VertexShadeFace(i, vertNormals, modelMat, modelInv, modelIndex))
 				{
@@ -895,7 +895,7 @@ public partial class Map
 //					return;
 				}					
 			}
-			else if(tex.IsLightMapped())
+//			else if(tex.IsLightMapped())
 			{
 				if(!CalcFaceInfo(fi, li, lp.mLightParams.mLightGridSize))
 				{
@@ -1046,7 +1046,7 @@ public partial class Map
 					{
 						if(faceHit != null)
 						{
-							if(mGFXTexInfos[faceHit.mTexInfo].IsSky())
+//							if(mGFXTexInfos[faceHit.mTexInfo].IsSky())
 							{
 								Int32	lightType	=sunLight.mLType;
 
@@ -1249,7 +1249,7 @@ public partial class Map
 				{
 					if(faceHit != null)
 					{
-						if(mGFXTexInfos[faceHit.mTexInfo].IsSky())
+//						if(mGFXTexInfos[faceHit.mTexInfo].IsSky())
 						{
 							Int32	lightType	=sunLight.mLType;
 
@@ -1400,7 +1400,7 @@ public partial class Map
 
 				GFXTexInfo	ti	=mGFXTexInfos[f.mTexInfo];
 
-				if(ti.IsSky())
+//				if(ti.IsSky())
 				{
 					bSkyLeaf	=true;
 					break;
@@ -1472,8 +1472,8 @@ public partial class Map
 			mGFXFaces[i].mLType3	=255;
 			
 			//Skip special faces with no lightmaps
-			if((mGFXTexInfos[mGFXFaces[i].mTexInfo].mFlags
-				& TexInfo.NO_LIGHTMAP) != 0)
+//			if((mGFXTexInfos[mGFXFaces[i].mTexInfo].mFlags
+//				& TexInfo.NO_LIGHTMAP) != 0)
 			{
 				continue;
 			}

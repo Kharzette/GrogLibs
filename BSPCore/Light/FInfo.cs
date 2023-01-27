@@ -69,7 +69,7 @@ public class FInfo
 	}
 
 
-	internal void CalcFaceLightInfo(LInfo lightInfo, List<Vector3> verts, int lightGridSize, GFXTexInfo tex)
+	internal void CalcFaceLightInfo(LInfo lightInfo, List<Vector3> verts, int lightGridSize, TexInfo tex)
 	{
 		float	minU	=Bounds.MIN_MAX_BOUNDS;
 		float	minV	=Bounds.MIN_MAX_BOUNDS;
@@ -84,11 +84,11 @@ public class FInfo
 		pln.mDist	=mPlane.mDist;
 		pln.mType	=mPlane.mType;
 
-		Vector3	vecU	=tex.mVecU;
-		Vector3	vecV	=tex.mVecV;
+		Vector3	vecU	=tex.mUVec;
+		Vector3	vecV	=tex.mVVec;
 		foreach(Vector3 vert in verts)
 		{
-			float	d	=Vector3.Dot(vert, vecU);
+			float	d	=Vector3.Dot(vert, vecU) + tex.mShiftU;
 			if(d > maxU)
 			{
 				maxU	=d;
@@ -98,7 +98,7 @@ public class FInfo
 				minU	=d;
 			}
 
-			d	=Vector3.Dot(vert, vecV);
+			d	=Vector3.Dot(vert, vecV) + tex.mShiftV;
 			if(d > maxV)
 			{
 				maxV	=d;

@@ -12,7 +12,7 @@ namespace BSPCore;
 //routines that check material types based on face, texinfo, and material name
 internal class MaterialCorrect
 {
-	internal static bool IsLightMapped(GFXFace f, GFXTexInfo tex, string matName)
+	internal static bool IsLightMapped(QFace f, TexInfo tex, string matName)
 	{
 		if(matName != null)
 		{
@@ -27,22 +27,19 @@ internal class MaterialCorrect
 			}
 		}
 
-		if(f != null)
+		if(f.mLightOfs == -1)
 		{
-			if(f.mLightOfs == -1)
-			{
-				return	false;	//only interested in lightmapped
-			}
+			return	false;	//only interested in lightmapped
+		}
 
-			//make sure not animating
-			if(f.mLType1 != 255 || f.mLType2 != 255 || f.mLType3 != 255)
-			{
-				return	false;
-			}
-			if(f.mLType0 != 0)
-			{
-				return	false;
-			}
+		//make sure not animating
+		if(f.mStyles.G != 255 || f.mStyles.B != 255 || f.mStyles.A != 255)
+		{
+			return	false;
+		}
+		if(f.mStyles.R != 0)
+		{
+			return	false;
 		}
 
 		if(tex != null)
@@ -51,7 +48,7 @@ internal class MaterialCorrect
 			{
 				return	false;
 			}
-			if(!matName.StartsWith(tex.mMaterial))
+			if(!matName.StartsWith(tex.mTexture))
 			{
 				return	false;
 			}
@@ -64,7 +61,7 @@ internal class MaterialCorrect
 	}
 
 
-	internal static bool IsLightMapAnimated(GFXFace f, GFXTexInfo tex, string matName)
+	internal static bool IsLightMapAnimated(QFace f, TexInfo tex, string matName)
 	{
 		if(matName != null)
 		{
@@ -74,7 +71,6 @@ internal class MaterialCorrect
 			}
 		}
 
-		if(f != null)
 		{
 			if(f.mLightOfs == -1)
 			{
@@ -82,13 +78,13 @@ internal class MaterialCorrect
 			}
 
 			//make sure actually animating
-			if(f.mLType0 ==0 || f.mLType0 == 255)
+			if(f.mStyles.R ==0 || f.mStyles.R == 255)
 			{
-				if(f.mLType1 ==0 || f.mLType1 == 255)
+				if(f.mStyles.G ==0 || f.mStyles.G == 255)
 				{
-					if(f.mLType2 ==0 || f.mLType2 == 255)
+					if(f.mStyles.B ==0 || f.mStyles.B == 255)
 					{
-						if(f.mLType3 ==0 || f.mLType3 == 255)
+						if(f.mStyles.A ==0 || f.mStyles.A == 255)
 						{
 							return	false;
 						}
@@ -112,92 +108,7 @@ internal class MaterialCorrect
 	}
 
 
-	internal static bool IsVLit(GFXFace f, GFXTexInfo tex, string matName)
-	{
-		if(matName != null)
-		{
-			if(!matName.EndsWith("*VertLit"))
-			{
-				return	false;
-			}
-		}
-
-		if(f != null)
-		{
-			if(f.mLightOfs != -1)
-			{
-				return	false;	//only interested in non lightmapped
-			}
-
-			//check anim lights for good measure
-			Debug.Assert(f.mLType0 == 255);
-			Debug.Assert(f.mLType1 == 255);
-			Debug.Assert(f.mLType2 == 255);
-			Debug.Assert(f.mLType3 == 255);
-		}
-
-		if(tex != null)
-		{
-			if(tex.mAlpha < 1.0f)
-			{
-				return	false;
-			}
-			if((tex.mFlags & 
-				(TexInfo.FULLBRIGHT | TexInfo.MIRROR | TexInfo.SKY)) != 0)
-			{
-				return	false;
-			}
-
-			if(!matName.StartsWith(tex.mMaterial))
-			{
-				return	false;
-			}
-		}
-		return	true;
-	}
-
-
-	internal static bool IsMirror(GFXFace f, GFXTexInfo tex, string matName)
-	{
-		if(matName != null)
-		{
-			if(!matName.EndsWith("*Mirror"))
-			{
-				return	false;
-			}
-		}
-
-		if(f != null)
-		{
-			if(f.mLightOfs != -1)
-			{
-				return	false;	//only interested in non lightmapped
-			}
-
-			//check anim lights for good measure
-			Debug.Assert(f.mLType0 == 255);
-			Debug.Assert(f.mLType1 == 255);
-			Debug.Assert(f.mLType2 == 255);
-			Debug.Assert(f.mLType3 == 255);
-		}
-
-		if(tex != null)
-		{
-			if((tex.mFlags & TexInfo.MIRROR) == 0)
-			{
-				return	false;
-			}
-
-			if(!matName.StartsWith(tex.mMaterial))
-			{
-				return	false;
-			}
-		}
-		return	true;
-	}
-
-
-	internal static bool IsAlpha(GFXFace f, GFXTexInfo tex, string matName)
+	internal static bool IsAlpha(QFace f, TexInfo tex, string matName)
 	{
 		if(matName != null)
 		{
@@ -207,28 +118,20 @@ internal class MaterialCorrect
 			}
 		}
 
-		if(f != null)
+		if(f.mLightOfs != -1)
 		{
-			if(f.mLightOfs != -1)
-			{
-				return	false;	//only interested in non lightmapped
-			}
-
-			//check anim lights for good measure
-			Debug.Assert(f.mLType0 == 255);
-			Debug.Assert(f.mLType1 == 255);
-			Debug.Assert(f.mLType2 == 255);
-			Debug.Assert(f.mLType3 == 255);
+			return	false;	//only interested in non lightmapped
 		}
+
+		//check anim lights for good measure
+		Debug.Assert(f.mStyles.R == 255);
+		Debug.Assert(f.mStyles.G == 255);
+		Debug.Assert(f.mStyles.B == 255);
+		Debug.Assert(f.mStyles.A == 255);
 
 		if(tex != null)
 		{
 			if(tex.mAlpha >= 1.0f)
-			{
-				return	false;
-			}
-
-			if((tex.mFlags & TexInfo.MIRROR) != 0)
 			{
 				return	false;
 			}
@@ -242,7 +145,7 @@ internal class MaterialCorrect
 	}
 
 
-	internal static bool IsFullBright(GFXFace f, GFXTexInfo tex, string matName)
+	internal static bool IsFullBright(QFace f, TexInfo tex, string matName)
 	{
 		if(matName != null)
 		{
@@ -252,7 +155,6 @@ internal class MaterialCorrect
 			}
 		}
 
-		if(f != null)
 		{
 			if(f.mLightOfs != -1)
 			{
@@ -260,10 +162,10 @@ internal class MaterialCorrect
 			}
 
 			//check anim lights for good measure
-			Debug.Assert(f.mLType0 == 255);
-			Debug.Assert(f.mLType1 == 255);
-			Debug.Assert(f.mLType2 == 255);
-			Debug.Assert(f.mLType3 == 255);
+			Debug.Assert(f.mStyles.R == 255);
+			Debug.Assert(f.mStyles.G == 255);
+			Debug.Assert(f.mStyles.B == 255);
+			Debug.Assert(f.mStyles.A == 255);
 		}
 
 		if(tex != null)
@@ -272,19 +174,7 @@ internal class MaterialCorrect
 			{
 				return	false;
 			}
-			if(Misc.bFlagSet(tex.mFlags, TexInfo.MIRROR))
-			{
-				return	false;
-			}
-			if(Misc.bFlagSet(tex.mFlags, TexInfo.GOURAUD))
-			{
-				return	false;
-			}
-			if(Misc.bFlagSet(tex.mFlags, TexInfo.FLAT))
-			{
-				return	false;
-			}
-			if(!Misc.bFlagSet(tex.mFlags, TexInfo.FULLBRIGHT))
+			if(!tex.IsLight())
 			{
 				return	false;
 			}
@@ -298,7 +188,7 @@ internal class MaterialCorrect
 	}
 
 
-	internal static bool IsSky(GFXFace f, GFXTexInfo tex, string matName)
+	internal static bool IsSky(QFace f, TexInfo tex, string matName)
 	{
 		if(matName != null)
 		{
@@ -308,7 +198,6 @@ internal class MaterialCorrect
 			}
 		}
 
-		if(f != null)
 		{
 			if(f.mLightOfs != -1)
 			{
@@ -316,10 +205,10 @@ internal class MaterialCorrect
 			}
 
 			//check anim lights for good measure
-			Debug.Assert(f.mLType0 == 255);
-			Debug.Assert(f.mLType1 == 255);
-			Debug.Assert(f.mLType2 == 255);
-			Debug.Assert(f.mLType3 == 255);
+			Debug.Assert(f.mStyles.R == 255);
+			Debug.Assert(f.mStyles.G == 255);
+			Debug.Assert(f.mStyles.B == 255);
+			Debug.Assert(f.mStyles.A == 255);
 		}
 
 		if(tex != null)
@@ -342,7 +231,7 @@ internal class MaterialCorrect
 	}
 
 
-	internal static bool IsLightMappedAlpha(GFXFace f, GFXTexInfo tex, string matName)
+	internal static bool IsLightMappedAlpha(QFace f, TexInfo tex, string matName)
 	{
 		if(matName != null)
 		{
@@ -352,7 +241,6 @@ internal class MaterialCorrect
 			}
 		}
 
-		if(f != null)
 		{
 			if(f.mLightOfs == -1)
 			{
@@ -360,11 +248,11 @@ internal class MaterialCorrect
 			}
 
 			//make sure not animating
-			if(f.mLType1 != 255 || f.mLType2 != 255 || f.mLType3 != 255)
+			if(f.mStyles.G != 255 || f.mStyles.B != 255 || f.mStyles.A != 255)
 			{
 				return	false;
 			}
-			if(f.mLType0 != 0)
+			if(f.mStyles.R != 0)
 			{
 				return	false;
 			}
@@ -385,7 +273,7 @@ internal class MaterialCorrect
 	}
 
 
-	internal static bool IsLightMappedAlphaAnimated(GFXFace f, GFXTexInfo tex, string matName)
+	internal static bool IsLightMappedAlphaAnimated(QFace f, TexInfo tex, string matName)
 	{
 		if(matName != null)
 		{
@@ -395,20 +283,19 @@ internal class MaterialCorrect
 			}
 		}
 
-		if(f != null)
 		{
 			if(f.mLightOfs == -1)
 			{
 				return	false;	//only interested in lightmapped
 			}
 
-			if(f.mLType0 ==0 || f.mLType0 == 255)
+			if(f.mStyles.R ==0 || f.mStyles.R == 255)
 			{
-				if(f.mLType1 ==0 || f.mLType1 == 255)
+				if(f.mStyles.G ==0 || f.mStyles.G == 255)
 				{
-					if(f.mLType2 ==0 || f.mLType2 == 255)
+					if(f.mStyles.B ==0 || f.mStyles.B == 255)
 					{
-						if(f.mLType3 ==0 || f.mLType3 == 255)
+						if(f.mStyles.A ==0 || f.mStyles.A == 255)
 						{
 							return	false;
 						}

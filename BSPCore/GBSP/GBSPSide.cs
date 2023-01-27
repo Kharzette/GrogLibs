@@ -138,7 +138,7 @@ internal class GBSPSide
 			ret			=flags[0];
 			ti.mFlags	=flags[1];
 
-			if(Misc.bFlagSet(ti.mFlags, TexInfo.TRANSPARENT | TexInfo.MIRROR))
+//			if(Misc.bFlagSet(ti.mFlags, TexInfo.TRANSPARENT | TexInfo.MIRROR))
 			{
 				ti.mAlpha	=Math.Clamp(numbers[14], 0f, 1f);
 
@@ -253,9 +253,9 @@ internal class GBSPSide
 					ret			|=GrogContents.BSP_CONTENTS_USER5;
 					ret			|=GrogContents.BSP_CONTENTS_EMPTY2;
 					ret			|=GrogContents.BSP_CONTENTS_WAVY2;
-					ti.mFlags	|=TexInfo.FULLBRIGHT;
-					ti.mFlags	|=TexInfo.TRANSPARENT;
-					ti.mFlags	|=TexInfo.EMITLIGHT;
+//					ti.mFlags	|=TexInfo.FULLBRIGHT;
+//					ti.mFlags	|=TexInfo.TRANSPARENT;
+//					ti.mFlags	|=TexInfo.EMITLIGHT;
 					ti.mAlpha	=0.95f;
 				}
 				else if(texName.Contains("water") || texName.Contains("WATER")
@@ -264,7 +264,7 @@ internal class GBSPSide
 					ret			|=GrogContents.BSP_CONTENTS_USER3;
 					ret			|=GrogContents.BSP_CONTENTS_EMPTY2;
 					ret			|=GrogContents.BSP_CONTENTS_WAVY2;
-					ti.mFlags	|=TexInfo.TRANSPARENT;
+//					ti.mFlags	|=TexInfo.TRANSPARENT;
 					ti.mAlpha	=0.75f;
 				}
 				else if(texName.StartsWith("slime") || texName.StartsWith("SLIME"))
@@ -272,13 +272,13 @@ internal class GBSPSide
 					ret			|=GrogContents.BSP_CONTENTS_USER4;
 					ret			|=GrogContents.BSP_CONTENTS_EMPTY2;
 					ret			|=GrogContents.BSP_CONTENTS_WAVY2;
-					ti.mFlags	|=TexInfo.TRANSPARENT;
+//					ti.mFlags	|=TexInfo.TRANSPARENT;
 					ti.mAlpha	=0.85f;
 				}
 				else if(texName.StartsWith("glass") || texName.StartsWith("GLASS"))
 				{
 					ret			|=GrogContents.BSP_CONTENTS_WINDOW2;
-					ti.mFlags	|=TexInfo.TRANSPARENT;
+//					ti.mFlags	|=TexInfo.TRANSPARENT;
 					ti.mAlpha	=0.5f;
 				}
 				else if(texName.StartsWith("teleport") || texName.StartsWith("TELEPORT"))
@@ -286,9 +286,9 @@ internal class GBSPSide
 					ret			|=GrogContents.BSP_CONTENTS_USER7;
 					ret			|=GrogContents.BSP_CONTENTS_EMPTY2;
 					ret			|=GrogContents.BSP_CONTENTS_WAVY2;
-					ti.mFlags	|=TexInfo.FULLBRIGHT;
-					ti.mFlags	|=TexInfo.TRANSPARENT;
-					ti.mFlags	|=TexInfo.EMITLIGHT;
+//					ti.mFlags	|=TexInfo.FULLBRIGHT;
+//					ti.mFlags	|=TexInfo.TRANSPARENT;
+//					ti.mFlags	|=TexInfo.EMITLIGHT;
 					ti.mAlpha	=0.75f;
 				}
 				else
@@ -312,17 +312,17 @@ internal class GBSPSide
 			else if(tok.StartsWith("sky") || tok.StartsWith("SKY") || tok.StartsWith("e1u1/sky"))
 			{
 				texName		=tok;
-				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
-				ti.mFlags	|=TexInfo.SKY;
+//				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+//				ti.mFlags	|=TexInfo.SKY;
 			}
 			else if(tok.StartsWith("lava") || tok.StartsWith("LAVA"))
 			{
 				ret			|=GrogContents.BSP_CONTENTS_USER5;
 				ret			|=GrogContents.BSP_CONTENTS_EMPTY2;
 				ret			|=GrogContents.BSP_CONTENTS_WAVY2;
-				ti.mFlags	|=TexInfo.FULLBRIGHT;
-				ti.mFlags	|=TexInfo.TRANSPARENT;
-				ti.mFlags	|=TexInfo.EMITLIGHT;
+//				ti.mFlags	|=TexInfo.FULLBRIGHT;
+//				ti.mFlags	|=TexInfo.TRANSPARENT;
+//				ti.mFlags	|=TexInfo.EMITLIGHT;
 				ti.mAlpha	=0.98f;
 			}
 			else if(tok.Contains("water") || tok.Contains("WATER"))
@@ -330,7 +330,7 @@ internal class GBSPSide
 				ret			|=GrogContents.BSP_CONTENTS_USER3;
 				ret			|=GrogContents.BSP_CONTENTS_EMPTY2;
 				ret			|=GrogContents.BSP_CONTENTS_WAVY2;
-				ti.mFlags	|=TexInfo.TRANSPARENT;
+//				ti.mFlags	|=TexInfo.TRANSPARENT;
 				ti.mAlpha	=0.85f;
 			}
 			else if(tok.StartsWith("slime") || tok.StartsWith("SLIME"))
@@ -338,19 +338,19 @@ internal class GBSPSide
 				ret			|=GrogContents.BSP_CONTENTS_USER4;
 				ret			|=GrogContents.BSP_CONTENTS_EMPTY2;
 				ret			|=GrogContents.BSP_CONTENTS_WAVY2;
-				ti.mFlags	|=TexInfo.TRANSPARENT;
+//				ti.mFlags	|=TexInfo.TRANSPARENT;
 				ti.mAlpha	=0.95f;
 			}
 			else if(tok.StartsWith("trigger") || tok.StartsWith("TRIGGER"))
 			{
 				ret			|=GrogContents.BSP_CONTENTS_TRIGGER;
-				ti.mFlags	|=TexInfo.FULLBRIGHT;
-				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
+//				ti.mFlags	|=TexInfo.FULLBRIGHT;
+//				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 			}
 			else if(tok.StartsWith("window") || tok.StartsWith("WINDOW"))
 			{
 				ret			|=GrogContents.BSP_CONTENTS_WINDOW2;
-				ti.mFlags	|=TexInfo.TRANSPARENT;
+//				ti.mFlags	|=TexInfo.TRANSPARENT;
 				ti.mAlpha	=0.35f;
 			}
 			else if(char.IsLetter(tok, 0))
@@ -944,7 +944,7 @@ internal class GBSPSide
 	internal void FixFlags(ref TexInfo ti)
 	{
 		//defaults
-		mFlags		=SIDE_VISIBLE;
+/*		mFlags		=SIDE_VISIBLE;
 
 		//if mirror, set no lightmap and flat
 		if(Misc.bFlagSet(ti.mFlags, TexInfo.MIRROR))
@@ -991,7 +991,7 @@ internal class GBSPSide
 			{
 				ti.mFlags	|=TexInfo.NO_LIGHTMAP;
 			}
-		}
+		}*/
 	}
 
 

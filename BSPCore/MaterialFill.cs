@@ -14,7 +14,7 @@ namespace BSPCore;
 internal class MaterialFill
 {
 	static void GetMirrorTexCoords(List<Vector3> verts,
-		GFXTexInfo tex,	out List<Vector2> coords)
+		TexInfo tex,	out List<Vector2> coords)
 	{
 		coords	=new List<Vector2>();
 
@@ -27,7 +27,7 @@ internal class MaterialFill
 		maxT	=-Bounds.MIN_MAX_BOUNDS;
 
 		GBSPPlane	pln;
-		pln.mNormal	=Vector3.Cross(tex.mVecU, tex.mVecV);
+		pln.mNormal	=Vector3.Cross(tex.mUVec, tex.mVVec);
 
 		pln.mNormal	=Vector3.Normalize(pln.mNormal);
 		pln.mDist	=0;
@@ -105,14 +105,14 @@ internal class MaterialFill
 	}
 
 
-	static Color AssignLightStyleIndex(GFXFace f)
+	static Color AssignLightStyleIndex(QFace f)
 	{
 		//switchable styles reference the same shader
 		//array as animated, so need a - 20
-		return	new Color(ClampLightIndex(f.mLType0),
-			ClampLightIndex(f.mLType1),
-			ClampLightIndex(f.mLType2),
-			ClampLightIndex(f.mLType3));
+		return	new Color(ClampLightIndex(f.mStyles.R),
+			ClampLightIndex(f.mStyles.G),
+			ClampLightIndex(f.mStyles.B),
+			ClampLightIndex(f.mStyles.A));
 	}
 
 
@@ -142,7 +142,7 @@ internal class MaterialFill
 
 
 	static void GetTexCoords1(List<Vector3> verts, GBSPPlane pln, int lightGridSize,
-		int	lwidth, int lheight, GFXTexInfo tex,
+		int	lwidth, int lheight, TexInfo tex,
 		out List<double> sCoords, out List<double> tCoords)
 	{
 		sCoords	=new List<double>();
@@ -163,8 +163,8 @@ internal class MaterialFill
 			double	crdX, crdY;
 
 			//dot product
-			crdX	=Vector3.Dot(pnt, tex.mVecU);
-			crdY	=Vector3.Dot(pnt, tex.mVecV);
+			crdX	=Vector3.Dot(pnt, tex.mUVec);
+			crdY	=Vector3.Dot(pnt, tex.mVVec);
 
 			//scale by light grid size
 			crdX	/=lightGridSize;
@@ -181,8 +181,8 @@ internal class MaterialFill
 
 
 	static bool AtlasAnimated(MaterialLib.TexAtlas atlas, int lightGridSize,
-		DrawDataChunk ddc, GFXFace f, byte []lightData,
-		List<Vector3> faceVerts, GBSPPlane pln, GFXTexInfo tex)
+		DrawDataChunk ddc, QFace f, byte []lightData,
+		List<Vector3> faceVerts, GBSPPlane pln, TexInfo tex)
 	{
 		for(int s=0;s < 4;s++)
 		{
@@ -191,7 +191,7 @@ internal class MaterialFill
 
 			if(s == 0)
 			{
-				if(f.mLType0 == 255)
+				if(f.mStyles.R == 255)
 				{
 					bTuFittyFi	=true;
 				}
@@ -199,7 +199,7 @@ internal class MaterialFill
 			}
 			else if(s == 1)
 			{
-				if(f.mLType1 == 255)
+				if(f.mStyles.G == 255)
 				{
 					bTuFittyFi	=true;
 				}
@@ -207,7 +207,7 @@ internal class MaterialFill
 			}
 			else if(s == 2)
 			{
-				if(f.mLType2 == 255)
+				if(f.mStyles.B == 255)
 				{
 					bTuFittyFi	=true;
 				}
@@ -215,7 +215,7 @@ internal class MaterialFill
 			}
 			else if(s == 3)
 			{
-				if(f.mLType3 == 255)
+				if(f.mStyles.A == 255)
 				{
 					bTuFittyFi	=true;
 				}
@@ -240,15 +240,27 @@ internal class MaterialFill
 	}
 
 
-	static bool AtlasLightMap(MaterialLib.TexAtlas atlas, int lightGridSize,
-		GFXFace f, byte []lightData, int styleIndex, List<Vector3> faceVerts,
-		GBSPPlane sidedPlane, GFXTexInfo tex, List<Vector2> texCoords)
+	internal static bool AtlasLightMap(MaterialLib.TexAtlas atlas, int lightGridSize,
+		QFace f, byte []lightData, int styleIndex, List<Vector3> faceVerts,
+		GBSPPlane sidedPlane, TexInfo tex, List<Vector2> texCoords)
 	{
 		double	scaleU, scaleV, offsetU, offsetV;
 		scaleU	=scaleV	=offsetU	=offsetV	=0.0;
-		Color	[]lmap	=new Color[f.mLHeight * f.mLWidth];
 
-		int	sizeOffset	=f.mLHeight * f.mLWidth * 3;
+		//calc light stuff
+		FInfo	fi	=new FInfo();
+		LInfo	li	=new LInfo();
+
+		fi.SetPlane(sidedPlane);
+
+		fi.CalcFaceLightInfo(li, faceVerts, lightGridSize, tex);
+
+		int	lHeight	=li.GetLHeight();
+		int	lWidth	=li.GetLWidth();
+
+		Color	[]lmap	=new Color[lHeight * lWidth];
+
+		int	sizeOffset	=lHeight * lWidth * 3;
 
 		sizeOffset	*=styleIndex;
 
@@ -260,7 +272,7 @@ internal class MaterialFill
 				(byte)0xFF);
 		}
 
-		if(!atlas.Insert(lmap, f.mLWidth, f.mLHeight,
+		if(!atlas.Insert(lmap, lWidth, lHeight,
 			out scaleU, out scaleV, out offsetU, out offsetV))
 		{
 			CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
@@ -269,30 +281,18 @@ internal class MaterialFill
 
 		List<double>	coordsU	=new List<double>();
 		List<double>	coordsV	=new List<double>();
-		GetTexCoords1(faceVerts, sidedPlane, lightGridSize, f.mLWidth, f.mLHeight, tex, out coordsU, out coordsV);
+		GetTexCoords1(faceVerts, sidedPlane, lightGridSize, lWidth, lHeight, tex, out coordsU, out coordsV);
 		AddTexCoordsToList(atlas, texCoords, coordsU, coordsV, offsetU, offsetV);
 
 		return	true;
 	}
+/*
 
-
-	static List<Vector3> GetFaceVerts(GFXFace f, Vector3 []verts, int []indexes)
-	{
-		List<Vector3>	ret	=new List<Vector3>();
-		for(int k=0;k < f.mNumVerts;k++)
-		{
-			int		idx	=indexes[f.mFirstVert + k];
-			Vector3	pnt	=verts[idx];
-
-			ret.Add(pnt);
-		}
-		return	ret;
-	}
 
 
 	//sided plane should be pre flipped if side != 0
-	static void ComputeFaceNormals(GFXFace f, Vector3 []verts, int []indexes,
-		GFXTexInfo tex, Vector3 []vnorms, GBSPPlane sidedPlane,
+	static void ComputeFaceNormals(QFace f, Vector3 []verts, int []indexes,
+		TexInfo tex, Vector3 []vnorms, GBSPPlane sidedPlane,
 		List<Vector3> norms)
 	{
 		for(int k=0;k < f.mNumVerts;k++)
@@ -311,33 +311,8 @@ internal class MaterialFill
 	}
 
 
-	//handles basic verts and texcoord 0 with model matrix
-	static void ComputeFaceData(GFXFace f, Vector3 []verts, int []indexes,
-		GFXTexInfo tex,	List<Vector2> tex0, List<Vector3> outVerts)
-	{
-		List<Vector3>	worldVerts	=GetFaceVerts(f, verts, indexes);
-
-		foreach(Vector3 v in worldVerts)
-		{
-			Vector2	crd;
-			crd.X	=Vector3.Dot(tex.mVecU, v);
-			crd.Y	=Vector3.Dot(tex.mVecV, v);
-
-			crd.X	/=tex.mDrawScaleU;
-			crd.Y	/=tex.mDrawScaleV;
-
-			crd.X	+=tex.mShiftU;
-			crd.Y	+=tex.mShiftV;
-
-			tex0.Add(crd);
-
-			outVerts.Add(v);
-		}
-	}
-
-
-	static void ComputeFaceColors(GFXFace f, Vector3 []verts, int []indexes,
-		GFXTexInfo tex, Vector3 []rgbVerts,	List<Color> colors)
+	static void ComputeFaceColors(QFace f, Vector3 []verts, int []indexes,
+		TexInfo tex, Vector3 []rgbVerts,	List<Color> colors)
 	{
 		int	fvert	=f.mFirstVert;
 		for(int k=0;k < f.mNumVerts;k++)
@@ -361,9 +336,9 @@ internal class MaterialFill
 	}
 
 
-	internal static bool FillLightMapped(DrawDataChunk ddc, GFXPlane []pp,
-				Vector3 []verts, int []indexes, GFXFace f, GFXTexInfo tex,
-				int lightGridSize, byte []lightData, MaterialLib.TexAtlas atlas)
+	internal static bool FillLightMapped(DrawDataChunk ddc, GBSPPlane plane,
+				QFace f, TexInfo tex, int lightGridSize, byte []lightData,
+				MaterialLib.TexAtlas atlas)
 	{
 		ddc.mNumFaces++;
 		ddc.mVCounts.Add(f.mNumVerts);
@@ -392,8 +367,8 @@ internal class MaterialFill
 
 
 	internal static bool FillLightMapAnimated(DrawDataChunk ddc, GFXPlane []pp,
-				Vector3 []verts, int []indexes, GFXFace f,
-				GFXTexInfo tex, int lightGridSize, byte []lightData,
+				Vector3 []verts, int []indexes, QFace f,
+				TexInfo tex, int lightGridSize, byte []lightData,
 				MaterialLib.TexAtlas atlas)
 	{
 		ddc.mNumFaces++;
@@ -434,35 +409,9 @@ internal class MaterialFill
 	}
 
 
-	internal static bool FillVLit(DrawDataChunk ddc, GFXPlane []pp,
-				Vector3 []verts, int []indexes, Vector3 []rgbVerts,
-				Vector3 []vnorms, GFXFace f, GFXTexInfo tex)
-	{
-		ddc.mNumFaces++;
-		ddc.mVCounts.Add(f.mNumVerts);
-
-		//grab plane for dynamic lighting normals
-		GFXPlane	pl	=pp[f.mPlaneNum];
-		GBSPPlane	pln	=new GBSPPlane(pl);
-		if(f.mbFlipSide)
-		{
-			pln.Inverse();
-		}
-
-		List<Vector3>	faceVerts	=new List<Vector3>();
-		ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, faceVerts);
-		ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
-		ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
-
-		ddc.mVerts.AddRange(faceVerts);
-
-		return	true;
-	}
-
-
 	internal static bool FillFullBright(DrawDataChunk ddc, GFXPlane []pp,
 				Vector3 []verts, int []indexes, Vector3 []rgbVerts,
-				Vector3 []vnorms, GFXFace f, GFXTexInfo tex)
+				Vector3 []vnorms, QFace f, TexInfo tex)
 	{
 		ddc.mNumFaces++;
 		ddc.mVCounts.Add(f.mNumVerts);
@@ -487,7 +436,7 @@ internal class MaterialFill
 
 	internal static bool FillSky(DrawDataChunk ddc, GFXPlane []pp,
 				Vector3 []verts, int []indexes,
-				GFXFace f, GFXTexInfo tex)
+				QFace f, TexInfo tex)
 	{
 		ddc.mNumFaces++;
 		ddc.mVCounts.Add(f.mNumVerts);
@@ -501,42 +450,9 @@ internal class MaterialFill
 	}
 
 
-	internal static bool FillMirror(DrawDataChunk ddc, GFXPlane []pp,
-				Vector3 []verts, int []indexes, Vector3 []rgbVerts, Vector3 []vnorms,
-				GFXFace f, GFXTexInfo tex, int lightGridSize,
-				byte []lightData, MaterialLib.TexAtlas atlas,
-				List<List<Vector3>> mirrorPolys)
-	{
-		ddc.mNumFaces++;
-		ddc.mVCounts.Add(f.mNumVerts);
-
-		GFXPlane	pl	=pp[f.mPlaneNum];
-		GBSPPlane	pln	=new GBSPPlane(pl);
-		if(f.mbFlipSide)
-		{
-			pln.Inverse();
-		}
-
-		List<Vector3>	fverts	=new List<Vector3>();
-		ComputeFaceData(f, verts, indexes, tex, ddc.mTex0, fverts);
-		ComputeFaceNormals(f, verts, indexes, tex, vnorms, pln, ddc.mNorms);
-		ComputeFaceColors(f, verts, indexes, tex, rgbVerts, ddc.mColors);
-
-		ddc.mVerts.AddRange(fverts);
-
-		List<Vector2>	coords	=new List<Vector2>();
-		GetMirrorTexCoords(fverts, tex, out coords);
-		ddc.mTex1.AddRange(coords);
-
-		mirrorPolys.Add(fverts);
-
-		return	true;
-	}
-
-
 	internal static bool FillAlpha(DrawDataChunk ddc, GFXPlane []pp,
 				Vector3 []verts, int []indexes, Vector3 []rgbVerts,
-				Vector3 []vnorms, GFXFace f, GFXTexInfo tex)
+				Vector3 []vnorms, QFace f, TexInfo tex)
 	{
 		ddc.mNumFaces++;
 		ddc.mVCounts.Add(f.mNumVerts);
@@ -560,7 +476,7 @@ internal class MaterialFill
 
 
 	internal static bool FillLightMappedAlpha(DrawDataChunk ddc, GFXPlane []pp,
-				Vector3 []verts, int []indexes, Vector3 []rgbVerts, GFXFace f, GFXTexInfo tex,
+				Vector3 []verts, int []indexes, Vector3 []rgbVerts, QFace f, TexInfo tex,
 				int lightGridSize, byte []lightData, MaterialLib.TexAtlas atlas)
 	{
 		ddc.mNumFaces++;
@@ -597,7 +513,7 @@ internal class MaterialFill
 
 	internal static bool FillLightMappedAlphaAnimated(DrawDataChunk ddc, GFXPlane []pp,
 				Vector3 []verts, int []indexes, Vector3 []rgbVerts,
-				GFXFace f, GFXTexInfo tex, int lightGridSize,
+				QFace f, TexInfo tex, int lightGridSize,
 				byte []lightData, MaterialLib.TexAtlas atlas)
 	{
 		ddc.mNumFaces++;
@@ -634,5 +550,5 @@ internal class MaterialFill
 		}
 
 		return	true;
-	}
+	}*/
 }

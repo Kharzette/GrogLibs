@@ -133,20 +133,37 @@ public partial class MapGrinder
 
 	//passed in data
 	int			mLightGridSize;
-	GFXTexInfo	[]mTexInfos;
-	GFXFace		[]mFaces;
+	TexInfo		[]mTexInfos;
+	QFace		[]mFaces;
+	QEdge		[]mEdges;
+	int			[]mSurfEdges;
+	GBSPPlane	[]mPlanes;
+	Vector3		[]mVerts;
+	QModel		[]mModels;
+	byte		[]mLightData;
 
 
 	public MapGrinder(GraphicsDevice gd,
 		StuffKeeper sk, MatLib matLib,
-		GFXTexInfo []texs, GFXFace []faces,
-		int lightGridSize, int atlasSize)
+		TexInfo []texs, Vector3 []verts,
+		QEdge []edges, int []surfEdges,
+		QFace []faces, GBSPPlane []planes,
+		QModel []models, byte []lightData,
+		int atlasSize)
 	{
-		mGD				=gd;
-		mMatLib			=matLib;
-		mTexInfos		=texs;
-		mLightGridSize	=lightGridSize;
-		mFaces			=faces;
+		mGD			=gd;
+		mMatLib		=matLib;
+
+		mTexInfos	=texs;
+		mFaces		=faces;
+		mEdges		=edges;
+		mSurfEdges	=surfEdges;
+		mPlanes		=planes;
+		mVerts		=verts;
+		mModels		=models;
+		mLightData	=lightData;
+
+		mLightGridSize	=16;		//maybe?
 
 		if(mMatLib == null)
 		{
@@ -216,26 +233,134 @@ public partial class MapGrinder
 	}
 
 
-	internal bool BuildLMData(Vector3 []verts, int[] inds,
-			GFXPlane []pp, GFXModel []models, byte []lightData)
+	//gets the face winding non triangulated
+	List<Vector3> GetFaceVerts(QFace f)
+	{
+		List<Vector3>	ret	=new List<Vector3>();
+
+		int	firstEdge	=f.mFirstEdge;
+
+		for(int j=0;j < f.mNumEdges;j++)
+		{
+			int	edge	=mSurfEdges[firstEdge];
+
+			UInt16	index	=0;
+			if(edge < 0)
+			{
+				index	=mEdges[-edge].v1;
+			}
+			else
+			{
+				index	=mEdges[edge].v0;
+			}
+
+			ret.Add(Vector3.Transform(mVerts[index], Map.mGrogTransform));
+		}		
+		return	ret;
+	}
+
+	//triangulate
+	List<Vector3> GetFaceTris(QFace f)
+	{
+		List<Vector3>	ret	=new List<Vector3>();
+
+		int	firstEdge	=f.mFirstEdge;
+
+		for(int j=1;j < f.mNumEdges - 1;j++)
+		{
+			int	edge	=mSurfEdges[firstEdge];
+
+			UInt16	index	=0;
+			if(edge < 0)
+			{
+				index	=mEdges[-edge].v1;
+			}
+			else
+			{
+				index	=mEdges[edge].v0;
+			}
+
+			ret.Add(Vector3.Transform(mVerts[index], Map.mGrogTransform));
+
+			edge	=mSurfEdges[firstEdge + j];
+			index	=0;
+			if(edge < 0)
+			{
+				index	=mEdges[-edge].v1;
+			}
+			else
+			{
+				index	=mEdges[edge].v0;
+			}
+
+			ret.Add(Vector3.Transform(mVerts[index], Map.mGrogTransform));
+
+			edge	=mSurfEdges[firstEdge + ((j + 1) % f.mNumEdges)];
+			index	=0;
+			if(edge < 0)
+			{
+				index	=mEdges[-edge].v1;
+			}
+			else
+			{
+				index	=mEdges[edge].v0;
+			}
+
+			ret.Add(Vector3.Transform(mVerts[index], Map.mGrogTransform));
+		}
+		return	ret;
+	}
+
+	//handles basic verts and texcoord 0
+	void ComputeFaceData(QFace f, TexInfo tex,
+		List<Vector2> tex0, List<Vector3> outVerts)
+	{
+		List<Vector3>	worldVerts	=GetFaceTris(f);
+
+		foreach(Vector3 v in worldVerts)
+		{
+			Vector2	crd;
+			crd.X	=Vector3.Dot(tex.mUVec, v);
+			crd.Y	=Vector3.Dot(tex.mVVec, v);
+
+			crd.X	/=tex.mDrawScaleU;
+			crd.Y	/=tex.mDrawScaleV;
+
+			crd.X	+=tex.mShiftU;
+			crd.Y	+=tex.mShiftV;
+
+			tex0.Add(crd);
+
+			outVerts.Add(v);
+		}
+	}
+
+
+	public bool BuildLMData()
 	{
 		UInt16	vertOfs	=0;	//model offset into the vertex buffer
-		for(int i=0;i < models.Length;i++)
+		for(int i=0;i < mModels.Length;i++)
 		{
 			//store faces per material
 			Dictionary<int,	DrawDataChunk>	matChunks	=new Dictionary<int, DrawDataChunk>();
 
 			foreach(string mat in mMaterialNames)
 			{
-				int	firstFace	=models[i].mFirstFace;
-				int	nFaces		=models[i].mNumFaces;
+				int	firstFace	=mModels[i].mFirstFace;
+				int	nFaces		=mModels[i].mNumFaces;
 
 				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
-					GFXFace		f	=mFaces[face];
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+					QFace	f	=mFaces[face];
+					TexInfo	tex	=mTexInfos[f.mTexInfo];
 
-					if(!mat.StartsWith(tex.mMaterial))
+					GBSPPlane	pln	=mPlanes[f.mPlaneNum];
+					if(f.mSide != 0)
+					{
+						pln.Inverse();
+					}
+
+					if(!mat.StartsWith(tex.mTexture))
 					{
 						continue;
 					}
@@ -259,18 +384,33 @@ public partial class MapGrinder
 						matChunks.Add(matIndex, ddc);
 					}
 
-					if(!MaterialFill.FillLightMapped(ddc, pp, verts, inds,
-						f, tex, mLightGridSize, lightData, mLMAtlas))
+					List<Vector3>	faceVerts	=new List<Vector3>();
+					ComputeFaceData(f, tex, ddc.mTex0, faceVerts);
+
+					ddc.mNumFaces++;
+					ddc.mVCounts.Add(faceVerts.Count);
+
+					//add face norm to verts
+					for(int j=0;j < faceVerts.Count;j++)
 					{
+						ddc.mNorms.Add(pln.mNormal);
+					}
+
+					if(!MaterialFill.AtlasLightMap(mLMAtlas, mLightGridSize, f,
+						mLightData, 0, faceVerts, pln, tex, ddc.mTex1))
+					{
+						CoreEvents.Print("Lightmap atlas out of space, try increasing it's size.\n");
 						return	false;
 					}
+
+					ddc.mVerts.AddRange(faceVerts);
 				}
 			}
 			FinishLightMapped(i, matChunks, ref vertOfs);
 		}
 		return	true;
 	}
-
+/*
 	internal bool BuildLMAnimData(Vector3 []verts, int[] inds,
 			GFXPlane []pp, GFXModel []models, byte []lightData)
 	{
@@ -287,8 +427,8 @@ public partial class MapGrinder
 
 				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
-					GFXFace		f	=mFaces[face];
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+					QFace	f	=mFaces[face];
+					TexInfo	tex	=mTexInfos[f.mTexInfo];
 
 					if(!mat.StartsWith(tex.mMaterial))
 					{
@@ -343,8 +483,8 @@ public partial class MapGrinder
 
 				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
-					GFXFace		f	=mFaces[face];
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+					QFace	f	=mFaces[face];
+					TexInfo	tex	=mTexInfos[f.mTexInfo];
 
 					if(!mat.StartsWith(tex.mMaterial))
 					{
@@ -399,8 +539,8 @@ public partial class MapGrinder
 
 				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
-					GFXFace		f	=mFaces[face];
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+					QFace	f	=mFaces[face];
+					TexInfo	tex	=mTexInfos[f.mTexInfo];
 
 					if(!mat.StartsWith(tex.mMaterial))
 					{
@@ -438,61 +578,6 @@ public partial class MapGrinder
 		return	true;
 	}
 
-	internal bool BuildVLitData(Vector3 []verts, int[] inds, Vector3 []rgbVerts,
-			Vector3 []vnorms, GFXPlane []pp, GFXModel []models)
-	{
-		UInt16	vertOfs	=0;	//model offset into the vertex buffer
-		for(int i=0;i < models.Length;i++)
-		{
-			//store faces per material
-			Dictionary<int,	DrawDataChunk>	matChunks	=new Dictionary<int, DrawDataChunk>();
-
-			foreach(string mat in mMaterialNames)
-			{
-				int	firstFace	=models[i].mFirstFace;
-				int	nFaces		=models[i].mNumFaces;
-
-				for(int face=firstFace;face < (firstFace + nFaces);face++)
-				{
-					GFXFace		f	=mFaces[face];
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
-
-					if(!mat.StartsWith(tex.mMaterial))
-					{
-						continue;
-					}
-
-					//skip unmatched materials
-					if(!MaterialCorrect.IsVLit(f, tex, mat))
-					{
-						continue;
-					}
-
-					int	matIndex	=mMaterialNames.IndexOf(mat);
-
-					DrawDataChunk	ddc;
-					if(matChunks.ContainsKey(matIndex))
-					{
-						ddc	=matChunks[matIndex];
-					}
-					else
-					{
-						ddc	=new DrawDataChunk();
-						matChunks.Add(matIndex, ddc);
-					}
-
-					if(!MaterialFill.FillVLit(ddc, pp, verts, inds,
-						rgbVerts, vnorms, f, tex))
-					{
-						return	false;
-					}
-				}
-			}
-			FinishVLit(i, matChunks, ref vertOfs);
-		}
-		return	true;
-	}
-
 	internal bool BuildFullBrightData(Vector3 []verts, int[] inds, Vector3 []rgbVerts,
 			Vector3 []vnorms, GFXPlane []pp, GFXModel []models)
 	{
@@ -509,8 +594,8 @@ public partial class MapGrinder
 
 				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
-					GFXFace		f	=mFaces[face];
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+					QFace	f	=mFaces[face];
+					TexInfo	tex	=mTexInfos[f.mTexInfo];
 
 					if(!mat.StartsWith(tex.mMaterial))
 					{
@@ -564,8 +649,8 @@ public partial class MapGrinder
 
 				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
-					GFXFace		f	=mFaces[face];
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+					QFace	f	=mFaces[face];
+					TexInfo	tex	=mTexInfos[f.mTexInfo];
 
 					if(!mat.StartsWith(tex.mMaterial))
 					{
@@ -618,8 +703,8 @@ public partial class MapGrinder
 
 				for(int face=firstFace;face < (firstFace + nFaces);face++)
 				{
-					GFXFace		f	=mFaces[face];
-					GFXTexInfo	tex	=mTexInfos[f.mTexInfo];
+					QFace	f	=mFaces[face];
+					TexInfo	tex	=mTexInfos[f.mTexInfo];
 
 					if(!mat.StartsWith(tex.mMaterial))
 					{
@@ -656,7 +741,7 @@ public partial class MapGrinder
 		}
 		return	true;
 	}
-
+*/
 	public void GetLMGeometry(out int typeIndex, out Array verts, out UInt16 []inds)
 	{
 		if(mLMVerts.Count == 0)
@@ -1140,9 +1225,9 @@ public partial class MapGrinder
 			return;
 		}
 
-		foreach(GFXFace f in mFaces)
+		foreach(QFace f in mFaces)
 		{
-			string	matName	=GFXTexInfo.ScryTrueName(f, mTexInfos[f.mTexInfo]);
+			string	matName	=TexInfo.ScryTrueName(f, mTexInfos[f.mTexInfo]);
 
 			if(!mMaterialNames.Contains(matName))
 			{

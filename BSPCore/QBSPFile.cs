@@ -33,6 +33,14 @@ public struct QFace
 	public int		mLightOfs;		
 }
 
+public struct QModel
+{
+	public Bounds	mBounds;
+	public Vector3	mOrigin;
+	public int		mHeadNode;
+	public int		mFirstFace, mNumFaces;
+}
+
 public class QBSPFile
 {
 	public Vector3		[]mVerts;
@@ -41,6 +49,8 @@ public class QBSPFile
 	public QEdge		[]mEdges;
 	public QFace		[]mFaces;
 	public int			[]mSurfEdges;
+	public QModel		[]mModels;
+	public byte			[]mLightData;
 
 	const int	HeaderLumps	=19;
 
@@ -115,6 +125,11 @@ public class QBSPFile
 			mTexInfos[i]	=new TexInfo();
 
 			mTexInfos[i].QRead(br);
+
+			mTexInfos[i].mUVec	=Vector3.TransformNormal(
+				mTexInfos[i].mUVec, Map.mGrogTransform);
+			mTexInfos[i].mVVec	=Vector3.TransformNormal(
+				mTexInfos[i].mVVec, Map.mGrogTransform);
 		}
 
 		//load edges, index 11
@@ -157,7 +172,35 @@ public class QBSPFile
 			mSurfEdges[i]	=br.ReadInt32();
 		}
 
+		//models, lucky 13
+		br.BaseStream.Seek(offsets[13], SeekOrigin.Begin);
 
+		uint	numModels	=lens[13] / 48;
+
+		mModels	=new QModel[numModels];
+		for(int i=0;i < numModels;i++)
+		{
+			mModels[i].mBounds	=new Bounds();
+
+			mModels[i].mBounds.mMins	=FileUtil.ReadVector3(br);
+			mModels[i].mBounds.mMaxs	=FileUtil.ReadVector3(br);
+
+			mModels[i].mOrigin	=FileUtil.ReadVector3(br);
+
+			mModels[i].mHeadNode	=br.ReadInt32();
+
+			mModels[i].mFirstFace	=br.ReadInt32();
+			mModels[i].mNumFaces	=br.ReadInt32();
+		}
+
+		//light data, lucky 7
+		br.BaseStream.Seek(offsets[7], SeekOrigin.Begin);
+
+		uint	numLight	=lens[7];
+
+		mLightData	=new byte[numLight];
+
+		br.Read(mLightData, 0, (int)numLight);
 
 		br.Close();
 		fs.Close();

@@ -539,12 +539,12 @@ public partial class VisMap
 				}
 				for(int k=0;k < checkLeaf.mNumFaces;k++)
 				{
-					string	matName	=mMap.GetMaterialNameForLeafFace(k + checkLeaf.mFirstFace);
+//					string	matName	=mMap.GetMaterialNameForLeafFace(k + checkLeaf.mFirstFace);
 
-					if(!visibleMaterials[leaf].Contains(matName))
-					{
-						visibleMaterials[leaf].Add(matName);
-					}
+//					if(!visibleMaterials[leaf].Contains(matName))
+//					{
+//						visibleMaterials[leaf].Add(matName);
+//					}
 				}
 			}
 		}

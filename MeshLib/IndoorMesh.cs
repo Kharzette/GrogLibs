@@ -374,7 +374,12 @@ public class IndoorMesh
 
 		foreach(KeyValuePair<int, List<DrawCall>> modCall in draws)
 		{
-			Matrix4x4	worldMat	=getModMatrix(modCall.Key);
+			Matrix4x4	worldMat	=Matrix4x4.Identity;
+
+			if(getModMatrix != null)
+			{
+				worldMat	=getModMatrix(modCall.Key);
+			}
 
 			cbk.SetWorldMat(worldMat);
 

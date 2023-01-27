@@ -145,12 +145,12 @@ public partial class Map
 
 		foreach(GFXFace f in mGFXFaces)
 		{
-			string	matName	=GFXTexInfo.ScryTrueName(f, mGFXTexInfos[f.mTexInfo]);
+//			string	matName	=GFXTexInfo.ScryTrueName(f, mGFXTexInfos[f.mTexInfo]);
 
-			if(!ret.Contains(matName))
-			{
-				ret.Add(matName);
-			}
+//			if(!ret.Contains(matName))
+//			{
+//				ret.Add(matName);
+//			}
 		}
 		return	ret;
 	}

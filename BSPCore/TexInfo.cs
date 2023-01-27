@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Numerics;
-using System.Collections.Generic;
+using System.Diagnostics;
 using UtilityLib;
 
 
@@ -19,15 +19,15 @@ public class TexInfo
 	public string		mMaterial;
 
 	//genesis texinfo flags
-	public const UInt32	MIRROR		=(1<<0);
-	public const UInt32	FULLBRIGHT	=(1<<1);
-	public const UInt32	SKY			=(1<<2);
-	public const UInt32	EMITLIGHT	=(1<<3);
-	public const UInt32	TRANSPARENT	=(1<<4);
-	public const UInt32	GOURAUD		=(1<<5);
-	public const UInt32	FLAT		=(1<<6);
-	public const UInt32	CELSHADE	=(1<<7);
-	public const UInt32	NO_LIGHTMAP	=(1<<15);
+//	public const UInt32	MIRROR		=(1<<0);
+//	public const UInt32	FULLBRIGHT	=(1<<1);
+//	public const UInt32	SKY			=(1<<2);
+//	public const UInt32	EMITLIGHT	=(1<<3);
+//	public const UInt32	TRANSPARENT	=(1<<4);
+//	public const UInt32	GOURAUD		=(1<<5);
+//	public const UInt32	FLAT		=(1<<6);
+//	public const UInt32	CELSHADE	=(1<<7);
+//	public const UInt32	NO_LIGHTMAP	=(1<<15);
 
 	//Q2 texinfo flags
 	public const UInt32	SURF_LIGHT		=0x1;	//value will hold the light strength
@@ -110,5 +110,85 @@ public class TexInfo
 		mTexture	=new string(texture);
 
 		uint	nextTexInfo	=br.ReadUInt32();
+	}
+
+	public bool IsLightMapped()
+	{
+		return	!(Misc.bFlagSet(mFlags, SURF_SKY)
+			|| Misc.bFlagSet(mFlags, SURF_WARP)
+			|| Misc.bFlagSet(mFlags, SURF_NODRAW)
+			|| Misc.bFlagSet(mFlags, SURF_SKIP));			
+	}
+
+	public bool IsAlpha()
+	{
+		return	((mFlags & (SURF_TRANS33 | SURF_TRANS66)) != 0);
+	}
+
+	public bool IsSky()
+	{
+		return	((mFlags & SURF_SKY) != 0);
+	}
+
+	public bool IsLight()
+	{
+		return	((mFlags & SURF_LIGHT) != 0);
+	}
+
+	internal static string ScryTrueName(QFace f, TexInfo tex)
+	{
+		string	matName	=tex.mTexture;
+
+		if(tex.IsLightMapped())
+		{
+			if(tex.IsAlpha() && f.mLightOfs != -1)
+			{
+				matName	+="*LitAlpha";
+			}
+			else if(tex.IsAlpha())
+			{
+				matName	+="*Alpha";
+			}
+			else if(f.mLightOfs == -1)
+			{
+				matName	+="*VertLit";
+			}
+			
+			int	numStyles	=0;
+			numStyles	+=(f.mStyles.R != 255)? 1 : 0;
+			numStyles	+=(f.mStyles.G != 255)? 1 : 0;
+			numStyles	+=(f.mStyles.B != 255)? 1 : 0;
+			numStyles	+=(f.mStyles.A != 255)? 1 : 0;
+
+			//animated lights ?
+			if(numStyles > 1)
+			{
+				Debug.Assert(tex.IsLightMapped());
+
+				//see if material is already alpha
+				if(matName.Contains("*LitAlpha"))
+				{
+					matName	+="Anim";	//*LitAlphaAnim
+				}
+				else
+				{
+					matName	+="*Anim";
+				}
+			}
+		}
+		else if(tex.IsAlpha())
+		{
+			matName	+="*Alpha";
+		}
+		else if(tex.IsSky())
+		{
+			matName	+="*Sky";
+		}
+		else if(tex.IsLight())
+		{
+			matName	+="*FullBright";
+		}
+
+		return	matName;
 	}
 }
