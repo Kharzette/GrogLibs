@@ -9,7 +9,7 @@ using System.Windows.Forms;
 using MeshLib;
 using UtilityLib;
 using MaterialLib;
-
+using Vortice.Direct2D1;
 
 namespace SharedForms;
 
@@ -921,6 +921,17 @@ public partial class MaterialForm : Form
 			MeshPartList.Top + adjust,
 			MeshPartList.Width,
 			MeshPartList.Height);
+
+		//size the material param group boxes to 6 up from part list
+		int	newBottom	=MeshPartList.Top - 6;
+
+		MeshMatGroupBox.SetBounds(MeshMatGroupBox.Left, MeshMatGroupBox.Top,
+			MeshMatGroupBox.Width,
+			newBottom - MeshMatGroupBox.Top);
+
+		TextureGroupBox.SetBounds(TextureGroupBox.Left, TextureGroupBox.Top,
+			TextureGroupBox.Width,
+			newBottom - TextureGroupBox.Top);
 	}
 
 
