@@ -252,4 +252,16 @@ internal class Material
 	{
 		mMaterialID	=id;
 	}
+
+
+	internal bool HasTexture()
+	{
+		if(mPSName == null || mPSName == "")
+		{
+			return	false;
+		}
+
+		//a bit of an assumption here
+		return	mPSName.Contains("Tex");
+	}
 }

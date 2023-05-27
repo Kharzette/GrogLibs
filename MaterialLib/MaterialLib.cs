@@ -448,4 +448,15 @@ public partial class MaterialLib
 
 		return	mMats[matName].mMeshVars;
 	}
+
+
+	public bool MaterialHasTexture(string matName)
+	{
+		if(!mMats.ContainsKey(matName))
+		{
+			return	false;
+		}
+
+		return	mMats[matName].HasTexture();
+	}
 }

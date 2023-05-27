@@ -664,7 +664,7 @@ public partial class MaterialForm : Form
 				Texture1Pic.Tag	=mm.Texture1;
 
 				MeshMatGroupBox.Enabled	=true;
-				TextureGroupBox.Enabled	=false;
+				TextureGroupBox.Enabled	=mMatLib.MaterialHasTexture(matName);
 			}
 
 			return;

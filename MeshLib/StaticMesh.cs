@@ -120,6 +120,10 @@ public partial class StaticMesh
 
 	public int GetPartCount()
 	{
+		if(mParts == null)
+		{
+			return	0;
+		}
 		return	mParts.Count;
 	}
 
