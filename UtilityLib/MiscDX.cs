@@ -342,4 +342,10 @@ public static partial class Misc
 	{
 		return	new Color(col.R, col.G, col.B, col.A);
 	}
+
+
+	public static Vector4 SystemColorToV4Color(System.Drawing.Color col)
+	{
+		return	new Vector4(col.R, col.G, col.B, col.A);
+	}
 }

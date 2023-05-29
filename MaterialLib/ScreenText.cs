@@ -42,6 +42,7 @@ public class ScreenText
 	ID3D11PixelShader			mPS;
 	ID3D11DepthStencilState		mDSS;
 	ID3D11BlendState			mBS;
+	ID3D11SamplerState			mSS;
 
 	Memory<TextVert>	mTextBuf;
 
@@ -87,6 +88,7 @@ public class ScreenText
 		mPS		=sk.GetPixelShader("TextPS");
 		mDSS	=sk.GetDepthStencilState("DisableDepth");
 		mBS		=sk.GetBlendState("AlphaBlending");
+		mSS		=sk.GetSamplerState("PointClamp");
 	}
 
 
@@ -302,6 +304,8 @@ public class ScreenText
 		mGD.DC.VSSetShader(mVS);
 		mGD.DC.PSSetShader(mPS);
 		mGD.DC.PSSetShaderResource(0, mFontSRV);
+
+		mGD.DC.PSSetSampler(0, mSS);
 
 		mGD.DC.OMSetDepthStencilState(mDSS);
 		mGD.DC.OMSetBlendState(mBS);
