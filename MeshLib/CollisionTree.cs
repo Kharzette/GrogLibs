@@ -15,9 +15,9 @@ public class CollisionNode
 	public const int	Capsule	=2;
 	public const int	Invalid	=3;
 
-	BoundingBox		?mBox;
-	BoundingSphere	?mSphere;
-	BoundingCapsule	?mCapsule;
+	public BoundingBox		?mBox;
+	public BoundingSphere	?mSphere;
+	public BoundingCapsule	?mCapsule;
 
 	int	mShape;
 
@@ -93,7 +93,7 @@ public class CollisionNode
 	}
 
 
-	void	CreateKid(int shape, BoundingBox ?box,
+	int	CreateKid(int shape, BoundingBox ?box,
 					BoundingSphere ?sp, BoundingCapsule ?cap)
 	{
 		CollisionNode	kid	=new CollisionNode();
@@ -104,27 +104,54 @@ public class CollisionNode
 		kid.mSphere		=sp;
 		kid.mCapsule	=cap;
 		kid.mShape		=shape;
+
+		return	kid.GetHashCode();
 	}
 
 
-	public void	CreateKid(BoundingBox box)
+	public int	CreateKid(BoundingBox box)
 	{
-		CreateKid(Box, box, null, null);
+		return	CreateKid(Box, box, null, null);
 	}
 
-	public void	CreateKid(BoundingSphere sp)
+	public int	CreateKid(BoundingSphere sp)
 	{
-		CreateKid(Sphere, null, sp, null);
+		return	CreateKid(Sphere, null, sp, null);
 	}
 
-	public void	CreateKid(BoundingCapsule cap)
+	public int	CreateKid(BoundingCapsule cap)
 	{
-		CreateKid(Capsule, null, null, cap);
+		return	CreateKid(Capsule, null, null, cap);
 	}
 
 	public int GetShape()
 	{
 		return	mShape;
+	}
+
+
+	public void NukeKid(CollisionNode kid)
+	{
+		if(!mKids.Contains(kid))
+		{
+			//not our kid
+			return;
+		}
+
+		kid.NukeAll();
+
+		mKids.Remove(kid);
+	}
+
+
+	internal void NukeAll()
+	{
+		foreach(CollisionNode kid in mKids)
+		{
+			kid.NukeAll();
+		}
+
+		mKids.Clear();
 	}
 }
 
@@ -138,6 +165,12 @@ public class CollisionTree
 	public CollisionNode	GetRoot()
 	{
 		return	mRoot;
+	}
+
+
+	public void NukeAll()
+	{
+		mRoot.NukeAll();
 	}
 
 
