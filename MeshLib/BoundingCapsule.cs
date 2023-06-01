@@ -16,6 +16,9 @@ public struct BoundingCapsule
 	internal float	mLength;	//distance between cap sphere centers
 								//not the actual full length of the capsule	
 
+	const float	MinSize	=0.001f;
+
+
 	internal BoundingCapsule(float rad, float len)
 	{
 		mRadius	=rad;
@@ -34,6 +37,19 @@ public struct BoundingCapsule
 	{
 		bw.Write(mRadius);
 		bw.Write(mLength);
+	}
+
+
+	internal void IncLength(float delta)
+	{
+		//don't allow negative
+		mLength	=MathHelper.Max(mLength + delta, MinSize);
+	}
+
+	internal void IncRadius(float delta)
+	{
+		//don't allow negative
+		mRadius	=MathHelper.Max(mRadius + delta, MinSize);
 	}
 
 

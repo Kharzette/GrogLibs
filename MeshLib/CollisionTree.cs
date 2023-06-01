@@ -19,7 +19,10 @@ public class CollisionNode
 	public BoundingSphere	?mSphere;
 	public BoundingCapsule	?mCapsule;
 
-	int	mShape;
+	//capsule has no position since it was made for bones
+	public Vector3			mPosition;
+
+	int		mShape;
 
 	public List<CollisionNode>	mKids	=new List<CollisionNode>();
 
@@ -152,6 +155,93 @@ public class CollisionNode
 		}
 
 		mKids.Clear();
+	}
+
+
+	public void AdjustLength(float lenDelta)
+	{
+		if(mShape == Box && mBox != null)
+		{
+			Vector3	min	=mBox.Value.Min;
+			Vector3	max	=mBox.Value.Max;
+
+			max.Z	+=lenDelta;
+
+			mBox	=new BoundingBox(min, max);
+		}
+		else if(mShape == Sphere && mSphere != null)
+		{
+			//len key for spheres does radius
+			mSphere	=new BoundingSphere(mSphere.Value.Center,
+						mSphere.Value.Radius + lenDelta);
+		}
+		else if(mShape == Capsule && mCapsule != null)	//capsule
+		{
+			mCapsule.Value.IncLength(lenDelta);
+		}
+	}
+
+	public void AdjustDepth(float depthDelta)
+	{
+		//only really makes sense for boxes
+		if(mShape != Box || mBox == null)
+		{
+			return;
+		}
+		Vector3	min	=mBox.Value.Min;
+		Vector3	max	=mBox.Value.Max;
+
+		min.Y	-=depthDelta * 0.5f;
+		max.Y	+=depthDelta * 0.5f;
+
+		mBox	=new BoundingBox(min, max);
+	}
+
+	public void AdjustRadius(float radiusDelta)
+	{
+		if(mShape == Box && mBox != null)
+		{
+			Vector3	min	=mBox.Value.Min;
+			Vector3	max	=mBox.Value.Max;
+
+			min.X	-=radiusDelta * 0.5f;
+			max.X	+=radiusDelta * 0.5f;
+
+			mBox	=new BoundingBox(min, max);
+		}
+		else if(mShape == Sphere && mSphere != null)
+		{
+			//len key for spheres does radius
+			mSphere	=new BoundingSphere(mSphere.Value.Center,
+						mSphere.Value.Radius + radiusDelta);
+		}
+		else if(mShape == Capsule && mCapsule != null)	//capsule
+		{
+			mCapsule.Value.IncRadius(radiusDelta);
+		}
+	}
+
+	public void Move(Vector3 delta)
+	{
+		if(mShape == Box && mBox != null)
+		{
+			Vector3	min	=mBox.Value.Min;
+			Vector3	max	=mBox.Value.Max;
+
+			min	+=delta;
+			max	+=delta;
+
+			mBox	=new BoundingBox(min, max);
+		}
+		else if(mShape == Sphere && mSphere != null)
+		{
+			mSphere	=new BoundingSphere(mSphere.Value.Center + delta,
+						mSphere.Value.Radius);
+		}
+		else if(mShape == Capsule && mCapsule != null)	//capsule
+		{
+			mPosition	+=delta;
+		}
 	}
 }
 
