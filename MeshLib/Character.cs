@@ -121,6 +121,8 @@ public partial class Character
 		mPartMats.Clear();
 
 		mBones	=null;
+		
+		mBound.FreeAll();
 	}
 
 

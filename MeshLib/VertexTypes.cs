@@ -134,6 +134,12 @@ public static class VertexTypes
 		VertexTypes.AddType(typeof(VPosNormTex0Col0F));
 		VertexTypes.AddType(typeof(VPosNormTex04Tex14Tex24Color0F));
 		VertexTypes.AddType(typeof(VPosNormTex0F));
+		VertexTypes.AddType(typeof(VPosNormTex0XBOX));
+	}
+
+	public static int	GetNumTypes()
+	{
+		return	mTypes.Count;
 	}
 
 	public static void AddType(Type t)
@@ -238,6 +244,9 @@ public static class VertexTypes
 	public static Type GetMatch(bool bPos, bool bNorm, bool bBoneIdx,
 		bool bBoneWeight, bool bTan, bool bBiTan, int numTex, int numColor)
 	{
+		//hard coding for ludum dare
+		return	typeof(VPosNormTex0XBOX);
+
 		foreach(Type t in mTypes)
 		{
 			//only support 1 position

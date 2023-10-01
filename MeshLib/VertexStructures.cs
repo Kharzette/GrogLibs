@@ -1970,3 +1970,15 @@ public struct VPosNormTex0F
 	[FieldOffset(28)]
 	public Vector2	TexCoord0;
 }
+
+//for ye olde xboxen
+[StructLayout(LayoutKind.Explicit, Pack = 0)]
+public struct VPosNormTex0XBOX
+{
+	[FieldOffset(0)]
+	public Vector3	Position;
+	[FieldOffset(12)]
+	public Vector3	Normal;
+	[FieldOffset(24)]
+	public Vector2	TexCoord0;
+}

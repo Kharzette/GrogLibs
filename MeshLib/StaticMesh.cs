@@ -21,7 +21,7 @@ public partial class StaticMesh
 	Matrix4x4	mTransform;
 
 	//bounding information
-	MeshBound	mBounds	=new MeshBound();
+	MeshBound	mBound;
 
 	//mesh parts and their relative xforms
 	//should always have the same count
@@ -62,7 +62,8 @@ public partial class StaticMesh
 
 		mTransform	=FileUtil.ReadMatrix(br);
 
-		mBounds.Read(br);
+		mBound	=new MeshBound();
+		mBound.Read(br);
 
 		int	numParts	=br.ReadInt32();
 
@@ -94,7 +95,7 @@ public partial class StaticMesh
 
 		mParts	=null;
 
-		mBounds.FreeAll();
+		mBound.FreeAll();
 	}
 
 
@@ -142,15 +143,15 @@ public partial class StaticMesh
 
 	public void GetRoughBounds(out BoundingBox ?box, out BoundingSphere ?sph)
 	{
-		if(mBounds == null)
+		if(mBound == null)
 		{
 			box	=null;
 			sph	=null;
 			return;
 		}
 		
-		box	=mBounds.GetRoughBox();
-		sph	=mBounds.GetRoughSphere();
+		box	=mBound.GetRoughBox();
+		sph	=mBound.GetRoughSphere();
 	}
 
 
@@ -166,12 +167,12 @@ public partial class StaticMesh
 	{
 		hitPos	=hitNorm	=Vector3.Zero;
 
-		if(!mBounds.RayIntersectRough(ref mTransform, startPos, endPos, rayRadius))
+		if(!mBound.RayIntersectRough(ref mTransform, startPos, endPos, rayRadius))
 		{
 			return	false;
 		}
 
-		return	mBounds.RayIntersectParts(ref mTransform, mTransforms,
+		return	mBound.RayIntersectParts(ref mTransform, mTransforms,
 			startPos, endPos, rayRadius,
 			out hitPos, out hitNorm);
 	}
@@ -321,8 +322,24 @@ public partial class StaticMesh
 	}
 
 
+	public void SaveParts(string pathDir)
+	{
+		foreach(Mesh m in mParts)
+		{
+			m.Write(pathDir + "/" + m.Name + ".mesh");
+		}
+	}
+
+	
 	public void SaveToFile(string fileName)
 	{
+		if(mBound == null)
+		{
+			Debug.WriteLine("Bound not set up yet!");
+			Debug.Assert(false);
+			return;
+		}
+
 		Debug.Assert(mParts.Count == mTransforms.Count);
 		Debug.Assert(mParts.Count == mPartMats.Count);
 
@@ -336,7 +353,7 @@ public partial class StaticMesh
 
 		FileUtil.WriteMatrix(bw, mTransform);
 
-		mBounds.Write(bw);
+		mBound.Write(bw);
 
 		bw.Write(mParts.Count);
 
@@ -351,53 +368,6 @@ public partial class StaticMesh
 	}
 
 
-	public bool ReadFromFile(string fileName)
-	{
-		if(!File.Exists(fileName))
-		{
-			return	false;
-		}
-
-		Stream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);
-		if(file == null)
-		{
-			return	false;
-		}
-		BinaryReader	br	=new BinaryReader(file);
-
-		UInt32	magic	=br.ReadUInt32();
-		if(magic != 0x57A71C15)
-		{
-			br.Close();
-			file.Close();
-			return	false;
-		}
-
-		mTransform	=FileUtil.ReadMatrix(br);
-
-		mBounds.Read(br);
-
-		int	numParts	=br.ReadInt32();
-
-		for(int i=0;i < numParts;i++)
-		{
-			Matrix4x4	mat	=FileUtil.ReadMatrix(br);
-
-			MeshMaterial	mm	=new MeshMaterial();
-
-			mm.Read(br);
-
-			mTransforms.Add(mat);
-			mPartMats.Add(mm);
-		}
-
-		br.Close();
-		file.Close();
-
-		return	true;
-	}
-
-
 	//this if for the DMN renderererererer
 	public void AssignMaterialIDs(MaterialLib.IDKeeper idk)
 	{
@@ -405,5 +375,17 @@ public partial class StaticMesh
 		{
 			mm.mMaterialID	=idk.GetID(mm.mMaterialName);
 		}
+	}
+
+
+	public bool GetSubBoundChoice(int idx)
+	{
+		return	mBound.GetSubBoundChoice(idx);
+	}
+
+
+	public int GetNumSubBounds()
+	{
+		return	mBound.GetNumSubBounds();
 	}
 }

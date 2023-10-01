@@ -30,6 +30,18 @@ internal class MeshBound
 	}
 
 
+	internal int GetNumSubBounds()
+	{
+		return	mChoices.Count;
+	}
+
+
+	internal bool GetSubBoundChoice(int idx)
+	{
+		return	mChoices[idx];
+	}
+
+
 	internal void Read(BinaryReader br)
 	{
 		Vector3	center	=FileUtil.ReadVector3(br);

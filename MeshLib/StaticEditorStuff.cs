@@ -34,7 +34,8 @@ public partial class StaticMesh
 
 	public void GenerateRoughBounds()
 	{
-		mBounds.ComputeOverall(mParts, mTransforms);
+		mBound	=new MeshBound();
+		mBound.ComputeOverall(mParts, mTransforms);
 	}
 
 
