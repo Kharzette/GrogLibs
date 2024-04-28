@@ -244,9 +244,6 @@ public static class VertexTypes
 	public static Type GetMatch(bool bPos, bool bNorm, bool bBoneIdx,
 		bool bBoneWeight, bool bTan, bool bBiTan, int numTex, int numColor)
 	{
-		//hard coding for ludum dare
-		return	typeof(VPosNormTex0XBOX);
-
 		foreach(Type t in mTypes)
 		{
 			//only support 1 position

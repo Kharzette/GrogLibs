@@ -33,6 +33,25 @@ public struct QFace
 	public int		mLightOfs;		
 }
 
+public struct QNode
+{
+	public int		mPlaneNum;
+	public int		mFront, mBack;			//neg numbers are -(leafs+1), not nodes
+	public Int16	mMinX, mMinY, mMinZ;
+	public Int16	mMaxX, mMaxY, mMaxZ;
+	public UInt16	mFirstFace, mNumFaces;
+}
+
+public struct QLeaf
+{
+	public int		mContents;
+	public Int16	mCluster, mArea;
+	public Int16	mMinX, mMinY, mMinZ;
+	public Int16	mMaxX, mMaxY, mMaxZ;
+	public UInt16	mFirstLeafFace, mNumLeafFaces;
+	public UInt16	mFirstLeafBrush, mNumLeafBrushes;
+}
+
 public struct QModel
 {
 	public Bounds	mBounds;
@@ -51,6 +70,8 @@ public class QBSPFile
 	public int			[]mSurfEdges;
 	public QModel		[]mModels;
 	public byte			[]mLightData;
+	public QNode		[]mNodes;
+	public QLeaf		[]mLeaves;
 
 	const int	HeaderLumps	=19;
 
@@ -201,6 +222,56 @@ public class QBSPFile
 		mLightData	=new byte[numLight];
 
 		br.Read(mLightData, 0, (int)numLight);
+
+		//nodes, 4
+		br.BaseStream.Seek(offsets[4], SeekOrigin.Begin);
+
+		uint	numNodes	=lens[4] * 24;
+
+		mNodes	=new QNode[numNodes];
+		for(int i=0;i < numNodes;i++)
+		{
+			mNodes[i].mPlaneNum	=br.ReadInt32();
+			mNodes[i].mFront	=br.ReadInt32();
+			mNodes[i].mBack		=br.ReadInt32();
+
+			mNodes[i].mMinX		=br.ReadInt16();
+			mNodes[i].mMinY		=br.ReadInt16();
+			mNodes[i].mMinZ		=br.ReadInt16();
+
+			mNodes[i].mMaxX		=br.ReadInt16();
+			mNodes[i].mMaxY		=br.ReadInt16();
+			mNodes[i].mMaxZ		=br.ReadInt16();
+
+			mNodes[i].mFirstFace	=br.ReadUInt16();
+			mNodes[i].mNumFaces		=br.ReadUInt16();
+		}
+
+		//leaves, 8
+		br.BaseStream.Seek(offsets[8], SeekOrigin.Begin);
+
+		uint	numLeaves	=lens[8] * 28;
+
+		mLeaves	=new QLeaf[numLeaves];
+		for(int i=0;i < numLeaves;i++)
+		{
+			mLeaves[i].mContents	=br.ReadInt32();
+			mLeaves[i].mCluster		=br.ReadInt16();
+			mLeaves[i].mArea		=br.ReadInt16();
+
+			mLeaves[i].mMinX		=br.ReadInt16();
+			mLeaves[i].mMinY		=br.ReadInt16();
+			mLeaves[i].mMinZ		=br.ReadInt16();
+
+			mLeaves[i].mMaxX		=br.ReadInt16();
+			mLeaves[i].mMaxY		=br.ReadInt16();
+			mLeaves[i].mMaxZ		=br.ReadInt16();
+
+			mLeaves[i].mFirstLeafFace	=br.ReadUInt16();
+			mLeaves[i].mNumLeafFaces	=br.ReadUInt16();
+			mLeaves[i].mFirstLeafBrush	=br.ReadUInt16();
+			mLeaves[i].mNumLeafBrushes	=br.ReadUInt16();
+		}
 
 		br.Close();
 		fs.Close();

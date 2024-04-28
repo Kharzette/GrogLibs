@@ -3,6 +3,9 @@ using System.Numerics;
 
 namespace UtilityLib;
 
+//this is all derived from
+//https://gafferongames.com/post/integration_basics/
+//which is a super good article
 public class Physics
 {
 	public struct PhyState

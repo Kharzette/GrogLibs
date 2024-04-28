@@ -436,12 +436,6 @@ internal class GBSPModel
 		GModel.mMaxs			=mBounds.mMaxs;
 		GModel.mFirstFace		=mFirstFace;
 		GModel.mNumFaces		=mNumFaces;
-		GModel.mFirstLeaf		=mFirstLeaf;
-		GModel.mNumLeafs		=mNumLeafs;
-		GModel.mFirstCluster	=mFirstCluster;
-		GModel.mNumClusters		=mNumClusters;
-		GModel.mAreaFront		=mAreaFront;
-		GModel.mAreaBack		=mAreaBack;
 
 		GModel.Write(bw);
 	}

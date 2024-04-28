@@ -1493,12 +1493,12 @@ public partial class Map
 
 
 #if !X64
-	public Int32	GetWorldFirstLeaf()
+/*	public Int32	GetWorldFirstLeaf()
 	{
 		return	mGFXModels[0].mFirstLeaf;
 	}
 
-/*
+
 	public string	GetMaterialNameForLeafFace(Int32 faceIndex)
 	{
 		GFXFace	f	=mGFXFaces[mGFXLeafFaces[faceIndex]];

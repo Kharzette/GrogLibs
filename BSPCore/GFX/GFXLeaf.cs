@@ -18,6 +18,19 @@ public class GFXLeaf
 	public Int32	mFirstSide;
 	public Int32	mNumSides;
 
+
+	public GFXLeaf() {	}
+	public GFXLeaf(QLeaf ql)
+	{
+		mContents		=(uint)ql.mContents;
+		mCluster		=ql.mCluster;
+		mArea			=ql.mArea;
+		mFirstPortal	=(Int32)ql.mFirstLeafFace;
+
+		mMins	=new Vector3(ql.mMinX, ql.mMinY, ql.mMinZ);
+		mMaxs	=new Vector3(ql.mMinX, ql.mMinY, ql.mMinZ);
+	}
+
 	public void Write(BinaryWriter bw)
 	{
 		bw.Write(mContents);

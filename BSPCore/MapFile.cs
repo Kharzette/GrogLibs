@@ -12,6 +12,30 @@ namespace BSPCore;
 
 public partial class Map
 {
+	public GFXHeader	ConvertQBSPFile(QBSPFile qFile)
+	{
+		GFXHeader	ret	=new GFXHeader();
+
+		ret.mbHasMaterialVis	=false;
+		ret.mbHasVis			=false;
+		ret.mbHasLight			=false;
+		ret.mTag				=0x47425350;
+
+		mGFXModels	=new GFXModel[qFile.mModels.Length];
+		for(int i=0;i < qFile.mModels.Length;i++)
+		{
+			mGFXModels[i]	=new GFXModel(qFile.mModels[i]);
+		}
+
+		mGFXNodes	=new GFXNode[qFile.mNodes.Length];
+		for(int i=0;i < qFile.mNodes.Length;i++)
+		{
+			mGFXNodes[i]	=new GFXNode(qFile.mNodes[i]);
+		}
+
+		return	ret;
+	}
+
 	public GFXHeader LoadGBSPFile(string fileName)
 	{
 		FileStream	file	=new FileStream(fileName, FileMode.Open, FileAccess.Read);

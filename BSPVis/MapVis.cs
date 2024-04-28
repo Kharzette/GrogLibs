@@ -484,6 +484,7 @@ public partial class VisMap
 
 	public void VisMaterials(GraphicsDevice gd, List<string> matNames)
 	{
+		/*
 		Dictionary<Int32, List<string>>	visibleMaterials
 			=new Dictionary<Int32, List<string>>();
 
@@ -569,6 +570,7 @@ public partial class VisMap
 		}
 
 		CoreEvents.Print("Material Vis Complete:  " + mGFXMaterialVisData.Length + " bytes.\n");
+		*/
 	}
 #endif
 

@@ -14,6 +14,21 @@ public class GFXNode
 	public Vector3	mMins, mMaxs;
 
 
+	public GFXNode()	{}
+	public GFXNode(QNode qn)
+	{
+		mFront		=qn.mFront;
+		mBack		=qn.mBack;
+		mNumFaces	=qn.mNumFaces;
+		mFirstFace	=qn.mFirstFace;
+		mPlaneNum	=qn.mPlaneNum;
+
+		mMins	=new Vector3(qn.mMinX, qn.mMinY, qn.mMinZ);
+		mMaxs	=new Vector3(qn.mMinX, qn.mMinY, qn.mMinZ);
+	}
+
+
+
 	public void Write(BinaryWriter bw)
 	{
 		bw.Write(mFront);
