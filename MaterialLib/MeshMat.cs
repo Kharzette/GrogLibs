@@ -12,7 +12,7 @@ namespace MaterialLib;
 
 //Material stuff specific to static / character meshes
 //This might get passed to GUI stuff so public
-public class MeshMat
+public partial class MeshMat
 {
 	Vector4	mSolidColour, mSpecColor;
 	Vector4	mLightColor0, mLightColor1, mLightColor2;
@@ -122,25 +122,5 @@ public class MeshMat
 	{
 		get	{	return	mTexture1;	}
 		set	{	mTexture1	=value;	}
-	}
-
-
-	internal void Apply(ID3D11DeviceContext dc,
-						CBKeeper cbk, StuffKeeper sk)
-	{
-		cbk.SetTrilights(mLightColor0, mLightColor1, mLightColor2, mLightDirection);
-		cbk.SetSpecular(mSpecColor, mSpecPower);
-		cbk.SetSolidColour(mSolidColour);
-
-		ID3D11ShaderResourceView	srv	=sk.GetSRV(mTexture0);
-		if(srv != null)
-		{
-			dc.PSSetShaderResource(0, srv);
-		}
-		srv	=sk.GetSRV(mTexture1);
-		if(srv != null)
-		{
-			dc.PSSetShaderResource(1, srv);
-		}
 	}
 }

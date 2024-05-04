@@ -349,17 +349,6 @@ public partial class Character
 	}
 
 
-	public void BuildDebugBoundDrawData(CommonPrims cprims)
-	{
-		mSkin?.BuildDebugBoundDrawData(cprims);
-	}
-
-	public void BuildDebugBoundDrawData(int index, CommonPrims cprims)
-	{
-		mSkin?.BuildDebugBoundDrawData(index, cprims);
-	}
-
-
 	void ComputeBoneBounds(Skeleton skel)
 	{
 		int	numBones	=skel.GetNumIndexedBones();

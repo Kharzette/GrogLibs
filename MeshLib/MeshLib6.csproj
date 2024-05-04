@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="CommonPrims.cs"/>
+    <Compile Remove="DrawCall.cs"/>
+    <Compile Remove="IndoorMesh.cs"/>
+    <Compile Remove="ShadowHelper.cs"/>
+    <Compile Remove="ShadowKeeper.cs"/>
+    <Compile Remove="SkinRunTime.cs"/>
+    <Compile Remove="MeshRunTime.cs"/>
+    <Compile Remove="CharacterRunTime.cs"/>
+    <Compile Remove="StaticMeshRunTime.cs"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\UtilityLib\UtilityLib6.csproj"/>
+    <ProjectReference Include="..\MaterialLib\MaterialLib6.csproj"/>
+  </ItemGroup>
+</Project>

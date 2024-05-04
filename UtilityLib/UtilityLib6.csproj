@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="GraphicsDevice.cs"/>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Vortice.Direct3D11" Version="2.2.0" />
+    <PackageReference Include="Vortice.DirectX" Version="2.2.0" />
+    <PackageReference Include="Vortice.DXGI" Version="2.2.0" />
+  </ItemGroup>
+</Project>

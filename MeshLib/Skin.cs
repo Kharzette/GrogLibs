@@ -13,7 +13,7 @@ namespace MeshLib;
 //all mesh parts will index in the same way
 //The tool will need to make sure the inverse bind poses
 //are all the same for each bone
-public class Skin
+public partial class Skin
 {
 	Dictionary<int, Matrix4x4>	mInverseBindPoses	=new Dictionary<int, Matrix4x4>();
 
@@ -93,38 +93,6 @@ public class Skin
 		for(int i=0;i < toMul.Count;i++)
 		{
 			toMul[i]	=Mathery.TransformCoordinate(toMul[i], ref ibp);
-		}
-	}
-
-
-	internal void BuildDebugBoundDrawData(int index, CommonPrims cprims)
-	{
-		if(!mBoneColShapes.ContainsKey(index))
-		{
-			return;
-		}
-
-		int	choice	=mBoneColShapes[index];
-		if(choice == Box)
-		{
-			cprims.AddBox(index, mBoneBoxes[index]);
-		}
-		else if(choice == Sphere)
-		{
-			cprims.AddSphere(index, mBoneSpheres[index]);
-		}
-		else if(choice == Capsule)
-		{
-			cprims.AddCapsule(index, mBoneCapsules[index]);
-		}
-	}
-
-
-	internal void BuildDebugBoundDrawData(CommonPrims cprims)
-	{
-		foreach(KeyValuePair<int, int> choice in mBoneColShapes)
-		{
-			BuildDebugBoundDrawData(choice.Key, cprims);
 		}
 	}
 

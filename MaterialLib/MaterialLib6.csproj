@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="DynamicLights.cs"/>
+    <Compile Remove="ScreenText.cs"/>
+    <Compile Remove="StuffKeeper.cs"/>
+    <Compile Remove="TexAtlas.cs"/>
+    <Compile Remove="PostProcess.cs"/>
+    <Compile Remove="Screen.cs"/>
+    <Compile Remove="ScreenUI.cs"/>
+    <Compile Remove="MaterialLibRunTime.cs"/>
+    <Compile Remove="BSPMatRunTime.cs"/>
+    <Compile Remove="MeshMatRunTime.cs"/>
+    <Compile Remove="CharacterMatRunTime.cs"/>
+    <Compile Remove="MaterialRunTime.cs"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\UtilityLib\UtilityLib6.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Vortice.D3DCompiler" Version="2.2.0" />
+    <PackageReference Include="Vortice.Direct2D1" Version="2.2.0" />
+    <PackageReference Include="Vortice.DXGI" Version="2.2.0" />
+  </ItemGroup>
+</Project>

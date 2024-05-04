@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Numerics;
 
 
 namespace UtilityLib;
 
 public static partial class Mathery
 {
+	public const float	PI_OVER_180	=(float)Math.PI / 180.0f;
+
 	public static int NextPowerOfTwo(int val)
 	{
 		int	count	=0;
@@ -153,5 +156,11 @@ public static partial class Mathery
 #else
 		return	bool.TryParse(str, out val);
 #endif
+	}
+
+
+	public static float ToRadians(float degrees)
+	{
+		return	degrees * PI_OVER_180;
 	}
 }
