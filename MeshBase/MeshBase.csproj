@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!--my own library references-->
+  <ItemGroup>
+    <ProjectReference Include="..\UtilityBase\UtilityBase.csproj" />
+  </ItemGroup>
+
+  <!--external library references-->
+  <ItemGroup>
+    <PackageReference Include="Vortice.Direct3D11" Version="2.2.0" />
+    <PackageReference Include="Vortice.DirectX" Version="2.2.0" />
+    <PackageReference Include="Vortice.DXGI" Version="2.2.0" />
+  </ItemGroup>
+</Project>
