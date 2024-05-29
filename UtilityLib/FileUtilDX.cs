@@ -155,6 +155,14 @@ public partial class FileUtil
 		bw.Write(vec.W);
 	}
 
+	public static void WriteVector4(BinaryWriter bw, Vector3 vec)
+	{
+		bw.Write(vec.X);
+		bw.Write(vec.Y);
+		bw.Write(vec.Z);
+		bw.Write(1.0f);
+	}
+
 
 	public static Vector4 ReadVector4(BinaryReader br)
 	{

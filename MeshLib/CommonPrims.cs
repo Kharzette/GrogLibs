@@ -110,14 +110,12 @@ public class CommonPrims
 		dc.VSSetShader(mVS);
 		dc.PSSetShader(mPS);
 
-		Vector4	lightColor2	=Vector4.One * 0.8f;
-		Vector4	lightColor3	=Vector4.One * 0.6f;
-
-		lightColor2.W	=lightColor3.W	=1f;
+		Vector3	lightColor2	=Vector3.One * 0.8f;
+		Vector3	lightColor3	=Vector3.One * 0.6f;
 
 		cbk.SetSolidColour(color);
-		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
-		cbk.SetSpecular(Vector4.One, 1);
+		cbk.SetTrilights(Vector3.One, lightColor2, lightColor3, mLightDir);
+		cbk.SetSpecular(Vector3.One, 1);
 		cbk.SetWorldMat(mAxisScale * transform);
 		cbk.UpdateObject(dc);
 
@@ -143,17 +141,15 @@ public class CommonPrims
 		Vector4	redColor	=Vector4.One;
 		Vector4	greenColor	=Vector4.One;
 		Vector4	blueColor	=Vector4.One;
-		Vector4	lightColor2	=Vector4.One * 0.8f;
-		Vector4	lightColor3	=Vector4.One * 0.6f;
-
-		lightColor2.W	=lightColor3.W	=1f;
+		Vector3	lightColor2	=Vector3.One * 0.8f;
+		Vector3	lightColor3	=Vector3.One * 0.6f;
 
 		redColor.Y	=redColor.Z	=greenColor.X	=greenColor.Z	=blueColor.X	=blueColor.Y	=0f;
 
 		//X axis red
 		cbk.SetSolidColour(redColor);
-		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
-		cbk.SetSpecular(Vector4.One, 1);
+		cbk.SetTrilights(Vector3.One, lightColor2, lightColor3, mLightDir);
+		cbk.SetSpecular(Vector3.One, 1);
 		cbk.UpdateObject(dc);
 		mXAxis.Draw(dc);
 
@@ -221,14 +217,12 @@ public class CommonPrims
 		dc.VSSetShader(mVS);
 		dc.PSSetShader(mPS);
 
-		Vector4	lightColor2	=Vector4.One * 0.8f;
-		Vector4	lightColor3	=Vector4.One * 0.6f;
-
-		lightColor2.W	=lightColor3.W	=1f;
+		Vector3	lightColor2	=Vector3.One * 0.8f;
+		Vector3	lightColor3	=Vector3.One * 0.6f;
 
 		cbk.SetSolidColour(color);
-		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
-		cbk.SetSpecular(Vector4.One, 1);
+		cbk.SetTrilights(Vector3.One, lightColor2, lightColor3, mLightDir);
+		cbk.SetSpecular(Vector3.One, 1);
 		cbk.SetWorldMat(transform);
 		cbk.UpdateObject(dc);
 
@@ -249,12 +243,12 @@ public class CommonPrims
 		dc.VSSetShader(mVS);
 		dc.PSSetShader(mPS);
 
-		Vector4	lightColor2	=Vector4.One * 0.8f;
-		Vector4	lightColor3	=Vector4.One * 0.6f;
+		Vector3	lightColor2	=Vector3.One * 0.8f;
+		Vector3	lightColor3	=Vector3.One * 0.6f;
 
 		cbk.SetSolidColour(color);
-		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
-		cbk.SetSpecular(Vector4.One, 1);
+		cbk.SetTrilights(Vector3.One, lightColor2, lightColor3, mLightDir);
+		cbk.SetSpecular(Vector3.One, 1);
 		cbk.SetWorldMat(transform);
 		cbk.UpdateObject(dc);
 		mBoxes[index].Draw(dc);
@@ -274,12 +268,12 @@ public class CommonPrims
 		dc.VSSetShader(mVS);
 		dc.PSSetShader(mPS);
 
-		Vector4	lightColor2	=Vector4.One * 0.8f;
-		Vector4	lightColor3	=Vector4.One * 0.6f;
+		Vector3	lightColor2	=Vector3.One * 0.8f;
+		Vector3	lightColor3	=Vector3.One * 0.6f;
 
 		cbk.SetSolidColour(color);
-		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
-		cbk.SetSpecular(Vector4.One, 1);
+		cbk.SetTrilights(Vector3.One, lightColor2, lightColor3, mLightDir);
+		cbk.SetSpecular(Vector3.One, 1);
 		cbk.SetWorldMat(transform);
 		cbk.UpdateObject(dc);
 		mSpheres[index].Draw(dc);

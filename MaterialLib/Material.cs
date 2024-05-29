@@ -232,8 +232,8 @@ internal class Material
 	}
 
 
-	internal void SetTrilightValues(Vector4 col0, Vector4 col1,
-									Vector4 col2, Vector3 lightDir)
+	internal void SetTrilightValues(Vector3 col0, Vector3 col1,
+									Vector3 col2, Vector3 lightDir)
 	{
 		mMeshVars.LightColor0		=col0;
 		mMeshVars.LightColor1		=col1;

@@ -66,7 +66,7 @@ public partial class MaterialLib
 	}
 
 
-	public void SetTriLightValues(Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
+	public void SetTriLightValues(Vector3 col0, Vector3 col1, Vector3 col2, Vector3 lightDir)
 	{
 		foreach(KeyValuePair<string, Material> mat in mMats)
 		{
@@ -85,7 +85,7 @@ public partial class MaterialLib
 
 
 	public void SetTriLightValues(string matName,
-		Vector4 col0, Vector4 col1, Vector4 col2, Vector3 lightDir)
+		Vector3 col0, Vector3 col1, Vector3 col2, Vector3 lightDir)
 	{
 		if(!mMats.ContainsKey(matName))
 		{

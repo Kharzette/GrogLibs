@@ -649,13 +649,13 @@ public partial class MaterialForm : Form
 				SolidColor.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.SolidColour));
 
 				//specular
-				SpecColor.BackColor		=Color.FromArgb(Misc.Vector4ToARGB(mm.SpecColor));
+				SpecColor.BackColor		=Color.FromArgb(Misc.Vector3ToARGB(mm.SpecColor));
 				SpecPower.Value			=(decimal)mm.SpecPower;
 
 				//trilight
-				LightColor0.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.LightColor0));
-				LightColor1.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.LightColor1));
-				LightColor2.BackColor	=Color.FromArgb(Misc.Vector4ToARGB(mm.LightColor2));
+				LightColor0.BackColor	=Color.FromArgb(Misc.Vector3ToARGB(mm.LightColor0));
+				LightColor1.BackColor	=Color.FromArgb(Misc.Vector3ToARGB(mm.LightColor1));
+				LightColor2.BackColor	=Color.FromArgb(Misc.Vector3ToARGB(mm.LightColor2));
 
 				Texture0Pic.Image	=mSKeeper.GetTextureBitmap(mm.Texture0);
 				Texture1Pic.Image	=mSKeeper.GetTextureBitmap(mm.Texture1);
@@ -861,14 +861,14 @@ public partial class MaterialForm : Form
 	void SetAllMeshValues(MeshMat mmat)
 	{
 		//trilight values
-		mmat.LightColor0	=Misc.ARGBToVector4(LightColor0.BackColor.ToArgb());
-		mmat.LightColor1	=Misc.ARGBToVector4(LightColor1.BackColor.ToArgb());
-		mmat.LightColor2	=Misc.ARGBToVector4(LightColor2.BackColor.ToArgb());
+		mmat.LightColor0	=Misc.ARGBToVector3(LightColor0.BackColor.ToArgb());
+		mmat.LightColor1	=Misc.ARGBToVector3(LightColor1.BackColor.ToArgb());
+		mmat.LightColor2	=Misc.ARGBToVector3(LightColor2.BackColor.ToArgb());
 
 		mmat.SolidColour	=Misc.ARGBToVector4(SolidColor.BackColor.ToArgb());
 
 		//spec
-		mmat.SpecColor		=Misc.ARGBToVector4(SpecColor.BackColor.ToArgb());
+		mmat.SpecColor		=Misc.ARGBToVector3(SpecColor.BackColor.ToArgb());
 		mmat.SpecPower		=(float)SpecPower.Value;
 
 		//textures

@@ -102,16 +102,14 @@ public class DebugDraw
 		gd.DC.IASetVertexBuffer(0, mVB, 24);
 		gd.DC.IASetIndexBuffer(mIB, Format.R16_UInt, 0);
 
-		Vector4	lightColor2	=Vector4.One * 0.8f;
-		Vector4	lightColor3	=Vector4.One * 0.6f;
-
-		lightColor2.W	=lightColor3.W	=1f;
+		Vector3	lightColor2	=Vector3.One * 0.8f;
+		Vector3	lightColor3	=Vector3.One * 0.6f;
 
 		cbk.SetTransposedView(gd.GCam.ViewTransposed, gd.GCam.Position);
 		cbk.SetWorldMat(Matrix4x4.Identity);
 
-		cbk.SetTrilights(Vector4.One, lightColor2, lightColor3, mLightDir);
-		cbk.SetSpecular(Vector4.One, 1f);
+		cbk.SetTrilights(Vector3.One, lightColor2, lightColor3, mLightDir);
+		cbk.SetSpecular(Vector3.One, 1f);
 		cbk.UpdateObject(gd.DC);
 
 		cbk.SetCommonCBToShaders(gd.DC);

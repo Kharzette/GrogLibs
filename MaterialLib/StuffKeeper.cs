@@ -160,6 +160,7 @@ public class StuffKeeper
 	{
 		LoadEntryPoints();
 		LoadShaders(gd.GD, sm);
+		CreateShadersFromByteCode(gd.GD);
 		SaveSourceFileDates(sm);
 		LoadResources(gd);
 		LoadFonts(gd);
@@ -856,21 +857,25 @@ public class StuffKeeper
 
 	void LoadEntryPoints()
 	{
+		string	entryDir	="/ShadersWin64";
+
 		//see if Shader folder exists in Content
-		if(!Directory.Exists(mGameRootDir + "/ShadersWin64"))
+		if(!Directory.Exists(mGameRootDir + entryDir))
+		{
+			//try compiled if no src
+			entryDir	="/CompiledShaders";
+		}
+
+		if(!File.Exists(mGameRootDir + entryDir + "/VSEntryPoints.txt"))
 		{
 			return;
 		}
-		if(!File.Exists(mGameRootDir + "/ShadersWin64/VSEntryPoints.txt"))
-		{
-			return;
-		}
-		if(!File.Exists(mGameRootDir + "/ShadersWin64/PSEntryPoints.txt"))
+		if(!File.Exists(mGameRootDir + entryDir + "/PSEntryPoints.txt"))
 		{
 			return;
 		}
 
-		FileStream	fs	=new FileStream(mGameRootDir + "/ShadersWin64/VSEntryPoints.txt", FileMode.Open, FileAccess.Read);
+		FileStream	fs	=new FileStream(mGameRootDir + entryDir + "/VSEntryPoints.txt", FileMode.Open, FileAccess.Read);
 		if(fs == null)
 		{
 			return;
@@ -900,7 +905,7 @@ public class StuffKeeper
 			}
 		}
 
-		fs	=new FileStream(mGameRootDir + "/ShadersWin64/PSEntryPoints.txt", FileMode.Open, FileAccess.Read);
+		fs	=new FileStream(mGameRootDir + entryDir + "/PSEntryPoints.txt", FileMode.Open, FileAccess.Read);
 		if(fs == null)
 		{
 			return;
@@ -1130,7 +1135,10 @@ public class StuffKeeper
 			//the ones we didn't compile just need loading from disc
 			LoadCompiledShaders(dev, sm);
 		}
+	}
 
+	void CreateShadersFromByteCode(ID3D11Device dev)
+	{
 		//create shaders from bytecode
 		foreach(KeyValuePair<string, byte []> code in mVSCode)
 		{

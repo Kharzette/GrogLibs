@@ -14,7 +14,7 @@ public class ObjEventArgs : EventArgs
 }
 
 
-public static partial class Misc
+public static unsafe partial class Misc
 {
 	public static void SafeInvoke(this EventHandler eh, object sender)
 	{
@@ -86,5 +86,26 @@ public static partial class Misc
 	public static void ClearFlag(ref UInt32 val, UInt32 flag)
 	{
 		val	&=(~flag);
+	}
+
+
+	public static void MemCpy(float []src, float []dest, int byteSize)
+	{
+		fixed(float *pSrc = src)
+		{
+			fixed(float *pDst = dest)
+			{
+				Buffer.MemoryCopy(pSrc, pDst, byteSize, byteSize);
+			}
+		}
+	}
+
+
+	public static void MemCpy(float []src, float *pDest, int byteSize)
+	{
+		fixed(float *pSrc = src)
+		{
+			Buffer.MemoryCopy(pSrc, pDest, byteSize, byteSize);
+		}
 	}
 }

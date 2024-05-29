@@ -6,6 +6,8 @@ using System.Runtime.InteropServices;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
 using Vortice.Mathematics.PackedVector;
+using UtilityLib;
+using System.Runtime.CompilerServices;
 
 
 namespace MaterialLib;
@@ -20,8 +22,10 @@ public unsafe class CBKeeper
 		internal Matrix4x4	mView;
 		internal Matrix4x4	mProjection;
 		internal Matrix4x4	mLightViewProj;	//for shadows
-		internal Vector3	mEyePos;
-		internal UInt32		mPadding;		//pad to 16 boundary
+		internal Vector4	mEyePos;		//w unused
+		internal Vector4	mFog;			//start, end, enabled, unused
+		internal Vector4	mSkyGradient0;
+		internal Vector4	mSkyGradient1;
 	}
 
 	//CommonFunctions.hlsli
@@ -30,19 +34,17 @@ public unsafe class CBKeeper
 	{
 		internal Matrix4x4	mWorld;
 		internal Vector4	mSolidColour;
-		internal Vector4	mSpecColor;
+		internal Vector4	mSpecColorPow;	//power in w
 
 		//These are considered directional (no falloff)
+		//light direction in w component
 		internal Vector4	mLightColor0;		//trilights need 3 colors
 		internal Vector4	mLightColor1;		//trilights need 3 colors
 		internal Vector4	mLightColor2;		//trilights need 3 colors
 
-		internal Vector3	mLightDirection;
-		internal float		mSpecPower;
-
-		//material id for borders etc
-		internal int		mMaterialID;
-		internal Vector3	mDanglyForce;
+		//a force vector for doing physicsy stuff
+		//integer material id in w
+		internal Vector4	mDanglyForce;
 	}
 
 	//CommonFunctions.hlsli
@@ -71,7 +73,10 @@ public unsafe class CBKeeper
 	{
 		internal bool		mbTextureEnabled;
 		internal Vector2	mTexSize;
-		internal uint		mNumDynLights;
+		internal uint		mPadding;
+		//light style array, make sure size matches HLSL
+		//Should be float16 TODO
+		internal fixed float	mAniIntensities[NumAniIntensities];
 	}
 
 	//post.hlsl
@@ -99,7 +104,10 @@ public unsafe class CBKeeper
 
 		//padding
 		internal uint	mPad0, mPad1;
-	}
+		//gaussianblur stuff, make sure size matches Post.hlsl
+		internal fixed float	mWeightsX[KernelSize], mWeightsY[KernelSize];
+		internal fixed float	mOffsetsX[KernelSize], mOffsetsY[KernelSize];
+}
 
 	//TextMode.hlsl
 	[StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -115,18 +123,24 @@ public unsafe class CBKeeper
 		internal uint	mCharHeight;	//height of characters in texels in the font texture (fixed)
 	}
 
+	//Cel.hlsli
+	[StructLayout(LayoutKind.Sequential, Pack = 4)]
+	struct	CelStuff
+	{
+		internal Vector4	mValMin;
+		internal Vector4	mValMax;
+		internal Vector4	mSnapTo;
+
+		internal int		mNumSteps;
+		internal Vector3	mPad;
+	}
+
 	//Character.hlsl bone array
 	Matrix4x4	[]mBones;
-
-	//BSP.hlsl light style array
-	float	[]mAniIntensities;
 
 	//BSP.hlsl dynamic lights
 	Vector4	[]mDynPos;
 	Vector4	[]mDynColor;
-
-	//post.hlsl weights & offsets array
-	float	[]mWeightsOffsetsXY;
 
 	//gpu side
 	ID3D11Buffer	mPerObjectBuf;
@@ -134,11 +148,11 @@ public unsafe class CBKeeper
 	ID3D11Buffer	mTwoDBuf;
 	ID3D11Buffer	mCharacterBuf;
 	ID3D11Buffer	mBSPBuf;
-	ID3D11Buffer	mBSPStylesBuf;
 	ID3D11Buffer	mDynPosBuf, mDynColBuf;
-	ID3D11Buffer	mPostBuf, mPostWOXYBuf;
+	ID3D11Buffer	mPostBuf;
 	ID3D11Buffer	mPerShadowBuf;
 	ID3D11Buffer	mTextModeBuf;
+	ID3D11Buffer	mCelBuf;
 
 	//cpu side
 	PerObject	mPerObject;
@@ -148,12 +162,16 @@ public unsafe class CBKeeper
 	Post		mPost;
 	PerShadow	mPerShadow;
 	TextMode	mTextMode;
+	CelStuff	mCelStuff;
 
 
 	//ensure matches Character.hlsl
-	const int	MaxBones		=55;	//match CommonFunctions.hlsli
-	const int	NumStyles		=44;	//match bsp.hlsl
-	const int	MaxDynLights	=16;	//match bsp.hlsl
+	const int	MaxBones			=55;	//match CommonFunctions.hlsli
+	const int	NumStyles			=44;	//match bsp.hlsl
+	const int	MaxDynLights		=16;	//match bsp.hlsl
+	const int	NumAniIntensities	=44;
+	const int	Radius				=30;
+	const int	KernelSize			=(Radius * 2 + 1);
 
 
 	//stuffkeeper constructs this
@@ -170,9 +188,9 @@ public unsafe class CBKeeper
 		mTwoDBuf.Dispose();
 		mCharacterBuf.Dispose();
 		mBSPBuf.Dispose();
-		mBSPStylesBuf.Dispose();
 		mPerShadowBuf.Dispose();
 		mTextModeBuf.Dispose();
+		mCelBuf.Dispose();
 		mDynColBuf.Dispose();
 		mDynPosBuf.Dispose();
 	}
@@ -188,9 +206,9 @@ public unsafe class CBKeeper
 		mPostBuf		=MakeConstantBuffer(dev, sizeof(Post));
 		mPerShadowBuf	=MakeConstantBuffer(dev, sizeof(PerShadow));
 		mTextModeBuf	=MakeConstantBuffer(dev, sizeof(TextMode));
+		mCelBuf			=MakeConstantBuffer(dev, sizeof(CelStuff));
 
 		//array buffers, C# is a pain sometimes
-		mBSPStylesBuf	=MakeConstantBuffer(dev, NumStyles * sizeof(float));
 		mDynColBuf		=MakeConstantBuffer(dev, MaxDynLights * sizeof(Vector4));
 		mDynPosBuf		=MakeConstantBuffer(dev, MaxDynLights * sizeof(Vector4));
 		mCharacterBuf	=MakeConstantBuffer(dev, sizeof(Matrix4x4) * MaxBones);
@@ -200,22 +218,13 @@ public unsafe class CBKeeper
 		mPerFrame		=new PerFrame();
 		mTwoD			=new TwoD();
 		mBones			=new Matrix4x4[MaxBones];
-		mAniIntensities	=new float[NumStyles];
 		mBSP			=new BSP();
 		mPost			=new Post();
 		mPerShadow		=new PerShadow();
 		mTextMode		=new TextMode();
+		mCelStuff		=new CelStuff();
 		mDynColor		=new Vector4[MaxDynLights];
 		mDynPos			=new Vector4[MaxDynLights];
-
-		int	woxySize	=61 * 4;
-
-		if(dev.FeatureLevel == FeatureLevel.Level_9_3)
-		{
-			woxySize	=15 * 4;
-		}
-		mWeightsOffsetsXY	=new float[woxySize];
-		mPostWOXYBuf		=MakeConstantBuffer(dev, sizeof(float) * woxySize);
 	}
 
 
@@ -243,41 +252,39 @@ public unsafe class CBKeeper
 		dc.PSSetConstantBuffer(0, mPerObjectBuf);
 		dc.VSSetConstantBuffer(1, mPerFrameBuf);
 		dc.PSSetConstantBuffer(1, mPerFrameBuf);
+		dc.VSSetConstantBuffer(10, mCelBuf);
+		dc.PSSetConstantBuffer(10, mCelBuf);
 	}
 
 	public void Set2DCBToShaders(ID3D11DeviceContext dc)
 	{
 		//2d
-		dc.VSSetConstantBuffer(3, mTwoDBuf);
-		dc.PSSetConstantBuffer(3, mTwoDBuf);
+		dc.VSSetConstantBuffer(7, mTwoDBuf);
+		dc.PSSetConstantBuffer(7, mTwoDBuf);
 	}
 
 	public void SetCharacterToShaders(ID3D11DeviceContext dc)
 	{
 		//character
-		dc.VSSetConstantBuffer(4, mCharacterBuf);
-		dc.PSSetConstantBuffer(4, mCharacterBuf);
+		dc.VSSetConstantBuffer(3, mCharacterBuf);
+		dc.PSSetConstantBuffer(3, mCharacterBuf);
 	}
 
 	public void SetBSPToShaders(ID3D11DeviceContext dc)
 	{
 		//bsp
-		dc.VSSetConstantBuffer(5, mBSPBuf);
-		dc.PSSetConstantBuffer(5, mBSPBuf);
-		dc.VSSetConstantBuffer(6, mBSPStylesBuf);
-		dc.PSSetConstantBuffer(6, mBSPStylesBuf);
-		dc.VSSetConstantBuffer(7, mDynPosBuf);
-		dc.PSSetConstantBuffer(7, mDynPosBuf);
-		dc.VSSetConstantBuffer(8, mDynColBuf);
-		dc.PSSetConstantBuffer(8, mDynColBuf);
+		dc.VSSetConstantBuffer(4, mBSPBuf);
+		dc.PSSetConstantBuffer(4, mBSPBuf);
+		dc.VSSetConstantBuffer(8, mDynPosBuf);
+		dc.PSSetConstantBuffer(8, mDynPosBuf);
+		dc.VSSetConstantBuffer(9, mDynColBuf);
+		dc.PSSetConstantBuffer(9, mDynColBuf);
 	}
 
 	public void SetPostToShaders(ID3D11DeviceContext dc)
 	{
-		dc.VSSetConstantBuffer(0, mPostBuf);
-		dc.PSSetConstantBuffer(0, mPostBuf);
-		dc.VSSetConstantBuffer(1, mPostWOXYBuf);
-		dc.PSSetConstantBuffer(1, mPostWOXYBuf);
+		dc.VSSetConstantBuffer(5, mPostBuf);
+		dc.PSSetConstantBuffer(5, mPostBuf);
 	}
 
 	public void SetPerShadowToShaders(ID3D11DeviceContext dc)
@@ -288,7 +295,7 @@ public unsafe class CBKeeper
 
 	public void SetTextModeToShaders(ID3D11DeviceContext dc)
 	{
-		dc.PSSetConstantBuffer(7, mTextModeBuf);
+		dc.PSSetConstantBuffer(6, mTextModeBuf);
 	}
 
 
@@ -319,7 +326,6 @@ public unsafe class CBKeeper
 
 	public void UpdateBSPArrays(ID3D11DeviceContext dc)
 	{
-		dc.UpdateSubresource(mAniIntensities, mBSPStylesBuf);
 		dc.UpdateSubresource(mDynColor, mDynColBuf);
 		dc.UpdateSubresource(mDynPos, mDynPosBuf);
 	}
@@ -327,7 +333,6 @@ public unsafe class CBKeeper
 	public void UpdatePost(ID3D11DeviceContext dc)
 	{
 		dc.UpdateSubresource<Post>(mPost, mPostBuf);
-		dc.UpdateSubresource(mWeightsOffsetsXY, mPostWOXYBuf);
 	}
 
 	public void	UpdatePerShadow(ID3D11DeviceContext dc)
@@ -340,19 +345,24 @@ public unsafe class CBKeeper
 		dc.UpdateSubresource<TextMode>(mTextMode, mTextModeBuf);
 	}
 
+	public void UpdateCelStuff(ID3D11DeviceContext dc)
+	{
+		dc.UpdateSubresource<CelStuff>(mCelStuff, mCelBuf);
+	}
+
 
 #region PerFrame
 	public void SetView(Matrix4x4 view, Vector3 eyePos)
 	{
 		mPerFrame.mView		=Matrix4x4.Transpose(view);
-		mPerFrame.mEyePos	=eyePos;
+		mPerFrame.mEyePos	=eyePos.ToV4(1.0f);
 	}
 
 
 	public void SetTransposedView(Matrix4x4 view, Vector3 eyePos)
 	{
 		mPerFrame.mView		=view;
-		mPerFrame.mEyePos	=eyePos;
+		mPerFrame.mEyePos	=eyePos.ToV4(1.0f);
 	}
 
 
@@ -382,33 +392,11 @@ public unsafe class CBKeeper
 
 
 #region	PerObject
-	public void SetTrilights(Vector4 L0, Vector4 L1, Vector4 L2, Vector3 lightDir)
-	{
-		mPerObject.mLightColor0		=L0;
-		mPerObject.mLightColor1		=L1;
-		mPerObject.mLightColor2		=L2;
-		mPerObject.mLightDirection	=lightDir;
-	}
-
-
 	public void SetTrilights(Vector3 L0, Vector3 L1, Vector3 L2, Vector3 lightDir)
-	{
-		mPerObject.mLightColor0.X		=L0.X;
-		mPerObject.mLightColor0.Y		=L0.Y;
-		mPerObject.mLightColor0.Z		=L0.Z;
-
-		mPerObject.mLightColor1.X		=L1.X;
-		mPerObject.mLightColor1.Y		=L1.Y;
-		mPerObject.mLightColor1.Z		=L1.Z;
-
-		mPerObject.mLightColor2.X		=L2.X;
-		mPerObject.mLightColor2.Y		=L2.Y;
-		mPerObject.mLightColor2.Z		=L2.Z;
-
-		mPerObject.mLightDirection	=lightDir;
-
-		mPerObject.mLightColor0.W	=mPerObject.mLightColor1.W
-			=mPerObject.mLightColor2.W	=1f;
+	{		
+		mPerObject.mLightColor0		=L0.ToV4(lightDir.X);
+		mPerObject.mLightColor1		=L1.ToV4(lightDir.Y);
+		mPerObject.mLightColor2		=L2.ToV4(lightDir.Z);
 	}
 
 
@@ -418,16 +406,15 @@ public unsafe class CBKeeper
 	}
 
 
-	public void SetSpecular(Vector4 specColour, float specPow)
+	public void SetSpecular(Vector3 specColour, float specPow)
 	{
-		mPerObject.mSpecColor	=specColour;
-		mPerObject.mSpecPower	=specPow;
+		mPerObject.mSpecColorPow	=specColour.ToV4(specPow);
 	}
 
 
 	internal void SetSpecularPower(float specPow)
 	{
-		mPerObject.mSpecPower	=specPow;
+		mPerObject.mSpecColorPow.W	=specPow;
 	}
 
 
@@ -445,13 +432,14 @@ public unsafe class CBKeeper
 
 	public void SetMaterialID(int matID)
 	{
-		mPerObject.mMaterialID	=matID;
+		//TODO: this might differ from C a bit
+		mPerObject.mDanglyForce.W	=matID;
 	}
 
 
 	public void SetDanglyForce(Vector3 force)
 	{
-		mPerObject.mDanglyForce	=force;
+		mPerObject.mDanglyForce	=force.ToV4(mPerObject.mDanglyForce.W);
 	}
 #endregion
 
@@ -496,7 +484,13 @@ public unsafe class CBKeeper
 			return;
 		}
 
-		Array.Copy(ani, mAniIntensities, NumStyles);
+		fixed(float	*pAni = ani)
+		{
+			fixed(float *pBspAnis = mBSP.mAniIntensities)
+			{
+				Buffer.MemoryCopy(pAni, pBspAnis, NumAniIntensities * 4, NumStyles * 4);
+			}
+		}
 	}
 
 
@@ -558,10 +552,22 @@ public unsafe class CBKeeper
 
 	public void SetWeightsOffsets(float []wx, float []wy, float []offx, float []offy)
 	{
-		wx.CopyTo(mWeightsOffsetsXY, 0);
-		wy.CopyTo(mWeightsOffsetsXY, wx.Length);
-		offx.CopyTo(mWeightsOffsetsXY, wx.Length * 2);
-		offy.CopyTo(mWeightsOffsetsXY, wx.Length * 3);
+		fixed(float *pPost = mPost.mWeightsX)
+		{
+			Misc.MemCpy(wx, pPost, KernelSize * 4);
+		}
+		fixed(float *pPost = mPost.mOffsetsX)
+		{
+			Misc.MemCpy(offx, pPost, KernelSize * 4);
+		}
+		fixed(float *pPost = mPost.mWeightsY)
+		{
+			Misc.MemCpy(wy, pPost, KernelSize * 4);
+		}
+		fixed(float *pPost = mPost.mOffsetsY)
+		{
+			Misc.MemCpy(offy, pPost, KernelSize * 4);
+		}
 	}
 #endregion
 
@@ -604,6 +610,17 @@ public unsafe class CBKeeper
 		mTextMode.mNumColumns	=numColumns;
 		mTextMode.mCharWidth	=charWidth;
 		mTextMode.mCharHeight	=charHeight;
+	}
+#endregion
+
+
+#region Cel
+	public void	SetCelSteps(Vector4 mins, Vector4 maxs, Vector4 steps, int numSteps)
+	{
+		mCelStuff.mValMin	=mins;
+		mCelStuff.mValMax	=maxs;
+		mCelStuff.mSnapTo	=steps;
+		mCelStuff.mNumSteps	=numSteps;
 	}
 #endregion
 }
