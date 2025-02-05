@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Numerics;
+using Vortice.Mathematics;
 
 
 namespace MeshLib;
@@ -75,6 +76,34 @@ public class KeyFrame
 	}
 
 
+	internal void ConvertToLeftHanded()
+	{
+		Matrix4x4	rotMat		=Matrix4x4.CreateFromQuaternion(mRotation);
+		Matrix4x4	transMat	=Matrix4x4.CreateTranslation(mPosition);
+		Matrix4x4	scaleMat	=Matrix4x4.CreateScale(mScale);
+
+		Matrix4x4	final	=scaleMat * rotMat * transMat;
+
+		RightHandToLeft(ref final);
+
+		Matrix4x4.Decompose(final, out mScale, out mRotation, out mPosition);
+	}
+
+
+	public static void RightHandToLeft(ref Matrix4x4 mat)
+	{
+		mat.M31	=-mat.M31;
+		mat.M32	=-mat.M32;
+		mat.M33	=-mat.M33;
+		mat.M34	=-mat.M34;
+
+		mat.M13	=-mat.M13;
+		mat.M23	=-mat.M23;
+		mat.M33	=-mat.M33;
+		mat.M43	=-mat.M43;
+	}
+
+	
 	internal static void Lerp(KeyFrame key0, KeyFrame key1,
 		float percentage, KeyFrame result)
 	{

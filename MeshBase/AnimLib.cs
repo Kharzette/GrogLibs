@@ -39,10 +39,17 @@ public class AnimLib
 	}
 
 
+	public bool HasAnim(string animName)
+	{
+		return	mAnims.ContainsKey(animName);
+	}
+
+
 	public void AddAnim(Anim an)
 	{
 		if(mAnims.ContainsKey(an.Name))
 		{
+			Console.WriteLine("Attempt to add an animation that is already in the library: " + an.Name + "\n");
 			return;	//already in there
 		}
 

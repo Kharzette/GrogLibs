@@ -236,6 +236,13 @@ public class GSNode
 			gsn.IterateStructure(ist);
 		}
 	}
+
+
+	//this should only need to do the root
+	internal void ConvertToLeftHanded()
+	{
+		mKeyValue.ConvertToLeftHanded();
+	}
 }
 
 
@@ -491,6 +498,16 @@ public class Skeleton
 	}
 
 
+	public void ConvertToLeftHanded()
+	{
+		//do the roots
+		foreach(GSNode gsn in mRoots)
+		{
+			gsn.ConvertToLeftHanded();
+		}
+	}
+
+	
 	//return the root bone names
 	public void GetRootNames(List<string> ret)
 	{
